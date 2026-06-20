@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1" />
-<title>PythaBarre — théorème de Pythagore v19</title>
+<title>Pythagore — outil visuel du théorème de Pythagore</title>
 <style>
   :root{
     --bg:#f5f7fb;
@@ -1585,17 +1585,1295 @@
   }
 
 
+
+  /* PATCH V25 — propositions visibles hors plein écran.
+     Les choix de Remplacer/Calculer/Regrouper apparaissaient bien en plein écran,
+     mais pouvaient être masqués hors plein écran par la carte du tableau trop compacte.
+     On garde la mise en page validée et on sécurise seulement la zone de choix. */
+  @media (min-width:981px){
+    .stage:not(:fullscreen) .leftWork{
+      overflow:visible;
+    }
+
+    .stage:not(:fullscreen) .leftWork .barBoard{
+      position:relative;
+      overflow:visible;
+      flex:0 0 276px;
+      min-height:276px;
+      padding-bottom:18px;
+    }
+
+    .stage:not(:fullscreen) .barBoard .sidePalette{
+      position:relative;
+      z-index:4;
+      margin-top:10px;
+      min-height:60px;
+      transform:none;
+    }
+  }
+
+  @media (min-width:981px) and (max-height:760px){
+    .stage:not(:fullscreen) .topbar{
+      min-height:198px;
+    }
+
+    .stage:not(:fullscreen) .equationHistory{
+      max-height:192px;
+    }
+
+    .stage:not(:fullscreen) .leftWork .barBoard{
+      flex-basis:258px;
+      min-height:258px;
+      padding-top:18px;
+      padding-bottom:12px;
+    }
+
+    .stage:not(:fullscreen) .barLine,
+    .stage:not(:fullscreen) .barPiece{
+      min-height:62px;
+    }
+
+    .stage:not(:fullscreen) .barBoard .sidePalette{
+      margin-top:8px;
+      min-height:54px;
+    }
+  }
+
+
+
+  /* PATCH V27 — retour couleurs neutres pour les propositions + visibilité hors plein écran.
+     Les propositions ne reprennent plus les couleurs du moulin pour éviter les confusions.
+     Hors plein écran, elles sont placées dans une zone basse réservée de la carte tableau. */
+  .sideChoice{
+    color:#0f172a;
+    background:#ffffff;
+    border-color:rgba(15,23,42,.18);
+  }
+  .sideChoice:hover{
+    background:#f8fafc;
+    border-color:rgba(15,23,42,.30);
+  }
+  .sideChoice.selectedChoiceToken{
+    background:#f1f5f9;
+    color:#0f172a;
+    border-color:rgba(51,65,85,.55);
+    box-shadow:0 0 0 5px rgba(100,116,139,.14), 0 8px 20px rgba(15,23,42,.07);
+  }
+
+  @media (min-width:981px){
+    .stage:not(:fullscreen) .leftWork{
+      overflow:visible;
+    }
+    .stage:not(:fullscreen) .leftWork .barBoard{
+      position:relative;
+      overflow:visible;
+      flex:0 0 304px;
+      min-height:304px;
+      padding:18px 12px 76px;
+      justify-content:flex-start;
+    }
+    .stage:not(:fullscreen) .barBoard .sidePalette{
+      position:absolute;
+      left:10px;
+      right:10px;
+      bottom:10px;
+      z-index:10;
+      margin:0;
+      min-height:58px;
+      transform:none;
+      align-items:center;
+    }
+  }
+
+  @media (min-width:981px) and (max-height:760px){
+    .stage:not(:fullscreen) .leftWork .barBoard{
+      flex-basis:286px;
+      min-height:286px;
+      padding-top:14px;
+      padding-bottom:68px;
+    }
+    .stage:not(:fullscreen) .barLine,
+    .stage:not(:fullscreen) .barPiece{
+      min-height:60px;
+    }
+    .stage:not(:fullscreen) .barBoard .sidePalette{
+      bottom:8px;
+      min-height:54px;
+    }
+  }
+
+
+
+  /* PATCH V28 — titre Pythagore + réglage plein écran uniquement.
+     Objectif : ne pas toucher au mode hors plein écran ; en plein écran,
+     donner plus de hauteur à l'historique d'équation, descendre la consigne
+     et le tableau, et rendre la carte du tableau plus compacte. */
+  @media (min-width:981px){
+    .stage:fullscreen .topbar{
+      min-height:360px;
+      padding-top:18px;
+      padding-bottom:8px;
+    }
+
+    .stage:fullscreen .equationHistory{
+      max-height:352px;
+    }
+
+    .stage:fullscreen .instructionZone{
+      min-height:46px;
+      margin-bottom:6px;
+    }
+
+    .stage:fullscreen .leftWork .barBoard{
+      flex:0 0 242px;
+      min-height:242px;
+      padding:16px 10px 6px;
+      justify-content:flex-start;
+    }
+
+    .stage:fullscreen .barLine,
+    .stage:fullscreen .barPiece{
+      min-height:64px;
+    }
+
+    .stage:fullscreen .barBoard .sidePalette{
+      margin-top:12px;
+      min-height:52px;
+    }
+  }
+
+  @media (min-width:981px) and (max-height:760px){
+    .stage:fullscreen .topbar{
+      min-height:310px;
+    }
+
+    .stage:fullscreen .equationHistory{
+      max-height:302px;
+    }
+
+    .stage:fullscreen .leftWork .barBoard{
+      flex-basis:224px;
+      min-height:224px;
+      padding-top:14px;
+      padding-bottom:6px;
+    }
+
+    .stage:fullscreen .barLine,
+    .stage:fullscreen .barPiece{
+      min-height:58px;
+    }
+  }
+
+
+  /* PATCH V28 — énoncé automatique + unité.
+     Ajout isolé : menu enrichi, phrase d'énoncé en haut de la zone de travail,
+     et unité seulement dans la conclusion pour garder les calculs lisibles. */
+  .unitGrid{
+    display:grid;
+    grid-template-columns:minmax(120px,220px);
+    justify-content:center;
+    margin-top:10px;
+  }
+  .unitBox{
+    background:rgba(255,255,255,.72);
+    border:1px solid rgba(15,23,42,.08);
+    border-radius:16px;
+    padding:8px;
+  }
+  .unitBox label{
+    margin-top:0;
+    margin-bottom:6px;
+    color:#334155;
+  }
+  .unitBox select{
+    min-height:42px;
+    font-size:16px;
+    font-weight:950;
+  }
+  .topbar{
+    flex-direction:column;
+    gap:6px;
+  }
+  .problemStatement{
+    width:min(980px,100%);
+    margin:0 auto 4px;
+    padding:8px 14px;
+    border-radius:16px;
+    border:1px solid rgba(15,23,42,.10);
+    background:rgba(248,250,252,.92);
+    color:#1e293b;
+    text-align:center;
+    font-size:clamp(15px,1.45vw,21px);
+    font-weight:900;
+    line-height:1.22;
+    box-shadow:0 8px 20px rgba(15,23,42,.05);
+  }
+  .stage:fullscreen .problemStatement{
+    width:min(1080px,100%);
+    font-size:clamp(17px,1.65vw,23px);
+  }
+  @media (max-width:700px){
+    .unitGrid{grid-template-columns:1fr;}
+    .problemStatement{font-size:15px;padding:7px 10px;}
+  }
+
+
+  /* PATCH V29 — épuration globale + propositions toujours visibles.
+     Objectif : supprimer les bulles autour de l'énoncé, du tableau et du moulin
+     en mode normal comme en plein écran, puis sortir les propositions de la carte
+     du tableau pour éviter qu'elles soient masquées hors plein écran. */
+
+  /* L'énoncé devient une ligne claire, sans carte. */
+  .stage .problemStatement{
+    background:transparent;
+    border:0;
+    box-shadow:none;
+    border-radius:0;
+    padding:2px 6px;
+    margin:0 auto 2px;
+  }
+
+  /* Les anciennes cartes du tableau et du moulin ne dessinent plus de bulles. */
+  .stage .card.barBoard,
+  .stage .card.visualCard{
+    background:transparent;
+    border:0;
+    box-shadow:none;
+    backdrop-filter:none;
+    border-radius:0;
+  }
+
+  .stage .card.barBoard{
+    padding:0 8px;
+    justify-content:flex-start;
+    gap:0;
+    overflow:visible;
+  }
+
+  .stage .card.visualCard{
+    padding:0;
+    overflow:visible;
+  }
+
+  /* Les propositions ne sont plus dans la bulle du tableau : elles ont leur
+     propre bande réservée, stable et toujours visible quand elle est active. */
+  .leftWork > .sidePalette{
+    display:flex !important;
+    visibility:hidden;
+    pointer-events:none;
+    flex:0 0 70px;
+    min-height:70px;
+    width:100%;
+    justify-content:center;
+    align-items:center;
+    gap:10px;
+    flex-wrap:wrap;
+    margin:0;
+    padding:6px 8px 0;
+    transform:none;
+  }
+
+  .leftWork > .sidePalette.show{
+    display:flex !important;
+    visibility:visible;
+    pointer-events:auto;
+  }
+
+  .leftWork > .sidePalette:empty{
+    visibility:hidden;
+    pointer-events:none;
+  }
+
+  .leftWork > .sidePalette .sideChoice{
+    min-height:46px;
+    min-width:84px;
+    padding:9px 14px;
+    font-size:20px;
+  }
+
+  /* On neutralise les réserves de hauteur et positionnements absolus hérités
+     des anciens patchs, puisque les propositions sont désormais sorties. */
+  @media (min-width:981px){
+    .stage:not(:fullscreen) .leftWork,
+    .stage:fullscreen .leftWork{
+      overflow:visible;
+    }
+
+    .stage:not(:fullscreen) .leftWork .barBoard,
+    .stage:fullscreen .leftWork .barBoard{
+      position:relative;
+      overflow:visible;
+      flex:0 0 auto;
+      min-height:0;
+      padding:0 8px;
+    }
+
+    .stage:not(:fullscreen) .visualCard,
+    .stage:fullscreen .visualCard{
+      margin-top:0;
+      padding-top:0;
+      padding-bottom:0;
+      justify-content:center;
+    }
+
+    .stage:not(:fullscreen) .workArea,
+    .stage:fullscreen .workArea{
+      gap:18px;
+      padding-top:0;
+    }
+
+    .stage:not(:fullscreen) .instructionZone,
+    .stage:fullscreen .instructionZone{
+      margin-bottom:4px;
+    }
+
+    .stage:not(:fullscreen) .leftWork > .sidePalette,
+    .stage:fullscreen .leftWork > .sidePalette{
+      flex-basis:70px;
+      min-height:70px;
+    }
+  }
+
+  @media (min-width:981px) and (max-height:760px){
+    .stage:not(:fullscreen) .leftWork > .sidePalette,
+    .stage:fullscreen .leftWork > .sidePalette{
+      flex-basis:60px;
+      min-height:60px;
+      padding-top:4px;
+    }
+
+    .leftWork > .sidePalette .sideChoice{
+      min-height:42px;
+      font-size:18px;
+      padding:8px 12px;
+    }
+  }
+
+  @media (max-width:980px){
+    .leftWork{
+      overflow:visible;
+    }
+
+    .stage .card.barBoard{
+      min-height:0;
+      padding:0 4px;
+    }
+
+    .leftWork > .sidePalette{
+      flex-basis:auto;
+      min-height:62px;
+      padding-top:6px;
+    }
+  }
+
+
+
+  /* PATCH V30 — abaissement léger de la consigne et du tableau.
+     Objectif : réserver davantage d'espace à l'énoncé + historique d'équation
+     en haut, puis descendre d'un cran la zone "Complète la relation" et le
+     tableau, sans toucher au moteur ni aux interactions. */
+  @media (min-width:981px){
+    .stage:not(:fullscreen) .topbar{
+      min-height:274px;
+      padding-top:14px;
+      padding-bottom:8px;
+    }
+
+    .stage:not(:fullscreen) .equationHistory{
+      max-height:266px;
+    }
+
+    .stage:fullscreen .topbar{
+      min-height:402px;
+      padding-top:18px;
+      padding-bottom:10px;
+    }
+
+    .stage:fullscreen .equationHistory{
+      max-height:392px;
+    }
+  }
+
+  @media (min-width:981px) and (max-height:760px){
+    .stage:not(:fullscreen) .topbar{
+      min-height:224px;
+    }
+
+    .stage:not(:fullscreen) .equationHistory{
+      max-height:216px;
+    }
+
+    .stage:fullscreen .topbar{
+      min-height:338px;
+    }
+
+    .stage:fullscreen .equationHistory{
+      max-height:328px;
+    }
+  }
+
+
+  /* PATCH V31 — abaissement supplémentaire très léger du tableau.
+     Objectif : laisser encore un peu plus d'air à l'équation qui se construit
+     en haut, sans modifier le moteur, les propositions ni les interactions. */
+  @media (min-width:981px){
+    .stage:not(:fullscreen) .topbar{
+      min-height:296px;
+    }
+
+    .stage:not(:fullscreen) .equationHistory{
+      max-height:288px;
+    }
+
+    .stage:fullscreen .topbar{
+      min-height:430px;
+    }
+
+    .stage:fullscreen .equationHistory{
+      max-height:420px;
+    }
+  }
+
+  @media (min-width:981px) and (max-height:760px){
+    .stage:not(:fullscreen) .topbar{
+      min-height:240px;
+    }
+
+    .stage:not(:fullscreen) .equationHistory{
+      max-height:232px;
+    }
+
+    .stage:fullscreen .topbar{
+      min-height:360px;
+    }
+
+    .stage:fullscreen .equationHistory{
+      max-height:350px;
+    }
+  }
+
+
+  /* PATCH V32 — mode guidé automatique + rédaction permanente.
+     La phrase de rédaction reste au-dessus de l'équation ; la consigne
+     numérotée pilote l'action du moment. Les anciens boutons d'étapes sont
+     supprimés pour gagner de la place et éviter les propositions cachées. */
+  #mainActions{
+    display:none !important;
+  }
+
+  .toolBar{
+    gap:6px;
+    margin-top:2px;
+  }
+
+  .proofIntro{
+    width:min(1080px,100%);
+    margin:0 auto 4px;
+    padding:0 6px;
+    color:#0f172a;
+    text-align:center;
+    font-size:clamp(16px,1.55vw,23px);
+    font-weight:900;
+    line-height:1.22;
+  }
+
+  .instructionZone{
+    font-size:clamp(18px,1.9vw,25px);
+    min-height:44px;
+    margin-bottom:2px;
+  }
+
+  .instructionZone strong{
+    color:#1d4ed8;
+    margin-right:.25em;
+  }
+
+  .leftWork > .sidePalette{
+    flex-basis:58px;
+    min-height:58px;
+    padding:2px 8px 0;
+  }
+
+  .leftWork > .sidePalette .sideChoice{
+    min-height:42px;
+    min-width:80px;
+    padding:8px 13px;
+    font-size:18px;
+  }
+
+  .leftWork > .sidePalette .contextualAction{
+    min-width:210px;
+    font-size:16px;
+    font-weight:950;
+    background:#eff6ff;
+    border-color:rgba(59,130,246,.32);
+    color:#1d4ed8;
+  }
+
+  @media (min-width:981px){
+    .stage:not(:fullscreen) .topbar{
+      min-height:236px;
+      padding-top:8px;
+      padding-bottom:6px;
+    }
+
+    .stage:not(:fullscreen) .equationHistory{
+      max-height:166px;
+    }
+
+    .stage:fullscreen .topbar{
+      min-height:328px;
+      padding-top:10px;
+      padding-bottom:8px;
+    }
+
+    .stage:fullscreen .equationHistory{
+      max-height:250px;
+    }
+
+    .stage:not(:fullscreen) .leftWork .barBoard,
+    .stage:fullscreen .leftWork .barBoard{
+      padding-top:0;
+    }
+  }
+
+  @media (min-width:981px) and (max-height:760px){
+    .stage:not(:fullscreen) .topbar{
+      min-height:205px;
+    }
+
+    .stage:not(:fullscreen) .equationHistory{
+      max-height:138px;
+    }
+
+    .stage:fullscreen .topbar{
+      min-height:286px;
+    }
+
+    .stage:fullscreen .equationHistory{
+      max-height:214px;
+    }
+
+    .proofIntro{
+      font-size:clamp(15px,1.35vw,20px);
+    }
+  }
+
+
+
+  /* PATCH V34 — menu compact, consigne lisible, schéma partie-tout en deux temps. */
+  .compactLengthGrid{
+    grid-template-columns:repeat(4, minmax(0,1fr));
+    gap:8px;
+  }
+  .compactLengthGrid .lengthBox{
+    padding:7px;
+  }
+  .compactLengthGrid .lengthBox label{
+    margin-bottom:5px;
+    font-size:10.5px;
+  }
+  .compactLengthGrid .lengthBox input,
+  .compactLengthGrid .compactUnitBox select{
+    min-height:42px;
+    font-size:18px;
+    padding:7px 8px;
+  }
+  .compactLengthGrid .compactUnitBox select{
+    font-size:15px;
+    font-weight:950;
+  }
+  .unitGrid{display:none;}
+
+  .proofIntro:empty,
+  .equationHistory:empty,
+  .instructionZone:empty{display:none;}
+
+  .instructionZone{
+    min-height:54px;
+    margin:8px auto 8px;
+    padding:0 10px;
+    align-items:flex-start;
+  }
+  .instructionPill{
+    display:inline-flex;
+    align-items:flex-start;
+    gap:6px;
+    max-width:min(960px,100%);
+    padding:9px 14px;
+    border-radius:14px;
+    background:rgba(241,245,249,.96);
+    border:1px solid rgba(100,116,139,.18);
+    color:#1e293b;
+    box-shadow:0 6px 16px rgba(15,23,42,.045);
+    text-align:left;
+    line-height:1.22;
+  }
+  .instructionPill .stepNumber{
+    flex:0 0 auto;
+    color:#1d4ed8;
+    font-weight:950;
+  }
+  .instructionPill .stepText{
+    display:block;
+    font-weight:900;
+  }
+  .operationPrompt{
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    min-height:42px;
+    padding:8px 12px;
+    border-radius:13px;
+    background:#fff7ed;
+    border:1px solid rgba(249,115,22,.28);
+    color:#9a3412;
+    font-size:20px;
+    font-weight:950;
+    white-space:nowrap;
+  }
+  .startGuidedBtn{
+    min-height:48px;
+    padding:12px 22px;
+    border-radius:16px;
+    font-size:17px;
+    background:linear-gradient(180deg,#60a5fa,#3b82f6);
+    color:white;
+  }
+  .stage.notStarted .barBoard,
+  .stage.notStarted .instructionZone,
+  .stage.notStarted .equationHistory,
+  .stage.notStarted .proofIntro{
+    display:none;
+  }
+  .stage.notStarted .leftWork > .sidePalette{
+    visibility:visible;
+    pointer-events:auto;
+    min-height:68px;
+  }
+  .proofIntro{
+    margin-bottom:2px;
+  }
+  .problemStatement{
+    white-space:normal;
+  }
+
+  @media (min-width:981px){
+    .stage:not(:fullscreen) .topbar{
+      min-height:212px;
+      padding-top:6px;
+      padding-bottom:4px;
+    }
+    .stage:not(:fullscreen) .equationHistory{
+      max-height:142px;
+    }
+    .stage:fullscreen .topbar{
+      min-height:350px;
+      padding-top:6px;
+      padding-bottom:8px;
+    }
+    .stage:fullscreen .equationHistory{
+      max-height:268px;
+    }
+    .stage:fullscreen .instructionZone{
+      margin-top:12px;
+      margin-bottom:8px;
+    }
+    .stage:fullscreen .leftWork .barBoard{
+      padding-top:0;
+    }
+  }
+  @media (max-width:700px){
+    .compactLengthGrid{grid-template-columns:1fr 1fr;}
+  }
+
+
+  /* PATCH V35 — énoncé encadré, consigne sobre, tableau stable, racine interactive. */
+  .stage .problemStatement{
+    display:block;
+    width:min(1040px,100%);
+    margin:0 auto 5px;
+    padding:7px 14px;
+    border-radius:15px;
+    background:rgba(241,245,249,.96);
+    border:1px solid rgba(100,116,139,.22);
+    box-shadow:0 6px 16px rgba(15,23,42,.045);
+    color:#1e293b;
+    font-weight:950;
+    line-height:1.2;
+  }
+  .stage .problemStatement .nowrap{white-space:nowrap;}
+  .proofIntro{
+    margin:0 auto 4px;
+    padding:0 8px;
+    background:transparent;
+    border:0;
+    box-shadow:none;
+  }
+  .instructionZone{
+    margin:12px auto 10px;
+    padding:0 10px;
+    min-height:48px;
+  }
+  .instructionPill{
+    display:inline-flex;
+    align-items:flex-start;
+    justify-content:center;
+    gap:3px;
+    max-width:min(1100px,100%);
+    padding:0;
+    border-radius:0;
+    background:transparent;
+    border:0;
+    box-shadow:none;
+    color:#1e293b;
+    text-align:left;
+    line-height:1.22;
+  }
+  .instructionPill .stepNumber{
+    flex:0 0 auto;
+    color:#1d4ed8;
+    font-weight:950;
+    padding-right:1px;
+  }
+  .instructionPill .stepText{font-weight:950;}
+  .leftWork > .sidePalette{
+    flex:0 0 74px;
+    min-height:74px;
+  }
+  .operationPrompt{
+    min-height:42px;
+    padding:8px 12px;
+  }
+
+  @media (min-width:981px){
+    .stage:not(.notStarted):not(:fullscreen) .topbar{
+      flex:0 0 250px;
+      height:250px;
+      min-height:250px;
+      padding-top:6px;
+      padding-bottom:6px;
+      overflow:hidden;
+    }
+    .stage:not(.notStarted):not(:fullscreen) .equationHistory{
+      flex:1 1 auto;
+      max-height:174px;
+      overflow-y:auto;
+    }
+    .stage:not(.notStarted):not(:fullscreen) .instructionZone{
+      margin-top:16px;
+      margin-bottom:12px;
+    }
+    .stage:not(.notStarted):not(:fullscreen) .leftWork .barBoard{
+      padding-top:4px;
+    }
+
+    .stage.notStarted:not(:fullscreen) .topbar{
+      flex:0 0 70px;
+      height:auto;
+      min-height:70px;
+      padding-top:6px;
+      overflow:visible;
+    }
+
+    .stage:not(.notStarted):fullscreen .topbar{
+      flex:0 0 380px;
+      height:380px;
+      min-height:380px;
+      padding-top:8px;
+      padding-bottom:8px;
+      overflow:hidden;
+    }
+    .stage:not(.notStarted):fullscreen .equationHistory{
+      flex:1 1 auto;
+      max-height:292px;
+      overflow-y:auto;
+    }
+    .stage:not(.notStarted):fullscreen .instructionZone{
+      margin-top:18px;
+      margin-bottom:14px;
+    }
+    .stage:not(.notStarted):fullscreen .leftWork .barBoard{
+      padding-top:6px;
+    }
+    .stage.notStarted:fullscreen .topbar{
+      flex:0 0 82px;
+      height:auto;
+      min-height:82px;
+      padding-top:8px;
+      overflow:visible;
+    }
+  }
+
+  @media (min-width:981px) and (max-height:760px){
+    .stage:not(.notStarted):not(:fullscreen) .topbar{
+      flex-basis:224px;
+      height:224px;
+      min-height:224px;
+    }
+    .stage:not(.notStarted):not(:fullscreen) .equationHistory{
+      max-height:148px;
+    }
+    .stage:not(.notStarted):fullscreen .topbar{
+      flex-basis:330px;
+      height:330px;
+      min-height:330px;
+    }
+    .stage:not(.notStarted):fullscreen .equationHistory{
+      max-height:250px;
+    }
+  }
+
+
+
+  /* PATCH V36 — réglage fin plein écran : bloc activité plus bas et tableau final stable.
+     On ne touche pas au moteur. On donne davantage de hauteur à la rédaction et à
+     l'équation en plein écran, puis on réserve la place de la consigne même quand
+     l'étape finale est terminée pour éviter que le tableau remonte. */
+  @media (min-width:981px){
+    .stage:not(.notStarted):fullscreen .topbar{
+      flex:0 0 430px;
+      height:430px;
+      min-height:430px;
+      padding-top:8px;
+      padding-bottom:8px;
+      overflow:hidden;
+    }
+
+    .stage:not(.notStarted):fullscreen .equationHistory{
+      max-height:342px;
+      overflow-y:auto;
+    }
+
+    .stage:not(.notStarted):fullscreen .instructionZone{
+      margin-top:22px;
+      margin-bottom:14px;
+      min-height:50px;
+    }
+
+    .stage:not(.notStarted):fullscreen .leftWork .barBoard{
+      padding-top:8px;
+    }
+
+    /* Quand la conclusion est atteinte, currentInstruction() devient vide.
+       On garde pourtant l'emplacement de la consigne pour que le tableau final
+       reste exactement dans la même zone verticale. */
+    .stage:not(.notStarted):fullscreen .instructionZone:empty{
+      display:flex;
+      visibility:hidden;
+    }
+  }
+
+  @media (min-width:981px) and (max-height:760px){
+    .stage:not(.notStarted):fullscreen .topbar{
+      flex-basis:372px;
+      height:372px;
+      min-height:372px;
+    }
+
+    .stage:not(.notStarted):fullscreen .equationHistory{
+      max-height:286px;
+    }
+
+    .stage:not(.notStarted):fullscreen .instructionZone{
+      margin-top:16px;
+      min-height:46px;
+    }
+  }
+
+
+
+  /* PATCH V37 — zone d’équation réellement élargie + conclusion moins basse.
+     Le tableau garde sa position validée ; on donne surtout à l’historique
+     d’équations le droit d’utiliser l’espace vide au-dessus de la consigne.
+     On remonte aussi légèrement la conclusion finale pour qu’elle respire
+     au-dessus des boutons. */
+  @media (min-width:981px){
+    .stage:not(.notStarted):fullscreen .topbar{
+      display:flex;
+      flex-direction:column;
+      align-items:center;
+      justify-content:flex-start;
+      gap:5px;
+    }
+
+    .stage:not(.notStarted):fullscreen .equationHistory{
+      flex:1 1 auto;
+      min-height:0;
+      max-height:none;
+      width:min(1080px,100%);
+      overflow-y:auto;
+      overflow-x:auto;
+    }
+
+    .stage:not(.notStarted):not(:fullscreen) .topbar{
+      display:flex;
+      flex-direction:column;
+      align-items:center;
+      justify-content:flex-start;
+      gap:5px;
+    }
+
+    .stage:not(.notStarted):not(:fullscreen) .equationHistory{
+      flex:1 1 auto;
+      min-height:0;
+      max-height:none;
+      width:min(1040px,100%);
+      overflow-y:auto;
+      overflow-x:auto;
+    }
+
+    .solution{
+      flex-basis:50px;
+      min-height:50px;
+      margin:0 0 18px;
+      align-items:flex-start;
+    }
+
+    .toolBar{
+      margin-top:0;
+    }
+  }
+
+  @media (min-width:981px) and (max-height:760px){
+    .solution{
+      flex-basis:44px;
+      min-height:44px;
+      margin-bottom:12px;
+    }
+  }
+
+
+  /* PATCH V38 — resserrage de la zone autour du tableau + distracteurs racine.
+     On ne change pas la logique : on réduit seulement les espaces morts autour
+     du schéma en barres et on améliore les propositions de racine carrée. */
+  .stage .card.barBoard{
+    padding-left:4px !important;
+    padding-right:4px !important;
+    padding-top:0 !important;
+    padding-bottom:0 !important;
+    gap:0 !important;
+  }
+
+  .barPair{
+    margin-top:0 !important;
+    margin-bottom:0 !important;
+  }
+
+  @media (min-width:981px){
+    .stage:not(.notStarted):not(:fullscreen) .leftWork .barBoard,
+    .stage:not(.notStarted):fullscreen .leftWork .barBoard{
+      padding-top:0 !important;
+      padding-bottom:0 !important;
+      min-height:0 !important;
+    }
+
+    .stage:not(.notStarted):not(:fullscreen) .barLine,
+    .stage:not(.notStarted):not(:fullscreen) .barPiece,
+    .stage:not(.notStarted):fullscreen .barLine,
+    .stage:not(.notStarted):fullscreen .barPiece{
+      min-height:70px;
+    }
+
+    .stage:not(.notStarted):not(:fullscreen) .leftWork > .sidePalette,
+    .stage:not(.notStarted):fullscreen .leftWork > .sidePalette{
+      padding-top:4px;
+    }
+  }
+
+  @media (min-width:981px) and (max-height:760px){
+    .stage:not(.notStarted):not(:fullscreen) .barLine,
+    .stage:not(.notStarted):not(:fullscreen) .barPiece,
+    .stage:not(.notStarted):fullscreen .barLine,
+    .stage:not(.notStarted):fullscreen .barPiece{
+      min-height:64px;
+    }
+  }
+
+
+
+  /* PATCH V39 — suppression de la réponse rouge en bas.
+     La conclusion reste dans l'historique d'équations ; on supprime seulement
+     l'affichage redondant sous le tableau, près des boutons. */
+  .solution{
+    display:none !important;
+    flex:0 0 0 !important;
+    min-height:0 !important;
+    height:0 !important;
+    margin:0 !important;
+    padding:0 !important;
+    overflow:hidden !important;
+  }
+
+
+  /* PATCH V40 — dernier réglage layout avant menu dynamique.
+     Objectifs :
+     - hors plein écran : descendre légèrement consigne + tableau sans perdre les propositions ;
+     - plein écran : resserrer réellement la zone du tableau en supprimant la hauteur
+       fixe héritée des anciens patchs ;
+     - garder le moteur et l'historique d'équations intacts. */
+  @media (min-width:981px){
+    /* Hors plein écran : on descend un peu le bloc activité, mais on garde
+       la carte du tableau compacte comme validé. */
+    .stage:not(.notStarted):not(:fullscreen) .instructionZone{
+      margin-top:22px !important;
+      margin-bottom:12px !important;
+    }
+
+    .stage:not(.notStarted):not(:fullscreen) .leftWork .barBoard{
+      flex:0 0 auto !important;
+      height:auto !important;
+      min-height:0 !important;
+      margin-top:6px !important;
+      margin-bottom:0 !important;
+      padding-top:0 !important;
+      padding-bottom:0 !important;
+      justify-content:flex-start !important;
+    }
+
+    /* Plein écran : on supprime la vieille hauteur réservée du tableau.
+       Le tableau prend seulement la hauteur de ses deux lignes, donc il ne
+       crée plus une grande bande vide au-dessus ou autour du schéma. */
+    .stage:not(.notStarted):fullscreen .leftWork .barBoard{
+      flex:0 0 auto !important;
+      height:auto !important;
+      min-height:0 !important;
+      margin-top:4px !important;
+      margin-bottom:0 !important;
+      padding-top:0 !important;
+      padding-bottom:0 !important;
+      justify-content:flex-start !important;
+    }
+
+    .stage:not(.notStarted):fullscreen .instructionZone{
+      margin-top:24px !important;
+      margin-bottom:12px !important;
+    }
+
+    .stage:not(.notStarted):fullscreen .leftWork > .sidePalette{
+      flex:0 0 68px !important;
+      min-height:68px !important;
+      padding-top:6px !important;
+    }
+  }
+
+  @media (min-width:981px) and (max-height:760px){
+    .stage:not(.notStarted):not(:fullscreen) .instructionZone{
+      margin-top:16px !important;
+      margin-bottom:8px !important;
+    }
+    .stage:not(.notStarted):fullscreen .instructionZone{
+      margin-top:18px !important;
+      margin-bottom:8px !important;
+    }
+    .stage:not(.notStarted):fullscreen .leftWork > .sidePalette{
+      flex-basis:60px !important;
+      min-height:60px !important;
+    }
+  }
+
+
+
+  /* PATCH V41 — correction de la zone d'équation finale en plein écran.
+     Le problème venait de la consigne finale invisible : elle réservait de la hauteur
+     entre l'équation et le tableau, mais cette hauteur n'était pas utilisable par
+     l'historique. Quand la conclusion est atteinte, on transfère donc cette hauteur
+     à la topbar : le tableau garde quasiment sa position, mais l'équation peut
+     descendre au lieu d'être coupée avec un scroll interne inutile. */
+  @media (min-width:981px){
+    .stage.isConcluded:fullscreen .topbar{
+      flex-basis:516px !important;
+      height:516px !important;
+      min-height:516px !important;
+      overflow:hidden !important;
+    }
+
+    .stage.isConcluded:fullscreen .equationHistory{
+      flex:1 1 auto !important;
+      min-height:0 !important;
+      max-height:none !important;
+      overflow-y:auto !important;
+      overflow-x:auto !important;
+    }
+
+    .stage.isConcluded:fullscreen .instructionZone:empty{
+      display:flex !important;
+      visibility:hidden !important;
+      flex:0 0 0 !important;
+      min-height:0 !important;
+      height:0 !important;
+      margin-top:0 !important;
+      margin-bottom:0 !important;
+      padding-top:0 !important;
+      padding-bottom:0 !important;
+      overflow:hidden !important;
+    }
+  }
+
+  @media (min-width:981px) and (max-height:760px){
+    .stage.isConcluded:fullscreen .topbar{
+      flex-basis:448px !important;
+      height:448px !important;
+      min-height:448px !important;
+    }
+  }
+
+
+  /* PATCH V42 — contraste de l’énoncé encadré en plein écran.
+     En plein écran, le fond général rendait l'encadré trop discret.
+     On renforce uniquement la bulle d’énoncé, sans toucher au moteur ni au layout. */
+  .stage:fullscreen .problemStatement{
+    background:rgba(226,232,240,.98) !important;
+    border:2px solid rgba(71,85,105,.30) !important;
+    box-shadow:0 8px 22px rgba(15,23,42,.08) !important;
+  }
+
+  .stage:fullscreen .problemStatement strong,
+  .stage:fullscreen .problemStatement{
+    color:#0f172a !important;
+  }
+
+
+
+  /* PATCH V40 — menu dynamique avec aperçu du triangle.
+     Ajout isolé : petit schéma de contrôle dans le menu, mis à jour avec
+     les lettres, le sommet rectangle, les longueurs et l’unité. */
+  .menuPreview{
+    margin:10px auto 12px;
+    max-width:570px;
+    display:grid;
+    grid-template-columns:minmax(220px, 295px) minmax(150px, 1fr);
+    gap:12px;
+    align-items:center;
+    padding:10px 12px;
+    border-radius:18px;
+    background:rgba(248,250,252,.82);
+    border:1px solid rgba(15,23,42,.08);
+  }
+  .menuPreviewSvg{
+    width:100%;
+    height:178px;
+    display:block;
+    overflow:visible;
+  }
+  .menuPreviewText{
+    color:#334155;
+    font-size:13px;
+    font-weight:850;
+    line-height:1.32;
+  }
+  .menuPreviewTitle{
+    color:#0f172a;
+    font-size:15px;
+    font-weight:950;
+    margin-bottom:5px;
+  }
+  .menuPreviewHint{
+    color:#64748b;
+    font-size:12px;
+    font-weight:750;
+    margin-top:6px;
+  }
+  .previewTriangle{
+    fill:rgba(255,255,255,.88);
+    stroke:#1d4ed8;
+    stroke-width:4;
+    stroke-linejoin:round;
+  }
+  .previewRightAngle{
+    fill:none;
+    stroke:#ef4444;
+    stroke-width:3.2;
+    stroke-linejoin:round;
+  }
+  .previewVertexDot{fill:#1d4ed8;}
+  .previewVertexText{
+    font-size:20px;
+    font-weight:950;
+    fill:#1d4ed8;
+    paint-order:stroke;
+    stroke:#fff;
+    stroke-width:5px;
+    stroke-linejoin:round;
+  }
+  .previewSideText{
+    font-size:13px;
+    font-weight:950;
+    fill:#0f172a;
+    paint-order:stroke;
+    stroke:#fff;
+    stroke-width:5px;
+    stroke-linejoin:round;
+  }
+  .previewHypText{fill:#166534;}
+  .previewUnknownText{fill:#dc2626;}
+  @media (max-width:700px){
+    .menuPreview{grid-template-columns:1fr;max-width:100%;}
+    .menuPreviewSvg{height:160px;}
+    .menuPreviewText{text-align:center;}
+  }
+
+
+  /* PATCH V41 — menu final : aperçu du triangle seul, placé en haut à droite. */
+  .creatorHeader{
+    display:grid;
+    grid-template-columns:minmax(250px, 1fr) minmax(170px, 220px);
+    gap:14px;
+    align-items:center;
+    margin:0 auto 10px;
+    max-width:610px;
+  }
+  .creatorIntro{min-width:0;}
+  .creatorIntro .creatorTitle{text-align:left;margin-bottom:8px;}
+  .creatorIntro label{text-align:left;margin-top:0;}
+  .creatorIntro .triangleName{margin-left:0;margin-right:0;max-width:220px;}
+  .menuPreview{
+    margin:0;
+    max-width:none;
+    display:block;
+    padding:0;
+    border:0;
+    background:transparent;
+    border-radius:0;
+  }
+  .menuPreviewSvg{
+    width:100%;
+    height:150px;
+    display:block;
+    overflow:visible;
+  }
+  .previewSideText{
+    font-size:12px;
+  }
+  .previewHypText{
+    fill:#166534;
+  }
+  @media (max-width:700px){
+    .creatorHeader{grid-template-columns:1fr;gap:8px;}
+    .creatorIntro .creatorTitle,
+    .creatorIntro label{text-align:center;}
+    .creatorIntro .triangleName{margin-left:auto;margin-right:auto;}
+    .menuPreview{max-width:260px;margin:0 auto;}
+    .menuPreviewSvg{height:140px;}
+  }
+
 </style>
 </head>
 <body>
 <main id="appMain">
   <section class="panel" id="panel">
-    <h1 class="appTitle">PythaBarre</h1>
+    <h1 class="appTitle">Pythagore</h1>
     <div class="creatorBlock" aria-label="Créer une situation de Pythagore">
-      <div class="creatorTitle">Créer une situation</div>
-
-      <label for="triangleNameInput">Nom du triangle</label>
-      <input class="triangleName" id="triangleNameInput" type="text" autocomplete="off" value="ABC" maxlength="3" />
+      <div class="creatorHeader">
+        <div class="creatorIntro">
+          <div class="creatorTitle">Créer une situation</div>
+          <label for="triangleNameInput">Nom du triangle</label>
+          <input class="triangleName" id="triangleNameInput" type="text" autocomplete="off" value="ABC" maxlength="3" />
+        </div>
+        <div class="menuPreview" aria-label="Aperçu du triangle">
+          <svg class="menuPreviewSvg" id="menuPreviewSvg" viewBox="0 0 280 190" preserveAspectRatio="xMidYMid meet" role="img" aria-label="Aperçu du triangle saisi"></svg>
+        </div>
+      </div>
 
       <div class="settingsGrid">
         <div>
@@ -1615,10 +2893,20 @@
         </div>
       </div>
 
-      <div class="lengthGrid" aria-label="Longueurs du triangle">
+      <div class="lengthGrid compactLengthGrid" aria-label="Longueurs et unité">
         <div class="lengthBox"><label id="labelSide01" for="side01Input">AB</label><input id="side01Input" type="text" autocomplete="off" value="3" /></div>
         <div class="lengthBox"><label id="labelSide02" for="side02Input">AC</label><input id="side02Input" type="text" autocomplete="off" value="4" /></div>
         <div class="lengthBox"><label id="labelSide12" for="side12Input">BC</label><input id="side12Input" type="text" autocomplete="off" value="?" /></div>
+        <div class="lengthBox unitBox compactUnitBox">
+          <label for="unitInput">Unité</label>
+          <select id="unitInput">
+            <option value="cm" selected>cm</option>
+            <option value="m">m</option>
+            <option value="mm">mm</option>
+            <option value="km">km</option>
+            <option value="">Sans unité</option>
+          </select>
+        </div>
       </div>
 
       <div class="exampleBlock" aria-label="Banque d’exemples">
@@ -1665,6 +2953,8 @@
     <div class="workArea" id="workArea">
       <div class="leftWork">
         <div class="topbar">
+          <div class="problemStatement" id="problemStatement"></div>
+          <div class="proofIntro" id="proofIntro"></div>
           <div class="equationHistory" id="equationHistory"></div>
         </div>
 
@@ -1672,8 +2962,9 @@
 
         <div class="card barBoard" id="barBoard">
           <div class="barPair" id="barPair"></div>
-          <div class="sidePalette" id="sidePalette"></div>
         </div>
+
+        <div class="sidePalette" id="sidePalette"></div>
       </div>
 
       <div class="card visualCard" id="visualCard">
@@ -1717,6 +3008,7 @@
   const triangleNameInput = document.getElementById("triangleNameInput");
   const rightAngleInput = document.getElementById("rightAngleInput");
   const relationModeInput = document.getElementById("relationModeInput");
+  const unitInput = document.getElementById("unitInput");
   const side01Input = document.getElementById("side01Input");
   const side02Input = document.getElementById("side02Input");
   const side12Input = document.getElementById("side12Input");
@@ -1734,6 +3026,8 @@
   const btnToggleEq = document.getElementById("btnToggleEq");
   const btnStageRandom = document.getElementById("btnStageRandom");
   const btnFullscreen = document.getElementById("btnFullscreen");
+  const problemStatement = document.getElementById("problemStatement");
+  const proofIntro = document.getElementById("proofIntro");
   const equationHistory = document.getElementById("equationHistory");
   const instructionZone = document.getElementById("instructionZone");
   const sidePalette = document.getElementById("sidePalette");
@@ -1767,6 +3061,7 @@
   let activeChoiceMode = null; // replace | calculate | regroup
   let selectedChoiceSide = null; // proposition choisie pour Remplacer
   let selectedCalcValue = null;  // proposition choisie pour Calculer
+  let choiceSeed = Math.floor(Math.random() * 1000000000);
   let flashCell = null;         // {side, kind:"ok"|"bad"}
   let message = "";
   let nextRotation = 0;
@@ -1882,6 +3177,7 @@
     setSideInput(legs[0], missing === "leg1" ? "?" : fmt(a), sideNames);
     setSideInput(legs[1], missing === "leg2" ? "?" : fmt(b), sideNames);
     setSideInput(hyp, missing === "hyp" ? "?" : fmt(c), sideNames);
+    renderMenuPreview();
   }
 
   function nextExample(step=1){
@@ -1954,6 +3250,28 @@
     return `${fmt(r)} environ`;
   }
 
+  function normalizeUnit(raw){
+    return String(raw ?? "").trim();
+  }
+
+  function unitSuffix(){
+    const unit = normalizeUnit(model?.unit ?? unitInput?.value ?? "");
+    return unit ? ` ${unit}` : "";
+  }
+
+  function lengthWithUnit(value){
+    return `${fmt(value)}${unitSuffix()}`;
+  }
+
+  function lengthAnswerWithUnit(squareValue){
+    const answer = lengthAnswer(squareValue);
+    const suffix = unitSuffix();
+    if(!suffix) return answer;
+    return answer.endsWith(" environ")
+      ? `${answer.slice(0, -8)}${suffix} environ`
+      : `${answer}${suffix}`;
+  }
+
   function reverseSide(s){ return s.split("").reverse().join(""); }
   function normalizeSideName(name){ return name.split("").sort().join(""); }
   function sameSide(a,b){ return normalizeSideName(a) === normalizeSideName(b); }
@@ -1979,6 +3297,7 @@
     const letters = normalizeName(triangleNameInput.value);
     const right = rightAngleInput.value || letters[0];
     const sideNames = sidesFromLetters(letters);
+    const unit = normalizeUnit(unitInput.value);
     const values = {};
     sideNames.forEach((s,i) => values[s] = parseLength(inputEls[i].value));
 
@@ -2007,7 +3326,7 @@
         showError("Si on cherche l’hypoténuse, les deux côtés de l’angle droit doivent être connus.");
         return null;
       }
-      return {letters,right,sideNames,values,hyp,legs,unknown,unknownIsHyp,leg1,leg2, relationMode:relationModeInput.value, rotation:nextRotation, colorMap:makeColorMap()};
+      return {letters,right,sideNames,values,unit,hyp,legs,unknown,unknownIsHyp,leg1,leg2, relationMode:relationModeInput.value, rotation:nextRotation, colorMap:makeColorMap()};
     }
 
     const unknownLeg = legs.find(l => sameSide(l,unknown));
@@ -2022,7 +3341,7 @@
       showError("L’hypoténuse doit être la plus grande longueur. Ici, les données ne sont pas cohérentes pour un triangle rectangle.");
       return null;
     }
-    return {letters,right,sideNames,values,hyp,legs,unknown:unknownLeg,unknownIsHyp:false,knownHyp:{side:hyp,value:hypValue},knownLeg:{side:knownLegName,value:knownLegValue}, relationMode:relationModeInput.value, rotation:nextRotation, colorMap:makeColorMap()};
+    return {letters,right,sideNames,values,unit,hyp,legs,unknown:unknownLeg,unknownIsHyp:false,knownHyp:{side:hyp,value:hypValue},knownLeg:{side:knownLegName,value:knownLegValue}, relationMode:relationModeInput.value, rotation:nextRotation, colorMap:makeColorMap()};
   }
 
   function correctSlots(){
@@ -2033,7 +3352,9 @@
   }
 
   function initialWork(){
-    const auto = model.relationMode === "auto";
+    // Le guidage automatique concerne les étapes, pas le pré-remplissage de la relation.
+    // La relation de Pythagore reste à construire par l’élève au démarrage.
+    const auto = false;
     const slots = auto ? correctSlots() : {lhs:null, rhs1:null, rhs2:null};
     const w = {
       relationComplete:auto,
@@ -2046,6 +3367,10 @@
       removed:false,
       sqrt:false,
       concluded:false,
+      operationChosen:false,
+      operation:null,
+      operationComputed:false,
+      started:false,
       result:null
     };
     if(model.unknownIsHyp){
@@ -2082,7 +3407,8 @@
 
   function relationRows(){
     const rows = [];
-    if(!work.relationComplete) return rows;
+    if(!work.started || !work.relationComplete) return rows;
+    const op = work.operation || correctPartWholeOperation();
     if(model.unknownIsHyp){
       const l1 = model.leg1, l2 = model.leg2;
       rows.push({lhs:coloredTerm(model.hyp, plainSq(model.hyp)), rhs:`${coloredTerm(l1.side, plainSq(l1.side))} + ${coloredTerm(l2.side, plainSq(l2.side))}`});
@@ -2090,17 +3416,28 @@
       if(work.squares[l1.side] || work.squares[l2.side]) rows.push({lhs:coloredTerm(model.hyp, plainSq(model.hyp)), rhs:`${coloredTerm(l1.side, displayKnownSquare(l1.side, l1.value))} + ${coloredTerm(l2.side, displayKnownSquare(l2.side, l2.value))}`});
       if(work.regrouped) rows.push({lhs:coloredTerm(model.hyp, plainSq(model.hyp)), rhs:coloredTerm(model.hyp, fmt(work.result))});
       if(work.sqrt) rows.push({lhs:model.hyp, rhs:`√${fmt(work.result)}`});
-      if(work.concluded) rows.push({lhs:model.hyp, rhs:lengthAnswer(work.result)});
+      if(work.concluded) rows.push({lhs:model.hyp, rhs:lengthAnswerWithUnit(work.result)});
     }else{
       const h = model.knownHyp, k = model.knownLeg, u = model.unknown;
-      const useColor = !work.decomposed;
-      rows.push({lhs:maybeColoredTerm(h.side, plainSq(h.side), useColor), rhs:`${maybeColoredTerm(k.side, plainSq(k.side), useColor)} + ${maybeColoredTerm(u, plainSq(u), useColor)}`});
-      if(anyReplaced()) rows.push({lhs:maybeColoredTerm(h.side, isReplaced(h.side) ? valueSq(h.value) : plainSq(h.side), useColor), rhs:`${maybeColoredTerm(k.side, isReplaced(k.side) ? valueSq(k.value) : plainSq(k.side), useColor)} + ${maybeColoredTerm(u, plainSq(u), useColor)}`});
-      if(work.squares[h.side] || work.squares[k.side]) rows.push({lhs:maybeColoredTerm(h.side, displayKnownSquare(h.side, h.value), useColor), rhs:`${maybeColoredTerm(k.side, displayKnownSquare(k.side, k.value), useColor)} + ${maybeColoredTerm(u, plainSq(u), useColor)}`});
-      if(work.decomposed) rows.push({lhs:`${fmt(work.squares[k.side])} + ${fmt(work.result)}`, rhs:`${fmt(work.squares[k.side])} + ${plainSq(u)}`});
-      if(work.removed) rows.push({lhs:fmt(work.result), rhs:plainSq(u)});
+      const useColor = !work.operationChosen;
+      const rhs1 = work.relationSlots.rhs1 || k.side;
+      const rhs2 = work.relationSlots.rhs2 || u;
+      const rhsTerm = (side) => sameSide(side, k.side)
+        ? maybeColoredTerm(k.side, plainSq(k.side), useColor)
+        : maybeColoredTerm(u, plainSq(u), useColor);
+      const rhsReplaced = (side) => sameSide(side, k.side)
+        ? maybeColoredTerm(k.side, isReplaced(k.side) ? valueSq(k.value) : plainSq(k.side), useColor)
+        : maybeColoredTerm(u, plainSq(u), useColor);
+      const rhsSquared = (side) => sameSide(side, k.side)
+        ? maybeColoredTerm(k.side, displayKnownSquare(k.side, k.value), useColor)
+        : maybeColoredTerm(u, plainSq(u), useColor);
+      rows.push({lhs:maybeColoredTerm(h.side, plainSq(h.side), useColor), rhs:`${rhsTerm(rhs1)} + ${rhsTerm(rhs2)}`});
+      if(anyReplaced()) rows.push({lhs:maybeColoredTerm(h.side, isReplaced(h.side) ? valueSq(h.value) : plainSq(h.side), useColor), rhs:`${rhsReplaced(rhs1)} + ${rhsReplaced(rhs2)}`});
+      if(work.squares[h.side] || work.squares[k.side]) rows.push({lhs:maybeColoredTerm(h.side, displayKnownSquare(h.side, h.value), useColor), rhs:`${rhsSquared(rhs1)} + ${rhsSquared(rhs2)}`});
+      if(work.operationChosen) rows.push({lhs:operationLabel(op), rhs:plainSq(u)});
+      if(work.decomposed) rows.push({lhs:plainSq(u), rhs:fmt(work.result)});
       if(work.sqrt) rows.push({lhs:u, rhs:`√${fmt(work.result)}`});
-      if(work.concluded) rows.push({lhs:u, rhs:lengthAnswer(work.result)});
+      if(work.concluded) rows.push({lhs:u, rhs:lengthAnswerWithUnit(work.result)});
     }
     return rows;
   }
@@ -2148,60 +3485,102 @@
     activeChoiceMode = mode;
     selectedChoiceSide = null;
     selectedCalcValue = null;
+    choiceSeed = Math.floor(Math.random() * 1000000000);
     message = "";
     render();
   }
 
+  function problemStatementHtml(){
+    if(!model) return "";
+    const triangleName = model.letters.join("");
+    const unknownSide = model.unknownIsHyp ? model.hyp : model.unknown;
+    const knownParts = model.sideNames
+      .filter(side => !(model.values[side] && model.values[side].unknown))
+      .map(side => `<span class="nowrap">${side} = ${lengthWithUnit(model.values[side].value)}</span>`);
+    const knownText = knownParts.length ? `${knownParts.join(" et ")}. ` : "";
+    return `Dans le triangle ${triangleName} rectangle en ${model.right}, ${knownText}Calculer <span class="nowrap">${unknownSide}</span>.`;
+  }
+
+  function proofIntroHtml(){
+    if(!model) return "";
+    const triangleName = model.letters.join("");
+    return `Le triangle ${triangleName} est rectangle en ${model.right}, donc d’après le théorème de Pythagore, on a :`;
+  }
+
+  function guidedMode(){
+    if(!work.started) return "start";
+    if(!work.relationComplete) return null;
+    if(!work.replaced) return "replace";
+    const targets = squareTargets();
+    if(!allSquaresDone(targets)) return "calculate";
+    if(!work.operationChosen) return "operation";
+    if(!work.operationComputed) return "operationResult";
+    if(!work.sqrt || !work.concluded) return "sqrt";
+    return null;
+  }
+
+  function syncGuidedMode(){
+    const mode = guidedMode();
+    if(activeChoiceMode === mode) return;
+    activeChoiceMode = mode;
+    selectedChoiceSide = null;
+    selectedCalcValue = null;
+    choiceSeed = Math.floor(Math.random() * 1000000000);
+  }
+
+  function stepPrefix(n, text){
+    return `<div class="instructionPill"><span class="stepNumber">${n}.</span><span class="stepText">${text}</span></div>`;
+  }
+
   function currentInstruction(){
+    if(!work.started) return "";
     if(!work.relationComplete){
-      if(selectedSlot) return "Clique sur l’aire d’un carré du moulin.";
-      return "Complète la relation : clique sur une case, puis sur l’aire d’un carré.";
+      if(selectedSlot) return stepPrefix(1, "Clique sur l’aire d’un carré du moulin pour compléter la relation.");
+      return stepPrefix(1, "Complète la relation de Pythagore : clique sur une case, puis sur l’aire d’un carré.");
     }
     if(!work.replaced){
-      if(activeChoiceMode === "replace"){
-        if(selectedChoiceSide) return `Clique sur la case du tableau où placer ${valueSq(sideValue(selectedChoiceSide))}.`;
-        return "Choisis une valeur, puis clique sur sa case dans le tableau.";
-      }
-      return "Remplace les longueurs connues par leurs valeurs.";
+      if(selectedChoiceSide) return stepPrefix(2, `Clique sur la case du tableau où placer ${valueSq(sideValue(selectedChoiceSide))}.`);
+      return stepPrefix(2, "Remplace les longueurs connues par leurs valeurs.");
     }
     const targets = squareTargets();
     const missing = targets.filter(t => !work.squares[t.side]);
     if(missing.length){
-      if(activeChoiceMode === "calculate"){
-        if(selectedCalcValue !== null) return `Clique sur le carré qui vaut ${fmt(selectedCalcValue)}.`;
-        return "Choisis un résultat, puis clique sur le carré à calculer.";
-      }
-      return "Calcule les carrés connus.";
+      if(selectedCalcValue !== null) return stepPrefix(3, `Clique sur le carré qui vaut ${fmt(selectedCalcValue)}.`);
+      return stepPrefix(3, "Calcule les carrés connus.");
     }
-    if(model.unknownIsHyp && !work.regrouped){
-      if(activeChoiceMode === "regroup") return "Choisis la somme des deux carrés.";
-      return "Regroupe les deux carrés connus.";
-    }
-    if(!model.unknownIsHyp && !work.decomposed) return "Décompose le carré de l’hypoténuse.";
-    if(!model.unknownIsHyp && !work.removed) return "Enlève le carré connu dans chaque membre.";
-    if(!work.sqrt) return "Passe du carré à la longueur.";
-    if(!work.concluded) return "Conclue par la longueur cherchée.";
+    if(!work.operationChosen) return stepPrefix(4, "Schéma partie-tout : choisis l’opération.");
+    if(!work.operationComputed) return stepPrefix(5, "Calcule l’opération choisie.");
+    if(!work.sqrt || !work.concluded) return stepPrefix(6, "Choisis le résultat de la racine carrée.");
     return "";
   }
 
   function render(){
     if(!model || !work) return;
     stage.classList.toggle("hideEquations", !display.equation);
+    stage.classList.toggle("notStarted", !work.started);
+    stage.classList.toggle("isConcluded", !!work.concluded);
     stage.classList.remove("hideBars", "hideVisual");
     workArea.classList.remove("onlyVisual", "onlyBars");
     syncEyeButton();
+    syncGuidedMode();
+    problemStatement.innerHTML = problemStatementHtml();
+    proofIntro.innerHTML = work.started ? proofIntroHtml() : "";
     renderEquations();
     instructionZone.innerHTML = currentInstruction();
     renderSidePalette();
     renderTriangle();
     renderBars();
     renderActions();
-    solution.textContent = work.concluded ? finalSolutionText() : "";
+    solution.textContent = "";
     actionZone.innerHTML = message ? `<div class="note${message.includes("pas") || message.includes("n’est") ? " errorNote" : ""}">${message}</div>` : "";
     setTimeout(() => equationHistory.scrollTop = equationHistory.scrollHeight, 0);
   }
 
   function renderEquations(){
+    if(!work.started){
+      equationHistory.innerHTML = "";
+      return;
+    }
     if(!work.relationComplete){
       equationHistory.innerHTML = relationEditorHtml();
       bindRelationSlotButtons(equationHistory);
@@ -2251,6 +3630,7 @@
   }
 
   function chooseSideForSlot(side){
+    if(!work.started) return;
     if(!selectedSlot && !work.relationComplete){
       const firstEmpty = ["lhs","rhs1","rhs2"].find(k => !work.relationSlots[k]);
       selectedSlot = firstEmpty || "lhs";
@@ -2258,10 +3638,31 @@
     if(!selectedSlot || work.relationComplete) return;
     mutate(() => {
       work.relationSlots[selectedSlot] = side;
-      const nextEmpty = ["lhs","rhs1","rhs2"].find(k => !work.relationSlots[k]);
-      selectedSlot = nextEmpty || null;
-      message = "";
+      const filled = !!(work.relationSlots.lhs && work.relationSlots.rhs1 && work.relationSlots.rhs2);
+      if(filled){
+        if(relationSlotsAreCorrect(work.relationSlots)){
+          work.relationComplete = true;
+          selectedSlot = null;
+          resetChoice();
+          message = "";
+        }else{
+          selectedSlot = null;
+          message = "La relation n’est pas correcte : clique sur une case pour la corriger.";
+        }
+      }else{
+        const nextEmpty = ["lhs","rhs1","rhs2"].find(k => !work.relationSlots[k]);
+        selectedSlot = nextEmpty || null;
+        message = "";
+      }
     });
+  }
+
+  function relationSlotsAreCorrect(s){
+    return !!(s.lhs && s.rhs1 && s.rhs2)
+      && sameSide(s.lhs, model.hyp)
+      && !sameSide(s.rhs1, s.rhs2)
+      && model.legs.some(l => sameSide(l, s.rhs1))
+      && model.legs.some(l => sameSide(l, s.rhs2));
   }
 
   function validateRelation(){
@@ -2271,17 +3672,13 @@
       render();
       return;
     }
-    const good = sameSide(s.lhs, model.hyp)
-      && !sameSide(s.rhs1, s.rhs2)
-      && model.legs.some(l => sameSide(l, s.rhs1))
-      && model.legs.some(l => sameSide(l, s.rhs2));
+    const good = relationSlotsAreCorrect(s);
     if(!good){
       message = "La relation n’est pas correcte.";
       render();
       return;
     }
     mutate(() => {
-      work.relationSlots = correctSlots();
       work.relationComplete = true;
       selectedSlot = null;
       resetChoice();
@@ -2301,15 +3698,27 @@
   function renderSidePalette(){
     sidePalette.classList.remove("show");
     sidePalette.innerHTML = "";
+
+    if(!work.started){
+      sidePalette.innerHTML = `<button type="button" class="startGuidedBtn" id="btnStartGuided">Commencer</button>`;
+      sidePalette.classList.add("show");
+      const startBtn = sidePalette.querySelector("#btnStartGuided");
+      if(startBtn){
+        startBtn.addEventListener("click", () => mutate(() => { work.started = true; message = ""; }));
+      }
+      return;
+    }
+
     if(!work.relationComplete || !activeChoiceMode) return;
 
     if(activeChoiceMode === "replace"){
-      const choices = replaceTargets()
+      const rawChoices = replaceTargets()
         .filter(t => !isReplaced(t.side))
         .map(t => ({label:valueSq(t.value), side:t.side}));
+      const choices = seededShuffle(rawChoices, "replace:" + rawChoices.map(c => c.side + ":" + c.label).join("|"));
       sidePalette.innerHTML = choices.map(c => {
         const selected = sameSide(c.side, selectedChoiceSide || "") ? " selectedChoiceToken" : "";
-        return `<button type="button" class="sideChoice ${sideColorClass(c.side)}${selected}" data-replace-choice="${c.side}">${c.label}</button>`;
+        return `<button type="button" class="sideChoice${selected}" data-replace-choice="${c.side}">${c.label}</button>`;
       }).join("");
       sidePalette.classList.add("show");
       sidePalette.querySelectorAll("[data-replace-choice]").forEach(btn => {
@@ -2341,18 +3750,43 @@
       return;
     }
 
-    if(activeChoiceMode === "regroup"){
-      const choices = regroupChoices();
-      sidePalette.innerHTML = choices.map(v => `<button type="button" class="sideChoice" data-regroup-choice="${v}">${fmt(v)}</button>`).join("");
+    if(activeChoiceMode === "operation"){
+      const choices = partWholeOperationChoices();
+      sidePalette.innerHTML = choices.map(op => `<button type="button" class="sideChoice" data-op-key="${op.key}">${operationLabel(op)}</button>`).join("");
       sidePalette.classList.add("show");
-      sidePalette.querySelectorAll("[data-regroup-choice]").forEach(btn => {
-        btn.addEventListener("click", () => applyRegroupChoice(Number(btn.dataset.regroupChoice)));
+      sidePalette.querySelectorAll("[data-op-key]").forEach(btn => {
+        btn.addEventListener("click", () => applyPartWholeOperation(btn.dataset.opKey));
+      });
+      return;
+    }
+
+    if(activeChoiceMode === "operationResult"){
+      const op = work.operation || correctPartWholeOperation();
+      const choices = operationResultChoices(op);
+      sidePalette.innerHTML = `<div class="operationPrompt">${operationLabel(op)} =</div>` + choices.map(v => `<button type="button" class="sideChoice" data-op-result="${v}">${fmt(v)}</button>`).join("");
+      sidePalette.classList.add("show");
+      sidePalette.querySelectorAll("[data-op-result]").forEach(btn => {
+        btn.addEventListener("click", () => applyPartWholeResult(Number(btn.dataset.opResult)));
+      });
+      return;
+    }
+
+    if(activeChoiceMode === "sqrt"){
+      const rootText = `√${fmt(work.result)}`;
+      const choices = sqrtResultChoices();
+      sidePalette.innerHTML = `<div class="operationPrompt">${rootText} =</div>` + choices.map(v => {
+        const label = sqrtChoiceLabel(v);
+        return `<button type="button" class="sideChoice" data-sqrt-choice="${v}">${label}</button>`;
+      }).join("");
+      sidePalette.classList.add("show");
+      sidePalette.querySelectorAll("[data-sqrt-choice]").forEach(btn => {
+        btn.addEventListener("click", () => applySqrtChoice(Number(btn.dataset.sqrtChoice)));
       });
     }
   }
 
   function renderBars(){
-    if(!display.bars){ barPair.innerHTML = ""; return; }
+    if(!display.bars || !work.started){ barPair.innerHTML = ""; return; }
     if(!work.relationComplete){
       const s = work.relationSlots;
       const top = [{slot:"lhs", side:s.lhs, main:s.lhs ? plainSq(s.lhs) : "…²"}];
@@ -2429,21 +3863,31 @@
     const hSq = square(h.value);
     const kSq = square(k.value);
     const rest = work.result ?? (hSq - kSq);
+    const unknownPiece = (opts={}) => piece("unknown", plainSq(u), {weight:rest, colorClass:sideColorClass(u), ...opts});
+    const knownPiece = (neutral=false) => squarePieceForKnown(k.side, k.value, kSq, neutral);
+    function orderedBottom(known, unknown){
+      const r1 = work.relationSlots.rhs1;
+      const r2 = work.relationSlots.rhs2;
+      if(r1 && r2 && sameSide(r1, u) && sameSide(r2, k.side)) return [unknown, known];
+      return [known, unknown];
+    }
     if(work.removed){
+      const knownRemoved = piece("removed", fmt(kSq), {weight:kSq});
+      const unknownAfter = piece("unknown", plainSq(u), {weight:rest, solved:work.concluded, colorClass:"focusUnknown"});
       return {
-        top:[piece("removed", fmt(kSq), {weight:kSq}), piece("result", fmt(rest), {weight:rest, colorClass:"neutralAfterDecompose"})],
-        bottom:[piece("removed", fmt(kSq), {weight:kSq}), piece("unknown", plainSq(u), {weight:rest, solved:work.concluded, colorClass:"focusUnknown"})]
+        top:orderedBottom(piece("removed", fmt(kSq), {weight:kSq}), piece("result", fmt(rest), {weight:rest, colorClass:"neutralAfterDecompose"})),
+        bottom:orderedBottom(knownRemoved, unknownAfter)
       };
     }
     if(work.decomposed){
       return {
-        top:[piece("decomposed", fmt(kSq), {weight:kSq, colorClass:"neutralAfterDecompose"}), piece("result", fmt(rest), {weight:rest, colorClass:"neutralAfterDecompose"})],
-        bottom:[squarePieceForKnown(k.side, k.value, kSq, true), piece("unknown", plainSq(u), {weight:rest, colorClass:"focusUnknown"})]
+        top:orderedBottom(piece("decomposed", fmt(kSq), {weight:kSq, colorClass:"neutralAfterDecompose"}), piece("result", fmt(rest), {weight:rest, colorClass:"neutralAfterDecompose"})),
+        bottom:orderedBottom(knownPiece(true), piece("unknown", plainSq(u), {weight:rest, colorClass:"focusUnknown"}))
       };
     }
     return {
       top:[squarePieceForKnown(h.side, h.value, hSq)],
-      bottom:[squarePieceForKnown(k.side, k.value, kSq), piece("unknown", plainSq(u), {weight:rest, colorClass:sideColorClass(u)})]
+      bottom:orderedBottom(knownPiece(false), unknownPiece())
     };
   }
 
@@ -2456,36 +3900,10 @@
   }
 
   function renderActions(){
+    // Mode guidé : les anciens boutons d’étapes disparaissent.
+    // L’étape active est indiquée dans la consigne, et les choix/action du moment
+    // apparaissent dans la bande de propositions.
     mainActions.innerHTML = "";
-    const actions = [];
-    if(!work.relationComplete){
-      const filled = !!(work.relationSlots.lhs && work.relationSlots.rhs1 && work.relationSlots.rhs2);
-      actions.push({label:"Valider la relation", done:false, disabled:!filled, fn:validateRelation});
-      actions.push({label:"Effacer", done:false, disabled:!filled && !selectedSlot, fn:clearRelation});
-    }else{
-      actions.push({label:"Relation", done:true, disabled:true});
-      actions.push({label:"Remplacer", done:work.replaced, disabled:work.replaced, fn:() => setChoiceMode("replace")});
-      const targets = squareTargets();
-      actions.push({label:"Calculer", done:allSquaresDone(targets), disabled:!work.replaced || allSquaresDone(targets), fn:() => setChoiceMode("calculate")});
-      if(model.unknownIsHyp){
-        actions.push({label:"Regrouper", done:work.regrouped, disabled:!allSquaresDone(targets) || work.regrouped, fn:() => setChoiceMode("regroup")});
-      }else{
-        actions.push({label:"Décomposer", done:work.decomposed, disabled:!allSquaresDone(targets) || work.decomposed, fn:askDecomposeHypSquare});
-        actions.push({label:"Enlever dans chaque membre", done:work.removed, disabled:!work.decomposed || work.removed, fn:removeKnownSquareBothSides});
-      }
-      actions.push({label:"Racine carrée", done:work.sqrt, disabled:!(work.regrouped || work.removed) || work.sqrt, fn:() => mutate(() => { work.sqrt = true; message = ""; })});
-      actions.push({label:"Conclure", done:work.concluded, disabled:!work.sqrt || work.concluded, fn:() => mutate(() => { work.concluded = true; message = ""; })});
-    }
-
-    actions.forEach(a => {
-      const btn = document.createElement("button");
-      btn.type = "button";
-      btn.className = "toolBtn" + (a.done ? " done" : "") + (!a.done && !a.disabled ? " active" : "");
-      btn.textContent = a.label;
-      btn.disabled = !!a.disabled;
-      if(a.fn) btn.addEventListener("click", a.fn);
-      mainActions.appendChild(btn);
-    });
   }
 
   function squareTargets(){
@@ -2554,6 +3972,29 @@
     });
   }
 
+  function hashString(str){
+    let h = 2166136261;
+    for(let i=0;i<str.length;i++){
+      h ^= str.charCodeAt(i);
+      h = Math.imul(h, 16777619);
+    }
+    return h >>> 0;
+  }
+
+  function seededShuffle(values, salt=""){
+    const arr = [...values];
+    let s = (choiceSeed ^ hashString(salt)) >>> 0;
+    function rnd(){
+      s = (Math.imul(1664525, s) + 1013904223) >>> 0;
+      return s / 4294967296;
+    }
+    for(let i=arr.length-1;i>0;i--){
+      const j = Math.floor(rnd() * (i + 1));
+      [arr[i], arr[j]] = [arr[j], arr[i]];
+    }
+    return arr;
+  }
+
   function globalSquareResultChoices(){
     const targets = squareTargets().filter(t => !work.squares[t.side]);
     const choices = [];
@@ -2593,7 +4034,167 @@
       add(base + guard * 3);
       guard++;
     }
-    return choices.slice(0, 5);
+    return seededShuffle(choices.slice(0, 5), "calculate:" + targets.map(t => t.side + ":" + t.value).join("|"));
+  }
+
+  function operationLabel(op){
+    if(!op) return "";
+    return `${fmt(op.left)} ${op.sign} ${fmt(op.right)}`;
+  }
+
+  function makeOperation(left, sign, right, correct=false){
+    const result = sign === "+" ? left + right : left - right;
+    return {key:`${fmt(left)}${sign}${fmt(right)}`.replace(/\s+/g,""), left, sign, right, result, correct};
+  }
+
+  function correctPartWholeOperation(){
+    if(model.unknownIsHyp){
+      const a = work.squares[model.leg1.side];
+      const b = work.squares[model.leg2.side];
+      return makeOperation(a, "+", b, true);
+    }
+    const h = work.squares[model.knownHyp.side];
+    const k = work.squares[model.knownLeg.side];
+    return makeOperation(h, "-", k, true);
+  }
+
+  function partWholeOperationChoices(){
+    const choices = [];
+    function add(op){
+      if(Number.isFinite(op.result) && !choices.some(x => x.key === op.key)) choices.push(op);
+    }
+    if(model.unknownIsHyp){
+      const a = work.squares[model.leg1.side];
+      const b = work.squares[model.leg2.side];
+      add(makeOperation(a, "+", b, true));
+      add(makeOperation(Math.max(a,b), "-", Math.min(a,b), false));
+      add(makeOperation(Math.min(a,b), "-", Math.max(a,b), false));
+      add(makeOperation(a, "-", b, false));
+    }else{
+      const h = work.squares[model.knownHyp.side];
+      const k = work.squares[model.knownLeg.side];
+      add(makeOperation(h, "-", k, true));
+      add(makeOperation(h, "+", k, false));
+      add(makeOperation(k, "-", h, false));
+      add(makeOperation(k, "+", h, false));
+    }
+    return seededShuffle(choices.slice(0, 4), "operation:" + choices.map(o => o.key).join("|"));
+  }
+
+  function applyPartWholeOperation(key){
+    if(activeChoiceMode !== "operation") return;
+    const choices = partWholeOperationChoices();
+    const chosen = choices.find(op => op.key === key);
+    if(!chosen || !chosen.correct){
+      message = "Ce n’est pas l’opération adaptée.";
+      render();
+      return;
+    }
+    mutate(() => {
+      work.operationChosen = true;
+      work.operation = chosen;
+      selectedChoiceSide = null;
+      selectedCalcValue = null;
+      message = "";
+    });
+  }
+
+  function operationResultChoices(op){
+    const correct = op.result;
+    const choices = [];
+    function add(v){
+      if(Number.isFinite(v) && !choices.some(x => approxEqual(x, v))) choices.push(v);
+    }
+    add(correct);
+    add(op.left + op.right);
+    add(Math.abs(op.left - op.right));
+    add(op.left);
+    add(op.right);
+    add(correct + 10);
+    add(correct - 10);
+    let guard = 1;
+    while(choices.length < 5 && guard < 20){ add(correct + guard * 2); guard++; }
+    return seededShuffle(choices.slice(0, 5), "operationResult:" + op.key);
+  }
+
+  function sqrtNumericAnswer(){
+    return Math.sqrt(work.result);
+  }
+
+  function sqrtChoiceLabel(v){
+    if(!Number.isFinite(v)) return "";
+    if(Math.abs(v - Math.round(v)) < 1e-10) return fmt(v);
+    return fmt(v);
+  }
+
+  function sqrtResultChoices(){
+    const correct = sqrtNumericAnswer();
+    const base = work.result;
+    const choices = [];
+    function add(v){
+      if(Number.isFinite(v) && v >= 0 && !choices.some(x => approxEqual(x, v))) choices.push(v);
+    }
+
+    // Distracteurs volontaires :
+    // - le carré lui-même (confusion √25 = 25),
+    // - la moitié du nombre sous la racine, même si elle est décimale (√25 ≠ 12,5),
+    // - le double de la racine,
+    // - des voisins de la bonne racine.
+    add(correct);
+    add(base);
+    add(base / 2);
+    add(correct * 2);
+    add(Math.max(0, correct + 1));
+    add(Math.max(0, correct - 1));
+    add(Math.max(0, base - correct));
+    add(Math.round(correct * 10) / 10 + 2);
+
+    let guard = 1;
+    while(choices.length < 5 && guard < 20){
+      add(Math.max(0, Math.round(correct) + guard));
+      guard++;
+    }
+    return seededShuffle(choices.slice(0, 5), "sqrt:" + base);
+  }
+
+  function applySqrtChoice(choice){
+    if(activeChoiceMode !== "sqrt") return;
+    const expected = sqrtNumericAnswer();
+    if(!approxEqual(choice, expected)){
+      message = "Ce n’est pas le bon résultat de la racine carrée.";
+      render();
+      return;
+    }
+    mutate(() => {
+      work.sqrt = true;
+      work.concluded = true;
+      selectedChoiceSide = null;
+      selectedCalcValue = null;
+      message = "";
+    });
+  }
+
+  function applyPartWholeResult(choice){
+    if(activeChoiceMode !== "operationResult") return;
+    const op = work.operation || correctPartWholeOperation();
+    if(!approxEqual(choice, op.result)){
+      message = "Ce n’est pas le bon résultat.";
+      render();
+      return;
+    }
+    mutate(() => {
+      work.result = op.result;
+      work.operationComputed = true;
+      if(model.unknownIsHyp){
+        work.regrouped = true;
+      }else{
+        work.decomposed = true;
+        work.removed = true;
+      }
+      selectedChoiceSide = null;
+      selectedCalcValue = null;
+      message = "";
+    });
   }
 
   function regroupChoices(){
@@ -2610,7 +4211,7 @@
     add(Math.abs(a - b));
     add(a * b);
     add(correct + Math.min(a,b));
-    return choices.slice(0, 4);
+    return seededShuffle(choices.slice(0, 4), "regroup:" + a + ":" + b);
   }
 
   function applyRegroupChoice(choice){
@@ -2710,7 +4311,90 @@
 
   function finalSolutionText(){
     const side = model.unknownIsHyp ? model.hyp : model.unknown;
-    return `${side} = ${lengthAnswer(work.result)}`;
+    return `${side} = ${lengthAnswerWithUnit(work.result)}`;
+  }
+
+
+
+  function escapeHtml(text){
+    return String(text ?? "")
+      .replace(/&/g,"&amp;")
+      .replace(/</g,"&lt;")
+      .replace(/>/g,"&gt;")
+      .replace(/"/g,"&quot;")
+      .replace(/'/g,"&#39;");
+  }
+
+  function menuPreviewCoords(letters, right){
+    const others = letters.filter(l => l !== right);
+    return {
+      [right]:{x:56,y:142},
+      [others[0]]:{x:56,y:38},
+      [others[1]]:{x:222,y:142}
+    };
+  }
+
+  function menuPreviewVertexOffset(coords, l){
+    const p = coords[l];
+    const cx = 111, cy = 107;
+    const dx = p.x - cx, dy = p.y - cy;
+    const len = Math.hypot(dx,dy) || 1;
+    return {x:dx/len*21, y:dy/len*21};
+  }
+
+  function menuPreviewSideValue(side, sideNames){
+    const idx = sideNames.findIndex(s => sameSide(s, side));
+    if(idx < 0) return "";
+    const raw = String(inputEls[idx].value ?? "").trim();
+    if(!raw) return `${side} =`;
+    const unit = normalizeUnit(unitInput?.value ?? "");
+    const suffix = unit && raw !== "?" ? ` ${unit}` : "";
+    return `${side} = ${raw}${suffix}`;
+  }
+
+
+  function previewSideLabelPosition(a,b,coords,letters,side,hyp){
+    const mx = (a.x+b.x)/2, my = (a.y+b.y)/2;
+    const values = letters.map(l => coords[l]);
+    const cx = values.reduce((s,p)=>s+p.x,0)/values.length;
+    const cy = values.reduce((s,p)=>s+p.y,0)/values.length;
+    const dx = b.x-a.x, dy = b.y-a.y, len = Math.hypot(dx,dy) || 1;
+    let nx = -dy/len, ny = dx/len;
+    const away = {x:mx-cx, y:my-cy};
+    if(nx*away.x + ny*away.y < 0){ nx = -nx; ny = -ny; }
+    const amount = sameSide(side,hyp) ? 36 : 30;
+    return {x:mx + nx*amount, y:my + ny*amount};
+  }
+
+  function renderMenuPreview(){
+    if(!menuPreviewSvg) return;
+    const letters = normalizeName(triangleNameInput.value);
+    let right = rightAngleInput.value || letters[0];
+    if(!letters.includes(right)) right = letters[0];
+    const sideNames = sidesFromLetters(letters);
+    const hyp = sideInInputOrder(hypotenuseForRightAngle(letters,right), sideNames);
+    const coords = menuPreviewCoords(letters, right);
+    const points = letters.map(l => `${coords[l].x},${coords[l].y}`).join(" ");
+    let html = `<polygon class="previewTriangle" points="${points}"/>`;
+    html += `<path class="previewRightAngle" d="${rightAnglePath(coords, right, letters)}"/>`;
+    for(const side of sideNames){
+      const a = coords[side[0]], b = coords[side[1]];
+      const mid = previewSideLabelPosition(a,b,coords,letters,side,hyp);
+      const label = escapeHtml(menuPreviewSideValue(side, sideNames));
+      const raw = String(inputEls[sideNames.findIndex(s => sameSide(s, side))]?.value ?? "").trim();
+      const classes = ["previewSideText"];
+      if(sameSide(side,hyp)) classes.push("previewHypText");
+      if(raw === "?" || raw.toLowerCase() === "x") classes.push("previewUnknownText");
+      html += `<text class="${classes.join(" ")}" x="${mid.x}" y="${mid.y}" text-anchor="middle" dominant-baseline="middle">${label}</text>`;
+    }
+    for(const l of letters){
+      const p = coords[l];
+      const off = menuPreviewVertexOffset(coords,l);
+      html += `<circle class="previewVertexDot" cx="${p.x}" cy="${p.y}" r="5.5"/>`;
+      html += `<text class="previewVertexText" x="${p.x+off.x}" y="${p.y+off.y}" text-anchor="middle" dominant-baseline="middle">${escapeHtml(l)}</text>`;
+    }
+    menuPreviewSvg.innerHTML = html;
+
   }
 
   function renderTriangle(){
@@ -2726,8 +4410,9 @@
         const colorCls = sideColorClass(side);
         const sq = squarePolygon(coords[side[0]], coords[side[1]], centroid);
         const label = squareLabels[side] ?? squareLabels[reverseSide(side)] ?? plainSq(side);
-        const pickClass = !work.relationComplete ? " squarePick" : "";
-        const pickAttr = !work.relationComplete ? ` data-square-side="${side}"` : "";
+        const canPickSquare = work.started && !work.relationComplete;
+        const pickClass = canPickSquare ? " squarePick" : "";
+        const pickAttr = canPickSquare ? ` data-square-side="${side}"` : "";
         html += `<polygon class="squareShape ${cls} ${colorCls}${pickClass}" points="${sq.points}"${pickAttr}/>`;
         html += `<text class="squareText" x="${sq.label.x}" y="${sq.label.y}" text-anchor="middle" dominant-baseline="middle">${label}</text>`;
       }
@@ -2917,6 +4602,7 @@
   function revealAll(){
     if(!model || !work) return;
     mutate(() => {
+      work.started = true;
       work.relationSlots = correctSlots();
       work.relationComplete = true;
       squareTargets().forEach(t => { work.replacements[t.side] = true; });
@@ -2924,12 +4610,18 @@
       if(model.unknownIsHyp){
         work.squares[model.leg1.side] = square(model.leg1.value);
         work.squares[model.leg2.side] = square(model.leg2.value);
+        work.operationChosen = true;
+        work.operation = correctPartWholeOperation();
         work.result = work.squares[model.leg1.side] + work.squares[model.leg2.side];
+        work.operationComputed = true;
         work.regrouped = true;
       }else{
         work.squares[model.knownHyp.side] = square(model.knownHyp.value);
         work.squares[model.knownLeg.side] = square(model.knownLeg.value);
+        work.operationChosen = true;
+        work.operation = correctPartWholeOperation();
         work.result = work.squares[model.knownHyp.side] - work.squares[model.knownLeg.side];
+        work.operationComputed = true;
         work.decomposed = true;
         work.removed = true;
       }
@@ -2947,9 +4639,11 @@
   btnStageRandom.addEventListener("click", () => { nextExample(1); start(); });
   exampleCategoryInput.addEventListener("change", () => { populateExampleIndexes(false); applySelectedExample(); });
   exampleIndexInput.addEventListener("change", () => { applySelectedExample(); });
-  missingModeInput.addEventListener("change", () => { applySelectedExample(); });
-  triangleNameInput.addEventListener("input", () => { updateSideLabels(); applySelectedExample(); });
-  rightAngleInput.addEventListener("change", () => { applySelectedExample(); });
+  missingModeInput.addEventListener("change", () => { applySelectedExample(); renderMenuPreview(); });
+  inputEls.forEach(input => input.addEventListener("input", renderMenuPreview));
+  if(unitInput) unitInput.addEventListener("change", renderMenuPreview);
+  triangleNameInput.addEventListener("input", () => { updateSideLabels(); applySelectedExample(); renderMenuPreview(); });
+  rightAngleInput.addEventListener("change", () => { applySelectedExample(); renderMenuPreview(); });
   btnMenu.addEventListener("click", () => { backToMenu(); });
   btnToggleEq.addEventListener("click", () => { display.equation = !display.equation; render(); });
   btnFullscreen.addEventListener("click", async () => {
@@ -2975,6 +4669,7 @@
   updateSideLabels();
   populateExampleCategories();
   applySelectedExample();
+  renderMenuPreview();
   syncEyeButton();
 })();
 </script>
