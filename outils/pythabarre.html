@@ -3018,6 +3018,31 @@
 
   /* PATCH V25 — racines approximatives : utiliser ≈ pour le résultat numérique. */
 
+
+  /* PATCH V28 — finitions : consignes alignées, choix d’opération contextualisé, schéma épuré. */
+  .instructionZone{
+    justify-content:flex-start;
+    width:min(980px,100%);
+    margin-left:auto;
+    margin-right:auto;
+  }
+  .instructionPill{
+    justify-content:flex-start;
+    text-align:left;
+  }
+  .operationEquationPrompt{
+    background:#eff6ff;
+    border-color:rgba(59,130,246,.30);
+    color:#1d4ed8;
+  }
+  .previewVertexDot{display:none;}
+  .previewSideText{
+    font-size:18px;
+  }
+  .sideText{
+    font-size:22px;
+  }
+
 </style>
 </head>
 <body>
@@ -3815,7 +3840,7 @@
       return stepPrefix(3, "Calcule les carrés connus.");
     }
     if(!work.operationChosen) return stepPrefix(4, "Schéma partie-tout : choisis l’opération.");
-    if(!work.operationComputed) return stepPrefix(5, "Calcule l’opération choisie.");
+    if(!work.operationComputed) return stepPrefix(5, "Calcule le résultat de l’opération.");
     if(!work.sqrt || !work.concluded) return stepPrefix(6, "Choisis le résultat de la racine carrée.");
     return "";
   }
@@ -4144,7 +4169,8 @@
 
     if(activeChoiceMode === "operation"){
       const choices = partWholeOperationChoices();
-      sidePalette.innerHTML = choices.map(op => `<button type="button" class="sideChoice" data-op-key="${op.key}">${operationLabel(op)}</button>`).join("");
+      const targetSide = model.unknownIsHyp ? model.hyp : model.unknown;
+      sidePalette.innerHTML = `<div class="operationPrompt operationEquationPrompt">${plainSq(targetSide)} =</div>` + choices.map(op => `<button type="button" class="sideChoice" data-op-key="${op.key}">${operationLabel(op)}</button>`).join("");
       sidePalette.classList.add("show");
       sidePalette.querySelectorAll("[data-op-key]").forEach(btn => {
         btn.addEventListener("click", () => applyPartWholeOperation(btn.dataset.opKey));
@@ -4399,34 +4425,23 @@
       }
       return NaN;
     }
-    if(targets.length >= 2){
-      const a = targets[0].value;
-      const b = targets[1].value;
-      add(a * 2);
-      add(square(a));
-      add(concatSquareConfusion(a));
-      add(concatSquareConfusion(b));
-      add(square(b));
-      add(b * 2);
-      add(square(a) + a);
-      add(Math.max(0, square(b) - b));
-    }else if(targets.length === 1){
-      const a = targets[0].value;
-      const c = square(a);
-      add(a * 2);
-      add(c);
-      add(concatSquareConfusion(a));
-      add(c + a);
-      add(Math.max(0, c - a));
-      add(c + 2);
-    }
+
+    // On veut toujours voir les deux pièges classiques : n² et n × 2.
+    // Exemple : pour 4², proposer 16 mais aussi 8.
+    targets.forEach(t => add(square(t.value)));      // bonne réponse possible
+    targets.forEach(t => add(t.value * 2));          // erreur classique : n² = n × 2
+    targets.forEach(t => add(t.value + 2));          // autre erreur classique : n² = n + 2
+    targets.forEach(t => add(concatSquareConfusion(t.value))); // ex. 4² → 42
+    targets.forEach(t => add(square(t.value) + t.value));
+    targets.forEach(t => add(Math.max(0, square(t.value) - t.value)));
+
     let guard = 1;
     const base = targets[0] ? square(targets[0].value) : 0;
-    while(choices.length < 5 && guard < 20){
+    while(choices.length < 6 && guard < 30){
       add(base + guard * 3);
       guard++;
     }
-    return seededShuffle(choices.slice(0, 5), "calculate:" + targets.map(t => t.side + ":" + t.value).join("|"));
+    return seededShuffle(choices.slice(0, 6), "calculate:" + targets.map(t => t.side + ":" + t.value).join("|"));
   }
 
   function operationLabel(op){
@@ -4461,6 +4476,7 @@
       const a = work.squares[l1.side];
       const b = work.squares[l2.side];
       add(makeOperation(a, "+", b, true));
+      add(makeOperation(b, "+", a, true));
       add(makeOperation(Math.max(a,b), "-", Math.min(a,b), false));
       add(makeOperation(Math.min(a,b), "-", Math.max(a,b), false));
       add(makeOperation(a, "-", b, false));
@@ -4741,10 +4757,10 @@
     const idx = sideNames.findIndex(s => sameSide(s, side));
     if(idx < 0) return "";
     const raw = String(inputEls[idx].value ?? "").trim();
-    if(!raw) return `${side} =`;
+    if(!raw) return "";
     const unit = normalizeUnit(unitInput?.value ?? "");
-    const suffix = unit && raw !== "?" ? ` ${unit}` : "";
-    return `${side} = ${raw}${suffix}`;
+    const suffix = unit && raw !== "?" && raw.toLowerCase() !== "x" ? ` ${unit}` : "";
+    return `${raw}${suffix}`;
   }
 
 
@@ -4785,7 +4801,6 @@
     for(const l of letters){
       const p = coords[l];
       const off = menuPreviewVertexOffset(coords,l);
-      html += `<circle class="previewVertexDot" cx="${p.x}" cy="${p.y}" r="5.5"/>`;
       html += `<text class="previewVertexText" x="${p.x+off.x}" y="${p.y+off.y}" text-anchor="middle" dominant-baseline="middle">${escapeHtml(l)}</text>`;
     }
     menuPreviewSvg.innerHTML = html;
@@ -4826,14 +4841,13 @@
         const value = displayVals[side] ?? displayVals[reverseSide(side)] ?? "";
         const isUnknownSide = model.values[side]?.unknown || model.values[reverseSide(side)]?.unknown;
         const finalCls = isUnknownSide && work.concluded ? " sideText finalSideText" : "sideText";
-        const eqSym = isUnknownSide && work.concluded ? sqrtEqSymbol(work.result) : "=";
-        html += `<text class="${finalCls}" x="${mid.x}" y="${mid.y}" text-anchor="middle" dominant-baseline="middle">${side} ${eqSym} ${value}</text>`;
+        const shownValue = isUnknownSide && work.concluded && sqrtEqSymbol(work.result) === "≈" ? `≈ ${value}` : value;
+        html += `<text class="${finalCls}" x="${mid.x}" y="${mid.y}" text-anchor="middle" dominant-baseline="middle">${shownValue}</text>`;
       }
 
       for(const l of model.letters){
         const p = coords[l];
         const off = vertexOffset(coords,l);
-        html += `<circle cx="${p.x}" cy="${p.y}" r="7" fill="#1d4ed8"/>`;
         html += `<text class="vertexText" x="${p.x+off.x}" y="${p.y+off.y}" text-anchor="middle" dominant-baseline="middle">${l}</text>`;
       }
     }
@@ -4944,9 +4958,14 @@
 
   function displayValuesForTriangle(){
     const values = {};
+    const suffix = unitSuffix();
     for(const side of model.sideNames){
       const parsed = model.values[side];
-      values[side] = parsed.unknown ? (work.concluded ? lengthAnswer(work.result) : "?") : fmt(parsed.value);
+      if(parsed.unknown){
+        values[side] = work.concluded ? `${lengthAnswer(work.result)}${suffix}` : "?";
+      }else{
+        values[side] = `${fmt(parsed.value)}${suffix}`;
+      }
     }
     return values;
   }
