@@ -3561,6 +3561,45 @@
     return w;
   }
 
+  function pythagoreRhsSidesInChosenOrder(){
+    const slots = work && work.relationSlots ? work.relationSlots : {};
+    const chosen = [slots.rhs1, slots.rhs2].filter(Boolean);
+
+    if(model.unknownIsHyp){
+      const defaults = [model.leg1.side, model.leg2.side];
+      if(chosen.length === 2
+        && !sameSide(chosen[0], chosen[1])
+        && chosen.every(side => model.legs.some(l => sameSide(l, side)))){
+        return chosen;
+      }
+      return defaults;
+    }
+
+    const defaults = [model.knownLeg.side, model.unknown];
+    if(chosen.length === 2
+      && !sameSide(chosen[0], chosen[1])
+      && chosen.some(side => sameSide(side, model.knownLeg.side))
+      && chosen.some(side => sameSide(side, model.unknown))){
+      return chosen;
+    }
+    return defaults;
+  }
+
+  function legObjectForSide(side){
+    if(model.unknownIsHyp){
+      if(sameSide(side, model.leg1.side)) return model.leg1;
+      if(sameSide(side, model.leg2.side)) return model.leg2;
+    }
+    if(model.knownLeg && sameSide(side, model.knownLeg.side)) return model.knownLeg;
+    if(model.knownHyp && sameSide(side, model.knownHyp.side)) return model.knownHyp;
+    if(model.unknown && sameSide(side, model.unknown)) return {side:model.unknown, value:sideValue(model.unknown)};
+    return {side, value:sideValue(side)};
+  }
+
+  function hypLegsInChosenOrder(){
+    return pythagoreRhsSidesInChosenOrder().map(side => legObjectForSide(side));
+  }
+
   function snapshot(){
     history.push(JSON.stringify({work, selectedSlot, selectedSquareSide, activeChoiceMode, selectedChoiceSide, selectedCalcValue, message}));
     if(history.length > 50) history.shift();
@@ -3591,7 +3630,7 @@
     if(!work.started || !work.relationComplete) return rows;
     const op = work.operation || correctPartWholeOperation();
     if(model.unknownIsHyp){
-      const l1 = model.leg1, l2 = model.leg2;
+      const [l1, l2] = hypLegsInChosenOrder();
       rows.push({lhs:coloredTerm(model.hyp, plainSq(model.hyp)), rhs:`${coloredTerm(l1.side, plainSq(l1.side))} + ${coloredTerm(l2.side, plainSq(l2.side))}`});
       if(anyReplaced()) rows.push({lhs:coloredTerm(model.hyp, plainSq(model.hyp)), rhs:`${coloredTerm(l1.side, isReplaced(l1.side) ? valueSq(l1.value) : plainSq(l1.side))} + ${coloredTerm(l2.side, isReplaced(l2.side) ? valueSq(l2.value) : plainSq(l2.side))}`});
       if(work.squares[l1.side] || work.squares[l2.side]) rows.push({lhs:coloredTerm(model.hyp, plainSq(model.hyp)), rhs:`${coloredTerm(l1.side, displayKnownSquare(l1.side, l1.value))} + ${coloredTerm(l2.side, displayKnownSquare(l2.side, l2.value))}`});
@@ -3605,8 +3644,9 @@
     }else{
       const h = model.knownHyp, k = model.knownLeg, u = model.unknown;
       const useColor = !work.operationChosen;
-      const rhs1 = work.relationSlots.rhs1 || k.side;
-      const rhs2 = work.relationSlots.rhs2 || u;
+      const rhsOrder = pythagoreRhsSidesInChosenOrder();
+      const rhs1 = rhsOrder[0];
+      const rhs2 = rhsOrder[1];
       const rhsTerm = (side) => sameSide(side, k.side)
         ? maybeColoredTerm(k.side, plainSq(k.side), useColor)
         : maybeColoredTerm(u, plainSq(u), useColor);
@@ -4198,7 +4238,7 @@
   }
 
   function hypBar(){
-    const l1 = model.leg1, l2 = model.leg2;
+    const [l1, l2] = hypLegsInChosenOrder();
     const w1 = square(l1.value), w2 = square(l2.value);
     const total = w1 + w2;
     if(work.regrouped){
@@ -4259,7 +4299,7 @@
   }
 
   function squareTargets(){
-    return model.unknownIsHyp ? [model.leg1, model.leg2] : [model.knownHyp, model.knownLeg];
+    return model.unknownIsHyp ? hypLegsInChosenOrder() : [model.knownHyp, model.knownLeg];
   }
   function allSquaresDone(targets){ return targets.every(t => !!work.squares[t.side]); }
 
@@ -4401,8 +4441,9 @@
 
   function correctPartWholeOperation(){
     if(model.unknownIsHyp){
-      const a = work.squares[model.leg1.side];
-      const b = work.squares[model.leg2.side];
+      const [l1, l2] = hypLegsInChosenOrder();
+      const a = work.squares[l1.side];
+      const b = work.squares[l2.side];
       return makeOperation(a, "+", b, true);
     }
     const h = work.squares[model.knownHyp.side];
@@ -4416,8 +4457,9 @@
       if(Number.isFinite(op.result) && !choices.some(x => x.key === op.key)) choices.push(op);
     }
     if(model.unknownIsHyp){
-      const a = work.squares[model.leg1.side];
-      const b = work.squares[model.leg2.side];
+      const [l1, l2] = hypLegsInChosenOrder();
+      const a = work.squares[l1.side];
+      const b = work.squares[l2.side];
       add(makeOperation(a, "+", b, true));
       add(makeOperation(Math.max(a,b), "-", Math.min(a,b), false));
       add(makeOperation(Math.min(a,b), "-", Math.max(a,b), false));
