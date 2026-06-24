@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1" />
-<title>ÉquaBarre — constructeur d’équations v2</title>
+<title>ÉquaBarre — constructeur d’équations v2.12</title>
 <style>
   :root{
     --bg:#f5f7fb;
@@ -2581,6 +2581,48 @@
     }
   }
 
+
+  /* PATCH CONSTRUCTEUR V2.13 — mobile portrait/étroit : actions rapides au-dessus de l’équation.
+     Correction ciblée : sur mobile, Menu / dé / œil ne sont plus superposés à l’historique.
+     L’équation récupère toute la largeur. Le rendu ordinateur reste inchangé. */
+  @media (hover:none) and (pointer:coarse) and (max-width:900px),
+         (hover:none) and (pointer:coarse) and (max-height:700px){
+    .stageQuickActions{
+      position:relative;
+      top:auto;
+      right:auto;
+      align-self:flex-end;
+      display:flex;
+      justify-content:flex-end;
+      width:auto;
+      margin:0 0 4px auto;
+      z-index:3;
+    }
+
+    .stage:not(:fullscreen):not(.emptyState) .topbar{
+      --eq-row-h:calc(clamp(18px,5.25vw,25px) * 1.18 + 3px);
+      height:calc(var(--eq-row-h) * 2 + 8px);
+      min-height:calc(var(--eq-row-h) * 2 + 8px);
+      padding:0 4px 4px;
+      overflow:hidden;
+      width:100%;
+    }
+
+    .stage:not(:fullscreen):not(.emptyState) .equationHistory{
+      --eq-row-h:calc(clamp(18px,5.25vw,25px) * 1.18 + 3px);
+      width:min(100%, calc(100vw - 24px));
+      height:calc(var(--eq-row-h) * 2);
+      max-height:calc(var(--eq-row-h) * 2);
+      padding:1px 2px;
+      overflow-y:auto;
+      overflow-x:auto;
+    }
+
+    .stage:not(:fullscreen):not(.emptyState) .equationTable{
+      font-size:clamp(18px,5.25vw,25px);
+    }
+  }
+
 </style>
 </head>
 <body>
@@ -2689,7 +2731,7 @@
       </div>
       <div class="toolBarRow toolBarRowGlobal">
         <button class="toolBtn globalToolBtn" id="toolDelete" type="button">Enlever dans chaque membre</button>
-        <button class="toolBtn undoToolBtn" id="toolUndo" type="button" title="Annuler la dernière action">↶ Annuler</button>
+        <button class="toolBtn undoToolBtn" id="toolUndo" type="button" title="Annuler la dernière action">↩ Annuler</button>
         <button class="toolBtn restartToolBtn" id="toolRestart" type="button" title="Revenir au schéma de départ">↺ Recommencer</button>
       </div>
     </div>
@@ -2956,8 +2998,19 @@
     return Math.max(a, Math.min(b,n));
   }
 
-  function makeNumber(value){
-    return { id:uid(), type:"number", value:Number(value), removed:false };
+  function makeNumber(value, extra={}){
+    const piece = { id:uid(), type:"number", value:Number(value), removed:false };
+    if(extra && typeof extra === "object"){
+      Object.assign(piece, extra);
+    }
+    return piece;
+  }
+
+  function makeShareGroupMeta(groupId, count){
+    return {
+      shareGroupId:groupId,
+      shareGroupCount:count
+    };
   }
 
   function makeX(){
@@ -2981,8 +3034,28 @@
         }
         terms.push(unknownTerm(count));
       }else{
-        terms.push(String(p.value));
-        i++;
+        // PATCH V2.12 — Partage équitable : le plateau garde les cases séparées,
+        // mais l'historique affiche les parts issues d'un même partage sous forme
+        // multiplicative. Exemple : 20 partagé en 10 parts devient 10 × 2,
+        // au lieu de 2 + 2 + 2 + ...
+        if(p.shareGroupId){
+          const groupId = p.shareGroupId;
+          const value = p.value;
+          let count = 0;
+          while(
+            i < pieces.length &&
+            pieces[i].type === "number" &&
+            pieces[i].shareGroupId === groupId &&
+            pieces[i].value === value
+          ){
+            count++;
+            i++;
+          }
+          terms.push(count >= 2 ? `${count} × ${value}` : String(value));
+        }else{
+          terms.push(String(p.value));
+          i++;
+        }
       }
     }
 
@@ -3312,7 +3385,8 @@
     if(!opp) return;
     pushHistory();
 
-    const parts = Array.from({length:opp.count}, () => makeNumber(opp.result));
+    const shareGroupId = uid();
+    const parts = Array.from({length:opp.count}, () => makeNumber(opp.result, makeShareGroupMeta(shareGroupId, opp.count)));
     const sideArr = state[opp.numberSide];
     const idx = sideArr.findIndex(p => p.id === opp.numberPiece.id);
     sideArr.splice(idx, 1, ...parts);
@@ -3743,7 +3817,8 @@
 
     pushHistory();
     const part = value / count;
-    arr.splice(idx, 1, ...Array.from({length:count}, () => makeNumber(part)));
+    const shareGroupId = uid();
+    arr.splice(idx, 1, ...Array.from({length:count}, () => makeNumber(part, makeShareGroupMeta(shareGroupId, count))));
     selectedShareRef = null;
     if(shareDialog) shareDialog.close();
     recordEquationStep();
