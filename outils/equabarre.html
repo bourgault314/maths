@@ -2396,6 +2396,191 @@
     }
   }
 
+
+  /* PATCH CONSTRUCTEUR V2.11 — téléphone : boutons accessibles sans casser l’ordinateur.
+     Le rendu ordinateur et le plein écran restent inchangés.
+     Sur écran tactile étroit ou bas, on abandonne le verrouillage en 100vh/overflow:hidden :
+     la page peut scroller naturellement, les boutons se compactent, et le bouton plein écran
+     est masqué car il n'est pas fiable sur mobile. */
+  @media (hover:none) and (pointer:coarse) and (max-width:900px),
+         (hover:none) and (pointer:coarse) and (max-height:700px){
+    html,
+    body{
+      min-height:100%;
+      overflow-y:auto;
+    }
+
+    main.activeMode{
+      width:calc(100vw - 12px);
+      margin:6px auto 12px;
+      display:block;
+    }
+
+    main.activeMode .stage:not(.emptyState){
+      height:auto !important;
+      min-height:calc(100svh - 18px);
+      overflow:visible !important;
+      padding:10px;
+      border-radius:18px;
+      display:flex;
+      flex-direction:column;
+    }
+
+    .stageQuickActions{
+      top:8px;
+      right:8px;
+      gap:5px;
+    }
+
+    .quickBtn{
+      width:38px;
+      height:38px;
+      min-width:38px;
+      border-radius:12px;
+      font-size:19px;
+      box-shadow:0 6px 16px rgba(15,23,42,.12);
+    }
+
+    .menuQuickBtn{
+      width:auto;
+      min-width:50px;
+      padding:0 8px;
+      font-size:12px;
+    }
+
+    #btnFullscreen{
+      display:none;
+    }
+
+    .stage:not(:fullscreen):not(.emptyState) .topbar{
+      --eq-row-h:calc(clamp(18px,5.4vw,25px) * 1.18 + 3px);
+      height:calc(var(--eq-row-h) * 2 + 8px);
+      min-height:calc(var(--eq-row-h) * 2 + 8px);
+      padding:2px 104px 4px 8px;
+      overflow:hidden;
+    }
+
+    .stage:not(:fullscreen):not(.emptyState) .equationHistory{
+      --eq-row-h:calc(clamp(18px,5.4vw,25px) * 1.18 + 3px);
+      width:min(100%, calc(100vw - 126px));
+      height:calc(var(--eq-row-h) * 2);
+      max-height:calc(var(--eq-row-h) * 2);
+      padding:1px 3px;
+      overflow-y:auto;
+      overflow-x:auto;
+    }
+
+    .stage:not(:fullscreen):not(.emptyState) .equationTable{
+      font-size:clamp(18px,5.4vw,25px);
+    }
+
+    .stage:not(:fullscreen):not(.emptyState) .equationTable td{
+      padding-left:4px;
+      padding-right:4px;
+    }
+
+    .stage:not(:fullscreen):not(.emptyState) .equationTable .eq{
+      padding-left:8px;
+      padding-right:8px;
+    }
+
+    .stage:not(:fullscreen):not(.emptyState) .instructionZone{
+      min-height:48px;
+      height:auto;
+      margin:0 auto 6px;
+      font-size:clamp(16px,4.6vw,20px);
+      line-height:1.22;
+    }
+
+    .stage:not(:fullscreen):not(.emptyState) .board{
+      --adaptive-piece-h:clamp(58px,16svh,84px);
+      flex:0 0 auto;
+      min-height:0;
+      padding:10px 8px;
+      border-radius:18px;
+    }
+
+    .stage:not(:fullscreen):not(.emptyState) .piece{
+      height:var(--adaptive-piece-h);
+    }
+
+    .stage:not(:fullscreen):not(.emptyState) .barLine{
+      min-height:var(--adaptive-piece-h);
+    }
+
+    .stage:not(:fullscreen):not(.emptyState) .pieceValue{
+      font-size:clamp(24px,7.6vw,34px);
+    }
+
+    .stage:not(:fullscreen):not(.emptyState) .splatIcon{
+      width:clamp(40px,13vw,60px);
+      height:clamp(40px,13vw,60px);
+    }
+
+    .stage:not(.emptyState) .solution{
+      min-height:38px;
+      height:38px;
+      margin:2px 0 3px;
+      font-size:clamp(26px,7.8vw,38px);
+    }
+
+    .stage:not(:fullscreen):not(.emptyState) .solution{
+      flex:0 0 38px;
+    }
+
+    .stage:not(:fullscreen):not(.emptyState) .toolBar{
+      margin:4px 0 0;
+      gap:6px;
+    }
+
+    .stage:not(:fullscreen):not(.emptyState) .toolBarRow{
+      width:100%;
+      gap:6px;
+    }
+
+    .stage:not(.emptyState) .toolBtn,
+    .stage:not(.emptyState) .undoToolBtn{
+      flex:1 1 138px;
+      min-height:44px;
+      padding:10px 10px;
+      border-radius:14px;
+      font-size:14px;
+      line-height:1.08;
+    }
+
+    .stage:not(:fullscreen):not(.emptyState) .actionZone{
+      flex:0 0 auto;
+      min-height:54px;
+      margin-top:6px;
+      padding-bottom:2px;
+      align-items:flex-start;
+      overflow:visible;
+    }
+
+    .stage:not(.emptyState) .actionZone button{
+      min-height:44px;
+      padding:10px 12px;
+      border-radius:14px;
+      font-size:14px;
+      line-height:1.08;
+    }
+  }
+
+  @media (hover:none) and (pointer:coarse) and (max-width:430px){
+    .stage:not(:fullscreen):not(.emptyState) .toolBtn,
+    .stage:not(:fullscreen):not(.emptyState) .undoToolBtn{
+      flex:1 1 126px;
+      font-size:13.5px;
+      padding-left:8px;
+      padding-right:8px;
+    }
+
+    .stage:not(:fullscreen):not(.emptyState) .board{
+      padding-left:5px;
+      padding-right:5px;
+    }
+  }
+
 </style>
 </head>
 <body>
@@ -3662,7 +3847,10 @@
     presetChips.classList.remove("open");
     if(btnShowSuggestions){ btnShowSuggestions.style.display = "inline-flex"; btnShowSuggestions.innerHTML = "Aide&nbsp;?"; }
 
-    const suggestions = buildSuggestions(piece.value);
+    // PATCH V2.10 — aide de décomposition contextuelle.
+    // On transmet le côté et l'identifiant de la case cliquée : l'aide peut alors
+    // regarder le membre opposé et proposer la décomposition utile dans le bon ordre visuel.
+    const suggestions = buildSuggestions(piece.value, side, id);
     for(const s of suggestions){
       const chip = document.createElement("button");
       chip.className = "chip mathChip";
@@ -3721,22 +3909,140 @@
     divideBlock.style.display = divisors.length ? "block" : "none";
   }
 
-  function buildSuggestions(value){
+  function addUniqueSuggestion(list, expr){
+    if(!expr) return;
+    const clean = String(expr).trim();
+    if(clean && !list.includes(clean)) list.push(clean);
+  }
+
+  function buildDecomposeExpr(value, target, placeTargetFirst){
+    const rest = value - target;
+    if(!(target > 0 && rest > 0)) return "";
+    return placeTargetFirst ? `${target} + ${rest}` : `${rest} + ${target}`;
+  }
+
+  function candidateVisualCenter(indexes){
+    if(!indexes || !indexes.length) return 0;
+    return indexes.reduce((sum, index) => sum + index, 0) / indexes.length;
+  }
+
+  function findUsefulOppositeNumberTarget(value, side){
+    if(!state || !side || !state[side]) return null;
+    const oppositeSide = getOppositeSide(side);
+    const pieces = activePieces(oppositeSide);
+    const numberItems = pieces
+      .map((piece, index) => ({piece, index}))
+      .filter(item => item.piece.type === "number" && Number(item.piece.value) > 0);
+
+    const candidates = [];
+    const seen = new Set();
+
+    function addCandidate(amount, indexes, priority){
+      amount = Number(amount);
+      if(!Number.isFinite(amount) || amount <= 0 || amount >= value) return;
+      if(!indexes || !indexes.length) return;
+      const key = `${amount}|${indexes.join(",")}`;
+      if(seen.has(key)) return;
+      seen.add(key);
+
+      const center = candidateVisualCenter(indexes);
+      const middle = (pieces.length - 1) / 2;
+      candidates.push({
+        amount,
+        indexes:indexes.slice(),
+        priority,
+        center,
+        placeTargetFirst:center <= middle,
+        span:Math.max(...indexes) - Math.min(...indexes)
+      });
+    }
+
+    // 1) Priorité forte : toute la constante connue de l'autre membre.
+    // C'est le cas typique 30 + ? / 18 + ? + ? + ? : on veut 18 + 12,
+    // parce que 18 est la quantité commune à faire apparaître.
+    const totalNumbers = numberItems.reduce((sum, item) => sum + Number(item.piece.value || 0), 0);
+    addCandidate(totalNumbers, numberItems.map(item => item.index), 0);
+
+    // 2) Groupes de nombres consécutifs déjà visibles dans l'autre membre.
+    let run = [];
+    for(let index=0; index<=pieces.length; index++){
+      const piece = pieces[index];
+      if(piece && piece.type === "number" && Number(piece.value) > 0){
+        run.push({piece, index});
+      }else{
+        if(run.length){
+          const sum = run.reduce((total, item) => total + Number(item.piece.value || 0), 0);
+          addCandidate(sum, run.map(item => item.index), run.length > 1 ? 1 : 2);
+        }
+        run = [];
+      }
+    }
+
+    // 3) Petits ensembles de plusieurs cases numériques, même non consécutives.
+    // Utile depuis qu'on accepte de sélectionner plusieurs cases avant de supprimer.
+    if(numberItems.length >= 2 && numberItems.length <= 6){
+      const maxMask = 1 << numberItems.length;
+      for(let mask=1; mask<maxMask; mask++){
+        if((mask & (mask - 1)) === 0) continue; // les cases seules sont déjà couvertes
+        let sum = 0;
+        const indexes = [];
+        for(let bit=0; bit<numberItems.length; bit++){
+          if(mask & (1 << bit)){
+            sum += Number(numberItems[bit].piece.value || 0);
+            indexes.push(numberItems[bit].index);
+          }
+        }
+        addCandidate(sum, indexes, 3);
+      }
+    }
+
+    if(!candidates.length) return null;
+
+    candidates.sort((a,b) => {
+      if(a.priority !== b.priority) return a.priority - b.priority;
+      if(a.span !== b.span) return a.span - b.span;
+      // À priorité égale, on préfère faire apparaître la plus grande quantité commune :
+      // cela évite de proposer une petite décomposition alors qu'on peut supprimer toute la constante.
+      return b.amount - a.amount;
+    });
+
+    return candidates[0];
+  }
+
+  function buildContextualUsefulSuggestion(value, side, id){
+    const usefulTarget = findUsefulOppositeNumberTarget(value, side);
+    if(usefulTarget){
+      return buildDecomposeExpr(value, usefulTarget.amount, usefulTarget.placeTargetFirst);
+    }
+
+    // Filet de sécurité : pour les anciens états ou les cas sans contexte exploitable,
+    // on garde l'ancienne idée « faire apparaître la constante de départ », mais dans un
+    // ordre plus naturel : constante commune d'abord, reste ensuite.
+    const b = state && state.original ? Number(state.original.b || 0) : 0;
+    if(b > 0 && value > b){
+      return `${b} + ${value - b}`;
+    }
+
+    return "";
+  }
+
+  function buildSuggestions(value, side=null, id=null){
     const b = state.original.b;
     const a = state.original.a;
     const x = state.original.x;
     const suggestions = [];
 
-    // Proposition vraiment utile : faire apparaître la constante à supprimer.
-    // Toutes les propositions affichées doivent rester des décompositions valides
-    // du nombre choisi : aucun bouton ne doit sembler « cassé ».
-    if(b > 0 && value > b){
-      const useful = value - b;
-      suggestions.push(`${useful} + ${b}`);
-    }
+    // Proposition vraiment utile : faire apparaître une quantité déjà présente
+    // dans l'autre membre, et la placer du bon côté visuel.
+    addUniqueSuggestion(suggestions, buildContextualUsefulSuggestion(value, side, id));
 
     // Autres propositions équivalentes, mais pas forcément optimales.
     const candidates = [];
+    if(b > 0 && value > b){
+      candidates.push(`${b} + ${value - b}`);
+      candidates.push(`${value - b} + ${b}`);
+    }
+
     for(let left=1; left<=value-1; left++){
       const right = value - left;
       if(left === right) candidates.push(`${left} + ${right}`);
@@ -3758,11 +4064,13 @@
     }
 
     for(const c of shuffleUnique(candidates)){
-      if(!suggestions.includes(c)) suggestions.push(c);
+      addUniqueSuggestion(suggestions, c);
       if(suggestions.length >= 4) break;
     }
 
-    return shuffle(suggestions.slice(0,4));
+    // On ne mélange plus la proposition finale : la première puce doit rester
+    // la décomposition pédagogiquement utile.
+    return suggestions.slice(0,4);
   }
 
   function shuffleUnique(arr){
