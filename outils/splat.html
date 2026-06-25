@@ -1150,6 +1150,37 @@ const xChar = "𝑥";
 const variableChars = [xChar, "𝑎", "𝑏", "𝑐", "𝑚", "𝑛", "𝑡"];
 const variableCharSet = new Set([...variableChars, "x", "a", "b", "c", "m", "n", "t"]);
 
+/* Mode C — palette variée par carte.
+   On garde les taches logiques 0/1/2, mais chaque carte peut leur associer
+   des couleurs différentes : plateau, indices, schémas et impression lisent
+   tous cette même correspondance. */
+const INVESTIGATE_COLOR_PALETTE = [
+  {key:"black",  short:"Noire",    sentence:"la tache noire",    screen:"var(--splat-black)",  reveal:"var(--splat-black-rev)",  print:"rgb(20,20,20)", printReveal:"rgba(40,40,40,0.18)"},
+  {key:"purple", short:"Violette", sentence:"la tache violette", screen:"var(--splat-purple)", reveal:"var(--splat-purple-rev)", print:"#9d4edd", printReveal:"rgba(157,78,221,0.20)"},
+  {key:"orange", short:"Orange",   sentence:"la tache orange",   screen:"var(--splat-orange)", reveal:"var(--splat-orange-rev)", print:"#f97316", printReveal:"rgba(249,115,22,0.20)"},
+  {key:"blue",   short:"Bleue",    sentence:"la tache bleue",    screen:"#2563eb", reveal:"rgba(37,99,235,0.20)", print:"#2563eb", printReveal:"rgba(37,99,235,0.20)"},
+  {key:"green",  short:"Verte",    sentence:"la tache verte",    screen:"#16a34a", reveal:"rgba(22,163,74,0.20)", print:"#16a34a", printReveal:"rgba(22,163,74,0.20)"},
+  {key:"red",    short:"Rouge",    sentence:"la tache rouge",    screen:"#dc2626", reveal:"rgba(220,38,38,0.20)", print:"#dc2626", printReveal:"rgba(220,38,38,0.20)"}
+];
+const INVESTIGATE_CLASSIC_COLOR_KEYS = ["black", "purple", "orange"];
+function investigateColorByKey(key){
+  return INVESTIGATE_COLOR_PALETTE.find(c => c.key === key) || INVESTIGATE_COLOR_PALETTE[0];
+}
+function buildInvestigateColorMap(rng, taskCount, varied){
+  const n = Math.max(1, Math.min(3, Number(taskCount) || 1));
+  if(!varied){
+    return INVESTIGATE_CLASSIC_COLOR_KEYS.slice(0, n);
+  }
+  const keys = INVESTIGATE_COLOR_PALETTE.map(c => c.key);
+  shuffleInPlace(keys, rng);
+  return keys.slice(0, n);
+}
+function investigateColorInfo(card, idx){
+  const classicKey = INVESTIGATE_CLASSIC_COLOR_KEYS[idx % INVESTIGATE_CLASSIC_COLOR_KEYS.length];
+  const keys = card && card._rel && Array.isArray(card._rel.colorMap) ? card._rel.colorMap : null;
+  return investigateColorByKey((keys && keys[idx]) || classicKey);
+}
+
 function pickVariableChar(rng){
   return variableChars[rInt(rng, 0, variableChars.length - 1)];
 }
@@ -1991,8 +2022,16 @@ function blobPath(cx, cy, r){
 }
 
 /* TRAY CONFIGURATION */
-/* PLATEAU UNIFORME H:550 POUR TOUS LES MODES */
+/*
+  Patch 9 : en disposition deux colonnes, les modes Splat simples
+  (A, A±, B, B±) utilisent un plateau plus haut, sans l'élargir.
+  Objectif : mieux occuper la colonne gauche et rendre les billes plus lisibles.
+  Les autres modes gardent le plateau historique.
+*/
 function getTrayConfig(mode){
+  if(mode === "U" || mode === "UPM" || mode === "N" || mode === "NPM"){
+    return { x:120, y:210, w:1360, h:660, isHigh: true };
+  }
   return { x:120, y:270, w:1360, h:550, isHigh: false };
 }
 
@@ -2116,7 +2155,13 @@ function assignPositionsNumbered(card, rng){
 
   const minSplatR = Math.min(...splats.map(s=>s.r));
   let beadR = Math.floor((minSplatR - 28) / 2); 
-  beadR = clamp(beadR, 34, 60);
+  // Patch 8 : en B / B±, on agrandit vraiment les jetons.
+  // Les autres familles numériques (C, D, F, G) gardent leurs tailles validées.
+  if(card.family === "N" || card.family === "NPM"){
+    beadR = clamp(beadR, 38, 68);
+  }else{
+    beadR = clamp(beadR, 34, 60);
+  }
   card._beadR = beadR;
 
   const posH = [];
@@ -2218,7 +2263,10 @@ function genInvestigate(rng){
   if(invOpDivEl.checked) ops.push('DIV');
   if(ops.length === 0) ops.push('ADD');
 
-  const names = ["la tache noire", "la tache violette", "la tache orange"];
+  const variedCColors = (activityEl && (activityEl.value === "C" || activityEl.value === "CD"));
+  const colorMap = buildInvestigateColorMap(rng, taskCount, variedCColors);
+  const colorInfos = colorMap.map(investigateColorByKey);
+  const names = colorInfos.map(c => c.sentence);
 
 
   function relationTextParts(op, k, tIdx, sIdx){
@@ -2338,6 +2386,7 @@ function genInvestigate(rng){
       structure,
       refIndex,
       names: names.slice(0, taskCount),
+      colorMap: colorMap.slice(0, taskCount),
       hiddenValues: hiddenVals.slice(),
       hiddenTotal: hiddenVals.reduce((a,b)=>a+b,0),
       visibleSum,
@@ -2448,6 +2497,7 @@ function genInvestigate(rng){
         hidden: hiddenVals, 
         _num: { tasks: taskCount, hiddenByTask: hiddenVals.map(v=>[v]), hiddenBeadsPerTask:1 },
         _inv: { indices },
+        _colorMap: colorMap.slice(0, taskCount),
         _rel: buildRelationModel({ taskCount, hiddenVals, relations, structure: taskCount === 2 ? "PAIR" : structureMode, visibleSum: visSum })
       };
     }
@@ -2459,12 +2509,15 @@ function genInvestigate(rng){
     hidden: [3,3],
     _num: { tasks: taskCount, hiddenByTask: [[3],[3]], hiddenBeadsPerTask:1 },
     _inv: { indices: ["Erreur"] },
+    _colorMap: colorMap.slice(0, taskCount),
     _rel: {
       version: 1,
       schemaKind: "error",
       taskCount,
       clueType,
       structure: "ERROR",
+      names: names.slice(0, taskCount),
+      colorMap: colorMap.slice(0, taskCount),
       hiddenValues: [3,3],
       hiddenTotal: 6,
       visibleSum: 0,
@@ -3071,9 +3124,10 @@ function assignPositionsClassic(card, rng){
 }
 
 function assignPositionsUnits(card, rng){
-  const tray = { x:120, y:270, w:1360, h:550 };
+  const tray = getTrayConfig(card.family);
   const margin = 8;
   const tasks = card._unit?.tasks ?? 1;
+  const isSignedUnitMode = (card.family === "UPM");
   const hiddenByTaskRaw = card._unit?.hiddenByTask ?? Array.from({length: tasks}, ()=>0);
   const hiddenByTask = hiddenByTaskRaw.map(v => Array.isArray(v) ? v.length : Number(v) || 0);
   const splats = getUnitSplats(tasks);
@@ -3097,15 +3151,27 @@ function assignPositionsUnits(card, rng){
   let beadR = 24;
   if(maxHidden > 0){
     const calc = Math.floor(rPad * Math.sqrt(0.82 / Math.max(1, maxHidden)));
-    beadR = clamp(calc, 12, 26);
+    // Patch 10 : en A±, les jetons +1 / −1 portent l'information.
+    // Ils doivent donc être nettement plus lisibles que les billes vides du A.
+    // On augmente seulement le plafond du mode A± et on garde A inchangé.
+    beadR = isSignedUnitMode ? clamp(calc, 18, 42) : clamp(calc, 14, 32);
   } else {
-    beadR = 26;
+    beadR = isSignedUnitMode ? 40 : 32;
   }
   const totalBeads = (card._unit?.visibleCount ?? card.visible.length) + hiddenByTask.reduce((a,b)=>a+b,0);
-  if(totalBeads >= 55) beadR = Math.min(beadR, 15);
-  else if(totalBeads >= 45) beadR = Math.min(beadR, 17);
-  else if(totalBeads >= 35) beadR = Math.min(beadR, 19);
-  else if(totalBeads >= 25) beadR = Math.min(beadR, 21);
+  if(isSignedUnitMode){
+    // Les seuils restent prudents quand il y a beaucoup de jetons,
+    // mais ils ne rapetissent plus trop vite les +1 / −1 en projection.
+    if(totalBeads >= 55) beadR = Math.min(beadR, 22);
+    else if(totalBeads >= 45) beadR = Math.min(beadR, 25);
+    else if(totalBeads >= 35) beadR = Math.min(beadR, 29);
+    else if(totalBeads >= 25) beadR = Math.min(beadR, 34);
+  }else{
+    if(totalBeads >= 55) beadR = Math.min(beadR, 17);
+    else if(totalBeads >= 45) beadR = Math.min(beadR, 19);
+    else if(totalBeads >= 35) beadR = Math.min(beadR, 22);
+    else if(totalBeads >= 25) beadR = Math.min(beadR, 25);
+  }
   function insideTray(cx, cy){
     if(cx < tray.x + beadR + margin) return false;
     if(cx > tray.x + tray.w - beadR - margin) return false;
@@ -3201,7 +3267,10 @@ function assignPositionsUnits(card, rng){
     return { posV, posH };
   }
   let placedRes = null;
-  for(let attempt=0; attempt<8 && !placedRes; attempt++){
+  // En A±, le rayon de départ est plus ambitieux : on teste davantage de tailles
+  // pour garder la plus grande taille possible sans tomber brutalement à 12.
+  const maxAttempts = isSignedUnitMode ? 30 : 8;
+  for(let attempt=0; attempt<maxAttempts && !placedRes; attempt++){
     const R = Math.max(12, beadR - attempt);
     placedRes = tryPlaceWithRadius(R);
   }
@@ -3583,11 +3652,25 @@ function formatRelationNumber(n){
   if(Math.abs(v - Math.round(v)) < 1e-9) return String(Math.round(v));
   return String(Math.round(v * 100) / 100).replace('.', ',');
 }
-function taskShortName(idx){
+function taskShortName(idx, card){
+  if(card && card.family === "C") return investigateColorInfo(card, idx).short;
   return ["Noire", "Violette", "Orange"][idx] || `Tache ${idx+1}`;
 }
-function taskSplatColor(idx){
-  return ["var(--splat-black)", "var(--splat-purple)", "var(--splat-orange)"][idx % 3];
+function taskSplatColor(idx, card, isPrint=false){
+  if(card && card.family === "C"){
+    const info = investigateColorInfo(card, idx);
+    return isPrint ? info.print : info.screen;
+  }
+  const colors = isPrint ? ["rgb(20,20,20)", "#9d4edd", "#f97316"] : ["var(--splat-black)", "var(--splat-purple)", "var(--splat-orange)"];
+  return colors[idx % 3];
+}
+function taskSplatRevealColor(idx, card, isPrint=false){
+  if(card && card.family === "C"){
+    const info = investigateColorInfo(card, idx);
+    return isPrint ? info.printReveal : info.reveal;
+  }
+  const colors = isPrint ? ["rgba(40,40,40,0.18)", "rgba(157,78,221,0.20)", "rgba(249,115,22,0.20)"] : ["var(--splat-black-rev)", "var(--splat-purple-rev)", "var(--splat-orange-rev)"];
+  return colors[idx % 3];
 }
 
 function relationGraphicClueParts(rel){
@@ -3622,7 +3705,7 @@ function drawRelationGraphicClues(targetGroup, card, opts = {}){
   rels.forEach((rel, i) => {
     const seq = relationGraphicClueParts(rel);
     if(seq.length){
-      renderMixedClue(g, cx, cy + i*lineH, seq, mkEl, mkText, isPrint, false);
+      renderMixedClue(g, cx, cy + i*lineH, seq, mkEl, mkText, isPrint, false, card);
     }
   });
   targetGroup.appendChild(g);
@@ -3796,8 +3879,8 @@ function drawRelationSituationSchema(targetGroup, card, opts = {}){
         "dominant-baseline":"middle", "font-size":20, "font-weight":950, fill:"var(--ink)"
       }));
     } else {
-      g.appendChild(el("circle",{cx:boxX+30, cy:y+rowH/2, r:12, fill:taskSplatColor(i), stroke:"rgba(0,0,0,.20)", "stroke-width":2}));
-      g.appendChild(text(boxX+54, y+rowH/2+1, taskShortName(i),{
+      g.appendChild(el("circle",{cx:boxX+30, cy:y+rowH/2, r:12, fill:taskSplatColor(i, card), stroke:"rgba(0,0,0,.20)", "stroke-width":2}));
+      g.appendChild(text(boxX+54, y+rowH/2+1, taskShortName(i, card),{
         "dominant-baseline":"middle", "font-size":21, "font-weight":950, fill:"var(--ink)"
       }));
     }
@@ -3845,7 +3928,7 @@ function getRelationGroupedDisplayGroups(card){
 
   for(let i=0;i<totals.items.length;i++){
     const item = totals.items[i];
-    groups.push({ label: taskShortName(i), parts: item.parts.map(p => ({...p})) });
+    groups.push({ label: taskShortName(i, card), parts: item.parts.map(p => ({...p})) });
   }
 
   if(totals.visibleSum > 0){
@@ -4093,7 +4176,7 @@ function drawRelationSubstitutionStep(targetGroup, card, opts = {}){
     const item = items[i] || {parts:[{kind:"x", label:getNumberedDisplayVarChar(card), weight:1}]};
     const cy = startY + i * (rowH + gap) + rowH/2;
     const splatR = 30;
-    g.appendChild(el("path",{d:blobPath(leftX, cy, splatR), fill:taskSplatColor(i), stroke:"rgba(0,0,0,0.20)", "stroke-width":2}));
+    g.appendChild(el("path",{d:blobPath(leftX, cy, splatR), fill:taskSplatColor(i, card), stroke:"rgba(0,0,0,0.20)", "stroke-width":2}));
     g.appendChild(text(leftX + 66, cy + 1, ":", {"text-anchor":"middle", "dominant-baseline":"middle", "font-size":36, "font-weight":900, fill:"var(--ink)"}));
 
     const parts = item.parts && item.parts.length ? item.parts : [{kind:"x", label:getNumberedDisplayVarChar(card), weight:1}];
@@ -4409,7 +4492,7 @@ function drawBarModelPartsInGroup(g, cx, topY, total, parts, api){
   return w;
 }
 
-function renderMixedClue(targetGroup, cx, cy, seq, mkEl, mkText, isPrint, revealed) {
+function renderMixedClue(targetGroup, cx, cy, seq, mkEl, mkText, isPrint, revealed, card=null) {
   const fontSize = isPrint ? 42 : 45;
   const charW = isPrint ? 22 : 24;
   const spaceW = isPrint ? 14 : 12;
@@ -4431,14 +4514,12 @@ function renderMixedClue(targetGroup, cx, cy, seq, mkEl, mkText, isPrint, reveal
   let totalW = metrics.reduce((sum, m) => sum + m.w, 0);
   let x = cx - totalW / 2;
 
-  const opqCols = isPrint ? ["rgb(0,0,0)", "#9d4edd", "#f97316"] : ["var(--splat-black)", "var(--splat-purple)", "var(--splat-orange)"];
-  const revCols = isPrint ? ["rgba(40,40,40,0.2)", "rgba(157,78,221,0.2)", "rgba(249,115,22,0.2)"] : ["var(--splat-black-rev)", "var(--splat-purple-rev)", "var(--splat-orange-rev)"];
   const strokeCol = isPrint ? "rgba(0,0,0,0.18)" : "var(--splat-stroke)";
 
   metrics.forEach(item => {
       if(item.type === 'splat') {
-          const coverCol = opqCols[item.id%3];
-          const revealCol = revCols[item.id%3];
+          const coverCol = taskSplatColor(item.id, card, isPrint);
+          const revealCol = taskSplatRevealColor(item.id, card, isPrint);
           const fillCol = (revealed === 2 || revealed === true) ? revealCol : coverCol;
 
           const p = mkEl("path", {
@@ -4489,20 +4570,53 @@ function renderCard(card, revealState){
   // Pour A et B, l'étape 1 doit être strictement l'étape 0 + tableau vide :
   // le total et le plateau ne bougent pas entre ces deux étapes.
   const isABProjectionLayout = (card.family === "U" || card.family === "N");
+  const isSplatTwoColumnLayout = (
+    card.family === "U" || card.family === "N" ||
+    card.family === "UPM" || card.family === "NPM"
+  );
   const isFullscreenProjection = !!document.fullscreenElement;
   const isIntroLayoutAB = isABProjectionLayout;
   const isEmptyTableStepAB = (isABProjectionLayout && revealState === 1);
   const abHasModelStep = (isABProjectionLayout && revealState >= 2);
   const abRevealPhase = abHasModelStep ? (revealState - 1) : revealState;
   const isCRelationLayout = (card.family === "C" && card._rel && revealState > 0 && revealState <= 5);
-  const introTrayShiftY = isABProjectionLayout ? (isFullscreenProjection ? -54 : -34) : 0;
-  const introTotalShiftY = isIntroLayoutAB ? (isFullscreenProjection ? -38 : -22) : 0;
+
+  // PATCH disposition deux colonnes — écran seulement :
+  // la situation Splat reste à gauche ; les aides/résolutions restent à droite.
+  // Le schéma en barres complet reste réservé aux modes A/B pour ne pas casser
+  // les modes relatifs et les modes spécifiques 9/8.
+  const isABTwoColumnLayout = isABProjectionLayout;
+  // Patch 2 — réglage fin de la disposition A/B :
+  // - centre réel du plateau gauche ;
+  // - TOTAL un peu plus bas pour éviter tout rognage hors plein écran ;
+  // - plateau légèrement agrandi ;
+  // - bouton Résoudre au-dessus du schéma en barres.
+  // Patch 8/9 — plateau gauche agrandi de façon perceptible :
+  // on garde la colonne de droite validée, mais on donne plus de hauteur
+  // réelle au plateau et plus de présence aux jetons dans A / A± / B / B±.
+  const abTrayScale = 0.70;
+  const abTrayTranslateX = -80;
+  const abTrayTranslateY = 100;
+  const abLeftCenterX = abTrayTranslateX + abTrayScale * (120 + 1360/2);
+  const abTrayTransform = `translate(${abTrayTranslateX} ${abTrayTranslateY}) scale(${abTrayScale})`;
+  const abBarCenterX = 1160;
+  const abBarTopY = 260;
+  const abEquationCenterX = abBarCenterX;
+  const abEquationStartY = 525;
+  // Patch 5 — les modes A± / B± n'ont pas de tableau :
+  // on remonte leur équation seule pour l'aligner avec le plateau gauche.
+  const signedEquationCenterY = 430;
+  const abSolveButtonX = abBarCenterX - 56;
+  const abSolveButtonY = abBarTopY - 72;
+
+  const introTrayShiftY = (isABProjectionLayout && !isABTwoColumnLayout) ? (isFullscreenProjection ? -54 : -34) : 0;
+  const introTotalShiftY = (isIntroLayoutAB && !isABTwoColumnLayout) ? (isFullscreenProjection ? -38 : -22) : 0;
   const relationTotalCompact = isCRelationLayout;
-  const bottomAidTyAB = 865;
+  const bottomAidTyAB = isABTwoColumnLayout ? (abBarTopY + 56) : 865;
 
   const trayTransform = isCRelationLayout
     ? (isFullscreenProjection ? "translate(210 -52) scale(0.74)" : "translate(240 -46) scale(0.70)")
-    : (introTrayShiftY ? `translate(0 ${introTrayShiftY})` : "");
+    : (isSplatTwoColumnLayout ? abTrayTransform : (introTrayShiftY ? `translate(0 ${introTrayShiftY})` : ""));
   const trayLayer = trayTransform
     ? el("g", { id:isCRelationLayout ? "relationTrayScale" : "introTrayShift", transform:trayTransform })
     : svg;
@@ -4518,7 +4632,8 @@ function renderCard(card, revealState){
   // En mode C avec schéma, le plein écran validé reste inchangé.
   // En mode normal, on remonte moins la bulle TOTAL pour éviter qu'elle soit coupée en haut.
   const relationLayoutShiftY = isCRelationLayout ? (isFullscreenProjection ? -58 : -42) : 0;
-  let tx = 800, ty = 92 + introTotalShiftY + relationLayoutShiftY; 
+  let tx = isSplatTwoColumnLayout ? abLeftCenterX : 800;
+  let ty = isSplatTwoColumnLayout ? 86 : (92 + introTotalShiftY + relationLayoutShiftY); 
 
   let totalColor = "var(--ink)";
   let totalLabelColor = "var(--total-label)";
@@ -4537,7 +4652,7 @@ function renderCard(card, revealState){
   const isBarModelTotalN = false;
   const isBarModelTotal = isBarModelTotalU || isBarModelTotalN;
 
-  const introTotalCompact = isIntroLayoutAB || relationTotalCompact;
+  const introTotalCompact = isSplatTwoColumnLayout || relationTotalCompact;
 
   if(isBarModelTotal){
     if(isBarModelTotalU){
@@ -4736,7 +4851,7 @@ function renderCard(card, revealState){
       const parts = [];
       if (vis > 0) parts.push({value: vis, hidden: false, text: revealState === 1 ? "" : String(vis)});
       parts.push(...drawingHiddenSums.map(v => ({ value: v, hidden: true, text: revealState === 1 ? "" : (abRevealPhase === 1 ? getNumberedDisplayVarChar(card) : String(v)) })));
-      const barWForSolve = drawBarModelPartsInGroup(emptyGroup, 800, bottomAidTyAB - 56, card.total, parts, {
+      const barWForSolve = drawBarModelPartsInGroup(emptyGroup, isABTwoColumnLayout ? abBarCenterX : 800, bottomAidTyAB - 56, card.total, parts, {
         rect:(a)=>el("rect", a),
         line:(a)=>el("line", a),
         text:(x,y,t,a)=>text(x,y,t,a),
@@ -4747,7 +4862,7 @@ function renderCard(card, revealState){
         totalTextOverride: revealState === 1 ? "" : String(card.total)
       });
       if(revealState === 2){
-        drawABEquabarSolveButton(emptyGroup, card, 800 - barWForSolve/2 - 132, bottomAidTyAB + 8);
+        drawABEquabarSolveButton(emptyGroup, card, isABTwoColumnLayout ? abSolveButtonX : (800 - barWForSolve/2 - 132), isABTwoColumnLayout ? abSolveButtonY : (bottomAidTyAB + 8));
       }
     }else if(card.family === "N"){
       const visSum = sumArray(card.visible);
@@ -4766,7 +4881,7 @@ function renderCard(card, revealState){
       const parts = [];
       if (visSum > 0) parts.push({value: visSum, hidden: false, text: revealState === 1 ? "" : String(visSum)});
       parts.push(...drawingHiddenSums.map(v => ({ value: v, hidden: true, text: revealState === 1 ? "" : (abRevealPhase === 1 ? getNumberedDisplayVarChar(card) : String(v)) })));
-      const barWForSolve = drawBarModelPartsInGroup(emptyGroup, 800, bottomAidTyAB - 56, card.total, parts, {
+      const barWForSolve = drawBarModelPartsInGroup(emptyGroup, isABTwoColumnLayout ? abBarCenterX : 800, bottomAidTyAB - 56, card.total, parts, {
         rect:(a)=>el("rect", a),
         line:(a)=>el("line", a),
         text:(x,y,t,a)=>text(x,y,t,a),
@@ -4779,7 +4894,7 @@ function renderCard(card, revealState){
         totalTextOverride: revealState === 1 ? "" : String(card.total)
       });
       if(revealState === 2){
-        drawABEquabarSolveButton(emptyGroup, card, 800 - barWForSolve/2 - 132, bottomAidTyAB + 8);
+        drawABEquabarSolveButton(emptyGroup, card, isABTwoColumnLayout ? abSolveButtonX : (800 - barWForSolve/2 - 132), isABTwoColumnLayout ? abSolveButtonY : (bottomAidTyAB + 8));
       }
     }
 
@@ -4804,8 +4919,8 @@ function renderCard(card, revealState){
         let calcLines = 0;
         if(vis > 0) calcLines++;
         if(tasks > 1) calcLines++;
-        let calcY = (bottomAidTyAB + 30) - ((calcLines - 1) * 35);
-        const centerX = 800 + 190 + 240;
+        let calcY = (isABTwoColumnLayout ? abEquationStartY : (bottomAidTyAB + 30)) - ((calcLines - 1) * 35);
+        const centerX = isABTwoColumnLayout ? abEquationCenterX : (800 + 190 + 240);
         if (vis > 0) {
           emptyGroup.appendChild(text(centerX - 30, calcY, `${card.total} − ${vis}`, { "text-anchor":"end", "font-size":"42", "fill":"var(--ink)", "font-weight":"700", "dominant-baseline":"middle" }));
           emptyGroup.appendChild(text(centerX, calcY, `=`, { "text-anchor":"middle", "font-size":"42", "fill":"var(--ink)", "font-weight":"700", "dominant-baseline":"middle" }));
@@ -4836,8 +4951,8 @@ function renderCard(card, revealState){
           (visSum > 0 && tasks > 1 ? 1 : 0) +
           (tasks > 1 || (tasks === 1 && visSum > 0) ? 1 : 0);
         const calcLines = revealState >= 3 ? (1 + resolutionLineCount) : 1;
-        let calcY = (bottomAidTyAB + 30) - ((calcLines - 1) * (calcGap / 2));
-        const centerX = 800 + 190 + 240;
+        let calcY = (isABTwoColumnLayout ? abEquationStartY : (bottomAidTyAB + 30)) - ((calcLines - 1) * (calcGap / 2));
+        const centerX = isABTwoColumnLayout ? abEquationCenterX : (800 + 190 + 240);
         const eqGap = 22;
         const unknownTerm = formatCoeffUnknownTerm(tasks, varChar);
         const eqLeft1 = visSum > 0 ? `${visSum} + ${unknownTerm}` : unknownTerm;
@@ -4863,13 +4978,15 @@ function renderCard(card, revealState){
 
   if(card.family === "NPM" && revealState > 0){
     drawNumberedSignedEquationAid(svg, card, revealState, {
-      centerY: bbTotal.y + bbTotal.height / 2
+      centerX: isSplatTwoColumnLayout ? abEquationCenterX : undefined,
+      centerY: isSplatTwoColumnLayout ? signedEquationCenterY : (bbTotal.y + bbTotal.height / 2)
     });
   }
 
   if(card.family === "UPM" && revealState > 0){
     drawUnitSignedEquationAid(svg, card, revealState, {
-      centerY: bbTotal.y + bbTotal.height / 2
+      centerX: isSplatTwoColumnLayout ? abEquationCenterX : undefined,
+      centerY: isSplatTwoColumnLayout ? signedEquationCenterY : (bbTotal.y + bbTotal.height / 2)
     });
   }
 
@@ -4898,7 +5015,7 @@ function renderCard(card, revealState){
           "font-weight":"700"
         }));
       } else if (Array.isArray(txt)) {
-        renderMixedClue(gInd, 800, cyLine, txt, el, text, false, card.family === "C" ? revealState >= 5 : revealState === 2);
+        renderMixedClue(gInd, 800, cyLine, txt, el, text, false, card.family === "C" ? revealState >= 5 : revealState === 2, card);
       }
     });
     svg.appendChild(gInd);
@@ -4934,21 +5051,39 @@ function renderCard(card, revealState){
     }
   }
   const taskCount = card._num?.tasks || card._unit?.tasks || (card._splats ? card._splats.length : 1);
-  if(!isModeC_or_D && taskCount > 1 && !(isABProjectionLayout && revealState > 0)){
+  if(!isModeC_or_D && taskCount > 1){
     const isSigned = (card.family === "NPM");
-    const ruleText = isSigned 
-        ? "Sous chaque tache se cache le même nombre." 
-        : "Sous chaque tache, il y a le même nombre de jetons.";
+    const gInd = el("g", {id: isSplatTwoColumnLayout ? "clueGroupRuleTwoCol" : "clueGroupRule"});
 
-    const gInd = el("g", {id: "clueGroupRule"});
-    const trayBottom = trayCfg.y + trayCfg.h;
-    const startY = trayBottom + 70;
-    gInd.appendChild(text(800, startY, ruleText, {
-      "text-anchor":"middle",
-      "font-size":"45",
-      "fill":"var(--ink)",
-      "font-weight":"700"
-    }));
+    if(isSplatTwoColumnLayout){
+      const line1 = "Sous chaque tache,";
+      const line2 = isSigned ? "se cache le même nombre." : "il y a le même nombre de jetons.";
+      const ruleY1 = 770;
+      gInd.appendChild(text(abLeftCenterX, ruleY1, line1, {
+        "text-anchor":"middle",
+        "font-size":"34",
+        "fill":"var(--ink)",
+        "font-weight":"800"
+      }));
+      gInd.appendChild(text(abLeftCenterX, ruleY1 + 42, line2, {
+        "text-anchor":"middle",
+        "font-size":"34",
+        "fill":"var(--ink)",
+        "font-weight":"800"
+      }));
+    }else{
+      const ruleText = isSigned 
+          ? "Sous chaque tache se cache le même nombre." 
+          : "Sous chaque tache, il y a le même nombre de jetons.";
+      const trayBottom = trayCfg.y + trayCfg.h;
+      const startY = trayBottom + 70;
+      gInd.appendChild(text(800, startY, ruleText, {
+        "text-anchor":"middle",
+        "font-size":"45",
+        "fill":"var(--ink)",
+        "font-weight":"700"
+      }));
+    }
     svg.appendChild(gInd);
   }
 
@@ -4956,7 +5091,7 @@ function renderCard(card, revealState){
   const visualRevealState = (card.family === "C") ? (revealState >= 5 ? 2 : 0) : (isABProjectionLayout ? abRevealPhase : revealState);
 
   if(card.family === "U" || card.family === "UPM"){
-    const beadR = card._beadR ?? (card.family === "UPM" ? 30 : 26);
+    const beadR = card._beadR ?? (card.family === "UPM" ? 34 : 32);
     const signedUnit = card.family === "UPM";
     const drawUnitToken = (cx, cy, value, hidden)=>{
       if(signedUnit){
@@ -4967,7 +5102,7 @@ function renderCard(card, revealState){
           "dominant-baseline":"middle",
           "alignment-baseline":"middle",
           "dy":"0.06em",
-          "font-size":String(Math.round(beadR*0.72)),
+          "font-size":String(Math.round(beadR*0.96)),
           "fill":"var(--ink)",
           "font-weight":"900"
         }));
@@ -5015,8 +5150,8 @@ function renderCard(card, revealState){
   }
 
   if(["N","NPM","C","D","C9","C8"].includes(card.family)){
-    const beadR = card._beadR ?? 52;
-    const font = Math.round(beadR * 0.9);
+    const beadR = card._beadR ?? 58;
+    const font = Math.round(beadR * ((card.family === "N" || card.family === "NPM") ? 0.94 : 0.9));
 
     for(let i=0;i<card.hidden.length;i++){
       const cx = card._posH?.[i]?.cx ?? 820;
@@ -5036,13 +5171,11 @@ function renderCard(card, revealState){
 
     const splats = card._splats || [{cx:820, cy:610, r:220}];
     const isEmptyNumberedTask = !!(card._num && card._num.emptyTask);
-    const opqCols = ["var(--splat-black)", "var(--splat-purple)", "var(--splat-orange)"];
-    const revCols = ["var(--splat-black-rev)", "var(--splat-purple-rev)", "var(--splat-orange-rev)"];
     const opp = (card.family === "NPM" && card._num && card._num.oppose && Array.isArray(card._num.oppose.flags)) ? card._num.oppose : null;
     
     splats.forEach((s, idx) => {
-      let coverCol = (card.family === "C" || card.family === "D") ? opqCols[idx%3] : "var(--splat-cover)";
-      let revealCol = (card.family === "C" || card.family === "D") ? revCols[idx%3] : "var(--splat-reveal)";
+      let coverCol = (card.family === "C" || card.family === "D") ? taskSplatColor(idx, card, false) : "var(--splat-cover)";
+      let revealCol = (card.family === "C" || card.family === "D") ? taskSplatRevealColor(idx, card, false) : "var(--splat-reveal)";
       
       const p = el("path",{
         d: blobPath(s.cx, s.cy, s.r),
@@ -5425,7 +5558,7 @@ function drawNumberedSignedEquationAid(targetGroup, card, revealState, opts = {}
   const gap = 56;
   const centerY = Number.isFinite(Number(opts.centerY)) ? Number(opts.centerY) : 138;
   const startY = centerY - ((shownLines.length - 1) * gap / 2);
-  const centerX = 1220;
+  const centerX = Number.isFinite(Number(opts.centerX)) ? Number(opts.centerX) : 1220;
   const eqGap = 22;
   let cy = startY;
 
@@ -5499,7 +5632,7 @@ function drawUnitSignedEquationAid(targetGroup, card, revealState, opts = {}){
   const gap = 56;
   const centerY = Number.isFinite(Number(opts.centerY)) ? Number(opts.centerY) : 138;
   const startY = centerY - ((shownLines.length - 1) * gap / 2);
-  const centerX = 1220;
+  const centerX = Number.isFinite(Number(opts.centerX)) ? Number(opts.centerX) : 1220;
   const eqGap = 22;
   let cy = startY;
 
@@ -5611,7 +5744,7 @@ function renderCardIntoSvg(targetSvg, card, printMode){
           "text-anchor":"middle","font-size":"42","fill":"#000","font-weight":"700"
         }));
       } else if (Array.isArray(txt)) {
-        renderMixedClue(targetSvg, 800, cyLine, txt, tEl, tText, true, revealAnswers);
+        renderMixedClue(targetSvg, 800, cyLine, txt, tEl, tText, true, revealAnswers, card);
       }
     });
   }
@@ -5678,7 +5811,7 @@ function renderCardIntoSvg(targetSvg, card, printMode){
       if(signedUnitPrint){
         const c = printSignedColors(value);
         targetSvg.appendChild(tEl("circle",{cx, cy, r:beadR, fill:c.fill, stroke:c.stroke,"stroke-width":"3.5"}));
-        targetSvg.appendChild(tText(cx, cy, value > 0 ? "+1" : "−1", {"text-anchor":"middle","dominant-baseline":"middle","font-size":String(Math.round(beadR*0.72)),"fill":"#000","font-weight":"900"}));
+        targetSvg.appendChild(tText(cx, cy, value > 0 ? "+1" : "−1", {"text-anchor":"middle","dominant-baseline":"middle","font-size":String(Math.round(beadR*0.86)),"fill":"#000","font-weight":"900"}));
       }else{
         targetSvg.appendChild(tEl("circle",{cx, cy, r:beadR, fill:hidden ? "rgba(0,0,0,0.05)" : "rgba(106,167,255,0.20)", stroke:hidden ? "rgba(0,0,0,0.18)" : "rgba(106,167,255,0.55)","stroke-width":"3"}));
       }
@@ -5837,7 +5970,7 @@ function renderCardIntoSvg(targetSvg, card, printMode){
     splats.forEach((s,idx)=>{
       let f;
       if(card.family === "C" || card.family === "D"){
-        f = revealAnswers ? colorsERev[idx%3] : colorsE[idx%3];
+        f = revealAnswers ? taskSplatRevealColor(idx, card, true) : taskSplatColor(idx, card, true);
       } else {
         f = revealAnswers ? revealCol : cover;
       }
