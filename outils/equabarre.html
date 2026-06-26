@@ -2623,6 +2623,419 @@
     }
   }
 
+
+
+  /* PATCH VUE DÉTAILLÉE — tableau à gauche, rédaction avec opérations à droite.
+     Mode expérimental : la vue compacte existante reste intacte. */
+  .viewModeBtn{
+    width:auto;
+    min-width:74px;
+    padding:0 12px;
+    font-size:14px;
+    font-weight:950;
+  }
+
+  .viewModeBtn.is-detailed{
+    background:linear-gradient(180deg,#60a5fa,#3b82f6);
+    color:#fff;
+    border-color:rgba(37,99,235,.30);
+  }
+
+  .stage.detailedView:not(:fullscreen):not(.emptyState){
+    height:calc(100vh - 36px);
+    min-height:620px;
+    display:grid !important;
+    grid-template-columns:minmax(460px,1fr) minmax(360px,480px);
+    grid-template-rows:72px minmax(230px,1fr) 64px auto 92px;
+    grid-template-areas:
+      "instruction history"
+      "board history"
+      "solution history"
+      "tools tools"
+      "actions actions";
+    gap:10px 16px;
+    overflow:hidden;
+  }
+
+  .stage.detailedView:not(:fullscreen):not(.emptyState) .instructionZone{
+    grid-area:instruction;
+    width:100%;
+    height:72px;
+    min-height:72px;
+    margin:0;
+  }
+
+  .stage.detailedView:not(:fullscreen):not(.emptyState) .board{
+    grid-area:board;
+    min-height:0;
+    height:100%;
+    padding:22px clamp(20px,3.2vw,48px);
+  }
+
+  .stage.detailedView:not(:fullscreen):not(.emptyState) .solution{
+    grid-area:solution;
+    align-self:center;
+  }
+
+  .stage.detailedView:not(:fullscreen):not(.emptyState) .toolBar{
+    grid-area:tools;
+    margin:0;
+  }
+
+  .stage.detailedView:not(:fullscreen):not(.emptyState) .actionZone{
+    grid-area:actions;
+    margin:0;
+  }
+
+  .stage.detailedView:not(:fullscreen):not(.emptyState) .topbar{
+    grid-area:history;
+    display:block !important;
+    height:auto !important;
+    min-height:0 !important;
+    padding:66px 16px 16px !important;
+    overflow:hidden;
+    background:rgba(255,255,255,.72);
+    border:1px solid rgba(15,23,42,.08);
+    border-radius:24px;
+  }
+
+  .stage.detailedView:not(:fullscreen):not(.emptyState) .equationHistory{
+    width:100% !important;
+    height:100% !important;
+    max-height:none !important;
+    padding:2px 6px 6px;
+    overflow:auto;
+  }
+
+  .stage.detailedView:not(:fullscreen):not(.emptyState) .equationTable{
+    font-size:clamp(24px,2.45vw,36px);
+    margin:0 auto;
+  }
+
+  .equationTable tr.operationStep td{
+    padding-top:2px;
+    padding-bottom:5px;
+  }
+
+  .equationTable .operationCell{
+    color:#475569;
+    opacity:.92;
+    font-size:.58em;
+    font-weight:950;
+  }
+
+  .operationWrap{
+    display:inline-flex;
+    align-items:center;
+    gap:.22em;
+    white-space:nowrap;
+  }
+
+  .operationCell.opLeft .operationWrap{
+    justify-content:flex-end;
+  }
+
+  .operationCell.opRight .operationWrap{
+    justify-content:flex-start;
+  }
+
+  .opLabel{
+    font-family:Arial, Helvetica, sans-serif;
+    font-variant-numeric:tabular-nums;
+    letter-spacing:-.02em;
+  }
+
+  .opArrowSvg{
+    width:1.6em;
+    height:1.28em;
+    display:block;
+    overflow:visible;
+  }
+
+  .opArrowSvg path{
+    fill:none;
+    stroke:currentColor;
+    stroke-width:3.2;
+    stroke-linecap:round;
+    stroke-linejoin:round;
+  }
+
+  .opArrowSvg .arrowHead{
+    fill:currentColor;
+    stroke:none;
+  }
+
+  .stage.detailedView:fullscreen:not(.emptyState){
+    display:grid !important;
+    grid-template-columns:minmax(520px,1fr) minmax(420px,560px);
+    grid-template-rows:74px minmax(230px,1fr) 58px auto 74px;
+    grid-template-areas:
+      "instruction history"
+      "board history"
+      "solution history"
+      "tools tools"
+      "actions actions";
+    gap:12px 18px;
+    padding:18px 22px 12px;
+    overflow:hidden;
+  }
+
+  .stage.detailedView:fullscreen:not(.emptyState) .instructionZone{
+    grid-area:instruction;
+    width:100%;
+    height:74px;
+    min-height:74px;
+    margin:0;
+  }
+
+  .stage.detailedView:fullscreen:not(.emptyState) .board{
+    grid-area:board;
+    width:100% !important;
+    min-height:0 !important;
+    height:100%;
+    margin:0 !important;
+    padding:22px clamp(28px,3.8vw,62px) !important;
+  }
+
+  .stage.detailedView:fullscreen:not(.emptyState) .solution{
+    grid-area:solution;
+    width:100% !important;
+    align-self:center;
+  }
+
+  .stage.detailedView:fullscreen:not(.emptyState) .toolBar{
+    grid-area:tools;
+    width:100% !important;
+    margin:0 !important;
+  }
+
+  .stage.detailedView:fullscreen:not(.emptyState) .actionZone{
+    grid-area:actions;
+    width:100% !important;
+    margin:0 !important;
+  }
+
+  .stage.detailedView:fullscreen:not(.emptyState) .topbar{
+    grid-area:history;
+    display:block !important;
+    width:100% !important;
+    height:auto !important;
+    min-height:0 !important;
+    flex:initial !important;
+    padding:66px 18px 18px !important;
+    overflow:hidden;
+    background:rgba(255,255,255,.72);
+    border:1px solid rgba(15,23,42,.08);
+    border-radius:24px;
+  }
+
+  .stage.detailedView:fullscreen:not(.emptyState) .equationHistory{
+    width:100% !important;
+    height:100% !important;
+    max-height:none !important;
+    padding:2px 8px 6px;
+    overflow:auto;
+  }
+
+  .stage.detailedView:fullscreen:not(.emptyState) .equationTable{
+    font-size:clamp(27px,2.45vw,42px) !important;
+  }
+
+  @media (max-width:980px){
+    .stage.detailedView:not(:fullscreen):not(.emptyState){
+      height:auto;
+      min-height:620px;
+      display:flex !important;
+      flex-direction:column;
+      overflow:visible;
+    }
+
+    .stage.detailedView:not(:fullscreen):not(.emptyState) .topbar{
+      order:3;
+      max-height:360px;
+      padding:18px 16px 16px !important;
+    }
+
+    .stage.detailedView:not(:fullscreen):not(.emptyState) .equationHistory{
+      max-height:320px !important;
+    }
+  }
+
+
+
+  /* PATCH VUE DÉTAILLÉE V3 — retour base V1, seulement feuille d’équation stable.
+     On garde les flèches de la V1. Pas de déplacement latéral des opérations.
+     Objectif : la zone blanche de rédaction existe dès le départ et ne grandit plus,
+     en mode normal comme en plein écran. */
+  .stage.detailedView:not(:fullscreen):not(.emptyState) .topbar,
+  .stage.detailedView:fullscreen:not(.emptyState) .topbar{
+    align-self:stretch !important;
+    justify-self:stretch !important;
+    height:100% !important;
+    max-height:100% !important;
+    min-height:0 !important;
+    box-sizing:border-box;
+    overflow:hidden !important;
+  }
+
+  .stage.detailedView:not(:fullscreen):not(.emptyState) .equationHistory,
+  .stage.detailedView:fullscreen:not(.emptyState) .equationHistory{
+    height:100% !important;
+    max-height:100% !important;
+    min-height:0 !important;
+    box-sizing:border-box;
+    overflow-y:auto !important;
+    overflow-x:hidden !important;
+  }
+
+  .stage.detailedView:not(:fullscreen):not(.emptyState) .equationTable,
+  .stage.detailedView:fullscreen:not(.emptyState) .equationTable{
+    max-width:100%;
+  }
+
+  /* En mode non plein écran, on garde la feuille haute, mais on descend seulement
+     le début de la rédaction pour éviter la zone des boutons rapides. */
+  .stage.detailedView:not(:fullscreen):not(.emptyState) .topbar{
+    padding-top:76px !important;
+  }
+
+  /* En plein écran, même logique : feuille fixe et déjà grande, sans changement
+     quand de nouvelles lignes apparaissent. */
+  .stage.detailedView:fullscreen:not(.emptyState) .topbar{
+    padding-top:76px !important;
+  }
+
+
+
+  /* PATCH VUE DÉTAILLÉE V4 — feuille d’équation sous les boutons rapides.
+     Base V3 conservée : mêmes flèches, même moteur, même déroulé.
+     Correction ciblée : le panneau blanc de rédaction commence plus bas
+     en mode détaillé, hors plein écran comme en plein écran. */
+  .stage.detailedView:not(:fullscreen):not(.emptyState) .topbar{
+    margin-top:92px !important;
+    height:calc(100% - 92px) !important;
+    max-height:calc(100% - 92px) !important;
+    padding-top:18px !important;
+  }
+
+  .stage.detailedView:fullscreen:not(.emptyState) .topbar{
+    margin-top:92px !important;
+    height:calc(100% - 92px) !important;
+    max-height:calc(100% - 92px) !important;
+    padding-top:18px !important;
+  }
+
+  @media (max-height:760px){
+    .stage.detailedView:not(:fullscreen):not(.emptyState) .topbar,
+    .stage.detailedView:fullscreen:not(.emptyState) .topbar{
+      margin-top:78px !important;
+      height:calc(100% - 78px) !important;
+      max-height:calc(100% - 78px) !important;
+    }
+  }
+
+
+
+  /* PATCH VUE DÉTAILLÉE V6 — cartes tableau/rédaction alignées.
+     Base V5 conservée : mêmes flèches, même moteur, même zone d'équation.
+     On enlève seulement la rangée devenue inutile de la réponse verte et on fait
+     démarrer la carte de rédaction sur la même ligne que la carte du tableau. */
+  .stage.detailedView:not(:fullscreen):not(.emptyState){
+    grid-template-columns:minmax(460px,1fr) minmax(360px,480px) !important;
+    grid-template-rows:72px minmax(0,1fr) auto 92px !important;
+    grid-template-areas:
+      "instruction spacer"
+      "board history"
+      "tools tools"
+      "actions actions" !important;
+    gap:10px 16px !important;
+  }
+
+  .stage.detailedView:not(:fullscreen):not(.emptyState) .solution{
+    display:none !important;
+  }
+
+  .stage.detailedView:not(:fullscreen):not(.emptyState) .board,
+  .stage.detailedView:not(:fullscreen):not(.emptyState) .topbar{
+    align-self:stretch !important;
+    justify-self:stretch !important;
+    height:100% !important;
+    min-height:0 !important;
+    max-height:100% !important;
+    margin-top:0 !important;
+    box-sizing:border-box !important;
+  }
+
+  .stage.detailedView:not(:fullscreen):not(.emptyState) .topbar{
+    padding:18px 16px 16px !important;
+  }
+
+  .stage.detailedView:not(:fullscreen):not(.emptyState) .equationHistory{
+    height:100% !important;
+    max-height:100% !important;
+    overflow-y:auto !important;
+    overflow-x:hidden !important;
+  }
+
+  .stage.detailedView:fullscreen:not(.emptyState){
+    grid-template-columns:minmax(520px,1fr) minmax(420px,560px) !important;
+    grid-template-rows:74px minmax(0,1fr) auto 74px !important;
+    grid-template-areas:
+      "instruction spacer"
+      "board history"
+      "tools tools"
+      "actions actions" !important;
+    gap:12px 18px !important;
+  }
+
+  .stage.detailedView:fullscreen:not(.emptyState) .solution{
+    display:none !important;
+  }
+
+  .stage.detailedView:fullscreen:not(.emptyState) .board,
+  .stage.detailedView:fullscreen:not(.emptyState) .topbar{
+    align-self:stretch !important;
+    justify-self:stretch !important;
+    height:100% !important;
+    min-height:0 !important;
+    max-height:100% !important;
+    margin-top:0 !important;
+    box-sizing:border-box !important;
+  }
+
+  .stage.detailedView:fullscreen:not(.emptyState) .topbar{
+    padding:18px 18px 18px !important;
+  }
+
+  .stage.detailedView:fullscreen:not(.emptyState) .equationHistory{
+    height:100% !important;
+    max-height:100% !important;
+    overflow-y:auto !important;
+    overflow-x:hidden !important;
+  }
+
+  @media (max-width:980px){
+    .stage.detailedView:not(:fullscreen):not(.emptyState){
+      height:auto !important;
+      min-height:620px !important;
+      display:flex !important;
+      flex-direction:column !important;
+      overflow:visible !important;
+    }
+
+    .stage.detailedView:not(:fullscreen):not(.emptyState) .topbar{
+      order:3 !important;
+      margin-top:0 !important;
+      height:auto !important;
+      max-height:360px !important;
+      padding:18px 16px 16px !important;
+    }
+
+    .stage.detailedView:not(:fullscreen):not(.emptyState) .equationHistory{
+      max-height:320px !important;
+    }
+  }
+
 </style>
 </head>
 <body>
@@ -2691,6 +3104,7 @@
   <section class="stage" id="stage">
     <div class="stageQuickActions" aria-label="Actions rapides">
       <button class="ghost quickBtn menuQuickBtn" id="btnBackToMenu" type="button" title="Revenir au menu de départ" aria-label="Revenir au menu de départ">Menu</button>
+      <button class="ghost quickBtn viewModeBtn" id="btnToggleDetailedView" type="button" title="Passer en vue détaillée" aria-label="Basculer entre vue compacte et vue détaillée">Détail</button>
       <button class="ghost quickBtn randomQuickBtn" id="btnStageRandomEquation" type="button" title="Nouvelle équation au hasard" aria-label="Générer une nouvelle équation au hasard">🎲</button>
       <button class="ghost quickBtn equationEyeBtn" id="btnToggleEquation" type="button" title="Masquer l’équation" aria-label="Afficher ou masquer l’équation"></button>
       <button class="ghost quickBtn" id="btnFullscreen" type="button" title="Plein écran" aria-label="Plein écran">⛶</button>
@@ -2802,6 +3216,7 @@
   const btnFullscreen = document.getElementById("btnFullscreen");
   const btnToggleEquation = document.getElementById("btnToggleEquation");
   const btnBackToMenu = document.getElementById("btnBackToMenu");
+  const btnToggleDetailedView = document.getElementById("btnToggleDetailedView");
   const toolDecompose = document.getElementById("toolDecompose");
   const toolAdd = document.getElementById("toolAdd");
   const toolShare = document.getElementById("toolShare");
@@ -2852,6 +3267,7 @@
   let addSelection = [];
   let moveSelection = null;
   let actionMode = "decompose"; // decompose | add | share | delete | move
+  let equationViewMode = "compact"; // compact | detailed
 
   function setActionMode(mode){
     actionMode = mode;
@@ -2968,6 +3384,27 @@
   function toggleEquationDisplay(){
     if(!equationDisplayModeEl) return;
     equationDisplayModeEl.value = equationDisplayModeEl.value === "hide" ? "show" : "hide";
+    render();
+  }
+
+  function isDetailedEquationView(){
+    return equationViewMode === "detailed";
+  }
+
+  function syncDetailedViewMode(){
+    if(stageEl){
+      stageEl.classList.toggle("detailedView", isDetailedEquationView());
+    }
+    if(btnToggleDetailedView){
+      const detailed = isDetailedEquationView();
+      btnToggleDetailedView.classList.toggle("is-detailed", detailed);
+      btnToggleDetailedView.textContent = detailed ? "Compact" : "Détail";
+      btnToggleDetailedView.title = detailed ? "Revenir à la vue compacte" : "Passer en vue détaillée";
+    }
+  }
+
+  function toggleDetailedEquationView(){
+    equationViewMode = isDetailedEquationView() ? "compact" : "detailed";
     render();
   }
 
@@ -3113,16 +3550,31 @@
     return `${sideExpression("bottom")} = ${sideExpression("top")}`;
   }
 
-  function recordEquationStep(){
+  function recordEquationStep(operation=null){
     if(!state) return;
     const eq = currentEquationString();
     if(!state.steps) state.steps = [];
-    if(state.steps[state.steps.length - 1] !== eq) state.steps.push(eq);
+    if(!state.stepOps) state.stepOps = [];
+    if(state.steps[state.steps.length - 1] !== eq){
+      if(state.steps.length > 0){
+        state.stepOps.push(operation || null);
+      }
+      state.steps.push(eq);
+    }
+  }
+
+  function compactOperationLabel(raw){
+    return String(raw || "").replace(/\s*×\s*/g, "×").replace(/\s+/g, "");
+  }
+
+  function makeBothSidesOperation(label){
+    return {type:"bothSides", label:String(label || "")};
   }
 
   function refreshStepsForUnknownDisplay(){
     if(!state) return;
     state.steps = [currentEquationString()];
+    state.stepOps = [];
     render();
   }
 
@@ -3175,6 +3627,7 @@
     if(!state) return;
     const eq = currentEquationString();
     if(!state.steps) state.steps = [];
+    if(!state.stepOps) state.stepOps = [];
     if(state.steps.length === 0){
       state.steps.push(eq);
     }else{
@@ -3349,8 +3802,9 @@
         if(ids.has(p.id)) p.removed = true;
       }
     }
+    const opLabel = `−${compactOperationLabel(info.label)}`;
     deleteSelection = [];
-    recordEquationStep();
+    recordEquationStep(makeBothSidesOperation(opLabel));
     render();
     setStatus("Même quantité supprimée des deux côtés", true);
   }
@@ -3390,7 +3844,7 @@
     const sideArr = state[opp.numberSide];
     const idx = sideArr.findIndex(p => p.id === opp.numberPiece.id);
     sideArr.splice(idx, 1, ...parts);
-    recordEquationStep();
+    recordEquationStep(makeBothSidesOperation(`:${opp.count}`));
 
     render();
     setStatus(`La quantité est partagée en ${opp.count} parts égales`, true);
@@ -3522,7 +3976,9 @@
 
     const solved = getSolvedValue();
     if(solved !== null){
-      solutionEl.textContent = `${displayedUnknown()} = ${solved}`;
+      // V5 — la réponse finale n'est plus affichée en gros en vert :
+      // elle est déjà visible dans la dernière ligne d'équation et dans le tableau.
+      solutionEl.textContent = "";
       setStatus("Résolution terminée", true);
       setInstruction(`Bravo :&nbsp;<strong>${displayedUnknown()}</strong>&nbsp;est trouvé.`);
       actionZone.innerHTML = "";
@@ -3688,6 +4144,27 @@
     return {lhs:parts[0].trim(), rhs:parts.slice(1).join("=").trim()};
   }
 
+  function escapeHtml(value){
+    return String(value == null ? "" : value)
+      .replace(/&/g, "&amp;")
+      .replace(/</g, "&lt;")
+      .replace(/>/g, "&gt;")
+      .replace(/"/g, "&quot;");
+  }
+
+  function operationArrowSvg(side){
+    if(side === "left"){
+      return `<svg class="opArrowSvg opArrowLeft" viewBox="0 0 44 44" aria-hidden="true" focusable="false"><path d="M9 4 C9 21 24 20 29 32"/><path class="arrowHead" d="M23 31 L31 39 L34 28 Z"/></svg>`;
+    }
+    return `<svg class="opArrowSvg opArrowRight" viewBox="0 0 44 44" aria-hidden="true" focusable="false"><path d="M35 4 C35 21 20 20 15 32"/><path class="arrowHead" d="M21 31 L13 39 L10 28 Z"/></svg>`;
+  }
+
+  function renderOperationRow(operation){
+    if(!operation || operation.type !== "bothSides" || !operation.label) return "";
+    const label = escapeHtml(operation.label);
+    return `<tr class="operationStep"><td class="operationCell opLeft"><span class="operationWrap"><span class="opLabel">${label}</span>${operationArrowSvg("left")}</span></td><td class="eq"></td><td class="operationCell opRight"><span class="operationWrap">${operationArrowSvg("right")}<span class="opLabel">${label}</span></span></td></tr>`;
+  }
+
   function renderEquationHistory(){
     if(!equationHistory) return;
     if(!equationDisplayEnabled()){
@@ -3696,6 +4173,7 @@
       return;
     }
     const steps = state.steps || [];
+    const stepOps = state.stepOps || [];
 
     if(!steps.length){
       equationHistory.innerHTML = "";
@@ -3703,13 +4181,17 @@
       return;
     }
 
-    const rows = steps.map((eq, i) => {
+    const rows = [];
+    steps.forEach((eq, i) => {
+      if(isDetailedEquationView() && i > 0){
+        rows.push(renderOperationRow(stepOps[i - 1]));
+      }
       const {lhs, rhs} = splitEquation(eq);
       const cls = i === steps.length - 1 ? "currentStep" : "historyStep";
-      return `<tr class="${cls}"><td class="lhs">${lhs}</td><td class="eq">=</td><td class="rhs">${rhs}</td></tr>`;
-    }).join("");
+      rows.push(`<tr class="${cls}"><td class="lhs">${escapeHtml(lhs)}</td><td class="eq">=</td><td class="rhs">${escapeHtml(rhs)}</td></tr>`);
+    });
 
-    equationHistory.innerHTML = `<table class="equationTable" aria-label="Étapes de résolution"><tbody>${rows}</tbody></table>`;
+    equationHistory.innerHTML = `<table class="equationTable" aria-label="Étapes de résolution"><tbody>${rows.join("")}</tbody></table>`;
     equationHistory.scrollTop = equationHistory.scrollHeight;
     syncEquationToggleButton();
   }
@@ -3722,6 +4204,7 @@
 
   function render(){
     syncFullscreenSizeMode();
+    syncDetailedViewMode();
     if(!state) return;
     const selectedIds = selectedDeleteIds();
     equationText.textContent = "";
@@ -3816,12 +4299,21 @@
     }
 
     pushHistory();
+    const oppositeSide = getOppositeSide(selectedShareRef.side);
+    const beforeThisSide = activePieces(selectedShareRef.side);
+    const beforeOpposite = activePieces(oppositeSide);
+    const isDivisionOfBothMembers =
+      beforeThisSide.length === 1 &&
+      beforeThisSide[0] && beforeThisSide[0].id === selectedShareRef.id &&
+      beforeOpposite.length === count &&
+      beforeOpposite.every(p => p.type === "x");
+
     const part = value / count;
     const shareGroupId = uid();
     arr.splice(idx, 1, ...Array.from({length:count}, () => makeNumber(part, makeShareGroupMeta(shareGroupId, count))));
     selectedShareRef = null;
     if(shareDialog) shareDialog.close();
-    recordEquationStep();
+    recordEquationStep(isDivisionOfBothMembers ? makeBothSidesOperation(`:${count}`) : null);
     render();
     setStatus("Nombre partagé en parts égales", true);
   }
@@ -4793,6 +5285,7 @@
     });
   }
   if(btnToggleEquation) btnToggleEquation.addEventListener("click", toggleEquationDisplay);
+  if(btnToggleDetailedView) btnToggleDetailedView.addEventListener("click", toggleDetailedEquationView);
   if(btnShowSuggestions){
     btnShowSuggestions.addEventListener("click", () => {
       presetChips.classList.toggle("open");
@@ -4967,7 +5460,8 @@
       top:[],
       bottom:[],
       hintCount:0,
-      steps:[]
+      steps:[],
+      stepOps:[]
     };
 
     const rawLhsSide = String(payload.lhsSide || payload.equationLhsSide || "").toLowerCase();
@@ -5047,6 +5541,7 @@
     setInstruction("<strong>Écris une équation à gauche, puis construis le tableau.</strong>");
     setStatus("Prêt à construire");
     syncFullscreenSizeMode();
+    syncDetailedViewMode();
     syncEquationToggleButton();
   }else{
     setBuilderLayout("active");
