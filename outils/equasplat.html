@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1" />
-<title>ÉquaSplat</title>
+<title>ÉquaSplat — vue rédaction v4</title>
 <style>
   :root{
     --bg:#f5f7fb;
@@ -1297,6 +1297,17 @@
     font-weight:950;
   }
 
+  /* PATCH V2 — bouton de bascule prêt : Classique / Rédaction.
+     À cette étape, on installe seulement le bouton et l'état CSS.
+     La mise en page Rédaction sera construite à l'étape suivante. */
+  .viewModeQuickBtn{
+    width:auto;
+    min-width:92px;
+    padding:0 13px;
+    font-size:14px;
+    font-weight:950;
+  }
+
   .restartQuickBtn{
     color:#3730a3;
     background:#eef2ff;
@@ -1308,7 +1319,8 @@
   }
 
   main.startMode .menuQuickBtn,
-  main.startMode .restartQuickBtn{
+  main.startMode .restartQuickBtn,
+  main.startMode .viewModeQuickBtn{
     display:none;
   }
 
@@ -1925,11 +1937,362 @@
   }
 
 
+
+  /* PATCH V1 — maison uniquement dans le menu de départ. */
+  main.startMode .panel{
+    position:relative !important;
+  }
+
+  .siteHomeBtn{
+    position:absolute;
+    top:18px;
+    left:18px;
+    width:42px;
+    height:42px;
+    display:grid;
+    place-items:center;
+    border-radius:14px;
+    color:#0f172a;
+    background:rgba(255,255,255,.88);
+    border:1px solid rgba(15,23,42,.12);
+    box-shadow:0 8px 20px rgba(15,23,42,.10);
+    text-decoration:none;
+    z-index:4;
+  }
+
+  .siteHomeBtn:hover{
+    background:#f1f5f9;
+  }
+
+  .siteHomeBtn svg{
+    width:24px;
+    height:24px;
+    display:block;
+  }
+
+  @media (max-width:700px){
+    .siteHomeBtn{
+      top:14px;
+      left:14px;
+      width:40px;
+      height:40px;
+    }
+  }
+
+
+  /* PATCH V3 — vue Rédaction : plateau Splat à gauche, équation à droite.
+     Étape volontairement limitée : on installe la mise en page et le mode Rédaction par défaut,
+     sans ajouter encore les flèches d'opération. Le moteur et les actions ne sont pas modifiés. */
+
+  main.activeMode.viewRedaction .stage:not(:fullscreen){
+    height:calc(100vh - 32px);
+    min-height:640px;
+    display:grid !important;
+    grid-template-columns:minmax(640px,1fr) minmax(320px,430px);
+    grid-template-rows:64px minmax(0,1fr) auto 72px;
+    grid-template-areas:
+      "instruction spacer"
+      "board history"
+      "tools tools"
+      "actions actions";
+    gap:10px 14px;
+    overflow:hidden;
+    padding:14px;
+  }
+
+  main.activeMode.viewRedaction .stage:not(:fullscreen) .instructionZone{
+    grid-area:instruction;
+    width:100%;
+    height:64px;
+    min-height:64px;
+    margin:0;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+  }
+
+  main.activeMode.viewRedaction .stage:not(:fullscreen) .board{
+    grid-area:board;
+    width:100%;
+    height:100%;
+    min-height:0;
+    max-height:none;
+    padding:8px;
+    margin:0;
+    align-self:stretch;
+    justify-self:stretch;
+  }
+
+  main.activeMode.viewRedaction .stage:not(:fullscreen) #splatSvg{
+    height:100%;
+    min-height:0;
+  }
+
+  main.activeMode.viewRedaction .stage:not(:fullscreen) .topbar{
+    grid-area:history;
+    display:block !important;
+    width:100%;
+    height:100%;
+    min-height:0;
+    max-height:100%;
+    margin:0;
+    padding:18px 16px 16px !important;
+    overflow:hidden;
+    background:rgba(255,255,255,.72);
+    border:1px solid rgba(15,23,42,.08);
+    border-radius:24px;
+    align-self:stretch;
+    justify-self:stretch;
+    box-sizing:border-box;
+  }
+
+  main.activeMode.viewRedaction .stage:not(:fullscreen) .equationHistory{
+    width:100% !important;
+    height:100% !important;
+    max-height:100% !important;
+    min-height:0;
+    margin:0;
+    padding:2px 6px 6px;
+    overflow-y:auto !important;
+    overflow-x:hidden !important;
+    display:block;
+  }
+
+  main.activeMode.viewRedaction .stage:not(:fullscreen) .equationList{
+    width:100% !important;
+    font-size:clamp(23px,2.15vw,34px);
+    line-height:1.12;
+  }
+
+  main.activeMode.viewRedaction .stage:not(:fullscreen) .toolBar{
+    grid-area:tools;
+    width:100%;
+    margin:0 auto;
+  }
+
+  main.activeMode.viewRedaction .stage:not(:fullscreen) .actionZone{
+    grid-area:actions;
+    width:100%;
+    min-height:72px;
+    margin:0;
+    align-items:flex-start;
+  }
+
+  main.activeMode.viewRedaction .stage:not(:fullscreen) .solution{
+    display:none !important;
+  }
+
+  main.activeMode.viewRedaction .viewModeQuickBtn{
+    background:linear-gradient(180deg,#60a5fa,#3b82f6);
+    color:#fff;
+    border-color:rgba(37,99,235,.30);
+  }
+
+  main.activeMode.viewRedaction .stage:fullscreen{
+    display:grid !important;
+    grid-template-columns:minmax(760px,1fr) minmax(360px,480px);
+    grid-template-rows:70px minmax(0,1fr) auto 76px;
+    grid-template-areas:
+      "instruction spacer"
+      "board history"
+      "tools tools"
+      "actions actions";
+    gap:12px 16px;
+    padding:18px 22px 12px;
+    overflow:hidden;
+  }
+
+  main.activeMode.viewRedaction .stage:fullscreen .instructionZone{
+    grid-area:instruction;
+    width:100%;
+    height:70px;
+    min-height:70px;
+    flex:initial;
+    margin:0;
+  }
+
+  main.activeMode.viewRedaction .stage:fullscreen .board{
+    grid-area:board;
+    width:100%;
+    height:100%;
+    min-height:0;
+    max-height:none;
+    flex:initial;
+    padding:8px;
+    margin:0;
+    align-self:stretch;
+    justify-self:stretch;
+  }
+
+  main.activeMode.viewRedaction .stage:fullscreen #splatSvg{
+    height:100%;
+    min-height:0;
+  }
+
+  main.activeMode.viewRedaction .stage:fullscreen .topbar{
+    grid-area:history;
+    display:block !important;
+    width:100%;
+    height:100%;
+    min-height:0;
+    max-height:100%;
+    flex:initial;
+    margin:0;
+    padding:18px 18px 18px !important;
+    overflow:hidden;
+    background:rgba(255,255,255,.72);
+    border:1px solid rgba(15,23,42,.08);
+    border-radius:24px;
+    align-self:stretch;
+    justify-self:stretch;
+    box-sizing:border-box;
+  }
+
+  main.activeMode.viewRedaction .stage:fullscreen .equationHistory{
+    width:100% !important;
+    height:100% !important;
+    max-height:100% !important;
+    min-height:0;
+    margin:0;
+    padding:2px 8px 6px;
+    overflow-y:auto !important;
+    overflow-x:hidden !important;
+    display:block;
+  }
+
+  main.activeMode.viewRedaction .stage:fullscreen .equationList{
+    width:100% !important;
+    font-size:clamp(26px,2.18vw,38px);
+    line-height:1.12;
+  }
+
+  main.activeMode.viewRedaction .stage:fullscreen .toolBar{
+    grid-area:tools;
+    width:100%;
+    flex:initial;
+    margin:0 auto;
+  }
+
+  main.activeMode.viewRedaction .stage:fullscreen .actionZone{
+    grid-area:actions;
+    width:100%;
+    min-height:76px;
+    flex:initial;
+    margin:0;
+    align-items:flex-start;
+  }
+
+  main.activeMode.viewRedaction .stage:fullscreen .solution{
+    display:none !important;
+  }
+
+
+
+  /* PATCH V4 — lignes d'opération dans la vue Rédaction.
+     Elles apparaissent seulement pour les actions appliquées aux deux membres. */
+  .equationOpRow{
+    display:grid;
+    grid-template-columns:minmax(0,1fr) auto minmax(0,1fr);
+    align-items:center;
+    column-gap:20px;
+    width:100%;
+    padding:1px 0 5px;
+    color:#475569;
+    opacity:.92;
+    font-size:.58em;
+    font-weight:950;
+    line-height:1;
+  }
+
+  .equationOpRow .operationCell{
+    min-width:0;
+  }
+
+  .operationWrap{
+    display:inline-flex;
+    align-items:center;
+    gap:.22em;
+    white-space:nowrap;
+  }
+
+  .operationCell.opLeft{
+    text-align:right;
+    justify-self:end;
+  }
+
+  .operationCell.opRight{
+    text-align:left;
+    justify-self:start;
+  }
+
+  .opLabel{
+    font-family:Arial, Helvetica, sans-serif;
+    font-variant-numeric:tabular-nums;
+    letter-spacing:-.02em;
+  }
+
+  .opArrowSvg{
+    width:1.6em;
+    height:1.28em;
+    display:block;
+    overflow:visible;
+  }
+
+  .opArrowSvg path{
+    fill:none;
+    stroke:currentColor;
+    stroke-width:3.2;
+    stroke-linecap:round;
+    stroke-linejoin:round;
+  }
+
+  .opArrowSvg .arrowHead{
+    fill:currentColor;
+    stroke:none;
+  }
+
+  @media (max-width:1050px){
+    main.activeMode.viewRedaction .stage:not(:fullscreen){
+      height:auto;
+      min-height:640px;
+      display:flex !important;
+      flex-direction:column;
+      overflow:visible;
+    }
+
+    main.activeMode.viewRedaction .stage:not(:fullscreen) .instructionZone{
+      height:auto;
+      min-height:58px;
+      width:100%;
+    }
+
+    main.activeMode.viewRedaction .stage:not(:fullscreen) .board{
+      height:430px;
+      min-height:360px;
+    }
+
+    main.activeMode.viewRedaction .stage:not(:fullscreen) .topbar{
+      height:auto;
+      max-height:360px;
+      min-height:240px;
+      padding:18px 16px 16px !important;
+    }
+
+    main.activeMode.viewRedaction .stage:not(:fullscreen) .equationHistory{
+      max-height:320px !important;
+    }
+  }
+
 </style>
 </head>
 <body>
 <main id="appMain" class="startMode">
   <section class="panel">
+    <a class="siteHomeBtn" href="sheet_generator_schema_partie_tout.html" title="Revenir au menu" aria-label="Revenir au menu">
+      <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+        <path d="M3.4 10.7 12 3.8l8.6 6.9c.4.3.5.9.2 1.3-.3.4-.9.5-1.3.2l-.9-.7v7.6c0 .7-.6 1.3-1.3 1.3h-4.1v-5.4H10.8v5.4H6.7c-.7 0-1.3-.6-1.3-1.3v-7.6l-.9.7c-.4.3-1 .2-1.3-.2-.3-.4-.2-1 .2-1.3Z" fill="currentColor"/>
+      </svg>
+    </a>
     <div class="appTitle">ÉquaSplat</div>
 
     <div class="menuCompactGrid" aria-label="Réglages de départ">
@@ -2040,6 +2403,7 @@
   <section class="stage" id="stage">
     <div class="stageQuickActions" aria-label="Actions rapides">
       <button class="ghost quickBtn menuQuickBtn" id="btnBackToMenu" type="button" title="Revenir au menu de départ" aria-label="Revenir au menu de départ">Menu</button>
+      <button class="ghost quickBtn viewModeQuickBtn" id="btnViewMode" type="button" title="Passer en vue classique" aria-label="Passer en vue classique">Classique</button>
       <button class="ghost quickBtn diceBtn" id="btnStageRandom" type="button" title="Nouvelle équation aléatoire" aria-label="Nouvelle équation aléatoire">🎲</button>
       <button class="ghost quickBtn" id="btnStageUndo" type="button" title="Annuler la dernière action" aria-label="Annuler la dernière action">↶</button>
       <button class="ghost quickBtn" id="btnFullscreen" type="button" title="Plein écran" aria-label="Plein écran">⛶</button>
@@ -2201,6 +2565,7 @@
   const btnStageRandom = document.getElementById("btnStageRandom");
   const btnStageReset = document.getElementById("btnStageReset");
   const btnBackToMenu = document.getElementById("btnBackToMenu");
+  const btnViewMode = document.getElementById("btnViewMode");
   const btnFullscreen = document.getElementById("btnFullscreen");
 
   const decomposeDialog = document.getElementById("decomposeDialog");
@@ -2237,6 +2602,7 @@
   let initialState = null;
   let history = [];
   let appLayoutMode = "start";
+  let viewMode = "redaction";
   let actionMode = "decompose";
   let selectedPieceRef = null;
   let deleteSelection = [];
@@ -2251,6 +2617,29 @@
     if(!appMain) return;
     appMain.classList.toggle("startMode", appLayoutMode === "start");
     appMain.classList.toggle("activeMode", appLayoutMode === "active");
+  }
+
+  function setViewMode(mode){
+    viewMode = mode === "redaction" ? "redaction" : "classic";
+    if(appMain){
+      appMain.classList.toggle("viewRedaction", viewMode === "redaction");
+      appMain.classList.toggle("viewClassic", viewMode === "classic");
+    }
+    if(stageEl){
+      stageEl.classList.toggle("viewRedaction", viewMode === "redaction");
+      stageEl.classList.toggle("viewClassic", viewMode === "classic");
+    }
+    if(btnViewMode){
+      const target = viewMode === "redaction" ? "Classique" : "Rédaction";
+      btnViewMode.textContent = target;
+      btnViewMode.title = viewMode === "redaction" ? "Passer en vue classique" : "Passer en vue rédaction";
+      btnViewMode.setAttribute("aria-label", btnViewMode.title);
+    }
+  }
+
+  function toggleViewMode(){
+    setViewMode(viewMode === "redaction" ? "classic" : "redaction");
+    render();
   }
 
   function openStage(){
@@ -2744,6 +3133,7 @@
         left:piecesFromParsedSide(model.left, {preserveWrittenTokens:true}),
         right:piecesFromParsedSide(model.right, {preserveWrittenTokens:true}),
         steps:[],
+        stepOps:[],
         conclusionDone:false
       };
       recordEquationStep();
@@ -3097,6 +3487,7 @@
       left:[],
       right:[],
       steps:[],
+      stepOps:[],
       conclusionDone:false
     };
 
@@ -3169,6 +3560,7 @@
       left:[],
       right:[],
       steps:[],
+      stepOps:[],
       conclusionDone:false
     };
 
@@ -3325,21 +3717,52 @@
     selectedPieceRef = null;
     deleteSelection = [];
     groupSelection = [];
-    recordEquationStep();
+    // La conclusion correspond à la division des deux membres par le nombre de taches.
+    // C'est ici, et non au moment du partage du plateau, que l'on affiche l'opération.
+    recordEquationStep(makeBothSidesOperation(`:${info.count}`));
     render();
   }
 
-  function recordEquationStep(){
+  function recordEquationStep(operation=null){
     if(!state) return;
     const eq = currentEquationString();
     if(!state.steps) state.steps = [];
-    if(state.steps[state.steps.length - 1] !== eq) state.steps.push(eq);
+    if(!state.stepOps) state.stepOps = [];
+    if(state.steps[state.steps.length - 1] !== eq){
+      if(state.steps.length > 0){
+        state.stepOps.push(operation || null);
+      }
+      state.steps.push(eq);
+    }
+  }
+
+  function compactOperationLabel(raw){
+    return String(raw || "").replace(/\s*×\s*/g, "×").replace(/\s+/g, "");
+  }
+
+  function makeBothSidesOperation(label){
+    return {type:"bothSides", label:String(label || "")};
+  }
+
+  function formatSignedOperationNumber(value){
+    const n = Number(value || 0);
+    if(n < 0) return `−${Math.abs(n)}`;
+    return `+${n}`;
+  }
+
+  function formatSignedOperationX(coef){
+    const n = Number(coef || 0);
+    const abs = Math.abs(n);
+    const v = displayedUnknown();
+    const body = abs === 1 ? v : `${abs}${v}`;
+    return n < 0 ? `−${body}` : `+${body}`;
   }
 
   function updateCurrentEquationStep(){
     if(!state) return;
     const eq = currentEquationString();
     if(!state.steps) state.steps = [];
+    if(!state.stepOps) state.stepOps = [];
     if(state.steps.length === 0){
       state.steps.push(eq);
       return;
@@ -3359,17 +3782,43 @@
     return {lhs:parts[0].trim(), rhs:parts.slice(1).join("=").trim()};
   }
 
+  function escapeHtml(value){
+    return String(value == null ? "" : value)
+      .replace(/&/g, "&amp;")
+      .replace(/</g, "&lt;")
+      .replace(/>/g, "&gt;")
+      .replace(/"/g, "&quot;");
+  }
+
+  function operationArrowSvg(side){
+    if(side === "left"){
+      return `<svg class="opArrowSvg opArrowLeft" viewBox="0 0 44 44" aria-hidden="true" focusable="false"><path d="M9 4 C9 21 24 20 29 32"/><path class="arrowHead" d="M23 31 L31 39 L34 28 Z"/></svg>`;
+    }
+    return `<svg class="opArrowSvg opArrowRight" viewBox="0 0 44 44" aria-hidden="true" focusable="false"><path d="M35 4 C35 21 20 20 15 32"/><path class="arrowHead" d="M21 31 L13 39 L10 28 Z"/></svg>`;
+  }
+
+  function renderOperationRow(operation){
+    if(viewMode !== "redaction" || !operation || operation.type !== "bothSides" || !operation.label) return "";
+    const label = escapeHtml(operation.label);
+    return `<div class="equationOpRow"><span class="operationCell opLeft"><span class="operationWrap"><span class="opLabel">${label}</span>${operationArrowSvg("left")}</span></span><span class="eq"></span><span class="operationCell opRight"><span class="operationWrap">${operationArrowSvg("right")}<span class="opLabel">${label}</span></span></span></div>`;
+  }
+
   function renderEquationHistory(){
     const steps = state.steps || [];
+    const stepOps = state.stepOps || [];
     if(!steps.length){ equationHistory.innerHTML = ""; return; }
-    const rows = steps.map((eq, i) => {
+    const rows = [];
+    steps.forEach((eq, i) => {
+      if(i > 0){
+        rows.push(renderOperationRow(stepOps[i - 1]));
+      }
       const {lhs, rhs} = splitEquation(eq);
       const isCurrent = i === steps.length - 1;
       const solved = isSolvedEquationString(eq);
       const cls = `${isCurrent ? "currentStep" : "historyStep"}${solved ? " solvedStep" : ""}`;
-      return `<div class="equationRow ${cls}"><span class="lhs">${lhs}</span><span class="eq">=</span><span class="rhs">${rhs}</span></div>`;
-    }).join("");
-    equationHistory.innerHTML = `<div class="equationList" aria-label="Étapes de résolution">${rows}</div>`;
+      rows.push(`<div class="equationRow ${cls}"><span class="lhs">${escapeHtml(lhs)}</span><span class="eq">=</span><span class="rhs">${escapeHtml(rhs)}</span></div>`);
+    });
+    equationHistory.innerHTML = `<div class="equationList" aria-label="Étapes de résolution">${rows.join("")}</div>`;
     equationHistory.scrollTop = equationHistory.scrollHeight;
   }
 
@@ -3430,7 +3879,7 @@
       const rightCoef = right.reduce((sum,p)=>sum + xSign(p), 0);
       if(leftCoef !== rightCoef) return {ok:false, reason:"differentXCoef", left, right, leftCoef, rightCoef};
       if(leftCoef === 0) return {ok:false, reason:"zeroXSelection", left, right, leftCoef, rightCoef};
-      return {ok:true, type:"x", label:formatXTerm(leftCoef), left, right};
+      return {ok:true, type:"x", coef:leftCoef, label:formatXTerm(leftCoef), left, right};
     }
     const leftSum = left.reduce((s,p)=>s + Number(p.value || 0), 0);
     const rightSum = right.reduce((s,p)=>s + Number(p.value || 0), 0);
@@ -3457,8 +3906,9 @@
     for(const side of ["left","right"]){
       for(const p of state[side]) if(ids.has(p.id)) p.removed = true;
     }
+    const opLabel = `−${compactOperationLabel(info.label)}`;
     deleteSelection = [];
-    recordEquationStep();
+    recordEquationStep(makeBothSidesOperation(opLabel));
     render();
   }
 
@@ -3642,13 +4092,13 @@
     return null;
   }
 
-  function applyTokenSplit(side, id, values, historyMode="update"){
+  function applyTokenSplit(side, id, values, historyMode="update", operation=null){
     const arr = state[side];
     const idx = arr.findIndex(p => p.id === id);
     if(idx < 0) return;
     pushHistory();
     arr.splice(idx, 1, ...values.map(makeToken));
-    if(historyMode === "record") recordEquationStep();
+    if(historyMode === "record") recordEquationStep(operation);
     else updateCurrentEquationStep();
     selectedPieceRef = null;
     render();
@@ -3786,7 +4236,10 @@
         btn.addEventListener("click", () => {
           const n = Number(btn.dataset.n);
           const part = Number(btn.dataset.part);
-          applyTokenSplit(side, id, Array.from({length:n},()=>part), "record");
+          // Partager équitablement est une action sur le plateau :
+          // on fait apparaître le produit (ex. 2 × 12), mais on ne note pas encore :2.
+          // La division des deux membres est affichée au moment de "Conclure".
+          applyTokenSplit(side, id, Array.from({length:n},()=>part), "record", null);
           shareDialog.close();
         });
       });
@@ -4409,11 +4862,11 @@
     setTimeout(()=>addBothInput.focus(), 80);
   }
 
-  function finishAddBothAction(){
+  function finishAddBothAction(operation=null){
     deleteSelection = [];
     groupSelection = [];
     selectedPieceRef = null;
-    recordEquationStep();
+    recordEquationStep(operation);
     addBothDialog.close();
     render();
   }
@@ -4436,7 +4889,7 @@
     pushHistory();
     state.left.push(makeToken(value));
     state.right.push(makeToken(value));
-    finishAddBothAction();
+    finishAddBothAction(makeBothSidesOperation(formatSignedOperationNumber(value)));
   }
 
   function applyAddBothX(sign){
@@ -4453,7 +4906,7 @@
       state.left.push(makeX(sign));
       state.right.push(makeX(sign));
     }
-    finishAddBothAction();
+    finishAddBothAction(makeBothSidesOperation(formatSignedOperationX(sign * count)));
   }
 
   function takeOppositeOfBothMembers(){
@@ -4469,7 +4922,7 @@
     deleteSelection = [];
     groupSelection = [];
     selectedPieceRef = null;
-    recordEquationStep();
+    recordEquationStep(makeBothSidesOperation("×(−1)"));
     render();
   }
 
@@ -4687,6 +5140,7 @@
   document.getElementById("btnRandom").addEventListener("click", () => fillRandomEquationInput({build:false}));
   document.getElementById("btnReset").addEventListener("click", resetCurrentExercise);
   if(btnBackToMenu) btnBackToMenu.addEventListener("click", returnToStartMenu);
+  if(btnViewMode) btnViewMode.addEventListener("click", toggleViewMode);
   if(btnStageReset) btnStageReset.addEventListener("click", resetCurrentExercise);
   btnStageRandom.addEventListener("click", randomAndOpen);
   toolDecompose.addEventListener("click", () => setActionMode("decompose"));
@@ -4756,12 +5210,12 @@
   }
   unknownDisplayModeEl.addEventListener("change", () => {
     if(appLayoutMode === "start"){ refreshEquationProposalFromMenus(); return; }
-    if(state){ state.conclusionDone = false; state.steps = [currentEquationString()]; render(); }
+    if(state){ state.conclusionDone = false; state.steps = [currentEquationString()]; state.stepOps = []; render(); }
   });
   if(equationWritingModeEl){
     equationWritingModeEl.addEventListener("change", () => {
       if(appLayoutMode === "start"){ refreshEquationProposalFromMenus(); return; }
-      if(state){ state.conclusionDone = false; state.steps = [currentEquationString()]; render(); }
+      if(state){ state.conclusionDone = false; state.steps = [currentEquationString()]; state.stepOps = []; render(); }
     });
   }
   removedDisplayModeEl.addEventListener("change", render);
@@ -4783,6 +5237,7 @@
   syncUniverseUI();
   syncTeacherControls();
   renderEquationExamples();
+  setViewMode("redaction");
   setAppLayout("start");
   refreshEquationProposalFromMenus();
 })();
