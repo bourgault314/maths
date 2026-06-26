@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1" />
-<title>ÉquaBarre — constructeur d’équations v2.12</title>
+<title>ÉquaBarre — vue rédaction v9</title>
 <style>
   :root{
     --bg:#f5f7fb;
@@ -428,6 +428,19 @@
     border:1px solid rgba(15,23,42,.14);
     box-shadow:0 10px 24px rgba(15,23,42,.14);
     backdrop-filter:blur(8px);
+  }
+
+  .homeQuickBtn{
+    width:44px;
+    min-width:44px;
+    padding:0;
+    color:#0f172a;
+  }
+
+  .homeQuickBtn .homeIcon{
+    width:24px;
+    height:24px;
+    display:block;
   }
 
   .equationEyeBtn svg{
@@ -2447,6 +2460,17 @@
       padding:0 8px;
       font-size:12px;
     }
+    .homeQuickBtn{
+      width:38px;
+      min-width:38px;
+      padding:0;
+    }
+
+    .homeQuickBtn .homeIcon{
+      width:21px;
+      height:21px;
+    }
+
 
     #btnFullscreen{
       display:none;
@@ -3036,11 +3060,57 @@
     }
   }
 
+
+  /* PATCH V9 — maison uniquement dans le menu de départ ; bouton actif remis en texte Menu. */
+  main.startMode .panel{
+    position:relative !important;
+  }
+
+  .siteHomeBtn{
+    position:absolute;
+    top:18px;
+    left:18px;
+    width:42px;
+    height:42px;
+    display:grid;
+    place-items:center;
+    border-radius:14px;
+    color:#0f172a;
+    background:rgba(255,255,255,.88);
+    border:1px solid rgba(15,23,42,.12);
+    box-shadow:0 8px 20px rgba(15,23,42,.10);
+    text-decoration:none;
+  }
+
+  .siteHomeBtn:hover{
+    background:#f1f5f9;
+  }
+
+  .siteHomeBtn svg{
+    width:24px;
+    height:24px;
+    display:block;
+  }
+
+  @media (max-width:700px){
+    .siteHomeBtn{
+      top:14px;
+      left:14px;
+      width:40px;
+      height:40px;
+    }
+  }
+
 </style>
 </head>
 <body>
 <main id="appMain" class="startMode">
   <section class="panel">
+    <a class="siteHomeBtn" href="index.html" title="Revenir à l’index" aria-label="Revenir à l’index">
+      <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+        <path d="M3.4 10.7 12 3.8l8.6 6.9c.4.3.5.9.2 1.3-.3.4-.9.5-1.3.2l-.9-.7v7.6c0 .7-.6 1.3-1.3 1.3h-4.1v-5.4H10.8v5.4H6.7c-.7 0-1.3-.6-1.3-1.3v-7.6l-.9.7c-.4.3-1 .2-1.3-.2-.3-.4-.2-1 .2-1.3Z" fill="currentColor"/>
+      </svg>
+    </a>
     <div class="appTitle">ÉquaBarre</div>
 
     <div class="profPanel" id="profPanel">
