@@ -2625,8 +2625,8 @@
 
 
 
-  /* PATCH VUE DÉTAILLÉE — tableau à gauche, rédaction avec opérations à droite.
-     Mode expérimental : la vue compacte existante reste intacte. */
+  /* PATCH VUE RÉDACTION — tableau à gauche, rédaction avec opérations à droite.
+     La vue rédaction est affichée par défaut ; la vue classique reste accessible. */
   .viewModeBtn{
     width:auto;
     min-width:74px;
@@ -3104,7 +3104,7 @@
   <section class="stage" id="stage">
     <div class="stageQuickActions" aria-label="Actions rapides">
       <button class="ghost quickBtn menuQuickBtn" id="btnBackToMenu" type="button" title="Revenir au menu de départ" aria-label="Revenir au menu de départ">Menu</button>
-      <button class="ghost quickBtn viewModeBtn" id="btnToggleDetailedView" type="button" title="Passer en vue détaillée" aria-label="Basculer entre vue compacte et vue détaillée">Détail</button>
+      <button class="ghost quickBtn viewModeBtn" id="btnToggleDetailedView" type="button" title="Passer en vue classique" aria-label="Basculer entre vue rédaction et vue classique">Classique</button>
       <button class="ghost quickBtn randomQuickBtn" id="btnStageRandomEquation" type="button" title="Nouvelle équation au hasard" aria-label="Générer une nouvelle équation au hasard">🎲</button>
       <button class="ghost quickBtn equationEyeBtn" id="btnToggleEquation" type="button" title="Masquer l’équation" aria-label="Afficher ou masquer l’équation"></button>
       <button class="ghost quickBtn" id="btnFullscreen" type="button" title="Plein écran" aria-label="Plein écran">⛶</button>
@@ -3267,7 +3267,7 @@
   let addSelection = [];
   let moveSelection = null;
   let actionMode = "decompose"; // decompose | add | share | delete | move
-  let equationViewMode = "compact"; // compact | detailed
+  let equationViewMode = "detailed"; // classic | detailed
 
   function setActionMode(mode){
     actionMode = mode;
@@ -3398,13 +3398,14 @@
     if(btnToggleDetailedView){
       const detailed = isDetailedEquationView();
       btnToggleDetailedView.classList.toggle("is-detailed", detailed);
-      btnToggleDetailedView.textContent = detailed ? "Compact" : "Détail";
-      btnToggleDetailedView.title = detailed ? "Revenir à la vue compacte" : "Passer en vue détaillée";
+      btnToggleDetailedView.textContent = detailed ? "Classique" : "Rédaction";
+      btnToggleDetailedView.title = detailed ? "Passer en vue classique" : "Passer en vue rédaction";
+      btnToggleDetailedView.setAttribute("aria-label", detailed ? "Passer en vue classique" : "Passer en vue rédaction");
     }
   }
 
   function toggleDetailedEquationView(){
-    equationViewMode = isDetailedEquationView() ? "compact" : "detailed";
+    equationViewMode = isDetailedEquationView() ? "classic" : "detailed";
     render();
   }
 
