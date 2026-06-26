@@ -3758,6 +3758,16 @@
     return n < 0 ? `−${body}` : `+${body}`;
   }
 
+  function formatSubtractBothSidesOperation(info){
+    if(!info) return "";
+    if(info.type === "x"){
+      const coef = Number(info.coef || 0);
+      return formatSignedOperationX(-coef);
+    }
+    const value = Number(info.value || 0);
+    return formatSignedOperationNumber(-value);
+  }
+
   function updateCurrentEquationStep(){
     if(!state) return;
     const eq = currentEquationString();
@@ -3773,7 +3783,7 @@
   function isSolvedEquationString(eq){
     const {lhs, rhs} = splitEquation(eq);
     const v = displayedUnknown();
-    return lhs === v && /^[−-]?\d+$/.test(rhs);
+    return (lhs === v && /^[−-]?\d+$/.test(rhs)) || (rhs === v && /^[−-]?\d+$/.test(lhs));
   }
 
   function splitEquation(eq){
@@ -3906,7 +3916,7 @@
     for(const side of ["left","right"]){
       for(const p of state[side]) if(ids.has(p.id)) p.removed = true;
     }
-    const opLabel = `−${compactOperationLabel(info.label)}`;
+    const opLabel = formatSubtractBothSidesOperation(info);
     deleteSelection = [];
     recordEquationStep(makeBothSidesOperation(opLabel));
     render();
