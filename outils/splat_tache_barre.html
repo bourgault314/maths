@@ -68,7 +68,33 @@
     .rv-btn.active { background: var(--accent); color: white; border-color: var(--accent); }
     .rv-btn.disabled { opacity: 0.3; pointer-events: none; }
     
-    .actions { flex-shrink: 0; display: grid; grid-template-columns: 1fr 1fr; gap: 9px; padding: 10px 14px 12px 14px; border-top: 1px solid #e2e8f0; background: #fff; }
+    .print-title-control {
+        flex-shrink: 0;
+        padding: 8px 14px 0 14px;
+        border-top: 1px solid #e2e8f0;
+        background: #fff;
+    }
+    .print-title-control label {
+        display: block;
+        font-size: 11px;
+        font-weight: 800;
+        color: #64748b;
+        text-transform: uppercase;
+        margin-bottom: 5px;
+    }
+    .print-title-control input {
+        width: 100%;
+        height: 34px;
+        padding: 7px 9px;
+        border: 1px solid var(--border);
+        border-radius: 7px;
+        font-size: 13px;
+        font-weight: 700;
+        outline: none;
+        background: #fff;
+    }
+    .print-title-control input::placeholder { color: #94a3b8; font-weight: 600; }
+    .actions { flex-shrink: 0; display: grid; grid-template-columns: 1fr 1fr; gap: 9px; padding: 8px 14px 12px 14px; background: #fff; }
     .btn { padding: 11px; border: none; border-radius: 8px; font-weight: 700; cursor: pointer; color: white; font-size: 13px; }
     .btn-new { background: var(--accent); }
     .btn-print { background: #10b981; }
@@ -275,6 +301,11 @@
       </div>
       <div id="seedStatus" class="seed-status" data-i18n="seed_status_auto">graine automatique</div>
     </div>
+  </div>
+
+  <div class="print-title-control">
+    <label for="activityLabel">Titre imprimé</label>
+    <input id="activityLabel" type="text" placeholder="ex. Activité 1" oninput="renderPages()">
   </div>
 
   <div class="actions">
@@ -650,6 +681,15 @@ function generateDotPositions(count, maxTarget, splatShape, splats) {
     return { arr: placed, r: dotR };
 }
 
+function getPrintedActivityLabel(isCorrectionPage) {
+    const input = document.getElementById('activityLabel');
+    const label = input ? input.value.trim() : '';
+    if (isCorrectionPage) {
+        return label ? `${label} — Correction` : 'Correction';
+    }
+    return label;
+}
+
 function createPageElement(chunk, isCorrectionPage, mirror) {
     const page = document.createElement('div'); page.className = isTBI ? 'page' : 'page activity-print-page';
     const inner = document.createElement('div'); inner.className = 'page-inner';
@@ -744,10 +784,11 @@ function createPageElement(chunk, isCorrectionPage, mirror) {
     if (!isTBI) {
         const header = document.createElement('div');
         header.className = 'activity-header';
+        const printedActivityLabel = getPrintedActivityLabel(isCorrectionPage);
         header.innerHTML = `
             <div class="activity-title-block">
                 <div class="activity-title">Petit Splat!</div>
-                <div class="activity-subtitle">${isCorrectionPage ? 'Correction' : 'Activité 1'}</div>
+                ${printedActivityLabel ? `<div class="activity-subtitle">${printedActivityLabel}</div>` : ''}
             </div>
             <div class="activity-logos">
                 <img class="activity-logo-irem" src="${PRINT_IREM_LOGO_SRC}" alt="IREM La Réunion">
