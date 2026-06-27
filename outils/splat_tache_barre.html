@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>SPLAT!</title>
+  <title>Petit Splat!</title>
   <style>
     :root {
       --ink: #111827;
@@ -23,23 +23,40 @@
     body { margin: 0; font-family: 'Segoe UI', system-ui, sans-serif; background: var(--bg); color: var(--ink); display: flex; height: 100vh; overflow: hidden; }
     
     /* SIDEBAR */
-    aside { width: 340px; background: var(--panel); border-right: 1px solid var(--border); display: flex; flex-direction: column; z-index: 10; box-shadow: 2px 0 10px rgba(0,0,0,0.05); }
-    .sb-header { padding: 15px 20px; border-bottom: 1px solid var(--border); background: #fff; }
-    .sb-title { font-size: 18px; font-weight: 800; color: var(--accent); margin: 0; text-transform: uppercase; letter-spacing: -0.5px; }
-    .sb-scroll { flex: 1; overflow-y: auto; padding: 20px; display: flex; flex-direction: column; gap: 15px; }
-    .section { border-bottom: 1px solid #f1f5f9; padding-bottom: 12px; }
-    .sec-title { font-size: 11px; text-transform: uppercase; color: #64748b; font-weight: 800; margin-bottom: 8px; }
+    aside { width: 320px; background: var(--panel); border-right: 1px solid var(--border); display: flex; flex-direction: column; z-index: 10; box-shadow: 2px 0 10px rgba(0,0,0,0.05); }
+    .sb-header { padding: 12px 16px; border-bottom: 1px solid var(--border); background: #fff; }
+    .sb-title { font-size: 17px; font-weight: 800; color: var(--accent); margin: 0; text-transform: uppercase; letter-spacing: -0.5px; }
+    .sb-scroll { flex: 1; overflow-y: auto; padding: 12px 14px 10px 14px; display: flex; flex-direction: column; gap: 9px; }
+    .section { border-bottom: 1px solid #f1f5f9; padding-bottom: 8px; }
+    .sec-title { font-size: 10px; text-transform: uppercase; color: #64748b; font-weight: 800; margin-bottom: 6px; }
     
-    select, input[type="number"] { padding: 8px; border: 1px solid var(--border); border-radius: 6px; font-size: 13px; font-weight: 600; width: 100%; outline: none; background: #fff; }
+    select, input[type="number"], input[type="text"] { padding: 7px 8px; border: 1px solid var(--border); border-radius: 6px; font-size: 13px; font-weight: 600; width: 100%; outline: none; background: #fff; }
+
+    .support-section { background: #eff6ff; padding: 9px; border-radius: 8px; border: 1px solid #bfdbfe; }
+    .support-section .sec-title { color: #1e3a8a; }
+    .compact-options { display: flex; flex-direction: column; gap: 6px; }
+    .control { margin-bottom: 7px; }
+    .control:last-child { margin-bottom: 0; }
+    .control label { display: block; font-size: 11px; font-weight: 700; color: #334155; margin-bottom: 4px; }
+    .control-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+    .seed-section { padding-bottom: 4px; }
+
+    .seed-row { display: grid; grid-template-columns: 1fr 38px; gap: 6px; align-items: center; }
+    .seed-btn { height: 32px; border: 1px solid #e2e8f0; border-radius: 8px; background: #f1f5f9; cursor: pointer; font-size: 16px; font-weight: 800; }
+    .seed-btn:hover { background: #e2e8f0; }
+    #seedInput.seed-auto { color: #94a3b8; font-style: italic; border-color: #e2e8f0; }
+    #seedInput.seed-manual { color: #1e40af; font-style: normal; border-color: #93c5fd; background: #eff6ff; }
+    .seed-status { margin-top: 3px; font-size: 11px; font-weight: 700; color: #94a3b8; }
+    .seed-status.manual { color: #1e40af; }
     
     .flags { display: flex; gap: 10px; margin-bottom: 10px; }
     .flag-btn { font-size: 12px; font-weight: 800; cursor: pointer; opacity: 0.5; padding: 4px 10px; border-radius: 6px; background:#f1f5f9; border: 1px solid #e2e8f0; }
     .flag-btn.active { opacity: 1; background: var(--accent); color: white; border-color: var(--accent); }
     
-    .corr-group { display: flex; gap: 8px; align-items: stretch; margin-bottom: 8px; }
-    .check-control { flex: 1; display: flex; align-items: center; gap: 10px; background: #f1f5f9; padding: 8px; border-radius: 8px; border: 1px solid #e2e8f0; cursor: pointer; margin-bottom: 0; }
-    .check-control input { width: 17px; height: 17px; cursor: pointer; }
-    .check-text { font-size: 12px; font-weight: 700; color: #334155; }
+    .corr-group { display: flex; gap: 7px; align-items: stretch; margin-bottom: 6px; }
+    .check-control { flex: 1; display: flex; align-items: center; gap: 8px; background: #f1f5f9; padding: 7px 8px; border-radius: 8px; border: 1px solid #e2e8f0; cursor: pointer; margin-bottom: 0; min-height: 34px; }
+    .check-control input { width: 16px; height: 16px; cursor: pointer; flex-shrink: 0; }
+    .check-text { font-size: 11.5px; font-weight: 700; color: #334155; }
     
     .rv-btn { 
         display: flex; align-items: center; justify-content: center; 
@@ -51,8 +68,8 @@
     .rv-btn.active { background: var(--accent); color: white; border-color: var(--accent); }
     .rv-btn.disabled { opacity: 0.3; pointer-events: none; }
     
-    .actions { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: auto; margin-bottom: 18px; padding-top: 10px; }
-    .btn { padding: 12px; border: none; border-radius: 8px; font-weight: 700; cursor: pointer; color: white; font-size: 13px; }
+    .actions { flex-shrink: 0; display: grid; grid-template-columns: 1fr 1fr; gap: 9px; padding: 10px 14px 12px 14px; border-top: 1px solid #e2e8f0; background: #fff; }
+    .btn { padding: 11px; border: none; border-radius: 8px; font-weight: 700; cursor: pointer; color: white; font-size: 13px; }
     .btn-new { background: var(--accent); }
     .btn-print { background: #10b981; }
 
@@ -111,37 +128,39 @@
 <body>
 
 <aside>
-  <div class="sb-header"><h2 class="sb-title" data-i18n="title">Splat! primaire</h2></div>
+  <div class="sb-header"><h2 class="sb-title" data-i18n="title">Petit Splat!</h2></div>
   <div class="sb-scroll">
     
-    <div class="section" style="background: #eff6ff; padding: 12px; border-radius: 8px; border: 1px solid #bfdbfe;">
-        <div class="sec-title" style="color: #1e3a8a;">Support d'utilisation</div>
+    <div class="section support-section">
+        <div class="sec-title">Support d'utilisation</div>
         <select id="supportMode" onchange="toggleMode()" style="background: white; border-color: #93c5fd; font-weight: 800; color: #1e40af;">
             <option value="print" selected>📄 Fiche (Impression PDF)</option>
-            <option value="tbi">💻 Écran Interactif (TBI)</option>
+            <option value="tbi">💻 Interactif : clic pour révéler</option>
         </select>
     </div>
 
     <div class="section" id="printOptionsSection">
-      <div class="sec-title" data-i18n="options">Options d'impression</div>
-      <div class="corr-group">
+      <div class="sec-title" data-i18n="options">Options</div>
+      <div class="compact-options">
+        <div class="corr-group">
+            <label class="check-control">
+                <input type="checkbox" id="showCorr" onchange="toggleCorr()">
+                <span class="check-text" data-i18n="opt_corr">Correction + Énoncé</span>
+            </label>
+            <div id="btnRV" class="rv-btn disabled" onclick="toggleRV(this)" title="Recto-Verso (Miroir auto)">RV</div>
+        </div>
+        <div class="corr-group">
+            <label class="check-control">
+                <input type="checkbox" id="hideDiagram" onchange="renderPages()">
+                <span class="check-text" data-i18n="opt_hide_diag">Schéma à tracer</span>
+            </label>
+        </div>
+        <div class="corr-group">
           <label class="check-control">
-              <input type="checkbox" id="showCorr" onchange="toggleCorr()">
-              <span class="check-text" data-i18n="opt_corr">Correction</span>
+              <input type="checkbox" id="nonPropDiagram" onchange="renderPages()">
+              <span class="check-text" data-i18n="opt_non_prop">Schémas non proportionnels</span>
           </label>
-          <div id="btnRV" class="rv-btn disabled" onclick="toggleRV(this)" title="Recto-Verso (Miroir auto)">RV</div>
-      </div>
-      <div class="corr-group" style="margin-bottom: 0;">
-          <label class="check-control">
-              <input type="checkbox" id="hideDiagram" onchange="renderPages()">
-              <span class="check-text" data-i18n="opt_hide_diag">Schéma à tracer</span>
-          </label>
-      </div>
-      <div class="corr-group" style="margin-bottom: 0; margin-top: 8px;">
-        <label class="check-control">
-            <input type="checkbox" id="nonPropDiagram" onchange="renderPages()">
-            <span class="check-text" data-i18n="opt_non_prop">Schémas non proportionnels</span>
-        </label>
+        </div>
       </div>
     </div>
 
@@ -156,37 +175,48 @@
 
     <div class="section">
       <div class="sec-title" data-i18n="content">Contenu</div>
-      <div class="control" style="margin-bottom: 10px;">
-          <label data-i18n="target" style="font-size: 12px; font-weight: 600;">Cible Max</label>
-          <select id="targetVal" onchange="startGen()">
-            <option value="20" selected>20 (Standard)</option>
-            <option value="50">50 (Avancé)</option>
-            <option value="100">100 (Expert)</option>
-          </select>
+      <div class="control-grid">
+        <div class="control">
+            <label data-i18n="target">Cible max</label>
+            <select id="targetVal" onchange="startGen()">
+              <option value="20" selected>20 (Standard)</option>
+              <option value="50">50 (Avancé)</option>
+              <option value="100">100 (Expert)</option>
+            </select>
+        </div>
+        <div class="control">
+            <label data-i18n="splat_count">Taches</label>
+            <select id="splatMode" onchange="startGen()">
+              <option value="1" selected>1 tache</option>
+              <option value="2">2 taches</option>
+              <option value="3">3 taches</option>
+              <option value="mix">Mélange Expert (2 à 6)</option>
+            </select>
+        </div>
       </div>
-      
-      <div class="control" style="margin-bottom: 10px;">
-          <label data-i18n="splat_count" style="font-size: 12px; font-weight: 600;">Nombre de taches</label>
-          <select id="splatMode" onchange="startGen()">
-            <option value="1" selected>1 tache</option>
-            <option value="2">2 taches</option>
-            <option value="3">3 taches</option>
-            <option value="mix">Mélange Expert (2 à 6)</option>
-          </select>
+      <div class="control">
+        <label data-i18n="exercise">Exercice</label>
+        <select id="gameMode" onchange="startGen()">
+          <option value="find_hidden" selected data-i18n="mode_hidden">Compléter le schéma en barres</option>
+          <option value="construct" data-i18n="mode_draw">Dessiner les points</option>
+          <option value="mix" data-i18n="mode_mix">Mélange</option>
+        </select>
       </div>
-
-      <div class="sec-title" style="margin-top:15px;" data-i18n="exercise">Exercice</div>
-      <select id="gameMode" onchange="startGen()" style="width:100%">
-        <option value="find_hidden" selected data-i18n="mode_hidden">Trouver ce qui est caché ?</option>
-        <option value="construct" data-i18n="mode_draw">Dessiner les points</option>
-        <option value="mix" data-i18n="mode_mix">Mélange</option>
-      </select>
     </div>
 
-    <div class="actions">
-      <button class="btn btn-new" onclick="startGen()" data-i18n="btn_mix">GÉNÉRER</button>
-      <button class="btn btn-print" id="printBtn" onclick="window.print()" data-i18n="btn_print">IMPRIMER</button>
+    <div class="section seed-section">
+      <div class="sec-title" data-i18n="seed_section">Graine</div>
+      <div class="seed-row">
+        <input type="text" id="seedInput" class="seed-auto" inputmode="text" autocomplete="off" oninput="onSeedInput()" onfocus="this.select()" onkeydown="if(event.key==='Enter') startGen()">
+        <button type="button" class="seed-btn" onclick="newAutoSeed()" title="Nouvelle graine" aria-label="Nouvelle graine">🎲</button>
+      </div>
+      <div id="seedStatus" class="seed-status" data-i18n="seed_status_auto">graine automatique</div>
     </div>
+  </div>
+
+  <div class="actions">
+    <button class="btn btn-new" onclick="startGen()" data-i18n="btn_mix">GÉNÉRER</button>
+    <button class="btn btn-print" id="printBtn" onclick="window.print()" data-i18n="btn_print">IMPRIMER</button>
   </div>
 </aside>
 
@@ -195,19 +225,21 @@
 <script>
 const i18n = {
     fr: {
-        title: "Splat! primaire", lang: "Langue", options: "Options", opt_corr: "Correction + Énoncé", opt_hide_diag: "Schéma à tracer",
+        title: "Petit Splat!", lang: "Langue", options: "Options", opt_corr: "Correction + Énoncé", opt_hide_diag: "Schéma à tracer",
         opt_non_prop: "Schémas non proportionnels",
         layout: "Mise en page", grid_12: "12 cases (3x4)", grid_9: "9 cases (3x3)", grid_8: "8 cases (Grosses)",
-        content: "Contenu", target: "Cible Max", splat_count: "Nombre de taches",
-        exercise: "Exercice", mode_hidden: "Trouver ce qui est caché ?", mode_draw: "Dessiner les points", mode_mix: "Mélange",
+        content: "Contenu", target: "Cible max", splat_count: "Taches",
+        exercise: "Exercice", mode_hidden: "Compléter le schéma en barres", mode_draw: "Dessiner les points", mode_mix: "Mélange",
+        seed_section: "Graine", seed_label: "Graine", seed_status_auto: "graine automatique", seed_status_manual: "graine fixée",
         btn_mix: "GÉNÉRER", btn_print: "IMPRIMER"
     },
     en: {
-        title: "Splat! primaire", lang: "Language", options: "Options", opt_corr: "Key + Problem", opt_hide_diag: "Draw Diagram",
+        title: "Petit Splat!", lang: "Language", options: "Options", opt_corr: "Key + Problem", opt_hide_diag: "Draw Diagram",
         opt_non_prop: "Non-proportional diagrams",
         layout: "Layout", grid_12: "12 boxes (3x4)", grid_9: "9 boxes (3x3)", grid_8: "8 boxes (Large)",
-        content: "Content", target: "Max Target", splat_count: "Number of Splats",
-        exercise: "Exercise", mode_hidden: "Find Hidden", mode_draw: "Draw Dots", mode_mix: "Mix",
+        content: "Content", target: "Max target", splat_count: "Splats",
+        exercise: "Exercise", mode_hidden: "Complete the bar model", mode_draw: "Draw Dots", mode_mix: "Mix",
+        seed_section: "Seed", seed_label: "Seed", seed_status_auto: "automatic seed", seed_status_manual: "fixed seed",
         btn_mix: "GENERATE", btn_print: "PRINT"
     }
 };
@@ -226,6 +258,84 @@ let currentLang = 'fr';
 let state = [];
 let isRVMode = false; 
 let isTBI = false;
+let seedMode = 'auto';
+let activeSeed = '';
+let currentRand = Math.random;
+
+function hashSeed(seed) {
+    let h = 2166136261 >>> 0;
+    const str = String(seed);
+    for (let i = 0; i < str.length; i++) {
+        h ^= str.charCodeAt(i);
+        h = Math.imul(h, 16777619);
+    }
+    return h >>> 0;
+}
+
+function mulberry32(seed) {
+    return function() {
+        let t = seed += 0x6D2B79F5;
+        t = Math.imul(t ^ (t >>> 15), t | 1);
+        t ^= t + Math.imul(t ^ (t >>> 7), t | 61);
+        return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+    };
+}
+
+function rand() {
+    return currentRand();
+}
+
+function makeAutoSeed() {
+    return String(Math.floor(100000 + Math.random() * 900000));
+}
+
+function updateSeedUI() {
+    const input = document.getElementById('seedInput');
+    const status = document.getElementById('seedStatus');
+    if (!input || !status) return;
+
+    const dict = i18n[currentLang] || i18n.fr;
+    input.classList.toggle('seed-auto', seedMode === 'auto');
+    input.classList.toggle('seed-manual', seedMode === 'manual');
+    status.classList.toggle('manual', seedMode === 'manual');
+    status.innerText = seedMode === 'manual' ? dict.seed_status_manual : dict.seed_status_auto;
+}
+
+function prepareSeedForGeneration() {
+    const input = document.getElementById('seedInput');
+    if (!input) {
+        activeSeed = makeAutoSeed();
+    } else if (seedMode === 'manual') {
+        activeSeed = input.value.trim();
+        if (!activeSeed) {
+            seedMode = 'auto';
+            activeSeed = makeAutoSeed();
+        }
+    } else {
+        activeSeed = makeAutoSeed();
+    }
+
+    if (input) input.value = activeSeed;
+    currentRand = mulberry32(hashSeed(activeSeed));
+    updateSeedUI();
+    return activeSeed;
+}
+
+function onSeedInput() {
+    const input = document.getElementById('seedInput');
+    if (!input || input.value.trim() === '') {
+        seedMode = 'auto';
+    } else {
+        seedMode = 'manual';
+        activeSeed = input.value.trim();
+    }
+    updateSeedUI();
+}
+
+function newAutoSeed() {
+    seedMode = 'auto';
+    startGen();
+}
 
 function setLang(l, el) { 
     currentLang = l; 
@@ -241,6 +351,7 @@ function updateUI() {
         const key = el.getAttribute('data-i18n');
         if(dict[key]) el.innerText = dict[key];
     });
+    updateSeedUI();
 }
 
 function toggleMode() {
@@ -251,11 +362,6 @@ function toggleMode() {
     if (isTBI) {
         printSection.style.display = 'none';
         printBtn.style.display = 'none';
-        if(document.getElementById('gridSize').value === '3x4') {
-            document.getElementById('gridSize').value = '3x3';
-            document.documentElement.style.setProperty('--cols', 3);
-            document.documentElement.style.setProperty('--rows', 3);
-        }
     } else {
         printSection.style.display = 'block';
         printBtn.style.display = 'block';
@@ -280,6 +386,7 @@ function toggleRV(btn) {
 }
 
 function startGen() {
+  prepareSeedForGeneration();
   const sizeSelect = document.getElementById('gridSize').value;
   const [cols, rows] = sizeSelect.split('x').map(Number);
   document.documentElement.style.setProperty('--cols', cols);
@@ -300,28 +407,28 @@ function startGen() {
 }
 
 function createItem(mode, maxTarget, splatMode) {
-    let actualMode = mode === 'mix' ? (Math.random() > 0.5 ? 'find_hidden' : 'construct') : mode;
-    let clueGiven = Math.random() > 0.5 ? 'visible' : 'hidden';
+    let actualMode = mode === 'mix' ? (rand() > 0.5 ? 'find_hidden' : 'construct') : mode;
+    let clueGiven = rand() > 0.5 ? 'visible' : 'hidden';
 
     let numSplats = 1;
     if (splatMode === 'mix') {
-        numSplats = Math.floor(Math.random() * 5) + 2; 
+        numSplats = Math.floor(rand() * 5) + 2; 
     } else {
         numSplats = parseInt(splatMode);
     }
 
     let maxHiddenPerSplat = Math.max(1, Math.floor(maxTarget / numSplats));
-    let hiddenPerSplat = Math.floor(Math.random() * maxHiddenPerSplat) + 1;
+    let hiddenPerSplat = Math.floor(rand() * maxHiddenPerSplat) + 1;
     let hidden = hiddenPerSplat * numSplats;
 
     let maxVisibleAllowed = Math.min(maxTarget - hidden, 20);
     if (maxVisibleAllowed < 0) maxVisibleAllowed = 0;
-    let visible = Math.floor(Math.random() * (maxVisibleAllowed + 1));
+    let visible = Math.floor(rand() * (maxVisibleAllowed + 1));
     
     let total = hidden + visible;
 
-    const splatShape = Math.floor(Math.random() * SPLAT_SHAPES.length);
-    const splatRot = Math.floor(Math.random() * 360);
+    const splatShape = Math.floor(rand() * SPLAT_SHAPES.length);
+    const splatRot = Math.floor(rand() * 360);
 
     const layouts = {
         1: [{x: 135, y: 110, s: 0.85}],
@@ -370,8 +477,8 @@ function generateHiddenDots(splats, countPerSplat, splatShape, maxTarget) {
             
             while (!safe && attempts < 300) {
                 attempts++;
-                let localX = 150 + (Math.random() - 0.5) * 160;
-                let localY = 100 + (Math.random() - 0.5) * 160;
+                let localX = 150 + (rand() - 0.5) * 160;
+                let localY = 100 + (rand() - 0.5) * 160;
                 
                 if (!ctx.isPointInPath(splatPath, localX, localY)) continue;
                 if (ctx.isPointInStroke(splatPath, localX, localY)) continue;
@@ -436,8 +543,8 @@ function generateDotPositions(count, maxTarget, splatShape, splats) {
         let maxMinDist = -1;
         
         for (let c = 0; c < 40; c++) {
-            let dX = 15 + Math.random() * (W - 30);
-            let dY = 15 + Math.random() * (H - 30);
+            let dX = 15 + rand() * (W - 30);
+            let dY = 15 + rand() * (H - 30);
 
             if (dX > 220 && dY < 80) continue;
 
