@@ -189,6 +189,12 @@
     }
     .activity-instruction-title { font-weight: 900; margin-bottom: 0.6mm; }
     .activity-instruction-line { padding-left: 6mm; text-indent: -4mm; }
+    .activity-instruction-note {
+        margin-top: 1.6mm;
+        font-size: 13.2px;
+        font-weight: 700;
+        color: #334155;
+    }
     .activity-print-page .grid { width: 100%; }
     .activity-print-page .diagram-container { flex-basis: 64px; }
     .activity-footer {
@@ -561,7 +567,7 @@ function generateHiddenDots(splats, countPerSplat, splatShape, maxTarget) {
     const allHiddenDots = [];
     
     for (let s of splats) {
-        // CORRECTION ICI : La ligne virtuelle qui repousse les billes s'adapte à l'échelle de la tache
+        // CORRECTION ICI : La ligne virtuelle qui repousse les jetons s'adapte à l'échelle de la tache
         // pour garantir qu'aucune bille ne dépasse, même si la tache est très petite !
         ctx.lineWidth = ((dotR * 2) + 6) / s.scale; 
 
@@ -684,22 +690,31 @@ function generateDotPositions(count, maxTarget, splatShape, splats) {
 function getInstructionHtml() {
     const modeEl = document.getElementById('gameMode');
     const mode = modeEl ? modeEl.value : 'find_hidden';
+    const splatModeEl = document.getElementById('splatMode');
+    const splatMode = splatModeEl ? splatModeEl.value : '1';
+    const hasSeveralSplats = splatMode !== '1';
+
+    let html = '';
 
     if (mode === 'construct') {
-        return `<div class="activity-instruction-title">Pour chaque carte :</div>
+        html = `<div class="activity-instruction-title">Pour chaque carte :</div>
                 <div class="activity-instruction-line">- observe le schéma en barres,</div>
                 <div class="activity-instruction-line">- complète le dessin et le schéma.</div>`;
-    }
-
-    if (mode === 'mix') {
-        return `<div class="activity-instruction-title">Pour chaque carte :</div>
+    } else if (mode === 'mix') {
+        html = `<div class="activity-instruction-title">Pour chaque carte :</div>
                 <div class="activity-instruction-line">- observe les informations données,</div>
                 <div class="activity-instruction-line">- complète ce qui manque dans le dessin ou le schéma en barres.</div>`;
+    } else {
+        html = `<div class="activity-instruction-title">Pour chaque carte :</div>
+                <div class="activity-instruction-line">- complète le schéma en barres,</div>
+                <div class="activity-instruction-line">- trouve le nombre de jetons cachés derrière chaque tache.</div>`;
     }
 
-    return `<div class="activity-instruction-title">Pour chaque carte :</div>
-            <div class="activity-instruction-line">- complète le schéma en barres,</div>
-            <div class="activity-instruction-line">- trouve le nombre de billes cachées derrière chaque tache.</div>`;
+    if (hasSeveralSplats) {
+        html += `<div class="activity-instruction-note">Si plusieurs taches apparaissent, elles cachent le même nombre de jetons.</div>`;
+    }
+
+    return html;
 }
 
 function getPrintedActivityLabel(isCorrectionPage) {
