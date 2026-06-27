@@ -681,6 +681,27 @@ function generateDotPositions(count, maxTarget, splatShape, splats) {
     return { arr: placed, r: dotR };
 }
 
+function getInstructionHtml() {
+    const modeEl = document.getElementById('gameMode');
+    const mode = modeEl ? modeEl.value : 'find_hidden';
+
+    if (mode === 'construct') {
+        return `<div class="activity-instruction-title">Pour chaque carte :</div>
+                <div class="activity-instruction-line">- observe le schéma en barres,</div>
+                <div class="activity-instruction-line">- complète le dessin et le schéma.</div>`;
+    }
+
+    if (mode === 'mix') {
+        return `<div class="activity-instruction-title">Pour chaque carte :</div>
+                <div class="activity-instruction-line">- observe les informations données,</div>
+                <div class="activity-instruction-line">- complète ce qui manque dans le dessin ou le schéma en barres.</div>`;
+    }
+
+    return `<div class="activity-instruction-title">Pour chaque carte :</div>
+            <div class="activity-instruction-line">- complète le schéma en barres,</div>
+            <div class="activity-instruction-line">- trouve le nombre de billes cachées derrière chaque tache.</div>`;
+}
+
 function getPrintedActivityLabel(isCorrectionPage) {
     const input = document.getElementById('activityLabel');
     const label = input ? input.value.trim() : '';
@@ -798,7 +819,7 @@ function createPageElement(chunk, isCorrectionPage, mirror) {
 
         const instruction = document.createElement('div');
         instruction.className = 'activity-instruction';
-        instruction.innerHTML = `<div class="activity-instruction-title">Pour chaque situation :</div><div class="activity-instruction-line">- complète le schéma en barres,</div><div class="activity-instruction-line">- trouve le nombre de billes cachées derrière chaque tache.</div>`;
+        instruction.innerHTML = getInstructionHtml();
         inner.appendChild(instruction);
     }
 
