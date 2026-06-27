@@ -130,6 +130,9 @@
     .tbi-mode.revealed .splat-path { opacity: 0.15; }
     .hidden-val { opacity: 0; transition: opacity 0.6s ease; }
     .tbi-mode.revealed .hidden-val { opacity: 1; }
+    .solution-dot { opacity: 1; transition: opacity 0.6s ease; }
+    .tbi-mode .solution-dot { opacity: 0; }
+    .tbi-mode.revealed .solution-dot { opacity: 1; }
 
     .part-splat { flex: 1; position: relative; border-bottom: 1px dashed #cbd5e1; margin-bottom: 5px; overflow: hidden; min-height: 0; }
     .splat-svg { width: 100%; height: 100%; display: block; }
@@ -746,20 +749,52 @@ function createPageElement(chunk, isCorrectionPage, mirror) {
             cell.onclick = function() { this.classList.toggle('revealed'); };
         }
         
-        let showVisualTotal = false, showVisualDots = false;
+        let showVisualTotal = false, showVisualDots = false, hideVisualDotsUntilReveal = false;
         let textTotal = "", textVis = "", textHid = "";
+        let revealTotal = false, revealVis = false, revealHid = false;
 
         if (item.mode === 'find_hidden') {
-            showVisualTotal = true; showVisualDots = true;
-            if (isCorrectionPage || isTBI) {
-                textTotal = item.total; textVis = item.visible; textHid = item.hiddenPerSplat;
+            showVisualTotal = true;
+            showVisualDots = true;
+
+            if (isCorrectionPage) {
+                textTotal = item.total;
+                textVis = item.visible;
+                textHid = item.hiddenPerSplat;
+            } else if (isTBI) {
+                textTotal = item.total;
+                textVis = item.visible;
+                textHid = item.hiddenPerSplat;
+                revealTotal = true;
+                revealVis = true;
+                revealHid = true;
             } else {
-                textTotal = ""; textVis = ""; textHid = "";
+                textTotal = "";
+                textVis = "";
+                textHid = "";
             }
         } else if (item.mode === 'construct') {
-            if (isCorrectionPage || isTBI) {
-                showVisualTotal = true; showVisualDots = true; 
-                textTotal = item.total; textVis = item.visible; textHid = item.hiddenPerSplat;
+            if (isCorrectionPage) {
+                showVisualTotal = true;
+                showVisualDots = true;
+                textTotal = item.total;
+                textVis = item.visible;
+                textHid = item.hiddenPerSplat;
+            } else if (isTBI) {
+                showVisualTotal = false;
+                showVisualDots = true;
+                hideVisualDotsUntilReveal = true;
+                textTotal = item.total;
+
+                if (item.clueGiven === 'visible') {
+                    textVis = item.visible;
+                    textHid = item.hiddenPerSplat;
+                    revealHid = true;
+                } else {
+                    textVis = item.visible;
+                    textHid = item.hiddenPerSplat;
+                    revealVis = true;
+                }
             } else {
                 textTotal = item.total; 
                 if (item.clueGiven === 'visible') {
@@ -771,9 +806,9 @@ function createPageElement(chunk, isCorrectionPage, mirror) {
         }
 
         const splatPart = document.createElement('div'); splatPart.className = 'part-splat';
-        
-        let htmlContent = getSplatSvg(item, showVisualDots);
-        
+
+        let htmlContent = getSplatSvg(item, showVisualDots, hideVisualDotsUntilReveal);
+
         let displayBadge = showVisualTotal ? item.total : "";
         htmlContent += `<div class="total-badge">${displayBadge}</div>`;
         
@@ -791,9 +826,9 @@ function createPageElement(chunk, isCorrectionPage, mirror) {
             let minW = item.numSplats >= 4 ? "25px" : "40px";
             let fSize = item.numSplats >= 4 ? "14px" : "18px"; 
 
-            let displayTotal = (isTBI && textTotal !== "") ? `<span class="hidden-val">${textTotal}</span>` : textTotal;
-            let displayVis   = (isTBI && textVis !== "")   ? `<span class="hidden-val">${textVis}</span>`   : textVis;
-            let displayHid   = (isTBI && textHid !== "")   ? `<span class="hidden-val">${textHid}</span>`   : textHid;
+            let displayTotal = (isTBI && revealTotal && textTotal !== "") ? `<span class="hidden-val">${textTotal}</span>` : textTotal;
+            let displayVis   = (isTBI && revealVis && textVis !== "")     ? `<span class="hidden-val">${textVis}</span>`   : textVis;
+            let displayHid   = (isTBI && revealHid && textHid !== "")     ? `<span class="hidden-val">${textHid}</span>`   : textHid;
 
             let bottomRowHTML = `<div class="row-bottom">`;
             
@@ -874,7 +909,7 @@ function renderPages() {
   }
 }
 
-function getSplatSvg(item, drawDots) {
+function getSplatSvg(item, drawDots, hideVisibleDotsUntilReveal = false) {
     const W = 300, H = 200;
     const pathData = SPLAT_SHAPES[item.splatShape % SPLAT_SHAPES.length];
     
@@ -887,8 +922,9 @@ function getSplatSvg(item, drawDots) {
     }
 
     if (drawDots && item.visible > 0) {
+        const dotClass = hideVisibleDotsUntilReveal ? ' class="solution-dot"' : '';
         for(let p of item.dots.arr) {
-             svg += `<circle cx="${p.x}" cy="${p.y}" r="${item.dots.r}" fill="#2563eb" stroke="#1e40af" stroke-width="0.5"/>`;
+             svg += `<circle${dotClass} cx="${p.x}" cy="${p.y}" r="${item.dots.r}" fill="#2563eb" stroke="#1e40af" stroke-width="0.5"/>`;
         }
     }
     
