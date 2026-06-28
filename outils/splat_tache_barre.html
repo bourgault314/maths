@@ -69,10 +69,8 @@
     .rv-btn.disabled { opacity: 0.3; pointer-events: none; }
     
     .print-title-control {
-        flex-shrink: 0;
-        padding: 8px 14px 0 14px;
-        border-top: 1px solid #e2e8f0;
-        background: #fff;
+        border-bottom: 1px solid #f1f5f9;
+        padding-bottom: 12px;
     }
     .print-title-control label {
         display: block;
@@ -94,7 +92,7 @@
         background: #fff;
     }
     .print-title-control input::placeholder { color: #94a3b8; font-weight: 600; }
-    .actions { flex-shrink: 0; display: grid; grid-template-columns: 1fr 1fr; gap: 9px; padding: 8px 14px 12px 14px; background: #fff; }
+    .actions { display: grid; grid-template-columns: 1fr 1fr; gap: 9px; margin-top: 2px; padding-bottom: 6px; }
     .btn { padding: 11px; border: none; border-radius: 8px; font-weight: 700; cursor: pointer; color: white; font-size: 13px; }
     .btn-new { background: var(--accent); }
     .btn-print { background: #10b981; }
@@ -296,7 +294,7 @@
         <label data-i18n="exercise">Exercice</label>
         <select id="gameMode" onchange="startGen()">
           <option value="find_hidden" selected data-i18n="mode_hidden">Compléter le schéma en barres</option>
-          <option value="construct" data-i18n="mode_draw">Dessiner les points</option>
+          <option value="construct" data-i18n="mode_draw">Dessiner les jetons</option>
           <option value="mix" data-i18n="mode_mix">Mélange</option>
         </select>
       </div>
@@ -310,17 +308,19 @@
       </div>
       <div id="seedStatus" class="seed-status" data-i18n="seed_status_auto">graine automatique</div>
     </div>
+
+    <div class="section print-title-control">
+      <label for="activityLabel">Titre imprimé</label>
+      <input id="activityLabel" type="text" placeholder="ex. Activité 1" oninput="renderPages()">
+    </div>
+
+    <div class="actions">
+      <button class="btn btn-new" onclick="startGen()" data-i18n="btn_mix">GÉNÉRER</button>
+      <button class="btn btn-print" id="printBtn" onclick="window.print()" data-i18n="btn_print">IMPRIMER</button>
+    </div>
   </div>
 
-  <div class="print-title-control">
-    <label for="activityLabel">Titre imprimé</label>
-    <input id="activityLabel" type="text" placeholder="ex. Activité 1" oninput="renderPages()">
-  </div>
 
-  <div class="actions">
-    <button class="btn btn-new" onclick="startGen()" data-i18n="btn_mix">GÉNÉRER</button>
-    <button class="btn btn-print" id="printBtn" onclick="window.print()" data-i18n="btn_print">IMPRIMER</button>
-  </div>
 </aside>
 
 <main id="mainArea"></main>
@@ -332,7 +332,7 @@ const i18n = {
         opt_non_prop: "Schémas non proportionnels",
         layout: "Mise en page", grid_12: "12 cases (3x4)", grid_9: "9 cases (3x3)", grid_8: "8 cases (Grosses)",
         content: "Contenu", target: "Cible max", splat_count: "Taches",
-        exercise: "Exercice", mode_hidden: "Compléter le schéma en barres", mode_draw: "Dessiner les points", mode_mix: "Mélange",
+        exercise: "Exercice", mode_hidden: "Compléter le schéma en barres", mode_draw: "Dessiner les jetons", mode_mix: "Mélange",
         seed_section: "Graine", seed_label: "Graine", seed_status_auto: "graine automatique", seed_status_manual: "graine fixée",
         btn_mix: "GÉNÉRER", btn_print: "IMPRIMER"
     },
@@ -341,7 +341,7 @@ const i18n = {
         opt_non_prop: "Non-proportional diagrams",
         layout: "Layout", grid_12: "12 boxes (3x4)", grid_9: "9 boxes (3x3)", grid_8: "8 boxes (Large)",
         content: "Content", target: "Max target", splat_count: "Splats",
-        exercise: "Exercise", mode_hidden: "Complete the bar model", mode_draw: "Draw Dots", mode_mix: "Mix",
+        exercise: "Exercise", mode_hidden: "Complete the bar model", mode_draw: "Draw Tokens", mode_mix: "Mix",
         seed_section: "Seed", seed_label: "Seed", seed_status_auto: "automatic seed", seed_status_manual: "fixed seed",
         btn_mix: "GENERATE", btn_print: "PRINT"
     }
