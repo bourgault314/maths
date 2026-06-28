@@ -116,10 +116,12 @@
     }
     .grid-3x4 .cell:nth-child(3n),
     .grid-3x3 .cell:nth-child(3n),
-    .grid-2x4 .cell:nth-child(2n) { border-right: none; }
+    .grid-2x4 .cell:nth-child(2n),
+    .grid-2x3 .cell:nth-child(2n) { border-right: none; }
     .grid-3x4 .cell:nth-child(n+10),
     .grid-3x3 .cell:nth-child(n+7),
-    .grid-2x4 .cell:nth-child(n+7) { border-bottom: none; }
+    .grid-2x4 .cell:nth-child(n+7),
+    .grid-2x3 .cell:nth-child(n+5) { border-bottom: none; }
     
     /* ANIMATIONS TBI MODE */
     .tbi-mode { cursor: pointer; transition: transform 0.2s ease, box-shadow 0.2s ease; }
@@ -148,6 +150,135 @@
     .row-bottom { flex: 1; display: flex; min-height: 25px; }
     .part-box { display: flex; align-items: center; justify-content: center; font-weight: 900; border-right: 2px solid #111827; overflow: hidden; }
     .part-box:last-child { border-right: none; }
+
+
+    /* MODULE RELATION ENTRE 2 TACHES */
+    .module-hint {
+      margin-top: 5px;
+      padding: 6px 7px;
+      border-radius: 7px;
+      background: #fff7ed;
+      border: 1px solid #fed7aa;
+      color: #9a3412;
+      font-size: 11px;
+      font-weight: 700;
+      line-height: 1.2;
+    }
+    .relation-clue {
+      flex: 0 0 auto;
+      margin: 0 auto 5px auto;
+      width: 92%;
+      padding: 4px 6px;
+      border: 1.5px solid #111827;
+      border-radius: 7px;
+      background: #fff7ed;
+      color: #111827;
+      font-size: 11.5px;
+      font-weight: 800;
+      line-height: 1.12;
+      text-align: center;
+    }
+    .relation-diagram { flex: 0 0 92px; width: 94%; }
+    .relation-diagram .diagram-inner {
+      border-width: 2px;
+      flex: 0 0 72px;
+      height: 72px;
+      min-height: 0;
+      width: 100%;
+    }
+    .relation-diagram .row-top {
+      flex: 1 1 0;
+      min-height: 0;
+      width: 100%;
+      box-sizing: border-box;
+    }
+    .relation-row-bottom {
+      flex: 1 1 0;
+      display: grid;
+      grid-template-columns: var(--rel-cols);
+      column-gap: 2px;
+      min-height: 0;
+      width: 100%;
+      box-sizing: border-box;
+      background: #111827; /* traits verticaux robustes, même à l'impression */
+    }
+    .relation-part-box {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border-right: none;
+      overflow: hidden;
+      min-width: 0;
+      box-sizing: border-box;
+      background: #fff;
+    }
+    .relation-part-box.relation-visible { background: #fff; }
+    .relation-part-box.relation-a { background: #e5e7eb; }
+    .relation-part-box.relation-b { background: #ffedd5; }
+    .relation-part-box.relation-c { background: #fee2e2; }
+    .relation-part-value {
+      flex: 1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      height: 100%;
+      font-size: 17px;
+      font-weight: 950;
+      line-height: 1;
+      background: transparent;
+    }
+    .relation-visible .relation-part-value { color: #2563eb; }
+    .relation-label-row {
+      flex: 0 0 16px;
+      display: grid;
+      grid-template-columns: var(--rel-cols);
+      width: calc(100% - 4px);
+      margin-left: 2px;
+      margin-right: 2px;
+      align-items: center;
+      justify-content: stretch;
+      column-gap: 2px;
+      padding-top: 2px;
+      font-size: 11px;
+      font-weight: 950;
+      text-transform: uppercase;
+      line-height: 1;
+      box-sizing: border-box;
+    }
+    .relation-label {
+      text-align: center;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: clip;
+      box-sizing: border-box;
+    }
+    .relation-label-visible { color: #2563eb; }
+    .relation-label-a { color: #111827; }
+    .relation-label-b { color: #ea580c; }
+    .relation-label-c { color: #dc2626; }
+    .relation-given-part .relation-part-value { font-weight: 950; }
+    .relation-clue-3 { font-size: 10.4px; line-height: 1.05; padding: 3px 5px; }
+    .relation3-cell { padding: 5px; }
+    .relation3-cell .part-splat { flex: 1.55 1 0; margin-bottom: 5px; }
+    .relation3-cell .relation-clue { width: 94%; font-size: 11.5px; line-height: 1.08; padding: 5px 7px; margin-bottom: 6px; }
+    .relation3-cell .relation-diagram { flex-basis: 100px; width: 94%; }
+    .relation3-cell .relation-diagram .diagram-inner { flex-basis: 80px; height: 80px; }
+
+    .sums3-cell .relation-clue {
+      width: 94%;
+      font-size: 15px;
+      line-height: 1.12;
+      padding: 5px 7px;
+      margin-bottom: 6px;
+      font-weight: 900;
+      text-align: center;
+    }
+    .relation-controls { margin-top: 3px; }
+    .option-pair { display: grid; grid-template-columns: 1fr 1fr; gap: 7px; }
+    .option-pair .check-control { min-height: 32px; padding: 6px 7px; }
+    .option-pair .check-text { font-size: 10.5px; }
+    #relationHintOption { margin-bottom: 0; }
+    #relationHintOption .check-control { min-height: 32px; padding: 6px 7px; }
 
     .grid-mirror { direction: rtl; } 
     .grid-mirror .cell { direction: ltr; }
@@ -217,7 +348,7 @@
       .page { margin: 0 auto; box-shadow: none; border: none; width: 210mm; height: 297mm; overflow: hidden; page-break-after: always; } 
       .page:last-child { page-break-after: auto; } 
       .grid { border: 2px solid #000; } 
-      .diagram-inner, .part-box, .total-badge, .activity-header, .activity-instruction { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+      .diagram-inner, .part-box, .total-badge, .activity-header, .activity-instruction, .relation-clue, .relation-part-box, .relation-part-label, .relation-part-value { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
     }
   </style>
 </head>
@@ -245,17 +376,21 @@
             </label>
             <div id="btnRV" class="rv-btn disabled" onclick="toggleRV(this)" title="Recto-Verso (Miroir auto)">RV</div>
         </div>
-        <div class="corr-group">
+        <div class="option-pair">
             <label class="check-control">
                 <input type="checkbox" id="hideDiagram" onchange="renderPages()">
                 <span class="check-text" data-i18n="opt_hide_diag">Schéma à tracer</span>
             </label>
+            <label class="check-control">
+                <input type="checkbox" id="nonPropDiagram" onchange="renderPages()">
+                <span class="check-text" data-i18n="opt_non_prop">Non proportionnel</span>
+            </label>
         </div>
-        <div class="corr-group">
-          <label class="check-control">
-              <input type="checkbox" id="nonPropDiagram" onchange="renderPages()">
-              <span class="check-text" data-i18n="opt_non_prop">Schémas non proportionnels</span>
-          </label>
+        <div class="corr-group" id="relationHintOption" style="display:none;">
+            <label class="check-control">
+                <input type="checkbox" id="giveOnePart" onchange="startGen()">
+                <span class="check-text">Une tache donnée</span>
+            </label>
         </div>
       </div>
     </div>
@@ -266,13 +401,31 @@
           <option value="3x4" selected data-i18n="grid_12">12 cases (3x4)</option>
           <option value="3x3" data-i18n="grid_9">9 cases (3x3)</option>
           <option value="2x4" data-i18n="grid_8">8 cases (Grosses)</option>
+          <option value="2x3" data-i18n="grid_6">6 cases (Enquête)</option>
       </select>
     </div>
 
     <div class="section">
       <div class="sec-title" data-i18n="content">Contenu</div>
+      <div class="control">
+        <label for="problemType">Type de problème</label>
+        <select id="problemType" onchange="updateProblemTypeUI(); startGen()">
+          <option value="classic" selected>Petit Splat classique</option>
+          <option value="relation2">Relation entre 2 taches</option>
+          <option value="relation3">Enquête avec 3 taches</option>
+          <option value="sums3">Défi : sommes de taches</option>
+        </select>
+      </div>
       <div class="control-grid">
-        <div class="control">
+        <div id="relationControls" class="control" style="display:none;">
+          <label>Niveau</label>
+          <select id="relationLevel" onchange="startGen()">
+            <option value="simple" selected>Simple</option>
+            <option value="advanced">Avancé</option>
+            <option value="expert">Expert</option>
+          </select>
+        </div>
+        <div class="control" id="targetControl">
             <label data-i18n="target">Cible max</label>
             <select id="targetVal" onchange="startGen()">
               <option value="20" selected>20 (Standard)</option>
@@ -280,7 +433,7 @@
               <option value="100">100 (Expert)</option>
             </select>
         </div>
-        <div class="control">
+        <div class="control" id="splatCountControl">
             <label data-i18n="splat_count">Taches</label>
             <select id="splatMode" onchange="startGen()">
               <option value="1" selected>1 tache</option>
@@ -290,7 +443,7 @@
             </select>
         </div>
       </div>
-      <div class="control">
+      <div class="control" id="exerciseControl">
         <label data-i18n="exercise">Exercice</label>
         <select id="gameMode" onchange="startGen()">
           <option value="find_hidden" selected data-i18n="mode_hidden">Compléter le schéma en barres</option>
@@ -329,9 +482,10 @@
 const i18n = {
     fr: {
         title: "Petit Splat!", lang: "Langue", options: "Options", opt_corr: "Correction + Énoncé", opt_hide_diag: "Schéma à tracer",
-        opt_non_prop: "Schémas non proportionnels",
-        layout: "Mise en page", grid_12: "12 cases (3x4)", grid_9: "9 cases (3x3)", grid_8: "8 cases (Grosses)",
+        opt_non_prop: "Non proportionnel",
+        layout: "Mise en page", grid_12: "12 cases (3x4)", grid_9: "9 cases (3x3)", grid_8: "8 cases (Grosses)", grid_6: "6 cases (Enquête)",
         content: "Contenu", target: "Cible max", splat_count: "Taches",
+        problem_type: "Type de problème", module_classic: "Petit Splat classique", module_relation2: "Relation entre 2 taches", module_relation3: "Enquête avec 3 taches", module_sums3: "Défi : sommes de taches",
         exercise: "Exercice", mode_hidden: "Compléter le schéma en barres", mode_draw: "Dessiner les jetons", mode_mix: "Mélange",
         seed_section: "Graine", seed_label: "Graine", seed_status_auto: "graine automatique", seed_status_manual: "graine fixée",
         btn_mix: "GÉNÉRER", btn_print: "IMPRIMER"
@@ -339,8 +493,9 @@ const i18n = {
     en: {
         title: "Petit Splat!", lang: "Language", options: "Options", opt_corr: "Key + Problem", opt_hide_diag: "Draw Diagram",
         opt_non_prop: "Non-proportional diagrams",
-        layout: "Layout", grid_12: "12 boxes (3x4)", grid_9: "9 boxes (3x3)", grid_8: "8 boxes (Large)",
+        layout: "Layout", grid_12: "12 boxes (3x4)", grid_9: "9 boxes (3x3)", grid_8: "8 boxes (Large)", grid_6: "6 boxes (Investigation)",
         content: "Content", target: "Max target", splat_count: "Splats",
+        problem_type: "Problem type", module_classic: "Classic Petit Splat", module_relation2: "Relation between 2 splats", module_relation3: "Investigation with 3 splats", module_sums3: "Challenge: sum clues",
         exercise: "Exercise", mode_hidden: "Complete the bar model", mode_draw: "Draw Tokens", mode_mix: "Mix",
         seed_section: "Seed", seed_label: "Seed", seed_status_auto: "automatic seed", seed_status_manual: "fixed seed",
         btn_mix: "GENERATE", btn_print: "PRINT"
@@ -459,6 +614,60 @@ function updateUI() {
     updateSeedUI();
 }
 
+
+function getProblemType() {
+    const el = document.getElementById('problemType');
+    return el ? el.value : 'classic';
+}
+
+function updateProblemTypeUI() {
+    const problemType = getProblemType();
+    const isClassic = problemType === 'classic';
+    const isRelation2 = problemType === 'relation2';
+    const isRelation3 = problemType === 'relation3';
+    const isSums3 = problemType === 'sums3';
+    const splatCountControl = document.getElementById('splatCountControl');
+    const exerciseControl = document.getElementById('exerciseControl');
+    const relationControls = document.getElementById('relationControls');
+    const relationHintOption = document.getElementById('relationHintOption');
+    const gridSelect = document.getElementById('gridSize');
+    const opt3x4 = gridSelect ? gridSelect.querySelector('option[value="3x4"]') : null;
+    const opt3x3 = gridSelect ? gridSelect.querySelector('option[value="3x3"]') : null;
+    const opt2x4 = gridSelect ? gridSelect.querySelector('option[value="2x4"]') : null;
+    const opt2x3 = gridSelect ? gridSelect.querySelector('option[value="2x3"]') : null;
+
+    if (splatCountControl) splatCountControl.style.display = isClassic ? '' : 'none';
+    if (exerciseControl) exerciseControl.style.display = isClassic ? '' : 'none';
+    if (relationControls) relationControls.style.display = isClassic ? 'none' : '';
+    if (relationHintOption) relationHintOption.style.display = isClassic ? 'none' : 'flex';
+
+    // Chaque module garde sa mise en page lisible :
+    // - classique : choix habituel 12 / 9 / 8 ;
+    // - relation 2 : 9 cases ;
+    // - enquête 3 et sommes : 6 cases (2 colonnes × 3 lignes), sans modifier le classique.
+    if (gridSelect) {
+        if (isClassic) {
+            if (opt3x4) opt3x4.disabled = false;
+            if (opt3x3) opt3x3.disabled = false;
+            if (opt2x4) opt2x4.disabled = false;
+            if (opt2x3) opt2x3.disabled = true;
+            if (gridSelect.value === '2x3') gridSelect.value = '3x4';
+        } else if (isRelation2) {
+            if (opt3x4) opt3x4.disabled = true;
+            if (opt3x3) opt3x3.disabled = false;
+            if (opt2x4) opt2x4.disabled = true;
+            if (opt2x3) opt2x3.disabled = true;
+            if (gridSelect.value !== '3x3') gridSelect.value = '3x3';
+        } else if (isRelation3 || isSums3) {
+            if (opt3x4) opt3x4.disabled = true;
+            if (opt3x3) opt3x3.disabled = true;
+            if (opt2x4) opt2x4.disabled = true;
+            if (opt2x3) opt2x3.disabled = false;
+            if (gridSelect.value !== '2x3') gridSelect.value = '2x3';
+        }
+    }
+}
+
 function toggleMode() {
     isTBI = document.getElementById('supportMode').value === 'tbi';
     const printSection = document.getElementById('printOptionsSection');
@@ -471,6 +680,7 @@ function toggleMode() {
         printSection.style.display = 'block';
         printBtn.style.display = 'block';
     }
+    updateProblemTypeUI();
     renderPages();
 }
 
@@ -492,6 +702,8 @@ function toggleRV(btn) {
 
 function startGen() {
   prepareSeedForGeneration();
+  updateProblemTypeUI();
+
   const sizeSelect = document.getElementById('gridSize').value;
   const [cols, rows] = sizeSelect.split('x').map(Number);
   document.documentElement.style.setProperty('--cols', cols);
@@ -500,15 +712,537 @@ function startGen() {
   const targetMax = parseInt(document.getElementById('targetVal').value);
   const gameMode = document.getElementById('gameMode').value;
   const splatMode = document.getElementById('splatMode').value;
+  const problemType = getProblemType();
   
   state = [];
   const totalItems = cols * rows;
 
   for(let i=0; i<totalItems; i++) {
-      state.push(createItem(gameMode, targetMax, splatMode));
+      if (problemType === 'relation2') {
+          state.push(createRelation2Item(targetMax));
+      } else if (problemType === 'relation3') {
+          state.push(createRelation3Item(targetMax));
+      } else if (problemType === 'sums3') {
+          state.push(createSums3Item(targetMax));
+      } else {
+          state.push(createItem(gameMode, targetMax, splatMode));
+      }
   }
   
   renderPages();
+}
+
+
+function generateHiddenDotsBySplat(splats, counts, splatShape, maxTarget) {
+    const W = 300, H = 200;
+    let dotR = (maxTarget > 50) ? 5 : 8;
+    let ctx = null;
+
+    try {
+        const canvas = document.createElement('canvas');
+        canvas.width = W; canvas.height = H;
+        ctx = canvas.getContext('2d');
+    } catch (e) { return []; }
+
+    const allHiddenDots = [];
+
+    for (let idx = 0; idx < splats.length; idx++) {
+        const s = splats[idx];
+        const count = counts[idx] || 0;
+        const shapeIndex = (s.pathIndex !== undefined ? s.pathIndex : splatShape) % SPLAT_SHAPES.length;
+        const splatPath = new Path2D(SPLAT_SHAPES[shapeIndex]);
+        ctx.lineWidth = ((dotR * 2) + 6) / s.scale;
+        const placed = [];
+
+        for (let k = 0; k < count; k++) {
+            let safe = false;
+            let bestDX = undefined, bestDY = undefined;
+            let attempts = 0;
+
+            while (!safe && attempts < 300) {
+                attempts++;
+                let localX = 150 + (rand() - 0.5) * 160;
+                let localY = 100 + (rand() - 0.5) * 160;
+
+                if (!ctx.isPointInPath(splatPath, localX, localY)) continue;
+                if (ctx.isPointInStroke(splatPath, localX, localY)) continue;
+
+                let rad = s.rot * Math.PI / 180;
+                let cos = Math.cos(rad), sin = Math.sin(rad);
+                let scaledX = (localX - 150) * s.scale;
+                let scaledY = (localY - 100) * s.scale;
+                let currentDX = (scaledX * cos - scaledY * sin) + s.cx;
+                let currentDY = (scaledX * sin + scaledY * cos) + s.cy;
+
+                bestDX = currentDX;
+                bestDY = currentDY;
+
+                let overlap = false;
+                let minReqDist = dotR * 2.2;
+                if (attempts > 100) minReqDist = dotR * 1.2;
+                if (attempts > 200) minReqDist = 0;
+
+                for (let p of placed) {
+                    if (Math.sqrt((currentDX - p.x)**2 + (currentDY - p.y)**2) < minReqDist) { overlap = true; break; }
+                }
+                if (!overlap) safe = true;
+            }
+
+            if (bestDX !== undefined) {
+                placed.push({x: bestDX, y: bestDY});
+                allHiddenDots.push({x: bestDX, y: bestDY, r: dotR, color: s.dotColor || '#2563eb'});
+            }
+        }
+    }
+    return allHiddenDots;
+}
+
+function getRelation2Settings() {
+    const levelEl = document.getElementById('relationLevel');
+    return {
+        // Le menu reste simple : le générateur mélange en interne les écarts et les relations multiplicatives.
+        kind: 'mix',
+        level: levelEl ? levelEl.value : 'simple'
+    };
+}
+
+function shouldGiveOnePart() {
+    const el = document.getElementById('giveOnePart');
+    return !!(el && el.checked);
+}
+
+function chooseGivenPartId(parts) {
+    if (!shouldGiveOnePart() || !parts || !parts.length) return null;
+    return parts[Math.floor(rand() * parts.length)].id;
+}
+
+function pluralJetons(n) {
+    return `jeton${n > 1 ? 's' : ''}`;
+}
+
+function fractionWord(factor) {
+    if (factor === 2) return 'la moitié';
+    if (factor === 3) return 'le tiers';
+    if (factor === 4) return 'le quart';
+    return `1/${factor}`;
+}
+
+
+function getRelationFactors(level) {
+    if (level === 'expert') return [2, 3, 4];
+    if (level === 'advanced') return [2, 3];
+    return [2];
+}
+
+function getRelationFamilies(level) {
+    // Simple contient déjà le double / la moitié ; avancé ajoute le triple ; expert ajoute le quadruple.
+    return ['add', 'mult'];
+}
+
+function chooseRelationFamily(level, forcedFamily = null) {
+    if (forcedFamily) return forcedFamily;
+    const families = getRelationFamilies(level);
+    return families[Math.floor(rand() * families.length)];
+}
+
+function makeRelationToReference(baseValue, otherLabel, refLabel, level, maxTarget, forcedFamily = null) {
+    const family = chooseRelationFamily(level, forcedFamily);
+    const cap = Math.max(12, maxTarget);
+
+    if (family === 'mult') {
+        const factors = getRelationFactors(level);
+        const factor = factors[Math.floor(rand() * factors.length)];
+        let otherValue;
+        let otherIsBig = rand() > 0.35;
+
+        if (otherIsBig) {
+            otherValue = baseValue * factor;
+        } else if (baseValue % factor === 0 && baseValue / factor >= 1) {
+            otherValue = baseValue / factor;
+        } else {
+            otherIsBig = true;
+            otherValue = baseValue * factor;
+        }
+
+        const bigger = otherValue > baseValue ? otherLabel : refLabel;
+        const smaller = otherValue > baseValue ? refLabel : otherLabel;
+        const styles = [
+            `La tache ${bigger} cache ${factor} fois plus de jetons que la tache ${smaller}.`,
+            `La tache ${smaller} cache ${factor} fois moins de jetons que la tache ${bigger}.`,
+            `La tache ${smaller} cache ${fractionWord(factor)} de ce que cache la tache ${bigger}.`
+        ];
+        return {
+            value: otherValue,
+            text: styles[Math.floor(rand() * styles.length)],
+            family: 'mult',
+            factor,
+            from: otherLabel,
+            ref: refLabel
+        };
+    }
+
+    const deltaLimit = level === 'expert' ? 12 : (level === 'advanced' ? 10 : 6);
+    const deltaMax = Math.max(1, Math.min(deltaLimit, cap - 3));
+    let delta = Math.floor(rand() * deltaMax) + 1;
+    let otherIsBig = rand() > 0.45;
+
+    if (!otherIsBig && baseValue - delta < 1) otherIsBig = true;
+    const otherValue = otherIsBig ? baseValue + delta : baseValue - delta;
+    const bigger = otherValue > baseValue ? otherLabel : refLabel;
+    const smaller = otherValue > baseValue ? refLabel : otherLabel;
+    const styles = [
+        `La tache ${bigger} cache ${delta} ${pluralJetons(delta)} de plus que la tache ${smaller}.`,
+        `La tache ${smaller} cache ${delta} ${pluralJetons(delta)} de moins que la tache ${bigger}.`
+    ];
+    return {
+        value: otherValue,
+        text: styles[Math.floor(rand() * styles.length)],
+        family: 'add',
+        delta,
+        from: otherLabel,
+        ref: refLabel
+    };
+}
+
+function relationSignature(rel) {
+    return rel.family === 'mult' ? `${rel.family}:${rel.factor}` : `${rel.family}:${rel.delta}`;
+}
+
+function chooseBaseValueForRelation3(level, cap) {
+    const divisor = level === 'expert' ? 7 : (level === 'advanced' ? 6 : 5);
+    const baseMax = Math.max(3, Math.floor(cap / divisor) + 2);
+    return Math.floor(rand() * baseMax) + 2;
+}
+
+function createRelation2Item(maxTarget) {
+    // Génération pensée pour le primaire : on choisit d'abord les valeurs cachées,
+    // puis on calcule le total. Ainsi le problème est toujours soluble proprement.
+    const settings = getRelation2Settings();
+    const families = settings.kind === 'mix' ? ['add', 'mult'] : [settings.kind];
+    const family = families[Math.floor(rand() * families.length)];
+    const cap = Math.max(12, maxTarget);
+
+    const shapeA = Math.floor(rand() * SPLAT_SHAPES.length);
+    const shapeB = (shapeA + 1 + Math.floor(rand() * (SPLAT_SHAPES.length - 1))) % SPLAT_SHAPES.length;
+    const rotA = Math.floor(rand() * 360);
+    const rotB = (rotA + 35 + Math.floor(rand() * 120)) % 360;
+
+    let a = 1, b = 2, visible = 0, total = 0;
+    let relationText = '';
+    let relationMeta = {};
+
+    const labels = { A: 'noire', B: 'orange' };
+
+    if (family === 'mult') {
+        const factors = settings.level === 'expert' ? [2, 3, 4] : (settings.level === 'advanced' ? [2, 3] : [2]);
+        const factor = factors[Math.floor(rand() * factors.length)];
+        const smallMax = Math.max(1, Math.floor((cap - 1) / (factor + 1)));
+        const small = Math.floor(rand() * smallMax) + 1;
+        const big = small * factor;
+        const orangeIsBig = rand() > 0.5;
+        a = orangeIsBig ? small : big;
+        b = orangeIsBig ? big : small;
+
+        const maxVisibleAllowed = Math.max(0, Math.min(20, cap - a - b));
+        visible = maxVisibleAllowed >= 1 ? Math.floor(rand() * maxVisibleAllowed) + 1 : 0;
+        total = a + b + visible;
+
+        const bigger = a > b ? labels.A : labels.B;
+        const smaller = a > b ? labels.B : labels.A;
+        const styles = [
+            `La tache ${bigger} cache ${factor} fois plus de jetons que la tache ${smaller}.`,
+            `La tache ${smaller} cache ${factor} fois moins de jetons que la tache ${bigger}.`,
+            `La tache ${smaller} cache ${fractionWord(factor)} de ce que cache la tache ${bigger}.`
+        ];
+        relationText = styles[Math.floor(rand() * styles.length)];
+        relationMeta = { family: 'mult', factor };
+    } else {
+        const deltaLimit = settings.level === 'expert' ? 12 : (settings.level === 'advanced' ? 10 : 6);
+        const deltaMax = Math.max(1, Math.min(deltaLimit, cap - 3));
+        const delta = Math.floor(rand() * deltaMax) + 1;
+        const smallMax = Math.max(1, Math.floor((cap - delta - 1) / 2));
+        const small = Math.floor(rand() * smallMax) + 1;
+        const big = small + delta;
+        const orangeIsBig = rand() > 0.5;
+        a = orangeIsBig ? small : big;
+        b = orangeIsBig ? big : small;
+
+        const maxVisibleAllowed = Math.max(0, Math.min(20, cap - a - b));
+        visible = maxVisibleAllowed >= 1 ? Math.floor(rand() * maxVisibleAllowed) + 1 : 0;
+        total = a + b + visible;
+
+        const bigger = a > b ? labels.A : labels.B;
+        const smaller = a > b ? labels.B : labels.A;
+        const styles = [
+            `La tache ${bigger} cache ${delta} ${pluralJetons(delta)} de plus que la tache ${smaller}.`,
+            `La tache ${smaller} cache ${delta} ${pluralJetons(delta)} de moins que la tache ${bigger}.`
+        ];
+        relationText = styles[Math.floor(rand() * styles.length)];
+        relationMeta = { family: 'add', delta };
+    }
+
+    const splats = [
+        { cx: 75, y: 115, cy: 115, scale: 0.62, rot: rotA, color: '#111827', dotColor: '#2563eb', label: 'noire', pathIndex: shapeA },
+        { cx: 185, y: 115, cy: 115, scale: 0.62, rot: rotB, color: '#f97316', dotColor: '#2563eb', label: 'orange', pathIndex: shapeB }
+    ];
+
+    const dotsPositions = generateDotPositions(visible, maxTarget, shapeA, splats);
+    const hiddenDots = generateHiddenDotsBySplat(splats, [a, b], shapeA, maxTarget);
+
+    const parts = [
+        { id: 'A', short: 'N', label: 'noire', value: a, color: '#111827' },
+        { id: 'B', short: 'O', label: 'orange', value: b, color: '#ea580c' }
+    ];
+    const givenPartId = chooseGivenPartId(parts);
+
+    return {
+        kind: 'relation2',
+        mode: 'relation2',
+        total,
+        visible,
+        hidden: a + b,
+        splatShape: shapeA,
+        splats,
+        dots: dotsPositions,
+        hiddenDots,
+        maxTargetContext: maxTarget,
+        parts,
+        givenPartId,
+        clues: [relationText],
+        relationText,
+        ...relationMeta
+    };
+}
+
+
+function createRelation3Item(maxTarget) {
+    // Enquête avec 3 taches.
+    // Simple : pivot commun = noire.
+    // Avancé : pivot commun variable.
+    // Expert : pivot commun variable ou chaîne.
+    const settings = getRelation2Settings();
+    const level = settings.level || 'simple';
+    const cap = Math.max(18, maxTarget);
+    const labels = { A: 'noire', B: 'orange', C: 'rouge' };
+    const ids = ['A', 'B', 'C'];
+
+    let values = { A: 3, B: 5, C: 6 };
+    let visible = 2, total = 16;
+    let clues = [];
+    let structure = 'pivot-fixed';
+    let pivotId = 'A';
+
+    for (let attempt = 0; attempt < 1200; attempt++) {
+        const candidateValues = {};
+        const candidateClues = [];
+        let candidateStructure = 'pivot-fixed';
+        let candidatePivot = 'A';
+
+        const useChain = level === 'expert' && rand() < 0.38;
+
+        if (useChain) {
+            candidateStructure = 'chain';
+            const order = ids.slice();
+            // Mélange déterministe via rand() pour respecter la graine.
+            for (let i = order.length - 1; i > 0; i--) {
+                const j = Math.floor(rand() * (i + 1));
+                const tmp = order[i]; order[i] = order[j]; order[j] = tmp;
+            }
+
+            const first = order[0], second = order[1], third = order[2];
+            const firstValue = chooseBaseValueForRelation3(level, cap);
+            const relSecond = makeRelationToReference(firstValue, labels[second], labels[first], level, maxTarget);
+            const relThird = makeRelationToReference(relSecond.value, labels[third], labels[second], level, maxTarget);
+
+            candidateValues[first] = firstValue;
+            candidateValues[second] = relSecond.value;
+            candidateValues[third] = relThird.value;
+            candidateClues.push(relSecond.text, relThird.text);
+            candidatePivot = first;
+        } else {
+            candidateStructure = level === 'simple' ? 'pivot-fixed' : 'pivot-variable';
+            candidatePivot = level === 'simple' ? 'A' : ids[Math.floor(rand() * ids.length)];
+            const others = ids.filter(id => id !== candidatePivot);
+            const pivotValue = chooseBaseValueForRelation3(level, cap);
+            const rel1 = makeRelationToReference(pivotValue, labels[others[0]], labels[candidatePivot], level, maxTarget);
+            const rel2 = makeRelationToReference(pivotValue, labels[others[1]], labels[candidatePivot], level, maxTarget);
+
+            candidateValues[candidatePivot] = pivotValue;
+            candidateValues[others[0]] = rel1.value;
+            candidateValues[others[1]] = rel2.value;
+            candidateClues.push(rel1.text, rel2.text);
+
+            // On évite deux indices exactement du même type numérique sur la même carte.
+            if (relationSignature(rel1) === relationSignature(rel2)) continue;
+        }
+
+        const valueList = ids.map(id => candidateValues[id]);
+        if (valueList.some(v => !Number.isFinite(v) || v < 2 || v > cap)) continue;
+        if (new Set(valueList).size < 3) continue;
+
+        const sumHidden = valueList.reduce((x, y) => x + y, 0);
+        if (sumHidden >= cap) continue;
+
+        const maxVisibleAllowed = Math.max(1, Math.min(18, cap - sumHidden));
+        const vis = Math.floor(rand() * maxVisibleAllowed) + 1;
+        if (sumHidden + vis > cap) continue;
+
+        values = candidateValues;
+        visible = vis;
+        total = sumHidden + visible;
+        clues = candidateClues;
+        structure = candidateStructure;
+        pivotId = candidatePivot;
+        break;
+    }
+
+    if (!clues.length) {
+        values = { A: 4, B: 8, C: 6 };
+        visible = 2; total = 20;
+        clues = [
+            'La tache orange cache 2 fois plus de jetons que la tache noire.',
+            'La tache rouge cache 2 jetons de plus que la tache noire.'
+        ];
+        structure = 'pivot-fixed';
+        pivotId = 'A';
+    }
+
+    const shapeA = Math.floor(rand() * SPLAT_SHAPES.length);
+    const shapeB = (shapeA + 1 + Math.floor(rand() * (SPLAT_SHAPES.length - 1))) % SPLAT_SHAPES.length;
+    let shapeC = (shapeB + 1 + Math.floor(rand() * (SPLAT_SHAPES.length - 1))) % SPLAT_SHAPES.length;
+    if (shapeC === shapeA) shapeC = (shapeC + 1) % SPLAT_SHAPES.length;
+
+    const rotA = Math.floor(rand() * 360);
+    const rotB = (rotA + 35 + Math.floor(rand() * 120)) % 360;
+    const rotC = (rotB + 35 + Math.floor(rand() * 120)) % 360;
+
+    // Disposition spéciale 6 cases : triangle plus ouvert, taches plus grandes et plus espacées.
+    const splats = [
+        // Taches plus étalées sur la largeur ; rouge remontée pour éviter la zone d'indice.
+        { cx: 44,  y: 88,  cy: 88,  scale: 0.65, rot: rotA, color: '#111827', dotColor: '#2563eb', label: labels.A, pathIndex: shapeA },
+        { cx: 236, y: 90,  cy: 90,  scale: 0.65, rot: rotB, color: '#f97316', dotColor: '#2563eb', label: labels.B, pathIndex: shapeB },
+        { cx: 140, y: 138, cy: 138, scale: 0.59, rot: rotC, color: '#dc2626', dotColor: '#2563eb', label: labels.C, pathIndex: shapeC }
+    ];
+
+    const dotsPositions = generateDotPositions(visible, maxTarget, shapeA, splats);
+    const hiddenDots = generateHiddenDotsBySplat(splats, [values.A, values.B, values.C], shapeA, maxTarget);
+
+    const parts = [
+        { id: 'A', short: 'N', label: labels.A, value: values.A, color: '#111827' },
+        { id: 'B', short: 'O', label: labels.B, value: values.B, color: '#ea580c' },
+        { id: 'C', short: 'R', label: labels.C, value: values.C, color: '#dc2626' }
+    ];
+    const givenPartId = chooseGivenPartId(parts);
+
+    return {
+        kind: 'relation3',
+        mode: 'relation3',
+        total,
+        visible,
+        hidden: values.A + values.B + values.C,
+        splatShape: shapeA,
+        splats,
+        dots: dotsPositions,
+        hiddenDots,
+        maxTargetContext: maxTarget,
+        structure,
+        pivotId,
+        parts,
+        givenPartId,
+        clues,
+        relationText: clues.join('\n')
+    };
+}
+
+function chooseValueRangeForSums(level, cap) {
+    const maxByCap = Math.max(5, Math.floor((cap - 2) / 3));
+    if (level === 'expert') return { min: 3, max: Math.max(6, Math.min(28, maxByCap + 10)) };
+    if (level === 'advanced') return { min: 2, max: Math.max(6, Math.min(20, maxByCap + 6)) };
+    return { min: 2, max: Math.max(5, Math.min(12, maxByCap + 3)) };
+}
+
+function createSums3Item(maxTarget) {
+    // Défi : trois taches, indices donnés sous forme de sommes de deux taches.
+    // Exemple : N + O = 15 ; O + R = 17 ; N + R = 14.
+    const settings = getRelation2Settings();
+    const level = settings.level || 'simple';
+    const cap = Math.max(20, maxTarget);
+    const labels = { A: 'noire', B: 'orange', C: 'rouge' };
+    const shorts = { A: 'N', B: 'O', C: 'R' };
+
+    let values = { A: 4, B: 6, C: 8 };
+    let visible = 2;
+    let total = 20;
+
+    const range = chooseValueRangeForSums(level, cap);
+
+    for (let attempt = 0; attempt < 900; attempt++) {
+        const a = range.min + Math.floor(rand() * (range.max - range.min + 1));
+        const b = range.min + Math.floor(rand() * (range.max - range.min + 1));
+        const c = range.min + Math.floor(rand() * (range.max - range.min + 1));
+        if (new Set([a, b, c]).size < 3) continue;
+
+        const hidden = a + b + c;
+        if (hidden >= cap) continue;
+
+        const maxVisibleAllowed = Math.max(1, Math.min(18, cap - hidden));
+        const vis = Math.floor(rand() * maxVisibleAllowed) + 1;
+        if (hidden + vis > cap) continue;
+
+        values = { A: a, B: b, C: c };
+        visible = vis;
+        total = hidden + visible;
+        break;
+    }
+
+    const shapeA = Math.floor(rand() * SPLAT_SHAPES.length);
+    const shapeB = (shapeA + 1 + Math.floor(rand() * (SPLAT_SHAPES.length - 1))) % SPLAT_SHAPES.length;
+    let shapeC = (shapeB + 1 + Math.floor(rand() * (SPLAT_SHAPES.length - 1))) % SPLAT_SHAPES.length;
+    if (shapeC === shapeA) shapeC = (shapeC + 1) % SPLAT_SHAPES.length;
+
+    const rotA = Math.floor(rand() * 360);
+    const rotB = (rotA + 35 + Math.floor(rand() * 120)) % 360;
+    const rotC = (rotB + 35 + Math.floor(rand() * 120)) % 360;
+
+    const splats = [
+        { cx: 44,  y: 88,  cy: 88,  scale: 0.65, rot: rotA, color: '#111827', dotColor: '#2563eb', label: labels.A, pathIndex: shapeA },
+        { cx: 236, y: 90,  cy: 90,  scale: 0.65, rot: rotB, color: '#f97316', dotColor: '#2563eb', label: labels.B, pathIndex: shapeB },
+        { cx: 140, y: 138, cy: 138, scale: 0.59, rot: rotC, color: '#dc2626', dotColor: '#2563eb', label: labels.C, pathIndex: shapeC }
+    ];
+
+    const pairClues = [
+        { text: `${shorts.A} + ${shorts.B} = ${values.A + values.B}`, order: rand() },
+        { text: `${shorts.B} + ${shorts.C} = ${values.B + values.C}`, order: rand() },
+        { text: `${shorts.A} + ${shorts.C} = ${values.A + values.C}`, order: rand() }
+    ].sort((x, y) => x.order - y.order).map(x => x.text);
+
+    const dotsPositions = generateDotPositions(visible, maxTarget, shapeA, splats);
+    const hiddenDots = generateHiddenDotsBySplat(splats, [values.A, values.B, values.C], shapeA, maxTarget);
+
+    const parts = [
+        { id: 'A', short: 'N', label: labels.A, value: values.A, color: '#111827' },
+        { id: 'B', short: 'O', label: labels.B, value: values.B, color: '#ea580c' },
+        { id: 'C', short: 'R', label: labels.C, value: values.C, color: '#dc2626' }
+    ];
+    const givenPartId = chooseGivenPartId(parts);
+
+    return {
+        kind: 'sums3',
+        mode: 'sums3',
+        total,
+        visible,
+        hidden: values.A + values.B + values.C,
+        splatShape: shapeA,
+        splats,
+        dots: dotsPositions,
+        hiddenDots,
+        maxTargetContext: maxTarget,
+        structure: 'pair-sums',
+        parts,
+        givenPartId,
+        clues: pairClues,
+        relationText: pairClues.join('\n')
+    };
 }
 
 function createItem(mode, maxTarget, splatMode) {
@@ -657,8 +1391,10 @@ function generateDotPositions(count, maxTarget, splatShape, splats) {
             if (canTestSplat) {
                 for(let s of splats) {
                     let p = inverseTransform(dX, dY, s.cx, s.cy, s.rot, s.scale);
+                    const shapeIndex = (s.pathIndex !== undefined ? s.pathIndex : splatShape) % SPLAT_SHAPES.length;
+                    const testPath = new Path2D(SPLAT_SHAPES[shapeIndex]);
                     ctx.lineWidth = ((dotR * 2) + 12) / s.scale; 
-                    if (ctx.isPointInPath(splatPath, p.x, p.y) || ctx.isPointInStroke(splatPath, p.x, p.y)) { touchSplat = true; break; }
+                    if (ctx.isPointInPath(testPath, p.x, p.y) || ctx.isPointInStroke(testPath, p.x, p.y)) { touchSplat = true; break; }
                 }
             } else {
                 for(let s of splats) {
@@ -691,6 +1427,26 @@ function generateDotPositions(count, maxTarget, splatShape, splats) {
 }
 
 function getInstructionHtml() {
+    const problemType = getProblemType();
+    if (problemType === 'relation2') {
+        return `<div class="activity-instruction-title">Pour chaque carte :</div>
+                <div class="activity-instruction-line">- observe le total, les jetons visibles et l'indice,</div>
+                <div class="activity-instruction-line">- complète le schéma en barres,</div>
+                <div class="activity-instruction-line">- trouve combien de jetons cache chaque tache.</div>`;
+    }
+    if (problemType === 'relation3') {
+        return `<div class="activity-instruction-title">Pour chaque carte :</div>
+                <div class="activity-instruction-line">- observe le total, les jetons visibles et les deux indices,</div>
+                <div class="activity-instruction-line">- complète le schéma en barres,</div>
+                <div class="activity-instruction-line">- trouve combien de jetons cache chaque tache.</div>`;
+    }
+    if (problemType === 'sums3') {
+        return `<div class="activity-instruction-title">Pour chaque carte :</div>
+                <div class="activity-instruction-line">- utilise les sommes de deux taches,</div>
+                <div class="activity-instruction-line">- complète le schéma en barres,</div>
+                <div class="activity-instruction-line">- trouve combien de jetons cache chaque tache.</div>`;
+    }
+
     const modeEl = document.getElementById('gameMode');
     const mode = modeEl ? modeEl.value : 'find_hidden';
     const splatModeEl = document.getElementById('splatMode');
@@ -729,6 +1485,85 @@ function getPrintedActivityLabel(isCorrectionPage) {
     return label;
 }
 
+
+function getRelationValueDisplay(value, shouldReveal) {
+    if (shouldReveal && value !== '') return `<span class="hidden-val">${value}</span>`;
+    return value;
+}
+
+function renderRelationCell(cell, item, isCorrectionPage, hideDiagram, isNonProp) {
+    let showVisualDots = true;
+    let hideVisualDotsUntilReveal = false;
+    let showHiddenDots = false;
+
+    if (isCorrectionPage) {
+        showHiddenDots = true;
+    } else if (isTBI) {
+        showHiddenDots = true;
+        hideVisualDotsUntilReveal = false;
+    }
+
+    const splatPart = document.createElement('div');
+    splatPart.className = 'part-splat';
+    let htmlContent = getSplatSvg(item, showVisualDots, hideVisualDotsUntilReveal, showHiddenDots);
+    htmlContent += `<div class="total-badge">${item.total}</div>`;
+    splatPart.innerHTML = htmlContent;
+    cell.appendChild(splatPart);
+
+    const clues = item.clues || (item.relationText ? [item.relationText] : []);
+    const clue = document.createElement('div');
+    clue.className = 'relation-clue' + (item.kind === 'relation3' ? ' relation-clue-3' : '');
+    clue.innerHTML = clues.map(t => `<div>${t}</div>`).join('');
+    cell.appendChild(clue);
+
+    const diag = document.createElement('div');
+    diag.className = 'diagram-container relation-diagram';
+
+    if (hideDiagram && !isCorrectionPage && !isTBI) {
+        diag.innerHTML = ``;
+        cell.appendChild(diag);
+        return;
+    }
+
+    // Sur la fiche élève, le total du schéma est à compléter :
+    // il est déjà donné sur le plateau, dans le badge. On ne le remplit qu'en correction.
+    const displayTotal = isCorrectionPage ? item.total : '';
+    const displayVis = isCorrectionPage ? item.visible : '';
+    const revealParts = false;
+
+    const minCol = item.parts.length >= 3 ? 27 : 34;
+    const flexVis = isNonProp ? 1 : Math.max(item.visible, item.total * 0.05, 1);
+    const partFlexes = item.parts.map(p => isNonProp ? 1 : Math.max(p.value, item.total * 0.05, 1));
+    const relationCols = `${item.visible > 0 ? `minmax(${minCol}px, ${flexVis}fr) ` : ''}${partFlexes.map(f => `minmax(${minCol}px, ${f}fr)`).join(' ')}`;
+
+    const partBoxes = item.parts.map((p, idx) => {
+        const isGivenPart = item.givenPartId === p.id;
+        const display = isCorrectionPage ? p.value : (isGivenPart ? p.value : (isTBI ? p.value : ''));
+        const givenClass = isGivenPart && !isCorrectionPage ? ' relation-given-part' : '';
+        return `<div class="relation-part-box relation-${p.id.toLowerCase()}${givenClass}"><div class="relation-part-value">${getRelationValueDisplay(display, revealParts)}</div></div>`;
+    }).join('');
+
+    const partLabels = item.parts.map(p => {
+        const short = p.short || (p.id === 'A' ? 'N' : (p.id === 'B' ? 'O' : p.id));
+        return `<div class="relation-label relation-label-${p.id.toLowerCase()}">${short}</div>`;
+    }).join('');
+
+    diag.innerHTML = `
+        <div class="diagram-inner" style="--rel-cols:${relationCols};">
+            <div class="row-top" style="font-size: 18px;">${displayTotal}</div>
+            <div class="relation-row-bottom">
+                ${item.visible > 0 ? `<div class="relation-part-box relation-visible"><div class="relation-part-value">${displayVis}</div></div>` : ''}
+                ${partBoxes}
+            </div>
+        </div>
+        <div class="relation-label-row" style="--rel-cols:${relationCols};">
+            ${item.visible > 0 ? `<div class="relation-label relation-label-visible">V</div>` : ''}
+            ${partLabels}
+        </div>`;
+
+    cell.appendChild(diag);
+}
+
 function createPageElement(chunk, isCorrectionPage, mirror) {
     const page = document.createElement('div'); page.className = isTBI ? 'page' : 'page activity-print-page';
     const inner = document.createElement('div'); inner.className = 'page-inner';
@@ -747,6 +1582,13 @@ function createPageElement(chunk, isCorrectionPage, mirror) {
         if (isTBI) {
             cell.className += ' tbi-mode';
             cell.onclick = function() { this.classList.toggle('revealed'); };
+        }
+
+        if (item.kind === 'relation2' || item.kind === 'relation3' || item.kind === 'sums3') {
+            cell.className += item.kind === 'relation2' ? ' relation-cell relation2-cell' : (item.kind === 'sums3' ? ' relation-cell relation3-cell sums3-cell' : ' relation-cell relation3-cell');
+            renderRelationCell(cell, item, isCorrectionPage, hideDiagram, isNonProp);
+            grid.appendChild(cell);
+            return;
         }
         
         let showVisualTotal = false, showVisualDots = false, hideVisualDotsUntilReveal = false;
@@ -909,15 +1751,17 @@ function renderPages() {
   }
 }
 
-function getSplatSvg(item, drawDots, hideVisibleDotsUntilReveal = false) {
+function getSplatSvg(item, drawDots, hideVisibleDotsUntilReveal = false, forceHiddenDots = false) {
     const W = 300, H = 200;
-    const pathData = SPLAT_SHAPES[item.splatShape % SPLAT_SHAPES.length];
+    const defaultPathData = SPLAT_SHAPES[item.splatShape % SPLAT_SHAPES.length];
     
     let svg = `<svg class="splat-svg" viewBox="0 0 ${W} ${H}" preserveAspectRatio="xMidYMid meet">`;
     
-    if (isTBI && item.hiddenDots && item.hiddenDots.length > 0) {
+    if ((isTBI || forceHiddenDots) && item.hiddenDots && item.hiddenDots.length > 0) {
+        const hiddenClass = (isTBI && forceHiddenDots && !document.body.classList.contains('print-only')) ? ' class="solution-dot"' : '';
         for(let p of item.hiddenDots) {
-             svg += `<circle cx="${p.x}" cy="${p.y}" r="${p.r}" fill="#2563eb" stroke="#1e40af" stroke-width="0.5"/>`;
+             const dotFill = p.color || '#2563eb';
+             svg += `<circle${hiddenClass} cx="${p.x}" cy="${p.y}" r="${p.r}" fill="${dotFill}" stroke="#1e40af" stroke-width="0.5"/>`;
         }
     }
 
@@ -929,8 +1773,11 @@ function getSplatSvg(item, drawDots, hideVisibleDotsUntilReveal = false) {
     }
     
     for(let s of item.splats) {
+        const splatFill = s.color || getComputedStyle(document.documentElement).getPropertyValue('--splat').trim();
+        const shapeIndex = s.pathIndex !== undefined ? s.pathIndex : item.splatShape;
+        const pathData = SPLAT_SHAPES[shapeIndex % SPLAT_SHAPES.length] || defaultPathData;
         svg += `<g transform="translate(${s.cx}, ${s.cy}) scale(${s.scale}) rotate(${s.rot}) translate(-150, -100)">`;
-        svg += `<path class="splat-path" d="${pathData}" fill="${getComputedStyle(document.documentElement).getPropertyValue('--splat').trim()}" filter="drop-shadow(3px 3px 2px rgba(0,0,0,0.3))" />`;
+        svg += `<path class="splat-path" d="${pathData}" fill="${splatFill}" filter="drop-shadow(3px 3px 2px rgba(0,0,0,0.3))" />`;
         svg += `</g>`;
     }
 
@@ -938,7 +1785,7 @@ function getSplatSvg(item, drawDots, hideVisibleDotsUntilReveal = false) {
     return svg;
 }
 
-window.onload = () => { startGen(); updateUI(); toggleMode(); };
+window.onload = () => { updateUI(); updateProblemTypeUI(); startGen(); toggleMode(); };
 </script>
 </body>
 </html>
