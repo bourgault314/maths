@@ -3,269 +3,1096 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Jeu de Nim - Club Maths</title>
-    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700;900&display=swap" rel="stylesheet">
+    <title>Jeu de Nim - Le bâton rouge V7</title>
+    <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;700;800;900&display=swap" rel="stylesheet">
     <style>
         :root {
-            --bg-color: #1e272e;
-            --primary: #00d2ff;
-            --danger: #ff3b3b;
-            --stick-base: #d2dae2;
-            --stick-dim: #485460;
-            --win-color: #27ae60;
-            --lose-color: #c0392b;
+            --bg: #15202b;
+            --bg-2: #1d2d3a;
+            --panel: rgba(255, 255, 255, 0.09);
+            --panel-strong: rgba(255, 255, 255, 0.14);
+            --text: #f7fbff;
+            --muted: #c6d3df;
+            --primary: #38d9ff;
+            --primary-2: #18a8d8;
+            --warning: #ffb545;
+            --danger: #ff4b5c;
+            --danger-dark: #c91f35;
+            --success: #26c281;
+            --wood: #f5d18a;
+            --wood-dark: #b8782d;
+            --wood-shadow: #7d4e1f;
+            --removed: #3d4b58;
+            --line: rgba(255, 255, 255, 0.18);
+            --paper: #fffdf7;
+            --ink: #24313d;
         }
 
+        * { box-sizing: border-box; }
+
         body {
-            font-family: 'Roboto', sans-serif;
-            background-color: var(--bg-color);
-            color: white;
-            text-align: center;
             margin: 0;
             min-height: 100vh;
+            font-family: 'Nunito', Arial, sans-serif;
+            color: var(--text);
+            background:
+                radial-gradient(circle at 20% 15%, rgba(56, 217, 255, 0.18), transparent 28%),
+                radial-gradient(circle at 90% 20%, rgba(255, 181, 69, 0.13), transparent 24%),
+                linear-gradient(135deg, var(--bg), var(--bg-2));
             display: flex;
-            flex-direction: column;
+            align-items: center;
             justify-content: center;
+            padding: 24px;
+            overflow-x: hidden;
+        }
+
+        button, input, select { font-family: inherit; }
+
+        .screen {
+            width: min(1120px, 100%);
+        }
+
+        .setup-card {
+            width: min(760px, 100%);
+            margin: 0 auto;
+            background: linear-gradient(180deg, rgba(255,255,255,0.12), rgba(255,255,255,0.07));
+            border: 1px solid rgba(255,255,255,0.2);
+            box-shadow: 0 28px 70px rgba(0,0,0,0.35);
+            border-radius: 30px;
+            padding: clamp(24px, 4vw, 42px);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .setup-card::before {
+            content: "";
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(120deg, rgba(255,255,255,0.08), transparent 35%, rgba(255,255,255,0.05));
+            pointer-events: none;
+        }
+
+        .setup-inner { position: relative; z-index: 1; }
+
+        .brand-kicker {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 7px 12px;
+            border-radius: 999px;
+            background: rgba(56,217,255,0.13);
+            border: 1px solid rgba(56,217,255,0.3);
+            color: #d9f8ff;
+            font-size: 14px;
+            font-weight: 800;
+            letter-spacing: 0.04em;
+            text-transform: uppercase;
+            margin-bottom: 16px;
+        }
+
+        h1 {
+            margin: 0 0 8px;
+            font-size: clamp(38px, 7vw, 74px);
+            line-height: 0.95;
+            letter-spacing: -0.05em;
+            font-weight: 900;
+        }
+
+        .subtitle {
+            margin: 0 0 28px;
+            color: var(--muted);
+            font-size: clamp(17px, 2vw, 21px);
+            max-width: 620px;
+        }
+
+        .setup-grid {
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 16px;
+            margin-bottom: 18px;
+        }
+
+        .field-card {
+            background: rgba(0,0,0,0.16);
+            border: 1px solid rgba(255,255,255,0.16);
+            border-radius: 20px;
+            padding: 16px;
+        }
+
+        .field-card.full { grid-column: 1 / -1; }
+
+        label {
+            display: block;
+            color: #edf7ff;
+            font-size: 15px;
+            font-weight: 900;
+            margin-bottom: 9px;
+        }
+
+        input[type="number"], select {
+            width: 100%;
+            border: 0;
+            outline: none;
+            border-radius: 14px;
+            background: rgba(255,255,255,0.95);
+            color: #15202b;
+            padding: 13px 14px;
+            font-size: 18px;
+            font-weight: 900;
+            text-align: center;
+            box-shadow: inset 0 -2px 0 rgba(0,0,0,0.12);
+        }
+
+        select { cursor: pointer; }
+
+        .quick-row {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 8px;
+            margin-top: 10px;
+        }
+
+        .quick-btn {
+            border: 1px solid rgba(255,255,255,0.16);
+            background: rgba(255,255,255,0.08);
+            color: var(--text);
+            border-radius: 12px;
+            padding: 9px 8px;
+            font-weight: 900;
+            cursor: pointer;
+            transition: transform .16s, background .16s, border-color .16s;
+        }
+        .quick-btn:hover { transform: translateY(-1px); background: rgba(255,255,255,0.15); border-color: rgba(56,217,255,0.5); }
+
+        .mode-choice {
+            display: grid;
+            grid-template-columns: repeat(3, minmax(0, 1fr));
+            gap: 10px;
+        }
+
+        .mode-tile {
+            position: relative;
+        }
+        .mode-tile input {
+            position: absolute;
+            opacity: 0;
+            pointer-events: none;
+        }
+        .mode-tile span {
+            display: block;
+            min-height: 86px;
+            border-radius: 16px;
+            border: 2px solid rgba(255,255,255,0.15);
+            background: rgba(255,255,255,0.08);
+            padding: 12px;
+            cursor: pointer;
+            transition: transform .16s, border-color .16s, background .16s;
+        }
+        .mode-tile strong {
+            display: block;
+            font-size: 17px;
+            margin-bottom: 4px;
+        }
+        .mode-tile small {
+            display: block;
+            color: var(--muted);
+            line-height: 1.25;
+            font-weight: 700;
+        }
+        .mode-tile input:checked + span {
+            border-color: var(--primary);
+            background: rgba(56,217,255,0.16);
+            box-shadow: 0 0 0 4px rgba(56,217,255,0.08);
+        }
+        .mode-tile:hover span { transform: translateY(-1px); }
+
+        .actions {
+            display: grid;
+            grid-template-columns: 1fr auto;
+            gap: 12px;
+            margin-top: 18px;
             align-items: center;
         }
 
-        h1 { margin-bottom: 20px; color: var(--primary); text-transform: uppercase; letter-spacing: 3px; font-weight: 900; }
+        .main-btn, .secondary-btn, .ghost-btn, .restart-btn, .close-btn, .print-btn {
+            border: 0;
+            border-radius: 999px;
+            font-weight: 900;
+            cursor: pointer;
+            transition: transform .16s, filter .16s, background .16s;
+        }
 
-        /* --- CONFIGURATION --- */
-        #setup-panel {
-            background: #2c3e50;
-            padding: 40px;
-            border-radius: 20px;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+        .main-btn {
+            background: linear-gradient(135deg, var(--primary), var(--primary-2));
+            color: #06202c;
+            padding: 16px 26px;
+            font-size: 20px;
+            box-shadow: 0 16px 30px rgba(24,168,216,0.25);
+        }
+        .main-btn:hover { transform: translateY(-2px); filter: brightness(1.08); }
+
+        .secondary-btn {
+            background: rgba(255,255,255,0.1);
+            color: var(--text);
+            border: 1px solid rgba(255,255,255,0.18);
+            padding: 13px 18px;
+            font-size: 16px;
+        }
+        .secondary-btn:hover { background: rgba(255,255,255,0.18); }
+
+        .error-line {
+            color: #ffd1d6;
+            background: rgba(255,75,92,0.12);
+            border: 1px solid rgba(255,75,92,0.26);
+            padding: 10px 12px;
+            border-radius: 13px;
+            display: none;
+            margin-top: 12px;
+            font-weight: 800;
+        }
+
+        /* Jeu */
+        #game-area {
+            display: none;
+            width: 100%;
+        }
+
+        .game-shell {
+            display: grid;
+            grid-template-columns: minmax(0, 1fr) 300px;
+            gap: 18px;
+            align-items: stretch;
+        }
+
+        .board-card, .side-panel {
+            background: rgba(255,255,255,0.09);
+            border: 1px solid rgba(255,255,255,0.18);
+            box-shadow: 0 24px 60px rgba(0,0,0,0.28);
+            border-radius: 28px;
+            overflow: hidden;
+        }
+
+        .board-card {
+            padding: clamp(18px, 3vw, 30px);
+            min-height: 560px;
             display: flex;
             flex-direction: column;
-            gap: 20px;
-            min-width: 350px;
-            border: 1px solid #4bcffa;
-            z-index: 10;
+            justify-content: space-between;
         }
 
-        .input-group label { display: block; margin-bottom: 8px; font-weight: bold; color: #ccc; text-align: center; }
-        
-        select, input {
-            width: 100%;
-            padding: 12px;
-            font-size: 18px;
-            border-radius: 8px;
-            border: none;
-            background: #fff;
-            color: #333;
-            box-sizing: border-box;
-            text-align: center;
-            text-align-last: center;
-            font-weight: bold;
-        }
-
-        button.main-btn {
-            background-color: var(--primary);
-            color: #1e272e;
-            border: none;
-            padding: 15px;
-            font-size: 18px;
-            font-weight: bold;
-            border-radius: 50px;
-            cursor: pointer;
-            margin-top: 5px;
-            transition: transform 0.2s;
-            width: 100%;
-        }
-        button.main-btn:hover { transform: scale(1.02); }
-
-        button.secondary-btn {
-            background-color: transparent;
-            border: 2px solid #fff;
-            color: #fff;
-            padding: 10px;
-            border-radius: 50px;
-            cursor: pointer;
-            font-weight: bold;
-            transition: all 0.2s;
-        }
-        button.secondary-btn:hover { background-color: #fff; color: #2c3e50; }
-
-        /* --- ZONE DE JEU --- */
-        #game-area { 
-            display: none; 
-            width: 90%; 
-            max-width: 1000px; 
+        .topbar {
+            display: flex;
+            align-items: flex-start;
+            justify-content: space-between;
+            gap: 16px;
+            margin-bottom: 20px;
         }
 
         #status-bar {
-            font-size: 24px;
-            margin-bottom: 50px;
-            color: #fff;
-            min-height: 30px;
+            text-align: left;
+            font-size: clamp(22px, 3vw, 34px);
+            line-height: 1.05;
+            font-weight: 900;
+            min-height: 76px;
+        }
+        #status-bar small {
+            display: block;
+            margin-top: 6px;
+            color: var(--muted);
+            font-size: 15px;
+            font-weight: 800;
+            letter-spacing: 0.01em;
         }
 
-        /* --- BÂTONS --- */
+        .pill {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            white-space: nowrap;
+            border-radius: 999px;
+            padding: 9px 13px;
+            background: rgba(255,255,255,0.09);
+            color: var(--muted);
+            border: 1px solid rgba(255,255,255,0.14);
+            font-weight: 900;
+            font-size: 14px;
+        }
+
+        .board-zone {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+        }
+
         #sticks-container {
+            position: relative;
             display: flex;
             justify-content: center;
-            flex-wrap: wrap; 
-            gap: 12px;
-            margin-bottom: 20px;
-            min-height: 160px;
+            flex-wrap: wrap;
+            gap: 14px;
+            min-height: 210px;
+            padding: 36px 12px 32px;
             align-items: flex-start;
+            border-radius: 24px;
+            background:
+                linear-gradient(180deg, rgba(255,255,255,0.06), rgba(0,0,0,0.08));
+            border: 1px solid rgba(255,255,255,0.12);
+        }
+
+        #sticks-container::after {
+            content: "";
+            position: absolute;
+            left: 22px;
+            right: 22px;
+            bottom: 26px;
+            height: 16px;
+            background: rgba(0,0,0,0.22);
+            border-radius: 50%;
+            filter: blur(10px);
+            pointer-events: none;
         }
 
         .stick {
-            width: 25px;
-            height: 140px;
-            background-color: var(--stick-base);
-            border-radius: 6px;
+            width: 28px;
+            height: 154px;
+            border-radius: 14px 14px 9px 9px;
             position: relative;
-            transition: transform 0.2s, background-color 0.2s;
-            box-shadow: 4px 4px 0px rgba(0,0,0,0.2);
+            flex-shrink: 0;
             cursor: default;
-            flex-shrink: 0; 
+            transform: translateY(0);
+            transform-origin: center bottom;
+            transition: transform .18s ease, opacity .22s ease, filter .18s ease, box-shadow .18s ease;
+            background:
+                linear-gradient(90deg, rgba(255,255,255,0.55), transparent 22%, transparent 68%, rgba(120,70,20,0.25)),
+                linear-gradient(180deg, #ffe1a6, var(--wood) 42%, var(--wood-dark));
+            box-shadow: inset -3px 0 0 rgba(0,0,0,0.13), 5px 8px 0 rgba(0,0,0,0.18);
+            z-index: 1;
+        }
+
+        .stick::before {
+            content: "";
+            position: absolute;
+            top: 9px;
+            left: 7px;
+            right: 7px;
+            height: 70%;
+            border-radius: 999px;
+            background: linear-gradient(90deg, rgba(255,255,255,0.38), transparent);
+            opacity: 0.75;
+            pointer-events: none;
+        }
+
+        .stick::after {
+            content: "";
+            position: absolute;
+            left: 4px;
+            right: 4px;
+            bottom: 7px;
+            height: 8px;
+            border-radius: 999px;
+            background: rgba(96, 53, 16, 0.28);
+            pointer-events: none;
         }
 
         .stick.danger-stick {
-            background-color: var(--danger);
-            border: 2px solid #fff;
-            box-shadow: 0 0 15px var(--danger);
+            background:
+                linear-gradient(90deg, rgba(255,255,255,0.48), transparent 22%, transparent 70%, rgba(80,0,0,0.26)),
+                linear-gradient(180deg, #ff8b93, var(--danger) 48%, var(--danger-dark));
+            box-shadow: 0 0 0 3px rgba(255,255,255,0.82), 0 0 24px rgba(255,75,92,0.65), 5px 8px 0 rgba(0,0,0,0.18);
         }
 
         .human-turn .stick.playable { cursor: pointer; }
-        .human-turn .stick.playable:hover { transform: translateY(-8px); }
+        .human-turn .stick.playable:not(.selected):hover {
+            transform: translateY(-9px) scale(1.02);
+            filter: brightness(1.06);
+        }
+
+        .stick.preview:not(.selected) {
+            transform: translateY(-9px);
+            filter: brightness(1.12);
+        }
+
+        .stick.selected,
+        .human-turn .stick.selected,
+        .human-turn .stick.selected:hover {
+            transform: translateY(-24px) scale(1.04);
+            filter: brightness(1.14);
+            box-shadow: 0 0 0 3px rgba(56,217,255,0.65), 0 0 24px rgba(56,217,255,0.55), 5px 8px 0 rgba(0,0,0,0.18);
+            z-index: 3;
+        }
 
         .stick.selected {
-            background-color: var(--primary) !important;
-            transform: translateY(-20px);
-            box-shadow: 0 0 20px var(--primary);
+            background:
+                linear-gradient(90deg, rgba(255,255,255,0.45), transparent 22%, transparent 68%, rgba(0,40,60,0.2)),
+                linear-gradient(180deg, #8ff0ff, var(--primary), #128db5) !important;
         }
 
         .stick.ai-selected {
-            background-color: #ff9f43 !important;
-            transform: translateY(-20px);
-            box-shadow: 0 0 15px #ff9f43;
+            transform: translateY(-24px) scale(1.04);
+            background:
+                linear-gradient(90deg, rgba(255,255,255,0.45), transparent 22%, transparent 68%, rgba(80,40,0,0.18)),
+                linear-gradient(180deg, #ffd58a, var(--warning), #c5740b) !important;
+            box-shadow: 0 0 0 3px rgba(255,181,69,0.55), 0 0 24px rgba(255,181,69,0.45), 5px 8px 0 rgba(0,0,0,0.18);
+            z-index: 3;
         }
 
         .stick.removed {
-            background-color: var(--stick-dim);
-            opacity: 0; 
-            transform: scale(0);
+            opacity: 0;
+            transform: translateY(30px) scale(0.55) rotate(8deg);
             pointer-events: none;
         }
-        .stick.removed.danger-stick { opacity: 0; }
 
-        /* --- BOUTON STABILISÉ --- */
-        #btn-placeholder {
-            height: 80px;
+        .stick.strategy-mark:not(.removed) {
+            outline: 3px dashed rgba(255,255,255,0.75);
+            outline-offset: 6px;
+        }
+
+        .controls-zone {
+            min-height: 110px;
             display: flex;
-            justify-content: center;
             align-items: center;
+            justify-content: center;
+            padding-top: 22px;
         }
 
         #confirmBtn {
-            background: linear-gradient(45deg, var(--primary), #0fbcf9);
-            border: none;
-            padding: 15px 60px;
-            font-size: 20px;
-            border-radius: 50px;
-            cursor: pointer;
-            font-weight: bold;
-            color: #fff;
-            box-shadow: 0 5px 20px rgba(0,0,0,0.3);
             visibility: hidden;
             opacity: 0;
-            transition: opacity 0.3s, transform 0.2s;
-            transform: scale(0.9);
+            pointer-events: none;
+            background: linear-gradient(135deg, var(--primary), var(--primary-2));
+            color: #05202c;
+            border: none;
+            padding: 16px 48px;
+            font-size: 22px;
+            border-radius: 999px;
+            cursor: pointer;
+            font-weight: 900;
+            box-shadow: 0 14px 34px rgba(24,168,216,0.28);
+            transform: scale(0.94);
+            transition: opacity .18s, transform .18s, visibility .18s;
         }
-        #confirmBtn.visible { visibility: visible; opacity: 1; transform: scale(1); }
+        #confirmBtn.visible {
+            visibility: visible;
+            opacity: 1;
+            pointer-events: auto;
+            transform: scale(1);
+        }
+        #confirmBtn:hover { transform: scale(1.03); }
 
-        /* --- ÉCRAN DE RÉSULTAT --- */
+        .bottom-actions {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        .ghost-btn {
+            background: transparent;
+            border: 1px solid rgba(255,255,255,0.18);
+            color: var(--muted);
+            padding: 10px 16px;
+            font-size: 15px;
+        }
+        .ghost-btn:hover { color: var(--text); background: rgba(255,255,255,0.08); }
+
+        .side-panel {
+            padding: 18px;
+            display: flex;
+            flex-direction: column;
+            gap: 14px;
+        }
+
+        .panel-box {
+            background: rgba(0,0,0,0.13);
+            border: 1px solid rgba(255,255,255,0.12);
+            border-radius: 20px;
+            padding: 14px;
+        }
+
+        .panel-box h2 {
+            font-size: 17px;
+            margin: 0 0 9px;
+            letter-spacing: -0.01em;
+        }
+
+        .panel-box p {
+            margin: 0;
+            color: var(--muted);
+            line-height: 1.35;
+            font-weight: 700;
+        }
+
+        #research-panel, #strategy-panel { display: none; }
+        .mode-research #research-panel { display: block; }
+        .mode-strategy #research-panel, .mode-strategy #strategy-panel { display: block; }
+
+        .log-list {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            margin-top: 10px;
+            max-height: 260px;
+            overflow: auto;
+            padding-right: 4px;
+        }
+
+        .log-entry {
+            display: grid;
+            grid-template-columns: auto 1fr auto;
+            gap: 8px;
+            align-items: center;
+            padding: 9px 10px;
+            border-radius: 13px;
+            background: rgba(255,255,255,0.08);
+            color: #f7fbff;
+            font-weight: 900;
+            font-size: 14px;
+        }
+        .log-entry small { color: var(--muted); font-weight: 800; }
+        .empty-log { color: var(--muted); font-weight: 800; font-size: 14px; padding: 6px 0; }
+
+        .strategy-list {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin-top: 12px;
+        }
+
+        .strategy-chip {
+            display: inline-flex;
+            min-width: 36px;
+            height: 34px;
+            align-items: center;
+            justify-content: center;
+            border-radius: 999px;
+            background: rgba(255,255,255,0.12);
+            border: 1px solid rgba(255,255,255,0.2);
+            color: #fff;
+            font-weight: 900;
+        }
+
+        .hint-note {
+            margin-top: 12px;
+            padding: 10px 12px;
+            border-radius: 14px;
+            background: rgba(255,181,69,0.13);
+            border: 1px solid rgba(255,181,69,0.28);
+            color: #ffe8bd;
+            font-weight: 800;
+            line-height: 1.35;
+        }
+
+
+
+        /* --- Version épurée avec aides discrètes --- */
+        .setup-card {
+            width: min(460px, 100%);
+            padding: 28px;
+            border-radius: 24px;
+        }
+        .setup-card h1 {
+            text-align: center;
+            font-size: clamp(38px, 8vw, 54px);
+            margin-bottom: 22px;
+            letter-spacing: -0.045em;
+        }
+        .setup-grid {
+            grid-template-columns: 1fr;
+            gap: 10px;
+            margin-bottom: 14px;
+        }
+        .field-card {
+            border-radius: 16px;
+            padding: 11px 13px;
+        }
+        .field-card label {
+            margin-bottom: 6px;
+            font-size: 14px;
+        }
+        input[type="number"], select {
+            padding: 10px 12px;
+            border-radius: 12px;
+            font-size: 17px;
+        }
+        .compact-sheet-btn {
+            width: 100%;
+            margin-top: 10px;
+            padding: 10px 14px;
+            font-size: 15px;
+            opacity: .82;
+        }
+        .simple-board {
+            max-width: 1080px;
+            margin: 0 auto;
+        }
+        .simple-topbar {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 12px;
+            flex-wrap: wrap;
+        }
+        .mini-pill {
+            display: none;
+            border: 1px solid rgba(255,255,255,.18);
+            background: rgba(255,255,255,.08);
+            color: var(--muted);
+            border-radius: 999px;
+            padding: 6px 10px;
+            font-size: 13px;
+            font-weight: 900;
+        }
+        .mode-research .mini-pill,
+        .mode-strategy .mini-pill { display: inline-flex; }
+        .compact-helper {
+            display: none;
+            width: min(900px, 100%);
+            margin: 0 auto 12px;
+            border: 1px solid rgba(255,255,255,.12);
+            background: rgba(0,0,0,.12);
+            border-radius: 16px;
+            padding: 8px 10px;
+            color: var(--muted);
+            font-weight: 900;
+        }
+        .mode-research #research-strip,
+        .mode-strategy #research-strip,
+        .mode-strategy #prof-hint { display: flex; }
+        #research-strip {
+            align-items: center;
+            gap: 10px;
+            justify-content: center;
+        }
+        .helper-label {
+            color: #eff9ff;
+            font-size: 13px;
+            letter-spacing: .04em;
+            text-transform: uppercase;
+            white-space: nowrap;
+        }
+        .move-strip {
+            display: flex;
+            gap: 6px;
+            flex-wrap: wrap;
+            justify-content: center;
+            align-items: center;
+            min-height: 28px;
+        }
+        .move-chip {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 26px;
+            border-radius: 999px;
+            padding: 4px 10px;
+            background: rgba(255,255,255,.09);
+            border: 1px solid rgba(255,255,255,.14);
+            color: #fff;
+            font-size: 14px;
+            line-height: 1;
+        }
+        .empty-log {
+            font-size: 14px;
+            color: var(--muted);
+        }
+        .trace-helper {
+            gap: 12px;
+        }
+        .trace-legend {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 14px;
+            flex-wrap: wrap;
+            font-size: 14px;
+            color: #f2f8ff;
+        }
+        .trace-legend span {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            white-space: nowrap;
+        }
+        .legend-dot {
+            width: 13px;
+            height: 13px;
+            border-radius: 999px;
+            display: inline-block;
+            box-shadow: 0 0 0 2px rgba(255,255,255,.22);
+        }
+        .legend-dot.p1 { background: var(--primary); }
+        .legend-dot.p2 { background: var(--warning); }
+
+        /* Mode Recherche : les bâtons retirés restent comme une trace visuelle.
+           On ne donne pas le nombre restant : l'élève doit toujours compter. */
+        .mode-research .stick.removed,
+        .mode-strategy .stick.removed {
+            opacity: .50;
+            transform: translateY(22px) scale(.74);
+            filter: saturate(.85) brightness(.95);
+            pointer-events: none;
+        }
+        .mode-research .stick.removed.taken-p1,
+        .mode-strategy .stick.removed.taken-p1 {
+            background:
+                linear-gradient(90deg, rgba(255,255,255,.42), transparent 22%, transparent 68%, rgba(0,40,60,.18)),
+                linear-gradient(180deg, #8ff0ff, var(--primary), #128db5) !important;
+            box-shadow: 0 0 0 2px rgba(56,217,255,.34), 4px 6px 0 rgba(0,0,0,.14);
+        }
+        .mode-research .stick.removed.taken-p2,
+        .mode-strategy .stick.removed.taken-p2 {
+            background:
+                linear-gradient(90deg, rgba(255,255,255,.42), transparent 22%, transparent 68%, rgba(80,40,0,.16)),
+                linear-gradient(180deg, #ffd58a, var(--warning), #c5740b) !important;
+            box-shadow: 0 0 0 2px rgba(255,181,69,.32), 4px 6px 0 rgba(0,0,0,.14);
+        }
+        .mode-research .stick.removed.danger-stick,
+        .mode-strategy .stick.removed.danger-stick {
+            opacity: .70;
+            background:
+                linear-gradient(90deg, rgba(255,255,255,.42), transparent 22%, transparent 70%, rgba(80,0,0,.22)),
+                linear-gradient(180deg, #ff8b93, var(--danger), var(--danger-dark)) !important;
+            box-shadow: 0 0 0 2px rgba(255,255,255,.42), 0 0 20px rgba(255,75,92,.36), 4px 6px 0 rgba(0,0,0,.14);
+        }
+        .mode-research .stick.removed.move-end,
+        .mode-strategy .stick.removed.move-end {
+            margin-right: 8px;
+        }
+
+        .prof-line {
+            justify-content: center;
+            text-align: center;
+            color: #ffe0e4;
+            border-color: rgba(255,75,92,.26);
+            background: rgba(255,75,92,.10);
+        }
+        .stick.trap-marker:not(.removed):not(.danger-stick) {
+            box-shadow:
+                0 0 0 3px rgba(255,75,92,.5),
+                0 0 18px rgba(255,75,92,.28),
+                inset -3px 0 0 rgba(0,0,0,0.13),
+                5px 8px 0 rgba(0,0,0,0.18);
+        }
+        .stick.trap-marker:not(.removed):not(.danger-stick)::after {
+            left: 6px;
+            right: 6px;
+            top: 10px;
+            bottom: auto;
+            height: 12px;
+            background: rgba(255,75,92,.85);
+            box-shadow: 0 0 10px rgba(255,75,92,.42);
+        }
+        .stick.strategy-mark:not(.removed) {
+            outline: 3px dashed rgba(255,255,255,.7);
+            outline-offset: 7px;
+        }
+        .mode-challenge #research-strip,
+        .mode-challenge #prof-hint { display: none; }
+
+        /* Résultat */
         #result-overlay {
             position: fixed;
-            top: 0; left: 0; width: 100%; height: 100%;
-            display: none; 
+            inset: 0;
+            display: none;
             flex-direction: column;
             justify-content: center;
             align-items: center;
-            z-index: 100;
-            animation: fadeIn 0.5s;
+            text-align: center;
+            padding: 28px;
+            z-index: 1000;
+            animation: fadeIn .28s ease;
         }
         @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
-        #result-overlay.win { background-color: rgba(39, 174, 96, 0.95); }
-        #result-overlay.lose { background-color: rgba(192, 57, 43, 0.95); }
-        #result-title { font-size: 80px; font-weight: 900; margin: 0; text-shadow: 0 5px 10px rgba(0,0,0,0.3); }
-        #result-desc { font-size: 30px; margin-top: 20px; margin-bottom: 40px; max-width: 80%; line-height: 1.4; }
-        
+        #result-overlay.win { background: rgba(22, 130, 84, 0.96); }
+        #result-overlay.lose { background: rgba(160, 38, 54, 0.96); }
+        #result-title {
+            font-size: clamp(52px, 9vw, 106px);
+            font-weight: 900;
+            letter-spacing: -0.06em;
+            margin: 0;
+            text-shadow: 0 8px 18px rgba(0,0,0,0.22);
+        }
+        #result-desc {
+            font-size: clamp(22px, 3vw, 34px);
+            max-width: 780px;
+            margin: 20px 0 36px;
+            font-weight: 800;
+            line-height: 1.25;
+        }
         .restart-btn {
             background: white;
-            color: #333;
-            padding: 20px 50px;
-            font-size: 24px;
-            border: none;
-            border-radius: 50px;
-            font-weight: bold;
-            cursor: pointer;
-            box-shadow: 0 10px 20px rgba(0,0,0,0.2);
-            transition: transform 0.2s;
+            color: #142332;
+            padding: 18px 42px;
+            font-size: 22px;
         }
-        .restart-btn:hover { transform: scale(1.1); }
+        .restart-btn:hover { transform: translateY(-2px) scale(1.02); }
 
-        /* --- MODAL FICHE ÉLÈVE (Visible au clic) --- */
+        /* Fiche */
         #worksheet-modal {
-            display: none; /* Caché par défaut */
+            display: none;
             position: fixed;
-            top: 0; left: 0; width: 100%; height: 100%;
-            background-color: rgba(0,0,0,0.8);
+            inset: 0;
+            background: rgba(0,0,0,0.82);
             z-index: 2000;
             overflow-y: auto;
-            padding: 20px;
-            box-sizing: border-box;
+            padding: 22px;
         }
 
         .worksheet-content {
-            background: white;
-            color: black;
-            max-width: 850px; /* Plus large pour l'impression */
+            background: var(--paper);
+            color: var(--ink);
+            max-width: 900px;
             margin: 20px auto;
-            padding: 50px;
-            border-radius: 5px;
-            box-shadow: 0 0 50px rgba(0,0,0,0.5);
+            padding: clamp(26px, 5vw, 54px);
+            border-radius: 14px;
+            box-shadow: 0 24px 70px rgba(0,0,0,0.45);
             text-align: left;
             position: relative;
         }
 
-        /* --- STYLE DE LA FICHE PAPIER --- */
-        .sheet-title { text-align: center; border-bottom: 3px solid #333; padding-bottom: 10px; margin-bottom: 30px; color: #000; font-size: 28px; }
-        .sheet-section { margin-bottom: 30px; }
-        .sheet-section h2 { background-color: #eee; padding: 8px 15px; border-left: 6px solid #000; margin-top: 0; font-size: 20px; }
-        
-        /* Tableaux */
-        .sheet-table { width: 100%; border-collapse: collapse; margin: 15px 0; font-size: 16px; }
-        .sheet-table th, .sheet-table td { border: 1px solid #666; padding: 12px 8px; text-align: center; }
-        .sheet-table th { background-color: #f0f0f0; font-weight: bold; }
-        
-        /* Lignes pointillées pour remplir */
-        .fill-in { border-bottom: 2px dotted #999; display: inline-block; width: 80px; }
-        .long-fill { width: 100%; border-bottom: 2px dotted #999; height: 30px; margin-top: 20px; }
-        .dotted-cell { border-bottom: 2px dotted #ccc; height: 20px; width: 80%; margin: 0 auto; display: block; }
-
-        /* Boutons dans la modale (ne s'impriment pas) */
         .modal-controls {
-            text-align: right;
-            margin-bottom: 20px;
-            border-bottom: 1px solid #ddd;
-            padding-bottom: 10px;
+            display: flex;
+            justify-content: flex-end;
+            gap: 8px;
+            margin-bottom: 18px;
+            padding-bottom: 12px;
+            border-bottom: 1px solid #dde2e7;
         }
-        .close-btn { background: #e74c3c; color: white; border: none; padding: 8px 15px; cursor: pointer; border-radius: 3px; font-size: 14px; }
-        .print-btn { background: #3498db; color: white; border: none; padding: 8px 15px; cursor: pointer; border-radius: 3px; font-size: 14px; margin-right: 10px; }
+        .print-btn, .close-btn {
+            padding: 9px 14px;
+            color: white;
+        }
+        .print-btn { background: #2474c7; }
+        .close-btn { background: #d84646; }
 
-        /* --- CSS SPÉCIAL IMPRESSION --- */
+        .sheet-title {
+            text-align: center;
+            border-bottom: 3px solid #1f2d3a;
+            padding-bottom: 12px;
+            margin: 0 0 28px;
+            color: #111;
+            font-size: 30px;
+            letter-spacing: -0.03em;
+        }
+        .sheet-section { margin-bottom: 30px; }
+        .sheet-section h2 {
+            background: #eef2f5;
+            border-left: 7px solid #1f2d3a;
+            padding: 9px 14px;
+            margin: 0 0 12px;
+            font-size: 21px;
+        }
+        .sheet-section p, .sheet-section li { font-size: 16px; line-height: 1.45; }
+        .sheet-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 16px 0;
+            font-size: 15px;
+        }
+        .sheet-table th, .sheet-table td {
+            border: 1px solid #6d7680;
+            padding: 10px 8px;
+            text-align: center;
+            vertical-align: middle;
+        }
+        .sheet-table th { background: #eef2f5; font-weight: 900; }
+        .fill-in {
+            border-bottom: 2px dotted #7c8792;
+            display: inline-block;
+            min-width: 92px;
+            height: 22px;
+            vertical-align: bottom;
+        }
+        .long-fill {
+            width: 100%;
+            border-bottom: 2px dotted #8e98a2;
+            height: 32px;
+            margin-top: 10px;
+        }
+        .dotted-cell {
+            border-bottom: 2px dotted #a5adb5;
+            height: 22px;
+            width: 86%;
+            margin: 0 auto;
+            display: block;
+        }
+
+
+
+        .sheet-note {
+            border: 1px solid #d6dde5;
+            background: #f7f9fb;
+            border-radius: 10px;
+            padding: 10px 12px;
+            margin: 12px 0;
+            font-weight: 800;
+        }
+        .sheet-note strong { color: #111; }
+        .sheet-mini {
+            font-size: 14px;
+            color: #4c5965;
+            margin-top: -4px;
+        }
+        .answer-box {
+            border: 1px solid #9aa5af;
+            min-height: 64px;
+            border-radius: 8px;
+            margin-top: 10px;
+            background: repeating-linear-gradient(
+                to bottom,
+                transparent 0,
+                transparent 30px,
+                rgba(36,49,61,.22) 31px,
+                transparent 32px
+            );
+        }
+
+        /* --- Menu compact : retour à un outil simple et efficace --- */
+        .setup-card {
+            width: min(390px, 100%);
+            margin: 0 auto;
+            background: #2c3e50;
+            border: 1px solid rgba(75, 207, 250, 0.75);
+            box-shadow: 0 12px 34px rgba(0,0,0,0.42);
+            border-radius: 20px;
+            padding: 32px;
+            overflow: visible;
+        }
+        .setup-card::before,
+        .setup-inner,
+        .brand-kicker,
+        .subtitle {
+            display: none;
+        }
+        .setup-card h1 {
+            margin: 0 0 22px;
+            color: var(--primary);
+            text-align: center;
+            text-transform: uppercase;
+            letter-spacing: 3px;
+            font-size: 34px;
+            line-height: 1;
+            font-weight: 900;
+        }
+        .setup-grid {
+            display: flex;
+            flex-direction: column;
+            gap: 14px;
+            margin: 0 0 18px;
+        }
+        .field-card,
+        .field-card.full {
+            background: transparent;
+            border: 0;
+            border-radius: 0;
+            padding: 0;
+        }
+        .setup-card label {
+            display: block;
+            margin-bottom: 7px;
+            color: #dce7ee;
+            text-align: center;
+            font-size: 15px;
+            font-weight: 900;
+        }
+        .setup-card input[type="number"],
+        .setup-card select {
+            width: 100%;
+            padding: 12px;
+            border-radius: 8px;
+            border: 0;
+            background: #fff;
+            color: #26323a;
+            font-size: 18px;
+            font-weight: 900;
+            text-align: center;
+            text-align-last: center;
+            box-shadow: none;
+        }
+        .setup-card .main-btn {
+            width: 100%;
+            margin-top: 2px;
+            padding: 15px;
+            border-radius: 999px;
+            font-size: 18px;
+            color: #10212a;
+            background: var(--primary);
+            box-shadow: none;
+        }
+        .setup-card .secondary-btn.compact-sheet-btn {
+            width: 100%;
+            margin-top: 12px;
+            padding: 10px 12px;
+            border-radius: 999px;
+            background: transparent;
+            border: 2px solid rgba(255,255,255,0.9);
+            color: #fff;
+            font-size: 15px;
+            box-shadow: none;
+        }
+        .quick-row,
+        .mode-choice,
+        .actions {
+            display: none;
+        }
+
+
+        /* --- Plateau épuré : aucune règle, aucune fiche, aucun panneau pendant la partie --- */
+        .game-shell {
+            display: flex;
+            justify-content: center;
+            align-items: stretch;
+            width: 100%;
+        }
+        .board-card.simple-board {
+            width: min(980px, 100%);
+            min-height: 520px;
+        }
+        .simple-topbar {
+            justify-content: center;
+            text-align: center;
+            margin-bottom: 12px;
+        }
+        .simple-topbar #status-bar {
+            text-align: center;
+            min-height: 44px;
+        }
+        .simple-topbar #status-bar small {
+            display: none;
+        }
+        .side-panel,
+        #activity-pill {
+            display: none !important;
+        }
+
+        @media (max-width: 940px) {
+            body { padding: 14px; }
+            .setup-grid { grid-template-columns: 1fr; }
+            .game-shell { grid-template-columns: 1fr; }
+            .board-card { min-height: auto; }
+            .side-panel { order: 2; }
+            #status-bar { min-height: auto; }
+            .topbar { flex-direction: column; }
+            .mode-choice { grid-template-columns: 1fr; }
+            .actions { grid-template-columns: 1fr; }
+            .stick { width: 23px; height: 132px; }
+            #sticks-container { gap: 10px; min-height: 178px; }
+        }
+
+        @media (max-width: 520px) {
+            .quick-row { grid-template-columns: repeat(2, 1fr); }
+            .stick { width: 18px; height: 112px; }
+            #sticks-container { gap: 7px; padding-left: 7px; padding-right: 7px; }
+            .main-btn, #confirmBtn { width: 100%; }
+        }
+
         @media print {
             body * { visibility: hidden; }
             #worksheet-modal {
                 display: block !important;
                 position: absolute;
-                top: 0; left: 0;
+                inset: 0 auto auto 0;
                 background: white;
                 padding: 0;
                 margin: 0;
@@ -278,274 +1105,412 @@
                 width: 100%;
                 max-width: 100%;
                 padding: 0;
+                border-radius: 0;
             }
             .worksheet-content * { visibility: visible; }
             .no-print, .modal-controls { display: none !important; }
-            .sheet-table th { background-color: #ddd !important; -webkit-print-color-adjust: exact; }
-            /* Force les hauteurs de ligne pour l'écriture */
-            .sheet-table td { height: 35px; } 
+            .sheet-table th { background-color: #ddd !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+            .sheet-table td { height: 34px; }
         }
-
     </style>
 </head>
 <body>
+    <main class="screen">
+        <section id="setup-panel" class="setup-card">
+            <h1>JEU DE NIM</h1>
 
-    <div id="setup-panel">
-        <h1>JEU DE NIM</h1>
-        
-        <div class="input-group">
-            <label>Nombre de bâtons</label>
-            <input type="number" id="totalSticks" value="21" min="13" max="100">
-        </div>
-        
-        <div class="input-group">
-            <label>Adversaire</label>
-            <select id="gameMode">
-                <option value="pve_medium">Ordi - Normal</option>
-                <option value="pve_hard">Ordi - Invincible</option>
-                <option value="pvp">2 Joueurs</option>
-            </select>
-        </div>
+            <div class="setup-grid">
+                <div class="field-card">
+                    <label for="totalSticks">Nombre de bâtons</label>
+                    <input type="number" id="totalSticks" value="21" min="5" max="100" inputmode="numeric">
+                </div>
 
-        <div class="input-group">
-            <label>Qui commence ?</label>
-            <select id="startPlayer">
-                <option value="player1">Joueur 1 (Humain)</option>
-                <option value="player2">Joueur 2 / Ordi</option>
-            </select>
-        </div>
+                <div class="field-card">
+                    <label for="gameMode">Adversaire</label>
+                    <select id="gameMode">
+                        <option value="pve_medium">Ordi - Normal</option>
+                        <option value="pve_hard">Ordi - Invincible</option>
+                        <option value="pvp">2 joueurs</option>
+                    </select>
+                </div>
 
-        <button class="main-btn" onclick="startGame()">LANCER LA PARTIE</button>
-        
-        <br><br>
-        <button class="secondary-btn" onclick="openWorksheet()">📄 Fiche Élève / Énoncé</button>
-    </div>
+                <div class="field-card">
+                    <label for="startPlayer">Qui commence ?</label>
+                    <select id="startPlayer">
+                        <option value="player1">Joueur 1</option>
+                        <option value="player2">Joueur 2 / Ordi</option>
+                    </select>
+                </div>
 
-    <div id="game-area">
-        <div id="status-bar">Prêt ?</div>
-        <div id="sticks-container"></div>
-        <div id="btn-placeholder">
-            <button id="confirmBtn" onclick="confirmMove()">VALIDER</button>
-        </div>
-        <button onclick="resetGame()" style="margin-top:20px; background:none; border:none; color:#555; cursor:pointer; text-decoration:underline;">Retour Menu</button>
-    </div>
+                <div class="field-card">
+                    <label for="activityMode">Aide</label>
+                    <select id="activityMode">
+                        <option value="challenge">Aucune</option>
+                        <option value="research">Recherche</option>
+                        <option value="strategy">Prof</option>
+                    </select>
+                </div>
+
+            </div>
+
+            <button class="main-btn" type="button" onclick="startGame()">LANCER LA PARTIE</button>
+            <button class="secondary-btn compact-sheet-btn" type="button" onclick="openWorksheet()">📄 Activité élève</button>
+            <div id="setup-error" class="error-line"></div>
+        </section>
+
+        <section id="game-area">
+            <div class="game-shell" id="game-shell">
+                <div class="board-card simple-board">
+                    <div class="topbar simple-topbar">
+                        <div id="status-bar">Prêt ?</div>
+                        <div id="activity-pill" class="mini-pill">Aucune aide</div>
+                    </div>
+
+                    <div class="board-zone">
+                        <div id="sticks-container" aria-label="Bâtons du jeu"></div>
+                        <div class="controls-zone">
+                            <button id="confirmBtn" type="button" onclick="confirmMove()">Valider</button>
+                        </div>
+                    </div>
+
+                    <div id="research-strip" class="compact-helper trace-helper">
+                        <span class="helper-label">Recherche</span>
+                        <div class="trace-legend" aria-label="Légende de la trace des coups">
+                            <span><i class="legend-dot p1"></i> Joueur 1</span>
+                            <span><i class="legend-dot p2"></i> Joueur 2 / Ordi</span>
+                        </div>
+                    </div>
+                    <div id="prof-hint" class="compact-helper prof-line">
+                        Repères prof : les marques rouges signalent les positions piégées.
+                    </div>
+
+                    <div class="bottom-actions">
+                        <button class="ghost-btn" type="button" onclick="resetGame()">← Retour au menu</button>
+                        <button class="ghost-btn" type="button" onclick="restartSameGame()">↻ Recommencer</button>
+                    </div>
+                </div>
+            </div>
+        </section>
 
     <div id="result-overlay">
-        <div id="result-title">TITRE</div>
+        <div id="result-title">Titre</div>
         <div id="result-desc">Description</div>
-        <button class="restart-btn" onclick="resetGame()">Rejouer</button>
+        <button class="restart-btn" type="button" onclick="restartSameGame()">Rejouer</button>
+        <button class="ghost-btn" type="button" style="margin-top:14px;color:white;border-color:rgba(255,255,255,.35)" onclick="resetGame()">Retour au menu</button>
     </div>
 
     <div id="worksheet-modal">
         <div class="worksheet-content">
             <div class="modal-controls no-print">
-                <button class="print-btn" onclick="window.print()">🖨️ Imprimer la fiche</button>
-                <button class="close-btn" onclick="closeWorksheet()">Fermer ✖</button>
+                <button class="print-btn" type="button" onclick="window.print()">🖨️ Imprimer</button>
+                <button class="close-btn" type="button" onclick="closeWorksheet()">Fermer ✖</button>
             </div>
 
-            <h1 class="sheet-title">Le Défi du Jeu de Nim</h1>
+            <h1 class="sheet-title">Activité élève — Découvrir une stratégie au jeu de Nim</h1>
 
             <div class="sheet-section">
-                <h2>1. Les Règles du Duel</h2>
-                <p>Le jeu se joue à deux (ou contre l'ordinateur) avec une rangée de bâtonnets.</p>
+                <h2>1. Comprendre les règles</h2>
+                <p>Le jeu se joue à deux, ou contre l'ordinateur, avec une rangée de bâtonnets.</p>
                 <ul>
-                    <li><strong>Mise en place :</strong> Une rangée de bâtons. Le dernier (à droite) est <strong>ROUGE</strong>.</li>
-                    <li><strong>Action :</strong> Chacun son tour, un joueur doit retirer <strong>1, 2 ou 3 bâtons</strong> (en partant de la gauche).</li>
-                    <li><strong>Défaite :</strong> Celui qui est obligé de ramasser le <strong>BÂTON ROUGE</strong> a perdu.</li>
+                    <li><strong>Mise en place :</strong> une rangée de bâtons. Le dernier, à droite, est rouge.</li>
+                    <li><strong>Action :</strong> chacun son tour, un joueur retire <strong>1, 2 ou 3 bâtons</strong>, en partant de la gauche.</li>
+                    <li><strong>Défaite :</strong> celui qui est obligé de ramasser le <strong>bâton rouge</strong> a perdu.</li>
                 </ul>
+                <div class="sheet-note">But de l'enquête : trouver s'il existe des positions dangereuses, puis chercher comment les laisser à l'adversaire.</div>
             </div>
 
             <div class="sheet-section">
-                <h2>2. Phase d'Exploration</h2>
-                <p><em>Mettez-vous par deux. Lancez le jeu en mode "2 Joueurs" avec 21 bâtons. Jouez 5 parties.</em></p>
+                <h2>2. Jouer et observer</h2>
+                <p><em>Lancez le jeu avec 21 bâtons, en mode « 2 joueurs » et aide « Recherche ». Jouez plusieurs parties sans utiliser le mode Prof.</em></p>
+                <p class="sheet-mini">Le mode Recherche garde une trace visuelle des coups joués, mais il ne donne pas le nombre de bâtons restants : il faut encore compter.</p>
                 <table class="sheet-table">
                     <tr>
-                        <th width="10%">N°</th>
-                        <th width="20%">Qui commence ?</th>
-                        <th width="20%">Qui a gagné ?</th>
-                        <th width="50%">Observation / Astuce</th> </tr>
-                    <tr><td>1</td><td></td><td></td><td></td></tr>
-                    <tr><td>2</td><td></td><td></td><td></td></tr>
-                    <tr><td>3</td><td></td><td></td><td></td></tr>
-                    <tr><td>4</td><td></td><td></td><td></td></tr>
-                    <tr><td>5</td><td></td><td></td><td></td></tr>
+                        <th width="10%">Partie</th>
+                        <th width="18%">Qui commence ?</th>
+                        <th width="18%">Qui gagne ?</th>
+                        <th width="27%">Un coup qui semble important</th>
+                        <th width="27%">Ce que je remarque</th>
+                    </tr>
+                    <tr><td>1</td><td></td><td></td><td></td><td></td></tr>
+                    <tr><td>2</td><td></td><td></td><td></td><td></td></tr>
+                    <tr><td>3</td><td></td><td></td><td></td><td></td></tr>
+                    <tr><td>4</td><td></td><td></td><td></td><td></td></tr>
                 </table>
+                <p><strong>Première hypothèse :</strong> je pense qu'un bon joueur doit essayer de...</p>
+                <div class="answer-box"></div>
             </div>
 
             <div class="sheet-section">
-                <h2>3. Recherche Scientifique</h2>
-                <p>Pour trouver la stratégie, analysons la <strong>fin de la partie</strong>. Imaginez que c'est à vous de jouer :</p>
+                <h2>3. Remonter depuis la fin</h2>
+                <p>Pour trouver une stratégie, on part de la fin de la partie. Imagine que c'est à toi de jouer.</p>
+                <div class="sheet-note"><strong>Vocabulaire :</strong> une position est <strong>perdante</strong> si le joueur qui doit jouer ne peut pas éviter de perdre. Une position est <strong>gagnante</strong> si le joueur peut jouer un coup qui met l'adversaire dans une position perdante.</div>
                 <table class="sheet-table">
                     <tr>
-                        <th width="25%">Il reste devant vous...</th>
-                        <th>Votre action (Prendre 1, 2 ou 3)</th>
-                        <th>Résultat</th>
-                        <th>Position</th>
+                        <th width="18%">Il reste devant moi...</th>
+                        <th width="22%">Position</th>
+                        <th width="30%">Pourquoi ?</th>
+                        <th width="30%">Si elle est gagnante, je prends combien pour laisser...</th>
                     </tr>
                     <tr>
-                        <td><strong>1 bâton</strong> (le rouge)</td>
-                        <td>Obligé de le prendre...</td>
-                        <td>PERDU</td>
+                        <td><strong>1 bâton</strong><br>(le rouge)</td>
                         <td><strong>Perdante</strong></td>
+                        <td>Je suis obligé de prendre le rouge.</td>
+                        <td>—</td>
                     </tr>
                     <tr>
                         <td><strong>2 bâtons</strong></td>
-                        <td>J'en prends 1, je laisse le rouge.</td>
-                        <td>GAGNÉ</td>
                         <td><strong>Gagnante</strong></td>
+                        <td>Je peux prendre 1 bâton.</td>
+                        <td>Je laisse <strong>1</strong> bâton.</td>
                     </tr>
-                    <tr>
-                        <td><strong>3 bâtons</strong></td>
-                        <td><span class="dotted-cell"></span></td>
-                        <td><span class="dotted-cell"></span></td>
-                        <td><span class="dotted-cell"></span></td>
-                    </tr>
-                    <tr>
-                        <td><strong>4 bâtons</strong></td>
-                        <td><span class="dotted-cell"></span></td>
-                        <td><span class="dotted-cell"></span></td>
-                        <td><span class="dotted-cell"></span></td>
-                    </tr>
-                    <tr>
-                        <td><strong>5 bâtons</strong></td>
-                        <td><span class="dotted-cell"></span></td>
-                        <td><span class="dotted-cell"></span></td>
-                        <td><span class="dotted-cell"></span></td>
-                    </tr>
-                    <tr>
-                        <td><strong>6 bâtons</strong></td>
-                        <td><span class="dotted-cell"></span></td>
-                        <td><span class="dotted-cell"></span></td>
-                        <td><span class="dotted-cell"></span></td>
-                    </tr>
-                    <tr>
-                        <td><strong>7 bâtons</strong></td>
-                        <td><span class="dotted-cell"></span></td>
-                        <td><span class="dotted-cell"></span></td>
-                        <td><span class="dotted-cell"></span></td>
-                    </tr>
-                    <tr>
-                        <td><strong>8 bâtons</strong></td>
-                        <td><span class="dotted-cell"></span></td>
-                        <td><span class="dotted-cell"></span></td>
-                        <td><span class="dotted-cell"></span></td>
-                    </tr>
-                     <tr>
-                        <td><strong>9 bâtons</strong></td>
-                        <td><span class="dotted-cell"></span></td>
-                        <td><span class="dotted-cell"></span></td>
-                        <td><span class="dotted-cell"></span></td>
-                    </tr>
+                    <tr><td><strong>3 bâtons</strong></td><td><span class="dotted-cell"></span></td><td><span class="dotted-cell"></span></td><td><span class="dotted-cell"></span></td></tr>
+                    <tr><td><strong>4 bâtons</strong></td><td><span class="dotted-cell"></span></td><td><span class="dotted-cell"></span></td><td><span class="dotted-cell"></span></td></tr>
+                    <tr><td><strong>5 bâtons</strong></td><td><span class="dotted-cell"></span></td><td><span class="dotted-cell"></span></td><td><span class="dotted-cell"></span></td></tr>
+                    <tr><td><strong>6 bâtons</strong></td><td><span class="dotted-cell"></span></td><td><span class="dotted-cell"></span></td><td><span class="dotted-cell"></span></td></tr>
+                    <tr><td><strong>7 bâtons</strong></td><td><span class="dotted-cell"></span></td><td><span class="dotted-cell"></span></td><td><span class="dotted-cell"></span></td></tr>
+                    <tr><td><strong>8 bâtons</strong></td><td><span class="dotted-cell"></span></td><td><span class="dotted-cell"></span></td><td><span class="dotted-cell"></span></td></tr>
+                    <tr><td><strong>9 bâtons</strong></td><td><span class="dotted-cell"></span></td><td><span class="dotted-cell"></span></td><td><span class="dotted-cell"></span></td></tr>
                 </table>
-                <p><strong>Conclusion :</strong> Les nombres de bâtons "maudits" (Positions Perdantes) sont :</p>
-                <p style="font-size: 1.2em; letter-spacing: 2px;">1, <span class="fill-in"></span>, <span class="fill-in"></span>, <span class="fill-in"></span>...</p>
-                
-                <p style="margin-top: 20px;"><strong>MA THÉORIE :</strong> Pour gagner, je dois toujours m'arranger pour laisser à l'adversaire un nombre de bâtons égal à :</p>
-                <div class="long-fill"></div>
-                <div class="long-fill"></div>
+
+                <p><strong>Les positions perdantes que j'ai repérées sont :</strong></p>
+                <p style="font-size: 1.15em; letter-spacing: 1px;">1, <span class="fill-in"></span>, <span class="fill-in"></span>, <span class="fill-in"></span>...</p>
+                <p><strong>Ce que ces nombres semblent avoir en commun :</strong></p>
+                <div class="answer-box"></div>
             </div>
 
             <div class="sheet-section">
-                <h2>4. Le Test Ultime (Humain vs Machine)</h2>
-                <p>Configurez le jeu : <strong>21 bâtons</strong> contre <strong>Ordi - Invincible</strong>.</p>
-                <p>D'après votre théorie, pour gagner avec 21 bâtons, qui doit commencer ? <span class="fill-in"></span></p>
-                <p><em>Lancez la partie et tentez de battre la machine !</em></p>
+                <h2>4. Formuler une stratégie et la tester</h2>
+                <p><strong>Ma stratégie en une phrase :</strong></p>
+                <div class="answer-box"></div>
+                <p>Configure le jeu : <strong>21 bâtons</strong>, adversaire <strong>Ordi - Invincible</strong>.</p>
+                <p>D'après ta stratégie, qui doit commencer ? <span class="fill-in"></span></p>
+                <p>Premier coup conseillé : prendre <span class="fill-in"></span> bâton(s).</p>
+                <p><em>Teste ensuite ta stratégie. Quand la classe a terminé, on peut afficher le mode Prof pour vérifier les positions dangereuses.</em></p>
             </div>
-            
         </div>
     </div>
 
 <script>
     let totalSticks = 21;
-    let sticksState = []; 
-    let currentPlayer = 1; 
+    let sticksState = [];
+    let currentPlayer = 1;
     let mode = 'pve_medium';
+    let activityMode = 'challenge';
     let isGameOver = false;
     let selectedCount = 0;
+    let moveNumber = 0;
+    let moveHistory = [];
+    let lastSettings = null;
 
-    function startGame() {
-        totalSticks = parseInt(document.getElementById('totalSticks').value);
-        mode = document.getElementById('gameMode').value;
-        const starter = document.getElementById('startPlayer').value;
+    const $ = (id) => document.getElementById(id);
 
-        document.getElementById('setup-panel').style.display = 'none';
-        document.getElementById('game-area').style.display = 'block';
-        document.getElementById('result-overlay').style.display = 'none';
-        
+    function setStickPreset(value) {
+        $('totalSticks').value = value;
+    }
+
+    function fillClassicSetup() {
+        $('totalSticks').value = 21;
+        $('gameMode').value = 'pve_hard';
+        $('startPlayer').value = 'player1';
+        $('activityMode').value = 'challenge';
+        setModeRadio('challenge');
+    }
+
+    function syncModeShortcut(value) {
+        $('activityMode').value = value;
+    }
+
+    $('activityMode').addEventListener('change', (event) => setModeRadio(event.target.value));
+
+    function setModeRadio(value) {
+        document.querySelectorAll('input[name="modeShortcut"]').forEach(input => {
+            input.checked = input.value === value;
+        });
+    }
+
+    function validateSetup() {
+        const value = Number.parseInt($('totalSticks').value, 10);
+        const errorBox = $('setup-error');
+
+        if (!Number.isInteger(value) || value < 5 || value > 100) {
+            errorBox.textContent = 'Choisis un nombre entier de bâtons entre 5 et 100.';
+            errorBox.style.display = 'block';
+            return null;
+        }
+
+        errorBox.style.display = 'none';
+        return value;
+    }
+
+    function startGame(settings = null) {
+        if (settings) {
+            totalSticks = settings.totalSticks;
+            mode = settings.mode;
+            activityMode = settings.activityMode;
+            currentPlayer = settings.currentPlayer;
+        } else {
+            const checkedTotal = validateSetup();
+            if (checkedTotal === null) return;
+            totalSticks = checkedTotal;
+            mode = $('gameMode').value;
+            activityMode = $('activityMode').value;
+            currentPlayer = ($('startPlayer').value === 'player1') ? 1 : 2;
+        }
+
+        lastSettings = { totalSticks, mode, activityMode, currentPlayer };
         sticksState = new Array(totalSticks).fill(0);
+        selectedCount = 0;
+        moveNumber = 0;
+        moveHistory = [];
         isGameOver = false;
-        currentPlayer = (starter === 'player1') ? 1 : 2;
 
+        $('setup-panel').style.display = 'none';
+        $('game-area').style.display = 'block';
+        $('result-overlay').style.display = 'none';
+
+        applyActivityMode();
         renderSticks();
+        renderMoveLog();
+        renderStrategyPanel();
         updateGameUI();
 
         if (currentPlayer === 2 && mode.startsWith('pve')) {
-            setTimeout(aiThink, 1000);
+            window.setTimeout(aiThink, 750);
         }
     }
 
-    // --- LOGIQUE MODALE FICHE ---
-    function openWorksheet() {
-        document.getElementById('worksheet-modal').style.display = 'block';
-    }
-    function closeWorksheet() {
-        document.getElementById('worksheet-modal').style.display = 'none';
+    function restartSameGame() {
+        const settings = lastSettings || {
+            totalSticks,
+            mode,
+            activityMode,
+            currentPlayer: 1
+        };
+        startGame(settings);
     }
 
-    // --- RESTE DU JEU ---
+    function resetGame() {
+        $('game-area').style.display = 'none';
+        $('setup-panel').style.display = 'block';
+        $('result-overlay').style.display = 'none';
+    }
+
+    function openWorksheet() {
+        $('worksheet-modal').style.display = 'block';
+    }
+
+    function closeWorksheet() {
+        $('worksheet-modal').style.display = 'none';
+    }
+
+    function applyActivityMode() {
+        const shell = $('game-shell');
+        shell.classList.remove('mode-challenge', 'mode-research', 'mode-strategy');
+        shell.classList.add(`mode-${activityMode}`);
+
+        const labels = {
+            challenge: 'Aucune aide',
+            research: 'Recherche',
+            strategy: 'Prof'
+        };
+        const pill = $('activity-pill');
+        if (pill) pill.textContent = labels[activityMode] || 'Aucune aide';
+    }
+
     function renderSticks() {
-        const container = document.getElementById('sticks-container');
+        const container = $('sticks-container');
         container.innerHTML = '';
 
         for (let i = 0; i < totalSticks; i++) {
-            let div = document.createElement('div');
-            div.className = 'stick';
-            if (i === totalSticks - 1) div.classList.add('danger-stick'); 
-            div.onclick = () => handleStickClick(i);
-            div.id = `stick-${i}`;
-            container.appendChild(div);
+            const stick = document.createElement('div');
+            stick.className = 'stick';
+            stick.id = `stick-${i}`;
+            stick.setAttribute('role', 'button');
+            stick.setAttribute('aria-label', `Bâton ${i + 1}`);
+            stick.tabIndex = 0;
+
+            if (i === totalSticks - 1) stick.classList.add('danger-stick');
+
+            stick.addEventListener('click', () => handleStickClick(i));
+            stick.addEventListener('mouseenter', () => previewSelection(i));
+            stick.addEventListener('mouseleave', clearPreview);
+            stick.addEventListener('keydown', event => {
+                if (event.key === 'Enter' || event.key === ' ') {
+                    event.preventDefault();
+                    handleStickClick(i);
+                }
+            });
+
+            container.appendChild(stick);
         }
+    }
+
+    function remainingCount() {
+        return sticksState.reduce((count, state) => count + (state === 0 ? 1 : 0), 0);
     }
 
     function getFirstAvailable() {
         return sticksState.indexOf(0);
     }
 
-    function handleStickClick(index) {
-        if (isGameOver || (mode.startsWith('pve') && currentPlayer === 2)) return;
-        if (sticksState[index] === 1) return;
+    function isHumanInputLocked() {
+        return isGameOver || (mode.startsWith('pve') && currentPlayer === 2);
+    }
 
+    function canSelectIndex(index) {
         const first = getFirstAvailable();
-        if (index >= first && index < first + 3) {
-            const potentialCount = (index - first) + 1;
-            if (potentialCount === selectedCount) {
-                selectedCount = 0;
-            } else {
-                selectedCount = potentialCount;
-            }
-            updateVisualSelection(first);
+        return first !== -1 && sticksState[index] === 0 && index >= first && index < first + 3;
+    }
+
+    function previewSelection(index) {
+        if (isHumanInputLocked() || !canSelectIndex(index)) return;
+        const first = getFirstAvailable();
+        const previewCount = index - first + 1;
+        clearPreview();
+        for (let i = 0; i < previewCount; i++) {
+            const stick = $(`stick-${first + i}`);
+            if (stick && !stick.classList.contains('selected')) stick.classList.add('preview');
         }
     }
 
-    function updateVisualSelection(first) {
-        for(let i=0; i<totalSticks; i++) {
-            let s = document.getElementById(`stick-${i}`);
-            if (!s.classList.contains('removed')) {
-                s.classList.remove('selected');
-                s.classList.remove('playable');
+    function clearPreview() {
+        document.querySelectorAll('.stick.preview').forEach(stick => stick.classList.remove('preview'));
+    }
+
+    function handleStickClick(index) {
+        if (isHumanInputLocked() || !canSelectIndex(index)) return;
+
+        const first = getFirstAvailable();
+        const potentialCount = index - first + 1;
+        selectedCount = (potentialCount === selectedCount) ? 0 : potentialCount;
+        updateVisualSelection();
+    }
+
+    function updateVisualSelection() {
+        const first = getFirstAvailable();
+        clearPreview();
+
+        for (let i = 0; i < totalSticks; i++) {
+            const stick = $(`stick-${i}`);
+            stick.classList.remove('selected', 'playable', 'strategy-mark', 'trap-marker');
+            if (sticksState[i] === 0 && first !== -1 && i >= first && i < first + 3) {
+                stick.classList.add('playable');
             }
         }
-        for(let i=0; i<3; i++) {
-            if(first + i < totalSticks) {
-                document.getElementById(`stick-${first + i}`).classList.add('playable');
-            }
+
+        for (let i = 0; i < selectedCount; i++) {
+            const stick = $(`stick-${first + i}`);
+            if (stick) stick.classList.add('selected');
         }
-        for(let i=0; i < selectedCount; i++) {
-            document.getElementById(`stick-${first + i}`).classList.add('selected');
-        }
-        const btn = document.getElementById('confirmBtn');
+
+        markStrategyPosition();
+        updateConfirmButton();
+    }
+
+    function updateConfirmButton() {
+        const btn = $('confirmBtn');
         if (selectedCount > 0) {
-            btn.innerHTML = `VALIDER (${selectedCount})`;
+            btn.textContent = `Valider ${selectedCount} bâton${selectedCount > 1 ? 's' : ''}`;
             btn.classList.add('visible');
         } else {
             btn.classList.remove('visible');
@@ -553,114 +1518,194 @@
     }
 
     function confirmMove() {
+        if (selectedCount < 1 || isHumanInputLocked()) return;
+        applyMove(selectedCount, currentPlayer);
+    }
+
+    function applyMove(take, player) {
         const first = getFirstAvailable();
-        for(let i=0; i < selectedCount; i++) {
-            sticksState[first + i] = 1;
-            let stick = document.getElementById(`stick-${first + i}`);
-            stick.classList.remove('selected');
-            stick.classList.add('removed');
+        const safeTake = Math.min(Math.max(take, 1), 3, remainingCount());
+
+        const ownerClass = player === 1 ? 'taken-p1' : 'taken-p2';
+
+        for (let i = 0; i < safeTake; i++) {
+            const index = first + i;
+            sticksState[index] = 1;
+            const stick = $(`stick-${index}`);
+            stick.classList.remove('selected', 'preview', 'playable', 'ai-selected', 'strategy-mark', 'trap-marker', 'move-start', 'move-end', 'taken-p1', 'taken-p2');
+            stick.classList.add('removed', ownerClass);
+            if (i === 0) stick.classList.add('move-start');
+            if (i === safeTake - 1) stick.classList.add('move-end');
         }
+
         selectedCount = 0;
-        document.getElementById('confirmBtn').classList.remove('visible');
+        updateConfirmButton();
+        addMoveToLog(player, safeTake);
         checkWin();
     }
 
+    function addMoveToLog(player, take) {
+        moveNumber++;
+        const label = getPlayerLabel(player);
+        moveHistory.push({ number: moveNumber, player: label, take });
+        renderMoveLog();
+    }
+
+    function renderMoveLog() {
+        const log = $('move-log');
+        if (!log) return;
+        log.innerHTML = '';
+
+        if (moveHistory.length === 0) {
+            const empty = document.createElement('span');
+            empty.className = 'empty-log';
+            empty.textContent = 'aucun coup';
+            log.appendChild(empty);
+            return;
+        }
+
+        moveHistory.forEach(entry => {
+            const chip = document.createElement('span');
+            chip.className = 'move-chip';
+            chip.textContent = `${entry.player} −${entry.take}`;
+            log.appendChild(chip);
+        });
+    }
+
+    function getPlayerLabel(player) {
+        if (mode === 'pvp') return player === 1 ? 'Joueur 1' : 'Joueur 2';
+        return player === 1 ? 'Joueur' : 'Ordi';
+    }
+
     function checkWin() {
-        const remaining = sticksState.filter(x => x === 0).length;
-        if (remaining === 0) {
+        if (remainingCount() === 0) {
             gameOver();
-        } else {
-            currentPlayer = (currentPlayer === 1) ? 2 : 1;
-            updateGameUI();
-            if (!isGameOver && mode.startsWith('pve') && currentPlayer === 2) {
-                setTimeout(aiThink, 1000);
-            }
+            return;
+        }
+
+        currentPlayer = (currentPlayer === 1) ? 2 : 1;
+        updateGameUI();
+
+        if (!isGameOver && mode.startsWith('pve') && currentPlayer === 2) {
+            window.setTimeout(aiThink, 750);
         }
     }
 
     function updateGameUI() {
-        const sb = document.getElementById('status-bar');
-        const container = document.getElementById('sticks-container');
         if (isGameOver) return;
 
+        const status = $('status-bar');
+        const container = $('sticks-container');
+        container.classList.toggle('human-turn', !isHumanInputLocked());
+
         if (currentPlayer === 1) {
-            sb.innerHTML = "C'est à <span style='color:var(--primary); font-weight:bold'>TOI</span> de jouer";
-            container.classList.add('human-turn');
+            status.innerHTML = `À toi de jouer`;
+        } else if (mode.startsWith('pve')) {
+            status.innerHTML = `<span style="color:var(--warning)">L'ordinateur réfléchit...</span>`;
         } else {
-            let name = mode.startsWith('pve') ? "L'Ordinateur réfléchit..." : "Tour du Joueur 2";
-            sb.innerHTML = `<span style='color:#ff9f43'>${name}</span>`;
-            container.classList.remove('human-turn');
+            status.innerHTML = `<span style="color:var(--warning)">Tour du joueur 2</span>`;
         }
+
+        updateVisualSelection();
     }
 
     function aiThink() {
-        const remaining = sticksState.filter(x => x === 0).length;
-        let take = 1;
-        let target = (remaining - 1) % 4;
+        if (isGameOver || !mode.startsWith('pve')) return;
+
+        const remaining = remainingCount();
+        let take;
 
         if (mode === 'pve_hard') {
-            take = target;
-            if (take === 0) take = 1; 
+            take = bestMove(remaining);
         } else {
-            if (remaining > 8 && Math.random() > 0.4) {
-                 take = Math.floor(Math.random() * 3) + 1;
-            } else {
-                take = target;
-                if (take === 0) take = 1;
-            }
+            const shouldPlayWell = remaining <= 8 || Math.random() > 0.42;
+            take = shouldPlayWell ? bestMove(remaining) : randomMove(remaining);
         }
-        take = Math.min(take, 3);
-        take = Math.min(take, remaining); 
-        if(take < 1) take = 1;
+
+        take = Math.min(take, remaining);
+        const first = getFirstAvailable();
+
+        for (let i = 0; i < take; i++) {
+            const stick = $(`stick-${first + i}`);
+            if (stick) stick.classList.add('ai-selected');
+        }
+
+        window.setTimeout(() => {
+            applyMove(take, currentPlayer);
+        }, 850);
+    }
+
+    function bestMove(remaining) {
+        const target = (remaining - 1) % 4;
+        return target === 0 ? 1 : target;
+    }
+
+    function randomMove(remaining) {
+        return Math.min(remaining, Math.floor(Math.random() * 3) + 1);
+    }
+
+    function losingPositions(limit) {
+        const positions = [];
+        for (let value = 1; value <= limit; value += 4) positions.push(value);
+        return positions;
+    }
+
+    function renderStrategyPanel() {
+        const list = $('strategy-list');
+        if (!list) return;
+        list.innerHTML = '';
+        losingPositions(totalSticks).forEach(value => {
+            const chip = document.createElement('span');
+            chip.className = 'strategy-chip';
+            chip.textContent = value;
+            list.appendChild(chip);
+        });
+    }
+
+    function markStrategyPosition() {
+        if (activityMode !== 'strategy' || isGameOver) return;
+
+        losingPositions(totalSticks).forEach(remaining => {
+            const index = totalSticks - remaining;
+            const stick = $(`stick-${index}`);
+            if (stick && sticksState[index] === 0) stick.classList.add('trap-marker');
+        });
+
+        const remaining = remainingCount();
+        if (!losingPositions(totalSticks).includes(remaining)) return;
 
         const first = getFirstAvailable();
-        for(let i=0; i<take; i++) {
-            document.getElementById(`stick-${first + i}`).classList.add('ai-selected');
+        if (first >= 0) {
+            const stick = $(`stick-${first}`);
+            if (stick) stick.classList.add('strategy-mark');
         }
-        setTimeout(() => {
-            for(let i=0; i<take; i++) {
-                sticksState[first + i] = 1;
-                let s = document.getElementById(`stick-${first + i}`);
-                s.classList.remove('ai-selected');
-                s.classList.add('removed');
-            }
-            checkWin();
-        }, 1000);
     }
 
     function gameOver() {
         isGameOver = true;
-        const overlay = document.getElementById('result-overlay');
-        const title = document.getElementById('result-title');
-        const desc = document.getElementById('result-desc');
-        
-        let loser = currentPlayer;
-        let winner = (currentPlayer === 1) ? 2 : 1;
+        const overlay = $('result-overlay');
+        const title = $('result-title');
+        const desc = $('result-desc');
+
+        const loser = currentPlayer;
+        const winner = currentPlayer === 1 ? 2 : 1;
 
         if (mode === 'pvp') {
-            overlay.className = "win"; 
-            title.innerText = `VICTOIRE J${winner} !`;
-            desc.innerText = `Le Joueur ${loser} a ramassé le bâton rouge.`;
+            overlay.className = 'win';
+            title.textContent = `Victoire J${winner} !`;
+            desc.textContent = `Le Joueur ${loser} a ramassé le bâton rouge.`;
+        } else if (loser === 1) {
+            overlay.className = 'lose';
+            title.textContent = 'Défaite...';
+            desc.textContent = 'Tu as pris le bâton rouge.';
         } else {
-            if (loser === 1) {
-                overlay.className = "lose"; 
-                title.innerText = "DÉFAITE... 💥";
-                desc.innerText = "Tu as pris le bâton rouge !";
-            } else {
-                overlay.className = "win"; 
-                title.innerText = "VICTOIRE ! 🥳";
-                desc.innerText = "L'ordinateur a été forcé de prendre le dernier bâton !";
-            }
+            overlay.className = 'win';
+            title.textContent = 'Victoire !';
+            desc.textContent = `L'ordinateur a été forcé de prendre le bâton rouge.`;
         }
-        overlay.style.display = "flex";
-    }
 
-    function resetGame() {
-        document.getElementById('game-area').style.display = 'none';
-        document.getElementById('setup-panel').style.display = 'flex';
-        document.getElementById('result-overlay').style.display = 'none';
+        overlay.style.display = 'flex';
     }
 </script>
-
 </body>
 </html>
