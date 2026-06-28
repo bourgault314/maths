@@ -1,0 +1,1817 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <title>Yavalath — plateau 2 joueurs</title>
+  <style>
+    :root{
+      --bg: #f6f3ec;
+      --panel: #fffaf0;
+      --ink: #1c1c1c;
+      --muted: #6b6258;
+      --cell: #fffefa;
+      --cell-hover: #fff3d3;
+      --border: #2f2a24;
+      --red: #d73333;
+      --red-dark: #9d1818;
+      --black: #171717;
+      --shadow: rgba(25, 20, 10, .18);
+      --accent: #f0c36a;
+    }
+
+    * { box-sizing: border-box; }
+
+    html, body {
+      height: 100%;
+      margin: 0;
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      color: var(--ink);
+      background:
+        radial-gradient(circle at 20% 10%, rgba(240, 195, 106, .18), transparent 32rem),
+        linear-gradient(135deg, #faf7ef, var(--bg));
+      overflow: hidden;
+    }
+
+    body {
+      display: flex;
+      justify-content: center;
+      align-items: stretch;
+      padding: clamp(8px, 1.4vw, 18px);
+    }
+
+    .app {
+      width: min(1440px, 100%);
+      height: min(100%, calc(100vh - clamp(16px, 2.8vw, 36px)));
+      min-height: 0;
+      display: grid;
+      grid-template-columns: clamp(300px, 23vw, 360px) minmax(0, 1fr);
+      gap: clamp(10px, 1.6vw, 22px);
+    }
+
+    .sidebar {
+      height: 100%;
+      min-height: 0;
+      overflow-y: auto;
+      overflow-x: hidden;
+      background: rgba(255, 250, 240, .94);
+      border: 2px solid rgba(34, 34, 34, .12);
+      border-radius: 24px;
+      box-shadow: 0 18px 50px var(--shadow);
+      padding: 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .title {
+      margin: 0;
+      font-size: clamp(2.45rem, 3.35vw, 3.65rem);
+      letter-spacing: .005em;
+      line-height: .9;
+      font-weight: 850;
+      white-space: nowrap;
+    }
+
+    .rules {
+      margin: 0;
+      font-size: 1rem;
+      line-height: 1.25;
+      color: var(--muted);
+    }
+
+    .status-card {
+      background: #fff;
+      border: 2px solid rgba(34, 34, 34, .12);
+      border-radius: 18px;
+      padding: 11px 12px;
+      display: grid;
+      gap: 8px;
+      flex: 0 0 auto;
+    }
+
+    .turn-row {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      font-size: 1.15rem;
+      font-weight: 750;
+    }
+
+    .big-chip {
+      width: 38px;
+      height: 38px;
+      border-radius: 50%;
+      border: 2px solid rgba(0,0,0,.28);
+      box-shadow: inset -5px -7px 12px rgba(0,0,0,.22), inset 4px 5px 10px rgba(255,255,255,.36), 0 4px 12px rgba(0,0,0,.18);
+      flex: 0 0 auto;
+    }
+
+    .big-chip.black { background: radial-gradient(circle at 35% 30%, #5b5b5b, var(--black) 58%); }
+    .big-chip.red { background: radial-gradient(circle at 35% 30%, #ff8b8b, var(--red) 58%); }
+
+    .counter {
+      color: var(--muted);
+      font-weight: 650;
+      font-size: .98rem;
+    }
+
+    .result-card {
+      background: #fff;
+      border: 3px solid rgba(34, 34, 34, .16);
+      border-radius: 18px;
+      padding: 11px 12px;
+      display: grid;
+      gap: 4px;
+      flex: 0 0 auto;
+    }
+
+    .result-card.hidden { display: none; }
+
+    .result-card.win {
+      border-color: rgba(36, 126, 67, .72);
+      background: #f1fff5;
+    }
+
+    .result-card.lose {
+      border-color: rgba(170, 30, 30, .72);
+      background: #fff2f2;
+    }
+
+    .result-text {
+      font-size: 1.2rem;
+      font-weight: 850;
+      line-height: 1.12;
+    }
+
+    .result-sub {
+      color: var(--muted);
+      font-size: .92rem;
+      line-height: 1.25;
+    }
+
+    .buttons {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 8px;
+      flex: 0 0 auto;
+    }
+
+    button {
+      appearance: none;
+      border: 0;
+      border-radius: 14px;
+      min-height: 42px;
+      padding: 10px 10px;
+      font: inherit;
+      font-size: .93rem;
+      line-height: 1.08;
+      font-weight: 760;
+      background: #26221c;
+      color: #fff;
+      box-shadow: 0 6px 16px rgba(0,0,0,.18);
+      cursor: pointer;
+      transition: transform .12s ease, box-shadow .12s ease, opacity .12s ease;
+      touch-action: manipulation;
+    }
+
+    button:hover { transform: translateY(-1px); box-shadow: 0 9px 20px rgba(0,0,0,.20); }
+    button:active { transform: translateY(1px) scale(.99); }
+    button:disabled { opacity: .45; cursor: not-allowed; transform: none; }
+
+    .secondary {
+      background: #fff;
+      color: var(--ink);
+      border: 2px solid rgba(34,34,34,.16);
+      box-shadow: none;
+    }
+
+    .secondary.active {
+      background: #fff5d8;
+      border-color: rgba(194, 130, 18, .55);
+    }
+
+    .danger { background: #8c1d1d; }
+
+    #resetBtn { grid-column: 1 / -1; }
+    #continueBtn, #aiNowBtn { grid-column: 1 / -1; }
+
+    .is-hidden { display: none !important; }
+
+    .hint {
+      display: none;
+      color: var(--muted);
+      font-size: .9rem;
+      line-height: 1.25;
+    }
+
+    .board-wrap {
+      min-height: 0;
+      background:
+        radial-gradient(circle at 50% 50%, rgba(255,255,255,.65), transparent 34rem),
+        linear-gradient(135deg, rgba(255, 252, 245, .82), rgba(255, 246, 229, .66));
+      border: 2px solid rgba(34, 34, 34, .10);
+      border-radius: 28px;
+      box-shadow: inset 0 0 0 1px rgba(255,255,255,.65), 0 18px 50px var(--shadow);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: clamp(10px, 1.5vw, 18px);
+      position: relative;
+    }
+
+    svg {
+      width: 100%;
+      height: 100%;
+      max-height: calc(100vh - 48px);
+      min-height: 420px;
+      user-select: none;
+      -webkit-user-select: none;
+      touch-action: none;
+    }
+
+    .cell {
+      fill: var(--cell);
+      stroke: var(--border);
+      stroke-width: 2.15;
+      cursor: pointer;
+      transition: fill .12s ease, filter .12s ease, stroke-width .12s ease;
+    }
+
+    .cell:hover, .cell.active-drop {
+      fill: var(--cell-hover);
+      stroke-width: 2.55;
+      filter: drop-shadow(0 2px 3px rgba(0,0,0,.18));
+    }
+
+    .token {
+      stroke: rgba(0,0,0,.45);
+      stroke-width: 2;
+      cursor: grab;
+      filter: drop-shadow(0 4px 5px rgba(0,0,0,.24));
+      transition: transform .16s ease, opacity .12s ease;
+    }
+
+    .token:active { cursor: grabbing; }
+    .token.black { fill: url(#blackToken); }
+    .token.red { fill: url(#redToken); }
+    .token.ghost { pointer-events: none; opacity: .78; filter: drop-shadow(0 8px 8px rgba(0,0,0,.32)); }
+    .token.drag-source { opacity: .23; }
+
+    .last-ring {
+      fill: none;
+      stroke: var(--accent);
+      stroke-width: 4.5;
+      pointer-events: none;
+      opacity: .95;
+    }
+
+    .result-ring {
+      fill: none;
+      stroke-width: 7;
+      pointer-events: none;
+      opacity: .95;
+      filter: drop-shadow(0 2px 4px rgba(0,0,0,.22));
+    }
+
+    .result-ring.win { stroke: #23884e; }
+    .result-ring.lose { stroke: #c42121; }
+
+    .analysis-card {
+      background: #fff;
+      border: 2px solid rgba(34, 34, 34, .12);
+      border-radius: 18px;
+      padding: 10px 12px;
+      color: var(--muted);
+      font-size: .9rem;
+      line-height: 1.22;
+      flex: 0 0 auto;
+    }
+
+    .analysis-card.hidden { display: none; }
+
+    .analysis-title {
+      color: var(--ink);
+      font-weight: 850;
+      margin-bottom: 5px;
+    }
+
+    .hint-marker {
+      stroke: rgba(0,0,0,.42);
+      stroke-width: 2;
+      pointer-events: none;
+      filter: drop-shadow(0 3px 4px rgba(0,0,0,.18));
+      opacity: .92;
+    }
+
+    .hint-marker.win { fill: #23884e; }
+    .hint-marker.lose { fill: #c42121; }
+    .hint-marker.block { fill: #e19a22; }
+    .hint-marker.danger { fill: #6f4bb8; }
+
+    .hint-label {
+      fill: #fff;
+      font-size: 20px;
+      font-weight: 950;
+      text-anchor: middle;
+      dominant-baseline: central;
+      pointer-events: none;
+      paint-order: stroke;
+      stroke: rgba(0,0,0,.22);
+      stroke-width: 1.5px;
+    }
+
+    .board-label {
+      font-size: 26px;
+      font-weight: 800;
+      fill: rgba(28,28,28,.80);
+      text-anchor: middle;
+    }
+
+    .coord-label {
+      font-size: 12px;
+      font-weight: 800;
+      fill: rgba(28, 28, 28, .34);
+      text-anchor: middle;
+      dominant-baseline: central;
+      pointer-events: none;
+      user-select: none;
+    }
+
+    .coords-hidden .coord-label { display: none; }
+
+    .links-card {
+      background: rgba(255,255,255,.82);
+      border: 2px solid rgba(34, 34, 34, .10);
+      border-radius: 18px;
+      padding: 10px 12px;
+      color: var(--muted);
+      font-size: .82rem;
+      line-height: 1.22;
+      flex: 0 0 auto;
+    }
+
+    .links-card a {
+      color: var(--ink);
+      font-weight: 800;
+      text-decoration-thickness: 2px;
+      text-underline-offset: 3px;
+    }
+
+    .credit-line {
+      margin-top: 5px;
+    }
+
+    .coach-card, .history-card {
+      background: #fff;
+      border: 2px solid rgba(34, 34, 34, .12);
+      border-radius: 18px;
+      padding: 10px 12px;
+      color: var(--muted);
+      font-size: .9rem;
+      line-height: 1.22;
+    }
+
+    .coach-card { flex: 0 0 auto; }
+
+    .history-card {
+      min-height: 0;
+      flex: 1 1 110px;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .coach-card.hidden { display: none; }
+
+    .coach-title, .history-head {
+      color: var(--ink);
+      font-weight: 850;
+      margin-bottom: 5px;
+    }
+
+    .coach-ring {
+      fill: none;
+      stroke: #2774c7;
+      stroke-width: 7;
+      stroke-dasharray: 10 7;
+      pointer-events: none;
+      opacity: .95;
+      filter: drop-shadow(0 2px 4px rgba(0,0,0,.22));
+    }
+
+    .history-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+    }
+
+    .history-count {
+      color: var(--muted);
+      font-weight: 750;
+      font-size: .86rem;
+      white-space: nowrap;
+    }
+
+    .history-list {
+      margin: 0;
+      padding-left: 1.25rem;
+      min-height: 0;
+      max-height: none;
+      overflow: auto;
+      flex: 1 1 auto;
+      scrollbar-gutter: stable;
+    }
+
+    .history-list li {
+      margin: 2px 0;
+      padding-left: 2px;
+    }
+
+    .history-list li.black-move { color: #1f1f1f; }
+    .history-list li.red-move { color: #a91f1f; }
+
+    .history-empty {
+      color: var(--muted);
+      font-style: italic;
+    }
+
+
+
+    .print-page {
+      display: none;
+    }
+
+    .print-link-button {
+      appearance: none;
+      border: 0;
+      background: transparent;
+      color: var(--ink);
+      font: inherit;
+      font-weight: 800;
+      text-decoration: underline;
+      text-decoration-thickness: 2px;
+      text-underline-offset: 3px;
+      padding: 0;
+      min-height: auto;
+      box-shadow: none;
+      border-radius: 0;
+      cursor: pointer;
+    }
+
+    .print-link-button:hover {
+      transform: none;
+      box-shadow: none;
+    }
+
+    @page {
+      size: A4 portrait;
+      margin: 0;
+    }
+
+    /* Ergonomie finale : panneau gauche épuré pour une mise en ligne */
+    .sidebar {
+      overflow-y: auto;
+      gap: 10px;
+      scrollbar-gutter: stable;
+    }
+
+    .main-actions {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 8px;
+      flex: 0 0 auto;
+    }
+
+    .main-actions #continueBtn,
+    .main-actions #aiNowBtn,
+    .main-actions #resetBtn {
+      grid-column: 1 / -1;
+    }
+
+    .drawer {
+      background: rgba(255,255,255,.88);
+      border: 2px solid rgba(34, 34, 34, .10);
+      border-radius: 16px;
+      padding: 0;
+      color: var(--muted);
+      flex: 0 0 auto;
+      overflow: hidden;
+    }
+
+    .drawer summary {
+      list-style: none;
+      cursor: pointer;
+      min-height: 40px;
+      padding: 10px 12px;
+      color: var(--ink);
+      font-weight: 850;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      user-select: none;
+    }
+
+    .drawer summary::-webkit-details-marker { display: none; }
+
+    .drawer summary::after {
+      content: "+";
+      display: inline-grid;
+      place-items: center;
+      width: 22px;
+      height: 22px;
+      border-radius: 999px;
+      background: #f1eadf;
+      color: var(--muted);
+      font-weight: 950;
+      flex: 0 0 auto;
+    }
+
+    .drawer[open] summary::after { content: "–"; }
+
+    .history-card {
+      min-height: auto;
+      flex: 0 0 auto;
+    }
+
+    .history-card[open] {
+      flex: 1 1 132px;
+      min-height: 94px;
+    }
+
+    .history-list {
+      margin: 0 10px 10px;
+      padding-left: 1.2rem;
+      max-height: 160px;
+      min-height: 44px;
+      overflow: auto;
+      scrollbar-gutter: stable;
+    }
+
+    .settings-buttons {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 8px;
+      padding: 0 10px 10px;
+    }
+
+    .settings-buttons button {
+      min-height: 38px;
+      font-size: .84rem;
+      padding: 8px;
+      border-radius: 12px;
+    }
+
+    .print-actions {
+      padding: 0 10px 10px;
+      display: grid;
+    }
+
+    .print-actions button {
+      min-height: 38px;
+      font-size: .88rem;
+      padding: 8px;
+      border-radius: 12px;
+    }
+
+    .settings-note {
+      margin: 0 12px 11px;
+      color: var(--muted);
+      font-size: .82rem;
+      line-height: 1.24;
+    }
+
+    .sources-card .links-card {
+      border: 0;
+      border-top: 2px solid rgba(34,34,34,.08);
+      border-radius: 0;
+      background: transparent;
+      padding: 10px 12px 12px;
+    }
+
+    .small-credit {
+      margin-top: 8px;
+      font-size: .8rem;
+      line-height: 1.22;
+    }
+
+    .title {
+      font-size: clamp(2.25rem, 3vw, 3.1rem);
+    }
+
+    .rules {
+      font-size: .94rem;
+    }
+
+    .status-card, .result-card, .analysis-card, .coach-card {
+      padding: 10px 11px;
+      border-radius: 16px;
+    }
+
+    .turn-row {
+      font-size: 1.03rem;
+    }
+
+    .big-chip {
+      width: 34px;
+      height: 34px;
+    }
+
+    .cell {
+      fill: #fffdf7;
+      stroke: #25211c;
+      stroke-width: 2.25;
+    }
+
+    .board-wrap {
+      background:
+        radial-gradient(circle at 50% 48%, rgba(255,255,255,.78), transparent 28rem),
+        linear-gradient(135deg, rgba(255, 253, 248, .92), rgba(251, 244, 231, .78));
+    }
+
+
+    @media print {
+      html, body {
+        height: auto;
+        overflow: visible;
+        background: #fff;
+      }
+
+      body {
+        display: block;
+        padding: 0;
+      }
+
+      .app {
+        display: none !important;
+      }
+
+      .print-page {
+        display: flex !important;
+        width: 210mm;
+        min-height: 297mm;
+        margin: 0 auto;
+        padding: 8mm 7mm 7mm;
+        background: #fff;
+        color: #111;
+        font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+        flex-direction: column;
+        align-items: center;
+        gap: 3mm;
+        box-sizing: border-box;
+      }
+
+      .print-header {
+        text-align: center;
+        flex: 0 0 auto;
+      }
+
+      .print-header h1 {
+        margin: 0;
+        font-size: 16mm;
+        line-height: .86;
+        letter-spacing: .01em;
+      }
+
+      .print-rules {
+        margin: 3mm 0 0;
+        font-size: 4.35mm;
+        line-height: 1.22;
+      }
+
+      .print-board {
+        width: 196mm;
+        max-width: 100%;
+        aspect-ratio: 1.13 / 1;
+        display: block;
+        flex: 0 0 auto;
+        margin-top: 7mm;
+      }
+
+      .print-board polygon {
+        fill: #fff;
+        stroke: #111;
+        stroke-width: 2.2;
+        vector-effect: non-scaling-stroke;
+      }
+
+      .print-credits {
+        margin-top: auto;
+        font-size: 2.9mm;
+        line-height: 1.22;
+        color: #333;
+        text-align: center;
+        max-width: 190mm;
+      }
+    }
+
+    @media (max-height: 780px) and (min-width: 851px) {
+      .sidebar { gap: 8px; padding: 14px; }
+      .title { font-size: clamp(2.2rem, 3vw, 3.2rem); }
+      .rules { font-size: .94rem; }
+      .turn-row { font-size: 1.02rem; }
+      .big-chip { width: 34px; height: 34px; }
+      .result-card, .status-card, .analysis-card, .coach-card, .history-card, .links-card { padding: 9px 10px; border-radius: 16px; }
+      .result-text { font-size: 1.05rem; }
+      .result-sub, .counter, .analysis-card, .coach-card, .history-card { font-size: .84rem; }
+      button { min-height: 38px; padding: 8px 8px; font-size: .86rem; }
+    }
+
+    @media (max-width: 850px) {
+      body { overflow: auto; align-items: flex-start; }
+      .app {
+        height: auto;
+        min-height: 100%;
+        grid-template-columns: 1fr;
+        grid-template-rows: auto minmax(480px, 1fr);
+      }
+      .sidebar {
+        height: auto;
+        border-radius: 20px;
+        padding: 12px;
+        gap: 10px;
+      }
+      .title { font-size: 2.5rem; }
+      .rules { font-size: .95rem; }
+      .status-card { grid-template-columns: 1fr auto; align-items: center; }
+      .history-card { flex: 0 0 auto; }
+      .history-list { max-height: 96px; }
+      .buttons { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+      #resetBtn, #continueBtn, #aiNowBtn { grid-column: auto; }
+      button { padding: 10px 8px; border-radius: 12px; font-size: .86rem; }
+      .hint { display: none; }
+      .board-wrap { min-height: 520px; }
+      svg { min-height: 500px; max-height: none; }
+    }
+
+    @media (max-height: 780px) and (min-width: 851px) {
+      .sidebar { gap: 7px; padding: 12px; }
+      .title { font-size: clamp(2rem, 2.7vw, 2.8rem); }
+      .rules { font-size: .88rem; }
+      .turn-row { font-size: .96rem; }
+      .counter { font-size: .86rem; }
+      .big-chip { width: 30px; height: 30px; }
+      button { min-height: 36px; font-size: .82rem; padding: 7px; }
+      .drawer summary { min-height: 36px; padding: 8px 10px; font-size: .88rem; }
+      .settings-buttons button, .print-actions button { min-height: 34px; font-size: .78rem; }
+      .status-card, .result-card, .analysis-card, .coach-card { padding: 8px 9px; }
+      .result-text { font-size: .98rem; }
+      .result-sub, .analysis-card, .coach-card, .settings-note { font-size: .78rem; }
+      .history-list { max-height: 110px; }
+    }
+
+    @media (max-width: 850px) {
+      .sidebar { overflow: visible; }
+      .main-actions { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+      .main-actions #continueBtn,
+      .main-actions #aiNowBtn,
+      .main-actions #resetBtn { grid-column: auto; }
+      .settings-buttons { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+      .history-card[open] { flex: 0 0 auto; }
+      .history-list { max-height: 120px; }
+    }
+
+  </style>
+</head>
+<body>
+  <main class="app" aria-label="Plateau Yavalath deux joueurs">
+    <aside class="sidebar">
+      <h1 class="title">Yavalath</h1>
+      <p class="rules">
+        Le premier qui aligne <strong>4 pions</strong> gagne.<br>
+        Le premier qui aligne <strong>3 pions</strong> perd.
+      </p>
+
+      <section class="status-card" aria-live="polite">
+        <div class="turn-row">
+          <span id="turnChip" class="big-chip black" aria-hidden="true"></span>
+          <span id="turnText">Tour : Noir</span>
+        </div>
+        <div id="counter" class="counter">0 pion posé</div>
+      </section>
+
+      <section id="resultBox" class="result-card hidden" aria-live="assertive">
+        <div id="resultText" class="result-text"></div>
+        <div id="resultSub" class="result-sub"></div>
+      </section>
+
+      <section id="analysisBox" class="analysis-card hidden" aria-live="polite">
+        <div id="analysisTitle" class="analysis-title"></div>
+        <div id="analysisText"></div>
+      </section>
+
+      <section id="coachBox" class="coach-card hidden" aria-live="polite">
+        <div id="coachTitle" class="coach-title"></div>
+        <div id="coachText"></div>
+      </section>
+
+      <div class="main-actions" aria-label="Actions principales">
+        <button id="switchBtn" type="button" class="secondary">Changer de joueur</button>
+        <button id="undoBtn" type="button" class="secondary">Annuler</button>
+        <button id="continueBtn" type="button" class="secondary is-hidden">Continuer la partie</button>
+        <button id="aiNowBtn" type="button" class="secondary is-hidden">Faire jouer l'IA</button>
+        <button id="resetBtn" type="button" class="danger">Recommencer</button>
+      </div>
+
+      <details id="historyBox" class="history-card drawer" aria-live="polite">
+        <summary>
+          <span>Historique</span>
+          <span id="historyCount" class="history-count">0 coup</span>
+        </summary>
+        <ol id="historyList" class="history-list"></ol>
+      </details>
+
+      <details class="drawer settings-card">
+        <summary>Paramètres et IA</summary>
+        <div class="settings-buttons">
+          <button id="judgeBtn" type="button" class="secondary active">Arbitre : activé</button>
+          <button id="analyzeBtn" type="button" class="secondary">Analyser les coups</button>
+          <button id="coachBtn" type="button" class="secondary">Conseil IA</button>
+          <button id="coordsBtn" type="button" class="secondary">Repères : masqués</button>
+          <button id="aiBtn" type="button" class="secondary">IA : désactivée</button>
+          <button id="fullscreenBtn" type="button" class="secondary">Plein écran</button>
+        </div>
+        <p class="settings-note">L'IA joue les rouges quand elle est activée. L'arbitre peut être coupé pour jouer en mode libre.</p>
+      </details>
+
+      <details class="drawer print-card">
+        <summary>Impression</summary>
+        <div class="print-actions">
+          <button id="printBtn" type="button" class="secondary">Imprimer le plateau</button>
+        </div>
+        <p class="settings-note">Imprime une fiche A4 avec le plateau vierge, les règles courtes, les crédits et les sources.</p>
+      </details>
+
+      <details class="drawer sources-card">
+        <summary>Crédits et sources</summary>
+        <div class="links-card" aria-label="Crédits et sources">
+          <a href="https://www.nestorgames.com/yavalath.html" target="_blank" rel="noopener">Jeu original</a> ·
+          <a href="https://nestorgames.com/rulebooks/YAVALATH_EN.pdf" target="_blank" rel="noopener">Règles officielles</a> ·
+          <a href="https://cambolbro.com/games/yavalath/" target="_blank" rel="noopener">Page Cameron Browne</a>
+          <div class="credit-line">Jeu original : <strong>Yavalath</strong>, conçu par <strong>Ludi / Cameron Browne</strong> et publié par <strong>nestorgames</strong>. Cette page est une adaptation numérique pédagogique non officielle.</div>
+          <div class="credit-line small-credit">Règle complète utilisée par l'arbitre : si un même coup crée une ligne de 4 et une ligne de 3, la ligne de 4 est prioritaire.</div>
+        </div>
+      </details>
+
+      <p class="hint">
+        Cliquez sur une case vide pour poser le pion du joueur dont c'est le tour. Pour corriger une erreur, vous pouvez faire glisser un pion déjà posé vers une case vide.
+      </p>
+    </aside>
+
+    <section class="board-wrap">
+      <svg id="board" class="coords-hidden" role="img" aria-label="Plateau hexagonal de Yavalath avec jetons noirs et rouges" preserveAspectRatio="xMidYMid meet">
+        <defs>
+          <radialGradient id="blackToken" cx="35%" cy="30%" r="70%">
+            <stop offset="0%" stop-color="#666"/>
+            <stop offset="55%" stop-color="#181818"/>
+            <stop offset="100%" stop-color="#050505"/>
+          </radialGradient>
+          <radialGradient id="redToken" cx="35%" cy="30%" r="70%">
+            <stop offset="0%" stop-color="#ff9a9a"/>
+            <stop offset="55%" stop-color="#d73333"/>
+            <stop offset="100%" stop-color="#951414"/>
+          </radialGradient>
+        </defs>
+        <g id="cells"></g>
+        <g id="rings"></g>
+        <g id="hints"></g>
+        <g id="tokens"></g>
+        <g id="dragLayer"></g>
+      </svg>
+    </section>
+  </main>
+
+  <main id="printPage" class="print-page" aria-hidden="true">
+    <header class="print-header">
+      <h1>Yavalath</h1>
+      <p class="print-rules">
+        Le premier qui aligne <strong>4 pions</strong> gagne.<br>
+        Le premier qui aligne <strong>3 pions</strong> perd.
+      </p>
+    </header>
+    <svg id="printBoard" class="print-board" role="img" aria-label="Plateau hexagonal de Yavalath à 61 cases" preserveAspectRatio="xMidYMid meet">
+      <g id="printCells"></g>
+    </svg>
+    <p class="print-credits">
+      Jeu original : <strong>Yavalath</strong>, conçu par <strong>Ludi / Cameron Browne</strong> et publié par <strong>nestorgames</strong>. Adaptation numérique pédagogique non officielle.<br>
+      Jeu original : www.nestorgames.com/yavalath.html · Règles officielles : nestorgames.com/rulebooks/YAVALATH_EN.pdf · Page auteur : cambolbro.com/games/yavalath/
+    </p>
+  </main>
+
+  <script>
+    (() => {
+      const svg = document.getElementById('board');
+      const cellsGroup = document.getElementById('cells');
+      const ringsGroup = document.getElementById('rings');
+      const hintsGroup = document.getElementById('hints');
+      const tokensGroup = document.getElementById('tokens');
+      const dragLayer = document.getElementById('dragLayer');
+      const turnChip = document.getElementById('turnChip');
+      const turnText = document.getElementById('turnText');
+      const counter = document.getElementById('counter');
+      const resultBox = document.getElementById('resultBox');
+      const resultText = document.getElementById('resultText');
+      const resultSub = document.getElementById('resultSub');
+      const analysisBox = document.getElementById('analysisBox');
+      const analysisTitle = document.getElementById('analysisTitle');
+      const analysisText = document.getElementById('analysisText');
+      const coachBox = document.getElementById('coachBox');
+      const coachTitle = document.getElementById('coachTitle');
+      const coachText = document.getElementById('coachText');
+      const historyCount = document.getElementById('historyCount');
+      const historyList = document.getElementById('historyList');
+      const switchBtn = document.getElementById('switchBtn');
+      const undoBtn = document.getElementById('undoBtn');
+      const judgeBtn = document.getElementById('judgeBtn');
+      const analyzeBtn = document.getElementById('analyzeBtn');
+      const coachBtn = document.getElementById('coachBtn');
+      const coordsBtn = document.getElementById('coordsBtn');
+      const aiBtn = document.getElementById('aiBtn');
+      const aiNowBtn = document.getElementById('aiNowBtn');
+      const continueBtn = document.getElementById('continueBtn');
+      const printBtn = document.getElementById('printBtn');
+      const fullscreenBtn = document.getElementById('fullscreenBtn');
+      const resetBtn = document.getElementById('resetBtn');
+      const printBoard = document.getElementById('printBoard');
+      const printCells = document.getElementById('printCells');
+
+      const SVG_NS = 'http://www.w3.org/2000/svg';
+      const RADIUS = 4;          // côté 5 : lignes 5, 6, 7, 8, 9, 8, 7, 6, 5
+      const HEX = 42;
+      const TOKEN_R = HEX * 0.55;
+      const DIRECTIONS = [
+        [1, 0],
+        [0, 1],
+        [1, -1]
+      ];
+
+      const cells = [];
+      const positions = new Map();
+      const labels = new Map();
+      const state = new Map();
+      let current = 'black';
+      let history = [];
+      let lastKey = null;
+      let drag = null;
+      let referee = true;
+      let hintsEnabled = false;
+      let showCoords = false;
+      let aiLevel = 'off';
+      let aiTimer = null;
+      let isAiThinking = false;
+      const aiColor = 'red';
+      let gameOver = false;
+      let result = null;
+      let adviceKey = null;
+      let adviceColor = null;
+      let adviceMessage = '';
+
+      function keyOf(q, r) { return `${q},${r}`; }
+      function parseKey(key) { return key.split(',').map(Number); }
+      function playerName(color) { return color === 'black' ? 'Noir' : 'Rouge'; }
+      function otherPlayer(color) { return color === 'black' ? 'red' : 'black'; }
+      function labelOf(key) { return labels.get(key) || key; }
+
+      function axialToPixel(q, r) {
+        return {
+          x: Math.sqrt(3) * HEX * (q + r / 2),
+          y: 1.5 * HEX * r
+        };
+      }
+
+      function hexPoints(cx, cy) {
+        const pts = [];
+        for (let i = 0; i < 6; i++) {
+          const angle = (-90 + i * 60) * Math.PI / 180;
+          pts.push(`${(cx + HEX * Math.cos(angle)).toFixed(2)},${(cy + HEX * Math.sin(angle)).toFixed(2)}`);
+        }
+        return pts.join(' ');
+      }
+
+      function buildCells() {
+        let minX = Infinity, maxX = -Infinity, minY = Infinity, maxY = -Infinity;
+        for (let r = -RADIUS; r <= RADIUS; r++) {
+          const qMin = Math.max(-RADIUS, -r - RADIUS);
+          const qMax = Math.min(RADIUS, -r + RADIUS);
+          for (let q = qMin; q <= qMax; q++) {
+            const {x, y} = axialToPixel(q, r);
+            const key = keyOf(q, r);
+            const rowLetter = String.fromCharCode(65 + r + RADIUS);
+            const colNumber = q - qMin + 1;
+            const label = `${rowLetter}${colNumber}`;
+            cells.push({q, r, key, x, y, label});
+            positions.set(key, {x, y});
+            labels.set(key, label);
+            minX = Math.min(minX, x - HEX);
+            maxX = Math.max(maxX, x + HEX);
+            minY = Math.min(minY, y - HEX);
+            maxY = Math.max(maxY, y + HEX);
+          }
+        }
+
+        const pad = 54;
+        svg.setAttribute('viewBox', `${minX - pad} ${minY - pad} ${maxX - minX + 2 * pad} ${maxY - minY + 2 * pad}`);
+
+        cells.forEach(cell => {
+          const poly = document.createElementNS(SVG_NS, 'polygon');
+          poly.setAttribute('class', 'cell');
+          poly.setAttribute('points', hexPoints(cell.x, cell.y));
+          poly.dataset.key = cell.key;
+          poly.addEventListener('click', () => placeOn(cell.key));
+          cellsGroup.appendChild(poly);
+
+          const label = document.createElementNS(SVG_NS, 'text');
+          label.setAttribute('class', 'coord-label');
+          label.setAttribute('x', cell.x);
+          label.setAttribute('y', cell.y + 2);
+          label.textContent = cell.label;
+          cellsGroup.appendChild(label);
+        });
+      }
+
+
+      function buildPrintBoard() {
+        if (!printBoard || !printCells) return;
+        let minX = Infinity, maxX = -Infinity, minY = Infinity, maxY = -Infinity;
+        cells.forEach(cell => {
+          minX = Math.min(minX, cell.x - HEX);
+          maxX = Math.max(maxX, cell.x + HEX);
+          minY = Math.min(minY, cell.y - HEX);
+          maxY = Math.max(maxY, cell.y + HEX);
+        });
+        // Pour l'impression, on ne reprend pas le grand cadre de sécurité du plateau interactif :
+        // on garde seulement une petite marge anti-rognage, afin d'obtenir un plateau presque
+        // aussi grand que sur la fiche PDF d'origine.
+        const printPad = 2.5;
+        printBoard.setAttribute('viewBox', `${minX - printPad} ${minY - printPad} ${maxX - minX + 2 * printPad} ${maxY - minY + 2 * printPad}`);
+        printCells.replaceChildren();
+        cells.forEach(cell => {
+          const poly = document.createElementNS(SVG_NS, 'polygon');
+          poly.setAttribute('points', hexPoints(cell.x, cell.y));
+          printCells.appendChild(poly);
+        });
+      }
+
+      function printBlankBoard() {
+        window.print();
+      }
+
+      function placeOn(key) {
+        if (drag || state.has(key) || gameOver || isAiThinking) return;
+        if (aiLevel !== 'off' && current === aiColor) return;
+        playMove(key, current, true);
+      }
+
+      function playMove(key, color, shouldScheduleAi = false) {
+        if (state.has(key) || gameOver) return;
+        clearAdvice();
+        state.set(key, color);
+        history.push({type: 'place', key, color});
+        lastKey = key;
+        evaluateAfterMove(key, color);
+        current = otherPlayer(color);
+        render();
+        if (shouldScheduleAi) scheduleAiIfNeeded();
+      }
+
+      function switchPlayer() {
+        if (gameOver || isAiThinking) return;
+        cancelAiTimer();
+        clearAdvice();
+        current = otherPlayer(current);
+        render();
+        scheduleAiIfNeeded();
+      }
+
+      function undo() {
+        cancelAiTimer();
+        const action = history.pop();
+        if (!action) return;
+
+        clearResult();
+        clearAdvice();
+        if (action.type === 'place') {
+          state.delete(action.key);
+          current = action.color;
+        }
+        if (action.type === 'move') {
+          state.delete(action.to);
+          state.set(action.from, action.color);
+        }
+        lastKey = history.length ? (history[history.length - 1].to || history[history.length - 1].key) : null;
+        render();
+      }
+
+      function resetGame() {
+        cancelAiTimer();
+        isAiThinking = false;
+        state.clear();
+        history = [];
+        lastKey = null;
+        current = 'black';
+        clearResult();
+        clearAdvice();
+        render();
+      }
+
+      function render() {
+        renderTokens();
+        renderLastRing();
+        renderHints();
+        renderCoach();
+        renderHistory();
+        renderStatus();
+      }
+
+      function renderStatus() {
+        const displayColor = result ? result.color : current;
+        turnChip.className = `big-chip ${displayColor}`;
+        if (gameOver) {
+          turnText.textContent = 'Partie terminée';
+        } else if (isAiThinking) {
+          turnText.textContent = 'IA rouge réfléchit…';
+        } else if (aiLevel !== 'off' && current === aiColor) {
+          turnText.textContent = 'Tour : IA rouge';
+        } else {
+          turnText.textContent = `Tour : ${playerName(current)}`;
+        }
+        const n = state.size;
+        counter.textContent = `${n} pion${n > 1 ? 's' : ''} posé${n > 1 ? 's' : ''}`;
+        undoBtn.disabled = history.length === 0 || isAiThinking;
+        switchBtn.disabled = gameOver || isAiThinking;
+        judgeBtn.textContent = `Arbitre : ${referee ? 'activé' : 'désactivé'}`;
+        judgeBtn.classList.toggle('active', referee);
+        analyzeBtn.textContent = hintsEnabled ? 'Masquer l’analyse' : 'Analyser les coups';
+        analyzeBtn.classList.toggle('active', hintsEnabled);
+        analyzeBtn.disabled = gameOver || isAiThinking;
+        coachBtn.textContent = adviceKey ? 'Recalculer conseil' : 'Conseil IA';
+        coachBtn.classList.toggle('active', !!adviceKey);
+        coachBtn.disabled = gameOver || isAiThinking;
+        coordsBtn.textContent = `Repères : ${showCoords ? 'visibles' : 'masqués'}`;
+        coordsBtn.classList.toggle('active', showCoords);
+        aiBtn.textContent = `IA : ${aiLevelName(aiLevel)}`;
+        aiBtn.classList.toggle('active', aiLevel !== 'off');
+        aiBtn.disabled = isAiThinking;
+        aiNowBtn.classList.toggle('is-hidden', !(aiLevel !== 'off' && current === aiColor && !gameOver));
+        aiNowBtn.disabled = isAiThinking;
+        continueBtn.classList.toggle('is-hidden', !gameOver);
+
+        if (result) {
+          resultBox.className = `result-card ${result.kind}`;
+          resultText.textContent = result.text;
+          resultSub.textContent = result.subtext;
+        } else {
+          resultBox.className = 'result-card hidden';
+          resultText.textContent = '';
+          resultSub.textContent = '';
+        }
+      }
+
+      function renderTokens() {
+        tokensGroup.replaceChildren();
+        for (const [key, color] of state.entries()) {
+          const pos = positions.get(key);
+          const circle = document.createElementNS(SVG_NS, 'circle');
+          circle.setAttribute('class', `token ${color}`);
+          circle.setAttribute('cx', pos.x);
+          circle.setAttribute('cy', pos.y);
+          circle.setAttribute('r', TOKEN_R);
+          circle.dataset.key = key;
+          circle.dataset.color = color;
+          circle.addEventListener('pointerdown', startDrag);
+          tokensGroup.appendChild(circle);
+        }
+      }
+
+      function renderLastRing() {
+        ringsGroup.replaceChildren();
+
+        if (result?.line?.length) {
+          result.line.forEach(key => {
+            const pos = positions.get(key);
+            if (!pos) return;
+            const ring = document.createElementNS(SVG_NS, 'circle');
+            ring.setAttribute('class', `result-ring ${result.kind}`);
+            ring.setAttribute('cx', pos.x);
+            ring.setAttribute('cy', pos.y);
+            ring.setAttribute('r', TOKEN_R + 7);
+            ringsGroup.appendChild(ring);
+          });
+          return;
+        }
+
+        if (lastKey && positions.has(lastKey)) {
+          const pos = positions.get(lastKey);
+          const ring = document.createElementNS(SVG_NS, 'circle');
+          ring.setAttribute('class', 'last-ring');
+          ring.setAttribute('cx', pos.x);
+          ring.setAttribute('cy', pos.y);
+          ring.setAttribute('r', TOKEN_R + 6);
+          ringsGroup.appendChild(ring);
+        }
+
+        if (adviceKey && positions.has(adviceKey) && !gameOver) {
+          const pos = positions.get(adviceKey);
+          const ring = document.createElementNS(SVG_NS, 'circle');
+          ring.setAttribute('class', 'coach-ring');
+          ring.setAttribute('cx', pos.x);
+          ring.setAttribute('cy', pos.y);
+          ring.setAttribute('r', TOKEN_R + 10);
+          ringsGroup.appendChild(ring);
+        }
+      }
+
+      function renderHints() {
+        hintsGroup.replaceChildren();
+        if (!hintsEnabled || gameOver) {
+          analysisBox.className = 'analysis-card hidden';
+          analysisTitle.textContent = '';
+          analysisText.textContent = '';
+          return;
+        }
+
+        const hints = collectMoveHints(current).filter(h => h.kind !== 'neutral');
+        const counts = {win: 0, lose: 0, block: 0, danger: 0};
+
+        hints.forEach(hint => {
+          counts[hint.kind]++;
+          const pos = positions.get(hint.key);
+          if (!pos) return;
+          const marker = document.createElementNS(SVG_NS, 'circle');
+          marker.setAttribute('class', `hint-marker ${hint.kind}`);
+          marker.setAttribute('cx', pos.x);
+          marker.setAttribute('cy', pos.y);
+          marker.setAttribute('r', 16);
+          hintsGroup.appendChild(marker);
+
+          const label = document.createElementNS(SVG_NS, 'text');
+          label.setAttribute('class', 'hint-label');
+          label.setAttribute('x', pos.x);
+          label.setAttribute('y', pos.y + 1);
+          label.textContent = hint.label;
+          hintsGroup.appendChild(label);
+        });
+
+        analysisBox.className = 'analysis-card';
+        analysisTitle.textContent = `Analyse : coups pour ${playerName(current)}`;
+        if (hints.length === 0) {
+          analysisText.textContent = 'Aucun coup critique immédiat détecté. Pas de victoire, de perte ou de blocage urgent pour ce tour.';
+        } else {
+          analysisText.textContent = `4 vert = gagner (${counts.win}) · 3 rouge = perdre (${counts.lose}) · B orange = bloquer (${counts.block}) · ! violet = dangereux (${counts.danger}).`;
+        }
+      }
+
+      function renderCoach() {
+        if (!adviceKey) {
+          coachBox.className = 'coach-card hidden';
+          coachTitle.textContent = '';
+          coachText.textContent = '';
+          return;
+        }
+        coachBox.className = 'coach-card';
+        coachTitle.textContent = `Conseil IA : ${playerName(adviceColor)} en ${labelOf(adviceKey)}`;
+        coachText.textContent = adviceMessage;
+      }
+
+      function renderHistory() {
+        const moves = history.filter(action => action.type === 'place');
+        const n = moves.length;
+        historyCount.textContent = `${n} coup${n > 1 ? 's' : ''}`;
+        historyList.replaceChildren();
+
+        if (history.length === 0) {
+          const item = document.createElement('li');
+          item.className = 'history-empty';
+          item.textContent = 'Aucun coup joué.';
+          historyList.appendChild(item);
+          return;
+        }
+
+        history.forEach((action, index) => {
+          const item = document.createElement('li');
+          item.className = `${action.color}-move`;
+          if (action.type === 'move') {
+            item.textContent = `Correction · ${playerName(action.color)} : ${labelOf(action.from)} → ${labelOf(action.to)}`;
+          } else {
+            item.textContent = `${playerName(action.color)} : ${labelOf(action.key)}`;
+          }
+          historyList.appendChild(item);
+        });
+        historyList.scrollTop = historyList.scrollHeight;
+      }
+
+      function clearAdvice() {
+        adviceKey = null;
+        adviceColor = null;
+        adviceMessage = '';
+      }
+
+      function clearResult() {
+        result = null;
+        gameOver = false;
+      }
+
+      function allEmptyKeys(board = state) {
+        return cells.map(cell => cell.key).filter(key => !board.has(key));
+      }
+
+      function lineThroughBoard(board, key, color, dq, dr) {
+        const [q0, r0] = parseKey(key);
+        const line = [key];
+
+        let q = q0 + dq;
+        let r = r0 + dr;
+        while (board.get(keyOf(q, r)) === color) {
+          line.push(keyOf(q, r));
+          q += dq;
+          r += dr;
+        }
+
+        q = q0 - dq;
+        r = r0 - dr;
+        while (board.get(keyOf(q, r)) === color) {
+          line.unshift(keyOf(q, r));
+          q -= dq;
+          r -= dr;
+        }
+
+        return line;
+      }
+
+      function inspectPlaced(board, key, color) {
+        const lines = DIRECTIONS.map(([dq, dr]) => lineThroughBoard(board, key, color, dq, dr));
+        const winLine = lines.find(line => line.length >= 4);
+        const loseLine = lines.find(line => line.length === 3);
+        const maxLine = Math.max(...lines.map(line => line.length));
+
+        if (winLine) return {outcome: 'win', line: winLine, maxLine, lines};
+        if (loseLine) return {outcome: 'lose', line: loseLine, maxLine, lines};
+        return {outcome: 'neutral', line: [], maxLine, lines};
+      }
+
+      function inspectMove(board, key, color) {
+        if (board.has(key)) return {outcome: 'invalid', line: [], maxLine: 0, lines: []};
+        board.set(key, color);
+        const inspected = inspectPlaced(board, key, color);
+        board.delete(key);
+        return inspected;
+      }
+
+      function evaluateAfterMove(key, color) {
+        clearResult();
+        if (!referee || !state.has(key)) return;
+
+        const inspected = inspectPlaced(state, key, color);
+        if (inspected.outcome === 'win') {
+          result = {
+            kind: 'win',
+            color,
+            line: inspected.line,
+            text: `${playerName(color)} gagne !`,
+            subtext: `${inspected.line.length} pions alignés. L'alignement est surligné en vert.`
+          };
+          gameOver = true;
+          return;
+        }
+
+        if (inspected.outcome === 'lose') {
+          result = {
+            kind: 'lose',
+            color,
+            line: inspected.line,
+            text: `${playerName(color)} perd !`,
+            subtext: `3 pions alignés. L'alignement est surligné en rouge.`
+          };
+          gameOver = true;
+        }
+      }
+
+      function collectWinningMoves(board, color) {
+        return allEmptyKeys(board).filter(key => inspectMove(board, key, color).outcome === 'win');
+      }
+
+      function classifyMove(key, color, board = state) {
+        const own = inspectMove(board, key, color);
+        if (own.outcome === 'win') return {key, kind: 'win', label: '4', own, opponentWinningReplies: []};
+        if (own.outcome === 'lose') return {key, kind: 'lose', label: '3', own, opponentWinningReplies: []};
+
+        const opponent = otherPlayer(color);
+        const blocksWin = inspectMove(board, key, opponent).outcome === 'win';
+        board.set(key, color);
+        const opponentWinningReplies = collectWinningMoves(board, opponent);
+        board.delete(key);
+
+        if (opponentWinningReplies.length > 0) {
+          return {key, kind: 'danger', label: '!', own, blocksWin, opponentWinningReplies};
+        }
+        if (blocksWin) {
+          return {key, kind: 'block', label: 'B', own, blocksWin, opponentWinningReplies};
+        }
+        return {key, kind: 'neutral', label: '·', own, blocksWin, opponentWinningReplies};
+      }
+
+      function collectMoveHints(color) {
+        return allEmptyKeys(state).map(key => classifyMove(key, color, state));
+      }
+
+      function toggleReferee() {
+        referee = !referee;
+        clearResult();
+        if (referee && lastKey && state.has(lastKey)) {
+          evaluateAfterMove(lastKey, state.get(lastKey));
+        }
+        render();
+      }
+
+      function toggleHints() {
+        hintsEnabled = !hintsEnabled;
+        render();
+      }
+
+      function toggleCoords() {
+        showCoords = !showCoords;
+        svg.classList.toggle('coords-hidden', !showCoords);
+        renderStatus();
+      }
+
+      function aiLevelName(level) {
+        return {
+          off: 'désactivée',
+          easy: 'facile',
+          medium: 'moyenne',
+          hard: 'difficile',
+          expert: 'experte'
+        }[level] || 'désactivée';
+      }
+
+      function cycleAiLevel() {
+        cancelAiTimer();
+        const order = ['off', 'easy', 'medium', 'hard', 'expert'];
+        aiLevel = order[(order.indexOf(aiLevel) + 1) % order.length];
+        render();
+        scheduleAiIfNeeded();
+      }
+
+      function cancelAiTimer() {
+        if (aiTimer) clearTimeout(aiTimer);
+        aiTimer = null;
+      }
+
+      function scheduleAiIfNeeded() {
+        cancelAiTimer();
+        if (aiLevel === 'off' || current !== aiColor || gameOver || isAiThinking) return;
+        aiTimer = setTimeout(playAiTurn, 420);
+      }
+
+      function randomChoice(items) {
+        return items[Math.floor(Math.random() * items.length)];
+      }
+
+      function centerScore(key) {
+        const [q, r] = parseKey(key);
+        return -Math.max(Math.abs(q), Math.abs(r), Math.abs(-q - r));
+      }
+
+      function quickRankMove(board, key, color) {
+        const own = inspectMove(board, key, color);
+        if (own.outcome === 'win') return 100000;
+        if (own.outcome === 'lose') return -100000;
+
+        const opponent = otherPlayer(color);
+        const blocksWin = inspectMove(board, key, opponent).outcome === 'win';
+        board.set(key, color);
+        const opponentWins = collectWinningMoves(board, opponent).length;
+        board.delete(key);
+
+        let score = 0;
+        if (blocksWin) score += 7000;
+        score -= opponentWins * 5500;
+        score += own.maxLine * 180;
+        score += centerScore(key) * 12;
+        score += Math.random() * 4;
+        return score;
+      }
+
+      function chooseEasyMove(color) {
+        const moves = allEmptyKeys(state);
+        const wins = moves.filter(key => inspectMove(state, key, color).outcome === 'win');
+        if (wins.length) return randomChoice(wins);
+        const safe = moves.filter(key => inspectMove(state, key, color).outcome !== 'lose');
+        return randomChoice(safe.length ? safe : moves);
+      }
+
+      function chooseMediumMove(color) {
+        const moves = allEmptyKeys(state);
+        if (!moves.length) return null;
+        let best = null;
+        let bestScore = -Infinity;
+        for (const key of moves) {
+          const score = quickRankMove(state, key, color);
+          if (score > bestScore) {
+            bestScore = score;
+            best = key;
+          }
+        }
+        return best;
+      }
+
+      function staticEval(board, color) {
+        const opponent = otherPlayer(color);
+        const empty = allEmptyKeys(board);
+        let score = 0;
+        for (const key of empty) {
+          const own = inspectMove(board, key, color);
+          const opp = inspectMove(board, key, opponent);
+          if (own.outcome === 'win') score += 900;
+          if (own.outcome === 'lose') score -= 90;
+          if (opp.outcome === 'win') score -= 900;
+          if (opp.outcome === 'lose') score += 70;
+          score += (own.maxLine - opp.maxLine) * 12;
+        }
+        return score;
+      }
+
+      function negamax(board, color, depth, alpha, beta, width = 18) {
+        if (depth === 0) return staticEval(board, color);
+        let moves = allEmptyKeys(board);
+        if (!moves.length) return 0;
+        moves = moves
+          .map(key => ({key, rank: quickRankMove(board, key, color)}))
+          .sort((a, b) => b.rank - a.rank)
+          .slice(0, depth >= 2 ? width : Math.max(width, 26))
+          .map(item => item.key);
+
+        let best = -Infinity;
+        for (const key of moves) {
+          const outcome = inspectMove(board, key, color);
+          let value;
+          if (outcome.outcome === 'win') {
+            value = 100000 + depth;
+          } else if (outcome.outcome === 'lose') {
+            value = -100000 - depth;
+          } else {
+            board.set(key, color);
+            value = -negamax(board, otherPlayer(color), depth - 1, -beta, -alpha, width);
+            board.delete(key);
+          }
+          if (value > best) best = value;
+          if (value > alpha) alpha = value;
+          if (alpha >= beta) break;
+        }
+        return best;
+      }
+
+      function chooseSearchMove(color, level = 'hard') {
+        const moves = allEmptyKeys(state);
+        if (!moves.length) return {key: null, score: 0, depth: 0, classification: null};
+
+        const depth = level === 'expert'
+          ? (state.size < 22 ? 3 : 4)
+          : (state.size < 18 ? 2 : 3);
+        const width = level === 'expert' ? 12 : 18;
+        const rootLimit = level === 'expert' ? (state.size < 10 ? 24 : 18) : moves.length;
+        let best = null;
+        let bestScore = -Infinity;
+        let bestClassification = null;
+        const ordered = moves
+          .map(key => ({key, rank: quickRankMove(state, key, color)}))
+          .sort((a, b) => b.rank - a.rank)
+          .slice(0, rootLimit)
+          .map(item => item.key);
+
+        for (const key of ordered) {
+          const outcome = inspectMove(state, key, color);
+          let score;
+          if (outcome.outcome === 'win') {
+            score = 1000000 + depth;
+          } else if (outcome.outcome === 'lose') {
+            score = -1000000 - depth;
+          } else {
+            state.set(key, color);
+            score = -negamax(state, otherPlayer(color), depth - 1, -Infinity, Infinity, width);
+            state.delete(key);
+          }
+          score += quickRankMove(state, key, color) * 0.001;
+          score += Math.random() * 2;
+          if (score > bestScore) {
+            bestScore = score;
+            best = key;
+            bestClassification = classifyMove(key, color, state);
+          }
+        }
+        return {key: best, score: bestScore, depth, classification: bestClassification};
+      }
+
+      function chooseHardMove(color) {
+        return chooseSearchMove(color, 'hard').key;
+      }
+
+      function chooseExpertMove(color) {
+        return chooseSearchMove(color, 'expert').key;
+      }
+
+      function adviceReason(color, moveInfo) {
+        if (!moveInfo?.key) return 'Aucun coup possible.';
+        const key = moveInfo.key;
+        const label = labelOf(key);
+        const hint = moveInfo.classification || classifyMove(key, color, state);
+        const opponent = playerName(otherPlayer(color)).toLowerCase();
+
+        if (hint.kind === 'win') {
+          return `Coup conseillé : ${label}. Il gagne immédiatement : ce coup crée un alignement de 4 ou plus.`;
+        }
+        if (hint.kind === 'block') {
+          return `Coup conseillé : ${label}. Il bloque une victoire immédiate du joueur ${opponent}, sans créer une ligne de 3 pour toi.`;
+        }
+        if (hint.kind === 'danger') {
+          return `Coup conseillé : ${label}. Ce n'est pas un coup parfait : l'adversaire aura encore une menace immédiate, mais c'est le meilleur coup trouvé par la recherche.`;
+        }
+        if (hint.kind === 'lose') {
+          return `Coup conseillé : ${label}. Attention : tous les bons coups semblent mauvais dans cette position, celui-ci crée une ligne de 3. À vérifier avant de jouer.`;
+        }
+        return `Coup conseillé : ${label}. Il évite la perte immédiate, ne donne pas de victoire directe à l'adversaire, et prépare la meilleure position trouvée à ${moveInfo.depth} coup${moveInfo.depth > 1 ? 's' : ''} de profondeur.`;
+      }
+
+      function showAdvice() {
+        if (gameOver || isAiThinking) return;
+        const info = chooseSearchMove(current, 'expert');
+        if (!info.key) return;
+        adviceKey = info.key;
+        adviceColor = current;
+        adviceMessage = adviceReason(current, info);
+        render();
+      }
+
+      function chooseAiMove(color) {
+        if (aiLevel === 'easy') return chooseEasyMove(color);
+        if (aiLevel === 'medium') return chooseMediumMove(color);
+        if (aiLevel === 'hard') return chooseHardMove(color);
+        if (aiLevel === 'expert') return chooseExpertMove(color);
+        return null;
+      }
+
+      function playAiTurn() {
+        cancelAiTimer();
+        if (aiLevel === 'off' || current !== aiColor || gameOver || isAiThinking) return;
+        isAiThinking = true;
+        renderStatus();
+
+        setTimeout(() => {
+          const move = chooseAiMove(aiColor);
+          isAiThinking = false;
+          if (!move || gameOver || current !== aiColor) {
+            render();
+            return;
+          }
+          playMove(move, aiColor, false);
+        }, 120);
+      }
+
+      function continueGame() {
+        clearResult();
+        clearAdvice();
+        render();
+        scheduleAiIfNeeded();
+      }
+
+      function svgPointFromEvent(e) {
+        const pt = svg.createSVGPoint();
+        pt.x = e.clientX;
+        pt.y = e.clientY;
+        return pt.matrixTransform(svg.getScreenCTM().inverse());
+      }
+
+      function startDrag(e) {
+        if (gameOver || isAiThinking || (aiLevel !== 'off' && current === aiColor)) return;
+        e.preventDefault();
+        e.stopPropagation();
+        const source = e.currentTarget;
+        const key = source.dataset.key;
+        const color = source.dataset.color;
+        const original = positions.get(key);
+        source.classList.add('drag-source');
+
+        const ghost = document.createElementNS(SVG_NS, 'circle');
+        ghost.setAttribute('class', `token ${color} ghost`);
+        ghost.setAttribute('cx', original.x);
+        ghost.setAttribute('cy', original.y);
+        ghost.setAttribute('r', TOKEN_R);
+        dragLayer.appendChild(ghost);
+
+        drag = { key, color, source, ghost, overKey: null };
+        svg.setPointerCapture(e.pointerId);
+        moveDrag(e);
+        svg.addEventListener('pointermove', moveDrag);
+        svg.addEventListener('pointerup', endDrag);
+        svg.addEventListener('pointercancel', cancelDrag);
+      }
+
+      function moveDrag(e) {
+        if (!drag) return;
+        const pt = svgPointFromEvent(e);
+        drag.ghost.setAttribute('cx', pt.x);
+        drag.ghost.setAttribute('cy', pt.y);
+
+        const drop = nearestEmptyCell(pt.x, pt.y, drag.key);
+        setDropHighlight(drop ? drop.key : null);
+        drag.overKey = drop ? drop.key : null;
+      }
+
+      function endDrag(e) {
+        if (!drag) return;
+        const from = drag.key;
+        const to = drag.overKey;
+        const color = drag.color;
+        clearDragListeners();
+        setDropHighlight(null);
+
+        if (to && to !== from && !state.has(to)) {
+          clearResult();
+          clearAdvice();
+          state.delete(from);
+          state.set(to, color);
+          history.push({type: 'move', from, to, color});
+          lastKey = to;
+          evaluateAfterMove(to, color);
+        }
+        render();
+        drag = null;
+      }
+
+      function cancelDrag() {
+        if (!drag) return;
+        clearDragListeners();
+        setDropHighlight(null);
+        render();
+        drag = null;
+      }
+
+      function clearDragListeners() {
+        svg.removeEventListener('pointermove', moveDrag);
+        svg.removeEventListener('pointerup', endDrag);
+        svg.removeEventListener('pointercancel', cancelDrag);
+        dragLayer.replaceChildren();
+      }
+
+      function nearestEmptyCell(x, y, sourceKey) {
+        let best = null;
+        let bestD = Infinity;
+        for (const cell of cells) {
+          if (cell.key !== sourceKey && state.has(cell.key)) continue;
+          const d = Math.hypot(x - cell.x, y - cell.y);
+          if (d < bestD) {
+            bestD = d;
+            best = cell;
+          }
+        }
+        return bestD <= HEX * 0.82 ? best : null;
+      }
+
+      function setDropHighlight(key) {
+        document.querySelectorAll('.cell.active-drop').forEach(el => el.classList.remove('active-drop'));
+        if (!key) return;
+        const cell = cellsGroup.querySelector(`[data-key="${CSS.escape(key)}"]`);
+        if (cell) cell.classList.add('active-drop');
+      }
+
+      function toggleFullscreen() {
+        const target = document.documentElement;
+        if (!document.fullscreenElement) {
+          target.requestFullscreen?.();
+        } else {
+          document.exitFullscreen?.();
+        }
+      }
+
+      switchBtn.addEventListener('click', switchPlayer);
+      undoBtn.addEventListener('click', undo);
+      judgeBtn.addEventListener('click', toggleReferee);
+      analyzeBtn.addEventListener('click', toggleHints);
+      coachBtn.addEventListener('click', showAdvice);
+      coordsBtn.addEventListener('click', toggleCoords);
+      aiBtn.addEventListener('click', cycleAiLevel);
+      aiNowBtn.addEventListener('click', playAiTurn);
+      continueBtn.addEventListener('click', continueGame);
+      resetBtn.addEventListener('click', resetGame);
+      printBtn.addEventListener('click', printBlankBoard);
+      fullscreenBtn.addEventListener('click', toggleFullscreen);
+      document.addEventListener('keydown', (e) => {
+        if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'z') undo();
+        if (e.key.toLowerCase() === 'r') resetGame();
+        if (e.key.toLowerCase() === 'a') toggleReferee();
+        if (e.key.toLowerCase() === 'h') toggleHints();
+        if (e.key.toLowerCase() === 'c') showAdvice();
+        if (e.key.toLowerCase() === 'n') toggleCoords();
+        if (e.key.toLowerCase() === 'i') cycleAiLevel();
+        if (e.key === ' ') { e.preventDefault(); switchPlayer(); }
+      });
+
+      buildCells();
+      buildPrintBoard();
+      render();
+    })();
+  </script>
+</body>
+</html>
