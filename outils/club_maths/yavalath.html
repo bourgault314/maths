@@ -477,7 +477,48 @@
       scrollbar-gutter: stable;
     }
 
-    .main-actions {
+    .mode-card, .help-card {
+      background: rgba(255,255,255,.88);
+      border: 2px solid rgba(34, 34, 34, .10);
+      border-radius: 16px;
+      padding: 10px;
+      color: var(--muted);
+      flex: 0 0 auto;
+    }
+
+    .section-title {
+      margin: 0 0 7px;
+      color: var(--ink);
+      font-weight: 900;
+      font-size: .94rem;
+      line-height: 1.1;
+    }
+
+    .mode-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 7px;
+    }
+
+    .mode-grid button {
+      min-height: 38px;
+      font-size: .82rem;
+      padding: 8px;
+      border-radius: 12px;
+    }
+
+    .mode-grid .mode-wide {
+      grid-column: 1 / -1;
+    }
+
+    .section-note {
+      margin: 7px 0 0;
+      color: var(--muted);
+      font-size: .78rem;
+      line-height: 1.22;
+    }
+
+    .main-actions, .help-actions {
       display: grid;
       grid-template-columns: repeat(2, minmax(0, 1fr));
       gap: 8px;
@@ -487,6 +528,17 @@
     .main-actions #continueBtn,
     .main-actions #aiNowBtn,
     .main-actions #resetBtn {
+      grid-column: 1 / -1;
+    }
+
+    .help-actions button {
+      min-height: 38px;
+      font-size: .84rem;
+      padding: 8px;
+      border-radius: 12px;
+    }
+
+    .help-actions .help-wide {
       grid-column: 1 / -1;
     }
 
@@ -632,6 +684,82 @@
     }
 
 
+
+    /* Menu compact : le plateau reste prioritaire, les réglages se déplient au besoin. */
+    .app {
+      grid-template-columns: clamp(270px, 20vw, 318px) minmax(0, 1fr);
+      gap: clamp(10px, 1.35vw, 18px);
+    }
+
+    .sidebar {
+      padding: 12px;
+      gap: 8px;
+      border-radius: 22px;
+    }
+
+    .title {
+      font-size: clamp(2.05rem, 2.65vw, 2.85rem);
+    }
+
+    .rules {
+      font-size: .88rem;
+      line-height: 1.22;
+    }
+
+    .mode-card, .help-card {
+      padding: 0;
+    }
+
+    .mode-card .mode-grid,
+    .help-card .help-actions {
+      padding: 0 10px 10px;
+    }
+
+    .mode-card .section-note {
+      margin: 0 12px 11px;
+    }
+
+    .mode-card summary strong {
+      white-space: nowrap;
+    }
+
+    .main-actions {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .main-actions button,
+    .help-actions button,
+    .mode-grid button {
+      min-height: 36px;
+      font-size: .8rem;
+      padding: 7px 8px;
+      border-radius: 12px;
+    }
+
+    .main-actions #printBtn,
+    .main-actions #continueBtn,
+    .main-actions #aiNowBtn {
+      grid-column: 1 / -1;
+    }
+
+    .main-actions #resetBtn {
+      grid-column: auto;
+    }
+
+    .status-card, .result-card, .analysis-card, .coach-card {
+      padding: 8px 9px;
+    }
+
+    .turn-row {
+      font-size: .96rem;
+      gap: 9px;
+    }
+
+    .big-chip {
+      width: 30px;
+      height: 30px;
+    }
+
     @media print {
       html, body {
         height: auto;
@@ -755,7 +883,7 @@
       .big-chip { width: 30px; height: 30px; }
       button { min-height: 36px; font-size: .82rem; padding: 7px; }
       .drawer summary { min-height: 36px; padding: 8px 10px; font-size: .88rem; }
-      .settings-buttons button, .print-actions button { min-height: 34px; font-size: .78rem; }
+      .mode-grid button, .help-actions button { min-height: 34px; font-size: .78rem; }
       .status-card, .result-card, .analysis-card, .coach-card { padding: 8px 9px; }
       .result-text { font-size: .98rem; }
       .result-sub, .analysis-card, .coach-card, .settings-note { font-size: .78rem; }
@@ -768,7 +896,7 @@
       .main-actions #continueBtn,
       .main-actions #aiNowBtn,
       .main-actions #resetBtn { grid-column: auto; }
-      .settings-buttons { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+      .mode-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
       .history-card[open] { flex: 0 0 auto; }
       .history-list { max-height: 120px; }
     }
@@ -807,41 +935,52 @@
         <div id="coachText"></div>
       </section>
 
+      <details id="modeDetails" class="drawer mode-card" aria-label="Choisir le mode de jeu">
+        <summary>
+          <span>Mode : <strong id="modeLabel">Deux joueurs</strong></span>
+        </summary>
+        <div class="mode-grid">
+          <button type="button" class="secondary mode-btn mode-wide active" data-ai-level="off">Deux joueurs</button>
+          <button type="button" class="secondary mode-btn" data-ai-level="easy">IA facile</button>
+          <button type="button" class="secondary mode-btn" data-ai-level="medium">IA moyenne</button>
+          <button type="button" class="secondary mode-btn" data-ai-level="hard">IA difficile</button>
+          <button type="button" class="secondary mode-btn" data-ai-level="expert">IA experte</button>
+        </div>
+        <p id="modeNote" class="section-note">Deux joueurs sur le même écran. Noir commence, puis les tours alternent automatiquement.</p>
+      </details>
+
       <div class="main-actions" aria-label="Actions principales">
-        <button id="switchBtn" type="button" class="secondary">Changer de joueur</button>
         <button id="undoBtn" type="button" class="secondary">Annuler</button>
+        <button id="resetBtn" type="button" class="danger">Recommencer</button>
+        <button id="coachBtn" type="button" class="secondary">Conseil IA</button>
+        <button id="fullscreenBtn" type="button" class="secondary">Plein écran</button>
+        <button id="printBtn" type="button" class="secondary">Imprimer</button>
         <button id="continueBtn" type="button" class="secondary is-hidden">Continuer la partie</button>
         <button id="aiNowBtn" type="button" class="secondary is-hidden">Faire jouer l'IA</button>
-        <button id="resetBtn" type="button" class="danger">Recommencer</button>
       </div>
+
+      <details class="drawer help-card" aria-label="Aides visuelles">
+        <summary>Aides visuelles</summary>
+        <div class="help-actions">
+          <button id="analyzeBtn" type="button" class="secondary">Voir les coups critiques</button>
+          <button id="coordsBtn" type="button" class="secondary">Repères : masqués</button>
+        </div>
+      </details>
 
       <details id="historyBox" class="history-card drawer" aria-live="polite">
         <summary>
-          <span>Historique</span>
+          <span>Historique des coups</span>
           <span id="historyCount" class="history-count">0 coup</span>
         </summary>
         <ol id="historyList" class="history-list"></ol>
       </details>
 
-      <details class="drawer settings-card">
-        <summary>Paramètres et IA</summary>
+      <details class="drawer advanced-card">
+        <summary>Options avancées</summary>
         <div class="settings-buttons">
-          <button id="judgeBtn" type="button" class="secondary active">Arbitre : activé</button>
-          <button id="analyzeBtn" type="button" class="secondary">Analyser les coups</button>
-          <button id="coachBtn" type="button" class="secondary">Conseil IA</button>
-          <button id="coordsBtn" type="button" class="secondary">Repères : masqués</button>
-          <button id="aiBtn" type="button" class="secondary">IA : désactivée</button>
-          <button id="fullscreenBtn" type="button" class="secondary">Plein écran</button>
+          <button id="switchBtn" type="button" class="secondary">Changer de joueur</button>
         </div>
-        <p class="settings-note">L'IA joue les rouges quand elle est activée. L'arbitre peut être coupé pour jouer en mode libre.</p>
-      </details>
-
-      <details class="drawer print-card">
-        <summary>Impression</summary>
-        <div class="print-actions">
-          <button id="printBtn" type="button" class="secondary">Imprimer le plateau</button>
-        </div>
-        <p class="settings-note">Imprime une fiche A4 avec le plateau vierge, les règles courtes, les crédits et les sources.</p>
+        <p class="settings-note">Utile seulement pour corriger une position ou installer une situation particulière. L'arbitre automatique reste activé.</p>
       </details>
 
       <details class="drawer sources-card">
@@ -851,7 +990,7 @@
           <a href="https://nestorgames.com/rulebooks/YAVALATH_EN.pdf" target="_blank" rel="noopener">Règles officielles</a> ·
           <a href="https://cambolbro.com/games/yavalath/" target="_blank" rel="noopener">Page Cameron Browne</a>
           <div class="credit-line">Jeu original : <strong>Yavalath</strong>, conçu par <strong>Ludi / Cameron Browne</strong> et publié par <strong>nestorgames</strong>. Cette page est une adaptation numérique pédagogique non officielle.</div>
-          <div class="credit-line small-credit">Règle complète utilisée par l'arbitre : si un même coup crée une ligne de 4 et une ligne de 3, la ligne de 4 est prioritaire.</div>
+          <div class="credit-line small-credit">Arbitre automatique : si un même coup crée une ligne de 4 et une ligne de 3, la ligne de 4 est prioritaire.</div>
         </div>
       </details>
 
@@ -924,11 +1063,13 @@
       const historyList = document.getElementById('historyList');
       const switchBtn = document.getElementById('switchBtn');
       const undoBtn = document.getElementById('undoBtn');
-      const judgeBtn = document.getElementById('judgeBtn');
       const analyzeBtn = document.getElementById('analyzeBtn');
       const coachBtn = document.getElementById('coachBtn');
       const coordsBtn = document.getElementById('coordsBtn');
-      const aiBtn = document.getElementById('aiBtn');
+      const modeBtns = Array.from(document.querySelectorAll('.mode-btn'));
+      const modeDetails = document.getElementById('modeDetails');
+      const modeLabel = document.getElementById('modeLabel');
+      const modeNote = document.getElementById('modeNote');
       const aiNowBtn = document.getElementById('aiNowBtn');
       const continueBtn = document.getElementById('continueBtn');
       const printBtn = document.getElementById('printBtn');
@@ -955,7 +1096,7 @@
       let history = [];
       let lastKey = null;
       let drag = null;
-      let referee = true;
+      const referee = true;
       let hintsEnabled = false;
       let showCoords = false;
       let aiLevel = 'off';
@@ -1141,9 +1282,7 @@
         counter.textContent = `${n} pion${n > 1 ? 's' : ''} posé${n > 1 ? 's' : ''}`;
         undoBtn.disabled = history.length === 0 || isAiThinking;
         switchBtn.disabled = gameOver || isAiThinking;
-        judgeBtn.textContent = `Arbitre : ${referee ? 'activé' : 'désactivé'}`;
-        judgeBtn.classList.toggle('active', referee);
-        analyzeBtn.textContent = hintsEnabled ? 'Masquer l’analyse' : 'Analyser les coups';
+        analyzeBtn.textContent = hintsEnabled ? 'Masquer les coups critiques' : 'Voir les coups critiques';
         analyzeBtn.classList.toggle('active', hintsEnabled);
         analyzeBtn.disabled = gameOver || isAiThinking;
         coachBtn.textContent = adviceKey ? 'Recalculer conseil' : 'Conseil IA';
@@ -1151,9 +1290,18 @@
         coachBtn.disabled = gameOver || isAiThinking;
         coordsBtn.textContent = `Repères : ${showCoords ? 'visibles' : 'masqués'}`;
         coordsBtn.classList.toggle('active', showCoords);
-        aiBtn.textContent = `IA : ${aiLevelName(aiLevel)}`;
-        aiBtn.classList.toggle('active', aiLevel !== 'off');
-        aiBtn.disabled = isAiThinking;
+        if (modeLabel) {
+          modeLabel.textContent = aiLevel === 'off' ? 'Deux joueurs' : `IA ${aiLevelName(aiLevel)}`;
+        }
+        modeBtns.forEach(btn => {
+          btn.classList.toggle('active', btn.dataset.aiLevel === aiLevel);
+          btn.disabled = isAiThinking;
+        });
+        if (modeNote) {
+          modeNote.textContent = aiLevel === 'off'
+            ? 'Deux joueurs sur le même écran. Noir commence, puis les tours alternent automatiquement.'
+            : `Contre l'ordinateur : tu joues Noir, l'IA rouge joue en niveau ${aiLevelName(aiLevel)}.`;
+        }
         aiNowBtn.classList.toggle('is-hidden', !(aiLevel !== 'off' && current === aiColor && !gameOver));
         aiNowBtn.disabled = isAiThinking;
         continueBtn.classList.toggle('is-hidden', !gameOver);
@@ -1417,9 +1565,8 @@
       }
 
       function toggleReferee() {
-        referee = !referee;
-        clearResult();
-        if (referee && lastKey && state.has(lastKey)) {
+        // L'arbitre automatique reste toujours activé dans la version en ligne.
+        if (lastKey && state.has(lastKey)) {
           evaluateAfterMove(lastKey, state.get(lastKey));
         }
         render();
@@ -1446,12 +1593,18 @@
         }[level] || 'désactivée';
       }
 
-      function cycleAiLevel() {
+      function setAiLevel(level) {
         cancelAiTimer();
-        const order = ['off', 'easy', 'medium', 'hard', 'expert'];
-        aiLevel = order[(order.indexOf(aiLevel) + 1) % order.length];
+        if (!['off', 'easy', 'medium', 'hard', 'expert'].includes(level)) return;
+        aiLevel = level;
+        clearAdvice();
         render();
         scheduleAiIfNeeded();
+      }
+
+      function cycleAiLevel() {
+        const order = ['off', 'easy', 'medium', 'hard', 'expert'];
+        setAiLevel(order[(order.indexOf(aiLevel) + 1) % order.length]);
       }
 
       function cancelAiTimer() {
@@ -1787,11 +1940,13 @@
 
       switchBtn.addEventListener('click', switchPlayer);
       undoBtn.addEventListener('click', undo);
-      judgeBtn.addEventListener('click', toggleReferee);
       analyzeBtn.addEventListener('click', toggleHints);
       coachBtn.addEventListener('click', showAdvice);
       coordsBtn.addEventListener('click', toggleCoords);
-      aiBtn.addEventListener('click', cycleAiLevel);
+      modeBtns.forEach(btn => btn.addEventListener('click', () => {
+        setAiLevel(btn.dataset.aiLevel);
+        if (modeDetails) modeDetails.open = false;
+      }));
       aiNowBtn.addEventListener('click', playAiTurn);
       continueBtn.addEventListener('click', continueGame);
       resetBtn.addEventListener('click', resetGame);
@@ -1800,7 +1955,7 @@
       document.addEventListener('keydown', (e) => {
         if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'z') undo();
         if (e.key.toLowerCase() === 'r') resetGame();
-        if (e.key.toLowerCase() === 'a') toggleReferee();
+        if (e.key.toLowerCase() === 'a') toggleHints();
         if (e.key.toLowerCase() === 'h') toggleHints();
         if (e.key.toLowerCase() === 'c') showAdvice();
         if (e.key.toLowerCase() === 'n') toggleCoords();
