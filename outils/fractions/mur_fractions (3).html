@@ -1,0 +1,747 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Mur de fractions</title>
+<style>
+  :root{
+    --bg:#f3f4f6;
+    --panel:#ffffff;
+    --ink:#111827;
+    --muted:#6b7280;
+    --line:#d1d5db;
+    --blue:#2563eb;
+    --blue-dark:#1d4ed8;
+    --soft:#f9fafb;
+    --page-w:297mm;
+    --page-h:210mm;
+  }
+  *{box-sizing:border-box}
+  html,body{height:100%}
+  body{
+    margin:0;
+    font-family:system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Arial,sans-serif;
+    background:var(--bg);
+    color:var(--ink);
+    display:flex;
+    flex-direction:column;
+  }
+  header{
+    height:48px;
+    flex:0 0 auto;
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:16px;
+    padding:0 18px;
+    background:#111827;
+    color:#fff;
+    box-shadow:0 2px 10px rgba(0,0,0,.16);
+    z-index:3;
+  }
+  header a{color:#d1d5db;text-decoration:none;font-size:14px;font-weight:600}
+  header a:hover{color:white}
+  header .title{font-weight:800;letter-spacing:.02em;font-size:15px}
+  header .spacer{width:64px}
+
+  main{flex:1;min-height:0;display:flex;overflow:hidden}
+  aside{
+    width:318px;
+    flex:0 0 318px;
+    background:var(--panel);
+    border-right:1px solid var(--line);
+    display:flex;
+    flex-direction:column;
+    min-height:0;
+  }
+  .settings{
+    padding:16px;
+    overflow:auto;
+    flex:1;
+  }
+  fieldset{
+    border:1px solid var(--line);
+    border-radius:14px;
+    padding:14px;
+    margin:0 0 14px;
+    background:#fff;
+  }
+  legend{
+    padding:0 8px;
+    color:#1f2937;
+    font-size:13px;
+    font-weight:850;
+  }
+  .hint{font-size:12px;line-height:1.35;color:var(--muted);margin-top:7px}
+  .mini-note{
+    display:none;
+    margin-top:10px;
+    border-radius:10px;
+    padding:9px 10px;
+    background:#fff7ed;
+    border:1px solid #fed7aa;
+    color:#9a3412;
+    font-size:12px;
+    font-weight:700;
+    line-height:1.35;
+  }
+  label.basic{
+    display:block;
+    font-size:13px;
+    font-weight:750;
+    margin:12px 0 6px;
+  }
+  select{
+    width:100%;
+    border:1px solid #cbd5e1;
+    border-radius:10px;
+    padding:9px 10px;
+    background:#fff;
+    color:#111827;
+    font-size:14px;
+  }
+  select:focus,button:focus-visible,input:focus-visible{
+    outline:none;
+    box-shadow:0 0 0 3px rgba(37,99,235,.18);
+    border-color:var(--blue);
+  }
+  .preset-row{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:12px}
+  button{
+    appearance:none;
+    border:none;
+    border-radius:10px;
+    background:#e5e7eb;
+    color:#111827;
+    padding:10px 12px;
+    font-weight:800;
+    font-size:13px;
+    cursor:pointer;
+  }
+  button:hover{filter:brightness(.98)}
+  button.primary{background:var(--blue);color:#fff}
+  button.primary:hover{background:var(--blue-dark)}
+  button.ghost{background:#f3f4f6;border:1px solid #d1d5db}
+  .denom-grid{
+    display:grid;
+    grid-template-columns:repeat(4,1fr);
+    gap:7px;
+  }
+  .denom-pill{
+    min-width:0;
+    cursor:pointer;
+    user-select:none;
+    border:1px solid #d1d5db;
+    border-radius:10px;
+    background:#fff;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    gap:5px;
+    padding:8px 4px;
+    font-size:13px;
+    font-weight:800;
+  }
+  .denom-pill input{margin:0;accent-color:var(--blue)}
+  .denom-pill:has(input:checked){background:#eff6ff;border-color:#93c5fd;color:#1d4ed8}
+  .actions{
+    flex:0 0 auto;
+    padding:14px 16px;
+    background:#fff;
+    border-top:1px solid var(--line);
+    box-shadow:0 -2px 12px rgba(0,0,0,.04);
+    display:grid;
+    grid-template-columns:1fr;
+    gap:9px;
+  }
+  .status{
+    min-height:18px;
+    color:var(--muted);
+    font-size:12px;
+    line-height:1.25;
+  }
+
+  .preview-area{
+    flex:1;
+    min-width:0;
+    overflow:auto;
+    padding:18px;
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    gap:12px;
+    background:linear-gradient(135deg,#eef2f7,#e5e7eb);
+  }
+  .preview-top{
+    width:min(100%,1030px);
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    gap:12px;
+    background:rgba(255,255,255,.92);
+    border:1px solid #e5e7eb;
+    border-radius:14px;
+    padding:11px 14px;
+    box-shadow:0 2px 12px rgba(0,0,0,.06);
+  }
+  .preview-top strong{font-size:14px}
+  .preview-top span{font-size:12px;color:var(--muted);font-weight:650;text-align:right}
+  .page-wrap{
+    width:min(100%,1030px);
+    aspect-ratio:297/210;
+    background:white;
+    box-shadow:0 10px 30px rgba(17,24,39,.22);
+    border-radius:4px;
+    overflow:hidden;
+  }
+  #wallSvg{width:100%;height:100%;display:block;background:#fff}
+
+  @media(max-width:840px){
+    main{flex-direction:column;overflow:auto}
+    aside{width:100%;flex:0 0 auto;max-height:none;border-right:0;border-bottom:1px solid var(--line)}
+    .settings{max-height:none;overflow:visible}
+    .preview-area{min-height:420px}
+    .actions{position:sticky;bottom:0;z-index:2}
+  }
+
+  @media print{
+    header,aside,.preview-top{display:none!important}
+    body,main,.preview-area{display:block;height:auto;overflow:visible;background:#fff;padding:0;margin:0}
+    .page-wrap{
+      width:var(--page-w);
+      height:var(--page-h);
+      aspect-ratio:auto;
+      box-shadow:none;
+      border-radius:0;
+      overflow:hidden;
+      page-break-after:always;
+      break-after:page;
+    }
+    #wallSvg{width:var(--page-w);height:var(--page-h)}
+    @page{size:A4 landscape;margin:0}
+  }
+</style>
+</head>
+<body>
+<header>
+  <a href="#" onclick="history.back();return false;">← Retour</a>
+  <div class="title">Mur de fractions</div>
+  <div class="spacer"></div>
+</header>
+
+<main>
+  <aside>
+    <div class="settings">
+      <fieldset>
+        <legend>Fractions affichées</legend>
+        <div class="preset-row">
+          <button type="button" class="ghost" id="presetBase">Mur de base</button>
+          <button type="button" class="ghost" id="presetAll">Tout jusqu’à 24</button>
+        </div>
+        <div class="denom-grid" id="denomGrid" aria-label="Choix des dénominateurs"></div>
+        <div class="hint">Maximum conseillé : 24 lignes sur une page A4 paysage. Les bandes s’agrandissent automatiquement quand il y a peu de lignes.</div>
+        <div class="mini-note" id="densityNote">Beaucoup de lignes : le mur tient sur une page, mais l’écriture sera plus petite.</div>
+      </fieldset>
+
+      <fieldset>
+        <legend>Affichage</legend>
+        <label class="basic" for="textMode">Écriture</label>
+        <select id="textMode">
+          <option value="all" selected>Dans toutes les parts</option>
+          <option value="first">Une fois au début de chaque ligne</option>
+          <option value="none">Sans écriture</option>
+        </select>
+
+        <label class="basic" for="contentMode">Contenu</label>
+        <select id="contentMode">
+          <option value="fraction" selected>Fraction</option>
+          <option value="letters">En lettres</option>
+          <option value="percent">Pourcentage</option>
+          <option value="decimal">Décimal</option>
+        </select>
+
+        <label class="basic" for="colorMode">Couleurs</label>
+        <select id="colorMode">
+          <option value="pedago" selected>Couleurs pédagogiques</option>
+          <option value="soft">Couleurs douces</option>
+          <option value="bw">Noir et blanc</option>
+        </select>
+      </fieldset>
+    </div>
+
+    <div class="actions">
+      <button type="button" class="primary" id="copyBtn">Copier</button>
+      <button type="button" class="ghost" id="downloadBtn">Télécharger</button>
+      <button type="button" class="ghost" id="printBtn">Imprimer</button>
+      <div class="status" id="status" aria-live="polite"></div>
+    </div>
+  </aside>
+
+  <section class="preview-area">
+    <div class="page-wrap">
+      <svg id="wallSvg" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 297 210" role="img" aria-label="Mur de fractions généré"></svg>
+    </div>
+  </section>
+</main>
+
+<script>
+(function(){
+  'use strict';
+
+  const SVG_NS = 'http://www.w3.org/2000/svg';
+  const PAGE = { w:297, h:210, mx:10, my:9 };
+  const MAX_DENOM = 24;
+  const BASE_DENOMS = [1,2,3,4,5,6,8,10,12];
+  const EXPORT_PX_PER_MM = 10;
+
+  // Couleurs pédagogiques reprises du générateur de bandes fourni.
+  // Les autres dénominateurs utilisent des teintes pastel discrètes pour éviter l’effet arc-en-ciel.
+  const pedagogicalColors = {
+    1:'#fff7e6',
+    2:'#facc15',
+    3:'#e9d5ff',
+    4:'#84cc16',
+    5:'#38bdf8',
+    6:'#f97316',
+    7:'#dbeafe',
+    8:'#f472b6',
+    9:'#fce7f3',
+    10:'#b91c1c',
+    11:'#ede9fe',
+    12:'#99ffff',
+    13:'#fff1d6',
+    14:'#dcfce7',
+    15:'#cffafe',
+    16:'#e0e7ff',
+    17:'#fee2e2',
+    18:'#fef9c3',
+    19:'#dbeafe',
+    20:'#ccfbf1',
+    21:'#fae8ff',
+    22:'#dcfce7',
+    23:'#ffe4e6',
+    24:'#fef3c7'
+  };
+
+  const softColors = {
+    1:'#f9fafb', 2:'#fef3c7', 3:'#ede9fe', 4:'#dcfce7', 5:'#dbeafe', 6:'#ffedd5',
+    7:'#e0f2fe', 8:'#fce7f3', 9:'#fae8ff', 10:'#fee2e2', 11:'#f3e8ff', 12:'#cffafe',
+    13:'#fef3c7', 14:'#dcfce7', 15:'#cffafe', 16:'#e0e7ff', 17:'#fee2e2', 18:'#fef9c3',
+    19:'#dbeafe', 20:'#ccfbf1', 21:'#fae8ff', 22:'#dcfce7', 23:'#ffe4e6', 24:'#fef3c7'
+  };
+
+  const denomWords = {
+    1:'unité',
+    2:'un demi',
+    3:'un tiers',
+    4:'un quart',
+    5:'un cinquième',
+    6:'un sixième',
+    7:'un septième',
+    8:'un huitième',
+    9:'un neuvième',
+    10:'un dixième',
+    11:'un onzième',
+    12:'un douzième',
+    13:'un treizième',
+    14:'un quatorzième',
+    15:'un quinzième',
+    16:'un seizième',
+    17:'un dix-septième',
+    18:'un dix-huitième',
+    19:'un dix-neuvième',
+    20:'un vingtième',
+    21:'un vingt-et-unième',
+    22:'un vingt-deuxième',
+    23:'un vingt-troisième',
+    24:'un vingt-quatrième'
+  };
+
+  const denomGrid = document.getElementById('denomGrid');
+  const svg = document.getElementById('wallSvg');
+  const textModeEl = document.getElementById('textMode');
+  const contentModeEl = document.getElementById('contentMode');
+  const colorModeEl = document.getElementById('colorMode');
+  const summaryEl = document.getElementById('summary');
+  const statusEl = document.getElementById('status');
+  const densityNote = document.getElementById('densityNote');
+
+  function make(tag, attrs){
+    const el = document.createElementNS(SVG_NS, tag);
+    for(const [k,v] of Object.entries(attrs || {})) el.setAttribute(k, v);
+    return el;
+  }
+
+  function clamp(v,min,max){ return Math.max(min, Math.min(max, v)); }
+
+  function setStatus(message){
+    statusEl.textContent = message || '';
+    if(message) window.setTimeout(() => {
+      if(statusEl.textContent === message) statusEl.textContent = '';
+    }, 3200);
+  }
+
+  function buildGrid(){
+    denomGrid.innerHTML = '';
+    for(let d=1; d<=MAX_DENOM; d++){
+      const label = document.createElement('label');
+      label.className = 'denom-pill';
+      label.title = d === 1 ? 'Unité' : `1/${d}`;
+      const input = document.createElement('input');
+      input.type = 'checkbox';
+      input.value = String(d);
+      input.checked = BASE_DENOMS.includes(d);
+      input.addEventListener('change', render);
+      const span = document.createElement('span');
+      span.textContent = d === 1 ? '1' : `/${d}`;
+      label.append(input, span);
+      denomGrid.appendChild(label);
+    }
+  }
+
+  function getSelectedDenoms(){
+    return Array.from(denomGrid.querySelectorAll('input:checked'))
+      .map(input => Number(input.value))
+      .filter(d => d>=1 && d<=MAX_DENOM)
+      .sort((a,b)=>a-b);
+  }
+
+  function setSelectedDenoms(list){
+    const wanted = new Set(list);
+    denomGrid.querySelectorAll('input').forEach(input => {
+      input.checked = wanted.has(Number(input.value));
+    });
+    render();
+  }
+
+  function colorFor(d){
+    const mode = colorModeEl.value;
+    if(mode === 'bw') return '#ffffff';
+    if(mode === 'soft') return softColors[d] || '#f9fafb';
+    return pedagogicalColors[d] || '#f9fafb';
+  }
+
+  function textColorFor(hex){
+    if(!hex || hex === '#ffffff') return '#111827';
+    const h = hex.replace('#','').trim();
+    if(h.length !== 6) return '#111827';
+    const r = parseInt(h.slice(0,2),16);
+    const g = parseInt(h.slice(2,4),16);
+    const b = parseInt(h.slice(4,6),16);
+    const lum = (0.2126*r + 0.7152*g + 0.0722*b) / 255;
+    return lum < 0.38 ? '#ffffff' : '#111827';
+  }
+
+  function clearSvg(){
+    while(svg.firstChild) svg.removeChild(svg.firstChild);
+  }
+
+  function formatDecimal(value, maxDigits){
+    return new Intl.NumberFormat('fr-FR', {
+      minimumFractionDigits: 0,
+      maximumFractionDigits: maxDigits
+    }).format(value);
+  }
+
+  function getLabelText(denom, contentMode){
+    if(contentMode === 'letters') return denomWords[denom] || `1/${denom}`;
+    if(contentMode === 'percent') return `${formatDecimal(100 / denom, 2)} %`;
+    if(contentMode === 'decimal') return formatDecimal(1 / denom, 3);
+    return '';
+  }
+
+  function appendFractionLabel(group, cx, cy, denom, rowH, segW, ink, contentMode){
+    if(contentMode !== 'fraction'){
+      const text = denom === 1 && contentMode !== 'letters' ? '1' : getLabelText(denom, contentMode);
+      const shouldRotate = contentMode === 'letters' && (segW < 24 || rowH < 9);
+      const charFactor = contentMode === 'letters' ? 0.54 : 0.44;
+      const maxByWidth = shouldRotate ? rowH * 0.72 : (segW - 1.4) / Math.max(2.2, text.length * charFactor);
+      const maxByHeight = shouldRotate ? (segW - 1.2) / Math.max(2.2, text.length * 0.52) : rowH * 0.44;
+      const fs = clamp(Math.min(maxByWidth, maxByHeight), 1.45, contentMode === 'letters' ? 4.0 : 4.9);
+      const t = make('text', {
+        x:cx, y:cy,
+        'font-size':fs,
+        'font-weight': contentMode === 'letters' ? '700' : '800',
+        'font-family':'system-ui, -apple-system, Segoe UI, Arial, sans-serif',
+        'text-anchor':'middle',
+        'dominant-baseline':'middle',
+        fill:ink,
+        transform: shouldRotate ? `rotate(-90 ${cx} ${cy})` : undefined
+      });
+      t.textContent = text;
+      if(!shouldRotate) t.removeAttribute('transform');
+      group.appendChild(t);
+      return;
+    }
+
+    if(denom === 1){
+      const fs = clamp(rowH * 0.40, 3.2, 7.2);
+      const t = make('text', {
+        x:cx, y:cy,
+        'font-size':fs,
+        'font-weight':'800',
+        'font-family':'system-ui, -apple-system, Segoe UI, Arial, sans-serif',
+        'text-anchor':'middle',
+        'dominant-baseline':'middle',
+        fill:ink
+      });
+      t.textContent = '1';
+      group.appendChild(t);
+      return;
+    }
+
+    const fs = clamp(Math.min(rowH * 0.28, segW * 0.30), 1.85, 4.7);
+    const barHalf = clamp(fs * 0.62, 1.15, Math.max(1.2, segW * 0.22));
+    const strokeW = clamp(rowH * 0.018, 0.13, 0.24);
+    const offset = clamp(fs * 0.72, 0.95, rowH * 0.34);
+
+    const num = make('text', {
+      x:cx, y:cy - offset,
+      'font-size':fs,
+      'font-weight':'750',
+      'font-family':'system-ui, -apple-system, Segoe UI, Arial, sans-serif',
+      'text-anchor':'middle',
+      'dominant-baseline':'middle',
+      fill:ink
+    });
+    num.textContent = '1';
+
+    const den = make('text', {
+      x:cx, y:cy + offset,
+      'font-size':fs,
+      'font-weight':'750',
+      'font-family':'system-ui, -apple-system, Segoe UI, Arial, sans-serif',
+      'text-anchor':'middle',
+      'dominant-baseline':'middle',
+      fill:ink
+    });
+    den.textContent = String(denom);
+
+    const line = make('line', {
+      x1:cx - barHalf,
+      x2:cx + barHalf,
+      y1:cy,
+      y2:cy,
+      stroke:ink,
+      'stroke-width':strokeW,
+      'stroke-linecap':'round'
+    });
+
+    group.append(num, line, den);
+  }
+
+  function appendPageBackground(){
+    svg.appendChild(make('rect', {x:0,y:0,width:PAGE.w,height:PAGE.h,fill:'#ffffff'}));
+  }
+
+  function render(){
+    const denoms = getSelectedDenoms();
+    clearSvg();
+    appendPageBackground();
+
+    if(denoms.length === 0){
+      const t = make('text', {
+        x:PAGE.w/2, y:PAGE.h/2,
+        'font-size':6,
+        'font-family':'system-ui, -apple-system, Segoe UI, Arial, sans-serif',
+        'font-weight':'800',
+        'text-anchor':'middle',
+        'dominant-baseline':'middle',
+        fill:'#6b7280'
+      });
+      t.textContent = 'Choisis au moins une fraction';
+      svg.appendChild(t);
+      if(summaryEl) summaryEl.textContent = '0 ligne';
+      densityNote.style.display = 'none';
+      return;
+    }
+
+    const n = denoms.length;
+    const gap = 0;
+    const usableW = PAGE.w - 2*PAGE.mx;
+    const usableH = PAGE.h - 2*PAGE.my;
+    const rowH = usableH / n;
+
+    const left = PAGE.mx;
+    let y = PAGE.my;
+    const textMode = textModeEl.value;
+    const contentMode = contentModeEl.value;
+    const strokeW = clamp(rowH * 0.027, 0.16, 0.34);
+    const sepW = clamp(rowH * 0.023, 0.14, 0.28);
+
+    for(let i = 0; i < denoms.length; i++){
+      const d = denoms[i];
+      const fill = colorFor(d);
+      const ink = textColorFor(fill);
+      const row = make('g', {});
+
+      row.appendChild(make('rect', {
+        x:left, y:y, width:usableW, height:rowH,
+        rx:0, ry:0,
+        fill:fill,
+        stroke:'none'
+      }));
+
+      row.appendChild(make('line', {
+        x1:left, x2:left + usableW,
+        y1:y, y2:y,
+        stroke:'#1f2937',
+        'stroke-width':strokeW,
+        'stroke-linecap':'square'
+      }));
+
+      row.appendChild(make('line', {
+        x1:left, x2:left,
+        y1:y, y2:y + rowH,
+        stroke:'#1f2937',
+        'stroke-width':strokeW,
+        'stroke-linecap':'square'
+      }));
+
+      row.appendChild(make('line', {
+        x1:left + usableW, x2:left + usableW,
+        y1:y, y2:y + rowH,
+        stroke:'#1f2937',
+        'stroke-width':strokeW,
+        'stroke-linecap':'square'
+      }));
+
+      if(i === denoms.length - 1){
+        row.appendChild(make('line', {
+          x1:left, x2:left + usableW,
+          y1:y + rowH, y2:y + rowH,
+          stroke:'#1f2937',
+          'stroke-width':strokeW,
+          'stroke-linecap':'square'
+        }));
+      }
+
+      if(d > 1){
+        for(let k=1;k<d;k++){
+          const x = left + usableW*k/d;
+          row.appendChild(make('line', {
+            x1:x, x2:x,
+            y1:y, y2:y+rowH,
+            stroke:'#1f2937',
+            'stroke-width':sepW
+          }));
+        }
+      }
+
+      if(textMode !== 'none'){
+        const segW = usableW / d;
+        if(textMode === 'all'){
+          for(let k=0;k<d;k++){
+            appendFractionLabel(row, left + segW*(k+.5), y + rowH/2, d, rowH, segW, ink, contentMode);
+          }
+        }else{
+          appendFractionLabel(row, left + segW*.5, y + rowH/2, d, rowH, segW, ink, contentMode);
+        }
+      }
+
+      svg.appendChild(row);
+      y += rowH + gap;
+    }
+
+    const lineWord = n > 1 ? 'lignes' : 'ligne';
+    const maxD = Math.max(...denoms);
+    const contentLabel = contentMode === 'fraction' ? 'fractions' : contentMode === 'letters' ? 'lettres' : contentMode === 'percent' ? 'pourcentages' : 'décimaux';
+    if(summaryEl) summaryEl.textContent = `${n} ${lineWord} · jusqu’à 1/${maxD} · ${contentLabel} · A4 paysage`;
+    densityNote.style.display = n >= 18 ? 'block' : 'none';
+  }
+
+  function svgToString(){
+    const clone = svg.cloneNode(true);
+    clone.setAttribute('xmlns', SVG_NS);
+    clone.setAttribute('width', '297mm');
+    clone.setAttribute('height', '210mm');
+    clone.setAttribute('viewBox', '0 0 297 210');
+    return new XMLSerializer().serializeToString(clone);
+  }
+
+  function svgToPngBlob(){
+    const svgText = svgToString();
+    const svgBlob = new Blob([svgText], {type:'image/svg+xml;charset=utf-8'});
+    const url = URL.createObjectURL(svgBlob);
+    return new Promise((resolve, reject) => {
+      const img = new Image();
+      img.onload = () => {
+        try{
+          const canvas = document.createElement('canvas');
+          canvas.width = Math.round(PAGE.w * EXPORT_PX_PER_MM);
+          canvas.height = Math.round(PAGE.h * EXPORT_PX_PER_MM);
+          const ctx = canvas.getContext('2d');
+          ctx.fillStyle = '#ffffff';
+          ctx.fillRect(0,0,canvas.width,canvas.height);
+          ctx.drawImage(img,0,0,canvas.width,canvas.height);
+          URL.revokeObjectURL(url);
+          canvas.toBlob(blob => {
+            if(blob) resolve(blob);
+            else reject(new Error('Conversion impossible.'));
+          }, 'image/png');
+        }catch(err){
+          URL.revokeObjectURL(url);
+          reject(err);
+        }
+      };
+      img.onerror = () => {
+        URL.revokeObjectURL(url);
+        reject(new Error('Image impossible à générer.'));
+      };
+      img.src = url;
+    });
+  }
+
+  async function copyImage(){
+    try{
+      const blob = await svgToPngBlob();
+      if(navigator.clipboard && window.ClipboardItem){
+        await navigator.clipboard.write([new ClipboardItem({'image/png': blob})]);
+        setStatus('Image copiée. Tu peux la coller dans un document.');
+      }else{
+        downloadBlob(blob, 'mur-fractions.png');
+        setStatus('Copie non disponible ici : l’image a été téléchargée.');
+      }
+    }catch(err){
+      console.error(err);
+      setStatus('Impossible de copier automatiquement dans ce navigateur. Utilise Télécharger.');
+    }
+  }
+
+  function downloadBlob(blob, filename){
+    const a = document.createElement('a');
+    const url = URL.createObjectURL(blob);
+    a.href = url;
+    a.download = filename;
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    window.setTimeout(() => URL.revokeObjectURL(url), 500);
+  }
+
+  async function downloadImage(){
+    try{
+      const blob = await svgToPngBlob();
+      downloadBlob(blob, 'mur-fractions.png');
+      setStatus('Image téléchargée.');
+    }catch(err){
+      console.error(err);
+      setStatus('Téléchargement impossible pour le moment.');
+    }
+  }
+
+  document.getElementById('presetBase').addEventListener('click', () => setSelectedDenoms(BASE_DENOMS));
+  document.getElementById('presetAll').addEventListener('click', () => setSelectedDenoms(Array.from({length:MAX_DENOM}, (_,i)=>i+1)));
+  document.getElementById('copyBtn').addEventListener('click', copyImage);
+  document.getElementById('downloadBtn').addEventListener('click', downloadImage);
+  document.getElementById('printBtn').addEventListener('click', () => window.print());
+  textModeEl.addEventListener('change', render);
+  contentModeEl.addEventListener('change', render);
+  colorModeEl.addEventListener('change', render);
+
+  buildGrid();
+  render();
+})();
+</script>
+</body>
+</html>
