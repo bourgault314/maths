@@ -68,7 +68,7 @@
   .hint{font-size:12px;line-height:1.35;color:var(--muted);margin-top:8px}
   .mini-note{
     display:none;
-    margin-top:10px;
+    margin-top:14px;
     border-radius:10px;
     padding:9px 10px;
     background:#fff7ed;
@@ -181,12 +181,12 @@
   .row{transition:opacity .15s}
   .row:hover .axis-bg{fill:#eff6ff;stroke:#60a5fa}
   .row:hover .axis-text{font-weight:850}
-  .row.common .axis-bg{fill:#fff7ed;stroke:#fb923c}
-  .row.common .axis-text{fill:#9a3412;font-weight:850}
-  .row.common .common-frame{opacity:1}
-  .row.pgcd .axis-bg{fill:#dcfce7;stroke:#16a34a}
-  .row.pgcd .axis-text{fill:#166534;font-weight:900}
-  .row.pgcd .pgcd-frame{opacity:1}
+  .row.common .axis-bg{fill:#ecfdf5;stroke:#16a34a}
+  .row.common .axis-text{fill:#166534;font-weight:850}
+  .row.common .common-frame{opacity:0}
+  .row.pgcd .axis-bg{fill:#fee2e2;stroke:#dc2626}
+  .row.pgcd .axis-text{fill:#991b1b;font-weight:900}
+  .row.pgcd .pgcd-frame{opacity:0}
   .row.pgcd .common-frame{opacity:0}
   .common-frame,.pgcd-frame{opacity:0;transition:opacity .15s}
 
@@ -221,13 +221,13 @@
   }
   body.pgcd-fullscreen .preview-area{
     height:100vh;
-    padding:62px 10px 10px;
+    padding:86px 10px 10px;
     overflow:hidden;
     background:#f3f4f6;
   }
   body.pgcd-fullscreen .page-wrap{
-    width:min(calc(100vw - 20px), calc((100vh - 76px) * 297 / 210));
-    max-height:calc(100vh - 76px);
+    width:min(calc(100vw - 20px), calc((100vh - 104px) * 297 / 210));
+    max-height:calc(100vh - 104px);
     aspect-ratio:297/210;
     box-shadow:none;
     border-radius:4px;
@@ -499,6 +499,48 @@
     return palette[index % palette.length];
   }
 
+  function appendHighlightFrame(group, x, y, w, h, isCommon, isPgcd){
+    // Cadres individuels désactivés : les cadres sont dessinés par blocs
+    // à la fin du rendu, ce qui évite les doubles bordures internes.
+  }
+
+  function appendRunFrame(group, x, y, w, h, kind, rowStep){
+    const inset = kind === 'pgcd' ? 0.26 : 0.36;
+    const color = kind === 'pgcd' ? '#dc2626' : '#16a34a';
+    const strokeW = kind === 'pgcd' ? 1.25 : 0.86;
+
+    // Un seul contour extérieur pour éviter les doubles traits,
+    // puis des séparations internes pour que chaque ligne reste encadrée.
+    group.appendChild(make('rect', {
+      x:x + inset,
+      y:y + inset,
+      width:Math.max(0, w - 2*inset),
+      height:Math.max(0, h - 2*inset),
+      fill:'none',
+      stroke:color,
+      'stroke-width':strokeW,
+      'stroke-linejoin':'miter',
+      'pointer-events':'none'
+    }));
+
+    if(rowStep && h > rowStep * 1.5){
+      const count = Math.round(h / rowStep);
+      for(let k=1; k<count; k++){
+        const yy = y + k * rowStep;
+        group.appendChild(make('line', {
+          x1:x + inset,
+          x2:x + w - inset,
+          y1:yy,
+          y2:yy,
+          stroke:color,
+          'stroke-width':strokeW,
+          'stroke-linecap':'butt',
+          'pointer-events':'none'
+        }));
+      }
+    }
+  }
+
   function drawWallCell(group, opts){
     const {x, y, w, h, parts, value, possible, fill, rowIndex, col, isCommon, isPgcd} = opts;
     if(!possible){
@@ -556,9 +598,13 @@
     let writingMode = mode;
 
     if(mode === 'auto'){
-      if(segW > needed + 2.1 && h > 4.3) writingMode = 'all';
-      else if(segW > 3.0 && h > 4.3) writingMode = 'first';
+      if(segW > needed + 2.1 && h > 4.3 && baseFs >= 1.85) writingMode = 'all';
+      else if(w > 24 && h > 4.3) writingMode = 'summary';
       else writingMode = 'none';
+    }
+
+    if((writingMode === 'all' || writingMode === 'first') && (baseFs < 1.55 || segW < 2.8)){
+      writingMode = 'summary';
     }
 
     if(writingMode === 'all'){
@@ -581,7 +627,18 @@
         weight:720,
         class:'cell-text'
       });
+    }else if(writingMode === 'summary'){
+      appendText(group, `${parts} parts de ${txt}`, x + w/2, y + h/2, {
+        fs:clamp(h * 0.26, 1.6, 3.8) * textScale(),
+        maxW:w * 0.86,
+        maxH:h * 0.66,
+        fill:'#111827',
+        weight:760,
+        class:'cell-text'
+      });
     }
+
+    appendHighlightFrame(group, x, y, w, h, isCommon, isPgcd);
   }
 
   function updateResult(n1, n2, pgcd){
@@ -642,6 +699,39 @@
       fill:'#6b7280'
     });
 
+    const highlightLayer = make('g', {'pointer-events':'none'});
+
+    function appendCommonRunFrames(){
+      if(stage < 1) return;
+
+      let runStart = null;
+      for(let i=0; i<=union.length; i++){
+        const parts = union[i];
+        const isCommon =
+          i < union.length &&
+          s1.has(parts) &&
+          s2.has(parts) &&
+          !(stage >= 2 && parts === pgcd);
+
+        if(isCommon && runStart === null) runStart = i;
+
+        if((!isCommon || i === union.length) && runStart !== null){
+          const y0 = rowAreaY + runStart * rowH;
+          const h0 = (i - runStart) * rowH;
+          appendRunFrame(highlightLayer, axisX, y0, axisW, h0, 'common', rowH);
+          runStart = null;
+        }
+      }
+
+      if(stage >= 2){
+        const pgcdIndex = union.indexOf(pgcd);
+        if(pgcdIndex >= 0){
+          const y0 = rowAreaY + pgcdIndex * rowH;
+          appendRunFrame(highlightLayer, axisX, y0, axisW, rowH, 'pgcd', rowH);
+        }
+      }
+    }
+
     union.forEach((parts, index) => {
       const y = rowAreaY + index * rowH;
       const possible1 = s1.has(parts);
@@ -676,6 +766,8 @@
         class:'axis-text'
       });
 
+      appendHighlightFrame(row, axisX, y, axisW, rowH, showCommon, showPgcd);
+
       drawWallCell(row, {
         x:wall1X, y, w:wallW, h:rowH,
         parts,
@@ -702,6 +794,9 @@
 
       svg.appendChild(row);
     });
+
+    appendCommonRunFrames();
+    svg.appendChild(highlightLayer);
   }
 
   function svgToString(){
