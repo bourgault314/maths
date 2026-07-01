@@ -252,6 +252,14 @@
           <option value="none">Sans écriture</option>
         </select>
 
+        <label class="basic" for="contentMode">Contenu</label>
+        <select id="contentMode">
+          <option value="fraction" selected>Fraction</option>
+          <option value="letters">En lettres</option>
+          <option value="percent">Pourcentage</option>
+          <option value="decimal">Décimal</option>
+        </select>
+
         <label class="basic" for="colorMode">Couleurs</label>
         <select id="colorMode">
           <option value="pedago" selected>Couleurs pédagogiques</option>
@@ -270,10 +278,6 @@
   </aside>
 
   <section class="preview-area">
-    <div class="preview-top">
-      <strong>Aperçu A4 paysage</strong>
-      <span id="summary"></span>
-    </div>
     <div class="page-wrap">
       <svg id="wallSvg" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 297 210" role="img" aria-label="Mur de fractions généré"></svg>
     </div>
@@ -326,9 +330,37 @@
     19:'#dbeafe', 20:'#ccfbf1', 21:'#fae8ff', 22:'#dcfce7', 23:'#ffe4e6', 24:'#fef3c7'
   };
 
+  const denomWords = {
+    1:'unité',
+    2:'un demi',
+    3:'un tiers',
+    4:'un quart',
+    5:'un cinquième',
+    6:'un sixième',
+    7:'un septième',
+    8:'un huitième',
+    9:'un neuvième',
+    10:'un dixième',
+    11:'un onzième',
+    12:'un douzième',
+    13:'un treizième',
+    14:'un quatorzième',
+    15:'un quinzième',
+    16:'un seizième',
+    17:'un dix-septième',
+    18:'un dix-huitième',
+    19:'un dix-neuvième',
+    20:'un vingtième',
+    21:'un vingt-et-unième',
+    22:'un vingt-deuxième',
+    23:'un vingt-troisième',
+    24:'un vingt-quatrième'
+  };
+
   const denomGrid = document.getElementById('denomGrid');
   const svg = document.getElementById('wallSvg');
   const textModeEl = document.getElementById('textMode');
+  const contentModeEl = document.getElementById('contentMode');
   const colorModeEl = document.getElementById('colorMode');
   const summaryEl = document.getElementById('summary');
   const statusEl = document.getElementById('status');
@@ -404,7 +436,44 @@
     while(svg.firstChild) svg.removeChild(svg.firstChild);
   }
 
-  function appendFractionLabel(group, cx, cy, denom, rowH, segW, ink){
+  function formatDecimal(value, maxDigits){
+    return new Intl.NumberFormat('fr-FR', {
+      minimumFractionDigits: 0,
+      maximumFractionDigits: maxDigits
+    }).format(value);
+  }
+
+  function getLabelText(denom, contentMode){
+    if(contentMode === 'letters') return denomWords[denom] || `1/${denom}`;
+    if(contentMode === 'percent') return `${formatDecimal(100 / denom, 2)} %`;
+    if(contentMode === 'decimal') return formatDecimal(1 / denom, 3);
+    return '';
+  }
+
+  function appendFractionLabel(group, cx, cy, denom, rowH, segW, ink, contentMode){
+    if(contentMode !== 'fraction'){
+      const text = denom === 1 && contentMode !== 'letters' ? '1' : getLabelText(denom, contentMode);
+      const shouldRotate = contentMode === 'letters' && (segW < 24 || rowH < 9);
+      const charFactor = contentMode === 'letters' ? 0.54 : 0.44;
+      const maxByWidth = shouldRotate ? rowH * 0.72 : (segW - 1.4) / Math.max(2.2, text.length * charFactor);
+      const maxByHeight = shouldRotate ? (segW - 1.2) / Math.max(2.2, text.length * 0.52) : rowH * 0.44;
+      const fs = clamp(Math.min(maxByWidth, maxByHeight), 1.45, contentMode === 'letters' ? 4.0 : 4.9);
+      const t = make('text', {
+        x:cx, y:cy,
+        'font-size':fs,
+        'font-weight': contentMode === 'letters' ? '700' : '800',
+        'font-family':'system-ui, -apple-system, Segoe UI, Arial, sans-serif',
+        'text-anchor':'middle',
+        'dominant-baseline':'middle',
+        fill:ink,
+        transform: shouldRotate ? `rotate(-90 ${cx} ${cy})` : undefined
+      });
+      t.textContent = text;
+      if(!shouldRotate) t.removeAttribute('transform');
+      group.appendChild(t);
+      return;
+    }
+
     if(denom === 1){
       const fs = clamp(rowH * 0.40, 3.2, 7.2);
       const t = make('text', {
@@ -424,9 +493,10 @@
     const fs = clamp(Math.min(rowH * 0.28, segW * 0.30), 1.85, 4.7);
     const barHalf = clamp(fs * 0.62, 1.15, Math.max(1.2, segW * 0.22));
     const strokeW = clamp(rowH * 0.018, 0.13, 0.24);
+    const offset = clamp(fs * 0.72, 0.95, rowH * 0.34);
 
     const num = make('text', {
-      x:cx, y:cy - fs*0.45,
+      x:cx, y:cy - offset,
       'font-size':fs,
       'font-weight':'750',
       'font-family':'system-ui, -apple-system, Segoe UI, Arial, sans-serif',
@@ -437,7 +507,7 @@
     num.textContent = '1';
 
     const den = make('text', {
-      x:cx, y:cy + fs*0.50,
+      x:cx, y:cy + offset,
       'font-size':fs,
       'font-weight':'750',
       'font-family':'system-ui, -apple-system, Segoe UI, Arial, sans-serif',
@@ -481,28 +551,26 @@
       });
       t.textContent = 'Choisis au moins une fraction';
       svg.appendChild(t);
-      summaryEl.textContent = '0 ligne';
+      if(summaryEl) summaryEl.textContent = '0 ligne';
       densityNote.style.display = 'none';
       return;
     }
 
     const n = denoms.length;
-    let gap = n <= 6 ? 3.2 : n <= 12 ? 2.1 : n <= 18 ? 1.45 : 1.05;
+    const gap = 0;
     const usableW = PAGE.w - 2*PAGE.mx;
     const usableH = PAGE.h - 2*PAGE.my;
-    let rowH = (usableH - gap*(n-1)) / n;
-    if(rowH < 5.8){
-      gap = 0.7;
-      rowH = (usableH - gap*(n-1)) / n;
-    }
+    const rowH = usableH / n;
 
     const left = PAGE.mx;
     let y = PAGE.my;
     const textMode = textModeEl.value;
+    const contentMode = contentModeEl.value;
     const strokeW = clamp(rowH * 0.027, 0.16, 0.34);
     const sepW = clamp(rowH * 0.023, 0.14, 0.28);
 
-    for(const d of denoms){
+    for(let i = 0; i < denoms.length; i++){
+      const d = denoms[i];
       const fill = colorFor(d);
       const ink = textColorFor(fill);
       const row = make('g', {});
@@ -511,9 +579,42 @@
         x:left, y:y, width:usableW, height:rowH,
         rx:0, ry:0,
         fill:fill,
-        stroke:'#1f2937',
-        'stroke-width':strokeW
+        stroke:'none'
       }));
+
+      row.appendChild(make('line', {
+        x1:left, x2:left + usableW,
+        y1:y, y2:y,
+        stroke:'#1f2937',
+        'stroke-width':strokeW,
+        'stroke-linecap':'square'
+      }));
+
+      row.appendChild(make('line', {
+        x1:left, x2:left,
+        y1:y, y2:y + rowH,
+        stroke:'#1f2937',
+        'stroke-width':strokeW,
+        'stroke-linecap':'square'
+      }));
+
+      row.appendChild(make('line', {
+        x1:left + usableW, x2:left + usableW,
+        y1:y, y2:y + rowH,
+        stroke:'#1f2937',
+        'stroke-width':strokeW,
+        'stroke-linecap':'square'
+      }));
+
+      if(i === denoms.length - 1){
+        row.appendChild(make('line', {
+          x1:left, x2:left + usableW,
+          y1:y + rowH, y2:y + rowH,
+          stroke:'#1f2937',
+          'stroke-width':strokeW,
+          'stroke-linecap':'square'
+        }));
+      }
 
       if(d > 1){
         for(let k=1;k<d;k++){
@@ -531,10 +632,10 @@
         const segW = usableW / d;
         if(textMode === 'all'){
           for(let k=0;k<d;k++){
-            appendFractionLabel(row, left + segW*(k+.5), y + rowH/2, d, rowH, segW, ink);
+            appendFractionLabel(row, left + segW*(k+.5), y + rowH/2, d, rowH, segW, ink, contentMode);
           }
         }else{
-          appendFractionLabel(row, left + segW*.5, y + rowH/2, d, rowH, segW, ink);
+          appendFractionLabel(row, left + segW*.5, y + rowH/2, d, rowH, segW, ink, contentMode);
         }
       }
 
@@ -544,7 +645,8 @@
 
     const lineWord = n > 1 ? 'lignes' : 'ligne';
     const maxD = Math.max(...denoms);
-    summaryEl.textContent = `${n} ${lineWord} · jusqu’à 1/${maxD} · A4 paysage`;
+    const contentLabel = contentMode === 'fraction' ? 'fractions' : contentMode === 'letters' ? 'lettres' : contentMode === 'percent' ? 'pourcentages' : 'décimaux';
+    if(summaryEl) summaryEl.textContent = `${n} ${lineWord} · jusqu’à 1/${maxD} · ${contentLabel} · A4 paysage`;
     densityNote.style.display = n >= 18 ? 'block' : 'none';
   }
 
@@ -634,6 +736,7 @@
   document.getElementById('downloadBtn').addEventListener('click', downloadImage);
   document.getElementById('printBtn').addEventListener('click', () => window.print());
   textModeEl.addEventListener('change', render);
+  contentModeEl.addEventListener('change', render);
   colorModeEl.addEventListener('change', render);
 
   buildGrid();
