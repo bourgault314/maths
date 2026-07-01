@@ -1,0 +1,674 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Mur des diviseurs</title>
+<style>
+  :root{
+    --bg:#f3f4f6;
+    --panel:#ffffff;
+    --ink:#111827;
+    --muted:#6b7280;
+    --line:#d1d5db;
+    --blue:#2563eb;
+    --blue-dark:#1d4ed8;
+    --page-w:297mm;
+    --page-h:210mm;
+  }
+  *{box-sizing:border-box}
+  html,body{height:100%}
+  body{
+    margin:0;
+    font-family:system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Arial,sans-serif;
+    background:var(--bg);
+    color:var(--ink);
+    display:flex;
+    flex-direction:column;
+  }
+  header{
+    height:48px;
+    flex:0 0 auto;
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:16px;
+    padding:0 18px;
+    background:#111827;
+    color:#fff;
+    box-shadow:0 2px 10px rgba(0,0,0,.16);
+    z-index:3;
+  }
+  header a{color:#d1d5db;text-decoration:none;font-size:14px;font-weight:600}
+  header a:hover{color:white}
+  header .title{font-weight:800;letter-spacing:.02em;font-size:15px}
+  header .spacer{width:64px}
+  main{flex:1;min-height:0;display:flex;overflow:hidden}
+  aside{
+    width:330px;
+    flex:0 0 330px;
+    background:var(--panel);
+    border-right:1px solid var(--line);
+    display:flex;
+    flex-direction:column;
+    min-height:0;
+  }
+  .settings{padding:16px;overflow:auto;flex:1}
+  fieldset{
+    border:1px solid var(--line);
+    border-radius:14px;
+    padding:14px;
+    margin:0 0 14px;
+    background:#fff;
+  }
+  legend{padding:0 8px;color:#1f2937;font-size:13px;font-weight:850}
+  .hint{font-size:12px;line-height:1.35;color:var(--muted);margin-top:8px}
+  .mini-note{
+    display:none;
+    margin-top:10px;
+    border-radius:10px;
+    padding:9px 10px;
+    background:#fff7ed;
+    border:1px solid #fed7aa;
+    color:#9a3412;
+    font-size:12px;
+    font-weight:700;
+    line-height:1.35;
+  }
+  label.basic{display:block;font-size:13px;font-weight:750;margin:12px 0 6px}
+  input[type="number"], select{
+    width:100%;
+    border:1px solid #cbd5e1;
+    border-radius:10px;
+    padding:9px 10px;
+    background:#fff;
+    color:#111827;
+    font-size:14px;
+  }
+  input[type="number"]:focus,select:focus,button:focus-visible,input:focus-visible{
+    outline:none;
+    box-shadow:0 0 0 3px rgba(37,99,235,.18);
+    border-color:var(--blue);
+  }
+  .number-row{display:grid;grid-template-columns:1fr auto;gap:8px;align-items:end}
+  .range-row{display:flex;align-items:center;gap:10px}
+  input[type="range"]{width:100%;accent-color:var(--blue)}
+  .range-value{min-width:42px;text-align:right;color:#374151;font-size:12px;font-weight:850}
+  button{
+    appearance:none;
+    border:none;
+    border-radius:10px;
+    background:#e5e7eb;
+    color:#111827;
+    padding:10px 12px;
+    font-weight:800;
+    font-size:13px;
+    cursor:pointer;
+  }
+  button:hover{filter:brightness(.98)}
+  button.primary{background:var(--blue);color:#fff}
+  button.primary:hover{background:var(--blue-dark)}
+  button.ghost{background:#f3f4f6;border:1px solid #d1d5db}
+  .actions{
+    flex:0 0 auto;
+    padding:14px 16px;
+    background:#fff;
+    border-top:1px solid var(--line);
+    box-shadow:0 -2px 12px rgba(0,0,0,.04);
+    display:grid;
+    grid-template-columns:1fr;
+    gap:9px;
+  }
+  .status{min-height:18px;color:var(--muted);font-size:12px;line-height:1.25}
+  .preview-area{
+    flex:1;
+    min-width:0;
+    overflow:auto;
+    padding:18px;
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    gap:12px;
+    background:linear-gradient(135deg,#eef2f7,#e5e7eb);
+  }
+  .preview-top{
+    width:min(100%,1120px);
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    gap:12px;
+    background:rgba(255,255,255,.92);
+    border:1px solid #e5e7eb;
+    border-radius:14px;
+    padding:11px 14px;
+    box-shadow:0 2px 12px rgba(0,0,0,.06);
+  }
+  .preview-top strong{font-size:14px}
+  .preview-top span{font-size:12px;color:var(--muted);font-weight:650;text-align:right}
+  .page-wrap{
+    width:min(100%,1120px);
+    aspect-ratio:297/210;
+    background:white;
+    box-shadow:0 10px 30px rgba(17,24,39,.22);
+    border-radius:4px;
+    overflow:hidden;
+  }
+  #wallSvg{width:100%;height:100%;display:block;background:#fff}
+  .row{transition:opacity .15s}
+  .row.dim{opacity:.28}
+  .row.hot .bar-bg{stroke-width:.62}
+  .row.hot .side-text,.row.hot .cell-text{font-weight:800}
+  @media(max-width:840px){
+    main{flex-direction:column;overflow:auto}
+    aside{width:100%;flex:0 0 auto;max-height:none;border-right:0;border-bottom:1px solid var(--line)}
+    .settings{max-height:none;overflow:visible}
+    .preview-area{min-height:420px}
+    .actions{position:sticky;bottom:0;z-index:2}
+  }
+  @media print{
+    header,aside,.preview-top{display:none!important}
+    body,main,.preview-area{display:block;height:auto;overflow:visible;background:#fff;padding:0;margin:0}
+    .page-wrap{
+      width:var(--page-w);
+      height:var(--page-h);
+      aspect-ratio:auto;
+      box-shadow:none;
+      border-radius:0;
+      overflow:hidden;
+      page-break-after:always;
+      break-after:page;
+    }
+    #wallSvg{width:var(--page-w);height:var(--page-h)}
+    @page{size:A4 landscape;margin:0}
+  }
+</style>
+</head>
+<body>
+<header>
+  <a href="#" onclick="history.back();return false;">← Retour</a>
+  <div class="title">Mur des diviseurs</div>
+  <div class="spacer"></div>
+</header>
+
+<main>
+  <aside>
+    <div class="settings">
+      <fieldset>
+        <legend>Nombre</legend>
+        <label class="basic" for="numberInput">Nombre total</label>
+        <div class="number-row">
+          <input id="numberInput" type="number" min="1" max="360" step="1" value="24" />
+          <button type="button" class="primary" id="renderBtn">Afficher</button>
+        </div>
+        <div class="hint">
+          Une ligne représente une écriture <strong>A × B = N</strong> :
+          on dessine <strong>A parts</strong>, et chaque part contient <strong>B</strong>.
+        </div>
+        <div class="mini-note" id="largeNote">
+          Beaucoup de parts : certaines écritures dans les briques sont masquées automatiquement pour rester lisibles.
+        </div>
+      </fieldset>
+
+      <fieldset>
+        <legend>Affichage</legend>
+
+        <label class="basic" for="cellMode">Dans les briques</label>
+        <select id="cellMode">
+          <option value="auto" selected>Auto : écrire quand ça rentre</option>
+          <option value="all">Écrire dans toutes les briques</option>
+          <option value="first">Écrire seulement dans la première brique</option>
+          <option value="none">Sans écriture</option>
+        </select>
+
+        <label class="basic" for="leftMode">À gauche</label>
+        <select id="leftMode">
+          <option value="parts" selected>Nombre de parts : 3 parts</option>
+          <option value="none">Rien</option>
+        </select>
+
+        <label class="basic" for="rightMode">À droite</label>
+        <select id="rightMode">
+          <option value="multiplication" selected>Multiplication : 3 × 8 = 24</option>
+          <option value="phrase">Phrase : 3 parts de 8</option>
+          <option value="both">Les deux</option>
+          <option value="none">Rien</option>
+        </select>
+
+        <label class="basic" for="textScale">Taille de l’écriture</label>
+        <div class="range-row">
+          <input id="textScale" type="range" min="60" max="180" step="5" value="100" />
+          <span class="range-value" id="textScaleValue">100%</span>
+        </div>
+
+        <label class="basic" for="colorMode">Couleurs</label>
+        <select id="colorMode">
+          <option value="soft" selected>Couleurs douces</option>
+          <option value="pedago">Couleurs contrastées</option>
+          <option value="bw">Noir et blanc</option>
+        </select>
+
+        <div class="hint">
+          Survoler une ligne met en évidence le couple associé : par exemple <strong>3 × 8</strong> et <strong>8 × 3</strong>.
+        </div>
+      </fieldset>
+    </div>
+
+    <div class="actions">
+      <button type="button" class="primary" id="copyBtn">Copier</button>
+      <button type="button" class="ghost" id="downloadBtn">Télécharger</button>
+      <button type="button" class="ghost" id="printBtn">Imprimer</button>
+      <div class="status" id="status" aria-live="polite"></div>
+    </div>
+  </aside>
+
+  <section class="preview-area">
+    <div class="preview-top">
+      <strong>Aperçu A4 paysage</strong>
+      <span id="summary"></span>
+    </div>
+    <div class="page-wrap">
+      <svg id="wallSvg" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 297 210" role="img" aria-label="Mur des diviseurs généré"></svg>
+    </div>
+  </section>
+</main>
+
+<script>
+(function(){
+  'use strict';
+
+  const SVG_NS = 'http://www.w3.org/2000/svg';
+  const PAGE = { w:297, h:210, mx:7.5, my:8 };
+  const EXPORT_PX_PER_MM = 10;
+
+  const softPalette = [
+    '#fff7e6', '#fef3c7', '#e9d5ff', '#dbeafe', '#dcfce7',
+    '#cffafe', '#fee2e2', '#fae8ff', '#e0e7ff', '#fef9c3',
+    '#ccfbf1', '#ffedd5'
+  ];
+  const pedagoPalette = [
+    '#facc15', '#84cc16', '#38bdf8', '#f97316', '#f472b6',
+    '#b91c1c', '#99ffff', '#c4b5fd', '#fb7185', '#2dd4bf'
+  ];
+
+  const svg = document.getElementById('wallSvg');
+  const numberInput = document.getElementById('numberInput');
+  const cellModeEl = document.getElementById('cellMode');
+  const leftModeEl = document.getElementById('leftMode');
+  const rightModeEl = document.getElementById('rightMode');
+  const textScaleEl = document.getElementById('textScale');
+  const textScaleValueEl = document.getElementById('textScaleValue');
+  const colorModeEl = document.getElementById('colorMode');
+  const summaryEl = document.getElementById('summary');
+  const statusEl = document.getElementById('status');
+  const largeNote = document.getElementById('largeNote');
+
+  function make(tag, attrs){
+    const el = document.createElementNS(SVG_NS, tag);
+    for(const [k,v] of Object.entries(attrs || {})) el.setAttribute(k, v);
+    return el;
+  }
+
+  function clamp(v,min,max){ return Math.max(min, Math.min(max, v)); }
+
+  function setStatus(message){
+    statusEl.textContent = message || '';
+    if(message) window.setTimeout(() => {
+      if(statusEl.textContent === message) statusEl.textContent = '';
+    }, 3200);
+  }
+
+  function textScale(){
+    return Number(textScaleEl.value || 100) / 100;
+  }
+
+  function updateScaleLabel(){
+    textScaleValueEl.textContent = `${textScaleEl.value}%`;
+  }
+
+  function divisorsOf(n){
+    const small = [];
+    const large = [];
+    for(let d=1; d*d<=n; d++){
+      if(n % d === 0){
+        small.push(d);
+        if(d !== n/d) large.push(n/d);
+      }
+    }
+    return small.concat(large.reverse());
+  }
+
+  function clearSvg(){
+    while(svg.firstChild) svg.removeChild(svg.firstChild);
+  }
+
+  function appendPageBackground(){
+    svg.appendChild(make('rect', {x:0,y:0,width:PAGE.w,height:PAGE.h,fill:'#ffffff'}));
+  }
+
+  function rowColor(index){
+    const mode = colorModeEl.value;
+    if(mode === 'bw') return '#ffffff';
+    const palette = mode === 'pedago' ? pedagoPalette : softPalette;
+    return palette[index % palette.length];
+  }
+
+  function textColorFor(hex){
+    if(!hex || hex === '#ffffff') return '#111827';
+    const h = hex.replace('#','').trim();
+    if(h.length !== 6) return '#111827';
+    const r = parseInt(h.slice(0,2),16);
+    const g = parseInt(h.slice(2,4),16);
+    const b = parseInt(h.slice(4,6),16);
+    const lum = (0.2126*r + 0.7152*g + 0.0722*b) / 255;
+    return lum < 0.38 ? '#ffffff' : '#111827';
+  }
+
+  function estimateTextWidthAtOne(text){
+    let w = 0;
+    for(const ch of String(text)){
+      if(ch === ' ') w += 0.28;
+      else if(ch === '-' || ch === '–') w += 0.34;
+      else if('ilI1.,:%'.includes(ch)) w += 0.30;
+      else if('×='.includes(ch)) w += 0.58;
+      else if('mwMW'.includes(ch)) w += 0.78;
+      else if('éèêëàâùûîïôöç'.includes(ch.toLowerCase())) w += 0.57;
+      else w += 0.55;
+    }
+    return Math.max(w, 0.5);
+  }
+
+  function appendText(group, text, x, y, options = {}){
+    const fs = options.fs ?? 4;
+    const fill = options.fill ?? '#111827';
+    const weight = options.weight ?? 700;
+    const anchor = options.anchor ?? 'middle';
+    const maxW = options.maxW ?? null;
+    const maxH = options.maxH ?? null;
+    const lines = Array.isArray(text) ? text.map(String) : [String(text)];
+    const lineGap = options.lineGap ?? 1.12;
+    let finalFs = fs;
+
+    if(maxW){
+      const widest = Math.max(...lines.map(line => estimateTextWidthAtOne(line)));
+      finalFs = Math.min(finalFs, maxW / widest);
+    }
+    if(maxH){
+      finalFs = Math.min(finalFs, maxH / (lines.length * lineGap));
+    }
+    finalFs = Math.max(1.1, finalFs);
+
+    const t = make('text', {
+      x, y,
+      'font-size':finalFs,
+      'font-weight':weight,
+      'font-family':'system-ui, -apple-system, Segoe UI, Arial, sans-serif',
+      'text-anchor':anchor,
+      'dominant-baseline':'middle',
+      fill
+    });
+    if(options.class) t.setAttribute('class', options.class);
+
+    if(lines.length === 1){
+      t.textContent = lines[0];
+    }else{
+      const firstY = y - ((lines.length - 1) * finalFs * lineGap) / 2;
+      lines.forEach((line, index) => {
+        const span = make('tspan', {
+          x,
+          y:firstY + index * finalFs * lineGap,
+          'dominant-baseline':'middle'
+        });
+        span.textContent = line;
+        t.appendChild(span);
+      });
+    }
+    group.appendChild(t);
+    return t;
+  }
+
+  function sideLabel(A, B, N, mode){
+    if(mode === 'none') return '';
+    if(mode === 'phrase') return `${A} ${A > 1 ? 'parts' : 'part'} de ${B}`;
+    if(mode === 'both') return [`${A} × ${B} = ${N}`, `${A} ${A > 1 ? 'parts' : 'part'} de ${B}`];
+    return `${A} × ${B} = ${N}`;
+  }
+
+  function setHighlight(A, B){
+    svg.querySelectorAll('.row').forEach(row => {
+      const d = Number(row.getAttribute('data-divisor'));
+      row.classList.toggle('hot', d === A || d === B);
+      row.classList.toggle('dim', !(d === A || d === B));
+    });
+  }
+
+  function clearHighlight(){
+    svg.querySelectorAll('.row').forEach(row => {
+      row.classList.remove('hot');
+      row.classList.remove('dim');
+    });
+  }
+
+  function render(){
+    const raw = Number(numberInput.value);
+    const N = Math.max(1, Math.min(360, Math.round(raw || 1)));
+    numberInput.value = String(N);
+
+    clearSvg();
+    appendPageBackground();
+
+    const divs = divisorsOf(N);
+    const rows = divs.length;
+
+    const leftActive = leftModeEl.value !== 'none';
+    const rightActive = rightModeEl.value !== 'none';
+    const leftW = leftActive ? 31 : 0;
+    const rightW = rightActive ? (rightModeEl.value === 'both' ? 56 : 45) : 0;
+    const gap = 3;
+    const usableW = PAGE.w - 2*PAGE.mx;
+    const barX = PAGE.mx + leftW + (leftActive ? gap : 0);
+    const barW = usableW - leftW - rightW - (leftActive ? gap : 0) - (rightActive ? gap : 0);
+    const rightX = barX + barW + gap;
+    const usableH = PAGE.h - 2*PAGE.my;
+    const rowH = usableH / rows;
+
+    const maxParts = Math.max(...divs);
+    const tooDense = maxParts > 60 || rowH < 6;
+    largeNote.style.display = tooDense ? 'block' : 'none';
+
+    divs.forEach((A, index) => {
+      const B = N / A;
+      const y = PAGE.my + index * rowH;
+      const fill = rowColor(index);
+      const ink = textColorFor(fill);
+      const g = make('g', {
+        class:'row',
+        'data-divisor':A,
+        'data-pair':B
+      });
+
+      if(leftActive){
+        appendText(g, `${A} ${A > 1 ? 'parts' : 'part'}`, PAGE.mx + leftW/2, y + rowH/2, {
+          fs:clamp(rowH * 0.28, 2.3, 4.6) * textScale(),
+          maxW:leftW - 2,
+          maxH:rowH * 0.72,
+          weight:700,
+          class:'side-text'
+        });
+      }
+
+      g.appendChild(make('rect', {
+        class:'bar-bg',
+        x:barX, y, width:barW, height:rowH,
+        rx:0, ry:0,
+        fill,
+        stroke:'#1f2937',
+        'stroke-width':clamp(rowH * 0.027, 0.16, 0.34)
+      }));
+
+      const segW = barW / A;
+      const sepW = clamp(rowH * 0.023, 0.12, 0.26);
+      if(A > 1){
+        for(let k=1; k<A; k++){
+          const x = barX + segW * k;
+          g.appendChild(make('line', {
+            x1:x, x2:x, y1:y, y2:y+rowH,
+            stroke:'#1f2937',
+            'stroke-width':sepW
+          }));
+        }
+      }
+
+      const mode = cellModeEl.value;
+      const baseFs = clamp(Math.min(rowH * 0.34, segW * 0.48), 1.7, 5.4) * textScale();
+      const value = String(B);
+      const valueWidth = estimateTextWidthAtOne(value) * baseFs;
+      let writingMode = mode;
+      if(mode === 'auto'){
+        if(segW > valueWidth + 2.2 && rowH > 4.5) writingMode = 'all';
+        else if(segW > 3.2 && rowH > 4.5) writingMode = 'first';
+        else writingMode = 'none';
+      }
+
+      if(writingMode === 'all'){
+        for(let k=0; k<A; k++){
+          appendText(g, value, barX + segW*(k+.5), y + rowH/2, {
+            fs:baseFs,
+            maxW:segW * 0.82,
+            maxH:rowH * 0.72,
+            fill:ink,
+            weight:720,
+            class:'cell-text'
+          });
+        }
+      }else if(writingMode === 'first'){
+        appendText(g, value, barX + segW*.5, y + rowH/2, {
+          fs:baseFs,
+          maxW:segW * 0.82,
+          maxH:rowH * 0.72,
+          fill:ink,
+          weight:720,
+          class:'cell-text'
+        });
+      }
+
+      if(rightActive){
+        appendText(g, sideLabel(A, B, N, rightModeEl.value), rightX + rightW/2, y + rowH/2, {
+          fs:clamp(rowH * 0.25, 2.0, 4.2) * textScale(),
+          maxW:rightW - 2,
+          maxH:rowH * 0.78,
+          fill:'#111827',
+          weight:700,
+          class:'side-text'
+        });
+      }
+
+      g.addEventListener('mouseenter', () => setHighlight(A, B));
+      g.addEventListener('mouseleave', clearHighlight);
+      svg.appendChild(g);
+    });
+
+    const divWord = rows > 1 ? 'diviseurs' : 'diviseur';
+    summaryEl.textContent = `${N} · ${rows} ${divWord} · ${divs.join(', ')}`;
+  }
+
+  function svgToString(){
+    const clone = svg.cloneNode(true);
+    clone.setAttribute('xmlns', SVG_NS);
+    clone.setAttribute('width', '297mm');
+    clone.setAttribute('height', '210mm');
+    clone.setAttribute('viewBox', '0 0 297 210');
+    clone.querySelectorAll('.row').forEach(row => row.classList.remove('hot','dim'));
+    return new XMLSerializer().serializeToString(clone);
+  }
+
+  function svgToPngBlob(){
+    const svgText = svgToString();
+    const svgBlob = new Blob([svgText], {type:'image/svg+xml;charset=utf-8'});
+    const url = URL.createObjectURL(svgBlob);
+    return new Promise((resolve, reject) => {
+      const img = new Image();
+      img.onload = () => {
+        try{
+          const canvas = document.createElement('canvas');
+          canvas.width = Math.round(PAGE.w * EXPORT_PX_PER_MM);
+          canvas.height = Math.round(PAGE.h * EXPORT_PX_PER_MM);
+          const ctx = canvas.getContext('2d');
+          ctx.fillStyle = '#ffffff';
+          ctx.fillRect(0,0,canvas.width,canvas.height);
+          ctx.drawImage(img,0,0,canvas.width,canvas.height);
+          URL.revokeObjectURL(url);
+          canvas.toBlob(blob => {
+            if(blob) resolve(blob);
+            else reject(new Error('Conversion impossible.'));
+          }, 'image/png');
+        }catch(err){
+          URL.revokeObjectURL(url);
+          reject(err);
+        }
+      };
+      img.onerror = () => {
+        URL.revokeObjectURL(url);
+        reject(new Error('Image impossible à générer.'));
+      };
+      img.src = url;
+    });
+  }
+
+  function downloadBlob(blob, filename){
+    const a = document.createElement('a');
+    const url = URL.createObjectURL(blob);
+    a.href = url;
+    a.download = filename;
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    window.setTimeout(() => URL.revokeObjectURL(url), 500);
+  }
+
+  async function copyImage(){
+    try{
+      const blob = await svgToPngBlob();
+      if(navigator.clipboard && window.ClipboardItem){
+        await navigator.clipboard.write([new ClipboardItem({'image/png': blob})]);
+        setStatus('Image copiée. Tu peux la coller dans un document.');
+      }else{
+        downloadBlob(blob, 'mur-diviseurs.png');
+        setStatus('Copie non disponible ici : l’image a été téléchargée.');
+      }
+    }catch(err){
+      console.error(err);
+      setStatus('Impossible de copier automatiquement dans ce navigateur. Utilise Télécharger.');
+    }
+  }
+
+  async function downloadImage(){
+    try{
+      const blob = await svgToPngBlob();
+      downloadBlob(blob, 'mur-diviseurs.png');
+      setStatus('Image téléchargée.');
+    }catch(err){
+      console.error(err);
+      setStatus('Téléchargement impossible pour le moment.');
+    }
+  }
+
+  document.getElementById('renderBtn').addEventListener('click', render);
+  numberInput.addEventListener('change', render);
+  numberInput.addEventListener('keydown', (event) => {
+    if(event.key === 'Enter') render();
+  });
+  cellModeEl.addEventListener('change', render);
+  leftModeEl.addEventListener('change', render);
+  rightModeEl.addEventListener('change', render);
+  colorModeEl.addEventListener('change', render);
+  textScaleEl.addEventListener('input', () => { updateScaleLabel(); render(); });
+  document.getElementById('copyBtn').addEventListener('click', copyImage);
+  document.getElementById('downloadBtn').addEventListener('click', downloadImage);
+  document.getElementById('printBtn').addEventListener('click', () => window.print());
+
+  updateScaleLabel();
+  render();
+})();
+</script>
+</body>
+</html>
