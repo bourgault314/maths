@@ -106,6 +106,22 @@
     box-shadow:0 0 0 3px rgba(37,99,235,.18);
     border-color:var(--blue);
   }
+  .range-row{
+    display:flex;
+    align-items:center;
+    gap:10px;
+  }
+  input[type="range"]{
+    width:100%;
+    accent-color:var(--blue);
+  }
+  .range-value{
+    min-width:42px;
+    text-align:right;
+    color:#374151;
+    font-size:12px;
+    font-weight:850;
+  }
   .preset-row{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:12px}
   button{
     appearance:none;
@@ -173,8 +189,8 @@
     background:linear-gradient(135deg,#eef2f7,#e5e7eb);
   }
   .preview-top{
+    display:none;
     width:min(100%,1030px);
-    display:flex;
     justify-content:space-between;
     align-items:center;
     gap:12px;
@@ -252,13 +268,21 @@
           <option value="none">Sans écriture</option>
         </select>
 
-        <label class="basic" for="contentMode">Contenu</label>
-        <select id="contentMode">
-          <option value="fraction" selected>Fraction</option>
-          <option value="letters">En lettres</option>
-          <option value="percent">Pourcentage</option>
-          <option value="decimal">Décimal</option>
+        <label class="basic" for="labelFormat">Contenu écrit</label>
+        <select id="labelFormat">
+          <option value="fraction" selected>Fractions : 1/2</option>
+          <option value="fractionUnit">Fractions avec u : fraction + u</option>
+          <option value="words">En lettres : un, un demi</option>
+          <option value="percent">Pourcentages : 50 %</option>
+          <option value="decimal">Décimaux : 0,5</option>
         </select>
+
+        <label class="basic" for="textScale">Taille de l’écriture</label>
+        <div class="range-row">
+          <input id="textScale" type="range" min="55" max="200" step="5" value="100" />
+          <span class="range-value" id="textScaleValue">100%</span>
+        </div>
+        <div class="hint">La base est plus grande pour les fractions à étage. Le curseur permet encore d’ajuster visuellement si besoin.</div>
 
         <label class="basic" for="colorMode">Couleurs</label>
         <select id="colorMode">
@@ -278,6 +302,10 @@
   </aside>
 
   <section class="preview-area">
+    <div class="preview-top">
+      <strong>Aperçu A4 paysage</strong>
+      <span id="summary"></span>
+    </div>
     <div class="page-wrap">
       <svg id="wallSvg" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 297 210" role="img" aria-label="Mur de fractions généré"></svg>
     </div>
@@ -330,37 +358,12 @@
     19:'#dbeafe', 20:'#ccfbf1', 21:'#fae8ff', 22:'#dcfce7', 23:'#ffe4e6', 24:'#fef3c7'
   };
 
-  const denomWords = {
-    1:'unité',
-    2:'un demi',
-    3:'un tiers',
-    4:'un quart',
-    5:'un cinquième',
-    6:'un sixième',
-    7:'un septième',
-    8:'un huitième',
-    9:'un neuvième',
-    10:'un dixième',
-    11:'un onzième',
-    12:'un douzième',
-    13:'un treizième',
-    14:'un quatorzième',
-    15:'un quinzième',
-    16:'un seizième',
-    17:'un dix-septième',
-    18:'un dix-huitième',
-    19:'un dix-neuvième',
-    20:'un vingtième',
-    21:'un vingt-et-unième',
-    22:'un vingt-deuxième',
-    23:'un vingt-troisième',
-    24:'un vingt-quatrième'
-  };
-
   const denomGrid = document.getElementById('denomGrid');
   const svg = document.getElementById('wallSvg');
   const textModeEl = document.getElementById('textMode');
-  const contentModeEl = document.getElementById('contentMode');
+  const labelFormatEl = document.getElementById('labelFormat');
+  const textScaleEl = document.getElementById('textScale');
+  const textScaleValueEl = document.getElementById('textScaleValue');
   const colorModeEl = document.getElementById('colorMode');
   const summaryEl = document.getElementById('summary');
   const statusEl = document.getElementById('status');
@@ -432,54 +435,216 @@
     return lum < 0.38 ? '#ffffff' : '#111827';
   }
 
+  function updateScaleLabel(){
+    textScaleValueEl.textContent = `${textScaleEl.value}%`;
+  }
+
+  function textScale(){
+    return Number(textScaleEl.value || 100) / 100;
+  }
+
+  function unitFractionName(denom){
+    const names = {
+      2:'demi',
+      3:'tiers',
+      4:'quart',
+      5:'cinquième',
+      6:'sixième',
+      7:'septième',
+      8:'huitième',
+      9:'neuvième',
+      10:'dixième',
+      11:'onzième',
+      12:'douzième',
+      13:'treizième',
+      14:'quatorzième',
+      15:'quinzième',
+      16:'seizième',
+      17:'dix-septième',
+      18:'dix-huitième',
+      19:'dix-neuvième',
+      20:'vingtième',
+      21:'vingt-et-unième',
+      22:'vingt-deuxième',
+      23:'vingt-troisième',
+      24:'vingt-quatrième'
+    };
+    return names[denom] || `${denom}e`;
+  }
+
+  function fractionWordFor(denom){
+    if(denom === 1) return 'un';
+    return `un ${unitFractionName(denom)}`;
+  }
+
+  function gcd(a,b){
+    a = Math.abs(a);
+    b = Math.abs(b);
+    while(b){
+      const t = b;
+      b = a % b;
+      a = t;
+    }
+    return a || 1;
+  }
+
+  function hasFiniteDecimal(numerator, denominator){
+    const g = gcd(numerator, denominator);
+    let d = Math.abs(denominator / g);
+    while(d % 2 === 0) d /= 2;
+    while(d % 5 === 0) d /= 5;
+    return d === 1;
+  }
+
+  function formatFrenchNumber(value, maxDecimals){
+    let cleaned = value.toFixed(maxDecimals);
+    cleaned = cleaned.replace(/(\.\d*?[1-9])0+$/,'$1');
+    cleaned = cleaned.replace(/\.0+$/,'');
+    return cleaned.replace('.', ',');
+  }
+
+  function percentFor(denom){
+    const exact = hasFiniteDecimal(100, denom);
+    const decimals = exact ? (Number.isInteger(100 / denom) ? 0 : 2) : 2;
+    const value = `${formatFrenchNumber(100 / denom, decimals)} %`;
+    return exact ? value : `≈ ${value}`;
+  }
+
+  function decimalFor(denom){
+    if(denom === 1) return '1';
+    const exact = hasFiniteDecimal(1, denom);
+    const decimals = [2,4,5,8,10,16,20].includes(denom) ? 3 : 4;
+    const value = formatFrenchNumber(1 / denom, decimals);
+    return exact ? value : `≈ ${value}`;
+  }
+
+  function plainLabelFor(denom){
+    const mode = labelFormatEl.value;
+    if(mode === 'words') return fractionWordFor(denom);
+    if(mode === 'percent') return percentFor(denom);
+    if(mode === 'decimal') return decimalFor(denom);
+    return denom === 1 ? '1' : `1/${denom}`;
+  }
+
+  function estimateTextWidthAtOne(text){
+    let w = 0;
+    for(const ch of text){
+      if(ch === ' ') w += 0.28;
+      else if(ch === '-' || ch === '–') w += 0.34;
+      else if('ilI1.,:%'.includes(ch)) w += 0.30;
+      else if('mwMW'.includes(ch)) w += 0.78;
+      else if('éèêëàâùûîïôöç'.includes(ch.toLowerCase())) w += 0.57;
+      else w += 0.55;
+    }
+    return Math.max(w, 0.5);
+  }
+
+  function labelLineCandidates(text){
+    const candidates = [[text]];
+    if(text.includes(' ')){
+      const [first, ...rest] = text.split(' ');
+      if(rest.length) candidates.push([first, rest.join(' ')]);
+    }
+    if(text.includes('-')){
+      const parts = text.split(' ');
+      if(parts.length >= 2 && parts[1].includes('-')){
+        const hyphenParts = parts[1].split('-');
+        if(hyphenParts.length === 2){
+          candidates.push([parts[0], `${hyphenParts[0]}-`, hyphenParts[1]]);
+        }
+        if(hyphenParts.length >= 3){
+          candidates.push([parts[0], `${hyphenParts[0]}-${hyphenParts[1]}-`, hyphenParts.slice(2).join('-')]);
+        }
+      }
+    }
+    return candidates;
+  }
+
+  function chooseFittedLines(text, rowH, segW, format){
+    const scale = textScale();
+    const isWordFormat = (format === 'words');
+    const maxW = Math.max(1, segW * (isWordFormat ? 0.86 : 0.84));
+    const maxH = Math.max(1, rowH * (isWordFormat ? 0.82 : 0.78));
+    const candidates = isWordFormat ? labelLineCandidates(text) : [[text]];
+    const maxFs = (isWordFormat
+      ? clamp(Math.min(rowH * 0.34, segW * 0.29), 2.0, 5.4)
+      : clamp(Math.min(rowH * 0.38, segW * 0.42), 2.2, 6.4)) * scale;
+    const minFs = isWordFormat ? 1.35 : 1.55;
+
+    let best = null;
+    for(const lines of candidates){
+      const widest = Math.max(...lines.map(line => estimateTextWidthAtOne(line)));
+      const lineGap = 1.08;
+      let fs = Math.min(maxFs, maxW / widest, maxH / (lines.length * lineGap));
+      fs = Math.max(minFs, fs);
+      const overflowW = Math.max(...lines.map(line => estimateTextWidthAtOne(line) * fs)) - maxW;
+      const overflowH = (lines.length * fs * lineGap) - maxH;
+      const score = Math.max(0, overflowW) * 8 + Math.max(0, overflowH) * 8 - fs + lines.length * 0.035;
+      if(!best || score < best.score) best = {lines, fs, score};
+    }
+
+    // Dernier filet de sécurité : si le meilleur choix déborde encore, on réduit jusqu’à ce que ça rentre.
+    const widest = Math.max(...best.lines.map(line => estimateTextWidthAtOne(line)));
+    const lineGap = 1.08;
+    best.fs = Math.min(best.fs, maxW / widest, maxH / (best.lines.length * lineGap));
+    best.fs = clamp(best.fs, 1.15, maxFs);
+    return best;
+  }
+
+  function fractionBarHalf(fs, segW, denom, withUnit){
+    const widestText = Math.max(
+      estimateTextWidthAtOne('1'),
+      estimateTextWidthAtOne(String(denom))
+    );
+    const idealHalf = (widestText * fs) / 2 + fs * 0.16;
+    const maxHalf = Math.max(1.15, segW * (withUnit ? 0.13 : 0.15));
+    return clamp(idealHalf, 0.95, maxHalf);
+  }
+
+  function appendPlainLabel(group, cx, cy, text, rowH, segW, ink, format){
+    const fitted = chooseFittedLines(text, rowH, segW, format);
+    const lines = fitted.lines;
+    const fs = fitted.fs;
+    const lineGap = 1.08;
+    const t = make('text', {
+      x:cx, y:cy,
+      'font-size':fs,
+      'font-weight':'600',
+      'font-family':'system-ui, -apple-system, Segoe UI, Arial, sans-serif',
+      'text-anchor':'middle',
+      'dominant-baseline':'middle',
+      'letter-spacing':'-0.01em',
+      fill:ink
+    });
+
+    if(lines.length === 1){
+      t.textContent = lines[0];
+    }else{
+      const firstY = cy - ((lines.length - 1) * fs * lineGap) / 2;
+      lines.forEach((line, index) => {
+        const span = make('tspan', {
+          x:cx,
+          y:firstY + index * fs * lineGap,
+          'dominant-baseline':'middle'
+        });
+        span.textContent = line;
+        t.appendChild(span);
+      });
+    }
+    group.appendChild(t);
+  }
+
   function clearSvg(){
     while(svg.firstChild) svg.removeChild(svg.firstChild);
   }
 
-  function formatDecimal(value, maxDigits){
-    return new Intl.NumberFormat('fr-FR', {
-      minimumFractionDigits: 0,
-      maximumFractionDigits: maxDigits
-    }).format(value);
-  }
-
-  function getLabelText(denom, contentMode){
-    if(contentMode === 'letters') return denomWords[denom] || `1/${denom}`;
-    if(contentMode === 'percent') return `${formatDecimal(100 / denom, 2)} %`;
-    if(contentMode === 'decimal') return formatDecimal(1 / denom, 3);
-    return '';
-  }
-
-  function appendFractionLabel(group, cx, cy, denom, rowH, segW, ink, contentMode){
-    if(contentMode !== 'fraction'){
-      const text = denom === 1 && contentMode !== 'letters' ? '1' : getLabelText(denom, contentMode);
-      const shouldRotate = contentMode === 'letters' && (segW < 24 || rowH < 9);
-      const charFactor = contentMode === 'letters' ? 0.54 : 0.44;
-      const maxByWidth = shouldRotate ? rowH * 0.72 : (segW - 1.4) / Math.max(2.2, text.length * charFactor);
-      const maxByHeight = shouldRotate ? (segW - 1.2) / Math.max(2.2, text.length * 0.52) : rowH * 0.44;
-      const fs = clamp(Math.min(maxByWidth, maxByHeight), 1.45, contentMode === 'letters' ? 4.0 : 4.9);
-      const t = make('text', {
-        x:cx, y:cy,
-        'font-size':fs,
-        'font-weight': contentMode === 'letters' ? '700' : '800',
-        'font-family':'system-ui, -apple-system, Segoe UI, Arial, sans-serif',
-        'text-anchor':'middle',
-        'dominant-baseline':'middle',
-        fill:ink,
-        transform: shouldRotate ? `rotate(-90 ${cx} ${cy})` : undefined
-      });
-      t.textContent = text;
-      if(!shouldRotate) t.removeAttribute('transform');
-      group.appendChild(t);
-      return;
-    }
-
+  function appendFractionLabel(group, cx, cy, denom, rowH, segW, ink){
     if(denom === 1){
-      const fs = clamp(rowH * 0.40, 3.2, 7.2);
+      const fs = clamp(rowH * 0.40, 3.2, 7.0) * textScale();
       const t = make('text', {
         x:cx, y:cy,
         'font-size':fs,
-        'font-weight':'800',
+        'font-weight':'600',
         'font-family':'system-ui, -apple-system, Segoe UI, Arial, sans-serif',
         'text-anchor':'middle',
         'dominant-baseline':'middle',
@@ -490,15 +655,15 @@
       return;
     }
 
-    const fs = clamp(Math.min(rowH * 0.28, segW * 0.30), 1.85, 4.7);
-    const barHalf = clamp(fs * 0.62, 1.15, Math.max(1.2, segW * 0.22));
-    const strokeW = clamp(rowH * 0.018, 0.13, 0.24);
-    const offset = clamp(fs * 0.72, 0.95, rowH * 0.34);
+    const fs = clamp(Math.min(rowH * 0.34, segW * 0.34), 2.15, 5.8) * textScale();
+    const barHalf = fractionBarHalf(fs, segW, denom, false);
+    const strokeW = clamp(rowH * 0.015, 0.11, 0.21);
+    const fracOffset = fs * 0.74;
 
     const num = make('text', {
-      x:cx, y:cy - offset,
+      x:cx, y:cy - fracOffset + fs * 0.12,
       'font-size':fs,
-      'font-weight':'750',
+      'font-weight':'600',
       'font-family':'system-ui, -apple-system, Segoe UI, Arial, sans-serif',
       'text-anchor':'middle',
       'dominant-baseline':'middle',
@@ -507,9 +672,9 @@
     num.textContent = '1';
 
     const den = make('text', {
-      x:cx, y:cy + offset,
+      x:cx, y:cy + fracOffset,
       'font-size':fs,
-      'font-weight':'750',
+      'font-weight':'600',
       'font-family':'system-ui, -apple-system, Segoe UI, Arial, sans-serif',
       'text-anchor':'middle',
       'dominant-baseline':'middle',
@@ -528,6 +693,76 @@
     });
 
     group.append(num, line, den);
+  }
+
+  function appendFractionWithUnitLabel(group, cx, cy, denom, rowH, segW, ink){
+    const fs = clamp(Math.min(rowH * 0.34, segW * 0.34), 2.15, 5.8) * textScale();
+
+    if(denom === 1){
+      const t = make('text', {
+        x:cx, y:cy,
+        'font-size':fs,
+        'font-weight':'600',
+        'font-family':'system-ui, -apple-system, Segoe UI, Arial, sans-serif',
+        'text-anchor':'middle',
+        'dominant-baseline':'middle',
+        fill:ink
+      });
+      t.textContent = '1u';
+      group.appendChild(t);
+      return;
+    }
+
+    const barHalf = fractionBarHalf(fs, segW, denom, true);
+    const strokeW = clamp(rowH * 0.015, 0.11, 0.21);
+    const fracOffset = fs * 0.74;
+    const fracCx = cx - fs * 0.26;
+    const unitX = fracCx + barHalf + fs * 0.14;
+
+    const num = make('text', {
+      x:fracCx, y:cy - fracOffset + fs * 0.12,
+      'font-size':fs,
+      'font-weight':'600',
+      'font-family':'system-ui, -apple-system, Segoe UI, Arial, sans-serif',
+      'text-anchor':'middle',
+      'dominant-baseline':'middle',
+      fill:ink
+    });
+    num.textContent = '1';
+
+    const den = make('text', {
+      x:fracCx, y:cy + fracOffset,
+      'font-size':fs,
+      'font-weight':'600',
+      'font-family':'system-ui, -apple-system, Segoe UI, Arial, sans-serif',
+      'text-anchor':'middle',
+      'dominant-baseline':'middle',
+      fill:ink
+    });
+    den.textContent = String(denom);
+
+    const line = make('line', {
+      x1:fracCx - barHalf,
+      x2:fracCx + barHalf,
+      y1:cy,
+      y2:cy,
+      stroke:ink,
+      'stroke-width':strokeW,
+      'stroke-linecap':'round'
+    });
+
+    const unit = make('text', {
+      x:unitX, y:cy,
+      'font-size':fs * 0.95,
+      'font-weight':'600',
+      'font-family':'system-ui, -apple-system, Segoe UI, Arial, sans-serif',
+      'text-anchor':'start',
+      'dominant-baseline':'middle',
+      fill:ink
+    });
+    unit.textContent = 'u';
+
+    group.append(num, line, den, unit);
   }
 
   function appendPageBackground(){
@@ -551,12 +786,13 @@
       });
       t.textContent = 'Choisis au moins une fraction';
       svg.appendChild(t);
-      if(summaryEl) summaryEl.textContent = '0 ligne';
+      summaryEl.textContent = '0 ligne';
       densityNote.style.display = 'none';
       return;
     }
 
     const n = denoms.length;
+    // Mur = briques collées : aucune gouttière entre les bandes.
     const gap = 0;
     const usableW = PAGE.w - 2*PAGE.mx;
     const usableH = PAGE.h - 2*PAGE.my;
@@ -565,12 +801,10 @@
     const left = PAGE.mx;
     let y = PAGE.my;
     const textMode = textModeEl.value;
-    const contentMode = contentModeEl.value;
     const strokeW = clamp(rowH * 0.027, 0.16, 0.34);
     const sepW = clamp(rowH * 0.023, 0.14, 0.28);
 
-    for(let i = 0; i < denoms.length; i++){
-      const d = denoms[i];
+    for(const d of denoms){
       const fill = colorFor(d);
       const ink = textColorFor(fill);
       const row = make('g', {});
@@ -579,42 +813,9 @@
         x:left, y:y, width:usableW, height:rowH,
         rx:0, ry:0,
         fill:fill,
-        stroke:'none'
-      }));
-
-      row.appendChild(make('line', {
-        x1:left, x2:left + usableW,
-        y1:y, y2:y,
         stroke:'#1f2937',
-        'stroke-width':strokeW,
-        'stroke-linecap':'square'
+        'stroke-width':strokeW
       }));
-
-      row.appendChild(make('line', {
-        x1:left, x2:left,
-        y1:y, y2:y + rowH,
-        stroke:'#1f2937',
-        'stroke-width':strokeW,
-        'stroke-linecap':'square'
-      }));
-
-      row.appendChild(make('line', {
-        x1:left + usableW, x2:left + usableW,
-        y1:y, y2:y + rowH,
-        stroke:'#1f2937',
-        'stroke-width':strokeW,
-        'stroke-linecap':'square'
-      }));
-
-      if(i === denoms.length - 1){
-        row.appendChild(make('line', {
-          x1:left, x2:left + usableW,
-          y1:y + rowH, y2:y + rowH,
-          stroke:'#1f2937',
-          'stroke-width':strokeW,
-          'stroke-linecap':'square'
-        }));
-      }
 
       if(d > 1){
         for(let k=1;k<d;k++){
@@ -630,23 +831,27 @@
 
       if(textMode !== 'none'){
         const segW = usableW / d;
+        const format = labelFormatEl.value;
+        const drawOne = (cx) => {
+          if(format === 'fraction') appendFractionLabel(row, cx, y + rowH/2, d, rowH, segW, ink);
+          else if(format === 'fractionUnit') appendFractionWithUnitLabel(row, cx, y + rowH/2, d, rowH, segW, ink);
+          else appendPlainLabel(row, cx, y + rowH/2, plainLabelFor(d), rowH, segW, ink, format);
+        };
         if(textMode === 'all'){
-          for(let k=0;k<d;k++){
-            appendFractionLabel(row, left + segW*(k+.5), y + rowH/2, d, rowH, segW, ink, contentMode);
-          }
+          for(let k=0;k<d;k++) drawOne(left + segW*(k+.5));
         }else{
-          appendFractionLabel(row, left + segW*.5, y + rowH/2, d, rowH, segW, ink, contentMode);
+          drawOne(left + segW*.5);
         }
       }
 
       svg.appendChild(row);
-      y += rowH + gap;
+      y += rowH;
     }
 
     const lineWord = n > 1 ? 'lignes' : 'ligne';
     const maxD = Math.max(...denoms);
-    const contentLabel = contentMode === 'fraction' ? 'fractions' : contentMode === 'letters' ? 'lettres' : contentMode === 'percent' ? 'pourcentages' : 'décimaux';
-    if(summaryEl) summaryEl.textContent = `${n} ${lineWord} · jusqu’à 1/${maxD} · ${contentLabel} · A4 paysage`;
+    const formatLabel = {fraction:'fractions', fractionUnit:'fractions avec u', words:'lettres', percent:'pourcentages', decimal:'décimaux'}[labelFormatEl.value] || 'fractions';
+    summaryEl.textContent = `${n} ${lineWord} · jusqu’à 1/${maxD} · ${formatLabel} · A4 paysage`;
     densityNote.style.display = n >= 18 ? 'block' : 'none';
   }
 
@@ -736,10 +941,12 @@
   document.getElementById('downloadBtn').addEventListener('click', downloadImage);
   document.getElementById('printBtn').addEventListener('click', () => window.print());
   textModeEl.addEventListener('change', render);
-  contentModeEl.addEventListener('change', render);
+  labelFormatEl.addEventListener('change', render);
+  textScaleEl.addEventListener('input', () => { updateScaleLabel(); render(); });
   colorModeEl.addEventListener('change', render);
 
   buildGrid();
+  updateScaleLabel();
   render();
 })();
 </script>
