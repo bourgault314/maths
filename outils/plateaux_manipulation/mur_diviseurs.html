@@ -132,6 +132,7 @@
     background:linear-gradient(135deg,#eef2f7,#e5e7eb);
   }
   .preview-top{
+    display:none;
     width:min(100%,1120px);
     display:flex;
     justify-content:space-between;
@@ -212,12 +213,21 @@
       <fieldset>
         <legend>Affichage</legend>
 
+        <label class="basic" for="quickMode">Mode rapide</label>
+        <select id="quickMode">
+          <option value="complete" selected>Complet : parts + briques + produits</option>
+          <option value="partsOnly">À compléter : seulement le nombre de parts</option>
+          <option value="partsProducts">À compléter : parts + multiplications</option>
+          <option value="empty">Mur vide : aucune écriture</option>
+          <option value="custom">Personnalisé</option>
+        </select>
+
         <label class="basic" for="cellMode">Dans les briques</label>
         <select id="cellMode">
           <option value="auto" selected>Auto : écrire quand ça rentre</option>
           <option value="all">Écrire dans toutes les briques</option>
           <option value="first">Écrire seulement dans la première brique</option>
-          <option value="none">Sans écriture</option>
+          <option value="none">Sans écriture dans les briques</option>
         </select>
 
         <label class="basic" for="leftMode">À gauche</label>
@@ -236,7 +246,7 @@
 
         <label class="basic" for="textScale">Taille de l’écriture</label>
         <div class="range-row">
-          <input id="textScale" type="range" min="60" max="180" step="5" value="100" />
+          <input id="textScale" type="range" min="60" max="180" step="5" value="120" />
           <span class="range-value" id="textScaleValue">100%</span>
         </div>
 
@@ -262,10 +272,6 @@
   </aside>
 
   <section class="preview-area">
-    <div class="preview-top">
-      <strong>Aperçu A4 paysage</strong>
-      <span id="summary"></span>
-    </div>
     <div class="page-wrap">
       <svg id="wallSvg" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 297 210" role="img" aria-label="Mur des diviseurs généré"></svg>
     </div>
@@ -292,13 +298,14 @@
 
   const svg = document.getElementById('wallSvg');
   const numberInput = document.getElementById('numberInput');
+  const quickModeEl = document.getElementById('quickMode');
   const cellModeEl = document.getElementById('cellMode');
   const leftModeEl = document.getElementById('leftMode');
   const rightModeEl = document.getElementById('rightMode');
   const textScaleEl = document.getElementById('textScale');
   const textScaleValueEl = document.getElementById('textScaleValue');
   const colorModeEl = document.getElementById('colorMode');
-  const summaryEl = document.getElementById('summary');
+  const summaryEl = null;
   const statusEl = document.getElementById('status');
   const largeNote = document.getElementById('largeNote');
 
@@ -323,6 +330,30 @@
 
   function updateScaleLabel(){
     textScaleValueEl.textContent = `${textScaleEl.value}%`;
+  }
+
+  function applyQuickMode(mode){
+    if(mode === 'complete'){
+      cellModeEl.value = 'auto';
+      leftModeEl.value = 'parts';
+      rightModeEl.value = 'multiplication';
+    }else if(mode === 'partsOnly'){
+      cellModeEl.value = 'none';
+      leftModeEl.value = 'parts';
+      rightModeEl.value = 'none';
+    }else if(mode === 'partsProducts'){
+      cellModeEl.value = 'none';
+      leftModeEl.value = 'parts';
+      rightModeEl.value = 'multiplication';
+    }else if(mode === 'empty'){
+      cellModeEl.value = 'none';
+      leftModeEl.value = 'none';
+      rightModeEl.value = 'none';
+    }
+  }
+
+  function markCustom(){
+    quickModeEl.value = 'custom';
   }
 
   function divisorsOf(n){
@@ -568,7 +599,7 @@
     });
 
     const divWord = rows > 1 ? 'diviseurs' : 'diviseur';
-    summaryEl.textContent = `${N} · ${rows} ${divWord} · ${divs.join(', ')}`;
+    
   }
 
   function svgToString(){
@@ -657,9 +688,15 @@
   numberInput.addEventListener('keydown', (event) => {
     if(event.key === 'Enter') render();
   });
-  cellModeEl.addEventListener('change', render);
-  leftModeEl.addEventListener('change', render);
-  rightModeEl.addEventListener('change', render);
+
+  quickModeEl.addEventListener('change', () => {
+    applyQuickMode(quickModeEl.value);
+    render();
+  });
+
+  cellModeEl.addEventListener('change', () => { markCustom(); render(); });
+  leftModeEl.addEventListener('change', () => { markCustom(); render(); });
+  rightModeEl.addEventListener('change', () => { markCustom(); render(); });
   colorModeEl.addEventListener('change', render);
   textScaleEl.addEventListener('input', () => { updateScaleLabel(); render(); });
   document.getElementById('copyBtn').addEventListener('click', copyImage);
