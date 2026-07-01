@@ -592,13 +592,15 @@
   }
 
   function fractionBarHalf(fs, segW, denom, withUnit){
+    const denomText = String(denom);
     const widestText = Math.max(
       estimateTextWidthAtOne('1'),
-      estimateTextWidthAtOne(String(denom))
+      estimateTextWidthAtOne(denomText)
     );
-    const idealHalf = (widestText * fs) / 2 + fs * 0.16;
-    const maxHalf = Math.max(1.15, segW * (withUnit ? 0.13 : 0.15));
-    return clamp(idealHalf, 0.95, maxHalf);
+    const extraPad = fs * (denom >= 10 ? 0.28 : 0.18);
+    const idealHalf = (widestText * fs) / 2 + extraPad;
+    const maxHalf = Math.max(1.2, segW * (withUnit ? 0.22 : 0.24));
+    return clamp(idealHalf, 1.0, maxHalf);
   }
 
   function appendPlainLabel(group, cx, cy, text, rowH, segW, ink, format){
