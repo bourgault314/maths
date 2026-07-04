@@ -181,8 +181,8 @@
     color:#0968bd;
   }
   .plateau{
-    --stage-top:82px;
-    --stage-bottom:126px;
+    --stage-top:64px;
+    --stage-bottom:106px;
     min-height:0;
     position:relative;
     overflow:hidden;
@@ -307,8 +307,8 @@
     max-width:calc(100% - 32px);
     pointer-events:none;
   }
-  .eqOverlayTop{ top:14px; }
-  .eqOverlayBottom{ bottom:76px; }
+  .eqOverlayTop{ top:10px; }
+  .eqOverlayBottom{ bottom:62px; }
   .calcPanel{
     position:absolute;
     left:50%;
@@ -384,7 +384,7 @@
   .message.bad{background:#fff8e8;color:#664000;border:1px solid #ffd99a}
   @media(max-width:980px){
     body{overflow:hidden}
-    .plateau{--stage-top:72px;--stage-bottom:118px}
+    .plateau{--stage-top:60px;--stage-bottom:104px}
     .app{height:100dvh;min-height:0}
     .toolbar{gap:6px}
     .title{font-size:19px}
@@ -394,7 +394,7 @@
     .message{min-width:0;flex-basis:100%}
     .eqOverlay .pill{font-size:19px;padding:7px 12px}
     .calcPanel{max-width:calc(100% - 28px);bottom:14px}
-    .eqOverlayBottom{bottom:74px}
+    .eqOverlayBottom{bottom:62px}
   }
 </style>
 </head>
@@ -537,8 +537,8 @@
     const packetHB=Math.max(76, rowsB*cell + padY*2);
     const gap=18;
     const left=150;
-    const top=54;
-    const labelGap=52;
+    const top=34;
+    const labelGap=44;
     const yA=top+44;
     const restGap=34;
     const rColsA=restCols(rA), rColsB=restCols(rB);
@@ -551,7 +551,7 @@
     const yB=yA+rowHA+labelGap;
     const restX=left+s*(packetW+gap)+restGap;
     const totalW=restX+restW+70;
-    const extraBottom=46;
+    const extraBottom=28;
     const totalH=yB+rowHB+extraBottom;
     return {A,B,s,qA,rA,qB,rB,colsA,colsB,cell,dotR,padX,padY,packetW,packetHA,packetHB,rowHA,rowHB,gap,left,top,yA,yB,restX,restW,restHA,restHB,totalW,totalH,restGap};
   }
