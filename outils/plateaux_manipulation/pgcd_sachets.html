@@ -268,6 +268,14 @@
     dominant-baseline:middle;
     fill:#475569;
   }
+  .packetLabel{
+    font-size:16px;
+    font-weight:950;
+    text-anchor:middle;
+    dominant-baseline:middle;
+    fill:#64748b;
+    letter-spacing:.02em;
+  }
   .quotientNum{
     font-size:17px;
     font-weight:950;
@@ -382,6 +390,120 @@
   }
   .message.ok{background:#edf9f1;color:#126f2a;border:1px solid #b7e6c4}
   .message.bad{background:#fff8e8;color:#664000;border:1px solid #ffd99a}
+
+  .divisorsTab{
+    position:absolute;
+    left:16px;
+    bottom:14px;
+    z-index:6;
+    width:min(440px, calc(100% - 260px));
+    min-width:260px;
+    border:1px solid #dbe3ee;
+    border-radius:18px;
+    background:rgba(255,255,255,.96);
+    box-shadow:0 10px 24px rgba(15,23,42,.10);
+    overflow:hidden;
+  }
+  .divisorsToggle{
+    width:100%;
+    border:0;
+    border-radius:0;
+    background:transparent;
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:10px;
+    min-height:42px;
+    padding:9px 12px;
+    color:#0f172a;
+    box-shadow:none;
+  }
+  .divisorsToggle:hover{box-shadow:none;background:#f8fafc}
+  .divisorsTitle{
+    display:flex;
+    align-items:center;
+    gap:8px;
+    font-size:15px;
+    font-weight:950;
+  }
+  .divisorsCount{
+    min-width:24px;
+    height:24px;
+    padding:0 7px;
+    border-radius:999px;
+    background:#eff6ff;
+    color:#0968bd;
+    display:inline-flex;
+    align-items:center;
+    justify-content:center;
+    font-size:13px;
+    font-weight:1000;
+  }
+  .divisorsChevron{
+    font-size:18px;
+    font-weight:1000;
+    color:#64748b;
+  }
+  .divisorsContent{
+    border-top:1px solid #e2e8f0;
+    padding:10px 12px 12px;
+    display:flex;
+    flex-direction:column;
+    gap:10px;
+  }
+  .divisorList{
+    display:flex;
+    align-items:center;
+    flex-wrap:wrap;
+    gap:7px;
+    min-height:30px;
+  }
+  .divisorChip{
+    min-width:34px;
+    height:30px;
+    padding:0 10px;
+    border-radius:999px;
+    background:#eff6ff;
+    color:#095ca8;
+    border:1px solid #bfdbfe;
+    display:inline-flex;
+    align-items:center;
+    justify-content:center;
+    font-size:16px;
+    font-weight:1000;
+  }
+  .divisorEmpty{
+    color:#64748b;
+    font-size:14px;
+    font-weight:800;
+  }
+  .divisorActions{
+    display:flex;
+    align-items:center;
+    gap:8px;
+    flex-wrap:wrap;
+  }
+  .addDivisorBtn{
+    color:#126f2a;
+    background:#ecfdf5;
+    border-color:#b7e6c4;
+  }
+  .addDivisorBtn:disabled{
+    opacity:.46;
+    cursor:not-allowed;
+    background:#f8fafc;
+    color:#64748b;
+    border-color:#e2e8f0;
+  }
+  .clearDivisorsBtn{
+    min-height:36px;
+    color:#64748b;
+    background:#fff;
+  }
+  .clearDivisorsBtn:disabled{
+    opacity:.38;
+    cursor:not-allowed;
+  }
   @media(max-width:980px){
     body{overflow:hidden}
     .plateau{--stage-top:60px;--stage-bottom:104px}
@@ -395,6 +517,8 @@
     .eqOverlay .pill{font-size:19px;padding:7px 12px}
     .calcPanel{max-width:calc(100% - 28px);bottom:14px}
     .eqOverlayBottom{bottom:62px}
+    .divisorsTab{left:10px;bottom:58px;width:min(460px, calc(100% - 20px));min-width:0}
+    .zoomPanel{right:10px;bottom:10px}
   }
 </style>
 </head>
@@ -440,6 +564,19 @@
       <div class="message bad" id="message" hidden>8 n’est pas un diviseur commun.</div>
       <div class="pill pgcd" id="pgcdPill" hidden></div>
     </div>
+    <div class="divisorsTab collapsed" id="divisorsTab">
+      <button class="divisorsToggle" id="divisorsToggle" aria-expanded="false">
+        <span class="divisorsTitle">Liste des diviseurs communs <span class="divisorsCount" id="divisorsCount">0</span></span>
+        <span class="divisorsChevron" id="divisorsChevron">▸</span>
+      </button>
+      <div class="divisorsContent" id="divisorsContent" hidden>
+        <div class="divisorList" id="divisorList"><span class="divisorEmpty">aucun pour l’instant</span></div>
+        <div class="divisorActions">
+          <button class="addDivisorBtn" id="addDivisorBtn">Ajouter 8</button>
+          <button class="clearDivisorsBtn" id="clearDivisorsBtn">Vider</button>
+        </div>
+      </div>
+    </div>
     <div class="zoomPanel" id="zoomPanel" aria-label="Zoom du plateau">
       <button id="zoomOutBtn" title="Dézoomer">−</button>
       <span class="zoomValue" id="zoomValue">100%</span>
@@ -476,6 +613,14 @@
   const zoomInBtn = document.getElementById('zoomInBtn');
   const zoomFitBtn = document.getElementById('zoomFitBtn');
   const zoomValue = document.getElementById('zoomValue');
+  const divisorsTab = document.getElementById('divisorsTab');
+  const divisorsToggle = document.getElementById('divisorsToggle');
+  const divisorsContent = document.getElementById('divisorsContent');
+  const divisorsChevron = document.getElementById('divisorsChevron');
+  const divisorsCount = document.getElementById('divisorsCount');
+  const divisorList = document.getElementById('divisorList');
+  const addDivisorBtn = document.getElementById('addDivisorBtn');
+  const clearDivisorsBtn = document.getElementById('clearDivisorsBtn');
 
   const state = {
     A:24,
@@ -487,7 +632,9 @@
     manualZoom:1,
     panX:0,
     panY:0,
-    lastBounds:null
+    lastBounds:null,
+    divisorsOpen:false,
+    commonDivisors:[]
   };
 
   const COLORS = {
@@ -688,6 +835,10 @@
     const yRestB=restTop(layout,'B');
     const fullTop=yA-34;
     const fullBottom=yB+rowHB+20;
+    if(state.guides){
+      const groupW=(s-1)*(packetW+gap)+packetW;
+      labelsLayer.appendChild(textNode('Paquets',{class:'packetLabel', x:left+groupW/2, y:yA-72}));
+    }
     for(let col=0; col<s; col++){
       const x=left+col*(packetW+gap);
       if(state.guides){
@@ -732,6 +883,37 @@
     zoomInBtn.disabled = state.manualZoom >= 2.49;
     plateau.classList.toggle('zoomed', state.manualZoom > 1.01);
   }
+
+  function syncDivisorsUi(ok){
+    divisorsTab.classList.toggle('open', state.divisorsOpen);
+    divisorsTab.classList.toggle('collapsed', !state.divisorsOpen);
+    divisorsToggle.setAttribute('aria-expanded', String(state.divisorsOpen));
+    divisorsContent.hidden = !state.divisorsOpen;
+    divisorsChevron.textContent = state.divisorsOpen ? '▾' : '▸';
+    divisorsCount.textContent = state.commonDivisors.length;
+
+    divisorList.innerHTML = '';
+    if(state.commonDivisors.length===0){
+      const empty=document.createElement('span');
+      empty.className='divisorEmpty';
+      empty.textContent='aucun pour l’instant';
+      divisorList.appendChild(empty);
+    }else{
+      state.commonDivisors.slice().sort((a,b)=>a-b).forEach(v=>{
+        const chip=document.createElement('span');
+        chip.className='divisorChip';
+        chip.textContent=String(v);
+        divisorList.appendChild(chip);
+      });
+    }
+
+    const already=state.commonDivisors.includes(state.s);
+    addDivisorBtn.disabled = !ok || already;
+    addDivisorBtn.textContent = already ? `${state.s} déjà dans la liste` : `Ajouter ${state.s}`;
+    addDivisorBtn.title = ok ? '' : 'Possible seulement quand il n’y a aucun reste dans les deux collections.';
+    clearDivisorsBtn.disabled = state.commonDivisors.length===0;
+  }
+
   function clampPan(W,H,vw,vh){
     const maxX=Math.max(0,(W-vw)/2);
     const maxY=Math.max(0,(H-vh)/2);
@@ -781,8 +963,13 @@
     sRange.value=String(state.s);
   }
   function render(){
-    state.A=clamp(parseInt(nAInput.value||1,10),1,240);
-    state.B=clamp(parseInt(nBInput.value||1,10),1,240);
+    const nextA=clamp(parseInt(nAInput.value||1,10),1,240);
+    const nextB=clamp(parseInt(nBInput.value||1,10),1,240);
+    if(nextA!==state.A || nextB!==state.B){
+      state.commonDivisors=[];
+    }
+    state.A=nextA;
+    state.B=nextB;
     nAInput.value=state.A;
     nBInput.value=state.B;
     updateMax();
@@ -803,6 +990,7 @@
     message.hidden=!state.calc;
     message.className='message '+(ok?'ok':'bad');
     message.textContent= ok ? `${state.s} est un diviseur commun.` : `${state.s} n’est pas un diviseur commun.`;
+    syncDivisorsUi(ok);
     if(state.reveal){
       const g=gcd(state.A,state.B);
       pgcdPill.hidden=false;
@@ -827,6 +1015,18 @@
   calcBtn.addEventListener('click',()=>{ state.calc=!state.calc; calcBtn.classList.toggle('active',state.calc); render(); });
   guidesBtn.addEventListener('click',()=>{ state.guides=!state.guides; guidesBtn.classList.toggle('active',state.guides); render(); });
   revealBtn.addEventListener('click',()=>{ state.reveal=!state.reveal; revealBtn.classList.toggle('active',state.reveal); render(); });
+  divisorsTab.addEventListener('pointerdown', e=>e.stopPropagation());
+  divisorsTab.addEventListener('click', e=>e.stopPropagation());
+  divisorsToggle.addEventListener('click',()=>{ state.divisorsOpen=!state.divisorsOpen; syncDivisorsUi(state.A%state.s===0 && state.B%state.s===0); });
+  addDivisorBtn.addEventListener('click',()=>{
+    const ok=(state.A%state.s===0 && state.B%state.s===0);
+    if(!ok || state.commonDivisors.includes(state.s)) return;
+    state.commonDivisors.push(state.s);
+    state.commonDivisors.sort((a,b)=>a-b);
+    state.divisorsOpen=true;
+    syncDivisorsUi(ok);
+  });
+  clearDivisorsBtn.addEventListener('click',()=>{ state.commonDivisors=[]; syncDivisorsUi(state.A%state.s===0 && state.B%state.s===0); });
   fullBtn.addEventListener('click',async()=>{
     if(!document.fullscreenElement){ await document.getElementById('app').requestFullscreen?.(); }
     else { await document.exitFullscreen?.(); }
