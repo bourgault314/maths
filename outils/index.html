@@ -25,6 +25,7 @@
   --c-magenta: #db2777; /* Cahier de calculs */
   --c-slate: #475569;  /* Patterns / Suites */
   --c-teal: #0d9488;   /* Engrenages */
+  --c-algebra: #f47c20; /* Tuiles algébriques */
 }
 
 *{box-sizing:border-box}
@@ -51,13 +52,39 @@ body{
   position: relative;
   display: flex;
   align-items: center;
+  justify-content:center;
   min-height: 56px;
   margin-bottom: 14px;
 }
 
 header{
-  text-align: left;
+  text-align: center;
   margin-bottom: 6px;
+  width:100%;
+}
+
+.brand-header{
+  width:100%;
+  display:grid;
+  justify-items:center;
+  gap:4px;
+}
+
+.corner-brand{
+  position:absolute;
+  top:0;
+  right:0;
+  padding:6px 10px;
+  font-size:0.88rem;
+  font-weight:800;
+  letter-spacing:-0.02em;
+  color:#64748b;
+  opacity:.92;
+  user-select:none;
+}
+
+.corner-brand .amp{
+  color:#0d9488;
 }
 
 header h1{
@@ -118,6 +145,7 @@ a.card[data-color="club"]:hover        { border-top-color: var(--c-indigo); }
 a.card[data-color="cahier"]:hover      { border-top-color: var(--c-magenta); }
 a.card[data-color="patterns"]:hover    { border-top-color: var(--c-slate); }
 a.card[data-color="engrenages"]:hover  { border-top-color: var(--c-teal); }
+a.card[data-color="algebra"]:hover     { border-top-color: var(--c-algebra); }
 
 .card-title{
   display: flex;
@@ -147,6 +175,83 @@ a.card[data-color="engrenages"]:hover  { border-top-color: var(--c-teal); }
   fill:var(--c-green);
 }
 
+.title-algebra{
+  display:inline-flex;
+  align-items:center;
+  gap:9px;
+}
+
+.tile-icon{
+  display:inline-grid;
+  grid-template-columns:24px 24px;
+  grid-template-rows:12px 12px;
+  gap:3px;
+  align-items:start;
+  justify-items:start;
+  flex:0 0 auto;
+}
+
+.tile-icon .tile-x2,
+.tile-icon .tile-x,
+.tile-icon .tile-u{
+  display:grid;
+  place-items:center;
+  border:1.4px solid rgba(15,23,42,.42);
+  border-radius:0;
+  font-size:8px;
+  font-weight:950;
+  line-height:1;
+  box-shadow:0 1px 1px rgba(0,0,0,.08);
+  color:#1f2937;
+}
+
+.tile-icon .tile-x2{
+  grid-column:1;
+  grid-row:1 / span 2;
+  width:24px;
+  height:24px;
+  background:#4fc3f7;
+}
+
+.tile-icon .tile-x{
+  grid-column:2;
+  grid-row:1;
+  width:24px;
+  height:12px;
+  background:#8ccf8c;
+}
+
+.tile-icon .tile-u{
+  grid-column:2;
+  grid-row:2;
+  width:12px;
+  height:12px;
+  background:#ffe66b;
+  font-size:6px;
+}
+
+.title-fraction{
+  display:inline-flex;
+  align-items:center;
+  gap:9px;
+}
+
+.fraction-icon{
+  width:1.45em;
+  height:1.45em;
+  flex:0 0 auto;
+}
+
+.fraction-icon svg{
+  display:block;
+  width:100%;
+  height:100%;
+}
+
+.fraction-icon text{
+  font-family: system-ui, -apple-system, "Segoe UI", Roboto, Arial, sans-serif;
+  font-weight:900;
+}
 
 .card-desc{
   margin: 0;
@@ -282,6 +387,7 @@ footer{
     margin-bottom: 12px;
   }
 
+
   header h1{
     font-size: clamp(25px, 6vw, 31px);
   }
@@ -293,7 +399,8 @@ footer{
 <main class="wrap">
 
   <div class="topbar">
-    <header>
+    <div class="corner-brand" aria-label="maths and go">maths<span class="amp">&amp;</span>go</div>
+    <header class="brand-header">
       <h1>Outils pédagogiques</h1>
     </header>
   </div>
@@ -331,8 +438,13 @@ footer{
     </a>
 
     <a class="card" href="fractions/index_fractions.html" data-color="fractions">
-      <div class="card-title"><span>½ Fractions</span></div>
+      <div class="card-title"><span class="title-fraction"><span class="fraction-icon" aria-hidden="true"><svg viewBox="0 0 64 64" role="img" focusable="false"><rect x="7" y="7" width="50" height="50" rx="10" fill="#f5f3ff" stroke="#8b5cf6" stroke-width="3"/><path d="M16 42 L46 18" stroke="#8b5cf6" stroke-width="4" stroke-linecap="round"/><text x="22" y="28" font-size="16" text-anchor="middle" fill="#6d28d9">1</text><text x="41" y="46" font-size="16" text-anchor="middle" fill="#6d28d9">2</text></svg></span><span>Fractions</span></span></div>
       <p class="card-desc">Manipuler, représenter, comprendre et imprimer des fractions.</p>
+    </a>
+
+    <a class="card" href="tuiles_algebrique/" data-color="algebra">
+      <div class="card-title"><span class="title-algebra"><span class="tile-icon" aria-hidden="true"><span class="tile-x2">x²</span><span class="tile-x">x</span><span class="tile-u">1</span></span><span>Tuiles algébriques</span></span></div>
+      <p class="card-desc">Générateurs, tuiles à imprimer et manipulations en ligne pour entrer dans l’algèbre.</p>
     </a>
 
     <a class="card" href="plateaux_manipulation/" data-color="plateaux">
