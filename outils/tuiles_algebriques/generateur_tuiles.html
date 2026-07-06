@@ -50,7 +50,7 @@ button:hover{filter:brightness(.985);transform:translateY(-1px)}
 .page{background:white;box-shadow:var(--shadow);position:relative;overflow:hidden;border:1px solid #ddd;page:a4-portrait}
 .page.portrait{width:210mm;height:297mm}
 .page.cazoom{--tileUnit:12.4mm;--tileX:39.6mm;--gap:3.1mm}
-.page.large{--tileUnit:14mm;--tileX:44.4mm;--gap:2.8mm}
+.page.large{--tileUnit:13.6mm;--tileX:43.2mm;--gap:2.2mm}
 .sheet{position:absolute;inset:0;padding:10mm 10mm 7mm;display:flex;flex-direction:column}
 .sheet-inner{height:100%;display:flex;flex-direction:column;min-height:0}
 .sheet.back .sheet-inner{transform:translate(var(--backOffsetX),var(--backOffsetY));}
@@ -89,6 +89,7 @@ button:hover{filter:brightness(.985);transform:translateY(-1px)}
 .type .tile.negative{background:var(--neg)!important}
 .page.thin{--stroke:.30mm}
 .board{display:flex;flex-direction:column;gap:calc(var(--gap) + .3mm);padding-top:1mm;width:100%;align-items:center}
+.page.large .board{gap:2.4mm}
 .row-tiles{display:flex;gap:var(--gap);align-items:flex-start;justify-content:center;width:100%}
 .row-tiles.units{gap:2.4mm}
 .group-gap{width:8mm;flex:0 0 auto}
@@ -187,13 +188,13 @@ function boardX2(){
 }
 function boardX(){
   let rows='';
-  const rowCount = isLarge() ? 14 : 16;
+  const rowCount = isLarge() ? 15 : 16;
   for(let i=0;i<rowCount;i++) rows += `<div class="row-tiles">${repeat('x',1,2)}${repeat('x',-1,2)}</div>`;
   return `<div class="board centered">${rows}</div>`;
 }
 function boardU(){
   let rows='';
-  const rowCount = isLarge() ? 14 : 16;
+  const rowCount = isLarge() ? 15 : 16;
   for(let i=0;i<rowCount;i++) rows += `<div class="row-tiles units">${repeat('unit',1,5)}<div class="group-gap"></div>${repeat('unit',-1,5)}</div>`;
   return `<div class="board centered">${rows}</div>`;
 }
