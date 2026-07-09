@@ -137,6 +137,91 @@
   button{padding:8px 8px;border-radius:11px;font-size:.84rem}
   .math-x,.tile-label,.term-block{font-family:"Cambria Math","STIX Two Math","Segoe UI Symbol","Comic Sans MS","Segoe Print","Bradley Hand","Chalkboard SE",cursive;font-weight:900}
 
+
+  /* Panneau de commande épuré : type principal visible, réglages rangés. */
+  .app{grid-template-columns:242px 1fr;gap:12px;padding:12px;}
+  .controls.pro-controls{padding:10px;border-radius:18px;top:12px;height:calc(100vh - 24px);overflow:auto;background:rgba(255,255,255,.97)}
+  .pro-controls .brand{margin:0 0 8px;padding:6px 0 9px;border-bottom:1px solid #eee4d9;text-align:center}
+  .pro-controls .logo-img{width:116px;margin:0 auto 4px;filter:drop-shadow(0 2px 3px rgba(68,45,22,.09))}
+  .pro-controls h1{font-size:.96rem;letter-spacing:-.035em;margin:0;line-height:1.03}
+  .pro-controls .subtitle{font-size:.70rem;line-height:1.1;margin-top:2px;color:var(--muted)}
+  .panel-section{border-top:1px solid #eee4d9;margin-top:7px;padding-top:7px}
+  .panel-section:first-of-type{border-top:0;margin-top:0;padding-top:0}
+  .pro-controls .block-title{font-size:.62rem;margin:0 0 5px;color:#8a7462;letter-spacing:.09em;text-transform:uppercase;font-weight:1000}
+  .control-card{background:#fbf9f6;border:1px solid #eee4d9;border-radius:12px;padding:6px;margin:5px 0}
+  .control-card.compact-card{padding:5px 6px}
+  .control-label{font-size:.67rem;font-weight:950;color:#6f6258;margin-bottom:4px;line-height:1;text-transform:none;letter-spacing:.01em}
+  .control-select,.control-number{position:absolute!important;left:-9999px!important;width:1px!important;height:1px!important;opacity:0!important;pointer-events:none!important}
+  .seg-grid{display:grid;gap:4px;width:100%}
+  .seg-grid.cols-2{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .seg-grid.cols-3{grid-template-columns:repeat(3,minmax(0,1fr))}
+  .seg-grid.type-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:6px}
+  .seg-btn{border:1px solid #ded4c9;background:#fff;border-radius:9px;padding:6px 5px;min-height:30px;font-size:.72rem;font-weight:900;line-height:1.08;letter-spacing:-.01em;box-shadow:none;color:#2a2724;cursor:pointer;white-space:normal}
+  .type-grid .seg-btn{min-height:42px;font-size:.76rem;border-radius:12px;padding:8px 6px;background:#fffdf9;box-shadow:0 1px 0 rgba(68,45,22,.04)}
+  .seg-btn:hover{transform:none;filter:brightness(.992)}
+  .seg-btn.active{background:#fff3e9;border-color:var(--accent);box-shadow:inset 0 0 0 1px var(--accent);color:#8e4a12}
+  .type-grid .seg-btn.active{box-shadow:inset 0 0 0 1.5px var(--accent),0 2px 8px rgba(244,124,32,.08)}
+  .fold-card{border:1px solid #eee4d9;border-radius:13px;background:#fbf9f6;margin:6px 0;overflow:hidden}
+  .fold-card summary{list-style:none;cursor:pointer;display:grid;grid-template-columns:1fr auto;gap:8px;align-items:center;padding:8px 9px;font-weight:950;color:#2a2724;font-size:.78rem;line-height:1.1}
+  .fold-card summary::-webkit-details-marker{display:none}
+  .fold-card summary::after{content:'+';display:grid;place-items:center;width:20px;height:20px;border-radius:999px;background:#fff3e9;color:#8e4a12;border:1px solid #f0cfb2;font-size:.95rem;line-height:1}
+  .fold-card[open] summary::after{content:'−'}
+  .summary-line{display:flex;flex-direction:column;gap:2px;min-width:0}
+  .summary-title{font-size:.63rem;text-transform:uppercase;letter-spacing:.08em;color:#8a7462;font-weight:1000}
+  .summary-value{font-size:.78rem;color:#2a2724;font-weight:950;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .fold-body{border-top:1px solid #eee4d9;padding:7px;background:#fffdf9}
+  .duo-controls{display:grid;grid-template-columns:1fr 1fr;gap:6px}
+  .stepper{display:grid;grid-template-columns:26px 1fr 26px;align-items:center;gap:4px}
+  .stepper button{border:1px solid #ded4c9;background:#fff;border-radius:8px;padding:0;min-height:28px;font-size:1rem;font-weight:1000;line-height:1;color:#2a2724;cursor:pointer}
+  .stepper span{display:grid;place-items:center;min-height:28px;border:1px solid #eee4d9;border-radius:8px;background:#fff;font-size:.84rem;font-weight:1000;color:#2a2724}
+  .toggle-row{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-top:5px}
+  .toggle-pill{display:block;position:relative;cursor:pointer}
+  .toggle-pill input{position:absolute;opacity:0;pointer-events:none}
+  .toggle-pill span{display:grid;place-items:center;min-height:34px;padding:6px;border:1px solid #ded4c9;border-radius:10px;background:#fff;font-size:.72rem;font-weight:900;line-height:1.08;text-align:center;color:#2a2724}
+  .toggle-pill.is-on span{background:#fff3e9;border-color:var(--accent);box-shadow:inset 0 0 0 1px var(--accent);color:#8e4a12}
+  .options-grid{display:grid;gap:6px}
+  .pro-controls .mini{font-size:.66rem;color:var(--muted);line-height:1.16;margin-top:5px;text-align:center}
+  .action-bar{position:sticky;bottom:0;z-index:8;display:grid;grid-template-columns:1fr 1fr;gap:7px;margin-top:8px;padding-top:8px;background:linear-gradient(180deg,rgba(255,255,255,.72),rgba(255,255,255,.98) 35%)}
+  .action-bar button{border-radius:12px;padding:10px 8px;font-size:.82rem;font-weight:950}
+  .legacy-buttons{display:none!important}
+  .footer{left:0!important;right:0!important;text-align:center!important;font-size:8.5px!important;color:#777!important}
+
+
+  /* Ajustements lisibilité validés : panneau un peu plus large, choix principal plus respirant. */
+  .app{grid-template-columns:282px 1fr;gap:14px;padding:14px;}
+  .controls.pro-controls{padding:12px;border-radius:20px;top:14px;height:calc(100vh - 28px);background:rgba(255,255,255,.985)}
+  .pro-controls .brand{margin:0 0 10px;padding:7px 0 10px}
+  .pro-controls .logo-img{width:122px;margin-bottom:5px}
+  .pro-controls h1{font-size:1rem;line-height:1.04}
+  .pro-controls .subtitle{font-size:.72rem}
+  .panel-section{margin-top:8px;padding-top:8px}
+  .panel-primary{padding:9px;border:1px solid #eadfd4;border-radius:16px;background:linear-gradient(180deg,#fffaf5,#fbf7f1);box-shadow:0 2px 10px rgba(68,45,22,.045)}
+  .panel-primary .block-title{font-size:.68rem;margin-bottom:8px;color:#7c6654;text-align:center;letter-spacing:.11em}
+  .seg-grid{gap:6px}
+  .seg-grid.type-grid{gap:8px}
+  .seg-btn{min-height:34px;padding:7px 7px;border-radius:10px;font-size:.76rem;line-height:1.12}
+  .type-grid .seg-btn{min-height:56px;padding:10px 8px;border-radius:14px;font-size:.84rem;line-height:1.08;background:#fff;border-color:#e3d8cd}
+  .type-grid .seg-btn.active{background:#fff0e4;border-color:var(--accent);box-shadow:inset 0 0 0 1.5px var(--accent),0 3px 10px rgba(244,124,32,.10)}
+  .fold-card{margin:8px 0;border-radius:15px;background:#fffdf9;border-color:#eadfd4;box-shadow:0 1px 6px rgba(68,45,22,.035)}
+  .fold-card summary{padding:10px 11px;font-size:.84rem}
+  .fold-card summary::after{width:23px;height:23px;font-size:1rem}
+  .summary-title{font-size:.66rem;letter-spacing:.09em;color:#7c6654}
+  .summary-value{font-size:.86rem;line-height:1.16}
+  .fold-body{padding:9px;background:#fffdf9}
+  .control-card{padding:8px;margin:0;border-radius:13px;background:#fbf9f6}
+  .control-card.compact-card{padding:8px}
+  .control-label{font-size:.70rem;margin-bottom:6px;color:#7c6654;text-transform:uppercase;letter-spacing:.06em}
+  .options-grid{gap:8px}
+  .duo-controls{gap:8px}
+  .stepper{grid-template-columns:30px 1fr 30px;gap:5px}
+  .stepper button,.stepper span{min-height:32px;border-radius:9px}
+  .toggle-row{gap:8px;margin-top:0}
+  .toggle-pill span{min-height:38px;font-size:.76rem;border-radius:11px}
+  .pro-controls .mini{font-size:.68rem;line-height:1.2;margin-top:7px}
+  .action-bar{gap:8px;margin-top:10px;padding-top:10px}
+  .action-bar button{min-height:40px;border-radius:13px;font-size:.86rem}
+  .footer{left:0!important;right:0!important;text-align:center!important;font-size:8.5px!important;color:#777!important}
+
   @media(max-width:1050px){.app{grid-template-columns:1fr}.controls{position:relative;height:auto;top:0}.page{transform-origin:top left}}
   @page a4-landscape{size:A4 landscape;margin:0}@page a4-portrait{size:A4 portrait;margin:0}
   @media print{*{print-color-adjust:exact!important;-webkit-print-color-adjust:exact!important;color-adjust:exact!important}html,body{background:#fff;margin:0!important;padding:0!important;width:auto!important;height:auto!important;min-height:0!important;overflow:visible!important}.app{display:block;padding:0}.controls{display:none}.preview-wrap{padding:0!important;overflow:visible!important;height:auto!important}.page{box-shadow:none;border:0;margin:0;break-after:auto!important;page-break-after:auto!important;overflow:hidden!important}.preview-wrap .page:not(:last-child){break-after:page!important;page-break-after:always!important}.preview-wrap .page:last-child{break-after:auto!important;page-break-after:auto!important}.sheet,.exercise-grid,.card{break-inside:avoid;page-break-inside:avoid}.tile{border:0!important;border-radius:0!important;box-shadow:none!important;outline:0!important}.term-block{border:.12pt solid #000!important;border-radius:0!important}.tile-svg rect{stroke:#000!important;stroke-width:.4!important;vector-effect:non-scaling-stroke!important}.page.landscape{width:297mm;height:210mm}.page.portrait{width:210mm;height:297mm}.footer{display:block!important}}
@@ -144,24 +229,83 @@
 </head>
 <body>
 <div class="app">
-  <aside class="controls">
-    <div class="brand"><a class="brand-link" href="index.html" aria-label="Retour au menu maths&go" title="Retour au menu"><img id="sideLogo" class="logo-img" alt="maths&go"></a><h1>Tuiles algébriques</h1><div class="subtitle">Réduire • distributivité • modèle d’aire</div></div>
-    <div class="block">
-      <div class="block-title">Activité</div>
-      <div class="field"><label class="main-label" for="activity">Type d’exercice</label><select id="activity"><option value="reduce">Réduire une expression</option><option value="single">Distributivité simple</option><option value="double">Double distributivité</option><option value="mixed">Fiche mixte</option></select></div>
-      <div class="field"><label class="main-label" for="visual">Aide visuelle</label><select id="visual"></select></div>
-      <div class="field"><label class="main-label" for="exprTop">Expression littérale</label><select id="exprTop"><option value="shown" selected>Affichée</option><option value="hidden">Cachée — à écrire par l’élève</option></select></div>
-      <div class="field"><label class="main-label" for="level">Type de calcul</label><select id="level"></select></div>
+  <aside class="controls pro-controls">
+    <div class="brand">
+      <a class="brand-link" href="index.html" aria-label="Retour au menu maths&go" title="Retour au menu"><img id="sideLogo" class="logo-img" alt="maths&go"></a>
+      <h1>Tuiles algébriques</h1>
+      <div class="subtitle">Fiches • modèles • corrigés</div>
     </div>
-    <div class="block">
-      <div class="block-title">Fiche</div>
-      <div class="row"><div class="field"><label class="main-label" for="count">Exercices / page</label><input id="count" type="number" min="2" max="12" value="9"></div><div class="field"><label class="main-label" for="pages">Pages</label><select id="pages"><option value="1" selected>1 page</option><option value="2">2 pages</option><option value="3">3 pages</option><option value="4">4 pages</option></select></div></div><div class="field"><label class="main-label" for="format">Format</label><select id="format"><option value="landscape" selected>A4 paysage</option><option value="portrait">A4 portrait</option></select></div>
-      <div class="field"><label class="main-label" for="printMode">Impression</label><select id="printMode"><option value="student" selected>Fiche élève</option><option value="answer">Corrigé</option><option value="sequence">Sujet puis corrigé</option><option value="duplex">Recto-verso sujet / corrigé</option></select><div class="mini" id="printHint">Recto-verso : A4 paysage = bord court ; A4 portrait = bord long. Le verso corrigé est inversé horizontalement.</div></div>
-      <div class="checks"><label class="check"><input type="checkbox" id="showLabels"> Écrire x², −x², x, −x, 1 et −1 sur toutes les tuiles</label><label class="check"><input type="checkbox" id="showAnswers"> Corrigé</label></div>
-      <div class="field"><label class="main-label" for="colorMode">Couleurs</label><select id="colorMode"><option value="blueyellow" selected>Bleu / jaune — positifs bleus, opposés jaunes</option><option value="type">Classique — 1 jaune / x vert / x² bleu / opposés rouges</option><option value="sign">Vert / rouge — positifs verts / opposés rouges</option><option value="bw">Noir & blanc — positifs blancs / opposés gris</option><option value="outline">Contours seuls</option></select></div>
+
+    <div class="panel-section panel-primary">
+      <div class="block-title">Type d’exercice</div>
+      <select id="activity" class="control-select"><option value="reduce">Réduire une expression</option><option value="single">Distributivité simple</option><option value="double">Double distributivité</option><option value="mixed">Fiche mixte</option></select>
+      <div class="seg-grid type-grid" data-segment-target="activity"></div>
     </div>
-    <div class="buttons"><button class="primary" id="generateBtn">🎲 Générer</button><button id="printBtn">🖨️ Imprimer</button></div>
-    <div class="buttons"><button id="studentBtn">Fiche élève</button><button id="answerBtn">Corrigé</button></div>
+
+    <details class="fold-card" id="visualPanel">
+      <summary><span class="summary-line"><span class="summary-title">Aide visuelle</span><span class="summary-value" data-summary-for="visual">Tuiles complètes</span></span></summary>
+      <div class="fold-body">
+        <select id="visual" class="control-select"></select>
+        <div class="seg-grid cols-2" data-segment-target="visual"></div>
+      </div>
+    </details>
+
+    <details class="fold-card" id="levelPanel">
+      <summary><span class="summary-line"><span class="summary-title">Type de calcul</span><span class="summary-value" data-summary-for="level">Mixte simple</span></span></summary>
+      <div class="fold-body">
+        <select id="level" class="control-select"></select>
+        <div class="seg-grid cols-2" data-segment-target="level"></div>
+      </div>
+    </details>
+
+    <details class="fold-card" id="optionsPanel">
+      <summary><span class="summary-line"><span class="summary-title">Options</span><span class="summary-value" data-summary-info="options">Paysage · 9 ex/page · 1 page</span></span></summary>
+      <div class="fold-body options-grid">
+        <div class="control-card compact-card">
+          <div class="control-label">Expression</div>
+          <select id="exprTop" class="control-select"><option value="shown" selected>Affichée</option><option value="hidden">Cachée — à écrire par l’élève</option></select>
+          <div class="seg-grid cols-2" data-segment-target="exprTop"></div>
+        </div>
+        <div class="control-card compact-card">
+          <div class="control-label">Format</div>
+          <select id="format" class="control-select"><option value="landscape">A4 paysage</option><option value="portrait" selected>A4 portrait</option></select>
+          <div class="seg-grid cols-2" data-segment-target="format"></div>
+        </div>
+        <div class="duo-controls">
+          <div class="control-card compact-card">
+            <div class="control-label">Ex/page</div>
+            <input id="count" class="control-number" type="number" min="2" max="12" value="9">
+            <div class="stepper" data-stepper-target="count"><button type="button" data-step="-1">−</button><span id="countValue">9</span><button type="button" data-step="1">+</button></div>
+          </div>
+          <div class="control-card compact-card">
+            <div class="control-label">Pages</div>
+            <select id="pages" class="control-select"><option value="1" selected>1 page</option><option value="2">2 pages</option><option value="3">3 pages</option><option value="4">4 pages</option></select>
+            <div class="stepper" data-stepper-target="pages"><button type="button" data-step="-1">−</button><span id="pagesValue">1</span><button type="button" data-step="1">+</button></div>
+          </div>
+        </div>
+        <div class="control-card">
+          <div class="control-label">Couleurs</div>
+          <select id="colorMode" class="control-select"><option value="blueyellow" selected>Bleu / jaune — positifs bleus, opposés jaunes</option><option value="type">Classique — 1 jaune / x vert / x² bleu / opposés rouges</option><option value="sign">Vert / rouge — positifs verts / opposés rouges</option><option value="bw">Noir & blanc — positifs blancs / opposés gris</option><option value="outline">Contours seuls</option></select>
+          <div class="seg-grid cols-2" data-segment-target="colorMode"></div>
+        </div>
+        <div class="toggle-row">
+          <label class="toggle-pill"><input type="checkbox" id="showLabels"><span>Écriture tuiles</span></label>
+          <label class="toggle-pill"><input type="checkbox" id="showAnswers"><span>Aperçu corrigé</span></label>
+        </div>
+      </div>
+    </details>
+
+    <details class="fold-card" id="printPanel">
+      <summary><span class="summary-line"><span class="summary-title">Impression</span><span class="summary-value" data-summary-for="printMode">Fiche élève</span></span></summary>
+      <div class="fold-body">
+        <select id="printMode" class="control-select"><option value="student" selected>Fiche élève</option><option value="answer">Corrigé</option><option value="sequence">Sujet puis corrigé</option><option value="duplex">Recto-verso sujet / corrigé</option></select>
+        <div class="seg-grid cols-2" data-segment-target="printMode"></div>
+        <div class="mini" id="printHint">Recto-verso : paysage = bord court · portrait = bord long.</div>
+      </div>
+    </details>
+
+    <div class="action-bar"><button class="primary" id="generateBtn">🎲 Générer</button><button id="printBtn">🖨️ Imprimer</button></div>
+    <div class="legacy-buttons" aria-hidden="true"><button id="studentBtn" type="button">Fiche élève</button><button id="answerBtn" type="button">Corrigé</button></div>
   </aside>
   <main class="preview-wrap"><section id="page" class="page landscape"><div id="sheet" class="sheet"></div></section></main>
 </div>
@@ -191,6 +335,106 @@
     const old=select.value; select.innerHTML=opts.map(o=>`<option value="${o[0]}">${o[1]}</option>`).join('');
     select.value=opts.some(o=>o[0]===old)?old:(fallback||opts[0][0]);
   }
+
+  const SEGMENT_LABELS={
+    activity:{reduce:'Réduire',single:'Distrib. simple',double:'Double',mixed:'Mixte'},
+    visual:{auto:'Aide variée',tiles:'Tuiles',factors:'Produits',grid:'Grille',expression:'Sans aide'},
+    exprTop:{shown:'Affichée',hidden:'À écrire'},
+    format:{landscape:'Paysage',portrait:'Portrait'},
+    colorMode:{blueyellow:'Bleu / jaune',type:'Classique',sign:'Vert / rouge',bw:'N&B',outline:'Contours'},
+    printMode:{student:'Élève',answer:'Corrigé',sequence:'Sujet + corrigé',duplex:'Recto-verso'},
+    level:{
+      '1':'x seul','2':'x + nombres','3':'Soustractions','4':'Avec x²','5':'Complet',
+      pos:'Simple',sub:'± dans parenthèse',coefx:'Coefficient x',xfactor:'Facteur x',signs:'Signes',outer:'Terme extérieur',mix:'Mélange',
+      oneNeg:'Avec signes',coefOne:'1 coefficient',coefBoth:'2 coefficients',signX:'−x / a − x',
+      progressive:'Mixte simple',signed:'Avec signes',advanced:'Technique'
+    }
+  };
+  const SEGMENT_TARGETS=['activity','visual','level','exprTop','format','colorMode','printMode'];
+  function escapeHTML(str){return String(str).replace(/[&<>"]/g,ch=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[ch]));}
+  function segmentLabel(target,value,text){
+    if(target==='level' && value==='mix' && $('activity') && $('activity').value==='mixed') return 'Mixte complet';
+    return (SEGMENT_LABELS[target]&&SEGMENT_LABELS[target][value])||text;
+  }
+  function renderSegmentGroup(target){
+    const select=$(target), group=document.querySelector(`[data-segment-target="${target}"]`);
+    if(!select||!group) return;
+    group.innerHTML=Array.from(select.options).map(opt=>{
+      const active=opt.value===select.value?' active':'';
+      const label=segmentLabel(target,opt.value,opt.textContent);
+      return `<button type="button" class="seg-btn${active}" data-value="${escapeHTML(opt.value)}" title="${escapeHTML(opt.textContent)}">${escapeHTML(label)}</button>`;
+    }).join('');
+  }
+  function syncSegmentGroup(target){
+    const select=$(target), group=document.querySelector(`[data-segment-target="${target}"]`);
+    if(!select||!group) return;
+    group.querySelectorAll('.seg-btn').forEach(btn=>btn.classList.toggle('active',btn.dataset.value===select.value));
+  }
+  function updateStepperDisplays(){
+    const count=$('count'), countValue=$('countValue');
+    if(count&&countValue) countValue.textContent=count.value;
+    const pages=$('pages'), pagesValue=$('pagesValue');
+    if(pages&&pagesValue) pagesValue.textContent=pages.value;
+  }
+  function syncTogglePills(){
+    document.querySelectorAll('.toggle-pill input').forEach(inp=>inp.closest('.toggle-pill').classList.toggle('is-on',inp.checked));
+  }
+  function selectedSegmentText(target){
+    const select=$(target);
+    if(!select) return '';
+    const opt=select.selectedOptions&&select.selectedOptions[0];
+    return opt?segmentLabel(target,opt.value,opt.textContent):'';
+  }
+  function updateFoldSummaries(){
+    document.querySelectorAll('[data-summary-for]').forEach(el=>{
+      el.textContent=selectedSegmentText(el.dataset.summaryFor);
+    });
+    const optionsSummary=document.querySelector('[data-summary-info="options"]');
+    if(optionsSummary){
+      const fmt=$('format')&&$('format').value==='portrait'?'Portrait':'Paysage';
+      const count=$('count')?$('count').value:'?';
+      const pages=$('pages')?$('pages').value:'?';
+      const color=selectedSegmentText('colorMode')||'Couleurs';
+      optionsSummary.textContent=`${fmt} · ${count} ex/page · ${pages} page${pages==='1'?'':'s'} · ${color}`;
+    }
+  }
+  function refreshControlUI(){
+    SEGMENT_TARGETS.forEach(renderSegmentGroup);
+    updateStepperDisplays();
+    syncTogglePills();
+    updateFoldSummaries();
+  }
+  function bindControlPanel(){
+    document.querySelectorAll('[data-segment-target]').forEach(group=>{
+      group.addEventListener('click',e=>{
+        const btn=e.target.closest('.seg-btn'); if(!btn) return;
+        const target=group.dataset.segmentTarget, select=$(target); if(!select) return;
+        select.value=btn.dataset.value;
+        syncSegmentGroup(target);
+        updateFoldSummaries();
+        select.dispatchEvent(new Event('change',{bubbles:true}));
+      });
+    });
+    document.querySelectorAll('[data-stepper-target]').forEach(stepper=>{
+      stepper.addEventListener('click',e=>{
+        const btn=e.target.closest('button[data-step]'); if(!btn) return;
+        const target=stepper.dataset.stepperTarget, el=$(target); if(!el) return;
+        const step=parseInt(btn.dataset.step,10);
+        if(el.tagName==='SELECT'){
+          const values=Array.from(el.options).map(o=>o.value);
+          const idx=Math.max(0,values.indexOf(el.value));
+          el.value=values[Math.max(0,Math.min(values.length-1,idx+step))];
+        }else{
+          const min=parseInt(el.min||'0',10), max=parseInt(el.max||'99',10);
+          el.value=Math.max(min,Math.min(max,parseInt(el.value||min,10)+step));
+        }
+        updateStepperDisplays();
+        updateFoldSummaries();
+        el.dispatchEvent(new Event('change',{bubbles:true}));
+      });
+    });
+    document.querySelectorAll('.toggle-pill input').forEach(inp=>inp.addEventListener('change',()=>{syncTogglePills();updateFoldSummaries();}));
+  }
   function updateMenu(resetCount=false){
     const a=$('activity').value;
     setOptions($('visual'),VISUALS[a]);
@@ -201,8 +445,9 @@
       // L'utilisateur peut ensuite changer librement le format et le nombre d'exercices.
       $('count').max=12;
       $('count').value=a==='reduce'?9:(a==='mixed'?4:(a==='double'?4:4));
-      $('format').value=a==='mixed'?'portrait':(a==='reduce'?'landscape':'portrait');
+      $('format').value='portrait';
     }
+    refreshControlUI();
   }
 
   function shuffle(arr){const a=arr.slice();for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]]}return a;}
@@ -606,20 +851,21 @@
     preview.innerHTML=allPages;
     requestAnimationFrame(fitTiles);
   }
-  $('activity').addEventListener('change',()=>{updateMenu(true);render(false);});
-  $('visual').addEventListener('change',()=>render(true));
-  $('exprTop').addEventListener('change',()=>render(true));
-  $('level').addEventListener('change',()=>render(false));
+  bindControlPanel();
+  $('activity').addEventListener('change',()=>{updateMenu(true);refreshControlUI();render(false);});
+  $('visual').addEventListener('change',()=>{syncSegmentGroup('visual');render(true);});
+  $('exprTop').addEventListener('change',()=>{syncSegmentGroup('exprTop');render(true);});
+  $('level').addEventListener('change',()=>{syncSegmentGroup('level');render(false);});
   $('generateBtn').addEventListener('click',()=>render(false));
   $('printBtn').addEventListener('click',()=>{render(true);requestAnimationFrame(()=>{fitTiles();setTimeout(()=>window.print(),80);});});
-  $('studentBtn').addEventListener('click',()=>{$('printMode').value='student';$('showAnswers').checked=false;render(true)});
-  $('answerBtn').addEventListener('click',()=>{$('printMode').value='answer';$('showAnswers').checked=true;render(true)});
-  ['count','pages','format'].forEach(id=>$(id).addEventListener('change',()=>render(false)));
-  $('printMode').addEventListener('change',()=>{syncAnswersFromPrintMode();render(true);});
-  $('showAnswers').addEventListener('change',()=>{syncSimpleModeFromAnswers();render(true);});
-  ['showLabels','colorMode'].forEach(id=>{$(id).addEventListener('input',()=>render(true));$(id).addEventListener('change',()=>render(true));});
+  $('studentBtn').addEventListener('click',()=>{$('printMode').value='student';$('showAnswers').checked=false;refreshControlUI();render(true)});
+  $('answerBtn').addEventListener('click',()=>{$('printMode').value='answer';$('showAnswers').checked=true;refreshControlUI();render(true)});
+  ['count','pages','format'].forEach(id=>$(id).addEventListener('change',()=>{syncSegmentGroup(id);updateStepperDisplays();render(false);}));
+  $('printMode').addEventListener('change',()=>{syncAnswersFromPrintMode();refreshControlUI();render(true);});
+  $('showAnswers').addEventListener('change',()=>{syncSimpleModeFromAnswers();refreshControlUI();render(true);});
+  ['showLabels','colorMode'].forEach(id=>{$(id).addEventListener('input',()=>{refreshControlUI();render(true);});$(id).addEventListener('change',()=>{refreshControlUI();render(true);});});
   window.addEventListener('resize',()=>requestAnimationFrame(fitTiles)); window.addEventListener('beforeprint',fitTiles);
-  updateMenu(false); $('level').value='5'; render(false);
+  updateMenu(false); $('level').value='5'; refreshControlUI(); render(false);
 })();
 </script>
 </body>
