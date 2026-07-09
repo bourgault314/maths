@@ -103,13 +103,7 @@ button:hover{filter:brightness(.985);transform:translateY(-1px)}
 .type .tile.x.positive{background:var(--x)!important}
 .type .tile.unit.positive{background:var(--u)!important}
 .type .tile.negative{background:var(--neg)!important}
-/* Comparaison couleur : hypothèse maths&go discutée.
-   +1 et +x² restent verts ; −1 et −x² rouges ; +x bleu ; −x jaune. */
-.mixed .tile.unit.positive,.mixed .tile.x2.positive{background:var(--pos)!important}
-.mixed .tile.unit.negative,.mixed .tile.x2.negative{background:var(--neg)!important}
-.mixed .tile.x.positive{background:var(--x2)!important}
-.mixed .tile.x.negative{background:var(--u)!important}
-/* Comparaison très lisible : toutes les positives bleues, tous les opposés jaunes. */
+/* Mode bleu / jaune : toutes les positives bleues, tous les opposés jaunes. */
 .blueyellow .tile.positive{background:var(--x2)!important}
 .blueyellow .tile.negative{background:var(--u)!important}
 .page.thin{--stroke:.30mm;--xStroke:7.2}
@@ -172,7 +166,7 @@ button:hover{filter:brightness(.985);transform:translateY(-1px)}
           </div>
         </div>
       </div>
-      <div class="field"><label class="main-label" for="colorMode">Couleurs</label><select id="colorMode"><option value="type" selected>classique : 1 jaune / x vert / x² bleu / opposés rouges</option><option value="sign">signe : positifs verts / opposés rouges</option><option value="mixed">test : 1 et x² vert/rouge, x bleu/jaune</option><option value="blueyellow">test : positifs bleus / opposés jaunes</option><option value="bw">noir & blanc avec opposés gris</option><option value="outline">contours seuls</option></select><div class="mini">Le mode classique est celui que je mettrais par défaut ; les deux modes “test” servent à comparer en impression.</div></div>
+      <div class="field"><label class="main-label" for="colorMode">Couleurs</label><select id="colorMode"><option value="blueyellow" selected>bleu / jaune : positifs bleus / opposés jaunes</option><option value="type">classique : 1 jaune / x vert / x² bleu / opposés rouges</option><option value="sign">vert / rouge : positifs verts / opposés rouges</option><option value="bw">noir & blanc : positifs blancs / opposés gris</option><option value="outline">contours seuls</option></select><div class="mini">Mode par défaut : bleu / jaune. Les autres modes restent disponibles pour comparer à l’impression.</div></div>
       <label class="check"><input type="checkbox" id="thinLines"> Traits fins</label>
     </div>
 
