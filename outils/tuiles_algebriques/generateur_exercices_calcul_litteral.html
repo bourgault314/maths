@@ -277,6 +277,88 @@
     font-weight:500!important;
   }
 
+
+  /* Finition : centrage optique des boutons − / + de quantité et pages. */
+  .stepper{grid-template-columns:32px 1fr 32px}
+  .stepper button{
+    width:32px;
+    height:32px;
+    min-height:32px;
+    padding:0!important;
+    border-radius:999px;
+    display:grid;
+    place-items:center;
+    line-height:0;
+    font-size:0;
+    font-family:system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
+  }
+  .stepper button::before{
+    display:block;
+    font-size:18px;
+    line-height:1;
+    font-weight:1000;
+    transform:translateY(-0.5px);
+  }
+  .stepper button[data-step="-1"]::before{content:"−";transform:translateY(-1px)}
+  .stepper button[data-step="1"]::before{content:"+";transform:translateY(-0.5px)}
+
+
+  /* Correction réelle : les symboles +/− sont dessinés géométriquement,
+     plus par une police. Cela centre parfaitement le signe dans le cercle. */
+  .fold-card summary::after{
+    content:""!important;
+    display:block!important;
+    width:20px!important;
+    height:20px!important;
+    border-radius:999px!important;
+    background-color:#fff3e9!important;
+    border:1px solid #f0cfb2!important;
+    color:#8e4a12!important;
+    box-sizing:border-box!important;
+    background-image:
+      linear-gradient(currentColor,currentColor),
+      linear-gradient(currentColor,currentColor)!important;
+    background-repeat:no-repeat!important;
+    background-position:center center,center center!important;
+    background-size:10px 2px,2px 10px!important;
+    transform:none!important;
+  }
+  .fold-card[open] summary::after{
+    content:""!important;
+    background-image:linear-gradient(currentColor,currentColor)!important;
+    background-repeat:no-repeat!important;
+    background-position:center center!important;
+    background-size:10px 2px!important;
+  }
+  .stepper button{
+    position:relative!important;
+    display:block!important;
+    width:32px!important;
+    height:32px!important;
+    min-height:32px!important;
+    padding:0!important;
+    border-radius:999px!important;
+    font-size:0!important;
+    line-height:0!important;
+    overflow:hidden!important;
+  }
+  .stepper button::before{content:""!important;display:none!important}
+  .stepper button[data-step="-1"],
+  .stepper button[data-step="1"]{
+    background-repeat:no-repeat!important;
+    background-position:center center!important;
+  }
+  .stepper button[data-step="-1"]{
+    background-image:linear-gradient(#2a2724,#2a2724)!important;
+    background-size:11px 2px!important;
+  }
+  .stepper button[data-step="1"]{
+    background-image:
+      linear-gradient(#2a2724,#2a2724),
+      linear-gradient(#2a2724,#2a2724)!important;
+    background-size:11px 2px,2px 11px!important;
+  }
+
 </style>
 </head>
 <body>
