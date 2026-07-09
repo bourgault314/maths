@@ -395,18 +395,137 @@
     .drag-tile{
       display:grid;
       place-items:center;
-      border:1.6px solid rgba(0,0,0,.62);
+      border:1.8px solid rgba(0,0,0,.62);
       box-shadow:inset 0 1px 0 rgba(255,255,255,.45), 0 4px 10px rgba(10,61,134,.10);
       color:#111;
       font-weight:950;
       line-height:1;
       flex:0 0 auto;
+      font-family:'Times New Roman', serif;
+      font-style:italic;
     }
 
-    .drag-tile.x2{width:44px;height:44px;background:#10b09c;font-size:.82rem;}
-    .drag-tile.x{width:62px;height:20px;background:#72c475;font-size:.78rem;}
-    .drag-tile.u{width:22px;height:22px;background:#ffe15a;font-size:.72rem;}
-    .drag-tile.neg{background:#ef3f35;}
+    .drag-tile.x2{width:44px;height:44px;background:#86efac;font-size:.84rem;}
+    .drag-tile.x{width:62px;height:20px;background:#86efac;font-size:.82rem;}
+    .drag-tile.u{width:22px;height:22px;background:#86efac;font-size:.74rem;font-style:normal;}
+    .drag-tile.neg{background:#fca5a5;}
+    .drag-tile.zero{background:#9ca3af;border-color:#6b7280;color:#111;font-style:normal;font-size:.82rem;text-shadow:none;box-shadow:inset 0 1px 0 rgba(255,255,255,.18), 0 4px 10px rgba(10,61,134,.10);}
+    .drag-tile.zero-x{width:62px;height:20px;font-size:.78rem;}
+
+
+    .card.equation .preview{
+      background:
+        radial-gradient(300px 170px at 50% 18%, rgba(255,138,0,.14), transparent 66%),
+        radial-gradient(280px 160px at 16% 84%, rgba(16,185,178,.13), transparent 66%),
+        linear-gradient(180deg, rgba(255,255,255,.92), rgba(251,247,241,.88));
+    }
+
+    .card.equation{
+      grid-column:1 / -1;
+      width:min(100%, 440px);
+      justify-self:center;
+    }
+
+    .equation-board{
+      width:min(100%, 382px);
+      aspect-ratio:1.35 / 1;
+      background:rgba(255,255,255,.97);
+      border:1.5px solid rgba(10,61,134,.16);
+      border-radius:22px;
+      box-shadow:0 16px 34px rgba(10,61,134,.10);
+      padding:16px;
+      transform:rotate(-1.4deg);
+      display:grid;
+      grid-template-columns:1fr 4px 1fr;
+      grid-template-rows:auto 1fr auto;
+      gap:12px;
+      position:relative;
+      overflow:hidden;
+    }
+
+    .equation-board::before{
+      content:"Résoudre une équation";
+      grid-column:1 / -1;
+      color:var(--ink);
+      font-weight:950;
+      letter-spacing:-.04em;
+      font-size:1.02rem;
+      text-align:center;
+      z-index:2;
+    }
+
+    .eq-divider-mini{
+      grid-column:2;
+      grid-row:2 / 4;
+      width:4px;
+      border-left:2px dashed rgba(10,61,134,.28);
+      border-right:2px dashed rgba(10,61,134,.28);
+      background:rgba(10,61,134,.08);
+      border-radius:999px;
+      position:relative;
+    }
+
+    .eq-divider-mini::after{
+      content:"=";
+      position:absolute;
+      left:50%;
+      top:46%;
+      transform:translate(-50%, -50%);
+      width:34px;
+      height:34px;
+      border-radius:12px;
+      display:grid;
+      place-items:center;
+      background:#fff;
+      color:var(--ink);
+      border:1.5px solid rgba(10,61,134,.14);
+      box-shadow:0 9px 18px rgba(10,61,134,.10);
+      font-weight:950;
+      font-size:1.35rem;
+    }
+
+    .eq-side{
+      border:2px dashed rgba(10,61,134,.16);
+      border-radius:16px;
+      min-height:126px;
+      padding:14px;
+      display:flex;
+      gap:8px;
+      align-content:flex-start;
+      flex-wrap:wrap;
+      background:rgba(246,239,229,.45);
+    }
+
+    .eq-side.left{grid-column:1;grid-row:2;}
+    .eq-side.right{grid-column:3;grid-row:2;}
+
+    .eq-caption{
+      color:rgba(10,61,134,.72);
+      font-size:.72rem;
+      font-weight:900;
+      text-align:center;
+      align-self:center;
+    }
+
+    .eq-caption.left{grid-column:1;grid-row:3;}
+    .eq-caption.right{grid-column:3;grid-row:3;}
+
+    .eq-tile{
+      display:grid;
+      place-items:center;
+      border:1.6px solid rgba(0,0,0,.62);
+      box-shadow:inset 0 1px 0 rgba(255,255,255,.45), 0 4px 10px rgba(10,61,134,.10);
+      color:#111;
+      font-family:'Times New Roman', serif;
+      font-style:italic;
+      font-weight:950;
+      line-height:1;
+      flex:0 0 auto;
+    }
+
+    .eq-tile.x{width:62px;height:22px;background:#86efac;font-size:.86rem;}
+    .eq-tile.u{width:22px;height:22px;background:#86efac;font-size:.75rem;font-style:normal;}
+    .eq-tile.neg{background:#fca5a5;}
 
 
     @media (max-width: 900px){
@@ -470,7 +589,10 @@
               <div class="drop-zone">
                 <div class="drag-tile x2">x²</div>
                 <div class="drag-tile x">x</div>
+                <div class="drag-tile x neg">−x</div>
                 <div class="drag-tile u">1</div>
+                <div class="drag-tile u zero">0</div>
+                <div class="drag-tile x zero zero-x">0</div>
               </div>
               <div class="drop-zone">
                 <div class="drag-tile x2 neg">−x²</div>
@@ -487,6 +609,34 @@
           </div>
           <div class="label">
             <div class="text">Plateau de tuiles<br>manipulables</div>
+            <div class="arrow">›</div>
+          </div>
+        </a>
+
+        <a class="card equation" href="tuiles_algebriques_mode_equation.html" style="--accent:var(--orange)">
+          <div class="preview" aria-hidden="true">
+            <div class="equation-board">
+              <div class="eq-side left">
+                <div class="eq-tile x">x</div>
+                <div class="eq-tile x">x</div>
+                <div class="eq-tile u">1</div>
+                <div class="eq-tile u">1</div>
+                <div class="eq-tile u neg">−1</div>
+              </div>
+              <div class="eq-divider-mini"></div>
+              <div class="eq-side right">
+                <div class="eq-tile x neg">−x</div>
+                <div class="eq-tile u">1</div>
+                <div class="eq-tile u">1</div>
+                <div class="eq-tile u">1</div>
+                <div class="eq-tile u">1</div>
+              </div>
+              <div class="eq-caption left">membre gauche</div>
+              <div class="eq-caption right">membre droit</div>
+            </div>
+          </div>
+          <div class="label">
+            <div class="text">Équations avec<br>les tuiles</div>
             <div class="arrow">›</div>
           </div>
         </a>
