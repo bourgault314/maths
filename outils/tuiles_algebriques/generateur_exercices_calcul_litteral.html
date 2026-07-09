@@ -158,7 +158,7 @@
     reduce:[['1','x seulement'],['2','x et nombres positifs'],['3','avec soustractions'],['4','avec x²'],['5','mélange complet']],
     single:[['pos','a(x + b)'],['sub','a(x ± b)'],['coefx','a(bx + c)'],['xfactor','ax(bx + c)'],['signs','avec −x ou −bx'],['outer','avec terme extérieur'],['mix','mélange de distributivité simple']],
     double:[['pos','(x + a)(x + b)'],['oneNeg','(x ± a)(x ± b)'],['coefOne','(ax + b)(x + c)'],['coefBoth','(ax + b)(cx + d)'],['signX','avec −x ou a − x'],['mix','mélange de double distributivité']],
-    mixed:[['progressive','Progression douce'],['signed','Avec signes négatifs'],['advanced','Plus difficile'],['mix','Tout mélanger']]
+    mixed:[['progressive','Mixte simple'],['signed','Mixte avec signes'],['advanced','Mixte technique'],['mix','Mixte complet']]
   };
   function setOptions(select, opts, fallback){
     const old=select.value; select.innerHTML=opts.map(o=>`<option value="${o[0]}">${o[1]}</option>`).join('');
@@ -202,8 +202,8 @@
   function mathifyExpr(text){return String(text).replace(/x²/g,'%%X2%%').replace(/x/g,'%%X%%').replace(/%%X2%%/g,'<span class="math-x">𝑥</span>²').replace(/%%X%%/g,'<span class="math-x">𝑥</span>');}
   function answerHTML(raw){const reduced=canonicalText(raw); return `<span class="answer"><span class="final">${mathifyExpr(reduced)}</span></span>`;}
 
-  function makeReduceExercise(){
-    const level=$('level').value; let terms=[]; let guard=0;
+  function makeReduceExercise(forcedMode=null){
+    const level=forcedMode||$('level').value; let terms=[]; let guard=0;
     do{guard++;
       if(level==='1'){terms=[{kind:'x',coeff:rand(1,5)},{kind:'x',coeff:rand(1,5)}];}
       else if(level==='2'){terms=[{kind:'x',coeff:rand(1,5)},{kind:'x',coeff:rand(1,5)},{kind:'u',coeff:rand(1,6)},{kind:'u',coeff:rand(1,6)}]; if(Math.random()<.4) terms.push({kind:pick(['x','u']),coeff:rand(1,4)});}
@@ -300,15 +300,37 @@
   }
   function makeMixedExercise(){
     const level=$('level').value;
-    const pool=level==='progressive'
-      ? [['reduce','5','tiles'],['single','pos','tiles'],['single','coefx','factors'],['double','pos','factors']]
-      : level==='signed'
-        ? [['reduce','5','tiles'],['single','sub','factors'],['single','signs','tiles'],['double','oneNeg','factors'],['double','signX','tiles']]
-        : level==='advanced'
-          ? [['single','xfactor','factors'],['single','outer','factors'],['double','coefOne','factors'],['double','coefBoth','tiles'],['double','signX','factors']]
-          : [['reduce','5','tiles'],['single','pos','tiles'],['single','coefx','factors'],['single','xfactor','factors'],['single','signs','tiles'],['single','outer','factors'],['double','pos','factors'],['double','coefOne','factors'],['double','coefBoth','tiles'],['double','signX','factors']];
+    const simplePool=[
+      ['reduce','2','tiles'],       // x et nombres positifs
+      ['single','pos','tiles'],     // a(x + b)
+      ['single','coefx','factors'], // a(bx + c), positifs surtout
+      ['double','pos','factors']    // (x + a)(x + b), positifs
+    ];
+    const signedPool=[
+      ['reduce','3','tiles'],       // réductions avec soustractions
+      ['single','sub','factors'],   // a(x - b)
+      ['single','signs','tiles'],   // -x, -bx ou facteur négatif
+      ['double','oneNeg','factors'],// (x ± a)(x ± b)
+      ['double','signX','tiles']    // -x ou a - x
+    ];
+    const technicalPool=[
+      ['reduce','4','tiles'],       // réduction avec x², x et nombres
+      ['single','coefx','factors'], // a(bx + c)
+      ['single','xfactor','factors'],
+      ['single','outer','factors'],
+      ['double','coefOne','factors'],
+      ['double','coefBoth','tiles']
+    ];
+    let pool;
+    if(level==='progressive') pool=simplePool;
+    else if(level==='signed') pool=signedPool;
+    else if(level==='advanced') pool=technicalPool;
+    else{
+      const r=Math.random();
+      pool=r<.35 ? simplePool : (r<.65 ? signedPool : technicalPool);
+    }
     const [kind,mode,vis]=pick(pool); let ex;
-    if(kind==='reduce') ex=makeReduceExercise(); else if(kind==='single') ex=makeSingleExercise(mode); else ex=makeDoubleExercise(mode);
+    if(kind==='reduce') ex=makeReduceExercise(mode); else if(kind==='single') ex=makeSingleExercise(mode); else ex=makeDoubleExercise(mode);
     ex.visual=($('visual').value==='auto')?vis:$('visual').value;
     return ex;
   }
