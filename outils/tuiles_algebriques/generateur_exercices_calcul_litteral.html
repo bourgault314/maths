@@ -88,6 +88,29 @@
     .term-block{border:.12pt solid #000!important}
   }
 
+
+
+  /* Ajustements validés : logo cliquable, menu plus compact, x plus manuscrit. */
+  .app{grid-template-columns:248px 1fr;gap:12px;padding:12px}
+  .controls{border-radius:18px;padding:12px;top:12px;height:calc(100vh - 24px)}
+  .brand{margin-bottom:8px}
+  .brand-link{display:inline-block;text-decoration:none;color:inherit;border-radius:14px;line-height:0}
+  .brand-link:focus-visible{outline:3px solid rgba(244,124,32,.45);outline-offset:4px}
+  .logo-img{width:118px;margin:0 auto 5px}
+  .brand h1{font-size:.96rem;line-height:1.05}
+  .subtitle{font-size:.74rem;margin-top:1px}
+  .block{padding-top:9px;margin-top:9px}
+  .block-title{font-size:.69rem;margin-bottom:6px;letter-spacing:.075em}
+  .field{margin:6px 0}
+  .row{gap:7px}
+  label.main-label{font-size:.8rem;margin-bottom:4px}
+  select,input[type="number"]{padding:7px 8px;border-radius:10px;font-size:.86rem}
+  .checks{gap:5px}
+  .check{padding:7px 8px;border-radius:10px;font-size:.8rem;gap:7px}
+  .buttons{gap:7px;margin-top:8px}
+  button{padding:8px 8px;border-radius:11px;font-size:.84rem}
+  .math-x,.tile-label,.term-block{font-family:"Cambria Math","STIX Two Math","Segoe UI Symbol","Comic Sans MS","Segoe Print","Bradley Hand","Chalkboard SE",cursive;font-weight:900}
+
   @media(max-width:1050px){.app{grid-template-columns:1fr}.controls{position:relative;height:auto;top:0}.page{transform-origin:top left}}
   @page a4-landscape{size:A4 landscape;margin:0}@page a4-portrait{size:A4 portrait;margin:0}
   @media print{*{print-color-adjust:exact!important;-webkit-print-color-adjust:exact!important;color-adjust:exact!important}html,body{background:#fff;margin:0!important;padding:0!important;width:100%!important;height:100%!important}.app{display:block;padding:0}.controls{display:none}.preview-wrap{padding:0;overflow:visible}.page{box-shadow:none;border:0;margin:0;break-after:auto;page-break-after:auto;overflow:hidden!important}.preview-wrap .page:not(:last-child){break-after:page;page-break-after:always}.sheet,.exercise-grid,.card{break-inside:avoid;page-break-inside:avoid}.tile{border:0!important;border-radius:0!important;box-shadow:none!important;outline:0!important}.term-block{border:.12pt solid #000!important;border-radius:0!important}.tile-svg rect{stroke:#000!important;stroke-width:.4!important;vector-effect:non-scaling-stroke!important}.page.landscape{width:297mm;height:210mm}.page.portrait{width:210mm;height:297mm}.footer{position:static}}
@@ -96,7 +119,7 @@
 <body>
 <div class="app">
   <aside class="controls">
-    <div class="brand"><img id="sideLogo" class="logo-img" alt="maths&go"><h1>Tuiles algébriques</h1><div class="subtitle">Réduire • distributivité • modèle d’aire</div></div>
+    <div class="brand"><a class="brand-link" href="index.html" aria-label="Retour au menu maths&go" title="Retour au menu"><img id="sideLogo" class="logo-img" alt="maths&go"></a><h1>Tuiles algébriques</h1><div class="subtitle">Réduire • distributivité • modèle d’aire</div></div>
     <div class="block">
       <div class="block-title">Activité</div>
       <div class="field"><label class="main-label" for="activity">Type d’exercice</label><select id="activity"><option value="reduce">Réduire une expression</option><option value="single">Distributivité simple</option><option value="double">Double distributivité</option><option value="mixed">Fiche mixte</option></select></div>
@@ -135,7 +158,7 @@
     reduce:[['1','x seulement'],['2','x et nombres positifs'],['3','avec soustractions'],['4','avec x²'],['5','mélange complet']],
     single:[['pos','a(x + b)'],['sub','a(x ± b)'],['coefx','a(bx + c)'],['xfactor','ax(bx + c)'],['signs','avec −x ou −bx'],['outer','avec terme extérieur'],['mix','mélange de distributivité simple']],
     double:[['pos','(x + a)(x + b)'],['oneNeg','(x ± a)(x ± b)'],['coefOne','(ax + b)(x + c)'],['coefBoth','(ax + b)(cx + d)'],['signX','avec −x ou a − x'],['mix','mélange de double distributivité']],
-    mixed:[['progressive','progression variée'],['signed','avec signes'],['advanced','avancé'],['mix','mélange complet']]
+    mixed:[['progressive','Progression douce'],['signed','Avec signes négatifs'],['advanced','Plus difficile'],['mix','Tout mélanger']]
   };
   function setOptions(select, opts, fallback){
     const old=select.value; select.innerHTML=opts.map(o=>`<option value="${o[0]}">${o[1]}</option>`).join('');
@@ -143,7 +166,9 @@
   }
   function updateMenu(resetCount=false){
     const a=$('activity').value;
-    setOptions($('visual'),VISUALS[a]); setOptions($('level'),LEVELS[a], a==='reduce'?'5':(a==='single'?'pos':'pos'));
+    setOptions($('visual'),VISUALS[a]);
+    const levelFallback={reduce:'5',single:'pos',double:'pos',mixed:'progressive'}[a]||LEVELS[a][0][0];
+    setOptions($('level'),LEVELS[a],levelFallback);
     if(resetCount){
       // On donne seulement de bons réglages de départ.
       // L'utilisateur peut ensuite changer librement le format et le nombre d'exercices.
@@ -173,7 +198,9 @@
   function parenPartText(mult,inside,first=false){const m=asTermMultiplier(mult); const body=multiplierBody(m)+'('+polyText(inside)+')'; if(first) return (m.coeff<0?'−':'')+body; return (m.coeff<0?'−':'+')+' '+body;}
   function factorText(terms){return '('+polyText(terms)+')'}
   function expressionFromParts(parts){let out=''; parts.forEach((p,i)=>{ if(p.type==='term') out+=(out?' ':'')+termText(p.term,i===0); else out+=(out?' ':'')+parenPartText(p.mult,p.inside,i===0); }); return out||'0';}
-  function answerHTML(raw){const reduced=canonicalText(raw); return `<span class="answer"><span class="final">${reduced}</span></span>`;}
+  function roundedXText(text){return String(text).replace(/x/g,'𝑥');}
+  function mathifyExpr(text){return String(text).replace(/x²/g,'%%X2%%').replace(/x/g,'%%X%%').replace(/%%X2%%/g,'<span class="math-x">𝑥</span>²').replace(/%%X%%/g,'<span class="math-x">𝑥</span>');}
+  function answerHTML(raw){const reduced=canonicalText(raw); return `<span class="answer"><span class="final">${mathifyExpr(reduced)}</span></span>`;}
 
   function makeReduceExercise(){
     const level=$('level').value; let terms=[]; let guard=0;
@@ -306,9 +333,9 @@
   }
 
   function tileFill(kind,sign){const mode=$('colorMode').value;if(mode==='bw') return sign<0?getComputedStyle(document.documentElement).getPropertyValue('--bwneg').trim():'#fff';if(mode==='sign') return sign<0?'#ee5a49':'#8ccf8c';if(sign<0)return '#ee5a49';if(kind==='x2')return '#4fc3f7';if(kind==='x')return '#8ccf8c';return '#ffe66b';}
-  function tileHTML(kind,sign,orient='h'){const cls=['tile',kind==='u'?'u':kind]; if(kind==='x'&&orient==='v') cls.push('v'); if(sign<0) cls.push('neg'); let text=''; if(kind==='x2') text=sign<0?'−x²':'x²'; if(kind==='x') text=sign<0?'−x':'x'; if(kind==='u') text=sign<0?'−1':'1'; const fill=tileFill(kind,sign); return `<span class="${cls.join(' ')}" aria-label="${text}"><svg class="tile-svg" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true"><rect x="1" y="1" width="98" height="98" rx="0" fill="${fill}" stroke="#000" stroke-width="0.45" vector-effect="non-scaling-stroke" shape-rendering="crispEdges"/></svg><span class="tile-label">${text}</span></span>`;}
+  function tileHTML(kind,sign,orient='h'){const cls=['tile',kind==='u'?'u':kind]; if(kind==='x'&&orient==='v') cls.push('v'); if(sign<0) cls.push('neg'); let text=''; if(kind==='x2') text=sign<0?'−x²':'x²'; if(kind==='x') text=sign<0?'−x':'x'; if(kind==='u') text=sign<0?'−1':'1'; const labelText=roundedXText(text); const fill=tileFill(kind,sign); return `<span class="${cls.join(' ')}" aria-label="${text}"><svg class="tile-svg" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true"><rect x="1" y="1" width="98" height="98" rx="0" fill="${fill}" stroke="#000" stroke-width="0.45" vector-effect="non-scaling-stroke" shape-rendering="crispEdges"/></svg><span class="tile-label">${labelText}</span></span>`;}
   function tileGroupsHTML(terms,compactClass=''){let html=`<div class="tile-groups ${compactClass}" data-base-class="${compactClass}">`; terms.forEach(t=>{const n=Math.abs(t.coeff), sign=Math.sign(t.coeff); const groupCls=['term-group']; if(t.kind==='x2')groupCls.push('x2group'); if(t.kind==='x')groupCls.push('xgroup'); if(t.kind==='u')groupCls.push('unitgroup'); html+=`<div class="${groupCls.join(' ')}" title="${termText(t,true)}">`; for(let i=0;i<n;i++) html+=tileHTML(t.kind,sign); html+='</div>';}); return html+'</div>';}
-  function termBlockHTML(t){const sign=Math.sign(t.coeff); const fill=tileFill(t.kind,sign); const cls=['term-block',t.kind==='u'?'u':t.kind]; if(sign<0) cls.push('neg'); return `<span class="${cls.join(' ')}" style="--fill:${fill}">${termText(t,true)}</span>`;}
+  function termBlockHTML(t){const sign=Math.sign(t.coeff); const fill=tileFill(t.kind,sign); const cls=['term-block',t.kind==='u'?'u':t.kind]; if(sign<0) cls.push('neg'); return `<span class="${cls.join(' ')}" style="--fill:${fill}">${mathifyExpr(termText(t,true))}</span>`;}
   function termVisualHTML(t,where='cell'){const n=Math.abs(t.coeff); if(n===0)return ''; const limit=where==='axis'?8:10; if(n>limit) return termBlockHTML(t); return tileGroupsHTML([t],where==='axis'?'axis-mini':'cell-mini');}
   function axisLabel(t,index=0){return termText(t,index===0).replace('+ ','+').replace('− ','−');}
   function axisFitClass(t,pos='top'){
@@ -337,7 +364,7 @@
   }
   function axisHTML(t,visual,pos='top',index=0){
     const tiles=(visual==='tiles'||visual==='factors')?axisTilesHTML(t,pos):'';
-    return `<div class="axis-content ${pos}"><span class="axis-label">${axisLabel(t,index)}</span>${tiles}</div>`;
+    return `<div class="axis-content ${pos}"><span class="axis-label">${mathifyExpr(axisLabel(t,index))}</span>${tiles}</div>`;
   }
   function productFitClass(prod,rows,cols){
     const total=Math.abs(prod.coeff);
@@ -439,14 +466,14 @@
     return ['Calcul littéral — entraînement mixte',exprMode==='hidden'?'Écris les expressions à partir des aides visuelles, puis calcule.':'Réduis, développe ou complète selon la situation. Écris les étapes utiles.'];
   }
   function renderExerciseCard(ex,i,number,activity,visual,exprMode,info){
-    const visualForEx=(activity==='mixed'?(ex.visual||'factors'):visual);
+    const visualForEx=(activity==='mixed'?(visual==='auto'?(ex.visual||'factors'):visual):visual);
     const headHTML=exprMode==='hidden'
       ? '<span class="math-part expr-blank">Expression :</span>'
-      : `<span class="math-part">${ex.expr}</span>`;
+      : `<span class="math-part">${mathifyExpr(ex.expr)}</span>`;
     let html=`<article class="card ${i>=(info.rows-1)*info.cols?'last-row':''}"><div class="expr-line"><span class="num">${number})</span>${headHTML}</div>`;
     if(ex.type==='reduce'){
       const total=allTileCount(ex.terms); const compactClass=(info.dense||total>20)?'tiny':(total>15?'compact':'');
-      html+=`<div class="tile-zone">${visual==='tiles'?tileGroupsHTML(ex.terms,compactClass):'<div class="plain-work"></div>'}</div>`;
+      html+=`<div class="tile-zone">${visualForEx==='tiles'?tileGroupsHTML(ex.terms,compactClass):'<div class="plain-work"></div>'}</div>`;
     } else if(ex.type==='single') {
       html+=`<div class="work-zone">${renderSingleModel(ex,visualForEx)}</div>`;
     } else {
