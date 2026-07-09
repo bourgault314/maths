@@ -142,7 +142,7 @@
   .app{grid-template-columns:242px 1fr;gap:12px;padding:12px;}
   .controls.pro-controls{padding:10px;border-radius:18px;top:12px;height:calc(100vh - 24px);overflow:auto;background:rgba(255,255,255,.97)}
   .pro-controls .brand{margin:0 0 8px;padding:6px 0 9px;border-bottom:1px solid #eee4d9;text-align:center}
-  .pro-controls .logo-img{width:116px;margin:0 auto 4px;filter:drop-shadow(0 2px 3px rgba(68,45,22,.09))}
+  .pro-controls .logo-img{width:116px;margin:0 auto 4px;filter:none}
   .pro-controls h1{font-size:.96rem;letter-spacing:-.035em;margin:0;line-height:1.03}
   .pro-controls .subtitle{font-size:.70rem;line-height:1.1;margin-top:2px;color:var(--muted)}
   .panel-section{border-top:1px solid #eee4d9;margin-top:7px;padding-top:7px}
@@ -225,6 +225,58 @@
   @media(max-width:1050px){.app{grid-template-columns:1fr}.controls{position:relative;height:auto;top:0}.page{transform-origin:top left}}
   @page a4-landscape{size:A4 landscape;margin:0}@page a4-portrait{size:A4 portrait;margin:0}
   @media print{*{print-color-adjust:exact!important;-webkit-print-color-adjust:exact!important;color-adjust:exact!important}html,body{background:#fff;margin:0!important;padding:0!important;width:auto!important;height:auto!important;min-height:0!important;overflow:visible!important}.app{display:block;padding:0}.controls{display:none}.preview-wrap{padding:0!important;overflow:visible!important;height:auto!important}.page{box-shadow:none;border:0;margin:0;break-after:auto!important;page-break-after:auto!important;overflow:hidden!important}.preview-wrap .page:not(:last-child){break-after:page!important;page-break-after:always!important}.preview-wrap .page:last-child{break-after:auto!important;page-break-after:auto!important}.sheet,.exercise-grid,.card{break-inside:avoid;page-break-inside:avoid}.tile{border:0!important;border-radius:0!important;box-shadow:none!important;outline:0!important}.term-block{border:.12pt solid #000!important;border-radius:0!important}.tile-svg rect{stroke:#000!important;stroke-width:.4!important;vector-effect:non-scaling-stroke!important}.page.landscape{width:297mm;height:210mm}.page.portrait{width:210mm;height:297mm}.footer{display:block!important}}
+
+
+  /* Retouche logo/titre validée : le logo reste posé sur le fond, sans effet de case. */
+  .pro-controls .brand{
+    display:flex!important;
+    flex-direction:column!important;
+    align-items:center!important;
+    text-align:center!important;
+    gap:4px!important;
+    margin:0 0 12px!important;
+    padding:8px 0 12px!important;
+    background:transparent!important;
+    box-shadow:none!important;
+  }
+  .pro-controls .brand-link{
+    display:block!important;
+    width:max-content!important;
+    max-width:100%!important;
+    margin:0 auto!important;
+    padding:0!important;
+    border:0!important;
+    background:transparent!important;
+    box-shadow:none!important;
+    line-height:0!important;
+  }
+  .pro-controls .logo-img{
+    width:178px!important;
+    max-width:94%!important;
+    height:auto!important;
+    display:block!important;
+    margin:0 auto 6px!important;
+    background:transparent!important;
+    border:0!important;
+    border-radius:0!important;
+    box-shadow:none!important;
+    filter:none!important;
+  }
+  .pro-controls .brand h1{
+    font-size:1.22rem!important;
+    line-height:1.03!important;
+    margin:2px 0 0!important;
+    letter-spacing:-.045em!important;
+    font-weight:1000!important;
+  }
+  .pro-controls .brand .subtitle{
+    font-size:.84rem!important;
+    line-height:1.15!important;
+    margin-top:2px!important;
+    color:var(--muted)!important;
+    font-weight:500!important;
+  }
+
 </style>
 </head>
 <body>
