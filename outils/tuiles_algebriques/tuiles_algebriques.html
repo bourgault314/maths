@@ -121,6 +121,12 @@
             width: 0; height: 0; 
         }
         #drawing-canvas { position: absolute; top: 0; left: 0; pointer-events: none; z-index: 30; }
+        #tile-trash-zone.trash-active,
+        #tile-trash-zone.tool-active {
+            background-color: #fecdd3 !important;
+            color: #9f1239 !important;
+            border-color: #fda4af !important;
+        }
 
         .product-frame {
             position: absolute;
@@ -268,10 +274,18 @@
                 </svg>
             </button>
 
-            <!-- TRASH BUTTON -->
-            <button onclick="app.resetBoard()" class="bg-rose-100 text-rose-600 hover:bg-rose-200 p-2 rounded-lg font-bold border border-rose-200 shadow-sm flex items-center gap-1 active:scale-95 transition" title="Tout effacer">
+            <!-- RESET BOARD BUTTON -->
+            <button onclick="app.resetBoard()" class="bg-rose-100 text-rose-600 hover:bg-rose-200 p-2 rounded-lg font-bold border border-rose-200 shadow-sm flex items-center gap-1 active:scale-95 transition" title="Tout recommencer">
                 <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v6h6M20 20v-6h-6" />
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 9a8 8 0 00-13.66-3.66L4 7.68M4 15a8 8 0 0013.66 3.66L20 16.32" />
+                </svg>
+            </button>
+
+            <!-- DELETE TILE BUTTON / DROP TARGET -->
+            <button id="tile-trash-zone" onclick="app.setTool(app.currentTool === 'erase' ? 'hand' : 'erase')" class="bg-rose-100 text-rose-600 hover:bg-rose-200 p-2 rounded-lg font-bold border border-rose-200 shadow-sm flex items-center gap-1 active:scale-95 transition" title="Supprimer une tuile : cliquer puis toucher une tuile, ou glisser une tuile ici" aria-label="Supprimer une tuile">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6M9 7V4a1 1 0 011-1h4a1 1 0 011 1v3M4 7h16" />
                 </svg>
             </button>
             <button id="btn-distribute" onclick="app.applyDistribution()" class="hidden btn-distribute bg-blue-500 hover:bg-blue-600 text-white font-bold py-1 px-4 rounded-lg shadow-md border-b-4 border-blue-700 active:border-b-0 active:translate-y-1 transition text-sm">Développer</button>
@@ -321,9 +335,12 @@
                 </svg>
             </button>
 
-<button onclick="app.clearDrawing()" id="btn-clear-drawing" class="p-2 rounded text-red-400 hover:bg-red-50" title="Effacer le stylo">
-                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
+<button onclick="app.clearDrawing()" id="btn-clear-drawing" class="p-2 rounded text-gray-500 hover:bg-gray-200" title="Effacer le stylo">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 16.5l7.9-7.9a2 2 0 012.8 0l2.7 2.7a2 2 0 010 2.8l-5.2 5.2H8.2L5 16.5z" />
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11.8 9.7l5.5 5.5" />
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3.8 20h16.4" />
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.7" d="M6.2 5.7h3.2M7.8 4.1v3.2" opacity=".65" />
                 </svg>
             </button>
 
@@ -477,7 +494,7 @@
             }
         };
                 // --- SON (avec bouton on/off + AudioContext créé à la demande) ---
-        let soundEnabled = true;
+        let soundEnabled = false;
         let audioCtx = null;
 
         function ensureAudioCtx() {
@@ -1552,7 +1569,7 @@
                 }, { passive: false });
                 this.boardContainer.addEventListener('mousedown', (e) => {
                     if (e.button !== 0) return;
-                    if (this.currentTool === 'pen' || e.target.closest('.token') || e.target.closest('.product-frame')) return;
+                    if (this.currentTool === 'pen' || this.currentTool === 'erase' || e.target.closest('.token') || e.target.closest('.product-frame')) return;
                     this.isPanning = true;
                     this.panStart = { x: e.clientX - this.pan.x, y: e.clientY - this.pan.y };
                     this.boardContainer.classList.add('panning');
@@ -1672,6 +1689,7 @@
             updateToolButtons() {
                 const handBtn = document.getElementById('tool-hand');
                 const penBtn = document.getElementById('tool-pen');
+                const trashBtn = document.getElementById('tile-trash-zone');
                 if (!handBtn || !penBtn) return;
 
                 const setActive = (btn) => {
@@ -1683,12 +1701,15 @@
                     btn.classList.add('text-gray-500');
                 };
 
-                if (this.currentTool === 'pen') {
-                    setInactive(handBtn);
-                    setActive(penBtn);
+                setInactive(handBtn);
+                setInactive(penBtn);
+                if (trashBtn) trashBtn.classList.remove('tool-active');
+
+                if (this.currentTool === 'pen') setActive(penBtn);
+                else if (this.currentTool === 'erase') {
+                    if (trashBtn) trashBtn.classList.add('tool-active');
                 } else {
                     setActive(handBtn);
-                    setInactive(penBtn);
                 }
             }
 
@@ -1762,7 +1783,10 @@
                 // FIX 1: Allow manual placement to reuse the last pack if types match
                 let pid;
                 const lp = this.lastPack;
-                const canReusePack = lp && lp.type === type && lp.sign === tileSign && (lp.orientation || 'h') === orientation && lp.stepIndex === this.currentStepIndex;
+                // Un x horizontal et un x vertical représentent la même valeur algébrique.
+                // On les autorise donc à appartenir au même paquet si on les pose à la suite.
+                const sameOrientationOrSameX = type === 'x' || (lp && (lp.orientation || 'h') === orientation);
+                const canReusePack = lp && lp.type === type && lp.sign === tileSign && sameOrientationOrSameX && lp.stepIndex === this.currentStepIndex;
 
                 if (placementMode === 'auto') {
                     if (canReusePack) {
@@ -2245,7 +2269,18 @@
                 tokens = tokens.filter(t => t.pairId === null);
 
                 const groups=[]; let cur=null;
-                tokens.forEach(t=>{ const s=(t.displaySign===-1)?-1:1; if(cur&&cur.type===t.type&&cur.s===s&&cur.pid===t.packId){cur.c++;} else { if(cur)groups.push(cur); cur={type:t.type,s:s,pid:t.packId,c:1}; } });
+                tokens.forEach(t=>{
+                    const s=(t.displaySign===-1)?-1:1;
+                    // L'orientation ne change pas la valeur : x horizontal et x vertical se lisent tous les deux x.
+                    // On combine seulement les termes consécutifs de même type et même signe :
+                    // x | x devient 2x, mais x | 1 | x reste x + 1 + x.
+                    if(cur && cur.type===t.type && cur.s===s){
+                        cur.c++;
+                    } else {
+                        if(cur) groups.push(cur);
+                        cur={type:t.type,s:s,c:1};
+                    }
+                });
                 if(cur)groups.push(cur);
                 let l=""; let first=true;
                 groups.forEach(g=>{
@@ -2339,10 +2374,96 @@
             generateGroupedLatex() { return this.tokensToReducedSumLatex(this.tokens); }
             latexStartsWithMinus(s) { return (s||'').trim().startsWith('-') || /^\{\\color\{[^}]+\}\{-\}\}/.test(s||''); }
             
+
+            getClientPoint(ev) {
+                const src = ev.changedTouches && ev.changedTouches.length ? ev.changedTouches[0] : (ev.touches && ev.touches.length ? ev.touches[0] : ev);
+                return { x: src.clientX, y: src.clientY };
+            }
+
+            isOverTileTrash(cx, cy) {
+                const zone = document.getElementById('tile-trash-zone');
+                if (!zone) return false;
+                const r = zone.getBoundingClientRect();
+                return cx >= r.left && cx <= r.right && cy >= r.top && cy <= r.bottom;
+            }
+
+            setTileTrashActive(active) {
+                const zone = document.getElementById('tile-trash-zone');
+                if (zone) zone.classList.toggle('trash-active', !!active);
+            }
+
+            deleteToken(token, save = true) {
+                if (!token) return;
+                if (save) this.saveState();
+                playSound('pop');
+
+                const ids = new Set([token.id]);
+                if (Array.isArray(token.ghostIds)) token.ghostIds.forEach(id => ids.add(id));
+
+                // Si on supprime un en-tête du tableau produit, on supprime aussi les cases de cette ligne/colonne
+                // et on décale proprement les indices des autres cases.
+                const removedTop = [];
+                const removedLeft = [];
+                this.tokens.forEach(t => {
+                    if (!ids.has(t.id)) return;
+                    if (t.productZone === 'top') removedTop.push(t.productIndex ?? 0);
+                    if (t.productZone === 'left') removedLeft.push(t.productIndex ?? 0);
+                });
+                if (removedTop.length || removedLeft.length) {
+                    this.tokens.forEach(t => {
+                        if (t.productZone !== 'cell') return;
+                        if (removedTop.includes(t.productCol ?? 0) || removedLeft.includes(t.productRow ?? 0)) ids.add(t.id);
+                    });
+                }
+
+                // Si la tuile était dans une paire nulle, on libère l'autre tuile.
+                this.tokens.forEach(t => {
+                    if (!ids.has(t.id) || !t.pairId) return;
+                    const partner = this.tokens.find(p => p.id === t.pairId);
+                    if (partner && !ids.has(partner.id)) {
+                        partner.pairId = null;
+                        partner.element?.classList.remove('is-zero');
+                        this.restoreTokenOrientation(partner);
+                    }
+                    const b = document.getElementById(`badge-${t.id}-${t.pairId}`) || document.getElementById(`badge-${t.pairId}-${t.id}`);
+                    if (b) b.remove();
+                });
+
+                const removed = this.tokens.filter(t => ids.has(t.id));
+                removed.forEach(t => t.element && t.element.remove());
+                this.tokens = this.tokens.filter(t => !ids.has(t.id));
+                this.steps.forEach(s => s.tokenIds = s.tokenIds.filter(id => !ids.has(id)));
+                this.tokens.forEach(t => {
+                    if (Array.isArray(t.ghostIds)) t.ghostIds = t.ghostIds.filter(id => !ids.has(id));
+                    if (t.productZone === 'cell') {
+                        t.productCol = (t.productCol ?? 0) - removedTop.filter(i => i < (t.productCol ?? 0)).length;
+                        t.productRow = (t.productRow ?? 0) - removedLeft.filter(i => i < (t.productRow ?? 0)).length;
+                    }
+                });
+
+                if (removed.some(t => t.productZone)) {
+                    this.reindexProductHeaders('top');
+                    this.reindexProductHeaders('left');
+                    if (this.productFrame) {
+                        this.renderProductFrame();
+                        this.reflowProductFrameTokens();
+                    }
+                }
+                this.checkOppositeAvailable();
+                this.updateEquation();
+            }
+
             handleDragStart(e) { 
-                if (this.currentTool !== 'hand') return; e.stopPropagation();
                 const el = e.target.closest('.token'); if(!el) return;
                 const id = parseInt(el.id.split('-')[1]);
+                if (this.currentTool === 'erase') {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    const token = this.tokens.find(t => t.id === id);
+                    this.deleteToken(token);
+                    return;
+                }
+                if (this.currentTool !== 'hand') return; e.stopPropagation();
                 this.draggedToken = this.tokens.find(t => t.id === id);
                 this.dragStartState = this.draggedToken ? {
                     x: this.draggedToken.x,
@@ -2371,21 +2492,43 @@
                 
                 const move=(ev)=>{
                     ev.preventDefault();
-                    const cx = ev.touches?ev.touches[0].clientX:ev.clientX; const cy = ev.touches?ev.touches[0].clientY:ev.clientY;
+                    const pt = this.getClientPoint(ev);
+                    const cx = pt.x; const cy = pt.y;
                     const br = this.boardContainer.getBoundingClientRect();
                     const wx = (cx - br.left - this.pan.x - this.dragOffset.x)/this.scale;
                     const wy = (cy - br.top - this.pan.y - this.dragOffset.y)/this.scale;
                     this.draggedToken.element.style.left=wx+'px'; this.draggedToken.element.style.top=wy+'px';
                     this.draggedToken.x=wx; this.draggedToken.y=wy;
+                    this.setTileTrashActive(this.isOverTileTrash(cx, cy));
                 };
-                const end=()=>{
+                const end=(ev)=>{
                     document.removeEventListener('mousemove',move); document.removeEventListener('touchmove',move);
                     document.removeEventListener('mouseup',end); document.removeEventListener('touchend',end);
                     if(this.draggedToken) {
                         this.draggedToken.element.classList.remove('dragging');
+                        const pt = this.getClientPoint(ev || {});
+                        if (this.isOverTileTrash(pt.x, pt.y)) {
+                            const tokenToDelete = this.draggedToken;
+                            if (this.dragStartState) {
+                                tokenToDelete.x = this.dragStartState.x;
+                                tokenToDelete.y = this.dragStartState.y;
+                                tokenToDelete.orientation = this.dragStartState.orientation || tokenToDelete.orientation;
+                                tokenToDelete.productZone = this.dragStartState.productZone;
+                                tokenToDelete.productIndex = this.dragStartState.productIndex;
+                                tokenToDelete.productRow = this.dragStartState.productRow;
+                                tokenToDelete.productCol = this.dragStartState.productCol;
+                            }
+                            this.draggedToken=null;
+                            this.dragStartState=null;
+                            this.setTileTrashActive(false);
+                            this.deleteToken(tokenToDelete, true);
+                            return;
+                        }
                         const productHandled = this.snapTokenToProductFrame(this.draggedToken);
                         if (!productHandled) this.checkSnapAndFinalize(this.draggedToken);
-                        this.draggedToken=null; this.dragStartState=null; this.updateEquation();
+                        this.draggedToken=null; this.dragStartState=null; this.setTileTrashActive(false); this.updateEquation();
+                    } else {
+                        this.setTileTrashActive(false);
                     }
                 };
                 document.addEventListener('mousemove',move); document.addEventListener('touchmove',move,{passive:false});
