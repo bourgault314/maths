@@ -1850,9 +1850,9 @@ function scientificGlideSvg(coefficient,exponent,correction=false){
   const positionFor=power=>x+(exponents.indexOf(power)+.5)*cellW;
   const direction=positive?'gauche':'droite';
   const arrowStart=positionFor(0),arrowEnd=positionFor(Number(exponent));
-  let body='<defs><marker id="scientific-arrow" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M 0 0 L 10 5 L 0 10 z" fill="#ff7a1a"/></marker></defs>';
+  let body='<defs><marker id="scientific-arrow" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M 0 0 L 10 5 L 0 10 z" fill="#111827"/></marker></defs>';
   body+='<text x="340" y="19" font-family="Arial, sans-serif" font-size="18" font-weight="800" text-anchor="middle" fill="#17384d">'+Math.abs(Number(exponent))+' rangs vers la '+direction+'</text>';
-  body+='<line x1="'+arrowStart+'" y1="34" x2="'+arrowEnd+'" y2="34" stroke="#ff7a1a" stroke-width="4" stroke-linecap="round" marker-end="url(#scientific-arrow)"/>';
+  body+='<line x1="'+arrowStart+'" y1="34" x2="'+arrowEnd+'" y2="34" stroke="#111827" stroke-width="4" stroke-linecap="round" marker-end="url(#scientific-arrow)"/>';
   exponents.forEach((power,index)=>{
     const cellX=x+index*cellW;
     body+='<rect x="'+cellX+'" y="'+headY+'" width="'+cellW+'" height="'+headH+'" fill="#f3f7fd" stroke="#9fb3cf" stroke-width="1.3"/>';
@@ -1911,8 +1911,10 @@ function renderScientificModule(inst,correction=false,mode=null){
     let footerHtml;
     if(kind==='to_scientific'){
       const data=scientificFirstNonZeroData(inst.scope.n);
-      footerHtml=renderPlaceholders('$$@@SCISOURCE@@=[[dots]]\\times10^{[[dots]]}$$',inst.answers,correction?'correction':'question')
+      footerHtml=renderPlaceholders('$$@@SCISOURCE@@\\,=\\,[[dots]]\\,\\times\\,10^{[[dots]]}$$',inst.answers,correction?'correction':'question')
         .replace('@@SCISOURCE@@','<span class="scientific-inline-number">'+data.highlighted+'</span>');
+    }else if(kind==='from_scientific'){
+      footerHtml=renderPlaceholders('$$'+scientificFormattedNumber(inst.scope.m)+'\\,\\times\\,10^{'+inst.scope.e+'}\\,=\\,[[dots]]$$',inst.answers,correction?'correction':'question');
     }else footerHtml=renderPlaceholders(inst.rawFooter,inst.answers,correction?'correction':'question');
     html+='<div class="footer scientific-footer">'+footerHtml+'</div>';
   }
@@ -2628,6 +2630,9 @@ body{margin:0;background:var(--bg);font-family:Arial,Helvetica,sans-serif;color:
 .diapo.scientific-mode .slide{max-width:1120px}
 .scientific-prompt{font-size:clamp(1.75rem,2.8vw,3rem);font-weight:850;line-height:1.13;margin:0 auto 5px}
 .scientific-footer{font-family:"Cambria Math","STIX Two Math","Times New Roman",serif;font-size:clamp(2.25rem,3.8vw,4rem);font-weight:750;margin:5px auto 0}
+.scientific-footer .answer-slot{width:auto!important;min-width:1.15em;margin-left:.03em;margin-right:.03em}
+.scientific-footer .answer-slot-filled{min-width:0}
+.scientific-footer sup .answer-slot{min-width:.85em;margin-left:.01em;margin-right:0}
 .scientific-help{display:flex;align-items:center;justify-content:center;margin:14px auto 0;color:#17384d}
 .scientific-place-help{min-height:76px;margin-top:20px;font-family:"Cambria Math","STIX Two Math","Times New Roman",serif}
 .scientific-inline-number{font-family:"Cambria Math","STIX Two Math","Times New Roman",serif;font-weight:800}
