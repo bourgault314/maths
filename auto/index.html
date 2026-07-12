@@ -2450,8 +2450,8 @@ function relationTilesHtml(visual){
     const width=96,height=32,scale=.85,cellW=width/visual.divisor;
     let cells='';
     for(let i=0;i<visual.divisor;i++) cells+=`<rect x="${i*cellW}" y="0" width="${cellW}" height="${height}" fill="${i===0?'#31a98e':'#fff'}" stroke="#171717" stroke-width="1.5"/>`;
-    const cx=cellW/2,lineHalf=Math.min(7,cellW*.34);
-    const fraction=`<text x="${cx}" y="10" text-anchor="middle" font-family="Cambria Math,STIX Two Math,Times New Roman,serif" font-size="10" font-style="italic" font-weight="700">n</text><line x1="${cx-lineHalf}" y1="14" x2="${cx+lineHalf}" y2="14" stroke="#111" stroke-width="1.2"/><text x="${cx}" y="25" text-anchor="middle" font-family="Cambria Math,STIX Two Math,Times New Roman,serif" font-size="10" font-weight="700">${visual.divisor}</text>`;
+    const cx=cellW/2,fractionSize=visual.divisor===4?9.5:11;
+    const fraction=`<text x="${cx}" y="17" text-anchor="middle" dominant-baseline="middle" font-family="Cambria Math,STIX Two Math,Times New Roman,serif" font-size="${fractionSize}" font-style="italic" font-weight="700">n/${visual.divisor}</text>`;
     return `<div class="relation-tile-help"><svg class="relation-algebra-tile relation-algebra-tile-fraction" viewBox="0 0 ${width} ${height}" width="${Math.round(width*scale)}" height="${Math.round(height*scale)}" aria-hidden="true">${cells}${fraction}</svg></div>`;
   }
   let tiles='';
