@@ -4,6 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>maths&go — Automatismes</title>
+<meta name="description" content="Générez des diaporamas d’automatismes mathématiques variés, avec aides visuelles et corrections, pour le collège et la préparation au DNB.">
 <style>
 :root {
   --bg:#f5f7fb; --panel:#fff; --line:#dbe4f3; --text:#10244a; --muted:#61708f;
@@ -70,6 +71,14 @@ button{padding:9px 12px}
 
 
 </style>
+<!-- Google tag (gtag.js) -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-X8TVC83222"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+  gtag('config', 'G-X8TVC83222');
+</script>
 </head>
 <body>
 <div class="app">
@@ -85,7 +94,7 @@ button{padding:9px 12px}
   <div class="panel">
     <div class="controls-row">
       <div class="field field-level"><label>Niveau</label><select id="level"><option value="3e" selected>3e / DNB complet</option><option value="4e">4e compatible</option><option value="all">Tout afficher</option></select></div>
-      <div class="field field-visual"><label>Aides visuelles</label><select id="visualMode"><option value="with" selected>Avec schémas</option><option value="without">Sans schémas</option></select></div>
+      <div class="field field-visual"><label>Aide</label><select id="visualMode"><option value="with" selected>Avec aide</option><option value="without">Sans aide</option></select></div>
       <div class="field field-count"><label>Questions</label><select id="count"><option>5</option><option>10</option><option>15</option><option>20</option></select></div>
       <div class="field field-seed"><label>Seed</label><input id="seed" placeholder="Auto"></div>
     </div>
@@ -135,6 +144,19 @@ function configureScientificModule(){
 }
 configureScientificModule();
 
+function configureAlreadyReducedQuestion(){
+  const mod=RAW_MODULES.find(m=>m.id==='dnb_10');
+  if(!mod || mod.questions.some(q=>q.options&&q.options.reduction_kind==='already_reduced')) return;
+  mod.questions.push({
+    n:6,
+    statement:'Réduis l’expression :',
+    answer:'[]',
+    options:{reduction_kind:'already_reduced'},
+    footer:''
+  });
+}
+configureAlreadyReducedQuestion();
+
 function numberLineQcmSvg(){
   return `<svg xmlns="http://www.w3.org/2000/svg" width="680" height="auto" viewBox="0 0 680 120" style="max-width:700px">
 <line x1="40" y1="60" x2="640" y2="60" stroke="#222" stroke-width="1.5"/>
@@ -151,9 +173,28 @@ function numberLineQcmSvg(){
 <line x1="582" y1="52" x2="582" y2="68" stroke="#222" stroke-width="1.5"/>
 <text x="\${zeroX}" y="92" font-family="sans-serif" font-size="22" text-anchor="middle">0</text>
 <text x="\${oneX}" y="92" font-family="sans-serif" font-size="22" text-anchor="middle">1</text>
-<circle cx="\${cx}" cy="60" r="6" fill="#2563a6"/>
+<line x1="\${cx}" y1="47" x2="\${cx}" y2="73" stroke="#2563a6" stroke-width="5" stroke-linecap="round"/>
 <text x="\${cx}" y="36" font-family="serif" font-style="italic" font-size="24" text-anchor="middle" fill="#2563a6">C</text>
 </svg>`;
+}
+
+function flexibleNumberLineSvg(pointName='A'){
+  return `<svg xmlns="http://www.w3.org/2000/svg" width="680" height="auto" viewBox="0 0 680 120" style="max-width:700px">
+<line x1="40" y1="60" x2="640" y2="60" stroke="#222" stroke-width="1.5"/>
+<polygon points="640,60 630,55 630,65" fill="#222"/>
+${Array.from({length:10},(_,i)=>`<line x1="${60+i*58}" y1="52" x2="${60+i*58}" y2="68" stroke="#222" stroke-width="1.5"/>`).join('\n')}
+<text x="\${refX1}" y="92" font-family="sans-serif" font-size="22" text-anchor="middle">\${refV1}</text>
+<text x="\${refX2}" y="92" font-family="sans-serif" font-size="22" text-anchor="middle">\${refV2}</text>
+<line x1="\${cx}" y1="47" x2="\${cx}" y2="73" stroke="#2563a6" stroke-width="5" stroke-linecap="round"/>
+<text x="\${cx}" y="36" font-family="serif" font-style="italic" font-size="24" text-anchor="middle" fill="#2563a6">${pointName}</text>
+</svg>`;
+}
+
+function numberLineTickMarkers(svg){
+  return String(svg||'').replace(
+    /<circle cx="([^"]+)" cy="60" r="6" fill="([^"]+)"\/>/g,
+    '<line x1="$1" y1="47" x2="$1" y2="73" stroke="$2" stroke-width="5" stroke-linecap="round"/>'
+  );
 }
 
 function configureNumberLineModule(){
@@ -166,6 +207,7 @@ function configureNumberLineModule(){
     item.statement=item.statement
       .replace(/#c0392b/g,'#2563a6')
       .replace(/#2471a3/g,'#7c3aed');
+    item.statement=numberLineTickMarkers(item.statement);
     item.footer=item.footer
       .replace(/x_A/g,'𝑥_A')
       .replace(/x_B/g,'𝑥_B')
@@ -198,10 +240,61 @@ function configureNumberLineModule(){
     },
     footer:'[[formula_qcm1]]'
   });
+
+  const flexibleA=flexibleNumberLineSvg('A');
+  const flexibleC=flexibleNumberLineSvg('C');
+  const directQuestion=(n,code,family)=>({
+    n,
+    statement:`Lis l'abscisse du point A :\n${flexibleA}`,
+    answer:'["val"]',
+    options:{formula_code:code,numberline_family:family},
+    footer:'$$𝑥_A\\,=\\,[[formula]]$$'
+  });
+
+  mod.questions.push(directQuestion(13,
+    'setNB(1)\nstep=RD(1,2)\ngap=RD(2,4)\nrefI1=RD(1,8-gap)\nrefI2=refI1+gap\ndir=RD(0,1)===0?-1:1\nzeroI=dir===1?refI1:refI2\nrefV1=(refI1-zeroI)*step\nrefV2=(refI2-zeroI)*step\ni=RD(0,9,[refI1,refI2])\nval=(i-zeroI)*step\nrefX1=60+refI1*58\nrefX2=60+refI2*58\ncx=60+i*58',
+    'scaled'
+  ));
+  mod.questions.push(directQuestion(14,
+    'setNB(1)\nstep=5\ngap=RD(2,4)\nrefI1=RD(1,8-gap)\nrefI2=refI1+gap\nrefV1=RD(-4,2)*step\nrefV2=refV1+gap*step\ni=RD(0,9,[refI1,refI2])\nval=refV1+(i-refI1)*step\nrefX1=60+refI1*58\nrefX2=60+refI2*58\ncx=60+i*58',
+    'scaled'
+  ));
+  mod.questions.push(directQuestion(15,
+    'setNB(1)\nsteps=[10,20,25,50]\nstep=steps[RD(0,3)]\ngap=RD(2,4)\nrefI1=RD(1,8-gap)\nrefI2=refI1+gap\nrefV1=RD(-3,1)*step\nrefV2=refV1+gap*step\ni=RD(0,9,[refI1,refI2])\nval=refV1+(i-refI1)*step\nrefX1=60+refI1*58\nrefX2=60+refI2*58\ncx=60+i*58',
+    'scaled'
+  ));
+  mod.questions.push(directQuestion(16,
+    'setNB(1)\nsteps=[0.1,0.2]\nstep=steps[RD(0,1)]\ngap=RD(2,5)\nrefI1=RD(1,8-gap)\nrefI2=refI1+gap\nrefV1=CUT(RD(-4,1)*step,2)\nrefV2=CUT(refV1+gap*step,2)\ni=RD(0,9,[refI1,refI2])\nval=CUT(refV1+(i-refI1)*step,2)\nrefX1=60+refI1*58\nrefX2=60+refI2*58\ncx=60+i*58',
+    'fractional'
+  ));
+  mod.questions.push(directQuestion(17,
+    'setNB(1)\nsteps=[1,2,5,10]\nstep=steps[RD(0,3)]\ngap=RD(2,4)\nrefI1=RD(1,8-gap)\nrefI2=refI1+gap\ndo{refV1=RD(-5,3)*step\nrefV2=refV1+gap*step}while(refV1===0||refV2===0)\ni=RD(0,9,[refI1,refI2])\nval=refV1+(i-refI1)*step\nrefX1=60+refI1*58\nrefX2=60+refI2*58\ncx=60+i*58',
+    'scaled'
+  ));
+  mod.questions.push({
+    n:18,
+    statement:`Quelle est l'abscisse du point C ?\n${flexibleC}&&$$\${val}$$&&$$\${raw}$$&&$$\${offByOne}$$&&$$\${opposite}$$&&`,
+    answer:'["1"]',
+    options:{
+      formula_code:'setNB(1)\nsteps=[0.1,0.2,0.5,2,5,10,20,25]\ndo{step=steps[RD(0,7)]\ngap=RD(2,5)\nrefI1=RD(1,8-gap)\nrefI2=refI1+gap\nrefV1=CUT(RD(-4,2)*step,2)\nrefV2=CUT(refV1+gap*step,2)\ni=RD(0,9,[refI1,refI2])\nval=CUT(refV1+(i-refI1)*step,2)\nraw=CUT(refV1+(i-refI1),2)\noffByOne=CUT(refV1+((i-refI1)+(i>refI1?1:-1))*step,2)\nopposite=0-val}while(val===0||raw===val||offByOne===val||opposite===val||raw===offByOne||raw===opposite||offByOne===opposite)\nrefX1=60+refI1*58\nrefX2=60+refI2*58\ncx=60+i*58',
+      shuffle_answers:true,
+      numberline_family:'scaled'
+    },
+    footer:'[[formula_qcm1]]'
+  });
+
+  const families={
+    1:'standard',2:'standard',3:'standard',4:'signed',5:'fractional',6:'fractional',
+    7:'signed',8:'standard',9:'signed',10:'standard',11:'fractional',12:'fractional'
+  };
+  mod.questions.forEach(item=>{
+    item.options=item.options||{};
+    if(!item.options.numberline_family) item.options.numberline_family=families[item.n]||'scaled';
+  });
 }
 configureNumberLineModule();
 
-const SOLID_NAMES=['un cube','un pavé droit','un prisme droit','un cylindre','une pyramide','un cône','une sphère'];
+const SOLID_NAMES=['un cube','un pavé droit','un prisme droit','un cylindre','une pyramide','un cône','une sphère','une boule'];
 function solidSvg(viewBox,body){
   return '<svg class="solid-svg" xmlns="http://www.w3.org/2000/svg" viewBox="'+viewBox+'" role="img" aria-label="Solide à reconnaître">'+body+'</svg>';
 }
@@ -390,13 +483,17 @@ function configureSolidsModule(){
     '<path d="M84 104 H136 M84 114 H126 M84 124 H132" stroke="#b59a74" stroke-width="2"/>'
   ),objectPrompt,'object'));
 
-  questions.push(solidQuestion(17,3,solidSvg('0 0 310 215',
-    '<polygon points="48,166 116,54 184,166" fill="#f7b267" stroke="#7a3c12" stroke-width="2.4"/>'+
-    '<polygon points="116,54 240,38 286,145 184,166" fill="#ef8f3c" stroke="#7a3c12" stroke-width="2.4"/>'+
-    '<path d="M116 54 L184 166 L286 145" fill="none" stroke="#7a3c12" stroke-width="2.4"/>'+
-    '<path d="M48 166 L184 166 L286 145" fill="none" stroke="#7a3c12" stroke-width="2.4"/>'+
-    '<path d="M116 54 L116 166 M82 166 L116 111 L150 166" fill="none" stroke="#8d4a19" stroke-width="2"/>'+
-    '<path d="M34 174 H295" stroke="#5f7a38" stroke-width="3" stroke-linecap="round"/>'
+  questions.push(solidQuestion(17,3,solidSvg('0 0 320 215',
+    '<polygon points="38,170 172,170 277,150 143,150" fill="#f7c98f"/>'+
+    '<polygon points="105,55 210,35 277,150 172,170" fill="#ef8f3c"/>'+
+    '<polygon points="38,170 105,55 172,170" fill="#f7b267"/>'+
+    '<polyline points="38,170 105,55 172,170 38,170" fill="none" stroke="#7a3c12" stroke-width="2.4" stroke-linejoin="round"/>'+
+    '<line x1="105" y1="55" x2="210" y2="35" stroke="#7a3c12" stroke-width="2.4"/>'+
+    '<line x1="172" y1="170" x2="277" y2="150" stroke="#7a3c12" stroke-width="2.4"/>'+
+    '<polyline points="210,35 277,150 172,170" fill="none" stroke="#7a3c12" stroke-width="2.4" stroke-linejoin="round"/>'+
+    '<path d="M38 170 L143 150 M143 150 L210 35 M143 150 L277 150" fill="none" stroke="#7a3c12" stroke-width="2.2" stroke-dasharray="6 5" stroke-linecap="round"/>'+
+    '<path d="M105 55 L105 170 M72 170 L105 112 L138 170" fill="none" stroke="#8d4a19" stroke-width="2"/>'+
+    '<path d="M25 180 H300" stroke="#5f7a38" stroke-width="3" stroke-linecap="round"/>'
   ),objectPrompt,'object'));
 
   questions.push(solidQuestion(18,4,solidSvg('0 0 250 215',
@@ -471,18 +568,20 @@ function configureSolidsModule(){
     '<polygon points="145,31 132,185 232,156" fill="#ffd0d0"/>'+
     '<polygon points="145,31 232,156 174,128" fill="#ffc4c4"/>'+
     '<path d="M145 31 L52 151 L132 185 L232 156 L145 31 M145 31 L132 185" fill="none" stroke="#9c2f2f" stroke-width="2.4" stroke-linejoin="round"/>'+
-    '<line x1="232" y1="156" x2="174" y2="128" stroke="#9c2f2f" stroke-width="2.4"/>'+
+    '<line x1="232" y1="156" x2="174" y2="128" stroke="#9c2f2f" stroke-width="2.4"'+dash+'/>'+
     '<path d="M52 151 L103 126 L174 128 M145 31 L103 126 M145 31 L174 128" fill="none" stroke="#9c2f2f" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"'+dash+'/>'
   )));
 
   questions.push(solidQuestion(27,3,solidSvg('0 0 310 205',
-    '<polygon points="62,78 96,42 140,60 132,113 82,128" fill="#f5fff5" stroke="#246b24" stroke-width="2.4" stroke-linejoin="round"/>'+
+    '<polygon points="62,78 96,42 140,60 132,113 82,128" fill="#f5fff5"/>'+
     '<polygon points="96,42 210,27 254,45 140,60" fill="#eef8ee"/>'+
     '<polygon points="140,60 254,45 246,98 132,113" fill="#e1f5e1"/>'+
     '<polygon points="132,113 246,98 196,113 82,128" fill="#d9f5d9"/>'+
+    '<polygon points="62,78 96,42 140,60 132,113 82,128" fill="none" stroke="#246b24" stroke-width="2.8" stroke-linejoin="round"/>'+
     '<line x1="96" y1="42" x2="210" y2="27" stroke="#246b24" stroke-width="2.4"/>'+
     '<line x1="140" y1="60" x2="254" y2="45" stroke="#246b24" stroke-width="2.4"/>'+
     '<line x1="132" y1="113" x2="246" y2="98" stroke="#246b24" stroke-width="2.4"/>'+
+    '<line x1="246" y1="98" x2="196" y2="113" stroke="#246b24" stroke-width="2.4"/>'+
     '<line x1="82" y1="128" x2="196" y2="113" stroke="#246b24" stroke-width="2.4"/>'+
     '<polyline points="210,27 254,45 246,98" fill="none" stroke="#246b24" stroke-width="2.4" stroke-linejoin="round"/>'+
     '<path d="M62 78 L176 63 M176 63 L210 27 M176 63 L196 113" fill="none" stroke="#246b24" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"'+dash+'/>'
@@ -503,7 +602,7 @@ function configureSolidsModule(){
     objectPrompt,'object'
   ));
   questions.push(solidQuestion(32,2,
-    '<div class="solid-emoji" role="img" aria-label="Brique">🧱</div>',
+    '<div class="solid-emoji" role="img" aria-label="Livre fermé">📕</div>',
     objectPrompt,'object'
   ));
   questions.push(solidQuestion(33,4,
@@ -515,9 +614,53 @@ function configureSolidsModule(){
     'Par quel solide géométrique peut-on modéliser le cornet ?','object'
   ));
 
+  questions.push(solidQuestion(35,8,
+    '<div class="solid-emoji" role="img" aria-label="Orange entière">🍊</div>',
+    'Par quel solide géométrique peut-on modéliser cette orange entière ?','object'
+  ));
+
   mod.questions=questions;
 }
 configureSolidsModule();
+
+function configureAreaModule(){
+  const mod=RAW_MODULES.find(m=>m.id==='dnb_22');
+  if(!mod) return;
+  mod.title='Aires : rectangle, carré, triangle et disque';
+  const template=(n,kind,category,visual=true)=>({
+    n,
+    statement:'',
+    answer:'[]',
+    options:{
+      area_kind:kind,
+      area_category:category,
+      area_visual:visual,
+      area_format:'direct'
+    },
+    footer:''
+  });
+  mod.questions=[
+    template(1,'rectangle_visual','rectangle',true),
+    template(2,'rectangle_text','rectangle',false),
+    template(3,'square_visual','square',true),
+    template(4,'square_text','square',false),
+    template(5,'triangle_general_visual','triangle',true),
+    template(6,'triangle_general_text','triangle',false),
+    template(7,'triangle_right_visual','triangle',true),
+    template(8,'triangle_right_text','triangle',false),
+    template(9,'disk_radius_approx_visual','disk',true),
+    template(10,'disk_diameter_approx_visual','disk',true),
+    template(11,'disk_exact_visual','disk',true),
+    template(12,'composite_facade_visual','composite',true),
+    template(13,'composite_two_rectangles_visual','composite',true),
+    template(14,'composite_rectangle_square_visual','composite',true),
+    template(15,'composite_square_roof_visual','composite',true),
+    template(16,'rectangle_diagonal_visual','rectangle',true),
+    template(17,'triangle_sides_height_visual','triangle',true),
+    template(18,'formula_recognition','formula',true)
+  ];
+}
+configureAreaModule();
 
 let rngSeed=1, quiz=[];
 function setSeed(s){ rngSeed=s; }
@@ -784,12 +927,13 @@ function hasRepeatedNature(groups){
 }
 
 /*
-Les cinq modèles sont strictement équiprobables dans le sac du module :
+Les six modèles sont strictement équiprobables dans le sac du module :
 1. une seule nature, sans annulation ;
 2. une seule nature, avec annulation ;
 3. plusieurs natures, sans annulation ;
 4. plusieurs natures, avec annulation ;
 5. lecture de tuiles déjà regroupées.
+6. expression déjà réduite, sans termes semblables à regrouper.
 
 Bornes validées :
 - coefficient d’un groupe : x² <= 4, x <= 5, unité <= 5 ;
@@ -876,6 +1020,21 @@ function makeReadCoeffs(){
   return coeffs;
 }
 
+function makeAlreadyReduced(groupCount=null){
+  const count=groupCount||pick([2,2,3]);
+  const types=shuffleLocal(['x2','x','u']).slice(0,count);
+  return shuffleLocal(types.map(type=>({type,coeff:RD(1,typeLimit(type))})));
+}
+
+function makeAlreadyReducedQcmGroups(){
+  for(let tries=0;tries<100;tries++){
+    const groups=makeAlreadyReduced(2);
+    const a=groups[0].coeff,b=groups[1].coeff;
+    if(a*b!==a+b) return groups;
+  }
+  return [{type:'u',coeff:2},{type:'x',coeff:3}];
+}
+
 
 function simpleQcmGroups(kind){
   const type=pick(['x','x2']);
@@ -913,6 +1072,41 @@ function qcmSamePower(coefficient,type){
   return reducedLatex(sums);
 }
 
+function qcmMonomial(coefficient,power){
+  const sign=coefficient<0?'-':'';
+  const a=Math.abs(coefficient);
+  if(power===0) return sign+String(a);
+  const body=power===1?'𝑥':'𝑥^'+power;
+  return sign+(a===1?'':String(a))+body;
+}
+
+function qcmProductError(a,b,type){
+  return qcmMonomial(a*b,type==='x2'?4:2);
+}
+
+function makeAlreadyReducedQcm(groups){
+  const powers={u:0,x:1,x2:2};
+  const correct=expressionLatex(groups);
+  const a=groups[0].coeff,b=groups[1].coeff,sum=a+b;
+  const ordered=[...groups].sort((g1,g2)=>powers[g1.type]-powers[g2.type]);
+  const low=ordered[0].type,high=ordered[1].type;
+  const distractors=[
+    qcmSamePower(sum,high),
+    low==='u'?String(sum):qcmSamePower(sum,low),
+    qcmMonomial(a*b,powers[groups[0].type]+powers[groups[1].type])
+  ];
+  const unique=[correct];
+  distractors.forEach(option=>{if(option!==correct&&!unique.includes(option)) unique.push(option);});
+  let bump=1;
+  while(unique.length<4){
+    const fallback=qcmSamePower(sum+bump,high);
+    if(!unique.includes(fallback)) unique.push(fallback);
+    bump++;
+  }
+  const options=shuffleLocal(unique.slice(0,4));
+  return {options,correctIndex:String(options.indexOf(correct)+1)};
+}
+
 function makeSimpleReductionQcm(groups){
   const type=groups[0].type;
   const a=groups[0].coeff;
@@ -927,7 +1121,7 @@ function makeSimpleReductionQcm(groups){
     distractors=[
       qcmPowerError(correctCoeff,type),
       qcmSamePower(a*b,type),
-      String(correctCoeff)
+      qcmProductError(a,b,type)
     ];
   } else {
     const positiveA=Math.abs(a);
@@ -935,7 +1129,7 @@ function makeSimpleReductionQcm(groups){
     distractors=[
       qcmSamePower(positiveA+positiveB,type),
       qcmPowerError(correctCoeff,type),
-      qcmSamePower(positiveA*positiveB,type)
+      qcmProductError(a,b,type)
     ];
   }
 
@@ -1135,25 +1329,28 @@ function makeModule01Instance(mod,q){
 function makeReductionInstance(mod,q){
   const kind=q.options.reduction_kind;
   const requestedFormat=q.options.reduction_format||'direct';
-  const qcmAllowed=(kind==='one_no_cancel' || kind==='one_cancel');
+  const qcmAllowed=(kind==='one_no_cancel' || kind==='one_cancel' || kind==='already_reduced');
   const format=(requestedFormat==='qcm' && qcmAllowed)?'qcm':'direct';
 
   let groups=[];
   let readCoeffs=null;
 
   if(format==='qcm'){
-    groups=simpleQcmGroups(kind);
+    groups=kind==='already_reduced'?makeAlreadyReducedQcmGroups():simpleQcmGroups(kind);
   } else {
     if(kind==='one_no_cancel') groups=makeOneNoCancel();
     if(kind==='one_cancel') groups=makeOneCancel();
     if(kind==='multi_no_cancel') groups=makeMultiNoCancel();
     if(kind==='multi_cancel') groups=makeMultiCancel();
+    if(kind==='already_reduced') groups=makeAlreadyReduced();
     if(kind==='read_tiles') readCoeffs=makeReadCoeffs();
   }
 
   const sums=readCoeffs||coeffSums(groups);
-  const answer=reducedLatex(sums);
-  const qcm=(format==='qcm')?makeSimpleReductionQcm(groups):null;
+  const answer=kind==='already_reduced'?expressionLatex(groups):reducedLatex(sums);
+  const qcm=(format==='qcm')
+    ? (kind==='already_reduced'?makeAlreadyReducedQcm(groups):makeSimpleReductionQcm(groups))
+    : null;
 
   return {
     module:mod,
@@ -1186,9 +1383,13 @@ function makeSolidsInstance(mod,q){
     const elementIndex=Number.isInteger(meta.solid_element_index)
       ? meta.solid_element_index
       : RD(0,2);
-    const elements=['sommets','arêtes','faces'];
+    const elementQuestions=[
+      'Combien de sommets possède ce solide ?',
+      'Combien d’arêtes possède ce solide ?',
+      'Combien de faces possède ce solide ?'
+    ];
     correct=Number(meta.solid_counts[elementIndex]);
-    prompt='<div class="solid-prompt">Combien de '+elements[elementIndex]+' possède ce solide ?</div>'+prompt;
+    prompt='<div class="solid-prompt">'+elementQuestions[elementIndex]+'</div>'+prompt;
 
     const closeValues=shuffleLocal([correct-1,correct+1,correct-2,correct+2]);
     const widerValues=shuffleLocal([4,5,6,7,8,9,10,11,12]);
@@ -1216,10 +1417,514 @@ function makeSolidsInstance(mod,q){
     hasSvg:true
   };
 }
+
+function areaSvg(width,height,body,label){
+  return '<svg class="area-svg" xmlns="http://www.w3.org/2000/svg" width="'+width+'" height="'+height+'" viewBox="0 0 '+width+' '+height+'" role="img" aria-label="'+escapeHtml(label)+'">'+body+'</svg>';
+}
+function areaUnit(){ return pick(['mm','cm','dm','m']); }
+function areaSquaredUnit(unit){ return unit+'²'; }
+function areaValue(value){ return fmt(CUT(value,2)); }
+function areaRectangleDimensions(){
+  const small=RD(3,9);
+  const minimum=Math.ceil(small*1.2);
+  const maximum=Math.max(minimum,Math.floor(small*2.4));
+  return {L:RD(minimum,maximum,[small]),l:small};
+}
+function areaRectangleSvg(L,l,unit,isSquare=false){
+  const maxW=250,maxH=135,scale=Math.min(maxW/L,maxH/l);
+  const w=L*scale,h=l*scale,x=(360-w)/2,y=30+(maxH-h)/2;
+  const fill=isSquare?'#fff3e6':'#eaf3ff';
+  const stroke=isSquare?'#b85c00':'#1f5f99';
+  let body='<rect x="'+x+'" y="'+y+'" width="'+w+'" height="'+h+'" fill="'+fill+'" stroke="'+stroke+'" stroke-width="2.4"/>';
+  body+='<text x="180" y="'+(y+h+28)+'" font-family="Georgia, serif" font-size="18" text-anchor="middle" fill="#17384d">'+L+' '+unit+'</text>';
+  if(!isSquare) body+='<text x="'+(x-12)+'" y="'+(y+h/2+6)+'" font-family="Georgia, serif" font-size="18" text-anchor="end" fill="#17384d">'+l+' '+unit+'</text>';
+  return areaSvg(360,220,body,isSquare?'Carré avec son côté':'Rectangle avec ses dimensions');
+}
+function areaRectangleDiagonalSvg(L,l,d,unit){
+  const maxW=250,maxH=135,scale=Math.min(maxW/L,maxH/l);
+  const w=L*scale,h=l*scale,x=(360-w)/2,y=30+(maxH-h)/2;
+  let body='<rect x="'+x+'" y="'+y+'" width="'+w+'" height="'+h+'" fill="#eaf3ff" stroke="#1f5f99" stroke-width="2.4"/>';
+  body+='<line x1="'+x+'" y1="'+(y+h)+'" x2="'+(x+w)+'" y2="'+y+'" stroke="#6040a0" stroke-width="2.2"/>';
+  body+='<text x="180" y="'+(y+h+28)+'" font-family="Georgia, serif" font-size="17" text-anchor="middle" fill="#17384d">L = '+L+' '+unit+'</text>';
+  body+='<text x="'+(x-10)+'" y="'+(y+h/2+6)+'" font-family="Georgia, serif" font-size="17" text-anchor="end" fill="#17384d">l = '+l+' '+unit+'</text>';
+  body+='<rect x="'+(x+w/2-42)+'" y="'+(y+h/2-25)+'" width="84" height="24" rx="5" fill="white" fill-opacity=".92"/>';
+  body+='<text x="'+(x+w/2)+'" y="'+(y+h/2-8)+'" font-family="Georgia, serif" font-size="17" text-anchor="middle" fill="#6040a0">d = '+d+' '+unit+'</text>';
+  return areaSvg(360,220,body,'Rectangle avec sa longueur, sa largeur et sa diagonale');
+}
+function areaGeneralTriangleSvg(b,h,unit){
+  const maxW=250,maxH=145,scale=Math.min(maxW/b,maxH/h);
+  const w=b*scale,hp=h*scale,x=(360-w)/2,baseY=175;
+  const footRatio=.25+rnd()*.5,footX=x+w*footRatio,apexY=baseY-hp;
+  let body='<polygon points="'+x+','+baseY+' '+(x+w)+','+baseY+' '+footX+','+apexY+'" fill="#fff4e6" stroke="#b35c00" stroke-width="2.4" stroke-linejoin="round"/>';
+  body+='<line x1="'+footX+'" y1="'+apexY+'" x2="'+footX+'" y2="'+baseY+'" stroke="#b35c00" stroke-width="2.2" stroke-dasharray="6 5"/>';
+  body+='<polyline points="'+footX+','+(baseY-13)+' '+(footX+13)+','+(baseY-13)+' '+(footX+13)+','+baseY+'" fill="none" stroke="#b35c00" stroke-width="2"/>';
+  body+='<text x="180" y="207" font-family="Georgia, serif" font-size="17" text-anchor="middle" fill="#17384d">base '+b+' '+unit+'</text>';
+  body+='<rect x="'+(footX+11)+'" y="'+(apexY+hp/2-17)+'" width="88" height="24" rx="5" fill="white" fill-opacity=".9"/>';
+  body+='<text x="'+(footX+17)+'" y="'+(apexY+hp/2)+'" font-family="Georgia, serif" font-size="17" fill="#17384d">h = '+h+' '+unit+'</text>';
+  return areaSvg(360,220,body,'Triangle avec sa base et sa hauteur');
+}
+function areaTriangleSidesHeightSvg(data,unit){
+  const b=data.b,h=data.h,foot=data.foot;
+  const maxW=250,maxH=140,scale=Math.min(maxW/b,maxH/h);
+  const w=b*scale,hp=h*scale,x=(360-w)/2,baseY=174,footX=x+foot*scale,apexY=baseY-hp;
+  let body='<polygon points="'+x+','+baseY+' '+(x+w)+','+baseY+' '+footX+','+apexY+'" fill="#fff4e6" stroke="#b35c00" stroke-width="2.4" stroke-linejoin="round"/>';
+  body+='<line x1="'+footX+'" y1="'+apexY+'" x2="'+footX+'" y2="'+baseY+'" stroke="#b35c00" stroke-width="2.1" stroke-dasharray="6 5"/>';
+  body+='<polyline points="'+footX+','+(baseY-13)+' '+(footX+13)+','+(baseY-13)+' '+(footX+13)+','+baseY+'" fill="none" stroke="#b35c00" stroke-width="2"/>';
+  body+='<text x="180" y="207" font-family="Georgia, serif" font-size="16" text-anchor="middle" fill="#17384d">b = '+b+' '+unit+'</text>';
+  body+='<text x="'+((x+footX)/2-8)+'" y="'+((baseY+apexY)/2-8)+'" font-family="Georgia, serif" font-size="16" text-anchor="end" fill="#17384d">a = '+data.left+' '+unit+'</text>';
+  body+='<text x="'+((x+w+footX)/2+8)+'" y="'+((baseY+apexY)/2-8)+'" font-family="Georgia, serif" font-size="16" fill="#17384d">c = '+data.right+' '+unit+'</text>';
+  body+='<rect x="'+(footX+8)+'" y="'+(apexY+hp/2-17)+'" width="82" height="24" rx="5" fill="white" fill-opacity=".92"/>';
+  body+='<text x="'+(footX+12)+'" y="'+(apexY+hp/2)+'" font-family="Georgia, serif" font-size="16" fill="#17384d">h = '+h+' '+unit+'</text>';
+  return areaSvg(360,220,body,'Triangle avec ses trois côtés et la hauteur correspondant à la base b');
+}
+function areaRightTriangleSvg(a,b,unit){
+  const maxW=240,maxH=140,scale=Math.min(maxW/b,maxH/a);
+  const w=b*scale,h=a*scale,baseY=175,flip=rnd()<.5;
+  const rightX=flip?305:55,otherX=flip?rightX-w:rightX+w,topY=baseY-h;
+  let body='<polygon points="'+rightX+','+baseY+' '+rightX+','+topY+' '+otherX+','+baseY+'" fill="#f0fff0" stroke="#247524" stroke-width="2.4" stroke-linejoin="round"/>';
+  const sign=flip?-1:1;
+  body+='<polyline points="'+rightX+','+(baseY-15)+' '+(rightX+15*sign)+','+(baseY-15)+' '+(rightX+15*sign)+','+baseY+'" fill="none" stroke="#247524" stroke-width="2"/>';
+  body+='<text x="'+(flip?rightX+12:rightX-12)+'" y="'+(topY+h/2+5)+'" font-family="Georgia, serif" font-size="17" text-anchor="'+(flip?'start':'end')+'" fill="#17384d">'+a+' '+unit+'</text>';
+  body+='<text x="'+((rightX+otherX)/2)+'" y="207" font-family="Georgia, serif" font-size="17" text-anchor="middle" fill="#17384d">'+b+' '+unit+'</text>';
+  return areaSvg(360,220,body,'Triangle rectangle coté');
+}
+function areaDiskSvg(value,unit,isDiameter){
+  const cx=180,cy=103,r=70,stroke=isDiameter?'#a13030':'#6040a0',fill=isDiameter?'#fff0f0':'#f2edff';
+  let body='<circle cx="'+cx+'" cy="'+cy+'" r="'+r+'" fill="'+fill+'" stroke="'+stroke+'" stroke-width="2.4"/>';
+  if(isDiameter){
+    body+='<line x1="'+(cx-r)+'" y1="'+cy+'" x2="'+(cx+r)+'" y2="'+cy+'" stroke="'+stroke+'" stroke-width="2.4"/>';
+    body+='<text x="'+cx+'" y="'+(cy-10)+'" font-family="Georgia, serif" font-size="18" text-anchor="middle" fill="#17384d">d = '+value+' '+unit+'</text>';
+  }else{
+    body+='<circle cx="'+cx+'" cy="'+cy+'" r="3.5" fill="'+stroke+'"/><line x1="'+cx+'" y1="'+cy+'" x2="'+(cx+r)+'" y2="'+cy+'" stroke="'+stroke+'" stroke-width="2.4"/>';
+    body+='<text x="'+(cx+r/2)+'" y="'+(cy-10)+'" font-family="Georgia, serif" font-size="18" text-anchor="middle" fill="#17384d">r = '+value+' '+unit+'</text>';
+  }
+  return areaSvg(360,220,body,isDiameter?'Disque avec son diamètre':'Disque avec son rayon');
+}
+function areaFacadeSvg(L,H,h,unit){
+  const maxW=230,maxRectH=105,maxRoofH=75,scale=Math.min(maxW/L,maxRectH/H,maxRoofH/h);
+  const w=L*scale,rh=H*scale,roof=h*scale,x=(360-w)/2,baseY=188,topY=baseY-rh,apexX=180,apexY=topY-roof;
+  let body='<rect x="'+x+'" y="'+topY+'" width="'+w+'" height="'+rh+'" fill="#eaf3ff" stroke="#1f5f99" stroke-width="2.4"/>';
+  body+='<polygon points="'+x+','+topY+' '+apexX+','+apexY+' '+(x+w)+','+topY+'" fill="#fff4e6" stroke="#b35c00" stroke-width="2.4" stroke-linejoin="round"/>';
+  body+='<line x1="'+apexX+'" y1="'+apexY+'" x2="'+apexX+'" y2="'+topY+'" stroke="#b35c00" stroke-width="2" stroke-dasharray="6 5"/>';
+  body+='<text x="180" y="214" font-family="Georgia, serif" font-size="16" text-anchor="middle" fill="#17384d">L = '+L+' '+unit+'</text>';
+  body+='<text x="'+(x+8)+'" y="'+(topY+rh/2)+'" font-family="Georgia, serif" font-size="16" fill="#17384d">H = '+H+' '+unit+'</text>';
+  body+='<rect x="'+(apexX+8)+'" y="'+(apexY+roof/2-17)+'" width="82" height="24" rx="5" fill="white" fill-opacity=".9"/>';
+  body+='<text x="'+(apexX+12)+'" y="'+(apexY+roof/2)+'" font-family="Georgia, serif" font-size="16" fill="#17384d">h = '+h+' '+unit+'</text>';
+  return areaSvg(360,230,body,'Façade composée d’un rectangle et d’un triangle');
+}
+function areaTwoRectanglesSvg(w1,h1,w2,h2,unit){
+  const total=w1+w2,maxH=Math.max(h1,h2),scale=Math.min(235/total,130/maxH);
+  const rw1=w1*scale,rw2=w2*scale,rh1=h1*scale,rh2=h2*scale;
+  const x=(360-rw1-rw2)/2,baseY=183,x2=x+rw1;
+  let body='<rect x="'+x+'" y="'+(baseY-rh1)+'" width="'+rw1+'" height="'+rh1+'" fill="#eaf3ff" stroke="#1f5f99" stroke-width="2.4"/>';
+  body+='<rect x="'+x2+'" y="'+(baseY-rh2)+'" width="'+rw2+'" height="'+rh2+'" fill="#fff3e6" stroke="#b85c00" stroke-width="2.4"/>';
+  body+='<text x="'+(x+rw1/2)+'" y="211" font-family="Georgia, serif" font-size="15" text-anchor="middle" fill="#17384d">L₁ = '+w1+' '+unit+'</text>';
+  body+='<text x="'+(x2+rw2/2)+'" y="211" font-family="Georgia, serif" font-size="15" text-anchor="middle" fill="#17384d">L₂ = '+w2+' '+unit+'</text>';
+  body+='<text x="'+(x+8)+'" y="'+(baseY-rh1/2+5)+'" font-family="Georgia, serif" font-size="15" fill="#17384d">l₁ = '+h1+' '+unit+'</text>';
+  body+='<text x="'+(x2+rw2-8)+'" y="'+(baseY-rh2/2+5)+'" font-family="Georgia, serif" font-size="15" text-anchor="end" fill="#17384d">l₂ = '+h2+' '+unit+'</text>';
+  return areaSvg(360,230,body,'Deux rectangles accolés formant une figure en escalier');
+}
+function areaRectangleSquareSvg(L,H,c,unit){
+  const total=L+c,maxH=Math.max(H,c),scale=Math.min(235/total,130/maxH);
+  const rw=L*scale,rh=H*scale,s=c*scale,x=(360-rw-s)/2,baseY=183,x2=x+rw;
+  let body='<rect x="'+x+'" y="'+(baseY-rh)+'" width="'+rw+'" height="'+rh+'" fill="#eaf3ff" stroke="#1f5f99" stroke-width="2.4"/>';
+  body+='<rect x="'+x2+'" y="'+(baseY-s)+'" width="'+s+'" height="'+s+'" fill="#fff3e6" stroke="#b85c00" stroke-width="2.4"/>';
+  body+='<text x="'+(x+rw/2)+'" y="211" font-family="Georgia, serif" font-size="15" text-anchor="middle" fill="#17384d">L = '+L+' '+unit+'</text>';
+  body+='<text x="'+(x2+s/2)+'" y="211" font-family="Georgia, serif" font-size="15" text-anchor="middle" fill="#17384d">c = '+c+' '+unit+'</text>';
+  body+='<text x="'+(x+8)+'" y="'+(baseY-rh/2+5)+'" font-family="Georgia, serif" font-size="15" fill="#17384d">H = '+H+' '+unit+'</text>';
+  return areaSvg(360,230,body,'Un rectangle et un carré accolés');
+}
+function areaSquareRoofSvg(c,h,unit){
+  const maxW=190,maxSquareH=112,maxRoofH=70,scale=Math.min(maxW/c,maxSquareH/c,maxRoofH/h);
+  const s=c*scale,roof=h*scale,x=(360-s)/2,baseY=188,topY=baseY-s,apexX=180,apexY=topY-roof;
+  let body='<rect x="'+x+'" y="'+topY+'" width="'+s+'" height="'+s+'" fill="#fff3e6" stroke="#b85c00" stroke-width="2.4"/>';
+  body+='<polygon points="'+x+','+topY+' '+apexX+','+apexY+' '+(x+s)+','+topY+'" fill="#f2edff" stroke="#6040a0" stroke-width="2.4" stroke-linejoin="round"/>';
+  body+='<line x1="'+apexX+'" y1="'+apexY+'" x2="'+apexX+'" y2="'+topY+'" stroke="#6040a0" stroke-width="2" stroke-dasharray="6 5"/>';
+  body+='<text x="180" y="214" font-family="Georgia, serif" font-size="16" text-anchor="middle" fill="#17384d">c = '+c+' '+unit+'</text>';
+  body+='<text x="'+(x-10)+'" y="'+(topY+s/2+5)+'" font-family="Georgia, serif" font-size="16" text-anchor="end" fill="#17384d">c = '+c+' '+unit+'</text>';
+  body+='<rect x="'+(apexX+8)+'" y="'+(apexY+roof/2-17)+'" width="82" height="24" rx="5" fill="white" fill-opacity=".9"/>';
+  body+='<text x="'+(apexX+12)+'" y="'+(apexY+roof/2)+'" font-family="Georgia, serif" font-size="16" fill="#17384d">h = '+h+' '+unit+'</text>';
+  return areaSvg(360,230,body,'Un carré surmonté d’un triangle');
+}
+function areaQcm(correct,distractors,unitSquared){
+  const unique=[];
+  [correct,...distractors].forEach(option=>{if(!unique.includes(String(option))) unique.push(String(option));});
+  while(unique.length<4){
+    const fallback=RD(2,150)+' '+unitSquared;
+    if(!unique.includes(fallback)) unique.push(fallback);
+  }
+  const options=shuffleLocal(unique.slice(0,4));
+  return {options,correctIndex:String(options.indexOf(String(correct))+1)};
+}
+function makeAreaInstance(mod,q){
+  const kind=q.options.area_kind;
+  const format=q.options.area_format||'direct';
+  const unit=areaUnit();
+  const unit2=areaSquaredUnit(unit);
+  let prompt='',visualHtml='',dataHtml='',formula='',calculation='',result='',qcm=null;
+  let correctValue='',distractors=[];
+
+  if(kind==='rectangle_visual'||kind==='rectangle_text'){
+    const d=areaRectangleDimensions(),A=d.L*d.l,P=2*(d.L+d.l);
+    prompt='Calcule l’aire de ce rectangle.';
+    visualHtml=kind==='rectangle_visual'?areaRectangleSvg(d.L,d.l,unit,false):'';
+    dataHtml=kind==='rectangle_text'?'<div class="area-data">Un rectangle mesure <strong>'+d.L+' '+unit+'</strong> de longueur et <strong>'+d.l+' '+unit+'</strong> de largeur.</div>':'';
+    formula='$$\\text{Aire}=\\text{longueur}\\times\\text{largeur}=L\\times l$$';
+    calculation='$$A='+d.L+'\\times'+d.l+'='+areaValue(A)+'$$';
+    result=areaValue(A)+' '+unit2;correctValue=result;
+    distractors=[areaValue(A)+' '+unit,areaValue(P)+' '+unit,areaValue(P)+' '+unit2];
+  }
+  if(kind==='rectangle_diagonal_visual'){
+    const triple=pick([
+      {l:3,L:4,d:5},{l:6,L:8,d:10},{l:5,L:12,d:13},
+      {l:8,L:15,d:17},{l:9,L:12,d:15},{l:12,L:16,d:20}
+    ]),A=triple.L*triple.l,P=2*(triple.L+triple.l);
+    prompt='Calcule l’aire de ce rectangle. Toutes les longueurs utiles ou non sont indiquées.';
+    visualHtml=areaRectangleDiagonalSvg(triple.L,triple.l,triple.d,unit);
+    formula='$$\\text{Aire}=\\text{longueur}\\times\\text{largeur}=L\\times l$$';
+    calculation='$$A='+triple.L+'\\times'+triple.l+'='+areaValue(A)+'$$';
+    result=areaValue(A)+' '+unit2;correctValue=result;
+    distractors=[areaValue(triple.L*triple.d)+' '+unit2,areaValue(P)+' '+unit,areaValue(A)+' '+unit];
+  }
+  if(kind==='square_visual'||kind==='square_text'){
+    let c=RD(3,15,[4]),A=c*c,P=4*c;
+    prompt='Calcule l’aire de ce carré.';
+    visualHtml=kind==='square_visual'?areaRectangleSvg(c,c,unit,true):'';
+    dataHtml=kind==='square_text'?'<div class="area-data">Un carré a un côté de <strong>'+c+' '+unit+'</strong>.</div>':'';
+    formula='$$\\text{Aire}=\\text{côté}\\times\\text{côté}=c^2$$';
+    calculation='$$A='+c+'^2='+A+'$$';
+    result=A+' '+unit2;correctValue=result;
+    distractors=[A+' '+unit,P+' '+unit,P+' '+unit2];
+  }
+  if(kind==='triangle_general_visual'||kind==='triangle_general_text'){
+    const b=RD(8,18),minH=Math.max(4,Math.ceil(b*.45)),maxH=Math.max(minH,Math.floor(b*1.05)),h=RD(minH,maxH),A=b*h/2;
+    prompt='Calcule l’aire de ce triangle.';
+    visualHtml=kind==='triangle_general_visual'?areaGeneralTriangleSvg(b,h,unit):'';
+    dataHtml=kind==='triangle_general_text'?'<div class="area-data">La base d’un triangle mesure <strong>'+b+' '+unit+'</strong> et la hauteur correspondante <strong>'+h+' '+unit+'</strong>.</div>':'';
+    formula='$$\\text{Aire}=(\\text{base}\\times\\text{hauteur})\\div2=(b\\times h)\\div2$$';
+    calculation='$$A=\\dfrac{'+b+'\\times'+h+'}{2}='+areaValue(A)+'$$';
+    result=areaValue(A)+' '+unit2;correctValue=result;
+    distractors=[areaValue(b*h)+' '+unit2,areaValue(b+h)+' '+unit2,areaValue(A)+' '+unit];
+  }
+  if(kind==='triangle_right_visual'||kind==='triangle_right_text'){
+    const a=RD(4,13),b=RD(5,16),A=a*b/2;
+    prompt='Ce triangle est rectangle. Calcule son aire.';
+    visualHtml=kind==='triangle_right_visual'?areaRightTriangleSvg(a,b,unit):'';
+    dataHtml=kind==='triangle_right_text'?'<div class="area-data">Les deux côtés perpendiculaires d’un triangle rectangle mesurent <strong>'+a+' '+unit+'</strong> et <strong>'+b+' '+unit+'</strong>.</div>':'';
+    formula='$$\\text{Aire}=(\\text{base}\\times\\text{hauteur})\\div2=(b\\times h)\\div2$$';
+    calculation='$$A=\\dfrac{'+a+'\\times'+b+'}{2}='+areaValue(A)+'$$';
+    result=areaValue(A)+' '+unit2;correctValue=result;
+    distractors=[areaValue(a*b)+' '+unit2,areaValue(a+b)+' '+unit2,areaValue(A)+' '+unit];
+  }
+  if(kind==='triangle_sides_height_visual'){
+    const data=pick([
+      {b:14,h:12,foot:5,left:13,right:15},
+      {b:25,h:12,foot:9,left:15,right:20},
+      {b:28,h:15,foot:8,left:17,right:25},
+      {b:17,h:24,foot:7,left:25,right:26}
+    ]),A=data.b*data.h/2;
+    prompt='Calcule l’aire de ce triangle. Toutes les longueurs utiles ou non sont indiquées.';
+    visualHtml=areaTriangleSidesHeightSvg(data,unit);
+    formula='$$\\text{Aire}=(\\text{base}\\times\\text{hauteur})\\div2=(b\\times h)\\div2$$';
+    calculation='$$A=\\dfrac{'+data.b+'\\times'+data.h+'}{2}='+areaValue(A)+'$$';
+    result=areaValue(A)+' '+unit2;correctValue=result;
+    distractors=[areaValue(data.b*data.h)+' '+unit2,areaValue((data.left+data.right+data.b))+' '+unit,areaValue(A)+' '+unit];
+  }
+  if(kind==='disk_radius_approx_visual'){
+    const r=RD(2,10),A=CUT(3.14*r*r,2),P=CUT(2*3.14*r,2),wrong=CUT(3.14*(r/2)*(r/2),2);
+    prompt='Calcule une valeur approchée de l’aire de ce disque avec π ≈ 3,14.';
+    visualHtml=areaDiskSvg(r,unit,false);
+    formula='$$\\text{Aire}=\\pi\\times\\text{rayon}^2=\\pi r^2$$';
+    calculation='$$A\\approx3,14\\times'+r+'^2='+areaValue(A)+'$$';
+    result=areaValue(A)+' '+unit2;correctValue=result;
+    distractors=[areaValue(P)+' '+unit,areaValue(wrong)+' '+unit2,areaValue(A)+' '+unit];
+  }
+  if(kind==='disk_diameter_approx_visual'){
+    const d=RD(2,12)*2,r=d/2,A=CUT(3.14*r*r,2),P=CUT(3.14*d,2),wrong=CUT(3.14*d*d,2);
+    prompt='Calcule une valeur approchée de l’aire de ce disque avec π ≈ 3,14.';
+    visualHtml=areaDiskSvg(d,unit,true);
+    formula='$$r=d\\div2\\quad;\\quad\\text{Aire}=\\pi\\times\\text{rayon}^2=\\pi r^2$$';
+    calculation='$$A\\approx3,14\\times('+d+'\\div2)^2='+areaValue(A)+'$$';
+    result=areaValue(A)+' '+unit2;correctValue=result;
+    distractors=[areaValue(P)+' '+unit,areaValue(wrong)+' '+unit2,areaValue(A)+' '+unit];
+  }
+  if(kind==='disk_exact_visual'){
+    const diameter=rnd()<.5,r=RD(2,10),shown=diameter?2*r:r,coefficient=r*r;
+    prompt='Donne la valeur exacte de l’aire de ce disque.';
+    visualHtml=areaDiskSvg(shown,unit,diameter);
+    formula=diameter?'$$r=d\\div2\\quad;\\quad\\text{Aire}=\\pi\\times\\text{rayon}^2=\\pi r^2$$':'$$\\text{Aire}=\\pi\\times\\text{rayon}^2=\\pi r^2$$';
+    calculation=diameter?'$$A=\\pi\\times('+shown+'\\div2)^2='+coefficient+'\\pi$$':'$$A=\\pi\\times'+r+'^2='+coefficient+'\\pi$$';
+    result=coefficient+'π '+unit2;correctValue=result;
+    const circumferenceCoeff=2*r,wrongCoeff=diameter?shown*shown:Math.max(1,r);
+    distractors=[circumferenceCoeff+'π '+unit,wrongCoeff+'π '+unit2,coefficient+'π '+unit];
+  }
+  if(kind==='composite_facade_visual'){
+    const L=RD(7,14),H=RD(3,8),h=RD(2,6),rect=L*H,roof=L*h/2,A=rect+roof;
+    prompt='Cette façade est formée d’un rectangle et d’un triangle. Calcule son aire totale.';
+    visualHtml=areaFacadeSvg(L,H,h,unit);
+    formula='$$\\text{Aire totale}=\\text{aire du rectangle}+\\text{aire du triangle}=L\\times H+(L\\times h)\\div2$$';
+    calculation='$$A='+L+'\\times'+H+'+\\dfrac{'+L+'\\times'+h+'}{2}='+areaValue(A)+'$$';
+    result=areaValue(A)+' '+unit2;correctValue=result;
+    distractors=[areaValue(rect)+' '+unit2,areaValue(rect+L*h)+' '+unit2,areaValue(A)+' '+unit];
+  }
+  if(kind==='composite_two_rectangles_visual'){
+    const w1=RD(4,8),w2=RD(3,7,[w1]),h1=RD(4,9),h2=RD(3,8,[h1]);
+    const A1=w1*h1,A2=w2*h2,A=A1+A2,bounding=(w1+w2)*Math.max(h1,h2);
+    prompt='Cette figure est formée de deux rectangles accolés. Calcule son aire totale.';
+    visualHtml=areaTwoRectanglesSvg(w1,h1,w2,h2,unit);
+    formula='$$\\text{Aire totale}=\\text{aire du rectangle 1}+\\text{aire du rectangle 2}=L_1\\times l_1+L_2\\times l_2$$';
+    calculation='$$A='+w1+'\\times'+h1+'+'+w2+'\\times'+h2+'='+areaValue(A)+'$$';
+    result=areaValue(A)+' '+unit2;correctValue=result;
+    distractors=[areaValue(A1)+' '+unit2,areaValue(bounding)+' '+unit2,areaValue(A)+' '+unit];
+  }
+  if(kind==='composite_rectangle_square_visual'){
+    const L=RD(5,10),H=RD(3,7),c=RD(3,7,[H]),rect=L*H,square=c*c,A=rect+square;
+    prompt='Cette figure est formée d’un rectangle et d’un carré accolés. Calcule son aire totale.';
+    visualHtml=areaRectangleSquareSvg(L,H,c,unit);
+    formula='$$\\text{Aire totale}=\\text{aire du rectangle}+\\text{aire du carré}=L\\times H+c^2$$';
+    calculation='$$A='+L+'\\times'+H+'+'+c+'^2='+areaValue(A)+'$$';
+    result=areaValue(A)+' '+unit2;correctValue=result;
+    distractors=[areaValue(rect)+' '+unit2,areaValue(rect+4*c)+' '+unit2,areaValue(A)+' '+unit];
+  }
+  if(kind==='composite_square_roof_visual'){
+    const c=RD(5,10),h=RD(2,6),square=c*c,roof=c*h/2,A=square+roof;
+    prompt='Cette figure est formée d’un carré surmonté d’un triangle. Calcule son aire totale.';
+    visualHtml=areaSquareRoofSvg(c,h,unit);
+    formula='$$\\text{Aire totale}=\\text{aire du carré}+\\text{aire du triangle}=c^2+(c\\times h)\\div2$$';
+    calculation='$$A='+c+'^2+('+c+'\\times'+h+')\\div2='+areaValue(A)+'$$';
+    result=areaValue(A)+' '+unit2;correctValue=result;
+    distractors=[areaValue(square)+' '+unit2,areaValue(square+c*h)+' '+unit2,areaValue(A)+' '+unit];
+  }
+
+  if(kind==='formula_recognition'){
+    const shape=pick(['rectangle','square','triangle','disk']);
+    let formulaOptions=[];
+    prompt='Quelle formule permet de calculer l’aire de cette figure ?';
+    if(shape==='rectangle'){
+      const d=areaRectangleDimensions();
+      visualHtml=areaRectangleSvg(d.L,d.l,unit,false);
+      formulaOptions=['L\\times l','\\dfrac{b\\times h}{2}','\\pi r^2','2(L+l)'];
+      correctValue='L\\times l';
+    }
+    if(shape==='square'){
+      const c=RD(3,15);
+      visualHtml=areaRectangleSvg(c,c,unit,true);
+      formulaOptions=['c^2','4c','\\dfrac{b\\times h}{2}','\\pi r^2'];
+      correctValue='c^2';
+    }
+    if(shape==='triangle'){
+      const b=RD(8,18),h=RD(4,12);
+      visualHtml=areaGeneralTriangleSvg(b,h,unit);
+      formulaOptions=['\\dfrac{b\\times h}{2}','b\\times h','L\\times l','\\pi r^2'];
+      correctValue='\\dfrac{b\\times h}{2}';
+    }
+    if(shape==='disk'){
+      const r=RD(2,10);
+      visualHtml=areaDiskSvg(r,unit,false);
+      formulaOptions=['\\pi r^2','\\pi r','\\pi d','\\pi d^2'];
+      correctValue='\\pi r^2';
+    }
+    const options=shuffleLocal(formulaOptions);
+    qcm={options:options.map(option=>'$$'+option+'$$'),correctIndex:String(options.indexOf(correctValue)+1)};
+    formula='';calculation='';result='';
+  }
+
+  if(format==='qcm'&&kind!=='formula_recognition') qcm=areaQcm(correctValue,distractors,unit2);
+  return {
+    module:mod,q,scope:{},answers:qcm?[qcm.correctIndex]:[correctValue],
+    rawStatement:prompt,rawFooter:'',hasSvg:!!visualHtml,
+    area:{kind,format,prompt,visualHtml,dataHtml,formula,calculation,result,unit,unit2,qcm}
+  };
+}
+function averageSvg(body,height,label){
+  return '<svg class="average-svg" xmlns="http://www.w3.org/2000/svg" width="760" height="'+height+'" viewBox="0 0 760 '+height+'" role="img" aria-label="'+escapeHtml(label)+'">'+body+'</svg>';
+}
+function averageBarSegments(items,x,y,width,height,fill,stroke,unknownIndex=-1,correction=false){
+  const weights=items.map(item=>Math.max(2,Number(item.value)||0)+2);
+  const total=weights.reduce((sum,value)=>sum+value,0)||1;
+  let cursor=x,body='';
+  items.forEach((item,index)=>{
+    const w=index===items.length-1?x+width-cursor:width*weights[index]/total;
+    const resolved=correction&&index===unknownIndex;
+    body+='<rect x="'+cursor+'" y="'+y+'" width="'+w+'" height="'+height+'" fill="'+(resolved?'#ecfdf5':fill)+'" stroke="'+(resolved?'#10b981':stroke)+'" stroke-width="2"/>';
+    const shownLabel=item.label==='x'?'𝑥':item.label;
+    body+='<text x="'+(cursor+w/2)+'" y="'+(y+height/2+7)+'" font-family="Cambria Math, STIX Two Math, Times New Roman, serif" font-size="22" font-weight="700" text-anchor="middle" fill="'+(resolved?'#087a55':'#17384d')+'">'+escapeHtml(shownLabel)+'</text>';
+    cursor+=w;
+  });
+  return body;
+}
+function averageEqualSegments(labels,x,y,width,height,known,correction=false){
+  const w=width/labels.length;
+  let body='';
+  labels.forEach((label,index)=>{
+    const resolved=correction&&!known;
+    body+='<rect x="'+(x+index*w)+'" y="'+y+'" width="'+w+'" height="'+height+'" fill="'+(resolved?'#ecfdf5':'#eaf3ff')+'" stroke="'+(resolved?'#10b981':'#1f5f99')+'" stroke-width="2"/>';
+    const shownLabel=label==='x'?'𝑥':label;
+    body+='<text x="'+(x+(index+.5)*w)+'" y="'+(y+height/2+8)+'" font-family="Cambria Math, STIX Two Math, Times New Roman, serif" font-size="24" font-weight="700" text-anchor="middle" fill="'+(resolved?'#087a55':'#17384d')+'">'+escapeHtml(shownLabel)+'</text>';
+  });
+  return body;
+}
+function averageComparisonSvg(data,correction=false){
+  const x=70,width=620,rowH=54,topY=16,totalY=topY+rowH,bottomY=totalY+rowH;
+  const topLabels=Array.from({length:data.count},()=>correction?data.averageLabel:(data.averageKnown?data.averageLabel:'x'));
+  const bottomItems=data.items.filter(item=>Number(item.value)!==0).map((item,index)=>({
+    value:item.value,
+    label:correction&&item.unknown?item.correctLabel:item.label,
+    unknown:item.unknown,
+    sourceIndex:index
+  }));
+  const unknownIndex=bottomItems.findIndex(item=>item.unknown);
+  let body=averageEqualSegments(topLabels,x,topY,width,rowH,data.averageKnown,correction);
+  body+='<rect x="'+x+'" y="'+totalY+'" width="'+width+'" height="'+rowH+'" fill="#f8fbff" stroke="#60708c" stroke-width="2"/>';
+  body+='<text x="380" y="'+(totalY+34)+'" font-family="Arial, sans-serif" font-size="18" font-weight="850" text-anchor="middle" fill="#60708c">TOTAL</text>';
+  body+=averageBarSegments(bottomItems,x,bottomY,width,rowH,'#fff3e6','#b85c00',unknownIndex,correction);
+  return averageSvg(body,194,'Schéma en barres comparant les valeurs à des parts toutes égales à la moyenne');
+}
+function averageTotalPartsSvg(data,correction=false){
+  const x=70,width=620,h=60,topY=20,bottomY=topY+h;
+  const totalText=correction?data.totalLabel:(data.totalKnown?data.totalLabel:'x');
+  const partText=correction?data.partLabel:(data.partKnown?data.partLabel:'x');
+  const totalResolved=correction&&!data.totalKnown,partsResolved=correction&&!data.partKnown;
+  let body=averageEqualSegments(Array.from({length:data.count},()=>partText),x,topY,width,h,data.partKnown,correction);
+  body+='<rect x="'+x+'" y="'+bottomY+'" width="'+width+'" height="'+h+'" fill="'+(totalResolved?'#ecfdf5':'#fff3e6')+'" stroke="'+(totalResolved?'#10b981':'#b85c00')+'" stroke-width="2.2"/>';
+  body+='<text x="380" y="'+(bottomY+38)+'" font-family="Arial, sans-serif" font-size="20" font-weight="850" text-anchor="middle" fill="#17384d">TOTAL</text>';
+  return averageSvg(body,160,'Schéma en barres reliant un total à des parts égales');
+}
+function averageWeightedSvg(data){
+  const x=70,width=620,topY=34,rowH=56,totalY=topY+rowH,bottomY=totalY+rowH;
+  let body='<text x="380" y="22" font-family="Arial, sans-serif" font-size="16" font-weight="800" text-anchor="middle" fill="#60708c">'+data.count+' parts égales</text>';
+  const shown=['x','x','…','x','x'],cellW=width/shown.length;
+  shown.forEach((label,index)=>{
+    body+='<rect x="'+(x+index*cellW)+'" y="'+topY+'" width="'+cellW+'" height="'+rowH+'" fill="#eaf3ff" stroke="#1f5f99" stroke-width="2"/>';
+    const shownLabel=label==='x'?'𝑥':label;
+    body+='<text x="'+(x+(index+.5)*cellW)+'" y="'+(topY+35)+'" font-family="Cambria Math, STIX Two Math, Times New Roman, serif" font-size="25" font-weight="700" text-anchor="middle" fill="#17384d">'+shownLabel+'</text>';
+  });
+  body+='<rect x="'+x+'" y="'+totalY+'" width="'+width+'" height="'+rowH+'" fill="#f8fbff" stroke="#60708c" stroke-width="1.8"/>';
+  body+='<text x="380" y="'+(totalY+35)+'" font-family="Arial, sans-serif" font-size="18" font-weight="850" text-anchor="middle" fill="#60708c">TOTAL</text>';
+  const positives=data.groups.filter(group=>group.value>0);
+  const contributionSum=positives.reduce((sum,group)=>sum+group.value*group.effect,0)||1;
+  const minWidth=82,remaining=Math.max(0,width-minWidth*positives.length);
+  let cursor=x;
+  positives.forEach((group,index)=>{
+    const contribution=group.value*group.effect;
+    const w=index===positives.length-1?x+width-cursor:minWidth+remaining*contribution/contributionSum;
+    body+='<rect x="'+cursor+'" y="'+bottomY+'" width="'+w+'" height="'+rowH+'" fill="#fff3e6" stroke="#b85c00" stroke-width="2"/>';
+    if(group.effect===1){
+      body+='<text x="'+(cursor+w/2)+'" y="'+(bottomY+37)+'" font-family="Arial, sans-serif" font-size="19" font-weight="850" text-anchor="middle" fill="#17384d">'+group.value+'</text>';
+    }else if(group.effect===2){
+      body+='<line x1="'+(cursor+w/2)+'" y1="'+bottomY+'" x2="'+(cursor+w/2)+'" y2="'+(bottomY+rowH)+'" stroke="#b85c00" stroke-width="2"/>';
+      body+='<text x="'+(cursor+w/4)+'" y="'+(bottomY+37)+'" font-family="Arial, sans-serif" font-size="19" font-weight="850" text-anchor="middle" fill="#17384d">'+group.value+'</text>';
+      body+='<text x="'+(cursor+3*w/4)+'" y="'+(bottomY+37)+'" font-family="Arial, sans-serif" font-size="19" font-weight="850" text-anchor="middle" fill="#17384d">'+group.value+'</text>';
+    }else{
+      const edge=Math.min(48,w*.27);
+      body+='<line x1="'+(cursor+edge)+'" y1="'+bottomY+'" x2="'+(cursor+edge)+'" y2="'+(bottomY+rowH)+'" stroke="#b85c00" stroke-width="2"/>';
+      body+='<line x1="'+(cursor+w-edge)+'" y1="'+bottomY+'" x2="'+(cursor+w-edge)+'" y2="'+(bottomY+rowH)+'" stroke="#b85c00" stroke-width="2"/>';
+      body+='<text x="'+(cursor+edge/2)+'" y="'+(bottomY+37)+'" font-family="Arial, sans-serif" font-size="19" font-weight="850" text-anchor="middle" fill="#17384d">'+group.value+'</text>';
+      body+='<text x="'+(cursor+w/2)+'" y="'+(bottomY+35)+'" font-family="Arial, sans-serif" font-size="22" font-weight="850" text-anchor="middle" fill="#17384d">…</text>';
+      body+='<text x="'+(cursor+w-edge/2)+'" y="'+(bottomY+37)+'" font-family="Arial, sans-serif" font-size="19" font-weight="850" text-anchor="middle" fill="#17384d">'+group.value+'</text>';
+    }
+    const braceY=bottomY+rowH+4,labelY=braceY+34;
+    body+='<path d="M '+(cursor+5)+' '+braceY+' Q '+(cursor+5)+' '+(braceY+9)+' '+(cursor+15)+' '+(braceY+9)+' L '+(cursor+w/2-8)+' '+(braceY+9)+' Q '+(cursor+w/2)+' '+(braceY+9)+' '+(cursor+w/2)+' '+(braceY+17)+' Q '+(cursor+w/2)+' '+(braceY+9)+' '+(cursor+w/2+8)+' '+(braceY+9)+' L '+(cursor+w-15)+' '+(braceY+9)+' Q '+(cursor+w-5)+' '+(braceY+9)+' '+(cursor+w-5)+' '+braceY+'" fill="none" stroke="#60708c" stroke-width="1.6"/>';
+    body+='<text x="'+(cursor+w/2)+'" y="'+labelY+'" font-family="Arial, sans-serif" font-size="14" font-weight="800" text-anchor="middle" fill="#60708c">'+group.effect+' fois</text>';
+    cursor+=w;
+  });
+  const zeroGroup=data.groups.find(group=>group.value===0);
+  let height=252;
+  if(zeroGroup){
+    height=296;
+    const zeroY=254,zeroX=32;
+    body+='<line x1="'+x+'" y1="'+(bottomY-4)+'" x2="'+x+'" y2="'+(bottomY+rowH+4)+'" stroke="#b85c00" stroke-width="3"/>';
+    body+='<rect x="'+zeroX+'" y="'+zeroY+'" width="190" height="29" rx="6" fill="#fff" stroke="#b85c00" stroke-width="1.8"/>';
+    body+='<text x="'+(zeroX+95)+'" y="'+(zeroY+20)+'" font-family="Arial, sans-serif" font-size="14" font-weight="850" text-anchor="middle" fill="#17384d">0 | … | 0  ('+zeroGroup.effect+' fois)</text>';
+    body+='<text x="'+(zeroX+207)+'" y="'+(zeroY+20)+'" font-family="Arial, sans-serif" font-size="13" font-weight="700" fill="#60708c">longueur nulle</text>';
+  }
+  return averageSvg(body,height,'Schéma en barres d’une moyenne pondérée avec les valeurs répétées selon leurs effectifs');
+}
+function averageRangeSvg(data,correction=false){
+  const minX=120,maxX=610,lineY=105;
+  const span=data.max-data.min||1;
+  const scale=span>0?(maxX-minX)/span:1;
+  const candidateX=data.value<data.min?70:(data.value>data.max?680:minX+(data.value-data.min)*scale);
+  const possible=data.value>=data.min&&data.value<=data.max;
+  const color=correction?(possible?'#10b981':'#d43b3b'):'#6040a0';
+  let body='<line x1="'+minX+'" y1="'+lineY+'" x2="'+maxX+'" y2="'+lineY+'" stroke="#1f5f99" stroke-width="6" stroke-linecap="butt"/>';
+  body+='<line x1="'+minX+'" y1="85" x2="'+minX+'" y2="125" stroke="#1f5f99" stroke-width="3"/><line x1="'+maxX+'" y1="85" x2="'+maxX+'" y2="125" stroke="#1f5f99" stroke-width="3"/>';
+  body+='<text x="'+minX+'" y="152" font-family="Arial, sans-serif" font-size="20" font-weight="800" text-anchor="middle" fill="#17384d">minimum : '+data.min+'</text>';
+  body+='<text x="'+maxX+'" y="152" font-family="Arial, sans-serif" font-size="20" font-weight="800" text-anchor="middle" fill="#17384d">maximum : '+data.max+'</text>';
+  body+='<circle cx="'+candidateX+'" cy="55" r="10" fill="'+color+'"/><line x1="'+candidateX+'" y1="65" x2="'+candidateX+'" y2="'+lineY+'" stroke="'+color+'" stroke-width="3"/>';
+  const candidateAnchor=data.value<data.min?'start':(data.value>data.max?'end':'middle');
+  body+='<text x="'+candidateX+'" y="30" font-family="Arial, sans-serif" font-size="19" font-weight="850" text-anchor="'+candidateAnchor+'" fill="'+color+'">moyenne proposée : '+data.value+'</text>';
+  if(correction) body+='<text x="380" y="194" font-family="Arial, sans-serif" font-size="19" font-weight="850" text-anchor="middle" fill="'+color+'">'+(possible?'Cette moyenne est possible.':'Cette moyenne est impossible.')+'</text>';
+  return averageSvg(body,215,'Position de la moyenne proposée par rapport au minimum et au maximum');
+}
+function averageTable(headers,values,firstHeader,secondHeader){
+  let html='<table class="average-table"><tr><th>'+escapeHtml(firstHeader)+'</th>';
+  headers.forEach(value=>html+='<td>'+escapeHtml(value)+'</td>');
+  html+='</tr><tr><th>'+escapeHtml(secondHeader)+'</th>';
+  values.forEach(value=>html+='<td>'+escapeHtml(value)+'</td>');
+  return html+'</tr></table>';
+}
+function averageQcm(options,correct){
+  const shuffled=shuffledCopy(options);
+  return {options:shuffled,correctIndex:String(shuffled.indexOf(correct)+1)};
+}
+function makeAverageInstance(mod,q){
+  const n=Number(q.n);
+  let d={kind:'',prompt:'',instruction:'',tableHtml:'',result:'',answerPrefix:'',visual:null,qcm:null,calculation:'',explanation:''};
+  if(n===1){
+    const a=RD(2,18),b=RD(2,18),c=RD(2,18),sum=a+b+c,g=GCD(sum,3),num=sum/g,den=3/g;
+    d={...d,kind:'values',prompt:'On considère les trois valeurs suivantes :',instruction:'Exprime leur moyenne sous forme de fraction.',dataLine:[a,b,c].join(' ; '),result:den===1?String(num):num+'/'+den,displayResult:den===1?String(num):'\\dfrac{'+num+'}{'+den+'}',answerPrefix:'moyenne = ',calculation:'$$\\text{moyenne}=\\dfrac{'+a+'+'+b+'+'+c+'}{3}=\\dfrac{'+sum+'}{3}='+(den===1?num:'\\dfrac{'+num+'}{'+den+'}')+'$$',visual:{type:'comparison',count:3,items:[a,b,c].map(value=>({value,label:String(value)})),averageKnown:false,averageLabel:fmt(sum/3),totalLabel:String(sum)}};
+  }
+  if(n===2){
+    const m=RD(6,18),d1=RD(1,4),d2=RD(1,4),values=[m-d1,m+d1,m-d2,m+d2];
+    d={...d,kind:'values',prompt:'Calcule la moyenne des quatre valeurs suivantes :',dataLine:values.join(' ; '),result:String(m),displayResult:String(m),answerPrefix:'moyenne = ',calculation:'$$\\text{moyenne}=\\dfrac{'+values.join('+')+'}{4}=\\dfrac{'+(4*m)+'}{4}='+m+'$$',visual:{type:'comparison',count:4,items:values.map(value=>({value,label:String(value)})),averageKnown:false,averageLabel:String(m),totalLabel:String(4*m)}};
+  }
+  if(n===3){
+    const e1=RD(2,8),e2=RD(2,8),e3=RD(2,8),count=e1+e2+e3,total=8*e1+12*e2+16*e3,mean=CUT(total/count,1);
+    d={...d,kind:'weighted',prompt:'Voici les notes obtenues à une évaluation :',instruction:'Calcule la moyenne des notes. Arrondis au dixième si nécessaire.',tableHtml:averageTable(['8','12','16'],[e1,e2,e3],'note','effectif'),result:fmt(mean),displayResult:fmt(mean),answerPrefix:'moyenne = ',calculation:'$$\\text{moyenne}=\\dfrac{8\\times'+e1+'+12\\times'+e2+'+16\\times'+e3+'}{'+e1+'+'+e2+'+'+e3+'}=\\dfrac{'+total+'}{'+count+'}\\approx'+fmt(mean)+'$$',visual:{type:'weighted',count,groups:[{value:8,effect:e1},{value:12,effect:e2},{value:16,effect:e3}]}};
+  }
+  if(n===4){
+    const correct='$$\\text{moyenne}=\\dfrac{\\text{somme des valeurs}}{\\text{nombre de valeurs}}$$';
+    const options=[correct,'$$\\text{moyenne}=\\dfrac{\\text{nombre de valeurs}}{\\text{somme des valeurs}}$$','$$\\text{moyenne}=\\text{maximum}-\\text{minimum}$$','$$\\text{moyenne}=\\text{somme des valeurs}+\\text{effectif}$$'];
+    d={...d,kind:'formula',prompt:'Quelle formule permet de calculer la moyenne d’une série de valeurs ?',qcm:averageQcm(options,correct)};
+  }
+  if(n===5){
+    const m=RD(8,18),d1=RD(1,4),d2=RD(1,4),a=m+d1,b=m-d1,c=m+d2,x=m-d2,total=4*m;
+    const items=[{value:a,label:String(a)},{value:b,label:String(b)},{value:c,label:String(c)},{value:x,label:'x',unknown:true,correctLabel:String(x)}];
+    d={...d,kind:'missing',prompt:'La moyenne de ces quatre nombres est '+m+' :',dataLine:[a,b,c,'x'].join(' ; '),instruction:'Calcule la valeur de x.',result:String(x),displayResult:String(x),answerPrefix:'x = ',calculation:'$$\\text{total}=4\\times'+m+'='+total+'$$<br>$$x='+total+'-('+a+'+'+b+'+'+c+')='+x+'$$',visual:{type:'comparison',count:4,items,averageKnown:true,averageLabel:String(m),totalLabel:String(total)}};
+  }
+  if(n===6){
+    const count=RD(3,9),mean=RD(4,20),sum=count*mean;
+    d={...d,kind:'sum_to_mean',prompt:'Une série de '+count+' valeurs a pour somme '+sum+'.',instruction:'Calcule sa moyenne.',result:String(mean),displayResult:String(mean),answerPrefix:'moyenne = ',calculation:'$$\\text{moyenne}='+sum+'\\div'+count+'='+mean+'$$',visual:{type:'totalParts',count,totalKnown:true,totalLabel:String(sum),partKnown:false,partLabel:String(mean)}};
+  }
+  if(n===7){
+    const count=RD(3,10),mean=RD(5,18),sum=count*mean;
+    d={...d,kind:'mean_to_sum',prompt:'La moyenne de '+count+' valeurs est '+mean+'.',instruction:'Quelle est la somme de ces '+count+' valeurs ?',result:String(sum),displayResult:String(sum),answerPrefix:'somme = ',calculation:'$$\\text{somme}='+count+'\\times'+mean+'='+sum+'$$',visual:{type:'totalParts',count,totalKnown:false,totalLabel:String(sum),partKnown:true,partLabel:String(mean)}};
+  }
+  if(n===8){
+    const min=RD(2,8),max=min+RD(4,8),caseKind=pick(['below','inside','above']);
+    const value=caseKind==='below'?min-RD(1,4):(caseKind==='above'?max+RD(1,4):RD(min,max));
+    const correct=value>=min&&value<=max?'Oui':'Non';
+    d={...d,kind:'range',prompt:'Toutes les valeurs d’une série sont comprises entre '+min+' et '+max+'.',instruction:'La moyenne de cette série peut-elle être égale à '+value+' ?',qcm:averageQcm(['Oui','Non','On ne peut pas savoir'],correct),explanation:'Une moyenne est nécessairement comprise entre la plus petite et la plus grande valeur.',visual:{type:'range',min,max,value}};
+  }
+  if(n===9){
+    const e0=RD(1,8),e1=RD(1,8),e2=RD(1,8),e3=RD(1,8),count=e0+e1+e2+e3,total=e1+2*e2+3*e3,exact=total/count,low=Math.floor(exact*100)/100,high=Math.ceil(exact*100)/100;
+    const result=Math.abs(low-high)<1e-9?fmt(low):fmt(low)+' (par défaut) ou '+fmt(high)+' (par excès)';
+    d={...d,kind:'weighted_zero',prompt:'On a demandé à des familles combien d’enfants elles ont.',instruction:'Calcule le nombre moyen d’enfants par famille. Donne une valeur approchée à 0,01 près par défaut ou par excès.',tableHtml:averageTable(['0','1','2','3'],[e0,e1,e2,e3],'nombre d’enfants','effectif'),result,displayResult:result,answerPrefix:'moyenne = ',calculation:'$$\\text{moyenne}=\\dfrac{0\\times'+e0+'+1\\times'+e1+'+2\\times'+e2+'+3\\times'+e3+'}{'+e0+'+'+e1+'+'+e2+'+'+e3+'}=\\dfrac{'+total+'}{'+count+'}$$<br>$$'+fmt(low)+'\\leq\\text{moyenne}\\leq'+fmt(high)+'$$',visual:{type:'weighted',count,groups:[{value:0,effect:e0},{value:1,effect:e1},{value:2,effect:e2},{value:3,effect:e3}]}};
+  }
+  if(n===10){
+    const x=RD(20,80)/10,y=RD(20,80)/10,mean=CUT((x+y)/2,2),values=[x,y];
+    d={...d,kind:'values_decimal',prompt:'Deux longueurs mesurent '+fmt(x)+' cm et '+fmt(y)+' cm.',instruction:'Calcule leur moyenne. Arrondis au centième si nécessaire.',result:fmt(mean),displayResult:fmt(mean)+' cm',answerPrefix:'moyenne = ',calculation:'$$\\text{moyenne}=\\dfrac{'+fmt(x)+'+'+fmt(y)+'}{2}='+fmt(mean)+'\\text{ cm}$$',visual:{type:'comparison',count:2,items:values.map(value=>({value,label:fmt(value)+' cm'})),averageKnown:false,averageLabel:fmt(mean)+' cm',totalLabel:fmt(x+y)+' cm'}};
+  }
+  const answers=d.qcm?[d.qcm.correctIndex]:[d.result];
+  return {module:mod,q,scope:{},answers,rawStatement:d.prompt,rawFooter:'',hasSvg:!!d.visual,average:d};
+}
 function makeInstance(mod,q){
   if(mod&&mod.id==='dnb_01') return makeModule01Instance(mod,q);
   if(mod&&mod.id==='dnb_10') return makeReductionInstance(mod,q);
   if(mod&&mod.id==='dnb_20') return makeSolidsInstance(mod,q);
+  if(mod&&mod.id==='dnb_22') return makeAreaInstance(mod,q);
+  if(mod&&mod.id==='dnb_30') return makeAverageInstance(mod,q);
   let scope={};
   if(q.options&&q.options.formula_code) scope=runCode(q.options.formula_code);
   let answers=parseAnswer(q, scope);
@@ -1268,6 +1973,88 @@ function renderSolidsModule(inst,correction=false){
     html+='<div class="opt '+(isCorrect?'correct':'')+'"><strong>'+String.fromCharCode(65+index)+'.</strong> '+renderMathSegments(option)+'</div>';
   });
   html+='</div>';
+  return html;
+}
+function renderAreaModule(inst,correction=false,mode=null){
+  if(mode===null) mode=document.getElementById('visualMode').value;
+  const d=inst.area;
+  const withHelp=mode==='with';
+  let html='<div class="area-question">';
+  html+='<div class="area-prompt">'+renderMathSegments(d.prompt)+'</div>';
+  html+='<div class="area-main">'+(d.visualHtml?'<div class="area-visual">'+d.visualHtml+'</div>':d.dataHtml)+'</div>';
+  const helpContent=d.kind==='formula_recognition'?'Une aire s’exprime en unités carrées.':d.formula;
+  html+='<div class="area-help '+((withHelp&&!correction)?'':'is-hidden')+'"><span class="area-help-label">Aide :</span> '+renderMathSegments(helpContent)+'</div>';
+  html+='</div>';
+
+  if(d.qcm){
+    html+='<div class="options area-options">';
+    d.qcm.options.forEach((option,index)=>{
+      const isCorrect=correction&&String(index+1)===String(d.qcm.correctIndex);
+      html+='<div class="opt '+(isCorrect?'correct':'')+'"><strong>'+String.fromCharCode(65+index)+'.</strong> '+renderMathSegments(option)+'</div>';
+    });
+    html+='</div>';
+  }else{
+    html+='<div class="area-answer-line">Aire = ';
+    html+=correction
+      ? '<strong class="area-answer-value">'+escapeHtml(d.result)+'</strong>'
+      : '<span class="answer-dots">…</span> '+d.unit2;
+    html+='</div>';
+  }
+
+  if(correction&&(d.formula||d.calculation)){
+    html+='<div class="area-correction">';
+    html+='<div><span class="area-step">Formule</span>'+renderMathSegments(d.formula)+'</div>';
+    html+='<div><span class="area-step">Calcul</span>'+renderMathSegments(d.calculation)+'</div>';
+    html+='</div>';
+  }
+  return html;
+}
+function averageVisualHtml(d){
+  if(!d.visual) return '';
+  if(d.visual.type==='comparison') return averageComparisonSvg(d.visual,false);
+  if(d.visual.type==='totalParts') return averageTotalPartsSvg(d.visual,false);
+  if(d.visual.type==='weighted') return averageWeightedSvg(d.visual);
+  if(d.visual.type==='range') return averageRangeSvg(d.visual,false);
+  return '';
+}
+function renderAverageModule(inst,correction=false,mode=null){
+  if(mode===null) mode=document.getElementById('visualMode').value;
+  const d=inst.average;
+  let html='<div class="average-question">';
+  html+='<div class="average-prompt">'+renderMathSegments(d.prompt)+'</div>';
+  if(d.dataLine) html+='<div class="average-data-line">'+renderMathSegments('$$'+d.dataLine+'$$')+'</div>';
+  if(d.tableHtml) html+='<div class="average-table-wrap">'+d.tableHtml+'</div>';
+  if(d.instruction) html+='<div class="average-instruction">'+renderMathSegments(d.instruction)+'</div>';
+  html+='</div>';
+
+  if(!correction&&d.visual){
+    if(!isWithoutVisuals(mode)) html+='<div class="average-help-visual">'+averageVisualHtml(d)+'</div>';
+    else html+=visualPlaceholder(mode);
+  }
+
+  if(d.qcm){
+    const formulaClass=d.kind==='formula'?' average-formula-options':'';
+    html+='<div class="options average-options'+formulaClass+' options-'+d.qcm.options.length+'">';
+    d.qcm.options.forEach((option,index)=>{
+      const isCorrect=correction&&String(index+1)===String(d.qcm.correctIndex);
+      html+='<div class="opt '+(isCorrect?'correct':'')+'"><strong>'+String.fromCharCode(65+index)+'.</strong> '+renderMathSegments(option)+'</div>';
+    });
+    html+='</div>';
+  }else{
+    html+='<div class="average-answer-line">'+escapeHtml(d.answerPrefix);
+    if(correction){
+      const result=d.kind==='weighted_zero'?escapeHtml(d.displayResult):renderMathSegments('$$'+d.displayResult+'$$');
+      html+='<strong class="average-answer-value">'+result+'</strong>';
+    }else html+='<span class="answer-dots">…</span>';
+    html+='</div>';
+  }
+
+  if(correction&&(d.calculation||d.explanation)){
+    html+='<div class="average-correction">';
+    if(d.calculation) html+='<div><span class="average-step">Calcul</span><div>'+renderMathSegments(d.calculation)+'</div></div>';
+    if(d.explanation) html+='<div><span class="average-step">Propriété</span><div>'+escapeHtml(d.explanation)+'</div></div>';
+    html+='</div>';
+  }
   return html;
 }
 
@@ -1544,6 +2331,8 @@ function renderQuestion(inst, correction=false, mode=null){
   if(inst && inst.module && inst.module.id==='dnb_01') return renderModule01(inst, correction, mode);
   if(inst && inst.module && inst.module.id==='dnb_10') return renderModule10(inst, correction, mode);
   if(inst && inst.module && inst.module.id==='dnb_20') return renderSolidsModule(inst, correction);
+  if(inst && inst.module && inst.module.id==='dnb_22') return renderAreaModule(inst, correction, mode);
+  if(inst && inst.module && inst.module.id==='dnb_30') return renderAverageModule(inst, correction, mode);
   if(inst && inst.module && inst.module.id==='dnb_07'){
     return renderModule07(inst, correction, mode);
   }
@@ -1618,8 +2407,8 @@ function makeDiapoWindowHtml(slidesData){
 :root{--bg:#f4f7fc;--text:#0b2147;--muted:#60708c;--border:#d8e3f4;--accent:#ff7a1a;--answer:#087a55;--blue:#003b7a;--success:#10b981}
 *{box-sizing:border-box}
 body{margin:0;background:var(--bg);font-family:Arial,Helvetica,sans-serif;color:var(--text)}
-.diapo{--stage-top:30px;--stage-x:34px;--stage-bottom:18px;min-height:100vh;display:flex;flex-direction:column;background:white}
-.top{height:82px;display:grid;grid-template-columns:auto minmax(0,1fr) auto;align-items:center;gap:14px;padding:10px 20px;border-bottom:1px solid var(--border);background:#fbfdff}
+.diapo{--stage-top:30px;--stage-x:34px;--stage-bottom:18px;height:100vh;height:100dvh;min-height:0;display:flex;flex-direction:column;overflow:hidden;background:white}
+.top{height:82px;flex:0 0 auto;display:grid;grid-template-columns:auto minmax(0,1fr) auto;align-items:center;gap:14px;padding:10px 20px;border-bottom:1px solid var(--border);background:#fbfdff;position:relative;z-index:10}
 .left,.right{display:flex;align-items:center;gap:10px}.right{justify-content:flex-end}
 .navnums{display:flex;gap:5px;align-items:center;justify-content:center;flex-wrap:nowrap;min-width:0;overflow:hidden}
 .mobile-counter{display:none;color:#073a75;font-size:1rem;font-weight:800}
@@ -1628,7 +2417,7 @@ body{margin:0;background:var(--bg);font-family:Arial,Helvetica,sans-serif;color:
 .btn{border:1px solid var(--border);border-radius:14px;background:white;color:#073a75;font-weight:800;font-size:1rem;padding:13px 18px;cursor:pointer}
 .btn.primary{background:var(--accent);border-color:var(--accent);color:white;min-width:270px;text-align:center}
 .btn:disabled{cursor:default;opacity:.62}
-.stage{flex:1;display:flex;align-items:flex-start;justify-content:center;padding:var(--stage-top) var(--stage-x) var(--stage-bottom);overflow:auto}
+.stage{flex:1;min-height:0;display:flex;align-items:flex-start;justify-content:center;padding:var(--stage-top) var(--stage-x) var(--stage-bottom);overflow:auto;overscroll-behavior:contain}
 .slide{width:100%;max-width:1220px;text-align:center}
 .visual-placeholder{display:flex;justify-content:center;align-items:center;min-height:0;margin:8px auto}.visual-placeholder .btn{font-size:.95rem;padding:10px 15px}
 .question{font-size:clamp(2rem,4.1vw,4.7rem);line-height:1.18;font-weight:800;margin:0 auto 34px}
@@ -1677,10 +2466,57 @@ body{margin:0;background:var(--bg);font-family:Arial,Helvetica,sans-serif;color:
 .solid-emoji{font-family:"Segoe UI Emoji","Apple Color Emoji","Noto Color Emoji",sans-serif;font-size:clamp(8rem,22vh,12rem);line-height:1;filter:drop-shadow(0 5px 7px rgba(16,36,74,.15))}
 .solid-options{grid-template-columns:repeat(2,minmax(0,1fr));gap:10px 14px;margin:2px auto 0;max-width:780px}
 .solid-options .opt{padding:10px 14px;border-radius:13px;font-size:clamp(1.03rem,1.45vw,1.35rem)}
-svg{max-width:950px;width:100%;height:auto}
-@media(max-width:800px){.diapo{--stage-top:24px;--stage-x:24px;--stage-bottom:24px}.top{grid-template-columns:1fr;height:auto;text-align:center}.left,.right{justify-content:center}.navnums,.fullscreen-btn{display:none}.mobile-counter{display:block}.stage{padding:var(--stage-top) var(--stage-x) var(--stage-bottom)}.options.options-4{grid-template-columns:1fr}.diapo.numberline-mode .footer{font-size:clamp(1.65rem,7.5vw,2rem)}.diapo.numberline-mode .answer-slot{width:2.2em!important}.diapo.numberline-mode .footer .qquad{width:.7em}.diapo.numberline-mode .footer .math-display{transform:none}.diapo.solids-mode .stage{padding:10px 10px 16px}.solid-prompt{font-size:clamp(1.25rem,5.6vw,1.65rem)}.solid-visual{width:230px;height:clamp(155px,27vh,215px)}.solid-options{grid-template-columns:repeat(2,minmax(0,1fr));gap:7px}.solid-options .opt{font-size:clamp(.88rem,3.7vw,1.08rem);padding:8px 9px}}
+.diapo.area-mode .stage{align-items:flex-start;padding:12px 24px 18px}
+.diapo.area-mode .slide{max-width:1080px}
+.area-prompt{font-size:clamp(1.65rem,2.5vw,2.65rem);font-weight:850;line-height:1.14;margin:0 auto 5px}
+.area-main{height:230px;display:flex;align-items:center;justify-content:center;margin:0 auto}
+.area-visual{width:100%;height:100%;display:flex;align-items:center;justify-content:center}
+.area-visual .area-svg{width:auto;max-width:100%;height:auto;max-height:100%;margin:auto}
+.area-data{max-width:820px;padding:22px 28px;border:2px solid var(--border);border-radius:16px;background:#f8fbff;font-size:clamp(1.45rem,2.2vw,2.25rem);font-weight:700;line-height:1.35}
+.area-help{height:58px;display:flex;align-items:center;justify-content:center;gap:14px;margin:1px auto 4px;color:#17384d;font-family:"Cambria Math","STIX Two Math","Times New Roman",serif;font-size:clamp(1.25rem,1.8vw,1.8rem);font-weight:700}
+.area-help-label{font-family:Arial,Helvetica,sans-serif;font-size:.72em;color:var(--muted);font-weight:800;text-transform:uppercase;letter-spacing:.05em}
+.area-help .math-display{white-space:normal}
+.area-help.is-hidden{visibility:hidden}
+.area-answer-line{font-family:"Cambria Math","STIX Two Math","Times New Roman",serif;font-size:clamp(2rem,3.6vw,3.8rem);font-weight:800;margin:4px auto 0}
+.area-answer-line .answer-dots{display:inline-block;min-width:2.2em}
+.area-answer-value{color:var(--answer);font-weight:900}
+.area-options{grid-template-columns:repeat(2,minmax(0,1fr));gap:10px 14px;margin:4px auto 0;max-width:820px}
+.area-options .opt{font-family:"Cambria Math","STIX Two Math","Times New Roman",serif;font-size:clamp(1.15rem,1.65vw,1.55rem);padding:11px 14px}
+.area-correction{max-width:790px;margin:10px auto 0;padding:0 10px;font-family:"Cambria Math","STIX Two Math","Times New Roman",serif;font-size:clamp(1.15rem,1.65vw,1.6rem);font-weight:700;line-height:1.3;text-align:left}
+.area-correction>div{display:grid;grid-template-columns:132px minmax(0,1fr);align-items:center;gap:20px;padding:5px 0}
+.area-correction .math-display{white-space:normal}
+.area-step{font-family:Arial,Helvetica,sans-serif;font-size:.72em;color:var(--muted);font-weight:850;text-align:right;text-transform:uppercase;letter-spacing:.04em}
+.diapo.average-mode .stage{align-items:flex-start;padding:10px 20px 16px}
+.diapo.average-mode .slide{max-width:1120px}
+.average-prompt{font-size:clamp(1.45rem,2vw,2.1rem);font-weight:850;line-height:1.14;margin:0 auto 5px}
+.average-instruction{font-size:clamp(1.2rem,1.8vw,1.75rem);font-weight:750;line-height:1.2;margin:7px auto 3px}
+.average-data-line{font-family:"Cambria Math","STIX Two Math","Times New Roman",serif;font-size:clamp(1.8rem,3vw,3rem);font-weight:750;margin:5px auto}
+.average-table-wrap{display:flex;justify-content:center;margin:8px auto 6px;max-width:100%;overflow-x:auto}
+.average-table{border-collapse:collapse;text-align:center;font-size:clamp(1rem,1.45vw,1.35rem);font-weight:750;background:#fff}
+.average-table th,.average-table td{border:2px solid #60708c;padding:9px 20px;white-space:nowrap}
+.average-table th{background:#f3f7fd;font-weight:850}
+.average-help-visual{height:clamp(190px,31vh,270px);display:flex;align-items:center;justify-content:center;margin:2px auto 0}
+.average-help-visual .average-svg{display:block;width:auto;max-width:100%;height:auto;max-height:100%}
+.average-answer-line{font-family:"Cambria Math","STIX Two Math","Times New Roman",serif;font-size:clamp(1.8rem,3.2vw,3.25rem);font-weight:800;margin:7px auto 0}
+.average-answer-line .answer-dots{display:inline-block;min-width:2em}
+.average-answer-value{color:var(--answer);font-weight:900}
+.average-options{gap:10px 14px;margin:10px auto 0;max-width:900px}
+.average-options .opt{font-size:clamp(1.05rem,1.45vw,1.4rem);padding:12px 15px;border-radius:14px}
+.average-options.options-3{grid-template-columns:repeat(3,minmax(0,1fr));max-width:1040px}
+.average-formula-options{grid-template-columns:repeat(2,minmax(0,1fr))!important;max-width:1000px;gap:9px 12px}
+.average-formula-options .opt{font-family:"Cambria Math","STIX Two Math","Times New Roman",serif;font-size:clamp(1.14rem,1.55vw,1.48rem);padding:10px 13px;overflow:hidden}
+.average-formula-options .math-display{white-space:normal}
+.average-correction{max-width:980px;margin:16px auto 0;padding:0 10px;font-family:"Cambria Math","STIX Two Math","Times New Roman",serif;font-size:clamp(1.45rem,2.15vw,2.05rem);font-weight:700;line-height:1.35;text-align:center}
+.average-correction>div{display:block;text-align:center;padding:6px 0}
+.average-correction .math-display{white-space:normal}
+.average-step{display:block;font-family:Arial,Helvetica,sans-serif;font-size:.58em;color:var(--muted);font-weight:850;text-align:center;text-transform:uppercase;letter-spacing:.04em;margin-bottom:5px}
+svg{display:block;max-width:100%;height:auto}
+@media(min-width:1000px){.diapo:fullscreen .slide,.diapo:-webkit-full-screen .slide{zoom:1.12}}
+@media(max-width:800px){.diapo{--stage-top:24px;--stage-x:24px;--stage-bottom:24px}.top{grid-template-columns:minmax(0,1fr) auto minmax(0,1fr);height:62px;text-align:center;padding:7px 9px;gap:6px}.left{justify-content:flex-start}.right{justify-content:flex-end}.top .btn{font-size:.8rem;padding:8px;border-radius:10px;white-space:nowrap}.top .btn.primary{min-width:0}.navnums,.fullscreen-btn{display:none}.mobile-counter{display:block;white-space:nowrap}.stage{padding:var(--stage-top) var(--stage-x) var(--stage-bottom)}.options.options-4{grid-template-columns:1fr}.diapo.numberline-mode .footer{font-size:clamp(1.65rem,7.5vw,2rem)}.diapo.numberline-mode .answer-slot{width:2.2em!important}.diapo.numberline-mode .footer .qquad{width:.7em}.diapo.numberline-mode .footer .math-display{transform:none}.diapo.solids-mode .stage{padding:10px 10px 16px}.solid-prompt{font-size:clamp(1.25rem,5.6vw,1.65rem)}.solid-visual{width:230px;height:clamp(155px,27vh,215px)}.solid-options{grid-template-columns:repeat(2,minmax(0,1fr));gap:7px}.solid-options .opt{font-size:clamp(.88rem,3.7vw,1.08rem);padding:8px 9px}}
+@media(max-width:800px){.diapo.area-mode .stage{padding:8px 9px 14px}.area-prompt{font-size:clamp(1.15rem,5.2vw,1.55rem);margin-bottom:2px}.area-main{height:178px}.area-data{padding:15px 16px;font-size:clamp(1.05rem,4.6vw,1.35rem)}.area-help{height:52px;gap:7px;font-size:clamp(.9rem,3.8vw,1.12rem);line-height:1.12}.area-answer-line{font-size:clamp(1.55rem,7vw,2.1rem)}.area-options{gap:7px;margin-top:2px}.area-options .opt{font-size:clamp(.9rem,3.7vw,1.08rem);padding:8px 9px}.area-correction{padding:0 6px;font-size:clamp(.9rem,3.7vw,1.1rem)}.area-correction>div{grid-template-columns:92px minmax(0,1fr);gap:10px;padding:4px 0}}
+@media(max-width:800px){.diapo.average-mode .stage{padding:7px 8px 13px}.average-prompt{font-size:clamp(1.08rem,5vw,1.45rem);margin-bottom:2px}.average-instruction{font-size:clamp(.96rem,4.1vw,1.18rem);margin:4px auto 2px}.average-data-line{font-size:clamp(1.45rem,7vw,2rem);margin:2px auto}.average-table-wrap{margin:5px auto 3px}.average-table{font-size:clamp(.75rem,3.25vw,.94rem)}.average-table th,.average-table td{padding:6px 8px;border-width:1.5px}.average-help-visual{height:clamp(170px,29vh,225px)}.average-answer-line{font-size:clamp(1.45rem,7vw,2rem);margin-top:4px}.average-options,.average-formula-options{grid-template-columns:1fr!important;gap:7px;margin-top:6px}.average-options .opt,.average-formula-options .opt{font-size:clamp(.82rem,3.55vw,1rem);padding:8px 9px}.average-correction{padding:0 5px;font-size:clamp(1.05rem,4.5vw,1.35rem);margin-top:8px}.average-correction>div{display:block;padding:4px 0}.average-step{text-align:center;margin-bottom:3px}}
 @media (hover:none) and (pointer:coarse){.navnums,.fullscreen-btn{display:none!important}.mobile-counter{display:block!important}}
-@media print{.diapo{--stage-top:20px;--stage-x:20px;--stage-bottom:20px}.top{display:none}.stage{padding:var(--stage-top) var(--stage-x) var(--stage-bottom)}}
+@media print{.diapo{--stage-top:20px;--stage-x:20px;--stage-bottom:20px;height:auto;min-height:100vh;overflow:visible}.top{display:none}.stage{min-height:auto;overflow:visible;padding:var(--stage-top) var(--stage-x) var(--stage-bottom)}}
 </style>
 </head>
 <body>
@@ -1719,13 +2555,15 @@ function render(){
  const nav=document.getElementById('navnums'); nav.innerHTML='';
  slides.forEach((s,i)=>{const b=document.createElement('button');b.className='navnum '+(i===idx?'active':'');b.textContent=i+1;b.onclick=()=>{idx=i;corr=false;render();};nav.appendChild(b);});
  const mobileCounter=document.getElementById('mobileCounter');
- if(mobileCounter) mobileCounter.textContent='Question '+(idx+1)+' / '+slides.length;
+ if(mobileCounter) mobileCounter.textContent=(idx+1)+' sur '+slides.length;
  const diapo=document.getElementById('diapo');
  diapo.classList.toggle('module01-mode',slides[idx].moduleId==='dnb_01');
  diapo.classList.toggle('reduction-mode',slides[idx].moduleId==='dnb_10');
  diapo.classList.toggle('squares-mode',slides[idx].moduleId==='dnb_07');
  diapo.classList.toggle('numberline-mode',slides[idx].moduleId==='dnb_14');
  diapo.classList.toggle('solids-mode',slides[idx].moduleId==='dnb_20');
+ diapo.classList.toggle('area-mode',slides[idx].moduleId==='dnb_22');
+ diapo.classList.toggle('average-mode',slides[idx].moduleId==='dnb_30');
  const current=slides[idx];
  const showVisual=current.canRevealVisual&&visualShown[idx];
  const content=corr
@@ -1810,7 +2648,7 @@ function balancedFormatsForCount(count){
 }
 
 function assignReductionFormats(entries){
-  const simpleKinds=['one_no_cancel','one_cancel'];
+  const simpleKinds=['one_no_cancel','one_cancel','already_reduced'];
   const formatsByKind={};
 
   simpleKinds.forEach(kind=>{
@@ -1822,7 +2660,7 @@ function assignReductionFormats(entries){
     formatsByKind[kind]=balancedFormatsForCount(count);
   });
 
-  const positions={one_no_cancel:0,one_cancel:0};
+  const positions={one_no_cancel:0,one_cancel:0,already_reduced:0};
 
   return entries.map(e=>{
     if(e.m.id!=='dnb_10' || !e.q.options) return e;
@@ -1859,6 +2697,12 @@ function visualPolicyForQuestion(m,q){
   if(m.id==='dnb_10'){
     return q.options&&q.options.reduction_kind==='read_tiles'?'essential':'optional';
   }
+  // Dans le module Aires, la figure porte les données de l'énoncé et reste
+  // toujours visible. Le sélecteur avec/sans aide commande seulement la formule.
+  if(m.id==='dnb_22') return 'none';
+  // Dans le module Moyennes, le tableau ou les données restent dans l'énoncé ;
+  // le schéma en barres est une aide facultative, sauf le QCM de formule.
+  if(m.id==='dnb_30') return Number(q.n)===4?'none':'optional';
   const hasVisual=/<svg/i.test(String(q.statement||'')+String(q.footer||''));
   return hasVisual?'essential':'none';
 }
@@ -1943,6 +2787,68 @@ function chooseSolidQuestions(questions,count){
   return shuffledCopy(chosen);
 }
 
+function chooseAreaQuestions(questions,count){
+  // Le QCM de reconnaissance de formule utilise une place du quota habituel.
+  const qcmCount=count>=8?2:(count>=4?1:0);
+  const selectable=qcmCount>0?questions:questions.filter(q=>q.options.area_kind!=='formula_recognition');
+  const byCategory=new Map();
+  selectable.forEach(q=>{
+    const category=(q.options&&q.options.area_category)||'other';
+    if(!byCategory.has(category)) byCategory.set(category,[]);
+    byCategory.get(category).push(q);
+  });
+
+  const pools=new Map();
+  byCategory.forEach((items,category)=>pools.set(category,shuffledCopy(items)));
+  let chosen=[];
+  while(chosen.length<count){
+    const categories=shuffledCopy([...pools.keys()].filter(category=>pools.get(category).length));
+    if(!categories.length){
+      byCategory.forEach((items,category)=>pools.set(category,shuffledCopy(items)));
+      continue;
+    }
+    for(const category of categories){
+      chosen.push(pools.get(category).pop());
+      if(chosen.length===count) break;
+    }
+  }
+
+  // Un QCM à partir de 4 questions, deux à partir de 8, jamais davantage.
+  const formulaQcmCount=chosen.filter(q=>q.options.area_kind==='formula_recognition').length;
+  const numericQcmCount=Math.max(0,qcmCount-formulaQcmCount);
+  const eligiblePositions=chosen.map((q,index)=>q.options.area_kind==='formula_recognition'?null:index).filter(index=>index!==null);
+  const qcmPositions=new Set(shuffledCopy(eligiblePositions).slice(0,numericQcmCount));
+  chosen=chosen.map((q,index)=>({
+    ...q,
+    options:{...q.options,area_format:q.options.area_kind==='formula_recognition'?'formula_qcm':(qcmPositions.has(index)?'qcm':'direct')}
+  }));
+  return shuffledCopy(chosen);
+}
+
+function chooseNumberLineQuestions(questions,count){
+  const byFamily=new Map();
+  questions.forEach(q=>{
+    const family=(q.options&&q.options.numberline_family)||'standard';
+    if(!byFamily.has(family)) byFamily.set(family,[]);
+    byFamily.get(family).push(q);
+  });
+  const pools=new Map();
+  byFamily.forEach((items,family)=>pools.set(family,shuffledCopy(items)));
+  const chosen=[];
+  while(chosen.length<count){
+    const families=shuffledCopy([...pools.keys()].filter(family=>pools.get(family).length));
+    if(!families.length){
+      byFamily.forEach((items,family)=>pools.set(family,shuffledCopy(items)));
+      continue;
+    }
+    for(const family of families){
+      chosen.push(pools.get(family).pop());
+      if(chosen.length===count) break;
+    }
+  }
+  return shuffledCopy(chosen);
+}
+
 function buildBalancedQuiz(mods,count){
   resetModule01State();
   const usable=mods
@@ -1960,8 +2866,12 @@ function buildBalancedQuiz(mods,count){
     const moduleCount=base+(index<remainder?1:0);
     let chosen=item.m.id==='dnb_20'
       ? chooseSolidQuestions(item.questions,moduleCount)
-      : [];
-    while(item.m.id!=='dnb_20'&&chosen.length<moduleCount){
+      : item.m.id==='dnb_22'
+        ? chooseAreaQuestions(item.questions,moduleCount)
+        : item.m.id==='dnb_14'
+          ? chooseNumberLineQuestions(item.questions,moduleCount)
+        : [];
+    while(item.m.id!=='dnb_20'&&item.m.id!=='dnb_22'&&item.m.id!=='dnb_14'&&chosen.length<moduleCount){
         const cycle=shuffledCopy(item.questions);
         const need=moduleCount-chosen.length;
         chosen.push(...cycle.slice(0,need));
