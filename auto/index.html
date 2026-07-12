@@ -178,7 +178,7 @@ function configureScientificModule(){
   decimalQuestion.options.formula_code=decimalQuestion.options.formula_code.replace('pow(10,e)','10**e');
   const recognitionQuestion=mod.questions.find(q=>q.n===10);
   if(recognitionQuestion){
-    recognitionQuestion.statement="Le nombre $$${m}\\times10^{${e}}$$ est-il écrit en notation scientifique ?&&Oui, c'est une écriture scientifique correcte&&Non, car le coefficient n’est pas compris entre 1 et 10&&Non, car l'exposant doit être positif&&";
+    recognitionQuestion.statement="Le nombre $$${m}\\times10^{${e}}$$ est-il écrit en notation scientifique ?&&Oui, c'est une écriture scientifique correcte&&Non, car la partie entière n’est pas comprise entre 1 et 10&&Non, car l'exposant doit être positif&&";
   }
 
   if(!mod.questions.some(q=>q.n===11)){
@@ -203,6 +203,78 @@ function configureScientificModule(){
   });
 }
 configureScientificModule();
+
+function configureMedianModule(){
+  const mod=RAW_MODULES.find(m=>m.id==='dnb_31');
+  if(!mod) return;
+  mod.title='Médiane et étendue';
+  const q=n=>mod.questions.find(item=>item.n===n);
+  const series=names=>'<div class="median-list">'+names.map(name=>'<span class="median-value">$$${'+name+'}$$</span>').join('<span class="median-separator">;</span>')+'</div>';
+  const makeTableResponsive=question=>{
+    if(!question||!question.statement) return;
+    question.statement=question.statement
+      .replace('<table style="border-collapse:collapse;margin:auto;text-align:center;font-size:18px">','<div class="median-table-wrap"><table class="median-table">')
+      .replace(/<td style="border:1px solid #555;padding:8px (?:14|18)px">/g,'<td>')
+      .replace('</table>','</table></div>');
+  };
+
+  q(1).statement='Détermine la médiane de la série suivante :'+series(['c','a','b']);
+  q(2).statement='Détermine la médiane de la série suivante :'+series(['e','a','d','b','c']);
+  q(3).statement='Détermine la médiane de la série suivante :'+series(['d','a','c','b']);
+  q(4).statement='La série suivante est déjà rangée dans l’ordre croissant :'+series(['a','b','c','d','e','f'])+'Détermine sa médiane.';
+  q(9).statement='Détermine la médiane de la série suivante, qui contient des valeurs répétées :'+series(['a','m','b','m','c']);
+  q(10).statement='La série suivante est déjà rangée dans l’ordre croissant :'+series(['a','b','c','d'])+'Quelle est sa médiane ?';
+  makeTableResponsive(q(6));
+  makeTableResponsive(q(7));
+
+  if(!q(11)){
+    mod.questions.push({
+      n:11,
+      statement:'Calcule l’étendue de la série suivante :'+series(['e','b','a','f','c','d']),
+      answer:'["etendue"]',
+      options:{formula_code:'setNB(1)\na=RD(1,6)\nb=a+RD(1,4)\nc=b+RD(1,4)\nd=c+RD(1,4)\ne=d+RD(1,4)\nf=e+RD(1,4)\netendue=f-a'},
+      footer:'$$\\text{étendue}=[[formula]]$$'
+    });
+  }
+  if(!q(12)){
+    mod.questions.push({
+      n:12,
+      statement:'Voici cinq distances relevées :<div class="median-table-wrap"><table class="median-table"><tr><td>mesure</td><td>A</td><td>B</td><td>C</td><td>D</td><td>E</td></tr><tr><td>distance (m)</td><td>$$${c}$$</td><td>$$${a}$$</td><td>$$${e}$$</td><td>$$${b}$$</td><td>$$${d}$$</td></tr></table></div>Calcule l’étendue de ces distances.',
+      answer:'["etendue"]',
+      options:{formula_code:'setNB(1)\na=RD(5,10)\nb=a+RD(1,3)\nc=b+RD(1,3)\nd=c+RD(1,3)\ne=d+RD(1,3)\netendue=e-a'},
+      footer:'$$\\text{étendue}=[[formula]]\\,\\text{m}$$'
+    });
+  }
+}
+configureMedianModule();
+
+function configureProportionModule(){
+  const mod=RAW_MODULES.find(m=>m.id==='dnb_34');
+  if(!mod) return;
+  const q=n=>mod.questions.find(item=>item.n===n);
+  const makeTableResponsive=question=>{
+    if(!question||!question.statement) return;
+    question.statement=question.statement
+      .replace('<table style="border-collapse:collapse;margin:auto;text-align:center;font-size:18px">','<div class="proportion-table-wrap"><table class="proportion-table">')
+      .replace(/<td style="border:1px solid #555;padding:8px 18px">/g,'<td>')
+      .replace('</table>','</table></div>');
+  };
+  makeTableResponsive(q(2));
+  makeTableResponsive(q(5));
+  if(q(9)&&q(9).options){
+    q(9).options.formula_code=q(9).options.formula_code.replace('q2=RD(2,5)','q2=RD(2,5,[q1])');
+  }
+  if(!q(11)){
+    mod.questions.push({
+      n:11,
+      statement:'Ce tableau est un tableau de proportionnalité. Calcule le nombre manquant.<div class="proportion-table-wrap proportion-bare-table-wrap"><table class="proportion-table proportion-bare-table"><tr><td>$$${x1}$$</td><td>$$${x2}$$</td></tr><tr><td>$$${y1}$$</td><td>?</td></tr></table></div>',
+      answer:'["y2"]',
+      options:{formula_code:'setNB(1)\nx1=RD(2,6)\nm=RD(2,4)\nk=RD(2,8)\nx2=x1*m\ny1=x1*k\ny2=x2*k'},
+      footer:'$$[[formula]]$$'
+    });
+  }
+}
+configureProportionModule();
 
 function configureAlreadyReducedQuestion(){
   const mod=RAW_MODULES.find(m=>m.id==='dnb_10');
@@ -1851,8 +1923,8 @@ function scientificGlideSvg(coefficient,exponent,correction=false){
   const direction=positive?'gauche':'droite';
   const arrowStart=positionFor(0),arrowEnd=positionFor(Number(exponent));
   let body='<defs><marker id="scientific-arrow" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M 0 0 L 10 5 L 0 10 z" fill="#111827"/></marker></defs>';
-  body+='<text x="340" y="19" font-family="Arial, sans-serif" font-size="18" font-weight="800" text-anchor="middle" fill="#17384d">'+Math.abs(Number(exponent))+' rangs vers la '+direction+'</text>';
-  body+='<line x1="'+arrowStart+'" y1="34" x2="'+arrowEnd+'" y2="34" stroke="#111827" stroke-width="4" stroke-linecap="round" marker-end="url(#scientific-arrow)"/>';
+  body+='<text x="340" y="17" font-family="Arial, sans-serif" font-size="20" font-weight="800" text-anchor="middle" fill="#17384d">'+Math.abs(Number(exponent))+' rangs vers la '+direction+'</text>';
+  body+='<line x1="'+arrowStart+'" y1="38" x2="'+arrowEnd+'" y2="38" stroke="#111827" stroke-width="4" stroke-linecap="round" marker-end="url(#scientific-arrow)"/>';
   exponents.forEach((power,index)=>{
     const cellX=x+index*cellW;
     body+='<rect x="'+cellX+'" y="'+headY+'" width="'+cellW+'" height="'+headH+'" fill="#f3f7fd" stroke="#9fb3cf" stroke-width="1.3"/>';
@@ -1886,8 +1958,7 @@ function scientificGlideSvg(coefficient,exponent,correction=false){
 function scientificRecognitionHelp(coefficient,correction=false){
   const value=Number(coefficient),valid=value>=1&&value<10;
   return '<div class="scientific-help scientific-condition-help">'
-    +'<div class="scientific-condition">1 ≤ <span class="scientific-coefficient '+(correction?(valid?'is-valid':'is-invalid'):'')+'">coefficient</span> &lt; 10</div>'
-    +'<div class="scientific-condition-caption">Le coefficient est le nombre placé devant la puissance de 10.</div>'
+    +'<div class="scientific-condition">1 ≤ <span class="scientific-coefficient '+(correction?(valid?'is-valid':'is-invalid'):'')+'">partie entière</span> &lt; 10</div>'
     +'</div>';
 }
 function scientificVisualHtml(inst,correction=false){
@@ -2133,6 +2204,20 @@ function makeInstance(mod,q){
   const hasSvg=/<svg/i.test(rawStatement+rawFooter);
   return {module:mod, q, scope, answers, rawStatement, rawFooter, hasSvg};
 }
+function compactQcmClass(options){
+  if(!Array.isArray(options) || options.length!==4) return '';
+  const allShort=options.every(option=>{
+    const visible=String(option)
+      .replace(/<[^>]*>/g,' ')
+      .replace(/\$\$/g,'')
+      .replace(/\\[a-zA-Z]+/g,'x')
+      .replace(/[{}]/g,'')
+      .replace(/\s+/g,' ')
+      .trim();
+    return visible.length<=12;
+  });
+  return allShort?' options-compact':'';
+}
 function renderGenericQuestion(inst, correction=false, mode=null){
   if(mode===null) mode=document.getElementById('visualMode').value;
   let statement=inst.rawStatement;
@@ -2147,7 +2232,7 @@ function renderGenericQuestion(inst, correction=false, mode=null){
   if(qcm){
     html += '<div class="question">'+renderMathSegments(qcm.prompt)+'</div>';
     const corrects=new Set(inst.answers.map(x=>String(x)));
-    html += '<div class="options options-'+qcm.opts.length+'">';
+    html += '<div class="options options-'+qcm.opts.length+compactQcmClass(qcm.opts)+'">';
     qcm.opts.forEach((o,i)=>{ const isC=correction && corrects.has(String(i+1)); html+='<div class="opt '+(isC?'correct':'')+'"><strong>'+String.fromCharCode(65+i)+'.</strong> '+renderMathSegments(o)+'</div>'; });
     html += '</div>';
   } else {
@@ -2435,7 +2520,7 @@ function renderModule07(inst, correction=false, mode=null){
     prompt = prompt + (visual ? '\n'+visual : '');
     html += '<div class="question">'+renderMathSegments(prompt)+'</div>';
     const corrects=new Set(inst.answers.map(x=>String(x)));
-    html += '<div class="options options-'+qcm.opts.length+'">';
+    html += '<div class="options options-'+qcm.opts.length+compactQcmClass(qcm.opts)+'">';
     qcm.opts.forEach((o,i)=>{ const isC=correction && corrects.has(String(i+1)); html+='<div class="opt '+(isC?'correct':'')+'"><strong>'+String.fromCharCode(65+i)+'.</strong> '+renderMathSegments(o)+'</div>'; });
     html += '</div>';
   } else {
@@ -2521,6 +2606,94 @@ function renderModule10(inst,correction=false,mode=null){
 
   return html;
 }
+
+function proportionVisualData(inst){
+  if(!inst||!inst.q||!inst.scope) return null;
+  const n=Number(inst.q.n),s=inst.scope;
+  if(n===1) return {topLabel:'Nombre de cahiers',topShort:'Cahiers',topUnit:'cahier',bottomLabel:'Prix',bottomShort:'Prix',bottomUnit:'€',pairs:[{x:s.q1,y:s.p1},{x:s.q2,y:s.p2,unknownBottom:true}],method:{type:'horizontal',fromX:s.q1,toX:s.q2,top:'× '+s.m,bottom:'× '+s.m}};
+  if(n===2) return {topLabel:'Masse',topShort:'Masse',topUnit:'kg',bottomLabel:'Prix',bottomShort:'Prix',bottomUnit:'€',pairs:[{x:3,y:s.p3},{x:5,y:s.p5},{x:8,y:s.p8,unknownBottom:true}],method:{type:'horizontal',fromX:3,toX:8,top:'+ 5',bottom:'+ '+s.p5}};
+  if(n===3) return {topLabel:'Nombre de billets',topShort:'Billets',topUnit:'billet',bottomLabel:'Prix',bottomShort:'Prix',bottomUnit:'€',pairs:[{x:s.n,y:s.p},{x:1,y:s.u,unknownBottom:true}],method:{type:'vertical',label:'× '+s.u}};
+  if(n===4) return {topLabel:'Masse de pommes',topShort:'Masse',topUnit:'kg',bottomLabel:'Prix',bottomShort:'Prix',bottomUnit:'€',pairs:[{x:s.q1,y:s.p1},{x:s.q2,y:s.p2,unknownBottom:true}],method:{type:'vertical',label:'× '+s.u}};
+  if(n===5) return {topLabel:'Nombre d’objets',topShort:'Objets',topUnit:'objet',bottomLabel:'Prix',bottomShort:'Prix',bottomUnit:'€',pairs:[{x:s.q1,y:s.p1},{x:s.q2,y:s.p2,unknownBottom:true}],method:{type:'vertical',label:'× '+s.u}};
+  if(n===6) return {topLabel:'Longueur sur la carte',topShort:'Carte',topUnit:'cm',bottomLabel:'Distance réelle',bottomShort:'Réalité',bottomUnit:'km',pairs:[{x:s.c,y:s.d},{x:1,y:s.u,unknownBottom:true}],method:{type:'vertical',label:'× '+s.u}};
+  if(n===7) return {topLabel:'Distance parcourue',topShort:'Distance',topUnit:'km',bottomLabel:'Carburant consommé',bottomShort:'Carburant',bottomUnit:'L',pairs:[{x:100,y:s.c},{x:s.d,y:s.r,unknownBottom:true}],method:{type:'horizontal',fromX:100,toX:s.d,top:'× '+s.m,bottom:'× '+s.m}};
+  if(n===8) return {topLabel:'Nombre de personnes',topShort:'Personnes',topUnit:'personne',bottomLabel:'Quantité de sucre',bottomShort:'Sucre',bottomUnit:'g',pairs:[{x:4,y:s.q4},{x:s.n,y:s.qn,unknownBottom:true}],method:{type:'vertical',label:'× '+s.u}};
+  if(n===9) return {topLabel:'Nombre d’articles',topShort:'Articles',topUnit:'article',bottomLabel:'Prix',bottomShort:'Prix',bottomUnit:'€',pairs:[{x:s.q1,y:s.p1},{x:s.q2,y:s.p2},{x:s.q3,y:s.p3,unknownBottom:true}],method:{type:'horizontal',fromX:s.q1,toX:s.q3,top:'+ '+s.q2,bottom:'+ '+s.p2}};
+  if(n===11) return {topLabel:'Ligne du haut',topShort:'Ligne 1',topUnit:'',bottomLabel:'Ligne du bas',bottomShort:'Ligne 2',bottomUnit:'',pairs:[{x:s.x1,y:s.y1},{x:s.x2,y:s.y2,unknownBottom:true}],method:{type:'vertical',label:'× '+s.k}};
+  return null;
+}
+function proportionGcd(values){
+  const ints=values.map(Number).filter(Number.isFinite).map(v=>Math.abs(Math.round(v)));
+  if(!ints.length) return 1;
+  const gcd2=(a,b)=>{while(b){const r=a%b;a=b;b=r;}return a||1;};
+  return ints.reduce(gcd2)||1;
+}
+function proportionDoubleLineSvg(data,correction=false,compact=false){
+  const W=compact?360:940,H=compact?240:250;
+  const labelRight=compact?84:228,lineStart=compact?96:254,lineEnd=compact?346:918;
+  const topY=compact?70:76,bottomY=compact?168:176;
+  const labelFont=compact?11:16,unitFont=compact?10:14,valueFont=compact?14:21;
+  const pairs=data.pairs.map(pair=>({...pair,x:Number(pair.x),y:Number(pair.y)})).filter(pair=>Number.isFinite(pair.x)&&Number.isFinite(pair.y));
+  const maxX=Math.max(...pairs.map(pair=>pair.x),1);
+  const pos=value=>lineStart+(lineEnd-lineStart)*(value/maxX);
+  let step=proportionGcd(pairs.map(pair=>pair.x));
+  if(maxX/step>10) step=maxX/10;
+  const tickValues=[0];
+  for(let value=step;value<maxX-1e-9;value+=step) tickValues.push(value);
+  tickValues.push(maxX,...pairs.map(pair=>pair.x));
+  const ticks=[...new Set(tickValues.map(value=>Number(value.toFixed(6))))].sort((a,b)=>a-b);
+  const topColor='#e68c1e',bottomColor='#2861aa',topFill='#ffeedc',bottomFill='#e4eefb';
+  const fullTop=compact?data.topShort:data.topLabel,fullBottom=compact?data.bottomShort:data.bottomLabel;
+  const labelBox=(y,fill,stroke,label,unit)=>{const hasUnit=String(unit||'').length>0;return `<rect x="4" y="${y-37}" width="${labelRight-10}" height="74" rx="10" fill="${fill}" stroke="${stroke}" stroke-width="1.7"/><text x="${(labelRight-6)/2}" y="${hasUnit?y-7:y+5}" font-family="Arial,Helvetica,sans-serif" font-size="${labelFont}" font-weight="800" text-anchor="middle" fill="${stroke}">${escapeHtml(label)}</text>${hasUnit?`<text x="${(labelRight-6)/2}" y="${y+17}" font-family="Arial,Helvetica,sans-serif" font-size="${unitFont}" font-weight="700" text-anchor="middle" fill="#4d5c72">${compact?'('+escapeHtml(unit)+')':'Unité : '+escapeHtml(unit)}</text>`:''}`;};
+  const bands=`<rect x="${lineStart-10}" y="${topY-34}" width="${lineEnd-lineStart+16}" height="68" rx="10" fill="${topFill}"/><rect x="${lineStart-10}" y="${bottomY-34}" width="${lineEnd-lineStart+16}" height="68" rx="10" fill="${bottomFill}"/>`;
+  const axes=`<line x1="${lineStart}" y1="${topY}" x2="${lineEnd}" y2="${topY}" stroke="${topColor}" stroke-width="3"/><polygon points="${lineEnd},${topY} ${lineEnd-10},${topY-6} ${lineEnd-10},${topY+6}" fill="${topColor}"/><line x1="${lineStart}" y1="${bottomY}" x2="${lineEnd}" y2="${bottomY}" stroke="${bottomColor}" stroke-width="3"/><polygon points="${lineEnd},${bottomY} ${lineEnd-10},${bottomY-6} ${lineEnd-10},${bottomY+6}" fill="${bottomColor}"/>`;
+  const tickHtml=ticks.map(value=>{const x=pos(value);return `<line x1="${x}" y1="${topY-7}" x2="${x}" y2="${topY+7}" stroke="${topColor}" stroke-width="2"/><line x1="${x}" y1="${bottomY-7}" x2="${x}" y2="${bottomY+7}" stroke="${bottomColor}" stroke-width="2"/>`;}).join('');
+  const zero=`<text x="${lineStart}" y="${topY-15}" font-family="Arial,Helvetica,sans-serif" font-size="${valueFont}" font-weight="800" text-anchor="middle" fill="#17283f">0</text><text x="${lineStart}" y="${bottomY+27}" font-family="Arial,Helvetica,sans-serif" font-size="${valueFont}" font-weight="800" text-anchor="middle" fill="#17283f">0</text>`;
+  const pairHtml=pairs.map(pair=>{const x=pos(pair.x),unknown=pair.unknownBottom&&!correction;return `<line x1="${x}" y1="${topY+9}" x2="${x}" y2="${bottomY-9}" stroke="#34465d" stroke-width="${compact?1.7:2.2}" ${unknown?'stroke-dasharray="7 6"':''}/><text x="${x}" y="${topY-15}" font-family="Arial,Helvetica,sans-serif" font-size="${valueFont}" font-weight="850" text-anchor="middle" fill="#17283f">${escapeHtml(fmt(pair.x))}</text><text x="${x}" y="${bottomY+27}" font-family="Arial,Helvetica,sans-serif" font-size="${valueFont}" font-weight="850" text-anchor="middle" fill="${unknown?'#b45309':'#17283f'}">${unknown?'?':escapeHtml(fmt(pair.y))}</text>`;}).join('');
+  let methodHtml='';
+  if(correction&&data.method){
+    const methodFont=compact?12:17;
+    if(data.method.type==='vertical'){
+      const x=(labelRight-6)/2,y1=topY+39,y2=bottomY-39;
+      methodHtml=`<line x1="${x-22}" y1="${y1}" x2="${x-22}" y2="${y2-5}" stroke="#17283f" stroke-width="2"/><polygon points="${x-22},${y2} ${x-27},${y2-8} ${x-17},${y2-8}" fill="#17283f"/><text x="${x+14}" y="${(y1+y2)/2+5}" font-family="Arial,Helvetica,sans-serif" font-size="${methodFont}" font-weight="850" text-anchor="middle" fill="#17283f">${escapeHtml(data.method.label)}</text>`;
+    }else if(data.method.type==='horizontal'){
+      const xa=pos(data.method.fromX),xb=pos(data.method.toX),direction=xb>=xa?1:-1,start=xa+8*direction,end=xb-10*direction,mid=(xa+xb)/2;
+      const arrow=(y,label)=>`<line x1="${start}" y1="${y}" x2="${end}" y2="${y}" stroke="#17283f" stroke-width="2"/><polygon points="${xb-3*direction},${y} ${xb-12*direction},${y-5} ${xb-12*direction},${y+5}" fill="#17283f"/><text x="${mid}" y="${y-10}" font-family="Arial,Helvetica,sans-serif" font-size="${methodFont}" font-weight="850" text-anchor="middle" fill="#17283f">${escapeHtml(label)}</text>`;
+      methodHtml=arrow(topY+33,data.method.top)+arrow(bottomY-25,data.method.bottom);
+    }
+  }
+  const klass=compact?'proportion-line-mobile':'proportion-line-desktop';
+  return `<svg class="proportion-line ${klass}" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${W} ${H}" role="img" aria-label="Double ligne graduée de proportionnalité">${bands}${labelBox(topY,topFill,topColor,fullTop,data.topUnit)}${labelBox(bottomY,bottomFill,bottomColor,fullBottom,data.bottomUnit)}${axes}${tickHtml}${zero}${pairHtml}${methodHtml}</svg>`;
+}
+function proportionTableCoefficient(inst){
+  const n=Number(inst.q.n),s=inst.scope||{};
+  if(n===2||n===5) return s.u;
+  if(n===11) return s.k;
+  return null;
+}
+function renderProportionModule(inst,correction=false,mode=null){
+  if(mode===null) mode=document.getElementById('visualMode').value;
+  const qcm=splitQCM(inst.rawStatement),visual=proportionVisualData(inst);
+  const visualHtml=visual&&!isWithoutVisuals(mode)?'<div class="proportion-help">'+proportionDoubleLineSvg(visual,correction,false)+proportionDoubleLineSvg(visual,correction,true)+'</div>':(visual?visualPlaceholder(mode):'');
+  let html='',statement=inst.rawStatement;
+  const tableCoefficient=proportionTableCoefficient(inst);
+  if(correction&&tableCoefficient!==null){
+    statement=statement.replace('?', '<span class="proportion-table-answer">'+escapeHtml(inst.answers[0])+'</span>');
+    statement=statement.replace('</table></div>','</table><div class="proportion-table-coefficient"><span class="proportion-table-down">↓</span><strong>× '+escapeHtml(fmt(tableCoefficient))+'</strong></div></div>');
+  }
+  const renderedQcm=splitQCM(statement);
+  if(renderedQcm){
+    html+='<div class="question proportion-prompt">'+renderMathSegments(renderedQcm.prompt)+'</div>'+visualHtml;
+    const corrects=new Set(inst.answers.map(x=>String(x)));
+    html+='<div class="options proportion-options options-'+renderedQcm.opts.length+compactQcmClass(renderedQcm.opts)+'">';
+    renderedQcm.opts.forEach((option,index)=>{const isCorrect=correction&&corrects.has(String(index+1));html+='<div class="opt '+(isCorrect?'correct':'')+'"><strong>'+String.fromCharCode(65+index)+'.</strong> '+renderMathSegments(option)+'</div>';});
+    html+='</div>';
+  }else{
+    html+='<div class="question proportion-prompt">'+renderMathSegments(statement)+'</div>'+visualHtml;
+  }
+  if(inst.rawFooter) html+='<div class="footer proportion-answer">'+renderPlaceholders(inst.rawFooter,inst.answers,correction?'correction':'question')+'</div>';
+  return html;
+}
 function renderQuestion(inst, correction=false, mode=null){
   if(mode===null) mode=document.getElementById('visualMode').value;
   if(inst && inst.module && inst.module.id==='dnb_01') return renderModule01(inst, correction, mode);
@@ -2529,6 +2702,7 @@ function renderQuestion(inst, correction=false, mode=null){
   if(inst && inst.module && inst.module.id==='dnb_20') return renderSolidsModule(inst, correction);
   if(inst && inst.module && inst.module.id==='dnb_22') return renderAreaModule(inst, correction, mode);
   if(inst && inst.module && inst.module.id==='dnb_30') return renderAverageModule(inst, correction, mode);
+  if(inst && inst.module && inst.module.id==='dnb_34') return renderProportionModule(inst, correction, mode);
   if(inst && inst.module && inst.module.id==='dnb_07'){
     return renderModule07(inst, correction, mode);
   }
@@ -2628,7 +2802,7 @@ body{margin:0;background:var(--bg);font-family:Arial,Helvetica,sans-serif;color:
 .visual-note{font-size:1.4rem;color:var(--muted);border:1px dashed var(--border);border-radius:12px;padding:12px;margin:12px auto;max-width:620px}
 .diapo.scientific-mode .stage{align-items:flex-start;padding:12px 20px 18px}
 .diapo.scientific-mode .slide{max-width:1120px}
-.scientific-prompt{font-size:clamp(1.75rem,2.8vw,3rem);font-weight:850;line-height:1.13;margin:0 auto 5px}
+.scientific-prompt{font-size:clamp(1.9rem,3.1vw,3.25rem);font-weight:850;line-height:1.13;margin:0 auto 5px}
 .scientific-footer{font-family:"Cambria Math","STIX Two Math","Times New Roman",serif;font-size:clamp(2.25rem,3.8vw,4rem);font-weight:750;margin:5px auto 0}
 .scientific-footer .answer-slot{width:auto!important;min-width:1.15em;margin-left:.03em;margin-right:.03em}
 .scientific-footer .answer-slot-filled{min-width:0}
@@ -2644,7 +2818,6 @@ body{margin:0;background:var(--bg);font-family:Arial,Helvetica,sans-serif;color:
 .scientific-condition-help{flex-direction:column;gap:7px;min-height:82px}
 .scientific-condition{font-family:"Cambria Math","STIX Two Math","Times New Roman",serif;font-size:clamp(2.1rem,3.6vw,3.8rem);font-weight:800}
 .scientific-condition-check{font-size:clamp(1.15rem,1.8vw,1.7rem);font-weight:750}
-.scientific-condition-caption{font-size:clamp(1rem,1.5vw,1.35rem);font-weight:700;color:var(--muted)}
 .scientific-coefficient{display:inline-block;padding:0 .15em;border-bottom:4px solid #e86100}
 .scientific-coefficient.is-valid{color:#087a55;border-color:#10b981}.scientific-coefficient.is-invalid{color:#b42318;border-color:#d43b3b}
 .scientific-options{margin-top:12px;max-width:1080px}.scientific-options .opt{font-size:clamp(1.15rem,1.75vw,1.75rem);padding:13px 16px}
@@ -2726,11 +2899,45 @@ body{margin:0;background:var(--bg);font-family:Arial,Helvetica,sans-serif;color:
 .average-correction>div{display:block;text-align:center;padding:6px 0}
 .average-correction .math-display{white-space:normal}
 .average-step{display:block;font-family:Arial,Helvetica,sans-serif;font-size:.58em;color:var(--muted);font-weight:850;text-align:center;text-transform:uppercase;letter-spacing:.04em;margin-bottom:5px}
+.diapo.median-mode .slide{max-width:1220px}
+.median-list{display:flex;align-items:center;justify-content:center;flex-wrap:wrap;gap:.16em .42em;max-width:100%;margin:16px auto 18px;font-family:"Cambria Math","STIX Two Math","Times New Roman",serif;font-size:clamp(2rem,3.2vw,3.4rem);font-weight:700;line-height:1.2}
+.median-value,.median-separator{display:inline-flex;align-items:center;white-space:nowrap}.median-value .math-display{white-space:nowrap}
+.median-separator{color:var(--muted);font-weight:700}
+.median-table-wrap{display:block;max-width:100%;margin:18px auto;overflow-x:auto;overscroll-behavior-x:contain;-webkit-overflow-scrolling:touch}
+.median-table{width:max-content;max-width:none;margin:0 auto;border-collapse:collapse;text-align:center;font-size:clamp(1.4rem,2.15vw,2.15rem);font-weight:700;background:#fff}
+.median-table td{border:2px solid #60708c;padding:clamp(8px,1vw,14px) clamp(12px,1.5vw,24px);white-space:nowrap}
+.diapo.proportion-mode .stage{align-items:flex-start;padding:10px 20px 16px}
+.diapo.proportion-mode .slide{max-width:1180px}
+.proportion-prompt{font-size:clamp(1.6rem,2.35vw,2.65rem);font-weight:850;line-height:1.16;margin:0 auto 7px}
+.proportion-help{display:flex;align-items:center;justify-content:center;width:100%;margin:2px auto 3px}
+.proportion-line{display:block;width:min(100%,960px);height:auto;margin:0 auto}
+.proportion-line-mobile{display:none}
+.proportion-answer{font-size:clamp(2rem,3.5vw,3.7rem);margin-top:5px}
+.proportion-options{margin-top:10px}
+.proportion-table-wrap{display:flex;align-items:center;justify-content:center;gap:14px;max-width:100%;margin:14px auto;overflow-x:auto;overscroll-behavior-x:contain;-webkit-overflow-scrolling:touch}
+.proportion-table{width:max-content;margin:0 auto;border-collapse:collapse;text-align:center;font-size:clamp(1.25rem,1.9vw,1.9rem);font-weight:700;background:#fff}
+.proportion-table td{border:2px solid #60708c;padding:10px 20px;white-space:nowrap}
+.proportion-table-answer{color:var(--answer);font-weight:900}
+.proportion-table-coefficient{display:flex;align-items:center;gap:7px;flex:none;padding:7px 9px;color:#17283f;font-family:Arial,Helvetica,sans-serif;font-size:clamp(1rem,1.5vw,1.35rem);font-weight:850;white-space:nowrap}
+.proportion-table-down{font-size:2.1em;line-height:1;color:#17283f}
+.proportion-bare-table{font-family:"Cambria Math","STIX Two Math","Times New Roman",serif;font-size:clamp(1.8rem,2.8vw,2.8rem)}
+.proportion-bare-table td{min-width:150px;padding:16px 32px}
+.course-btn{position:fixed;top:94px;right:16px;z-index:30;min-height:48px;padding:10px 17px;border:2px solid #e86100;border-radius:14px;background:#fff3e5;color:#7a3500;font-size:1.02rem;font-weight:850;cursor:pointer;box-shadow:0 5px 16px rgba(11,33,71,.15)}
+.course-btn[hidden],.course-modal[hidden]{display:none!important}
+.course-modal{position:fixed;inset:0;z-index:100;display:flex;align-items:center;justify-content:center;padding:18px;background:rgba(11,33,71,.48)}
+.course-card{position:relative;width:min(680px,100%);max-height:min(720px,calc(100dvh - 36px));overflow:auto;padding:26px;border:2px solid var(--border);border-radius:22px;background:white;box-shadow:0 24px 70px rgba(11,33,71,.28)}
+.course-close{position:absolute;top:10px;right:12px;width:42px;height:42px;border:0;border-radius:50%;background:#eef4fc;color:#073a75;font-size:1.55rem;font-weight:900;cursor:pointer}
+.course-title{margin:0 48px 20px 0;color:#073a75;font-size:clamp(1.65rem,3.4vw,2.4rem);line-height:1.1}
+.course-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+.course-rule{padding:15px 16px;border:2px solid var(--border);border-radius:15px;background:#f8fbff;font-size:clamp(1rem,1.7vw,1.3rem);line-height:1.35;text-align:left}
+.course-rule strong{display:block;margin-bottom:5px;color:#e86100;font-size:1.08em}
 svg{display:block;max-width:100%;height:auto}
 @media(min-width:1000px){.diapo:fullscreen .slide,.diapo:-webkit-full-screen .slide{zoom:1.12}}
-@media(max-width:800px){.diapo{--stage-top:24px;--stage-x:24px;--stage-bottom:24px}.top{grid-template-columns:minmax(0,1fr) auto minmax(0,1fr);height:76px;text-align:center;padding:9px;gap:6px}.left{justify-content:flex-start}.right{justify-content:flex-end}.top .btn{min-height:52px;font-size:.92rem;padding:11px 10px;border-radius:12px;white-space:nowrap}.top .btn.primary{min-width:0}.navnums,.fullscreen-btn{display:none}.mobile-counter{display:block;white-space:nowrap;font-size:1.08rem}.stage{padding:var(--stage-top) var(--stage-x) var(--stage-bottom)}.diapo .stage>.slide{margin-top:auto;margin-bottom:auto}.options.options-4{grid-template-columns:1fr}.diapo.scientific-mode .stage{padding:8px 8px 13px}.scientific-prompt{font-size:clamp(1.15rem,5.2vw,1.5rem)}.scientific-footer{font-size:clamp(1.7rem,7.7vw,2.25rem);margin-top:3px}.scientific-place-help{min-height:62px;margin-top:14px}.scientific-place-equation{font-size:clamp(1.45rem,6.4vw,2rem)}.scientific-glide-help{height:clamp(160px,24vh,195px);margin-top:-3px}.scientific-condition-help{min-height:64px;margin-top:8px}.scientific-condition{font-size:clamp(1.7rem,7.4vw,2.25rem)}.scientific-condition-caption{font-size:clamp(.78rem,3.4vw,.98rem)}.scientific-options{gap:7px;margin-top:6px}.scientific-options .opt{font-size:clamp(.86rem,3.75vw,1.05rem);padding:8px 9px}.diapo.numberline-mode .footer{font-size:clamp(1.65rem,7.5vw,2rem)}.diapo.numberline-mode .answer-slot{width:2.2em!important}.diapo.numberline-mode .footer .qquad{width:.7em}.diapo.numberline-mode .footer .math-display{transform:none}.diapo.solids-mode .stage{padding:10px 10px 16px}.solid-prompt{font-size:clamp(1.25rem,5.6vw,1.65rem)}.solid-visual{width:230px;height:clamp(155px,27vh,215px)}.solid-options{grid-template-columns:repeat(2,minmax(0,1fr));gap:7px}.solid-options .opt{font-size:clamp(.88rem,3.7vw,1.08rem);padding:8px 9px}}
+@media(max-width:800px){.diapo{--stage-top:24px;--stage-x:24px;--stage-bottom:24px}.top{grid-template-columns:minmax(0,1fr) auto minmax(0,1fr);height:76px;text-align:center;padding:9px;gap:6px}.left{justify-content:flex-start}.right{justify-content:flex-end}.top .btn{min-height:52px;font-size:.92rem;padding:11px 10px;border-radius:12px;white-space:nowrap}.top .btn.primary{min-width:0}.navnums,.fullscreen-btn{display:none}.mobile-counter{display:block;white-space:nowrap;font-size:1.08rem}.stage{padding:var(--stage-top) var(--stage-x) var(--stage-bottom)}.diapo .stage>.slide{margin-top:auto;margin-bottom:auto}.options.options-4{grid-template-columns:1fr}.options.options-4.options-compact{grid-template-columns:repeat(2,minmax(0,1fr))}.diapo.scientific-mode .stage{padding:8px 8px 13px}.scientific-prompt{font-size:clamp(1.25rem,5.8vw,1.65rem)}.scientific-footer{font-size:clamp(1.7rem,7.7vw,2.25rem);margin-top:3px}.scientific-place-help{min-height:62px;margin-top:14px}.scientific-place-equation{font-size:clamp(1.45rem,6.4vw,2rem)}.scientific-glide-help{height:clamp(160px,24vh,195px);margin-top:-3px}.scientific-condition-help{min-height:64px;margin-top:8px}.scientific-condition{font-size:clamp(1.7rem,7.4vw,2.25rem)}.scientific-options{gap:7px;margin-top:6px}.scientific-options .opt{font-size:clamp(.86rem,3.75vw,1.05rem);padding:8px 9px}.diapo.numberline-mode .footer{font-size:clamp(1.65rem,7.5vw,2rem)}.diapo.numberline-mode .answer-slot{width:2.2em!important}.diapo.numberline-mode .footer .qquad{width:.7em}.diapo.numberline-mode .footer .math-display{transform:none}.diapo.solids-mode .stage{padding:10px 10px 16px}.solid-prompt{font-size:clamp(1.25rem,5.6vw,1.65rem)}.solid-visual{width:230px;height:clamp(155px,27vh,215px)}.solid-options{grid-template-columns:repeat(2,minmax(0,1fr));gap:7px}.solid-options .opt{font-size:clamp(.88rem,3.7vw,1.08rem);padding:8px 9px}}
 @media(max-width:800px){.diapo.area-mode .stage{padding:8px 9px 14px}.area-prompt{font-size:clamp(1.15rem,5.2vw,1.55rem);margin-bottom:2px}.area-main{height:178px}.area-data{padding:15px 16px;font-size:clamp(1.05rem,4.6vw,1.35rem)}.area-help{height:52px;gap:7px;font-size:clamp(.9rem,3.8vw,1.12rem);line-height:1.12}.area-answer-line{font-size:clamp(1.55rem,7vw,2.1rem)}.area-options{gap:7px;margin-top:2px}.area-options .opt{font-size:clamp(.9rem,3.7vw,1.08rem);padding:8px 9px}.area-correction{padding:0 6px;font-size:clamp(.9rem,3.7vw,1.1rem)}.area-correction>div{grid-template-columns:92px minmax(0,1fr);gap:10px;padding:4px 0}}
 @media(max-width:800px){.diapo.average-mode .stage{padding:7px 8px 13px}.average-prompt{font-size:clamp(1.08rem,5vw,1.45rem);margin-bottom:2px}.average-instruction{font-size:clamp(.96rem,4.1vw,1.18rem);margin:4px auto 2px}.average-data-line{font-size:clamp(1.45rem,7vw,2rem);margin:2px auto}.average-table-wrap{margin:5px auto 3px}.average-table{font-size:clamp(.75rem,3.25vw,.94rem)}.average-table th,.average-table td{padding:6px 8px;border-width:1.5px}.average-help-visual{height:clamp(170px,29vh,225px)}.average-answer-line{font-size:clamp(1.45rem,7vw,2rem);margin-top:4px}.average-options,.average-formula-options{grid-template-columns:1fr!important;gap:7px;margin-top:6px}.average-options .opt,.average-formula-options .opt{font-size:clamp(.82rem,3.55vw,1rem);padding:8px 9px}.average-correction{padding:0 5px;font-size:clamp(1.05rem,4.5vw,1.35rem);margin-top:8px}.average-correction>div{display:block;padding:4px 0}.average-step{text-align:center;margin-bottom:3px}}
+@media(max-width:800px){.diapo.median-mode .stage{padding:12px 9px 16px}.diapo.median-mode .question{font-size:clamp(1.3rem,5.7vw,1.72rem);line-height:1.18;margin-bottom:17px}.diapo.median-mode .footer{font-size:clamp(1.55rem,7vw,2rem);margin-top:10px}.median-list{gap:.18em .4em;margin:11px auto 13px;font-size:clamp(1.25rem,5.7vw,1.65rem)}.median-table-wrap{margin:11px auto}.median-table{font-size:clamp(.78rem,3.45vw,1rem)}.median-table td{padding:6px 7px;border-width:1.5px}.course-btn{top:10px;right:9px;min-height:46px;padding:9px 13px;font-size:.95rem}.course-card{padding:22px 16px 18px;border-radius:18px}.course-title{margin-bottom:15px;font-size:1.55rem}.course-grid{grid-template-columns:1fr;gap:8px}.course-rule{padding:11px 12px;font-size:1rem}}
+@media(max-width:800px){.diapo.proportion-mode .stage{padding:8px 8px 14px}.proportion-prompt{font-size:clamp(1.18rem,5.25vw,1.52rem);line-height:1.17;margin-bottom:3px}.proportion-line-desktop{display:none}.proportion-line-mobile{display:block;width:min(100%,390px)}.proportion-help{margin:1px auto 2px}.proportion-answer{font-size:clamp(1.55rem,7vw,2.05rem);margin-top:2px}.proportion-options{gap:7px;margin-top:6px}.proportion-options .opt{font-size:clamp(.86rem,3.7vw,1.05rem);padding:8px 9px}.proportion-table-wrap{gap:7px;margin:9px auto;justify-content:flex-start}.proportion-table{font-size:clamp(.8rem,3.45vw,1rem)}.proportion-table td{padding:6px 8px;border-width:1.5px}.proportion-table-coefficient{gap:4px;padding:5px 4px;font-size:.85rem}.proportion-bare-table{font-size:clamp(1.3rem,5.8vw,1.65rem)}.proportion-bare-table td{min-width:105px;padding:12px 22px}}
 @media(max-width:800px){.diapo>.top{order:2;border-top:1px solid var(--border);border-bottom:0}.diapo>.stage{order:1}}
 @media (hover:none) and (pointer:coarse){.navnums,.fullscreen-btn{display:none!important}.mobile-counter{display:block!important}}
 @media print{.diapo{--stage-top:20px;--stage-x:20px;--stage-bottom:20px;height:auto;min-height:100vh;overflow:visible}.top{display:none}.stage{min-height:auto;overflow:visible;padding:var(--stage-top) var(--stage-x) var(--stage-bottom)}}
@@ -2744,12 +2951,33 @@ svg{display:block;max-width:100%;height:auto}
 <div class="mobile-counter" id="mobileCounter"></div>
 <div class="right"><button class="btn fullscreen-btn" onclick="toggleFS()">⛶</button><button class="btn primary" id="nextBtn" onclick="next()">Correction ►</button></div>
 </header>
-<main class="stage"><section class="slide" id="slide"></section></main>
+<main class="stage"><button class="course-btn" id="courseBtn" type="button" onclick="openCourse()" hidden>📘 Cours</button><section class="slide" id="slide"></section></main>
+</div>
+<div class="course-modal" id="courseModal" onclick="if(event.target===this)closeCourse()" hidden>
+  <section class="course-card" role="dialog" aria-modal="true" aria-labelledby="courseTitle">
+    <button class="course-close" type="button" aria-label="Fermer le cours" onclick="closeCourse()">×</button>
+    <h2 class="course-title" id="courseTitle"></h2>
+    <div class="course-grid" id="courseGrid"></div>
+  </section>
 </div>
 <script>
 const slides=${payload};
 let idx=0;let corr=false;
 const visualShown=slides.map(()=>false);
+const courseCatalog={
+  divisibility:{title:'Critères de divisibilité',rules:[
+    ['Divisible par 2','Son chiffre des unités est 0, 2, 4, 6 ou 8.'],
+    ['Divisible par 3','La somme de ses chiffres est divisible par 3.'],
+    ['Divisible par 5','Son chiffre des unités est 0 ou 5.'],
+    ['Divisible par 9','La somme de ses chiffres est divisible par 9.']
+  ]},
+  median:{title:'Médiane et étendue',rules:[
+    ['Avant de commencer','Ranger les valeurs dans l’ordre croissant.'],
+    ['Effectif impair','La médiane est la valeur centrale.'],
+    ['Effectif pair','La médiane est la moyenne des deux valeurs centrales.'],
+    ['Étendue','Étendue = maximum − minimum.']
+  ]}
+};
 function fitNavNumbers(){
  const nav=document.getElementById('navnums');
  const buttons=[...nav.querySelectorAll('.navnum')];
@@ -2782,7 +3010,12 @@ function render(){
  diapo.classList.toggle('solids-mode',slides[idx].moduleId==='dnb_20');
  diapo.classList.toggle('area-mode',slides[idx].moduleId==='dnb_22');
  diapo.classList.toggle('average-mode',slides[idx].moduleId==='dnb_30');
+ diapo.classList.toggle('median-mode',slides[idx].moduleId==='dnb_31');
+ diapo.classList.toggle('proportion-mode',slides[idx].moduleId==='dnb_34');
  const current=slides[idx];
+ closeCourse();
+ const courseBtn=document.getElementById('courseBtn');
+ if(courseBtn) courseBtn.hidden=!current.courseKind;
  const showVisual=current.canRevealVisual&&visualShown[idx];
  const content=corr
    ? (showVisual?current.visualCorrectionHtml:current.correctionHtml)
@@ -2799,11 +3032,13 @@ function render(){
  nextBtn.disabled=finished;
  requestAnimationFrame(fitNavNumbers);
 }
+function openCourse(){const modal=document.getElementById('courseModal'),course=courseCatalog[slides[idx].courseKind];if(modal&&course){document.getElementById('courseTitle').textContent=course.title;document.getElementById('courseGrid').innerHTML=course.rules.map(rule=>'<div class="course-rule"><strong>'+rule[0]+'</strong>'+rule[1]+'</div>').join('');modal.hidden=false;const close=modal.querySelector('.course-close');if(close)close.focus();}}
+function closeCourse(){const modal=document.getElementById('courseModal');if(modal)modal.hidden=true;}
 function revealVisual(){if(slides[idx].canRevealVisual){visualShown[idx]=true;render();}}
 function next(){if(!corr){corr=true;render();return;} if(idx<slides.length-1){idx++;corr=false;render();}}
 function prev(){if(corr){corr=false;render();return;} if(idx>0){idx--;corr=false;render();}}
 function toggleFS(){const d=document.getElementById('diapo'); if(!document.fullscreenElement) d.requestFullscreen(); else document.exitFullscreen();}
-document.addEventListener('keydown',e=>{if(e.key==='ArrowRight')next(); if(e.key==='ArrowLeft')prev(); if(e.key==='f'||e.key==='F')toggleFS();});
+document.addEventListener('keydown',e=>{if(e.key==='Escape')closeCourse(); if(e.key==='ArrowRight')next(); if(e.key==='ArrowLeft')prev(); if(e.key==='f'||e.key==='F')toggleFS();});
 window.addEventListener('resize',()=>requestAnimationFrame(fitNavNumbers));
 render();
 </`+`script>
@@ -2819,6 +3054,7 @@ function openDiapoWindow(){
     const hiddenMode=slideModeForVisualPolicy(mode,visualPolicy);
     return {
       moduleId:inst.module.id,
+      courseKind:mode==='with'?({dnb_08:'divisibility',dnb_31:'median'}[inst.module.id]||null):null,
       questionHtml:buildCleanSlideHtml(inst,false,hiddenMode),
       correctionHtml:buildCleanSlideHtml(inst,true,hiddenMode),
       canRevealVisual,
@@ -2922,6 +3158,9 @@ function visualPolicyForQuestion(m,q){
   // Dans le module Moyennes, le tableau ou les données restent dans l'énoncé ;
   // le schéma en barres est une aide facultative, sauf le QCM de formule.
   if(m.id==='dnb_30') return Number(q.n)===4?'none':'optional';
+  // La double ligne graduée aide les problèmes contextualisés, tandis que les
+  // tableaux constituent déjà leur propre représentation.
+  if(m.id==='dnb_34') return [1,2,3,4,5,6,7,8,9,11].includes(Number(q.n))?'optional':'none';
   const hasVisual=/<svg/i.test(String(q.statement||'')+String(q.footer||''));
   return hasVisual?'essential':'none';
 }
