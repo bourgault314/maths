@@ -35,10 +35,30 @@
       text-align: center;
     }
 
-    /* Hauteur réservée dès le premier rendu : aucun recentrage au chargement. */
+    /*
+      Ordinateur : cadre et coordonnées fixes.
+      L'image ne participe plus au calcul du centrage de la page.
+    */
     @media (min-width: 521px) {
+      body {
+        display: block;
+      }
+
       main {
+        position: fixed;
+        top: 50%;
+        left: 50%;
         height: 500px;
+        padding-top: 243.36px;
+        transform: translate(-50%, -250px);
+      }
+
+      .logo {
+        position: absolute;
+        top: 48px;
+        left: 50%;
+        margin: 0;
+        transform: translateX(-50%);
       }
     }
 
