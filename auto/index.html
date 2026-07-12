@@ -168,6 +168,69 @@ function configureSquaresModule(){
 }
 configureSquaresModule();
 
+function configureRelationsModule(){
+  const mod=RAW_MODULES.find(m=>m.id==='dnb_09');
+  if(!mod) return;
+  const q=n=>mod.questions.find(item=>item.n===n);
+
+  // Le carré isolé est déjà travaillé dans le module 07. Il reste présent
+  // dans la question récapitulative n°1, conformément à la liste DNB.
+  mod.questions=mod.questions.filter(item=>item.n!==7);
+
+  q(1).options={...q(1).options,relation_kind:'summary'};
+  q(2).options={...q(2).options,relation_kind:'multiple_direct',factor:2};
+  q(3).options={...q(3).options,relation_kind:'multiple_direct',factor:3};
+  q(4).options={...q(4).options,relation_kind:'fraction_direct',divisor:2};
+  q(5).options={...q(5).options,relation_kind:'predecessor'};
+  q(6).options={...q(6).options,relation_kind:'successor'};
+
+  // Les relations littérales sont séparées pour être toutes proposées avec
+  // la même fréquence dans le tirage du module.
+  q(8).statement='Quelle expression correspond à la relation demandée ?';
+  q(8).answer='[]';
+  q(8).footer='';
+  q(8).options={relation_kind:'expression_qcm',expression_target:'double'};
+
+  q(9).options={...q(9).options,relation_kind:'multiple_inverse',factor:2};
+  // Le petit problème reste inchangé dans son énoncé ; il reçoit seulement
+  // le même schéma du triple que le calcul direct.
+  q(10).options={...q(10).options,relation_kind:'multiple_direct',factor:3};
+
+  mod.questions.push({
+    n:11,
+    statement:'Calcule le quadruple de ce nombre :',
+    answer:'["4*n"]',
+    options:{formula_code:'setNB(1)\nn=RD(5,30)',relation_kind:'multiple_direct',factor:4},
+    footer:'$$\\text{quadruple de }${n}=[[formula]]$$'
+  });
+  mod.questions.push({
+    n:12,
+    statement:'Calcule la moitié de ce nombre impair :',
+    answer:'["n/2"]',
+    options:{formula_code:'setNB(1)\nn=2*RD(2,24)+1',relation_kind:'fraction_direct',divisor:2},
+    footer:'$$\\text{moitié de }${n}=[[formula]]$$'
+  });
+  mod.questions.push({
+    n:13,
+    statement:'Calcule le quart de ce nombre :',
+    answer:'["n/4"]',
+    options:{formula_code:'setNB(1)\nn=4*RD(2,25)',relation_kind:'fraction_direct',divisor:4},
+    footer:'$$\\text{quart de }${n}=[[formula]]$$'
+  });
+
+  [
+    [14,'triple'],[15,'quadruple'],[16,'half'],[17,'quarter'],
+    [18,'predecessor'],[19,'successor']
+  ].forEach(([n,target])=>mod.questions.push({
+    n,
+    statement:'Quelle expression correspond à la relation demandée ?',
+    answer:'[]',
+    options:{relation_kind:'expression_qcm',expression_target:target},
+    footer:''
+  }));
+}
+configureRelationsModule();
+
 function configureScientificModule(){
   const mod=RAW_MODULES.find(m=>m.id==='dnb_06');
   if(!mod) return;
@@ -2185,8 +2248,72 @@ function makeAverageInstance(mod,q){
   const answers=d.qcm?[d.qcm.correctIndex]:[d.result];
   return {module:mod,q,scope:{},answers,rawStatement:d.prompt,rawFooter:'',hasSvg:!!d.visual,average:d};
 }
+
+function relationExpressionChoices(target=null){
+  const terms=(...items)=>({kind:'terms',items});
+  const nTerms=count=>terms({type:'n',count,sign:1});
+  const nAndUnits=(count,sign=1)=>terms({type:'n',count:1,sign:1},{type:'u',count:Math.abs(count),sign});
+  const square=()=>terms({type:'n2',count:1,sign:1});
+  const fraction=divisor=>({kind:'fraction',divisor});
+  const singleN=()=>terms({type:'n',count:1,sign:1});
+  const configs=[
+    {id:'double',prompt:'Quelle expression représente le double du nombre $$n$$ ?',correct:'2n',options:[
+      {latex:'2n',visual:nTerms(2)},{latex:'n+2',visual:nAndUnits(2)},{latex:'n^2',visual:square()},{latex:'\\dfrac{n}{2}',visual:fraction(2)}]},
+    {id:'triple',prompt:'Quelle expression représente le triple du nombre $$n$$ ?',correct:'3n',options:[
+      {latex:'3n',visual:nTerms(3)},{latex:'n+3',visual:nAndUnits(3)},{latex:'n^2',visual:square()},{latex:'\\dfrac{n}{2}',visual:fraction(2)}]},
+    {id:'quadruple',prompt:'Quelle expression représente le quadruple du nombre $$n$$ ?',correct:'4n',options:[
+      {latex:'4n',visual:nTerms(4)},{latex:'n+4',visual:nAndUnits(4)},{latex:'n^2',visual:square()},{latex:'\\dfrac{n}{4}',visual:fraction(4)}]},
+    {id:'half',prompt:'Quelle expression représente la moitié du nombre $$n$$ ?',correct:'\\dfrac{n}{2}',options:[
+      {latex:'\\dfrac{n}{2}',visual:fraction(2)},{latex:'2n',visual:nTerms(2)},{latex:'n-2',visual:nAndUnits(2,-1)},{latex:'n^2',visual:square()}]},
+    {id:'quarter',prompt:'Quelle expression représente le quart du nombre $$n$$ ?',correct:'\\dfrac{n}{4}',options:[
+      {latex:'\\dfrac{n}{4}',visual:fraction(4)},{latex:'4n',visual:nTerms(4)},{latex:'n-4',visual:nAndUnits(4,-1)},{latex:'n^2',visual:square()}]},
+    {id:'predecessor',prompt:'Quelle expression représente le prédécesseur du nombre entier $$n$$ ?',correct:'n-1',options:[
+      {latex:'n-1',visual:nAndUnits(1,-1)},{latex:'n+1',visual:nAndUnits(1)},{latex:'1-n',visual:terms({type:'u',count:1,sign:1},{type:'n',count:1,sign:-1})},{latex:'n',visual:singleN()}]},
+    {id:'successor',prompt:'Quelle expression représente le successeur du nombre entier $$n$$ ?',correct:'n+1',options:[
+      {latex:'n+1',visual:nAndUnits(1)},{latex:'n-1',visual:nAndUnits(1,-1)},{latex:'2n',visual:nTerms(2)},{latex:'n',visual:singleN()}]}
+  ];
+  const config=configs.find(item=>item.id===target)||pick(configs);
+  const options=shuffledCopy(config.options);
+  return {
+    prompt:config.prompt,
+    options,
+    correctIndex:options.findIndex(option=>option.latex===config.correct)+1
+  };
+}
+
+function makeRelationInstance(mod,q){
+  if(q.options&&q.options.relation_kind==='expression_qcm'){
+    const qcm=relationExpressionChoices(q.options.expression_target);
+    return {
+      module:mod,q,scope:{},answers:[String(qcm.correctIndex)],
+      rawStatement:qcm.prompt,rawFooter:'',hasSvg:false,
+      relation:{kind:'expression_qcm',qcm}
+    };
+  }
+  let scope={};
+  if(q.options&&q.options.formula_code) scope=runCode(q.options.formula_code);
+  let answers=parseAnswer(q,scope);
+  let rawStatement=subVars(q.statement||'',scope);
+  const rawFooter=subVars(q.footer||'',scope);
+  if(q.options&&q.options.shuffle_answers){
+    const shuffled=shuffledQcm(rawStatement,answers);
+    rawStatement=shuffled.statement;
+    answers=shuffled.answers;
+  }
+  const relationKind=q.options&&q.options.relation_kind;
+  let relation=null;
+  if(relationKind==='summary') relation={kind:relationKind,value:Number(scope.n)};
+  if(relationKind==='multiple_direct') relation={kind:relationKind,factor:Number(q.options.factor),value:Number(scope.n),result:Number(scope.n)*Number(q.options.factor)};
+  if(relationKind==='multiple_inverse') relation={kind:relationKind,factor:Number(q.options.factor),value:Number(scope.n),result:Number(scope.c)};
+  if(relationKind==='fraction_direct') relation={kind:relationKind,divisor:Number(q.options.divisor),value:Number(scope.n),result:Number(scope.n)/Number(q.options.divisor)};
+  if(relationKind==='predecessor') relation={kind:relationKind,value:Number(scope.n),result:Number(scope.n)-1};
+  if(relationKind==='successor') relation={kind:relationKind,value:Number(scope.n),result:Number(scope.n)+1};
+  return {module:mod,q,scope,answers,rawStatement,rawFooter,hasSvg:false,relation};
+}
+
 function makeInstance(mod,q){
   if(mod&&mod.id==='dnb_01') return makeModule01Instance(mod,q);
+  if(mod&&mod.id==='dnb_09') return makeRelationInstance(mod,q);
   if(mod&&mod.id==='dnb_10') return makeReductionInstance(mod,q);
   if(mod&&mod.id==='dnb_20') return makeSolidsInstance(mod,q);
   if(mod&&mod.id==='dnb_22') return makeAreaInstance(mod,q);
@@ -2239,6 +2366,143 @@ function renderGenericQuestion(inst, correction=false, mode=null){
     html += '<div class="question">'+renderMathSegments(statement)+'</div>';
   }
   if(footer) html += '<div class="footer">'+renderPlaceholders(footer, inst.answers, correction?'correction':'question')+'</div>';
+  return html;
+}
+
+function relationPalette(kind,size){
+  if(kind==='multiple'&&size===2) return {fill:'#fff7d6',stroke:'#8a7420'};
+  if(kind==='multiple'&&size===3) return {fill:'#fde5eb',stroke:'#9b455f'};
+  if(kind==='multiple'&&size===4) return {fill:'#e6f5e4',stroke:'#477a45'};
+  if(kind==='fraction'&&size===2) return {fill:'#fff7d6',stroke:'#8a7420'};
+  if(kind==='fraction'&&size===4) return {fill:'#e6f5e4',stroke:'#477a45'};
+  return {fill:'#e7f1fb',stroke:'#35658c'};
+}
+
+function relationBarSvg(data,correction=false){
+  const x=60,width=640,topY=28,topH=70,bottomY=98,bottomH=70;
+  const text=(x,y,value,size=24,weight=800)=>`<text x="${x}" y="${y}" text-anchor="middle" dominant-baseline="middle" font-family="Arial,Helvetica,sans-serif" font-size="${size}" font-weight="${weight}" fill="#17283f">${escapeHtml(value)}</text>`;
+  let body='';
+
+  if(data.kind==='multiple_direct'||data.kind==='multiple_inverse'){
+    const factor=data.factor;
+    const palette=relationPalette('multiple',factor);
+    const names={2:'LE DOUBLE',3:'LE TRIPLE',4:'LE QUADRUPLE'};
+    const cellW=width/factor;
+    body+=`<rect x="${x}" y="${topY}" width="${width}" height="${topH}" fill="${palette.fill}" stroke="#222" stroke-width="2"/>`;
+    body+=text(x+width/2,topY+topH/2,correction?fmt(data.result):names[factor],25,850);
+    for(let i=0;i<factor;i++){
+      body+=`<rect x="${x+i*cellW}" y="${bottomY}" width="${cellW}" height="${bottomH}" fill="${i===0?palette.fill:'#fff'}" stroke="#222" stroke-width="2" ${i===0?'':'stroke-dasharray="8 6"'}/>`;
+      if(correction) body+=text(x+(i+.5)*cellW,bottomY+bottomH/2,fmt(data.value),21,800);
+    }
+    if(!correction) body+=text(x+cellW/2,bottomY+bottomH/2,'la quantité',Math.min(21,Math.max(15,180/cellW*18)),780);
+  }
+
+  if(data.kind==='fraction_direct'){
+    const divisor=data.divisor;
+    const palette=relationPalette('fraction',divisor);
+    const names={2:'la moitié',4:'le quart'};
+    const cellW=width/divisor;
+    body+=`<rect x="${x}" y="${topY}" width="${width}" height="${topH}" fill="${palette.fill}" stroke="#222" stroke-width="2"/>`;
+    body+=text(x+width/2,topY+topH/2,correction?fmt(data.value):'LE TOUT',25,850);
+    for(let i=0;i<divisor;i++){
+      body+=`<rect x="${x+i*cellW}" y="${bottomY}" width="${cellW}" height="${bottomH}" fill="${i===0?palette.fill:'#fff'}" stroke="#222" stroke-width="2"/>`;
+      if(correction) body+=text(x+(i+.5)*cellW,bottomY+bottomH/2,fmt(data.result),divisor===4?20:22,800);
+    }
+    if(!correction) body+=text(x+cellW/2,bottomY+bottomH/2,names[divisor],divisor===4?18:21,780);
+  }
+
+  if(data.kind==='predecessor'||data.kind==='successor'){
+    const palette=relationPalette('neighbor',1),unitW=82,mainW=width-unitW;
+    const isPredecessor=data.kind==='predecessor';
+    const topLabel=correction
+      ? fmt(isPredecessor?data.value:data.result)
+      : (isPredecessor?'LE NOMBRE : '+fmt(data.value):'LE SUCCESSEUR');
+    const bottomLabel=correction
+      ? fmt(isPredecessor?data.result:data.value)
+      : (isPredecessor?'le prédécesseur':'le nombre : '+fmt(data.value));
+    body+=`<rect x="${x}" y="${topY}" width="${width}" height="${topH}" fill="${palette.fill}" stroke="#222" stroke-width="2"/>`;
+    body+=text(x+width/2,topY+topH/2,topLabel,25,850);
+    body+=`<rect x="${x}" y="${bottomY}" width="${mainW}" height="${bottomH}" fill="${palette.fill}" stroke="#222" stroke-width="2"/>`;
+    body+=`<rect x="${x+mainW}" y="${bottomY}" width="${unitW}" height="${bottomH}" fill="#fff" stroke="#222" stroke-width="2"/>`;
+    body+=text(x+mainW/2,bottomY+bottomH/2,bottomLabel,22,780);
+    body+=text(x+mainW+unitW/2,bottomY+bottomH/2,'1',23,850);
+  }
+
+  return `<div class="relation-bar-help"><svg class="relation-bar-svg" viewBox="0 0 760 198" role="img" aria-label="Schéma en barres">${body}</svg></div>`;
+}
+
+function relationTileUnit(type,sign=1){
+  const positive=sign>0,fill=positive?'#31a98e':'#ef5142';
+  const label=type==='n2'?(positive?'𝑛²':'−𝑛²'):(type==='n'?(positive?'𝑛':'−𝑛'):(positive?'1':'−1'));
+  // Même géométrie que dans le module Réduction : l'unité mesure un tiers
+  // de la longueur de n, et le côté de n² est égal à cette longueur.
+  const viewW=type==='u'?32:96,viewH=type==='n2'?96:32;
+  const scale=.85,w=Math.round(viewW*scale),h=Math.round(viewH*scale);
+  const fs=type==='n2'?27:(type==='n'?24:18),baseline=type==='n2'?50:17;
+  return `<svg class="relation-algebra-tile relation-algebra-tile-${type}" viewBox="0 0 ${viewW} ${viewH}" width="${w}" height="${h}" aria-hidden="true"><rect x="1" y="1" width="${viewW-2}" height="${viewH-2}" fill="${fill}" stroke="#171717" stroke-width="1.7"/><text x="${viewW/2}" y="${baseline}" dominant-baseline="middle" text-anchor="middle" font-family="Cambria Math,STIX Two Math,Times New Roman,serif" font-size="${fs}" font-weight="700" fill="#111">${label}</text></svg>`;
+}
+
+function relationTilesHtml(visual){
+  if(!visual) return '';
+  if(visual.kind==='fraction'){
+    // Une fraction de n garde exactement la géométrie 96 × 32 de la tuile n.
+    // Seule la subdivision interne change.
+    const width=96,height=32,scale=.85,cellW=width/visual.divisor;
+    let cells='';
+    for(let i=0;i<visual.divisor;i++) cells+=`<rect x="${i*cellW}" y="0" width="${cellW}" height="${height}" fill="${i===0?'#31a98e':'#fff'}" stroke="#171717" stroke-width="1.5"/>`;
+    const cx=cellW/2,lineHalf=Math.min(7,cellW*.34);
+    const fraction=`<text x="${cx}" y="10" text-anchor="middle" font-family="Cambria Math,STIX Two Math,Times New Roman,serif" font-size="10" font-style="italic" font-weight="700">n</text><line x1="${cx-lineHalf}" y1="14" x2="${cx+lineHalf}" y2="14" stroke="#111" stroke-width="1.2"/><text x="${cx}" y="25" text-anchor="middle" font-family="Cambria Math,STIX Two Math,Times New Roman,serif" font-size="10" font-weight="700">${visual.divisor}</text>`;
+    return `<div class="relation-tile-help"><svg class="relation-algebra-tile relation-algebra-tile-fraction" viewBox="0 0 ${width} ${height}" width="${Math.round(width*scale)}" height="${Math.round(height*scale)}" aria-hidden="true">${cells}${fraction}</svg></div>`;
+  }
+  let tiles='';
+  visual.items.forEach(item=>{for(let i=0;i<item.count;i++) tiles+=relationTileUnit(item.type,item.sign);});
+  return `<div class="relation-tile-help">${tiles}</div>`;
+}
+
+function relationSummaryItems(value){
+  const terms=(...items)=>({kind:'terms',items});
+  return [
+    {label:'Double',result:2*value,visual:terms({type:'n',count:2,sign:1})},
+    {label:'Triple',result:3*value,visual:terms({type:'n',count:3,sign:1})},
+    {label:'Moitié',result:value/2,visual:{kind:'fraction',divisor:2}},
+    {label:'Prédécesseur',result:value-1,visual:terms({type:'n',count:1,sign:1},{type:'u',count:1,sign:-1})},
+    {label:'Successeur',result:value+1,visual:terms({type:'n',count:1,sign:1},{type:'u',count:1,sign:1})},
+    {label:'Carré',result:value*value,visual:terms({type:'n2',count:1,sign:1})}
+  ];
+}
+
+function renderModule09(inst,correction=false,mode=null){
+  if(mode===null) mode=document.getElementById('visualMode').value;
+  const data=inst.relation;
+  if(!data) return renderGenericQuestion(inst,correction,mode);
+  const withHelp=!isWithoutVisuals(mode);
+
+  if(data.kind==='summary'){
+    let html='<div class="question relation-prompt">'+renderMathSegments(inst.rawStatement)+'</div>';
+    html+='<div class="relation-summary-grid">';
+    relationSummaryItems(data.value).forEach(item=>{
+      html+='<div class="relation-summary-card"><div class="relation-summary-line"><span>'+item.label+'</span><strong>'+(correction?escapeHtml(fmt(item.result)):'…')+'</strong></div>'+(withHelp?relationTilesHtml(item.visual):'')+'</div>';
+    });
+    html+='</div>';
+    if(!withHelp) html+=visualPlaceholder(mode);
+    return html;
+  }
+
+  if(data.kind==='expression_qcm'){
+    let html='<div class="question relation-prompt">'+renderMathSegments(data.qcm.prompt)+'</div>';
+    html+='<div class="options options-4 options-compact relation-options">';
+    data.qcm.options.forEach((option,index)=>{
+      const isCorrect=correction&&String(index+1)===String(data.qcm.correctIndex);
+      html+='<div class="opt '+(isCorrect?'correct':'')+'"><div class="relation-option-label"><strong>'+String.fromCharCode(65+index)+'.</strong> '+renderMathSegments('$$'+option.latex+'$$')+'</div>'+(withHelp?relationTilesHtml(option.visual):'')+'</div>';
+    });
+    html+='</div>';
+    if(!withHelp) html+=visualPlaceholder(mode);
+    return html;
+  }
+
+  let html='<div class="question relation-prompt">'+renderMathSegments(inst.rawStatement)+'</div>';
+  html+=withHelp?relationBarSvg(data,correction):visualPlaceholder(mode);
+  if(inst.rawFooter) html+='<div class="footer relation-answer">'+renderPlaceholders(inst.rawFooter,inst.answers,correction?'correction':'question')+'</div>';
   return html;
 }
 
@@ -2698,6 +2962,7 @@ function renderQuestion(inst, correction=false, mode=null){
   if(mode===null) mode=document.getElementById('visualMode').value;
   if(inst && inst.module && inst.module.id==='dnb_01') return renderModule01(inst, correction, mode);
   if(inst && inst.module && inst.module.id==='dnb_06') return renderScientificModule(inst, correction, mode);
+  if(inst && inst.module && inst.module.id==='dnb_09') return renderModule09(inst, correction, mode);
   if(inst && inst.module && inst.module.id==='dnb_10') return renderModule10(inst, correction, mode);
   if(inst && inst.module && inst.module.id==='dnb_20') return renderSolidsModule(inst, correction);
   if(inst && inst.module && inst.module.id==='dnb_22') return renderAreaModule(inst, correction, mode);
@@ -2718,7 +2983,7 @@ const LEVEL_5E_QUESTIONS={
   dnb_04:'all',
   dnb_05:'all',
   dnb_08:'all',
-  dnb_09:[2,3,4,5,6,8,9,10],
+  dnb_09:[2,3,4,5,6,8,9,10,11,12,13,14,15,16,17,18,19],
   dnb_11:[1,4,6],
   dnb_14:'all',
   dnb_15:'all',
@@ -2866,6 +3131,22 @@ body{margin:0;background:var(--bg);font-family:Arial,Helvetica,sans-serif;color:
 .diapo.module01-mode .module01-answer{font-family:"Cambria Math","STIX Two Math","Times New Roman",serif;font-size:clamp(3rem,5vw,5.4rem);font-weight:700;margin:9px auto 0}
 .diapo.module01-mode .module01-options{margin-top:12px;max-width:1180px}
 .diapo.module01-mode .module01-options .opt{font-family:"Cambria Math","STIX Two Math","Times New Roman",serif;font-size:clamp(1.55rem,2.3vw,2.55rem);text-align:left;padding:13px 16px}
+.diapo.relation-mode .stage{align-items:flex-start;padding:14px 22px 18px;overflow:auto}
+.diapo.relation-mode .slide{max-width:1080px}
+.relation-prompt{font-size:clamp(1.9rem,3vw,3.3rem);line-height:1.12;margin:0 auto 8px}
+.relation-bar-help{display:flex;align-items:center;justify-content:center;width:100%;height:clamp(150px,27vh,220px);margin:2px auto 1px}
+.relation-bar-svg{display:block;width:min(100%,820px);height:auto;max-height:100%}
+.relation-answer{font-family:"Cambria Math","STIX Two Math","Times New Roman",serif;font-size:clamp(2.2rem,4vw,4.1rem);margin-top:4px}
+.relation-options{grid-template-columns:repeat(2,minmax(0,1fr));gap:11px 15px;margin:10px auto 0;max-width:980px}
+.relation-options .opt{display:flex;flex-direction:column;align-items:stretch;justify-content:center;min-height:118px;padding:11px 15px;font-family:"Cambria Math","STIX Two Math","Times New Roman",serif;font-size:clamp(1.45rem,2.1vw,2.25rem)}
+.relation-option-label{display:flex;align-items:center;gap:.22em;min-height:38px}
+.relation-tile-help{display:flex;flex-wrap:wrap;align-items:center;justify-content:center;gap:4px;min-height:50px;margin-top:7px}
+.relation-tile-help svg{display:block;flex:none;max-width:none}
+.relation-summary-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px 14px;width:min(100%,930px);margin:7px auto 0}
+.relation-summary-card{display:flex;flex-direction:column;justify-content:center;min-height:119px;padding:9px 14px;border:2px solid #d7e3f3;border-radius:14px;background:#f8fbff}
+.relation-summary-line{display:flex;align-items:center;justify-content:space-between;gap:15px;font-family:"Cambria Math","STIX Two Math","Times New Roman",serif;font-size:clamp(1.3rem,1.9vw,1.85rem);font-weight:700}
+.relation-summary-line strong{min-width:2.2em;color:#087a55;text-align:right;font-size:1.18em}
+.relation-summary-card .relation-tile-help{margin-top:4px;min-height:34px}
 .diapo.reduction-mode .stage{align-items:flex-start;padding:var(--stage-top) var(--stage-x) var(--stage-bottom);overflow:auto}
 .diapo.reduction-mode .slide{max-width:1480px}
 .diapo.reduction-mode .reduction-prompt{font-size:clamp(2.45rem,3.7vw,4.2rem);margin:0 auto 7px;line-height:1.08}
@@ -2970,6 +3251,7 @@ body{margin:0;background:var(--bg);font-family:Arial,Helvetica,sans-serif;color:
 svg{display:block;max-width:100%;height:auto}
 @media(min-width:1000px){.diapo:fullscreen .slide,.diapo:-webkit-full-screen .slide{zoom:1.12}}
 @media(max-width:800px){.diapo{--stage-top:24px;--stage-x:24px;--stage-bottom:24px}.top{grid-template-columns:minmax(0,1fr) auto minmax(0,1fr);height:76px;text-align:center;padding:9px;gap:6px}.left{justify-content:flex-start}.right{justify-content:flex-end}.top .btn{min-height:52px;font-size:.92rem;padding:11px 10px;border-radius:12px;white-space:nowrap}.top .btn.primary{min-width:0}.navnums,.fullscreen-btn{display:none}.mobile-counter{display:block;white-space:nowrap;font-size:1.08rem}.stage{padding:var(--stage-top) var(--stage-x) var(--stage-bottom)}.diapo .stage>.slide{margin-top:auto;margin-bottom:auto}.options.options-4{grid-template-columns:1fr}.options.options-4.options-compact{grid-template-columns:repeat(2,minmax(0,1fr))}.diapo.scientific-mode .stage{padding:8px 8px 13px}.scientific-prompt{font-size:clamp(1.25rem,5.8vw,1.65rem)}.scientific-footer{font-size:clamp(1.7rem,7.7vw,2.25rem);margin-top:3px}.scientific-place-help{min-height:62px;margin-top:14px}.scientific-place-equation{font-size:clamp(1.45rem,6.4vw,2rem)}.scientific-glide-help{height:clamp(160px,24vh,195px);margin-top:-3px}.scientific-condition-help{min-height:64px;margin-top:8px}.scientific-condition{font-size:clamp(1.7rem,7.4vw,2.25rem)}.scientific-options{gap:7px;margin-top:6px}.scientific-options .opt{font-size:clamp(.86rem,3.75vw,1.05rem);padding:8px 9px}.diapo.numberline-mode .footer{font-size:clamp(1.65rem,7.5vw,2rem)}.diapo.numberline-mode .answer-slot{width:2.2em!important}.diapo.numberline-mode .footer .qquad{width:.7em}.diapo.numberline-mode .footer .math-display{transform:none}.diapo.solids-mode .stage{padding:10px 10px 16px}.solid-prompt{font-size:clamp(1.25rem,5.6vw,1.65rem)}.solid-visual{width:230px;height:clamp(155px,27vh,215px)}.solid-options{grid-template-columns:repeat(2,minmax(0,1fr));gap:7px}.solid-options .opt{font-size:clamp(.88rem,3.7vw,1.08rem);padding:8px 9px}}
+@media(max-width:800px){.diapo.relation-mode .stage{padding:8px 8px 13px}.relation-prompt{font-size:clamp(1.2rem,5.4vw,1.55rem);margin-bottom:3px}.relation-bar-help{height:clamp(105px,20vh,150px);margin:0 auto}.relation-answer{font-size:clamp(1.55rem,7vw,2.05rem);margin-top:1px}.relation-options{gap:7px;margin-top:5px}.relation-options .opt{min-height:99px;padding:7px 8px;font-size:clamp(.98rem,4.4vw,1.2rem)}.relation-option-label{min-height:29px}.relation-tile-help{min-height:44px;margin-top:4px;gap:3px}.relation-summary-grid{grid-template-columns:1fr;gap:7px;margin-top:5px}.relation-summary-card{min-height:99px;padding:7px 12px}.relation-summary-line{font-size:clamp(1.05rem,4.8vw,1.3rem)}.relation-summary-card .relation-tile-help{min-height:31px}}
 @media(max-width:800px){.diapo.area-mode .stage{padding:8px 9px 14px}.area-prompt{font-size:clamp(1.15rem,5.2vw,1.55rem);margin-bottom:2px}.area-main{height:178px}.area-data{padding:15px 16px;font-size:clamp(1.05rem,4.6vw,1.35rem)}.area-help{height:52px;gap:7px;font-size:clamp(.9rem,3.8vw,1.12rem);line-height:1.12}.area-answer-line{font-size:clamp(1.55rem,7vw,2.1rem)}.area-options{gap:7px;margin-top:2px}.area-options .opt{font-size:clamp(.9rem,3.7vw,1.08rem);padding:8px 9px}.area-correction{padding:0 6px;font-size:clamp(.9rem,3.7vw,1.1rem)}.area-correction>div{grid-template-columns:92px minmax(0,1fr);gap:10px;padding:4px 0}}
 @media(max-width:800px){.diapo.average-mode .stage{padding:7px 8px 13px}.average-prompt{font-size:clamp(1.08rem,5vw,1.45rem);margin-bottom:2px}.average-instruction{font-size:clamp(.96rem,4.1vw,1.18rem);margin:4px auto 2px}.average-data-line{font-size:clamp(1.45rem,7vw,2rem);margin:2px auto}.average-table-wrap{margin:5px auto 3px}.average-table{font-size:clamp(.75rem,3.25vw,.94rem)}.average-table th,.average-table td{padding:6px 8px;border-width:1.5px}.average-help-visual{height:clamp(170px,29vh,225px)}.average-answer-line{font-size:clamp(1.45rem,7vw,2rem);margin-top:4px}.average-options,.average-formula-options{grid-template-columns:1fr!important;gap:7px;margin-top:6px}.average-options .opt,.average-formula-options .opt{font-size:clamp(.82rem,3.55vw,1rem);padding:8px 9px}.average-correction{padding:0 5px;font-size:clamp(1.05rem,4.5vw,1.35rem);margin-top:8px}.average-correction>div{display:block;padding:4px 0}.average-step{text-align:center;margin-bottom:3px}}
 @media(max-width:800px){.diapo.median-mode .stage{padding:12px 9px 16px}.diapo.median-mode .question{font-size:clamp(1.3rem,5.7vw,1.72rem);line-height:1.18;margin-bottom:17px}.diapo.median-mode .footer{font-size:clamp(1.55rem,7vw,2rem);margin-top:10px}.median-list{gap:.18em .4em;margin:11px auto 13px;font-size:clamp(1.25rem,5.7vw,1.65rem)}.median-table-wrap{margin:11px auto}.median-table{font-size:clamp(.78rem,3.45vw,1rem)}.median-table td{padding:6px 7px;border-width:1.5px}.course-btn{top:10px;right:9px;min-height:46px;padding:9px 13px;font-size:.95rem}.course-card{padding:22px 16px 18px;border-radius:18px}.course-title{margin-bottom:15px;font-size:1.55rem}.course-grid{grid-template-columns:1fr;gap:8px}.course-rule{padding:11px 12px;font-size:1rem}}
@@ -3040,6 +3322,7 @@ function render(){
  const diapo=document.getElementById('diapo');
  diapo.classList.toggle('module01-mode',slides[idx].moduleId==='dnb_01');
  diapo.classList.toggle('scientific-mode',slides[idx].moduleId==='dnb_06');
+ diapo.classList.toggle('relation-mode',slides[idx].moduleId==='dnb_09');
  diapo.classList.toggle('reduction-mode',slides[idx].moduleId==='dnb_10');
  diapo.classList.toggle('squares-mode',slides[idx].moduleId==='dnb_07');
  diapo.classList.toggle('numberline-mode',slides[idx].moduleId==='dnb_14');
@@ -3185,6 +3468,7 @@ function visualPolicyForQuestion(m,q){
   }
   if(m.id==='dnb_06') return 'optional';
   if(m.id==='dnb_07') return Number(q.n)===7?'none':'optional';
+  if(m.id==='dnb_09') return [1,2,3,4,5,6,8,9,10,11,12,13,14,15,16,17,18,19].includes(Number(q.n))?'optional':'none';
   if(m.id==='dnb_10'){
     return q.options&&q.options.reduction_kind==='read_tiles'?'essential':'optional';
   }
