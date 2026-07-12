@@ -35,6 +35,13 @@
       text-align: center;
     }
 
+    /* Hauteur réservée dès le premier rendu : aucun recentrage au chargement. */
+    @media (min-width: 521px) {
+      main {
+        height: 500px;
+      }
+    }
+
     .acces-automatismes {
       position: fixed;
       top: calc(15% - 95px);
@@ -48,7 +55,7 @@
     .logo {
       display: block;
       width: min(330px, 72vw);
-      height: auto;
+      height: min(153.36px, 33.47vw);
       aspect-ratio: 669 / 311;
       margin: 0 auto 42px;
     }
