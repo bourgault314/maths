@@ -108,7 +108,7 @@ button{padding:9px 12px}
         <label id="levelLabel">Niveau</label>
         <input type="hidden" id="level" value="3e">
         <div class="segmented-control" data-control="level" role="group" aria-labelledby="levelLabel">
-          <button type="button" class="segment-btn" data-value="5e" aria-pressed="false" disabled title="Niveau à venir">5e</button>
+          <button type="button" class="segment-btn" data-value="5e" aria-pressed="false">5e</button>
           <button type="button" class="segment-btn" data-value="4e" aria-pressed="false">4e</button>
           <button type="button" class="segment-btn is-active" data-value="3e" aria-pressed="true">3e</button>
           <button type="button" class="segment-btn" data-value="DNB" aria-pressed="false">DNB</button>
@@ -2708,8 +2708,44 @@ function renderQuestion(inst, correction=false, mode=null){
   }
   return renderGenericQuestion(inst, correction, mode);
 }
+// La progression de 5e est volontairement définie question par question :
+// certains modules contiennent aussi des notions qui n'arrivent qu'en 4e.
+// La progression existante de 4e reste inchangée et 3e reprend le DNB.
+const LEVEL_5E_QUESTIONS={
+  dnb_01:'all',
+  dnb_02:'all',
+  dnb_03:[1,2,3,4,5,6,7,9,10],
+  dnb_04:'all',
+  dnb_05:'all',
+  dnb_08:'all',
+  dnb_09:[2,3,4,5,6,8,9,10],
+  dnb_11:[1,4,6],
+  dnb_14:'all',
+  dnb_15:'all',
+  dnb_16:'all',
+  dnb_17:'all',
+  dnb_18:'all',
+  dnb_19:[1,2,6,7,8,10],
+  dnb_20:'all',
+  dnb_21:'all',
+  dnb_22:'all',
+  dnb_23:'all',
+  dnb_28:[1,2,3,4,5,6,8,9,10],
+  dnb_29:'all',
+  dnb_30:'all',
+  dnb_32:'all',
+  dnb_33:[1,2,3,4,8,9,10],
+  dnb_34:'all',
+  dnb_37:'all'
+};
+function questionEligibleForLevel(m,q,level){
+  if(level!=='5e') return true;
+  const allowed=LEVEL_5E_QUESTIONS[m.id];
+  return allowed==='all' || (Array.isArray(allowed) && allowed.includes(Number(q.n)));
+}
 function visibleModules(){
   const level=document.getElementById('level').value;
+  if(level==='5e') return RAW_MODULES.filter(m=>Object.prototype.hasOwnProperty.call(LEVEL_5E_QUESTIONS,m.id));
   return RAW_MODULES.filter(m=> level==='all' || m.level_tags.includes(level) || (level==='3e' && m.level_tags.includes('DNB')) );
 }
 const DNB_THEMES=[
@@ -3180,8 +3216,9 @@ function slideModeForVisualPolicy(mode,policy){
 
 function eligibleQuestionsForModule(m){
   const mode=document.getElementById('visualMode').value;
+  const level=document.getElementById('level').value;
   const questions=m.id==='dnb_01'?MODULE01_TEMPLATES:m.questions;
-  return questions.filter(q=>questionEligibleForVisualMode(m,q,mode));
+  return questions.filter(q=>questionEligibleForLevel(m,q,level) && questionEligibleForVisualMode(m,q,mode));
 }
 
 function chooseVariedSolidDrawings(drawings,count){
@@ -3206,6 +3243,9 @@ function chooseVariedSolidDrawings(drawings,count){
 }
 
 function chooseSolidQuestions(questions,count){
+  // Si ce module n'a reçu aucune place dans le questionnaire équilibré,
+  // il ne doit surtout pas forcer l'ajout d'une figure.
+  if(count<=0) return [];
   const groups={
     drawing:questions.filter(q=>q.options&&q.options.solid_category==='drawing'),
     object:questions.filter(q=>q.options&&q.options.solid_category==='object'),
