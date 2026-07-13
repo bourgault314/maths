@@ -1517,7 +1517,7 @@ const MODULE01_OFFICIAL=[
   {num:5,den:2,dec:'2,5'},
   {num:1,den:10,dec:'0,1'},
   {num:100,den:100,dec:'1'},
-  {num:7,den:1,dec:'7'}
+  {num:4,den:1,dec:'4'}
 ];
 const MODULE01_TEMPLATES=[
   {n:1,options:{module01_kind:'fixed_f2d',module01_format:'open'}},
@@ -3356,40 +3356,84 @@ function renderAverageModule(inst,correction=false,mode=null){
 function module01PartitionPalette(den){
   const palettes={
     1:['#ef5757','#fee3e3','#8d2424'],
-    2:['#f4c431','#fff2bc','#6f5700'],
-    3:['#cba9ef','#f1e7fb','#684286'],
-    4:['#8dce32','#edf8d9','#496c10'],
-    5:['#4bb9e8','#def4fc','#176e91'],
-    6:['#f49a45','#feead8','#8d4d15'],
-    8:['#e777ae','#fbe4f1','#8b315f'],
+    2:['#b98ae8','#f0e5fb','#654187'],
+    3:['#6eafea','#e5f2fd','#285f8f'],
+    4:['#b98ae8','#f0e5fb','#654187'],
+    5:['#e67dab','#fbe6ef','#8a335b'],
+    6:['#6eafea','#e5f2fd','#285f8f'],
+    8:['#b98ae8','#f0e5fb','#654187'],
     10:['#78c989','#e5f5e8','#276b42'],
-    12:['#74ccef','#e2f5fc','#256f8c'],
-    15:['#ba91df','#eee2f8','#69418a'],
-    20:['#6fc6dd','#e2f5f9','#246d7e'],
-    25:['#f2ca3f','#fff5bf','#4a3b00'],
-    50:['#f2ca3f','#fff5bf','#4a3b00'],
+    12:['#6eafea','#e5f2fd','#285f8f'],
+    15:['#e67dab','#fbe6ef','#8a335b'],
+    16:['#b98ae8','#f0e5fb','#654187'],
+    20:['#62c5c0','#e1f6f4','#276d69'],
+    25:['#ef9b55','#fcebdc','#8a4b18'],
+    50:['#759ccf','#e7eff9','#355c8a'],
     100:['#f2ca3f','#fff5bf','#4a3b00']
   };
   return palettes[den]||['#60bfa8','#e3f5f0','#296a5b'];
 }
 function module01PartitionLayout(den){
+  if(den===4) return {cols:2,rows:2};
+  if(den===6) return {cols:3,rows:2};
+  if(den===8) return {cols:4,rows:2};
+  if(den===12) return {cols:3,rows:4};
+  if(den===15) return {cols:5,rows:3};
+  if(den===16) return {cols:4,rows:4};
+  if(den===20) return {cols:5,rows:4};
   if(den===25) return {cols:5,rows:5};
   if(den===50) return {cols:10,rows:5};
   if(den===100) return {cols:10,rows:10};
   return {cols:Math.max(1,den),rows:1};
 }
-function module01BoardSvgPart(x0,y0,size,filled,den,neutral=false,emphasisDen=null){
+function module01PartitionOrder(den,cols,rows,orderingDen=null){
+  const rowMajor=Array.from({length:den},(_,i)=>i);
+  if(den===16){
+    const order=[];
+    [[0,0],[2,0],[0,2],[2,2]].forEach(([x0,y0])=>{
+      [[0,0],[0,1],[1,0],[1,1]].forEach(([dx,dy])=>order.push((y0+dy)*cols+x0+dx));
+    });
+    return order;
+  }
+  if(den===15||den===25||den===50||(den===20&&orderingDen===5)){
+    const order=[];
+    for(let col=0;col<cols;col++) for(let row=0;row<rows;row++) order.push(row*cols+col);
+    return order;
+  }
+  return rowMajor;
+}
+function module01HierarchyGuides(x0,y0,size,den,stroke,orderingDen=null){
+  let out='';
+  const v=(ratio,width)=>{const x=x0+ratio*size;out+=`<line x1="${x}" y1="${y0}" x2="${x}" y2="${y0+size}" stroke="${stroke}" stroke-width="${width}"/>`;};
+  const h=(ratio,width)=>{const y=y0+ratio*size;out+=`<line x1="${x0}" y1="${y}" x2="${x0+size}" y2="${y}" stroke="${stroke}" stroke-width="${width}"/>`;};
+  if([4,8,16].includes(den)){v(.5,3.2);h(.5,3.2);}
+  if(den===16){v(.25,2);v(.75,2);}
+  if([3,6,12].includes(den)){v(1/3,2.8);v(2/3,2.8);}
+  if(den===6) h(.5,2.15);
+  if(den===12){h(.25,2);h(.5,2);h(.75,2);}
+  if([5,15,25].includes(den)) for(let i=1;i<5;i++) v(i/5,2.35);
+  if(den===20){
+    if(orderingDen===4){h(.25,2.35);h(.5,2.35);h(.75,2.35);}
+    else for(let i=1;i<5;i++) v(i/5,2.35);
+  }
+  if(den===50) for(let i=1;i<10;i++) v(i/10,i===5?2.5:1.75);
+  if(den===100){v(.5,1.9);h(.5,1.9);}
+  return out;
+}
+function module01BoardSvgPart(x0,y0,size,filled,den,neutral=false,emphasisDen=null,orderingDen=null){
   const sourceDen=neutral?100:Math.max(1,den);
   const {cols,rows}=module01PartitionLayout(sourceDen);
   const [dark,light,stroke]=module01PartitionPalette(sourceDen);
   const cellW=size/cols,cellH=size/rows,selected=Math.max(0,Math.min(sourceDen,filled));
+  const selectedCells=new Set(module01PartitionOrder(sourceDen,cols,rows,orderingDen).slice(0,selected));
   let out='';
   for(let row=0;row<rows;row++){
     for(let col=0;col<cols;col++){
       const index=row*cols+col;
-      out+=`<rect x="${x0+col*cellW}" y="${y0+row*cellH}" width="${cellW}" height="${cellH}" fill="${index<selected?dark:light}" stroke="${stroke}" stroke-width="${sourceDen>=50?.72:1.15}"/>`;
+      out+=`<rect x="${x0+col*cellW}" y="${y0+row*cellH}" width="${cellW}" height="${cellH}" fill="${selectedCells.has(index)?dark:light}" stroke="${stroke}" stroke-width="${sourceDen>=50?.72:1.15}"/>`;
     }
   }
+  out+=module01HierarchyGuides(x0,y0,size,sourceDen,stroke,orderingDen);
   if(rows===1&&emphasisDen&&sourceDen%emphasisDen===0&&emphasisDen<sourceDen){
     const group=sourceDen/emphasisDen;
     for(let i=group;i<sourceDen;i+=group){
@@ -3403,7 +3447,7 @@ function module01BoardSvgPart(x0,y0,size,filled,den,neutral=false,emphasisDen=nu
   }
   return out;
 }
-function module01GridVisual(num,den,neutral=false,emphasisDen=null){
+function module01GridVisual(num,den,neutral=false,emphasisDen=null,orderingDen=null){
   const total=neutral?Math.round((num/den)*100):num;
   const per=neutral?100:Math.max(1,den);
   const boards=Math.max(1,Math.ceil(total/per));
@@ -3415,13 +3459,13 @@ function module01GridVisual(num,den,neutral=false,emphasisDen=null){
   for(let i=0;i<boards;i++){
     const col=i%cols,row=Math.floor(i/cols),x=pad+col*(size+gap),y=pad+row*(size+gap);
     const filled=Math.min(per,remaining);remaining-=filled;
-    shapes+=module01BoardSvgPart(x,y,size,filled,per,false,emphasisDen);
+    shapes+=module01BoardSvgPart(x,y,size,filled,per,false,emphasisDen,orderingDen);
   }
   return `<div class="module01-visual"><svg viewBox="0 0 ${w} ${h}" style="max-width:${w}px" role="img" aria-label="${boards===1?'Une unité partagée en '+per+' parts égales':boards+' unités, chacune partagée en '+per+' parts égales'}">${shapes}</svg></div>`;
 }
 function module01VisualHtml(d,correction=false){
   const g=GCD(d.num,d.den),simplified=correction&&g>1&&d.reduced&&d.reduced.den<d.den;
-  return module01GridVisual(d.num,d.den,d.visualKind==='neutral',simplified?d.reduced.den:null);
+  return module01GridVisual(d.num,d.den,d.visualKind==='neutral',simplified?d.reduced.den:null,d.reduced?d.reduced.den:null);
 }
 function renderModule01(inst,correction=false,mode=null){
   if(mode===null) mode=document.getElementById('visualMode').value;
