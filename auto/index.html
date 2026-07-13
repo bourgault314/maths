@@ -1517,6 +1517,8 @@ const MODULE01_OFFICIAL=[
   {num:5,den:2,dec:'2,5'},
   {num:1,den:10,dec:'0,1'},
   {num:100,den:100,dec:'1'},
+  {num:2,den:1,dec:'2'},
+  {num:3,den:1,dec:'3'},
   {num:4,den:1,dec:'4'}
 ];
 const MODULE01_TEMPLATES=[
@@ -1629,7 +1631,7 @@ function makeModule01Instance(mod,q){
     do{num=RD(den+1,3*den-1);}while(num===2*den);
     dec=module01Decimal(num,den);visualKind='bar';
   } else if(kind==='integer_f2d'){
-    den=pick([2,3,4,5,10]); const k=pick([2,3]);num=k*den;dec=String(k);visualKind='bar';
+    den=1;num=pick([2,3,4]);dec=String(num);visualKind='bar';
   } else if(kind==='reducible_f2d'){
     const bases=[{n:1,d:2},{n:1,d:4},{n:3,d:4},{n:1,d:5},{n:2,d:5},{n:3,d:5},{n:4,d:5}];
     let base,k;
@@ -1680,6 +1682,185 @@ function makeModule01Instance(mod,q){
     module:mod,q,scope:{},answers,rawStatement:prompt,rawFooter:display,hasSvg:true,
     module01:{kind,format,direction,num,den,dec,reduced,visualKind,qcm,prompt,display,equality}
   };
+}
+
+const FRACTION_OPS_KINDS=['simplify_simple','simplify_harder','compare_same_den','compare_same_num','add_same_den','subtract_same_den','add_multiple_den','multiply'];
+const MODULE03=RAW_MODULES.find(module=>module.id==='dnb_03');
+if(MODULE03){
+  MODULE03.title='Fractions : simplifier, comparer, additionner';
+  MODULE03.questions=MODULE03.questions.slice(0,8).map((question,index)=>({
+    ...question,
+    options:{...(question.options||{}),fraction_ops_kind:FRACTION_OPS_KINDS[index]}
+  }));
+}
+const MODULE11=RAW_MODULES.find(module=>module.id==='dnb_11');
+if(MODULE11&&!MODULE11.questions.some(question=>Number(question.n)===11)){
+  MODULE11.questions.push({
+    n:11,
+    statement:'Calcule la valeur de cette expression :',
+    answer:'[]',
+    footer:'',
+    options:{substitution_kind:'factorised'}
+  });
+}
+
+function fractionOpsReduce(num,den){
+  const divisor=GCD(Math.abs(num),Math.abs(den));
+  return {num:num/divisor,den:den/divisor};
+}
+function fractionOpsLatex(num,den){ return '\\dfrac{'+num+'}{'+den+'}'; }
+function fractionOpsResultLatex(result){ return result.den===1?String(result.num):fractionOpsLatex(result.num,result.den); }
+function fractionOpsQcm(options,correct){
+  const shuffled=shuffleLocal(options);
+  return {options:shuffled,correctIndex:String(shuffled.indexOf(correct)+1)};
+}
+function makeFractionOpsInstance(mod,q){
+  const kind=q.options.fraction_ops_kind;
+  const data={kind};
+  let answers=[];
+
+  if(kind==='simplify_simple'||kind==='simplify_harder'){
+    const bases=kind==='simplify_simple'
+      ? [{n:1,d:2},{n:2,d:3},{n:3,d:4},{n:3,d:5},{n:4,d:5},{n:5,d:6}]
+      : [{n:2,d:5},{n:3,d:7},{n:4,d:9},{n:5,d:8},{n:5,d:9},{n:7,d:10}];
+    const base=pick(bases);
+    const possible=[2,3,4].filter(value=>base.d*value<=24);
+    const factor=pick(possible.length?possible:[2]);
+    data.num=base.n*factor;data.den=base.d*factor;
+    data.result={num:base.n,den:base.d};
+    answers=[String(base.n),String(base.d)];
+  }
+
+  if(kind==='compare_same_den'){
+    const scenario=RD(0,2);
+    let n1,d1,n2,d2,correct;
+    if(scenario===0){
+      d1=pick([2,3,4,5,6]);n1=RD(1,d1-1);
+      const factors=[2,3].filter(factor=>d1*factor<=12),factor=pick(factors);
+      n2=n1*factor;d2=d1*factor;correct='Elles sont égales';
+    }else{
+      d1=d2=pick([3,4,5,6,8,10,12]);
+      if(scenario===1){ n1=RD(2,d1-1);n2=RD(1,n1-1); }
+      else{ n1=RD(1,d1-2);n2=RD(n1+1,d1-1); }
+    }
+    const first=fractionOpsLatex(n1,d1),second=fractionOpsLatex(n2,d2);
+    if(!correct) correct=n1/d1>n2/d2?first:second;
+    Object.assign(data,{n1,d1,n2,d2,qcm:fractionOpsQcm([first,second,'Elles sont égales'],correct)});
+    answers=[data.qcm.correctIndex];
+  }
+
+  if(kind==='compare_same_num'){
+    const scenario=RD(0,2);
+    let n1,d1,n2,d2,correct;
+    if(scenario===0){
+      d1=pick([2,3,4,5,6]);n1=RD(1,d1-1);
+      const factors=[2,3].filter(factor=>d1*factor<=12),factor=pick(factors);
+      n2=n1*factor;d2=d1*factor;correct='Elles sont égales';
+    }else{
+      d1=pick([3,4,5,6,8,10,12]);
+      do{d2=pick([3,4,5,6,8,10,12]);}while(d2===d1);
+      n1=n2=RD(1,Math.min(d1,d2)-1);
+    }
+    const first=fractionOpsLatex(n1,d1),second=fractionOpsLatex(n2,d2);
+    if(!correct) correct=d1<d2?first:second;
+    Object.assign(data,{n1,d1,n2,d2,qcm:fractionOpsQcm([first,second,'Elles sont égales'],correct)});
+    answers=[data.qcm.correctIndex];
+  }
+
+  if(kind==='add_same_den'){
+    const den=pick([3,4,5,6,8,10,12]);
+    const a=RD(1,den-1),b=RD(1,den-a);
+    const result=fractionOpsReduce(a+b,den);
+    Object.assign(data,{a,b,den,result});answers=[String(result.num),String(result.den)];
+  }
+
+  if(kind==='subtract_same_den'){
+    const den=pick([4,5,6,8,10,12]);
+    const a=RD(2,den-1),b=RD(1,a-1);
+    const result=fractionOpsReduce(a-b,den);
+    Object.assign(data,{a,b,den,result});answers=[String(result.num),String(result.den)];
+  }
+
+  if(kind==='add_multiple_den'){
+    const den1=pick([2,3,4,5,6]);
+    const factor=pick([2,3]);
+    const den2=den1*factor;
+    const a=RD(1,den1-1),b=RD(1,den2-1);
+    const converted=a*factor;
+    const result=fractionOpsReduce(converted+b,den2);
+    Object.assign(data,{a,b,den1,den2,factor,converted,result});answers=[String(result.num),String(result.den)];
+  }
+
+  if(kind==='multiply'){
+    const den1=pick([2,3,4,5]),den2=pick([2,3,4,5]);
+    const a=RD(1,den1-1),b=RD(1,den2-1);
+    const result=fractionOpsReduce(a*b,den1*den2);
+    Object.assign(data,{a,b,den1,den2,result});answers=[String(result.num),String(result.den)];
+  }
+
+  return {module:mod,q,scope:{},answers,rawStatement:q.statement||'',rawFooter:'',hasSvg:true,fractionOps:data};
+}
+
+function substitutionSignedValue(positiveOnly=false){
+  if(positiveOnly||rnd()<.52) return RD(1,8);
+  return RD(-8,-1);
+}
+function substitutionNumberLatex(value){ return Number(value)<0?'('+value+')':String(value); }
+function substitutionTerm(coefficient,variable,first=false){
+  if(coefficient===0) return '';
+  const sign=coefficient<0?'-':(first?'':'+');
+  const magnitude=Math.abs(coefficient);
+  return sign+(magnitude===1?'':magnitude)+variable;
+}
+function makeSubstitutionInstance(mod,q){
+  const number=Number(q.n);
+  const positiveOnly=document.getElementById('level').value==='5e';
+  const data={kind:number};
+  let expression='',substitution='',answer=0,prompt='Calcule la valeur de cette expression :';
+  let x=substitutionSignedValue(positiveOnly),y=substitutionSignedValue(positiveOnly);
+
+  if(number===1){
+    const a=RD(2,6),b=RD(-9,9,[0]);answer=a*x+b;
+    expression=a+'x'+(b<0?String(b):'+'+b);
+    substitution=a+'\\times '+substitutionNumberLatex(x)+(b<0?String(b):'+'+b);
+  }else if(number===2){
+    const a=RD(2,5),b=RD(1,9);answer=a*x*x+b;
+    expression=a+'x^2+'+b;substitution=a+'\\times '+substitutionNumberLatex(x)+'^2+'+b;
+  }else if(number===3){
+    const b=RD(-5,5,[0]),c=RD(-9,9,[0]);answer=x*x+b*x+c;
+    expression='x^2'+substitutionTerm(b,'x')+(c<0?String(c):'+'+c);
+    substitution=substitutionNumberLatex(x)+'^2'+(b<0?'-':'+')+Math.abs(b)+'\\times '+substitutionNumberLatex(x)+(c<0?String(c):'+'+c);
+  }else if(number===4){
+    const a=RD(10,30),b=RD(2,5);answer=a-b*x;
+    expression=a+'-'+b+'x';substitution=a+'-'+b+'\\times '+substitutionNumberLatex(x);
+  }else if(number===5){
+    const a=RD(2,4);answer=a*x*x*x;
+    expression=a+'x^3';substitution=a+'\\times '+substitutionNumberLatex(x)+'^3';
+  }else if(number===6){
+    const a=RD(2,6),b=RD(2,6);answer=a*x+b*y;
+    expression=a+'x+'+b+'y';substitution=a+'\\times '+substitutionNumberLatex(x)+'+'+b+'\\times '+substitutionNumberLatex(y);
+  }else if(number===7){
+    x=pick([2,3,5]);const power=pick([3,4,5]);answer=Math.pow(x,power);
+    expression=x+'^'+power;substitution=expression;Object.assign(data,{power});
+  }else if(number===8){
+    const a=RD(1,5);answer=Math.pow(x+a,2);
+    expression='(x+'+a+')^2';substitution='('+substitutionNumberLatex(x)+'+'+a+')^2';
+  }else if(number===9){
+    x=positiveOnly?RD(2,6):(rnd()<.52?RD(2,6):RD(-6,-2));answer=2*x*x;
+    expression='2x^2';substitution='2\\times '+substitutionNumberLatex(x)+'^2';
+    const options=shuffleLocal([answer,4*x*x,2*x]).map(String);
+    data.qcm={options,correctIndex:String(options.indexOf(String(answer))+1)};
+  }else if(number===10){
+    x=RD(3,15);answer=x*x;prompt='Calcule l’aire d’un carré de côté '+x+' cm.';
+    expression=x+'^2';substitution=expression;
+  }else{
+    const a=RD(2,6),b=RD(1,8);answer=a*(x+b);
+    expression=a+'(x+'+b+')';substitution=a+'\\times ('+substitutionNumberLatex(x)+'+'+b+')';
+  }
+
+  Object.assign(data,{expression,substitution,answer,x,y,prompt});
+  const answers=data.qcm?[data.qcm.correctIndex]:[String(answer)];
+  return {module:mod,q,scope:{},answers,rawStatement:prompt,rawFooter:'',hasSvg:false,substitution:data};
 }
 
 function makeReductionInstance(mod,q){
@@ -2637,11 +2818,13 @@ function makeRelationInstance(mod,q){
 
 function makeInstance(mod,q){
   if(mod&&mod.id==='dnb_01') return makeModule01Instance(mod,q);
+  if(mod&&mod.id==='dnb_03') return makeFractionOpsInstance(mod,q);
   if(mod&&mod.id==='dnb_04') return makeFractionPercentInstance(mod,q);
   if(mod&&mod.id==='dnb_05') return makeMultipleFormsInstance(mod,q);
   if(mod&&mod.id==='dnb_09') return makeRelationInstance(mod,q);
   if(mod&&mod.id==='dnb_18') return makeAngleSumInstance(mod,q);
   if(mod&&mod.id==='dnb_10') return makeReductionInstance(mod,q);
+  if(mod&&mod.id==='dnb_11') return makeSubstitutionInstance(mod,q);
   if(mod&&mod.id==='dnb_20') return makeSolidsInstance(mod,q);
   if(mod&&mod.id==='dnb_22') return makeAreaInstance(mod,q);
   if(mod&&mod.id==='dnb_30') return makeAverageInstance(mod,q);
@@ -3487,6 +3670,188 @@ function renderModule01(inst,correction=false,mode=null){
   return html;
 }
 
+let fractionOpsSvgCounter=0;
+function fractionOpsColor(den){
+  const colors={2:['#ffd11a','#fff5c7','#8a6d00'],3:['#d9b8ff','#f4eaff','#7042a3'],4:['#7fd000','#e8f7c9','#477a00'],5:['#39b6e8','#dff5fd','#14739a'],6:['#ff7417','#ffeadb','#9b3c00'],8:['#ed68b0','#fde3f1','#963664'],10:['#c51c22','#fbe0e1','#861116'],12:['#79e8ec','#e3fbfc','#237b82']};
+  return colors[den]||['#6aa9e9','#e7f1fb','#295f91'];
+}
+function fractionOpsBandSvg(num,den,options={}){
+  const showWhole=options.showWhole===true;
+  const width=330,height=showWhole?78:54,x=5,y=showWhole?20:3,bandW=320,bandH=48;
+  const [dark,light,stroke]=fractionOpsColor(den);
+  const selected=Math.max(0,Math.min(num,den));
+  const removed=Math.max(0,Math.min(options.removed||0,selected));
+  const removedStart=selected-removed;
+  const pattern='fraction-hatch-'+(++fractionOpsSvgCounter);
+  let cells='';
+  for(let index=0;index<den;index++){
+    const cellX=x+index*bandW/den;
+    const cellWidth=bandW/den;
+    let fill=index<selected?dark:light;
+    if(index>=removedStart&&index<selected&&removed) fill='url(#'+pattern+')';
+    cells+='<rect x="'+cellX+'" y="'+y+'" width="'+(cellWidth+.2)+'" height="'+bandH+'" fill="'+fill+'" stroke="'+stroke+'" stroke-width="1.4"/>';
+    if(index<selected&&den<=12){
+      const center=cellX+cellWidth/2;
+      const fontSize=Math.max(7,Math.min(11,cellWidth*.31));
+      cells+='<text x="'+center+'" y="'+(y+17)+'" text-anchor="middle" font-family="Cambria Math,Times New Roman,serif" font-size="'+fontSize+'" font-weight="800" fill="#17283f">1</text>'
+        +'<line x1="'+(center-fontSize*.42)+'" y1="'+(y+22)+'" x2="'+(center+fontSize*.42)+'" y2="'+(y+22)+'" stroke="#17283f" stroke-width="1.1"/>'
+        +'<text x="'+center+'" y="'+(y+34)+'" text-anchor="middle" font-family="Cambria Math,Times New Roman,serif" font-size="'+fontSize+'" font-weight="800" fill="#17283f">'+den+'</text>';
+    }
+  }
+  return '<svg class="fraction-ops-band" viewBox="0 0 '+width+' '+height+'" role="img" aria-label="'+selected+' parts colorées sur '+den+'">'
+    +'<defs><pattern id="'+pattern+'" patternUnits="userSpaceOnUse" width="8" height="8" patternTransform="rotate(35)"><rect width="8" height="8" fill="'+dark+'"/><line x1="0" y1="0" x2="0" y2="8" stroke="#ffffff" stroke-width="3"/></pattern></defs>'
+    +(showWhole?'<text x="'+(x+bandW/2)+'" y="13" text-anchor="middle" font-family="Cambria Math,Times New Roman,serif" font-size="15" font-weight="850" fill="#60708c">1</text>':'')
+    +cells+'<rect x="'+x+'" y="'+y+'" width="'+bandW+'" height="'+bandH+'" fill="none" stroke="'+stroke+'" stroke-width="3"/></svg>';
+}
+function fractionOpsBandGroup(num,den,options={}){
+  const units=Math.max(1,Math.ceil(num/den));
+  let remaining=num,html='<div class="fraction-ops-units">';
+  for(let index=0;index<units;index++){
+    const selected=Math.min(den,remaining);remaining-=selected;
+    html+=fractionOpsBandSvg(selected,den,index===units-1?options:{});
+  }
+  return html+'</div>';
+}
+function fractionOpsBandCard(label,num,den,options={}){
+  return '<div class="fraction-ops-card"><div class="fraction-ops-label">'+renderMathSegments('$$'+label+'$$')+'</div>'+fractionOpsBandGroup(num,den,options)+'</div>';
+}
+function fractionOpsComparisonWall(n1,d1,n2,d2){
+  return '<div class="fraction-ops-compare-wall">'
+    +'<div class="fraction-ops-wall-label fraction-ops-wall-label-top">'+renderMathSegments('$$'+fractionOpsLatex(n1,d1)+'$$')+'</div>'
+    +fractionOpsBandSvg(n1,d1,{showWhole:false})
+    +fractionOpsBandSvg(n2,d2,{showWhole:false})
+    +'<div class="fraction-ops-wall-label fraction-ops-wall-label-bottom">'+renderMathSegments('$$'+fractionOpsLatex(n2,d2)+'$$')+'</div>'
+    +'</div>';
+}
+function fractionOpsAreaSvg(a,den1,b,den2){
+  const width=390,height=310,x=72,y=42,size=230,cellW=size/den1,cellH=size/den2;
+  let cells='';
+  for(let row=0;row<den2;row++) for(let col=0;col<den1;col++){
+    const horizontal=col<a,vertical=row<b;
+    const fill=horizontal&&vertical?'#49a9dc':((horizontal||vertical)?'#cce7f5':'#f0f2f4');
+    cells+='<rect x="'+(x+col*cellW)+'" y="'+(y+row*cellH)+'" width="'+cellW+'" height="'+cellH+'" fill="'+fill+'" stroke="#536274" stroke-width="1.2"/>';
+  }
+  const topCenter=x+(a*cellW)/2,leftCenter=y+(b*cellH)/2;
+  const topFraction='<text x="'+topCenter+'" y="16" text-anchor="middle" font-family="Cambria Math,Times New Roman,serif" font-size="18" font-weight="850" fill="#17283f">'+a+'</text><line x1="'+(topCenter-12)+'" y1="22" x2="'+(topCenter+12)+'" y2="22" stroke="#17283f" stroke-width="2"/><text x="'+topCenter+'" y="39" text-anchor="middle" font-family="Cambria Math,Times New Roman,serif" font-size="18" font-weight="850" fill="#17283f">'+den1+'</text>';
+  const leftFraction='<g transform="translate(25 '+leftCenter+')"><text x="0" y="-13" text-anchor="middle" font-family="Cambria Math,Times New Roman,serif" font-size="18" font-weight="850" fill="#17283f">'+b+'</text><line x1="-12" y1="-6" x2="12" y2="-6" stroke="#17283f" stroke-width="2"/><text x="0" y="13" text-anchor="middle" font-family="Cambria Math,Times New Roman,serif" font-size="18" font-weight="850" fill="#17283f">'+den2+'</text></g>';
+  return '<svg class="fraction-ops-area" viewBox="0 0 '+width+' '+height+'" role="img" aria-label="Modèle d’aire du produit de deux fractions">'
+    +topFraction+leftFraction
+    +'<line x1="'+x+'" y1="37" x2="'+(x+a*cellW)+'" y2="37" stroke="#17283f" stroke-width="2.2"/>'
+    +'<line x1="64" y1="'+y+'" x2="64" y2="'+(y+b*cellH)+'" stroke="#17283f" stroke-width="2.2"/>'
+    +cells+'<rect x="'+x+'" y="'+y+'" width="'+size+'" height="'+size+'" fill="none" stroke="#17283f" stroke-width="3"/></svg>';
+}
+function fractionOpsVisualHtml(data,correction=false){
+  const kind=data.kind;
+  if(kind==='simplify_simple'||kind==='simplify_harder'){
+    const bottomLabel=correction?fractionOpsLatex(data.result.num,data.result.den):'';
+    return '<div class="fraction-ops-stack">'+fractionOpsBandCard(fractionOpsLatex(data.num,data.den),data.num,data.den)
+      +'<div class="fraction-ops-arrow">↓</div>'+fractionOpsBandCard(bottomLabel,data.result.num,data.result.den)+'</div>';
+  }
+  if(kind==='compare_same_den'){
+    return fractionOpsComparisonWall(data.n1,data.d1,data.n2,data.d2);
+  }
+  if(kind==='compare_same_num'){
+    return fractionOpsComparisonWall(data.n1,data.d1,data.n2,data.d2);
+  }
+  if(kind==='add_same_den'){
+    let html='<div class="fraction-ops-operation">'+fractionOpsBandCard(fractionOpsLatex(data.a,data.den),data.a,data.den)+fractionOpsBandCard(fractionOpsLatex(data.b,data.den),data.b,data.den)+'</div>';
+    if(correction){
+      const rawResult=fractionOpsLatex(data.a+data.b,data.den);
+      const reducedResult=fractionOpsResultLatex(data.result);
+      const resultLabel=(data.result.num===data.a+data.b&&data.result.den===data.den)?rawResult:(rawResult+'='+reducedResult);
+      html+='<div class="fraction-ops-result-visual"><span>=</span>'+fractionOpsBandCard(resultLabel,data.a+data.b,data.den)+'</div>';
+    }
+    return html;
+  }
+  if(kind==='subtract_same_den'){
+    let html='<div class="fraction-ops-stack">'+fractionOpsBandCard(fractionOpsLatex(data.a,data.den)+'-'+fractionOpsLatex(data.b,data.den),data.a,data.den,{removed:data.b})+'</div>';
+    if(correction) html+='<div class="fraction-ops-result-visual"><span>=</span>'+fractionOpsBandCard(fractionOpsResultLatex(data.result),data.a-data.b,data.den)+'</div>';
+    return html;
+  }
+  if(kind==='add_multiple_den'){
+    return '<div class="fraction-ops-conversion">'
+      +'<div class="fraction-ops-wall">'
+      +'<div class="fraction-ops-wall-label fraction-ops-wall-label-top">'+renderMathSegments('$$'+fractionOpsLatex(data.converted,data.den2)+'$$')+'</div>'
+      +fractionOpsBandSvg(data.converted,data.den2,{showWhole:false})
+      +fractionOpsBandSvg(data.a,data.den1,{showWhole:false})
+      +'<div class="fraction-ops-wall-label fraction-ops-wall-label-bottom">'+renderMathSegments('$$'+fractionOpsLatex(data.a,data.den1)+'$$')+'</div>'
+      +'</div>'
+      +fractionOpsBandCard(fractionOpsLatex(data.b,data.den2),data.b,data.den2)
+      +'</div>';
+  }
+  if(kind==='multiply'){
+    return '<div class="fraction-ops-product">'+fractionOpsAreaSvg(data.a,data.den1,data.b,data.den2)+'</div>';
+  }
+  return '';
+}
+function fractionOpsEquation(data){
+  if(data.kind==='simplify_simple'||data.kind==='simplify_harder') return {left:fractionOpsLatex(data.num,data.den),right:fractionOpsResultLatex(data.result)};
+  if(data.kind==='add_same_den') return {left:fractionOpsLatex(data.a,data.den)+'+'+fractionOpsLatex(data.b,data.den),right:fractionOpsResultLatex(data.result)};
+  if(data.kind==='subtract_same_den') return {left:fractionOpsLatex(data.a,data.den)+'-'+fractionOpsLatex(data.b,data.den),right:fractionOpsResultLatex(data.result)};
+  if(data.kind==='add_multiple_den') return {left:fractionOpsLatex(data.a,data.den1)+'+'+fractionOpsLatex(data.b,data.den2),right:fractionOpsResultLatex(data.result)};
+  if(data.kind==='multiply') return {left:fractionOpsLatex(data.a,data.den1)+'\\times '+fractionOpsLatex(data.b,data.den2),right:fractionOpsResultLatex(data.result)};
+  return null;
+}
+function renderFractionOpsModule(inst,correction=false,mode=null){
+  if(mode===null) mode=document.getElementById('visualMode').value;
+  const data=inst.fractionOps;
+  const prompts={
+    simplify_simple:'Simplifie cette fraction.',simplify_harder:'Simplifie cette fraction.',
+    compare_same_den:'Quelle est la plus grande de ces deux fractions ?',compare_same_num:'Quelle est la plus grande de ces deux fractions ?',
+    add_same_den:'Calcule cette somme.',subtract_same_den:'Calcule cette différence.',
+    add_multiple_den:'Réduis au même dénominateur, puis calcule.',multiply:'Calcule ce produit.'
+  };
+  let html='<div class="question fraction-ops-prompt">'+prompts[data.kind]+'</div>';
+  if(!isWithoutVisuals(mode)) html+='<div class="fraction-ops-help">'+fractionOpsVisualHtml(data,correction)+'</div>';
+  else html+=visualPlaceholder(mode);
+
+  if(data.qcm){
+    html+='<div class="options fraction-ops-options options-'+data.qcm.options.length+'">';
+    data.qcm.options.forEach((option,index)=>{
+      const correct=correction&&String(index+1)===String(data.qcm.correctIndex);
+      const rendered=option.charAt(0)==='\\'?renderMathSegments('$$'+option+'$$'):escapeHtml(option);
+      html+='<div class="opt '+(correct?'correct':'')+'"><strong>'+String.fromCharCode(65+index)+'.</strong> '+rendered+'</div>';
+    });
+    html+='</div>';
+  }else{
+    const equation=fractionOpsEquation(data);
+    html+='<div class="footer fraction-ops-answer"><span>'+renderMathSegments('$$'+equation.left+'=$$')+'</span>'
+      +(correction?'<strong>'+renderMathSegments('$$'+equation.right+'$$')+'</strong>':'<span class="answer-dots">...</span>')+'</div>';
+  }
+  return html;
+}
+
+function renderSubstitutionModule(inst,correction=false,mode=null){
+  if(mode===null) mode=document.getElementById('visualMode').value;
+  const data=inst.substitution,number=Number(inst.q.n);
+  let prompt=data.prompt;
+  if(![7,10].includes(number)){
+    prompt=number===6
+      ? 'Calcule pour '+renderMathSegments('$$x='+data.x+'$$')+' et '+renderMathSegments('$$y='+data.y+'$$')+'.'
+      : 'Calcule pour '+renderMathSegments('$$x='+data.x+'$$')+'.';
+  }
+  if(number===9) prompt='Pour '+renderMathSegments('$$x='+data.x+'$$')+', que vaut '+renderMathSegments('$$2x^2$$')+' ?';
+  let html='<div class="question substitution-prompt">'+prompt+'</div>';
+  if(number!==10) html+='<div class="substitution-expression">'+renderMathSegments('$$'+data.expression+'$$')+'</div>';
+  if(!isWithoutVisuals(mode)&&number!==7){
+    html+='<div class="substitution-help"><span>On remplace :</span>'+renderMathSegments('$$'+data.substitution+'$$')+'</div>';
+  }else if(number!==7) html+=visualPlaceholder(mode);
+
+  if(data.qcm){
+    html+='<div class="options substitution-options options-'+data.qcm.options.length+'">';
+    data.qcm.options.forEach((option,index)=>{
+      const correct=correction&&String(index+1)===String(data.qcm.correctIndex);
+      html+='<div class="opt '+(correct?'correct':'')+'"><strong>'+String.fromCharCode(65+index)+'.</strong> '+renderMathSegments('$$'+option+'$$')+'</div>';
+    });
+    html+='</div>';
+  }else{
+    const suffix=number===10?'\\text{ cm}^2':'';
+    html+='<div class="footer substitution-answer"><span>'+renderMathSegments('$$='+ (correction?'':'\\ldots') +'$$')+'</span>'
+      +(correction?'<strong>'+renderMathSegments('$$'+data.answer+suffix+'$$')+'</strong>':'')+'</div>';
+  }
+  return html;
+}
+
 function stripSvgOnly(s){
   return String(s||'').replace(/<svg[\s\S]*?<\/svg>/ig,'').replace(/<div[^>]*>\s*<\/div>/ig,'').replace(/\n{2,}/g,'\n').trim();
 }
@@ -3740,11 +4105,13 @@ function renderProportionModule(inst,correction=false,mode=null){
 function renderQuestion(inst, correction=false, mode=null){
   if(mode===null) mode=document.getElementById('visualMode').value;
   if(inst && inst.module && inst.module.id==='dnb_01') return renderModule01(inst, correction, mode);
+  if(inst && inst.module && inst.module.id==='dnb_03') return renderFractionOpsModule(inst, correction, mode);
   if(inst && inst.module && inst.module.id==='dnb_04') return renderModule04(inst, correction, mode);
   if(inst && inst.module && inst.module.id==='dnb_05') return renderMultipleFormsModule(inst, correction, mode);
   if(inst && inst.module && inst.module.id==='dnb_06') return renderScientificModule(inst, correction, mode);
   if(inst && inst.module && inst.module.id==='dnb_09') return renderModule09(inst, correction, mode);
   if(inst && inst.module && inst.module.id==='dnb_10') return renderModule10(inst, correction, mode);
+  if(inst && inst.module && inst.module.id==='dnb_11') return renderSubstitutionModule(inst, correction, mode);
   if(inst && inst.module && inst.module.id==='dnb_18') return renderAngleSumModule(inst, correction, mode);
   if(inst && inst.module && inst.module.id==='dnb_20') return renderSolidsModule(inst, correction);
   if(inst && inst.module && inst.module.id==='dnb_22') return renderAreaModule(inst, correction, mode);
@@ -3762,12 +4129,12 @@ function renderQuestion(inst, correction=false, mode=null){
 const LEVEL_5E_QUESTIONS={
   dnb_01:'all',
   dnb_02:'all',
-  dnb_03:[1,2,3,4,5,6,7,9,10],
+  dnb_03:[1,2,3,4,5,6,7],
   dnb_04:'all',
   dnb_05:'all',
   dnb_08:'all',
   dnb_09:[2,3,4,5,6,8,9,10,11,12,13,14,15,16,17,18,19],
-  dnb_11:[1,4,6],
+  dnb_11:[1,4,6,11],
   dnb_14:'all',
   dnb_15:'all',
   dnb_16:'all',
@@ -3914,6 +4281,43 @@ body{margin:0;background:var(--bg);font-family:Arial,Helvetica,sans-serif;color:
 .diapo.module01-mode .module01-answer{font-family:"Cambria Math","STIX Two Math","Times New Roman",serif;font-size:clamp(3rem,5vw,5.4rem);font-weight:700;margin:9px auto 0}
 .diapo.module01-mode .module01-options{margin-top:12px;max-width:1180px}
 .diapo.module01-mode .module01-options .opt{font-family:"Cambria Math","STIX Two Math","Times New Roman",serif;font-size:clamp(1.55rem,2.3vw,2.55rem);text-align:left;padding:13px 16px}
+.diapo.fraction-ops-mode .stage{align-items:flex-start;padding:10px 18px 16px;overflow:auto}
+.diapo.fraction-ops-mode .slide{max-width:1180px}
+.fraction-ops-prompt{font-size:clamp(1.75rem,2.8vw,3rem);line-height:1.12;margin:0 auto 5px}
+.fraction-ops-help{display:flex;flex-direction:column;align-items:center;width:100%;margin:2px auto 3px;max-width:1080px}
+.fraction-ops-pair,.fraction-ops-operation,.fraction-ops-conversion{display:flex;align-items:center;justify-content:center;gap:12px 18px;margin:0 auto}
+.fraction-ops-stack{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:0;margin:0 auto}
+.fraction-ops-stack>.fraction-ops-arrow+.fraction-ops-card{margin-top:10px}
+.fraction-ops-card{display:flex;flex-direction:column;align-items:center;justify-content:center;min-width:0;max-width:360px}
+.fraction-ops-label{min-height:31px;font-family:"Cambria Math","STIX Two Math","Times New Roman",serif;font-size:clamp(1.15rem,1.8vw,1.75rem);font-weight:800}
+.fraction-ops-units{display:flex;align-items:center;justify-content:center;gap:5px;width:100%}
+.fraction-ops-band{display:block;width:min(100%,330px);height:auto}
+.fraction-ops-arrow{font-size:1.55rem;font-weight:900;color:#60708c;line-height:.8}
+.fraction-ops-sign{font-size:clamp(1.8rem,3vw,3rem);font-weight:900;color:#17283f;flex:none}
+.fraction-ops-sign-bottom{align-self:flex-end;margin-bottom:30px}
+.fraction-ops-wall,.fraction-ops-compare-wall{display:flex;flex-direction:column;align-items:center;justify-content:center;width:min(100%,350px);flex:0 1 350px}
+.fraction-ops-wall .fraction-ops-band,.fraction-ops-compare-wall .fraction-ops-band{width:min(100%,330px);flex:none}
+.fraction-ops-wall .fraction-ops-band+.fraction-ops-band,.fraction-ops-compare-wall .fraction-ops-band+.fraction-ops-band{margin-top:-6px}
+.fraction-ops-wall-label{min-height:29px;font-family:"Cambria Math","STIX Two Math","Times New Roman",serif;font-size:clamp(1.1rem,1.7vw,1.65rem);font-weight:850}
+.fraction-ops-wall-label-bottom{margin-top:-1px}
+.fraction-ops-result-visual{display:flex;align-items:center;justify-content:center;gap:10px;margin-top:1px;font-size:2.3rem;font-weight:900}
+.fraction-ops-result-text{font-family:"Cambria Math","STIX Two Math","Times New Roman",serif;font-size:clamp(1.5rem,2.4vw,2.4rem);font-weight:900;color:var(--answer);white-space:nowrap}
+.fraction-ops-product{display:flex;align-items:center;justify-content:center;gap:18px;margin:0 auto}
+.fraction-ops-area{display:block;width:min(100%,390px);height:auto;max-height:300px}
+.fraction-ops-answer{display:flex;align-items:center;justify-content:center;gap:.1em;font-family:"Cambria Math","STIX Two Math","Times New Roman",serif;font-size:clamp(2.15rem,3.8vw,4rem);margin-top:2px}
+.fraction-ops-answer strong{color:var(--answer)}
+.fraction-ops-options{grid-template-columns:repeat(3,minmax(0,1fr));gap:10px 14px;margin:7px auto 0;max-width:960px}
+.fraction-ops-options .opt{font-family:"Cambria Math","STIX Two Math","Times New Roman",serif;font-size:clamp(1.1rem,1.7vw,1.7rem);padding:11px 14px}
+@media(min-width:801px){.fraction-ops-card{max-width:430px}.fraction-ops-stack>.fraction-ops-card,.fraction-ops-operation>.fraction-ops-card,.fraction-ops-conversion>.fraction-ops-card,.fraction-ops-result-visual>.fraction-ops-card{width:min(100%,430px)}.fraction-ops-operation>.fraction-ops-card,.fraction-ops-conversion>.fraction-ops-card{flex:0 1 430px}.fraction-ops-band{width:min(100%,400px)}.fraction-ops-wall,.fraction-ops-compare-wall{width:min(100%,430px);flex-basis:430px}.fraction-ops-wall .fraction-ops-band,.fraction-ops-compare-wall .fraction-ops-band{width:min(100%,400px)}.fraction-ops-area{width:min(100%,455px);max-height:350px}.fraction-ops-label{font-size:clamp(1.55rem,2.4vw,2.35rem)}.fraction-ops-wall-label{font-size:clamp(1.45rem,2.2vw,2.15rem)}}
+.diapo.substitution-mode .stage{align-items:flex-start;padding:16px 22px 18px;overflow:auto}
+.diapo.substitution-mode .slide{max-width:1040px}
+.substitution-prompt{font-size:clamp(1.7rem,2.75vw,3rem);line-height:1.14;margin:0 auto 8px}
+.substitution-expression{font-family:"Cambria Math","STIX Two Math","Times New Roman",serif;font-size:clamp(2.2rem,4vw,4.2rem);font-weight:800;margin:3px auto 10px}
+.substitution-help{display:flex;align-items:center;justify-content:center;gap:16px;min-height:70px;margin:4px auto 5px;color:#17384d;font-family:"Cambria Math","STIX Two Math","Times New Roman",serif;font-size:clamp(1.55rem,2.7vw,2.8rem);font-weight:750}
+.substitution-help>span{font-family:Arial,Helvetica,sans-serif;font-size:.58em;color:#60708c;font-weight:850}
+.substitution-answer{display:flex;align-items:center;justify-content:center;gap:.1em;font-family:"Cambria Math","STIX Two Math","Times New Roman",serif;font-size:clamp(2.4rem,4.4vw,4.6rem);margin-top:3px}
+.substitution-answer strong{color:var(--answer)}
+.substitution-options{margin-top:9px;max-width:880px}
 .diapo.fraction-percent-mode .stage{align-items:flex-start;padding:14px 22px 18px;overflow:auto}
 .diapo.fraction-percent-mode .slide{max-width:1080px}
 .fraction-percent-prompt{font-size:clamp(1.9rem,3vw,3.25rem);line-height:1.12;margin:0 auto 7px}
@@ -4072,6 +4476,7 @@ svg{display:block;max-width:100%;height:auto}
 @media(max-width:800px){.diapo{--stage-top:24px;--stage-x:24px;--stage-bottom:24px}.top{grid-template-columns:minmax(0,1fr) auto minmax(0,1fr);height:76px;text-align:center;padding:9px;gap:6px}.left{justify-content:flex-start}.right{justify-content:flex-end}.top .btn{min-height:52px;font-size:.92rem;padding:11px 10px;border-radius:12px;white-space:nowrap}.top .btn.primary{min-width:0}.navnums,.fullscreen-btn{display:none}.mobile-counter{display:block;white-space:nowrap;font-size:1.08rem}.stage{padding:var(--stage-top) var(--stage-x) var(--stage-bottom)}.diapo .stage>.slide{margin-top:auto;margin-bottom:auto}.options.options-4{grid-template-columns:1fr}.options.options-4.options-compact{grid-template-columns:repeat(2,minmax(0,1fr))}.diapo.scientific-mode .stage{padding:8px 8px 13px}.scientific-prompt{font-size:clamp(1.25rem,5.8vw,1.65rem)}.scientific-footer{font-size:clamp(1.7rem,7.7vw,2.25rem);margin-top:3px}.scientific-place-help{min-height:62px;margin-top:14px}.scientific-place-equation{font-size:clamp(1.45rem,6.4vw,2rem)}.scientific-glide-help{height:clamp(160px,24vh,195px);margin-top:-3px}.scientific-condition-help{min-height:64px;margin-top:8px}.scientific-condition{font-size:clamp(1.7rem,7.4vw,2.25rem)}.scientific-options{gap:7px;margin-top:6px}.scientific-options .opt{font-size:clamp(.86rem,3.75vw,1.05rem);padding:8px 9px}.diapo.numberline-mode .footer{font-size:clamp(1.65rem,7.5vw,2rem)}.diapo.numberline-mode .answer-slot{width:2.2em!important}.diapo.numberline-mode .footer .qquad{width:.7em}.diapo.numberline-mode .footer .math-display{transform:none}.diapo.solids-mode .stage{padding:10px 10px 16px}.solid-prompt{font-size:clamp(1.25rem,5.6vw,1.65rem)}.solid-visual{width:230px;height:clamp(155px,27vh,215px)}.solid-options{grid-template-columns:repeat(2,minmax(0,1fr));gap:7px}.solid-options .opt{font-size:clamp(.88rem,3.7vw,1.08rem);padding:8px 9px}}
 @media(max-width:800px){.diapo.relation-mode .stage{padding:8px 8px 13px}.relation-prompt{font-size:clamp(1.2rem,5.4vw,1.55rem);margin-bottom:3px}.relation-bar-help{height:clamp(105px,20vh,150px);margin:0 auto}.relation-answer{font-size:clamp(1.55rem,7vw,2.05rem);margin-top:1px}.relation-options{gap:7px;margin-top:5px}.relation-options .opt{min-height:99px;padding:7px 8px;font-size:clamp(.98rem,4.4vw,1.2rem)}.relation-option-label{min-height:29px}.relation-tile-help{min-height:44px;margin-top:4px;gap:3px}.relation-summary-grid{grid-template-columns:1fr;gap:7px;margin-top:5px}.relation-summary-card{min-height:99px;padding:7px 12px}.relation-summary-line{font-size:clamp(1.05rem,4.8vw,1.3rem)}.relation-summary-card .relation-tile-help{min-height:31px}}
 @media(max-width:800px){.diapo.fraction-percent-mode .stage{padding:8px 8px 13px}.fraction-percent-prompt{font-size:clamp(1.18rem,5.25vw,1.52rem);margin-bottom:2px}.fraction-percent-help{height:clamp(115px,20vh,160px);margin:0 auto}.fraction-percent-answer{font-size:clamp(1.55rem,7vw,2.05rem);margin-top:1px}}
+@media(max-width:800px){.diapo.fraction-ops-mode .stage{padding:7px 7px 13px}.fraction-ops-prompt{font-size:clamp(1.18rem,5.25vw,1.52rem);margin-bottom:2px}.fraction-ops-pair,.fraction-ops-operation,.fraction-ops-conversion{flex-direction:column;gap:0;margin:0 auto}.fraction-ops-card{width:min(100%,330px)}.fraction-ops-stack>.fraction-ops-arrow+.fraction-ops-card{margin-top:6px}.fraction-ops-label{min-height:24px;font-size:clamp(.96rem,4.2vw,1.18rem)}.fraction-ops-band{width:min(100%,285px)}.fraction-ops-wall,.fraction-ops-compare-wall{width:min(100%,300px);flex-basis:auto}.fraction-ops-wall .fraction-ops-band,.fraction-ops-compare-wall .fraction-ops-band{width:min(100%,285px)}.fraction-ops-wall-label{min-height:23px;font-size:clamp(.92rem,4vw,1.12rem)}.fraction-ops-sign{font-size:1.55rem;line-height:.75}.fraction-ops-sign-bottom{align-self:center;margin-bottom:0}.fraction-ops-arrow{font-size:1.2rem}.fraction-ops-result-visual{font-size:1.5rem;margin-top:0}.fraction-ops-product{flex-direction:column;gap:1px}.fraction-ops-area{width:min(100%,285px);max-height:235px}.fraction-ops-result-text{font-size:clamp(1.15rem,5vw,1.5rem)}.fraction-ops-answer{font-size:clamp(1.55rem,7vw,2.05rem);margin-top:1px}.fraction-ops-options{grid-template-columns:1fr;gap:6px;margin-top:4px}.fraction-ops-options .opt{font-size:clamp(.9rem,3.8vw,1.08rem);padding:8px 9px}.diapo.substitution-mode .stage{padding:9px 9px 14px}.substitution-prompt{font-size:clamp(1.2rem,5.3vw,1.55rem);margin-bottom:3px}.substitution-expression{font-size:clamp(1.8rem,8vw,2.35rem);margin:2px auto 5px}.substitution-help{flex-direction:column;gap:2px;min-height:57px;font-size:clamp(1.35rem,6vw,1.75rem);margin:2px auto}.substitution-answer{font-size:clamp(1.75rem,7.7vw,2.3rem)}.substitution-options{gap:7px;margin-top:5px}.substitution-options .opt{font-size:clamp(.95rem,4.1vw,1.15rem);padding:8px 9px}}
 @media(max-width:800px){.diapo.multiple-forms-mode .stage{padding:7px 7px 13px}.multiple-forms-prompt{font-size:clamp(1.12rem,5vw,1.46rem);line-height:1.15;margin-bottom:2px}.multiple-forms-help{height:clamp(150px,26vh,205px);margin:0 auto}.multiple-forms-help.multiple-forms-tenths{height:clamp(150px,26vh,205px)}.multiple-forms-help.multiple-forms-line{height:clamp(135px,22vh,175px)}.multiple-forms-svg{width:min(100%,760px)}.multiple-forms-caption{font-size:clamp(.83rem,3.55vw,1rem);margin-top:0}.multiple-forms-answer{font-size:clamp(1.48rem,6.8vw,2rem);margin-top:1px}.multiple-forms-options{grid-template-columns:repeat(2,minmax(0,1fr));gap:7px;margin-top:5px}.multiple-forms-options .opt{font-size:clamp(.95rem,4.15vw,1.15rem);padding:8px 9px}}
 @media(max-width:800px){.diapo.angle-sum-mode .stage{padding:8px 8px 13px}.angle-sum-prompt{font-size:clamp(1.14rem,5.15vw,1.5rem);margin-bottom:2px}.angle-sum-prompt svg{width:min(100%,300px);max-height:235px;margin-top:4px}.angle-bar-help{height:clamp(105px,18vh,145px);margin:0 auto}.angle-sum-answer{font-size:clamp(1.5rem,6.8vw,2rem);margin-top:1px}.angle-sum-options{gap:7px;margin-top:5px}.angle-sum-options .opt{font-size:clamp(.9rem,3.8vw,1.08rem);padding:8px 9px}}
 @media(max-width:800px){.diapo.evolution-mode .stage{padding:7px 7px 13px}.evolution-prompt{font-size:clamp(1.05rem,4.7vw,1.38rem);line-height:1.15;margin-bottom:2px}.evolution-prompt table{font-size:.82rem!important}.evolution-help{height:clamp(118px,20vh,168px);margin:0 auto}.evolution-help-scroll{justify-content:flex-start;overflow-x:auto;overscroll-behavior-x:contain;-webkit-overflow-scrolling:touch}.evolution-help-scroll .evolution-svg{width:720px;max-width:none;flex:none}.evolution-answer{font-size:clamp(1.5rem,6.8vw,2rem);margin-top:1px}.evolution-options{grid-template-columns:1fr;gap:6px;margin-top:4px}.evolution-options .opt{font-size:clamp(.8rem,3.45vw,.98rem);padding:7px 8px}}
@@ -4144,11 +4549,13 @@ function render(){
  if(mobileCounter) mobileCounter.textContent=(idx+1)+' sur '+slides.length;
  const diapo=document.getElementById('diapo');
  diapo.classList.toggle('module01-mode',slides[idx].moduleId==='dnb_01');
+ diapo.classList.toggle('fraction-ops-mode',slides[idx].moduleId==='dnb_03');
  diapo.classList.toggle('fraction-percent-mode',slides[idx].moduleId==='dnb_04');
  diapo.classList.toggle('multiple-forms-mode',slides[idx].moduleId==='dnb_05');
  diapo.classList.toggle('scientific-mode',slides[idx].moduleId==='dnb_06');
  diapo.classList.toggle('relation-mode',slides[idx].moduleId==='dnb_09');
  diapo.classList.toggle('reduction-mode',slides[idx].moduleId==='dnb_10');
+ diapo.classList.toggle('substitution-mode',slides[idx].moduleId==='dnb_11');
  diapo.classList.toggle('squares-mode',slides[idx].moduleId==='dnb_07');
  diapo.classList.toggle('numberline-mode',slides[idx].moduleId==='dnb_14');
  diapo.classList.toggle('angle-sum-mode',slides[idx].moduleId==='dnb_18');
@@ -4293,6 +4700,7 @@ function visualPolicyForQuestion(m,q){
   if(m.id==='dnb_01'){
     return q.options&&q.options.module01_kind==='read_visual'?'essential':'optional';
   }
+  if(m.id==='dnb_03') return 'optional';
   if(m.id==='dnb_04') return 'optional';
   if(m.id==='dnb_05') return 'optional';
   if(m.id==='dnb_06') return 'optional';
@@ -4301,6 +4709,7 @@ function visualPolicyForQuestion(m,q){
   if(m.id==='dnb_10'){
     return q.options&&q.options.reduction_kind==='read_tiles'?'essential':'optional';
   }
+  if(m.id==='dnb_11') return Number(q.n)===7?'none':'optional';
   if(m.id==='dnb_18') return [2,3,4,5,6,7,8,9,10].includes(Number(q.n))?'optional':'none';
   // Dans le module Aires, la figure porte les données de l'énoncé et reste
   // toujours visible. Le sélecteur avec/sans aide commande seulement la formule.
