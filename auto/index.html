@@ -1805,12 +1805,19 @@ function substitutionSignedValue(positiveOnly=false){
   if(positiveOnly||rnd()<.52) return RD(1,8);
   return RD(-8,-1);
 }
-function substitutionNumberLatex(value){ return Number(value)<0?'('+value+')':String(value); }
+function substitutionVariableLatex(variable){ return variable==='y'?'𝑦':'𝑥'; }
+function substitutionIntegerLatex(value){ return String(value).replace('-', '−'); }
+function substitutionNumberLatex(value){ return Number(value)<0?'('+substitutionIntegerLatex(value)+')':substitutionIntegerLatex(value); }
+function substitutionSignedPart(value){ return Number(value)<0?'\\,−\\,'+Math.abs(value):'\\,+\\,'+value; }
 function substitutionTerm(coefficient,variable,first=false){
   if(coefficient===0) return '';
-  const sign=coefficient<0?'-':(first?'':'+');
+  const sign=coefficient<0?'−':(first?'':'+');
   const magnitude=Math.abs(coefficient);
-  return sign+(magnitude===1?'':magnitude)+variable;
+  return (first?'':'\\,'+sign+'\\,')+(magnitude===1?'':magnitude)+substitutionVariableLatex(variable);
+}
+function substitutionNumericTerm(coefficient,value){
+  const sign=coefficient<0?'−':'+';
+  return '\\,'+sign+'\\,'+Math.abs(coefficient)+'\\,\\times\\,'+substitutionNumberLatex(value);
 }
 function makeSubstitutionInstance(mod,q){
   const number=Number(q.n);
@@ -1821,33 +1828,36 @@ function makeSubstitutionInstance(mod,q){
 
   if(number===1){
     const a=RD(2,6),b=RD(-9,9,[0]);answer=a*x+b;
-    expression=a+'x'+(b<0?String(b):'+'+b);
-    substitution=a+'\\times '+substitutionNumberLatex(x)+(b<0?String(b):'+'+b);
+    expression=a+substitutionVariableLatex('x')+substitutionSignedPart(b);
+    substitution=a+'\\,\\times\\,'+substitutionNumberLatex(x)+substitutionSignedPart(b);
   }else if(number===2){
     const a=RD(2,5),b=RD(1,9);answer=a*x*x+b;
-    expression=a+'x^2+'+b;substitution=a+'\\times '+substitutionNumberLatex(x)+'^2+'+b;
+    expression=a+substitutionVariableLatex('x')+'^2'+substitutionSignedPart(b);
+    substitution=a+'\\,\\times\\,'+substitutionNumberLatex(x)+'^2'+substitutionSignedPart(b);
   }else if(number===3){
     const b=RD(-5,5,[0]),c=RD(-9,9,[0]);answer=x*x+b*x+c;
-    expression='x^2'+substitutionTerm(b,'x')+(c<0?String(c):'+'+c);
-    substitution=substitutionNumberLatex(x)+'^2'+(b<0?'-':'+')+Math.abs(b)+'\\times '+substitutionNumberLatex(x)+(c<0?String(c):'+'+c);
+    expression=substitutionVariableLatex('x')+'^2'+substitutionTerm(b,'x')+substitutionSignedPart(c);
+    substitution=substitutionNumberLatex(x)+'^2'+substitutionNumericTerm(b,x)+substitutionSignedPart(c);
   }else if(number===4){
     const a=RD(10,30),b=RD(2,5);answer=a-b*x;
-    expression=a+'-'+b+'x';substitution=a+'-'+b+'\\times '+substitutionNumberLatex(x);
+    expression=a+'\\,−\\,'+b+substitutionVariableLatex('x');
+    substitution=a+'\\,−\\,'+b+'\\,\\times\\,'+substitutionNumberLatex(x);
   }else if(number===5){
     const a=RD(2,4);answer=a*x*x*x;
-    expression=a+'x^3';substitution=a+'\\times '+substitutionNumberLatex(x)+'^3';
+    expression=a+substitutionVariableLatex('x')+'^3';substitution=a+'\\,\\times\\,'+substitutionNumberLatex(x)+'^3';
   }else if(number===6){
     const a=RD(2,6),b=RD(2,6);answer=a*x+b*y;
-    expression=a+'x+'+b+'y';substitution=a+'\\times '+substitutionNumberLatex(x)+'+'+b+'\\times '+substitutionNumberLatex(y);
+    expression=a+substitutionVariableLatex('x')+'\\,+\\,'+b+substitutionVariableLatex('y');
+    substitution=a+'\\,\\times\\,'+substitutionNumberLatex(x)+'\\,+\\,'+b+'\\,\\times\\,'+substitutionNumberLatex(y);
   }else if(number===7){
     x=pick([2,3,5]);const power=pick([3,4,5]);answer=Math.pow(x,power);
     expression=x+'^'+power;substitution=expression;Object.assign(data,{power});
   }else if(number===8){
     const a=RD(1,5);answer=Math.pow(x+a,2);
-    expression='(x+'+a+')^2';substitution='('+substitutionNumberLatex(x)+'+'+a+')^2';
+    expression='('+substitutionVariableLatex('x')+'\\,+\\,'+a+')^2';substitution='('+substitutionNumberLatex(x)+'\\,+\\,'+a+')^2';
   }else if(number===9){
     x=positiveOnly?RD(2,6):(rnd()<.52?RD(2,6):RD(-6,-2));answer=2*x*x;
-    expression='2x^2';substitution='2\\times '+substitutionNumberLatex(x)+'^2';
+    expression='2'+substitutionVariableLatex('x')+'^2';substitution='2\\,\\times\\,'+substitutionNumberLatex(x)+'^2';
     const options=shuffleLocal([answer,4*x*x,2*x]).map(String);
     data.qcm={options,correctIndex:String(options.indexOf(String(answer))+1)};
   }else if(number===10){
@@ -1855,7 +1865,7 @@ function makeSubstitutionInstance(mod,q){
     expression=x+'^2';substitution=expression;
   }else{
     const a=RD(2,6),b=RD(1,8);answer=a*(x+b);
-    expression=a+'(x+'+b+')';substitution=a+'\\times ('+substitutionNumberLatex(x)+'+'+b+')';
+    expression=a+'('+substitutionVariableLatex('x')+'\\,+\\,'+b+')';substitution=a+'\\,\\times\\,('+substitutionNumberLatex(x)+'\\,+\\,'+b+')';
   }
 
   Object.assign(data,{expression,substitution,answer,x,y,prompt});
@@ -3827,14 +3837,14 @@ function renderSubstitutionModule(inst,correction=false,mode=null){
   let prompt=data.prompt;
   if(![7,10].includes(number)){
     prompt=number===6
-      ? 'Calcule pour '+renderMathSegments('$$x='+data.x+'$$')+' et '+renderMathSegments('$$y='+data.y+'$$')+'.'
-      : 'Calcule pour '+renderMathSegments('$$x='+data.x+'$$')+'.';
+      ? 'Calcule pour '+renderMathSegments('$$'+substitutionVariableLatex('x')+'\\,=\\,'+substitutionIntegerLatex(data.x)+'$$')+' et '+renderMathSegments('$$'+substitutionVariableLatex('y')+'\\,=\\,'+substitutionIntegerLatex(data.y)+'$$')+'.'
+      : 'Calcule pour '+renderMathSegments('$$'+substitutionVariableLatex('x')+'\\,=\\,'+substitutionIntegerLatex(data.x)+'$$')+'.';
   }
-  if(number===9) prompt='Pour '+renderMathSegments('$$x='+data.x+'$$')+', que vaut '+renderMathSegments('$$2x^2$$')+' ?';
+  if(number===9) prompt='Pour '+renderMathSegments('$$'+substitutionVariableLatex('x')+'\\,=\\,'+substitutionIntegerLatex(data.x)+'$$')+', que vaut '+renderMathSegments('$$2'+substitutionVariableLatex('x')+'^2$$')+' ?';
   let html='<div class="question substitution-prompt">'+prompt+'</div>';
   if(number!==10) html+='<div class="substitution-expression">'+renderMathSegments('$$'+data.expression+'$$')+'</div>';
   if(!isWithoutVisuals(mode)&&number!==7){
-    html+='<div class="substitution-help"><span>On remplace :</span>'+renderMathSegments('$$'+data.substitution+'$$')+'</div>';
+    html+='<div class="substitution-help">'+renderMathSegments('$$'+data.substitution+'$$')+'</div>';
   }else if(number!==7) html+=visualPlaceholder(mode);
 
   if(data.qcm){
@@ -3846,8 +3856,8 @@ function renderSubstitutionModule(inst,correction=false,mode=null){
     html+='</div>';
   }else{
     const suffix=number===10?'\\text{ cm}^2':'';
-    html+='<div class="footer substitution-answer"><span>'+renderMathSegments('$$='+ (correction?'':'\\ldots') +'$$')+'</span>'
-      +(correction?'<strong>'+renderMathSegments('$$'+data.answer+suffix+'$$')+'</strong>':'')+'</div>';
+    html+='<div class="footer substitution-answer"><span class="substitution-equals">=</span>'
+      +(correction?'<strong>'+renderMathSegments('$$'+data.answer+suffix+'$$')+'</strong>':'<span class="answer-dots">…</span>')+'</div>';
   }
   return html;
 }
@@ -4313,8 +4323,7 @@ body{margin:0;background:var(--bg);font-family:Arial,Helvetica,sans-serif;color:
 .diapo.substitution-mode .slide{max-width:1040px}
 .substitution-prompt{font-size:clamp(1.7rem,2.75vw,3rem);line-height:1.14;margin:0 auto 8px}
 .substitution-expression{font-family:"Cambria Math","STIX Two Math","Times New Roman",serif;font-size:clamp(2.2rem,4vw,4.2rem);font-weight:800;margin:3px auto 10px}
-.substitution-help{display:flex;align-items:center;justify-content:center;gap:16px;min-height:70px;margin:4px auto 5px;color:#17384d;font-family:"Cambria Math","STIX Two Math","Times New Roman",serif;font-size:clamp(1.55rem,2.7vw,2.8rem);font-weight:750}
-.substitution-help>span{font-family:Arial,Helvetica,sans-serif;font-size:.58em;color:#60708c;font-weight:850}
+.substitution-help{display:flex;align-items:center;justify-content:center;min-height:70px;margin:4px auto 5px;color:#60708c;font-family:"Cambria Math","STIX Two Math","Times New Roman",serif;font-size:clamp(2.2rem,4vw,4.2rem);font-weight:800}
 .substitution-answer{display:flex;align-items:center;justify-content:center;gap:.1em;font-family:"Cambria Math","STIX Two Math","Times New Roman",serif;font-size:clamp(2.4rem,4.4vw,4.6rem);margin-top:3px}
 .substitution-answer strong{color:var(--answer)}
 .substitution-options{margin-top:9px;max-width:880px}
@@ -4476,7 +4485,7 @@ svg{display:block;max-width:100%;height:auto}
 @media(max-width:800px){.diapo{--stage-top:24px;--stage-x:24px;--stage-bottom:24px}.top{grid-template-columns:minmax(0,1fr) auto minmax(0,1fr);height:76px;text-align:center;padding:9px;gap:6px}.left{justify-content:flex-start}.right{justify-content:flex-end}.top .btn{min-height:52px;font-size:.92rem;padding:11px 10px;border-radius:12px;white-space:nowrap}.top .btn.primary{min-width:0}.navnums,.fullscreen-btn{display:none}.mobile-counter{display:block;white-space:nowrap;font-size:1.08rem}.stage{padding:var(--stage-top) var(--stage-x) var(--stage-bottom)}.diapo .stage>.slide{margin-top:auto;margin-bottom:auto}.options.options-4{grid-template-columns:1fr}.options.options-4.options-compact{grid-template-columns:repeat(2,minmax(0,1fr))}.diapo.scientific-mode .stage{padding:8px 8px 13px}.scientific-prompt{font-size:clamp(1.25rem,5.8vw,1.65rem)}.scientific-footer{font-size:clamp(1.7rem,7.7vw,2.25rem);margin-top:3px}.scientific-place-help{min-height:62px;margin-top:14px}.scientific-place-equation{font-size:clamp(1.45rem,6.4vw,2rem)}.scientific-glide-help{height:clamp(160px,24vh,195px);margin-top:-3px}.scientific-condition-help{min-height:64px;margin-top:8px}.scientific-condition{font-size:clamp(1.7rem,7.4vw,2.25rem)}.scientific-options{gap:7px;margin-top:6px}.scientific-options .opt{font-size:clamp(.86rem,3.75vw,1.05rem);padding:8px 9px}.diapo.numberline-mode .footer{font-size:clamp(1.65rem,7.5vw,2rem)}.diapo.numberline-mode .answer-slot{width:2.2em!important}.diapo.numberline-mode .footer .qquad{width:.7em}.diapo.numberline-mode .footer .math-display{transform:none}.diapo.solids-mode .stage{padding:10px 10px 16px}.solid-prompt{font-size:clamp(1.25rem,5.6vw,1.65rem)}.solid-visual{width:230px;height:clamp(155px,27vh,215px)}.solid-options{grid-template-columns:repeat(2,minmax(0,1fr));gap:7px}.solid-options .opt{font-size:clamp(.88rem,3.7vw,1.08rem);padding:8px 9px}}
 @media(max-width:800px){.diapo.relation-mode .stage{padding:8px 8px 13px}.relation-prompt{font-size:clamp(1.2rem,5.4vw,1.55rem);margin-bottom:3px}.relation-bar-help{height:clamp(105px,20vh,150px);margin:0 auto}.relation-answer{font-size:clamp(1.55rem,7vw,2.05rem);margin-top:1px}.relation-options{gap:7px;margin-top:5px}.relation-options .opt{min-height:99px;padding:7px 8px;font-size:clamp(.98rem,4.4vw,1.2rem)}.relation-option-label{min-height:29px}.relation-tile-help{min-height:44px;margin-top:4px;gap:3px}.relation-summary-grid{grid-template-columns:1fr;gap:7px;margin-top:5px}.relation-summary-card{min-height:99px;padding:7px 12px}.relation-summary-line{font-size:clamp(1.05rem,4.8vw,1.3rem)}.relation-summary-card .relation-tile-help{min-height:31px}}
 @media(max-width:800px){.diapo.fraction-percent-mode .stage{padding:8px 8px 13px}.fraction-percent-prompt{font-size:clamp(1.18rem,5.25vw,1.52rem);margin-bottom:2px}.fraction-percent-help{height:clamp(115px,20vh,160px);margin:0 auto}.fraction-percent-answer{font-size:clamp(1.55rem,7vw,2.05rem);margin-top:1px}}
-@media(max-width:800px){.diapo.fraction-ops-mode .stage{padding:7px 7px 13px}.fraction-ops-prompt{font-size:clamp(1.18rem,5.25vw,1.52rem);margin-bottom:2px}.fraction-ops-pair,.fraction-ops-operation,.fraction-ops-conversion{flex-direction:column;gap:0;margin:0 auto}.fraction-ops-card{width:min(100%,330px)}.fraction-ops-stack>.fraction-ops-arrow+.fraction-ops-card{margin-top:6px}.fraction-ops-label{min-height:24px;font-size:clamp(.96rem,4.2vw,1.18rem)}.fraction-ops-band{width:min(100%,285px)}.fraction-ops-wall,.fraction-ops-compare-wall{width:min(100%,300px);flex-basis:auto}.fraction-ops-wall .fraction-ops-band,.fraction-ops-compare-wall .fraction-ops-band{width:min(100%,285px)}.fraction-ops-wall-label{min-height:23px;font-size:clamp(.92rem,4vw,1.12rem)}.fraction-ops-sign{font-size:1.55rem;line-height:.75}.fraction-ops-sign-bottom{align-self:center;margin-bottom:0}.fraction-ops-arrow{font-size:1.2rem}.fraction-ops-result-visual{font-size:1.5rem;margin-top:0}.fraction-ops-product{flex-direction:column;gap:1px}.fraction-ops-area{width:min(100%,285px);max-height:235px}.fraction-ops-result-text{font-size:clamp(1.15rem,5vw,1.5rem)}.fraction-ops-answer{font-size:clamp(1.55rem,7vw,2.05rem);margin-top:1px}.fraction-ops-options{grid-template-columns:1fr;gap:6px;margin-top:4px}.fraction-ops-options .opt{font-size:clamp(.9rem,3.8vw,1.08rem);padding:8px 9px}.diapo.substitution-mode .stage{padding:9px 9px 14px}.substitution-prompt{font-size:clamp(1.2rem,5.3vw,1.55rem);margin-bottom:3px}.substitution-expression{font-size:clamp(1.8rem,8vw,2.35rem);margin:2px auto 5px}.substitution-help{flex-direction:column;gap:2px;min-height:57px;font-size:clamp(1.35rem,6vw,1.75rem);margin:2px auto}.substitution-answer{font-size:clamp(1.75rem,7.7vw,2.3rem)}.substitution-options{gap:7px;margin-top:5px}.substitution-options .opt{font-size:clamp(.95rem,4.1vw,1.15rem);padding:8px 9px}}
+@media(max-width:800px){.diapo.fraction-ops-mode .stage{padding:7px 7px 13px}.fraction-ops-prompt{font-size:clamp(1.18rem,5.25vw,1.52rem);margin-bottom:2px}.fraction-ops-pair,.fraction-ops-operation,.fraction-ops-conversion{flex-direction:column;gap:0;margin:0 auto}.fraction-ops-card{width:min(100%,330px)}.fraction-ops-stack>.fraction-ops-arrow+.fraction-ops-card{margin-top:6px}.fraction-ops-label{min-height:24px;font-size:clamp(.96rem,4.2vw,1.18rem)}.fraction-ops-band{width:min(100%,285px)}.fraction-ops-wall,.fraction-ops-compare-wall{width:min(100%,300px);flex-basis:auto}.fraction-ops-wall .fraction-ops-band,.fraction-ops-compare-wall .fraction-ops-band{width:min(100%,285px)}.fraction-ops-wall-label{min-height:23px;font-size:clamp(.92rem,4vw,1.12rem)}.fraction-ops-sign{font-size:1.55rem;line-height:.75}.fraction-ops-sign-bottom{align-self:center;margin-bottom:0}.fraction-ops-arrow{font-size:1.2rem}.fraction-ops-result-visual{font-size:1.5rem;margin-top:0}.fraction-ops-product{flex-direction:column;gap:1px}.fraction-ops-area{width:min(100%,285px);max-height:235px}.fraction-ops-result-text{font-size:clamp(1.15rem,5vw,1.5rem)}.fraction-ops-answer{font-size:clamp(1.55rem,7vw,2.05rem);margin-top:1px}.fraction-ops-options{grid-template-columns:1fr;gap:6px;margin-top:4px}.fraction-ops-options .opt{font-size:clamp(.9rem,3.8vw,1.08rem);padding:8px 9px}.diapo.substitution-mode .stage{padding:9px 9px 14px}.substitution-prompt{font-size:clamp(1.2rem,5.3vw,1.55rem);margin-bottom:3px}.substitution-expression{font-size:clamp(1.8rem,8vw,2.35rem);margin:2px auto 5px}.substitution-help{flex-direction:column;min-height:57px;font-size:clamp(1.8rem,8vw,2.35rem);margin:2px auto}.substitution-answer{font-size:clamp(1.75rem,7.7vw,2.3rem)}.substitution-options{gap:7px;margin-top:5px}.substitution-options .opt{font-size:clamp(.95rem,4.1vw,1.15rem);padding:8px 9px}}
 @media(max-width:800px){.diapo.multiple-forms-mode .stage{padding:7px 7px 13px}.multiple-forms-prompt{font-size:clamp(1.12rem,5vw,1.46rem);line-height:1.15;margin-bottom:2px}.multiple-forms-help{height:clamp(150px,26vh,205px);margin:0 auto}.multiple-forms-help.multiple-forms-tenths{height:clamp(150px,26vh,205px)}.multiple-forms-help.multiple-forms-line{height:clamp(135px,22vh,175px)}.multiple-forms-svg{width:min(100%,760px)}.multiple-forms-caption{font-size:clamp(.83rem,3.55vw,1rem);margin-top:0}.multiple-forms-answer{font-size:clamp(1.48rem,6.8vw,2rem);margin-top:1px}.multiple-forms-options{grid-template-columns:repeat(2,minmax(0,1fr));gap:7px;margin-top:5px}.multiple-forms-options .opt{font-size:clamp(.95rem,4.15vw,1.15rem);padding:8px 9px}}
 @media(max-width:800px){.diapo.angle-sum-mode .stage{padding:8px 8px 13px}.angle-sum-prompt{font-size:clamp(1.14rem,5.15vw,1.5rem);margin-bottom:2px}.angle-sum-prompt svg{width:min(100%,300px);max-height:235px;margin-top:4px}.angle-bar-help{height:clamp(105px,18vh,145px);margin:0 auto}.angle-sum-answer{font-size:clamp(1.5rem,6.8vw,2rem);margin-top:1px}.angle-sum-options{gap:7px;margin-top:5px}.angle-sum-options .opt{font-size:clamp(.9rem,3.8vw,1.08rem);padding:8px 9px}}
 @media(max-width:800px){.diapo.evolution-mode .stage{padding:7px 7px 13px}.evolution-prompt{font-size:clamp(1.05rem,4.7vw,1.38rem);line-height:1.15;margin-bottom:2px}.evolution-prompt table{font-size:.82rem!important}.evolution-help{height:clamp(118px,20vh,168px);margin:0 auto}.evolution-help-scroll{justify-content:flex-start;overflow-x:auto;overscroll-behavior-x:contain;-webkit-overflow-scrolling:touch}.evolution-help-scroll .evolution-svg{width:720px;max-width:none;flex:none}.evolution-answer{font-size:clamp(1.5rem,6.8vw,2rem);margin-top:1px}.evolution-options{grid-template-columns:1fr;gap:6px;margin-top:4px}.evolution-options .opt{font-size:clamp(.8rem,3.45vw,.98rem);padding:7px 8px}}
