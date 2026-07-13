@@ -1018,6 +1018,34 @@ function configureAreaModule(){
 }
 configureAreaModule();
 
+function configureEquationModule(){
+  const mod=RAW_MODULES.find(m=>m.id==='dnb_13');
+  if(!mod) return;
+  mod.title='Résoudre des équations';
+  const template=(n,kind)=>({
+    n,
+    statement:'',
+    answer:'[]',
+    options:{equation_kind:kind},
+    footer:''
+  });
+  mod.questions=[
+    template(1,'mul_positive'),
+    template(2,'add_positive'),
+    template(3,'sub_positive'),
+    template(4,'affine_positive'),
+    template(5,'mul_signed'),
+    template(6,'affine_signed'),
+    template(7,'two_sided'),
+    template(8,'opposite_one_side'),
+    template(9,'qcm_solution'),
+    template(10,'qcm_operation'),
+    template(11,'taxi_problem'),
+    template(12,'think_number')
+  ];
+}
+configureEquationModule();
+
 let rngSeed=1, quiz=[];
 function setSeed(s){ rngSeed=s; }
 function rnd(){ rngSeed=(rngSeed*9301+49297)%233280; return rngSeed/233280; }
@@ -1871,6 +1899,204 @@ function makeSubstitutionInstance(mod,q){
   Object.assign(data,{expression,substitution,answer,x,y,prompt});
   const answers=data.qcm?[data.qcm.correctIndex]:[String(answer)];
   return {module:mod,q,scope:{},answers,rawStatement:prompt,rawFooter:'',hasSvg:false,substitution:data};
+}
+
+function equationSignedInteger(value){ return String(value).replace('-', '−'); }
+function equationVariable(){ return '𝑥'; }
+function equationLinearTerm(coefficient){
+  if(coefficient===0) return '';
+  if(coefficient===1) return equationVariable();
+  if(coefficient===-1) return '−'+equationVariable();
+  return equationSignedInteger(coefficient)+equationVariable();
+}
+function equationExpression(coefficient,constant){
+  let expression=equationLinearTerm(coefficient);
+  if(constant!==0){
+    if(!expression) expression=equationSignedInteger(constant);
+    else expression+=(constant>0?' + ':' − ')+Math.abs(constant);
+  }
+  return expression||'0';
+}
+function equationEquality(leftCoefficient,leftConstant,rightCoefficient,rightConstant){
+  return equationExpression(leftCoefficient,leftConstant)+' = '+equationExpression(rightCoefficient,rightConstant);
+}
+const EQUASPLAT_IMPORT_URL='https://mathsgo.re/outils/equasplat_import_splat.html';
+function equationImportSide(coefficient,constant){
+  const pieces=[];
+  const sign=coefficient<0?-1:1;
+  for(let i=0;i<Math.abs(coefficient);i++) pieces.push({type:'x',sign});
+  if(constant!==0) pieces.push({type:'number',value:constant});
+  // L'import ÉquaSplat exige au moins une pièce de chaque côté.
+  // Une paire de jetons opposés représente proprement un membre égal à zéro.
+  if(!pieces.length){
+    pieces.push({type:'number',value:1},{type:'number',value:-1});
+  }
+  return pieces;
+}
+function equationImportUrl(data){
+  const payload={
+    source:'splat_equations',
+    variable:equationVariable(),
+    unknownDisplay:'letter',
+    universe:'relative',
+    numberMode:'grouped',
+    signedWritingMode:'simplified',
+    x:data.solution,
+    left:equationImportSide(data.a,data.b),
+    right:equationImportSide(data.c,data.d)
+  };
+  return EQUASPLAT_IMPORT_URL+'?data='+encodeURIComponent(JSON.stringify(payload));
+}
+function equationResolveButtonHtml(data){
+  return '<a class="equation-resolve-btn" href="'+escapeHtml(equationImportUrl(data))+'" target="_blank" rel="noopener noreferrer" aria-label="Résoudre cette équation dans ÉquaSplat">Résoudre</a>';
+}
+function equationWithResolveHtml(data,className=''){
+  return '<div class="equation-resolve-row">'
+    +equationResolveButtonHtml(data)
+    +'<div class="equation-resolve-center">'+equationAlignedRowHtml(data.equation,className)+'</div>'
+    +'<span class="equation-resolve-balance" aria-hidden="true"></span>'
+    +'</div>';
+}
+function equationChooseSigned(min=-12,max=12,excludeZero=false){
+  const excluded=excludeZero?[0]:[];
+  return RD(min,max,excluded);
+}
+function equationOppositeTermOperation(coefficient){
+  if(coefficient>0) return '− '+equationLinearTerm(coefficient);
+  return '+ '+equationLinearTerm(Math.abs(coefficient));
+}
+function equationOppositeConstantOperation(constant){
+  return constant>0?'− '+constant:'+ '+Math.abs(constant);
+}
+function equationBuildResolution(a,b,c,d,solution){
+  const steps=[equationEquality(a,b,c,d)];
+  const operations=[];
+  const variableOnLeft=a>c;
+  const reducedCoefficient=Math.abs(a-c);
+  let reducedConstant;
+  const pushStep=(step,operation)=>{
+    if(steps[steps.length-1]===step) return;
+    operations.push(operation);
+    steps.push(step);
+  };
+
+  if(variableOnLeft){
+    if(c!==0) pushStep(equationEquality(reducedCoefficient,b,0,d),equationOppositeTermOperation(c));
+    reducedConstant=d-b;
+    if(b!==0) pushStep(equationEquality(reducedCoefficient,0,0,reducedConstant),equationOppositeConstantOperation(b));
+  }else{
+    if(a!==0) pushStep(equationEquality(0,b,reducedCoefficient,d),equationOppositeTermOperation(a));
+    reducedConstant=b-d;
+    if(d!==0) pushStep(equationEquality(0,reducedConstant,reducedCoefficient,0),equationOppositeConstantOperation(d));
+  }
+
+  const finalStep=variableOnLeft
+    ?equationVariable()+' = '+equationSignedInteger(solution)
+    :equationSignedInteger(solution)+' = '+equationVariable();
+  pushStep(finalStep,reducedCoefficient===1?'':('÷ '+reducedCoefficient));
+  return {steps,operations};
+}
+function equationUniqueOptions(correct,candidates,count=4){
+  const values=[];
+  [correct].concat(candidates).forEach(value=>{
+    const key=String(value);
+    if(!values.some(item=>String(item)===key)) values.push(value);
+  });
+  let offset=1;
+  while(values.length<count){
+    const value=Number(correct)+(offset%2?offset:-offset);
+    if(!values.some(item=>String(item)===String(value))) values.push(value);
+    offset++;
+  }
+  const options=shuffleLocal(values.slice(0,count));
+  return {options,correctIndex:String(options.findIndex(value=>String(value)===String(correct))+1)};
+}
+function equationSafeAffine(signed=false){
+  for(let tries=0;tries<80;tries++){
+    const a=RD(2,5);
+    const solution=signed?equationChooseSigned(-12,12,true):RD(1,10);
+    const b=signed?equationChooseSigned(-12,12,true):RD(1,12);
+    const d=a*solution+b;
+    if(Math.abs(d)<=50) return {a,b,c:0,d,solution};
+  }
+  return {a:2,b:3,c:0,d:11,solution:4};
+}
+function makeEquationInstance(mod,q){
+  const kind=q.options&&q.options.equation_kind||'mul_positive';
+  const level=document.getElementById('level').value;
+  const positiveOnly=level==='5e';
+  let a=1,b=0,c=0,d=0,solution=1;
+  let prompt='Résous cette équation.';
+  let contextual=false,answerSuffix='',qcm=null;
+
+  if(kind==='mul_positive'){
+    a=RD(2,5);solution=RD(2,12);d=a*solution;
+  }else if(kind==='add_positive'){
+    solution=RD(2,15);b=RD(2,12);d=solution+b;
+  }else if(kind==='sub_positive'){
+    d=RD(1,15);b=-RD(2,12);solution=d-b;
+  }else if(kind==='affine_positive'){
+    ({a,b,c,d,solution}=equationSafeAffine(false));
+  }else if(kind==='mul_signed'){
+    a=RD(2,5);solution=equationChooseSigned(-12,12,true);d=a*solution;
+  }else if(kind==='affine_signed'){
+    ({a,b,c,d,solution}=equationSafeAffine(true));
+  }else if(kind==='two_sided'){
+    let valid=false;
+    for(let tries=0;tries<100;tries++){
+      a=RD(1,5);c=RD(1,5,[a]);solution=equationChooseSigned(-12,12,true);
+      b=equationChooseSigned(-15,15);d=(a-c)*solution+b;
+      if(Math.abs(d)<=50){valid=true;break;}
+    }
+    if(!valid){a=3;b=-4;c=1;d=8;solution=6;}
+  }else if(kind==='opposite_one_side'){
+    let valid=false;
+    for(let tries=0;tries<100;tries++){
+      a=-RD(1,5);c=RD(1,5);solution=equationChooseSigned(-10,10,true);
+      b=equationChooseSigned(-15,15);d=(a-c)*solution+b;
+      if(Math.abs(d)<=50){valid=true;break;}
+    }
+    if(!valid){a=-2;b=5;c=1;d=-7;solution=4;}
+  }else if(kind==='qcm_solution'){
+    const generated=positiveOnly?equationSafeAffine(false):equationSafeAffine(true);
+    ({a,b,c,d,solution}=generated);
+    const candidates=[-solution,d-b,d/a,solution+1,solution-1].map(value=>Number.isInteger(value)?value:Math.round(value));
+    const choices=equationUniqueOptions(solution,candidates,4);
+    qcm={kind:'solution',options:choices.options.map(value=>equationVariable()+' = '+equationSignedInteger(value)),correctIndex:choices.correctIndex};
+    prompt='Quelle est la solution de cette équation ?';
+  }else if(kind==='qcm_operation'){
+    const operationKind=pick(['add','subtract','divide']);
+    solution=RD(2,10);
+    if(operationKind==='add'){
+      a=RD(2,5);b=RD(2,10);d=a*solution+b;
+    }else if(operationKind==='subtract'){
+      a=RD(2,5);b=-RD(1,Math.min(10,a*solution-1));d=a*solution+b;
+    }else{
+      a=RD(2,5);b=0;d=a*solution;
+    }
+    const amount=Math.abs(b);
+    const options=operationKind==='divide'
+      ?['Diviser les deux membres par '+a,'Soustraire '+a+' aux deux membres','Multiplier les deux membres par '+a]
+      :['Soustraire '+amount+' aux deux membres','Ajouter '+amount+' aux deux membres','Diviser les deux membres par '+a];
+    const correct=operationKind==='add'?options[0]:operationKind==='subtract'?options[1]:options[0];
+    const shuffled=shuffleLocal(options);
+    qcm={kind:'operation',options:shuffled,correctIndex:String(shuffled.indexOf(correct)+1)};
+    prompt='Quelle opération faut-il effectuer en premier ?';
+  }else if(kind==='taxi_problem'){
+    a=RD(2,5);b=RD(3,10);solution=RD(4,12);d=a*solution+b;
+    prompt='Un taxi facture '+b+' € de prise en charge puis '+a+' € par kilomètre. La course coûte '+d+' €. Quelle distance a été parcourue ?';
+    contextual=true;answerSuffix=' km';
+  }else if(kind==='think_number'){
+    a=RD(2,5);b=RD(2,12);solution=RD(1,12);d=a*solution+b;
+    prompt='Je pense à un nombre. Je le multiplie par '+a+', puis j’ajoute '+b+'. J’obtiens '+d+'. Quel est ce nombre ?';
+    contextual=true;
+  }
+
+  const equation=equationEquality(a,b,c,d);
+  const resolution=equationBuildResolution(a,b,c,d,solution);
+  const data={kind,a,b,c,d,solution,prompt,contextual,answerSuffix,qcm,equation,variableOnLeft:a>c,steps:resolution.steps,operations:resolution.operations};
+  const answers=qcm?[qcm.correctIndex]:[String(solution)];
+  return {module:mod,q,scope:{},answers,rawStatement:prompt,rawFooter:'',hasSvg:true,equationData:data};
 }
 
 function makeReductionInstance(mod,q){
@@ -2835,6 +3061,7 @@ function makeInstance(mod,q){
   if(mod&&mod.id==='dnb_18') return makeAngleSumInstance(mod,q);
   if(mod&&mod.id==='dnb_10') return makeReductionInstance(mod,q);
   if(mod&&mod.id==='dnb_11') return makeSubstitutionInstance(mod,q);
+  if(mod&&mod.id==='dnb_13') return makeEquationInstance(mod,q);
   if(mod&&mod.id==='dnb_20') return makeSolidsInstance(mod,q);
   if(mod&&mod.id==='dnb_22') return makeAreaInstance(mod,q);
   if(mod&&mod.id==='dnb_30') return makeAverageInstance(mod,q);
@@ -3862,6 +4089,127 @@ function renderSubstitutionModule(inst,correction=false,mode=null){
   return html;
 }
 
+function equationTokenSvg(x,y,value){
+  const positive=Number(value)>=0;
+  const fill=positive?'#bbf7d0':'#fecdd3';
+  const stroke=positive?'#36c779':'#d94a68';
+  return '<g transform="translate('+x+' '+y+')">'
+    +'<circle r="27" fill="'+fill+'" stroke="'+stroke+'" stroke-width="4"/>'
+    +'<text x="0" y="8" text-anchor="middle" font-family="Arial,Helvetica,sans-serif" font-size="23" font-weight="850" fill="#071a2f">'+escapeHtml(equationSignedInteger(value))+'</text>'
+    +'</g>';
+}
+function equationSplatSvgItem(x,y,opposite,revealed,solution){
+  const value=opposite?-Number(solution):Number(solution);
+  const path='M-44,-8 C-50,-35 -24,-47 -7,-36 C8,-54 35,-41 32,-19 C52,-9 48,20 26,25 C21,48 -9,52 -20,32 C-44,37 -56,12 -44,-8 Z';
+  if(!revealed){
+    return '<g transform="translate('+x+' '+y+')"><path d="'+path+'" fill="#080a0b" stroke="#c5c8cb" stroke-width="3"/>'
+      +(opposite?'<text x="0" y="7" text-anchor="middle" font-family="Arial,Helvetica,sans-serif" font-size="17" font-weight="900" fill="#ffffff">opposé</text>':'')
+      +'</g>';
+  }
+  const positive=value>=0,fill=positive?'#bbf7d0':'#fecdd3',stroke=positive?'#36c779':'#d94a68';
+  return '<g transform="translate('+x+' '+y+')"><path d="'+path+'" fill="#f8fafc" stroke="#c5c8cb" stroke-width="3"/>'
+    +'<circle r="23" fill="'+fill+'" stroke="'+stroke+'" stroke-width="4"/>'
+    +'<text x="0" y="7" text-anchor="middle" font-family="Arial,Helvetica,sans-serif" font-size="20" font-weight="850" fill="#273746">'+escapeHtml(equationSignedInteger(value))+'</text></g>';
+}
+function equationSplatPositions(count,panelX){
+  if(count<=0) return [];
+  const layouts={
+    1:[[215,145]],
+    2:[[130,145],[300,145]],
+    3:[[130,105],[300,105],[215,205]],
+    4:[[130,100],[300,100],[130,205],[300,205]],
+    5:[[92,100],[215,100],[338,100],[150,205],[280,205]]
+  };
+  return (layouts[count]||layouts[5]).map(point=>[panelX+point[0],point[1]]);
+}
+function equationSplatPanel(coefficient,constant,panelX,revealed,solution){
+  let html='';
+  const opposite=coefficient<0;
+  equationSplatPositions(Math.min(5,Math.abs(coefficient)),panelX).forEach(point=>{
+    html+=equationSplatSvgItem(point[0],point[1],opposite,revealed,solution);
+  });
+  if(constant!==0) html+=equationTokenSvg(panelX+215,305,constant);
+  return html;
+}
+function equationSplatSvg(data,revealed=false){
+  return '<svg class="equation-splat-svg" viewBox="0 0 920 360" role="img" aria-label="Balance représentant la même quantité à gauche et à droite">'
+    +'<rect x="12" y="16" width="440" height="330" rx="28" fill="#f8fafc" stroke="#c9cdd2" stroke-width="4"/>'
+    +'<rect x="468" y="16" width="440" height="330" rx="28" fill="#f8fafc" stroke="#c9cdd2" stroke-width="4"/>'
+    +'<line x1="460" y1="8" x2="460" y2="352" stroke="#0a0a0a" stroke-width="7" stroke-linecap="round"/>'
+    +equationSplatPanel(data.a,data.b,12,revealed,data.solution)
+    +equationSplatPanel(data.c,data.d,468,revealed,data.solution)
+    +'</svg>';
+}
+function equationAlignedRowHtml(equation,className=''){
+  const parts=String(equation).split(' = ');
+  const left=parts.shift()||'';
+  const right=parts.join(' = ');
+  return '<div class="equation-aligned-row '+className+'">'
+    +'<span class="equation-aligned-left">'+renderMathSegments('$$'+left+'$$')+'</span>'
+    +'<span class="equation-aligned-equals">=</span>'
+    +'<span class="equation-aligned-right">'+renderMathSegments('$$'+right+'$$')+'</span>'
+    +'</div>';
+}
+function equationDetailEquationRowHtml(equation,isFinal=false){
+  const parts=String(equation).split(' = ');
+  const left=parts.shift()||'';
+  const right=parts.join(' = ');
+  return '<div class="equation-detail-line equation-detail-equation '+(isFinal?'equation-detail-final':'')+'">'
+    +'<span class="equation-detail-left">'+renderMathSegments('$$'+left+'$$')+'</span>'
+    +'<span class="equation-detail-equals">=</span>'
+    +'<span class="equation-detail-right">'+renderMathSegments('$$'+right+'$$')+'</span>'
+    +'</div>';
+}
+function equationDetailOperationRowHtml(operation){
+  const rendered=renderMathSegments('$$'+operation+'$$');
+  return '<div class="equation-detail-line equation-detail-operation">'
+    +'<span class="equation-detail-operation-left"><span>'+rendered+'</span><span class="equation-detail-arrow">↓</span></span>'
+    +'<span class="equation-detail-operation-right"><span class="equation-detail-arrow">↓</span><span>'+rendered+'</span></span>'
+    +'</div>';
+}
+function equationDetailHtml(data){
+  let html='<div class="equation-detail-resolution">';
+  data.steps.forEach((step,index)=>{
+    html+=equationDetailEquationRowHtml(step,index===data.steps.length-1);
+    if(index<data.operations.length) html+=equationDetailOperationRowHtml(data.operations[index]);
+  });
+  return html+'</div>';
+}
+function renderEquationModule(inst,correction=false,mode=null){
+  if(mode===null) mode=document.getElementById('visualMode').value;
+  const data=inst.equationData;
+  let html='<div class="question equation-prompt">'+escapeHtml(data.prompt)+'</div>';
+  if(!data.contextual) html+=equationWithResolveHtml(data,'equation-main');
+
+  if(!isWithoutVisuals(mode)){
+    html+='<div class="equation-help">'
+      +(data.contextual?equationWithResolveHtml(data,'equation-help-equation'):'')
+      +equationSplatSvg(data,correction)+'</div>';
+  }else html+=visualPlaceholder(mode);
+
+  if(data.qcm){
+    html+='<div class="options equation-options options-'+data.qcm.options.length+'">';
+    data.qcm.options.forEach((option,index)=>{
+      const correct=correction&&String(index+1)===String(data.qcm.correctIndex);
+      const rendered=data.qcm.kind==='solution'?renderMathSegments('$$'+option+'$$'):escapeHtml(option);
+      html+='<div class="opt '+(correct?'correct':'')+'"><strong>'+String.fromCharCode(65+index)+'.</strong> '+rendered+'</div>';
+    });
+    html+='</div>';
+  }else{
+    const answerLabel=data.answerSuffix
+      ?(correction?'<strong>'+escapeHtml(equationSignedInteger(data.solution)+data.answerSuffix)+'</strong>':'<span class="answer-dots">…</span>')
+      :(data.variableOnLeft
+        ?renderMathSegments('$$'+equationVariable()+' = $$')+(correction?'<strong>'+renderMathSegments('$$'+equationSignedInteger(data.solution)+'$$')+'</strong>':'<span class="answer-dots">…</span>')
+        :(correction?'<strong>'+renderMathSegments('$$'+equationSignedInteger(data.solution)+'$$')+'</strong>':'<span class="answer-dots">…</span>')+renderMathSegments('$$ = '+equationVariable()+'$$'));
+    html+='<div class="equation-answer-shell">'
+      +'<span class="equation-answer-balance" aria-hidden="true"></span>'
+      +'<div class="footer equation-answer">'+answerLabel+'</div>'
+      +(correction?'<button class="equation-detail-btn" type="button" onclick="openEquationDetail()">Détail</button>':'<span class="equation-answer-balance" aria-hidden="true"></span>')
+      +'</div>';
+  }
+  return html;
+}
+
 function stripSvgOnly(s){
   return String(s||'').replace(/<svg[\s\S]*?<\/svg>/ig,'').replace(/<div[^>]*>\s*<\/div>/ig,'').replace(/\n{2,}/g,'\n').trim();
 }
@@ -4122,6 +4470,7 @@ function renderQuestion(inst, correction=false, mode=null){
   if(inst && inst.module && inst.module.id==='dnb_09') return renderModule09(inst, correction, mode);
   if(inst && inst.module && inst.module.id==='dnb_10') return renderModule10(inst, correction, mode);
   if(inst && inst.module && inst.module.id==='dnb_11') return renderSubstitutionModule(inst, correction, mode);
+  if(inst && inst.module && inst.module.id==='dnb_13') return renderEquationModule(inst, correction, mode);
   if(inst && inst.module && inst.module.id==='dnb_18') return renderAngleSumModule(inst, correction, mode);
   if(inst && inst.module && inst.module.id==='dnb_20') return renderSolidsModule(inst, correction);
   if(inst && inst.module && inst.module.id==='dnb_22') return renderAreaModule(inst, correction, mode);
@@ -4145,6 +4494,7 @@ const LEVEL_5E_QUESTIONS={
   dnb_08:'all',
   dnb_09:[2,3,4,5,6,8,9,10,11,12,13,14,15,16,17,18,19],
   dnb_11:[1,4,6,11],
+  dnb_13:[1,2,3,4,9,10,11,12],
   dnb_14:'all',
   dnb_15:'all',
   dnb_16:'all',
@@ -4328,6 +4678,32 @@ body{margin:0;background:var(--bg);font-family:Arial,Helvetica,sans-serif;color:
 .substitution-answer strong{color:var(--answer)}
 .substitution-options{margin-top:9px;max-width:880px}
 .substitution-options.options-3{grid-template-columns:repeat(3,minmax(0,1fr));max-width:960px}
+.diapo.equation-mode .stage{align-items:flex-start;padding:10px 18px 16px;overflow:auto}
+.diapo.equation-mode .slide{max-width:1160px}
+.equation-prompt{font-size:clamp(1.7rem,2.75vw,3.05rem);line-height:1.13;margin:0 auto 4px}
+.equation-main,.equation-help-equation{font-family:"Cambria Math","STIX Two Math","Times New Roman",serif;font-size:clamp(2.2rem,3.8vw,4.1rem);font-weight:800;line-height:1.05;margin:1px auto 3px}
+.equation-resolve-row{display:grid;grid-template-columns:minmax(74px,1fr) minmax(0,920px) minmax(74px,1fr);align-items:center;width:100%;margin-left:auto;margin-right:auto}
+.equation-resolve-center{min-width:0}
+.equation-resolve-center .equation-aligned-row{width:100%}
+.equation-resolve-btn{justify-self:end;margin-right:10px;padding:7px 11px;border:2px solid #159d52;border-radius:12px;background:#eefbf3;color:#087238;font-family:Arial,Helvetica,sans-serif;font-size:clamp(.82rem,1.15vw,1rem);font-weight:900;line-height:1;text-decoration:none;white-space:nowrap;box-shadow:0 1px 0 rgba(8,114,56,.08)}
+.equation-resolve-btn:hover,.equation-resolve-btn:focus-visible{background:#dcf8e8;border-color:#087b3d;outline:none}
+.equation-resolve-balance{display:block;min-width:0}
+.equation-aligned-row{display:grid;grid-template-columns:minmax(0,1fr) auto minmax(0,1fr);align-items:baseline;column-gap:.22em;width:min(100%,920px);margin-left:auto;margin-right:auto}
+.equation-aligned-left{text-align:right;min-width:0}
+.equation-aligned-equals{text-align:center}
+.equation-aligned-right{text-align:left;min-width:0}
+.equation-help{display:flex;flex-direction:column;align-items:center;justify-content:center;width:100%;height:clamp(215px,37vh,335px);margin:0 auto 2px}
+.equation-help-equation{font-size:clamp(1.65rem,2.55vw,2.75rem);margin-bottom:1px}
+.equation-splat-svg{display:block;width:min(100%,920px);height:auto;max-height:100%}
+.equation-answer-shell{display:grid;grid-template-columns:minmax(62px,1fr) auto minmax(62px,1fr);align-items:center;width:min(100%,760px);margin:1px auto 0}
+.equation-answer{display:flex;align-items:center;justify-content:center;gap:.1em;font-family:"Cambria Math","STIX Two Math","Times New Roman",serif;font-size:clamp(2.15rem,3.75vw,4rem);margin:1px auto 0}
+.equation-answer strong{color:var(--answer)}
+.equation-detail-btn{justify-self:start;margin-left:10px;padding:7px 11px;border:2px solid #c8d8ed;border-radius:11px;background:#f8fbff;color:#073a75;font-family:Arial,Helvetica,sans-serif;font-size:clamp(.82rem,1.2vw,1rem);font-weight:850;cursor:pointer}
+.equation-detail-btn:hover{border-color:#0b5fa8;background:#edf6ff}
+.equation-options{margin-top:5px;max-width:980px;gap:9px 12px}
+.equation-options.options-3{grid-template-columns:repeat(3,minmax(0,1fr))}
+.equation-options .opt{font-size:clamp(1.05rem,1.55vw,1.55rem);padding:11px 13px}
+@media(max-width:800px){.diapo.equation-mode .stage{padding:7px 7px 14px}.equation-prompt{font-size:clamp(1.12rem,5vw,1.45rem);margin-bottom:2px}.equation-resolve-row{grid-template-columns:54px minmax(0,1fr) 54px}.equation-resolve-btn{margin-right:4px;padding:5px 6px;border-radius:9px;font-size:.68rem;border-width:1.5px}.equation-main{font-size:clamp(1.65rem,7.5vw,2.1rem);margin:1px auto 2px}.equation-help{height:clamp(155px,29vh,225px)}.equation-help-equation{font-size:clamp(1.25rem,5.5vw,1.65rem)}.equation-splat-svg{width:min(100%,560px)}.equation-answer-shell{grid-template-columns:minmax(54px,1fr) auto minmax(54px,1fr)}.equation-answer{font-size:clamp(1.65rem,7.3vw,2.1rem)}.equation-detail-btn{margin-left:5px;padding:6px 8px;border-radius:9px;font-size:.78rem}.equation-options,.equation-options.options-3{grid-template-columns:1fr;gap:6px;margin-top:4px}.equation-options .opt{font-size:clamp(.88rem,3.75vw,1.05rem);padding:8px 9px}}
 .diapo.fraction-percent-mode .stage{align-items:flex-start;padding:14px 22px 18px;overflow:auto}
 .diapo.fraction-percent-mode .slide{max-width:1080px}
 .fraction-percent-prompt{font-size:clamp(1.9rem,3vw,3.25rem);line-height:1.12;margin:0 auto 7px}
@@ -4473,7 +4849,7 @@ body{margin:0;background:var(--bg);font-family:Arial,Helvetica,sans-serif;color:
 .proportion-bare-table{font-family:"Cambria Math","STIX Two Math","Times New Roman",serif;font-size:clamp(1.8rem,2.8vw,2.8rem)}
 .proportion-bare-table td{min-width:150px;padding:16px 32px}
 .course-btn{position:fixed;top:94px;right:16px;z-index:30;min-height:48px;padding:10px 17px;border:2px solid #e86100;border-radius:14px;background:#fff3e5;color:#7a3500;font-size:1.02rem;font-weight:850;cursor:pointer;box-shadow:0 5px 16px rgba(11,33,71,.15)}
-.course-btn[hidden],.course-modal[hidden]{display:none!important}
+.course-btn[hidden],.course-modal[hidden],.equation-detail-modal[hidden]{display:none!important}
 .course-modal{position:fixed;inset:0;z-index:100;display:flex;align-items:center;justify-content:center;padding:18px;background:rgba(11,33,71,.48)}
 .course-card{position:relative;width:min(680px,100%);max-height:min(720px,calc(100dvh - 36px));overflow:auto;padding:26px;border:2px solid var(--border);border-radius:22px;background:white;box-shadow:0 24px 70px rgba(11,33,71,.28)}
 .course-close{position:absolute;top:10px;right:12px;width:42px;height:42px;border:0;border-radius:50%;background:#eef4fc;color:#073a75;font-size:1.55rem;font-weight:900;cursor:pointer}
@@ -4481,6 +4857,22 @@ body{margin:0;background:var(--bg);font-family:Arial,Helvetica,sans-serif;color:
 .course-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
 .course-rule{padding:15px 16px;border:2px solid var(--border);border-radius:15px;background:#f8fbff;font-size:clamp(1rem,1.7vw,1.3rem);line-height:1.35;text-align:left}
 .course-rule strong{display:block;margin-bottom:5px;color:#e86100;font-size:1.08em}
+.equation-detail-modal{position:fixed;inset:0;z-index:110;display:flex;align-items:center;justify-content:center;padding:18px;background:rgba(11,33,71,.52)}
+.equation-detail-card{position:relative;width:min(860px,100%);max-height:min(760px,calc(100dvh - 36px));overflow:auto;padding:24px 24px 28px;border:2px solid var(--border);border-radius:22px;background:#fff;box-shadow:0 24px 70px rgba(11,33,71,.3)}
+.equation-detail-close{position:absolute;top:10px;right:12px;width:42px;height:42px;border:0;border-radius:50%;background:#eef4fc;color:#073a75;font-size:1.55rem;font-weight:900;cursor:pointer}
+.equation-detail-title{margin:0 48px 18px;color:#073a75;font-size:clamp(1.55rem,3vw,2.15rem);line-height:1.1;text-align:center}
+.equation-detail-resolution{width:min(100%,760px);margin:0 auto;font-family:"Cambria Math","STIX Two Math","Times New Roman",serif;font-weight:800}
+.equation-detail-line{display:grid;grid-template-columns:clamp(52px,9vw,82px) minmax(0,1fr) 30px minmax(0,1fr) clamp(52px,9vw,82px);align-items:center;width:100%;column-gap:3px}
+.equation-detail-equation{min-height:48px;font-size:clamp(1.55rem,2.8vw,2.35rem);line-height:1.05}
+.equation-detail-left{grid-column:2;text-align:right;white-space:nowrap}
+.equation-detail-equals{grid-column:3;text-align:center}
+.equation-detail-right{grid-column:4;text-align:left;white-space:nowrap}
+.equation-detail-operation{min-height:42px;color:#e86100;font-family:Arial,Helvetica,sans-serif;font-size:clamp(1rem,1.65vw,1.35rem);font-weight:900;line-height:1}
+.equation-detail-operation-left{grid-column:1;display:flex;align-items:center;justify-content:flex-end;gap:3px;white-space:nowrap}
+.equation-detail-operation-right{grid-column:5;display:flex;align-items:center;justify-content:flex-start;gap:3px;white-space:nowrap}
+.equation-detail-arrow{font-size:1.55em;line-height:1}
+.equation-detail-final{color:#078a5b;font-weight:900}
+@media(max-width:800px){.equation-detail-modal{padding:7px}.equation-detail-card{max-height:calc(100dvh - 14px);padding:18px 7px 20px;border-radius:16px}.equation-detail-title{margin:2px 42px 14px;font-size:1.38rem}.equation-detail-close{top:7px;right:7px;width:38px;height:38px}.equation-detail-resolution{width:min(100%,430px)}.equation-detail-line{grid-template-columns:45px minmax(0,1fr) 20px minmax(0,1fr) 45px;column-gap:2px}.equation-detail-equation{min-height:39px;font-size:clamp(1.08rem,5.3vw,1.42rem)}.equation-detail-operation{min-height:32px;font-size:clamp(.78rem,3.6vw,.94rem)}.equation-detail-operation-left,.equation-detail-operation-right{gap:2px}.equation-detail-arrow{font-size:1.4em}}
 svg{display:block;max-width:100%;height:auto}
 @media(min-width:1000px){.diapo:fullscreen .slide,.diapo:-webkit-full-screen .slide{zoom:1.12}}
 @media(max-width:800px){.diapo{--stage-top:24px;--stage-x:24px;--stage-bottom:24px}.top{grid-template-columns:minmax(0,1fr) auto minmax(0,1fr);height:76px;text-align:center;padding:9px;gap:6px}.left{justify-content:flex-start}.right{justify-content:flex-end}.top .btn{min-height:52px;font-size:.92rem;padding:11px 10px;border-radius:12px;white-space:nowrap}.top .btn.primary{min-width:0}.navnums,.fullscreen-btn{display:none}.mobile-counter{display:block;white-space:nowrap;font-size:1.08rem}.stage{padding:var(--stage-top) var(--stage-x) var(--stage-bottom)}.diapo .stage>.slide{margin-top:auto;margin-bottom:auto}.options.options-4{grid-template-columns:1fr}.options.options-4.options-compact{grid-template-columns:repeat(2,minmax(0,1fr))}.diapo.scientific-mode .stage{padding:8px 8px 13px}.scientific-prompt{font-size:clamp(1.25rem,5.8vw,1.65rem)}.scientific-footer{font-size:clamp(1.7rem,7.7vw,2.25rem);margin-top:3px}.scientific-place-help{min-height:62px;margin-top:14px}.scientific-place-equation{font-size:clamp(1.45rem,6.4vw,2rem)}.scientific-glide-help{height:clamp(160px,24vh,195px);margin-top:-3px}.scientific-condition-help{min-height:64px;margin-top:8px}.scientific-condition{font-size:clamp(1.7rem,7.4vw,2.25rem)}.scientific-options{gap:7px;margin-top:6px}.scientific-options .opt{font-size:clamp(.86rem,3.75vw,1.05rem);padding:8px 9px}.diapo.numberline-mode .footer{font-size:clamp(1.65rem,7.5vw,2rem)}.diapo.numberline-mode .answer-slot{width:2.2em!important}.diapo.numberline-mode .footer .qquad{width:.7em}.diapo.numberline-mode .footer .math-display{transform:none}.diapo.solids-mode .stage{padding:10px 10px 16px}.solid-prompt{font-size:clamp(1.25rem,5.6vw,1.65rem)}.solid-visual{width:230px;height:clamp(155px,27vh,215px)}.solid-options{grid-template-columns:repeat(2,minmax(0,1fr));gap:7px}.solid-options .opt{font-size:clamp(.88rem,3.7vw,1.08rem);padding:8px 9px}}
@@ -4514,6 +4906,13 @@ svg{display:block;max-width:100%;height:auto}
     <button class="course-close" type="button" aria-label="Fermer le cours" onclick="closeCourse()">×</button>
     <h2 class="course-title" id="courseTitle"></h2>
     <div class="course-grid" id="courseGrid"></div>
+  </section>
+</div>
+<div class="equation-detail-modal" id="equationDetailModal" onclick="if(event.target===this)closeEquationDetail()" hidden>
+  <section class="equation-detail-card" role="dialog" aria-modal="true" aria-labelledby="equationDetailTitle">
+    <button class="equation-detail-close" type="button" aria-label="Fermer la résolution détaillée" onclick="closeEquationDetail()">×</button>
+    <h2 class="equation-detail-title" id="equationDetailTitle">Résolution détaillée</h2>
+    <div id="equationDetailBody"></div>
   </section>
 </div>
 <script>
@@ -4566,6 +4965,7 @@ function render(){
  diapo.classList.toggle('relation-mode',slides[idx].moduleId==='dnb_09');
  diapo.classList.toggle('reduction-mode',slides[idx].moduleId==='dnb_10');
  diapo.classList.toggle('substitution-mode',slides[idx].moduleId==='dnb_11');
+ diapo.classList.toggle('equation-mode',slides[idx].moduleId==='dnb_13');
  diapo.classList.toggle('squares-mode',slides[idx].moduleId==='dnb_07');
  diapo.classList.toggle('numberline-mode',slides[idx].moduleId==='dnb_14');
  diapo.classList.toggle('angle-sum-mode',slides[idx].moduleId==='dnb_18');
@@ -4577,6 +4977,7 @@ function render(){
  diapo.classList.toggle('evolution-mode',slides[idx].moduleId==='dnb_35');
  const current=slides[idx];
  closeCourse();
+ closeEquationDetail();
  const courseBtn=document.getElementById('courseBtn');
  if(courseBtn) courseBtn.hidden=!current.courseKind;
  const showVisual=current.canRevealVisual&&visualShown[idx];
@@ -4597,11 +4998,13 @@ function render(){
 }
 function openCourse(){const modal=document.getElementById('courseModal'),course=courseCatalog[slides[idx].courseKind];if(modal&&course){document.getElementById('courseTitle').textContent=course.title;document.getElementById('courseGrid').innerHTML=course.rules.map(rule=>'<div class="course-rule"><strong>'+rule[0]+'</strong>'+rule[1]+'</div>').join('');modal.hidden=false;const close=modal.querySelector('.course-close');if(close)close.focus();}}
 function closeCourse(){const modal=document.getElementById('courseModal');if(modal)modal.hidden=true;}
+function openEquationDetail(){const modal=document.getElementById('equationDetailModal'),body=document.getElementById('equationDetailBody'),detail=slides[idx].equationDetailHtml;if(modal&&body&&detail){body.innerHTML=detail;modal.hidden=false;const close=modal.querySelector('.equation-detail-close');if(close)close.focus();}}
+function closeEquationDetail(){const modal=document.getElementById('equationDetailModal');if(modal)modal.hidden=true;}
 function revealVisual(){if(slides[idx].canRevealVisual){visualShown[idx]=true;render();}}
 function next(){if(!corr){corr=true;render();return;} if(idx<slides.length-1){idx++;corr=false;render();}}
 function prev(){if(corr){corr=false;render();return;} if(idx>0){idx--;corr=false;render();}}
 function toggleFS(){const d=document.getElementById('diapo'); if(!document.fullscreenElement) d.requestFullscreen(); else document.exitFullscreen();}
-document.addEventListener('keydown',e=>{if(e.key==='Escape')closeCourse(); if(e.key==='ArrowRight')next(); if(e.key==='ArrowLeft')prev(); if(e.key==='f'||e.key==='F')toggleFS();});
+document.addEventListener('keydown',e=>{const detail=document.getElementById('equationDetailModal'),course=document.getElementById('courseModal');if(e.key==='Escape'){closeCourse();closeEquationDetail();return;}if((detail&&!detail.hidden)||(course&&!course.hidden))return;if(e.key==='ArrowRight')next();if(e.key==='ArrowLeft')prev();if(e.key==='f'||e.key==='F')toggleFS();});
 window.addEventListener('resize',()=>requestAnimationFrame(fitNavNumbers));
 render();
 </`+`script>
@@ -4620,6 +5023,7 @@ function openDiapoWindow(){
       courseKind:mode==='with'?({dnb_08:'divisibility',dnb_31:'median'}[inst.module.id]||null):null,
       questionHtml:buildCleanSlideHtml(inst,false,hiddenMode),
       correctionHtml:buildCleanSlideHtml(inst,true,hiddenMode),
+      equationDetailHtml:inst.module.id==='dnb_13'&&inst.equationData&&!inst.equationData.qcm?equationDetailHtml(inst.equationData):null,
       canRevealVisual,
       visualQuestionHtml:canRevealVisual?buildCleanSlideHtml(inst,false,'with'):null,
       visualCorrectionHtml:canRevealVisual?buildCleanSlideHtml(inst,true,'with'):null
@@ -4720,6 +5124,7 @@ function visualPolicyForQuestion(m,q){
     return q.options&&q.options.reduction_kind==='read_tiles'?'essential':'optional';
   }
   if(m.id==='dnb_11') return Number(q.n)===7?'none':'optional';
+  if(m.id==='dnb_13') return 'optional';
   if(m.id==='dnb_18') return [2,3,4,5,6,7,8,9,10].includes(Number(q.n))?'optional':'none';
   // Dans le module Aires, la figure porte les données de l'énoncé et reste
   // toujours visible. Le sélecteur avec/sans aide commande seulement la formule.
