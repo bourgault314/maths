@@ -231,6 +231,51 @@ function configureRelationsModule(){
 }
 configureRelationsModule();
 
+function configureFractionPercentModule(){
+  const mod=RAW_MODULES.find(m=>m.id==='dnb_04');
+  if(!mod) return;
+  const q=n=>mod.questions.find(item=>item.n===n);
+
+  [1,2,3].forEach(n=>{
+    q(n).statement='Calcule :';
+    q(n).options={...q(n).options,fraction_percent_category:'fraction'};
+  });
+  [[4,100],[5,50],[6,25],[7,10],[8,1]].forEach(([n,percent])=>{
+    q(n).options={...q(n).options,fraction_percent_category:'percent',percent_value:percent};
+  });
+
+  q(9).options={
+    ...q(9).options,
+    fraction_percent_category:'percent',
+    percent_dynamic:true,
+    formula_code:'setNB(1)\nidx=RD(5)\na=[100,50,25,20,10,1][idx]\nmul=[1,2,4,5,10,100][idx]\nc=RD(2,30)*mul'
+  };
+  q(10).options={
+    ...q(10).options,
+    fraction_percent_category:'percent',
+    percent_dynamic:true,
+    percent_contextual:true,
+    formula_code:'setNB(1)\nidx=RD(5)\na=[100,50,25,20,10,1][idx]\nmul=[1,2,4,5,10,100][idx]\nc=RD(2,12)*mul\ncontextIndex=RD(4)'
+  };
+
+  if(!q(11)) mod.questions.push({
+    n:11,
+    statement:'Calcule :',
+    answer:'["c/5"]',
+    options:{
+      formula_code:'setNB(1)\nc=RD(2,50)*5',
+      fraction_percent_category:'percent',
+      percent_value:20
+    },
+    footer:'$$20\\%\\text{ de }${c}=[[formula]]$$'
+  });
+
+  mod.questions=mod.questions.filter(item=>item.n!==12);
+  const displayOrder=[1,2,3,4,5,6,11,7,8,9,10];
+  mod.questions.sort((a,b)=>displayOrder.indexOf(a.n)-displayOrder.indexOf(b.n));
+}
+configureFractionPercentModule();
+
 function configureScientificModule(){
   const mod=RAW_MODULES.find(m=>m.id==='dnb_06');
   if(!mod) return;
@@ -266,6 +311,20 @@ function configureScientificModule(){
   });
 }
 configureScientificModule();
+
+function configureAngleSumModule(){
+  const mod=RAW_MODULES.find(m=>m.id==='dnb_18');
+  if(!mod) return;
+  const kinds={
+    1:'sum_course',2:'general',3:'general',4:'right',5:'isosceles_vertex',
+    6:'isosceles_base',7:'equilateral',8:'validity_three',9:'figure',10:'invalid_two'
+  };
+  mod.questions.forEach(q=>{
+    q.options=q.options||{};
+    q.options.angle_sum_kind=kinds[q.n];
+  });
+}
+configureAngleSumModule();
 
 function configureMedianModule(){
   const mod=RAW_MODULES.find(m=>m.id==='dnb_31');
@@ -1962,7 +2021,7 @@ function scientificFirstNonZeroData(value){
 function scientificPlaceHelp(value,correction=false){
   const data=scientificFirstNonZeroData(value);
   const placeData=scientificFirstNonZeroData(data.placeValue);
-  const shownExponent=correction?String(data.exponent):'⋯';
+  const shownExponent=correction?String(data.exponent):'...';
   return '<div class="scientific-help scientific-place-help" role="img" aria-label="Valeur de position du premier chiffre non nul">'
     +'<div class="scientific-place-equation">'+placeData.highlighted
     +' = '+data.digit+' × 10<sup>'+shownExponent+'</sup></div>'
@@ -2050,6 +2109,7 @@ function renderScientificModule(inst,correction=false,mode=null){
     }else if(kind==='from_scientific'){
       footerHtml=renderPlaceholders('$$'+scientificFormattedNumber(inst.scope.m)+'\\,\\times\\,10^{'+inst.scope.e+'}\\,=\\,[[dots]]$$',inst.answers,correction?'correction':'question');
     }else footerHtml=renderPlaceholders(inst.rawFooter,inst.answers,correction?'correction':'question');
+    footerHtml=footerHtml.replace(/<span class="answer-dots">…<\/span>/g,'<span class="answer-dots">...</span>');
     html+='<div class="footer scientific-footer">'+footerHtml+'</div>';
   }
   if(!isWithoutVisuals(mode)) html+=scientificVisualHtml(inst,correction);
@@ -2281,6 +2341,98 @@ function relationExpressionChoices(target=null){
   };
 }
 
+function makeFractionPercentInstance(mod,q){
+  const scope=q.options&&q.options.formula_code?runCode(q.options.formula_code):{};
+  const answers=parseAnswer(q,scope);
+  let rawStatement=subVars(q.statement||'',scope);
+  let rawFooter=subVars(q.footer||'',scope);
+  const category=q.options&&q.options.fraction_percent_category;
+  let fractionPercent=null;
+
+  if(category==='fraction'){
+    const numerator=Number(scope.p===undefined?1:scope.p);
+    const denominator=Number(scope.q);
+    const level=(typeof document!=='undefined'&&document.getElementById('level'))?document.getElementById('level').value:'4e';
+    fractionPercent={
+      kind:'fraction',
+      numerator,
+      denominator,
+      total:Number(scope.n),
+      part:Number(scope.n)/denominator,
+      result:numerator*Number(scope.n)/denominator,
+      label:String(scope.mot||'la fraction'),
+      wordLabels:level==='5e'
+    };
+  }
+
+  if(category==='percent'){
+    const percent=Number(q.options.percent_dynamic?scope.a:q.options.percent_value);
+    fractionPercent={
+      kind:'percent',
+      percent,
+      denominator:100/percent,
+      total:Number(scope.c),
+      part:Number(scope.c)*percent/100,
+      result:Number(scope.c)*percent/100,
+      contextual:!!q.options.percent_contextual
+    };
+  }
+
+  if(q.options&&q.options.percent_contextual){
+    const percent=fmt(scope.a);
+    const contexts=[
+      {prompt:`Dans un collège de $$${scope.c}$$ élèves, $$${percent}\\%$$ sont externes. Combien d’élèves sont externes ?`,unit:'élèves'},
+      {prompt:`Une bibliothèque possède $$${scope.c}$$ livres. $$${percent}\\%$$ sont des bandes dessinées. Combien de bandes dessinées possède-t-elle ?`,unit:'bandes dessinées'},
+      {prompt:`Un club sportif compte $$${scope.c}$$ adhérents. $$${percent}\\%$$ pratiquent la natation. Combien d’adhérents pratiquent la natation ?`,unit:'adhérents'},
+      {prompt:`Un verger compte $$${scope.c}$$ arbres. $$${percent}\\%$$ sont des pommiers. Combien de pommiers y a-t-il ?`,unit:'pommiers'},
+      {prompt:`Une collection contient $$${scope.c}$$ cartes. $$${percent}\\%$$ sont rares. Combien de cartes rares contient-elle ?`,unit:'cartes rares'}
+    ];
+    const context=contexts[Number(scope.contextIndex)||0];
+    rawStatement='<div style="text-align:justify">'+context.prompt+'</div>';
+    rawFooter='$$[[formula]]\\text{ '+context.unit+'}$$';
+  }
+
+  return {module:mod,q,scope,answers,rawStatement,rawFooter,hasSvg:false,fractionPercent};
+}
+
+function makeAngleSumInstance(mod,q){
+  const scope=q.options&&q.options.formula_code?runCode(q.options.formula_code):{};
+  let answers=parseAnswer(q,scope);
+  let rawStatement=subVars(q.statement||'',scope);
+  const rawFooter=subVars(q.footer||'',scope);
+  if(q.options&&q.options.shuffle_answers){
+    const shuffled=shuffledQcm(rawStatement,answers);
+    rawStatement=shuffled.statement;
+    answers=shuffled.answers;
+  }
+  const kind=q.options&&q.options.angle_sum_kind;
+  let bar=null;
+  if(kind==='general'){
+    const third=180-Number(scope.a)-Number(scope.b);
+    bar={values:[Number(scope.a),Number(scope.b),third],unknown:[2]};
+  }
+  if(kind==='right'){
+    bar={values:[90,Number(scope.a),90-Number(scope.a)],unknown:[2]};
+  }
+  if(kind==='isosceles_vertex'){
+    const base=(180-Number(scope.a))/2;
+    bar={values:[Number(scope.a),base,base],unknown:[1,2]};
+  }
+  if(kind==='isosceles_base'){
+    bar={values:[Number(scope.a),Number(scope.a),180-2*Number(scope.a)],unknown:[2]};
+  }
+  if(kind==='equilateral'){
+    bar={values:[60,60,60],unknown:[0,1,2]};
+  }
+  if(kind==='validity_three'||kind==='figure'){
+    bar={values:[Number(scope.a),Number(scope.b),Number(scope.c)],unknown:kind==='figure'?[2]:[]};
+  }
+  if(kind==='invalid_two'){
+    bar={values:[Number(scope.a),Number(scope.b)],unknown:[],comparison:true};
+  }
+  return {module:mod,q,scope,answers,rawStatement,rawFooter,hasSvg:/<svg/i.test(rawStatement+rawFooter),angleSum:{kind,bar}};
+}
+
 function makeRelationInstance(mod,q){
   if(q.options&&q.options.relation_kind==='expression_qcm'){
     const qcm=relationExpressionChoices(q.options.expression_target);
@@ -2313,7 +2465,9 @@ function makeRelationInstance(mod,q){
 
 function makeInstance(mod,q){
   if(mod&&mod.id==='dnb_01') return makeModule01Instance(mod,q);
+  if(mod&&mod.id==='dnb_04') return makeFractionPercentInstance(mod,q);
   if(mod&&mod.id==='dnb_09') return makeRelationInstance(mod,q);
+  if(mod&&mod.id==='dnb_18') return makeAngleSumInstance(mod,q);
   if(mod&&mod.id==='dnb_10') return makeReductionInstance(mod,q);
   if(mod&&mod.id==='dnb_20') return makeSolidsInstance(mod,q);
   if(mod&&mod.id==='dnb_22') return makeAreaInstance(mod,q);
@@ -2366,6 +2520,136 @@ function renderGenericQuestion(inst, correction=false, mode=null){
     html += '<div class="question">'+renderMathSegments(statement)+'</div>';
   }
   if(footer) html += '<div class="footer">'+renderPlaceholders(footer, inst.answers, correction?'correction':'question')+'</div>';
+  return html;
+}
+
+function fractionPercentPalette(data){
+  if(data.kind==='fraction'){
+    if([2].includes(data.denominator)) return {fill:'#fff4c9',stroke:'#8a7420'};
+    if([3,6].includes(data.denominator)) return {fill:'#fde5eb',stroke:'#9b455f'};
+    if([4,8].includes(data.denominator)) return {fill:'#e5f5e4',stroke:'#477a45'};
+    if(data.denominator===5) return {fill:'#e4f0f9',stroke:'#35658c'};
+    return {fill:'#f2e9fb',stroke:'#6b4c91'};
+  }
+  if(data.percent===50) return {fill:'#fff4c9',stroke:'#8a7420'};
+  if(data.percent===25) return {fill:'#e5f5e4',stroke:'#477a45'};
+  if(data.percent===20) return {fill:'#e4f0f9',stroke:'#35658c'};
+  if(data.percent===10) return {fill:'#fff0df',stroke:'#a55f1a'};
+  if(data.percent===1) return {fill:'#f1e7fb',stroke:'#72509a'};
+  return {fill:'#eef1f7',stroke:'#4f6078'};
+}
+
+function fractionPercentBarSvg(data,correction=false){
+  const W=760,x=30,width=700,topY=20,topH=68,bottomY=88,bottomH=68;
+  const palette=fractionPercentPalette(data);
+  const divisor=Math.max(1,Math.round(data.denominator));
+  const cellW=width/divisor;
+  const hasFractionBrace=data.kind==='fraction'&&!correction&&data.numerator>1;
+  const H=divisor===100?205:(hasFractionBrace?234:176);
+  const text=(cx,cy,value,size=23,weight=800,fill='#17283f')=>`<text x="${cx}" y="${cy}" text-anchor="middle" dominant-baseline="middle" font-family="Arial,Helvetica,sans-serif" font-size="${size}" font-weight="${weight}" fill="${fill}">${escapeHtml(value)}</text>`;
+  const fractionText=(cx,cy,numerator,denominator,size=22,fill='#17283f')=>{
+    const halfLine=Math.max(10,size*.55);
+    return `<g fill="${fill}" stroke="${fill}"><text x="${cx}" y="${cy-size*.43}" text-anchor="middle" dominant-baseline="middle" font-family="Cambria Math,STIX Two Math,Times New Roman,serif" font-size="${size}" font-weight="750" stroke="none">${escapeHtml(numerator)}</text><line x1="${cx-halfLine}" y1="${cy}" x2="${cx+halfLine}" y2="${cy}" stroke-width="1.7" stroke-linecap="square"/><text x="${cx}" y="${cy+size*.45}" text-anchor="middle" dominant-baseline="middle" font-family="Cambria Math,STIX Two Math,Times New Roman,serif" font-size="${size}" font-weight="750" stroke="none">${escapeHtml(denominator)}</text></g>`;
+  };
+  const unitFractionNames={2:'une moitié',3:'un tiers',4:'un quart',5:'un cinquième',6:'un sixième',8:'un huitième'};
+  let fills=`<rect x="${x}" y="${topY}" width="${width}" height="${topH}" fill="${palette.fill}"/>`;
+  let labels='';
+
+  if(data.kind==='fraction'){
+    labels+=text(x+width/2,topY+topH/2,correction?fmt(data.total):'LE TOUT',25,850);
+    for(let i=0;i<divisor;i++){
+      const selected=i<data.numerator;
+      fills+=`<rect x="${x+i*cellW}" y="${bottomY}" width="${cellW}" height="${bottomH}" fill="${selected?palette.fill:'#fff'}"/>`;
+      if(correction) labels+=text(x+(i+.5)*cellW,bottomY+bottomH/2,fmt(data.part),Math.max(14,Math.min(21,cellW*.22)),800);
+      else if(selected){
+        labels+=data.wordLabels
+          ? text(x+(i+.5)*cellW,bottomY+bottomH/2,unitFractionNames[divisor]||('un '+divisor+'ième'),Math.max(12,Math.min(17,cellW*.15)),760,palette.stroke)
+          : fractionText(x+(i+.5)*cellW,bottomY+bottomH/2,1,divisor,Math.max(20,Math.min(24,cellW*.26)),palette.stroke);
+      }
+    }
+    if(hasFractionBrace){
+      const x1=x,x2=x+cellW*data.numerator,mid=(x1+x2)/2,y=163;
+      labels+=`<path d="M ${x1} ${y} Q ${x1} ${y+13} ${x1+15} ${y+13} L ${mid-11} ${y+13} Q ${mid-4} ${y+13} ${mid} ${y+22} Q ${mid+4} ${y+13} ${mid+11} ${y+13} L ${x2-15} ${y+13} Q ${x2} ${y+13} ${x2} ${y}" fill="none" stroke="${palette.stroke}" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>`;
+      labels+=data.wordLabels
+        ? text(mid,y+47,data.label,18,800,palette.stroke)
+        : fractionText(mid,y+47,data.numerator,divisor,23,palette.stroke);
+    }
+  }else{
+    labels+=text(x+width/2,topY+topH/2,correction?fmt(data.total):'100 %',25,850);
+    for(let i=0;i<divisor;i++){
+      fills+=`<rect x="${x+i*cellW}" y="${bottomY}" width="${cellW}" height="${bottomH}" fill="${palette.fill}"/>`;
+      if(divisor<=10){
+        const label=correction?fmt(data.part):fmt(data.percent)+' %';
+        labels+=text(x+(i+.5)*cellW,bottomY+bottomH/2,label,divisor===10?14:Math.max(15,Math.min(21,cellW*.19)),780);
+      }
+    }
+    if(divisor===100){
+      const firstX=x+cellW/2;
+      labels+=`<path d="M ${firstX} ${bottomY+bottomH} L ${firstX+25} 181 L ${firstX+92} 181" fill="none" stroke="${palette.stroke}" stroke-width="1.8"/>`;
+      labels+=text(firstX+180,181,correction?fmt(data.part):'1 case = 1 %',correction?17:15,780,palette.stroke);
+    }
+  }
+
+  // Une seule grille est tracée par-dessus les fonds : aucune bordure commune
+  // n'est donc redessinée deux fois.
+  let grid=`<rect x="${x}" y="${topY}" width="${width}" height="${topH+bottomH}" fill="none" stroke="${palette.stroke}" stroke-width="2.2"/><line x1="${x}" y1="${bottomY}" x2="${x+width}" y2="${bottomY}" stroke="${palette.stroke}" stroke-width="2.2"/>`;
+  for(let i=1;i<divisor;i++){
+    const major=divisor===100&&i%10===0;
+    grid+=`<line x1="${x+i*cellW}" y1="${bottomY}" x2="${x+i*cellW}" y2="${bottomY+bottomH}" stroke="${palette.stroke}" stroke-width="${divisor===100?(major?1.8:.65):1.35}"/>`;
+  }
+
+  return `<div class="fraction-percent-help"><svg class="fraction-percent-svg" viewBox="0 0 ${W} ${H}" role="img" aria-label="Schéma en barres">${fills}${grid}${labels}</svg></div>`;
+}
+
+function renderModule04(inst,correction=false,mode=null){
+  if(mode===null) mode=document.getElementById('visualMode').value;
+  const data=inst.fractionPercent;
+  if(!data) return renderGenericQuestion(inst,correction,mode);
+  let html='<div class="question fraction-percent-prompt">'+renderMathSegments(inst.rawStatement)+'</div>';
+  html+=isWithoutVisuals(mode)?visualPlaceholder(mode):fractionPercentBarSvg(data,correction);
+  if(inst.rawFooter) html+='<div class="footer fraction-percent-answer">'+renderPlaceholders(inst.rawFooter,inst.answers,correction?'correction':'question')+'</div>';
+  return html;
+}
+
+function angleSumBarSvg(data,correction=false){
+  const W=820,H=164,x=60,topY=18,topW=600,barH=58,bottomY=76;
+  const total=data.values.reduce((sum,value)=>sum+Number(value),0);
+  const bottomW=data.comparison?topW*total/180:topW;
+  const label=(cx,cy,value,size=21,mathVariable=false)=>`<text x="${cx}" y="${cy}" text-anchor="middle" dominant-baseline="middle" font-family="${mathVariable?'Cambria Math, STIX Two Math, Times New Roman, serif':'Arial,Helvetica,sans-serif'}" font-size="${size}" font-weight="800" fill="#111">${escapeHtml(value)}</text>`;
+  let fills=`<rect x="${x}" y="${topY}" width="${topW}" height="${barH}" fill="#fff"/><rect x="${x}" y="${bottomY}" width="${bottomW}" height="${barH}" fill="#fff"/>`;
+  let grid=`<rect x="${x}" y="${topY}" width="${topW}" height="${barH}" fill="none" stroke="#111" stroke-width="2.2"/><rect x="${x}" y="${bottomY}" width="${bottomW}" height="${barH}" fill="none" stroke="#111" stroke-width="2.2"/>`;
+  let labels=label(x+topW/2,topY+barH/2,'180°',23);
+  let cursor=x;
+  data.values.forEach((value,index)=>{
+    const cellW=topW*Number(value)/180;
+    if(index>0) grid+=`<line x1="${cursor}" y1="${bottomY}" x2="${cursor}" y2="${bottomY+barH}" stroke="#111" stroke-width="1.7"/>`;
+    const unknown=!correction&&data.unknown.includes(index);
+    labels+=label(cursor+cellW/2,bottomY+barH/2,unknown?'𝑥':fmt(value)+'°',Math.max(15,Math.min(21,cellW*.24)),unknown);
+    cursor+=cellW;
+  });
+  if(data.comparison){
+    labels+=`<line x1="${x+topW}" y1="${topY-4}" x2="${x+topW}" y2="${bottomY+barH+4}" stroke="#111" stroke-width="1.5" stroke-dasharray="6 5"/>`;
+  }
+  return `<div class="angle-bar-help"><svg class="angle-bar-svg" viewBox="0 0 ${W} ${H}" role="img" aria-label="Schéma en barres de la somme des angles">${fills}${grid}${labels}</svg></div>`;
+}
+
+function renderAngleSumModule(inst,correction=false,mode=null){
+  if(mode===null) mode=document.getElementById('visualMode').value;
+  const qcm=splitQCM(inst.rawStatement);
+  const prompt=qcm?qcm.prompt:inst.rawStatement;
+  const bar=inst.angleSum&&inst.angleSum.bar;
+  let html='<div class="question angle-sum-prompt">'+renderMathSegments(prompt)+'</div>';
+  if(bar) html+=isWithoutVisuals(mode)?visualPlaceholder(mode):angleSumBarSvg(bar,correction);
+  if(qcm){
+    const corrects=new Set(inst.answers.map(value=>String(value)));
+    html+='<div class="options angle-sum-options options-'+qcm.opts.length+'">';
+    qcm.opts.forEach((option,index)=>{
+      const isCorrect=correction&&corrects.has(String(index+1));
+      html+='<div class="opt '+(isCorrect?'correct':'')+'"><strong>'+String.fromCharCode(65+index)+'.</strong> '+renderMathSegments(option)+'</div>';
+    });
+    html+='</div>';
+  }
+  if(inst.rawFooter) html+='<div class="footer angle-sum-answer">'+renderPlaceholders(inst.rawFooter,inst.answers,correction?'correction':'question')+'</div>';
   return html;
 }
 
@@ -2961,9 +3245,11 @@ function renderProportionModule(inst,correction=false,mode=null){
 function renderQuestion(inst, correction=false, mode=null){
   if(mode===null) mode=document.getElementById('visualMode').value;
   if(inst && inst.module && inst.module.id==='dnb_01') return renderModule01(inst, correction, mode);
+  if(inst && inst.module && inst.module.id==='dnb_04') return renderModule04(inst, correction, mode);
   if(inst && inst.module && inst.module.id==='dnb_06') return renderScientificModule(inst, correction, mode);
   if(inst && inst.module && inst.module.id==='dnb_09') return renderModule09(inst, correction, mode);
   if(inst && inst.module && inst.module.id==='dnb_10') return renderModule10(inst, correction, mode);
+  if(inst && inst.module && inst.module.id==='dnb_18') return renderAngleSumModule(inst, correction, mode);
   if(inst && inst.module && inst.module.id==='dnb_20') return renderSolidsModule(inst, correction);
   if(inst && inst.module && inst.module.id==='dnb_22') return renderAreaModule(inst, correction, mode);
   if(inst && inst.module && inst.module.id==='dnb_30') return renderAverageModule(inst, correction, mode);
@@ -3099,7 +3385,7 @@ body{margin:0;background:var(--bg);font-family:Arial,Helvetica,sans-serif;color:
 .correction{margin-top:30px;border-top:2px solid var(--border);padding-top:24px}.correction h3{display:none}
 .ans{font-size:clamp(2rem,4vw,4.2rem);font-weight:900;color:var(--success)}
 .frac{display:inline-flex;flex-direction:column;vertical-align:middle;align-items:center;line-height:1;margin:0 .08em}.frac .frac-num{border-bottom:2px solid currentColor;padding:0 .16em .06em}.frac .frac-den{padding:.06em .16em 0}
-.math-inline,.math-display{display:inline-block;white-space:nowrap}.aligned-math{display:inline-block;text-align:left;line-height:1.35}.quad{display:inline-block;width:1.2em}.qquad{display:inline-block;width:2.4em}.widehat{text-decoration:overline}.mathcal{font-family:Georgia,serif;font-style:italic}.answer-slot{display:inline-flex;align-items:baseline;justify-content:center;width:var(--answer-width,1.05em);margin:0 .08em;white-space:nowrap;vertical-align:baseline}.frac .answer-slot-small{margin:0 .02em}.answer-dots{display:inline-block;letter-spacing:.06em}sup .answer-slot{align-items:center;line-height:1;margin-left:.02em;margin-right:.02em}sup .answer-slot-filled{width:auto!important;min-width:0;margin-left:-.04em;margin-right:0}sup .answer-dots{line-height:1;letter-spacing:0;transform:translateY(-.16em)}
+.math-inline,.math-display{display:inline-block;white-space:nowrap}.aligned-math{display:inline-block;text-align:left;line-height:1.35}.quad{display:inline-block;width:1.2em}.qquad{display:inline-block;width:2.4em}.widehat{display:inline-block;position:relative;padding-top:.24em;text-decoration:none;line-height:1}.widehat::before,.widehat::after{content:"";position:absolute;top:.08em;width:52%;border-top:1.8px solid currentColor;pointer-events:none}.widehat::before{left:-1%;transform:rotate(-11deg);transform-origin:100% 50%}.widehat::after{right:-1%;transform:rotate(11deg);transform-origin:0 50%}.mathcal{font-family:Georgia,serif;font-style:italic}.answer-slot{display:inline-flex;align-items:baseline;justify-content:center;width:var(--answer-width,1.05em);margin:0 .08em;white-space:nowrap;vertical-align:baseline}.frac .answer-slot-small{margin:0 .02em}.answer-dots{display:inline-block;letter-spacing:.06em}sup .answer-slot{align-items:center;line-height:1;margin-left:.02em;margin-right:.02em}sup .answer-slot-filled{width:auto!important;min-width:0;margin-left:-.04em;margin-right:0}sup .answer-dots{line-height:1;letter-spacing:0;transform:translateY(-.16em)}
 .visual-note{font-size:1.4rem;color:var(--muted);border:1px dashed var(--border);border-radius:12px;padding:12px;margin:12px auto;max-width:620px}
 .diapo.scientific-mode .stage{align-items:flex-start;padding:12px 20px 18px}
 .diapo.scientific-mode .slide{max-width:1120px}
@@ -3131,6 +3417,22 @@ body{margin:0;background:var(--bg);font-family:Arial,Helvetica,sans-serif;color:
 .diapo.module01-mode .module01-answer{font-family:"Cambria Math","STIX Two Math","Times New Roman",serif;font-size:clamp(3rem,5vw,5.4rem);font-weight:700;margin:9px auto 0}
 .diapo.module01-mode .module01-options{margin-top:12px;max-width:1180px}
 .diapo.module01-mode .module01-options .opt{font-family:"Cambria Math","STIX Two Math","Times New Roman",serif;font-size:clamp(1.55rem,2.3vw,2.55rem);text-align:left;padding:13px 16px}
+.diapo.fraction-percent-mode .stage{align-items:flex-start;padding:14px 22px 18px;overflow:auto}
+.diapo.fraction-percent-mode .slide{max-width:1080px}
+.fraction-percent-prompt{font-size:clamp(1.9rem,3vw,3.25rem);line-height:1.12;margin:0 auto 7px}
+.fraction-percent-help{display:flex;align-items:center;justify-content:center;width:100%;height:clamp(155px,28vh,225px);margin:2px auto 1px}
+.fraction-percent-svg{display:block;width:min(100%,820px);height:auto;max-height:100%}
+.fraction-percent-answer{font-family:"Cambria Math","STIX Two Math","Times New Roman",serif;font-size:clamp(2.2rem,4vw,4.05rem);margin-top:3px}
+.diapo.angle-sum-mode .stage{align-items:flex-start;padding:12px 20px 18px;overflow:auto}
+.diapo.angle-sum-mode .slide{max-width:1120px}
+.angle-sum-prompt{font-size:clamp(1.75rem,2.8vw,3.1rem);line-height:1.13;margin:0 auto 5px}
+.angle-sum-prompt svg{display:block;width:min(100%,430px);height:auto;margin:7px auto 0}
+.angle-bar-help{display:flex;align-items:center;justify-content:center;width:100%;height:clamp(130px,23vh,185px);margin:2px auto 1px}
+.angle-bar-svg{display:block;width:min(100%,850px);height:auto;max-height:100%}
+.angle-sum-answer{font-family:"Cambria Math","STIX Two Math","Times New Roman",serif;font-size:clamp(2.1rem,3.8vw,3.9rem);margin-top:3px}
+.angle-sum-answer .answer-slot-filled{margin-right:0}
+.angle-sum-options{margin-top:8px;max-width:900px}
+.angle-sum-options .opt{font-size:clamp(1.2rem,1.9vw,1.9rem);padding:11px 14px}
 .diapo.relation-mode .stage{align-items:flex-start;padding:14px 22px 18px;overflow:auto}
 .diapo.relation-mode .slide{max-width:1080px}
 .relation-prompt{font-size:clamp(1.9rem,3vw,3.3rem);line-height:1.12;margin:0 auto 8px}
@@ -3252,6 +3554,8 @@ svg{display:block;max-width:100%;height:auto}
 @media(min-width:1000px){.diapo:fullscreen .slide,.diapo:-webkit-full-screen .slide{zoom:1.12}}
 @media(max-width:800px){.diapo{--stage-top:24px;--stage-x:24px;--stage-bottom:24px}.top{grid-template-columns:minmax(0,1fr) auto minmax(0,1fr);height:76px;text-align:center;padding:9px;gap:6px}.left{justify-content:flex-start}.right{justify-content:flex-end}.top .btn{min-height:52px;font-size:.92rem;padding:11px 10px;border-radius:12px;white-space:nowrap}.top .btn.primary{min-width:0}.navnums,.fullscreen-btn{display:none}.mobile-counter{display:block;white-space:nowrap;font-size:1.08rem}.stage{padding:var(--stage-top) var(--stage-x) var(--stage-bottom)}.diapo .stage>.slide{margin-top:auto;margin-bottom:auto}.options.options-4{grid-template-columns:1fr}.options.options-4.options-compact{grid-template-columns:repeat(2,minmax(0,1fr))}.diapo.scientific-mode .stage{padding:8px 8px 13px}.scientific-prompt{font-size:clamp(1.25rem,5.8vw,1.65rem)}.scientific-footer{font-size:clamp(1.7rem,7.7vw,2.25rem);margin-top:3px}.scientific-place-help{min-height:62px;margin-top:14px}.scientific-place-equation{font-size:clamp(1.45rem,6.4vw,2rem)}.scientific-glide-help{height:clamp(160px,24vh,195px);margin-top:-3px}.scientific-condition-help{min-height:64px;margin-top:8px}.scientific-condition{font-size:clamp(1.7rem,7.4vw,2.25rem)}.scientific-options{gap:7px;margin-top:6px}.scientific-options .opt{font-size:clamp(.86rem,3.75vw,1.05rem);padding:8px 9px}.diapo.numberline-mode .footer{font-size:clamp(1.65rem,7.5vw,2rem)}.diapo.numberline-mode .answer-slot{width:2.2em!important}.diapo.numberline-mode .footer .qquad{width:.7em}.diapo.numberline-mode .footer .math-display{transform:none}.diapo.solids-mode .stage{padding:10px 10px 16px}.solid-prompt{font-size:clamp(1.25rem,5.6vw,1.65rem)}.solid-visual{width:230px;height:clamp(155px,27vh,215px)}.solid-options{grid-template-columns:repeat(2,minmax(0,1fr));gap:7px}.solid-options .opt{font-size:clamp(.88rem,3.7vw,1.08rem);padding:8px 9px}}
 @media(max-width:800px){.diapo.relation-mode .stage{padding:8px 8px 13px}.relation-prompt{font-size:clamp(1.2rem,5.4vw,1.55rem);margin-bottom:3px}.relation-bar-help{height:clamp(105px,20vh,150px);margin:0 auto}.relation-answer{font-size:clamp(1.55rem,7vw,2.05rem);margin-top:1px}.relation-options{gap:7px;margin-top:5px}.relation-options .opt{min-height:99px;padding:7px 8px;font-size:clamp(.98rem,4.4vw,1.2rem)}.relation-option-label{min-height:29px}.relation-tile-help{min-height:44px;margin-top:4px;gap:3px}.relation-summary-grid{grid-template-columns:1fr;gap:7px;margin-top:5px}.relation-summary-card{min-height:99px;padding:7px 12px}.relation-summary-line{font-size:clamp(1.05rem,4.8vw,1.3rem)}.relation-summary-card .relation-tile-help{min-height:31px}}
+@media(max-width:800px){.diapo.fraction-percent-mode .stage{padding:8px 8px 13px}.fraction-percent-prompt{font-size:clamp(1.18rem,5.25vw,1.52rem);margin-bottom:2px}.fraction-percent-help{height:clamp(115px,20vh,160px);margin:0 auto}.fraction-percent-answer{font-size:clamp(1.55rem,7vw,2.05rem);margin-top:1px}}
+@media(max-width:800px){.diapo.angle-sum-mode .stage{padding:8px 8px 13px}.angle-sum-prompt{font-size:clamp(1.14rem,5.15vw,1.5rem);margin-bottom:2px}.angle-sum-prompt svg{width:min(100%,300px);max-height:235px;margin-top:4px}.angle-bar-help{height:clamp(105px,18vh,145px);margin:0 auto}.angle-sum-answer{font-size:clamp(1.5rem,6.8vw,2rem);margin-top:1px}.angle-sum-options{gap:7px;margin-top:5px}.angle-sum-options .opt{font-size:clamp(.9rem,3.8vw,1.08rem);padding:8px 9px}}
 @media(max-width:800px){.diapo.area-mode .stage{padding:8px 9px 14px}.area-prompt{font-size:clamp(1.15rem,5.2vw,1.55rem);margin-bottom:2px}.area-main{height:178px}.area-data{padding:15px 16px;font-size:clamp(1.05rem,4.6vw,1.35rem)}.area-help{height:52px;gap:7px;font-size:clamp(.9rem,3.8vw,1.12rem);line-height:1.12}.area-answer-line{font-size:clamp(1.55rem,7vw,2.1rem)}.area-options{gap:7px;margin-top:2px}.area-options .opt{font-size:clamp(.9rem,3.7vw,1.08rem);padding:8px 9px}.area-correction{padding:0 6px;font-size:clamp(.9rem,3.7vw,1.1rem)}.area-correction>div{grid-template-columns:92px minmax(0,1fr);gap:10px;padding:4px 0}}
 @media(max-width:800px){.diapo.average-mode .stage{padding:7px 8px 13px}.average-prompt{font-size:clamp(1.08rem,5vw,1.45rem);margin-bottom:2px}.average-instruction{font-size:clamp(.96rem,4.1vw,1.18rem);margin:4px auto 2px}.average-data-line{font-size:clamp(1.45rem,7vw,2rem);margin:2px auto}.average-table-wrap{margin:5px auto 3px}.average-table{font-size:clamp(.75rem,3.25vw,.94rem)}.average-table th,.average-table td{padding:6px 8px;border-width:1.5px}.average-help-visual{height:clamp(170px,29vh,225px)}.average-answer-line{font-size:clamp(1.45rem,7vw,2rem);margin-top:4px}.average-options,.average-formula-options{grid-template-columns:1fr!important;gap:7px;margin-top:6px}.average-options .opt,.average-formula-options .opt{font-size:clamp(.82rem,3.55vw,1rem);padding:8px 9px}.average-correction{padding:0 5px;font-size:clamp(1.05rem,4.5vw,1.35rem);margin-top:8px}.average-correction>div{display:block;padding:4px 0}.average-step{text-align:center;margin-bottom:3px}}
 @media(max-width:800px){.diapo.median-mode .stage{padding:12px 9px 16px}.diapo.median-mode .question{font-size:clamp(1.3rem,5.7vw,1.72rem);line-height:1.18;margin-bottom:17px}.diapo.median-mode .footer{font-size:clamp(1.55rem,7vw,2rem);margin-top:10px}.median-list{gap:.18em .4em;margin:11px auto 13px;font-size:clamp(1.25rem,5.7vw,1.65rem)}.median-table-wrap{margin:11px auto}.median-table{font-size:clamp(.78rem,3.45vw,1rem)}.median-table td{padding:6px 7px;border-width:1.5px}.course-btn{top:10px;right:9px;min-height:46px;padding:9px 13px;font-size:.95rem}.course-card{padding:22px 16px 18px;border-radius:18px}.course-title{margin-bottom:15px;font-size:1.55rem}.course-grid{grid-template-columns:1fr;gap:8px}.course-rule{padding:11px 12px;font-size:1rem}}
@@ -3321,11 +3625,13 @@ function render(){
  if(mobileCounter) mobileCounter.textContent=(idx+1)+' sur '+slides.length;
  const diapo=document.getElementById('diapo');
  diapo.classList.toggle('module01-mode',slides[idx].moduleId==='dnb_01');
+ diapo.classList.toggle('fraction-percent-mode',slides[idx].moduleId==='dnb_04');
  diapo.classList.toggle('scientific-mode',slides[idx].moduleId==='dnb_06');
  diapo.classList.toggle('relation-mode',slides[idx].moduleId==='dnb_09');
  diapo.classList.toggle('reduction-mode',slides[idx].moduleId==='dnb_10');
  diapo.classList.toggle('squares-mode',slides[idx].moduleId==='dnb_07');
  diapo.classList.toggle('numberline-mode',slides[idx].moduleId==='dnb_14');
+ diapo.classList.toggle('angle-sum-mode',slides[idx].moduleId==='dnb_18');
  diapo.classList.toggle('solids-mode',slides[idx].moduleId==='dnb_20');
  diapo.classList.toggle('area-mode',slides[idx].moduleId==='dnb_22');
  diapo.classList.toggle('average-mode',slides[idx].moduleId==='dnb_30');
@@ -3466,12 +3772,14 @@ function visualPolicyForQuestion(m,q){
   if(m.id==='dnb_01'){
     return q.options&&q.options.module01_kind==='read_visual'?'essential':'optional';
   }
+  if(m.id==='dnb_04') return 'optional';
   if(m.id==='dnb_06') return 'optional';
   if(m.id==='dnb_07') return Number(q.n)===7?'none':'optional';
   if(m.id==='dnb_09') return [1,2,3,4,5,6,8,9,10,11,12,13,14,15,16,17,18,19].includes(Number(q.n))?'optional':'none';
   if(m.id==='dnb_10'){
     return q.options&&q.options.reduction_kind==='read_tiles'?'essential':'optional';
   }
+  if(m.id==='dnb_18') return [2,3,4,5,6,7,8,9,10].includes(Number(q.n))?'optional':'none';
   // Dans le module Aires, la figure porte les données de l'énoncé et reste
   // toujours visible. Le sélecteur avec/sans aide commande seulement la formule.
   if(m.id==='dnb_22') return 'none';
@@ -3503,6 +3811,25 @@ function eligibleQuestionsForModule(m){
   const level=document.getElementById('level').value;
   const questions=m.id==='dnb_01'?MODULE01_TEMPLATES:m.questions;
   return questions.filter(q=>questionEligibleForLevel(m,q,level) && questionEligibleForVisualMode(m,q,mode));
+}
+
+function chooseFractionPercentQuestions(questions,count){
+  const fractions=questions.filter(q=>q.options&&q.options.fraction_percent_category==='fraction');
+  const percents=questions.filter(q=>q.options&&q.options.fraction_percent_category==='percent');
+  let fractionCount=Math.floor(count/2),percentCount=count-fractionCount;
+  if(count%2===1&&rnd()<.5) [fractionCount,percentCount]=[percentCount,fractionCount];
+  const repeatedPick=(pool,needed)=>{
+    const selected=[];
+    while(selected.length<needed){
+      const cycle=shuffledCopy(pool);
+      selected.push(...cycle.slice(0,needed-selected.length));
+    }
+    return selected;
+  };
+  return shuffledCopy([
+    ...repeatedPick(fractions,fractionCount),
+    ...repeatedPick(percents,percentCount)
+  ]);
 }
 
 function chooseVariedSolidDrawings(drawings,count){
@@ -3646,14 +3973,16 @@ function buildBalancedQuiz(mods,count){
 
   moduleOrder.forEach((item,index)=>{
     const moduleCount=base+(index<remainder?1:0);
-    let chosen=item.m.id==='dnb_20'
+    let chosen=item.m.id==='dnb_04'
+      ? chooseFractionPercentQuestions(item.questions,moduleCount)
+      : item.m.id==='dnb_20'
       ? chooseSolidQuestions(item.questions,moduleCount)
       : item.m.id==='dnb_22'
         ? chooseAreaQuestions(item.questions,moduleCount)
         : item.m.id==='dnb_14'
           ? chooseNumberLineQuestions(item.questions,moduleCount)
         : [];
-    while(item.m.id!=='dnb_20'&&item.m.id!=='dnb_22'&&item.m.id!=='dnb_14'&&chosen.length<moduleCount){
+    while(item.m.id!=='dnb_04'&&item.m.id!=='dnb_20'&&item.m.id!=='dnb_22'&&item.m.id!=='dnb_14'&&chosen.length<moduleCount){
         const cycle=shuffledCopy(item.questions);
         const need=moduleCount-chosen.length;
         chosen.push(...cycle.slice(0,need));
