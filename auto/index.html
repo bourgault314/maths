@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <meta name="theme-color" content="#f5f7fb">
-<title>Automatismes maths cycle 4 et DNB — révision 25.1 | maths&amp;go</title>
+<title>Automatismes maths cycle 4 et DNB — révision 25.2 | maths&amp;go</title>
 <meta name="description" content="Outil d’automatismes de mathématiques pour le cycle 4 et le DNB : entraînez vos élèves en vidéoprojection ou sur téléphone, avec aides et corrections.">
 <style>
 :root {
@@ -89,7 +89,7 @@ button.orange{background:var(--orange)}
     </a>
     <div class="title">
       <h1>Automatismes<span class="title-cycle">Cycle 4</span></h1>
-      <span class="revision-badge">Révision 25.1</span>
+      <span class="revision-badge">Révision 25.2</span>
     </div>
   </div>
 
@@ -8787,7 +8787,7 @@ function buildCleanSlideHtml(inst, correction=false, mode=null){
 </script>
 <script>
 const INTERACTIVE_SERIES_COUNT=10;
-const APP_REVISION='25.1';
+const APP_REVISION='25.2';
 
 function makeDiapoWindowHtml(seriesData,experienceMode='interactive'){
   const normalizedSeries=Array.isArray(seriesData&&seriesData[0])?seriesData:[seriesData||[]];
@@ -9147,22 +9147,17 @@ button{font:inherit;-webkit-appearance:none;appearance:none;-webkit-tap-highligh
 .key{min-width:0;min-height:0;padding:6px 8px;border:1px solid #c6d6e9;border-radius:11px;background:white;color:#073a75;font-size:1.18rem;font-weight:900;cursor:pointer;box-shadow:0 2px 0 rgba(7,58,117,.09);touch-action:manipulation}
 .key:active{transform:translateY(1px);box-shadow:none}.key.utility{display:grid;place-items:center;background:#eef4fc;font-family:Arial,Helvetica,sans-serif;font-size:.9rem}.key.utility svg{width:25px;height:25px;pointer-events:none}
 .answer-guidance,.answer-feedback{display:none;min-width:0;height:100%;min-height:54px;align-items:center;justify-content:center;padding:9px 16px;border:1.5px solid #cbd9ea;border-radius:13px;background:#fff;text-align:center;font-size:1.35rem;font-weight:900;line-height:1.18}
-.answer-guidance{color:#5c6f89}
-.answer-kind{padding:4px 9px;border:1px solid #cad8e9;border-radius:999px;background:#f8fbff;white-space:nowrap}
+.answer-guidance{border-color:transparent;background:transparent;color:#64758c}
+.answer-kind{padding:0;border:0;border-radius:0;background:transparent;white-space:nowrap;font-size:.92em;letter-spacing:.01em}
 .answer-feedback{flex-direction:column;gap:2px}.feedback-title{font-size:1em}.feedback-answer{font-size:.9em;font-weight:850}.answer-feedback.good{border-color:#86d8bb;background:#ecfdf5;color:#087a55}.answer-feedback.bad{border-color:#f3a7a7;background:#fff1f2;color:#b42318}
 .answer-dock.qcm-mode:not(.locked) .answer-guidance,.answer-dock.keypad-collapsed:not(.locked) .answer-guidance{display:flex}
 .answer-dock.qcm-mode .keypad,.answer-dock.keypad-collapsed .keypad{visibility:hidden;pointer-events:none}
 .answer-dock.locked .keypad,.answer-dock.locked .answer-guidance{visibility:hidden;pointer-events:none}
 .answer-dock.locked .answer-feedback{display:flex}
 .answer-dock.keypad-collapsed .answer-main,.answer-dock.qcm-mode .answer-main{height:60px}
-.dock-actions{display:grid;grid-template-columns:56px 116px;align-items:stretch;justify-content:stretch;gap:4px;width:176px;height:100%}
-.dock-clear,.dock-action{min-height:54px;border-radius:11px;font-family:Arial,"Helvetica Neue",Helvetica,sans-serif;font-weight:900;cursor:pointer;touch-action:manipulation}
-.dock-clear{display:grid;place-items:center;min-width:56px;padding:5px;border:1px solid #c6d6e9;background:#eef4fc;color:#073a75;font-size:.76rem;box-shadow:0 2px 0 rgba(7,58,117,.08)}
-.dock-clear svg{width:25px;height:25px;pointer-events:none}
-.dock-clear[hidden]{display:none!important}
-.dock-clear:active:not(:disabled){transform:translateY(1px);box-shadow:none}.dock-clear:disabled{opacity:.46;cursor:default}.dock-action{min-width:116px;padding:8px 10px;border:1px solid #e86100;background:#ff7a1a;color:#fff;font-size:1.08rem;box-shadow:0 2px 0 rgba(153,61,0,.16)}
+.dock-actions{display:grid;grid-template-columns:1fr;align-items:stretch;justify-content:stretch;width:176px;height:100%}
+.dock-action{min-width:0;min-height:54px;padding:8px 10px;border:1px solid #e86100;border-radius:11px;background:#ff7a1a;color:#fff;font-family:Arial,"Helvetica Neue",Helvetica,sans-serif;font-size:1.08rem;font-weight:900;cursor:pointer;box-shadow:0 2px 0 rgba(153,61,0,.16);touch-action:manipulation}
 .dock-action:disabled{opacity:.62;cursor:default}
-.answer-dock.locked:not(.qcm-mode) .dock-clear{visibility:hidden;pointer-events:none}
 .answer-dock.qcm-mode .answer-body{grid-template-columns:minmax(280px,940px) 220px}.answer-dock.qcm-mode .dock-actions{grid-template-columns:220px;width:220px}.answer-dock.qcm-mode .dock-action{min-width:220px;font-size:1.16rem}
 .interactive-input-slot{display:inline-grid;place-items:center;min-width:2.15em;min-height:1.28em;margin:0 .06em;padding:.02em .18em;border:2px solid #9fb9d8;border-radius:.24em;background:#fff;color:#073a75;font:inherit;font-weight:900;line-height:1;vertical-align:middle;cursor:pointer;box-shadow:0 .08em .16em rgba(7,58,117,.08);touch-action:manipulation}
 .interactive-input-slot.is-empty{color:#8798ad}.interactive-input-slot.active{border-color:#e86100;background:#fff7ed;box-shadow:0 0 0 3px rgba(232,97,0,.13)}
@@ -9173,7 +9168,7 @@ button{font:inherit;-webkit-appearance:none;appearance:none;-webkit-tap-highligh
 .interactive-polynomial-response.term-count-1{font-size:clamp(3rem,5.6vw,5.8rem)}.interactive-polynomial-response.term-count-2{font-size:clamp(2.55rem,5vw,5.2rem)}
 .interactive-polynomial-term{display:inline-flex;align-items:center;gap:.12em;white-space:nowrap}.interactive-polynomial-separator{margin:0 -.08em;font-family:Arial,Helvetica,sans-serif;font-weight:750}
 @media(min-width:801px){.diapo.interactive-mode .stage{padding:6px 18px 10px}.diapo.interactive-mode .question svg{max-height:255px;width:auto;margin-left:auto;margin-right:auto}}
-@media(min-width:1000px){.answer-body{display:block;position:relative;padding:0 clamp(130px,12vw,170px)}.answer-main{width:100%;max-width:var(--keypad-max);margin:0 auto}.answer-dock.qcm-mode .answer-main{max-width:960px}.dock-actions{position:absolute;right:14px;top:0;bottom:0}}
+@media(min-width:1200px){.answer-dock:not(.qcm-mode) .answer-body{display:block;position:relative;padding:0 195px}.answer-dock:not(.qcm-mode) .answer-main{width:100%;max-width:var(--keypad-max);margin:0 auto}.answer-dock:not(.qcm-mode) .dock-actions{position:absolute;right:14px;top:0;bottom:0}}
 @media(min-width:801px) and (max-height:760px){.diapo.interactive-mode.module01-mode .module01-prompt{font-size:clamp(2rem,3vw,2.7rem);margin-bottom:4px}.diapo.interactive-mode.module01-mode .module01-source{font-size:clamp(2.45rem,4vw,3.75rem);margin:1px auto 3px}.diapo.interactive-mode.module01-mode .module01-visual{margin:3px auto 2px}.diapo.interactive-mode.module01-mode .module01-visual svg{width:auto;max-width:100%;max-height:220px}.diapo.interactive-mode.module01-mode .module01-options .opt{padding:9px 14px}.diapo.interactive-mode.median-mode .question{font-size:clamp(1.9rem,3.3vw,2.85rem);line-height:1.12;margin-bottom:10px}.diapo.interactive-mode.median-mode .options{gap:10px 14px;margin-top:10px}.diapo.interactive-mode.median-mode .opt{padding:13px 16px;font-size:clamp(1.15rem,1.7vw,1.55rem)}.diapo.interactive-mode.angle-sum-mode .angle-sum-prompt{font-size:clamp(1.65rem,2.4vw,2.15rem);margin-bottom:2px}.diapo.interactive-mode.angle-sum-mode .angle-sum-prompt svg{max-height:158px;margin-top:3px}.diapo.interactive-mode.angle-sum-mode .angle-bar-help{height:138px;margin-top:0}.diapo.interactive-mode.geometry-long-prompt-mode .question svg{max-height:285px!important}.diapo.interactive-mode.geometry-long-prompt-mode .opt{min-height:54px;padding:11px 14px}.diapo.interactive-mode.proportion-table-mode .proportion-line-desktop{width:min(100%,760px)}}
 @media(min-width:801px) and (max-height:760px){.diapo.interactive-mode.area-formula-mode .area-main{height:clamp(250px,38vh,300px)}}
 .diapo.interactive-mode .presentation-only{display:none!important}
@@ -9249,7 +9244,7 @@ svg{display:block;max-width:100%;height:auto}
 @media(max-width:800px){.diapo.data-mode .stage{padding:5px 6px 9px}.diapo.data-mode .question{margin-bottom:5px;font-size:clamp(1.16rem,5.05vw,1.48rem);line-height:1.1}.diapo.data-mode .question table{font-size:clamp(.88rem,3.75vw,1.06rem)!important}.diapo.data-mode .question table td,.diapo.data-mode .question table th{padding:11px 9px!important}.diapo.data-mode .footer{margin-top:6px;font-size:clamp(1.55rem,6.8vw,2rem)}}
 @media(max-width:800px){.slide .question table{max-width:100%;font-size:clamp(.92rem,3.9vw,1.08rem)!important}.slide .question table td,.slide .question table th{padding:12px 10px!important;border-width:1.5px!important}.diapo.coordinate-mode .stage{padding:4px 4px 8px}.diapo.coordinate-mode .question{font-size:clamp(1.18rem,5.2vw,1.5rem);line-height:1.1;margin-bottom:3px}.diapo.coordinate-mode .question svg{width:min(100%,380px)!important;max-width:380px!important;max-height:min(52vh,380px)!important;margin:3px auto!important}.diapo.coordinate-mode .footer{font-size:clamp(1.75rem,7.8vw,2.3rem);margin-top:3px}.diapo.right-angle-mode .question{font-size:clamp(2rem,9vw,2.8rem);margin-bottom:20px}.diapo.right-angle-mode .footer{font-size:clamp(2.1rem,9.5vw,3rem)}}
 @media(max-width:800px){.diapo>.top{order:2;border-top:1px solid var(--border);border-bottom:0}.diapo>.stage{order:1}}
-@media(max-width:800px){.diapo.interactive-mode{--stage-x:7px;--stage-bottom:7px}.diapo.interactive-mode>.top{order:1;height:54px;grid-template-columns:minmax(0,1fr) auto minmax(0,1fr);border-top:0;border-bottom:1px solid var(--border);padding:7px max(9px,env(safe-area-inset-right)) 7px max(9px,env(safe-area-inset-left))}.diapo.interactive-mode>.stage{order:2;padding-top:5px}.diapo.interactive-mode>.answer-dock{order:3}.diapo.interactive-mode .keyboard-toggle,.diapo.interactive-mode .fullscreen-btn{width:40px;height:40px;min-height:40px;padding:0}.interactive-summary{grid-column:2;justify-content:center;font-size:.86rem}.interactive-score{padding:5px 8px}.answer-dock{padding:6px max(6px,env(safe-area-inset-right)) max(6px,env(safe-area-inset-bottom)) max(6px,env(safe-area-inset-left))}.answer-body{grid-template-columns:minmax(0,1fr) 154px;justify-content:stretch;gap:5px}.answer-main{height:var(--keypad-height-mobile);min-height:58px}.keypad{grid-template-columns:repeat(var(--key-columns-mobile,6),minmax(0,1fr));gap:4px}.key{min-height:0;padding:4px 2px;border-radius:9px;font-size:1.04rem}.key.utility{font-size:.78rem}.key.utility svg{width:23px;height:23px}.answer-guidance,.answer-feedback{min-height:58px;padding:8px 8px;border-radius:10px;font-size:1.16rem}.feedback-answer{font-size:1em}.answer-kind{padding:3px 7px}.answer-dock.keypad-collapsed .answer-main,.answer-dock.qcm-mode .answer-main{height:62px}.dock-actions{grid-template-columns:46px 104px;width:154px;gap:4px}.dock-clear{min-width:46px;padding:4px 2px}.dock-clear svg{width:23px;height:23px}.dock-action{min-width:104px;min-height:58px;padding:7px 5px;font-size:1.03rem}.answer-dock.qcm-mode .answer-body{grid-template-columns:minmax(0,1fr) 184px}.answer-dock.qcm-mode .dock-actions{grid-template-columns:184px;width:184px}.answer-dock.qcm-mode .dock-action{min-width:184px;font-size:1.1rem}.interactive-input-slot{min-height:1.48em;min-width:2.18em;border-radius:.28em}.interactive-polynomial-response{gap:7px 10px;margin-top:7px;font-size:clamp(1.7rem,7.7vw,2.25rem)}.interactive-polynomial-response.term-count-1{font-size:clamp(2.3rem,10vw,3rem)}.interactive-polynomial-response.term-count-2{font-size:clamp(1.95rem,8.8vw,2.65rem)}.interactive-polynomial-term small{font-size:.42em}.interactive-finish{margin:3vh auto 0;padding:22px 15px}.interactive-finish-mark{width:54px;height:54px}.interactive-finish-score{margin-bottom:14px}.interactive-finish-actions{flex-direction:column;gap:8px}.interactive-finish-actions .btn,.interactive-finish-actions .btn.primary{width:min(100%,260px);min-width:0}}
+@media(max-width:800px){.diapo.interactive-mode{--stage-x:7px;--stage-bottom:7px}.diapo.interactive-mode>.top{order:1;height:54px;grid-template-columns:minmax(0,1fr) auto minmax(0,1fr);border-top:0;border-bottom:1px solid var(--border);padding:7px max(9px,env(safe-area-inset-right)) 7px max(9px,env(safe-area-inset-left))}.diapo.interactive-mode>.stage{order:2;padding-top:5px}.diapo.interactive-mode>.answer-dock{order:3}.diapo.interactive-mode .keyboard-toggle,.diapo.interactive-mode .fullscreen-btn{width:40px;height:40px;min-height:40px;padding:0}.interactive-summary{grid-column:2;justify-content:center;font-size:.86rem}.interactive-score{padding:5px 8px}.answer-dock{padding:6px max(6px,env(safe-area-inset-right)) max(6px,env(safe-area-inset-bottom)) max(6px,env(safe-area-inset-left))}.answer-body{grid-template-columns:minmax(0,1fr) 154px;justify-content:stretch;gap:5px}.answer-main{height:var(--keypad-height-mobile);min-height:58px}.keypad{grid-template-columns:repeat(var(--key-columns-mobile,6),minmax(0,1fr));gap:4px}.key{min-height:0;padding:4px 2px;border-radius:9px;font-size:1.04rem}.key.utility{font-size:.78rem}.key.utility svg{width:23px;height:23px}.answer-guidance,.answer-feedback{min-height:58px;padding:8px 8px;border-radius:10px;font-size:1.16rem}.feedback-answer{font-size:1em}.answer-kind{padding:0}.answer-dock.keypad-collapsed .answer-main,.answer-dock.qcm-mode .answer-main{height:62px}.dock-actions{grid-template-columns:1fr;width:154px}.dock-action{min-width:0;min-height:58px;padding:7px 5px;font-size:1.03rem}.answer-dock.qcm-mode .answer-body{grid-template-columns:minmax(0,1fr) 184px}.answer-dock.qcm-mode .dock-actions{grid-template-columns:184px;width:184px}.answer-dock.qcm-mode .dock-action{min-width:184px;font-size:1.1rem}.interactive-input-slot{min-height:1.48em;min-width:2.18em;border-radius:.28em}.interactive-polynomial-response{gap:7px 10px;margin-top:7px;font-size:clamp(1.7rem,7.7vw,2.25rem)}.interactive-polynomial-response.term-count-1{font-size:clamp(2.3rem,10vw,3rem)}.interactive-polynomial-response.term-count-2{font-size:clamp(1.95rem,8.8vw,2.65rem)}.interactive-polynomial-term small{font-size:.42em}.interactive-finish{margin:3vh auto 0;padding:22px 15px}.interactive-finish-mark{width:54px;height:54px}.interactive-finish-score{margin-bottom:14px}.interactive-finish-actions{flex-direction:column;gap:8px}.interactive-finish-actions .btn,.interactive-finish-actions .btn.primary{width:min(100%,260px);min-width:0}}
 @media(max-width:600px){.fullscreen-btn,.diapo.interactive-mode .keyboard-toggle{display:none!important}.diapo.interactive-mode .interactive-summary{position:absolute;inset:0;left:0;max-width:none;transform:none;pointer-events:none}.diapo.interactive-mode #interactiveCounter{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);white-space:nowrap}.diapo.interactive-mode .course-btn{position:absolute;left:max(9px,env(safe-area-inset-left));top:50%;transform:translateY(-50%);width:40px;height:40px;min-height:40px;padding:0;display:inline-grid;place-items:center}.diapo.interactive-mode .course-btn span{display:none}.diapo.interactive-mode .right{position:static}.diapo.interactive-mode .interactive-score{position:absolute;right:max(9px,env(safe-area-inset-right));top:50%;transform:translateY(-50%)}}
 @media (hover:none) and (pointer:coarse){.navnums{display:none!important}.mobile-counter{display:block!important}}
 @media print{.diapo{--stage-top:20px;--stage-x:20px;--stage-bottom:20px;height:auto;min-height:100vh;overflow:visible}.top{display:none}.stage{min-height:auto;overflow:visible;padding:var(--stage-top) var(--stage-x) var(--stage-bottom)}}
@@ -9273,10 +9268,9 @@ svg{display:block;max-width:100%;height:auto}
       <div class="answer-guidance"><span class="answer-kind" id="answerKind"></span></div>
       <div class="answer-feedback" id="answerFeedback" aria-live="polite"></div>
     </div>
-    <div class="dock-actions"><button class="dock-clear" id="interactiveClear" type="button" aria-label="Effacer toute la réponse" title="Effacer toute la réponse" onclick="clearInteractiveAnswer()"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m4.5 15.5 7.8-8.1a2.2 2.2 0 0 1 3.1 0l3.2 3.2a2.2 2.2 0 0 1 0 3.1l-5.8 5.8H8.5z" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/><path d="m9 11 5.3 5.3M12.8 19.5h7" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg></button><button class="dock-action" id="interactiveAction" type="button" onclick="submitInteractive()">Suivant</button></div>
+    <div class="dock-actions"><button class="dock-action" id="interactiveAction" type="button" onclick="submitInteractive()">Suivant</button></div>
   </div>
 </section>
-</div>
 <div class="course-modal" id="courseModal" onclick="if(event.target===this)closeCourse()" hidden>
   <section class="course-card" role="dialog" aria-modal="true" aria-labelledby="courseTitle">
     <button class="course-close" type="button" aria-label="Fermer le cours" onclick="closeCourse()">×</button>
@@ -9290,6 +9284,7 @@ svg{display:block;max-width:100%;height:auto}
     <h2 class="equation-detail-title" id="equationDetailTitle">Résolution détaillée</h2>
     <div id="equationDetailBody"></div>
   </section>
+</div>
 </div>
 <script>
 const seriesBank=${payload};
@@ -9829,11 +9824,9 @@ function hasInteractiveAnswer(){
  return interactiveTouched.some(Boolean);
 }
 function updateInteractiveControls(){
- const dock=document.getElementById('answerDock'),action=document.getElementById('interactiveAction'),clear=document.getElementById('interactiveClear');
- const spec=slides[idx].interactiveSpec;
+ const dock=document.getElementById('answerDock'),action=document.getElementById('interactiveAction');
  const hasAnswer=hasInteractiveAnswer();
  if(action){action.textContent=interactiveLocked?'Suivant':(hasAnswer?'Valider':'Suivant');action.disabled=false;}
- if(clear){clear.hidden=spec.kind==='qcm';clear.disabled=interactiveLocked||!hasAnswer;}
  if(dock) dock.classList.toggle('answer-ready',!interactiveLocked&&hasAnswer);
 }
 function toggleInteractiveOption(index){
