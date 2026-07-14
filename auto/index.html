@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <meta name="theme-color" content="#f5f7fb">
-  <title>Automatismes maths cycle 4 et DNB — version 1.10 | maths&amp;go</title>
+  <title>Automatismes maths cycle 4 et DNB — version 1.11 | maths&amp;go</title>
 <meta name="description" content="Outil d’automatismes de mathématiques pour le cycle 4 et le DNB : entraînez vos élèves en vidéoprojection ou sur téléphone, avec aides et corrections.">
 <style>
 :root {
@@ -89,7 +89,7 @@ button.orange{background:var(--orange)}
     </a>
     <div class="title">
       <h1>Automatismes<span class="title-cycle">Cycle 4 – DNB</span></h1>
-      <span class="revision-badge">V1.10</span>
+      <span class="revision-badge">V1.11</span>
     </div>
   </div>
 
@@ -9304,7 +9304,7 @@ function buildCleanSlideHtml(inst, correction=false, mode=null){
 </script>
 <script>
 const INTERACTIVE_SERIES_COUNT=10;
-const APP_REVISION='1.10';
+const APP_REVISION='1.11';
 
 function makeDiapoWindowHtml(seriesData,experienceMode='interactive'){
   const normalizedSeries=Array.isArray(seriesData&&seriesData[0])?seriesData:[seriesData||[]];
@@ -11028,13 +11028,146 @@ function shuffledCopy(arr){
 }
 
 /*
-Tirage équilibré :
-1. Le nombre total de questions est réparti aussi équitablement que possible
-   entre les modules cochés.
-2. Dans chaque module, toutes les questions passent une fois, dans un ordre
-   mélangé, avant qu'un nouveau cycle recommence.
-3. La série finale est ensuite remélangée.
+Banque de tirage :
+1. Un type déjà tiré ne revient pas avant l'épuisement de son paquet.
+2. Les dix séries interactives partagent la même banque : avec plusieurs
+   modules, les types continuent donc de tourner d'une série à l'autre.
+3. Les places supplémentaires sont attribuées aux modules les moins servis.
+4. L'ordre final entrelace les modules sans casser l'ordre pédagogique interne.
 */
+
+let quizSelectionState=null;
+
+function quizBankSignature(mods){
+  return mods.map(module=>module.id).sort().join('|');
+}
+
+function beginQuizBank(mods){
+  quizSelectionState={
+    signature:quizBankSignature(mods),
+    questionDecks:new Map(),
+    orderDecks:new Map(),
+    moduleExtraCounts:new Map()
+  };
+}
+
+function ensureQuizBank(mods){
+  const signature=quizBankSignature(mods);
+  if(!quizSelectionState||quizSelectionState.signature!==signature) beginQuizBank(mods);
+}
+
+function questionDeckSignature(questions){
+  return questions.map(question=>String(question.n)).sort().join('|');
+}
+
+function avoidBoundaryRepeat(cycle,lastQuestion){
+  if(!lastQuestion||cycle.length<2||String(cycle[0].n)!==String(lastQuestion.n)) return cycle;
+  const swapIndex=cycle.findIndex(question=>String(question.n)!==String(lastQuestion.n));
+  if(swapIndex>0) [cycle[0],cycle[swapIndex]]=[cycle[swapIndex],cycle[0]];
+  return cycle;
+}
+
+function drawFromQuestionDeck(deckKey,questions,count,cycleBuilder=null){
+  if(count<=0||!questions.length) return [];
+  const signature=questionDeckSignature(questions);
+  let deck=quizSelectionState.questionDecks.get(deckKey);
+  if(!deck||deck.signature!==signature){
+    deck={signature,queue:[],lastQuestion:null};
+    quizSelectionState.questionDecks.set(deckKey,deck);
+  }
+  const selected=[];
+  while(selected.length<count){
+    if(!deck.queue.length){
+      const cycle=cycleBuilder?cycleBuilder():shuffledCopy(questions);
+      deck.queue=avoidBoundaryRepeat(cycle,deck.lastQuestion);
+    }
+    const question=deck.queue.shift();
+    if(!question) break;
+    selected.push(question);
+    deck.lastQuestion=question;
+  }
+  return selected;
+}
+
+function drawOrderKey(deckKey,keys){
+  const signature=[...keys].sort().join('|');
+  let deck=quizSelectionState.orderDecks.get(deckKey);
+  if(!deck||deck.signature!==signature){
+    deck={signature,queue:[],last:null};
+    quizSelectionState.orderDecks.set(deckKey,deck);
+  }
+  if(!deck.queue.length){
+    deck.queue=shuffledCopy(keys);
+    if(deck.last&&deck.queue.length>1&&deck.queue[0]===deck.last){
+      const swapIndex=deck.queue.findIndex(key=>key!==deck.last);
+      [deck.queue[0],deck.queue[swapIndex]]=[deck.queue[swapIndex],deck.queue[0]];
+    }
+  }
+  const key=deck.queue.shift();
+  deck.last=key;
+  return key;
+}
+
+function chooseAlternatingGroups(moduleId,questions,count,groupForQuestion,deckPrefix){
+  const groups=new Map();
+  questions.forEach(question=>{
+    const group=groupForQuestion(question);
+    if(!groups.has(group)) groups.set(group,[]);
+    groups.get(group).push(question);
+  });
+  const groupNames=[...groups.keys()];
+  if(groupNames.length<2) return drawFromQuestionDeck(moduleId+':'+deckPrefix+':all',questions,count);
+  const chosen=[];
+  while(chosen.length<count){
+    const group=drawOrderKey(moduleId+':'+deckPrefix+':order',groupNames);
+    chosen.push(...drawFromQuestionDeck(moduleId+':'+deckPrefix+':'+group,groups.get(group),1));
+  }
+  return chosen;
+}
+
+function interleavedQuestionCycle(questions,groupForQuestion){
+  const pools=new Map();
+  questions.forEach(question=>{
+    const group=groupForQuestion(question);
+    if(!pools.has(group)) pools.set(group,[]);
+    pools.get(group).push(question);
+  });
+  pools.forEach((items,key)=>pools.set(key,shuffledCopy(items)));
+  const cycle=[];
+  while([...pools.values()].some(items=>items.length)){
+    const active=shuffledCopy([...pools.keys()].filter(key=>pools.get(key).length));
+    active.forEach(key=>cycle.push(pools.get(key).pop()));
+  }
+  return cycle;
+}
+
+function allocateModuleCounts(usable,count){
+  const base=Math.floor(count/usable.length);
+  const remainder=count%usable.length;
+  const candidates=shuffledCopy(usable).sort((left,right)=>
+    (quizSelectionState.moduleExtraCounts.get(left.m.id)||0)-(quizSelectionState.moduleExtraCounts.get(right.m.id)||0)
+  );
+  const extras=new Set(candidates.slice(0,remainder).map(item=>item.m.id));
+  extras.forEach(id=>quizSelectionState.moduleExtraCounts.set(id,(quizSelectionState.moduleExtraCounts.get(id)||0)+1));
+  return usable.map(item=>({...item,moduleCount:base+(extras.has(item.m.id)?1:0)}));
+}
+
+function interleaveModuleSelections(selections){
+  const queues=selections.filter(selection=>selection.questions.length).map(selection=>({...selection,questions:[...selection.questions]}));
+  const plan=[];
+  let lastModuleId=null;
+  while(queues.some(selection=>selection.questions.length)){
+    const nonEmpty=queues.filter(selection=>selection.questions.length);
+    let candidates=nonEmpty.filter(selection=>selection.m.id!==lastModuleId);
+    if(!candidates.length) candidates=nonEmpty;
+    const longest=Math.max(...candidates.map(selection=>selection.questions.length));
+    candidates=shuffledCopy(candidates.filter(selection=>selection.questions.length===longest));
+    const selected=candidates[0];
+    plan.push({m:selected.m,q:selected.questions.shift()});
+    lastModuleId=selected.m.id;
+  }
+  return plan;
+}
 
 function balancedFormatsForCount(count){
   const half=Math.floor(count/2);
@@ -11144,47 +11277,31 @@ function eligibleQuestionsForModule(m){
   return questions.filter(q=>questionEligibleForLevel(m,q,level) && questionEligibleForVisualMode(m,q,mode));
 }
 
-function chooseFractionPercentQuestions(questions,count){
-  const fractions=questions.filter(q=>q.options&&q.options.fraction_percent_category==='fraction');
-  const percents=questions.filter(q=>q.options&&q.options.fraction_percent_category==='percent');
-  let fractionCount=Math.floor(count/2),percentCount=count-fractionCount;
-  if(count%2===1&&rnd()<.5) [fractionCount,percentCount]=[percentCount,fractionCount];
-  const repeatedPick=(pool,needed)=>{
-    const selected=[];
-    while(selected.length<needed){
-      const cycle=shuffledCopy(pool);
-      selected.push(...cycle.slice(0,needed-selected.length));
-    }
-    return selected;
-  };
-  return shuffledCopy([
-    ...repeatedPick(fractions,fractionCount),
-    ...repeatedPick(percents,percentCount)
+function chooseFractionPercentQuestions(moduleId,questions,count){
+  return chooseAlternatingGroups(
+    moduleId,
+    questions,
+    count,
+    question=>question.options?.fraction_percent_category||'other',
+    'fraction-percent'
+  );
+}
+
+function solidQuestionCycle(groups){
+  const pools=new Map([
+    ['drawing',interleavedQuestionCycle(groups.drawing,question=>question.options?.solid_answer||question.n)],
+    ['object',shuffledCopy(groups.object)],
+    ['count',shuffledCopy(groups.count)]
   ]);
-}
-
-function chooseVariedSolidDrawings(drawings,count){
-  const byName=new Map();
-  drawings.forEach(q=>{
-    const name=q.options.solid_answer;
-    if(!byName.has(name)) byName.set(name,[]);
-    byName.get(name).push(q);
-  });
-  const chosen=[];
-  while(chosen.length<count){
-    const availableNames=shuffledCopy([...byName.keys()].filter(name=>byName.get(name).length));
-    if(!availableNames.length) break;
-    for(const name of availableNames){
-      const variants=byName.get(name);
-      const index=Math.floor(rnd()*variants.length);
-      chosen.push(variants.splice(index,1)[0]);
-      if(chosen.length===count) break;
-    }
+  const cycle=[];
+  while([...pools.values()].some(items=>items.length)){
+    const active=shuffledCopy([...pools.keys()].filter(key=>pools.get(key).length));
+    active.forEach(key=>cycle.push(pools.get(key).shift()));
   }
-  return chosen;
+  return cycle;
 }
 
-function chooseSolidQuestions(questions,count){
+function chooseSolidQuestions(moduleId,questions,count){
   // Si ce module n'a reçu aucune place dans le questionnaire équilibré,
   // il ne doit surtout pas forcer l'ajout d'une figure.
   if(count<=0) return [];
@@ -11194,64 +11311,34 @@ function chooseSolidQuestions(questions,count){
     count:questions.filter(q=>q.options&&q.options.solid_category==='count')
   };
 
-  const drawingCount=Math.min(groups.drawing.length,Math.max(1,Math.round(count*.6)));
-  const remaining=count-drawingCount;
-  let objectCount=Math.floor(remaining/2);
-  let countCount=remaining-objectCount;
-  if(remaining%2===1&&rnd()<.5){
-    [objectCount,countCount]=[countCount,objectCount];
-  }
-
-  objectCount=Math.min(objectCount,groups.object.length);
-  countCount=Math.min(countCount,groups.count.length);
-  const selectedCounts=shuffledCopy(groups.count).slice(0,countCount);
+  const chosen=drawFromQuestionDeck(
+    moduleId+':solid-all',
+    questions,
+    count,
+    ()=>solidQuestionCycle(groups)
+  );
   const elementOrder=[];
-  while(elementOrder.length<countCount){
+  const countQuestionTotal=chosen.filter(question=>question.options?.solid_category==='count').length;
+  while(elementOrder.length<countQuestionTotal){
     elementOrder.push(...shuffledCopy([0,1,2]));
   }
-  const configuredCounts=selectedCounts.map((q,index)=>({
-    ...q,
-    options:{...q.options,solid_element_index:elementOrder[index]}
-  }));
-  let chosen=[
-    ...chooseVariedSolidDrawings(groups.drawing,drawingCount),
-    ...shuffledCopy(groups.object).slice(0,objectCount),
-    ...configuredCounts
-  ];
-
-  if(chosen.length<count){
-    const selectedNumbers=new Set(chosen.map(q=>q.n));
-    const remainingPool=shuffledCopy(questions.filter(q=>!selectedNumbers.has(q.n)));
-    chosen.push(...remainingPool.slice(0,count-chosen.length));
-  }
-  return shuffledCopy(chosen);
+  let countIndex=0;
+  return chosen.map(question=>question.options?.solid_category==='count'?{
+    ...question,
+    options:{...question.options,solid_element_index:elementOrder[countIndex++]}
+  }:question);
 }
 
-function chooseAreaQuestions(questions,count){
+function chooseAreaQuestions(moduleId,questions,count){
   // Le QCM de reconnaissance de formule utilise une place du quota habituel.
   const qcmCount=count>=8?2:(count>=4?1:0);
-  const selectable=qcmCount>0?questions:questions.filter(q=>q.options.area_kind!=='formula_recognition');
-  const byCategory=new Map();
-  selectable.forEach(q=>{
-    const category=(q.options&&q.options.area_category)||'other';
-    if(!byCategory.has(category)) byCategory.set(category,[]);
-    byCategory.get(category).push(q);
-  });
-
-  const pools=new Map();
-  byCategory.forEach((items,category)=>pools.set(category,shuffledCopy(items)));
-  let chosen=[];
-  while(chosen.length<count){
-    const categories=shuffledCopy([...pools.keys()].filter(category=>pools.get(category).length));
-    if(!categories.length){
-      byCategory.forEach((items,category)=>pools.set(category,shuffledCopy(items)));
-      continue;
-    }
-    for(const category of categories){
-      chosen.push(pools.get(category).pop());
-      if(chosen.length===count) break;
-    }
-  }
+  const selectable=questions;
+  let chosen=drawFromQuestionDeck(
+    moduleId+':areas',
+    selectable,
+    count,
+    ()=>interleavedQuestionCycle(selectable,question=>question.options?.area_category||'other')
+  );
 
   // Un QCM à partir de 4 questions, deux à partir de 8, jamais davantage.
   const formulaQcmCount=chosen.filter(q=>q.options.area_kind==='formula_recognition').length;
@@ -11265,49 +11352,24 @@ function chooseAreaQuestions(questions,count){
   return shuffledCopy(chosen);
 }
 
-function chooseNumberLineQuestions(questions,count){
-  const byFamily=new Map();
-  questions.forEach(q=>{
-    const family=(q.options&&q.options.numberline_family)||'standard';
-    if(!byFamily.has(family)) byFamily.set(family,[]);
-    byFamily.get(family).push(q);
-  });
-  const pools=new Map();
-  byFamily.forEach((items,family)=>pools.set(family,shuffledCopy(items)));
-  const chosen=[];
-  while(chosen.length<count){
-    const families=shuffledCopy([...pools.keys()].filter(family=>pools.get(family).length));
-    if(!families.length){
-      byFamily.forEach((items,family)=>pools.set(family,shuffledCopy(items)));
-      continue;
-    }
-    for(const family of families){
-      chosen.push(pools.get(family).pop());
-      if(chosen.length===count) break;
-    }
-  }
-  return shuffledCopy(chosen);
+function chooseNumberLineQuestions(moduleId,questions,count){
+  return chooseAlternatingGroups(
+    moduleId,
+    questions,
+    count,
+    question=>question.options?.numberline_family||'standard',
+    'number-line'
+  );
 }
 
-function chooseFractionMulDivQuestions(questions,count){
-  const multiplication=questions.filter(question=>String(question.options?.fraction_ops_kind||'').startsWith('multiply'));
-  const division=questions.filter(question=>String(question.options?.fraction_ops_kind||'').startsWith('divide'));
-  if(!multiplication.length||!division.length) return shuffledCopy(questions).slice(0,count);
-  let multiplyPool=[],dividePool=[],nextMultiply=RD(0,1)===0;
-  const take=poolName=>{
-    if(poolName==='multiply'){
-      if(!multiplyPool.length) multiplyPool=shuffledCopy(multiplication);
-      return multiplyPool.pop();
-    }
-    if(!dividePool.length) dividePool=shuffledCopy(division);
-    return dividePool.pop();
-  };
-  const chosen=[];
-  while(chosen.length<count){
-    chosen.push(take(nextMultiply?'multiply':'divide'));
-    nextMultiply=!nextMultiply;
-  }
-  return chosen;
+function chooseFractionMulDivQuestions(moduleId,questions,count){
+  return chooseAlternatingGroups(
+    moduleId,
+    questions,
+    count,
+    question=>String(question.options?.fraction_ops_kind||'').startsWith('multiply')?'multiply':'divide',
+    'fraction-mul-div'
+  );
 }
 
 function buildBalancedQuiz(mods,count){
@@ -11317,36 +11379,27 @@ function buildBalancedQuiz(mods,count){
     .filter(item=>item.questions.length>0);
 
   if(!usable.length) return [];
+  ensureQuizBank(usable.map(item=>item.m));
 
-  const moduleOrder=shuffledCopy(usable);
-  const base=Math.floor(count/moduleOrder.length);
-  const remainder=count%moduleOrder.length;
-  let plan=[];
-
-  moduleOrder.forEach((item,index)=>{
-    const moduleCount=base+(index<remainder?1:0);
+  const selections=allocateModuleCounts(usable,count).map(item=>{
+    const moduleCount=item.moduleCount;
     let chosen=item.m.id==='dnb_03b'
-      ? chooseFractionMulDivQuestions(item.questions,moduleCount)
+      ? chooseFractionMulDivQuestions(item.m.id,item.questions,moduleCount)
       : item.m.id==='dnb_04'
-      ? chooseFractionPercentQuestions(item.questions,moduleCount)
+      ? chooseFractionPercentQuestions(item.m.id,item.questions,moduleCount)
       : item.m.id==='dnb_20'
-      ? chooseSolidQuestions(item.questions,moduleCount)
+      ? chooseSolidQuestions(item.m.id,item.questions,moduleCount)
       : item.m.id==='dnb_22'
-        ? chooseAreaQuestions(item.questions,moduleCount)
+        ? chooseAreaQuestions(item.m.id,item.questions,moduleCount)
         : item.m.id==='dnb_14'
-          ? chooseNumberLineQuestions(item.questions,moduleCount)
-        : [];
-    while(item.m.id!=='dnb_03b'&&item.m.id!=='dnb_04'&&item.m.id!=='dnb_20'&&item.m.id!=='dnb_22'&&item.m.id!=='dnb_14'&&chosen.length<moduleCount){
-        const cycle=shuffledCopy(item.questions);
-        const need=moduleCount-chosen.length;
-        chosen.push(...cycle.slice(0,need));
-    }
-    chosen.forEach(q=>plan.push({m:item.m,q}));
+          ? chooseNumberLineQuestions(item.m.id,item.questions,moduleCount)
+        : drawFromQuestionDeck(item.m.id+':all',item.questions,moduleCount);
+    return {m:item.m,questions:chosen};
   });
 
+  let plan=interleaveModuleSelections(selections);
   plan=assignReductionFormats(plan);
-  const ordered=mods.length===1&&mods[0].id==='dnb_03b'?plan:shuffledCopy(plan);
-  return ordered.map(({m,q})=>makeInstance(m,q));
+  return plan.map(({m,q})=>makeInstance(m,q));
 }
 
 function generate(){
@@ -11357,6 +11410,7 @@ function generate(){
   const mods=visibleModules().filter(m=>checked.has(m.id));
   if(!mods.length){ alert('Coche au moins un module.'); return; }
   const count=parseInt(document.getElementById('count').value,10);
+  beginQuizBank(mods);
   quiz=buildBalancedQuiz(mods,count);
   if(!quiz.length){ alert('Aucune question compatible avec les options choisies.'); return; }
   openDiapoWindow();
