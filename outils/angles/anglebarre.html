@@ -1,0 +1,2481 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>AngleBarre — angles d’un triangle | maths&amp;go</title>
+<meta name="description" content="Résolvez pas à pas des problèmes sur la somme des angles d’un triangle quelconque, rectangle, isocèle ou équilatéral.">
+<meta name="robots" content="index, follow">
+<meta name="theme-color" content="#2563eb">
+<link rel="canonical" href="https://mathsgo.re/angles/anglebarre.html">
+<meta property="og:locale" content="fr_FR">
+<meta property="og:type" content="website">
+<meta property="og:title" content="AngleBarre — angles d’un triangle">
+<meta property="og:description" content="Un outil pas à pas pour travailler les angles des triangles.">
+<meta property="og:url" content="https://mathsgo.re/angles/anglebarre.html">
+<meta property="og:site_name" content="maths&amp;go">
+<style>
+  :root{
+    --bg:#f5f7fb;
+    --panel:#ffffff;
+    --ink:#0f172a;
+    --muted:#64748b;
+    --line:#d8dee9;
+    --blue:#3b82f6;
+    --blue-soft:#dbeafe;
+    --orange:#f97316;
+    --orange-soft:#ffedd5;
+    --green:#16a34a;
+    --green-soft:#dcfce7;
+    --red:#ef4444;
+    --red-soft:#fee2e2;
+    --shadow:0 18px 50px rgba(15,23,42,.10);
+    --radius:22px;
+  }
+
+  *{box-sizing:border-box}
+
+  body{
+    margin:0;
+    min-height:100vh;
+    background:
+      radial-gradient(circle at top left, rgba(59,130,246,.13), transparent 34rem),
+      radial-gradient(circle at bottom right, rgba(22,163,74,.10), transparent 34rem),
+      var(--bg);
+    color:var(--ink);
+    font-family:system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Arial,sans-serif;
+  }
+
+  main{
+    width:min(680px, calc(100vw - 28px));
+    margin:14px auto 26px;
+    display:grid;
+    grid-template-columns:minmax(320px, 640px);
+    justify-content:center;
+    gap:18px;
+    align-items:start;
+  }
+
+  main.activeMode{
+    grid-template-columns:minmax(0,1fr);
+    width:min(1240px, calc(100vw - 28px));
+  }
+
+  .panel,.stage{
+    background:rgba(255,255,255,.88);
+    border:1px solid rgba(15,23,42,.08);
+    border-radius:var(--radius);
+    box-shadow:var(--shadow);
+    backdrop-filter:blur(10px);
+  }
+
+  .panel{padding:18px 20px 20px}
+  main.activeMode .panel{display:none}
+
+  .appTitle{
+    text-align:center;
+    font-size:clamp(34px,4.6vw,48px);
+    line-height:.95;
+    letter-spacing:-.06em;
+    font-weight:950;
+    margin:0 0 14px;
+  }
+
+  .brandLink{
+    display:block;
+    width:112px;
+    line-height:0;
+    flex:0 0 auto;
+  }
+  .brandLink img{display:block;width:100%;height:auto}
+  .panelBrand{margin:0 auto 8px}
+  .stageQuickActions .brandLink{margin-right:auto;width:98px}
+  .familyHint{
+    margin:9px 0 0;
+    min-height:20px;
+    color:#475569;
+    font-size:13px;
+    font-weight:750;
+    line-height:1.35;
+    text-align:center;
+  }
+
+  .creatorBlock{
+    padding:16px 18px 18px;
+    margin:0 auto;
+    max-width:610px;
+    border:1px solid rgba(59,130,246,.16);
+    background:rgba(239,246,255,.72);
+    border-radius:18px;
+  }
+
+  .creatorTitle{
+    text-align:center;
+    font-size:20px;
+    font-weight:950;
+    color:#1d4ed8;
+    margin-bottom:12px;
+  }
+
+  label{
+    display:block;
+    margin:9px 0 5px;
+    font-size:11px;
+    color:var(--muted);
+    font-weight:850;
+    text-transform:uppercase;
+    letter-spacing:.06em;
+    text-align:center;
+  }
+
+  input,select{
+    width:100%;
+    border:1px solid rgba(15,23,42,.14);
+    border-radius:13px;
+    padding:9px 11px;
+    min-height:42px;
+    background:white;
+    color:var(--ink);
+    font-size:15px;
+    font-weight:800;
+    outline:none;
+    text-align:center;
+    text-align-last:center;
+  }
+
+  input:focus,select:focus{
+    border-color:rgba(59,130,246,.55);
+    box-shadow:0 0 0 4px rgba(59,130,246,.12);
+  }
+
+  input:disabled,select:disabled{
+    background:#eef2ff;
+    color:#3730a3;
+    opacity:1;
+    cursor:not-allowed;
+  }
+
+  .triangleName{
+    max-width:220px;
+    margin:0 auto;
+    display:block;
+    font-size:22px;
+    font-weight:950;
+    letter-spacing:.05em;
+    text-transform:uppercase;
+  }
+
+  .settingsGrid{display:grid;grid-template-columns:1fr 1fr;gap:10px;align-items:end}
+  .angleGrid{display:grid;grid-template-columns:repeat(3,1fr);gap:9px;margin-top:2px}
+
+  .angleBox{
+    background:rgba(255,255,255,.72);
+    border:1px solid rgba(15,23,42,.08);
+    border-radius:14px;
+    padding:8px;
+  }
+
+  .angleBox label{margin-top:0;margin-bottom:8px;color:#334155}
+  .angleBox input{font-size:20px;min-height:48px;font-weight:950}
+
+  .rightBox.hidden{opacity:.42}
+
+  .displayBox{
+    margin-top:12px;
+    padding:11px;
+    background:rgba(255,255,255,.66);
+    border:1px solid rgba(15,23,42,.08);
+    border-radius:16px;
+  }
+
+  .displayTitle{
+    text-align:center;
+    font-size:12px;
+    color:#334155;
+    font-weight:950;
+    text-transform:uppercase;
+    letter-spacing:.06em;
+    margin-bottom:8px;
+  }
+
+  .toggleGrid{display:grid;grid-template-columns:1fr 1fr;gap:8px;align-items:stretch}
+
+  .toggleItem{
+    display:flex;
+    align-items:center;
+    justify-content:flex-start;
+    gap:10px;
+    min-height:38px;
+    padding:7px 12px;
+    border-radius:12px;
+    background:#fff;
+    border:1px solid rgba(15,23,42,.10);
+    color:#334155;
+    font-size:13px;
+    font-weight:900;
+    cursor:pointer;
+    text-align:left;
+    text-transform:none;
+    letter-spacing:0;
+    margin:0;
+  }
+
+  .toggleItem input{width:18px;height:18px;accent-color:#3b82f6;cursor:pointer;flex:0 0 18px;margin:0}
+
+  .creatorActions{display:flex;gap:10px;justify-content:center;align-items:stretch;margin-top:13px}
+
+  button{
+    border:none;
+    border-radius:14px;
+    padding:12px 14px;
+    font-size:15px;
+    font-weight:950;
+    color:var(--ink);
+    background:#eef2f7;
+    cursor:pointer;
+    transition:transform .08s ease, filter .12s ease, opacity .12s ease;
+  }
+  button:hover{filter:brightness(.98)}
+  button:active{transform:translateY(1px)}
+  button:disabled{opacity:.42;cursor:not-allowed;transform:none}
+  button.primary{background:linear-gradient(180deg,#60a5fa,#3b82f6);color:white}
+  button.green{background:linear-gradient(180deg,#22c55e,#16a34a);color:white}
+  button.orange{background:linear-gradient(180deg,#fb923c,#f97316);color:white}
+  button.ghost{background:rgba(255,255,255,.78);border:1px solid rgba(15,23,42,.12)}
+
+  .diceBtn{
+    flex:0 0 48px;
+    width:48px;
+    min-height:48px;
+    padding:0;
+    font-size:25px;
+    font-family:"Segoe UI Emoji","Apple Color Emoji","Noto Color Emoji",system-ui,sans-serif;
+  }
+
+  .buildBtn{flex:0 1 360px;max-width:360px;min-height:48px;border-radius:18px;font-size:17px}
+
+  .buildError{
+    display:none;
+    margin-top:14px;
+    padding:11px 12px;
+    border-radius:14px;
+    background:#fef2f2;
+    border:1px solid rgba(239,68,68,.22);
+    color:#991b1b;
+    font-size:13px;
+    line-height:1.35;
+    font-weight:850;
+    text-align:center;
+  }
+  .buildError.show{display:block}
+
+  .stage{display:none;position:relative;padding:16px;min-height:660px}
+
+  main.activeMode .stage{
+    display:flex;
+    flex-direction:column;
+    height:calc(100vh - 36px);
+    min-height:650px;
+    overflow:hidden;
+  }
+
+  .stage:fullscreen{
+    background:var(--bg);
+    border-radius:0;
+    width:100vw;
+    height:100vh;
+    padding:22px;
+    display:flex;
+    flex-direction:column;
+  }
+
+  .stageQuickActions{
+    position:absolute;
+    top:14px;
+    right:14px;
+    z-index:5;
+    display:flex;
+    gap:8px;
+    align-items:center;
+  }
+
+  .quickBtn{
+    min-width:44px;
+    height:44px;
+    padding:0 12px;
+    display:grid;
+    place-items:center;
+    border-radius:14px;
+    font-size:15px;
+    line-height:1;
+    background:rgba(255,255,255,.94);
+    border:1px solid rgba(15,23,42,.14);
+    box-shadow:0 10px 24px rgba(15,23,42,.14);
+    backdrop-filter:blur(8px);
+  }
+
+  .quickIcon{font-size:22px;width:44px;padding:0}
+  .equationEyeBtn svg{width:23px;height:23px;display:block;opacity:.78}
+  .equationEyeBtn:hover svg{opacity:.95}
+  .equationEyeBtn.is-hidden{opacity:.72;background:#f8fafc}
+
+  .topbar{
+    flex:0 0 auto;
+    padding:3px 190px 6px 40px;
+    min-height:116px;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    overflow:hidden;
+  }
+
+  .equationHistory{width:min(980px,100%);max-height:110px;overflow-y:auto;overflow-x:auto;scrollbar-width:thin}
+  .equationTable{border-collapse:collapse;margin:0 auto;font-size:clamp(24px,2.7vw,38px);font-weight:950;line-height:1.18}
+  .equationTable td{padding:2px 8px;white-space:nowrap;vertical-align:baseline}
+  .equationTable .lhs{text-align:right}
+  .equationTable .eq{text-align:center;color:#64748b;padding-left:14px;padding-right:14px}
+  .equationTable .rhs{text-align:left}
+  .equationTable tr.historyStep{color:#64748b;opacity:.82}
+  .equationTable tr.currentStep{color:#0f172a;opacity:1}
+  .equationTable tr.currentStep .eq{color:#3b82f6}
+  .equationTable tr.finalConclusion td{color:#dc2626}
+
+  .propertyCard{
+    width:min(920px,100%);
+    margin:0 auto;
+    padding:16px 20px;
+    border-radius:20px;
+    border:1px solid rgba(59,130,246,.18);
+    background:#eff6ff;
+    color:#1e3a8a;
+    text-align:center;
+    font-size:clamp(20px,2.5vw,31px);
+    font-weight:950;
+    line-height:1.25;
+  }
+
+  .whiteBoard{
+    width:min(860px,96%);
+    min-height:190px;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    text-align:center;
+    padding:22px 26px;
+    border-radius:22px;
+    background:#fff;
+    border:3px solid rgba(15,23,42,.18);
+    box-shadow:inset 0 0 0 2px rgba(255,255,255,.9), 0 14px 34px rgba(15,23,42,.08);
+    color:#0f172a;
+    font-size:clamp(26px,3.2vw,44px);
+    font-weight:950;
+    line-height:1.18;
+  }
+  .whiteBoard.waiting{
+    color:#94a3b8;
+    font-size:clamp(22px,2.5vw,34px);
+    border-style:dashed;
+  }
+  .whiteBoard.compact{
+    min-height:92px;
+    padding:14px 18px;
+    margin-bottom:8px;
+    font-size:clamp(18px,2vw,27px);
+    border-width:2px;
+  }
+
+  .relationEditor{
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    gap:10px;
+    flex-wrap:wrap;
+    font-size:clamp(26px,3vw,42px);
+    font-weight:950;
+  }
+
+  .slotBtn{
+    min-width:126px;
+    min-height:58px;
+    padding:8px 16px;
+    border-radius:16px;
+    background:#fff;
+    border:2px solid rgba(59,130,246,.26);
+    color:#1d4ed8;
+    font-size:inherit;
+    font-weight:950;
+    line-height:1;
+    box-shadow:0 8px 20px rgba(59,130,246,.08);
+  }
+  .slotBtn.empty{color:#94a3b8;border-style:dashed;background:#f8fafc}
+  .slotBtn.selected{background:#dbeafe;border-color:#2563eb;box-shadow:0 0 0 5px rgba(59,130,246,.15)}
+  .plusSign,.equalsSign{color:#64748b}
+
+  .instructionZone{
+    flex:0 0 auto;
+    margin:0 auto 8px;
+    width:min(980px,100%);
+    min-height:54px;
+    display:flex;
+    justify-content:center;
+    align-items:center;
+    text-align:center;
+    color:#334155;
+    font-size:clamp(18px,2vw,25px);
+    font-weight:850;
+    line-height:1.28;
+  }
+  .instructionZone strong{font-weight:950}
+
+  .anglePalette{
+    display:none;
+    flex:0 0 auto;
+    justify-content:center;
+    align-items:center;
+    gap:10px;
+    flex-wrap:wrap;
+    margin:-2px 0 8px;
+  }
+  .anglePalette.show{display:flex}
+  .angleChoice{
+    min-width:86px;
+    min-height:48px;
+    padding:10px 14px;
+    border-radius:999px;
+    background:#fff;
+    border:1px solid rgba(15,23,42,.13);
+    box-shadow:0 8px 20px rgba(15,23,42,.07);
+    font-size:21px;
+    font-weight:950;
+  }
+  .angleChoice.usedChoice{display:none}
+  .angleChoice.selectedChoice{
+    background:#dbeafe;
+    border-color:#2563eb;
+    box-shadow:0 0 0 4px rgba(59,130,246,.14), 0 8px 20px rgba(15,23,42,.07);
+  }
+
+  .workArea{
+    flex:1 1 auto;
+    min-height:260px;
+    display:grid;
+    grid-template-columns:minmax(320px,.92fr) minmax(430px,1.08fr);
+    gap:16px;
+    overflow:hidden;
+  }
+
+  .workArea.onlyVisual{grid-template-columns:minmax(320px,760px);justify-content:center}
+  .workArea.onlyBars{grid-template-columns:minmax(430px,900px);justify-content:center}
+
+  .card{
+    min-height:0;
+    background:linear-gradient(180deg,rgba(255,255,255,.72),rgba(255,255,255,.38));
+    border:1px solid rgba(15,23,42,.08);
+    border-radius:24px;
+    padding:14px;
+    display:flex;
+    flex-direction:column;
+    justify-content:center;
+    align-items:center;
+  }
+
+  .visualCard{position:relative;overflow:visible}
+  svg.triangleSvg{width:min(100%,640px);height:100%;min-height:390px;overflow:visible}
+  .triangleShape{fill:rgba(255,255,255,.9);stroke:#1d4ed8;stroke-width:5;stroke-linejoin:round}
+  .angleArc{fill:none;stroke-width:6;stroke-linecap:round;stroke-linejoin:round}
+  .rightAngleMark{fill:none;stroke:#ef4444;stroke-width:4;stroke-linejoin:round}
+  .vertexText,.angleValueText{
+    font-weight:950;
+    paint-order:stroke;
+    stroke:#fff;
+    stroke-width:7px;
+    stroke-linejoin:round;
+  }
+  .vertexText{font-size:28px;fill:#1d4ed8}
+  .angleValueText{font-size:25px;fill:#0f172a}
+  .angleHit{fill:rgba(59,130,246,0);cursor:pointer;pointer-events:all}
+  .angleHit:hover{fill:rgba(59,130,246,.10)}
+
+  .barBoard{width:100%;min-height:100%;justify-content:center;gap:12px}
+  .barWrap{width:100%;display:flex;flex-direction:column;gap:8px;align-items:center;justify-content:center}
+  .barTotal{
+    font-size:clamp(28px,3vw,42px);
+    font-weight:950;
+    color:#1e3a8a;
+    line-height:1;
+  }
+  .barCompareLabel{
+    align-self:center;
+    margin:0 0 -2px;
+    color:#64748b;
+    font-size:13px;
+    font-weight:950;
+    text-transform:uppercase;
+    letter-spacing:.06em;
+  }
+  .barTable{
+    width:min(980px,96%);
+    display:flex;
+    flex-direction:column;
+    align-items:stretch;
+    justify-content:center;
+  }
+  .barLine{
+    --table-border:rgba(15,23,42,.42);
+    display:grid;
+    grid-auto-flow:column;
+    grid-template-columns:var(--cols,1fr);
+    align-items:stretch;
+    justify-content:start;
+    width:100%;
+    max-width:980px;
+    min-height:98px;
+    background:#fff;
+    box-sizing:border-box;
+    overflow:visible;
+  }
+  .barLine.top{
+    border-top:2px solid var(--table-border);
+    border-left:2px solid var(--table-border);
+    border-right:2px solid var(--table-border);
+    border-bottom:2px solid var(--table-border);
+  }
+  .barLine.bottom{
+    border-left:2px solid var(--table-border);
+    border-right:2px solid var(--table-border);
+    border-bottom:2px solid var(--table-border);
+  }
+  .barLine.relationDraft{--table-border:rgba(59,130,246,.32)}
+  .barPiece{
+    min-width:92px;
+    width:100%;
+    min-height:98px;
+    border-right:2px solid var(--table-border);
+    display:grid;
+    place-items:center;
+    position:relative;
+    overflow:hidden;
+    user-select:none;
+    box-sizing:border-box;
+    background:linear-gradient(180deg,#fff,#f8fafc);
+    cursor:default;
+  }
+  .barPiece:last-child{border-right:0}
+  .barLine.relationDraft .barPiece{min-width:120px}
+  .barPiece.unknown{
+    background:
+      repeating-linear-gradient(135deg,rgba(59,130,246,.11) 0 8px,rgba(255,255,255,.66) 8px 15px),
+      linear-gradient(180deg,var(--blue-soft),#eff6ff);
+    box-shadow:inset 0 0 0 3px rgba(59,130,246,.18);
+  }
+  .barPiece.result{background:linear-gradient(180deg,var(--green-soft),#f0fdf4)}
+  .barPiece.knownGroup{background:linear-gradient(180deg,#eef2ff,#ffffff)}
+  .barPiece.removed{
+    opacity:.42;
+    color:#64748b;
+    background:
+      repeating-linear-gradient(135deg,rgba(15,23,42,.26) 0 7px,rgba(255,255,255,.18) 7px 14px),
+      #e5e7eb;
+  }
+  .barPiece.solved .pieceMain{color:#dc2626}
+  .barSlot{
+    cursor:pointer;
+    appearance:none;
+    -webkit-appearance:none;
+    border:0;
+    border-radius:0;
+    padding:0;
+    margin:0;
+    background:#ffffff;
+    box-shadow:none;
+  }
+  .barSlot:hover{background:#f8fafc}
+  .barSlot.empty{background:#ffffff}
+  .barSlot.empty .pieceMain{color:#94a3b8}
+  .barSlot.selected{
+    background:#eff6ff;
+    box-shadow:inset 0 0 0 4px rgba(37,99,235,.42);
+  }
+  .barAngleA{background:linear-gradient(180deg,rgba(59,130,246,.17),#eff6ff)}
+  .barAngleB{background:linear-gradient(180deg,rgba(249,115,22,.17),#fff7ed)}
+  .barAngleC{background:linear-gradient(180deg,rgba(22,163,74,.17),#f0fdf4)}
+  .pieceMain{font-size:clamp(27px,3.3vw,42px);font-weight:950;letter-spacing:-.035em;line-height:1;white-space:nowrap;text-align:center}
+
+  .solution{
+    flex:0 0 58px;
+    min-height:58px;
+    margin:5px 0 1px;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    text-align:center;
+    font-size:clamp(30px,3.8vw,52px);
+    font-weight:950;
+    letter-spacing:-.05em;
+    color:#dc2626;
+    line-height:1;
+  }
+
+  .toolBar{flex:0 0 auto;margin:4px 0;display:flex;flex-direction:column;align-items:center;gap:10px}
+  .toolBarRow{display:flex;justify-content:center;gap:12px;flex-wrap:wrap}
+  .toolBtn{
+    min-height:56px;
+    padding:14px 19px;
+    border-radius:19px;
+    font-size:16px;
+    line-height:1.12;
+    border:1px solid rgba(15,23,42,.12);
+    background:#f8fafc;
+    color:#334155;
+  }
+  .toolBtn.active{background:linear-gradient(180deg,#60a5fa,#3b82f6);color:#fff;border-color:rgba(37,99,235,.30);box-shadow:0 10px 24px rgba(59,130,246,.18)}
+  .toolBtn.done{background:#ecfdf5;border-color:rgba(22,163,74,.26);color:#166534}
+  .undoToolBtn{background:#fff7ed;border-color:rgba(249,115,22,.28);color:#9a3412}
+  .restartToolBtn{background:#eef2ff;border-color:rgba(99,102,241,.22);color:#3730a3}
+
+  .actionZone{flex:0 0 auto;min-height:42px;margin-top:0;display:flex;align-items:center;justify-content:center;gap:10px;flex-wrap:wrap}
+  .note{color:#64748b;font-size:13px;font-weight:750;text-align:center;line-height:1.28;min-height:20px}
+  .note.errorNote{color:#b91c1c;font-weight:900}
+
+  .barChoiceZone{
+    flex:0 0 auto;
+    min-height:76px;
+    width:min(900px,96%);
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    gap:10px;
+    flex-wrap:wrap;
+    margin-top:10px;
+  }
+  .barChoiceZone.empty{visibility:hidden}
+  .choiceBtn{
+    min-width:112px;
+    min-height:48px;
+    padding:10px 16px;
+    border-radius:16px;
+    background:#fff;
+    border:1px solid rgba(15,23,42,.14);
+    box-shadow:0 8px 18px rgba(15,23,42,.07);
+    font-size:22px;
+    font-weight:950;
+    color:#1e293b;
+  }
+  .choiceBtn:hover{background:#f8fafc}
+  .choiceBtn.selectedChoice{
+    background:#dbeafe;
+    border-color:#2563eb;
+    box-shadow:0 0 0 4px rgba(59,130,246,.14), 0 8px 18px rgba(15,23,42,.07);
+  }
+  .barPiece.replaceable,
+  .barPiece.groupSelectable{
+    cursor:pointer;
+  }
+  .barPiece.replaceable:hover,
+  .barPiece.groupSelectable:hover{
+    filter:brightness(.985);
+    box-shadow:inset 0 0 0 3px rgba(59,130,246,.18);
+  }
+  .barPiece.replaceSelected,
+  .barPiece.groupSelected{
+    box-shadow:inset 0 0 0 4px rgba(37,99,235,.42);
+  }
+  .choiceHint{
+    width:100%;
+    text-align:center;
+    font-size:13px;
+    font-weight:850;
+    color:#64748b;
+    margin-bottom:-3px;
+  }
+  .barPiece.result.barAngleA{background:linear-gradient(180deg,rgba(59,130,246,.17),#eff6ff)}
+  .barPiece.result.barAngleB{background:linear-gradient(180deg,rgba(249,115,22,.17),#fff7ed)}
+  .barPiece.result.barAngleC{background:linear-gradient(180deg,rgba(22,163,74,.17),#f0fdf4)}
+
+  .hideEquations .topbar{display:none}
+  .hideBars .barBoard{display:none}
+  .hideVisual .visualCard{display:none}
+
+  dialog{
+    width:min(640px, calc(100vw - 28px));
+    border:1px solid rgba(15,23,42,.10);
+    border-radius:24px;
+    padding:0;
+    box-shadow:0 30px 100px rgba(15,23,42,.24);
+  }
+  dialog::backdrop{background:rgba(15,23,42,.35);backdrop-filter:blur(4px)}
+  .dialogInner{padding:34px 38px 32px;text-align:center}
+  .dialogTitle{font-size:34px;font-weight:950;letter-spacing:-.04em;margin:0 0 12px;text-align:center}
+  .dialogText{color:#475569;font-size:20px;font-weight:750;line-height:1.42;margin-bottom:18px;text-align:center}
+  #calcInput{text-align:center;font-size:32px;font-weight:950;min-height:68px;border-radius:18px;padding:18px 16px}
+  .dialogError{display:none;margin-top:12px;padding:10px 12px;border-radius:14px;background:#fef2f2;border:1px solid rgba(239,68,68,.22);color:#991b1b;font-weight:850;line-height:1.35}
+  .dialogError.show{display:block}
+  dialog .btnrow{display:flex;justify-content:center;gap:12px;flex-wrap:wrap;margin-top:16px}
+  dialog button{min-height:52px;padding:14px 18px;border-radius:18px;font-size:16px;line-height:1.15}
+  .autoFillBtn{background:#fef3c7;border-color:rgba(245,158,11,.35);color:#92400e}
+
+  @media (max-width:980px){
+    main.activeMode .stage{height:auto;min-height:650px;overflow:visible}
+    .workArea,.workArea.onlyVisual,.workArea.onlyBars{grid-template-columns:1fr;overflow:visible}
+    .topbar{padding-right:150px;padding-left:20px}
+    .settingsGrid,.angleGrid,.toggleGrid{grid-template-columns:1fr}
+  }
+
+  @media (max-width:700px){
+    main{width:min(1000px, calc(100vw - 20px))}
+    .panel{padding:16px}
+    .creatorBlock{padding:15px}
+    .creatorActions{flex-direction:column}
+    .diceBtn,.buildBtn{width:100%;max-width:none;flex:1 1 auto}
+    .stage{padding:12px}
+    .stageQuickActions{position:static;justify-content:flex-end;margin-bottom:8px}
+    .topbar{padding:0;min-height:104px}
+    .equationTable{font-size:24px}
+    .slotBtn{min-width:104px;min-height:52px}
+    .toolBtn{flex:1 1 220px}
+    .dialogInner{padding:28px 22px 26px}
+    .dialogTitle{font-size:30px}
+    .dialogText{font-size:18px}
+  }
+
+  @media (max-height:760px){
+    main.activeMode .stage{min-height:570px}
+    .barLine,.barPiece{min-height:76px}
+    .solution{flex-basis:48px;min-height:48px;font-size:clamp(28px,3.6vw,48px)}
+    .toolBtn{min-height:50px;padding:12px 16px;font-size:15px}
+    .instructionZone{min-height:40px;font-size:clamp(17px,1.7vw,23px)}
+    .topbar{min-height:92px}
+    .equationHistory{max-height:88px}
+    svg.triangleSvg{min-height:300px}
+  }
+
+
+  /* PATCH MOBILE — interface compacte, tableau stable et sans débordement. */
+  @media (max-width:760px){
+    html,body{max-width:100%;overflow-x:hidden}
+    body{min-height:100dvh}
+    main,
+    main.activeMode{
+      width:calc(100vw - 8px);
+      margin:4px auto 12px;
+      display:block;
+    }
+    .panel,.stage{border-radius:16px}
+    .panel{padding:12px}
+    .creatorBlock{padding:13px 10px 14px;border-radius:14px}
+    .appTitle{font-size:34px;margin-bottom:10px}
+    .panelBrand{width:92px;margin-bottom:6px}
+    .stageQuickActions .brandLink{width:76px}
+    .settingsGrid{grid-template-columns:1fr;gap:7px}
+    .angleGrid{grid-template-columns:repeat(3,minmax(0,1fr));gap:6px}
+    .angleBox{padding:6px 4px;border-radius:11px}
+    .angleBox label{font-size:9px;letter-spacing:.02em;margin-bottom:4px}
+    .angleBox input{min-height:43px;padding:7px 4px;font-size:18px}
+    .toggleGrid{grid-template-columns:1fr 1fr;gap:6px}
+    .toggleItem{min-height:40px;padding:7px 8px;font-size:12px}
+    .creatorActions{flex-direction:row}
+    .diceBtn{flex:0 0 48px;width:48px}
+    .buildBtn{max-width:none;min-width:0}
+
+    main.activeMode .stage{
+      height:auto;
+      min-height:calc(100dvh - 8px);
+      overflow:visible;
+      padding:8px;
+    }
+    .stage:fullscreen{
+      width:100vw;
+      min-height:100dvh;
+      height:auto;
+      padding:max(8px, env(safe-area-inset-top)) 8px max(8px, env(safe-area-inset-bottom));
+      overflow-y:auto;
+    }
+    .stageQuickActions{
+      position:sticky;
+      top:4px;
+      z-index:20;
+      justify-content:flex-end;
+      gap:5px;
+      margin:0 0 5px;
+      padding:3px;
+      border-radius:12px;
+      background:rgba(245,247,251,.90);
+      backdrop-filter:blur(10px);
+    }
+    .quickBtn{height:40px;min-width:40px;padding:0 9px;border-radius:11px;font-size:13px}
+    .quickIcon{width:40px;padding:0;font-size:20px}
+
+    .topbar{padding:2px 0 4px;min-height:78px;overflow:visible}
+    .equationHistory{max-height:104px;width:100%;overflow-x:auto}
+    .equationTable{font-size:clamp(19px,5.5vw,25px)}
+    .equationTable td{padding:2px 4px}
+    .equationTable .eq{padding-left:7px;padding-right:7px}
+    .relationEditor{
+      width:100%;
+      display:grid;
+      grid-template-columns:minmax(50px,1fr) auto minmax(50px,1fr) auto minmax(50px,1fr) auto minmax(58px,1fr);
+      gap:4px;
+      font-size:20px;
+      flex-wrap:nowrap;
+    }
+    .slotBtn{min-width:0;width:100%;min-height:46px;padding:5px 3px;border-radius:10px;font-size:20px}
+    .instructionZone{min-height:50px;margin-bottom:4px;padding:0 4px;font-size:15px;line-height:1.22}
+    .anglePalette{gap:6px;margin:0 0 6px}
+    .angleChoice{min-width:66px;min-height:42px;padding:7px 10px;font-size:18px}
+
+    .workArea,.workArea.onlyVisual,.workArea.onlyBars{grid-template-columns:1fr;gap:8px;overflow:visible;min-height:0}
+    .card{padding:8px;border-radius:16px;min-height:0}
+    .visualCard{order:1}
+    .barBoard{order:2;min-height:auto;gap:6px}
+    svg.triangleSvg{min-height:255px;height:min(38dvh,340px);width:100%}
+    .vertexText{font-size:24px}
+    .angleValueText{font-size:22px}
+    .angleHit{r:64px}
+    .whiteBoard{width:100%;min-height:120px;padding:15px;border-radius:14px;font-size:24px}
+    .whiteBoard.compact{min-height:70px;margin-bottom:5px;padding:10px;font-size:17px;border-radius:12px}
+
+    .barWrap{gap:5px;justify-content:flex-start}
+    .barTable{width:100%;--cell-min:0px}
+    .barLine{min-height:68px;width:100%}
+    .barPiece{min-width:0;min-height:68px}
+    .barLine.relationDraft .barPiece{min-width:0}
+    .pieceMain{font-size:clamp(20px,6vw,28px)}
+    .barChoiceZone{width:100%;min-height:116px;margin-top:6px;gap:6px;align-content:center}
+    .choiceHint{font-size:12px;margin-bottom:0;padding:0 4px}
+    .choiceBtn{min-width:calc(50% - 6px);min-height:42px;padding:7px 8px;border-radius:11px;font-size:18px}
+
+    .solution{flex-basis:44px;min-height:44px;margin:2px 0;font-size:30px}
+    .toolBar{width:100%;gap:6px;margin-top:2px}
+    .toolBarRow{width:100%;display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:6px}
+    .toolBtn{min-height:46px;padding:9px 7px;border-radius:13px;font-size:13px}
+    .actionZone{min-height:34px}
+    .note{font-size:12px}
+  }
+
+  @media (max-width:390px){
+    .appTitle{font-size:31px}
+    .toggleGrid{grid-template-columns:1fr}
+    .relationEditor{grid-template-columns:minmax(43px,1fr) auto minmax(43px,1fr) auto minmax(43px,1fr) auto minmax(50px,1fr);gap:2px;font-size:18px}
+    .slotBtn{font-size:18px;min-height:43px}
+    .plusSign,.equalsSign{font-size:17px}
+    .choiceBtn{font-size:16px}
+    svg.triangleSvg{min-height:235px;height:34dvh}
+  }
+
+
+  /* PATCH TABLEAU INITIAL — cellules strictement carrées et placement mieux équilibré. */
+  .relationDraftTable{
+    margin-top:16px;
+  }
+  .barLine.relationDraft{
+    overflow:hidden;
+    border-radius:0 !important;
+    background:
+      repeating-linear-gradient(
+        135deg,
+        rgba(59,130,246,.085) 0 10px,
+        rgba(255,255,255,.88) 10px 20px
+      );
+  }
+  .barLine.relationDraft .barPiece,
+  .barLine.relationDraft .barSlot{
+    border-radius:0 !important;
+    background:transparent !important;
+    background-image:none !important;
+    box-shadow:none;
+    clip-path:none;
+  }
+  .barLine.relationDraft .barSlot:hover{
+    background:rgba(239,246,255,.58) !important;
+  }
+  .barLine.relationDraft .barSlot.selected{
+    background:rgba(219,234,254,.82) !important;
+    box-shadow:inset 0 0 0 4px rgba(37,99,235,.42);
+  }
+  .barLine.relationDraft .barSlot:active{
+    transform:none;
+  }
+
+  /* Séparations permanentes des cellules du tableau initial. */
+  .barLine.relationDraft .barPiece,
+  .barLine.relationDraft .barSlot{
+    border-right:2px solid var(--table-border) !important;
+  }
+  .barLine.relationDraft .barPiece:last-child,
+  .barLine.relationDraft .barSlot:last-child{
+    border-right:0 !important;
+  }
+
+  /* Deux séparations verticales toujours visibles dans la ligne des trois angles. */
+  .barLine.relationDraft.top{
+    position:relative;
+  }
+  .barLine.relationDraft.top::before,
+  .barLine.relationDraft.top::after{
+    content:"";
+    position:absolute;
+    top:0;
+    bottom:0;
+    width:2px;
+    background:var(--table-border);
+    pointer-events:none;
+    z-index:5;
+    transform:translateX(-1px);
+  }
+  .barLine.relationDraft.top::before{left:33.333333%}
+  .barLine.relationDraft.top::after{left:66.666667%}
+
+  @media (max-width:760px){
+    .relationDraftTable{margin-top:8px}
+  }
+
+</style>
+<!-- Google tag (gtag.js) -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-X8TVC83222"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+  gtag('config', 'G-X8TVC83222');
+</script>
+</head>
+<body>
+<main id="appMain">
+  <section class="panel" id="panel">
+    <a class="brandLink panelBrand" href="./index.html" aria-label="Retour à l’index des angles" title="Retour à l’index des angles">
+      <img src="maths_go_logo.png" alt="maths&amp;go" width="1298" height="612">
+    </a>
+    <h1 class="appTitle">AngleBarre</h1>
+    <div class="creatorBlock" aria-label="Créer une situation sur les angles d’un triangle">
+      <div class="creatorTitle">Créer une situation</div>
+
+      <label for="triangleNameInput">Nom du triangle</label>
+      <input class="triangleName" id="triangleNameInput" type="text" autocomplete="off" value="ABC" maxlength="3" />
+
+      <div class="settingsGrid">
+        <div>
+          <label for="triangleTypeInput">Type de triangle</label>
+          <select id="triangleTypeInput">
+            <option value="any" selected>Quelconque</option>
+            <option value="right">Rectangle</option>
+            <option value="isosceles">Isocèle</option>
+            <option value="equilateral">Équilatéral</option>
+          </select>
+        </div>
+        <div class="rightBox" id="rightBox">
+          <label for="rightAngleInput" id="specialVertexLabel">Angle droit en</label>
+          <select id="rightAngleInput">
+            <option value="A" selected>A</option>
+            <option value="B">B</option>
+            <option value="C">C</option>
+          </select>
+        </div>
+      </div>
+      <div class="familyHint" id="familyHint">Indique deux angles connus et un angle inconnu avec ?.</div>
+
+      <div class="settingsGrid">
+        <div>
+          <label for="relationModeInput">Relation</label>
+          <select id="relationModeInput">
+            <option value="manual" selected>À compléter par clic</option>
+            <option value="auto">Automatique</option>
+          </select>
+        </div>
+        <div>
+          <label for="unknownDisplayInput">Inconnue affichée</label>
+          <select id="unknownDisplayInput">
+            <option value="angle" selected>Â, B̂, Ĉ</option>
+            <option value="question">?</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="angleGrid" aria-label="Angles du triangle">
+        <div class="angleBox"><label id="labelAngle0" for="angle0Input">Angle A</label><input id="angle0Input" type="text" autocomplete="off" value="50" /></div>
+        <div class="angleBox"><label id="labelAngle1" for="angle1Input">Angle B</label><input id="angle1Input" type="text" autocomplete="off" value="70" /></div>
+        <div class="angleBox"><label id="labelAngle2" for="angle2Input">Angle C</label><input id="angle2Input" type="text" autocomplete="off" value="?" /></div>
+      </div>
+
+      <div class="displayBox">
+        <div class="displayTitle">Afficher</div>
+        <div class="toggleGrid">
+          <label class="toggleItem"><input id="showEquationInput" type="checkbox" checked /> Équation</label>
+          <label class="toggleItem"><input id="showBarsInput" type="checkbox" checked /> Schéma / tableau</label>
+          <label class="toggleItem"><input id="showTriangleInput" type="checkbox" checked /> Triangle</label>
+          <label class="toggleItem"><input id="showPropertyInput" type="checkbox" checked /> Propriété</label>
+        </div>
+      </div>
+
+      <div class="creatorActions">
+        <button class="ghost diceBtn" id="btnRandom" type="button" title="Générer un exemple" aria-label="Générer un exemple">🎲</button>
+        <button class="primary buildBtn" id="btnBuild" type="button">Construire</button>
+      </div>
+      <div class="buildError" id="buildError"></div>
+    </div>
+  </section>
+
+  <section class="stage" id="stage">
+    <div class="stageQuickActions" aria-label="Actions rapides">
+      <a class="brandLink" href="./index.html" aria-label="Retour à l’index des angles" title="Retour à l’index des angles">
+        <img src="maths_go_logo.png" alt="maths&amp;go" width="1298" height="612">
+      </a>
+      <button class="ghost quickBtn" id="btnMenu" type="button">Menu</button>
+      <button class="ghost quickBtn quickIcon" id="btnStageRandom" type="button" title="Nouvel exemple" aria-label="Nouvel exemple">🎲</button>
+      <button class="ghost quickBtn quickIcon equationEyeBtn" id="btnToggleEq" type="button" title="Masquer l’équation" aria-label="Afficher ou masquer l’équation"></button>
+      <button class="ghost quickBtn quickIcon" id="btnFullscreen" type="button" title="Plein écran" aria-label="Plein écran">⛶</button>
+    </div>
+
+    <div class="topbar">
+      <div class="equationHistory" id="equationHistory"></div>
+    </div>
+
+    <div class="instructionZone" id="instructionZone"></div>
+    <div class="anglePalette" id="anglePalette"></div>
+
+    <div class="workArea" id="workArea">
+      <div class="card visualCard" id="visualCard">
+        <svg class="triangleSvg" id="triangleSvg" viewBox="-40 -70 740 650" preserveAspectRatio="xMidYMid meet" role="img" aria-label="Triangle et angles"></svg>
+      </div>
+
+      <div class="card barBoard" id="barBoard">
+        <div class="barWrap" id="barWrap"></div>
+      </div>
+    </div>
+
+    <div class="solution" id="solution"></div>
+
+    <div class="toolBar" aria-label="Étapes">
+      <div class="toolBarRow" id="mainActions"></div>
+      <div class="toolBarRow">
+        <button class="toolBtn undoToolBtn" id="btnUndo" type="button">↶ Annuler</button>
+        <button class="toolBtn restartToolBtn" id="btnRestart" type="button">↺ Recommencer</button>
+        <button class="toolBtn" id="btnReveal" type="button">Tout dérouler</button>
+      </div>
+    </div>
+
+    <div class="actionZone" id="actionZone"></div>
+  </section>
+</main>
+
+<dialog id="calcDialog">
+  <div class="dialogInner">
+    <h2 class="dialogTitle" id="calcDialogTitle">Calculer</h2>
+    <div class="dialogText" id="calcDialogText"></div>
+    <input id="calcInput" type="text" autocomplete="off" />
+    <div class="dialogError" id="calcError"></div>
+    <div class="btnrow">
+      <button class="ghost autoFillBtn" id="btnCalcAuto" type="button">Réponse</button>
+      <button class="primary" id="btnCalcApply" type="button">Valider</button>
+      <button class="ghost" id="btnCalcCancel" type="button">Annuler</button>
+    </div>
+  </div>
+</dialog>
+
+<script>
+(() => {
+  const appMain = document.getElementById("appMain");
+  const stage = document.getElementById("stage");
+  const triangleNameInput = document.getElementById("triangleNameInput");
+  const triangleTypeInput = document.getElementById("triangleTypeInput");
+  const rightBox = document.getElementById("rightBox");
+  const rightAngleInput = document.getElementById("rightAngleInput");
+  const specialVertexLabel = document.getElementById("specialVertexLabel");
+  const familyHint = document.getElementById("familyHint");
+  const relationModeInput = document.getElementById("relationModeInput");
+  const unknownDisplayInput = document.getElementById("unknownDisplayInput");
+  const angleInputs = [document.getElementById("angle0Input"), document.getElementById("angle1Input"), document.getElementById("angle2Input")];
+  const angleLabels = [document.getElementById("labelAngle0"), document.getElementById("labelAngle1"), document.getElementById("labelAngle2")];
+  const showEquationInput = document.getElementById("showEquationInput");
+  const showBarsInput = document.getElementById("showBarsInput");
+  const showTriangleInput = document.getElementById("showTriangleInput");
+  const showPropertyInput = document.getElementById("showPropertyInput");
+  const btnBuild = document.getElementById("btnBuild");
+  const btnRandom = document.getElementById("btnRandom");
+  const buildError = document.getElementById("buildError");
+  const btnMenu = document.getElementById("btnMenu");
+  const btnToggleEq = document.getElementById("btnToggleEq");
+  const btnStageRandom = document.getElementById("btnStageRandom");
+  const btnFullscreen = document.getElementById("btnFullscreen");
+  const equationHistory = document.getElementById("equationHistory");
+  const instructionZone = document.getElementById("instructionZone");
+  const anglePalette = document.getElementById("anglePalette");
+  const workArea = document.getElementById("workArea");
+  const triangleSvg = document.getElementById("triangleSvg");
+  const barWrap = document.getElementById("barWrap");
+  const solution = document.getElementById("solution");
+  const mainActions = document.getElementById("mainActions");
+  const actionZone = document.getElementById("actionZone");
+  const btnUndo = document.getElementById("btnUndo");
+  const btnRestart = document.getElementById("btnRestart");
+  const btnReveal = document.getElementById("btnReveal");
+
+  const calcDialog = document.getElementById("calcDialog");
+  const calcDialogTitle = document.getElementById("calcDialogTitle");
+  const calcDialogText = document.getElementById("calcDialogText");
+  const calcInput = document.getElementById("calcInput");
+  const calcError = document.getElementById("calcError");
+  const btnCalcApply = document.getElementById("btnCalcApply");
+  const btnCalcAuto = document.getElementById("btnCalcAuto");
+  const btnCalcCancel = document.getElementById("btnCalcCancel");
+
+  let model = null;
+  let work = null;
+  let history = [];
+  let selectedSlot = null;
+  let pendingRelationValue = null;
+  let selectedReplace = null;
+  let pendingReplace = null;
+  let message = "";
+  let pendingDialog = null;
+  let display = {equation:true,bars:true,triangle:true,property:true};
+  let nextExampleIndex = 0;
+
+  const examples = [
+    {name:"ABC", type:"any", angles:{A:"50", B:"70", C:"?"}},
+    {name:"ABC", type:"any", angles:{A:"?", B:"65", C:"45"}},
+    {name:"DEF", type:"right", right:"D", angles:{D:"90", E:"35", F:"?"}},
+    {name:"RST", type:"right", right:"S", angles:{R:"42", S:"90", T:"?"}},
+    {name:"MNO", type:"any", angles:{M:"80", N:"?", O:"55"}},
+    {name:"IJK", type:"any", angles:{I:"38", J:"64", K:"?"}},
+    {name:"UVW", type:"right", right:"V", angles:{U:"?", V:"90", W:"27"}},
+    {name:"XYZ", type:"any", angles:{X:"?", Y:"52", Z:"91"}},
+    {name:"GHI", type:"right", right:"H", angles:{G:"63", H:"90", I:"?"}},
+    {name:"PQR", type:"any", angles:{P:"74", Q:"?", R:"48"}},
+    {name:"ABC", type:"isosceles", right:"A", angles:{A:"40", B:"?", C:"?"}},
+    {name:"DEF", type:"isosceles", right:"D", angles:{D:"?", E:"65", F:"?"}},
+    {name:"RST", type:"equilateral", angles:{R:"60", S:"60", T:"60"}}
+  ];
+
+  const angleColors = {
+    0:{stroke:"#3b82f6", soft:"barAngleA"},
+    1:{stroke:"#f97316", soft:"barAngleB"},
+    2:{stroke:"#16a34a", soft:"barAngleC"}
+  };
+
+  function normalizeName(raw){
+    const clean = String(raw || "ABC").toUpperCase().replace(/[^A-ZÀ-ÖØ-Ý]/g, "");
+    const padded = (clean + "ABC").slice(0,3);
+    const arr = padded.split("");
+    if(new Set(arr).size !== 3) return ["A","B","C"];
+    return arr;
+  }
+
+  function updateAngleLabels(){
+    const letters = normalizeName(triangleNameInput.value);
+    letters.forEach((l,i) => angleLabels[i].textContent = `Angle ${l}`);
+    [...rightAngleInput.options].forEach((opt,i) => { opt.textContent = letters[i]; opt.value = letters[i]; });
+    if(!letters.includes(rightAngleInput.value)) rightAngleInput.value = letters[0];
+    syncRightAngleUi();
+  }
+
+  function syncRightAngleUi(){
+    const letters = normalizeName(triangleNameInput.value);
+    const type = triangleTypeInput.value;
+    const isRight = type === "right";
+    const isIsosceles = type === "isosceles";
+    const isEquilateral = type === "equilateral";
+    const hasSpecialVertex = isRight || isIsosceles;
+    rightBox.classList.toggle("hidden", !hasSpecialVertex);
+    rightAngleInput.disabled = !hasSpecialVertex;
+    specialVertexLabel.textContent = isIsosceles ? "Sommet principal" : "Angle droit en";
+    relationModeInput.disabled = isIsosceles || isEquilateral;
+    angleInputs.forEach((input,i) => {
+      input.disabled = isEquilateral || (isRight && letters[i] === rightAngleInput.value);
+    });
+    if(isRight){
+      const index = letters.indexOf(rightAngleInput.value);
+      if(index >= 0) angleInputs[index].value = "90";
+    }
+    if(isEquilateral){
+      angleInputs.forEach(input => input.value = "60");
+      familyHint.textContent = "Les trois angles seront déduits de la propriété du triangle équilatéral.";
+    }else if(isIsosceles){
+      familyHint.textContent = "Mets ? dans les angles à trouver. Les deux angles à la base sont égaux.";
+    }else if(isRight){
+      familyHint.textContent = "L’angle droit vaut 90°. Indique un seul autre angle inconnu avec ?.";
+    }else{
+      familyHint.textContent = "Indique deux angles connus et un angle inconnu avec ?.";
+    }
+  }
+
+  function handleTriangleTypeChange(){
+    const letters = normalizeName(triangleNameInput.value);
+    const type = triangleTypeInput.value;
+    if(type === "isosceles"){
+      const apex = rightAngleInput.value || letters[0];
+      letters.forEach((letter, index) => {
+        angleInputs[index].value = letter === apex ? "40" : "?";
+      });
+    }else if(type === "equilateral"){
+      angleInputs.forEach(input => { input.value = "60"; });
+    }else if(type === "any" && angleInputs.every(input => input.value === "60")){
+      angleInputs[0].value = "50";
+      angleInputs[1].value = "70";
+      angleInputs[2].value = "?";
+    }else if(type === "right" && !angleInputs.some(input => input.value.trim() === "?")){
+      angleInputs[2].value = "?";
+    }
+    syncRightAngleUi();
+  }
+
+  function parseAngle(text){
+    const raw = String(text ?? "").trim().replace(",", ".").replace("°", "");
+    if(raw === "" || raw === "?" || raw.toLowerCase() === "x") return {unknown:true, value:null};
+    const n = Number(raw);
+    if(!Number.isFinite(n) || n <= 0 || n >= 180) return {error:true, raw};
+    return {unknown:false, value:n};
+  }
+
+  function parseNumberLike(text){
+    const raw = String(text ?? "").trim().replace(/,/g,".").replace(/°/g,"").replace(/−/g,"-");
+    if(!raw) return null;
+    if(/^[-+]?\d+(\.\d+)?$/.test(raw)) return Number(raw);
+    if(/^[\d.+\-\s]+$/.test(raw)){
+      const parts = raw.split("+").map(s => Number(s.trim())).filter(n => Number.isFinite(n));
+      if(parts.length >= 2 && parts.join("+") !== "") return parts.reduce((a,b)=>a+b,0);
+    }
+    return null;
+  }
+
+  function parseDecomposeAnswer(text, knownSum, expected){
+    const direct = parseNumberLike(text);
+    if(direct !== null){
+      if(approxEqual(direct, expected)) return expected;
+      if(approxEqual(direct, 180)) return expected;
+    }
+    let raw = String(text ?? "").trim().replace(/,/g,".").replace(/°/g,"").replace(/−/g,"-").replace(/\s+/g,"");
+    if(!raw) return null;
+    const sides = raw.split("=");
+    const exprs = sides.length === 2 ? sides : [raw];
+    for(const expr of exprs){
+      const nums = expr.split("+").map(v => Number(v)).filter(Number.isFinite);
+      if(nums.length === 2){
+        const hasKnown = nums.some(n => approxEqual(n, knownSum));
+        const hasExpected = nums.some(n => approxEqual(n, expected));
+        if(hasKnown && hasExpected) return expected;
+      }
+    }
+    return null;
+  }
+
+  function approxEqual(a,b){ return Math.abs(a-b) < 1e-9; }
+  function fmt(n){
+    if(!Number.isFinite(n)) return "";
+    if(Math.abs(n - Math.round(n)) < 1e-10) return String(Math.round(n));
+    return String(Math.round(n * 100) / 100).replace(".", ",");
+  }
+  function angleSymbol(letter){ return `${letter}̂`; }
+  function choiceLabel(value){
+    return value === "180" ? "180°" : angleSymbol(value);
+  }
+  function angleLabel(letter){
+    if(model?.unknownDisplay === "question" && model?.unknowns?.includes(letter) && !work?.concluded) return "?";
+    return angleSymbol(letter);
+  }
+  function angleValueLabel(letter){
+    const a = model.angles[letter];
+    if(a.unknown) return work?.concluded ? `${fmt(model.solutions?.[letter] ?? work.result)}°` : angleLabel(letter);
+    return `${fmt(a.value)}°`;
+  }
+  function knownAngleLetters(){
+    if(!model) return [];
+    return model.letters.filter(l => !model.angles[l].unknown);
+  }
+
+  function isReplaced(letter){
+    return !!work?.replacements?.[letter];
+  }
+
+  function replacementMain(letter){
+    const a = model.angles[letter];
+    if(a.unknown) return angleSymbol(letter);
+    return isReplaced(letter) ? fmt(a.value) : angleSymbol(letter);
+  }
+
+  function hasReplacementProgress(){
+    return knownAngleLetters().some(l => isReplaced(l));
+  }
+
+  function allKnownReplaced(){
+    const known = knownAngleLetters();
+    return known.length > 0 && known.every(l => isReplaced(l));
+  }
+
+
+  function showError(text){ buildError.textContent = text; buildError.classList.add("show"); }
+  function hideError(){ buildError.textContent = ""; buildError.classList.remove("show"); }
+
+  function buildModel(){
+    hideError();
+    updateAngleLabels();
+    const letters = normalizeName(triangleNameInput.value);
+    const type = triangleTypeInput.value;
+    const right = type === "right" ? rightAngleInput.value : null;
+    const angles = {};
+
+    letters.forEach((letter,i) => {
+      if(type === "right" && letter === right){
+        angles[letter] = {unknown:false, value:90};
+        angleInputs[i].value = "90";
+      }else{
+        angles[letter] = parseAngle(angleInputs[i].value);
+      }
+    });
+
+    for(const letter of letters){
+      if(angles[letter].error){
+        showError(`L’angle ${letter} doit être un nombre entre 0 et 180, ou bien ? si c’est l’angle inconnu.`);
+        return null;
+      }
+    }
+
+    if(type === "equilateral"){
+      const equilateralAngles = Object.fromEntries(letters.map(letter => [letter, {unknown:true, value:null}]));
+      return {
+        letters,
+        type,
+        family:"equilateral",
+        right:null,
+        angles:equilateralAngles,
+        unknowns:[...letters],
+        unknown:letters[0],
+        knownSum:0,
+        result:60,
+        solutions:Object.fromEntries(letters.map(letter => [letter, 60])),
+        relationMode:relationModeInput.value,
+        unknownDisplay:unknownDisplayInput.value
+      };
+    }
+
+    if(type === "isosceles"){
+      const apex = rightAngleInput.value;
+      const bases = letters.filter(letter => letter !== apex);
+      const unknowns = letters.filter(letter => angles[letter].unknown);
+      if(!unknowns.length){
+        showError("Mets ? dans au moins un angle à déterminer.");
+        return null;
+      }
+
+      const solutions = {};
+      const baseKnown = bases.filter(letter => !angles[letter].unknown);
+      let baseValue;
+      let apexValue;
+
+      if(!angles[apex].unknown){
+        apexValue = angles[apex].value;
+        baseValue = (180 - apexValue) / 2;
+        if(baseValue <= 0){
+          showError("La mesure du sommet principal ne permet pas d’obtenir deux angles positifs à la base.");
+          return null;
+        }
+        if(baseKnown.some(letter => !approxEqual(angles[letter].value, baseValue))){
+          showError(`Avec ${fmt(apexValue)}° au sommet, chacun des deux angles à la base doit mesurer ${fmt(baseValue)}°.`);
+          return null;
+        }
+      }else{
+        if(!baseKnown.length){
+          showError("Quand le sommet principal est inconnu, donne la mesure d’au moins un angle à la base.");
+          return null;
+        }
+        baseValue = angles[baseKnown[0]].value;
+        if(baseKnown.some(letter => !approxEqual(angles[letter].value, baseValue))){
+          showError("Dans un triangle isocèle, les deux angles à la base doivent être égaux.");
+          return null;
+        }
+        apexValue = 180 - 2 * baseValue;
+        if(apexValue <= 0){
+          showError("Cette mesure à la base ne permet pas d’obtenir un angle positif au sommet.");
+          return null;
+        }
+      }
+
+      solutions[apex] = apexValue;
+      bases.forEach(letter => { solutions[letter] = baseValue; });
+      const primaryUnknown = angles[apex].unknown ? apex : unknowns[0];
+      return {
+        letters,
+        type,
+        family:"isosceles",
+        right:null,
+        apex,
+        bases,
+        isoCase:angles[apex].unknown ? "apex" : "base",
+        angles,
+        unknowns,
+        unknown:primaryUnknown,
+        knownSum:letters.reduce((sum, letter) => sum + (angles[letter].unknown ? 0 : angles[letter].value), 0),
+        result:solutions[primaryUnknown],
+        solutions,
+        relationMode:relationModeInput.value,
+        unknownDisplay:unknownDisplayInput.value
+      };
+    }
+
+    const unknowns = letters.filter(l => angles[l].unknown);
+    if(unknowns.length !== 1){
+      showError("Il faut exactement un angle inconnu : écris ? dans une seule case.");
+      return null;
+    }
+    if(type === "right" && unknowns[0] === right){
+      showError("Dans cette première version, l’angle droit est donné : il vaut 90°. Choisis un autre angle inconnu.");
+      return null;
+    }
+
+    const knownSum = letters.reduce((sum,l) => sum + (angles[l].unknown ? 0 : angles[l].value), 0);
+    if(knownSum >= 180){
+      showError(`La somme des angles connus vaut ${fmt(knownSum)}°. Elle doit être inférieure à 180°.`);
+      return null;
+    }
+    const result = 180 - knownSum;
+    if(result <= 0){
+      showError("Les données ne permettent pas de trouver un angle positif.");
+      return null;
+    }
+
+    return {
+      letters,
+      type,
+      family:"general",
+      right,
+      angles,
+      unknowns,
+      unknown:unknowns[0],
+      knownSum,
+      result,
+      relationMode:relationModeInput.value,
+      unknownDisplay:unknownDisplayInput.value
+    };
+  }
+
+  function correctSlots(){ return {total:"180", a:model.letters[0], b:model.letters[1], c:model.letters[2]}; }
+
+  function emptyRelationSlots(){ return {total:null, a:null, b:null, c:null}; }
+
+  function relationAngleOrder(){
+    if(!work?.relationComplete) return [...model.letters];
+    const entered = [work.relationSlots?.a, work.relationSlots?.b, work.relationSlots?.c]
+      .filter(letter => model.letters.includes(letter));
+    return entered.length === 3 && new Set(entered).size === 3 ? entered : [...model.letters];
+  }
+
+  function unknownComesFirstAfterGrouping(){
+    return relationAngleOrder().indexOf(model.unknown) === 0;
+  }
+
+  function groupedEquationSides(unknownText, knownText){
+    return unknownComesFirstAfterGrouping()
+      ? {lhs:`${unknownText} + ${knownText}`, rhs:`${unknownText} + ${knownText}`}
+      : {lhs:`${knownText} + ${unknownText}`, rhs:`${knownText} + ${unknownText}`};
+  }
+
+  function initialWork(){
+    const auto = model.family === "general" && model.relationMode === "auto";
+    return {
+      property:false,
+      relationComplete:auto,
+      relationSlots:auto ? correctSlots() : emptyRelationSlots(),
+      replaced:false,
+      replacements:{},
+      grouped:false,
+      groupSelection:[],
+      decomposed:false,
+      removed:false,
+      concluded:false,
+      choiceMode:null,
+      result:model.result
+    };
+  }
+
+  function snapshot(){
+    history.push(JSON.stringify({work, selectedSlot, pendingRelationValue, selectedReplace, pendingReplace, message}));
+    if(history.length > 60) history.shift();
+  }
+  function restore(){
+    if(!history.length) return;
+    const old = JSON.parse(history.pop());
+    work = old.work;
+    selectedSlot = old.selectedSlot;
+    pendingRelationValue = old.pendingRelationValue || null;
+    selectedReplace = old.selectedReplace || null;
+    pendingReplace = old.pendingReplace || null;
+    message = old.message || "";
+    render();
+  }
+  function mutate(fn){ snapshot(); fn(); render(); }
+
+  function displaySettingsFromMenu(){
+    display = {
+      equation:showEquationInput.checked,
+      bars:showBarsInput.checked,
+      triangle:showTriangleInput.checked,
+      property:showPropertyInput.checked
+    };
+  }
+
+  function relationRows(){
+    const rows = [];
+    if(!work.property) return rows;
+    if(model.family === "equilateral"){
+      if(work.replaced) rows.push({lhs:model.letters.map(angleSymbol).join(" = "), rhs:"60°"});
+      if(work.concluded && !work.replaced) rows.push({lhs:model.letters.map(angleSymbol).join(" = "), rhs:"60°"});
+      return rows;
+    }
+    if(model.family === "isosceles"){
+      const [base1, base2] = model.bases;
+      if(work.replaced) rows.push({lhs:angleSymbol(base1), rhs:angleSymbol(base2)});
+      if(work.relationComplete) rows.push({lhs:model.letters.map(angleSymbol).join(" + "), rhs:"180°"});
+      if(work.grouped){
+        if(model.isoCase === "base"){
+          rows.push({lhs:`2 × ${angleSymbol(base1)}`, rhs:`180° − ${fmt(model.solutions[model.apex])}°`});
+        }else{
+          rows.push({lhs:angleSymbol(model.apex), rhs:`180° − 2 × ${fmt(model.solutions[base1])}°`});
+        }
+      }
+      if(work.concluded){
+        model.unknowns.forEach(letter => rows.push({lhs:angleSymbol(letter), rhs:`${fmt(model.solutions[letter])}°`}));
+      }
+      return rows;
+    }
+    if(!work.relationComplete) return rows;
+    const u = model.unknown;
+    const order = relationAngleOrder();
+    rows.push({lhs:order.map(l => angleSymbol(l)).join(" + "), rhs:"180°"});
+    if(hasReplacementProgress() || work.replaced){
+      rows.push({lhs:order.map(l => model.angles[l].unknown ? angleSymbol(l) : (isReplaced(l) || work.replaced ? `${fmt(model.angles[l].value)}°` : angleSymbol(l))).join(" + "), rhs:"180°"});
+    }
+    const unknownFirst = unknownComesFirstAfterGrouping();
+    const known = `${fmt(model.knownSum)}°`;
+    const unknown = angleSymbol(u);
+    const result = `${fmt(work.result)}°`;
+    if(work.grouped){
+      rows.push({lhs:unknownFirst ? `${unknown} + ${known}` : `${known} + ${unknown}`, rhs:"180°"});
+    }
+    if(work.decomposed){
+      rows.push({
+        lhs:unknownFirst ? `${unknown} + ${known}` : `${known} + ${unknown}`,
+        rhs:unknownFirst ? `${result} + ${known}` : `${known} + ${result}`
+      });
+    }
+    if(work.removed){
+      rows.push({lhs:unknown, rhs:result});
+    }
+    if(work.concluded){
+      rows.push({lhs:unknown, rhs:result});
+    }
+    return rows;
+  }
+
+  function currentInstruction(){
+    if(model.family === "equilateral"){
+      if(!work.property) return "Commence par citer la propriété du triangle équilatéral.";
+      if(!work.replaced) return "Déduis la mesure commune de ses trois angles.";
+      if(!work.concluded) return "Conclue pour les trois angles.";
+      return "";
+    }
+    if(model.family === "isosceles"){
+      if(!work.property) return "Commence par citer la propriété du triangle isocèle.";
+      if(!work.replaced) return "Identifie les deux angles égaux à la base.";
+      if(!work.relationComplete) return "Écris la relation donnant la somme des trois angles.";
+      if(!work.grouped) return model.isoCase === "base"
+        ? "Retire l’angle du sommet puis partage le reste en deux parts égales."
+        : "Utilise deux fois la mesure d’un angle à la base.";
+      if(!work.concluded) return "Conclue par la mesure de chaque angle cherché.";
+      return "";
+    }
+    if(!work.property) return "Commence par citer la propriété utilisée.";
+    if(!work.relationComplete){
+      if(selectedSlot) return "Case sélectionnée : clique sur l’angle ou sur l’étiquette à placer.";
+      if(pendingRelationValue) return `${choiceLabel(pendingRelationValue)} sélectionné : clique sur la case correspondante.`;
+      return "Clique sur une case puis sur un angle, ou sur un angle puis sur une case.";
+    }
+    if(!work.replaced){
+      if(work.choiceMode === "replace"){
+        if(selectedReplace) return `Case ${angleSymbol(selectedReplace)} sélectionnée : clique sur sa mesure.`;
+        if(pendingReplace) return `Mesure de ${angleSymbol(pendingReplace)} sélectionnée : clique sur sa case.`;
+        return "Remplace les angles connus : clique sur une case puis sur sa mesure.";
+      }
+      return "Remplace les angles connus par leurs mesures.";
+    }
+    if(!work.grouped){
+      if(work.choiceMode === "group"){
+        const n = work.groupSelection?.length || 0;
+        return n < 2 ? "Sélectionne les deux cases connues à regrouper." : "Choisis la somme des deux angles sélectionnés.";
+      }
+      return "Regroupe les angles connus.";
+    }
+    if(!work.decomposed) return "Décompose 180° avec la partie déjà connue.";
+    if(!work.removed) return "Enlève la même partie dans chaque membre.";
+    if(!work.concluded) return "Conclue par la mesure de l’angle cherché.";
+    return "";
+  }
+
+  function render(){
+    if(!model || !work) return;
+    stage.classList.toggle("hideEquations", !display.equation);
+    stage.classList.toggle("hideBars", !display.bars);
+    stage.classList.toggle("hideVisual", !display.triangle);
+    workArea.classList.toggle("onlyVisual", display.triangle && !display.bars);
+    workArea.classList.toggle("onlyBars", !display.triangle && display.bars);
+    syncEyeButton();
+    renderEquations();
+    instructionZone.innerHTML = currentInstruction();
+    renderAnglePalette();
+    renderTriangle();
+    renderBars();
+    renderActions();
+    solution.innerHTML = work.concluded
+      ? (model.family === "general"
+        ? `${angleSymbol(model.unknown)} = ${fmt(work.result)}°`
+        : model.unknowns.map(letter => `${angleSymbol(letter)} = ${fmt(model.solutions[letter])}°`).join(" · "))
+      : "";
+    actionZone.innerHTML = message ? `<div class="note${message.includes("pas") || message.includes("manque") || message.includes("déjà") ? " errorNote" : ""}">${message}</div>` : "";
+    setTimeout(() => equationHistory.scrollTop = equationHistory.scrollHeight, 0);
+  }
+
+  function renderEquations(){
+    if(model.family === "general" && work.property && !work.relationComplete){
+      equationHistory.innerHTML = relationEditorHtml();
+      bindRelationSlotButtons(equationHistory);
+      return;
+    }
+    const rows = relationRows();
+    if(!rows.length){
+      equationHistory.innerHTML = "";
+      return;
+    }
+    let html = `<table class="equationTable" aria-label="Historique d'équations"><tbody>`;
+    rows.forEach((row,i) => {
+      const isLast = i === rows.length - 1;
+      const classes = [isLast ? "currentStep" : "historyStep"];
+      if(work.concluded && isLast) classes.push("finalConclusion");
+      html += `<tr class="${classes.join(" ")}"><td class="lhs">${row.lhs}</td><td class="eq">=</td><td class="rhs">${row.rhs}</td></tr>`;
+    });
+    html += `</tbody></table>`;
+    equationHistory.innerHTML = html;
+  }
+
+  function relationEditorHtml(){
+    const s = work.relationSlots;
+    return `<div class="relationEditor" aria-label="Relation des angles à compléter">
+      ${slotButton("a", s.a)}
+      <span class="plusSign">+</span>
+      ${slotButton("b", s.b)}
+      <span class="plusSign">+</span>
+      ${slotButton("c", s.c)}
+      <span class="equalsSign">=</span>
+      ${slotButton("total", s.total)}
+    </div>`;
+  }
+
+  function slotButton(slot, value){
+    const label = value ? choiceLabel(value) : (slot === "total" ? "…°" : "…");
+    const classes = ["slotBtn"];
+    if(!value) classes.push("empty");
+    if(selectedSlot === slot) classes.push("selected");
+    return `<button type="button" class="${classes.join(" ")}" data-slot="${slot}">${label}</button>`;
+  }
+
+  function bindRelationSlotButtons(root){
+    root.querySelectorAll("[data-slot]").forEach(btn => btn.addEventListener("click", () => selectSlot(btn.dataset.slot)));
+  }
+
+  function relationValueFitsSlot(value, slot){
+    const isTotal = value === "180";
+    return isTotal ? slot === "total" : slot !== "total";
+  }
+
+  function placeRelationValue(value, slot){
+    const angleSlots = ["a","b","c"];
+    const isTotal = value === "180";
+    if(!relationValueFitsSlot(value, slot)){
+      message = isTotal
+        ? "180° se place dans la case à droite du signe égal."
+        : "Les angles se placent dans les trois cases avant le signe égal.";
+      render();
+      return;
+    }
+    if(!isTotal && Object.entries(work.relationSlots).some(([key,current]) => angleSlots.includes(key) && key !== slot && current === value)){
+      message = `${angleSymbol(value)} est déjà utilisé.`;
+      render();
+      return;
+    }
+    mutate(() => {
+      work.relationSlots[slot] = value;
+      selectedSlot = null;
+      pendingRelationValue = null;
+      message = "";
+    });
+  }
+
+  function selectSlot(slot){
+    if(!work.property || work.relationComplete) return;
+    if(pendingRelationValue){
+      placeRelationValue(pendingRelationValue, slot);
+      return;
+    }
+    selectedSlot = selectedSlot === slot ? null : slot;
+    message = "";
+    render();
+  }
+
+  function chooseAngleForSlot(letter){
+    chooseRelationValue(letter);
+  }
+
+  function chooseRelationValue(value){
+    if(!work.property || work.relationComplete) return;
+    if(selectedSlot){
+      placeRelationValue(value, selectedSlot);
+      return;
+    }
+    pendingRelationValue = pendingRelationValue === value ? null : value;
+    message = pendingRelationValue ? `${choiceLabel(value)} sélectionné : clique maintenant sur une case.` : "";
+    render();
+  }
+
+  function validateRelation(){
+    const s = work.relationSlots;
+    const vals = [s.a,s.b,s.c].filter(Boolean);
+    if(vals.length !== 3 || !s.total){ message = "Il manque encore une case."; render(); return; }
+    const unique = new Set(vals).size === 3;
+    const allLetters = model.letters.every(l => vals.includes(l));
+    if(s.total !== "180" || !unique || !allLetters){ message = "La relation n’est pas correcte."; render(); return; }
+    mutate(() => { work.relationComplete = true; work.choiceMode = null; selectedSlot = null; pendingRelationValue = null; selectedReplace = null; pendingReplace = null; message = ""; });
+  }
+
+  function clearRelation(){
+    mutate(() => { work.relationSlots = emptyRelationSlots(); work.choiceMode = null; selectedSlot = null; pendingRelationValue = null; selectedReplace = null; pendingReplace = null; message = ""; });
+  }
+
+  function renderAnglePalette(){
+    if(model.family !== "general"){
+      anglePalette.classList.remove("show");
+      anglePalette.innerHTML = "";
+      return;
+    }
+    const show = work.property && !work.relationComplete;
+    anglePalette.classList.toggle("show", show);
+    if(!show){ anglePalette.innerHTML = ""; return; }
+    const angleUsed = model.letters.filter(letter => [work.relationSlots.a, work.relationSlots.b, work.relationSlots.c].includes(letter));
+    const totalUsed = work.relationSlots.total === "180";
+    const angleButtons = model.letters.map((letter,i) => {
+      const alreadyUsed = angleUsed.includes(letter);
+      const selected = pendingRelationValue === letter ? " selectedChoice" : "";
+      return `<button type="button" class="angleChoice${alreadyUsed ? " usedChoice" : ""}${selected}" data-relation-choice="${letter}" style="color:${angleColors[i].stroke}">${angleSymbol(letter)}</button>`;
+    }).join("");
+    const totalButton = `<button type="button" class="angleChoice${totalUsed ? " usedChoice" : ""}${pendingRelationValue === "180" ? " selectedChoice" : ""}" data-relation-choice="180" style="color:#1e3a8a">180°</button>`;
+    anglePalette.innerHTML = angleButtons + totalButton;
+    anglePalette.querySelectorAll("[data-relation-choice]").forEach(btn => btn.addEventListener("click", () => chooseRelationValue(btn.dataset.relationChoice)));
+  }
+
+  function renderBars(){
+    if(!display.bars){ barWrap.innerHTML = ""; return; }
+    barWrap.innerHTML = barDiagramHtml();
+    bindRelationSlotButtons(barWrap);
+    barWrap.querySelectorAll("[data-replace-cell]").forEach(el => el.addEventListener("click", () => selectReplaceCell(el.dataset.replaceCell)));
+    barWrap.querySelectorAll("[data-replace-choice]").forEach(btn => btn.addEventListener("click", () => chooseReplaceValue(btn.dataset.replaceChoice)));
+    barWrap.querySelectorAll("[data-group-cell]").forEach(el => el.addEventListener("click", () => toggleGroupCell(el.dataset.groupCell)));
+    barWrap.querySelectorAll("[data-group-choice]").forEach(btn => btn.addEventListener("click", () => applyGroupChoice(btn.dataset.groupChoice)));
+    barWrap.querySelectorAll("[data-decompose-choice]").forEach(btn => btn.addEventListener("click", () => applyDecomposeChoice(btn.dataset.decomposeChoice)));
+  }
+
+  function propertyText(){
+    if(model.family === "equilateral") return "Dans un triangle équilatéral, les trois angles sont égaux et mesurent chacun 60°.";
+    if(model.family === "isosceles") return "Dans un triangle isocèle, les deux angles à la base sont égaux.";
+    return "La somme des trois angles d’un triangle fait 180°.";
+  }
+
+  function propertyBoardHtml(compact=false){
+    return `<div class="whiteBoard${compact ? " compact" : ""}">${propertyText()}</div>`;
+  }
+
+  function barDiagramHtml(){
+    if(!work.property){
+      return display.property ? `<div class="whiteBoard waiting">Propriété utilisée ?</div>` : "";
+    }
+    if(model.family !== "general") return familyBarDiagramHtml();
+    if(!work.relationComplete){
+      const s = work.relationSlots;
+      const top = [
+        {slot:"a", letter:s.a, main:s.a ? angleSymbol(s.a) : "…", weight:60},
+        {slot:"b", letter:s.b, main:s.b ? angleSymbol(s.b) : "…", weight:60},
+        {slot:"c", letter:s.c, main:s.c ? angleSymbol(s.c) : "…", weight:60}
+      ];
+      const bottom = [{slot:"total", value:s.total, main:s.total ? "180" : "…", weight:180, kind:"knownGroup"}];
+      return (display.property ? propertyBoardHtml(true) : "") + renderBarTable(top, bottom, true, "relationDraftTable");
+    }
+
+    if(work.decomposed || work.removed || work.concluded){
+      const isRemoved = work.removed || work.concluded;
+      const unknownPiece = {kind:"unknown", letter:model.unknown, main:angleSymbol(model.unknown), weight:model.result, solved:work.concluded};
+      const knownPiece = {kind:isRemoved ? "removed" : "knownGroup", main:fmt(model.knownSum), weight:model.knownSum};
+      const resultPiece = {kind:"result", letter:model.unknown, main:fmt(work.result), weight:model.result};
+      const bottomKnownPiece = {kind:isRemoved ? "removed" : "knownGroup", main:fmt(model.knownSum), weight:model.knownSum};
+      const top = unknownComesFirstAfterGrouping() ? [unknownPiece, knownPiece] : [knownPiece, unknownPiece];
+      const bottom = unknownComesFirstAfterGrouping() ? [resultPiece, bottomKnownPiece] : [bottomKnownPiece, resultPiece];
+      return renderBarTable(top, bottom, false);
+    }
+
+    if(work.grouped){
+      const unknownPiece = {kind:"unknown", letter:model.unknown, main:angleSymbol(model.unknown), weight:model.result};
+      const knownPiece = {kind:"knownGroup", main:fmt(model.knownSum), weight:model.knownSum};
+      const top = unknownComesFirstAfterGrouping() ? [unknownPiece, knownPiece] : [knownPiece, unknownPiece];
+      const bottom = [{kind:"knownGroup", main:"180", weight:180}];
+      return renderBarTable(top, bottom, false);
+    }
+
+    const top = relationAngleOrder().map(letter => {
+      const i = model.letters.indexOf(letter);
+      const a = model.angles[letter];
+      const isUnknown = a.unknown;
+      const main = isUnknown ? angleSymbol(letter) : replacementMain(letter);
+      return {
+        kind:isUnknown ? "unknown" : "known",
+        letter,
+        main,
+        weight:isUnknown ? model.result : a.value,
+        colorClass:angleColors[i].soft,
+        replaceable:work.choiceMode === "replace" && !isUnknown && !isReplaced(letter),
+        replaceSelected:selectedReplace === letter,
+        groupSelectable:work.choiceMode === "group" && !isUnknown,
+        groupSelected:(work.groupSelection || []).includes(letter)
+      };
+    });
+    const bottom = [{kind:"knownGroup", main:"180", weight:180}];
+    return renderBarTable(top, bottom, false);
+  }
+
+  function familyBarDiagramHtml(){
+    const pieces = model.letters.map((letter, index) => {
+      const a = model.angles[letter];
+      const solved = work.concluded;
+      const main = solved
+        ? fmt(model.solutions[letter])
+        : (a.unknown ? angleLabel(letter) : fmt(a.value));
+      return {
+        kind:a.unknown ? "unknown" : "known",
+        letter,
+        main,
+        weight:60,
+        solved,
+        colorClass:angleColors[index].soft
+      };
+    });
+    const bottom = [{kind:"knownGroup", main:"180", weight:180}];
+    return (display.property ? propertyBoardHtml(true) : "") + renderBarTable(pieces, bottom, false);
+  }
+
+  function renderBarTable(topPieces, bottomPieces, relationSlots=false, extraClass=""){
+    const cls = `barTable${extraClass ? " " + extraClass : ""}`;
+    return `<div class="${cls}">${renderBarLine(topPieces,"top",relationSlots)}${renderBarLine(bottomPieces,"bottom",relationSlots)}</div>${choiceZoneHtml()}`;
+  }
+
+  function choiceZoneHtml(){
+    if(!work?.choiceMode) return `<div class="barChoiceZone empty" aria-hidden="true"></div>`;
+    if(work.choiceMode === "replace"){
+      const letters = knownAngleLetters().filter(l => !isReplaced(l));
+      const buttons = letters.map(l => {
+        const selected = pendingReplace === l ? " selectedChoice" : "";
+        return `<button type="button" class="choiceBtn${selected}" data-replace-choice="${l}">${angleSymbol(l)} = ${fmt(model.angles[l].value)}</button>`;
+      }).join("");
+      return `<div class="barChoiceZone" aria-label="Remplacer les angles connus"><div class="choiceHint">Clique sur une case puis sur sa mesure, ou l’inverse.</div>${buttons}</div>`;
+    }
+    if(work.choiceMode === "group"){
+      const n = work.groupSelection?.length || 0;
+      if(n < 2){
+        return `<div class="barChoiceZone" aria-label="Sélectionner les angles à regrouper"><div class="choiceHint">Clique sur les deux cases connues à regrouper.</div></div>`;
+      }
+      const choices = groupChoices();
+      return `<div class="barChoiceZone" aria-label="Choisir la somme des angles connus"><div class="choiceHint">Choisis la somme des deux cases sélectionnées.</div>${choices.map(v => `<button type="button" class="choiceBtn" data-group-choice="${v}">${fmt(v)}</button>`).join("")}</div>`;
+    }
+    if(work.choiceMode === "decompose"){
+      const choices = decomposeChoices();
+      return `<div class="barChoiceZone" aria-label="Choisir la décomposition de 180">${choices.map(c => `<button type="button" class="choiceBtn" data-decompose-choice="${c.key}">${c.label}</button>`).join("")}</div>`;
+    }
+    return `<div class="barChoiceZone empty" aria-hidden="true"></div>`;
+  }
+
+  function groupChoices(){
+    const correct = model.knownSum;
+    const known = model.letters.filter(l => !model.angles[l].unknown).map(l => model.angles[l].value);
+    const a = known[0] ?? 50;
+    const b = known[1] ?? 70;
+    const candidates = [correct, Math.max(1, correct - 10), Math.min(179, correct + 10), Math.max(1, Math.abs(a - b)), Math.min(179, correct + 20)];
+    return uniqueNumbers(candidates).slice(0,4).sort((x,y) => x-y);
+  }
+
+  function decomposeChoices(){
+    const k = model.knownSum;
+    const r = model.result;
+    const d = r > 20 ? 10 : 5;
+    const candidates = [
+      [k, r],
+      [r, k],
+      [k, clampAngle(r - d)],
+      [clampAngle(k - d), clampAngle(r + d)]
+    ];
+    const seen = new Set();
+    const out = [];
+    for(const [a,b] of candidates){
+      const label = `${fmt(a)} + ${fmt(b)}`;
+      if(!seen.has(label)){
+        seen.add(label);
+        out.push({label, key:`${fmt(a)}+${fmt(b)}`});
+      }
+    }
+    return out;
+  }
+
+  function clampAngle(n){ return Math.max(1, Math.min(179, Math.round(n))); }
+
+  function uniqueNumbers(values){
+    const out = [];
+    for(const v of values){
+      const n = Math.round(Number(v));
+      if(Number.isFinite(n) && !out.some(x => approxEqual(x,n))) out.push(n);
+    }
+    while(out.length < 4){
+      const n = Math.min(179, Math.max(1, (out[0] || 90) + 10*out.length));
+      if(!out.some(x => approxEqual(x,n))) out.push(n);
+      else out.push(n + 1);
+    }
+    return out;
+  }
+
+  function renderBarLine(pieces, position="top", relationSlots=false){
+    const minCell = relationSlots ? 120 : 92;
+    const cols = pieces.map(p => `minmax(var(--cell-min, ${minCell}px), ${Math.max(0.55, Number(p.weight) || 1)}fr)`).join(" ");
+    const draftClass = relationSlots ? " relationDraft" : "";
+    let html = `<div class="barLine ${position}${draftClass}" style="--cols:${cols}">`;
+    pieces.forEach(p => {
+      if(relationSlots && p.slot){
+        const classes = ["barPiece","barSlot"];
+        if(!p.value && !p.letter) classes.push("empty");
+        if(p.letter) classes.push(colorClassForLetter(p.letter));
+        if(selectedSlot === p.slot) classes.push("selected");
+        html += `<button type="button" class="${classes.join(" ")}" data-slot="${p.slot}"><span class="pieceMain">${p.main}</span></button>`;
+      }else{
+        const classes = ["barPiece", p.kind || "known"];
+        if(p.colorClass) classes.push(p.colorClass);
+        else if(p.letter) classes.push(colorClassForLetter(p.letter));
+        if(p.solved) classes.push("solved");
+        if(p.replaceable) classes.push("replaceable");
+        if(p.replaceSelected) classes.push("replaceSelected");
+        if(p.groupSelectable) classes.push("groupSelectable");
+        if(p.groupSelected) classes.push("groupSelected");
+        const attrs = [];
+        if(p.replaceable) attrs.push(`data-replace-cell="${p.letter}"`);
+        if(p.groupSelectable) attrs.push(`data-group-cell="${p.letter}"`);
+        html += `<div class="${classes.join(" ")}" ${attrs.join(" ")}><div class="pieceMain">${p.main}</div></div>`;
+      }
+    });
+    html += `</div>`;
+    return html;
+  }
+
+  function colorClassForLetter(letter){
+    const index = model.letters.indexOf(letter);
+    return angleColors[index]?.soft || "";
+  }
+
+  function renderActions(){
+    mainActions.innerHTML = "";
+    if(model.family !== "general"){
+      renderFamilyActions();
+      return;
+    }
+    const actions = [];
+    actions.push({label:"Propriété", done:work.property, disabled:work.property, fn:() => mutate(() => { work.property = true; work.choiceMode = null; message = ""; })});
+    if(!work.property){
+      actions.push({label:"Relation", done:false, disabled:true});
+    }else if(!work.relationComplete){
+      const filled = !!(work.relationSlots.total && work.relationSlots.a && work.relationSlots.b && work.relationSlots.c);
+      actions.push({label:"Valider la relation", done:false, disabled:!filled, fn:validateRelation});
+      actions.push({label:"Effacer", done:false, disabled:!filled && !selectedSlot, fn:clearRelation});
+    }else{
+      actions.push({label:"Relation", done:true, disabled:true});
+      actions.push({label:"Remplacer", done:work.replaced, disabled:work.replaced, fn:askReplace});
+      actions.push({label:"Regrouper", done:work.grouped, disabled:!work.replaced || work.grouped, fn:askRegroup});
+      actions.push({label:"Décomposer 180°", done:work.decomposed, disabled:!work.grouped || work.decomposed, fn:askDecompose});
+      actions.push({label:"Enlever", done:work.removed, disabled:!work.decomposed || work.removed, fn:() => mutate(() => { work.removed = true; work.choiceMode = null; message = ""; })});
+      actions.push({label:"Conclure", done:work.concluded, disabled:!work.removed || work.concluded, fn:() => mutate(() => { work.concluded = true; work.choiceMode = null; message = ""; })});
+    }
+    actions.forEach(a => {
+      const btn = document.createElement("button");
+      btn.type = "button";
+      btn.className = "toolBtn" + (a.done ? " done" : "") + (!a.done && !a.disabled ? " active" : "");
+      btn.textContent = a.label;
+      btn.disabled = !!a.disabled;
+      if(a.fn) btn.addEventListener("click", a.fn);
+      mainActions.appendChild(btn);
+    });
+  }
+
+  function renderFamilyActions(){
+    const actions = [];
+    actions.push({label:"Propriété", done:work.property, disabled:work.property, fn:() => mutate(() => { work.property = true; message = ""; })});
+    actions.push({
+      label:model.family === "equilateral" ? "Déduire 60°" : "Angles égaux",
+      done:work.replaced,
+      disabled:!work.property || work.replaced,
+      fn:() => mutate(() => { work.replaced = true; message = ""; })
+    });
+    if(model.family === "isosceles"){
+      actions.push({label:"Relation 180°", done:work.relationComplete, disabled:!work.replaced || work.relationComplete, fn:() => mutate(() => { work.relationComplete = true; message = ""; })});
+      actions.push({
+        label:"Calculer",
+        done:work.grouped,
+        disabled:!work.relationComplete || work.grouped,
+        fn:() => openNumberDialog({
+          title:"Calculer l’angle",
+          text:`Quelle est la mesure de ${angleSymbol(model.unknown)} ?`,
+          expected:model.result,
+          error:"Ce résultat n’est pas correct.",
+          onValid:(answer) => mutate(() => { work.grouped = true; work.result = answer; message = ""; })
+        })
+      });
+    }
+    actions.push({
+      label:"Conclure",
+      done:work.concluded,
+      disabled:(model.family === "isosceles" ? !work.grouped : !work.replaced) || work.concluded,
+      fn:() => mutate(() => { work.concluded = true; message = ""; })
+    });
+    actions.forEach(action => {
+      const btn = document.createElement("button");
+      btn.type = "button";
+      btn.className = "toolBtn" + (action.done ? " done" : "") + (!action.done && !action.disabled ? " active" : "");
+      btn.textContent = action.label;
+      btn.disabled = !!action.disabled;
+      if(action.fn) btn.addEventListener("click", action.fn);
+      mainActions.appendChild(btn);
+    });
+  }
+
+  function askReplace(){
+    if(work.replaced) return;
+    mutate(() => {
+      work.choiceMode = "replace";
+      work.groupSelection = [];
+      selectedReplace = null;
+      pendingReplace = null;
+      message = "";
+    });
+  }
+
+  function applyReplacement(letter){
+    mutate(() => {
+      work.replacements[letter] = true;
+      selectedReplace = null;
+      pendingReplace = null;
+      work.replaced = allKnownReplaced();
+      if(work.replaced) work.choiceMode = null;
+      message = "";
+    });
+  }
+
+  function selectReplaceCell(letter){
+    if(work.choiceMode !== "replace" || isReplaced(letter) || model.angles[letter].unknown) return;
+    if(pendingReplace){
+      if(pendingReplace !== letter){
+        message = `Cette mesure correspond à ${angleSymbol(pendingReplace)}, pas à ${angleSymbol(letter)}.`;
+        render();
+        return;
+      }
+      applyReplacement(letter);
+      return;
+    }
+    selectedReplace = selectedReplace === letter ? null : letter;
+    message = "";
+    render();
+  }
+
+  function chooseReplaceValue(letter){
+    if(work.choiceMode !== "replace" || isReplaced(letter)) return;
+    if(selectedReplace){
+      if(selectedReplace !== letter){
+        message = `Cette mesure ne correspond pas à la case ${angleSymbol(selectedReplace)}.`;
+        render();
+        return;
+      }
+      applyReplacement(letter);
+      return;
+    }
+    pendingReplace = pendingReplace === letter ? null : letter;
+    message = pendingReplace ? `Clique sur la case ${angleSymbol(letter)} à remplacer.` : "";
+    render();
+  }
+
+  function askRegroup(){
+    if(!work.replaced || work.grouped) return;
+    mutate(() => {
+      work.choiceMode = "group";
+      work.groupSelection = [];
+      selectedReplace = null;
+      pendingReplace = null;
+      message = "";
+    });
+  }
+
+  function askDecompose(){
+    if(!work.grouped || work.decomposed) return;
+    mutate(() => { work.choiceMode = "decompose"; message = ""; });
+  }
+
+  function toggleGroupCell(letter){
+    if(work.choiceMode !== "group" || model.angles[letter].unknown) return;
+    mutate(() => {
+      const current = work.groupSelection || [];
+      if(current.includes(letter)){
+        work.groupSelection = current.filter(l => l !== letter);
+      }else if(current.length < 2){
+        work.groupSelection = [...current, letter];
+      }else{
+        work.groupSelection = [current[1], letter];
+      }
+      message = "";
+    });
+  }
+
+  function applyGroupChoice(value){
+    const answer = Number(value);
+    const selected = work.groupSelection || [];
+    const known = knownAngleLetters();
+    if(selected.length !== 2 || !known.every(l => selected.includes(l))){
+      message = "Sélectionne les deux angles connus avant de choisir la somme.";
+      render();
+      return;
+    }
+    if(!approxEqual(answer, model.knownSum)){
+      message = "Ce n’est pas la somme des angles connus.";
+      render();
+      return;
+    }
+    mutate(() => { work.grouped = true; work.groupSelection = []; work.choiceMode = null; message = ""; });
+  }
+
+  function applyDecomposeChoice(key){
+    const correct = `${fmt(model.knownSum)}+${fmt(model.result)}`;
+    if(key !== correct){
+      message = "Cette décomposition ne garde pas la partie connue dans le bon ordre.";
+      render();
+      return;
+    }
+    mutate(() => { work.result = model.result; work.decomposed = true; work.choiceMode = null; message = ""; });
+  }
+
+  function openNumberDialog({title,text,expected,error,onValid,mode="number"}){
+    pendingDialog = {expected,error,onValid,mode};
+    calcDialogTitle.innerHTML = title;
+    calcDialogText.innerHTML = text;
+    calcInput.value = "";
+    calcError.classList.remove("show");
+    calcError.textContent = "";
+    calcDialog.showModal();
+    setTimeout(() => calcInput.focus(), 60);
+  }
+
+  function validateDialog(){
+    if(!pendingDialog) return;
+    const answer = pendingDialog.mode === "decompose"
+      ? parseDecomposeAnswer(calcInput.value, model.knownSum, pendingDialog.expected)
+      : parseNumberLike(calcInput.value);
+    if(answer === null || !approxEqual(answer, pendingDialog.expected)){
+      calcError.textContent = pendingDialog.error;
+      calcError.classList.add("show");
+      return;
+    }
+    const fn = pendingDialog.onValid;
+    pendingDialog = null;
+    calcDialog.close();
+    fn(answer);
+  }
+
+  function renderTriangle(){
+    if(!display.triangle){ triangleSvg.innerHTML = ""; return; }
+    const coords = triangleCoordinates();
+    const letters = model.letters;
+    const points = letters.map(l => `${coords[l].x},${coords[l].y}`).join(" ");
+    const centroid = centroidOf(coords, letters);
+    let html = `<polygon class="triangleShape" points="${points}"/>`;
+
+    letters.forEach((letter,i) => {
+      const others = letters.filter(l => l !== letter);
+      const arc = angleArcPolyline(coords[letter], coords[others[0]], coords[others[1]], 46);
+      html += `<polyline class="angleArc" points="${arc}" style="stroke:${angleColors[i].stroke}"/>`;
+    });
+
+    if(model.type === "right" && model.right){
+      html += rightAngleMark(coords, model.right, letters);
+    }
+
+    letters.forEach((letter,i) => {
+      const p = coords[letter];
+      const out = outwardVector(p, centroid);
+      const labelPos = {x:p.x + out.x*34, y:p.y + out.y*34};
+      const valuePos = angleTextPosition(coords, letter, letters, 78);
+      html += `<text class="vertexText" x="${labelPos.x}" y="${labelPos.y}" text-anchor="middle" dominant-baseline="middle">${letter}</text>`;
+      html += `<text class="angleValueText" x="${valuePos.x}" y="${valuePos.y}" text-anchor="middle" dominant-baseline="middle">${angleValueLabel(letter)}</text>`;
+      html += `<circle class="angleHit" cx="${p.x}" cy="${p.y}" r="74" data-angle-hit="${letter}"><title>${angleSymbol(letter)}</title></circle>`;
+    });
+
+    triangleSvg.innerHTML = html;
+    triangleSvg.querySelectorAll("[data-angle-hit]").forEach(el => el.addEventListener("click", () => chooseAngleForSlot(el.dataset.angleHit)));
+  }
+
+  function triangleCoordinates(){
+    const [l0,l1,l2] = model.letters;
+    const angle0 = fullAngleValue(l0);
+    const angle1 = fullAngleValue(l1);
+    const angle2 = fullAngleValue(l2);
+
+    const A = Math.max(1, Math.min(178, angle0)) * Math.PI / 180;
+    const B = Math.max(1, Math.min(178, angle1)) * Math.PI / 180;
+    const C = Math.max(1, Math.min(178, angle2)) * Math.PI / 180;
+
+    const base = 520;
+    const left = {x:0, y:0};
+    const right = {x:base, y:0};
+    const sideFromLeft = base * Math.sin(C) / Math.sin(A);
+    let apex = {
+      x:left.x + sideFromLeft * Math.cos(B),
+      y:left.y - sideFromLeft * Math.sin(B)
+    };
+
+    const raw = {};
+    raw[l0] = apex;
+    raw[l1] = left;
+    raw[l2] = right;
+
+    return fitTriangle(raw, model.letters);
+  }
+
+  function fullAngleValue(letter){
+    const a = model.angles[letter];
+    return a.unknown ? (model.solutions?.[letter] ?? model.result) : a.value;
+  }
+
+  function fitTriangle(raw, letters){
+    const xs = letters.map(l => raw[l].x);
+    const ys = letters.map(l => raw[l].y);
+    const minX = Math.min(...xs), maxX = Math.max(...xs);
+    const minY = Math.min(...ys), maxY = Math.max(...ys);
+    const w = Math.max(1, maxX-minX);
+    const h = Math.max(1, maxY-minY);
+    const targetW = 560;
+    const targetH = 390;
+    const scale = Math.min(targetW/w, targetH/h);
+    const offsetX = 330 - (minX + w/2) * scale;
+    const offsetY = 250 - (minY + h/2) * scale;
+    const coords = {};
+    letters.forEach(l => {
+      coords[l] = {x:raw[l].x*scale + offsetX, y:raw[l].y*scale + offsetY};
+    });
+    return coords;
+  }
+
+  function centroidOf(coords, letters){
+    return {
+      x:letters.reduce((s,l)=>s+coords[l].x,0)/3,
+      y:letters.reduce((s,l)=>s+coords[l].y,0)/3
+    };
+  }
+
+  function outwardVector(p, centroid){
+    const vx = p.x - centroid.x;
+    const vy = p.y - centroid.y;
+    const len = Math.hypot(vx,vy) || 1;
+    return {x:vx/len,y:vy/len};
+  }
+
+  function angleTextPosition(coords, letter, letters, radius){
+    const p = coords[letter];
+    const [o1,o2] = letters.filter(l => l !== letter).map(l => coords[l]);
+    const v1 = unit(o1.x-p.x, o1.y-p.y);
+    const v2 = unit(o2.x-p.x, o2.y-p.y);
+    let bx = v1.x + v2.x;
+    let by = v1.y + v2.y;
+    const bl = Math.hypot(bx,by);
+    if(bl < .001){ bx = -v1.y; by = v1.x; }
+    else { bx /= bl; by /= bl; }
+    const centroid = centroidOf(coords, letters);
+    const toCenter = unit(centroid.x-p.x, centroid.y-p.y);
+    if(bx*toCenter.x + by*toCenter.y < 0){ bx *= -1; by *= -1; }
+    return {x:p.x + bx*radius, y:p.y + by*radius};
+  }
+
+  function angleArcPolyline(p, a, b, radius){
+    let ang1 = Math.atan2(a.y-p.y, a.x-p.x);
+    let ang2 = Math.atan2(b.y-p.y, b.x-p.x);
+    let diff = normalizeAngle(ang2 - ang1);
+    if(diff > Math.PI){
+      const t = ang1;
+      ang1 = ang2;
+      ang2 = t;
+      diff = normalizeAngle(ang2 - ang1);
+    }
+    const steps = 18;
+    const pts = [];
+    for(let i=0;i<=steps;i++){
+      const t = i/steps;
+      const ang = ang1 + diff*t;
+      pts.push(`${p.x + Math.cos(ang)*radius},${p.y + Math.sin(ang)*radius}`);
+    }
+    return pts.join(" ");
+  }
+
+  function normalizeAngle(a){
+    while(a < 0) a += Math.PI*2;
+    while(a >= Math.PI*2) a -= Math.PI*2;
+    return a;
+  }
+
+  function unit(x,y){
+    const len = Math.hypot(x,y) || 1;
+    return {x:x/len,y:y/len};
+  }
+
+  function rightAngleMark(coords, right, letters){
+    const p = coords[right];
+    const [a,b] = letters.filter(l => l !== right).map(l => coords[l]);
+    const v1 = unit(a.x-p.x, a.y-p.y);
+    const v2 = unit(b.x-p.x, b.y-p.y);
+    const s = 34;
+    const p1 = {x:p.x + v1.x*s, y:p.y + v1.y*s};
+    const p2 = {x:p1.x + v2.x*s, y:p1.y + v2.y*s};
+    const p3 = {x:p.x + v2.x*s, y:p.y + v2.y*s};
+    return `<path class="rightAngleMark" d="M ${p1.x} ${p1.y} L ${p2.x} ${p2.y} L ${p3.x} ${p3.y}"/>`;
+  }
+
+  function startFromMenu(){
+    const built = buildModel();
+    if(!built) return;
+    model = built;
+    work = initialWork();
+    history = [];
+    selectedSlot = null;
+    pendingRelationValue = null;
+    selectedReplace = null;
+    pendingReplace = null;
+    message = "";
+    displaySettingsFromMenu();
+    appMain.classList.add("activeMode");
+    render();
+  }
+
+  function backToMenu(){
+    appMain.classList.remove("activeMode");
+    if(document.fullscreenElement) document.exitFullscreen().catch(()=>{});
+  }
+
+  function restartCurrent(){
+    if(!model) return;
+    work = initialWork();
+    history = [];
+    selectedSlot = null;
+    pendingRelationValue = null;
+    selectedReplace = null;
+    pendingReplace = null;
+    message = "";
+    render();
+  }
+
+  function revealAll(){
+    if(!model || !work) return;
+    mutate(() => {
+      work.property = true;
+      if(!work.relationComplete){ work.relationSlots = correctSlots(); work.relationComplete = true; }
+      work.replaced = true;
+      work.replacements = Object.fromEntries(knownAngleLetters().map(l => [l, true]));
+      work.grouped = true;
+      work.decomposed = true;
+      work.removed = true;
+      work.concluded = true;
+      work.result = model.result;
+      work.choiceMode = null;
+      selectedSlot = null;
+      pendingRelationValue = null;
+      selectedReplace = null;
+      pendingReplace = null;
+      message = "";
+    });
+  }
+
+  function applyExample(ex){
+    triangleNameInput.value = ex.name;
+    updateAngleLabels();
+    triangleTypeInput.value = ex.type;
+    if(ex.type === "right" || ex.type === "isosceles") rightAngleInput.value = ex.right;
+    const letters = normalizeName(ex.name);
+    letters.forEach((l,i) => angleInputs[i].value = ex.angles[l] ?? "?");
+    syncRightAngleUi();
+  }
+
+  function randomExample(){
+    const ex = examples[nextExampleIndex % examples.length];
+    nextExampleIndex += 1;
+    applyExample(ex);
+  }
+
+  function stageRandomExample(){
+    randomExample();
+    const built = buildModel();
+    if(!built) return;
+    model = built;
+    work = initialWork();
+    history = [];
+    selectedSlot = null;
+    pendingRelationValue = null;
+    selectedReplace = null;
+    pendingReplace = null;
+    message = "";
+    displaySettingsFromMenu();
+    render();
+  }
+
+  function syncEyeButton(){
+    btnToggleEq.innerHTML = display.equation ? eyeSvg(false) : eyeSvg(true);
+    btnToggleEq.classList.toggle("is-hidden", !display.equation);
+    btnToggleEq.title = display.equation ? "Masquer l’équation" : "Afficher l’équation";
+  }
+
+  function eyeSvg(hidden){
+    if(hidden){
+      return `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 3l18 18"/><path d="M10.7 10.7a2 2 0 0 0 2.6 2.6"/><path d="M9.9 4.2A10.8 10.8 0 0 1 12 4c5 0 8.6 4.1 10 8a13.6 13.6 0 0 1-3 4.7"/><path d="M6.1 6.1A13.3 13.3 0 0 0 2 12c1.4 3.9 5 8 10 8a10.9 10.9 0 0 0 4.1-.8"/></svg>`;
+    }
+    return `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12Z"/><circle cx="12" cy="12" r="3"/></svg>`;
+  }
+
+  btnBuild.addEventListener("click", startFromMenu);
+  btnMenu.addEventListener("click", backToMenu);
+  btnRandom.addEventListener("click", randomExample);
+  btnStageRandom.addEventListener("click", stageRandomExample);
+  btnUndo.addEventListener("click", restore);
+  btnRestart.addEventListener("click", restartCurrent);
+  btnReveal.addEventListener("click", revealAll);
+  btnToggleEq.addEventListener("click", () => { display.equation = !display.equation; showEquationInput.checked = display.equation; render(); });
+  btnFullscreen.addEventListener("click", () => {
+    if(document.fullscreenElement) document.exitFullscreen().catch(()=>{});
+    else stage.requestFullscreen?.();
+  });
+  btnCalcApply.addEventListener("click", validateDialog);
+  btnCalcAuto.addEventListener("click", () => { if(pendingDialog) calcInput.value = fmt(pendingDialog.expected); });
+  btnCalcCancel.addEventListener("click", () => { pendingDialog = null; calcDialog.close(); });
+  calcInput.addEventListener("keydown", (e) => { if(e.key === "Enter") validateDialog(); });
+
+  triangleNameInput.addEventListener("input", updateAngleLabels);
+  triangleTypeInput.addEventListener("change", handleTriangleTypeChange);
+  rightAngleInput.addEventListener("change", syncRightAngleUi);
+  angleInputs.forEach(input => input.addEventListener("focus", syncRightAngleUi));
+
+  showEquationInput.addEventListener("change", () => { display.equation = showEquationInput.checked; if(model) render(); });
+  showBarsInput.addEventListener("change", () => { display.bars = showBarsInput.checked; if(model) render(); });
+  showTriangleInput.addEventListener("change", () => { display.triangle = showTriangleInput.checked; if(model) render(); });
+  showPropertyInput.addEventListener("change", () => { display.property = showPropertyInput.checked; if(model) render(); });
+
+  updateAngleLabels();
+  syncEyeButton();
+})();
+</script>
+</body>
+</html>
