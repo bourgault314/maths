@@ -4,7 +4,8 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <meta name="theme-color" content="#f5f7fb">
-  <title>Automatismes maths cycle 4 et DNB — version 1.12 | maths&amp;go</title>
+<script>if(new URLSearchParams(location.search).get('partage')==='1')document.documentElement.classList.add('share-test');</script>
+  <title>Automatismes maths cycle 4 et DNB — version 1.13 | maths&amp;go</title>
 <meta name="description" content="Outil d’automatismes de mathématiques pour le cycle 4 et le DNB : entraînez vos élèves en vidéoprojection ou sur téléphone, avec aides et corrections.">
 <link rel="canonical" href="https://mathsgo.re/auto/">
 <style>
@@ -17,7 +18,8 @@
 *{box-sizing:border-box}
 html{overflow-y:auto;scrollbar-gutter:stable;-webkit-text-size-adjust:100%;text-size-adjust:100%}
 @supports not (scrollbar-gutter:stable){html{overflow-y:scroll}}
-body{margin:0;font-family:Arial,"Helvetica Neue",Helvetica,sans-serif;background:var(--bg);color:var(--text);padding:max(18px,env(safe-area-inset-top)) max(18px,env(safe-area-inset-right)) max(18px,env(safe-area-inset-bottom)) max(18px,env(safe-area-inset-left));-webkit-font-smoothing:antialiased}
+body{margin:0;font-family:Arial,"Helvetica Neue",Helvetica,sans-serif;background:var(--bg);color:var(--text);padding:max(18px,env(safe-area-inset-top)) max(18px,env(safe-area-inset-right)) max(118px,calc(env(safe-area-inset-bottom) + 100px)) max(18px,env(safe-area-inset-left));-webkit-font-smoothing:antialiased}
+body.modal-open{overflow:hidden}
 .app{max-width:860px;margin:0 auto;}
 .header{display:flex;align-items:center;justify-content:center;gap:20px;background:white;border:1px solid var(--line);border-radius:18px;padding:14px 18px;box-shadow:var(--shadow);}
 .logo{height:64px;object-fit:contain}
@@ -31,7 +33,7 @@ body{margin:0;font-family:Arial,"Helvetica Neue",Helvetica,sans-serif;background
 .revision-badge{display:block;width:max-content;margin:5px auto 0;color:#7b879b;font-size:.66rem;font-weight:650;letter-spacing:.035em}
 .panel{margin-top:14px;background:white;border:1px solid var(--line);border-radius:18px;padding:14px;box-shadow:var(--shadow);}
 .controls-row{display:flex;align-items:flex-end;gap:8px;flex-wrap:wrap}
-.controls-row .field-level{flex:1 1 230px}.controls-row .field-visual{flex:1 1 150px}.controls-row .field-experience{flex:1 1 205px}.controls-row .field-count{flex:1 1 170px}.controls-row .field-seed{flex:0 1 105px}.controls-row .field-generate{flex:0 0 auto}
+.controls-row .field-level{flex:1 1 230px}.controls-row .field-visual{flex:1 1 150px}.controls-row .field-experience{flex:1 1 205px}.controls-row .field-count{flex:1 1 170px}.controls-row .field-generate{flex:0 0 auto}
 .quick-actions{display:flex;align-items:center;gap:7px;flex-wrap:wrap;margin-left:auto}
 .actions-row{display:flex;align-items:center;justify-content:flex-start;gap:7px;flex-wrap:wrap;margin-top:10px}
 .field label{display:block;font-weight:700;font-size:.82rem;margin:0 0 5px;color:var(--blue);text-align:center}
@@ -39,14 +41,26 @@ select,input{width:100%;padding:9px 10px;border:1px solid #cfd8ea;border-radius:
 button{border:0;border-radius:10px;padding:9px 12px;font-family:inherit;font-weight:800;cursor:pointer;background:var(--blue);color:#fff;font-size:.95rem;-webkit-appearance:none;appearance:none;-webkit-tap-highlight-color:transparent}
 button.secondary{background:white;color:var(--blue);border:1px solid var(--line)}
 button.orange{background:var(--orange)}
-.share-action{background:#087a55}
+.share-action{display:none;background:#fff;color:#087a55;border:2px solid #87c5b0}
+html.share-test .share-action{display:block}
+button:disabled{cursor:not-allowed;opacity:.48}
+.setup-tools{display:none;align-items:center;justify-content:flex-end;margin-top:10px}
+html.share-test .setup-tools{display:flex}
+.setup-tool-button{min-height:38px;padding:9px 13px;border:1px solid var(--line);border-radius:10px;background:#fff;color:var(--blue);font-size:.84rem;font-weight:800;line-height:1.15;white-space:nowrap;cursor:pointer}
+.setup-tool-button:hover{border-color:#8eb4df;background:#f5f9ff}
+.modules-toolbar{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-top:13px;padding-top:12px;border-top:1px solid var(--line)}
+.modules-toolbar h2{margin:0;color:var(--blue);font-size:1rem;line-height:1.2}
+.bulk-actions{display:flex;gap:7px;flex:none}
+.bulk-actions button{min-width:0;min-height:36px;padding:6px 8px;border-color:transparent;background:transparent;font-size:.78rem;white-space:nowrap;text-decoration:underline;text-decoration-color:#b8c9df;text-underline-offset:3px}
+.bulk-actions button:hover{border-color:transparent;background:#eef6ff;text-decoration-color:var(--blue)}
 .series-entry{margin-top:11px;padding:10px 11px;border:1px solid var(--line);border-radius:12px;background:#f8fbff}
 .series-entry>label,.share-panel>label{display:block;margin:0 0 5px;color:var(--blue);font-size:.78rem;font-weight:800}
 .series-entry-row,.share-copy-row{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:7px}
 .series-entry-row input,.share-copy-row input{min-width:0;font-family:Arial,"Helvetica Neue",Helvetica,sans-serif}
-.share-panel{margin-top:10px;padding:12px;border:1px solid #b9d9cd;border-radius:13px;background:#f5fcf9;box-shadow:0 8px 20px rgba(8,122,85,.08)}
-.share-panel[hidden],.qr-box[hidden],.series-message[hidden]{display:none!important}
+.share-panel{padding:15px;border:1px solid #b9d9cd;border-radius:15px;background:#f5fcf9;box-shadow:0 18px 55px rgba(16,36,74,.2)}
+.qr-box[hidden],.series-message[hidden],.modal-overlay[hidden]{display:none!important}
 .share-panel-head{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:10px;color:#075f43}
+.share-panel-head h2,.modal-head h2{margin:0;font-size:1.08rem;line-height:1.2}
 .share-close{display:grid;place-items:center;width:34px;height:34px;padding:0;border:1px solid #b9d9cd;background:#fff;color:#075f43;font-size:1.35rem;line-height:1}
 .share-copy-row{margin-bottom:9px}.share-copy-row button{min-width:84px}
 .share-qr-actions{display:flex;gap:7px;flex-wrap:wrap;margin-top:5px}
@@ -55,8 +69,15 @@ button.orange{background:var(--orange)}
 .share-privacy{margin:10px 2px 0;color:var(--muted);font-size:.76rem;line-height:1.35}
 .series-message{margin-top:9px;padding:9px 11px;border-radius:10px;background:#eef4ff;color:var(--blue);font-size:.82rem;font-weight:700;line-height:1.3}
 .series-message.good{background:#eaf8f2;color:#075f43}.series-message.bad{background:#fff0f0;color:#9d2f2f}
+.modal-overlay{position:fixed;z-index:1000;inset:0;display:grid;place-items:center;padding:20px;background:rgba(7,35,75,.55)}
+.modal-card{width:min(100%,680px);max-height:calc(100dvh - 40px);overflow:auto}
+.modal-card.series-entry{width:min(100%,650px);margin:0;padding:16px;background:#fff;box-shadow:0 18px 55px rgba(16,36,74,.2)}
+.modal-head{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:13px;color:var(--blue)}
+.modal-close{display:grid;place-items:center;width:36px;height:36px;padding:0;border:1px solid var(--line);background:#fff;color:var(--blue);font-size:1.35rem;line-height:1}
+.modal-card.series-entry>label{display:block;margin-bottom:6px;color:var(--blue);font-size:.8rem;font-weight:800}
 .segmented-control{display:grid;gap:4px;width:100%}
-.field-level .segmented-control,.field-count .segmented-control{grid-template-columns:repeat(4,minmax(0,1fr))}
+.field-level .segmented-control{grid-template-columns:repeat(4,minmax(0,1fr))}
+.field-count .segmented-control{grid-template-columns:repeat(4,minmax(0,1fr))}
 .field-visual .segmented-control,.field-experience .segmented-control{grid-template-columns:repeat(2,minmax(0,1fr))}
 .segment-btn{min-width:0;min-height:38px;padding:7px 4px;border:1px solid #cfd8ea;border-radius:9px;background:#fff;color:var(--blue);font-size:.84rem;line-height:1;box-shadow:none}
 .segment-btn:hover{border-color:var(--cyan);background:#f1fbfb}
@@ -65,7 +86,7 @@ button.orange{background:var(--orange)}
 .segment-btn:disabled{cursor:not-allowed;border-color:#dfe5ef;background:#eef1f6;color:#9aa5b8;opacity:1}
 .field-seed input{text-align:center;min-height:38px}
 .small{font-size:.84rem;color:var(--muted);line-height:1.35}
-.modules{margin-top:14px;display:grid;gap:8px}
+.modules{margin-top:9px;display:grid;gap:8px}
 .theme-group{border:1px solid var(--line);border-left:5px solid var(--blue);border-radius:12px;background:#fff;overflow:hidden}
 .theme-group[open]{border-left-color:var(--orange);box-shadow:0 5px 16px rgba(16,36,74,.07)}
 .theme-summary{list-style:none;display:flex;align-items:center;gap:10px;padding:11px 14px;cursor:pointer;background:#f8fbff;color:var(--blue);font-weight:800;user-select:none}
@@ -74,10 +95,14 @@ button.orange{background:var(--orange)}
 .theme-chevron{color:var(--orange);font-size:1.05rem;transition:transform .16s ease}
 .theme-group[open] .theme-chevron{transform:rotate(90deg)}
 .theme-name{flex:1}
-.theme-count{font-size:.75rem;color:var(--muted);font-weight:700;background:white;border:1px solid var(--line);border-radius:999px;padding:3px 8px}
+.theme-select-all{display:inline-flex;flex:0 0 52px;align-items:center;gap:5px;min-height:28px;padding:2px 4px;color:var(--blue);font-size:.72rem;font-weight:750;cursor:pointer;white-space:nowrap}
+.theme-select-all input{width:16px;height:16px;margin:0;padding:0;accent-color:var(--blue);cursor:pointer}
+.theme-select-all:has(input:focus-visible){border-radius:6px;outline:3px solid rgba(255,130,0,.35);outline-offset:1px}
+.theme-count{flex:0 0 150px;white-space:nowrap;text-align:center;font-size:.75rem;color:var(--muted);font-weight:700;background:white;border:1px solid var(--line);border-radius:999px;padding:3px 8px}
 .theme-items{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:5px 10px;padding:10px 12px 12px;border-top:1px solid var(--line)}
 .modrow{display:flex;gap:9px;align-items:flex-start;min-height:auto;padding:7px 8px;border-radius:8px;font-size:.88rem;line-height:1.2}
 .modrow:hover{background:#eef6ff}
+.modrow:has(input:checked){background:#f3f8ff}
 .modrow input{flex:0 0 auto;width:16px;height:16px;margin:1px 0 0;transform:none}
 .modrow .small,.modrow .badge{display:none!important}
 .modrow strong{font-weight:650}
@@ -85,9 +110,21 @@ button.orange{background:var(--orange)}
 .credit{margin:14px 8px 0;text-align:center;font-size:.78rem;line-height:1.45;color:var(--muted)}
 .credit a{color:var(--blue);font-weight:700;text-decoration:none}
 .credit a:hover{text-decoration:underline}
+.setup-action-shell{position:fixed;z-index:800;left:0;right:0;bottom:0;padding:10px max(18px,env(safe-area-inset-right)) max(10px,env(safe-area-inset-bottom)) max(18px,env(safe-area-inset-left));pointer-events:none;background:linear-gradient(180deg,rgba(245,247,251,0),rgba(245,247,251,.96) 28%)}
+.setup-action-bar{display:grid;grid-template-columns:minmax(0,1fr) minmax(220px,auto);align-items:center;gap:9px;width:min(100%,832px);margin:0 auto;padding:10px 11px;border:1px solid #cbdcf1;border-radius:15px;background:rgba(255,255,255,.98);box-shadow:0 12px 34px rgba(7,59,122,.18);pointer-events:auto}
+html.share-test .setup-action-bar{grid-template-columns:minmax(0,1fr) auto minmax(220px,auto)}
+.setup-summary{min-width:0;display:flex;flex-direction:column;gap:2px;padding-left:3px}
+.setup-summary strong{overflow:hidden;color:var(--blue);font-size:.9rem;line-height:1.15;text-overflow:ellipsis;white-space:nowrap}
+.setup-summary span{overflow:hidden;color:var(--muted);font-size:.74rem;line-height:1.2;text-overflow:ellipsis;white-space:nowrap}
+.setup-action-bar>button{min-height:48px;white-space:nowrap}
+.generate-count{display:none}
+.setup-action-bar .share-action{min-width:112px}
+.setup-action-bar .generate-action{min-width:220px}
 @media(max-width:1050px){.controls-row{flex-wrap:wrap}.quick-actions{margin-left:0}.theme-items{grid-template-columns:repeat(2,minmax(0,1fr))}}
-@media(min-width:651px){.controls-row{display:grid;grid-template-columns:minmax(190px,2.2fr) minmax(120px,1.3fr) minmax(180px,2fr) minmax(145px,1.6fr) minmax(90px,1fr);align-items:stretch}.controls-row>.field{display:flex;min-width:0;flex-direction:column;justify-content:flex-end;padding:8px 6px;background:#f8fbff;border:1px solid var(--line);border-radius:12px}.controls-row>.field label{margin-bottom:7px}.actions-row{justify-content:center}.actions-row .generate-action{flex:0 0 220px}.actions-row .share-action{flex:0 0 185px}.actions-row .secondary{flex:0 0 140px}}
-@media(max-width:650px){body{padding:max(10px,env(safe-area-inset-top)) max(10px,env(safe-area-inset-right)) max(10px,env(safe-area-inset-bottom)) max(10px,env(safe-area-inset-left))}.header{padding:10px 12px}.controls-row{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);align-items:end;gap:14px 10px}.controls-row>*{min-width:0}.controls-row>.field{position:relative;z-index:0}.controls-row>.field::before{content:"";position:absolute;z-index:-1;inset:-5px -4px;background:#f8fbff;border:1px solid var(--line);border-radius:11px}.segment-btn{min-height:40px;padding:7px 2px;font-size:.78rem}.field-visual .segment-btn{font-size:.76rem}.field-experience .segment-btn{font-size:.7rem;letter-spacing:-.015em}.field-seed{grid-column:1/-1}.quick-actions{flex-basis:100%!important}.actions-row{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:7px}.actions-row .generate-action,.actions-row .share-action{grid-column:1/-1}.actions-row button{width:100%}.series-entry-row,.share-copy-row{grid-template-columns:minmax(0,1fr) 82px}.share-qr-actions{display:grid;grid-template-columns:1fr 1fr}.share-qr-actions button{padding:9px 5px;font-size:.8rem}.theme-items{grid-template-columns:1fr}.theme-count-label{display:none}.theme-count{white-space:nowrap}.title h1{font-size:1.2rem}}
+@media(min-width:651px){.controls-row{display:grid;grid-template-columns:minmax(190px,2.2fr) minmax(120px,1.3fr) minmax(180px,2fr) minmax(145px,1.6fr);align-items:stretch}.controls-row>.field{display:flex;min-width:0;flex-direction:column;justify-content:flex-end;padding:8px 6px;background:#f8fbff;border:1px solid var(--line);border-radius:12px}.controls-row>.field label{margin-bottom:7px}}
+@media(max-width:650px){body{padding:max(10px,env(safe-area-inset-top)) max(10px,env(safe-area-inset-right)) max(84px,calc(env(safe-area-inset-bottom) + 74px)) max(10px,env(safe-area-inset-left))}.header{padding:10px 12px}.controls-row{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);align-items:end;gap:14px 10px}.controls-row>*{min-width:0}.controls-row>.field{position:relative;z-index:0}.controls-row>.field::before{content:"";position:absolute;z-index:-1;inset:-5px -4px;background:#f8fbff;border:1px solid var(--line);border-radius:11px}.segment-btn{min-height:44px;padding:7px 2px;font-size:.78rem}.field-visual .segment-btn{font-size:.76rem}.field-experience .segment-btn{font-size:.7rem;letter-spacing:-.015em}.quick-actions{flex-basis:100%!important}.setup-tools{width:100%}.setup-tool-button{width:100%;min-width:0;min-height:44px;padding:8px 5px;font-size:.78rem;text-align:center}.modules-toolbar{align-items:center;flex-direction:row;flex-wrap:wrap}.modules-toolbar h2{flex:1 0 100%}.bulk-actions{display:flex;width:auto;margin-left:auto}.bulk-actions button{width:auto;min-width:0;min-height:42px;padding:7px 6px}.modal-overlay{padding:10px}.modal-card{max-height:calc(100dvh - 20px)}.series-entry-row,.share-copy-row{grid-template-columns:minmax(0,1fr) 82px}.share-qr-actions{display:grid;grid-template-columns:1fr 1fr}.share-qr-actions button{min-height:44px;padding:9px 5px;font-size:.8rem}.theme-items{grid-template-columns:1fr}.theme-summary{gap:7px;padding:10px}.theme-count-label{display:none}.theme-count{flex-basis:54px;white-space:nowrap;padding:3px 6px}.title h1{font-size:1.2rem}.setup-action-shell{padding:8px 10px max(8px,env(safe-area-inset-bottom))}.setup-action-bar{display:block;width:calc(100vw - 20px);padding:8px}.setup-summary{display:none}.setup-action-bar .share-action,.setup-action-bar .generate-action{min-width:0;width:100%}.setup-action-bar>button{min-height:48px;padding:8px 7px;font-size:.84rem}.generate-count{display:inline}html.share-test .setup-action-bar{display:grid;grid-template-columns:minmax(0,1fr) 88px;gap:7px}html.share-test .setup-action-bar .generate-action{grid-column:1;grid-row:1}html.share-test .setup-action-bar .share-action{grid-column:2;grid-row:1}}
+@media(max-width:650px){.setup-action-shell.is-empty{display:none}}
+@media(max-width:350px){.field-experience,.field-count{grid-column:1/-1}.field-level .segment-btn{font-size:.7rem;letter-spacing:-.02em}.field-experience .segment-btn{font-size:.76rem;letter-spacing:0}}
 </style>
 <!-- Google tag (gtag.js) -->
 <script async src="https://www.googletagmanager.com/gtag/js?id=G-X8TVC83222"></script>
@@ -106,7 +143,7 @@ button.orange{background:var(--orange)}
     </a>
     <div class="title">
       <h1>Automatismes<span class="title-cycle">Cycle 4 – DNB</span></h1>
-      <span class="revision-badge">V1.12</span>
+      <span class="revision-badge">V1.13</span>
     </div>
   </div>
 
@@ -114,12 +151,12 @@ button.orange{background:var(--orange)}
     <div class="controls-row">
       <div class="field field-level">
         <label id="levelLabel">Niveau</label>
-        <input type="hidden" id="level" value="DNB">
+        <input type="hidden" id="level" value="3e">
         <div class="segmented-control" data-control="level" role="group" aria-labelledby="levelLabel">
           <button type="button" class="segment-btn" data-value="5e" aria-pressed="false">5e</button>
           <button type="button" class="segment-btn" data-value="4e" aria-pressed="false">4e</button>
-          <button type="button" class="segment-btn" data-value="3e" aria-pressed="false">3e</button>
-          <button type="button" class="segment-btn is-active" data-value="DNB" aria-pressed="true">DNB</button>
+          <button type="button" class="segment-btn is-active" data-value="3e" aria-pressed="true">3e</button>
+          <button type="button" class="segment-btn" data-value="DNB" aria-pressed="false">DNB</button>
         </div>
       </div>
       <div class="field field-visual">
@@ -148,35 +185,59 @@ button.orange{background:var(--orange)}
           <button type="button" class="segment-btn" data-value="20" aria-pressed="false">20</button>
         </div>
       </div>
-      <div class="field field-seed"><label for="seed">Seed</label><input id="seed" placeholder="Auto"></div>
     </div>
-    <div class="actions-row">
-      <button class="generate-action" id="generateButton" onclick="generate()">Lancer l’entraînement</button>
-      <button class="share-action" id="shareButton" type="button" aria-expanded="false" onclick="prepareSeriesShare()">Partager cette série</button>
-      <button class="secondary" onclick="selectVisible(true)">Tout cocher</button>
-      <button class="secondary" onclick="selectVisible(false)">Tout décocher</button>
+    <input type="hidden" id="seed" value="">
+    <div class="setup-tools">
+      <button class="setup-tool-button" id="openSeriesButton" type="button" aria-expanded="false" aria-controls="openSeriesOverlay" onclick="setOpenSeriesPanel(true)">Ouvrir une série</button>
     </div>
-    <div class="series-entry">
-      <label for="seriesCodeInput">Ouvrir une série partagée</label>
-      <div class="series-entry-row">
-        <input id="seriesCodeInput" autocomplete="off" spellcheck="false" placeholder="Code MG1-… ou lien">
-        <button type="button" onclick="openSeriesFromEntry()">Ouvrir</button>
+    <div class="modules-toolbar">
+      <h2>Choisir les automatismes</h2>
+      <div class="bulk-actions" role="group" aria-label="Sélection des automatismes">
+        <button class="secondary" type="button" onclick="selectVisible(true)">Tout</button>
+        <button class="secondary" type="button" onclick="selectVisible(false)">Effacer</button>
       </div>
-    </div>
-    <div class="share-panel" id="sharePanel" hidden>
-      <div class="share-panel-head"><strong>Partager cette série</strong><button class="share-close" type="button" aria-label="Fermer" onclick="closeSeriesShare()">×</button></div>
-      <label for="shareLink">Lien</label>
-      <div class="share-copy-row"><input id="shareLink" readonly><button type="button" onclick="copySeriesLink()">Copier</button></div>
-      <label for="shareCode">Code autonome</label>
-      <div class="share-copy-row"><input id="shareCode" readonly><button type="button" onclick="copySeriesCode()">Copier</button></div>
-      <div class="share-qr-actions"><button type="button" class="secondary" onclick="showSeriesQr()">Afficher le QR code</button><button type="button" class="secondary" onclick="downloadSeriesQr()">Enregistrer le QR</button></div>
-      <div class="qr-box" id="qrBox" hidden></div>
-      <p class="share-privacy">Le lien contient uniquement les réglages et la seed. Il ne contient ni identité ni réponse d’élève.</p>
     </div>
     <div class="series-message" id="seriesMessage" role="status" aria-live="polite" hidden></div>
     <div id="modules" class="modules"></div>
   </div>
   <p class="credit">Remerciements à Eric Hakenholz, créateur de <a href="https://doctools.org/dnb/automatismes_dnb.html" target="_blank" rel="noopener noreferrer">DocTools</a>, pour le partage du fichier, et à Claire Lagarde, pour son aide précieuse.</p>
+</div>
+
+<div class="modal-overlay" id="openSeriesOverlay" hidden onclick="if(event.target===this)setOpenSeriesPanel(false)">
+  <section class="modal-card series-entry" role="dialog" aria-modal="true" aria-labelledby="openSeriesTitle">
+    <div class="modal-head"><h2 id="openSeriesTitle">Ouvrir une série</h2><button class="modal-close" type="button" aria-label="Fermer" onclick="setOpenSeriesPanel(false)">×</button></div>
+    <label for="seriesCodeInput">Saisissez un code MG1 ou collez un lien</label>
+    <div class="series-entry-row">
+      <input id="seriesCodeInput" autocomplete="off" spellcheck="false" placeholder="Code MG1-… ou lien">
+      <button type="button" onclick="openSeriesFromEntry()">Ouvrir</button>
+    </div>
+    <div class="series-message" id="openSeriesMessage" role="status" aria-live="polite" hidden></div>
+  </section>
+</div>
+
+<div class="modal-overlay" id="shareOverlay" hidden onclick="if(event.target===this)closeSeriesShare()">
+  <section class="modal-card share-panel" id="sharePanel" role="dialog" aria-modal="true" aria-labelledby="sharePanelTitle">
+    <div class="share-panel-head"><h2 id="sharePanelTitle">Partager la série</h2><button class="share-close" type="button" aria-label="Fermer" onclick="closeSeriesShare()">×</button></div>
+    <label for="shareLink">Lien</label>
+    <div class="share-copy-row"><input id="shareLink" readonly><button type="button" onclick="copySeriesLink()">Copier</button></div>
+    <label for="shareCode">Code autonome</label>
+    <div class="share-copy-row"><input id="shareCode" readonly><button type="button" onclick="copySeriesCode()">Copier</button></div>
+    <div class="share-qr-actions"><button type="button" class="secondary" onclick="showSeriesQr()">Afficher le QR code</button><button type="button" class="secondary" onclick="downloadSeriesQr()">Enregistrer le QR</button></div>
+    <div class="qr-box" id="qrBox" hidden></div>
+    <p class="share-privacy">Le lien contient uniquement les réglages et le numéro du tirage. Il ne contient ni identité ni réponse d’élève.</p>
+    <div class="series-message" id="shareSeriesMessage" role="status" aria-live="polite" hidden></div>
+  </section>
+</div>
+
+<div class="setup-action-shell is-empty" aria-label="Résumé et lancement de la série">
+  <div class="setup-action-bar">
+    <div class="setup-summary" aria-live="polite">
+      <strong id="selectionSummary">Choisis au moins un automatisme</strong>
+      <span id="settingsSummary">3e · 5 questions · Interactif · Avec aide</span>
+    </div>
+    <button class="share-action" id="shareButton" type="button" aria-expanded="false" aria-controls="shareOverlay" onclick="prepareSeriesShare()" disabled>Partager</button>
+    <button class="generate-action" id="generateButton" type="button" onclick="generate()" disabled><span class="generate-label">Lancer l’entraînement</span><span class="generate-count" id="generateCount" aria-hidden="true"></span></button>
+  </div>
 </div>
 <script>
 const RAW_NUMBER_MODULES = [
@@ -4025,11 +4086,12 @@ const RAW_ALGORITHM_MODULES = [
 ];
 </script>
 <script>
+const modulesInDomain=(modules,domain)=>modules.map(module=>({...module,domain}));
 const RAW_MODULES = [
-  ...RAW_NUMBER_MODULES,
-  ...RAW_GEOMETRY_MODULES,
-  ...RAW_DATA_MODULES,
-  ...RAW_ALGORITHM_MODULES
+  ...modulesInDomain(RAW_NUMBER_MODULES,'numbers'),
+  ...modulesInDomain(RAW_GEOMETRY_MODULES,'geometry'),
+  ...modulesInDomain(RAW_DATA_MODULES,'data'),
+  ...modulesInDomain(RAW_ALGORITHM_MODULES,'algorithm')
 ];
 const PROFESSIONAL_MODULE_TITLES={
   dnb_01:'Écriture décimale des fractions simples',
@@ -4072,7 +4134,7 @@ function addPlaceValueShiftModule(){
     'mixed','mixed','qcm_result','qcm_result','missing_factor','missing_number'
   ];
   const module={
-    id:'dnb_02b',num:2.5,
+    id:'dnb_02b',num:2.5,domain:'numbers',
     title:'Multiplier et diviser par 10, 100 et 1 000',
     level_tags:['5e','4e','3e','DNB'],source:'mathsgo',has_svg:true,
     questions:kinds.map((kind,index)=>({
@@ -5797,6 +5859,7 @@ const FRACTION_MUL_DIV_KINDS=['multiply','multiply_cancel','divide_fraction','di
 const FRACTION_MUL_DIV_MODULE={
   id:'dnb_03b',
   num:3.5,
+  domain:'numbers',
   title:'Fractions : multiplier et diviser',
   level_tags:['4e','3e','DNB'],
   source:'mathsgo',
@@ -5828,7 +5891,7 @@ if(TRIG_MODULE){
   TRIG_MODULE.questions=TRIG_NO_CALCULATOR_KINDS.map((kind,index)=>({n:index+1,statement:'',answer:'[]',footer:'',options:{trig_kind:kind}}));
   const trigIndex=RAW_MODULES.indexOf(TRIG_MODULE);
   if(!RAW_MODULES.some(module=>module.id==='dnb_26b')) RAW_MODULES.splice(trigIndex+1,0,{
-    id:'dnb_26b',num:26.5,title:'Trigonométrie avec calculatrice',level_tags:['3e'],source:'mathsgo',has_svg:true,
+    id:'dnb_26b',num:26.5,domain:'geometry',title:'Trigonométrie avec calculatrice',level_tags:['3e'],source:'mathsgo',has_svg:true,
     questions:TRIG_CALCULATOR_KINDS.map((kind,index)=>({n:index+1,statement:'',answer:'[]',footer:'',options:{trig_kind:kind}}))
   });
 }
@@ -9291,35 +9354,41 @@ function visibleModules(){
   if(level==='5e') return RAW_MODULES.filter(m=>Object.prototype.hasOwnProperty.call(LEVEL_5E_QUESTIONS,m.id));
   return RAW_MODULES.filter(m=> level==='all' || m.level_tags.includes(level) || (level==='3e' && m.level_tags.includes('DNB')) );
 }
-const DNB_THEMES=[
-  {id:'numbers',title:'Nombres et calculs',from:1,to:14},
-  {id:'geometry',title:'Espace et géométrie',from:15,to:27},
-  {id:'data',title:'Organisation et gestion de données et probabilités',from:28,to:36},
-  {id:'algo',title:'Algorithmique et programmation',from:37,to:37}
+const MODULE_DOMAINS=[
+  {id:'numbers',title:'Nombres et calculs'},
+  {id:'geometry',title:'Espace et géométrie'},
+  {id:'data',title:'Organisation et gestion de données et probabilités'},
+  {id:'algorithm',title:'Algorithmique et programmation'}
 ];
 function updateThemeCounts(){
   document.querySelectorAll('.theme-group').forEach(group=>{
     const boxes=[...group.querySelectorAll('.modcb')];
     const checked=boxes.filter(cb=>cb.checked).length;
     const badge=group.querySelector('.theme-count');
+    const master=group.querySelector('.theme-select-cb');
+    if(master){
+      master.checked=boxes.length>0&&checked===boxes.length;
+      master.indeterminate=checked>0&&checked<boxes.length;
+    }
     if(badge){
-      badge.innerHTML='<span class="theme-count-value">'+checked+' / '+boxes.length+'</span><span class="theme-count-label"> sélectionné'+(checked>1?'s':'')+'</span>';
-      badge.setAttribute('aria-label',checked+' module'+(checked>1?'s':'')+' sélectionné'+(checked>1?'s':'')+' sur '+boxes.length);
+      badge.innerHTML='<span class="theme-count-value">'+checked+' / '+boxes.length+'</span><span class="theme-count-label"> sélectionné'+(checked===1?'':'s')+'</span>';
+      badge.setAttribute('aria-label',checked+' module'+(checked===1?'':'s')+' sélectionné'+(checked===1?'':'s')+' sur '+boxes.length);
     }
   });
+  if(typeof updateSetupActions==='function') updateSetupActions();
 }
 function renderModuleList(){
   const box=document.getElementById('modules'); box.innerHTML='';
   const modules=visibleModules();
-  DNB_THEMES.forEach(theme=>{
-    const members=modules.filter(m=>m.num>=theme.from&&m.num<=theme.to);
+  MODULE_DOMAINS.forEach(theme=>{
+    const members=modules.filter(module=>module.domain===theme.id);
     if(!members.length) return;
     const group=document.createElement('details');
     group.className='theme-group';
     group.dataset.theme=theme.id;
     const summary=document.createElement('summary');
     summary.className='theme-summary';
-    summary.innerHTML='<span class="theme-chevron">▶</span><span class="theme-name">'+theme.title+'</span><span class="theme-count"></span>';
+    summary.innerHTML='<span class="theme-chevron">▶</span><span class="theme-name">'+theme.title+'</span><label class="theme-select-all"><input class="theme-select-cb" type="checkbox" aria-label="Tout sélectionner dans '+theme.title+'"><span>Tout</span></label><span class="theme-count"></span>';
     const items=document.createElement('div');
     items.className='theme-items';
     members.forEach(m=>{
@@ -9329,6 +9398,13 @@ function renderModuleList(){
       items.appendChild(row);
     });
     group.append(summary,items);
+    const themeSelector=summary.querySelector('.theme-select-all');
+    const themeCheckbox=summary.querySelector('.theme-select-cb');
+    themeSelector.addEventListener('click',event=>event.stopPropagation());
+    themeCheckbox.addEventListener('change',()=>{
+      group.querySelectorAll('.modcb').forEach(cb=>cb.checked=themeCheckbox.checked);
+      updateThemeCounts();
+    });
     group.addEventListener('toggle',()=>{
       if(group.open) box.querySelectorAll('.theme-group[open]').forEach(other=>{if(other!==group) other.open=false;});
     });
@@ -9345,7 +9421,7 @@ function buildCleanSlideHtml(inst, correction=false, mode=null){
 <script>
 const MATHSGO_SCHEMA_VERSION=1;
 const MATHSGO_GENERATOR_VERSION='1.12.0';
-const MATHSGO_APP_VERSION='1.12';
+const MATHSGO_APP_VERSION='1.13';
 const MATHSGO_SERIES_PREFIX='MG1-';
 const MATHSGO_CANONICAL_URL='https://mathsgo.re/auto/';
 const MATHSGO_ALLOWED_LEVELS=new Set(['5e','4e','3e','DNB']);
@@ -9713,7 +9789,7 @@ function linkForSeriesDefinition(definition){
 </script>
 <script>
 const INTERACTIVE_SERIES_COUNT=10;
-const APP_REVISION=typeof MATHSGO_APP_VERSION==='string'?MATHSGO_APP_VERSION:'1.12';
+const APP_REVISION=typeof MATHSGO_APP_VERSION==='string'?MATHSGO_APP_VERSION:'1.13';
 
 function makeDiapoWindowHtml(seriesData,experienceMode='interactive'){
   const normalizedSeries=Array.isArray(seriesData&&seriesData[0])?seriesData:[seriesData||[]];
@@ -11986,12 +12062,39 @@ document.querySelectorAll('.segmented-control').forEach(group=>{
   });
 });
 document.getElementById('level').addEventListener('change', renderModuleList);
+function updateSetupActions(){
+  const selectedCount=document.querySelectorAll('.modcb:checked').length;
+  const selectionSummary=document.getElementById('selectionSummary');
+  const settingsSummary=document.getElementById('settingsSummary');
+  const generateButton=document.getElementById('generateButton');
+  const generateCount=document.getElementById('generateCount');
+  const shareButton=document.getElementById('shareButton');
+  document.querySelector('.setup-action-shell')?.classList.toggle('is-empty',selectedCount===0);
+  if(selectionSummary) selectionSummary.textContent=selectedCount
+    ?selectedCount+' automatisme'+(selectedCount===1?'':'s')+' sélectionné'+(selectedCount===1?'':'s')
+    :'Choisis au moins un automatisme';
+  if(settingsSummary){
+    const level=document.getElementById('level').value;
+    const count=document.getElementById('count').value;
+    const experience=document.getElementById('experienceMode').value==='interactive'?'Interactif':'Diaporama';
+    const assistance=document.getElementById('visualMode').value==='with'?'Avec aide':'Sans aide';
+    settingsSummary.textContent=level+' · '+count+' questions · '+experience+' · '+assistance;
+  }
+  if(generateButton) generateButton.disabled=selectedCount===0;
+  if(generateCount) generateCount.textContent=selectedCount?' · '+selectedCount:'';
+  if(shareButton) shareButton.disabled=selectedCount===0;
+}
 function updateGenerateButtonLabel(){
   const button=document.getElementById('generateButton');
   const mode=document.getElementById('experienceMode');
-  if(button&&mode) button.textContent=mode.value==='interactive'?'Lancer l’entraînement':'Lancer le diaporama';
+  const label=button?.querySelector('.generate-label');
+  if(label&&mode) label.textContent=mode.value==='interactive'?'Lancer l’entraînement':'Lancer le diaporama';
+  updateSetupActions();
 }
 document.getElementById('experienceMode').addEventListener('change',updateGenerateButtonLabel);
+document.getElementById('visualMode').addEventListener('change',updateSetupActions);
+document.getElementById('count').addEventListener('change',updateSetupActions);
+document.getElementById('level').addEventListener('change',updateSetupActions);
 updateGenerateButtonLabel();
 renderModuleList();
 </script>
@@ -14298,14 +14401,32 @@ var qrcode = function() {
 let mathsgoPreparedShare=null;
 let mathsgoPreparedQr=null;
 
-function mathsgoSetSeriesMessage(message,kind=''){
-  const box=document.getElementById('seriesMessage');if(!box)return;
+function mathsgoSetSeriesMessage(message,kind='',target='main'){
+  const ids={main:'seriesMessage',share:'shareSeriesMessage',open:'openSeriesMessage'};
+  const box=document.getElementById(ids[target]||ids.main);if(!box)return;
   box.textContent=message||'';box.className='series-message'+(kind?' '+kind:'');box.hidden=!message;
 }
 
 function mathsgoSetSharePanel(open){
-  const panel=document.getElementById('sharePanel');if(panel)panel.hidden=!open;
+  const overlay=document.getElementById('shareOverlay');if(overlay)overlay.hidden=!open;
   const button=document.getElementById('shareButton');if(button)button.setAttribute('aria-expanded',open?'true':'false');
+  mathsgoSyncModalBody();
+  if(open) requestAnimationFrame(()=>document.querySelector('#sharePanel .share-close')?.focus());
+  else button?.focus();
+}
+
+function mathsgoSyncModalBody(){
+  const open=[...document.querySelectorAll('.modal-overlay')].some(overlay=>!overlay.hidden);
+  document.body.classList.toggle('modal-open',open);
+}
+
+function setOpenSeriesPanel(open){
+  const overlay=document.getElementById('openSeriesOverlay');if(overlay)overlay.hidden=!open;
+  const button=document.getElementById('openSeriesButton');if(button)button.setAttribute('aria-expanded',open?'true':'false');
+  if(open) mathsgoSetSeriesMessage('','','open');
+  mathsgoSyncModalBody();
+  if(open) requestAnimationFrame(()=>document.getElementById('seriesCodeInput')?.focus());
+  else button?.focus();
 }
 
 function prepareSeriesShare(){
@@ -14317,8 +14438,8 @@ function prepareSeriesShare(){
     document.getElementById('shareCode').value=code;
     document.getElementById('shareLink').value=link;
     const qrBox=document.getElementById('qrBox');if(qrBox){qrBox.hidden=true;qrBox.replaceChildren();}
-    mathsgoSetSharePanel(true);mathsgoSetSeriesMessage('Lien prêt. Cette série ne contient aucune donnée personnelle.','good');
-  }catch(error){mathsgoSetSeriesMessage(error&&error.message?error.message:'Impossible de préparer le partage.','bad');}
+    mathsgoSetSharePanel(true);mathsgoSetSeriesMessage('Lien prêt. Cette série ne contient aucune donnée personnelle.','good','share');
+  }catch(error){mathsgoSetSeriesMessage(error&&error.message?error.message:'Impossible de préparer le partage.','bad','share');}
 }
 
 function closeSeriesShare(){mathsgoSetSharePanel(false);}
@@ -14330,8 +14451,8 @@ async function mathsgoCopyText(value,label){
       const helper=document.createElement('textarea');helper.value=value;helper.setAttribute('readonly','');helper.style.position='fixed';helper.style.opacity='0';document.body.append(helper);helper.select();
       if(!document.execCommand('copy')) throw new Error('copy');helper.remove();
     }
-    mathsgoSetSeriesMessage(label+' copié.','good');
-  }catch(error){mathsgoSetSeriesMessage('La copie automatique a échoué. Sélectionne le texte puis copie-le.','bad');}
+    mathsgoSetSeriesMessage(label+' copié.','good','share');
+  }catch(error){mathsgoSetSeriesMessage('La copie automatique a échoué. Sélectionne le texte puis copie-le.','bad','share');}
 }
 
 function copySeriesCode(){if(mathsgoPreparedShare)mathsgoCopyText(mathsgoPreparedShare.code,'Code');}
@@ -14349,7 +14470,7 @@ function showSeriesQr(){
     mathsgoPreparedQr=mathsgoBuildQr(mathsgoPreparedShare.link);
     const box=document.getElementById('qrBox');box.innerHTML=mathsgoPreparedQr.createSvgTag({cellSize:6,margin:4,scalable:true});box.hidden=false;
     box.querySelector('svg')?.setAttribute('aria-label','QR code de la série');
-  }catch(error){mathsgoSetSeriesMessage(error&&error.message?error.message:'Impossible de créer le QR code.','bad');}
+  }catch(error){mathsgoSetSeriesMessage(error&&error.message?error.message:'Impossible de créer le QR code.','bad','share');}
 }
 
 function downloadSeriesQr(){
@@ -14362,7 +14483,7 @@ function downloadSeriesQr(){
     const context=canvas.getContext('2d');context.fillStyle='#fff';context.fillRect(0,0,size,size);context.fillStyle='#000';
     for(let row=0;row<count;row++)for(let col=0;col<count;col++)if(mathsgoPreparedQr.isDark(row,col))context.fillRect((col+margin)*cell,(row+margin)*cell,cell,cell);
     const link=document.createElement('a');link.download='serie-mathsgo-'+seriesIdForDefinition(mathsgoPreparedShare.definition)+'.png';link.href=canvas.toDataURL('image/png');link.click();
-  }catch(error){mathsgoSetSeriesMessage(error&&error.message?error.message:'Impossible d’enregistrer le QR code.','bad');}
+  }catch(error){mathsgoSetSeriesMessage(error&&error.message?error.message:'Impossible d’enregistrer le QR code.','bad','share');}
 }
 
 function openSeriesFromEntry(){
@@ -14371,7 +14492,7 @@ function openSeriesFromEntry(){
     const definition=decodeSeriesDefinition(input.value);
     applySeriesDefinitionToUi(definition);
     generateFromDefinition(definition,{sameTab:true});
-  }catch(error){mathsgoSetSeriesMessage(error&&error.message?error.message:'Impossible d’ouvrir cette série.','bad');}
+  }catch(error){mathsgoSetSeriesMessage(error&&error.message?error.message:'Impossible d’ouvrir cette série.','bad','open');}
 }
 
 function openSharedSeriesFromLocation(){
@@ -14389,6 +14510,21 @@ function openSharedSeriesFromLocation(){
 }
 
 document.getElementById('seriesCodeInput')?.addEventListener('keydown',event=>{if(event.key==='Enter'){event.preventDefault();openSeriesFromEntry();}});
+document.addEventListener('keydown',event=>{
+  const overlay=[...document.querySelectorAll('.modal-overlay')].find(item=>!item.hidden);
+  if(event.key==='Tab'&&overlay){
+    const focusable=[...overlay.querySelectorAll('button:not([disabled]),input:not([disabled]),select:not([disabled]),textarea:not([disabled]),a[href],[tabindex]:not([tabindex="-1"])')].filter(item=>!item.hidden&&item.getClientRects().length);
+    if(!focusable.length){event.preventDefault();return;}
+    const first=focusable[0],last=focusable[focusable.length-1],active=document.activeElement;
+    if(!overlay.contains(active)||(event.shiftKey&&active===first)){event.preventDefault();last.focus();}
+    else if(!event.shiftKey&&active===last){event.preventDefault();first.focus();}
+    return;
+  }
+  if(event.key==='Escape'){
+    if(!document.getElementById('shareOverlay')?.hidden) closeSeriesShare();
+    else if(!document.getElementById('openSeriesOverlay')?.hidden) setOpenSeriesPanel(false);
+  }
+});
 openSharedSeriesFromLocation();
 </script>
 </body>
