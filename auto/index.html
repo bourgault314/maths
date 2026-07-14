@@ -4,8 +4,9 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <meta name="theme-color" content="#f5f7fb">
-  <title>Automatismes maths cycle 4 et DNB — version 1.11 | maths&amp;go</title>
+  <title>Automatismes maths cycle 4 et DNB — version 1.12 | maths&amp;go</title>
 <meta name="description" content="Outil d’automatismes de mathématiques pour le cycle 4 et le DNB : entraînez vos élèves en vidéoprojection ou sur téléphone, avec aides et corrections.">
+<link rel="canonical" href="https://mathsgo.re/auto/">
 <style>
 :root {
   color-scheme:light;
@@ -38,6 +39,22 @@ select,input{width:100%;padding:9px 10px;border:1px solid #cfd8ea;border-radius:
 button{border:0;border-radius:10px;padding:9px 12px;font-family:inherit;font-weight:800;cursor:pointer;background:var(--blue);color:#fff;font-size:.95rem;-webkit-appearance:none;appearance:none;-webkit-tap-highlight-color:transparent}
 button.secondary{background:white;color:var(--blue);border:1px solid var(--line)}
 button.orange{background:var(--orange)}
+.share-action{background:#087a55}
+.series-entry{margin-top:11px;padding:10px 11px;border:1px solid var(--line);border-radius:12px;background:#f8fbff}
+.series-entry>label,.share-panel>label{display:block;margin:0 0 5px;color:var(--blue);font-size:.78rem;font-weight:800}
+.series-entry-row,.share-copy-row{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:7px}
+.series-entry-row input,.share-copy-row input{min-width:0;font-family:Arial,"Helvetica Neue",Helvetica,sans-serif}
+.share-panel{margin-top:10px;padding:12px;border:1px solid #b9d9cd;border-radius:13px;background:#f5fcf9;box-shadow:0 8px 20px rgba(8,122,85,.08)}
+.share-panel[hidden],.qr-box[hidden],.series-message[hidden]{display:none!important}
+.share-panel-head{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:10px;color:#075f43}
+.share-close{display:grid;place-items:center;width:34px;height:34px;padding:0;border:1px solid #b9d9cd;background:#fff;color:#075f43;font-size:1.35rem;line-height:1}
+.share-copy-row{margin-bottom:9px}.share-copy-row button{min-width:84px}
+.share-qr-actions{display:flex;gap:7px;flex-wrap:wrap;margin-top:5px}
+.qr-box{width:min(100%,310px);margin:12px auto 4px;padding:10px;border:1px solid var(--line);border-radius:12px;background:#fff}
+.qr-box svg{display:block;width:100%;height:auto}
+.share-privacy{margin:10px 2px 0;color:var(--muted);font-size:.76rem;line-height:1.35}
+.series-message{margin-top:9px;padding:9px 11px;border-radius:10px;background:#eef4ff;color:var(--blue);font-size:.82rem;font-weight:700;line-height:1.3}
+.series-message.good{background:#eaf8f2;color:#075f43}.series-message.bad{background:#fff0f0;color:#9d2f2f}
 .segmented-control{display:grid;gap:4px;width:100%}
 .field-level .segmented-control,.field-count .segmented-control{grid-template-columns:repeat(4,minmax(0,1fr))}
 .field-visual .segmented-control,.field-experience .segmented-control{grid-template-columns:repeat(2,minmax(0,1fr))}
@@ -69,8 +86,8 @@ button.orange{background:var(--orange)}
 .credit a{color:var(--blue);font-weight:700;text-decoration:none}
 .credit a:hover{text-decoration:underline}
 @media(max-width:1050px){.controls-row{flex-wrap:wrap}.quick-actions{margin-left:0}.theme-items{grid-template-columns:repeat(2,minmax(0,1fr))}}
-@media(min-width:651px){.controls-row{display:grid;grid-template-columns:minmax(190px,2.2fr) minmax(120px,1.3fr) minmax(180px,2fr) minmax(145px,1.6fr) minmax(90px,1fr);align-items:stretch}.controls-row>.field{display:flex;min-width:0;flex-direction:column;justify-content:flex-end;padding:8px 6px;background:#f8fbff;border:1px solid var(--line);border-radius:12px}.controls-row>.field label{margin-bottom:7px}.actions-row{justify-content:center}.actions-row .generate-action{flex:0 0 240px}.actions-row .secondary{flex:0 0 150px}}
-@media(max-width:650px){body{padding:max(10px,env(safe-area-inset-top)) max(10px,env(safe-area-inset-right)) max(10px,env(safe-area-inset-bottom)) max(10px,env(safe-area-inset-left))}.header{padding:10px 12px}.controls-row{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);align-items:end;gap:14px 10px}.controls-row>*{min-width:0}.controls-row>.field{position:relative;z-index:0}.controls-row>.field::before{content:"";position:absolute;z-index:-1;inset:-5px -4px;background:#f8fbff;border:1px solid var(--line);border-radius:11px}.segment-btn{min-height:40px;padding:7px 2px;font-size:.78rem}.field-visual .segment-btn{font-size:.76rem}.field-experience .segment-btn{font-size:.7rem;letter-spacing:-.015em}.field-seed{grid-column:1/-1}.quick-actions{flex-basis:100%!important}.actions-row{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:7px}.actions-row .generate-action{grid-column:1/-1}.actions-row button{width:100%}.theme-items{grid-template-columns:1fr}.theme-count-label{display:none}.theme-count{white-space:nowrap}.title h1{font-size:1.2rem}}
+@media(min-width:651px){.controls-row{display:grid;grid-template-columns:minmax(190px,2.2fr) minmax(120px,1.3fr) minmax(180px,2fr) minmax(145px,1.6fr) minmax(90px,1fr);align-items:stretch}.controls-row>.field{display:flex;min-width:0;flex-direction:column;justify-content:flex-end;padding:8px 6px;background:#f8fbff;border:1px solid var(--line);border-radius:12px}.controls-row>.field label{margin-bottom:7px}.actions-row{justify-content:center}.actions-row .generate-action{flex:0 0 220px}.actions-row .share-action{flex:0 0 185px}.actions-row .secondary{flex:0 0 140px}}
+@media(max-width:650px){body{padding:max(10px,env(safe-area-inset-top)) max(10px,env(safe-area-inset-right)) max(10px,env(safe-area-inset-bottom)) max(10px,env(safe-area-inset-left))}.header{padding:10px 12px}.controls-row{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);align-items:end;gap:14px 10px}.controls-row>*{min-width:0}.controls-row>.field{position:relative;z-index:0}.controls-row>.field::before{content:"";position:absolute;z-index:-1;inset:-5px -4px;background:#f8fbff;border:1px solid var(--line);border-radius:11px}.segment-btn{min-height:40px;padding:7px 2px;font-size:.78rem}.field-visual .segment-btn{font-size:.76rem}.field-experience .segment-btn{font-size:.7rem;letter-spacing:-.015em}.field-seed{grid-column:1/-1}.quick-actions{flex-basis:100%!important}.actions-row{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:7px}.actions-row .generate-action,.actions-row .share-action{grid-column:1/-1}.actions-row button{width:100%}.series-entry-row,.share-copy-row{grid-template-columns:minmax(0,1fr) 82px}.share-qr-actions{display:grid;grid-template-columns:1fr 1fr}.share-qr-actions button{padding:9px 5px;font-size:.8rem}.theme-items{grid-template-columns:1fr}.theme-count-label{display:none}.theme-count{white-space:nowrap}.title h1{font-size:1.2rem}}
 </style>
 <!-- Google tag (gtag.js) -->
 <script async src="https://www.googletagmanager.com/gtag/js?id=G-X8TVC83222"></script>
@@ -78,7 +95,7 @@ button.orange{background:var(--orange)}
   window.dataLayer = window.dataLayer || [];
   function gtag(){dataLayer.push(arguments);}
   gtag('js', new Date());
-  gtag('config', 'G-X8TVC83222');
+  gtag('config', 'G-X8TVC83222', {page_location:'https://mathsgo.re/auto/'});
 </script>
 </head>
 <body>
@@ -89,7 +106,7 @@ button.orange{background:var(--orange)}
     </a>
     <div class="title">
       <h1>Automatismes<span class="title-cycle">Cycle 4 – DNB</span></h1>
-      <span class="revision-badge">V1.11</span>
+      <span class="revision-badge">V1.12</span>
     </div>
   </div>
 
@@ -135,9 +152,28 @@ button.orange{background:var(--orange)}
     </div>
     <div class="actions-row">
       <button class="generate-action" id="generateButton" onclick="generate()">Lancer l’entraînement</button>
+      <button class="share-action" id="shareButton" type="button" aria-expanded="false" onclick="prepareSeriesShare()">Partager cette série</button>
       <button class="secondary" onclick="selectVisible(true)">Tout cocher</button>
       <button class="secondary" onclick="selectVisible(false)">Tout décocher</button>
     </div>
+    <div class="series-entry">
+      <label for="seriesCodeInput">Ouvrir une série partagée</label>
+      <div class="series-entry-row">
+        <input id="seriesCodeInput" autocomplete="off" spellcheck="false" placeholder="Code MG1-… ou lien">
+        <button type="button" onclick="openSeriesFromEntry()">Ouvrir</button>
+      </div>
+    </div>
+    <div class="share-panel" id="sharePanel" hidden>
+      <div class="share-panel-head"><strong>Partager cette série</strong><button class="share-close" type="button" aria-label="Fermer" onclick="closeSeriesShare()">×</button></div>
+      <label for="shareLink">Lien</label>
+      <div class="share-copy-row"><input id="shareLink" readonly><button type="button" onclick="copySeriesLink()">Copier</button></div>
+      <label for="shareCode">Code autonome</label>
+      <div class="share-copy-row"><input id="shareCode" readonly><button type="button" onclick="copySeriesCode()">Copier</button></div>
+      <div class="share-qr-actions"><button type="button" class="secondary" onclick="showSeriesQr()">Afficher le QR code</button><button type="button" class="secondary" onclick="downloadSeriesQr()">Enregistrer le QR</button></div>
+      <div class="qr-box" id="qrBox" hidden></div>
+      <p class="share-privacy">Le lien contient uniquement les réglages et la seed. Il ne contient ni identité ni réponse d’élève.</p>
+    </div>
+    <div class="series-message" id="seriesMessage" role="status" aria-live="polite" hidden></div>
     <div id="modules" class="modules"></div>
   </div>
   <p class="credit">Remerciements à Eric Hakenholz, créateur de <a href="https://doctools.org/dnb/automatismes_dnb.html" target="_blank" rel="noopener noreferrer">DocTools</a>, pour le partage du fichier, et à Claire Lagarde, pour son aide précieuse.</p>
@@ -5047,7 +5083,11 @@ configureEquationModule();
 </script>
 <script>
 let rngSeed=1, quiz=[];
-function setSeed(s){ rngSeed=s; }
+function setSeed(s){
+  const value=Number.isFinite(Number(s))?Math.trunc(Number(s)):1;
+  rngSeed=((value%233280)+233280)%233280;
+  return rngSeed;
+}
 function rnd(){ rngSeed=(rngSeed*9301+49297)%233280; return rngSeed/233280; }
 function RD(a,b,excluded){ let min,max; if(b===undefined){min=0;max=a;} else {min=a;max=b;} let v, tries=0; do{v=Math.floor(rnd()*(max-min+1))+min; tries++;}while(Array.isArray(excluded)&&excluded.includes(v)&&tries<200); return v; }
 function pick(arr){ return arr[Math.floor(rnd()*arr.length)]; }
@@ -9303,8 +9343,377 @@ function buildCleanSlideHtml(inst, correction=false, mode=null){
 }
 </script>
 <script>
+const MATHSGO_SCHEMA_VERSION=1;
+const MATHSGO_GENERATOR_VERSION='1.12.0';
+const MATHSGO_APP_VERSION='1.12';
+const MATHSGO_SERIES_PREFIX='MG1-';
+const MATHSGO_CANONICAL_URL='https://mathsgo.re/auto/';
+const MATHSGO_ALLOWED_LEVELS=new Set(['5e','4e','3e','DNB']);
+const MATHSGO_ALLOWED_COUNTS=new Set([5,10,15,20]);
+const MATHSGO_ALLOWED_VISUAL_MODES=new Set(['with','without']);
+const MATHSGO_ALLOWED_EXPERIENCE_MODES=new Set(['presentation','interactive']);
+
+const MATHSGO_MODULE_REGISTRY=Object.freeze([
+  ['fractions-ecriture-decimale','dnb_01'],
+  ['nombres-decimaux-comparer-calculer','dnb_02'],
+  ['multiplier-diviser-par-10-100-1000','dnb_02b'],
+  ['fractions-simplifier-comparer-additionner','dnb_03'],
+  ['fractions-multiplier-diviser','dnb_03b'],
+  ['fractions-quantite-pourcentages','dnb_04'],
+  ['nombre-formes-equivalentes','dnb_05'],
+  ['notation-scientifique','dnb_06'],
+  ['carres-entiers','dnb_07'],
+  ['criteres-divisibilite','dnb_08'],
+  ['relations-numeriques','dnb_09'],
+  ['reduire-expression-litterale','dnb_10'],
+  ['substitution-expression','dnb_11'],
+  ['developper-factoriser','dnb_12'],
+  ['resoudre-equations','dnb_13'],
+  ['lire-abscisse','dnb_14'],
+  ['lire-coordonnees','dnb_15'],
+  ['codage-figures','dnb_16'],
+  ['angles-reconnaitre-nommer-mesurer','dnb_17'],
+  ['somme-angles-triangle','dnb_18'],
+  ['conversions-unites','dnb_19'],
+  ['reconnaitre-solides','dnb_20'],
+  ['perimetres','dnb_21'],
+  ['aires','dnb_22'],
+  ['volumes','dnb_23'],
+  ['pythagore','dnb_24'],
+  ['thales','dnb_25'],
+  ['trigonometrie-sans-calculatrice','dnb_26'],
+  ['trigonometrie-avec-calculatrice','dnb_26b'],
+  ['transformations','dnb_27'],
+  ['probabilites-equiprobabilite','dnb_28'],
+  ['frequences','dnb_29'],
+  ['moyennes','dnb_30'],
+  ['mediane-etendue','dnb_31'],
+  ['lire-tableaux-diagrammes-graphiques','dnb_32'],
+  ['reconnaitre-proportionnalite','dnb_33'],
+  ['problemes-proportionnalite','dnb_34'],
+  ['evolutions-pourcentage','dnb_35'],
+  ['lire-graphique-dependance','dnb_36'],
+  ['algorithmique-instructions','dnb_37']
+].map(([id,legacyId])=>Object.freeze({id,legacyId,aliases:Object.freeze([legacyId])})));
+
+const MATHSGO_MODULE_BY_ID=new Map(MATHSGO_MODULE_REGISTRY.map(entry=>[entry.id,entry]));
+const MATHSGO_MODULE_BY_ALIAS=new Map(MATHSGO_MODULE_REGISTRY.flatMap(entry=>entry.aliases.map(alias=>[alias,entry])));
+const MATHSGO_MODULE_INDEX_BY_ID=new Map(MATHSGO_MODULE_REGISTRY.map((entry,index)=>[entry.id,index]));
+
+class MathsgoSeriesError extends Error{
+  constructor(code,message){super(message);this.name='MathsgoSeriesError';this.code=code;}
+}
+
+function mathsgoCanonicalModuleId(value){
+  const id=String(value||'').trim();
+  return MATHSGO_MODULE_BY_ID.get(id)?.id||MATHSGO_MODULE_BY_ALIAS.get(id)?.id||null;
+}
+
+function mathsgoLegacyModuleId(value){
+  const id=mathsgoCanonicalModuleId(value);
+  return id?MATHSGO_MODULE_BY_ID.get(id).legacyId:null;
+}
+
+function mathsgoModuleAllowedForLevel(canonicalId,level){
+  const legacyId=mathsgoLegacyModuleId(canonicalId);
+  const module=RAW_MODULES.find(item=>item.id===legacyId);
+  if(!module) return false;
+  if(level==='5e') return Object.prototype.hasOwnProperty.call(LEVEL_5E_QUESTIONS,legacyId);
+  return module.level_tags.includes(level)||(level==='3e'&&module.level_tags.includes('DNB'));
+}
+
+function mathsgoRandomSeed(){
+  if(globalThis.crypto&&typeof globalThis.crypto.getRandomValues==='function'){
+    const data=new Uint32Array(1);globalThis.crypto.getRandomValues(data);return data[0]%233280;
+  }
+  return Math.floor(Math.random()*233280);
+}
+
+function mathsgoNormalizeSeed(value,{generate=false}={}){
+  if((value===null||value===undefined||String(value).trim()==='')&&generate) return mathsgoRandomSeed();
+  const raw=String(value??'').trim();
+  if(!/^\d+$/.test(raw)) throw new MathsgoSeriesError('INVALID_SEED','La seed doit être un entier compris entre 0 et 233279.');
+  const seed=Number(raw);
+  if(!Number.isSafeInteger(seed)||seed<0||seed>=233280) throw new MathsgoSeriesError('INVALID_SEED','La seed doit être un entier compris entre 0 et 233279.');
+  return seed;
+}
+
+function mathsgoIsPlainObject(value){
+  return !!value&&typeof value==='object'&&!Array.isArray(value)&&Object.getPrototypeOf(value)===Object.prototype;
+}
+
+function normalizeSeriesDefinition(input,{strict=false,generateSeed=false}={}){
+  if(!mathsgoIsPlainObject(input)) throw new MathsgoSeriesError('INVALID_SERIES','La définition de série est invalide.');
+  const allowedKeys=new Set(['schemaVersion','generatorVersion','level','questionCount','moduleIds','seed','visualMode','experienceMode','seriesCount']);
+  if(strict){
+    const unknown=Object.keys(input).filter(key=>!allowedKeys.has(key));
+    if(unknown.length) throw new MathsgoSeriesError('UNKNOWN_FIELD','Le code contient un réglage inconnu.');
+  }
+  const schemaVersion=Number(input.schemaVersion??MATHSGO_SCHEMA_VERSION);
+  if(schemaVersion!==MATHSGO_SCHEMA_VERSION) throw new MathsgoSeriesError('UNSUPPORTED_SCHEMA','Cette version de code de série n’est pas prise en charge.');
+  const generatorVersion=String(input.generatorVersion||MATHSGO_GENERATOR_VERSION);
+  if(generatorVersion!==MATHSGO_GENERATOR_VERSION) throw new MathsgoSeriesError('UNSUPPORTED_GENERATOR','Cette série a été créée avec une version du générateur qui n’est plus prise en charge.');
+  const level=String(input.level||'');
+  if(!MATHSGO_ALLOWED_LEVELS.has(level)) throw new MathsgoSeriesError('INVALID_LEVEL','Le niveau demandé n’est pas reconnu.');
+  const questionCount=Number(input.questionCount);
+  if(!MATHSGO_ALLOWED_COUNTS.has(questionCount)) throw new MathsgoSeriesError('INVALID_COUNT','Le nombre de questions doit être 5, 10, 15 ou 20.');
+  if(!Array.isArray(input.moduleIds)||!input.moduleIds.length||input.moduleIds.length>MATHSGO_MODULE_REGISTRY.length){
+    throw new MathsgoSeriesError('INVALID_MODULES','La série doit contenir au moins un module valide.');
+  }
+  const moduleIds=input.moduleIds.map(mathsgoCanonicalModuleId);
+  if(moduleIds.some(id=>!id)) throw new MathsgoSeriesError('UNKNOWN_MODULE','Le code contient un module inconnu.');
+  if(new Set(moduleIds).size!==moduleIds.length) throw new MathsgoSeriesError('DUPLICATE_MODULE','Un module est présent plusieurs fois dans le code.');
+  if(moduleIds.some(id=>!mathsgoModuleAllowedForLevel(id,level))) throw new MathsgoSeriesError('MODULE_LEVEL_MISMATCH','Un module ne correspond pas au niveau enregistré.');
+  moduleIds.sort();
+  const visualMode=String(input.visualMode||'');
+  if(!MATHSGO_ALLOWED_VISUAL_MODES.has(visualMode)) throw new MathsgoSeriesError('INVALID_VISUAL_MODE','Le mode d’aide n’est pas reconnu.');
+  const experienceMode=String(input.experienceMode||'');
+  if(!MATHSGO_ALLOWED_EXPERIENCE_MODES.has(experienceMode)) throw new MathsgoSeriesError('INVALID_EXPERIENCE_MODE','Le mode de travail n’est pas reconnu.');
+  const expectedSeriesCount=experienceMode==='interactive'?INTERACTIVE_SERIES_COUNT:1;
+  if(strict&&input.seriesCount!==undefined&&Number(input.seriesCount)!==expectedSeriesCount){
+    throw new MathsgoSeriesError('INVALID_SERIES_COUNT','Le nombre de séries ne correspond pas au mode enregistré.');
+  }
+  return Object.freeze({
+    schemaVersion,
+    generatorVersion,
+    level,
+    questionCount,
+    moduleIds:Object.freeze(moduleIds),
+    seed:mathsgoNormalizeSeed(input.seed,{generate:generateSeed}),
+    visualMode,
+    experienceMode,
+    seriesCount:expectedSeriesCount
+  });
+}
+
+function mathsgoCanonicalJson(value){
+  if(Array.isArray(value)) return '['+value.map(mathsgoCanonicalJson).join(',')+']';
+  if(mathsgoIsPlainObject(value)) return '{'+Object.keys(value).sort().map(key=>JSON.stringify(key)+':'+mathsgoCanonicalJson(value[key])).join(',')+'}';
+  return JSON.stringify(value);
+}
+
+function mathsgoHash128(value){
+  const source=String(value);let h1=1779033703,h2=3144134277,h3=1013904242,h4=2773480762;
+  for(let i=0;i<source.length;i++){
+    const k=source.charCodeAt(i);h1=h2^Math.imul(h1^k,597399067);h2=h3^Math.imul(h2^k,2869860233);h3=h4^Math.imul(h3^k,951274213);h4=h1^Math.imul(h4^k,2716044179);
+  }
+  h1=Math.imul(h3^(h1>>>18),597399067);h2=Math.imul(h4^(h2>>>22),2869860233);h3=Math.imul(h1^(h3>>>17),951274213);h4=Math.imul(h2^(h4>>>19),2716044179);
+  const words=[h1^h2^h3^h4,h2^h1,h3^h1,h4^h1];
+  return words.map(word=>(word>>>0).toString(16).padStart(8,'0')).join('');
+}
+
+function seriesIdForDefinition(definition){
+  const normalized=normalizeSeriesDefinition(definition);
+  return 'sr_'+mathsgoHash128(mathsgoCanonicalJson(normalized));
+}
+
+function mathsgoSlug(value){
+  return String(value??'').normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/^-|-$/g,'')||'modele';
+}
+
+function templateIdForQuestion(module,question){
+  const canonicalModuleId=mathsgoCanonicalModuleId(module.id)||mathsgoSlug(module.id);
+  const options=question.options||{};
+  const semantic=Object.keys(options).filter(key=>/_kind$/.test(key)).sort().map(key=>mathsgoSlug(options[key])).filter(Boolean).join('-');
+  const suffix='q'+String(question.n).replace(/[^0-9a-z]+/gi,'-');
+  return canonicalModuleId+'.'+(semantic?semantic+'.':'')+suffix;
+}
+
+function mathsgoSanitizeParameters(value,key=''){
+  if(typeof value==='function'||value===undefined||typeof value==='symbol') return undefined;
+  if(value===null||typeof value==='boolean'||typeof value==='number') return Number.isFinite(value)?value:null;
+  if(typeof value==='string'){
+    if(/(?:html|svg|statement|footer|formula_code)/i.test(key)) return undefined;
+    return value.length<=500?value:value.slice(0,500);
+  }
+  if(Array.isArray(value)) return value.map(item=>mathsgoSanitizeParameters(item,key)).filter(item=>item!==undefined).slice(0,100);
+  if(mathsgoIsPlainObject(value)){
+    const result={};
+    Object.keys(value).sort().forEach(childKey=>{const cleaned=mathsgoSanitizeParameters(value[childKey],childKey);if(cleaned!==undefined)result[childKey]=cleaned;});
+    return result;
+  }
+  return undefined;
+}
+
+function mathsgoParametersForInstance(instance){
+  const result={};
+  const scope=mathsgoSanitizeParameters(instance.scope||{});
+  if(scope&&Object.keys(scope).length) result.generated=scope;
+  const modelKeys=['module01','placeValue','fractionOps','fractionPercent','multipleForms','relation','reduction','substitution','equationData','angleSum','conversion','area','trig','average','evolution'];
+  modelKeys.forEach(key=>{if(instance[key]!==undefined){const cleaned=mathsgoSanitizeParameters(instance[key],key);if(cleaned!==undefined)result[key]=cleaned;}});
+  return result;
+}
+
+function mathsgoResponseTypeForSpec(spec){
+  if(spec.kind==='qcm') return spec.multiple?'multiple-choice':'qcm';
+  if(spec.kind==='grid-point') return 'coordinates';
+  if(spec.layout==='fraction') return 'fraction';
+  if(spec.layout==='polynomial') return 'algebraic-expression';
+  if((spec.slots||[]).length>1) return 'multiple-fields';
+  const keyValues=(spec.keys||[]).map(key=>typeof key==='string'?key:key.value).join('');
+  return /x|²/.test(keyValues)?'algebraic-expression':'numeric';
+}
+
+function createQuestionInstanceContract(instance,spec,context){
+  const position=Number(context.position);
+  const seriesOrdinal=Number(context.seriesOrdinal||1);
+  const seriesId=String(context.seriesId);
+  const templateId=templateIdForQuestion(instance.module,instance.q);
+  const parameters=mathsgoParametersForInstance(instance);
+  const responseType=mathsgoResponseTypeForSpec(spec);
+  const qcmOptions=spec.kind==='qcm'?(spec.options||[]).map(option=>({
+    optionId:templateId+'.o'+String(option.index+1),
+    displayedValue:option.displayedValue,
+    errorCode:null
+  })):null;
+  const accepted=spec.kind==='qcm'
+    ?(spec.correctIndices||[]).map(index=>qcmOptions[index]?.optionId).filter(Boolean)
+    :(spec.acceptedCombinations||[]);
+  const generatedSeriesId=seriesId+'-'+String(seriesOrdinal).padStart(2,'0');
+  const identitySource={seriesId,generatedSeriesId,position,templateId,templateVersion:1,parameters};
+  return Object.freeze({
+    schemaVersion:MATHSGO_SCHEMA_VERSION,
+    generatorVersion:MATHSGO_GENERATOR_VERSION,
+    questionInstanceId:'qi_'+mathsgoHash128(mathsgoCanonicalJson(identitySource)),
+    seriesId,
+    generatedSeriesId,
+    position,
+    level:context.level,
+    moduleId:mathsgoCanonicalModuleId(instance.module.id),
+    legacyModuleId:instance.module.id,
+    skillIds:Object.freeze([mathsgoCanonicalModuleId(instance.module.id)]),
+    metadataStatus:'legacy-adapted',
+    templateId,
+    legacyQuestionNumber:Number(instance.q.n),
+    templateVersion:1,
+    difficulty:null,
+    calculator:instance.module.id==='dnb_26b',
+    parameters:Object.freeze(parameters),
+    response:Object.freeze({
+      type:responseType,
+      canonicalValue:accepted[0]??null,
+      acceptedValues:Object.freeze(accepted),
+      displayedValue:spec.expectedDisplay||'',
+      options:qcmOptions?Object.freeze(qcmOptions):null,
+      constraints:Object.freeze({
+        fractionPolicy:spec.fractionPolicy||null,
+        unitPolicy:instance.module.id==='dnb_22'?'displayed-not-entered':null
+      })
+    })
+  });
+}
+
+function readSeriesDefinitionFromUi(){
+  const seedInput=document.getElementById('seed');
+  const selectedLegacyIds=[...document.querySelectorAll('.modcb:checked')].map(input=>input.value);
+  const definition=normalizeSeriesDefinition({
+    schemaVersion:MATHSGO_SCHEMA_VERSION,
+    generatorVersion:MATHSGO_GENERATOR_VERSION,
+    level:document.getElementById('level').value,
+    questionCount:Number(document.getElementById('count').value),
+    moduleIds:selectedLegacyIds,
+    seed:seedInput.value,
+    visualMode:document.getElementById('visualMode').value,
+    experienceMode:document.getElementById('experienceMode').value
+  },{generateSeed:true});
+  seedInput.value=String(definition.seed);seedInput.placeholder='Auto';
+  return definition;
+}
+
+function mathsgoSetSegmentedValue(id,value){
+  const input=document.getElementById(id);if(!input)return;input.value=String(value);
+  const group=document.querySelector('.segmented-control[data-control="'+id+'"]');
+  if(group) group.querySelectorAll('.segment-btn').forEach(button=>{const active=button.dataset.value===String(value);button.classList.toggle('is-active',active);button.setAttribute('aria-pressed',active?'true':'false');});
+}
+
+function applySeriesDefinitionToUi(definition){
+  const normalized=normalizeSeriesDefinition(definition);
+  mathsgoSetSegmentedValue('level',normalized.level);
+  mathsgoSetSegmentedValue('visualMode',normalized.visualMode);
+  mathsgoSetSegmentedValue('experienceMode',normalized.experienceMode);
+  mathsgoSetSegmentedValue('count',normalized.questionCount);
+  document.getElementById('seed').value=String(normalized.seed);
+  renderModuleList();
+  const legacyIds=new Set(normalized.moduleIds.map(mathsgoLegacyModuleId));
+  document.querySelectorAll('.modcb').forEach(input=>{input.checked=legacyIds.has(input.value);});
+  updateThemeCounts();
+  if(typeof updateGenerateButtonLabel==='function') updateGenerateButtonLabel();
+  return normalized;
+}
+
+function modulesForSeriesDefinition(definition){
+  const normalized=normalizeSeriesDefinition(definition);
+  return canonicalModuleOrder(normalized.moduleIds.map(id=>RAW_MODULES.find(module=>module.id===mathsgoLegacyModuleId(id))).filter(Boolean));
+}
+
+function mathsgoCrc32(text){
+  let crc=0xffffffff;
+  for(let i=0;i<text.length;i++){
+    crc^=text.charCodeAt(i);
+    for(let bit=0;bit<8;bit++) crc=(crc>>>1)^((crc&1)?0xedb88320:0);
+  }
+  return ((crc^0xffffffff)>>>0).toString(16).padStart(8,'0');
+}
+
+function mathsgoBase64UrlEncode(text){
+  const bytes=new TextEncoder().encode(text);let binary='';bytes.forEach(byte=>{binary+=String.fromCharCode(byte);});
+  return btoa(binary).replace(/\+/g,'-').replace(/\//g,'_').replace(/=+$/,'');
+}
+
+function mathsgoBase64UrlDecode(text){
+  const padded=text.replace(/-/g,'+').replace(/_/g,'/')+'==='.slice((text.length+3)%4);
+  let binary;try{binary=atob(padded);}catch(error){throw new MathsgoSeriesError('INVALID_BASE64','Le code de série est illisible.');}
+  const bytes=Uint8Array.from(binary,char=>char.charCodeAt(0));
+  try{return new TextDecoder('utf-8',{fatal:true}).decode(bytes);}catch(error){throw new MathsgoSeriesError('INVALID_TEXT','Le code de série contient un texte invalide.');}
+}
+
+function encodeSeriesDefinition(definition){
+  const normalized=normalizeSeriesDefinition(definition);
+  const compact={v:normalized.schemaVersion,g:normalized.generatorVersion,l:normalized.level,q:normalized.questionCount,m:normalized.moduleIds.map(id=>MATHSGO_MODULE_INDEX_BY_ID.get(id)),s:normalized.seed,a:normalized.visualMode,x:normalized.experienceMode,b:normalized.seriesCount};
+  const payload=mathsgoBase64UrlEncode(mathsgoCanonicalJson(compact));
+  return MATHSGO_SERIES_PREFIX+payload+'.'+mathsgoCrc32(payload);
+}
+
+function mathsgoExtractSeriesCode(input){
+  let value=String(input||'').trim();
+  if(!value&&typeof location!=='undefined') value=location.href;
+  if(/^https?:\/\//i.test(value)||/^file:/i.test(value)){
+    let url;try{url=new URL(value);}catch(error){throw new MathsgoSeriesError('INVALID_LINK','Le lien de série est invalide.');}
+    value=new URLSearchParams(url.hash.replace(/^#/,'')).get('s')||url.searchParams.get('s')||'';
+  }
+  try{value=decodeURIComponent(value);}catch(error){throw new MathsgoSeriesError('INVALID_CODE','Le code de série est invalide.');}
+  const match=value.match(/MG1-[A-Za-z0-9_-]+\.[0-9a-fA-F]{8}/);
+  if(!match) throw new MathsgoSeriesError('INVALID_PREFIX','Le code doit commencer par MG1-.');
+  return match[0];
+}
+
+function decodeSeriesDefinition(input){
+  const code=mathsgoExtractSeriesCode(input);
+  if(code.length>2048) throw new MathsgoSeriesError('CODE_TOO_LONG','Le code de série est trop long.');
+  const body=code.slice(MATHSGO_SERIES_PREFIX.length);const separator=body.lastIndexOf('.');
+  if(separator<1) throw new MathsgoSeriesError('INVALID_CODE','Le code de série est incomplet.');
+  const payload=body.slice(0,separator),checksum=body.slice(separator+1).toLowerCase();
+  if(mathsgoCrc32(payload)!==checksum) throw new MathsgoSeriesError('CHECKSUM_MISMATCH','Le code a été modifié ou mal copié.');
+  let compact;try{compact=JSON.parse(mathsgoBase64UrlDecode(payload));}catch(error){if(error instanceof MathsgoSeriesError)throw error;throw new MathsgoSeriesError('INVALID_JSON','Le contenu du code est invalide.');}
+  if(!mathsgoIsPlainObject(compact)) throw new MathsgoSeriesError('INVALID_PAYLOAD','Le contenu du code est invalide.');
+  const allowedKeys=new Set(['v','g','l','q','m','s','a','x','b']);
+  if(Object.keys(compact).some(key=>!allowedKeys.has(key))) throw new MathsgoSeriesError('UNKNOWN_FIELD','Le code contient un réglage inconnu.');
+  if(!Array.isArray(compact.m)) throw new MathsgoSeriesError('INVALID_MODULES','La liste de modules du code est invalide.');
+  const moduleIds=compact.m.map(value=>{
+    if(typeof value==='number'&&Number.isInteger(value)&&value>=0&&value<MATHSGO_MODULE_REGISTRY.length) return MATHSGO_MODULE_REGISTRY[value].id;
+    if(typeof value==='string') return value;
+    return null;
+  });
+  return normalizeSeriesDefinition({schemaVersion:compact.v,generatorVersion:compact.g,level:compact.l,questionCount:compact.q,moduleIds,seed:compact.s,visualMode:compact.a,experienceMode:compact.x,seriesCount:compact.b},{strict:true});
+}
+
+function linkForSeriesDefinition(definition){
+  return MATHSGO_CANONICAL_URL+'#s='+encodeSeriesDefinition(definition);
+}
+</script>
+<script>
 const INTERACTIVE_SERIES_COUNT=10;
-const APP_REVISION='1.11';
+const APP_REVISION=typeof MATHSGO_APP_VERSION==='string'?MATHSGO_APP_VERSION:'1.12';
 
 function makeDiapoWindowHtml(seriesData,experienceMode='interactive'){
   const normalizedSeries=Array.isArray(seriesData&&seriesData[0])?seriesData:[seriesData||[]];
@@ -9890,6 +10299,39 @@ let advanceTimer=null;
 const phoneKeypadMedia=window.matchMedia('(max-width:600px)');
 let keypadVisible=false;
 let visualShown=slides.map(()=>false);
+class AttemptRecorder{
+ constructor(mode){this.mode=mode==='memory'?'memory':'disabled';this.attempts=[];}
+ record(attempt){if(this.mode!=='memory')return false;this.attempts.push(JSON.parse(JSON.stringify(attempt)));return true;}
+ list(){return this.attempts.map(attempt=>JSON.parse(JSON.stringify(attempt)));}
+ clear(){this.attempts.length=0;}
+}
+const attemptRecorder=new AttemptRecorder(window.__MATHSGO_ATTEMPT_RECORDER_MODE__);
+window.mathsgoAttemptRecorder=attemptRecorder;
+let questionSession=null;
+function currentQuestionKey(){
+ const current=slides[idx];
+ return current&&current.questionInstance?current.questionInstance.questionInstanceId:(seriesIndex+'-'+idx);
+}
+function pauseQuestionTimer(){
+ if(questionSession&&questionSession.activeSince!==null){
+   questionSession.activeMs+=Math.max(0,performance.now()-questionSession.activeSince);
+   questionSession.activeSince=null;
+ }
+}
+function resumeQuestionTimer(){
+ if(interactiveMode&&!interactiveFinished&&!interactiveLocked&&document.visibilityState==='visible'&&questionSession&&questionSession.activeSince===null) questionSession.activeSince=performance.now();
+}
+function ensureQuestionSession(){
+ const key=currentQuestionKey();
+ if(!questionSession||questionSession.key!==key) questionSession={key,activeMs:0,activeSince:null,validations:0,helpKinds:new Set()};
+ resumeQuestionTimer();
+ return questionSession;
+}
+function markQuestionHelp(kind){
+ const session=ensureQuestionSession();
+ session.helpKinds.add(String(kind));
+}
+document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='hidden')pauseQuestionTimer();else resumeQuestionTimer();});
 function courseFraction(n,d){return '<span class="course-frac"><span>'+n+'</span><span>'+d+'</span></span>';}
 function courseCoordinatesVisual(){return '<svg class="course-visual" viewBox="0 0 390 220" role="img" aria-label="Exemple : M a pour coordonnées moins deux et trois"><defs><marker id="courseArrow" markerWidth="7" markerHeight="7" refX="5.5" refY="3.5" orient="auto"><path d="M0 0L7 3.5L0 7Z" fill="#17384d"/></marker></defs><g stroke="#d8e3f4" stroke-width="1">'+[-3,-2,-1,1,2,3].map(function(v){var p=195+v*48;return '<line x1="'+p+'" y1="18" x2="'+p+'" y2="202"/><line x1="20" y1="'+(110-v*28)+'" x2="370" y2="'+(110-v*28)+'"/>';}).join('')+'</g><line x1="18" y1="110" x2="374" y2="110" stroke="#17384d" stroke-width="2" marker-end="url(#courseArrow)"/><line x1="195" y1="204" x2="195" y2="14" stroke="#17384d" stroke-width="2" marker-end="url(#courseArrow)"/><line x1="99" y1="26" x2="99" y2="110" stroke="#e86100" stroke-width="2" stroke-dasharray="6 5"/><line x1="99" y1="26" x2="195" y2="26" stroke="#087a55" stroke-width="2" stroke-dasharray="6 5"/><g transform="translate(99 26)" stroke="#9d2f2f" stroke-width="4" stroke-linecap="round"><line x1="-7" y1="0" x2="7" y2="0"/><line x1="0" y1="-7" x2="0" y2="7"/></g><text x="110" y="20" fill="#9d2f2f" font-size="18" font-weight="800">M</text><text x="99" y="132" fill="#e86100" font-size="16" text-anchor="middle">−2</text><text x="181" y="31" fill="#087a55" font-size="16" text-anchor="end">3</text><text x="195" y="218" fill="#17384d" font-size="18" font-weight="850" text-anchor="middle">M(−2 ; 3)</text></svg>';}
 function courseFractionVisual(){return '<svg class="course-visual" viewBox="0 0 390 150" role="img" aria-label="Un tiers devient deux sixièmes"><text x="45" y="25" fill="#17384d" font-size="16" font-weight="850">1/3</text><g transform="translate(45 38)"><rect width="270" height="38" fill="#f5eaff" stroke="#7042a3" stroke-width="3"/><rect width="90" height="38" fill="#d9b8ff"/><path d="M90 0V38M180 0V38" stroke="#7042a3" stroke-width="2"/></g><path d="M45 99H315" stroke="#7042a3" stroke-width="3"/><path d="M90 82V120M135 82V120M180 82V120M225 82V120M270 82V120" stroke="#7042a3" stroke-width="1.8"/><rect x="45" y="82" width="90" height="38" fill="#d9b8ff" opacity=".82"/><text x="332" y="109" fill="#087a55" font-size="18" font-weight="900">2/6</text><path d="M333 54L350 72L333 90" fill="none" stroke="#e86100" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/></svg>';}
@@ -10288,6 +10730,7 @@ function tuneRenderedGeometry(current,slide){
 }
 function render(){
  const current=slides[idx];
+ if(interactiveMode&&!interactiveFinished) ensureQuestionSession();
  const nav=document.getElementById('navnums');
  nav.innerHTML='';
  if(!interactiveMode){
@@ -10741,6 +11184,58 @@ function interactiveAnswerIsCorrect(spec){
    return numericAnswer!==null&&numericExpected!==null&&Math.abs(numericAnswer-numericExpected)<1e-9;
  }));
 }
+function rawInteractiveResponse(spec){
+ if(spec.kind==='qcm'){
+   const options=slides[idx].questionInstance&&slides[idx].questionInstance.response.options;
+   return [...selectedOptions].sort((a,b)=>a-b).map(index=>options&&options[index]?options[index].optionId:index);
+ }
+ return interactiveValues.slice();
+}
+function evaluateInteractiveAnswer(spec){
+ const skipped=!hasInteractiveAnswer();
+ const correct=!skipped&&interactiveAnswerIsCorrect(spec);
+ const raw=rawInteractiveResponse(spec);
+ const normalized=spec.kind==='qcm'?raw:raw.map(normalizeInteractiveAnswer);
+ return Object.freeze({
+   isCorrect:correct,
+   outcome:skipped?'skipped':(correct?'correct':'incorrect'),
+   reasonCode:skipped?'EMPTY_RESPONSE':(correct?'CORRECT':'WRONG_ANSWER'),
+   rawResponse:raw,
+   normalizedResponse:normalized,
+   errorCode:null
+ });
+}
+function recordInteractiveAttempt(result){
+ const current=slides[idx],contract=current.questionInstance;
+ if(!contract) return;
+ const session=ensureQuestionSession();pauseQuestionTimer();session.validations++;
+ attemptRecorder.record({
+   schemaVersion:contract.schemaVersion||1,
+   generatorVersion:contract.generatorVersion||'1.12.0',
+   questionInstanceId:contract.questionInstanceId,
+   seriesId:contract.seriesId,
+   generatedSeriesId:contract.generatedSeriesId,
+   position:contract.position,
+   moduleId:contract.moduleId,
+   skillIds:contract.skillIds,
+   templateId:contract.templateId,
+   templateVersion:contract.templateVersion,
+   responseType:contract.response.type,
+   responseGiven:result.rawResponse,
+   normalizedResponse:result.normalizedResponse,
+   outcome:result.outcome,
+   isCorrect:result.isCorrect,
+   reasonCode:result.reasonCode,
+   errorCode:result.errorCode,
+   attemptNumber:session.validations,
+   activeResponseTimeMs:Math.min(1800000,Math.round(session.activeMs)),
+   assistanceMode:current.assistanceMode,
+   helpOpened:session.helpKinds.size>0,
+   helpKinds:[...session.helpKinds].sort(),
+   correctionDisplayed:true,
+   experienceMode
+ });
+}
 function setInteractiveFeedback(message,kind,detail=''){
  const feedback=document.getElementById('answerFeedback');
  if(!feedback) return;
@@ -10755,8 +11250,8 @@ function submitInteractive(){
  if(!interactiveMode||interactiveFinished) return;
  if(interactiveLocked){clearTimeout(advanceTimer);advanceInteractive();return;}
  const spec=slides[idx].interactiveSpec;
- const skipped=!hasInteractiveAnswer();
- const correct=!skipped&&interactiveAnswerIsCorrect(spec);
+ const validation=evaluateInteractiveAnswer(spec);
+ const correct=validation.isCorrect;
  interactiveLocked=true;corr=true;answeredCount++;
  if(correct) correctCount++;
  if(correct) setInteractiveFeedback('Bonne réponse ✓','good');
@@ -10765,16 +11260,17 @@ function submitInteractive(){
    setInteractiveFeedback('Mauvaise réponse','bad',expected?'Réponse : '+expected:'');
  }
  render();
+ recordInteractiveAttempt(validation);
  clearTimeout(advanceTimer);
  advanceTimer=null;
 }
 function advanceInteractive(){
  if(idx>=slides.length-1){interactiveFinished=true;render();return;}
- idx++;corr=false;selectedOptions.clear();interactiveLocked=false;resetInteractiveEntryState(slides[idx].interactiveSpec);
+ idx++;corr=false;selectedOptions.clear();interactiveLocked=false;questionSession=null;resetInteractiveEntryState(slides[idx].interactiveSpec);
  setInteractiveFeedback('','');render();
 }
 function restartInteractive(){
- clearTimeout(advanceTimer);idx=0;corr=false;selectedOptions.clear();interactiveLocked=false;correctCount=0;answeredCount=0;interactiveFinished=false;visualShown=slides.map(()=>false);resetInteractiveEntryState(slides[0].interactiveSpec);setInteractiveFeedback('','');render();
+ clearTimeout(advanceTimer);idx=0;corr=false;selectedOptions.clear();interactiveLocked=false;correctCount=0;answeredCount=0;interactiveFinished=false;questionSession=null;visualShown=slides.map(()=>false);resetInteractiveEntryState(slides[0].interactiveSpec);setInteractiveFeedback('','');render();
 }
 function startNextSeries(){
  if(seriesBank.length<2) return;
@@ -10782,11 +11278,11 @@ function startNextSeries(){
  slides=seriesBank[seriesIndex];
  restartInteractive();
 }
-function openCourse(){const modal=document.getElementById('courseModal'),course=courseForSlide(slides[idx]);if(modal&&course){document.getElementById('courseTitle').textContent=course.title;document.getElementById('courseGrid').innerHTML=course.rules.map(rule=>'<div class="course-rule'+(rule[2]?' course-rule-wide':'')+'"><strong>'+rule[0]+'</strong>'+rule[1]+'</div>').join('');modal.hidden=false;const close=modal.querySelector('.course-close');if(close)close.focus();}}
+function openCourse(){const modal=document.getElementById('courseModal'),course=courseForSlide(slides[idx]);if(modal&&course){markQuestionHelp('course');document.getElementById('courseTitle').textContent=course.title;document.getElementById('courseGrid').innerHTML=course.rules.map(rule=>'<div class="course-rule'+(rule[2]?' course-rule-wide':'')+'"><strong>'+rule[0]+'</strong>'+rule[1]+'</div>').join('');modal.hidden=false;const close=modal.querySelector('.course-close');if(close)close.focus();}}
 function closeCourse(){const modal=document.getElementById('courseModal');if(modal)modal.hidden=true;}
-function openEquationDetail(){const modal=document.getElementById('equationDetailModal'),body=document.getElementById('equationDetailBody'),detail=slides[idx].equationDetailHtml;if(modal&&body&&detail){body.innerHTML=detail;modal.hidden=false;const close=modal.querySelector('.equation-detail-close');if(close)close.focus();}}
+function openEquationDetail(){const modal=document.getElementById('equationDetailModal'),body=document.getElementById('equationDetailBody'),detail=slides[idx].equationDetailHtml;if(modal&&body&&detail){markQuestionHelp('equation-detail');body.innerHTML=detail;modal.hidden=false;const close=modal.querySelector('.equation-detail-close');if(close)close.focus();}}
 function closeEquationDetail(){const modal=document.getElementById('equationDetailModal');if(modal)modal.hidden=true;}
-function revealVisual(){if(slides[idx].canRevealVisual){visualShown[idx]=true;render();}}
+function revealVisual(){if(slides[idx].canRevealVisual){markQuestionHelp('visual');visualShown[idx]=true;render();}}
 function next(){if(interactiveMode)return;if(!corr){corr=true;render();return;}if(idx<slides.length-1){idx++;corr=false;render();}}
 function prev(){if(interactiveMode)return;if(corr){corr=false;render();return;}if(idx>0){idx--;corr=false;render();}}
 function toggleFS(){const d=document.getElementById('diapo');if(!document.fullscreenElement)d.requestFullscreen();else document.exitFullscreen();}
@@ -10880,6 +11376,7 @@ function interactiveSpecForInstance(inst,correctionHtml){
       kind:'qcm',
       multiple:correctIndices.length>1,
       correctIndices,
+      options:options.map((option,index)=>({index,displayedValue:option.textContent.replace(/^\s*[A-Z]\.\s*/,'').replace(/\s+/g,' ').trim()})),
       expectedDisplay:(letters.length>1?'réponses ':'réponse ')+letters.join(' et ')
     };
   }
@@ -10976,21 +11473,32 @@ function courseContextForInstance(inst){
   return null;
 }
 
-function slidesDataForQuiz(sourceQuiz,mode){
-  return sourceQuiz.map(inst => {
+function slidesDataForQuiz(sourceQuiz,mode,context={}){
+  fractionOpsSvgCounter=0;
+  return sourceQuiz.map((inst,index) => {
     const visualPolicy=visualPolicyForQuestion(inst.module,inst.q);
     const canRevealVisual=mode==='without'&&visualPolicy==='optional';
     const hiddenMode=slideModeForVisualPolicy(mode,visualPolicy);
     const questionHtml=buildCleanSlideHtml(inst,false,hiddenMode);
     const correctionHtml=buildCleanSlideHtml(inst,true,hiddenMode);
+    const interactiveSpec=interactiveSpecForInstance(inst,correctionHtml);
+    const questionInstance=context.seriesId?createQuestionInstanceContract(inst,interactiveSpec,{
+      seriesId:context.seriesId,
+      seriesOrdinal:context.seriesOrdinal||1,
+      position:index+1,
+      level:context.level
+    }):null;
     return {
       moduleId:inst.module.id,
+      canonicalModuleId:mathsgoCanonicalModuleId(inst.module.id),
       questionNumber:Number(inst.q.n),
       courseKind:courseKindForModule(inst.module.id,mode),
       courseContext:courseContextForInstance(inst),
       questionHtml,
       correctionHtml,
-      interactiveSpec:interactiveSpecForInstance(inst,correctionHtml),
+      interactiveSpec,
+      questionInstance,
+      assistanceMode:mode,
       equationDetailHtml:inst.module.id==='dnb_13'&&inst.equationData&&!inst.equationData.qcm?equationDetailHtml(inst.equationData):null,
       canRevealVisual,
       visualQuestionHtml:canRevealVisual?buildCleanSlideHtml(inst,false,'with'):null,
@@ -10999,21 +11507,25 @@ function slidesDataForQuiz(sourceQuiz,mode){
   });
 }
 
-function openDiapoWindow(){
-  const mode=document.getElementById('visualMode').value;
-  const experienceMode=document.getElementById('experienceMode')?.value||'interactive';
+function openDiapoWindow(definition=null,{sameTab=false}={}){
+  const normalized=definition?normalizeSeriesDefinition(definition):readSeriesDefinitionFromUi();
+  const mode=normalized.visualMode;
+  const experienceMode=normalized.experienceMode;
+  const seriesId=seriesIdForDefinition(normalized);
   const seriesQuizzes=[quiz];
   if(experienceMode==='interactive'){
-    const checked=new Set([...document.querySelectorAll('.modcb:checked')].map(cb=>cb.value));
-    const mods=visibleModules().filter(module=>checked.has(module.id));
-    const count=parseInt(document.getElementById('count').value,10);
-    while(seriesQuizzes.length<INTERACTIVE_SERIES_COUNT) seriesQuizzes.push(buildBalancedQuiz(mods,count));
+    const mods=modulesForSeriesDefinition(normalized);
+    while(seriesQuizzes.length<normalized.seriesCount) seriesQuizzes.push(buildBalancedQuiz(mods,normalized.questionCount));
   }
-  const seriesData=seriesQuizzes.map(seriesQuiz=>slidesDataForQuiz(seriesQuiz,mode));
+  const seriesData=seriesQuizzes.map((seriesQuiz,index)=>slidesDataForQuiz(seriesQuiz,mode,{seriesId,seriesOrdinal:index+1,level:normalized.level}));
+  const html=makeDiapoWindowHtml(seriesData,experienceMode);
+  if(sameTab){
+    document.open();document.write(html);document.close();return;
+  }
   const w = window.open('', '_blank');
   if(!w){ alert('La nouvelle fenêtre a été bloquée. Autorise les popups pour cette page.'); return; }
   w.document.open();
-  w.document.write(makeDiapoWindowHtml(seriesData,experienceMode));
+  w.document.write(html);
   w.document.close();
 }
 </script>
@@ -11040,6 +11552,10 @@ let quizSelectionState=null;
 
 function quizBankSignature(mods){
   return mods.map(module=>module.id).sort().join('|');
+}
+
+function canonicalModuleOrder(mods){
+  return [...mods].sort((left,right)=>left.id===right.id?0:(left.id<right.id?-1:1));
 }
 
 function beginQuizBank(mods){
@@ -11117,12 +11633,48 @@ function chooseAlternatingGroups(moduleId,questions,count,groupForQuestion,deckP
   });
   const groupNames=[...groups.keys()];
   if(groupNames.length<2) return drawFromQuestionDeck(moduleId+':'+deckPrefix+':all',questions,count);
+  const orderKey=moduleId+':'+deckPrefix+':strict-order';
+  const signature=[...groupNames].sort().join('|');
+  let orderState=quizSelectionState.orderDecks.get(orderKey);
+  if(!orderState||orderState.signature!==signature){
+    orderState={signature,last:null};
+    quizSelectionState.orderDecks.set(orderKey,orderState);
+  }
   const chosen=[];
   while(chosen.length<count){
-    const group=drawOrderKey(moduleId+':'+deckPrefix+':order',groupNames);
+    let candidates=orderState.last===null?groupNames:groupNames.filter(name=>name!==orderState.last);
+    if(!candidates.length) candidates=groupNames;
+    if(orderState.last===null&&count%2===1){
+      const largest=Math.max(...candidates.map(name=>groups.get(name).length));
+      candidates=candidates.filter(name=>groups.get(name).length===largest);
+    }
+    const group=pick(candidates);
     chosen.push(...drawFromQuestionDeck(moduleId+':'+deckPrefix+':'+group,groups.get(group),1));
+    orderState.last=group;
   }
   return chosen;
+}
+
+function coverageFirstQuestionCycle(questions,groupForQuestion){
+  const pools=new Map();
+  questions.forEach(question=>{
+    const group=groupForQuestion(question);
+    if(!pools.has(group)) pools.set(group,[]);
+    pools.get(group).push(question);
+  });
+  pools.forEach((items,key)=>pools.set(key,shuffledCopy(items)));
+  const cycle=[];
+  let lastGroup=null;
+  while([...pools.values()].some(items=>items.length)){
+    let candidates=[...pools.keys()].filter(key=>pools.get(key).length&&key!==lastGroup);
+    if(!candidates.length) candidates=[...pools.keys()].filter(key=>pools.get(key).length);
+    const largest=Math.max(...candidates.map(key=>pools.get(key).length));
+    candidates=shuffledCopy(candidates.filter(key=>pools.get(key).length===largest));
+    const group=candidates[0];
+    cycle.push(pools.get(group).pop());
+    lastGroup=group;
+  }
+  return cycle;
 }
 
 function interleavedQuestionCycle(questions,groupForQuestion){
@@ -11278,12 +11830,11 @@ function eligibleQuestionsForModule(m){
 }
 
 function chooseFractionPercentQuestions(moduleId,questions,count){
-  return chooseAlternatingGroups(
-    moduleId,
+  return drawFromQuestionDeck(
+    moduleId+':fraction-percent:coverage',
     questions,
     count,
-    question=>question.options?.fraction_percent_category||'other',
-    'fraction-percent'
+    ()=>coverageFirstQuestionCycle(questions,question=>question.options?.fraction_percent_category||'other')
   );
 }
 
@@ -11353,12 +11904,11 @@ function chooseAreaQuestions(moduleId,questions,count){
 }
 
 function chooseNumberLineQuestions(moduleId,questions,count){
-  return chooseAlternatingGroups(
-    moduleId,
+  return drawFromQuestionDeck(
+    moduleId+':number-line:coverage',
     questions,
     count,
-    question=>question.options?.numberline_family||'standard',
-    'number-line'
+    ()=>coverageFirstQuestionCycle(questions,question=>question.options?.numberline_family||'standard')
   );
 }
 
@@ -11374,7 +11924,7 @@ function chooseFractionMulDivQuestions(moduleId,questions,count){
 
 function buildBalancedQuiz(mods,count){
   resetModule01State();
-  const usable=mods
+  const usable=canonicalModuleOrder(mods)
     .map(m=>({m,questions:eligibleQuestionsForModule(m)}))
     .filter(item=>item.questions.length>0);
 
@@ -11402,18 +11952,22 @@ function buildBalancedQuiz(mods,count){
   return plan.map(({m,q})=>makeInstance(m,q));
 }
 
-function generate(){
-  let seed=document.getElementById('seed').value.trim();
-  if(!seed||isNaN(seed)){ seed=Math.floor(Math.random()*99999)+1; document.getElementById('seed').placeholder=seed; }
-  setSeed(parseInt(seed,10));
-  const checked=new Set([...document.querySelectorAll('.modcb:checked')].map(cb=>cb.value));
-  const mods=visibleModules().filter(m=>checked.has(m.id));
-  if(!mods.length){ alert('Coche au moins un module.'); return; }
-  const count=parseInt(document.getElementById('count').value,10);
+let currentSeriesDefinition=null;
+
+function generateFromDefinition(definition,{sameTab=false}={}){
+  const normalized=normalizeSeriesDefinition(definition);
+  const mods=modulesForSeriesDefinition(normalized);
+  setSeed(normalized.seed);
   beginQuizBank(mods);
-  quiz=buildBalancedQuiz(mods,count);
+  quiz=buildBalancedQuiz(mods,normalized.questionCount);
   if(!quiz.length){ alert('Aucune question compatible avec les options choisies.'); return; }
-  openDiapoWindow();
+  currentSeriesDefinition=normalized;
+  openDiapoWindow(normalized,{sameTab});
+}
+
+function generate(){
+  try{generateFromDefinition(readSeriesDefinitionFromUi());}
+  catch(error){alert(error&&error.message?error.message:'Impossible de préparer cette série.');}
 }
 
 document.querySelectorAll('.segmented-control').forEach(group=>{
@@ -11440,6 +11994,2402 @@ function updateGenerateButtonLabel(){
 document.getElementById('experienceMode').addEventListener('change',updateGenerateButtonLabel);
 updateGenerateButtonLabel();
 renderModuleList();
+</script>
+<script>
+//---------------------------------------------------------------------
+//
+// QR Code Generator for JavaScript
+//
+// Copyright (c) 2009 Kazuhiko Arase
+//
+// URL: http://www.d-project.com/
+//
+// Licensed under the MIT license:
+//  http://www.opensource.org/licenses/mit-license.php
+//
+// The word 'QR Code' is registered trademark of
+// DENSO WAVE INCORPORATED
+//  http://www.denso-wave.com/qrcode/faqpatent-e.html
+//
+//---------------------------------------------------------------------
+
+var qrcode = function() {
+
+  //---------------------------------------------------------------------
+  // qrcode
+  //---------------------------------------------------------------------
+
+  /**
+   * qrcode
+   * @param typeNumber 1 to 40
+   * @param errorCorrectionLevel 'L','M','Q','H'
+   */
+  var qrcode = function(typeNumber, errorCorrectionLevel) {
+
+    var PAD0 = 0xEC;
+    var PAD1 = 0x11;
+
+    var _typeNumber = typeNumber;
+    var _errorCorrectionLevel = QRErrorCorrectionLevel[errorCorrectionLevel];
+    var _modules = null;
+    var _moduleCount = 0;
+    var _dataCache = null;
+    var _dataList = [];
+
+    var _this = {};
+
+    var makeImpl = function(test, maskPattern) {
+
+      _moduleCount = _typeNumber * 4 + 17;
+      _modules = function(moduleCount) {
+        var modules = new Array(moduleCount);
+        for (var row = 0; row < moduleCount; row += 1) {
+          modules[row] = new Array(moduleCount);
+          for (var col = 0; col < moduleCount; col += 1) {
+            modules[row][col] = null;
+          }
+        }
+        return modules;
+      }(_moduleCount);
+
+      setupPositionProbePattern(0, 0);
+      setupPositionProbePattern(_moduleCount - 7, 0);
+      setupPositionProbePattern(0, _moduleCount - 7);
+      setupPositionAdjustPattern();
+      setupTimingPattern();
+      setupTypeInfo(test, maskPattern);
+
+      if (_typeNumber >= 7) {
+        setupTypeNumber(test);
+      }
+
+      if (_dataCache == null) {
+        _dataCache = createData(_typeNumber, _errorCorrectionLevel, _dataList);
+      }
+
+      mapData(_dataCache, maskPattern);
+    };
+
+    var setupPositionProbePattern = function(row, col) {
+
+      for (var r = -1; r <= 7; r += 1) {
+
+        if (row + r <= -1 || _moduleCount <= row + r) continue;
+
+        for (var c = -1; c <= 7; c += 1) {
+
+          if (col + c <= -1 || _moduleCount <= col + c) continue;
+
+          if ( (0 <= r && r <= 6 && (c == 0 || c == 6) )
+              || (0 <= c && c <= 6 && (r == 0 || r == 6) )
+              || (2 <= r && r <= 4 && 2 <= c && c <= 4) ) {
+            _modules[row + r][col + c] = true;
+          } else {
+            _modules[row + r][col + c] = false;
+          }
+        }
+      }
+    };
+
+    var getBestMaskPattern = function() {
+
+      var minLostPoint = 0;
+      var pattern = 0;
+
+      for (var i = 0; i < 8; i += 1) {
+
+        makeImpl(true, i);
+
+        var lostPoint = QRUtil.getLostPoint(_this);
+
+        if (i == 0 || minLostPoint > lostPoint) {
+          minLostPoint = lostPoint;
+          pattern = i;
+        }
+      }
+
+      return pattern;
+    };
+
+    var setupTimingPattern = function() {
+
+      for (var r = 8; r < _moduleCount - 8; r += 1) {
+        if (_modules[r][6] != null) {
+          continue;
+        }
+        _modules[r][6] = (r % 2 == 0);
+      }
+
+      for (var c = 8; c < _moduleCount - 8; c += 1) {
+        if (_modules[6][c] != null) {
+          continue;
+        }
+        _modules[6][c] = (c % 2 == 0);
+      }
+    };
+
+    var setupPositionAdjustPattern = function() {
+
+      var pos = QRUtil.getPatternPosition(_typeNumber);
+
+      for (var i = 0; i < pos.length; i += 1) {
+
+        for (var j = 0; j < pos.length; j += 1) {
+
+          var row = pos[i];
+          var col = pos[j];
+
+          if (_modules[row][col] != null) {
+            continue;
+          }
+
+          for (var r = -2; r <= 2; r += 1) {
+
+            for (var c = -2; c <= 2; c += 1) {
+
+              if (r == -2 || r == 2 || c == -2 || c == 2
+                  || (r == 0 && c == 0) ) {
+                _modules[row + r][col + c] = true;
+              } else {
+                _modules[row + r][col + c] = false;
+              }
+            }
+          }
+        }
+      }
+    };
+
+    var setupTypeNumber = function(test) {
+
+      var bits = QRUtil.getBCHTypeNumber(_typeNumber);
+
+      for (var i = 0; i < 18; i += 1) {
+        var mod = (!test && ( (bits >> i) & 1) == 1);
+        _modules[Math.floor(i / 3)][i % 3 + _moduleCount - 8 - 3] = mod;
+      }
+
+      for (var i = 0; i < 18; i += 1) {
+        var mod = (!test && ( (bits >> i) & 1) == 1);
+        _modules[i % 3 + _moduleCount - 8 - 3][Math.floor(i / 3)] = mod;
+      }
+    };
+
+    var setupTypeInfo = function(test, maskPattern) {
+
+      var data = (_errorCorrectionLevel << 3) | maskPattern;
+      var bits = QRUtil.getBCHTypeInfo(data);
+
+      // vertical
+      for (var i = 0; i < 15; i += 1) {
+
+        var mod = (!test && ( (bits >> i) & 1) == 1);
+
+        if (i < 6) {
+          _modules[i][8] = mod;
+        } else if (i < 8) {
+          _modules[i + 1][8] = mod;
+        } else {
+          _modules[_moduleCount - 15 + i][8] = mod;
+        }
+      }
+
+      // horizontal
+      for (var i = 0; i < 15; i += 1) {
+
+        var mod = (!test && ( (bits >> i) & 1) == 1);
+
+        if (i < 8) {
+          _modules[8][_moduleCount - i - 1] = mod;
+        } else if (i < 9) {
+          _modules[8][15 - i - 1 + 1] = mod;
+        } else {
+          _modules[8][15 - i - 1] = mod;
+        }
+      }
+
+      // fixed module
+      _modules[_moduleCount - 8][8] = (!test);
+    };
+
+    var mapData = function(data, maskPattern) {
+
+      var inc = -1;
+      var row = _moduleCount - 1;
+      var bitIndex = 7;
+      var byteIndex = 0;
+      var maskFunc = QRUtil.getMaskFunction(maskPattern);
+
+      for (var col = _moduleCount - 1; col > 0; col -= 2) {
+
+        if (col == 6) col -= 1;
+
+        while (true) {
+
+          for (var c = 0; c < 2; c += 1) {
+
+            if (_modules[row][col - c] == null) {
+
+              var dark = false;
+
+              if (byteIndex < data.length) {
+                dark = ( ( (data[byteIndex] >>> bitIndex) & 1) == 1);
+              }
+
+              var mask = maskFunc(row, col - c);
+
+              if (mask) {
+                dark = !dark;
+              }
+
+              _modules[row][col - c] = dark;
+              bitIndex -= 1;
+
+              if (bitIndex == -1) {
+                byteIndex += 1;
+                bitIndex = 7;
+              }
+            }
+          }
+
+          row += inc;
+
+          if (row < 0 || _moduleCount <= row) {
+            row -= inc;
+            inc = -inc;
+            break;
+          }
+        }
+      }
+    };
+
+    var createBytes = function(buffer, rsBlocks) {
+
+      var offset = 0;
+
+      var maxDcCount = 0;
+      var maxEcCount = 0;
+
+      var dcdata = new Array(rsBlocks.length);
+      var ecdata = new Array(rsBlocks.length);
+
+      for (var r = 0; r < rsBlocks.length; r += 1) {
+
+        var dcCount = rsBlocks[r].dataCount;
+        var ecCount = rsBlocks[r].totalCount - dcCount;
+
+        maxDcCount = Math.max(maxDcCount, dcCount);
+        maxEcCount = Math.max(maxEcCount, ecCount);
+
+        dcdata[r] = new Array(dcCount);
+
+        for (var i = 0; i < dcdata[r].length; i += 1) {
+          dcdata[r][i] = 0xff & buffer.getBuffer()[i + offset];
+        }
+        offset += dcCount;
+
+        var rsPoly = QRUtil.getErrorCorrectPolynomial(ecCount);
+        var rawPoly = qrPolynomial(dcdata[r], rsPoly.getLength() - 1);
+
+        var modPoly = rawPoly.mod(rsPoly);
+        ecdata[r] = new Array(rsPoly.getLength() - 1);
+        for (var i = 0; i < ecdata[r].length; i += 1) {
+          var modIndex = i + modPoly.getLength() - ecdata[r].length;
+          ecdata[r][i] = (modIndex >= 0)? modPoly.getAt(modIndex) : 0;
+        }
+      }
+
+      var totalCodeCount = 0;
+      for (var i = 0; i < rsBlocks.length; i += 1) {
+        totalCodeCount += rsBlocks[i].totalCount;
+      }
+
+      var data = new Array(totalCodeCount);
+      var index = 0;
+
+      for (var i = 0; i < maxDcCount; i += 1) {
+        for (var r = 0; r < rsBlocks.length; r += 1) {
+          if (i < dcdata[r].length) {
+            data[index] = dcdata[r][i];
+            index += 1;
+          }
+        }
+      }
+
+      for (var i = 0; i < maxEcCount; i += 1) {
+        for (var r = 0; r < rsBlocks.length; r += 1) {
+          if (i < ecdata[r].length) {
+            data[index] = ecdata[r][i];
+            index += 1;
+          }
+        }
+      }
+
+      return data;
+    };
+
+    var createData = function(typeNumber, errorCorrectionLevel, dataList) {
+
+      var rsBlocks = QRRSBlock.getRSBlocks(typeNumber, errorCorrectionLevel);
+
+      var buffer = qrBitBuffer();
+
+      for (var i = 0; i < dataList.length; i += 1) {
+        var data = dataList[i];
+        buffer.put(data.getMode(), 4);
+        buffer.put(data.getLength(), QRUtil.getLengthInBits(data.getMode(), typeNumber) );
+        data.write(buffer);
+      }
+
+      // calc num max data.
+      var totalDataCount = 0;
+      for (var i = 0; i < rsBlocks.length; i += 1) {
+        totalDataCount += rsBlocks[i].dataCount;
+      }
+
+      if (buffer.getLengthInBits() > totalDataCount * 8) {
+        throw 'code length overflow. ('
+          + buffer.getLengthInBits()
+          + '>'
+          + totalDataCount * 8
+          + ')';
+      }
+
+      // end code
+      if (buffer.getLengthInBits() + 4 <= totalDataCount * 8) {
+        buffer.put(0, 4);
+      }
+
+      // padding
+      while (buffer.getLengthInBits() % 8 != 0) {
+        buffer.putBit(false);
+      }
+
+      // padding
+      while (true) {
+
+        if (buffer.getLengthInBits() >= totalDataCount * 8) {
+          break;
+        }
+        buffer.put(PAD0, 8);
+
+        if (buffer.getLengthInBits() >= totalDataCount * 8) {
+          break;
+        }
+        buffer.put(PAD1, 8);
+      }
+
+      return createBytes(buffer, rsBlocks);
+    };
+
+    _this.addData = function(data, mode) {
+
+      mode = mode || 'Byte';
+
+      var newData = null;
+
+      switch(mode) {
+      case 'Numeric' :
+        newData = qrNumber(data);
+        break;
+      case 'Alphanumeric' :
+        newData = qrAlphaNum(data);
+        break;
+      case 'Byte' :
+        newData = qr8BitByte(data);
+        break;
+      case 'Kanji' :
+        newData = qrKanji(data);
+        break;
+      default :
+        throw 'mode:' + mode;
+      }
+
+      _dataList.push(newData);
+      _dataCache = null;
+    };
+
+    _this.isDark = function(row, col) {
+      if (row < 0 || _moduleCount <= row || col < 0 || _moduleCount <= col) {
+        throw row + ',' + col;
+      }
+      return _modules[row][col];
+    };
+
+    _this.getModuleCount = function() {
+      return _moduleCount;
+    };
+
+    _this.make = function() {
+      if (_typeNumber < 1) {
+        var typeNumber = 1;
+
+        for (; typeNumber < 40; typeNumber++) {
+          var rsBlocks = QRRSBlock.getRSBlocks(typeNumber, _errorCorrectionLevel);
+          var buffer = qrBitBuffer();
+
+          for (var i = 0; i < _dataList.length; i++) {
+            var data = _dataList[i];
+            buffer.put(data.getMode(), 4);
+            buffer.put(data.getLength(), QRUtil.getLengthInBits(data.getMode(), typeNumber) );
+            data.write(buffer);
+          }
+
+          var totalDataCount = 0;
+          for (var i = 0; i < rsBlocks.length; i++) {
+            totalDataCount += rsBlocks[i].dataCount;
+          }
+
+          if (buffer.getLengthInBits() <= totalDataCount * 8) {
+            break;
+          }
+        }
+
+        _typeNumber = typeNumber;
+      }
+
+      makeImpl(false, getBestMaskPattern() );
+    };
+
+    _this.createTableTag = function(cellSize, margin) {
+
+      cellSize = cellSize || 2;
+      margin = (typeof margin == 'undefined')? cellSize * 4 : margin;
+
+      var qrHtml = '';
+
+      qrHtml += '<table style="';
+      qrHtml += ' border-width: 0px; border-style: none;';
+      qrHtml += ' border-collapse: collapse;';
+      qrHtml += ' padding: 0px; margin: ' + margin + 'px;';
+      qrHtml += '">';
+      qrHtml += '<tbody>';
+
+      for (var r = 0; r < _this.getModuleCount(); r += 1) {
+
+        qrHtml += '<tr>';
+
+        for (var c = 0; c < _this.getModuleCount(); c += 1) {
+          qrHtml += '<td style="';
+          qrHtml += ' border-width: 0px; border-style: none;';
+          qrHtml += ' border-collapse: collapse;';
+          qrHtml += ' padding: 0px; margin: 0px;';
+          qrHtml += ' width: ' + cellSize + 'px;';
+          qrHtml += ' height: ' + cellSize + 'px;';
+          qrHtml += ' background-color: ';
+          qrHtml += _this.isDark(r, c)? '#000000' : '#ffffff';
+          qrHtml += ';';
+          qrHtml += '"/>';
+        }
+
+        qrHtml += '</tr>';
+      }
+
+      qrHtml += '</tbody>';
+      qrHtml += '</table>';
+
+      return qrHtml;
+    };
+
+    _this.createSvgTag = function(cellSize, margin, alt, title) {
+
+      var opts = {};
+      if (typeof arguments[0] == 'object') {
+        // Called by options.
+        opts = arguments[0];
+        // overwrite cellSize and margin.
+        cellSize = opts.cellSize;
+        margin = opts.margin;
+        alt = opts.alt;
+        title = opts.title;
+      }
+
+      cellSize = cellSize || 2;
+      margin = (typeof margin == 'undefined')? cellSize * 4 : margin;
+
+      // Compose alt property surrogate
+      alt = (typeof alt === 'string') ? {text: alt} : alt || {};
+      alt.text = alt.text || null;
+      alt.id = (alt.text) ? alt.id || 'qrcode-description' : null;
+
+      // Compose title property surrogate
+      title = (typeof title === 'string') ? {text: title} : title || {};
+      title.text = title.text || null;
+      title.id = (title.text) ? title.id || 'qrcode-title' : null;
+
+      var size = _this.getModuleCount() * cellSize + margin * 2;
+      var c, mc, r, mr, qrSvg='', rect;
+
+      rect = 'l' + cellSize + ',0 0,' + cellSize +
+        ' -' + cellSize + ',0 0,-' + cellSize + 'z ';
+
+      qrSvg += '<svg version="1.1" xmlns="http://www.w3.org/2000/svg"';
+      qrSvg += !opts.scalable ? ' width="' + size + 'px" height="' + size + 'px"' : '';
+      qrSvg += ' viewBox="0 0 ' + size + ' ' + size + '" ';
+      qrSvg += ' preserveAspectRatio="xMinYMin meet"';
+      qrSvg += (title.text || alt.text) ? ' role="img" aria-labelledby="' +
+          escapeXml([title.id, alt.id].join(' ').trim() ) + '"' : '';
+      qrSvg += '>';
+      qrSvg += (title.text) ? '<title id="' + escapeXml(title.id) + '">' +
+          escapeXml(title.text) + '</title>' : '';
+      qrSvg += (alt.text) ? '<description id="' + escapeXml(alt.id) + '">' +
+          escapeXml(alt.text) + '</description>' : '';
+      qrSvg += '<rect width="100%" height="100%" fill="white" cx="0" cy="0"/>';
+      qrSvg += '<path d="';
+
+      for (r = 0; r < _this.getModuleCount(); r += 1) {
+        mr = r * cellSize + margin;
+        for (c = 0; c < _this.getModuleCount(); c += 1) {
+          if (_this.isDark(r, c) ) {
+            mc = c*cellSize+margin;
+            qrSvg += 'M' + mc + ',' + mr + rect;
+          }
+        }
+      }
+
+      qrSvg += '" stroke="transparent" fill="black"/>';
+      qrSvg += '</svg>';
+
+      return qrSvg;
+    };
+
+    _this.createDataURL = function(cellSize, margin) {
+
+      cellSize = cellSize || 2;
+      margin = (typeof margin == 'undefined')? cellSize * 4 : margin;
+
+      var size = _this.getModuleCount() * cellSize + margin * 2;
+      var min = margin;
+      var max = size - margin;
+
+      return createDataURL(size, size, function(x, y) {
+        if (min <= x && x < max && min <= y && y < max) {
+          var c = Math.floor( (x - min) / cellSize);
+          var r = Math.floor( (y - min) / cellSize);
+          return _this.isDark(r, c)? 0 : 1;
+        } else {
+          return 1;
+        }
+      } );
+    };
+
+    _this.createImgTag = function(cellSize, margin, alt) {
+
+      cellSize = cellSize || 2;
+      margin = (typeof margin == 'undefined')? cellSize * 4 : margin;
+
+      var size = _this.getModuleCount() * cellSize + margin * 2;
+
+      var img = '';
+      img += '<img';
+      img += '\u0020src="';
+      img += _this.createDataURL(cellSize, margin);
+      img += '"';
+      img += '\u0020width="';
+      img += size;
+      img += '"';
+      img += '\u0020height="';
+      img += size;
+      img += '"';
+      if (alt) {
+        img += '\u0020alt="';
+        img += escapeXml(alt);
+        img += '"';
+      }
+      img += '/>';
+
+      return img;
+    };
+
+    var escapeXml = function(s) {
+      var escaped = '';
+      for (var i = 0; i < s.length; i += 1) {
+        var c = s.charAt(i);
+        switch(c) {
+        case '<': escaped += '&lt;'; break;
+        case '>': escaped += '&gt;'; break;
+        case '&': escaped += '&amp;'; break;
+        case '"': escaped += '&quot;'; break;
+        default : escaped += c; break;
+        }
+      }
+      return escaped;
+    };
+
+    var _createHalfASCII = function(margin) {
+      var cellSize = 1;
+      margin = (typeof margin == 'undefined')? cellSize * 2 : margin;
+
+      var size = _this.getModuleCount() * cellSize + margin * 2;
+      var min = margin;
+      var max = size - margin;
+
+      var y, x, r1, r2, p;
+
+      var blocks = {
+        '██': '█',
+        '█ ': '▀',
+        ' █': '▄',
+        '  ': ' '
+      };
+
+      var blocksLastLineNoMargin = {
+        '██': '▀',
+        '█ ': '▀',
+        ' █': ' ',
+        '  ': ' '
+      };
+
+      var ascii = '';
+      for (y = 0; y < size; y += 2) {
+        r1 = Math.floor((y - min) / cellSize);
+        r2 = Math.floor((y + 1 - min) / cellSize);
+        for (x = 0; x < size; x += 1) {
+          p = '█';
+
+          if (min <= x && x < max && min <= y && y < max && _this.isDark(r1, Math.floor((x - min) / cellSize))) {
+            p = ' ';
+          }
+
+          if (min <= x && x < max && min <= y+1 && y+1 < max && _this.isDark(r2, Math.floor((x - min) / cellSize))) {
+            p += ' ';
+          }
+          else {
+            p += '█';
+          }
+
+          // Output 2 characters per pixel, to create full square. 1 character per pixels gives only half width of square.
+          ascii += (margin < 1 && y+1 >= max) ? blocksLastLineNoMargin[p] : blocks[p];
+        }
+
+        ascii += '\n';
+      }
+
+      if (size % 2 && margin > 0) {
+        return ascii.substring(0, ascii.length - size - 1) + Array(size+1).join('▀');
+      }
+
+      return ascii.substring(0, ascii.length-1);
+    };
+
+    _this.createASCII = function(cellSize, margin) {
+      cellSize = cellSize || 1;
+
+      if (cellSize < 2) {
+        return _createHalfASCII(margin);
+      }
+
+      cellSize -= 1;
+      margin = (typeof margin == 'undefined')? cellSize * 2 : margin;
+
+      var size = _this.getModuleCount() * cellSize + margin * 2;
+      var min = margin;
+      var max = size - margin;
+
+      var y, x, r, p;
+
+      var white = Array(cellSize+1).join('██');
+      var black = Array(cellSize+1).join('  ');
+
+      var ascii = '';
+      var line = '';
+      for (y = 0; y < size; y += 1) {
+        r = Math.floor( (y - min) / cellSize);
+        line = '';
+        for (x = 0; x < size; x += 1) {
+          p = 1;
+
+          if (min <= x && x < max && min <= y && y < max && _this.isDark(r, Math.floor((x - min) / cellSize))) {
+            p = 0;
+          }
+
+          // Output 2 characters per pixel, to create full square. 1 character per pixels gives only half width of square.
+          line += p ? white : black;
+        }
+
+        for (r = 0; r < cellSize; r += 1) {
+          ascii += line + '\n';
+        }
+      }
+
+      return ascii.substring(0, ascii.length-1);
+    };
+
+    _this.renderTo2dContext = function(context, cellSize) {
+      cellSize = cellSize || 2;
+      var length = _this.getModuleCount();
+      for (var row = 0; row < length; row++) {
+        for (var col = 0; col < length; col++) {
+          context.fillStyle = _this.isDark(row, col) ? 'black' : 'white';
+          context.fillRect(row * cellSize, col * cellSize, cellSize, cellSize);
+        }
+      }
+    }
+
+    return _this;
+  };
+
+  //---------------------------------------------------------------------
+  // qrcode.stringToBytes
+  //---------------------------------------------------------------------
+
+  qrcode.stringToBytesFuncs = {
+    'default' : function(s) {
+      var bytes = [];
+      for (var i = 0; i < s.length; i += 1) {
+        var c = s.charCodeAt(i);
+        bytes.push(c & 0xff);
+      }
+      return bytes;
+    }
+  };
+
+  qrcode.stringToBytes = qrcode.stringToBytesFuncs['default'];
+
+  //---------------------------------------------------------------------
+  // qrcode.createStringToBytes
+  //---------------------------------------------------------------------
+
+  /**
+   * @param unicodeData base64 string of byte array.
+   * [16bit Unicode],[16bit Bytes], ...
+   * @param numChars
+   */
+  qrcode.createStringToBytes = function(unicodeData, numChars) {
+
+    // create conversion map.
+
+    var unicodeMap = function() {
+
+      var bin = base64DecodeInputStream(unicodeData);
+      var read = function() {
+        var b = bin.read();
+        if (b == -1) throw 'eof';
+        return b;
+      };
+
+      var count = 0;
+      var unicodeMap = {};
+      while (true) {
+        var b0 = bin.read();
+        if (b0 == -1) break;
+        var b1 = read();
+        var b2 = read();
+        var b3 = read();
+        var k = String.fromCharCode( (b0 << 8) | b1);
+        var v = (b2 << 8) | b3;
+        unicodeMap[k] = v;
+        count += 1;
+      }
+      if (count != numChars) {
+        throw count + ' != ' + numChars;
+      }
+
+      return unicodeMap;
+    }();
+
+    var unknownChar = '?'.charCodeAt(0);
+
+    return function(s) {
+      var bytes = [];
+      for (var i = 0; i < s.length; i += 1) {
+        var c = s.charCodeAt(i);
+        if (c < 128) {
+          bytes.push(c);
+        } else {
+          var b = unicodeMap[s.charAt(i)];
+          if (typeof b == 'number') {
+            if ( (b & 0xff) == b) {
+              // 1byte
+              bytes.push(b);
+            } else {
+              // 2bytes
+              bytes.push(b >>> 8);
+              bytes.push(b & 0xff);
+            }
+          } else {
+            bytes.push(unknownChar);
+          }
+        }
+      }
+      return bytes;
+    };
+  };
+
+  //---------------------------------------------------------------------
+  // QRMode
+  //---------------------------------------------------------------------
+
+  var QRMode = {
+    MODE_NUMBER :    1 << 0,
+    MODE_ALPHA_NUM : 1 << 1,
+    MODE_8BIT_BYTE : 1 << 2,
+    MODE_KANJI :     1 << 3
+  };
+
+  //---------------------------------------------------------------------
+  // QRErrorCorrectionLevel
+  //---------------------------------------------------------------------
+
+  var QRErrorCorrectionLevel = {
+    L : 1,
+    M : 0,
+    Q : 3,
+    H : 2
+  };
+
+  //---------------------------------------------------------------------
+  // QRMaskPattern
+  //---------------------------------------------------------------------
+
+  var QRMaskPattern = {
+    PATTERN000 : 0,
+    PATTERN001 : 1,
+    PATTERN010 : 2,
+    PATTERN011 : 3,
+    PATTERN100 : 4,
+    PATTERN101 : 5,
+    PATTERN110 : 6,
+    PATTERN111 : 7
+  };
+
+  //---------------------------------------------------------------------
+  // QRUtil
+  //---------------------------------------------------------------------
+
+  var QRUtil = function() {
+
+    var PATTERN_POSITION_TABLE = [
+      [],
+      [6, 18],
+      [6, 22],
+      [6, 26],
+      [6, 30],
+      [6, 34],
+      [6, 22, 38],
+      [6, 24, 42],
+      [6, 26, 46],
+      [6, 28, 50],
+      [6, 30, 54],
+      [6, 32, 58],
+      [6, 34, 62],
+      [6, 26, 46, 66],
+      [6, 26, 48, 70],
+      [6, 26, 50, 74],
+      [6, 30, 54, 78],
+      [6, 30, 56, 82],
+      [6, 30, 58, 86],
+      [6, 34, 62, 90],
+      [6, 28, 50, 72, 94],
+      [6, 26, 50, 74, 98],
+      [6, 30, 54, 78, 102],
+      [6, 28, 54, 80, 106],
+      [6, 32, 58, 84, 110],
+      [6, 30, 58, 86, 114],
+      [6, 34, 62, 90, 118],
+      [6, 26, 50, 74, 98, 122],
+      [6, 30, 54, 78, 102, 126],
+      [6, 26, 52, 78, 104, 130],
+      [6, 30, 56, 82, 108, 134],
+      [6, 34, 60, 86, 112, 138],
+      [6, 30, 58, 86, 114, 142],
+      [6, 34, 62, 90, 118, 146],
+      [6, 30, 54, 78, 102, 126, 150],
+      [6, 24, 50, 76, 102, 128, 154],
+      [6, 28, 54, 80, 106, 132, 158],
+      [6, 32, 58, 84, 110, 136, 162],
+      [6, 26, 54, 82, 110, 138, 166],
+      [6, 30, 58, 86, 114, 142, 170]
+    ];
+    var G15 = (1 << 10) | (1 << 8) | (1 << 5) | (1 << 4) | (1 << 2) | (1 << 1) | (1 << 0);
+    var G18 = (1 << 12) | (1 << 11) | (1 << 10) | (1 << 9) | (1 << 8) | (1 << 5) | (1 << 2) | (1 << 0);
+    var G15_MASK = (1 << 14) | (1 << 12) | (1 << 10) | (1 << 4) | (1 << 1);
+
+    var _this = {};
+
+    var getBCHDigit = function(data) {
+      var digit = 0;
+      while (data != 0) {
+        digit += 1;
+        data >>>= 1;
+      }
+      return digit;
+    };
+
+    _this.getBCHTypeInfo = function(data) {
+      var d = data << 10;
+      while (getBCHDigit(d) - getBCHDigit(G15) >= 0) {
+        d ^= (G15 << (getBCHDigit(d) - getBCHDigit(G15) ) );
+      }
+      return ( (data << 10) | d) ^ G15_MASK;
+    };
+
+    _this.getBCHTypeNumber = function(data) {
+      var d = data << 12;
+      while (getBCHDigit(d) - getBCHDigit(G18) >= 0) {
+        d ^= (G18 << (getBCHDigit(d) - getBCHDigit(G18) ) );
+      }
+      return (data << 12) | d;
+    };
+
+    _this.getPatternPosition = function(typeNumber) {
+      return PATTERN_POSITION_TABLE[typeNumber - 1];
+    };
+
+    _this.getMaskFunction = function(maskPattern) {
+
+      switch (maskPattern) {
+
+      case QRMaskPattern.PATTERN000 :
+        return function(i, j) { return (i + j) % 2 == 0; };
+      case QRMaskPattern.PATTERN001 :
+        return function(i, j) { return i % 2 == 0; };
+      case QRMaskPattern.PATTERN010 :
+        return function(i, j) { return j % 3 == 0; };
+      case QRMaskPattern.PATTERN011 :
+        return function(i, j) { return (i + j) % 3 == 0; };
+      case QRMaskPattern.PATTERN100 :
+        return function(i, j) { return (Math.floor(i / 2) + Math.floor(j / 3) ) % 2 == 0; };
+      case QRMaskPattern.PATTERN101 :
+        return function(i, j) { return (i * j) % 2 + (i * j) % 3 == 0; };
+      case QRMaskPattern.PATTERN110 :
+        return function(i, j) { return ( (i * j) % 2 + (i * j) % 3) % 2 == 0; };
+      case QRMaskPattern.PATTERN111 :
+        return function(i, j) { return ( (i * j) % 3 + (i + j) % 2) % 2 == 0; };
+
+      default :
+        throw 'bad maskPattern:' + maskPattern;
+      }
+    };
+
+    _this.getErrorCorrectPolynomial = function(errorCorrectLength) {
+      var a = qrPolynomial([1], 0);
+      for (var i = 0; i < errorCorrectLength; i += 1) {
+        a = a.multiply(qrPolynomial([1, QRMath.gexp(i)], 0) );
+      }
+      return a;
+    };
+
+    _this.getLengthInBits = function(mode, type) {
+
+      if (1 <= type && type < 10) {
+
+        // 1 - 9
+
+        switch(mode) {
+        case QRMode.MODE_NUMBER    : return 10;
+        case QRMode.MODE_ALPHA_NUM : return 9;
+        case QRMode.MODE_8BIT_BYTE : return 8;
+        case QRMode.MODE_KANJI     : return 8;
+        default :
+          throw 'mode:' + mode;
+        }
+
+      } else if (type < 27) {
+
+        // 10 - 26
+
+        switch(mode) {
+        case QRMode.MODE_NUMBER    : return 12;
+        case QRMode.MODE_ALPHA_NUM : return 11;
+        case QRMode.MODE_8BIT_BYTE : return 16;
+        case QRMode.MODE_KANJI     : return 10;
+        default :
+          throw 'mode:' + mode;
+        }
+
+      } else if (type < 41) {
+
+        // 27 - 40
+
+        switch(mode) {
+        case QRMode.MODE_NUMBER    : return 14;
+        case QRMode.MODE_ALPHA_NUM : return 13;
+        case QRMode.MODE_8BIT_BYTE : return 16;
+        case QRMode.MODE_KANJI     : return 12;
+        default :
+          throw 'mode:' + mode;
+        }
+
+      } else {
+        throw 'type:' + type;
+      }
+    };
+
+    _this.getLostPoint = function(qrcode) {
+
+      var moduleCount = qrcode.getModuleCount();
+
+      var lostPoint = 0;
+
+      // LEVEL1
+
+      for (var row = 0; row < moduleCount; row += 1) {
+        for (var col = 0; col < moduleCount; col += 1) {
+
+          var sameCount = 0;
+          var dark = qrcode.isDark(row, col);
+
+          for (var r = -1; r <= 1; r += 1) {
+
+            if (row + r < 0 || moduleCount <= row + r) {
+              continue;
+            }
+
+            for (var c = -1; c <= 1; c += 1) {
+
+              if (col + c < 0 || moduleCount <= col + c) {
+                continue;
+              }
+
+              if (r == 0 && c == 0) {
+                continue;
+              }
+
+              if (dark == qrcode.isDark(row + r, col + c) ) {
+                sameCount += 1;
+              }
+            }
+          }
+
+          if (sameCount > 5) {
+            lostPoint += (3 + sameCount - 5);
+          }
+        }
+      };
+
+      // LEVEL2
+
+      for (var row = 0; row < moduleCount - 1; row += 1) {
+        for (var col = 0; col < moduleCount - 1; col += 1) {
+          var count = 0;
+          if (qrcode.isDark(row, col) ) count += 1;
+          if (qrcode.isDark(row + 1, col) ) count += 1;
+          if (qrcode.isDark(row, col + 1) ) count += 1;
+          if (qrcode.isDark(row + 1, col + 1) ) count += 1;
+          if (count == 0 || count == 4) {
+            lostPoint += 3;
+          }
+        }
+      }
+
+      // LEVEL3
+
+      for (var row = 0; row < moduleCount; row += 1) {
+        for (var col = 0; col < moduleCount - 6; col += 1) {
+          if (qrcode.isDark(row, col)
+              && !qrcode.isDark(row, col + 1)
+              &&  qrcode.isDark(row, col + 2)
+              &&  qrcode.isDark(row, col + 3)
+              &&  qrcode.isDark(row, col + 4)
+              && !qrcode.isDark(row, col + 5)
+              &&  qrcode.isDark(row, col + 6) ) {
+            lostPoint += 40;
+          }
+        }
+      }
+
+      for (var col = 0; col < moduleCount; col += 1) {
+        for (var row = 0; row < moduleCount - 6; row += 1) {
+          if (qrcode.isDark(row, col)
+              && !qrcode.isDark(row + 1, col)
+              &&  qrcode.isDark(row + 2, col)
+              &&  qrcode.isDark(row + 3, col)
+              &&  qrcode.isDark(row + 4, col)
+              && !qrcode.isDark(row + 5, col)
+              &&  qrcode.isDark(row + 6, col) ) {
+            lostPoint += 40;
+          }
+        }
+      }
+
+      // LEVEL4
+
+      var darkCount = 0;
+
+      for (var col = 0; col < moduleCount; col += 1) {
+        for (var row = 0; row < moduleCount; row += 1) {
+          if (qrcode.isDark(row, col) ) {
+            darkCount += 1;
+          }
+        }
+      }
+
+      var ratio = Math.abs(100 * darkCount / moduleCount / moduleCount - 50) / 5;
+      lostPoint += ratio * 10;
+
+      return lostPoint;
+    };
+
+    return _this;
+  }();
+
+  //---------------------------------------------------------------------
+  // QRMath
+  //---------------------------------------------------------------------
+
+  var QRMath = function() {
+
+    var EXP_TABLE = new Array(256);
+    var LOG_TABLE = new Array(256);
+
+    // initialize tables
+    for (var i = 0; i < 8; i += 1) {
+      EXP_TABLE[i] = 1 << i;
+    }
+    for (var i = 8; i < 256; i += 1) {
+      EXP_TABLE[i] = EXP_TABLE[i - 4]
+        ^ EXP_TABLE[i - 5]
+        ^ EXP_TABLE[i - 6]
+        ^ EXP_TABLE[i - 8];
+    }
+    for (var i = 0; i < 255; i += 1) {
+      LOG_TABLE[EXP_TABLE[i] ] = i;
+    }
+
+    var _this = {};
+
+    _this.glog = function(n) {
+
+      if (n < 1) {
+        throw 'glog(' + n + ')';
+      }
+
+      return LOG_TABLE[n];
+    };
+
+    _this.gexp = function(n) {
+
+      while (n < 0) {
+        n += 255;
+      }
+
+      while (n >= 256) {
+        n -= 255;
+      }
+
+      return EXP_TABLE[n];
+    };
+
+    return _this;
+  }();
+
+  //---------------------------------------------------------------------
+  // qrPolynomial
+  //---------------------------------------------------------------------
+
+  function qrPolynomial(num, shift) {
+
+    if (typeof num.length == 'undefined') {
+      throw num.length + '/' + shift;
+    }
+
+    var _num = function() {
+      var offset = 0;
+      while (offset < num.length && num[offset] == 0) {
+        offset += 1;
+      }
+      var _num = new Array(num.length - offset + shift);
+      for (var i = 0; i < num.length - offset; i += 1) {
+        _num[i] = num[i + offset];
+      }
+      return _num;
+    }();
+
+    var _this = {};
+
+    _this.getAt = function(index) {
+      return _num[index];
+    };
+
+    _this.getLength = function() {
+      return _num.length;
+    };
+
+    _this.multiply = function(e) {
+
+      var num = new Array(_this.getLength() + e.getLength() - 1);
+
+      for (var i = 0; i < _this.getLength(); i += 1) {
+        for (var j = 0; j < e.getLength(); j += 1) {
+          num[i + j] ^= QRMath.gexp(QRMath.glog(_this.getAt(i) ) + QRMath.glog(e.getAt(j) ) );
+        }
+      }
+
+      return qrPolynomial(num, 0);
+    };
+
+    _this.mod = function(e) {
+
+      if (_this.getLength() - e.getLength() < 0) {
+        return _this;
+      }
+
+      var ratio = QRMath.glog(_this.getAt(0) ) - QRMath.glog(e.getAt(0) );
+
+      var num = new Array(_this.getLength() );
+      for (var i = 0; i < _this.getLength(); i += 1) {
+        num[i] = _this.getAt(i);
+      }
+
+      for (var i = 0; i < e.getLength(); i += 1) {
+        num[i] ^= QRMath.gexp(QRMath.glog(e.getAt(i) ) + ratio);
+      }
+
+      // recursive call
+      return qrPolynomial(num, 0).mod(e);
+    };
+
+    return _this;
+  };
+
+  //---------------------------------------------------------------------
+  // QRRSBlock
+  //---------------------------------------------------------------------
+
+  var QRRSBlock = function() {
+
+    var RS_BLOCK_TABLE = [
+
+      // L
+      // M
+      // Q
+      // H
+
+      // 1
+      [1, 26, 19],
+      [1, 26, 16],
+      [1, 26, 13],
+      [1, 26, 9],
+
+      // 2
+      [1, 44, 34],
+      [1, 44, 28],
+      [1, 44, 22],
+      [1, 44, 16],
+
+      // 3
+      [1, 70, 55],
+      [1, 70, 44],
+      [2, 35, 17],
+      [2, 35, 13],
+
+      // 4
+      [1, 100, 80],
+      [2, 50, 32],
+      [2, 50, 24],
+      [4, 25, 9],
+
+      // 5
+      [1, 134, 108],
+      [2, 67, 43],
+      [2, 33, 15, 2, 34, 16],
+      [2, 33, 11, 2, 34, 12],
+
+      // 6
+      [2, 86, 68],
+      [4, 43, 27],
+      [4, 43, 19],
+      [4, 43, 15],
+
+      // 7
+      [2, 98, 78],
+      [4, 49, 31],
+      [2, 32, 14, 4, 33, 15],
+      [4, 39, 13, 1, 40, 14],
+
+      // 8
+      [2, 121, 97],
+      [2, 60, 38, 2, 61, 39],
+      [4, 40, 18, 2, 41, 19],
+      [4, 40, 14, 2, 41, 15],
+
+      // 9
+      [2, 146, 116],
+      [3, 58, 36, 2, 59, 37],
+      [4, 36, 16, 4, 37, 17],
+      [4, 36, 12, 4, 37, 13],
+
+      // 10
+      [2, 86, 68, 2, 87, 69],
+      [4, 69, 43, 1, 70, 44],
+      [6, 43, 19, 2, 44, 20],
+      [6, 43, 15, 2, 44, 16],
+
+      // 11
+      [4, 101, 81],
+      [1, 80, 50, 4, 81, 51],
+      [4, 50, 22, 4, 51, 23],
+      [3, 36, 12, 8, 37, 13],
+
+      // 12
+      [2, 116, 92, 2, 117, 93],
+      [6, 58, 36, 2, 59, 37],
+      [4, 46, 20, 6, 47, 21],
+      [7, 42, 14, 4, 43, 15],
+
+      // 13
+      [4, 133, 107],
+      [8, 59, 37, 1, 60, 38],
+      [8, 44, 20, 4, 45, 21],
+      [12, 33, 11, 4, 34, 12],
+
+      // 14
+      [3, 145, 115, 1, 146, 116],
+      [4, 64, 40, 5, 65, 41],
+      [11, 36, 16, 5, 37, 17],
+      [11, 36, 12, 5, 37, 13],
+
+      // 15
+      [5, 109, 87, 1, 110, 88],
+      [5, 65, 41, 5, 66, 42],
+      [5, 54, 24, 7, 55, 25],
+      [11, 36, 12, 7, 37, 13],
+
+      // 16
+      [5, 122, 98, 1, 123, 99],
+      [7, 73, 45, 3, 74, 46],
+      [15, 43, 19, 2, 44, 20],
+      [3, 45, 15, 13, 46, 16],
+
+      // 17
+      [1, 135, 107, 5, 136, 108],
+      [10, 74, 46, 1, 75, 47],
+      [1, 50, 22, 15, 51, 23],
+      [2, 42, 14, 17, 43, 15],
+
+      // 18
+      [5, 150, 120, 1, 151, 121],
+      [9, 69, 43, 4, 70, 44],
+      [17, 50, 22, 1, 51, 23],
+      [2, 42, 14, 19, 43, 15],
+
+      // 19
+      [3, 141, 113, 4, 142, 114],
+      [3, 70, 44, 11, 71, 45],
+      [17, 47, 21, 4, 48, 22],
+      [9, 39, 13, 16, 40, 14],
+
+      // 20
+      [3, 135, 107, 5, 136, 108],
+      [3, 67, 41, 13, 68, 42],
+      [15, 54, 24, 5, 55, 25],
+      [15, 43, 15, 10, 44, 16],
+
+      // 21
+      [4, 144, 116, 4, 145, 117],
+      [17, 68, 42],
+      [17, 50, 22, 6, 51, 23],
+      [19, 46, 16, 6, 47, 17],
+
+      // 22
+      [2, 139, 111, 7, 140, 112],
+      [17, 74, 46],
+      [7, 54, 24, 16, 55, 25],
+      [34, 37, 13],
+
+      // 23
+      [4, 151, 121, 5, 152, 122],
+      [4, 75, 47, 14, 76, 48],
+      [11, 54, 24, 14, 55, 25],
+      [16, 45, 15, 14, 46, 16],
+
+      // 24
+      [6, 147, 117, 4, 148, 118],
+      [6, 73, 45, 14, 74, 46],
+      [11, 54, 24, 16, 55, 25],
+      [30, 46, 16, 2, 47, 17],
+
+      // 25
+      [8, 132, 106, 4, 133, 107],
+      [8, 75, 47, 13, 76, 48],
+      [7, 54, 24, 22, 55, 25],
+      [22, 45, 15, 13, 46, 16],
+
+      // 26
+      [10, 142, 114, 2, 143, 115],
+      [19, 74, 46, 4, 75, 47],
+      [28, 50, 22, 6, 51, 23],
+      [33, 46, 16, 4, 47, 17],
+
+      // 27
+      [8, 152, 122, 4, 153, 123],
+      [22, 73, 45, 3, 74, 46],
+      [8, 53, 23, 26, 54, 24],
+      [12, 45, 15, 28, 46, 16],
+
+      // 28
+      [3, 147, 117, 10, 148, 118],
+      [3, 73, 45, 23, 74, 46],
+      [4, 54, 24, 31, 55, 25],
+      [11, 45, 15, 31, 46, 16],
+
+      // 29
+      [7, 146, 116, 7, 147, 117],
+      [21, 73, 45, 7, 74, 46],
+      [1, 53, 23, 37, 54, 24],
+      [19, 45, 15, 26, 46, 16],
+
+      // 30
+      [5, 145, 115, 10, 146, 116],
+      [19, 75, 47, 10, 76, 48],
+      [15, 54, 24, 25, 55, 25],
+      [23, 45, 15, 25, 46, 16],
+
+      // 31
+      [13, 145, 115, 3, 146, 116],
+      [2, 74, 46, 29, 75, 47],
+      [42, 54, 24, 1, 55, 25],
+      [23, 45, 15, 28, 46, 16],
+
+      // 32
+      [17, 145, 115],
+      [10, 74, 46, 23, 75, 47],
+      [10, 54, 24, 35, 55, 25],
+      [19, 45, 15, 35, 46, 16],
+
+      // 33
+      [17, 145, 115, 1, 146, 116],
+      [14, 74, 46, 21, 75, 47],
+      [29, 54, 24, 19, 55, 25],
+      [11, 45, 15, 46, 46, 16],
+
+      // 34
+      [13, 145, 115, 6, 146, 116],
+      [14, 74, 46, 23, 75, 47],
+      [44, 54, 24, 7, 55, 25],
+      [59, 46, 16, 1, 47, 17],
+
+      // 35
+      [12, 151, 121, 7, 152, 122],
+      [12, 75, 47, 26, 76, 48],
+      [39, 54, 24, 14, 55, 25],
+      [22, 45, 15, 41, 46, 16],
+
+      // 36
+      [6, 151, 121, 14, 152, 122],
+      [6, 75, 47, 34, 76, 48],
+      [46, 54, 24, 10, 55, 25],
+      [2, 45, 15, 64, 46, 16],
+
+      // 37
+      [17, 152, 122, 4, 153, 123],
+      [29, 74, 46, 14, 75, 47],
+      [49, 54, 24, 10, 55, 25],
+      [24, 45, 15, 46, 46, 16],
+
+      // 38
+      [4, 152, 122, 18, 153, 123],
+      [13, 74, 46, 32, 75, 47],
+      [48, 54, 24, 14, 55, 25],
+      [42, 45, 15, 32, 46, 16],
+
+      // 39
+      [20, 147, 117, 4, 148, 118],
+      [40, 75, 47, 7, 76, 48],
+      [43, 54, 24, 22, 55, 25],
+      [10, 45, 15, 67, 46, 16],
+
+      // 40
+      [19, 148, 118, 6, 149, 119],
+      [18, 75, 47, 31, 76, 48],
+      [34, 54, 24, 34, 55, 25],
+      [20, 45, 15, 61, 46, 16]
+    ];
+
+    var qrRSBlock = function(totalCount, dataCount) {
+      var _this = {};
+      _this.totalCount = totalCount;
+      _this.dataCount = dataCount;
+      return _this;
+    };
+
+    var _this = {};
+
+    var getRsBlockTable = function(typeNumber, errorCorrectionLevel) {
+
+      switch(errorCorrectionLevel) {
+      case QRErrorCorrectionLevel.L :
+        return RS_BLOCK_TABLE[(typeNumber - 1) * 4 + 0];
+      case QRErrorCorrectionLevel.M :
+        return RS_BLOCK_TABLE[(typeNumber - 1) * 4 + 1];
+      case QRErrorCorrectionLevel.Q :
+        return RS_BLOCK_TABLE[(typeNumber - 1) * 4 + 2];
+      case QRErrorCorrectionLevel.H :
+        return RS_BLOCK_TABLE[(typeNumber - 1) * 4 + 3];
+      default :
+        return undefined;
+      }
+    };
+
+    _this.getRSBlocks = function(typeNumber, errorCorrectionLevel) {
+
+      var rsBlock = getRsBlockTable(typeNumber, errorCorrectionLevel);
+
+      if (typeof rsBlock == 'undefined') {
+        throw 'bad rs block @ typeNumber:' + typeNumber +
+            '/errorCorrectionLevel:' + errorCorrectionLevel;
+      }
+
+      var length = rsBlock.length / 3;
+
+      var list = [];
+
+      for (var i = 0; i < length; i += 1) {
+
+        var count = rsBlock[i * 3 + 0];
+        var totalCount = rsBlock[i * 3 + 1];
+        var dataCount = rsBlock[i * 3 + 2];
+
+        for (var j = 0; j < count; j += 1) {
+          list.push(qrRSBlock(totalCount, dataCount) );
+        }
+      }
+
+      return list;
+    };
+
+    return _this;
+  }();
+
+  //---------------------------------------------------------------------
+  // qrBitBuffer
+  //---------------------------------------------------------------------
+
+  var qrBitBuffer = function() {
+
+    var _buffer = [];
+    var _length = 0;
+
+    var _this = {};
+
+    _this.getBuffer = function() {
+      return _buffer;
+    };
+
+    _this.getAt = function(index) {
+      var bufIndex = Math.floor(index / 8);
+      return ( (_buffer[bufIndex] >>> (7 - index % 8) ) & 1) == 1;
+    };
+
+    _this.put = function(num, length) {
+      for (var i = 0; i < length; i += 1) {
+        _this.putBit( ( (num >>> (length - i - 1) ) & 1) == 1);
+      }
+    };
+
+    _this.getLengthInBits = function() {
+      return _length;
+    };
+
+    _this.putBit = function(bit) {
+
+      var bufIndex = Math.floor(_length / 8);
+      if (_buffer.length <= bufIndex) {
+        _buffer.push(0);
+      }
+
+      if (bit) {
+        _buffer[bufIndex] |= (0x80 >>> (_length % 8) );
+      }
+
+      _length += 1;
+    };
+
+    return _this;
+  };
+
+  //---------------------------------------------------------------------
+  // qrNumber
+  //---------------------------------------------------------------------
+
+  var qrNumber = function(data) {
+
+    var _mode = QRMode.MODE_NUMBER;
+    var _data = data;
+
+    var _this = {};
+
+    _this.getMode = function() {
+      return _mode;
+    };
+
+    _this.getLength = function(buffer) {
+      return _data.length;
+    };
+
+    _this.write = function(buffer) {
+
+      var data = _data;
+
+      var i = 0;
+
+      while (i + 2 < data.length) {
+        buffer.put(strToNum(data.substring(i, i + 3) ), 10);
+        i += 3;
+      }
+
+      if (i < data.length) {
+        if (data.length - i == 1) {
+          buffer.put(strToNum(data.substring(i, i + 1) ), 4);
+        } else if (data.length - i == 2) {
+          buffer.put(strToNum(data.substring(i, i + 2) ), 7);
+        }
+      }
+    };
+
+    var strToNum = function(s) {
+      var num = 0;
+      for (var i = 0; i < s.length; i += 1) {
+        num = num * 10 + chatToNum(s.charAt(i) );
+      }
+      return num;
+    };
+
+    var chatToNum = function(c) {
+      if ('0' <= c && c <= '9') {
+        return c.charCodeAt(0) - '0'.charCodeAt(0);
+      }
+      throw 'illegal char :' + c;
+    };
+
+    return _this;
+  };
+
+  //---------------------------------------------------------------------
+  // qrAlphaNum
+  //---------------------------------------------------------------------
+
+  var qrAlphaNum = function(data) {
+
+    var _mode = QRMode.MODE_ALPHA_NUM;
+    var _data = data;
+
+    var _this = {};
+
+    _this.getMode = function() {
+      return _mode;
+    };
+
+    _this.getLength = function(buffer) {
+      return _data.length;
+    };
+
+    _this.write = function(buffer) {
+
+      var s = _data;
+
+      var i = 0;
+
+      while (i + 1 < s.length) {
+        buffer.put(
+          getCode(s.charAt(i) ) * 45 +
+          getCode(s.charAt(i + 1) ), 11);
+        i += 2;
+      }
+
+      if (i < s.length) {
+        buffer.put(getCode(s.charAt(i) ), 6);
+      }
+    };
+
+    var getCode = function(c) {
+
+      if ('0' <= c && c <= '9') {
+        return c.charCodeAt(0) - '0'.charCodeAt(0);
+      } else if ('A' <= c && c <= 'Z') {
+        return c.charCodeAt(0) - 'A'.charCodeAt(0) + 10;
+      } else {
+        switch (c) {
+        case ' ' : return 36;
+        case '$' : return 37;
+        case '%' : return 38;
+        case '*' : return 39;
+        case '+' : return 40;
+        case '-' : return 41;
+        case '.' : return 42;
+        case '/' : return 43;
+        case ':' : return 44;
+        default :
+          throw 'illegal char :' + c;
+        }
+      }
+    };
+
+    return _this;
+  };
+
+  //---------------------------------------------------------------------
+  // qr8BitByte
+  //---------------------------------------------------------------------
+
+  var qr8BitByte = function(data) {
+
+    var _mode = QRMode.MODE_8BIT_BYTE;
+    var _data = data;
+    var _bytes = qrcode.stringToBytes(data);
+
+    var _this = {};
+
+    _this.getMode = function() {
+      return _mode;
+    };
+
+    _this.getLength = function(buffer) {
+      return _bytes.length;
+    };
+
+    _this.write = function(buffer) {
+      for (var i = 0; i < _bytes.length; i += 1) {
+        buffer.put(_bytes[i], 8);
+      }
+    };
+
+    return _this;
+  };
+
+  //---------------------------------------------------------------------
+  // qrKanji
+  //---------------------------------------------------------------------
+
+  var qrKanji = function(data) {
+
+    var _mode = QRMode.MODE_KANJI;
+    var _data = data;
+
+    var stringToBytes = qrcode.stringToBytesFuncs['SJIS'];
+    if (!stringToBytes) {
+      throw 'sjis not supported.';
+    }
+    !function(c, code) {
+      // self test for sjis support.
+      var test = stringToBytes(c);
+      if (test.length != 2 || ( (test[0] << 8) | test[1]) != code) {
+        throw 'sjis not supported.';
+      }
+    }('\u53cb', 0x9746);
+
+    var _bytes = stringToBytes(data);
+
+    var _this = {};
+
+    _this.getMode = function() {
+      return _mode;
+    };
+
+    _this.getLength = function(buffer) {
+      return ~~(_bytes.length / 2);
+    };
+
+    _this.write = function(buffer) {
+
+      var data = _bytes;
+
+      var i = 0;
+
+      while (i + 1 < data.length) {
+
+        var c = ( (0xff & data[i]) << 8) | (0xff & data[i + 1]);
+
+        if (0x8140 <= c && c <= 0x9FFC) {
+          c -= 0x8140;
+        } else if (0xE040 <= c && c <= 0xEBBF) {
+          c -= 0xC140;
+        } else {
+          throw 'illegal char at ' + (i + 1) + '/' + c;
+        }
+
+        c = ( (c >>> 8) & 0xff) * 0xC0 + (c & 0xff);
+
+        buffer.put(c, 13);
+
+        i += 2;
+      }
+
+      if (i < data.length) {
+        throw 'illegal char at ' + (i + 1);
+      }
+    };
+
+    return _this;
+  };
+
+  //=====================================================================
+  // GIF Support etc.
+  //
+
+  //---------------------------------------------------------------------
+  // byteArrayOutputStream
+  //---------------------------------------------------------------------
+
+  var byteArrayOutputStream = function() {
+
+    var _bytes = [];
+
+    var _this = {};
+
+    _this.writeByte = function(b) {
+      _bytes.push(b & 0xff);
+    };
+
+    _this.writeShort = function(i) {
+      _this.writeByte(i);
+      _this.writeByte(i >>> 8);
+    };
+
+    _this.writeBytes = function(b, off, len) {
+      off = off || 0;
+      len = len || b.length;
+      for (var i = 0; i < len; i += 1) {
+        _this.writeByte(b[i + off]);
+      }
+    };
+
+    _this.writeString = function(s) {
+      for (var i = 0; i < s.length; i += 1) {
+        _this.writeByte(s.charCodeAt(i) );
+      }
+    };
+
+    _this.toByteArray = function() {
+      return _bytes;
+    };
+
+    _this.toString = function() {
+      var s = '';
+      s += '[';
+      for (var i = 0; i < _bytes.length; i += 1) {
+        if (i > 0) {
+          s += ',';
+        }
+        s += _bytes[i];
+      }
+      s += ']';
+      return s;
+    };
+
+    return _this;
+  };
+
+  //---------------------------------------------------------------------
+  // base64EncodeOutputStream
+  //---------------------------------------------------------------------
+
+  var base64EncodeOutputStream = function() {
+
+    var _buffer = 0;
+    var _buflen = 0;
+    var _length = 0;
+    var _base64 = '';
+
+    var _this = {};
+
+    var writeEncoded = function(b) {
+      _base64 += String.fromCharCode(encode(b & 0x3f) );
+    };
+
+    var encode = function(n) {
+      if (n < 0) {
+        // error.
+      } else if (n < 26) {
+        return 0x41 + n;
+      } else if (n < 52) {
+        return 0x61 + (n - 26);
+      } else if (n < 62) {
+        return 0x30 + (n - 52);
+      } else if (n == 62) {
+        return 0x2b;
+      } else if (n == 63) {
+        return 0x2f;
+      }
+      throw 'n:' + n;
+    };
+
+    _this.writeByte = function(n) {
+
+      _buffer = (_buffer << 8) | (n & 0xff);
+      _buflen += 8;
+      _length += 1;
+
+      while (_buflen >= 6) {
+        writeEncoded(_buffer >>> (_buflen - 6) );
+        _buflen -= 6;
+      }
+    };
+
+    _this.flush = function() {
+
+      if (_buflen > 0) {
+        writeEncoded(_buffer << (6 - _buflen) );
+        _buffer = 0;
+        _buflen = 0;
+      }
+
+      if (_length % 3 != 0) {
+        // padding
+        var padlen = 3 - _length % 3;
+        for (var i = 0; i < padlen; i += 1) {
+          _base64 += '=';
+        }
+      }
+    };
+
+    _this.toString = function() {
+      return _base64;
+    };
+
+    return _this;
+  };
+
+  //---------------------------------------------------------------------
+  // base64DecodeInputStream
+  //---------------------------------------------------------------------
+
+  var base64DecodeInputStream = function(str) {
+
+    var _str = str;
+    var _pos = 0;
+    var _buffer = 0;
+    var _buflen = 0;
+
+    var _this = {};
+
+    _this.read = function() {
+
+      while (_buflen < 8) {
+
+        if (_pos >= _str.length) {
+          if (_buflen == 0) {
+            return -1;
+          }
+          throw 'unexpected end of file./' + _buflen;
+        }
+
+        var c = _str.charAt(_pos);
+        _pos += 1;
+
+        if (c == '=') {
+          _buflen = 0;
+          return -1;
+        } else if (c.match(/^\s$/) ) {
+          // ignore if whitespace.
+          continue;
+        }
+
+        _buffer = (_buffer << 6) | decode(c.charCodeAt(0) );
+        _buflen += 6;
+      }
+
+      var n = (_buffer >>> (_buflen - 8) ) & 0xff;
+      _buflen -= 8;
+      return n;
+    };
+
+    var decode = function(c) {
+      if (0x41 <= c && c <= 0x5a) {
+        return c - 0x41;
+      } else if (0x61 <= c && c <= 0x7a) {
+        return c - 0x61 + 26;
+      } else if (0x30 <= c && c <= 0x39) {
+        return c - 0x30 + 52;
+      } else if (c == 0x2b) {
+        return 62;
+      } else if (c == 0x2f) {
+        return 63;
+      } else {
+        throw 'c:' + c;
+      }
+    };
+
+    return _this;
+  };
+
+  //---------------------------------------------------------------------
+  // gifImage (B/W)
+  //---------------------------------------------------------------------
+
+  var gifImage = function(width, height) {
+
+    var _width = width;
+    var _height = height;
+    var _data = new Array(width * height);
+
+    var _this = {};
+
+    _this.setPixel = function(x, y, pixel) {
+      _data[y * _width + x] = pixel;
+    };
+
+    _this.write = function(out) {
+
+      //---------------------------------
+      // GIF Signature
+
+      out.writeString('GIF87a');
+
+      //---------------------------------
+      // Screen Descriptor
+
+      out.writeShort(_width);
+      out.writeShort(_height);
+
+      out.writeByte(0x80); // 2bit
+      out.writeByte(0);
+      out.writeByte(0);
+
+      //---------------------------------
+      // Global Color Map
+
+      // black
+      out.writeByte(0x00);
+      out.writeByte(0x00);
+      out.writeByte(0x00);
+
+      // white
+      out.writeByte(0xff);
+      out.writeByte(0xff);
+      out.writeByte(0xff);
+
+      //---------------------------------
+      // Image Descriptor
+
+      out.writeString(',');
+      out.writeShort(0);
+      out.writeShort(0);
+      out.writeShort(_width);
+      out.writeShort(_height);
+      out.writeByte(0);
+
+      //---------------------------------
+      // Local Color Map
+
+      //---------------------------------
+      // Raster Data
+
+      var lzwMinCodeSize = 2;
+      var raster = getLZWRaster(lzwMinCodeSize);
+
+      out.writeByte(lzwMinCodeSize);
+
+      var offset = 0;
+
+      while (raster.length - offset > 255) {
+        out.writeByte(255);
+        out.writeBytes(raster, offset, 255);
+        offset += 255;
+      }
+
+      out.writeByte(raster.length - offset);
+      out.writeBytes(raster, offset, raster.length - offset);
+      out.writeByte(0x00);
+
+      //---------------------------------
+      // GIF Terminator
+      out.writeString(';');
+    };
+
+    var bitOutputStream = function(out) {
+
+      var _out = out;
+      var _bitLength = 0;
+      var _bitBuffer = 0;
+
+      var _this = {};
+
+      _this.write = function(data, length) {
+
+        if ( (data >>> length) != 0) {
+          throw 'length over';
+        }
+
+        while (_bitLength + length >= 8) {
+          _out.writeByte(0xff & ( (data << _bitLength) | _bitBuffer) );
+          length -= (8 - _bitLength);
+          data >>>= (8 - _bitLength);
+          _bitBuffer = 0;
+          _bitLength = 0;
+        }
+
+        _bitBuffer = (data << _bitLength) | _bitBuffer;
+        _bitLength = _bitLength + length;
+      };
+
+      _this.flush = function() {
+        if (_bitLength > 0) {
+          _out.writeByte(_bitBuffer);
+        }
+      };
+
+      return _this;
+    };
+
+    var getLZWRaster = function(lzwMinCodeSize) {
+
+      var clearCode = 1 << lzwMinCodeSize;
+      var endCode = (1 << lzwMinCodeSize) + 1;
+      var bitLength = lzwMinCodeSize + 1;
+
+      // Setup LZWTable
+      var table = lzwTable();
+
+      for (var i = 0; i < clearCode; i += 1) {
+        table.add(String.fromCharCode(i) );
+      }
+      table.add(String.fromCharCode(clearCode) );
+      table.add(String.fromCharCode(endCode) );
+
+      var byteOut = byteArrayOutputStream();
+      var bitOut = bitOutputStream(byteOut);
+
+      // clear code
+      bitOut.write(clearCode, bitLength);
+
+      var dataIndex = 0;
+
+      var s = String.fromCharCode(_data[dataIndex]);
+      dataIndex += 1;
+
+      while (dataIndex < _data.length) {
+
+        var c = String.fromCharCode(_data[dataIndex]);
+        dataIndex += 1;
+
+        if (table.contains(s + c) ) {
+
+          s = s + c;
+
+        } else {
+
+          bitOut.write(table.indexOf(s), bitLength);
+
+          if (table.size() < 0xfff) {
+
+            if (table.size() == (1 << bitLength) ) {
+              bitLength += 1;
+            }
+
+            table.add(s + c);
+          }
+
+          s = c;
+        }
+      }
+
+      bitOut.write(table.indexOf(s), bitLength);
+
+      // end code
+      bitOut.write(endCode, bitLength);
+
+      bitOut.flush();
+
+      return byteOut.toByteArray();
+    };
+
+    var lzwTable = function() {
+
+      var _map = {};
+      var _size = 0;
+
+      var _this = {};
+
+      _this.add = function(key) {
+        if (_this.contains(key) ) {
+          throw 'dup key:' + key;
+        }
+        _map[key] = _size;
+        _size += 1;
+      };
+
+      _this.size = function() {
+        return _size;
+      };
+
+      _this.indexOf = function(key) {
+        return _map[key];
+      };
+
+      _this.contains = function(key) {
+        return typeof _map[key] != 'undefined';
+      };
+
+      return _this;
+    };
+
+    return _this;
+  };
+
+  var createDataURL = function(width, height, getPixel) {
+    var gif = gifImage(width, height);
+    for (var y = 0; y < height; y += 1) {
+      for (var x = 0; x < width; x += 1) {
+        gif.setPixel(x, y, getPixel(x, y) );
+      }
+    }
+
+    var b = byteArrayOutputStream();
+    gif.write(b);
+
+    var base64 = base64EncodeOutputStream();
+    var bytes = b.toByteArray();
+    for (var i = 0; i < bytes.length; i += 1) {
+      base64.writeByte(bytes[i]);
+    }
+    base64.flush();
+
+    return 'data:image/gif;base64,' + base64;
+  };
+
+  //---------------------------------------------------------------------
+  // returns qrcode function.
+
+  return qrcode;
+}();
+
+// multibyte support
+!function() {
+
+  qrcode.stringToBytesFuncs['UTF-8'] = function(s) {
+    // http://stackoverflow.com/questions/18729405/how-to-convert-utf8-string-to-byte-array
+    function toUTF8Array(str) {
+      var utf8 = [];
+      for (var i=0; i < str.length; i++) {
+        var charcode = str.charCodeAt(i);
+        if (charcode < 0x80) utf8.push(charcode);
+        else if (charcode < 0x800) {
+          utf8.push(0xc0 | (charcode >> 6),
+              0x80 | (charcode & 0x3f));
+        }
+        else if (charcode < 0xd800 || charcode >= 0xe000) {
+          utf8.push(0xe0 | (charcode >> 12),
+              0x80 | ((charcode>>6) & 0x3f),
+              0x80 | (charcode & 0x3f));
+        }
+        // surrogate pair
+        else {
+          i++;
+          // UTF-16 encodes 0x10000-0x10FFFF by
+          // subtracting 0x10000 and splitting the
+          // 20 bits of 0x0-0xFFFFF into two halves
+          charcode = 0x10000 + (((charcode & 0x3ff)<<10)
+            | (str.charCodeAt(i) & 0x3ff));
+          utf8.push(0xf0 | (charcode >>18),
+              0x80 | ((charcode>>12) & 0x3f),
+              0x80 | ((charcode>>6) & 0x3f),
+              0x80 | (charcode & 0x3f));
+        }
+      }
+      return utf8;
+    }
+    return toUTF8Array(s);
+  };
+
+}();
+
+(function (factory) {
+  if (typeof define === 'function' && define.amd) {
+      define([], factory);
+  } else if (typeof exports === 'object') {
+      module.exports = factory();
+  }
+}(function () {
+    return qrcode;
+}));
+</script>
+<script>
+let mathsgoPreparedShare=null;
+let mathsgoPreparedQr=null;
+
+function mathsgoSetSeriesMessage(message,kind=''){
+  const box=document.getElementById('seriesMessage');if(!box)return;
+  box.textContent=message||'';box.className='series-message'+(kind?' '+kind:'');box.hidden=!message;
+}
+
+function mathsgoSetSharePanel(open){
+  const panel=document.getElementById('sharePanel');if(panel)panel.hidden=!open;
+  const button=document.getElementById('shareButton');if(button)button.setAttribute('aria-expanded',open?'true':'false');
+}
+
+function prepareSeriesShare(){
+  try{
+    const definition=readSeriesDefinitionFromUi();
+    const code=encodeSeriesDefinition(definition);
+    const link=linkForSeriesDefinition(definition);
+    mathsgoPreparedShare={definition,code,link};mathsgoPreparedQr=null;
+    document.getElementById('shareCode').value=code;
+    document.getElementById('shareLink').value=link;
+    const qrBox=document.getElementById('qrBox');if(qrBox){qrBox.hidden=true;qrBox.replaceChildren();}
+    mathsgoSetSharePanel(true);mathsgoSetSeriesMessage('Lien prêt. Cette série ne contient aucune donnée personnelle.','good');
+  }catch(error){mathsgoSetSeriesMessage(error&&error.message?error.message:'Impossible de préparer le partage.','bad');}
+}
+
+function closeSeriesShare(){mathsgoSetSharePanel(false);}
+
+async function mathsgoCopyText(value,label){
+  try{
+    if(navigator.clipboard&&window.isSecureContext) await navigator.clipboard.writeText(value);
+    else{
+      const helper=document.createElement('textarea');helper.value=value;helper.setAttribute('readonly','');helper.style.position='fixed';helper.style.opacity='0';document.body.append(helper);helper.select();
+      if(!document.execCommand('copy')) throw new Error('copy');helper.remove();
+    }
+    mathsgoSetSeriesMessage(label+' copié.','good');
+  }catch(error){mathsgoSetSeriesMessage('La copie automatique a échoué. Sélectionne le texte puis copie-le.','bad');}
+}
+
+function copySeriesCode(){if(mathsgoPreparedShare)mathsgoCopyText(mathsgoPreparedShare.code,'Code');}
+function copySeriesLink(){if(mathsgoPreparedShare)mathsgoCopyText(mathsgoPreparedShare.link,'Lien');}
+
+function mathsgoBuildQr(value){
+  if(typeof qrcode!=='function') throw new Error('Le générateur de QR code n’est pas disponible.');
+  const qr=qrcode(0,'M');qr.addData(value,'Byte');qr.make();return qr;
+}
+
+function showSeriesQr(){
+  try{
+    if(!mathsgoPreparedShare) prepareSeriesShare();
+    if(!mathsgoPreparedShare) return;
+    mathsgoPreparedQr=mathsgoBuildQr(mathsgoPreparedShare.link);
+    const box=document.getElementById('qrBox');box.innerHTML=mathsgoPreparedQr.createSvgTag({cellSize:6,margin:4,scalable:true});box.hidden=false;
+    box.querySelector('svg')?.setAttribute('aria-label','QR code de la série');
+  }catch(error){mathsgoSetSeriesMessage(error&&error.message?error.message:'Impossible de créer le QR code.','bad');}
+}
+
+function downloadSeriesQr(){
+  try{
+    if(!mathsgoPreparedShare) prepareSeriesShare();
+    if(!mathsgoPreparedShare) return;
+    if(!mathsgoPreparedQr) mathsgoPreparedQr=mathsgoBuildQr(mathsgoPreparedShare.link);
+    const margin=4,cell=9,count=mathsgoPreparedQr.getModuleCount(),size=(count+margin*2)*cell;
+    const canvas=document.createElement('canvas');canvas.width=size;canvas.height=size;
+    const context=canvas.getContext('2d');context.fillStyle='#fff';context.fillRect(0,0,size,size);context.fillStyle='#000';
+    for(let row=0;row<count;row++)for(let col=0;col<count;col++)if(mathsgoPreparedQr.isDark(row,col))context.fillRect((col+margin)*cell,(row+margin)*cell,cell,cell);
+    const link=document.createElement('a');link.download='serie-mathsgo-'+seriesIdForDefinition(mathsgoPreparedShare.definition)+'.png';link.href=canvas.toDataURL('image/png');link.click();
+  }catch(error){mathsgoSetSeriesMessage(error&&error.message?error.message:'Impossible d’enregistrer le QR code.','bad');}
+}
+
+function openSeriesFromEntry(){
+  const input=document.getElementById('seriesCodeInput');
+  try{
+    const definition=decodeSeriesDefinition(input.value);
+    applySeriesDefinitionToUi(definition);
+    generateFromDefinition(definition,{sameTab:true});
+  }catch(error){mathsgoSetSeriesMessage(error&&error.message?error.message:'Impossible d’ouvrir cette série.','bad');}
+}
+
+function openSharedSeriesFromLocation(){
+  const params=new URLSearchParams(location.hash.replace(/^#/,''));
+  if(!params.has('s')) return false;
+  try{
+    const definition=decodeSeriesDefinition(location.href);
+    applySeriesDefinitionToUi(definition);
+    setTimeout(()=>generateFromDefinition(definition,{sameTab:true}),0);
+    return true;
+  }catch(error){
+    mathsgoSetSeriesMessage(error&&error.message?error.message:'Le lien de série est invalide.','bad');
+    return false;
+  }
+}
+
+document.getElementById('seriesCodeInput')?.addEventListener('keydown',event=>{if(event.key==='Enter'){event.preventDefault();openSeriesFromEntry();}});
+openSharedSeriesFromLocation();
 </script>
 </body>
 </html>
