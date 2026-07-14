@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <meta name="theme-color" content="#f5f7fb">
-<title>Automatismes maths cycle 4 et DNB — version 25.3 | maths&amp;go</title>
+<title>Automatismes maths cycle 4 et DNB — version 1.4 | maths&amp;go</title>
 <meta name="description" content="Outil d’automatismes de mathématiques pour le cycle 4 et le DNB : entraînez vos élèves en vidéoprojection ou sur téléphone, avec aides et corrections.">
 <style>
 :root {
@@ -27,7 +27,7 @@ body{margin:0;font-family:Arial,"Helvetica Neue",Helvetica,sans-serif;background
 .title h1{margin:0;font-size:1.45rem;line-height:1.05;color:var(--blue);text-align:center}
 .title h1 .title-cycle{display:block;margin-top:.18em;font-size:.72em;letter-spacing:.02em}
 .title p{margin:.25rem 0 0;color:var(--muted);font-size:.95rem}
-.revision-badge{display:block;width:max-content;margin:6px auto 0;padding:2px 8px;border:1px solid #cfdced;border-radius:999px;background:#f7faff;color:#61708f;font-size:.68rem;font-weight:800;letter-spacing:.02em}
+.revision-badge{display:block;width:max-content;margin:5px auto 0;color:#7b879b;font-size:.66rem;font-weight:650;letter-spacing:.035em}
 .panel{margin-top:14px;background:white;border:1px solid var(--line);border-radius:18px;padding:14px;box-shadow:var(--shadow);}
 .controls-row{display:flex;align-items:flex-end;gap:8px;flex-wrap:wrap}
 .controls-row .field-level{flex:1 1 230px}.controls-row .field-visual{flex:1 1 150px}.controls-row .field-experience{flex:1 1 205px}.controls-row .field-count{flex:1 1 170px}.controls-row .field-seed{flex:0 1 105px}.controls-row .field-generate{flex:0 0 auto}
@@ -89,7 +89,7 @@ button.orange{background:var(--orange)}
     </a>
     <div class="title">
       <h1>Automatismes<span class="title-cycle">Cycle 4 – DNB</span></h1>
-      <span class="revision-badge">V25.3</span>
+      <span class="revision-badge">V1.4</span>
     </div>
   </div>
 
@@ -4379,6 +4379,21 @@ function configureProportionModule(){
 }
 configureProportionModule();
 
+function configureLegacyStatementTables(){
+  const legacyTable=/(?:<br>|\n\n)?\s*(<table style="border-collapse:collapse;margin:auto;text-align:(?:center|left);font-size:(?:18|20)px">[\s\S]*?<\/table>)(?:<br>)?/g;
+  RAW_MODULES.forEach(module=>{
+    module.questions.forEach(question=>{
+      if(!question.statement||!question.statement.includes('<table style=')) return;
+      const tableClass='legacy-table-'+module.id+'-'+question.n;
+      question.statement=question.statement.replace(legacyTable,(_,table)=>{
+        const classified=table.replace('<table ','<table class="legacy-statement-table '+tableClass+'" ');
+        return '<div class="legacy-statement-table-wrap '+tableClass+'-wrap">'+classified+'</div>';
+      });
+    });
+  });
+}
+configureLegacyStatementTables();
+
 function configureAlreadyReducedQuestion(){
   const mod=RAW_MODULES.find(m=>m.id==='dnb_10');
   if(!mod || mod.questions.some(q=>q.options&&q.options.reduction_kind==='already_reduced')) return;
@@ -4528,6 +4543,20 @@ function configureNumberLineModule(){
   });
 }
 configureNumberLineModule();
+
+function configureCoordinatePointMarkers(){
+  const mod=RAW_MODULES.find(module=>module.id==='dnb_15');
+  if(!mod) return;
+  const pointCircle=/<circle cx="([^"]+)" cy="([^"]+)" r="5" fill="([^"]+)"\/>/g;
+  mod.questions.forEach(question=>{
+    if(!question.statement) return;
+    question.statement=question.statement.replace(pointCircle,(_,cx,cy,color)=>
+      '<g class="coordinate-point-marker" transform="translate('+cx+' '+cy+')" stroke="'+color+'" stroke-width="3.2" stroke-linecap="round">'
+      +'<line x1="-7" y1="0" x2="7" y2="0"/><line x1="0" y1="-7" x2="0" y2="7"/></g>'
+    );
+  });
+}
+configureCoordinatePointMarkers();
 
 const SOLID_NAMES=['un cube','un pavé droit','un prisme droit','un cylindre','une pyramide','un cône','une sphère','une boule'];
 function solidSvg(viewBox,body){
@@ -7084,15 +7113,16 @@ function renderGenericQuestion(inst, correction=false, mode=null){
     footer=stripVisuals(footer,keepPlaceholder);
   }
   const qcm=splitQCM(statement);
+  const questionClass=statement.includes('legacy-statement-table-wrap')?'question legacy-statement-question':'question';
   let html='';
   if(qcm){
-    html += '<div class="question">'+renderMathSegments(qcm.prompt)+'</div>';
+    html += '<div class="'+questionClass+'">'+renderMathSegments(qcm.prompt)+'</div>';
     const corrects=new Set(inst.answers.map(x=>String(x)));
     html += '<div class="options options-'+qcm.opts.length+compactQcmClass(qcm.opts)+'">';
     qcm.opts.forEach((o,i)=>{ const isC=correction && corrects.has(String(i+1)); html+='<div class="opt '+(isC?'correct':'')+'"><strong>'+String.fromCharCode(65+i)+'.</strong> '+renderMathSegments(o)+'</div>'; });
     html += '</div>';
   } else {
-    html += '<div class="question">'+renderMathSegments(statement)+'</div>';
+    html += '<div class="'+questionClass+'">'+renderMathSegments(statement)+'</div>';
   }
   if(footer) html += '<div class="footer">'+renderPlaceholders(footer, inst.answers, correction?'correction':'question')+'</div>';
   return html;
@@ -7322,26 +7352,75 @@ function multipleFormsGridSvg(data,correction=false){
 }
 
 function multipleFormsLineSvg(data){
-  const W=920,H=210,x1=145,x2=855,topY=67,bottomY=135,step=(x2-x1)/20;
-  const lineColor='#17283f';
-  let svg=`<text x="125" y="${topY+6}" text-anchor="end" font-family="Arial,Helvetica,sans-serif" font-size="20" font-weight="850" fill="${lineColor}">décimal</text>`;
-  svg+=`<text x="132" y="${bottomY+6}" text-anchor="end" font-family="Arial,Helvetica,sans-serif" font-size="18" font-weight="850" fill="${lineColor}">pourcentages</text>`;
-  svg+=`<line x1="${x1}" y1="${topY}" x2="${x2}" y2="${topY}" stroke="#17283f" stroke-width="3"/>`;
-  svg+=`<line x1="${x1}" y1="${bottomY}" x2="${x2}" y2="${bottomY}" stroke="${lineColor}" stroke-width="3"/>`;
-  for(let i=0;i<=20;i++){
-    const x=x1+i*step,major=i%10===0;
-    svg+=`<line x1="${x}" y1="${topY-(major?13:8)}" x2="${x}" y2="${topY+(major?13:8)}" stroke="#17283f" stroke-width="${major?2.5:1.35}"/>`;
-    svg+=`<line x1="${x}" y1="${bottomY-(major?13:8)}" x2="${x}" y2="${bottomY+(major?13:8)}" stroke="${lineColor}" stroke-width="${major?2.5:1.35}"/>`;
-    if(major){
-      svg+=`<text x="${x}" y="${topY+34}" text-anchor="middle" font-family="Arial,Helvetica,sans-serif" font-size="19" font-weight="850" fill="#17283f">${i/10}</text>`;
-      svg+=`<text x="${x}" y="${bottomY+38}" text-anchor="middle" font-family="Arial,Helvetica,sans-serif" font-size="19" font-weight="850" fill="${lineColor}">${i*10} %</text>`;
-    }
-  }
+  const W=920,H=350,x1=160,x2=870,step=(x2-x1)/20,lineColor='#17283f';
+  const rows=[
+    {key:'decimal',label:'décimal',y:55,color:'#6b3fa9'},
+    {key:'tenths',label:'dixièmes',y:130,color:'#2761a4'},
+    {key:'hundredths',label:'centièmes',y:205,color:'#b45b12'},
+    {key:'percent',label:'pourcentages',y:280,color:'#087a55'}
+  ];
+  const tenths=Math.round(data.value*10),hundredths=Math.round(data.value*100);
   const markerX=x1+data.value*(x2-x1)/2;
-  svg+=`<line x1="${markerX}" y1="${topY+14}" x2="${markerX}" y2="${bottomY-14}" stroke="#8c73b8" stroke-width="2" stroke-dasharray="5 5"/>`;
-  svg+=`<text x="${markerX}" y="${topY-22}" text-anchor="middle" font-family="Cambria Math,STIX Two Math,Times New Roman,serif" font-size="25" font-weight="850" fill="#6b3fa9">${escapeHtml(fmt(data.value))}</text>`;
-  svg+=`<text x="${markerX}" y="${bottomY+38}" text-anchor="middle" font-family="Arial,Helvetica,sans-serif" font-size="22" font-weight="850" fill="#087a55">${escapeHtml(fmt(data.value*100))} %</text>`;
-  return `<div class="multiple-forms-help multiple-forms-line"><svg class="multiple-forms-svg" viewBox="0 0 ${W} ${H}" role="img" aria-label="Double droite graduée : écriture décimale et pourcentage">${svg}</svg></div>`;
+  const fractionPill=(y,numerator,denominator,color)=>
+    `<g><rect x="${markerX-27}" y="${y-48}" width="54" height="43" rx="9" fill="#ffffff" stroke="${color}" stroke-width="1.4" opacity=".98"/>`
+    +`<text x="${markerX}" y="${y-31}" text-anchor="middle" font-family="Cambria Math,STIX Two Math,Times New Roman,serif" font-size="16" font-weight="850" fill="${color}">${numerator}</text>`
+    +`<line x1="${markerX-12}" y1="${y-25}" x2="${markerX+12}" y2="${y-25}" stroke="${color}" stroke-width="1.8"/>`
+    +`<text x="${markerX}" y="${y-9}" text-anchor="middle" font-family="Cambria Math,STIX Two Math,Times New Roman,serif" font-size="16" font-weight="850" fill="${color}">${denominator}</text></g>`;
+  let svg='';
+  rows.forEach(row=>{
+    svg+=`<text x="142" y="${row.y+6}" text-anchor="end" font-family="Arial,Helvetica,sans-serif" font-size="${row.key==='percent'?17:19}" font-weight="850" fill="${lineColor}">${row.label}</text>`;
+    svg+=`<line x1="${x1}" y1="${row.y}" x2="${x2}" y2="${row.y}" stroke="${lineColor}" stroke-width="3"/>`;
+    for(let i=0;i<=20;i++){
+      const x=x1+i*step,major=i%10===0;
+      svg+=`<line x1="${x}" y1="${row.y-(major?12:7)}" x2="${x}" y2="${row.y+(major?12:7)}" stroke="${lineColor}" stroke-width="${major?2.5:1.3}"/>`;
+      if(major&&(row.key==='decimal'||row.key==='percent')){
+        const label=row.key==='decimal'?String(i/10):(i*10)+' %';
+        svg+=`<text x="${x}" y="${row.y+31}" text-anchor="middle" font-family="Arial,Helvetica,sans-serif" font-size="18" font-weight="850" fill="${lineColor}">${label}</text>`;
+      }
+    }
+    svg+=`<line x1="${markerX}" y1="${row.y-12}" x2="${markerX}" y2="${row.y+12}" stroke="${row.color}" stroke-width="4" stroke-linecap="round"/>`;
+  });
+  svg=`<line x1="${markerX}" y1="69" x2="${markerX}" y2="266" stroke="#8c73b8" stroke-width="2" stroke-dasharray="5 5"/>`+svg;
+  svg+=`<rect x="${markerX-35}" y="18" width="70" height="29" rx="8" fill="#ffffff" stroke="#6b3fa9" stroke-width="1.4"/><text x="${markerX}" y="40" text-anchor="middle" font-family="Cambria Math,STIX Two Math,Times New Roman,serif" font-size="22" font-weight="850" fill="#6b3fa9">${escapeHtml(fmt(data.value))}</text>`;
+  svg+=fractionPill(rows[1].y,tenths,10,rows[1].color);
+  svg+=fractionPill(rows[2].y,hundredths,100,rows[2].color);
+  svg+=`<rect x="${markerX-38}" y="294" width="76" height="31" rx="8" fill="#ffffff" stroke="#087a55" stroke-width="1.4"/><text x="${markerX}" y="317" text-anchor="middle" font-family="Arial,Helvetica,sans-serif" font-size="20" font-weight="850" fill="#087a55">${escapeHtml(fmt(data.value*100))} %</text>`;
+  return `<div class="multiple-forms-help multiple-forms-line"><svg class="multiple-forms-svg multiple-forms-line-desktop" viewBox="0 0 ${W} ${H}" role="img" aria-label="Quatre droites graduées alignant l’écriture décimale, les dixièmes, les centièmes et le pourcentage">${svg}</svg>${multipleFormsLineMobileSvg(data)}</div>`;
+}
+
+function multipleFormsLineMobileSvg(data){
+  const W=390,H=330,x1=88,x2=380,step=(x2-x1)/20,lineColor='#17283f';
+  const rows=[
+    {key:'decimal',label:'décimal',y:48,color:'#6b3fa9'},
+    {key:'tenths',label:'dixièmes',y:118,color:'#2761a4'},
+    {key:'hundredths',label:'centièmes',y:188,color:'#b45b12'},
+    {key:'percent',label:'pourcentages',y:258,color:'#087a55'}
+  ];
+  const markerX=x1+data.value*(x2-x1)/2,tenths=Math.round(data.value*10),hundredths=Math.round(data.value*100);
+  const fractionPill=(y,numerator,denominator,color)=>
+    `<g><rect x="${markerX-21}" y="${y-42}" width="42" height="37" rx="7" fill="#ffffff" stroke="${color}" stroke-width="1.3"/>`
+    +`<text x="${markerX}" y="${y-28}" text-anchor="middle" font-family="Cambria Math,STIX Two Math,Times New Roman,serif" font-size="13" font-weight="850" fill="${color}">${numerator}</text>`
+    +`<line x1="${markerX-10}" y1="${y-23}" x2="${markerX+10}" y2="${y-23}" stroke="${color}" stroke-width="1.6"/>`
+    +`<text x="${markerX}" y="${y-9}" text-anchor="middle" font-family="Cambria Math,STIX Two Math,Times New Roman,serif" font-size="13" font-weight="850" fill="${color}">${denominator}</text></g>`;
+  let svg='';
+  rows.forEach(row=>{
+    svg+=`<text x="80" y="${row.y+4}" text-anchor="end" font-family="Arial,Helvetica,sans-serif" font-size="${row.key==='percent'?10:11}" font-weight="850" fill="${lineColor}">${row.label}</text>`;
+    svg+=`<line x1="${x1}" y1="${row.y}" x2="${x2}" y2="${row.y}" stroke="${lineColor}" stroke-width="2.2"/>`;
+    for(let i=0;i<=20;i++){
+      const x=x1+i*step,major=i%10===0;
+      svg+=`<line x1="${x}" y1="${row.y-(major?9:5)}" x2="${x}" y2="${row.y+(major?9:5)}" stroke="${lineColor}" stroke-width="${major?2:1}"/>`;
+      if(major&&(row.key==='decimal'||row.key==='percent')){
+        const label=row.key==='decimal'?String(i/10):(i*10)+' %';
+        svg+=`<text x="${x}" y="${row.y+24}" text-anchor="middle" font-family="Arial,Helvetica,sans-serif" font-size="11" font-weight="850" fill="${lineColor}">${label}</text>`;
+      }
+    }
+    svg+=`<line x1="${markerX}" y1="${row.y-10}" x2="${markerX}" y2="${row.y+10}" stroke="${row.color}" stroke-width="3.2" stroke-linecap="round"/>`;
+  });
+  svg=`<line x1="${markerX}" y1="60" x2="${markerX}" y2="246" stroke="#8c73b8" stroke-width="1.7" stroke-dasharray="4 4"/>`+svg;
+  svg+=`<rect x="${markerX-29}" y="13" width="58" height="27" rx="7" fill="#ffffff" stroke="#6b3fa9" stroke-width="1.3"/><text x="${markerX}" y="33" text-anchor="middle" font-family="Cambria Math,STIX Two Math,Times New Roman,serif" font-size="18" font-weight="850" fill="#6b3fa9">${escapeHtml(fmt(data.value))}</text>`;
+  svg+=fractionPill(rows[1].y,tenths,10,rows[1].color)+fractionPill(rows[2].y,hundredths,100,rows[2].color);
+  svg+=`<rect x="${markerX-32}" y="271" width="64" height="28" rx="7" fill="#ffffff" stroke="#087a55" stroke-width="1.3"/><text x="${markerX}" y="292" text-anchor="middle" font-family="Arial,Helvetica,sans-serif" font-size="16" font-weight="850" fill="#087a55">${escapeHtml(fmt(data.value*100))} %</text>`;
+  return `<svg class="multiple-forms-svg multiple-forms-line-mobile" viewBox="0 0 ${W} ${H}" role="img" aria-label="Quatre droites graduées adaptées au téléphone">${svg}</svg>`;
 }
 
 function multipleFormsCorrectionCaption(data){
@@ -7518,7 +7597,8 @@ function renderEvolutionModule(inst,correction=false,mode=null){
   if(mode===null) mode=document.getElementById('visualMode').value;
   const qcm=splitQCM(inst.rawStatement);
   const prompt=qcm?qcm.prompt:inst.rawStatement;
-  let html='<div class="question evolution-prompt">'+renderMathSegments(prompt)+'</div>';
+  const promptClass=prompt.includes('legacy-statement-table-wrap')?'question evolution-prompt legacy-statement-question':'question evolution-prompt';
+  let html='<div class="'+promptClass+'">'+renderMathSegments(prompt)+'</div>';
   html+=isWithoutVisuals(mode)?visualPlaceholder(mode):evolutionBarSvg(inst.evolution,correction);
   if(qcm){
     const corrects=new Set(inst.answers.map(value=>String(value)));
@@ -8021,6 +8101,7 @@ function fractionOpsBandSvg(num,den,options={}){
   const removed=Math.max(0,Math.min(options.removed||0,selected));
   const removedStart=selected-removed;
   const pattern='fraction-hatch-'+(++fractionOpsSvgCounter);
+  const hidePartLabels=options.hidePartLabels===true;
   let cells='';
   for(let index=0;index<den;index++){
     const cellX=x+index*bandW/den;
@@ -8028,19 +8109,18 @@ function fractionOpsBandSvg(num,den,options={}){
     let fill=index<selected?dark:light;
     if(index>=removedStart&&index<selected&&removed) fill='url(#'+pattern+')';
     cells+='<rect x="'+cellX+'" y="'+y+'" width="'+(cellWidth+.2)+'" height="'+bandH+'" fill="'+fill+'" stroke="'+stroke+'" stroke-width="1.4"/>';
-    if(index<selected&&den<=12){
+    if(index<selected&&den<=12&&!hidePartLabels){
       const center=cellX+cellWidth/2;
       const fontSize=Math.max(7,Math.min(11,cellWidth*.31));
-      if(index>=removedStart&&index<selected&&removed){
-        cells+='<rect x="'+(center-fontSize*.78)+'" y="'+(y+7)+'" width="'+(fontSize*1.56)+'" height="34" rx="4" fill="#ffffff" opacity=".9"/>';
-      }
-      cells+='<text x="'+center+'" y="'+(y+17)+'" text-anchor="middle" font-family="Cambria Math,Times New Roman,serif" font-size="'+fontSize+'" font-weight="800" fill="#17283f">1</text>'
-        +'<line x1="'+(center-fontSize*.42)+'" y1="'+(y+22)+'" x2="'+(center+fontSize*.42)+'" y2="'+(y+22)+'" stroke="#17283f" stroke-width="1.1"/>'
-        +'<text x="'+center+'" y="'+(y+34)+'" text-anchor="middle" font-family="Cambria Math,Times New Roman,serif" font-size="'+fontSize+'" font-weight="800" fill="#17283f">'+den+'</text>';
+      const isRemoved=index>=removedStart&&index<selected&&removed;
+      const labelColor=isRemoved?'#ffffff':'#17283f';
+      cells+='<text x="'+center+'" y="'+(y+17)+'" text-anchor="middle" font-family="Cambria Math,Times New Roman,serif" font-size="'+fontSize+'" font-weight="800" fill="'+labelColor+'">1</text>'
+        +'<line x1="'+(center-fontSize*.42)+'" y1="'+(y+22)+'" x2="'+(center+fontSize*.42)+'" y2="'+(y+22)+'" stroke="'+labelColor+'" stroke-width="1.1"/>'
+        +'<text x="'+center+'" y="'+(y+34)+'" text-anchor="middle" font-family="Cambria Math,Times New Roman,serif" font-size="'+fontSize+'" font-weight="800" fill="'+labelColor+'">'+den+'</text>';
     }
   }
   return '<svg class="fraction-ops-band" viewBox="0 0 '+width+' '+height+'" role="img" aria-label="'+selected+' parts colorées sur '+den+'">'
-    +'<defs><pattern id="'+pattern+'" patternUnits="userSpaceOnUse" width="10" height="10" patternTransform="rotate(35)"><rect width="10" height="10" fill="#ffffff"/><line x1="0" y1="0" x2="0" y2="10" stroke="'+stroke+'" stroke-width="1" opacity=".34"/></pattern></defs>'
+    +'<defs><pattern id="'+pattern+'" patternUnits="userSpaceOnUse" width="10" height="10" patternTransform="rotate(35)"><rect width="10" height="10" fill="#2f659f"/><line x1="0" y1="0" x2="0" y2="10" stroke="#ffffff" stroke-width="2" opacity=".58"/></pattern></defs>'
     +(showWhole?'<text x="'+(x+bandW/2)+'" y="13" text-anchor="middle" font-family="Cambria Math,Times New Roman,serif" font-size="15" font-weight="850" fill="#60708c">1</text>':'')
     +cells+'<rect x="'+x+'" y="'+y+'" width="'+bandW+'" height="'+bandH+'" fill="none" stroke="'+stroke+'" stroke-width="3"/></svg>';
 }
@@ -8089,7 +8169,7 @@ function fractionOpsVisualHtml(data,correction=false){
   if(kind==='simplify_simple'||kind==='simplify_harder'){
     const bottomLabel=correction?fractionOpsLatex(data.result.num,data.result.den):'';
     return '<div class="fraction-ops-stack">'+fractionOpsBandCard(fractionOpsLatex(data.num,data.den),data.num,data.den)
-      +'<div class="fraction-ops-arrow">↓</div>'+fractionOpsBandCard(bottomLabel,data.result.num,data.result.den)+'</div>';
+      +'<div class="fraction-ops-arrow">↓</div>'+fractionOpsBandCard(bottomLabel,data.result.num,data.result.den,{hidePartLabels:true})+'</div>';
   }
   if(kind==='compare_same_den'){
     return fractionOpsComparisonWall(data.n1,data.d1,data.n2,data.d2);
@@ -8106,7 +8186,7 @@ function fractionOpsVisualHtml(data,correction=false){
   }
   if(kind==='subtract_same_den'){
     let html='<div class="fraction-ops-stack">'+fractionOpsBandCard('',data.a,data.den,{removed:data.b})+'</div>';
-    if(correction) html+='<div class="fraction-ops-result-visual"><span>=</span>'+fractionOpsBandCard('',data.a-data.b,data.den)+'</div>';
+    if(correction) html+='<div class="fraction-ops-result-visual fraction-ops-result-separated"><span>=</span>'+fractionOpsBandCard('',data.a-data.b,data.den)+'</div>';
     return html;
   }
   if(kind==='add_multiple_den'){
@@ -8159,8 +8239,16 @@ function fractionOpsVisualHtml(data,correction=false){
 }
 function fractionOpsEquation(data,correction=false){
   if(data.kind==='simplify_simple'||data.kind==='simplify_harder') return {left:fractionOpsLatex(data.num,data.den),right:fractionOpsResultLatex(data.result)};
-  if(data.kind==='add_same_den') return {left:fractionOpsLatex(data.a,data.den)+'+'+fractionOpsLatex(data.b,data.den),right:fractionOpsResultLatex(data.result)};
-  if(data.kind==='subtract_same_den') return {left:fractionOpsLatex(data.a,data.den)+'-'+fractionOpsLatex(data.b,data.den),right:fractionOpsResultLatex(data.result)};
+  if(data.kind==='add_same_den'||data.kind==='subtract_same_den'){
+    const rawNumerator=data.kind==='add_same_den'?data.a+data.b:data.a-data.b;
+    const raw={num:rawNumerator,den:data.den};
+    const reduced=raw.num!==data.result.num||raw.den!==data.result.den;
+    return {
+      left:fractionOpsLatex(data.a,data.den)+(data.kind==='add_same_den'?'+':'-')+fractionOpsLatex(data.b,data.den),
+      right:fractionOpsLatex(raw.num,raw.den),
+      simplification:correction&&reduced?{raw,result:data.result,divisor:GCD(Math.abs(raw.num),Math.abs(raw.den))}:null
+    };
+  }
   if(data.kind==='add_multiple_den'){
     const intermediate=fractionOpsLatex(data.converted,data.den2)+'+'+fractionOpsLatex(data.b,data.den2);
     const right=correction?intermediate+'='+fractionOpsResultLatex(data.result):fractionOpsResultLatex(data.result);
@@ -8207,6 +8295,13 @@ function renderFractionOpsModule(inst,correction=false,mode=null){
     const equation=fractionOpsEquation(data,correction);
     html+='<div class="footer fraction-ops-answer fraction-ops-answer-top"><span>'+renderMathSegments('$$'+equation.left+'=$$')+'</span>'
       +(correction?'<strong>'+renderMathSegments('$$'+equation.right+'$$')+'</strong>':'<span class="answer-dots">...</span>')+'</div>';
+    if(correction&&equation.simplification){
+      const step=equation.simplification;
+      html+='<div class="fraction-ops-simplification"><span>Forme simplifiée :</span>'
+        +renderMathSegments('$$'+fractionOpsLatex(step.raw.num,step.raw.den)+'='
+          +fractionOpsLatex(step.raw.num+'\\div'+step.divisor,step.raw.den+'\\div'+step.divisor)
+          +'='+fractionOpsResultLatex(step.result)+'$$')+'</div>';
+    }
     if(!isWithoutVisuals(mode)) html+='<div class="fraction-ops-help">'+fractionOpsVisualHtml(data,correction)+'</div>';
     else html+=visualPlaceholder(mode);
   }
@@ -8787,7 +8882,7 @@ function buildCleanSlideHtml(inst, correction=false, mode=null){
 </script>
 <script>
 const INTERACTIVE_SERIES_COUNT=10;
-const APP_REVISION='25.3';
+const APP_REVISION='1.4';
 
 function makeDiapoWindowHtml(seriesData,experienceMode='interactive'){
   const normalizedSeries=Array.isArray(seriesData&&seriesData[0])?seriesData:[seriesData||[]];
@@ -8821,7 +8916,7 @@ button{font:inherit;-webkit-appearance:none;appearance:none;-webkit-tap-highligh
 .fullscreen-btn,.keyboard-toggle{width:48px;height:48px;min-height:48px;padding:0;display:inline-grid;place-items:center}
 .keyboard-toggle{display:none}.keyboard-toggle[hidden]{display:none!important}.keyboard-toggle[aria-pressed="true"]{border-color:#86a8cf;background:#eaf3ff;color:#003b7a}
 .stage{flex:1;min-height:0;display:flex;flex-direction:column;align-items:center;justify-content:flex-start;padding:12px var(--stage-x) var(--stage-bottom);overflow:auto;overscroll-behavior:contain}
-.slide{width:100%;max-width:1220px;margin-top:auto;margin-bottom:auto;text-align:center}
+.slide{width:100%;min-width:0;max-width:1220px;margin-top:auto;margin-bottom:auto;text-align:center}
 .visual-placeholder{display:flex;justify-content:center;align-items:center;min-height:0;margin:8px auto}.visual-placeholder .btn{font-size:.95rem;padding:10px 15px}
 .question{font-size:clamp(2rem,4.1vw,4.7rem);line-height:1.18;font-weight:800;margin:0 auto 34px}
 .footer{font-size:clamp(2rem,4.5vw,4.8rem);font-weight:700;line-height:1.15;margin-top:18px}
@@ -8885,12 +8980,14 @@ button{font:inherit;-webkit-appearance:none;appearance:none;-webkit-tap-highligh
 .fraction-ops-wall-label{min-height:29px;font-family:"Cambria Math","STIX Two Math","Times New Roman",serif;font-size:clamp(1.1rem,1.7vw,1.65rem);font-weight:850}
 .fraction-ops-wall-label-bottom{margin-top:-1px}
 .fraction-ops-result-visual{display:flex;align-items:center;justify-content:center;gap:10px;margin-top:1px;font-size:2.3rem;font-weight:900}
+.fraction-ops-result-separated{margin-top:22px}
 .fraction-ops-result-text{font-family:"Cambria Math","STIX Two Math","Times New Roman",serif;font-size:clamp(1.5rem,2.4vw,2.4rem);font-weight:900;color:var(--answer);white-space:nowrap}
 .fraction-ops-product{display:flex;align-items:center;justify-content:center;gap:18px;margin:0 auto}
 .fraction-ops-area{display:block;width:min(100%,390px);height:auto;max-height:300px}
 .fraction-ops-answer{display:flex;align-items:center;justify-content:center;gap:.1em;font-family:"Cambria Math","STIX Two Math","Times New Roman",serif;font-size:clamp(2.15rem,3.8vw,4rem);margin-top:2px}
 .fraction-ops-answer-top{margin:2px auto 7px}
 .fraction-ops-answer strong{color:var(--answer)}
+.fraction-ops-simplification{display:flex;flex-wrap:wrap;align-items:center;justify-content:center;gap:5px 10px;margin:0 auto 5px;color:#55657d;font-size:clamp(1rem,1.55vw,1.35rem);font-weight:800}.fraction-ops-simplification .math-inline,.fraction-ops-simplification .math-display{color:#087a55;font-family:"Cambria Math","STIX Two Math","Times New Roman",serif;font-size:1.18em;font-weight:850}
 .fraction-ops-options{grid-template-columns:repeat(3,minmax(0,1fr));gap:10px 14px;margin:7px auto 0;max-width:960px}
 .fraction-ops-options .opt{font-family:"Cambria Math","STIX Two Math","Times New Roman",serif;font-size:clamp(1.1rem,1.7vw,1.7rem);padding:11px 14px}
 .fraction-ops-method-card{width:min(100%,820px);margin:8px auto;padding:18px 22px;border:2px solid #bfd4ec;border-radius:18px;background:#f5f9ff}
@@ -8949,9 +9046,10 @@ button{font:inherit;-webkit-appearance:none;appearance:none;-webkit-tap-highligh
 .multiple-forms-prompt{font-size:clamp(1.75rem,2.8vw,3.05rem);font-weight:850;line-height:1.13;margin:0 auto 5px}
 .multiple-forms-help{display:flex;align-items:center;justify-content:center;width:100%;height:clamp(230px,38vh,350px);margin:1px auto 0}
 .multiple-forms-help.multiple-forms-tenths{height:clamp(230px,38vh,350px)}
-.multiple-forms-help.multiple-forms-line{height:clamp(150px,25vh,205px)}
+.multiple-forms-help.multiple-forms-line{height:clamp(260px,38vh,335px)}
 .multiple-forms-svg{display:block;width:auto;max-width:100%;height:100%;max-height:100%}
 .multiple-forms-line .multiple-forms-svg{width:min(100%,960px);height:auto}
+.multiple-forms-line-mobile{display:none}
 .multiple-forms-caption{min-height:1.35em;margin:2px auto 0;color:#60708c;font-size:clamp(1.15rem,1.75vw,1.65rem);font-weight:800;line-height:1.2}
 .multiple-forms-answer{font-family:"Cambria Math","STIX Two Math","Times New Roman",serif;font-size:clamp(2.05rem,3.75vw,3.85rem);font-weight:800;margin:4px auto 0}
 .multiple-forms-options{grid-template-columns:repeat(2,minmax(0,1fr));gap:9px 13px;margin:8px auto 0;max-width:900px}
@@ -9105,6 +9203,7 @@ button{font:inherit;-webkit-appearance:none;appearance:none;-webkit-tap-highligh
 .proportion-table-down{font-size:2.1em;line-height:1;color:#17283f}
 .proportion-bare-table{font-family:"Cambria Math","STIX Two Math","Times New Roman",serif;font-size:clamp(1.8rem,2.8vw,2.8rem)}
 .proportion-bare-table td{min-width:150px;padding:16px 32px}
+.legacy-statement-question{display:block;width:100%;min-width:0;max-width:100%;overflow:visible}.legacy-statement-question>.math-inline{display:block;width:100%;min-width:0;white-space:normal}.legacy-statement-table-wrap{display:block;width:100%;min-width:0;max-width:100%;margin:clamp(16px,2.2vh,26px) auto clamp(20px,2.7vh,32px);overflow-x:auto;overscroll-behavior-x:contain;-webkit-overflow-scrolling:touch;contain:inline-size}.legacy-statement-table-wrap .legacy-statement-table{width:max-content;margin:0 auto!important}
 .slide .question table{max-width:100%;margin-left:auto!important;margin-right:auto!important;line-height:1.2}
 .slide .question table td,.slide .question table th{padding:17px 26px!important;border-width:2px!important}
 .diapo.coordinate-mode .stage{padding:6px 10px 10px}
@@ -9200,7 +9299,7 @@ button{font:inherit;-webkit-appearance:none;appearance:none;-webkit-tap-highligh
 .course-title{margin:0 48px 20px;color:#073a75;font-size:clamp(1.65rem,3.4vw,2.4rem);line-height:1.1;text-align:center}
 .course-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
 .course-rule{padding:15px 16px;border:2px solid var(--border);border-radius:15px;background:#f8fbff;font-size:clamp(1rem,1.7vw,1.3rem);line-height:1.35;text-align:left}
-.course-rule strong{display:block;margin-bottom:5px;color:#e86100;font-size:1.08em}
+.course-rule>strong{display:block;margin-bottom:5px;color:#e86100;font-size:1.08em}
 .course-example{display:block;margin-top:8px;padding:7px 9px;border-radius:9px;background:#eef5fd;color:#17384d;font-size:.9em;font-weight:750}
 .course-equation{display:flex;align-items:center;justify-content:center;flex-wrap:wrap;gap:.12em;margin-top:7px;font-family:"Cambria Math","STIX Two Math","Times New Roman",serif;font-size:1.22em;font-weight:800}
 .course-frac{display:inline-flex;flex-direction:column;align-items:center;justify-content:center;min-width:1.35em;line-height:1;vertical-align:middle}.course-frac>span:first-child{width:100%;padding:0 .15em .08em;border-bottom:2px solid currentColor;text-align:center}.course-frac>span:last-child{padding:.08em .15em 0}
@@ -9245,6 +9344,7 @@ svg{display:block;max-width:100%;height:auto}
 @media(max-width:800px){.slide .question table{max-width:100%;font-size:clamp(.92rem,3.9vw,1.08rem)!important}.slide .question table td,.slide .question table th{padding:14px 14px!important;border-width:1.5px!important}.diapo.coordinate-mode .stage{padding:4px 4px 8px}.diapo.coordinate-mode .question{font-size:clamp(1.18rem,5.2vw,1.5rem);line-height:1.1;margin-bottom:3px}.diapo.coordinate-mode .question svg{width:min(100%,380px)!important;max-width:380px!important;max-height:min(52vh,380px)!important;margin:3px auto!important}.diapo.coordinate-mode .footer{font-size:clamp(1.75rem,7.8vw,2.3rem);margin-top:3px}.diapo.right-angle-mode .question{font-size:clamp(2rem,9vw,2.8rem);margin-bottom:20px}.diapo.right-angle-mode .footer{font-size:clamp(2.1rem,9.5vw,3rem)}}
 @media(max-width:800px){.diapo>.top{order:2;border-top:1px solid var(--border);border-bottom:0}.diapo>.stage{order:1}}
 @media(max-width:800px){.diapo.interactive-mode{--stage-x:7px;--stage-bottom:7px}.diapo.interactive-mode>.top{order:1;height:54px;grid-template-columns:minmax(0,1fr) auto minmax(0,1fr);border-top:0;border-bottom:1px solid var(--border);padding:7px max(9px,env(safe-area-inset-right)) 7px max(9px,env(safe-area-inset-left))}.diapo.interactive-mode>.stage{order:2;padding-top:5px}.diapo.interactive-mode>.answer-dock{order:3}.diapo.interactive-mode .keyboard-toggle,.diapo.interactive-mode .fullscreen-btn{width:40px;height:40px;min-height:40px;padding:0}.interactive-summary{grid-column:2;justify-content:center;font-size:.86rem}.interactive-score{padding:5px 8px}.answer-dock{padding:6px max(6px,env(safe-area-inset-right)) max(6px,env(safe-area-inset-bottom)) max(6px,env(safe-area-inset-left))}.answer-body{grid-template-columns:minmax(0,1fr) 154px;justify-content:stretch;gap:5px}.answer-main{height:var(--keypad-height-mobile);min-height:58px}.keypad{grid-template-columns:repeat(var(--key-columns-mobile,6),minmax(0,1fr));gap:4px}.key{min-height:0;padding:4px 2px;border-radius:9px;font-size:1.04rem}.key.utility{font-size:.78rem}.key.utility svg{width:23px;height:23px}.answer-guidance,.answer-feedback{min-height:58px;padding:8px 8px;border-radius:10px;font-size:1.16rem}.feedback-answer{font-size:1em}.answer-kind{padding:0}.answer-dock.keypad-collapsed .answer-main,.answer-dock.qcm-mode .answer-main{height:62px}.dock-actions{grid-template-columns:1fr;width:154px}.dock-action{min-width:0;min-height:58px;padding:7px 5px;font-size:1.03rem}.answer-dock.qcm-mode .answer-body{grid-template-columns:minmax(0,1fr) 184px}.answer-dock.qcm-mode .dock-actions{grid-template-columns:184px;width:184px}.answer-dock.qcm-mode .dock-action{min-width:184px;font-size:1.1rem}.interactive-input-slot{min-height:1.48em;min-width:2.18em;border-radius:.28em}.interactive-polynomial-response{gap:7px 10px;margin-top:7px;font-size:clamp(1.7rem,7.7vw,2.25rem)}.interactive-polynomial-response.term-count-1{font-size:clamp(2.3rem,10vw,3rem)}.interactive-polynomial-response.term-count-2{font-size:clamp(1.95rem,8.8vw,2.65rem)}.interactive-polynomial-term small{font-size:.42em}.interactive-finish{margin:3vh auto 0;padding:22px 15px}.interactive-finish-mark{width:54px;height:54px}.interactive-finish-score{margin-bottom:14px}.interactive-finish-actions{flex-direction:column;gap:8px}.interactive-finish-actions .btn,.interactive-finish-actions .btn.primary{width:min(100%,260px);min-width:0}}
+@media(max-width:800px){.multiple-forms-help.multiple-forms-line{height:clamp(245px,39vh,315px)}.multiple-forms-line-desktop{display:none}.multiple-forms-line-mobile{display:block;width:min(100%,390px)!important;height:auto}.fraction-ops-result-separated{margin-top:13px}.fraction-ops-simplification{max-width:360px;margin-bottom:3px;font-size:.88rem;line-height:1.12}.legacy-statement-table-wrap{margin:15px auto 20px}}
 @media(max-width:600px){.fullscreen-btn,.diapo.interactive-mode .keyboard-toggle{display:none!important}.diapo.interactive-mode .interactive-summary{position:absolute;inset:0;left:0;max-width:none;transform:none;pointer-events:none}.diapo.interactive-mode #interactiveCounter{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);white-space:nowrap}.diapo.interactive-mode .course-btn{position:absolute;left:max(9px,env(safe-area-inset-left));top:50%;transform:translateY(-50%);width:38px;height:38px;min-height:38px;padding:0;display:inline-grid;place-items:center;border:1px solid #efbb8a;border-radius:50%;background:#fffaf5;color:#9e4200;box-shadow:0 1px 4px rgba(11,33,71,.09)}.diapo.interactive-mode .course-btn svg{width:21px;height:21px}.diapo.interactive-mode .course-btn span{display:none}.diapo.interactive-mode .right{position:static}.diapo.interactive-mode .interactive-score{position:absolute;right:max(9px,env(safe-area-inset-right));top:50%;transform:translateY(-50%)}}
 @media (hover:none) and (pointer:coarse){.navnums{display:none!important}.mobile-counter{display:block!important}}
 @media print{.diapo{--stage-top:20px;--stage-x:20px;--stage-bottom:20px;height:auto;min-height:100vh;overflow:visible}.top{display:none}.stage{min-height:auto;overflow:visible;padding:var(--stage-top) var(--stage-x) var(--stage-bottom)}}
@@ -9411,7 +9511,7 @@ Object.assign(courseCatalog,{
     ['Vérifier','L’abscisse lue doit être cohérente avec les repères voisins et avec le signe du nombre.']
   ]},
   coordinates:{title:'Lire les coordonnées d’un point',rules:[
-    ['Ordre','Les coordonnées s’écrivent (abscisse ; ordonnée) : d’abord x, puis y.'],
+    ['Ordre','Les coordonnées s’écrivent (abscisse ; ordonnée) : d’abord x, puis y.<span class="course-example"><strong>Astuce :</strong> dans l’alphabet, le <strong>A</strong> d’<strong>abscisse</strong> vient avant le <strong>O</strong> d’<strong>ordonnée</strong>.</span>'],
     ['Lire x','Depuis le point, on rejoint verticalement l’axe horizontal pour lire l’abscisse.'],
     ['Lire y','On rejoint horizontalement l’axe vertical pour lire l’ordonnée.<span class="course-example">Un point sur l’axe des abscisses a une ordonnée égale à 0.</span>']
   ]},
@@ -9878,11 +9978,26 @@ function safeInteractiveNumber(value){
  if(!normalized||!/^[0-9+\\-*/().]+$/.test(normalized)) return null;
  try{const result=Function('"use strict";return ('+normalized+')')();return Number.isFinite(result)?result:null;}catch(error){return null;}
 }
+function equivalentInteractiveFraction(values,combinations){
+ if(values.length!==2) return false;
+ const numerator=safeInteractiveNumber(values[0]),denominator=safeInteractiveNumber(values[1]);
+ if(numerator===null||denominator===null||Math.abs(denominator)<1e-12) return false;
+ return (combinations||[]).some(combination=>{
+   if(combination.length!==2) return false;
+   const expectedNumerator=safeInteractiveNumber(combination[0]);
+   const expectedDenominator=safeInteractiveNumber(combination[1]);
+   if(expectedNumerator===null||expectedDenominator===null||Math.abs(expectedDenominator)<1e-12) return false;
+   return Math.abs(numerator*expectedDenominator-expectedNumerator*denominator)<1e-9;
+ });
+}
 function interactiveAnswerIsCorrect(spec){
  if(spec.kind==='qcm'){
    const selected=[...selectedOptions].sort((a,b)=>a-b);
    const expected=[...spec.correctIndices].sort((a,b)=>a-b);
    return selected.length===expected.length&&selected.every((value,index)=>value===expected[index]);
+ }
+ if(spec.layout==='fraction'&&spec.fractionPolicy==='equivalent'){
+   return equivalentInteractiveFraction(interactiveValues,spec.acceptedCombinations);
  }
  return (spec.acceptedCombinations||[]).some(combination=>combination.length===interactiveValues.length&&combination.every((expected,index)=>{
    const answer=normalizeInteractiveAnswer(interactiveValues[index]);
@@ -10070,10 +10185,15 @@ function interactiveSpecForInstance(inst,correctionHtml){
   if(isPairedFraction||isSingleFraction){
     const combinations=isPairedFraction?acceptedCombinations:splitFractionCombinations;
     const display=isPairedFraction?rawAnswers.join('/'):(rawAnswers[0]||'');
+    const fractionKind=inst.fractionOps&&inst.fractionOps.kind;
+    const equivalentFraction=(moduleId==='dnb_03'&&['add_same_den','subtract_same_den','add_multiple_den'].includes(fractionKind))
+      ||(moduleId==='dnb_03b'&&fractionKind==='multiply')
+      ||moduleId==='dnb_28'||moduleId==='dnb_29';
     return {
       kind:'slots',layout:'fraction',
       slots:[{label:'Numérateur'},{label:'Dénominateur'}],
       acceptedCombinations:combinations,
+      fractionPolicy:equivalentFraction?'equivalent':'exact',
       expectedDisplay:'réponse : '+display,
       keys:interactiveKeysFor(combinations)
     };
