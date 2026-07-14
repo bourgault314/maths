@@ -7364,21 +7364,71 @@ function makeConversionInstance(mod,q){
 function trigTriangleData(){
   const sets=[['A','B','C'],['M','N','P'],['R','S','T'],['E','F','G']];
   const letters=sets[RD(0,sets.length-1)];
-  return {angle:letters[0],right:letters[1],other:letters[2],adjacent:letters[0]+letters[1],opposite:letters[1]+letters[2],hypotenuse:letters[0]+letters[2]};
+  return {angle:letters[0],right:letters[1],other:letters[2],orientation:RD(0,7),adjacent:letters[0]+letters[1],opposite:letters[1]+letters[2],hypotenuse:letters[0]+letters[2]};
+}
+function trigSvgPoint(point){ return point.x.toFixed(1)+' '+point.y.toFixed(1); }
+function trigUnitVector(from,to){
+  const dx=to.x-from.x,dy=to.y-from.y,length=Math.hypot(dx,dy)||1;
+  return {x:dx/length,y:dy/length};
+}
+function trigOffset(point,vector,distance){ return {x:point.x+vector.x*distance,y:point.y+vector.y*distance}; }
+function trigReadableAngle(from,to){
+  let angle=Math.atan2(to.y-from.y,to.x-from.x)*180/Math.PI;
+  if(angle>90) angle-=180;
+  if(angle<-90) angle+=180;
+  return angle;
+}
+function trigLabelPosition(from,to,centroid,distance=19){
+  const midpoint={x:(from.x+to.x)/2,y:(from.y+to.y)/2},direction=trigUnitVector(from,to);
+  const normal={x:-direction.y,y:direction.x};
+  const first=trigOffset(midpoint,normal,distance),second=trigOffset(midpoint,normal,-distance);
+  const firstDistance=Math.hypot(first.x-centroid.x,first.y-centroid.y);
+  const secondDistance=Math.hypot(second.x-centroid.x,second.y-centroid.y);
+  return firstDistance>=secondDistance?first:second;
+}
+function trigTriangleLayout(index){
+  const layouts=[
+    [{x:45,y:190},{x:315,y:190},{x:315,y:45}],
+    [{x:335,y:190},{x:65,y:190},{x:65,y:45}],
+    [{x:45,y:45},{x:315,y:45},{x:315,y:190}],
+    [{x:335,y:45},{x:65,y:45},{x:65,y:190}],
+    [{x:55,y:35},{x:55,y:195},{x:320,y:195}],
+    [{x:325,y:35},{x:325,y:195},{x:60,y:195}],
+    [{x:55,y:200},{x:55,y:40},{x:320,y:40}],
+    [{x:325,y:200},{x:325,y:40},{x:60,y:40}]
+  ];
+  return layouts[Math.abs(Number(index)||0)%layouts.length];
 }
 function trigTriangleSvg(triangle,sideLabels={}){
   const label=(key,fallback)=>escapeHtml(String(sideLabels[key]??fallback));
+  const [anglePoint,rightPoint,otherPoint]=trigTriangleLayout(triangle.orientation);
+  const centroid={x:(anglePoint.x+rightPoint.x+otherPoint.x)/3,y:(anglePoint.y+rightPoint.y+otherPoint.y)/3};
+  const rightToAngle=trigUnitVector(rightPoint,anglePoint),rightToOther=trigUnitVector(rightPoint,otherPoint),rightSize=18;
+  const rightOne=trigOffset(rightPoint,rightToAngle,rightSize);
+  const rightTwo=trigOffset(rightOne,rightToOther,rightSize);
+  const rightThree=trigOffset(rightPoint,rightToOther,rightSize);
+  const angleToRight=trigUnitVector(anglePoint,rightPoint),angleToOther=trigUnitVector(anglePoint,otherPoint),angleRadius=34;
+  const angleStart=trigOffset(anglePoint,angleToRight,angleRadius),angleEnd=trigOffset(anglePoint,angleToOther,angleRadius);
+  const angleSweep=angleToRight.x*angleToOther.y-angleToRight.y*angleToOther.x>0?1:0;
+  const angleBisector=trigUnitVector({x:0,y:0},{x:angleToRight.x+angleToOther.x,y:angleToRight.y+angleToOther.y});
+  const angleMark=trigOffset(anglePoint,angleBisector,48);
+  const vertexLabel=(point,name)=>{
+    const outward=trigUnitVector(centroid,point),position=trigOffset(point,outward,20);
+    return '<text x="'+position.x.toFixed(1)+'" y="'+position.y.toFixed(1)+'" dominant-baseline="middle" text-anchor="middle" font-family="serif" font-style="italic" font-size="23" fill="#17384d">'+name+'</text>';
+  };
+  const sideLabel=(from,to,text,color)=>{
+    const position=trigLabelPosition(from,to,centroid),rotation=trigReadableAngle(from,to);
+    return '<text x="'+position.x.toFixed(1)+'" y="'+position.y.toFixed(1)+'" dominant-baseline="middle" text-anchor="middle" font-size="18" font-weight="850" fill="'+color+'" transform="rotate('+rotation.toFixed(1)+' '+position.x.toFixed(1)+' '+position.y.toFixed(1)+')">'+text+'</text>';
+  };
   return '<svg class="trig-question-svg" viewBox="0 0 380 235" role="img" aria-label="Triangle '+triangle.angle+triangle.right+triangle.other+' rectangle en '+triangle.right+'">'
-    +'<polygon points="45,190 315,190 315,45" fill="#eef6ff" stroke="#17384d" stroke-width="3"/>'
-    +'<path d="M315 170H295V190" fill="none" stroke="#e86100" stroke-width="4"/>'
-    +'<path d="M83 190A38 38 0 0 0 78 171" fill="none" stroke="#e86100" stroke-width="4"/>'
-    +'<text x="27" y="211" font-family="serif" font-style="italic" font-size="23" fill="#17384d">'+triangle.angle+'</text>'
-    +'<text x="321" y="211" font-family="serif" font-style="italic" font-size="23" fill="#17384d">'+triangle.right+'</text>'
-    +'<text x="321" y="42" font-family="serif" font-style="italic" font-size="23" fill="#17384d">'+triangle.other+'</text>'
-    +'<text x="180" y="220" text-anchor="middle" font-size="18" font-weight="850" fill="#0879d0">'+label('adjacent',triangle.adjacent)+'</text>'
-    +'<text x="350" y="120" text-anchor="middle" font-size="18" font-weight="850" fill="#b23a48">'+label('opposite',triangle.opposite)+'</text>'
-    +'<text x="170" y="102" text-anchor="middle" font-size="18" font-weight="850" fill="#7651b5" transform="rotate(-28 170 102)">'+label('hypotenuse',triangle.hypotenuse)+'</text>'
-    +'<text x="87" y="179" font-size="16" font-weight="900" fill="#e86100">'+triangle.angle+'̂</text></svg>';
+    +'<polygon points="'+trigSvgPoint(anglePoint)+' '+trigSvgPoint(rightPoint)+' '+trigSvgPoint(otherPoint)+'" fill="#eef6ff" stroke="#17384d" stroke-width="3" stroke-linejoin="round"/>'
+    +'<path d="M'+trigSvgPoint(rightOne)+' L'+trigSvgPoint(rightTwo)+' L'+trigSvgPoint(rightThree)+'" fill="none" stroke="#e86100" stroke-width="4"/>'
+    +'<path d="M'+trigSvgPoint(angleStart)+' A'+angleRadius+' '+angleRadius+' 0 0 '+angleSweep+' '+trigSvgPoint(angleEnd)+'" fill="none" stroke="#e86100" stroke-width="4"/>'
+    +vertexLabel(anglePoint,triangle.angle)+vertexLabel(rightPoint,triangle.right)+vertexLabel(otherPoint,triangle.other)
+    +sideLabel(anglePoint,rightPoint,label('adjacent',triangle.adjacent),'#0879d0')
+    +sideLabel(rightPoint,otherPoint,label('opposite',triangle.opposite),'#b23a48')
+    +sideLabel(anglePoint,otherPoint,label('hypotenuse',triangle.hypotenuse),'#7651b5')
+    +'<text x="'+angleMark.x.toFixed(1)+'" y="'+angleMark.y.toFixed(1)+'" dominant-baseline="middle" text-anchor="middle" font-size="16" font-weight="900" fill="#e86100">'+triangle.angle+'̂</text></svg>';
 }
 function trigQcmInstance(mod,q,prompt,options,correctAnswers,triangle,extra={}){
   const statement=prompt+'&&'+options.join('&&')+'&&';
@@ -7551,14 +7601,14 @@ function placeValueToolHtml(data,correction=false){
   const strip=Array(13).fill(0).map(()=>'<span class="place-value-strip-digit"></span>').join('');
   const instruction=correction
     ? '<strong>'+fmt(data.value)+' '+data.symbol+' '+data.factor+' = '+fmt(data.result)+'</strong>'
-    : '<span>Fais glisser la bandelette de '+Math.abs(data.shift)+' colonne'+(Math.abs(data.shift)>1?'s':'')+' vers '+(data.shift>0?'la gauche':'la droite')+'.</span>';
+    : '';
   return '<div class="place-value-tool" data-base-digits="'+escapeHtml(digits.join('|'))+'" data-target-shift="'+data.shift+'" data-initial-shift="'+shift+'">'
     +'<div class="place-value-grid">'
       +'<div class="place-value-head-row">'+headers+'</div>'
       +'<div class="place-value-preview-row"><div class="place-value-strip-viewport"><div class="place-value-strip">'+strip+'</div></div><div class="place-value-window-row">'+windows+'</div><span class="place-value-comma place-value-preview-comma" aria-hidden="true">,</span><div class="place-value-drag-bar" tabindex="0" role="slider" aria-label="Faire glisser la bandelette" aria-valuemin="-3" aria-valuemax="3" aria-valuenow="'+shift+'"><span></span></div></div>'
       +'<div class="place-value-fixed-row">'+fixed+'<span class="place-value-comma place-value-fixed-comma" aria-hidden="true">,</span></div>'
     +'</div><div class="place-value-row-labels"><span>Résultat obtenu</span><span>Nombre de départ</span></div>'
-    +'<div class="place-value-tool-note">'+instruction+'</div></div>';
+    +(instruction?'<div class="place-value-tool-note">'+instruction+'</div>':'')+'</div>';
 }
 function placeValueNumberMarkup(value,highlightUnits=false){
   const valueText=fmt(value),parts=valueText.split(','),integer=parts[0]||'0';
@@ -7584,21 +7634,56 @@ function renderPlaceValueModule(inst,correction=false,mode=null){
     html+='<div class="options place-value-options options-4">';
     data.qcm.options.forEach((option,index)=>{html+='<div class="opt '+(correction&&index+1===data.qcm.correctIndex?'correct':'')+'"><strong>'+String.fromCharCode(65+index)+'.</strong> '+renderMathSegments('$$'+option+'$$')+'</div>';});
     html+='</div>';
-  }else{
-    html+='<div class="place-value-correction'+(correction?'':' is-placeholder')+'">La virgule reste fixe : ce sont les chiffres qui changent de colonne.</div>';
   }
   return html;
 }
-function durationEquivalenceDisc(first,second,kind='hour'){
-  return '<div class="duration-disc '+(kind==='minute'?'duration-disc-minute':'duration-disc-hour')+'"><span>'+first+'</span><i></i><span>'+second+'</span></div>';
+function durationValueDisc(value,kind='hour'){
+  const className=kind==='second'?'duration-disc-second':(kind==='minute'?'duration-disc-minute':'duration-disc-hour');
+  return '<span class="duration-disc '+className+'">'+value+'</span>';
+}
+function durationEquivalencePair(first,second,firstKind='hour',secondKind='minute'){
+  return '<span class="duration-equivalence-pair">'+durationValueDisc(first,firstKind)+'<b>=</b>'+durationValueDisc(second,secondKind)+'</span>';
 }
 function conversionDurationHtml(data,correction=false){
   const hours=Number(data.hours),minutes=Number(data.minutes),totalMinutes=hours*60+minutes,totalSeconds=totalMinutes*60;
   return '<div class="duration-conversion-tool">'
-    +'<div class="duration-reference-discs">'+durationEquivalenceDisc('1 h','60 min','hour')+durationEquivalenceDisc('1 min','60 s','minute')+'</div>'
-    +'<div class="duration-instance"><span class="duration-multiplier">'+hours+' ×</span>'+durationEquivalenceDisc('1 h','60 min','hour')+'<span class="duration-plus">+</span><span class="duration-minute-chip">'+minutes+' min</span></div>'
-    +(correction?'<div class="duration-correction-line"><strong>'+hours+' × 3 600</strong><span>+</span><strong>'+minutes+' × 60</strong><span>=</span><b>'+totalSeconds+' s</b></div>':'<p>Utilise les deux équivalences pour tout convertir en secondes.</p>')
+    +'<div class="duration-instance">'
+      +'<div class="duration-instance-row"><span class="duration-multiplier">'+hours+' ×</span>'+durationValueDisc('1 h','hour')+'<span class="duration-plus">+</span>'+durationValueDisc(minutes+' min','minute')+'</div>'
+      +'<span class="duration-down" aria-hidden="true">↓</span>'
+      +'<div class="duration-instance-row"><span class="duration-multiplier">'+hours+' ×</span>'+durationValueDisc('60 min','minute')+'<span class="duration-plus">+</span>'+durationValueDisc(minutes+' min','minute')+'</div>'
+    +'</div>'
+    +'<div class="duration-second-step">'+durationEquivalencePair('1 min','60 s','minute','second')+'</div>'
+    +(correction?'<div class="duration-correction-line"><strong>('+hours+' × 60) + '+minutes+' = '+totalMinutes+' min</strong><span>puis</span><strong>'+totalMinutes+' × 60</strong><span>=</span><b>'+totalSeconds+' s</b></div>':'')
     +'</div>';
+}
+function conversionTheme(data){
+  const themes={length:['#1283ff','#dcecff'],mass:['#16a34a','#e2f5e8'],capacity:['#06b6d4','#ddf7fb'],area:['#f59e0b','#fff0d8'],volume:['#7c3aed','#eee6ff']};
+  return themes[data.family]||themes.length;
+}
+function conversionUnitMarkup(unit){
+  return escapeHtml(String(unit||'')).replace(/²/g,'<sup>2</sup>').replace(/³/g,'<sup>3</sup>');
+}
+function conversionValueMarkup(value){
+  const text=fmt(value),characters=Array.from(text);
+  let searchFrom=characters.indexOf(',');
+  if(searchFrom<0) searchFrom=characters.length;
+  let unitsIndex=-1;
+  for(let index=searchFrom-1;index>=0;index--){
+    if(/[0-9]/.test(characters[index])){unitsIndex=index;break;}
+  }
+  return characters.map((character,index)=>index===unitsIndex
+    ? '<span class="conversion-source-units-digit">'+escapeHtml(character)+'</span>'
+    : escapeHtml(character)).join('');
+}
+function conversionEquationHtml(inst,correction=false){
+  const data=inst.conversion,number=Number(inst.q&&inst.q.n),state=correction?'correction':'question';
+  if(number===9) return '<span class="conversion-equation-stack">'+renderPlaceholders(inst.rawFooter,inst.answers,state)+'</span>';
+  const answer=renderPlaceholders('[[formula]]',inst.answers,state);
+  if(data.family==='duration'){
+    return '<span class="conversion-source-expression"><span class="conversion-source-value">'+data.hours+'</span> <span class="conversion-source-unit">h</span>&nbsp; <span class="conversion-source-value">'+data.minutes+'</span> <span class="conversion-source-unit">min</span></span><span class="conversion-equals">=</span>'+answer+'<span class="conversion-target-unit">s</span>';
+  }
+  const displayedTarget=number===5?'L':data.target;
+  return '<span class="conversion-source-expression"><span class="conversion-source-value">'+conversionValueMarkup(data.value)+'</span> <span class="conversion-source-unit">'+conversionUnitMarkup(data.source)+'</span></span><span class="conversion-equals">=</span>'+answer+'<span class="conversion-target-unit">'+conversionUnitMarkup(displayedTarget)+'</span>';
 }
 function conversionTableHtml(data,correction=false){
   const units=data.units||[];
@@ -7606,8 +7691,7 @@ function conversionTableHtml(data,correction=false){
   const sourceIndex=units.indexOf(data.source),targetIndex=units.indexOf(data.target);
   const totalSlots=units.length*slots,sourceRightSlot=sourceIndex*slots+(slots-1);
   const digits=digitsInPlaceValueColumns(data.value,totalSlots,sourceRightSlot);
-  const themes={length:['#0879d0','#dceeff'],mass:['#24994d','#e2f5e8'],capacity:['#20a7c1','#ddf7fb'],area:['#e89516','#fff0d8'],volume:['#6d35d8','#eee6ff']};
-  const theme=themes[data.family]||themes.length;
+  const theme=conversionTheme(data);
   const crossLabels={'3_2':'kL','4_0':'hL','4_1':'daL','4_2':'L','5_0':'dL','5_1':'cL','5_2':'mL'};
   let headers='',subcells='';
   units.forEach((unit,index)=>{
@@ -7616,25 +7700,26 @@ function conversionTableHtml(data,correction=false){
       const isUnitSlot=slot===slots-1;
       const cross=data.crossLabels?crossLabels[index+'_'+slot]:'';
       const areaAlias=data.family==='area'&&isUnitSlot?(unit==='hm²'?'ha':(unit==='dam²'?'a':'')):'';
-      headers+='<div class="conversion-unit '+(index===sourceIndex&&isUnitSlot?'source':'')+' '+(index===targetIndex&&isUnitSlot?'target':'')+'">'
+      headers+='<div class="conversion-unit '+(index===sourceIndex&&isUnitSlot?'source':'')+' '+(index===targetIndex&&isUnitSlot?'target':'')+'" data-unit-index="'+index+'" data-unit-slot="'+(isUnitSlot?'true':'false')+'">'
         +(isUnitSlot?'<strong>'+unit+'</strong>':'')+(cross?'<small>'+cross+'</small>':'')+(areaAlias?'<small>'+areaAlias+'</small>':'')+'</div>';
-      subcells+='<div class="conversion-slot '+(index===sourceIndex?'source':'')+' '+(index===targetIndex?'target':'')+'" data-slot="'+absolute+'" data-digit="'+digit+'">'+digit+'</div>';
+      subcells+='<div class="conversion-slot '+(index===sourceIndex?'source':'')+' '+(index===targetIndex?'target':'')+'" data-slot="'+absolute+'" data-unit-index="'+index+'" data-unit-slot="'+(isUnitSlot?'true':'false')+'" data-digit="'+digit+'">'+digit+'</div>';
     }
   });
   return '<div class="conversion-tool conversion-family-'+data.family+'" data-source-unit="'+sourceIndex+'" data-target-unit="'+targetIndex+'" data-initial-unit="'+(correction?targetIndex:sourceIndex)+'" data-unit-slots="'+slots+'" style="--conversion-slots:'+totalSlots+';--conversion-unit-slots:'+slots+';--conversion-units:'+units.length+';--conversion-color:'+theme[0]+';--conversion-pale:'+theme[1]+'">'
     +'<div class="conversion-grid-wrap"><div class="conversion-grid">'+headers+subcells+'</div><button class="conversion-cursor" type="button" aria-label="Déplacer le repère vers l’unité demandée" data-unit="'+(correction?targetIndex:sourceIndex)+'"><span class="conversion-cursor-label">L’unité de<br>mesure</span><span class="conversion-cursor-comma">,</span><span class="conversion-cursor-digit-label">Le chiffre des<br>unités</span></button></div>'
-    +'<p>'+(correction?'<strong>'+data.source+' → '+data.target+' : '+(data.answers||[]).join(' ; ')+'</strong>':'Fais glisser le repère jusqu’à l’unité demandée.')+'</p></div>';
+    +'</div>';
 }
 function renderConversionModule(inst,correction=false,mode=null){
   if(mode===null) mode=document.getElementById('visualMode').value;
   const data=inst.conversion;
-  let html='<div class="question conversion-prompt">'+renderMathSegments(inst.rawStatement||'Convertis.')+'</div>';
+  const theme=conversionTheme(data);
+  let html='<div class="conversion-content" style="--conversion-color:'+theme[0]+';--conversion-pale:'+theme[1]+'">';
+  if(Number(inst.q&&inst.q.n)===5) html+='<div class="conversion-context">Sachant que '+renderMathSegments('$$1\\,\\text{dm}^3=1\\,\\text{L}$$')+'</div>';
+  html+='<div class="question conversion-prompt"><span class="conversion-verb">Convertis :</span>'+conversionEquationHtml(inst,correction)+'</div>';
   if(!isWithoutVisuals(mode)) html+=data.family==='duration'?conversionDurationHtml(data,correction):conversionTableHtml(data,correction);
   else html+=visualPlaceholder(mode);
-  if(inst.rawFooter) html+='<div class="footer conversion-answer'+(Number(inst.q&&inst.q.n)===9?' conversion-answer-stack':'')+'">'+renderPlaceholders(inst.rawFooter,inst.answers,correction?'correction':'question')+'</div>';
-  if(data.family==='duration') html+='<div class="conversion-method'+(correction?'':' is-placeholder')+'">('+data.hours+' × 3 600) + ('+data.minutes+' × 60) = '+data.answers[0]+' s</div>';
-  if(data.family==='volume') html+='<div class="conversion-method'+(correction?'':' is-placeholder')+'">À retenir : 1 m³ = 1 kL, 1 dm³ = 1 L et 1 cm³ = 1 mL.</div>';
-  return html;
+  if(correction&&data.family==='volume') html+='<div class="conversion-method">À retenir : 1 m³ = 1 kL, 1 dm³ = 1 L et 1 cm³ = 1 mL.</div>';
+  return html+'</div>';
 }
 
 function fractionPercentPalette(data){
@@ -9931,18 +10016,16 @@ button{font:inherit;-webkit-appearance:none;appearance:none;-webkit-tap-highligh
 .place-value-fixed-digit{border-right:1.5px solid #9fb3c8}.place-value-fixed-digit:nth-child(7){border-right:0}
 .place-value-comma{position:absolute;z-index:7;left:calc(57.142857% - 4px);bottom:4px;color:#e86100;font-family:Cambria Math,serif;font-size:2.6rem;font-weight:900;line-height:1;pointer-events:none}
 .place-value-row-labels{position:absolute;width:1px;height:1px;overflow:hidden}.place-value-tool-note{display:flex;align-items:center;justify-content:center;height:44px;min-height:44px;margin-top:8px;color:#31516e;font-size:clamp(1.08rem,2vw,1.45rem);line-height:1.1}.place-value-tool-note strong{color:#087a55;font-size:1.25em}.place-value-correction{height:28px;margin:7px auto;color:#31516e;font-size:clamp(1.08rem,2vw,1.45rem);line-height:1.1}.place-value-options{max-width:820px;margin-top:10px}
-.conversion-prompt{font-size:clamp(1.95rem,3.45vw,3rem);margin-bottom:8px}
-.conversion-tool{width:min(98%,1540px);margin:92px auto 4px;user-select:none}.conversion-grid-wrap{position:relative}.conversion-grid{position:relative;display:grid;grid-template-columns:repeat(var(--conversion-slots),minmax(0,1fr));border:3px solid var(--conversion-color);border-radius:14px;background:#fff;isolation:isolate;overflow:visible}
-.conversion-unit{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;min-height:58px;padding:5px 1px;border-right:1.5px solid color-mix(in srgb,var(--conversion-color) 75%,white);border-bottom:2px solid var(--conversion-color);background:var(--conversion-pale);color:#17384d;font-size:clamp(.68rem,1.2vw,1.05rem);font-weight:850}.conversion-unit strong{font-size:1.08em}.conversion-unit small{color:var(--conversion-color);font-size:.78em;font-weight:900}.conversion-unit.source,.conversion-unit.target{background:color-mix(in srgb,var(--conversion-pale) 60%,white);color:var(--conversion-color)}
-.conversion-slot{position:relative;z-index:2;display:grid;place-items:center;min-height:86px;border-right:1px solid color-mix(in srgb,var(--conversion-color) 45%,white);color:#0b2147;font-family:Cambria Math,Times New Roman,serif;font-size:clamp(1.45rem,2.45vw,2.65rem);font-weight:850}.conversion-slot.source{background:color-mix(in srgb,var(--conversion-pale) 35%,white)}.conversion-slot.target{background:color-mix(in srgb,var(--conversion-pale) 18%,white)}.conversion-slot.ghost-zero{color:#61758c}
-.conversion-cursor{position:absolute;z-index:4;top:-3px;bottom:-3px;left:0;width:calc(100% / var(--conversion-slots));padding:0;border:3px solid var(--conversion-color);border-radius:10px;background:color-mix(in srgb,var(--conversion-pale) 65%,transparent);cursor:grab;touch-action:none;outline:none;transition:transform .16s ease}.conversion-cursor:focus-visible{box-shadow:0 0 0 4px color-mix(in srgb,var(--conversion-color) 24%,transparent)}
-.conversion-cursor-label,.conversion-cursor-digit-label{position:absolute;left:50%;width:148px;padding:10px 9px;border:3px solid #fff;border-radius:14px;background:var(--conversion-color);color:#fff;font-size:clamp(.78rem,1.25vw,1.05rem);font-weight:900;line-height:1.05;box-shadow:0 8px 22px rgba(23,56,77,.2);pointer-events:none}.conversion-cursor-label{bottom:calc(100% + 26px);transform:translateX(-50%)}.conversion-cursor-label:after{content:"";position:absolute;left:50%;top:100%;transform:translateX(-50%);border-left:13px solid transparent;border-right:13px solid transparent;border-top:15px solid var(--conversion-color)}.conversion-cursor-digit-label{top:calc(100% + 27px);transform:translateX(-50%)}.conversion-cursor-digit-label:before{content:"";position:absolute;left:50%;bottom:100%;transform:translateX(-50%);border-left:13px solid transparent;border-right:13px solid transparent;border-bottom:15px solid var(--conversion-color)}.conversion-cursor-comma{position:absolute;right:-9px;bottom:4px;color:var(--conversion-color);font-family:Cambria Math,serif;font-size:2.45rem;font-weight:900;line-height:1}
-.conversion-tool p{min-height:38px;margin:76px 0 0;color:#31516e;font-size:clamp(1.08rem,1.95vw,1.48rem);text-align:center}.conversion-tool p strong{color:#087a55;font-size:1.22em}.conversion-answer{font-size:clamp(2.15rem,4.5vw,3.8rem);margin-top:8px}.conversion-answer-stack{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px}.conversion-answer-stack .math-display{display:block;margin:0}.conversion-method{margin:8px auto;color:#31516e;font-size:clamp(1.08rem,2vw,1.45rem)}
-.duration-conversion-tool{width:min(96%,900px);margin:4px auto 0}.duration-reference-discs,.duration-instance,.duration-course-discs{display:flex;align-items:center;justify-content:center;gap:18px}.duration-reference-discs{margin-bottom:12px}.duration-course-discs{margin:12px auto 2px}.duration-course-discs .duration-disc{width:112px}
-.duration-disc{display:grid;grid-template-rows:1fr 2px 1fr;place-items:center;width:128px;aspect-ratio:1;border:4px solid #9d3e70;border-radius:50%;overflow:hidden;background:linear-gradient(#f9d6e8 0 50%,#fff 50%);color:#6d234b;font-size:clamp(1rem,1.8vw,1.28rem);font-weight:900;line-height:1.05;box-shadow:0 3px 8px rgba(23,56,77,.12)}.duration-disc-minute{border-color:#2f71a8;background:linear-gradient(#dceeff 0 50%,#fff 50%);color:#174d78}.duration-disc i{width:100%;border-top:2px solid currentColor}
-.duration-instance{min-height:128px;padding:8px 14px;border:2px solid #d3dfec;border-radius:18px;background:#f8fbff}.duration-instance .duration-disc{width:104px}.duration-multiplier,.duration-plus{color:#17384d;font-size:clamp(1.55rem,3vw,2.4rem);font-weight:900}.duration-minute-chip{padding:14px 20px;border:3px solid #2f71a8;border-radius:999px;background:#dceeff;color:#174d78;font-size:clamp(1.15rem,2.2vw,1.7rem);font-weight:900}.duration-conversion-tool>p{margin:7px 0;color:#31516e;font-size:clamp(1rem,1.8vw,1.3rem)}.duration-correction-line{display:flex;flex-wrap:wrap;align-items:center;justify-content:center;gap:8px 14px;margin-top:11px;color:#17384d;font-size:clamp(1.18rem,2.25vw,1.75rem)}.duration-correction-line b{color:#087a55;font-size:1.15em}
-.conversion-answer:not(.conversion-answer-stack){display:flex;align-items:center;justify-content:center;height:1.25em;line-height:1;overflow:visible}.conversion-answer-stack{min-height:2.5em;line-height:1}
-.conversion-cursor{transition:none}
+.conversion-content{width:100%}.conversion-context{margin:0 auto 4px;color:#31516e;font-size:clamp(1rem,1.65vw,1.3rem);font-weight:750;text-align:center}.conversion-prompt{display:flex;flex-wrap:wrap;align-items:center;justify-content:center;gap:.18em .28em;font-size:clamp(1.95rem,3.45vw,3rem);margin-bottom:8px}.conversion-verb{font-weight:900}.conversion-source-expression{white-space:nowrap}.conversion-source-value{color:#0b2147;font-weight:900}.conversion-source-unit,.conversion-source-units-digit{color:var(--conversion-color);font-weight:950}.conversion-source-unit sup,.conversion-target-unit sup{font-size:.62em}.conversion-equals{margin:0 .08em}.conversion-target-unit{margin-left:.08em;font-weight:850}.conversion-equation-stack{display:flex;flex-direction:column;align-items:center;gap:4px}.conversion-equation-stack .math-display{margin:0}
+.conversion-tool{width:min(98%,1540px);margin:100px auto 94px;user-select:none}.conversion-grid-wrap{position:relative}.conversion-grid{position:relative;display:grid;grid-template-columns:repeat(var(--conversion-slots),minmax(0,1fr));gap:4px;background:transparent;isolation:isolate;overflow:visible}
+.conversion-unit{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;min-height:54px;padding:4px 1px;border:2px solid var(--conversion-color);border-radius:8px;background:color-mix(in srgb,var(--conversion-color) 12%,white);color:#17384d;font-size:clamp(.68rem,1.2vw,1.08rem);font-weight:800}.conversion-unit strong{font-size:1.08em}.conversion-unit small{color:color-mix(in srgb,var(--conversion-color) 82%,#17384d);font-size:.78em;font-weight:900}.conversion-unit:not([data-unit-slot="true"]){background:transparent;border-color:color-mix(in srgb,var(--conversion-color) 34%,transparent)}.conversion-unit.is-cursor-unit strong{color:var(--conversion-color);font-weight:950;text-shadow:0 0 1px color-mix(in srgb,var(--conversion-color) 75%,transparent)}
+.conversion-slot{position:relative;z-index:2;display:grid;place-items:center;min-height:92px;border:2px solid var(--conversion-color);border-radius:8px;background:#fff;color:#0b2147;font-family:Cambria Math,Times New Roman,serif;font-size:clamp(1.7rem,2.8vw,3rem);font-weight:750}.conversion-slot.ghost-zero{color:#526a82}.conversion-slot.is-cursor-unit{color:var(--conversion-color);font-weight:950;text-shadow:0 0 1px color-mix(in srgb,var(--conversion-color) 70%,transparent)}
+.conversion-cursor{position:absolute;z-index:4;top:0;bottom:0;left:0;width:calc(100% / var(--conversion-slots));padding:0;border:3px solid color-mix(in srgb,var(--conversion-color) 72%,#17384d);border-radius:8px;background:color-mix(in srgb,var(--conversion-color) 15%,transparent);cursor:grab;touch-action:none;outline:none;transition:transform .16s ease}.conversion-cursor:active{cursor:grabbing}.conversion-cursor:focus-visible{box-shadow:0 0 0 4px color-mix(in srgb,var(--conversion-color) 24%,transparent)}
+.conversion-cursor-label,.conversion-cursor-digit-label{position:absolute;left:50%;width:150px;padding:11px 9px;border:3px solid #fff;border-radius:14px;background:linear-gradient(135deg,var(--conversion-color),color-mix(in srgb,var(--conversion-color) 78%,#17384d));color:#fff;font-size:clamp(.82rem,1.25vw,1.08rem);font-weight:950;line-height:1.05;text-transform:uppercase;box-shadow:0 8px 22px rgba(23,56,77,.24);pointer-events:none}.conversion-cursor-label{bottom:calc(100% + 26px);transform:translateX(-50%)}.conversion-cursor-label:after{content:"";position:absolute;left:50%;top:100%;transform:translateX(-50%);border-left:14px solid transparent;border-right:14px solid transparent;border-top:15px solid color-mix(in srgb,var(--conversion-color) 78%,#17384d)}.conversion-cursor-digit-label{top:calc(100% + 27px);transform:translateX(-50%)}.conversion-cursor-digit-label:before{content:"";position:absolute;left:50%;bottom:100%;transform:translateX(-50%);border-left:14px solid transparent;border-right:14px solid transparent;border-bottom:15px solid var(--conversion-color)}.conversion-cursor-comma{position:absolute;right:-13px;bottom:31px;color:color-mix(in srgb,var(--conversion-color) 78%,#17384d);font-family:Nunito,Arial,sans-serif;font-size:3.5rem;font-weight:950;line-height:0;text-shadow:2px 2px 0 #fff,-2px -2px 0 #fff,2px -2px 0 #fff,-2px 2px 0 #fff}
+.conversion-method{margin:-66px auto 12px;color:#31516e;font-size:clamp(1.08rem,2vw,1.45rem)}
+.duration-conversion-tool{width:min(96%,940px);margin:4px auto 0}.duration-course-discs{display:flex;flex-wrap:wrap;align-items:center;justify-content:center;gap:18px;margin:12px auto 2px}.duration-equivalence-pair{display:inline-flex;align-items:center;justify-content:center;gap:10px}.duration-equivalence-pair>b{color:#17384d;font-size:clamp(1.35rem,2.4vw,2rem)}
+.duration-disc{display:inline-grid;place-items:center;width:104px;aspect-ratio:1;border:4px solid #9d3e70;border-radius:50%;background:#f9d6e8;color:#6d234b;font-size:clamp(.95rem,1.65vw,1.2rem);font-weight:950;line-height:1.05;box-shadow:0 3px 8px rgba(23,56,77,.12);white-space:nowrap}.duration-disc-minute{border-color:#2f71a8;background:#dceeff;color:#174d78}.duration-disc-second{border-color:#21835d;background:#dff5e9;color:#145c41}.duration-course-discs .duration-disc{width:104px}
+.duration-instance{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;min-height:220px;padding:10px 14px;border:2px solid #d3dfec;border-radius:18px;background:#f8fbff}.duration-instance-row{display:flex;align-items:center;justify-content:center;gap:13px}.duration-instance-row .duration-disc{width:82px}.duration-multiplier,.duration-plus{color:#17384d;font-size:clamp(1.45rem,2.8vw,2.2rem);font-weight:950}.duration-down{color:#e86100;font-size:2rem;font-weight:950;line-height:.75}.duration-second-step{display:flex;justify-content:center;margin:8px auto 0}.duration-second-step .duration-disc{width:76px}.duration-correction-line{display:flex;flex-wrap:wrap;align-items:center;justify-content:center;gap:8px 14px;margin-top:11px;color:#17384d;font-size:clamp(1.08rem,2.05vw,1.55rem)}.duration-correction-line b{color:#087a55;font-size:1.15em}
 .transformation-placement-svg{display:block;width:min(100%,600px);max-height:560px;margin:2px auto}.transformation-grid-hit{cursor:crosshair;pointer-events:all}.transformation-grid-hit:focus{fill:rgba(240,120,24,.16);outline:none}
 .diapo.trigonometry-mode .question{font-size:clamp(1.75rem,2.7vw,2.75rem);line-height:1.12}.trig-question-svg{display:block;width:min(100%,540px);max-height:330px;margin:6px auto 2px}.diapo.trigonometry-mode .options{max-width:1120px;gap:10px 14px;margin-top:7px}.diapo.trigonometry-mode .opt{min-height:62px;padding:11px 14px;font-size:clamp(1.08rem,1.65vw,1.6rem)}.diapo.trigonometry-mode .footer{font-size:clamp(2rem,3.8vw,3.7rem);margin-top:4px}.course-trig-visual{max-height:230px}
 .fraction-ops-area{display:block;width:min(100%,390px);height:auto;max-height:300px}
@@ -10304,7 +10387,7 @@ svg{display:block;max-width:100%;height:auto}
 @media(max-width:800px){.fraction-product-manipulator{display:none}.fraction-product-static{display:block!important;width:min(96%,430px);max-height:clamp(235px,42vh,330px);margin:0 auto}.fraction-ops-product{width:100%}}
 @media(max-width:800px){.diapo.multiple-forms-mode .stage{padding:5px 6px 10px}.multiple-forms-prompt{font-size:clamp(1.34rem,5.9vw,1.72rem);line-height:1.15;margin-bottom:2px}.multiple-forms-help{height:clamp(230px,38vh,315px);margin:0 auto}.multiple-forms-help.multiple-forms-tenths{height:clamp(230px,38vh,315px)}.multiple-forms-help.multiple-forms-line{height:clamp(160px,27vh,210px)}.multiple-forms-caption{font-size:clamp(.94rem,4.05vw,1.15rem);margin-top:0}.multiple-forms-answer{font-size:clamp(1.95rem,8.6vw,2.55rem);margin-top:2px}.multiple-forms-options{grid-template-columns:repeat(2,minmax(0,1fr));gap:7px;margin-top:5px}.multiple-forms-options .opt{font-size:clamp(1.02rem,4.45vw,1.25rem);padding:10px 10px}}
 @media(max-width:800px){.diapo.place-value-mode .stage{padding:5px 4px 8px}.place-value-prompt{font-size:clamp(1.48rem,6.3vw,1.9rem);margin-bottom:2px}.place-value-equation{font-size:clamp(2.05rem,9vw,2.8rem);margin:1px auto 5px}.place-value-tool{width:100%;margin-top:2px}.place-value-grid{border-width:2px;border-radius:10px}.place-value-head{height:29px;padding:0 1px;font-size:clamp(.46rem,1.9vw,.62rem);writing-mode:vertical-rl;transform:rotate(180deg)}.place-value-preview-row,.place-value-fixed-row{height:49px}.place-value-drag-bar{left:-13px;right:-13px;top:6px;height:37px}.place-value-strip-digit,.place-value-fixed-digit{font-size:clamp(1.7rem,7.5vw,2.25rem)}.place-value-comma{left:calc(57.142857% - 3px);bottom:2px;font-size:2rem}.place-value-tool-note{height:35px;min-height:35px;margin-top:4px;padding:0 4px;font-size:clamp(.84rem,3.55vw,1rem);text-align:center}.place-value-tool-note strong{font-size:1.16em}.place-value-correction{height:22px;font-size:clamp(.9rem,3.8vw,1.08rem);margin:3px auto;line-height:1.05}.place-value-options{grid-template-columns:repeat(2,minmax(0,1fr));gap:6px;margin-top:4px}.place-value-options .opt{font-size:clamp(.96rem,4.1vw,1.15rem);padding:8px}}
-@media(max-width:800px){.diapo.conversion-mode .stage{padding:5px 4px 8px}.conversion-prompt{font-size:clamp(1.4rem,6vw,1.82rem);margin-bottom:3px}.conversion-tool{width:100%;margin:20px auto 1px;overflow-x:auto;overscroll-behavior-x:contain}.conversion-family-area .conversion-grid-wrap{width:540px}.conversion-family-volume .conversion-grid-wrap{width:735px}.conversion-grid{border-width:2px;border-radius:9px}.conversion-unit{min-height:43px;padding:2px 1px;font-size:.58rem}.conversion-unit small{font-size:.72em}.conversion-slot{min-height:60px;font-size:1.02rem;overflow:hidden}.conversion-cursor{top:-7px;bottom:-7px;border-width:2px;border-radius:7px}.conversion-cursor-label,.conversion-cursor-digit-label{display:none}.conversion-cursor-comma{right:-7px;bottom:2px;font-size:1.9rem}.conversion-tool p{display:none}.conversion-answer{font-size:clamp(1.8rem,7.8vw,2.4rem);margin-top:7px}.conversion-answer-stack{gap:5px}.conversion-method{font-size:clamp(.84rem,3.55vw,1.02rem);margin:3px auto}.duration-conversion-tool{width:100%;margin-top:1px}.duration-reference-discs{gap:12px;margin-bottom:7px}.duration-disc{width:92px;border-width:3px;font-size:.86rem}.duration-instance{min-height:94px;gap:8px;padding:5px 7px;border-radius:13px}.duration-instance .duration-disc{width:72px;font-size:.7rem}.duration-multiplier,.duration-plus{font-size:1.25rem}.duration-minute-chip{padding:9px 12px;border-width:2px;font-size:.96rem}.duration-conversion-tool>p{font-size:.83rem;margin:4px 0;display:block}.duration-correction-line{gap:5px 8px;margin-top:6px;font-size:.94rem}.diapo.conversion-mode.correction-visible .duration-reference-discs{display:none}}
+@media(max-width:800px){.diapo.conversion-mode .stage{padding:5px 4px 8px}.conversion-context{font-size:.86rem}.conversion-prompt{font-size:clamp(1.32rem,5.7vw,1.75rem);margin-bottom:3px}.conversion-tool{width:100%;margin:25px auto 8px;overflow-x:auto;overscroll-behavior-x:contain}.conversion-family-area .conversion-grid-wrap{width:540px}.conversion-family-volume .conversion-grid-wrap{width:735px}.conversion-grid{gap:3px}.conversion-unit{min-height:43px;padding:2px 1px;border-width:2px;font-size:.62rem}.conversion-unit small{font-size:.72em}.conversion-slot{min-height:62px;border-width:2px;font-size:1.22rem;overflow:hidden}.conversion-cursor{border-width:3px;border-radius:7px}.conversion-cursor-label,.conversion-cursor-digit-label{display:none}.conversion-cursor-comma{right:-9px;bottom:21px;font-size:2.35rem;text-shadow:1px 1px 0 #fff,-1px -1px 0 #fff,1px -1px 0 #fff,-1px 1px 0 #fff}.conversion-method{font-size:clamp(.84rem,3.55vw,1.02rem);margin:3px auto}.duration-conversion-tool{width:100%;margin-top:1px}.duration-disc{width:70px;border-width:3px;font-size:.78rem}.duration-instance{min-height:172px;gap:3px;padding:5px 7px;border-radius:13px}.duration-instance-row{gap:7px}.duration-instance-row .duration-disc{width:61px;font-size:.69rem}.duration-multiplier,.duration-plus{font-size:1.18rem}.duration-down{font-size:1.5rem}.duration-second-step{margin-top:5px}.duration-second-step .duration-disc{width:58px}.duration-second-step .duration-equivalence-pair{gap:6px}.duration-correction-line{gap:5px 8px;margin-top:6px;font-size:.88rem}}
 @media(max-width:800px){.diapo.angle-sum-mode .stage{padding:7px 7px 11px}.angle-sum-prompt{font-size:clamp(1.3rem,5.8vw,1.7rem);margin-bottom:3px}.angle-sum-prompt svg{width:min(100%,350px);max-height:270px;margin-top:3px}.angle-bar-help{height:clamp(145px,24vh,195px);margin:0 auto}.angle-sum-answer{font-size:clamp(1.82rem,8.1vw,2.4rem);margin-top:2px}.angle-sum-options{gap:7px;margin-top:5px}.angle-sum-options .opt{min-height:50px;font-size:clamp(1rem,4.3vw,1.2rem);padding:10px 11px}}
 @media(max-width:800px){.diapo.angle-sum-mode.angle-figure-mode .angle-sum-prompt{font-size:clamp(1.1rem,4.8vw,1.38rem)}.diapo.angle-sum-mode.angle-figure-mode .angle-sum-prompt svg{max-height:175px}.diapo.angle-sum-mode.angle-figure-mode .angle-bar-help{height:112px}.diapo.angle-sum-mode.angle-figure-mode .angle-sum-answer{font-size:clamp(1.55rem,7vw,2rem)}}
 @media(max-width:800px){.diapo.evolution-mode .stage{padding:7px 7px 12px}.evolution-prompt{font-size:clamp(1.28rem,5.55vw,1.65rem);line-height:1.15;margin-bottom:3px}.evolution-prompt table{font-size:clamp(.94rem,4vw,1.1rem)!important;margin-top:10px!important;margin-bottom:10px!important}.evolution-prompt table td,.evolution-prompt table th{padding-top:13px!important;padding-bottom:13px!important}.evolution-help{height:clamp(145px,24vh,190px);margin:0 auto}.evolution-help-scroll{justify-content:flex-start;overflow-x:auto;overscroll-behavior-x:contain;-webkit-overflow-scrolling:touch}.evolution-help-scroll .evolution-svg{width:720px;max-width:none;flex:none}.evolution-answer{font-size:clamp(1.72rem,7.6vw,2.25rem);margin-top:2px}.evolution-options{grid-template-columns:1fr;gap:7px;margin-top:4px}.evolution-options .opt{font-size:clamp(.92rem,3.9vw,1.08rem);padding:9px 10px}}
@@ -10442,7 +10525,7 @@ function courseTransformationVisual(kind){
 function coursePythagorasVisual(){return '<svg class="course-visual" viewBox="0 0 520 315" role="img" aria-label="Triangle ABC rectangle en B avec trois vrais carrés construits sur ses côtés et une barre d’égalité des aires"><polygon points="130,115 130,190 230,190" fill="#fff" stroke="#17384d" stroke-width="3"/><path d="M130 174H146V190" fill="none" stroke="#e86100" stroke-width="4"/><polygon points="130,115 130,190 55,190 55,115" fill="#dceeff" stroke="#0879d0" stroke-width="3"/><polygon points="130,190 230,190 230,290 130,290" fill="#e2f5e8" stroke="#24994d" stroke-width="3"/><polygon points="130,115 230,190 305,90 205,15" fill="#fff0d8" stroke="#e89516" stroke-width="3"/><text x="92" y="158" text-anchor="middle" fill="#0879d0" font-size="18" font-weight="900">AB²</text><text x="180" y="245" text-anchor="middle" fill="#24994d" font-size="18" font-weight="900">BC²</text><text x="218" y="105" text-anchor="middle" fill="#b76e00" font-size="18" font-weight="900" transform="rotate(37 218 105)">AC²</text><text x="115" y="108" font-size="18" font-style="italic">A</text><text x="112" y="210" font-size="18" font-style="italic">B</text><text x="236" y="209" font-size="18" font-style="italic">C</text><rect x="342" y="55" width="145" height="62" rx="8" fill="#fff0d8" stroke="#e89516" stroke-width="3"/><text x="414" y="93" text-anchor="middle" fill="#b76e00" font-size="20" font-weight="900">AC²</text><text x="414" y="145" text-anchor="middle" fill="#17384d" font-size="26" font-weight="900">=</text><rect x="342" y="169" width="63" height="62" rx="8" fill="#dceeff" stroke="#0879d0" stroke-width="3"/><rect x="414" y="169" width="73" height="62" rx="8" fill="#e2f5e8" stroke="#24994d" stroke-width="3"/><text x="373" y="207" text-anchor="middle" fill="#0879d0" font-size="17" font-weight="900">AB²</text><text x="450" y="207" text-anchor="middle" fill="#24994d" font-size="17" font-weight="900">BC²</text><text x="409" y="207" text-anchor="middle" fill="#17384d" font-size="21" font-weight="900">+</text><text x="414" y="273" text-anchor="middle" fill="#17384d" font-size="16" font-weight="850">aire du grand carré</text><text x="414" y="294" text-anchor="middle" fill="#17384d" font-size="16" font-weight="850">= somme des deux autres</text></svg>';}
 function courseTrigVisual(){return '<svg class="course-visual course-trig-visual" viewBox="0 0 470 235" role="img" aria-label="Triangle ABC rectangle en B avec les côtés repérés par rapport à l’angle A"><polygon points="42,194 318,194 318,42" fill="#eef6ff" stroke="#17384d" stroke-width="3"/><path d="M318 174H298V194" fill="none" stroke="#e86100" stroke-width="4"/><path d="M82 194A40 40 0 0 0 77 173" fill="none" stroke="#e86100" stroke-width="4"/><text x="22" y="216" font-size="22" font-style="italic">A</text><text x="326" y="216" font-size="22" font-style="italic">B</text><text x="326" y="40" font-size="22" font-style="italic">C</text><text x="178" y="222" text-anchor="middle" fill="#0879d0" font-size="17" font-weight="900">côté adjacent</text><text x="360" y="120" text-anchor="middle" fill="#b23a48" font-size="17" font-weight="900">côté opposé</text><text x="178" y="102" text-anchor="middle" fill="#7651b5" font-size="17" font-weight="900" transform="rotate(-29 178 102)">hypoténuse</text><text x="410" y="70" text-anchor="middle" fill="#17384d" font-size="17" font-weight="900">par rapport</text><text x="410" y="94" text-anchor="middle" fill="#17384d" font-size="17" font-weight="900">à l’angle Â</text></svg>';}
 function courseConversionVisual(kind){
- if(kind==='duration') return '<div class="duration-course-discs" role="img" aria-label="Disques d’équivalence des heures, minutes et secondes"><div class="duration-disc duration-disc-hour"><span>1 h</span><i></i><span>60 min</span></div><div class="duration-disc duration-disc-minute"><span>1 min</span><i></i><span>60 s</span></div></div>';
+ if(kind==='duration') return '<div class="duration-course-discs" role="img" aria-label="Équivalences entre heures, minutes et secondes"><span class="duration-equivalence-pair"><span class="duration-disc duration-disc-hour">1 h</span><b>=</b><span class="duration-disc duration-disc-minute">60 min</span></span><span class="duration-equivalence-pair"><span class="duration-disc duration-disc-minute">1 min</span><b>=</b><span class="duration-disc duration-disc-second">60 s</span></span></div>';
  const count=kind==='area'?2:(kind==='volume'?3:1),labels=kind==='area'?['m²','dm²','cm²']:(kind==='volume'?['m³','dm³','cm³']:['m','dm','cm']);
  let cells='';labels.forEach(function(label,index){cells+='<text x="'+(72+index*128)+'" y="28" text-anchor="middle" fill="#17384d" font-size="18" font-weight="850">'+label+'</text>';for(let i=0;i<count;i++)cells+='<rect x="'+(24+index*128+i*(96/count))+'" y="42" width="'+(96/count)+'" height="58" fill="'+(index===1?'#fff0df':'#eef6ff')+'" stroke="#17384d" stroke-width="2"/>';});
  return '<svg class="course-visual" viewBox="0 0 420 125" role="img" aria-label="Tableau de conversion">'+cells+'<text x="210" y="121" text-anchor="middle" fill="#087a55" font-size="16" font-weight="850">'+count+' position'+(count>1?'s':'')+' par unité</text></svg>';
@@ -10693,7 +10776,7 @@ function percentChangeCourse(context){
 function conversionCourse(context){
  const number=Number(context&&context.questionNumber||1);
  if(number===8) return {title:'Convertir des durées',rules:[
-   ['Deux équivalences','Les deux faces de chaque disque représentent la même durée : 1 h = 60 min et 1 min = 60 s.'+courseConversionVisual('duration')],
+   ['Deux équivalences','Les deux disques reliés par « = » représentent la même durée : 1 h = 60 min et 1 min = 60 s.'+courseConversionVisual('duration')],
    ['Vers une unité plus petite','On multiplie : heures → minutes, × 60 ; minutes → secondes, × 60.'],
    ['Exemple complet','<span class="course-equation">2 h 15 min = (2 × 3 600) + (15 × 60) = 8 100 s</span><span class="course-example">Une heure vaut aussi 3 600 s, car 60 × 60 = 3 600.</span>']
  ]};
@@ -10979,10 +11062,19 @@ function setupConversionTools(){
  document.querySelectorAll('.conversion-tool').forEach(tool=>{
    const grid=tool.querySelector('.conversion-grid'),cursor=tool.querySelector('.conversion-cursor');if(!grid||!cursor||cursor.dataset.ready==='1')return;
    cursor.dataset.ready='1';
-   const cells=[...tool.querySelectorAll('.conversion-slot')],units=Number(getComputedStyle(tool).getPropertyValue('--conversion-units'))||7,unitSlots=Number(tool.dataset.unitSlots)||1;
-   let unit=Number(tool.dataset.initialUnit)||0;
-   const apply=(center=false)=>{
-     unit=Math.max(0,Math.min(units-1,unit));const unitSlot=unit*unitSlots+(unitSlots-1);cursor.style.transform='translateX('+(unitSlot*100)+'%)';cursor.dataset.unit=String(unit);
+   const cells=[...tool.querySelectorAll('.conversion-slot')],headers=[...tool.querySelectorAll('.conversion-unit')],units=Number(getComputedStyle(tool).getPropertyValue('--conversion-units'))||7,unitSlots=Number(tool.dataset.unitSlots)||1,totalSlots=units*unitSlots;
+   let unit=Number(tool.dataset.initialUnit)||0,slotWidth=0,startX=0,startPx=0,currentPx=0,dragging=false;
+   const clamp=(value,min,max)=>Math.min(max,Math.max(min,value));
+   const refresh=()=>{slotWidth=grid.getBoundingClientRect().width/totalSlots;};
+   const setCursor=(px,snap=false)=>{
+     cursor.style.transition=snap?'transform .16s ease':'none';
+     cursor.style.transform='translateX('+px+'px)';
+     currentPx=px;
+   };
+   const apply=(center=false,snap=true)=>{
+     refresh();
+     unit=clamp(unit,0,units-1);const unitSlot=unit*unitSlots+(unitSlots-1);
+     setCursor(unitSlot*slotWidth,snap);cursor.dataset.unit=String(unit);
      cells.forEach(cell=>{cell.textContent=cell.dataset.digit||'';cell.classList.remove('ghost-zero');});
      const occupied=cells.filter(cell=>(cell.dataset.digit||'')!=='').map(cell=>Number(cell.dataset.slot));
      if(occupied.length){
@@ -10991,14 +11083,33 @@ function setupConversionTools(){
          const cell=cells[index];if(cell&&cell.textContent===''){cell.textContent='0';cell.classList.add('ghost-zero');}
        }
      }
+     headers.forEach(header=>header.classList.remove('is-cursor-unit'));
+     cells.forEach(cell=>cell.classList.remove('is-cursor-unit'));
+     const activeHeader=headers.find(header=>Number(header.dataset.unitIndex)===unit&&header.dataset.unitSlot==='true');
+     const activeCell=cells[unitSlot];
+     if(activeHeader) activeHeader.classList.add('is-cursor-unit');
+     if(activeCell) activeCell.classList.add('is-cursor-unit');
      if(center&&tool.scrollWidth>tool.clientWidth+2) requestAnimationFrame(()=>{const slotWidth=grid.getBoundingClientRect().width/(units*unitSlots),cursorCenter=(unitSlot+.5)*slotWidth;tool.scrollLeft=Math.max(0,cursorCenter-tool.clientWidth/2);});
-   };apply(true);
-   const chooseFromPointer=event=>{const rect=grid.getBoundingClientRect();unit=Math.max(0,Math.min(units-1,Math.floor((event.clientX-rect.left)/rect.width*units)));apply();};
-   cursor.addEventListener('pointerdown',event=>{event.preventDefault();cursor.style.transition='none';cursor.setPointerCapture(event.pointerId);chooseFromPointer(event);});
-   cursor.addEventListener('pointermove',event=>{if(cursor.hasPointerCapture(event.pointerId))chooseFromPointer(event);});
-   const end=event=>{if(!cursor.hasPointerCapture(event.pointerId))return;cursor.releasePointerCapture(event.pointerId);apply(true);};
-   cursor.addEventListener('pointerup',end);cursor.addEventListener('pointercancel',end);
-   cursor.addEventListener('keydown',event=>{if(event.key!=='ArrowLeft'&&event.key!=='ArrowRight')return;event.preventDefault();unit+=event.key==='ArrowLeft'?-1:1;apply(true);});
+   };
+   requestAnimationFrame(()=>apply(true,false));
+   cursor.addEventListener('pointerdown',event=>{
+     event.preventDefault();refresh();dragging=true;startX=event.clientX;startPx=currentPx;cursor.setPointerCapture(event.pointerId);
+   });
+   cursor.addEventListener('pointermove',event=>{
+     if(!dragging||!cursor.hasPointerCapture(event.pointerId))return;
+     const minPx=(unitSlots-1)*slotWidth,maxPx=(totalSlots-1)*slotWidth;
+     setCursor(clamp(startPx+(event.clientX-startX),minPx,maxPx),false);
+   });
+   const end=event=>{
+     if(!dragging||!cursor.hasPointerCapture(event.pointerId))return;
+     dragging=false;cursor.releasePointerCapture(event.pointerId);
+     const rect=grid.getBoundingClientRect();
+     unit=clamp(Math.floor((event.clientX-rect.left)/rect.width*units),0,units-1);
+     apply(true,true);
+   };
+   cursor.addEventListener('pointerup',end);
+   cursor.addEventListener('pointercancel',event=>{if(!dragging)return;dragging=false;try{cursor.releasePointerCapture(event.pointerId);}catch(_){ }apply(true,true);});
+   cursor.addEventListener('keydown',event=>{if(event.key!=='ArrowLeft'&&event.key!=='ArrowRight')return;event.preventDefault();unit+=event.key==='ArrowLeft'?-1:1;apply(true,true);});
  });
 }
 function setupFractionProductTools(){
@@ -12009,6 +12120,30 @@ function chooseFractionMulDivQuestions(moduleId,questions,count){
   );
 }
 
+function trigCoverageGroup(moduleId,question){
+  const kind=String(question.options?.trig_kind||'');
+  if(moduleId==='dnb_26b'){
+    if(kind==='ratio_decimal') return 'ratio';
+    if(['missing_adjacent_cos','missing_hypotenuse_cos'].includes(kind)) return 'longueur-cosinus';
+    if(['missing_opposite_sin','missing_opposite_tan'].includes(kind)) return 'longueur-sinus-tangente';
+    return 'angle';
+  }
+  if(['condition','hypotenuse','adjacent','opposite'].includes(kind)) return 'reperage';
+  if(['cos_ratio','sin_ratio','tan_ratio','choose_ratio'].includes(kind)) return 'rapport';
+  if(kind==='choose_method') return 'methode';
+  if(['formula_check','calculation_check','coherence'].includes(kind)) return 'verification';
+  return 'propriete';
+}
+
+function chooseTrigQuestions(moduleId,questions,count){
+  return drawFromQuestionDeck(
+    moduleId+':trigonometry:coverage',
+    questions,
+    count,
+    ()=>interleavedQuestionCycle(questions,question=>trigCoverageGroup(moduleId,question))
+  );
+}
+
 function buildBalancedQuiz(mods,count){
   resetModule01State();
   const usable=canonicalModuleOrder(mods)
@@ -12030,6 +12165,8 @@ function buildBalancedQuiz(mods,count){
         ? chooseAreaQuestions(item.m.id,item.questions,moduleCount)
         : item.m.id==='dnb_14'
           ? chooseNumberLineQuestions(item.m.id,item.questions,moduleCount)
+        : ['dnb_26','dnb_26b'].includes(item.m.id)
+          ? chooseTrigQuestions(item.m.id,item.questions,moduleCount)
         : drawFromQuestionDeck(item.m.id+':all',item.questions,moduleCount);
     return {m:item.m,questions:chosen};
   });
