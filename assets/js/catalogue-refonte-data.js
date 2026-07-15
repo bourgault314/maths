@@ -286,6 +286,11 @@ window.MATHSGO_CATALOGUE = {
       "domain": "geometrie"
     },
     {
+      "id": "thales",
+      "title": "Thalès",
+      "domain": "geometrie"
+    },
+    {
       "id": "espace-constructions",
       "title": "Espace, solides et patrons",
       "domain": "geometrie"
