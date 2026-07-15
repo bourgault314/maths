@@ -4,6 +4,8 @@
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <title>Moulin de Pythagore — Puzzles stables</title>
+<meta name="description" content="Moulin de Pythagore interactif : manipulez des puzzles de découpage pour visualiser l’égalité des aires dans un triangle rectangle." />
+<link rel="canonical" href="https://mathsgo.re/outils/plateaux_manipulation/moulin_pythagore.html" />
 <style>
   :root{
     --bg:#ffffff;
@@ -72,6 +74,11 @@
   .toggle.on .pill::after{left:17px;}
 
   #stageWrap{flex:1; position:relative; overflow:hidden; background:#fff; touch-action:none;}
+  #mobilePuzzleHint{display:none; padding:7px 12px; background:#f8fafc; border-bottom:1px solid var(--border); color:var(--muted); font-size:13px; text-align:center;}
+  #puzzleStatus{min-height:0; padding:0 12px; color:var(--muted); font-size:13px; text-align:center;}
+  #puzzleStatus:not(:empty){padding-top:6px; padding-bottom:6px;}
+  #puzzleStatus.success{color:#166534; font-weight:700;}
+  #puzzleStatus.error{color:#b91c1c; font-weight:700;}
   svg{width:100%; height:100%; display:block; touch-action:none;}
 
   .boardLine{stroke:#111827; stroke-width:3; fill:none; stroke-linecap:round; stroke-linejoin:round;}
@@ -79,10 +86,13 @@
   .rightAngle{stroke:#111827; stroke-width:3; fill:none; stroke-linecap:round; stroke-linejoin:round; opacity:1;}
   .label{font-size:22px; font-weight:700; fill:#111827; paint-order:stroke; stroke:#fff; stroke-width:5px; display:none;}
   .showLetters .label{display:block;}
+  .mobileNote{display:none; font-size:28px; font-weight:800; fill:#64748b; text-anchor:middle;}
+  .compactLayout .mobileNote{display:block;}
 
   .piecePoly{stroke:#111827; stroke-width:3.2; stroke-linejoin:round; cursor:grab;}
   .piecePoly:active{cursor:grabbing;}
   .previewPoly{stroke:#111827; stroke-width:3.2; stroke-linejoin:round; opacity:.9; pointer-events:none;}
+  .targetSquare{fill:rgba(248,250,252,.72);}
 
   .pieceSelected .piecePoly{stroke-width:5.2;}
   .handle{pointer-events:auto; cursor:crosshair;}
@@ -125,11 +135,23 @@
     button, .toggle, select{padding:10px 12px; font-size:15px;}
     .group{border:none; padding:0; margin:0;}
   }
+
+  @media (max-width:700px){
+    /* Le fond de la scène peut défiler entre les deux moulins ; les pièces,
+       elles, restent entièrement réservées au geste de déplacement. */
+    #stageWrap{touch-action:pan-y; overflow-x:hidden;}
+    svg#stage{touch-action:pan-y;}
+    svg#stage .piecePoly,
+    svg#stage .handle{touch-action:none;}
+    #fullscreen{display:none;}
+    #mobilePuzzleHint{display:block;}
+  }
+
 </style>
 <link rel="stylesheet" href="../../assets/css/consentement.css">
 <script defer src="../../assets/js/consentement.js"></script>
 </head>
-<body>
+<body data-component-id="game.pythagore-reassembly" data-component-version="1">
 <div id="app">
   <div id="toolbar">
     <div class="group">
@@ -138,6 +160,8 @@
       <option value="bhaskara">2. Bhaskara (4 triangles + 1 carré)</option>
       <option value="leitzmann">3. Liu Hui (8 triangles)</option>
       <option value="quatreIdentiques">4. 4 pièces identiques + 1 carré</option>
+      <option value="bhaskaraMiroir">5. Cadre miroir (4 triangles + 1 carré)</option>
+      <option value="bhaskaraTourne">6. Cadre tourné (4 triangles + 1 carré)</option>
     </select>
     </div>
 
@@ -155,6 +179,8 @@
     <div class="group">
       <button id="flip" class="primary">Retourner</button>
       <button id="reset" class="danger">Réinitialiser</button>
+      <button id="checkSolution" class="primary">Vérifier</button>
+      <button id="showSolution">Solution</button>
     </div>
 
     <div class="spacer"></div>
@@ -164,6 +190,11 @@
       <button id="fullscreen">⛶</button>
     </div>
   </div>
+
+  <div id="mobilePuzzleHint" role="status">
+    Sur téléphone : la cible est en haut, les pièces sont juste plus bas. Fais défiler la scène si nécessaire.
+  </div>
+  <div id="puzzleStatus" role="status" aria-live="polite"></div>
 
   <div id="stageWrap">
     <svg id="stage" xmlns="http://www.w3.org/2000/svg">
@@ -247,8 +278,11 @@
   const toggleLetters = document.getElementById("toggleLetters");
   const btnReset = document.getElementById("reset");
   const btnFlip = document.getElementById("flip");
+  const btnCheckSolution = document.getElementById("checkSolution");
+  const btnShowSolution = document.getElementById("showSolution");
   const btnFullscreen = document.getElementById("fullscreen");
   const btnEnonce = document.getElementById("enonce");
+  const puzzleStatus = document.getElementById("puzzleStatus");
 
   const modal = document.getElementById("enonceModal");
   const modalTitle = document.getElementById("enonceTitle");
@@ -257,6 +291,7 @@
 
   const state = {
     mode: "eleves",
+    layoutCompact: null,
     puzzle: "perigal",
     snapEnabled: true,
     angleSnapEnabled: true,
@@ -264,7 +299,9 @@
     selectedId: null,
     dragging: null,
     pieces: new Map(),
+    solutionPoses: new Map(),
     snapPoints: [],
+    bhaskaraPoseTargets: new Map(),
     molds: [],
     moulins: {L:null, R:null},
     worldTransform: {s: 1, tx: 0, ty: 0},
@@ -275,6 +312,14 @@
   function applyWorldTransform(){
     const {s, tx, ty} = state.worldTransform;
     world.setAttribute("transform", `translate(${tx},${ty}) scale(${s})`);
+  }
+
+  function isCompactViewport(){
+    return window.matchMedia && window.matchMedia("(max-width: 700px)").matches;
+  }
+
+  function isBhaskaraPuzzle(){
+    return ["bhaskara","bhaskaraMiroir","bhaskaraTourne"].includes(state.puzzle);
   }
 
   function clientToWorld(evt){
@@ -302,6 +347,181 @@
     p.el.setAttribute("transform", `translate(${p.pos.x},${p.pos.y}) rotate(${p.rot}) scale(${sx},1)`);
   }
 
+  function signedPolygonArea(points){
+    let sum = 0;
+    for(let i=0; i<points.length; i++){
+      const a = points[i], b = points[(i+1)%points.length];
+      sum += a.x*b.y - b.x*a.y;
+    }
+    return sum / 2;
+  }
+
+  function polygonArea(points){ return Math.abs(signedPolygonArea(points)); }
+
+  function transformLocalVertices(piece, pos, rot, flipX){
+    const t=rad(rot), c=Math.cos(t), s=Math.sin(t), sx=flipX ? -1 : 1;
+    return piece.verticesLocal.map(v=>{
+      const x=sx*v.x, y=v.y;
+      return {x:pos.x+x*c-y*s, y:pos.y+x*s+y*c};
+    });
+  }
+
+  // Cherche une pose exacte d'une pièce sur un polygone cible congruent.
+  // On autorise la rotation et le retournement manuel, jamais un étirement.
+  function poseForTargetPolygon(piece, targetPoints){
+    if(!piece || !targetPoints || piece.verticesLocal.length !== targetPoints.length) return null;
+    const src=piece.verticesLocal;
+    for(const flipX of [false,true]){
+      const sx=flipX ? -1 : 1;
+      const flipped=src.map(v=>({x:sx*v.x,y:v.y}));
+      for(let si=0; si<src.length; si++){
+        for(let sj=0; sj<src.length; sj++){
+          if(si===sj) continue;
+          const sv={x:flipped[sj].x-flipped[si].x,y:flipped[sj].y-flipped[si].y};
+          const sl=Math.hypot(sv.x,sv.y);
+          if(sl<1e-8) continue;
+          for(let ti=0; ti<targetPoints.length; ti++){
+            for(let tj=0; tj<targetPoints.length; tj++){
+              if(ti===tj) continue;
+              const tv={x:targetPoints[tj].x-targetPoints[ti].x,y:targetPoints[tj].y-targetPoints[ti].y};
+              const tl=Math.hypot(tv.x,tv.y);
+              if(Math.abs(sl-tl)>1e-4) continue;
+              const rot=deg(Math.atan2(tv.y,tv.x)-Math.atan2(sv.y,sv.x));
+              const rq=rotatePointLocal(flipped[si],rot);
+              const pos={x:targetPoints[ti].x-rq.x,y:targetPoints[ti].y-rq.y};
+              const actual=transformLocalVertices(piece,pos,rot,flipX);
+              const unused=new Set(targetPoints.map((_,i)=>i));
+              const expected=[];
+              let maxD=0;
+              for(const v of actual){
+                let best=-1, bestD=Infinity;
+                for(const k of unused){
+                  const d=Math.hypot(v.x-targetPoints[k].x,v.y-targetPoints[k].y);
+                  if(d<bestD){bestD=d;best=k;}
+                }
+                if(best<0) { maxD=Infinity; break; }
+                unused.delete(best);
+                expected.push({...targetPoints[best]});
+                maxD=Math.max(maxD,bestD);
+              }
+              if(maxD<0.5) return {pos,rot,flipX,expectedVertices:expected};
+            }
+          }
+        }
+      }
+    }
+    return null;
+  }
+
+  // Solution exacte du cadre de Bhaskara : quatre triangles autour du carré
+  // central de côté |b-a|. Cette construction sert aussi de test de congruence
+  // pour les futures variantes de quatre triangles.
+  function bhaskaraSolutionPolygons(){
+    const R=state.moulins?.R;
+    if(!R) return null;
+    const {a,b,c}=R.mold;
+    const edges=[[R.B,R.C],[R.C,R.Cw],[R.Cw,R.Bw],[R.Bw,R.B]];
+    const thirdPoints=edges.map(([p,q])=>{
+      const ex=(q.x-p.x)/c, ey=(q.y-p.y)/c;
+      const nx=ey, ny=-ex; // normale vers l'intérieur du carré cible
+      return {x:p.x+(b*b/c)*ex+(a*b/c)*nx,y:p.y+(b*b/c)*ey+(a*b/c)*ny};
+    });
+    return {
+      triangles:edges.map(([p,q],i)=>[p,q,thirdPoints[i]]),
+      square:thirdPoints
+    };
+  }
+
+  function prepareSolutionPoses(){
+    state.solutionPoses.clear();
+    const target=isBhaskaraPuzzle() ? bhaskaraSolutionPolygons() : null;
+    if(!target) return;
+    target.triangles.forEach((poly,i)=>{
+      const piece=state.pieces.get(`L-t${i+1}`);
+      if(!piece) return;
+      const pose=poseForTargetPolygon(piece,poly);
+      if(pose) state.solutionPoses.set(piece.id,pose);
+    });
+    const squarePiece=state.pieces.get("L-sq");
+    if(squarePiece){
+      const squarePose=poseForTargetPolygon(squarePiece,target.square);
+      if(squarePose) state.solutionPoses.set(squarePiece.id,squarePose);
+    }
+  }
+
+  function setPuzzleStatus(text,type=""){
+    puzzleStatus.textContent=text;
+    puzzleStatus.className=type;
+  }
+
+  function showSolution(){
+    if(!state.solutionPoses.size){
+      setPuzzleStatus("La solution automatique de ce découpage doit encore être validée géométriquement.","error");
+      return;
+    }
+    state.solutionPoses.forEach((pose,id)=>{
+      const piece=state.pieces.get(id);
+      if(!piece) return;
+      piece.pos={...pose.pos};
+      piece.rot=pose.rot;
+      piece.flipX=pose.flipX;
+      applyPieceTransform(piece);
+    });
+    setSelected(null);
+    setPuzzleStatus("Solution affichée. Tu peux recommencer pour rejouer le puzzle.","success");
+  }
+
+  function clipConvexPolygon(subject,clip){
+    let output=subject.map(p=>({...p}));
+    const orientation=Math.sign(signedPolygonArea(clip)) || 1;
+    for(let i=0;i<clip.length;i++){
+      const a=clip[i], b=clip[(i+1)%clip.length];
+      const inside=p=>orientation*((b.x-a.x)*(p.y-a.y)-(b.y-a.y)*(p.x-a.x)) >= -1e-7;
+      const input=output; output=[];
+      if(!input.length) break;
+      for(let j=0;j<input.length;j++){
+        const p=input[j], q=input[(j+1)%input.length];
+        const pin=inside(p), qin=inside(q);
+        if(pin && qin) output.push(q);
+        else if(pin && !qin){
+          const hit=lineIntersection(p,q,a,b); if(hit) output.push(hit);
+        } else if(!pin && qin){
+          const hit=lineIntersection(p,q,a,b); if(hit) output.push(hit);
+          output.push(q);
+        }
+      }
+    }
+    return output;
+  }
+
+  function checkPuzzleSolution(){
+    const R=state.moulins?.R;
+    if(!R || !state.pieces.size) return false;
+    const target=R.mold.corners;
+    const pieces=[...state.pieces.values()].map(piece=>({piece,points:pieceWorldVertices(piece)}));
+    const targetArea=polygonArea(target);
+    const totalArea=pieces.reduce((sum,item)=>sum+polygonArea(item.points),0);
+    if(Math.abs(totalArea-targetArea)>Math.max(20,targetArea*0.002)){
+      setPuzzleStatus("Les pièces ne correspondent pas à la surface du carré cible.","error");
+      return false;
+    }
+    if(pieces.some(item=>item.points.some(point=>!pointInConvexPolygon(point,target,1.5)))){
+      setPuzzleStatus("Une pièce dépasse encore du carré cible.","error");
+      return false;
+    }
+    for(let i=0;i<pieces.length;i++){
+      for(let j=i+1;j<pieces.length;j++){
+        const overlap=polygonArea(clipConvexPolygon(pieces[i].points,pieces[j].points));
+        if(overlap>Math.max(12,targetArea*0.0002)){
+          setPuzzleStatus("Les pièces se chevauchent encore.","error");
+          return false;
+        }
+      }
+    }
+    setPuzzleStatus("Bravo : les pièces remplissent exactement le carré de l’hypoténuse.","success");
+    return true;
+  }
+
   function setSelected(id){
     if(state.selectedId && state.pieces.has(state.selectedId)){
       const prev=state.pieces.get(state.selectedId);
@@ -326,31 +546,45 @@
   }
 
   function fitWorldToViewport(){
-  // Centre et ajuste le zoom en se basant uniquement sur le plateau (pas sur les pièces),
-  // pour éviter que le centrage bouge quand on déplace les pièces.
-  const W = stageWrap.clientWidth || 1;
-  const H = stageWrap.clientHeight || 1;
+    // Centre et ajuste le zoom en se basant uniquement sur les plateaux (pas sur
+    // les pièces), pour éviter que le cadrage bouge pendant une manipulation.
+    const W = stageWrap.clientWidth || 1;
+    const H = stageWrap.clientHeight || 1;
 
-  const gBoards = document.getElementById("boards");
-  const gBoardsL = document.getElementById("boardsL");
+    const gBoards = document.getElementById("boards");
+    const gBoardsL = document.getElementById("boardsL");
 
-  // En mode vide, on centre uniquement le moulin gauche (R est masqué)
-  const target = (state.mode === "vide" ? (gBoardsL || gBoards) : gBoards) || world;
-  const bb = target.getBBox();
+    // En mode vide, on centre uniquement le moulin gauche (R est masqué).
+    const target = (state.mode === "vide" ? (gBoardsL || gBoards) : gBoards) || world;
+    const bb = target.getBBox();
+    const compact = isCompactViewport() && state.mode === "eleves";
+    const pad = compact ? 18 : 32;
+    const contentW = bb.width  + pad * 2;
+    const contentH = bb.height + pad * 2;
 
-  const pad = 32;           // marge autour du plateau
-  const yShift = -8;       // léger biais vers le haut (plus proche du menu)       // léger biais vers le haut (plus proche du menu)
-  const contentW = bb.width  + pad * 2;
-  const contentH = bb.height + pad * 2;
+    if(compact){
+      // Sur téléphone, les deux moulins sont empilés. On privilégie leur largeur
+      // pour conserver des pièces manipulables, puis on laisse la scène défiler.
+      const s = Math.min(W / contentW, 1.35);
+      const sceneH = Math.max(H, contentH * s);
+      stage.style.height = `${sceneH}px`;
+      stage.style.minHeight = `${sceneH}px`;
+      stageWrap.style.overflowY = sceneH > H + 1 ? "auto" : "hidden";
+      state.worldTransform.s  = s;
+      state.worldTransform.tx = (W - contentW * s) / 2 - bb.x * s + pad * s;
+      state.worldTransform.ty = pad * s - bb.y * s + 12;
+    } else {
+      stage.style.height = "";
+      stage.style.minHeight = "";
+      stageWrap.style.overflowY = "hidden";
+      const s = Math.min(W / contentW, H / contentH, 1.35);
+      state.worldTransform.s  = s;
+      state.worldTransform.tx = (W - contentW * s) / 2 - bb.x * s + pad * s;
+      state.worldTransform.ty = (H - contentH * s) / 2 - bb.y * s + pad * s - 8;
+    }
 
-  const s = Math.min(W / contentW, H / contentH, 1.35);
-
-  state.worldTransform.s  = s;
-  state.worldTransform.tx = (W - contentW * s) / 2 - bb.x * s + pad * s;
-  state.worldTransform.ty = (H - contentH * s) / 2 - bb.y * s + pad * s + yShift;
-
-  applyWorldTransform();
-}
+    applyWorldTransform();
+  }
 
 // ---------- PUZZLES ----------
 
@@ -377,7 +611,11 @@
       generate: (Ax, Ay, b, ratio) => {
         const a = b * ratio;
         const mkTri = (ox, oy, w, h) => [ {x:ox, y:oy}, {x:ox+w, y:oy}, {x:ox, y:oy+h} ];
-        const sq = { key:"sq", fill:COLORS.softGray, points:[ {x:Ax-a, y:Ay}, {x:Ax, y:Ay}, {x:Ax, y:Ay+a}, {x:Ax-a, y:Ay+a} ]};
+        // Dans la construction de Bhaskara, le carré intérieur a pour côté |b-a|.
+        // Pour le triangle utilisé ici (a=b/2), ce côté vaut a ; l'écrire ainsi
+        // garde toutefois le générateur cohérent si le rapport évolue plus tard.
+        const d = Math.abs(b-a);
+        const sq = { key:"sq", fill:COLORS.softGray, points:[ {x:Ax-d, y:Ay}, {x:Ax, y:Ay}, {x:Ax, y:Ay+d}, {x:Ax-d, y:Ay+d} ]};
         const TopL = {x:Ax, y:Ay-b};
         return [
           { key:"t1", fill:COLORS.yellow, points: mkTri(TopL.x,     TopL.y,   a,  b) },
@@ -386,6 +624,32 @@
           { key:"t4", fill:COLORS.green,  points: mkTri(TopL.x+2*a, TopL.y+b, -a, -b) },
           sq
         ];
+      }
+    },
+
+    // Variante réellement manipulable : même dissection validée, mais
+    // disposition de départ réfléchie dans chacun des deux carrés sources.
+    // Elle réutilise exactement les mêmes formes et la même solution.
+    bhaskaraMiroir: {
+      name: "Cadre miroir",
+      generate: (Ax, Ay, b, ratio) => {
+        const a=b*ratio;
+        return PUZZLES.bhaskara.generate(Ax,Ay,b,ratio).map(piece=>{
+          const cx=piece.key === "sq" ? Ax-a/2 : Ax+b/2;
+          return {...piece,points:piece.points.map(p=>({x:2*cx-p.x,y:p.y}))};
+        });
+      }
+    },
+
+    bhaskaraTourne: {
+      name: "Cadre tourné",
+      generate: (Ax, Ay, b, ratio) => {
+        const a=b*ratio;
+        return PUZZLES.bhaskara.generate(Ax,Ay,b,ratio).map(piece=>{
+          const cx=piece.key === "sq" ? Ax-a/2 : Ax+b/2;
+          const cy=piece.key === "sq" ? Ay+a/2 : Ay-b/2;
+          return {...piece,points:piece.points.map(p=>({x:2*cx-p.x,y:2*cy-p.y}))};
+        });
       }
     },
 
@@ -552,7 +816,7 @@
         <p><strong>Objectif :</strong> déplacer les <strong>5 pièces</strong> provenant de <em>a²</em> et <em>b²</em> pour reconstituer le carré de l'hypoténuse <em>c²</em>.</p>
         <p class="muted">Conseil : commence par placer la grande pièce quadrilatère, puis complète avec les triangles.</p>
         <ul>
-          <li>Tu peux <strong>tourner</strong> (poignée ↻) et <strong>retourner</strong> une pièce (bouton <em>Retourner</em> ou double-clic rapide).</li>
+          <li>Tu peux <strong>tourner</strong> (poignée ↻) et <strong>retourner</strong> une pièce avec le bouton <em>Retourner</em>.</li>
           <li>Le <strong>snap</strong> est actif : relâche près d'un sommet (carré / autres pièces) pour aimanter.</li>
         </ul>
       `
@@ -562,6 +826,20 @@
       html: `
         <p><strong>Objectif :</strong> placer <strong>4 triangles</strong> et le <strong>carré</strong> pour reconstruire <em>c²</em>.</p>
         <p class="muted">Indice : les 4 triangles forment une sorte de cadre ; le petit carré comble le trou central.</p>
+      `
+    },
+    bhaskaraMiroir: {
+      title: "Puzzle 5 — Cadre miroir",
+      html: `
+        <p><strong>Objectif :</strong> reconstruire <em>c²</em> avec les mêmes 4 triangles et le carré central, dans une disposition de départ réfléchie.</p>
+        <p class="muted">Indice : les triangles forment un cadre autour du carré central.</p>
+      `
+    },
+    bhaskaraTourne: {
+      title: "Puzzle 6 — Cadre tourné",
+      html: `
+        <p><strong>Objectif :</strong> reconstruire <em>c²</em> avec les 4 triangles et le carré central, après un départ tourné.</p>
+        <p class="muted">Indice : replace les triangles autour du carré central puis aligne le cadre sur les côtés de <em>c²</em>.</p>
       `
     },
     leitzmann: {
@@ -580,7 +858,7 @@
         <ul>
           <li>Astuce : place d’abord le carré entier dans un coin de <em>c²</em>.</li>
           <li>Les 4 pièces identiques se complètent bien quand leurs arêtes « obliques » sont alignées avec le bord de <em>c²</em>.</li>
-          <li>Tu peux <strong>retourner</strong> une pièce (bouton <em>Retourner</em> ou double‑clic).</li>
+          <li>Tu peux <strong>retourner</strong> une pièce avec le bouton <em>Retourner</em>.</li>
         </ul>
       `
     }
@@ -635,12 +913,30 @@
   function buildScene(){
     while(world.firstChild) world.removeChild(world.firstChild);
     state.pieces.clear();
+    state.solutionPoses.clear();
     state.snapPoints=[];
     state.molds=[];
 
     const b=BASE.b, r=BASE.ratio, a=b*r;
-    const left = buildMoulin("L", BASE.margin+a, BASE.margin+b, b, r);
-    const right = buildMoulin("R", BASE.margin+a+(b+2*a)+BASE.gap, BASE.margin+b, b, r);
+    const compact = isCompactViewport();
+    stage.classList.toggle("compactLayout", compact);
+    const leftX = BASE.margin+a;
+    const topY = BASE.margin+b;
+    const left = buildMoulin(
+      "L",
+      leftX,
+      compact ? topY+(2*b+a+20) : topY,
+      b,
+      r
+    );
+    const right = buildMoulin(
+      "R",
+      compact ? leftX : leftX+(b+2*a)+BASE.gap,
+      topY,
+      b,
+      r
+    );
+    state.layoutCompact = compact;
 
     state.moulins = {L:left, R:right};
     state.molds.push(left.mold, right.mold);
@@ -649,7 +945,21 @@
     const gB=svgEl("g", {id:"boards"});
     const gP=svgEl("g", {id:"pieces"});
     const gL=svgEl("g", {id:"labels"});
-    world.append(gB, gP, gL);
+    const gNotes=svgEl("g", {id:"mobileNotes"});
+    world.append(gB, gP, gL, gNotes);
+
+    if(compact){
+      const targetCenter={
+        x:(right.B.x+right.C.x+right.Cw.x+right.Bw.x)/4,
+        y:(right.B.y+right.C.y+right.Cw.y+right.Bw.y)/4
+      };
+      gNotes.append(
+        svgEl("text",{x:targetCenter.x,y:Math.min(right.B.y,right.C.y,right.Cw.y,right.Bw.y)-28,class:"mobileNote"}),
+        svgEl("text",{x:left.A.x+b/2,y:left.A.y-b-28,class:"mobileNote"})
+      );
+      gNotes.firstChild.textContent="CIBLE";
+      gNotes.lastChild.textContent="PIÈCES À DÉPLACER";
+    }
 
     [left, right].forEach(m => {
       const {A,B,C,Bw,Cw} = m;
@@ -673,7 +983,7 @@
       // Carré sur l'hypoténuse
       gBM.appendChild(svgEl("polygon", {
         points:`${B.x},${B.y} ${C.x},${C.y} ${Cw.x},${Cw.y} ${Bw.x},${Bw.y}`,
-        class:"boardLine"
+        class:`boardLine${m.moulinId === "R" ? " targetSquare" : ""}`
       }));
 
       // Angle droit (repère)
@@ -690,16 +1000,6 @@
         gL.appendChild(t);
       });
 
-
-      // Aperçu des pièces sur le moulin de droite (non déplaçable)
-      if(m.moulinId === "R"){
-        const gPrev = svgEl("g",{id:"previewR"});
-        m.pieces.forEach(pdef => {
-          const pts = pdef.points.map(p => `${p.x.toFixed(2)},${p.y.toFixed(2)}`).join(" ");
-          gPrev.appendChild(svgEl("polygon",{points:pts, fill:(pdef.fill||"#cccccc"), class:"previewPoly"}));
-        });
-        gBM.appendChild(gPrev);
-      }
 
       if(m.moulinId === "L"){
 
@@ -750,6 +1050,7 @@
       }
     });
 
+    prepareSolutionPoses();
     fitWorldToViewport();
   }
 
@@ -802,7 +1103,7 @@
   }
 
   function applyBhaskaraAngleSnap(piece, thresholdDeg = 14){
-    if(state.puzzle !== "bhaskara" || !piece) return false;
+    if(!isBhaskaraPuzzle() || !piece) return false;
 
     // On n'applique cette aide que près du moulin cible, pour éviter
     // de perturber les pièces encore posées sur le moulin de gauche.
@@ -908,7 +1209,7 @@
   }
 
   function tryBhaskaraEdgeSnap(piece){
-    if(state.puzzle !== "bhaskara" || !piece) return false;
+    if(!isBhaskaraPuzzle() || !piece) return false;
     if(piece.id.endsWith("-sq")) return false;
     if(!isNearRightMoulin(piece, 260)) return false;
 
@@ -916,7 +1217,7 @@
     // On utilise les poses exactes déjà calculées pour le puzzle Bhaskara.
     // Puis on capture la pièce si SON hypoténuse actuelle est proche de
     // l'hypoténuse de l'une de ces poses exactes.
-    const candidates = state.bhaskaraPoseTargets.get(piece.id) || [];
+    const candidates = state.bhaskaraPoseTargets?.get(piece.id) || [];
     if(!candidates.length) return false;
 
     const hyp = longestLocalEdge(piece);
@@ -973,11 +1274,11 @@
   }
 
   function tryBhaskaraSquareSnap(piece){
-    if(state.puzzle !== "bhaskara" || !piece) return false;
+    if(!isBhaskaraPuzzle() || !piece) return false;
     if(!piece.id.endsWith("-sq")) return false;
     if(!isNearRightMoulin(piece, 240)) return false;
 
-    const candidates = state.bhaskaraPoseTargets.get(piece.id) || [];
+    const candidates = state.bhaskaraPoseTargets?.get(piece.id) || [];
     if(!candidates.length) return false;
 
     let best = null;
@@ -1012,6 +1313,62 @@
     }
 
     return false;
+  }
+
+  function segmentsFromVertices(vertices){
+    const out = [];
+    for(let i=0; i<vertices.length; i++){
+      out.push({a:vertices[i], b:vertices[(i+1)%vertices.length]});
+    }
+    return out;
+  }
+
+  // Aimantation complémentaire : lorsque la pièce est déjà orientée comme la
+  // cible, on aligne aussi un bord entier. Cela évite le simple « coin collé »
+  // qui était insuffisant pour les puzzles les plus complexes.
+  function tryEdgeSnap(piece){
+    if(!piece || !isNearRightMoulin(piece, 260)) return false;
+    const R = state.moulins?.R;
+    if(!R) return false;
+
+    const targetSegments = segmentsFromVertices(R.mold.corners);
+    for(const [id, other] of state.pieces.entries()){
+      if(id === piece.id || !isNearRightMoulin(other, 260)) continue;
+      targetSegments.push(...segmentsFromVertices(pieceWorldVertices(other)));
+    }
+
+    const current = pieceWorldVertices(piece);
+    const pieceSegments = segmentsFromVertices(current);
+    let best = null;
+
+    for(const ps of pieceSegments){
+      const pAngle = deg(Math.atan2(ps.b.y-ps.a.y, ps.b.x-ps.a.x));
+      const pLen = Math.hypot(ps.b.x-ps.a.x, ps.b.y-ps.a.y);
+      for(const ts of targetSegments){
+        const tLen = Math.hypot(ts.b.x-ts.a.x, ts.b.y-ts.a.y);
+        if(Math.abs(pLen-tLen) > SNAP.posStrong*1.8) continue;
+
+        for(const [ta,tb] of [[ts.a,ts.b],[ts.b,ts.a]]){
+          const targetAngle = deg(Math.atan2(tb.y-ta.y, tb.x-ta.x));
+          const angleD = Math.abs(normAngleDeg(pAngle-targetAngle));
+          if(angleD > 12) continue;
+
+          const delta = {x:ta.x-ps.a.x, y:ta.y-ps.a.y};
+          const movedB = {x:ps.b.x+delta.x, y:ps.b.y+delta.y};
+          const endD = Math.hypot(movedB.x-tb.x, movedB.y-tb.y);
+          if(endD > 42) continue;
+
+          const score = endD + Math.abs(pLen-tLen)*0.6 + angleD*1.4;
+          if(!best || score < best.score) best = {delta, score};
+        }
+      }
+    }
+
+    if(!best) return false;
+    piece.pos.x += best.delta.x;
+    piece.pos.y += best.delta.y;
+    applyPieceTransform(piece);
+    return true;
   }
 
 
@@ -1066,7 +1423,7 @@
         // Bhaskara : on ajoute des rotations qui alignent une arête de la pièce
         // avec les côtés du carré incliné c². C'est ce qui aide l'hypoténuse
         // à devenir vraiment parallèle au bord cible.
-        if(state.puzzle === "bhaskara" && isNearRightMoulin(piece, 260)){
+        if(isBhaskaraPuzzle() && isNearRightMoulin(piece, 260)){
           const localEdges = edgeAnglesLocal(piece);
           const targetAngles = bhaskaraTargetAngles();
           for(const localA of localEdges){
@@ -1082,7 +1439,7 @@
           if(d<bestD){bestD=d;best=c;}
         });
 
-        const threshold = (state.puzzle === "bhaskara" && isNearRightMoulin(piece, 260)) ? 12 : SNAP.rot;
+        const threshold = (isBhaskaraPuzzle() && isNearRightMoulin(piece, 260)) ? 12 : SNAP.rot;
         if(bestD<threshold) piece.rot=best;
       }
     }
@@ -1105,6 +1462,7 @@
     if(piece && state.snapEnabled){
       applyBhaskaraAngleSnap(piece, 18);
       snappedByBhaskaraExact = tryBhaskaraEdgeSnap(piece) || tryBhaskaraSquareSnap(piece);
+      if(!snappedByBhaskaraExact) snappedByBhaskaraExact = tryEdgeSnap(piece);
     }
 
     // Snap : vers le carré c² + vers les sommets des autres pièces (pour aider à fermer le pavage)
@@ -1161,16 +1519,18 @@
       btnModeVide.classList.remove("on");
       stage.classList.remove("modeVide");
     }
-    
-    // Visibilité robuste (pour le centrage et pour que #labels puisse fonctionner en mode vide)
+
+    // Visibilité explicite : elle complète les règles CSS et empêche les lettres
+    // du moulin cible de réapparaître en mode « Vide ».
     const gPieces = document.getElementById("pieces");
     const gBoardsR = document.getElementById("boardsR");
     if(gPieces)  gPieces.style.display  = (mode === "vide") ? "none" : "";
     if(gBoardsR) gBoardsR.style.display = (mode === "vide") ? "none" : "";
-    // On masque aussi les lettres du moulin droit en mode vide (sinon elles peuvent influencer le centrage)
     document.querySelectorAll('.label[data-side="R"]').forEach(el=>{
       el.style.display = (mode === "vide") ? "none" : "";
     });
+
+    // Visibilité robuste (pour le centrage et pour que #labels puisse fonctionner en mode vide)
     fitWorldToViewport();
   }
 
@@ -1192,6 +1552,7 @@
       applyPieceTransform(p);
     });
     setSelected(null);
+    setPuzzleStatus("");
   };
 
   btnFlip.onclick = () => {
@@ -1199,19 +1560,20 @@
     if(state.selectedId) flipPiece(state.selectedId);
   };
 
+  btnCheckSolution.onclick = () => checkPuzzleSolution();
+  btnShowSolution.onclick = () => showSolution();
+
   puzzleSelect.onchange = (e) => {
     state.puzzle = e.target.value;
     buildScene();
-    // garder le mode actuel
-    if(state.mode === "vide") stage.classList.add("modeVide");
-    fitWorldToViewport();
+    // garder le mode actuel et ses règles de visibilité
+    setMode(state.mode);
   };
 
   btnFullscreen.onclick = () => {
     if(!document.fullscreenElement) document.documentElement.requestFullscreen();
     else document.exitFullscreen();
   };
-
 
   // ---------- Énoncé (impression) ----------
   btnEnonce.onclick = openEnonce;
@@ -1362,7 +1724,7 @@
   <text class="tag" x="${tag1x}" y="${tag1y}">1</text>
   <text class="tag" x="${tag2x}" y="${tag2y}">2</text>
   ${drawMoulinStatic(L, true)}
-  ${drawMoulinStatic(R, true)}
+  ${drawMoulinStatic(R, false)}
 </svg>`;
 }
 
@@ -1681,9 +2043,56 @@ function buildApplicationMoulinSVG(AB_cm = 5, AC_cm = 12) {
   modalClose.onclick = closeEnonce;
   modal.addEventListener("pointerdown", (e)=>{ e.preventDefault(); e.stopPropagation(); });
 
+  // Contrat d’intégration pour une fiche élève : ouvrir directement un puzzle.
+  function puzzleLaunchConfig(override={}){
+    const params = new URLSearchParams(window.location.search);
+    const globalConfig = window.MATHSGO_PYTHAGORE_PUZZLE_CONFIG;
+    const base = globalConfig && typeof globalConfig === "object" ? globalConfig : {};
+    const query = {};
+    if(params.has("puzzle")) query.puzzle = params.get("puzzle");
+    if(params.has("mode")) query.mode = params.get("mode");
+    if(params.has("letters")) query.letters = /^(1|true|oui|yes)$/i.test(params.get("letters"));
+    return {...base, ...query, ...override};
+  }
+
+  function applyPuzzleLaunchConfig(override={}){
+    const cfg = puzzleLaunchConfig(override);
+    if(cfg.puzzle && [...puzzleSelect.options].some(opt => opt.value === cfg.puzzle)){
+      state.puzzle = cfg.puzzle;
+      puzzleSelect.value = cfg.puzzle;
+    }
+    if(cfg.mode === "eleves" || cfg.mode === "vide") state.mode = cfg.mode;
+    if(typeof cfg.letters === "boolean") state.lettersEnabled = cfg.letters;
+    return cfg;
+  }
+
   // ---------- init ----------
+  applyPuzzleLaunchConfig();
   buildScene();
-  window.addEventListener("resize", fitWorldToViewport);
+  fitWorldToViewport();
+  setMode(state.mode);
+  toggleLetters.classList.toggle("on", state.lettersEnabled);
+  stage.classList.toggle("showLetters", state.lettersEnabled);
+  window.MathsGoPythagorePuzzle = {
+    launch(config={}){
+      applyPuzzleLaunchConfig(config);
+      buildScene();
+      fitWorldToViewport();
+      setMode(state.mode);
+      toggleLetters.classList.toggle("on", state.lettersEnabled);
+      stage.classList.toggle("showLetters", state.lettersEnabled);
+    },
+    start(config={}){ this.launch(config); }
+  };
+  window.addEventListener("resize", () => {
+    const compact = isCompactViewport();
+    if(state.layoutCompact !== compact){
+      buildScene();
+      setMode(state.mode);
+    } else {
+      fitWorldToViewport();
+    }
+  });
 })();
 </script>
 </body>
