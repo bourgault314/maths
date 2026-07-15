@@ -414,9 +414,10 @@ select { cursor: pointer; }
 .section-heading {
   display: flex;
   align-items: end;
-  justify-content: space-between;
+  justify-content: center;
   gap: 16px;
   margin: 0 0 15px;
+  text-align: center;
 }
 
 .section-heading h2 {
@@ -524,20 +525,19 @@ select { cursor: pointer; }
 .domain-card {
   position: relative;
   min-width: 0;
-  min-height: 205px;
+  min-height: 138px;
   display: grid;
-  grid-template-columns: 1fr;
-  align-content: center;
-  justify-items: center;
-  gap: 9px;
-  padding: 18px 22px;
+  grid-template-columns: 78px minmax(0, 1fr) 22px;
+  align-items: center;
+  gap: 15px;
+  padding: 18px;
   overflow: hidden;
   border: 1px solid #d7e0e9;
-  border-top: 6px solid var(--accent, var(--blue));
+  border-left: 6px solid var(--accent, var(--blue));
   border-radius: 17px;
   color: inherit;
   background: #fff;
-  text-align: center;
+  text-align: left;
   box-shadow: 0 4px 10px rgba(15, 40, 72, .05);
   transition: transform .16s ease, box-shadow .16s ease, border-color .16s ease;
 }
@@ -563,8 +563,8 @@ select { cursor: pointer; }
 
 .domain-card-secondary {
   grid-column: 1 / -1;
-  min-height: 175px;
-  grid-template-columns: 1fr;
+  min-height: 105px;
+  grid-template-columns: 66px minmax(0, 1fr) 22px;
   background: linear-gradient(135deg, #f4fbf5, #fff);
 }
 
@@ -575,22 +575,21 @@ select { cursor: pointer; }
   height: 62px;
   display: grid;
   place-items: center;
-  margin: 0 auto;
 }
 
 .domain-card-icon svg { width: 100%; height: 100%; overflow: visible; }
 [data-domain-card="proportionnalite-mesures"] {
-  grid-template-columns: 1fr;
+  grid-template-columns: 100px minmax(0, 1fr) 22px;
 }
 [data-domain-card="proportionnalite-mesures"] .domain-card-icon {
   width: 98px;
   height: 66px;
 }
-.domain-card-copy { position: relative; z-index: 1; min-width: 0; max-width: 460px; }
+.domain-card-copy { position: relative; z-index: 1; min-width: 0; }
 .domain-card-copy strong { display: block; color: #16304f; font-size: 1.14rem; line-height: 1.2; }
 .domain-card-copy small { display: block; margin-top: 6px; color: #64758a; font-size: .88rem; line-height: 1.35; }
 .domain-card-copy em { display: block; margin-top: 8px; color: var(--accent, var(--blue)); font-size: .77rem; font-style: normal; font-weight: 800; }
-.domain-card-arrow { display: none; }
+.domain-card-arrow { position: relative; z-index: 1; color: var(--accent, var(--blue)); font-size: 1.35rem; font-weight: 800; }
 
 .notion-card,
 .resource-card {
@@ -853,7 +852,7 @@ select { cursor: pointer; }
   .domain-card {
     min-height: 164px;
     grid-template-columns: 1fr;
-    align-content: center;
+    align-content: start;
     gap: 8px;
     padding: 13px 12px;
     border-left-width: 1px;
