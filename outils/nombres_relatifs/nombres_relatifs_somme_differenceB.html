@@ -2,8 +2,9 @@
 <html lang="fr">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Opérations Relatifs - La Soustraction</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <meta name="description" content="Plateau interactif pour manipuler la soustraction des nombres relatifs.">
+    <title>Manipuler les nombres relatifs — Soustraction | maths&go</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;600;800&display=swap" rel="stylesheet">
     <style>
@@ -11,10 +12,16 @@
             font-family: 'Fredoka', sans-serif;
             background-color: #f0f9ff;
             overflow: hidden;
-            touch-action: none;
+            touch-action: manipulation;
             user-select: none;
             -webkit-user-select: none;
             cursor: default;
+        }
+
+        button:focus-visible,
+        a:focus-visible {
+            outline: 3px solid #f59e0b;
+            outline-offset: 2px;
         }
 
         /* --- STYLES DES JETONS --- */
@@ -242,7 +249,6 @@ body.projection-mode .token.crossed::before {
         }
 
 
-    
         /* --- ADAPTATION MOBILE : uniquement la présentation --- */
         @media (max-width: 639px) {
             html,
@@ -491,6 +497,12 @@ body.projection-mode .token.crossed::before {
                 transform: scale(1.06);
             }
 
+            /* Le plateau conserve la manipulation au doigt ; la page et l’en-tête peuvent zoomer. */
+            header,
+            aside {
+                touch-action: manipulation;
+            }
+
             .target-token {
                 width: 30px;
                 height: 30px;
@@ -534,10 +546,10 @@ body.projection-mode .token.crossed::before {
             
             <!-- GAUCHE : Boutons Actions -->
             <div class="flex items-center gap-2 sm:gap-3 flex-shrink-0">
-                 <a href="index.html" class="board-back bg-slate-100 text-slate-600 hover:bg-slate-200 p-2 rounded-lg border border-slate-200 shadow-sm flex items-center justify-center transition" title="Retour aux nombres relatifs" aria-label="Retour aux nombres relatifs">
+                <a href="index.html" class="board-back bg-slate-100 text-slate-600 hover:bg-slate-200 p-2 rounded-lg border border-slate-200 shadow-sm flex items-center justify-center transition" title="Retour aux nombres relatifs" aria-label="Retour aux nombres relatifs">
                     <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m3 9 9-6 9 6v10a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><path d="M9 21V12h6v9"/></svg>
                 </a>
-<button onclick="resetBoard()" class="bg-rose-100 text-rose-600 hover:bg-rose-200 p-2 sm:px-3 sm:py-2 rounded-lg font-bold border border-rose-200 shadow-sm flex items-center gap-1 active:bg-rose-300 transition" title="Tout recommencer">
+                 <button onclick="resetBoard()" class="bg-rose-100 text-rose-600 hover:bg-rose-200 p-2 sm:px-3 sm:py-2 rounded-lg font-bold border border-rose-200 shadow-sm flex items-center gap-1 active:bg-rose-300 transition" title="Tout recommencer">
                     <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
                     </svg>
@@ -600,7 +612,7 @@ body.projection-mode .token.crossed::before {
                     </svg>
                 </button>
 
-                <button onclick="toggleSound()" id="btn-sound" class="p-2 rounded text-gray-600 hover:bg-gray-200 active:scale-95 transition flex items-center justify-center" title="Son on/off">
+                <button onclick="toggleSound()" id="btn-sound" class="p-2 rounded text-gray-600 hover:bg-gray-200 active:scale-95 transition flex items-center justify-center" title="Activer le son" aria-label="Activer le son" aria-pressed="false">
                     <svg id="icon-sound-on" xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5L6 9H3v6h3l5 4V5z" />
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.54 8.46a5 5 0 010 7.07" />
@@ -952,17 +964,25 @@ board.addEventListener('wheel', (e) => {
 
         // --- AUDIO ENGINE ---
         let soundEnabled = false;
-        try { soundEnabled = JSON.parse(localStorage.getItem('relatifs_sound_v2') ?? 'false'); } catch(e) { soundEnabled = false; }
+        try { soundEnabled = JSON.parse(localStorage.getItem('relatifs_sound_v2') ?? 'false') === true; } catch(e) { soundEnabled = false; }
 
-        const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        const AudioContextClass = window.AudioContext || window.webkitAudioContext;
+        let audioCtx = null;
+        function getAudioContext() {
+            if (audioCtx || !AudioContextClass) return audioCtx;
+            try { audioCtx = new AudioContextClass(); } catch (_) { audioCtx = null; }
+            return audioCtx;
+        }
         function playSound(type) {
             if (!soundEnabled) return;
-            if (audioCtx.state === 'suspended') audioCtx.resume();
-            const osc = audioCtx.createOscillator();
-            const gain = audioCtx.createGain();
+            const ctx = getAudioContext();
+            if (!ctx) return;
+            if (ctx.state === 'suspended') ctx.resume().catch(() => {});
+            const osc = ctx.createOscillator();
+            const gain = ctx.createGain();
             osc.connect(gain);
-            gain.connect(audioCtx.destination);
-            const now = audioCtx.currentTime;
+            gain.connect(ctx.destination);
+            const now = ctx.currentTime;
 
             if (type === 'pop') {
                 osc.type = 'sine';
@@ -1936,14 +1956,21 @@ const id = parseInt(el.id.split('-')[1]);
         function syncSoundIcon() {
             const on = document.getElementById('icon-sound-on');
             const off = document.getElementById('icon-sound-off');
+            const btn = document.getElementById('btn-sound');
             if (!on || !off) return;
             if (soundEnabled) { on.classList.remove('hidden'); off.classList.add('hidden'); }
             else { on.classList.add('hidden'); off.classList.remove('hidden'); }
+            if (btn) {
+                btn.setAttribute('aria-pressed', String(soundEnabled));
+                btn.setAttribute('aria-label', soundEnabled ? 'Désactiver le son' : 'Activer le son');
+                btn.title = soundEnabled ? 'Désactiver le son' : 'Activer le son';
+            }
         }
         function toggleSound() {
             soundEnabled = !soundEnabled;
             try { localStorage.setItem('relatifs_sound_v2', JSON.stringify(soundEnabled)); } catch(e) {}
             syncSoundIcon();
+            if (soundEnabled) playSound('click');
         }
 
         function toggleHelp(force) {
