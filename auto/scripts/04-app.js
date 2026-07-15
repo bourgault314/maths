@@ -293,8 +293,11 @@ function slideModeForVisualPolicy(mode,policy){
 function eligibleQuestionsForModule(m){
   const mode=document.getElementById('visualMode').value;
   const level=document.getElementById('level').value;
+  const experience=document.getElementById('experienceMode')?.value||'interactive';
   const questions=m.id==='dnb_01'?MODULE01_TEMPLATES:m.questions;
-  return questions.filter(q=>questionEligibleForLevel(m,q,level) && questionEligibleForVisualMode(m,q,mode));
+  return questions.filter(q=>questionEligibleForLevel(m,q,level)
+    && questionEligibleForVisualMode(m,q,mode)
+    && (experience==='interactive'||!q.options?.pythagore_tactile_kind));
 }
 
 function chooseFractionPercentQuestions(moduleId,questions,count){
