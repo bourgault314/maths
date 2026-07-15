@@ -40,6 +40,10 @@
             <path d="M21.45 12c.529.493 1.283 1.157 1.472 1.73.189.573-.034 1.225-.337 1.709-.303.485-.991.847-1.481 1.2-.49.352-.965.666-1.459.916-.494.25-.993.462-1.506.584-.513.122-1.142.006-1.572.147-.43.141-.732.251-1.007.701-.274.451-.335 1.345-.64 2-.305.656-.703 1.578-1.19 1.935-.487.357-1.175.346-1.73.208-.555-.138-1.112-.681-1.598-1.038-.487-.357-.932-.712-1.322-1.105-.391-.392-.747-.801-1.022-1.251-.274-.45-.358-1.085-.625-1.45-.267-.365-.465-.619-.978-.741-.513-.122-1.382.097-2.1.01-.718-.088-1.718-.182-2.208-.535-.49-.352-.692-1.01-.732-1.581-.04-.57.304-1.267.493-1.841.189-.573.389-1.105.642-1.598.253-.493.531-.958.875-1.358.343-.4.921-.676 1.185-1.043.265-.367.445-.634.403-1.159-.043-.526-.52-1.285-.658-1.995-.139-.709-.358-1.689-.174-2.264.184-.575.747-.971 1.277-1.185.53-.215 1.3-.103 1.903-.1.604.003 1.172.028 1.719.117.547.088 1.075.209 1.562.412.487.203.927.667 1.358.805.431.138.74.227 1.227.024.486-.202 1.061-.89 1.693-1.241.632-.352 1.497-.863 2.1-.866.604-.003 1.155.411 1.522.849.368.438.499 1.204.683 1.779.184.575.335 1.123.42 1.67.085.548.133 1.088.091 1.613-.043.526-.348 1.088-.346 1.541.001.452.012.774.356 1.174.343.4 1.175.734 1.704 1.227Z" fill="#22c55e" stroke="#166534" stroke-width="1.05"/>
             <text x="12" y="15.3" text-anchor="middle" fill="#fff" font-family="Arial" font-size="7" font-weight="900">?</text>
           </g>
+          <g transform="translate(326 35) rotate(-3 11 24)">
+            <rect x="0" y="0" width="22" height="48" rx="3.5" fill="#ef655e" stroke="#7f1d1d" stroke-width="1.8"/>
+            <text x="11" y="28" text-anchor="middle" fill="#111827" font-family="Arial" font-size="10" font-weight="900">−x</text>
+          </g>
           <g transform="translate(354 22) rotate(3 39 37)">
             <path d="M0 27h18v18H0Z" fill="#bfdbfe" stroke="#2563eb" stroke-width="1.7"/><path d="M18 45h24v24H18Z" fill="#fde68a" stroke="#ca8a04" stroke-width="1.7"/><path d="M18 27 36 3l24 18-18 24Z" fill="#fecaca" stroke="#dc2626" stroke-width="1.7"/><path d="M18 27v18h24Z" fill="#ecfeff" stroke="#0f766e" stroke-width="2.1"/><path d="M18 39h6v6" fill="none" stroke="#f97316" stroke-width="2"/>
             <text x="9" y="39" text-anchor="middle" fill="#1d4ed8" font-family="Arial" font-size="7.5" font-weight="900">A²</text>
@@ -63,11 +67,16 @@
     </section>
 
     <footer>
-      <span>Gwenaël Bourgault</span><span aria-hidden="true">·</span>
-      <button type="button" class="contact-btn" data-open="contact-modal">Me contacter</button><span aria-hidden="true">·</span>
-      <a class="footer-link" href="mentions-legales.html">Mentions légales</a><span aria-hidden="true">·</span>
-      <a class="footer-link" href="confidentialite.html">Confidentialité</a><span aria-hidden="true">·</span>
-      <button type="button" class="footer-link" onclick="window.mathsgoConsentement &amp;&amp; window.mathsgoConsentement.ouvrir()">Gérer mes cookies</button>
+      <span class="footer-line">
+        <span>Gwenaël Bourgault</span><span aria-hidden="true">·</span>
+        <button type="button" class="contact-btn" data-open="contact-modal">Me contacter</button>
+      </span>
+      <span class="footer-divider" aria-hidden="true">·</span>
+      <span class="footer-line">
+        <a class="footer-link" href="mentions-legales.html">Mentions légales</a><span aria-hidden="true">·</span>
+        <a class="footer-link" href="confidentialite.html">Confidentialité</a><span aria-hidden="true">·</span>
+        <button type="button" class="footer-link" data-mathsgo-consent-open onclick="window.mathsgoConsentement &amp;&amp; window.mathsgoConsentement.ouvrir()">Cookies</button>
+      </span>
     </footer>
   </main>
 
@@ -75,7 +84,7 @@
     <div class="modal-content" role="dialog" aria-modal="true" aria-labelledby="contact-title">
       <button type="button" class="close-modal" data-close="contact-modal" aria-label="Fermer">×</button>
       <h2 id="contact-title">Me contacter</h2>
-      <p class="modal-note">N’hésitez pas pour toute remarque, question ou bug rencontré sur le site.</p>
+      <p class="modal-note">Une remarque, une question ou un bug à signaler&nbsp;?</p>
       <a class="btn-send" href="mailto:gwenael@mathsgo.re?subject=Contact%20depuis%20mathsgo.re">Écrire à gwenael@mathsgo.re</a>
       <p class="contact-privacy-note">Le message s’ouvre dans votre application de messagerie. Aucune donnée n’est transmise par maths&amp;go.</p>
     </div>
