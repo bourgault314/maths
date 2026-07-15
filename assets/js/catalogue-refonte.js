@@ -252,7 +252,7 @@
       triangles: `<svg viewBox="0 0 70 48" aria-hidden="true"><path d="M10 40 31 6l31 34Z" fill="#e0f2fe" stroke="#2563eb" stroke-width="2" stroke-linejoin="round"/><g fill="none" stroke="#0d9488" stroke-width="1.45"><path d="M31 6v34M10 40 38.4 14.1M62 40 24.4 16.8"/></g><g fill="#fff" stroke="#f97316" stroke-width="1.2"><path d="M31 35h5v5"/><rect x="35.5" y="13.7" width="4.5" height="4.5" transform="rotate(47.7 37.75 15.95)"/><rect x="22.1" y="14.5" width="4.5" height="4.5" transform="rotate(-58.3 24.35 16.75)"/></g></svg>`,
       parallelograms: `<svg viewBox="0 0 70 48" aria-hidden="true"><path d="M16 8h43L49 40H6Z" fill="#dcfce7" stroke="#15803d" stroke-width="2" stroke-linejoin="round"/><path d="M16 8 49 40M59 8 6 40" fill="none" stroke="#2563eb" stroke-width="1.6"/><circle cx="32.5" cy="24" r="2.5" fill="#f97316" stroke="#fff" stroke-width="1"/><path d="M27 10h10M27 38h10M10 21l5 2M50 25l5 2" stroke="#15803d" stroke-width="1.4" stroke-linecap="round"/></svg>`,
       cube: `<svg viewBox="0 0 64 48" aria-hidden="true"><path d="m10 15 23-10 21 11-23 11Z" fill="#dbeafe" stroke="#2563eb" stroke-width="1.7"/><path d="m10 15 21 12v17L10 32Z" fill="#93c5fd" stroke="#2563eb" stroke-width="1.7"/><path d="m31 27 23-11v17L31 44Z" fill="#bfdbfe" stroke="#2563eb" stroke-width="1.7"/><path d="m21 10 22 11M21 21l23-10" stroke="#fff" stroke-width="1" opacity=".8"/></svg>`,
-      pythagore: `<svg viewBox="0 0 70 48" aria-hidden="true"><path d="M13 17h12v12H13Z" fill="#bfdbfe" stroke="#2563eb" stroke-width="1.25"/><path d="M25 29h16v16H25Z" fill="#fde68a" stroke="#ca8a04" stroke-width="1.25"/><path d="M25 17 37 1l16 12-12 16Z" fill="#fecaca" stroke="#dc2626" stroke-width="1.25"/><path d="M25 17v12h16Z" fill="#ecfeff" stroke="#0f766e" stroke-width="1.8"/><path d="M25 25h4v4" fill="none" stroke="#f97316" stroke-width="1.6"/></svg>`,
+      pythagore: `<svg viewBox="0 0 70 48" aria-hidden="true"><path d="M13 17h12v12H13Z" fill="#bfdbfe" stroke="#2563eb" stroke-width="1.25"/><path d="M25 29h16v16H25Z" fill="#fde68a" stroke="#ca8a04" stroke-width="1.25"/><path d="M25 17 37 1l16 12-12 16Z" fill="#fecaca" stroke="#dc2626" stroke-width="1.25"/><path d="M25 17v12h16Z" fill="#ecfeff" stroke="#0f766e" stroke-width="1.8"/><path d="M25 25h4v4" fill="none" stroke="#f97316" stroke-width="1.6"/><text x="19" y="25" text-anchor="middle" fill="#1d4ed8" font-family="Arial" font-size="5.8" font-weight="900">A²</text><text x="33" y="39" text-anchor="middle" fill="#92400e" font-family="Arial" font-size="5.8" font-weight="900">B²</text><text x="39" y="18" text-anchor="middle" fill="#991b1b" font-family="Arial" font-size="5.8" font-weight="900">C²</text></svg>`,
       stats: `<svg viewBox="0 0 64 48" aria-hidden="true"><path d="M7 42h51M9 42V5" stroke="#475569" stroke-width="1.7" stroke-linecap="round"/><rect x="14" y="28" width="9" height="14" rx="1.5" fill="#f9a8d4"/><rect x="28" y="18" width="9" height="24" rx="1.5" fill="#fb7185"/><rect x="42" y="8" width="9" height="34" rx="1.5" fill="#be3e68"/><path d="m14 22 13-7 12 5 15-15" fill="none" stroke="#0f766e" stroke-width="2.2" stroke-linecap="round"/></svg>`,
       average: `<svg viewBox="0 0 64 48" aria-hidden="true"><path d="M5 42h54" stroke="#475569" stroke-width="1.6"/><rect x="8" y="28" width="10" height="14" rx="2" fill="#93c5fd"/><rect x="21" y="10" width="10" height="32" rx="2" fill="#fca5a5"/><rect x="34" y="20" width="10" height="22" rx="2" fill="#fde68a"/><rect x="47" y="16" width="10" height="26" rx="2" fill="#86efac"/><path d="M6 22h53" stroke="#7c3aed" stroke-width="2" stroke-dasharray="4 3"/></svg>`,
       probability: `<svg viewBox="0 0 70 48" aria-hidden="true"><rect x="4" y="7" width="27" height="27" rx="6" fill="#fce7f3" stroke="#be3e68" stroke-width="1.8"/><g fill="#9d174d"><circle cx="11" cy="14" r="2.1"/><circle cx="24" cy="14" r="2.1"/><circle cx="11" cy="27" r="2.1"/><circle cx="24" cy="27" r="2.1"/></g><path d="M44 8h14l-2.5 6c6 5 8.5 16 6.5 26H40c-2-10 .5-21 6.5-26Z" fill="#fff7ed" stroke="#be3e68" stroke-width="1.8" stroke-linejoin="round"/><path d="M44 8h14" stroke="#9d174d" stroke-width="2" stroke-linecap="round"/><circle cx="47" cy="29" r="4" fill="#60a5fa" stroke="#1d4ed8" stroke-width="1"/><circle cx="55" cy="31" r="4" fill="#facc15" stroke="#a16207" stroke-width="1"/><circle cx="51" cy="22" r="4" fill="#39c979" stroke="#15803d" stroke-width="1"/></svg>`,
@@ -355,7 +355,10 @@
 
   function renderTabs() {
     document.querySelectorAll("[data-domain]").forEach((button) => {
-      button.setAttribute("aria-pressed", String(button.dataset.domain === state.domain));
+      button.setAttribute("aria-pressed", String(button.dataset.domain === state.domain && !state.notion));
+    });
+    document.querySelectorAll("[data-notion]").forEach((button) => {
+      button.setAttribute("aria-pressed", String(button.dataset.notion === state.notion && !state.domain));
     });
   }
 
@@ -413,6 +416,19 @@
         searchInput.value = "";
         typeSelect.value = "";
       }
+      clearQueryString();
+      render();
+    });
+  });
+
+  document.querySelectorAll("[data-notion]").forEach((button) => {
+    button.addEventListener("click", () => {
+      state.domain = "";
+      state.notion = button.dataset.notion || "";
+      state.query = "";
+      state.type = "";
+      searchInput.value = "";
+      typeSelect.value = "";
       clearQueryString();
       render();
     });
