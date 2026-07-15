@@ -20,9 +20,9 @@
   ];
 
   const domainDesign = {
-    "nombres-calculs": { icon: "fibonacci" },
+    "nombres-calculs": { icon: "ulam" },
     algebre: { icon: "splat" },
-    "proportionnalite-mesures": { icon: "thales" },
+    "proportionnalite-mesures": { icon: "pantograph" },
     geometrie: { icon: "seigaiha" },
     donnees: { icon: "frequencies" },
     informatique: { icon: "koch" },
@@ -161,6 +161,12 @@
       keywords: "triangle rectangle carré hypoténuse moulin",
       icon: "pythagore"
     },
+    thales: {
+      description: "Mesurer des longueurs et raisonner avec des droites parallèles.",
+      keywords: "thales parallèles pyramide ombre agrandissement réduction",
+      icon: "thales",
+      showWhenEmpty: true
+    },
     statistiques: {
       description: "Organiser et représenter des données.",
       keywords: "statistique graphique diagramme données",
@@ -261,8 +267,9 @@
 
   function icon(name) {
     const icons = {
-      fibonacci: `<svg viewBox="0 0 82 52" aria-hidden="true"><g stroke="#0b67b2" stroke-width="1.15" stroke-linejoin="round"><rect x="2" y="2" width="30" height="30" fill="#dbeafe"/><rect x="32" y="2" width="48" height="48" fill="#e0f2fe"/><rect x="2" y="32" width="18" height="18" fill="#bfdbfe"/><rect x="20" y="32" width="6" height="6" fill="#fef3c7"/><rect x="26" y="32" width="6" height="6" fill="#fed7aa"/><rect x="20" y="38" width="12" height="12" fill="#93c5fd"/></g><g fill="#083b66" font-family="Arial" font-weight="900" text-anchor="middle" dominant-baseline="central"><text x="17" y="17" font-size="10">5</text><text x="56" y="26" font-size="12">8</text><text x="11" y="41" font-size="8">3</text><text x="26" y="44" font-size="7">2</text><text x="23" y="35" font-size="4.8">1</text></g></svg>`,
-      thales: `<svg viewBox="0 0 82 52" aria-hidden="true"><path d="M4 44h74" stroke="#7c2d12" stroke-width="1.7" stroke-linecap="round"/><g fill="#fbbf24" stroke="#c2410c" stroke-width="1.35" stroke-linecap="round"><circle cx="10" cy="10" r="4.4"/><path d="M10 1.5v3M10 15.5v3M1.5 10h3M15.5 10h3M4 4l2.2 2.2M13.8 13.8 16 16M16 4l-2.2 2.2M6.2 13.8 4 16"/></g><path d="M15 31v13" fill="none" stroke="#9a3412" stroke-width="2.1" stroke-linecap="round"/><path d="m37 44 10-31 10 31Z" fill="#fdba74" stroke="#9a3412" stroke-width="1.6" stroke-linejoin="round"/><path d="M47 13v31M47 40h4v4" fill="none" stroke="#dc2626" stroke-width="1.5" stroke-linejoin="round"/><g fill="none" stroke="#0f766e" stroke-width="2.15" stroke-linecap="round"><path d="M15 31 26 44M47 13 73.23 44"/></g><g stroke="#f97316" stroke-width="2.5" stroke-linecap="round"><path d="M15 44h11M47 44h26.23"/></g></svg>`,
+      ulam: `<svg viewBox="0 0 64 52" aria-hidden="true"><rect x="6.5" y="1.5" width="49" height="49" rx="2" fill="#eff6ff" stroke="#1d4ed8" stroke-width="1.2"/><g stroke="#bfdbfe" stroke-width=".65"><path d="M13.5 1.5v49M20.5 1.5v49M27.5 1.5v49M34.5 1.5v49M41.5 1.5v49M48.5 1.5v49M6.5 8.5h49M6.5 15.5h49M6.5 22.5h49M6.5 29.5h49M6.5 36.5h49M6.5 43.5h49"/></g><g fill="#0f766e" stroke="#fff" stroke-width=".75"><circle cx="38" cy="26" r="2.35"/><circle cx="38" cy="19" r="2.35"/><circle cx="24" cy="19" r="2.35"/><circle cx="24" cy="33" r="2.35"/><circle cx="45" cy="26" r="2.35"/><circle cx="45" cy="12" r="2.35"/><circle cx="17" cy="12" r="2.35"/><circle cx="17" cy="26" r="2.35"/><circle cx="31" cy="40" r="2.35"/><circle cx="52" cy="19" r="2.35"/><circle cx="52" cy="5" r="2.35"/><circle cx="10" cy="5" r="2.35"/><circle cx="10" cy="33" r="2.35"/><circle cx="10" cy="47" r="2.35"/><circle cx="38" cy="47" r="2.35"/></g><circle cx="31" cy="26" r="2.8" fill="#f97316" stroke="#9a3412" stroke-width=".8"/></svg>`,
+      pantograph: `<svg viewBox="0 0 82 52" aria-hidden="true"><path d="M8 45c4-7 9-7 14 0" fill="none" stroke="#2563eb" stroke-width="1.8" stroke-linecap="round"/><path d="M56 45c6-12 14-12 21 0" fill="none" stroke="#f97316" stroke-width="2.2" stroke-linecap="round"/><g fill="none" stroke-linecap="round" stroke-linejoin="round"><path d="M18 11 47 11 59 35 30 35Z" stroke="#0f766e" stroke-width="3"/><path d="M30 35 18 45M47 11 72 33" stroke="#c2410c" stroke-width="2.4"/></g><g fill="#fbbf24" stroke="#92400e" stroke-width="1"><circle cx="18" cy="11" r="2.7"/><circle cx="47" cy="11" r="2.7"/><circle cx="59" cy="35" r="2.7"/><circle cx="30" cy="35" r="2.7"/></g><circle cx="18" cy="45" r="2.2" fill="#2563eb"/><path d="m70 30 4 5-3 2Z" fill="#f97316" stroke="#9a3412" stroke-width=".7"/></svg>`,
+      thales: `<svg viewBox="0 0 82 52" aria-hidden="true"><path d="M4 44h74" stroke="#7c2d12" stroke-width="1.7" stroke-linecap="round"/><g fill="#fbbf24" stroke="#c2410c" stroke-width="1.35" stroke-linecap="round"><circle cx="10" cy="10" r="4.4"/><path d="M10 1.5v3M10 15.5v3M1.5 10h3M15.5 10h3M4 4l2.2 2.2M13.8 13.8 16 16M16 4l-2.2 2.2M6.2 13.8 4 16"/></g><path d="M15 31v13" fill="none" stroke="#9a3412" stroke-width="2.1" stroke-linecap="round"/><path d="m37 44 10-31 10 31Z" fill="#fdba74" stroke="#9a3412" stroke-width="1.6" stroke-linejoin="round"/><path d="M47 13v31" fill="none" stroke="#dc2626" stroke-width="1.5"/><g fill="none" stroke="#0f766e" stroke-width="2.15" stroke-linecap="round"><path d="M15 31 26 44M47 13 73.23 44"/></g><g stroke="#f97316" stroke-width="2.5" stroke-linecap="round"><path d="M15 44h11M47 44h26.23"/></g></svg>`,
       seigaiha: `<svg viewBox="0 0 76 52" aria-hidden="true"><rect width="76" height="52" rx="4" fill="#eef2ff"/><g fill="none" stroke-linecap="round"><g stroke="#1d4ed8" stroke-width="1.8"><path d="M2 27A18 18 0 0 1 38 27M38 27A18 18 0 0 1 74 27"/><path d="M-16 49A18 18 0 0 1 20 49M20 49A18 18 0 0 1 56 49M56 49A18 18 0 0 1 92 49"/></g><g stroke="#0f766e" stroke-width="1.65"><path d="M8 27A12 12 0 0 1 32 27M44 27A12 12 0 0 1 68 27"/><path d="M-10 49A12 12 0 0 1 14 49M26 49A12 12 0 0 1 50 49M62 49A12 12 0 0 1 86 49"/></g><g stroke="#f97316" stroke-width="1.55"><path d="M14 27A6 6 0 0 1 26 27M50 27A6 6 0 0 1 62 27"/><path d="M-4 49A6 6 0 0 1 8 49M32 49A6 6 0 0 1 44 49M68 49A6 6 0 0 1 80 49"/></g></g></svg>`,
       frequencies: `<svg viewBox="0 0 78 52" aria-hidden="true"><rect x="3" y="11" width="26" height="26" rx="6" fill="#fce7f3" stroke="#be3e68" stroke-width="1.7"/><g fill="#9d174d"><circle cx="10" cy="18" r="2"/><circle cx="22" cy="18" r="2"/><circle cx="16" cy="24" r="2"/><circle cx="10" cy="30" r="2"/><circle cx="22" cy="30" r="2"/></g><path d="M38 45h37M38 45V12" fill="none" stroke="#475569" stroke-width="1.5" stroke-linecap="round"/><path d="m34.8 15.5 3.2-3.5 3.2 3.5" fill="none" stroke="#475569" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/><path d="M39 28h35" stroke="#7c3aed" stroke-width="1.2" stroke-dasharray="3 2"/><g stroke="#9d174d" stroke-width=".8"><rect x="42" y="30" width="4.2" height="15" rx="1" fill="#f9a8d4"/><rect x="47.6" y="27" width="4.2" height="18" rx="1" fill="#fb7185"/><rect x="53.2" y="29" width="4.2" height="16" rx="1" fill="#f9a8d4"/><rect x="58.8" y="26" width="4.2" height="19" rx="1" fill="#be3e68"/><rect x="64.4" y="31" width="4.2" height="14" rx="1" fill="#f9a8d4"/><rect x="70" y="28" width="4.2" height="17" rx="1" fill="#fb7185"/></g></svg>`,
       koch: `<svg viewBox="0 0 72 52" aria-hidden="true"><polygon points="12,35 17.33,35 20,39.62 22.67,35 28,35 30.67,39.62 28,44.24 33.33,44.24 36,48.86 38.67,44.24 44,44.24 41.33,39.62 44,35 49.33,35 52,39.62 54.67,35 60,35 57.33,31.22 59.27,27.02 54.67,27.44 52,23.67 53.94,19.47 58.54,19.05 55.88,15.27 57.81,11.07 53.21,11.49 50.54,7.71 48.6,11.91 44,12.33 41.33,8.56 43.27,4.36 38.67,4.78 36,1 33.33,4.78 28.73,4.36 30.67,8.56 28,12.33 23.4,11.91 21.46,7.71 18.79,11.49 14.19,11.07 16.12,15.27 13.46,19.05 18.06,19.47 20,23.67 17.33,27.44 12.73,27.02 14.67,31.22" fill="#eef0ff" stroke="#4f5fb3" stroke-width="1.35" stroke-linejoin="round"/><polyline points="12,35 17.33,35 20,39.62 22.67,35" fill="none" stroke="#f97316" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/><g transform="translate(9 35)" stroke="#166534" stroke-width=".9" stroke-linecap="round"><ellipse cx="0" cy="0" rx="4.8" ry="3.2" fill="#22c55e"/><path d="M-2-2.6-4.5-5M-2 2.6-4.5 5M2-2.6 3.5-5M2 2.6 3.5 5" fill="none"/><circle cx="5" cy="0" r="2.1" fill="#facc15"/><circle cx="5.6" cy="-.6" r=".45" fill="#312e81" stroke="none"/></g></svg>`,
@@ -383,7 +390,7 @@
     return catalogue.notions.filter((notion) => {
       if (state.domain && notion.domain !== state.domain) return false;
       if (notionDesign[notion.id]?.hiddenFromBrowse) return false;
-      if (!notionResourceCount(notion.id)) return false;
+      if (!notionResourceCount(notion.id) && !notionDesign[notion.id]?.showWhenEmpty) return false;
       if (state.query && !allWordsMatch(notionHaystack(notion), state.query)) return false;
       return true;
     });
@@ -425,7 +432,7 @@
           <h3>${escapeHtml(notion.title)}</h3>
         </span>
         <p>${escapeHtml(design.description || "Découvrir les outils de ce thème.")}</p>
-        <span class="notion-count">${count} ressource${count > 1 ? "s" : ""}</span>
+        <span class="notion-count">${count ? `${count} ressource${count > 1 ? "s" : ""}` : "Bientôt"}</span>
       </a>`;
     }).join("") || `<p class="empty-state">Aucun thème ne correspond à cette recherche.</p>`;
   }
