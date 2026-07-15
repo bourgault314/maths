@@ -24,7 +24,10 @@ Il ne constitue pas encore la charte définitive.
 - segments et demi-droites dessinés conformément à leur nature, sans point décoratif ;
 - ordre des lettres fourni par l'utilisateur toujours respecté ;
 - jetons relatifs rouges/verts, bord noir, texte noir `+1` ou `−1` ;
-- variable `x` arrondie et manuscrite, mais non enfantine ;
+- variable `x` arrondie et manuscrite, mais non enfantine ; le modèle canonique est
+  le SVG `roundedXGlyph()` de `outils/tuiles_algebriques/generateur_tuiles.html` :
+  deux courbes horizontales qui se rejoignent au centre. Ne jamais le remplacer
+  par la lettre typographique `X`, ni par deux diagonales croisées ;
 - unités présentes dans les résultats finaux.
 
 ## Modes d'affichage à prévoir
