@@ -570,9 +570,17 @@ select { cursor: pointer; }
 .domain-card-secondary {
   grid-column: 1 / -1;
   min-height: 105px;
-  grid-template-columns: 66px minmax(260px, 430px) 66px;
+  grid-template-columns: 66px fit-content(340px);
   justify-content: center;
+  column-gap: 8px;
   background: linear-gradient(135deg, #f4fbf5, #fff);
+}
+
+.domain-card-secondary .domain-card-arrow {
+  position: absolute;
+  top: 50%;
+  right: 24px;
+  transform: translateY(-50%);
 }
 
 .domain-card-icon {
