@@ -5,6 +5,17 @@ Moulin de Pythagore. Les pages historiques restent les références publiées ;
 ce contrat prépare leur utilisation dans des fiches, des questions, des aides,
 des corrections, des diaporamas et des jeux mobiles.
 
+Il constitue l’unique bibliothèque Pythagore de maths&go :
+
+- `visuals.js` contient les géométries et rendus SVG exécutables ;
+- `../../schemas/pythagore-components.v1.json` décrit leur contrat de données ;
+- `../../../scripts/build-pythagore-thumbnails.mjs` produit les miniatures du
+  catalogue à partir de ces mêmes primitives.
+
+Une correction du moulin, des barres, des couleurs ou de la racine carrée doit
+être faite ici, puis répercutée par le générateur. Elle ne doit pas être redessinée
+indépendamment dans chaque miniature.
+
 Les variantes inventées doivent être explicitement nommées comme variantes.
 Un puzzle historique ne doit être ajouté qu’après vérification de sa découpe,
 de sa solution et de l’absence de chevauchement des pièces.
@@ -68,6 +79,40 @@ Les trois composants partagent le même objet triangle :
 Le générateur ne doit pas demander à l’IA de redessiner le moulin ou le schéma
 en barres. Il lui demande un composant, des paramètres validés et un mode de
 rendu. Le moteur construit ensuite la représentation à partir de ces données.
+
+## Règles graphiques validées
+
+### Moulin et pièces de Périgal
+
+- le triangle et les trois carrés sont calculés à la même échelle ;
+- le rapport historique de la miniature est `1:2:√5` ;
+- les petit, moyen et grand carrés sont tous remplis dans le rendu résolu ;
+- les cinq pièces proviennent de `perigalSourcePieces` et leur recomposition
+  exacte du grand carré de `perigalSolvedPieces` ;
+- aucune pièce ne doit être redessinée ou déplacée approximativement.
+
+### Schéma en barres
+
+- la barre `BC²` occupe toute la largeur ;
+- les parties `AB²` et `AC²` sont directement jointives sous elle ;
+- leur largeur est proportionnelle aux aires représentées ;
+- seuls les noms des carrés apparaissent dans les rectangles.
+
+### Racine carrée
+
+`squareRootSvg` est la primitive commune. Elle trace la racine avec un véritable
+crochet et une barre supérieure ; le radicande commence immédiatement après le
+crochet, avec seulement le retrait optique défini par la fonction. Pour un rendu
+graphique maths&go, ne pas la remplacer par le caractère Unicode `√` ni ajouter
+manuellement de l’espace entre la racine et le nombre.
+
+### Rédaction de Pythagore
+
+- les signes `=` d’une résolution sont alignés et proches du membre de gauche ;
+- `BC` est aligné avec les occurrences de `BC²` ;
+- l’interligne reste compact et constant ;
+- les couleurs sémantiques restent visibles jusqu’à la ligne de calcul des
+  carrés, puis la rédaction redevient noire à partir du résultat numérique.
 
 ## Modes attendus
 
