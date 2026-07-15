@@ -371,19 +371,9 @@
       `<button type="button" data-breadcrumb-target="entry">Tous les domaines</button>`
     ];
 
-    if (selectedDomain) {
+    if (selectedDomain && level !== "domain") {
       parts.push(`<span class="breadcrumb-separator" aria-hidden="true">›</span>`);
-      if (level === "domain") {
-        parts.push(`<span class="breadcrumb-current" aria-current="page">${escapeHtml(selectedDomain.title)}</span>`);
-      } else {
-        parts.push(`<button type="button" data-breadcrumb-target="domain">${escapeHtml(selectedDomain.title)}</button>`);
-      }
-    }
-
-    const current = selectedCollection?.title || selectedNotion?.title;
-    if (current) {
-      parts.push(`<span class="breadcrumb-separator" aria-hidden="true">›</span>`);
-      parts.push(`<span class="breadcrumb-current" aria-current="page">${escapeHtml(current)}</span>`);
+      parts.push(`<button type="button" data-breadcrumb-target="domain">${escapeHtml(selectedDomain.title)}</button>`);
     }
 
     breadcrumb.innerHTML = parts.join("");
@@ -802,6 +792,7 @@
     const level = viewLevel();
 
     mainPanel.classList.toggle("catalogue-deep-view", level === "domain" || level === "notion" || level === "collection");
+    document.body.classList.toggle("catalogue-is-deep", level === "domain" || level === "notion" || level === "collection");
     mainPanel.dataset.catalogueView = level;
     renderBreadcrumb(level, selectedDomain, selectedNotion, selectedCollection);
 
