@@ -1,0 +1,89 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>maths&go — aperçu des représentations v1</title>
+  <style>
+    :root { color-scheme: light; font-family: Arial, sans-serif; }
+    body { margin: 0; color: #202020; background: #f7f8fa; }
+    main { max-width: 1080px; margin: 0 auto; padding: 20px 14px 48px; }
+    h1 { font-size: 1.45rem; margin: 0 0 6px; }
+    p { color: #596273; margin: 0 0 20px; }
+    .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 14px; }
+    section { background: #fff; border: 1px solid #e2e6eb; border-radius: 14px; padding: 14px; box-shadow: 0 2px 8px rgba(20,30,40,.05); }
+    h2 { font-size: 1rem; margin: 0 0 10px; }
+    .visual { min-height: 130px; display: flex; align-items: center; justify-content: center; overflow: hidden; }
+    code { display: block; margin-top: 8px; color: #667085; font-size: .78rem; white-space: pre-wrap; }
+    @media (max-width: 500px) { main { padding: 16px 9px 36px; } section { padding: 10px; } }
+  </style>
+</head>
+<body>
+  <main>
+    <h1>Pack de représentations maths&go v1</h1>
+    <p>Prévisualisation indépendante : jetons, droites graduées, fractions et pourcentages. Aucun module d’Automatismes n’est modifié par cette page.</p>
+    <div class="grid" id="previews"></div>
+  </main>
+  <script src="../components/representation-pack-v1.js"></script>
+  <script src="../adapters/automatismes/representation-pack-adapter.js"></script>
+  <script>
+    (function () {
+      const pack = window.MATHSGO_REPRESENTATIONS;
+      const examples = [
+        {
+          title: 'Jetons — sommes et paire nulle',
+          id: 'representation.bead-groups',
+          payload: { groups: [{ value: 3 }, { value: -2 }, { value: 0, zeroPairs: 1 }], maxPerRow: 12 }
+        },
+        {
+          title: 'Droite graduée — nombres relatifs',
+          id: 'representation.number-line',
+          payload: { min: -5, max: 5, step: 1, points: [{ value: -2, label: '−2' }, { value: 3, label: '+3', color: '#2e7d32', position: 'below' }] }
+        },
+        {
+          title: 'Fractions — bande',
+          id: 'representation.fraction-strip',
+          payload: { numerator: 3, denominator: 4 }
+        },
+        {
+          title: 'Fractions — grille de centièmes',
+          id: 'representation.fraction-grid',
+          payload: { filled: 16, columns: 5, rows: 4 }
+        },
+        {
+          title: 'Pourcentage — double droite',
+          id: 'representation.percentage-double-line',
+          payload: { scale: 'quarters', total: 240, percentage: 75 }
+        },
+        {
+          title: 'Pourcentage — barre',
+          id: 'representation.percentage-bar',
+          payload: { percentage: 37.5 }
+        }
+      ];
+      const container = document.getElementById('previews');
+      examples.forEach(function (example) {
+        const card = document.createElement('section');
+        const heading = document.createElement('h2');
+        heading.textContent = example.title;
+        const visual = document.createElement('div');
+        visual.className = 'visual';
+        const definition = {
+          componentId: example.id,
+          version: 1,
+          status: 'review',
+          renderer: 'mathsgo-representation-pack-v1',
+          payload: example.payload
+        };
+        visual.innerHTML = pack.render(definition);
+        const meta = document.createElement('code');
+        meta.textContent = JSON.stringify(definition.payload);
+        card.appendChild(heading);
+        card.appendChild(visual);
+        card.appendChild(meta);
+        container.appendChild(card);
+      });
+    }());
+  </script>
+</body>
+</html>
