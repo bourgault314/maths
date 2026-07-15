@@ -218,6 +218,21 @@
   button.green{background:linear-gradient(180deg,#22c55e,#16a34a);color:white}
   button.orange{background:linear-gradient(180deg,#fb923c,#f97316);color:white}
   button.ghost{background:rgba(255,255,255,.78);border:1px solid rgba(15,23,42,.12)}
+  .resourceLink{
+    display:inline-flex;
+    align-items:center;
+    justify-content:center;
+    min-height:48px;
+    padding:12px 16px;
+    color:#1d4ed8;
+    border:1px solid rgba(37,99,235,.20);
+    border-radius:14px;
+    background:rgba(239,246,255,.92);
+    font-size:15px;
+    font-weight:950;
+    text-decoration:none;
+  }
+  .resourceLink:hover{background:#dbeafe}
 
   .diceBtn{
     flex:0 0 58px;
@@ -3356,6 +3371,7 @@
       </div>
 
       <div class="creatorActions">
+        <a class="resourceLink" href="pythabarre_recto_verso.pdf" target="_blank" rel="noopener">Imprimer la fiche recto-verso</a>
         <button class="primary buildBtn" id="btnBuild" type="button">Construire</button>
       </div>
       <div class="buildError" id="buildError"></div>

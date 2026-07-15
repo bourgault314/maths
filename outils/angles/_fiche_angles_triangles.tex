@@ -1,0 +1,497 @@
+
+\documentclass[12pt]{article}
+\usepackage[a4paper,margin=0mm]{geometry}
+\usepackage{tikz}
+\usetikzlibrary{calc,angles,quotes}
+\usepackage{fontspec}
+\setmainfont{Noto Sans}
+\setsansfont{Noto Sans}
+\newfontfamily\serif{Noto Serif}
+\pagestyle{empty}
+\definecolor{orange}{HTML}{FF8500}
+\definecolor{borderorange}{HTML}{F6C45A}
+\definecolor{soft}{HTML}{FFF2E8}
+\definecolor{grid}{HTML}{777777}
+\tikzset{
+  tri/.style={draw=black,line width=.9pt,line cap=round,line join=round},
+  angpic/.style={draw=black,line width=.55pt, every pic quotes/.style={inner sep=.35mm}},
+  rightpic/.style={draw=black,line width=.55pt},
+  gridline/.style={draw=grid,line width=.35pt},
+  barline/.style={draw=black,line width=.42pt},
+  bartext/.style={font=\sffamily\bfseries\scriptsize},
+  qnum/.style={font=\sffamily\bfseries\large},
+  exbadge/.style={font=\sffamily\bfseries\large, text=white},
+  answer/.style={font=\serif\bfseries\itshape\large},
+  answerline/.style={line width=.45pt,draw=black},
+  calc/.style={font=\sffamily\bfseries\scriptsize},
+  ratio/.style={font=\sffamily\bfseries\footnotesize}
+}
+\newcommand{\pageframe}{
+  \draw[rounded corners=3.5mm,line width=1.05pt,draw=borderorange] ($(current page.north west)+(4mm,-4mm)$) rectangle ($(current page.south east)+(-4mm,4mm)$);
+}
+\newcommand{\header}{
+  \draw[rounded corners=3.6mm,line width=.45pt] ($(current page.north west)+(8mm,-8mm)$) rectangle ($(current page.north west)+(145mm,-18mm)$);
+  \node[anchor=west,font=\sffamily\bfseries\fontsize{20}{22}\selectfont] at ($(current page.north west)+(14mm,-13mm)$) {Angles dans les triangles (A)};
+  \node[anchor=north east] at ($(current page.north east)+(-12mm,-8mm)$) {\includegraphics[width=32mm]{maths_go_logo.png}};
+  \draw[line width=.35pt] ($(current page.north west)+(114mm,-23.2mm)$) rectangle ($(current page.north west)+(149mm,-29.8mm)$);
+  \node[font=\sffamily\bfseries\fontsize{5.7}{6.2}\selectfont,align=center,text width=32mm] at ($(current page.north west)+(131.5mm,-26.5mm)$) {LES SCHÉMAS NE SONT PAS À L'ÉCHELLE};
+}
+\newcommand{\sectiontitle}[3]{
+  \pgfmathsetmacro{\sx}{#1}
+  \pgfmathsetmacro{\sy}{#2}
+  \pgfmathsetmacro{\sex}{#1+36}
+  \pgfmathsetmacro{\sey}{#2+8}
+  \pgfmathsetmacro{\stx}{#1+2}
+  \pgfmathsetmacro{\sty}{#2+4.1}
+  \fill[soft,rounded corners=4mm] ($(current page.north west)+(\sx mm,-\sy mm)$) rectangle ($(current page.north west)+(\sex mm,-\sey mm)$);
+  \node[anchor=west,font=\serif\bfseries\itshape\large] at ($(current page.north west)+(\stx mm,-\sty mm)$) {#3};
+}
+\newcommand{\footer}[1]{
+  \node[anchor=west,font=\sffamily\tiny] at ($(current page.south west)+(8mm,6mm)$) {© maths\&go};
+  \node[font=\sffamily\tiny,align=center] at ($(current page.south)+(0,7mm)$) {Géométrie - Angles et droites\\Angles dans les triangles};
+  \node[anchor=east,font=\sffamily\tiny] at ($(current page.south east)+(-8mm,6mm)$) {Page #1/2};
+}
+\begin{document}
+\begin{tikzpicture}[remember picture,overlay,x=1mm,y=1mm]
+\pageframe\header
+% Section A
+\sectiontitle{8}{34}{Section A}
+\node[anchor=west,font=\serif\itshape\small] at ($(current page.north west)+(42mm,-38mm)$) {Utilise les modèles en barres pour calculer les angles manquants dans les triangles.};
+\draw[gridline] ($(current page.north west)+(8mm,-44mm)$) rectangle ($(current page.north west)+(203mm,-167mm)$);
+\draw[gridline] ($(current page.north west)+(73mm,-44mm)$) -- ($(current page.north west)+(73mm,-167mm)$);
+\draw[gridline] ($(current page.north west)+(138mm,-44mm)$) -- ($(current page.north west)+(138mm,-167mm)$);
+\draw[gridline] ($(current page.north west)+(8mm,-105.5mm)$) -- ($(current page.north west)+(203mm,-105.5mm)$);
+\begin{scope}[shift={($(current page.north west)+(8mm,-44mm)$)},x=1mm,y=1mm]
+\fill[orange] (0,0) rectangle (23,-8.2);\node[exbadge] at (11.5,-4.1) {Exemple};
+\begin{scope}[shift={(0,0)}]
+\coordinate (A) at (10,-26);
+\coordinate (B) at (33,-7);
+\coordinate (C) at (58,-26);
+\draw[tri] (A) -- (B) -- (C) -- cycle;
+\pic[angpic, angle radius=4.2mm, angle eccentricity=1.62, "{\scriptsize\bfseries $30^\circ$}"] {angle=C--A--B};
+\pic[angpic, angle radius=4.8mm, angle eccentricity=1.34, "{\scriptsize\bfseries $115^\circ$}"] {angle=A--B--C};
+\pic[angpic, angle radius=4.2mm, angle eccentricity=1.54, "{\scriptsize $\hat{a}$}"] {angle=B--C--A};
+\end{scope}
+\draw[barline] (8,-34) rectangle (58,-52.2);
+\draw[barline] (8,-40.06666666666666) -- (58,-40.06666666666666);
+\draw[barline] (8,-46.13333333333333) -- (58,-46.13333333333333);
+\node[bartext] at (33.0,-37.03333333333333) {180°};
+\draw[barline] (16.333333333333336,-40.06666666666666) -- (16.333333333333336,-46.13333333333333);
+\draw[barline] (48.27777777777778,-40.06666666666666) -- (48.27777777777778,-52.2);
+\node[bartext] at (12.166666666666668,-43.1) {30°};
+\node[bartext] at (32.30555555555556,-43.1) {115°};
+\node[bartext] at (53.138888888888886,-43.1) {$\hat{a}$};
+\node[bartext] at (28.138888888888886,-49.166666666666664) {145°};
+\node[bartext] at (53.138888888888886,-49.166666666666664) {$\hat{a}$};
+\node[calc,anchor=west] at (5,-55.9) {$\hat{a}$ = 180° - 145°};\node[calc,anchor=west] at (5,-59.3) {$\hat{a}$ = 35°};
+\end{scope}
+\begin{scope}[shift={($(current page.north west)+(73mm,-44.0mm)$)},x=1mm,y=1mm]
+\node[qnum,anchor=north west] at (2,-2) {1)};
+\begin{scope}[shift={(0,0)}]
+\coordinate (A) at (18,-26);
+\coordinate (B) at (37,-12);
+\coordinate (C) at (50,-26);
+\draw[tri] (A) -- (B) -- (C) -- cycle;
+\pic[angpic, angle radius=3.8mm, angle eccentricity=1.54, "{\scriptsize $\hat{b}$}"] {angle=C--A--B};
+\pic[angpic, angle radius=4.1mm, angle eccentricity=1.54, "{\scriptsize\bfseries $58^\circ$}"] {angle=A--B--C};
+\pic[angpic, angle radius=3.8mm, angle eccentricity=1.62, "{\scriptsize\bfseries $71^\circ$}"] {angle=B--C--A};
+\end{scope}
+\draw[barline] (8,-35) rectangle (58,-53);
+\draw[barline] (8,-41.0) -- (58,-41.0);
+\draw[barline] (8,-47.0) -- (58,-47.0);
+\node[bartext] at (33.0,-38.0) {180°};
+\node[answer,anchor=west] at (3,-57) {$\hat{b}$ =};
+\end{scope}
+\begin{scope}[shift={($(current page.north west)+(138mm,-44.0mm)$)},x=1mm,y=1mm]
+\node[qnum,anchor=north west] at (2,-2) {2)};
+\begin{scope}[shift={(0,0)}]
+\coordinate (A) at (18,-26);
+\coordinate (B) at (38,-10.5);
+\coordinate (C) at (35,-26);
+\draw[tri] (A) -- (B) -- (C) -- cycle;
+\pic[angpic, angle radius=3.8mm, angle eccentricity=1.58, "{\scriptsize\bfseries $45^\circ$}"] {angle=C--A--B};
+\pic[angpic, angle radius=3.9mm, angle eccentricity=1.48, "{\scriptsize\bfseries $42^\circ$}"] {angle=A--B--C};
+\pic[angpic, angle radius=4.0mm, angle eccentricity=1.42, "{\scriptsize $\hat{c}$}"] {angle=B--C--A};
+\end{scope}
+\draw[barline] (8,-35) rectangle (58,-53);
+\draw[barline] (8,-41.0) -- (58,-41.0);
+\draw[barline] (8,-47.0) -- (58,-47.0);
+\node[bartext] at (33.0,-38.0) {180°};
+\node[answer,anchor=west] at (3,-57) {$\hat{c}$ =};
+\end{scope}
+\begin{scope}[shift={($(current page.north west)+(8mm,-105.5mm)$)},x=1mm,y=1mm]
+\node[qnum,anchor=north west] at (2,-2) {3)};
+\begin{scope}[shift={(0,0)}]
+\coordinate (A) at (16,-26);
+\coordinate (B) at (43,-12);
+\coordinate (C) at (53,-26);
+\draw[tri] (A) -- (B) -- (C) -- cycle;
+\pic[angpic, angle radius=3.8mm, angle eccentricity=1.58, "{\scriptsize\bfseries $37^\circ$}"] {angle=C--A--B};
+\pic[angpic, angle radius=4.0mm, angle eccentricity=1.44, "{\scriptsize $\hat{d}$}"] {angle=A--B--C};
+\pic[angpic, angle radius=4.2mm, angle eccentricity=1.42, "{\scriptsize\bfseries $84^\circ$}"] {angle=B--C--A};
+\end{scope}
+\draw[barline] (8,-35) rectangle (58,-53);
+\draw[barline] (8,-41.0) -- (58,-41.0);
+\draw[barline] (8,-47.0) -- (58,-47.0);
+\node[bartext] at (33.0,-38.0) {180°};
+\node[answer,anchor=west] at (3,-57) {$\hat{d}$ =};
+\end{scope}
+\begin{scope}[shift={($(current page.north west)+(73mm,-105.5mm)$)},x=1mm,y=1mm]
+\node[qnum,anchor=north west] at (2,-2) {4)};
+\begin{scope}[shift={(0,0)}]
+\coordinate (A) at (9,-26);
+\coordinate (B) at (57,-9);
+\coordinate (C) at (57,-26);
+\draw[tri] (A) -- (B) -- (C) -- cycle;
+\pic[angpic, angle radius=4.0mm, angle eccentricity=1.64, "{\scriptsize\bfseries $59^\circ$}"] {angle=C--A--B};
+\pic[angpic, angle radius=4.0mm, angle eccentricity=1.42, "{\scriptsize $\hat{e}$}"] {angle=A--B--C};
+\pic[rightpic, angle radius=4.2mm] {right angle=B--C--A};
+\end{scope}
+\draw[barline] (8,-35) rectangle (58,-53);
+\draw[barline] (8,-41.0) -- (58,-41.0);
+\draw[barline] (8,-47.0) -- (58,-47.0);
+\node[bartext] at (33.0,-38.0) {180°};
+\node[answer,anchor=west] at (3,-57) {$\hat{e}$ =};
+\end{scope}
+\begin{scope}[shift={($(current page.north west)+(138mm,-105.5mm)$)},x=1mm,y=1mm]
+\node[qnum,anchor=north west] at (2,-2) {5)};
+\begin{scope}[shift={(0,0)}]
+\coordinate (A) at (18,-26);
+\coordinate (B) at (20,-13);
+\coordinate (C) at (42,-26);
+\draw[tri] (A) -- (B) -- (C) -- cycle;
+\pic[angpic, angle radius=3.8mm, angle eccentricity=1.56, "{\scriptsize\bfseries $88^\circ$}"] {angle=C--A--B};
+\pic[angpic, angle radius=4.0mm, angle eccentricity=1.40, "{\scriptsize $\hat{f}$}"] {angle=A--B--C};
+\pic[angpic, angle radius=3.8mm, angle eccentricity=1.52, "{\scriptsize\bfseries $44^\circ$}"] {angle=B--C--A};
+\end{scope}
+\draw[barline] (8,-35) rectangle (58,-53);
+\draw[barline] (8,-41.0) -- (58,-41.0);
+\draw[barline] (8,-47.0) -- (58,-47.0);
+\node[bartext] at (33.0,-38.0) {180°};
+\node[answer,anchor=west] at (3,-57) {$\hat{f}$ =};
+\end{scope}
+% Section B
+\sectiontitle{8}{174}{Section B}
+\node[anchor=west,font=\serif\itshape\small] at ($(current page.north west)+(42mm,-178mm)$) {Deux triangles ci-dessous sont impossibles. Lesquels ?};
+\begin{scope}[shift={($(current page.north west)+(18mm,-188mm)$)},x=1mm,y=1mm]
+\node[qnum] at (0,0) {1};
+\begin{scope}[shift={(8,-2)}]
+\coordinate (A) at (8,-5);
+\coordinate (B) at (11,-25);
+\coordinate (C) at (48,-20);
+\draw[tri] (A) -- (B) -- (C) -- cycle;
+\pic[angpic, angle radius=4.5mm, angle eccentricity=1.55, "{\scriptsize\bfseries $103^\circ$}"] {angle=B--A--C};
+\pic[angpic, angle radius=4.5mm, angle eccentricity=1.55, "{\scriptsize\bfseries $41^\circ$}"] {angle=C--B--A};
+\pic[angpic, angle radius=4.0mm, angle eccentricity=1.8, "{\scriptsize\bfseries $36^\circ$}"] {angle=A--C--B};
+\end{scope}
+\end{scope}
+\begin{scope}[shift={($(current page.north west)+(82mm,-188mm)$)},x=1mm,y=1mm]
+\node[qnum] at (0,0) {2};
+\begin{scope}[shift={(8,-2)}]
+\coordinate (A) at (8,-25);
+\coordinate (B) at (26,-5);
+\coordinate (C) at (50,-25);
+\draw[tri] (A) -- (B) -- (C) -- cycle;
+\pic[angpic, angle radius=4.7mm, angle eccentricity=1.6, "{\scriptsize\bfseries $87^\circ$}"] {angle=C--A--B};
+\pic[angpic, angle radius=4.7mm, angle eccentricity=1.55, "{\scriptsize\bfseries $55^\circ$}"] {angle=A--B--C};
+\pic[angpic, angle radius=4.7mm, angle eccentricity=1.65, "{\scriptsize\bfseries $38^\circ$}"] {angle=B--C--A};
+\end{scope}
+\end{scope}
+\begin{scope}[shift={($(current page.north west)+(146mm,-188mm)$)},x=1mm,y=1mm]
+\node[qnum] at (0,0) {3};
+\begin{scope}[shift={(8,-2)}]
+\coordinate (A) at (5,-25);
+\coordinate (B) at (48,-12);
+\coordinate (C) at (42,-25);
+\draw[tri] (A) -- (B) -- (C) -- cycle;
+\pic[angpic, angle radius=4.0mm, angle eccentricity=2.02, "{\footnotesize\bfseries $44^\circ$}"] {angle=C--A--B};
+\pic[angpic, angle radius=4.3mm, angle eccentricity=1.6, "{\scriptsize\bfseries $54^\circ$}"] {angle=A--B--C};
+\pic[angpic, angle radius=4.6mm, angle eccentricity=1.6, "{\scriptsize\bfseries $82^\circ$}"] {angle=B--C--A};
+\end{scope}
+\end{scope}
+\begin{scope}[shift={($(current page.north west)+(18mm,-223mm)$)},x=1mm,y=1mm]
+\node[qnum] at (0,0) {4};
+\begin{scope}[shift={(8,-2)}]
+\coordinate (A) at (5,-25);
+\coordinate (B) at (49,-12);
+\coordinate (C) at (41,-25);
+\draw[tri] (A) -- (B) -- (C) -- cycle;
+\pic[angpic, angle radius=4.0mm, angle eccentricity=2.1, "{\scriptsize\bfseries $99^\circ$}"] {angle=C--A--B};
+\pic[angpic, angle radius=4.5mm, angle eccentricity=1.7, "{\scriptsize\bfseries $52^\circ$}"] {angle=A--B--C};
+\pic[angpic, angle radius=4.6mm, angle eccentricity=1.52, "{\scriptsize\bfseries $29^\circ$}"] {angle=B--C--A};
+\end{scope}
+\end{scope}
+\begin{scope}[shift={($(current page.north west)+(82mm,-223mm)$)},x=1mm,y=1mm]
+\node[qnum] at (0,0) {5};
+\begin{scope}[shift={(8,-2)}]
+\coordinate (A) at (8,-25);
+\coordinate (B) at (27,-7);
+\coordinate (C) at (50,-25);
+\draw[tri] (A) -- (B) -- (C) -- cycle;
+\pic[angpic, angle radius=4.5mm, angle eccentricity=1.7, "{\scriptsize\bfseries $69^\circ$}"] {angle=C--A--B};
+\pic[angpic, angle radius=4.6mm, angle eccentricity=1.4, "{\scriptsize\bfseries $113^\circ$}"] {angle=A--B--C};
+\pic[angpic, angle radius=4.5mm, angle eccentricity=1.65, "{\scriptsize\bfseries $40^\circ$}"] {angle=B--C--A};
+\end{scope}
+\end{scope}
+\begin{scope}[shift={($(current page.north west)+(146mm,-223mm)$)},x=1mm,y=1mm]
+\node[qnum] at (0,0) {6};
+\begin{scope}[shift={(8,-2)}]
+\coordinate (A) at (8,-6);
+\coordinate (B) at (11,-25);
+\coordinate (C) at (49,-20);
+\draw[tri] (A) -- (B) -- (C) -- cycle;
+\pic[angpic, angle radius=4.5mm, angle eccentricity=1.65, "{\scriptsize\bfseries $67^\circ$}"] {angle=B--A--C};
+\pic[angpic, angle radius=4.7mm, angle eccentricity=1.55, "{\scriptsize\bfseries $74^\circ$}"] {angle=C--B--A};
+\pic[angpic, angle radius=4.0mm, angle eccentricity=1.8, "{\scriptsize\bfseries $39^\circ$}"] {angle=A--C--B};
+\end{scope}
+\end{scope}
+
+\node[anchor=west,font=\serif\bfseries\itshape\large] at ($(current page.north west)+(10mm,-264mm)$) {Triangles impossibles :};
+\node[font=\serif\bfseries\itshape\large] at ($(current page.north west)+(112mm,-264mm)$) {et};
+\footer{1}
+\end{tikzpicture}
+\newpage
+\begin{tikzpicture}[remember picture,overlay,x=1mm,y=1mm]
+\pageframe\header
+\sectiontitle{8}{34}{Section C}
+\node[anchor=west,font=\serif\itshape\small] at ($(current page.north west)+(42mm,-38mm)$) {Calcule la mesure des angles manquants.};
+\draw[gridline] ($(current page.north west)+(8mm,-44mm)$) rectangle ($(current page.north west)+(203mm,-147mm)$);
+\foreach \x in {47,86,125,164}{\draw[gridline] ($(current page.north west)+(\x mm,-44mm)$) -- ($(current page.north west)+(\x mm,-147mm)$);}
+\draw[gridline] ($(current page.north west)+(8mm,-95.5mm)$) -- ($(current page.north west)+(203mm,-95.5mm)$);
+\begin{scope}[shift={($(current page.north west)+(8mm,-44.0mm)$)},x=1mm,y=1mm]
+\node[qnum,anchor=north west] at (2,-2) {1)};
+\begin{scope}[shift={(0,0)}]
+\coordinate (A) at (11,-30);
+\coordinate (B) at (15,-13);
+\coordinate (C) at (29,-30);
+\draw[tri] (A) -- (B) -- (C) -- cycle;
+\pic[angpic, angle radius=3.2mm, angle eccentricity=1.56, "{\scriptsize\bfseries $93^\circ$}"] {angle=C--A--B};
+\pic[angpic, angle radius=3.8mm, angle eccentricity=1.34, "{\scriptsize $\hat{a}$}"] {angle=A--B--C};
+\pic[angpic, angle radius=3.4mm, angle eccentricity=1.42, "{\scriptsize\bfseries $61^\circ$}"] {angle=B--C--A};
+\end{scope}
+\node[answer,anchor=west] at (4,-43) {$\hat{a}$ =};
+\end{scope}
+\begin{scope}[shift={($(current page.north west)+(47mm,-44.0mm)$)},x=1mm,y=1mm]
+\node[qnum,anchor=north west] at (2,-2) {2)};
+\begin{scope}[shift={(0,0)}]
+\coordinate (A) at (11,-13);
+\coordinate (B) at (11,-30);
+\coordinate (C) at (28,-30);
+\draw[tri] (A) -- (B) -- (C) -- cycle;
+\pic[angpic, angle radius=3.2mm, angle eccentricity=1.48, "{\scriptsize $\hat{b}$}"] {angle=B--A--C};
+\pic[rightpic, angle radius=3.4mm] {right angle=C--B--A};
+\pic[angpic, angle radius=3.4mm, angle eccentricity=1.42, "{\scriptsize\bfseries $68^\circ$}"] {angle=A--C--B};
+\end{scope}
+\node[answer,anchor=west] at (4,-43) {$\hat{b}$ =};
+\end{scope}
+\begin{scope}[shift={($(current page.north west)+(86mm,-44.0mm)$)},x=1mm,y=1mm]
+\node[qnum,anchor=north west] at (2,-2) {3)};
+\begin{scope}[shift={(0,0)}]
+\coordinate (A) at (6,-30);
+\coordinate (B) at (28,-17);
+\coordinate (C) at (31,-30);
+\draw[tri] (A) -- (B) -- (C) -- cycle;
+\pic[angpic, angle radius=3.0mm, angle eccentricity=1.46, "{\scriptsize $\hat{c}$}"] {angle=C--A--B};
+\pic[angpic, angle radius=3.6mm, angle eccentricity=1.42, "{\scriptsize\bfseries $60^\circ$}"] {angle=A--B--C};
+\pic[angpic, angle radius=3.6mm, angle eccentricity=1.28, "{\scriptsize\bfseries $87^\circ$}"] {angle=B--C--A};
+\end{scope}
+\node[answer,anchor=west] at (4,-43) {$\hat{c}$ =};
+\end{scope}
+\begin{scope}[shift={($(current page.north west)+(125mm,-44.0mm)$)},x=1mm,y=1mm]
+\node[qnum,anchor=north west] at (2,-2) {4)};
+\begin{scope}[shift={(0,0)}]
+\coordinate (A) at (12,-30);
+\coordinate (B) at (20,-15);
+\coordinate (C) at (29,-30);
+\draw[tri] (A) -- (B) -- (C) -- cycle;
+\pic[angpic, angle radius=3.4mm, angle eccentricity=1.52, "{\scriptsize\bfseries $67^\circ$}"] {angle=C--A--B};
+\pic[angpic, angle radius=3.8mm, angle eccentricity=1.32, "{\scriptsize $\hat{d}$}"] {angle=A--B--C};
+\pic[angpic, angle radius=3.6mm, angle eccentricity=1.40, "{\scriptsize\bfseries $72^\circ$}"] {angle=B--C--A};
+\end{scope}
+\node[answer,anchor=west] at (4,-43) {$\hat{d}$ =};
+\end{scope}
+\begin{scope}[shift={($(current page.north west)+(164mm,-44.0mm)$)},x=1mm,y=1mm]
+\node[qnum,anchor=north west] at (2,-2) {5)};
+\begin{scope}[shift={(0,0)}]
+\coordinate (A) at (10,-14);
+\coordinate (B) at (10,-30);
+\coordinate (C) at (28,-30);
+\draw[tri] (A) -- (B) -- (C) -- cycle;
+\pic[angpic, angle radius=3.4mm, angle eccentricity=1.34, "{\scriptsize $\hat{e}$}"] {angle=B--A--C};
+\pic[rightpic, angle radius=3.4mm] {right angle=C--B--A};
+\pic[angpic, angle radius=3.2mm, angle eccentricity=1.50, "{\scriptsize\bfseries $51^\circ$}"] {angle=A--C--B};
+\end{scope}
+\node[answer,anchor=west] at (4,-43) {$\hat{e}$ =};
+\end{scope}
+\begin{scope}[shift={($(current page.north west)+(8mm,-95.5mm)$)},x=1mm,y=1mm]
+\node[qnum,anchor=north west] at (2,-2) {6)};
+\begin{scope}[shift={(0,0)}]
+\coordinate (A) at (6,-30);
+\coordinate (B) at (20,-21);
+\coordinate (C) at (34,-30);
+\draw[tri] (A) -- (B) -- (C) -- cycle;
+\pic[angpic, angle radius=3.3mm, angle eccentricity=1.56, "{\scriptsize $\hat{f}$}"] {angle=C--A--B};
+\pic[angpic, angle radius=3.8mm, angle eccentricity=1.32, "{\scriptsize\bfseries $120^\circ$}"] {angle=A--B--C};
+\pic[angpic, angle radius=3.3mm, angle eccentricity=1.56, "{\scriptsize $\hat{f}$}"] {angle=B--C--A};
+\end{scope}
+\node[answer,anchor=west] at (4,-43) {$\hat{f}$ =};
+\end{scope}
+\begin{scope}[shift={($(current page.north west)+(47mm,-95.5mm)$)},x=1mm,y=1mm]
+\node[qnum,anchor=north west] at (2,-2) {7)};
+\begin{scope}[shift={(0,0)}]
+\coordinate (A) at (20,-17);
+\coordinate (B) at (9,-30);
+\coordinate (C) at (31,-30);
+\draw[tri] (A) -- (B) -- (C) -- cycle;
+\pic[angpic, angle radius=3.6mm, angle eccentricity=1.36, "{\scriptsize\bfseries $70^\circ$}"] {angle=B--A--C};
+\pic[angpic, angle radius=3.6mm, angle eccentricity=1.42, "{\scriptsize $\hat{g}$}"] {angle=C--B--A};
+\pic[angpic, angle radius=3.4mm, angle eccentricity=1.42, "{\scriptsize $\hat{g}$}"] {angle=A--C--B};
+\end{scope}
+\node[answer,anchor=west] at (4,-43) {$\hat{g}$ =};
+\end{scope}
+\begin{scope}[shift={($(current page.north west)+(86mm,-95.5mm)$)},x=1mm,y=1mm]
+\node[qnum,anchor=north west] at (2,-2) {8)};
+\begin{scope}[shift={(0,0)}]
+\coordinate (A) at (10,-30);
+\coordinate (B) at (28,-16);
+\coordinate (C) at (28,-30);
+\draw[tri] (A) -- (B) -- (C) -- cycle;
+\pic[angpic, angle radius=3.2mm, angle eccentricity=1.50, "{\scriptsize $\hat{h}$}"] {angle=C--A--B};
+\pic[angpic, angle radius=3.8mm, angle eccentricity=1.34, "{\scriptsize\bfseries $41^\circ$}"] {angle=A--B--C};
+\pic[angpic, angle radius=3.6mm, angle eccentricity=1.34, "{\scriptsize\bfseries $89^\circ$}"] {angle=B--C--A};
+\end{scope}
+\node[answer,anchor=west] at (4,-43) {$\hat{h}$ =};
+\end{scope}
+\begin{scope}[shift={($(current page.north west)+(125mm,-95.5mm)$)},x=1mm,y=1mm]
+\node[qnum,anchor=north west] at (2,-2) {9)};
+\begin{scope}[shift={(0,0)}]
+\coordinate (A) at (6,-30);
+\coordinate (B) at (17,-15);
+\coordinate (C) at (33,-30);
+\draw[tri] (A) -- (B) -- (C) -- cycle;
+\pic[angpic, angle radius=3.4mm, angle eccentricity=1.54, "{\scriptsize\bfseries $54^\circ$}"] {angle=C--A--B};
+\pic[angpic, angle radius=3.8mm, angle eccentricity=1.34, "{\scriptsize\bfseries $93^\circ$}"] {angle=A--B--C};
+\pic[angpic, angle radius=3.4mm, angle eccentricity=1.42, "{\scriptsize $\hat{i}$}"] {angle=B--C--A};
+\end{scope}
+\node[answer,anchor=west] at (4,-43) {$\hat{i}$ =};
+\end{scope}
+\begin{scope}[shift={($(current page.north west)+(164mm,-95.5mm)$)},x=1mm,y=1mm]
+\node[qnum,anchor=north west] at (2,-2) {10)};
+\begin{scope}[shift={(0,0)}]
+\coordinate (A) at (12,-30);
+\coordinate (B) at (9,-16);
+\coordinate (C) at (30,-30);
+\draw[tri] (A) -- (B) -- (C) -- cycle;
+\pic[angpic, angle radius=3.0mm, angle eccentricity=1.54, "{\scriptsize $\hat{j}$}"] {angle=C--A--B};
+\pic[angpic, angle radius=3.3mm, angle eccentricity=1.50, "{\scriptsize\bfseries $39^\circ$}"] {angle=A--B--C};
+\pic[angpic, angle radius=3.6mm, angle eccentricity=1.42, "{\scriptsize\bfseries $37^\circ$}"] {angle=B--C--A};
+\end{scope}
+\node[answer,anchor=west] at (4,-43) {$\hat{j}$ =};
+\end{scope}
+
+\sectiontitle{8}{154}{Section D}
+\node[anchor=west,font=\serif\itshape\small] at ($(current page.north west)+(42mm,-158mm)$) {Calcule la mesure des angles manquants.};
+\draw[gridline] ($(current page.north west)+(8mm,-166mm)$) rectangle ($(current page.north west)+(203mm,-267mm)$);
+\foreach \x in {56.75,105.5,154.25}{\draw[gridline] ($(current page.north west)+(\x mm,-166mm)$) -- ($(current page.north west)+(\x mm,-267mm)$);}
+\draw[gridline] ($(current page.north west)+(8mm,-216.5mm)$) -- ($(current page.north west)+(203mm,-216.5mm)$);
+\begin{scope}[shift={($(current page.north west)+(8.0mm,-166.0mm)$)},x=1mm,y=1mm]
+\node[qnum,anchor=north west] at (2,-2) {1)};
+\begin{scope}[shift={(0,0)}]
+\coordinate (A) at (7,-27);
+\coordinate (B) at (31,-14);
+\coordinate (C) at (32,-27);
+\draw[tri] (A) -- (B) -- (C) -- cycle;
+\pic[angpic, angle radius=3.2mm, angle eccentricity=1.80, "{\scriptsize\bfseries $28^\circ$}"] {angle=C--A--B};
+\pic[angpic, angle radius=3.4mm, angle eccentricity=1.74, "{\scriptsize\bfseries $66^\circ$}"] {angle=A--B--C};
+\pic[angpic, angle radius=3.5mm, angle eccentricity=1.64, "{\scriptsize $\hat{a}$}"] {angle=B--C--A};
+\end{scope}
+\node[answer,anchor=west] at (4,-43) {$\hat{a}$ =};
+\end{scope}
+\begin{scope}[shift={($(current page.north west)+(56.75mm,-166.0mm)$)},x=1mm,y=1mm]
+\node[qnum,anchor=north west] at (2,-2) {2)};
+\begin{scope}[shift={(0,0)}]
+\coordinate (A) at (9,-12);
+\coordinate (B) at (9,-27);
+\coordinate (C) at (26,-27);
+\draw[tri] (A) -- (B) -- (C) -- cycle;
+\pic[angpic, angle radius=3.4mm, angle eccentricity=1.54, "{\scriptsize $\hat{b}$}"] {angle=B--A--C};
+\pic[rightpic, angle radius=3.5mm] {right angle=C--B--A};
+\pic[angpic, angle radius=3.8mm, angle eccentricity=1.75, "{\scriptsize\bfseries $41^\circ$}"] {angle=A--C--B};
+\end{scope}
+\node[answer,anchor=west] at (4,-43) {$\hat{b}$ =};
+\end{scope}
+\begin{scope}[shift={($(current page.north west)+(105.5mm,-166.0mm)$)},x=1mm,y=1mm]
+\node[qnum,anchor=north west] at (2,-2) {3)};
+\begin{scope}[shift={(0,0)}]
+\coordinate (A) at (5,-27);
+\coordinate (B) at (14,-13);
+\coordinate (C) at (35,-27);
+\draw[tri] (A) -- (B) -- (C) -- cycle;
+\pic[angpic, angle radius=4.0mm, angle eccentricity=1.65, "{\scriptsize\bfseries $57^\circ$}"] {angle=C--A--B};
+\pic[angpic, angle radius=4.2mm, angle eccentricity=1.38, "{\small $\hat{c}$}"] {angle=A--B--C};
+\pic[angpic, angle radius=4.0mm, angle eccentricity=1.7, "{\scriptsize\bfseries $34^\circ$}"] {angle=B--C--A};
+\end{scope}
+\node[answer,anchor=west] at (4,-43) {$\hat{c}$ =};
+\end{scope}
+\begin{scope}[shift={($(current page.north west)+(154.25mm,-166.0mm)$)},x=1mm,y=1mm]
+\node[qnum,anchor=north west] at (2,-2) {4)};
+\begin{scope}[shift={(0,0)}]
+\coordinate (A) at (5,-27);
+\coordinate (B) at (17,-13);
+\coordinate (C) at (35,-27);
+\draw[tri] (A) -- (B) -- (C) -- cycle;
+\pic[angpic, angle radius=4.0mm, angle eccentricity=1.65, "{\scriptsize\bfseries $49^\circ$}"] {angle=C--A--B};
+\pic[angpic, angle radius=4.3mm, angle eccentricity=1.4, "{\small $\hat{d}$}"] {angle=A--B--C};
+\pic[angpic, angle radius=4.0mm, angle eccentricity=1.65, "{\scriptsize\bfseries $39^\circ$}"] {angle=B--C--A};
+\end{scope}
+\node[answer,anchor=west] at (4,-43) {$\hat{d}$ =};
+\end{scope}
+\begin{scope}[shift={($(current page.north west)+(8.0mm,-216.5mm)$)},x=1mm,y=1mm]
+\node[qnum,anchor=north west] at (2,-2) {5)};
+\begin{scope}[shift={(0,0)}]
+\coordinate (A) at (13,-27);
+\coordinate (B) at (28,-13);
+\coordinate (C) at (27,-27);
+\draw[tri] (A) -- (B) -- (C) -- cycle;
+\pic[angpic, angle radius=3.6mm, angle eccentricity=1.44, "{\scriptsize $\hat{e}$}"] {angle=C--A--B};
+\pic[angpic, angle radius=3.8mm, angle eccentricity=1.38, "{\scriptsize\bfseries $43^\circ$}"] {angle=A--B--C};
+\pic[angpic, angle radius=3.8mm, angle eccentricity=1.32, "{\scriptsize\bfseries $94^\circ$}"] {angle=B--C--A};
+\end{scope}
+\node[answer,anchor=west] at (4,-43) {$\hat{e}$ =};
+\end{scope}
+\begin{scope}[shift={($(current page.north west)+(56.75mm,-216.5mm)$)},x=1mm,y=1mm]
+\node[qnum,anchor=north west] at (2,-2) {6)};
+\begin{scope}[shift={(0,0)}]
+\coordinate (A) at (20,-14);
+\coordinate (B) at (13,-27);
+\coordinate (C) at (26,-27);
+\draw[tri] (A) -- (B) -- (C) -- cycle;
+\pic[angpic, angle radius=3.6mm, angle eccentricity=1.44, "{\scriptsize\bfseries $50^\circ$}"] {angle=B--A--C};
+\pic[angpic, angle radius=3.6mm, angle eccentricity=1.42, "{\scriptsize $\hat{f}$}"] {angle=C--B--A};
+\pic[angpic, angle radius=3.4mm, angle eccentricity=1.42, "{\scriptsize $\hat{f}$}"] {angle=A--C--B};
+\end{scope}
+\node[answer,anchor=west] at (4,-43) {$\hat{f}$ =};
+\end{scope}
+\begin{scope}[shift={($(current page.north west)+(105.5mm,-216.5mm)$)},x=1mm,y=1mm]
+\node[qnum,anchor=north west] at (2,-2) {7)};
+\begin{scope}[shift={(0,0)}]
+\coordinate (A) at (10,-27);
+\coordinate (B) at (28,-14);
+\coordinate (C) at (29,-27);
+\draw[tri] (A) -- (B) -- (C) -- cycle;
+\pic[angpic, angle radius=3.2mm, angle eccentricity=1.66, "{\scriptsize\bfseries $37^\circ$}"] {angle=C--A--B};
+\pic[angpic, angle radius=3.6mm, angle eccentricity=1.42, "{\scriptsize\bfseries $58^\circ$}"] {angle=A--B--C};
+\pic[angpic, angle radius=3.6mm, angle eccentricity=1.34, "{\scriptsize $\hat{g}$}"] {angle=B--C--A};
+\end{scope}
+\node[answer,anchor=west] at (4,-43) {$\hat{g}$ =};
+\end{scope}
+\begin{scope}[shift={($(current page.north west)+(154.25mm,-216.5mm)$)},x=1mm,y=1mm]
+\node[qnum,anchor=north west] at (2,-2) {8)};
+\node[ratio,anchor=north west,text width=31mm,align=left] at (5,-9) {Le rapport des trois angles $\hat{h}$, $\hat{i}$ et $\hat{j}$ d'un triangle est 2:3:4.};
+\node[answer,anchor=west] at (10,-31) {$\hat{h}$ =};
+\node[answer,anchor=west] at (10,-39) {$\hat{i}$ =};
+\node[answer,anchor=west] at (10,-47) {$\hat{j}$ =};
+\end{scope}
+\footer{2}
+\end{tikzpicture}
+\end{document}
