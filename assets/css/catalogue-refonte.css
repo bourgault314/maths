@@ -853,7 +853,7 @@ select { cursor: pointer; }
   .domain-card {
     min-height: 164px;
     grid-template-columns: 1fr;
-    align-content: start;
+    align-content: center;
     gap: 8px;
     padding: 13px 12px;
     border-left-width: 1px;
