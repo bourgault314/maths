@@ -4,6 +4,8 @@
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1" />
 <title>Pythagore — outil visuel du théorème de Pythagore</title>
+<meta name="description" content="PythaBarre est un outil interactif maths&go pour visualiser, écrire et calculer avec le théorème de Pythagore." />
+<link rel="canonical" href="https://mathsgo.re/outils/pythabarre.html" />
 <style>
   :root{
     --bg:#f5f7fb;
@@ -579,13 +581,15 @@
   }
   .toolBtn.active{background:linear-gradient(180deg,#60a5fa,#3b82f6);color:#fff;border-color:rgba(37,99,235,.30);box-shadow:0 10px 24px rgba(59,130,246,.18)}
   .toolBtn.done{background:#ecfdf5;border-color:rgba(22,163,74,.26);color:#166534}
-  .undoToolBtn{background:#fff7ed;border-color:rgba(249,115,22,.28);color:#9a3412}
+  /* Annuler et Recommencer appartiennent à la même famille de commandes. */
+  .undoToolBtn,
   .restartToolBtn{background:#eef2ff;border-color:rgba(99,102,241,.22);color:#3730a3}
 
   .actionZone{flex:0 0 auto;min-height:34px;margin-top:0;display:flex;align-items:center;justify-content:center;gap:10px;flex-wrap:wrap}
   .note{color:#64748b;font-size:13px;font-weight:750;text-align:center;line-height:1.28}
 
-  .hideEquations .topbar{display:none}
+  /* L’œil ne doit jamais faire disparaître l’énoncé ni le triangle. */
+  .hideEquations .equationHistory{display:none}
   .hideBars .barBoard{display:none}
   .hideVisual .visualCard{display:none}
 
@@ -700,8 +704,8 @@
     .creatorActions{flex-direction:column}
     .diceBtn,.buildBtn{width:100%;max-width:none;flex:1 1 auto}
     .stage{padding:12px}
-    .stageQuickActions{position:static;justify-content:flex-end;margin-bottom:8px}
-    .topbar{padding:0;min-height:104px}
+    .stageQuickActions{position:static;justify-content:center;margin:0 auto 6px;gap:7px}
+    .topbar{padding:0;min-height:0;gap:4px}
     .equationTable{font-size:24px}
     .slotBtn{min-width:104px;min-height:52px}
     .toolBtn{flex:1 1 220px}
@@ -3043,11 +3047,80 @@
     font-size:22px;
   }
 
+  /* Rendu téléphone : les boutons rapides passent dans la ligne supérieure,
+     donc l’équation ne doit pas réserver une colonne vide à droite. */
+  @media (max-width:700px){
+    main.activeMode .stage:not(:fullscreen){
+      width:100%;
+      min-height:0;
+      padding:10px;
+    }
+    .stage:not(:fullscreen) .topbar{
+      width:100%;
+      padding:0;
+      min-height:0;
+    }
+    .stage:not(:fullscreen) .equationHistory{
+      width:100%;
+      max-width:100%;
+      padding:0 2px;
+      overflow-x:auto;
+    }
+    .stage:not(:fullscreen) .equationTable{
+      font-size:clamp(21px,6.4vw,29px);
+    }
+    .stage:not(:fullscreen) .relationEditor{
+      gap:5px;
+      flex-wrap:nowrap;
+      font-size:clamp(22px,7vw,31px);
+    }
+    .stage:not(:fullscreen) .slotBtn{
+      min-width:78px;
+      min-height:48px;
+      padding:7px 8px;
+    }
+    .stage:not(:fullscreen) .workArea{
+      overflow:visible;
+      gap:8px;
+    }
+    /* Sur téléphone, l’ordre pédagogique devient : consigne, triangle, tableau. */
+    .stage:not(:fullscreen) .leftWork{display:contents}
+    .stage:not(:fullscreen) .topbar{order:0}
+    .stage:not(:fullscreen) .instructionZone{order:1}
+    .stage:not(:fullscreen) .visualCard{
+      order:2;
+      min-height:250px;
+      height:clamp(250px,38vh,330px);
+      padding:4px;
+    }
+    .stage:not(:fullscreen) .barBoard{order:3}
+    .stage:not(:fullscreen) .sidePalette{order:4}
+    .stage:not(:fullscreen) svg.triangleSvg{
+      width:100%;
+      height:100%;
+      min-height:0;
+    }
+    .stage:not(:fullscreen) .leftWork{gap:6px}
+    .stage:not(:fullscreen) .leftWork .barBoard{min-height:230px}
+    .stage:not(:fullscreen) .instructionZone{min-height:44px;margin-bottom:2px;font-size:clamp(16px,4.6vw,20px)}
+    .stage:not(:fullscreen) .barLine{
+      width:100%;
+    }
+    .stage:not(:fullscreen) .barPiece{
+      min-height:82px;
+    }
+    .stage:not(:fullscreen) .pieceMain{
+      font-size:clamp(24px,8vw,36px);
+    }
+    .stage:not(:fullscreen) #btnFullscreen{display:none;}
+    .stage:not(:fullscreen) .toolBar{margin-top:6px}
+  }
+
 </style>
 <link rel="stylesheet" href="../assets/css/consentement.css">
 <script defer src="../assets/js/consentement.js"></script>
 </head>
-<body>
+<body data-component-id="geometry.pythagore-bar-model" data-component-version="1">
 <main id="appMain">
   <section class="panel" id="panel">
     <h1 class="appTitle">Pythagore</h1>
@@ -3251,17 +3324,20 @@
   let activeChoiceMode = null; // replace | calculate | regroup
   let selectedChoiceSide = null; // proposition choisie pour Remplacer
   let selectedCalcValue = null;  // proposition choisie pour Calculer
+  let selectedReplaceSide = null; // case choisie avant la valeur à remplacer
+  let selectedComputeSide = null; // case choisie avant le résultat du carré
   let choiceSeed = Math.floor(Math.random() * 1000000000);
   let flashCell = null;         // {side, kind:"ok"|"bad"}
   let message = "";
   let nextRotation = 0;
   let display = {equation:true, bars:true, triangle:true, moulin:true};
 
-  const colorClassPool = ["barColor1", "barColor2", "barColor3", "barColor4", "barColor5"];
-
   function makeColorMap(){
-    const shuffled = [...colorClassPool].sort(() => Math.random() - 0.5);
-    return {hyp:shuffled[0], leg1:shuffled[1], leg2:shuffled[2]};
+    // Les couleurs portent un sens mathématique partagé avec le moulin :
+    // hypothénuse = vert, premier côté de l’angle droit = bleu,
+    // second côté de l’angle droit = orange.
+    // Elles ne doivent donc pas changer d’une question à l’autre.
+    return {hyp:"barColor1", leg1:"barColor2", leg2:"barColor3"};
   }
 
   const tripletsPythagoreFaciles = [
@@ -3368,6 +3444,62 @@
     setSideInput(legs[1], missing === "leg2" ? "?" : fmt(b), sideNames);
     setSideInput(hyp, missing === "hyp" ? "?" : fmt(c), sideNames);
     renderMenuPreview();
+  }
+
+  /*
+   * Contrat d’intégration léger pour maths&go.
+   * Une fiche peut fournir les données par objet global ou par paramètres URL,
+   * puis demander le lancement direct de l’activité.
+   */
+  function launchConfigFromQuery(){
+    const params = new URLSearchParams(window.location.search);
+    const cfg = {};
+    const value = (key) => params.has(key) ? params.get(key) : undefined;
+    const letters = value("triangle") || value("letters");
+    const right = value("right") || value("rightAngle");
+    if(letters || right) cfg.triangle = {letters, rightAngle:right};
+    const sides = {};
+    ["AB","AC","BC"].forEach(side => {
+      const v = value(side);
+      if(v !== undefined) sides[side] = v;
+    });
+    if(Object.keys(sides).length) cfg.sides = sides;
+    if(value("unit") !== undefined) cfg.unit = value("unit");
+    if(value("mode") !== undefined) cfg.mode = value("mode");
+    if(value("autostart") !== undefined) cfg.autoStart = /^(1|true|oui|yes)$/i.test(value("autostart"));
+    return cfg;
+  }
+
+  function getLaunchConfig(override={}){
+    const globalConfig = window.MATHSGO_PYTHABARRE_CONFIG;
+    const base = globalConfig && typeof globalConfig === "object" ? globalConfig : {};
+    const query = launchConfigFromQuery();
+    const cfg = {...base, ...query, ...override};
+    cfg.triangle = {...(base.triangle || {}), ...(query.triangle || {}), ...(override.triangle || {})};
+    cfg.sides = {...(base.sides || {}), ...(query.sides || {}), ...(override.sides || {})};
+    return cfg;
+  }
+
+  function applyLaunchConfig(override={}){
+    const cfg = getLaunchConfig(override);
+    const triangle = cfg.triangle || {};
+    const letters = triangle.letters || triangle.name || cfg.letters;
+    if(letters) triangleNameInput.value = String(letters).slice(0,3).toUpperCase();
+    updateSideLabels();
+    const right = triangle.rightAngle || triangle.right || cfg.rightAngle;
+    if(right && [...rightAngleInput.options].some(opt => opt.value === right)) rightAngleInput.value = right;
+    if(cfg.unit !== undefined && [...unitInput.options].some(opt => opt.value === String(cfg.unit))) unitInput.value = String(cfg.unit);
+    if(cfg.mode === "auto" || cfg.mode === "manual") relationModeInput.value = cfg.mode;
+
+    const sideNames = sidesFromLetters(normalizeName(triangleNameInput.value));
+    const suppliedSides = cfg.sides || {};
+    sideNames.forEach(side => {
+      const key = Object.keys(suppliedSides).find(k => sameSide(k, side));
+      if(!key) return;
+      setSideInput(side, suppliedSides[key], sideNames);
+    });
+    renderMenuPreview();
+    return cfg;
   }
 
   function nextExample(step=1){
@@ -3628,7 +3760,7 @@
   }
 
   function snapshot(){
-    history.push(JSON.stringify({work, selectedSlot, selectedSquareSide, activeChoiceMode, selectedChoiceSide, selectedCalcValue, message}));
+    history.push(JSON.stringify({work, selectedSlot, selectedSquareSide, activeChoiceMode, selectedChoiceSide, selectedCalcValue, selectedReplaceSide, selectedComputeSide, message}));
     if(history.length > 50) history.shift();
   }
   function restore(){
@@ -3640,6 +3772,8 @@
     activeChoiceMode = old.activeChoiceMode || null;
     selectedChoiceSide = old.selectedChoiceSide || null;
     selectedCalcValue = old.selectedCalcValue ?? null;
+    selectedReplaceSide = old.selectedReplaceSide || null;
+    selectedComputeSide = old.selectedComputeSide || null;
     flashCell = null;
     message = old.message || "";
     render();
@@ -3762,6 +3896,8 @@
     activeChoiceMode = null;
     selectedChoiceSide = null;
     selectedCalcValue = null;
+    selectedReplaceSide = null;
+    selectedComputeSide = null;
   }
 
   function setChoiceMode(mode){
@@ -3808,6 +3944,8 @@
         activeChoiceMode = null;
         selectedChoiceSide = null;
         selectedCalcValue = null;
+        selectedReplaceSide = null;
+        selectedComputeSide = null;
       }
       return;
     }
@@ -3816,6 +3954,8 @@
     activeChoiceMode = mode;
     selectedChoiceSide = null;
     selectedCalcValue = null;
+    selectedReplaceSide = null;
+    selectedComputeSide = null;
     choiceSeed = Math.floor(Math.random() * 1000000000);
   }
 
@@ -3832,14 +3972,16 @@
       return stepPrefix(1, "Complète la relation de Pythagore : clique sur une case puis sur une aire, ou sur une aire puis sur une case.");
     }
     if(!work.replaced){
+      if(selectedReplaceSide) return stepPrefix(2, "Clique sur la longueur à placer dans la case choisie.");
       if(selectedChoiceSide) return stepPrefix(2, `Clique sur la case du tableau où placer ${valueSq(sideValue(selectedChoiceSide))}.`);
-      return stepPrefix(2, "Remplace les longueurs connues par leurs valeurs.");
+      return stepPrefix(2, "Remplace les longueurs connues : clique sur une case puis sur une valeur, ou dans l’autre sens.");
     }
     const targets = squareTargets();
     const missing = targets.filter(t => !work.squares[t.side]);
     if(missing.length){
+      if(selectedComputeSide !== null) return stepPrefix(3, "Clique sur la valeur du carré à placer dans la case choisie.");
       if(selectedCalcValue !== null) return stepPrefix(3, `Clique sur le carré qui vaut ${fmt(selectedCalcValue)}.`);
-      return stepPrefix(3, "Calcule les carrés connus.");
+      return stepPrefix(3, "Calcule les carrés connus : clique sur une case puis sur une valeur, ou dans l’autre sens.");
     }
     if(!work.operationChosen) return stepPrefix(4, "Schéma partie-tout : choisis l’opération.");
     if(!work.operationComputed) return stepPrefix(5, "Calcule le résultat de l’opération.");
@@ -3961,8 +4103,9 @@
           message = "La relation n’est pas correcte : clique sur une case pour la corriger.";
         }
       }else{
-        const nextEmpty = ["lhs","rhs1","rhs2"].find(k => !work.relationSlots[k]);
-        selectedSlot = nextEmpty || null;
+        // Chaque placement termine le geste. L’élève choisit lui-même la
+        // prochaine case : aucun ordre imposé, aucune sélection automatique.
+        selectedSlot = null;
         message = "";
       }
     });
@@ -4044,6 +4187,8 @@
       selectedSquareSide = null;
       selectedChoiceSide = null;
       selectedCalcValue = null;
+      selectedReplaceSide = null;
+      selectedComputeSide = null;
       activeChoiceMode = null;
       message = "";
 
@@ -4141,12 +4286,7 @@
       }).join("");
       sidePalette.classList.add("show");
       sidePalette.querySelectorAll("[data-replace-choice]").forEach(btn => {
-        btn.addEventListener("click", () => {
-          selectedChoiceSide = btn.dataset.replaceChoice;
-          selectedCalcValue = null;
-          message = "";
-          render();
-        });
+        btn.addEventListener("click", () => chooseReplaceValue(btn.dataset.replaceChoice));
       });
       return;
     }
@@ -4159,12 +4299,7 @@
       }).join("");
       sidePalette.classList.add("show");
       sidePalette.querySelectorAll("[data-calc-choice]").forEach(btn => {
-        btn.addEventListener("click", () => {
-          selectedCalcValue = Number(btn.dataset.calcChoice);
-          selectedChoiceSide = null;
-          message = "";
-          render();
-        });
+        btn.addEventListener("click", () => chooseComputeValue(btn.dataset.calcChoice));
       });
       return;
     }
@@ -4244,6 +4379,7 @@
         const classes = ["barPiece", p.kind || "known"];
         if(p.colorClass) classes.push(p.colorClass);
         const pSide = p.side || p.replace || p.compute || null;
+        if(pSide && ((selectedReplaceSide && sameSide(selectedReplaceSide, pSide)) || (selectedComputeSide && sameSide(selectedComputeSide, pSide)))) classes.push("selectedChoice");
         if(flashCell && pSide && sameSide(flashCell.side, pSide)) classes.push(flashCell.kind === "bad" ? "clickWrong" : "clickFlash");
         if(p.solved) classes.push("solved");
         const attrs = `${p.replace ? ` data-replace="${p.replace}"` : ""}${p.compute ? ` data-compute="${p.compute}"` : ""}`;
@@ -4344,8 +4480,8 @@
     if(activeChoiceMode !== "replace") return;
     if(work.replaced || !replaceTargets().some(t => sameSide(t.side, side))) return;
     if(!selectedChoiceSide){
-      flashTableCell(side, "bad");
-      message = "Choisis d’abord une valeur.";
+      selectedReplaceSide = side;
+      message = "Case choisie. Clique maintenant sur la longueur à placer.";
       render();
       return;
     }
@@ -4361,17 +4497,39 @@
       work.replaced = allReplaced();
       selectedChoiceSide = null;
       selectedCalcValue = null;
+      selectedReplaceSide = null;
       if(work.replaced) activeChoiceMode = null;
       message = "";
     });
+  }
+
+  function chooseReplaceValue(side){
+    if(activeChoiceMode !== "replace") return;
+    if(selectedReplaceSide){
+      const target = selectedReplaceSide;
+      if(!sameSide(side, target)){
+        message = "Cette longueur ne correspond pas à la case choisie.";
+        selectedReplaceSide = null;
+        selectedChoiceSide = null;
+        render();
+        return;
+      }
+      selectedChoiceSide = side;
+      selectReplaceSide(target);
+      return;
+    }
+    selectedChoiceSide = side;
+    selectedCalcValue = null;
+    message = "Valeur choisie. Clique maintenant sur sa case dans le tableau.";
+    render();
   }
 
   function selectComputeSide(side){
     if(activeChoiceMode !== "calculate") return;
     if(!work.replaced || work.squares[side] || !squareTargets().some(t => sameSide(t.side, side))) return;
     if(selectedCalcValue === null){
-      flashTableCell(side, "bad");
-      message = "Choisis d’abord un résultat.";
+      selectedComputeSide = side;
+      message = "Case choisie. Clique maintenant sur la valeur du carré.";
       render();
       return;
     }
@@ -4387,9 +4545,25 @@
       work.squares[side] = expected;
       selectedCalcValue = null;
       selectedChoiceSide = null;
+      selectedComputeSide = null;
       if(allSquaresDone(squareTargets())) activeChoiceMode = null;
       message = "";
     });
+  }
+
+  function chooseComputeValue(value){
+    if(activeChoiceMode !== "calculate") return;
+    const numeric = Number(value);
+    if(selectedComputeSide){
+      const target = selectedComputeSide;
+      selectedCalcValue = numeric;
+      selectComputeSide(target);
+      return;
+    }
+    selectedCalcValue = numeric;
+    selectedChoiceSide = null;
+    message = "Résultat choisi. Clique maintenant sur le carré correspondant.";
+    render();
   }
 
   function hashString(str){
@@ -5091,8 +5265,19 @@
   updateSideLabels();
   populateExampleCategories();
   applySelectedExample();
-  renderMenuPreview();
+  const initialLaunchConfig = applyLaunchConfig();
+  window.MathsGoPythaBarre = {
+    launch(config={}){
+      applyLaunchConfig(config);
+      start();
+    },
+    start(config={}){
+      applyLaunchConfig(config);
+      start();
+    }
+  };
   syncEyeButton();
+  if(initialLaunchConfig.autoStart) start();
 })();
 </script>
 </body>

@@ -1,0 +1,158 @@
+# Composants Pythagore
+
+Ce dossier décrit les composants réutilisables issus de `PythaBarre` et du
+Moulin de Pythagore. Les pages historiques restent les références publiées ;
+ce contrat prépare leur utilisation dans des fiches, des questions, des aides,
+des corrections, des diaporamas et des jeux mobiles.
+
+Les variantes inventées doivent être explicitement nommées comme variantes.
+Un puzzle historique ne doit être ajouté qu’après vérification de sa découpe,
+de sa solution et de l’absence de chevauchement des pièces.
+
+## Trois composants
+
+### `geometry.pythagore-moulin`
+
+Représentation géométrique d’un triangle rectangle et des trois carrés construits
+sur ses côtés.
+
+- `rightAngleVertex` identifie le sommet de l’angle droit ;
+- `hypotenuse` est toujours le côté opposé à cet angle ;
+- les carrés portent les rôles `hypotenuse`, `leg1` et `leg2` ;
+- les couleurs sont sémantiques et stables : vert pour l’hypoténuse, bleu et
+  orange pour les deux côtés de l’angle droit ;
+- le rendu doit pouvoir produire un moulin complet, un moulin vide, un moulin
+  à compléter et un moulin annoté.
+
+### `representation.pythagore-bar-model`
+
+Schéma en barres proportionnel aux aires des carrés.
+
+- une largeur de partie est proportionnelle à `length²` ;
+- les cellules ont un rôle mathématique explicite, pas seulement une couleur ;
+- le parcours distingue relation, remplacement des longueurs, calcul des carrés,
+  regroupement ou décomposition, puis racine carrée ;
+- la rédaction conserve les unités et la conclusion sur la longueur cherchée ;
+- les erreurs et distracteurs sont définis par étape.
+
+### `game.pythagore-reassembly`
+
+Jeu de déplacement des pièces d’un découpage de Pythagore.
+
+- chaque pièce possède un identifiant stable, des sommets, une couleur, une
+  position, une rotation et un état de retournement ;
+- les transformations autorisées sont déclarées par le puzzle ;
+- les aimantations utilisent des ancres géométriques déclarées : sommets,
+  milieux, bords et poses exactes ;
+- une validation ne dépend jamais d’un simple rapprochement visuel ;
+- le mode téléphone empile `Cible` puis `Pièces` dans une scène verticale
+  défilante afin de garder des zones de manipulation suffisamment grandes.
+
+## Règles communes
+
+Les trois composants partagent le même objet triangle :
+
+```json
+{
+  "letters": ["A", "B", "C"],
+  "rightAngleVertex": "A",
+  "sides": {
+    "AB": {"role": "leg1", "length": 3},
+    "AC": {"role": "leg2", "length": 4},
+    "BC": {"role": "hypotenuse", "length": 5}
+  },
+  "unit": "cm"
+}
+```
+
+Le générateur ne doit pas demander à l’IA de redessiner le moulin ou le schéma
+en barres. Il lui demande un composant, des paramètres validés et un mode de
+rendu. Le moteur construit ensuite la représentation à partir de ces données.
+
+## Modes attendus
+
+Chaque composant doit déclarer les modes qu’il accepte :
+
+- `course` : représentation expliquée et stable ;
+- `question` : une ou plusieurs inconnues ;
+- `help` : aide visuelle ciblée sans changer la question ;
+- `correction` : résultat et étapes visibles ;
+- `slideshow` : projection plein écran ;
+- `game` : manipulation tactile ;
+- `printable` : fiche ou gabarit papier.
+
+## Intégration directe de PythaBarre
+
+Une page élève peut fournir une situation puis lancer directement l’activité.
+Le contrat minimal côté navigateur est :
+
+```js
+window.MATHSGO_PYTHABARRE_CONFIG = {
+  triangle: {letters: "ABC", rightAngle: "A"},
+  sides: {AB: 3, AC: 4, BC: "?"},
+  unit: "cm",
+  mode: "manual",
+  autoStart: true
+};
+```
+
+La même configuration peut être passée à `window.MathsGoPythaBarre.start(config)`
+ou `launch(config)`. Pour un lien simple, les paramètres `triangle`, `right`,
+`AB`, `AC`, `BC`, `unit`, `mode` et `autostart=1` sont acceptés dans l’URL.
+Les identifiants de côté restent stables, même si leur ordre d’affichage change.
+Le composant ne collecte aucune donnée élève : la page appelante garde la main
+sur le contexte, l’aide et la validation.
+
+Pour le jeu, la page peut utiliser le même principe :
+
+```js
+window.MATHSGO_PYTHAGORE_PUZZLE_CONFIG = {
+  puzzle: "bhaskara",
+  mode: "eleves",
+  letters: false
+};
+```
+
+L’API correspondante est `window.MathsGoPythagorePuzzle.launch(config)` ; le
+paramètre URL `puzzle=bhaskara` permet aussi un lien direct.
+
+## Identifiants et suivi futur
+
+Une question qui utilise Pythagore conserve au minimum :
+
+```text
+componentId
+componentVersion
+templateId
+questionInstanceId
+representationId
+seed
+parameters
+```
+
+Une activité de puzzle peut ensuite enregistrer, sans collecter maintenant :
+
+```text
+puzzleId
+pieceSetId
+moveCount
+rotationCount
+flipCount
+helpOpened
+completed
+```
+
+Ces champs préparent l’analyse future sans construire aujourd’hui de serveur ni
+activer de collecte élève.
+
+## Références visuelles à conserver
+
+Les golden snapshots du composant devront couvrir :
+
+1. PythaBarre sur ordinateur en plein écran ;
+2. PythaBarre en portrait sur téléphone ;
+3. Moulin complet sur ordinateur ;
+4. Moulin mobile empilé `Cible` puis `Pièces` ;
+5. un puzzle simple sans retournement ;
+6. Bhaskara avec rotation et retournement ;
+7. un rendu imprimable sans page blanche supplémentaire.
