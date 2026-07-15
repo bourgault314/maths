@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <title>Yavalath d’Axelle | maths&amp;go</title>
-  <meta name="description" content="Une version simple de Yavalath pour jouer cinq parties contre l’ordinateur.">
+  <meta name="description" content="Une version simple de Yavalath pour jouer trois parties contre l’ordinateur.">
   <meta name="robots" content="noindex, nofollow">
   <style>
     :root {
@@ -105,6 +105,10 @@
     }
     .dashboard span { display: block; color: #69778a; font-size: .7rem; font-weight: 800; text-transform: uppercase; letter-spacing: .045em; }
     .dashboard strong { display: block; overflow: hidden; margin-top: 2px; color: var(--blue-dark); font-size: clamp(.92rem, 2.8vw, 1.12rem); text-overflow: ellipsis; white-space: nowrap; }
+    .level-dashboard { display: flex; flex-direction: column; align-items: stretch; }
+    .level-switch { display: grid; grid-template-columns: 1fr 1fr; gap: 3px; margin-top: 4px; }
+    .level-switch-button { min-width: 0; padding: 5px 3px; border: 1px solid #cdd9e5; border-radius: 8px; color: #52657b; background: #fff; font-size: clamp(.62rem, 1.7vw, .78rem); font-weight: 900; cursor: pointer; }
+    .level-switch-button.active { color: #fff; border-color: var(--blue); background: var(--blue); }
 
     .status {
       min-height: 48px;
@@ -182,7 +186,10 @@
     .intro-lead { margin: 10px auto 20px; color: var(--muted); }
     .rule-cards { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
     .rule-card { padding: 15px 10px; border-radius: 17px; font-weight: 850; }
-    .rule-card strong { display: block; font-size: 2rem; }
+    .rule-card strong { display: block; margin-top: 7px; font-size: 1.08rem; }
+    .rule-card span { display: block; margin-top: 3px; font-size: .83rem; line-height: 1.25; }
+    .rule-chips { display: flex; align-items: center; justify-content: center; gap: 5px; min-height: 29px; }
+    .rule-chips i { width: 25px; height: 25px; display: block; border: 1px solid rgba(0,0,0,.24); border-radius: 50%; background: radial-gradient(circle at 34% 28%, #72b7ff 0 18%, #0f6cf9 58%, #063f86 100%); box-shadow: inset -2px -2px 3px rgba(0,0,0,.2); }
     .rule-card.lose { color: #8c2929; background: #fff1f1; border: 2px solid #edbcbc; }
     .rule-card.win { color: #075b3f; background: #eafaf4; border: 2px solid #a8dfca; }
     .level-title { margin: 21px 0 8px; color: #344e69; font-size: .86rem; font-weight: 900; }
@@ -190,7 +197,7 @@
     .level-button { min-height: 50px; padding: 10px; border: 2px solid #d8e2ec; border-radius: 14px; color: #435b74; background: #fff; font-weight: 900; cursor: pointer; }
     .level-button.active { color: #0755b8; border-color: #4386d6; background: #edf5ff; box-shadow: inset 0 0 0 1px #4386d6; }
     .intro .primary { width: 100%; margin-top: 17px; }
-    .five-note { margin: 12px 0 0; color: #728096; font-size: .8rem; }
+    .game-limit-note { margin: 12px 0 0; color: #728096; font-size: .8rem; }
 
     .credits { margin: 13px auto 0; color: rgba(16,41,74,.55); font-size: .7rem; line-height: 1.35; text-align: center; }
 
@@ -236,8 +243,14 @@
       </header>
 
       <div class="dashboard" aria-label="Informations sur les parties">
-        <div><span>Partie</span><strong id="game-number">1 sur 5</strong></div>
-        <div><span>Niveau</span><strong id="level-label">Facile</strong></div>
+        <div><span>Partie</span><strong id="game-number">1 sur 3</strong></div>
+        <div class="level-dashboard">
+          <span>Niveau</span>
+          <div class="level-switch" role="group" aria-label="Changer le niveau de l’ordinateur">
+            <button class="level-switch-button active" type="button" data-game-level="easy">Facile</button>
+            <button class="level-switch-button" type="button" data-game-level="hard">Difficile</button>
+          </div>
+        </div>
         <div><span>Score</span><strong id="score-label">0 – 0</strong></div>
       </div>
 
@@ -285,8 +298,14 @@
       <h1 id="intro-title">Yavalath</h1>
       <p class="intro-lead">Tu joues avec les pions bleus et tu commences.</p>
       <div class="rule-cards">
-        <div class="rule-card lose"><strong>3</strong>pions alignés&nbsp;: tu perds</div>
-        <div class="rule-card win"><strong>4</strong>pions alignés&nbsp;: tu gagnes</div>
+        <div class="rule-card lose">
+          <div class="rule-chips" aria-hidden="true"><i></i><i></i><i></i></div>
+          <strong>Tu perds</strong><span>si tu alignes exactement 3 pions.</span>
+        </div>
+        <div class="rule-card win">
+          <div class="rule-chips" aria-hidden="true"><i></i><i></i><i></i><i></i></div>
+          <strong>Tu gagnes</strong><span>si tu alignes 4 pions.</span>
+        </div>
       </div>
       <p class="level-title">Choisis le niveau de l’ordinateur</p>
       <div class="levels" role="group" aria-label="Niveau de l’ordinateur">
@@ -294,7 +313,7 @@
         <button class="level-button" type="button" data-level="hard">Difficile</button>
       </div>
       <button id="start-game" class="primary" type="button">J’ai compris, je joue !</button>
-      <p class="five-note">Tu peux jouer cinq parties.</p>
+      <p class="game-limit-note">Tu peux jouer trois parties.</p>
     </section>
   </div>
 
@@ -308,8 +327,8 @@
       const startButton = document.getElementById('start-game');
       const rulesButton = document.getElementById('rules-button');
       const levelButtons = Array.from(document.querySelectorAll('.level-button'));
+      const gameLevelButtons = Array.from(document.querySelectorAll('.level-switch-button'));
       const gameNumber = document.getElementById('game-number');
-      const levelLabel = document.getElementById('level-label');
       const scoreLabel = document.getElementById('score-label');
       const status = document.getElementById('status');
       const statusText = document.getElementById('status-text');
@@ -322,7 +341,7 @@
       const RADIUS = 4;
       const HEX = 40;
       const TOKEN_RADIUS = 22;
-      const MAX_GAMES = 5;
+      const MAX_GAMES = 3;
       const PLAYER = 'player';
       const AI = 'ai';
       const DIRECTIONS = [[1, 0], [0, 1], [1, -1]];
@@ -559,7 +578,7 @@
         const draw = winner === null;
         resultPanel.className = `result-panel${winner === AI ? ' lose' : ''}`;
         resultTitle.textContent = draw ? 'Partie terminée' : playerWon ? 'Bravo Axelle !' : 'Cette fois, l’ordinateur gagne.';
-        resultText.textContent = `${reason} ${gamesCompleted < MAX_GAMES ? `Il te reste ${MAX_GAMES - gamesCompleted} partie${MAX_GAMES - gamesCompleted > 1 ? 's' : ''}.` : 'Tes cinq parties sont terminées.'}`;
+        resultText.textContent = `${reason} ${gamesCompleted < MAX_GAMES ? `Il te reste ${MAX_GAMES - gamesCompleted} partie${MAX_GAMES - gamesCompleted > 1 ? 's' : ''}.` : 'Tes trois parties sont terminées.'}`;
         resultPanel.hidden = false;
         nextGameButton.hidden = gamesCompleted >= MAX_GAMES;
         render();
@@ -583,8 +602,7 @@
         renderTokens();
         renderHintsAndMarks();
         renderStatus();
-        gameNumber.textContent = gamesCompleted >= MAX_GAMES ? '5 sur 5' : `${gamesCompleted + 1} sur 5`;
-        levelLabel.textContent = level === 'easy' ? 'Facile' : 'Difficile';
+        gameNumber.textContent = gamesCompleted >= MAX_GAMES ? `${MAX_GAMES} sur ${MAX_GAMES}` : `${gamesCompleted + 1} sur ${MAX_GAMES}`;
         scoreLabel.textContent = `${playerWins} – ${aiWins}`;
       }
 
@@ -636,7 +654,7 @@
       function renderStatus() {
         status.classList.toggle('ai', thinking || current === AI);
         if (gameOver) {
-          statusText.textContent = gamesCompleted >= MAX_GAMES ? 'Tes cinq parties sont terminées.' : 'La partie est terminée.';
+          statusText.textContent = gamesCompleted >= MAX_GAMES ? 'Tes trois parties sont terminées.' : 'La partie est terminée.';
         } else if (thinking) {
           statusText.textContent = 'L’ordinateur réfléchit…';
         } else {
@@ -657,10 +675,12 @@
       function selectLevel(nextLevel) {
         level = nextLevel;
         levelButtons.forEach(button => button.classList.toggle('active', button.dataset.level === level));
+        gameLevelButtons.forEach(button => button.classList.toggle('active', button.dataset.gameLevel === level));
         render();
       }
 
       levelButtons.forEach(button => button.addEventListener('click', () => selectLevel(button.dataset.level)));
+      gameLevelButtons.forEach(button => button.addEventListener('click', () => selectLevel(button.dataset.gameLevel)));
       startButton.addEventListener('click', () => {
         started = true;
         overlay.hidden = true;
