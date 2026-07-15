@@ -1,14 +1,40 @@
 (function () {
   const multiplicationMemo = `
-    <svg viewBox="0 0 180 126" aria-hidden="true">
-      <text x="90" y="18" text-anchor="middle" fill="#35445a" font-family="Arial" font-size="17" font-weight="900">12 en tout</text>
-      <path d="M18 32V24H162V32" fill="none" stroke="#063f86" stroke-width="2.5"/>
-      <rect x="18" y="38" width="144" height="48" fill="#fff" stroke="#063f86" stroke-width="3"/>
-      <rect x="18" y="38" width="36" height="48" fill="#bfeeea"/>
-      <rect x="90" y="38" width="36" height="48" fill="#bfeeea"/>
-      <path d="M54 38v48M90 38v48M126 38v48" stroke="#063f86" stroke-width="2.5"/>
-      <g fill="#075b57" font-family="Arial" font-size="17" font-weight="900" text-anchor="middle"><text x="36" y="68">3</text><text x="72" y="68">3</text><text x="108" y="68">3</text><text x="144" y="68">3</text></g>
-      <text x="90" y="116" text-anchor="middle" fill="#063f86" font-family="Arial" font-size="18" font-weight="900">4 × 3 = 12</text>
+    <svg viewBox="0 0 520 230" role="img" aria-label="Douze représenté par trois groupes de quatre billes et par quatre groupes de trois billes">
+      <g transform="translate(8 5)">
+        <text x="120" y="18" text-anchor="middle" fill="#075b57" font-family="Arial" font-size="15" font-weight="900">3 groupes de 4</text>
+        <rect x="30" y="29" width="180" height="37" rx="8" fill="#fff" stroke="#063f86" stroke-width="2.5"/>
+        <text x="120" y="55" text-anchor="middle" fill="#063f86" font-family="Arial" font-size="25" font-weight="900">12</text>
+        <g fill="#dff7f4" stroke="#087a77" stroke-width="2">
+          <rect x="30" y="66" width="60" height="34"/><rect x="90" y="66" width="60" height="34"/><rect x="150" y="66" width="60" height="34"/>
+        </g>
+        <g fill="#075b57" font-family="Arial" font-size="18" font-weight="900" text-anchor="middle"><text x="60" y="89">4</text><text x="120" y="89">4</text><text x="180" y="89">4</text></g>
+        <g fill="#16a39b" stroke="#075b57" stroke-width="1.5">
+          <circle cx="42" cy="126" r="7"/><circle cx="54" cy="142" r="7"/><circle cx="66" cy="126" r="7"/><circle cx="78" cy="142" r="7"/>
+          <circle cx="102" cy="126" r="7"/><circle cx="114" cy="142" r="7"/><circle cx="126" cy="126" r="7"/><circle cx="138" cy="142" r="7"/>
+          <circle cx="162" cy="126" r="7"/><circle cx="174" cy="142" r="7"/><circle cx="186" cy="126" r="7"/><circle cx="198" cy="142" r="7"/>
+        </g>
+        <path d="M88 113v43M148 113v43" stroke="#a6d9d5" stroke-width="2" stroke-dasharray="4 4"/>
+        <text x="120" y="186" text-anchor="middle" fill="#063f86" font-family="Arial" font-size="19" font-weight="900">3 × 4 = 12</text>
+      </g>
+      <path d="M260 20v184" stroke="#d7e2ec" stroke-width="2"/>
+      <g transform="translate(272 5)">
+        <text x="120" y="18" text-anchor="middle" fill="#9a5308" font-family="Arial" font-size="15" font-weight="900">4 groupes de 3</text>
+        <rect x="24" y="29" width="192" height="37" rx="8" fill="#fff" stroke="#063f86" stroke-width="2.5"/>
+        <text x="120" y="55" text-anchor="middle" fill="#063f86" font-family="Arial" font-size="25" font-weight="900">12</text>
+        <g fill="#fff1dc" stroke="#d86b08" stroke-width="2">
+          <rect x="24" y="66" width="48" height="34"/><rect x="72" y="66" width="48" height="34"/><rect x="120" y="66" width="48" height="34"/><rect x="168" y="66" width="48" height="34"/>
+        </g>
+        <g fill="#9a5308" font-family="Arial" font-size="18" font-weight="900" text-anchor="middle"><text x="48" y="89">3</text><text x="96" y="89">3</text><text x="144" y="89">3</text><text x="192" y="89">3</text></g>
+        <g fill="#f59e42" stroke="#9a5308" stroke-width="1.5">
+          <circle cx="40" cy="126" r="7"/><circle cx="48" cy="143" r="7"/><circle cx="56" cy="126" r="7"/>
+          <circle cx="88" cy="126" r="7"/><circle cx="96" cy="143" r="7"/><circle cx="104" cy="126" r="7"/>
+          <circle cx="136" cy="126" r="7"/><circle cx="144" cy="143" r="7"/><circle cx="152" cy="126" r="7"/>
+          <circle cx="184" cy="126" r="7"/><circle cx="192" cy="143" r="7"/><circle cx="200" cy="126" r="7"/>
+        </g>
+        <path d="M72 113v43M120 113v43M168 113v43" stroke="#f2c394" stroke-width="2" stroke-dasharray="4 4"/>
+        <text x="120" y="186" text-anchor="middle" fill="#063f86" font-family="Arial" font-size="19" font-weight="900">4 × 3 = 12</text>
+      </g>
     </svg>`;
 
   const halfMemo = `
@@ -142,8 +168,8 @@
         color: "#08b9b2",
         soft: "#effcf9",
         visual: multiplicationMemo,
-        title: "Une multiplication, ce sont des groupes",
-        text: "4 × 3, c’est 4 groupes de 3. On peut aussi penser 3 groupes de 4 : le résultat reste 12."
+        title: "Une multiplication, ce sont des groupes égaux",
+        text: "On peut ranger les 12 billes en 3 groupes de 4 ou en 4 groupes de 3. Les deux multiplications donnent 12."
       },
       {
         color: "#d8a600",
