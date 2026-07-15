@@ -142,8 +142,8 @@ h1 {
   border-radius: 19px;
   background: var(--memo-soft);
 }
-.memo-visual { height: 92px; display: grid; place-items: center; margin-bottom: 13px; }
-.memo-visual svg { max-width: 100%; max-height: 92px; }
+.memo-visual { height: 112px; display: grid; place-items: center; margin-bottom: 13px; }
+.memo-visual svg { max-width: 100%; max-height: 112px; }
 .memo-card h2 { margin: 0; color: #153a61; font-size: 1.08rem; }
 .memo-card p { margin: 8px 0 0; color: #52657b; font-size: .9rem; line-height: 1.48; }
 .centered-button { display: flex; margin-right: auto; margin-left: auto; }
@@ -240,8 +240,8 @@ footer { max-width: 940px; margin: 17px auto 0; color: rgba(16,41,74,.52); font-
   .memo-screen { padding: 34px 17px 28px; }
   .screen-heading { margin-bottom: 20px; }
   .memo-card { grid-template-columns: 78px minmax(0,1fr); padding: 16px 13px; }
-  .memo-visual { height: 72px; }
-  .memo-visual svg { max-height: 70px; }
+  .memo-visual { height: 86px; }
+  .memo-visual svg { max-height: 84px; }
   .quiz-screen { padding: 21px 14px 25px; }
   .question-card { padding-top: 18px; }
   .question-visual { min-height: 65px; margin-bottom: 10px; }
