@@ -585,6 +585,10 @@ select { cursor: pointer; }
   width: 98px;
   height: 66px;
 }
+[data-domain-card="donnees"] .domain-card-icon {
+  width: 84px;
+  height: 64px;
+}
 .domain-card-copy { position: relative; z-index: 1; min-width: 0; }
 .domain-card-copy strong { display: block; color: #16304f; font-size: 1.14rem; line-height: 1.2; }
 .domain-card-copy small { display: block; margin-top: 6px; color: #64758a; font-size: .88rem; line-height: 1.35; }
@@ -865,6 +869,10 @@ select { cursor: pointer; }
   }
   [data-domain-card="proportionnalite-mesures"] .domain-card-icon {
     width: 94px;
+    height: 54px;
+  }
+  [data-domain-card="donnees"] .domain-card-icon {
+    width: 70px;
     height: 54px;
   }
   .domain-card-copy strong { font-size: .98rem; }
