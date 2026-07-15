@@ -35,12 +35,35 @@ moteur de la rendre.
 Premier composant pédagogique documenté : [Pythagore](components/pythagore/README.md),
 avec son contrat expérimental [JSON](schemas/pythagore-components.v1.json).
 
+## Premier pack exécutable
+
+Le [pack de représentations v1](components/representation-pack-v1.js) fournit
+des rendus SVG déterministes pour :
+
+- les jetons de nombres relatifs ;
+- les droites graduées simples et doubles ;
+- les bandes et grilles de fractions ;
+- les doubles droites et barres de pourcentages.
+
+La [prévisualisation](preview/representations.html) permet de tester ces quatre
+familles sans modifier les questions d'Automatismes. L'[adaptateur
+Automatismes](adapters/automatismes/representation-pack-adapter.js) sépare le
+rendu graphique du moteur de questions.
+
+Le contrat de données est décrit dans
+[representation-components.v1.json](schemas/representation-components.v1.json).
+Les tests peuvent être lancés avec :
+
+```bash
+node studio/tests/representations/representation-pack.test.js
+```
+
 ## État actuel
 
-Le dossier contient uniquement les contrats de départ et la feuille de route.
-Aucun moteur d'Automatismes n'a encore été déplacé. Les premiers composants ne
-seront créés qu'après validation de leurs paramètres et de leurs références
-visuelles.
+Le dossier contient maintenant les contrats de départ, le premier pack exécutable
+et son adaptateur. Aucun moteur de questions d'Automatismes n'a été déplacé :
+`/auto` reste responsable des modules, des banques, de l'aléatoire, des réponses,
+des corrections et des identifiants stables.
 
 À terme, la partie source pourra être déplacée dans un dépôt privé
 `mathsgo-studio`, tandis que le dépôt public `maths` restera le site publié.
