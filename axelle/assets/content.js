@@ -1,7 +1,7 @@
 (function () {
   const multiplicationMemo = `
     <svg viewBox="0 0 180 126" aria-hidden="true">
-      <text x="90" y="16" text-anchor="middle" fill="#536176" font-family="Arial" font-size="13" font-weight="800">12 en tout</text>
+      <text x="90" y="18" text-anchor="middle" fill="#35445a" font-family="Arial" font-size="17" font-weight="900">12 en tout</text>
       <path d="M18 32V24H162V32" fill="none" stroke="#063f86" stroke-width="2.5"/>
       <rect x="18" y="38" width="144" height="48" fill="#fff" stroke="#063f86" stroke-width="3"/>
       <rect x="18" y="38" width="36" height="48" fill="#bfeeea"/>
@@ -12,14 +12,26 @@
     </svg>`;
 
   const fractionMemo = `
-    <svg viewBox="0 0 180 126" aria-hidden="true">
-      <text x="90" y="15" text-anchor="middle" fill="#536176" font-family="Arial" font-size="13" font-weight="800">une unité</text>
-      <path d="M18 31V23H162V31" fill="none" stroke="#063f86" stroke-width="2.5"/>
-      <rect x="18" y="37" width="144" height="50" fill="#fff" stroke="#7c3aed" stroke-width="3"/>
-      <rect x="18" y="37" width="96" height="50" fill="#e9d5ff"/>
-      <path d="M66 37v50M114 37v50" stroke="#7c3aed" stroke-width="2.5"/>
-      <g fill="#5b21b6" font-family="Georgia" font-size="17" font-weight="900" text-anchor="middle"><text x="80" y="106">2</text><path d="M71 110h18" stroke="#5b21b6" stroke-width="2"/><text x="80" y="124">3</text></g>
-      <text x="130" y="116" text-anchor="middle" fill="#5b21b6" font-family="Arial" font-size="14" font-weight="850">deux tiers</text>
+    <svg viewBox="0 0 250 150" aria-label="Rappel : un demi, deux tiers et trois quarts">
+      <g font-family="Arial" font-weight="850">
+        <rect x="7" y="8" width="116" height="31" fill="#fff" stroke="#a16207" stroke-width="2.5"/>
+        <rect x="7" y="8" width="58" height="31" fill="#facc15"/>
+        <path d="M65 8v31" stroke="#a16207" stroke-width="2.5"/>
+        <g fill="#7a4906" font-family="Georgia" font-size="15" text-anchor="middle"><text x="145" y="21">1</text><path d="M137 25h16" stroke="#7a4906" stroke-width="2"/><text x="145" y="38">2</text></g>
+        <text x="196" y="29" text-anchor="middle" fill="#7a4906" font-size="13">un demi</text>
+
+        <rect x="7" y="58" width="116" height="31" fill="#fff" stroke="#7c3aed" stroke-width="2.5"/>
+        <rect x="7" y="58" width="77.33" height="31" fill="#e9d5ff"/>
+        <path d="M45.67 58v31M84.33 58v31" stroke="#7c3aed" stroke-width="2.5"/>
+        <g fill="#5b21b6" font-family="Georgia" font-size="15" text-anchor="middle"><text x="145" y="71">2</text><path d="M137 75h16" stroke="#5b21b6" stroke-width="2"/><text x="145" y="88">3</text></g>
+        <text x="196" y="79" text-anchor="middle" fill="#5b21b6" font-size="13">deux tiers</text>
+
+        <rect x="7" y="108" width="116" height="31" fill="#fff" stroke="#3f6212" stroke-width="2.5"/>
+        <rect x="7" y="108" width="87" height="31" fill="#84cc16"/>
+        <path d="M36 108v31M65 108v31M94 108v31" stroke="#3f6212" stroke-width="2.5"/>
+        <g fill="#365314" font-family="Georgia" font-size="15" text-anchor="middle"><text x="145" y="121">3</text><path d="M137 125h16" stroke="#365314" stroke-width="2"/><text x="145" y="138">4</text></g>
+        <text x="198" y="129" text-anchor="middle" fill="#365314" font-size="13">trois quarts</text>
+      </g>
     </svg>`;
 
   const geometryMemo = `
@@ -165,6 +177,26 @@
         explanation: "48 = 6 × 8. C’est donc 6 fois 8."
       },
       {
+        section: "Tables",
+        kicker: "Calcul rapide",
+        title: "5 × 7 = ?",
+        prompt: "Choisis le bon résultat.",
+        options: ["30", "35", "40", "45"],
+        answer: 1,
+        hint: "Compte de 5 en 5, sept fois.",
+        explanation: "5 × 7 = 35. C’est 7 groupes de 5."
+      },
+      {
+        section: "Tables",
+        kicker: "Égalité à trou",
+        title: "3 × ? = 27",
+        prompt: "Quel nombre manque ?",
+        options: ["7", "8", "9", "10"],
+        answer: 2,
+        hint: "Cherche 27 dans la table de 3.",
+        explanation: "3 × 9 = 27. Le nombre manquant est 9."
+      },
+      {
         section: "Calcul",
         kicker: "Une stratégie utile",
         title: "36 + 9 = ?",
@@ -227,6 +259,17 @@
         answer: 0,
         hint: "Une part colorée sur deux parts égales, c’est un demi.",
         explanation: `Une part sur les 2 parts égales est colorée : c’est ${stackedFraction(1, 2, "un demi")}.`
+      },
+      {
+        section: "Fractions",
+        kicker: "Lire une fraction",
+        title: "Comment lit-on cette fraction ?",
+        prompt: "Observe le numérateur et le dénominateur.",
+        visual: `<div class="fraction-reading-visual" role="img" aria-label="La fraction un quart"><span class="stacked-fraction"><span>1</span><span>4</span></span></div>`,
+        options: ["un demi", "un tiers", "un quart", "quatre unités"],
+        answer: 2,
+        hint: "Quand le nombre du bas est 4, on dit « quart ».",
+        explanation: `${stackedFraction(1, 4, "un quart")} se lit « un quart ».`
       },
       {
         section: "Problème",
