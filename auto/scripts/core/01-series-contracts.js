@@ -51,7 +51,9 @@ const MATHSGO_MODULE_REGISTRY=Object.freeze([
   ['problemes-proportionnalite','dnb_34',36],
   ['evolutions-pourcentage','dnb_35',37],
   ['lire-graphique-dependance','dnb_36',38],
-  ['algorithmique-instructions','dnb_37',39]
+  ['algorithmique-instructions','dnb_37',39],
+  ['relatifs-addition-jetons','dnb_38',40],
+  ['relatifs-soustraction-jetons','dnb_39',41]
 ].map(([id,legacyId,code])=>Object.freeze({id,legacyId,code,aliases:Object.freeze([legacyId])})));
 
 const MATHSGO_MODULE_BY_ID=new Map(MATHSGO_MODULE_REGISTRY.map(entry=>[entry.id,entry]));
@@ -204,7 +206,7 @@ function mathsgoParametersForInstance(instance){
   const result={};
   const scope=mathsgoSanitizeParameters(instance.scope||{});
   if(scope&&Object.keys(scope).length) result.generated=scope;
-  const modelKeys=['module01','placeValue','fractionOps','fractionPercent','multipleForms','relation','reduction','substitution','equationData','angleSum','conversion','area','trig','average','evolution'];
+  const modelKeys=['module01','placeValue','fractionOps','fractionPercent','multipleForms','relation','reduction','substitution','equationData','angleSum','conversion','area','trig','average','evolution','relativeTokens'];
   modelKeys.forEach(key=>{if(instance[key]!==undefined){const cleaned=mathsgoSanitizeParameters(instance[key],key);if(cleaned!==undefined)result[key]=cleaned;}});
   return result;
 }
@@ -213,6 +215,7 @@ function mathsgoResponseTypeForSpec(spec){
   if(spec.kind==='qcm') return spec.multiple?'multiple-choice':'qcm';
   if(spec.kind==='grid-point') return 'coordinates';
   if(spec.layout==='fraction') return 'fraction';
+  if(spec.kind==='relative-tokens') return 'relative-tokens';
   if(spec.layout==='polynomial') return 'algebraic-expression';
   if((spec.slots||[]).length>1) return 'multiple-fields';
   const keyValues=(spec.keys||[]).map(key=>typeof key==='string'?key:key.value).join('');
