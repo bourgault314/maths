@@ -147,6 +147,42 @@
     #mobilePuzzleHint{display:block;}
   }
 
+  /* maths&go — interface compacte : l'activité reste au premier plan. */
+  #toolbar{
+    gap:6px;
+    padding:8px 12px;
+    box-shadow:0 2px 12px rgba(15,23,42,.06);
+  }
+  #toolbar .group{gap:6px; padding-right:8px; margin-right:0;}
+  #toolbar button,
+  #toolbar select{min-height:40px; border-radius:12px; font-weight:750;}
+  #puzzleSelect{min-width:250px;}
+  #stageWrap{background:transparent;}
+  #mobilePuzzleHint{background:#f8fafc; border-bottom:1px solid #e2e8f0;}
+
+  @media (max-width:700px){
+    #toolbar{display:grid; grid-template-columns:1fr; gap:7px; padding:8px 10px;}
+    #toolbar .group{display:flex; border:0; padding:0; margin:0;}
+    #toolbar .group:first-child{width:100%;}
+    #puzzleSelect{width:100%; max-width:none; min-height:44px;}
+    #toolbar .group:nth-child(2),
+    #toolbar .group:nth-child(3),
+    #toolbar #checkSolution,
+    #toolbar #enonce,
+    #toolbar #fullscreen{display:none;}
+    #toolbar .group:nth-child(4){display:flex; justify-content:center; gap:7px;}
+    #toolbar .group:nth-child(4) button{flex:1; min-width:0; padding:9px 7px; font-size:14px;}
+    #mobilePuzzleHint{display:none;}
+    #puzzleStatus{font-size:12px; padding-left:8px; padding-right:8px;}
+    #stageWrap{min-height:0;}
+  }
+
+  @media (min-width:701px){
+    #toolbar .group:nth-child(2){order:4;}
+    #toolbar .group:nth-child(3){order:5;}
+    #toolbar .group:nth-child(4){order:3;}
+  }
+
 </style>
 <link rel="stylesheet" href="../../assets/css/consentement.css">
 <script defer src="../../assets/js/consentement.js"></script>
@@ -160,8 +196,7 @@
       <option value="bhaskara">2. Bhaskara (4 triangles + 1 carré)</option>
       <option value="leitzmann">3. Liu Hui (8 triangles)</option>
       <option value="quatreIdentiques">4. 4 pièces identiques + 1 carré</option>
-      <option value="bhaskaraMiroir">5. Cadre miroir (4 triangles + 1 carré)</option>
-      <option value="bhaskaraTourne">6. Cadre tourné (4 triangles + 1 carré)</option>
+      <option value="perigalSix">5. Périgal — défi 6 pièces</option>
     </select>
     </div>
 
@@ -319,7 +354,7 @@
   }
 
   function isBhaskaraPuzzle(){
-    return ["bhaskara","bhaskaraMiroir","bhaskaraTourne"].includes(state.puzzle);
+    return state.puzzle === "bhaskara";
   }
 
   function clientToWorld(evt){
@@ -627,29 +662,20 @@
       }
     },
 
-    // Variante réellement manipulable : même dissection validée, mais
-    // disposition de départ réfléchie dans chacun des deux carrés sources.
-    // Elle réutilise exactement les mêmes formes et la même solution.
-    bhaskaraMiroir: {
-      name: "Cadre miroir",
+    // Défi 6 pièces : on affine réellement le découpage de Périgal en
+    // séparant le quadrilatère central en deux triangles. Ce n'est pas un
+    // simple miroir de Bhaskara : le nombre et la nature des pièces changent.
+    perigalSix: {
+      name: "Périgal — défi 6 pièces",
       generate: (Ax, Ay, b, ratio) => {
-        const a=b*ratio;
-        return PUZZLES.bhaskara.generate(Ax,Ay,b,ratio).map(piece=>{
-          const cx=piece.key === "sq" ? Ax-a/2 : Ax+b/2;
-          return {...piece,points:piece.points.map(p=>({x:2*cx-p.x,y:p.y}))};
-        });
-      }
-    },
-
-    bhaskaraTourne: {
-      name: "Cadre tourné",
-      generate: (Ax, Ay, b, ratio) => {
-        const a=b*ratio;
-        return PUZZLES.bhaskara.generate(Ax,Ay,b,ratio).map(piece=>{
-          const cx=piece.key === "sq" ? Ax-a/2 : Ax+b/2;
-          const cy=piece.key === "sq" ? Ay+a/2 : Ay-b/2;
-          return {...piece,points:piece.points.map(p=>({x:2*cx-p.x,y:2*cy-p.y}))};
-        });
+        const pieces = PUZZLES.perigal.generate(Ax, Ay, b, ratio);
+        const central = pieces.find(piece => piece.key === "m");
+        if(!central) return pieces;
+        const [A,B,P,L] = central.points;
+        return pieces.filter(piece => piece.key !== "m").concat([
+          {key:"m1", fill:COLORS.magenta, points:[A,B,P]},
+          {key:"m2", fill:COLORS.purple, points:[A,P,L]}
+        ]);
       }
     },
 
@@ -828,18 +854,11 @@
         <p class="muted">Indice : les 4 triangles forment une sorte de cadre ; le petit carré comble le trou central.</p>
       `
     },
-    bhaskaraMiroir: {
-      title: "Puzzle 5 — Cadre miroir",
+    perigalSix: {
+      title: "Puzzle 5 — Périgal, défi 6 pièces",
       html: `
-        <p><strong>Objectif :</strong> reconstruire <em>c²</em> avec les mêmes 4 triangles et le carré central, dans une disposition de départ réfléchie.</p>
-        <p class="muted">Indice : les triangles forment un cadre autour du carré central.</p>
-      `
-    },
-    bhaskaraTourne: {
-      title: "Puzzle 6 — Cadre tourné",
-      html: `
-        <p><strong>Objectif :</strong> reconstruire <em>c²</em> avec les 4 triangles et le carré central, après un départ tourné.</p>
-        <p class="muted">Indice : replace les triangles autour du carré central puis aligne le cadre sur les côtés de <em>c²</em>.</p>
+        <p><strong>Objectif :</strong> déplacer les <strong>6 pièces</strong> pour reconstituer le carré de l'hypoténuse <em>c²</em>.</p>
+        <p class="muted">Le grand quadrilatère de Périgal est séparé en deux triangles : les pièces sont donc réellement différentes du puzzle 1.</p>
       `
     },
     leitzmann: {
