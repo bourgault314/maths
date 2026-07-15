@@ -791,23 +791,23 @@ select { cursor: pointer; }
 
 @media (max-width: 680px) {
   .site-shell { width: min(100% - 20px, 1180px); }
-  .site-header { min-height: 87px; grid-template-columns: 1fr auto; }
-  .brand-link { grid-column: 1; justify-self: start; width: 145px; }
-  .header-home { grid-column: 2; }
+  .site-header { min-height: 87px; grid-template-columns: 1fr auto 1fr; }
+  .brand-link { grid-column: 2; justify-self: center; width: 145px; }
+  .header-home { grid-column: 3; min-width: 48px; min-height: 48px; padding: 9px; }
   .main-panel { padding: 20px 15px 24px; border-radius: 21px; }
-  .hero { margin-bottom: 21px; }
+  .hero { margin-bottom: 17px; }
   .catalogue-controls { grid-template-columns: 1fr; gap: 9px; }
   .catalogue-controls.has-domain { grid-template-columns: 1fr; }
   .catalogue-controls.has-domain .search-box { grid-column: auto; }
   .auto-feature {
-    min-height: 92px;
-    grid-template-columns: 58px minmax(0, 1fr) 34px;
+    min-height: 86px;
+    grid-template-columns: 54px minmax(0, 1fr) 34px;
     gap: 12px;
-    padding: 13px 14px;
+    padding: 11px 13px;
     border-left-width: 5px;
   }
-  .auto-feature-icon { width: 58px; height: 58px; border-radius: 15px; }
-  .auto-feature-icon svg { width: 45px; height: 45px; }
+  .auto-feature-icon { width: 54px; height: 54px; border-radius: 15px; }
+  .auto-feature-icon svg { width: 43px; height: 43px; }
   .auto-feature-copy strong span {
     display: block;
     width: max-content;
@@ -892,7 +892,7 @@ select { cursor: pointer; }
 
 @media (max-width: 420px) {
   .header-home span { display: none; }
-  .header-home svg { width: 24px; height: 24px; }
+  .header-home svg { width: 27px; height: 27px; }
   .hero h1 { font-size: 2rem; }
   .auto-feature { grid-template-columns: 52px minmax(0, 1fr) 30px; gap: 10px; padding: 12px; }
   .auto-feature-icon { width: 52px; height: 52px; border-radius: 14px; }
