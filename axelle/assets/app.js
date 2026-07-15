@@ -46,6 +46,7 @@
   function renderQuestion() {
     const question = session.questions[questionIndex];
     answered = false;
+    screens.quiz.classList.remove("answered-state");
     sectionLabel.textContent = question.section;
     questionCount.textContent = `Question ${questionIndex + 1} sur ${session.questions.length}`;
     progressBar.style.width = `${(questionIndex / session.questions.length) * 100}%`;
@@ -91,6 +92,10 @@
     hintButton.hidden = true;
     hintBox.hidden = true;
     nextButton.hidden = false;
+    screens.quiz.classList.add("answered-state");
+    window.requestAnimationFrame(() => {
+      feedback.scrollIntoView({ behavior: "smooth", block: "nearest" });
+    });
   }
 
   function finish() {
