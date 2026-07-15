@@ -12,6 +12,11 @@
   const typeMap = new Map(catalogue.types.map((type) => [type.id, type]));
   const facetMap = new Map((catalogue.facets || []).map((facet) => [facet.id, facet]));
   const resourceClassifications = catalogue.resourceClassifications || {};
+  const resourceFamilies = catalogue.resourceFamilies || [];
+  const resourceFamilyByPath = new Map();
+  resourceFamilies.forEach((family) => {
+    (family.paths || []).forEach((path) => resourceFamilyByPath.set(path, family));
+  });
   const mainDomainIds = [
     "nombres-calculs",
     "algebre",
@@ -117,9 +122,8 @@
     },
     "schemas-barres": {
       description: "Modéliser les problèmes avec des schémas en barres.",
-      keywords: "splat problème partie tout barres singapour",
-      icon: "bars",
-      hub: "splat/index.html"
+      keywords: "problème résolution partie tout barres singapour enquête",
+      icon: "bars"
     },
     patterns: {
       description: "Observer, prolonger et généraliser des motifs.",
@@ -229,7 +233,7 @@
       icon: "tiles"
     },
     splat: {
-      description: "Retrouver Splat et les outils de modélisation par schémas en barres.",
+      description: "Retrouver les plateaux Splat, ÉquaSplat et ÉquaBarre.",
       icon: "splat"
     }
   };
@@ -454,7 +458,7 @@
   }
 
   function domainResourceCount(domainId) {
-    return published.filter((resource) => resource.domains.includes(domainId)).length;
+    return resourceDisplayCount(published.filter((resource) => resource.domains.includes(domainId)));
   }
 
   function resourceClassification(resource) {
@@ -484,16 +488,39 @@
     return [...(resource.tags || []), ...(resourceClassification(resource).tags || [])];
   }
 
+  function displayItems(resources) {
+    const items = [];
+    const seenFamilies = new Set();
+    resources.forEach((resource) => {
+      const family = resourceFamilyByPath.get(resource.path);
+      if (!family) {
+        items.push({ resource });
+        return;
+      }
+      if (seenFamilies.has(family.id)) return;
+      seenFamilies.add(family.id);
+      const variants = (family.paths || [])
+        .map((path) => published.find((candidate) => candidate.path === path))
+        .filter(Boolean);
+      if (variants.length) items.push({ family, variants });
+    });
+    return items;
+  }
+
+  function resourceDisplayCount(resources) {
+    return displayItems(resources).length;
+  }
+
   function notionResourceCount(notionId, domainId = "") {
-    return published.filter((resource) => (
+    return resourceDisplayCount(published.filter((resource) => (
       (!domainId || resource.domains.includes(domainId)) &&
       resourceBelongsToNotion(resource, notionId) &&
       !resourceCollections(resource).some((id) => collectionMap.get(id)?.collapseInNotion)
-    )).length;
+    )));
   }
 
   function collectionResourceCount(collectionId) {
-    return published.filter((resource) => resourceCollections(resource).includes(collectionId)).length;
+    return resourceDisplayCount(published.filter((resource) => resourceCollections(resource).includes(collectionId)));
   }
 
   function resourceFacets(resource) {
@@ -557,6 +584,7 @@
     return (catalogue.collections || []).filter((collection) => {
       if (state.domain && collection.domain !== state.domain) return false;
       if (collection.parent) return false;
+      if (collection.hiddenFromBrowse) return false;
       return collectionResourceCount(collection.id) > 0;
     });
   }
@@ -669,10 +697,11 @@
     const facets = resourceFacets(resource);
     if (facets.has("jeux")) return "jeux";
     if (facets.has("cours")) return "cours";
-    if (facets.has("activites")) return "activites";
     if (facets.has("generer")) return "generer";
+    if (facets.has("gabarits")) return "imprimer";
+    if (facets.has("activites")) return "activites";
     if (facets.has("manipuler")) return "manipuler";
-    if (facets.has("imprimer") || facets.has("gabarits")) return "imprimer";
+    if (facets.has("imprimer")) return "imprimer";
     return "manipuler";
   }
 
@@ -683,6 +712,27 @@
       <span class="resource-copy"><h3>${escapeHtml(resource.title)}</h3><span class="resource-meta">${escapeHtml(resourceMeta(resource))}</span></span>
       <span class="resource-arrow" aria-hidden="true">→</span>
     </a>`;
+  }
+
+  function variantLabel(resource) {
+    const parts = resource.title.split("—");
+    return (parts.length > 1 ? parts.at(-1) : resource.title).trim();
+  }
+
+  function resourceFamilyCard(family, variants) {
+    const representative = variants[0];
+    const domainId = representative?.domains?.[0] || "nombres-calculs";
+    const versionLabel = `${variants.length} version${variants.length > 1 ? "s" : ""}`;
+    return `<details class="resource-family-card" style="${domainStyle(domainId)}">
+      <summary class="resource-family-summary">
+        <span class="resource-type-icon">${typeIcon(representative)}</span>
+        <span class="resource-copy"><h3>${escapeHtml(family.title)}</h3><span class="resource-meta">${escapeHtml(`${versionLabel} · ${family.description || "Choisir une version."}`)}</span></span>
+        <span class="resource-family-toggle" aria-hidden="true">⌄</span>
+      </summary>
+      <div class="resource-variants" aria-label="${escapeHtml(`Versions de ${family.title}`)}">
+        ${variants.map((resource) => `<a href="${escapeHtml(rootPrefix + resource.path)}"><span>${escapeHtml(variantLabel(resource))}</span><span aria-hidden="true">→</span></a>`).join("")}
+      </div>
+    </details>`;
   }
 
   function renderResources(resources, directCollections = []) {
@@ -715,16 +765,21 @@
       : "";
 
     const grouped = new Map(resourceGroups.map((group) => [group.id, []]));
-    resources.forEach((resource) => grouped.get(primaryResourceGroup(resource)).push(resource));
+    displayItems(resources).forEach((item) => {
+      const groupId = item.family?.group || primaryResourceGroup(item.resource);
+      grouped.get(groupId)?.push(item);
+    });
     const groupedResources = resourceGroups.map((group) => {
-      const groupResources = grouped.get(group.id);
-      if (!groupResources.length) return "";
+      const groupItems = grouped.get(group.id);
+      if (!groupItems.length) return "";
       return `<section class="resource-group" aria-labelledby="resource-group-${escapeHtml(group.id)}">
         <div class="resource-group-heading">
           <h2 id="resource-group-${escapeHtml(group.id)}">${escapeHtml(group.label)}</h2>
-          <span>${groupResources.length} ressource${groupResources.length > 1 ? "s" : ""}</span>
+          <span>${groupItems.length} entrée${groupItems.length > 1 ? "s" : ""}</span>
         </div>
-        <div class="resource-group-grid">${groupResources.map(resourceCard).join("")}</div>
+        <div class="resource-group-grid">${groupItems.map((item) => item.family
+          ? resourceFamilyCard(item.family, item.variants)
+          : resourceCard(item.resource)).join("")}</div>
       </section>`;
     }).join("");
     resourceGrid.innerHTML = directAccess + groupedResources;
@@ -783,7 +838,7 @@
 
       summary.textContent = [
         directCollections.length ? `${directCollections.length} accès direct${directCollections.length > 1 ? "s" : ""}` : "",
-        `${resources.length} outil${resources.length > 1 ? "s" : ""}`
+        `${resourceDisplayCount(resources)} entrée${resourceDisplayCount(resources) > 1 ? "s" : ""}`
       ].filter(Boolean).join(" · ");
       return;
     }

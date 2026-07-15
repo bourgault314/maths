@@ -657,7 +657,8 @@ select { cursor: pointer; }
 .domain-card-arrow { position: relative; z-index: 1; color: var(--accent, var(--blue)); font-size: 1.35rem; font-weight: 800; }
 
 .notion-card,
-.resource-card {
+.resource-card,
+.resource-family-card {
   position: relative;
   min-width: 0;
   overflow: hidden;
@@ -680,7 +681,8 @@ select { cursor: pointer; }
 }
 
 .notion-card::after,
-.resource-card::after {
+.resource-card::after,
+.resource-family-card::after {
   content: "";
   position: absolute;
   right: -32px;
@@ -694,7 +696,8 @@ select { cursor: pointer; }
 }
 
 .notion-card:hover,
-.resource-card:hover {
+.resource-card:hover,
+.resource-family-card:hover {
   transform: translateY(-3px);
   border-color: color-mix(in srgb, var(--accent, var(--blue)) 42%, #d7e0e9);
   box-shadow: 0 11px 23px rgba(15, 40, 72, 0.11);
@@ -778,6 +781,71 @@ select { cursor: pointer; }
   align-items: center;
   gap: 12px;
   padding: 16px;
+}
+
+.resource-family-card {
+  min-height: 118px;
+}
+
+.resource-family-summary {
+  position: relative;
+  z-index: 1;
+  min-height: 113px;
+  display: grid;
+  grid-template-columns: 48px 1fr 24px;
+  align-items: center;
+  gap: 12px;
+  padding: 16px;
+  cursor: pointer;
+  list-style: none;
+}
+
+.resource-family-summary::-webkit-details-marker { display: none; }
+
+.resource-family-summary:focus-visible {
+  outline: 3px solid color-mix(in srgb, var(--accent, var(--blue)) 32%, transparent);
+  outline-offset: -4px;
+  border-radius: 10px;
+}
+
+.resource-family-toggle {
+  color: var(--accent, var(--blue));
+  font-size: 1.35rem;
+  font-weight: 850;
+  line-height: 1;
+  transition: transform .16s ease;
+}
+
+.resource-family-card[open] .resource-family-toggle { transform: rotate(180deg); }
+
+.resource-variants {
+  position: relative;
+  z-index: 1;
+  display: grid;
+  gap: 1px;
+  padding: 0 12px 12px;
+}
+
+.resource-variants a {
+  min-height: 44px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 10px 12px;
+  border-radius: 9px;
+  color: #27425f;
+  background: color-mix(in srgb, var(--soft, #eef5fb) 72%, #fff);
+  font-size: .86rem;
+  font-weight: 750;
+  line-height: 1.25;
+  text-decoration: none;
+}
+
+.resource-variants a:hover,
+.resource-variants a:focus-visible {
+  color: var(--accent, var(--blue));
+  background: var(--soft, #eef5fb);
 }
 
 .resource-type-icon {

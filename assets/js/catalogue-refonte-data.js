@@ -130,46 +130,73 @@ window.MATHSGO_CATALOGUE = {
       "title": "Tuiles algébriques",
       "domain": "algebre",
       "notions": ["calcul-litteral", "equations"],
-      "hub": "tuiles_algebriques/index.html"
+      "hub": "tuiles_algebriques/index.html",
+      "hiddenFromBrowse": true
     },
     {
       "id": "splat",
-      "title": "Splat et schémas en barres",
+      "title": "Splat",
       "domain": "algebre",
-      "notions": ["calcul-litteral", "equations", "schemas-barres"],
+      "notions": ["calcul-litteral", "equations"],
       "hub": "splat/index.html",
       "featured": true
     }
   ],
   "resourceClassifications": {
-    "outils/box_barre_final.html": { "primaryNotion": "schemas-barres", "collections": ["splat"], "tags": ["schema-barres", "splat"] },
-    "outils/box_pasbarre_final.html": { "primaryNotion": "schemas-barres", "collections": ["splat"], "tags": ["schema-barres", "splat"] },
+    "outils/box_barre_final.html": { "primaryNotion": "calcul-litteral", "collections": ["splat"], "tags": ["boite", "splat"] },
+    "outils/box_pasbarre_final.html": { "primaryNotion": "calcul-litteral", "collections": [], "tags": ["boite", "archive"] },
     "outils/tuiles_algebriques/tuiles_algebriques.html": { "primaryNotion": "calcul-litteral", "collections": ["tuiles-algebriques"], "tags": ["tuiles-algebriques"] },
     "outils/tuiles_algebriques/tuiles_algebriques_mode_equation.html": { "primaryNotion": "equations", "collections": ["tuiles-algebriques"], "tags": ["tuiles-algebriques"] },
-    "outils/detective_des_grandeurs_additive__1.pdf": { "primaryNotion": "schemas-barres", "collections": ["splat"], "tags": ["schema-barres", "splat"] },
-    "outils/detective_des_grandeurs_additive__2.pdf": { "primaryNotion": "schemas-barres", "collections": ["splat"], "tags": ["schema-barres", "splat"] },
-    "outils/detective_des_grandeurs_multiplicative__1.pdf": { "primaryNotion": "schemas-barres", "collections": ["splat"], "tags": ["schema-barres", "splat"] },
+    "outils/detective_des_grandeurs_additive__1.pdf": { "primaryNotion": "schemas-barres", "collections": [], "tags": ["schema-barres", "resolution-problemes", "enquete"] },
+    "outils/detective_des_grandeurs_additive__2.pdf": { "primaryNotion": "schemas-barres", "collections": [], "tags": ["schema-barres", "resolution-problemes", "enquete"] },
+    "outils/detective_des_grandeurs_multiplicative__1.pdf": { "primaryNotion": "schemas-barres", "collections": [], "tags": ["schema-barres", "resolution-problemes", "enquete"] },
     "outils/equabarre.html": { "primaryNotion": "equations", "collections": ["splat"], "tags": ["schema-barres", "splat"] },
     "outils/equasplat.html": { "primaryNotion": "equations", "collections": ["splat"], "tags": ["schema-barres", "splat"] },
-    "outils/gabarits_enquetes_additive.pdf": { "primaryNotion": "schemas-barres", "collections": ["splat"], "tags": ["schema-barres", "splat"] },
-    "outils/gabarits_enquetes_multiplicative.pdf": { "primaryNotion": "schemas-barres", "collections": ["splat"], "tags": ["schema-barres", "splat"] },
-    "outils/gabarits_partage_equitable_2_3_4_5.pdf": { "primaryNotion": "schemas-barres", "collections": ["splat"], "tags": ["schema-barres", "splat"] },
-    "outils/sheet_generator_schema_partie_tout.html": { "primaryNotion": "schemas-barres", "collections": ["splat"], "tags": ["schema-barres", "splat"] },
+    "outils/gabarits_enquetes_additive.pdf": { "primaryNotion": "schemas-barres", "collections": [], "tags": ["schema-barres", "resolution-problemes", "gabarit"] },
+    "outils/gabarits_enquetes_multiplicative.pdf": { "primaryNotion": "schemas-barres", "collections": [], "tags": ["schema-barres", "resolution-problemes", "gabarit"] },
+    "outils/gabarits_partage_equitable_2_3_4_5.pdf": { "primaryNotion": "schemas-barres", "collections": [], "tags": ["schema-barres", "resolution-problemes", "gabarit"] },
+    "outils/sheet_generator_schema_partie_tout.html": { "primaryNotion": "schemas-barres", "collections": [], "tags": ["ancien-index", "schema-barres"] },
     "outils/tuiles_algebriques/livret_litteral_blanc_gris.pdf": { "primaryNotion": "calcul-litteral", "collections": ["tuiles-algebriques"], "tags": ["tuiles-algebriques"] },
     "outils/tuiles_algebriques/livret_litteral_bleu_jaune.pdf.pdf": { "primaryNotion": "calcul-litteral", "collections": ["tuiles-algebriques"], "tags": ["tuiles-algebriques"] },
     "outils/tuiles_algebriques/livret_litteral_mathigon.pdf": { "primaryNotion": "calcul-litteral", "collections": ["tuiles-algebriques"], "tags": ["tuiles-algebriques"] },
     "outils/tuiles_algebriques/livret_litteral_vert_rouge.pdf": { "primaryNotion": "calcul-litteral", "collections": ["tuiles-algebriques"], "tags": ["tuiles-algebriques"] },
-    "outils/fabrication_materiel/maths_barre.html": { "primaryNotion": "schemas-barres", "collections": ["splat"], "tags": ["schema-barres", "splat"] },
+    "outils/fabrication_materiel/maths_barre.html": { "primaryNotion": "schemas-barres", "collections": [], "tags": ["schema-barres", "reference-technique"] },
     "outils/patterns.html": { "primaryNotion": "patterns", "collections": [], "tags": ["patterns", "generalisation"] },
-    "outils/problemes_barres.html": { "primaryNotion": "schemas-barres", "collections": ["splat"], "tags": ["schema-barres", "splat"] },
-    "outils/problemes_barres_M974.html": { "primaryNotion": "schemas-barres", "collections": ["splat"], "tags": ["schema-barres", "splat"] },
-    "outils/splat.html": { "primaryNotion": "schemas-barres", "collections": ["splat"], "tags": ["schema-barres", "splat"] },
-    "outils/splat_tache_barre.html": { "primaryNotion": "schemas-barres", "collections": ["splat"], "tags": ["schema-barres", "splat"] },
+    "outils/problemes_barres.html": { "primaryNotion": "schemas-barres", "collections": [], "tags": ["schema-barres", "resolution-problemes"] },
+    "outils/problemes_barres_M974.html": { "primaryNotion": "schemas-barres", "collections": [], "tags": ["schema-barres", "resolution-problemes", "version-travail"] },
+    "outils/splat.html": { "primaryNotion": "calcul-litteral", "collections": ["splat"], "tags": ["splat", "inconnue", "relation"] },
+    "outils/splat_tache_barre.html": { "primaryNotion": "calcul-litteral", "collections": ["splat"], "tags": ["splat", "inconnue", "relation"] },
     "outils/splat_equations.html": { "primaryNotion": "equations", "collections": ["splat"], "tags": ["schema-barres", "splat"] },
     "outils/tuiles_algebriques/generateur_exercices_calcul_litteral.html": { "primaryNotion": "calcul-litteral", "collections": ["tuiles-algebriques"], "tags": ["tuiles-algebriques"] },
     "outils/tuiles_algebriques/generateur_tuiles.html": { "primaryNotion": "calcul-litteral", "collections": ["tuiles-algebriques"], "tags": ["tuiles-algebriques"] },
     "outils/pythabarre.html": { "primaryNotion": "pythagore", "collections": [], "tags": ["schema-barres"] }
   },
+  "resourceFamilies": [
+    {
+      "id": "cours-tuiles-algebriques",
+      "title": "Cours avec les tuiles algébriques",
+      "description": "Choisir la version couleur du livret.",
+      "group": "cours",
+      "paths": [
+        "outils/tuiles_algebriques/livret_litteral_blanc_gris.pdf",
+        "outils/tuiles_algebriques/livret_litteral_bleu_jaune.pdf.pdf",
+        "outils/tuiles_algebriques/livret_litteral_mathigon.pdf",
+        "outils/tuiles_algebriques/livret_litteral_vert_rouge.pdf"
+      ]
+    },
+    {
+      "id": "cours-nombres-relatifs",
+      "title": "Cours imprimables — nombres relatifs",
+      "description": "Choisir la version graphique du cours.",
+      "group": "cours",
+      "paths": [
+        "outils/nombres_relatifs/nombres_relatifs_couleur_mathsgo.pdf",
+        "outils/nombres_relatifs/nombres_relatifs_vert_rouge_ecriture_blanche.pdf",
+        "outils/nombres_relatifs/nombres_relatifs_gris_blanc.pdf",
+        "outils/nombres_relatifs/nombres_relatifs_vert_rouge_contour_noir.pdf"
+      ]
+    }
+  ],
   "domains": [
     {
       "id": "nombres-calculs",
@@ -299,8 +326,8 @@ window.MATHSGO_CATALOGUE = {
     },
     {
       "id": "schemas-barres",
-      "title": "Schémas en barres et problèmes",
-      "domain": "algebre"
+      "title": "Schémas en barres",
+      "domain": "nombres-calculs"
     },
     {
       "id": "patterns",
@@ -1229,7 +1256,7 @@ window.MATHSGO_CATALOGUE = {
       "description": "Une ressource maths&go pour travailler schémas en barres et problèmes.",
       "path": "outils/detective_des_grandeurs_additive__1.pdf",
       "domains": [
-        "algebre"
+        "nombres-calculs"
       ],
       "notions": [
         "schemas-barres"
@@ -1256,7 +1283,7 @@ window.MATHSGO_CATALOGUE = {
       "description": "Une ressource maths&go pour travailler schémas en barres et problèmes.",
       "path": "outils/detective_des_grandeurs_additive__2.pdf",
       "domains": [
-        "algebre"
+        "nombres-calculs"
       ],
       "notions": [
         "schemas-barres"
@@ -1283,7 +1310,7 @@ window.MATHSGO_CATALOGUE = {
       "description": "Une ressource maths&go pour travailler schémas en barres et problèmes.",
       "path": "outils/detective_des_grandeurs_multiplicative__1.pdf",
       "domains": [
-        "algebre"
+        "nombres-calculs"
       ],
       "notions": [
         "schemas-barres"
@@ -1667,7 +1694,7 @@ window.MATHSGO_CATALOGUE = {
       "description": "Une ressource maths&go pour travailler schémas en barres et problèmes.",
       "path": "outils/gabarits_enquetes_additive.pdf",
       "domains": [
-        "algebre"
+        "nombres-calculs"
       ],
       "notions": [
         "schemas-barres"
@@ -1696,7 +1723,7 @@ window.MATHSGO_CATALOGUE = {
       "description": "Une ressource maths&go pour travailler schémas en barres et problèmes.",
       "path": "outils/gabarits_enquetes_multiplicative.pdf",
       "domains": [
-        "algebre"
+        "nombres-calculs"
       ],
       "notions": [
         "schemas-barres"
@@ -1754,7 +1781,7 @@ window.MATHSGO_CATALOGUE = {
       "description": "Une ressource maths&go pour travailler schémas en barres et problèmes.",
       "path": "outils/gabarits_partage_equitable_2_3_4_5.pdf",
       "domains": [
-        "algebre"
+        "nombres-calculs"
       ],
       "notions": [
         "schemas-barres"
@@ -2020,11 +2047,11 @@ window.MATHSGO_CATALOGUE = {
     },
     {
       "id": "outils-sheet-generator-schema-partie-tout-html",
-      "title": "Générateur de schémas en barre",
-      "description": "Une ressource maths&go pour travailler schémas en barres et problèmes.",
+      "title": "Ancien menu des schémas en barres",
+      "description": "Ancien index conservé pour assurer la continuité des liens.",
       "path": "outils/sheet_generator_schema_partie_tout.html",
       "domains": [
-        "algebre"
+        "nombres-calculs"
       ],
       "notions": [
         "schemas-barres"
@@ -2044,7 +2071,7 @@ window.MATHSGO_CATALOGUE = {
         "modélisation"
       ],
       "kind": "tool",
-      "status": "published",
+      "status": "hidden",
       "featured": false,
       "recent": false
     },
@@ -2848,7 +2875,7 @@ window.MATHSGO_CATALOGUE = {
       "description": "Une ressource maths&go pour travailler schémas en barres et problèmes.",
       "path": "outils/fabrication_materiel/maths_barre.html",
       "domains": [
-        "algebre"
+        "nombres-calculs"
       ],
       "notions": [
         "schemas-barres"
@@ -2868,7 +2895,7 @@ window.MATHSGO_CATALOGUE = {
         "modélisation"
       ],
       "kind": "tool",
-      "status": "published",
+      "status": "hidden",
       "featured": false,
       "recent": false
     },
@@ -3240,7 +3267,7 @@ window.MATHSGO_CATALOGUE = {
       "filters": [],
       "keywords": [],
       "kind": "tool",
-      "status": "published",
+      "status": "hidden",
       "featured": false,
       "recent": true
     },
@@ -3364,7 +3391,7 @@ window.MATHSGO_CATALOGUE = {
       "description": "Une ressource maths&go pour travailler schémas en barres et problèmes.",
       "path": "outils/problemes_barres.html",
       "domains": [
-        "algebre"
+        "nombres-calculs"
       ],
       "notions": [
         "schemas-barres"
@@ -3394,7 +3421,7 @@ window.MATHSGO_CATALOGUE = {
       "description": "Une ressource maths&go pour travailler schémas en barres et problèmes.",
       "path": "outils/problemes_barres_M974.html",
       "domains": [
-        "algebre"
+        "nombres-calculs"
       ],
       "notions": [
         "schemas-barres"

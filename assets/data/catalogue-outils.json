@@ -169,13 +169,24 @@
     },
     {
       "id": "schemas-en-barre",
-      "title": "Schémas en barre",
-      "description": "Problèmes, pourcentages, fractions et chemin vers l’algèbre avec SPLAT.",
-      "path": "outils/sheet_generator_schema_partie_tout.html",
-      "kind": "tool",
+      "title": "Schémas en barres",
+      "description": "Modéliser des problèmes avec des schémas en barres et des supports d’enquête.",
+      "path": "outils/index.html?domain=nombres-calculs&notion=schemas-barres",
+      "kind": "collection",
       "status": "published",
-      "themes": ["problemes", "fractions", "algebre"],
+      "themes": ["nombres-calcul", "problemes"],
       "uses": ["manipuler", "projeter", "imprimer"],
+      "audiences": ["eleve", "enseignant", "classe"]
+    },
+    {
+      "id": "splat",
+      "title": "Splat",
+      "description": "Plateaux Splat, ÉquaSplat et ÉquaBarre autour de l’inconnue.",
+      "path": "outils/index.html?domain=algebre&collection=splat",
+      "kind": "collection",
+      "status": "published",
+      "themes": ["algebre"],
+      "uses": ["manipuler", "projeter", "entrainer"],
       "audiences": ["eleve", "enseignant", "classe"]
     },
     {
