@@ -108,9 +108,9 @@
 }
 
 .mg-consent__button--quiet {
-  border: 1px solid var(--mg-consent-line);
+  border: 1px solid var(--mg-consent-blue);
   background: #fff;
-  color: var(--mg-consent-ink);
+  color: var(--mg-consent-blue-dark);
 }
 
 .mg-consent__button--accept {
@@ -142,19 +142,36 @@
 .mg-consent-manage {
   position: fixed;
   z-index: 2147482999;
-  right: max(8px, env(safe-area-inset-right));
-  bottom: max(8px, env(safe-area-inset-bottom));
-  min-height: 32px;
-  padding: 5px 9px;
+  right: max(10px, env(safe-area-inset-right));
+  bottom: max(10px, env(safe-area-inset-bottom));
+  width: 36px;
+  height: 36px;
+  padding: 8px;
   border: 1px solid rgba(6, 63, 134, 0.2);
   border-radius: 999px;
-  background: rgba(255, 255, 255, 0.9);
+  background: rgba(255, 255, 255, 0.82);
   color: var(--mg-consent-blue-dark);
   box-shadow: 0 4px 14px rgba(15, 23, 42, 0.1);
-  font-size: 0.7rem;
-  font-weight: 750;
-  line-height: 1;
   backdrop-filter: blur(8px);
+  opacity: 0.68;
+  transition: opacity 160ms ease, background 160ms ease;
+}
+
+.mg-consent-manage svg {
+  display: block;
+  width: 100%;
+  height: 100%;
+  fill: #fff;
+  stroke: currentColor;
+  stroke-width: 1.7;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.mg-consent-manage:hover,
+.mg-consent-manage:focus-visible {
+  background: #fff;
+  opacity: 1;
 }
 
 @media (max-width: 720px) {
@@ -166,7 +183,7 @@
 
   .mg-consent__actions {
     display: grid;
-    grid-template-columns: 0.85fr 1.5fr;
+    grid-template-columns: 1fr 1fr;
   }
 
   .mg-consent__button {

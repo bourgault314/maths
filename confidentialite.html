@@ -24,9 +24,9 @@
     <p class="legal-eyebrow">Vos données</p>
     <h1>Confidentialité et cookies</h1>
     <p class="legal-intro">Les outils publics restent utilisables sans compte. Les statistiques Google Analytics ne sont activées qu’après un accord explicite.</p>
-    <p class="legal-updated">Dernière mise à jour : 14 juillet 2026</p>
+    <p class="legal-updated">Dernière mise à jour : 15 juillet 2026</p>
 
-    <p class="legal-note"><strong>Situation actuelle :</strong> maths&amp;go ne crée pas encore de compte élève et n’enregistre pas les réponses, notes ou parcours réalisés dans les outils publics. Un futur espace de suivi fera l’objet d’une information distincte avant sa mise en service.</p>
+    <p class="legal-note"><strong>Situation actuelle :</strong> maths&amp;go ne crée pas de compte élève et n’enregistre pas les réponses, les notes ou les parcours réalisés dans les outils publics.</p>
 
     <div class="legal-sections">
       <section class="legal-section" aria-labelledby="responsable">
@@ -77,7 +77,7 @@
         </div>
         <p>Refuser les statistiques n’empêche aucun outil public de fonctionner. Vous pouvez changer d’avis à tout moment.</p>
         <div class="legal-actions">
-          <button class="legal-button" type="button" onclick="window.mathsgoConsentement && window.mathsgoConsentement.ouvrir()">Gérer mes cookies</button>
+          <button class="legal-button" type="button" data-mathsgo-consent-open onclick="window.mathsgoConsentement && window.mathsgoConsentement.ouvrir()">Gérer mes cookies</button>
         </div>
       </section>
 
@@ -89,7 +89,7 @@
 
       <section class="legal-section" aria-labelledby="conservation">
         <h2 id="conservation">Conservation</h2>
-        <p>Le choix relatif aux statistiques et les cookies Analytics configurés par maths&amp;go expirent au plus tard après 180 jours. Les échanges par e-mail sont conservés pendant la durée nécessaire au traitement de la demande, puis supprimés lorsqu’ils ne sont plus utiles, sous réserve d’une obligation légale.</p>
+        <p>Les durées relatives aux statistiques sont indiquées dans le tableau ci-dessus. Les échanges par e-mail sont conservés pendant la durée nécessaire au traitement de la demande, puis supprimés lorsqu’ils ne sont plus utiles, sous réserve d’une obligation légale.</p>
         <p>Les durées appliquées aux journaux techniques de GitHub et aux données traitées par Google relèvent également de leurs politiques et des réglages du service.</p>
       </section>
 
@@ -99,16 +99,8 @@
         <p>Pour exercer ces droits, écrivez à <a href="mailto:gwenael@mathsgo.re?subject=Exercice%20de%20mes%20droits%20sur%20mathsgo.re">gwenael@mathsgo.re</a> en précisant votre demande. Vous pouvez également saisir la <a href="https://www.cnil.fr/fr/plaintes" rel="noopener noreferrer">CNIL</a>.</p>
       </section>
 
-      <section class="legal-section" aria-labelledby="evolution">
-        <h2 id="evolution">Évolution vers un suivi des élèves</h2>
-        <p>Un futur espace d’entraînement ou d’évaluation enregistré nécessitera un cadre séparé : données minimales, rôles enseignant/élève, durées de conservation, sécurité, droits d’accès et information adaptée aux mineurs. Cette politique sera mise à jour avant toute activation de ce suivi.</p>
-      </section>
     </div>
 
-    <div class="legal-actions">
-      <a class="legal-button legal-button--quiet" href="mentions-legales.html">Mentions légales</a>
-      <a class="legal-button legal-button--quiet" href="./">Retour à l’accueil</a>
-    </div>
   </main>
 
   <footer class="legal-footer">
@@ -117,6 +109,7 @@
       <nav aria-label="Informations du site">
         <a href="mentions-legales.html">Mentions légales</a>
         <a href="confidentialite.html" aria-current="page">Confidentialité</a>
+        <button type="button" class="legal-footer-button" data-mathsgo-consent-open onclick="window.mathsgoConsentement &amp;&amp; window.mathsgoConsentement.ouvrir()">Cookies</button>
       </nav>
     </div>
   </footer>
