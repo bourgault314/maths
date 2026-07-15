@@ -41,6 +41,21 @@ construire un adaptateur et vérifier l'équivalence avant de poursuivre.
 | tuiles algébriques | tuiles `x²`, `x`, unité | plusieurs modes graphiques |
 | nombres relatifs | jetons signés | conventions déjà précises |
 
+### Module prioritaire : nombres relatifs dans Automatismes
+
+Le premier branchement prévu dans le moteur est constitué de deux modules
+réutilisables :
+
+- `dnb_38` — addition de nombres relatifs avec jetons manipulables ;
+- `dnb_39` — soustraction de nombres relatifs avec paires nulles et zone à
+  retirer.
+
+Ils sont classés `5e`, `4e` et `3e`, mais pas `DNB` : l'intégration dans
+Automatismes sert à la consolidation du cycle 4 et à la réutilisation dans les
+activités, pas à présenter ces notions comme des automatismes spécifiques du
+DNB. Ils doivent conserver les modes Avec aide / Sans aide, Diaporama et
+Interactif, ainsi que le cours associé.
+
 ## Nettoyage du 15 juillet 2026
 
 - `/auto` reste la version découpée et canonique des automatismes ;
