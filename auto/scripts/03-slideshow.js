@@ -1160,11 +1160,14 @@ function placePythagoreTactileToken(spec,token,group,index){
  }
  interactiveValues.forEach((value,slot)=>{if(value===token&&slot!==index){interactiveValues[slot]='';interactiveTouched[slot]=false;}});
  interactiveValues[index]=token;interactiveTouched[index]=true;selectedTactileDropIndex=null;
+ selectedTactileToken='';selectedTactileGroup='';
  setPythagoreTactileFeedback('Continue : place les éléments restants.');
  refreshPythagoreTactile(spec);updateInteractiveControls();
 }
 function setupPythagoreTactileInteraction(spec){
  const root=document.querySelector('#slide .pythagore-tactile');if(!root)return;
+ if(root.dataset.tactileReady==='1'){refreshPythagoreTactile(spec);return;}
+ root.dataset.tactileReady='1';
  const tokens=[...root.querySelectorAll('.pythagore-tactile-token')];
  selectedTactileToken='';selectedTactileGroup='';selectedTactileDropIndex=null;
  refreshPythagoreTactile(spec);
