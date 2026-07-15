@@ -2533,6 +2533,61 @@ function makeTrigInstance(mod,q){
   return trigDirectInstance(mod,q,'On donne $$\\widehat{'+triangle.angle+'}='+degrees+'°$$ et $$'+triangle.adjacent+'='+adjacent+'\\text{ cm}$$. Calcule le périmètre du triangle. Arrondis au dixième.'+visual,'$$P=[[dec]]\\text{ cm}$$',result,triangle,{kind,degrees,adjacent});
 }
 
+const RELATIVE_ADDITION_TEMPLATES=[
+  {a:3,b:4},
+  {a:-3,b:-4},
+  {a:3,b:-3},
+  {a:5,b:-3},
+  {a:-6,b:2},
+  {a:4,b:-7},
+  {a:-2,b:5},
+  {a:6,b:-4}
+];
+const RELATIVE_SUBTRACTION_TEMPLATES=[
+  {a:6,b:4},
+  {a:-6,b:-2},
+  {a:4,b:-7},
+  {a:-3,b:5},
+  {a:2,b:6},
+  {a:-7,b:-4},
+  {a:5,b:-3},
+  {a:-4,b:6}
+];
+function relativeDisplayNumber(value){
+  const text=fmt(value);
+  return text.startsWith('-')?'−'+text.slice(1):text;
+}
+function relativeExpression(a,kind,b){
+  return kind==='addition'
+    ? relativeDisplayNumber(a)+' + '+(b<0?'('+relativeDisplayNumber(b)+')':relativeDisplayNumber(b))
+    : relativeDisplayNumber(a)+' − ('+relativeDisplayNumber(b)+')';
+}
+function relativeTokenList(value,zone,prefix){
+  const sign=value<0?-1:1;
+  return Array.from({length:Math.abs(value)},(_,index)=>({id:prefix+String(index+1),sign,zone,origin:zone}));
+}
+function makeRelativeTokensInstance(mod,q){
+  const kind=q.options.relative_tokens_kind;
+  const templates=kind==='addition'?RELATIVE_ADDITION_TEMPLATES:RELATIVE_SUBTRACTION_TEMPLATES;
+  const template=templates[(Number(q.n)-1)%templates.length];
+  const a=template.a,b=template.b,result=kind==='addition'?a+b:a-b;
+  const initialTokens=kind==='addition'
+    ? [...relativeTokenList(a,'a','a'),...relativeTokenList(b,'b','b')]
+    : relativeTokenList(a,'board','a');
+  const relativeTokens={
+    kind,
+    a,b,result,
+    removeSign:kind==='subtraction'?(b<0?-1:1):null,
+    removeCount:kind==='subtraction'?Math.abs(b):0,
+    initialTokens,
+    instanceKey:kind+'-'+q.n+'-'+a+'-'+b
+  };
+  return {
+    module:mod,q,scope:{},answers:[String(result)],rawStatement:'',rawFooter:'',hasSvg:true,
+    relativeTokens
+  };
+}
+
 function makeInstance(mod,q){
   if(mod&&mod.id==='dnb_01') return makeModule01Instance(mod,q);
   if(mod&&mod.id==='dnb_02b') return makePlaceValueInstance(mod,q);
@@ -2550,6 +2605,7 @@ function makeInstance(mod,q){
   if(mod&&mod.id==='dnb_22') return makeAreaInstance(mod,q);
   if(mod&&mod.id==='dnb_30') return makeAverageInstance(mod,q);
   if(mod&&mod.id==='dnb_35') return makeEvolutionInstance(mod,q);
+  if(mod&&['dnb_38','dnb_39'].includes(mod.id)) return makeRelativeTokensInstance(mod,q);
   let scope={};
   if(q.options&&q.options.formula_code) scope=runCode(q.options.formula_code);
   let answerChoices=parseAnswerChoices(q,scope);
@@ -4383,6 +4439,65 @@ function renderProportionModule(inst,correction=false,mode=null){
   if(inst.rawFooter) html+='<div class="footer proportion-answer">'+renderPlaceholders(inst.rawFooter,inst.answers,correction?'correction':'question')+'</div>';
   return html;
 }
+function relativeTokenLabel(sign){return sign>0?'+1':'−1';}
+function relativePairIndexes(tokens,zone){
+  const positive=[],negative=[];
+  tokens.forEach((token,index)=>{
+    if(token.zone!==zone) return;
+    (token.sign>0?positive:negative).push(index);
+  });
+  const paired=new Set();
+  for(let index=0;index<Math.min(positive.length,negative.length);index++){
+    paired.add(positive[index]);paired.add(negative[index]);
+  }
+  return paired;
+}
+function relativeStaticToken(token,paired=false){
+  return '<span class="relative-token '+(token.sign>0?'relative-token-positive':'relative-token-negative')+(paired?' is-null-pair':'')+'" aria-label="Jeton '+relativeTokenLabel(token.sign)+'">'+relativeTokenLabel(token.sign)+'</span>';
+}
+function relativeZoneMarkup(label,zone,tokens,{correction=false}={}){
+  const paired=relativePairIndexes(tokens,zone);
+  const visible=tokens.filter(token=>token.zone===zone);
+  const tokenHtml=visible.map(token=>relativeStaticToken(token,paired.has(tokens.indexOf(token)))).join('');
+  return '<section class="relative-token-zone relative-token-zone-'+zone+'" data-relative-zone="'+zone+'"><h3>'+label+'</h3><div class="relative-token-list">'+(tokenHtml||'<span class="relative-token-empty">—</span>')+'</div></section>';
+}
+function relativeInitialState(data){return {tokens:data.initialTokens.map(token=>({...token})),nextPair:1};}
+function relativeSolutionState(data){
+  const state=relativeInitialState(data);
+  if(data.kind==='addition') state.tokens.forEach(token=>{token.zone='result';});
+  else{
+    for(let index=0;index<data.removeCount;index++){
+      const token=state.tokens.find(item=>item.zone==='board'&&item.sign===data.removeSign);
+      if(token) token.zone='removed';
+      else{
+        const pair=state.nextPair++;
+        state.tokens.push({id:'p'+pair+'+',sign:1,zone:'board',origin:'board'}, {id:'p'+pair+'-',sign:-1,zone:'board',origin:'board'});
+        const added=state.tokens.find(item=>item.id==='p'+pair+(data.removeSign>0?'+':'-'));
+        if(added) added.zone='removed';
+      }
+    }
+  }
+  return state;
+}
+function relativeTokensBoardMarkup(data,state,correction=false){
+  const controls=correction?'':'<p class="relative-token-instruction">'+(data.kind==='addition'?'Rassemble les deux groupes dans la zone résultat. Les paires +1/−1 valent zéro.':'Retire les jetons demandés. Si nécessaire, ajoute une paire nulle, puis retire le jeton voulu.')+'</p>';
+  const actions=correction?'':'<div class="relative-token-actions"><button type="button" class="relative-token-action" data-relative-action="reset">Recommencer</button>'+(data.kind==='subtraction'?'<button type="button" class="relative-token-action" data-relative-action="add-pair">Ajouter une paire nulle</button>':'')+'</div>';
+  const zones=data.kind==='addition'
+    ? relativeZoneMarkup('Premier nombre','a',state.tokens,{correction})+relativeZoneMarkup('Deuxième nombre','b',state.tokens,{correction})+relativeZoneMarkup('Résultat','result',state.tokens,{correction})
+    : relativeZoneMarkup('Plateau de départ','board',state.tokens,{correction})+relativeZoneMarkup('Zone « retirer »','removed',state.tokens,{correction});
+  return '<div class="relative-token-board" data-relative-board data-relative-kind="'+data.kind+'">'+zones+controls+actions+(correction?'<p class="relative-token-result">'+relativeExpression(data.a,data.kind,data.b)+' = <strong>'+relativeDisplayNumber(data.result)+'</strong></p>':'')+'</div>';
+}
+function renderRelativeTokensModule(inst,correction=false,mode=null){
+  if(mode===null) mode=document.getElementById('visualMode').value;
+  const data=inst.relativeTokens;
+  const expression=relativeExpression(data.a,data.kind,data.b);
+  const prompt='<div class="question relative-token-prompt">Calcule <strong>'+expression+'</strong> en manipulant les jetons.</div>';
+  if(mode==='without-reveal'&&!correction){
+    return prompt+'<div class="visual-placeholder relative-token-placeholder"><button class="btn" onclick="revealVisual()">Afficher l’aide</button></div>';
+  }
+  const state=correction?relativeSolutionState(data):relativeInitialState(data);
+  return prompt+relativeTokensBoardMarkup(data,state,correction);
+}
 function renderQuestion(inst, correction=false, mode=null){
   if(mode===null) mode=document.getElementById('visualMode').value;
   if(inst && inst.module && inst.module.id==='dnb_01') return renderModule01(inst, correction, mode);
@@ -4404,6 +4519,7 @@ function renderQuestion(inst, correction=false, mode=null){
   if(inst && inst.module && inst.module.id==='dnb_30') return renderAverageModule(inst, correction, mode);
   if(inst && inst.module && inst.module.id==='dnb_34') return renderProportionModule(inst, correction, mode);
   if(inst && inst.module && inst.module.id==='dnb_35') return renderEvolutionModule(inst, correction, mode);
+  if(inst && inst.module && ['dnb_38','dnb_39'].includes(inst.module.id)) return renderRelativeTokensModule(inst, correction, mode);
   if(inst && inst.module && inst.module.id==='dnb_07'){
     return renderModule07(inst, correction, mode);
   }
@@ -4443,7 +4559,9 @@ const LEVEL_5E_QUESTIONS={
   dnb_32:'all',
   dnb_33:[1,2,3,4,8,9,10],
   dnb_34:'all',
-  dnb_37:'all'
+  dnb_37:'all',
+  dnb_38:'all',
+  dnb_39:'all'
 };
 
 // Pendant la transition des programmes, ces contenus sont déjà travaillés
@@ -4474,7 +4592,9 @@ const MODULE_MENU_GROUPS={
     {id:'entiers-divisibilite',title:'Nombres entiers et divisibilité',moduleIds:['dnb_08','dnb_09']},
     {id:'fractions',title:'Fractions et nombres rationnels',moduleIds:['dnb_01','dnb_03','dnb_03b','dnb_04','dnb_05']},
     {id:'puissances',title:'Puissances',moduleIds:['dnb_07','dnb_06']},
-    {id:'algebre',title:'Calcul littéral et algèbre',moduleIds:['dnb_10','dnb_11','dnb_12','dnb_13']}
+    {id:'algebre',title:'Calcul littéral et algèbre',moduleIds:['dnb_10','dnb_11','dnb_12','dnb_13']},
+    {id:'relatifs-addition',title:'Nombres relatifs — addition',moduleIds:['dnb_38']},
+    {id:'relatifs-soustraction',title:'Nombres relatifs — soustraction',moduleIds:['dnb_39']}
   ],
   geometry:[
     {id:'reperage',title:'Repérage',moduleIds:['dnb_15']},
