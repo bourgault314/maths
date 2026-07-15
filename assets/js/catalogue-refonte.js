@@ -204,7 +204,6 @@
   const state = {
     domain: new URLSearchParams(window.location.search).get("domain") || "",
     query: "",
-    facet: new URLSearchParams(window.location.search).get("facet") || "",
     notion: new URLSearchParams(window.location.search).get("notion") || ""
   };
 
@@ -218,11 +217,7 @@
   const backButton = document.getElementById("back-themes");
   const searchInput = document.getElementById("catalogue-search");
   const clearButton = document.getElementById("search-clear");
-  const controls = document.querySelector(".catalogue-controls");
-  const domainBox = document.querySelector(".domain-box");
-  const facetBox = document.querySelector(".facet-box");
-  const domainSelect = document.getElementById("domain-filter");
-  const facetSelect = document.getElementById("facet-filter");
+  const mainPanel = document.querySelector(".main-panel");
 
   function escapeHtml(value) {
     return String(value ?? "")
@@ -251,18 +246,63 @@
     return words(query).every((word) => target.includes(word));
   }
 
-  function syncQueryString() {
+  function stateFromUrl() {
+    const params = new URLSearchParams(window.location.search);
+    state.domain = params.get("domain") || "";
+    state.notion = params.get("notion") || "";
+    state.query = "";
+
+    if (state.notion && !notionMap.has(state.notion)) state.notion = "";
+    if (state.domain && !domainMap.has(state.domain)) state.domain = "";
+    if (state.notion) state.domain = notionMap.get(state.notion)?.domain || state.domain;
+  }
+
+  function viewLevel() {
+    if (state.notion) return "notion";
+    if (state.domain) return "domain";
+    return state.query ? "search" : "entry";
+  }
+
+  function catalogueUrl() {
+    const params = new URLSearchParams();
+    if (state.domain) params.set("domain", state.domain);
+    if (state.notion) params.set("notion", state.notion);
+    const query = params.toString();
+    return `${window.location.pathname}${query ? `?${query}` : ""}`;
+  }
+
+  function rememberCurrentScroll() {
     try {
-      const params = new URLSearchParams();
-      if (state.domain) params.set("domain", state.domain);
-      if (state.notion) params.set("notion", state.notion);
-      if (state.facet) params.set("facet", state.facet);
-      const query = params.toString();
-      history.replaceState(null, "", `${window.location.pathname}${query ? `?${query}` : ""}`);
+      history.replaceState({
+        ...(history.state || {}),
+        catalogue: true,
+        level: viewLevel(),
+        scrollY: window.scrollY
+      }, "", catalogueUrl());
     } catch (_error) {
       // L'ouverture directe depuis un dossier Windows peut interdire l'API History.
-      // Le filtrage doit continuer à fonctionner dans ce cas.
+      // La navigation doit continuer à fonctionner dans ce cas.
     }
+  }
+
+  function writeHistory(mode, fromLevel = null) {
+    const historyState = {
+      catalogue: true,
+      level: viewLevel(),
+      fromLevel,
+      scrollY: 0
+    };
+
+    try {
+      history[mode === "push" ? "pushState" : "replaceState"](historyState, "", catalogueUrl());
+    } catch (_error) {
+      // Même repli que ci-dessus pour une consultation hors serveur web.
+    }
+  }
+
+  function moveToTopAndFocus() {
+    window.scrollTo({ top: 0, behavior: "auto" });
+    window.requestAnimationFrame(() => pageTitle.focus({ preventScroll: true }));
   }
 
   function icon(name) {
@@ -408,16 +448,13 @@
     return published.filter((resource) => {
       if (state.domain && !resource.domains.includes(state.domain)) return false;
       if (state.notion && !resource.notions.includes(state.notion)) return false;
-      if (state.facet && !resourceFacets(resource).has(state.facet)) return false;
       if (state.query && !allWordsMatch(resourceHaystack(resource), state.query)) return false;
       return true;
     });
   }
 
   function notionHref(notion) {
-    const design = notionDesign[notion.id] || {};
-    if (design.hub) return design.hub;
-    return `index.html?notion=${encodeURIComponent(notion.id)}`;
+    return `?domain=${encodeURIComponent(notion.domain)}&notion=${encodeURIComponent(notion.id)}`;
   }
 
   function renderNotions(notions) {
@@ -428,7 +465,7 @@
     notionGrid.innerHTML = notions.map((notion) => {
       const design = notionDesign[notion.id] || {};
       const count = notionResourceCount(notion.id);
-      return `<a class="notion-card" href="${escapeHtml(notionHref(notion))}" style="${domainStyle(notion.domain)}">
+      return `<a class="notion-card" data-notion-card="${escapeHtml(notion.id)}" href="${escapeHtml(notionHref(notion))}" style="${domainStyle(notion.domain)}">
         <span class="notion-top">
           <span class="notion-icon">${icon(design.icon)}</span>
           <h3>${escapeHtml(notion.title)}</h3>
@@ -446,43 +483,76 @@
     return [notion?.title, ...facetLabels, facetLabels.length ? "" : (fallback || "Outil interactif")].filter(Boolean).join(" · ");
   }
 
+  const resourceGroups = [
+    { id: "manipuler", label: "Manipuler et visualiser" },
+    { id: "generer", label: "Générer et personnaliser" },
+    { id: "imprimer", label: "Imprimer et fabriquer" },
+    { id: "activites", label: "Activités et séances" },
+    { id: "cours", label: "Cours et synthèses" },
+    { id: "jeux", label: "Jouer et explorer" }
+  ];
+
+  function primaryResourceGroup(resource) {
+    const facets = resourceFacets(resource);
+    if (facets.has("jeux")) return "jeux";
+    if (facets.has("cours")) return "cours";
+    if (facets.has("activites")) return "activites";
+    if (facets.has("generer")) return "generer";
+    if (facets.has("manipuler")) return "manipuler";
+    if (facets.has("imprimer") || facets.has("gabarits")) return "imprimer";
+    return "manipuler";
+  }
+
+  function resourceCard(resource) {
+    const domainId = resource.domains[0] || "nombres-calculs";
+    return `<a class="resource-card" href="${escapeHtml(rootPrefix + resource.path)}" style="${domainStyle(domainId)}">
+      <span class="resource-type-icon">${typeIcon(resource)}</span>
+      <span class="resource-copy"><h3>${escapeHtml(resource.title)}</h3><span class="resource-meta">${escapeHtml(resourceMeta(resource))}</span></span>
+      <span class="resource-arrow" aria-hidden="true">→</span>
+    </a>`;
+  }
+
   function renderResources(resources) {
     domainGrid.hidden = true;
     notionGrid.hidden = true;
     resourceGrid.hidden = false;
     notionGrid.innerHTML = "";
-    resourceGrid.innerHTML = resources.map((resource) => {
-      const domainId = resource.domains[0] || "nombres-calculs";
-      return `<a class="resource-card" href="${escapeHtml(rootPrefix + resource.path)}" style="${domainStyle(domainId)}">
-        <span class="resource-type-icon">${typeIcon(resource)}</span>
-        <span class="resource-copy"><h3>${escapeHtml(resource.title)}</h3><span class="resource-meta">${escapeHtml(resourceMeta(resource))}</span></span>
-        <span class="resource-arrow" aria-hidden="true">→</span>
-      </a>`;
-    }).join("") || `<p class="empty-state">${state.notion ? "Cet univers est prêt à accueillir ses premiers outils." : "Aucun outil ne correspond à ces critères."}</p>`;
-  }
+    if (!resources.length) {
+      resourceGrid.innerHTML = `<p class="empty-state">${state.notion ? "Cet univers est prêt à accueillir ses premiers outils." : "Aucun outil ne correspond à cette recherche."}</p>`;
+      return;
+    }
 
-  function syncControls() {
-    const hasDomain = Boolean(state.domain);
-    controls.classList.toggle("has-domain", hasDomain);
-    domainBox.hidden = !hasDomain;
-    facetBox.hidden = !hasDomain;
-    domainSelect.value = state.domain;
-    facetSelect.value = state.facet;
+    const grouped = new Map(resourceGroups.map((group) => [group.id, []]));
+    resources.forEach((resource) => grouped.get(primaryResourceGroup(resource)).push(resource));
+    resourceGrid.innerHTML = resourceGroups.map((group) => {
+      const groupResources = grouped.get(group.id);
+      if (!groupResources.length) return "";
+      return `<section class="resource-group" aria-labelledby="resource-group-${escapeHtml(group.id)}">
+        <div class="resource-group-heading">
+          <h2 id="resource-group-${escapeHtml(group.id)}">${escapeHtml(group.label)}</h2>
+          <span>${groupResources.length} ressource${groupResources.length > 1 ? "s" : ""}</span>
+        </div>
+        <div class="resource-group-grid">${groupResources.map(resourceCard).join("")}</div>
+      </section>`;
+    }).join("");
   }
 
   function render() {
-    syncControls();
     clearButton.hidden = !state.query;
 
     const selectedNotion = notionMap.get(state.notion);
     const selectedDomain = domainMap.get(state.domain);
     const queryHasNotionMatches = Boolean(state.query && matchingNotions().length);
-    const showResources = Boolean(state.notion || state.facet || (state.query && !queryHasNotionMatches));
+    const showResources = Boolean(state.notion || (state.query && !queryHasNotionMatches));
+    const level = viewLevel();
 
-    backButton.hidden = !(state.domain || state.notion || state.facet || state.query);
+    mainPanel.classList.toggle("catalogue-deep-view", level === "domain" || level === "notion");
+    mainPanel.dataset.catalogueView = level;
+    backButton.hidden = level === "entry";
 
-    if (!state.domain && !state.notion && !state.facet && !state.query) {
+    if (!state.domain && !state.notion && !state.query) {
       renderDomains();
+      backButton.textContent = "← Retour";
       pageTitle.textContent = "Choisissez un domaine";
       heroLead.textContent = "Entrez par un domaine, puis choisissez une notion pour retrouver ses outils illustrés.";
       title.textContent = "Les domaines";
@@ -498,15 +568,12 @@
         pageTitle.textContent = selectedNotion.title;
         heroLead.textContent = notionDesign[selectedNotion.id]?.description || "Les outils disponibles pour ce thème.";
         title.textContent = `Les outils — ${selectedNotion.title}`;
-      } else if (state.facet) {
-        const facet = facetMap.get(state.facet);
-        pageTitle.textContent = facet?.label || "Accès direct";
-        heroLead.textContent = selectedDomain ? `Les ressources de ${selectedDomain.title.toLowerCase()} correspondant à ce besoin.` : "Toutes les ressources correspondant à ce besoin.";
-        title.textContent = selectedDomain ? `${facet?.label} — ${selectedDomain.title}` : (facet?.label || "Outils");
+        backButton.textContent = `← ${selectedDomain?.title || "Toutes les notions"}`;
       } else {
         pageTitle.textContent = "Résultats de la recherche";
         heroLead.textContent = `Les outils correspondant à « ${state.query.trim()} ».`;
         title.textContent = "Outils trouvés";
+        backButton.textContent = "← Effacer la recherche";
       }
 
       summary.textContent = `${resources.length} outil${resources.length > 1 ? "s" : ""}`;
@@ -520,6 +587,7 @@
       ? `Les thèmes de ${selectedDomain.title.toLowerCase()} présents sur maths&go.`
       : "Retrouvez les notions illustrées de maths&go.";
     title.textContent = state.query ? "Notions trouvées" : (selectedDomain ? "Choisissez une notion" : "Les notions");
+    backButton.textContent = selectedDomain ? "← Tous les domaines" : "← Effacer la recherche";
     summary.textContent = notions.length
       ? `${notions.length} notion${notions.length > 1 ? "s" : ""}`
       : "Cette porte est prête pour les prochaines ressources.";
@@ -528,36 +596,37 @@
   domainGrid.addEventListener("click", (event) => {
     const button = event.target.closest("[data-domain-card]");
     if (!button) return;
+    const fromLevel = viewLevel();
+    rememberCurrentScroll();
     state.domain = button.dataset.domainCard || "";
     state.notion = "";
     state.query = "";
     searchInput.value = "";
-    syncQueryString();
+    writeHistory("push", fromLevel);
     render();
-    window.scrollTo({ top: 0, behavior: "smooth" });
+    moveToTopAndFocus();
   });
 
-  domainSelect.addEventListener("change", () => {
-    state.domain = domainSelect.value;
-    state.notion = "";
-    if (!state.domain) state.facet = "";
+  notionGrid.addEventListener("click", (event) => {
+    const link = event.target.closest("[data-notion-card]");
+    if (!link || event.button !== 0 || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return;
+    event.preventDefault();
+    const notion = notionMap.get(link.dataset.notionCard);
+    if (!notion) return;
+    const fromLevel = viewLevel();
+    rememberCurrentScroll();
+    state.domain = notion.domain;
+    state.notion = notion.id;
     state.query = "";
     searchInput.value = "";
-    syncQueryString();
+    writeHistory("push", fromLevel);
     render();
-  });
-
-  facetSelect.addEventListener("change", () => {
-    state.facet = facetSelect.value;
-    state.notion = "";
-    syncQueryString();
-    render();
+    moveToTopAndFocus();
   });
 
   searchInput.addEventListener("input", () => {
     state.query = searchInput.value;
     state.notion = "";
-    syncQueryString();
     render();
   });
 
@@ -570,25 +639,46 @@
 
   backButton.addEventListener("click", () => {
     if (state.notion) {
+      if (history.state?.fromLevel === "domain") {
+        history.back();
+        return;
+      }
       state.domain = notionMap.get(state.notion)?.domain || state.domain;
       state.notion = "";
-    } else if (state.facet) {
-      state.facet = "";
-    } else {
+      writeHistory("replace");
+      render();
+      moveToTopAndFocus();
+    } else if (state.domain) {
+      if (history.state?.fromLevel === "entry") {
+        history.back();
+        return;
+      }
       state.domain = "";
-      state.facet = "";
       state.query = "";
       searchInput.value = "";
+      writeHistory("replace");
+      render();
+      moveToTopAndFocus();
+    } else {
+      state.query = "";
+      searchInput.value = "";
+      render();
+      searchInput.focus();
     }
-    syncQueryString();
-    render();
-    window.scrollTo({ top: 0, behavior: "smooth" });
   });
 
-  if (state.notion && !notionMap.has(state.notion)) state.notion = "";
-  if (state.domain && !domainMap.has(state.domain)) state.domain = "";
-  if (state.facet && !facetMap.has(state.facet)) state.facet = "";
-  if (state.notion && !state.domain) state.domain = notionMap.get(state.notion)?.domain || "";
-  if (state.facet && !state.domain) state.facet = "";
+  window.addEventListener("popstate", (event) => {
+    stateFromUrl();
+    searchInput.value = "";
+    render();
+    const scrollY = Number.isFinite(event.state?.scrollY) ? event.state.scrollY : 0;
+    window.requestAnimationFrame(() => window.requestAnimationFrame(() => {
+      window.scrollTo({ top: scrollY, behavior: "auto" });
+    }));
+  });
+
+  stateFromUrl();
+  if ("scrollRestoration" in history) history.scrollRestoration = "manual";
+  writeHistory("replace", history.state?.fromLevel || null);
   render();
 })();

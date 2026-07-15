@@ -6,11 +6,11 @@
   <title>Outils pédagogiques de mathématiques par thème | maths&amp;go</title>
   <meta name="description" content="Explorez les outils maths&go par thème : nombres, fractions, fonctions, algèbre, géométrie, probabilités, algorithmique et jeux mathématiques.">
   <link rel="canonical" href="https://mathsgo.re/outils/">
-  <link rel="stylesheet" href="../assets/css/catalogue-refonte.css?v=vase-finale-1">
+  <link rel="stylesheet" href="../assets/css/catalogue-refonte.css?v=navigation-3-levels-1">
   <link rel="stylesheet" href="../assets/css/consentement.css">
   <script defer src="../assets/js/consentement.js"></script>
-  <script defer src="../assets/js/catalogue-refonte-data.js?v=3445d7f"></script>
-  <script defer src="../assets/js/catalogue-refonte.js?v=splat-x-rond-2"></script>
+  <script defer src="../assets/js/catalogue-refonte-data.js?v=navigation-3-levels-1"></script>
+  <script defer src="../assets/js/catalogue-refonte.js?v=navigation-3-levels-1"></script>
 </head>
 <body data-root-prefix="../">
   <a class="skip-link" href="#catalogue">Aller aux thèmes</a>
@@ -27,9 +27,11 @@
     </header>
 
     <main class="main-panel" id="catalogue">
+      <button class="back-themes" id="back-themes" type="button" hidden>← Tous les domaines</button>
+
       <section class="hero" aria-labelledby="page-title">
         <p class="eyebrow">Explorer les outils</p>
-        <h1 id="page-title">Choisissez un domaine</h1>
+        <h1 id="page-title" tabindex="-1">Choisissez un domaine</h1>
         <p class="hero-lead" id="hero-lead">Entrez par un domaine, puis choisissez une notion pour retrouver ses outils illustrés.</p>
       </section>
 
@@ -59,34 +61,6 @@
           <button id="search-clear" class="search-clear" type="button" aria-label="Effacer la recherche" hidden>×</button>
         </div>
 
-        <div class="domain-box" hidden>
-          <label for="domain-filter">Domaine</label>
-          <select id="domain-filter">
-            <option value="">Tous les domaines</option>
-            <option value="nombres-calculs">Nombres et calculs</option>
-            <option value="algebre">Calcul littéral et algèbre</option>
-            <option value="proportionnalite-mesures">Proportionnalité, fonctions et grandeurs</option>
-            <option value="geometrie">Espace et géométrie</option>
-            <option value="donnees">Données, statistiques et probabilités</option>
-            <option value="informatique">Pensée informatique</option>
-            <option value="jeux-recherches">Jeux et explorations</option>
-          </select>
-        </div>
-
-        <div class="facet-box" hidden>
-          <label for="facet-filter">Afficher</label>
-          <select id="facet-filter">
-            <option value="">Toutes les ressources</option>
-            <option value="manipuler">Manipuler</option>
-            <option value="generer">Générer / personnaliser</option>
-            <option value="gabarits">Gabarits et matériel</option>
-            <option value="imprimer">Imprimer / fabriquer</option>
-            <option value="activites">Activités et séances</option>
-            <option value="cours">Cours et synthèses</option>
-            <option value="jeux">Jouer / explorer</option>
-          </select>
-        </div>
-
       </div>
 
       <section aria-labelledby="results-title">
@@ -95,7 +69,6 @@
             <h2 id="results-title">Les domaines</h2>
             <p class="results-summary" id="results-summary" aria-live="polite"></p>
           </div>
-          <button class="back-themes" id="back-themes" type="button" hidden>← Retour</button>
         </div>
 
         <div class="domain-grid" id="domain-grid"></div>

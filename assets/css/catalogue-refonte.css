@@ -88,6 +88,10 @@ select { cursor: pointer; }
   text-decoration: none;
   font-size: 0.91rem;
   font-weight: 700;
+  min-width: 44px;
+  min-height: 44px;
+  justify-content: center;
+  padding: 8px 10px;
 }
 
 .header-home svg { width: 19px; height: 19px; }
@@ -433,19 +437,82 @@ select { cursor: pointer; }
   display: inline-flex;
   align-items: center;
   gap: 7px;
-  padding: 8px 12px;
+  max-width: 100%;
+  min-height: 44px;
+  padding: 9px 14px;
   border: 1px solid #cbd8e5;
   border-radius: 10px;
   color: var(--blue);
   background: #fff;
   font-weight: 760;
+  line-height: 1.25;
+  text-align: left;
+  white-space: normal;
 }
 
-.notion-grid,
-.resource-grid {
+.notion-grid {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 14px;
+}
+
+.resource-grid { display: block; }
+
+.resource-group + .resource-group { margin-top: 30px; }
+
+.resource-group-heading {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 14px;
+  margin: 0 0 12px;
+  padding-bottom: 8px;
+  border-bottom: 1px solid #e0e7ef;
+}
+
+.resource-group-heading h2 {
+  margin: 0;
+  color: var(--blue-dark);
+  font-size: clamp(1.15rem, 1.8vw, 1.42rem);
+  line-height: 1.25;
+}
+
+.resource-group-heading span {
+  flex: 0 0 auto;
+  color: var(--muted);
+  font-size: .82rem;
+  font-weight: 700;
+}
+
+.resource-group-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 14px;
+}
+
+.catalogue-deep-view > .back-themes {
+  margin: 0 0 14px;
+}
+
+.catalogue-deep-view .hero {
+  max-width: none;
+  margin: 0 0 24px;
+  text-align: left;
+}
+
+.catalogue-deep-view .hero h1 {
+  max-width: 900px;
+  font-size: clamp(1.85rem, 3.3vw, 2.65rem);
+  line-height: 1.12;
+  overflow-wrap: anywhere;
+}
+
+.catalogue-deep-view .eyebrow,
+.catalogue-deep-view .hero-lead,
+.catalogue-deep-view .auto-feature,
+.catalogue-deep-view .catalogue-controls,
+.catalogue-deep-view .section-heading {
+  display: none;
 }
 
 .domain-grid {
@@ -646,6 +713,7 @@ select { cursor: pointer; }
   color: #16304f;
   font-size: 1rem;
   line-height: 1.25;
+  overflow-wrap: anywhere;
 }
 
 .resource-meta {
@@ -714,7 +782,7 @@ select { cursor: pointer; }
 
 @media (max-width: 920px) {
   .notion-grid,
-  .resource-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .resource-group-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .domain-tab { padding-inline: 15px; }
   .catalogue-controls.has-domain { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .catalogue-controls.has-domain .search-box { grid-column: 1 / -1; }
@@ -778,7 +846,7 @@ select { cursor: pointer; }
     background: var(--tab-color, var(--blue));
   }
   .notion-grid,
-  .resource-grid { grid-template-columns: 1fr; gap: 10px; }
+  .resource-group-grid { grid-template-columns: 1fr; gap: 10px; }
   .domain-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 9px; }
   .domain-card {
     min-height: 164px;
@@ -813,6 +881,10 @@ select { cursor: pointer; }
   .domain-card-secondary .domain-card-copy small { display: block; }
   .notion-card { min-height: 122px; padding: 14px 15px; }
   .notion-icon { width: 53px; height: 43px; flex-basis: 53px; }
+  .catalogue-deep-view .hero { margin-bottom: 19px; }
+  .catalogue-deep-view > .back-themes { margin-bottom: 11px; }
+  .resource-group + .resource-group { margin-top: 25px; }
+  .resource-group-heading { align-items: flex-start; }
   .section-heading { align-items: center; }
   .site-footer { padding-bottom: max(18px, env(safe-area-inset-bottom)); }
 }
