@@ -1,0 +1,665 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>Yavalath d’Axelle | maths&amp;go</title>
+  <meta name="description" content="Une version simple de Yavalath pour jouer cinq parties contre l’ordinateur.">
+  <meta name="robots" content="noindex, nofollow">
+  <style>
+    :root {
+      --blue: #0755b8;
+      --blue-dark: #063f86;
+      --orange: #f97316;
+      --orange-dark: #b94708;
+      --teal: #08a99f;
+      --ink: #10294a;
+      --muted: #5b687a;
+      --line: #d5e0eb;
+      --good: #087a55;
+      --bad: #b83a3a;
+      --cell: #fffefa;
+    }
+
+    * { box-sizing: border-box; }
+    html { min-height: 100%; -webkit-text-size-adjust: 100%; }
+    body {
+      min-height: 100vh;
+      margin: 0;
+      padding: clamp(8px, 2vw, 22px);
+      color: var(--ink);
+      background-color: #f7f7f7;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='100' height='100' viewBox='0 0 100 100'%3E%3Cg fill='none' stroke='%231e1b4b' stroke-width='.4' stroke-opacity='.08'%3E%3Cpath d='M50 0 62 38 100 50 62 62 50 100 38 62 0 50 38 38Z'/%3E%3C/g%3E%3C/svg%3E");
+      font-family: "Segoe UI", system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
+    }
+    button, a { -webkit-tap-highlight-color: transparent; }
+    button { font: inherit; }
+    [hidden] { display: none !important; }
+
+    .game-shell { width: min(100%, 1080px); margin: 0 auto; }
+    .topbar {
+      min-height: 64px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      padding: 0 5px;
+    }
+    .brand { display: block; padding: 0; border: 0; background: transparent; }
+    .brand img { display: block; width: clamp(118px, 18vw, 148px); height: auto; }
+    .space-link {
+      padding: 8px 12px;
+      border: 1px solid #cdd9e5;
+      border-radius: 999px;
+      color: #58677a;
+      background: rgba(255,255,255,.88);
+      text-decoration: none;
+      font-size: .78rem;
+      font-weight: 850;
+    }
+
+    .game-card {
+      overflow: hidden;
+      border: 1px solid rgba(206,219,232,.95);
+      border-radius: 28px;
+      background: rgba(255,255,255,.98);
+      box-shadow: 0 22px 55px rgba(15,40,72,.11);
+    }
+    .game-head {
+      display: grid;
+      grid-template-columns: minmax(0,1fr) auto;
+      align-items: center;
+      gap: 14px;
+      padding: 17px clamp(16px, 3vw, 28px) 14px;
+      border-bottom: 1px solid #e2e9f0;
+      background: linear-gradient(100deg, #f1fbfa, #f5f9ff 58%, #fff7ed);
+    }
+    .game-title { margin: 0; color: var(--blue-dark); font-family: Georgia, serif; font-size: clamp(1.8rem, 5vw, 2.65rem); }
+    .rule-line { margin: 5px 0 0; color: var(--muted); font-size: clamp(.82rem, 2.4vw, .98rem); font-weight: 700; }
+    .rule-line .lose { color: var(--bad); }
+    .rule-line .win { color: var(--good); }
+    .rule-button {
+      min-height: 42px;
+      padding: 8px 13px;
+      border: 1px solid #cbd8e5;
+      border-radius: 12px;
+      color: var(--blue-dark);
+      background: #fff;
+      font-weight: 850;
+      cursor: pointer;
+    }
+
+    .dashboard {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0,1fr));
+      gap: 8px;
+      padding: 12px clamp(12px, 2.5vw, 22px) 0;
+    }
+    .dashboard > div {
+      min-width: 0;
+      padding: 10px 12px;
+      border: 1px solid #dce5ed;
+      border-radius: 13px;
+      background: #f8fafc;
+      text-align: center;
+    }
+    .dashboard span { display: block; color: #69778a; font-size: .7rem; font-weight: 800; text-transform: uppercase; letter-spacing: .045em; }
+    .dashboard strong { display: block; overflow: hidden; margin-top: 2px; color: var(--blue-dark); font-size: clamp(.92rem, 2.8vw, 1.12rem); text-overflow: ellipsis; white-space: nowrap; }
+
+    .status {
+      min-height: 48px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      margin: 12px 14px 0;
+      padding: 10px 14px;
+      border-radius: 14px;
+      color: #254260;
+      background: #eef6ff;
+      font-weight: 850;
+      text-align: center;
+    }
+    .status.warning { color: #80520c; background: #fff5d9; }
+    .turn-dot { width: 18px; height: 18px; flex: 0 0 auto; border-radius: 50%; background: var(--blue); box-shadow: inset -3px -3px 5px rgba(0,0,0,.2); }
+    .status.ai .turn-dot { background: var(--orange); }
+
+    .board-wrap { display: grid; place-items: center; padding: clamp(8px, 2vw, 18px); }
+    #board { display: block; width: min(100%, 720px); height: auto; max-height: min(66vh, 720px); touch-action: manipulation; }
+    .cell { fill: var(--cell); stroke: #2f3b48; stroke-width: 2.2; cursor: pointer; transition: fill .12s ease, stroke .12s ease; }
+    .cell:hover { fill: #eef6ff; }
+    .cell.win-hint { fill: #dff7eb; stroke: #15915f; stroke-width: 4; animation: pulse 1.05s ease-in-out infinite alternate; }
+    .token { stroke: rgba(0,0,0,.3); stroke-width: 2.3; pointer-events: none; }
+    .last-ring { fill: none; stroke: #fff; stroke-width: 4; pointer-events: none; }
+    .result-ring { fill: none; stroke-width: 6; pointer-events: none; }
+    .result-ring.good { stroke: #19a46b; }
+    .result-ring.bad { stroke: #d84c4c; }
+    @keyframes pulse { from { opacity: .62; } to { opacity: 1; } }
+
+    .result-panel {
+      margin: 0 clamp(14px, 3vw, 28px) 22px;
+      padding: 17px;
+      border: 2px solid #acdcca;
+      border-radius: 17px;
+      background: #effcf6;
+      text-align: center;
+    }
+    .result-panel.lose { border-color: #efc1c1; background: #fff3f3; }
+    .result-panel h2 { margin: 0; color: var(--good); font-size: 1.35rem; }
+    .result-panel.lose h2 { color: var(--bad); }
+    .result-panel p { margin: 7px 0 0; color: var(--muted); line-height: 1.45; }
+    .result-actions { display: flex; flex-wrap: wrap; justify-content: center; gap: 9px; margin-top: 14px; }
+    .primary, .secondary {
+      min-height: 48px;
+      padding: 11px 18px;
+      border-radius: 14px;
+      font-weight: 900;
+      cursor: pointer;
+    }
+    .primary { border: 0; color: #fff; background: linear-gradient(145deg, #0b58aa, #063f86); box-shadow: 0 9px 18px rgba(6,63,134,.2); }
+    .secondary { border: 1px solid #cbd8e5; color: var(--blue-dark); background: #fff; text-decoration: none; }
+
+    .overlay {
+      position: fixed;
+      z-index: 20;
+      inset: 0;
+      display: grid;
+      place-items: center;
+      padding: 16px;
+      background: rgba(8,26,49,.68);
+      backdrop-filter: blur(5px);
+    }
+    .intro {
+      width: min(100%, 560px);
+      padding: clamp(23px, 5vw, 38px);
+      border-radius: 26px;
+      background: #fff;
+      box-shadow: 0 28px 70px rgba(0,0,0,.3);
+      text-align: center;
+    }
+    .intro .eyebrow { margin: 0 0 5px; color: var(--teal); font-size: .75rem; font-weight: 950; letter-spacing: .1em; text-transform: uppercase; }
+    .intro h1 { margin: 0; color: var(--blue-dark); font-family: Georgia, serif; font-size: clamp(2.3rem, 10vw, 3.7rem); }
+    .intro-lead { margin: 10px auto 20px; color: var(--muted); }
+    .rule-cards { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+    .rule-card { padding: 15px 10px; border-radius: 17px; font-weight: 850; }
+    .rule-card strong { display: block; font-size: 2rem; }
+    .rule-card.lose { color: #8c2929; background: #fff1f1; border: 2px solid #edbcbc; }
+    .rule-card.win { color: #075b3f; background: #eafaf4; border: 2px solid #a8dfca; }
+    .level-title { margin: 21px 0 8px; color: #344e69; font-size: .86rem; font-weight: 900; }
+    .levels { display: grid; grid-template-columns: 1fr 1fr; gap: 9px; }
+    .level-button { min-height: 50px; padding: 10px; border: 2px solid #d8e2ec; border-radius: 14px; color: #435b74; background: #fff; font-weight: 900; cursor: pointer; }
+    .level-button.active { color: #0755b8; border-color: #4386d6; background: #edf5ff; box-shadow: inset 0 0 0 1px #4386d6; }
+    .intro .primary { width: 100%; margin-top: 17px; }
+    .five-note { margin: 12px 0 0; color: #728096; font-size: .8rem; }
+
+    .credits { margin: 13px auto 0; color: rgba(16,41,74,.55); font-size: .7rem; line-height: 1.35; text-align: center; }
+
+    @media (max-width: 560px) {
+      body { padding: 6px; }
+      .topbar { min-height: 58px; }
+      .space-link { padding: 7px 9px; font-size: .7rem; }
+      .game-card { border-radius: 22px; }
+      .game-head { padding: 13px 13px 11px; }
+      .rule-line { line-height: 1.35; }
+      .dashboard { padding: 9px 9px 0; gap: 5px; }
+      .dashboard > div { padding: 8px 5px; }
+      .dashboard span { font-size: .61rem; }
+      .status { margin: 9px 9px 0; font-size: .9rem; }
+      .board-wrap { padding: 3px 5px 8px; }
+      #board { max-height: 56vh; }
+      .result-panel { margin: 0 9px 14px; padding: 14px 10px; }
+      .intro { padding: 25px 18px; }
+      .rule-card { padding: 12px 6px; font-size: .9rem; }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after { animation: none !important; transition: none !important; }
+    }
+  </style>
+</head>
+<body>
+  <main class="game-shell">
+    <header class="topbar">
+      <a class="brand" href="/axelle/" aria-label="Revenir à l’espace d’Axelle">
+        <img src="/assets/img/mathsgo-logo.png" alt="maths&amp;go" width="1338" height="622">
+      </a>
+      <a class="space-link" href="/axelle/">L’espace d’Axelle</a>
+    </header>
+
+    <section class="game-card">
+      <header class="game-head">
+        <div>
+          <h1 class="game-title">Yavalath</h1>
+          <p class="rule-line"><span class="lose">3 alignés&nbsp;: tu perds.</span> <span class="win">4 alignés&nbsp;: tu gagnes.</span></p>
+        </div>
+        <button id="rules-button" class="rule-button" type="button">La règle</button>
+      </header>
+
+      <div class="dashboard" aria-label="Informations sur les parties">
+        <div><span>Partie</span><strong id="game-number">1 sur 5</strong></div>
+        <div><span>Niveau</span><strong id="level-label">Facile</strong></div>
+        <div><span>Score</span><strong id="score-label">0 – 0</strong></div>
+      </div>
+
+      <div id="status" class="status" aria-live="polite">
+        <span class="turn-dot" aria-hidden="true"></span>
+        <span id="status-text">À toi de jouer : pose un pion bleu.</span>
+      </div>
+
+      <div class="board-wrap">
+        <svg id="board" role="img" aria-label="Plateau hexagonal de Yavalath" preserveAspectRatio="xMidYMid meet">
+          <defs>
+            <radialGradient id="player-token" cx="34%" cy="28%" r="72%">
+              <stop offset="0%" stop-color="#72b7ff"/>
+              <stop offset="58%" stop-color="#0f6cf9"/>
+              <stop offset="100%" stop-color="#063f86"/>
+            </radialGradient>
+            <radialGradient id="ai-token" cx="34%" cy="28%" r="72%">
+              <stop offset="0%" stop-color="#ffd08b"/>
+              <stop offset="58%" stop-color="#f97316"/>
+              <stop offset="100%" stop-color="#a73e06"/>
+            </radialGradient>
+          </defs>
+          <g id="cells"></g>
+          <g id="tokens"></g>
+          <g id="marks"></g>
+        </svg>
+      </div>
+
+      <section id="result-panel" class="result-panel" hidden aria-live="assertive">
+        <h2 id="result-title"></h2>
+        <p id="result-text"></p>
+        <div class="result-actions">
+          <button id="next-game" class="primary" type="button">Partie suivante</button>
+          <a id="back-space" class="secondary" href="/axelle/">Retour à l’espace d’Axelle</a>
+        </div>
+      </section>
+    </section>
+
+    <p class="credits">Yavalath, jeu conçu par Ludi / Cameron Browne et publié par nestorgames · adaptation pédagogique non officielle.</p>
+  </main>
+
+  <div id="intro-overlay" class="overlay" role="dialog" aria-modal="true" aria-labelledby="intro-title">
+    <section class="intro">
+      <p class="eyebrow">La règle toute simple</p>
+      <h1 id="intro-title">Yavalath</h1>
+      <p class="intro-lead">Tu joues avec les pions bleus et tu commences.</p>
+      <div class="rule-cards">
+        <div class="rule-card lose"><strong>3</strong>pions alignés&nbsp;: tu perds</div>
+        <div class="rule-card win"><strong>4</strong>pions alignés&nbsp;: tu gagnes</div>
+      </div>
+      <p class="level-title">Choisis le niveau de l’ordinateur</p>
+      <div class="levels" role="group" aria-label="Niveau de l’ordinateur">
+        <button class="level-button active" type="button" data-level="easy">Facile</button>
+        <button class="level-button" type="button" data-level="hard">Difficile</button>
+      </div>
+      <button id="start-game" class="primary" type="button">J’ai compris, je joue !</button>
+      <p class="five-note">Tu peux jouer cinq parties.</p>
+    </section>
+  </div>
+
+  <script>
+    (() => {
+      const svg = document.getElementById('board');
+      const cellsGroup = document.getElementById('cells');
+      const tokensGroup = document.getElementById('tokens');
+      const marksGroup = document.getElementById('marks');
+      const overlay = document.getElementById('intro-overlay');
+      const startButton = document.getElementById('start-game');
+      const rulesButton = document.getElementById('rules-button');
+      const levelButtons = Array.from(document.querySelectorAll('.level-button'));
+      const gameNumber = document.getElementById('game-number');
+      const levelLabel = document.getElementById('level-label');
+      const scoreLabel = document.getElementById('score-label');
+      const status = document.getElementById('status');
+      const statusText = document.getElementById('status-text');
+      const resultPanel = document.getElementById('result-panel');
+      const resultTitle = document.getElementById('result-title');
+      const resultText = document.getElementById('result-text');
+      const nextGameButton = document.getElementById('next-game');
+
+      const SVG_NS = 'http://www.w3.org/2000/svg';
+      const RADIUS = 4;
+      const HEX = 40;
+      const TOKEN_RADIUS = 22;
+      const MAX_GAMES = 5;
+      const PLAYER = 'player';
+      const AI = 'ai';
+      const DIRECTIONS = [[1, 0], [0, 1], [1, -1]];
+
+      const cells = [];
+      const positions = new Map();
+      const state = new Map();
+      let level = 'easy';
+      let current = PLAYER;
+      let gameOver = false;
+      let thinking = false;
+      let lastKey = null;
+      let resultLine = [];
+      let gamesCompleted = 0;
+      let playerWins = 0;
+      let aiWins = 0;
+      let started = false;
+      let statusTimer = null;
+
+      const keyOf = (q, r) => `${q},${r}`;
+      const parseKey = key => key.split(',').map(Number);
+      const other = color => color === PLAYER ? AI : PLAYER;
+      const emptyKeys = () => cells.map(cell => cell.key).filter(key => !state.has(key));
+      const randomChoice = items => items[Math.floor(Math.random() * items.length)];
+
+      function axialToPixel(q, r) {
+        return { x: Math.sqrt(3) * HEX * (q + r / 2), y: 1.5 * HEX * r };
+      }
+
+      function hexPoints(cx, cy) {
+        return Array.from({length: 6}, (_, index) => {
+          const angle = (-90 + index * 60) * Math.PI / 180;
+          return `${(cx + HEX * Math.cos(angle)).toFixed(2)},${(cy + HEX * Math.sin(angle)).toFixed(2)}`;
+        }).join(' ');
+      }
+
+      function buildBoard() {
+        let minX = Infinity;
+        let maxX = -Infinity;
+        let minY = Infinity;
+        let maxY = -Infinity;
+
+        for (let r = -RADIUS; r <= RADIUS; r += 1) {
+          const qMin = Math.max(-RADIUS, -r - RADIUS);
+          const qMax = Math.min(RADIUS, -r + RADIUS);
+          for (let q = qMin; q <= qMax; q += 1) {
+            const key = keyOf(q, r);
+            const {x, y} = axialToPixel(q, r);
+            cells.push({key, q, r, x, y});
+            positions.set(key, {x, y});
+            minX = Math.min(minX, x - HEX);
+            maxX = Math.max(maxX, x + HEX);
+            minY = Math.min(minY, y - HEX);
+            maxY = Math.max(maxY, y + HEX);
+          }
+        }
+
+        const padding = 49;
+        svg.setAttribute('viewBox', `${minX - padding} ${minY - padding} ${maxX - minX + 2 * padding} ${maxY - minY + 2 * padding}`);
+        for (const cell of cells) {
+          const polygon = document.createElementNS(SVG_NS, 'polygon');
+          polygon.setAttribute('class', 'cell');
+          polygon.setAttribute('points', hexPoints(cell.x, cell.y));
+          polygon.dataset.key = cell.key;
+          polygon.addEventListener('click', () => playerMove(cell.key));
+          cellsGroup.appendChild(polygon);
+        }
+      }
+
+      function lineThrough(board, key, color, dq, dr) {
+        const [q0, r0] = parseKey(key);
+        const line = [key];
+        let q = q0 + dq;
+        let r = r0 + dr;
+        while (board.get(keyOf(q, r)) === color) {
+          line.push(keyOf(q, r));
+          q += dq;
+          r += dr;
+        }
+        q = q0 - dq;
+        r = r0 - dr;
+        while (board.get(keyOf(q, r)) === color) {
+          line.unshift(keyOf(q, r));
+          q -= dq;
+          r -= dr;
+        }
+        return line;
+      }
+
+      function inspectPlaced(board, key, color) {
+        const lines = DIRECTIONS.map(([dq, dr]) => lineThrough(board, key, color, dq, dr));
+        const winning = lines.find(line => line.length >= 4);
+        const losing = lines.find(line => line.length === 3);
+        const maxLine = Math.max(...lines.map(line => line.length));
+        if (winning) return {outcome: 'win', line: winning, maxLine};
+        if (losing) return {outcome: 'lose', line: losing, maxLine};
+        return {outcome: 'neutral', line: [], maxLine};
+      }
+
+      function inspectMove(key, color) {
+        if (state.has(key)) return {outcome: 'invalid', line: [], maxLine: 0};
+        state.set(key, color);
+        const result = inspectPlaced(state, key, color);
+        state.delete(key);
+        return result;
+      }
+
+      function playerMove(key) {
+        if (!started || gameOver || thinking || current !== PLAYER || state.has(key)) return;
+        const preview = inspectMove(key, PLAYER);
+        if (level === 'easy' && preview.outcome === 'lose') {
+          showTemporaryWarning('Attention : ce coup ferait exactement 3 pions. Choisis une autre case !');
+          return;
+        }
+        playMove(key, PLAYER);
+        if (!gameOver) {
+          current = AI;
+          render();
+          scheduleAi();
+        }
+      }
+
+      function playMove(key, color) {
+        state.set(key, color);
+        lastKey = key;
+        const inspected = inspectPlaced(state, key, color);
+        render();
+        if (inspected.outcome === 'win') {
+          finishGame(color, `${color === PLAYER ? 'Tu as' : 'L’ordinateur a'} aligné 4 pions.`, inspected.line);
+        } else if (inspected.outcome === 'lose') {
+          finishGame(other(color), `${color === PLAYER ? 'Tu as' : 'L’ordinateur a'} aligné exactement 3 pions.`, inspected.line);
+        } else if (state.size === cells.length) {
+          finishGame(null, 'Le plateau est plein : cette partie est terminée.', []);
+        }
+      }
+
+      function scheduleAi() {
+        thinking = true;
+        renderStatus();
+        window.setTimeout(() => {
+          const move = level === 'easy' ? chooseEasyMove() : chooseHardMove();
+          thinking = false;
+          if (!move || gameOver) return;
+          playMove(move, AI);
+          if (!gameOver) {
+            current = PLAYER;
+            render();
+          }
+        }, 520);
+      }
+
+      function chooseEasyMove() {
+        const moves = emptyKeys();
+        if (!moves.length) return null;
+        const losingMoves = moves.filter(key => inspectMove(key, AI).outcome === 'lose');
+        const neutralMoves = moves.filter(key => inspectMove(key, AI).outcome === 'neutral');
+        const playerWins = moves.filter(key => inspectMove(key, PLAYER).outcome === 'win');
+
+        if (state.size >= 9 && losingMoves.length && (state.size >= 17 || Math.random() < .42)) {
+          return randomChoice(losingMoves);
+        }
+
+        const leavesPlayerWinOpen = neutralMoves.filter(key => !playerWins.includes(key));
+        if (leavesPlayerWinOpen.length) return randomChoice(leavesPlayerWinOpen);
+        if (neutralMoves.length) return randomChoice(neutralMoves);
+        if (losingMoves.length) return randomChoice(losingMoves);
+        return randomChoice(moves);
+      }
+
+      function centerScore(key) {
+        const [q, r] = parseKey(key);
+        return -Math.max(Math.abs(q), Math.abs(r), Math.abs(-q - r));
+      }
+
+      function chooseHardMove() {
+        const moves = emptyKeys();
+        if (!moves.length) return null;
+        const wins = moves.filter(key => inspectMove(key, AI).outcome === 'win');
+        if (wins.length) return randomChoice(wins);
+
+        const safe = moves.filter(key => inspectMove(key, AI).outcome !== 'lose');
+        const candidates = safe.length ? safe : moves;
+        const playerImmediateWins = new Set(moves.filter(key => inspectMove(key, PLAYER).outcome === 'win'));
+        let bestMoves = [];
+        let bestScore = -Infinity;
+
+        for (const key of candidates) {
+          const own = inspectMove(key, AI);
+          let score = own.maxLine * 170 + centerScore(key) * 9 + Math.random() * 5;
+          if (playerImmediateWins.has(key)) score += 8000;
+          state.set(key, AI);
+          const replies = emptyKeys();
+          const playerWinsAfter = replies.filter(reply => inspectMove(reply, PLAYER).outcome === 'win').length;
+          const playerSafeLines = replies.reduce((max, reply) => Math.max(max, inspectMove(reply, PLAYER).maxLine), 0);
+          state.delete(key);
+          score -= playerWinsAfter * 6000;
+          score -= playerSafeLines * 35;
+          if (score > bestScore + .001) {
+            bestScore = score;
+            bestMoves = [key];
+          } else if (Math.abs(score - bestScore) < .001) {
+            bestMoves.push(key);
+          }
+        }
+        return randomChoice(bestMoves);
+      }
+
+      function finishGame(winner, reason, line) {
+        gameOver = true;
+        thinking = false;
+        resultLine = line;
+        gamesCompleted += 1;
+        if (winner === PLAYER) playerWins += 1;
+        if (winner === AI) aiWins += 1;
+
+        const playerWon = winner === PLAYER;
+        const draw = winner === null;
+        resultPanel.className = `result-panel${winner === AI ? ' lose' : ''}`;
+        resultTitle.textContent = draw ? 'Partie terminée' : playerWon ? 'Bravo Axelle !' : 'Cette fois, l’ordinateur gagne.';
+        resultText.textContent = `${reason} ${gamesCompleted < MAX_GAMES ? `Il te reste ${MAX_GAMES - gamesCompleted} partie${MAX_GAMES - gamesCompleted > 1 ? 's' : ''}.` : 'Tes cinq parties sont terminées.'}`;
+        resultPanel.hidden = false;
+        nextGameButton.hidden = gamesCompleted >= MAX_GAMES;
+        render();
+        resultPanel.scrollIntoView({behavior: 'smooth', block: 'nearest'});
+      }
+
+      function newGame() {
+        if (gamesCompleted >= MAX_GAMES) return;
+        state.clear();
+        resultLine = [];
+        lastKey = null;
+        current = PLAYER;
+        gameOver = false;
+        thinking = false;
+        resultPanel.hidden = true;
+        render();
+        window.scrollTo({top: 0, behavior: 'smooth'});
+      }
+
+      function render() {
+        renderTokens();
+        renderHintsAndMarks();
+        renderStatus();
+        gameNumber.textContent = gamesCompleted >= MAX_GAMES ? '5 sur 5' : `${gamesCompleted + 1} sur 5`;
+        levelLabel.textContent = level === 'easy' ? 'Facile' : 'Difficile';
+        scoreLabel.textContent = `${playerWins} – ${aiWins}`;
+      }
+
+      function renderTokens() {
+        tokensGroup.replaceChildren();
+        for (const [key, color] of state.entries()) {
+          const position = positions.get(key);
+          const token = document.createElementNS(SVG_NS, 'circle');
+          token.setAttribute('class', 'token');
+          token.setAttribute('cx', position.x);
+          token.setAttribute('cy', position.y);
+          token.setAttribute('r', TOKEN_RADIUS);
+          token.setAttribute('fill', color === PLAYER ? 'url(#player-token)' : 'url(#ai-token)');
+          tokensGroup.appendChild(token);
+        }
+      }
+
+      function renderHintsAndMarks() {
+        cellsGroup.querySelectorAll('.cell').forEach(cell => cell.classList.remove('win-hint'));
+        marksGroup.replaceChildren();
+
+        if (!gameOver && level === 'easy' && current === PLAYER && !thinking) {
+          const winningMoves = emptyKeys().filter(key => inspectMove(key, PLAYER).outcome === 'win');
+          for (const key of winningMoves) {
+            cellsGroup.querySelector(`[data-key="${key}"]`)?.classList.add('win-hint');
+          }
+        }
+
+        if (lastKey && positions.has(lastKey)) {
+          addRing(lastKey, 'last-ring');
+        }
+        if (gameOver) {
+          const winnerClass = resultPanel.classList.contains('lose') ? 'bad' : 'good';
+          resultLine.forEach(key => addRing(key, `result-ring ${winnerClass}`));
+        }
+      }
+
+      function addRing(key, className) {
+        const position = positions.get(key);
+        if (!position) return;
+        const ring = document.createElementNS(SVG_NS, 'circle');
+        ring.setAttribute('class', className);
+        ring.setAttribute('cx', position.x);
+        ring.setAttribute('cy', position.y);
+        ring.setAttribute('r', TOKEN_RADIUS + 5);
+        marksGroup.appendChild(ring);
+      }
+
+      function renderStatus() {
+        status.classList.toggle('ai', thinking || current === AI);
+        if (gameOver) {
+          statusText.textContent = gamesCompleted >= MAX_GAMES ? 'Tes cinq parties sont terminées.' : 'La partie est terminée.';
+        } else if (thinking) {
+          statusText.textContent = 'L’ordinateur réfléchit…';
+        } else {
+          statusText.textContent = 'À toi de jouer : pose un pion bleu.';
+        }
+      }
+
+      function showTemporaryWarning(message) {
+        window.clearTimeout(statusTimer);
+        status.classList.add('warning');
+        statusText.textContent = message;
+        statusTimer = window.setTimeout(() => {
+          status.classList.remove('warning');
+          renderStatus();
+        }, 2500);
+      }
+
+      function selectLevel(nextLevel) {
+        level = nextLevel;
+        levelButtons.forEach(button => button.classList.toggle('active', button.dataset.level === level));
+        render();
+      }
+
+      levelButtons.forEach(button => button.addEventListener('click', () => selectLevel(button.dataset.level)));
+      startButton.addEventListener('click', () => {
+        started = true;
+        overlay.hidden = true;
+        startButton.textContent = 'J’ai compris, je joue !';
+        render();
+      });
+      rulesButton.addEventListener('click', () => {
+        startButton.textContent = 'Continuer la partie';
+        overlay.hidden = false;
+      });
+      nextGameButton.addEventListener('click', newGame);
+
+      buildBoard();
+      selectLevel('easy');
+      render();
+    })();
+  </script>
+</body>
+</html>
