@@ -2533,7 +2533,53 @@ function makeTrigInstance(mod,q){
   return trigDirectInstance(mod,q,'On donne $$\\widehat{'+triangle.angle+'}='+degrees+'°$$ et $$'+triangle.adjacent+'='+adjacent+'\\text{ cm}$$. Calcule le périmètre du triangle. Arrondis au dixième.'+visual,'$$P=[[dec]]\\text{ cm}$$',result,triangle,{kind,degrees,adjacent});
 }
 
+function pythagoreTactileTriangleSvg(data){
+  const a=escapeHtml(data.a), b=escapeHtml(data.b), c=escapeHtml(data.c);
+  return '<svg class="pythagore-tactile-triangle" viewBox="0 0 360 210" role="img" aria-label="Triangle ABC rectangle en A" xmlns="http://www.w3.org/2000/svg">'
+    +'<polygon points="72,164 72,45 286,164" fill="#eef8ff" stroke="#1f5f8b" stroke-width="3"/>'
+    +'<polyline points="72,144 92,144 92,164" fill="none" stroke="#1f5f8b" stroke-width="3"/>'
+    +'<text x="53" y="184" font-family="serif" font-style="italic" font-size="23" fill="#17384d">A</text>'
+    +'<text x="52" y="39" font-family="serif" font-style="italic" font-size="23" fill="#17384d">B</text>'
+    +'<text x="294" y="184" font-family="serif" font-style="italic" font-size="23" fill="#17384d">C</text>'
+    +'<text x="38" y="110" text-anchor="end" font-family="Arial,sans-serif" font-size="16" font-weight="700" fill="#2471a3">AB = '+a+' cm</text>'
+    +'<text x="182" y="184" text-anchor="middle" font-family="Arial,sans-serif" font-size="16" font-weight="700" fill="#d46a00">AC = '+b+' cm</text>'
+    +'<text x="205" y="91" text-anchor="middle" transform="rotate(29 205 91)" font-family="Arial,sans-serif" font-size="16" font-weight="700" fill="#087a55">BC = '+c+' cm</text>'
+    +'</svg>';
+}
+
+function pythagoreTactileHtml(data,correction=false){
+  const triangle=pythagoreTactileTriangleSvg(data);
+  const relation=correction
+    ? '<div class="pythagore-tactile-solution-line"><strong>BC²</strong> = <strong>AB²</strong> + <strong>AC²</strong></div><div class="pythagore-tactile-solution-line"><strong>'+escapeHtml(data.cSquared)+'</strong> = <strong>'+escapeHtml(data.aSquared)+'</strong> + <strong>'+escapeHtml(data.bSquared)+'</strong></div>'
+    : '<div class="pythagore-tactile-equation" aria-label="Égalité à compléter">'
+      +'<button class="pythagore-tactile-drop" type="button" data-slot="0" data-accept="label">…</button><span>=</span>'
+      +'<button class="pythagore-tactile-drop" type="button" data-slot="1" data-accept="label">…</button><span>+</span>'
+      +'<button class="pythagore-tactile-drop" type="button" data-slot="2" data-accept="label">…</button></div>'
+      +'<div class="pythagore-tactile-values" aria-label="Valeurs à placer">'
+      +'<span class="pythagore-tactile-caption">Puis les aires des carrés :</span>'
+      +'<button class="pythagore-tactile-drop" type="button" data-slot="3" data-accept="value">…</button><span>=</span>'
+      +'<button class="pythagore-tactile-drop" type="button" data-slot="4" data-accept="value">…</button><span>+</span>'
+      +'<button class="pythagore-tactile-drop" type="button" data-slot="5" data-accept="value">…</button></div>'
+      +'<div class="pythagore-tactile-palette" data-palette="labels"><span class="pythagore-tactile-caption">Étiquettes</span>'
+      +['BC²','AB²','AC²'].map((token,index)=>'<button class="pythagore-tactile-token label-token" type="button" data-token="'+token+'" data-token-group="label" aria-label="Déplacer '+token+'">'+token+'</button>').join('')+'</div>'
+      +'<div class="pythagore-tactile-palette" data-palette="values"><span class="pythagore-tactile-caption">Valeurs</span>'
+      +[data.cSquared,data.aSquared,data.bSquared].map(token=>'<button class="pythagore-tactile-token value-token" type="button" data-token="'+escapeHtml(token)+'" data-token-group="value" aria-label="Déplacer '+escapeHtml(token)+'">'+escapeHtml(token)+'</button>').join('')+'</div>'
+      +'<p class="pythagore-tactile-hint" data-tactile-feedback>Appuie sur une étiquette puis sur une case, ou fais-la glisser.</p>';
+  return '<div class="pythagore-tactile" data-kind="relation-and-values">'
+    +'<div class="pythagore-tactile-prompt">Le triangle <strong>ABC</strong> est rectangle en <strong>A</strong>. Construis l’égalité de Pythagore, puis remplace les valeurs.</div>'
+    +triangle+relation+'</div>';
+}
+
+function makePythagoreTactileInstance(mod,q){
+  const scope=q.options&&q.options.formula_code?runCode(q.options.formula_code):{};
+  const a=Number(scope.a),b=Number(scope.b),c=Number(scope.c);
+  const data={kind:'relation-and-values',a,b,c,aSquared:String(a*a),bSquared:String(b*b),cSquared:String(c*c),labels:['BC²','AB²','AC²']};
+  const answers=['BC²','AB²','AC²',data.cSquared,data.aSquared,data.bSquared];
+  return {module:mod,q,scope,answers,answerChoices:[],rawStatement:q.statement||'',rawFooter:'',hasSvg:true,pythagoreTactile:data};
+}
+
 function makeInstance(mod,q){
+  if(q&&q.options&&q.options.pythagore_tactile_kind) return makePythagoreTactileInstance(mod,q);
   if(mod&&mod.id==='dnb_01') return makeModule01Instance(mod,q);
   if(mod&&mod.id==='dnb_02b') return makePlaceValueInstance(mod,q);
   if(mod&&['dnb_03','dnb_03b'].includes(mod.id)) return makeFractionOpsInstance(mod,q);
@@ -4385,6 +4431,7 @@ function renderProportionModule(inst,correction=false,mode=null){
 }
 function renderQuestion(inst, correction=false, mode=null){
   if(mode===null) mode=document.getElementById('visualMode').value;
+  if(inst&&inst.pythagoreTactile) return pythagoreTactileHtml(inst.pythagoreTactile,correction);
   if(inst && inst.module && inst.module.id==='dnb_01') return renderModule01(inst, correction, mode);
   if(inst && inst.module && inst.module.id==='dnb_02b') return renderPlaceValueModule(inst, correction, mode);
   if(inst && inst.module && ['dnb_03','dnb_03b'].includes(inst.module.id)) return renderFractionOpsModule(inst, correction, mode);
