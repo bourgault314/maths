@@ -3,7 +3,8 @@ const RAW_MODULES = [
   ...modulesInDomain(RAW_NUMBER_MODULES,'numbers'),
   ...modulesInDomain(RAW_GEOMETRY_MODULES,'geometry'),
   ...modulesInDomain(RAW_DATA_MODULES,'data'),
-  ...modulesInDomain(RAW_ALGORITHM_MODULES,'algorithm')
+  ...modulesInDomain(RAW_ALGORITHM_MODULES,'algorithm'),
+  ...modulesInDomain(RAW_RELATIVE_TOKENS_MODULES,'numbers')
 ];
 const PROFESSIONAL_MODULE_TITLES={
   dnb_01:'Écriture décimale des fractions simples',
