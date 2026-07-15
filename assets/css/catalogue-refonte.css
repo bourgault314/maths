@@ -133,6 +133,32 @@ select { cursor: pointer; }
   line-height: 1.55;
 }
 
+.domain-mobile-box {
+  display: none;
+  align-items: center;
+  gap: 10px;
+  min-height: 47px;
+  padding: 0 14px;
+  border: 1px solid #ced9e5;
+  border-radius: 14px;
+  background: #fff;
+}
+.domain-mobile-box label {
+  flex: 0 0 auto;
+  color: #6a788b;
+  font-size: 0.83rem;
+  font-weight: 800;
+}
+.domain-mobile-box select {
+  min-width: 0;
+  flex: 1;
+  border: 0;
+  outline: 0;
+  color: var(--blue-dark);
+  background: transparent;
+  font-weight: 780;
+}
+
 .catalogue-controls {
   display: grid;
   grid-template-columns: minmax(230px, 1fr) minmax(230px, 330px);
@@ -479,6 +505,8 @@ select { cursor: pointer; }
   .hero { margin-bottom: 21px; }
   .catalogue-controls { grid-template-columns: 1fr; gap: 9px; }
   .type-box { min-height: 47px; }
+  .domain-nav { display: none; }
+  .domain-mobile-box { display: flex; margin-bottom: 10px; }
   .domain-nav {
     gap: 7px;
     margin-right: -15px;
