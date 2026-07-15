@@ -668,6 +668,27 @@ select { cursor: pointer; }
   color: #162e4e;
   font-size: 1.08rem;
   line-height: 1.22;
+  overflow-wrap: anywhere;
+}
+
+.collection-card {
+  background: linear-gradient(145deg, #fff 0%, var(--soft, #eef5fb) 165%);
+}
+
+.collection-label {
+  position: relative;
+  z-index: 1;
+  align-self: flex-start;
+  margin: 0 0 9px;
+  padding: 4px 8px;
+  border-radius: 999px;
+  color: var(--accent, var(--blue));
+  background: var(--soft, #eef5fb);
+  font-size: .68rem;
+  font-weight: 850;
+  letter-spacing: .045em;
+  line-height: 1;
+  text-transform: uppercase;
 }
 
 .notion-card p {

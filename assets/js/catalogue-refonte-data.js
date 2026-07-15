@@ -118,6 +118,35 @@ window.MATHSGO_CATALOGUE = {
       "featured": true
     }
   ],
+  "resourceClassifications": {
+    "outils/box_barre_final.html": { "primaryNotion": "schemas-barres", "collections": ["splat"], "tags": ["schema-barres", "splat"] },
+    "outils/box_pasbarre_final.html": { "primaryNotion": "schemas-barres", "collections": ["splat"], "tags": ["schema-barres", "splat"] },
+    "outils/tuiles_algebriques/tuiles_algebriques.html": { "primaryNotion": "calcul-litteral", "collections": ["tuiles-algebriques"], "tags": ["tuiles-algebriques"] },
+    "outils/tuiles_algebriques/tuiles_algebriques_mode_equation.html": { "primaryNotion": "equations", "collections": ["tuiles-algebriques"], "tags": ["tuiles-algebriques"] },
+    "outils/detective_des_grandeurs_additive__1.pdf": { "primaryNotion": "schemas-barres", "collections": ["splat"], "tags": ["schema-barres", "splat"] },
+    "outils/detective_des_grandeurs_additive__2.pdf": { "primaryNotion": "schemas-barres", "collections": ["splat"], "tags": ["schema-barres", "splat"] },
+    "outils/detective_des_grandeurs_multiplicative__1.pdf": { "primaryNotion": "schemas-barres", "collections": ["splat"], "tags": ["schema-barres", "splat"] },
+    "outils/equabarre.html": { "primaryNotion": "equations", "collections": ["splat"], "tags": ["schema-barres", "splat"] },
+    "outils/equasplat.html": { "primaryNotion": "equations", "collections": ["splat"], "tags": ["schema-barres", "splat"] },
+    "outils/gabarits_enquetes_additive.pdf": { "primaryNotion": "schemas-barres", "collections": ["splat"], "tags": ["schema-barres", "splat"] },
+    "outils/gabarits_enquetes_multiplicative.pdf": { "primaryNotion": "schemas-barres", "collections": ["splat"], "tags": ["schema-barres", "splat"] },
+    "outils/gabarits_partage_equitable_2_3_4_5.pdf": { "primaryNotion": "schemas-barres", "collections": ["splat"], "tags": ["schema-barres", "splat"] },
+    "outils/sheet_generator_schema_partie_tout.html": { "primaryNotion": "schemas-barres", "collections": ["splat"], "tags": ["schema-barres", "splat"] },
+    "outils/tuiles_algebriques/livret_litteral_blanc_gris.pdf": { "primaryNotion": "calcul-litteral", "collections": ["tuiles-algebriques"], "tags": ["tuiles-algebriques"] },
+    "outils/tuiles_algebriques/livret_litteral_bleu_jaune.pdf.pdf": { "primaryNotion": "calcul-litteral", "collections": ["tuiles-algebriques"], "tags": ["tuiles-algebriques"] },
+    "outils/tuiles_algebriques/livret_litteral_mathigon.pdf": { "primaryNotion": "calcul-litteral", "collections": ["tuiles-algebriques"], "tags": ["tuiles-algebriques"] },
+    "outils/tuiles_algebriques/livret_litteral_vert_rouge.pdf": { "primaryNotion": "calcul-litteral", "collections": ["tuiles-algebriques"], "tags": ["tuiles-algebriques"] },
+    "outils/fabrication_materiel/maths_barre.html": { "primaryNotion": "schemas-barres", "collections": ["splat"], "tags": ["schema-barres", "splat"] },
+    "outils/patterns.html": { "primaryNotion": "patterns", "collections": [], "tags": ["patterns", "generalisation"] },
+    "outils/problemes_barres.html": { "primaryNotion": "schemas-barres", "collections": ["splat"], "tags": ["schema-barres", "splat"] },
+    "outils/problemes_barres_M974.html": { "primaryNotion": "schemas-barres", "collections": ["splat"], "tags": ["schema-barres", "splat"] },
+    "outils/splat.html": { "primaryNotion": "schemas-barres", "collections": ["splat"], "tags": ["schema-barres", "splat"] },
+    "outils/splat_tache_barre.html": { "primaryNotion": "schemas-barres", "collections": ["splat"], "tags": ["schema-barres", "splat"] },
+    "outils/splat_equations.html": { "primaryNotion": "equations", "collections": ["splat"], "tags": ["schema-barres", "splat"] },
+    "outils/tuiles_algebriques/generateur_exercices_calcul_litteral.html": { "primaryNotion": "calcul-litteral", "collections": ["tuiles-algebriques"], "tags": ["tuiles-algebriques"] },
+    "outils/tuiles_algebriques/generateur_tuiles.html": { "primaryNotion": "calcul-litteral", "collections": ["tuiles-algebriques"], "tags": ["tuiles-algebriques"] },
+    "outils/pythabarre.html": { "primaryNotion": "pythagore", "collections": [], "tags": ["schema-barres"] }
+  },
   "domains": [
     {
       "id": "nombres-calculs",

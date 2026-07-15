@@ -8,8 +8,10 @@
   const published = catalogue.resources.filter((resource) => resource.status === "published");
   const domainMap = new Map(catalogue.domains.map((domain) => [domain.id, domain]));
   const notionMap = new Map(catalogue.notions.map((notion) => [notion.id, notion]));
+  const collectionMap = new Map((catalogue.collections || []).map((collection) => [collection.id, collection]));
   const typeMap = new Map(catalogue.types.map((type) => [type.id, type]));
   const facetMap = new Map((catalogue.facets || []).map((facet) => [facet.id, facet]));
+  const resourceClassifications = catalogue.resourceClassifications || {};
   const mainDomainIds = [
     "nombres-calculs",
     "algebre",
@@ -201,10 +203,22 @@
     }
   };
 
+  const collectionDesign = {
+    "tuiles-algebriques": {
+      description: "Retrouver les plateaux, générateurs et livrets de tuiles algébriques.",
+      icon: "tiles"
+    },
+    splat: {
+      description: "Retrouver Splat et les outils de modélisation par schémas en barres.",
+      icon: "splat"
+    }
+  };
+
   const state = {
     domain: new URLSearchParams(window.location.search).get("domain") || "",
     query: "",
-    notion: new URLSearchParams(window.location.search).get("notion") || ""
+    notion: new URLSearchParams(window.location.search).get("notion") || "",
+    collection: new URLSearchParams(window.location.search).get("collection") || ""
   };
 
   const domainGrid = document.getElementById("domain-grid");
@@ -250,14 +264,18 @@
     const params = new URLSearchParams(window.location.search);
     state.domain = params.get("domain") || "";
     state.notion = params.get("notion") || "";
+    state.collection = params.get("collection") || "";
     state.query = "";
 
     if (state.notion && !notionMap.has(state.notion)) state.notion = "";
+    if (state.collection && !collectionMap.has(state.collection)) state.collection = "";
     if (state.domain && !domainMap.has(state.domain)) state.domain = "";
     if (state.notion) state.domain = notionMap.get(state.notion)?.domain || state.domain;
+    if (state.collection) state.domain = collectionMap.get(state.collection)?.domain || state.domain;
   }
 
   function viewLevel() {
+    if (state.collection) return "collection";
     if (state.notion) return "notion";
     if (state.domain) return "domain";
     return state.query ? "search" : "entry";
@@ -267,6 +285,7 @@
     const params = new URLSearchParams();
     if (state.domain) params.set("domain", state.domain);
     if (state.notion) params.set("notion", state.notion);
+    if (state.collection) params.set("collection", state.collection);
     const query = params.toString();
     return `${window.location.pathname}${query ? `?${query}` : ""}`;
   }
@@ -377,8 +396,35 @@
     return published.filter((resource) => resource.domains.includes(domainId)).length;
   }
 
-  function notionResourceCount(notionId) {
-    return published.filter((resource) => resource.notions.includes(notionId)).length;
+  function resourceClassification(resource) {
+    return resourceClassifications[resource.path] || {};
+  }
+
+  function resourceBelongsToNotion(resource, notionId) {
+    const primaryNotion = resourceClassification(resource).primaryNotion;
+    return primaryNotion ? primaryNotion === notionId : resource.notions.includes(notionId);
+  }
+
+  function resourcePrimaryNotion(resource) {
+    return resourceClassification(resource).primaryNotion || resource.notions[0] || "";
+  }
+
+  function resourceCollections(resource) {
+    return resourceClassification(resource).collections || resource.collections || [];
+  }
+
+  function resourceTags(resource) {
+    return [...(resource.tags || []), ...(resourceClassification(resource).tags || [])];
+  }
+
+  function notionResourceCount(notionId, domainId = "") {
+    return published.filter((resource) => (
+      (!domainId || resource.domains.includes(domainId)) && resourceBelongsToNotion(resource, notionId)
+    )).length;
+  }
+
+  function collectionResourceCount(collectionId) {
+    return published.filter((resource) => resourceCollections(resource).includes(collectionId)).length;
   }
 
   function resourceFacets(resource) {
@@ -432,22 +478,39 @@
     return catalogue.notions.filter((notion) => {
       if (state.domain && notion.domain !== state.domain) return false;
       if (notionDesign[notion.id]?.hiddenFromBrowse) return false;
-      if (!notionResourceCount(notion.id) && !notionDesign[notion.id]?.showWhenEmpty) return false;
+      if (!notionResourceCount(notion.id, notion.domain) && !notionDesign[notion.id]?.showWhenEmpty) return false;
       if (state.query && !allWordsMatch(notionHaystack(notion), state.query)) return false;
       return true;
+    });
+  }
+
+  function matchingCollections() {
+    return (catalogue.collections || []).filter((collection) => {
+      if (state.domain && collection.domain !== state.domain) return false;
+      return collectionResourceCount(collection.id) > 0;
     });
   }
 
   function resourceHaystack(resource) {
     const domains = resource.domains.map((id) => domainMap.get(id)?.title || "");
     const notions = resource.notions.map((id) => notionMap.get(id)?.title || "");
-    return [resource.title, resource.description, ...(resource.keywords || []), ...domains, ...notions].join(" ");
+    const collections = resourceCollections(resource).map((id) => collectionMap.get(id)?.title || id);
+    return [
+      resource.title,
+      resource.description,
+      ...(resource.keywords || []),
+      ...resourceTags(resource),
+      ...domains,
+      ...notions,
+      ...collections
+    ].join(" ");
   }
 
   function matchingResources() {
     return published.filter((resource) => {
       if (state.domain && !resource.domains.includes(state.domain)) return false;
-      if (state.notion && !resource.notions.includes(state.notion)) return false;
+      if (state.notion && !resourceBelongsToNotion(resource, state.notion)) return false;
+      if (state.collection && !resourceCollections(resource).includes(state.collection)) return false;
       if (state.query && !allWordsMatch(resourceHaystack(resource), state.query)) return false;
       return true;
     });
@@ -457,14 +520,18 @@
     return `?domain=${encodeURIComponent(notion.domain)}&notion=${encodeURIComponent(notion.id)}`;
   }
 
-  function renderNotions(notions) {
+  function collectionHref(collection) {
+    return `?domain=${encodeURIComponent(collection.domain)}&collection=${encodeURIComponent(collection.id)}`;
+  }
+
+  function renderNotions(notions, collections) {
     domainGrid.hidden = true;
     notionGrid.hidden = false;
     resourceGrid.hidden = true;
     resourceGrid.innerHTML = "";
-    notionGrid.innerHTML = notions.map((notion) => {
+    const notionCards = notions.map((notion) => {
       const design = notionDesign[notion.id] || {};
-      const count = notionResourceCount(notion.id);
+      const count = notionResourceCount(notion.id, notion.domain);
       return `<a class="notion-card" data-notion-card="${escapeHtml(notion.id)}" href="${escapeHtml(notionHref(notion))}" style="${domainStyle(notion.domain)}">
         <span class="notion-top">
           <span class="notion-icon">${icon(design.icon)}</span>
@@ -473,11 +540,25 @@
         <p>${escapeHtml(design.description || "Découvrir les outils de ce thème.")}</p>
         <span class="notion-count">${count ? `${count} ressource${count > 1 ? "s" : ""}` : "Bientôt"}</span>
       </a>`;
-    }).join("") || `<p class="empty-state">Aucun thème ne correspond à cette recherche.</p>`;
+    });
+    const collectionCards = collections.map((collection) => {
+      const design = collectionDesign[collection.id] || {};
+      const count = collectionResourceCount(collection.id);
+      return `<a class="notion-card collection-card" data-collection-card="${escapeHtml(collection.id)}" href="${escapeHtml(collectionHref(collection))}" style="${domainStyle(collection.domain)}">
+        <span class="collection-label">Collection</span>
+        <span class="notion-top">
+          <span class="notion-icon">${icon(design.icon)}</span>
+          <h3>${escapeHtml(collection.title)}</h3>
+        </span>
+        <p>${escapeHtml(design.description || "Retrouver cette collection d’outils.")}</p>
+        <span class="notion-count">${count} ressource${count > 1 ? "s" : ""}</span>
+      </a>`;
+    });
+    notionGrid.innerHTML = [...notionCards, ...collectionCards].join("") || `<p class="empty-state">Aucun thème ne correspond à cette recherche.</p>`;
   }
 
   function resourceMeta(resource) {
-    const notion = notionMap.get(resource.notions[0]);
+    const notion = notionMap.get(resourcePrimaryNotion(resource));
     const facetLabels = [...resourceFacets(resource)].slice(0, 2).map((id) => facetMap.get(id)?.label).filter(Boolean);
     const fallback = (resource.types || []).map((id) => typeMap.get(id)?.label).find(Boolean);
     return [notion?.title, ...facetLabels, facetLabels.length ? "" : (fallback || "Outil interactif")].filter(Boolean).join(" · ");
@@ -541,12 +622,12 @@
     clearButton.hidden = !state.query;
 
     const selectedNotion = notionMap.get(state.notion);
+    const selectedCollection = collectionMap.get(state.collection);
     const selectedDomain = domainMap.get(state.domain);
-    const queryHasNotionMatches = Boolean(state.query && matchingNotions().length);
-    const showResources = Boolean(state.notion || (state.query && !queryHasNotionMatches));
+    const showResources = Boolean(state.notion || state.collection || state.query);
     const level = viewLevel();
 
-    mainPanel.classList.toggle("catalogue-deep-view", level === "domain" || level === "notion");
+    mainPanel.classList.toggle("catalogue-deep-view", level === "domain" || level === "notion" || level === "collection");
     mainPanel.dataset.catalogueView = level;
     backButton.hidden = level === "entry";
 
@@ -564,7 +645,12 @@
       const resources = matchingResources();
       renderResources(resources);
 
-      if (selectedNotion) {
+      if (selectedCollection) {
+        pageTitle.textContent = selectedCollection.title;
+        heroLead.textContent = collectionDesign[selectedCollection.id]?.description || "Les outils disponibles dans cette collection.";
+        title.textContent = `Les outils — ${selectedCollection.title}`;
+        backButton.textContent = `← ${selectedDomain?.title || "Toutes les notions"}`;
+      } else if (selectedNotion) {
         pageTitle.textContent = selectedNotion.title;
         heroLead.textContent = notionDesign[selectedNotion.id]?.description || "Les outils disponibles pour ce thème.";
         title.textContent = `Les outils — ${selectedNotion.title}`;
@@ -581,15 +667,19 @@
     }
 
     const notions = matchingNotions();
-    renderNotions(notions);
+    const collections = matchingCollections();
+    renderNotions(notions, collections);
     pageTitle.textContent = selectedDomain ? selectedDomain.title : "Choisissez une notion";
     heroLead.textContent = selectedDomain
       ? `Les thèmes de ${selectedDomain.title.toLowerCase()} présents sur maths&go.`
       : "Retrouvez les notions illustrées de maths&go.";
-    title.textContent = state.query ? "Notions trouvées" : (selectedDomain ? "Choisissez une notion" : "Les notions");
+    title.textContent = state.query ? "Notions trouvées" : (selectedDomain ? "Choisissez une notion ou une collection" : "Les notions");
     backButton.textContent = selectedDomain ? "← Tous les domaines" : "← Effacer la recherche";
-    summary.textContent = notions.length
-      ? `${notions.length} notion${notions.length > 1 ? "s" : ""}`
+    summary.textContent = notions.length || collections.length
+      ? [
+        notions.length ? `${notions.length} notion${notions.length > 1 ? "s" : ""}` : "",
+        collections.length ? `${collections.length} collection${collections.length > 1 ? "s" : ""}` : ""
+      ].filter(Boolean).join(" · ")
       : "Cette porte est prête pour les prochaines ressources.";
   }
 
@@ -600,6 +690,7 @@
     rememberCurrentScroll();
     state.domain = button.dataset.domainCard || "";
     state.notion = "";
+    state.collection = "";
     state.query = "";
     searchInput.value = "";
     writeHistory("push", fromLevel);
@@ -608,15 +699,17 @@
   });
 
   notionGrid.addEventListener("click", (event) => {
-    const link = event.target.closest("[data-notion-card]");
+    const link = event.target.closest("[data-notion-card], [data-collection-card]");
     if (!link || event.button !== 0 || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return;
     event.preventDefault();
-    const notion = notionMap.get(link.dataset.notionCard);
-    if (!notion) return;
     const fromLevel = viewLevel();
     rememberCurrentScroll();
-    state.domain = notion.domain;
-    state.notion = notion.id;
+    const collection = collectionMap.get(link.dataset.collectionCard);
+    const notion = notionMap.get(link.dataset.notionCard);
+    if (!collection && !notion) return;
+    state.domain = collection?.domain || notion.domain;
+    state.notion = notion?.id || "";
+    state.collection = collection?.id || "";
     state.query = "";
     searchInput.value = "";
     writeHistory("push", fromLevel);
@@ -627,6 +720,7 @@
   searchInput.addEventListener("input", () => {
     state.query = searchInput.value;
     state.notion = "";
+    state.collection = "";
     render();
   });
 
@@ -638,13 +732,14 @@
   });
 
   backButton.addEventListener("click", () => {
-    if (state.notion) {
+    if (state.notion || state.collection) {
       if (history.state?.fromLevel === "domain") {
         history.back();
         return;
       }
-      state.domain = notionMap.get(state.notion)?.domain || state.domain;
+      state.domain = notionMap.get(state.notion)?.domain || collectionMap.get(state.collection)?.domain || state.domain;
       state.notion = "";
+      state.collection = "";
       writeHistory("replace");
       render();
       moveToTopAndFocus();
