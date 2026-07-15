@@ -20,6 +20,7 @@ const PROFESSIONAL_MODULE_TITLES={
   dnb_22:'Aires : rectangle, carré, triangle et disque',
   dnb_23:'Volumes : cube, pavé droit, prisme et cylindre',
   dnb_24:'Théorème de Pythagore : égalité et situations',
+  dnb_24_tactile:'Pythagore manipulable — téléphone',
   dnb_25:'Théorème de Thalès : triangles emboîtés',
   dnb_26:'Cosinus dans un triangle rectangle',
   dnb_32:'Lire des tableaux, diagrammes et graphiques',
