@@ -237,7 +237,7 @@ window.MATHSGO_CATALOGUE = {
     },
     {
       "id": "calcul-litteral",
-      "title": "La pensée algébrique",
+      "title": "Expressions littérales et tuiles",
       "domain": "algebre"
     },
     {
