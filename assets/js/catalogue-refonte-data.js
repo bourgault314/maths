@@ -178,14 +178,14 @@ window.MATHSGO_CATALOGUE = {
       "primaryNotion": "pythagore",
       "collections": [],
       "tags": ["puzzle", "aires", "pythagore"],
-      "thumbnail": "assets/img/thumbnails/moulin-pythagore-capture.svg?v=5",
+      "thumbnail": "assets/img/thumbnails/moulin-pythagore-capture.svg?v=6",
       "cardDescription": "Déplacer les pièces de puzzles pour visualiser l’égalité des aires du théorème de Pythagore."
     },
     "outils/pythabarre.html": {
       "primaryNotion": "pythagore",
       "collections": [],
       "tags": ["schema-barres", "moulin", "pythagore"],
-      "thumbnail": "assets/img/thumbnails/pythabarre-capture.svg?v=5",
+      "thumbnail": "assets/img/thumbnails/pythabarre-capture.svg?v=6",
       "cardDescription": "Dérouler le théorème pas à pas avec le calcul, le schéma en barres et le moulin de Pythagore."
     }
   },
