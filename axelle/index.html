@@ -16,7 +16,10 @@
       <button id="brand-home-button" class="brand-home-button" type="button" aria-label="Revenir à l’accueil de l’espace d’Axelle">
         <img class="brand-logo" src="/assets/img/mathsgo-logo.png" alt="maths&go" width="1338" height="622">
       </button>
-      <button id="space-home-button" class="space-name" type="button">L’espace d’Axelle</button>
+      <button id="space-home-button" class="space-name" type="button" aria-label="Revenir à l’accueil d’Axelle">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m3 11 9-8 9 8v9a1 1 0 0 1-1 1h-5v-7H9v7H4a1 1 0 0 1-1-1Z"/></svg>
+        <span>Accueil d’Axelle</span>
+      </button>
     </header>
 
     <section id="welcome-screen" class="screen welcome-screen" aria-labelledby="welcome-title">
@@ -107,7 +110,12 @@
       <div class="finish-actions">
         <button id="restart-button" class="primary-button" type="button">Rejouer</button>
         <a class="bonus-button" href="yavalath.html">
-          <span>Bonus&nbsp;: jouer à Yavalath</span><small>5 parties contre l’ordinateur</small>
+          <svg class="bonus-icon" viewBox="0 0 64 64" aria-hidden="true">
+            <path d="M32 3 56 17v30L32 61 8 47V17Z" fill="#fff" stroke="#0755b8" stroke-width="3"/>
+            <g fill="#0f6cf9"><circle cx="20" cy="23" r="5"/><circle cx="32" cy="32" r="5"/><circle cx="44" cy="41" r="5"/></g>
+            <g fill="#f97316"><circle cx="43" cy="21" r="5"/><circle cx="21" cy="43" r="5"/></g>
+          </svg>
+          <span class="bonus-copy"><span>Bonus&nbsp;: jouer à Yavalath</span><small>3 parties contre l’ordinateur</small></span>
         </a>
       </div>
     </section>
