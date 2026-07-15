@@ -1,0 +1,193 @@
+{
+  "schemaVersion": 1,
+  "updatedAt": "2026-07-15",
+  "description": "Catalogue central des points d’entrée publics. Les fichiers restent à leur emplacement actuel ; les placements pilotent leur affichage virtuel futur.",
+  "uiConnected": false,
+  "vocabularies": {
+    "themes": [
+      { "id": "nombres-calcul", "label": "Nombres et calculs" },
+      { "id": "fractions", "label": "Fractions et nombres rationnels" },
+      { "id": "grandeurs-mesures", "label": "Proportionnalité, fonctions et grandeurs" },
+      { "id": "geometrie", "label": "Espace et géométrie" },
+      { "id": "algebre", "label": "Calcul littéral et algèbre" },
+      { "id": "donnees-probabilites", "label": "Données, statistiques et probabilités" },
+      { "id": "pensee-informatique", "label": "Pensée informatique" },
+      { "id": "problemes", "label": "Résolution de problèmes" },
+      { "id": "jeux-recherche", "label": "Jeux et recherche" }
+    ],
+    "uses": [
+      { "id": "manipuler", "label": "Manipuler" },
+      { "id": "projeter", "label": "Projeter en classe" },
+      { "id": "entrainer", "label": "S’entraîner" },
+      { "id": "imprimer", "label": "Imprimer" },
+      { "id": "fabriquer", "label": "Fabriquer du matériel" }
+    ],
+    "audiences": [
+      { "id": "eleve", "label": "Élève" },
+      { "id": "enseignant", "label": "Enseignant" },
+      { "id": "classe", "label": "Classe / TNI" }
+    ],
+    "statuses": [
+      { "id": "published", "label": "Publié" },
+      { "id": "work-in-progress", "label": "En cours" },
+      { "id": "review", "label": "À vérifier" },
+      { "id": "hidden", "label": "Non affiché" }
+    ]
+  },
+  "resources": [
+    {
+      "id": "angles",
+      "title": "Angles",
+      "description": "Outils à imprimer, plateaux de manipulation et ressources à projeter autour des angles.",
+      "path": "outils/angles/",
+      "kind": "collection",
+      "status": "published",
+      "themes": ["geometrie", "grandeurs-mesures"],
+      "uses": ["manipuler", "projeter", "imprimer"],
+      "audiences": ["enseignant", "classe"]
+    },
+    {
+      "id": "automatismes",
+      "title": "Automatismes",
+      "description": "Automatismes à projeter ou imprimer et cahiers de calcul mental.",
+      "path": "outils/automatismes/index.html",
+      "kind": "collection",
+      "status": "published",
+      "themes": ["nombres-calcul", "algebre"],
+      "uses": ["projeter", "entrainer", "imprimer"],
+      "audiences": ["eleve", "enseignant", "classe"]
+    },
+    {
+      "id": "automatismes-cycle-4-dnb",
+      "title": "Automatismes Cycle 4 – DNB",
+      "description": "Générateur interactif de séries d’automatismes pour l’entraînement et la projection.",
+      "path": "auto/",
+      "kind": "tool",
+      "status": "work-in-progress",
+      "themes": ["nombres-calcul", "grandeurs-mesures", "geometrie", "algebre"],
+      "uses": ["projeter", "entrainer"],
+      "audiences": ["eleve", "enseignant", "classe"]
+    },
+    {
+      "id": "bouliers-abaques",
+      "title": "Bouliers et abaques",
+      "description": "Activités et outils virtuels pour apprendre à compter en manipulant.",
+      "path": "outils/bouliers/",
+      "kind": "collection",
+      "status": "published",
+      "themes": ["nombres-calcul"],
+      "uses": ["manipuler", "projeter"],
+      "audiences": ["eleve", "enseignant", "classe"]
+    },
+    {
+      "id": "club-maths",
+      "title": "Club Maths",
+      "description": "Explorations, jeux en ligne, fiches et plateaux de jeu.",
+      "path": "outils/club_maths/index.html",
+      "kind": "collection",
+      "status": "published",
+      "themes": ["jeux-recherche"],
+      "uses": ["manipuler", "entrainer", "imprimer"],
+      "audiences": ["eleve", "enseignant", "classe"]
+    },
+    {
+      "id": "conversions",
+      "title": "Conversions",
+      "description": "Matériel réel et virtuel pour fabriquer, projeter et s’exercer.",
+      "path": "outils/conversions/",
+      "kind": "collection",
+      "status": "published",
+      "themes": ["grandeurs-mesures", "nombres-calcul"],
+      "uses": ["manipuler", "projeter", "entrainer", "fabriquer"],
+      "audiences": ["eleve", "enseignant", "classe"]
+    },
+    {
+      "id": "engrenages",
+      "title": "Engrenages",
+      "description": "Outils pour manipuler, comprendre et générer des exercices sur les engrenages.",
+      "path": "outils/engrenages/",
+      "kind": "collection",
+      "status": "published",
+      "themes": ["nombres-calcul", "problemes"],
+      "uses": ["manipuler", "projeter", "entrainer"],
+      "audiences": ["eleve", "enseignant", "classe"]
+    },
+    {
+      "id": "fabrication-materiel",
+      "title": "Fabrication de matériel",
+      "description": "Générateurs de matériel à imprimer, découper et plastifier.",
+      "path": "outils/fabrication_materiel/",
+      "kind": "collection",
+      "status": "published",
+      "themes": ["nombres-calcul", "grandeurs-mesures", "geometrie"],
+      "uses": ["imprimer", "fabriquer"],
+      "audiences": ["enseignant"]
+    },
+    {
+      "id": "fractions",
+      "title": "Fractions et nombres rationnels",
+      "description": "Manipuler les fractions et relier quotients, écritures et nombres rationnels.",
+      "path": "outils/fractions/index_fractions.html",
+      "kind": "collection",
+      "status": "published",
+      "themes": ["fractions", "nombres-calcul"],
+      "uses": ["manipuler", "projeter", "entrainer", "imprimer", "fabriquer"],
+      "audiences": ["eleve", "enseignant", "classe"]
+    },
+    {
+      "id": "nombres-relatifs",
+      "title": "Nombres relatifs",
+      "description": "Introduction, manipulation et ressources autour des jetons relatifs.",
+      "path": "outils/nombres_relatifs/index.html",
+      "kind": "collection",
+      "status": "published",
+      "themes": ["nombres-calcul"],
+      "uses": ["manipuler", "projeter", "entrainer", "imprimer"],
+      "audiences": ["eleve", "enseignant", "classe"]
+    },
+    {
+      "id": "patterns",
+      "title": "Patterns",
+      "description": "Générateur de patterns pour construire un parcours vers l’algèbre.",
+      "path": "outils/patterns.html",
+      "kind": "tool",
+      "status": "work-in-progress",
+      "themes": ["algebre", "problemes"],
+      "uses": ["manipuler", "projeter", "entrainer"],
+      "audiences": ["eleve", "enseignant", "classe"]
+    },
+    {
+      "id": "plateaux-manipulation",
+      "title": "Plateaux de manipulation",
+      "description": "Espaces de travail pour projeter les manipulations des élèves.",
+      "path": "outils/plateaux_manipulation/",
+      "kind": "collection",
+      "status": "published",
+      "themes": ["nombres-calcul", "grandeurs-mesures", "geometrie", "problemes"],
+      "uses": ["manipuler", "projeter"],
+      "audiences": ["enseignant", "classe"]
+    },
+    {
+      "id": "schemas-en-barre",
+      "title": "Schémas en barre",
+      "description": "Problèmes, pourcentages, fractions et chemin vers l’algèbre avec SPLAT.",
+      "path": "outils/sheet_generator_schema_partie_tout.html",
+      "kind": "tool",
+      "status": "published",
+      "themes": ["problemes", "fractions", "algebre"],
+      "uses": ["manipuler", "projeter", "imprimer"],
+      "audiences": ["eleve", "enseignant", "classe"]
+    },
+    {
+      "id": "tuiles-algebriques",
+      "title": "Tuiles algébriques",
+      "description": "Générateurs, tuiles à imprimer et manipulations pour entrer dans l’algèbre.",
+      "path": "outils/tuiles_algebriques/index.html",
+      "kind": "collection",
+      "status": "published",
+      "themes": ["algebre", "nombres-calcul"],
+      "uses": ["manipuler", "projeter", "entrainer", "imprimer", "fabriquer"],
+      "audiences": ["eleve", "enseignant", "classe"]
+    }
+  ]
+}

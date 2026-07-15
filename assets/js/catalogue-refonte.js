@@ -1,0 +1,450 @@
+(() => {
+  "use strict";
+
+  const catalogue = window.MATHSGO_CATALOGUE;
+  if (!catalogue) return;
+
+  const rootPrefix = document.body.dataset.rootPrefix || "";
+  const published = catalogue.resources.filter((resource) => resource.status === "published");
+  const domainMap = new Map(catalogue.domains.map((domain) => [domain.id, domain]));
+  const notionMap = new Map(catalogue.notions.map((notion) => [notion.id, notion]));
+  const typeMap = new Map(catalogue.types.map((type) => [type.id, type]));
+
+  const notionDesign = {
+    numeration: {
+      description: "Bouliers, abaques et représentations des nombres.",
+      keywords: "boulier rekenrek soroban décimaux nombres",
+      icon: "abacus"
+    },
+    fractions: {
+      description: "Relier fractions, quotients et nombres rationnels.",
+      keywords: "bandes disques mur partage quotient rationnel",
+      icon: "fractions",
+      hub: "fractions/index_fractions.html"
+    },
+    relatifs: {
+      description: "Donner du sens aux nombres positifs et négatifs.",
+      keywords: "jetons positif négatif somme différence",
+      icon: "relatifs",
+      hub: "nombres_relatifs/index.html"
+    },
+    divisibilite: {
+      description: "Explorer les entiers, diviseurs, multiples et PGCD.",
+      keywords: "entier diviseur multiple pgcd sachets mur nombre premier",
+      icon: "divisibilite"
+    },
+    puissances: {
+      description: "Construire et visualiser les puissances.",
+      keywords: "exposant carré feuille pliage",
+      icon: "powers"
+    },
+    "racines-carrees": {
+      description: "Comprendre la racine carrée par les aires et les longueurs.",
+      keywords: "racine carré irrationnel aire longueur pythagore",
+      icon: "roots"
+    },
+    "calcul-mental": {
+      description: "S’entraîner, automatiser et projeter en classe.",
+      keywords: "automatismes dnb calcul mental cahier",
+      icon: "automatismes",
+      hub: "automatismes/index.html"
+    },
+    proportionnalite: {
+      description: "Ratios, grandeurs et situations proportionnelles.",
+      keywords: "ratio échelle proportion partage",
+      icon: "ratio"
+    },
+    pourcentages: {
+      description: "Visualiser et calculer les pourcentages.",
+      keywords: "pourcent grille cent taux",
+      icon: "percent"
+    },
+    fonctions: {
+      description: "Relier formules, tableaux de valeurs et graphiques.",
+      keywords: "fonction image antécédent graphique tableau dépendance affine linéaire",
+      icon: "functions"
+    },
+    conversions: {
+      description: "Convertir les longueurs, aires et volumes.",
+      keywords: "unités longueur aire volume glisse",
+      icon: "conversions",
+      hub: "conversions/index.html"
+    },
+    "aires-perimetres": {
+      description: "Comparer, mesurer et raisonner sur les figures.",
+      keywords: "aire périmètre surface rectangle triangle",
+      icon: "area"
+    },
+    "temps-durees": {
+      description: "Lire l’heure et comprendre les durées.",
+      keywords: "horloge heure minute durée temps",
+      icon: "clock"
+    },
+    "calcul-litteral": {
+      description: "Généraliser et manipuler les expressions algébriques.",
+      keywords: "développer réduire expression tuiles x",
+      icon: "tiles",
+      hub: "tuiles_algebriques/index.html"
+    },
+    equations: {
+      description: "Représenter l’inconnue et résoudre des équations.",
+      keywords: "équation balance equasplat equabarre inconnue",
+      icon: "splat"
+    },
+    "schemas-barres": {
+      description: "Modéliser les problèmes avec des schémas en barres.",
+      keywords: "splat problème partie tout barres singapour",
+      icon: "bars"
+    },
+    patterns: {
+      description: "Observer, prolonger et généraliser des motifs.",
+      keywords: "suite motif algèbre généralisation",
+      icon: "patterns",
+      hub: "patterns.html"
+    },
+    angles: {
+      description: "Mesurer, construire et manipuler les angles.",
+      keywords: "rapporteur gabarit triangle bandes",
+      icon: "angles",
+      hub: "angles/index.html"
+    },
+    reperage: {
+      description: "Lire et placer des points sur une droite ou dans un repère.",
+      keywords: "abscisse ordonnée coordonnées droite graduée plan repère",
+      icon: "coordinates"
+    },
+    transformations: {
+      description: "Faire agir symétries, rotations et translations sur les figures.",
+      keywords: "symétrie axiale centrale demi-tour translation rotation image",
+      icon: "transformations"
+    },
+    triangles: {
+      description: "Construire, caractériser et raisonner avec les triangles.",
+      keywords: "triangle médiane hauteur médiatrice bissectrice cercle circonscrit",
+      icon: "triangles"
+    },
+    parallelogrammes: {
+      description: "Construire et caractériser les parallélogrammes.",
+      keywords: "parallélogramme rectangle losange carré diagonales quadrilatère",
+      icon: "parallelograms"
+    },
+    "espace-constructions": {
+      description: "Représenter les solides, leurs patrons et leurs sections.",
+      keywords: "cube solide patron prisme pyramide 3d",
+      icon: "cube"
+    },
+    pythagore: {
+      description: "Voir et comprendre le théorème de Pythagore.",
+      keywords: "triangle rectangle carré hypoténuse moulin",
+      icon: "pythagore"
+    },
+    statistiques: {
+      description: "Organiser et représenter des données.",
+      keywords: "statistique graphique diagramme données",
+      icon: "stats"
+    },
+    moyennes: {
+      description: "Donner du sens à la moyenne par la manipulation.",
+      keywords: "moyenne répartition équilibrer barres",
+      icon: "average"
+    },
+    probabilites: {
+      description: "Expérimenter le hasard et quantifier les chances.",
+      keywords: "probabilité hasard dé pièce urne fréquence événement",
+      icon: "probability"
+    },
+    "pensee-informatique": {
+      description: "Décomposer un problème et construire des algorithmes.",
+      keywords: "algorithme programmation blocs variable boucle condition scratch",
+      icon: "computing"
+    },
+    strategie: {
+      description: "Anticiper, raisonner et élaborer une stratégie.",
+      keywords: "jeu nim yavalath stratégie plateau",
+      icon: "strategy",
+      hub: "club_maths/index.html"
+    },
+    explorations: {
+      description: "Chercher, conjecturer et découvrir des structures.",
+      keywords: "engrenages chaos tables modulaires recherche",
+      icon: "gears",
+      hub: "club_maths/index.html"
+    }
+  };
+
+  const state = {
+    domain: "",
+    query: "",
+    type: "",
+    notion: new URLSearchParams(window.location.search).get("notion") || ""
+  };
+
+  const notionGrid = document.getElementById("notion-grid");
+  const resourceGrid = document.getElementById("resource-grid");
+  const title = document.getElementById("results-title");
+  const summary = document.getElementById("results-summary");
+  const pageTitle = document.getElementById("page-title");
+  const heroLead = document.getElementById("hero-lead");
+  const backButton = document.getElementById("back-themes");
+  const searchInput = document.getElementById("catalogue-search");
+  const clearButton = document.getElementById("search-clear");
+  const typeSelect = document.getElementById("type-filter");
+
+  function escapeHtml(value) {
+    return String(value ?? "")
+      .replaceAll("&", "&amp;")
+      .replaceAll("<", "&lt;")
+      .replaceAll(">", "&gt;")
+      .replaceAll('"', "&quot;")
+      .replaceAll("'", "&#039;");
+  }
+
+  function normalise(value) {
+    return String(value ?? "")
+      .normalize("NFD")
+      .replace(/[\u0300-\u036f]/g, "")
+      .toLowerCase()
+      .replace(/[^a-z0-9]+/g, " ")
+      .trim();
+  }
+
+  function words(value) {
+    return normalise(value).split(" ").filter(Boolean);
+  }
+
+  function allWordsMatch(haystack, query) {
+    const target = normalise(haystack);
+    return words(query).every((word) => target.includes(word));
+  }
+
+  function clearQueryString() {
+    try {
+      history.replaceState(null, "", window.location.pathname);
+    } catch (_error) {
+      // L'ouverture directe depuis un dossier Windows peut interdire l'API History.
+      // Le filtrage doit continuer à fonctionner dans ce cas.
+    }
+  }
+
+  function icon(name) {
+    const icons = {
+      abacus: `<svg viewBox="0 0 64 48" aria-hidden="true"><rect x="3" y="5" width="58" height="38" rx="5" fill="#fff4cf" stroke="#9a5b12" stroke-width="2"/><path d="M9 17h46M9 31h46" stroke="#7c4810" stroke-width="1.5"/><g stroke="#7f1d1d" stroke-width=".8"><circle cx="13" cy="17" r="3" fill="#ef4444"/><circle cx="20" cy="17" r="3" fill="#ef4444"/><circle cx="27" cy="17" r="3" fill="#ef4444"/><circle cx="13" cy="31" r="3" fill="#ef4444"/><circle cx="20" cy="31" r="3" fill="#ef4444"/></g><g fill="#fff" stroke="#475569" stroke-width=".8"><circle cx="37" cy="17" r="3"/><circle cx="44" cy="17" r="3"/><circle cx="51" cy="17" r="3"/><circle cx="37" cy="31" r="3"/><circle cx="44" cy="31" r="3"/><circle cx="51" cy="31" r="3"/></g></svg>`,
+      fractions: `<svg viewBox="0 0 88 56" aria-hidden="true"><rect x="1" y="1" width="86" height="10.8" fill="#2dd4bf"/><rect x="1" y="11.8" width="86" height="10.8" fill="#facc15"/><rect x="1" y="22.6" width="86" height="10.8" fill="#38bdf8"/><rect x="1" y="33.4" width="86" height="10.8" fill="#fde68a"/><rect x="1" y="44.2" width="86" height="10.8" fill="#fca5a5"/><g fill="none" stroke="#334155" stroke-width="1.15"><rect x="1" y="1" width="86" height="54" rx="1"/><path d="M1 11.8H87M1 22.6H87M1 33.4H87M1 44.2H87M44 11.8v10.8M29.7 22.6v10.8M58.3 22.6v10.8M22.5 33.4v10.8M44 33.4v10.8M65.5 33.4v10.8M18.2 44.2V55M35.4 44.2V55M52.6 44.2V55M69.8 44.2V55"/></g></svg>`,
+      relatifs: `<svg viewBox="0 0 70 48" aria-hidden="true"><ellipse cx="31" cy="24" rx="29" ry="20" fill="none" stroke="#64748b" stroke-width="2"/><circle cx="22" cy="24" r="12" fill="#39c979" stroke="#111827" stroke-width="1.7"/><circle cx="43" cy="24" r="12" fill="#ef655e" stroke="#111827" stroke-width="1.7"/><text x="14" y="28" font-family="Arial" font-size="10" font-weight="900">+1</text><text x="36" y="28" font-family="Arial" font-size="10" font-weight="900">−1</text><text x="61" y="28" fill="#475569" font-family="Arial" font-size="14" font-weight="900">0</text></svg>`,
+      divisibilite: `<svg viewBox="0 0 64 48" aria-hidden="true"><rect x="4" y="7" width="56" height="34" rx="4" fill="#ecfdf5" stroke="#15803d" stroke-width="1.7"/><path d="M4 19h56M4 30h56M18 7v12M32 7v12M46 7v12M13 19v11M25 19v11M39 19v11M51 19v11M18 30v11M32 30v11M46 30v11" stroke="#22c55e" stroke-width="1.2"/><text x="32" y="27" text-anchor="middle" fill="#166534" font-family="Arial" font-size="9" font-weight="900">PGCD</text></svg>`,
+      powers: `<svg viewBox="0 0 70 48" aria-hidden="true"><g stroke="#4c1d95" stroke-width="1.1"><rect x="3" y="31" width="9" height="9" rx="1.5" fill="#c4b5fd"/><rect x="19" y="31" width="9" height="9" rx="1.5" fill="#a78bfa"/><rect x="28" y="31" width="9" height="9" rx="1.5" fill="#a78bfa"/><rect x="45" y="31" width="9" height="9" rx="1.5" fill="#8b5cf6"/><rect x="54" y="31" width="9" height="9" rx="1.5" fill="#8b5cf6"/><rect x="45" y="22" width="9" height="9" rx="1.5" fill="#8b5cf6"/><rect x="54" y="22" width="9" height="9" rx="1.5" fill="#8b5cf6"/></g><path d="M13 35h4m21 0h5" stroke="#f97316" stroke-width="2" stroke-linecap="round"/><path d="m16 32 3 3-3 3m25-6 3 3-3 3" fill="none" stroke="#f97316" stroke-width="1.5" stroke-linejoin="round"/><text x="4" y="27" fill="#5b21b6" font-family="Arial" font-size="8" font-weight="900">2⁰</text><text x="21" y="27" fill="#5b21b6" font-family="Arial" font-size="8" font-weight="900">2¹</text><text x="49" y="17" fill="#5b21b6" font-family="Arial" font-size="9" font-weight="900">2²</text></svg>`,
+      roots: `<svg viewBox="0 0 70 48" aria-hidden="true"><rect x="19" y="5" width="31" height="31" rx="2" fill="#ede9fe" stroke="#6d28d9" stroke-width="2"/><path d="M19 36v6m31-6v6M19 40h31" fill="none" stroke="#f97316" stroke-width="1.5" stroke-linecap="round"/><text x="34.5" y="24.5" text-anchor="middle" fill="#5b21b6" font-family="Georgia,serif" font-size="13" font-weight="700">2</text><text x="34.5" y="47" text-anchor="middle" fill="#c2410c" font-family="Arial" font-size="9" font-weight="900">√2</text><path d="M6 25h7l3-10 4 18" fill="none" stroke="#0f766e" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>`,
+      automatismes: `<svg viewBox="0 0 64 48" aria-hidden="true"><g transform="rotate(-8 17 26)"><rect x="5" y="10" width="25" height="33" rx="4" fill="#e0f2fe" stroke="#0369a1" stroke-width="1.5"/><path d="m12 21 11 13M23 21 12 34" stroke="#0284c7" stroke-width="2.3" stroke-linecap="round"/></g><g transform="rotate(4 33 23)"><rect x="20" y="5" width="27" height="36" rx="4" fill="#fef3c7" stroke="#a16207" stroke-width="1.5"/><circle cx="33.5" cy="16" r="2.8" fill="#f59e0b"/><circle cx="33.5" cy="31" r="2.8" fill="#f59e0b"/><path d="M27 23.5h13" stroke="#92400e" stroke-width="2" stroke-linecap="round"/></g><rect x="39" y="10" width="21" height="33" rx="4" fill="#fce7f3" stroke="#9d174d" stroke-width="1.6"/><text x="43" y="31" fill="#be185d" font-family="Arial" font-size="14" font-weight="900">x²</text></svg>`,
+      ratio: `<svg viewBox="0 0 64 48" aria-hidden="true"><rect x="4" y="7" width="22" height="15" rx="4" fill="#ffedd5" stroke="#c2410c" stroke-width="1.5"/><text x="15" y="18" text-anchor="middle" fill="#9a3412" font-family="Arial" font-size="10" font-weight="900">2</text><rect x="38" y="26" width="22" height="15" rx="4" fill="#dbeafe" stroke="#1d4ed8" stroke-width="1.5"/><text x="49" y="37" text-anchor="middle" fill="#1e40af" font-family="Arial" font-size="10" font-weight="900">5</text><path d="M28 12c12-1 20 3 24 11" fill="none" stroke="#ea580c" stroke-width="2.1" stroke-linecap="round"/><path d="m48 19 4 4-6 .5" fill="none" stroke="#ea580c" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><path d="M36 37c-12 1-20-3-24-11" fill="none" stroke="#0f766e" stroke-width="2.1" stroke-linecap="round"/><path d="m16 30-4-4 6-.5" fill="none" stroke="#0f766e" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>`,
+      percent: `<svg viewBox="0 0 64 48" aria-hidden="true"><rect x="8" y="3" width="40" height="40" rx="2" fill="#fff" stroke="#0f766e" stroke-width="1.5"/><path d="M8 3h40v12H8Z" fill="#5eead4"/><path d="M8 15h28v4H8Z" fill="#fb923c"/><g stroke="#94a3b8" stroke-width=".45"><path d="M12 3v40M16 3v40M20 3v40M24 3v40M28 3v40M32 3v40M36 3v40M40 3v40M44 3v40M8 7h40M8 11h40M8 15h40M8 19h40M8 23h40M8 27h40M8 31h40M8 35h40M8 39h40"/></g><text x="38" y="38" text-anchor="middle" fill="#f97316" font-family="Arial" font-size="15" font-weight="900">%</text></svg>`,
+      functions: `<svg viewBox="0 0 70 48" aria-hidden="true"><g stroke="#cbd5e1" stroke-width=".65"><path d="M12 8v34M23 8v34M34 8v34M45 8v34M56 8v34M7 15h55M7 25h55M7 35h55"/></g><path d="M7 40h56M12 44V6" fill="none" stroke="#334155" stroke-width="1.5" stroke-linecap="round"/><path d="m60 37 3 3-3 3M9 9l3-3 3 3" fill="none" stroke="#334155" stroke-width="1.4" stroke-linejoin="round"/><path d="M14 36 54 10" fill="none" stroke="#f97316" stroke-width="2.5" stroke-linecap="round"/><g fill="#0d9488" stroke="#fff" stroke-width="1"><circle cx="20" cy="32" r="2.7"/><circle cx="34" cy="23" r="2.7"/><circle cx="48" cy="14" r="2.7"/></g><text x="56" y="12" fill="#0f766e" font-family="Arial" font-size="8" font-weight="900">f</text></svg>`,
+      conversions: `<svg viewBox="0 0 64 48" aria-hidden="true"><rect x="3" y="5" width="25" height="16" rx="5" fill="#ffedd5" stroke="#c2410c" stroke-width="1.5"/><text x="11" y="17" fill="#9a3412" font-family="Arial" font-size="10" font-weight="900">m</text><rect x="36" y="27" width="25" height="16" rx="5" fill="#dbeafe" stroke="#1d4ed8" stroke-width="1.5"/><text x="42" y="39" fill="#1e40af" font-family="Arial" font-size="9" font-weight="900">cm</text><path d="M31 11c10-1 17 2 20 9M33 37c-10 1-17-2-20-9" fill="none" stroke="#ea580c" stroke-width="2.2" stroke-linecap="round"/><path d="m49 16 3 4-5 .5M15 32l-3-4 5-.5" fill="none" stroke="#ea580c" stroke-width="1.8"/></svg>`,
+      area: `<svg viewBox="0 0 64 48" aria-hidden="true"><rect x="4" y="10" width="31" height="28" fill="#bfdbfe" stroke="#2563eb" stroke-width="2"/><path d="M4 19h31M4 28h31M14 10v28M24 10v28" stroke="#fff" stroke-width="1"/><path d="m41 38 9-29 11 29Z" fill="#fed7aa" stroke="#ea580c" stroke-width="2"/><path d="M50 9v29" stroke="#f97316" stroke-width="1.2" stroke-dasharray="3 2"/></svg>`,
+      clock: `<svg viewBox="0 0 64 48" aria-hidden="true"><circle cx="30" cy="24" r="20" fill="#fff7ed" stroke="#c2410c" stroke-width="2"/><g stroke="#9a3412" stroke-width="1.3"><path d="M30 6v4M30 38v4M12 24h4M44 24h4"/></g><path d="M30 24 21 16M30 24v-12" stroke="#2563eb" stroke-width="2.6" stroke-linecap="round"/><circle cx="30" cy="24" r="2.5" fill="#f97316"/><text x="49" y="39" fill="#0f766e" font-family="Arial" font-size="10" font-weight="900">60</text></svg>`,
+      tiles: `<svg viewBox="0 0 70 48" aria-hidden="true"><rect x="4" y="5" width="32" height="32" rx="4" fill="#75bfff" stroke="#2563eb" stroke-width="1.8"/><rect x="41" y="5" width="24" height="13" rx="3" fill="#75bfff" stroke="#2563eb" stroke-width="1.5"/><rect x="41" y="23" width="24" height="13" rx="3" fill="#fde76f" stroke="#ca8a04" stroke-width="1.5"/><rect x="27" y="31" width="12" height="12" rx="2" fill="#fde76f" stroke="#ca8a04" stroke-width="1.3"/><text x="13" y="27" fill="#1d4ed8" font-family="Arial" font-size="15" font-weight="900">x²</text><text x="49" y="15" fill="#1d4ed8" font-family="Arial" font-size="10" font-weight="900">x</text><text x="46" y="33" fill="#92400e" font-family="Arial" font-size="9" font-weight="900">−x</text></svg>`,
+      splat: `<svg viewBox="-2 -2 28 28" aria-hidden="true"><path d="M21.45 12c.529.493 1.283 1.157 1.472 1.73.189.573-.034 1.225-.337 1.709-.303.485-.991.847-1.481 1.2-.49.352-.965.666-1.459.916-.494.25-.993.462-1.506.584-.513.122-1.142.006-1.572.147-.43.141-.732.251-1.007.701-.274.451-.335 1.345-.64 2-.305.656-.703 1.578-1.19 1.935-.487.357-1.175.346-1.73.208-.555-.138-1.112-.681-1.598-1.038-.487-.357-.932-.712-1.322-1.105-.391-.392-.747-.801-1.022-1.251-.274-.45-.358-1.085-.625-1.45-.267-.365-.465-.619-.978-.741-.513-.122-1.382.097-2.1.01-.718-.088-1.718-.182-2.208-.535-.49-.352-.692-1.01-.732-1.581-.04-.57.304-1.267.493-1.841.189-.573.389-1.105.642-1.598.253-.493.531-.958.875-1.358.343-.4.921-.676 1.185-1.043.265-.367.445-.634.403-1.159-.043-.526-.52-1.285-.658-1.995-.139-.709-.358-1.689-.174-2.264.184-.575.747-.971 1.277-1.185.53-.215 1.3-.103 1.903-.1.604.003 1.172.028 1.719.117.547.088 1.075.209 1.562.412.487.203.927.667 1.358.805.431.138.74.227 1.227.024.486-.202 1.061-.89 1.693-1.241.632-.352 1.497-.863 2.1-.866.604-.003 1.155.411 1.522.849.368.438.499 1.204.683 1.779.184.575.335 1.123.42 1.67.085.548.133 1.088.091 1.613-.043.526-.348 1.088-.346 1.541.001.452.012.774.356 1.174.343.4 1.175.734 1.704 1.227Z" fill="#22c55e" stroke="#166534" stroke-width="1.05"/><text x="12" y="15.3" text-anchor="middle" fill="#fff" font-family="Arial" font-size="7" font-weight="900">?</text><circle cx="6.6" cy="10" r="1.7" fill="#fde047"/><circle cx="17.4" cy="13.2" r="1.7" fill="#fb923c"/></svg>`,
+      bars: `<svg viewBox="0 0 70 48" aria-hidden="true"><g stroke-width="1.45"><path d="M6 7h18v12H6Z" fill="#86efac" stroke="#15803d"/><path d="M24 7h17v12H24Z" fill="#bbf7d0" stroke="#15803d"/><path d="M41 7h22v12H41Z" fill="#fde68a" stroke="#b45309"/><path d="M6 28h25v12H6Z" fill="#bfdbfe" stroke="#2563eb"/><path d="M31 28h14v12H31Z" fill="#dbeafe" stroke="#2563eb"/><path d="M45 28h18v12H45Z" fill="#fed7aa" stroke="#ea580c"/></g><text x="54" y="37" text-anchor="middle" fill="#9a3412" font-family="Arial" font-size="9" font-weight="900">?</text></svg>`,
+      patterns: `<svg viewBox="0 0 72 48" aria-hidden="true"><g stroke="#1e3a5f" stroke-width=".9"><rect x="2" y="37" width="7" height="7" rx="1" fill="#38bdf8"/><rect x="19" y="29" width="7" height="7" rx="1" fill="#f97316"/><rect x="19" y="37" width="7" height="7" rx="1" fill="#f97316"/><rect x="36" y="21" width="7" height="7" rx="1" fill="#38bdf8"/><rect x="36" y="29" width="7" height="7" rx="1" fill="#f97316"/><rect x="36" y="37" width="7" height="7" rx="1" fill="#f97316"/><rect x="53" y="5" width="7" height="7" rx="1" fill="#f97316"/><rect x="53" y="13" width="7" height="7" rx="1" fill="#f97316"/><rect x="53" y="21" width="7" height="7" rx="1" fill="#38bdf8"/><rect x="53" y="29" width="7" height="7" rx="1" fill="#f97316"/><rect x="53" y="37" width="7" height="7" rx="1" fill="#f97316"/></g><text x="64" y="43" fill="#334155" font-family="Arial" font-size="15" font-weight="900">?</text></svg>`,
+      angles: `<svg viewBox="0 0 64 48" aria-hidden="true"><path d="M7 39h52M7 39 45 7" fill="none" stroke="#2563eb" stroke-width="5" stroke-linecap="round"/><path d="M27 39a20 20 0 0 0-5-13" fill="none" stroke="#f97316" stroke-width="3.5" stroke-linecap="round"/></svg>`,
+      coordinates: `<svg viewBox="0 0 70 48" aria-hidden="true"><g stroke="#cbd5e1" stroke-width=".7"><path d="M12 5v38M23 5v38M34 5v38M45 5v38M56 5v38M6 12h58M6 23h58M6 34h58"/></g><path d="M6 34h58M23 44V5" fill="none" stroke="#334155" stroke-width="1.6"/><path d="m61 31 3 3-3 3M20 8l3-3 3 3" fill="none" stroke="#334155" stroke-width="1.4" stroke-linejoin="round"/><path d="M23 12h33v22" fill="none" stroke="#f97316" stroke-width="1.4" stroke-dasharray="3 2"/><circle cx="56" cy="12" r="3.4" fill="#0d9488" stroke="#fff" stroke-width="1.2"/><text x="60" y="9" fill="#0f766e" font-family="Arial" font-size="8" font-weight="900">A</text></svg>`,
+      transformations: `<svg viewBox="0 0 70 48" aria-hidden="true"><path d="M35 4v40" stroke="#94a3b8" stroke-width="1.4" stroke-dasharray="3 3"/><path d="m8 36 18-25 4 25Z" fill="#fed7aa" stroke="#c2410c" stroke-width="1.8"/><path d="m62 36-18-25-4 25Z" fill="#99f6e4" stroke="#0f766e" stroke-width="1.8"/><path d="M25 7c7-5 14-5 21 0" fill="none" stroke="#4f46e5" stroke-width="2" stroke-linecap="round"/><path d="m43 3 4 4-5 2" fill="none" stroke="#4f46e5" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/><path d="M12 31h13M45 31h13" stroke="#fff" stroke-width="1.4"/></svg>`,
+      triangles: `<svg viewBox="0 0 70 48" aria-hidden="true"><path d="m7 41 27-35 29 35Z" fill="#e0f2fe" stroke="#2563eb" stroke-width="2" stroke-linejoin="round"/><path d="M34 6v35M7 41l43-18" fill="none" stroke="#0d9488" stroke-width="1.5"/><path d="M34 36h5v5" fill="none" stroke="#f97316" stroke-width="1.7"/><path d="M20 24a17 17 0 0 0 8 6" fill="none" stroke="#f97316" stroke-width="1.8" stroke-linecap="round"/></svg>`,
+      parallelograms: `<svg viewBox="0 0 70 48" aria-hidden="true"><path d="M16 8h43L49 40H6Z" fill="#dcfce7" stroke="#15803d" stroke-width="2" stroke-linejoin="round"/><path d="M16 8 49 40M59 8 6 40" fill="none" stroke="#2563eb" stroke-width="1.6"/><circle cx="32.5" cy="24" r="2.5" fill="#f97316" stroke="#fff" stroke-width="1"/><path d="M27 10h10M27 38h10M10 21l5 2M50 25l5 2" stroke="#15803d" stroke-width="1.4" stroke-linecap="round"/></svg>`,
+      cube: `<svg viewBox="0 0 64 48" aria-hidden="true"><path d="m10 15 23-10 21 11-23 11Z" fill="#dbeafe" stroke="#2563eb" stroke-width="1.7"/><path d="m10 15 21 12v17L10 32Z" fill="#93c5fd" stroke="#2563eb" stroke-width="1.7"/><path d="m31 27 23-11v17L31 44Z" fill="#bfdbfe" stroke="#2563eb" stroke-width="1.7"/><path d="m21 10 22 11M21 21l23-10" stroke="#fff" stroke-width="1" opacity=".8"/></svg>`,
+      pythagore: `<svg viewBox="0 0 70 48" aria-hidden="true"><path d="M13 17h12v12H13Z" fill="#bfdbfe" stroke="#2563eb" stroke-width="1.25"/><path d="M25 29h16v16H25Z" fill="#fde68a" stroke="#ca8a04" stroke-width="1.25"/><path d="M25 17 37 1l16 12-12 16Z" fill="#fecaca" stroke="#dc2626" stroke-width="1.25"/><path d="M25 17v12h16Z" fill="#ecfeff" stroke="#0f766e" stroke-width="1.8"/><path d="M25 25h4v4" fill="none" stroke="#f97316" stroke-width="1.6"/></svg>`,
+      stats: `<svg viewBox="0 0 64 48" aria-hidden="true"><path d="M7 42h51M9 42V5" stroke="#475569" stroke-width="1.7" stroke-linecap="round"/><rect x="14" y="28" width="9" height="14" rx="1.5" fill="#f9a8d4"/><rect x="28" y="18" width="9" height="24" rx="1.5" fill="#fb7185"/><rect x="42" y="8" width="9" height="34" rx="1.5" fill="#be3e68"/><path d="m14 22 13-7 12 5 15-15" fill="none" stroke="#0f766e" stroke-width="2.2" stroke-linecap="round"/></svg>`,
+      average: `<svg viewBox="0 0 64 48" aria-hidden="true"><path d="M5 42h54" stroke="#475569" stroke-width="1.6"/><rect x="8" y="28" width="10" height="14" rx="2" fill="#93c5fd"/><rect x="21" y="10" width="10" height="32" rx="2" fill="#fca5a5"/><rect x="34" y="20" width="10" height="22" rx="2" fill="#fde68a"/><rect x="47" y="16" width="10" height="26" rx="2" fill="#86efac"/><path d="M6 22h53" stroke="#7c3aed" stroke-width="2" stroke-dasharray="4 3"/></svg>`,
+      probability: `<svg viewBox="0 0 70 48" aria-hidden="true"><rect x="5" y="5" width="28" height="28" rx="6" fill="#fce7f3" stroke="#be3e68" stroke-width="1.8"/><g fill="#9d174d"><circle cx="12" cy="12" r="2.1"/><circle cx="26" cy="12" r="2.1"/><circle cx="12" cy="26" r="2.1"/><circle cx="26" cy="26" r="2.1"/></g><path d="M40 34h25" stroke="#475569" stroke-width="2" stroke-linecap="round"/><path d="M40 30v8M52.5 30v8M65 30v8" stroke="#475569" stroke-width="1.5"/><circle cx="52.5" cy="34" r="3.4" fill="#f97316" stroke="#fff" stroke-width="1"/><text x="40" y="47" text-anchor="middle" fill="#475569" font-family="Arial" font-size="7">0</text><text x="53" y="47" text-anchor="middle" fill="#be3e68" font-family="Arial" font-size="7" font-weight="900">½</text><text x="65" y="47" text-anchor="middle" fill="#475569" font-family="Arial" font-size="7">1</text></svg>`,
+      computing: `<svg viewBox="0 0 70 48" aria-hidden="true"><rect x="5" y="6" width="24" height="13" rx="4" fill="#bfdbfe" stroke="#2563eb" stroke-width="1.5"/><rect x="22" y="20" width="25" height="13" rx="4" fill="#fde68a" stroke="#ca8a04" stroke-width="1.5"/><rect x="41" y="34" width="24" height="11" rx="4" fill="#99f6e4" stroke="#0f766e" stroke-width="1.5"/><text x="17" y="15.5" text-anchor="middle" fill="#1d4ed8" font-family="Arial" font-size="8" font-weight="900">x ← 1</text><text x="34.5" y="29.5" text-anchor="middle" fill="#92400e" font-family="Arial" font-size="8" font-weight="900">x &lt; 5 ?</text><text x="53" y="42" text-anchor="middle" fill="#0f766e" font-family="Arial" font-size="8" font-weight="900">x + 1</text><path d="M58 33c7-13-3-25-18-25" fill="none" stroke="#7c3aed" stroke-width="1.8" stroke-linecap="round"/><path d="m43 5-4 3 4 3" fill="none" stroke="#7c3aed" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>`,
+      strategy: `<svg viewBox="0 0 48 36" aria-hidden="true"><g stroke="#312e81" stroke-width=".75" stroke-linejoin="round"><path d="M24 2 19 10h10Z" fill="#f97316"/><path d="m14 18 5-8 5 8Z" fill="#06b6d4"/><path d="m34 18-5-8-5 8Z" fill="#6366f1"/><path d="m14 18-5 8h10Z" fill="#6366f1"/><path d="M4 34l5-8 5 8Z" fill="#facc15"/><path d="m24 34-5-8-5 8Z" fill="#06b6d4"/><path d="m34 18-5 8h10Z" fill="#facc15"/><path d="m24 34 5-8 5 8Z" fill="#f97316"/><path d="m44 34-5-8-5 8Z" fill="#6366f1"/></g></svg>`,
+      gears: `<svg viewBox="0 0 48 36" aria-hidden="true"><defs><linearGradient id="gear-main-catalogue" x1="5" y1="6" x2="29" y2="30" gradientUnits="userSpaceOnUse"><stop stop-color="#99f6e4"/><stop offset="1" stop-color="#14b8a6"/></linearGradient><linearGradient id="gear-small-catalogue" x1="31" y1="19" x2="43" y2="32" gradientUnits="userSpaceOnUse"><stop stop-color="#fde68a"/><stop offset="1" stop-color="#f59e0b"/></linearGradient></defs><path d="M17 5 19.03 5.16 20.09 8.49 21.54 9.09 24.64 7.48 26.19 8.81 25.09 12.12 25.91 13.46 29.36 13.98 29.84 15.97 27 18 26.88 19.56 29.36 22.02 28.58 23.9 25.09 23.88 24.07 25.07 24.64 28.52 22.9 29.58 20.09 27.51 18.56 27.88 17 31 14.97 30.84 13.91 27.51 12.46 26.91 9.36 28.52 7.81 27.19 8.91 23.88 8.09 22.54 4.64 22.02 4.16 20.03 7 18 7.12 16.44 4.64 13.98 5.42 12.1 8.91 12.12 9.93 10.93 9.36 7.48 11.1 6.42 13.91 8.49 15.44 8.12Z" fill="url(#gear-main-catalogue)" stroke="#0f766e" stroke-width="1.6" stroke-linejoin="round"/><circle cx="17" cy="18" r="5.4" fill="#ecfeff" stroke="#0f766e" stroke-width="1.6"/><circle cx="17" cy="18" r="2.1" fill="#5eead4" stroke="#115e59" stroke-width="1.2"/><path d="M37 17 38.56 17.15 39.3 19.46 40.33 20.01 42.66 19.34 43.65 20.56 42.54 22.7 42.88 23.83 45 25 44.85 26.56 42.54 27.3 41.99 28.33 42.66 30.66 41.44 31.65 39.3 30.54 38.17 30.88 37 33 35.44 32.85 34.7 30.54 33.67 29.99 31.34 30.66 30.35 29.44 31.46 27.3 31.12 26.17 29 25 29.15 23.44 31.46 22.7 32.01 21.67 31.34 19.34 32.56 18.35 34.7 19.46 35.83 19.12Z" fill="url(#gear-small-catalogue)" stroke="#b45309" stroke-width="1.35" stroke-linejoin="round"/><circle cx="37" cy="25" r="2.7" fill="#fffbeb" stroke="#b45309" stroke-width="1.2"/><path d="M11.3 10.4c2.6-2.2 6.2-2.8 9.4-1.5" fill="none" stroke="#fff" stroke-width="1.2" stroke-linecap="round" opacity=".8"/></svg>`
+    };
+    return icons[name] || icons.explorations;
+  }
+
+  function typeIcon(resource) {
+    const types = resource.types || [];
+    if (resource.kind === "document" || types.includes("imprimable")) {
+      return `<svg viewBox="0 0 32 32" aria-hidden="true"><path d="M7 3h12l6 6v20H7Z" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/><path d="M19 3v7h6M11 16h10M11 21h10" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/></svg>`;
+    }
+    if (types.includes("generateur")) {
+      return `<svg viewBox="0 0 32 32" aria-hidden="true"><path d="M7 8h18M7 16h18M7 24h18" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/><circle cx="12" cy="8" r="3" fill="#fff" stroke="currentColor" stroke-width="1.7"/><circle cx="21" cy="16" r="3" fill="#fff" stroke="currentColor" stroke-width="1.7"/><circle cx="15" cy="24" r="3" fill="#fff" stroke="currentColor" stroke-width="1.7"/></svg>`;
+    }
+    if (types.includes("exerciseur")) {
+      return `<svg viewBox="0 0 32 32" aria-hidden="true"><rect x="4" y="5" width="24" height="21" rx="4" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="m10 15 4 4 8-9" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
+    }
+    return `<svg viewBox="0 0 32 32" aria-hidden="true"><path d="m4 9 18-4 6 15-18 5Z" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/><circle cx="11" cy="13" r="2.5" fill="currentColor"/><rect x="18" y="10" width="5" height="5" rx="1" fill="currentColor"/><path d="M13 21h9" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/></svg>`;
+  }
+
+  function domainStyle(domainId) {
+    const domain = domainMap.get(domainId) || catalogue.domains[0];
+    return `--accent:${escapeHtml(domain.color)};--soft:${escapeHtml(domain.soft)}`;
+  }
+
+  function notionHaystack(notion) {
+    const design = notionDesign[notion.id] || {};
+    return [notion.title, design.description, design.keywords].join(" ");
+  }
+
+  function matchingNotions() {
+    return catalogue.notions.filter((notion) => {
+      if (state.domain && notion.domain !== state.domain) return false;
+      if (state.query && !allWordsMatch(notionHaystack(notion), state.query)) return false;
+      return true;
+    });
+  }
+
+  function resourceHaystack(resource) {
+    const domains = resource.domains.map((id) => domainMap.get(id)?.title || "");
+    const notions = resource.notions.map((id) => notionMap.get(id)?.title || "");
+    return [resource.title, resource.description, ...(resource.keywords || []), ...domains, ...notions].join(" ");
+  }
+
+  function matchingResources() {
+    return published.filter((resource) => {
+      if (state.domain && !resource.domains.includes(state.domain)) return false;
+      if (state.notion && !resource.notions.includes(state.notion)) return false;
+      if (state.type && !(resource.types || []).includes(state.type)) return false;
+      if (state.query && !allWordsMatch(resourceHaystack(resource), state.query)) return false;
+      return true;
+    });
+  }
+
+  function notionHref(notion) {
+    const design = notionDesign[notion.id] || {};
+    if (design.hub) return design.hub;
+    return `index.html?notion=${encodeURIComponent(notion.id)}`;
+  }
+
+  function renderNotions(notions) {
+    notionGrid.hidden = false;
+    resourceGrid.hidden = true;
+    resourceGrid.innerHTML = "";
+    notionGrid.innerHTML = notions.map((notion) => {
+      const design = notionDesign[notion.id] || {};
+      return `<a class="notion-card" href="${escapeHtml(notionHref(notion))}" style="${domainStyle(notion.domain)}">
+        <span class="notion-top">
+          <span class="notion-icon">${icon(design.icon)}</span>
+          <h3>${escapeHtml(notion.title)}</h3>
+        </span>
+        <p>${escapeHtml(design.description || "Découvrir les outils de ce thème.")}</p>
+      </a>`;
+    }).join("") || `<p class="empty-state">Aucun thème ne correspond à cette recherche.</p>`;
+  }
+
+  function resourceMeta(resource) {
+    const notion = notionMap.get(resource.notions[0]);
+    const type = (resource.types || []).map((id) => typeMap.get(id)?.label).find(Boolean);
+    return [notion?.title, type || (resource.kind === "document" ? "Document" : "Outil interactif")].filter(Boolean).join(" · ");
+  }
+
+  function renderResources(resources) {
+    notionGrid.hidden = true;
+    resourceGrid.hidden = false;
+    notionGrid.innerHTML = "";
+    resourceGrid.innerHTML = resources.map((resource) => {
+      const domainId = resource.domains[0] || "nombres-calculs";
+      return `<a class="resource-card" href="${escapeHtml(rootPrefix + resource.path)}" style="${domainStyle(domainId)}">
+        <span class="resource-type-icon">${typeIcon(resource)}</span>
+        <span class="resource-copy"><h3>${escapeHtml(resource.title)}</h3><span class="resource-meta">${escapeHtml(resourceMeta(resource))}</span></span>
+        <span class="resource-arrow" aria-hidden="true">→</span>
+      </a>`;
+    }).join("") || `<p class="empty-state">${state.notion ? "Cet univers est prêt à accueillir ses premiers outils." : "Aucun outil ne correspond à ces critères."}</p>`;
+  }
+
+  function renderTabs() {
+    document.querySelectorAll("[data-domain]").forEach((button) => {
+      button.setAttribute("aria-pressed", String(button.dataset.domain === state.domain));
+    });
+  }
+
+  function render() {
+    renderTabs();
+    clearButton.hidden = !state.query;
+
+    const selectedNotion = notionMap.get(state.notion);
+    const selectedDomain = domainMap.get(state.domain);
+    const queryHasNotionMatches = Boolean(state.query && matchingNotions().length);
+    const showResources = Boolean(state.notion || state.type || (state.query && !queryHasNotionMatches));
+
+    backButton.hidden = !state.notion;
+
+    if (showResources) {
+      const resources = matchingResources();
+      renderResources(resources);
+
+      if (selectedNotion) {
+        pageTitle.textContent = selectedNotion.title;
+        heroLead.textContent = notionDesign[selectedNotion.id]?.description || "Les outils disponibles pour ce thème.";
+        title.textContent = `Les outils — ${selectedNotion.title}`;
+      } else if (state.type) {
+        const type = typeMap.get(state.type);
+        pageTitle.textContent = type?.label || "Accès direct";
+        heroLead.textContent = selectedDomain ? `Les ressources de ${selectedDomain.title.toLowerCase()} correspondant à ce besoin.` : "Toutes les ressources correspondant à ce besoin.";
+        title.textContent = selectedDomain ? `${type?.label} — ${selectedDomain.title}` : (type?.label || "Outils");
+      } else {
+        pageTitle.textContent = "Résultats de la recherche";
+        heroLead.textContent = `Les outils correspondant à « ${state.query.trim()} ».`;
+        title.textContent = "Outils trouvés";
+      }
+
+      summary.textContent = `${resources.length} outil${resources.length > 1 ? "s" : ""}`;
+      return;
+    }
+
+    const notions = matchingNotions();
+    renderNotions(notions);
+    pageTitle.textContent = selectedDomain ? selectedDomain.title : "Choisissez un thème";
+    heroLead.textContent = selectedDomain
+      ? `Les thèmes de ${selectedDomain.title.toLowerCase()} présents sur maths&go.`
+      : "Retrouvez les univers illustrés de maths&go, puis entrez dans celui qui vous intéresse.";
+    title.textContent = state.query ? "Thèmes trouvés" : (selectedDomain ? `Les thèmes — ${selectedDomain.title}` : "Tous les thèmes");
+    summary.textContent = `${notions.length} thème${notions.length > 1 ? "s" : ""}`;
+  }
+
+  document.querySelectorAll("[data-domain]").forEach((button) => {
+    button.addEventListener("click", () => {
+      state.domain = button.dataset.domain || "";
+      state.notion = "";
+      if (!state.domain) {
+        state.query = "";
+        state.type = "";
+        searchInput.value = "";
+        typeSelect.value = "";
+      }
+      clearQueryString();
+      render();
+    });
+  });
+
+  searchInput.addEventListener("input", () => {
+    state.query = searchInput.value;
+    state.notion = "";
+    clearQueryString();
+    render();
+  });
+
+  clearButton.addEventListener("click", () => {
+    searchInput.value = "";
+    state.query = "";
+    searchInput.focus();
+    render();
+  });
+
+  typeSelect.addEventListener("change", () => {
+    state.type = typeSelect.value;
+    state.notion = "";
+    clearQueryString();
+    render();
+  });
+
+  backButton.addEventListener("click", () => {
+    state.notion = "";
+    clearQueryString();
+    render();
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  });
+
+  if (state.notion && !notionMap.has(state.notion)) state.notion = "";
+  render();
+})();

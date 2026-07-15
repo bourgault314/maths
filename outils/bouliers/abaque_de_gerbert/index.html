@@ -124,7 +124,7 @@
     }
 
     /* CARDS */
-    a.card-link{
+    .card-link{
       text-decoration:none;
       background: var(--bg-card);
       border-radius: 16px;
@@ -140,7 +140,7 @@
     }
 
     /* barre latérale */
-    a.card-link::before{
+    .card-link::before{
       content:"";
       position:absolute;
       left:0; top:0; bottom:0;
@@ -150,9 +150,9 @@
     }
 
     /* catégories */
-    .cat-start a.card-link::before{ background: #b45309; }  /* amber */
-    .cat-op a.card-link::before{ background: #f59e0b; }     /* orange */
-    .cat-adv a.card-link::before{ background: #64748b; }    /* slate */
+    .cat-start .card-link::before{ background: #b45309; }  /* amber */
+    .cat-op .card-link::before{ background: #f59e0b; }     /* orange */
+    .cat-adv .card-link::before{ background: #64748b; }    /* slate */
 
     a.card-link:hover{
       transform: translateY(-5px);
@@ -160,6 +160,11 @@
       border-color: rgba(0,0,0,0.12);
     }
     a.card-link:hover::before{ width: 10px; }
+
+    .card-link.is-coming-soon{
+      opacity: .72;
+      cursor: default;
+    }
 
     .icon-box{
       font-size: 2.5rem;
@@ -211,15 +216,8 @@
       padding-bottom: 2rem;
     }
   </style>
-  <!-- Google tag (gtag.js) -->
-<script async src="https://www.googletagmanager.com/gtag/js?id=G-X8TVC83222"></script>
-<script>
-  window.dataLayer = window.dataLayer || [];
-  function gtag(){dataLayer.push(arguments);}
-  gtag('js', new Date());
-
-  gtag('config', 'G-X8TVC83222');
-</script>
+<link rel="stylesheet" href="../../../assets/css/consentement.css">
+<script defer src="../../../assets/js/consentement.js"></script>
 </head>
 
 <body>
@@ -298,26 +296,26 @@
         <p>Méthode directe pour poser une multiplication avec superposition.</p>
       </a>
 
-      <a href="abaque_gerbert_division.html" class="card-link">
+      <div class="card-link is-coming-soon">
         <div class="icon-box">➗</div>
         <div class="card-head">
           <h3>Division</h3>
           <span class="pill soon">à venir</span>
         </div>
         <p>Mode guidé pour une division (partages, échanges, reste).</p>
-      </a>
+      </div>
     </section>
 
     <h2 class="section-title">🧩 Bonus</h2>
     <section class="grid cat-adv">
-      <a href="abaque_gerbert_aide.html" class="card-link">
+      <div class="card-link is-coming-soon">
         <div class="icon-box">📘</div>
         <div class="card-head">
           <h3>Fiche d’utilisation</h3>
           <span class="pill soon">à venir</span>
         </div>
         <p>Une page simple “mode d’emploi” (règles, gestes, vocabulaire, conseils prof).</p>
-      </a>
+      </div>
 
       <a href="https://www.youtube.com/watch?v=_ubBAAgLiok" class="card-link" target="_blank" rel="noopener noreferrer">
         <div class="icon-box">🎥</div>
