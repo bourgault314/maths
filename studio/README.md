@@ -13,6 +13,8 @@ moteur de la rendre.
 - La bibliothèque est la source de vérité ; la mémoire d'un agent ne l'est pas.
 - Les rendus validés doivent être déterministes : mêmes paramètres, même résultat.
 - Le contenu sémantique est séparé du dessin, du mode d'activité et de l'interface.
+- Les outils interactifs exposent un contrat de lancement réutilisable : une page
+  élève peut fournir des paramètres validés et ouvrir directement le bon exemple.
 - Un contenu peut produire plusieurs sorties : web, téléphone, diaporama, impression
   et PDF.
 - Les contenus passent par les états `draft`, `review`, `validated`, `deprecated`.
@@ -29,6 +31,9 @@ moteur de la rendre.
 4. [Données et résultats](docs/04-DONNEES-ET-RESULTATS.md)
 5. [Feuille de route](docs/05-ROADMAP.md)
 6. [Inventaire et migration](docs/06-INVENTAIRE-MIGRATION.md)
+
+Premier composant pédagogique documenté : [Pythagore](components/pythagore/README.md),
+avec son contrat expérimental [JSON](schemas/pythagore-components.v1.json).
 
 ## État actuel
 
