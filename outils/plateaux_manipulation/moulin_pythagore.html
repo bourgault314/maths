@@ -137,10 +137,13 @@
   }
 
   @media (max-width:700px){
-    /* Le fond de la scène peut défiler entre les deux moulins ; les pièces,
-       elles, restent entièrement réservées au geste de déplacement. */
+    /* Sur téléphone, une seule forme de moulin reste visible : la cible.
+       Les pièces sont conservées dans la scène, sous la cible, sans afficher
+       un deuxième triangle source. */
     #stageWrap{touch-action:pan-y; overflow-x:hidden;}
     svg#stage{touch-action:pan-y;}
+    svg#stage.compactLayout #boardsL{display:none;}
+    svg#stage.compactLayout .label[data-side="L"]{display:none!important;}
     svg#stage .piecePoly,
     svg#stage .handle{touch-action:none;}
     #fullscreen{display:none;}
@@ -581,18 +584,33 @@
   }
 
   function fitWorldToViewport(){
-    // Centre et ajuste le zoom en se basant uniquement sur les plateaux (pas sur
-    // les pièces), pour éviter que le cadrage bouge pendant une manipulation.
+    // Centre et ajuste le zoom en se basant sur les plateaux, et sur la zone
+    // initiale des pièces en mode téléphone. Le déplacement d'une pièce ne
+    // relance pas ce calcul : le cadrage reste donc fixe pendant le jeu.
     const W = stageWrap.clientWidth || 1;
     const H = stageWrap.clientHeight || 1;
 
     const gBoards = document.getElementById("boards");
     const gBoardsL = document.getElementById("boardsL");
+    const gBoardsR = document.getElementById("boardsR");
+    const gPieces = document.getElementById("pieces");
 
-    // En mode vide, on centre uniquement le moulin gauche (R est masqué).
-    const target = (state.mode === "vide" ? (gBoardsL || gBoards) : gBoards) || world;
-    const bb = target.getBBox();
     const compact = isCompactViewport() && state.mode === "eleves";
+    // En mode élève sur téléphone, seul le moulin cible est visible ; les
+    // pièces sont prises en compte séparément pour garder leur zone à l'écran.
+    const target = state.mode === "vide"
+      ? (gBoardsL || gBoards)
+      : (compact ? (gBoardsR || gBoards) : gBoards) || world;
+    let bb = target.getBBox();
+    if(compact && gPieces){
+      const piecesBox = gPieces.getBBox();
+      if(piecesBox.width || piecesBox.height){
+        const minX=Math.min(bb.x,piecesBox.x), minY=Math.min(bb.y,piecesBox.y);
+        const maxX=Math.max(bb.x+bb.width,piecesBox.x+piecesBox.width);
+        const maxY=Math.max(bb.y+bb.height,piecesBox.y+piecesBox.height);
+        bb={x:minX,y:minY,width:maxX-minX,height:maxY-minY};
+      }
+    }
     const pad = compact ? 18 : 32;
     const contentW = bb.width  + pad * 2;
     const contentH = bb.height + pad * 2;
