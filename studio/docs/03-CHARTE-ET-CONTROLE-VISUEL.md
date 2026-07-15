@@ -40,6 +40,22 @@ Il ne constitue pas encore la charte définitive.
 - impression A4 et A5 ;
 - noir et blanc ou contour seul lorsque le composant le permet.
 
+Sur téléphone, le plein écran n’est pas proposé pour les outils pédagogiques :
+il est réservé à l’ordinateur et à la projection.
+
+## Règle de sobriété des outils et des énoncés
+
+Les outils et les énoncés imprimables restent centrés sur l’activité mathématique :
+
+- pas de petit bouton ou lien de retour vers le site dans l’outil ou l’énoncé ;
+- pas d’adresse web affichée sur l’énoncé imprimable ;
+- pas de marquage parasite ou d’ancien habillage résiduel ;
+- menus et boutons modernisés dans le langage visuel maths&go, sans modifier le
+  contenu mathématique validé.
+
+Cette règle s’applique à chaque ancienne page reprise, notamment aux deux outils
+de Pythagore.
+
 ## Références visuelles
 
 Chaque composant validé doit fournir :
