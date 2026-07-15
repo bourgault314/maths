@@ -11,34 +11,46 @@
       <text x="90" y="116" text-anchor="middle" fill="#063f86" font-family="Arial" font-size="18" font-weight="900">4 × 3 = 12</text>
     </svg>`;
 
-  const fractionMemo = `
-    <svg viewBox="0 0 250 150" aria-label="Rappel : un demi, deux tiers et trois quarts">
-      <g font-family="Arial" font-weight="850">
-        <rect x="7" y="8" width="116" height="31" fill="#fff" stroke="#a16207" stroke-width="2.5"/>
-        <rect x="7" y="8" width="58" height="31" fill="#facc15"/>
-        <path d="M65 8v31" stroke="#a16207" stroke-width="2.5"/>
-        <g fill="#7a4906" font-family="Georgia" font-size="15" text-anchor="middle"><text x="145" y="21">1</text><path d="M137 25h16" stroke="#7a4906" stroke-width="2"/><text x="145" y="38">2</text></g>
-        <text x="196" y="29" text-anchor="middle" fill="#7a4906" font-size="13">un demi</text>
+  const halfMemo = `
+    <svg viewBox="0 0 190 130" aria-label="Une unité partagée en deux parts égales, dont une est colorée : un demi">
+      <text x="95" y="15" text-anchor="middle" fill="#536176" font-family="Arial" font-size="13" font-weight="850">une unité</text>
+      <path d="M15 31V23H175V31" fill="none" stroke="#a16207" stroke-width="2.5"/>
+      <rect x="15" y="37" width="160" height="48" fill="#fff" stroke="#a16207" stroke-width="3"/>
+      <rect x="15" y="37" width="80" height="48" fill="#facc15"/>
+      <path d="M95 37v48" stroke="#a16207" stroke-width="3"/>
+      <g fill="#7a4906" font-family="Georgia" font-size="18" font-weight="900" text-anchor="middle"><text x="62" y="105">1</text><path d="M52 110h20" stroke="#7a4906" stroke-width="2.5"/><text x="62" y="127">2</text></g>
+      <text x="130" y="117" text-anchor="middle" fill="#7a4906" font-family="Arial" font-size="15" font-weight="900">un demi</text>
+    </svg>`;
 
-        <rect x="7" y="58" width="116" height="31" fill="#fff" stroke="#7c3aed" stroke-width="2.5"/>
-        <rect x="7" y="58" width="77.33" height="31" fill="#e9d5ff"/>
-        <path d="M45.67 58v31M84.33 58v31" stroke="#7c3aed" stroke-width="2.5"/>
-        <g fill="#5b21b6" font-family="Georgia" font-size="15" text-anchor="middle"><text x="145" y="71">2</text><path d="M137 75h16" stroke="#5b21b6" stroke-width="2"/><text x="145" y="88">3</text></g>
-        <text x="196" y="79" text-anchor="middle" fill="#5b21b6" font-size="13">deux tiers</text>
+  const thirdsMemo = `
+    <svg viewBox="0 0 190 130" aria-label="Une unité partagée en trois parts égales, dont deux sont colorées : deux tiers">
+      <text x="95" y="15" text-anchor="middle" fill="#536176" font-family="Arial" font-size="13" font-weight="850">une unité</text>
+      <path d="M15 31V23H175V31" fill="none" stroke="#7c3aed" stroke-width="2.5"/>
+      <rect x="15" y="37" width="160" height="48" fill="#fff" stroke="#7c3aed" stroke-width="3"/>
+      <rect x="15" y="37" width="106.67" height="48" fill="#e9d5ff"/>
+      <path d="M68.33 37v48M121.67 37v48" stroke="#7c3aed" stroke-width="3"/>
+      <g fill="#5b21b6" font-family="Georgia" font-size="18" font-weight="900" text-anchor="middle"><text x="62" y="105">2</text><path d="M52 110h20" stroke="#5b21b6" stroke-width="2.5"/><text x="62" y="127">3</text></g>
+      <text x="132" y="117" text-anchor="middle" fill="#5b21b6" font-family="Arial" font-size="15" font-weight="900">deux tiers</text>
+    </svg>`;
 
-        <rect x="7" y="108" width="116" height="31" fill="#fff" stroke="#3f6212" stroke-width="2.5"/>
-        <rect x="7" y="108" width="87" height="31" fill="#84cc16"/>
-        <path d="M36 108v31M65 108v31M94 108v31" stroke="#3f6212" stroke-width="2.5"/>
-        <g fill="#365314" font-family="Georgia" font-size="15" text-anchor="middle"><text x="145" y="121">3</text><path d="M137 125h16" stroke="#365314" stroke-width="2"/><text x="145" y="138">4</text></g>
-        <text x="198" y="129" text-anchor="middle" fill="#365314" font-size="13">trois quarts</text>
-      </g>
+  const quartersMemo = `
+    <svg viewBox="0 0 190 130" aria-label="Une unité partagée en quatre parts égales, dont trois sont colorées : trois quarts">
+      <text x="95" y="15" text-anchor="middle" fill="#536176" font-family="Arial" font-size="13" font-weight="850">une unité</text>
+      <path d="M15 31V23H175V31" fill="none" stroke="#3f6212" stroke-width="2.5"/>
+      <rect x="15" y="37" width="160" height="48" fill="#fff" stroke="#3f6212" stroke-width="3"/>
+      <rect x="15" y="37" width="120" height="48" fill="#84cc16"/>
+      <path d="M55 37v48M95 37v48M135 37v48" stroke="#3f6212" stroke-width="3"/>
+      <g fill="#365314" font-family="Georgia" font-size="18" font-weight="900" text-anchor="middle"><text x="62" y="105">3</text><path d="M52 110h20" stroke="#365314" stroke-width="2.5"/><text x="62" y="127">4</text></g>
+      <text x="135" y="117" text-anchor="middle" fill="#365314" font-family="Arial" font-size="15" font-weight="900">trois quarts</text>
     </svg>`;
 
   const geometryMemo = `
-    <svg viewBox="0 0 150 100" aria-hidden="true">
-      <rect x="40" y="13" width="70" height="70" fill="#dbeafe" stroke="#2563eb" stroke-width="4"/>
-      <path d="M40 68h15v15M95 83V68h15M40 28h15V13M95 13v15h15" fill="none" stroke="#f97316" stroke-width="3.5"/>
-      <path d="M70 9v9M80 9v9M70 78v9M80 78v9M35 43h9M35 53h9M106 43h9M106 53h9" stroke="#087a55" stroke-width="3" stroke-linecap="round"/>
+    <svg viewBox="0 0 170 150" aria-label="Un carré avec ses quatre côtés égaux et ses quatre angles droits codés">
+      <rect x="32" y="4" width="106" height="106" fill="#dbeafe" stroke="#2563eb" stroke-width="5"/>
+      <path d="M32 88h22v22M116 110V88h22M32 26h22V4M116 4v22h22" fill="none" stroke="#f97316" stroke-width="4"/>
+      <path d="M79 0v10M91 0v10M79 104v12M91 104v12M26 51h12M26 63h12M132 51h12M132 63h12" stroke="#087a55" stroke-width="4" stroke-linecap="round"/>
+      <text x="85" y="131" text-anchor="middle" fill="#0755b8" font-family="Arial" font-size="13" font-weight="900">4 côtés égaux</text>
+      <text x="85" y="147" text-anchor="middle" fill="#b94708" font-family="Arial" font-size="13" font-weight="900">4 angles droits</text>
     </svg>`;
 
   const stackedFraction = (numerator, denominator, words) => `<span class="fraction-option"><span class="stacked-fraction"><span>${numerator}</span><span>${denominator}</span></span><span class="fraction-words">${words}</span></span>`;
@@ -131,11 +143,25 @@
         text: "4 × 3, c’est 4 groupes de 3. On peut aussi penser 3 groupes de 4 : le résultat reste 12."
       },
       {
+        color: "#d8a600",
+        soft: "#fffbea",
+        visual: halfMemo,
+        title: "Un demi",
+        text: "Un demi, c’est 1 part choisie quand l’unité est partagée en 2 parts égales."
+      },
+      {
         color: "#7c3aed",
         soft: "#f8f3ff",
-        visual: fractionMemo,
-        title: "Une fraction partage l’unité en parts égales",
+        visual: thirdsMemo,
+        title: "Deux tiers",
         text: "Deux tiers, c’est 2 parts choisies quand l’unité est partagée en 3 parts égales."
+      },
+      {
+        color: "#65a30d",
+        soft: "#f7fee7",
+        visual: quartersMemo,
+        title: "Trois quarts",
+        text: "Trois quarts, c’est 3 parts choisies quand l’unité est partagée en 4 parts égales."
       },
       {
         color: "#2563eb",
