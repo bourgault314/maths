@@ -25,6 +25,9 @@
     <loc>https://mathsgo.re/outils/bouliers/</loc>
   </url>
   <url>
+    <loc>https://mathsgo.re/outils/calcul_litteral/</loc>
+  </url>
+  <url>
     <loc>https://mathsgo.re/outils/club_maths/</loc>
   </url>
   <url>
@@ -44,6 +47,9 @@
   </url>
   <url>
     <loc>https://mathsgo.re/outils/plateaux_manipulation/</loc>
+  </url>
+  <url>
+    <loc>https://mathsgo.re/outils/splat/</loc>
   </url>
   <url>
     <loc>https://mathsgo.re/outils/tuiles_algebriques/</loc>

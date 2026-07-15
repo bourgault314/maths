@@ -133,8 +133,63 @@ select { cursor: pointer; }
   line-height: 1.55;
 }
 
-.domain-mobile-box {
-  display: none;
+.featured-access {
+  display: grid;
+  grid-template-columns: minmax(0, 1.18fr) minmax(0, .82fr);
+  gap: 12px;
+  margin: 0 0 18px;
+}
+
+.featured-card {
+  min-width: 0;
+  min-height: 90px;
+  display: grid;
+  grid-template-columns: 62px minmax(0, 1fr) 22px;
+  align-items: center;
+  gap: 13px;
+  padding: 14px 16px;
+  border: 1px solid #d4dfea;
+  border-radius: 17px;
+  color: inherit;
+  background: #fff;
+  text-decoration: none;
+  box-shadow: 0 5px 14px rgba(15, 40, 72, 0.06);
+  transition: transform .16s ease, box-shadow .16s ease, border-color .16s ease;
+}
+
+.featured-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 12px 24px rgba(15, 40, 72, 0.11);
+}
+
+.featured-auto {
+  border-color: #b9d2ec;
+  background: linear-gradient(135deg, #f4f9ff, #fff);
+}
+
+.featured-splat {
+  border-color: #cce5d2;
+  background: linear-gradient(135deg, #f1fbf3, #fff);
+}
+
+.featured-visual {
+  width: 62px;
+  height: 58px;
+  display: grid;
+  place-items: center;
+}
+
+.featured-visual svg { width: 100%; height: 100%; overflow: visible; }
+.featured-copy { min-width: 0; }
+.featured-copy strong { display: block; color: var(--blue-dark); font-size: 1.02rem; line-height: 1.22; }
+.featured-copy small { display: block; margin-top: 5px; color: #64758a; font-size: .84rem; line-height: 1.3; }
+.featured-arrow { color: var(--blue); font-size: 1.35rem; font-weight: 800; transition: transform .16s ease; }
+.featured-card:hover .featured-arrow { transform: translateX(3px); }
+
+.domain-mobile-box,
+.domain-box,
+.facet-box {
+  display: flex;
   align-items: center;
   gap: 10px;
   min-height: 47px;
@@ -143,13 +198,17 @@ select { cursor: pointer; }
   border-radius: 14px;
   background: #fff;
 }
-.domain-mobile-box label {
+.domain-mobile-box label,
+.domain-box label,
+.facet-box label {
   flex: 0 0 auto;
   color: #6a788b;
   font-size: 0.83rem;
   font-weight: 800;
 }
-.domain-mobile-box select {
+.domain-mobile-box select,
+.domain-box select,
+.facet-box select {
   min-width: 0;
   flex: 1;
   border: 0;
@@ -161,13 +220,15 @@ select { cursor: pointer; }
 
 .catalogue-controls {
   display: grid;
-  grid-template-columns: minmax(230px, 1fr) minmax(230px, 330px);
+  grid-template-columns: minmax(240px, 1fr) minmax(210px, 280px) minmax(210px, 280px);
   gap: 14px;
   margin-bottom: 22px;
 }
 
 .search-box,
-.type-box {
+.type-box,
+.domain-box,
+.facet-box {
   min-height: 52px;
   display: flex;
   align-items: center;
@@ -179,7 +240,9 @@ select { cursor: pointer; }
 }
 
 .search-box:focus-within,
-.type-box:focus-within {
+.type-box:focus-within,
+.domain-box:focus-within,
+.facet-box:focus-within {
   border-color: #78a7d4;
   box-shadow: 0 0 0 3px rgba(11, 103, 178, 0.10);
 }
@@ -212,14 +275,18 @@ select { cursor: pointer; }
   line-height: 1;
 }
 
-.type-box label {
+.type-box label,
+.domain-box label,
+.facet-box label {
   flex: 0 0 auto;
   color: #6a788b;
   font-size: 0.83rem;
   font-weight: 800;
 }
 
-.type-box select {
+.type-box select,
+.domain-box select,
+.facet-box select {
   min-width: 0;
   flex: 1;
   border: 0;
@@ -311,6 +378,74 @@ select { cursor: pointer; }
   gap: 14px;
 }
 
+.domain-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 14px;
+}
+
+.domain-card {
+  position: relative;
+  min-width: 0;
+  min-height: 138px;
+  display: grid;
+  grid-template-columns: 78px minmax(0, 1fr) 22px;
+  align-items: center;
+  gap: 15px;
+  padding: 18px;
+  overflow: hidden;
+  border: 1px solid #d7e0e9;
+  border-left: 6px solid var(--accent, var(--blue));
+  border-radius: 17px;
+  color: inherit;
+  background: #fff;
+  text-align: left;
+  box-shadow: 0 4px 10px rgba(15, 40, 72, .05);
+  transition: transform .16s ease, box-shadow .16s ease, border-color .16s ease;
+}
+
+.domain-card::after {
+  content: "";
+  position: absolute;
+  right: -44px;
+  bottom: -58px;
+  width: 150px;
+  height: 150px;
+  border-radius: 50%;
+  background: var(--soft, #eef5fb);
+  opacity: .78;
+  pointer-events: none;
+}
+
+.domain-card:hover {
+  transform: translateY(-3px);
+  border-color: color-mix(in srgb, var(--accent, var(--blue)) 45%, #d7e0e9);
+  box-shadow: 0 12px 25px rgba(15, 40, 72, .11);
+}
+
+.domain-card-secondary {
+  grid-column: 1 / -1;
+  min-height: 105px;
+  grid-template-columns: 66px minmax(0, 1fr) 22px;
+  background: linear-gradient(135deg, #f4fbf5, #fff);
+}
+
+.domain-card-icon {
+  position: relative;
+  z-index: 1;
+  width: 76px;
+  height: 62px;
+  display: grid;
+  place-items: center;
+}
+
+.domain-card-icon svg { width: 100%; height: 100%; overflow: visible; }
+.domain-card-copy { position: relative; z-index: 1; min-width: 0; }
+.domain-card-copy strong { display: block; color: #16304f; font-size: 1.14rem; line-height: 1.2; }
+.domain-card-copy small { display: block; margin-top: 6px; color: #64758a; font-size: .88rem; line-height: 1.35; }
+.domain-card-copy em { display: block; margin-top: 8px; color: var(--accent, var(--blue)); font-size: .77rem; font-style: normal; font-weight: 800; }
+.domain-card-arrow { position: relative; z-index: 1; color: var(--accent, var(--blue)); font-size: 1.35rem; font-weight: 800; }
+
 .notion-card,
 .resource-card {
   position: relative;
@@ -393,6 +528,16 @@ select { cursor: pointer; }
   color: #637287;
   font-size: 0.9rem;
   line-height: 1.4;
+}
+
+.notion-count {
+  position: relative;
+  z-index: 1;
+  display: block;
+  margin-top: 8px;
+  color: var(--accent, var(--blue));
+  font-size: .76rem;
+  font-weight: 800;
 }
 
 .resource-card {
@@ -494,6 +639,8 @@ select { cursor: pointer; }
   .notion-grid,
   .resource-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .domain-tab { padding-inline: 15px; }
+  .catalogue-controls { grid-template-columns: 1fr 1fr; }
+  .search-box { grid-column: 1 / -1; }
 }
 
 @media (max-width: 680px) {
@@ -503,10 +650,15 @@ select { cursor: pointer; }
   .header-home { grid-column: 2; }
   .main-panel { padding: 20px 15px 24px; border-radius: 21px; }
   .hero { margin-bottom: 21px; }
+  .featured-access { grid-template-columns: 1fr; gap: 9px; }
+  .featured-card { min-height: 82px; grid-template-columns: 55px minmax(0, 1fr) 18px; padding: 12px 13px; }
+  .featured-visual { width: 53px; height: 50px; }
   .catalogue-controls { grid-template-columns: 1fr; gap: 9px; }
-  .type-box { min-height: 47px; }
+  .type-box,
+  .domain-box,
+  .facet-box { min-height: 47px; }
   .domain-nav { display: none; }
-  .domain-mobile-box { display: flex; margin-bottom: 10px; }
+  .domain-mobile-box { display: none; }
   .domain-nav {
     gap: 7px;
     margin-right: -15px;
@@ -531,6 +683,31 @@ select { cursor: pointer; }
   }
   .notion-grid,
   .resource-grid { grid-template-columns: 1fr; gap: 10px; }
+  .domain-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 9px; }
+  .domain-card {
+    min-height: 164px;
+    grid-template-columns: 1fr;
+    align-content: start;
+    gap: 8px;
+    padding: 13px 12px;
+    border-left-width: 1px;
+    border-top: 5px solid var(--accent, var(--blue));
+    text-align: center;
+  }
+  .domain-card-icon { width: 62px; height: 52px; margin: 0 auto; }
+  .domain-card-copy strong { font-size: .98rem; }
+  .domain-card-copy small { display: none; }
+  .domain-card-copy em { margin-top: 6px; }
+  .domain-card-arrow { display: none; }
+  .domain-card-secondary {
+    grid-column: 1 / -1;
+    min-height: 91px;
+    grid-template-columns: 57px minmax(0, 1fr);
+    align-items: center;
+    text-align: left;
+  }
+  .domain-card-secondary .domain-card-icon { width: 56px; height: 47px; }
+  .domain-card-secondary .domain-card-copy small { display: block; }
   .notion-card { min-height: 122px; padding: 14px 15px; }
   .notion-icon { width: 53px; height: 43px; flex-basis: 53px; }
   .section-heading { align-items: center; }
@@ -542,7 +719,10 @@ select { cursor: pointer; }
   .header-home svg { width: 24px; height: 24px; }
   .hero h1 { font-size: 2rem; }
   .search-box { min-height: 49px; }
-  .type-box label { display: none; }
+  .type-box label,
+  .domain-box label,
+  .facet-box label { display: none; }
+  .domain-card { min-height: 155px; }
 }
 
 @media (prefers-reduced-motion: reduce) {

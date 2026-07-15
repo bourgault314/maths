@@ -1,7 +1,7 @@
 window.MATHSGO_CATALOGUE = {
-  "schemaVersion": 3,
-  "generatedAt": "2026-07-14T19:09:23.810Z",
-  "description": "Catalogue virtuel détaillé du prototype de refonte. Aucun chemin physique n’est déplacé.",
+  "schemaVersion": 4,
+  "generatedAt": "2026-07-15T00:00:00.000Z",
+  "description": "Catalogue des ressources maths&go : domaines, notions, collections et facettes cumulables.",
   "uses": [
     {
       "id": "manipuler",
@@ -46,6 +46,76 @@ window.MATHSGO_CATALOGUE = {
     {
       "id": "generateur-exercices",
       "label": "Générateurs d’exercices"
+    }
+  ],
+  "facets": [
+    {
+      "id": "manipuler",
+      "label": "Manipuler"
+    },
+    {
+      "id": "generer",
+      "label": "Générer / personnaliser"
+    },
+    {
+      "id": "gabarits",
+      "label": "Gabarits et matériel"
+    },
+    {
+      "id": "imprimer",
+      "label": "Imprimer / fabriquer"
+    },
+    {
+      "id": "activites",
+      "label": "Activités et séances"
+    },
+    {
+      "id": "cours",
+      "label": "Cours et synthèses"
+    },
+    {
+      "id": "jeux",
+      "label": "Jouer / explorer"
+    }
+  ],
+  "collections": [
+    {
+      "id": "bouliers",
+      "title": "Bouliers et abaques",
+      "domain": "nombres-calculs",
+      "notions": ["numeration"],
+      "hub": "bouliers/index.html"
+    },
+    {
+      "id": "rekenrek",
+      "title": "Rekenrek",
+      "domain": "nombres-calculs",
+      "notions": ["numeration", "calcul-mental"],
+      "hub": "bouliers/rekenrek/index.html",
+      "role": "progression"
+    },
+    {
+      "id": "gerbert",
+      "title": "Abaque de Gerbert",
+      "domain": "nombres-calculs",
+      "notions": ["numeration"],
+      "hub": "bouliers/abaque_de_gerbert/index.html",
+      "role": "progression-courte"
+    },
+    {
+      "id": "tuiles-algebriques",
+      "title": "Tuiles algébriques",
+      "domain": "algebre",
+      "notions": ["calcul-litteral", "equations"],
+      "hub": "tuiles_algebriques/index.html"
+    },
+    {
+      "id": "splat",
+      "title": "Splat et schémas en barres",
+      "domain": "algebre",
+      "notions": ["calcul-litteral", "equations", "schemas-barres"],
+      "hub": "splat/index.html",
+      "featured": true
     }
   ],
   "domains": [

@@ -9,6 +9,25 @@
   const domainMap = new Map(catalogue.domains.map((domain) => [domain.id, domain]));
   const notionMap = new Map(catalogue.notions.map((notion) => [notion.id, notion]));
   const typeMap = new Map(catalogue.types.map((type) => [type.id, type]));
+  const facetMap = new Map((catalogue.facets || []).map((facet) => [facet.id, facet]));
+  const mainDomainIds = [
+    "nombres-calculs",
+    "algebre",
+    "proportionnalite-mesures",
+    "geometrie",
+    "donnees",
+    "informatique"
+  ];
+
+  const domainDesign = {
+    "nombres-calculs": { icon: "abacus" },
+    algebre: { icon: "splat" },
+    "proportionnalite-mesures": { icon: "ratio" },
+    geometrie: { icon: "angles" },
+    donnees: { icon: "stats" },
+    informatique: { icon: "computing" },
+    "jeux-recherches": { icon: "strategy" }
+  };
 
   const notionDesign = {
     numeration: {
@@ -48,7 +67,8 @@
       description: "S’entraîner, automatiser et projeter en classe.",
       keywords: "automatismes dnb calcul mental cahier",
       icon: "automatismes",
-      hub: "automatismes/index.html"
+      hub: "../auto/",
+      hiddenFromBrowse: true
     },
     proportionnalite: {
       description: "Ratios, grandeurs et situations proportionnelles.",
@@ -85,17 +105,19 @@
       description: "Généraliser et manipuler les expressions algébriques.",
       keywords: "développer réduire expression tuiles x",
       icon: "tiles",
-      hub: "tuiles_algebriques/index.html"
+      hub: "calcul_litteral/index.html"
     },
     equations: {
       description: "Représenter l’inconnue et résoudre des équations.",
       keywords: "équation balance equasplat equabarre inconnue",
-      icon: "splat"
+      icon: "splat",
+      hub: "splat/index.html"
     },
     "schemas-barres": {
       description: "Modéliser les problèmes avec des schémas en barres.",
       keywords: "splat problème partie tout barres singapour",
-      icon: "bars"
+      icon: "bars",
+      hub: "splat/index.html"
     },
     patterns: {
       description: "Observer, prolonger et généraliser des motifs.",
@@ -174,12 +196,13 @@
   };
 
   const state = {
-    domain: "",
+    domain: new URLSearchParams(window.location.search).get("domain") || "",
     query: "",
-    type: "",
+    facet: new URLSearchParams(window.location.search).get("facet") || "",
     notion: new URLSearchParams(window.location.search).get("notion") || ""
   };
 
+  const domainGrid = document.getElementById("domain-grid");
   const notionGrid = document.getElementById("notion-grid");
   const resourceGrid = document.getElementById("resource-grid");
   const title = document.getElementById("results-title");
@@ -189,8 +212,8 @@
   const backButton = document.getElementById("back-themes");
   const searchInput = document.getElementById("catalogue-search");
   const clearButton = document.getElementById("search-clear");
-  const typeSelect = document.getElementById("type-filter");
-  const domainMobileSelect = document.getElementById("domain-mobile-filter");
+  const domainSelect = document.getElementById("domain-filter");
+  const facetSelect = document.getElementById("facet-filter");
 
   function escapeHtml(value) {
     return String(value ?? "")
@@ -219,9 +242,14 @@
     return words(query).every((word) => target.includes(word));
   }
 
-  function clearQueryString() {
+  function syncQueryString() {
     try {
-      history.replaceState(null, "", window.location.pathname);
+      const params = new URLSearchParams();
+      if (state.domain) params.set("domain", state.domain);
+      if (state.notion) params.set("notion", state.notion);
+      if (state.facet) params.set("facet", state.facet);
+      const query = params.toString();
+      history.replaceState(null, "", `${window.location.pathname}${query ? `?${query}` : ""}`);
     } catch (_error) {
       // L'ouverture directe depuis un dossier Windows peut interdire l'API History.
       // Le filtrage doit continuer à fonctionner dans ce cas.
@@ -288,9 +316,66 @@
     return [notion.title, design.description, design.keywords].join(" ");
   }
 
+  function domainResourceCount(domainId) {
+    return published.filter((resource) => resource.domains.includes(domainId)).length;
+  }
+
+  function notionResourceCount(notionId) {
+    return published.filter((resource) => resource.notions.includes(notionId)).length;
+  }
+
+  function resourceFacets(resource) {
+    const facets = new Set();
+    const types = resource.types || [];
+    const uses = resource.uses || [];
+    const source = normalise([resource.title, resource.path, resource.description, ...(resource.keywords || [])].join(" "));
+
+    if (uses.includes("manipuler") || types.includes("plateau")) facets.add("manipuler");
+    if (types.includes("generateur") || source.includes("generateur") || source.includes("maker")) facets.add("generer");
+    if (
+      source.match(/gabarit|rapporteur|materiel|cartes|grille|patron|tuiles a decouper/) ||
+      (resource.filters || []).includes("materiel-imprimer")
+    ) facets.add("gabarits");
+    if (resource.kind === "document" || types.includes("imprimable") || uses.includes("imprimer")) facets.add("imprimer");
+    if (source.match(/activite|seance|recherche|enquete|detective|puzzle|problemes|narration|feuille coupee/)) facets.add("activites");
+    if (source.match(/cours|synthese/) || resource.path.includes("livret_litteral")) facets.add("cours");
+    if (resource.domains.includes("jeux-recherches") || source.match(/jeu de|yavalath|chaos|tables modulaires|grand pari/)) facets.add("jeux");
+    return facets;
+  }
+
+  function renderDomains() {
+    domainGrid.hidden = false;
+    notionGrid.hidden = true;
+    resourceGrid.hidden = true;
+    notionGrid.innerHTML = "";
+    resourceGrid.innerHTML = "";
+
+    const cards = mainDomainIds.map((domainId) => {
+      const domain = domainMap.get(domainId);
+      const count = domainResourceCount(domainId);
+      const design = domainDesign[domainId] || {};
+      return `<button class="domain-card" type="button" data-domain-card="${escapeHtml(domainId)}" style="${domainStyle(domainId)}">
+        <span class="domain-card-icon">${icon(design.icon)}</span>
+        <span class="domain-card-copy"><strong>${escapeHtml(domain.title)}</strong><small>${escapeHtml(domain.short)}</small><em>${count ? `${count} ressource${count > 1 ? "s" : ""}` : "Bientôt"}</em></span>
+        <span class="domain-card-arrow" aria-hidden="true">→</span>
+      </button>`;
+    });
+
+    const games = domainMap.get("jeux-recherches");
+    const gamesCount = domainResourceCount("jeux-recherches");
+    cards.push(`<button class="domain-card domain-card-secondary" type="button" data-domain-card="jeux-recherches" style="${domainStyle("jeux-recherches")}">
+      <span class="domain-card-icon">${icon(domainDesign["jeux-recherches"].icon)}</span>
+      <span class="domain-card-copy"><strong>${escapeHtml(games.title)}</strong><small>${escapeHtml(games.short)}</small><em>${gamesCount} ressource${gamesCount > 1 ? "s" : ""}</em></span>
+      <span class="domain-card-arrow" aria-hidden="true">→</span>
+    </button>`);
+    domainGrid.innerHTML = cards.join("");
+  }
+
   function matchingNotions() {
     return catalogue.notions.filter((notion) => {
       if (state.domain && notion.domain !== state.domain) return false;
+      if (notionDesign[notion.id]?.hiddenFromBrowse) return false;
+      if (!notionResourceCount(notion.id)) return false;
       if (state.query && !allWordsMatch(notionHaystack(notion), state.query)) return false;
       return true;
     });
@@ -306,7 +391,7 @@
     return published.filter((resource) => {
       if (state.domain && !resource.domains.includes(state.domain)) return false;
       if (state.notion && !resource.notions.includes(state.notion)) return false;
-      if (state.type && !(resource.types || []).includes(state.type)) return false;
+      if (state.facet && !resourceFacets(resource).has(state.facet)) return false;
       if (state.query && !allWordsMatch(resourceHaystack(resource), state.query)) return false;
       return true;
     });
@@ -319,28 +404,33 @@
   }
 
   function renderNotions(notions) {
+    domainGrid.hidden = true;
     notionGrid.hidden = false;
     resourceGrid.hidden = true;
     resourceGrid.innerHTML = "";
     notionGrid.innerHTML = notions.map((notion) => {
       const design = notionDesign[notion.id] || {};
+      const count = notionResourceCount(notion.id);
       return `<a class="notion-card" href="${escapeHtml(notionHref(notion))}" style="${domainStyle(notion.domain)}">
         <span class="notion-top">
           <span class="notion-icon">${icon(design.icon)}</span>
           <h3>${escapeHtml(notion.title)}</h3>
         </span>
         <p>${escapeHtml(design.description || "Découvrir les outils de ce thème.")}</p>
+        <span class="notion-count">${count} ressource${count > 1 ? "s" : ""}</span>
       </a>`;
     }).join("") || `<p class="empty-state">Aucun thème ne correspond à cette recherche.</p>`;
   }
 
   function resourceMeta(resource) {
     const notion = notionMap.get(resource.notions[0]);
-    const type = (resource.types || []).map((id) => typeMap.get(id)?.label).find(Boolean);
-    return [notion?.title, type || (resource.kind === "document" ? "Document" : "Outil interactif")].filter(Boolean).join(" · ");
+    const facetLabels = [...resourceFacets(resource)].slice(0, 2).map((id) => facetMap.get(id)?.label).filter(Boolean);
+    const fallback = (resource.types || []).map((id) => typeMap.get(id)?.label).find(Boolean);
+    return [notion?.title, ...facetLabels, facetLabels.length ? "" : (fallback || "Outil interactif")].filter(Boolean).join(" · ");
   }
 
   function renderResources(resources) {
+    domainGrid.hidden = true;
     notionGrid.hidden = true;
     resourceGrid.hidden = false;
     notionGrid.innerHTML = "";
@@ -354,31 +444,30 @@
     }).join("") || `<p class="empty-state">${state.notion ? "Cet univers est prêt à accueillir ses premiers outils." : "Aucun outil ne correspond à ces critères."}</p>`;
   }
 
-  function renderTabs() {
-    document.querySelectorAll("[data-domain]").forEach((button) => {
-      button.setAttribute("aria-pressed", String(button.dataset.domain === state.domain && !state.notion));
-    });
-    document.querySelectorAll("[data-notion]").forEach((button) => {
-      button.setAttribute("aria-pressed", String(button.dataset.notion === state.notion && !state.domain));
-    });
+  function syncControls() {
+    domainSelect.value = state.domain;
+    facetSelect.value = state.facet;
   }
-  function syncDomainMobile() {
-    if (!domainMobileSelect) return;
-    domainMobileSelect.value = state.notion ? `notion:${state.notion}` : state.domain;
-  }
-
 
   function render() {
-    renderTabs();
-    syncDomainMobile();
+    syncControls();
     clearButton.hidden = !state.query;
 
     const selectedNotion = notionMap.get(state.notion);
     const selectedDomain = domainMap.get(state.domain);
     const queryHasNotionMatches = Boolean(state.query && matchingNotions().length);
-    const showResources = Boolean(state.notion || state.type || (state.query && !queryHasNotionMatches));
+    const showResources = Boolean(state.notion || state.facet || (state.query && !queryHasNotionMatches));
 
-    backButton.hidden = !state.notion;
+    backButton.hidden = !(state.domain || state.notion || state.facet || state.query);
+
+    if (!state.domain && !state.notion && !state.facet && !state.query) {
+      renderDomains();
+      pageTitle.textContent = "Choisissez un domaine";
+      heroLead.textContent = "Entrez par un domaine, puis choisissez une notion pour retrouver ses outils illustrés.";
+      title.textContent = "Les domaines";
+      summary.textContent = "6 domaines mathématiques · jeux et explorations à part";
+      return;
+    }
 
     if (showResources) {
       const resources = matchingResources();
@@ -388,11 +477,11 @@
         pageTitle.textContent = selectedNotion.title;
         heroLead.textContent = notionDesign[selectedNotion.id]?.description || "Les outils disponibles pour ce thème.";
         title.textContent = `Les outils — ${selectedNotion.title}`;
-      } else if (state.type) {
-        const type = typeMap.get(state.type);
-        pageTitle.textContent = type?.label || "Accès direct";
+      } else if (state.facet) {
+        const facet = facetMap.get(state.facet);
+        pageTitle.textContent = facet?.label || "Accès direct";
         heroLead.textContent = selectedDomain ? `Les ressources de ${selectedDomain.title.toLowerCase()} correspondant à ce besoin.` : "Toutes les ressources correspondant à ce besoin.";
-        title.textContent = selectedDomain ? `${type?.label} — ${selectedDomain.title}` : (type?.label || "Outils");
+        title.textContent = selectedDomain ? `${facet?.label} — ${selectedDomain.title}` : (facet?.label || "Outils");
       } else {
         pageTitle.textContent = "Résultats de la recherche";
         heroLead.textContent = `Les outils correspondant à « ${state.query.trim()} ».`;
@@ -405,63 +494,48 @@
 
     const notions = matchingNotions();
     renderNotions(notions);
-    pageTitle.textContent = selectedDomain ? selectedDomain.title : "Choisissez un thème";
+    pageTitle.textContent = selectedDomain ? selectedDomain.title : "Choisissez une notion";
     heroLead.textContent = selectedDomain
       ? `Les thèmes de ${selectedDomain.title.toLowerCase()} présents sur maths&go.`
-      : "Retrouvez les univers illustrés de maths&go, puis entrez dans celui qui vous intéresse.";
-    title.textContent = state.query ? "Thèmes trouvés" : (selectedDomain ? `Les thèmes — ${selectedDomain.title}` : "Tous les thèmes");
-    summary.textContent = `${notions.length} thème${notions.length > 1 ? "s" : ""}`;
+      : "Retrouvez les notions illustrées de maths&go.";
+    title.textContent = state.query ? "Notions trouvées" : (selectedDomain ? "Choisissez une notion" : "Les notions");
+    summary.textContent = notions.length
+      ? `${notions.length} notion${notions.length > 1 ? "s" : ""}`
+      : "Cette porte est prête pour les prochaines ressources.";
   }
 
-  document.querySelectorAll("[data-domain]").forEach((button) => {
-    button.addEventListener("click", () => {
-      state.domain = button.dataset.domain || "";
-      state.notion = "";
-      if (!state.domain) {
-        state.query = "";
-        state.type = "";
-        searchInput.value = "";
-        typeSelect.value = "";
-      }
-      clearQueryString();
-      render();
-    });
-  });
-
-  document.querySelectorAll("[data-notion]").forEach((button) => {
-    button.addEventListener("click", () => {
-      state.domain = "";
-      state.notion = button.dataset.notion || "";
-      state.query = "";
-      state.type = "";
-      searchInput.value = "";
-      typeSelect.value = "";
-      clearQueryString();
-      render();
-    });
-  });
-
-  domainMobileSelect?.addEventListener("change", () => {
-    const value = domainMobileSelect.value;
-    if (value.startsWith("notion:")) {
-      state.notion = value.slice(7);
-      state.domain = "";
-    } else {
-      state.notion = "";
-      state.domain = value;
-    }
+  domainGrid.addEventListener("click", (event) => {
+    const button = event.target.closest("[data-domain-card]");
+    if (!button) return;
+    state.domain = button.dataset.domainCard || "";
+    state.notion = "";
     state.query = "";
-    state.type = "";
     searchInput.value = "";
-    typeSelect.value = "";
-    clearQueryString();
+    syncQueryString();
+    render();
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  });
+
+  domainSelect.addEventListener("change", () => {
+    state.domain = domainSelect.value;
+    state.notion = "";
+    state.query = "";
+    searchInput.value = "";
+    syncQueryString();
+    render();
+  });
+
+  facetSelect.addEventListener("change", () => {
+    state.facet = facetSelect.value;
+    state.notion = "";
+    syncQueryString();
     render();
   });
 
   searchInput.addEventListener("input", () => {
     state.query = searchInput.value;
     state.notion = "";
-    clearQueryString();
+    syncQueryString();
     render();
   });
 
@@ -472,20 +546,24 @@
     render();
   });
 
-  typeSelect.addEventListener("change", () => {
-    state.type = typeSelect.value;
-    state.notion = "";
-    clearQueryString();
-    render();
-  });
-
   backButton.addEventListener("click", () => {
-    state.notion = "";
-    clearQueryString();
+    if (state.notion) {
+      state.domain = notionMap.get(state.notion)?.domain || state.domain;
+      state.notion = "";
+    } else {
+      state.domain = "";
+      state.facet = "";
+      state.query = "";
+      searchInput.value = "";
+    }
+    syncQueryString();
     render();
     window.scrollTo({ top: 0, behavior: "smooth" });
   });
 
   if (state.notion && !notionMap.has(state.notion)) state.notion = "";
+  if (state.domain && !domainMap.has(state.domain)) state.domain = "";
+  if (state.facet && !facetMap.has(state.facet)) state.facet = "";
+  if (state.notion && !state.domain) state.domain = notionMap.get(state.notion)?.domain || "";
   render();
 })();
