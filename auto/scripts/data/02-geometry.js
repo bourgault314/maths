@@ -1028,6 +1028,17 @@ const RAW_GEOMETRY_MODULES = [
           "shuffle_answers": true
         },
         "footer": "[[formula_qcm1]]"
+      },
+      {
+        "n": 11,
+        "statement": "Construis tactilement l'égalité de Pythagore puis remplace les valeurs.",
+        "answer": "[]",
+        "options": {
+          "pythagore_tactile_kind": "relation-and-values",
+          "formula_code": "setNB(1)\nk=RD(0,4)\na=[3,5,6,8,7][k]\nb=[4,12,8,15,24][k]\nc=[5,13,10,17,25][k]",
+          "template_version": 1
+        },
+        "footer": ""
       }
     ]
   },
