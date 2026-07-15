@@ -33,15 +33,29 @@
         <p class="hero-lead" id="hero-lead">Entrez par un domaine, puis choisissez une notion pour retrouver ses outils illustrés.</p>
       </section>
 
+      <a class="auto-feature" href="../auto/">
+        <span class="auto-feature-icon" aria-hidden="true">
+          <svg viewBox="0 0 64 64" focusable="false">
+            <rect x="10" y="9" width="44" height="46" rx="10"/>
+            <path d="M21 23h22M21 33h22M21 43h13"/>
+            <path class="auto-feature-check" d="m39 42 4 4 8-10"/>
+          </svg>
+        </span>
+        <span class="auto-feature-copy">
+          <span class="auto-feature-kicker">Accès direct</span>
+          <strong>Automatismes <span>Cycle 4 – DNB</span></strong>
+          <small>S’entraîner, créer une série ou la projeter en classe.</small>
+        </span>
+        <span class="auto-feature-arrow" aria-hidden="true">→</span>
+      </a>
+
       <div class="catalogue-controls">
         <div class="search-box">
           <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="10.8" cy="10.8" r="6.8" fill="none" stroke="currentColor" stroke-width="2"/><path d="m16 16 4.5 4.5" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
           <label class="visually-hidden" for="catalogue-search">Rechercher un thème ou un outil</label>
-          <input id="catalogue-search" type="search" autocomplete="off" placeholder="Fractions, angles, rapporteur, conversions…">
+          <input id="catalogue-search" type="search" autocomplete="off" placeholder="Rechercher : fractions, Pythagore, gabarit…">
           <button id="search-clear" class="search-clear" type="button" aria-label="Effacer la recherche" hidden>×</button>
         </div>
-
-        <a class="auto-compact" href="../auto/">Automatismes Cycle 4 – DNB <span aria-hidden="true">→</span></a>
 
         <div class="domain-box" hidden>
           <label for="domain-filter">Domaine</label>
@@ -94,7 +108,7 @@
       <a href="mailto:gwenael@mathsgo.re?subject=Contact%20depuis%20mathsgo.re">Me contacter</a><span aria-hidden="true">·</span>
       <a href="../mentions-legales.html">Mentions légales</a><span aria-hidden="true">·</span>
       <a href="../confidentialite.html">Confidentialité</a><span aria-hidden="true">·</span>
-      <button type="button" onclick="window.mathsgoConsentement &amp;&amp; window.mathsgoConsentement.ouvrir()">Gérer mes cookies</button>
+      <button type="button" data-mathsgo-consent-open onclick="window.mathsgoConsentement &amp;&amp; window.mathsgoConsentement.ouvrir()">Gérer mes cookies</button>
     </footer>
   </div>
 </body>
