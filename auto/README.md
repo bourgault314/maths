@@ -23,9 +23,10 @@ n'est plus la source canonique du site.
 
 ## Garanties actuelles
 
-- 40 modules enregistrés avec des codes permanents ;
+- 42 modules enregistrés avec des codes permanents ;
 - mêmes paramètres et même seed : mêmes séries ;
 - modes interactif et diaporama ;
+- plateaux de nombres relatifs manipulables (addition et soustraction), ciblés 5e/cycle 4 ;
 - partage par lien, code MG1 et QR code ;
 - aucun nom ni résultat d'élève dans le lien ;
 - `AttemptRecorder` préparé mais désactivé ;
