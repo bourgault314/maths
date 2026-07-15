@@ -63,7 +63,7 @@
       "description": "Générateur interactif de séries d’automatismes pour l’entraînement et la projection.",
       "path": "auto/",
       "kind": "tool",
-      "status": "work-in-progress",
+      "status": "published",
       "themes": ["nombres-calcul", "grandeurs-mesures", "geometrie", "algebre"],
       "uses": ["projeter", "entrainer"],
       "audiences": ["eleve", "enseignant", "classe"]
