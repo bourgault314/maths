@@ -17,7 +17,7 @@
       </div>
     </foreignObject>`;
 
-  const fractionMemo = ({ denominator, numerator, color, pale, stroke, name, ariaLabel }) => {
+  const fractionMemo = ({ denominator, numerator, color, stroke, name, ariaLabel }) => {
     const x = 20;
     const y = 45;
     const width = 200;
@@ -25,7 +25,7 @@
     const cellWidth = width / denominator;
     let fills = `<rect x="${x}" y="${y}" width="${width}" height="${height}" fill="#fff"/>`;
     for (let index = 0; index < numerator; index += 1) {
-      fills += `<rect x="${x + index * cellWidth}" y="${y}" width="${cellWidth + .15}" height="${height}" fill="${index === 0 ? color : pale}"/>`;
+      fills += `<rect x="${x + index * cellWidth}" y="${y}" width="${cellWidth + .15}" height="${height}" fill="${color}"/>`;
     }
     let grid = `<rect x="${x}" y="${y}" width="${width}" height="${height}" fill="none" stroke="${stroke}" stroke-width="3"/>`;
     for (let index = 1; index < denominator; index += 1) {
@@ -43,44 +43,44 @@
   };
 
   const multiplicationMemo = `
-    <svg viewBox="0 0 560 285" role="img" aria-label="Douze représenté par un rectangle de trois rangées de quatre, puis par le même rectangle tourné en quatre rangées de trois">
+    <svg viewBox="0 0 560 312" role="img" aria-label="Douze représenté par un rectangle de trois rangées de quatre, puis par le même rectangle tourné en quatre rangées de trois">
       <g>
-        <rect x="93" y="7" width="104" height="38" rx="8" fill="#fff" stroke="#063f86" stroke-width="2.5"/>
-        <text x="145" y="33" text-anchor="middle" fill="#063f86" font-family="Arial,Helvetica,sans-serif" font-size="25" font-weight="900">12</text>
+        <rect x="93" y="4" width="104" height="38" rx="8" fill="#fff" stroke="#063f86" stroke-width="2.5"/>
+        <text x="145" y="30" text-anchor="middle" fill="#063f86" font-family="Arial,Helvetica,sans-serif" font-size="25" font-weight="900">12</text>
 
-        <rect x="55" y="89" width="180" height="108" fill="#dff7f4"/>
-        <rect x="55" y="125" width="180" height="36" fill="#c9efeb"/>
-        <rect x="55" y="89" width="180" height="108" fill="none" stroke="#075b57" stroke-width="3"/>
-        <path d="M100 89V197M145 89V197M190 89V197M55 125H235M55 161H235" fill="none" stroke="#075b57" stroke-width="1.8"/>
+        <rect x="55" y="108" width="180" height="108" fill="#dff7f4"/>
+        <rect x="55" y="144" width="180" height="36" fill="#c9efeb"/>
+        <rect x="55" y="108" width="180" height="108" fill="none" stroke="#075b57" stroke-width="3"/>
+        <path d="M100 108V216M145 108V216M190 108V216M55 144H235M55 180H235" fill="none" stroke="#075b57" stroke-width="1.8"/>
 
-        <path d="M55 81V74H235V81" fill="none" stroke="#60708c" stroke-width="1.8" stroke-linecap="round"/>
-        <text x="145" y="69" text-anchor="middle" fill="#075b57" font-family="Arial,Helvetica,sans-serif" font-size="17" font-weight="900">4</text>
-        <path d="M47 89H40V197H47" fill="none" stroke="#60708c" stroke-width="1.8" stroke-linecap="round"/>
-        <text x="29" y="149" text-anchor="middle" fill="#075b57" font-family="Arial,Helvetica,sans-serif" font-size="17" font-weight="900">3</text>
+        <path d="M55 100V93H235V100" fill="none" stroke="#60708c" stroke-width="1.8" stroke-linecap="round"/>
+        <text x="145" y="88" text-anchor="middle" fill="#075b57" font-family="Arial,Helvetica,sans-serif" font-size="17" font-weight="900">4</text>
+        <path d="M47 108H40V216H47" fill="none" stroke="#60708c" stroke-width="1.8" stroke-linecap="round"/>
+        <text x="29" y="168" text-anchor="middle" fill="#075b57" font-family="Arial,Helvetica,sans-serif" font-size="17" font-weight="900">3</text>
 
-        <text x="145" y="251" text-anchor="middle" fill="#173a5e" font-family="Arial,Helvetica,sans-serif" font-size="16" font-weight="900">3 groupes de 4</text>
-        <text x="145" y="274" text-anchor="middle" fill="#075b57" font-family="Arial,Helvetica,sans-serif" font-size="18" font-weight="900">3 × 4 = 12</text>
+        <text x="145" y="280" text-anchor="middle" fill="#173a5e" font-family="Arial,Helvetica,sans-serif" font-size="16" font-weight="900">3 groupes de 4</text>
+        <text x="145" y="303" text-anchor="middle" fill="#075b57" font-family="Arial,Helvetica,sans-serif" font-size="18" font-weight="900">3 × 4 = 12</text>
       </g>
 
-      <path d="M280 28V260" stroke="#d7e2ec" stroke-width="2"/>
+      <path d="M280 25V287" stroke="#d7e2ec" stroke-width="2"/>
 
       <g>
-        <rect x="363" y="7" width="104" height="38" rx="8" fill="#fff" stroke="#063f86" stroke-width="2.5"/>
-        <text x="415" y="33" text-anchor="middle" fill="#063f86" font-family="Arial,Helvetica,sans-serif" font-size="25" font-weight="900">12</text>
+        <rect x="363" y="4" width="104" height="38" rx="8" fill="#fff" stroke="#063f86" stroke-width="2.5"/>
+        <text x="415" y="30" text-anchor="middle" fill="#063f86" font-family="Arial,Helvetica,sans-serif" font-size="25" font-weight="900">12</text>
 
-        <rect x="361" y="53" width="108" height="180" fill="#fff1dc"/>
-        <rect x="361" y="98" width="108" height="45" fill="#ffe6c5"/>
-        <rect x="361" y="188" width="108" height="45" fill="#ffe6c5"/>
-        <rect x="361" y="53" width="108" height="180" fill="none" stroke="#9a5308" stroke-width="3"/>
-        <path d="M397 53V233M433 53V233M361 98H469M361 143H469M361 188H469" fill="none" stroke="#9a5308" stroke-width="1.8"/>
+        <rect x="361" y="72" width="108" height="180" fill="#fff1dc"/>
+        <rect x="361" y="117" width="108" height="45" fill="#ffe6c5"/>
+        <rect x="361" y="207" width="108" height="45" fill="#ffe6c5"/>
+        <rect x="361" y="72" width="108" height="180" fill="none" stroke="#9a5308" stroke-width="3"/>
+        <path d="M397 72V252M433 72V252M361 117H469M361 162H469M361 207H469" fill="none" stroke="#9a5308" stroke-width="1.8"/>
 
-        <path d="M361 47V40H469V47" fill="none" stroke="#60708c" stroke-width="1.8" stroke-linecap="round"/>
-        <text x="415" y="35" text-anchor="middle" fill="#9a5308" font-family="Arial,Helvetica,sans-serif" font-size="17" font-weight="900">3</text>
-        <path d="M477 53H484V233H477" fill="none" stroke="#60708c" stroke-width="1.8" stroke-linecap="round"/>
-        <text x="498" y="149" text-anchor="middle" fill="#9a5308" font-family="Arial,Helvetica,sans-serif" font-size="17" font-weight="900">4</text>
+        <path d="M361 66V59H469V66" fill="none" stroke="#60708c" stroke-width="1.8" stroke-linecap="round"/>
+        <text x="415" y="54" text-anchor="middle" fill="#9a5308" font-family="Arial,Helvetica,sans-serif" font-size="17" font-weight="900">3</text>
+        <path d="M477 72H484V252H477" fill="none" stroke="#60708c" stroke-width="1.8" stroke-linecap="round"/>
+        <text x="498" y="168" text-anchor="middle" fill="#9a5308" font-family="Arial,Helvetica,sans-serif" font-size="17" font-weight="900">4</text>
 
-        <text x="415" y="251" text-anchor="middle" fill="#173a5e" font-family="Arial,Helvetica,sans-serif" font-size="16" font-weight="900">4 groupes de 3</text>
-        <text x="415" y="274" text-anchor="middle" fill="#9a5308" font-family="Arial,Helvetica,sans-serif" font-size="18" font-weight="900">4 × 3 = 12</text>
+        <text x="415" y="280" text-anchor="middle" fill="#173a5e" font-family="Arial,Helvetica,sans-serif" font-size="16" font-weight="900">4 groupes de 3</text>
+        <text x="415" y="303" text-anchor="middle" fill="#9a5308" font-family="Arial,Helvetica,sans-serif" font-size="18" font-weight="900">4 × 3 = 12</text>
       </g>
     </svg>`;
 
@@ -88,7 +88,6 @@
     denominator: 2,
     numerator: 1,
     color: "#facc15",
-    pale: "#fff4b3",
     stroke: "#8a6d00",
     name: "un demi",
     ariaLabel: "Une unité partagée en deux parts égales, dont une est colorée : un demi"
@@ -98,7 +97,6 @@
     denominator: 3,
     numerator: 2,
     color: "#cda1ff",
-    pale: "#e5ccff",
     stroke: "#7042a3",
     name: "deux tiers",
     ariaLabel: "Une unité partagée en trois parts égales, dont deux sont colorées : deux tiers"
@@ -108,7 +106,6 @@
     denominator: 4,
     numerator: 3,
     color: "#7fd000",
-    pale: "#b8e878",
     stroke: "#477a00",
     name: "trois quarts",
     ariaLabel: "Une unité partagée en quatre parts égales, dont trois sont colorées : trois quarts"
