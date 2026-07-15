@@ -33,23 +33,6 @@
         <p class="hero-lead" id="hero-lead">Entrez par un domaine, puis choisissez une notion pour retrouver ses outils illustrés.</p>
       </section>
 
-      <section class="featured-access" aria-label="Accès principaux">
-        <a class="featured-card featured-auto" href="../auto/">
-          <span class="featured-visual" aria-hidden="true">
-            <svg viewBox="0 0 72 58"><rect x="5" y="8" width="28" height="39" rx="5" fill="#e0f2fe" stroke="#0369a1" stroke-width="1.7" transform="rotate(-7 19 27)"/><path d="m13 22 12 14M25 22 13 36" stroke="#0284c7" stroke-width="2.4" stroke-linecap="round"/><rect x="30" y="5" width="36" height="46" rx="6" fill="#fef3c7" stroke="#a16207" stroke-width="1.7"/><text x="48" y="24" text-anchor="middle" fill="#92400e" font-family="Arial" font-size="12" font-weight="900">DNB</text><path d="M40 33h16M40 40h12" stroke="#f59e0b" stroke-width="2.2" stroke-linecap="round"/></svg>
-          </span>
-          <span class="featured-copy"><strong>Automatismes Cycle 4 – DNB</strong><small>Créer une série, projeter ou s’entraîner</small></span>
-          <span class="featured-arrow" aria-hidden="true">→</span>
-        </a>
-        <a class="featured-card featured-splat" href="splat/index.html">
-          <span class="featured-visual" aria-hidden="true">
-            <svg viewBox="-3 -3 30 30"><path d="M21.45 12c.529.493 1.283 1.157 1.472 1.73.189.573-.034 1.225-.337 1.709-.303.485-.991.847-1.481 1.2-.49.352-.965.666-1.459.916-.494.25-.993.462-1.506.584-.513.122-1.142.006-1.572.147-.43.141-.732.251-1.007.701-.274.451-.335 1.345-.64 2-.305.656-.703 1.578-1.19 1.935-.487.357-1.175.346-1.73.208-.555-.138-1.112-.681-1.598-1.038-.487-.357-.932-.712-1.322-1.105-.391-.392-.747-.801-1.022-1.251-.274-.45-.358-1.085-.625-1.45-.267-.365-.465-.619-.978-.741-.513-.122-1.382.097-2.1.01-.718-.088-1.718-.182-2.208-.535-.49-.352-.692-1.01-.732-1.581-.04-.57.304-1.267.493-1.841.189-.573.389-1.105.642-1.598.253-.493.531-.958.875-1.358.343-.4.921-.676 1.185-1.043.265-.367.445-.634.403-1.159-.043-.526-.52-1.285-.658-1.995-.139-.709-.358-1.689-.174-2.264.184-.575.747-.971 1.277-1.185.53-.215 1.3-.103 1.903-.1.604.003 1.172.028 1.719.117.547.088 1.075.209 1.562.412.487.203.927.667 1.358.805.431.138.74.227 1.227.024.486-.202 1.061-.89 1.693-1.241.632-.352 1.497-.863 2.1-.866.604-.003 1.155.411 1.522.849.368.438.499 1.204.683 1.779.184.575.335 1.123.42 1.67.085.548.133 1.088.091 1.613-.043.526-.348 1.088-.346 1.541.001.452.012.774.356 1.174.343.4 1.175.734 1.704 1.227Z" fill="#22c55e" stroke="#166534" stroke-width="1.05"/><text x="12" y="15.3" text-anchor="middle" fill="#fff" font-family="Arial" font-size="7" font-weight="900">?</text></svg>
-          </span>
-          <span class="featured-copy"><strong>Splat et schémas en barres</strong><small>Accéder directement à toute la collection</small></span>
-          <span class="featured-arrow" aria-hidden="true">→</span>
-        </a>
-      </section>
-
       <div class="catalogue-controls">
         <div class="search-box">
           <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="10.8" cy="10.8" r="6.8" fill="none" stroke="currentColor" stroke-width="2"/><path d="m16 16 4.5 4.5" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
@@ -58,7 +41,9 @@
           <button id="search-clear" class="search-clear" type="button" aria-label="Effacer la recherche" hidden>×</button>
         </div>
 
-        <div class="domain-box">
+        <a class="auto-compact" href="../auto/">Automatismes Cycle 4 – DNB <span aria-hidden="true">→</span></a>
+
+        <div class="domain-box" hidden>
           <label for="domain-filter">Domaine</label>
           <select id="domain-filter">
             <option value="">Tous les domaines</option>
@@ -72,7 +57,7 @@
           </select>
         </div>
 
-        <div class="facet-box">
+        <div class="facet-box" hidden>
           <label for="facet-filter">Afficher</label>
           <select id="facet-filter">
             <option value="">Toutes les ressources</option>

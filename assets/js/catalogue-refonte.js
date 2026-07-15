@@ -212,6 +212,9 @@
   const backButton = document.getElementById("back-themes");
   const searchInput = document.getElementById("catalogue-search");
   const clearButton = document.getElementById("search-clear");
+  const controls = document.querySelector(".catalogue-controls");
+  const domainBox = document.querySelector(".domain-box");
+  const facetBox = document.querySelector(".facet-box");
   const domainSelect = document.getElementById("domain-filter");
   const facetSelect = document.getElementById("facet-filter");
 
@@ -445,6 +448,10 @@
   }
 
   function syncControls() {
+    const hasDomain = Boolean(state.domain);
+    controls.classList.toggle("has-domain", hasDomain);
+    domainBox.hidden = !hasDomain;
+    facetBox.hidden = !hasDomain;
     domainSelect.value = state.domain;
     facetSelect.value = state.facet;
   }
@@ -465,7 +472,7 @@
       pageTitle.textContent = "Choisissez un domaine";
       heroLead.textContent = "Entrez par un domaine, puis choisissez une notion pour retrouver ses outils illustrés.";
       title.textContent = "Les domaines";
-      summary.textContent = "6 domaines mathématiques · jeux et explorations à part";
+      summary.textContent = "";
       return;
     }
 
@@ -519,6 +526,7 @@
   domainSelect.addEventListener("change", () => {
     state.domain = domainSelect.value;
     state.notion = "";
+    if (!state.domain) state.facet = "";
     state.query = "";
     searchInput.value = "";
     syncQueryString();
@@ -550,6 +558,8 @@
     if (state.notion) {
       state.domain = notionMap.get(state.notion)?.domain || state.domain;
       state.notion = "";
+    } else if (state.facet) {
+      state.facet = "";
     } else {
       state.domain = "";
       state.facet = "";
@@ -565,5 +575,6 @@
   if (state.domain && !domainMap.has(state.domain)) state.domain = "";
   if (state.facet && !facetMap.has(state.facet)) state.facet = "";
   if (state.notion && !state.domain) state.domain = notionMap.get(state.notion)?.domain || "";
+  if (state.facet && !state.domain) state.facet = "";
   render();
 })();

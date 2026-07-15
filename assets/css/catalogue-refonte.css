@@ -133,59 +133,6 @@ select { cursor: pointer; }
   line-height: 1.55;
 }
 
-.featured-access {
-  display: grid;
-  grid-template-columns: minmax(0, 1.18fr) minmax(0, .82fr);
-  gap: 12px;
-  margin: 0 0 18px;
-}
-
-.featured-card {
-  min-width: 0;
-  min-height: 90px;
-  display: grid;
-  grid-template-columns: 62px minmax(0, 1fr) 22px;
-  align-items: center;
-  gap: 13px;
-  padding: 14px 16px;
-  border: 1px solid #d4dfea;
-  border-radius: 17px;
-  color: inherit;
-  background: #fff;
-  text-decoration: none;
-  box-shadow: 0 5px 14px rgba(15, 40, 72, 0.06);
-  transition: transform .16s ease, box-shadow .16s ease, border-color .16s ease;
-}
-
-.featured-card:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 12px 24px rgba(15, 40, 72, 0.11);
-}
-
-.featured-auto {
-  border-color: #b9d2ec;
-  background: linear-gradient(135deg, #f4f9ff, #fff);
-}
-
-.featured-splat {
-  border-color: #cce5d2;
-  background: linear-gradient(135deg, #f1fbf3, #fff);
-}
-
-.featured-visual {
-  width: 62px;
-  height: 58px;
-  display: grid;
-  place-items: center;
-}
-
-.featured-visual svg { width: 100%; height: 100%; overflow: visible; }
-.featured-copy { min-width: 0; }
-.featured-copy strong { display: block; color: var(--blue-dark); font-size: 1.02rem; line-height: 1.22; }
-.featured-copy small { display: block; margin-top: 5px; color: #64758a; font-size: .84rem; line-height: 1.3; }
-.featured-arrow { color: var(--blue); font-size: 1.35rem; font-weight: 800; transition: transform .16s ease; }
-.featured-card:hover .featured-arrow { transform: translateX(3px); }
-
 .domain-mobile-box,
 .domain-box,
 .facet-box {
@@ -219,11 +166,43 @@ select { cursor: pointer; }
 }
 
 .catalogue-controls {
+  min-width: 0;
   display: grid;
-  grid-template-columns: minmax(240px, 1fr) minmax(210px, 280px) minmax(210px, 280px);
+  grid-template-columns: minmax(0, 1fr) auto;
   gap: 14px;
   margin-bottom: 22px;
 }
+
+.catalogue-controls.has-domain {
+  grid-template-columns: minmax(240px, 1fr) auto minmax(190px, 250px) minmax(190px, 250px);
+}
+
+.catalogue-controls > * {
+  min-width: 0;
+}
+
+.search-box,
+.domain-box,
+.facet-box { width: 100%; }
+
+.auto-compact {
+  min-height: 52px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 9px;
+  padding: 0 17px;
+  border: 1px solid #b9d2ec;
+  border-radius: 14px;
+  color: var(--blue-dark);
+  background: #f4f9ff;
+  text-decoration: none;
+  font-size: .9rem;
+  font-weight: 800;
+  white-space: nowrap;
+}
+
+.auto-compact:hover { border-color: #78a7d4; background: #edf6ff; }
 
 .search-box,
 .type-box,
@@ -287,6 +266,8 @@ select { cursor: pointer; }
 .type-box select,
 .domain-box select,
 .facet-box select {
+  width: auto;
+  max-width: 100%;
   min-width: 0;
   flex: 1;
   border: 0;
@@ -358,6 +339,8 @@ select { cursor: pointer; }
   color: var(--muted);
   font-size: 0.93rem;
 }
+
+.results-summary:empty { display: none; }
 
 .back-themes {
   display: inline-flex;
@@ -639,8 +622,8 @@ select { cursor: pointer; }
   .notion-grid,
   .resource-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .domain-tab { padding-inline: 15px; }
-  .catalogue-controls { grid-template-columns: 1fr 1fr; }
-  .search-box { grid-column: 1 / -1; }
+  .catalogue-controls.has-domain { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  .catalogue-controls.has-domain .search-box { grid-column: 1 / -1; }
 }
 
 @media (max-width: 680px) {
@@ -650,10 +633,13 @@ select { cursor: pointer; }
   .header-home { grid-column: 2; }
   .main-panel { padding: 20px 15px 24px; border-radius: 21px; }
   .hero { margin-bottom: 21px; }
-  .featured-access { grid-template-columns: 1fr; gap: 9px; }
-  .featured-card { min-height: 82px; grid-template-columns: 55px minmax(0, 1fr) 18px; padding: 12px 13px; }
-  .featured-visual { width: 53px; height: 50px; }
   .catalogue-controls { grid-template-columns: 1fr; gap: 9px; }
+  .catalogue-controls.has-domain { grid-template-columns: 1fr; }
+  .catalogue-controls.has-domain .search-box { grid-column: auto; }
+  .auto-compact { width: 100%; min-height: 47px; white-space: normal; text-align: center; }
+  .search-box,
+  .domain-box,
+  .facet-box { width: 100%; min-width: 0; overflow: hidden; }
   .type-box,
   .domain-box,
   .facet-box { min-height: 47px; }
@@ -701,12 +687,12 @@ select { cursor: pointer; }
   .domain-card-arrow { display: none; }
   .domain-card-secondary {
     grid-column: 1 / -1;
-    min-height: 91px;
-    grid-template-columns: 57px minmax(0, 1fr);
-    align-items: center;
-    text-align: left;
+    min-height: 128px;
+    grid-template-columns: 1fr;
+    align-content: center;
+    text-align: center;
   }
-  .domain-card-secondary .domain-card-icon { width: 56px; height: 47px; }
+  .domain-card-secondary .domain-card-icon { width: 60px; height: 50px; }
   .domain-card-secondary .domain-card-copy small { display: block; }
   .notion-card { min-height: 122px; padding: 14px 15px; }
   .notion-icon { width: 53px; height: 43px; flex-basis: 53px; }

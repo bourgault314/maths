@@ -100,21 +100,14 @@ h1 {
   filter: drop-shadow(0 6px 9px rgba(15, 40, 72, 0.055));
 }
 
-.home-actions {
-  width: min(100%, 610px);
-  display: grid;
-  grid-template-columns: 1.25fr .85fr;
-  gap: 11px;
-  margin: clamp(19px, 2.5vw, 25px) auto 0;
-}
-
 .btn-start {
-  min-width: 0;
+  min-width: min(100%, 300px);
   display: inline-flex;
   align-items: center;
   justify-content: center;
   gap: 12px;
-  padding: 15px 20px;
+  margin-top: clamp(19px, 2.5vw, 25px);
+  padding: 16px 28px;
   border: 1px solid rgba(255, 255, 255, 0.45);
   border-radius: 17px;
   color: #fff;
@@ -132,26 +125,6 @@ h1 {
 }
 
 .btn-start svg { width: 20px; height: 20px; }
-
-.btn-explore {
-  border-color: #cbd9e8;
-  color: var(--blue);
-  background: #fff;
-  box-shadow: 0 10px 20px rgba(6, 63, 134, 0.09);
-}
-
-.btn-explore:hover { box-shadow: 0 15px 26px rgba(6, 63, 134, 0.15); }
-
-.quick-splat {
-  display: inline-block;
-  margin-top: 13px;
-  color: #476482;
-  font-size: .88rem;
-  font-weight: 700;
-  text-decoration: none;
-}
-
-.quick-splat:hover { color: var(--blue); text-decoration: underline; text-underline-offset: 3px; }
 
 footer {
   min-height: 24px;
@@ -251,9 +224,6 @@ footer {
   .brand-logo { width: min(82vw, 330px); }
   .maths-scene { width: calc(100% + 4px); margin-top: 20px; }
   .maths-scene svg { transform: scale(1.06); transform-origin: center; }
-  .home-actions { grid-template-columns: 1fr; width: min(100%, 360px); }
-  .btn-start { min-height: 53px; padding: 14px 17px; font-size: 1rem; }
-  .quick-splat { max-width: 290px; line-height: 1.4; }
   footer { flex-direction: column; gap: 5px; }
   .footer-divider { display: none; }
   .modal-content { padding: 2rem 1.35rem 1.5rem; }
