@@ -45,8 +45,8 @@
   const multiplicationMemo = `
     <svg viewBox="0 0 560 312" role="img" aria-label="Douze représenté par un rectangle de trois rangées de quatre, puis par le même rectangle tourné en quatre rangées de trois">
       <g>
-        <rect x="93" y="4" width="104" height="38" rx="8" fill="#fff" stroke="#063f86" stroke-width="2.5"/>
-        <text x="145" y="30" text-anchor="middle" fill="#063f86" font-family="Arial,Helvetica,sans-serif" font-size="25" font-weight="900">12</text>
+        <rect x="93" y="0" width="104" height="36" rx="8" fill="#fff" stroke="#063f86" stroke-width="2.5"/>
+        <text x="145" y="26" text-anchor="middle" fill="#063f86" font-family="Arial,Helvetica,sans-serif" font-size="25" font-weight="900">12</text>
 
         <rect x="55" y="108" width="180" height="108" fill="#dff7f4"/>
         <rect x="55" y="144" width="180" height="36" fill="#c9efeb"/>
@@ -65,8 +65,8 @@
       <path d="M280 25V287" stroke="#d7e2ec" stroke-width="2"/>
 
       <g>
-        <rect x="363" y="4" width="104" height="38" rx="8" fill="#fff" stroke="#063f86" stroke-width="2.5"/>
-        <text x="415" y="30" text-anchor="middle" fill="#063f86" font-family="Arial,Helvetica,sans-serif" font-size="25" font-weight="900">12</text>
+        <rect x="363" y="0" width="104" height="36" rx="8" fill="#fff" stroke="#063f86" stroke-width="2.5"/>
+        <text x="415" y="26" text-anchor="middle" fill="#063f86" font-family="Arial,Helvetica,sans-serif" font-size="25" font-weight="900">12</text>
 
         <rect x="361" y="72" width="108" height="180" fill="#fff1dc"/>
         <rect x="361" y="117" width="108" height="45" fill="#ffe6c5"/>
