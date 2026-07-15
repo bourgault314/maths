@@ -15,18 +15,60 @@
 - créer les premiers schémas JSON en version expérimentale ;
 - définir les jetons graphiques maths&go ;
 - installer les contrôles téléphone, ordinateur et impression ;
+- définir le contrat tactile commun : déplacer, sélectionner, annuler, zoomer et
+  dessiner ne doivent pas se faire concurrence ;
+- prévoir un zoom navigateur autorisé et, lorsque le geste devient ambigu, des
+  commandes explicites `+` / `−` plutôt qu'un zoom tactile imposé ;
+- définir des cibles tactiles suffisamment grandes, un retour visuel après chaque
+  action et un bouton de réinitialisation facilement retrouvable ;
 - fixer la procédure `draft → review → validated`.
 
-## Phase 2 — Trois composants pilotes
+## Phase 2 — Composants pilotes
 
 Composants proposés :
 
 1. groupes de billes et multiplication ;
 2. bandes et murs de fractions ;
-3. Splat ou schéma partie-tout.
+3. Splat ou schéma partie-tout ;
+4. jetons de nombres relatifs et paires nulles.
 
 Chaque pilote doit fonctionner en cours, question, diaporama et impression avant
 de généraliser le contrat.
+
+Pour les jetons de nombres relatifs, le premier plateau choisi sera terminé et
+validé avant de fabriquer les variantes simplifiées ou de l'intégrer à
+Automatismes. La version de référence restera le plateau complet ; les versions
+simplifiées seront des modes du même composant, pas cinq nouveaux outils
+indépendants.
+
+## Chantier prioritaire — plateaux manipulables réutilisables
+
+Ce chantier prépare les plateaux de nombres relatifs, puis les autres
+représentations manipulables de maths&go.
+
+- construire une brique de jetons manipulables utilisable sur ordinateur et
+  téléphone ;
+- prévoir un mode `complet` et un mode `simplifié`, avec le même moteur de
+  déplacement et les mêmes règles mathématiques ;
+- créer une **station d'accueil** intégrable dans une page : elle reçoit un
+  calcul, une représentation et des options d'affichage, puis rend le plateau
+  manipulable sans recopier son code dans chaque activité ;
+- permettre à une activité de fournir un calcul ou une configuration de départ
+  au plateau, puis de récupérer un état de manipulation pour la correction ;
+- préparer une insertion légère dans les questions d'Automatismes, d'abord sur
+  un seul module finalisé ;
+- conserver les recettes de dessin, paramètres, identifiants et règles
+  pédagogiques dans la bibliothèque réutilisable, séparés du gros moteur
+  actuel.
+
+Ordre de réalisation :
+
+1. choisir un plateau de nombres relatifs et le finaliser ;
+2. valider son ergonomie sur téléphone, ordinateur et projection ;
+3. extraire le composant et sa station d'accueil ;
+4. produire le mode simplifié et un premier exemple ALF ;
+5. brancher un seul calcul dans Automatismes ;
+6. généraliser seulement après comparaison avec le plateau validé.
 
 ## Phase 3 — Parcours d'Axelle piloté par JSON
 
