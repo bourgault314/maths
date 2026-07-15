@@ -1,0 +1,33 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://mathsgo.re/studio/schemas/representation-components.v1.json",
+  "title": "Contrat des représentations maths&go",
+  "description": "Contrat commun des composants graphiques réutilisables. Les composants rendent les paramètres ; ils ne génèrent ni questions ni aléatoire.",
+  "type": "object",
+  "required": ["componentId", "version", "status", "renderer", "payload"],
+  "properties": {
+    "componentId": {
+      "type": "string",
+      "enum": [
+        "representation.bead-groups",
+        "representation.number-line",
+        "representation.double-number-line",
+        "representation.fraction-strip",
+        "representation.fraction-grid",
+        "representation.percentage-double-line",
+        "representation.percentage-bar"
+      ]
+    },
+    "version": { "type": "integer", "minimum": 1 },
+    "status": { "enum": ["draft", "review", "validated", "deprecated"] },
+    "renderer": { "const": "mathsgo-representation-pack-v1" },
+    "supportedModes": {
+      "type": "array",
+      "items": { "enum": ["course", "quiz", "slideshow", "printable", "mobile", "projection"] },
+      "uniqueItems": true
+    },
+    "sources": { "type": "array", "items": { "type": "string" } },
+    "payload": { "type": "object" }
+  },
+  "additionalProperties": false
+}
