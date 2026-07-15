@@ -164,6 +164,11 @@ window.MATHSGO_CATALOGUE = {
     "outils/patterns.html": { "primaryNotion": "patterns", "collections": [], "tags": ["patterns", "generalisation"] },
     "outils/problemes_barres.html": { "primaryNotion": "schemas-barres", "collections": [], "tags": ["schema-barres", "resolution-problemes"] },
     "outils/problemes_barres_M974.html": { "primaryNotion": "schemas-barres", "collections": [], "tags": ["schema-barres", "resolution-problemes", "version-travail"] },
+    "outils/nombres_relatifs/nombres_relatifs_somme_difference.html": { "primaryNotion": "relatifs", "collections": [], "tags": ["nombres-relatifs", "plateau-manipulation"] },
+    "outils/nombres_relatifs/nombres_relatifs_somme_differenceB.html": { "primaryNotion": "relatifs", "collections": [], "tags": ["nombres-relatifs", "plateau-manipulation"] },
+    "outils/nombres_relatifs/nombres_relatifs_somme_differenceBClaire.html": { "primaryNotion": "relatifs", "collections": [], "tags": ["nombres-relatifs", "plateau-manipulation"] },
+    "outils/nombres_relatifs/nombres_relatifs_somme_differenceC.html": { "primaryNotion": "relatifs", "collections": [], "tags": ["nombres-relatifs", "plateau-manipulation"] },
+    "outils/nombres_relatifs/nombres_relatifs_somme_differenceD.html": { "primaryNotion": "relatifs", "collections": [], "tags": ["nombres-relatifs", "plateau-manipulation"] },
     "outils/splat.html": { "primaryNotion": "calcul-litteral", "collections": ["splat"], "tags": ["splat", "inconnue", "relation"] },
     "outils/splat_tache_barre.html": { "primaryNotion": "calcul-litteral", "collections": ["splat"], "tags": ["splat", "inconnue", "relation"] },
     "outils/splat_equations.html": { "primaryNotion": "equations", "collections": ["splat"], "tags": ["schema-barres", "splat"] },
@@ -177,6 +182,12 @@ window.MATHSGO_CATALOGUE = {
       "title": "Cours avec les tuiles algébriques",
       "description": "Choisir la version couleur du livret.",
       "group": "cours",
+      "labels": {
+        "outils/tuiles_algebriques/livret_litteral_blanc_gris.pdf": "Blanc et gris",
+        "outils/tuiles_algebriques/livret_litteral_bleu_jaune.pdf.pdf": "Bleu et jaune",
+        "outils/tuiles_algebriques/livret_litteral_mathigon.pdf": "Mathigon",
+        "outils/tuiles_algebriques/livret_litteral_vert_rouge.pdf": "Vert et rouge"
+      },
       "paths": [
         "outils/tuiles_algebriques/livret_litteral_blanc_gris.pdf",
         "outils/tuiles_algebriques/livret_litteral_bleu_jaune.pdf.pdf",
@@ -185,10 +196,36 @@ window.MATHSGO_CATALOGUE = {
       ]
     },
     {
+      "id": "plateaux-nombres-relatifs",
+      "title": "Plateaux de manipulation",
+      "description": "Choisir le plateau de nombres relatifs.",
+      "group": "manipuler",
+      "labels": {
+        "outils/nombres_relatifs/nombres_relatifs_somme_difference.html": "Version A — addition et soustraction",
+        "outils/nombres_relatifs/nombres_relatifs_somme_differenceB.html": "Version B — soustraction",
+        "outils/nombres_relatifs/nombres_relatifs_somme_differenceBClaire.html": "Version B claire",
+        "outils/nombres_relatifs/nombres_relatifs_somme_differenceC.html": "Version C — expert",
+        "outils/nombres_relatifs/nombres_relatifs_somme_differenceD.html": "Version D — expert avec annulation"
+      },
+      "paths": [
+        "outils/nombres_relatifs/nombres_relatifs_somme_difference.html",
+        "outils/nombres_relatifs/nombres_relatifs_somme_differenceB.html",
+        "outils/nombres_relatifs/nombres_relatifs_somme_differenceBClaire.html",
+        "outils/nombres_relatifs/nombres_relatifs_somme_differenceC.html",
+        "outils/nombres_relatifs/nombres_relatifs_somme_differenceD.html"
+      ]
+    },
+    {
       "id": "cours-nombres-relatifs",
       "title": "Cours imprimables — nombres relatifs",
       "description": "Choisir la version graphique du cours.",
       "group": "cours",
+      "labels": {
+        "outils/nombres_relatifs/nombres_relatifs_couleur_mathsgo.pdf": "Couleurs maths&go",
+        "outils/nombres_relatifs/nombres_relatifs_vert_rouge_ecriture_blanche.pdf": "Rouge et vert",
+        "outils/nombres_relatifs/nombres_relatifs_gris_blanc.pdf": "Gris et blanc",
+        "outils/nombres_relatifs/nombres_relatifs_vert_rouge_contour_noir.pdf": "Contour noir"
+      },
       "paths": [
         "outils/nombres_relatifs/nombres_relatifs_couleur_mathsgo.pdf",
         "outils/nombres_relatifs/nombres_relatifs_vert_rouge_ecriture_blanche.pdf",
@@ -3109,7 +3146,7 @@ window.MATHSGO_CATALOGUE = {
       "filters": [],
       "keywords": [],
       "kind": "tool",
-      "status": "review",
+      "status": "published",
       "featured": false,
       "recent": false
     },
@@ -3135,7 +3172,7 @@ window.MATHSGO_CATALOGUE = {
       "filters": [],
       "keywords": [],
       "kind": "tool",
-      "status": "review",
+      "status": "published",
       "featured": false,
       "recent": false
     },
@@ -3161,7 +3198,7 @@ window.MATHSGO_CATALOGUE = {
       "filters": [],
       "keywords": [],
       "kind": "tool",
-      "status": "review",
+      "status": "published",
       "featured": false,
       "recent": false
     },
@@ -3187,7 +3224,7 @@ window.MATHSGO_CATALOGUE = {
       "filters": [],
       "keywords": [],
       "kind": "tool",
-      "status": "review",
+      "status": "published",
       "featured": false,
       "recent": false
     },

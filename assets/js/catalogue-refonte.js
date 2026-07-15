@@ -714,7 +714,9 @@
     </a>`;
   }
 
-  function variantLabel(resource) {
+  function variantLabel(resource, family) {
+    const explicitLabel = family?.labels?.[resource.path];
+    if (explicitLabel) return explicitLabel;
     const parts = resource.title.split("—");
     return (parts.length > 1 ? parts.at(-1) : resource.title).trim();
   }
@@ -730,7 +732,7 @@
         <span class="resource-family-toggle" aria-hidden="true">⌄</span>
       </summary>
       <div class="resource-variants" aria-label="${escapeHtml(`Versions de ${family.title}`)}">
-        ${variants.map((resource) => `<a href="${escapeHtml(rootPrefix + resource.path)}"><span>${escapeHtml(variantLabel(resource))}</span><span aria-hidden="true">→</span></a>`).join("")}
+        ${variants.map((resource) => `<a href="${escapeHtml(rootPrefix + resource.path)}"><span>${escapeHtml(variantLabel(resource, family))}</span><span aria-hidden="true">→</span></a>`).join("")}
       </div>
     </details>`;
   }
