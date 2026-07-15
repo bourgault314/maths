@@ -1380,7 +1380,7 @@ header{
             const zeroPairs = state.tokens.filter(t => t.type === 'green' && t.pairId !== null).sort((a,b) => a.id - b.id);
 
             // Marge légèrement augmentée pour tenir compte de l’agrandissement visuel mobile.
-            const spacing = TOKEN_SIZE + 15; 
+            const spacing = TOKEN_SIZE + 15;
             const availableWidth = board.clientWidth - 40; 
             const maxColsBoard = Math.max(1, Math.floor(availableWidth / spacing));
 
