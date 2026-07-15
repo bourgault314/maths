@@ -436,6 +436,25 @@ button{font:inherit;-webkit-appearance:none;appearance:none;-webkit-tap-highligh
 .interactive-polynomial-response{display:flex;align-items:center;justify-content:center;flex-wrap:wrap;gap:9px 14px;margin:10px auto 0;font-family:"Cambria Math","STIX Two Math","Times New Roman",serif;font-size:clamp(2.25rem,4.4vw,4.7rem);font-weight:850}
 .interactive-polynomial-response.term-count-1{font-size:clamp(3rem,5.6vw,5.8rem)}.interactive-polynomial-response.term-count-2{font-size:clamp(2.55rem,5vw,5.2rem)}
 .interactive-polynomial-term{display:inline-flex;align-items:center;gap:.12em;white-space:nowrap}.interactive-polynomial-separator{margin:0 -.08em;font-family:Arial,Helvetica,sans-serif;font-weight:750}
+.relative-token-prompt{font-size:clamp(1.75rem,3.7vw,3.55rem);line-height:1.14;margin:0 auto 16px}
+.relative-token-board{width:min(100%,1040px);margin:0 auto;text-align:center}
+.relative-token-zone{min-height:112px;margin:10px auto;padding:10px 12px;border:1px dashed #b7cbe3;border-radius:14px;background:#fbfdff}
+.relative-token-zone h3{margin:0 0 8px;color:#073a75;font-size:clamp(1rem,1.75vw,1.3rem);font-weight:900}
+.relative-token-zone-a,.relative-token-zone-b{display:inline-flex;width:calc(50% - 8px);vertical-align:top;flex-direction:column}
+.relative-token-zone-result{min-height:122px;border-color:#86a8cf;background:#f4f8fe}
+.relative-token-list{display:flex;align-items:center;justify-content:center;flex-wrap:wrap;gap:8px;min-height:58px}
+.relative-token{display:inline-grid;place-items:center;width:54px;height:54px;min-width:54px;border:2px solid #111;border-radius:50%;color:#111;font-size:1.18rem;font-weight:900;line-height:1;box-shadow:0 2px 0 rgba(11,33,71,.12)}
+.relative-token-positive{background:#31a98e}.relative-token-negative{background:#ef5142}
+button.relative-token{cursor:pointer;touch-action:manipulation}.relative-token:active{transform:translateY(1px);box-shadow:none}
+.relative-token.is-null-pair{box-shadow:0 0 0 4px #f59e0b,0 2px 0 rgba(11,33,71,.12)}
+.relative-token-empty{display:inline-grid;place-items:center;min-width:54px;height:54px;color:#60708c;font-size:1.5rem}
+.relative-token-instruction{margin:12px auto 8px;color:#405875;font-size:clamp(1rem,1.8vw,1.28rem);font-weight:750;line-height:1.25}
+.relative-token-actions{display:flex;justify-content:center;flex-wrap:wrap;gap:8px;margin:8px auto 0}
+.relative-token-action{min-height:46px;padding:9px 14px;border:1px solid #9fb9d8;border-radius:11px;background:#fff;color:#073a75;font-size:1rem;font-weight:850;cursor:pointer;touch-action:manipulation}
+.relative-token-action:active{transform:translateY(1px)}
+.relative-token-result{margin:14px auto 0;font-family:"Cambria Math","STIX Two Math","Times New Roman",serif;font-size:clamp(1.7rem,3.2vw,3.1rem);font-weight:800}.relative-token-result strong{color:var(--answer)}
+.relative-token-placeholder{min-height:86px}
+.answer-dock.relative-tokens-dock .answer-main{min-height:58px}
 @media(min-width:801px){.diapo.interactive-mode .stage{padding:6px 18px 10px}.diapo.interactive-mode .question svg{max-height:255px;width:auto;margin-left:auto;margin-right:auto}}
 @media(min-width:1200px){.answer-dock:not(.qcm-mode) .answer-body{display:block;position:relative;padding:0 195px}.answer-dock:not(.qcm-mode) .answer-main{width:100%;max-width:var(--keypad-max);margin:0 auto}.answer-dock:not(.qcm-mode) .dock-actions{position:absolute;right:14px;top:0;bottom:0}}
 @media(min-width:801px) and (max-height:760px){.diapo.interactive-mode.module01-mode .module01-prompt{font-size:clamp(2rem,3vw,2.7rem);margin-bottom:4px}.diapo.interactive-mode.module01-mode .module01-source{font-size:clamp(2.45rem,4vw,3.75rem);margin:1px auto 3px}.diapo.interactive-mode.module01-mode .module01-visual{margin:3px auto 2px}.diapo.interactive-mode.module01-mode .module01-visual svg{width:auto;max-width:100%;max-height:220px}.diapo.interactive-mode.module01-mode .module01-options .opt{padding:9px 14px}.diapo.interactive-mode.median-mode .question{font-size:clamp(1.9rem,3.3vw,2.85rem);line-height:1.12;margin-bottom:10px}.diapo.interactive-mode.median-mode .options{gap:10px 14px;margin-top:10px}.diapo.interactive-mode.median-mode .opt{padding:13px 16px;font-size:clamp(1.15rem,1.7vw,1.55rem)}.diapo.interactive-mode.angle-sum-mode .angle-sum-prompt{font-size:clamp(1.65rem,2.4vw,2.15rem);margin-bottom:2px}.diapo.interactive-mode.angle-sum-mode .angle-sum-prompt svg{max-height:158px;margin-top:3px}.diapo.interactive-mode.angle-sum-mode .angle-bar-help{height:138px;margin-top:0}.diapo.interactive-mode.geometry-long-prompt-mode .question svg{max-height:285px!important}.diapo.interactive-mode.geometry-long-prompt-mode .opt{min-height:54px;padding:11px 14px}.diapo.interactive-mode.proportion-table-mode .proportion-line-desktop{width:min(100%,760px)}}
@@ -520,7 +539,7 @@ svg{display:block;max-width:100%;height:auto}
 @media(max-width:800px){.slide .question table{max-width:100%;font-size:clamp(.92rem,3.9vw,1.08rem)!important}.slide .question table td,.slide .question table th{padding:14px 14px!important;border-width:1.5px!important}.diapo.coordinate-mode .stage{padding:4px 4px 8px}.diapo.coordinate-mode .question{font-size:clamp(1.18rem,5.2vw,1.5rem);line-height:1.1;margin-bottom:3px}.diapo.coordinate-mode .question svg{width:min(100%,380px)!important;max-width:380px!important;max-height:min(52vh,380px)!important;margin:3px auto!important}.diapo.coordinate-mode .footer{font-size:clamp(1.75rem,7.8vw,2.3rem);margin-top:3px}.diapo.right-angle-mode .question{font-size:clamp(2rem,9vw,2.8rem);margin-bottom:20px}.diapo.right-angle-mode .footer{font-size:clamp(2.1rem,9.5vw,3rem)}}
 @media(max-width:800px){.diapo.transformations-mode .stage{padding:4px 4px 8px}.diapo.transformations-mode .question{font-size:clamp(1.12rem,4.9vw,1.42rem);line-height:1.09;margin-bottom:3px}.diapo.transformations-mode .question svg{width:min(100%,390px)!important;max-width:390px!important;max-height:min(49vh,390px)!important;margin:3px auto!important}.diapo.transformations-mode .footer{font-size:clamp(1.6rem,7.2vw,2.15rem);margin-top:3px}.diapo.transformations-mode .options{gap:6px;margin-top:4px}.diapo.transformations-mode .opt{font-size:clamp(.9rem,3.85vw,1.08rem);padding:8px 9px}.course-visual{max-height:175px}.course-rule-wide{grid-column:auto}}
 @media(max-width:800px){.diapo>.top{order:2;border-top:1px solid var(--border);border-bottom:0}.diapo>.stage{order:1}}
-@media(max-width:800px){.diapo.interactive-mode{--stage-x:7px;--stage-bottom:7px}.diapo.interactive-mode>.top{order:1;height:54px;grid-template-columns:minmax(0,1fr) auto minmax(0,1fr);border-top:0;border-bottom:1px solid var(--border);padding:7px max(9px,env(safe-area-inset-right)) 7px max(9px,env(safe-area-inset-left))}.diapo.interactive-mode>.stage{order:2;padding-top:5px}.diapo.interactive-mode>.answer-dock{order:3}.diapo.interactive-mode .keyboard-toggle,.diapo.interactive-mode .fullscreen-btn{width:40px;height:40px;min-height:40px;padding:0}.interactive-summary{grid-column:2;justify-content:center;font-size:.86rem}.interactive-score{padding:5px 8px}.answer-dock{padding:6px max(6px,env(safe-area-inset-right)) max(6px,env(safe-area-inset-bottom)) max(6px,env(safe-area-inset-left))}.answer-body{grid-template-columns:minmax(0,1fr) 154px;justify-content:stretch;gap:5px}.answer-main{height:var(--keypad-height-mobile);min-height:58px}.keypad{grid-template-columns:repeat(var(--key-columns-mobile,6),minmax(0,1fr));gap:4px}.key{min-height:0;padding:4px 2px;border-radius:9px;font-size:1.04rem}.key.utility{font-size:.78rem}.key.utility svg{width:23px;height:23px}.answer-guidance,.answer-feedback{min-height:58px;padding:8px 8px;border-radius:10px;font-size:1.16rem}.feedback-answer{font-size:1em}.answer-kind{padding:0}.answer-dock.keypad-collapsed .answer-main,.answer-dock.qcm-mode .answer-main{height:62px}.dock-actions{grid-template-columns:1fr;width:154px}.dock-action{min-width:0;min-height:58px;padding:7px 5px;font-size:1.03rem}.answer-dock.qcm-mode .answer-body{grid-template-columns:minmax(0,1fr) 184px}.answer-dock.qcm-mode .dock-actions{grid-template-columns:184px;width:184px}.answer-dock.qcm-mode .dock-action{min-width:184px;font-size:1.1rem}.interactive-input-slot{min-height:1.48em;min-width:2.18em;border-radius:.28em}.interactive-polynomial-response{gap:7px 10px;margin-top:7px;font-size:clamp(1.7rem,7.7vw,2.25rem)}.interactive-polynomial-response.term-count-1{font-size:clamp(2.3rem,10vw,3rem)}.interactive-polynomial-response.term-count-2{font-size:clamp(1.95rem,8.8vw,2.65rem)}.interactive-polynomial-term small{font-size:.42em}.interactive-finish{margin:3vh auto 0;padding:22px 15px}.interactive-finish-mark{width:54px;height:54px}.interactive-finish-score{margin-bottom:14px}.interactive-finish-actions{flex-direction:column;gap:8px}.interactive-finish-actions .btn,.interactive-finish-actions .btn.primary{width:min(100%,260px);min-width:0}}
+@media(max-width:800px){.diapo.interactive-mode{--stage-x:7px;--stage-bottom:7px}.diapo.interactive-mode>.top{order:1;height:54px;grid-template-columns:minmax(0,1fr) auto minmax(0,1fr);border-top:0;border-bottom:1px solid var(--border);padding:7px max(9px,env(safe-area-inset-right)) 7px max(9px,env(safe-area-inset-left))}.diapo.interactive-mode>.stage{order:2;padding-top:5px}.diapo.interactive-mode>.answer-dock{order:3}.diapo.interactive-mode .keyboard-toggle,.diapo.interactive-mode .fullscreen-btn{width:40px;height:40px;min-height:40px;padding:0}.interactive-summary{grid-column:2;justify-content:center;font-size:.86rem}.interactive-score{padding:5px 8px}.answer-dock{padding:6px max(6px,env(safe-area-inset-right)) max(6px,env(safe-area-inset-bottom)) max(6px,env(safe-area-inset-left))}.answer-body{grid-template-columns:minmax(0,1fr) 154px;justify-content:stretch;gap:5px}.answer-main{height:var(--keypad-height-mobile);min-height:58px}.keypad{grid-template-columns:repeat(var(--key-columns-mobile,6),minmax(0,1fr));gap:4px}.key{min-height:0;padding:4px 2px;border-radius:9px;font-size:1.04rem}.key.utility{font-size:.78rem}.key.utility svg{width:23px;height:23px}.answer-guidance,.answer-feedback{min-height:58px;padding:8px 8px;border-radius:10px;font-size:1.16rem}.feedback-answer{font-size:1em}.answer-kind{padding:0}.answer-dock.keypad-collapsed .answer-main,.answer-dock.qcm-mode .answer-main{height:62px}.dock-actions{grid-template-columns:1fr;width:154px}.dock-action{min-width:0;min-height:58px;padding:7px 5px;font-size:1.03rem}.answer-dock.qcm-mode .answer-body{grid-template-columns:minmax(0,1fr) 184px}.answer-dock.qcm-mode .dock-actions{grid-template-columns:184px;width:184px}.answer-dock.qcm-mode .dock-action{min-width:184px;font-size:1.1rem}.interactive-input-slot{min-height:1.48em;min-width:2.18em;border-radius:.28em}.interactive-polynomial-response{gap:7px 10px;margin-top:7px;font-size:clamp(1.7rem,7.7vw,2.25rem)}.interactive-polynomial-response.term-count-1{font-size:clamp(2.3rem,10vw,3rem)}.interactive-polynomial-response.term-count-2{font-size:clamp(1.95rem,8.8vw,2.65rem)}.interactive-polynomial-term small{font-size:.42em}.relative-token-prompt{font-size:clamp(1.45rem,7vw,2.15rem);margin-bottom:8px}.relative-token-board{width:100%}.relative-token-zone{min-height:96px;margin:7px auto;padding:8px 7px;border-radius:12px}.relative-token-zone-a,.relative-token-zone-b{width:calc(50% - 4px)}.relative-token-zone h3{font-size:.92rem;margin-bottom:5px}.relative-token-list{gap:5px;min-height:50px}.relative-token{width:46px;height:46px;min-width:46px;font-size:1.02rem}.relative-token-empty{min-width:46px;height:46px}.relative-token.is-null-pair{box-shadow:0 0 0 3px #f59e0b,0 2px 0 rgba(11,33,71,.12)}.relative-token-instruction{margin:8px auto 5px;font-size:.95rem}.relative-token-actions{margin-top:5px}.relative-token-action{min-height:44px;padding:8px 10px;font-size:.92rem}.relative-token-result{margin-top:9px;font-size:clamp(1.45rem,7vw,2.1rem)}.interactive-finish{margin:3vh auto 0;padding:22px 15px}.interactive-finish-mark{width:54px;height:54px}.interactive-finish-score{margin-bottom:14px}.interactive-finish-actions{flex-direction:column;gap:8px}.interactive-finish-actions .btn,.interactive-finish-actions .btn.primary{width:min(100%,260px);min-width:0}}
 @media(max-width:800px){.multiple-forms-help.multiple-forms-line{height:clamp(245px,39vh,315px)}.multiple-forms-line-desktop{display:none}.multiple-forms-line-mobile{display:block;width:min(100%,390px)!important;height:auto}.fraction-ops-result-separated{margin-top:13px}.fraction-ops-simplification{max-width:360px;margin-bottom:3px;font-size:.88rem;line-height:1.12}.legacy-statement-table-wrap{margin:15px auto 20px}}
 @media(max-width:600px){.fullscreen-btn,.diapo.interactive-mode .keyboard-toggle{display:none!important}.diapo:not(.interactive-mode) .top{gap:5px;padding-left:7px;padding-right:7px}.diapo:not(.interactive-mode) .right{gap:6px}.diapo:not(.interactive-mode) .course-btn{width:42px;height:42px;min-height:42px;padding:0;display:inline-grid;place-items:center;border-radius:50%}.diapo:not(.interactive-mode) .course-btn svg{width:21px;height:21px}.diapo:not(.interactive-mode) .course-btn span{display:none}.diapo.interactive-mode .interactive-summary{position:absolute;inset:0;left:0;max-width:none;transform:none;pointer-events:none}.diapo.interactive-mode #interactiveCounter{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);white-space:nowrap}.diapo.interactive-mode .course-btn{position:absolute;left:max(9px,env(safe-area-inset-left));top:50%;transform:translateY(-50%);width:38px;height:38px;min-height:38px;padding:0;display:inline-grid;place-items:center;border:1px solid #efbb8a;border-radius:50%;background:#fffaf5;color:#9e4200;box-shadow:0 1px 4px rgba(11,33,71,.09)}.diapo.interactive-mode .course-btn svg{width:21px;height:21px}.diapo.interactive-mode .course-btn span{display:none}.diapo.interactive-mode .right{position:static}.diapo.interactive-mode .interactive-score{position:absolute;right:max(9px,env(safe-area-inset-right));top:50%;transform:translateY(-50%)}}
 @media (hover:none) and (pointer:coarse){.navnums{display:none!important}.mobile-counter{display:block!important}}
@@ -573,6 +592,8 @@ let idx=0;
 let corr=false;
 let interactiveValues=[];
 let interactiveTouched=[];
+let relativeBoardState=null;
+let relativeBoardKey='';
 let activeSlotIndex=0;
 let selectedOptions=new Set();
 let interactiveLocked=false;
@@ -734,6 +755,16 @@ Object.assign(courseCatalog,{
     ['Multiplier','Double de n : 2n ; triple : 3n ; quadruple : 4n.'+courseRelationVisual()],
     ['Partager','La moitié est une des deux parts égales : '+courseFraction('n',2)+' ; le quart est une des quatre parts égales : '+courseFraction('n',4)+'.'],
     ['Entiers voisins','Le prédécesseur d’un entier n est n − 1 ; son successeur est n + 1.<span class="course-example">Pour n = 12 : prédécesseur 11, successeur 13.</span>']
+  ]},
+  relative_addition:{title:'Additionner des nombres relatifs avec des jetons',rules:[
+    ['Les jetons','Un jeton vert vaut +1 ; un jeton rouge vaut −1. Le nombre écrit dans le jeton indique sa valeur.'],
+    ['Paire nulle','Un jeton +1 et un jeton −1 forment une paire nulle : leur somme vaut 0. On peut ajouter autant de paires nulles que nécessaire sans changer la valeur.'],
+    ['Addition','On rassemble les deux groupes de jetons. Les paires nulles peuvent être repérées, puis les jetons restants donnent le résultat.']
+  ]},
+  relative_subtraction:{title:'Soustraire des nombres relatifs avec des jetons',rules:[
+    ['Ce que signifie soustraire','Soustraire un nombre, c’est retirer des jetons de la valeur correspondante : retirer +1 signifie retirer un jeton vert ; retirer −1 signifie retirer un jeton rouge.'],
+    ['Créer des paires nulles','S’il n’y a pas assez de jetons du signe demandé, on ajoute une ou plusieurs paires +1/−1. La valeur du plateau ne change pas.'],
+    ['Retirer puis lire','On déplace les jetons demandés dans la zone « retirer ». Les jetons qui restent sur le plateau donnent le résultat. Soustraire un nombre revient aussi à ajouter son opposé.']
   ]},
   reduce_expression:{title:'Réduire une expression littérale',rules:[
     ['Regrouper','On additionne seulement les termes de même nature : les x² ensemble, les x ensemble et les nombres ensemble.'],
@@ -1002,7 +1033,7 @@ function setModuleClasses(diapo,moduleId){
    'equation-mode':['dnb_13'],'numberline-mode':['dnb_14'],'geometry-choice-mode':['dnb_16','dnb_17'],'angle-sum-mode':['dnb_18'],
    'conversion-mode':['dnb_19'],'solids-mode':['dnb_20'],'perimeter-mode':['dnb_21'],'area-mode':['dnb_22'],'volume-mode':['dnb_23'],'average-mode':['dnb_30'],
    'median-mode':['dnb_31'],'proportion-mode':['dnb_34'],'evolution-mode':['dnb_35'],'data-mode':['dnb_28','dnb_29'],
-   'algorithm-mode':['dnb_37'],'coordinate-mode':['dnb_15'],'transformations-mode':['dnb_27'],'trigonometry-mode':['dnb_26','dnb_26b']
+   'algorithm-mode':['dnb_37'],'coordinate-mode':['dnb_15'],'transformations-mode':['dnb_27'],'trigonometry-mode':['dnb_26','dnb_26b'],'relative-tokens-mode':['dnb_38','dnb_39']
  };
  Object.entries(map).forEach(entry=>diapo.classList.toggle(entry[0],entry[1].includes(moduleId)));
  diapo.classList.toggle('dense-mode',['dnb_15','dnb_24','dnb_25','dnb_26','dnb_26b','dnb_32','dnb_33','dnb_36','dnb_37'].includes(moduleId));
@@ -1080,6 +1111,7 @@ function setupInteractiveSlide(current){
  const spec=current.interactiveSpec;
  dock.hidden=false;
  dock.classList.toggle('qcm-mode',spec.kind==='qcm'||spec.kind==='grid-point');
+ dock.classList.toggle('relative-tokens-dock',spec.kind==='relative-tokens');
  dock.classList.toggle('locked',interactiveLocked);
  const kind=document.getElementById('answerKind');
  if(kind){
@@ -1104,6 +1136,8 @@ function setupInteractiveSlide(current){
    });
  }else if(spec.kind==='grid-point'){
    ensureInteractiveEntryState(spec);setupGridPointInteraction(spec);
+ }else if(spec.kind==='relative-tokens'){
+   setupRelativeTokensInteraction(spec);
  }else if(!interactiveLocked){
    ensureInteractiveEntryState(spec);
    injectInteractiveResponse(spec);
@@ -1264,13 +1298,87 @@ function setupFractionProductTools(){
    render();
  });
 }
+function relativeClientTokenLabel(sign){return sign>0?'+1':'−1';}
+function relativeClientDisplayNumber(value){const text=String(value);return text.startsWith('-')?'−'+text.slice(1):text;}
+function relativeClientInitialState(spec){return {tokens:(spec.relative.initialTokens||[]).map(token=>({...token})),nextPair:1};}
+function relativeClientStateKey(state){return JSON.stringify({tokens:state.tokens.map(token=>({id:token.id,sign:token.sign,zone:token.zone})).sort((a,b)=>a.id.localeCompare(b.id)),nextPair:state.nextPair});}
+function relativeClientPairedIds(tokens,zone){
+ const positive=tokens.filter(token=>token.zone===zone&&token.sign>0),negative=tokens.filter(token=>token.zone===zone&&token.sign<0),paired=new Set();
+ for(let index=0;index<Math.min(positive.length,negative.length);index++){paired.add(positive[index].id);paired.add(negative[index].id);}
+ return paired;
+}
+function relativeClientZoneHtml(label,zone,state){
+ const paired=relativeClientPairedIds(state.tokens,zone),tokens=state.tokens.filter(token=>token.zone===zone);
+ const content=tokens.length?tokens.map(token=>'<button type="button" class="relative-token '+(token.sign>0?'relative-token-positive':'relative-token-negative')+(paired.has(token.id)?' is-null-pair':'')+'" data-relative-token-id="'+token.id+'" aria-label="Jeton '+relativeClientTokenLabel(token.sign)+'">'+relativeClientTokenLabel(token.sign)+'</button>').join(''):'<span class="relative-token-empty">—</span>';
+ return '<section class="relative-token-zone relative-token-zone-'+zone+'" data-relative-zone="'+zone+'"><h3>'+label+'</h3><div class="relative-token-list">'+content+'</div></section>';
+}
+function relativeClientBoardHtml(spec,state){
+ const data=spec.relative;
+ const zones=data.kind==='addition'
+   ?relativeClientZoneHtml('Premier nombre','a',state)+relativeClientZoneHtml('Deuxième nombre','b',state)+relativeClientZoneHtml('Résultat','result',state)
+   :relativeClientZoneHtml('Plateau de départ','board',state)+relativeClientZoneHtml('Zone « retirer »','removed',state);
+ const actions='<div class="relative-token-actions"><button type="button" class="relative-token-action" data-relative-action="reset">Recommencer</button>'+(data.kind==='subtraction'?'<button type="button" class="relative-token-action" data-relative-action="add-pair">Ajouter une paire nulle</button>':'')+'</div>';
+ const instruction=data.kind==='addition'?'Touchez un jeton pour le déplacer dans la zone résultat. Les paires +1/−1 valent zéro.':'Touchez un jeton du signe demandé pour le retirer. Si nécessaire, ajoutez une paire nulle.';
+ return zones+'<p class="relative-token-instruction">'+instruction+'</p>'+actions;
+}
+function relativeClientRenderBoard(spec){
+ const board=document.querySelector('#slide [data-relative-board]');
+ if(board) board.innerHTML=relativeClientBoardHtml(spec,relativeBoardState);
+}
+function relativeClientSetState(spec,state){
+ relativeBoardState=state;
+ interactiveValues=[relativeClientStateKey(state)];
+ const initialKey=relativeClientStateKey(relativeClientInitialState(spec));
+ interactiveTouched=[interactiveValues[0]!==initialKey];
+ relativeClientRenderBoard(spec);
+ updateInteractiveControls();
+ relativeClientBindBoard(spec);
+}
+function relativeClientBindBoard(spec){
+ const board=document.querySelector('#slide [data-relative-board]');if(!board||interactiveLocked)return;
+ board.querySelectorAll('[data-relative-token-id]').forEach(button=>button.addEventListener('click',()=>{
+   const token=relativeBoardState.tokens.find(item=>item.id===button.dataset.relativeTokenId);if(!token)return;
+   const data=spec.relative;
+   if(data.kind==='addition') token.zone=token.zone==='result'?token.origin:'result';
+   else if(token.zone==='removed') token.zone='board';
+   else if(token.zone==='board'){
+     const removed=relativeBoardState.tokens.filter(item=>item.zone==='removed').length;
+     if(token.sign!==data.removeSign||removed>=data.removeCount){
+       setInteractiveFeedback('Retire un jeton du signe demandé.','bad');return;
+     }
+     token.zone='removed';
+   }
+   setInteractiveFeedback('','');
+   relativeClientSetState(spec,relativeBoardState);
+ }));
+ board.querySelector('[data-relative-action="reset"]')?.addEventListener('click',()=>{setInteractiveFeedback('','');relativeClientSetState(spec,relativeClientInitialState(spec));});
+ board.querySelector('[data-relative-action="add-pair"]')?.addEventListener('click',()=>{
+   const pair=relativeBoardState.nextPair++;
+   relativeBoardState.tokens.push({id:'p'+pair+'+',sign:1,zone:'board',origin:'board'},{id:'p'+pair+'-',sign:-1,zone:'board',origin:'board'});
+   setInteractiveFeedback('','');relativeClientSetState(spec,relativeBoardState);
+ });
+}
+function setupRelativeTokensInteraction(spec){
+ if(!spec||!spec.relative||interactiveLocked)return;
+ if(relativeBoardKey!==spec.relative.instanceKey){relativeBoardKey=spec.relative.instanceKey;relativeBoardState=relativeClientInitialState(spec);interactiveValues=[relativeClientStateKey(relativeBoardState)];interactiveTouched=[false];}
+ relativeClientRenderBoard(spec);relativeClientBindBoard(spec);
+ const kind=document.getElementById('answerKind');if(kind)kind.textContent='Manipule les jetons puis valide';
+ updateInteractiveControls();
+}
 function resetInteractiveEntryState(spec){
- const slots=spec&&Array.isArray(spec.slots)?spec.slots:[];
- interactiveValues=slots.map(slot=>String(slot.initialValue===undefined?'':slot.initialValue));
- interactiveTouched=slots.map(()=>false);
- activeSlotIndex=0;
+ if(spec&&spec.kind==='relative-tokens'){
+   relativeBoardKey=spec.relative.instanceKey;relativeBoardState=relativeClientInitialState(spec);interactiveValues=[relativeClientStateKey(relativeBoardState)];interactiveTouched=[false];activeSlotIndex=0;return;
+ }
+  const slots=spec&&Array.isArray(spec.slots)?spec.slots:[];
+  interactiveValues=slots.map(slot=>String(slot.initialValue===undefined?'':slot.initialValue));
+  interactiveTouched=slots.map(()=>false);
+  activeSlotIndex=0;
 }
 function ensureInteractiveEntryState(spec){
+ if(spec&&spec.kind==='relative-tokens'){
+   if(!relativeBoardState||relativeBoardKey!==spec.relative.instanceKey) resetInteractiveEntryState(spec);
+   return;
+ }
  const count=Array.isArray(spec.slots)?spec.slots.length:0;
  if(interactiveValues.length!==count||interactiveTouched.length!==count) resetInteractiveEntryState(spec);
  if(activeSlotIndex>=count) activeSlotIndex=Math.max(0,count-1);
@@ -1373,7 +1481,7 @@ function renderInteractiveKeypad(spec){
  if(!keypad) return;
  keypad.innerHTML='';
  const body=keypad.closest('.answer-body');
- if(spec.kind==='qcm'||spec.kind==='grid-point'){
+ if(spec.kind==='qcm'||spec.kind==='grid-point'||spec.kind==='relative-tokens'){
    if(body){body.style.setProperty('--keypad-max','940px');body.style.setProperty('--keypad-height-desktop','64px');body.style.setProperty('--keypad-height-mobile','62px');}
    return;
  }
@@ -1397,7 +1505,7 @@ function renderInteractiveKeypad(spec){
 function applyKeypadVisibility(spec=slides[idx]&&slides[idx].interactiveSpec){
  const dock=document.getElementById('answerDock'),toggle=document.getElementById('keyboardToggle');
  if(!dock||!toggle) return;
- const available=interactiveMode&&!interactiveFinished&&spec&&spec.kind!=='qcm'&&spec.kind!=='grid-point';
+ const available=interactiveMode&&!interactiveFinished&&spec&&spec.kind!=='qcm'&&spec.kind!=='grid-point'&&spec.kind!=='relative-tokens';
  const visible=phoneKeypadMedia.matches||keypadVisible;
  dock.classList.toggle('keypad-collapsed',available&&!visible);
  toggle.hidden=!available||phoneKeypadMedia.matches;
@@ -1414,6 +1522,7 @@ function toggleKeypad(){
 function hasInteractiveAnswer(){
  const spec=slides[idx].interactiveSpec;
  if(spec.kind==='qcm') return selectedOptions.size>0;
+ if(spec.kind==='relative-tokens') return interactiveTouched.some(Boolean);
  return interactiveTouched.some(Boolean);
 }
 function updateInteractiveControls(){
@@ -1490,6 +1599,16 @@ function interactiveAnswerIsCorrect(spec){
  if(spec.layout==='fraction'&&spec.fractionPolicy==='equivalent'){
    return equivalentInteractiveFraction(interactiveValues,spec.acceptedCombinations);
  }
+ if(spec.kind==='relative-tokens'){
+   const data=spec.relative,state=relativeBoardState;
+   if(!state||!Array.isArray(state.tokens))return false;
+   if(data.kind==='addition'){
+     return state.tokens.every(token=>token.zone==='result')&&state.tokens.reduce((sum,token)=>sum+token.sign,0)===data.result;
+   }
+   const removed=state.tokens.filter(token=>token.zone==='removed');
+   const boardValue=state.tokens.filter(token=>token.zone==='board').reduce((sum,token)=>sum+token.sign,0);
+   return removed.length===data.removeCount&&removed.every(token=>token.sign===data.removeSign)&&boardValue===data.result;
+ }
  return (spec.acceptedCombinations||[]).some(combination=>combination.length===interactiveValues.length&&combination.every((expected,index)=>{
    const answer=normalizeInteractiveAnswer(interactiveValues[index]);
    if(normalizeInteractiveAnswer(expected)===answer) return true;
@@ -1503,13 +1622,14 @@ function rawInteractiveResponse(spec){
    const options=slides[idx].questionInstance&&slides[idx].questionInstance.response.options;
    return [...selectedOptions].sort((a,b)=>a-b).map(index=>options&&options[index]?options[index].optionId:index);
  }
+ if(spec.kind==='relative-tokens') return [{...relativeBoardState,tokens:relativeBoardState.tokens.map(token=>({...token}))}];
  return interactiveValues.slice();
 }
 function evaluateInteractiveAnswer(spec){
  const skipped=!hasInteractiveAnswer();
  const correct=!skipped&&interactiveAnswerIsCorrect(spec);
  const raw=rawInteractiveResponse(spec);
- const normalized=spec.kind==='qcm'?raw:raw.map(normalizeInteractiveAnswer);
+ const normalized=spec.kind==='qcm'?raw:(spec.kind==='relative-tokens'?[relativeClientStateKey(relativeBoardState)]:raw.map(normalizeInteractiveAnswer));
  return Object.freeze({
    isCorrect:correct,
    outcome:skipped?'skipped':(correct?'correct':'incorrect'),
@@ -1676,6 +1796,13 @@ function interactiveKeysFor(combinations,options={}){
   return keys;
 }
 function interactiveSpecForInstance(inst,correctionHtml){
+  if(inst.relativeTokens){
+    return {
+      kind:'relative-tokens',
+      relative:inst.relativeTokens,
+      expectedDisplay:'réponse : '+relativeClientDisplayNumber(inst.relativeTokens.result)
+    };
+  }
   if(inst.q&&inst.q.options&&inst.q.options.transformation_place_kind){
     const combinations=interactiveAnswerCombinations(inst,(inst.answers||[]).map(value=>String(value)));
     return {kind:'grid-point',slots:[{label:'Abscisse'},{label:'Ordonnée'}],acceptedCombinations:combinations,expectedDisplay:'réponse : '+(inst.answers||[]).join(' ; '),keys:[]};
@@ -1771,7 +1898,7 @@ function courseKindForModule(moduleId,mode){
     dnb_21:'perimeter_formulas',dnb_22:'area_formulas',dnb_23:'volume_formulas',dnb_24:'pythagoras',dnb_25:'thales',
     dnb_26:'trigonometry_basics',dnb_26b:'trigonometry_calculator',dnb_27:'transformations',dnb_28:'probability',dnb_29:'frequency',
     dnb_30:'mean',dnb_31:'median',dnb_32:'read_data',dnb_33:'recognize_proportion',
-    dnb_34:'solve_proportion',dnb_35:'percent_change',dnb_36:'read_graph',dnb_37:'algorithm'
+    dnb_34:'solve_proportion',dnb_35:'percent_change',dnb_36:'read_graph',dnb_37:'algorithm',dnb_38:'relative_addition',dnb_39:'relative_subtraction'
   };
   if(alwaysAvailable[moduleId]) return alwaysAvailable[moduleId];
   return null;
