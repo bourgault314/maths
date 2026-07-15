@@ -668,7 +668,7 @@ window.MATHSGO_CATALOGUE = {
       "id": "outils-automatismes-automatismes-mathsgo-html",
       "title": "Automatismes",
       "description": "Générez des diaporamas d’automatismes mathématiques variés, avec aides visuelles et corrections, pour le collège et la préparation au DNB.",
-      "path": "outils/automatismes/automatismes_mathsgo.html",
+      "path": "auto/",
       "domains": [
         "nombres-calculs"
       ],
