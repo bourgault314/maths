@@ -1,74 +1,118 @@
 (function () {
+  // Conventions graphiques reprises du moteur Automatismes :
+  // fonds d'abord, puis un contour extérieur unique et des séparations uniques.
+  const memoTopBrace = (x1, x2, y, color) => {
+    const mid = (x1 + x2) / 2;
+    return `<path d="M ${x1} ${y + 8} Q ${x1} ${y} ${x1 + 11} ${y} L ${mid - 10} ${y} Q ${mid - 3} ${y} ${mid} ${y - 9} Q ${mid + 3} ${y} ${mid + 10} ${y} L ${x2 - 11} ${y} Q ${x2} ${y} ${x2} ${y + 8}" fill="none" stroke="${color}" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>`;
+  };
+
+  const memoFractionLabel = (numerator, denominator, name, color) => `
+    <foreignObject x="38" y="108" width="164" height="54">
+      <div xmlns="http://www.w3.org/1999/xhtml" style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;gap:13px;color:${color};font-family:Cambria Math,STIX Two Math,Times New Roman,serif;font-size:21px;font-weight:800;line-height:1">
+        <span style="display:inline-flex;flex-direction:column;align-items:center;justify-content:center;line-height:1">
+          <span style="min-width:1.2em;padding:0 .14em .07em;border-bottom:2px solid currentColor;text-align:center">${numerator}</span>
+          <span style="padding:.07em .14em 0;text-align:center">${denominator}</span>
+        </span>
+        <span style="white-space:nowrap;font-family:Arial,Helvetica,sans-serif;font-size:16px">${name}</span>
+      </div>
+    </foreignObject>`;
+
+  const fractionMemo = ({ denominator, numerator, color, pale, stroke, name, ariaLabel }) => {
+    const x = 20;
+    const y = 45;
+    const width = 200;
+    const height = 50;
+    const cellWidth = width / denominator;
+    let fills = `<rect x="${x}" y="${y}" width="${width}" height="${height}" fill="#fff"/>`;
+    for (let index = 0; index < numerator; index += 1) {
+      fills += `<rect x="${x + index * cellWidth}" y="${y}" width="${cellWidth + .15}" height="${height}" fill="${index === 0 ? color : pale}"/>`;
+    }
+    let grid = `<rect x="${x}" y="${y}" width="${width}" height="${height}" fill="none" stroke="${stroke}" stroke-width="3"/>`;
+    for (let index = 1; index < denominator; index += 1) {
+      const separatorX = x + index * cellWidth;
+      grid += `<line x1="${separatorX}" y1="${y}" x2="${separatorX}" y2="${y + height}" stroke="${stroke}" stroke-width="2"/>`;
+    }
+    return `
+      <svg viewBox="0 0 240 166" role="img" aria-label="${ariaLabel}">
+        <text x="120" y="15" text-anchor="middle" fill="#536176" font-family="Arial,Helvetica,sans-serif" font-size="13" font-weight="850">une unité</text>
+        ${memoTopBrace(x, x + width, 31, stroke)}
+        ${fills}
+        ${grid}
+        ${memoFractionLabel(numerator, denominator, name, stroke)}
+      </svg>`;
+  };
+
   const multiplicationMemo = `
-    <svg viewBox="0 0 520 230" role="img" aria-label="Douze représenté par trois groupes de quatre billes et par quatre groupes de trois billes">
-      <g transform="translate(8 5)">
-        <text x="120" y="18" text-anchor="middle" fill="#075b57" font-family="Arial" font-size="15" font-weight="900">3 groupes de 4</text>
-        <rect x="30" y="29" width="180" height="37" rx="8" fill="#fff" stroke="#063f86" stroke-width="2.5"/>
-        <text x="120" y="55" text-anchor="middle" fill="#063f86" font-family="Arial" font-size="25" font-weight="900">12</text>
-        <g fill="#dff7f4" stroke="#087a77" stroke-width="2">
-          <rect x="30" y="66" width="60" height="34"/><rect x="90" y="66" width="60" height="34"/><rect x="150" y="66" width="60" height="34"/>
-        </g>
-        <g fill="#075b57" font-family="Arial" font-size="18" font-weight="900" text-anchor="middle"><text x="60" y="89">4</text><text x="120" y="89">4</text><text x="180" y="89">4</text></g>
-        <g fill="#16a39b" stroke="#075b57" stroke-width="1.5">
-          <circle cx="42" cy="126" r="7"/><circle cx="54" cy="142" r="7"/><circle cx="66" cy="126" r="7"/><circle cx="78" cy="142" r="7"/>
-          <circle cx="102" cy="126" r="7"/><circle cx="114" cy="142" r="7"/><circle cx="126" cy="126" r="7"/><circle cx="138" cy="142" r="7"/>
-          <circle cx="162" cy="126" r="7"/><circle cx="174" cy="142" r="7"/><circle cx="186" cy="126" r="7"/><circle cx="198" cy="142" r="7"/>
-        </g>
-        <path d="M88 113v43M148 113v43" stroke="#a6d9d5" stroke-width="2" stroke-dasharray="4 4"/>
-        <text x="120" y="186" text-anchor="middle" fill="#063f86" font-family="Arial" font-size="19" font-weight="900">3 × 4 = 12</text>
+    <svg viewBox="0 0 560 285" role="img" aria-label="Douze représenté par un rectangle de trois rangées de quatre, puis par le même rectangle tourné en quatre rangées de trois">
+      <g>
+        <rect x="93" y="7" width="104" height="38" rx="8" fill="#fff" stroke="#063f86" stroke-width="2.5"/>
+        <text x="145" y="33" text-anchor="middle" fill="#063f86" font-family="Arial,Helvetica,sans-serif" font-size="25" font-weight="900">12</text>
+
+        <rect x="55" y="89" width="180" height="108" fill="#dff7f4"/>
+        <rect x="55" y="125" width="180" height="36" fill="#c9efeb"/>
+        <rect x="55" y="89" width="180" height="108" fill="none" stroke="#075b57" stroke-width="3"/>
+        <path d="M100 89V197M145 89V197M190 89V197M55 125H235M55 161H235" fill="none" stroke="#075b57" stroke-width="1.8"/>
+
+        <path d="M55 81V74H235V81" fill="none" stroke="#60708c" stroke-width="1.8" stroke-linecap="round"/>
+        <text x="145" y="69" text-anchor="middle" fill="#075b57" font-family="Arial,Helvetica,sans-serif" font-size="17" font-weight="900">4</text>
+        <path d="M47 89H40V197H47" fill="none" stroke="#60708c" stroke-width="1.8" stroke-linecap="round"/>
+        <text x="29" y="149" text-anchor="middle" fill="#075b57" font-family="Arial,Helvetica,sans-serif" font-size="17" font-weight="900">3</text>
+
+        <text x="145" y="251" text-anchor="middle" fill="#173a5e" font-family="Arial,Helvetica,sans-serif" font-size="16" font-weight="900">3 groupes de 4</text>
+        <text x="145" y="274" text-anchor="middle" fill="#075b57" font-family="Arial,Helvetica,sans-serif" font-size="18" font-weight="900">3 × 4 = 12</text>
       </g>
-      <path d="M260 20v184" stroke="#d7e2ec" stroke-width="2"/>
-      <g transform="translate(272 5)">
-        <text x="120" y="18" text-anchor="middle" fill="#9a5308" font-family="Arial" font-size="15" font-weight="900">4 groupes de 3</text>
-        <rect x="24" y="29" width="192" height="37" rx="8" fill="#fff" stroke="#063f86" stroke-width="2.5"/>
-        <text x="120" y="55" text-anchor="middle" fill="#063f86" font-family="Arial" font-size="25" font-weight="900">12</text>
-        <g fill="#fff1dc" stroke="#d86b08" stroke-width="2">
-          <rect x="24" y="66" width="48" height="34"/><rect x="72" y="66" width="48" height="34"/><rect x="120" y="66" width="48" height="34"/><rect x="168" y="66" width="48" height="34"/>
-        </g>
-        <g fill="#9a5308" font-family="Arial" font-size="18" font-weight="900" text-anchor="middle"><text x="48" y="89">3</text><text x="96" y="89">3</text><text x="144" y="89">3</text><text x="192" y="89">3</text></g>
-        <g fill="#f59e42" stroke="#9a5308" stroke-width="1.5">
-          <circle cx="40" cy="126" r="7"/><circle cx="48" cy="143" r="7"/><circle cx="56" cy="126" r="7"/>
-          <circle cx="88" cy="126" r="7"/><circle cx="96" cy="143" r="7"/><circle cx="104" cy="126" r="7"/>
-          <circle cx="136" cy="126" r="7"/><circle cx="144" cy="143" r="7"/><circle cx="152" cy="126" r="7"/>
-          <circle cx="184" cy="126" r="7"/><circle cx="192" cy="143" r="7"/><circle cx="200" cy="126" r="7"/>
-        </g>
-        <path d="M72 113v43M120 113v43M168 113v43" stroke="#f2c394" stroke-width="2" stroke-dasharray="4 4"/>
-        <text x="120" y="186" text-anchor="middle" fill="#063f86" font-family="Arial" font-size="19" font-weight="900">4 × 3 = 12</text>
+
+      <path d="M280 28V260" stroke="#d7e2ec" stroke-width="2"/>
+
+      <g>
+        <rect x="363" y="7" width="104" height="38" rx="8" fill="#fff" stroke="#063f86" stroke-width="2.5"/>
+        <text x="415" y="33" text-anchor="middle" fill="#063f86" font-family="Arial,Helvetica,sans-serif" font-size="25" font-weight="900">12</text>
+
+        <rect x="361" y="53" width="108" height="180" fill="#fff1dc"/>
+        <rect x="361" y="98" width="108" height="45" fill="#ffe6c5"/>
+        <rect x="361" y="188" width="108" height="45" fill="#ffe6c5"/>
+        <rect x="361" y="53" width="108" height="180" fill="none" stroke="#9a5308" stroke-width="3"/>
+        <path d="M397 53V233M433 53V233M361 98H469M361 143H469M361 188H469" fill="none" stroke="#9a5308" stroke-width="1.8"/>
+
+        <path d="M361 47V40H469V47" fill="none" stroke="#60708c" stroke-width="1.8" stroke-linecap="round"/>
+        <text x="415" y="35" text-anchor="middle" fill="#9a5308" font-family="Arial,Helvetica,sans-serif" font-size="17" font-weight="900">3</text>
+        <path d="M477 53H484V233H477" fill="none" stroke="#60708c" stroke-width="1.8" stroke-linecap="round"/>
+        <text x="498" y="149" text-anchor="middle" fill="#9a5308" font-family="Arial,Helvetica,sans-serif" font-size="17" font-weight="900">4</text>
+
+        <text x="415" y="251" text-anchor="middle" fill="#173a5e" font-family="Arial,Helvetica,sans-serif" font-size="16" font-weight="900">4 groupes de 3</text>
+        <text x="415" y="274" text-anchor="middle" fill="#9a5308" font-family="Arial,Helvetica,sans-serif" font-size="18" font-weight="900">4 × 3 = 12</text>
       </g>
     </svg>`;
 
-  const halfMemo = `
-    <svg viewBox="0 0 190 130" aria-label="Une unité partagée en deux parts égales, dont une est colorée : un demi">
-      <text x="95" y="15" text-anchor="middle" fill="#536176" font-family="Arial" font-size="13" font-weight="850">une unité</text>
-      <path d="M15 31V23H175V31" fill="none" stroke="#a16207" stroke-width="2.5"/>
-      <rect x="15" y="37" width="160" height="48" fill="#fff" stroke="#a16207" stroke-width="3"/>
-      <rect x="15" y="37" width="80" height="48" fill="#facc15"/>
-      <path d="M95 37v48" stroke="#a16207" stroke-width="3"/>
-      <g fill="#7a4906" font-family="Georgia" font-size="18" font-weight="900" text-anchor="middle"><text x="62" y="105">1</text><path d="M52 110h20" stroke="#7a4906" stroke-width="2.5"/><text x="62" y="127">2</text></g>
-      <text x="130" y="117" text-anchor="middle" fill="#7a4906" font-family="Arial" font-size="15" font-weight="900">un demi</text>
-    </svg>`;
+  const halfMemo = fractionMemo({
+    denominator: 2,
+    numerator: 1,
+    color: "#facc15",
+    pale: "#fff4b3",
+    stroke: "#8a6d00",
+    name: "un demi",
+    ariaLabel: "Une unité partagée en deux parts égales, dont une est colorée : un demi"
+  });
 
-  const thirdsMemo = `
-    <svg viewBox="0 0 190 130" aria-label="Une unité partagée en trois parts égales, dont deux sont colorées : deux tiers">
-      <text x="95" y="15" text-anchor="middle" fill="#536176" font-family="Arial" font-size="13" font-weight="850">une unité</text>
-      <path d="M15 31V23H175V31" fill="none" stroke="#7c3aed" stroke-width="2.5"/>
-      <rect x="15" y="37" width="160" height="48" fill="#fff" stroke="#7c3aed" stroke-width="3"/>
-      <rect x="15" y="37" width="106.67" height="48" fill="#e9d5ff"/>
-      <path d="M68.33 37v48M121.67 37v48" stroke="#7c3aed" stroke-width="3"/>
-      <g fill="#5b21b6" font-family="Georgia" font-size="18" font-weight="900" text-anchor="middle"><text x="62" y="105">2</text><path d="M52 110h20" stroke="#5b21b6" stroke-width="2.5"/><text x="62" y="127">3</text></g>
-      <text x="132" y="117" text-anchor="middle" fill="#5b21b6" font-family="Arial" font-size="15" font-weight="900">deux tiers</text>
-    </svg>`;
+  const thirdsMemo = fractionMemo({
+    denominator: 3,
+    numerator: 2,
+    color: "#cda1ff",
+    pale: "#e5ccff",
+    stroke: "#7042a3",
+    name: "deux tiers",
+    ariaLabel: "Une unité partagée en trois parts égales, dont deux sont colorées : deux tiers"
+  });
 
-  const quartersMemo = `
-    <svg viewBox="0 0 190 130" aria-label="Une unité partagée en quatre parts égales, dont trois sont colorées : trois quarts">
-      <text x="95" y="15" text-anchor="middle" fill="#536176" font-family="Arial" font-size="13" font-weight="850">une unité</text>
-      <path d="M15 31V23H175V31" fill="none" stroke="#3f6212" stroke-width="2.5"/>
-      <rect x="15" y="37" width="160" height="48" fill="#fff" stroke="#3f6212" stroke-width="3"/>
-      <rect x="15" y="37" width="120" height="48" fill="#84cc16"/>
-      <path d="M55 37v48M95 37v48M135 37v48" stroke="#3f6212" stroke-width="3"/>
-      <g fill="#365314" font-family="Georgia" font-size="18" font-weight="900" text-anchor="middle"><text x="62" y="105">3</text><path d="M52 110h20" stroke="#365314" stroke-width="2.5"/><text x="62" y="127">4</text></g>
-      <text x="135" y="117" text-anchor="middle" fill="#365314" font-family="Arial" font-size="15" font-weight="900">trois quarts</text>
-    </svg>`;
+  const quartersMemo = fractionMemo({
+    denominator: 4,
+    numerator: 3,
+    color: "#7fd000",
+    pale: "#b8e878",
+    stroke: "#477a00",
+    name: "trois quarts",
+    ariaLabel: "Une unité partagée en quatre parts égales, dont trois sont colorées : trois quarts"
+  });
 
   const geometryMemo = `
     <svg viewBox="0 0 170 150" aria-label="Un carré avec ses quatre côtés égaux et ses quatre angles droits codés">
