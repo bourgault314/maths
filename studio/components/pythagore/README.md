@@ -20,7 +20,7 @@ Les variantes inventées doivent être explicitement nommées comme variantes.
 Un puzzle historique ne doit être ajouté qu’après vérification de sa découpe,
 de sa solution et de l’absence de chevauchement des pièces.
 
-## Trois composants
+## Quatre composants
 
 ### `geometry.pythagore-moulin`
 
@@ -62,6 +62,16 @@ Jeu de déplacement des pièces d’un découpage de Pythagore.
   à l’ordinateur ;
 - les puzzles proposés doivent être de vraies découpes distinctes. Une simple
   rotation ou un miroir d’un puzzle existant ne constitue pas une variante.
+
+### `activity.pythagore-tactile`
+
+La première activité bêta d'Automatismes utilise une interaction volontairement
+petite et vérifiable : l'élève place `BC²`, `AB²`, `AC²`, puis les trois valeurs
+dans `BC² = AB² + AC²` et `c² = a² + b²`. Elle fonctionne au toucher par appui
+puis appui sur la case, avec glisser-déposer en complément. Le clavier visuel est
+désactivé pour garder le puzzle lisible sur téléphone. Cette activité reste dans
+la bêta avant toute extension aux lettres du triangle, au schéma en barres ou au
+choix du chemin de calcul.
 
 ## Règles communes
 
@@ -157,6 +167,28 @@ ou `launch(config)`. Pour un lien simple, les paramètres `triangle`, `right`,
 Les identifiants de côté restent stables, même si leur ordre d’affichage change.
 Le composant ne collecte aucune donnée élève : la page appelante garde la main
 sur le contexte, l’aide et la validation.
+
+Pour intégrer l'outil sans quitter la page, importer `embed.js` puis monter un
+composant dans un conteneur :
+
+```js
+import {mountPythagoreComponent} from '/studio/components/pythagore/embed.js';
+
+mountPythagoreComponent(document.querySelector('#outil'), {
+  type: 'pythabarre',
+  config: {triangle: {letters: 'ABC', rightAngle: 'A'}, sides: {AB: 3, AC: 4, BC: '?'}, autoStart: true}
+});
+
+mountPythagoreComponent(document.querySelector('#jeu'), {
+  type: 'puzzle',
+  puzzle: 'bhaskara',
+  config: {mode: 'eleves', letters: false}
+});
+```
+
+Le conteneur est remplaçable par un bloc de question, d'aide ou de correction.
+Sur téléphone, la page appelante peut choisir uniquement `type: 'puzzle'` et
+laisser une hauteur généreuse pour la manipulation tactile.
 
 Pour le jeu, la page peut utiliser le même principe :
 
