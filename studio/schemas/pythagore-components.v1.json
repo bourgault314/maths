@@ -11,7 +11,8 @@
       "enum": [
         "geometry.pythagore-moulin",
         "representation.pythagore-bar-model",
-        "game.pythagore-reassembly"
+        "game.pythagore-reassembly",
+        "activity.pythagore-tactile"
       ]
     },
     "version": {"type": "integer", "minimum": 1},
