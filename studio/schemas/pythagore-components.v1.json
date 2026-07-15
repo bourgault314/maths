@@ -1,0 +1,95 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://mathsgo.re/studio/schemas/pythagore-components.v1.json",
+  "title": "Composants Pythagore maths&go",
+  "description": "Contrat expérimental commun au moulin, au schéma en barres et au puzzle de Pythagore.",
+  "type": "object",
+  "required": ["componentId", "version", "status", "renderer", "supportedModes", "parameters", "pedagogy"],
+  "properties": {
+    "componentId": {
+      "type": "string",
+      "enum": [
+        "geometry.pythagore-moulin",
+        "representation.pythagore-bar-model",
+        "game.pythagore-reassembly"
+      ]
+    },
+    "version": {"type": "integer", "minimum": 1},
+    "status": {"enum": ["draft", "review", "validated", "deprecated"]},
+    "renderer": {"type": "string", "minLength": 1},
+    "supportedModes": {
+      "type": "array",
+      "items": {"enum": ["course", "question", "help", "correction", "slideshow", "game", "printable"]},
+      "uniqueItems": true,
+      "minItems": 1
+    },
+    "parameters": {"type": "object"},
+    "pedagogy": {
+      "type": "object",
+      "required": ["triangle", "colorRoles"],
+      "properties": {
+        "triangle": {
+          "type": "object",
+          "required": ["letters", "rightAngleVertex", "sides"],
+          "properties": {
+            "letters": {
+              "type": "array",
+              "prefixItems": [{"type": "string", "minLength": 1}, {"type": "string", "minLength": 1}, {"type": "string", "minLength": 1}],
+              "minItems": 3,
+              "maxItems": 3
+            },
+            "rightAngleVertex": {"type": "string", "minLength": 1},
+            "sides": {
+              "type": "object",
+              "additionalProperties": {
+                "type": "object",
+                "required": ["role"],
+                "properties": {
+                  "role": {"enum": ["hypotenuse", "leg1", "leg2"]},
+                  "length": {"type": ["number", "null"]},
+                  "unknown": {"type": "boolean"}
+                },
+                "additionalProperties": false
+              },
+              "minProperties": 3,
+              "maxProperties": 3
+            },
+            "unit": {"type": "string"}
+          },
+          "additionalProperties": false
+        },
+        "colorRoles": {
+          "type": "object",
+          "required": ["hypotenuse", "leg1", "leg2"],
+          "properties": {
+            "hypotenuse": {"type": "string"},
+            "leg1": {"type": "string"},
+            "leg2": {"type": "string"}
+          },
+          "additionalProperties": false
+        },
+        "steps": {"type": "array", "items": {"type": "object"}},
+        "anchors": {"type": "array", "items": {"type": "object"}}
+      },
+      "additionalProperties": true
+    },
+    "integration": {
+      "type": "object",
+      "description": "Point d’entrée pour lancer une situation depuis une page élève.",
+      "properties": {
+        "globalConfig": {"const": "MATHSGO_PYTHABARRE_CONFIG"},
+        "api": {"enum": ["window.MathsGoPythaBarre.start", "window.MathsGoPythaBarre.launch"]},
+        "queryParameters": {
+          "type": "array",
+          "items": {"enum": ["triangle", "right", "AB", "AC", "BC", "unit", "mode", "autostart", "puzzle", "letters"]},
+          "uniqueItems": true
+        },
+        "autoStart": {"type": "boolean"}
+      },
+      "additionalProperties": false
+    },
+    "sources": {"type": "array", "items": {"type": "string"}},
+    "license": {"type": ["string", "null"]}
+  },
+  "additionalProperties": false
+}
