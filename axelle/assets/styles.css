@@ -272,6 +272,15 @@ footer { max-width: 940px; margin: 17px auto 0; color: rgba(16,41,74,.52); font-
   .welcome-screen { padding: 34px 20px 25px; }
   .welcome-screen h1 { font-size: clamp(2.25rem, 12vw, 3.15rem); }
   .lead { font-size: .98rem; }
+  .session-facts { flex-wrap: nowrap; gap: 6px; }
+  .session-facts span {
+    min-width: 0;
+    flex: 1 1 0;
+    padding: 7px 5px;
+    font-size: .73rem;
+    text-align: center;
+    white-space: nowrap;
+  }
   .welcome-scene { margin-top: -8px; }
   .memo-screen { padding: 34px 17px 28px; }
   .screen-heading { margin-bottom: 20px; }
