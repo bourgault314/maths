@@ -41,7 +41,8 @@
       description: "Bouliers, abaques et représentations des nombres.",
       keywords: "boulier rekenrek soroban décimaux nombres",
       icon: "abacus",
-      hub: "bouliers/index.html"
+      hub: "bouliers/index.html",
+      navigation: "hub"
     },
     fractions: {
       description: "Relier fractions, quotients et nombres rationnels.",
@@ -626,6 +627,8 @@
   }
 
   function notionHref(notion) {
+    const design = notionDesign[notion.id] || {};
+    if (design.navigation === "hub" && design.hub) return design.hub;
     return `?domain=${encodeURIComponent(notion.domain)}&notion=${encodeURIComponent(notion.id)}`;
   }
 
