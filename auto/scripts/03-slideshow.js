@@ -47,6 +47,21 @@ button{font:inherit;-webkit-appearance:none;appearance:none;-webkit-tap-highligh
 .frac{display:inline-flex;flex-direction:column;vertical-align:middle;align-items:center;line-height:1;margin:0 .08em}.frac .frac-num{border-bottom:2px solid currentColor;padding:0 .16em .06em}.frac .frac-den{padding:.06em .16em 0}
 .math-inline,.math-display{display:inline-block;white-space:nowrap}.aligned-math{display:inline-block;text-align:left;line-height:1.35}.quad{display:inline-block;width:1.2em}.qquad{display:inline-block;width:2.4em}.widehat{display:inline-block;position:relative;padding-top:.24em;text-decoration:none;line-height:1}.widehat::before,.widehat::after{content:"";position:absolute;top:.08em;width:52%;border-top:1.8px solid currentColor;pointer-events:none}.widehat::before{left:-1%;transform:rotate(-11deg);transform-origin:100% 50%}.widehat::after{right:-1%;transform:rotate(11deg);transform-origin:0 50%}.mathcal{font-family:Georgia,serif;font-style:italic}.answer-slot{display:inline-flex;align-items:baseline;justify-content:center;width:var(--answer-width,1.05em);margin:0 .08em;white-space:nowrap;vertical-align:baseline}.frac .answer-slot-small{margin:0 .02em}.answer-dots{display:inline-block;letter-spacing:.06em}sup .answer-slot{align-items:center;line-height:1;margin-left:.02em;margin-right:.02em}sup .answer-slot-filled{width:auto!important;min-width:0;margin-left:-.04em;margin-right:0}sup .answer-dots{line-height:1;letter-spacing:0;transform:translateY(-.16em)}
 .visual-note{font-size:1.4rem;color:var(--muted);border:1px dashed var(--border);border-radius:12px;padding:12px;margin:12px auto;max-width:620px}
+.pythagore-tactile{width:min(100%,760px);margin:0 auto;padding:16px 18px 14px;border:2px solid #d7e3f3;border-radius:20px;background:linear-gradient(180deg,#fbfdff,#f4f9ff);color:#17384d}
+.pythagore-tactile-prompt{font-size:clamp(1.16rem,2vw,1.6rem);line-height:1.2;font-weight:750;margin:0 auto 6px}
+.pythagore-tactile-triangle{display:block;width:min(100%,360px);height:auto;margin:0 auto 3px}
+.pythagore-tactile-equation,.pythagore-tactile-values{display:flex;align-items:center;justify-content:center;gap:8px;font-family:"Cambria Math","STIX Two Math","Times New Roman",serif;font-size:clamp(1.65rem,3vw,2.7rem);font-weight:850;line-height:1.05;margin:6px auto}
+.pythagore-tactile-values{font-size:clamp(1.4rem,2.4vw,2.15rem);margin-top:10px}
+.pythagore-tactile-drop{display:inline-grid;place-items:center;min-width:2.8em;min-height:1.6em;padding:5px 10px;border:2px dashed #9cb4d0;border-radius:12px;background:#fff;color:#073a75;font:inherit;font-weight:900;cursor:pointer;touch-action:none;transition:background .15s,border-color .15s,transform .15s}
+.pythagore-tactile-drop[data-accept="value"]{min-width:2.5em}
+.pythagore-tactile-drop.filled{border-style:solid;border-color:#86a8cf;background:#eef6ff}.pythagore-tactile-drop.is-selected{border-color:#ff7a1a;background:#fff2e8;transform:translateY(-1px)}
+.pythagore-tactile-palette{display:flex;align-items:center;justify-content:center;flex-wrap:wrap;gap:8px;margin:8px auto 0;padding:7px 9px;border:1px solid #d7e3f3;border-radius:14px;background:#fff}
+.pythagore-tactile-caption{flex:0 0 100%;font:800 .82rem/1.1 Arial,sans-serif;color:#60708c;text-transform:uppercase;letter-spacing:.04em}
+.pythagore-tactile-token{min-width:64px;min-height:44px;padding:7px 12px;border:2px solid #2471a3;border-radius:12px;background:#eef8ff;color:#174d78;font:800 1.15rem/1 Arial,sans-serif;cursor:grab;touch-action:none;user-select:none;box-shadow:0 2px 0 rgba(23,56,77,.08)}
+.pythagore-tactile-token:active{cursor:grabbing}.pythagore-tactile-token.value-token{border-color:#d46a00;background:#fff5e8;color:#a14d00}.pythagore-tactile-token.is-selected{outline:3px solid #ff7a1a;outline-offset:2px}
+.pythagore-tactile-hint{min-height:1.2em;margin:8px auto 0;color:#60708c;font-size:.93rem;font-weight:700}.pythagore-tactile-hint.is-error{color:#b42318}.pythagore-tactile-hint.is-success{color:#087a55}
+.pythagore-drag-ghost{position:fixed;z-index:1000;pointer-events:none;transform:translate(-50%,-50%) scale(1.05);opacity:.92;box-shadow:0 8px 20px rgba(23,56,77,.22)}
+@media(max-width:800px){.pythagore-tactile{width:100%;padding:10px 7px 9px;border-radius:15px}.pythagore-tactile-prompt{font-size:clamp(1rem,4.35vw,1.25rem);margin-bottom:2px}.pythagore-tactile-triangle{width:min(100%,270px);max-height:154px}.pythagore-tactile-equation{gap:4px;font-size:clamp(1.35rem,7.2vw,1.95rem);margin:4px auto}.pythagore-tactile-values{gap:4px;font-size:clamp(1.15rem,5.8vw,1.55rem);margin:6px auto}.pythagore-tactile-drop{min-width:2.5em;min-height:1.65em;padding:4px 7px;border-radius:9px}.pythagore-tactile-palette{gap:6px;margin-top:6px;padding:6px}.pythagore-tactile-token{min-width:56px;min-height:44px;padding:6px 9px;font-size:1.05rem}.pythagore-tactile-hint{font-size:.82rem;margin-top:6px}}
 .diapo.scientific-mode .stage{align-items:center;padding:12px 20px 18px}
 .diapo.scientific-mode .slide{max-width:1120px}
 .scientific-prompt{font-size:clamp(1.9rem,3.1vw,3.25rem);font-weight:850;line-height:1.13;margin:0 auto 5px}
@@ -1085,6 +1100,7 @@ function setupInteractiveSlide(current){
  if(kind){
    if(spec.kind==='qcm') kind.textContent=spec.multiple?'Plusieurs réponses':'Une seule réponse';
    else if(spec.kind==='grid-point') kind.textContent='Clique sur le quadrillage';
+   else if(spec.kind==='pythagore-tactile') kind.textContent='Déplace les étiquettes';
    else if(spec.layout==='fraction') kind.textContent='Numérateur / dénominateur';
    else if(spec.layout==='polynomial') kind.textContent='Coefficients';
    else kind.textContent=(spec.slots&&spec.slots.length>1)?spec.slots.length+' cases':'Réponse';
@@ -1104,6 +1120,8 @@ function setupInteractiveSlide(current){
    });
  }else if(spec.kind==='grid-point'){
    ensureInteractiveEntryState(spec);setupGridPointInteraction(spec);
+ }else if(spec.kind==='pythagore-tactile'){
+   ensureInteractiveEntryState(spec);setupPythagoreTactileInteraction(spec);
  }else if(!interactiveLocked){
    ensureInteractiveEntryState(spec);
    injectInteractiveResponse(spec);
@@ -1111,6 +1129,58 @@ function setupInteractiveSlide(current){
  renderInteractiveKeypad(spec);
  applyKeypadVisibility(spec);
  updateInteractiveControls();
+}
+function setPythagoreTactileFeedback(message,kind=''){
+ const node=document.querySelector('#slide [data-tactile-feedback]');
+ if(!node)return;
+ node.textContent=message;
+ node.classList.toggle('is-error',kind==='error');
+ node.classList.toggle('is-success',kind==='success');
+}
+function refreshPythagoreTactile(spec){
+ const root=document.querySelector('#slide .pythagore-tactile');if(!root)return;
+ root.querySelectorAll('.pythagore-tactile-drop').forEach(drop=>{
+   const index=Number(drop.dataset.slot),value=interactiveValues[index]||'';
+   drop.textContent=value||'…';
+   drop.classList.toggle('filled',!!value);
+   drop.classList.toggle('is-selected',!interactiveLocked&&selectedTactileDropIndex===index);
+   drop.disabled=interactiveLocked;
+ });
+ root.querySelectorAll('.pythagore-tactile-token').forEach(token=>{
+   token.classList.toggle('is-selected',!interactiveLocked&&selectedTactileToken===token.dataset.token);
+ });
+}
+let selectedTactileToken='',selectedTactileGroup='',selectedTactileDropIndex=null;
+function placePythagoreTactileToken(spec,token,group,index){
+ if(interactiveLocked)return;
+ const drop= document.querySelector('#slide .pythagore-tactile-drop[data-slot="'+index+'"]');
+ if(!drop||drop.dataset.accept!==group){
+   setPythagoreTactileFeedback(group==='label'?'Cette étiquette va dans la première égalité.':'Cette valeur va dans la deuxième égalité.','error');
+   return;
+ }
+ interactiveValues.forEach((value,slot)=>{if(value===token&&slot!==index){interactiveValues[slot]='';interactiveTouched[slot]=false;}});
+ interactiveValues[index]=token;interactiveTouched[index]=true;selectedTactileDropIndex=null;
+ setPythagoreTactileFeedback('Continue : place les éléments restants.');
+ refreshPythagoreTactile(spec);updateInteractiveControls();
+}
+function setupPythagoreTactileInteraction(spec){
+ const root=document.querySelector('#slide .pythagore-tactile');if(!root)return;
+ const tokens=[...root.querySelectorAll('.pythagore-tactile-token')];
+ selectedTactileToken='';selectedTactileGroup='';selectedTactileDropIndex=null;
+ refreshPythagoreTactile(spec);
+ if(interactiveLocked)return;
+ const select=(token,node)=>{selectedTactileToken=token.dataset.token;selectedTactileGroup=token.dataset.tokenGroup||'';selectedTactileDropIndex=null;setPythagoreTactileFeedback('Maintenant, touche la case où placer '+selectedTactileToken+'.');refreshPythagoreTactile(spec);};
+ tokens.forEach(node=>{
+   let moved=false,ghost=null,startX=0,startY=0;
+   const cleanup=()=>{document.removeEventListener('pointermove',move);document.removeEventListener('pointerup',up);document.removeEventListener('pointercancel',up);if(ghost){ghost.remove();ghost=null;}};
+   const move=event=>{if(!ghost)return;const dx=event.clientX-startX,dy=event.clientY-startY;if(Math.hypot(dx,dy)>7)moved=true;ghost.style.left=event.clientX+'px';ghost.style.top=event.clientY+'px';};
+   const up=event=>{const target=document.elementFromPoint(event.clientX,event.clientY)?.closest?.('.pythagore-tactile-drop');if(moved&&target){placePythagoreTactileToken(spec,node.dataset.token,node.dataset.tokenGroup||'',Number(target.dataset.slot));}else if(!moved){select(node,node);}cleanup();};
+   node.addEventListener('pointerdown',event=>{if(interactiveLocked)return;event.preventDefault();startX=event.clientX;startY=event.clientY;moved=false;ghost=node.cloneNode(true);ghost.classList.add('pythagore-drag-ghost');ghost.style.left=event.clientX+'px';ghost.style.top=event.clientY+'px';document.body.append(ghost);document.addEventListener('pointermove',move);document.addEventListener('pointerup',up);document.addEventListener('pointercancel',up);});
+   node.addEventListener('click',event=>{if(interactiveLocked)return;if(event.detail===0||!moved)select(node,node);});
+ });
+ root.querySelectorAll('.pythagore-tactile-drop').forEach(drop=>{
+   drop.addEventListener('click',()=>{if(interactiveLocked)return;const index=Number(drop.dataset.slot);if(selectedTactileToken){placePythagoreTactileToken(spec,selectedTactileToken,selectedTactileGroup,index);}else{selectedTactileDropIndex=index;setPythagoreTactileFeedback('Choisis d’abord une étiquette ou une valeur.','error');refreshPythagoreTactile(spec);}});
+ });
 }
 function setupGridPointInteraction(spec){
  const svg=document.querySelector('#slide .transformation-placement-svg');if(!svg)return;
@@ -1373,6 +1443,10 @@ function renderInteractiveKeypad(spec){
  if(!keypad) return;
  keypad.innerHTML='';
  const body=keypad.closest('.answer-body');
+ if(spec.kind==='pythagore-tactile'){
+   if(body){body.style.setProperty('--keypad-max','940px');body.style.setProperty('--keypad-height-desktop','0px');body.style.setProperty('--keypad-height-mobile','0px');}
+   return;
+ }
  if(spec.kind==='qcm'||spec.kind==='grid-point'){
    if(body){body.style.setProperty('--keypad-max','940px');body.style.setProperty('--keypad-height-desktop','64px');body.style.setProperty('--keypad-height-mobile','62px');}
    return;
@@ -1397,7 +1471,7 @@ function renderInteractiveKeypad(spec){
 function applyKeypadVisibility(spec=slides[idx]&&slides[idx].interactiveSpec){
  const dock=document.getElementById('answerDock'),toggle=document.getElementById('keyboardToggle');
  if(!dock||!toggle) return;
- const available=interactiveMode&&!interactiveFinished&&spec&&spec.kind!=='qcm'&&spec.kind!=='grid-point';
+ const available=interactiveMode&&!interactiveFinished&&spec&&spec.kind!=='qcm'&&spec.kind!=='grid-point'&&spec.kind!=='pythagore-tactile';
  const visible=phoneKeypadMedia.matches||keypadVisible;
  dock.classList.toggle('keypad-collapsed',available&&!visible);
  toggle.hidden=!available||phoneKeypadMedia.matches;
@@ -1414,6 +1488,7 @@ function toggleKeypad(){
 function hasInteractiveAnswer(){
  const spec=slides[idx].interactiveSpec;
  if(spec.kind==='qcm') return selectedOptions.size>0;
+ if(spec.kind==='pythagore-tactile') return interactiveTouched.length===spec.slots.length&&interactiveTouched.every(Boolean);
  return interactiveTouched.some(Boolean);
 }
 function updateInteractiveControls(){
@@ -1676,6 +1751,16 @@ function interactiveKeysFor(combinations,options={}){
   return keys;
 }
 function interactiveSpecForInstance(inst,correctionHtml){
+  if(inst&&inst.pythagoreTactile){
+    return {
+      kind:'pythagore-tactile',
+      layout:'drag',
+      slots:Array.from({length:6},(_,index)=>({label:index<3?'Étiquette '+(index+1):'Valeur '+(index-2),initialValue:''})),
+      acceptedCombinations:[(inst.answers||[]).map(value=>String(value))],
+      expectedDisplay:'BC² = AB² + AC² ; '+inst.pythagoreTactile.cSquared+' = '+inst.pythagoreTactile.aSquared+' + '+inst.pythagoreTactile.bSquared,
+      keys:[]
+    };
+  }
   if(inst.q&&inst.q.options&&inst.q.options.transformation_place_kind){
     const combinations=interactiveAnswerCombinations(inst,(inst.answers||[]).map(value=>String(value)));
     return {kind:'grid-point',slots:[{label:'Abscisse'},{label:'Ordonnée'}],acceptedCombinations:combinations,expectedDisplay:'réponse : '+(inst.answers||[]).join(' ; '),keys:[]};
