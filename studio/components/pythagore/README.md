@@ -56,8 +56,12 @@ Jeu de déplacement des pièces d’un découpage de Pythagore.
 - les aimantations utilisent des ancres géométriques déclarées : sommets,
   milieux, bords et poses exactes ;
 - une validation ne dépend jamais d’un simple rapprochement visuel ;
-- le mode téléphone empile `Cible` puis `Pièces` dans une scène verticale
-  défilante afin de garder des zones de manipulation suffisamment grandes.
+- le mode téléphone affiche une seule activité, avec `Cible` puis `Pièces` dans
+  une scène verticale défilante afin de garder des zones de manipulation
+  suffisamment grandes ; plein écran, lettres et impression restent réservés
+  à l’ordinateur ;
+- les puzzles proposés doivent être de vraies découpes distinctes. Une simple
+  rotation ou un miroir d’un puzzle existant ne constitue pas une variante.
 
 ## Règles communes
 
