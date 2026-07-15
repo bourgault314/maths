@@ -162,6 +162,7 @@ h1 {
 .question-prompt { margin: 11px auto 21px; color: var(--muted); line-height: 1.5; }
 .answers { display: grid; grid-template-columns: repeat(2, minmax(0,1fr)); gap: 10px; }
 .answer-button {
+  min-width: 0;
   min-height: 66px;
   padding: 12px 15px;
   border: 2px solid #d7e2ec;
@@ -170,6 +171,7 @@ h1 {
   background: #fff;
   font-size: clamp(1rem, 3vw, 1.28rem);
   font-weight: 850;
+  overflow-wrap: anywhere;
   cursor: pointer;
   transition: border-color .14s ease, background .14s ease, transform .14s ease;
 }
@@ -179,7 +181,7 @@ h1 {
 .answer-button.wrong { border-color: #e39797; color: #8f2b2b; background: #fff0f0; }
 .answer-button .shape-option { display: flex; align-items: center; justify-content: center; gap: 13px; }
 .answer-button .shape-option svg { width: 58px; height: 48px; }
-.fraction-option { display: inline-flex; align-items: center; justify-content: center; gap: 12px; }
+.fraction-option { display: inline-flex; flex-wrap: wrap; align-items: center; justify-content: center; gap: 8px 12px; }
 .stacked-fraction { min-width: 1.25em; display: inline-flex; flex-direction: column; align-items: center; color: var(--blue-dark); font-family: Georgia, "Times New Roman", serif; font-size: 1.23em; line-height: .9; vertical-align: middle; }
 .stacked-fraction > span:first-child { min-width: 1.25em; padding: 0 .13em .1em; border-bottom: 2px solid currentColor; text-align: center; }
 .stacked-fraction > span:last-child { padding-top: .1em; }
@@ -229,8 +231,8 @@ footer { max-width: 940px; margin: 17px auto 0; color: rgba(16,41,74,.52); font-
 
 @media (max-width: 520px) {
   body { padding: 7px 7px 20px; }
-  .app-header { min-height: 65px; padding: 0 7px; }
-  .brand-logo { width: 132px; }
+  .app-header { min-height: 57px; padding: 0 7px; }
+  .brand-logo { width: 118px; }
   .space-name { font-size: .72rem; }
   .screen { border-radius: 24px; }
   .welcome-screen { padding: 34px 20px 25px; }
@@ -242,19 +244,33 @@ footer { max-width: 940px; margin: 17px auto 0; color: rgba(16,41,74,.52); font-
   .memo-card { grid-template-columns: 78px minmax(0,1fr); padding: 16px 13px; }
   .memo-visual { height: 86px; }
   .memo-visual svg { max-height: 84px; }
-  .quiz-screen { padding: 21px 14px 25px; }
-  .question-card { padding-top: 18px; }
-  .question-visual { min-height: 65px; margin-bottom: 10px; }
-  .question-visual svg { max-height: 145px; }
+  .quiz-screen { padding: 15px 11px 19px; }
+  .question-card { padding-top: 12px; }
+  .question-card h1 { font-size: clamp(1.7rem, 8vw, 2.35rem); }
+  .question-prompt { margin: 7px auto 13px; font-size: .92rem; line-height: 1.4; }
+  .question-visual { min-height: 50px; margin-bottom: 6px; }
+  .question-visual svg { max-height: 118px; }
   .fraction-reading-visual { min-height: 106px; }
   .fraction-reading-visual .stacked-fraction { font-size: 3.8rem; }
-  .answers { grid-template-columns: 1fr; gap: 8px; }
-  .answer-button { min-height: 56px; }
+  .answers { grid-template-columns: repeat(2, minmax(0,1fr)); gap: 7px; }
+  .answer-button { min-height: 54px; padding: 9px 8px; font-size: .96rem; }
+  .answer-button .shape-option { flex-direction: column; gap: 3px; }
+  .answer-button .shape-option svg { width: 45px; height: 37px; }
+  .hint-button { min-height: 40px; margin-top: 10px; }
+  .hint-box, .feedback { margin-top: 9px; padding: 10px 11px; font-size: .86rem; line-height: 1.4; }
+  .next-button { min-height: 48px; margin-top: 10px; }
+  .answered-state .question-visual svg { max-height: 92px; }
+  .answered-state .question-prompt { margin-bottom: 9px; }
+  .answered-state .answer-button { min-height: 47px; padding-top: 7px; padding-bottom: 7px; }
   .next-button { width: 100%; }
   .finish-screen { padding: 38px 18px; }
   .finish-summary { grid-template-columns: 1fr 1fr; }
   .finish-actions { flex-direction: column; }
   .finish-actions > * { width: 100%; }
+}
+
+@media (max-width: 350px) {
+  .answers { grid-template-columns: 1fr; }
 }
 
 @media (prefers-reduced-motion: reduce) {
