@@ -1,33 +1,33 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 720 320" role="img" aria-label="Puzzle de Liu Hui et égalité de Pythagore">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 720 320" role="img" aria-label="Puzzle de Périgal recomposé dans le carré de l’hypoténuse">
   <rect width="720" height="320" fill="#fff"/>
-  <g transform="translate(22 -3) rotate(-2 205 160)" stroke="#172033" stroke-width="3" stroke-linejoin="round">
-    <!-- Triangle rectangle central -->
-    <path d="M150 145v78h114Z" fill="#fff"/>
-    <path d="M150 145h13v13h-13" fill="none" stroke="#0f766e" stroke-width="2.5"/>
 
-    <!-- Carré du petit côté, découpé en quatre pièces -->
-    <rect x="72" y="145" width="78" height="78" fill="#fff"/>
-    <path d="M72 145 112 171 72 223Z" fill="#f2841d"/>
-    <path d="M72 145h78l-38 26Z" fill="#ef5745"/>
-    <path d="m72 223 40-52 38 52Z" fill="#ffd071"/>
-    <path d="m150 145-38 26 38 52Z" fill="#20b20e"/>
+  <!-- Un seul moulin : les cinq pièces sont toutes réunies dans c². -->
+  <g transform="translate(28 18) scale(.78)" stroke="#172033" stroke-width="3" stroke-linejoin="round">
+    <!-- Triangle rectangle et carrés a², b² laissés vides. -->
+    <path d="M112 118V28H250V118Z" fill="#fff"/>
+    <path d="M22 118H112V208H22Z" fill="#fff"/>
+    <path d="M112 118h18v18h-18" fill="none" stroke="#0f766e" stroke-width="2.6"/>
+    <path d="M112 118H250L112 208Z" fill="#fff"/>
 
-    <!-- Carré du grand côté, découpé en quatre pièces -->
-    <rect x="150" y="31" width="114" height="114" fill="#fff"/>
-    <path d="M150 31h114l-38 39Z" fill="#169de8"/>
-    <path d="M150 31 226 70l-76 75Z" fill="#89c2ed"/>
-    <path d="M264 31v114l-38-75Z" fill="#286cc1"/>
-    <path d="m150 145 76-75 38 75Z" fill="#22bda5"/>
+    <!-- Carré de l’hypoténuse : solution de Périgal à cinq pièces. -->
+    <path d="M250 118 339 254 203 343 112 208Z" fill="#fff"/>
+    <path d="M250 118 169 160 169 252 286 252Z" fill="#d90072"/>
+    <path d="M112 208 169 160 169 252 184 313 203 343Z" fill="#969696"/>
+    <path d="M169 252H239V313H184Z" fill="#13ad13"/>
+    <path d="M239 252H286L339 254 239 313Z" fill="#ffd071"/>
+    <path d="M184 313H239L203 343Z" fill="#169de8"/>
+    <path d="M169 160V252M169 252H286M184 313H239M239 252V313" fill="none"/>
+    <path d="M250 118 339 254 203 343 112 208Z" fill="none"/>
 
-    <!-- Carré construit sur l'hypoténuse -->
-    <path d="m150 223 114-78 78 114-114 78Z" fill="#fbfdff"/>
+    <g fill="#475569" stroke="none" font-family="Segoe UI, Arial, sans-serif" font-size="21" font-weight="850" text-anchor="middle">
+      <text x="181" y="81">b²</text>
+      <text x="67" y="171">a²</text>
+    </g>
   </g>
 
   <g font-family="Segoe UI, Arial, sans-serif" text-anchor="middle">
-    <text x="548" y="119" fill="#063f86" font-size="24" font-weight="750">Théorème de Pythagore</text>
-    <text x="548" y="190" fill="#10294a" font-size="48" font-weight="850">
-      <tspan fill="#169de8">a²</tspan><tspan> + </tspan><tspan fill="#f2841d">b²</tspan><tspan> = </tspan><tspan fill="#7c3aed">c²</tspan>
-    </text>
-    <text x="548" y="235" fill="#64748b" font-size="20" font-weight="650">Puzzle de Liu Hui</text>
+    <text x="548" y="110" fill="#063f86" font-size="25" font-weight="800">Moulin de Pythagore</text>
+    <text x="548" y="188" fill="#111827" font-size="48" font-weight="850">a² + b² = c²</text>
+    <text x="548" y="234" fill="#64748b" font-size="20" font-weight="700">Périgal · 5 pièces</text>
   </g>
 </svg>

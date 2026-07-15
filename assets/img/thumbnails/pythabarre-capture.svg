@@ -1,43 +1,54 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 720 320" role="img" aria-label="Résolution complète de PythaBarre avec moulin et triangle de départ">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 720 320" role="img" aria-label="PythaBarre : triangle ABC rectangle en A, rédaction, moulin et schéma en barres">
   <rect width="720" height="320" fill="#fff"/>
 
-  <!-- Résolution -->
+  <!-- Schéma de départ centré en haut : ABC rectangle en A. -->
   <g font-family="Segoe UI, Arial, sans-serif">
-    <text x="28" y="29" fill="#063f86" font-size="18" font-weight="850">Résolution pas à pas</text>
-    <g font-size="20" font-weight="750" fill="#334155">
-      <text x="42" y="61">BC²</text><text x="116" y="61">=</text><text x="147" y="61">AB² + AC²</text>
-      <text x="42" y="91">BC²</text><text x="116" y="91">=</text><text x="147" y="91">3² + 4²</text>
-      <text x="42" y="121">BC²</text><text x="116" y="121">=</text><text x="147" y="121">9 + 16</text>
-      <text x="42" y="151">BC²</text><text x="116" y="151">=</text><text x="147" y="151">25</text>
-      <text x="48" y="181">BC</text><text x="116" y="181">=</text><text x="147" y="181">√25</text>
-      <text x="48" y="211" fill="#b42318">BC</text><text x="116" y="211">=</text><text x="147" y="211" fill="#b42318">5 cm</text>
+    <path d="M322 76V14L424 76Z" fill="#f8fbff" stroke="#2563eb" stroke-width="3" stroke-linejoin="round"/>
+    <path d="M322 59h17v17h-17" fill="none" stroke="#ef4444" stroke-width="2.5"/>
+    <g fill="#063f86" font-size="14" font-weight="850">
+      <text x="305" y="82">A</text><text x="305" y="17">B</text><text x="430" y="82">C</text>
+    </g>
+    <g fill="#334155" font-size="13" font-weight="800">
+      <text x="278" y="49">3 cm</text>
+      <text x="362" y="94">4 cm</text>
+      <text x="383" y="38" fill="#f58220">?</text>
     </g>
   </g>
 
-  <!-- Moulin numérique -->
-  <g transform="translate(394 22)" stroke-linejoin="round">
-    <path d="M82 96h72v72H82Z" fill="#eadcf8" stroke="#b79ad6" stroke-width="2"/>
-    <path d="M154 168h96v96h-96Z" fill="#f8d9e9" stroke="#dcaec5" stroke-width="2"/>
-    <path d="m154 96 74-86 86 74-74 86Z" fill="#f8dfcf" stroke="#d8b9a5" stroke-width="2"/>
-    <path d="M154 96v72h86Z" fill="#fff" stroke="#1d4ed8" stroke-width="4"/>
-    <path d="M154 151h17v17h-17" fill="none" stroke="#ef4444" stroke-width="3"/>
-    <g font-family="Segoe UI, Arial, sans-serif" font-size="20" font-weight="850" text-anchor="middle" fill="#172033">
-      <text x="118" y="139">9</text><text x="202" y="224">16</text><text x="239" y="94">25</text>
+  <!-- Rédaction française, avec une colonne de signes égal régulière. -->
+  <g font-family="Segoe UI, Arial, sans-serif">
+    <text x="25" y="104" fill="#063f86" font-size="16" font-weight="850">Résolution</text>
+    <g font-size="18" font-weight="750" fill="#334155">
+      <text x="30" y="130">BC²</text><text x="78" y="130">=</text><text x="100" y="130">AB² + AC²</text>
+      <text x="30" y="156">BC²</text><text x="78" y="156">=</text><text x="100" y="156">3² + 4²</text>
+      <text x="30" y="182">BC²</text><text x="78" y="182">=</text><text x="100" y="182">9 + 16</text>
+      <text x="30" y="208">BC²</text><text x="78" y="208">=</text><text x="100" y="208">25</text>
+      <text x="35" y="234" fill="#b42318">BC</text><text x="78" y="234">=</text>
+      <!-- Radical tracé : crochet montant et barre au-dessus de 25. -->
+      <path d="M99 226l5 7 7-17h34" fill="none" stroke="#334155" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
+      <text x="120" y="234">25</text><text x="153" y="234">=</text><text x="176" y="234" fill="#b42318">5 cm</text>
     </g>
   </g>
 
-  <!-- Schéma de départ -->
-  <g transform="translate(245 220)" font-family="Segoe UI, Arial, sans-serif">
-    <text x="0" y="43" fill="#64748b" font-size="15" font-weight="750">Schéma de départ</text>
-    <g transform="translate(170 5)">
-      <path d="M0 72V13l92 59Z" fill="#f8fbff" stroke="#2563eb" stroke-width="3" stroke-linejoin="round"/>
-      <path d="M0 57h15v15H0" fill="none" stroke="#ef4444" stroke-width="2.5"/>
-      <g fill="#063f86" font-size="16" font-weight="850">
-        <text x="-18" y="79">A</text><text x="-18" y="15">B</text><text x="96" y="79">C</text>
-      </g>
-      <g fill="#334155" font-size="14" font-weight="750">
-        <text x="8" y="44">3 cm</text><text x="38" y="88">4 cm</text><text x="55" y="37" fill="#f58220">?</text>
-      </g>
+  <!-- Moulin : les carrés sont construits sur les bons côtés. -->
+  <g stroke-linejoin="round" font-family="Segoe UI, Arial, sans-serif" font-weight="850" text-anchor="middle">
+    <path d="M488 111V160H439V111Z" fill="#eadcf8" stroke="#b79ad6" stroke-width="2"/>
+    <path d="M488 160H553V225H488Z" fill="#f8d9e9" stroke="#dcaec5" stroke-width="2"/>
+    <path d="M488 111 553 160 602 95 537 46Z" fill="#f8dfcf" stroke="#d8b9a5" stroke-width="2"/>
+    <path d="M488 111V160H553Z" fill="#fff" stroke="#2563eb" stroke-width="3"/>
+    <path d="M488 144h16v16h-16" fill="none" stroke="#ef4444" stroke-width="2.5"/>
+    <g fill="#172033" font-size="17">
+      <text x="463" y="141">9</text><text x="520" y="197">16</text><text x="546" y="101">25</text>
     </g>
+  </g>
+
+  <!-- Schéma en barres : BC² au-dessus, AB² et AC² dessous, proportions 9:16. -->
+  <g transform="translate(247 241)" font-family="Segoe UI, Arial, sans-serif" font-weight="800">
+    <rect x="0" y="0" width="250" height="29" rx="5" fill="#f8dfcf" stroke="#caa58c" stroke-width="2"/>
+    <text x="125" y="20" text-anchor="middle" fill="#172033" font-size="14">BC² = 25 cm²</text>
+    <rect x="0" y="38" width="90" height="29" rx="5" fill="#eadcf8" stroke="#b79ad6" stroke-width="2"/>
+    <rect x="90" y="38" width="160" height="29" rx="5" fill="#f8d9e9" stroke="#dcaec5" stroke-width="2"/>
+    <text x="45" y="58" text-anchor="middle" fill="#172033" font-size="12">AB² = 9 cm²</text>
+    <text x="170" y="58" text-anchor="middle" fill="#172033" font-size="12">AC² = 16 cm²</text>
   </g>
 </svg>
