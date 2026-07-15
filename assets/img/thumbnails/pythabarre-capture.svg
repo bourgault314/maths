@@ -4,21 +4,21 @@
   <g transform="translate(-13 2)" font-family="Segoe UI,Arial,sans-serif">
     <path d="M322 74V14L422 74Z" fill="#f8fbff" stroke="#2563eb" stroke-width="3" stroke-linejoin="round"/>
     <path d="M322 58h16v16h-16" fill="none" stroke="#ef4444" stroke-width="2.5"/>
-    <g fill="#063f86" font-size="14" font-weight="850"><text x="305" y="80">A</text><text x="305" y="17">B</text><text x="428" y="80">C</text></g>
+    <g fill="#063f86" font-size="17" font-weight="850"><text x="302" y="82">A</text><text x="302" y="18">B</text><text x="429" y="82">C</text></g>
     <g fill="#334155" font-size="13" font-weight="800"><text x="278" y="48">3 cm</text><text x="360" y="92">4 cm</text><text x="381" y="36" fill="#f58220">?</text></g>
   </g>
 
-  <text x="360" y="112" text-anchor="middle" fill="#063f86" font-family="Segoe UI,Arial,sans-serif" font-size="19" font-weight="900">PythaBarre</text>
+  <text x="360" y="116" text-anchor="middle" fill="#063f86" font-family="Segoe UI,Arial,sans-serif" font-size="25" font-weight="900">PythaBarre</text>
 
   <g font-family="Segoe UI,Arial,sans-serif" font-size="18" font-weight="760">
     <text x="24" y="112" fill="#063f86" font-size="16" font-weight="850">Résolution</text>
     <text x="28" y="134"><tspan fill="#187a3c">BC²</tspan></text><text x="68" y="134" fill="#334155">=</text><text x="86" y="134"><tspan fill="#0879d0">AB²</tspan><tspan fill="#334155"> + </tspan><tspan fill="#b76e00">AC²</tspan></text>
     <text x="28" y="155"><tspan fill="#187a3c">BC²</tspan></text><text x="68" y="155" fill="#334155">=</text><text x="86" y="155"><tspan fill="#0879d0">3²</tspan><tspan fill="#334155"> + </tspan><tspan fill="#b76e00">4²</tspan></text>
     <text x="28" y="176"><tspan fill="#187a3c">BC²</tspan></text><text x="68" y="176" fill="#334155">=</text><text x="86" y="176"><tspan fill="#0879d0">9</tspan><tspan fill="#334155"> + </tspan><tspan fill="#b76e00">16</tspan></text>
-    <text x="28" y="197" fill="#334155">BC²</text><text x="68" y="197" fill="#334155">=</text><text x="86" y="197" fill="#334155">25</text>
-    <text x="28" y="218" fill="#b42318">BC</text><text x="68" y="218" fill="#334155">=</text>
-    <g fill="#334155" stroke="#334155"><path d="M 86 211.52 l 3.96 6.12 l 5.76 -14.76 H 119.4" fill="none" stroke-width="1.98" stroke-linecap="round" stroke-linejoin="round"/><text x="98.24" y="218" stroke="none" font-family="Segoe UI,Arial,sans-serif" font-size="18" font-weight="760">25</text></g>
-    <text x="129" y="218" fill="#334155">=</text><text x="147" y="218" fill="#b42318">5 cm</text>
+    <text x="28" y="197" fill="#111827">BC²</text><text x="68" y="197" fill="#111827">=</text><text x="86" y="197" fill="#111827">25</text>
+    <text x="28" y="218" fill="#111827">BC</text><text x="68" y="218" fill="#111827">=</text>
+    <g fill="#111827" stroke="#111827"><path d="M 86 211.52 l 3.96 6.12 l 5.76 -14.76 H 119.4" fill="none" stroke-width="1.98" stroke-linecap="round" stroke-linejoin="round"/><text x="98.24" y="218" stroke="none" font-family="Segoe UI,Arial,sans-serif" font-size="18" font-weight="760">25</text></g>
+    <text x="129" y="218" fill="#111827">=</text><text x="147" y="218" fill="#111827">5 cm</text>
   </g>
 
   <g transform="translate(435 60)">
@@ -28,14 +28,14 @@
     </g>
   </g>
 
-  <g transform="translate(235 248)" font-size="14">
-    <g font-family="Segoe UI,Arial,sans-serif" font-weight="850" text-anchor="middle" dominant-baseline="middle">
+  <g transform="translate(235 248)">
+    <g font-family="Segoe UI,Arial,sans-serif" font-size="16" font-weight="850" text-anchor="middle" dominant-baseline="middle">
     <rect x="0" y="0" width="250" height="29" fill="#e2f5e8" stroke="#24994d" stroke-width="2"/>
     <rect x="0" y="29" width="90" height="29" fill="#dceeff" stroke="#0879d0" stroke-width="2"/>
     <rect x="90" y="29" width="160" height="29" fill="#fff0d8" stroke="#e89516" stroke-width="2"/>
-    <text x="125" y="14.5" fill="#187a3c">BC²</text>
-    <text x="45" y="43.5" fill="#0879d0">AB²</text>
-    <text x="170" y="43.5" fill="#b76e00">AC²</text>
+    <text x="125" y="15.5" fill="#187a3c">BC²</text>
+    <text x="45" y="44.5" fill="#0879d0">AB²</text>
+    <text x="170" y="44.5" fill="#b76e00">AC²</text>
   </g>
   </g>
 </svg>

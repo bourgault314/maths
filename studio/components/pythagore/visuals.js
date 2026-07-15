@@ -125,15 +125,17 @@ export function squareRootSvg({x=0,baseline=20,radicand="25",fontSize=18,color="
 }
 
 /** Schéma en barres de Pythagore : rectangles jointifs et seules lettres dans les cases. */
-export function pythagoreanBarsSvg({x=0,y=0,width=250,height=30,strokeWidth=2}={}){
+export function pythagoreanBarsSvg({x=0,y=0,width=250,height=30,strokeWidth=2,labelFontSize=16}={}){
   const split=width*9/25;
   const c=PYTHAGORE_COLORS;
-  return `<g font-family="Segoe UI,Arial,sans-serif" font-weight="850" text-anchor="middle" dominant-baseline="middle">
+  const topLabelY=round(y+height/2+1);
+  const bottomLabelY=round(y+height*1.5+1);
+  return `<g font-family="Segoe UI,Arial,sans-serif" font-size="${labelFontSize}" font-weight="850" text-anchor="middle" dominant-baseline="middle">
     <rect x="${x}" y="${y}" width="${width}" height="${height}" fill="${c.hypFill}" stroke="${c.hypStroke}" stroke-width="${strokeWidth}"/>
     <rect x="${x}" y="${y+height}" width="${round(split)}" height="${height}" fill="${c.leg1Fill}" stroke="${c.leg1Stroke}" stroke-width="${strokeWidth}"/>
     <rect x="${round(x+split)}" y="${y+height}" width="${round(width-split)}" height="${height}" fill="${c.leg2Fill}" stroke="${c.leg2Stroke}" stroke-width="${strokeWidth}"/>
-    <text x="${x+width/2}" y="${y+height/2}" fill="${c.hypText}">BC²</text>
-    <text x="${x+split/2}" y="${y+height*1.5}" fill="${c.leg1Text}">AB²</text>
-    <text x="${x+split+(width-split)/2}" y="${y+height*1.5}" fill="${c.leg2Text}">AC²</text>
+    <text x="${round(x+width/2)}" y="${topLabelY}" fill="${c.hypText}">BC²</text>
+    <text x="${round(x+split/2)}" y="${bottomLabelY}" fill="${c.leg1Text}">AB²</text>
+    <text x="${round(x+split+(width-split)/2)}" y="${bottomLabelY}" fill="${c.leg2Text}">AC²</text>
   </g>`;
 }

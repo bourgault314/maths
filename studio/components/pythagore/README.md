@@ -96,7 +96,9 @@ rendu. Le moteur construit ensuite la représentation à partir de ces données.
 - la barre `BC²` occupe toute la largeur ;
 - les parties `AB²` et `AC²` sont directement jointives sous elle ;
 - leur largeur est proportionnelle aux aires représentées ;
-- seuls les noms des carrés apparaissent dans les rectangles.
+- seuls les noms des carrés apparaissent dans les rectangles ;
+- chaque nom est centré horizontalement et corrigé optiquement d’un pixel vers
+  le bas pour compenser l’exposant `²`.
 
 ### Racine carrée
 
@@ -112,7 +114,11 @@ manuellement de l’espace entre la racine et le nombre.
 - `BC` est aligné avec les occurrences de `BC²` ;
 - l’interligne reste compact et constant ;
 - les couleurs sémantiques restent visibles jusqu’à la ligne de calcul des
-  carrés, puis la rédaction redevient noire à partir du résultat numérique.
+  carrés ; les lignes `BC² = 25` et `BC = √25 = 5 cm` sont entièrement noires.
+
+Dans une miniature du puzzle résolu, les pièces restent seules dans les carrés :
+ne pas superposer `a²`, `b²` ou `c²`. L’égalité est présentée séparément à côté
+du moulin.
 
 ## Modes attendus
 
