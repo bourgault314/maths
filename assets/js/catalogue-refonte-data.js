@@ -174,7 +174,20 @@ window.MATHSGO_CATALOGUE = {
     "outils/splat_equations.html": { "primaryNotion": "equations", "collections": ["splat"], "tags": ["schema-barres", "splat"] },
     "outils/tuiles_algebriques/generateur_exercices_calcul_litteral.html": { "primaryNotion": "calcul-litteral", "collections": ["tuiles-algebriques"], "tags": ["tuiles-algebriques"] },
     "outils/tuiles_algebriques/generateur_tuiles.html": { "primaryNotion": "calcul-litteral", "collections": ["tuiles-algebriques"], "tags": ["tuiles-algebriques"] },
-    "outils/pythabarre.html": { "primaryNotion": "pythagore", "collections": [], "tags": ["schema-barres"] }
+    "outils/plateaux_manipulation/moulin_pythagore.html": {
+      "primaryNotion": "pythagore",
+      "collections": [],
+      "tags": ["puzzle", "aires", "pythagore"],
+      "thumbnail": "assets/img/thumbnails/moulin-pythagore-capture.svg",
+      "cardDescription": "Déplacer les pièces de puzzles pour visualiser l’égalité des aires du théorème de Pythagore."
+    },
+    "outils/pythabarre.html": {
+      "primaryNotion": "pythagore",
+      "collections": [],
+      "tags": ["schema-barres", "moulin", "pythagore"],
+      "thumbnail": "assets/img/thumbnails/pythabarre-capture.svg",
+      "cardDescription": "Dérouler le théorème pas à pas avec le calcul, le schéma en barres et le moulin de Pythagore."
+    }
   },
   "resourceFamilies": [
     {

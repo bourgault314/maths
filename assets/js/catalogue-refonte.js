@@ -707,9 +707,14 @@
 
   function resourceCard(resource) {
     const domainId = resource.domains[0] || "nombres-calculs";
-    return `<a class="resource-card" href="${escapeHtml(rootPrefix + resource.path)}" style="${domainStyle(domainId)}">
-      <span class="resource-type-icon">${typeIcon(resource)}</span>
-      <span class="resource-copy"><h3>${escapeHtml(resource.title)}</h3><span class="resource-meta">${escapeHtml(resourceMeta(resource))}</span></span>
+    const classification = resourceClassification(resource);
+    const thumbnail = classification.thumbnail || resource.thumbnail;
+    const description = classification.cardDescription || resource.description;
+    return `<a class="resource-card${thumbnail ? " resource-card-visual" : ""}" href="${escapeHtml(rootPrefix + resource.path)}" style="${domainStyle(domainId)}">
+      ${thumbnail
+        ? `<span class="resource-thumbnail"><img src="${escapeHtml(rootPrefix + thumbnail)}" alt="" loading="lazy"></span>`
+        : `<span class="resource-type-icon">${typeIcon(resource)}</span>`}
+      <span class="resource-copy"><h3>${escapeHtml(resource.title)}</h3>${thumbnail ? `<span class="resource-description">${escapeHtml(description)}</span>` : `<span class="resource-meta">${escapeHtml(resourceMeta(resource))}</span>`}</span>
       <span class="resource-arrow" aria-hidden="true">→</span>
     </a>`;
   }
