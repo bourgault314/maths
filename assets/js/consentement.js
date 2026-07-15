@@ -152,7 +152,7 @@
       '    <span class="mg-consent__status" aria-live="polite"></span>',
       '  </div>',
       '  <div class="mg-consent__actions">',
-      '    <button type="button" class="mg-consent__button mg-consent__button--quiet" data-consent-action="deny">Refuser</button>',
+      '    <button type="button" class="mg-consent__button mg-consent__button--quiet" data-consent-action="deny">Refuser les statistiques</button>',
       '    <button type="button" class="mg-consent__button mg-consent__button--accept" data-consent-action="accept">Autoriser les statistiques</button>',
       '    <button type="button" class="mg-consent__close" data-consent-action="close" aria-label="Fermer les réglages">Fermer</button>',
       '  </div>',
@@ -162,7 +162,12 @@
     manageButton = document.createElement("button");
     manageButton.type = "button";
     manageButton.className = "mg-consent-manage";
-    manageButton.textContent = "Cookies";
+    manageButton.innerHTML = [
+      '<svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">',
+      '  <path d="M4 7h10M18 7h2M4 12h3M11 12h9M4 17h8M16 17h4"/>',
+      '  <circle cx="16" cy="7" r="2"/><circle cx="9" cy="12" r="2"/><circle cx="14" cy="17" r="2"/>',
+      '</svg>'
+    ].join("");
     manageButton.setAttribute("aria-label", "Gérer mes choix de cookies");
     manageButton.hidden = true;
 
@@ -223,7 +228,8 @@
 
   function updateManageButton() {
     if (!manageButton) return;
-    manageButton.hidden = !choice || (banner && !banner.hidden);
+    const directControl = document.querySelector("[data-mathsgo-consent-open]");
+    manageButton.hidden = !choice || Boolean(directControl) || (banner && !banner.hidden);
     manageButton.dataset.consentState = choice || "unset";
   }
 
