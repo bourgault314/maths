@@ -1029,13 +1029,77 @@ const RAW_GEOMETRY_MODULES = [
         },
         "footer": "[[formula_qcm1]]"
       },
+    ]
+  },
+  {
+    "id": "dnb_24_tactile",
+    "num": 24.1,
+    "title": "Pythagore manipulable — téléphone",
+    "level_tags": ["4e", "3e"],
+    "source": "mathsgo_tactile_beta",
+    "has_svg": true,
+    "questions": [
       {
-        "n": 11,
+        "n": 1,
         "statement": "Construis tactilement l'égalité de Pythagore puis remplace les valeurs.",
         "answer": "[]",
         "options": {
           "pythagore_tactile_kind": "relation-and-values",
-          "formula_code": "setNB(1)\nk=RD(0,4)\na=[3,5,6,8,7][k]\nb=[4,12,8,15,24][k]\nc=[5,13,10,17,25][k]",
+          "pythagore_tactile_right_angle": "A",
+          "pythagore_tactile_prompt": "Construis l’égalité de Pythagore, puis place les aires des carrés.",
+          "formula_code": "setNB(1)\na=3\nb=4\nc=5",
+          "template_version": 1
+        },
+        "footer": ""
+      },
+      {
+        "n": 2,
+        "statement": "Construis tactilement l'égalité de Pythagore dans ce triangle rectangle.",
+        "answer": "[]",
+        "options": {
+          "pythagore_tactile_kind": "relation-and-values",
+          "pythagore_tactile_right_angle": "B",
+          "pythagore_tactile_prompt": "Le triangle est rectangle en B. Construis l’égalité, puis place les aires.",
+          "formula_code": "setNB(1)\na=5\nb=12\nc=13",
+          "template_version": 1
+        },
+        "footer": ""
+      },
+      {
+        "n": 3,
+        "statement": "Place les trois carrés dans la bonne égalité.",
+        "answer": "[]",
+        "options": {
+          "pythagore_tactile_kind": "relation-and-values",
+          "pythagore_tactile_right_angle": "C",
+          "pythagore_tactile_prompt": "Le triangle est rectangle en C. Reconstitue l’égalité des aires.",
+          "formula_code": "setNB(1)\na=6\nb=8\nc=10",
+          "template_version": 1
+        },
+        "footer": ""
+      },
+      {
+        "n": 4,
+        "statement": "Complète tactilement la relation de Pythagore.",
+        "answer": "[]",
+        "options": {
+          "pythagore_tactile_kind": "relation-and-values",
+          "pythagore_tactile_right_angle": "A",
+          "pythagore_tactile_prompt": "Construis la relation entre les carrés construits sur les côtés.",
+          "formula_code": "setNB(1)\na=7\nb=24\nc=25",
+          "template_version": 1
+        },
+        "footer": ""
+      },
+      {
+        "n": 5,
+        "statement": "Retrouve l'égalité de Pythagore et les valeurs correspondantes.",
+        "answer": "[]",
+        "options": {
+          "pythagore_tactile_kind": "relation-and-values",
+          "pythagore_tactile_right_angle": "B",
+          "pythagore_tactile_prompt": "Le triangle est rectangle en B. Place chaque carré et son aire.",
+          "formula_code": "setNB(1)\na=8\nb=15\nc=17",
           "template_version": 1
         },
         "footer": ""
