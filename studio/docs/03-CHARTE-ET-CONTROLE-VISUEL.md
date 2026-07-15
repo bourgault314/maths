@@ -30,6 +30,28 @@ Il ne constitue pas encore la charte définitive.
   par la lettre typographique `X`, ni par deux diagonales croisées ;
 - unités présentes dans les résultats finaux.
 
+## Composant nombres relatifs — règles à préserver
+
+- jetons `+1` verts et `−1` rouges, avec contour noir et texte noir ;
+- signe et valeur écrits à l'intérieur du jeton ; aucun signe `+` décoratif
+  entre plusieurs jetons ;
+- paires nulles formées d'un `+1` et d'un `−1`, repérables visuellement et
+  conservant la valeur zéro ;
+- addition : deux groupes peuvent être rassemblés dans une zone de résultat,
+  où les paires nulles restent observables ;
+- soustraction : une zone « à retirer » est distincte du plateau ; si le
+  plateau ne contient pas assez de jetons du signe demandé, l'élève ajoute des
+  paires nulles puis retire les jetons nécessaires ;
+- une aide visuelle doit montrer les jetons manipulables, sans remplacer
+  l'énoncé ni donner directement la réponse ;
+- le cours associé doit rappeler la paire nulle et le lien
+  « soustraire un nombre = ajouter son opposé » ;
+- téléphone portrait, ordinateur et vidéoprojection doivent être contrôlés ;
+  les commandes tactiles doivent rester accessibles et ne pas dépendre d'un
+  geste de pincement ambigu ;
+- recettes de dessin, état initial, paramètres, correction et identifiants
+  restent séparés de la logique de génération des questions.
+
 ## Modes d'affichage à prévoir
 
 - téléphone portrait ;
@@ -39,31 +61,6 @@ Il ne constitue pas encore la charte définitive.
 - plein écran ;
 - impression A4 et A5 ;
 - noir et blanc ou contour seul lorsque le composant le permet.
-
-Sur téléphone, le plein écran n’est pas proposé pour les outils pédagogiques :
-il est réservé à l’ordinateur et à la projection.
-
-## Règle de sobriété des outils et des énoncés
-
-Les outils et les énoncés imprimables restent centrés sur l’activité mathématique :
-
-- pas de petit bouton ou lien de retour vers le site dans l’outil ou l’énoncé ;
-- pas d’adresse web affichée sur l’énoncé imprimable ;
-- pas de marquage parasite ou d’ancien habillage résiduel ;
-- menus et boutons modernisés dans le langage visuel maths&go, sans modifier le
-  contenu mathématique validé.
-
-Cette règle s’applique à chaque ancienne page reprise, notamment aux deux outils
-de Pythagore.
-
-Pour les activités interactives, une étape qui change de texte ne doit pas
-déplacer le plateau ou le schéma principal. Les consignes disposent d’une zone
-réservée ; une sélection effectuée par l’élève est désélectionnée après l’action
-et aucun emplacement suivant n’est choisi automatiquement.
-
-Sur téléphone, on conserve seulement les commandes nécessaires à l’action en
-cours. Le puzzle ou le schéma occupe la place principale ; les réglages
-secondaires restent accessibles sur ordinateur.
 
 ## Références visuelles
 
