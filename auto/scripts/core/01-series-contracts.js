@@ -51,7 +51,8 @@ const MATHSGO_MODULE_REGISTRY=Object.freeze([
   ['problemes-proportionnalite','dnb_34',36],
   ['evolutions-pourcentage','dnb_35',37],
   ['lire-graphique-dependance','dnb_36',38],
-  ['algorithmique-instructions','dnb_37',39]
+  ['algorithmique-instructions','dnb_37',39],
+  ['pythagore-tactile','dnb_24_tactile',40]
 ].map(([id,legacyId,code])=>Object.freeze({id,legacyId,code,aliases:Object.freeze([legacyId])})));
 
 const MATHSGO_MODULE_BY_ID=new Map(MATHSGO_MODULE_REGISTRY.map(entry=>[entry.id,entry]));
