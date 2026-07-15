@@ -56,6 +56,15 @@ Les outils et les énoncés imprimables restent centrés sur l’activité math�
 Cette règle s’applique à chaque ancienne page reprise, notamment aux deux outils
 de Pythagore.
 
+Pour les activités interactives, une étape qui change de texte ne doit pas
+déplacer le plateau ou le schéma principal. Les consignes disposent d’une zone
+réservée ; une sélection effectuée par l’élève est désélectionnée après l’action
+et aucun emplacement suivant n’est choisi automatiquement.
+
+Sur téléphone, on conserve seulement les commandes nécessaires à l’action en
+cours. Le puzzle ou le schéma occupe la place principale ; les réglages
+secondaires restent accessibles sur ordinateur.
+
 ## Références visuelles
 
 Chaque composant validé doit fournir :
