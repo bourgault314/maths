@@ -295,6 +295,12 @@ select { cursor: pointer; }
   font-weight: 850;
 }
 
+.auto-feature-arrow svg {
+  display: block;
+  width: 20px;
+  height: 20px;
+}
+
 .search-box,
 .type-box,
 .domain-box,
@@ -537,7 +543,7 @@ select { cursor: pointer; }
   border-radius: 17px;
   color: inherit;
   background: #fff;
-  text-align: left;
+  text-align: center;
   box-shadow: 0 4px 10px rgba(15, 40, 72, .05);
   transition: transform .16s ease, box-shadow .16s ease, border-color .16s ease;
 }
@@ -564,7 +570,8 @@ select { cursor: pointer; }
 .domain-card-secondary {
   grid-column: 1 / -1;
   min-height: 105px;
-  grid-template-columns: 66px minmax(0, 1fr) 22px;
+  grid-template-columns: 66px minmax(260px, 430px) 66px;
+  justify-content: center;
   background: linear-gradient(135deg, #f4fbf5, #fff);
 }
 
