@@ -252,6 +252,23 @@ h1 {
   gap: 8px 16px;
 }
 
+.legal-footer-button {
+  margin: 0;
+  padding: 0;
+  border: 0;
+  color: var(--mg-blue);
+  background: transparent;
+  font: inherit;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  cursor: pointer;
+}
+
+.legal-footer-button:hover,
+.legal-footer-button:focus-visible {
+  color: #0b62b9;
+}
+
 @media (max-width: 620px) {
   .legal-header__inner,
   .legal-main,
