@@ -187,7 +187,9 @@ window.MATHSGO_CATALOGUE = {
       "tags": ["schema-barres", "moulin", "pythagore"],
       "thumbnail": "assets/img/thumbnails/pythabarre-capture.svg?v=6",
       "cardDescription": "Dérouler le théorème pas à pas avec le calcul, le schéma en barres et le moulin de Pythagore."
-    }
+    },
+    "outils/pythabarre_recto_verso.pdf": { "primaryNotion": "pythagore", "collections": [], "tags": ["schema-barres", "moulin", "pythagore", "imprimable"] },
+    "outils/angles/fiche_angles_triangles.pdf": { "primaryNotion": "angles", "collections": [], "tags": ["angles", "triangles", "imprimable"] }
   },
   "resourceFamilies": [
     {
@@ -1709,6 +1711,38 @@ window.MATHSGO_CATALOGUE = {
       "status": "published",
       "featured": false,
       "recent": false
+    },
+    {
+      "id": "outils-angles-fiche-angles-triangles-pdf",
+      "title": "Fiche — angles dans les triangles",
+      "description": "Une fiche progressive à imprimer pour calculer, vérifier et raisonner avec la somme des angles d’un triangle.",
+      "path": "outils/angles/fiche_angles_triangles.pdf",
+      "domains": [
+        "geometrie"
+      ],
+      "notions": [
+        "angles",
+        "triangles"
+      ],
+      "uses": [
+        "imprimer",
+        "entrainer"
+      ],
+      "types": [
+        "imprimable"
+      ],
+      "filters": [
+        "materiel-imprimer"
+      ],
+      "keywords": [
+        "somme des angles",
+        "triangle rectangle",
+        "triangle isocèle"
+      ],
+      "kind": "document",
+      "status": "published",
+      "featured": false,
+      "recent": true
     },
     {
       "id": "outils-angles-gabarits-angles-generateur-html",
@@ -3544,6 +3578,38 @@ window.MATHSGO_CATALOGUE = {
       "recent": false
     },
     {
+      "id": "outils-pythabarre-recto-verso-pdf",
+      "title": "PythaBarre — fiche recto-verso",
+      "description": "Une fiche à imprimer pour structurer la relation de Pythagore avec le moulin, les schémas en barres et une rédaction pas à pas.",
+      "path": "outils/pythabarre_recto_verso.pdf",
+      "domains": [
+        "geometrie"
+      ],
+      "notions": [
+        "pythagore",
+        "schemas-barres"
+      ],
+      "uses": [
+        "imprimer",
+        "entrainer"
+      ],
+      "types": [
+        "imprimable"
+      ],
+      "filters": [
+        "materiel-imprimer"
+      ],
+      "keywords": [
+        "triangle rectangle",
+        "hypoténuse",
+        "moulin de Pythagore"
+      ],
+      "kind": "document",
+      "status": "published",
+      "featured": false,
+      "recent": true
+    },
+    {
       "id": "outils-angles-generateur-rapporteurs-calque-html",
       "title": "Rapporteurs à imprimer sur calque",
       "description": "Créez gratuitement une feuille A4 de rapporteurs sans nombres, gradués ou numérotés, à imprimer sur papier calque. Plusieurs formats par page.",
@@ -3866,7 +3932,7 @@ window.MATHSGO_CATALOGUE = {
       "recent": false
     },
     {
-      "id": "outils-bouliers-rekenrek-cache-cache-html",
+      "id": "outils-bouliers-rekenrek-jeu-rideau-html",
       "title": "Rekenrek — jeu du rideau",
       "description": "Une ressource maths&go pour travailler numération.",
       "path": "outils/bouliers/rekenrek/cache cache.html",
