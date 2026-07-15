@@ -40,6 +40,9 @@ button { font: inherit; }
 .brand-home-button { padding: 0; border: 0; background: transparent; cursor: pointer; }
 .brand-logo { width: 148px; height: auto; display: block; }
 .space-name {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
   padding: 7px 12px;
   border: 1px solid #cfdae5;
   border-radius: 999px;
@@ -49,6 +52,7 @@ button { font: inherit; }
   font-weight: 800;
   cursor: pointer;
 }
+.space-name svg { width: 15px; height: 15px; fill: currentColor; }
 
 .screen {
   position: relative;
@@ -220,7 +224,9 @@ h1 {
 .finish-summary span { margin-top: 4px; color: #64748b; font-size: .78rem; font-weight: 750; }
 .finish-actions { display: flex; flex-wrap: wrap; align-items: stretch; justify-content: center; gap: 10px; margin-top: 24px; }
 .finish-actions .primary-button { margin-top: 0; }
-.bonus-button { min-height: 54px; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 9px 18px; border: 1px solid #d6e1eb; border-radius: 16px; color: var(--blue); background: #f2f7fb; text-decoration: none; font-weight: 850; }
+.bonus-button { min-height: 58px; display: flex; align-items: center; justify-content: center; gap: 10px; padding: 7px 16px; border: 1px solid #d6e1eb; border-radius: 16px; color: var(--blue); background: #f2f7fb; text-decoration: none; font-weight: 850; text-align: left; }
+.bonus-icon { width: 43px; height: 43px; flex: 0 0 auto; filter: drop-shadow(0 3px 4px rgba(6,63,134,.12)); }
+.bonus-copy { display: flex; flex-direction: column; }
 .bonus-button small { margin-top: 2px; color: #64748b; font-size: .7rem; font-weight: 700; }
 footer { max-width: 940px; margin: 17px auto 0; color: rgba(16,41,74,.52); font-size: .78rem; text-align: center; }
 
