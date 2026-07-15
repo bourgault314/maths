@@ -253,25 +253,12 @@ select { cursor: pointer; }
   stroke-linejoin: round;
 }
 
-.auto-feature-icon .auto-feature-check {
-  stroke: var(--orange);
-  stroke-width: 4;
-}
-
 .auto-feature-copy {
   position: relative;
   z-index: 1;
   min-width: 0;
   display: grid;
   gap: 3px;
-}
-
-.auto-feature-kicker {
-  color: var(--teal);
-  font-size: .73rem;
-  font-weight: 850;
-  letter-spacing: .09em;
-  text-transform: uppercase;
 }
 
 .auto-feature-copy strong {
@@ -745,6 +732,13 @@ select { cursor: pointer; }
   }
   .auto-feature-icon { width: 58px; height: 58px; border-radius: 15px; }
   .auto-feature-icon svg { width: 45px; height: 45px; }
+  .auto-feature-copy strong span {
+    display: block;
+    width: max-content;
+    margin-top: 2px;
+    font-size: .86em;
+    white-space: nowrap;
+  }
   .auto-feature-arrow { width: 34px; height: 34px; }
   .search-box,
   .domain-box,
