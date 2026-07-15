@@ -190,6 +190,7 @@
   const searchInput = document.getElementById("catalogue-search");
   const clearButton = document.getElementById("search-clear");
   const typeSelect = document.getElementById("type-filter");
+  const domainMobileSelect = document.getElementById("domain-mobile-filter");
 
   function escapeHtml(value) {
     return String(value ?? "")
@@ -361,9 +362,15 @@
       button.setAttribute("aria-pressed", String(button.dataset.notion === state.notion && !state.domain));
     });
   }
+  function syncDomainMobile() {
+    if (!domainMobileSelect) return;
+    domainMobileSelect.value = state.notion ? `notion:${state.notion}` : state.domain;
+  }
+
 
   function render() {
     renderTabs();
+    syncDomainMobile();
     clearButton.hidden = !state.query;
 
     const selectedNotion = notionMap.get(state.notion);
@@ -432,6 +439,23 @@
       clearQueryString();
       render();
     });
+  });
+
+  domainMobileSelect?.addEventListener("change", () => {
+    const value = domainMobileSelect.value;
+    if (value.startsWith("notion:")) {
+      state.notion = value.slice(7);
+      state.domain = "";
+    } else {
+      state.notion = "";
+      state.domain = value;
+    }
+    state.query = "";
+    state.type = "";
+    searchInput.value = "";
+    typeSelect.value = "";
+    clearQueryString();
+    render();
   });
 
   searchInput.addEventListener("input", () => {
