@@ -18,6 +18,11 @@ Application d'automatismes pour le cycle 4 et le DNB, publiée à l'adresse
 | `scripts/core/02-share-ui.js` | lien, QR code et ouverture directe |
 | `scripts/vendor/` | générateur de QR code embarqué |
 
+La branche bêta peut contenir des activités tactiles expérimentales. La première
+activité Pythagore est la question 11 du module `dnb_24` : elle est prévue pour
+le téléphone, sans clavier visuel, et ne modifie pas le parcours public tant
+qu'elle n'a pas été testée.
+
 La page publique utilise ces fichiers découpés. L'ancien gros fichier autonome
 n'est plus la source canonique du site.
 
