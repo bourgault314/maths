@@ -477,19 +477,36 @@
       function chooseEasyMove() {
         const moves = emptyKeys();
         if (!moves.length) return null;
+        const winningMoves = moves.filter(key => inspectMove(key, AI).outcome === 'win');
+        if (winningMoves.length) return randomChoice(winningMoves);
+
         const losingMoves = moves.filter(key => inspectMove(key, AI).outcome === 'lose');
         const neutralMoves = moves.filter(key => inspectMove(key, AI).outcome === 'neutral');
-        const playerWins = moves.filter(key => inspectMove(key, PLAYER).outcome === 'win');
+        const safeMoves = neutralMoves.length ? neutralMoves : losingMoves;
+        const playerWinningMoves = moves.filter(key => inspectMove(key, PLAYER).outcome === 'win');
 
-        if (state.size >= 9 && losingMoves.length && (state.size >= 17 || Math.random() < .42)) {
-          return randomChoice(losingMoves);
+        // Un niveau facile voit une menace directe la plupart du temps, mais pas toujours.
+        if (playerWinningMoves.length && Math.random() < .72) {
+          const blocks = safeMoves.filter(key => playerWinningMoves.includes(key));
+          if (blocks.length) return randomChoice(blocks);
         }
 
-        const leavesPlayerWinOpen = neutralMoves.filter(key => !playerWins.includes(key));
-        if (leavesPlayerWinOpen.length) return randomChoice(leavesPlayerWinOpen);
-        if (neutralMoves.length) return randomChoice(neutralMoves);
-        if (losingMoves.length) return randomChoice(losingMoves);
-        return randomChoice(moves);
+        const ranked = safeMoves.map(key => {
+          const own = inspectMove(key, AI);
+          let score = own.maxLine * 115 + centerScore(key) * 7 + Math.random() * 45;
+          state.set(key, AI);
+          const replies = emptyKeys();
+          const immediatePlayerWins = replies.filter(reply => inspectMove(reply, PLAYER).outcome === 'win').length;
+          const bestPlayerLine = replies.reduce((best, reply) => Math.max(best, inspectMove(reply, PLAYER).maxLine), 0);
+          state.delete(key);
+          score -= immediatePlayerWins * (Math.random() < .68 ? 1700 : 120);
+          score -= bestPlayerLine * 18;
+          return {key, score};
+        }).sort((a, b) => b.score - a.score);
+
+        // Il choisit parmi plusieurs coups convenables : cohérent, mais encore prévisible et battable.
+        const shortlist = ranked.slice(0, Math.min(4, ranked.length));
+        return randomChoice(shortlist).key;
       }
 
       function centerScore(key) {
