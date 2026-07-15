@@ -65,13 +65,14 @@ Jeu de déplacement des pièces d’un découpage de Pythagore.
 
 ### `activity.pythagore-tactile`
 
-La première activité bêta d'Automatismes utilise une interaction volontairement
-petite et vérifiable : l'élève place `BC²`, `AB²`, `AC²`, puis les trois valeurs
-dans `BC² = AB² + AC²` et `c² = a² + b²`. Elle fonctionne au toucher par appui
-puis appui sur la case, avec glisser-déposer en complément. Le clavier visuel est
-désactivé pour garder le puzzle lisible sur téléphone. Cette activité reste dans
-la bêta avant toute extension aux lettres du triangle, au schéma en barres ou au
-choix du chemin de calcul.
+L’activité bêta d’Automatismes est isolée dans le module `dnb_24_tactile`, sous
+le menu `Manipuler sur téléphone`. Elle propose cinq modèles paramétrés :
+angle droit en A, B ou C, et triplets 3-4-5, 5-12-13, 6-8-10, 7-24-25 et
+8-15-17. L’élève place les trois côtés dans la bonne égalité, puis les trois
+aires correspondantes. Elle fonctionne au toucher par appui puis appui sur la
+case, avec glisser-déposer en complément. Le clavier visuel est désactivé pour
+garder le jeu lisible sur téléphone. Le moteur est prévu pour recevoir d’autres
+modèles sans réécrire l’interaction.
 
 ## Règles communes
 
