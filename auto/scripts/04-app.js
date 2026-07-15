@@ -273,6 +273,7 @@ function visualPolicyForQuestion(m,q){
   // tableaux constituent déjà leur propre représentation.
   if(m.id==='dnb_34') return [1,2,3,4,5,6,7,8,9,11].includes(Number(q.n))?'optional':'none';
   if(m.id==='dnb_35') return 'optional';
+  if(['dnb_38','dnb_39'].includes(m.id)) return 'optional';
   const hasVisual=/<svg/i.test(String(q.statement||'')+String(q.footer||''));
   return hasVisual?'essential':'none';
 }
