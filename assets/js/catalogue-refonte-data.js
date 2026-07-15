@@ -84,7 +84,8 @@ window.MATHSGO_CATALOGUE = {
       "title": "Bouliers et abaques",
       "domain": "nombres-calculs",
       "notions": ["numeration"],
-      "hub": "bouliers/index.html"
+      "hub": "bouliers/index.html",
+      "collapseInNotion": true
     },
     {
       "id": "rekenrek",
@@ -92,7 +93,27 @@ window.MATHSGO_CATALOGUE = {
       "domain": "nombres-calculs",
       "notions": ["numeration", "calcul-mental"],
       "hub": "bouliers/rekenrek/index.html",
-      "role": "progression"
+      "role": "progression",
+      "parent": "bouliers",
+      "navigation": "hub"
+    },
+    {
+      "id": "montessori",
+      "title": "Boulier Montessori",
+      "domain": "nombres-calculs",
+      "notions": ["numeration"],
+      "hub": "bouliers/boulier_montessori/index.html",
+      "parent": "bouliers",
+      "navigation": "hub"
+    },
+    {
+      "id": "soroban",
+      "title": "Soroban",
+      "domain": "nombres-calculs",
+      "notions": ["numeration", "calcul-mental"],
+      "hub": "bouliers/soroban/index.html",
+      "parent": "bouliers",
+      "navigation": "hub"
     },
     {
       "id": "gerbert",
@@ -100,7 +121,9 @@ window.MATHSGO_CATALOGUE = {
       "domain": "nombres-calculs",
       "notions": ["numeration"],
       "hub": "bouliers/abaque_de_gerbert/index.html",
-      "role": "progression-courte"
+      "role": "progression-courte",
+      "parent": "bouliers",
+      "navigation": "hub"
     },
     {
       "id": "tuiles-algebriques",

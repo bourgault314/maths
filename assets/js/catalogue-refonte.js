@@ -204,6 +204,26 @@
   };
 
   const collectionDesign = {
+    bouliers: {
+      description: "Choisir entre Rekenrek, Montessori, Soroban et abaque de Gerbert.",
+      icon: "abacus"
+    },
+    rekenrek: {
+      description: "Suivre une progression structurée avec le Rekenrek.",
+      icon: "abacus"
+    },
+    montessori: {
+      description: "Manipuler les nombres et les opérations avec le boulier Montessori.",
+      icon: "abacus"
+    },
+    soroban: {
+      description: "Découvrir et utiliser le boulier japonais.",
+      icon: "abacus"
+    },
+    gerbert: {
+      description: "Découvrir les outils de l’abaque de Gerbert.",
+      icon: "abacus"
+    },
     "tuiles-algebriques": {
       description: "Retrouver les plateaux, générateurs et livrets de tuiles algébriques.",
       icon: "tiles"
@@ -228,7 +248,7 @@
   const summary = document.getElementById("results-summary");
   const pageTitle = document.getElementById("page-title");
   const heroLead = document.getElementById("hero-lead");
-  const backButton = document.getElementById("back-themes");
+  const breadcrumb = document.getElementById("catalogue-breadcrumb");
   const searchInput = document.getElementById("catalogue-search");
   const clearButton = document.getElementById("search-clear");
   const mainPanel = document.querySelector(".main-panel");
@@ -305,10 +325,17 @@
   }
 
   function writeHistory(mode, fromLevel = null) {
+    const previousEntryOffset = Number.isInteger(history.state?.entryHistoryOffset)
+      ? history.state.entryHistoryOffset
+      : 0;
+    const entryHistoryOffset = mode === "push"
+      ? (fromLevel === "entry" ? 1 : (fromLevel === "domain" && previousEntryOffset ? previousEntryOffset + 1 : 0))
+      : previousEntryOffset;
     const historyState = {
       catalogue: true,
       level: viewLevel(),
       fromLevel,
+      entryHistoryOffset,
       scrollY: 0
     };
 
@@ -322,6 +349,40 @@
   function moveToTopAndFocus() {
     window.scrollTo({ top: 0, behavior: "auto" });
     window.requestAnimationFrame(() => pageTitle.focus({ preventScroll: true }));
+  }
+
+  function renderBreadcrumb(level, selectedDomain, selectedNotion, selectedCollection) {
+    breadcrumb.hidden = level === "entry";
+    if (level === "entry") {
+      breadcrumb.innerHTML = "";
+      return;
+    }
+
+    if (level === "search") {
+      breadcrumb.innerHTML = `<button type="button" data-breadcrumb-target="search">← Effacer la recherche</button>`;
+      return;
+    }
+
+    const parts = [
+      `<button type="button" data-breadcrumb-target="entry">Tous les domaines</button>`
+    ];
+
+    if (selectedDomain) {
+      parts.push(`<span class="breadcrumb-separator" aria-hidden="true">›</span>`);
+      if (level === "domain") {
+        parts.push(`<span class="breadcrumb-current" aria-current="page">${escapeHtml(selectedDomain.title)}</span>`);
+      } else {
+        parts.push(`<button type="button" data-breadcrumb-target="domain">${escapeHtml(selectedDomain.title)}</button>`);
+      }
+    }
+
+    const current = selectedCollection?.title || selectedNotion?.title;
+    if (current) {
+      parts.push(`<span class="breadcrumb-separator" aria-hidden="true">›</span>`);
+      parts.push(`<span class="breadcrumb-current" aria-current="page">${escapeHtml(current)}</span>`);
+    }
+
+    breadcrumb.innerHTML = parts.join("");
   }
 
   function icon(name) {
@@ -410,7 +471,13 @@
   }
 
   function resourceCollections(resource) {
-    return resourceClassification(resource).collections || resource.collections || [];
+    const collections = new Set(resourceClassification(resource).collections || resource.collections || []);
+    if (resource.path.startsWith("outils/bouliers/")) collections.add("bouliers");
+    if (resource.path.startsWith("outils/bouliers/rekenrek/")) collections.add("rekenrek");
+    if (resource.path.startsWith("outils/bouliers/boulier_montessori/")) collections.add("montessori");
+    if (resource.path.startsWith("outils/bouliers/soroban/")) collections.add("soroban");
+    if (resource.path.startsWith("outils/bouliers/abaque_de_gerbert/")) collections.add("gerbert");
+    return [...collections];
   }
 
   function resourceTags(resource) {
@@ -419,7 +486,9 @@
 
   function notionResourceCount(notionId, domainId = "") {
     return published.filter((resource) => (
-      (!domainId || resource.domains.includes(domainId)) && resourceBelongsToNotion(resource, notionId)
+      (!domainId || resource.domains.includes(domainId)) &&
+      resourceBelongsToNotion(resource, notionId) &&
+      !resourceCollections(resource).some((id) => collectionMap.get(id)?.collapseInNotion)
     )).length;
   }
 
@@ -487,8 +556,29 @@
   function matchingCollections() {
     return (catalogue.collections || []).filter((collection) => {
       if (state.domain && collection.domain !== state.domain) return false;
+      if (collection.parent) return false;
       return collectionResourceCount(collection.id) > 0;
     });
+  }
+
+  function matchingSearchCollections() {
+    if (!state.query) return [];
+    return (catalogue.collections || []).filter((collection) => {
+      if (!collectionResourceCount(collection.id)) return false;
+      const design = collectionDesign[collection.id] || {};
+      const notionTitles = (collection.notions || []).map((id) => notionMap.get(id)?.title || "");
+      return allWordsMatch([
+        collection.title,
+        design.description,
+        ...notionTitles
+      ].join(" "), state.query);
+    });
+  }
+
+  function childCollections(collectionId) {
+    return (catalogue.collections || []).filter((collection) => (
+      collection.parent === collectionId && collectionResourceCount(collection.id) > 0
+    ));
   }
 
   function resourceHaystack(resource) {
@@ -510,6 +600,7 @@
     return published.filter((resource) => {
       if (state.domain && !resource.domains.includes(state.domain)) return false;
       if (state.notion && !resourceBelongsToNotion(resource, state.notion)) return false;
+      if (state.notion && resourceCollections(resource).some((id) => collectionMap.get(id)?.collapseInNotion)) return false;
       if (state.collection && !resourceCollections(resource).includes(state.collection)) return false;
       if (state.query && !allWordsMatch(resourceHaystack(resource), state.query)) return false;
       return true;
@@ -521,6 +612,7 @@
   }
 
   function collectionHref(collection) {
+    if (collection.navigation === "hub" && collection.hub) return collection.hub;
     return `?domain=${encodeURIComponent(collection.domain)}&collection=${encodeURIComponent(collection.id)}`;
   }
 
@@ -593,19 +685,38 @@
     </a>`;
   }
 
-  function renderResources(resources) {
+  function renderResources(resources, directCollections = []) {
     domainGrid.hidden = true;
     notionGrid.hidden = true;
     resourceGrid.hidden = false;
     notionGrid.innerHTML = "";
-    if (!resources.length) {
+    if (!resources.length && !directCollections.length) {
       resourceGrid.innerHTML = `<p class="empty-state">${state.notion ? "Cet univers est prêt à accueillir ses premiers outils." : "Aucun outil ne correspond à cette recherche."}</p>`;
       return;
     }
 
+    const directAccess = directCollections.length
+      ? `<section class="search-direct" aria-labelledby="search-direct-title">
+        <div class="resource-group-heading">
+          <h2 id="search-direct-title">Accès direct</h2>
+        </div>
+        <div class="search-direct-grid">${directCollections.map((collection) => {
+          const design = collectionDesign[collection.id] || {};
+          return `<a class="notion-card collection-card" data-collection-card="${escapeHtml(collection.id)}" href="${escapeHtml(collectionHref(collection))}" style="${domainStyle(collection.domain)}">
+            <span class="collection-label">Collection</span>
+            <span class="notion-top">
+              <span class="notion-icon">${icon(design.icon)}</span>
+              <h3>${escapeHtml(collection.title)}</h3>
+            </span>
+            <p>${escapeHtml(design.description || "Retrouver cette collection d’outils.")}</p>
+          </a>`;
+        }).join("")}</div>
+      </section>`
+      : "";
+
     const grouped = new Map(resourceGroups.map((group) => [group.id, []]));
     resources.forEach((resource) => grouped.get(primaryResourceGroup(resource)).push(resource));
-    resourceGrid.innerHTML = resourceGroups.map((group) => {
+    const groupedResources = resourceGroups.map((group) => {
       const groupResources = grouped.get(group.id);
       if (!groupResources.length) return "";
       return `<section class="resource-group" aria-labelledby="resource-group-${escapeHtml(group.id)}">
@@ -616,6 +727,7 @@
         <div class="resource-group-grid">${groupResources.map(resourceCard).join("")}</div>
       </section>`;
     }).join("");
+    resourceGrid.innerHTML = directAccess + groupedResources;
   }
 
   function render() {
@@ -629,11 +741,10 @@
 
     mainPanel.classList.toggle("catalogue-deep-view", level === "domain" || level === "notion" || level === "collection");
     mainPanel.dataset.catalogueView = level;
-    backButton.hidden = level === "entry";
+    renderBreadcrumb(level, selectedDomain, selectedNotion, selectedCollection);
 
     if (!state.domain && !state.notion && !state.query) {
       renderDomains();
-      backButton.textContent = "← Retour";
       pageTitle.textContent = "Explorer les outils";
       heroLead.textContent = "Recherchez un outil ou choisissez un domaine.";
       title.textContent = "Choisissez un domaine";
@@ -642,27 +753,38 @@
     }
 
     if (showResources) {
+      const children = selectedCollection ? childCollections(selectedCollection.id) : [];
+      if (children.length) {
+        renderNotions([], children);
+        pageTitle.textContent = selectedCollection.title;
+        heroLead.textContent = collectionDesign[selectedCollection.id]?.description || "Choisissez une famille d’outils.";
+        title.textContent = `Choisissez un outil — ${selectedCollection.title}`;
+        summary.textContent = `${children.length} famille${children.length > 1 ? "s" : ""}`;
+        return;
+      }
+
       const resources = matchingResources();
-      renderResources(resources);
+      const directCollections = state.query ? matchingSearchCollections() : [];
+      renderResources(resources, directCollections);
 
       if (selectedCollection) {
         pageTitle.textContent = selectedCollection.title;
         heroLead.textContent = collectionDesign[selectedCollection.id]?.description || "Les outils disponibles dans cette collection.";
         title.textContent = `Les outils — ${selectedCollection.title}`;
-        backButton.textContent = `← ${selectedDomain?.title || "Toutes les notions"}`;
       } else if (selectedNotion) {
         pageTitle.textContent = selectedNotion.title;
         heroLead.textContent = notionDesign[selectedNotion.id]?.description || "Les outils disponibles pour ce thème.";
         title.textContent = `Les outils — ${selectedNotion.title}`;
-        backButton.textContent = `← ${selectedDomain?.title || "Toutes les notions"}`;
       } else {
         pageTitle.textContent = "Résultats de la recherche";
         heroLead.textContent = `Les outils correspondant à « ${state.query.trim()} ».`;
         title.textContent = "Outils trouvés";
-        backButton.textContent = "← Effacer la recherche";
       }
 
-      summary.textContent = `${resources.length} outil${resources.length > 1 ? "s" : ""}`;
+      summary.textContent = [
+        directCollections.length ? `${directCollections.length} accès direct${directCollections.length > 1 ? "s" : ""}` : "",
+        `${resources.length} outil${resources.length > 1 ? "s" : ""}`
+      ].filter(Boolean).join(" · ");
       return;
     }
 
@@ -674,7 +796,6 @@
       ? `Les thèmes de ${selectedDomain.title.toLowerCase()} présents sur maths&go.`
       : "Retrouvez les notions illustrées de maths&go.";
     title.textContent = state.query ? "Notions trouvées" : (selectedDomain ? "Choisissez une notion ou une collection" : "Les notions");
-    backButton.textContent = selectedDomain ? "← Tous les domaines" : "← Effacer la recherche";
     summary.textContent = notions.length || collections.length
       ? [
         notions.length ? `${notions.length} notion${notions.length > 1 ? "s" : ""}` : "",
@@ -698,15 +819,16 @@
     moveToTopAndFocus();
   });
 
-  notionGrid.addEventListener("click", (event) => {
+  function openNotionOrCollection(event) {
     const link = event.target.closest("[data-notion-card], [data-collection-card]");
     if (!link || event.button !== 0 || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return;
-    event.preventDefault();
-    const fromLevel = viewLevel();
-    rememberCurrentScroll();
     const collection = collectionMap.get(link.dataset.collectionCard);
     const notion = notionMap.get(link.dataset.notionCard);
     if (!collection && !notion) return;
+    if (collection?.navigation === "hub" && collection.hub) return;
+    event.preventDefault();
+    const fromLevel = viewLevel();
+    rememberCurrentScroll();
     state.domain = collection?.domain || notion.domain;
     state.notion = notion?.id || "";
     state.collection = collection?.id || "";
@@ -715,7 +837,10 @@
     writeHistory("push", fromLevel);
     render();
     moveToTopAndFocus();
-  });
+  }
+
+  notionGrid.addEventListener("click", openNotionOrCollection);
+  resourceGrid.addEventListener("click", openNotionOrCollection);
 
   searchInput.addEventListener("input", () => {
     state.query = searchInput.value;
@@ -731,9 +856,21 @@
     render();
   });
 
-  backButton.addEventListener("click", () => {
-    if (state.notion || state.collection) {
-      if (history.state?.fromLevel === "domain") {
+  breadcrumb.addEventListener("click", (event) => {
+    const control = event.target.closest("[data-breadcrumb-target]");
+    if (!control) return;
+    const target = control.dataset.breadcrumbTarget;
+
+    if (target === "search") {
+      state.query = "";
+      searchInput.value = "";
+      render();
+      searchInput.focus();
+      return;
+    }
+
+    if (target === "domain") {
+      if ((state.notion || state.collection) && history.state?.fromLevel === "domain") {
         history.back();
         return;
       }
@@ -743,22 +880,23 @@
       writeHistory("replace");
       render();
       moveToTopAndFocus();
-    } else if (state.domain) {
-      if (history.state?.fromLevel === "entry") {
-        history.back();
+      return;
+    }
+
+    if (target === "entry") {
+      const entryHistoryOffset = history.state?.entryHistoryOffset || 0;
+      if (entryHistoryOffset > 0) {
+        history.go(-entryHistoryOffset);
         return;
       }
       state.domain = "";
+      state.notion = "";
+      state.collection = "";
       state.query = "";
       searchInput.value = "";
       writeHistory("replace");
       render();
       moveToTopAndFocus();
-    } else {
-      state.query = "";
-      searchInput.value = "";
-      render();
-      searchInput.focus();
     }
   });
 
