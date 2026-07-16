@@ -78,6 +78,16 @@ Ce retour d’expérience fait partie des règles du projet. Il ne doit pas êtr
 
 Une aide visuelle ne doit pas être remplacée par une phrase lorsque le schéma permet de comprendre immédiatement.
 
+#### Sens obligatoire des flèches
+
+Une flèche explicative part toujours du mot ou de la légende et sa pointe vise exactement l’objet expliqué. Pour une fraction placée à gauche des légendes :
+
+- la flèche `numérateur` va de la légende vers le nombre du haut ;
+- la flèche `dénominateur` va de la légende vers le nombre du bas ;
+- la pointe est dessinée du côté du nombre, jamais du côté du texte.
+
+Avant publication, suivre visuellement chaque flèche dans le sens de la lecture : « le mot désigne quoi ? ». L’extrémité pointue doit donner la réponse.
+
 ### 3. Le cours sur les angles décrivait une propriété secondaire
 
 **Erreur rencontrée :** le titre insistait sur le fait que tourner un angle ne change pas son nom, sans donner directement le vrai repère de cours.
@@ -159,3 +169,24 @@ Le test `tests/axelle-j2-regression.cjs` doit rester associé au parcours. Il v�
 - le passage à la question suivante après une réponse tactile fausse ;
 - le retrait d’une étiquette déjà placée ;
 - les rendus ordinateur et téléphone utilisés pour l’inspection visuelle.
+
+### 12. Une conversion n’est pas un ordre de grandeur
+
+**Erreur rencontrée :** `1 km = 1 000 m` était affiché seul. L’égalité était exacte, mais elle ne donnait aucune image mentale de la distance à une enfant.
+
+**Règle :** pour chaque nouvelle unité, fournir un **étalon concret** avant de demander une conversion. Exemples retenus pour Axelle :
+
+- environ 1 m : du sol à une poignée de porte ;
+- environ 1 km : un trajet de la maison à l’école.
+
+Le repère est présenté comme une approximation, car la distance réelle dépend du lieu.
+
+### 13. Un schéma de cours doit suffire sans paragraphe redondant
+
+**Erreur rencontrée :** le mémo sur les angles répétait sous les dessins les informations déjà écrites à côté de chaque angle.
+
+**Règle :** si les quatre dessins portent clairement `aigu`, `droit · 90°`, `obtus` et `plat · 180°`, ne pas recopier ces quatre informations dans un texte sous la carte. Pour l’angle plat, marquer aussi le sommet par un point ou un petit trait central.
+
+### 14. Vérification de l’affichage ordinateur
+
+Le cours doit être vérifié sur un écran d’ordinateur courant, y compris avec une hauteur de 768 à 900 px. Réduire raisonnablement les marges et les cartes pour que l’ensemble reste lisible et largement visible sans transformer les schémas en vignettes.
