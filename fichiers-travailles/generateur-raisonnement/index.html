@@ -1,0 +1,171 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+  <meta name="theme-color" content="#f4f7fb">
+  <meta name="description" content="Générateur de rituels de raisonnement mathématique pour le collège.">
+  <title>Raisonner au collège | maths&amp;go</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <main class="app" id="setupView">
+    <header class="site-header">
+      <div class="wordmark" aria-label="maths&go"><span>maths</span><b>&amp;</b><span>go</span></div>
+      <span class="prototype-badge">V0.2</span>
+    </header>
+
+    <section class="start-card" aria-labelledby="pageTitle">
+      <header class="start-intro">
+        <p class="eyebrow">Diaporama de classe · collège</p>
+        <h1 id="pageTitle">Raisonner au collège</h1>
+        <p>Une question courte. Un temps pour chercher. Une justification à construire ensemble.</p>
+      </header>
+
+      <form id="generatorForm">
+        <section class="quick-start" aria-label="Démarrage rapide">
+          <fieldset class="level-field">
+            <legend>Choisir le niveau</legend>
+            <div class="segmented level-segmented" data-control="level">
+              <button type="button" data-value="6e">6e</button>
+              <button type="button" data-value="5e">5e</button>
+              <button type="button" data-value="4e">4e</button>
+              <button type="button" class="is-active" data-value="3e">3e</button>
+              <button type="button" data-value="all">Tous</button>
+            </div>
+            <input type="hidden" id="level" value="3e">
+          </fieldset>
+
+          <button class="generate-button" id="generateButton" type="submit">
+            <span>Lancer 10 questions</span><b aria-hidden="true">→</b>
+          </button>
+        </section>
+
+        <details class="advanced-settings" id="advancedSettings">
+          <summary>
+            <span>Personnaliser la série</span>
+            <small id="summaryText">10 questions · 3e · progression équilibrée</small>
+            <i aria-hidden="true">⌄</i>
+          </summary>
+
+          <div class="advanced-content">
+            <div class="compact-controls">
+              <fieldset class="field">
+                <legend>Nombre de questions</legend>
+                <div class="segmented" data-control="count">
+                  <button type="button" data-value="5">5</button>
+                  <button type="button" class="is-active" data-value="10">10</button>
+                  <button type="button" data-value="15">15</button>
+                  <button type="button" data-value="20">20</button>
+                </div>
+                <input type="hidden" id="count" value="10">
+              </fieldset>
+
+              <fieldset class="field">
+                <legend>Niveau de raisonnement</legend>
+                <div class="segmented" data-control="difficulty">
+                  <button type="button" data-value="1">Repérer</button>
+                  <button type="button" data-value="2">Justifier</button>
+                  <button type="button" data-value="3">Prouver</button>
+                  <button type="button" class="is-active" data-value="all">Progressif</button>
+                </div>
+                <input type="hidden" id="difficulty" value="all">
+              </fieldset>
+            </div>
+
+            <div class="filter-heading">
+              <strong>Parcours et contenus</strong>
+              <div class="bulk-buttons">
+                <button type="button" id="selectAllButton">Tout</button>
+                <button type="button" id="selectNoneButton">Effacer</button>
+              </div>
+            </div>
+
+            <fieldset class="pathway-section">
+              <legend>Quel type de raisonnement faire travailler ?</legend>
+              <div class="pathway-grid" data-control="pathway">
+                <button type="button" class="is-active" data-value="mixed"><strong>Équilibré</strong><span>Un peu de tout</span></button>
+                <button type="button" data-value="search"><strong>Chercher</strong><span>Observer, conjecturer, tester</span></button>
+                <button type="button" data-value="prove"><strong>Convaincre</strong><span>Déduire, justifier, réfuter</span></button>
+                <button type="button" data-value="critique"><strong>Examiner</strong><span>Comparer, repérer, corriger</span></button>
+                <button type="button" data-value="model"><strong>Modéliser</strong><span>Formuler, interpréter, vérifier</span></button>
+              </div>
+              <input type="hidden" id="pathway" value="mixed">
+            </fieldset>
+
+            <fieldset class="check-section domain-section">
+              <legend>Domaines mathématiques</legend>
+              <div class="check-grid domain-grid" id="domainChecks"></div>
+            </fieldset>
+
+            <details class="gesture-settings">
+              <summary>Réglage fin des gestes <span>facultatif</span></summary>
+              <div class="check-grid gesture-grid" id="gestureChecks"></div>
+            </details>
+
+            <footer class="advanced-footer">
+              <span id="coverageText">7 domaines · Équilibré · progressif · 64 familles disponibles</span>
+              <button class="text-button" type="button" id="resetButton">Réinitialiser</button>
+            </footer>
+          </div>
+        </details>
+      </form>
+    </section>
+
+    <p class="class-note"><strong>En classe :</strong> les élèves répondent oralement, sur ardoise ou dans le cahier. Le diaporama ne met pas de note.</p>
+  </main>
+
+  <section class="slideshow" id="slideshow" hidden aria-label="Diaporama de raisonnement">
+    <header class="slide-toolbar">
+      <div class="toolbar-left">
+        <button class="icon-button" id="setupButton" type="button" title="Revenir aux réglages" aria-label="Revenir aux réglages">
+          <svg viewBox="0 0 24 24"><path d="m3 11 9-8 9 8M5 10v10h14V10M9 20v-6h6v6"/></svg>
+        </button>
+        <button class="toolbar-button previous" id="prevButton" type="button"><span aria-hidden="true">←</span><b>Précédent</b></button>
+      </div>
+
+      <div class="slide-identity">
+        <span id="slideCounter">1 / 10</span>
+        <div class="progress" aria-hidden="true"><i id="progressBar"></i></div>
+      </div>
+
+      <div class="toolbar-actions">
+        <button class="icon-button secondary-action" id="restartButton" type="button" title="Nouvelle série" aria-label="Nouvelle série">
+          <svg viewBox="0 0 24 24"><path d="M20 11a8 8 0 1 0-2.3 5.7M20 4v7h-7"/></svg>
+        </button>
+        <button class="icon-button secondary-action" id="fullscreenButton" type="button" title="Plein écran" aria-label="Plein écran">
+          <svg viewBox="0 0 24 24"><path d="M4 9V4h5M15 4h5v5M20 15v5h-5M9 20H4v-5"/></svg>
+        </button>
+        <button class="toolbar-button primary" id="nextButton" type="button">Correction</button>
+      </div>
+    </header>
+
+    <main class="slide-stage">
+      <article class="slide-card" id="slideCard">
+        <header class="question-meta">
+          <span class="domain-pill" id="domainPill"></span>
+          <span class="gesture-pill" id="gesturePill"></span>
+          <span class="level-pill" id="levelPill"></span>
+        </header>
+
+        <div class="question-layout">
+          <section class="question-body" id="questionBody"></section>
+          <aside class="thinking-bar" id="thinkingSidebar">
+            <div>
+              <span>Avant de répondre</span>
+              <strong id="thinkingPrompt"></strong>
+            </div>
+            <button class="hint-button" id="hintButton" type="button">Indice</button>
+            <div class="hint-box" id="hintBox" hidden></div>
+          </aside>
+        </div>
+
+        <section class="correction" id="correctionPanel" hidden></section>
+      </article>
+    </main>
+  </section>
+
+  <script src="reasoning-banks.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>
