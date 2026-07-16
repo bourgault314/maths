@@ -6,6 +6,7 @@
   <title>Bibliothèque visuelle des icônes | maths&amp;go</title>
   <meta name="description" content="Galerie complète des icônes mathématiques créées pour maths&amp;go et réutilisées dans le catalogue et l’accueil.">
   <script src="../assets/js/mathsgo-icon-library.js?v=icons-library-20260716-4"></script>
+  <script src="../assets/js/mathgo-generative-icons.js?v=generative-library-20260716-1"></script>
   <style>
     :root{--ink:#173a5e;--blue:#0b67b2;--soft:#eef7ff;--line:#dbe7ef;--orange:#f58220}
     *{box-sizing:border-box}
@@ -22,6 +23,27 @@
     .notice{margin:18px 0 26px;padding:13px 16px;border-left:4px solid var(--orange);border-radius:12px;background:#fff7ed;color:#7c4215;line-height:1.5}
     h2{margin:28px 0 14px;font-size:1.2rem}
     .count{color:#6b8295;font-size:.9rem;font-weight:700}
+    .generative-section{margin:28px 0 36px}
+    .generative-heading{display:flex;align-items:flex-end;justify-content:space-between;gap:18px;margin-bottom:14px}
+    .generative-heading h2{margin:0 0 5px}
+    .generative-heading p{max-width:720px;margin:0;color:#58728a;line-height:1.5}
+    .regenerate{flex:0 0 auto;border:1px solid #9cc9df;border-radius:999px;background:#eff9ff;color:var(--blue);padding:9px 14px;font:800 .83rem inherit;cursor:pointer}
+    .regenerate:hover{border-color:var(--blue);background:#fff}
+    .generative-grid{display:grid;gap:18px}
+    .generative-family{--family:#0b67b2;overflow:hidden;border:1px solid color-mix(in srgb,var(--family) 28%,#dbe7ef);border-radius:20px;background:linear-gradient(135deg,#fff 0%,color-mix(in srgb,var(--family) 5%,#fff) 100%);box-shadow:0 8px 24px rgba(23,58,94,.055)}
+    .generative-copy{display:grid;grid-template-columns:minmax(170px,.62fr) minmax(260px,1.38fr);gap:18px;padding:17px 18px 14px;border-bottom:1px solid #e5eef4}
+    .generative-title-row{display:flex;align-items:center;gap:9px;flex-wrap:wrap}
+    .generative-title{margin:0;color:#173a5e;font-size:1.08rem;font-weight:900}
+    .generative-key{border-radius:999px;background:color-mix(in srgb,var(--family) 10%,#fff);color:color-mix(in srgb,var(--family) 76%,#173a5e);padding:4px 8px;font:750 .69rem ui-monospace,SFMono-Regular,Menlo,monospace}
+    .generative-note{margin:6px 0 0;color:var(--family);font-size:.78rem;font-weight:850;letter-spacing:.035em}
+    .generative-rule,.generative-question{margin:0;color:#58728a;font-size:.88rem;line-height:1.45}
+    .generative-question{margin-top:6px;color:#365b77;font-weight:750}
+    .generative-variants{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;padding:13px}
+    .generative-variant{min-width:0;margin:0}
+    .generative-stage{aspect-ratio:1;display:grid;place-items:center;overflow:hidden;border:1px solid #e1ebf1;border-radius:15px;background:rgba(255,255,255,.88)}
+    .generative-stage svg{display:block;width:100%;height:100%}
+    .generative-variant figcaption{display:flex;justify-content:center;margin-top:6px;color:#71879a;font-size:.7rem;font-weight:800}
+    .generative-variant:first-child figcaption{color:var(--family)}
     .icon-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:13px}
     .icon-card{min-width:0;border:1px solid #dce8ef;border-radius:16px;background:#fbfdff;padding:12px;display:flex;flex-direction:column;gap:9px}
     .icon-card.home-card{background:#f7fffd;border-color:#bce7df}
@@ -32,7 +54,8 @@
     .home-copy{color:#58728a;line-height:1.5;margin:0 0 12px}
     .new-note{color:#58728a;line-height:1.5;margin:-4px 0 12px}
     .footer-note{margin:28px 0 0;padding-top:18px;border-top:1px solid var(--line);color:#668095;font-size:.9rem;line-height:1.55}
-    @media (max-width:560px){.topbar{align-items:flex-start;flex-direction:column}.links{justify-content:flex-start}.library-box{padding:18px 14px}.icon-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:9px}.icon-card{padding:8px;border-radius:13px}.icon-stage{height:76px}.icon-stage svg{height:70px}.icon-name{font-size:.82rem}.icon-key{font-size:.64rem}}
+    @media (max-width:760px){.generative-heading{align-items:flex-start;flex-direction:column}.generative-copy{grid-template-columns:1fr;gap:9px}.generative-variants{grid-template-columns:repeat(2,minmax(0,1fr))}}
+    @media (max-width:560px){.topbar{align-items:flex-start;flex-direction:column}.links{justify-content:flex-start}.library-box{padding:18px 14px}.generative-copy{padding:14px}.generative-variants{padding:9px;gap:8px}.icon-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:9px}.icon-card{padding:8px;border-radius:13px}.icon-stage{height:76px}.icon-stage svg{height:70px}.icon-name{font-size:.82rem}.icon-key{font-size:.64rem}}
   </style>
 </head>
 <body>
@@ -46,15 +69,26 @@
       <p class="intro">Une seule galerie pour retrouver les dessins mathématiques créés pour le site maths&amp;go : métronome des automatismes, Thalès, Pythagore, puissances, espace et géométrie, fractions, nombres, données, jeux et tous les autres.</p>
       <div class="notice">Cette page affiche directement la bibliothèque centrale réutilisée par le catalogue. Les icônes restent vectorielles et gardent leur identifiant pour pouvoir être reprises dans les prochains outils.</div>
 
-      <section aria-labelledby="catalogue-title">
-        <h2 id="catalogue-title">Toutes les icônes du catalogue <span class="count" id="icon-count"></span></h2>
-        <div class="icon-grid" id="catalogue-icons"></div>
-      </section>
-
       <section aria-labelledby="new-series-title">
         <h2 id="new-series-title">Nouvelle série · programme du collège</h2>
         <p class="new-note">Une première famille dessinée autour de cinq histoires mathématiques : le hasard ouvre plusieurs chemins, les répétitions deviennent une distribution, l’échelle se conserve, la fonction transforme une entrée en sortie, et mesurer revient à comparer avec une unité.</p>
         <div class="icon-grid" id="new-series-icons"></div>
+      </section>
+
+      <section class="generative-section" aria-labelledby="generative-title">
+        <div class="generative-heading">
+          <div>
+            <h2 id="generative-title">Icônes génératives · hasard contrôlé</h2>
+            <p>Les cinq outils esthétiques inventés pour maths&amp;go. Chaque dessin est produit par le code : la règle reste reconnaissable, tandis que la composition change avec la graine.</p>
+          </div>
+          <button class="regenerate" id="regenerate-generative" type="button">↻ Trois autres variantes</button>
+        </div>
+        <div class="generative-grid" id="generative-icons"></div>
+      </section>
+
+      <section aria-labelledby="catalogue-title">
+        <h2 id="catalogue-title">Toutes les icônes du catalogue <span class="count" id="icon-count"></span></h2>
+        <div class="icon-grid" id="catalogue-icons"></div>
       </section>
 
       <section aria-labelledby="home-title">
@@ -81,6 +115,7 @@
         average:"Moyennes",probability:"Probabilités · version actuelle",hasard:"Hasard · chemins possibles","probability-statistics":"Probabilité + statistique",grandeur:"Grandeurs · mesurer par unité",computing:"Informatique",strategy:"Jeux et stratégie",cps:"Compétences psychosociales",gears:"Engrenages"
       };
       const library = window.MATHSGO_ICON_LIBRARY || {};
+      const generator = window.MathsGoGenerativeIcons;
       const card = (key, home = false) => {
         const wrapper = document.createElement("article");
         wrapper.className = "icon-card" + (home ? " home-card" : "");
@@ -102,6 +137,60 @@
       document.querySelector("#icon-count").textContent = "(" + Object.keys(library).length + ")";
       ["hasard","probability-statistics","proportionnalite","function","grandeur"].forEach(key => document.querySelector("#new-series-icons").append(card(key,true)));
       ["fractions","relatifs","splat","pythagore","abacus"].forEach(key => document.querySelector("#home-icons").append(card(key,true)));
+
+      const generativeColors = ["#be3e68", "#0f766e", "#ea7a1a", "#6553b8", "#0b67b2"];
+      let generativeBatch = 0;
+
+      function generativeFamilyCard(family, familyIndex) {
+        const article = document.createElement("article");
+        article.className = "generative-family";
+        article.style.setProperty("--family", generativeColors[familyIndex % generativeColors.length]);
+
+        const copy = document.createElement("div");
+        copy.className = "generative-copy";
+        const identity = document.createElement("div");
+        identity.innerHTML = `<div class="generative-title-row"><h3 class="generative-title">${family.name}</h3><code class="generative-key">generative:${family.id}</code></div><p class="generative-note">${family.note}</p>`;
+        const story = document.createElement("div");
+        story.innerHTML = `<p class="generative-rule"><strong>Règle.</strong> ${family.rule}</p><p class="generative-question">Question aux élèves : ${family.question}</p>`;
+        copy.append(identity, story);
+
+        const variants = document.createElement("div");
+        variants.className = "generative-variants";
+        const labels = ["Aujourd’hui", "Variante A", "Variante B", "Variante C"];
+        for (let index = 0; index < 4; index += 1) {
+          const figure = document.createElement("figure");
+          figure.className = "generative-variant";
+          const stage = document.createElement("div");
+          stage.className = "generative-stage";
+          const seed = index === 0
+            ? generator.dailySeed(family.id)
+            : [family.id, "bibliotheque", generativeBatch, index, "mathsgo-v1"].join("|");
+          stage.append(generator.createSvg(family.id, { seed, label: family.name + " · " + labels[index] }));
+          const caption = document.createElement("figcaption");
+          caption.textContent = labels[index];
+          figure.append(stage, caption);
+          variants.append(figure);
+        }
+
+        article.append(copy, variants);
+        return article;
+      }
+
+      function renderGenerativeFamilies() {
+        const grid = document.querySelector("#generative-icons");
+        grid.replaceChildren();
+        if (!generator) {
+          grid.textContent = "Le générateur d’icônes n’a pas pu être chargé.";
+          return;
+        }
+        generator.families.forEach((family, index) => grid.append(generativeFamilyCard(family, index)));
+      }
+
+      document.querySelector("#regenerate-generative").addEventListener("click", () => {
+        generativeBatch += 1;
+        renderGenerativeFamilies();
+      });
+      renderGenerativeFamilies();
     })();
   </script>
   <noscript><p>Activez JavaScript pour afficher la galerie des icônes.</p></noscript>
