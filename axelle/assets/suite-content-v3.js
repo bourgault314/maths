@@ -104,7 +104,7 @@
   const triangleMemoVisual = `
     <svg viewBox="0 0 360 170" role="img" aria-label="Triangle rectangle avec un angle droit, triangle isocèle avec deux côtés égaux et triangle équilatéral avec trois côtés égaux">
       <g fill="#fff" stroke="#0755b8" stroke-width="4" stroke-linejoin="round">
-        <path d="M20 91V23h82Z"/>
+        <path d="M20 91V23L102 91Z"/>
         <path d="m124 91 56-69 56 69Z"/>
         <path d="m252 91 48-69 48 69Z"/>
       </g>
@@ -251,7 +251,7 @@
       soft: "#f1f6ff",
       visual: triangleMemoVisual,
       title: "Reconnaître un triangle",
-      text: "Observe le carré et les petits traits placés sur les côtés."
+      text: ""
     },
     {
       mobileStack: true,
@@ -326,18 +326,18 @@
       title: "Place chaque nom sous le bon angle",
       prompt: "Fais glisser les étiquettes. Tu peux aussi toucher un mot puis sa case.",
       hint: "Cherche d’abord l’angle droit avec son petit carré et l’angle plat qui forme une ligne.",
-      explanation: "Même tournés, les quatre angles gardent leur ouverture et donc leur nom."
+      explanation: "Aigu, droit, obtus et plat : chaque nom correspond à une ouverture."
     },
     {
       section: "Angles",
-      kicker: "Un angle peut tourner",
+      kicker: "Reconnaître le codage",
       title: "Quel angle est représenté ?",
-      prompt: "Le petit carré indique son ouverture, pas son orientation.",
+      prompt: "Observe le petit carré orange.",
       visual: `<svg viewBox="0 0 500 210" role="img" aria-label="Angle tourné à identifier"><g transform="translate(155 4) rotate(43 70 80) scale(1.6)" class="angle-lines">${angleDrawing("right").replace(/<\/?g[^>]*>/g, "")}</g></svg>`,
       options: ["Angle aigu", "Angle droit", "Angle obtus", "Carré"],
       answer: 1,
       hint: "Le petit carré est le code de l’angle droit.",
-      explanation: "C’est un angle droit. Le tourner ne le transforme pas en carré — joli piège !"
+      explanation: "Le petit carré orange code un angle droit."
     },
     {
       section: "Angles",
@@ -422,7 +422,7 @@
       visual: metreStripVisual,
       options: ["1 m = 10 cm", "1 m = 100 cm", "1 m = 1 000 cm", "1 m = 60 cm"],
       answer: 1,
-      hint: "Pense au repère vu dans le mémo : la poignée de porte est environ à un mètre du sol.",
+      hint: "Observe la règle : elle va de 0 cm à 100 cm.",
       explanation: "1 m = 100 cm. Cette conversion est à connaître par cœur."
     },
     {
