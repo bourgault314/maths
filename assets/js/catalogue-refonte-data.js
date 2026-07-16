@@ -294,6 +294,14 @@ window.MATHSGO_CATALOGUE = {
       "thumbnail": "assets/img/thumbnails/divisibilite/partages-pgcd.png?v=1",
       "cardDescription": "Chercher le plus grand nombre de paquets identiques en manipulant deux quantités."
     },
+    "outils/plateaux_manipulation/feuille_coupee_puissance.html": {
+      "primaryNotion": "puissances",
+      "primaryGroup": "activites",
+      "collections": [],
+      "tags": ["puissances", "exposants", "doublement", "narration-recherche"],
+      "thumbnail": "assets/img/thumbnails/puissances/decoupage-puissances.png?v=1",
+      "cardDescription": "Découper une feuille virtuellement pour observer le doublement du nombre de morceaux et de l’épaisseur."
+    },
     "outils/plateaux_manipulation/moulin_pythagore.html": {
       "primaryNotion": "pythagore",
       "collections": [],
@@ -1662,8 +1670,8 @@ window.MATHSGO_CATALOGUE = {
     },
     {
       "id": "outils-plateaux-manipulation-feuille-coupee-puissance-html",
-      "title": "Exposants : Narration de Recherche",
-      "description": "Une ressource maths&go pour travailler puissances.",
+      "title": "Puissances par découpage",
+      "description": "Découper une feuille virtuellement pour observer le doublement du nombre de morceaux et de l’épaisseur.",
       "path": "outils/plateaux_manipulation/feuille_coupee_puissance.html",
       "domains": [
         "nombres-calculs"
