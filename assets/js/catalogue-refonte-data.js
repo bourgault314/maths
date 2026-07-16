@@ -273,6 +273,38 @@ window.MATHSGO_CATALOGUE = {
       "thumbnail": "assets/img/thumbnails/notions/moyenne.svg?v=1",
       "cardDescription": "Déplacer ou couper des blocs pour égaliser les piles et donner du sens à la moyenne."
     },
+    "outils/plateaux_manipulation/glisse_entiers_flex.html": {
+      "primaryNotion": "numeration",
+      "primaryGroup": "manipuler",
+      "collections": [],
+      "tags": ["numeration", "entiers", "valeur-position", "multiplier", "diviser"],
+      "thumbnail": "assets/img/thumbnails/numeration/glisse-entiers.svg?v=1",
+      "cardDescription": "Faire glisser les chiffres dans le tableau de numération et visualiser les changements de valeur."
+    },
+    "outils/plateaux_manipulation/glisse_nombres_decimaux.html": {
+      "primaryNotion": "numeration",
+      "primaryGroup": "manipuler",
+      "collections": [],
+      "tags": ["numeration", "decimaux", "valeur-position", "dixiemes", "centiemes"],
+      "thumbnail": "assets/img/thumbnails/numeration/glisse-decimaux.svg?v=1",
+      "cardDescription": "Déplacer les chiffres de part et d’autre de la virgule dans un tableau de numération décimale."
+    },
+    "outils/plateaux_manipulation/numeration_decimale.html": {
+      "primaryNotion": "numeration",
+      "primaryGroup": "manipuler",
+      "collections": [],
+      "tags": ["numeration", "decimaux", "unites", "dixiemes", "centiemes", "fractions"],
+      "thumbnail": "assets/img/thumbnails/numeration/plateau-decimal.svg?v=1",
+      "cardDescription": "Couper et fusionner unités, dixièmes et centièmes pour construire les écritures décimales et fractionnaires."
+    },
+    "outils/fabrication_materiel/numeration_decimale_maker.html": {
+      "primaryNotion": "numeration",
+      "primaryGroup": "generer",
+      "collections": [],
+      "tags": ["numeration", "decimaux", "materiel", "imprimer", "gabarit"],
+      "thumbnail": "assets/img/thumbnails/numeration/maker-decimal.svg?v=1",
+      "cardDescription": "Préparer des planches d’unités, dixièmes et centièmes personnalisées pour l’impression."
+    },
     "outils/problemes_barres_M974.html": { "primaryNotion": "schemas-barres", "collections": [], "tags": ["schema-barres", "resolution-problemes", "version-travail"] },
     "outils/nombres_relatifs/nombres_relatifs_somme_difference.html": { "primaryNotion": "relatifs", "collections": [], "tags": ["nombres-relatifs", "plateau-manipulation"] },
     "outils/nombres_relatifs/nombres_relatifs_somme_differenceB.html": { "primaryNotion": "relatifs", "collections": [], "tags": ["nombres-relatifs", "plateau-manipulation"] },
@@ -2842,7 +2874,7 @@ window.MATHSGO_CATALOGUE = {
     {
       "id": "outils-plateaux-manipulation-glisse-entiers-flex-html",
       "title": "Glisse-entiers",
-      "description": "Une ressource maths&go pour travailler numération.",
+      "description": "Un tableau de numération pour faire glisser les chiffres et comprendre la valeur de position dans les entiers.",
       "path": "outils/plateaux_manipulation/glisse_entiers_flex.html",
       "domains": [
         "nombres-calculs"
@@ -2868,8 +2900,8 @@ window.MATHSGO_CATALOGUE = {
     },
     {
       "id": "outils-plateaux-manipulation-glisse-nombres-decimaux-html",
-      "title": "Glisse-nombres",
-      "description": "Une ressource maths&go pour travailler numération.",
+      "title": "Glisse-nombres décimaux",
+      "description": "Un tableau interactif pour déplacer les chiffres entre unités, dixièmes et centièmes.",
       "path": "outils/plateaux_manipulation/glisse_nombres_decimaux.html",
       "domains": [
         "nombres-calculs"
@@ -3402,8 +3434,8 @@ window.MATHSGO_CATALOGUE = {
     },
     {
       "id": "outils-fabrication-materiel-numeration-decimale-maker-html",
-      "title": "Maker — numération décimale",
-      "description": "Une ressource maths&go pour travailler numération.",
+      "title": "Matériel de numération décimale",
+      "description": "Un générateur de planches personnalisables d’unités, dixièmes et centièmes à imprimer.",
       "path": "outils/fabrication_materiel/numeration_decimale_maker.html",
       "domains": [
         "nombres-calculs",
@@ -3606,8 +3638,8 @@ window.MATHSGO_CATALOGUE = {
     },
     {
       "id": "outils-plateaux-manipulation-numeration-decimale-html",
-      "title": "Numération décimale — Plateau (PATCH 5)",
-      "description": "Une ressource maths&go pour travailler numération.",
+      "title": "Plateau de numération décimale",
+      "description": "Un plateau pour couper, fusionner et relier unités, dixièmes, centièmes, fractions et écritures décimales.",
       "path": "outils/plateaux_manipulation/numeration_decimale.html",
       "domains": [
         "nombres-calculs",

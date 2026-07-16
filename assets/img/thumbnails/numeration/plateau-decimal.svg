@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 720 320">
+  <defs><pattern id="cent" width="16" height="16" patternUnits="userSpaceOnUse"><path d="M16 0H0V16" fill="none" stroke="#2563eb" stroke-width="1"/></pattern><filter id="shadow"><feDropShadow dx="0" dy="4" stdDeviation="5" flood-opacity=".17"/></filter></defs>
+  <rect width="720" height="320" fill="#f4f8fb"/>
+  <text x="35" y="48" fill="#1d3f5f" font-family="system-ui,sans-serif" font-size="24" font-weight="780">Plateau de numération décimale</text>
+  <text x="35" y="74" fill="#728398" font-family="system-ui,sans-serif" font-size="15">Couper et fusionner unités, dixièmes et centièmes</text>
+  <g transform="translate(61 102)" filter="url(#shadow)" font-family="system-ui,sans-serif" text-anchor="middle">
+    <rect width="160" height="160" fill="#dbeafe" stroke="#2563eb" stroke-width="3"/><rect width="160" height="160" fill="url(#cent)"/>
+    <text x="80" y="87" fill="#1e40af" font-size="23" font-weight="820">1 unité</text>
+    <g transform="translate(244 0)"><rect width="160" height="16" fill="#fce7f3" stroke="#db2777" stroke-width="3"/><path d="M16 0v16M32 0v16M48 0v16M64 0v16M80 0v16M96 0v16M112 0v16M128 0v16M144 0v16" stroke="#db2777"/><text x="80" y="54" fill="#9d174d" font-size="20" font-weight="800">1 dixième</text><text x="80" y="79" fill="#9d174d" font-size="17">= 10 centièmes</text></g>
+    <g transform="translate(501 0)"><rect width="34" height="34" fill="#ede9fe" stroke="#7c3aed" stroke-width="3"/><text x="17" y="70" fill="#5b21b6" font-size="19" font-weight="800">1</text><line x1="4" y1="77" x2="30" y2="77" stroke="#5b21b6" stroke-width="2"/><text x="17" y="98" fill="#5b21b6" font-size="16" font-weight="800">100</text><text x="17" y="132" fill="#5b21b6" font-size="15">un centième</text></g>
+    <g transform="translate(244 126)" font-weight="760"><rect width="122" height="39" rx="12" fill="#fff3d6" stroke="#f59e0b"/><text x="61" y="25" fill="#a45b06" font-size="15">✂ Couper</text><rect x="137" width="122" height="39" rx="12" fill="#e5faef" stroke="#10b981"/><text x="198" y="25" fill="#087b56" font-size="15">Fusionner</text></g>
+  </g>
+</svg>
