@@ -166,7 +166,7 @@ h1 { margin: 0; font-size: clamp(2rem, 4.5vw, 3.8rem); line-height: 1.04; letter
 .memo-card:nth-child(4) { grid-column: 2 / span 2; }
 .memo-number { position: absolute; top: 12px; left: 12px; display: grid; place-items: center; width: 27px; height: 27px; color: #fff; font-size: .79rem; font-weight: 900; border-radius: 50%; background: var(--memo-color); z-index: 2; }
 .memo-visual { display: grid; place-items: center; min-height: 150px; margin: -3px 0 8px; }
-.memo-visual svg { display: block; width: 100%; max-height: 170px; }
+.memo-visual svg { display: block; width: 100%; max-height: 190px; }
 .memo-card h2 { min-height: 2.55em; margin: 7px 0 8px; color: var(--memo-color); font-size: 1.07rem; line-height: 1.28; }
 .memo-card p { margin: 0; color: #465a73; font-size: .88rem; line-height: 1.52; }
 
@@ -255,13 +255,13 @@ h1 { margin: 0; font-size: clamp(2rem, 4.5vw, 3.8rem); line-height: 1.04; letter
 
 .hint-button { display: block; margin: 18px 0 0; padding: 7px 0; color: #52667d; border: 0; border-bottom: 1px dashed #93a4b6; background: transparent; cursor: pointer; font-size: .84rem; font-weight: 800; }
 .hint-box { margin-top: 10px; padding: 12px 14px; color: #38516c; border-left: 4px solid #f59e0b; border-radius: 8px; background: #fffbeb; line-height: 1.45; }
+.hint-box > svg { display: block; width: min(100%, 520px); max-height: 220px; margin: 0 auto; }
 .feedback { display: flex; flex-direction: column; gap: 4px; margin-top: 15px; padding: 13px 15px; border-radius: 11px; line-height: 1.43; }
 .feedback.success { color: #0f623d; border: 1px solid #9bdfbd; background: #eefbf4; }
 .feedback.error { color: #9b2c2c; border: 1px solid #f2b4b4; background: #fff3f3; }
-.feedback.try-again { color: #815008; border: 1px solid #f3ca79; background: #fff9e8; }
 .feedback strong { font-size: .95rem; }
 .feedback span { font-size: .9rem; }
-.next-button { width: 100%; margin-top: 17px; }
+.next-button { width: 100%; min-height: 58px; margin-top: 17px; font-size: 1rem; }
 
 .story-card { width: min(100%, 680px); max-height: 244px; padding: 16px 20px; overflow: auto; text-align: left; border: 1px solid #d8e1ec; border-radius: 13px; background: #fffdf8; box-shadow: inset 4px 0 #f7c85b; }
 .story-card p { margin: 0 0 7px; color: #2d4056; font-family: Georgia, serif; font-size: .94rem; line-height: 1.5; }
@@ -392,6 +392,7 @@ footer { min-height: 58px; padding: 18px 16px; color: #718096; text-align: cente
   .match-token { min-height: 37px; font-size: .76rem; }
   .match-slot { min-height: 39px; }
   .feedback { font-size: .84rem; }
+  .next-button { min-height: 62px; box-shadow: 0 10px 24px rgba(16,41,74,.2); }
   .finish-actions { grid-template-columns: 1fr; }
   .bonus-button { grid-column: auto; }
   footer { min-height: 44px; padding: 13px 10px; }
