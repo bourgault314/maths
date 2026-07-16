@@ -2016,7 +2016,7 @@ window.MATHSGO_CATALOGUE = {
       "description": "Représentez une équation par deux schémas en barres et transformez les deux membres pas à pas.",
       "path": "outils/equabarre.html",
       "domains": [
-        "algebre"
+        "nombres-calculs"
       ],
       "notions": [
         "equations",
