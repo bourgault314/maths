@@ -1,0 +1,260 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>CPS — Bilan guidé de fin du premier semestre | maths&amp;go</title>
+  <meta name="description" content="Un document guidé de quatre pages A3 pour aider l’élève à relire son semestre, comprendre son fonctionnement et choisir un objectif concret.">
+  <link rel="canonical" href="https://mathsgo.re/cps/bilan-s1.html">
+  <link rel="stylesheet" href="../assets/css/consentement.css">
+  <script defer src="../assets/js/consentement.js"></script>
+  <style>
+    :root {
+      --blue: #063f86;
+      --blue-dark: #052f67;
+      --teal: #08aaa5;
+      --orange: #f58220;
+      --rose: #b84f7b;
+      --rose-soft: #fff0f6;
+      --ink: #10294a;
+      --muted: #5c6c82;
+      --line: #d9e2ec;
+      --page: #f6f8fb;
+      --shadow: 0 14px 34px rgba(22, 47, 82, .09);
+    }
+
+    * { box-sizing: border-box; }
+    html { min-height: 100%; -webkit-text-size-adjust: 100%; }
+    body {
+      min-height: 100vh;
+      margin: 0;
+      color: var(--ink);
+      background-color: var(--page);
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='100' height='100' viewBox='0 0 100 100'%3E%3Cg fill='none' stroke='%231e1b4b' stroke-width='.4' stroke-opacity='.055'%3E%3Cpath d='M50 0 62 38 100 50 62 62 50 100 38 62 0 50 38 38Z'/%3E%3C/g%3E%3C/svg%3E");
+      font-family: "Segoe UI", system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
+    }
+
+    button { font: inherit; cursor: pointer; }
+    .site-shell { width: min(1180px, calc(100% - 28px)); margin: 0 auto; }
+    .site-header {
+      min-height: 72px;
+      display: grid;
+      grid-template-columns: 1fr auto 1fr;
+      align-items: center;
+      padding: 7px 2px 5px;
+    }
+    .brand-link { grid-column: 2; width: 132px; }
+    .brand-link img { display: block; width: 100%; height: auto; }
+    .back-link {
+      grid-column: 1;
+      grid-row: 1;
+      justify-self: start;
+      display: inline-flex;
+      align-items: center;
+      gap: 7px;
+      min-height: 44px;
+      padding: 8px 10px;
+      color: #52647a;
+      text-decoration: none;
+      font-size: .91rem;
+      font-weight: 750;
+    }
+    .back-link svg { width: 19px; height: 19px; }
+
+    main {
+      margin-bottom: 24px;
+      padding: clamp(18px, 2.4vw, 30px);
+      border: 1px solid rgba(203, 216, 230, .9);
+      border-radius: 28px;
+      background: rgba(255, 255, 255, .97);
+      box-shadow: var(--shadow);
+    }
+    .hero { max-width: 840px; margin: 0 auto 24px; text-align: center; }
+    .eyebrow {
+      display: inline-flex;
+      align-items: center;
+      gap: 7px;
+      margin: 0 0 9px;
+      padding: 6px 11px;
+      border-radius: 999px;
+      color: #8f365e;
+      background: var(--rose-soft);
+      font-size: .78rem;
+      font-weight: 850;
+      letter-spacing: .065em;
+      text-transform: uppercase;
+    }
+    .eyebrow::before { content: ""; width: 8px; height: 8px; border-radius: 50%; background: var(--rose); }
+    h1 {
+      margin: 0;
+      color: var(--blue-dark);
+      font-family: Georgia, "Times New Roman", serif;
+      font-size: clamp(2rem, 4.6vw, 3.15rem);
+      line-height: 1.05;
+      letter-spacing: -.035em;
+    }
+    .lead {
+      max-width: 720px;
+      margin: 12px auto 0;
+      color: var(--muted);
+      font-size: clamp(1rem, 1.6vw, 1.12rem);
+      line-height: 1.55;
+    }
+    .actions { display: flex; justify-content: center; flex-wrap: wrap; gap: 10px; margin-top: 19px; }
+    .action {
+      min-height: 46px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      padding: 10px 16px;
+      border: 1px solid var(--blue);
+      border-radius: 12px;
+      color: #fff;
+      background: var(--blue);
+      text-decoration: none;
+      font-weight: 800;
+      box-shadow: 0 7px 16px rgba(6, 63, 134, .14);
+    }
+    .action-secondary { color: var(--blue); background: #fff; box-shadow: none; }
+    .action svg { width: 18px; height: 18px; }
+    .format-note {
+      margin: 10px 0 0;
+      color: #6b7789;
+      font-size: .83rem;
+      font-weight: 700;
+    }
+
+    .guide {
+      max-width: 920px;
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 10px;
+      margin: 0 auto 24px;
+    }
+    .guide-card {
+      min-width: 0;
+      padding: 13px 15px;
+      border: 1px solid #e0e6ee;
+      border-top: 4px solid var(--accent);
+      border-radius: 14px;
+      background: var(--soft);
+    }
+    .guide-card strong { display: block; margin-bottom: 4px; color: #16304f; font-size: .95rem; }
+    .guide-card span { color: #637287; font-size: .86rem; line-height: 1.35; }
+
+    .preview-heading { margin: 0 0 13px; text-align: center; color: var(--blue-dark); font-size: 1.35rem; }
+    .pages { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 18px; }
+    .page-preview {
+      margin: 0;
+      overflow: hidden;
+      border: 1px solid #d5dde7;
+      border-radius: 13px;
+      background: #fff;
+      box-shadow: 0 9px 22px rgba(15, 40, 72, .08);
+    }
+    .page-preview img { display: block; width: 100%; height: auto; }
+    .page-preview figcaption {
+      padding: 9px 12px;
+      color: #5c6c82;
+      background: #fbfcfe;
+      font-size: .82rem;
+      font-weight: 750;
+      text-align: center;
+    }
+    .site-footer {
+      display: flex;
+      justify-content: center;
+      flex-wrap: wrap;
+      gap: 7px;
+      padding: 16px 10px 24px;
+      color: #66788d;
+      font-size: .82rem;
+    }
+    .site-footer a, .site-footer button { padding: 0; border: 0; color: #526d8d; background: transparent; text-decoration: underline; }
+
+    @media (max-width: 720px) {
+      .site-shell { width: min(100% - 18px, 1180px); }
+      .site-header { min-height: 78px; }
+      .brand-link { width: 124px; }
+      .back-link span { display: none; }
+      main { padding: 20px 13px; border-radius: 21px; }
+      .guide { grid-template-columns: 1fr; }
+      .pages { grid-template-columns: 1fr; gap: 13px; }
+      .action { width: 100%; }
+    }
+
+    @media print {
+      @page { size: A3 landscape; margin: 0; }
+      body { background: #fff; }
+      .site-header, .hero, .guide, .preview-heading, .site-footer { display: none !important; }
+      .site-shell { width: auto; margin: 0; }
+      main { margin: 0; padding: 0; border: 0; border-radius: 0; box-shadow: none; }
+      .pages { display: block; }
+      .page-preview {
+        width: 420mm;
+        height: 297mm;
+        margin: 0;
+        border: 0;
+        border-radius: 0;
+        box-shadow: none;
+        break-after: page;
+        page-break-after: always;
+      }
+      .page-preview:last-child { break-after: auto; page-break-after: auto; }
+      .page-preview img { width: 420mm; height: 297mm; object-fit: fill; }
+      .page-preview figcaption { display: none; }
+    }
+  </style>
+</head>
+<body>
+  <div class="site-shell">
+    <header class="site-header">
+      <a class="back-link" href="../outils/index.html?domain=cps&amp;notion=bilans-cps">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m15 5-7 7 7 7" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        <span>Retour aux CPS</span>
+      </a>
+      <a class="brand-link" href="../index.html" aria-label="Accueil maths&go">
+        <img src="../assets/img/mathsgo-logo.png" alt="maths&go" width="1338" height="622">
+      </a>
+    </header>
+
+    <main>
+      <section class="hero">
+        <p class="eyebrow">Compétences psychosociales</p>
+        <h1>Bilan guidé de fin du premier semestre</h1>
+        <p class="lead">Un seul document de quatre pages pour relire son semestre, mettre des mots sur ce qui aide ou freine, mieux comprendre son profil d’élève et choisir un petit pas concret.</p>
+        <div class="actions">
+          <a class="action" href="https://www.canva.com/d/1pfiH9nWtgp2ewv" target="_blank" rel="noopener">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 9V4h10v5M7 17H5a2 2 0 0 1-2-2v-4a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2v4a2 2 0 0 1-2 2h-2M7 14h10v7H7Z" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/></svg>
+            Télécharger ou imprimer dans Canva
+          </a>
+        </div>
+        <p class="format-note">1 document · 4 pages recto · format A3 paysage · choisir « PDF pour impression »</p>
+      </section>
+
+      <section class="guide" aria-label="Parcours proposé">
+        <div class="guide-card" style="--accent:#08aaa5;--soft:#edfafa"><strong>1. Relire</strong><span>Identifier ses émotions, ses fiertés et les moments importants.</span></div>
+        <div class="guide-card" style="--accent:#f58220;--soft:#fff6eb"><strong>2. Comprendre</strong><span>Repérer ce qui freine, ce qui aide et les stratégies déjà utiles.</span></div>
+        <div class="guide-card" style="--accent:#b84f7b;--soft:#fff0f6"><strong>3. Agir</strong><span>Choisir un objectif observable et trois actions réalistes.</span></div>
+      </section>
+
+      <h2 class="preview-heading">Aperçu du document complet</h2>
+      <section class="pages" aria-label="Aperçu des quatre pages du même document">
+        <figure class="page-preview"><img src="assets/bilan-s1/page-1.png" alt="Page 1 : mon semestre, ce que j’ai appris sur moi"><figcaption>1 · Faire le point sur son semestre</figcaption></figure>
+        <figure class="page-preview"><img src="assets/bilan-s1/page-2.png" alt="Page 2 : comprendre pour progresser"><figcaption>2 · Comprendre ce qui aide ou freine</figcaption></figure>
+        <figure class="page-preview"><img src="assets/bilan-s1/page-3.png" alt="Page 3 : mon profil d’élève"><figcaption>3 · Mieux connaître son profil d’élève</figcaption></figure>
+        <figure class="page-preview"><img src="assets/bilan-s1/page-4.png" alt="Page 4 : je choisis un cap et je m’engage"><figcaption>4 · Choisir un cap et s’engager</figcaption></figure>
+      </section>
+    </main>
+
+    <footer class="site-footer">
+      <span>Gwenaël Bourgault</span><span aria-hidden="true">·</span>
+      <a href="mailto:gwenael@mathsgo.re?subject=Ressource%20CPS%20sur%20mathsgo.re">Me contacter</a><span aria-hidden="true">·</span>
+      <a href="../mentions-legales.html">Mentions légales</a><span aria-hidden="true">·</span>
+      <a href="../confidentialite.html">Confidentialité</a><span aria-hidden="true">·</span>
+      <button type="button" data-mathsgo-consent-open onclick="window.mathsgoConsentement &amp;&amp; window.mathsgoConsentement.ouvrir()">Cookies</button>
+    </footer>
+  </div>
+</body>
+</html>
