@@ -36,3 +36,14 @@ Toutes les tuiles utilisent de vrais quarts de cercle : le rayon vaut exactement
 la moitié du côté de la tuile et les raccords se font aux milieux des côtés.
 La version générative tire l’orientation de chaque tuile au hasard et met en
 évidence un chemin connecté.
+
+
+## Icônes de fonctions et de grandeurs
+
+L’identifiant public `function` réutilise l’icône `equal-volume-vase` :
+le vase accompagné de sa courbe de remplissage. L’ancienne machine (x²)
+reste conservée sous `function-machine`. Le dessin distinct des deux vases
+de même volume porte l’identifiant `equal-volume-vases`.
+
+Ces identifiants doivent rester uniques : deux propriétés homonymes dans la
+bibliothèque JavaScript conduiraient la dernière à masquer la première.
