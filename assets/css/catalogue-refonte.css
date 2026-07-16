@@ -787,6 +787,8 @@ select { cursor: pointer; }
   justify-self: center;
 }
 [data-domain-card="donnees"] .mathsgo-mosaic-menu-icon {
+  position: relative;
+  top: -5px;
   filter: drop-shadow(0 2px 2px rgba(15, 40, 72, .14));
 }
 .domain-card-copy { position: relative; z-index: 1; min-width: 0; }
