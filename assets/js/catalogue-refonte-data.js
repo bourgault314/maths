@@ -302,6 +302,46 @@ window.MATHSGO_CATALOGUE = {
       "thumbnail": "assets/img/thumbnails/puissances/decoupage-puissances.png?v=1",
       "cardDescription": "Découper une feuille virtuellement pour observer le doublement du nombre de morceaux et de l’épaisseur."
     },
+    "outils/angles/anglebarre.html": {
+      "primaryNotion": "angles",
+      "primaryGroup": "manipuler",
+      "collections": [],
+      "tags": ["angles", "triangle", "somme-des-angles", "raisonnement"],
+      "thumbnail": "assets/img/thumbnails/angles/anglebarre.png?v=1",
+      "cardDescription": "Résoudre pas à pas des problèmes sur la somme des angles d’un triangle à l’aide d’un schéma en barres."
+    },
+    "outils/angles/bandes_magnetiques.html": {
+      "primaryNotion": "angles",
+      "primaryGroup": "manipuler",
+      "collections": [],
+      "tags": ["angles", "bandes-magnetiques", "construction", "rapporteur", "manipulation"],
+      "thumbnail": "assets/img/thumbnails/angles/bandes-magnetiques.png?v=1",
+      "cardDescription": "Construire librement des angles et des figures avec des bandes magnétiques, un rapporteur et une équerre."
+    },
+    "outils/angles/gabarits_angles.html": {
+      "primaryNotion": "angles",
+      "primaryGroup": "manipuler",
+      "collections": [],
+      "tags": ["angles", "gabarits", "comparaison", "rapporteur", "manipulation"],
+      "thumbnail": "assets/img/thumbnails/angles/gabarits-angles.png?v=1",
+      "cardDescription": "Superposer, comparer et mesurer des gabarits d’angles directement sur un plateau interactif."
+    },
+    "outils/angles/gabarits_angles_generateur.html": {
+      "primaryNotion": "angles",
+      "primaryGroup": "generer",
+      "collections": [],
+      "tags": ["angles", "gabarits", "generateur", "imprimer", "materiel"],
+      "thumbnail": "assets/img/thumbnails/angles/generateur-gabarits.png?v=1",
+      "cardDescription": "Composer une planche de gabarits d’angles aux mesures, couleurs et formats choisis."
+    },
+    "outils/angles/generateur-rapporteurs-calque.html": {
+      "primaryNotion": "angles",
+      "primaryGroup": "generer",
+      "collections": [],
+      "tags": ["angles", "rapporteur", "generateur", "calque", "imprimer"],
+      "thumbnail": "assets/img/thumbnails/angles/rapporteurs-calque.png?v=1",
+      "cardDescription": "Créer une feuille A4 de rapporteurs personnalisés à imprimer sur papier calque."
+    },
     "outils/plateaux_manipulation/moulin_pythagore.html": {
       "primaryNotion": "pythagore",
       "collections": [],
@@ -860,7 +900,7 @@ window.MATHSGO_CATALOGUE = {
     },
     {
       "id": "outils-angles-anglebarre-html",
-      "title": "AngleBarre — angles d’un triangle",
+      "title": "AngleBarre",
       "description": "Résolvez pas à pas des problèmes sur la somme des angles d’un triangle quelconque, rectangle, isocèle ou équilatéral.",
       "path": "outils/angles/anglebarre.html",
       "domains": [
@@ -991,7 +1031,7 @@ window.MATHSGO_CATALOGUE = {
     },
     {
       "id": "outils-angles-bandes-magnetiques-html",
-      "title": "Bandes magnétiques — géométrie interactive",
+      "title": "Bandes magnétiques",
       "description": "Construisez et manipulez des angles avec des bandes magnétiques virtuelles, un rapporteur, une équerre et des outils de dessin.",
       "path": "outils/angles/bandes_magnetiques.html",
       "domains": [
@@ -1822,7 +1862,7 @@ window.MATHSGO_CATALOGUE = {
     },
     {
       "id": "outils-angles-gabarits-angles-html",
-      "title": "Gabarits d’angles — plateau de manipulation",
+      "title": "Gabarits d’angles",
       "description": "Manipulez, superposez et comparez des gabarits d’angles avec un rapporteur, une équerre, une règle et des outils de dessin.",
       "path": "outils/angles/gabarits_angles.html",
       "domains": [
@@ -1882,7 +1922,7 @@ window.MATHSGO_CATALOGUE = {
     },
     {
       "id": "outils-angles-gabarits-angles-generateur-html",
-      "title": "Gabarits d’angles à imprimer — générateur",
+      "title": "Générateur de gabarits d’angles",
       "description": "Créez gratuitement des gabarits d’angles personnalisés à imprimer : mesures, arcs, couleurs et plusieurs formats par page.",
       "path": "outils/angles/gabarits_angles_generateur.html",
       "domains": [
