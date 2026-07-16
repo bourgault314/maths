@@ -394,7 +394,7 @@
         title: "Comment s’appelle cet angle ?",
         prompt: "Le petit carré orange donne une information importante.",
         visual: rightAngleVisual,
-        options: ["Angle aigu", "Angle droit", "Angle obtus", "Ce n’est pas un angle"],
+        options: ["Angle aigu", "Angle droit", "Angle obtus", "Carré"],
         answer: 1,
         hint: "Le petit carré est le code utilisé pour marquer un angle droit.",
         explanation: "C’est un angle droit. Le petit carré orange est son codage."
