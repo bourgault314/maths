@@ -43,8 +43,7 @@ Référence : <https://www.education.gouv.fr/bo/2026/Hebdo10/MENE2602912A>
 - Parallélogrammes : `parallelogrammes/`
 - Espace, solides et patrons : `espace-patrons-constructions/`
 - Pythagore : `pythagore/`
-- Statistiques : `statistiques-representations/`
-- Moyennes : `moyennes/`
+- Statistiques, dont la moyenne : `statistiques-representations/`
 - Probabilités : `probabilites/`
 - Pensée informatique : `pensee-informatique/`
 
