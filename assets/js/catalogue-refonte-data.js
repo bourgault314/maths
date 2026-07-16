@@ -305,6 +305,22 @@ window.MATHSGO_CATALOGUE = {
       "thumbnail": "assets/img/thumbnails/numeration/maker-decimal.svg?v=1",
       "cardDescription": "Préparer des planches d’unités, dixièmes et centièmes personnalisées pour l’impression."
     },
+    "auto/index.html": {
+      "primaryNotion": "calcul-mental",
+      "primaryGroup": "generer",
+      "collections": [],
+      "tags": ["automatismes", "cycle-4", "dnb", "entrainement", "diaporama", "interactif"],
+      "thumbnail": "assets/img/thumbnails/automatismes/entrainement-cycle4.svg?v=1",
+      "cardDescription": "Choisir le niveau, les domaines et le mode pour lancer une séance interactive ou un diaporama."
+    },
+    "outils/automatismes/CM_Livret_A5.html": {
+      "primaryNotion": "calcul-mental",
+      "primaryGroup": "generer",
+      "collections": [],
+      "tags": ["automatismes", "livret", "a5", "imprimer", "tous-domaines"],
+      "thumbnail": "assets/img/thumbnails/automatismes/livret-a5.svg?v=1",
+      "cardDescription": "Composer puis imprimer un livret A5 de six blocs pouvant mobiliser tous les domaines."
+    },
     "outils/problemes_barres_M974.html": { "primaryNotion": "schemas-barres", "collections": [], "tags": ["schema-barres", "resolution-problemes", "version-travail"] },
     "outils/nombres_relatifs/nombres_relatifs_somme_difference.html": { "primaryNotion": "relatifs", "collections": [], "tags": ["nombres-relatifs", "plateau-manipulation"] },
     "outils/nombres_relatifs/nombres_relatifs_somme_differenceB.html": { "primaryNotion": "relatifs", "collections": [], "tags": ["nombres-relatifs", "plateau-manipulation"] },
@@ -3373,8 +3389,8 @@ window.MATHSGO_CATALOGUE = {
     },
     {
       "id": "outils-automatismes-cm-livret-a5-html",
-      "title": "Livret de calcul mental A5",
-      "description": "Une ressource maths&go pour travailler calcul mental et automatismes.",
+      "title": "Livret d’automatismes A5",
+      "description": "Un générateur de livret A5 en six blocs, personnalisable avec des automatismes issus de tous les domaines.",
       "path": "outils/automatismes/CM_Livret_A5.html",
       "domains": [
         "nombres-calculs"
