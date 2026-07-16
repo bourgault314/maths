@@ -204,7 +204,7 @@ window.MATHSGO_CATALOGUE = {
       "primaryNotion": "patterns",
       "collections": [],
       "tags": ["patterns", "generalisation", "laboratoire", "regularites", "algebre", "figures"],
-      "thumbnail": "assets/img/thumbnails/patterns.png?v=1",
+      "thumbnail": "assets/img/thumbnails/patterns-card.svg?v=2",
       "cardDescription": "Observer de beaux motifs, prévoir une étape puis généraliser en reliant chaque terme d’une expression au dessin."
     },
     "outils/club_maths/jeu_de_nim.html": {
@@ -3945,7 +3945,7 @@ window.MATHSGO_CATALOGUE = {
       ],
       "filters": [],
       "keywords": [],
-      "thumbnail": "assets/img/thumbnails/patterns.png?v=1",
+      "thumbnail": "assets/img/thumbnails/patterns-card.svg?v=2",
       "cardDescription": "Observer de beaux motifs, prévoir une étape puis généraliser en reliant chaque terme d’une expression au dessin.",
       "kind": "tool",
       "status": "published",
