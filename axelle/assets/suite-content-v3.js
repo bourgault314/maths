@@ -102,14 +102,15 @@
     </svg>`;
 
   const measureMemoVisual = `
-    <svg viewBox="0 0 300 170" role="img" aria-label="Poignée de porte située à environ un mètre du sol et conversion un mètre égale cent centimètres">
+    <svg viewBox="0 0 300 170" role="img" aria-label="Poignée de porte située à environ un mètre du sol, un mètre égale cent centimètres et un kilomètre égale mille mètres">
       <rect x="26" y="12" width="92" height="137" rx="5" fill="#fff" stroke="#0755b8" stroke-width="4"/>
       <circle cx="94" cy="83" r="7" fill="#f97316"/><path d="M12 147V83M6 147h12M6 83h12" stroke="#087a71" stroke-width="4"/>
       <text x="8" y="119" fill="#087a71" font-family="Arial" font-size="16" font-weight="900" transform="rotate(-90 8 119)">environ 1 m</text>
-      <g transform="translate(145 35)" fill="#173a5e" font-family="Arial" text-anchor="middle">
-        <rect width="137" height="84" rx="15" fill="#fff8e8" stroke="#f1bd5a" stroke-width="3"/>
-        <text x="68" y="35" font-size="21" font-weight="900">1 m = 100 cm</text>
-        <text x="68" y="63" font-size="14">un repère à retenir</text>
+      <g transform="translate(139 24)" fill="#173a5e" font-family="Arial" text-anchor="middle">
+        <rect width="151" height="111" rx="15" fill="#fff8e8" stroke="#f1bd5a" stroke-width="3"/>
+        <text x="75" y="34" font-size="19" font-weight="900">1 m = 100 cm</text>
+        <text x="75" y="66" font-size="18" font-weight="900">1 km = 1 000 m</text>
+        <text x="75" y="91" font-size="13">deux égalités à retenir</text>
       </g>
     </svg>`;
 
@@ -119,6 +120,14 @@
       ${Array.from({length: 11}, (_, index) => `<path d="M${60 + index * 38} 52v${index % 5 === 0 ? 48 : 25}" stroke="#9a6200" stroke-width="2"/>`).join("")}
       <text x="60" y="132" fill="#173a5e" font-family="Arial" font-size="17" font-weight="900">0 cm</text>
       <text x="440" y="132" text-anchor="end" fill="#173a5e" font-family="Arial" font-size="17" font-weight="900">100 cm</text>
+    </svg>`;
+
+  const kilometreVisual = `
+    <svg viewBox="0 0 500 180" role="img" aria-label="Un kilomètre correspond à mille mètres">
+      <path d="M64 138 177 42h146l113 96Z" fill="#e8f4ff" stroke="#0755b8" stroke-width="4" stroke-linejoin="round"/>
+      <path d="M250 50v83" stroke="#fff" stroke-width="6" stroke-dasharray="14 12"/>
+      <rect x="145" y="67" width="210" height="66" rx="14" fill="#fff" stroke="#087a71" stroke-width="4"/>
+      <text x="250" y="108" text-anchor="middle" fill="#173a5e" font-family="Arial" font-size="28" font-weight="900">1 km = 1 000 m</text>
     </svg>`;
 
   const doorHandleVisual = `
@@ -207,7 +216,7 @@
       soft: "#f7fee7",
       visual: measureMemoVisual,
       title: "Un mètre est un repère utile",
-      text: "1 m = 100 cm. Une poignée de porte se trouve à environ 1 m du sol : ce repère aide à estimer une longueur avant de la mesurer."
+      text: "1 m = 100 cm et 1 km = 1 000 m. Une poignée de porte se trouve à environ 1 m du sol : ce repère aide à estimer une longueur avant de la mesurer."
     }
   ];
 
@@ -236,14 +245,14 @@
     },
     {
       section: "Fractions",
-      kicker: "Comparer",
-      title: "Quelle quantité est la plus grande ?",
-      prompt: "Observe les deux disques de même taille.",
-      visual: twoDiskVisual({denominator: 12, filledFirst: 8, filledSecond: 9, color: "#a7d8ff", left: "A : deux tiers", right: "B : trois quarts"}),
-      options: [`A : ${stackedFraction(2, 3, "deux tiers")}`, `B : ${stackedFraction(3, 4, "trois quarts")}`, "Elles sont égales", "Impossible à savoir"],
+      kicker: "Nommer une fraction",
+      title: "Quelle fraction du disque est colorée ?",
+      prompt: "Le disque est partagé en 3 parts égales.",
+      visual: diskVisual(3, 2, {color: "#a7d8ff"}),
+      options: [stackedFraction(1, 3, "un tiers"), stackedFraction(2, 3, "deux tiers"), stackedFraction(1, 2, "un demi"), stackedFraction(3, 4, "trois quarts")],
       answer: 1,
-      hint: "Les disques sont partagés ici en douzièmes : compare les zones colorées.",
-      explanation: "Trois quarts est plus grand que deux tiers : le disque B a une part colorée de plus sur douze."
+      hint: "Le dénominateur est le nombre total de parts. Le numérateur est le nombre de parts colorées.",
+      explanation: `Le disque contient 3 parts égales et 2 sont colorées : ${stackedFraction(2, 3, "deux tiers")}. Les autres choix confondent la part blanche, la moitié ou le nombre de quarts.`
     },
     {
       type: "disk-select",
@@ -266,17 +275,6 @@
       answer: 0,
       hint: "Il reste une seule part blanche parmi les quatre parts.",
       explanation: `Il manque 1 part sur 4 : ${stackedFraction(1, 4, "un quart")}. Trois quarts plus un quart font une unité.`
-    },
-    {
-      section: "Fractions",
-      kicker: "Les dixièmes",
-      title: "Quelle écriture à virgule correspond à sept dixièmes ?",
-      prompt: "Le disque est partagé en 10 parts égales.",
-      visual: diskVisual(10, 7, {color: "#c4b5fd"}),
-      options: ["0,07", "0,7", "7,0", "1,7"],
-      answer: 1,
-      hint: "Un dixième vaut 0,1. Sept dixièmes valent donc sept fois 0,1.",
-      explanation: `Sept dixièmes s’écrit ${stackedFraction(7, 10)} ou 0,7.`
     },
     {
       type: "angle-match",
@@ -394,6 +392,17 @@
       answer: 1,
       hint: "Une poignée arrive généralement vers la taille d’un enfant ou d’un adulte.",
       explanation: "Une poignée de porte se trouve à environ 1 m du sol. C’est un bon repère pour estimer des hauteurs."
+    },
+    {
+      section: "Mesures",
+      kicker: "Conversion à connaître",
+      title: "Un kilomètre, c’est combien de mètres ?",
+      prompt: "Choisis l’égalité exacte.",
+      visual: kilometreVisual,
+      options: ["1 km = 100 m", "1 km = 1 000 m", "1 km = 10 000 m", "1 km = 1 m"],
+      answer: 1,
+      hint: "Le préfixe kilo signifie mille.",
+      explanation: "1 km = 1 000 m. Cette conversion est à connaître par cœur."
     },
     {
       section: "Problème",
