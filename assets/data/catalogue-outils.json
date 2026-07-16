@@ -164,7 +164,7 @@
       "path": "outils/labo-des-regularites.html",
       "kind": "tool",
       "status": "work-in-progress",
-      "thumbnail": "assets/img/thumbnails/patterns.png?v=1",
+      "thumbnail": "assets/img/thumbnails/patterns-card.svg?v=2",
       "cardDescription": "Observer de beaux motifs, prévoir une étape puis faire émerger une expression algébrique à partir de la structure.",
       "themes": ["algebre", "problemes"],
       "uses": ["manipuler", "projeter", "entrainer"],
