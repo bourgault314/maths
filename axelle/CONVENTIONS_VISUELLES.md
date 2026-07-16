@@ -196,3 +196,21 @@ Le cours doit être vérifié sur un écran d’ordinateur courant, y compris av
 **Erreur rencontrée :** le carré orange du petit triangle était dessiné en bas à gauche, mais les deux côtés perpendiculaires du triangle se rencontraient en haut à gauche. Le codage était propre graphiquement et pourtant mathématiquement faux.
 
 **Règle :** avant de placer le carré, repérer les deux segments perpendiculaires dans les coordonnées de la figure. Le carré doit toucher leur sommet commun. Une vérification visuelle du carré seul ne suffit pas : il faut suivre les trois côtés du triangle.
+
+### 16. Objet mathématique « angle nommé »
+
+Un angle nommé n’est jamais écrit avec une seule lettre isolée comme `angle A` ou `angle B`.
+
+**Règles obligatoires :**
+
+- utiliser trois lettres, avec le sommet au milieu : `ABC` signifie que le sommet est `B` ;
+- placer un chapeau visible au-dessus des trois lettres ;
+- reporter les trois lettres sur la figure aux bons points ;
+- employer exactement le même objet avec chapeau dans l’énoncé, les réponses, l’aide et la correction ;
+- vérifier le sens de lecture des deux demi-droites avant de publier.
+
+Le composant local actuel est `namedAngle`. Il doit être réutilisé dès qu’un angle est nommé dans une réponse HTML.
+
+### 17. Formulation du cours sur les triangles
+
+La phrase retenue est : **« On observe les codages sur les figures. »** Le mot `codages` est précis et doit remplacer les formulations vagues comme « observe les petits traits ».
