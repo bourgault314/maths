@@ -457,7 +457,7 @@ select { cursor: pointer; }
   display: inline-flex;
   align-items: center;
   flex-wrap: wrap;
-  gap: 2px;
+  gap: 5px;
   max-width: 100%;
   color: var(--muted);
   font-size: .91rem;
@@ -465,12 +465,12 @@ select { cursor: pointer; }
 }
 
 .catalogue-breadcrumb button {
-  min-height: 44px;
-  padding: 8px 10px;
-  border: 0;
-  border-radius: 9px;
+  min-height: 40px;
+  padding: 7px 12px;
+  border: 1px solid #d8e4ef;
+  border-radius: 999px;
   color: var(--blue);
-  background: transparent;
+  background: #f7fafc;
   font-weight: 760;
   text-align: left;
   white-space: normal;
@@ -478,8 +478,29 @@ select { cursor: pointer; }
 
 .catalogue-breadcrumb button:hover,
 .catalogue-breadcrumb button:focus-visible {
+  border-color: #a9c9e8;
   background: #edf5fc;
 }
+
+.breadcrumb-back > svg {
+  width: 18px;
+  height: 18px;
+  margin-right: 4px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 2.2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  transition: transform .16s ease;
+}
+
+.breadcrumb-back {
+  display: inline-flex;
+  align-items: center;
+}
+
+.breadcrumb-back:hover > svg,
+.breadcrumb-back:focus-visible > svg { transform: translateX(-2px); }
 
 .breadcrumb-separator {
   padding-inline: 1px;
@@ -547,14 +568,14 @@ select { cursor: pointer; }
 
 .catalogue-deep-view .hero {
   max-width: none;
-  margin: 0 0 18px;
+  margin: 0 0 14px;
   text-align: left;
 }
 
 .catalogue-deep-view .hero h1 {
   max-width: 900px;
-  font-size: clamp(1.85rem, 3.3vw, 2.65rem);
-  line-height: 1.12;
+  font-size: clamp(1.8rem, 2.7vw, 2.3rem);
+  line-height: 1.1;
   overflow-wrap: anywhere;
 }
 
@@ -585,7 +606,7 @@ select { cursor: pointer; }
 
   body.catalogue-is-deep .brand-link {
     grid-column: 1;
-    width: 112px;
+    width: 104px;
   }
 
   body.catalogue-is-deep .site-header > .catalogue-breadcrumb {
@@ -600,7 +621,7 @@ select { cursor: pointer; }
 
   body.catalogue-is-deep .main-panel {
     margin-bottom: 0;
-    padding-top: 12px;
+    padding-top: 9px;
     border: 0;
     border-radius: 0;
     background: transparent;
@@ -1278,12 +1299,14 @@ select { cursor: pointer; }
 /* Page d'entrée sur ordinateur : l'ancienne composition en deux colonnes,
    resserrée en hauteur sans réduire les illustrations des domaines. */
 @media (min-width: 921px) {
+  body { min-height: calc(100vh - 16px); }
+
   body:not(.catalogue-is-deep) .site-shell {
     position: relative;
+    margin-top: 16px;
     overflow: hidden;
     border: 1px solid rgba(203, 216, 230, 0.9);
-    border-top: 0;
-    border-radius: 0 0 28px 28px;
+    border-radius: 28px;
     background: rgba(255, 255, 255, 0.97);
     box-shadow: var(--shadow);
   }
@@ -1365,6 +1388,10 @@ select { cursor: pointer; }
     height: 58px;
   }
 
+  body:not(.catalogue-is-deep) .domain-card:not(.domain-card-secondary) > .domain-card-icon {
+    transform: translateX(9px);
+  }
+
   body:not(.catalogue-is-deep) [data-domain-card="proportionnalite-mesures"] {
     grid-template-columns: 92px minmax(0, 1fr) 20px;
   }
@@ -1440,15 +1467,15 @@ select { cursor: pointer; }
     padding: 6px 11px;
   }
   body:not(.catalogue-is-deep) .domain-card-icon,
-  body:not(.catalogue-is-deep) .catalogue-shell-icon { width: 66px; height: 54px; }
+  body:not(.catalogue-is-deep) .catalogue-shell-icon { width: 70px; height: 58px; }
   body:not(.catalogue-is-deep) [data-domain-card="proportionnalite-mesures"] {
     grid-template-columns: 86px minmax(0, 1fr) 18px;
   }
   body:not(.catalogue-is-deep) [data-domain-card="proportionnalite-mesures"] .domain-card-icon {
-    width: 84px;
-    height: 56px;
+    width: 90px;
+    height: 60px;
   }
-  body:not(.catalogue-is-deep) [data-domain-card="donnees"] .domain-card-icon { width: 74px; height: 56px; }
+  body:not(.catalogue-is-deep) [data-domain-card="donnees"] .domain-card-icon { width: 78px; height: 60px; }
   body:not(.catalogue-is-deep) .domain-card-copy strong { font-size: 1.01rem; }
   body:not(.catalogue-is-deep) .domain-card-copy small { margin-top: 2px; font-size: .78rem; line-height: 1.18; }
   body:not(.catalogue-is-deep) .domain-card-copy em { margin-top: 2px; font-size: .7rem; }
@@ -1458,7 +1485,7 @@ select { cursor: pointer; }
   }
 }
 
-@media (min-width: 1600px) and (min-height: 900px) {
+@media (min-width: 1600px) and (min-height: 1000px) {
   body:not(.catalogue-is-deep) .site-header { min-height: 76px; padding-inline: 28px; }
   body:not(.catalogue-is-deep) .brand-link { width: 158px; }
   body:not(.catalogue-is-deep) .main-panel { padding: 24px 28px 28px; }
