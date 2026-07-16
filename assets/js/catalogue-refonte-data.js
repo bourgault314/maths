@@ -131,7 +131,7 @@ window.MATHSGO_CATALOGUE = {
       "domain": "algebre",
       "notions": ["calcul-litteral", "equations"],
       "hub": "tuiles_algebriques/index.html",
-      "hiddenFromBrowse": true,
+      "hiddenFromBrowse": false,
       "collapseInNotion": true
     },
     {
@@ -141,7 +141,7 @@ window.MATHSGO_CATALOGUE = {
       "notions": ["calcul-litteral", "equations"],
       "hub": "splat/index.html",
       "featured": true,
-      "hiddenFromBrowse": true,
+      "hiddenFromBrowse": false,
       "collapseInNotion": true
     }
   ],
@@ -153,7 +153,7 @@ window.MATHSGO_CATALOGUE = {
       "primaryGroup": "manipuler",
       "collections": ["tuiles-algebriques"],
       "tags": ["tuiles-algebriques", "expression", "developpement", "reduction", "manipulation"],
-      "thumbnail": "assets/img/thumbnails/tuiles-algebriques/plateau-expressions.png?v=1",
+      "thumbnail": "assets/img/thumbnails/tuiles-algebriques/plateau-expressions.png?v=2",
       "cardDescription": "Composer, ordonner et simplifier des expressions avec les tuiles x², x et 1."
     },
     "outils/tuiles_algebriques/tuiles_algebriques_mode_equation.html": {
@@ -172,7 +172,7 @@ window.MATHSGO_CATALOGUE = {
       "primaryGroup": "manipuler",
       "collections": ["splat"],
       "tags": ["schema-barres", "equation", "inconnue", "splat"],
-      "thumbnail": "assets/img/thumbnails/splat/equabarre.png?v=1",
+      "thumbnail": "assets/img/thumbnails/splat/equabarre.png?v=2",
       "cardDescription": "Représenter une équation par deux schémas en barres et transformer les deux membres pas à pas."
     },
     "outils/equasplat.html": {
@@ -180,7 +180,7 @@ window.MATHSGO_CATALOGUE = {
       "primaryGroup": "manipuler",
       "collections": ["splat"],
       "tags": ["equation", "inconnue", "jetons", "splat"],
-      "thumbnail": "assets/img/thumbnails/splat/equasplat.png?v=1",
+      "thumbnail": "assets/img/thumbnails/splat/equasplat.png?v=2",
       "cardDescription": "Construire une équation avec des taches et des jetons puis agir de la même façon sur les deux membres."
     },
     "outils/gabarits_enquetes_additive.pdf": { "primaryNotion": "schemas-barres", "collections": [], "tags": ["schema-barres", "resolution-problemes", "gabarit"] },
@@ -332,7 +332,7 @@ window.MATHSGO_CATALOGUE = {
       "primaryGroup": "generer",
       "collections": ["splat"],
       "tags": ["splat", "inconnue", "relation", "jetons", "cartes"],
-      "thumbnail": "assets/img/thumbnails/splat/splat.png?v=1",
+      "thumbnail": "assets/img/thumbnails/splat/splat.png?v=2",
       "cardDescription": "Générer des cartes où une tache cache une quantité de jetons et faire raisonner sur l’inconnue."
     },
     "outils/splat_tache_barre.html": {
@@ -340,7 +340,7 @@ window.MATHSGO_CATALOGUE = {
       "primaryGroup": "generer",
       "collections": ["splat"],
       "tags": ["splat", "inconnue", "schema-barres", "fiche", "imprimer"],
-      "thumbnail": "assets/img/thumbnails/splat/petit-splat.png?v=1",
+      "thumbnail": "assets/img/thumbnails/splat/petit-splat.png?v=2",
       "cardDescription": "Composer une fiche de Petits Splats avec jetons cachés et schémas en barres à compléter."
     },
     "outils/splat_equations.html": {
@@ -348,7 +348,7 @@ window.MATHSGO_CATALOGUE = {
       "primaryGroup": "generer",
       "collections": ["splat"],
       "tags": ["schema-barres", "equation", "inconnue", "splat", "cartes"],
-      "thumbnail": "assets/img/thumbnails/splat/splat-equations.png?v=1",
+      "thumbnail": "assets/img/thumbnails/splat/splat-equations.png?v=2",
       "cardDescription": "Générer des cartes d’équations où les deux côtés contiennent des jetons et des quantités cachées."
     },
     "outils/tuiles_algebriques/generateur_exercices_calcul_litteral.html": {
