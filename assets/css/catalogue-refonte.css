@@ -765,9 +765,29 @@ select { cursor: pointer; }
   width: 70px;
   height: 50px;
 }
+[data-domain-card="proportionnalite-mesures"] .domain-card-icon svg {
+  transform: scale(1.08);
+  transform-origin: center;
+}
+[data-domain-card="geometrie"],
+[data-domain-card="donnees"] {
+  grid-template-columns: 72px minmax(0, 1fr) 18px;
+}
+[data-domain-card="geometrie"] .domain-card-icon {
+  width: 72px;
+  height: 54px;
+}
+[data-domain-card="geometrie"] .domain-card-icon svg {
+  transform: scale(1.18);
+  transform-origin: center;
+}
 [data-domain-card="donnees"] .domain-card-icon {
-  width: 64px;
-  height: 48px;
+  width: 68px;
+  height: 54px;
+  justify-self: center;
+}
+[data-domain-card="donnees"] .mathsgo-mosaic-menu-icon {
+  filter: drop-shadow(0 2px 2px rgba(15, 40, 72, .14));
 }
 .domain-card-copy { position: relative; z-index: 1; min-width: 0; }
 .domain-card-copy strong { display: block; color: #16304f; font-size: 1.02rem; line-height: 1.18; }
