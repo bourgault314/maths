@@ -61,7 +61,7 @@ function hasParentNavigation(html, anchors) {
   if (/history\.(?:back|go)\s*\(/i.test(html)) return true;
   return anchors.some(({ attrs, href, text }) => {
     const label = `${attrs} ${text}`.toLowerCase();
-    const explicitLabel = /(retour|accueil|menu|sommaire|index|précédent|precedent|←|🏠|⌂)/i.test(label);
+    const explicitLabel = /(retour|revenir|accueil|menu|sommaire|index|précédent|precedent|←|🏠|⌂)/i.test(label);
     const navigatesElsewhere = href !== "#"
       && !/^javascript:/i.test(href)
       && !/^mailto:/i.test(href);
