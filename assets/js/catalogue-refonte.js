@@ -31,7 +31,7 @@
     algebre: { icon: "splat" },
     "proportionnalite-mesures": { icon: "equal-volume-vase" },
     geometrie: { icon: "seigaiha" },
-    donnees: { icon: "frequencies" },
+    donnees: { icon: "generative:mosaic" },
     informatique: { icon: "koch" },
     "jeux-recherches": { icon: "strategy" },
     cps: { icon: "cps" }
@@ -389,6 +389,21 @@
 
   function icon(name) {
     const icons = window.MATHSGO_ICON_LIBRARY || {};
+    if (name && name.startsWith("generative:")) {
+      const familyId = name.slice("generative:".length);
+      const generator = window.MathsGoGenerativeIcons;
+      if (generator && typeof generator.createSvg === "function") {
+        const svg = generator.createSvg(familyId, {
+          seed: generator.dailySeed(familyId),
+          label: ""
+        });
+        svg.removeAttribute("role");
+        svg.removeAttribute("aria-label");
+        svg.setAttribute("aria-hidden", "true");
+        return svg.outerHTML;
+      }
+      return icons.frequencies;
+    }
     return icons[name] || icons.explorations;
   }
 
