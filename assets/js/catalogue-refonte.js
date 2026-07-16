@@ -380,7 +380,6 @@
     ];
 
     if (selectedDomain && level !== "domain") {
-      parts.push(`<span class="breadcrumb-separator" aria-hidden="true">›</span>`);
       parts.push(`<button type="button" data-breadcrumb-target="domain">${escapeHtml(selectedDomain.title)}</button>`);
     }
 
