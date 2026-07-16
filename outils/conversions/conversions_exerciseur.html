@@ -147,6 +147,36 @@
 
     /* LAYOUT IMPRESSION */
     #printContainer { display: none; width: 100%; max-width: 950px; background: white; }
+    @media screen and (max-width: 700px) {
+      body { padding: 8px; }
+      .config-panel { padding: 12px; border-radius: 10px; }
+      .config-header h2 { font-size: 1.05rem; line-height: 1.25; }
+      .theme-grid { gap: 8px; }
+      .config-col { flex: 1 1 145px !important; min-width: 0 !important; gap: 8px; }
+      .theme-col { padding: 9px; }
+      .theme-col .checkbox-list[style*="grid-template-columns"] { grid-template-columns: 1fr !important; }
+      .bottom-config, .config-options, .btn-wrap, .print-group { width: 100%; }
+      .bottom-config { align-items: stretch; padding: 10px; }
+      .config-options { gap: 10px; }
+      .btn-wrap { align-items: stretch; }
+      .print-group { flex-wrap: wrap; }
+      .btn-main { min-height: 44px; padding: 9px 10px; }
+      .diapo-container { margin-top: 8px; min-height: 0; border-radius: 12px; }
+      .diapo-header { display: grid; grid-template-columns: 44px minmax(70px, 1fr) auto; gap: 6px; padding: 8px; }
+      .diapo-header > div:last-child { gap: 5px !important; min-width: 0; }
+      .btn-nav { min-width: 0; min-height: 44px; padding: 8px; }
+      #btnPrev { width: 44px; overflow: hidden; color: transparent; font-size: 0; }
+      #btnPrev::before { content: "◄"; color: var(--text); font-size: 1rem; }
+      #btnNext { min-width: 0; max-width: 145px; font-size: .76rem; line-height: 1.15; }
+      .slide-counter { font-size: .82rem; text-align: center; }
+      .question-box { padding: 18px 10px 8px; }
+      .question-text { font-size: clamp(1.25rem, 6vw, 1.9rem); line-height: 1.25; }
+      .hint-box, .correction-box { padding-inline: 10px !important; }
+      .correction-text { font-size: clamp(1.15rem, 5.6vw, 1.75rem); }
+      .thumbnails-bar { flex-wrap: nowrap; justify-content: flex-start; overflow-x: auto; }
+      .thumb-btn { flex: 0 0 auto; }
+      .est-assoc-grid { grid-template-columns: 1fr; gap: 10px; padding: 12px; font-size: 1.05rem; }
+    }
     @media print {
       body { background: white; padding: 0; margin: 0; align-items: flex-start; justify-content: center; }
       .config-panel, .diapo-container { display: none !important; }
@@ -173,6 +203,7 @@
   </style>
 <link rel="stylesheet" href="../../assets/css/consentement.css">
 <script defer src="../../assets/js/consentement.js"></script>
+<script defer src="../../assets/js/tool-parent-navigation.js?v=1"></script>
 </head>
 <body>
 

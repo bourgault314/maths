@@ -2,6 +2,7 @@
 <html lang="fr">
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Générateur Rekenrek V25 - Final Clean</title>
     <style>
         /* ---------- CONFIGURATION ---------- */
@@ -201,6 +202,27 @@
         .verso-middle { height: 30%; display: flex; justify-content: center; align-items: center; font-size: 13pt; font-family: 'Comic Sans MS', sans-serif; text-align: center; padding: 0 5px; }
         .verso-bottom { height: 15%; background-color: var(--theme-color) !important; }
 
+        @media screen and (max-width: 700px) {
+            body { padding: 10px; }
+            .settings-panel {
+                grid-template-columns: minmax(0, 1fr);
+                gap: 16px;
+                padding: 14px;
+                margin-bottom: 14px;
+            }
+            .settings-column { border-right: 0; padding-right: 0; }
+            .radio-group { flex-wrap: wrap; }
+            .btn-print { width: 100%; min-height: 46px; padding: 12px 16px; }
+            #preview-area {
+                width: calc(100vw - 20px);
+                overflow-x: auto;
+                align-items: flex-start;
+                overscroll-behavior-inline: contain;
+                -webkit-overflow-scrolling: touch;
+            }
+            .page-a4 { flex: 0 0 auto; }
+        }
+
         @media print {
             @page { size: A4; margin: 0; }
             body { padding: 0; background: none; }
@@ -211,6 +233,7 @@
     </style>
 <link rel="stylesheet" href="../../../assets/css/consentement.css">
 <script defer src="../../../assets/js/consentement.js"></script>
+<script defer src="../../../assets/js/tool-parent-navigation.js?v=1"></script>
 </head>
 <body>
 

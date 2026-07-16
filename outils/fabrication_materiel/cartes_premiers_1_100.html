@@ -2,6 +2,7 @@
 <html lang="fr">
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Générateur de Cartes (Nombres)</title>
     <style>
         /* =========================================================
@@ -159,6 +160,25 @@
             grid-template-columns: repeat(var(--grid-cols), var(--card-width));
             grid-template-rows: repeat(var(--grid-rows), var(--card-height));
             gap: var(--gutter) var(--gutter);
+        }
+
+        @media screen and (max-width: 700px) {
+            body { padding: 10px; }
+            .topbar-nav { margin-bottom: 10px; }
+            .settings-panel { padding: 14px; gap: 16px; margin-bottom: 14px; }
+            .settings-panel h1 { font-size: 18px; margin-bottom: 4px; }
+            .control-group { flex: 1 1 145px; min-width: 0; }
+            .row-inputs { flex-wrap: wrap; }
+            .action-buttons { width: 100%; margin-left: 0; align-self: stretch; }
+            .action-buttons button { flex: 1 1 140px; min-height: 44px; padding: 10px 12px; }
+            #preview-area {
+                width: calc(100vw - 20px);
+                overflow-x: auto;
+                align-items: flex-start;
+                overscroll-behavior-inline: contain;
+                -webkit-overflow-scrolling: touch;
+            }
+            .page-a4 { flex: 0 0 auto; }
         }
 
         /* =========================================================

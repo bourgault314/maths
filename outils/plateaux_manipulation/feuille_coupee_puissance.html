@@ -15,6 +15,8 @@
             --toolbar-bg: #f8fafc;
             --btn-radius: 8px;
             --stack-line: #334155; /* Gris foncé bleuté, très net */
+            --stack-width: min(540px, calc(100vw - 24px));
+            --stack-half: min(270px, calc((100vw - 24px) / 2));
         }
 
         body.dark-mode {
@@ -155,8 +157,7 @@
         /* --- CONFIGURATION DES FEUILLES --- */
         .line-pack {
             position: relative;
-            /* LARGEUR AUGMENTÉE (était 300px) */
-            width: 540px; 
+            width: var(--stack-width);
             display: flex; flex-direction: column-reverse; /* Empile vers le haut */
         }
 
@@ -175,14 +176,14 @@
         .stack-anim-container {
             position: absolute; bottom: 0; left: 50%;
             transform: translateX(-50%);
-            width: 540px; /* Doit matcher line-pack */
+            width: var(--stack-width);
             height: auto;
             display: flex; align-items: flex-end; justify-content: center;
             pointer-events: none;
         }
 
         .anim-half {
-            width: 270px; /* Moitié de 540px */
+            width: var(--stack-half);
             display: flex; flex-direction: column-reverse;
             position: relative;
         }
@@ -194,7 +195,7 @@
         @keyframes liftOver {
             0% { transform: translate(0, 0); }
             50% { transform: translate(0, -110%); } 
-            100% { transform: translate(-270px, -100%); } /* -270px pour poser pile dessus */
+            100% { transform: translate(calc(0px - var(--stack-half)), -100%); }
         }
 
         .stack-meta {
@@ -277,6 +278,51 @@
             border-radius: 8px;
             height: 80px;
             margin: 8px 0 16px 0;
+        }
+
+        @media screen and (max-width: 700px) {
+            body { height: 100dvh; }
+            .toolbar {
+                height: auto;
+                min-height: 0;
+                padding: 6px 8px;
+                gap: 6px;
+                flex-wrap: wrap;
+            }
+            .stats-group {
+                width: 100%;
+                justify-content: space-between;
+                gap: 6px;
+            }
+            .stat-box { min-width: 0; }
+            .stat-label { font-size: .66rem; }
+            .stat-val { font-size: clamp(1.1rem, 5.3vw, 1.45rem); }
+            .actions-group {
+                width: 100%;
+                gap: 6px;
+                overflow-x: auto;
+                overscroll-behavior-inline: contain;
+                padding-bottom: 2px;
+            }
+            .actions-group button {
+                flex: 0 0 auto;
+                min-height: 42px;
+                padding: 8px 10px;
+                font-size: .82rem;
+            }
+            .btn-cut { padding-inline: 16px !important; }
+            .visual-area { padding: 6px; }
+            .stack-wrap { gap: 10px; padding: 4px; }
+            #stack-drawing { height: 61dvh; }
+            .stack-meta { padding: 7px 14px; max-width: calc(100vw - 20px); }
+            .stack-count { font-size: 1.35rem; }
+            .stack-sub { font-size: .85rem; }
+            .modal-overlay { padding: 10px; }
+            .modal-content { width: 100%; padding: 56px 12px 16px; }
+            .close-modal { top: 10px; right: 10px; width: 44px; height: 44px; font-size: 2rem; }
+            .print-actions { grid-template-columns: 1fr; }
+            .print-actions .print-btn-small,
+            .print-actions .print-btn { width: 100%; justify-self: stretch !important; }
         }
 
 
@@ -429,6 +475,7 @@
     </style>
 <link rel="stylesheet" href="../../assets/css/consentement.css">
 <script defer src="../../assets/js/consentement.js"></script>
+<script defer src="../../assets/js/tool-parent-navigation.js?v=1"></script>
 </head>
 <body>
 
