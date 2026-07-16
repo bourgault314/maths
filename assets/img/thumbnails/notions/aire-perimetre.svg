@@ -1,0 +1,16 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 720 320">
+  <defs><pattern id="grid" width="34" height="34" patternUnits="userSpaceOnUse"><path d="M34 0H0V34" fill="none" stroke="#b8c5d1" stroke-width="1"/></pattern></defs>
+  <rect width="720" height="320" fill="#f7fafc"/>
+  <rect x="22" y="18" width="676" height="284" rx="21" fill="#fff" stroke="#d8e1e8"/>
+  <text x="48" y="53" fill="#173e49" font-family="system-ui,sans-serif" font-size="22" font-weight="750">Aire et périmètre</text>
+  <g font-family="system-ui,sans-serif" font-weight="700">
+    <rect x="438" y="27" width="110" height="40" rx="20" fill="#eff9f8" stroke="#cce9e5"/><text x="493" y="53" fill="#13877d" font-size="16" text-anchor="middle">Aire 14 u.a</text>
+    <rect x="558" y="27" width="115" height="40" rx="20" fill="#fff1f2" stroke="#ffd4d9"/><text x="615" y="53" fill="#d84659" font-size="16" text-anchor="middle">Périm. 18 u.l</text>
+  </g>
+  <rect x="96" y="79" width="528" height="204" rx="9" fill="url(#grid)" stroke="#718291"/>
+  <g fill="#60a5fa" fill-opacity=".78" stroke="#2563eb" stroke-width="2">
+    <rect x="266" y="113" width="34" height="34"/><rect x="300" y="113" width="34" height="34"/><rect x="334" y="113" width="34" height="34"/><rect x="368" y="113" width="34" height="34"/>
+    <rect x="232" y="147" width="34" height="34"/><rect x="266" y="147" width="34" height="34"/><rect x="300" y="147" width="34" height="34"/><rect x="334" y="147" width="34" height="34"/><rect x="368" y="147" width="34" height="34"/><rect x="402" y="147" width="34" height="34"/>
+    <rect x="266" y="181" width="34" height="34"/><rect x="300" y="181" width="34" height="34"/><rect x="334" y="181" width="34" height="34"/><rect x="368" y="181" width="34" height="34"/>
+  </g>
+</svg>
