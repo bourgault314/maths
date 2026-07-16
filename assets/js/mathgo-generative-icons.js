@@ -2,7 +2,7 @@
   "use strict";
 
   const SVG_NS = "http://www.w3.org/2000/svg";
-  const VERSION = "1.0.0";
+  const VERSION = "2026.07.16-truchet";
   const DEFAULT_THEME = Object.freeze({
     card: "#ffffff",
     border: "#d9e5ee",
@@ -417,7 +417,138 @@
     });
   }
 
+
+  function drawTruchet(svg, rng, uid, theme) {
+    const group = addClip(svg, uid + "-clip", 31);
+    const cells = 4;
+    const min = 16;
+    const side = 32;
+    const radius = side / 2;
+    const max = min + cells * side;
+    const paletteShift = Math.floor(rng() * theme.palette.length);
+    const orientations = [];
+    const segments = [];
+
+    add(group, "rect", { x: 11, y: 11, width: 138, height: 138, rx: 31, fill: theme.muted });
+
+    const grid = add(group, "g", {
+      fill: "none",
+      stroke: theme.border,
+      "stroke-width": .8,
+      opacity: .38
+    });
+    for (let index = 1; index < cells; index += 1) {
+      const position = min + index * side;
+      add(grid, "path", { d: "M " + position + " " + min + " V " + max });
+      add(grid, "path", { d: "M " + min + " " + position + " H " + max });
+    }
+
+    function tileParts(column, row, orientation) {
+      const x = min + column * side;
+      const y = min + row * side;
+      if (orientation === 0) {
+        return [
+          { ports: ["T", "L"], d: "M " + (x + radius) + " " + y + " A " + radius + " " + radius + " 0 0 1 " + x + " " + (y + radius) },
+          { ports: ["R", "B"], d: "M " + (x + side) + " " + (y + radius) + " A " + radius + " " + radius + " 0 0 0 " + (x + radius) + " " + (y + side) }
+        ];
+      }
+      return [
+        { ports: ["T", "R"], d: "M " + (x + radius) + " " + y + " A " + radius + " " + radius + " 0 0 0 " + (x + side) + " " + (y + radius) },
+        { ports: ["L", "B"], d: "M " + x + " " + (y + radius) + " A " + radius + " " + radius + " 0 0 1 " + (x + radius) + " " + (y + side) }
+      ];
+    }
+
+    for (let row = 0; row < cells; row += 1) {
+      orientations[row] = [];
+      segments[row] = [];
+      for (let column = 0; column < cells; column += 1) {
+        const orientation = rng() < .5 ? 0 : 1;
+        orientations[row][column] = orientation;
+        segments[row][column] = tileParts(column, row, orientation);
+      }
+    }
+
+    const boundary = [];
+    for (let column = 0; column < cells; column += 1) {
+      boundary.push([column, 0, "T"], [column, cells - 1, "B"]);
+    }
+    for (let row = 0; row < cells; row += 1) {
+      boundary.push([0, row, "L"], [cells - 1, row, "R"]);
+    }
+
+    let cursor = boundary[Math.floor(rng() * boundary.length)].slice();
+    const highlighted = new Set();
+    const moves = {
+      T: [0, -1, "B"],
+      R: [1, 0, "L"],
+      B: [0, 1, "T"],
+      L: [-1, 0, "R"]
+    };
+
+    while (cursor[0] >= 0 && cursor[0] < cells && cursor[1] >= 0 && cursor[1] < cells) {
+      const column = cursor[0];
+      const row = cursor[1];
+      const entering = cursor[2];
+      const partIndex = segments[row][column].findIndex(function (part) {
+        return part.ports.indexOf(entering) !== -1;
+      });
+      if (partIndex < 0) break;
+
+      const key = column + ":" + row + ":" + partIndex;
+      if (highlighted.has(key)) break;
+      highlighted.add(key);
+
+      const leaving = segments[row][column][partIndex].ports.find(function (port) {
+        return port !== entering;
+      });
+      const move = moves[leaving];
+      cursor = [column + move[0], row + move[1], move[2]];
+    }
+
+    for (let row = 0; row < cells; row += 1) {
+      for (let column = 0; column < cells; column += 1) {
+        segments[row][column].forEach(function (part, partIndex) {
+          add(group, "path", {
+            d: part.d,
+            fill: "none",
+            stroke: colorAt(theme, paletteShift + orientations[row][column]),
+            "stroke-width": 4.6,
+            "stroke-linecap": "round"
+          });
+          if (highlighted.has(column + ":" + row + ":" + partIndex)) {
+            add(group, "path", {
+              d: part.d,
+              fill: "none",
+              stroke: "#f58220",
+              "stroke-width": 6.2,
+              "stroke-linecap": "round",
+              "stroke-linejoin": "round"
+            });
+          }
+        });
+      }
+    }
+
+    add(group, "rect", {
+      x: min,
+      y: min,
+      width: cells * side,
+      height: cells * side,
+      fill: "none",
+      stroke: theme.border,
+      "stroke-width": 1.5
+    });
+  }
+
   const FAMILY_DEFINITIONS = [
+    {
+      id: "truchet",
+      name: "Pavage de Truchet",
+      note: "quarts de cercle · connexions · hasard",
+      rule: "Une grille 4 × 4 est remplie de tuiles orientées au hasard ; chaque trait est un quart de cercle exact dont le rayon vaut la moitié du côté d’une tuile.",
+      question: "Quels chemins sortent du cadre et lesquels forment une boucle ?",
+      draw: drawTruchet
+    },
     {
       id: "petals",
       name: "Rosace indocile",
