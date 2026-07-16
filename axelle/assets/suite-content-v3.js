@@ -352,7 +352,7 @@
       title: "Quel angle est représenté ?",
       prompt: "Observe le petit carré orange.",
       visual: `<svg viewBox="0 0 500 210" role="img" aria-label="Angle tourné à identifier"><g transform="translate(155 4) rotate(43 70 80) scale(1.6)" class="angle-lines">${angleDrawing("right").replace(/<\/?g[^>]*>/g, "")}</g></svg>`,
-      options: ["Angle aigu", "Angle droit", "Angle obtus", "Carré"],
+      options: ["Angle aigu", "Angle droit", "Angle obtus", "Angle plat"],
       answer: 1,
       hint: "Le petit carré est le code de l’angle droit.",
       explanation: "Le petit carré orange code un angle droit."
@@ -361,13 +361,13 @@
       section: "Angles",
       kicker: "Comparer des ouvertures",
       title: "Quel angle est le plus grand ?",
-      prompt: "Ne regarde pas la longueur des côtés : compare seulement l’ouverture.",
+      prompt: "Compare les deux ouvertures indiquées par les arcs orange.",
       visual: `<svg viewBox="0 0 500 220" role="img" aria-label="Les angles ABC et DEF sont à comparer">
-        <g fill="none" stroke="#2563eb" stroke-width="8" stroke-linecap="round" stroke-linejoin="round"><path d="M125 142H52M125 142 190 92"/><path d="M335 142H448M335 142 288 58"/></g>
-        <g fill="none" stroke="#f97316" stroke-width="5"><path d="M94 142A31 31 0 0 1 102 123"/><path d="M372 142A37 37 0 0 0 317 110"/></g>
-        <g class="svg-label" font-size="18"><text x="35" y="160">A</text><text x="118" y="169">B</text><text x="194" y="88">C</text><text x="275" y="53">D</text><text x="327" y="169">E</text><text x="454" y="160">F</text></g>
+        <g fill="none" stroke="#2563eb" stroke-width="8" stroke-linecap="round" stroke-linejoin="round"><path d="M140 150H45M140 150 78 78"/><path d="M350 150H455M350 150 315 65"/></g>
+        <g fill="none" stroke="#f97316" stroke-width="5" stroke-linecap="round"><path d="M105 150A35 35 0 0 1 117 124"/><path d="M385 150A35 35 0 0 0 337 118"/></g>
+        <g class="svg-label" font-size="18"><text x="28" y="169">A</text><text x="133" y="178">B</text><text x="67" y="72">C</text><text x="303" y="60">D</text><text x="343" y="178">E</text><text x="462" y="169">F</text></g>
       </svg>`,
-      options: [`L’angle ${namedAngle("ABC")}`, `L’angle ${namedAngle("DEF")}`, "Ils sont égaux", "Le plus long côté gagne"],
+      options: [`L’angle ${namedAngle("ABC")}`, `L’angle ${namedAngle("DEF")}`, "Ils ont la même ouverture"],
       answer: 1,
       hint: `Compare l’ouverture de ${namedAngle("ABC")} et celle de ${namedAngle("DEF")}.`,
       explanation: `L’angle ${namedAngle("DEF")} est plus ouvert : il est donc plus grand. La longueur des côtés n’a aucune importance.`
@@ -387,15 +387,16 @@
       type: "splat-table",
       section: "Splat",
       kicker: "Organiser les informations",
-      title: "Complète le tableau du Splat",
-      prompt: "Place 9, ? et 15 au bon endroit.",
-      visible: 9,
-      total: 15,
-      hidden: 6,
-      options: ["5", "6", "7", "9"],
-      answer: 1,
-      hint: "9 jetons sont visibles. Le Splat cache les autres. Il y a 15 jetons en tout.",
-      explanation: "9 jetons sont visibles, 6 sont cachés et il y en a 15 en tout : 9 + 6 = 15."
+      title: "Construis le schéma en barres du Splat",
+      prompt: "On voit les jetons 3 et 4. Il y a 19 en tout.",
+      displayValues: [3, 4],
+      visible: 7,
+      total: 19,
+      hidden: 12,
+      options: ["10", "11", "12", "13"],
+      answer: 2,
+      hint: "3 + 4 = 7. Dans le schéma en barres, place 19 dans le tout, puis 7 et ? dans les deux parties.",
+      explanation: "Les jetons visibles valent 3 + 4 = 7. Le Splat cache 19 − 7 = 12. Le schéma représente 7 + 12 = 19."
     },
     {
       section: "Triangles",
