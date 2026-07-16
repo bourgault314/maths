@@ -131,7 +131,8 @@ window.MATHSGO_CATALOGUE = {
       "domain": "algebre",
       "notions": ["calcul-litteral", "equations"],
       "hub": "tuiles_algebriques/index.html",
-      "hiddenFromBrowse": true
+      "hiddenFromBrowse": true,
+      "collapseInNotion": true
     },
     {
       "id": "splat",
@@ -139,7 +140,9 @@ window.MATHSGO_CATALOGUE = {
       "domain": "algebre",
       "notions": ["calcul-litteral", "equations"],
       "hub": "splat/index.html",
-      "featured": true
+      "featured": true,
+      "hiddenFromBrowse": true,
+      "collapseInNotion": true
     }
   ],
   "resourceClassifications": {

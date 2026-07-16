@@ -593,6 +593,16 @@
     });
   }
 
+  function matchingNotionCollections(notionId) {
+    if (!notionId) return [];
+    return (catalogue.collections || []).filter((collection) => (
+      !collection.parent
+      && collection.collapseInNotion
+      && (collection.notions || []).includes(notionId)
+      && collectionResourceCount(collection.id) > 0
+    ));
+  }
+
   function childCollections(collectionId) {
     return (catalogue.collections || []).filter((collection) => (
       collection.parent === collectionId && collectionResourceCount(collection.id) > 0
@@ -738,7 +748,7 @@
     </details>`;
   }
 
-  function renderResources(resources, directCollections = []) {
+  function renderResources(resources, directCollections = [], directTitle = "Accès direct") {
     domainGrid.hidden = true;
     notionGrid.hidden = true;
     resourceGrid.hidden = false;
@@ -751,7 +761,7 @@
     const directAccess = directCollections.length
       ? `<section class="search-direct" aria-labelledby="search-direct-title">
         <div class="resource-group-heading">
-          <h2 id="search-direct-title">Accès direct</h2>
+          <h2 id="search-direct-title">${escapeHtml(directTitle)}</h2>
         </div>
         <div class="search-direct-grid">${directCollections.map((collection) => {
           const design = collectionDesign[collection.id] || {};
@@ -823,8 +833,10 @@
       }
 
       const resources = matchingResources();
-      const directCollections = state.query ? matchingSearchCollections() : [];
-      renderResources(resources, directCollections);
+      const directCollections = selectedNotion
+        ? matchingNotionCollections(selectedNotion.id)
+        : (state.query ? matchingSearchCollections() : []);
+      renderResources(resources, directCollections, selectedNotion ? "Choisir une famille" : "Accès direct");
 
       if (selectedCollection) {
         pageTitle.textContent = selectedCollection.title;
@@ -841,7 +853,9 @@
       }
 
       summary.textContent = [
-        directCollections.length ? `${directCollections.length} accès direct${directCollections.length > 1 ? "s" : ""}` : "",
+        directCollections.length
+          ? `${directCollections.length} ${selectedNotion ? `famille${directCollections.length > 1 ? "s" : ""}` : `accès direct${directCollections.length > 1 ? "s" : ""}`}`
+          : "",
         `${resourceDisplayCount(resources)} entrée${resourceDisplayCount(resources) > 1 ? "s" : ""}`
       ].filter(Boolean).join(" · ");
       return;
