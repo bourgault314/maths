@@ -1,0 +1,124 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>L’épreuve de Jacquie | maths&amp;go</title>
+  <meta name="description" content="Vingt questions de français, de théâtre et de haute surveillance grammaticale pour Jacquie.">
+  <meta name="robots" content="noindex, nofollow">
+  <link rel="stylesheet" href="assets/styles.css?v=20260716-1">
+  <script defer src="assets/content.js?v=20260716-1"></script>
+  <script defer src="assets/app.js?v=20260716-1"></script>
+</head>
+<body>
+  <main class="app-shell">
+    <header class="app-header">
+      <button id="brand-home-button" class="brand-home-button" type="button" aria-label="Revenir à l’accueil de l’espace de Jacquie">
+        <img class="brand-logo" src="/assets/img/mathsgo-logo.png" alt="maths&go" width="1338" height="622">
+      </button>
+      <button id="space-home-button" class="space-name" type="button" aria-label="Revenir à l’accueil de Jacquie">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m3 11 9-8 9 8v9a1 1 0 0 1-1 1h-5v-7H9v7H4a1 1 0 0 1-1-1Z"/></svg>
+        <span>Accueil de Jacquie</span>
+      </button>
+    </header>
+
+    <section id="welcome-screen" class="screen welcome-screen" aria-labelledby="welcome-title">
+      <div class="welcome-copy">
+        <p class="eyebrow">Évaluation diagnostique hautement réglementaire</p>
+        <h1 id="welcome-title">Le petit contrôle de Jacquie</h1>
+        <p class="lead">Une agrégation ne dispense malheureusement pas du contrôle continu. Français, théâtre, nouveau programme et mathématiques de haute voltige&nbsp;: le jury sera intraitable, mais poli.</p>
+        <div class="session-facts" aria-label="Informations sur l’activité">
+          <span><b>20</b> questions</span>
+          <span><b>5</b> choses à mémoriser</span>
+          <span>Coefficient démesuré</span>
+        </div>
+        <button id="start-button" class="primary-button" type="button">
+          <span>Passer l’épreuve</span><span aria-hidden="true">→</span>
+        </button>
+      </div>
+      <div class="welcome-scene" aria-hidden="true">
+        <svg viewBox="0 0 440 340">
+          <path d="M38 178C24 94 96 28 181 46c61 13 96-27 158 10 72 43 77 145 17 202-49 47-119 8-175 23-72 19-132-40-143-103Z" fill="#fff8ef" stroke="#ead8c4" stroke-width="2"/>
+          <path d="M56 247c58-41 250-40 323 3" fill="none" stroke="#c9a26a" stroke-width="6" stroke-linecap="round"/>
+          <g transform="translate(73 78) rotate(-5 102 72)">
+            <rect width="204" height="144" rx="15" fill="#fff" stroke="#d5c4b1" stroke-width="3"/>
+            <text x="102" y="35" text-anchor="middle" fill="#7c2d52" font-family="Georgia,serif" font-size="18" font-weight="700">CONTRÔLE SURPRISE</text>
+            <path d="M25 55h154M25 78h154M25 101h103" stroke="#e7ddd2" stroke-width="3" stroke-linecap="round"/>
+            <text x="102" y="129" text-anchor="middle" fill="#183b5b" font-family="Arial" font-size="25" font-weight="900">agrégée ≠ dispensée</text>
+          </g>
+          <g transform="translate(275 78)">
+            <path d="M11 97 67 4l56 93Z" fill="#7c2d52" stroke="#4c1731" stroke-width="3"/>
+            <path d="M24 98h86v82H24Z" fill="#9a3e67" stroke="#4c1731" stroke-width="3"/>
+            <path d="M58 180v-48h20v48" fill="#2a1830"/>
+            <path d="M40 98v-21M68 98v-21M96 98v-21" stroke="#f6d18b" stroke-width="5"/>
+            <circle cx="68" cy="44" r="11" fill="#f6d18b"/>
+          </g>
+          <g transform="translate(233 236)">
+            <path d="M0 31c22-28 53-30 73 0-20 9-50 9-73 0Z" fill="#ef476f" stroke="#a9183c" stroke-width="3"/>
+            <path d="M36 1v31" stroke="#2f855a" stroke-width="5" stroke-linecap="round"/>
+            <path d="M36 8c14-11 24-7 27 2-10 5-20 4-27-2Z" fill="#58a96d"/>
+          </g>
+        </svg>
+      </div>
+    </section>
+
+    <section id="memo-screen" class="screen memo-screen" hidden aria-labelledby="memo-title">
+      <div class="screen-heading">
+        <p class="eyebrow">Leçon à apprendre avant l’interrogation</p>
+        <h1 id="memo-title">Cinq nouveautés à mémoriser</h1>
+        <p>Elles viennent vraiment du nouveau programme de français du cycle&nbsp;4. Oui, le contrôle commence juste après. Non, le syndicat n’a pas été prévenu.</p>
+      </div>
+      <div id="memo-grid" class="memo-grid"></div>
+      <div class="source-note">
+        Sources officielles&nbsp;: <a href="https://www.education.gouv.fr/bo/2026/Hebdo10/MENE2602912A" target="_blank" rel="noopener">BO du 5 mars 2026</a> et <a href="https://eduscol.education.gouv.fr/5733/ressources-d-accompagnement-du-programme-de-francais-au-cycle-4" target="_blank" rel="noopener">Éduscol</a>.
+      </div>
+      <button id="memo-button" class="primary-button centered-button" type="button">
+        <span>J’ai tout retenu, évidemment</span><span aria-hidden="true">→</span>
+      </button>
+    </section>
+
+    <section id="quiz-screen" class="screen quiz-screen" hidden aria-labelledby="question-title">
+      <div class="progress-head">
+        <span id="section-label" class="section-label">Programme</span>
+        <span id="question-count">Question 1 sur 20</span>
+      </div>
+      <div class="progress-track" aria-hidden="true"><span id="progress-bar"></span></div>
+
+      <article class="question-card">
+        <div id="question-visual" class="question-visual"></div>
+        <p id="question-kicker" class="question-kicker"></p>
+        <h1 id="question-title"></h1>
+        <p id="question-prompt" class="question-prompt"></p>
+        <div id="answers" class="answers" role="group" aria-label="Réponses proposées"></div>
+        <button id="hint-button" class="hint-button" type="button">Demander au souffleur</button>
+        <div id="hint-box" class="hint-box" hidden></div>
+        <div id="feedback" class="feedback" hidden aria-live="polite"></div>
+        <button id="next-button" class="primary-button next-button" type="button" hidden>
+          <span>Question suivante</span><span aria-hidden="true">→</span>
+        </button>
+      </article>
+    </section>
+
+    <section id="finish-screen" class="screen finish-screen" hidden aria-labelledby="finish-title">
+      <div class="finish-mark" aria-hidden="true">20</div>
+      <p class="eyebrow">Délibération du jury</p>
+      <h1 id="finish-title">Copie de Jacquie</h1>
+      <p id="finish-message" class="finish-message"></p>
+      <div class="finish-summary">
+        <div><strong id="final-score">0/20</strong><span>note officielle</span></div>
+        <div><strong id="final-rank">En progrès</strong><span>avis du conseil</span></div>
+      </div>
+      <p class="result-detail">Les explications apparaissent après chaque réponse&nbsp;: même les erreurs rapportent donc quelque chose, ce qui est scandaleusement pédagogique.</p>
+      <div class="finish-actions">
+        <button id="restart-button" class="primary-button" type="button">Repasser l’agrégation</button>
+        <a class="bonus-button" href="rappels.html">
+          <span class="bonus-icon" aria-hidden="true">🌹</span>
+          <span class="bonus-copy"><span>Réclamer ses rappels</span><small>Attraper les roses, éviter les tomates</small></span>
+        </a>
+      </div>
+    </section>
+  </main>
+
+  <footer>Une plaisanterie pédagogique maths&amp;go · aucun résultat n’est envoyé · aucune agrégation n’a été maltraitée</footer>
+</body>
+</html>
