@@ -132,7 +132,7 @@
       description: "Observer, prolonger et généraliser des motifs.",
       keywords: "suite motif algèbre généralisation",
       icon: "patterns",
-      hub: "patterns.html"
+      hub: "labo-des-regularites.html"
     },
     angles: {
       description: "Mesurer, construire et manipuler les angles.",
