@@ -338,6 +338,8 @@ window.MATHSGO_CATALOGUE = {
       "id": "plateaux-nombres-relatifs",
       "title": "Plateaux de manipulation",
       "description": "Choisir le plateau de nombres relatifs.",
+      "cardDescription": "Manipuler les jetons, former des paires zéro, additionner et soustraire.",
+      "thumbnail": "assets/img/thumbnails/relatifs/plateaux-relatifs.png?v=1",
       "group": "manipuler",
       "labels": {
         "outils/nombres_relatifs/nombres_relatifs_somme_difference.html": "Version A — addition et soustraction",
@@ -358,6 +360,8 @@ window.MATHSGO_CATALOGUE = {
       "id": "cours-nombres-relatifs",
       "title": "Cours imprimables — nombres relatifs",
       "description": "Choisir la version graphique du cours.",
+      "cardDescription": "Le même recueil avec plusieurs styles de jetons.",
+      "thumbnail": "assets/img/thumbnails/relatifs/cours-relatifs.png?v=1",
       "group": "cours",
       "labels": {
         "outils/nombres_relatifs/nombres_relatifs_couleur_mathsgo.pdf": "Couleurs maths&go",
