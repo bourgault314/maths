@@ -176,21 +176,87 @@ window.MATHSGO_CATALOGUE = {
     "outils/tuiles_algebriques/generateur_tuiles.html": { "primaryNotion": "calcul-litteral", "collections": ["tuiles-algebriques"], "tags": ["tuiles-algebriques"] },
     "outils/fractions_multiples_problemes.pdf": {
       "primaryNotion": "fractions",
+      "primaryGroup": "activites",
       "collections": [],
-      "tags": ["fractions", "multiples", "divisibilite", "problemes"]
+      "tags": ["fractions", "multiples", "divisibilite", "problemes"],
+      "thumbnail": "assets/img/thumbnails/fractions/fractions-multiples-problemes.png?v=1",
+      "cardDescription": "Résoudre et inventer des problèmes de fractions d’une quantité à partir de schémas en barres."
     },
     "outils/fractions_multiples_exerciseur.html": {
       "primaryNotion": "fractions",
+      "primaryGroup": "generer",
       "collections": [],
-      "tags": ["fractions", "multiples", "divisibilite", "exerciseur"]
+      "tags": ["fractions", "multiples", "divisibilite", "exerciseur"],
+      "thumbnail": "assets/img/thumbnails/fractions/generateur-fractions-multiples.png?v=1",
+      "cardDescription": "Composer un diaporama ou une fiche sur les parts, les multiples et les fractions d’une quantité."
     },
     "outils/multiples_et_fractions_d_une_quantite.pdf": {
       "primaryNotion": "fractions",
+      "primaryGroup": "imprimer",
       "collections": [],
-      "tags": ["fractions", "multiples", "divisibilite", "quantite"]
+      "tags": ["fractions", "multiples", "divisibilite", "quantite"],
+      "thumbnail": "assets/img/thumbnails/fractions/fractions-quantite.png?v=1",
+      "cardDescription": "Modéliser une fraction d’une quantité avec des schémas en barres à observer et à compléter."
+    },
+    "outils/fractions/fractions_produit_manipulation.html": {
+      "primaryNotion": "fractions",
+      "primaryGroup": "manipuler",
+      "collections": [],
+      "tags": ["fractions", "produit", "aire", "manipulation"],
+      "thumbnail": "assets/img/thumbnails/fractions/produit-fractions.png?v=1",
+      "cardDescription": "Visualiser le produit de deux fractions en superposant des partages horizontaux et verticaux."
+    },
+    "outils/fractions/gabarits_fractions.pdf": {
+      "primaryNotion": "fractions",
+      "primaryGroup": "imprimer",
+      "collections": [],
+      "tags": ["fractions", "gabarits", "bandes", "imprimer"],
+      "thumbnail": "assets/img/thumbnails/fractions/gabarits-fractions.png?v=1",
+      "cardDescription": "Imprimer des bandes de fractions colorées et une version à compléter."
+    },
+    "outils/fractions/disque_maker.html": {
+      "primaryNotion": "fractions",
+      "primaryGroup": "generer",
+      "collections": [],
+      "tags": ["fractions", "disques", "generateur", "imprimer"],
+      "thumbnail": "assets/img/thumbnails/fractions/generateur-disques.png?v=1",
+      "cardDescription": "Créer des disques fractionnaires personnalisés prêts à imprimer et à découper."
+    },
+    "outils/fractions/bandes_maker_v2.html": {
+      "primaryNotion": "fractions",
+      "primaryGroup": "generer",
+      "collections": [],
+      "tags": ["fractions", "bandes", "generateur", "imprimer"],
+      "thumbnail": "assets/img/thumbnails/fractions/generateur-bandes.png?v=1",
+      "cardDescription": "Créer des bandes fractionnaires recto verso avec les dénominateurs et couleurs choisis."
+    },
+    "outils/fractions/mur_fractions.html": {
+      "primaryNotion": "fractions",
+      "primaryGroup": "manipuler",
+      "collections": [],
+      "tags": ["fractions", "mur", "equivalences", "comparaison"],
+      "thumbnail": "assets/img/thumbnails/fractions/mur-fractions.png?v=1",
+      "cardDescription": "Construire un mur de fractions pour comparer les parts et repérer des équivalences."
+    },
+    "outils/fractions/bandes_fractions.html": {
+      "primaryNotion": "fractions",
+      "primaryGroup": "manipuler",
+      "collections": [],
+      "tags": ["fractions", "bandes", "manipulation"],
+      "thumbnail": "assets/img/thumbnails/fractions/bandes-fractions.png?v=1",
+      "cardDescription": "Manipuler des bandes fractionnaires et composer des égalités de longueurs."
+    },
+    "outils/fractions/disques_fractions.html": {
+      "primaryNotion": "fractions",
+      "primaryGroup": "manipuler",
+      "collections": [],
+      "tags": ["fractions", "disques", "manipulation"],
+      "thumbnail": "assets/img/thumbnails/fractions/disques-fractions.png?v=1",
+      "cardDescription": "Assembler et comparer des secteurs de disques pour représenter des fractions."
     },
     "outils/fabrication_materiel/cartes_premiers_1_100.html": {
       "primaryNotion": "divisibilite",
+      "primaryGroup": "generer",
       "collections": [],
       "tags": ["divisibilite", "nombres-premiers", "decomposition", "diviseurs", "cartes"],
       "thumbnail": "assets/img/thumbnails/divisibilite/cartes-nombres.png?v=1",
@@ -198,6 +264,7 @@ window.MATHSGO_CATALOGUE = {
     },
     "outils/fabrication_materiel/grille_de_nombres.html": {
       "primaryNotion": "divisibilite",
+      "primaryGroup": "generer",
       "collections": [],
       "tags": ["divisibilite", "grille", "crible", "nombres-entiers"],
       "thumbnail": "assets/img/thumbnails/divisibilite/grille-numerique.png?v=1",
@@ -205,6 +272,7 @@ window.MATHSGO_CATALOGUE = {
     },
     "outils/plateaux_manipulation/mur_diviseurs.html": {
       "primaryNotion": "divisibilite",
+      "primaryGroup": "manipuler",
       "collections": [],
       "tags": ["divisibilite", "diviseurs", "multiplication", "mur"],
       "thumbnail": "assets/img/thumbnails/divisibilite/mur-diviseurs.png?v=1",
@@ -212,6 +280,7 @@ window.MATHSGO_CATALOGUE = {
     },
     "outils/plateaux_manipulation/mur_diviseurs_pgcd.html": {
       "primaryNotion": "divisibilite",
+      "primaryGroup": "manipuler",
       "collections": [],
       "tags": ["divisibilite", "diviseurs-communs", "pgcd", "mur"],
       "thumbnail": "assets/img/thumbnails/divisibilite/mur-diviseurs-pgcd.png?v=1",
@@ -219,6 +288,7 @@ window.MATHSGO_CATALOGUE = {
     },
     "outils/plateaux_manipulation/pgcd_sachets.html": {
       "primaryNotion": "divisibilite",
+      "primaryGroup": "manipuler",
       "collections": [],
       "tags": ["divisibilite", "partage", "paquets", "diviseurs-communs", "pgcd"],
       "thumbnail": "assets/img/thumbnails/divisibilite/partages-pgcd.png?v=1",
@@ -1681,8 +1751,8 @@ window.MATHSGO_CATALOGUE = {
     },
     {
       "id": "outils-fractions-fractions-produit-manipulation-html",
-      "title": "Fraction d’une fraction — lignes et grille V8",
-      "description": "Une ressource maths&go pour travailler fractions.",
+      "title": "Produit de fractions",
+      "description": "Visualiser le produit de deux fractions en superposant des partages horizontaux et verticaux.",
       "path": "outils/fractions/fractions_produit_manipulation.html",
       "domains": [
         "nombres-calculs"
@@ -1709,8 +1779,8 @@ window.MATHSGO_CATALOGUE = {
     },
     {
       "id": "outils-fractions-multiples-problemes-pdf",
-      "title": "Fractions multiples — problèmes",
-      "description": "Une ressource maths&go pour travailler fractions.",
+      "title": "Fractions et multiples — problèmes",
+      "description": "Résoudre et inventer des problèmes de fractions d’une quantité à partir de schémas en barres.",
       "path": "outils/fractions_multiples_problemes.pdf",
       "domains": [
         "nombres-calculs"
@@ -1887,7 +1957,7 @@ window.MATHSGO_CATALOGUE = {
     {
       "id": "outils-fractions-gabarits-fractions-pdf",
       "title": "Gabarits de fractions",
-      "description": "Une ressource maths&go pour travailler fractions.",
+      "description": "Imprimer des bandes de fractions colorées et une version à compléter.",
       "path": "outils/fractions/gabarits_fractions.pdf",
       "domains": [
         "nombres-calculs"
@@ -2102,8 +2172,8 @@ window.MATHSGO_CATALOGUE = {
     },
     {
       "id": "outils-fractions-multiples-exerciseur-html",
-      "title": "Générateur de Fractions et Multiples",
-      "description": "Une ressource maths&go pour travailler fractions.",
+      "title": "Générateur de fractions et multiples",
+      "description": "Composer un diaporama ou une fiche sur les parts, les multiples et les fractions d’une quantité.",
       "path": "outils/fractions_multiples_exerciseur.html",
       "domains": [
         "nombres-calculs"
@@ -2220,8 +2290,8 @@ window.MATHSGO_CATALOGUE = {
     },
     {
       "id": "outils-fractions-disque-maker-html",
-      "title": "Générateur PRO — Disques de Fractions",
-      "description": "Une ressource maths&go pour travailler fractions.",
+      "title": "Générateur de disques de fractions",
+      "description": "Créer des disques fractionnaires personnalisés prêts à imprimer et à découper.",
       "path": "outils/fractions/disque_maker.html",
       "domains": [
         "nombres-calculs"
@@ -2251,8 +2321,8 @@ window.MATHSGO_CATALOGUE = {
     },
     {
       "id": "outils-fractions-bandes-maker-v2-html",
-      "title": "Générateur PRO — Fractions (Bandes)",
-      "description": "Une ressource maths&go pour travailler fractions.",
+      "title": "Générateur de bandes de fractions",
+      "description": "Créer des bandes fractionnaires recto verso avec les dénominateurs et couleurs choisis.",
       "path": "outils/fractions/bandes_maker_v2.html",
       "domains": [
         "nombres-calculs"
@@ -2276,7 +2346,7 @@ window.MATHSGO_CATALOGUE = {
         "partage"
       ],
       "kind": "tool",
-      "status": "hidden",
+      "status": "published",
       "featured": false,
       "recent": false
     },
@@ -3074,7 +3144,7 @@ window.MATHSGO_CATALOGUE = {
     {
       "id": "outils-multiples-et-fractions-d-une-quantite-pdf",
       "title": "Multiples et fractions d’une quantité",
-      "description": "Une ressource maths&go pour travailler fractions.",
+      "description": "Modéliser une fraction d’une quantité avec des schémas en barres à observer et à compléter.",
       "path": "outils/multiples_et_fractions_d_une_quantite.pdf",
       "domains": [
         "nombres-calculs"
@@ -3104,7 +3174,7 @@ window.MATHSGO_CATALOGUE = {
     {
       "id": "outils-fractions-mur-fractions-html",
       "title": "Mur de fractions",
-      "description": "Une ressource maths&go pour travailler fractions.",
+      "description": "Construire un mur de fractions pour comparer les parts et repérer des équivalences.",
       "path": "outils/fractions/mur_fractions.html",
       "domains": [
         "nombres-calculs"
@@ -3433,8 +3503,8 @@ window.MATHSGO_CATALOGUE = {
     },
     {
       "id": "outils-fractions-bandes-fractions-html",
-      "title": "Plateau – Bandes de fractions",
-      "description": "Une ressource maths&go pour travailler fractions.",
+      "title": "Bandes de fractions",
+      "description": "Manipuler des bandes fractionnaires et composer des égalités de longueurs.",
       "path": "outils/fractions/bandes_fractions.html",
       "domains": [
         "nombres-calculs"
@@ -3464,8 +3534,8 @@ window.MATHSGO_CATALOGUE = {
     },
     {
       "id": "outils-fractions-disques-fractions-html",
-      "title": "Plateau – Disques de fractions",
-      "description": "Une ressource maths&go pour travailler fractions.",
+      "title": "Disques de fractions",
+      "description": "Assembler et comparer des secteurs de disques pour représenter des fractions.",
       "path": "outils/fractions/disques_fractions.html",
       "domains": [
         "nombres-calculs"

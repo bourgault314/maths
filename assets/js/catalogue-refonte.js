@@ -684,6 +684,8 @@
   ];
 
   function primaryResourceGroup(resource) {
+    const explicitGroup = resourceClassification(resource).primaryGroup;
+    if (explicitGroup && resourceGroups.some((group) => group.id === explicitGroup)) return explicitGroup;
     const facets = resourceFacets(resource);
     if (facets.has("jeux")) return "jeux";
     if (facets.has("cours")) return "cours";
