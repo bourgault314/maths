@@ -756,6 +756,24 @@ select { cursor: pointer; }
   filter: drop-shadow(0 1px 1px rgba(0, 0, 0, 0.08));
 }
 
+.notion-icon.collection-thumbnail {
+  width: 98px;
+  height: 64px;
+  flex-basis: 98px;
+  overflow: hidden;
+  border: 1px solid color-mix(in srgb, var(--accent, var(--blue)) 22%, #d7e0e9);
+  border-radius: 11px;
+  background: #fff;
+  box-shadow: 0 3px 9px rgba(15, 40, 72, 0.08);
+}
+
+.collection-thumbnail > img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+
 .notion-card h3 {
   margin: 0;
   color: #162e4e;
@@ -1131,6 +1149,7 @@ select { cursor: pointer; }
   .domain-card-secondary .domain-card-copy small { display: block; }
   .notion-card { min-height: 122px; padding: 14px 15px; }
   .notion-icon { width: 53px; height: 43px; flex-basis: 53px; }
+  .notion-icon.collection-thumbnail { width: 82px; height: 54px; flex-basis: 82px; }
   .catalogue-deep-view .hero { margin-bottom: 19px; }
   .catalogue-deep-view > .catalogue-breadcrumb { margin-bottom: 11px; }
   .catalogue-breadcrumb {
