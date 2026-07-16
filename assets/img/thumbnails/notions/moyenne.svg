@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 720 320">
+  <rect width="720" height="320" fill="#f6f8fb"/>
+  <rect x="25" y="22" width="670" height="276" rx="22" fill="#fff" stroke="#dce4ec"/>
+  <text x="48" y="61" fill="#1e3554" font-family="system-ui,sans-serif" font-size="24" font-weight="780">Égaliser les piles</text>
+  <text x="48" y="86" fill="#7b8798" font-family="system-ui,sans-serif" font-size="15">Déplacer ou couper les blocs pour construire la moyenne</text>
+  <line x1="52" y1="259" x2="668" y2="259" stroke="#aeb9c7" stroke-width="3"/>
+  <line x1="52" y1="158" x2="668" y2="158" stroke="#f59e0b" stroke-width="3" stroke-dasharray="9 7"/>
+  <text x="661" y="150" fill="#b56708" font-family="system-ui,sans-serif" font-size="14" font-weight="700" text-anchor="end">moyenne = 4</text>
+  <g fill="#60a5fa" stroke="#2563eb" stroke-width="1.3">
+    <path d="M95 235h74v24H95Zm0-26h74v24H95Z"/><path d="M205 235h74v24H205Zm0-26h74v24H205Zm0-26h74v24H205Zm0-26h74v24H205Zm0-26h74v24H205Zm0-26h74v24H205Z"/>
+    <path d="M315 235h74v24H315Zm0-26h74v24H315Zm0-26h74v24H315Z"/><path d="M425 235h74v24H425Zm0-26h74v24H425Zm0-26h74v24H425Zm0-26h74v24H425Zm0-26h74v24H425Z"/>
+    <path d="M535 235h74v24H535Zm0-26h74v24H535Zm0-26h74v24H535Zm0-26h74v24H535Z"/>
+  </g>
+  <path d="M137 182C185 126 226 118 242 146" fill="none" stroke="#f59e0b" stroke-width="5" stroke-linecap="round"/><path d="m233 135 15 12-15 8" fill="none" stroke="#f59e0b" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/>
+</svg>

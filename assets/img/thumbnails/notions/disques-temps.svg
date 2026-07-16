@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 720 320">
+  <defs><filter id="shadow"><feDropShadow dx="0" dy="5" stdDeviation="6" flood-opacity=".18"/></filter></defs>
+  <rect width="720" height="320" fill="#f6f9fc"/>
+  <rect x="22" y="18" width="676" height="284" rx="22" fill="#fff" stroke="#dce5ed"/>
+  <text x="48" y="57" fill="#1e3a5f" font-family="system-ui,sans-serif" font-size="23" font-weight="760">Disques de temps</text>
+  <text x="48" y="82" fill="#738198" font-family="system-ui,sans-serif" font-size="15">Retourner, déplacer et regrouper les équivalences</text>
+  <g filter="url(#shadow)" font-family="system-ui,sans-serif" text-anchor="middle">
+    <g><circle cx="190" cy="188" r="78" fill="#f472b6" stroke="#be185d" stroke-width="4"/><text x="190" y="180" font-size="29" font-weight="800" fill="#5f1239">1 heure</text><text x="190" y="211" font-size="18" font-weight="700" fill="#831843">60 minutes</text></g>
+    <g><circle cx="360" cy="188" r="78" fill="#facc15" stroke="#a16207" stroke-width="4"/><text x="360" y="180" font-size="29" font-weight="800" fill="#633806">1 heure</text><text x="360" y="211" font-size="18" font-weight="700" fill="#713f12">3 600 secondes</text></g>
+    <g><circle cx="530" cy="188" r="78" fill="#38bdf8" stroke="#075985" stroke-width="4"/><text x="530" y="180" font-size="28" font-weight="800" fill="#073a58">1 minute</text><text x="530" y="211" font-size="18" font-weight="700" fill="#075985">60 secondes</text></g>
+  </g>
+</svg>

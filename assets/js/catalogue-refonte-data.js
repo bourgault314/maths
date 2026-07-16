@@ -233,6 +233,46 @@ window.MATHSGO_CATALOGUE = {
       "thumbnail": "assets/img/thumbnails/jeux/grand-pari.svg?v=1",
       "cardDescription": "Parier sur la somme de deux ou trois dés puis comparer les fréquences observées."
     },
+    "outils/plateaux_manipulation/aire_perimetre_plateau.html": {
+      "primaryNotion": "aires-perimetres",
+      "primaryGroup": "manipuler",
+      "collections": [],
+      "tags": ["aire", "perimetre", "quadrillage", "figures"],
+      "thumbnail": "assets/img/thumbnails/notions/aire-perimetre.svg?v=1",
+      "cardDescription": "Construire des figures sur quadrillage et comparer simultanément leur aire et leur périmètre."
+    },
+    "outils/plateaux_manipulation/maitre_du_temps.html": {
+      "primaryNotion": "temps-durees",
+      "primaryGroup": "manipuler",
+      "collections": [],
+      "tags": ["temps", "durees", "heures", "minutes", "secondes", "conversion"],
+      "thumbnail": "assets/img/thumbnails/notions/disques-temps.svg?v=1",
+      "cardDescription": "Manipuler des disques recto verso pour relier heures, minutes et secondes."
+    },
+    "outils/plateaux_manipulation/cubes_construction.html": {
+      "primaryNotion": "espace-constructions",
+      "primaryGroup": "manipuler",
+      "collections": [],
+      "tags": ["espace", "cubes", "volume", "scene3d", "construction"],
+      "thumbnail": "assets/img/thumbnails/notions/scene3d.svg?v=1",
+      "cardDescription": "Accéder à SCÈNE3D pour construire, faire tourner et dénombrer des assemblages de cubes."
+    },
+    "outils/plateaux_manipulation/stats_city.html": {
+      "primaryNotion": "statistiques",
+      "primaryGroup": "manipuler",
+      "collections": [],
+      "tags": ["statistiques", "mediane", "moyenne", "etendue", "donnees"],
+      "thumbnail": "assets/img/thumbnails/notions/stats-city.svg?v=1",
+      "cardDescription": "Ranger et construire une ville de données pour travailler médiane, moyenne et étendue."
+    },
+    "outils/plateaux_manipulation/moyennes.html": {
+      "primaryNotion": "moyennes",
+      "primaryGroup": "manipuler",
+      "collections": [],
+      "tags": ["moyenne", "repartition", "equilibrage", "decimaux", "blocs"],
+      "thumbnail": "assets/img/thumbnails/notions/moyenne.svg?v=1",
+      "cardDescription": "Déplacer ou couper des blocs pour égaliser les piles et donner du sens à la moyenne."
+    },
     "outils/problemes_barres_M974.html": { "primaryNotion": "schemas-barres", "collections": [], "tags": ["schema-barres", "resolution-problemes", "version-travail"] },
     "outils/nombres_relatifs/nombres_relatifs_somme_difference.html": { "primaryNotion": "relatifs", "collections": [], "tags": ["nombres-relatifs", "plateau-manipulation"] },
     "outils/nombres_relatifs/nombres_relatifs_somme_differenceB.html": { "primaryNotion": "relatifs", "collections": [], "tags": ["nombres-relatifs", "plateau-manipulation"] },
@@ -1095,8 +1135,8 @@ window.MATHSGO_CATALOGUE = {
     },
     {
       "id": "outils-plateaux-manipulation-aire-perimetre-plateau-html",
-      "title": "Aire & Périmètre — Plateau",
-      "description": "Une ressource maths&go pour travailler aires et périmètres.",
+      "title": "Aire et périmètre",
+      "description": "Un plateau quadrillé pour construire des figures et comparer leur aire et leur périmètre.",
       "path": "outils/plateaux_manipulation/aire_perimetre_plateau.html",
       "domains": [
         "proportionnalite-mesures",
@@ -3335,8 +3375,8 @@ window.MATHSGO_CATALOGUE = {
     },
     {
       "id": "outils-plateaux-manipulation-maitre-du-temps-html",
-      "title": "Maître du temps",
-      "description": "Une ressource maths&go pour travailler temps et durées.",
+      "title": "Disques de temps",
+      "description": "Des disques recto verso pour manipuler les équivalences entre heures, minutes et secondes.",
       "path": "outils/plateaux_manipulation/maitre_du_temps.html",
       "domains": [
         "proportionnalite-mesures"
@@ -3725,8 +3765,8 @@ window.MATHSGO_CATALOGUE = {
     },
     {
       "id": "outils-plateaux-manipulation-moyennes-html",
-      "title": "Outil : La Moyenne (Décimaux)",
-      "description": "Une ressource maths&go pour travailler moyennes.",
+      "title": "Moyenne — égaliser les piles",
+      "description": "Une manipulation de blocs entiers ou décimaux pour construire la moyenne par répartition.",
       "path": "outils/plateaux_manipulation/moyennes.html",
       "domains": [
         "donnees"
@@ -4117,8 +4157,8 @@ window.MATHSGO_CATALOGUE = {
     },
     {
       "id": "outils-plateaux-manipulation-cubes-construction-html",
-      "title": "Recommandation SCÈNE3D",
-      "description": "Une ressource maths&go pour travailler espace, patrons et constructions.",
+      "title": "SCÈNE3D — assemblages de cubes",
+      "description": "Un accès à SCÈNE3D, outil de Mathix et de l’IREM Paris-Nord pour manipuler des assemblages de cubes.",
       "path": "outils/plateaux_manipulation/cubes_construction.html",
       "domains": [
         "geometrie"
@@ -4830,7 +4870,7 @@ window.MATHSGO_CATALOGUE = {
     {
       "id": "outils-plateaux-manipulation-stats-city-html",
       "title": "Stats City",
-      "description": "Une ressource maths&go pour travailler statistiques et représentations.",
+      "description": "Une ville de données pour manipuler la médiane, la moyenne et l’étendue.",
       "path": "outils/plateaux_manipulation/stats_city.html",
       "domains": [
         "donnees"
