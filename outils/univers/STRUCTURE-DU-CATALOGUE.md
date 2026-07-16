@@ -20,7 +20,7 @@ Référence : <https://www.education.gouv.fr/bo/2026/Hebdo10/MENE2602912A>
 - Calcul mental et automatismes : `../automatismes/index.html`
 - Conversions : `../conversions/index.html`
 - Calcul littéral et algèbre : `../tuiles_algebriques/index.html`
-- Patterns : `../patterns.html`
+- Patterns : `../labo-des-regularites.html`
 - Angles : `../angles/index.html`
 - Jeux de stratégie : `../club_maths/index.html`
 - Explorations mathématiques : `../engrenages/index.html` et `../club_maths/index.html`
