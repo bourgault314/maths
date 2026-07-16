@@ -29,7 +29,7 @@
   const domainDesign = {
     "nombres-calculs": { icon: "factor-tree" },
     algebre: { icon: "splat" },
-    "proportionnalite-mesures": { icon: "grandeur" },
+    "proportionnalite-mesures": { icon: "equal-volume-vase" },
     geometrie: { icon: "seigaiha" },
     donnees: { icon: "probability-statistics" },
     informatique: { icon: "koch" },
