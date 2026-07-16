@@ -58,11 +58,36 @@
   }
 
   const angleGallery = `
-    <svg viewBox="0 0 300 210" role="img" aria-label="Angle aigu, droit, obtus et plat dans des orientations différentes">
-      ${angleDrawing("acute", "translate(5 4) rotate(-15 60 65) scale(1.05)")}
-      ${angleDrawing("right", "translate(158 5) rotate(22 60 60) scale(1.05)")}
-      ${angleDrawing("obtuse", "translate(9 105) rotate(-18 60 62) scale(1.05)")}
-      ${angleDrawing("flat", "translate(160 94) rotate(29 60 74) scale(1.05)")}
+    <svg viewBox="0 0 360 235" role="img" aria-label="Angle aigu, angle droit de 90 degrés, angle obtus et angle plat de 180 degrés">
+      <g fill="#fff" stroke="#e2d7f4" stroke-width="2">
+        <rect x="3" y="3" width="172" height="108" rx="13"/><rect x="185" y="3" width="172" height="108" rx="13"/>
+        <rect x="3" y="124" width="172" height="108" rx="13"/><rect x="185" y="124" width="172" height="108" rx="13"/>
+      </g>
+      ${angleDrawing("acute", "translate(19 -2) rotate(-13 60 65) scale(.9)")}
+      ${angleDrawing("right", "translate(205 -1) rotate(16 60 60) scale(.9)")}
+      ${angleDrawing("obtuse", "translate(23 116) rotate(-15 60 62) scale(.9)")}
+      ${angleDrawing("flat", "translate(211 117) rotate(12 60 74) scale(.9)")}
+      <g fill="#4c2b87" font-family="Arial, sans-serif" font-size="15" font-weight="900" text-anchor="middle">
+        <text x="89" y="101">aigu</text><text x="271" y="101">droit · 90°</text>
+        <text x="89" y="222">obtus</text><text x="271" y="222">plat · 180°</text>
+      </g>
+    </svg>`;
+
+  const fractionReadingVisual = `
+    <svg viewBox="0 0 400 175" role="img" aria-label="Trois quarts : le numérateur 3 indique les trois parts coloriées et le dénominateur 4 indique les quatre parts égales en tout">
+      ${disk({denominator: 4, filled: 3, cx: 72, cy: 82, radius: 55, color: "#8bd7cf"})}
+      <g fill="#173a5e" font-family="Cambria Math, Georgia, serif" font-weight="900" text-anchor="middle">
+        <text x="175" y="65" font-size="31">3</text><path d="M151 74h48" stroke="#173a5e" stroke-width="3"/>
+        <text x="175" y="108" font-size="31">4</text>
+      </g>
+      <g fill="none" stroke="#087a71" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M195 54h38l8-8M233 54l8 8"/><path d="M195 101h38l8-8M233 101l8 8"/>
+      </g>
+      <g fill="#075b57" font-family="Arial, sans-serif">
+        <text x="250" y="48" font-size="16" font-weight="900">numérateur</text><text x="250" y="67" font-size="13">parts coloriées</text>
+        <text x="250" y="95" font-size="16" font-weight="900">dénominateur</text><text x="250" y="114" font-size="13">parts égales en tout</text>
+        <text x="175" y="151" text-anchor="middle" font-size="15" font-weight="900">trois quarts</text>
+      </g>
     </svg>`;
 
   const fractionMemoVisual = (denominator, filled, words, color) => `
@@ -77,16 +102,25 @@
     </svg>`;
 
   const triangleMemoVisual = `
-    <svg viewBox="0 0 300 170" role="img" aria-label="Triangle rectangle, triangle isocèle et triangle équilatéral">
+    <svg viewBox="0 0 360 170" role="img" aria-label="Triangle rectangle avec un angle droit, triangle isocèle avec deux côtés égaux et triangle équilatéral avec trois côtés égaux">
       <g fill="#fff" stroke="#0755b8" stroke-width="4" stroke-linejoin="round">
-        <path d="M18 74V18h74Z"/><path d="M18 58h16v16" fill="none" stroke="#f97316" stroke-width="3"/>
-        <path d="m113 74 42-58 42 58Z"/><path d="m129 52 9 7M181 52l-9 7" stroke="#f97316" stroke-width="3"/>
-        <path d="m217 74 34-58 34 58Z"/><path d="m229 49 8 5M265 54l8-5M247 74v-9" stroke="#f97316" stroke-width="3"/>
+        <path d="M20 91V23h82Z"/>
+        <path d="m124 91 56-69 56 69Z"/>
+        <path d="m252 91 48-69 48 69Z"/>
       </g>
-      <g fill="#173a5e" font-family="Arial, sans-serif" font-size="13" font-weight="900" text-anchor="middle">
-        <text x="55" y="99">rectangle</text><text x="155" y="99">isocèle</text><text x="251" y="99">équilatéral</text>
+      <path d="M20 68h23v23" fill="none" stroke="#f97316" stroke-width="4"/>
+      <g fill="none" stroke="#f97316" stroke-width="4" stroke-linecap="round">
+        <path d="m148 52 10 8M202 60l10-8"/>
+        <path d="m273 52 10 8M317 60l10-8M300 83v16"/>
       </g>
-      <text x="150" y="139" text-anchor="middle" fill="#536176" font-family="Arial, sans-serif" font-size="13">angle droit · 2 côtés égaux · 3 côtés égaux</text>
+      <g fill="#173a5e" font-family="Arial, sans-serif" text-anchor="middle">
+        <text x="61" y="115" font-size="13" font-weight="900">triangle</text><text x="61" y="131" font-size="13" font-weight="900">rectangle</text>
+        <text x="61" y="155" font-size="13">1 angle droit</text>
+        <text x="180" y="115" font-size="13" font-weight="900">triangle</text><text x="180" y="131" font-size="13" font-weight="900">isocèle</text>
+        <text x="180" y="155" font-size="13">2 côtés égaux</text>
+        <text x="300" y="115" font-size="13" font-weight="900">triangle</text><text x="300" y="131" font-size="13" font-weight="900">équilatéral</text>
+        <text x="300" y="155" font-size="13">3 côtés égaux</text>
+      </g>
     </svg>`;
 
   const triangleRightVisual = `
@@ -98,19 +132,20 @@
   const triangleIsoscelesVisual = `
     <svg viewBox="0 0 500 225" role="img" aria-label="Triangle avec deux côtés de même longueur">
       <path d="M250 25 105 190h290Z" fill="#effcf9" stroke="#087a71" stroke-width="6" stroke-linejoin="round"/>
-      <path d="m161 115 14 11M339 115l-14 11" stroke="#f97316" stroke-width="6" stroke-linecap="round"/>
+      <path d="m164 109 14 12M322 121l14-12" stroke="#f97316" stroke-width="6" stroke-linecap="round"/>
     </svg>`;
 
   const measureMemoVisual = `
-    <svg viewBox="0 0 300 170" role="img" aria-label="Poignée de porte située à environ un mètre du sol, un mètre égale cent centimètres et un kilomètre égale mille mètres">
-      <rect x="26" y="12" width="92" height="137" rx="5" fill="#fff" stroke="#0755b8" stroke-width="4"/>
-      <circle cx="94" cy="83" r="7" fill="#f97316"/><path d="M12 147V83M6 147h12M6 83h12" stroke="#087a71" stroke-width="4"/>
-      <text x="8" y="119" fill="#087a71" font-family="Arial" font-size="16" font-weight="900" transform="rotate(-90 8 119)">environ 1 m</text>
-      <g transform="translate(139 24)" fill="#173a5e" font-family="Arial" text-anchor="middle">
-        <rect width="151" height="111" rx="15" fill="#fff8e8" stroke="#f1bd5a" stroke-width="3"/>
-        <text x="75" y="34" font-size="19" font-weight="900">1 m = 100 cm</text>
-        <text x="75" y="66" font-size="18" font-weight="900">1 km = 1 000 m</text>
-        <text x="75" y="91" font-size="13">deux égalités à retenir</text>
+    <svg viewBox="0 0 360 190" role="img" aria-label="Grande porte dont la poignée est à environ un mètre du sol, un mètre égale cent centimètres et un kilomètre égale mille mètres">
+      <rect x="35" y="8" width="126" height="173" rx="5" fill="#fff" stroke="#0755b8" stroke-width="5"/>
+      <circle cx="135" cy="100" r="9" fill="#f97316"/>
+      <path d="M18 179V100M10 179h16M10 100h16" stroke="#087a71" stroke-width="4"/>
+      <text x="13" y="149" fill="#087a71" font-family="Arial" font-size="15" font-weight="900" transform="rotate(-90 13 149)">environ 1 m</text>
+      <g transform="translate(181 31)" fill="#173a5e" font-family="Arial" text-anchor="middle">
+        <rect width="166" height="125" rx="15" fill="#fff8e8" stroke="#f1bd5a" stroke-width="3"/>
+        <text x="83" y="42" font-size="21" font-weight="900">1 m = 100 cm</text>
+        <path d="M24 61h118" stroke="#f1bd5a" stroke-width="2"/>
+        <text x="83" y="91" font-size="20" font-weight="900">1 km = 1 000 m</text>
       </g>
     </svg>`;
 
@@ -182,41 +217,44 @@
 
   const mathsMemos = [
     {
+      mobileStack: true,
       color: palette.teal,
       soft: "#effcf9",
-      visual: fractionMemoVisual(4, 3, "trois quarts", "#8bd7cf"),
-      title: "Une fraction raconte un partage",
-      text: "Le dénominateur indique le nombre de parts égales. Le numérateur indique les parts coloriées. Ici, 3 parts sur 4 sont coloriées : la réponse est « trois quarts »."
+      visual: fractionReadingVisual,
+      title: "Lire une fraction",
+      text: "3 parts sur 4 sont coloriées : trois quarts."
     },
     {
+      mobileStack: true,
       color: "#b06b00",
       soft: "#fff9e9",
       visual: fractionMemoVisual(6, 5, "cinq sixièmes", "#f7c85b"),
-      title: "Le partage donne le nom des parts",
-      text: "Un disque partagé en 6 parts égales donne des sixièmes. Ici, 5 parts sur 6 sont coloriées : la réponse est « cinq sixièmes »."
+      title: "Cinq sixièmes",
+      text: "Le disque est partagé en 6 parts égales. 5 parts sur 6 sont coloriées."
     },
     {
       mobileStack: true,
       color: palette.purple,
       soft: "#f8f3ff",
       visual: angleGallery,
-      title: "Tourner un angle ne change pas son nom",
-      text: "Aigu : plus petit que le droit. Obtus : plus grand que le droit. Plat : ses deux côtés forment une ligne droite."
+      title: "Les quatre angles",
+      text: "Aigu : moins de 90°. Droit : 90°. Obtus : entre 90° et 180°. Plat : 180°."
     },
     {
       mobileStack: true,
       color: palette.blue,
       soft: "#f1f6ff",
       visual: triangleMemoVisual,
-      title: "Les codes révèlent le nom du triangle",
-      text: "Un triangle rectangle possède un angle droit. Un triangle isocèle a 2 côtés égaux. Un triangle équilatéral a 3 côtés égaux."
+      title: "Reconnaître un triangle",
+      text: "Observe le carré et les petits traits placés sur les côtés."
     },
     {
+      mobileStack: true,
       color: palette.green,
       soft: "#f7fee7",
       visual: measureMemoVisual,
-      title: "Un mètre est un repère utile",
-      text: "1 m = 100 cm et 1 km = 1 000 m. Une poignée de porte se trouve à environ 1 m du sol : ce repère aide à estimer une longueur avant de la mesurer."
+      title: "Des repères de longueur",
+      text: "Une poignée de porte est à environ 1 m du sol. 1 km = 1 000 m."
     }
   ];
 
@@ -229,7 +267,7 @@
       visual: diskVisual(5, 3, {color: "#8bd7cf"}),
       options: [stackedFraction(2, 5, "deux cinquièmes"), stackedFraction(3, 5, "trois cinquièmes"), stackedFraction(3, 4, "trois quarts"), stackedFraction(2, 3, "deux tiers")],
       answer: 1,
-      hint: "Compte toutes les parts, puis seulement les parts colorées.",
+      hint: fractionReadingVisual,
       explanation: `Le disque a 5 parts égales et 3 sont colorées : ${stackedFraction(3, 5, "trois cinquièmes")}.`
     },
     {
@@ -263,7 +301,7 @@
       denominator: 5,
       target: 3,
       hint: "Le dénominateur 5 donne les cinq secteurs. Le numérateur 3 donne le nombre de secteurs à choisir.",
-      explanation: `Tu as choisi 3 parts sur les 5 parts égales : ${stackedFraction(3, 5, "trois cinquièmes")}.`
+      explanation: `Il faut choisir 3 parts sur les 5 parts égales : ${stackedFraction(3, 5, "trois cinquièmes")}.`
     },
     {
       section: "Fractions",
@@ -678,8 +716,8 @@
     maths: {
       name: "Mathématiques",
       eyebrow: "Mission maths",
-      memoTitle: "Cinq mini-leçons avant de commencer",
-      memoIntro: "Lis les exemples et les réponses : chaque idée sera réutilisée dans les questions. Tu pourras aussi demander un indice.",
+      memoTitle: "Cinq choses à retenir",
+      memoIntro: "Regarde les dessins. Tu pourras demander un indice.",
       color: palette.blue,
       memos: mathsMemos,
       questions: mathsQuestions
