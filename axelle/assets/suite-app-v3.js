@@ -22,7 +22,9 @@
     answers: document.getElementById("answers"),
     interactive: document.getElementById("interactive-zone"),
     hintButton: document.getElementById("hint-button"),
+    hintOverlay: document.getElementById("hint-overlay"),
     hintBox: document.getElementById("hint-box"),
+    hintClose: document.getElementById("hint-close"),
     feedback: document.getElementById("feedback"),
     nextButton: document.getElementById("next-button"),
     finishMessage: document.getElementById("finish-message"),
@@ -116,7 +118,7 @@
     elements.interactive.replaceChildren();
     elements.answers.hidden = false;
     elements.interactive.hidden = true;
-    elements.hintBox.hidden = true;
+    elements.hintOverlay.hidden = true;
     elements.feedback.hidden = true;
     elements.nextButton.hidden = true;
     elements.hintButton.hidden = false;
@@ -141,6 +143,8 @@
       renderDiskSelect(question);
     } else if (question.type === "angle-match") {
       renderAngleMatch(question);
+    } else if (question.type === "splat-table") {
+      renderSplatTable(question);
     } else {
       renderOptions(question);
     }
@@ -227,6 +231,102 @@
       elements.interactive.querySelector(".validate-button").disabled = true;
       showFeedback(correct, question.explanation);
       revealNext();
+    });
+  }
+
+  function renderSplatTable(question) {
+    elements.answers.hidden = true;
+    elements.interactive.hidden = false;
+    const expected = {visible: String(question.visible), hidden: "?", total: String(question.total)};
+    const assignments = {};
+    let selectedToken = null;
+
+    elements.interactive.innerHTML = `
+      <div class="splat-task">
+        <div class="splat-scene" aria-label="${question.visible} jetons visibles, des jetons cachés et ${question.total} jetons en tout">
+          <div class="splat-total"><small>EN TOUT</small><strong>${question.total}</strong></div>
+          <div class="splat-balls">${Array.from({length: question.visible}, (_, index) => `<span style="--i:${index}">${index + 1}</span>`).join("")}</div>
+          <div class="splat-blob" aria-hidden="true">?</div>
+        </div>
+        <p class="splat-instruction">Complète d’abord le tableau.</p>
+        <div class="splat-table" role="group" aria-label="Tableau à compléter">
+          ${[{id:"visible",label:"jetons visibles"},{id:"hidden",label:"jetons cachés"},{id:"total",label:"jetons en tout"}].map(column => `<div><span>${column.label}</span><button type="button" class="splat-slot" data-slot="${column.id}" aria-label="Case ${column.label}">Dépose ici</button></div>`).join("")}
+        </div>
+        <div class="splat-token-tray" aria-label="Étiquettes à placer">
+          ${["?", String(question.total), String(question.visible)].map(value => `<button type="button" class="splat-token" data-value="${value}">${value}</button>`).join("")}
+        </div>
+        <button class="validate-button splat-validate" type="button">Valider le tableau</button>
+        <div class="splat-stage-two" hidden></div>
+      </div>`;
+
+    const renderAssignments = () => {
+      elements.interactive.querySelectorAll(".splat-slot").forEach(slot => {
+        const value = assignments[slot.dataset.slot];
+        slot.textContent = value || "Dépose ici";
+        slot.classList.toggle("filled", Boolean(value));
+      });
+      elements.interactive.querySelectorAll(".splat-token").forEach(token => {
+        const used = Object.values(assignments).includes(token.dataset.value);
+        token.classList.toggle("used", used);
+        token.classList.toggle("selected", token.dataset.value === selectedToken);
+      });
+    };
+
+    elements.interactive.querySelectorAll(".splat-token").forEach(token => token.addEventListener("click", () => {
+      if (answered || token.classList.contains("used")) return;
+      selectedToken = selectedToken === token.dataset.value ? null : token.dataset.value;
+      renderAssignments();
+    }));
+
+    elements.interactive.querySelectorAll(".splat-slot").forEach(slot => slot.addEventListener("click", () => {
+      if (answered) return;
+      if (selectedToken) {
+        Object.keys(assignments).forEach(key => { if (assignments[key] === selectedToken) delete assignments[key]; });
+        assignments[slot.dataset.slot] = selectedToken;
+        selectedToken = null;
+      } else if (assignments[slot.dataset.slot]) {
+        delete assignments[slot.dataset.slot];
+      }
+      renderAssignments();
+    }));
+
+    const revealCorrectTable = () => {
+      Object.assign(assignments, expected);
+      renderAssignments();
+      elements.interactive.querySelectorAll(".splat-slot, .splat-token").forEach(button => { button.disabled = true; });
+      elements.interactive.querySelector(".splat-validate").disabled = true;
+    };
+
+    elements.interactive.querySelector(".splat-validate").addEventListener("click", () => {
+      const tableCorrect = Object.keys(expected).every(key => assignments[key] === expected[key]);
+      revealCorrectTable();
+      if (!tableCorrect) {
+        answered = true;
+        showFeedback(false, question.explanation);
+        revealNext();
+        return;
+      }
+
+      const stage = elements.interactive.querySelector(".splat-stage-two");
+      elements.interactive.querySelector(".splat-token-tray").hidden = true;
+      elements.interactive.querySelector(".splat-validate").hidden = true;
+      stage.hidden = false;
+      stage.innerHTML = `<h2>Combien de jetons sont cachés sous le Splat ?</h2><div class="splat-answers">${question.options.map((option, index) => `<button type="button" class="splat-answer-button" data-index="${index}">${option}</button>`).join("")}</div>`;
+      elements.interactive.querySelector(".splat-instruction").textContent = "Le tableau est juste. Trouve maintenant le nombre caché.";
+      stage.querySelectorAll(".splat-answer-button").forEach(button => button.addEventListener("click", () => {
+        if (answered) return;
+        answered = true;
+        const index = Number(button.dataset.index);
+        const correct = index === question.answer;
+        if (correct) score += 1;
+        stage.querySelectorAll(".splat-answer-button").forEach((candidate, candidateIndex) => {
+          candidate.disabled = true;
+          if (candidateIndex === question.answer) candidate.classList.add("correct");
+        });
+        button.classList.add(correct ? "chosen-correct" : "wrong");
+        showFeedback(correct, question.explanation);
+        revealNext();
+      }));
     });
   }
 
@@ -376,7 +476,7 @@
     elements.feedback.innerHTML = `<strong>${heading}</strong><span>${explanation}</span>`;
     elements.feedback.hidden = false;
     elements.hintButton.hidden = true;
-    elements.hintBox.hidden = true;
+    elements.hintOverlay.hidden = true;
   }
 
   function revealNext() {
@@ -419,11 +519,19 @@
   elements.bonusButton.addEventListener("click", () => sessionStorage.setItem("axelle-game-pass", "ready"));
   elements.brandHome.addEventListener("click", goDesk);
   elements.spaceHome.addEventListener("click", goDesk);
+  const closeHint = () => {
+    elements.hintOverlay.hidden = true;
+    elements.hintButton.textContent = "Afficher un indice";
+    elements.hintButton.focus();
+  };
   elements.hintButton.addEventListener("click", () => {
-    const willShow = elements.hintBox.hidden;
-    elements.hintBox.hidden = !willShow;
-    elements.hintButton.textContent = willShow ? "Masquer l’indice" : "Afficher un indice";
+    elements.hintOverlay.hidden = false;
+    elements.hintButton.textContent = "Indice affiché";
+    elements.hintClose.focus();
   });
+  elements.hintClose.addEventListener("click", closeHint);
+  elements.hintOverlay.addEventListener("click", event => { if (event.target === elements.hintOverlay) closeHint(); });
+  document.addEventListener("keydown", event => { if (event.key === "Escape" && !elements.hintOverlay.hidden) closeHint(); });
 
   refreshDeskProgress();
   const requested = new URLSearchParams(location.search).get("mission");
