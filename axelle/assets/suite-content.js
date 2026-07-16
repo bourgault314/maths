@@ -393,7 +393,7 @@
     {
       color: palette.teal,
       soft: "#effcf9",
-      visual: `<div class="agreement-visual"><span>un</span><span>petit</span><span>gecko</span><b>→</b><span>des</span><span>petits</span><span>geckos</span></div>`,
+      visual: `<div class="agreement-visual"><span class="agreement-side"><i>un</i><i>petit</i><i>gecko</i></span><b>↓</b><span class="agreement-side"><i>des</i><i>petits</i><i>geckos</i></span></div>`,
       title: "Dans le groupe nominal, les mots voyagent ensemble",
       text: "Le déterminant, le nom et l’adjectif s’accordent en genre et en nombre. Le nom noyau donne les informations aux autres mots."
     },
