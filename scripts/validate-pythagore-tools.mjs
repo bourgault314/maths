@@ -27,7 +27,11 @@ const sqrt5=Math.sqrt(5);
 const P=[1.2,-1.6];
 const sources={
   perigal:{y:[[0,-2],[1,-2],P,[0,-1]],b:[[1,-2],[2,-2],P],g:[[2,0],[2,-2],P],m:[[0,0],[2,0],P,[0,-1]],sq:[[-1,0],[0,0],[0,1],[-1,1]]},
-  perigalSix:{y:[[0,-2],[1,-2],P,[0,-1]],b:[[1,-2],[2,-2],P],g:[[2,0],[2,-2],P],m1:[[0,0],[2,0],P],m2:[[0,0],P,[0,-1]],sq:[[-1,0],[0,0],[0,1],[-1,1]]},
+  mosaiqueOblique:{
+    b1:[[0,-2],[0.625,-2],[0.4,-1.55],[0,-1.75]],b2:[[0.4,-1.55],[0,-0.75],[0,-1.75]],
+    b3:[[0.625,-2],[2,-2],[2,-0.75],[0.4,-1.55]],b4:[[0,-0.75],[0.4,-1.55],[2,-0.75],[2,0],[0,0]],
+    a1:[[-1,1],[-1,0],[0,0],[0,0.25],[-0.375,1]],a2:[[0,0.25],[0,1],[-0.375,1]]
+  },
   leitzmann:{
     bTop:[[0,-2],[2,-2],[4/3,-4/3]],bLeft:[[0,-2],[0,0],[4/3,-4/3]],bBottom:[[0,0],[2,0],[4/3,-4/3]],bRight:[[2,0],[2,-2],[4/3,-4/3]],
     aTop:[[-1,0],[0,0],[-1/3,1/3]],aLeft:[[-1,0],[-1,1],[-1/3,1/3]],aBottom:[[-1,1],[0,1],[-1/3,1/3]],aRight:[[0,1],[0,0],[-1/3,1/3]]
@@ -37,7 +41,7 @@ const sources={
   }
 };
 
-const expectedKeys={perigal:['b','g','m','sq','y'],perigalSix:['b','g','m1','m2','sq','y'],leitzmann:['aBottom','aLeft','aRight','aTop','bBottom','bLeft','bRight','bTop'],quatreIdentiques:['aSq','q1','q2','q3','q4']};
+const expectedKeys={perigal:['b','g','m','sq','y'],mosaiqueOblique:['a1','a2','b1','b2','b3','b4'],leitzmann:['aBottom','aLeft','aRight','aTop','bBottom','bLeft','bRight','bTop'],quatreIdentiques:['aSq','q1','q2','q3','q4']};
 
 for(const [puzzle,keys] of Object.entries(expectedKeys)){
   const layout=layouts[puzzle];
