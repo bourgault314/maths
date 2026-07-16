@@ -61,5 +61,18 @@ if(!html.includes('svg#stage.compactLayout #boardsR{display:none;}')) fail('Le s
 if(!html.includes('const interactiveTarget = compact ? left : right;')) fail('Le snap mobile doit viser le moulin visible de gauche.');
 if(!html.includes('function activePuzzleMoulin()')) fail('La validation doit suivre le moulin actif.');
 if(!html.includes('prepareSolutionPoses();')) fail('Les poses de solution doivent être préparées à chaque construction.');
+if(!html.includes('function tryExactSolutionSnap(piece)')) fail('Le snap de finition exact doit être disponible pour tous les puzzles.');
+if(!html.includes('pose.flipX !== piece.flipX')) fail('Le snap ne doit jamais retourner automatiquement une pièce.');
+if(html.includes('bhaskaraPoseTargets')) fail('Le snap Bhaskara ne doit plus dépendre d’une table de poses vide.');
 
-if(!process.exitCode) console.log('OK — 5 puzzles, 5 solutions, pavages exacts et moulin mobile unique contrôlés.');
+const pythaFile='outils/pythabarre.html';
+const pytha=fs.readFileSync(new URL(`../${pythaFile}`,import.meta.url),'utf8');
+const pythaScript=pytha.match(/<script>\s*([\s\S]*?)<\/script>/)?.[1];
+try{new vm.Script(pythaScript||'');}catch(error){fail(`Le JavaScript de PythaBarre est invalide : ${error.message}`);}
+if(!pytha.includes('.stage:not(:fullscreen) #btnFullscreen{display:none;}')) fail('Le plein écran de PythaBarre doit être masqué sur téléphone.');
+if(!pytha.includes('.stage:not(:fullscreen) #btnToggleEq,\n    .stage:not(:fullscreen) #btnStageRandom{display:none;}')) fail('PythaBarre doit garder une barre supérieure minimale sur téléphone.');
+if(!pytha.includes('.stage:not(:fullscreen) .barBoard{\n      order:4;') || !pytha.includes('.stage:not(:fullscreen) .equationHistory{\n      order:5;')) fail('L’équation mobile doit rester sous le tableau.');
+if(!pytha.includes('selectedSlot = null;\n        message = "";')) fail('Chaque placement dans la relation doit désélectionner la case.');
+if(!pytha.includes('window.MathsGoPythaBarre = {')) fail('Le contrat d’intégration de PythaBarre doit rester disponible.');
+
+if(!process.exitCode) console.log('OK — 5 puzzles, 5 solutions, snaps exacts et règles mobiles Moulin/PythaBarre contrôlés.');
