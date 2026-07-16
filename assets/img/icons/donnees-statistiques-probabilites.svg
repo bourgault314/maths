@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 78 52" role="img" aria-labelledby="title desc">
+  <title id="title">Données, statistiques et probabilités</title>
+  <desc id="desc">Un dé à cinq points accompagné d’un histogramme et d’une ligne de seuil.</desc>
+  <rect x="2" y="15" width="30" height="30" rx="7" fill="#fce7f3" stroke="#be3e68" stroke-width="1.8"/>
+  <path d="M7 20c5-3.5 13-4 20-.8" fill="none" stroke="#fff" stroke-width="1.4" stroke-linecap="round" opacity=".7"/>
+  <g fill="#9d174d">
+    <circle cx="10" cy="23" r="2.2"/><circle cx="24" cy="23" r="2.2"/><circle cx="17" cy="30" r="2.2"/><circle cx="10" cy="37" r="2.2"/><circle cx="24" cy="37" r="2.2"/>
+  </g>
+  <path d="M41 45h36M41 45V9" fill="none" stroke="#475569" stroke-width="1.65" stroke-linecap="round"/>
+  <path d="m37.7 12.5 3.3-3.5 3.3 3.5" fill="none" stroke="#475569" stroke-width="1.65" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M42 27h34" stroke="#7c3aed" stroke-width="1.25" stroke-dasharray="3 2"/>
+  <g stroke="#9d174d" stroke-width=".8">
+    <rect x="44" y="29" width="4.5" height="16" rx="1" fill="#f9a8d4"/><rect x="49.6" y="25" width="4.5" height="20" rx="1" fill="#fb7185"/><rect x="55.2" y="28" width="4.5" height="17" rx="1" fill="#f9a8d4"/><rect x="60.8" y="23" width="4.5" height="22" rx="1" fill="#be3e68"/><rect x="66.4" y="30" width="4.5" height="15" rx="1" fill="#f9a8d4"/><rect x="72" y="26" width="4.5" height="19" rx="1" fill="#fb7185"/>
+  </g>
+</svg>
