@@ -54,7 +54,7 @@ select { cursor: pointer; }
 .skip-link:focus { transform: translateY(0); }
 
 .site-shell {
-  width: min(1180px, calc(100% - 30px));
+  width: min(1120px, calc(100% - 30px));
   margin: 0 auto;
 }
 
@@ -1373,7 +1373,13 @@ select { cursor: pointer; }
 /* Page d'entrée sur ordinateur : l'ancienne composition en deux colonnes,
    resserrée en hauteur sans réduire les illustrations des domaines. */
 @media (min-width: 921px) {
-  body { min-height: calc(100vh - 16px); }
+  body:not(.catalogue-is-deep) {
+    min-height: 100vh;
+    min-height: 100dvh;
+    display: flex;
+    flex-direction: column;
+    padding-block: 16px;
+  }
 
   body.catalogue-is-deep .site-header {
     min-height: 64px;
@@ -1386,7 +1392,8 @@ select { cursor: pointer; }
 
   body:not(.catalogue-is-deep) .site-shell {
     position: relative;
-    margin-top: 16px;
+    margin-block: auto;
+    margin-inline: auto;
     overflow: hidden;
     border: 1px solid rgba(203, 216, 230, 0.9);
     border-radius: 28px;
