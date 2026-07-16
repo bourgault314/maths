@@ -2751,8 +2751,8 @@
               "Retire l’alvéole centrale puis cherche six fois un nombre triangulaire.",
             ],
             error: [
-              "Mina compte 6n alvéoles sur chaque couronne. Pourquoi la première couronne contredit-elle cette règle ?",
-              "Précise si n désigne le numéro de la couronne ou sa distance au centre.",
+              "Mina affirme que l’anneau ajouté à l’étape n contient 6n alvéoles. Pourquoi l’étape 2 contredit-elle cette règle ?",
+              "À l’étape n, l’anneau est à une distance n − 1 du centre.",
             ],
           },
           prompts: [
@@ -3695,7 +3695,7 @@
           }
           s = out;
         }
-        return Number(s);
+        return s;
       }
       function digitSum(n) {
         return String(Math.abs(n))
@@ -3887,7 +3887,8 @@
           category: "multiply",
           term: (n) => Math.round(100 * Math.pow(1.1, n - 1) * 100) / 100,
           formula: "100 × 1,1ⁿ⁻¹",
-          note: "chaque terme s’obtient en multipliant le précédent par 1,1",
+          note:
+            "chaque terme s’obtient en multipliant le précédent par 1,1 ; les valeurs affichées sont arrondies au centième",
           recursive: "Multiplier par 1,1",
           focus: 8,
           inverse: 4,
@@ -4004,7 +4005,7 @@
           term: (n) => n * (n + 1),
           formula: "n(n + 1)",
           note: "le terme est l’aire d’un rectangle n par n + 1",
-          recursive: "Ajouter 2n au passage au rang suivant",
+          recursive: "Pour obtenir uₙ depuis uₙ₋₁, ajouter 2n",
           focus: 18,
           inverse: 10,
           error:
@@ -4132,7 +4133,7 @@
           title: "La roue des sept jours",
           family: "Périodicité · cycle de sept",
           story:
-            "Le septième état ramène au premier, comme les jours d’une semaine.",
+            "Après le septième état, le cycle revient au premier, comme les jours d’une semaine.",
           category: "cycles",
           term: (n) => ((n - 1) % 7) + 1,
           formula: "1 + reste de (n − 1) ÷ 7",
@@ -4163,7 +4164,7 @@
         }),
         numberPattern({
           id: "elevens",
-          title: "Les doubles de onze",
+          title: "Les multiples de onze",
           family: "Écriture décimale · régularité",
           story:
             "L’écriture des nombres révèle une structure simple jusqu’à un certain rang.",
@@ -4183,12 +4184,13 @@
           family: "Écriture décimale · concaténation",
           story: "Chaque rang ajoute un chiffre 1 à droite du précédent.",
           category: "challenges",
-          term: (n) => (Math.pow(10, n) - 1) / 9,
+          term: (n) => "1".repeat(n),
           formula: "(10ⁿ − 1) / 9",
           note: "le terme de rang n s’écrit avec n chiffres 1",
           recursive: "Multiplier par 10 puis ajouter 1",
           focus: 6,
           inverse: 5,
+          max: 10,
           error:
             "Nora écrit n × 1. Pourquoi la position des chiffres change-t-elle la valeur ?",
         }),
@@ -4376,10 +4378,12 @@
           category: "challenges",
           term: (n) => lookSay(n),
           formula: "décrire les groupes du terme précédent",
-          note: "11 signifie « deux 1 », puis 21 signifie « un 2 et un 1 »",
+          note:
+            "11 se lit « deux 1 », donc le terme suivant est 21 ; 21 se lit « un 2, puis un 1 », donc le suivant est 1211",
           recursive: "Lire puis décrire le terme précédent",
           focus: 6,
           inverse: 4,
+          max: 10,
           error:
             "Nina calcule sur la valeur numérique. Pourquoi faut-il ici lire l’écriture chiffre par chiffre ?",
           reflex:
@@ -4652,7 +4656,8 @@
             formula: start + " × " + fmt(factor) + "ⁿ⁻¹",
             note:
               "chaque terme s’obtient en multipliant le précédent par " +
-              fmt(factor),
+              fmt(factor) +
+              " ; les valeurs affichées sont arrondies au centième",
             recursive: "Multiplier par " + fmt(factor),
           };
         } else if (id === "alternate_steps") {
@@ -4803,6 +4808,7 @@
           ...changes,
           baseId: base.id,
           variantSeed: seed,
+          variantChanged: Object.keys(changes).length > 0,
         };
         variant.q = { ...base.q };
         if (Object.keys(changes).length) {
@@ -5217,6 +5223,585 @@
         pascal:
           "Une règle locale d’addition peut produire une croissance globale multiplicative.",
       };
+      const visualNearHints = {
+        portal:
+          "Une étape de plus correspond à une colonne complète de 3 tuiles de plus ; la tuile corail reste fixe.",
+        house:
+          "Une case supplémentaire partage un mur avec la précédente : elle ajoute 5 segments, pas 6.",
+        stairs:
+          "La 5e marche ajoute une nouvelle colonne de 5 carrés aux 10 carrés de l’étape 4.",
+        rings:
+          "Le contour gagne 2 tuiles sur chacun de ses 4 côtés : 8 tuiles de plus.",
+        lava:
+          "Un pic supplémentaire apporte une montée et une descente : 2 segments de plus.",
+        weave:
+          "Ajoute un module complet de 4 pièces, en inversant son orientation.",
+        rosette:
+          "Une nouvelle couronne apporte exactement 6 pétales.",
+        pool:
+          "Quand le côté du bassin augmente de 1, la margelle gagne 4 tuiles.",
+        pebbles:
+          "La 5e couche est triangulaire : elle contient 15 galets, à ajouter aux 20 déjà présents.",
+        twins:
+          "À chaque étape, A gagne 2 unités et B en gagne 3 : à l’étape 5, A vaut 18 et B vaut 16.",
+        fern:
+          "Au niveau suivant, 32 nouveaux bourgeons apparaissent : 31 + 32 = 63.",
+        illusion:
+          "Avec la règle choisie « doubler », l’étape 5 vaut 16 ; une autre règle pourrait toutefois prolonger autrement.",
+        diamond:
+          "La 5e couronne ajoute 4 × 4 = 16 pierres autour des 25 déjà présentes.",
+        honeycomb:
+          "La 5e couronne ajoute 6 × 4 = 24 alvéoles autour des 37 déjà présentes.",
+        pinwheel:
+          "Chaque bras gagne une pièce : 4 pièces s’ajoutent au total.",
+        kolam:
+          "Passer d’un réseau 4 × 4 à 5 × 5 ajoute 9 points ; chacun porte 4 arcs.",
+        snowflake:
+          "Chaque triangle en produit 3 : le total est multiplié par 3.",
+        gnomon:
+          "Le 5e gnomon contient 2 × 5 − 1 = 9 cases.",
+        triangles:
+          "Le nouveau triangle partage un côté et n’ajoute donc que 2 segments.",
+        tables:
+          "Une nouvelle table ajoute une place en haut et une en bas ; les 2 places d’extrémité restent fixes.",
+        rectangle:
+          "Le rectangle passe de 4 × 5 à 5 × 6 : une nouvelle rangée et une nouvelle colonne apparaissent.",
+        zoom:
+          "Chaque pixel du petit L devient un carré 5 × 5 : les deux dimensions sont multipliées.",
+        constellation:
+          "Les 5 points restent les mêmes ; seules leurs distances au centre augmentent.",
+        mirror:
+          "Ajoute un module de 5 pièces et réfléchis-le par rapport au précédent.",
+        koch:
+          "Chaque segment est remplacé par 4 segments : le total est multiplié par 4.",
+        checker:
+          "Passe d’un damier 4 × 4 à 5 × 5, puis tiens compte de la couleur des quatre coins.",
+        gridlines:
+          "La nouvelle rangée et la nouvelle colonne prolongent aussi les anciennes lignes : 20 segments s’ajoutent.",
+        star:
+          "Une graine s’ajoute sur chacun des 6 bras ; la graine centrale reste fixe.",
+        facade:
+          "La façade passe de 4 × 6 à 5 × 7 : elle gagne 11 fenêtres.",
+        seedtriangle:
+          "Le contour gagne une graine dans chacune des 3 directions : 3 graines de plus.",
+        handshake:
+          "Le 5e point est relié aux 4 points déjà présents : 4 nouvelles liaisons.",
+        diagonals:
+          "Le nouveau sommet crée de nouvelles diagonales et transforme aussi un ancien côté en diagonale.",
+        fibspiral:
+          "Le côté suivant est la somme des deux précédents : 2 + 3 = 5.",
+        carpet:
+          "Chaque carré plein est remplacé par 8 carrés : le total est multiplié par 8.",
+        trilattice:
+          "La nouvelle couche apporte 5 segments dans chacune des 3 directions : 15 segments de plus.",
+      };
+      const inverseConclusions = {
+        portal: (n) => "Il s’agit de l’étape " + n + ".",
+        house: (n) => "La rangée contient " + n + " cases.",
+        stairs: (n) => "L’escalier possède " + n + " marches.",
+        rings: (n) => "Il s’agit du " + n + "e anneau.",
+        lava: (n) => "Il s’agit de l’étape " + n + ".",
+        weave: (n) => "La frise contient " + n + " modules.",
+        rosette: (n) => "La rosace contient " + n + " couronnes.",
+        pool: (n) => "Le bassin mesure " + n + " tuiles de côté.",
+        pebbles: (n) => "La pyramide possède " + n + " couches.",
+        fern: (n) => "Il s’agit du niveau " + n + ".",
+        illusion: (n) => "Avec la règle « doubler », il s’agit de l’étape " + n + ".",
+        diamond: (n) => "Le diamant possède " + n + " couronnes.",
+        honeycomb: (n) => "La ruche possède " + n + " couronnes.",
+        pinwheel: (n) => "Il s’agit de l’étape " + n + ".",
+        kolam: (n) => "Le réseau possède " + n + " points sur un côté.",
+        snowflake: (n) => "Il s’agit de l’étape " + n + ".",
+        gnomon: (n) => n + " gnomons ont été ajoutés.",
+        triangles: (n) => "L’éventail contient " + n + " triangles.",
+        tables: (n) => "La rangée contient " + n + " tables.",
+        rectangle: (n) => "Il s’agit de l’étape " + n + ".",
+        zoom: (n) => "Le facteur d’agrandissement vaut " + n + ".",
+        mirror: (n) => "La frise contient " + n + " modules.",
+        koch: (n) => "Il s’agit de l’étape " + n + ".",
+        checker: (n) => "Le damier mesure " + n + " cases de côté.",
+        gridlines: (n) => "Le quadrillage mesure " + n + " cases de côté.",
+        star: (n) => "Il s’agit de l’étape " + n + ".",
+        facade: (n) => "La façade possède " + n + " étages.",
+        seedtriangle: (n) => "Il s’agit de l’étape " + n + ".",
+        handshake: (n) => "Le cercle contient " + n + " points.",
+        diagonals: (n) => "Il s’agit de l’étape " + n + ", avec " + (n + 3) + " sommets.",
+        fibspiral: (n) => "Le carré est au rang " + n + ".",
+        carpet: (n) => "Il s’agit de l’étape " + n + ".",
+        trilattice: (n) => "Il s’agit de l’étape " + n + ".",
+      };
+      const visualErrorCorrections = {
+        portal: {
+          wrong: "n + 3",
+          correct: "3n + 1",
+          answer: "« Ajouter 3 » décrit le passage d’une étape à la suivante ; ce n’est pas la règle directe.",
+          proof: "n + 3 donne 5 à l’étape 2 au lieu de 7. Le dessin montre n colonnes de 3 tuiles et 1 tuile fixe : 3n + 1.",
+        },
+        house: {
+          wrong: "6n",
+          correct: "5n + 1",
+          answer: "Le calcul 6n recompte les murs partagés entre deux cases voisines.",
+          proof: "La première case utilise 6 segments, puis chaque nouvelle case n’en ajoute que 5 : 6 + 5(n − 1) = 5n + 1.",
+        },
+        stairs: {
+          wrong: "n²",
+          correct: "n(n + 1) ÷ 2",
+          answer: "n² compte un carré complet, alors que l’escalier n’en occupe qu’une moitié réorganisée.",
+          proof: "Deux escaliers identiques forment un rectangle n × (n + 1), donc un seul contient n(n + 1) ÷ 2 carrés.",
+        },
+        rings: {
+          wrong: "4(2n + 1)",
+          correct: "8n",
+          answer: "En comptant quatre côtés entiers, Léa compte chacun des quatre coins deux fois.",
+          proof: "On corrige 4(2n + 1) − 4 = 8n.",
+        },
+        lava: {
+          wrong: "2n",
+          correct: "2n + 1",
+          answer: "Les n pics donnent bien 2n segments, mais le segment vertical de départ reste à ajouter.",
+          proof: "n montées + n descentes + 1 segment fixe donnent 2n + 1.",
+        },
+        weave: {
+          wrong: "seulement 4n",
+          correct: "4n et orientation alternée",
+          answer: "La quantité 4n ne décrit pas à elle seule le pattern géométrique.",
+          proof: "Chaque module contient 4 pièces, mais deux modules voisins sont aussi reliés par une alternance d’orientation.",
+        },
+        rosette: {
+          wrong: "6n + 1 pétales",
+          correct: "6n pétales",
+          answer: "Le disque central n’est pas un pétale ; il ne répond donc pas à la grandeur demandée.",
+          proof: "Il y a 6 pétales par couronne et n couronnes, soit 6n pétales. 6n + 1 compterait toutes les pièces, centre compris.",
+        },
+        pool: {
+          wrong: "4n",
+          correct: "4n + 4",
+          answer: "Quatre bandes de longueur n laissent de côté les quatre tuiles des coins.",
+          proof: "La bordure vaut (n + 2)² − n² = 4n + 4.",
+        },
+        pebbles: {
+          wrong: "n³",
+          correct: "n(n + 1)(n + 2) ÷ 6",
+          answer: "n³ remplit un cube entier ; la pyramide ne conserve que des couches triangulaires.",
+          proof: "On additionne T₁ + T₂ + … + Tₙ, ce qui donne n(n + 1)(n + 2) ÷ 6.",
+        },
+        twins: {
+          wrong: "A restera devant",
+          correct: "A − B = 7 − n",
+          answer: "A part plus haut, mais B gagne 3 unités par étape contre 2 pour A.",
+          proof: "L’écart A − B vaut 7 − n : il devient nul à l’étape 7, puis B dépasse A.",
+        },
+        fern: {
+          wrong: "aucune règle",
+          correct: "uₙ = 2ⁿ⁺¹ − 1",
+          answer: "L’ajout n’est pas constant, mais la règle multiplicative est parfaitement régulière.",
+          proof: "Chaque dernier bourgeon en produit deux ; le total vérifie uₙ₊₁ = 2uₙ + 1.",
+        },
+        illusion: {
+          wrong: "8 est obligatoire",
+          correct: "8 si l’on choisit de doubler",
+          answer: "Le mot « seule » est injustifié : plusieurs règles peuvent commencer par 1, 2, 4.",
+          proof: "Doubler conduit à 8, mais une autre règle peut partager les trois premières étapes et produire une autre quatrième valeur.",
+        },
+        diamond: {
+          wrong: "n²",
+          correct: "n² + (n − 1)²",
+          answer: "n désigne le nombre de couronnes, pas le côté d’un carré plein.",
+          proof: "Le diamant s’assemble avec deux carrés consécutifs : n² + (n − 1)² = 2n(n − 1) + 1.",
+        },
+        honeycomb: {
+          wrong: "6n sur la couronne n",
+          correct: "6(n − 1) sur la couronne n",
+          answer: "À l’étape 2, l’anneau ajouté contient 6 alvéoles, pas 12.",
+          proof: "La couronne de l’étape n contient 6(n − 1) alvéoles ; le total vaut 1 + 6(1 + … + n − 1).",
+        },
+        pinwheel: {
+          wrong: "4n",
+          correct: "4n + 1",
+          answer: "Les quatre bras donnent 4n pièces, mais la pièce centrale n’appartient à aucun bras.",
+          proof: "On compte 4 bras de n pièces, puis 1 centre fixe : 4n + 1.",
+        },
+        kolam: {
+          wrong: "4n",
+          correct: "4n²",
+          answer: "Yuna ne fait varier qu’une dimension du réseau.",
+          proof: "Il y a n × n = n² points et 4 arcs autour de chacun, soit 4n² arcs.",
+        },
+        snowflake: {
+          wrong: "chercher un ajout constant",
+          correct: "multiplier par 3",
+          answer: "Le nombre ajouté change parce que chaque triangle présent en produit trois.",
+          proof: "Le total est multiplié par 3 à chaque étape : 1, 3, 9, 27… soit 3ⁿ⁻¹.",
+        },
+        gnomon: {
+          wrong: "n cases",
+          correct: "2n − 1 cases",
+          answer: "Le n-ième gnomon réunit une ligne de n cases et une colonne de n cases avec un coin commun.",
+          proof: "n + n − 1 = 2n − 1 ; la somme des gnomons forme le carré n².",
+        },
+        triangles: {
+          wrong: "3n",
+          correct: "2n + 1",
+          answer: "Chaque nouveau triangle partage un rayon avec le précédent ; 3n recompte ces côtés communs.",
+          proof: "Le premier triangle utilise 3 segments, puis chaque triangle supplémentaire en ajoute 2 : 3 + 2(n − 1) = 2n + 1.",
+        },
+        tables: {
+          wrong: "4n",
+          correct: "2n + 2",
+          answer: "Quand les tables se touchent, les places situées sur les côtés communs disparaissent.",
+          proof: "Il reste n places en haut, n en bas et 2 aux extrémités : 2n + 2.",
+        },
+        rectangle: {
+          wrong: "n²",
+          correct: "n(n + 1)",
+          answer: "Le rectangle possède une colonne de plus qu’un carré n × n.",
+          proof: "On compte n² cases pour le carré et une bande de n cases : n² + n = n(n + 1).",
+        },
+        zoom: {
+          wrong: "3n",
+          correct: "3n²",
+          answer: "Le facteur n agit sur la largeur et sur la hauteur de chaque bloc.",
+          proof: "Chaque bloc contient n × n = n² pixels ; les trois blocs contiennent donc 3n² pixels.",
+        },
+        constellation: {
+          wrong: "plus grand = plus de points",
+          correct: "5 points invariants",
+          answer: "L’agrandissement éloigne les points, mais il n’en crée aucun.",
+          proof: "Les distances sont multipliées par le facteur ; le nombre de points reste toujours égal à 5.",
+        },
+        mirror: {
+          wrong: "simple répétition",
+          correct: "répétition avec symétrie",
+          answer: "La quantité se répète, mais l’orientation change un module sur deux.",
+          proof: "La règle complète associe 5 pièces par module et une réflexion entre deux modules voisins.",
+        },
+        koch: {
+          wrong: "+4 à chaque étape",
+          correct: "×4 à chaque étape",
+          answer: "Ce ne sont pas quatre segments isolés qui s’ajoutent : chaque segment existant est remplacé par quatre.",
+          proof: "Le total est multiplié par 4 : 1, 4, 16, 64… soit 4ⁿ⁻¹.",
+        },
+        checker: {
+          wrong: "toujours n² ÷ 2",
+          correct: "deux cas selon la parité",
+          answer: "Pour n impair, n² est impair : le partage en deux donne nécessairement une demi-case impossible.",
+          proof: "Si n est pair, il y a n² ÷ 2 cases bleues ; s’il est impair, la couleur des coins en a (n² + 1) ÷ 2.",
+        },
+        gridlines: {
+          wrong: "2n²",
+          correct: "2n(n + 1)",
+          answer: "Un quadrillage de n cases possède n + 1 lignes dans chaque direction, pas n.",
+          proof: "Chaque direction contient (n + 1) lignes de n segments : n(n + 1), à doubler pour les deux directions.",
+        },
+        star: {
+          wrong: "6n",
+          correct: "6n + 1",
+          answer: "La graine centrale est fixe et n’appartient à aucun des six bras.",
+          proof: "Les six bras donnent 6n graines, puis on ajoute le centre : 6n + 1.",
+        },
+        facade: {
+          wrong: "n² + 2",
+          correct: "n² + 2n",
+          answer: "Les deux colonnes supplémentaires contiennent chacune n fenêtres, pas une seule.",
+          proof: "n(n + 2) = n² + n × 2 = n² + 2n.",
+        },
+        seedtriangle: {
+          wrong: "3(n + 1)",
+          correct: "3n",
+          answer: "Chaque sommet appartient à deux côtés et est donc compté deux fois dans 3(n + 1).",
+          proof: "On retire les trois doubles comptages : 3(n + 1) − 3 = 3n.",
+        },
+        handshake: {
+          wrong: "n(n − 1)",
+          correct: "n(n − 1) ÷ 2",
+          answer: "Le comptage depuis chaque point voit deux fois chaque liaison : une fois depuis chacune de ses extrémités.",
+          proof: "A–B et B–A désignent la même liaison ; on divise donc n(n − 1) par 2.",
+        },
+        diagonals: {
+          wrong: "toutes les paires",
+          correct: "paires moins les côtés",
+          answer: "Les paires de sommets voisins forment les côtés du polygone, pas des diagonales.",
+          proof: "Avec n + 3 sommets, on retire les n + 3 côtés de toutes les paires ; il reste n(n + 3) ÷ 2 diagonales.",
+        },
+        fibspiral: {
+          wrong: "différence constante",
+          correct: "somme des deux précédents",
+          answer: "Aucune différence unique ne convient : chaque côté dépend des deux côtés précédents.",
+          proof: "La règle est Fₙ = Fₙ₋₁ + Fₙ₋₂ : 1, 1, 2, 3, 5, 8…",
+        },
+        carpet: {
+          wrong: "+8 à chaque étape",
+          correct: "×8 à chaque étape",
+          answer: "Tous les carrés pleins sont remplacés simultanément, pas un seul.",
+          proof: "Chaque carré produit 8 carrés : le total est multiplié par 8 et vaut 8ⁿ⁻¹.",
+        },
+        trilattice: {
+          wrong: "3n²",
+          correct: "3n(n + 1) ÷ 2",
+          answer: "Dans une direction, les lignes ont des longueurs 1, 2, …, n ; elles ne forment pas un carré n × n.",
+          proof: "Une direction contient n(n + 1) ÷ 2 segments ; les trois directions en contiennent 3n(n + 1) ÷ 2.",
+        },
+      };
+      const numberErrorCorrections = {
+        num_arith_plus: {
+          wrong: "n + 3",
+          correct: "3n + 2",
+          answer: "« Ajouter 3 » est la règle de proche en proche, pas la formule du terme de rang n.",
+          proof: "La suite commence à 5 : uₙ = 5 + 3(n − 1) = 3n + 2.",
+        },
+        num_arith_minus: {
+          wrong: "4n",
+          correct: "86 − 4n",
+          answer: "4n augmente, alors que cette suite diminue de 4 à chaque rang.",
+          proof: "Comme u₁ = 82, on écrit uₙ = 82 − 4(n − 1) = 86 − 4n.",
+        },
+        num_decimal_step: {
+          wrong: "+25",
+          correct: "+0,25",
+          answer: "25 et 0,25 ne représentent pas la même valeur : 0,25 est un quart d’unité.",
+          proof: "0,50 + 0,25 = 0,75, tandis que 0,50 + 25 = 25,50.",
+        },
+        num_relatives: {
+          wrong: "s’arrêter avant 0",
+          correct: "continuer avec +4",
+          answer: "Une suite de nombres relatifs peut traverser zéro sans changer de règle.",
+          proof: "Après −3, on ajoute encore 4 : le terme suivant vaut 1, puis 5.",
+        },
+        num_constant: {
+          wrong: "toute suite varie",
+          correct: "uₙ = 7",
+          answer: "Une suite peut être constante : le rang change alors que la valeur reste la même.",
+          proof: "Ici u₁ = u₂ = … = 7.",
+        },
+        num_geom_double: {
+          wrong: "+3",
+          correct: "×2",
+          answer: "L’écart n’est pas constant : il vaut 3, puis 6, puis 12…",
+          proof: "Le rapport reste égal à 2 : 3, 6, 12, 24… donc uₙ = 3 × 2ⁿ⁻¹.",
+        },
+        num_geom_half: {
+          wrong: "−64",
+          correct: "÷2",
+          answer: "On retire 64 une seule fois ; les écarts suivants valent −32, puis −16.",
+          proof: "Chaque terme est la moitié du précédent : 128, 64, 32, 16…",
+        },
+        num_percent10: {
+          wrong: "+10",
+          correct: "×1,1",
+          answer: "Les 10 % sont recalculés sur le nouveau terme, donc l’augmentation n’est pas constante.",
+          proof: "100 devient 110, puis on ajoute 11 pour obtenir 121 ; la règle est de multiplier par 1,1.",
+        },
+        num_alternate_steps: {
+          wrong: "un seul écart",
+          correct: "+2 puis +5",
+          answer: "Les différences alternent : une différence constante ne peut pas décrire la suite.",
+          proof: "On lit +2, +5, +2, +5… et on recommence.",
+        },
+        num_interleaved: {
+          wrong: "une règle pour tous les rangs",
+          correct: "deux sous-suites",
+          answer: "Les rangs impairs et pairs suivent deux règles différentes.",
+          proof: "Aux rangs impairs : 2, 4, 6, 8… ; aux rangs pairs : 5, 10, 20, 40…",
+        },
+        num_signs: {
+          wrong: "u₂₀ = 6",
+          correct: "u₂₀ = −6",
+          answer: "Le signe est positif aux rangs impairs et négatif aux rangs pairs.",
+          proof: "20 est pair, donc u₂₀ = −6.",
+        },
+        num_squares: {
+          wrong: "2n",
+          correct: "n²",
+          answer: "Deux dimensions ne s’additionnent pas pour calculer une aire : elles se multiplient.",
+          proof: "Un carré de côté n contient n × n = n² unités d’aire.",
+        },
+        num_triangular: {
+          wrong: "n²",
+          correct: "n(n + 1) ÷ 2",
+          answer: "Le nombre triangulaire n’occupe pas un carré complet.",
+          proof: "Deux triangles identiques forment un rectangle n × (n + 1), donc un triangle vaut n(n + 1) ÷ 2.",
+        },
+        num_cubes: {
+          wrong: "3n",
+          correct: "n³",
+          answer: "Les trois dimensions d’un volume se multiplient.",
+          proof: "Un cube de côté n a pour volume n × n × n = n³.",
+        },
+        num_rectangles: {
+          wrong: "n²",
+          correct: "n(n + 1)",
+          answer: "Le rectangle possède une bande de n cases de plus que le carré n × n.",
+          proof: "n² + n = n(n + 1).",
+        },
+        num_centered_square: {
+          wrong: "seulement 4(n − 1)",
+          correct: "n² + (n − 1)²",
+          answer: "4(n − 1) compte uniquement la nouvelle couronne, pas toute la figure.",
+          proof: "Le total réunit les couronnes précédentes et vaut n² + (n − 1)².",
+        },
+        num_pentagonal: {
+          wrong: "aucune règle",
+          correct: "écarts +3",
+          answer: "Les premiers écarts varient, mais leurs propres écarts sont constants.",
+          proof: "Les différences 1, 4, 7, 10… augmentent toujours de 3.",
+        },
+        num_n2plus1: {
+          wrong: "(n + 1)²",
+          correct: "n² + 1",
+          answer: "Ajouter 1 au côté ajoute une ligne et une colonne, pas une seule case.",
+          proof: "(n + 1)² = n² + 2n + 1, tandis que la suite demande seulement n² + 1.",
+        },
+        num_fibonacci: {
+          wrong: "différence constante",
+          correct: "somme des deux précédents",
+          answer: "Les différences changent parce que chaque terme utilise deux termes précédents.",
+          proof: "La règle est uₙ = uₙ₋₁ + uₙ₋₂.",
+        },
+        num_add_rank: {
+          wrong: "suite arithmétique",
+          correct: "ajouts 1, 2, 3…",
+          answer: "Additionner ne suffit pas à rendre une suite arithmétique : l’ajout doit être constant.",
+          proof: "Ici les différences valent 1, 2, 3, 4…",
+        },
+        num_staircase: {
+          wrong: "+1 à chaque terme",
+          correct: "répéter k, k fois",
+          answer: "On ajoute 1 seulement au passage d’un palier au suivant.",
+          proof: "La suite commence 1, 2, 2, 3, 3, 3, 4, 4, 4, 4…",
+        },
+        num_cycle4: {
+          wrong: "continuer 4, 5…",
+          correct: "recommencer 1, 2, 3, 0",
+          answer: "Après quatre termes, le motif recommence.",
+          proof: "Le terme suivant 1, 2, 3, 0 est de nouveau 1.",
+        },
+        num_week: {
+          wrong: "garder le quotient",
+          correct: "utiliser le reste modulo 7",
+          answer: "Le quotient compte les cycles complets ; le reste indique la position dans le cycle courant.",
+          proof: "On utilise le reste de (n − 1) dans la division par 7.",
+        },
+        num_power_units: {
+          wrong: "calculer 2⁵⁰",
+          correct: "utiliser le cycle 2, 4, 8, 6",
+          answer: "Le chiffre des unités se répète tous les quatre rangs.",
+          proof: "50 laisse le même reste que 2 modulo 4, donc 2⁵⁰ se termine par 4.",
+        },
+        num_elevens: {
+          wrong: "toujours deux chiffres identiques",
+          correct: "contre-exemple : 11 × 10 = 110",
+          answer: "La régularité visuelle des deux chiffres identiques s’arrête après 99.",
+          proof: "Au rang 10, le multiple vaut 110 : ses chiffres ne sont pas tous identiques.",
+        },
+        num_repunits: {
+          wrong: "n × 1",
+          correct: "concaténer n chiffres 1",
+          answer: "La valeur dépend de la position de chaque chiffre 1.",
+          proof: "111 vaut 100 + 10 + 1, pas 3 × 1.",
+        },
+        num_divisors: {
+          wrong: "d(n) augmente toujours",
+          correct: "la factorisation décide",
+          answer: "Un rang plus grand peut avoir moins de diviseurs.",
+          proof: "6 possède 4 diviseurs, alors que 7, pourtant plus grand, n’en possède que 2.",
+        },
+        num_primes: {
+          wrong: "+2 après chaque nombre premier",
+          correct: "tester le prochain nombre premier",
+          answer: "Après 7, ajouter 2 donne 9, qui n’est pas premier.",
+          proof: "Le nombre premier suivant 7 est 11 : l’écart vaut alors 4.",
+        },
+        num_motif_repeat: {
+          wrong: "même valeur = même suivant",
+          correct: "repérer la position dans le bloc",
+          answer: "Une même valeur peut occuper plusieurs positions du motif et avoir des suivants différents.",
+          proof: "Dans 4, 9, 4, 7, 9, le premier 4 est suivi de 9 et le second de 7.",
+        },
+        num_fractions: {
+          wrong: "ajouter 1 conserve la fraction",
+          correct: "les valeurs se rapprochent de 1",
+          answer: "Ajouter 1 au numérateur et au dénominateur ne conserve pas le quotient.",
+          proof: "1/2 = 0,5 tandis que 2/3 ≈ 0,667.",
+        },
+        num_mul_add: {
+          wrong: "une opération unique",
+          correct: "alterner ×2 et +3",
+          answer: "La règle porte sur un cycle de deux opérations.",
+          proof: "On lit 2 → 4 par ×2, puis 4 → 7 par +3, et on recommence.",
+        },
+        num_affine_recurrence: {
+          wrong: "retirer 1 puis doubler",
+          correct: "doubler puis retirer 1",
+          answer: "L’ordre des opérations change le résultat.",
+          proof: "À partir de u, 2u − 1 n’est pas égal à 2(u − 1) = 2u − 2.",
+        },
+        num_parity_mix: {
+          wrong: "n² à tous les rangs",
+          correct: "n² si n impair ; 2n si n pair",
+          answer: "Le rang 4 réfute la règle unique n².",
+          proof: "La suite donne u₄ = 2 × 4 = 8, alors que 4² = 16.",
+        },
+        num_units_multiples: {
+          wrong: "calculer tout le produit",
+          correct: "raisonner modulo 10",
+          answer: "Seul le chiffre des unités du produit est demandé.",
+          proof: "Les unités de 7n suivent un cycle ; pour n = 100, le chiffre des unités vaut 0.",
+        },
+        num_gcd12: {
+          wrong: "le PGCD augmente avec n",
+          correct: "comparer les diviseurs communs",
+          answer: "Le PGCD n’est pas une fonction croissante du rang.",
+          proof: "PGCD(12, 12) = 12, puis PGCD(13, 12) = 1.",
+        },
+        num_rec_double_rank: {
+          wrong: "toujours retirer 1",
+          correct: "retirer 1, puis 2, puis 3…",
+          answer: "La quantité retirée dépend du rang courant.",
+          proof: "La règle est uₙ₊₁ = 2uₙ − n.",
+        },
+        num_look_say: {
+          wrong: "chercher une opération numérique",
+          correct: "lire les groupes de chiffres",
+          answer: "La règle agit sur l’écriture du terme, pas sur sa valeur arithmétique.",
+          proof: "11 se lit « deux 1 », ce qui produit 21 ; 21 se lit « un 2, un 1 », ce qui produit 1211.",
+        },
+        num_digit_sum: {
+          wrong: "+1 à chaque rang",
+          correct: "additionner les chiffres du rang",
+          answer: "Le passage de 9 à 10 fait chuter le terme.",
+          proof: "u₉ = 9, tandis que u₁₀ = 1 + 0 = 1.",
+        },
+        num_last_square: {
+          wrong: "tous les chiffres sont possibles",
+          correct: "unités possibles : 0, 1, 4, 5, 6, 9",
+          answer: "Les premiers carrés excluent déjà 2, 3, 7 et 8 comme chiffres des unités.",
+          proof: "Les unités des carrés suivent le cycle 1, 4, 9, 6, 5, 6, 9, 4, 1, 0.",
+        },
+        num_ambiguous: {
+          wrong: "8 est obligatoire",
+          correct: "8 avec la règle « doubler »",
+          answer: "Les termes 1, 2, 4 ne déterminent pas une règle unique.",
+          proof: "Doubler donne 8, mais une autre règle peut partager les trois premiers termes puis diverger.",
+        },
+      };
+      function activeErrorCorrection() {
+        if (current.kind !== "number")
+          return visualErrorCorrections[current.id] || null;
+        if (current.variantChanged)
+          return {
+            wrong: "règle du tirage précédent",
+            correct: current.formula,
+            answer:
+              "La règle du tirage précédent ne peut pas être réutilisée sans vérifier les nouvelles valeurs.",
+            proof:
+              "Ici, la transformation est « " +
+              current.recursive +
+              " » et la règle affichée est « " +
+              current.formula +
+              " ».",
+          };
+        return numberErrorCorrections[current.id] || null;
+      }
       const questionMeta = {
         notice: ["Observer", "◌"],
         near: ["Continuer sans voir", "→"],
@@ -5769,20 +6354,23 @@
       function fern(n) {
         const depth = Math.min(n, 6),
           lines = [],
-          nodes = [];
+          nodes = [[105, 178, 0]];
         function branch(x, y, len, angle, d) {
-          nodes.push([x, y, d]);
           if (d === depth) return;
-          const nx = x + Math.cos(angle) * len,
-            ny = y - Math.sin(angle) * len;
-          lines.push([x, y, nx, ny, d]);
-          branch(nx, ny, len * 0.72, angle + 0.48, d + 1);
-          branch(nx, ny, len * 0.72, angle - 0.48, d + 1);
+          for (const turn of [-0.46, 0.46]) {
+            const nextAngle = angle + turn,
+              nx = x + Math.cos(nextAngle) * len,
+              ny = y - Math.sin(nextAngle) * len,
+              level = d + 1;
+            lines.push([x, y, nx, ny, level]);
+            nodes.push([nx, ny, level]);
+            branch(nx, ny, len * 0.7, nextAngle + turn * 0.12, level);
+          }
         }
         branch(105, 178, 47, Math.PI / 2, 0);
         let z = "";
         for (const l of lines) {
-          const recent = toolsState.growth && l[4] === depth - 1;
+          const recent = toolsState.growth && l[4] === depth;
           z +=
             '<line x1="' +
             l[0] +
@@ -5795,7 +6383,7 @@
             '" stroke="' +
             (recent ? palette.coral : palette.green) +
             '" stroke-width="' +
-            Math.max(1.4, 5 - l[4] * 0.55) +
+            Math.max(1.4, 5.4 - l[4] * 0.55) +
             '" stroke-linecap="round"/>';
         }
         for (const p of nodes) {
@@ -5990,55 +6578,45 @@
           for (let c = 0; c < shown; c++) {
             const x = left + c * gap,
               y = top + r * gap,
-              rad = 14;
-            let color = toolsState.decompose
-              ? (r + c) % 2
-                ? palette.violet
-                : palette.lagoon
-              : palette.violet;
-            if (toolsState.growth && (r === shown - 1 || c === shown - 1))
-              color = palette.coral;
-            z +=
-              '<path d="M ' +
-              x +
-              " " +
-              (y - rad) +
-              " Q " +
-              (x + rad) +
-              " " +
-              (y - rad) +
-              " " +
-              (x + rad) +
-              " " +
-              y +
-              " Q " +
-              (x + rad) +
-              " " +
-              (y + rad) +
-              " " +
-              x +
-              " " +
-              (y + rad) +
-              " Q " +
-              (x - rad) +
-              " " +
-              (y + rad) +
-              " " +
-              (x - rad) +
-              " " +
-              y +
-              " Q " +
-              (x - rad) +
-              " " +
-              (y - rad) +
-              " " +
-              x +
-              " " +
-              (y - rad) +
-              '" fill="none" stroke="' +
-              color +
-              '" stroke-width="3.4" stroke-linecap="round"/>' +
-              dot(x, y, 2.6, palette.sun);
+              rad = 14,
+              added = r === shown - 1 || c === shown - 1,
+              quarters = [
+                [x, y - rad, x + rad, y - rad, x + rad, y],
+                [x + rad, y, x + rad, y + rad, x, y + rad],
+                [x, y + rad, x - rad, y + rad, x - rad, y],
+                [x - rad, y, x - rad, y - rad, x, y - rad],
+              ],
+              arcColors = [
+                palette.lagoon,
+                palette.sun,
+                palette.violet,
+                palette.green,
+              ];
+            quarters.forEach((arc, index) => {
+              const color =
+                toolsState.growth && added
+                  ? palette.coral
+                  : toolsState.decompose
+                    ? arcColors[index]
+                    : palette.violet;
+              z +=
+                '<path d="M ' +
+                arc[0] +
+                " " +
+                arc[1] +
+                " Q " +
+                arc[2] +
+                " " +
+                arc[3] +
+                " " +
+                arc[4] +
+                " " +
+                arc[5] +
+                '" fill="none" stroke="' +
+                color +
+                '" stroke-width="3.4" stroke-linecap="round"/>';
+            });
+            z += dot(x, y, 2.6, palette.navy);
           }
         }
         if (n > shown)
@@ -6182,14 +6760,7 @@
           bottom = 128;
         let z = "";
         for (let i = 0; i < shown; i++) {
-          const fill =
-            toolsState.growth && i === shown - 1
-              ? palette.coral
-              : toolsState.decompose
-                ? i % 2
-                  ? palette.lagoon
-                  : palette.sun
-                : "#f2c27a";
+          const fill = "#f2c27a";
           z +=
             '<rect x="' +
             (left + i * cell) +
@@ -6209,18 +6780,26 @@
               left + i * cell + cell / 2,
               top - 13,
               6.5,
-              toolsState.decompose ? palette.lagoon : palette.navy,
+              toolsState.growth && i === shown - 1
+                ? palette.coral
+                : toolsState.decompose
+                  ? palette.lagoon
+                  : palette.navy,
             ) +
             dot(
               left + i * cell + cell / 2,
               bottom + 13,
               6.5,
-              toolsState.decompose ? palette.violet : palette.navy,
+              toolsState.growth && i === shown - 1
+                ? palette.coral
+                : toolsState.decompose
+                  ? palette.violet
+                  : palette.navy,
             );
         }
         z +=
-          dot(left - 13, (top + bottom) / 2, 6.5, palette.coral) +
-          dot(left + shown * cell + 13, (top + bottom) / 2, 6.5, palette.coral);
+          dot(left - 13, (top + bottom) / 2, 6.5, palette.sun) +
+          dot(left + shown * cell + 13, (top + bottom) / 2, 6.5, palette.sun);
         if (n > shown)
           z +=
             '<text x="115" y="177" text-anchor="middle" font-size="12" font-weight="900" fill="' +
@@ -6491,30 +7070,42 @@
           left = (230 - shown * s) / 2,
           top = (190 - shown * s) / 2;
         let z = "";
-        for (let i = 0; i <= shown; i++) {
-          const color = toolsState.decompose
-            ? i % 2
-              ? palette.lagoon
-              : palette.violet
-            : palette.navy;
-          z +=
-            seg(
-              left,
-              top + i * s,
-              left + shown * s,
-              top + i * s,
-              toolsState.growth && i === shown ? palette.coral : color,
-              3,
-            ) +
-            seg(
-              left + i * s,
-              top,
-              left + i * s,
-              top + shown * s,
-              toolsState.growth && i === shown ? palette.coral : color,
+        for (let r = 0; r <= shown; r++)
+          for (let c = 0; c < shown; c++) {
+            const added = r === shown || (c === shown - 1 && r < shown),
+              color =
+                toolsState.growth && added
+                  ? palette.coral
+                  : toolsState.decompose
+                    ? palette.sun
+                    : palette.navy;
+            z += seg(
+              left + c * s,
+              top + r * s,
+              left + (c + 1) * s,
+              top + r * s,
+              color,
               3,
             );
-        }
+          }
+        for (let c = 0; c <= shown; c++)
+          for (let r = 0; r < shown; r++) {
+            const added = c === shown || (r === shown - 1 && c < shown),
+              color =
+                toolsState.growth && added
+                  ? palette.coral
+                  : toolsState.decompose
+                    ? palette.lagoon
+                    : palette.navy;
+            z += seg(
+              left + c * s,
+              top + r * s,
+              left + c * s,
+              top + (r + 1) * s,
+              color,
+              3,
+            );
+          }
         if (n > shown)
           z +=
             '<text x="115" y="211" text-anchor="middle" font-size="12" font-weight="900" fill="' +
@@ -6784,7 +7375,7 @@
           left = 28,
           top = 15;
         let z = "";
-        function fill(x, y, s, d) {
+        function fill(x, y, s, d, highlightParent = false) {
           if (d === 0) {
             z +=
               '<rect x="' +
@@ -6806,8 +7397,9 @@
           for (let r = 0; r < 3; r++)
             for (let c = 0; c < 3; c++)
               if (!(r === 1 && c === 1)) {
-                const last = toolsState.growth && d === 1 && r === 2 && c === 2;
-                if (last)
+                const highlightedGroup =
+                  toolsState.growth && d === 1 && highlightParent;
+                if (highlightedGroup)
                   z +=
                     '<rect x="' +
                     (x + c * q) +
@@ -6820,10 +7412,30 @@
                     '" fill="' +
                     palette.coral +
                     '"/>';
-                else fill(x + c * q, y + r * q, q, d - 1);
+                else
+                  fill(
+                    x + c * q,
+                    y + r * q,
+                    q,
+                    d - 1,
+                    highlightParent && r === 0 && c === 0,
+                  );
               }
+          if (toolsState.growth && d === 1 && highlightParent)
+            z +=
+              '<rect x="' +
+              x +
+              '" y="' +
+              y +
+              '" width="' +
+              s +
+              '" height="' +
+              s +
+              '" fill="none" stroke="' +
+              palette.coral +
+              '" stroke-width="2.5"/>';
         }
-        fill(left, top, size, depth);
+        fill(left, top, size, depth, true);
         if (n - 1 > depth)
           z +=
             '<text x="115" y="207" text-anchor="middle" font-size="12" font-weight="900" fill="' +
@@ -7507,6 +8119,8 @@
                 ". À quel(s) rang(s) peut-il apparaître ?",
               "Utilise la règle et vérifie si plusieurs rangs peuvent donner la même valeur.",
             ];
+          if (type === "error")
+            return [current.q.error[0], current.prompts[0]];
           return current.q[type];
         }
         if (current.id === "portal") {
@@ -7533,6 +8147,23 @@
                 ", le portail comporte " +
                 n +
                 " colonnes de 3 tuiles, puis 1 tuile fixe.",
+            ];
+        }
+        if (current.id === "twins") {
+          if (type === "notice")
+            return [
+              "Comment évoluent les deux hauteurs ?",
+              "Compare séparément la hauteur de départ et le gain à chaque étape.",
+            ];
+          if (type === "near")
+            return [
+              "Sans la dessiner, prévois les hauteurs des deux filaos à l’étape 5.",
+              visualNearHints.twins,
+            ];
+          if (type === "generalize")
+            return [
+              "Écris une expression donnant la hauteur de chaque filao à l’étape n.",
+              "A part à 10 et gagne 2 ; B part à 4 et gagne 3.",
             ];
         }
         if (current.id === "pascal") {
@@ -7591,21 +8222,22 @@
         if (type === "notice")
           return [
             "Qu’est-ce qui reste identique ? Qu’est-ce qui change ?",
-            "Décris la structure comme si ton partenaire ne pouvait pas voir le dessin.",
+            current.prompts[0],
           ];
         if (type === "near")
           return [
             "Sans la dessiner ici, prévois l’étape 5 et sa quantité " +
               withDe(current.unit) +
               ".",
-            "Pars de l’étape 4, puis explique exactement ce qui change.",
+            visualNearHints[current.id] ||
+              "Pars de l’étape 4, puis explique exactement ce qui change.",
           ];
         if (type === "generalize")
           return [
             "Écris une expression qui donne le nombre " +
               withDe(current.unit) +
               " à l’étape n.",
-            "Chaque terme de ton expression doit correspondre à une partie visible du dessin.",
+            current.prompts[0],
           ];
         if (type === "far" && !["twins", "illusion"].includes(current.id))
           return [
@@ -7647,9 +8279,17 @@
           limit = Math.min(100, current.max || 100);
         return [...Array(limit)]
           .map((_, i) => i + 1)
-          .filter(
-            (i) => Math.abs(Number(current.count(i)) - Number(target)) < 1e-9,
-          );
+          .filter((i) => {
+            const value = current.count(i);
+            if (
+              typeof value === "number" &&
+              typeof target === "number" &&
+              Number.isFinite(value) &&
+              Number.isFinite(target)
+            )
+              return Math.abs(value - target) < 1e-9;
+            return String(value) === String(target);
+          });
       }
       function correctionFor() {
         const n = Number($("#rank").value),
@@ -7708,8 +8348,8 @@
           if (currentQuestion === "far")
             return {
               answer:
-                (current.ambiguous ? "Avec la règle choisie, " : "") +
-                "le terme de rang " +
+                (current.ambiguous ? "Avec la règle choisie, le" : "Le") +
+                " terme de rang " +
                 n +
                 " vaut " +
                 displayAt(current, n) +
@@ -7739,15 +8379,21 @@
                   : "La suite n’est pas injective : une même valeur peut correspondre à plusieurs rangs.",
             };
           }
-          return {
-            answer: "L’affirmation doit être corrigée ou nuancée.",
-            proof:
-              "Ici, " +
-              current.note +
-              ". La règle retenue doit être testée sur plusieurs rangs : " +
-              current.formula +
-              ".",
-          };
+          const errorCorrection = activeErrorCorrection();
+          return errorCorrection
+            ? {
+                answer: errorCorrection.answer,
+                proof: errorCorrection.proof,
+              }
+            : {
+                answer: "L’affirmation doit être corrigée ou nuancée.",
+                proof:
+                  "Ici, " +
+                  current.note +
+                  ". La règle retenue doit être testée sur plusieurs rangs : " +
+                  current.formula +
+                  ".",
+              };
         }
         if (current.id === "pascal") {
           if (currentQuestion === "notice")
@@ -7810,12 +8456,29 @@
               " pour n’importe quelle étape.",
           };
         if (currentQuestion === "near")
-          return {
-            answer:
-              "À l’étape 5, on obtient " + quantity(current.count(5)) + ".",
-            proof:
-              "L’étape 5 n’était pas affichée : on prolonge exactement la transformation observée entre les étapes précédentes.",
-          };
+          if (current.id === "twins")
+            return {
+              answer: "À l’étape 5, le filao A mesure 18 unités et le filao B 16 unités.",
+              proof: "A = 2 × 5 + 8 = 18 et B = 3 × 5 + 1 = 16.",
+            };
+          else if (current.id === "illusion")
+            return {
+              answer: "Avec la règle choisie « doubler », l’étape 5 contient 16 points.",
+              proof: "Cette valeur dépend de la règle annoncée ; les trois premières étapes ne l’imposent pas à elles seules.",
+            };
+          else
+            return {
+              answer:
+                "À l’étape 5, on obtient " + quantity(current.count(5)) + ".",
+              proof:
+                (visualNearHints[current.id] ||
+                  "On prolonge exactement la transformation observée.") +
+                " La quantité passe de " +
+                quantity(current.count(4)) +
+                " à " +
+                quantity(current.count(5)) +
+                ".",
+            };
         if (currentQuestion === "generalize")
           return {
             answer: "Une expression possible est " + current.formula + ".",
@@ -7875,29 +8538,39 @@
                 "Pour retrouver le facteur, il faudrait une longueur ou une distance, pas seulement le nombre de points.",
             };
           const target = current.count(n),
-            rank = [...Array(101)]
-              .map((_, i) => i + 1)
-              .find((i) => current.count(i) === target);
+            rank = inverseMatches()[0],
+            conclusion = inverseConclusions[current.id];
           return {
             answer: rank
-              ? "Il s’agit de l’étape " + rank + "."
+              ? conclusion
+                ? conclusion(rank)
+                : "Il s’agit de l’étape " + rank + "."
               : "La donnée doit être comparée à la règle du pattern.",
-            proof:
-              sentenceStart(current.note) +
-              ". On cherche le rang qui produit la quantité annoncée.",
+            proof: rank
+              ? "On vérifie : " +
+                current.ways(rank)[0][1] +
+                " = " +
+                quantity(target) +
+                "."
+              : sentenceStart(current.note) +
+                ". On cherche le rang qui produit la quantité annoncée.",
           };
         }
-        return {
-          answer:
-            current.id === "illusion"
-              ? "Le mot « seule » est injustifié : plusieurs règles peuvent commencer par 1, 2, 4."
-              : "L’erreur vient d’une lecture incomplète de la construction. La règle correcte est " +
+        const errorCorrection = activeErrorCorrection();
+        return errorCorrection
+          ? {
+              answer: errorCorrection.answer,
+              proof: errorCorrection.proof,
+            }
+          : {
+              answer:
+                "L’erreur vient d’une lecture incomplète de la construction. La règle correcte est " +
                 current.formula +
                 ".",
-          proof:
-            sentenceStart(current.note) +
-            ". Il faut tester l’affirmation sur le dessin, puis sur plusieurs rangs.",
-        };
+              proof:
+                sentenceStart(current.note) +
+                ". Il faut tester l’affirmation sur le dessin, puis sur plusieurs rangs.",
+            };
       }
       function boardFor() {
         const n = Number($("#rank").value),
@@ -7959,10 +8632,12 @@
                   : "plusieurs rangs conviennent",
             };
           }
+          const errorCorrection = activeErrorCorrection();
           return {
-            lead: "On teste l’affirmation",
-            label: "Règle",
-            result: current.formula,
+            lead: "On corrige précisément l’affirmation",
+            label: "Erreur → correction",
+            formula: errorCorrection?.wrong || "affirmation à tester",
+            result: errorCorrection?.correct || current.formula,
           };
         }
         if (current.id === "pascal") {
@@ -8011,11 +8686,23 @@
             result: "La même organisation se prolonge à chaque rang",
           };
         if (currentQuestion === "near")
-          return {
-            lead: "On prolonge d’une étape",
-            label: "Calcul",
-            result: "n = 5  →  " + quantity(current.count(5)),
-          };
+          return current.id === "twins"
+            ? {
+                lead: "On prolonge les deux croissances",
+                label: "Étape 5",
+                result: "A = 18  ·  B = 16",
+              }
+            : current.id === "illusion"
+              ? {
+                  lead: "On annonce d’abord la règle choisie",
+                  label: "Si on double",
+                  result: "étape 5 = 16 points",
+                }
+              : {
+                  lead: "On prolonge d’une étape",
+                  label: "Calcul",
+                  result: "n = 5  →  " + quantity(current.count(5)),
+                };
         if (currentQuestion === "generalize")
           return {
             lead: "Une règle pour toutes les étapes",
@@ -8078,10 +8765,12 @@
             label: "Contre-exemple",
             result: "1, 2, 4 n’imposent pas une seule suite",
           };
+        const errorCorrection = activeErrorCorrection();
         return {
-          lead: "On vérifie sur le dessin et sur les nombres",
-          label: "Règle correcte",
-          result: current.formula,
+          lead: "On corrige précisément l’affirmation",
+          label: "Erreur → correction",
+          formula: errorCorrection?.wrong || "lecture incomplète",
+          result: errorCorrection?.correct || current.formula,
         };
       }
       function renderCorrection() {
@@ -8089,6 +8778,7 @@
           board = boardFor();
         $("#boardLead").textContent = board.lead;
         $("#formulaLabel").textContent = board.label;
+        $("#formula").textContent = board.formula || current.formula;
         $("#boardResult").textContent = board.result;
         $("#correctionAnswer").textContent = c.answer;
         $("#correctionProof").textContent = c.proof;
@@ -8507,7 +9197,7 @@
         if (reveal)
           $("#correctionPanel").scrollIntoView({
             behavior: "smooth",
-            block: "nearest",
+            block: "start",
           });
       };
       $("#settingsBtn").onclick = openSettings;
