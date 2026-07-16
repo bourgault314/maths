@@ -153,8 +153,22 @@ window.MATHSGO_CATALOGUE = {
     "outils/detective_des_grandeurs_additive__1.pdf": { "primaryNotion": "schemas-barres", "collections": [], "tags": ["schema-barres", "resolution-problemes", "enquete"] },
     "outils/detective_des_grandeurs_additive__2.pdf": { "primaryNotion": "schemas-barres", "collections": [], "tags": ["schema-barres", "resolution-problemes", "enquete"] },
     "outils/detective_des_grandeurs_multiplicative__1.pdf": { "primaryNotion": "schemas-barres", "collections": [], "tags": ["schema-barres", "resolution-problemes", "enquete"] },
-    "outils/equabarre.html": { "primaryNotion": "equations", "collections": ["splat"], "tags": ["schema-barres", "splat"] },
-    "outils/equasplat.html": { "primaryNotion": "equations", "collections": ["splat"], "tags": ["schema-barres", "splat"] },
+    "outils/equabarre.html": {
+      "primaryNotion": "equations",
+      "primaryGroup": "manipuler",
+      "collections": ["splat"],
+      "tags": ["schema-barres", "equation", "inconnue", "splat"],
+      "thumbnail": "assets/img/thumbnails/splat/equabarre.png?v=1",
+      "cardDescription": "Représenter une équation par deux schémas en barres et transformer les deux membres pas à pas."
+    },
+    "outils/equasplat.html": {
+      "primaryNotion": "equations",
+      "primaryGroup": "manipuler",
+      "collections": ["splat"],
+      "tags": ["equation", "inconnue", "jetons", "splat"],
+      "thumbnail": "assets/img/thumbnails/splat/equasplat.png?v=1",
+      "cardDescription": "Construire une équation avec des taches et des jetons puis agir de la même façon sur les deux membres."
+    },
     "outils/gabarits_enquetes_additive.pdf": { "primaryNotion": "schemas-barres", "collections": [], "tags": ["schema-barres", "resolution-problemes", "gabarit"] },
     "outils/gabarits_enquetes_multiplicative.pdf": { "primaryNotion": "schemas-barres", "collections": [], "tags": ["schema-barres", "resolution-problemes", "gabarit"] },
     "outils/gabarits_partage_equitable_2_3_4_5.pdf": { "primaryNotion": "schemas-barres", "collections": [], "tags": ["schema-barres", "resolution-problemes", "gabarit"] },
@@ -172,9 +186,30 @@ window.MATHSGO_CATALOGUE = {
     "outils/nombres_relatifs/nombres_relatifs_somme_differenceBClaire.html": { "primaryNotion": "relatifs", "collections": [], "tags": ["nombres-relatifs", "plateau-manipulation"] },
     "outils/nombres_relatifs/nombres_relatifs_somme_differenceC.html": { "primaryNotion": "relatifs", "collections": [], "tags": ["nombres-relatifs", "plateau-manipulation"] },
     "outils/nombres_relatifs/nombres_relatifs_somme_differenceD.html": { "primaryNotion": "relatifs", "collections": [], "tags": ["nombres-relatifs", "plateau-manipulation"] },
-    "outils/splat.html": { "primaryNotion": "calcul-litteral", "collections": ["splat"], "tags": ["splat", "inconnue", "relation"] },
-    "outils/splat_tache_barre.html": { "primaryNotion": "calcul-litteral", "collections": ["splat"], "tags": ["splat", "inconnue", "relation"] },
-    "outils/splat_equations.html": { "primaryNotion": "equations", "collections": ["splat"], "tags": ["schema-barres", "splat"] },
+    "outils/splat.html": {
+      "primaryNotion": "calcul-litteral",
+      "primaryGroup": "generer",
+      "collections": ["splat"],
+      "tags": ["splat", "inconnue", "relation", "jetons", "cartes"],
+      "thumbnail": "assets/img/thumbnails/splat/splat.png?v=1",
+      "cardDescription": "Générer des cartes où une tache cache une quantité de jetons et faire raisonner sur l’inconnue."
+    },
+    "outils/splat_tache_barre.html": {
+      "primaryNotion": "calcul-litteral",
+      "primaryGroup": "generer",
+      "collections": ["splat"],
+      "tags": ["splat", "inconnue", "schema-barres", "fiche", "imprimer"],
+      "thumbnail": "assets/img/thumbnails/splat/petit-splat.png?v=1",
+      "cardDescription": "Composer une fiche de Petits Splats avec jetons cachés et schémas en barres à compléter."
+    },
+    "outils/splat_equations.html": {
+      "primaryNotion": "equations",
+      "primaryGroup": "generer",
+      "collections": ["splat"],
+      "tags": ["schema-barres", "equation", "inconnue", "splat", "cartes"],
+      "thumbnail": "assets/img/thumbnails/splat/splat-equations.png?v=1",
+      "cardDescription": "Générer des cartes d’équations où les deux côtés contiennent des jetons et des quantités cachées."
+    },
     "outils/tuiles_algebriques/generateur_exercices_calcul_litteral.html": { "primaryNotion": "calcul-litteral", "collections": ["tuiles-algebriques"], "tags": ["tuiles-algebriques"] },
     "outils/tuiles_algebriques/generateur_tuiles.html": { "primaryNotion": "calcul-litteral", "collections": ["tuiles-algebriques"], "tags": ["tuiles-algebriques"] },
     "outils/fractions_multiples_problemes.pdf": {
@@ -1801,7 +1836,7 @@ window.MATHSGO_CATALOGUE = {
     {
       "id": "outils-equabarre-html",
       "title": "ÉquaBarre",
-      "description": "Une ressource maths&go pour travailler équations et représentations.",
+      "description": "Représentez une équation par deux schémas en barres et transformez les deux membres pas à pas.",
       "path": "outils/equabarre.html",
       "domains": [
         "algebre"
@@ -1830,7 +1865,7 @@ window.MATHSGO_CATALOGUE = {
     {
       "id": "outils-equasplat-html",
       "title": "ÉquaSplat",
-      "description": "Une ressource maths&go pour travailler calcul littéral.",
+      "description": "Construisez une équation avec des taches et des jetons puis agissez de la même façon sur les deux membres.",
       "path": "outils/equasplat.html",
       "domains": [
         "algebre"
@@ -4627,8 +4662,8 @@ window.MATHSGO_CATALOGUE = {
     },
     {
       "id": "outils-splat-html",
-      "title": "Splat! — relations et inconnues",
-      "description": "Une ressource maths&go pour travailler calcul littéral.",
+      "title": "Splat — relations et inconnues",
+      "description": "Générez des cartes où une tache cache une quantité de jetons et faites raisonner sur l’inconnue.",
       "path": "outils/splat.html",
       "domains": [
         "algebre"
@@ -4659,8 +4694,8 @@ window.MATHSGO_CATALOGUE = {
     },
     {
       "id": "outils-splat-tache-barre-html",
-      "title": "Splat! — taches et barres",
-      "description": "Une ressource maths&go pour travailler calcul littéral.",
+      "title": "Petit Splat — fiches et schémas en barres",
+      "description": "Composez une fiche de Petits Splats avec jetons cachés et schémas en barres à compléter.",
       "path": "outils/splat_tache_barre.html",
       "domains": [
         "algebre"
@@ -4693,8 +4728,8 @@ window.MATHSGO_CATALOGUE = {
     },
     {
       "id": "outils-splat-equations-html",
-      "title": "Splat! Équations",
-      "description": "Une ressource maths&go pour travailler calcul littéral.",
+      "title": "Splat — équations",
+      "description": "Générez des cartes d’équations où les deux côtés contiennent des jetons et des quantités cachées.",
       "path": "outils/splat_equations.html",
       "domains": [
         "algebre"
