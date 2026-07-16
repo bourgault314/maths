@@ -1,0 +1,59 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>Le contrôle de Baguette | maths&amp;go</title>
+  <meta name="description" content="Vingt questions de SVT, neurosciences et compétences psychosociales pour Baguette, pourtant officiellement en vacances.">
+  <meta name="robots" content="noindex, nofollow">
+  <link rel="stylesheet" href="../jacquie/assets/styles.css?v=20260716-1">
+  <script defer src="assets/content.js?v=20260716-1"></script>
+  <script defer src="assets/app.js?v=20260716-1"></script>
+</head>
+<body>
+  <main class="app-shell">
+    <header class="app-header">
+      <button id="brand-home-button" class="brand-home-button" type="button" aria-label="Revenir à l’accueil de Baguette"><img class="brand-logo" src="/assets/img/mathsgo-logo.png" alt="maths&go" width="1338" height="622"></button>
+      <button id="space-home-button" class="space-name" type="button" aria-label="Revenir à l’accueil de Baguette"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m3 11 9-8 9 8v9a1 1 0 0 1-1 1h-5v-7H9v7H4a1 1 0 0 1-1-1Z"/></svg><span>Accueil de Baguette</span></button>
+    </header>
+
+    <section id="welcome-screen" class="screen welcome-screen" aria-labelledby="welcome-title">
+      <div class="welcome-copy">
+        <p class="eyebrow">Formation continue pendant congés discontinus</p>
+        <h1 id="welcome-title">Le petit contrôle de Baguette</h1>
+        <p class="lead">Perrine est en vacances. Elle nous l’a dit. Plusieurs fois. Le ministère, les neurones et ce questionnaire ont néanmoins décidé de vérifier si une formatrice en SVT conserve ses synapses au repos.</p>
+        <div class="session-facts" aria-label="Informations sur l’activité"><span><b>20</b> questions</span><span><b>5</b> choses à mémoriser</span><span>Coefficient crème solaire</span></div>
+        <button id="start-button" class="primary-button" type="button"><span>Interrompre mes vacances</span><span aria-hidden="true">→</span></button>
+      </div>
+      <div class="welcome-scene" aria-hidden="true">
+        <svg viewBox="0 0 440 340">
+          <path d="M42 190C20 98 89 31 177 46c61 10 104-28 165 13 72 49 67 156 4 202-52 38-113 5-172 21-70 19-119-30-132-92Z" fill="#f2fff8" stroke="#cde8da" stroke-width="2"/>
+          <circle cx="332" cy="68" r="38" fill="#ffd166"/><g fill="none" stroke="#f3a712" stroke-width="5" stroke-linecap="round"><path d="M332 15v-13M332 134v-13M279 68h-13M398 68h-13M294 30l-10-10M380 116l-10-10M370 30l10-10M284 116l10-10"/></g>
+          <g transform="translate(70 82)"><path d="M14 96c0-49 36-82 86-82s86 33 86 82c0 45-31 78-76 83l-10 28-10-28c-45-5-76-38-76-83Z" fill="#efb4c4" stroke="#843b62" stroke-width="4"/><path d="M100 17v160M51 31c18 18 19 38 5 59 23 11 27 38 11 63M149 31c-18 18-19 38-5 59-23 11-27 38-11 63" fill="none" stroke="#843b62" stroke-width="4" stroke-linecap="round"/><g fill="#fff"><circle cx="47" cy="69" r="7"/><circle cx="143" cy="69" r="7"/><circle cx="78" cy="121" r="7"/><circle cx="126" cy="142" r="7"/></g></g>
+          <g transform="translate(250 194) rotate(-8)"><rect width="142" height="72" fill="#d8a15f" stroke="#8a5b2a" stroke-width="3"/><path d="M0 18h142M0 36h142M0 54h142" stroke="#b87839" stroke-width="2"/><text x="71" y="45" text-anchor="middle" fill="#603813" font-family="Arial" font-size="20" font-weight="900">EN VACANCES</text></g>
+        </svg>
+      </div>
+    </section>
+
+    <section id="memo-screen" class="screen memo-screen" hidden aria-labelledby="memo-title">
+      <div class="screen-heading"><p class="eyebrow">Stage imposé par un collègue malveillant</p><h1 id="memo-title">Cinq nouveautés à mémoriser</h1><p>Du vrai, du récent, et une information institutionnelle délicieuse : parfois, la nouveauté consiste à apprendre que le nouveau programme n’arrive pas.</p></div>
+      <div id="memo-grid" class="memo-grid"></div>
+      <div class="source-note">Sources : <a href="https://eduscol.education.gouv.fr/5742/ressources-d-accompagnement-du-programme-de-sciences-de-la-vie-et-de-la-terre-au-cycle-4" target="_blank" rel="noopener">Éduscol SVT cycle 4</a>, <a href="https://www.education.gouv.fr/bo/2025/Hebdo33/MENE2515977N" target="_blank" rel="noopener">BO du DNB 2027</a> et <a href="https://www.santepubliquefrance.fr/docs/referentiel/les-competences-psychosociales-un-referentiel-operationnel-a-destination-des-0" target="_blank" rel="noopener">référentiel CPS 2026</a>.</div>
+      <button id="memo-button" class="primary-button centered-button" type="button"><span>J’ai mémorisé malgré les vacances</span><span aria-hidden="true">→</span></button>
+    </section>
+
+    <section id="quiz-screen" class="screen quiz-screen" hidden aria-labelledby="question-title">
+      <div class="progress-head"><span id="section-label" class="section-label">SVT</span><span id="question-count">Question 1 sur 20</span></div><div class="progress-track" aria-hidden="true"><span id="progress-bar"></span></div>
+      <article class="question-card"><div id="question-visual" class="question-visual"></div><p id="question-kicker" class="question-kicker"></p><h1 id="question-title"></h1><p id="question-prompt" class="question-prompt"></p><div id="answers" class="answers" role="group" aria-label="Réponses proposées"></div><button id="hint-button" class="hint-button" type="button">Activer une synapse de secours</button><div id="hint-box" class="hint-box" hidden></div><div id="feedback" class="feedback" hidden aria-live="polite"></div><button id="next-button" class="primary-button next-button" type="button" hidden><span>Question suivante</span><span aria-hidden="true">→</span></button></article>
+    </section>
+
+    <section id="finish-screen" class="screen finish-screen" hidden aria-labelledby="finish-title">
+      <div class="finish-mark" aria-hidden="true">20</div><p class="eyebrow">Compte rendu de dissection</p><h1 id="finish-title">Cerveau de Baguette</h1><p id="finish-message" class="finish-message"></p>
+      <div class="finish-summary"><div><strong id="final-score">0/20</strong><span>activité synaptique</span></div><div><strong id="final-rank">Au repos</strong><span>diagnostic</span></div></div>
+      <p class="result-detail">Les explications ont été fournies après chaque réponse. Toute ressemblance avec une formation académique est fortuite : ici, il y avait un bouton « suivant ».</p>
+      <div class="finish-actions"><button id="restart-button" class="primary-button" type="button">Reprendre depuis la plage</button><a class="bonus-button" href="vacances.html"><span class="bonus-icon" aria-hidden="true">🧠</span><span class="bonus-copy"><span>Sauver ses vacances</span><small>Attraper les neurones, éviter les courriels</small></span></a></div>
+    </section>
+  </main>
+  <footer>Une plaisanterie pédagogique maths&amp;go · aucun résultat n’est envoyé · Perrine est toujours en vacances</footer>
+</body>
+</html>
