@@ -111,8 +111,8 @@
         conversions:"Conversions",area:"Aires et périmètres",clock:"Temps et durées",tiles:"Calcul littéral",
         splat:"Équations · Splat",bars:"Schémas en barres",patterns:"Motifs et régularités",angles:"Angles",
         coordinates:"Repérage",transformations:"Transformations",triangles:"Triangles",
-        parallelograms:"Parallélogrammes",cube:"Solides","pythagore-home":"Pythagore · accueil sans lettres",pythagore:"Pythagore · avec A², B², C²",stats:"Statistiques · ancienne version",
-        average:"Moyennes",probability:"Probabilités · version actuelle",hasard:"Hasard · chemins possibles","probability-statistics":"Probabilité + statistique",grandeur:"Grandeurs · mesurer par unité",computing:"Informatique",strategy:"Jeux et stratégie",cps:"Compétences psychosociales",gears:"Engrenages"
+        parallelograms:"Parallélogrammes",cube:"Solides",pythagore:"Pythagore",stats:"Statistiques · ancienne version",
+        average:"Moyennes",probability:"Probabilités · version actuelle",hasard:"Hasard · arbre pile ou face","probability-statistics":"Probabilité + statistique",grandeur:"Grandeurs · mesurer par unité",computing:"Informatique",strategy:"Jeux et stratégie",cps:"Compétences psychosociales",gears:"Engrenages"
       };
       const library = window.MATHSGO_ICON_LIBRARY || {};
       const generator = window.MathsGoGenerativeIcons;
@@ -136,7 +136,7 @@
       Object.keys(library).forEach(key => catalogueGrid.append(card(key)));
       document.querySelector("#icon-count").textContent = "(" + Object.keys(library).length + ")";
       ["hasard","probability-statistics","proportionnalite","function","grandeur"].forEach(key => document.querySelector("#new-series-icons").append(card(key,true)));
-      ["fractions","relatifs","splat","pythagore-home","abacus"].forEach(key => document.querySelector("#home-icons").append(card(key,true)));
+      ["fractions","relatifs","splat","pythagore","abacus"].forEach(key => document.querySelector("#home-icons").append(card(key,true)));
 
       const generativeColors = ["#be3e68", "#0f766e", "#ea7a1a", "#6553b8", "#0b67b2"];
       let generativeBatch = 0;
