@@ -14,6 +14,8 @@
       ${words ? `<span class="fraction-words">${words}</span>` : ""}
     </span>`;
 
+  const namedAngle = name => `<span class="named-angle" role="img" aria-label="angle ${name.split("").join(" ")}">${name}</span>`;
+
   function polar(cx, cy, radius, degrees) {
     const angle = (degrees - 90) * Math.PI / 180;
     return {x: cx + radius * Math.cos(angle), y: cy + radius * Math.sin(angle)};
@@ -208,10 +210,26 @@
 
   const dataVisual = `
     <svg viewBox="0 0 500 220" role="img" aria-label="Diagramme du nombre de livres lus : lundi 2, mardi 5, mercredi 3, jeudi 6">
+      <g stroke="#cbd5e1" stroke-width="1.4" stroke-dasharray="5 5">
+        ${[1,2,3,4,5,6].map(n => `<path d="M70 ${175-n*23}H455"/>`).join("")}
+      </g>
       <path d="M70 175H455M70 25V175" stroke="#334155" stroke-width="3"/>
       ${[1,2,3,4,5,6].map(n => `<path d="M64 ${175-n*23}h12" stroke="#64748b" stroke-width="2"/><text x="51" y="${181-n*23}" text-anchor="middle" fill="#64748b" font-family="Arial" font-size="13">${n}</text>`).join("")}
       ${[{x:104,h:2,c:"#60a5fa",l:"lun."},{x:194,h:5,c:"#34d399",l:"mar."},{x:284,h:3,c:"#fbbf24",l:"mer."},{x:374,h:6,c:"#a78bfa",l:"jeu."}].map(b => `<rect x="${b.x}" y="${175-b.h*23}" width="56" height="${b.h*23}" rx="5" fill="${b.c}" stroke="#173a5e" stroke-width="2"/><text x="${b.x+28}" y="202" text-anchor="middle" fill="#334155" font-family="Arial" font-size="15" font-weight="800">${b.l}</text>`).join("")}
     </svg>`;
+
+  const placeValueTableVisual = `
+    <svg viewBox="0 0 500 190" role="img" aria-label="Tableau de numération : cinq centaines de milliers, deux dizaines de milliers, sept milliers, zéro centaine, zéro dizaine et quatre unités">
+      <g font-family="Arial, sans-serif" text-anchor="middle">
+        <rect x="34" y="25" width="432" height="130" rx="12" fill="#fff" stroke="#0755b8" stroke-width="3"/>
+        <path d="M34 59H466M34 96H466M106 59V155M178 59V155M250 25V155M322 59V155M394 59V155" stroke="#9db2c7" stroke-width="2"/>
+        <g fill="#173a5e" font-size="13" font-weight="900"><text x="142" y="48">classe des milliers</text><text x="358" y="48">unités simples</text></g>
+        <g fill="#536176" font-size="13" font-weight="800"><text x="70" y="83">CM</text><text x="142" y="83">DM</text><text x="214" y="83">M</text><text x="286" y="83">C</text><text x="358" y="83">D</text><text x="430" y="83">U</text></g>
+        <g fill="#0755b8" font-size="28" font-weight="900"><text x="70" y="132">5</text><text x="142" y="132">2</text><text x="214" y="132">7</text><text x="286" y="132">0</text><text x="358" y="132">0</text><text x="430" y="132">4</text></g>
+      </g>
+    </svg>`;
+
+  const placeValueHint = `<div class="course-hint place-value-hint">${placeValueTableVisual}<p>Je sépare les classes : <strong>527 | 004</strong>, puis je lis <strong>527 004</strong>.</p></div>`;
 
   const probabilityVisual = `
     <svg viewBox="0 0 500 180" role="img" aria-label="Sac contenant quatre jetons bleus et deux jetons orange, sans jeton vert">
@@ -251,7 +269,7 @@
       soft: "#f1f6ff",
       visual: triangleMemoVisual,
       title: "Reconnaître un triangle",
-      text: ""
+      text: "On observe les codages sur les figures."
     },
     {
       mobileStack: true,
@@ -344,11 +362,15 @@
       kicker: "Comparer des ouvertures",
       title: "Quel angle est le plus grand ?",
       prompt: "Ne regarde pas la longueur des côtés : compare seulement l’ouverture.",
-      visual: `<svg viewBox="0 0 500 220" role="img" aria-label="Deux angles A et B à comparer"><g transform="translate(30 25) scale(1.55)" class="angle-lines">${angleDrawing("acute").replace(/<\/?g[^>]*>/g, "")}</g><g transform="translate(282 20) scale(1.55)" class="angle-lines">${angleDrawing("obtuse").replace(/<\/?g[^>]*>/g, "")}</g><text x="135" y="207" text-anchor="middle" class="svg-label">A</text><text x="378" y="207" text-anchor="middle" class="svg-label">B</text></svg>`,
-      options: ["L’angle A", "L’angle B", "Ils sont égaux", "Le plus long côté gagne"],
+      visual: `<svg viewBox="0 0 500 220" role="img" aria-label="Les angles ABC et DEF sont à comparer">
+        <g fill="none" stroke="#2563eb" stroke-width="8" stroke-linecap="round" stroke-linejoin="round"><path d="M125 142H52M125 142 190 92"/><path d="M335 142H448M335 142 288 58"/></g>
+        <g fill="none" stroke="#f97316" stroke-width="5"><path d="M94 142A31 31 0 0 1 102 123"/><path d="M372 142A37 37 0 0 0 317 110"/></g>
+        <g class="svg-label" font-size="18"><text x="35" y="160">A</text><text x="118" y="169">B</text><text x="194" y="88">C</text><text x="275" y="53">D</text><text x="327" y="169">E</text><text x="454" y="160">F</text></g>
+      </svg>`,
+      options: [`L’angle ${namedAngle("ABC")}`, `L’angle ${namedAngle("DEF")}`, "Ils sont égaux", "Le plus long côté gagne"],
       answer: 1,
-      hint: "L’angle B s’ouvre davantage que l’angle A.",
-      explanation: "L’angle B est plus ouvert : il est donc plus grand. La longueur des côtés n’a aucune importance."
+      hint: `Compare l’ouverture de ${namedAngle("ABC")} et celle de ${namedAngle("DEF")}.`,
+      explanation: `L’angle ${namedAngle("DEF")} est plus ouvert : il est donc plus grand. La longueur des côtés n’a aucune importance.`
     },
     {
       section: "Angles",
@@ -362,15 +384,18 @@
       explanation: "C’est un angle plat. Ses deux côtés forment une ligne droite."
     },
     {
+      type: "splat-table",
       section: "Splat",
-      kicker: "Une quantité cachée",
-      title: "Combien de jetons sont cachés ?",
-      prompt: "Il y a 15 jetons en tout et tu en vois 9.",
-      visual: splatVisual(9, 15),
+      kicker: "Organiser les informations",
+      title: "Complète le tableau du Splat",
+      prompt: "Place 9, ? et 15 au bon endroit.",
+      visible: 9,
+      total: 15,
+      hidden: 6,
       options: ["5", "6", "7", "9"],
       answer: 1,
-      hint: "Cherche le complément de 9 pour arriver à 15.",
-      explanation: "15 − 9 = 6. Le Splat cache 6 jetons."
+      hint: "9 jetons sont visibles. Le Splat cache les autres. Il y a 15 jetons en tout.",
+      explanation: "9 jetons sont visibles, 6 sont cachés et il y en a 15 en tout : 9 + 6 = 15."
     },
     {
       section: "Triangles",
@@ -417,13 +442,13 @@
     {
       section: "Mesures",
       kicker: "Conversion à connaître",
-      title: "Un mètre, c’est combien de centimètres ?",
+      title: "Un kilomètre, c’est combien de mètres ?",
       prompt: "Choisis l’égalité exacte.",
-      visual: metreStripVisual,
-      options: ["1 m = 10 cm", "1 m = 100 cm", "1 m = 1 000 cm", "1 m = 60 cm"],
-      answer: 1,
-      hint: "Observe la règle : elle va de 0 cm à 100 cm.",
-      explanation: "1 m = 100 cm. Cette conversion est à connaître par cœur."
+      visual: kilometreVisual,
+      options: ["1 km = 10 m", "1 km = 100 m", "1 km = 1 000 m", "1 km = 10 000 m"],
+      answer: 2,
+      hint: "Un kilomètre contient mille mètres.",
+      explanation: "1 km = 1 000 m."
     },
     {
       section: "Mesures",
@@ -470,15 +495,15 @@
       explanation: "5 + 6 = 11 livres. Le gecko bibliothécaire réclame déjà une étagère de plus."
     },
     {
-      section: "Hasard",
-      kicker: "Certain, possible ou impossible",
-      title: "Sans regarder, Axelle tire un jeton vert. Cet évènement est…",
-      prompt: "Observe le contenu du sac.",
-      visual: probabilityVisual,
-      options: ["Certain", "Possible", "Impossible", "Plus probable que bleu"],
+      section: "Nombres",
+      kicker: "Lire un tableau de numération",
+      title: "Quel nombre est écrit dans le tableau ?",
+      prompt: "Lis les chiffres classe par classe.",
+      visual: placeValueTableVisual,
+      options: ["52 704", "527 040", "527 004", "5 270 004"],
       answer: 2,
-      hint: "Y a-t-il au moins un jeton vert dans le sac ?",
-      explanation: "Il n’y a aucun jeton vert : en tirer un est impossible. Même avec énormément de chance."
+      hint: placeValueHint,
+      explanation: "Le tableau indique 527 milliers et 4 unités : le nombre est 527 004."
     }
   ];
 
@@ -491,42 +516,44 @@
 
   const frenchMemos = [
     {
+      mobileStack: true,
       color: palette.purple,
       soft: "#f8f3ff",
       visual: `<div class="explicit-lesson"><span><b>Explicite</b><i>« L’assiette est vide. »</i><strong>→ le gâteau a disparu</strong></span><span><b>Implicite</b><i>Une miette sur le museau de Moka.</i><strong>→ Moka a probablement mangé le gâteau</strong></span></div>`,
-      title: "Distinguer ce qui est écrit de ce qu’on déduit",
-      text: "Une information explicite est écrite dans le texte. Une information implicite n’est pas écrite : on la déduit en reliant des indices. Cette déduction s’appelle une inférence. Pour comprendre un pronom comme « lui » ou « les », cherche le nom qu’il remplace."
+      title: "Explicite ou implicite ?",
+      text: "Explicite : c’est écrit. Implicite : je le déduis grâce aux indices."
     },
     {
+      mobileStack: true,
       color: palette.blue,
       soft: "#f1f6ff",
       visual: `<div class="method-list"><span><b>Verbe</b><i>change le temps</i></span><span><b>Sujet</b><i>qui est-ce qui… ?</i></span><span><b>Négation</b><i>ne… plus autour du verbe</i></span><span><b>Groupe mobile</b><i>déplace-le pour vérifier</i></span></div>`,
-      title: "Analyser une phrase avec une méthode",
-      text: "Une phrase interrogative pose une question. Pour trouver le verbe, change le temps ; pour trouver le sujet, demande « qui est-ce qui… ? ». La négation encadre le verbe. Un complément comme « ce matin » peut souvent être déplacé ou supprimé."
+      title: "Analyser une phrase",
+      text: "Je cherche le verbe, puis le sujet. La négation entoure le verbe. Un groupe mobile peut se déplacer."
     },
     {
       mobileStack: true,
       color: palette.teal,
       soft: "#effcf9",
       visual: `<div class="agreement-visual"><span class="agreement-side"><i>un</i><i>petit</i><i>gecko</i></span><b>↓</b><span class="agreement-side"><i>des</i><i>petits</i><i>geckos</i></span></div>`,
-      title: "Construire et accorder un groupe nominal",
-      text: "Un groupe nominal contient un nom noyau, souvent accompagné d’un déterminant et d’un ou plusieurs adjectifs. Ils s’accordent en genre et en nombre. Dans « ce gecko », « ce » est un déterminant démonstratif : il montre le gecko dont on parle."
+      title: "Accorder un groupe nominal",
+      text: "Le déterminant, le nom et l’adjectif s’accordent."
     },
     {
       mobileStack: true,
       color: palette.orange,
       soft: "#fff7ed",
       visual: `<div class="timeline-visual"><span><i>hier</i>jouait</span><span><i>maintenant</i>joue</span><span><i>demain</i>jouera</span></div><div class="compound-tense"><b>a</b><span>+</span><b>retrouvé</b><small>auxiliaire + participe passé</small></div>`,
-      title: "Reconnaître les temps grâce à leurs marques",
-      text: "L’imparfait exprime souvent une action passée qui dure et porte les terminaisons -ais, -ait ou -aient. Au futur, on retrouve souvent le r de l’infinitif. Le passé composé se construit avec un auxiliaire et un participe passé."
+      title: "Reconnaître les temps",
+      text: "Hier : imparfait. Demain : futur. Passé composé = auxiliaire + participe passé."
     },
     {
       mobileStack: true,
       color: palette.green,
       soft: "#f7fee7",
       visual: `<div class="word-network"><strong>petit</strong><span>minuscule</span><span>grand</span><span>petitesse</span><small>synonyme · antonyme · famille</small></div>`,
-      title: "Relier les mots par leur sens ou leur famille",
-      text: "Un synonyme a un sens proche : minuscule signifie « très petit ». Un antonyme a un sens contraire : grand s’oppose à petit. Les mots d’une même famille partagent une base et une idée : dent, dentiste, dentaire."
+      title: "Relier les mots",
+      text: "Synonyme : sens proche. Antonyme : sens contraire. Famille : même base."
     }
   ];
 
@@ -730,8 +757,8 @@
     francais: {
       name: "Français",
       eyebrow: "Mission français",
-      memoTitle: "Cinq mini-leçons claires avant le QCM",
-      memoIntro: "Chaque mini-leçon donne une définition, une méthode et un exemple. Les questions reprendront ensuite exactement ces notions.",
+      memoTitle: "Cinq choses à retenir",
+      memoIntro: "Regarde les exemples.",
       color: palette.purple,
       memos: frenchMemos,
       questions: frenchQuestions
