@@ -161,7 +161,7 @@ window.MATHSGO_CATALOGUE = {
       "primaryGroup": "manipuler",
       "collections": ["tuiles-algebriques"],
       "tags": ["tuiles-algebriques", "equation", "premier-degre", "balance", "manipulation"],
-      "thumbnail": "assets/img/thumbnails/tuiles-algebriques/plateau-equations.png?v=1",
+      "thumbnail": "assets/img/thumbnails/tuiles-algebriques/plateau-equations.png?v=2",
       "cardDescription": "Poser puis résoudre une équation du premier degré en manipulant les deux membres."
     },
     "outils/detective_des_grandeurs_additive__1.pdf": { "primaryNotion": "schemas-barres", "collections": [], "tags": ["schema-barres", "resolution-problemes", "enquete"] },
@@ -262,7 +262,7 @@ window.MATHSGO_CATALOGUE = {
       "primaryGroup": "manipuler",
       "collections": [],
       "tags": ["statistiques", "mediane", "moyenne", "etendue", "donnees"],
-      "thumbnail": "assets/img/thumbnails/notions/stats-city.svg?v=1",
+      "thumbnail": "assets/img/thumbnails/notions/stats-city.png?v=2",
       "cardDescription": "Ranger et construire une ville de données pour travailler médiane, moyenne et étendue."
     },
     "outils/plateaux_manipulation/moyennes.html": {
@@ -278,7 +278,7 @@ window.MATHSGO_CATALOGUE = {
       "primaryGroup": "manipuler",
       "collections": [],
       "tags": ["numeration", "entiers", "valeur-position", "multiplier", "diviser"],
-      "thumbnail": "assets/img/thumbnails/numeration/glisse-entiers.svg?v=1",
+      "thumbnail": "assets/img/thumbnails/numeration/glisse-entiers.png?v=2",
       "cardDescription": "Faire glisser les chiffres dans le tableau de numération et visualiser les changements de valeur."
     },
     "outils/plateaux_manipulation/glisse_nombres_decimaux.html": {
@@ -286,7 +286,7 @@ window.MATHSGO_CATALOGUE = {
       "primaryGroup": "manipuler",
       "collections": [],
       "tags": ["numeration", "decimaux", "valeur-position", "dixiemes", "centiemes"],
-      "thumbnail": "assets/img/thumbnails/numeration/glisse-decimaux.svg?v=1",
+      "thumbnail": "assets/img/thumbnails/numeration/glisse-decimaux.png?v=2",
       "cardDescription": "Déplacer les chiffres de part et d’autre de la virgule dans un tableau de numération décimale."
     },
     "outils/plateaux_manipulation/numeration_decimale.html": {
@@ -294,7 +294,7 @@ window.MATHSGO_CATALOGUE = {
       "primaryGroup": "manipuler",
       "collections": [],
       "tags": ["numeration", "decimaux", "unites", "dixiemes", "centiemes", "fractions"],
-      "thumbnail": "assets/img/thumbnails/numeration/plateau-decimal.svg?v=1",
+      "thumbnail": "assets/img/thumbnails/numeration/plateau-decimal.png?v=2",
       "cardDescription": "Couper et fusionner unités, dixièmes et centièmes pour construire les écritures décimales et fractionnaires."
     },
     "outils/fabrication_materiel/numeration_decimale_maker.html": {
@@ -302,7 +302,7 @@ window.MATHSGO_CATALOGUE = {
       "primaryGroup": "generer",
       "collections": [],
       "tags": ["numeration", "decimaux", "materiel", "imprimer", "gabarit"],
-      "thumbnail": "assets/img/thumbnails/numeration/maker-decimal.svg?v=1",
+      "thumbnail": "assets/img/thumbnails/numeration/maker-decimal.png?v=2",
       "cardDescription": "Préparer des planches d’unités, dixièmes et centièmes personnalisées pour l’impression."
     },
     "auto/index.html": {
