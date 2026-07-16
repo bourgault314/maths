@@ -161,7 +161,7 @@
       "id": "patterns",
       "title": "Patterns",
       "description": "Générateur de patterns pour construire un parcours vers l’algèbre.",
-      "path": "outils/patterns.html",
+      "path": "outils/labo-des-regularites.html",
       "kind": "tool",
       "status": "work-in-progress",
       "themes": ["algebre", "problemes"],
