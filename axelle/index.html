@@ -6,9 +6,9 @@
   <title>Le bureau d’Axelle | maths&amp;go</title>
   <meta name="description" content="Deux missions courtes et visuelles pour préparer l’entrée en CM1 : mathématiques et français.">
   <meta name="robots" content="noindex, nofollow">
-  <link rel="stylesheet" href="assets/suite-styles.css?v=20260716-2">
-  <script defer src="assets/suite-content.js?v=20260716-2"></script>
-  <script defer src="assets/suite-app.js?v=20260716-2"></script>
+  <link rel="stylesheet" href="assets/suite-styles-v3.css?v=20260716">
+  <script defer src="assets/suite-content-v3.js?v=20260716"></script>
+  <script defer src="assets/suite-app-v3.js?v=20260716"></script>
 </head>
 <body>
   <main class="app-shell">
@@ -27,7 +27,7 @@
         <div>
           <p class="eyebrow">Bonjour Axelle !</p>
           <h1 id="desk-title">Cap sur le CM1</h1>
-          <p class="lead">Choisis une mission. Tu regarderas d’abord quelques mémos, puis tu répondras à 18 questions sans chronomètre.</p>
+          <p class="lead">Choisis une mission. Tu découvriras d’abord cinq mini-leçons, puis tu répondras aux questions sans chronomètre.</p>
         </div>
         <div class="desk-mascot" aria-hidden="true">
           <svg viewBox="0 0 210 155">
@@ -55,7 +55,7 @@
             </svg>
           </span>
           <span class="mission-copy"><small>Mission 1</small><strong>Mathématiques</strong><span>Fractions, angles et premiers défis de CM1</span></span>
-          <span class="mission-facts"><b>5</b> mémos · <b>18</b> questions</span>
+          <span class="mission-facts"><b>5</b> mini-leçons · <b>20</b> questions</span>
           <span class="mission-start">Commencer <span aria-hidden="true">→</span></span>
         </button>
 
@@ -69,18 +69,11 @@
             </svg>
           </span>
           <span class="mission-copy"><small>Mission 2</small><strong>Français</strong><span>Compréhension, grammaire et mots malicieux</span></span>
-          <span class="mission-facts"><b>5</b> mémos · <b>18</b> questions</span>
+          <span class="mission-facts"><b>5</b> mini-leçons · <b>18</b> questions</span>
           <span class="mission-start">Commencer <span aria-hidden="true">→</span></span>
         </button>
       </div>
 
-      <a class="game-card" href="carres-gloutons.html">
-        <span class="game-mini-board" aria-hidden="true">
-          <i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i>
-        </span>
-        <span><small>Le bonus</small><strong>Les Carrés gloutons</strong><span>Deux parties de stratégie contre Gloubi</span></span>
-        <b>Jouer →</b>
-      </a>
     </section>
 
     <section id="memo-screen" class="screen memo-screen" hidden aria-labelledby="memo-title">
@@ -127,13 +120,13 @@
       <h1 id="finish-title">Bravo Axelle !</h1>
       <p id="finish-message" class="finish-message"></p>
       <div class="finish-summary">
-        <div><strong id="final-score">0/18</strong><span>bonnes réponses</span></div>
+        <div><strong id="final-score">0/20</strong><span>bonnes réponses</span></div>
         <div><strong id="final-count">18</strong><span>questions terminées</span></div>
       </div>
       <div class="finish-actions">
         <button id="restart-button" class="primary-button" type="button">Rejouer la mission</button>
         <button id="desk-button" class="secondary-button" type="button">Retour au bureau</button>
-        <a class="bonus-button" href="carres-gloutons.html">
+        <a id="bonus-button" class="bonus-button" href="carres-gloutons.html">
           <span class="bonus-grid" aria-hidden="true"><i></i><i></i><i></i><i></i></span>
           <span class="bonus-copy"><span>Bonus : les Carrés gloutons</span><small>Deux parties contre Gloubi</small></span>
         </a>
