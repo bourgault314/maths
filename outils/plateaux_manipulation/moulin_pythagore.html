@@ -87,7 +87,6 @@
   .label{font-size:22px; font-weight:700; fill:#111827; paint-order:stroke; stroke:#fff; stroke-width:5px; display:none;}
   .showLetters .label{display:block;}
   .mobileNote{display:none; font-size:28px; font-weight:800; fill:#64748b; text-anchor:middle;}
-  .compactLayout .mobileNote{display:block;}
 
   .piecePoly{stroke:#111827; stroke-width:3.2; stroke-linejoin:round; cursor:grab;}
   .piecePoly:active{cursor:grabbing;}
@@ -137,17 +136,16 @@
   }
 
   @media (max-width:700px){
-    /* Sur téléphone, une seule forme de moulin reste visible : la cible.
-       Les pièces sont conservées dans la scène, sous la cible, sans afficher
-       un deuxième triangle source. */
+    /* Sur téléphone, le moulin de départ est déjà le puzzle complet : les
+       pièces occupent a² et b² et doivent rejoindre c² sur la même figure. */
     #stageWrap{touch-action:pan-y; overflow-x:hidden;}
     svg#stage{touch-action:pan-y;}
-    svg#stage.compactLayout #boardsL{display:none;}
-    svg#stage.compactLayout .label[data-side="L"]{display:none!important;}
+    svg#stage.compactLayout #boardsR{display:none;}
+    svg#stage.compactLayout .label{display:none!important;}
     svg#stage .piecePoly,
     svg#stage .handle{touch-action:none;}
     #fullscreen{display:none;}
-    #mobilePuzzleHint{display:block;}
+    #mobilePuzzleHint{display:none;}
   }
 
   /* maths&go — interface compacte : l'activité reste au premier plan. */
@@ -199,7 +197,7 @@
       <option value="bhaskara">2. Bhaskara (4 triangles + 1 carré)</option>
       <option value="leitzmann">3. Liu Hui (8 triangles)</option>
       <option value="quatreIdentiques">4. 4 pièces identiques + 1 carré</option>
-      <option value="perigalSix">5. Périgal — défi 6 pièces</option>
+      <option value="abuAlWafa">5. Abū al-Wafā — 9 pièces</option>
     </select>
     </div>
 
@@ -230,7 +228,7 @@
   </div>
 
   <div id="mobilePuzzleHint" role="status">
-    Sur téléphone : la cible est en haut, les pièces sont juste plus bas. Fais défiler la scène si nécessaire.
+    Déplace les pièces de a² et b² vers le carré c² de cette même figure.
   </div>
   <div id="puzzleStatus" role="status" aria-live="polite"></div>
 
@@ -360,6 +358,10 @@
     return state.puzzle === "bhaskara";
   }
 
+  function activePuzzleMoulin(){
+    return state.layoutCompact ? state.moulins?.L : state.moulins?.R;
+  }
+
   function clientToWorld(evt){
     const pt = stage.createSVGPoint();
     pt.x = evt.clientX; pt.y = evt.clientY;
@@ -455,10 +457,11 @@
   // central de côté |b-a|. Cette construction sert aussi de test de congruence
   // pour les futures variantes de quatre triangles.
   function bhaskaraSolutionPolygons(){
-    const R=state.moulins?.R;
-    if(!R) return null;
-    const {a,b,c}=R.mold;
-    const edges=[[R.B,R.C],[R.C,R.Cw],[R.Cw,R.Bw],[R.Bw,R.B]];
+    const targetMoulin=activePuzzleMoulin();
+    if(!targetMoulin) return null;
+    const {a,b,c}=targetMoulin.mold;
+    const {B,C,Cw,Bw}=targetMoulin;
+    const edges=[[B,C],[C,Cw],[Cw,Bw],[Bw,B]];
     const thirdPoints=edges.map(([p,q])=>{
       const ex=(q.x-p.x)/c, ey=(q.y-p.y)/c;
       const nx=ey, ny=-ex; // normale vers l'intérieur du carré cible
@@ -470,21 +473,67 @@
     };
   }
 
+  // Dissection d'Abū al-Wafā pour le triangle 1-2-√5 utilisé par l'outil.
+  // Le carré c² est vu sur une grille : un carré central et huit pièces de
+  // bord (quatre triangles et quatre trapèzes) couvrent exactement sa surface.
+  function abuAlWafaSolutionPolygons(targetMoulin){
+    if(!targetMoulin) return null;
+    const {a,uvec,vvec}=targetMoulin.mold;
+    const root5=Math.sqrt(5);
+    const ex={x:(2*uvec.x-vvec.x)/root5,y:(2*uvec.y-vvec.y)/root5};
+    const ey={x:(uvec.x+2*vvec.x)/root5,y:(uvec.y+2*vvec.y)/root5};
+    const origin=targetMoulin.C;
+    const worldPoint=([x,y])=>({
+      x:origin.x+a*(x*ex.x+y*ey.x),
+      y:origin.y+a*(x*ex.y+y*ey.y)
+    });
+    const polygons={
+      t1:[[0,0],[0,1],[-.5,1]],
+      q1:[[-1,2],[-.5,1],[0,1],[0,2]],
+      t2:[[1,.5],[2,1],[1,1]],
+      q2:[[0,1],[0,0],[1,.5],[1,1]],
+      t3:[[-1,2],[0,2],[0,2.5]],
+      q3:[[0,2.5],[0,2],[1,2],[1,3]],
+      t4:[[1,2],[1.5,2],[1,3]],
+      q4:[[1,2],[1,1],[2,1],[1.5,2]],
+      sq:[[0,1],[1,1],[1,2],[0,2]]
+    };
+    return Object.fromEntries(
+      Object.entries(polygons).map(([key,points])=>[key,points.map(worldPoint)])
+    );
+  }
+
   function prepareSolutionPoses(){
     state.solutionPoses.clear();
     const target=isBhaskaraPuzzle() ? bhaskaraSolutionPolygons() : null;
-    if(!target) return;
-    target.triangles.forEach((poly,i)=>{
-      const piece=state.pieces.get(`L-t${i+1}`);
+    if(target){
+      target.triangles.forEach((poly,i)=>{
+        const piece=state.pieces.get(`L-t${i+1}`);
+        if(!piece) return;
+        const pose=poseForTargetPolygon(piece,poly);
+        if(pose) state.solutionPoses.set(piece.id,pose);
+      });
+      const squarePiece=state.pieces.get("L-sq");
+      if(squarePiece){
+        const squarePose=poseForTargetPolygon(squarePiece,target.square);
+        if(squarePose) state.solutionPoses.set(squarePiece.id,squarePose);
+      }
+      return;
+    }
+
+    const puzzle=PUZZLES[state.puzzle];
+    const customTargets=puzzle?.solutionTargets?.(activePuzzleMoulin());
+    if(!customTargets) return;
+    Object.entries(customTargets).forEach(([key,polygon])=>{
+      const piece=state.pieces.get(`L-${key}`);
       if(!piece) return;
-      const pose=poseForTargetPolygon(piece,poly);
+      const pose=poseForTargetPolygon(piece,polygon);
       if(pose) state.solutionPoses.set(piece.id,pose);
     });
-    const squarePiece=state.pieces.get("L-sq");
-    if(squarePiece){
-      const squarePose=poseForTargetPolygon(squarePiece,target.square);
-      if(squarePose) state.solutionPoses.set(squarePiece.id,squarePose);
-    }
+  }
+
+  function allSolutionPiecesReady(){
+    return state.pieces.size > 0 && state.solutionPoses.size === state.pieces.size;
   }
 
   function setPuzzleStatus(text,type=""){
@@ -493,7 +542,7 @@
   }
 
   function showSolution(){
-    if(!state.solutionPoses.size){
+    if(!allSolutionPiecesReady()){
       setPuzzleStatus("La solution automatique de ce découpage doit encore être validée géométriquement.","error");
       return;
     }
@@ -533,9 +582,9 @@
   }
 
   function checkPuzzleSolution(){
-    const R=state.moulins?.R;
-    if(!R || !state.pieces.size) return false;
-    const target=R.mold.corners;
+    const targetMoulin=activePuzzleMoulin();
+    if(!targetMoulin || !state.pieces.size) return false;
+    const target=targetMoulin.mold.corners;
     const pieces=[...state.pieces.values()].map(piece=>({piece,points:pieceWorldVertices(piece)}));
     const targetArea=polygonArea(target);
     const totalArea=pieces.reduce((sum,item)=>sum+polygonArea(item.points),0);
@@ -596,11 +645,11 @@
     const gPieces = document.getElementById("pieces");
 
     const compact = isCompactViewport() && state.mode === "eleves";
-    // En mode élève sur téléphone, seul le moulin cible est visible ; les
-    // pièces sont prises en compte séparément pour garder leur zone à l'écran.
+    // Sur téléphone, le moulin de gauche est le puzzle complet : pièces sur
+    // a² et b², avec c² vide sur cette même figure.
     const target = state.mode === "vide"
       ? (gBoardsL || gBoards)
-      : (compact ? (gBoardsR || gBoards) : gBoards) || world;
+      : (compact ? (gBoardsL || gBoards) : gBoards) || world;
     let bb = target.getBBox();
     if(compact && gPieces){
       const piecesBox = gPieces.getBBox();
@@ -616,8 +665,8 @@
     const contentH = bb.height + pad * 2;
 
     if(compact){
-      // Sur téléphone, les deux moulins sont empilés. On privilégie leur largeur
-      // pour conserver des pièces manipulables, puis on laisse la scène défiler.
+      // Une seule figure est cadrée sur téléphone afin de rendre les pièces
+      // suffisamment grandes et directement manipulables.
       const s = Math.min(W / contentW, 1.35);
       const sceneH = Math.max(H, contentH * s);
       stage.style.height = `${sceneH}px`;
@@ -680,21 +729,42 @@
       }
     },
 
-    // Défi 6 pièces : on affine réellement le découpage de Périgal en
-    // séparant le quadrilatère central en deux triangles. Ce n'est pas un
-    // simple miroir de Bhaskara : le nombre et la nature des pièces changent.
-    perigalSix: {
-      name: "Périgal — défi 6 pièces",
+    // Abū al-Wafā : construction historiquement distincte de Périgal.
+    // Pour le rapport fixe 1:2 de l'outil, b² est partagé en quatre cellules
+    // a×a ; chacune fournit un petit triangle et un trapèze. Avec a² entier,
+    // les neuf pièces reconstituent le carré incliné de côté √5·a.
+    abuAlWafa: {
+      name: "Abū al-Wafā — 9 pièces",
       generate: (Ax, Ay, b, ratio) => {
-        const pieces = PUZZLES.perigal.generate(Ax, Ay, b, ratio);
-        const central = pieces.find(piece => piece.key === "m");
-        if(!central) return pieces;
-        const [A,B,P,L] = central.points;
-        return pieces.filter(piece => piece.key !== "m").concat([
-          {key:"m1", fill:COLORS.magenta, points:[A,B,P]},
-          {key:"m2", fill:COLORS.purple, points:[A,P,L]}
-        ]);
-      }
+        const a=b*ratio;
+        const colors=[
+          [COLORS.yellow,COLORS.orange],
+          [COLORS.blue,COLORS.darkblue],
+          [COLORS.lightRed,COLORS.red],
+          [COLORS.teal,COLORS.green]
+        ];
+        const pieces=[];
+        let index=0;
+        for(let row=0;row<2;row++){
+          for(let col=0;col<2;col++){
+            const x=Ax+col*a, y=Ay-b+row*a;
+            const TL={x,y}, TM={x:x+a/2,y}, TR={x:x+a,y};
+            const BL={x,y:y+a}, BR={x:x+a,y:y+a};
+            index++;
+            pieces.push(
+              {key:`t${index}`,fill:colors[index-1][0],points:[TL,TM,BL]},
+              {key:`q${index}`,fill:colors[index-1][1],points:[TM,TR,BR,BL]}
+            );
+          }
+        }
+        pieces.push({
+          key:"sq",
+          fill:COLORS.purple,
+          points:[{x:Ax-a,y:Ay},{x:Ax,y:Ay},{x:Ax,y:Ay+a},{x:Ax-a,y:Ay+a}]
+        });
+        return pieces;
+      },
+      solutionTargets: abuAlWafaSolutionPolygons
     },
 
     // Liu Hui (construction stable inspirée du document fourni)
@@ -872,11 +942,11 @@
         <p class="muted">Indice : les 4 triangles forment une sorte de cadre ; le petit carré comble le trou central.</p>
       `
     },
-    perigalSix: {
-      title: "Puzzle 5 — Périgal, défi 6 pièces",
+    abuAlWafa: {
+      title: "Puzzle 5 — Abū al-Wafā",
       html: `
-        <p><strong>Objectif :</strong> déplacer les <strong>6 pièces</strong> pour reconstituer le carré de l'hypoténuse <em>c²</em>.</p>
-        <p class="muted">Le grand quadrilatère de Périgal est séparé en deux triangles : les pièces sont donc réellement différentes du puzzle 1.</p>
+        <p><strong>Objectif :</strong> déplacer les <strong>9 pièces</strong> pour reconstituer le carré de l'hypoténuse <em>c²</em>.</p>
+        <p class="muted">Cette dissection historique est différente de Périgal : quatre petits triangles, quatre trapèzes et le carré <em>a²</em> entier.</p>
       `
     },
     leitzmann: {
@@ -976,27 +1046,14 @@
     state.layoutCompact = compact;
 
     state.moulins = {L:left, R:right};
-    state.molds.push(left.mold, right.mold);
-    state.snapPoints.push(...left.snapPoints, ...right.snapPoints);
+    const interactiveTarget = compact ? left : right;
+    state.molds.push(interactiveTarget.mold);
+    state.snapPoints.push(...interactiveTarget.snapPoints);
 
     const gB=svgEl("g", {id:"boards"});
     const gP=svgEl("g", {id:"pieces"});
     const gL=svgEl("g", {id:"labels"});
-    const gNotes=svgEl("g", {id:"mobileNotes"});
-    world.append(gB, gP, gL, gNotes);
-
-    if(compact){
-      const targetCenter={
-        x:(right.B.x+right.C.x+right.Cw.x+right.Bw.x)/4,
-        y:(right.B.y+right.C.y+right.Cw.y+right.Bw.y)/4
-      };
-      gNotes.append(
-        svgEl("text",{x:targetCenter.x,y:Math.min(right.B.y,right.C.y,right.Cw.y,right.Bw.y)-28,class:"mobileNote"}),
-        svgEl("text",{x:left.A.x+b/2,y:left.A.y-b-28,class:"mobileNote"})
-      );
-      gNotes.firstChild.textContent="CIBLE";
-      gNotes.lastChild.textContent="PIÈCES À DÉPLACER";
-    }
+    world.append(gB, gP, gL);
 
     [left, right].forEach(m => {
       const {A,B,C,Bw,Cw} = m;
@@ -1114,10 +1171,10 @@
   }
 
   function bhaskaraTargetAngles(){
-    const R = state.moulins?.R;
-    if(!R) return [];
-    const u = R.mold.uvec;
-    const v = R.mold.vvec;
+    const targetMoulin = activePuzzleMoulin();
+    if(!targetMoulin) return [];
+    const u = targetMoulin.mold.uvec;
+    const v = targetMoulin.mold.vvec;
 
     const au = deg(Math.atan2(u.y, u.x));
     const av = deg(Math.atan2(v.y, v.x));
@@ -1127,10 +1184,10 @@
     return [au, au + 180, av, av + 180];
   }
 
-  function isNearRightMoulin(piece, extra = 170){
-    const R = state.moulins?.R;
-    if(!R) return false;
-    const bb = R.mold.bbox;
+  function isNearTargetMoulin(piece, extra = 170){
+    const targetMoulin = activePuzzleMoulin();
+    if(!targetMoulin) return false;
+    const bb = targetMoulin.mold.bbox;
     return (
       piece.pos.x >= bb.minX - extra &&
       piece.pos.x <= bb.maxX + extra &&
@@ -1144,7 +1201,7 @@
 
     // On n'applique cette aide que près du moulin cible, pour éviter
     // de perturber les pièces encore posées sur le moulin de gauche.
-    if(!isNearRightMoulin(piece)) return false;
+    if(!isNearTargetMoulin(piece)) return false;
 
     const localEdges = edgeAnglesLocal(piece);
     const targetAngles = bhaskaraTargetAngles();
@@ -1199,11 +1256,11 @@
   }
 
   function bhaskaraTargetEdges(){
-    const R = state.moulins?.R;
-    if(!R) return [];
+    const targetMoulin = activePuzzleMoulin();
+    if(!targetMoulin) return [];
 
     // Carré de l'hypoténuse : ordre des sommets [B, C, Cw, Bw]
-    const B = R.B, C = R.C, Cw = R.Cw, Bw = R.Bw;
+    const {B,C,Cw,Bw} = targetMoulin;
     return [
       {a:B,  b:C},
       {a:C,  b:Cw},
@@ -1248,7 +1305,7 @@
   function tryBhaskaraEdgeSnap(piece){
     if(!isBhaskaraPuzzle() || !piece) return false;
     if(piece.id.endsWith("-sq")) return false;
-    if(!isNearRightMoulin(piece, 260)) return false;
+    if(!isNearTargetMoulin(piece, 260)) return false;
 
     // V13 : on ne colle plus l'hypoténuse sur "n'importe quel côté possible".
     // On utilise les poses exactes déjà calculées pour le puzzle Bhaskara.
@@ -1313,7 +1370,7 @@
   function tryBhaskaraSquareSnap(piece){
     if(!isBhaskaraPuzzle() || !piece) return false;
     if(!piece.id.endsWith("-sq")) return false;
-    if(!isNearRightMoulin(piece, 240)) return false;
+    if(!isNearTargetMoulin(piece, 240)) return false;
 
     const candidates = state.bhaskaraPoseTargets?.get(piece.id) || [];
     if(!candidates.length) return false;
@@ -1364,13 +1421,13 @@
   // cible, on aligne aussi un bord entier. Cela évite le simple « coin collé »
   // qui était insuffisant pour les puzzles les plus complexes.
   function tryEdgeSnap(piece){
-    if(!piece || !isNearRightMoulin(piece, 260)) return false;
-    const R = state.moulins?.R;
-    if(!R) return false;
+    if(!piece || !isNearTargetMoulin(piece, 260)) return false;
+    const targetMoulin = activePuzzleMoulin();
+    if(!targetMoulin) return false;
 
-    const targetSegments = segmentsFromVertices(R.mold.corners);
+    const targetSegments = segmentsFromVertices(targetMoulin.mold.corners);
     for(const [id, other] of state.pieces.entries()){
-      if(id === piece.id || !isNearRightMoulin(other, 260)) continue;
+      if(id === piece.id || !isNearTargetMoulin(other, 260)) continue;
       targetSegments.push(...segmentsFromVertices(pieceWorldVertices(other)));
     }
 
@@ -1460,7 +1517,7 @@
         // Bhaskara : on ajoute des rotations qui alignent une arête de la pièce
         // avec les côtés du carré incliné c². C'est ce qui aide l'hypoténuse
         // à devenir vraiment parallèle au bord cible.
-        if(isBhaskaraPuzzle() && isNearRightMoulin(piece, 260)){
+        if(isBhaskaraPuzzle() && isNearTargetMoulin(piece, 260)){
           const localEdges = edgeAnglesLocal(piece);
           const targetAngles = bhaskaraTargetAngles();
           for(const localA of localEdges){
@@ -1476,7 +1533,7 @@
           if(d<bestD){bestD=d;best=c;}
         });
 
-        const threshold = (isBhaskaraPuzzle() && isNearRightMoulin(piece, 260)) ? 12 : SNAP.rot;
+        const threshold = (isBhaskaraPuzzle() && isNearTargetMoulin(piece, 260)) ? 12 : SNAP.rot;
         if(bestD<threshold) piece.rot=best;
       }
     }
