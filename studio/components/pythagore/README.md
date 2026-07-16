@@ -63,6 +63,11 @@ Jeu de déplacement des pièces d’un découpage de Pythagore.
 - les puzzles proposés doivent être de vraies découpes distinctes. Une simple
   rotation ou un miroir d’un puzzle existant ne constitue pas une variante.
 
+Les identifiants actuellement publiés sont `perigal`, `bhaskara`, `leitzmann`,
+`quatreIdentiques` et `mosaiqueOblique`. `mosaiqueOblique` est une construction
+Math&Go en six pièces : quatre pièces viennent du grand carré et deux du petit.
+Elle remplace l’ancienne recoupe `perigalSix`, qui ne doit plus être proposée.
+
 ## Emplacements et publications
 
 - la page publique du jeu reste
@@ -98,6 +103,28 @@ Les trois composants partagent le même objet triangle :
 Le générateur ne doit pas demander à l’IA de redessiner le moulin ou le schéma
 en barres. Il lui demande un composant, des paramètres validés et un mode de
 rendu. Le moteur construit ensuite la représentation à partir de ces données.
+
+## Règles d’interface à vérifier à chaque modification
+
+- le plein écran est réservé à l’ordinateur et reste masqué sur téléphone ;
+- un jeu mobile n’affiche qu’un seul plateau utile, agrandi, sans copie blanche
+  ou second moulin empilé ;
+- les commandes mobiles restent réduites au choix de l’activité et aux actions
+  nécessaires pour jouer ; les commandes de projection y sont masquées ;
+- le retour au menu existe sans ajouter de logo ou de signature répétitive ;
+- une consigne qui change conserve une zone de hauteur stable afin que le
+  triangle, le moulin ou le tableau ne saute pas pendant l’activité ;
+- l’équation de PythaBarre reste visible et se construit sous le tableau sur
+  téléphone ; l’œil et le changement rapide d’exemple sont réservés à
+  l’ordinateur ;
+- après chaque association case/étiquette réussie, les deux sélections sont
+  annulées : l’élève recommence volontairement le geste suivant ;
+- l’ordre des deux carrés des côtés de l’angle droit est libre dans la relation
+  de Pythagore ;
+- les énoncés imprimables ne portent ni adresse du site, ni logo ajouté, ni
+  bouton de navigation ;
+- avant publication, contrôler au minimum ordinateur, plein écran ordinateur,
+  téléphone portrait, solution, retournement et recommencement.
 
 ## Règles graphiques validées
 
@@ -185,6 +212,19 @@ window.MATHSGO_PYTHAGORE_PUZZLE_CONFIG = {
 
 L’API correspondante est `window.MathsGoPythagorePuzzle.launch(config)` ; le
 paramètre URL `puzzle=bhaskara` permet aussi un lien direct.
+
+Exemple avec la nouvelle découpe :
+
+```js
+window.MathsGoPythagorePuzzle.launch({
+  puzzle: "mosaiqueOblique",
+  mode: "eleves",
+  letters: false
+});
+```
+
+Le snap de finition utilise les poses exactes mais respecte toujours l’état de
+retournement choisi par l’élève : il ne retourne jamais une pièce tout seul.
 
 ## Identifiants et suivi futur
 
