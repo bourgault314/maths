@@ -4614,7 +4614,7 @@ window.MATHSGO_CATALOGUE = {
       "recent": false
     },
     {
-      "id": "outils-bouliers-rekenrek-cache-cache-html",
+      "id": "outils-bouliers-rekenrek-cache-cache-rideau-millimetre-html",
       "title": "Rekenrek Cache-Cache - Rideau Millimétré",
       "description": "Une ressource maths&go pour travailler numération.",
       "path": "outils/bouliers/rekenrek/cache-cache.html",
