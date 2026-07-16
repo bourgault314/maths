@@ -180,8 +180,9 @@ h1 { margin: 0; font-size: clamp(2rem, 4.5vw, 3.8rem); line-height: 1.04; letter
 .sentence-diagram .subject-chip { border-bottom: 4px solid #0755b8; }
 .sentence-diagram .verb-chip { border-bottom: 4px solid #f97316; }
 .sentence-diagram small { flex-basis: 100%; margin-top: 8px; color: #536176; text-align: center; }
-.agreement-visual { display: flex; align-items: center; justify-content: center; flex-wrap: wrap; gap: 6px; }
-.agreement-visual span { padding: 7px 8px; border-radius: 8px; background: #fff; border-bottom: 3px solid #08a89f; font-size: .78rem; font-weight: 800; }
+.agreement-visual { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 7px; }
+.agreement-visual .agreement-side { display: flex; justify-content: center; gap: 5px; }
+.agreement-visual i { padding: 6px 7px; border-radius: 8px; background: #fff; border-bottom: 3px solid #08a89f; font-size: .75rem; font-style: normal; font-weight: 800; }
 .agreement-visual b { color: #f97316; }
 .timeline-visual { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; align-items: center; }
 .timeline-visual span { display: flex; flex-direction: column; gap: 6px; padding: 12px 4px; text-align: center; border-radius: 10px; background: #fff; color: #b94708; font-weight: 900; }
