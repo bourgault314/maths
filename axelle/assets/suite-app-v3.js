@@ -237,33 +237,47 @@
   function renderSplatTable(question) {
     elements.answers.hidden = true;
     elements.interactive.hidden = false;
-    const expected = {visible: String(question.visible), hidden: "?", total: String(question.total)};
+    const expected = {total: String(question.total)};
     const assignments = {};
     let selectedToken = null;
+    let ignoreNextTokenClick = false;
+    const displayValues = question.displayValues || [question.visible];
 
     elements.interactive.innerHTML = `
       <div class="splat-task">
-        <div class="splat-scene" aria-label="${question.visible} jetons visibles, des jetons cachés et ${question.total} jetons en tout">
+        <div class="splat-scene" aria-label="Un jeton marqué ${displayValues[0]}, un jeton marqué ${displayValues[1]}, un Splat et ${question.total} en tout">
           <div class="splat-total"><small>EN TOUT</small><strong>${question.total}</strong></div>
-          <div class="splat-balls">${Array.from({length: question.visible}, (_, index) => `<span style="--i:${index}">${index + 1}</span>`).join("")}</div>
-          <div class="splat-blob" aria-hidden="true">?</div>
+          <div class="splat-balls">${displayValues.map((value, index) => `<span style="--i:${index}">${value}</span>`).join("")}</div>
+          <svg class="splat-blob" viewBox="0 0 24 24" aria-label="Des jetons sont cachés sous le Splat" role="img">
+            <path d="M21.45 12c.529.493 1.283 1.157 1.472 1.73.189.573-.034 1.225-.337 1.709-.303.485-.991.847-1.481 1.2-.49.352-.965.666-1.459.916-.494.25-.993.462-1.506.584-.513.122-1.142.006-1.572.147-.43.141-.732.251-1.007.701-.274.451-.335 1.345-.64 2-.305.656-.703 1.578-1.19 1.935-.487.357-1.175.346-1.73.208-.555-.138-1.112-.681-1.598-1.038-.487-.357-.932-.712-1.322-1.105-.391-.392-.747-.801-1.022-1.251-.274-.45-.358-1.085-.625-1.45-.267-.365-.465-.619-.978-.741-.513-.122-1.382.097-2.1.01-.718-.088-1.718-.182-2.208-.535-.49-.352-.692-1.01-.732-1.581-.04-.57.304-1.267.493-1.841.189-.573.389-1.105.642-1.598.253-.493.531-.958.875-1.358.343-.4.921-.676 1.185-1.043.265-.367.445-.634.403-1.159-.043-.526-.52-1.285-.658-1.995-.139-.709-.358-1.689-.174-2.264.184-.575.747-.971 1.277-1.185.53-.215 1.3-.103 1.903-.1.604.003 1.172.028 1.719.117.547.088 1.075.209 1.562.412.487.203.927.667 1.358.805.431.138.74.227 1.227.024.486-.202 1.061-.89 1.693-1.241.632-.352 1.497-.863 2.1-.866.604-.003 1.155.411 1.522.849.368.438.499 1.204.683 1.779.184.575.335 1.123.42 1.67.085.548.133 1.088.091 1.613-.043.526-.348 1.088-.346 1.541.001.452.012.774.356 1.174.343.4 1.175.734 1.704 1.227Z"/>
+            <text x="12" y="15.4" text-anchor="middle">?</text>
+          </svg>
         </div>
-        <p class="splat-instruction">Complète d’abord le tableau.</p>
-        <div class="splat-table" role="group" aria-label="Tableau à compléter">
-          ${[{id:"visible",label:"jetons visibles"},{id:"hidden",label:"jetons cachés"},{id:"total",label:"jetons en tout"}].map(column => `<div><span>${column.label}</span><button type="button" class="splat-slot" data-slot="${column.id}" aria-label="Case ${column.label}">Dépose ici</button></div>`).join("")}
+        <p class="splat-instruction">Construis le schéma en barres.</p>
+        <div class="splat-table" role="group" aria-label="Schéma en barres à compléter : le tout en haut et deux parties en bas">
+          <div class="splat-bar-row splat-bar-total">
+            <button type="button" class="splat-slot" data-slot="total" aria-label="Le tout : dépose une étiquette ici"></button>
+          </div>
+          <div class="splat-bar-row splat-bar-parts">
+            <button type="button" class="splat-slot" data-slot="part-a" aria-label="Première partie : dépose une étiquette ici"></button>
+            <button type="button" class="splat-slot" data-slot="part-b" aria-label="Deuxième partie : dépose une étiquette ici"></button>
+          </div>
         </div>
         <div class="splat-token-tray" aria-label="Étiquettes à placer">
-          ${["?", String(question.total), String(question.visible)].map(value => `<button type="button" class="splat-token" data-value="${value}">${value}</button>`).join("")}
+          ${["?", String(question.total), String(question.visible)].map(value => `<button type="button" class="splat-token" data-value="${value}" aria-label="Étiquette ${value}">${value}</button>`).join("")}
         </div>
-        <button class="validate-button splat-validate" type="button">Valider le tableau</button>
+        <button class="validate-button splat-validate" type="button">Valider le schéma</button>
         <div class="splat-stage-two" hidden></div>
       </div>`;
+
+    const slotLabel = slotId => slotId === "total" ? "LE TOUT" : "UNE PARTIE";
 
     const renderAssignments = () => {
       elements.interactive.querySelectorAll(".splat-slot").forEach(slot => {
         const value = assignments[slot.dataset.slot];
-        slot.textContent = value || "Dépose ici";
+        slot.innerHTML = `<small>${slotLabel(slot.dataset.slot)}</small><strong>${value || "Dépose ici"}</strong>`;
         slot.classList.toggle("filled", Boolean(value));
+        slot.setAttribute("aria-label", `${slotLabel(slot.dataset.slot).toLowerCase()} : ${value || "dépose une étiquette ici"}`);
       });
       elements.interactive.querySelectorAll(".splat-token").forEach(token => {
         const used = Object.values(assignments).includes(token.dataset.value);
@@ -272,34 +286,104 @@
       });
     };
 
+    const assignSplatToken = (value, slotId) => {
+      if (answered) return;
+      Object.keys(assignments).forEach(key => { if (assignments[key] === value) delete assignments[key]; });
+      assignments[slotId] = value;
+      selectedToken = null;
+      renderAssignments();
+    };
+
+    const beginSplatDrag = (event, token) => {
+      if (answered || token.classList.contains("used") || event.pointerType === "mouse" && event.button !== 0) return;
+      const startX = event.clientX;
+      const startY = event.clientY;
+      dragState = {value: token.dataset.value, startX, startY, ghost: null, moved: false, pointerId: event.pointerId};
+      token.setPointerCapture(event.pointerId);
+
+      const move = moveEvent => {
+        if (!dragState || moveEvent.pointerId !== dragState.pointerId) return;
+        if (Math.hypot(moveEvent.clientX - startX, moveEvent.clientY - startY) > 6 && !dragState.ghost) {
+          dragState.moved = true;
+          const ghost = token.cloneNode(true);
+          ghost.className = "splat-token splat-drag-ghost";
+          document.body.appendChild(ghost);
+          dragState.ghost = ghost;
+        }
+        if (dragState.ghost) {
+          moveEvent.preventDefault();
+          dragState.ghost.style.left = `${moveEvent.clientX}px`;
+          dragState.ghost.style.top = `${moveEvent.clientY}px`;
+        }
+      };
+
+      const end = endEvent => {
+        if (!dragState || endEvent.pointerId !== dragState.pointerId) return;
+        token.removeEventListener("pointermove", move);
+        token.removeEventListener("pointerup", end);
+        token.removeEventListener("pointercancel", end);
+        const current = dragState;
+        current.ghost?.remove();
+        dragState = null;
+        if (current.moved) {
+          ignoreNextTokenClick = true;
+          const target = document.elementFromPoint(endEvent.clientX, endEvent.clientY)?.closest(".splat-slot");
+          if (target) assignSplatToken(current.value, target.dataset.slot);
+          window.setTimeout(() => { ignoreNextTokenClick = false; }, 0);
+        }
+      };
+
+      token.addEventListener("pointermove", move);
+      token.addEventListener("pointerup", end);
+      token.addEventListener("pointercancel", end);
+    };
+
     elements.interactive.querySelectorAll(".splat-token").forEach(token => token.addEventListener("click", () => {
+      if (ignoreNextTokenClick) return;
       if (answered || token.classList.contains("used")) return;
       selectedToken = selectedToken === token.dataset.value ? null : token.dataset.value;
       renderAssignments();
     }));
+    elements.interactive.querySelectorAll(".splat-token").forEach(token => token.addEventListener("pointerdown", event => beginSplatDrag(event, token)));
 
     elements.interactive.querySelectorAll(".splat-slot").forEach(slot => slot.addEventListener("click", () => {
       if (answered) return;
       if (selectedToken) {
-        Object.keys(assignments).forEach(key => { if (assignments[key] === selectedToken) delete assignments[key]; });
-        assignments[slot.dataset.slot] = selectedToken;
-        selectedToken = null;
+        assignSplatToken(selectedToken, slot.dataset.slot);
       } else if (assignments[slot.dataset.slot]) {
         delete assignments[slot.dataset.slot];
+        renderAssignments();
       }
-      renderAssignments();
     }));
 
-    const revealCorrectTable = () => {
-      Object.assign(assignments, expected);
+    const revealCorrectTable = preserveParts => {
+      if (!preserveParts) {
+        Object.keys(assignments).forEach(key => delete assignments[key]);
+        Object.assign(assignments, expected, {"part-a": String(question.visible), "part-b": "?"});
+      }
       renderAssignments();
       elements.interactive.querySelectorAll(".splat-slot, .splat-token").forEach(button => { button.disabled = true; });
       elements.interactive.querySelector(".splat-validate").disabled = true;
     };
 
+    const revealHiddenPart = () => {
+      const hiddenKey = assignments["part-a"] === "?" ? "part-a" : "part-b";
+      const visibleKey = hiddenKey === "part-a" ? "part-b" : "part-a";
+      const hiddenSlot = elements.interactive.querySelector(`[data-slot="${hiddenKey}"]`);
+      const visibleSlot = elements.interactive.querySelector(`[data-slot="${visibleKey}"]`);
+      hiddenSlot.innerHTML = `<small>UNE PARTIE</small><strong>${question.hidden}</strong>`;
+      hiddenSlot.classList.add("resolved");
+      hiddenSlot.style.flexGrow = question.hidden;
+      visibleSlot.style.flexGrow = question.visible;
+      hiddenSlot.parentElement.classList.add("proportioned");
+    };
+
+    renderAssignments();
+
     elements.interactive.querySelector(".splat-validate").addEventListener("click", () => {
-      const tableCorrect = Object.keys(expected).every(key => assignments[key] === expected[key]);
-      revealCorrectTable();
+      const parts = [assignments["part-a"], assignments["part-b"]];
+      const tableCorrect = assignments.total === expected.total && parts.includes(String(question.visible)) && parts.includes("?");
+      revealCorrectTable(tableCorrect);
       if (!tableCorrect) {
         answered = true;
         showFeedback(false, question.explanation);
@@ -312,7 +396,7 @@
       elements.interactive.querySelector(".splat-validate").hidden = true;
       stage.hidden = false;
       stage.innerHTML = `<h2>Combien de jetons sont cachés sous le Splat ?</h2><div class="splat-answers">${question.options.map((option, index) => `<button type="button" class="splat-answer-button" data-index="${index}">${option}</button>`).join("")}</div>`;
-      elements.interactive.querySelector(".splat-instruction").textContent = "Le tableau est juste. Trouve maintenant le nombre caché.";
+      elements.interactive.querySelector(".splat-instruction").textContent = "Le schéma est juste. Trouve maintenant la partie cachée.";
       stage.querySelectorAll(".splat-answer-button").forEach(button => button.addEventListener("click", () => {
         if (answered) return;
         answered = true;
@@ -324,6 +408,7 @@
           if (candidateIndex === question.answer) candidate.classList.add("correct");
         });
         button.classList.add(correct ? "chosen-correct" : "wrong");
+        revealHiddenPart();
         showFeedback(correct, question.explanation);
         revealNext();
       }));
