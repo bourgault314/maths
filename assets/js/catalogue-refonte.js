@@ -212,7 +212,8 @@
   const collectionDesign = {
     bouliers: {
       description: "Choisir entre Rekenrek, Montessori, Soroban et abaque de Gerbert.",
-      icon: "abacus"
+      icon: "abacus",
+      inlineGroup: "manipuler"
     },
     rekenrek: {
       description: "Suivre une progression structurée avec le Rekenrek.",
@@ -236,13 +237,11 @@
     },
     "tuiles-algebriques": {
       description: "Retrouver les plateaux, générateurs et livrets de tuiles algébriques.",
-      icon: "tiles",
-      thumbnail: "assets/img/thumbnails/tuiles-algebriques/plateau-expressions.png?v=2"
+      icon: "tiles"
     },
     splat: {
-      description: "Retrouver Splat, Petit Splat, Splat Équations, ÉquaSplat et ÉquaBarre.",
-      icon: "splat",
-      thumbnail: "assets/img/thumbnails/splat/splat.png?v=2"
+      description: "Retrouver Splat, Petit Splat, Splat Équations et ÉquaSplat.",
+      icon: "splat"
     }
   };
 
@@ -400,7 +399,7 @@
       fractions: `<svg viewBox="0 0 88 56" aria-hidden="true"><rect x="1" y="1" width="86" height="10.8" fill="#2dd4bf"/><rect x="1" y="11.8" width="86" height="10.8" fill="#facc15"/><rect x="1" y="22.6" width="86" height="10.8" fill="#38bdf8"/><rect x="1" y="33.4" width="86" height="10.8" fill="#fde68a"/><rect x="1" y="44.2" width="86" height="10.8" fill="#fca5a5"/><g fill="none" stroke="#334155" stroke-width="1.15"><rect x="1" y="1" width="86" height="54" rx="1"/><path d="M1 11.8H87M1 22.6H87M1 33.4H87M1 44.2H87M44 11.8v10.8M29.7 22.6v10.8M58.3 22.6v10.8M22.5 33.4v10.8M44 33.4v10.8M65.5 33.4v10.8M18.2 44.2V55M35.4 44.2V55M52.6 44.2V55M69.8 44.2V55"/></g></svg>`,
       relatifs: `<svg viewBox="0 0 70 48" aria-hidden="true"><ellipse cx="31" cy="24" rx="29" ry="20" fill="none" stroke="#64748b" stroke-width="2"/><circle cx="22" cy="24" r="12" fill="#39c979" stroke="#111827" stroke-width="1.7"/><circle cx="43" cy="24" r="12" fill="#ef655e" stroke="#111827" stroke-width="1.7"/><text x="14" y="28" font-family="Arial" font-size="10" font-weight="900">+1</text><text x="36" y="28" font-family="Arial" font-size="10" font-weight="900">−1</text><text x="61" y="28" fill="#475569" font-family="Arial" font-size="14" font-weight="900">0</text></svg>`,
       divisibilite: `<svg viewBox="0 0 64 48" aria-hidden="true"><rect x="4" y="7" width="56" height="34" rx="4" fill="#ecfdf5" stroke="#15803d" stroke-width="1.7"/><path d="M4 19h56M4 30h56M18 7v12M32 7v12M46 7v12M13 19v11M25 19v11M39 19v11M51 19v11M18 30v11M32 30v11M46 30v11" stroke="#22c55e" stroke-width="1.2"/><text x="32" y="27" text-anchor="middle" fill="#166534" font-family="Arial" font-size="9" font-weight="900">PGCD</text></svg>`,
-      powers: `<svg viewBox="0 0 88 52" aria-hidden="true"><g stroke="#4c1d95" stroke-width="1.35"><rect x="2" y="34" width="13" height="13" rx="2" fill="#c4b5fd"/><rect x="20" y="34" width="13" height="13" rx="2" fill="#a78bfa"/><rect x="33" y="34" width="13" height="13" rx="2" fill="#a78bfa"/><rect x="50" y="21" width="13" height="13" rx="2" fill="#8b5cf6"/><rect x="63" y="21" width="13" height="13" rx="2" fill="#8b5cf6"/><rect x="50" y="34" width="13" height="13" rx="2" fill="#8b5cf6"/><rect x="63" y="34" width="13" height="13" rx="2" fill="#8b5cf6"/></g><g fill="#5b21b6" font-family="Arial" font-weight="900" text-anchor="middle"><text x="8.5" y="27" font-size="10.5">2⁰</text><text x="33" y="27" font-size="10.5">2¹</text><text x="63" y="15" font-size="11">2²</text><text x="83" y="43" font-size="17">?</text></g></svg>`,
+      powers: `<svg viewBox="0 0 92 52" aria-hidden="true"><g stroke="#4c1d95" stroke-width="1.35"><rect x="2" y="34" width="13" height="13" rx="2" fill="#c4b5fd"/><rect x="20" y="34" width="13" height="13" rx="2" fill="#a78bfa"/><rect x="33" y="34" width="13" height="13" rx="2" fill="#a78bfa"/><rect x="50" y="21" width="13" height="13" rx="2" fill="#8b5cf6"/><rect x="63" y="21" width="13" height="13" rx="2" fill="#8b5cf6"/><rect x="50" y="34" width="13" height="13" rx="2" fill="#8b5cf6"/><rect x="63" y="34" width="13" height="13" rx="2" fill="#8b5cf6"/></g><g fill="#5b21b6" font-family="Arial" font-weight="900" text-anchor="middle"><text x="8.5" y="27" font-size="10.5">2⁰</text><text x="33" y="27" font-size="10.5">2¹</text><text x="63" y="15" font-size="11">2²</text><text x="87" y="43" font-size="17">?</text></g></svg>`,
       roots: `<svg viewBox="0 0 70 54" aria-hidden="true"><rect x="20" y="2" width="30" height="30" rx="3" fill="#ede9fe" stroke="#6d28d9" stroke-width="2"/><text x="35" y="22.5" text-anchor="middle" fill="#5b21b6" font-family="Georgia,serif" font-size="14" font-weight="700">2</text><path d="M18 44l4 1.5 3 5.5 5-14h22" fill="none" stroke="#c2410c" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/><text x="40" y="50" text-anchor="middle" fill="#c2410c" font-family="Georgia,serif" font-size="14" font-weight="700">2</text></svg>`,
       automatismes: `<svg viewBox="0 0 64 64" aria-hidden="true"><path d="m18 53 6-43h16l6 43Z" fill="#eff6ff" stroke="#0b67b2" stroke-width="2.4" stroke-linejoin="round"/><g stroke="#08aaa5" stroke-width="1.7" stroke-linecap="round"><path d="M28 20h9M27 26h9M26 32h8M25 38h8"/></g><path d="M32 45V13" fill="none" stroke="#f58220" stroke-width="3.2" stroke-linecap="round"/><rect x="28.5" y="23" width="7" height="5.5" rx="1.4" fill="#f9bf3b" stroke="#a85b08" stroke-width="1.2"/><circle cx="32" cy="45" r="3.1" fill="#f58220" stroke="#a8440b" stroke-width="1.2"/><path d="M15 53h34v6H15Z" fill="#0b67b2" stroke="#063f86" stroke-width="1.8" stroke-linejoin="round"/></svg>`,
       ratio: `<svg viewBox="0 0 76 50" aria-hidden="true"><rect x="4" y="17" width="22" height="16" rx="5" fill="#ffedd5" stroke="#c2410c" stroke-width="1.5"/><text x="15" y="28.5" text-anchor="middle" fill="#9a3412" font-family="Arial" font-size="10" font-weight="900">2</text><rect x="50" y="17" width="22" height="16" rx="5" fill="#dbeafe" stroke="#1d4ed8" stroke-width="1.5"/><text x="61" y="28.5" text-anchor="middle" fill="#1e40af" font-family="Arial" font-size="10" font-weight="900">5</text><path d="M29 21h16m-4-4 4 4-4 4" fill="none" stroke="#ea580c" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"/><path d="M47 29H31m4-4-4 4 4 4" fill="none" stroke="#0f766e" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"/></svg>`,
@@ -411,7 +410,7 @@
       clock: `<svg viewBox="0 0 78 48" aria-hidden="true"><circle cx="23" cy="23" r="18" fill="#fff7ed" stroke="#c2410c" stroke-width="2"/><g stroke="#9a3412" stroke-width="1.3"><path d="M23 7v4M23 35v4M7 23h4M35 23h4"/></g><path d="M23 23 15 16M23 23V12" stroke="#2563eb" stroke-width="2.6" stroke-linecap="round"/><circle cx="23" cy="23" r="2.5" fill="#f97316"/><text x="58" y="27" text-anchor="middle" fill="#0f766e" font-family="Arial" font-size="8.5" font-weight="900">60 min</text></svg>`,
       tiles: `<svg viewBox="0 0 70 48" aria-hidden="true"><rect x="4" y="5" width="32" height="32" rx="4" fill="#75bfff" stroke="#2563eb" stroke-width="1.8"/><rect x="41" y="5" width="24" height="13" rx="3" fill="#75bfff" stroke="#2563eb" stroke-width="1.5"/><rect x="41" y="23" width="24" height="13" rx="3" fill="#fde76f" stroke="#ca8a04" stroke-width="1.5"/><rect x="27" y="31" width="12" height="12" rx="2" fill="#fde76f" stroke="#ca8a04" stroke-width="1.3"/><text x="13" y="27" fill="#1d4ed8" font-family="Arial" font-size="15" font-weight="900">x²</text><text x="49" y="15" fill="#1d4ed8" font-family="Arial" font-size="10" font-weight="900">x</text><text x="46" y="33" fill="#92400e" font-family="Arial" font-size="9" font-weight="900">−x</text><text x="33" y="40" text-anchor="middle" fill="#92400e" font-family="Arial" font-size="8" font-weight="900">1</text></svg>`,
       splat: `<svg viewBox="-2 -2 28 28" aria-hidden="true"><path d="M21.45 12c.529.493 1.283 1.157 1.472 1.73.189.573-.034 1.225-.337 1.709-.303.485-.991.847-1.481 1.2-.49.352-.965.666-1.459.916-.494.25-.993.462-1.506.584-.513.122-1.142.006-1.572.147-.43.141-.732.251-1.007.701-.274.451-.335 1.345-.64 2-.305.656-.703 1.578-1.19 1.935-.487.357-1.175.346-1.73.208-.555-.138-1.112-.681-1.598-1.038-.487-.357-.932-.712-1.322-1.105-.391-.392-.747-.801-1.022-1.251-.274-.45-.358-1.085-.625-1.45-.267-.365-.465-.619-.978-.741-.513-.122-1.382.097-2.1.01-.718-.088-1.718-.182-2.208-.535-.49-.352-.692-1.01-.732-1.581-.04-.57.304-1.267.493-1.841.189-.573.389-1.105.642-1.598.253-.493.531-.958.875-1.358.343-.4.921-.676 1.185-1.043.265-.367.445-.634.403-1.159-.043-.526-.52-1.285-.658-1.995-.139-.709-.358-1.689-.174-2.264.184-.575.747-.971 1.277-1.185.53-.215 1.3-.103 1.903-.1.604.003 1.172.028 1.719.117.547.088 1.075.209 1.562.412.487.203.927.667 1.358.805.431.138.74.227 1.227.024.486-.202 1.061-.89 1.693-1.241.632-.352 1.497-.863 2.1-.866.604-.003 1.155.411 1.522.849.368.438.499 1.204.683 1.779.184.575.335 1.123.42 1.67.085.548.133 1.088.091 1.613-.043.526-.348 1.088-.346 1.541.001.452.012.774.356 1.174.343.4 1.175.734 1.704 1.227Z" fill="#8b5cf6" stroke="#5b21b6" stroke-width="1.05"/><text x="12.4" y="14.2" text-anchor="middle" fill="#fff" font-family="Times New Roman, Times, serif" font-size="10" font-weight="700" font-style="italic">x</text></svg>`,
-      bars: `<svg viewBox="0 0 72 46" aria-hidden="true"><g stroke-width="1.35"><path d="M6 6h18v16H6Z" fill="#86efac" stroke="#15803d"/><path d="M24 6h25v16H24Z" fill="#bbf7d0" stroke="#15803d"/><path d="M49 6h15v16H49Z" fill="#fde68a" stroke="#b45309"/><path d="M6 22h12v16H6Z" fill="#bfdbfe" stroke="#2563eb"/><path d="M18 22h20v16H18Z" fill="#dbeafe" stroke="#2563eb"/><path d="M38 22h26v16H38Z" fill="#fed7aa" stroke="#ea580c"/></g><g font-family="Arial" font-size="8.5" font-weight="900" text-anchor="middle"><text x="15" y="17.2" fill="#166534">5</text><text x="36.5" y="17.2" fill="#166534">7</text><text x="56.5" y="17.2" fill="#92400e">4</text><text x="12" y="33.2" fill="#1d4ed8">2</text><text x="28" y="33.2" fill="#1d4ed8">4</text><text x="51" y="33.2" fill="#c2410c">x</text></g></svg>`,
+      bars: `<svg viewBox="0 0 72 46" aria-hidden="true"><g stroke-width="1.35"><rect x="6" y="6" width="18" height="16" rx="3" fill="#86efac" stroke="#15803d"/><rect x="24" y="6" width="25" height="16" rx="3" fill="#bbf7d0" stroke="#15803d"/><rect x="49" y="6" width="15" height="16" rx="3" fill="#fde68a" stroke="#b45309"/><rect x="6" y="22" width="12" height="16" rx="3" fill="#bfdbfe" stroke="#2563eb"/><rect x="18" y="22" width="20" height="16" rx="3" fill="#dbeafe" stroke="#2563eb"/><rect x="38" y="22" width="26" height="16" rx="3" fill="#fed7aa" stroke="#ea580c"/></g><g font-family="Arial" font-size="8.5" font-weight="900" text-anchor="middle"><text x="15" y="17.2" fill="#166534">5</text><text x="36.5" y="17.2" fill="#166534">7</text><text x="56.5" y="17.2" fill="#92400e">4</text><text x="12" y="33.2" fill="#1d4ed8">2</text><text x="28" y="33.2" fill="#1d4ed8">4</text><text x="51" y="33.2" fill="#c2410c">x</text></g></svg>`,
       patterns: `<svg viewBox="0 0 76 48" aria-hidden="true"><g stroke="#1e3a5f" stroke-width=".9"><rect x="2" y="37" width="7" height="7" rx="1" fill="#38bdf8"/><rect x="19" y="29" width="7" height="7" rx="1" fill="#f97316"/><rect x="19" y="37" width="7" height="7" rx="1" fill="#f97316"/><rect x="36" y="21" width="7" height="7" rx="1" fill="#38bdf8"/><rect x="36" y="29" width="7" height="7" rx="1" fill="#f97316"/><rect x="36" y="37" width="7" height="7" rx="1" fill="#f97316"/><rect x="53" y="5" width="7" height="7" rx="1" fill="#f97316"/><rect x="53" y="13" width="7" height="7" rx="1" fill="#f97316"/><rect x="53" y="21" width="7" height="7" rx="1" fill="#38bdf8"/><rect x="53" y="29" width="7" height="7" rx="1" fill="#f97316"/><rect x="53" y="37" width="7" height="7" rx="1" fill="#f97316"/></g><text x="70" y="43" fill="#334155" font-family="Arial" font-size="15" font-weight="900">?</text></svg>`,
       angles: `<svg viewBox="0 0 64 48" aria-hidden="true"><path d="M7 39h52M7 39 45 7" fill="none" stroke="#2563eb" stroke-width="5" stroke-linecap="round"/><path d="M27 39a20 20 0 0 0-5-13" fill="none" stroke="#f97316" stroke-width="3.5" stroke-linecap="round"/></svg>`,
       coordinates: `<svg viewBox="0 0 70 48" aria-hidden="true"><g stroke="#cbd5e1" stroke-width=".7"><path d="M12 5v38M23 5v38M34 5v38M45 5v38M56 5v38M6 12h58M6 23h58M6 34h58"/></g><path d="M6 34h58M23 44V5" fill="none" stroke="#334155" stroke-width="1.6"/><path d="m61 31 3 3-3 3M20 8l3-3 3 3" fill="none" stroke="#334155" stroke-width="1.4" stroke-linejoin="round"/><path d="M23 12h33v22" fill="none" stroke="#f97316" stroke-width="1.4" stroke-dasharray="3 2"/><circle cx="56" cy="12" r="3.4" fill="#0d9488" stroke="#fff" stroke-width="1.2"/><text x="60" y="9" fill="#0f766e" font-family="Arial" font-size="8" font-weight="900">A</text></svg>`,
@@ -705,10 +704,12 @@
     const collectionCards = collections.map((collection) => {
       const design = collectionDesign[collection.id] || {};
       const count = collectionResourceCount(collection.id);
-      return `<a class="notion-card collection-card" data-collection-card="${escapeHtml(collection.id)}" href="${escapeHtml(collectionHref(collection))}" style="${domainStyle(collection.domain)}">
+      const hasThumbnail = Boolean(design.thumbnail);
+      return `<a class="notion-card collection-card${hasThumbnail ? " collection-card-visual" : ""}" data-collection-card="${escapeHtml(collection.id)}" href="${escapeHtml(collectionHref(collection))}" style="${domainStyle(collection.domain)}">
+        ${hasThumbnail ? `<span class="resource-thumbnail collection-card-thumbnail"><img src="${escapeHtml(rootPrefix + design.thumbnail)}" alt="" loading="lazy"></span>` : ""}
         <span class="collection-label">Collection</span>
         <span class="notion-top">
-          ${collectionVisual(collection)}
+          ${hasThumbnail ? "" : collectionVisual(collection)}
           <h3>${escapeHtml(collection.title)}</h3>
         </span>
         <p>${escapeHtml(design.description || "Retrouver cette collection d’outils.")}</p>
@@ -789,6 +790,15 @@
     </details>`;
   }
 
+  function collectionResourceCard(collection) {
+    const design = collectionDesign[collection.id] || {};
+    return `<a class="resource-card resource-card-visual collection-resource-card" data-collection-card="${escapeHtml(collection.id)}" href="${escapeHtml(collectionHref(collection))}" style="${domainStyle(collection.domain)}">
+      <span class="resource-thumbnail collection-resource-icon">${icon(design.icon)}</span>
+      <span class="resource-copy"><h3>${escapeHtml(collection.title)}</h3><span class="resource-description">${escapeHtml(design.description || "Retrouver cette collection d’outils.")}</span></span>
+      <span class="resource-arrow" aria-hidden="true">→</span>
+    </a>`;
+  }
+
   function renderResources(resources, directCollections = [], directTitle = "Accès direct") {
     domainGrid.hidden = true;
     notionGrid.hidden = true;
@@ -799,12 +809,15 @@
       return;
     }
 
-    const directAccess = directCollections.length
+    const inlineCollections = directCollections.filter((collection) => collectionDesign[collection.id]?.inlineGroup);
+    const separateCollections = directCollections.filter((collection) => !collectionDesign[collection.id]?.inlineGroup);
+
+    const directAccess = separateCollections.length
       ? `<section class="search-direct" aria-labelledby="search-direct-title">
         <div class="resource-group-heading">
           <h2 id="search-direct-title">${escapeHtml(directTitle)}</h2>
         </div>
-        <div class="search-direct-grid">${directCollections.map((collection) => {
+        <div class="search-direct-grid">${separateCollections.map((collection) => {
           const design = collectionDesign[collection.id] || {};
           return `<a class="notion-card collection-card" data-collection-card="${escapeHtml(collection.id)}" href="${escapeHtml(collectionHref(collection))}" style="${domainStyle(collection.domain)}">
             <span class="collection-label">Collection</span>
@@ -819,19 +832,25 @@
       : "";
 
     const grouped = new Map(resourceGroups.map((group) => [group.id, []]));
+    const groupedCollections = new Map(resourceGroups.map((group) => [group.id, []]));
     displayItems(resources).forEach((item) => {
       const groupId = item.family?.group || primaryResourceGroup(item.resource);
       grouped.get(groupId)?.push(item);
     });
+    inlineCollections.forEach((collection) => {
+      groupedCollections.get(collectionDesign[collection.id]?.inlineGroup)?.push(collection);
+    });
     const groupedResources = resourceGroups.map((group) => {
       const groupItems = grouped.get(group.id);
-      if (!groupItems.length) return "";
+      const groupCollections = groupedCollections.get(group.id);
+      const groupCount = groupItems.length + groupCollections.length;
+      if (!groupCount) return "";
       return `<section class="resource-group" aria-labelledby="resource-group-${escapeHtml(group.id)}">
         <div class="resource-group-heading">
           <h2 id="resource-group-${escapeHtml(group.id)}">${escapeHtml(group.label)}</h2>
-          <span>${groupItems.length} entrée${groupItems.length > 1 ? "s" : ""}</span>
+          <span>${groupCount} entrée${groupCount > 1 ? "s" : ""}</span>
         </div>
-        <div class="resource-group-grid">${groupItems.map((item) => item.family
+        <div class="resource-group-grid">${groupCollections.map(collectionResourceCard).join("")}${groupItems.map((item) => item.family
           ? resourceFamilyCard(item.family, item.variants)
           : resourceCard(item.resource)).join("")}</div>
       </section>`;

@@ -146,7 +146,7 @@ window.MATHSGO_CATALOGUE = {
     }
   ],
   "resourceClassifications": {
-    "outils/box_barre_final.html": { "primaryNotion": "calcul-litteral", "collections": ["splat"], "tags": ["boite", "splat"] },
+    "outils/box_barre_final.html": { "primaryNotion": "schemas-barres", "collections": [], "tags": ["boite", "schema-barres"] },
     "outils/box_pasbarre_final.html": { "primaryNotion": "calcul-litteral", "collections": [], "tags": ["boite", "archive"] },
     "outils/tuiles_algebriques/tuiles_algebriques.html": {
       "primaryNotion": "calcul-litteral",
@@ -168,10 +168,10 @@ window.MATHSGO_CATALOGUE = {
     "outils/detective_des_grandeurs_additive__2.pdf": { "primaryNotion": "schemas-barres", "collections": [], "tags": ["schema-barres", "resolution-problemes", "enquete"] },
     "outils/detective_des_grandeurs_multiplicative__1.pdf": { "primaryNotion": "schemas-barres", "collections": [], "tags": ["schema-barres", "resolution-problemes", "enquete"] },
     "outils/equabarre.html": {
-      "primaryNotion": "equations",
+      "primaryNotion": "schemas-barres",
       "primaryGroup": "manipuler",
-      "collections": ["splat"],
-      "tags": ["schema-barres", "equation", "inconnue", "splat"],
+      "collections": [],
+      "tags": ["schema-barres", "equation", "inconnue"],
       "thumbnail": "assets/img/thumbnails/splat/equabarre.png?v=2",
       "cardDescription": "Représenter une équation par deux schémas en barres et transformer les deux membres pas à pas."
     },
