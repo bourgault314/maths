@@ -446,6 +446,14 @@ window.MATHSGO_CATALOGUE = {
       "thumbnail": "assets/img/thumbnails/angles/rapporteurs-calque.png?v=1",
       "cardDescription": "Créer une feuille A4 de rapporteurs personnalisés à imprimer sur papier calque."
     },
+    "outils/problemes_barres.html": {
+      "primaryNotion": "schemas-barres",
+      "primaryGroup": "generer",
+      "collections": [],
+      "tags": ["schema-barres", "resolution-problemes", "generateur", "partie-tout", "equation"],
+      "thumbnail": "assets/img/thumbnails/schemas-barres/generateur-problemes.png?v=1",
+      "cardDescription": "Générer et résoudre pas à pas des problèmes avec schéma en barres, équation et fiche imprimable."
+    },
     "outils/plateaux_manipulation/moulin_pythagore.html": {
       "primaryNotion": "pythagore",
       "collections": [],
@@ -526,6 +534,42 @@ window.MATHSGO_CATALOGUE = {
         "outils/nombres_relatifs/nombres_relatifs_vert_rouge_ecriture_blanche.pdf",
         "outils/nombres_relatifs/nombres_relatifs_gris_blanc.pdf",
         "outils/nombres_relatifs/nombres_relatifs_vert_rouge_contour_noir.pdf"
+      ]
+    },
+    {
+      "id": "detective-des-grandeurs",
+      "title": "Détective des grandeurs",
+      "description": "Choisir une série de problèmes additifs ou multiplicatifs.",
+      "cardDescription": "Des enquêtes progressives pour identifier les grandeurs et modéliser les relations.",
+      "thumbnail": "assets/img/thumbnails/schemas-barres/detective-grandeurs.png?v=1",
+      "group": "activites",
+      "labels": {
+        "outils/detective_des_grandeurs_additive__1.pdf": "Situations additives — série 1",
+        "outils/detective_des_grandeurs_additive__2.pdf": "Situations additives — série 2",
+        "outils/detective_des_grandeurs_multiplicative__1.pdf": "Situations multiplicatives"
+      },
+      "paths": [
+        "outils/detective_des_grandeurs_additive__1.pdf",
+        "outils/detective_des_grandeurs_additive__2.pdf",
+        "outils/detective_des_grandeurs_multiplicative__1.pdf"
+      ]
+    },
+    {
+      "id": "gabarits-schemas-barres",
+      "title": "Gabarits de schémas en barres",
+      "description": "Choisir le gabarit à imprimer selon la structure du problème.",
+      "cardDescription": "Des supports guidés pour les enquêtes additives, multiplicatives et les partages équitables.",
+      "thumbnail": "assets/img/thumbnails/schemas-barres/gabarits-enquetes.png?v=1",
+      "group": "gabarits",
+      "labels": {
+        "outils/gabarits_enquetes_additive.pdf": "Enquêtes additives",
+        "outils/gabarits_enquetes_multiplicative.pdf": "Enquêtes multiplicatives",
+        "outils/gabarits_partage_equitable_2_3_4_5.pdf": "Partages équitables en 2, 3, 4 ou 5"
+      },
+      "paths": [
+        "outils/gabarits_enquetes_additive.pdf",
+        "outils/gabarits_enquetes_multiplicative.pdf",
+        "outils/gabarits_partage_equitable_2_3_4_5.pdf"
       ]
     }
   ],
@@ -1585,7 +1629,7 @@ window.MATHSGO_CATALOGUE = {
     {
       "id": "outils-detective-des-grandeurs-additive-1-pdf",
       "title": "Détective des grandeurs — situations additives 1",
-      "description": "Une ressource maths&go pour travailler schémas en barres et problèmes.",
+      "description": "Une première série d’enquêtes additives pour identifier les grandeurs et leurs relations.",
       "path": "outils/detective_des_grandeurs_additive__1.pdf",
       "domains": [
         "nombres-calculs"
@@ -1612,7 +1656,7 @@ window.MATHSGO_CATALOGUE = {
     {
       "id": "outils-detective-des-grandeurs-additive-2-pdf",
       "title": "Détective des grandeurs — situations additives 2",
-      "description": "Une ressource maths&go pour travailler schémas en barres et problèmes.",
+      "description": "Neuf pages d’enquêtes additives progressives, de la combinaison à la comparaison.",
       "path": "outils/detective_des_grandeurs_additive__2.pdf",
       "domains": [
         "nombres-calculs"
@@ -1639,7 +1683,7 @@ window.MATHSGO_CATALOGUE = {
     {
       "id": "outils-detective-des-grandeurs-multiplicative-1-pdf",
       "title": "Détective des grandeurs — situations multiplicatives",
-      "description": "Une ressource maths&go pour travailler schémas en barres et problèmes.",
+      "description": "Trois pages d’enquêtes multiplicatives sur les groupes égaux, les comparaisons et les partages.",
       "path": "outils/detective_des_grandeurs_multiplicative__1.pdf",
       "domains": [
         "nombres-calculs"
@@ -2055,7 +2099,7 @@ window.MATHSGO_CATALOGUE = {
     {
       "id": "outils-gabarits-enquetes-additive-pdf",
       "title": "Gabarits d’enquêtes additives",
-      "description": "Une ressource maths&go pour travailler schémas en barres et problèmes.",
+      "description": "Deux pages de gabarits guidés pour représenter et résoudre les enquêtes additives.",
       "path": "outils/gabarits_enquetes_additive.pdf",
       "domains": [
         "nombres-calculs"
@@ -2084,7 +2128,7 @@ window.MATHSGO_CATALOGUE = {
     {
       "id": "outils-gabarits-enquetes-multiplicative-pdf",
       "title": "Gabarits d’enquêtes multiplicatives",
-      "description": "Une ressource maths&go pour travailler schémas en barres et problèmes.",
+      "description": "Sept pages de gabarits pour représenter les structures multiplicatives et vérifier les calculs.",
       "path": "outils/gabarits_enquetes_multiplicative.pdf",
       "domains": [
         "nombres-calculs"
@@ -2142,7 +2186,7 @@ window.MATHSGO_CATALOGUE = {
     {
       "id": "outils-gabarits-partage-equitable-2-3-4-5-pdf",
       "title": "Gabarits de partage équitable",
-      "description": "Une ressource maths&go pour travailler schémas en barres et problèmes.",
+      "description": "Des gabarits à imprimer pour partager équitablement une quantité en deux, trois, quatre ou cinq parts.",
       "path": "outils/gabarits_partage_equitable_2_3_4_5.pdf",
       "domains": [
         "nombres-calculs"
@@ -3774,7 +3818,7 @@ window.MATHSGO_CATALOGUE = {
     {
       "id": "outils-problemes-barres-html",
       "title": "Problèmes en barres",
-      "description": "Une ressource maths&go pour travailler schémas en barres et problèmes.",
+      "description": "Générez et résolvez pas à pas des problèmes avec schéma en barres, équation et fiche imprimable.",
       "path": "outils/problemes_barres.html",
       "domains": [
         "nombres-calculs"
