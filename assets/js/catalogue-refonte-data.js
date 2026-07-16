@@ -3920,9 +3920,9 @@ window.MATHSGO_CATALOGUE = {
     },
     {
       "id": "outils-patterns-html",
-      "title": "Patterns — vers l’algèbre",
-      "description": "Une ressource maths&go pour travailler patterns et généralisation.",
-      "path": "outils/patterns.html",
+      "title": "Labo des régularités — Patterns",
+      "description": "Observer, prolonger, expliquer et généraliser des motifs au collège.",
+      "path": "outils/labo-des-regularites.html",
       "domains": [
         "algebre"
       ],
