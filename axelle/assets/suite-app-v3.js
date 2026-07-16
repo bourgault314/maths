@@ -40,7 +40,6 @@
   let questionIndex = 0;
   let score = 0;
   let answered = false;
-  let firstTry = true;
   let selectedMatchToken = null;
   let angleAssignments = {};
   let dragState = null;
@@ -110,7 +109,6 @@
 
   function resetQuestionState() {
     answered = false;
-    firstTry = true;
     selectedMatchToken = null;
     angleAssignments = {};
     dragState = null;
@@ -213,18 +211,21 @@
     });
 
     elements.interactive.querySelector(".validate-button").addEventListener("click", () => {
-      if (chosen.size !== question.target) {
-        firstTry = false;
-        elements.feedback.className = "feedback try-again";
-        elements.feedback.innerHTML = `<strong>Pas encore.</strong> Tu as colorié ${chosen.size} secteur${chosen.size > 1 ? "s" : ""}. Il en faut exactement ${question.target}.`;
-        elements.feedback.hidden = false;
-        return;
-      }
+      const correct = chosen.size === question.target;
       answered = true;
-      if (firstTry) score += 1;
+      if (correct) score += 1;
+      if (!correct) {
+        chosen.clear();
+        elements.interactive.querySelectorAll(".touch-sector").forEach((path, index) => {
+          if (index < question.target) chosen.add(index);
+          path.classList.toggle("selected", index < question.target);
+        });
+        count.textContent = question.target;
+        elements.interactive.querySelector(".selection-count").childNodes[1].textContent = ` secteurs sélectionnés sur ${question.denominator}`;
+      }
       elements.interactive.querySelectorAll(".touch-sector").forEach(path => path.classList.add("locked"));
       elements.interactive.querySelector(".validate-button").disabled = true;
-      showFeedback(true, question.explanation, !firstTry);
+      showFeedback(correct, question.explanation);
       revealNext();
     });
   }
@@ -262,7 +263,13 @@
     });
     elements.interactive.querySelectorAll(".match-slot").forEach(slot => {
       slot.addEventListener("click", () => {
-        if (selectedMatchToken) assignAngleToken(selectedMatchToken, slot.dataset.target);
+        if (answered) return;
+        if (selectedMatchToken) {
+          assignAngleToken(selectedMatchToken, slot.dataset.target);
+        } else if (angleAssignments[slot.dataset.target]) {
+          delete angleAssignments[slot.dataset.target];
+          renderAngleAssignments();
+        }
       });
       slot.addEventListener("dragover", event => event.preventDefault());
       slot.addEventListener("drop", event => {
@@ -296,7 +303,8 @@
       const tokenId = angleAssignments[slot.dataset.target];
       slot.classList.toggle("filled", Boolean(tokenId));
       slot.classList.remove("incorrect");
-      slot.querySelector("span").textContent = tokenId ? labelById[tokenId] : "Dépose le nom ici";
+      slot.querySelector("span").textContent = tokenId ? `${labelById[tokenId]} ×` : "Dépose le nom ici";
+      slot.setAttribute("aria-label", tokenId ? `${labelById[tokenId]}. Toucher pour retirer.` : "Déposer un nom d’angle ici");
     });
     elements.interactive.querySelectorAll(".match-token").forEach(token => {
       const used = Object.values(angleAssignments).includes(token.dataset.token);
@@ -349,32 +357,22 @@
 
   function validateAngles() {
     const expected = ["acute", "right", "obtuse", "flat"];
-    if (Object.keys(angleAssignments).length < 4) {
-      firstTry = false;
-      elements.feedback.className = "feedback try-again";
-      elements.feedback.innerHTML = "<strong>Il en manque.</strong> Place les quatre étiquettes avant de valider.";
-      elements.feedback.hidden = false;
-      return;
-    }
     const wrongTargets = expected.filter(target => angleAssignments[target] !== target);
-    if (wrongTargets.length) {
-      firstTry = false;
-      wrongTargets.forEach(target => elements.interactive.querySelector(`[data-target="${target}"]`)?.classList.add("incorrect"));
-      elements.feedback.className = "feedback try-again";
-      elements.feedback.innerHTML = `<strong>Presque.</strong> ${wrongTargets.length} étiquette${wrongTargets.length > 1 ? "s ne sont" : " n’est"} pas encore au bon endroit.`;
-      elements.feedback.hidden = false;
-      return;
-    }
+    const correct = wrongTargets.length === 0;
     answered = true;
-    if (firstTry) score += 1;
+    if (correct) score += 1;
+    if (!correct) {
+      expected.forEach(target => { angleAssignments[target] = target; });
+      renderAngleAssignments();
+    }
     elements.interactive.querySelectorAll("button").forEach(button => { button.disabled = true; });
-    showFeedback(true, session.questions[questionIndex].explanation, !firstTry);
+    showFeedback(correct, session.questions[questionIndex].explanation);
     revealNext();
   }
 
-  function showFeedback(correct, explanation, afterRetry = false) {
+  function showFeedback(correct, explanation) {
     elements.feedback.className = `feedback ${correct ? "success" : "error"}`;
-    const heading = correct ? (afterRetry ? "Bien corrigé !" : "Bien joué !") : "Pas cette fois.";
+    const heading = correct ? "Bien joué !" : "Pas cette fois.";
     elements.feedback.innerHTML = `<strong>${heading}</strong><span>${explanation}</span>`;
     elements.feedback.hidden = false;
     elements.hintButton.hidden = true;
