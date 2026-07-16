@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>Moulin de Pythagore — Puzzles stables</title>
+<title>Moulin de Pythagore — Math&Go</title>
 <meta name="description" content="Moulin de Pythagore interactif : manipulez des puzzles de découpage pour visualiser l’égalité des aires dans un triangle rectangle." />
 <link rel="canonical" href="https://mathsgo.re/outils/plateaux_manipulation/moulin_pythagore.html" />
 <style>
@@ -45,6 +45,22 @@
     user-select:none;
     font-family:inherit;
   }
+  #backMenu{
+    min-height:40px;
+    display:inline-flex;
+    align-items:center;
+    justify-content:center;
+    padding:0 11px;
+    border:1px solid var(--border);
+    border-radius:12px;
+    color:var(--ink);
+    background:#fff;
+    text-decoration:none;
+    font-size:14px;
+    font-weight:800;
+    white-space:nowrap;
+  }
+  #backMenu:hover{background:var(--btnHover);}
   select{padding-right:24px; font-weight:600; max-width: 320px;}
   button:hover, .toggle:hover, select:hover{background:var(--btnHover);}
   button:active{transform:translateY(1px);}
@@ -165,7 +181,9 @@
     #toolbar{display:grid; grid-template-columns:1fr; gap:7px; padding:8px 10px;}
     #toolbar .group{display:flex; border:0; padding:0; margin:0;}
     #toolbar .group:first-child{width:100%;}
-    #puzzleSelect{width:100%; max-width:none; min-height:44px;}
+    #backMenu{width:44px;min-width:44px;padding:0;font-size:0;}
+    #backMenu::before{content:"←";font-size:22px;line-height:1;}
+    #puzzleSelect{width:auto; flex:1; max-width:none; min-width:0; min-height:44px;}
     #toolbar .group:nth-child(2),
     #toolbar .group:nth-child(3),
     #toolbar #checkSolution,
@@ -192,6 +210,7 @@
 <div id="app">
   <div id="toolbar">
     <div class="group">
+      <a id="backMenu" href="index.html" aria-label="Retour au menu des plateaux" title="Retour au menu">← Menu</a>
       <select id="puzzleSelect">
       <option value="perigal" selected>1. Périgal (5 pièces)</option>
       <option value="bhaskara">2. Bhaskara (4 triangles + 1 carré)</option>
@@ -256,10 +275,10 @@
 
   const BASE = { b: 420, ratio: 0.5, gap: 170, margin: 60 };
   const COLORS = {
-    green: "#009900", magenta: "#cc0066", yellow: "#ffcc66", blue: "#0099ff",
-    gray: "#808080", red: "#e74c3c", purple: "#9b59b6", orange: "#e67e22",
-    teal: "#1abc9c", lightblue: "#90caf9", lightBlue: "#90caf9", darkblue: "#1565c0", brown: "#795548",
-    lightRed: "#fca5a5", softGray: "#bdc3c7",
+    green: "#52b788", magenta: "#d66b9c", yellow: "#f3c969", blue: "#5aa7e8",
+    gray: "#8b95a1", red: "#df766f", purple: "#9b83d4", orange: "#e99a5d",
+    teal: "#57b5aa", lightblue: "#9dc9ee", lightBlue: "#9dc9ee", darkblue: "#4f7fb9", brown: "#8b6b58",
+    lightRed: "#f2aaa5", softGray: "#c3cad2",
     black: "#111827"
   };
 
@@ -337,7 +356,6 @@
     pieces: new Map(),
     solutionPoses: new Map(),
     snapPoints: [],
-    bhaskaraPoseTargets: new Map(),
     molds: [],
     moulins: {L:null, R:null},
     worldTransform: {s: 1, tx: 0, ty: 0},
@@ -1311,7 +1329,8 @@
     // On utilise les poses exactes déjà calculées pour le puzzle Bhaskara.
     // Puis on capture la pièce si SON hypoténuse actuelle est proche de
     // l'hypoténuse de l'une de ces poses exactes.
-    const candidates = state.bhaskaraPoseTargets?.get(piece.id) || [];
+    const exactPose = state.solutionPoses.get(piece.id);
+    const candidates = exactPose ? [exactPose] : [];
     if(!candidates.length) return false;
 
     const hyp = longestLocalEdge(piece);
@@ -1372,7 +1391,8 @@
     if(!piece.id.endsWith("-sq")) return false;
     if(!isNearTargetMoulin(piece, 240)) return false;
 
-    const candidates = state.bhaskaraPoseTargets?.get(piece.id) || [];
+    const exactPose = state.solutionPoses.get(piece.id);
+    const candidates = exactPose ? [exactPose] : [];
     if(!candidates.length) return false;
 
     let best = null;
@@ -1465,6 +1485,36 @@
     return true;
   }
 
+  // Snap de finition commun à tous les puzzles. Il ne retourne jamais une
+  // pièce automatiquement : l'élève garde la décision de Retourner. Dès que
+  // la bonne face est orientée et déposée près de sa pose exacte, les petits
+  // écarts tactiles sont supprimés pour fermer proprement le pavage.
+  function tryExactSolutionSnap(piece){
+    if(!piece || !isNearTargetMoulin(piece,260)) return false;
+    const pose=state.solutionPoses.get(piece.id);
+    if(!pose || pose.flipX !== piece.flipX || !pose.expectedVertices) return false;
+
+    const current=pieceWorldVertices(piece);
+    if(current.length !== pose.expectedVertices.length) return false;
+    let total=0, maxD=0;
+    for(let i=0;i<current.length;i++){
+      const d=Math.hypot(current[i].x-pose.expectedVertices[i].x,current[i].y-pose.expectedVertices[i].y);
+      total+=d;
+      maxD=Math.max(maxD,d);
+    }
+    const avgD=total/current.length;
+    const centerD=Math.hypot(piece.pos.x-pose.pos.x,piece.pos.y-pose.pos.y);
+    const rotD=Math.abs(normAngleDeg(piece.rot-pose.rot));
+    const closeEnough=maxD<92 || (avgD<74 && centerD<145) || (centerD<96 && rotD<24);
+    if(!closeEnough) return false;
+
+    piece.pos={...pose.pos};
+    piece.rot=pose.rot;
+    piece.flipX=pose.flipX;
+    applyPieceTransform(piece);
+    return true;
+  }
+
 
   // ---------- Interactions ----------
   function onPiecePointerDown(evt){
@@ -1552,16 +1602,17 @@
     // Bhaskara : au lâcher, on corrige d'abord l'angle si une arête est presque
     // parallèle à un côté du carré incliné. Ensuite seulement, le snap par coin
     // existant peut placer la pièce proprement.
-    let snappedByBhaskaraExact = false;
+    let snappedByExact = false;
     if(piece && state.snapEnabled){
       applyBhaskaraAngleSnap(piece, 18);
-      snappedByBhaskaraExact = tryBhaskaraEdgeSnap(piece) || tryBhaskaraSquareSnap(piece);
-      if(!snappedByBhaskaraExact) snappedByBhaskaraExact = tryEdgeSnap(piece);
+      snappedByExact = tryExactSolutionSnap(piece);
+      if(!snappedByExact && isBhaskaraPuzzle()) snappedByExact = tryBhaskaraEdgeSnap(piece) || tryBhaskaraSquareSnap(piece);
+      if(!snappedByExact) snappedByExact = tryEdgeSnap(piece);
     }
 
     // Snap : vers le carré c² + vers les sommets des autres pièces (pour aider à fermer le pavage)
     // Si Bhaskara a verrouillé une hypoténuse ou le carré central, on ne relance pas le snap générique.
-    if(piece && state.snapEnabled && !snappedByBhaskaraExact){
+    if(piece && state.snapEnabled && !snappedByExact){
       const verts = pieceWorldVertices(piece);
       const targets = [...state.snapPoints];
 
