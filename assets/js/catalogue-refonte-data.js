@@ -302,6 +302,38 @@ window.MATHSGO_CATALOGUE = {
       "thumbnail": "assets/img/thumbnails/puissances/decoupage-puissances.png?v=1",
       "cardDescription": "Découper une feuille virtuellement pour observer le doublement du nombre de morceaux et de l’épaisseur."
     },
+    "outils/engrenages/engrenages_plateau.html": {
+      "primaryNotion": "proportionnalite",
+      "primaryGroup": "manipuler",
+      "collections": [],
+      "tags": ["proportionnalite", "engrenages", "ratio", "sens-rotation", "vitesse"],
+      "thumbnail": "assets/img/thumbnails/proportionnalite/engrenages.png?v=1",
+      "cardDescription": "Manipuler des roues dentées pour relier nombres de dents, sens de rotation et rapports de vitesses."
+    },
+    "outils/engrenages/engrenages_exerciseur.html": {
+      "primaryNotion": "proportionnalite",
+      "primaryGroup": "generer",
+      "collections": [],
+      "tags": ["proportionnalite", "engrenages", "exerciseur", "ratio", "sens-rotation"],
+      "thumbnail": "assets/img/thumbnails/proportionnalite/exercices-engrenages.png?v=1",
+      "cardDescription": "Générer des questions illustrées sur les engrenages, avec réponse et correction détaillée."
+    },
+    "outils/plateaux_manipulation/ratio.html": {
+      "primaryNotion": "proportionnalite",
+      "primaryGroup": "manipuler",
+      "collections": [],
+      "tags": ["proportionnalite", "ratio", "fractions", "pourcentages", "schema-barres"],
+      "thumbnail": "assets/img/thumbnails/proportionnalite/labo-ratios.png?v=1",
+      "cardDescription": "Composer un mélange et observer simultanément son ratio, ses fractions et ses pourcentages."
+    },
+    "outils/plateaux_manipulation/puzzle_brousseau.html": {
+      "primaryNotion": "proportionnalite",
+      "primaryGroup": "activites",
+      "collections": [],
+      "tags": ["proportionnalite", "agrandissement", "reduction", "puzzle", "brousseau"],
+      "thumbnail": "assets/img/thumbnails/proportionnalite/puzzle-brousseau.png?v=1",
+      "cardDescription": "Étudier agrandissement et réduction à partir des six pièces du puzzle de Brousseau."
+    },
     "outils/angles/anglebarre.html": {
       "primaryNotion": "angles",
       "primaryGroup": "manipuler",
@@ -1562,7 +1594,7 @@ window.MATHSGO_CATALOGUE = {
     {
       "id": "outils-engrenages-engrenages-plateau-html",
       "title": "Engrenages",
-      "description": "Une ressource maths&go pour travailler proportionnalité et ratios.",
+      "description": "Manipulez des roues dentées pour étudier les rapports de vitesses, les sens de rotation et les positions relatives.",
       "path": "outils/engrenages/engrenages_plateau.html",
       "domains": [
         "proportionnalite-mesures"
@@ -2093,8 +2125,8 @@ window.MATHSGO_CATALOGUE = {
     },
     {
       "id": "outils-engrenages-engrenages-exerciseur-html",
-      "title": "Générateur d'Exercices — Engrenages",
-      "description": "Une ressource maths&go pour travailler proportionnalité et ratios.",
+      "title": "Générateur d’exercices — engrenages",
+      "description": "Générez des questions illustrées sur les engrenages, avec réponse et correction détaillée.",
       "path": "outils/engrenages/engrenages_exerciseur.html",
       "domains": [
         "proportionnalite-mesures"
@@ -2772,8 +2804,8 @@ window.MATHSGO_CATALOGUE = {
     },
     {
       "id": "outils-plateaux-manipulation-ratio-html",
-      "title": "Labo des Proportions - Multi-Ratio",
-      "description": "Une ressource maths&go pour travailler proportionnalité et ratios.",
+      "title": "Labo des proportions",
+      "description": "Composez des mélanges à deux, trois ou quatre couleurs et comparez ratios, fractions et pourcentages.",
       "path": "outils/plateaux_manipulation/ratio.html",
       "domains": [
         "proportionnalite-mesures"
@@ -3727,7 +3759,7 @@ window.MATHSGO_CATALOGUE = {
     {
       "id": "outils-plateaux-manipulation-puzzle-brousseau-html",
       "title": "Puzzle de Brousseau",
-      "description": "Une ressource maths&go pour travailler proportionnalité et ratios.",
+      "description": "Agrandissez ou réduisez les six pièces du puzzle de Brousseau pour étudier la proportionnalité et la conservation des angles.",
       "path": "outils/plateaux_manipulation/puzzle_brousseau.html",
       "domains": [
         "proportionnalite-mesures"
