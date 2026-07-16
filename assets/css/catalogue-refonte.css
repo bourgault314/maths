@@ -58,17 +58,17 @@ select { cursor: pointer; }
 }
 
 .site-header {
-  min-height: 106px;
+  min-height: 66px;
   display: grid;
   grid-template-columns: 1fr auto 1fr;
   align-items: center;
-  padding: 13px 2px 8px;
+  padding: 7px 2px 5px;
 }
 
 .brand-link {
   grid-column: 2;
   display: block;
-  width: 172px;
+  width: 124px;
 }
 
 .brand-link img {
@@ -99,7 +99,7 @@ select { cursor: pointer; }
 
 .main-panel {
   margin-bottom: 24px;
-  padding: clamp(22px, 3.6vw, 42px);
+  padding: clamp(16px, 1.9vw, 22px);
   border: 1px solid rgba(203, 216, 230, 0.9);
   border-radius: 28px;
   background: rgba(255, 255, 255, 0.96);
@@ -108,7 +108,7 @@ select { cursor: pointer; }
 
 .hero {
   max-width: 790px;
-  margin: 0 auto 28px;
+  margin: 0 auto 12px;
   text-align: center;
 }
 
@@ -125,7 +125,7 @@ select { cursor: pointer; }
   margin: 0;
   color: var(--blue-dark);
   font-family: Georgia, "Times New Roman", serif;
-  font-size: clamp(2rem, 4.1vw, 3.25rem);
+  font-size: clamp(1.8rem, 2.6vw, 2.25rem);
   line-height: 1.05;
   letter-spacing: -0.035em;
 }
@@ -133,10 +133,10 @@ select { cursor: pointer; }
 .hero h1:focus { outline: none; }
 
 .hero-lead {
-  margin: 13px auto 0;
+  margin: 5px auto 0;
   color: var(--muted);
-  font-size: clamp(1rem, 1.55vw, 1.13rem);
-  line-height: 1.55;
+  font-size: clamp(.94rem, 1.3vw, 1.04rem);
+  line-height: 1.25;
 }
 
 .domain-mobile-box,
@@ -176,7 +176,7 @@ select { cursor: pointer; }
   display: grid;
   grid-template-columns: minmax(0, 1fr);
   gap: 14px;
-  margin-bottom: 22px;
+  margin-bottom: 10px;
 }
 
 .catalogue-controls.has-domain {
@@ -194,13 +194,13 @@ select { cursor: pointer; }
 .auto-feature {
   position: relative;
   min-width: 0;
-  min-height: 98px;
+  min-height: 64px;
   display: grid;
-  grid-template-columns: 66px minmax(0, 1fr) auto;
+  grid-template-columns: 48px minmax(0, 1fr) auto;
   align-items: center;
-  gap: 17px;
-  margin: 0 0 14px;
-  padding: 15px 19px;
+  gap: 12px;
+  margin: 0 0 8px;
+  padding: 7px 14px;
   overflow: hidden;
   border: 1px solid #a9c9e8;
   border-left: 6px solid var(--orange);
@@ -239,8 +239,8 @@ select { cursor: pointer; }
 .auto-feature-icon {
   position: relative;
   z-index: 1;
-  width: 66px;
-  height: 66px;
+  width: 48px;
+  height: 48px;
   display: grid;
   place-items: center;
   border: 1px solid rgba(6, 63, 134, 0.13);
@@ -250,8 +250,8 @@ select { cursor: pointer; }
 }
 
 .auto-feature-icon svg {
-  width: 51px;
-  height: 51px;
+  width: 38px;
+  height: 38px;
   fill: none;
   stroke: currentColor;
   stroke-width: 3;
@@ -307,7 +307,7 @@ select { cursor: pointer; }
 .type-box,
 .domain-box,
 .facet-box {
-  min-height: 52px;
+  min-height: 42px;
   display: flex;
   align-items: center;
   gap: 10px;
@@ -435,14 +435,14 @@ select { cursor: pointer; }
   align-items: end;
   justify-content: center;
   gap: 16px;
-  margin: 0 0 15px;
+  margin: 0 0 8px;
   text-align: center;
 }
 
 .section-heading h2 {
   margin: 0;
   color: var(--blue-dark);
-  font-size: clamp(1.35rem, 2.2vw, 1.8rem);
+  font-size: clamp(1.25rem, 1.8vw, 1.55rem);
 }
 
 .results-summary {
@@ -535,10 +535,6 @@ select { cursor: pointer; }
   gap: 14px;
 }
 
-.catalogue-deep-view > .catalogue-breadcrumb {
-  margin: 0 0 14px;
-}
-
 .search-direct {
   margin-bottom: 30px;
 }
@@ -551,7 +547,7 @@ select { cursor: pointer; }
 
 .catalogue-deep-view .hero {
   max-width: none;
-  margin: 0 0 24px;
+  margin: 0 0 18px;
   text-align: left;
 }
 
@@ -581,15 +577,30 @@ select { cursor: pointer; }
   }
 
   body.catalogue-is-deep .site-header {
-    min-height: 94px;
-    padding: 10px 42px 4px;
+    min-height: 64px;
+    grid-template-columns: auto minmax(0, 1fr);
+    gap: 18px;
+    padding: 6px 24px;
   }
 
-  body.catalogue-is-deep .brand-link { width: 158px; }
+  body.catalogue-is-deep .brand-link {
+    grid-column: 1;
+    width: 112px;
+  }
+
+  body.catalogue-is-deep .site-header > .catalogue-breadcrumb {
+    grid-column: 2;
+    grid-row: 1;
+    min-width: 0;
+    margin: 0;
+    justify-self: start;
+  }
+
+  body.catalogue-is-deep .header-home { display: none; }
 
   body.catalogue-is-deep .main-panel {
     margin-bottom: 0;
-    padding-top: 18px;
+    padding-top: 12px;
     border: 0;
     border-radius: 0;
     background: transparent;
@@ -599,8 +610,8 @@ select { cursor: pointer; }
 
 .domain-grid {
   display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 14px;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 10px;
 }
 
 .catalogue-first-paint-shell {
@@ -665,12 +676,12 @@ select { cursor: pointer; }
 .domain-card {
   position: relative;
   min-width: 0;
-  min-height: 138px;
+  min-height: 92px;
   display: grid;
-  grid-template-columns: 78px minmax(0, 1fr) 22px;
+  grid-template-columns: 58px minmax(0, 1fr) 18px;
   align-items: center;
-  gap: 15px;
-  padding: 18px;
+  gap: 10px;
+  padding: 10px 12px;
   overflow: hidden;
   border: 1px solid #d7e0e9;
   border-left: 6px solid var(--accent, var(--blue));
@@ -702,46 +713,46 @@ select { cursor: pointer; }
 }
 
 .domain-card-secondary {
-  grid-column: 1 / -1;
-  min-height: 105px;
-  grid-template-columns: 66px fit-content(340px);
-  justify-content: center;
-  column-gap: 8px;
+  grid-column: 2;
+  min-height: 92px;
+  grid-template-columns: 52px minmax(0, 1fr) 18px;
+  justify-content: stretch;
+  column-gap: 10px;
   background: linear-gradient(135deg, #f4fbf5, #fff);
 }
 
 .domain-card-secondary .domain-card-arrow {
-  position: absolute;
-  top: 50%;
-  right: 24px;
-  transform: translateY(-50%);
+  position: relative;
+  top: auto;
+  right: auto;
+  transform: none;
 }
 
 .domain-card-icon {
   position: relative;
   z-index: 1;
-  width: 76px;
-  height: 62px;
+  width: 54px;
+  height: 46px;
   display: grid;
   place-items: center;
 }
 
 .domain-card-icon svg { width: 100%; height: 100%; overflow: visible; }
 [data-domain-card="proportionnalite-mesures"] {
-  grid-template-columns: 100px minmax(0, 1fr) 22px;
+  grid-template-columns: 72px minmax(0, 1fr) 18px;
 }
 [data-domain-card="proportionnalite-mesures"] .domain-card-icon {
-  width: 98px;
-  height: 66px;
+  width: 70px;
+  height: 50px;
 }
 [data-domain-card="donnees"] .domain-card-icon {
-  width: 84px;
-  height: 64px;
+  width: 64px;
+  height: 48px;
 }
 .domain-card-copy { position: relative; z-index: 1; min-width: 0; }
-.domain-card-copy strong { display: block; color: #16304f; font-size: 1.14rem; line-height: 1.2; }
-.domain-card-copy small { display: block; margin-top: 6px; color: #64758a; font-size: .88rem; line-height: 1.35; }
-.domain-card-copy em { display: block; margin-top: 8px; color: var(--accent, var(--blue)); font-size: .77rem; font-style: normal; font-weight: 800; }
+.domain-card-copy strong { display: block; color: #16304f; font-size: 1.02rem; line-height: 1.18; }
+.domain-card-copy small { display: block; margin-top: 4px; color: #64758a; font-size: .8rem; line-height: 1.25; }
+.domain-card-copy em { display: block; margin-top: 5px; color: var(--accent, var(--blue)); font-size: .74rem; font-style: normal; font-weight: 800; }
 .domain-card-arrow { position: relative; z-index: 1; color: var(--accent, var(--blue)); font-size: 1.35rem; font-weight: 800; }
 
 .notion-card,
@@ -1108,6 +1119,8 @@ select { cursor: pointer; }
   .domain-tab { padding-inline: 15px; }
   .catalogue-controls.has-domain { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .catalogue-controls.has-domain .search-box { grid-column: 1 / -1; }
+  .domain-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .domain-card-secondary { grid-column: 1 / -1; }
 }
 
 @media (max-width: 680px) {
@@ -1222,6 +1235,27 @@ select { cursor: pointer; }
   .resource-group-heading { align-items: flex-start; }
   .section-heading { align-items: center; }
   .site-footer { padding-bottom: max(18px, env(safe-area-inset-bottom)); }
+
+  body.catalogue-is-deep .site-header {
+    min-height: 64px;
+    grid-template-columns: auto minmax(0, 1fr);
+    gap: 8px;
+    padding: 6px 8px;
+  }
+  body.catalogue-is-deep .brand-link {
+    grid-column: 1;
+    width: 98px;
+    justify-self: start;
+  }
+  body.catalogue-is-deep .site-header > .catalogue-breadcrumb {
+    grid-column: 2;
+    grid-row: 1;
+    min-width: 0;
+    margin: 0;
+    font-size: .8rem;
+  }
+  body.catalogue-is-deep .header-home { display: none; }
+  body.catalogue-is-deep .main-panel { padding-top: 10px; }
 }
 
 @media (max-width: 420px) {
@@ -1239,6 +1273,46 @@ select { cursor: pointer; }
   .domain-box label,
   .facet-box label { display: none; }
   .domain-card { min-height: 155px; }
+}
+
+@media (min-width: 1600px) and (min-height: 900px) {
+  body:not(.catalogue-is-deep) .site-shell { width: min(1480px, calc(100% - 42px)); }
+  body:not(.catalogue-is-deep) .site-header { min-height: 88px; }
+  body:not(.catalogue-is-deep) .brand-link { width: 158px; }
+  body:not(.catalogue-is-deep) .main-panel { padding: 30px 34px 34px; }
+  body:not(.catalogue-is-deep) .hero { margin-bottom: 23px; }
+  body:not(.catalogue-is-deep) .hero h1 { font-size: 3rem; }
+  body:not(.catalogue-is-deep) .hero-lead { font-size: 1.12rem; }
+  body:not(.catalogue-is-deep) .auto-feature {
+    min-height: 92px;
+    grid-template-columns: 66px minmax(0, 1fr) auto;
+    padding: 14px 20px;
+  }
+  body:not(.catalogue-is-deep) .auto-feature-icon { width: 66px; height: 66px; }
+  body:not(.catalogue-is-deep) .auto-feature-icon svg { width: 51px; height: 51px; }
+  body:not(.catalogue-is-deep) .domain-grid { gap: 14px; }
+  body:not(.catalogue-is-deep) .domain-card {
+    min-height: 130px;
+    grid-template-columns: 78px minmax(0, 1fr) 22px;
+    gap: 15px;
+    padding: 16px 18px;
+  }
+  body:not(.catalogue-is-deep) .domain-card-secondary {
+    grid-column: 2;
+    grid-template-columns: 68px minmax(0, 1fr) 22px;
+  }
+  body:not(.catalogue-is-deep) .domain-card-icon { width: 76px; height: 62px; }
+  body:not(.catalogue-is-deep) [data-domain-card="proportionnalite-mesures"] {
+    grid-template-columns: 100px minmax(0, 1fr) 22px;
+  }
+  body:not(.catalogue-is-deep) [data-domain-card="proportionnalite-mesures"] .domain-card-icon {
+    width: 98px;
+    height: 66px;
+  }
+  body:not(.catalogue-is-deep) [data-domain-card="donnees"] .domain-card-icon { width: 84px; height: 64px; }
+  body:not(.catalogue-is-deep) .domain-card-copy strong { font-size: 1.14rem; }
+  body:not(.catalogue-is-deep) .domain-card-copy small { margin-top: 6px; font-size: .88rem; line-height: 1.35; }
+  body:not(.catalogue-is-deep) .domain-card-copy em { margin-top: 8px; font-size: .77rem; }
 }
 
 @media (prefers-reduced-motion: reduce) {
