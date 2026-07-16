@@ -31,7 +31,7 @@
     algebre: { icon: "splat" },
     "proportionnalite-mesures": { icon: "grandeur" },
     geometrie: { icon: "seigaiha" },
-    donnees: { icon: "generative:mosaic" },
+    donnees: { icon: "probability-statistics" },
     informatique: { icon: "koch" },
     "jeux-recherches": { icon: "strategy" },
     cps: { icon: "cps" }
