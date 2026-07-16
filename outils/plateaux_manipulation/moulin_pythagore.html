@@ -197,7 +197,7 @@
       <option value="bhaskara">2. Bhaskara (4 triangles + 1 carré)</option>
       <option value="leitzmann">3. Liu Hui (8 triangles)</option>
       <option value="quatreIdentiques">4. Découpage croisé (4 pièces + 1 carré)</option>
-      <option value="perigalSix">5. Périgal — défi 6 pièces</option>
+      <option value="mosaiqueOblique">5. Mosaïque oblique (6 pièces)</option>
     </select>
     </div>
 
@@ -485,13 +485,13 @@
       y:[[0.894427191,1.3416407865],[0.4472135955,2.2360679775],[0,2.2360679775],[0,0.894427191]],
       b:[[0.4472135955,0],[0,0.894427191],[0,0]]
     },
-    perigalSix: {
-      m1:[[0.894427191,0.4472135955],[0,2.2360679775],[1.788854382,2.2360679775]],
-      sq:[[1.3416407865,1.3416407865],[0.894427191,0.4472135955],[1.788854382,0],[2.2360679775,0.894427191]],
-      g:[[1.788854382,0],[0,0.894427191],[0,0]],
-      y:[[1.3416407865,1.3416407865],[1.788854382,2.2360679775],[2.2360679775,2.2360679775],[2.2360679775,0.894427191]],
-      m2:[[0.894427191,0.4472135955],[0,2.2360679775],[0,0.894427191]],
-      b:[[1.788854382,0],[2.2360679775,0.894427191],[2.2360679775,0]]
+    mosaiqueOblique: {
+      b1:[[1.6770509831,2.0124611797],[2.2360679775,1.7329526826],[2.2360679775,2.2360679775],[1.788854382,2.2360679775]],
+      b2:[[2.2360679775,0],[2.2360679775,0.894427191],[1.788854382,0]],
+      b3:[[0,1.7329526826],[1.2298373876,1.1180339887],[1.788854382,2.2360679775],[0,2.2360679775]],
+      b4:[[0,0.894427191],[0,0],[1.788854382,0],[2.1242645786,0.6708203932],[0.3354101966,1.5652475842]],
+      a1:[[1.6770509831,2.0124611797],[1.2298373876,1.1180339887],[2.1242645786,0.6708203932],[2.2360679775,0.894427191],[2.2360679775,1.7329526826]],
+      a2:[[0,0.894427191],[0.3354101966,1.5652475842],[0,1.7329526826]]
     },
     leitzmann: {
       bLeft:[[2.2360679775,2.2360679775],[1.3416407865,0.4472135955],[0.7453559925,2.2360679775]],
@@ -747,20 +747,22 @@
       }
     },
 
-    // Défi 6 pièces : on affine réellement le découpage de Périgal en
-    // séparant le quadrilatère central en deux triangles. Ce n'est pas un
-    // simple miroir de Bhaskara : le nombre et la nature des pièces changent.
-    perigalSix: {
-      name: "Périgal — défi 6 pièces",
+    // Construction Math&Go : les deux carrés sont découpés suivant un réseau
+    // oblique 1:2. Les six pièces obtenues pavent exactement le carré c² ; ce
+    // n'est ni une recoupe de Périgal, ni une variante du découpage croisé.
+    mosaiqueOblique: {
+      name: "Mosaïque oblique",
       generate: (Ax, Ay, b, ratio) => {
-        const pieces = PUZZLES.perigal.generate(Ax, Ay, b, ratio);
-        const central = pieces.find(piece => piece.key === "m");
-        if(!central) return pieces;
-        const [A,B,P,L] = central.points;
-        return pieces.filter(piece => piece.key !== "m").concat([
-          {key:"m1", fill:COLORS.magenta, points:[A,B,P]},
-          {key:"m2", fill:COLORS.purple, points:[A,P,L]}
-        ]);
+        const a = b * ratio;
+        const point = (x,y) => ({x:Ax+x*a,y:Ay+y*a});
+        return [
+          {key:"b1",fill:COLORS.yellow, points:[[0,-2],[0.625,-2],[0.4,-1.55],[0,-1.75]].map(([x,y])=>point(x,y))},
+          {key:"b2",fill:COLORS.teal,   points:[[0.4,-1.55],[0,-0.75],[0,-1.75]].map(([x,y])=>point(x,y))},
+          {key:"b3",fill:COLORS.blue,   points:[[0.625,-2],[2,-2],[2,-0.75],[0.4,-1.55]].map(([x,y])=>point(x,y))},
+          {key:"b4",fill:COLORS.orange, points:[[0,-0.75],[0.4,-1.55],[2,-0.75],[2,0],[0,0]].map(([x,y])=>point(x,y))},
+          {key:"a1",fill:COLORS.purple, points:[[-1,1],[-1,0],[0,0],[0,0.25],[-0.375,1]].map(([x,y])=>point(x,y))},
+          {key:"a2",fill:COLORS.green,  points:[[0,0.25],[0,1],[-0.375,1]].map(([x,y])=>point(x,y))}
+        ];
       }
     },
 
@@ -940,11 +942,11 @@
         <p class="muted">Indice : les 4 triangles forment une sorte de cadre ; le petit carré comble le trou central.</p>
       `
     },
-    perigalSix: {
-      title: "Puzzle 5 — Périgal, défi 6 pièces",
+    mosaiqueOblique: {
+      title: "Puzzle 5 — Mosaïque oblique",
       html: `
-        <p><strong>Objectif :</strong> déplacer les <strong>6 pièces</strong> pour reconstituer le carré de l'hypoténuse <em>c²</em>.</p>
-        <p class="muted">Le grand quadrilatère de Périgal est séparé en deux triangles : les pièces sont donc réellement différentes du puzzle 1.</p>
+        <p><strong>Objectif :</strong> déplacer les <strong>6 pièces</strong> issues des deux carrés pour reconstituer le carré de l'hypoténuse <em>c²</em>.</p>
+        <p class="muted">Les deux petites pièces vont sur des bords opposés. Place ensuite le grand pentagone orange et complète les espaces restants.</p>
       `
     },
     leitzmann: {
