@@ -1,13 +1,16 @@
 \documentclass[a4paper,12pt]{article}
 \usepackage[utf8]{inputenc}
 \usepackage[T1]{fontenc}
-\usepackage[french]{babel}
+\usepackage[provide=*,french]{babel}
+\usepackage{lmodern}
 % Marges réduites au minimum pour optimiser l'espace A3
 \usepackage[left=0.5cm, right=0.5cm, top=0.5cm, bottom=0.5cm]{geometry}
 \usepackage{tikz}
 \usetikzlibrary{decorations.pathreplacing, arrows.meta, patterns}
 \usepackage{tcolorbox}
 \usepackage{amssymb}
+\usepackage{graphicx}
+\usepackage{eso-pic}
 
 % Couleurs
 \definecolor{mypink}{RGB}{235, 150, 150}
@@ -16,9 +19,26 @@
 \title{\vspace{-2cm}Gabarits A3 Final V22 (Tables alignées + cadres centrés)}
 \date{}
 
-\begin{document}
-\shorthandoff{:;!?}
 
+
+% ==========================================
+% FOOTER STABLE : logo externe + adresse
+% À conserver dans le même dossier que ce fichier .tex :
+%   ../assets/img/mathsgo-logo.png
+% ==========================================
+\definecolor{brandNavy}{RGB}{11,53,112}
+
+\newcommand{\MathsGoPrintFooter}{%
+\begin{tikzpicture}[remember picture,overlay]
+    \node[anchor=south west, inner sep=0pt] at ([xshift=0.55cm,yshift=0.22cm]current page.south west)
+        {\includegraphics[width=2.45cm]{../assets/img/mathsgo-logo.png}};
+    \node[anchor=south, text=brandNavy!70, font=\sffamily\bfseries\fontsize{7}{7}\selectfont] at ([yshift=0.32cm]current page.south)
+        {mathsgo.re};
+\end{tikzpicture}%
+}
+\AddToShipoutPictureFG{\MathsGoPrintFooter}
+
+\begin{document}
 % ==================================================================================
 % PAGE 1 : DEUX INCONNUES
 % Objectif :
@@ -27,6 +47,9 @@
 %  - Les titres d'étapes restent alignés (colonne à gauche), sans influencer le centrage.
 % ==================================================================================
 
+% On autorise proprement le premier cadre à descendre jusqu’au bas de page.
+% Le cadre reste donc généré par tcolorbox/LaTeX, sans retouche du PDF.
+\enlargethispage{1.2cm}
 \begin{tcolorbox}[colback=white, colframe=black, title=\centering\textbf{GABARIT : PROBLÈME À DEUX INCONNUES}]
     \centering
     \begin{tikzpicture}[scale=0.85, every node/.style={font=\bfseries\small}]
@@ -35,7 +58,7 @@
         % Largeur de l'étape 2 (référence) : 9.0
         % On force la "boîte" TikZ à être exactement le bloc tableau (0..9),
         % pour que le centrage LaTeX centre réellement le tableau.
-        \path[use as bounding box] (0, 7.2) rectangle (9.0, -24.2);
+        \path[use as bounding box] (0, 7.2) rectangle (9.0, -25.15);
 
         % Colonne des titres (décalée pour garder l'équilibre visuel)
         \def\Xstep{-3.5}

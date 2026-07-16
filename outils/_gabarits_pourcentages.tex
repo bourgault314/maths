@@ -1,7 +1,8 @@
 \documentclass[a4paper,12pt]{article}
 \usepackage[utf8]{inputenc}
 \usepackage[T1]{fontenc}
-\usepackage[french]{babel}
+\usepackage[provide=*,french]{babel}
+\usepackage{lmodern}
 % Marges à 1cm pour être sûr que rien n'est coupé à l'impression
 \usepackage[left=0.8cm, right=0.8cm, top=1cm, bottom=1cm]{geometry}
 \usepackage{tikz}
@@ -22,15 +23,15 @@
 % FOOTER STABLE : logo externe + adresse
 % Le logo est inclus comme un fichier PDF unique pour garder exactement le même rendu partout.
 % À conserver dans le même dossier que ce fichier .tex :
-%   mathsgo_logo_final_master_nocrop_barres_descendues.pdf
+%   ../assets/img/mathsgo-logo.png
 % ==========================================
 \definecolor{brandNavy}{RGB}{11,53,112}
 \newcommand{\MathsGoPrintFooter}{%
 \begin{tikzpicture}[remember picture,overlay]
     \node[anchor=south west, inner sep=0pt] at ([xshift=0.55cm,yshift=0.18cm]current page.south west)
-        {\includegraphics[width=6.20cm]{mathsgo_logo_final_master_nocrop_barres_descendues.pdf}};
+        {\includegraphics[width=2.45cm]{../assets/img/mathsgo-logo.png}};
     \node[anchor=south, text=brandNavy!70, font=\sffamily\bfseries\fontsize{7}{7}\selectfont] at ([yshift=0.32cm]current page.south)
-        {aca.re/maths/splat};
+        {mathsgo.re};
 \end{tikzpicture}%
 }
 \AddToShipoutPictureFG{\MathsGoPrintFooter}

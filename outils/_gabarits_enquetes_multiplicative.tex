@@ -1,12 +1,15 @@
 \documentclass[a4paper,12pt]{article}
 \usepackage[utf8]{inputenc}
 \usepackage[T1]{fontenc}
-\usepackage[french]{babel}
+\usepackage[provide=*,french]{babel}
+\usepackage{lmodern}
 \usepackage[left=0.5cm, right=0.5cm, top=0.5cm, bottom=0.5cm]{geometry}
 \usepackage{tikz}
 \usetikzlibrary{decorations.pathreplacing, arrows.meta, patterns, calc}
 \usepackage{tcolorbox}
 \usepackage{amssymb}
+\usepackage{graphicx}
+\usepackage{eso-pic}
 
 % Couleurs
 \definecolor{mypink}{RGB}{235, 150, 150}
@@ -29,7 +32,7 @@
     \begin{tikzpicture}[scale=0.80, every node/.style={font=\bfseries\small}]
 
         % Cadre agrandi à -22.0
-        \path[use as bounding box] (0, 7.2) rectangle (\W, -22.0);
+        \path[use as bounding box] (0, 7.2) rectangle (\W, -27.0);
         \def\Xstep{-3.5}
 
         % ÉTAPE 1
@@ -126,7 +129,7 @@
 \centering
 \begin{tikzpicture}[scale=0.80, every node/.style={font=\bfseries\small}]
     % Cadre agrandi à -22.0
-    \path[use as bounding box] (0, 7.2) rectangle (\W, -22.0);
+    \path[use as bounding box] (0, 7.2) rectangle (\W, -27.0);
     \def\Xstep{-3.5}
 
     \node[overlay, anchor=west, blue!80!black] at (\Xstep, 7.0) {\large ÉTAPE 1 : REPRÉSENTER (Je dessine)};
@@ -245,7 +248,7 @@
 \centering
 \begin{tikzpicture}[scale=0.80, every node/.style={font=\bfseries\small}]
     % Cadre élargi à -24.0 vers le bas !
-    \path[use as bounding box] (0, 8.8) rectangle (\W, -24.0);
+    \path[use as bounding box] (0, 8.8) rectangle (\W, -25.5);
     \def\Xstep{-3.5}
 
     % =========================
@@ -254,7 +257,7 @@
     \node[overlay, anchor=west, blue!80!black] at (\Xstep, 8.2) {\large ÉTAPE 1 : REPRÉSENTER (Je dessine)};
     
     % 1ère part
-    \node[overlay, anchor=east] at (-0.2, 6.9) {1\iere\ part : ....................};
+    \node[overlay, anchor=east] at (-0.2, 6.9) {1\textsuperscript{re} part : ....................};
     \draw[thick, fill=mypink!30] (0, 6.4) rectangle (\U, 7.4);
     \node at ({\U/2}, 6.9) {\Large ?};
 
@@ -309,7 +312,7 @@
     \node at (7.2, -3.2) {\Large $\cdots$};
     \node at (9.0, -3.2) {\Large ?};
 
-    \draw [decorate, decoration={brace, amplitude=5pt, mirror}, thick] (0, -3.9) -- (1.2, -3.9) node [midway, below=4pt] {1\iere\ part};
+    \draw [decorate, decoration={brace, amplitude=5pt, mirror}, thick] (0, -3.9) -- (1.2, -3.9) node [midway, below=4pt] {1\textsuperscript{re} part};
     \draw [decorate, decoration={brace, amplitude=5pt, mirror}, thick] (1.2, -3.9) -- (4.8, -3.9) node [midway, below=4pt] {2e\ part};
     \draw [decorate, decoration={brace, amplitude=5pt, mirror}, thick] (4.8, -3.9) -- (9.6, -3.9) node [midway, below=4pt] {3e\ part};
 
@@ -369,7 +372,7 @@
     \node at (7.2, -13.3) {\Large $\cdots$};
     \node at (9.0, -13.3) {\Large ?};
 
-    \draw [decorate, decoration={brace, amplitude=5pt, mirror}, thick] (0, -14.0) -- (1.2, -14.0) node [midway, below=4pt] {1\iere\ part};
+    \draw [decorate, decoration={brace, amplitude=5pt, mirror}, thick] (0, -14.0) -- (1.2, -14.0) node [midway, below=4pt] {1\textsuperscript{re} part};
     \draw [decorate, decoration={brace, amplitude=5pt, mirror}, thick] (1.2, -14.0) -- (4.8, -14.0) node [midway, below=4pt] {2e\ part};
     \draw [decorate, decoration={brace, amplitude=5pt, mirror}, thick] (4.8, -14.0) -- (9.6, -14.0) node [midway, below=4pt] {3e\ part};
 
@@ -378,7 +381,7 @@
     % =========================
     \node[draw=black, thick, rounded corners, fill=yellow!20, inner sep=10pt, align=left] at ({\W/2}, -17.0) {
         \large \textbf{RÉPONSES :} \\[0.2cm]
-        1\iere\ part : ..................... \quad 2e\ part : ..................... \quad 3e\ part : .....................
+        1\textsuperscript{re} part : ..................... \quad 2e part : ..................... \quad 3e part : .....................
     };
 
     \node[draw=green!50!black, dashed, thick, rounded corners, inner sep=10pt, align=left] at ({\W/2}, -21.5) {
@@ -391,20 +394,43 @@
 \end{tcolorbox}
 }
 
-\begin{document}
+% ==========================================
+% FOOTER STABLE : logo externe + adresse
+% À conserver dans le même dossier que ce fichier .tex :
+%   ../assets/img/mathsgo-logo.png
+% ==========================================
+\definecolor{brandNavy}{RGB}{11,53,112}
 
+\newcommand{\MathsGoPrintFooter}{%
+\begin{tikzpicture}[remember picture,overlay]
+    \node[anchor=south west, inner sep=0pt] at ([xshift=0.55cm,yshift=0.22cm]current page.south west)
+        {\includegraphics[width=2.45cm]{../assets/img/mathsgo-logo.png}};
+    \node[anchor=south, text=brandNavy!70, font=\sffamily\bfseries\fontsize{7}{7}\selectfont] at ([yshift=0.32cm]current page.south)
+        {mathsgo.re};
+\end{tikzpicture}%
+}
+\AddToShipoutPictureFG{\MathsGoPrintFooter}
+
+\begin{document}
+\enlargethispage{1.2cm}
 \GabaritMultDeux{2}
 \newpage
+\enlargethispage{1.2cm}
 \GabaritMultDeux{3}
 \newpage
+\enlargethispage{1.2cm}
 \GabaritMultDeux{4}
 \newpage
+\enlargethispage{1.2cm}
 \GabaritMultDeux{5}
 \newpage
+\enlargethispage{1.2cm}
 \GabaritMultDeux{6}
 \newpage
+\enlargethispage{1.2cm}
 \GabaritMultDeuxN
 \newpage
+\enlargethispage{1.2cm}
 \GabaritMultTroisNM
 
 \end{document}

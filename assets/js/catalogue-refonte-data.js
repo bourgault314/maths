@@ -1,6 +1,6 @@
 window.MATHSGO_CATALOGUE = {
   "schemaVersion": 4,
-  "generatedAt": "2026-07-15T00:00:00.000Z",
+  "generatedAt": "2026-07-16T00:00:00.000Z",
   "description": "Catalogue des ressources maths&go : domaines, notions, collections et facettes cumulables.",
   "uses": [
     {
@@ -189,6 +189,10 @@ window.MATHSGO_CATALOGUE = {
       "cardDescription": "Dérouler le théorème pas à pas avec le calcul, le schéma en barres et le moulin de Pythagore."
     },
     "outils/pythabarre_recto_verso.pdf": { "primaryNotion": "pythagore", "collections": [], "tags": ["schema-barres", "moulin", "pythagore", "imprimable"] },
+    "outils/fiche_reciproque_thales.pdf": { "primaryNotion": "thales", "collections": [], "tags": ["thales", "reciproque", "contraposee", "imprimable"] },
+    "outils/gabarits_proportionnalite_tableaux.pdf": { "primaryNotion": "proportionnalite", "collections": [], "tags": ["proportionnalite", "tableau", "gabarit", "imprimable"] },
+    "outils/gabarit_proportionnalite_double_ligne_graduee.pdf": { "primaryNotion": "proportionnalite", "collections": [], "tags": ["proportionnalite", "double-ligne-graduee", "gabarit", "imprimable"] },
+    "outils/gabarit_proportionnalite_tableau_sans_coefficient.pdf": { "primaryNotion": "proportionnalite", "collections": [], "tags": ["proportionnalite", "tableau", "sans-coefficient", "gabarit", "imprimable"] },
     "outils/angles/fiche_angles_triangles.pdf": { "primaryNotion": "angles", "collections": [], "tags": ["angles", "triangles", "imprimable"] }
   },
   "resourceFamilies": [
@@ -4498,6 +4502,128 @@ window.MATHSGO_CATALOGUE = {
       "status": "published",
       "featured": false,
       "recent": false
+    },
+    {
+      "id": "outils-fiche-reciproque-thales-pdf",
+      "title": "Thalès — réciproque et contraposée",
+      "description": "Une fiche recto-verso guidée pour choisir les bons rapports, comparer puis conclure que deux droites sont parallèles ou non.",
+      "path": "outils/fiche_reciproque_thales.pdf",
+      "domains": [
+        "geometrie"
+      ],
+      "notions": [
+        "thales"
+      ],
+      "uses": [
+        "imprimer",
+        "entrainer"
+      ],
+      "types": [
+        "imprimable"
+      ],
+      "filters": [
+        "materiel-imprimer"
+      ],
+      "keywords": [
+        "réciproque",
+        "contraposée",
+        "droites parallèles",
+        "rapports"
+      ],
+      "kind": "document",
+      "status": "published",
+      "featured": false,
+      "recent": true
+    },
+    {
+      "id": "outils-gabarits-proportionnalite-tableaux-pdf",
+      "title": "Proportionnalité — tableaux",
+      "description": "Trois gabarits de tableaux de proportionnalité : coloré, vierge et à colonnes larges.",
+      "path": "outils/gabarits_proportionnalite_tableaux.pdf",
+      "domains": [
+        "proportionnalite-mesures"
+      ],
+      "notions": [
+        "proportionnalite"
+      ],
+      "uses": [
+        "imprimer",
+        "projeter"
+      ],
+      "types": [
+        "imprimable"
+      ],
+      "filters": [
+        "materiel-imprimer"
+      ],
+      "keywords": [
+        "tableau de proportionnalité",
+        "coefficient"
+      ],
+      "kind": "document",
+      "status": "published",
+      "featured": false,
+      "recent": true
+    },
+    {
+      "id": "outils-gabarit-proportionnalite-double-ligne-graduee-pdf",
+      "title": "Proportionnalité — double ligne graduée",
+      "description": "Deux modèles de double ligne graduée pour relier visuellement deux grandeurs proportionnelles.",
+      "path": "outils/gabarit_proportionnalite_double_ligne_graduee.pdf",
+      "domains": [
+        "proportionnalite-mesures"
+      ],
+      "notions": [
+        "proportionnalite"
+      ],
+      "uses": [
+        "imprimer",
+        "projeter"
+      ],
+      "types": [
+        "imprimable"
+      ],
+      "filters": [
+        "materiel-imprimer"
+      ],
+      "keywords": [
+        "double ligne graduée",
+        "grandeurs"
+      ],
+      "kind": "document",
+      "status": "published",
+      "featured": false,
+      "recent": true
+    },
+    {
+      "id": "outils-gabarit-proportionnalite-tableau-sans-coefficient-pdf",
+      "title": "Proportionnalité — tableau sans coefficient",
+      "description": "Trois tableaux à compléter sans faire apparaître le coefficient de proportionnalité.",
+      "path": "outils/gabarit_proportionnalite_tableau_sans_coefficient.pdf",
+      "domains": [
+        "proportionnalite-mesures"
+      ],
+      "notions": [
+        "proportionnalite"
+      ],
+      "uses": [
+        "imprimer",
+        "projeter"
+      ],
+      "types": [
+        "imprimable"
+      ],
+      "filters": [
+        "materiel-imprimer"
+      ],
+      "keywords": [
+        "tableau de proportionnalité",
+        "sans coefficient"
+      ],
+      "kind": "document",
+      "status": "published",
+      "featured": false,
+      "recent": true
     },
     {
       "id": "outils-club-maths-yavalath-html",

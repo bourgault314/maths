@@ -1,0 +1,121 @@
+
+\documentclass[11pt]{article}
+\usepackage[a4paper,landscape,margin=1.05cm]{geometry}
+\usepackage[T1]{fontenc}
+\usepackage[utf8]{inputenc}
+\usepackage[provide=*,french]{babel}
+\usepackage{tikz}
+\usepackage{graphicx}
+\usepackage{eso-pic}
+\usepackage{xcolor}
+\usepackage{lmodern}
+\usepackage{microtype}
+\pagestyle{empty}
+
+\definecolor{toporange}{RGB}{230,140,30}
+\definecolor{bottomblue}{RGB}{40,97,170}
+\definecolor{softgray}{RGB}{95,95,95}
+\definecolor{montorange}{RGB}{255,238,220}
+\definecolor{montblue}{RGB}{228,238,251}
+\definecolor{brandNavy}{RGB}{11,53,112}
+
+\newcommand{\MathsGoPrintFooter}{%
+\begin{tikzpicture}[remember picture,overlay]
+    \node[anchor=south west, inner sep=0pt] at ([xshift=0.55cm,yshift=0.18cm]current page.south west)
+        {\includegraphics[width=2.45cm]{../assets/img/mathsgo-logo.png}};
+    \node[anchor=south, text=brandNavy!70, font=\sffamily\bfseries\fontsize{7}{7}\selectfont] at ([yshift=0.32cm]current page.south)
+        {mathsgo.re};
+\end{tikzpicture}%
+}
+\AddToShipoutPictureFG{\MathsGoPrintFooter}
+
+\newcommand{\titre}[2]{%
+  \begin{center}
+    {\Huge\bfseries Proportionnalité}\\[0.14cm]
+    {\Large #1}
+    \ifx&#2&\else\\[0.08cm]{\large\color{softgray}#2}\fi
+  \end{center}
+}
+
+\newcommand{\leftCellOne}[3]{% x, y, color
+  \node[anchor=west,text=#3,font=\large\bfseries] at (#1,#2+1.02) {Grandeur 1 :};
+  \draw[softgray,densely dotted,line width=0.55pt] (#1,#2+0.28)--(#1+3.05,#2+0.28);
+  \node[anchor=west,text=#3,font=\large\bfseries] at (#1,#2-0.46) {Unité de mesure :};
+  \draw[softgray,densely dotted,line width=0.55pt] (#1,#2-1.20)--(#1+3.05,#2-1.20);
+}
+\newcommand{\leftCellTwo}[3]{% x, y, color
+  \node[anchor=west,text=#3,font=\large\bfseries] at (#1,#2+1.02) {Grandeur 2 :};
+  \draw[softgray,densely dotted,line width=0.55pt] (#1,#2+0.28)--(#1+3.05,#2+0.28);
+  \node[anchor=west,text=#3,font=\large\bfseries] at (#1,#2-0.46) {Unité de mesure :};
+  \draw[softgray,densely dotted,line width=0.55pt] (#1,#2-1.20)--(#1+3.05,#2-1.20);
+}
+
+\newcommand{\tableColored}[4]{% n cols, cw, lw, rh
+\begin{center}
+\begin{tikzpicture}[x=1cm,y=1cm]
+  \def\n{#1}
+  \def\cw{#2}
+  \def\lw{#3}
+  \def\rh{#4}
+  \pgfmathsetmacro{\W}{\lw+\n*\cw}
+  \pgfmathsetmacro{\H}{2*\rh}
+
+  \fill[montorange,rounded corners=5pt] (0,\rh) rectangle (\W,\H);
+  \fill[montblue,rounded corners=5pt] (0,0) rectangle (\W,\rh);
+
+  \draw[softgray,line width=0.9pt,rounded corners=4pt] (0,0) rectangle (\W,\H);
+  \draw[softgray,line width=0.9pt] (0,\rh)--(\W,\rh);
+  \draw[softgray,line width=0.9pt] (\lw,0)--(\lw,\H);
+  \foreach \i in {1,...,#1}{
+    \pgfmathsetmacro{\x}{\lw+\i*\cw}
+    \draw[softgray,line width=0.55pt] (\x,0)--(\x,\H);
+  }
+
+  \leftCellOne{0.18}{1.50*\rh}{toporange}
+  \leftCellTwo{0.18}{0.50*\rh}{bottomblue}
+
+\end{tikzpicture}
+\end{center}
+}
+
+\newcommand{\tableSimple}[4]{% n cols, cw, lw, rh
+\begin{center}
+\begin{tikzpicture}[x=1cm,y=1cm]
+  \def\n{#1}
+  \def\cw{#2}
+  \def\lw{#3}
+  \def\rh{#4}
+  \pgfmathsetmacro{\W}{\lw+\n*\cw}
+  \pgfmathsetmacro{\H}{2*\rh}
+
+  \draw[softgray,line width=0.9pt,rounded corners=4pt] (0,0) rectangle (\W,\H);
+  \draw[softgray,line width=0.9pt] (0,\rh)--(\W,\rh);
+  \draw[softgray,line width=0.9pt] (\lw,0)--(\lw,\H);
+  \foreach \i in {1,...,#1}{
+    \pgfmathsetmacro{\x}{\lw+\i*\cw}
+    \draw[softgray,line width=0.55pt] (\x,0)--(\x,\H);
+  }
+
+  \leftCellOne{0.18}{1.50*\rh}{toporange}
+  \leftCellTwo{0.18}{0.50*\rh}{bottomblue}
+\end{tikzpicture}
+\end{center}
+}
+
+\begin{document}
+
+\titre{Tableau}{}
+\vspace*{1.45cm}
+\tableColored{6}{3.00}{5.00}{2.95}
+
+\newpage
+\titre{Tableau}{}
+\vspace*{1.85cm}
+\tableSimple{6}{3.00}{5.00}{2.95}
+
+\newpage
+\titre{Tableau}{colonnes larges}
+\vspace*{1.45cm}
+\tableColored{4}{4.45}{5.25}{2.95}
+
+\end{document}

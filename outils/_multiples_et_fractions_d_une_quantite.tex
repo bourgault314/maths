@@ -1,12 +1,19 @@
 \documentclass[a4paper,12pt]{article}
 \usepackage[utf8]{inputenc}
 \usepackage[T1]{fontenc}
-\usepackage[french]{babel}
+\usepackage[provide=*,french]{babel}
+\usepackage{lmodern}
 % Marges réduites pour optimiser l'espace
 \usepackage[left=1.2cm, right=1.2cm, top=1.5cm, bottom=1.5cm]{geometry}
 \usepackage{tikz}
 \usepackage{amsmath} % Pour les belles fractions
 \usepackage{graphicx} % Pour \scalebox (réduction de la taille du texte)
+\usepackage{eso-pic}
+\usetikzlibrary{arrows.meta,decorations.pathreplacing}
+\tikzset{
+    pointillesforts/.style={dash pattern=on 2.4pt off 2.4pt, line width=0.95pt, line cap=round},
+    ligneecriture/.style={draw=black!38, line width=0.45pt, line cap=round}
+}
 
 % Couleurs Mathnipulez d'origine
 \definecolor{color50}{RGB}{255, 230, 100}  % Jaune
@@ -14,6 +21,8 @@
 \definecolor{color33}{RGB}{255, 180, 200}  % Rose pastel
 \definecolor{color20}{RGB}{150, 200, 235}  % Bleu
 \definecolor{color10}{RGB}{250, 180, 100}  % Orange
+\definecolor{colorMul}{RGB}{135, 215, 210} % Turquoise pour le gabarit multiplicatif
+\definecolor{colorFracN}{RGB}{210, 195, 235} % Lavande pour le gabarit fractionnaire
 
 % Largeur de chaque gabarit pour tenir sur deux colonnes
 \newcommand{\Largeur}{8.5}
@@ -31,17 +40,20 @@
     \begin{tikzpicture}[scale=1]
         \useasboundingbox (0, -0.3) rectangle (\Largeur, 2.7);
         \pgfmathsetmacro{\w}{\Largeur/#1}
-        
+
         % Bloc total (Haut)
         \draw[thick, fill=#2!20] (0, 1.2) rectangle (\Largeur, 2.4);
         \node[font=\bfseries] at ({\Largeur/2}, 1.8) {#3};
-        
-        % Bloc des parts (Bas)
-        \foreach \i in {1,...,#1} {
-            \pgfmathsetmacro{\xpos}{(\i-1)*\w}
-            \draw[thick, fill=#2!40] (\xpos, 0) rectangle +(\w, 1.2);
-            \node[font=\bfseries] at (\xpos+\w/2, 0.6) {#4};
-        }
+
+        % Bloc des parts (Bas) : seule la première part est colorée
+        \draw[thick, fill=#2!40] (0, 0) rectangle +(\w, 1.2);
+        \ifnum#1>1
+            \foreach \i in {2,...,#1} {
+                \pgfmathsetmacro{\xpos}{(\i-1)*\w}
+                \draw[thick, fill=white] (\xpos, 0) rectangle +(\w, 1.2);
+            }
+        \fi
+        \node[font=\bfseries] at ({\w/2}, 0.6) {#4};
     \end{tikzpicture}%
 }
 
@@ -52,20 +64,98 @@
     \begin{tikzpicture}[scale=1]
         \useasboundingbox (0, -0.3) rectangle (\Largeur, 2.7);
         \pgfmathsetmacro{\w}{\Largeur/#1}
-        
-        % Bloc total (Haut) avec pointillés
+
+        % Bloc total (Haut) : ligne d'écriture basse, fine et claire
         \draw[thick, fill=#2!20] (0, 1.2) rectangle (\Largeur, 2.4);
-        \draw[dotted, thick, line cap=round] ({\Largeur/2 - 1.5}, 1.8) -- ({\Largeur/2 + 1.5}, 1.8);
-        
-        % Bloc des parts (Bas) avec pointillés
-        \foreach \i in {1,...,#1} {
-            \pgfmathsetmacro{\xpos}{(\i-1)*\w}
-            \draw[thick, fill=#2!40] (\xpos, 0) rectangle +(\w, 1.2);
-            \pgfmathsetmacro{\dotw}{min(\w*0.25, 0.5)}
-            \draw[dotted, thick, line cap=round] (\xpos+\w/2-\dotw, 0.6) -- (\xpos+\w/2+\dotw, 0.6);
-        }
+        \draw[ligneecriture] ({\Largeur/2 - 1.5}, 1.58) -- ({\Largeur/2 + 1.5}, 1.58);
+
+        % Bloc des parts (Bas) : seule la première part est colorée
+        \draw[thick, fill=#2!40] (0, 0) rectangle +(\w, 1.2);
+        \ifnum#1>1
+            \foreach \i in {2,...,#1} {
+                \pgfmathsetmacro{\xpos}{(\i-1)*\w}
+                \draw[thick, fill=white] (\xpos, 0) rectangle +(\w, 1.2);
+            }
+        \fi
+        \pgfmathsetmacro{\dotw}{min(\w*0.30, 0.65)}
+        \draw[ligneecriture] ({\w/2-\dotw}, 0.38) -- ({\w/2+\dotw}, 0.38);
     \end{tikzpicture}%
 }
+
+
+
+% ==========================================
+% MACROS : GABARITS MULTIPLES (PAGE 2)
+% Une seule part est donnée en trait plein ;
+% les autres parts du multiple sont suggérées en pointillés,
+% sans recouvrir les traits pleins déjà porteurs de sens.
+% ==========================================
+\newcommand{\gabaritMultipleRempli}[4]{%
+    \begin{tikzpicture}[scale=1]
+        \useasboundingbox (0, -0.3) rectangle (\Largeur, 2.7);
+        \pgfmathsetmacro{\w}{\Largeur/#1}
+
+        % Bloc du multiple (Haut) : contour plein sur toute la largeur
+        \draw[thick, fill=#2!20] (0, 1.2) rectangle (\Largeur, 2.4);
+        \node[font=\bfseries] at ({\Largeur/2}, 1.8) {#3};
+
+        % Une part connue en trait plein
+        \draw[thick, fill=#2!40] (0, 0) rectangle +(\w, 1.2);
+        \node[font=\bfseries] at ({\w/2}, 0.6) {#4};
+
+        % Parts à imaginer : pointillés uniquement sur les bords non déjà tracés en plein
+        % La séparation avec la part pleine et la limite avec le multiple restent pleines.
+        \ifnum#1>1
+            \draw[pointillesforts] (\w, 0) -- (\Largeur, 0);
+            \foreach \i in {2,...,#1} {
+                \pgfmathsetmacro{\xpos}{\i*\w}
+                \draw[pointillesforts] (\xpos, 0) -- (\xpos, 1.2);
+            }
+        \fi
+    \end{tikzpicture}%
+}
+
+\newcommand{\gabaritMultipleVide}[2]{%
+    \begin{tikzpicture}[scale=1]
+        \useasboundingbox (0, -0.3) rectangle (\Largeur, 2.7);
+        \pgfmathsetmacro{\w}{\Largeur/#1}
+
+        % Bloc du multiple (Haut) : contour plein, réponse à compléter
+        \draw[thick, fill=#2!20] (0, 1.2) rectangle (\Largeur, 2.4);
+        \draw[ligneecriture] ({\Largeur/2 - 1.5}, 1.58) -- ({\Largeur/2 + 1.5}, 1.58);
+
+        % Une part en trait plein, à compléter par une ligne d'écriture basse et claire
+        \draw[thick, fill=#2!40] (0, 0) rectangle +(\w, 1.2);
+        \pgfmathsetmacro{\dotw}{min(\w*0.25, 0.5)}
+        \draw[ligneecriture] ({\w/2-\dotw}, 0.38) -- ({\w/2+\dotw}, 0.38);
+
+        % Parts à imaginer : pointillés uniquement sur les bords non déjà tracés en plein
+        % La séparation avec la part pleine et la limite avec le multiple restent pleines.
+        \ifnum#1>1
+            \draw[pointillesforts] (\w, 0) -- (\Largeur, 0);
+            \foreach \i in {2,...,#1} {
+                \pgfmathsetmacro{\xpos}{\i*\w}
+                \draw[pointillesforts] (\xpos, 0) -- (\xpos, 1.2);
+            }
+        \fi
+    \end{tikzpicture}%
+}
+
+
+% ==========================================
+% FOOTER STABLE : logo externe + adresse
+% ==========================================
+\definecolor{brandNavy}{RGB}{11,53,112}
+
+\newcommand{\MathsGoPrintFooter}{%
+\begin{tikzpicture}[remember picture,overlay]
+    \node[anchor=south west, inner sep=0pt] at ([xshift=0.55cm,yshift=0.18cm]current page.south west)
+        {\includegraphics[width=2.45cm]{../assets/img/mathsgo-logo.png}};
+    \node[anchor=south, text=brandNavy!70, font=\sffamily\bfseries\fontsize{7}{7}\selectfont] at ([yshift=0.32cm]current page.south)
+        {mathsgo.re};
+\end{tikzpicture}%
+}
+\AddToShipoutPictureFG{\MathsGoPrintFooter}
 
 \begin{document}
 
@@ -124,21 +214,28 @@
 \vspace{0.6cm}
 
 \noindent
-\gabaritRempli{2}{color50}{LE DOUBLE}{une part} \hfill \gabaritVide{2}{color50}
+\gabaritMultipleRempli{2}{color50}{LE DOUBLE}{la quantité} \hfill \gabaritMultipleVide{2}{color50}
 \vfill
 \noindent
-\gabaritRempli{4}{color25}{LE QUADRUPLE}{une part} \hfill \gabaritVide{4}{color25}
+\gabaritMultipleRempli{4}{color25}{LE QUADRUPLE}{\scriptsize la quantité} \hfill \gabaritMultipleVide{4}{color25}
 \vfill
 \noindent
-\gabaritRempli{3}{color33}{LE TRIPLE}{une part} \hfill \gabaritVide{3}{color33}
+\gabaritMultipleRempli{3}{color33}{LE TRIPLE}{la quantité} \hfill \gabaritMultipleVide{3}{color33}
 \vfill
 \noindent
-\gabaritRempli{5}{color20}{LE QUINTUPLE}{\empile{\scriptsize une}{\scriptsize part}} \hfill \gabaritVide{5}{color20}
+\gabaritMultipleRempli{5}{color20}{LE QUINTUPLE}{\empile{\scriptsize la}{\scriptsize quantité}} \hfill \gabaritMultipleVide{5}{color20}
 \vfill
 \noindent
-\gabaritRempli{10}{color10}{LE DÉCUPLE}{\empile{\tiny une}{\tiny part}} \hfill \gabaritVide{10}{color10}
+\gabaritMultipleRempli{10}{color10}{LE DÉCUPLE}{\scalebox{0.62}{\empile{\tiny la}{\tiny quantité}}} \hfill \gabaritMultipleVide{10}{color10}
 
 \vspace*{\fill}
+
+
+
+
+\newpage
+
+
 
 
 \end{document}
