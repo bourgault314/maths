@@ -953,15 +953,24 @@ select { cursor: pointer; }
 
 .collection-card-visual .collection-card-thumbnail {
   width: calc(100% + 34px);
-  height: 158px;
+  height: auto;
+  aspect-ratio: 16 / 10;
   margin: 0 -17px 13px;
-  flex: 0 0 158px;
+  padding: clamp(12px, 3vw, 18px);
+  flex: 0 0 auto;
   border: 0;
   border-radius: 0;
+  background:
+    radial-gradient(300px 180px at 15% 10%, color-mix(in srgb, var(--accent) 18%, transparent), transparent 68%),
+    linear-gradient(180deg, rgba(255, 255, 255, 0.94), rgba(245, 250, 255, 0.86));
 }
 
 .collection-card-visual .collection-card-thumbnail img {
   object-fit: cover;
+  border: 1.5px solid rgba(10, 61, 134, 0.14);
+  border-radius: 15px;
+  background: #fff;
+  box-shadow: 0 16px 34px rgba(10, 61, 134, 0.11);
 }
 
 .collection-card-visual .notion-count {
