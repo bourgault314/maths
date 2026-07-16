@@ -397,6 +397,21 @@
           seed: generator.dailySeed(familyId),
           label: ""
         });
+        if (familyId === "mosaic") {
+          const frame = svg.querySelector(":scope > rect");
+          const clippedGroup = svg.querySelector("g[clip-path]");
+          const definitions = svg.querySelector(":scope > defs");
+          if (frame) frame.remove();
+          if (definitions) definitions.remove();
+          if (clippedGroup) {
+            clippedGroup.removeAttribute("clip-path");
+            clippedGroup.setAttribute(
+              "transform",
+              "translate(80 80) rotate(-3) scale(1.08) translate(-80 -80)"
+            );
+          }
+          svg.classList.add("mathsgo-mosaic-menu-icon");
+        }
         svg.removeAttribute("role");
         svg.removeAttribute("aria-label");
         svg.setAttribute("aria-hidden", "true");
