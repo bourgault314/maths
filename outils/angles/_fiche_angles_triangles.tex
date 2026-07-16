@@ -3,10 +3,12 @@
 \usepackage[a4paper,margin=0mm]{geometry}
 \usepackage{tikz}
 \usetikzlibrary{calc,angles,quotes}
-\usepackage{fontspec}
-\setmainfont{Noto Sans}
-\setsansfont{Noto Sans}
-\newfontfamily\serif{Noto Serif}
+\usepackage[T1]{fontenc}
+\usepackage[utf8]{inputenc}
+\usepackage[provide=*,french]{babel}
+\usepackage{lmodern}
+\usepackage{textcomp}
+\newcommand{\serif}{\rmfamily}
 \pagestyle{empty}
 \definecolor{orange}{HTML}{FF8500}
 \definecolor{borderorange}{HTML}{F6C45A}
@@ -32,7 +34,7 @@
 \newcommand{\header}{
   \draw[rounded corners=3.6mm,line width=.45pt] ($(current page.north west)+(8mm,-8mm)$) rectangle ($(current page.north west)+(145mm,-18mm)$);
   \node[anchor=west,font=\sffamily\bfseries\fontsize{20}{22}\selectfont] at ($(current page.north west)+(14mm,-13mm)$) {Angles dans les triangles (A)};
-  \node[anchor=north east] at ($(current page.north east)+(-12mm,-8mm)$) {\includegraphics[width=32mm]{maths_go_logo.png}};
+  \node[anchor=north east] at ($(current page.north east)+(-12mm,-8mm)$) {\includegraphics[width=32mm]{../../assets/img/mathsgo-logo.png}};
   \draw[line width=.35pt] ($(current page.north west)+(114mm,-23.2mm)$) rectangle ($(current page.north west)+(149mm,-29.8mm)$);
   \node[font=\sffamily\bfseries\fontsize{5.7}{6.2}\selectfont,align=center,text width=32mm] at ($(current page.north west)+(131.5mm,-26.5mm)$) {LES SCHÉMAS NE SONT PAS À L'ÉCHELLE};
 }
@@ -47,7 +49,7 @@
   \node[anchor=west,font=\serif\bfseries\itshape\large] at ($(current page.north west)+(\stx mm,-\sty mm)$) {#3};
 }
 \newcommand{\footer}[1]{
-  \node[anchor=west,font=\sffamily\tiny] at ($(current page.south west)+(8mm,6mm)$) {© maths\&go};
+  \node[anchor=west,font=\sffamily\bfseries\tiny,text=blue!55!black] at ($(current page.south west)+(8mm,6mm)$) {mathsgo.re};
   \node[font=\sffamily\tiny,align=center] at ($(current page.south)+(0,7mm)$) {Géométrie - Angles et droites\\Angles dans les triangles};
   \node[anchor=east,font=\sffamily\tiny] at ($(current page.south east)+(-8mm,6mm)$) {Page #1/2};
 }

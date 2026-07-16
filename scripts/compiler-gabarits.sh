@@ -8,9 +8,12 @@ mkdir -p "$OUT"
 build() {
   local source="$1"
   local destination="$2"
-  latexmk -cd -pdf -interaction=nonstopmode -halt-on-error \
+  local engine="${3:--pdf}"
+  local basename
+  basename="$(basename "${source%.tex}")"
+  latexmk -cd "$engine" -interaction=nonstopmode -halt-on-error \
     -output-directory="$OUT" "$ROOT/outils/$source"
-  cp "$OUT/${source%.tex}.pdf" "$ROOT/outils/$destination"
+  cp "$OUT/$basename.pdf" "$ROOT/outils/$destination"
 }
 
 build _gabarits_enquetes_additive.tex gabarits_enquetes_additive.pdf
@@ -23,8 +26,9 @@ build _gabarit_proportionnalite_double_ligne_graduee.tex gabarit_proportionnalit
 build _gabarit_proportionnalite_tableau_sans_coefficient.tex gabarit_proportionnalite_tableau_sans_coefficient.pdf
 build _fiche_reciproque_thales.tex fiche_reciproque_thales.pdf
 build _pythabarre_recto_verso.tex pythabarre_recto_verso.pdf
+build angles/_fiche_angles_triangles.tex angles/fiche_angles_triangles.pdf
 
-python3 "$ROOT/scripts/ajouter-adresse-mathsgo-pdf.py" \
+python3 "$ROOT/scripts/uniformiser-signature-pdf.py" \
   "$ROOT/outils/_source_gabarits_partage_equitable.pdf" \
   "$ROOT/outils/gabarits_partage_equitable_2_3_4_5.pdf" \
-  --x 135 --y 18
+  --mode partage
