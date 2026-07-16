@@ -1,0 +1,270 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Bibliothèque des icônes | maths&amp;go</title>
+  <style>
+    :root {
+      color-scheme: light;
+      --blue:#063f86;
+      --teal:#087f78;
+      --orange:#f58220;
+      --ink:#16304f;
+      --muted:#60748b;
+      --line:#d9e5ee;
+      --paper:#ffffff;
+      --wash:#eef5f9;
+    }
+    * { box-sizing:border-box; }
+    body {
+      margin:0;
+      min-height:100vh;
+      background:linear-gradient(180deg,#eef5f9,#f8fbfd 38%,#eef5f9);
+      color:var(--ink);
+      font-family:system-ui,-apple-system,"Segoe UI",sans-serif;
+    }
+    button, input { font:inherit; }
+    .page { width:min(1180px,calc(100% - 28px)); margin:24px auto 48px; }
+    header { display:flex; align-items:center; gap:18px; margin-bottom:18px; }
+    header img { width:118px; height:auto; display:block; }
+    header a { color:var(--blue); font-weight:800; text-decoration:none; }
+    h1 { margin:0; font-size:clamp(1.75rem,3vw,2.5rem); line-height:1.05; }
+    h2 { margin:0; color:var(--blue); font-size:clamp(1.15rem,2vw,1.45rem); }
+    h3 { margin:0; font-size:1rem; }
+    .intro { max-width:850px; margin:8px 0 24px; color:var(--muted); line-height:1.55; }
+    .library-box {
+      margin-top:18px;
+      padding:clamp(18px,4vw,34px);
+      border:1px solid var(--line);
+      border-radius:24px;
+      background:var(--paper);
+      box-shadow:0 14px 34px rgba(15,40,72,.10);
+    }
+    .section-head { display:flex; align-items:flex-end; justify-content:space-between; gap:16px; margin-bottom:18px; }
+    .section-head p { max-width:650px; margin:5px 0 0; color:var(--muted); font-size:.88rem; line-height:1.45; }
+    .fixed-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(205px,1fr)); gap:14px; }
+    .fixed-card {
+      min-height:172px;
+      padding:17px 14px 14px;
+      display:flex;
+      flex-direction:column;
+      align-items:center;
+      justify-content:space-between;
+      border:1px solid var(--line);
+      border-radius:17px;
+      background:linear-gradient(145deg,#fff,#f8fbfd);
+    }
+    .fixed-card svg { width:145px; height:92px; overflow:visible; }
+    .fixed-card strong { color:var(--ink); font-size:.95rem; text-align:center; }
+    .fixed-card small { margin-top:4px; color:var(--muted); font-size:.75rem; text-align:center; }
+    .controls { display:flex; flex-wrap:wrap; align-items:center; gap:10px; }
+    .button {
+      min-height:42px;
+      padding:9px 14px;
+      border:1px solid #075b9b;
+      border-radius:12px;
+      color:#fff;
+      background:#0879d0;
+      font-weight:800;
+      cursor:pointer;
+      box-shadow:0 4px 10px rgba(8,121,208,.18);
+    }
+    .button.secondary { border-color:var(--line); color:var(--blue); background:#fff; box-shadow:none; }
+    .toggle { display:flex; align-items:center; gap:7px; color:var(--ink); font-size:.84rem; font-weight:700; }
+    .toggle input { width:18px; height:18px; accent-color:#0879d0; }
+    .badge {
+      display:inline-flex;
+      align-items:center;
+      min-height:30px;
+      padding:5px 9px;
+      border-radius:999px;
+      color:#075b9b;
+      background:#e6f3fc;
+      font-size:.75rem;
+      font-weight:800;
+    }
+    .family-list { display:grid; gap:16px; }
+    .family-card { padding:16px; border:1px solid var(--line); border-radius:18px; background:#fbfdff; }
+    .family-card[data-family="mosaic"] { border-color:#87cfc9; background:linear-gradient(135deg,#f5fffe,#fbfdff); }
+    .family-head { display:grid; grid-template-columns:minmax(170px,.65fr) minmax(260px,1.35fr); gap:18px; align-items:start; margin-bottom:13px; }
+    .family-title { display:flex; align-items:center; flex-wrap:wrap; gap:8px; }
+    .family-title p { width:100%; margin:4px 0 0; color:var(--muted); font-size:.78rem; }
+    .rule { margin:0; color:#304a65; font-size:.84rem; line-height:1.45; }
+    .question { display:block; margin-top:5px; color:var(--teal); font-weight:800; }
+    .generation-grid { display:grid; grid-template-columns:repeat(5,minmax(0,1fr)); gap:10px; }
+    figure { min-width:0; margin:0; padding:7px; border:1px solid var(--line); border-radius:14px; background:#fff; }
+    figure:first-child { border-color:#6eb7ea; box-shadow:0 0 0 2px #dff1fd inset; }
+    figure svg { display:block; width:100%; max-width:160px; aspect-ratio:1; margin:auto; transition:width .18s ease; }
+    figcaption { margin-top:4px; color:var(--muted); font-size:.72rem; text-align:center; }
+    .small-preview figure { display:flex; min-height:88px; flex-direction:column; justify-content:center; }
+    .small-preview figure svg { width:48px; }
+    .note { margin:20px 0 0; color:var(--muted); font-size:.82rem; line-height:1.5; }
+    code { padding:.12em .35em; border-radius:.35em; background:#edf3f7; color:#2b455e; }
+    @media (max-width:760px) {
+      .section-head { align-items:flex-start; flex-direction:column; }
+      .family-head { grid-template-columns:1fr; gap:8px; }
+      .generation-grid { grid-template-columns:repeat(3,minmax(0,1fr)); }
+    }
+    @media (max-width:480px) {
+      header { align-items:flex-start; flex-direction:column; gap:10px; }
+      header img { width:104px; }
+      .page { width:min(100% - 18px,1180px); margin-top:14px; }
+      .library-box { padding:16px 12px; border-radius:18px; }
+      .generation-grid { grid-template-columns:repeat(2,minmax(0,1fr)); }
+      .controls { align-items:flex-start; flex-direction:column; }
+    }
+  </style>
+</head>
+<body>
+  <main class="page">
+    <header>
+      <a href="../index.html" aria-label="Accueil maths&go"><img src="../assets/img/mathsgo-logo.png" alt="maths&go"></a>
+      <div>
+        <h1>Bibliothèque des icônes</h1>
+        <a href="index.html">← Retour à l’index des outils</a>
+      </div>
+    </header>
+    <p class="intro">La collection visuelle commune de maths&amp;go : les icônes fixes du catalogue et cinq familles génératives originales. Une même règle produit des figures parentes, jamais tout à fait identiques.</p>
+
+    <section class="library-box" aria-labelledby="fixed-title">
+      <div class="section-head">
+        <div>
+          <h2 id="fixed-title">Icônes fixes du catalogue</h2>
+          <p>Ces SVG sont les repères stables des grands domaines. Les deux retouches demandées sont visibles ici.</p>
+        </div>
+      </div>
+      <div class="fixed-grid">
+        <article class="fixed-card">
+          <svg viewBox="0 0 78 56" role="img" aria-label="Compétences psychosociales"><path d="M28.5 4.5C18.2 8.7 11 18.2 11 29c0 14.4 12.5 25.5 28 25.5S67 43.4 67 29c0-10.8-7.2-20.3-17.5-24.5" fill="none" stroke="#0a9188" stroke-width="4.6" stroke-linecap="round"/><path d="M39 18.5c-5.7-3.6-8.3-6.5-7.6-9.8.5-2.6 2.6-4.4 5.2-4.4 1.4 0 2.6.7 3.4 1.8.8-1.1 2-1.8 3.4-1.8 2.6 0 4.7 1.8 5.2 4.4.7 3.3-1.9 6.2-7.6 9.8l-1 1Z" transform="translate(-1 -3.5)" fill="#ff684c" stroke="#c74936" stroke-width="1.15" stroke-linejoin="round"/><path d="M13.5 29c0-2.5 2-4.5 4.5-4.5h13.5c2.5 0 4.5 2 4.5 4.5v6.5c0 2.5-2 4.5-4.5 4.5h-7l-4.8 4 .7-4H18c-2.5 0-4.5-2-4.5-4.5Z" fill="#20aaa4" stroke="#087f78" stroke-width="1.4" stroke-linejoin="round"/><path d="m61.8 37.8 7.6 7.6" fill="none" stroke="#a85b08" stroke-width="6" stroke-linecap="round"/><path d="m61.8 37.8 7.6 7.6" fill="none" stroke="#f9bf3b" stroke-width="4" stroke-linecap="round"/><circle cx="56" cy="32" r="8" fill="#fff" stroke="#a85b08" stroke-width="6"/><circle cx="56" cy="32" r="8" fill="#fff" stroke="#f9bf3b" stroke-width="4.3"/></svg>
+          <strong>Compétences psychosociales</strong><small>Cœur remonté pour mieux respirer</small>
+        </article>
+        <article class="fixed-card">
+          <svg viewBox="-16 0 108 52" role="img" aria-label="Espace et géométrie"><rect x="-16" width="108" height="52" rx="4" fill="#eef2ff"/><g fill="none" stroke-linecap="round"><g stroke="#1d4ed8" stroke-width="1.8"><path d="M2 27A18 18 0 0 1 38 27M38 27A18 18 0 0 1 74 27"/><path d="M-16 49A18 18 0 0 1 20 49M20 49A18 18 0 0 1 56 49M56 49A18 18 0 0 1 92 49"/></g><g stroke="#0f766e" stroke-width="1.65"><path d="M8 27A12 12 0 0 1 32 27M44 27A12 12 0 0 1 68 27"/><path d="M-10 49A12 12 0 0 1 14 49M26 49A12 12 0 0 1 50 49M62 49A12 12 0 0 1 86 49"/></g><g stroke="#f97316" stroke-width="1.55"><path d="M14 27A6 6 0 0 1 26 27M50 27A6 6 0 0 1 62 27"/><path d="M-4 49A6 6 0 0 1 8 49M32 49A6 6 0 0 1 44 49M68 49A6 6 0 0 1 80 49"/></g></g></svg>
+          <strong>Espace et géométrie</strong><small>Deuxième rangée visible sur toute sa largeur</small>
+        </article>
+        <article class="fixed-card">
+          <svg viewBox="0 0 78 52" role="img" aria-label="Données, statistiques et probabilités"><rect x="2" y="15" width="30" height="30" rx="7" fill="#fce7f3" stroke="#be3e68" stroke-width="1.8"/><path d="M7 20c5-3.5 13-4 20-.8" fill="none" stroke="#fff" stroke-width="1.4" stroke-linecap="round" opacity=".7"/><g fill="#9d174d"><circle cx="10" cy="23" r="2.2"/><circle cx="24" cy="23" r="2.2"/><circle cx="17" cy="30" r="2.2"/><circle cx="10" cy="37" r="2.2"/><circle cx="24" cy="37" r="2.2"/></g><path d="M41 45h36M41 45V9" fill="none" stroke="#475569" stroke-width="1.65" stroke-linecap="round"/><path d="m37.7 12.5 3.3-3.5 3.3 3.5" fill="none" stroke="#475569" stroke-width="1.65" stroke-linecap="round" stroke-linejoin="round"/><path d="M42 27h34" stroke="#7c3aed" stroke-width="1.25" stroke-dasharray="3 2"/><g stroke="#9d174d" stroke-width=".8"><rect x="44" y="29" width="4.5" height="16" rx="1" fill="#f9a8d4"/><rect x="49.6" y="25" width="4.5" height="20" rx="1" fill="#fb7185"/><rect x="55.2" y="28" width="4.5" height="17" rx="1" fill="#f9a8d4"/><rect x="60.8" y="23" width="4.5" height="22" rx="1" fill="#be3e68"/><rect x="66.4" y="30" width="4.5" height="15" rx="1" fill="#f9a8d4"/><rect x="72" y="26" width="4.5" height="19" rx="1" fill="#fb7185"/></g></svg>
+          <strong>Données, statistiques et probabilités</strong><small>Dé, fréquences et seuil de lecture</small>
+        </article>
+        <article class="fixed-card">
+          <svg viewBox="0 0 92 52" role="img" aria-label="Puissances"><g stroke="#4c1d95" stroke-width="1.35"><rect x="2" y="35" width="15" height="15" rx="2" fill="#c4b5fd"/><rect x="19" y="35" width="15" height="15" rx="2" fill="#a78bfa"/><rect x="36" y="35" width="15" height="15" rx="2" fill="#a78bfa"/><rect x="55" y="18" width="15" height="15" rx="2" fill="#8b5cf6"/><rect x="72" y="18" width="15" height="15" rx="2" fill="#8b5cf6"/><rect x="55" y="35" width="15" height="15" rx="2" fill="#8b5cf6"/><rect x="72" y="35" width="15" height="15" rx="2" fill="#8b5cf6"/></g><text x="88" y="15" fill="#5b21b6" font-family="Arial" font-size="17" font-weight="900" text-anchor="middle">?</text></svg>
+          <strong>Puissances</strong><small>Croissance par paquets et question ouverte</small>
+        </article>
+      </div>
+    </section>
+
+    <section class="library-box" aria-labelledby="generative-title">
+      <div class="section-head">
+        <div>
+          <h2 id="generative-title">Les cinq familles génératives</h2>
+          <p>Chaque figure est un SVG léger, calculé localement à partir d’une graine. Même graine : même dessin. Aucun appel réseau, aucune IA au chargement.</p>
+        </div>
+        <div class="controls" aria-label="Contrôles des générations">
+          <button class="button" type="button" data-next-series>Cinq autres jours</button>
+          <button class="button secondary" type="button" data-today hidden>Revenir à aujourd’hui</button>
+          <label class="toggle"><input type="checkbox" data-small-preview> Tester à 48 px</label>
+          <span class="badge" data-series-label>Série quotidienne</span>
+        </div>
+      </div>
+      <div class="family-list" data-family-list aria-live="polite"></div>
+      <p class="note">Le composant réutilisable est <code>assets/js/mathgo-generative-icons.js</code>. Il peut produire une icône commune du jour ou une icône personnelle du jour, avec un identifiant aléatoire conservé seulement dans le navigateur.</p>
+    </section>
+  </main>
+
+  <script src="../assets/js/mathgo-generative-icons.js?v=20260716-1"></script>
+  <script>
+    (function () {
+      "use strict";
+      const component = window.MathsGoGenerativeIcons;
+      const host = document.querySelector("[data-family-list]");
+      const seriesLabel = document.querySelector("[data-series-label]");
+      const todayButton = document.querySelector("[data-today]");
+      let seriesOffset = 0;
+
+      function dateWithOffset(offset) {
+        const date = new Date();
+        date.setHours(12, 0, 0, 0);
+        date.setDate(date.getDate() + offset);
+        return date;
+      }
+
+      function shortDate(date) {
+        return new Intl.DateTimeFormat("fr-FR", { day:"numeric", month:"short" }).format(date).replace(".", "");
+      }
+
+      function render() {
+        host.replaceChildren();
+        seriesLabel.textContent = seriesOffset === 0 ? "Série quotidienne" : "Jours +" + seriesOffset + " à +" + (seriesOffset + 4);
+        todayButton.hidden = seriesOffset === 0;
+
+        component.families.forEach(function (family, familyIndex) {
+          const article = document.createElement("article");
+          article.className = "family-card";
+          article.dataset.family = family.id;
+
+          const head = document.createElement("div");
+          head.className = "family-head";
+          const identity = document.createElement("div");
+          identity.className = "family-title";
+          const title = document.createElement("h3");
+          title.textContent = (familyIndex + 1) + ". " + family.name;
+          identity.appendChild(title);
+          if (family.id === "mosaic") {
+            const badge = document.createElement("span");
+            badge.className = "badge";
+            badge.textContent = "Dessinable en classe";
+            identity.appendChild(badge);
+          }
+          const note = document.createElement("p");
+          note.textContent = family.note;
+          identity.appendChild(note);
+
+          const rule = document.createElement("p");
+          rule.className = "rule";
+          rule.textContent = family.rule + " ";
+          const question = document.createElement("span");
+          question.className = "question";
+          question.textContent = family.question;
+          rule.appendChild(question);
+          head.append(identity, rule);
+
+          const grid = document.createElement("div");
+          grid.className = "generation-grid";
+          for (let variant = 0; variant < 5; variant += 1) {
+            const dayOffset = seriesOffset + variant;
+            const date = dateWithOffset(dayOffset);
+            const label = family.name + ", génération du " + shortDate(date);
+            const figure = document.createElement("figure");
+            const svg = component.createSvg(family.id, {
+              seed: component.dailySeed(family.id, { date:date }),
+              label:label
+            });
+            const caption = document.createElement("figcaption");
+            caption.textContent = dayOffset === 0 ? "Aujourd’hui" : shortDate(date);
+            figure.append(svg, caption);
+            grid.appendChild(figure);
+          }
+
+          article.append(head, grid);
+          host.appendChild(article);
+        });
+      }
+
+      document.querySelector("[data-next-series]").addEventListener("click", function () {
+        seriesOffset += 5;
+        render();
+      });
+      todayButton.addEventListener("click", function () {
+        seriesOffset = 0;
+        render();
+      });
+      document.querySelector("[data-small-preview]").addEventListener("change", function (event) {
+        host.classList.toggle("small-preview", event.target.checked);
+      });
+
+      render();
+    }());
+  </script>
+</body>
+</html>
