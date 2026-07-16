@@ -264,6 +264,7 @@
   const breadcrumb = document.getElementById("catalogue-breadcrumb");
   const searchInput = document.getElementById("catalogue-search");
   const clearButton = document.getElementById("search-clear");
+  const siteShell = document.querySelector(".site-shell");
   const mainPanel = document.querySelector(".main-panel");
 
   function escapeHtml(value) {
@@ -874,9 +875,19 @@
     const selectedDomain = domainMap.get(state.domain);
     const showResources = Boolean(state.notion || state.collection || state.query);
     const level = viewLevel();
+    const enteringDeepView = level === "domain" || level === "notion" || level === "collection";
 
-    mainPanel.classList.toggle("catalogue-deep-view", level === "domain" || level === "notion" || level === "collection");
-    document.body.classList.toggle("catalogue-is-deep", level === "domain" || level === "notion" || level === "collection");
+    if (
+      enteringDeepView &&
+      !document.body.classList.contains("catalogue-is-deep") &&
+      window.matchMedia("(min-width: 921px)").matches
+    ) {
+      const stageTop = Math.max(16, Math.round(siteShell.getBoundingClientRect().top));
+      document.documentElement.style.setProperty("--catalogue-stage-top", `${stageTop}px`);
+    }
+
+    mainPanel.classList.toggle("catalogue-deep-view", enteringDeepView);
+    document.body.classList.toggle("catalogue-is-deep", enteringDeepView);
     mainPanel.dataset.catalogueView = level;
     renderBreadcrumb(level, selectedDomain, selectedNotion, selectedCollection);
 
