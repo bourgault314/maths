@@ -174,6 +174,56 @@ window.MATHSGO_CATALOGUE = {
     "outils/splat_equations.html": { "primaryNotion": "equations", "collections": ["splat"], "tags": ["schema-barres", "splat"] },
     "outils/tuiles_algebriques/generateur_exercices_calcul_litteral.html": { "primaryNotion": "calcul-litteral", "collections": ["tuiles-algebriques"], "tags": ["tuiles-algebriques"] },
     "outils/tuiles_algebriques/generateur_tuiles.html": { "primaryNotion": "calcul-litteral", "collections": ["tuiles-algebriques"], "tags": ["tuiles-algebriques"] },
+    "outils/fractions_multiples_problemes.pdf": {
+      "primaryNotion": "fractions",
+      "collections": [],
+      "tags": ["fractions", "multiples", "divisibilite", "problemes"]
+    },
+    "outils/fractions_multiples_exerciseur.html": {
+      "primaryNotion": "fractions",
+      "collections": [],
+      "tags": ["fractions", "multiples", "divisibilite", "exerciseur"]
+    },
+    "outils/multiples_et_fractions_d_une_quantite.pdf": {
+      "primaryNotion": "fractions",
+      "collections": [],
+      "tags": ["fractions", "multiples", "divisibilite", "quantite"]
+    },
+    "outils/fabrication_materiel/cartes_premiers_1_100.html": {
+      "primaryNotion": "divisibilite",
+      "collections": [],
+      "tags": ["divisibilite", "nombres-premiers", "decomposition", "diviseurs", "cartes"],
+      "thumbnail": "assets/img/thumbnails/divisibilite/cartes-nombres.png?v=1",
+      "cardDescription": "Créer des cartes recto verso avec décomposition, critères et listes de diviseurs."
+    },
+    "outils/fabrication_materiel/grille_de_nombres.html": {
+      "primaryNotion": "divisibilite",
+      "collections": [],
+      "tags": ["divisibilite", "grille", "crible", "nombres-entiers"],
+      "thumbnail": "assets/img/thumbnails/divisibilite/grille-numerique.png?v=1",
+      "cardDescription": "Composer une grille numérique personnalisée, de 1 à 100 ou sur une plage choisie."
+    },
+    "outils/plateaux_manipulation/mur_diviseurs.html": {
+      "primaryNotion": "divisibilite",
+      "collections": [],
+      "tags": ["divisibilite", "diviseurs", "multiplication", "mur"],
+      "thumbnail": "assets/img/thumbnails/divisibilite/mur-diviseurs.png?v=1",
+      "cardDescription": "Visualiser tous les diviseurs d’un nombre sous forme de lignes de parts égales."
+    },
+    "outils/plateaux_manipulation/mur_diviseurs_pgcd.html": {
+      "primaryNotion": "divisibilite",
+      "collections": [],
+      "tags": ["divisibilite", "diviseurs-communs", "pgcd", "mur"],
+      "thumbnail": "assets/img/thumbnails/divisibilite/mur-diviseurs-pgcd.png?v=1",
+      "cardDescription": "Comparer deux murs de diviseurs pour repérer les diviseurs communs et le PGCD."
+    },
+    "outils/plateaux_manipulation/pgcd_sachets.html": {
+      "primaryNotion": "divisibilite",
+      "collections": [],
+      "tags": ["divisibilite", "partage", "paquets", "diviseurs-communs", "pgcd"],
+      "thumbnail": "assets/img/thumbnails/divisibilite/partages-pgcd.png?v=1",
+      "cardDescription": "Chercher le plus grand nombre de paquets identiques en manipulant deux quantités."
+    },
     "outils/plateaux_manipulation/moulin_pythagore.html": {
       "primaryNotion": "pythagore",
       "collections": [],
@@ -1952,8 +2002,8 @@ window.MATHSGO_CATALOGUE = {
     },
     {
       "id": "outils-fabrication-materiel-cartes-premiers-1-100-html",
-      "title": "Générateur de Cartes (Nombres)",
-      "description": "Une ressource maths&go pour travailler divisibilité, multiples et pgcd.",
+      "title": "Cartes de nombres",
+      "description": "Créer des cartes recto verso avec décomposition, critères et listes de diviseurs.",
       "path": "outils/fabrication_materiel/cartes_premiers_1_100.html",
       "domains": [
         "nombres-calculs"
@@ -1974,7 +2024,12 @@ window.MATHSGO_CATALOGUE = {
       "filters": [
         "materiel-imprimer"
       ],
-      "keywords": [],
+      "keywords": [
+        "diviseurs",
+        "décomposition",
+        "nombres premiers",
+        "cartes"
+      ],
       "kind": "tool",
       "status": "published",
       "featured": false,
@@ -2423,8 +2478,8 @@ window.MATHSGO_CATALOGUE = {
     },
     {
       "id": "outils-fabrication-materiel-grille-de-nombres-html",
-      "title": "Grille numérique A4",
-      "description": "Une ressource maths&go pour travailler divisibilité, multiples et pgcd.",
+      "title": "Grille de nombres à imprimer",
+      "description": "Composer une grille numérique personnalisée, de 1 à 100 ou sur une plage choisie.",
       "path": "outils/fabrication_materiel/grille_de_nombres.html",
       "domains": [
         "nombres-calculs"
@@ -2445,7 +2500,11 @@ window.MATHSGO_CATALOGUE = {
       "filters": [
         "materiel-imprimer"
       ],
-      "keywords": [],
+      "keywords": [
+        "grille numérique",
+        "crible",
+        "nombres entiers"
+      ],
       "kind": "tool",
       "status": "published",
       "featured": false,
@@ -3073,7 +3132,7 @@ window.MATHSGO_CATALOGUE = {
     {
       "id": "outils-plateaux-manipulation-mur-diviseurs-html",
       "title": "Mur des diviseurs",
-      "description": "Une ressource maths&go pour travailler divisibilité, multiples et pgcd.",
+      "description": "Visualiser tous les diviseurs d’un nombre sous forme de lignes de parts égales.",
       "path": "outils/plateaux_manipulation/mur_diviseurs.html",
       "domains": [
         "nombres-calculs"
@@ -3089,7 +3148,11 @@ window.MATHSGO_CATALOGUE = {
         "plateau"
       ],
       "filters": [],
-      "keywords": [],
+      "keywords": [
+        "diviseurs",
+        "multiplication",
+        "mur"
+      ],
       "kind": "tool",
       "status": "published",
       "featured": false,
@@ -3098,7 +3161,7 @@ window.MATHSGO_CATALOGUE = {
     {
       "id": "outils-plateaux-manipulation-mur-diviseurs-pgcd-html",
       "title": "Mur des diviseurs et PGCD",
-      "description": "Une ressource maths&go pour travailler divisibilité, multiples et pgcd.",
+      "description": "Comparer deux murs de diviseurs pour repérer les diviseurs communs et le PGCD.",
       "path": "outils/plateaux_manipulation/mur_diviseurs_pgcd.html",
       "domains": [
         "nombres-calculs"
@@ -3114,7 +3177,11 @@ window.MATHSGO_CATALOGUE = {
         "plateau"
       ],
       "filters": [],
-      "keywords": [],
+      "keywords": [
+        "diviseurs communs",
+        "pgcd",
+        "mur"
+      ],
       "kind": "tool",
       "status": "published",
       "featured": false,
@@ -3309,7 +3376,7 @@ window.MATHSGO_CATALOGUE = {
     {
       "id": "outils-plateaux-manipulation-pgcd-sachets-html",
       "title": "Partages en sachets et PGCD",
-      "description": "Une ressource maths&go pour travailler divisibilité, multiples et pgcd.",
+      "description": "Chercher le plus grand nombre de paquets identiques en manipulant deux quantités.",
       "path": "outils/plateaux_manipulation/pgcd_sachets.html",
       "domains": [
         "nombres-calculs"
@@ -3327,7 +3394,12 @@ window.MATHSGO_CATALOGUE = {
         "exerciseur"
       ],
       "filters": [],
-      "keywords": [],
+      "keywords": [
+        "partage",
+        "paquets",
+        "diviseurs communs",
+        "pgcd"
+      ],
       "kind": "tool",
       "status": "published",
       "featured": false,
