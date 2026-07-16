@@ -1,8 +1,8 @@
 # Conventions visuelles mathématiques — espace Axelle
 
-_Mise à jour : 15 juillet 2026._
+_Mise à jour : 16 juillet 2026._
 
-Ce fichier conserve discrètement les choix appliqués dans `axelle/assets/content.js`. Il sert de point de comparaison avec la future bibliothèque graphique commune issue du découpage d’Automatismes.
+Ce fichier conserve les choix appliqués dans l’espace Axelle, notamment dans `axelle/assets/content.js` et dans les fichiers `suite-*-v3`. Il sert de point de comparaison avec la future bibliothèque graphique commune issue du découpage d’Automatismes.
 
 ## Principe général
 
@@ -56,3 +56,106 @@ Quand les composants d’Automatismes seront extraits et stabilisés :
 3. faire importer ces composants par Axelle ;
 4. supprimer les fonctions locales devenues des doublons ;
 5. vérifier les rendus sur téléphone portrait et ordinateur avant publication.
+
+## Retour d’expérience — J2 du 16 juillet 2026
+
+Ce retour d’expérience fait partie des règles du projet. Il ne doit pas être supprimé lorsque le J2 sera remplacé : les mêmes erreurs pourraient se reproduire dans un autre parcours destiné à un enfant.
+
+### 1. Le cours était trop long pour une future CM1
+
+**Erreur rencontrée :** les mémos contenaient plusieurs phrases explicatives alors que le dessin pouvait porter l’essentiel du sens.
+
+**Règle :** une carte de cours pour enfant transmet une seule idée. Le dessin donne l’information principale ; le texte se limite à un titre explicite et à une ou deux phrases courtes.
+
+### 2. La fraction n’était pas assez explicite
+
+**Erreur rencontrée :** les mots `numérateur` et `dénominateur` étaient expliqués dans un paragraphe, sans flèches. L’aide de la première question était seulement une phrase.
+
+**Règle :** montrer une fraction verticale et relier par des flèches :
+
+- le numérateur au nombre de parts coloriées ;
+- le dénominateur au nombre total de parts égales.
+
+Une aide visuelle ne doit pas être remplacée par une phrase lorsque le schéma permet de comprendre immédiatement.
+
+### 3. Le cours sur les angles décrivait une propriété secondaire
+
+**Erreur rencontrée :** le titre insistait sur le fait que tourner un angle ne change pas son nom, sans donner directement le vrai repère de cours.
+
+**Règle :** écrire le nom à côté de chaque dessin et afficher les repères utiles : aigu inférieur à 90°, droit égal à 90°, obtus entre 90° et 180°, plat égal à 180°.
+
+### 4. Les codages des triangles étaient mal placés
+
+**Erreur rencontrée :** certains traits d’égalité n’étaient pas centrés sur les segments et le codage de l’angle droit n’était pas assez nettement rattaché au bon sommet.
+
+**Règle :**
+
+- le carré d’angle droit touche exactement les deux côtés issus du sommet concerné ;
+- un trait d’égalité coupe le segment et est centré sur lui ;
+- sous chaque figure, écrire séparément `1 angle droit`, `2 côtés égaux` ou `3 côtés égaux`.
+
+Les coordonnées mathématiques des segments doivent être vérifiées avant le réglage esthétique.
+
+### 5. Des dessins essentiels devenaient minuscules sur téléphone
+
+**Erreur rencontrée :** le disque des sixièmes et la porte utilisaient la mise en page compacte à deux colonnes ; ils devenaient trop petits pour être lus.
+
+**Règle :** les mémos dont le schéma porte le cours utilisent la disposition pleine largeur sur téléphone (`mobileStack`). Ne jamais valider un dessin uniquement sur ordinateur.
+
+### 6. La première version corrigée contenait encore des chevauchements
+
+**Erreur rencontrée :** les légendes sous la fraction se superposaient et les noms des trois triangles se touchaient.
+
+**Cause :** le code SVG avait été vérifié syntaxiquement, mais pas encore observé dans son rendu réel.
+
+**Règle :** avant publication, prendre et examiner au minimum :
+
+- une capture ordinateur du cours complet ;
+- une capture téléphone portrait du cours complet ;
+- une capture rapprochée de chaque schéma géométrique modifié ;
+- une capture des états de réussite et d’erreur des activités tactiles.
+
+### 7. Une mauvaise réponse pouvait bloquer tout le questionnaire
+
+**Erreur rencontrée :** les QCM ordinaires affichaient la correction puis la suite, mais le disque à colorier et l’association des angles exigeaient une réponse correcte. Une erreur empêchait donc d’avancer.
+
+**Règle commune :** une validation termine toujours la question :
+
+1. indiquer si la réponse est correcte ou non ;
+2. afficher la correction ;
+3. afficher `Question suivante`.
+
+Si une activité doit exceptionnellement imposer un nouvel essai, ce choix doit être explicite, avec un véritable bouton `Réessayer`, et non un blocage implicite.
+
+### 8. Une action tactile n’était pas réversible
+
+**Erreur rencontrée :** après avoir placé un nom sous un angle, il était impossible de le retirer simplement.
+
+**Règle :** avant validation, toute manipulation doit pouvoir être annulée. Dans l’association des angles, toucher une case remplie remet son étiquette dans la réserve. L’interface doit signaler cette possibilité visuellement et dans son libellé accessible.
+
+### 9. Le bouton suivant masquait la correction
+
+**Erreur rencontrée pendant la correction :** une première tentative de bouton mobile collant recouvrait une partie du message d’erreur des angles.
+
+**Règle :** aucun bouton persistant ne doit masquer l’énoncé, l’aide ou la correction. Le bouton suivant reste dans le flux de la page, en pleine largeur, avec une hauteur tactile confortable.
+
+### 10. Publication et cache
+
+**Erreur de procédure :** le dépôt local permettait de lire GitHub mais ne possédait pas les identifiants nécessaires au `git push`. Après publication par le connecteur GitHub, le cache public pouvait encore servir l’ancienne page pendant environ dix minutes.
+
+**Règle :**
+
+- relire la dernière version de `main` avant toute publication ;
+- publier d’abord les ressources, puis `index.html` avec une nouvelle version de cache ;
+- vérifier que les fichiers de `main` correspondent exactement à la version testée ;
+- distinguer clairement « publié sur main » et « déjà propagé sur le site public ».
+
+### 11. Test de non-régression obligatoire
+
+Le test `tests/axelle-j2-regression.cjs` doit rester associé au parcours. Il vérifie notamment :
+
+- les 20 questions de maths et les 18 questions de français jusqu’à l’écran final ;
+- la présence du schéma dans l’aide de la première fraction ;
+- le passage à la question suivante après une réponse tactile fausse ;
+- le retrait d’une étiquette déjà placée ;
+- les rendus ordinateur et téléphone utilisés pour l’inspection visuelle.
