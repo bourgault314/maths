@@ -41,25 +41,40 @@
       display: grid;
       grid-template-columns: 1fr auto 1fr;
       align-items: center;
-      padding: 7px 2px 5px;
+      padding: 0 2px;
     }
-    .brand-link { grid-column: 2; width: 132px; }
-    .brand-link img { display: block; width: 100%; height: auto; }
-    .back-link {
+    .brand-link {
       grid-column: 1;
       grid-row: 1;
       justify-self: start;
+      width: 128px;
+      display: block;
+      border-radius: 8px;
+    }
+    .brand-link img { display: block; width: 100%; height: auto; }
+    .back-link {
+      grid-column: 3;
+      grid-row: 1;
+      justify-self: end;
       display: inline-flex;
       align-items: center;
+      justify-content: center;
       gap: 7px;
+      min-width: 44px;
       min-height: 44px;
       padding: 8px 10px;
+      border-radius: 12px;
       color: #52647a;
       text-decoration: none;
       font-size: .91rem;
       font-weight: 750;
     }
     .back-link svg { width: 19px; height: 19px; }
+    .back-link:hover { color: var(--blue); background: rgba(255, 255, 255, .68); }
+    .brand-link:focus-visible, .back-link:focus-visible {
+      outline: 3px solid rgba(8, 170, 165, .32);
+      outline-offset: 3px;
+    }
 
     main {
       margin-bottom: 24px;
@@ -126,9 +141,9 @@
     }
 
     .guide {
-      max-width: 920px;
+      max-width: 1050px;
       display: grid;
-      grid-template-columns: repeat(3, 1fr);
+      grid-template-columns: repeat(4, minmax(0, 1fr));
       gap: 10px;
       margin: 0 auto 24px;
     }
@@ -177,10 +192,19 @@
     }
     .site-footer a, .site-footer button { padding: 0; border: 0; color: #526d8d; background: transparent; text-decoration: underline; }
 
+    @media (max-width: 900px) {
+      .guide { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    }
+
     @media (max-width: 720px) {
       .site-shell { width: min(100% - 18px, 1180px); }
-      .site-header { min-height: 78px; }
-      .brand-link { width: 124px; }
+      .site-header {
+        min-height: 78px;
+        grid-template-columns: 44px 1fr 44px;
+        padding: 0;
+      }
+      .brand-link { grid-column: 2; justify-self: center; width: 124px; }
+      .back-link { grid-column: 1; justify-self: start; width: 44px; padding: 8px; }
       .back-link span { display: none; }
       main { padding: 20px 13px; border-radius: 21px; }
       .guide { grid-template-columns: 1fr; }
@@ -226,7 +250,7 @@
       <section class="hero">
         <p class="eyebrow">Compétences psychosociales</p>
         <h1>Bilan guidé de fin du premier semestre</h1>
-        <p class="lead">Un seul document de quatre pages pour relire son semestre, mettre des mots sur ce qui aide ou freine, mieux comprendre son profil d’élève et choisir un petit pas concret.</p>
+        <p class="lead">Un seul document de quatre pages pour faire le point sur son semestre, comprendre ce qui aide ou freine, mieux se connaître et choisir un petit cap concret.</p>
         <div class="actions">
           <a class="action" href="https://www.canva.com/d/1pfiH9nWtgp2ewv" target="_blank" rel="noopener">
             <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 9V4h10v5M7 17H5a2 2 0 0 1-2-2v-4a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2v4a2 2 0 0 1-2 2h-2M7 14h10v7H7Z" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/></svg>
@@ -236,10 +260,11 @@
         <p class="format-note">1 document · 4 pages recto · format A3 paysage · choisir « PDF pour impression »</p>
       </section>
 
-      <section class="guide" aria-label="Parcours proposé">
-        <div class="guide-card" style="--accent:#08aaa5;--soft:#edfafa"><strong>1. Relire</strong><span>Identifier ses émotions, ses fiertés et les moments importants.</span></div>
-        <div class="guide-card" style="--accent:#f58220;--soft:#fff6eb"><strong>2. Comprendre</strong><span>Repérer ce qui freine, ce qui aide et les stratégies déjà utiles.</span></div>
-        <div class="guide-card" style="--accent:#b84f7b;--soft:#fff0f6"><strong>3. Agir</strong><span>Choisir un objectif observable et trois actions réalistes.</span></div>
+      <section class="guide" aria-label="Les quatre étapes du bilan">
+        <div class="guide-card" style="--accent:#08aaa5;--soft:#edfafa"><strong>1. Faire le point sur mon semestre</strong><span>Identifier ce que j’ai vécu, appris et réussi.</span></div>
+        <div class="guide-card" style="--accent:#f58220;--soft:#fff6eb"><strong>2. Comprendre ce qui m’aide ou me freine</strong><span>Une difficulté est une situation à comprendre, pas une étiquette.</span></div>
+        <div class="guide-card" style="--accent:#2fa9e8;--soft:#eef8fe"><strong>3. Mieux me connaître</strong><span>Je pense · je ressens et je gère · je suis avec les autres.</span></div>
+        <div class="guide-card" style="--accent:#b84f7b;--soft:#fff0f6"><strong>4. Choisir un cap et m’engager</strong><span>Choisir un petit changement concret à répéter.</span></div>
       </section>
 
       <aside class="usage-note">
