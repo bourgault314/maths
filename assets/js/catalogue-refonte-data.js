@@ -334,6 +334,38 @@ window.MATHSGO_CATALOGUE = {
       "thumbnail": "assets/img/thumbnails/proportionnalite/puzzle-brousseau.png?v=1",
       "cardDescription": "Étudier agrandissement et réduction à partir des six pièces du puzzle de Brousseau."
     },
+    "outils/gabarits_pourcentages.pdf": {
+      "primaryNotion": "pourcentages",
+      "primaryGroup": "gabarits",
+      "collections": [],
+      "tags": ["pourcentages", "gabarits", "schema-barres", "imprimer"],
+      "thumbnail": "assets/img/thumbnails/pourcentages/gabarits-pourcentages.png?v=1",
+      "cardDescription": "Imprimer des schémas en barres partagés en demis, quarts, cinquièmes, dixièmes et centièmes."
+    },
+    "outils/pourcentages_exerciceur.html": {
+      "primaryNotion": "pourcentages",
+      "primaryGroup": "generer",
+      "collections": [],
+      "tags": ["pourcentages", "exerciseur", "diaporama", "fiche", "evolutions"],
+      "thumbnail": "assets/img/thumbnails/pourcentages/generateur-pourcentages.png?v=1",
+      "cardDescription": "Composer un diaporama ou une fiche sur les parts, les taux, le tout et les évolutions."
+    },
+    "outils/gabarit_pourcentages_double_ligne_graduee.pdf": {
+      "primaryNotion": "pourcentages",
+      "primaryGroup": "gabarits",
+      "collections": [],
+      "tags": ["pourcentages", "double-ligne-graduee", "grandeur", "gabarit", "imprimer"],
+      "thumbnail": "assets/img/thumbnails/pourcentages/double-ligne-graduee.png?v=1",
+      "cardDescription": "Mettre en correspondance un pourcentage et une grandeur sur des doubles lignes graduées."
+    },
+    "outils/pourcentages_recherche.pdf": {
+      "primaryNotion": "pourcentages",
+      "primaryGroup": "activites",
+      "collections": [],
+      "tags": ["pourcentages", "enquetes", "problemes", "recherche", "schema-barres"],
+      "thumbnail": "assets/img/thumbnails/pourcentages/recherche-pourcentages.png?v=1",
+      "cardDescription": "Mener des missions et enquêtes progressives à partir de schémas en barres et de situations concrètes."
+    },
     "outils/angles/anglebarre.html": {
       "primaryNotion": "angles",
       "primaryGroup": "manipuler",
@@ -2099,7 +2131,7 @@ window.MATHSGO_CATALOGUE = {
     {
       "id": "outils-gabarits-pourcentages-pdf",
       "title": "Gabarits de pourcentages",
-      "description": "Une ressource maths&go pour travailler pourcentages.",
+      "description": "Des schémas en barres à compléter ou déjà partagés en demis, quarts, cinquièmes, dixièmes et centièmes.",
       "path": "outils/gabarits_pourcentages.pdf",
       "domains": [
         "proportionnalite-mesures"
@@ -2318,7 +2350,7 @@ window.MATHSGO_CATALOGUE = {
     {
       "id": "outils-pourcentages-exerciceur-html",
       "title": "Générateur de pourcentages",
-      "description": "Une ressource maths&go pour travailler pourcentages.",
+      "description": "Générez un diaporama ou une fiche sur les parts, les pourcentages, le tout et les évolutions.",
       "path": "outils/pourcentages_exerciceur.html",
       "domains": [
         "proportionnalite-mesures"
@@ -3650,7 +3682,7 @@ window.MATHSGO_CATALOGUE = {
     {
       "id": "outils-gabarit-pourcentages-double-ligne-graduee-pdf",
       "title": "Pourcentages — double ligne graduée",
-      "description": "Une ressource maths&go pour travailler pourcentages.",
+      "description": "Des doubles lignes graduées à imprimer pour relier pourcentages, grandeurs et unités.",
       "path": "outils/gabarit_pourcentages_double_ligne_graduee.pdf",
       "domains": [
         "proportionnalite-mesures"
@@ -3869,8 +3901,8 @@ window.MATHSGO_CATALOGUE = {
     },
     {
       "id": "outils-pourcentages-recherche-pdf",
-      "title": "Recherche sur les pourcentages",
-      "description": "Une ressource maths&go pour travailler pourcentages.",
+      "title": "Pourcentages — missions et enquêtes",
+      "description": "Six pages de missions et d’enquêtes progressives sur les pourcentages, avec schémas en barres et situations concrètes.",
       "path": "outils/pourcentages_recherche.pdf",
       "domains": [
         "proportionnalite-mesures"
