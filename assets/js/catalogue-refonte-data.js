@@ -262,7 +262,7 @@ window.MATHSGO_CATALOGUE = {
       "primaryGroup": "manipuler",
       "collections": [],
       "tags": ["statistiques", "mediane", "moyenne", "etendue", "donnees"],
-      "thumbnail": "assets/img/thumbnails/notions/stats-city.png?v=2",
+      "thumbnail": "assets/img/thumbnails/notions/stats-city.png?v=3",
       "cardDescription": "Ranger et construire une ville de données pour travailler médiane, moyenne et étendue."
     },
     "outils/plateaux_manipulation/moyennes.html": {

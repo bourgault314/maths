@@ -183,7 +183,8 @@
     probabilites: {
       description: "Expérimenter le hasard et quantifier les chances.",
       keywords: "probabilité hasard dé pièce urne fréquence événement",
-      icon: "probability"
+      icon: "probability",
+      showWhenEmpty: true
     },
     "pensee-informatique": {
       description: "Décomposer un problème et construire des algorithmes.",
