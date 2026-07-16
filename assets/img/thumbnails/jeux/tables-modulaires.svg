@@ -1,0 +1,24 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 720 320">
+  <defs>
+    <radialGradient id="bg"><stop stop-color="#20242c"/><stop offset="1" stop-color="#080a0e"/></radialGradient>
+    <linearGradient id="rainbow"><stop stop-color="#f53895"/><stop offset=".25" stop-color="#7559e8"/><stop offset=".5" stop-color="#1fcce5"/><stop offset=".75" stop-color="#55dd72"/><stop offset="1" stop-color="#f0cf42"/></linearGradient>
+    <filter id="glow"><feGaussianBlur stdDeviation="2.2" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
+  </defs>
+  <rect width="720" height="320" fill="url(#bg)"/>
+  <text x="34" y="48" fill="#fff" font-family="system-ui,sans-serif" font-size="24" letter-spacing="3">TABLES MODULAIRES</text>
+  <text x="35" y="76" fill="#44d8ef" font-family="system-ui,sans-serif" font-size="15">Quand une table de multiplication devient une courbe</text>
+  <circle cx="489" cy="160" r="132" fill="#020305" stroke="#2c3038" stroke-width="5"/>
+  <g fill="none" stroke="url(#rainbow)" stroke-width="1.15" stroke-opacity=".8" filter="url(#glow)">
+    <path d="M489 28L489 292M462 31L516 289M436 39L542 281M411 49L567 271M389 63L589 257M371 81L607 239M356 102L622 218M347 126L631 194M343 151L635 169M344 177L634 143M350 201L628 119M361 224L617 96M377 244L601 76M396 261L582 59M419 275L559 45M444 285L534 35M471 291L507 29"/>
+    <path d="M489 28L343 151M516 31L344 177M542 39L350 201M567 49L361 224M589 63L377 244M607 81L396 261M622 102L419 275M631 126L444 285M635 151L471 291M634 177L507 291M628 201L534 285M617 224L559 275M601 244L582 261"/>
+  </g>
+  <circle cx="489" cy="160" r="5" fill="#51e5ee" filter="url(#glow)"/>
+  <g transform="translate(35 115)">
+    <rect width="245" height="116" rx="17" fill="#fff" fill-opacity=".08" stroke="#fff" stroke-opacity=".12"/>
+    <text x="22" y="34" fill="#e6e9ef" font-family="system-ui,sans-serif" font-size="15">Table de multiplication</text>
+    <text x="212" y="34" fill="#37d7ee" font-family="system-ui,sans-serif" font-size="18" font-weight="700">2,00</text>
+    <line x1="22" y1="62" x2="218" y2="62" stroke="#657080" stroke-width="7" stroke-linecap="round"/>
+    <circle cx="95" cy="62" r="10" fill="#32c8e5"/>
+    <text x="22" y="94" fill="#abb3bf" font-family="system-ui,sans-serif" font-size="14">200 points reliés sur le cercle</text>
+  </g>
+</svg>

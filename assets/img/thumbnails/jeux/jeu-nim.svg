@@ -1,0 +1,28 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 720 320">
+  <defs>
+    <linearGradient id="bg" x2="1" y2="1"><stop stop-color="#102b39"/><stop offset="1" stop-color="#111d2a"/></linearGradient>
+    <linearGradient id="wood" x2="0" y2="1"><stop stop-color="#ffe2a2"/><stop offset=".56" stop-color="#efb757"/><stop offset="1" stop-color="#b8751d"/></linearGradient>
+    <linearGradient id="red" x2="0" y2="1"><stop stop-color="#ff7184"/><stop offset=".55" stop-color="#f23352"/><stop offset="1" stop-color="#a70f2f"/></linearGradient>
+    <filter id="shadow"><feDropShadow dx="0" dy="5" stdDeviation="6" flood-opacity=".35"/></filter>
+  </defs>
+  <rect width="720" height="320" fill="url(#bg)"/>
+  <rect x="55" y="40" width="610" height="240" rx="26" fill="#fff" fill-opacity=".08" stroke="#7c9aaa" stroke-opacity=".5"/>
+  <text x="360" y="86" fill="#fff" font-family="system-ui,sans-serif" font-size="28" font-weight="750" text-anchor="middle">À toi de jouer</text>
+  <rect x="82" y="111" width="556" height="107" rx="20" fill="#07131c" fill-opacity=".27" stroke="#7c9aaa" stroke-opacity=".24"/>
+  <g filter="url(#shadow)">
+    <g fill="url(#wood)" stroke="#ffdc90" stroke-width="1.4">
+      <rect x="101" y="132" width="17" height="64" rx="8"/><rect x="125" y="132" width="17" height="64" rx="8"/>
+      <rect x="149" y="132" width="17" height="64" rx="8"/><rect x="173" y="132" width="17" height="64" rx="8"/>
+      <rect x="197" y="132" width="17" height="64" rx="8"/><rect x="221" y="132" width="17" height="64" rx="8"/>
+      <rect x="245" y="132" width="17" height="64" rx="8"/><rect x="269" y="132" width="17" height="64" rx="8"/>
+      <rect x="293" y="132" width="17" height="64" rx="8"/><rect x="317" y="132" width="17" height="64" rx="8"/>
+      <rect x="341" y="132" width="17" height="64" rx="8"/><rect x="365" y="132" width="17" height="64" rx="8"/>
+      <rect x="389" y="132" width="17" height="64" rx="8"/><rect x="413" y="132" width="17" height="64" rx="8"/>
+      <rect x="437" y="132" width="17" height="64" rx="8"/><rect x="461" y="132" width="17" height="64" rx="8"/>
+      <rect x="485" y="132" width="17" height="64" rx="8"/><rect x="509" y="132" width="17" height="64" rx="8"/>
+      <rect x="533" y="132" width="17" height="64" rx="8"/><rect x="557" y="132" width="17" height="64" rx="8"/>
+    </g>
+    <rect x="581" y="130" width="19" height="68" rx="9" fill="url(#red)" stroke="#ffd0d8" stroke-width="2"/>
+  </g>
+  <text x="360" y="254" fill="#cce5ef" font-family="system-ui,sans-serif" font-size="17" font-weight="650" text-anchor="middle">Prendre 1, 2 ou 3 bâtons · éviter le bâton rouge</text>
+</svg>
