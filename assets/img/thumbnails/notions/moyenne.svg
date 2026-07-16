@@ -11,5 +11,5 @@
     <path d="M315 235h74v24H315Zm0-26h74v24H315Zm0-26h74v24H315Z"/><path d="M425 235h74v24H425Zm0-26h74v24H425Zm0-26h74v24H425Zm0-26h74v24H425Zm0-26h74v24H425Z"/>
     <path d="M535 235h74v24H535Zm0-26h74v24H535Zm0-26h74v24H535Zm0-26h74v24H535Z"/>
   </g>
-  <path d="M137 182C185 126 226 118 242 146" fill="none" stroke="#f59e0b" stroke-width="5" stroke-linecap="round"/><path d="m233 135 15 12-15 8" fill="none" stroke="#f59e0b" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M242 146C226 118 185 126 137 182" fill="none" stroke="#f59e0b" stroke-width="5" stroke-linecap="round"/><path d="m153 178-16 4 4-16" fill="none" stroke="#f59e0b" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/>
 </svg>

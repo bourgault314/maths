@@ -1,6 +1,6 @@
 # Sources et signature des PDF imprimables
 
-Ce document est l'inventaire technique des 28 PDF publics de maths&go.
+Ce document est l'inventaire technique des 29 PDF publics de maths&go.
 
 ## Référence graphique
 
@@ -15,7 +15,7 @@ Ce document est l'inventaire technique des 28 PDF publics de maths&go.
 
 ## PDF possédant une source LaTeX
 
-Ces 13 documents sont entièrement modifiables et recompilables :
+Ces 14 documents sont entièrement modifiables et recompilables :
 
 | PDF public | Source |
 |---|---|
@@ -30,6 +30,7 @@ Ces 13 documents sont entièrement modifiables et recompilables :
 | `gabarits_enquetes_multiplicative.pdf` | `_gabarits_enquetes_multiplicative.tex` |
 | `gabarits_pourcentages.pdf` | `_gabarits_pourcentages.tex` |
 | `gabarits_proportionnalite_tableaux.pdf` | `_gabarits_proportionnalite_tableaux.tex` |
+| `gabarit_reciproque_pythagore.pdf` | `_gabarit_reciproque_pythagore.tex` |
 | `multiples_et_fractions_d_une_quantite.pdf` | `_multiples_et_fractions_d_une_quantite.tex` |
 | `pythabarre_recto_verso.pdf` | `_pythabarre_recto_verso.tex` |
 
@@ -67,7 +68,7 @@ importé, et non à chaque compilation générale.
 
 ## Classement public
 
-Les 28 PDF sont tous déclarés dans `assets/js/catalogue-refonte-data.js` et dans
+Les 29 PDF sont tous déclarés dans `assets/js/catalogue-refonte-data.js` et dans
 `sitemap.xml`. Leur classement visible se fait par domaine et notion dans le
 catalogue ; leur chemin physique historique n'a pas été déplacé afin de préserver
 les liens publics existants.

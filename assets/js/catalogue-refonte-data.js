@@ -266,11 +266,11 @@ window.MATHSGO_CATALOGUE = {
       "cardDescription": "Ranger et construire une ville de données pour travailler médiane, moyenne et étendue."
     },
     "outils/plateaux_manipulation/moyennes.html": {
-      "primaryNotion": "moyennes",
+      "primaryNotion": "statistiques",
       "primaryGroup": "manipuler",
       "collections": [],
       "tags": ["moyenne", "repartition", "equilibrage", "decimaux", "blocs"],
-      "thumbnail": "assets/img/thumbnails/notions/moyenne.svg?v=1",
+      "thumbnail": "assets/img/thumbnails/notions/moyenne.svg?v=2",
       "cardDescription": "Déplacer ou couper des blocs pour égaliser les piles et donner du sens à la moyenne."
     },
     "outils/plateaux_manipulation/glisse_entiers_flex.html": {
@@ -661,7 +661,20 @@ window.MATHSGO_CATALOGUE = {
       "thumbnail": "assets/img/thumbnails/pythabarre-capture.svg?v=6",
       "cardDescription": "Dérouler le théorème pas à pas avec le calcul, le schéma en barres et le moulin de Pythagore."
     },
-    "outils/pythabarre_recto_verso.pdf": { "primaryNotion": "pythagore", "collections": [], "tags": ["schema-barres", "moulin", "pythagore", "imprimable"] },
+    "outils/pythabarre_recto_verso.pdf": {
+      "primaryNotion": "pythagore",
+      "collections": [],
+      "tags": ["schema-barres", "moulin", "pythagore", "gabarit", "imprimable"],
+      "thumbnail": "assets/img/thumbnails/pythagore/gabarit-pythagore.png?v=1",
+      "cardDescription": "Guider pas à pas le calcul d’une longueur avec les carrés colorés, le schéma en barres et une rédaction structurée."
+    },
+    "outils/gabarit_reciproque_pythagore.pdf": {
+      "primaryNotion": "pythagore",
+      "collections": [],
+      "tags": ["pythagore", "reciproque", "contraposee", "gabarit", "imprimable"],
+      "thumbnail": "assets/img/thumbnails/pythagore/gabarit-reciproque-pythagore.png?v=1",
+      "cardDescription": "Comparer séparément le carré du plus grand côté et la somme des deux autres carrés, puis rédiger la conclusion adaptée."
+    },
     "outils/fiche_reciproque_thales.pdf": {
       "primaryNotion": "thales",
       "collections": [],
@@ -968,11 +981,6 @@ window.MATHSGO_CATALOGUE = {
     {
       "id": "statistiques",
       "title": "Statistiques",
-      "domain": "donnees"
-    },
-    {
-      "id": "moyennes",
-      "title": "Moyennes",
       "domain": "donnees"
     },
     {
@@ -3840,7 +3848,7 @@ window.MATHSGO_CATALOGUE = {
         "donnees"
       ],
       "notions": [
-        "moyennes"
+        "statistiques"
       ],
       "uses": [
         "manipuler",
@@ -4140,8 +4148,8 @@ window.MATHSGO_CATALOGUE = {
     },
     {
       "id": "outils-pythabarre-recto-verso-pdf",
-      "title": "PythaBarre — fiche recto-verso",
-      "description": "Une fiche à imprimer pour structurer la relation de Pythagore avec le moulin, les schémas en barres et une rédaction pas à pas.",
+      "title": "Gabarit Pythagore",
+      "description": "Un gabarit à imprimer pour calculer une longueur avec les carrés colorés, le schéma en barres et une rédaction pas à pas.",
       "path": "outils/pythabarre_recto_verso.pdf",
       "domains": [
         "geometrie"
@@ -4163,7 +4171,41 @@ window.MATHSGO_CATALOGUE = {
       "keywords": [
         "triangle rectangle",
         "hypoténuse",
-        "moulin de Pythagore"
+        "moulin de Pythagore",
+        "gabarit Pythagore"
+      ],
+      "kind": "document",
+      "status": "published",
+      "featured": false,
+      "recent": true
+    },
+    {
+      "id": "outils-gabarit-reciproque-pythagore-pdf",
+      "title": "Gabarit réciproque de Pythagore",
+      "description": "Un gabarit à imprimer pour identifier le plus grand côté, effectuer les deux calculs séparément, les comparer et conclure correctement.",
+      "path": "outils/gabarit_reciproque_pythagore.pdf",
+      "domains": [
+        "geometrie"
+      ],
+      "notions": [
+        "pythagore"
+      ],
+      "uses": [
+        "imprimer",
+        "entrainer"
+      ],
+      "types": [
+        "imprimable"
+      ],
+      "filters": [
+        "materiel-imprimer"
+      ],
+      "keywords": [
+        "triangle rectangle",
+        "plus grand côté",
+        "réciproque de Pythagore",
+        "contraposée de Pythagore",
+        "gabarit"
       ],
       "kind": "document",
       "status": "published",
