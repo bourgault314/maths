@@ -457,7 +457,7 @@ select { cursor: pointer; }
   display: inline-flex;
   align-items: center;
   flex-wrap: wrap;
-  gap: 5px;
+  gap: 8px;
   max-width: 100%;
   color: var(--muted);
   font-size: .91rem;
@@ -503,9 +503,7 @@ select { cursor: pointer; }
 .breadcrumb-back:focus-visible > svg { transform: translateX(-2px); }
 
 .breadcrumb-separator {
-  padding-inline: 1px;
-  color: #8b9aab;
-  font-weight: 800;
+  display: none;
 }
 
 .breadcrumb-current {
@@ -1399,6 +1397,18 @@ select { cursor: pointer; }
 
   body:not(.catalogue-is-deep) .domain-card:not(.domain-card-secondary) > .domain-card-icon {
     transform: translateX(9px);
+  }
+
+  /* Ajuster le poids visuel des deux dessins les plus fins sans déplacer
+     les textes ni modifier la hauteur des cartes. */
+  body:not(.catalogue-is-deep) [data-domain-card="donnees"] .domain-card-icon svg {
+    transform: scale(1.1);
+    transform-origin: center;
+  }
+
+  body:not(.catalogue-is-deep) [data-domain-card="informatique"] .domain-card-icon svg {
+    transform: scale(1.16);
+    transform-origin: center;
   }
 
   body:not(.catalogue-is-deep) [data-domain-card="proportionnalite-mesures"] {
