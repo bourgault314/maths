@@ -69,6 +69,47 @@ async function completeMission(page, subject) {
   if (score !== `${total}/${total}`) throw new Error(`${subject} ne se termine pas avec le score attendu : ${score}.`);
 }
 
+async function auditEveryMathsQuestion(page) {
+  const folder = path.join(output, "maths-20-questions");
+  fs.mkdirSync(folder, {recursive: true});
+  await page.goto(BASE, {waitUntil: "networkidle"});
+  await page.locator('[data-subject="maths"]').click();
+  await page.locator("#memo-button").click();
+  const questions = await page.evaluate(() => window.AXELLE_SESSIONS.maths.questions.map(question => ({
+    type: question.type || "qcm",
+    answer: question.answer,
+    target: question.target,
+    title: question.title
+  })));
+
+  for (let index = 0; index < questions.length; index += 1) {
+    const question = questions[index];
+    const layout = await page.evaluate(() => ({
+      viewportWidth: window.innerWidth,
+      pageWidth: document.documentElement.scrollWidth,
+      cardWidth: document.querySelector(".question-card").getBoundingClientRect().width
+    }));
+    if (layout.pageWidth > layout.viewportWidth + 1 || layout.cardWidth > layout.viewportWidth) {
+      throw new Error(`Débordement horizontal à la question ${index + 1} : ${question.title}`);
+    }
+    await page.screenshot({path: path.join(folder, `${String(index + 1).padStart(2, "0")}.png`), fullPage: true});
+
+    if (question.type === "disk-select") {
+      for (let sector = 0; sector < question.target; sector += 1) await page.locator(".touch-sector").nth(sector).click();
+      await page.locator(".validate-button").click();
+    } else if (question.type === "angle-match") {
+      for (const id of ["acute", "right", "obtuse", "flat"]) {
+        await page.locator(`.match-token[data-token="${id}"]`).click();
+        await page.locator(`.match-slot[data-target="${id}"]`).click();
+      }
+      await page.locator(".angle-match > .validate-button").click();
+    } else {
+      await page.locator(".answer-button").nth(question.answer).click();
+    }
+    await page.locator("#next-button:not([hidden])").click();
+  }
+}
+
 (async () => {
   const server = await startServer();
   const browser = await chromium.launch({
@@ -89,6 +130,22 @@ async function completeMission(page, subject) {
   await desktop.locator("#hint-button").click();
   if (await desktop.locator("#hint-box svg").count() !== 1) throw new Error("L’aide de la première fraction n’a pas de schéma.");
   await desktop.screenshot({path: `${output}/desktop-fraction-hint.png`, fullPage: true});
+
+  for (const viewport of [{width: 1366, height: 768, name: "desktop-1366x768"}, {width: 1440, height: 900, name: "desktop-1440x900"}]) {
+    const page = await browser.newPage({viewport});
+    page.on("pageerror", error => errors.push(error.message));
+    await openMaths(page);
+    const layout = await page.evaluate(() => ({
+      viewportHeight: window.innerHeight,
+      pageHeight: document.documentElement.scrollHeight,
+      buttonBottom: document.querySelector("#memo-button").getBoundingClientRect().bottom
+    }));
+    await page.screenshot({path: `${output}/${viewport.name}-memos.png`, fullPage: true});
+    if (layout.buttonBottom > layout.viewportHeight) {
+      throw new Error(`Le bouton du cours sort de l’écran ${viewport.width}×${viewport.height} (${Math.round(layout.buttonBottom)} px).`);
+    }
+    await page.close();
+  }
 
   const mobile = await browser.newPage({viewport: {width: 390, height: 844}});
   mobile.on("pageerror", error => errors.push(error.message));
@@ -131,6 +188,12 @@ async function completeMission(page, subject) {
   const completion = await browser.newPage({viewport: {width: 1200, height: 900}});
   await completeMission(completion, "maths");
   await completeMission(completion, "francais");
+
+  if (process.env.AXELLE_AUDIT_ALL === "1") {
+    const audit = await browser.newPage({viewport: {width: 1366, height: 768}});
+    audit.on("pageerror", error => errors.push(error.message));
+    await auditEveryMathsQuestion(audit);
+  }
 
   await browser.close();
   await new Promise(resolve => server.close(resolve));
