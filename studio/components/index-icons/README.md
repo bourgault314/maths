@@ -6,7 +6,7 @@ géométrie, fractions, statistiques, bouliers et autres représentations.
 
 ## Source centrale
 
-Les 38 SVG utilisés par le site sont conservés dans
+Les SVG fixes utilisés par le site sont conservés dans
 `assets/js/mathsgo-icon-library.js`. Le catalogue charge cette bibliothèque
 pour ses cartes de domaines et de notions ; la page d’accueil réutilise les
 mêmes dessins dans sa composition visuelle.
@@ -14,10 +14,25 @@ mêmes dessins dans sa composition visuelle.
 ## Aperçu visible
 
 La page publique [Bibliothèque des icônes](../../../outils/bibliotheque-icones.html)
-présente les 38 dessins dans une boîte lisible, avec un rappel des cinq icônes
-réunies sur l’accueil. Elle inclut notamment les deux icônes modifiées le
-16 juillet 2026 : puissances et espace/géométrie.
+présente les dessins dans une boîte lisible, avec un rappel des cinq icônes
+réunies sur l’accueil. Elle inclut notamment les icônes modifiées le 16 juillet 2026 : puissances,
+espace/géométrie et les deux compositions fixes du pavage de Truchet.
 
 Chaque nouvelle icône doit conserver un identifiant stable, un SVG vectoriel,
 une palette maths&go cohérente et une entrée dans cette bibliothèque avant
 d’être réutilisée dans un autre outil.
+
+
+## Pavages de Truchet
+
+Trois versions sont conservées sous un nom distinct, sans remplacer l’icône
+« Espace et géométrie » :
+
+- `truchet-chemin` : composition fixe « Chemin dansant » ;
+- `truchet-rosace` : composition fixe « Rosace » ;
+- `generative:truchet` : pavage 4 × 4 renouvelé par le moteur aléatoire.
+
+Toutes les tuiles utilisent de vrais quarts de cercle : le rayon vaut exactement
+la moitié du côté de la tuile et les raccords se font aux milieux des côtés.
+La version générative tire l’orientation de chaque tuile au hasard et met en
+évidence un chemin connecté.
