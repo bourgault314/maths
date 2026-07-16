@@ -1,0 +1,23 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 720 320">
+  <defs><filter id="glow"><feGaussianBlur stdDeviation="1.1" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter></defs>
+  <rect width="720" height="320" fill="#111315"/>
+  <text x="35" y="45" fill="#fff" font-family="system-ui,sans-serif" font-size="24" letter-spacing="2">LE JEU DU CHAOS</text>
+  <text x="35" y="72" fill="#35d9ec" font-family="system-ui,sans-serif" font-size="15">Le hasard fait apparaître le triangle de Sierpiński</text>
+  <g transform="translate(312 18) scale(.9)" filter="url(#glow)">
+    <g fill="#ff1d65"><path d="M180 10L100 148H260Z"/><path d="M100 148L60 217H140Z"/><path d="M260 148L220 217H300Z"/><path d="M180 79L140 148H220Z"/></g>
+    <g fill="#25dc72"><path d="M60 148L0 252H120Z"/><path d="M0 252L-30 304H30Z"/><path d="M120 252L90 304H150Z"/><path d="M60 200L30 252H90Z"/></g>
+    <g fill="#2475ff"><path d="M300 148L240 252H360Z"/><path d="M240 252L210 304H270Z"/><path d="M360 252L330 304H390Z"/><path d="M300 200L270 252H330Z"/></g>
+    <g fill="#060708">
+      <path d="M180 79L140 148H220Z" transform="translate(0 35) scale(.5) translate(180 -79)"/>
+      <path d="M60 200L30 252H90Z" transform="translate(-8 21) scale(.55) translate(60 -200)"/>
+      <path d="M300 200L270 252H330Z" transform="translate(135 21) scale(.55) translate(300 -200)"/>
+      <path d="M180 148L120 252H240Z"/>
+    </g>
+  </g>
+  <g transform="translate(35 120)" font-family="system-ui,sans-serif">
+    <rect width="228" height="116" rx="18" fill="#fff" fill-opacity=".07" stroke="#fff" stroke-opacity=".12"/>
+    <text x="22" y="34" fill="#d9dde4" font-size="15">1. Choisir un sommet au hasard</text>
+    <text x="22" y="62" fill="#d9dde4" font-size="15">2. Avancer jusqu’au milieu</text>
+    <text x="22" y="90" fill="#d9dde4" font-size="15">3. Recommencer 10 000 fois</text>
+  </g>
+</svg>

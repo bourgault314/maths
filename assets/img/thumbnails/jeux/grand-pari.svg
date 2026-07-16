@@ -1,0 +1,28 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 720 320">
+  <defs>
+    <linearGradient id="bg" x2="1" y2="1"><stop stop-color="#17263b"/><stop offset="1" stop-color="#07101e"/></linearGradient>
+    <filter id="shadow"><feDropShadow dx="0" dy="5" stdDeviation="6" flood-opacity=".35"/></filter>
+  </defs>
+  <rect width="720" height="320" fill="url(#bg)"/>
+  <text x="28" y="42" fill="#75a9ff" font-family="system-ui,sans-serif" font-size="22" letter-spacing="3">LE GRAND PARI</text>
+  <line x1="290" y1="20" x2="290" y2="300" stroke="#52647a" stroke-opacity=".45"/>
+  <text x="30" y="76" fill="#a7b4c4" font-family="system-ui,sans-serif" font-size="13">FRÉQUENCE DES SOMMES</text>
+  <g transform="translate(34 112)" fill="#4b93f3">
+    <rect x="0" y="102" width="14" height="68" rx="3"/><rect x="21" y="86" width="14" height="84" rx="3"/>
+    <rect x="42" y="70" width="14" height="100" rx="3"/><rect x="63" y="51" width="14" height="119" rx="3"/>
+    <rect x="84" y="33" width="14" height="137" rx="3"/><rect x="105" y="12" width="14" height="158" rx="3"/>
+    <rect x="126" y="25" width="14" height="145" rx="3"/><rect x="147" y="43" width="14" height="127" rx="3"/>
+    <rect x="168" y="64" width="14" height="106" rx="3"/><rect x="189" y="86" width="14" height="84" rx="3"/>
+    <rect x="210" y="106" width="14" height="64" rx="3"/>
+  </g>
+  <g fill="#92a0b3" font-family="system-ui,sans-serif" font-size="11" text-anchor="middle">
+    <text x="41" y="300">2</text><text x="62" y="300">3</text><text x="83" y="300">4</text><text x="104" y="300">5</text><text x="125" y="300">6</text><text x="146" y="300">7</text><text x="167" y="300">8</text><text x="188" y="300">9</text><text x="209" y="300">10</text><text x="230" y="300">11</text><text x="251" y="300">12</text>
+  </g>
+  <text x="500" y="80" fill="#a7b4c4" font-family="system-ui,sans-serif" font-size="15" text-anchor="middle">Sur quelle somme paries-tu ?</text>
+  <g transform="translate(390 100)" filter="url(#shadow)">
+    <g transform="rotate(-8 66 60)"><rect width="112" height="112" rx="22" fill="#f6f8fb"/><g fill="#152236"><circle cx="30" cy="30" r="8"/><circle cx="82" cy="30" r="8"/><circle cx="56" cy="56" r="8"/><circle cx="30" cy="82" r="8"/><circle cx="82" cy="82" r="8"/></g></g>
+    <g transform="translate(128 5) rotate(7 56 56)"><rect width="112" height="112" rx="22" fill="#f6f8fb"/><g fill="#152236"><circle cx="30" cy="30" r="8"/><circle cx="82" cy="30" r="8"/><circle cx="30" cy="82" r="8"/><circle cx="82" cy="82" r="8"/></g></g>
+  </g>
+  <rect x="418" y="242" width="170" height="47" rx="24" fill="#5e728b"/>
+  <text x="503" y="272" fill="#fff" font-family="system-ui,sans-serif" font-size="17" font-weight="750" text-anchor="middle">LANCER !</text>
+</svg>

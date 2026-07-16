@@ -193,6 +193,46 @@ window.MATHSGO_CATALOGUE = {
     "outils/tuiles_algebriques/livret_litteral_vert_rouge.pdf": { "primaryNotion": "calcul-litteral", "collections": ["tuiles-algebriques"], "tags": ["tuiles-algebriques"] },
     "outils/fabrication_materiel/maths_barre.html": { "primaryNotion": "schemas-barres", "collections": [], "tags": ["schema-barres", "reference-technique"] },
     "outils/patterns.html": { "primaryNotion": "patterns", "collections": [], "tags": ["patterns", "generalisation"] },
+    "outils/club_maths/jeu_de_nim.html": {
+      "primaryNotion": "strategie",
+      "primaryGroup": "jeux",
+      "collections": [],
+      "tags": ["jeu", "strategie", "anticipation", "invariant"],
+      "thumbnail": "assets/img/thumbnails/jeux/jeu-nim.svg?v=1",
+      "cardDescription": "Chercher une stratégie gagnante en retirant 1, 2 ou 3 bâtons sans prendre le bâton rouge."
+    },
+    "outils/club_maths/yavalath.html": {
+      "primaryNotion": "strategie",
+      "primaryGroup": "jeux",
+      "collections": [],
+      "tags": ["jeu", "strategie", "alignement", "hexagones"],
+      "thumbnail": "assets/img/thumbnails/jeux/yavalath.svg?v=1",
+      "cardDescription": "Aligner quatre pions sur le plateau hexagonal sans perdre en formant d’abord une ligne de trois."
+    },
+    "outils/club_maths/tables_modulaires.html": {
+      "primaryNotion": "explorations",
+      "primaryGroup": "jeux",
+      "collections": [],
+      "tags": ["exploration", "tables", "modulo", "courbes", "cercle"],
+      "thumbnail": "assets/img/thumbnails/jeux/tables-modulaires.svg?v=1",
+      "cardDescription": "Relier les multiples sur un cercle et observer les courbes produites par les tables modulaires."
+    },
+    "outils/club_maths/jeu_du_chaos.html": {
+      "primaryNotion": "explorations",
+      "primaryGroup": "jeux",
+      "collections": [],
+      "tags": ["exploration", "fractale", "hasard", "sierpinski", "scratch"],
+      "thumbnail": "assets/img/thumbnails/jeux/jeu-chaos.svg?v=1",
+      "cardDescription": "Faire émerger le triangle de Sierpiński par une expérience aléatoire, puis prolonger avec Scratch."
+    },
+    "outils/plateaux_manipulation/le_grand_pari.html": {
+      "primaryNotion": "probabilites",
+      "primaryGroup": "jeux",
+      "collections": [],
+      "tags": ["probabilites", "frequences", "des", "sommes", "simulation"],
+      "thumbnail": "assets/img/thumbnails/jeux/grand-pari.svg?v=1",
+      "cardDescription": "Parier sur la somme de deux ou trois dés puis comparer les fréquences observées."
+    },
     "outils/problemes_barres_M974.html": { "primaryNotion": "schemas-barres", "collections": [], "tags": ["schema-barres", "resolution-problemes", "version-travail"] },
     "outils/nombres_relatifs/nombres_relatifs_somme_difference.html": { "primaryNotion": "relatifs", "collections": [], "tags": ["nombres-relatifs", "plateau-manipulation"] },
     "outils/nombres_relatifs/nombres_relatifs_somme_differenceB.html": { "primaryNotion": "relatifs", "collections": [], "tags": ["nombres-relatifs", "plateau-manipulation"] },
@@ -1641,8 +1681,8 @@ window.MATHSGO_CATALOGUE = {
     },
     {
       "id": "outils-club-maths-jeu-du-chaos-html",
-      "title": "Club Maths - Le Jeu du Chaos",
-      "description": "Une ressource maths&go pour travailler jeux de stratégie.",
+      "title": "Jeu du chaos",
+      "description": "Une exploration aléatoire qui fait apparaître le triangle de Sierpiński et propose un prolongement avec Scratch.",
       "path": "outils/club_maths/jeu_du_chaos.html",
       "domains": [
         "jeux-recherches"
@@ -1668,8 +1708,8 @@ window.MATHSGO_CATALOGUE = {
     },
     {
       "id": "outils-club-maths-tables-modulaires-html",
-      "title": "Club Maths - Les Tables Modulaires",
-      "description": "Une ressource maths&go pour travailler jeux de stratégie.",
+      "title": "Tables modulaires",
+      "description": "Une exploration visuelle des courbes créées par les tables de multiplication sur un cercle.",
       "path": "outils/club_maths/tables_modulaires.html",
       "domains": [
         "jeux-recherches"
@@ -2961,8 +3001,8 @@ window.MATHSGO_CATALOGUE = {
     },
     {
       "id": "outils-club-maths-jeu-de-nim-html",
-      "title": "Jeu de Nim - Le bâton rouge V9",
-      "description": "Une ressource maths&go pour travailler jeux de stratégie.",
+      "title": "Jeu de Nim — le bâton rouge",
+      "description": "Un jeu de retrait pour chercher, formuler et tester une stratégie gagnante.",
       "path": "outils/club_maths/jeu_de_nim.html",
       "domains": [
         "jeux-recherches"
@@ -3046,8 +3086,8 @@ window.MATHSGO_CATALOGUE = {
     },
     {
       "id": "outils-plateaux-manipulation-le-grand-pari-html",
-      "title": "Le Grand Pari - Ultimate Edition",
-      "description": "Une ressource maths&go pour travailler explorations mathématiques.",
+      "title": "Le Grand Pari — sommes de dés",
+      "description": "Un jeu de probabilités pour parier sur une somme et observer sa fréquence avec deux ou trois dés.",
       "path": "outils/plateaux_manipulation/le_grand_pari.html",
       "domains": [
         "jeux-recherches"
@@ -5036,8 +5076,8 @@ window.MATHSGO_CATALOGUE = {
     },
     {
       "id": "outils-club-maths-yavalath-html",
-      "title": "Yavalath — plateau 2 joueurs",
-      "description": "Une ressource maths&go pour travailler jeux de stratégie.",
+      "title": "Yavalath",
+      "description": "Un jeu d’alignement sur plateau hexagonal où une ligne de quatre gagne mais une ligne de trois fait perdre.",
       "path": "outils/club_maths/yavalath.html",
       "domains": [
         "jeux-recherches"
