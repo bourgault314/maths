@@ -151,6 +151,10 @@
 
   <script>
     (() => {
+      if (sessionStorage.getItem("axelle-game-pass") !== "ready") {
+        location.replace("/axelle/");
+        return;
+      }
       const SVG_NS = "http://www.w3.org/2000/svg";
       const SIZE = 4;
       const CELL = 96;
@@ -373,7 +377,7 @@
         result.className = `result${aiWon ? " lose" : ""}`;
         resultTitle.textContent = playerWon ? "Axelle gagne cette partie !" : aiWon ? "Gloubi gagne cette fois." : "Égalité parfaite !";
         resultText.textContent = `${playerSquares} carré${playerSquares > 1 ? "s" : ""} pour toi, ${aiSquares} pour Gloubi. ${round === 1 ? "La deuxième partie change le premier joueur." : finalMessage()}`;
-        nextRound.textContent = round === 1 ? "Deuxième partie" : "Rejouer les deux parties";
+        nextRound.textContent = round === 1 ? "Deuxième partie" : "Retour au bureau d’Axelle";
         result.hidden = false;
         result.scrollIntoView({behavior: "smooth", block: "nearest"});
       }
@@ -396,12 +400,15 @@
       }
 
       nextRound.addEventListener("click", () => {
-        if (round === 1) round = 2;
-        else { round = 1; playerWins = 0; aiWins = 0; draws = 0; }
+        if (round === 2) {
+          location.href = "/axelle/";
+          return;
+        }
+        round = 2;
         resetBoard();
         window.scrollTo({top: 0, behavior: "smooth"});
       });
-      startGame.addEventListener("click", () => { started = true; overlay.hidden = true; startGame.textContent = "Continuer la partie"; render(); });
+      startGame.addEventListener("click", () => { sessionStorage.removeItem("axelle-game-pass"); started = true; overlay.hidden = true; startGame.textContent = "Continuer la partie"; render(); });
       rulesButton.addEventListener("click", () => { overlay.hidden = false; });
 
       buildBoard();
