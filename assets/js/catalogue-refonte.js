@@ -112,13 +112,15 @@
       description: "Généraliser et manipuler les expressions algébriques.",
       keywords: "développer réduire expression tuiles x",
       icon: "tiles",
-      hub: "calcul_litteral/index.html"
+      hub: "calcul_litteral/index.html",
+      hiddenFromBrowse: true
     },
     equations: {
       description: "Représenter l’inconnue et résoudre des équations.",
       keywords: "équation balance equasplat equabarre inconnue",
       icon: "splat",
-      hub: "splat/index.html"
+      hub: "splat/index.html",
+      hiddenFromBrowse: true
     },
     "schemas-barres": {
       description: "Modéliser les problèmes avec des schémas en barres.",
@@ -234,11 +236,13 @@
     },
     "tuiles-algebriques": {
       description: "Retrouver les plateaux, générateurs et livrets de tuiles algébriques.",
-      icon: "tiles"
+      icon: "tiles",
+      thumbnail: "assets/img/thumbnails/tuiles-algebriques/plateau-expressions.png?v=2"
     },
     splat: {
-      description: "Retrouver les plateaux Splat, ÉquaSplat et ÉquaBarre.",
-      icon: "splat"
+      description: "Retrouver Splat, Petit Splat, Splat Équations, ÉquaSplat et ÉquaBarre.",
+      icon: "splat",
+      thumbnail: "assets/img/thumbnails/splat/splat.png?v=2"
     }
   };
 
@@ -908,7 +912,11 @@
     heroLead.textContent = selectedDomain
       ? `Les thèmes de ${selectedDomain.title.toLowerCase()} présents sur maths&go.`
       : "Retrouvez les notions illustrées de maths&go.";
-    title.textContent = state.query ? "Notions trouvées" : (selectedDomain ? "Choisissez une notion ou une collection" : "Les notions");
+    title.textContent = state.query
+      ? "Notions trouvées"
+      : (selectedDomain?.id === "algebre"
+        ? "Choisissez un univers"
+        : (selectedDomain ? "Choisissez une notion ou une collection" : "Les notions"));
     summary.textContent = notions.length || collections.length
       ? [
         notions.length ? `${notions.length} notion${notions.length > 1 ? "s" : ""}` : "",
