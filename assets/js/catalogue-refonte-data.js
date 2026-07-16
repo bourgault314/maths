@@ -4181,7 +4181,7 @@ window.MATHSGO_CATALOGUE = {
     },
     {
       "id": "outils-gabarit-reciproque-pythagore-pdf",
-      "title": "Gabarit réciproque de Pythagore",
+      "title": "Gabarit réciproque et contraposé de Pythagore",
       "description": "Un gabarit à imprimer pour identifier le plus grand côté, effectuer les deux calculs séparément, les comparer et conclure correctement.",
       "path": "outils/gabarit_reciproque_pythagore.pdf",
       "domains": [
