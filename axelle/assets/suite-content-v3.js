@@ -177,16 +177,17 @@
       soft: "#effcf9",
       visual: fractionMemoVisual(4, 3, "trois quarts", "#8bd7cf"),
       title: "Une fraction raconte un partage",
-      text: `Le dénominateur indique le nombre de parts égales. Le numérateur indique les parts coloriées. Ici : ${stackedFraction(3, 4, "trois quarts")}, c’est 3 parts sur 4.`
+      text: "Le dénominateur indique le nombre de parts égales. Le numérateur indique les parts coloriées. Ici, 3 parts sur 4 sont coloriées : la réponse est « trois quarts »."
     },
     {
       color: "#b06b00",
       soft: "#fff9e9",
       visual: fractionMemoVisual(6, 5, "cinq sixièmes", "#f7c85b"),
       title: "Le partage donne le nom des parts",
-      text: `Un disque partagé en 6 parts égales donne des sixièmes. Ici, 5 parts sont coloriées : ${stackedFraction(5, 6, "cinq sixièmes")}. La fraction reste plus petite que 1.`
+      text: "Un disque partagé en 6 parts égales donne des sixièmes. Ici, 5 parts sur 6 sont coloriées : la réponse est « cinq sixièmes »."
     },
     {
+      mobileStack: true,
       color: palette.purple,
       soft: "#f8f3ff",
       visual: angleGallery,
@@ -194,6 +195,7 @@
       text: "Aigu : plus petit que le droit. Obtus : plus grand que le droit. Plat : ses deux côtés forment une ligne droite."
     },
     {
+      mobileStack: true,
       color: palette.blue,
       soft: "#f1f6ff",
       visual: triangleMemoVisual,
@@ -451,6 +453,7 @@
       text: "Une phrase interrogative pose une question. Pour trouver le verbe, change le temps ; pour trouver le sujet, demande « qui est-ce qui… ? ». La négation encadre le verbe. Un complément comme « ce matin » peut souvent être déplacé ou supprimé."
     },
     {
+      mobileStack: true,
       color: palette.teal,
       soft: "#effcf9",
       visual: `<div class="agreement-visual"><span class="agreement-side"><i>un</i><i>petit</i><i>gecko</i></span><b>↓</b><span class="agreement-side"><i>des</i><i>petits</i><i>geckos</i></span></div>`,
@@ -458,6 +461,7 @@
       text: "Un groupe nominal contient un nom noyau, souvent accompagné d’un déterminant et d’un ou plusieurs adjectifs. Ils s’accordent en genre et en nombre. Dans « ce gecko », « ce » est un déterminant démonstratif : il montre le gecko dont on parle."
     },
     {
+      mobileStack: true,
       color: palette.orange,
       soft: "#fff7ed",
       visual: `<div class="timeline-visual"><span><i>hier</i>jouait</span><span><i>maintenant</i>joue</span><span><i>demain</i>jouera</span></div><div class="compound-tense"><b>a</b><span>+</span><b>retrouvé</b><small>auxiliaire + participe passé</small></div>`,
@@ -465,6 +469,7 @@
       text: "L’imparfait exprime souvent une action passée qui dure et porte les terminaisons -ais, -ait ou -aient. Au futur, on retrouve souvent le r de l’infinitif. Le passé composé se construit avec un auxiliaire et un participe passé."
     },
     {
+      mobileStack: true,
       color: palette.green,
       soft: "#f7fee7",
       visual: `<div class="word-network"><strong>petit</strong><span>minuscule</span><span>grand</span><span>petitesse</span><small>synonyme · antonyme · famille</small></div>`,
