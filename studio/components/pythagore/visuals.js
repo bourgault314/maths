@@ -91,11 +91,13 @@ export function perigalSolvedPieces(geometry){
   ];
 }
 
-export function windmillSvg({x=0,y=0,small=60,medium=120,fillAll=true,fillAreas=false,labels=true,strokeWidth=2}={}){
+export function windmillSvg({x=0,y=0,small=60,medium=120,fillAll=true,fillSource=false,fillAreas=false,labels=true,strokeWidth=2}={}){
   const g=pythagoreanWindmillGeometry({x,y,small,medium});
   const polygons=[];
   if(fillAll){
     polygons.push(...perigalSourcePieces(g),...perigalSolvedPieces(g));
+  } else if(fillSource){
+    polygons.push(...perigalSourcePieces(g));
   }
   const areaMarkup=fillAreas ? [
     {points:g.smallSquare,fill:PYTHAGORE_COLORS.leg1Fill},

@@ -8,10 +8,22 @@ import {
 
 const root = new URL("../", import.meta.url);
 
-const moulin = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 720 320" role="img" aria-label="Moulin de Pythagore : les trois carrés remplis avec les pièces de Périgal">
+const moulinSolution = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 720 320" role="img" aria-label="Solution du moulin de Pythagore avec les pièces de Périgal">
   <rect width="720" height="320" fill="#fff"/>
   <g transform="translate(10 5)">
     ${windmillSvg({x:102,y:108,small:52,medium:104,fillAll:true,labels:false,strokeWidth:2.2})}
+  </g>
+  <g font-family="Segoe UI,Arial,sans-serif" text-anchor="middle">
+    <text x="525" y="105" fill="#063f86" font-size="25" font-weight="800">Moulin de Pythagore</text>
+    <text x="525" y="185" fill="#111827" font-size="48" font-weight="850">a² + b² = c²</text>
+    <text x="525" y="232" fill="#64748b" font-size="20" font-weight="700">Périgal · 5 pièces</text>
+  </g>
+</svg>`;
+
+const moulin = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 720 320" role="img" aria-label="Moulin de Pythagore : pièces de Périgal dans les carrés de départ et carré final vide">
+  <rect width="720" height="320" fill="#fff"/>
+  <g transform="translate(10 5)">
+    ${windmillSvg({x:102,y:108,small:52,medium:104,fillAll:false,fillSource:true,labels:false,strokeWidth:2.2})}
   </g>
   <g font-family="Segoe UI,Arial,sans-serif" text-anchor="middle">
     <text x="525" y="105" fill="#063f86" font-size="25" font-weight="800">Moulin de Pythagore</text>
@@ -57,4 +69,5 @@ const pythabarre = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 720 320
 </svg>`;
 
 await writeFile(new URL("assets/img/thumbnails/moulin-pythagore-capture.svg",root),moulin+"\n");
+await writeFile(new URL("assets/img/thumbnails/moulin-pythagore-solution.svg",root),moulinSolution+"\n");
 await writeFile(new URL("assets/img/thumbnails/pythabarre-capture.svg",root),pythabarre+"\n");

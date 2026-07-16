@@ -114,9 +114,8 @@
   .handleLine{stroke:#111827; stroke-width:3; opacity:.8;}
   .handleDot{fill:#fff; stroke:#111827; stroke-width:3;}
 
-  /* Mode vide = moulin centré (à gauche) sans pièces ni lettres */
+  /* Mode vide = moulin unique sans pièces ni lettres */
   .modeVide #pieces,
-  .modeVide #boardsR,
   .modeVide .handle{display:none;}
 
   /* Modal Énoncé */
@@ -152,11 +151,10 @@
   }
 
   @media (max-width:700px){
-    /* Sur téléphone, le moulin de départ est déjà le puzzle complet : les
-       pièces occupent a² et b² et doivent rejoindre c² sur la même figure. */
+    /* Sur téléphone, les pièces occupent a² et b² et doivent rejoindre c²
+       sur l'unique figure, comme sur ordinateur. */
     #stageWrap{touch-action:pan-y; overflow-x:hidden;}
     svg#stage{touch-action:pan-y;}
-    svg#stage.compactLayout #boardsR{display:none;}
     svg#stage.compactLayout .label{display:none!important;}
     svg#stage .piecePoly,
     svg#stage .handle{touch-action:none;}
@@ -235,7 +233,6 @@
       <button id="flip" class="primary">Retourner</button>
       <button id="reset" class="danger">Réinitialiser</button>
       <button id="checkSolution" class="primary">Vérifier</button>
-      <button id="showSolution">Solution</button>
     </div>
 
     <div class="spacer"></div>
@@ -334,7 +331,6 @@
   const btnReset = document.getElementById("reset");
   const btnFlip = document.getElementById("flip");
   const btnCheckSolution = document.getElementById("checkSolution");
-  const btnShowSolution = document.getElementById("showSolution");
   const btnFullscreen = document.getElementById("fullscreen");
   const btnEnonce = document.getElementById("enonce");
   const puzzleStatus = document.getElementById("puzzleStatus");
@@ -377,7 +373,7 @@
   }
 
   function activePuzzleMoulin(){
-    return state.layoutCompact ? state.moulins?.L : state.moulins?.R;
+    return state.moulins?.L;
   }
 
   function clientToWorld(evt){
@@ -578,6 +574,8 @@
     puzzleStatus.className=type;
   }
 
+  // Conservation interne de la solution exacte : elle sert aux contrôles de
+  // géométrie et pourra être réutilisée, mais elle n'est plus exposée à l'élève.
   function showSolution(){
     if(!state.solutionPoses.size){
       setPuzzleStatus("La solution automatique de ce découpage doit encore être validée géométriquement.","error");
@@ -683,9 +681,7 @@
     const compact = isCompactViewport() && state.mode === "eleves";
     // Sur téléphone, le moulin de gauche est le puzzle complet : pièces sur
     // a² et b², avec c² vide sur cette même figure.
-    const target = state.mode === "vide"
-      ? (gBoardsL || gBoards)
-      : (compact ? (gBoardsL || gBoards) : gBoards) || world;
+    const target = (gBoardsL || gBoards) || world;
     let bb = target.getBBox();
     if(compact && gPieces){
       const piecesBox = gPieces.getBBox();
@@ -1050,13 +1046,13 @@
     const left = buildMoulin(
       "L",
       leftX,
-      compact ? topY+(2*b+a+20) : topY,
+      topY,
       b,
       r
     );
     const right = buildMoulin(
       "R",
-      compact ? leftX : leftX+(b+2*a)+BASE.gap,
+      leftX+(b+2*a)+BASE.gap,
       topY,
       b,
       r
@@ -1064,7 +1060,7 @@
     state.layoutCompact = compact;
 
     state.moulins = {L:left, R:right};
-    const interactiveTarget = compact ? left : right;
+    const interactiveTarget = left;
     state.molds.push(interactiveTarget.mold);
     state.snapPoints.push(...interactiveTarget.snapPoints);
 
@@ -1073,7 +1069,9 @@
     const gL=svgEl("g", {id:"labels"});
     world.append(gB, gP, gL);
 
-    [left, right].forEach(m => {
+    // Le plateau manipulable ne montre qu'un moulin. La seconde copie reste
+    // disponible dans state.moulins.R exclusivement pour l'impression.
+    [left].forEach(m => {
       const {A,B,C,Bw,Cw} = m;
 
       const gBM = svgEl("g", {id:"boards"+m.moulinId});
@@ -1095,7 +1093,7 @@
       // Carré sur l'hypoténuse
       gBM.appendChild(svgEl("polygon", {
         points:`${B.x},${B.y} ${C.x},${C.y} ${Cw.x},${Cw.y} ${Bw.x},${Bw.y}`,
-        class:`boardLine${m.moulinId === "R" ? " targetSquare" : ""}`
+        class:"boardLine"
       }));
 
       // Angle droit (repère)
@@ -1665,15 +1663,9 @@
       stage.classList.remove("modeVide");
     }
 
-    // Visibilité explicite : elle complète les règles CSS et empêche les lettres
-    // du moulin cible de réapparaître en mode « Vide ».
+    // Visibilité explicite du moulin unique en mode « Vide ».
     const gPieces = document.getElementById("pieces");
-    const gBoardsR = document.getElementById("boardsR");
     if(gPieces)  gPieces.style.display  = (mode === "vide") ? "none" : "";
-    if(gBoardsR) gBoardsR.style.display = (mode === "vide") ? "none" : "";
-    document.querySelectorAll('.label[data-side="R"]').forEach(el=>{
-      el.style.display = (mode === "vide") ? "none" : "";
-    });
 
     // Visibilité robuste (pour le centrage et pour que #labels puisse fonctionner en mode vide)
     fitWorldToViewport();
@@ -1706,7 +1698,6 @@
   };
 
   btnCheckSolution.onclick = () => checkPuzzleSolution();
-  btnShowSolution.onclick = () => showSolution();
 
   puzzleSelect.onchange = (e) => {
     state.puzzle = e.target.value;
@@ -1869,7 +1860,7 @@
   <text class="tag" x="${tag1x}" y="${tag1y}">1</text>
   <text class="tag" x="${tag2x}" y="${tag2y}">2</text>
   ${drawMoulinStatic(L, true)}
-  ${drawMoulinStatic(R, false)}
+  ${drawMoulinStatic(R, true)}
 </svg>`;
 }
 

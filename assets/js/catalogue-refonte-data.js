@@ -651,7 +651,7 @@ window.MATHSGO_CATALOGUE = {
       "primaryNotion": "pythagore",
       "collections": [],
       "tags": ["puzzle", "aires", "pythagore"],
-      "thumbnail": "assets/img/thumbnails/moulin-pythagore-capture.svg?v=6",
+      "thumbnail": "assets/img/thumbnails/moulin-pythagore-capture.svg?v=7",
       "cardDescription": "Déplacer les pièces de puzzles pour visualiser l’égalité des aires du théorème de Pythagore."
     },
     "outils/pythabarre.html": {

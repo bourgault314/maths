@@ -56,10 +56,9 @@ Jeu de déplacement des pièces d’un découpage de Pythagore.
 - les aimantations utilisent des ancres géométriques déclarées : sommets,
   milieux, bords et poses exactes ;
 - une validation ne dépend jamais d’un simple rapprochement visuel ;
-- le mode téléphone affiche uniquement le moulin de départ agrandi : il porte
-  déjà les pièces sur `a²` et `b²` ainsi que le carré `c²` à remplir. Le moulin
-  cible séparé est masqué ; plein écran, lettres et impression restent réservés
-  à l’ordinateur ;
+- le mode manipulable affiche un seul moulin, sur ordinateur comme sur
+  téléphone : il porte déjà les pièces sur `a²` et `b²` ainsi que le carré
+  `c²` à remplir. La seconde copie n'existe que dans la version imprimable ;
 - les puzzles proposés doivent être de vraies découpes distinctes. Une simple
   rotation ou un miroir d’un puzzle existant ne constitue pas une variante.
 
@@ -109,6 +108,9 @@ rendu. Le moteur construit ensuite la représentation à partir de ces données.
 - le plein écran est réservé à l’ordinateur et reste masqué sur téléphone ;
 - un jeu mobile n’affiche qu’un seul plateau utile, agrandi, sans copie blanche
   ou second moulin empilé ;
+- le Moulin interactif n'affiche qu'une seule figure sur tous les écrans ; la
+  fiche imprimée affiche deux copies identiques avec les pièces dans `a²` et
+  `b²`, afin de découper la première et de conserver la seconde comme support ;
 - les commandes mobiles restent réduites au choix de l’activité et aux actions
   nécessaires pour jouer ; les commandes de projection y sont masquées ;
 - le retour au menu existe sans ajouter de logo ou de signature répétitive ;
@@ -133,6 +135,11 @@ rendu. Le moteur construit ensuite la représentation à partir de ces données.
 - le triangle et les trois carrés sont calculés à la même échelle ;
 - le rapport historique de la miniature est `1:2:√5` ;
 - les petit, moyen et grand carrés sont tous remplis dans le rendu résolu ;
+- la vignette publique d'accès garde les pièces dans les deux carrés de départ
+  et laisse le carré final vide, afin de ne pas révéler la solution ;
+- le rendu résolu historique est conservé dans
+  `assets/img/thumbnails/moulin-pythagore-solution.svg`, mais n'est pas proposé
+  comme commande dans l'interface élève ;
 - les cinq pièces proviennent de `perigalSourcePieces` et leur recomposition
   exacte du grand carré de `perigalSolvedPieces` ;
 - aucune pièce ne doit être redessinée ou déplacée approximativement.

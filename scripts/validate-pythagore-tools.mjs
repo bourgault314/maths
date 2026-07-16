@@ -3,6 +3,8 @@ import vm from 'node:vm';
 
 const file='outils/plateaux_manipulation/moulin_pythagore.html';
 const html=fs.readFileSync(new URL(`../${file}`,import.meta.url),'utf8');
+const publicThumbnail=fs.readFileSync(new URL('../assets/img/thumbnails/moulin-pythagore-capture.svg',import.meta.url),'utf8');
+const archivedSolution=fs.readFileSync(new URL('../assets/img/thumbnails/moulin-pythagore-solution.svg',import.meta.url),'utf8');
 const fail=message=>{console.error(`ERREUR — ${message}`);process.exitCode=1;};
 const near=(a,b,tolerance=1e-7)=>Math.abs(a-b)<=tolerance;
 const area=points=>Math.abs(points.reduce((sum,p,index)=>{const q=points[(index+1)%points.length];return sum+p[0]*q[1]-p[1]*q[0];},0)/2);
@@ -57,8 +59,14 @@ for(const [puzzle,keys] of Object.entries(expectedKeys)){
   for(let i=0;i<polygons.length;i++) for(let j=i+1;j<polygons.length;j++) if(area(clip(polygons[i][1],polygons[j][1]))>2e-7) fail(`Chevauchement dans ${puzzle} entre ${polygons[i][0]} et ${polygons[j][0]}.`);
 }
 
-if(!html.includes('svg#stage.compactLayout #boardsR{display:none;}')) fail('Le second moulin doit être masqué sur téléphone.');
-if(!html.includes('const interactiveTarget = compact ? left : right;')) fail('Le snap mobile doit viser le moulin visible de gauche.');
+if(!html.includes('[left].forEach(m => {')) fail('Le plateau interactif doit afficher un seul moulin sur tous les écrans.');
+if(!html.includes('const interactiveTarget = left;')) fail('Le snap doit viser l’unique moulin visible.');
+if(!html.includes('leftX+(b+2*a)+BASE.gap,')) fail('Les deux moulins imprimés doivent rester côte à côte, même depuis un téléphone.');
+if(!html.includes('${drawMoulinStatic(L, true)}\n  ${drawMoulinStatic(R, true)}')) fail('Les deux moulins imprimés doivent être identiques et remplis.');
+if(html.includes('id="showSolution"')) fail('La solution ne doit pas être accessible depuis l’interface élève.');
+if(!html.includes('<option value="perigal" selected>')) fail('Périgal doit être le puzzle ouvert par défaut.');
+if(publicThumbnail.includes('102,160 143.6,139.2 143.6,243.2')) fail('La vignette publique ne doit pas montrer le carré final résolu.');
+if(!archivedSolution.includes('102,160 143.6,139.2 143.6,243.2')) fail('L’illustration historique de la solution Périgal doit être conservée.');
 if(!html.includes('function activePuzzleMoulin()')) fail('La validation doit suivre le moulin actif.');
 if(!html.includes('prepareSolutionPoses();')) fail('Les poses de solution doivent être préparées à chaque construction.');
 if(!html.includes('function tryExactSolutionSnap(piece)')) fail('Le snap de finition exact doit être disponible pour tous les puzzles.');
