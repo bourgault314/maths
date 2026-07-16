@@ -190,3 +190,9 @@ Le repère est présenté comme une approximation, car la distance réelle dépe
 ### 14. Vérification de l’affichage ordinateur
 
 Le cours doit être vérifié sur un écran d’ordinateur courant, y compris avec une hauteur de 768 à 900 px. Réduire raisonnablement les marges et les cartes pour que l’ensemble reste lisible et largement visible sans transformer les schémas en vignettes.
+
+### 15. Vérifier le sommet réellement droit, pas seulement le carré
+
+**Erreur rencontrée :** le carré orange du petit triangle était dessiné en bas à gauche, mais les deux côtés perpendiculaires du triangle se rencontraient en haut à gauche. Le codage était propre graphiquement et pourtant mathématiquement faux.
+
+**Règle :** avant de placer le carré, repérer les deux segments perpendiculaires dans les coordonnées de la figure. Le carré doit toucher leur sommet commun. Une vérification visuelle du carré seul ne suffit pas : il faut suivre les trois côtés du triangle.
