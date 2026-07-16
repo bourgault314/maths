@@ -30,6 +30,7 @@
     .icon-name{font-weight:900;color:var(--ink);font-size:.96rem}
     .icon-key{color:#7790a2;font:600 .72rem ui-monospace,SFMono-Regular,Menlo,monospace}
     .home-copy{color:#58728a;line-height:1.5;margin:0 0 12px}
+    .new-note{color:#58728a;line-height:1.5;margin:-4px 0 12px}
     .footer-note{margin:28px 0 0;padding-top:18px;border-top:1px solid var(--line);color:#668095;font-size:.9rem;line-height:1.55}
     @media (max-width:560px){.topbar{align-items:flex-start;flex-direction:column}.links{justify-content:flex-start}.library-box{padding:18px 14px}.icon-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:9px}.icon-card{padding:8px;border-radius:13px}.icon-stage{height:76px}.icon-stage svg{height:70px}.icon-name{font-size:.82rem}.icon-key{font-size:.64rem}}
   </style>
@@ -50,6 +51,12 @@
         <div class="icon-grid" id="catalogue-icons"></div>
       </section>
 
+      <section aria-labelledby="new-series-title">
+        <h2 id="new-series-title">Nouvelle série · programme du collège</h2>
+        <p class="new-note">Une première famille dessinée autour de cinq histoires mathématiques : le hasard ouvre plusieurs chemins, les répétitions deviennent une distribution, l’échelle se conserve, la fonction transforme une entrée en sortie, et mesurer revient à comparer avec une unité.</p>
+        <div class="icon-grid" id="new-series-icons"></div>
+      </section>
+
       <section aria-labelledby="home-title">
         <h2 id="home-title">Icônes réunies sur l’accueil</h2>
         <p class="home-copy">La scène graphique de l’accueil réutilise cette même famille : fractions, nombres relatifs, équations, Pythagore et boulier. Elles sont rappelées ici ensemble pour les retrouver rapidement.</p>
@@ -66,12 +73,12 @@
         thales:"Thalès","seigaiha":"Espace et géométrie","frequencies":"Données et fréquences",
         koch:"Flocon de Koch",abacus:"Boulier",fractions:"Fractions",relatifs:"Nombres relatifs",
         divisibilite:"Divisibilité et PGCD",powers:"Puissances",roots:"Racines carrées",
-        automatismes:"Automatismes · métronome",ratio:"Proportionnalité",percent:"Pourcentages",functions:"Fonctions",
+        automatismes:"Automatismes · métronome",ratio:"Proportionnalité · ancienne version",proportionnalite:"Proportionnalité",percent:"Pourcentages",functions:"Fonctions · ancienne version",function:"Fonctions",
         conversions:"Conversions",area:"Aires et périmètres",clock:"Temps et durées",tiles:"Calcul littéral",
         splat:"Équations · Splat",bars:"Schémas en barres",patterns:"Motifs et régularités",angles:"Angles",
         coordinates:"Repérage",transformations:"Transformations",triangles:"Triangles",
-        parallelograms:"Parallélogrammes",cube:"Solides",pythagore:"Pythagore",stats:"Statistiques",
-        average:"Moyennes",probability:"Probabilités",computing:"Informatique",strategy:"Jeux et stratégie",cps:"Compétences psychosociales",gears:"Engrenages"
+        parallelograms:"Parallélogrammes",cube:"Solides",pythagore:"Pythagore",stats:"Statistiques · ancienne version",
+        average:"Moyennes",probability:"Probabilités · version actuelle",hasard:"Hasard · chemins possibles",probability-statistics:"Probabilité + statistique",grandeur:"Grandeurs · mesurer par unité",computing:"Informatique",strategy:"Jeux et stratégie",cps:"Compétences psychosociales",gears:"Engrenages"
       };
       const library = window.MATHSGO_ICON_LIBRARY || {};
       const card = (key, home = false) => {
@@ -93,6 +100,7 @@
       const catalogueGrid = document.querySelector("#catalogue-icons");
       Object.keys(library).forEach(key => catalogueGrid.append(card(key)));
       document.querySelector("#icon-count").textContent = "(" + Object.keys(library).length + ")";
+      ["hasard","probability-statistics","proportionnalite","function","grandeur"].forEach(key => document.querySelector("#new-series-icons").append(card(key,true)));
       ["fractions","relatifs","splat","pythagore","abacus"].forEach(key => document.querySelector("#home-icons").append(card(key,true)));
     })();
   </script>

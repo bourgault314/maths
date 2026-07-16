@@ -29,9 +29,9 @@
   const domainDesign = {
     "nombres-calculs": { icon: "factor-tree" },
     algebre: { icon: "splat" },
-    "proportionnalite-mesures": { icon: "equal-volume-vase" },
+    "proportionnalite-mesures": { icon: "grandeur" },
     geometrie: { icon: "seigaiha" },
-    donnees: { icon: "generative:mosaic" },
+    donnees: { icon: "probability-statistics" },
     informatique: { icon: "koch" },
     "jeux-recherches": { icon: "strategy" },
     cps: { icon: "cps" }
@@ -81,7 +81,7 @@
     proportionnalite: {
       description: "Ratios, grandeurs et situations proportionnelles.",
       keywords: "ratio échelle proportion partage",
-      icon: "ratio"
+      icon: "proportionnalite"
     },
     pourcentages: {
       description: "Visualiser et calculer les pourcentages.",
@@ -91,7 +91,7 @@
     fonctions: {
       description: "Relier formules, tableaux de valeurs et graphiques.",
       keywords: "fonction image antécédent graphique tableau dépendance affine linéaire",
-      icon: "functions"
+      icon: "function"
     },
     conversions: {
       description: "Convertir les longueurs, aires et volumes.",
@@ -179,12 +179,12 @@
     statistiques: {
       description: "Organiser, représenter et interpréter des données, notamment avec la moyenne.",
       keywords: "statistique graphique diagramme données moyenne répartition équilibrer barres",
-      icon: "stats"
+      icon: "probability-statistics"
     },
     probabilites: {
       description: "Expérimenter le hasard et quantifier les chances.",
       keywords: "probabilité hasard dé pièce urne fréquence événement",
-      icon: "probability",
+      icon: "hasard",
       showWhenEmpty: true
     },
     "pensee-informatique": {
