@@ -361,6 +361,10 @@ footer { min-height: 58px; padding: 18px 16px; color: #718096; text-align: cente
   .memo-visual { grid-area: visual; min-height: 115px; margin: 0; }
   .memo-card h2 { grid-area: title; min-height: auto; margin: 0 0 5px; font-size: .98rem; }
   .memo-card p { grid-area: text; font-size: .78rem; line-height: 1.42; }
+  .memo-card.mobile-stack { display: block; }
+  .memo-card.mobile-stack .memo-visual { min-height: 132px; margin: 0 0 8px; }
+  .memo-card.mobile-stack h2 { margin-bottom: 7px; font-size: 1.02rem; }
+  .memo-card.mobile-stack p { font-size: .82rem; line-height: 1.48; }
   .memo-number { top: 8px; left: 8px; width: 23px; height: 23px; }
   .memo-text-visual, .sentence-diagram, .agreement-visual, .timeline-visual, .word-network, .explicit-lesson, .method-list { min-height: 102px; }
   .explicit-lesson { gap: 5px; }
