@@ -1,0 +1,1491 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+  <meta name="theme-color" content="#f4f7fb">
+  <meta name="description" content="Générateur de rituels de raisonnement mathématique pour le collège.">
+  <title>Raisonner au collège | maths&amp;go</title>
+  <style>
+:root{
+  --blue:#11386e;
+  --blue-2:#1f5f9d;
+  --blue-pale:#edf5ff;
+  --orange:#ef7d00;
+  --orange-pale:#fff3e5;
+  --turquoise:#078f8d;
+  --turquoise-pale:#e9f8f6;
+  --green:#137a52;
+  --green-pale:#edf9f3;
+  --purple:#6b45a5;
+  --purple-pale:#f3eefb;
+  --ink:#17243a;
+  --muted:#647287;
+  --line:#d8e1ec;
+  --surface:#fff;
+  --background:#f4f7fb;
+  --shadow:0 16px 48px rgba(17,56,110,.11);
+  font-family:Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
+  color:var(--ink);
+  background:var(--background);
+  font-synthesis:none;
+}
+
+*{box-sizing:border-box}
+html{min-height:100%;background:var(--background)}
+body{margin:0;min-height:100vh;background:linear-gradient(155deg,#f8fbfe 0,#f4f7fb 48%,#f8fafc 100%)}
+body.is-presenting{overflow:hidden}
+button,input,summary{font:inherit}
+button,summary,label{cursor:pointer}
+button:focus-visible,input:focus-visible,summary:focus-visible{outline:3px solid rgba(239,125,0,.38);outline-offset:2px}
+button:disabled{cursor:not-allowed;opacity:.38}
+[hidden]{display:none!important}
+
+/* Écran de départ */
+.app{width:min(880px,calc(100% - 28px));min-height:100vh;margin:0 auto;padding:14px 0 28px}
+.site-header{display:flex;align-items:center;justify-content:space-between;min-height:42px;padding:0 3px 10px}
+.wordmark{display:inline-flex;align-items:baseline;gap:1px;color:var(--blue);font-size:1.35rem;font-weight:950;letter-spacing:-.06em}
+.wordmark b{color:var(--orange);font-size:1.15em}
+.prototype-badge{border:1px solid #efc28c;border-radius:999px;background:var(--orange-pale);color:#944700;padding:4px 9px;font-size:.68rem;font-weight:900}
+
+.start-card{overflow:hidden;border:1px solid var(--line);border-radius:20px;background:#fff;box-shadow:var(--shadow)}
+.start-intro{border-bottom:1px solid var(--line);background:linear-gradient(120deg,#fff,#f4f9fd);padding:30px 34px 25px;text-align:center}
+.eyebrow{margin:0 0 5px;color:var(--turquoise);font-size:.69rem;font-weight:900;letter-spacing:.12em;text-transform:uppercase}
+.start-intro h1{margin:0;color:var(--blue);font-size:clamp(1.85rem,5vw,2.65rem);line-height:1.05;letter-spacing:-.04em}
+.start-intro>p:last-child{max-width:610px;margin:10px auto 0;color:var(--muted);font-size:.98rem;line-height:1.45}
+
+.quick-start{display:grid;grid-template-columns:minmax(0,1fr) 240px;align-items:end;gap:20px;padding:24px 28px}
+.level-field,.field,.check-section{min-width:0;margin:0;border:0;padding:0}
+.level-field legend,.field legend,.check-section legend{margin:0 0 9px;color:var(--ink);font-size:.76rem;font-weight:900}
+.segmented{display:grid;grid-auto-flow:column;grid-auto-columns:1fr;gap:3px;border:1px solid var(--line);border-radius:11px;background:#f1f4f8;padding:3px}
+.segmented button{min-height:38px;border:0;border-radius:8px;background:transparent;color:var(--muted);padding:6px;font-size:.76rem;font-weight:850;transition:.13s ease}
+.segmented button:hover{background:#fff;color:var(--blue)}
+.segmented button.is-active{background:#fff;color:var(--blue);box-shadow:0 2px 8px rgba(17,56,110,.15)}
+.level-segmented button{font-size:.88rem}
+
+.generate-button{display:flex;align-items:center;justify-content:center;gap:18px;min-height:48px;border:0;border-radius:11px;background:var(--orange);box-shadow:0 7px 18px rgba(224,105,0,.23);color:#fff;padding:10px 17px;font-size:.91rem;font-weight:900}
+.generate-button:hover{background:#dc7100;transform:translateY(-1px)}
+.generate-button:disabled{filter:grayscale(.45);transform:none}
+.generate-button b{font-size:1.18rem}
+
+.advanced-settings{border-top:1px solid var(--line);background:#fbfcfe}
+.advanced-settings>summary{display:grid;grid-template-columns:auto 1fr auto;align-items:center;gap:12px;min-height:52px;padding:10px 28px;list-style:none;color:var(--blue);font-size:.82rem;font-weight:900}
+.advanced-settings>summary::-webkit-details-marker{display:none}
+.advanced-settings>summary small{justify-self:end;color:var(--muted);font-size:.68rem;font-weight:650}
+.advanced-settings>summary i{font-size:1rem;font-style:normal;transition:transform .16s ease}
+.advanced-settings[open]>summary{border-bottom:1px solid var(--line);background:#fff}
+.advanced-settings[open]>summary i{transform:rotate(180deg)}
+.advanced-content{padding:20px 28px 22px}
+.compact-controls{display:grid;grid-template-columns:1fr 1.2fr;gap:18px}
+.filter-heading{display:flex;align-items:center;justify-content:space-between;gap:12px;margin:22px 0 10px;border-top:1px solid var(--line);padding-top:17px;font-size:.78rem}
+.bulk-buttons{display:flex;gap:5px}
+.bulk-buttons button,.text-button{border:1px solid var(--line);border-radius:8px;background:#fff;color:var(--blue-2);padding:5px 9px;font-size:.7rem;font-weight:850}
+.bulk-buttons button:hover,.text-button:hover{border-color:#a6bad0;background:var(--blue-pale)}
+.pathway-section{min-width:0;margin:0;border:0;padding:0}
+.pathway-section legend{margin:0 0 9px;color:var(--ink);font-size:.76rem;font-weight:900}
+.pathway-grid{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:7px}
+.pathway-grid button{display:grid;gap:3px;min-height:58px;border:1px solid var(--line);border-radius:10px;background:#fff;padding:8px 7px;color:var(--blue);text-align:left}
+.pathway-grid button:hover{border-color:#9eb7d0;background:#f8fbfe}
+.pathway-grid button.is-active{border-color:var(--turquoise);background:var(--turquoise-pale);box-shadow:inset 3px 0 var(--turquoise)}
+.pathway-grid strong{font-size:.74rem}.pathway-grid span{color:var(--muted);font-size:.59rem;line-height:1.25}
+.domain-section{margin-top:17px}
+.check-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:6px}
+.domain-grid{grid-template-columns:repeat(4,minmax(0,1fr))}
+.gesture-grid{grid-template-columns:repeat(3,minmax(0,1fr))}
+.check-card{display:grid;grid-template-columns:auto auto minmax(0,1fr);align-items:center;gap:7px;min-height:39px;border:1px solid var(--line);border-radius:9px;background:#fff;padding:6px 8px;color:var(--blue);font-size:.69rem;font-weight:800;line-height:1.16;transition:.13s ease}
+.check-card:hover{border-color:#a5bad0;background:#f8fbfe}
+.check-card:has(input:checked){border-color:#98b8d8;background:var(--blue-pale);box-shadow:inset 3px 0 var(--blue-2)}
+.check-card input{width:15px;height:15px;margin:0;accent-color:var(--blue)}
+.check-icon{display:grid;place-items:center;width:24px;height:24px;border-radius:7px;background:#fff;color:var(--orange);font-size:.78rem;font-weight:950}
+.gesture-settings{margin-top:12px;border:1px solid var(--line);border-radius:10px;background:#fff}
+.gesture-settings>summary{padding:9px 11px;list-style:none;color:var(--blue);font-size:.7rem;font-weight:850}
+.gesture-settings>summary::-webkit-details-marker{display:none}
+.gesture-settings>summary span{margin-left:5px;color:var(--muted);font-size:.6rem;font-weight:650}
+.gesture-settings[open]>summary{border-bottom:1px solid var(--line)}
+.gesture-settings .gesture-grid{padding:10px}
+.advanced-footer{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-top:15px;border-top:1px solid var(--line);padding-top:13px;color:var(--muted);font-size:.68rem}
+.class-note{margin:13px auto 0;color:var(--muted);text-align:center;font-size:.73rem;line-height:1.4}
+.class-note strong{color:var(--blue)}
+
+/* Diaporama */
+.slideshow{position:fixed;z-index:20;inset:0;display:grid;grid-template-rows:64px minmax(0,1fr);background:var(--background)}
+.slide-toolbar{display:grid;grid-template-columns:minmax(180px,1fr) auto minmax(260px,1fr);align-items:center;gap:14px;border-bottom:1px solid var(--line);background:#fff;padding:max(7px,env(safe-area-inset-top)) max(12px,env(safe-area-inset-right)) 7px max(12px,env(safe-area-inset-left));box-shadow:0 3px 14px rgba(17,56,110,.08)}
+.toolbar-left,.toolbar-actions{display:flex;align-items:center;gap:6px}
+.toolbar-actions{justify-content:flex-end}
+.toolbar-button,.icon-button{height:42px;border:1px solid var(--line);border-radius:9px;background:#fff;color:var(--blue);font-size:.79rem;font-weight:900}
+.toolbar-button{display:flex;align-items:center;justify-content:center;gap:7px;padding:7px 12px}
+.icon-button{display:grid;place-items:center;width:42px;padding:0}
+.toolbar-button:hover,.icon-button:hover{border-color:#9fb7d0;background:var(--blue-pale)}
+.icon-button svg{width:19px;height:19px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.toolbar-button.primary{width:150px;border-color:var(--orange);background:var(--orange);color:#fff}
+.slide-identity{display:grid;justify-items:center;gap:5px;min-width:110px;color:var(--blue);font-size:.78rem;font-weight:950}
+.progress{width:108px;height:4px;overflow:hidden;border-radius:99px;background:#e1e8f0}
+.progress i{display:block;width:10%;height:100%;border-radius:inherit;background:linear-gradient(90deg,var(--turquoise),var(--orange));transition:width .18s ease}
+
+.slide-stage{min-height:0;overflow:auto;padding:clamp(10px,2vw,24px)}
+.slide-card{display:flex;flex-direction:column;width:min(1240px,100%);min-height:calc(100dvh - 64px - clamp(20px,4vw,48px));margin:0 auto;overflow:hidden;border:1px solid var(--line);border-radius:18px;background:#fff;box-shadow:0 12px 36px rgba(17,56,110,.1)}
+.question-meta{display:flex;align-items:center;gap:6px;min-height:46px;border-bottom:1px solid var(--line);background:#fbfcfe;padding:8px 16px}
+.question-meta span{border-radius:999px;padding:4px 9px;font-size:.65rem;font-weight:900}
+.domain-pill{background:var(--blue-pale);color:var(--blue)}
+.gesture-pill{background:var(--turquoise-pale);color:#08706f}
+.level-pill{margin-left:auto;background:var(--orange-pale);color:#984900}
+.question-layout{display:flex;flex:1;flex-direction:column;min-height:0}
+.question-body{display:flex;flex:1;flex-direction:column;justify-content:center;min-width:0;padding:clamp(24px,4vw,52px)}
+.question-kicker{margin:0 0 8px;color:var(--orange);font-size:.73rem;font-weight:950;letter-spacing:.09em;text-transform:uppercase}
+.question-body h2{max-width:980px;margin:0 auto;color:var(--ink);text-align:center;font-size:clamp(1.55rem,3.2vw,2.8rem);line-height:1.17;letter-spacing:-.025em}
+.question-body .subprompt{max-width:840px;margin:12px auto 0;color:var(--muted);text-align:center;font-size:clamp(.91rem,1.45vw,1.1rem);line-height:1.42}
+.math-line{display:flex;align-items:center;justify-content:center;gap:.35em;flex-wrap:wrap;margin:19px auto 5px;color:var(--blue);font-family:"Cambria Math","STIX Two Math",Georgia,serif;font-size:clamp(1.85rem,4vw,3.2rem);font-weight:750}
+.frac{display:inline-grid;grid-template-rows:auto auto;vertical-align:middle;min-width:1.15em;text-align:center;line-height:1}
+.frac>span:first-child{border-bottom:.07em solid currentColor;padding:0 .12em .08em}
+.frac>span:last-child{padding:.08em .12em 0}
+.visual-wrap{display:grid;place-items:center;width:min(700px,100%);max-height:300px;margin:14px auto 0}
+.visual-wrap svg{display:block;width:100%;height:auto;max-height:300px}
+
+.choice-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:9px;width:min(850px,100%);margin:20px auto 0}
+.choice-card{display:flex;align-items:center;gap:11px;min-height:60px;border:2px solid var(--line);border-radius:11px;background:#fbfcfe;padding:10px 13px;color:var(--ink);font-size:clamp(.89rem,1.4vw,1.06rem);font-weight:730;line-height:1.27}
+.choice-card b{display:grid;place-items:center;flex:0 0 29px;height:29px;border-radius:7px;background:#e8eef5;color:var(--blue);font-size:.76rem}
+.choice-card.is-correct{border-color:#48a379;background:var(--green-pale);box-shadow:inset 4px 0 var(--green)}
+.choice-card.is-correct b{background:var(--green);color:#fff}
+.sequence-grid{display:grid;gap:7px;width:min(820px,100%);margin:20px auto 0}
+.sequence-card{display:grid;grid-template-columns:34px 1fr;align-items:center;gap:9px;border:2px solid var(--line);border-radius:10px;background:#fbfcfe;padding:9px 12px;font-size:clamp(.86rem,1.35vw,1.02rem);font-weight:720}
+.sequence-card b{display:grid;place-items:center;width:28px;height:28px;border-radius:50%;background:var(--purple-pale);color:var(--purple);font-size:.72rem}
+.code-grid{grid-template-columns:repeat(4,minmax(0,1fr));width:min(930px,100%)}
+.code-grid .sequence-card{grid-template-columns:28px minmax(0,1fr);padding:8px 9px;font-family:"SFMono-Regular",Consolas,"Liberation Mono",monospace;font-size:.78rem}
+.open-task{display:flex;align-items:center;justify-content:center;gap:9px;width:min(650px,100%);margin:20px auto 0;border:1px dashed #9eb4cc;border-radius:11px;background:#f7faff;padding:11px;color:var(--blue);font-size:.86rem;font-weight:850;text-align:center}
+.open-task svg{width:23px;height:23px;fill:none;stroke:var(--orange);stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+
+.thinking-bar{display:grid;grid-template-columns:minmax(0,1fr) auto;align-items:center;gap:14px;border-top:1px solid var(--line);background:#f7fbff;padding:11px 17px}
+.thinking-bar>div{display:flex;align-items:baseline;gap:10px;min-width:0}
+.thinking-bar span{flex:0 0 auto;color:var(--turquoise);font-size:.63rem;font-weight:950;letter-spacing:.08em;text-transform:uppercase}
+.thinking-bar strong{overflow:hidden;color:var(--blue);font-size:.82rem;line-height:1.3;text-overflow:ellipsis;white-space:nowrap}
+.hint-button{min-width:70px;border:1px solid #e3b47d;border-radius:8px;background:var(--orange-pale);color:#914500;padding:7px 10px;font-size:.7rem;font-weight:900}
+.hint-box{grid-column:1/-1;border-left:3px solid var(--orange);background:#fff8ef;padding:8px 10px;color:#6f4b27;font-size:.75rem;line-height:1.4}
+
+.correction{border-top:1px solid #b9dac8;background:linear-gradient(180deg,#f2faf6,#fff);padding:15px clamp(18px,3.5vw,42px) 17px}
+.correction-grid{display:grid;grid-template-columns:minmax(0,1.35fr) minmax(250px,.65fr);gap:18px;align-items:start}
+.correction h3{display:flex;align-items:center;gap:7px;margin:0 0 6px;color:var(--green);font-size:.94rem}
+.correction h3 span{display:grid;place-items:center;width:24px;height:24px;border-radius:50%;background:var(--green);color:#fff;font-size:.7rem}
+.correction-answer{color:var(--ink);font-size:clamp(.9rem,1.3vw,1.03rem);font-weight:740;line-height:1.42}
+.correction-proof{margin-top:7px;color:var(--muted);font-size:.8rem;line-height:1.44}
+.reflex-box{border:1px solid #b8d6d2;border-radius:10px;background:var(--turquoise-pale);padding:10px 12px}
+.reflex-box p{margin:0 0 4px;color:#08706f;font-size:.62rem;font-weight:950;letter-spacing:.08em;text-transform:uppercase}
+.reflex-box strong{color:#075f5e;font-size:.81rem;line-height:1.33}
+.slide-card.is-correction .question-body{padding-top:17px;padding-bottom:17px}
+.slide-card.is-correction .question-body h2{font-size:clamp(1.2rem,2.2vw,1.85rem)}
+.slide-card.is-correction .question-body .subprompt{font-size:.84rem}
+.slide-card.is-correction .visual-wrap{max-height:190px;margin-top:7px}
+.slide-card.is-correction .visual-wrap svg{max-height:190px}
+.slide-card.is-correction .choice-grid,.slide-card.is-correction .sequence-grid{margin-top:10px}
+.slide-card.is-correction .choice-card{min-height:48px;padding-top:7px;padding-bottom:7px}
+
+@media(max-width:760px){
+  .app{width:min(100% - 18px,620px);padding-top:7px}
+  .site-header{min-height:36px;padding-bottom:7px}.wordmark{font-size:1.15rem}
+  .start-card{border-radius:15px}
+  .start-intro{padding:22px 16px 18px}.start-intro h1{font-size:1.8rem}.start-intro>p:last-child{margin-top:8px;font-size:.82rem}
+  .quick-start{grid-template-columns:1fr;gap:14px;padding:18px 14px}
+  .generate-button{width:100%;min-height:50px}
+  .advanced-settings>summary{grid-template-columns:1fr auto;padding:9px 15px}.advanced-settings>summary small{display:none}
+  .advanced-content{padding:16px 13px 18px}.compact-controls{grid-template-columns:1fr;gap:15px}
+  .pathway-grid{grid-template-columns:1fr 1fr}.pathway-grid button:first-child{grid-column:1/-1;min-height:49px}.pathway-grid button{min-height:55px}
+  .domain-grid{grid-template-columns:1fr 1fr}
+  .gesture-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .class-note{max-width:92%;font-size:.67rem}
+
+  .slide-toolbar{grid-template-columns:1fr auto 1fr;gap:6px;padding-left:7px;padding-right:7px}
+  .toolbar-left{gap:4px}.toolbar-button.previous{width:42px;padding:0}.toolbar-button.previous b{display:none}
+  .toolbar-actions .secondary-action{display:none}.toolbar-button.primary{width:112px;padding:6px;font-size:.72rem}
+  .slide-identity{min-width:58px}.progress{width:58px}
+  .slide-stage{padding:7px}.slide-card{min-height:calc(100dvh - 78px);border-radius:12px}
+  .question-meta{min-height:41px;padding:6px 8px}.question-meta span{padding:4px 7px;font-size:.56rem}.gesture-pill{max-width:39vw;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .question-body{padding:20px 12px}.question-body h2{font-size:clamp(1.25rem,6.2vw,1.72rem)}.question-body .subprompt{font-size:.82rem}.math-line{margin-top:12px;font-size:clamp(1.5rem,8vw,2.2rem)}
+  .visual-wrap{max-height:220px;margin-top:9px}.visual-wrap svg{max-height:220px}
+  .choice-grid{grid-template-columns:1fr;gap:6px;margin-top:13px}.choice-card{min-height:49px;padding:7px 9px;font-size:.8rem}.choice-card b{flex-basis:26px;height:26px}
+  .sequence-grid{gap:6px;margin-top:13px}.sequence-card{font-size:.77rem;padding:7px 9px}.code-grid{grid-template-columns:1fr 1fr}.code-grid .sequence-card{font-size:.66rem}
+  .open-task{margin-top:13px;padding:8px;font-size:.75rem}
+  .thinking-bar{gap:8px;padding:9px 10px}.thinking-bar>div{display:grid;gap:2px}.thinking-bar strong{font-size:.73rem;white-space:normal}.hint-button{min-width:60px;padding:7px;font-size:.65rem}.hint-box{font-size:.7rem}
+  .correction{padding:11px}.correction-grid{grid-template-columns:1fr;gap:9px}.correction-answer{font-size:.84rem}.correction-proof{font-size:.73rem}.reflex-box{padding:8px 9px}.reflex-box strong{font-size:.75rem}
+}
+
+@media(max-width:390px){
+  .start-intro h1{font-size:1.65rem}.level-segmented button{font-size:.78rem;padding-left:3px;padding-right:3px}
+  .toolbar-button.primary{width:105px}.question-meta .level-pill{padding-left:5px;padding-right:5px}
+}
+
+@media print{
+  .site-header,.start-card,.class-note,.slide-toolbar,.thinking-bar{display:none!important}
+  body{background:#fff}.slideshow{position:static;display:block}.slide-stage{padding:0}.slide-card{min-height:auto;border:0;box-shadow:none}.correction{display:block!important}
+}
+
+</style>
+</head>
+<body>
+  <main class="app" id="setupView">
+    <header class="site-header">
+      <div class="wordmark" aria-label="maths&go"><span>maths</span><b>&amp;</b><span>go</span></div>
+      <span class="prototype-badge">V0.2</span>
+    </header>
+
+    <section class="start-card" aria-labelledby="pageTitle">
+      <header class="start-intro">
+        <p class="eyebrow">Diaporama de classe · collège</p>
+        <h1 id="pageTitle">Raisonner au collège</h1>
+        <p>Une question courte. Un temps pour chercher. Une justification à construire ensemble.</p>
+      </header>
+
+      <form id="generatorForm">
+        <section class="quick-start" aria-label="Démarrage rapide">
+          <fieldset class="level-field">
+            <legend>Choisir le niveau</legend>
+            <div class="segmented level-segmented" data-control="level">
+              <button type="button" data-value="6e">6e</button>
+              <button type="button" data-value="5e">5e</button>
+              <button type="button" data-value="4e">4e</button>
+              <button type="button" class="is-active" data-value="3e">3e</button>
+              <button type="button" data-value="all">Tous</button>
+            </div>
+            <input type="hidden" id="level" value="3e">
+          </fieldset>
+
+          <button class="generate-button" id="generateButton" type="submit">
+            <span>Lancer 10 questions</span><b aria-hidden="true">→</b>
+          </button>
+        </section>
+
+        <details class="advanced-settings" id="advancedSettings">
+          <summary>
+            <span>Personnaliser la série</span>
+            <small id="summaryText">10 questions · 3e · progression équilibrée</small>
+            <i aria-hidden="true">⌄</i>
+          </summary>
+
+          <div class="advanced-content">
+            <div class="compact-controls">
+              <fieldset class="field">
+                <legend>Nombre de questions</legend>
+                <div class="segmented" data-control="count">
+                  <button type="button" data-value="5">5</button>
+                  <button type="button" class="is-active" data-value="10">10</button>
+                  <button type="button" data-value="15">15</button>
+                  <button type="button" data-value="20">20</button>
+                </div>
+                <input type="hidden" id="count" value="10">
+              </fieldset>
+
+              <fieldset class="field">
+                <legend>Niveau de raisonnement</legend>
+                <div class="segmented" data-control="difficulty">
+                  <button type="button" data-value="1">Repérer</button>
+                  <button type="button" data-value="2">Justifier</button>
+                  <button type="button" data-value="3">Prouver</button>
+                  <button type="button" class="is-active" data-value="all">Progressif</button>
+                </div>
+                <input type="hidden" id="difficulty" value="all">
+              </fieldset>
+            </div>
+
+            <div class="filter-heading">
+              <strong>Parcours et contenus</strong>
+              <div class="bulk-buttons">
+                <button type="button" id="selectAllButton">Tout</button>
+                <button type="button" id="selectNoneButton">Effacer</button>
+              </div>
+            </div>
+
+            <fieldset class="pathway-section">
+              <legend>Quel type de raisonnement faire travailler ?</legend>
+              <div class="pathway-grid" data-control="pathway">
+                <button type="button" class="is-active" data-value="mixed"><strong>Équilibré</strong><span>Un peu de tout</span></button>
+                <button type="button" data-value="search"><strong>Chercher</strong><span>Observer, conjecturer, tester</span></button>
+                <button type="button" data-value="prove"><strong>Convaincre</strong><span>Déduire, justifier, réfuter</span></button>
+                <button type="button" data-value="critique"><strong>Examiner</strong><span>Comparer, repérer, corriger</span></button>
+                <button type="button" data-value="model"><strong>Modéliser</strong><span>Formuler, interpréter, vérifier</span></button>
+              </div>
+              <input type="hidden" id="pathway" value="mixed">
+            </fieldset>
+
+            <fieldset class="check-section domain-section">
+              <legend>Domaines mathématiques</legend>
+              <div class="check-grid domain-grid" id="domainChecks"></div>
+            </fieldset>
+
+            <details class="gesture-settings">
+              <summary>Réglage fin des gestes <span>facultatif</span></summary>
+              <div class="check-grid gesture-grid" id="gestureChecks"></div>
+            </details>
+
+            <footer class="advanced-footer">
+              <span id="coverageText">7 domaines · Équilibré · progressif · 64 familles disponibles</span>
+              <button class="text-button" type="button" id="resetButton">Réinitialiser</button>
+            </footer>
+          </div>
+        </details>
+      </form>
+    </section>
+
+    <p class="class-note"><strong>En classe :</strong> les élèves répondent oralement, sur ardoise ou dans le cahier. Le diaporama ne met pas de note.</p>
+  </main>
+
+  <section class="slideshow" id="slideshow" hidden aria-label="Diaporama de raisonnement">
+    <header class="slide-toolbar">
+      <div class="toolbar-left">
+        <button class="icon-button" id="setupButton" type="button" title="Revenir aux réglages" aria-label="Revenir aux réglages">
+          <svg viewBox="0 0 24 24"><path d="m3 11 9-8 9 8M5 10v10h14V10M9 20v-6h6v6"/></svg>
+        </button>
+        <button class="toolbar-button previous" id="prevButton" type="button"><span aria-hidden="true">←</span><b>Précédent</b></button>
+      </div>
+
+      <div class="slide-identity">
+        <span id="slideCounter">1 / 10</span>
+        <div class="progress" aria-hidden="true"><i id="progressBar"></i></div>
+      </div>
+
+      <div class="toolbar-actions">
+        <button class="icon-button secondary-action" id="restartButton" type="button" title="Nouvelle série" aria-label="Nouvelle série">
+          <svg viewBox="0 0 24 24"><path d="M20 11a8 8 0 1 0-2.3 5.7M20 4v7h-7"/></svg>
+        </button>
+        <button class="icon-button secondary-action" id="fullscreenButton" type="button" title="Plein écran" aria-label="Plein écran">
+          <svg viewBox="0 0 24 24"><path d="M4 9V4h5M15 4h5v5M20 15v5h-5M9 20H4v-5"/></svg>
+        </button>
+        <button class="toolbar-button primary" id="nextButton" type="button">Correction</button>
+      </div>
+    </header>
+
+    <main class="slide-stage">
+      <article class="slide-card" id="slideCard">
+        <header class="question-meta">
+          <span class="domain-pill" id="domainPill"></span>
+          <span class="gesture-pill" id="gesturePill"></span>
+          <span class="level-pill" id="levelPill"></span>
+        </header>
+
+        <div class="question-layout">
+          <section class="question-body" id="questionBody"></section>
+          <aside class="thinking-bar" id="thinkingSidebar">
+            <div>
+              <span>Avant de répondre</span>
+              <strong id="thinkingPrompt"></strong>
+            </div>
+            <button class="hint-button" id="hintButton" type="button">Indice</button>
+            <div class="hint-box" id="hintBox" hidden></div>
+          </aside>
+        </div>
+
+        <section class="correction" id="correctionPanel" hidden></section>
+      </article>
+    </main>
+  </section>
+
+  <script>
+(function () {
+  "use strict";
+
+  const LEVELS = ["6e", "5e", "4e", "3e"];
+
+  const domains = {
+    numbers: { label: "Nombres et calculs", short: "Nombres", icon: "#", description: "Divisibilité, fractions, calcul" },
+    algebra: { label: "Algèbre et motifs", short: "Algèbre", icon: "a", description: "Motifs, expressions, équations" },
+    geometry: { label: "Espace et géométrie", short: "Géométrie", icon: "△", description: "Propriétés, preuves, figures" },
+    data: { label: "Données et hasard", short: "Données", icon: "%", description: "Statistiques, probabilités" },
+    proportion: { label: "Proportionnalité et fonctions", short: "Proportionnalité", icon: "↗", description: "Modèles, variations, graphes" },
+    computing: { label: "Pensée informatique", short: "Algorithmique", icon: "⟲", description: "Programmes, tests, invariants" },
+    transversal: { label: "Problèmes et stratégies", short: "Stratégies", icon: "?", description: "Choix, contrôle, modélisation" }
+  };
+
+  const gestures = {
+    observe: { label: "Observer et classer", short: "Observer", icon: "◎", description: "Repérer une structure" },
+    conjecture: { label: "Conjecturer et généraliser", short: "Conjecturer", icon: "…", description: "Passer des cas à une idée" },
+    test: { label: "Tester et réfuter", short: "Réfuter", icon: "×", description: "Chercher le cas décisif" },
+    justify: { label: "Justifier et prouver", short: "Prouver", icon: "∴", description: "Produire un argument valable" },
+    critique: { label: "Critiquer et corriger", short: "Critiquer", icon: "!", description: "Trouver la première erreur" },
+    strategy: { label: "Choisir une stratégie", short: "Choisir", icon: "◇", description: "Décider avant de calculer" },
+    logic: { label: "Enchainer et déduire", short: "Déduire", icon: "⇒", description: "Relier données et conclusion" },
+    model: { label: "Modéliser et interpréter", short: "Modéliser", icon: "≈", description: "Discuter le modèle" },
+    reflect: { label: "Planifier et vérifier", short: "Vérifier", icon: "✓", description: "Contrôler sa démarche" }
+  };
+
+  function pick(rng, values) {
+    return values[Math.floor(rng() * values.length)];
+  }
+
+  function int(rng, min, max) {
+    return Math.floor(rng() * (max - min + 1)) + min;
+  }
+
+  function shuffled(rng, values) {
+    const result = values.slice();
+    for (let i = result.length - 1; i > 0; i -= 1) {
+      const j = Math.floor(rng() * (i + 1));
+      [result[i], result[j]] = [result[j], result[i]];
+    }
+    return result;
+  }
+
+  function signed(n) {
+    return n < 0 ? `(${n})` : String(n);
+  }
+
+  function gcd(a, b) {
+    let x = Math.abs(a);
+    let y = Math.abs(b);
+    while (y) [x, y] = [y, x % y];
+    return x;
+  }
+
+  function fraction(n, d) {
+    const g = gcd(n, d);
+    return `<span class="frac"><span>${n / g}</span><span>${d / g}</span></span>`;
+  }
+
+  function escapeHtml(value) {
+    return String(value).replace(/[&<>"]/g, (character) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" })[character]);
+  }
+
+  function svg(content, viewBox = "0 0 640 230", label = "Illustration mathématique") {
+    return `<svg viewBox="${viewBox}" role="img" aria-label="${escapeHtml(label)}" xmlns="http://www.w3.org/2000/svg">${content}</svg>`;
+  }
+
+  function barSvg(parts, labels) {
+    const colors = ["#1f5f99", "#f28c28", "#0f9f9b", "#8165a7", "#d85f66"];
+    const total = parts.reduce((sum, value) => sum + value, 0);
+    let x = 40;
+    const rectangles = parts.map((value, index) => {
+      const width = 550 * value / total;
+      const shape = `<rect x="${x}" y="70" width="${width}" height="75" rx="4" fill="${colors[index % colors.length]}" opacity=".9"/><text x="${x + width / 2}" y="115" text-anchor="middle" fill="white" font-size="24" font-weight="800">${escapeHtml(labels[index])}</text>`;
+      x += width;
+      return shape;
+    }).join("");
+    return svg(`${rectangles}<line x1="40" y1="165" x2="590" y2="165" stroke="#12324f" stroke-width="3"/><text x="315" y="205" text-anchor="middle" fill="#52677b" font-size="20">total</text>`, undefined, "Schéma en barres");
+  }
+
+  function patternSvg(values) {
+    let shapes = "";
+    values.forEach((value, row) => {
+      const y = 28 + row * 64;
+      shapes += `<text x="70" y="${y + 22}" text-anchor="middle" fill="#12324f" font-size="19" font-weight="800">rang ${row + 1}</text>`;
+      for (let index = 0; index < value; index += 1) {
+        shapes += `<rect x="${120 + index * 29}" y="${y}" width="23" height="23" rx="4" fill="${index % 2 ? "#0f9f9b" : "#1f5f99"}"/>`;
+      }
+      shapes += `<text x="585" y="${y + 20}" text-anchor="middle" fill="#ef7d00" font-size="19" font-weight="900">${value}</text>`;
+    });
+    return svg(shapes, "0 0 640 225", "Nombre d'éléments aux trois premiers rangs d'un motif");
+  }
+
+  function triangleSvg(a, b, c, right) {
+    const marker = right ? `<path d="M155 168v-24h24" fill="none" stroke="#f28c28" stroke-width="4"/>` : "";
+    return svg(`<path d="M150 168 L470 168 L150 42 Z" fill="#eef6fc" stroke="#1f5f99" stroke-width="5"/>${marker}<text x="310" y="198" text-anchor="middle" fill="#12324f" font-size="23">${escapeHtml(a)}</text><text x="118" y="110" text-anchor="middle" fill="#12324f" font-size="23">${escapeHtml(b)}</text><text x="327" y="94" text-anchor="middle" fill="#12324f" font-size="23">${escapeHtml(c)}</text>`, undefined, "Triangle avec longueurs indiquées");
+  }
+
+  function graphSvg(points, truncated) {
+    const baseY = truncated ? 175 : 205;
+    const min = truncated ? Math.min(...points.map((point) => point[1])) - 1 : 0;
+    const max = Math.max(...points.map((point) => point[1])) + 1;
+    const coords = points.map((point, index) => {
+      const x = 85 + index * (470 / Math.max(1, points.length - 1));
+      const y = baseY - ((point[1] - min) / (max - min)) * 135;
+      return { x, y, label: point[0], value: point[1] };
+    });
+    return svg(`<line x1="70" y1="25" x2="70" y2="${baseY}" stroke="#12324f" stroke-width="3"/><line x1="70" y1="${baseY}" x2="580" y2="${baseY}" stroke="#12324f" stroke-width="3"/><text x="55" y="${baseY + 5}" text-anchor="end" fill="#52677b" font-size="15">${min}</text><polyline points="${coords.map((point) => `${point.x},${point.y}`).join(" ")}" fill="none" stroke="#f28c28" stroke-width="6"/>${coords.map((point) => `<circle cx="${point.x}" cy="${point.y}" r="8" fill="#1f5f99"/><text x="${point.x}" y="${baseY + 28}" text-anchor="middle" fill="#52677b" font-size="16">${escapeHtml(point.label)}</text><text x="${point.x}" y="${point.y - 14}" text-anchor="middle" fill="#12324f" font-size="17" font-weight="800">${point.value}</text>`).join("")}`, undefined, "Graphique d'évolution");
+  }
+
+  function base(template, generated, context) {
+    const possibleLevels = context.level && context.level !== "all" && template.levels.includes(context.level)
+      ? [context.level]
+      : template.levels;
+    return {
+      templateId: template.id,
+      templateVersion: template.version,
+      level: pick(context.rng, possibleLevels),
+      domain: template.domain,
+      gesture: template.gesture,
+      difficulty: template.difficulty,
+      ...generated
+    };
+  }
+
+  function template(config, generator) {
+    const result = { version: 1, ...config };
+    result.generate = (context) => base(result, generator(context), context);
+    return result;
+  }
+
+  const templates = [
+    template({ id: "num-parity-asn", levels: LEVELS, domain: "numbers", gesture: "conjecture", difficulty: 1 }, ({ rng }) => {
+      const cases = [
+        { statement: "La somme de deux nombres impairs est paire.", correct: 0, answer: "Toujours.", proof: "Deux nombres impairs s’écrivent 2a + 1 et 2b + 1. Leur somme vaut 2(a + b + 1), donc elle est paire." },
+        { statement: "Un nombre pair est divisible par 4.", correct: 1, answer: "Parfois.", proof: "8 convient, mais 6 est pair et n’est pas divisible par 4." },
+        { statement: "La somme d’un nombre pair et d’un nombre impair est paire.", correct: 2, answer: "Jamais.", proof: "2a + (2b + 1) = 2(a + b) + 1 : la somme est impaire." },
+        { statement: "Le carré d’un nombre impair est impair.", correct: 0, answer: "Toujours.", proof: "(2a + 1)² = 2(2a² + 2a) + 1, qui est impair." }
+      ];
+      const item = pick(rng, cases);
+      return { kicker: "Toujours, parfois ou jamais ?", title: item.statement, subprompt: "Choisis, puis prépare un exemple ou un argument qui résiste à tous les cas.", choices: ["Toujours", "Parfois", "Jamais"], correctIndex: item.correct, hint: "« Toujours » demande une preuve ; « parfois » demande un exemple et un contre-exemple ; « jamais » demande une impossibilité.", answer: item.answer, proof: item.proof, reflex: "Associer chaque quantificateur au type de preuve nécessaire." };
+    }),
+
+    template({ id: "num-counterexample-operations", levels: LEVELS, domain: "numbers", gesture: "test", difficulty: 2 }, ({ rng }) => {
+      const cases = [
+        { statement: "Diviser un nombre positif le rend toujours plus petit.", counter: "3 ÷ 0,5 = 6", why: "Diviser par un nombre compris entre 0 et 1 agrandit le résultat." },
+        { statement: "Le carré d’un nombre positif est toujours plus grand que ce nombre.", counter: "0,5² = 0,25", why: "Entre 0 et 1, multiplier un nombre par lui-même le diminue." },
+        { statement: "Ajouter deux fractions augmente toujours le dénominateur.", counter: "1/2 + 1/2 = 1", why: "Le dénominateur de l’écriture simplifiée peut diminuer." },
+        { statement: "Soustraire un nombre donne toujours un résultat plus petit.", counter: "4 − (−2) = 6", why: "Soustraire un nombre négatif revient à ajouter son opposé." }
+      ];
+      const item = pick(rng, cases);
+      return { kicker: "Une seule objection suffit", title: `Réfute l’affirmation : « ${item.statement} »`, subprompt: "Propose des nombres précis et effectue le calcul.", openLabel: "Écris un contre-exemple, pas seulement « c’est faux ».", hint: "Cherche du côté de 0, de 1, des nombres négatifs ou des fractions : ce sont souvent des cas frontières.", answer: `Contre-exemple possible : ${item.counter}.`, proof: item.why, reflex: "Pour réfuter « toujours », un seul cas exact qui échoue suffit." };
+    }),
+
+    template({ id: "num-divisibility-deduction", levels: LEVELS, domain: "numbers", gesture: "logic", difficulty: 2 }, ({ rng }) => {
+      const cases = [
+        { data: "N est divisible par 6.", choices: ["N est divisible par 2 et par 3", "N est divisible par 12", "N se termine par 6", "N est impair"], correct: 0, proof: "6 = 2 × 3. Tout multiple de 6 est donc à la fois multiple de 2 et de 3." },
+        { data: "N est divisible par 10.", choices: ["N est divisible par 2 et par 5", "N est divisible par 20", "N est divisible par 3", "N = 10"], correct: 0, proof: "10 = 2 × 5. Un multiple de 10 possède ces deux diviseurs, mais pas nécessairement 20." },
+        { data: "N est divisible par 4 et par 6.", choices: ["N est divisible par 12", "N est divisible par 24", "N est divisible par 10", "N est égal à 24"], correct: 0, proof: "Le plus petit multiple commun à 4 et 6 est 12. Par exemple 12 vérifie les données mais n’est pas divisible par 24." }
+      ];
+      const item = pick(rng, cases);
+      return { kicker: "Que peut-on vraiment déduire ?", title: item.data, subprompt: "Choisis la seule conclusion certaine.", choices: item.choices, correctIndex: item.correct, hint: "Teste la plus petite valeur qui vérifie la donnée, puis cherche la structure des multiples.", answer: item.choices[item.correct], proof: item.proof, reflex: "Une conclusion certaine doit être vraie pour toutes les valeurs compatibles avec les données." };
+    }),
+
+    template({ id: "num-consecutive-proof", levels: ["5e", "4e", "3e"], domain: "numbers", gesture: "justify", difficulty: 3 }, ({ rng }) => {
+      const start = int(rng, 2, 12);
+      return { kicker: "De l’exemple à la preuve", title: "La somme de trois entiers consécutifs est-elle toujours divisible par 3 ?", subprompt: `Commence si tu veux par ${start}, ${start + 1} et ${start + 2}, puis explique pourquoi l’idée vaut pour n’importe quel départ.`, math: `${start} + ${start + 1} + ${start + 2} = ${3 * (start + 1)}`, hint: "Appelle n le premier entier. Les deux suivants sont n + 1 et n + 2.", answer: "Oui, toujours.", proof: "n + (n + 1) + (n + 2) = 3n + 3 = 3(n + 1). La somme est donc un multiple de 3.", reflex: "Un exemple fait naitre la conjecture ; une lettre permet de traiter tous les cas." };
+    }),
+
+    template({ id: "num-odd-square-proof", levels: ["4e", "3e"], domain: "numbers", gesture: "justify", difficulty: 3 }, () => ({
+      kicker: "Prouver une propriété numérique", title: "Prouve que le carré d’un entier impair est impair.", subprompt: "Ta preuve doit fonctionner pour tout entier impair, pas seulement pour quelques exemples.",
+      steps: ["Écrire un entier impair sous la forme 2n + 1.", "Développer (2n + 1)².", "Mettre le résultat sous la forme 2k + 1.", "Conclure avec la définition d’un entier impair."],
+      hint: "Développe (2n + 1)², puis factorise tout ce qui est pair.", answer: "Si un entier est impair, son carré est impair.", proof: "(2n + 1)² = 4n² + 4n + 1 = 2(2n² + 2n) + 1. C’est bien de la forme 2k + 1.", reflex: "Pour une propriété de parité, traduire pair par 2n et impair par 2n + 1." }
+    )),
+
+    template({ id: "num-fraction-first-error", levels: LEVELS, domain: "numbers", gesture: "critique", difficulty: 2 }, ({ rng }) => {
+      const a = int(rng, 1, 4);
+      const b = int(rng, a + 2, 9);
+      const c = int(rng, 1, 4);
+      const d = int(rng, c + 2, 9);
+      const numerator = a * d + c * b;
+      const denominator = b * d;
+      return { kicker: "Diagnostic d’erreur", title: `Lina écrit : ${a}/${b} + ${c}/${d} = ${a + c}/${b + d}. Où son raisonnement casse-t-il ?`, subprompt: "Explique la première règle non respectée, puis corrige le calcul.", choices: ["Elle aurait dû additionner seulement les numérateurs", "Les parts n’ont pas le même dénominateur", "Il fallait multiplier les deux fractions", "Le calcul est correct"], correctIndex: 1, hint: "Dessine des parts de tailles différentes : peut-on les compter ensemble directement ?", answer: `Les parts n’ont pas la même taille. Un dénominateur commun possible est ${denominator}.`, proof: `${a}/${b} + ${c}/${d} = ${a * d}/${denominator} + ${c * b}/${denominator} = ${numerator}/${denominator}, à simplifier si nécessaire.`, reflex: "Repérer la première règle fausse avant de refaire tout le calcul." };
+    }),
+
+    template({ id: "num-estimation-plausibility", levels: LEVELS, domain: "numbers", gesture: "reflect", difficulty: 1 }, ({ rng }) => {
+      const a = int(rng, 38, 89);
+      const b = int(rng, 11, 29);
+      const actual = a * b;
+      const candidateSet = new Set([actual, Math.round(actual / 10), actual * 10, a + b, actual + a, Math.round(actual / 100) * 1000]);
+      const candidates = shuffled(rng, Array.from(candidateSet).slice(0, 4));
+      const correct = candidates.indexOf(actual);
+      return { kicker: "Avant le calcul exact", title: `Sans poser l’opération, quel résultat peut être celui de ${a} × ${b} ?`, subprompt: "Élimine les ordres de grandeur impossibles et justifie ton choix.", choices: candidates.map(String), correctIndex: correct, hint: `${a} est proche de ${Math.round(a / 10) * 10} et ${b} est proche de ${Math.round(b / 10) * 10}.`, answer: `${actual} est le seul ordre de grandeur plausible.`, proof: `${a} × ${b} est voisin de ${Math.round(a / 10) * 10} × ${Math.round(b / 10) * 10}, donc de quelques milliers, et non de quelques dizaines ou dizaines de milliers.`, reflex: "Estimer avant de calculer permet de détecter une erreur de touche ou de virgule." };
+    }),
+
+    template({ id: "num-clever-strategy", levels: LEVELS, domain: "numbers", gesture: "strategy", difficulty: 2 }, ({ rng }) => {
+      const n = pick(rng, [19, 21, 49, 51, 99, 101]);
+      const factor = int(rng, 4, 12);
+      const near = n < 20 ? 20 : n < 50 ? 50 : 100;
+      const operation = n < near ? `${near} × ${factor} − ${factor}` : `${near} × ${factor} + ${factor}`;
+      return { kicker: "Choisir avant d’exécuter", title: `Quelle stratégie rend ${n} × ${factor} presque mental ?`, subprompt: "Le but n’est pas seulement d’obtenir le résultat, mais d’expliquer le choix.", choices: ["Poser immédiatement la multiplication", `Remplacer ${n} par ${near} puis compenser`, "Additionner les deux nombres", "Utiliser un tableau de proportionnalité"], correctIndex: 1, hint: `${n} est à une unité d’un nombre rond.`, answer: `${operation} = ${n * factor}.`, proof: "La distributivité autorise à remplacer un facteur par une somme ou une différence plus commode, puis à compenser exactement.", reflex: "Avant de calculer, chercher nombre rond, facteur commun ou décomposition utile." };
+    }),
+
+    template({ id: "alg-pattern-generalize", levels: LEVELS, domain: "algebra", gesture: "conjecture", difficulty: 2 }, ({ rng }) => {
+      const multiplier = pick(rng, [2, 3, 4]);
+      const fixed = pick(rng, [1, 2, 3].filter((value) => value !== multiplier));
+      const values = [1, 2, 3].map((n) => multiplier * n + fixed);
+      const options = shuffled(rng, [`${multiplier}n + ${fixed}`, `${fixed}n + ${multiplier}`, `${multiplier}(n + ${fixed})`, `${multiplier}n − ${fixed}`]);
+      const correct = options.indexOf(`${multiplier}n + ${fixed}`);
+      return { kicker: "Voir ce qui change et ce qui reste", title: `Le motif possède ${values[0]}, puis ${values[1]}, puis ${values[2]} éléments. Quelle formule prévoit le rang n ?`, subprompt: "Vérifie la formule sur deux rangs différents avant de la retenir.", visual: patternSvg(values), choices: options, correctIndex: correct, hint: `À chaque nouveau rang, on ajoute ${multiplier} éléments. Il reste aussi une partie fixe.`, answer: `La formule est ${multiplier}n + ${fixed}.`, proof: `Pour n = 1, 2, 3, elle donne bien ${values.join(", ")}. Surtout, elle décrit la structure : ${multiplier} groupes dépendant du rang et ${fixed} élément${fixed > 1 ? "s" : ""} fixe${fixed > 1 ? "s" : ""}.`, reflex: "Une formule de motif doit décrire sa construction, pas seulement coller aux premiers nombres." };
+    }),
+
+    template({ id: "alg-examples-not-proof", levels: ["5e", "4e", "3e"], domain: "algebra", gesture: "critique", difficulty: 2 }, ({ rng }) => {
+      const claim = pick(rng, [
+        { text: "n² + n est pair pour tout entier n", proof: "n² + n = n(n + 1). Deux entiers consécutifs : l’un des deux est pair, donc leur produit est pair." },
+        { text: "la somme de deux multiples de 5 est un multiple de 5", proof: "Si les nombres sont 5a et 5b, leur somme est 5(a + b), donc un multiple de 5." },
+        { text: "le produit de deux nombres impairs est impair", proof: "(2a + 1)(2b + 1) = 2(2ab + a + b) + 1, donc le produit est impair." }
+      ]);
+      return { kicker: "Exemples ou démonstration ?", title: `Noé vérifie quatre valeurs puis conclut : « ${claim.text}. » A-t-il prouvé l’affirmation ?`, subprompt: "Décide ce que les essais autorisent réellement à dire.", choices: ["Oui, quatre exemples suffisent", "Oui, si les nombres sont grands", "Non, ils soutiennent une conjecture mais ne prouvent pas tous les cas", "Non, les exemples ne servent jamais"], correctIndex: 2, hint: "Combien d’entiers faudrait-il tester pour couvrir « tout entier » ?", answer: "Non. Les exemples rendent la conjecture plausible, sans traiter l’infinité des cas.", proof: claim.proof, reflex: "Des exemples peuvent faire conjecturer ; une preuve explique pourquoi aucun cas ne peut échapper." };
+    }),
+
+    template({ id: "alg-reorder-even-proof", levels: ["5e", "4e", "3e"], domain: "algebra", gesture: "logic", difficulty: 3 }, ({ rng }) => {
+      const steps = ["On note 2a et 2b les deux nombres pairs.", "Leur somme vaut 2a + 2b.", "On factorise : 2a + 2b = 2(a + b).", "La somme est donc un multiple de 2, donc un nombre pair."];
+      const order = shuffled(rng, steps);
+      return { kicker: "Remettre une preuve en ordre", title: "Dans quel ordre enchainer ces quatre phrases pour prouver que la somme de deux nombres pairs est paire ?", subprompt: "Repère la donnée traduite, le calcul, puis la conclusion.", sequence: order, correctSequence: steps, hint: "Une preuve part des hypothèses et se termine par la propriété à établir.", answer: "Ordre : écriture des deux nombres, somme, factorisation, conclusion.", proof: steps.join(" "), reflex: "Une chaine déductive va des données vers la conclusion, chaque maillon étant justifié." };
+    }),
+
+    template({ id: "alg-expand-first-error", levels: ["4e", "3e"], domain: "algebra", gesture: "critique", difficulty: 2 }, ({ rng }) => {
+      const a = int(rng, 2, 7);
+      const b = int(rng, 2, 9);
+      const c = int(rng, 2, 6);
+      return { kicker: "La première erreur utile", title: `Maya développe : ${a}(${b}x − ${c}) = ${a * b}x − ${c}. Quelle est la première erreur ?`, subprompt: "N’effectue pas tout à nouveau avant d’avoir nommé la règle oubliée.", choices: [`Le terme ${b}x ne doit pas être multiplié`, `Le facteur ${a} doit multiplier chacun des deux termes`, "Il faut remplacer x par une valeur", "Il n’y a pas d’erreur"], correctIndex: 1, hint: "Dessine deux flèches partant du facteur extérieur.", answer: `Le facteur ${a} doit aussi multiplier −${c}.`, proof: `${a}(${b}x − ${c}) = ${a * b}x − ${a * c}.`, reflex: "Dans une distributivité, vérifier que chaque terme intérieur a reçu le facteur extérieur." };
+    }),
+
+    template({ id: "alg-illegal-division", levels: ["3e"], domain: "algebra", gesture: "critique", difficulty: 3 }, () => ({
+      kicker: "Une hypothèse cachée", title: "On part de ax = ay et on divise par a pour conclure x = y. Cette étape est-elle toujours valide ?", subprompt: "Cherche la valeur de a qui rend le raisonnement dangereux.", choices: ["Oui, pour tous les réels", "Non : il faut savoir que a ≠ 0", "Non : il faut savoir que x et y sont positifs", "Oui, si x et y sont entiers"], correctIndex: 1, hint: "Que signifie « diviser par a » lorsque a vaut 0 ?", answer: "Il faut l’hypothèse a ≠ 0.", proof: "Si a = 0, alors ax = ay devient 0 = 0 pour n’importe quels x et y ; on ne peut donc pas en déduire x = y.", reflex: "Avant de diviser par une expression, vérifier qu’elle ne peut pas être nulle." }
+    )),
+
+    template({ id: "alg-analysis-synthesis", levels: ["3e"], domain: "algebra", gesture: "strategy", difficulty: 3 }, ({ rng }) => {
+      const target = int(rng, 4, 12);
+      const result = target * target + target;
+      return { kicker: "Remonter puis vérifier", title: `Trouve un entier dont le carré augmenté de lui-même vaut ${result}.`, subprompt: "Propose une valeur plausible, puis distingue la recherche de la vérification.", math: `x² + x = ${result}`, hint: `Encadre ${result} entre deux carrés consécutifs.`, answer: `x = ${target} convient${target !== -target - 1 ? `, et x = ${-target - 1} aussi` : ""}.`, proof: `${target}² + ${target} = ${result}. De plus, (${signed(-target - 1)})² + (${signed(-target - 1)}) = ${result}. La vérification confirme les solutions proposées.`, reflex: "L’analyse aide à trouver ; la synthèse vérifie que chaque candidat répond bien au problème." };
+    }),
+
+    template({ id: "alg-implication-converse", levels: ["4e", "3e"], domain: "algebra", gesture: "logic", difficulty: 3 }, ({ rng }) => {
+      const cases = [
+        { premise: "Si un entier est multiple de 4, alors il est pair.", converse: "Si un entier est pair, alors il est multiple de 4.", counter: "6 est pair mais n’est pas multiple de 4." },
+        { premise: "Si x = 3, alors x² = 9.", converse: "Si x² = 9, alors x = 3.", counter: "x = −3 vérifie aussi x² = 9." },
+        { premise: "Si un nombre se termine par 0, alors il est divisible par 5.", converse: "S’il est divisible par 5, il se termine par 0.", counter: "15 est divisible par 5 et se termine par 5." }
+      ];
+      const item = pick(rng, cases);
+      return { kicker: "Attention au sens de la flèche", title: `On sait : « ${item.premise} » Peut-on affirmer la réciproque ?`, subprompt: `Réciproque proposée : « ${item.converse} »`, choices: ["Oui, une implication et sa réciproque sont toujours vraies ensemble", "Oui, parce que les phrases utilisent les mêmes mots", "Non, la réciproque doit être vérifiée séparément", "Non, aucune réciproque n’est jamais vraie"], correctIndex: 2, hint: "Inverse le rôle de l’hypothèse et de la conclusion, puis cherche un contre-exemple.", answer: "Non, cette réciproque est fausse.", proof: item.counter, reflex: "Retourner une implication crée une nouvelle affirmation, à prouver ou à réfuter." };
+    }),
+
+    template({ id: "alg-equivalent-expressions", levels: ["5e", "4e", "3e"], domain: "algebra", gesture: "test", difficulty: 2 }, ({ rng }) => {
+      const a = int(rng, 2, 6);
+      const b = int(rng, 2, 7);
+      const options = shuffled(rng, [`${a}x + ${a * b}`, `${a}x + ${b}`, `${a + b}x`, `${a * b}x + ${a}`]);
+      const correctExpression = `${a}x + ${a * b}`;
+      return { kicker: "Tester sans se laisser piéger", title: `Quelle expression est égale à ${a}(x + ${b}) pour toute valeur de x ?`, subprompt: "Un essai peut éliminer une formule ; la distributivité justifie celle qui reste.", choices: options, correctIndex: options.indexOf(correctExpression), hint: "Teste x = 0 : plusieurs expressions fausses disparaissent immédiatement.", answer: `${a}(x + ${b}) = ${correctExpression}.`, proof: `Le facteur ${a} multiplie x et ${b}. Tester une valeur est utile pour réfuter ; la distributivité prouve l’identité pour tout x.`, reflex: "Choisir une valeur simple pour trier, puis revenir à une propriété pour prouver." };
+    }),
+
+    template({ id: "geo-measure-not-proof", levels: LEVELS, domain: "geometry", gesture: "critique", difficulty: 1 }, ({ rng }) => {
+      const claim = pick(rng, ["Ces deux droites sont perpendiculaires", "Ce triangle est isocèle", "Ces deux longueurs sont égales", "Cet angle mesure 60°"]);
+      return { kicker: "Voir n’est pas démontrer", title: `Sur la figure, ${claim.toLowerCase()}. « Je l’ai mesuré sur le dessin » est-il une preuve ?`, subprompt: "Distingue ce qui aide à conjecturer de ce qui garantit la conclusion.", choices: ["Oui, si la règle est précise", "Oui, si le dessin est grand", "Non, une figure particulière ou imprécise ne prouve pas le cas général", "Non, on ne doit jamais mesurer"], correctIndex: 2, hint: "La figure pourrait-elle être légèrement déformée tout en gardant les mêmes données écrites ?", answer: "Non. La mesure sur le dessin soutient une conjecture, mais ne démontre pas.", proof: "Une preuve utilise les données codées, une définition ou une propriété. Le dessin est un support du raisonnement, pas sa garantie.", reflex: "En géométrie, demander : quelle donnée ou propriété autorise exactement cette conclusion ?" };
+    }),
+
+    template({ id: "geo-perpendicular-bisector", levels: LEVELS, domain: "geometry", gesture: "logic", difficulty: 2 }, ({ rng }) => {
+      const point = pick(rng, ["M", "P", "R"]);
+      return { kicker: "Définition ou propriété ?", title: `${point} appartient à la médiatrice du segment [AB]. Que peut-on affirmer ?`, subprompt: "Choisis la conclusion garantie par cette seule donnée.", choices: [`${point}A = ${point}B`, `${point} est le milieu de [AB]`, `(A${point}) ⟂ (B${point})`, `AB = A${point}`], correctIndex: 0, hint: "La médiatrice est l’ensemble des points équidistants des extrémités d’un segment.", answer: `${point}A = ${point}B.`, proof: "Tout point de la médiatrice d’un segment est à égale distance de ses deux extrémités.", reflex: "Reformuler une appartenance à un lieu géométrique par la propriété qui le caractérise." };
+    }),
+
+    template({ id: "geo-angle-proof-order", levels: ["5e", "4e", "3e"], domain: "geometry", gesture: "logic", difficulty: 3 }, ({ rng }) => {
+      const a = int(rng, 35, 70);
+      const b = int(rng, 35, 80);
+      const c = 180 - a - b;
+      const steps = ["Dans un triangle, la somme des trois angles vaut 180°.", `Donc l’angle inconnu vaut 180° − ${a}° − ${b}°.`, `On calcule : 180 − ${a} − ${b} = ${c}.`, `L’angle inconnu mesure donc ${c}°.`];
+      return { kicker: "Chainer propriété et calcul", title: `Un triangle possède deux angles de ${a}° et ${b}°. Remets la justification de son troisième angle dans l’ordre.`, subprompt: "La propriété doit apparaitre avant le calcul qu’elle autorise.", sequence: shuffled(rng, steps), correctSequence: steps, hint: "Commence par énoncer la propriété générale sur les angles d’un triangle.", answer: `Le troisième angle mesure ${c}°.`, proof: steps.join(" "), reflex: "Citer la propriété avant de l’utiliser rend le calcul démonstratif." };
+    }),
+
+    template({ id: "geo-quadrilateral-characteristic", levels: ["5e", "4e", "3e"], domain: "geometry", gesture: "logic", difficulty: 2 }, ({ rng }) => {
+      const cases = [
+        { data: "Un quadrilatère a ses diagonales qui se coupent en leur milieu.", conclusion: "C’est un parallélogramme", distractors: ["C’est forcément un rectangle", "C’est forcément un losange", "On ne peut rien conclure"], proof: "C’est une propriété caractéristique du parallélogramme." },
+        { data: "Un parallélogramme possède un angle droit.", conclusion: "C’est un rectangle", distractors: ["C’est forcément un losange", "C’est seulement un trapèze", "On ne peut rien conclure"], proof: "Un parallélogramme ayant un angle droit est un rectangle." },
+        { data: "Un parallélogramme possède deux côtés consécutifs de même longueur.", conclusion: "C’est un losange", distractors: ["C’est forcément un rectangle", "C’est un triangle", "On ne peut rien conclure"], proof: "Dans un parallélogramme, les côtés opposés sont égaux ; l’égalité de deux côtés consécutifs rend alors les quatre côtés égaux." }
+      ];
+      const item = pick(rng, cases);
+      const choices = shuffled(rng, [item.conclusion, ...item.distractors]);
+      return { kicker: "Propriété caractéristique", title: item.data, subprompt: "Quelle nature est garantie, sans te fier à l’allure d’un dessin ?", choices, correctIndex: choices.indexOf(item.conclusion), hint: "Cherche une propriété qui fonctionne dans les deux sens pour reconnaitre la figure.", answer: `${item.conclusion}.`, proof: item.proof, reflex: "Pour reconnaitre une figure, utiliser une propriété caractéristique et vérifier toutes ses hypothèses." };
+    }),
+
+    template({ id: "geo-pythagoras-status", levels: ["4e", "3e"], domain: "geometry", gesture: "strategy", difficulty: 2 }, ({ rng }) => {
+      const triple = pick(rng, [[3, 4, 5], [5, 12, 13], [6, 8, 10], [8, 15, 17]]);
+      const [a, b, c] = triple;
+      return { kicker: "Théorème ou réciproque ?", title: `Un triangle a pour côtés ${a} cm, ${b} cm et ${c} cm. Quel outil permet de décider s’il est rectangle ?`, subprompt: "La nature du triangle n’est pas donnée : choisis le bon sens du raisonnement.", visual: triangleSvg(`${a} cm`, `${b} cm`, `${c} cm`, false), choices: ["Le théorème de Pythagore", "La réciproque du théorème de Pythagore", "La contraposée de Thalès", "Une mesure sur la figure"], correctIndex: 1, hint: "Le théorème calcule une longueur quand le triangle est déjà rectangle ; ici, on veut reconnaitre sa nature.", answer: "On utilise la réciproque du théorème de Pythagore.", proof: `${a}² + ${b}² = ${a * a + b * b} et ${c}² = ${c * c}. Les deux valeurs sont égales ; le triangle est rectangle, d’hypoténuse le côté de longueur ${c} cm.`, reflex: "Identifier ce qui est donné et ce qu’il faut conclure avant de choisir théorème, réciproque ou contraposée." };
+    }),
+
+    template({ id: "geo-pythagoras-contrapositive", levels: ["4e", "3e"], domain: "geometry", gesture: "logic", difficulty: 3 }, ({ rng }) => {
+      const cases = [[4, 5, 7], [5, 6, 8], [6, 7, 10], [7, 9, 12]];
+      const [a, b, c] = pick(rng, cases);
+      return { kicker: "Prouver que ce n’est pas", title: `Les côtés d’un triangle mesurent ${a} cm, ${b} cm et ${c} cm. Comment prouver qu’il n’est pas rectangle ?`, subprompt: "Compare le carré du plus grand côté à la somme des carrés des deux autres.", choices: [`${a}² + ${b}² ≠ ${c}², donc le triangle n’est pas rectangle`, `${a} + ${b} ≠ ${c}, donc le triangle n’est pas rectangle`, "Le dessin n’a pas d’angle droit", "Aucun outil ne permet de conclure"], correctIndex: 0, hint: "La contraposée de « rectangle ⇒ égalité » est « pas d’égalité ⇒ pas rectangle ».", answer: `${a * a} + ${b * b} = ${a * a + b * b}, tandis que ${c}² = ${c * c}.`, proof: "Les valeurs sont différentes. Par contraposée du théorème de Pythagore, le triangle n’est pas rectangle.", reflex: "Pour nier une conclusion, la contraposée peut transformer la preuve en un test calculable." };
+    }),
+
+    template({ id: "geo-thales-useful-data", levels: ["3e"], domain: "geometry", gesture: "strategy", difficulty: 3 }, () => ({
+      kicker: "Vérifier les conditions avant la formule", title: "Dans un triangle ABC, M appartient à [AB] et N à [AC]. Quelle donnée manque pour appliquer le théorème de Thalès ?", subprompt: "Ne commence aucun produit en croix avant d’avoir contrôlé la configuration.", choices: ["(MN) ∥ (BC)", "AM = AN", "Le triangle ABC est rectangle", "M et N sont des milieux"], correctIndex: 0, hint: "Le théorème relie des longueurs grâce à une condition géométrique précise.", answer: "Il faut savoir que les droites (MN) et (BC) sont parallèles.", proof: "Avec M sur [AB], N sur [AC] et (MN) parallèle à (BC), on peut écrire les rapports de Thalès dans le bon ordre.", reflex: "Une formule n’est disponible qu’après vérification de toutes les hypothèses du théorème." }
+    )),
+
+    template({ id: "geo-median-area", levels: ["5e", "4e", "3e"], domain: "geometry", gesture: "justify", difficulty: 3 }, () => ({
+      kicker: "Voir un invariant", title: "Dans un triangle ABC, M est le milieu de [BC]. Pourquoi les triangles ABM et ACM ont-ils la même aire ?", subprompt: "Cherche une base et une hauteur comparables.", choices: ["Ils ont la même base", "BM = MC et ils ont la même hauteur issue de A", "Ils sont toujours superposables", "Parce que M est le centre du triangle"], correctIndex: 1, hint: "Utilise Aire = base × hauteur ÷ 2 en prenant les bases sur la droite (BC).", answer: "Les deux aires sont égales.", proof: "Les bases BM et MC sont égales puisque M est le milieu de [BC]. Les deux triangles ont la même hauteur issue de A relative à la droite (BC).", reflex: "Pour comparer des aires, chercher une base égale et une hauteur commune plutôt que l’allure des figures." }
+    )),
+
+    template({ id: "geo-triangle-congruence", levels: ["5e", "4e", "3e"], domain: "geometry", gesture: "justify", difficulty: 2 }, ({ rng }) => {
+      const cases = [
+        { data: "trois côtés respectivement égaux", valid: true, proof: "Le critère côté-côté-côté suffit à déterminer deux triangles superposables." },
+        { data: "trois angles respectivement égaux", valid: false, proof: "Les triangles ont la même forme, mais peuvent avoir des tailles différentes." },
+        { data: "deux côtés et l’angle compris respectivement égaux", valid: true, proof: "Le critère côté-angle-côté fixe la forme et la taille." },
+        { data: "un seul côté de même longueur", valid: false, proof: "Une infinité de triangles différents peuvent partager une même longueur de côté." }
+      ];
+      const item = pick(rng, cases);
+      return { kicker: "Données suffisantes ?", title: `Deux triangles ont ${item.data}. Sont-ils nécessairement superposables ?`, subprompt: "Décide si les informations fixent à la fois la forme et la taille.", choices: ["Oui, nécessairement", "Non, pas nécessairement"], correctIndex: item.valid ? 0 : 1, hint: "Essaie mentalement de déformer ou d’agrandir un triangle tout en conservant les données.", answer: item.valid ? "Oui, les données sont suffisantes." : "Non, les données ne sont pas suffisantes.", proof: item.proof, reflex: "Distinguer données compatibles et données suffisantes pour garantir une conclusion." };
+    }),
+
+    template({ id: "data-mean-extreme", levels: ["5e", "4e", "3e"], domain: "data", gesture: "conjecture", difficulty: 2 }, ({ rng }) => {
+      const values = [int(rng, 8, 12), int(rng, 10, 14), int(rng, 11, 15), int(rng, 12, 16)];
+      const outlier = int(rng, 35, 50);
+      return { kicker: "Effet d’une valeur extrême", title: `Une série contient ${values.join(", ")}. On ajoute ${outlier}. Que devient la moyenne ?`, subprompt: "Raisonne d’abord sur le sens de variation, sans forcément calculer la nouvelle valeur.", choices: ["Elle augmente", "Elle diminue", "Elle ne change pas", "On ne peut jamais savoir"], correctIndex: 0, hint: "Compare la nouvelle valeur à l’ancienne moyenne, qui est comprise entre le minimum et le maximum.", answer: "La moyenne augmente.", proof: `${outlier} est supérieur à toutes les valeurs, donc à l’ancienne moyenne. Ajouter une valeur supérieure à la moyenne fait augmenter la moyenne.`, reflex: "Comparer la nouvelle valeur à l’ancienne moyenne permet souvent de prévoir l’effet sans tout recalculer." };
+    }),
+
+    template({ id: "data-truncated-graph", levels: LEVELS, domain: "data", gesture: "critique", difficulty: 2 }, ({ rng }) => {
+      const start = int(rng, 70, 90);
+      const points = [["Lun.", start], ["Mar.", start + 1], ["Mer.", start + 2], ["Jeu.", start + 3]];
+      return { kicker: "Lire sans se faire impressionner", title: "Le graphique donne l’impression d’une hausse spectaculaire. Est-ce justifié ?", subprompt: "Observe l’origine et l’amplitude de l’axe vertical avant d’interpréter.", visual: graphSvg(points, true), choices: ["Oui, la valeur a au moins doublé", "Non, l’axe tronqué amplifie une hausse de quelques unités", "Oui, toute ligne montante prouve une forte hausse", "On ne peut lire aucune valeur"], correctIndex: 1, hint: "Compare la première et la dernière valeur, pas seulement la pente visuelle.", answer: `La valeur passe de ${start} à ${start + 3}, soit seulement +3.`, proof: "L’axe vertical commence près des données au lieu de 0 ; cela agrandit visuellement un écart faible. Le graphique n’est pas faux, mais sa présentation peut être trompeuse.", reflex: "Sur un graphique, vérifier échelle, origine, unités et valeurs avant de commenter la forme." };
+    }),
+
+    template({ id: "data-correlation-causation", levels: ["4e", "3e"], domain: "data", gesture: "model", difficulty: 3 }, ({ rng }) => {
+      const cases = [
+        { a: "les ventes de glaces", b: "le nombre de baignades", hidden: "la température estivale" },
+        { a: "la pointure", b: "le vocabulaire lu", hidden: "l’âge des enfants" },
+        { a: "le nombre de pompiers présents", b: "l’ampleur des dégâts", hidden: "la gravité initiale de l’incendie" }
+      ];
+      const item = pick(rng, cases);
+      return { kicker: "Corrélation n’est pas causalité", title: `On observe que ${item.a} augmente en même temps que ${item.b}. Peut-on conclure que l’un cause l’autre ?`, subprompt: "Propose une variable cachée ou une autre explication compatible avec les données.", choices: ["Oui, deux évolutions liées prouvent toujours une cause", "Non, une association seule ne prouve pas un lien causal", "Oui, si le graphique est précis", "Non, les statistiques ne permettent jamais de conclure"], correctIndex: 1, hint: `Cherche un troisième facteur qui pourrait agir sur les deux phénomènes.`, answer: "Non. L’association observée ne suffit pas à établir une cause.", proof: `Une explication possible est ${item.hidden}. Il faudrait un protocole et d’autres données pour isoler un effet causal.`, reflex: "Séparer ce que les données montrent de l’histoire qu’on leur fait raconter." };
+    }),
+
+    template({ id: "data-equiprobability", levels: ["5e", "4e", "3e"], domain: "data", gesture: "model", difficulty: 2 }, ({ rng }) => {
+      const cases = [
+        { object: "une pièce inconnue", outcomes: "pile et face", assumption: "la pièce est équilibrée" },
+        { object: "un dé artisanal", outcomes: "ses six faces", assumption: "le dé est équilibré" },
+        { object: "une roue colorée sans autre information", outcomes: "les couleurs", assumption: "les secteurs associés ont le même angle" }
+      ];
+      const item = pick(rng, cases);
+      return { kicker: "Une hypothèse du modèle", title: `On utilise ${item.object}. Peut-on déclarer que ${item.outcomes} sont équiprobables ?`, subprompt: "Distingue une conséquence mathématique d’une hypothèse sur l’objet réel.", choices: ["Oui, dès que les issues sont nommées", "Non, il faut une hypothèse de symétrie ou d’équilibre", "Oui, après un seul essai", "Non, aucune expérience ne peut être modélisée"], correctIndex: 1, hint: "Deux issues possibles ne signifient pas automatiquement une chance sur deux.", answer: `Il faut supposer que ${item.assumption}.`, proof: "L’équiprobabilité appartient au modèle choisi. Elle doit être justifiée par la symétrie, la fabrication ou vérifiée expérimentalement de façon raisonnable.", reflex: "En probabilité, annoncer les hypothèses du modèle avant de calculer." };
+    }),
+
+    template({ id: "data-small-sample", levels: ["5e", "4e", "3e"], domain: "data", gesture: "reflect", difficulty: 2 }, ({ rng }) => {
+      const heads = int(rng, 7, 10);
+      const throws = 10;
+      return { kicker: "Hasard et fluctuation", title: `Une pièce supposée équilibrée donne ${heads} piles en ${throws} lancers. Est-ce une preuve qu’elle est truquée ?`, subprompt: "Discute la taille de l’échantillon et la fluctuation possible.", choices: ["Oui, exactement", "Non, un petit échantillon peut beaucoup fluctuer", "Oui, car il fallait exactement 5 piles", "Non, une pièce ne peut jamais être testée"], correctIndex: 1, hint: "Équilibrée ne veut pas dire que chaque courte série contient exactement moitié-moitié.", answer: "Non, cette série seule ne suffit pas.", proof: "Même avec une probabilité de 1/2, des écarts apparaissent au hasard. Il faudrait beaucoup plus d’essais et un critère décidé à l’avance pour juger l’écart inhabituel.", reflex: "Avant de généraliser une fréquence, regarder la taille et la variabilité de l’échantillon." };
+    }),
+
+    template({ id: "data-mean-median-resistance", levels: ["4e", "3e"], domain: "data", gesture: "strategy", difficulty: 2 }, () => ({
+      kicker: "Choisir l’indicateur", title: "Pour décrire les salaires d’une petite entreprise où le dirigeant gagne beaucoup plus que les autres, quel indicateur résiste mieux à cette valeur extrême ?", subprompt: "Explique ce que l’indicateur choisi raconte et ce qu’il masque.", choices: ["La moyenne", "La médiane", "L’étendue", "Le maximum"], correctIndex: 1, hint: "Une valeur extrême déplace la moyenne, mais pas forcément la position centrale dans la liste ordonnée.", answer: "La médiane est moins sensible à la valeur extrême.", proof: "La médiane dépend de l’ordre des valeurs, tandis que la moyenne utilise leur somme. Il reste pertinent de donner plusieurs indicateurs pour ne pas masquer la dispersion.", reflex: "Choisir un indicateur en fonction de la question et de la forme des données, pas par habitude." }
+    )),
+
+    template({ id: "data-probability-bounds", levels: ["5e", "4e", "3e"], domain: "data", gesture: "observe", difficulty: 1 }, ({ rng }) => {
+      const probability = pick(rng, ["−0,2", "1,4", "120 %", "3/2"]);
+      return { kicker: "Contrôle immédiat", title: `Un calcul donne la probabilité ${probability}. Que peux-tu conclure sans refaire tout le calcul ?`, subprompt: "Utilise une propriété de toutes les probabilités.", choices: ["Le résultat est possible", "Le résultat est impossible : une probabilité est comprise entre 0 et 1", "L’évènement est certain", "Il manque seulement une unité"], correctIndex: 1, hint: "0 correspond à impossible et 1 à certain.", answer: "Le résultat est impossible.", proof: "Toute probabilité appartient à l’intervalle [0 ; 1], soit de 0 % à 100 %. Le calcul ou le modèle contient donc une erreur.", reflex: "Contrôler les bornes naturelles d’un résultat avant de lui donner du sens." };
+    }),
+
+    template({ id: "prop-table-test", levels: LEVELS, domain: "proportion", gesture: "test", difficulty: 1 }, ({ rng }) => {
+      const k = int(rng, 2, 6);
+      const proportional = rng() > 0.45;
+      const xs = [2, 3, 5];
+      const ys = xs.map((x, index) => k * x + (!proportional && index === 2 ? 1 : 0));
+      return { kicker: "Même opérateur partout ?", title: `Le tableau x : ${xs.join(" ; ")} / y : ${ys.join(" ; ")} est-il un tableau de proportionnalité ?`, subprompt: "Un seul quotient différent suffit pour réfuter.", choices: ["Oui", "Non"], correctIndex: proportional ? 0 : 1, hint: "Calcule y ÷ x dans au moins deux colonnes.", answer: proportional ? `Oui, le coefficient est ${k}.` : "Non, les quotients ne sont pas tous égaux.", proof: proportional ? `${ys[0]} ÷ ${xs[0]} = ${ys[1]} ÷ ${xs[1]} = ${ys[2]} ÷ ${xs[2]} = ${k}.` : `Les deux premières colonnes donnent ${k}, mais ${ys[2]} ÷ ${xs[2]} ≠ ${k}.`, reflex: "La proportionnalité exige un même multiplicateur pour toutes les valeurs." };
+    }),
+
+    template({ id: "prop-additive-trap", levels: LEVELS, domain: "proportion", gesture: "critique", difficulty: 2 }, ({ rng }) => {
+      const price = int(rng, 3, 8);
+      const qty = int(rng, 2, 5);
+      const next = qty + 2;
+      return { kicker: "Additif ou multiplicatif ?", title: `${qty} objets coûtent ${qty * price} €. Eli dit : « ${next} objets coûtent ${qty * price + 2} € car on ajoute 2 objets. » Où est l’erreur ?`, subprompt: "Identifie ce qui doit rester invariant dans la situation.", choices: ["Il faut ajouter 2 €", `Chaque objet ajoute ${price} €, pas 1 €`, "Il faut soustraire 2 €", "Le prix ne dépend pas de la quantité"], correctIndex: 1, hint: "Quel est le prix d’un seul objet ?", answer: `${next} objets coûtent ${next * price} €.`, proof: `Le coefficient de proportionnalité est ${price} €/objet. Ajouter 2 objets ajoute 2 × ${price} = ${2 * price} €, et non 2 €.`, reflex: "Dans une situation proportionnelle, les écarts aussi sont multipliés par le prix unitaire." };
+    }),
+
+    template({ id: "prop-scale-strategy", levels: LEVELS, domain: "proportion", gesture: "strategy", difficulty: 2 }, ({ rng }) => {
+      const base = pick(rng, [3, 4, 5]);
+      const price = int(rng, 6, 12);
+      const target = base * pick(rng, [3, 4, 5]);
+      const multiplier = target / base;
+      return { kicker: "Choisir le chemin le plus court", title: `${base} places coûtent ${price} €. Comment trouver rapidement le prix de ${target} places au même tarif ?`, subprompt: "Compare passage à l’unité et facteur direct.", choices: [`Multiplier ${price} par ${multiplier}`, `Ajouter ${target - base} à ${price}`, `Diviser ${price} par ${multiplier}`, "Faire une moyenne"], correctIndex: 0, hint: `${target} est ${multiplier} fois ${base}.`, answer: `${target} places coûtent ${price * multiplier} €.`, proof: `La quantité est multipliée par ${multiplier} ; dans une situation proportionnelle, le prix l’est aussi.`, reflex: "Chercher d’abord un rapport simple entre les quantités avant de passer systématiquement par l’unité." };
+    }),
+
+    template({ id: "prop-percent-reverse", levels: ["4e", "3e"], domain: "proportion", gesture: "critique", difficulty: 2 }, ({ rng }) => {
+      const p = pick(rng, [10, 20, 25, 30]);
+      return { kicker: "Une transformation et son inverse", title: `Après une hausse de ${p} %, un prix baisse de ${p} %. Revient-il forcément à sa valeur initiale ?`, subprompt: "Teste sur un prix initial de 100 € et compare les bases des deux pourcentages.", choices: ["Oui, les pourcentages s’annulent", "Non, la baisse s’applique au nouveau prix", "Oui, si le prix est entier", "On ne peut pas calculer"], correctIndex: 1, hint: `Après la hausse, 100 € devient ${100 + p} €. Calcule ensuite ${p} % de ce nouveau montant.`, answer: `Non : 100 × ${(1 + p / 100).toFixed(2).replace(".", ",")} × ${(1 - p / 100).toFixed(2).replace(".", ",")} = ${100 - p * p / 100} €.`, proof: `Les coefficients multiplicateurs sont ${1 + p / 100} et ${1 - p / 100}. Leur produit vaut ${1 - (p / 100) ** 2}, inférieur à 1.`, reflex: "Deux pourcentages opposés ne s’annulent que s’ils portent sur la même base." };
+    }),
+
+    template({ id: "prop-function-representations", levels: ["3e"], domain: "proportion", gesture: "model", difficulty: 2 }, ({ rng }) => {
+      const rate = int(rng, 2, 5);
+      const fixed = pick(rng, [2, 3, 4, 5, 6, 7, 8].filter((value) => value !== rate));
+      return { kicker: "Relier situation et formule", title: `Un service facture ${fixed} € fixes puis ${rate} € par heure. Quelle formule donne le prix P pour h heures ?`, subprompt: "Distingue la partie fixe de la partie qui dépend de la durée.", choices: [`P = ${fixed}h + ${rate}`, `P = ${rate}h + ${fixed}`, `P = ${fixed + rate}h`, `P = ${fixed + rate}`], correctIndex: 1, hint: "Pour h = 0, la formule doit encore donner les frais fixes.", answer: `P(h) = ${rate}h + ${fixed}.`, proof: `${rate}h représente le coût variable de h heures ; on ajoute ensuite les ${fixed} € indépendants de h.`, reflex: "Dans une formule de modèle, interpréter séparément chaque terme et tester une valeur frontière." };
+    }),
+
+    template({ id: "prop-graph-inference", levels: ["3e"], domain: "proportion", gesture: "model", difficulty: 2 }, ({ rng }) => {
+      const start = int(rng, 2, 6);
+      const step = int(rng, 2, 4);
+      const points = [["0", start], ["1", start + step], ["2", start + 2 * step], ["3", start + 3 * step]];
+      return { kicker: "Ce que le graphique autorise", title: "La représentation est une droite qui ne passe pas par l’origine. Quelle conclusion est certaine ?", subprompt: "Distingue fonction affine et situation de proportionnalité.", visual: graphSvg(points, false), choices: ["La situation est proportionnelle", "La situation n’est pas proportionnelle", "Toutes les valeurs sont négatives", "La fonction est constante"], correctIndex: 1, hint: "Une représentation de proportionnalité est une droite passant par l’origine.", answer: "La situation n’est pas proportionnelle.", proof: `Pour x = 0, y = ${start} et non 0. Il existe une partie fixe : le modèle est affine mais pas proportionnel.`, reflex: "Sur un graphique, la proportionnalité impose une droite passant par l’origine." };
+    }),
+
+    template({ id: "prop-linear-deduction", levels: ["3e"], domain: "proportion", gesture: "logic", difficulty: 3 }, ({ rng }) => {
+      const rate = int(rng, 2, 7);
+      const x = int(rng, 3, 8);
+      return { kicker: "Déduire d’une propriété", title: `On sait que f est une fonction linéaire et que f(1) = ${rate}. Sans tableau, que vaut f(${x}) ?`, subprompt: "Traduis « fonction linéaire » par sa forme générale.", choices: [`${rate + x}`, `${rate * x}`, `${rate ** x}`, `${rate}`], correctIndex: 1, hint: "Une fonction linéaire s’écrit f(x) = ax, et f(1) donne directement a.", answer: `f(${x}) = ${rate * x}.`, proof: `Comme f(x) = ax et f(1) = a = ${rate}, on a f(${x}) = ${rate} × ${x} = ${rate * x}.`, reflex: "Transformer un mot mathématique défini en une écriture exploitable." };
+    }),
+
+    template({ id: "code-trace", levels: LEVELS, domain: "computing", gesture: "logic", difficulty: 1 }, ({ rng }) => {
+      const start = int(rng, 2, 9);
+      const add = int(rng, 2, 6);
+      const factor = int(rng, 2, 4);
+      const result = (start + add) * factor;
+      const candidates = new Set([result, start + add * factor, start * factor + add, start + add + factor, result - add, result + factor]);
+      const values = Array.from(candidates).slice(0, 4);
+      while (values.length < 4) values.push(result + values.length + 2);
+      return { kicker: "Exécuter sans sauter d’étape", title: `Programme : choisir ${start} ; ajouter ${add} ; multiplier le résultat par ${factor}. Quel nombre est affiché ?`, subprompt: "Garde la valeur courante après chaque instruction.", code: [`x ← ${start}`, `x ← x + ${add}`, `x ← x × ${factor}`, "afficher x"], choices: shuffled(rng, values.map(String)), answerValue: String(result), hint: "La deuxième instruction modifie x ; la troisième utilise cette nouvelle valeur.", answer: `Le programme affiche ${result}.`, proof: `Après l’addition, x = ${start + add}. Puis ${start + add} × ${factor} = ${result}.`, reflex: "Dans une trace, écrire la nouvelle valeur de la variable après chaque instruction." };
+    }),
+
+    template({ id: "code-first-bug", levels: ["5e", "4e", "3e"], domain: "computing", gesture: "critique", difficulty: 2 }, ({ rng }) => {
+      const factor = int(rng, 2, 5);
+      const add = int(rng, 2, 7);
+      return { kicker: "Trouver le premier test qui échoue", title: `On veut calculer « multiplier un nombre par ${factor}, puis ajouter ${add} ». Le programme calcule x ← ${factor}(x + ${add}). Quel est le problème ?`, subprompt: "Compare les deux expressions sur une valeur simple, puis corrige.", choices: [`Il faut écrire x ← ${factor}x + ${add}`, `Il faut écrire x ← x + ${factor + add}`, "Le programme est toujours équivalent", "Il faut supprimer x"], correctIndex: 0, hint: "Teste x = 0 : le programme voulu donne l’ajout seul.", answer: `La bonne affectation est x ← ${factor}x + ${add}.`, proof: `Le programme écrit développe en ${factor}x + ${factor * add}, il ajoute donc ${factor * add} au lieu de ${add}.`, reflex: "Pour comparer deux programmes, choisir une entrée discriminante puis expliquer l’écart algébriquement." };
+    }),
+
+    template({ id: "code-loop-invariant", levels: ["4e", "3e"], domain: "computing", gesture: "conjecture", difficulty: 3 }, ({ rng }) => {
+      const step = pick(rng, [2, 3, 5]);
+      const start = step * int(rng, 1, 4);
+      return { kicker: "Ce qui reste vrai dans la boucle", title: `On part de ${start} et on répète : « ajouter ${step} ». Quelle propriété reste vraie à chaque tour ?`, subprompt: "Formule un invariant et explique pourquoi une itération le conserve.", choices: [`Le nombre reste un multiple de ${step}`, "Le nombre reste égal à sa valeur de départ", "Le nombre devient toujours pair", "Le nombre finit toujours par 0"], correctIndex: 0, hint: `Écris la valeur après n tours : ${start} + n × ${step}.`, answer: `La valeur reste un multiple de ${step}.`, proof: `${start} est un multiple de ${step}. Ajouter encore ${step}, lui-même multiple de ${step}, conserve cette propriété à chaque itération.`, reflex: "Un invariant est une propriété vraie au départ et préservée par chaque tour de boucle." };
+    }),
+
+    template({ id: "code-condition-boundary", levels: ["5e", "4e", "3e"], domain: "computing", gesture: "test", difficulty: 2 }, ({ rng }) => {
+      const threshold = int(rng, 10, 20);
+      return { kicker: "Tester les frontières", title: `Un programme doit afficher « admis » pour une note supérieure ou égale à ${threshold}. Il utilise la condition note > ${threshold}. Quel test révèle immédiatement le bug ?`, subprompt: "Choisis une entrée frontière, là où deux conditions presque identiques se séparent.", choices: [String(threshold - 1), String(threshold), String(threshold + 1), "0"], correctIndex: 1, hint: "Compare strictement supérieur et supérieur ou égal.", answer: `Tester note = ${threshold}.`, proof: `La règle attendue accepte ${threshold}, mais la condition note > ${threshold} le refuse. Il faut utiliser note ≥ ${threshold}.`, reflex: "Pour tester une condition, essayer juste avant, exactement sur, et juste après la frontière." };
+    }),
+
+    template({ id: "trans-useful-information", levels: LEVELS, domain: "transversal", gesture: "strategy", difficulty: 1 }, ({ rng }) => {
+      const length = int(rng, 6, 14);
+      const width = int(rng, 3, 8);
+      const color = pick(rng, ["bleue", "rouge", "verte"]);
+      return { kicker: "Trier avant de calculer", title: `Une salle rectangulaire mesure ${length} m sur ${width} m. Les murs sont ${color}s et la porte mesure 2 m. On veut l’aire du sol. Quelles données sont utiles ?`, subprompt: "Classe les informations : nécessaires, inutiles ou éventuellement utiles dans une autre question.", choices: [`${length} m et ${width} m`, `La couleur et ${length} m`, "La porte et la couleur", "Toutes les données"], correctIndex: 0, hint: "Écris la formule de la grandeur demandée avant de prendre les nombres.", answer: `Seules la longueur ${length} m et la largeur ${width} m sont nécessaires.`, proof: `L’aire du rectangle vaut ${length} × ${width} = ${length * width} m². La couleur et la largeur de porte ne figurent pas dans ce calcul.`, reflex: "Partir de la question et de la relation utile pour sélectionner les données." };
+    }),
+
+    template({ id: "trans-units-plausibility", levels: LEVELS, domain: "transversal", gesture: "reflect", difficulty: 1 }, ({ rng }) => {
+      const cases = [
+        { object: "la taille d’un élève", value: "165 m", correction: "165 cm ou 1,65 m", why: "165 m est l’ordre de grandeur d’un grand bâtiment." },
+        { object: "l’aire d’une feuille A4", value: "624 cm", correction: "environ 624 cm²", why: "Une aire s’exprime avec une unité carrée." },
+        { object: "la durée d’un trajet à pied jusqu’au collège", value: "12 kg", correction: "une unité de temps, par exemple 12 min", why: "Le kilogramme mesure une masse." },
+        { object: "la contenance d’une bouteille", value: "1,5 km", correction: "environ 1,5 L", why: "Le kilomètre mesure une longueur." }
+      ];
+      const item = pick(rng, cases);
+      return { kicker: "Le résultat raconte-t-il quelque chose ?", title: `Un élève annonce pour ${item.object} : ${item.value}. Que vérifies-tu en premier ?`, subprompt: "Contrôle la grandeur, l’unité et l’ordre de grandeur.", choices: ["Seulement les chiffres", "L’unité et la plausibilité", "Le nombre de décimales", "Rien si la calculatrice l’affiche"], correctIndex: 1, hint: "Demande-toi ce que mesure l’unité écrite et compare à un objet connu.", answer: `Une réponse plausible serait ${item.correction}.`, proof: item.why, reflex: "Toute réponse numérique doit être relue avec sa grandeur, son unité et son ordre de grandeur." };
+    }),
+
+    template({ id: "trans-compare-strategies", levels: LEVELS, domain: "transversal", gesture: "strategy", difficulty: 2 }, ({ rng }) => {
+      const total = pick(rng, [48, 60, 72, 84]);
+      const fractionPart = pick(rng, [[1, 4], [1, 3], [3, 4], [2, 3]]);
+      const [n, d] = fractionPart;
+      return { kicker: "Plusieurs chemins, un choix argumenté", title: `Pour calculer ${n}/${d} de ${total}, quelle stratégie est la plus directe mentalement ?`, subprompt: "Une autre méthode peut être correcte ; défends celle qui réduit le risque d’erreur.", choices: [`Diviser ${total} par ${d}, puis multiplier par ${n}`, `Calculer ${n} ÷ ${d} avec beaucoup de décimales`, `Ajouter ${n} et ${d} à ${total}`, "Faire un produit en croix sans écrire de relation"], correctIndex: 0, hint: `${total} est divisible par ${d}.`, answer: `${total} ÷ ${d} × ${n} = ${total / d * n}.`, proof: "Le partage en d parts égales donne une part ; multiplier par n donne le nombre de parts demandées. La méthode suit le sens de la fraction.", reflex: "Une stratégie est bonne si elle est valide, compréhensible et adaptée aux nombres présents." };
+    }),
+
+    template({ id: "trans-plan-monitor-evaluate", levels: LEVELS, domain: "transversal", gesture: "reflect", difficulty: 2 }, ({ rng }) => {
+      const phase = pick(rng, [
+        { label: "avant", prompt: "Avant de commencer un problème, quelle question aide le plus ?", correct: "Qu’est-ce qui est demandé et quelles représentations pourraient aider ?", distractors: ["Combien de lignes aura ma réponse ?", "Quelle touche de calculatrice utiliser en premier ?", "Puis-je copier un nombre au hasard ?"], proof: "Planifier consiste à comprendre le but, mobiliser les connaissances et choisir un premier chemin." },
+        { label: "pendant", prompt: "Pendant la résolution, quelle question aide le plus ?", correct: "Mon résultat intermédiaire est-il cohérent et ma stratégie avance-t-elle ?", distractors: ["Ai-je écrit assez petit ?", "Dois-je continuer exactement pareil quoi qu’il arrive ?", "Puis-je ignorer les unités ?"], proof: "Surveiller consiste à contrôler les étapes et changer de stratégie si elle ne produit rien." },
+        { label: "après", prompt: "Après avoir obtenu un résultat, quelle question aide le plus ?", correct: "Répond-il à la question, est-il plausible et puis-je l’expliquer ?", distractors: ["Ai-je fini avant les autres ?", "Puis-je effacer toutes mes étapes ?", "La calculatrice a-t-elle beaucoup de chiffres ?"], proof: "Évaluer consiste à vérifier, interpréter et tirer un apprentissage de la démarche." }
+      ]);
+      const choices = shuffled(rng, [phase.correct, ...phase.distractors]);
+      return { kicker: `Métacognition · ${phase.label}`, title: phase.prompt, subprompt: "Choisis la question qui pilote vraiment le raisonnement.", choices, correctIndex: choices.indexOf(phase.correct), hint: "La bonne question doit agir sur la compréhension, la stratégie ou le contrôle mathématique.", answer: phase.correct, proof: phase.proof, reflex: "Planifier avant, surveiller pendant, évaluer après : trois moments différents d’un même raisonnement." };
+    }),
+
+    template({ id: "trans-model-assumption", levels: ["5e", "4e", "3e"], domain: "transversal", gesture: "model", difficulty: 3 }, ({ rng }) => {
+      const cases = [
+        { situation: "prévoir la distance parcourue par un cycliste à partir de sa vitesse actuelle", assumption: "la vitesse reste constante", failure: "arrêts, pentes et variations de vitesse" },
+        { situation: "prévoir la population d’une ville en prolongeant une hausse annuelle", assumption: "le même taux d’évolution se maintient", failure: "migrations, politiques ou évènements futurs" },
+        { situation: "estimer le nombre de poissons d’un lac à partir d’un échantillon", assumption: "l’échantillon représente bien l’ensemble du lac", failure: "poissons regroupés dans certaines zones" }
+      ];
+      const item = pick(rng, cases);
+      return { kicker: "Le modèle a un domaine de validité", title: `Pour ${item.situation}, quelle hypothèse faut-il annoncer ?`, subprompt: "Puis donne une raison pour laquelle le modèle pourrait s’écarter du réel.", openLabel: "Formule une hypothèse et une limite.", hint: "Demande-toi ce que le calcul suppose constant, régulier ou représentatif.", answer: `Hypothèse possible : ${item.assumption}.`, proof: `Le modèle pourrait être mis en défaut par ${item.failure}. Un modèle est utile sans être une copie parfaite du réel.`, reflex: "Modéliser, c’est simplifier explicitement puis confronter le résultat à la situation réelle." };
+    }),
+
+    template({ id: "trans-missing-data", levels: LEVELS, domain: "transversal", gesture: "critique", difficulty: 3 }, ({ rng }) => {
+      const cases = [
+        { question: "Un rectangle a un périmètre de 30 cm. Quelle est son aire ?", missing: "la longueur d’un côté ou une autre relation", examples: "1 cm × 14 cm et 5 cm × 10 cm ont le même périmètre, mais pas la même aire" },
+        { question: "Une classe a obtenu une moyenne de 12. Combien d’élèves ont eu plus de 12 ?", missing: "la répartition des notes", examples: "des listes très différentes peuvent avoir la même moyenne" },
+        { question: "Une voiture a parcouru 120 km. Combien de temps a duré le trajet ?", missing: "la vitesse moyenne ou une information équivalente", examples: "la même distance peut être parcourue à des vitesses différentes" }
+      ];
+      const item = pick(rng, cases);
+      return { kicker: "Le problème est-il déterminé ?", title: item.question, subprompt: "Avant de calculer, décide si une réponse unique est possible.", choices: ["Oui, toutes les données nécessaires sont présentes", "Non, une information supplémentaire est nécessaire", "Oui, il suffit de diviser par 2", "Non, les mathématiques ne peuvent rien modéliser"], correctIndex: 1, hint: "Essaie de construire deux situations différentes qui respectent les données mais donnent des réponses différentes.", answer: `Il manque ${item.missing}.`, proof: `Contre-exemple d’unicité : ${item.examples}.`, reflex: "Pour montrer qu’une réponse n’est pas déterminée, construire deux cas compatibles donnant des résultats différents." };
+    }),
+
+    template({ id: "num-structure-classify", levels: LEVELS, domain: "numbers", gesture: "observe", difficulty: 1 }, ({ rng }) => {
+      const cases = [
+        { property: "paire", correct: "2n", choices: ["2n", "n + 1", "n²", "3n"], proof: "2n est, par définition, un multiple de 2 pour tout entier n." },
+        { property: "impaire", correct: "2n + 1", choices: ["2n + 1", "n + 1", "3n", "n²"], proof: "2n + 1 est la forme générale d’un entier impair." },
+        { property: "multiple de 5", correct: "5(n + 2)", choices: ["5(n + 2)", "5n + 2", "n + 5", "2(n + 5)"], proof: "5(n + 2) contient le facteur 5, quel que soit l’entier n." },
+        { property: "multiple de 3", correct: "3n + 6", choices: ["3n + 6", "3n + 2", "6n + 1", "n + 3"], proof: "3n + 6 = 3(n + 2), donc l’expression possède toujours le facteur 3." }
+      ];
+      const item = pick(rng, cases);
+      const choices = shuffled(rng, item.choices);
+      return { kicker: "Repérer une structure sans calculer", title: `Pour n entier, quelle expression est toujours ${item.property} ?`, subprompt: "Cherche une forme ou un facteur visible qui garantit la propriété.", choices, correctIndex: choices.indexOf(item.correct), hint: "Factorise mentalement et compare avec la définition de la propriété demandée.", answer: `${item.correct} est toujours ${item.property}.`, proof: item.proof, reflex: "Une écriture algébrique peut rendre une propriété visible avant tout remplacement numérique." };
+    }),
+
+    template({ id: "geo-codings-observe", levels: LEVELS, domain: "geometry", gesture: "observe", difficulty: 1 }, ({ rng }) => {
+      const cases = [
+        { data: "Les segments [AB] et [AC] portent le même codage de longueur.", conclusion: "AB = AC", distractors: ["AB est parallèle à AC", "L’angle A est droit", "B est le milieu de [AC]"], proof: "Un même codage sur deux segments signifie que leurs longueurs sont égales." },
+        { data: "Un petit carré code l’angle ABC.", conclusion: "L’angle ABC mesure 90°", distractors: ["AB = BC", "A, B et C sont alignés", "ABC est équilatéral"], proof: "Le petit carré est le codage conventionnel d’un angle droit." },
+        { data: "I appartient à [AB] et les segments [AI] et [IB] portent le même codage.", conclusion: "I est le milieu de [AB]", distractors: ["(AI) est perpendiculaire à (IB)", "A est le milieu de [IB]", "AB = AI"], proof: "I est sur le segment et AI = IB : les deux conditions de la définition du milieu sont réunies." }
+      ];
+      const item = pick(rng, cases);
+      const choices = shuffled(rng, [item.conclusion, ...item.distractors]);
+      return { kicker: "Lire les données, pas l’allure", title: item.data, subprompt: "Quelle information est réellement donnée par le codage ?", choices, correctIndex: choices.indexOf(item.conclusion), hint: "Traduis chaque symbole conventionnel par une phrase mathématique exacte.", answer: `${item.conclusion}.`, proof: item.proof, reflex: "Commencer une preuve de géométrie en inventoriant les codages et les données écrites." };
+    }),
+
+    template({ id: "geo-symmetry-preserves-length", levels: LEVELS, domain: "geometry", gesture: "justify", difficulty: 3 }, ({ rng }) => {
+      const length = int(rng, 3, 9);
+      return { kicker: "Une preuve courte en géométrie", title: `C et D sont les symétriques de A et B par rapport à une même droite. On sait que AB = ${length} cm. Que vaut CD ?`, subprompt: "Donne le résultat, puis la propriété qui le garantit indépendamment du dessin.", choices: [`CD = ${length} cm`, `CD = ${length * 2} cm`, `CD = ${length + 2} cm`, "On ne peut rien conclure"], correctIndex: 0, hint: "Une symétrie axiale conserve les distances.", answer: `CD = ${length} cm.`, proof: "La symétrie axiale transforme A en C et B en D. Comme elle conserve les longueurs, l’image du segment [AB] a la même longueur : CD = AB.", reflex: "Dans une transformation, identifier les objets images puis citer l’invariant conservé." };
+    }),
+
+    template({ id: "num-odd-one-out", levels: LEVELS, domain: "numbers", gesture: "observe", difficulty: 1 }, ({ rng }) => {
+      const cases = [
+        { values: "12 · 18 · 24 · 25", reasons: "25 est le seul impair ; 18 est le seul multiple de 9 ; 24 est le seul multiple de 8 ; 12 est le seul diviseur de 24 parmi les trois autres nombres." },
+        { values: "16 · 25 · 27 · 36", reasons: "27 est le seul impair qui n’est pas un carré ; 16 est le seul carré d’un multiple de 4 ; 25 est le seul qui se termine par 5 ; 36 est le seul multiple de 3 qui soit un carré." },
+        { values: "0,25 · 1/2 · 50 % · 0,75", reasons: "0,75 est le seul supérieur à 1/2 ; 0,25 est le seul égal à 1/4 ; 1/2 est la seule écriture fractionnaire ; 50 % est la seule écriture en pourcentage." }
+      ];
+      const item = pick(rng, cases);
+      return { kicker: "L’intrus n’est pas unique", title: `Choisis un intrus et défends ton choix : ${item.values}`, subprompt: "Une autre réponse peut être correcte si elle repose sur une propriété précise.", openLabel: "Choisis, puis complète : « C’est le seul qui… »", hint: "Observe parité, divisibilité, écriture, valeur ou relation avec les autres nombres.", answer: "Plusieurs choix sont recevables.", proof: item.reasons, reflex: "Classer oblige à nommer une propriété ; deux classements différents peuvent être simultanément valides." };
+    }),
+
+    template({ id: "alg-same-different", levels: ["5e", "4e", "3e"], domain: "algebra", gesture: "observe", difficulty: 2 }, ({ rng }) => {
+      const a = int(rng, 2, 5);
+      const b = int(rng, 2, 7);
+      const cases = [
+        { left: `${a}(x + ${b})`, right: `${a}x + ${a * b}`, correct: 0, answer: "Elles sont égales pour tout x.", proof: "La distributivité transforme exactement la première expression en la seconde." },
+        { left: `${a}(x + ${b})`, right: `${a}x + ${b}`, correct: 2, answer: "Elles ne sont égales pour aucune valeur de x.", proof: `La différence constante vaut ${a * b} − ${b} = ${b * (a - 1)}, qui n’est pas nulle.` },
+        { left: `${a}(x + ${b})`, right: `${a + b}x`, correct: 1, answer: `Elles sont égales seulement pour x = ${a}.`, proof: `${a}x + ${a * b} = ${a + b}x revient à ${a * b} = ${b}x, donc x = ${a}.` }
+      ];
+      const item = pick(rng, cases);
+      return { kicker: "Même apparence ou même valeur ?", title: `Compare ${item.left} et ${item.right}.`, subprompt: "Sont-elles égales toujours, parfois ou jamais ?", choices: ["Toujours", "Pour une seule valeur de x", "Jamais"], correctIndex: item.correct, hint: "Développe si nécessaire, puis étudie la condition d’égalité.", answer: item.answer, proof: item.proof, reflex: "Distinguer une identité vraie pour tout x d’une égalité vraie seulement pour certaines valeurs." };
+    }),
+
+    template({ id: "num-create-example", levels: LEVELS, domain: "numbers", gesture: "test", difficulty: 2 }, ({ rng }) => {
+      const cases = [
+        { task: "Trouve un entier compris entre 50 et 100, divisible par 6 mais pas par 12.", example: "54", verification: "54 = 6 × 9, tandis que 54 n’est pas un multiple de 12." },
+        { task: "Trouve un nombre à trois chiffres divisible à la fois par 5 et par 9.", example: "135", verification: "135 se termine par 5 et la somme de ses chiffres vaut 9." },
+        { task: "Trouve une fraction de dénominateur 8 strictement comprise entre 1/2 et 3/4.", example: "5/8", verification: "1/2 = 4/8 et 3/4 = 6/8, donc 4/8 < 5/8 < 6/8." },
+        { task: "Trouve un entier négatif supérieur à −10 dont le carré est compris entre 20 et 40.", example: "−5 ou −6", verification: "(−5)² = 25 et (−6)² = 36 ; les deux conviennent." }
+      ];
+      const item = pick(rng, cases);
+      return { kicker: "Construire sous contraintes", title: item.task, subprompt: "La réponse doit satisfaire toutes les conditions en même temps.", openLabel: "Propose un exemple, puis vérifie chaque contrainte.", hint: "Traite d’abord la condition la plus restrictive, puis élimine les candidats qui échouent aux autres.", answer: `Exemple possible : ${item.example}.`, proof: item.verification, reflex: "Pour construire un exemple, croiser les contraintes puis les vérifier une par une." };
+    }),
+
+    template({ id: "trans-repair-statement", levels: ["4e", "3e"], domain: "transversal", gesture: "critique", difficulty: 3 }, ({ rng }) => {
+      const cases = [
+        { statement: "Tous les nombres premiers sont impairs.", repair: "Tous les nombres premiers sauf 2 sont impairs.", proof: "2 est le seul nombre premier pair." },
+        { statement: "Si x² = 25, alors x = 5.", repair: "Si x² = 25, alors x = 5 ou x = −5.", proof: "Deux nombres opposés ont le même carré." },
+        { statement: "Si un entier est pair, alors il est divisible par 4.", repair: "Si un entier est divisible par 4, alors il est pair.", proof: "La phrase initiale est réfutée par 6 ; la réciproque proposée est vraie." },
+        { statement: "Multiplier deux nombres positifs donne un résultat plus grand que chacun d’eux.", repair: "L’affirmation devient vraie si les deux nombres sont strictement supérieurs à 1.", proof: "Le cas 0,5 × 2 réfute l’énoncé initial ; la condition ajoutée écarte 0, 1 et les facteurs compris entre 0 et 1." }
+      ];
+      const item = pick(rng, cases);
+      return { kicker: "Réparer plutôt que jeter", title: `Modifie le moins possible l’affirmation fausse : « ${item.statement} »`, subprompt: "Tu peux ajouter une condition, changer la conclusion ou prévoir une exception.", openLabel: "Écris une version qui soit vraie dans tous les cas.", hint: "Commence par trouver pourquoi la phrase est fausse ; le contre-exemple indique souvent la réparation.", answer: item.repair, proof: item.proof, reflex: "Un contre-exemple ne sert pas seulement à réfuter : il aide à préciser le domaine de validité." };
+    }),
+
+    template({ id: "geo-always-sometimes-never", levels: LEVELS, domain: "geometry", gesture: "conjecture", difficulty: 2 }, ({ rng }) => {
+      const cases = [
+        { statement: "Les diagonales d’un rectangle ont la même longueur.", correct: 0, answer: "Toujours.", proof: "C’est une propriété de tous les rectangles." },
+        { statement: "Les diagonales d’un quadrilatère ont la même longueur.", correct: 1, answer: "Parfois.", proof: "C’est vrai pour un rectangle, mais faux pour un parallélogramme quelconque." },
+        { statement: "Un triangle possède deux angles droits.", correct: 2, answer: "Jamais.", proof: "Deux angles droits totaliseraient déjà 180°, sans laisser de mesure positive au troisième angle." },
+        { statement: "Deux triangles de même aire sont superposables.", correct: 1, answer: "Parfois.", proof: "Deux triangles superposables ont la même aire, mais on peut construire des triangles de formes différentes ayant une même base et une même hauteur." }
+      ];
+      const item = pick(rng, cases);
+      return { kicker: "Toujours, parfois ou jamais ?", title: item.statement, subprompt: "Prépare la preuve adaptée : propriété, exemple et contre-exemple, ou impossibilité.", choices: ["Toujours", "Parfois", "Jamais"], correctIndex: item.correct, hint: "Essaie une figure familière, puis déforme-la en conservant seulement les données de l’énoncé.", answer: item.answer, proof: item.proof, reflex: "En géométrie aussi, « parfois » exige un exemple vrai et un exemple faux." };
+    }),
+
+    template({ id: "data-unsupported-claim", levels: ["5e", "4e", "3e"], domain: "data", gesture: "critique", difficulty: 3 }, ({ rng }) => {
+      const cases = [
+        { data: "Le pays A a 60 % de territoire boisé et le pays B 45 %.", claim: "Le pays A possède une plus grande aire de forêt.", missing: "l’aire totale de chaque pays", proof: "Un pourcentage plus élevé d’une petite superficie peut représenter moins d’hectares qu’un pourcentage plus faible d’une grande superficie." },
+        { data: "La classe A a une moyenne de 14 et la classe B une moyenne de 12.", claim: "Chaque élève de A a une meilleure note que chaque élève de B.", missing: "la répartition des notes dans chaque classe", proof: "Les moyennes peuvent différer tout en ayant des valeurs individuelles qui se chevauchent." },
+        { data: "70 % des personnes interrogées préfèrent l’option A.", claim: "70 % de toute la population préfère A.", missing: "la taille et le mode de sélection de l’échantillon", proof: "Un échantillon biaisé ou trop petit ne représente pas nécessairement la population." }
+      ];
+      const item = pick(rng, cases);
+      return { kicker: "Que permettent réellement les données ?", title: `${item.data} Peut-on conclure : « ${item.claim} » ?`, subprompt: "Ne décide pas si la phrase est vraie dans le monde ; décide si elle est prouvée par les données fournies.", choices: ["Oui, la conclusion est prouvée", "Non, une information essentielle manque", "Oui, parce que le premier nombre est plus grand", "Non, aucune donnée ne permet jamais de conclure"], correctIndex: 1, hint: "Imagine deux situations différentes donnant les mêmes nombres affichés.", answer: `Non. Il manque ${item.missing}.`, proof: item.proof, reflex: "Distinguer une affirmation vraie d’une affirmation soutenue par les données disponibles." };
+    }),
+
+    template({ id: "data-mean-not-observed", levels: ["5e", "4e", "3e"], domain: "data", gesture: "test", difficulty: 3 }, ({ rng }) => {
+      const cases = [
+        { context: "Une équipe gagne ses matchs avec un écart moyen de 19 points.", question: "Est-il possible qu’aucun match n’ait été gagné avec exactement 19 points d’écart ?", example: "Des écarts de 18 et 20 ont une moyenne de 19, sans contenir 19." },
+        { context: "La taille moyenne de quatre élèves est 160 cm.", question: "Est-il possible qu’aucun élève ne mesure exactement 160 cm ?", example: "158, 159, 161 et 162 ont une moyenne de 160, sans contenir 160." },
+        { context: "La moyenne de trois notes est 12.", question: "Est-il possible qu’aucune des trois notes ne soit 12 ?", example: "10, 11 et 15 ont une moyenne de 12, sans contenir 12." }
+      ];
+      const item = pick(rng, cases);
+      return { kicker: "La moyenne est-elle une valeur observée ?", title: `${item.context} ${item.question}`, subprompt: "Un exemple bien construit suffit à établir que c’est possible.", choices: ["Oui, c’est possible", "Non, la moyenne doit apparaitre dans la série"], correctIndex: 0, hint: "Choisis des valeurs placées de part et d’autre de la moyenne.", answer: "Oui, c’est possible.", proof: item.example, reflex: "La moyenne équilibre les écarts ; elle n’est pas obligatoirement une valeur de la série." };
+    }),
+
+    template({ id: "prop-calculation-to-story", levels: LEVELS, domain: "proportion", gesture: "model", difficulty: 2 }, ({ rng }) => {
+      const cases = [
+        { calculation: "84 ÷ 7 × 3 = 36", correct: "Calculer 3/7 de 84", distractors: ["Augmenter 84 de 7 %", "Partager 84 entre 3 personnes", "Calculer 7/3 de 84"], proof: "Diviser par 7 donne une septième part, puis multiplier par 3 en prend trois." },
+        { calculation: "120 × 0,8 = 96", correct: "Réduire 120 de 20 %", distractors: ["Augmenter 120 de 80 %", "Calculer 8 % de 120", "Partager 120 en 8 parts"], proof: "Conserver 80 % revient à multiplier par 0,8 ; c’est donc retirer 20 %." },
+        { calculation: "45 ÷ 5 × 8 = 72", correct: "Trouver le prix de 8 objets quand 5 coûtent 45 €", distractors: ["Réduire 45 € de 5 %", "Partager 45 objets entre 8 personnes", "Ajouter 8 € à 45 €"], proof: "45 ÷ 5 donne le prix unitaire, puis × 8 donne le prix de huit objets." }
+      ];
+      const item = pick(rng, cases);
+      const choices = shuffled(rng, [item.correct, ...item.distractors]);
+      return { kicker: "Du calcul à la situation", title: `Quelle question peut être résolue par ${item.calculation} ?`, subprompt: "Interprète le rôle de chaque opération, dans l’ordre.", choices, correctIndex: choices.indexOf(item.correct), hint: "Traduis d’abord la division : partage, valeur d’une part ou passage à l’unité ?", answer: item.correct, proof: item.proof, reflex: "Modéliser, c’est pouvoir expliquer ce que représente chaque nombre et chaque opération." };
+    }),
+
+    template({ id: "trans-withheld-information", levels: LEVELS, domain: "transversal", gesture: "strategy", difficulty: 2 }, ({ rng }) => {
+      const cases = [
+        { question: "Déterminer l’aire d’un rectangle dont le périmètre vaut 30 cm.", useful: "La longueur d’un côté", distractors: ["La couleur du rectangle", "La longueur de sa diagonale dessinée sans échelle", "Le nom de ses sommets"], proof: "Le périmètre seul ne fixe pas l’aire ; connaitre un côté permet de trouver l’autre." },
+        { question: "Calculer la probabilité de tirer une boule rouge dans une urne.", useful: "Le nombre de boules rouges et le nombre total de boules", distractors: ["La matière de l’urne", "L’ordre dans lequel les boules ont été placées", "La couleur de la table"], proof: "Dans un tirage équiprobable, la probabilité est le quotient du nombre de cas favorables par le nombre total de cas." },
+        { question: "Trouver le prix de 9 cahiers dans une situation proportionnelle.", useful: "Le prix d’un cahier ou le prix d’un autre nombre connu de cahiers", distractors: ["La couleur des cahiers", "Le jour de la semaine", "Le nombre de pages du manuel voisin"], proof: "Il faut une paire quantité-prix permettant de déterminer le coefficient de proportionnalité." }
+      ];
+      const item = pick(rng, cases);
+      const choices = shuffled(rng, [item.useful, ...item.distractors]);
+      return { kicker: "Information volontairement cachée", title: item.question, subprompt: "Quelle carte d’information faut-il retourner en priorité ?", choices, correctIndex: choices.indexOf(item.useful), hint: "Écris la relation mathématique nécessaire et cherche la grandeur encore inconnue.", answer: item.useful, proof: item.proof, reflex: "Retarder les données oblige à identifier ce dont la méthode a réellement besoin." };
+    }),
+
+    template({ id: "trans-convince-sceptic", levels: LEVELS, domain: "transversal", gesture: "justify", difficulty: 3 }, ({ rng }) => {
+      const cases = [
+        { claim: "Deux rectangles peuvent avoir le même périmètre et des aires différentes.", proof: "Un rectangle 1 × 5 et un rectangle 2 × 4 ont tous deux un périmètre de 12, mais des aires de 5 et 8." },
+        { claim: "25 % de 80 donne le même résultat que 80 % de 25.", proof: "25 % de 80 = 0,25 × 80 = 20 et 80 % de 25 = 0,8 × 25 = 20. Plus généralement, a % de b et b % de a valent tous deux ab/100." },
+        { claim: "Une fraction ayant un plus grand dénominateur peut être plus petite.", proof: "Pour les fractions unitaires, 1/8 < 1/6 : partager la même unité en davantage de parts donne des parts plus petites." },
+        { claim: "Un résultat affiché par une calculatrice peut être faux pour le problème.", proof: "La calculatrice exécute les touches saisies ; une mauvaise opération, une unité oubliée ou un modèle inadapté peut produire un nombre exact mais une réponse fausse." }
+      ];
+      const item = pick(rng, cases);
+      return { kicker: "Convaincs une personne sceptique", title: `Construis un argument pour la convaincre que : « ${item.claim} »`, subprompt: "Un bon argument doit pouvoir être vérifié par quelqu’un qui n’est pas déjà d’accord.", openLabel: "Donne une preuve, un exemple décisif ou une explication générale.", hint: "Demande-toi si un exemple suffit ici ou s’il faut expliquer pourquoi cela reste vrai en général.", answer: "Argument possible", proof: item.proof, reflex: "Convaincre, ce n’est pas répéter la conclusion : c’est fournir une raison contrôlable." };
+    }),
+
+    template({ id: "code-compare-programs", levels: ["5e", "4e", "3e"], domain: "computing", gesture: "critique", difficulty: 3 }, ({ rng }) => {
+      const a = int(rng, 2, 5);
+      const b = int(rng, 2, 6);
+      const equivalent = rng() > 0.45;
+      const first = `ajouter ${b}, puis multiplier par ${a}`;
+      const second = equivalent ? `multiplier par ${a}, puis ajouter ${a * b}` : `multiplier par ${a}, puis ajouter ${b}`;
+      return { kicker: "Deux programmes, même effet ?", title: `Programme A : ${first}. Programme B : ${second}. Donnent-ils toujours le même résultat ?`, subprompt: "Teste une entrée simple, puis explique avec une expression.", choices: ["Oui, pour toute entrée", "Non, pas pour toute entrée"], correctIndex: equivalent ? 0 : 1, hint: "Avec une entrée x, traduis les deux programmes en expressions littérales.", answer: equivalent ? "Oui, ils sont équivalents." : "Non, ils ne sont pas équivalents.", proof: equivalent ? `Le programme A donne ${a}(x + ${b}) = ${a}x + ${a * b}, exactement comme B.` : `A donne ${a}x + ${a * b}, tandis que B donne ${a}x + ${b}. Comme ${a * b} ≠ ${b}, ils diffèrent pour toute entrée.`, reflex: "Un test peut réfuter l’équivalence ; une identité algébrique permet de la prouver pour toutes les entrées." };
+    }),
+
+    template({ id: "prop-connect-representations", levels: ["5e", "4e", "3e"], domain: "proportion", gesture: "logic", difficulty: 2 }, ({ rng }) => {
+      const rate = int(rng, 2, 5);
+      const fixed = int(rng, 1, 6);
+      const proportional = rng() > 0.5;
+      const formula = proportional ? `y = ${rate}x` : `y = ${rate}x + ${fixed}`;
+      const correct = proportional
+        ? `Une quantité y est toujours ${rate} fois la quantité x.`
+        : `On paie ${fixed} € fixes puis ${rate} € par unité.`;
+      const distractors = proportional
+        ? [`On ajoute ${rate} à x.`, `On paie ${rate} € fixes, quel que soit x.`, `y diminue quand x augmente.`]
+        : [`Une quantité y est toujours ${rate + fixed} fois x.`, `On paie seulement ${fixed} €, quel que soit x.`, `La situation est proportionnelle.`];
+      const choices = shuffled(rng, [correct, ...distractors]);
+      return { kicker: "Relier deux représentations", title: `Quelle situation est décrite par la formule ${formula} ?`, subprompt: "Fais correspondre chaque terme de la formule à une information de la situation.", choices, correctIndex: choices.indexOf(correct), hint: "Calcule y lorsque x = 0 : cela révèle une éventuelle partie fixe.", answer: correct, proof: proportional ? `Le coefficient ${rate} multiplie x et la formule donne 0 lorsque x = 0.` : `${rate}x dépend du nombre d’unités ; ${fixed} reste présent même lorsque x = 0.`, reflex: "Relier formule, tableau, graphique et récit en interprétant les invariants de chaque représentation." };
+    })
+  ];
+
+  // Fix the few question types whose answer position is generated dynamically.
+  templates.forEach((entry) => {
+    const original = entry.generate;
+    entry.generate = (context) => {
+      const question = original(context);
+      if (question.answerValue && question.choices) question.correctIndex = question.choices.indexOf(question.answerValue);
+      if (question.steps && !question.sequence) {
+        question.sequence = shuffled(context.rng, question.steps);
+        question.correctSequence = question.steps;
+      }
+      return question;
+    };
+  });
+
+  window.MATHSGO_REASONING_BANKS = Object.freeze({
+    schemaVersion: 1,
+    generatorVersion: "0.2.0",
+    levels: LEVELS,
+    domains,
+    gestures,
+    templates
+  });
+}());
+
+</script>
+  <script>
+(function () {
+  "use strict";
+
+  const bank = window.MATHSGO_REASONING_BANKS;
+  if (!bank) throw new Error("La banque de raisonnement n’a pas été chargée.");
+
+  const $ = (selector) => document.querySelector(selector);
+  const setupView = $("#setupView");
+  const slideshow = $("#slideshow");
+  const form = $("#generatorForm");
+  const domainChecks = $("#domainChecks");
+  const gestureChecks = $("#gestureChecks");
+  const levelInput = $("#level");
+  const countInput = $("#count");
+  const difficultyInput = $("#difficulty");
+  const pathwayInput = $("#pathway");
+  const summaryText = $("#summaryText");
+  const coverageText = $("#coverageText");
+  const generateButton = $("#generateButton");
+  const questionBody = $("#questionBody");
+  const correctionPanel = $("#correctionPanel");
+  const slideCard = $("#slideCard");
+  const hintButton = $("#hintButton");
+  const hintBox = $("#hintBox");
+  const nextButton = $("#nextButton");
+  const prevButton = $("#prevButton");
+
+  const state = {
+    questions: [],
+    questionStates: [],
+    index: 0,
+    seed: 0,
+    seriesNumber: 0
+  };
+
+  const pathways = {
+    mixed: { label: "Équilibré", gestures: Object.keys(bank.gestures), order: null },
+    search: { label: "Chercher", gestures: ["observe", "conjecture", "test", "strategy"], order: ["observe", "conjecture", "test", "strategy"] },
+    prove: { label: "Convaincre", gestures: ["observe", "conjecture", "test", "logic", "justify", "critique"], order: ["observe", "conjecture", "test", "logic", "justify", "critique"] },
+    critique: { label: "Examiner", gestures: ["observe", "critique", "test", "reflect", "strategy"], order: ["observe", "critique", "test", "reflect", "strategy"] },
+    model: { label: "Modéliser", gestures: ["observe", "model", "strategy", "reflect", "critique"], order: ["observe", "model", "strategy", "reflect", "critique"] },
+    custom: { label: "Sur mesure", gestures: [], order: null }
+  };
+
+  const thinkingPrompts = {
+    observe: "Repère ce qui change et ce qui reste.",
+    conjecture: "Propose une idée, puis demande-toi si elle vaut toujours.",
+    test: "Cherche l’exemple qui pourrait faire échouer l’affirmation.",
+    justify: "Cite la définition ou la propriété qui autorise la conclusion.",
+    critique: "Repère la première étape qui n’est plus garantie.",
+    strategy: "Choisis un chemin adapté avant de calculer.",
+    logic: "Enchaine les données jusqu’à la conclusion.",
+    model: "Repère les hypothèses qui relient le calcul à la réalité.",
+    reflect: "Contrôle la démarche, le résultat et ses limites."
+  };
+
+  function escapeHtml(value) {
+    return String(value).replace(/[&<>"']/g, (character) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[character]);
+  }
+
+  function hashSeed(value) {
+    let h = 2166136261;
+    for (let i = 0; i < value.length; i += 1) {
+      h ^= value.charCodeAt(i);
+      h = Math.imul(h, 16777619);
+    }
+    return h >>> 0;
+  }
+
+  function seededRandom(seed) {
+    let value = seed >>> 0;
+    return function random() {
+      value += 0x6D2B79F5;
+      let t = value;
+      t = Math.imul(t ^ (t >>> 15), t | 1);
+      t ^= t + Math.imul(t ^ (t >>> 7), t | 61);
+      return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+    };
+  }
+
+  function shuffled(rng, values) {
+    const result = values.slice();
+    for (let i = result.length - 1; i > 0; i -= 1) {
+      const j = Math.floor(rng() * (i + 1));
+      [result[i], result[j]] = [result[j], result[i]];
+    }
+    return result;
+  }
+
+  function plural(value, singular, pluralForm) {
+    return `${value} ${value > 1 ? pluralForm : singular}`;
+  }
+
+  function makeChecks(container, values, kind) {
+    container.innerHTML = Object.entries(values).map(([id, item]) => `
+      <label class="check-card">
+        <input type="checkbox" name="${kind}" value="${id}" checked>
+        <span class="check-icon" aria-hidden="true">${escapeHtml(item.icon)}</span>
+        <strong>${escapeHtml(item.short || item.label)}</strong>
+      </label>
+    `).join("");
+  }
+
+  function selectedValues(name) {
+    return Array.from(document.querySelectorAll(`input[name="${name}"]:checked`), (input) => input.value);
+  }
+
+  function getSettings() {
+    return {
+      level: levelInput.value,
+      count: Number(countInput.value),
+      difficulty: difficultyInput.value,
+      pathway: pathwayInput.value,
+      domains: selectedValues("domain"),
+      gestures: selectedValues("gesture")
+    };
+  }
+
+  function eligibleTemplates(settings) {
+    return bank.templates.filter((entry) => (
+      settings.domains.includes(entry.domain)
+      && settings.gestures.includes(entry.gesture)
+      && (settings.difficulty === "all" || entry.difficulty === Number(settings.difficulty))
+      && (settings.level === "all" || entry.levels.includes(settings.level))
+    ));
+  }
+
+  function updateSummary() {
+    const settings = getSettings();
+    const eligible = eligibleTemplates(settings);
+    const level = settings.level === "all" ? "collège" : settings.level;
+    const requirement = settings.difficulty === "all"
+      ? "progressif"
+      : ["", "repérage", "justification", "preuve"][Number(settings.difficulty)];
+    const pathway = pathways[settings.pathway]?.label || pathways.custom.label;
+    summaryText.textContent = `${plural(settings.count, "question", "questions")} · ${level} · ${pathway}`;
+    coverageText.textContent = `${plural(settings.domains.length, "domaine", "domaines")} · ${pathway} · ${requirement} · ${plural(eligible.length, "famille disponible", "familles disponibles")}`;
+    generateButton.querySelector("span").textContent = `Lancer ${plural(settings.count, "question", "questions")}`;
+    generateButton.disabled = eligible.length === 0;
+    generateButton.title = eligible.length ? "Générer une série" : "Aucune famille ne correspond à ces filtres";
+  }
+
+  function chooseBalancedTemplates(eligible, count, rng, pathwayKey) {
+    const chosen = [];
+    const usages = { domain: {}, gesture: {}, difficulty: {}, template: {} };
+    let pool = shuffled(rng, eligible);
+    const order = pathways[pathwayKey]?.order;
+
+    for (let index = 0; index < count; index += 1) {
+      if (index > 0 && index % Math.max(1, eligible.length) === 0) pool = shuffled(rng, eligible);
+      let bestScore = Infinity;
+      let candidates = [];
+      const targetGesture = order?.[index % order.length];
+      const stagePool = targetGesture && pool.some((entry) => entry.gesture === targetGesture)
+        ? pool.filter((entry) => entry.gesture === targetGesture)
+        : pool;
+      stagePool.forEach((entry) => {
+        const sameAsPrevious = chosen.length && chosen[chosen.length - 1].id === entry.id ? 2.5 : 0;
+        const score = (usages.domain[entry.domain] || 0) * 1.15
+          + (usages.gesture[entry.gesture] || 0) * 1.3
+          + (usages.difficulty[entry.difficulty] || 0) * 0.4
+          + (usages.template[entry.id] || 0) * 2
+          + sameAsPrevious
+          + rng() * 0.12;
+        if (score < bestScore - 0.001) {
+          bestScore = score;
+          candidates = [entry];
+        } else if (Math.abs(score - bestScore) < 0.001) {
+          candidates.push(entry);
+        }
+      });
+      const selected = candidates[Math.floor(rng() * candidates.length)];
+      chosen.push(selected);
+      usages.domain[selected.domain] = (usages.domain[selected.domain] || 0) + 1;
+      usages.gesture[selected.gesture] = (usages.gesture[selected.gesture] || 0) + 1;
+      usages.difficulty[selected.difficulty] = (usages.difficulty[selected.difficulty] || 0) + 1;
+      usages.template[selected.id] = (usages.template[selected.id] || 0) + 1;
+    }
+    return chosen;
+  }
+
+  function makeSeries(freshSeed = true) {
+    const settings = getSettings();
+    const eligible = eligibleTemplates(settings);
+    if (!eligible.length) return;
+    state.seriesNumber += 1;
+    if (freshSeed) state.seed = hashSeed(`${Date.now()}-${performance.now()}-${state.seriesNumber}`);
+    const rng = seededRandom(state.seed);
+    const selection = chooseBalancedTemplates(eligible, settings.count, rng, settings.pathway);
+    state.questions = selection.map((entry, position) => ({
+      ...entry.generate({ rng, level: settings.level }),
+      instanceId: `${entry.id}-${state.seed.toString(36)}-${position + 1}`
+    }));
+    state.questionStates = state.questions.map(() => ({ correction: false, hint: false }));
+    state.index = 0;
+    setupView.hidden = true;
+    slideshow.hidden = false;
+    document.body.classList.add("is-presenting");
+    renderQuestion();
+  }
+
+  function choiceMarkup(question) {
+    if (!question.choices) return "";
+    return `<div class="choice-grid">${question.choices.map((choice, index) => `
+      <div class="choice-card" data-choice-index="${index}">
+        <b>${String.fromCharCode(65 + index)}</b><span>${escapeHtml(choice)}</span>
+      </div>
+    `).join("")}</div>`;
+  }
+
+  function sequenceMarkup(question) {
+    if (!question.sequence) return "";
+    return `<div class="sequence-grid">${question.sequence.map((step, index) => `
+      <div class="sequence-card"><b>${String.fromCharCode(65 + index)}</b><span>${escapeHtml(step)}</span></div>
+    `).join("")}</div>`;
+  }
+
+  function codeMarkup(question) {
+    if (!question.code) return "";
+    return `<div class="sequence-grid code-grid">${question.code.map((step, index) => `
+      <div class="sequence-card"><b>${index + 1}</b><span>${escapeHtml(step)}</span></div>
+    `).join("")}</div>`;
+  }
+
+  function openMarkup(question) {
+    if (question.choices || question.sequence || question.code || !question.openLabel) return "";
+    return `<div class="open-task">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 19h16M6 16l10-10 2 2L8 18H6v-2Z"/></svg>
+      <span>${escapeHtml(question.openLabel)}</span>
+    </div>`;
+  }
+
+  function renderQuestion() {
+    const question = state.questions[state.index];
+    const localState = state.questionStates[state.index];
+    const domain = bank.domains[question.domain];
+    const gesture = bank.gestures[question.gesture];
+
+    $("#slideCounter").textContent = `${state.index + 1} / ${state.questions.length}`;
+    $("#progressBar").style.width = `${((state.index + (localState.correction ? 1 : 0.45)) / state.questions.length) * 100}%`;
+    $("#domainPill").textContent = domain.label;
+    $("#gesturePill").textContent = gesture.label;
+    $("#levelPill").textContent = `${question.level} · niveau ${question.difficulty}`;
+    $("#thinkingPrompt").textContent = thinkingPrompts[question.gesture];
+
+    questionBody.innerHTML = `
+      <p class="question-kicker">${escapeHtml(question.kicker || gesture.label)}</p>
+      <h2>${question.title}</h2>
+      ${question.subprompt ? `<p class="subprompt">${question.subprompt}</p>` : ""}
+      ${question.math ? `<div class="math-line">${question.math}</div>` : ""}
+      ${question.visual ? `<div class="visual-wrap">${question.visual}</div>` : ""}
+      ${codeMarkup(question)}
+      ${choiceMarkup(question)}
+      ${sequenceMarkup(question)}
+      ${openMarkup(question)}
+    `;
+
+    hintBox.innerHTML = question.hint || "Cherche d’abord ce qui est donné, ce qui est demandé et la propriété qui pourrait les relier.";
+    hintBox.hidden = !localState.hint;
+    hintButton.textContent = localState.hint ? "Masquer" : "Indice";
+    correctionPanel.innerHTML = `
+      <div class="correction-grid">
+        <div>
+          <h3><span>✓</span> Correction raisonnée</h3>
+          <div class="correction-answer">${question.answer}</div>
+          <div class="correction-proof">${question.proof}</div>
+        </div>
+        <div class="reflex-box">
+          <p>Réflexe à retenir</p>
+          <strong>${question.reflex}</strong>
+        </div>
+      </div>
+    `;
+    correctionPanel.hidden = !localState.correction;
+    slideCard.classList.toggle("is-correction", localState.correction);
+    if (localState.correction && Number.isInteger(question.correctIndex)) {
+      questionBody.querySelector(`[data-choice-index="${question.correctIndex}"]`)?.classList.add("is-correct");
+    }
+
+    prevButton.disabled = state.index === 0 && !localState.correction;
+    nextButton.textContent = localState.correction
+      ? (state.index === state.questions.length - 1 ? "Nouvelle série" : "Suivante")
+      : "Correction";
+    window.scrollTo({ top: 0, behavior: "instant" });
+  }
+
+  function nextAction() {
+    const localState = state.questionStates[state.index];
+    if (!localState.correction) {
+      localState.correction = true;
+      renderQuestion();
+      return;
+    }
+    if (state.index < state.questions.length - 1) {
+      state.index += 1;
+      renderQuestion();
+    } else {
+      makeSeries(true);
+    }
+  }
+
+  function previousAction() {
+    const localState = state.questionStates[state.index];
+    if (localState.correction) {
+      localState.correction = false;
+    } else if (state.index > 0) {
+      state.index -= 1;
+    }
+    renderQuestion();
+  }
+
+  function returnToSetup() {
+    if (document.fullscreenElement) document.exitFullscreen().catch(() => {});
+    slideshow.hidden = true;
+    setupView.hidden = false;
+    document.body.classList.remove("is-presenting");
+    window.scrollTo({ top: 0, behavior: "instant" });
+  }
+
+  function toggleFullscreen() {
+    if (document.fullscreenElement) {
+      document.exitFullscreen().catch(() => {});
+    } else {
+      slideshow.requestFullscreen?.().catch(() => {});
+    }
+  }
+
+  function setSegment(control, value) {
+    const element = document.querySelector(`.segmented[data-control="${control}"]`);
+    element.querySelectorAll("button").forEach((button) => button.classList.toggle("is-active", button.dataset.value === value));
+    document.querySelector(`#${control}`).value = value;
+  }
+
+  function setPathway(value, applyGestures = true) {
+    pathwayInput.value = value;
+    document.querySelectorAll('.pathway-grid button[data-value]').forEach((button) => {
+      button.classList.toggle("is-active", button.dataset.value === value);
+    });
+    if (applyGestures && pathways[value]) {
+      const selected = new Set(pathways[value].gestures);
+      form.querySelectorAll('input[name="gesture"]').forEach((input) => { input.checked = selected.has(input.value); });
+    }
+  }
+
+  makeChecks(domainChecks, bank.domains, "domain");
+  makeChecks(gestureChecks, bank.gestures, "gesture");
+
+  document.querySelectorAll(".segmented").forEach((control) => {
+    control.addEventListener("click", (event) => {
+      const button = event.target.closest("button[data-value]");
+      if (!button) return;
+      setSegment(control.dataset.control, button.dataset.value);
+      updateSummary();
+    });
+  });
+
+  $(".pathway-grid").addEventListener("click", (event) => {
+    const button = event.target.closest("button[data-value]");
+    if (!button) return;
+    setPathway(button.dataset.value, true);
+    updateSummary();
+  });
+
+  form.addEventListener("change", (event) => {
+    if (event.target.name === "gesture") setPathway("custom", false);
+    updateSummary();
+  });
+  form.addEventListener("submit", (event) => {
+    event.preventDefault();
+    makeSeries(true);
+  });
+
+  $("#selectAllButton").addEventListener("click", () => {
+    form.querySelectorAll('input[type="checkbox"]').forEach((input) => { input.checked = true; });
+    setPathway("mixed", false);
+    updateSummary();
+  });
+  $("#selectNoneButton").addEventListener("click", () => {
+    form.querySelectorAll('input[type="checkbox"]').forEach((input) => { input.checked = false; });
+    setPathway("custom", false);
+    updateSummary();
+  });
+  $("#resetButton").addEventListener("click", () => {
+    setSegment("level", "3e");
+    setSegment("count", "10");
+    setSegment("difficulty", "all");
+    form.querySelectorAll('input[type="checkbox"]').forEach((input) => { input.checked = true; });
+    setPathway("mixed", false);
+    updateSummary();
+  });
+
+  hintButton.addEventListener("click", () => {
+    state.questionStates[state.index].hint = !state.questionStates[state.index].hint;
+    renderQuestion();
+  });
+  nextButton.addEventListener("click", nextAction);
+  prevButton.addEventListener("click", previousAction);
+  $("#restartButton").addEventListener("click", () => makeSeries(true));
+  $("#setupButton").addEventListener("click", returnToSetup);
+  $("#fullscreenButton").addEventListener("click", toggleFullscreen);
+
+  document.addEventListener("keydown", (event) => {
+    if (slideshow.hidden || ["INPUT", "TEXTAREA", "SELECT"].includes(document.activeElement?.tagName)) return;
+    if (event.key === "ArrowRight" || event.key === "Enter" || event.key === " ") {
+      event.preventDefault();
+      nextAction();
+    } else if (event.key === "ArrowLeft") {
+      event.preventDefault();
+      previousAction();
+    } else if (event.key.toLowerCase() === "h" || event.key.toLowerCase() === "i") {
+      state.questionStates[state.index].hint = !state.questionStates[state.index].hint;
+      renderQuestion();
+    } else if (event.key.toLowerCase() === "f") {
+      toggleFullscreen();
+    } else if (event.key === "Escape" && !document.fullscreenElement) {
+      returnToSetup();
+    }
+  });
+
+  updateSummary();
+}());
+
+</script>
+</body>
+</html>
