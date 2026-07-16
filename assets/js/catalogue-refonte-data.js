@@ -146,6 +146,14 @@ window.MATHSGO_CATALOGUE = {
     }
   ],
   "resourceClassifications": {
+    "cps/bilan-s1.html": {
+      "primaryNotion": "bilans-cps",
+      "primaryGroup": "imprimer",
+      "collections": [],
+      "tags": ["cps", "bilan", "connaissance-de-soi", "engagement"],
+      "thumbnail": "cps/assets/bilan-s1/page-1.png",
+      "cardDescription": "Un bilan guidé en quatre pages pour relire son semestre, comprendre son fonctionnement et choisir un petit pas concret."
+    },
     "outils/box_barre_final.html": { "primaryNotion": "schemas-barres", "collections": [], "tags": ["boite", "schema-barres"] },
     "outils/box_pasbarre_final.html": { "primaryNotion": "calcul-litteral", "collections": [], "tags": ["boite", "archive"] },
     "outils/tuiles_algebriques/tuiles_algebriques.html": {
@@ -850,6 +858,13 @@ window.MATHSGO_CATALOGUE = {
       "short": "Chercher, conjecturer et élaborer une stratégie.",
       "color": "#2f6d3f",
       "soft": "#edf8ef"
+    },
+    {
+      "id": "cps",
+      "title": "Compétences psychosociales",
+      "short": "Se connaître, coopérer et avancer avec confiance.",
+      "color": "#b84f7b",
+      "soft": "#fff0f6"
     }
   ],
   "notions": [
@@ -1002,6 +1017,11 @@ window.MATHSGO_CATALOGUE = {
       "id": "explorations",
       "title": "Explorations mathématiques",
       "domain": "jeux-recherches"
+    },
+    {
+      "id": "bilans-cps",
+      "title": "Bilans et connaissance de soi",
+      "domain": "cps"
     }
   ],
   "resources": [
@@ -5313,6 +5333,36 @@ window.MATHSGO_CATALOGUE = {
       "status": "published",
       "featured": false,
       "recent": false
+    },
+    {
+      "id": "cps-bilan-s1-html",
+      "title": "Bilan guidé de fin du premier semestre",
+      "description": "Un document unique de quatre pages A3 pour faire le point sur son semestre, ses ressources et son prochain objectif.",
+      "path": "cps/bilan-s1.html",
+      "domains": [
+        "cps"
+      ],
+      "notions": [
+        "bilans-cps"
+      ],
+      "uses": [
+        "projeter",
+        "imprimer"
+      ],
+      "types": [
+        "imprimable"
+      ],
+      "filters": [],
+      "keywords": [
+        "compétences psychosociales",
+        "bilan élève",
+        "connaissance de soi",
+        "engagement"
+      ],
+      "kind": "document",
+      "status": "published",
+      "featured": true,
+      "recent": true
     }
   ]
 };

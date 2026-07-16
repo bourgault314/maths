@@ -33,7 +33,8 @@
     geometrie: { icon: "seigaiha" },
     donnees: { icon: "frequencies" },
     informatique: { icon: "koch" },
-    "jeux-recherches": { icon: "strategy" }
+    "jeux-recherches": { icon: "strategy" },
+    cps: { icon: "cps" }
   };
 
   const notionDesign = {
@@ -202,6 +203,11 @@
       keywords: "engrenages chaos tables modulaires recherche",
       icon: "gears",
       hub: "club_maths/index.html"
+    },
+    "bilans-cps": {
+      description: "Se connaître, faire le point et choisir un petit pas pour progresser.",
+      keywords: "cps compétences psychosociales bilan élève émotions coopération engagement",
+      icon: "cps"
     }
   };
 
@@ -420,6 +426,7 @@
       probability: `<svg viewBox="0 0 70 48" aria-hidden="true"><rect x="4" y="7" width="27" height="27" rx="6" fill="#fce7f3" stroke="#be3e68" stroke-width="1.8"/><g fill="#9d174d"><circle cx="11" cy="14" r="2.1"/><circle cx="24" cy="14" r="2.1"/><circle cx="11" cy="27" r="2.1"/><circle cx="24" cy="27" r="2.1"/></g><path d="M44 8h14l-2.5 6c6 5 8.5 16 6.5 26H40c-2-10 .5-21 6.5-26Z" fill="#fff7ed" stroke="#be3e68" stroke-width="1.8" stroke-linejoin="round"/><path d="M44 8h14" stroke="#9d174d" stroke-width="2" stroke-linecap="round"/><circle cx="47" cy="29" r="4" fill="#60a5fa" stroke="#1d4ed8" stroke-width="1"/><circle cx="55" cy="31" r="4" fill="#facc15" stroke="#a16207" stroke-width="1"/><circle cx="51" cy="22" r="4" fill="#39c979" stroke="#15803d" stroke-width="1"/></svg>`,
       computing: `<svg viewBox="0 0 76 50" aria-hidden="true"><rect x="6" y="4" width="64" height="42" rx="4" fill="#eff6ff" stroke="#2563eb" stroke-width="1.3"/><g stroke="#bfdbfe" stroke-width="1"><path d="M22 4v42M38 4v42M54 4v42M6 18h64M6 32h64"/></g><circle cx="14" cy="39" r="4" fill="#22c55e" stroke="#15803d" stroke-width="1.2"/><path d="M14 39h16V25h16V11h14" fill="none" stroke="#7c3aed" stroke-width="3.4" stroke-linecap="round" stroke-linejoin="round"/><path d="m56 7 5 4-5 4" fill="none" stroke="#7c3aed" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/><path d="M64 7v15" stroke="#c2410c" stroke-width="1.8"/><path d="m64 8 8 3-8 4Z" fill="#f97316" stroke="#c2410c" stroke-width="1"/></svg>`,
       strategy: `<svg viewBox="0 0 48 36" aria-hidden="true"><g stroke="#312e81" stroke-width=".75" stroke-linejoin="round"><path d="M24 2 19 10h10Z" fill="#f97316"/><path d="m14 18 5-8 5 8Z" fill="#06b6d4"/><path d="m34 18-5-8-5 8Z" fill="#6366f1"/><path d="m14 18-5 8h10Z" fill="#6366f1"/><path d="M4 34l5-8 5 8Z" fill="#facc15"/><path d="m24 34-5-8-5 8Z" fill="#06b6d4"/><path d="m34 18-5 8h10Z" fill="#facc15"/><path d="m24 34 5-8 5 8Z" fill="#f97316"/><path d="m44 34-5-8-5 8Z" fill="#6366f1"/></g></svg>`,
+      cps: `<svg viewBox="0 0 78 56" aria-hidden="true"><path d="M28.5 4.5C18.2 8.7 11 18.2 11 29c0 14.4 12.5 25.5 28 25.5S67 43.4 67 29c0-10.8-7.2-20.3-17.5-24.5" fill="none" stroke="#0a9188" stroke-width="4.6" stroke-linecap="round"/><path d="M39 18.5c-5.7-3.6-8.3-6.5-7.6-9.8.5-2.6 2.6-4.4 5.2-4.4 1.4 0 2.6.7 3.4 1.8.8-1.1 2-1.8 3.4-1.8 2.6 0 4.7 1.8 5.2 4.4.7 3.3-1.9 6.2-7.6 9.8l-1 1Z" transform="translate(-1 -1.5)" fill="#ff684c" stroke="#c74936" stroke-width="1.15" stroke-linejoin="round"/><path d="M13.5 29c0-2.5 2-4.5 4.5-4.5h13.5c2.5 0 4.5 2 4.5 4.5v6.5c0 2.5-2 4.5-4.5 4.5h-7l-4.8 4 .7-4H18c-2.5 0-4.5-2-4.5-4.5Z" fill="#20aaa4" stroke="#087f78" stroke-width="1.4" stroke-linejoin="round"/><path d="m61.8 37.8 7.6 7.6" fill="none" stroke="#a85b08" stroke-width="6" stroke-linecap="round"/><path d="m61.8 37.8 7.6 7.6" fill="none" stroke="#f9bf3b" stroke-width="4" stroke-linecap="round"/><circle cx="56" cy="32" r="8" fill="#fff" stroke="#a85b08" stroke-width="6"/><circle cx="56" cy="32" r="8" fill="#fff" stroke="#f9bf3b" stroke-width="4.3"/></svg>`,
       gears: `<svg viewBox="0 0 70 52" aria-hidden="true"><g fill="#2dd4bf" stroke="#0f766e" stroke-width="1.35"><g transform="translate(22 22)"><rect x="-3" y="-20" width="6" height="9" rx="1"/><rect x="-3" y="-20" width="6" height="9" rx="1" transform="rotate(45)"/><rect x="-3" y="-20" width="6" height="9" rx="1" transform="rotate(90)"/><rect x="-3" y="-20" width="6" height="9" rx="1" transform="rotate(135)"/><rect x="-3" y="-20" width="6" height="9" rx="1" transform="rotate(180)"/><rect x="-3" y="-20" width="6" height="9" rx="1" transform="rotate(225)"/><rect x="-3" y="-20" width="6" height="9" rx="1" transform="rotate(270)"/><rect x="-3" y="-20" width="6" height="9" rx="1" transform="rotate(315)"/><circle r="13"/></g></g><circle cx="22" cy="22" r="5" fill="#ecfeff" stroke="#0f766e" stroke-width="1.5"/><g fill="#facc15" stroke="#b45309" stroke-width="1.2"><g transform="translate(49 31)"><rect x="-2.6" y="-14" width="5.2" height="7" rx=".8"/><rect x="-2.6" y="-14" width="5.2" height="7" rx=".8" transform="rotate(45)"/><rect x="-2.6" y="-14" width="5.2" height="7" rx=".8" transform="rotate(90)"/><rect x="-2.6" y="-14" width="5.2" height="7" rx=".8" transform="rotate(135)"/><rect x="-2.6" y="-14" width="5.2" height="7" rx=".8" transform="rotate(180)"/><rect x="-2.6" y="-14" width="5.2" height="7" rx=".8" transform="rotate(225)"/><rect x="-2.6" y="-14" width="5.2" height="7" rx=".8" transform="rotate(270)"/><rect x="-2.6" y="-14" width="5.2" height="7" rx=".8" transform="rotate(315)"/><circle r="9"/></g></g><circle cx="49" cy="31" r="3.2" fill="#fffbeb" stroke="#b45309" stroke-width="1.3"/></svg>`
     };
     return icons[name] || icons.explorations;
@@ -559,13 +566,20 @@
       </button>`;
     });
 
-    const games = domainMap.get("jeux-recherches");
-    const gamesCount = domainResourceCount("jeux-recherches");
-    cards.push(`<button class="domain-card domain-card-secondary" type="button" data-domain-card="jeux-recherches" style="${domainStyle("jeux-recherches")}">
-      <span class="domain-card-icon">${icon(domainDesign["jeux-recherches"].icon)}</span>
-      <span class="domain-card-copy"><strong>${escapeHtml(games.title)}</strong><small>${escapeHtml(games.short)}</small><em>${gamesCount} ressource${gamesCount > 1 ? "s" : ""}</em></span>
-      <span class="domain-card-arrow" aria-hidden="true">→</span>
-    </button>`);
+    ["jeux-recherches", "cps"].forEach((domainId) => {
+      const domain = domainMap.get(domainId);
+      const count = domainResourceCount(domainId);
+      const directCps = domainId === "cps";
+      const tag = directCps ? "a" : "button";
+      const attributes = directCps
+        ? `href="${escapeHtml(rootPrefix + "cps/bilan-s1.html")}" data-domain-card="cps" data-domain-direct="true"`
+        : `type="button" data-domain-card="${escapeHtml(domainId)}"`;
+      cards.push(`<${tag} class="domain-card domain-card-secondary" ${attributes} style="${domainStyle(domainId)}">
+        <span class="domain-card-icon">${icon(domainDesign[domainId].icon)}</span>
+        <span class="domain-card-copy"><strong>${escapeHtml(domain.title)}</strong><small>${escapeHtml(domain.short)}</small><em>${count ? `${count} ressource${count > 1 ? "s" : ""}` : "Bientôt"}</em></span>
+        <span class="domain-card-arrow" aria-hidden="true">→</span>
+      </${tag}>`);
+    });
     domainGrid.innerHTML = cards.join("");
   }
 
@@ -941,7 +955,7 @@
 
   domainGrid.addEventListener("click", (event) => {
     const button = event.target.closest("[data-domain-card]");
-    if (!button) return;
+    if (!button || button.dataset.domainDirect === "true") return;
     const fromLevel = viewLevel();
     rememberCurrentScroll();
     state.domain = button.dataset.domainCard || "";
