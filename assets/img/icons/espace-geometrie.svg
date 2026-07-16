@@ -1,0 +1,19 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="-16 0 108 52" role="img" aria-labelledby="title desc">
+  <title id="title">Espace et géométrie</title>
+  <desc id="desc">Deux rangées décalées d’arcs de cercle bleus, turquoise et orange.</desc>
+  <rect x="-16" width="108" height="52" rx="4" fill="#eef2ff"/>
+  <g fill="none" stroke-linecap="round">
+    <g stroke="#1d4ed8" stroke-width="1.8">
+      <path d="M2 27A18 18 0 0 1 38 27M38 27A18 18 0 0 1 74 27"/>
+      <path d="M-16 49A18 18 0 0 1 20 49M20 49A18 18 0 0 1 56 49M56 49A18 18 0 0 1 92 49"/>
+    </g>
+    <g stroke="#0f766e" stroke-width="1.65">
+      <path d="M8 27A12 12 0 0 1 32 27M44 27A12 12 0 0 1 68 27"/>
+      <path d="M-10 49A12 12 0 0 1 14 49M26 49A12 12 0 0 1 50 49M62 49A12 12 0 0 1 86 49"/>
+    </g>
+    <g stroke="#f97316" stroke-width="1.55">
+      <path d="M14 27A6 6 0 0 1 26 27M50 27A6 6 0 0 1 62 27"/>
+      <path d="M-4 49A6 6 0 0 1 8 49M32 49A6 6 0 0 1 44 49M68 49A6 6 0 0 1 80 49"/>
+    </g>
+  </g>
+</svg>
