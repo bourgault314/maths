@@ -3940,7 +3940,7 @@ window.MATHSGO_CATALOGUE = {
       "filters": [],
       "keywords": [],
       "kind": "tool",
-      "status": "hidden",
+      "status": "published",
       "featured": false,
       "recent": true
     },
