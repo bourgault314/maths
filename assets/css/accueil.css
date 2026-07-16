@@ -218,13 +218,27 @@ footer {
 .contact-privacy-note { margin: 14px 0 0; color: #64748b; font-size: 0.8rem; line-height: 1.45; text-align: center; }
 
 @media (max-width: 600px) {
-  body { padding: 12px; justify-content: flex-start; }
-  .page { margin-top: 10px; gap: 18px; }
+  body {
+    min-height: 100dvh;
+    padding: 12px;
+    justify-content: flex-start;
+  }
+  .page {
+    min-height: calc(100vh - 34px);
+    min-height: calc(100svh - 34px);
+    margin-top: 10px;
+    gap: 18px;
+  }
   .hero-card { padding: 34px 14px 40px; border-radius: 25px; }
   .brand-logo { width: min(82vw, 330px); }
   .maths-scene { width: calc(100% + 4px); margin-top: 20px; }
   .maths-scene svg { transform: scale(1.06); transform-origin: center; }
-  footer { flex-direction: column; gap: 5px; }
+  footer {
+    flex-direction: column;
+    gap: 5px;
+    margin-top: auto;
+    padding-bottom: max(2px, env(safe-area-inset-bottom));
+  }
   .footer-divider { display: none; }
   .modal-content { padding: 2rem 1.35rem 1.5rem; }
 }
