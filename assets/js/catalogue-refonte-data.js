@@ -200,7 +200,7 @@ window.MATHSGO_CATALOGUE = {
     "outils/tuiles_algebriques/livret_litteral_mathigon.pdf": { "primaryNotion": "calcul-litteral", "collections": ["tuiles-algebriques"], "tags": ["tuiles-algebriques"] },
     "outils/tuiles_algebriques/livret_litteral_vert_rouge.pdf": { "primaryNotion": "calcul-litteral", "collections": ["tuiles-algebriques"], "tags": ["tuiles-algebriques"] },
     "outils/fabrication_materiel/maths_barre.html": { "primaryNotion": "schemas-barres", "collections": [], "tags": ["schema-barres", "reference-technique"] },
-    "outils/patterns.html": { "primaryNotion": "patterns", "collections": [], "tags": ["patterns", "generalisation"] },
+    "outils/labo-des-regularites.html": { "primaryNotion": "patterns", "collections": [], "tags": ["patterns", "generalisation", "laboratoire", "regularites"] },
     "outils/club_maths/jeu_de_nim.html": {
       "primaryNotion": "strategie",
       "primaryGroup": "jeux",
