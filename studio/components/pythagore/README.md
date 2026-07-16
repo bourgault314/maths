@@ -56,12 +56,15 @@ Jeu de déplacement des pièces d’un découpage de Pythagore.
 - les aimantations utilisent des ancres géométriques déclarées : sommets,
   milieux, bords et poses exactes ;
 - une validation ne dépend jamais d’un simple rapprochement visuel ;
-- le mode téléphone affiche un seul moulin-cible, agrandi, puis la zone des
-  pièces en dessous : le second triangle source est masqué pour éviter deux
-  moulins empilés ; plein écran, lettres et impression restent réservés à
-  l’ordinateur ;
+- le mode téléphone affiche uniquement le moulin de départ agrandi : il porte
+  déjà les pièces sur `a²` et `b²` ainsi que le carré `c²` à remplir. Le moulin
+  cible séparé est masqué ; plein écran, lettres et impression restent réservés
+  à l’ordinateur ;
 - les puzzles proposés doivent être de vraies découpes distinctes. Une simple
   rotation ou un miroir d’un puzzle existant ne constitue pas une variante.
+- la dissection `abuAlWafa` comporte neuf pièces réellement distinctes du
+  Périgal : quatre triangles, quatre trapèzes et le carré `a²` entier. Sa
+  solution est définie par des poses exactes et validée sans chevauchement.
 
 ### `activity.pythagore-tactile`
 
@@ -240,7 +243,7 @@ Les golden snapshots du composant devront couvrir :
 1. PythaBarre sur ordinateur en plein écran ;
 2. PythaBarre en portrait sur téléphone ;
 3. Moulin complet sur ordinateur ;
-4. Moulin mobile empilé `Cible` puis `Pièces` ;
+4. Moulin mobile unique avec pièces sur `a²` et `b²`, et `c²` vide ;
 5. un puzzle simple sans retournement ;
 6. Bhaskara avec rotation et retournement ;
 7. un rendu imprimable sans page blanche supplémentaire.
