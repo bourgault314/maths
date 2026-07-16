@@ -1373,6 +1373,10 @@ select { cursor: pointer; }
 /* Page d'entrée sur ordinateur : l'ancienne composition en deux colonnes,
    resserrée en hauteur sans réduire les illustrations des domaines. */
 @media (min-width: 921px) {
+  body.catalogue-is-deep .site-shell {
+    margin-top: var(--catalogue-stage-top, 16px);
+  }
+
   body:not(.catalogue-is-deep) {
     min-height: 100vh;
     min-height: 100dvh;
