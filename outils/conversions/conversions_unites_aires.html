@@ -91,9 +91,36 @@
 
         /* SVG : on masque les textes tant que le mode 123 n'est pas actif */
         body:not(.show-values) .tile-text { display: none; }
+
+        @media (max-width: 640px) {
+            body > div[class*="top-4"] {
+                top: 6px !important;
+                gap: 4px !important;
+                padding-inline: 6px;
+            }
+            body > div[class*="top-4"] > div:first-child {
+                gap: 4px !important;
+                padding: 4px !important;
+                justify-content: center;
+            }
+            .unit-pill { padding: 6px 9px; font-size: 12px; min-height: 36px; }
+            body > div[class*="bottom-6"] {
+                bottom: 6px !important;
+                justify-content: flex-start !important;
+                gap: 8px !important;
+                overflow-x: auto;
+                padding: 0 8px 4px;
+                overscroll-behavior-inline: contain;
+                -webkit-overflow-scrolling: touch;
+            }
+            body > div[class*="bottom-6"] > .ui-panel { flex: 0 0 auto; }
+            .tool-btn { min-width: 44px; min-height: 44px; padding: 5px; }
+            .tool-btn svg { width: 22px; height: 22px; }
+        }
     </style>
 <link rel="stylesheet" href="../../assets/css/consentement.css">
 <script defer src="../../assets/js/consentement.js"></script>
+<script defer src="../../assets/js/tool-parent-navigation.js?v=1"></script>
 </head>
 <body oncontextmenu="return false;">
 

@@ -29,9 +29,47 @@
         #btn-reset-view:hover { background: #f1f5f9; transform: scale(1.05); color: #1e293b; border-color: #cbd5e1; }
 
         .color-transition { transition: all 0.4s ease; }
+
+        @media (max-width: 799px) {
+            #ui-layer {
+                top: 8px;
+                left: 8px;
+                right: 8px;
+            }
+            #ui-card {
+                width: auto !important;
+                max-height: min(54dvh, 430px);
+                padding: 12px !important;
+                overflow-y: auto;
+                overscroll-behavior: contain;
+            }
+            #unit-indicators { margin-bottom: 10px !important; }
+            #ui-card > .mb-6 { margin-bottom: 10px !important; padding-bottom: 10px !important; min-height: 0 !important; }
+            #main-equation { font-size: clamp(1.45rem, 7vw, 2rem) !important; }
+            #sub-text { font-size: .82rem !important; }
+            #btn-reveal { padding: 7px 10px !important; font-size: .75rem !important; }
+            #ui-card > .bg-slate-100 { display: none !important; }
+            #ui-card .action-btn { padding: 10px 12px !important; font-size: .9rem !important; }
+            #volume-title {
+                top: auto;
+                bottom: 66px;
+                width: calc(100% - 24px);
+                font-size: 17px;
+                line-height: 1.15;
+            }
+            #btn-reset-view {
+                top: auto;
+                right: 10px;
+                bottom: 10px;
+                padding: 9px 13px;
+                font-size: 12px;
+            }
+            #canvas-container { left: 0; }
+        }
     </style>
 <link rel="stylesheet" href="../../assets/css/consentement.css">
 <script defer src="../../assets/js/consentement.js"></script>
+<script defer src="../../assets/js/tool-parent-navigation.js?v=1"></script>
 </head>
 <body>
 

@@ -153,6 +153,35 @@
     /* --- LOGIQUE D'IMPRESSION (A4 - 4 Par Page) --- */
     #printLogoFixed { display: none; }
 
+    @media screen and (max-width: 700px) {
+      body { padding: 8px; }
+      .config-panel { padding: 12px; border-radius: 10px; }
+      .config-header { align-items: flex-start; }
+      .config-header h2 { font-size: 1.08rem; }
+      .config-header p { font-size: .8rem; }
+      .theme-grid { grid-template-columns: 1fr; gap: 8px; }
+      .theme-col { padding: 10px; }
+      .bottom-config, .config-left { width: 100%; }
+      .bottom-config { align-items: stretch; padding: 10px; }
+      .config-left { gap: 10px; }
+      .btn-main { width: 100%; min-height: 44px; }
+      .diapo-container { border-radius: 12px; }
+      .diapo-header { display: grid; grid-template-columns: 44px minmax(70px, 1fr) auto; gap: 6px; padding: 8px; }
+      .header-group { gap: 5px; min-width: 0; }
+      .btn-nav { min-width: 0; min-height: 44px; padding: 8px; }
+      #btnPrev { width: 44px; overflow: hidden; color: transparent; font-size: 0; }
+      #btnPrev::before { content: "◄"; color: var(--text); font-size: 1rem; }
+      #btnPlay { min-width: 0; max-width: 140px; font-size: .76rem; line-height: 1.15; }
+      .slide-counter { font-size: .82rem; text-align: center; }
+      .question-box { min-height: 84px; padding: 14px 10px; }
+      .question-text { font-size: clamp(1.15rem, 5.6vw, 1.5rem); }
+      .stage-wrap { min-height: 48dvh; }
+      .correction-box { min-height: 90px; padding: 12px 10px; }
+      .correction-text { font-size: 1.15rem; }
+      .thumbnails-wrap { flex-wrap: nowrap; justify-content: flex-start; overflow-x: auto; padding: 10px; }
+      .thumb { flex: 0 0 110px; height: 70px; }
+    }
+
     @media screen {
       #printArea { display: none; }
     }
@@ -231,6 +260,7 @@
   </style>
 <link rel="stylesheet" href="../../assets/css/consentement.css">
 <script defer src="../../assets/js/consentement.js"></script>
+<script defer src="../../assets/js/tool-parent-navigation.js?v=1"></script>
 </head>
 <body>
 
