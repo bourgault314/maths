@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 70 48" role="img" aria-labelledby="title desc">
+  <title id="title">Probabilités</title>
+  <desc id="desc">Un dé à quatre points et un sac contenant trois boules colorées.</desc>
+  <rect x="4" y="7" width="27" height="27" rx="6" fill="#fce7f3" stroke="#be3e68" stroke-width="1.8"/>
+  <g fill="#9d174d"><circle cx="11" cy="14" r="2.1"/><circle cx="24" cy="14" r="2.1"/><circle cx="11" cy="27" r="2.1"/><circle cx="24" cy="27" r="2.1"/></g>
+  <path d="M44 8h14l-2.5 6c6 5 8.5 16 6.5 26H40c-2-10 .5-21 6.5-26Z" fill="#fff7ed" stroke="#be3e68" stroke-width="1.8" stroke-linejoin="round"/>
+  <path d="M44 8h14" stroke="#9d174d" stroke-width="2" stroke-linecap="round"/>
+  <circle cx="47" cy="29" r="4" fill="#60a5fa" stroke="#1d4ed8" stroke-width="1"/>
+  <circle cx="55" cy="31" r="4" fill="#facc15" stroke="#a16207" stroke-width="1"/>
+  <circle cx="51" cy="22" r="4" fill="#39c979" stroke="#15803d" stroke-width="1"/>
+</svg>
