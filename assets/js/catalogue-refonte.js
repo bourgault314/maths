@@ -372,7 +372,7 @@
     }
 
     const parts = [
-      `<button type="button" data-breadcrumb-target="entry">Tous les domaines</button>`
+      `<button type="button" class="breadcrumb-back" data-breadcrumb-target="entry"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M19 12H5m6-6-6 6 6 6"/></svg> Tous les domaines</button>`
     ];
 
     if (selectedDomain && level !== "domain") {
