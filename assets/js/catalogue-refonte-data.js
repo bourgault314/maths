@@ -193,7 +193,6 @@ window.MATHSGO_CATALOGUE = {
     "outils/tuiles_algebriques/livret_litteral_vert_rouge.pdf": { "primaryNotion": "calcul-litteral", "collections": ["tuiles-algebriques"], "tags": ["tuiles-algebriques"] },
     "outils/fabrication_materiel/maths_barre.html": { "primaryNotion": "schemas-barres", "collections": [], "tags": ["schema-barres", "reference-technique"] },
     "outils/patterns.html": { "primaryNotion": "patterns", "collections": [], "tags": ["patterns", "generalisation"] },
-    "outils/problemes_barres.html": { "primaryNotion": "schemas-barres", "collections": [], "tags": ["schema-barres", "resolution-problemes"] },
     "outils/problemes_barres_M974.html": { "primaryNotion": "schemas-barres", "collections": [], "tags": ["schema-barres", "resolution-problemes", "version-travail"] },
     "outils/nombres_relatifs/nombres_relatifs_somme_difference.html": { "primaryNotion": "relatifs", "collections": [], "tags": ["nombres-relatifs", "plateau-manipulation"] },
     "outils/nombres_relatifs/nombres_relatifs_somme_differenceB.html": { "primaryNotion": "relatifs", "collections": [], "tags": ["nombres-relatifs", "plateau-manipulation"] },
@@ -3387,7 +3386,7 @@ window.MATHSGO_CATALOGUE = {
     {
       "id": "outils-plateaux-manipulation-moulin-pythagore-html",
       "title": "Moulin de Pythagore",
-      "description": "Une ressource maths&go pour travailler pythagore.",
+      "description": "Déplacez les pièces de puzzles pour visualiser l’égalité des aires du théorème de Pythagore.",
       "path": "outils/plateaux_manipulation/moulin_pythagore.html",
       "domains": [
         "geometrie"
@@ -3968,7 +3967,7 @@ window.MATHSGO_CATALOGUE = {
     {
       "id": "outils-pythabarre-html",
       "title": "PythaBarre",
-      "description": "Une ressource maths&go pour travailler pythagore.",
+      "description": "Déroulez le théorème pas à pas avec le calcul, le schéma en barres et le moulin de Pythagore.",
       "path": "outils/pythabarre.html",
       "domains": [
         "geometrie"

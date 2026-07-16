@@ -214,19 +214,23 @@
     },
     rekenrek: {
       description: "Suivre une progression structurée avec le Rekenrek.",
-      icon: "abacus"
+      icon: "abacus",
+      thumbnail: "assets/img/thumbnails/bouliers/rekenrek.png?v=1"
     },
     montessori: {
       description: "Manipuler les nombres et les opérations avec le boulier Montessori.",
-      icon: "abacus"
+      icon: "abacus",
+      thumbnail: "assets/img/thumbnails/bouliers/montessori.png?v=1"
     },
     soroban: {
       description: "Découvrir et utiliser le boulier japonais.",
-      icon: "abacus"
+      icon: "abacus",
+      thumbnail: "assets/img/thumbnails/bouliers/soroban.png?v=1"
     },
     gerbert: {
       description: "Découvrir les outils de l’abaque de Gerbert.",
-      icon: "abacus"
+      icon: "abacus",
+      thumbnail: "assets/img/thumbnails/bouliers/gerbert.png?v=1"
     },
     "tuiles-algebriques": {
       description: "Retrouver les plateaux, générateurs et livrets de tuiles algébriques.",
@@ -421,6 +425,14 @@
       gears: `<svg viewBox="0 0 70 52" aria-hidden="true"><g fill="#2dd4bf" stroke="#0f766e" stroke-width="1.35"><g transform="translate(22 22)"><rect x="-3" y="-20" width="6" height="9" rx="1"/><rect x="-3" y="-20" width="6" height="9" rx="1" transform="rotate(45)"/><rect x="-3" y="-20" width="6" height="9" rx="1" transform="rotate(90)"/><rect x="-3" y="-20" width="6" height="9" rx="1" transform="rotate(135)"/><rect x="-3" y="-20" width="6" height="9" rx="1" transform="rotate(180)"/><rect x="-3" y="-20" width="6" height="9" rx="1" transform="rotate(225)"/><rect x="-3" y="-20" width="6" height="9" rx="1" transform="rotate(270)"/><rect x="-3" y="-20" width="6" height="9" rx="1" transform="rotate(315)"/><circle r="13"/></g></g><circle cx="22" cy="22" r="5" fill="#ecfeff" stroke="#0f766e" stroke-width="1.5"/><g fill="#facc15" stroke="#b45309" stroke-width="1.2"><g transform="translate(49 31)"><rect x="-2.6" y="-14" width="5.2" height="7" rx=".8"/><rect x="-2.6" y="-14" width="5.2" height="7" rx=".8" transform="rotate(45)"/><rect x="-2.6" y="-14" width="5.2" height="7" rx=".8" transform="rotate(90)"/><rect x="-2.6" y="-14" width="5.2" height="7" rx=".8" transform="rotate(135)"/><rect x="-2.6" y="-14" width="5.2" height="7" rx=".8" transform="rotate(180)"/><rect x="-2.6" y="-14" width="5.2" height="7" rx=".8" transform="rotate(225)"/><rect x="-2.6" y="-14" width="5.2" height="7" rx=".8" transform="rotate(270)"/><rect x="-2.6" y="-14" width="5.2" height="7" rx=".8" transform="rotate(315)"/><circle r="9"/></g></g><circle cx="49" cy="31" r="3.2" fill="#fffbeb" stroke="#b45309" stroke-width="1.3"/></svg>`
     };
     return icons[name] || icons.explorations;
+  }
+
+  function collectionVisual(collection) {
+    const design = collectionDesign[collection.id] || {};
+    if (design.thumbnail) {
+      return `<span class="notion-icon collection-thumbnail"><img src="${escapeHtml(rootPrefix + design.thumbnail)}" alt="" loading="lazy"></span>`;
+    }
+    return `<span class="notion-icon">${icon(design.icon)}</span>`;
   }
 
   function typeIcon(resource) {
@@ -667,7 +679,7 @@
       return `<a class="notion-card collection-card" data-collection-card="${escapeHtml(collection.id)}" href="${escapeHtml(collectionHref(collection))}" style="${domainStyle(collection.domain)}">
         <span class="collection-label">Collection</span>
         <span class="notion-top">
-          <span class="notion-icon">${icon(design.icon)}</span>
+          ${collectionVisual(collection)}
           <h3>${escapeHtml(collection.title)}</h3>
         </span>
         <p>${escapeHtml(design.description || "Retrouver cette collection d’outils.")}</p>
@@ -768,7 +780,7 @@
           return `<a class="notion-card collection-card" data-collection-card="${escapeHtml(collection.id)}" href="${escapeHtml(collectionHref(collection))}" style="${domainStyle(collection.domain)}">
             <span class="collection-label">Collection</span>
             <span class="notion-top">
-              <span class="notion-icon">${icon(design.icon)}</span>
+              ${collectionVisual(collection)}
               <h3>${escapeHtml(collection.title)}</h3>
             </span>
             <p>${escapeHtml(design.description || "Retrouver cette collection d’outils.")}</p>
