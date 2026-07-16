@@ -196,7 +196,7 @@
       <option value="perigal" selected>1. Périgal (5 pièces)</option>
       <option value="bhaskara">2. Bhaskara (4 triangles + 1 carré)</option>
       <option value="leitzmann">3. Liu Hui (8 triangles)</option>
-      <option value="quatreIdentiques">4. 4 pièces identiques + 1 carré</option>
+      <option value="quatreIdentiques">4. Découpage croisé (4 pièces + 1 carré)</option>
       <option value="perigalSix">5. Périgal — défi 6 pièces</option>
     </select>
     </div>
@@ -473,21 +473,86 @@
     };
   }
 
+  // Pavages exacts, exprimés dans le repère (u,v) du carré c² et avec a=1.
+  // Le rapport du moulin est 1:2:√5 ; les coordonnées sont donc simplement
+  // multipliées par a, puis projetées dans le carré incliné. Ces poses ont été
+  // contrôlées par aire, inclusion et absence de chevauchement.
+  const EXACT_SOLUTION_UV = {
+    perigal: {
+      m:[[1.3416407865,0.4472135955],[0.4472135955,2.2360679775],[2.2360679775,2.2360679775],[2.2360679775,0.894427191]],
+      sq:[[1.3416407865,0.4472135955],[0.894427191,1.3416407865],[0,0.894427191],[0.4472135955,0]],
+      g:[[0.4472135955,0],[2.2360679775,0.894427191],[2.2360679775,0]],
+      y:[[0.894427191,1.3416407865],[0.4472135955,2.2360679775],[0,2.2360679775],[0,0.894427191]],
+      b:[[0.4472135955,0],[0,0.894427191],[0,0]]
+    },
+    perigalSix: {
+      m1:[[0.894427191,0.4472135955],[0,2.2360679775],[1.788854382,2.2360679775]],
+      sq:[[1.3416407865,1.3416407865],[0.894427191,0.4472135955],[1.788854382,0],[2.2360679775,0.894427191]],
+      g:[[1.788854382,0],[0,0.894427191],[0,0]],
+      y:[[1.3416407865,1.3416407865],[1.788854382,2.2360679775],[2.2360679775,2.2360679775],[2.2360679775,0.894427191]],
+      m2:[[0.894427191,0.4472135955],[0,2.2360679775],[0,0.894427191]],
+      b:[[1.788854382,0],[2.2360679775,0.894427191],[2.2360679775,0]]
+    },
+    leitzmann: {
+      bLeft:[[2.2360679775,2.2360679775],[1.3416407865,0.4472135955],[0.7453559925,2.2360679775]],
+      bBottom:[[0.894427191,1.788854382],[0,0],[1.490711985,0]],
+      bTop:[[0,0],[0.894427191,1.788854382],[0,1.490711985]],
+      bRight:[[2.2360679775,2.2360679775],[1.3416407865,0.4472135955],[2.2360679775,0.7453559925]],
+      aLeft:[[0,2.2360679775],[0.894427191,1.788854382],[0,1.490711985]],
+      aBottom:[[1.3416407865,0.4472135955],[2.2360679775,0],[2.2360679775,0.7453559925]],
+      aTop:[[2.2360679775,0],[1.3416407865,0.4472135955],[1.490711985,0]],
+      aRight:[[0,2.2360679775],[0.894427191,1.788854382],[0.7453559925,2.2360679775]]
+    },
+    quatreIdentiques: {
+      q1:[[0.894427191,0.4472135955],[1.11803398875,0],[2.2360679775,0],[2.2360679775,1.11803398875]],
+      q2:[[1.788854382,0.894427191],[2.2360679775,1.11803398875],[2.2360679775,2.2360679775],[1.11803398875,2.2360679775]],
+      q3:[[1.3416407865,1.788854382],[1.11803398875,2.2360679775],[0,2.2360679775],[0,1.11803398875]],
+      q4:[[0.4472135955,1.3416407865],[0,1.11803398875],[0,0],[1.11803398875,0]],
+      aSq:[[0.4472135955,1.3416407865],[0.894427191,0.4472135955],[1.788854382,0.894427191],[1.3416407865,1.788854382]]
+    }
+  };
+
+  function exactSolutionPolygons(){
+    const targetMoulin=activePuzzleMoulin();
+    const layout=EXACT_SOLUTION_UV[state.puzzle];
+    if(!targetMoulin || !layout) return null;
+    const {C,mold}=targetMoulin;
+    return Object.fromEntries(Object.entries(layout).map(([key,points])=>[
+      key,
+      points.map(([u,v])=>({
+        x:C.x+(u*mold.a)*mold.uvec.x+(v*mold.a)*mold.vvec.x,
+        y:C.y+(u*mold.a)*mold.uvec.y+(v*mold.a)*mold.vvec.y
+      }))
+    ]));
+  }
+
   function prepareSolutionPoses(){
     state.solutionPoses.clear();
-    const target=isBhaskaraPuzzle() ? bhaskaraSolutionPolygons() : null;
+    if(isBhaskaraPuzzle()){
+      const target=bhaskaraSolutionPolygons();
+      if(!target) return;
+      target.triangles.forEach((poly,i)=>{
+        const piece=state.pieces.get(`L-t${i+1}`);
+        if(!piece) return;
+        const pose=poseForTargetPolygon(piece,poly);
+        if(pose) state.solutionPoses.set(piece.id,pose);
+      });
+      const squarePiece=state.pieces.get("L-sq");
+      if(squarePiece){
+        const squarePose=poseForTargetPolygon(squarePiece,target.square);
+        if(squarePose) state.solutionPoses.set(squarePiece.id,squarePose);
+      }
+      return;
+    }
+
+    const target=exactSolutionPolygons();
     if(!target) return;
-    target.triangles.forEach((poly,i)=>{
-      const piece=state.pieces.get(`L-t${i+1}`);
+    Object.entries(target).forEach(([key,poly])=>{
+      const piece=state.pieces.get(`L-${key}`);
       if(!piece) return;
       const pose=poseForTargetPolygon(piece,poly);
       if(pose) state.solutionPoses.set(piece.id,pose);
     });
-    const squarePiece=state.pieces.get("L-sq");
-    if(squarePiece){
-      const squarePose=poseForTargetPolygon(squarePiece,target.square);
-      if(squarePose) state.solutionPoses.set(squarePiece.id,squarePose);
-    }
   }
 
   function setPuzzleStatus(text,type=""){
@@ -738,7 +803,7 @@
     }
 ,
     quatreIdentiques: {
-      name: "4 pièces identiques",
+      name: "Découpage croisé",
       generate: (Ax, Ay, b, ratio) => {
         const a = b * ratio;
         const c = Math.hypot(a, b);
@@ -832,7 +897,8 @@
           {x:Ax, y:Ay-b}, {x:Ax+b, y:Ay-b}, {x:Ax+b, y:Ay}, {x:Ax, y:Ay}
         ];
 
-        // Règle : le petit carré reste entier, le grand est découpé en 4 pièces identiques
+        // Règle : le petit carré reste entier, le grand est découpé en quatre
+        // quadrilatères par deux droites perpendiculaires.
         const keepA = a <= b;
 
         if(keepA){
@@ -890,13 +956,13 @@
     }
 ,
     quatreIdentiques: {
-      title: "Puzzle 4 — 4 pièces identiques + 1 carré",
+      title: "Puzzle 4 — Découpage croisé + 1 carré",
       html: `
-        <p>Le <strong>petit carré</strong> reste <strong>entier</strong>. L’autre carré est découpé en <strong>4 pièces identiques</strong>.</p>
+        <p>Le <strong>petit carré</strong> reste <strong>entier</strong>. L’autre carré est découpé en <strong>4 quadrilatères</strong> par deux droites perpendiculaires.</p>
         <p>Objectif : déplacer ces <strong>5 pièces</strong> pour reconstituer le carré incliné <em>c²</em>.</p>
         <ul>
           <li>Astuce : place d’abord le carré entier dans un coin de <em>c²</em>.</li>
-          <li>Les 4 pièces identiques se complètent bien quand leurs arêtes « obliques » sont alignées avec le bord de <em>c²</em>.</li>
+          <li>Les 4 quadrilatères se complètent bien quand leurs arêtes obliques sont alignées avec le bord de <em>c²</em>.</li>
           <li>Tu peux <strong>retourner</strong> une pièce avec le bouton <em>Retourner</em>.</li>
         </ul>
       `
