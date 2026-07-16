@@ -188,7 +188,7 @@ window.MATHSGO_CATALOGUE = {
     "outils/gabarits_partage_equitable_2_3_4_5.pdf": { "primaryNotion": "schemas-barres", "collections": [], "tags": ["schema-barres", "resolution-problemes", "gabarit"] },
     "outils/sheet_generator_schema_partie_tout.html": { "primaryNotion": "schemas-barres", "collections": [], "tags": ["ancien-index", "schema-barres"] },
     "outils/tuiles_algebriques/livret_litteral_blanc_gris.pdf": { "primaryNotion": "calcul-litteral", "collections": ["tuiles-algebriques"], "tags": ["tuiles-algebriques"] },
-    "outils/tuiles_algebriques/livret_litteral_bleu_jaune.pdf.pdf": { "primaryNotion": "calcul-litteral", "collections": ["tuiles-algebriques"], "tags": ["tuiles-algebriques"] },
+    "outils/tuiles_algebriques/livret_litteral_bleu_jaune.pdf": { "primaryNotion": "calcul-litteral", "collections": ["tuiles-algebriques"], "tags": ["tuiles-algebriques"] },
     "outils/tuiles_algebriques/livret_litteral_mathigon.pdf": { "primaryNotion": "calcul-litteral", "collections": ["tuiles-algebriques"], "tags": ["tuiles-algebriques"] },
     "outils/tuiles_algebriques/livret_litteral_vert_rouge.pdf": { "primaryNotion": "calcul-litteral", "collections": ["tuiles-algebriques"], "tags": ["tuiles-algebriques"] },
     "outils/fabrication_materiel/maths_barre.html": { "primaryNotion": "schemas-barres", "collections": [], "tags": ["schema-barres", "reference-technique"] },
@@ -678,13 +678,13 @@ window.MATHSGO_CATALOGUE = {
       "group": "cours",
       "labels": {
         "outils/tuiles_algebriques/livret_litteral_blanc_gris.pdf": "Blanc et gris",
-        "outils/tuiles_algebriques/livret_litteral_bleu_jaune.pdf.pdf": "Bleu et jaune",
+        "outils/tuiles_algebriques/livret_litteral_bleu_jaune.pdf": "Bleu et jaune",
         "outils/tuiles_algebriques/livret_litteral_mathigon.pdf": "Mathigon",
         "outils/tuiles_algebriques/livret_litteral_vert_rouge.pdf": "Vert et rouge"
       },
       "paths": [
         "outils/tuiles_algebriques/livret_litteral_blanc_gris.pdf",
-        "outils/tuiles_algebriques/livret_litteral_bleu_jaune.pdf.pdf",
+        "outils/tuiles_algebriques/livret_litteral_bleu_jaune.pdf",
         "outils/tuiles_algebriques/livret_litteral_mathigon.pdf",
         "outils/tuiles_algebriques/livret_litteral_vert_rouge.pdf"
       ]
@@ -3298,10 +3298,10 @@ window.MATHSGO_CATALOGUE = {
       "recent": false
     },
     {
-      "id": "outils-tuiles-algebriques-livret-litteral-bleu-jaune-pdf-pdf",
+      "id": "outils-tuiles-algebriques-livret-litteral-bleu-jaune-pdf",
       "title": "Livret de calcul littéral — bleu et jaune",
       "description": "Un livret d’activités de calcul littéral avec des tuiles bleues et jaunes.",
-      "path": "outils/tuiles_algebriques/livret_litteral_bleu_jaune.pdf.pdf",
+      "path": "outils/tuiles_algebriques/livret_litteral_bleu_jaune.pdf",
       "domains": [
         "algebre"
       ],

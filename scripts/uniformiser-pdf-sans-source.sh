@@ -25,7 +25,7 @@ for pdf in \
   nombres_relatifs/nombres_relatifs_vert_rouge_contour_noir.pdf \
   nombres_relatifs/nombres_relatifs_vert_rouge_ecriture_blanche.pdf \
   tuiles_algebriques/livret_litteral_blanc_gris.pdf \
-  tuiles_algebriques/livret_litteral_bleu_jaune.pdf.pdf \
+  tuiles_algebriques/livret_litteral_bleu_jaune.pdf \
   tuiles_algebriques/livret_litteral_mathigon.pdf \
   tuiles_algebriques/livret_litteral_vert_rouge.pdf
 do
