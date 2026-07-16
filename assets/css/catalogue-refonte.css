@@ -603,6 +603,65 @@ select { cursor: pointer; }
   gap: 14px;
 }
 
+.catalogue-first-paint-shell {
+  contain: layout paint;
+}
+
+.catalogue-shell-card {
+  pointer-events: none;
+}
+
+.catalogue-shell-icon {
+  position: relative;
+  z-index: 1;
+  width: 58px;
+  height: 52px;
+  border: 1px solid color-mix(in srgb, var(--accent, var(--blue)) 24%, #d7e0e9);
+  border-radius: 14px;
+  background: linear-gradient(135deg, var(--soft, #eef5fb), #fff 72%);
+  box-shadow: inset 0 0 0 5px rgba(255, 255, 255, .48);
+}
+
+.catalogue-shell-icon::before,
+.catalogue-shell-icon::after {
+  content: "";
+  position: absolute;
+  left: 12px;
+  right: 12px;
+  height: 5px;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--accent, var(--blue)) 34%, #fff);
+}
+
+.catalogue-shell-icon::before { top: 15px; }
+.catalogue-shell-icon::after { top: 27px; right: 22px; }
+
+.catalogue-shell-card .domain-card-arrow {
+  width: 9px;
+  height: 9px;
+  border: solid var(--accent, var(--blue));
+  border-width: 2px 2px 0 0;
+  font-size: 0;
+  transform: rotate(45deg);
+}
+
+@media (max-width: 680px) {
+  .catalogue-shell-icon {
+    width: 53px;
+    height: 45px;
+    border-radius: 12px;
+  }
+
+  .catalogue-shell-icon::before,
+  .catalogue-shell-icon::after {
+    left: 10px;
+    right: 10px;
+  }
+
+  .catalogue-shell-icon::before { top: 13px; }
+  .catalogue-shell-icon::after { top: 23px; right: 18px; }
+}
+
 .domain-card {
   position: relative;
   min-width: 0;
