@@ -30,10 +30,10 @@
 \newcommand{\LogoFile}{../assets/img/mathsgo-logo.png}
 \newcommand{\MathsGoFooter}{%
 \begin{tikzpicture}[remember picture,overlay]
-  \node[anchor=south west,inner sep=0pt] at ([xshift=0.48cm,yshift=0.20cm]current page.south west)
+  \node[anchor=south west,inner sep=0pt] at ([xshift=0.55cm,yshift=0.18cm]current page.south west)
     {\includegraphics[width=2.45cm]{\LogoFile}};
-  \node[anchor=west,inner sep=0pt,text=brandNavy,font=\sffamily\bfseries\fontsize{9.2}{10.0}\selectfont]
-    at ([xshift=3.16cm,yshift=0.57cm]current page.south west) {mathsgo.re};
+  \node[anchor=south,inner sep=0pt,text=brandNavy!70,font=\sffamily\bfseries\fontsize{7}{7}\selectfont]
+    at ([yshift=0.32cm]current page.south) {mathsgo.re};
 \end{tikzpicture}%
 }
 \AddToShipoutPictureFG{\MathsGoFooter}
@@ -47,6 +47,8 @@
 \newcommand{\StepHead}[2]{\StepBadge{#1}\hspace{0.18cm}{\bfseries\color{brandNavy}\fontsize{12.2}{13.0}\selectfont #2}}
 \newcommand{\SubHead}[2]{\textcolor{#1}{\bfseries\fontsize{10.7}{11.4}\selectfont #2}}
 \newcommand{\CheckBox}{\ensuremath{\Box}\,}
+\newcommand{\BigCheckBox}{\tikz[baseline=-0.62ex]{\draw[rounded corners=0pt,brandNavy,line width=0.75pt] (0,0) rectangle (0.38,0.38);}\hspace{0.08cm}}
+\newcommand{\LowBigCheckBox}{\tikz[baseline=0.85ex]{\draw[rounded corners=0pt,brandNavy,line width=0.75pt] (0,0) rectangle (0.38,0.38);}\hspace{0.08cm}}
 \newcommand{\Sep}{\vspace{0.05cm}\par\noindent\textcolor{lightLine}{\rule{19.45cm}{0.42pt}}\par\vspace{0.05cm}}
 \newcommand{\Apt}{\textcolor{brandOrange}{A}}
 \newcommand{\Mpt}{\textcolor{brandBlue}{M}}
@@ -62,9 +64,8 @@
 
 \newcommand{\Header}[2]{%
 \begin{center}
-{\fontsize{22.2}{23.4}\selectfont\bfseries\color{brandNavy} Thalès : démontrer parallèle ou non}\par\vspace{0.02cm}
-{\fontsize{13.2}{14.0}\selectfont\bfseries\color{brandTeal} #1}\par\vspace{0.02cm}
-{\fontsize{9.9}{10.6}\selectfont\bfseries\color{brandOrange} #2}
+{\fontsize{19.4}{20.5}\selectfont\bfseries\color{brandNavy} #1}\par\vspace{0.03cm}
+{\fontsize{12.7}{13.5}\selectfont\bfseries\color{brandTeal} #2}
 \end{center}\vspace{0.02cm}}
 
 % ---------- Figures nettes : pas de bouts arrondis sur les triangles ----------
@@ -80,14 +81,13 @@
   \draw[brandNavy,line width=1.25pt] (A)--(C);
   \draw[brandTeal,line width=1.38pt] (B)--(C);
   \draw[brandBlue,line width=1.28pt,densely dashed] (M)--(N);
-  \foreach \P/\col in {A/brandOrange,M/brandBlue,N/brandBlue,B/brandTeal,C/brandTeal}{\fill[\col] (\P) circle (2.0pt);}
   \node[brandOrange,font=\bfseries\small] at (-0.27,-0.25) {$A$};
   \node[brandBlue,font=\bfseries\small] at (2.62,-0.88) {$M$};
   \node[brandBlue,font=\bfseries\small] at (2.04,1.28) {$N$};
   \node[brandTeal,font=\bfseries\small] at (5.68,-1.18) {$B$};
   \node[brandTeal,font=\bfseries\small] at (4.89,2.42) {$C$};
-  \node[brandBlue,font=\bfseries\scriptsize] at (2.83,0.33) {$(MN)$};
-  \node[brandTeal,font=\bfseries\scriptsize] at (5.45,0.52) {$(BC)$};
+  \node[brandBlue,font=\bfseries\scriptsize] at (3.10,0.36) {$(MN)$};
+  \node[brandTeal,font=\bfseries\scriptsize] at (5.56,0.64) {$(BC)$};
 \end{tikzpicture}}
 
 \newcommand{\FigurePapillon}[1]{%
@@ -101,14 +101,13 @@
   \draw[brandNavy,line width=1.25pt] (N)--(A)--(C);
   \draw[brandBlue,line width=1.28pt,densely dashed] (M)--(N);
   \draw[brandTeal,line width=1.38pt] (B)--(C);
-  \foreach \P/\col in {A/brandOrange,M/brandBlue,N/brandBlue,B/brandTeal,C/brandTeal}{\fill[\col] (\P) circle (2.0pt);}
   \node[brandOrange,font=\bfseries\small] at (-0.05,0.31) {$A$};
   \node[brandBlue,font=\bfseries\small] at (-2.50,0.94) {$M$};
   \node[brandBlue,font=\bfseries\small] at (-1.93,-1.43) {$N$};
   \node[brandTeal,font=\bfseries\small] at (3.68,-1.21) {$B$};
   \node[brandTeal,font=\bfseries\small] at (2.80,2.12) {$C$};
-  \node[brandBlue,font=\bfseries\scriptsize] at (-2.12,-0.20) {$(MN)$};
-  \node[brandTeal,font=\bfseries\scriptsize] at (3.30,0.46) {$(BC)$};
+  \node[brandBlue,font=\bfseries\scriptsize] at (-2.60,-0.18) {$(MN)$};
+  \node[brandTeal,font=\bfseries\scriptsize] at (3.56,0.46) {$(BC)$};
 \end{tikzpicture}}
 
 \newcommand{\BlankEmboitee}[1]{%
@@ -123,12 +122,11 @@
   \draw[brandNavy!90,line width=1.10pt] (A)--(C);
   \draw[brandTeal,line width=1.18pt] (B)--(C);
   \draw[brandBlue,line width=1.15pt,densely dashed] (M)--(N);
-  \foreach \P in {A,M,N,B,C}{\fill[white,draw=brandNavy!60,line width=.70pt] (\P) circle (2.55pt);}
-  \node at (-0.36,-0.30) {\LowDotted{0.48}};
-  \node at (2.70,-0.88) {\LowDotted{0.48}};
-  \node at (2.05,1.30) {\LowDotted{0.48}};
-  \node at (5.78,-1.18) {\LowDotted{0.48}};
-  \node at (4.96,2.42) {\LowDotted{0.48}};
+  \node at (-0.55,-0.45) {\LowDotted{0.48}};
+  \node at (2.82,-1.08) {\LowDotted{0.48}};
+  \node at (1.82,1.50) {\LowDotted{0.48}};
+  \node at (6.02,-1.35) {\LowDotted{0.48}};
+  \node at (4.90,2.68) {\LowDotted{0.48}};
 \end{tikzpicture}}
 
 \newcommand{\BlankPapillon}[1]{%
@@ -142,18 +140,17 @@
   \draw[brandNavy!90,line width=1.10pt] (N)--(A)--(C);
   \draw[brandBlue,line width=1.15pt,densely dashed] (M)--(N);
   \draw[brandTeal,line width=1.18pt] (B)--(C);
-  \foreach \P in {A,M,N,B,C}{\fill[white,draw=brandNavy!60,line width=.70pt] (\P) circle (2.55pt);}
-  \node at (-0.05,0.34) {\LowDotted{0.48}};
-  \node at (-2.53,0.96) {\LowDotted{0.48}};
-  \node at (-1.96,-1.45) {\LowDotted{0.48}};
-  \node at (3.78,-1.22) {\LowDotted{0.48}};
-  \node at (2.87,2.14) {\LowDotted{0.48}};
+  \node at (0.00,0.55) {\LowDotted{0.48}};
+  \node at (-2.72,1.20) {\LowDotted{0.48}};
+  \node at (-2.05,-1.68) {\LowDotted{0.48}};
+  \node at (4.00,-1.40) {\LowDotted{0.48}};
+  \node at (2.95,2.38) {\LowDotted{0.48}};
 \end{tikzpicture}}
 
 \begin{document}
 
 % ================= PAGE 1 =================
-\Header{Réciproque ou contraposée ?}{Page 1 - méthode guidée avec les lettres données}
+\Header{Thalès : démontrer que des droites sont parallèles ou non}{Réciproque ou contraposée ?}
 
 \begin{center}
 \begin{minipage}[t]{9.35cm}
@@ -193,13 +190,13 @@
 \begin{minipage}[c]{6.5cm}
 \centering
 {\bfseries\color{brandTeal} Sur la droite $A,M,B$}\par\vspace{0.02cm}
-\fontsize{18}{19}\selectfont $\dfrac{\AMcol}{\ABcol}$
+\fontsize{15.5}{16.5}\selectfont $\dfrac{\AMcol}{\ABcol}$
 \end{minipage}
 \hspace{1.0cm}
 \begin{minipage}[c]{6.5cm}
 \centering
 {\bfseries\color{brandOrange} Sur la droite $A,N,C$}\par\vspace{0.02cm}
-\fontsize{18}{19}\selectfont $\dfrac{\ANcol}{\ACcol}$
+\fontsize{15.5}{16.5}\selectfont $\dfrac{\ANcol}{\ACcol}$
 \end{minipage}
 \par\vspace{0.05cm}
 {\small\bfseries\color{brandNavy} Même modèle : longueur de $A$ jusqu'à la droite $(MN)$ / longueur de $A$ jusqu'à la droite $(BC)$.}
@@ -212,16 +209,18 @@
 \noindent\begin{minipage}[t]{9.50cm}
 \begin{tikzpicture}
 \node[rounded corners=8pt,draw=brandTeal,fill=brandTeal!5,line width=0.85pt,text width=9.00cm,inner sep=6pt,align=center] {
-{\bfseries\color{brandTeal} Premier rapport}\par\vspace{-0.02cm}
-\[\BigRatio{\dfrac{\AMcol}{\ABcol}=\dfrac{\LowDotted{0.72}}{\LowDotted{0.72}}=\LowDotted{0.88}}\]
+{\bfseries\color{brandTeal} Premier rapport}\par\vspace{0.02cm}
+{\fontsize{19}{20}\selectfont
+$\displaystyle\dfrac{\AMcol}{\ABcol}=\dfrac{\LowDotted{0.84}}{\LowDotted{0.84}}=\LowDotted{1.02}$}
 };
 \end{tikzpicture}
 \end{minipage}\hfill
 \begin{minipage}[t]{9.50cm}
 \begin{tikzpicture}
 \node[rounded corners=8pt,draw=brandOrange,fill=brandOrange!5,line width=0.85pt,text width=9.00cm,inner sep=6pt,align=center] {
-{\bfseries\color{brandOrange} Deuxième rapport}\par\vspace{-0.02cm}
-\[\BigRatio{\dfrac{\ANcol}{\ACcol}=\dfrac{\LowDotted{0.72}}{\LowDotted{0.72}}=\LowDotted{0.88}}\]
+{\bfseries\color{brandOrange} Deuxième rapport}\par\vspace{0.02cm}
+{\fontsize{19}{20}\selectfont
+$\displaystyle\dfrac{\ANcol}{\ACcol}=\dfrac{\LowDotted{0.84}}{\LowDotted{0.84}}=\LowDotted{1.02}$}
 };
 \end{tikzpicture}
 \end{minipage}
@@ -263,13 +262,13 @@
 \begin{center}
 \tikz[baseline=-0.72ex]{\node[rounded corners=6pt,draw=brandNavy!55,fill=softBlue!18,line width=0.8pt,inner xsep=14pt,inner ysep=6pt,font=\bfseries\fontsize{11.5}{12.2}\selectfont\color{brandNavy}]{Donc les droites $(MN)$ et $(BC)$ sont \LowDotted{3.20}.};}
 \hspace{0.4cm}
-\tikz[baseline=-0.72ex]{\node[rounded corners=6pt,draw=brandOrange!55,fill=softOrange!35,line width=0.65pt,inner xsep=10pt,inner ysep=5.5pt,font=\bfseries\fontsize{10.0}{10.8}\selectfont\color{brandNavy}]{\CheckBox réciproque \quad \CheckBox contraposée};}
+\tikz[baseline=-0.72ex]{\node[rounded corners=7pt,draw=brandOrange!55,fill=softOrange!35,line width=0.70pt,minimum width=6.35cm,inner xsep=13pt,inner ysep=8pt,font=\bfseries\fontsize{10.8}{11.5}\selectfont\color{brandNavy}]{\BigCheckBox \raisebox{0.90ex}{réciproque} \qquad \BigCheckBox \raisebox{0.90ex}{contraposée}};}
 \end{center}
 
 \newpage
 
 % ================= PAGE 2 =================
-\Header{Réciproque ou contraposée ?}{Page 2 - gabarit à adapter aux lettres de l'exercice}
+\Header{Fiche-guide : réciproque ou contraposée ?}{J'adapte les lettres à la figure de mon exercice}
 
 \noindent
 \begin{minipage}[t]{5.45cm}
@@ -381,9 +380,74 @@ $\displaystyle \frac{\LowDotted{0.55}}{\LowDotted{0.55}}=\frac{\LowDotted{0.55}}
 \vspace{0.08cm}
 \begin{center}
 \begin{tikzpicture}
-\node[rounded corners=7pt,draw=brandOrange!55,fill=softOrange!50,line width=0.65pt,text width=12.60cm,inner sep=5.2pt,align=center] {\bfseries\color{brandNavy} Ma réponse est-elle justifiée par le bon mot ? \hspace{0.22cm}$\Box$ réciproque \hspace{0.18cm}$\Box$ contraposée};
+\node[rounded corners=7pt,draw=brandOrange!55,fill=softOrange!50,line width=0.65pt,text width=12.60cm,inner sep=7.0pt,align=center] {\bfseries\color{brandNavy} Ma réponse est-elle justifiée par le bon mot ? \hspace{0.22cm}\LowBigCheckBox réciproque \hspace{0.25cm}\LowBigCheckBox contraposée};
 \end{tikzpicture}
 \end{center}
 
 \end{minipage}
+
+\newpage
+
+\Header{Deux exemples entièrement rédigés}{Un cas emboîté et un cas papillon}
+
+\begin{center}
+\tikz\node[rounded corners=7pt,draw=brandNavy!40,fill=softBlue!20,line width=.70pt,text width=18.25cm,inner sep=5pt,align=center]{%
+{\bfseries\color{brandNavy} Même démarche dans les deux configurations : je calcule deux rapports, je les compare, puis j'emploie le bon raisonnement.}
+};
+\end{center}
+
+\vspace{0.12cm}
+{\bfseries\color{brandTeal}\fontsize{12.6}{13.4}\selectfont Exemple 1 — cas emboîté : les droites sont parallèles}\par\vspace{0.05cm}
+\begin{tikzpicture}
+\node[rounded corners=9pt,draw=brandTeal,fill=brandTeal!4,line width=.85pt,text width=18.45cm,inner sep=8pt,align=left] {
+\begin{minipage}[c]{6.15cm}
+\centering
+\FigureEmboitee{0.72}\par\vspace{0.08cm}
+{\fontsize{9.4}{10.1}\selectfont
+$AM=4$ cm \quad $AB=10$ cm\par
+$AN=6$ cm \quad $AC=15$ cm}
+\end{minipage}\hfill
+\begin{minipage}[c]{11.55cm}
+{\bfseries\color{brandNavy} 1. Je vérifie le contexte.}\par
+Les points $A,M,B$ sont alignés. Les points $A,N,C$ sont alignés. Les points sont placés dans le même ordre : $A-M-B$ et $A-N-C$.\par\vspace{0.10cm}
+{\bfseries\color{brandNavy} 2. Je calcule les deux rapports.}\par
+\[
+\frac{AM}{AB}=\frac{4}{10}
+\qquad\text{et}\qquad
+\frac{AN}{AC}=\frac{6}{15}
+\]
+J'utilise l'égalité des produits en croix : $4\times15=60$ et $10\times6=60$. Les deux rapports sont donc égaux.\par\vspace{0.10cm}
+{\bfseries\color{brandTeal} 3. Je conclus.}\par
+D'après la réciproque du théorème de Thalès, les droites $(MN)$ et $(BC)$ sont parallèles.
+\end{minipage}
+};
+\end{tikzpicture}
+
+\vspace{0.35cm}
+{\bfseries\color{brandOrange}\fontsize{12.6}{13.4}\selectfont Exemple 2 — cas papillon : les droites ne sont pas parallèles}\par\vspace{0.05cm}
+\begin{tikzpicture}
+\node[rounded corners=9pt,draw=brandOrange,fill=brandOrange!4,line width=.85pt,text width=18.45cm,inner sep=8pt,align=left] {
+\begin{minipage}[c]{6.15cm}
+\centering
+\FigurePapillon{0.66}\par\vspace{0.08cm}
+{\fontsize{9.4}{10.1}\selectfont
+$AM=3$ cm \quad $AB=5$ cm\par
+$AN=4$ cm \quad $AC=7$ cm}
+\end{minipage}\hfill
+\begin{minipage}[c]{11.55cm}
+{\bfseries\color{brandNavy} 1. Je vérifie le contexte.}\par
+Les points $M,A,B$ sont alignés. Les points $N,A,C$ sont alignés. Le sommet commun est $A$.\par\vspace{0.10cm}
+{\bfseries\color{brandNavy} 2. Je calcule les deux rapports.}\par
+\[
+\frac{AM}{AB}=\frac{3}{5}
+\qquad\text{et}\qquad
+\frac{AN}{AC}=\frac{4}{7}
+\]
+J'utilise les produits en croix : $3\times7=21$ et $5\times4=20$. Les deux rapports sont donc différents.\par\vspace{0.10cm}
+{\bfseries\color{brandOrange} 3. Je conclus.}\par
+D'après la contraposée du théorème de Thalès, les droites $(MN)$ et $(BC)$ ne sont pas parallèles.
+\end{minipage}
+};
+\end{tikzpicture}
+
 \end{document}
