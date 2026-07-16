@@ -24,6 +24,15 @@
   button:hover{filter:brightness(1.08)}
   #holder{user-select:none;touch-action:manipulation;display:inline-block;border-radius:12px;box-shadow:0 8px 24px rgba(0,0,0,.08)}
   .note{font-size:12px;opacity:.8;margin-top:8px}
+  @media (max-width:700px){
+    .wrap{margin:8px auto;padding:0 8px}
+    h1{font-size:17px}
+    .panel{gap:6px;margin-bottom:8px}
+    input,button{min-height:44px;padding:8px 10px}
+    #holder{display:block;width:100%;overflow:hidden}
+    #holder svg{display:block;width:100%;height:auto;max-width:100%}
+    .note{line-height:1.35}
+  }
 </style>
 <link rel="stylesheet" href="../../../assets/css/consentement.css">
 <script defer src="../../../assets/js/consentement.js"></script>

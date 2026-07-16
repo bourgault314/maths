@@ -151,6 +151,17 @@
     .part-box { display: flex; align-items: center; justify-content: center; font-weight: 900; border-right: 2px solid #111827; overflow: hidden; }
     .part-box:last-child { border-right: none; }
 
+    /* Aperçu téléphone : réglages au-dessus et feuille A4 réduite à la largeur. */
+    @media (max-width:700px) {
+      :root { --page-margin: 4vw; }
+      body { flex-direction: column; height: 100dvh; }
+      aside { width: 100%; max-height: 44dvh; border-right: 0; border-bottom: 1px solid var(--border); }
+      .sb-scroll { padding: 8px 10px; }
+      main { padding: 8px; gap: 10px; }
+      .page { width: 100%; height: auto; aspect-ratio: 210 / 297; }
+      .actions .btn { min-height: 44px; }
+    }
+
 
     /* MODULE RELATION ENTRE 2 TACHES */
     .module-hint {

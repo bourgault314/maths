@@ -42,12 +42,30 @@
             display: flex; justify-content: center; align-items: center;
         }
 
-        .victory-text { 
+        .victory-text {
             color: #16a34a !important;
             font-weight: 800;
             font-size: clamp(1.4rem, 2.0vw + 0.9rem, 2.4rem);
             line-height: 1.15;
             text-align: center;
+        }
+
+        @media (max-width: 700px) {
+            body { height: 100dvh; }
+            header > div:first-child {
+                min-height: 64px;
+                justify-content: flex-start;
+                overflow-x: auto;
+                overflow-y: hidden;
+                flex-wrap: nowrap;
+                touch-action: pan-x;
+                -webkit-overflow-scrolling: touch;
+            }
+            header > div:first-child > div:nth-child(2) { display: none !important; }
+            header > div:first-child > div { flex-shrink: 0; }
+            .tool-btn { min-width: 42px; min-height: 42px; }
+            #setup-modal { padding: 10px; }
+            #setup-modal > div { padding: 20px; max-height: calc(100dvh - 20px); overflow-y: auto; }
         }
     </style>
 <link rel="stylesheet" href="../../assets/css/consentement.css">

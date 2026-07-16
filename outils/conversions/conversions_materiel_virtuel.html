@@ -163,7 +163,25 @@
   .modal-actions { display: flex; justify-content: flex-end; gap: 12px; }
   
   #print-container { display: none; }
-  
+
+  @media (max-width:700px) {
+    .app{margin:8px auto;padding:0 6px}
+    .topbar{gap:6px;margin-bottom:6px}
+    .left,.right{gap:5px}
+    select,.btn{min-height:44px}
+    .board{padding:10px 4px 8px;overflow:hidden}
+    .title{font-size:1.15rem;margin-bottom:8px}
+    .inner{padding-top:88px;padding-bottom:88px}
+    .board-columns,.head-group{gap:2px}
+    .unitBtn{min-height:40px;font-size:.82rem;border-width:1px}
+    .digit{min-height:62px;font-size:clamp(1.35rem,8vw,2rem);padding:0 1px;border-width:1px}
+    .handle{width:96px;height:62px;padding:4px}
+    .h-text{font-size:.84rem}
+    .cursor::after{font-size:2.4rem;right:-9px;bottom:24px}
+    .result{min-height:76px;padding:8px 10px}
+    .result .mainLine{font-size:clamp(1.45rem,8vw,2.15rem)}
+  }
+
   @media print {
     @page { size: A4 landscape; margin: 12mm; }
     body { background: #fff; }

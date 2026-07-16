@@ -7,6 +7,8 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;600;800&display=swap" rel="stylesheet">
     <style>
+        :root { --building-width: 60px; }
+
         body {
             font-family: 'Fredoka', sans-serif;
             background-color: #0f172a;
@@ -112,7 +114,7 @@
 
         /* STYLE "GRATTE-CIEL" STANDARD */
         .building {
-            width: 60px;
+            width: var(--building-width);
             background: linear-gradient(180deg, #38bdf8 0%, #0284c7 100%);
             border: 3px solid #7dd3fc; border-bottom: none; border-radius: 8px 8px 0 0;
             box-shadow: 0 5px 15px rgba(0,0,0,0.4);
@@ -163,7 +165,7 @@
         }
         
         .brick {
-            width: 60px; box-sizing: border-box;
+            width: var(--building-width); box-sizing: border-box;
             background: #3b82f6; border: 1px solid #1d4ed8; 
             border-top: 1px solid #60a5fa; position: relative; height: 20px;
         }
@@ -204,7 +206,7 @@
             box-shadow: 0 0 15px rgba(236, 72, 153, 0.8);
         }
         #median-tool.ghost-building {
-            width: 60px !important; 
+            width: var(--building-width) !important;
             background: linear-gradient(180deg, rgba(250, 204, 21, 0.8) 0%, rgba(202, 138, 4, 0.8) 100%) !important;
             border: 3px solid rgba(254, 240, 138, 0.9) !important;
             border-bottom: none; border-radius: 8px 8px 0 0;
@@ -217,7 +219,7 @@
         #median-tool:active { cursor: grabbing; }
         
         #tool-handle {
-            position: absolute; bottom: 50%; width: 60px; height: 32px;
+            position: absolute; bottom: 50%; width: var(--building-width); height: 32px;
             background: white; border: 3px solid #ec4899; border-radius: 20px;
             display: flex; align-items: center; justify-content: space-between;
             box-shadow: 0 4px 10px rgba(0,0,0,0.3); color: #ec4899; padding: 0 8px;
@@ -417,6 +419,49 @@
         .btn-cancel:hover { background: #475569; color: white; }
         .btn-confirm { background: #2563eb; color: white; border: 1px solid #3b82f6; }
         .btn-confirm:hover { background: #1d4ed8; }
+
+        @media (max-width: 700px) {
+            body { height: 100dvh; }
+            .primary-bar { flex-direction: column !important; padding: 5px; gap: 5px; align-items: stretch; }
+            .city-brand { display: none !important; }
+            .main-mode-nav { width: 100%; gap: 5px; }
+            .main-mode-nav .nav-btn { flex: 1; min-height: 44px; padding: 7px 5px; font-size: .78rem; }
+            #info-message { min-height: 28px; }
+            #msg-title { font-size: .9rem; }
+            .action-bar {
+                display: grid !important;
+                grid-template-columns: minmax(0,1fr) auto;
+                gap: 5px;
+                min-height: 0;
+                padding: 5px;
+            }
+            #subnav-calcul,
+            #subnav-build {
+                grid-column: 1 / -1;
+                max-width: 100%;
+                overflow-x: auto;
+                flex-wrap: nowrap;
+                padding-bottom: 2px;
+                touch-action: pan-x;
+            }
+            #subnav-calcul > *, #subnav-build > * { flex-shrink: 0; }
+            #controls-gen { grid-column: 1; min-width: 0; gap: 4px; }
+            .drawing-tools { position: static !important; transform: none !important; grid-column: 2; justify-self: end; }
+            .drawing-tools button { min-width: 40px; min-height: 40px; }
+            #mini-instruction { display: none !important; }
+            #construct-goals { top: 6px; right: 6px; width: min(220px, calc(100% - 12px)); padding: 10px; }
+            #brick-supply { left: 8px; bottom: 68px; width: 64px; height: 92px; }
+            #floating-result h2 { font-size: 2rem; }
+            .footer-group {
+                min-height: 60px !important;
+                padding: 7px !important;
+                padding-bottom: max(7px, env(safe-area-inset-bottom)) !important;
+                gap: 8px !important;
+                flex-wrap: wrap;
+            }
+            .footer-group button { min-height: 44px; padding: 7px 14px; }
+            .footer-group .w-px { display: none; }
+        }
     </style>
 <link rel="stylesheet" href="../../assets/css/consentement.css">
 <script defer src="../../assets/js/consentement.js"></script>
@@ -457,15 +502,15 @@
         </svg>
     </div>
 
-    <div class="bg-slate-950/90 backdrop-blur border-b border-slate-800 p-2 flex flex-col sm:flex-row justify-between items-center z-50 shrink-0 gap-4">
-        <div class="flex items-center gap-3 pl-2">
+    <div class="primary-bar bg-slate-950/90 backdrop-blur border-b border-slate-800 p-2 flex flex-col sm:flex-row justify-between items-center z-50 shrink-0 gap-4">
+        <div class="city-brand flex items-center gap-3 pl-2">
             <span class="text-3xl">🏙️</span>
             <div>
                 <h1 class="text-xl font-bold text-slate-100">Stats City</h1>
                 <p class="text-slate-500 text-xs font-semibold tracking-wide">La ville des statistiques</p>
             </div>
         </div>
-        <div class="flex gap-4">
+        <div class="main-mode-nav flex gap-4">
             <button onclick="setMainMode('CALCUL')" id="nav-calcul" class="nav-btn active">🧮 Mode Calcul</button>
             <button onclick="setMainMode('BUILD')" id="nav-build" class="nav-btn">🏗️ Mode Constructeur</button>
         </div>
@@ -474,7 +519,7 @@
         </div>
     </div>
 
-    <div class="bg-slate-900 border-b border-slate-700 p-2 flex justify-between items-center z-[70] shrink-0 relative min-h-[50px]">
+    <div class="action-bar bg-slate-900 border-b border-slate-700 p-2 flex justify-between items-center z-[70] shrink-0 relative min-h-[50px]">
         <div id="subnav-calcul" class="flex gap-2 items-center">
             <button onclick="setSubMode('MEDIAN')" id="btn-mode-median" class="sub-mode-btn active">MÉDIANE</button>
             <button onclick="setSubMode('MEAN')" id="btn-mode-mean" class="sub-mode-btn">MOYENNE</button>
@@ -504,7 +549,7 @@
                 Nouveau
             </button>
         </div>
-        <div class="flex gap-2 items-center absolute left-[65%] -translate-x-1/2">
+        <div class="drawing-tools flex gap-2 items-center absolute left-[65%] -translate-x-1/2">
             <div class="flex items-center gap-1 bg-slate-800 p-1 rounded-lg border border-slate-600">
                 <button onclick="setTool('hand')" id="tool-hand" class="p-2 rounded bg-slate-600 text-white shadow"><svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 11.5V14m0-2.5v-6a1.5 1.5 0 113 0m-3 6a1.5 1.5 0 00-3 0v2a7.5 7.5 0 0015 0v-5a1.5 1.5 0 00-3 0m-6-3V11m0-5.5v-1a1.5 1.5 0 013 0v1m0 0V11m0-5.5a1.5 1.5 0 013 0v3m0 0V11" /></svg></button>
                 <button onclick="setTool('pen')" id="tool-pen" class="p-2 rounded text-slate-400 hover:text-white"><svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" /></svg></button>
@@ -586,6 +631,21 @@
             maxFloors: 25,
             minFloors: 1
         };
+
+        function updateResponsiveGeometry() {
+            const available = Math.max(280, container?.clientWidth || window.innerWidth || 390);
+            const count = Math.max(2, state?.count || 5);
+            const compact = window.matchMedia('(max-width: 700px)').matches;
+            const hasMedianGap = state?.subMode === 'MEDIAN' && state?.isMedianFound && count % 2 === 0;
+            const visualCount = count + (hasMedianGap ? 1 : 0);
+            const gap = compact ? Math.max(4, Math.min(10, available / (count * 7))) : 20;
+            const width = compact
+                ? Math.max(26, Math.min(60, (available - 12 - gap * (visualCount - 1)) / visualCount))
+                : 60;
+            CONFIG.gap = gap;
+            CONFIG.buildingWidth = width;
+            document.documentElement.style.setProperty('--building-width', `${width}px`);
+        }
 
         const medianTool = document.getElementById('median-tool');
 
@@ -919,6 +979,7 @@
         }
 
         function repositionBuildings(skipItem = null) {
+            updateResponsiveGeometry();
             let extraGap = 0; let splitIndex = -1;
             if (state.subMode === 'MEDIAN' && state.isMedianFound && state.count % 2 === 0) {
                 extraGap = CONFIG.buildingWidth + CONFIG.gap; splitIndex = state.count / 2;

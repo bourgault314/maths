@@ -156,6 +156,41 @@
             box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
             border: 1px solid #f1f5f9;
         }
+
+        @media (max-width: 700px) {
+            body {
+                height: 100dvh;
+                overflow: hidden;
+                touch-action: pan-y;
+            }
+            body > header {
+                align-items: stretch;
+                gap: 6px;
+                max-height: 112px;
+                overflow-x: auto;
+                flex-wrap: nowrap;
+                touch-action: pan-x;
+            }
+            body > header > div { flex-shrink: 0; }
+            body > div.flex-1 {
+                display: block !important;
+                overflow-y: auto !important;
+                touch-action: pan-y;
+            }
+            body > div.flex-1 > section {
+                min-height: 430px;
+                padding: 10px;
+                overflow: visible;
+            }
+            body > div.flex-1 > aside { height: auto; }
+            body > div.flex-1 > aside > div {
+                height: auto;
+                padding: 16px;
+                gap: 20px;
+                overflow: visible;
+            }
+            .item-block { width: 44px; height: 44px; }
+        }
     </style>
 <link rel="stylesheet" href="../../assets/css/consentement.css">
 <script defer src="../../assets/js/consentement.js"></script>
