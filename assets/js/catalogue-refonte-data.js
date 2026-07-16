@@ -266,11 +266,11 @@ window.MATHSGO_CATALOGUE = {
       "cardDescription": "Ranger et construire une ville de données pour travailler médiane, moyenne et étendue."
     },
     "outils/plateaux_manipulation/moyennes.html": {
-      "primaryNotion": "moyennes",
+      "primaryNotion": "statistiques",
       "primaryGroup": "manipuler",
       "collections": [],
       "tags": ["moyenne", "repartition", "equilibrage", "decimaux", "blocs"],
-      "thumbnail": "assets/img/thumbnails/notions/moyenne.svg?v=1",
+      "thumbnail": "assets/img/thumbnails/notions/moyenne.svg?v=2",
       "cardDescription": "Déplacer ou couper des blocs pour égaliser les piles et donner du sens à la moyenne."
     },
     "outils/plateaux_manipulation/glisse_entiers_flex.html": {
@@ -981,11 +981,6 @@ window.MATHSGO_CATALOGUE = {
     {
       "id": "statistiques",
       "title": "Statistiques",
-      "domain": "donnees"
-    },
-    {
-      "id": "moyennes",
-      "title": "Moyennes",
       "domain": "donnees"
     },
     {
@@ -3853,7 +3848,7 @@ window.MATHSGO_CATALOGUE = {
         "donnees"
       ],
       "notions": [
-        "moyennes"
+        "statistiques"
       ],
       "uses": [
         "manipuler",
