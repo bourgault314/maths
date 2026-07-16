@@ -591,9 +591,19 @@
     });
   }
 
+  function collectionRootId(collectionId) {
+    let collection = collectionMap.get(collectionId);
+    const visited = new Set();
+    while (collection?.parent && !visited.has(collection.id)) {
+      visited.add(collection.id);
+      collection = collectionMap.get(collection.parent) || collection;
+    }
+    return collection?.id || collectionId;
+  }
+
   function matchingSearchCollections() {
     if (!state.query) return [];
-    return (catalogue.collections || []).filter((collection) => {
+    const candidates = (catalogue.collections || []).filter((collection) => {
       if (!collectionResourceCount(collection.id)) return false;
       const design = collectionDesign[collection.id] || {};
       const notionTitles = (collection.notions || []).map((id) => notionMap.get(id)?.title || "");
@@ -602,6 +612,17 @@
         design.description,
         ...notionTitles
       ].join(" "), state.query);
+    });
+    const titleMatches = candidates.filter((collection) => allWordsMatch(collection.title, state.query));
+    if (!titleMatches.length) return candidates;
+    const titleMatchIds = new Set(titleMatches.map((collection) => collection.id));
+    return titleMatches.filter((collection) => {
+      let parentId = collection.parent;
+      while (parentId) {
+        if (titleMatchIds.has(parentId)) return false;
+        parentId = collectionMap.get(parentId)?.parent || "";
+      }
+      return true;
     });
   }
 
@@ -637,11 +658,17 @@
   }
 
   function matchingResources() {
+    const collectionTitleMatches = state.query && !state.notion && !state.collection
+      ? new Set((catalogue.collections || [])
+        .filter((collection) => allWordsMatch(collection.title, state.query))
+        .map((collection) => collectionRootId(collection.id)))
+      : new Set();
     return published.filter((resource) => {
       if (state.domain && !resource.domains.includes(state.domain)) return false;
       if (state.notion && !resourceBelongsToNotion(resource, state.notion)) return false;
       if (state.notion && resourceCollections(resource).some((id) => collectionMap.get(id)?.collapseInNotion)) return false;
       if (state.collection && !resourceCollections(resource).includes(state.collection)) return false;
+      if (collectionTitleMatches.size && resourceCollections(resource).some((id) => collectionTitleMatches.has(collectionRootId(id)))) return false;
       if (state.query && !allWordsMatch(resourceHaystack(resource), state.query)) return false;
       return true;
     });
