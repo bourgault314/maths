@@ -74,5 +74,8 @@ if(!pytha.includes('.stage:not(:fullscreen) #btnToggleEq,\n    .stage:not(:fulls
 if(!pytha.includes('.stage:not(:fullscreen) .barBoard{\n      order:4;') || !pytha.includes('.stage:not(:fullscreen) .equationHistory{\n      order:5;')) fail('L’équation mobile doit rester sous le tableau.');
 if(!pytha.includes('selectedSlot = null;\n        message = "";')) fail('Chaque placement dans la relation doit désélectionner la case.');
 if(!pytha.includes('window.MathsGoPythaBarre = {')) fail('Le contrat d’intégration de PythaBarre doit rester disponible.');
+if(!pytha.includes('.stage:not(.notStarted):not(:fullscreen) .instructionZone:empty,') || !pytha.includes('height:72px;\n      min-height:72px;\n      max-height:72px;')) fail('La consigne ordinateur doit conserver une hauteur fixe jusqu’à la fin.');
+if(!pytha.includes('class="menuPageHome" href="index.html"') || !pytha.includes('Retour au catalogue des outils')) fail('Le menu PythaBarre doit proposer un retour explicite au catalogue Outils.');
+if(!pytha.includes('class="toolBtn commandToolBtn undoToolBtn"') || !pytha.includes('class="toolBtn commandToolBtn restartToolBtn"')) fail('Annuler et Recommencer doivent utiliser les commandes modernes communes.');
 
 if(!process.exitCode) console.log('OK — 5 puzzles, 5 solutions, snaps exacts et règles mobiles Moulin/PythaBarre contrôlés.');
