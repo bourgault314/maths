@@ -516,8 +516,7 @@
   function notionResourceCount(notionId, domainId = "") {
     return resourceDisplayCount(published.filter((resource) => (
       (!domainId || resource.domains.includes(domainId)) &&
-      resourceBelongsToNotion(resource, notionId) &&
-      !resourceCollections(resource).some((id) => collectionMap.get(id)?.collapseInNotion)
+      resourceBelongsToNotion(resource, notionId)
     )));
   }
 
@@ -895,7 +894,9 @@
         directCollections.length
           ? `${directCollections.length} ${selectedNotion ? `famille${directCollections.length > 1 ? "s" : ""}` : `accès direct${directCollections.length > 1 ? "s" : ""}`}`
           : "",
-        `${resourceDisplayCount(resources)} entrée${resourceDisplayCount(resources) > 1 ? "s" : ""}`
+        resourceDisplayCount(resources)
+          ? `${resourceDisplayCount(resources)} entrée${resourceDisplayCount(resources) > 1 ? "s" : ""}`
+          : ""
       ].filter(Boolean).join(" · ");
       return;
     }
