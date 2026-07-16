@@ -20,6 +20,11 @@ Il ne constitue pas encore la charte définitive.
 - schémas en barres aux parties jointives et proportionnelles quand le sens le demande ;
 - côtés égaux codés par des traits cohérents ;
 - angles droits codés par un carré ;
+- une figure géométrique ne reprend jamais l'arrondi des cartes d'interface :
+  un rectangle a quatre côtés rectilignes et quatre sommets non arrondis ; un
+  carré est dessiné avec une largeur strictement égale à sa hauteur et quatre
+  sommets non arrondis. Cette règle vaut aussi pour les schémas d'inclusion
+  (« un carré est un rectangle particulier ») ;
 - angles nommés avec un chapeau ;
 - segments et demi-droites dessinés conformément à leur nature, sans point décoratif ;
 - ordre des lettres fourni par l'utilisateur toujours respecté ;

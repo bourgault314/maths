@@ -14,11 +14,11 @@
     </svg>`;
 
   const mathVisual = `
-    <svg viewBox="0 0 520 155" role="img" aria-label="Un carré est inclus dans la famille des rectangles">
-      <rect x="65" y="23" width="390" height="110" rx="18" fill="#eef6ff" stroke="#3676b8" stroke-width="3"/>
-      <text x="260" y="48" text-anchor="middle" fill="#245a91" font-family="Arial" font-size="16" font-weight="900">RECTANGLES</text>
-      <rect x="213" y="62" width="94" height="62" rx="8" fill="#fff5da" stroke="#c18111" stroke-width="4"/>
-      <text x="260" y="99" text-anchor="middle" fill="#8b5a08" font-family="Arial" font-size="17" font-weight="900">CARRÉS</text>
+    <svg viewBox="0 0 520 175" role="img" aria-label="Un véritable carré aux quatre côtés égaux placé dans un rectangle aux angles droits pour montrer qu’un carré est un rectangle particulier">
+      <rect x="55" y="22" width="410" height="132" fill="#eef6ff" stroke="#3676b8" stroke-width="3"/>
+      <text x="164" y="94" text-anchor="middle" fill="#245a91" font-family="Arial" font-size="18" font-weight="900">RECTANGLES</text>
+      <rect x="327" y="40" width="96" height="96" fill="#fff5da" stroke="#c18111" stroke-width="4"/>
+      <text x="375" y="94" text-anchor="middle" fill="#8b5a08" font-family="Arial" font-size="16" font-weight="900">CARRÉS</text>
     </svg>`;
 
   const lineVisual = `
