@@ -87,7 +87,6 @@
   .label{font-size:22px; font-weight:700; fill:#111827; paint-order:stroke; stroke:#fff; stroke-width:5px; display:none;}
   .showLetters .label{display:block;}
   .mobileNote{display:none; font-size:28px; font-weight:800; fill:#64748b; text-anchor:middle;}
-  .compactLayout .mobileNote{display:block;}
 
   .piecePoly{stroke:#111827; stroke-width:3.2; stroke-linejoin:round; cursor:grab;}
   .piecePoly:active{cursor:grabbing;}
@@ -137,14 +136,16 @@
   }
 
   @media (max-width:700px){
-    /* Le fond de la scène peut défiler entre les deux moulins ; les pièces,
-       elles, restent entièrement réservées au geste de déplacement. */
+    /* Sur téléphone, le moulin de départ est déjà le puzzle complet : les
+       pièces occupent a² et b² et doivent rejoindre c² sur la même figure. */
     #stageWrap{touch-action:pan-y; overflow-x:hidden;}
     svg#stage{touch-action:pan-y;}
+    svg#stage.compactLayout #boardsR{display:none;}
+    svg#stage.compactLayout .label{display:none!important;}
     svg#stage .piecePoly,
     svg#stage .handle{touch-action:none;}
     #fullscreen{display:none;}
-    #mobilePuzzleHint{display:block;}
+    #mobilePuzzleHint{display:none;}
   }
 
   /* maths&go — interface compacte : l'activité reste au premier plan. */
@@ -227,7 +228,7 @@
   </div>
 
   <div id="mobilePuzzleHint" role="status">
-    Sur téléphone : la cible est en haut, les pièces sont juste plus bas. Fais défiler la scène si nécessaire.
+    Déplace les pièces de a² et b² vers le carré c² de cette même figure.
   </div>
   <div id="puzzleStatus" role="status" aria-live="polite"></div>
 
@@ -357,6 +358,10 @@
     return state.puzzle === "bhaskara";
   }
 
+  function activePuzzleMoulin(){
+    return state.layoutCompact ? state.moulins?.L : state.moulins?.R;
+  }
+
   function clientToWorld(evt){
     const pt = stage.createSVGPoint();
     pt.x = evt.clientX; pt.y = evt.clientY;
@@ -452,10 +457,11 @@
   // central de côté |b-a|. Cette construction sert aussi de test de congruence
   // pour les futures variantes de quatre triangles.
   function bhaskaraSolutionPolygons(){
-    const R=state.moulins?.R;
-    if(!R) return null;
-    const {a,b,c}=R.mold;
-    const edges=[[R.B,R.C],[R.C,R.Cw],[R.Cw,R.Bw],[R.Bw,R.B]];
+    const targetMoulin=activePuzzleMoulin();
+    if(!targetMoulin) return null;
+    const {a,b,c}=targetMoulin.mold;
+    const {B,C,Cw,Bw}=targetMoulin;
+    const edges=[[B,C],[C,Cw],[Cw,Bw],[Bw,B]];
     const thirdPoints=edges.map(([p,q])=>{
       const ex=(q.x-p.x)/c, ey=(q.y-p.y)/c;
       const nx=ey, ny=-ex; // normale vers l'intérieur du carré cible
@@ -530,9 +536,9 @@
   }
 
   function checkPuzzleSolution(){
-    const R=state.moulins?.R;
-    if(!R || !state.pieces.size) return false;
-    const target=R.mold.corners;
+    const targetMoulin=activePuzzleMoulin();
+    if(!targetMoulin || !state.pieces.size) return false;
+    const target=targetMoulin.mold.corners;
     const pieces=[...state.pieces.values()].map(piece=>({piece,points:pieceWorldVertices(piece)}));
     const targetArea=polygonArea(target);
     const totalArea=pieces.reduce((sum,item)=>sum+polygonArea(item.points),0);
@@ -581,25 +587,39 @@
   }
 
   function fitWorldToViewport(){
-    // Centre et ajuste le zoom en se basant uniquement sur les plateaux (pas sur
-    // les pièces), pour éviter que le cadrage bouge pendant une manipulation.
+    // Centre et ajuste le zoom en se basant sur les plateaux, et sur la zone
+    // initiale des pièces en mode téléphone. Le déplacement d'une pièce ne
+    // relance pas ce calcul : le cadrage reste donc fixe pendant le jeu.
     const W = stageWrap.clientWidth || 1;
     const H = stageWrap.clientHeight || 1;
 
     const gBoards = document.getElementById("boards");
     const gBoardsL = document.getElementById("boardsL");
+    const gPieces = document.getElementById("pieces");
 
-    // En mode vide, on centre uniquement le moulin gauche (R est masqué).
-    const target = (state.mode === "vide" ? (gBoardsL || gBoards) : gBoards) || world;
-    const bb = target.getBBox();
     const compact = isCompactViewport() && state.mode === "eleves";
+    // Sur téléphone, le moulin de gauche est le puzzle complet : pièces sur
+    // a² et b², avec c² vide sur cette même figure.
+    const target = state.mode === "vide"
+      ? (gBoardsL || gBoards)
+      : (compact ? (gBoardsL || gBoards) : gBoards) || world;
+    let bb = target.getBBox();
+    if(compact && gPieces){
+      const piecesBox = gPieces.getBBox();
+      if(piecesBox.width || piecesBox.height){
+        const minX=Math.min(bb.x,piecesBox.x), minY=Math.min(bb.y,piecesBox.y);
+        const maxX=Math.max(bb.x+bb.width,piecesBox.x+piecesBox.width);
+        const maxY=Math.max(bb.y+bb.height,piecesBox.y+piecesBox.height);
+        bb={x:minX,y:minY,width:maxX-minX,height:maxY-minY};
+      }
+    }
     const pad = compact ? 18 : 32;
     const contentW = bb.width  + pad * 2;
     const contentH = bb.height + pad * 2;
 
     if(compact){
-      // Sur téléphone, les deux moulins sont empilés. On privilégie leur largeur
-      // pour conserver des pièces manipulables, puis on laisse la scène défiler.
+      // Une seule figure est cadrée sur téléphone afin de rendre les pièces
+      // suffisamment grandes et directement manipulables.
       const s = Math.min(W / contentW, 1.35);
       const sceneH = Math.max(H, contentH * s);
       stage.style.height = `${sceneH}px`;
@@ -958,27 +978,14 @@
     state.layoutCompact = compact;
 
     state.moulins = {L:left, R:right};
-    state.molds.push(left.mold, right.mold);
-    state.snapPoints.push(...left.snapPoints, ...right.snapPoints);
+    const interactiveTarget = compact ? left : right;
+    state.molds.push(interactiveTarget.mold);
+    state.snapPoints.push(...interactiveTarget.snapPoints);
 
     const gB=svgEl("g", {id:"boards"});
     const gP=svgEl("g", {id:"pieces"});
     const gL=svgEl("g", {id:"labels"});
-    const gNotes=svgEl("g", {id:"mobileNotes"});
-    world.append(gB, gP, gL, gNotes);
-
-    if(compact){
-      const targetCenter={
-        x:(right.B.x+right.C.x+right.Cw.x+right.Bw.x)/4,
-        y:(right.B.y+right.C.y+right.Cw.y+right.Bw.y)/4
-      };
-      gNotes.append(
-        svgEl("text",{x:targetCenter.x,y:Math.min(right.B.y,right.C.y,right.Cw.y,right.Bw.y)-28,class:"mobileNote"}),
-        svgEl("text",{x:left.A.x+b/2,y:left.A.y-b-28,class:"mobileNote"})
-      );
-      gNotes.firstChild.textContent="CIBLE";
-      gNotes.lastChild.textContent="PIÈCES À DÉPLACER";
-    }
+    world.append(gB, gP, gL);
 
     [left, right].forEach(m => {
       const {A,B,C,Bw,Cw} = m;
@@ -1096,10 +1103,10 @@
   }
 
   function bhaskaraTargetAngles(){
-    const R = state.moulins?.R;
-    if(!R) return [];
-    const u = R.mold.uvec;
-    const v = R.mold.vvec;
+    const targetMoulin = activePuzzleMoulin();
+    if(!targetMoulin) return [];
+    const u = targetMoulin.mold.uvec;
+    const v = targetMoulin.mold.vvec;
 
     const au = deg(Math.atan2(u.y, u.x));
     const av = deg(Math.atan2(v.y, v.x));
@@ -1109,10 +1116,10 @@
     return [au, au + 180, av, av + 180];
   }
 
-  function isNearRightMoulin(piece, extra = 170){
-    const R = state.moulins?.R;
-    if(!R) return false;
-    const bb = R.mold.bbox;
+  function isNearTargetMoulin(piece, extra = 170){
+    const targetMoulin = activePuzzleMoulin();
+    if(!targetMoulin) return false;
+    const bb = targetMoulin.mold.bbox;
     return (
       piece.pos.x >= bb.minX - extra &&
       piece.pos.x <= bb.maxX + extra &&
@@ -1126,7 +1133,7 @@
 
     // On n'applique cette aide que près du moulin cible, pour éviter
     // de perturber les pièces encore posées sur le moulin de gauche.
-    if(!isNearRightMoulin(piece)) return false;
+    if(!isNearTargetMoulin(piece)) return false;
 
     const localEdges = edgeAnglesLocal(piece);
     const targetAngles = bhaskaraTargetAngles();
@@ -1181,11 +1188,11 @@
   }
 
   function bhaskaraTargetEdges(){
-    const R = state.moulins?.R;
-    if(!R) return [];
+    const targetMoulin = activePuzzleMoulin();
+    if(!targetMoulin) return [];
 
     // Carré de l'hypoténuse : ordre des sommets [B, C, Cw, Bw]
-    const B = R.B, C = R.C, Cw = R.Cw, Bw = R.Bw;
+    const {B,C,Cw,Bw} = targetMoulin;
     return [
       {a:B,  b:C},
       {a:C,  b:Cw},
@@ -1230,7 +1237,7 @@
   function tryBhaskaraEdgeSnap(piece){
     if(!isBhaskaraPuzzle() || !piece) return false;
     if(piece.id.endsWith("-sq")) return false;
-    if(!isNearRightMoulin(piece, 260)) return false;
+    if(!isNearTargetMoulin(piece, 260)) return false;
 
     // V13 : on ne colle plus l'hypoténuse sur "n'importe quel côté possible".
     // On utilise les poses exactes déjà calculées pour le puzzle Bhaskara.
@@ -1295,7 +1302,7 @@
   function tryBhaskaraSquareSnap(piece){
     if(!isBhaskaraPuzzle() || !piece) return false;
     if(!piece.id.endsWith("-sq")) return false;
-    if(!isNearRightMoulin(piece, 240)) return false;
+    if(!isNearTargetMoulin(piece, 240)) return false;
 
     const candidates = state.bhaskaraPoseTargets?.get(piece.id) || [];
     if(!candidates.length) return false;
@@ -1346,13 +1353,13 @@
   // cible, on aligne aussi un bord entier. Cela évite le simple « coin collé »
   // qui était insuffisant pour les puzzles les plus complexes.
   function tryEdgeSnap(piece){
-    if(!piece || !isNearRightMoulin(piece, 260)) return false;
-    const R = state.moulins?.R;
-    if(!R) return false;
+    if(!piece || !isNearTargetMoulin(piece, 260)) return false;
+    const targetMoulin = activePuzzleMoulin();
+    if(!targetMoulin) return false;
 
-    const targetSegments = segmentsFromVertices(R.mold.corners);
+    const targetSegments = segmentsFromVertices(targetMoulin.mold.corners);
     for(const [id, other] of state.pieces.entries()){
-      if(id === piece.id || !isNearRightMoulin(other, 260)) continue;
+      if(id === piece.id || !isNearTargetMoulin(other, 260)) continue;
       targetSegments.push(...segmentsFromVertices(pieceWorldVertices(other)));
     }
 
@@ -1442,7 +1449,7 @@
         // Bhaskara : on ajoute des rotations qui alignent une arête de la pièce
         // avec les côtés du carré incliné c². C'est ce qui aide l'hypoténuse
         // à devenir vraiment parallèle au bord cible.
-        if(isBhaskaraPuzzle() && isNearRightMoulin(piece, 260)){
+        if(isBhaskaraPuzzle() && isNearTargetMoulin(piece, 260)){
           const localEdges = edgeAnglesLocal(piece);
           const targetAngles = bhaskaraTargetAngles();
           for(const localA of localEdges){
@@ -1458,7 +1465,7 @@
           if(d<bestD){bestD=d;best=c;}
         });
 
-        const threshold = (isBhaskaraPuzzle() && isNearRightMoulin(piece, 260)) ? 12 : SNAP.rot;
+        const threshold = (isBhaskaraPuzzle() && isNearTargetMoulin(piece, 260)) ? 12 : SNAP.rot;
         if(bestD<threshold) piece.rot=best;
       }
     }
