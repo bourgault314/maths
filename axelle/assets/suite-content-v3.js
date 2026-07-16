@@ -52,7 +52,7 @@
       acute: '<path d="M28 80H114M28 80 91 38"/><path class="angle-arc" d="M55 80A27 27 0 0 0 51 65"/>',
       right: '<path d="M28 80H114M28 80V15"/><path class="angle-mark" d="M28 57h23v23"/>',
       obtuse: '<path d="M31 80H117M31 80 4 30"/><path class="angle-arc" d="M61 80A30 30 0 0 0 17 54"/>',
-      flat: '<path d="M5 80H119"/><path class="angle-arc" d="M33 80A29 29 0 0 1 91 80"/>'
+      flat: '<path d="M5 80H119"/><path class="angle-arc" d="M33 80A29 29 0 0 1 91 80"/><circle class="angle-vertex" cx="62" cy="80" r="4.5"/>'
     };
     return `<g transform="${transform}" class="angle-lines">${drawings[kind]}</g>`;
   }
@@ -81,7 +81,7 @@
         <text x="175" y="108" font-size="31">4</text>
       </g>
       <g fill="none" stroke="#087a71" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
-        <path d="M195 54h38l8-8M233 54l8 8"/><path d="M195 101h38l8-8M233 101l8 8"/>
+        <path d="M241 54H200M208 46l-8 8 8 8"/><path d="M241 101H200M208 93l-8 8 8 8"/>
       </g>
       <g fill="#075b57" font-family="Arial, sans-serif">
         <text x="250" y="48" font-size="16" font-weight="900">numérateur</text><text x="250" y="67" font-size="13">parts coloriées</text>
@@ -108,7 +108,7 @@
         <path d="m124 91 56-69 56 69Z"/>
         <path d="m252 91 48-69 48 69Z"/>
       </g>
-      <path d="M20 68h23v23" fill="none" stroke="#f97316" stroke-width="4"/>
+      <path d="M20 66h25v25H20" fill="#fff3e8" stroke="#f97316" stroke-width="4"/>
       <g fill="none" stroke="#f97316" stroke-width="4" stroke-linecap="round">
         <path d="m148 52 10 8M202 60l10-8"/>
         <path d="m273 52 10 8M317 60l10-8M300 83v16"/>
@@ -136,16 +136,19 @@
     </svg>`;
 
   const measureMemoVisual = `
-    <svg viewBox="0 0 360 190" role="img" aria-label="Grande porte dont la poignée est à environ un mètre du sol, un mètre égale cent centimètres et un kilomètre égale mille mètres">
+    <svg viewBox="0 0 360 190" role="img" aria-label="Grande porte dont la poignée est à environ un mètre du sol, et un trajet entre la maison et l’école qui donne un repère d’environ un kilomètre">
       <rect x="35" y="8" width="126" height="173" rx="5" fill="#fff" stroke="#0755b8" stroke-width="5"/>
       <circle cx="135" cy="100" r="9" fill="#f97316"/>
-      <path d="M18 179V100M10 179h16M10 100h16" stroke="#087a71" stroke-width="4"/>
-      <text x="13" y="149" fill="#087a71" font-family="Arial" font-size="15" font-weight="900" transform="rotate(-90 13 149)">environ 1 m</text>
-      <g transform="translate(181 31)" fill="#173a5e" font-family="Arial" text-anchor="middle">
+      <path d="M112 179V105M104 179h16M104 105h16" stroke="#087a71" stroke-width="4"/>
+      <text x="103" y="150" fill="#087a71" font-family="Arial" font-size="15" font-weight="900" text-anchor="end">≈ 1 m</text>
+      <g transform="translate(181 22)" fill="#173a5e" font-family="Arial" text-anchor="middle">
         <rect width="166" height="125" rx="15" fill="#fff8e8" stroke="#f1bd5a" stroke-width="3"/>
-        <text x="83" y="42" font-size="21" font-weight="900">1 m = 100 cm</text>
-        <path d="M24 61h118" stroke="#f1bd5a" stroke-width="2"/>
-        <text x="83" y="91" font-size="20" font-weight="900">1 km = 1 000 m</text>
+        <text x="83" y="29" font-size="18" font-weight="900">environ 1 km</text>
+        <path d="M26 76Q83 38 140 76" fill="none" stroke="#087a71" stroke-width="5" stroke-dasharray="7 7"/>
+        <path d="M22 78h24V57L34 47 22 57Z" fill="#e8f4ff" stroke="#0755b8" stroke-width="2"/>
+        <path d="M120 78h28V53h-28Z M126 53V43h16v10" fill="#fff" stroke="#d95f02" stroke-width="2"/>
+        <text x="34" y="101" font-size="13" font-weight="900">maison</text>
+        <text x="134" y="101" font-size="13" font-weight="900">école</text>
       </g>
     </svg>`;
 
@@ -158,11 +161,13 @@
     </svg>`;
 
   const kilometreVisual = `
-    <svg viewBox="0 0 500 180" role="img" aria-label="Un kilomètre correspond à mille mètres">
-      <path d="M64 138 177 42h146l113 96Z" fill="#e8f4ff" stroke="#0755b8" stroke-width="4" stroke-linejoin="round"/>
-      <path d="M250 50v83" stroke="#fff" stroke-width="6" stroke-dasharray="14 12"/>
-      <rect x="145" y="67" width="210" height="66" rx="14" fill="#fff" stroke="#087a71" stroke-width="4"/>
-      <text x="250" y="108" text-anchor="middle" fill="#173a5e" font-family="Arial" font-size="28" font-weight="900">1 km = 1 000 m</text>
+    <svg viewBox="0 0 500 180" role="img" aria-label="Un trajet d’environ un kilomètre entre une maison et une école">
+      <path d="M92 119Q250 20 408 119" fill="none" stroke="#087a71" stroke-width="7" stroke-dasharray="13 11"/>
+      <path d="M55 132h80V78L95 45 55 78Z" fill="#e8f4ff" stroke="#0755b8" stroke-width="4"/>
+      <path d="M365 132h84V68h-84Z M382 68V42h50v26" fill="#fff" stroke="#d95f02" stroke-width="4"/>
+      <text x="95" y="160" text-anchor="middle" fill="#173a5e" font-family="Arial" font-size="19" font-weight="900">maison</text>
+      <text x="407" y="160" text-anchor="middle" fill="#173a5e" font-family="Arial" font-size="19" font-weight="900">école</text>
+      <text x="250" y="105" text-anchor="middle" fill="#173a5e" font-family="Arial" font-size="25" font-weight="900">environ 1 km</text>
     </svg>`;
 
   const doorHandleVisual = `
@@ -238,7 +243,7 @@
       soft: "#f8f3ff",
       visual: angleGallery,
       title: "Les quatre angles",
-      text: "Aigu : moins de 90°. Droit : 90°. Obtus : entre 90° et 180°. Plat : 180°."
+      text: ""
     },
     {
       mobileStack: true,
@@ -254,7 +259,7 @@
       soft: "#f7fee7",
       visual: measureMemoVisual,
       title: "Des repères de longueur",
-      text: "Une poignée de porte est à environ 1 m du sol. 1 km = 1 000 m."
+      text: "Poignée–sol : environ 1 m. Maison–école : environ 1 km."
     }
   ];
 
@@ -433,14 +438,14 @@
     },
     {
       section: "Mesures",
-      kicker: "Conversion à connaître",
-      title: "Un kilomètre, c’est combien de mètres ?",
-      prompt: "Choisis l’égalité exacte.",
+      kicker: "Choisir un ordre de grandeur",
+      title: "Quel trajet peut mesurer environ 1 km ?",
+      prompt: "Choisis un repère réaliste.",
       visual: kilometreVisual,
-      options: ["1 km = 100 m", "1 km = 1 000 m", "1 km = 10 000 m", "1 km = 1 m"],
+      options: ["La longueur d’un crayon", "De la maison à l’école", "La hauteur d’une porte", "La largeur d’un cahier"],
       answer: 1,
-      hint: "Le préfixe kilo signifie mille.",
-      explanation: "1 km = 1 000 m. Cette conversion est à connaître par cœur."
+      hint: "Un kilomètre correspond à un trajet que l’on fait dans un quartier.",
+      explanation: "De la maison à l’école peut représenter environ 1 km. C’est un repère utile pour imaginer cette distance."
     },
     {
       section: "Problème",
