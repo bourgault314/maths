@@ -216,6 +216,19 @@
     border-left: 14px solid #a88348;
     border-radius: 4px;
   }
+  @media (max-width: 700px) {
+    .app{margin:6px auto;padding:0 6px}
+    .toolbar{justify-content:flex-start}
+    .btn{min-height:44px}
+    .exercise-panel{padding:10px;gap:10px}
+    .target-area{gap:8px}
+    .digit-group{height:3.2rem;margin:0 2px;padding:0 4px}
+    .digit-char{font-size:2.2rem}
+    .abacus-wrapper{justify-content:flex-start}
+    .labels{width:68px}
+    .label-item{padding-right:5px;font-size:.72rem}
+    .abacus{min-width:260px}
+  }
   .abacus::before, .abacus::after{
     content:""; position:absolute; left: -14px; right: -14px; height:var(--frame-thickness);
     background:linear-gradient(#caa367,#9a733c); z-index: 2;

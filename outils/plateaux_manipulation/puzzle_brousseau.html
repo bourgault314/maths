@@ -221,6 +221,31 @@
   }
   #refLayer{ pointer-events:none; }
 
+  /* Téléphone : une barre tactile sur une seule ligne, défilable horizontalement. */
+  @media (max-width:700px){
+    .toolbar{
+      height:64px;
+      min-height:64px;
+      justify-content:flex-start;
+      padding:6px 8px;
+      overflow-x:auto;
+      overflow-y:hidden;
+      flex-wrap:nowrap;
+      touch-action:pan-x;
+      -webkit-overflow-scrolling:touch;
+    }
+    .group{flex:0 0 auto; flex-wrap:nowrap; gap:6px;}
+    .btn{min-width:44px; min-height:44px; padding:8px 10px; white-space:nowrap;}
+    .sep{flex:0 0 1px;}
+    .canvas{height:calc(100dvh - 64px); touch-action:none;}
+    svg#stage{touch-action:none;}
+    .overlay{padding:8px;}
+    .paper{padding:18px 14px;}
+    .enonceLayout{display:block;}
+    #paperSvg{width:min(100%,350px); height:auto; aspect-ratio:1; margin:auto;}
+    .optRow input[type="range"]{width:min(220px,100%);}
+  }
+
   /* Options professeur dans l'énoncé */
   .optBox{
     margin-top:16px;

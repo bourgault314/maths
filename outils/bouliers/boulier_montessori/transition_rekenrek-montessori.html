@@ -185,6 +185,17 @@
     border-left: 14px solid #a88348;
     border-radius: 4px;
   }
+  @media (max-width: 700px) {
+    .app{margin:6px auto;padding:0 6px}
+    .toolbar{justify-content:flex-start}
+    .btn{min-height:44px}
+    .center-display{min-height:3.2rem}
+    .value-container{font-size:2.4rem}
+    .abacus-wrapper{justify-content:flex-start}
+    .labels{width:68px}
+    .label-item{padding-right:5px;font-size:.72rem}
+    .abacus{min-width:260px}
+  }
   .abacus::before, .abacus::after{
     content:""; position:absolute; left: -14px; right: -14px; height:var(--frame-thickness);
     background:linear-gradient(#caa367,#9a733c); z-index: 2;

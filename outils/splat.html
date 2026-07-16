@@ -519,6 +519,21 @@
   .stageNavBtn:active{transform:translateY(1px)}
   .stageNavBtn:disabled{opacity:.38;cursor:not-allowed;transform:none}
   .stageNavBtn svg{width:20px;height:20px;display:block}
+
+  /* Sur téléphone, le panneau de réglages passe au-dessus du plateau. */
+  @media (max-width:760px){
+    .wrap{flex-direction:column;gap:8px;padding:8px;align-items:stretch}
+    .wrap > .panel,
+    .wrap > .stage{flex:1 1 auto;max-width:none;width:100%;min-width:0}
+    .panel{padding:10px}
+    .panelTop{gap:8px}
+    .panelTop .home,
+    .panelTop .helpBtn{width:44px;height:44px;min-width:44px}
+    .stage{gap:8px}
+    .stageNavBtn{width:44px;height:44px}
+    .helpOverlay{padding:8px}
+    .helpDialog{width:100%;padding:24px 18px}
+  }
   .fsHost:fullscreen .stageNavOverlay{
     top:18px;
     right:18px;

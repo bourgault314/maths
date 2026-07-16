@@ -255,6 +255,19 @@
   }
 
   .stage{display:flex;flex-direction:column;gap:12px}
+
+  /* Sur téléphone, conserver toute la largeur pour la manipulation. */
+  @media (max-width:760px){
+    .wrap{flex-direction:column;gap:8px;padding:8px;align-items:stretch}
+    .wrap > .panel,
+    .wrap > .stage{flex:1 1 auto;max-width:none;width:100%;min-width:0}
+    .panel{padding:10px}
+    .panelHeader{gap:8px}
+    .panelHeader .home,
+    .panelHeader .helpBtn{width:44px;height:44px;min-width:44px}
+    .helpOverlay{padding:8px}
+    .helpDialog{width:100%;padding:24px 18px}
+  }
   .cardbox{
     background:var(--card);
     border:1px solid rgba(255,255,255,0.08);
