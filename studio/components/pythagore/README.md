@@ -56,12 +56,27 @@ Jeu de déplacement des pièces d’un découpage de Pythagore.
 - les aimantations utilisent des ancres géométriques déclarées : sommets,
   milieux, bords et poses exactes ;
 - une validation ne dépend jamais d’un simple rapprochement visuel ;
-- le mode téléphone affiche une seule activité, avec `Cible` puis `Pièces` dans
-  une scène verticale défilante afin de garder des zones de manipulation
-  suffisamment grandes ; plein écran, lettres et impression restent réservés
+- le mode téléphone affiche uniquement le moulin de départ agrandi : il porte
+  déjà les pièces sur `a²` et `b²` ainsi que le carré `c²` à remplir. Le moulin
+  cible séparé est masqué ; plein écran, lettres et impression restent réservés
   à l’ordinateur ;
 - les puzzles proposés doivent être de vraies découpes distinctes. Une simple
   rotation ou un miroir d’un puzzle existant ne constitue pas une variante.
+
+## Emplacements et publications
+
+- la page publique du jeu reste
+  `outils/plateaux_manipulation/moulin_pythagore.html` dans le dépôt du site
+  `bourgault314/maths` ;
+- les géométries et contrats réutilisables restent dans
+  `studio/components/pythagore` du même dépôt ;
+- une question tactile qui réutilise ces composants dans Automatismes doit être
+  intégrée uniquement dans le dépôt bêta `bourgault314/mathsgo-automatismes-beta` ;
+- le jeu public du Moulin et le module tactile d’Automatismes sont deux usages
+  différents d’une même bibliothèque : l’un ne doit pas être déplacé dans
+  l’autre dépôt ;
+- la branche historique `beta/automatisme-pythagore` du dépôt du site est un
+  espace de préparation temporaire, pas le déploiement officiel d’Automatismes.
 
 ## Règles communes
 
@@ -207,7 +222,7 @@ Les golden snapshots du composant devront couvrir :
 1. PythaBarre sur ordinateur en plein écran ;
 2. PythaBarre en portrait sur téléphone ;
 3. Moulin complet sur ordinateur ;
-4. Moulin mobile empilé `Cible` puis `Pièces` ;
+4. Moulin mobile unique avec pièces sur `a²` et `b²`, et `c²` vide ;
 5. un puzzle simple sans retournement ;
 6. Bhaskara avec rotation et retournement ;
 7. un rendu imprimable sans page blanche supplémentaire.
