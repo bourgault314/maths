@@ -200,7 +200,13 @@ window.MATHSGO_CATALOGUE = {
     "outils/tuiles_algebriques/livret_litteral_mathigon.pdf": { "primaryNotion": "calcul-litteral", "collections": ["tuiles-algebriques"], "tags": ["tuiles-algebriques"] },
     "outils/tuiles_algebriques/livret_litteral_vert_rouge.pdf": { "primaryNotion": "calcul-litteral", "collections": ["tuiles-algebriques"], "tags": ["tuiles-algebriques"] },
     "outils/fabrication_materiel/maths_barre.html": { "primaryNotion": "schemas-barres", "collections": [], "tags": ["schema-barres", "reference-technique"] },
-    "outils/labo-des-regularites.html": { "primaryNotion": "patterns", "collections": [], "tags": ["patterns", "generalisation", "laboratoire", "regularites"] },
+    "outils/labo-des-regularites.html": {
+      "primaryNotion": "patterns",
+      "collections": [],
+      "tags": ["patterns", "generalisation", "laboratoire", "regularites", "algebre", "figures"],
+      "thumbnail": "assets/img/thumbnails/patterns.png?v=1",
+      "cardDescription": "Observer de beaux motifs, prévoir une étape puis généraliser en reliant chaque terme d’une expression au dessin."
+    },
     "outils/club_maths/jeu_de_nim.html": {
       "primaryNotion": "strategie",
       "primaryGroup": "jeux",
@@ -3939,6 +3945,8 @@ window.MATHSGO_CATALOGUE = {
       ],
       "filters": [],
       "keywords": [],
+      "thumbnail": "assets/img/thumbnails/patterns.png?v=1",
+      "cardDescription": "Observer de beaux motifs, prévoir une étape puis généraliser en reliant chaque terme d’une expression au dessin.",
       "kind": "tool",
       "status": "published",
       "featured": false,
