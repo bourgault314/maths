@@ -115,9 +115,15 @@ button:hover{filter:brightness(.985);transform:translateY(-1px)}
 .group-gap{width:8mm;flex:0 0 auto}
 .centered .row-tiles{justify-content:center}
 .spread .row-tiles{justify-content:center}
-@media(max-width:1050px){.app{grid-template-columns:1fr}.controls{position:relative;height:auto;top:0}.preview-wrap{padding:0}.page{transform-origin:top left}}
+@media(max-width:1050px){
+  .app{grid-template-columns:1fr}
+  .controls{position:relative;height:auto;top:0}
+  .preview-wrap{min-width:0;width:100%;max-width:100%;overflow:visible;padding:8px 0 22px}
+  .page-stack{width:100%;gap:16px}
+  .page{transform-origin:top center}
+}
 @page a4-portrait{size:A4 portrait;margin:0}
-@media print{html,body{width:210mm!important;min-height:0!important;background:white!important;margin:0!important;padding:0!important;overflow:visible!important}.app{display:block!important;min-height:0!important;padding:0!important}.controls{display:none!important}.preview-wrap{overflow:visible!important;padding:0!important;height:auto!important}.page-stack{display:block!important;gap:0!important}.page{width:210mm!important;height:297mm!important;box-shadow:none!important;border:0!important;margin:0!important;overflow:hidden!important;break-inside:avoid!important;page-break-inside:avoid!important;break-after:auto;page-break-after:auto}.page:not(:last-child){break-after:page!important;page-break-after:always!important}.sheet-header{display:none!important}.tile{print-color-adjust:exact!important;-webkit-print-color-adjust:exact!important}}
+@media print{html,body{width:210mm!important;min-height:0!important;background:white!important;margin:0!important;padding:0!important;overflow:visible!important}.app{display:block!important;min-height:0!important;padding:0!important}.controls{display:none!important}.preview-wrap{overflow:visible!important;padding:0!important;height:auto!important}.page-stack{display:block!important;gap:0!important}.page{zoom:1!important;width:210mm!important;height:297mm!important;box-shadow:none!important;border:0!important;margin:0!important;overflow:hidden!important;break-inside:avoid!important;page-break-inside:avoid!important;break-after:auto;page-break-after:auto}.page:not(:last-child){break-after:page!important;page-break-after:always!important}.sheet-header{display:none!important}.tile{print-color-adjust:exact!important;-webkit-print-color-adjust:exact!important}}
 </style>
 <link rel="stylesheet" href="../../assets/css/consentement.css">
 <script defer src="../../assets/js/consentement.js"></script>
@@ -276,16 +282,32 @@ function page(back=false){
   return `<section class="${pageClass}">${crops()}<div class="sheet ${back?'back':''}"><div class="sheet-inner">${header()}<div class="sheet-content">${contentByMode(back)}</div></div></div></section>`
 }
 
+function fitPreviewPages(){
+  const preview=document.querySelector('.preview-wrap');
+  if(!preview) return;
+  const pages=Array.from(preview.querySelectorAll('.page'));
+  pages.forEach(page=>page.style.removeProperty('zoom'));
+  if(!window.matchMedia('(max-width: 1050px)').matches || window.matchMedia('print').matches) return;
+  const availableWidth=Math.max(0,preview.clientWidth-10);
+  pages.forEach(page=>{
+    const naturalWidth=page.offsetWidth;
+    if(naturalWidth>0) page.style.zoom=String(Math.min(1,availableWidth/naturalWidth));
+  });
+}
+
 function build(){
   document.documentElement.style.setProperty('--backOffsetX',($('offsetX').value||0)+'mm');
   document.documentElement.style.setProperty('--backOffsetY',($('offsetY').value||0)+'mm');
   let html = page(false);
   if($('doubleSided').checked) html += page(true);
   $('pages').innerHTML = html;
+  requestAnimationFrame(fitPreviewPages);
 }
 document.querySelectorAll('input[name="mode"], input[name="size"], input[name="labels"]').forEach(el=>el.addEventListener('input', build));
 ['letter','colorMode','thinLines','doubleSided','offsetX','offsetY'].forEach(id=>$(id).addEventListener('input', build));
 $('printBtn').addEventListener('click', ()=>{build(); setTimeout(()=>window.print(), 80);});
+window.addEventListener('resize',()=>requestAnimationFrame(fitPreviewPages));
+window.addEventListener('afterprint',()=>requestAnimationFrame(fitPreviewPages));
 build();
 })();
 </script>

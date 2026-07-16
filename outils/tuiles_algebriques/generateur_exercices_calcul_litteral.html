@@ -222,9 +222,15 @@
   .action-bar button{min-height:40px;border-radius:13px;font-size:.86rem}
   .footer{left:0!important;right:0!important;text-align:center!important;font-size:8.5px!important;color:#777!important}
 
-  @media(max-width:1050px){.app{grid-template-columns:1fr}.controls{position:relative;height:auto;top:0}.page{transform-origin:top left}}
+  @media(max-width:1050px){
+    .app{grid-template-columns:1fr}
+    .controls{position:relative;height:auto;top:0}
+    .preview-wrap{min-width:0;width:100%;max-width:100%;overflow:visible;padding:8px 0 22px}
+    .preview-wrap .page + .page{margin-top:16px}
+    .page{transform-origin:top center}
+  }
   @page a4-landscape{size:A4 landscape;margin:0}@page a4-portrait{size:A4 portrait;margin:0}
-  @media print{*{print-color-adjust:exact!important;-webkit-print-color-adjust:exact!important;color-adjust:exact!important}html,body{background:#fff;margin:0!important;padding:0!important;width:auto!important;height:auto!important;min-height:0!important;overflow:visible!important}.app{display:block;padding:0}.controls{display:none}.preview-wrap{padding:0!important;overflow:visible!important;height:auto!important}.page{box-shadow:none;border:0;margin:0;break-after:auto!important;page-break-after:auto!important;overflow:hidden!important}.preview-wrap .page:not(:last-child){break-after:page!important;page-break-after:always!important}.preview-wrap .page:last-child{break-after:auto!important;page-break-after:auto!important}.sheet,.exercise-grid,.card{break-inside:avoid;page-break-inside:avoid}.tile{border:0!important;border-radius:0!important;box-shadow:none!important;outline:0!important}.term-block{border:.12pt solid #000!important;border-radius:0!important}.tile-svg rect{stroke:#000!important;stroke-width:.4!important;vector-effect:non-scaling-stroke!important}.page.landscape{width:297mm;height:210mm}.page.portrait{width:210mm;height:297mm}.footer{display:block!important}}
+  @media print{*{print-color-adjust:exact!important;-webkit-print-color-adjust:exact!important;color-adjust:exact!important}html,body{background:#fff;margin:0!important;padding:0!important;width:auto!important;height:auto!important;min-height:0!important;overflow:visible!important}.app{display:block;padding:0}.controls{display:none}.preview-wrap{padding:0!important;overflow:visible!important;height:auto!important}.page{zoom:1!important;box-shadow:none;border:0;margin:0;break-after:auto!important;page-break-after:auto!important;overflow:hidden!important}.preview-wrap .page:not(:last-child){break-after:page!important;page-break-after:always!important}.preview-wrap .page:last-child{break-after:auto!important;page-break-after:auto!important}.sheet,.exercise-grid,.card{break-inside:avoid;page-break-inside:avoid}.tile{border:0!important;border-radius:0!important;box-shadow:none!important;outline:0!important}.term-block{border:.12pt solid #000!important;border-radius:0!important}.tile-svg rect{stroke:#000!important;stroke-width:.4!important;vector-effect:non-scaling-stroke!important}.page.landscape{width:297mm;height:210mm}.page.portrait{width:210mm;height:297mm}.footer{display:block!important}}
 
 
   /* Retouche logo/titre validée : le logo reste posé sur le fond, sans effet de case. */
@@ -957,6 +963,18 @@
     if(mode==='student') $('showAnswers').checked=false;
     if(mode==='answer') $('showAnswers').checked=true;
   }
+  function fitPreviewPages(){
+    const preview=document.querySelector('.preview-wrap');
+    if(!preview) return;
+    const pages=Array.from(preview.querySelectorAll('.page'));
+    pages.forEach(page=>page.style.removeProperty('zoom'));
+    if(!window.matchMedia('(max-width: 1050px)').matches || window.matchMedia('print').matches) return;
+    const availableWidth=Math.max(0,preview.clientWidth-10);
+    pages.forEach(page=>{
+      const naturalWidth=page.offsetWidth;
+      if(naturalWidth>0) page.style.zoom=String(Math.min(1,availableWidth/naturalWidth));
+    });
+  }
   function render(useExisting=false){
     const activity=$('activity').value, visual=$('visual').value, format=$('format').value, exprMode=$('exprTop').value;
     const printMode=$('printMode')?$('printMode').value:($('showAnswers').checked?'answer':'student');
@@ -985,7 +1003,7 @@
       for(let p=0;p<pages;p++) allPages+=renderPage(currentExercises.slice(p*count,(p+1)*count),p,count,activity,visual,exprMode,info,pageClass,title,instruction,showAnswer,false);
     }
     preview.innerHTML=allPages;
-    requestAnimationFrame(fitTiles);
+    requestAnimationFrame(()=>{fitTiles();fitPreviewPages();});
   }
   bindControlPanel();
   $('activity').addEventListener('change',()=>{updateMenu(true);refreshControlUI();render(false);});
@@ -1000,7 +1018,9 @@
   $('printMode').addEventListener('change',()=>{syncAnswersFromPrintMode();refreshControlUI();render(true);});
   $('showAnswers').addEventListener('change',()=>{syncSimpleModeFromAnswers();refreshControlUI();render(true);});
   ['showLabels','colorMode'].forEach(id=>{$(id).addEventListener('input',()=>{refreshControlUI();render(true);});$(id).addEventListener('change',()=>{refreshControlUI();render(true);});});
-  window.addEventListener('resize',()=>requestAnimationFrame(fitTiles)); window.addEventListener('beforeprint',fitTiles);
+  window.addEventListener('resize',()=>requestAnimationFrame(()=>{fitTiles();fitPreviewPages();}));
+  window.addEventListener('beforeprint',fitTiles);
+  window.addEventListener('afterprint',()=>requestAnimationFrame(fitPreviewPages));
   updateMenu(false); $('level').value='5'; refreshControlUI(); render(false);
 })();
 </script>
