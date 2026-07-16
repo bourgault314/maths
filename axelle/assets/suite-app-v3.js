@@ -86,7 +86,7 @@
 
     session.memos.forEach((memo, index) => {
       const article = document.createElement("article");
-      article.className = "memo-card";
+      article.className = `memo-card${memo.mobileStack ? " mobile-stack" : ""}`;
       article.style.setProperty("--memo-color", memo.color);
       article.style.setProperty("--memo-soft", memo.soft);
       article.innerHTML = `
