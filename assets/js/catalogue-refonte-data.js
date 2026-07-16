@@ -662,7 +662,27 @@ window.MATHSGO_CATALOGUE = {
       "cardDescription": "Dérouler le théorème pas à pas avec le calcul, le schéma en barres et le moulin de Pythagore."
     },
     "outils/pythabarre_recto_verso.pdf": { "primaryNotion": "pythagore", "collections": [], "tags": ["schema-barres", "moulin", "pythagore", "imprimable"] },
-    "outils/fiche_reciproque_thales.pdf": { "primaryNotion": "thales", "collections": [], "tags": ["thales", "reciproque", "contraposee", "imprimable"] },
+    "outils/fiche_reciproque_thales.pdf": {
+      "primaryNotion": "thales",
+      "collections": [],
+      "tags": ["thales", "reciproque", "contraposee", "imprimable"],
+      "thumbnail": "assets/img/thumbnails/thales/reciproque-contraposee.png?v=1",
+      "cardDescription": "Méthode guidée, fiche adaptable et deux exemples rédigés pour démontrer que des droites sont parallèles ou non."
+    },
+    "outils/fiche_thales_criteres_a_verifier.pdf": {
+      "primaryNotion": "thales",
+      "collections": [],
+      "tags": ["thales", "reciproque", "contraposee", "criteres", "imprimable", "a-verifier"],
+      "thumbnail": "assets/img/thumbnails/thales/tester-parallelisme-a-verifier.png?v=1",
+      "cardDescription": "Proposition à vérifier : comprendre puis appliquer un critère de parallélisme ou de non-parallélisme."
+    },
+    "outils/fiche_thales_direct_a_verifier.pdf": {
+      "primaryNotion": "thales",
+      "collections": [],
+      "tags": ["thales", "theoreme-direct", "longueur", "proportionnalite", "imprimable", "a-verifier"],
+      "thumbnail": "assets/img/thumbnails/thales/thales-direct-a-verifier.png?v=1",
+      "cardDescription": "Proposition à vérifier : tableau de proportionnalité, choix des colonnes et rédaction pour calculer une longueur."
+    },
     "outils/gabarits_proportionnalite_tableaux.pdf": { "primaryNotion": "proportionnalite", "collections": [], "tags": ["proportionnalite", "tableau", "gabarit", "imprimable"] },
     "outils/gabarit_proportionnalite_double_ligne_graduee.pdf": { "primaryNotion": "proportionnalite", "collections": [], "tags": ["proportionnalite", "double-ligne-graduee", "gabarit", "imprimable"] },
     "outils/gabarit_proportionnalite_tableau_sans_coefficient.pdf": { "primaryNotion": "proportionnalite", "collections": [], "tags": ["proportionnalite", "tableau", "sans-coefficient", "gabarit", "imprimable"] },
@@ -5043,7 +5063,7 @@ window.MATHSGO_CATALOGUE = {
     {
       "id": "outils-fiche-reciproque-thales-pdf",
       "title": "Thalès — réciproque et contraposée",
-      "description": "Une fiche recto-verso guidée pour choisir les bons rapports, comparer puis conclure que deux droites sont parallèles ou non.",
+      "description": "Une méthode guidée, un gabarit adaptable et deux exemples rédigés pour démontrer que deux droites sont parallèles ou non.",
       "path": "outils/fiche_reciproque_thales.pdf",
       "domains": [
         "geometrie"
@@ -5066,6 +5086,70 @@ window.MATHSGO_CATALOGUE = {
         "contraposée",
         "droites parallèles",
         "rapports"
+      ],
+      "kind": "document",
+      "status": "published",
+      "featured": false,
+      "recent": true
+    },
+    {
+      "id": "outils-fiche-thales-criteres-a-verifier-pdf",
+      "title": "Thalès — tester un parallélisme (à vérifier)",
+      "description": "Une proposition alternative pour comprendre le même coefficient puis appliquer un critère de parallélisme ou de non-parallélisme.",
+      "path": "outils/fiche_thales_criteres_a_verifier.pdf",
+      "domains": [
+        "geometrie"
+      ],
+      "notions": [
+        "thales"
+      ],
+      "uses": [
+        "imprimer",
+        "entrainer"
+      ],
+      "types": [
+        "imprimable"
+      ],
+      "filters": [
+        "materiel-imprimer"
+      ],
+      "keywords": [
+        "réciproque",
+        "contraposée",
+        "critère de parallélisme",
+        "à vérifier"
+      ],
+      "kind": "document",
+      "status": "published",
+      "featured": false,
+      "recent": true
+    },
+    {
+      "id": "outils-fiche-thales-direct-a-verifier-pdf",
+      "title": "Thalès direct — calculer une longueur (à vérifier)",
+      "description": "Une proposition pour comprendre le tableau de proportionnalité, choisir deux colonnes utiles et rédiger le calcul d’une longueur.",
+      "path": "outils/fiche_thales_direct_a_verifier.pdf",
+      "domains": [
+        "geometrie"
+      ],
+      "notions": [
+        "thales"
+      ],
+      "uses": [
+        "imprimer",
+        "entrainer"
+      ],
+      "types": [
+        "imprimable"
+      ],
+      "filters": [
+        "materiel-imprimer"
+      ],
+      "keywords": [
+        "théorème de Thalès",
+        "longueur",
+        "tableau de proportionnalité",
+        "à vérifier"
       ],
       "kind": "document",
       "status": "published",
