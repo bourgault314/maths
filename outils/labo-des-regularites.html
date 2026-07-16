@@ -472,6 +472,7 @@
       .stage svg {
         width: 100%;
         height: 200px;
+        min-height: 0;
         overflow: visible;
         filter: drop-shadow(0 7px 6px rgba(17, 56, 110, 0.08));
       }
@@ -534,8 +535,11 @@
         box-shadow: 0 12px 30px rgba(17, 56, 110, 0.09);
         color: var(--blue);
         font-family: "Cambria Math", Georgia, serif;
-        font-size: clamp(1.7rem, 3.7vw, 3.5rem);
+        font-size: clamp(1.35rem, 2.5vw, 2rem);
         font-weight: 900;
+        line-height: 1.05;
+        overflow-wrap: anywhere;
+        text-align: center;
       }
       .number-card::before {
         content: "";
@@ -553,6 +557,13 @@
         color: var(--orange);
         font-family: Inter, ui-sans-serif, system-ui, sans-serif;
         font-size: clamp(2.4rem, 5.6vw, 5rem);
+      }
+      .number-card.number-long {
+        font-size: clamp(1rem, 1.7vw, 1.45rem);
+        letter-spacing: -0.035em;
+      }
+      .number-card.number-very-long {
+        font-size: clamp(0.78rem, 1.25vw, 1.05rem);
       }
       .number-card.number-given {
         border-style: dashed;
@@ -1431,6 +1442,18 @@
         .stage-canvas {
           flex: 1;
           min-height: 0;
+          container-type: size;
+        }
+        .stage svg {
+          height: min(200px, calc(100cqh - 76px));
+        }
+        .number-stage,
+        .number-canvas .number-stage:last-child {
+          min-height: 0;
+        }
+        .number-card {
+          width: auto;
+          height: min(190px, calc(100cqh - 76px));
         }
         .student-actions {
           flex: 0 0 auto;
@@ -1454,10 +1477,10 @@
           padding-bottom: 40px;
         }
         .stage svg {
-          height: 225px;
+          height: min(225px, calc(100cqh - 82px));
         }
         .stage:last-child svg {
-          height: 290px;
+          height: min(250px, calc(100cqh - 82px));
         }
         .stage:last-child .stage-label {
           font-size: 0.72rem;
@@ -1648,7 +1671,7 @@
         .number-card {
           width: min(78%, 145px);
           border-radius: 16px;
-          font-size: clamp(1.7rem, 9vw, 2.7rem);
+          font-size: clamp(1.25rem, 6.5vw, 2rem);
         }
         .stage-label {
           bottom: 8px;
@@ -2202,7 +2225,8 @@
           max: 30,
           count: (n) => 3 * n + 1,
           formula: "3n + 1",
-          note: "3 tuiles répétées n fois, puis 1 tuile fixe",
+          note:
+            "à l’étape n, le portail contient n colonnes de 3 tuiles, puis 1 tuile fixe",
           unit: "tuiles",
           q: {
             far: [
@@ -2224,8 +2248,8 @@
             "Comment prouver sans tester toutes les étapes ?",
           ],
           ways: (n) => [
-            ["n colonnes de 3", 3 * n + " + 1"],
-            ["une ligne et deux tours", n + " + " + (2 * n + 1)],
+            ["n colonnes de 3, puis 1", n + " × 3 + 1"],
+            ["une ligne et deux autres", n + 1 + " + " + 2 * n],
             ["le suivant moins 3", 3 * (n + 1) + 1 + " − 3"],
           ],
         },
@@ -2288,7 +2312,7 @@
           q: {
             far: [
               "Peux-tu prévoir le nombre de carrés à l’étape 20 ?",
-              "Essaie de doubler l’escalier pour fabriquer une forme connue.",
+              "Compte les lignes 1, 2, 3… puis imagine un second escalier retourné pour former un rectangle.",
             ],
             inverse: [
               "Un escalier contient 55 carrés. Combien a-t-il de marches ?",
@@ -2700,7 +2724,7 @@
           ways: (n) => [
             ["centre et couronnes", "1 + 4(1 + … + " + (n - 1) + ")"],
             ["deux rectangles décalés", n + "² + " + (n - 1) + "²"],
-            ["forme développée", "2" + n + "² − 2×" + n + " + 1"],
+            ["forme développée", "2×" + n + "² − 2×" + n + " + 1"],
           ],
         },
         {
@@ -3135,7 +3159,7 @@
               "paires de modules",
               "10 × " + Math.floor(n / 2) + (n % 2 ? " + 5" : ""),
             ],
-            ["décomposition", "2" + n + " + 2" + n + " + " + n],
+            ["décomposition", 2 * n + " + " + 2 * n + " + " + n],
           ],
         },
         {
@@ -3211,11 +3235,13 @@
             "Peut-on écrire une seule règle sans parler de parité ?",
           ],
           ways: (n) => [
-            ["total", n + "² cases"],
             [
               "si le côté est " + (n % 2 ? "impair" : "pair"),
-              "" + Math.ceil((n * n) / 2) + " bleues",
+              n % 2
+                ? "(" + n + "² + 1) ÷ 2"
+                : n + "² ÷ 2",
             ],
+            ["total", n + "² cases"],
             ["écart entre couleurs", n % 2 ? "1" : "0"],
           ],
         },
@@ -3253,9 +3279,9 @@
             "Pourquoi les deux directions donnent-elles le même total ?",
           ],
           ways: (n) => [
+            ["total", "2 × " + n + " × " + (n + 1)],
             ["horizontaux", n + " × " + (n + 1)],
             ["verticaux", n + " × " + (n + 1)],
-            ["total", "2 × " + n + " × " + (n + 1)],
           ],
         },
         {
@@ -3554,7 +3580,7 @@
               "Compte une direction, puis utilise la symétrie des trois directions.",
             ],
             inverse: [
-              "Le réseau contient 90 petits segments. Quelle est son étape ?",
+              "Le réseau contient 84 petits segments. Quelle est son étape ?",
               "Divise d’abord par trois puis reconnais un nombre triangulaire.",
             ],
             error: [
@@ -3568,8 +3594,8 @@
             "Où se cache un nombre triangulaire ?",
           ],
           ways: (n) => [
-            ["une direction", "1 + 2 + … + " + n],
             ["trois directions", "3 × " + (n * (n + 1)) / 2],
+            ["une direction", "1 + 2 + … + " + n],
             ["formule directe", "3×" + n + "×" + (n + 1) + "÷2"],
           ],
         },
@@ -3586,7 +3612,8 @@
           count: (n) => Math.pow(2, n - 1),
           formula: "2ⁿ⁻¹",
           note: "la somme de chaque ligne est le double de la précédente",
-          unit: "pour la somme de la ligne",
+          unit: "comme somme de ligne",
+          quantity: (value) => "somme : " + fmt(value),
           q: {
             far: [
               "Quelle est la somme de la 10e ligne ?",
@@ -3607,8 +3634,8 @@
             "Quel lien avec les puissances de deux ?",
           ],
           ways: (n) => [
-            ["sommes successives", "1, 2, 4, 8…"],
             ["puissance", "2^" + (n - 1)],
+            ["sommes successives", "1, 2, 4, 8…"],
             ["récurrence", "2 × somme précédente"],
           ],
         },
@@ -5250,34 +5277,71 @@
         );
       }
       function portal(n) {
-        const shown = Math.min(n, 9),
+        const compressed = n > 9,
+          shown = compressed ? 6 : n,
           s = 17,
           g = 3,
-          w = shown * (s + g) + s,
-          h = 3 * (s + g);
+          ellipsisGap = compressed ? 28 : 0,
+          xAt = (i) => 10 + i * (s + g) + (compressed && i >= 3 ? ellipsisGap : 0),
+          repeatedRight = xAt(shown - 1) + s,
+          fixedX = repeatedRight + g,
+          w = fixedX + s + 12,
+          additionHint =
+            toolsState.growth && ["notice", "near"].includes(currentQuestion),
+          structureHint =
+            toolsState.decompose || (toolsState.growth && !additionHint);
         let z = "";
         for (let i = 0; i < shown; i++) {
           for (let j = 0; j < 3; j++) {
-            let fill = toolsState.decompose
-              ? j === 1
-                ? palette.sun
-                : palette.lagoon
-              : palette.lagoon;
-            if (toolsState.growth && i === shown - 1) fill = palette.coral;
-            z += tile(10 + i * (s + g), 40 + j * (s + g), s, fill);
+            const fill = additionHint && i === shown - 1 ? palette.coral : palette.lagoon;
+            z += tile(xAt(i), 40 + j * (s + g), s, fill);
           }
         }
-        z += tile(10 + shown * (s + g), 40 + 2 * (s + g), s, palette.coral);
-        if (n > shown)
+        z += tile(fixedX, 40 + 2 * (s + g), s, palette.coral);
+        if (compressed) {
           z +=
             '<text x="' +
-            (10 + w / 2) +
-            '" y="125" text-anchor="middle" font-size="12" font-weight="800" fill="' +
+            (xAt(2) + s + ellipsisGap / 2) +
+            '" y="79" text-anchor="middle" font-size="22" font-weight="900" fill="' +
             palette.violet +
-            '">… ' +
+            '">…</text>';
+        }
+        if (structureHint) {
+          z +=
+            '<rect x="7" y="35" width="' +
+            (repeatedRight - 4) +
+            '" height="65" rx="7" fill="none" stroke="' +
+            palette.sun +
+            '" stroke-width="2.5"/>' +
+            '<text x="' +
+            (7 + (repeatedRight - 4) / 2) +
+            '" y="27" text-anchor="middle" font-size="11" font-weight="900" fill="' +
+            palette.coral +
+            '">' +
+            (n <= 3 ? n + " × 3" : n + " colonnes × 3") +
+            '</text><text x="' +
+            (fixedX + s / 2) +
+            '" y="118" text-anchor="middle" font-size="10" font-weight="900" fill="' +
+            palette.coral +
+            '">+ 1</text>';
+        } else if (additionHint) {
+          z +=
+            '<text x="' +
+            (xAt(shown - 1) + s / 2) +
+            '" y="27" text-anchor="middle" font-size="10" font-weight="900" fill="' +
+            palette.coral +
+            '">+ 3</text>';
+        } else if (compressed) {
+          z +=
+            '<text x="' +
+            (7 + (repeatedRight - 4) / 2) +
+            '" y="124" text-anchor="middle" font-size="11" font-weight="900" fill="' +
+            palette.violet +
+            '">' +
             n +
             " colonnes</text>";
-        return wrapSvg(z, Math.max(200, w + 25), 155);
+        }
+        return wrapSvg(z, Math.max(200, w), 138);
       }
       function house(n) {
         const shown = Math.min(n, 7),
@@ -6929,11 +6993,22 @@
         if (typeof v !== "number" || !Number.isFinite(v)) return String(v);
         return v.toLocaleString("fr-FR", { maximumFractionDigits: 4 });
       }
+      function sentenceStart(value) {
+        const text = String(value || "");
+        return text ? text[0].toLocaleUpperCase("fr-FR") + text.slice(1) : text;
+      }
       function displayAt(p, n) {
         return p.display ? p.display(n) : fmt(p.count(n));
       }
       function quantity(v) {
+        if (current.quantity) return current.quantity(v);
         return current.kind === "number" ? fmt(v) : fmt(v) + " " + current.unit;
+      }
+
+      function withDe(unit) {
+        return /^[aeiouyàâäéèêëîïôöùûühœ]/i.test(unit)
+          ? "d’" + unit
+          : "de " + unit;
       }
       function findItem(id) {
         return (
@@ -7238,6 +7313,14 @@
                   v === 5) ||
                   (format === "holes" && holes.includes(v)) ||
                   (format === "rule" && v >= 4));
+              const displayed = displayAt(current, v),
+                lengthClass = hidden
+                  ? ""
+                  : displayed.length > 8
+                    ? " number-very-long"
+                    : displayed.length > 4
+                      ? " number-long"
+                      : "";
               return (
                 '<div class="stage number-stage"><div class="number-card ' +
                 (hidden
@@ -7245,8 +7328,9 @@
                   : format === "rule" && v <= 3
                     ? "number-given"
                     : "") +
+                lengthClass +
                 '">' +
-                (hidden ? "?" : displayAt(current, v)) +
+                (hidden ? "?" : displayed) +
                 '</div><span class="stage-label">Rang ' +
                 v +
                 "</span></div>"
@@ -7339,7 +7423,7 @@
           ranks.map((n) => "<td>" + displayAt(current, n) + "</td>").join("") +
           "</tr></table>";
         $("#recursiveRule").textContent = inferredRecursive();
-        $("#recursiveNote").textContent = current.note + ".";
+        $("#recursiveNote").textContent = sentenceStart(current.note) + ".";
         $("#explicitRule").textContent = current.formula;
         $("#miniGraph").innerHTML = graphSvg();
         const r = Number($("#rank").value) || 5,
@@ -7425,6 +7509,85 @@
             ];
           return current.q[type];
         }
+        if (current.id === "portal") {
+          if (type === "notice")
+            return [
+              "Qu’est-ce qui reste identique ? Qu’est-ce qui change ?",
+              "D’une étape à la suivante, une colonne complète de 3 tuiles s’ajoute ; la tuile corail reste fixe.",
+            ];
+          if (type === "near")
+            return [
+              "Sans la dessiner ici, prévois l’étape 5 et son nombre de tuiles.",
+              "Une étape de plus correspond à une colonne de 3 tuiles de plus.",
+            ];
+          if (type === "generalize")
+            return [
+              "Écris une expression qui donne le nombre de tuiles à l’étape n.",
+              "Repère n colonnes identiques de 3 tuiles, puis la tuile corail fixe.",
+            ];
+          if (type === "far")
+            return [
+              "Combien de tuiles à l’étape " + n + " ?",
+              "À l’étape " +
+                n +
+                ", le portail comporte " +
+                n +
+                " colonnes de 3 tuiles, puis 1 tuile fixe.",
+            ];
+        }
+        if (current.id === "pascal") {
+          if (type === "notice")
+            return [
+              "Comment évolue la somme des nombres d’une ligne à la suivante ?",
+              "Additionne chaque ligne : 1, puis 2, puis 4, puis 8…",
+            ];
+          if (type === "near")
+            return [
+              "Quelle est la somme des nombres de la 5e ligne ?",
+              "La somme double quand on passe à la ligne suivante.",
+            ];
+          if (type === "generalize")
+            return [
+              "Écris une expression donnant la somme des nombres de la ligne n.",
+              "La première somme vaut 1, puis chaque somme est multipliée par 2.",
+            ];
+          if (type === "far")
+            return [
+              "Quelle est la somme des nombres de la ligne " + n + " ?",
+              current.q.far[1],
+            ];
+          if (type === "inverse")
+            return [
+              "Une ligne a pour somme " +
+                fmt(current.count(n)) +
+                ". Quel est son rang ?",
+              n === inverseRanks[current.id]
+                ? current.q.inverse[1]
+                : "Reconnais une puissance de deux.",
+            ];
+          if (type === "error") return current.q.error;
+        }
+        if (type === "far" && current.q?.far) {
+          if (
+            ["twins", "illusion"].includes(current.id) ||
+            n === focusRanks[current.id]
+          )
+            return current.q.far;
+          return [
+            "Combien " + withDe(current.unit) + " à l’étape " + n + " ?",
+            current.q.far[1],
+          ];
+        }
+        if (type === "inverse" && current.q?.inverse) {
+          if (n === inverseRanks[current.id]) return current.q.inverse;
+          return [
+            "Une figure possède " +
+              quantity(current.count(n)) +
+              ". De quelle étape s’agit-il ?",
+            "Pars de la structure et transforme la question en équation.",
+          ];
+        }
+        if (type === "error" && current.q?.error) return current.q.error;
         if (type === "notice")
           return [
             "Qu’est-ce qui reste identique ? Qu’est-ce qui change ?",
@@ -7432,15 +7595,15 @@
           ];
         if (type === "near")
           return [
-            "Sans la dessiner ici, prévois l’étape 5 et sa quantité de " +
-              current.unit +
+            "Sans la dessiner ici, prévois l’étape 5 et sa quantité " +
+              withDe(current.unit) +
               ".",
             "Pars de l’étape 4, puis explique exactement ce qui change.",
           ];
         if (type === "generalize")
           return [
-            "Écris une expression qui donne le nombre de " +
-              current.unit +
+            "Écris une expression qui donne le nombre " +
+              withDe(current.unit) +
               " à l’étape n.",
             "Chaque terme de ton expression doit correspondre à une partie visible du dessin.",
           ];
@@ -7539,7 +7702,8 @@
             return {
               answer: "Une règle possible est " + current.formula + ".",
               proof:
-                current.note + ". La lettre n représente ici le rang du terme.",
+                sentenceStart(current.note) +
+                ". La lettre n représente ici le rang du terme.",
             };
           if (currentQuestion === "far")
             return {
@@ -7552,7 +7716,7 @@
                 ".",
               proof: current.ambiguous
                 ? "Cette valeur n’est pas imposée par les seuls premiers termes : il faut annoncer la règle choisie."
-                : current.note +
+                : sentenceStart(current.note) +
                   ". On évite ainsi de produire tous les termes intermédiaires.",
             };
           if (currentQuestion === "inverse") {
@@ -7585,6 +7749,55 @@
               ".",
           };
         }
+        if (current.id === "pascal") {
+          if (currentQuestion === "notice")
+            return {
+              answer: "La somme double d’une ligne à la suivante.",
+              proof: "Les premières sommes sont 1, 2, 4, 8…",
+            };
+          if (currentQuestion === "near")
+            return {
+              answer: "La somme des nombres de la 5e ligne vaut 16.",
+              proof: "1, 2, 4, 8, 16 : on double quatre fois à partir de la première ligne.",
+            };
+          if (currentQuestion === "generalize")
+            return {
+              answer: "La somme des nombres de la ligne n vaut 2ⁿ⁻¹.",
+              proof: "La première somme vaut 1, puis chaque passage à la ligne suivante multiplie la somme par 2.",
+            };
+          if (currentQuestion === "far")
+            return {
+              answer:
+                "La somme des nombres de la " +
+                n +
+                "e ligne vaut " +
+                fmt(current.count(n)) +
+                ".",
+              proof:
+                "On calcule 2^" +
+                (n - 1) +
+                " = " +
+                fmt(current.count(n)) +
+                ".",
+            };
+          if (currentQuestion === "inverse") {
+            const rank = inverseMatches()[0];
+            return {
+              answer: "Il s’agit de la ligne de rang " + rank + ".",
+              proof:
+                fmt(current.count(n)) +
+                " = 2^" +
+                (rank - 1) +
+                ", donc n = " +
+                rank +
+                ".",
+            };
+          }
+          return {
+            answer: "Il faut additionner tous les nombres de la ligne.",
+            proof: "Les deux nombres placés aux extrémités ne suffisent pas dès que la ligne contient des coefficients intérieurs.",
+          };
+        }
         if (currentQuestion === "notice")
           return {
             answer:
@@ -7607,10 +7820,23 @@
           return {
             answer: "Une expression possible est " + current.formula + ".",
             proof:
-              current.note +
+              sentenceStart(current.note) +
               ". La lettre n représente le numéro de l’étape et chaque terme se lit dans la construction.",
           };
         if (currentQuestion === "far") {
+          if (current.id === "portal")
+            return {
+              answer:
+                "À l’étape " + n + ", il y a " + quantity(current.count(n)) + ".",
+              proof:
+                "On compte " +
+                n +
+                " colonnes de 3 tuiles, puis 1 tuile fixe : " +
+                n +
+                " × 3 + 1 = " +
+                fmt(current.count(n)) +
+                ".",
+            };
           if (current.id === "twins")
             return {
               answer:
@@ -7628,7 +7854,10 @@
             answer:
               "À l’étape " + n + ", il y a " + quantity(current.count(n)) + ".",
             proof:
-              current.note + ". On calcule donc avec " + current.formula + ".",
+              sentenceStart(current.note) +
+              ". On calcule donc avec " +
+              current.formula +
+              ".",
           };
         }
         if (currentQuestion === "inverse") {
@@ -7654,7 +7883,7 @@
               ? "Il s’agit de l’étape " + rank + "."
               : "La donnée doit être comparée à la règle du pattern.",
             proof:
-              current.note +
+              sentenceStart(current.note) +
               ". On cherche le rang qui produit la quantité annoncée.",
           };
         }
@@ -7666,7 +7895,7 @@
                 current.formula +
                 ".",
           proof:
-            current.note +
+            sentenceStart(current.note) +
             ". Il faut tester l’affirmation sur le dessin, puis sur plusieurs rangs.",
         };
       }
@@ -7736,6 +7965,45 @@
             result: current.formula,
           };
         }
+        if (current.id === "pascal") {
+          if (currentQuestion === "notice")
+            return {
+              lead: "La somme de la ligne double",
+              label: "Sommes",
+              result: "1 → 2 → 4 → 8 → …",
+            };
+          if (currentQuestion === "near")
+            return {
+              lead: "On double à chaque nouvelle ligne",
+              label: "Ligne 5",
+              result: "2⁴ = 16",
+            };
+          if (currentQuestion === "generalize")
+            return {
+              lead: "Une règle pour toutes les lignes",
+              label: "Somme",
+              result: "2ⁿ⁻¹",
+            };
+          if (currentQuestion === "far")
+            return {
+              lead: "On calcule sans écrire toute la ligne",
+              label: "Ligne " + n,
+              result: "2^" + (n - 1) + " = " + fmt(current.count(n)),
+            };
+          if (currentQuestion === "inverse") {
+            const rank = inverseMatches()[0];
+            return {
+              lead: "On reconnaît une puissance de deux",
+              label: "Rang",
+              result: fmt(current.count(n)) + " = 2^" + (rank - 1) + " → n = " + rank,
+            };
+          }
+          return {
+            lead: "On additionne toute la ligne",
+            label: "Vérification",
+            result: "extrémités + coefficients intérieurs",
+          };
+        }
         if (currentQuestion === "notice")
           return {
             lead: "Ce qu’il faut voir",
@@ -7766,6 +8034,12 @@
               lead: "Les premiers termes ne décident pas seuls",
               label: "Exemple",
               result: "si on double : étape 6 = 32",
+            };
+          if (current.id === "constellation")
+            return {
+              lead: "Le nombre de points reste invariant",
+              label: "Points",
+              result: "5 à toutes les étapes",
             };
           return {
             lead: "On prévoit sans tout dessiner",
@@ -8204,6 +8478,12 @@
         const reveal = $("#hintBox").hidden;
         $("#hintBox").hidden = !reveal;
         toolsState.growth = reveal;
+        toolsState.decompose =
+          !$("#correctionPanel").hidden ||
+          (reveal &&
+            ["far", "generalize", "inverse", "error"].includes(
+              currentQuestion,
+            ));
         $("#hintBtn").textContent = reveal ? "Masquer l’indice" : "Indice";
         renderStages();
       };
@@ -8211,7 +8491,12 @@
         const reveal = $("#correctionPanel").hidden;
         $("#correctionPanel").hidden = !reveal;
         toolsState.counts = reveal;
-        toolsState.decompose = reveal;
+        toolsState.decompose =
+          reveal ||
+          (!$("#hintBox").hidden &&
+            ["far", "generalize", "inverse", "error"].includes(
+              currentQuestion,
+            ));
         if (!reveal) {
           $("#teacherDetails").open = false;
           $("#representationDetails").open = false;
