@@ -176,14 +176,9 @@
       showWhenEmpty: true
     },
     statistiques: {
-      description: "Organiser et représenter des données.",
-      keywords: "statistique graphique diagramme données",
+      description: "Organiser, représenter et interpréter des données, notamment avec la moyenne.",
+      keywords: "statistique graphique diagramme données moyenne répartition équilibrer barres",
       icon: "stats"
-    },
-    moyennes: {
-      description: "Donner du sens à la moyenne par la manipulation.",
-      keywords: "moyenne répartition équilibrer barres",
-      icon: "average"
     },
     probabilites: {
       description: "Expérimenter le hasard et quantifier les chances.",
