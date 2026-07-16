@@ -148,8 +148,22 @@ window.MATHSGO_CATALOGUE = {
   "resourceClassifications": {
     "outils/box_barre_final.html": { "primaryNotion": "calcul-litteral", "collections": ["splat"], "tags": ["boite", "splat"] },
     "outils/box_pasbarre_final.html": { "primaryNotion": "calcul-litteral", "collections": [], "tags": ["boite", "archive"] },
-    "outils/tuiles_algebriques/tuiles_algebriques.html": { "primaryNotion": "calcul-litteral", "collections": ["tuiles-algebriques"], "tags": ["tuiles-algebriques"] },
-    "outils/tuiles_algebriques/tuiles_algebriques_mode_equation.html": { "primaryNotion": "equations", "collections": ["tuiles-algebriques"], "tags": ["tuiles-algebriques"] },
+    "outils/tuiles_algebriques/tuiles_algebriques.html": {
+      "primaryNotion": "calcul-litteral",
+      "primaryGroup": "manipuler",
+      "collections": ["tuiles-algebriques"],
+      "tags": ["tuiles-algebriques", "expression", "developpement", "reduction", "manipulation"],
+      "thumbnail": "assets/img/thumbnails/tuiles-algebriques/plateau-expressions.png?v=1",
+      "cardDescription": "Composer, ordonner et simplifier des expressions avec les tuiles x², x et 1."
+    },
+    "outils/tuiles_algebriques/tuiles_algebriques_mode_equation.html": {
+      "primaryNotion": "equations",
+      "primaryGroup": "manipuler",
+      "collections": ["tuiles-algebriques"],
+      "tags": ["tuiles-algebriques", "equation", "premier-degre", "balance", "manipulation"],
+      "thumbnail": "assets/img/thumbnails/tuiles-algebriques/plateau-equations.png?v=1",
+      "cardDescription": "Poser puis résoudre une équation du premier degré en manipulant les deux membres."
+    },
     "outils/detective_des_grandeurs_additive__1.pdf": { "primaryNotion": "schemas-barres", "collections": [], "tags": ["schema-barres", "resolution-problemes", "enquete"] },
     "outils/detective_des_grandeurs_additive__2.pdf": { "primaryNotion": "schemas-barres", "collections": [], "tags": ["schema-barres", "resolution-problemes", "enquete"] },
     "outils/detective_des_grandeurs_multiplicative__1.pdf": { "primaryNotion": "schemas-barres", "collections": [], "tags": ["schema-barres", "resolution-problemes", "enquete"] },
@@ -210,8 +224,22 @@ window.MATHSGO_CATALOGUE = {
       "thumbnail": "assets/img/thumbnails/splat/splat-equations.png?v=1",
       "cardDescription": "Générer des cartes d’équations où les deux côtés contiennent des jetons et des quantités cachées."
     },
-    "outils/tuiles_algebriques/generateur_exercices_calcul_litteral.html": { "primaryNotion": "calcul-litteral", "collections": ["tuiles-algebriques"], "tags": ["tuiles-algebriques"] },
-    "outils/tuiles_algebriques/generateur_tuiles.html": { "primaryNotion": "calcul-litteral", "collections": ["tuiles-algebriques"], "tags": ["tuiles-algebriques"] },
+    "outils/tuiles_algebriques/generateur_exercices_calcul_litteral.html": {
+      "primaryNotion": "calcul-litteral",
+      "primaryGroup": "generer",
+      "collections": ["tuiles-algebriques"],
+      "tags": ["tuiles-algebriques", "exerciseur", "fiche", "developper", "reduire"],
+      "thumbnail": "assets/img/thumbnails/tuiles-algebriques/generateur-exercices.png?v=1",
+      "cardDescription": "Créer une fiche d’exercices illustrés pour développer, réduire ou compléter des expressions."
+    },
+    "outils/tuiles_algebriques/generateur_tuiles.html": {
+      "primaryNotion": "calcul-litteral",
+      "primaryGroup": "generer",
+      "collections": ["tuiles-algebriques"],
+      "tags": ["tuiles-algebriques", "materiel", "imprimer", "decouper", "generateur"],
+      "thumbnail": "assets/img/thumbnails/tuiles-algebriques/tuiles-decouper.png?v=1",
+      "cardDescription": "Personnaliser une planche de tuiles algébriques à imprimer et à découper."
+    },
     "outils/fractions_multiples_problemes.pdf": {
       "primaryNotion": "fractions",
       "primaryGroup": "activites",
@@ -518,6 +546,8 @@ window.MATHSGO_CATALOGUE = {
       "id": "cours-tuiles-algebriques",
       "title": "Cours avec les tuiles algébriques",
       "description": "Choisir la version couleur du livret.",
+      "cardDescription": "Le même livret d’activités proposé dans quatre styles de tuiles.",
+      "thumbnail": "assets/img/thumbnails/tuiles-algebriques/livrets.png?v=1",
       "group": "cours",
       "labels": {
         "outils/tuiles_algebriques/livret_litteral_blanc_gris.pdf": "Blanc et gris",
@@ -1557,8 +1587,8 @@ window.MATHSGO_CATALOGUE = {
     },
     {
       "id": "outils-tuiles-algebriques-tuiles-algebriques-html",
-      "title": "Calcul Littéral - Développement",
-      "description": "Une ressource maths&go pour travailler calcul littéral.",
+      "title": "Tuiles algébriques — expressions",
+      "description": "Composez, ordonnez et simplifiez des expressions avec les tuiles x², x et 1.",
       "path": "outils/tuiles_algebriques/tuiles_algebriques.html",
       "domains": [
         "algebre"
@@ -1584,8 +1614,8 @@ window.MATHSGO_CATALOGUE = {
     },
     {
       "id": "outils-tuiles-algebriques-tuiles-algebriques-mode-equation-html",
-      "title": "Calcul Littéral - Équations (1er Degré)",
-      "description": "Une ressource maths&go pour travailler calcul littéral.",
+      "title": "Tuiles algébriques — équations",
+      "description": "Posez puis résolvez une équation du premier degré en manipulant les deux membres.",
       "path": "outils/tuiles_algebriques/tuiles_algebriques_mode_equation.html",
       "domains": [
         "algebre"
@@ -3113,7 +3143,7 @@ window.MATHSGO_CATALOGUE = {
     {
       "id": "outils-tuiles-algebriques-livret-litteral-blanc-gris-pdf",
       "title": "Livret de calcul littéral — blanc et gris",
-      "description": "Une ressource maths&go pour travailler calcul littéral.",
+      "description": "Un livret d’activités de calcul littéral avec des tuiles en blanc et gris.",
       "path": "outils/tuiles_algebriques/livret_litteral_blanc_gris.pdf",
       "domains": [
         "algebre"
@@ -3143,7 +3173,7 @@ window.MATHSGO_CATALOGUE = {
     {
       "id": "outils-tuiles-algebriques-livret-litteral-bleu-jaune-pdf-pdf",
       "title": "Livret de calcul littéral — bleu et jaune",
-      "description": "Une ressource maths&go pour travailler calcul littéral.",
+      "description": "Un livret d’activités de calcul littéral avec des tuiles bleues et jaunes.",
       "path": "outils/tuiles_algebriques/livret_litteral_bleu_jaune.pdf.pdf",
       "domains": [
         "algebre"
@@ -3173,7 +3203,7 @@ window.MATHSGO_CATALOGUE = {
     {
       "id": "outils-tuiles-algebriques-livret-litteral-mathigon-pdf",
       "title": "Livret de calcul littéral — Mathigon",
-      "description": "Une ressource maths&go pour travailler calcul littéral.",
+      "description": "Un livret d’activités de calcul littéral avec les couleurs de tuiles Mathigon.",
       "path": "outils/tuiles_algebriques/livret_litteral_mathigon.pdf",
       "domains": [
         "algebre"
@@ -3203,7 +3233,7 @@ window.MATHSGO_CATALOGUE = {
     {
       "id": "outils-tuiles-algebriques-livret-litteral-vert-rouge-pdf",
       "title": "Livret de calcul littéral — vert et rouge",
-      "description": "Une ressource maths&go pour travailler calcul littéral.",
+      "description": "Un livret d’activités de calcul littéral avec des tuiles vertes et rouges.",
       "path": "outils/tuiles_algebriques/livret_litteral_vert_rouge.pdf",
       "domains": [
         "algebre"
@@ -4821,8 +4851,8 @@ window.MATHSGO_CATALOGUE = {
     },
     {
       "id": "outils-tuiles-algebriques-generateur-exercices-calcul-litteral-html",
-      "title": "Tuiles algébriques",
-      "description": "Une ressource maths&go pour travailler calcul littéral.",
+      "title": "Générateur d’exercices avec les tuiles",
+      "description": "Créez une fiche d’exercices illustrés pour développer, réduire ou compléter des expressions.",
       "path": "outils/tuiles_algebriques/generateur_exercices_calcul_litteral.html",
       "domains": [
         "algebre"
@@ -4855,7 +4885,7 @@ window.MATHSGO_CATALOGUE = {
     {
       "id": "outils-tuiles-algebriques-generateur-tuiles-html",
       "title": "Tuiles algébriques à découper",
-      "description": "Une ressource maths&go pour travailler calcul littéral.",
+      "description": "Personnalisez une planche de tuiles algébriques à imprimer et à découper.",
       "path": "outils/tuiles_algebriques/generateur_tuiles.html",
       "domains": [
         "algebre"
