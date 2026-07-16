@@ -815,11 +815,11 @@ select { cursor: pointer; }
 }
 
 .notion-card {
-  min-height: 142px;
+  min-height: 122px;
   display: flex;
   flex-direction: column;
   justify-content: space-between;
-  padding: 17px 17px 15px;
+  padding: 12px 15px 11px;
 }
 
 .notion-card::after,
@@ -854,9 +854,9 @@ select { cursor: pointer; }
 }
 
 .notion-icon {
-  width: 58px;
-  height: 47px;
-  flex: 0 0 58px;
+  width: 53px;
+  height: 43px;
+  flex: 0 0 53px;
   display: grid;
   place-items: center;
 }
@@ -923,17 +923,17 @@ select { cursor: pointer; }
 .notion-card p {
   position: relative;
   z-index: 1;
-  margin: 12px 0 0;
+  margin: 7px 0 0;
   color: #637287;
-  font-size: 0.9rem;
-  line-height: 1.4;
+  font-size: 0.84rem;
+  line-height: 1.28;
 }
 
 .notion-count {
   position: relative;
   z-index: 1;
   display: block;
-  margin-top: 8px;
+  margin-top: 5px;
   color: var(--accent, var(--blue));
   font-size: .76rem;
   font-weight: 800;
