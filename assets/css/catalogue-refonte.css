@@ -872,6 +872,23 @@ select { cursor: pointer; }
   list-style: none;
 }
 
+.resource-family-card-visual .resource-family-summary {
+  grid-template-columns: minmax(0, 1fr) 24px;
+  align-items: start;
+  gap: 0 12px;
+  padding: 0 16px 16px;
+}
+
+.resource-family-card-visual .resource-copy {
+  grid-column: 1;
+  align-self: center;
+}
+
+.resource-family-card-visual .resource-family-toggle {
+  grid-column: 2;
+  align-self: center;
+}
+
 .resource-family-summary::-webkit-details-marker { display: none; }
 
 .resource-family-summary:focus-visible {

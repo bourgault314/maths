@@ -722,10 +722,14 @@
     const representative = variants[0];
     const domainId = representative?.domains?.[0] || "nombres-calculs";
     const versionLabel = `${variants.length} version${variants.length > 1 ? "s" : ""}`;
-    return `<details class="resource-family-card" style="${domainStyle(domainId)}">
+    const thumbnail = family.thumbnail;
+    const description = family.cardDescription || family.description || "Choisir une version.";
+    return `<details class="resource-family-card${thumbnail ? " resource-family-card-visual" : ""}" style="${domainStyle(domainId)}">
       <summary class="resource-family-summary">
-        <span class="resource-type-icon">${typeIcon(representative)}</span>
-        <span class="resource-copy"><h3>${escapeHtml(family.title)}</h3><span class="resource-meta">${escapeHtml(`${versionLabel} · ${family.description || "Choisir une version."}`)}</span></span>
+        ${thumbnail
+          ? `<span class="resource-thumbnail"><img src="${escapeHtml(rootPrefix + thumbnail)}" alt="" loading="lazy"></span>`
+          : `<span class="resource-type-icon">${typeIcon(representative)}</span>`}
+        <span class="resource-copy"><h3>${escapeHtml(family.title)}</h3>${thumbnail ? `<span class="resource-description">${escapeHtml(`${versionLabel} · ${description}`)}</span>` : `<span class="resource-meta">${escapeHtml(`${versionLabel} · ${description}`)}</span>`}</span>
         <span class="resource-family-toggle" aria-hidden="true">⌄</span>
       </summary>
       <div class="resource-variants" aria-label="${escapeHtml(`Versions de ${family.title}`)}">
