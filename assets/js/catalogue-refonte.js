@@ -31,7 +31,7 @@
     algebre: { icon: "splat" },
     "proportionnalite-mesures": { icon: "equal-volume-vase" },
     geometrie: { icon: "seigaiha" },
-    donnees: { icon: "frequencies" },
+    donnees: { icon: "generative:mosaic" },
     informatique: { icon: "koch" },
     "jeux-recherches": { icon: "strategy" },
     cps: { icon: "cps" }
@@ -429,6 +429,21 @@
       cps: `<svg viewBox="0 0 78 56" aria-hidden="true"><ellipse cx="39" cy="29" rx="28" ry="25.5" fill="none" stroke="#0a9188" stroke-width="4.6"/><path d="M39 18.5c-5.7-3.6-8.3-6.5-7.6-9.8.5-2.6 2.6-4.4 5.2-4.4 1.4 0 2.6.7 3.4 1.8.8-1.1 2-1.8 3.4-1.8 2.6 0 4.7 1.8 5.2 4.4.7 3.3-1.9 6.2-7.6 9.8l-1 1Z" transform="translate(-1 -3.5)" fill="#ff684c" stroke="#c74936" stroke-width="1.15" stroke-linejoin="round"/><path d="M13.5 29c0-2.5 2-4.5 4.5-4.5h13.5c2.5 0 4.5 2 4.5 4.5v6.5c0 2.5-2 4.5-4.5 4.5h-7l-4.8 4 .7-4H18c-2.5 0-4.5-2-4.5-4.5Z" fill="#20aaa4" stroke="#087f78" stroke-width="1.4" stroke-linejoin="round"/><path d="m61.8 37.8 7.6 7.6" fill="none" stroke="#a85b08" stroke-width="6" stroke-linecap="round"/><path d="m61.8 37.8 7.6 7.6" fill="none" stroke="#f9bf3b" stroke-width="4" stroke-linecap="round"/><circle cx="56" cy="32" r="8" fill="#fff" stroke="#a85b08" stroke-width="6"/><circle cx="56" cy="32" r="8" fill="#fff" stroke="#f9bf3b" stroke-width="4.3"/></svg>`,
       gears: `<svg viewBox="0 0 70 52" aria-hidden="true"><g fill="#2dd4bf" stroke="#0f766e" stroke-width="1.35"><g transform="translate(22 22)"><rect x="-3" y="-20" width="6" height="9" rx="1"/><rect x="-3" y="-20" width="6" height="9" rx="1" transform="rotate(45)"/><rect x="-3" y="-20" width="6" height="9" rx="1" transform="rotate(90)"/><rect x="-3" y="-20" width="6" height="9" rx="1" transform="rotate(135)"/><rect x="-3" y="-20" width="6" height="9" rx="1" transform="rotate(180)"/><rect x="-3" y="-20" width="6" height="9" rx="1" transform="rotate(225)"/><rect x="-3" y="-20" width="6" height="9" rx="1" transform="rotate(270)"/><rect x="-3" y="-20" width="6" height="9" rx="1" transform="rotate(315)"/><circle r="13"/></g></g><circle cx="22" cy="22" r="5" fill="#ecfeff" stroke="#0f766e" stroke-width="1.5"/><g fill="#facc15" stroke="#b45309" stroke-width="1.2"><g transform="translate(49 31)"><rect x="-2.6" y="-14" width="5.2" height="7" rx=".8"/><rect x="-2.6" y="-14" width="5.2" height="7" rx=".8" transform="rotate(45)"/><rect x="-2.6" y="-14" width="5.2" height="7" rx=".8" transform="rotate(90)"/><rect x="-2.6" y="-14" width="5.2" height="7" rx=".8" transform="rotate(135)"/><rect x="-2.6" y="-14" width="5.2" height="7" rx=".8" transform="rotate(180)"/><rect x="-2.6" y="-14" width="5.2" height="7" rx=".8" transform="rotate(225)"/><rect x="-2.6" y="-14" width="5.2" height="7" rx=".8" transform="rotate(270)"/><rect x="-2.6" y="-14" width="5.2" height="7" rx=".8" transform="rotate(315)"/><circle r="9"/></g></g><circle cx="49" cy="31" r="3.2" fill="#fffbeb" stroke="#b45309" stroke-width="1.3"/></svg>`
     };
+    if (name && name.startsWith("generative:")) {
+      const familyId = name.slice("generative:".length);
+      const generator = window.MathsGoGenerativeIcons;
+      if (generator && typeof generator.createSvg === "function") {
+        const svg = generator.createSvg(familyId, {
+          seed: generator.dailySeed(familyId),
+          label: ""
+        });
+        svg.removeAttribute("role");
+        svg.removeAttribute("aria-label");
+        svg.setAttribute("aria-hidden", "true");
+        return svg.outerHTML;
+      }
+      return icons.frequencies;
+    }
     return icons[name] || icons.explorations;
   }
 
