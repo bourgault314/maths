@@ -234,7 +234,7 @@ window.MATHSGO_CATALOGUE = {
       "cardDescription": "Faire émerger le triangle de Sierpiński par une expérience aléatoire, puis prolonger avec Scratch."
     },
     "outils/plateaux_manipulation/le_grand_pari.html": {
-      "primaryNotion": "probabilites",
+      "primaryNotion": "explorations",
       "primaryGroup": "jeux",
       "collections": [],
       "tags": ["probabilites", "frequences", "des", "sommes", "simulation"],
@@ -380,7 +380,7 @@ window.MATHSGO_CATALOGUE = {
       "primaryGroup": "activites",
       "collections": [],
       "tags": ["fractions", "multiples", "divisibilite", "problemes"],
-      "thumbnail": "assets/img/thumbnails/fractions/fractions-multiples-problemes.png?v=1",
+      "thumbnail": "assets/img/thumbnails/fractions/fractions-multiples-problemes.png?v=2",
       "cardDescription": "Résoudre et inventer des problèmes de fractions d’une quantité à partir de schémas en barres."
     },
     "outils/fractions_multiples_exerciseur.html": {
@@ -388,7 +388,7 @@ window.MATHSGO_CATALOGUE = {
       "primaryGroup": "generer",
       "collections": [],
       "tags": ["fractions", "multiples", "divisibilite", "exerciseur"],
-      "thumbnail": "assets/img/thumbnails/fractions/generateur-fractions-multiples.png?v=1",
+      "thumbnail": "assets/img/thumbnails/fractions/generateur-fractions-multiples.png?v=2",
       "cardDescription": "Composer un diaporama ou une fiche sur les parts, les multiples et les fractions d’une quantité."
     },
     "outils/multiples_et_fractions_d_une_quantite.pdf": {
@@ -396,7 +396,7 @@ window.MATHSGO_CATALOGUE = {
       "primaryGroup": "imprimer",
       "collections": [],
       "tags": ["fractions", "multiples", "divisibilite", "quantite"],
-      "thumbnail": "assets/img/thumbnails/fractions/fractions-quantite.png?v=1",
+      "thumbnail": "assets/img/thumbnails/fractions/fractions-quantite.png?v=2",
       "cardDescription": "Modéliser une fraction d’une quantité avec des schémas en barres à observer et à compléter."
     },
     "outils/fractions/fractions_produit_manipulation.html": {
@@ -404,7 +404,7 @@ window.MATHSGO_CATALOGUE = {
       "primaryGroup": "manipuler",
       "collections": [],
       "tags": ["fractions", "produit", "aire", "manipulation"],
-      "thumbnail": "assets/img/thumbnails/fractions/produit-fractions.png?v=1",
+      "thumbnail": "assets/img/thumbnails/fractions/produit-fractions.png?v=2",
       "cardDescription": "Visualiser le produit de deux fractions en superposant des partages horizontaux et verticaux."
     },
     "outils/fractions/gabarits_fractions.pdf": {
@@ -412,7 +412,7 @@ window.MATHSGO_CATALOGUE = {
       "primaryGroup": "imprimer",
       "collections": [],
       "tags": ["fractions", "gabarits", "bandes", "imprimer"],
-      "thumbnail": "assets/img/thumbnails/fractions/gabarits-fractions.png?v=1",
+      "thumbnail": "assets/img/thumbnails/fractions/gabarits-fractions.png?v=2",
       "cardDescription": "Imprimer des bandes de fractions colorées et une version à compléter."
     },
     "outils/fractions/disque_maker.html": {
@@ -420,7 +420,7 @@ window.MATHSGO_CATALOGUE = {
       "primaryGroup": "generer",
       "collections": [],
       "tags": ["fractions", "disques", "generateur", "imprimer"],
-      "thumbnail": "assets/img/thumbnails/fractions/generateur-disques.png?v=1",
+      "thumbnail": "assets/img/thumbnails/fractions/generateur-disques.png?v=2",
       "cardDescription": "Créer des disques fractionnaires personnalisés prêts à imprimer et à découper."
     },
     "outils/fractions/bandes_maker_v2.html": {
@@ -428,7 +428,7 @@ window.MATHSGO_CATALOGUE = {
       "primaryGroup": "generer",
       "collections": [],
       "tags": ["fractions", "bandes", "generateur", "imprimer"],
-      "thumbnail": "assets/img/thumbnails/fractions/generateur-bandes.png?v=1",
+      "thumbnail": "assets/img/thumbnails/fractions/generateur-bandes.png?v=2",
       "cardDescription": "Créer des bandes fractionnaires recto verso avec les dénominateurs et couleurs choisis."
     },
     "outils/fractions/mur_fractions.html": {
@@ -436,7 +436,7 @@ window.MATHSGO_CATALOGUE = {
       "primaryGroup": "manipuler",
       "collections": [],
       "tags": ["fractions", "mur", "equivalences", "comparaison"],
-      "thumbnail": "assets/img/thumbnails/fractions/mur-fractions.png?v=1",
+      "thumbnail": "assets/img/thumbnails/fractions/mur-fractions.png?v=2",
       "cardDescription": "Construire un mur de fractions pour comparer les parts et repérer des équivalences."
     },
     "outils/fractions/bandes_fractions.html": {
@@ -444,7 +444,7 @@ window.MATHSGO_CATALOGUE = {
       "primaryGroup": "manipuler",
       "collections": [],
       "tags": ["fractions", "bandes", "manipulation"],
-      "thumbnail": "assets/img/thumbnails/fractions/bandes-fractions.png?v=1",
+      "thumbnail": "assets/img/thumbnails/fractions/bandes-fractions.png?v=2",
       "cardDescription": "Manipuler des bandes fractionnaires et composer des égalités de longueurs."
     },
     "outils/fractions/disques_fractions.html": {
@@ -452,7 +452,7 @@ window.MATHSGO_CATALOGUE = {
       "primaryGroup": "manipuler",
       "collections": [],
       "tags": ["fractions", "disques", "manipulation"],
-      "thumbnail": "assets/img/thumbnails/fractions/disques-fractions.png?v=1",
+      "thumbnail": "assets/img/thumbnails/fractions/disques-fractions.png?v=2",
       "cardDescription": "Assembler et comparer des secteurs de disques pour représenter des fractions."
     },
     "outils/fabrication_materiel/cartes_premiers_1_100.html": {
@@ -537,7 +537,7 @@ window.MATHSGO_CATALOGUE = {
     },
     "outils/gabarits_pourcentages.pdf": {
       "primaryNotion": "pourcentages",
-      "primaryGroup": "gabarits",
+      "primaryGroup": "imprimer",
       "collections": [],
       "tags": ["pourcentages", "gabarits", "schema-barres", "imprimer"],
       "thumbnail": "assets/img/thumbnails/pourcentages/gabarits-pourcentages.png?v=1",
@@ -553,7 +553,7 @@ window.MATHSGO_CATALOGUE = {
     },
     "outils/gabarit_pourcentages_double_ligne_graduee.pdf": {
       "primaryNotion": "pourcentages",
-      "primaryGroup": "gabarits",
+      "primaryGroup": "imprimer",
       "collections": [],
       "tags": ["pourcentages", "double-ligne-graduee", "grandeur", "gabarit", "imprimer"],
       "thumbnail": "assets/img/thumbnails/pourcentages/double-ligne-graduee.png?v=1",
@@ -796,7 +796,7 @@ window.MATHSGO_CATALOGUE = {
       "description": "Choisir le gabarit à imprimer selon la structure du problème.",
       "cardDescription": "Des supports guidés pour les enquêtes additives, multiplicatives et les partages équitables.",
       "thumbnail": "assets/img/thumbnails/schemas-barres/gabarits-enquetes.png?v=1",
-      "group": "gabarits",
+      "group": "imprimer",
       "labels": {
         "outils/gabarits_enquetes_additive.pdf": "Enquêtes additives",
         "outils/gabarits_enquetes_multiplicative.pdf": "Enquêtes multiplicatives",

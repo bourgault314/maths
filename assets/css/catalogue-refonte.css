@@ -846,6 +846,11 @@ select { cursor: pointer; }
   filter: drop-shadow(0 1px 1px rgba(0, 0, 0, 0.08));
 }
 
+[data-notion-card="puissances"] .notion-icon > svg {
+  transform: scale(1.18);
+  transform-origin: center;
+}
+
 .notion-icon.collection-thumbnail {
   width: 98px;
   height: 64px;
