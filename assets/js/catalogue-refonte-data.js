@@ -366,6 +366,46 @@ window.MATHSGO_CATALOGUE = {
       "thumbnail": "assets/img/thumbnails/pourcentages/recherche-pourcentages.png?v=1",
       "cardDescription": "Mener des missions et enquêtes progressives à partir de schémas en barres et de situations concrètes."
     },
+    "outils/conversions/conversions_exerciseur.html": {
+      "primaryNotion": "conversions",
+      "primaryGroup": "generer",
+      "collections": [],
+      "tags": ["conversions", "unites", "ordres-de-grandeur", "exerciseur", "diaporama"],
+      "thumbnail": "assets/img/thumbnails/conversions/generateur-conversions.png?v=1",
+      "cardDescription": "Générer des questions de conversion et d’ordre de grandeur avec aides visuelles et correction."
+    },
+    "outils/conversions/conversions_materiel.html": {
+      "primaryNotion": "conversions",
+      "primaryGroup": "generer",
+      "collections": [],
+      "tags": ["conversions", "glisse-unite", "materiel", "imprimer", "generateur"],
+      "thumbnail": "assets/img/thumbnails/conversions/glisse-unite-imprimer.png?v=1",
+      "cardDescription": "Créer un glisse-unité personnalisé à imprimer et à assembler pour la classe."
+    },
+    "outils/conversions/conversions_materiel_virtuel.html": {
+      "primaryNotion": "conversions",
+      "primaryGroup": "manipuler",
+      "collections": [],
+      "tags": ["conversions", "glisse-unite", "decimaux", "manipulation", "tableau"],
+      "thumbnail": "assets/img/thumbnails/conversions/glisse-unite.png?v=1",
+      "cardDescription": "Déplacer l’unité de mesure et les chiffres dans un glisse-unité virtuel."
+    },
+    "outils/conversions/conversions_unites_aires.html": {
+      "primaryNotion": "conversions",
+      "primaryGroup": "manipuler",
+      "collections": [],
+      "tags": ["conversions", "aires", "unites-carrees", "manipulation", "visualisation"],
+      "thumbnail": "assets/img/thumbnails/conversions/unites-aires.png?v=1",
+      "cardDescription": "Visualiser la relation entre unités d’aire en décomposant un carré unité."
+    },
+    "outils/conversions/conversions_unites_volumes.html": {
+      "primaryNotion": "conversions",
+      "primaryGroup": "manipuler",
+      "collections": [],
+      "tags": ["conversions", "volumes", "unites-cubes", "3d", "visualisation"],
+      "thumbnail": "assets/img/thumbnails/conversions/unites-volumes.png?v=1",
+      "cardDescription": "Explorer en 3D la relation entre millimètre cube, centimètre cube et unités supérieures."
+    },
     "outils/angles/anglebarre.html": {
       "primaryNotion": "angles",
       "primaryGroup": "manipuler",
@@ -989,8 +1029,8 @@ window.MATHSGO_CATALOGUE = {
     },
     {
       "id": "outils-conversions-conversions-unites-aires-html",
-      "title": "Atelier : Unités d'Aire",
-      "description": "Une ressource maths&go pour travailler conversions.",
+      "title": "Unités d’aire",
+      "description": "Visualisez la relation entre les unités d’aire en décomposant un carré unité.",
       "path": "outils/conversions/conversions_unites_aires.html",
       "domains": [
         "proportionnalite-mesures"
@@ -1013,8 +1053,8 @@ window.MATHSGO_CATALOGUE = {
     },
     {
       "id": "outils-conversions-conversions-unites-volumes-html",
-      "title": "Atelier Volumes 3D - La Chaîne Complète (Alignement en coin)",
-      "description": "Une ressource maths&go pour travailler conversions.",
+      "title": "Unités de volume en 3D",
+      "description": "Explorez en 3D les relations entre millimètre cube, centimètre cube et unités supérieures.",
       "path": "outils/conversions/conversions_unites_volumes.html",
       "domains": [
         "proportionnalite-mesures"
@@ -2260,8 +2300,8 @@ window.MATHSGO_CATALOGUE = {
     },
     {
       "id": "outils-conversions-conversions-exerciseur-html",
-      "title": "Générateur de Conversions & Ordres de Grandeur",
-      "description": "Une ressource maths&go pour travailler conversions.",
+      "title": "Générateur de conversions",
+      "description": "Générez des questions de conversion et d’ordre de grandeur avec aides visuelles et correction.",
       "path": "outils/conversions/conversions_exerciseur.html",
       "domains": [
         "proportionnalite-mesures"
@@ -2322,7 +2362,7 @@ window.MATHSGO_CATALOGUE = {
     {
       "id": "outils-conversions-conversions-materiel-html",
       "title": "Générateur de glisse-unité à imprimer",
-      "description": "Une ressource maths&go pour travailler conversions.",
+      "description": "Créez un glisse-unité personnalisé à imprimer et à assembler pour la classe.",
       "path": "outils/conversions/conversions_materiel.html",
       "domains": [
         "proportionnalite-mesures"
@@ -2585,8 +2625,8 @@ window.MATHSGO_CATALOGUE = {
     },
     {
       "id": "outils-conversions-conversions-materiel-virtuel-html",
-      "title": "Glisse unité",
-      "description": "Une ressource maths&go pour travailler conversions.",
+      "title": "Glisse-unité virtuel",
+      "description": "Déplacez l’unité de mesure et les chiffres dans un tableau de conversion interactif.",
       "path": "outils/conversions/conversions_materiel_virtuel.html",
       "domains": [
         "proportionnalite-mesures"
