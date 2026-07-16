@@ -142,6 +142,18 @@
     }
     .guide-card strong { display: block; margin-bottom: 4px; color: #16304f; font-size: .95rem; }
     .guide-card span { color: #637287; font-size: .86rem; line-height: 1.35; }
+    .usage-note {
+      margin: 0 auto 24px;
+      padding: 13px 15px;
+      border: 1px solid #cfe0f2;
+      border-left: 4px solid #2f78b7;
+      border-radius: 14px;
+      color: #52677f;
+      background: #f3f8fd;
+      font-size: .86rem;
+      line-height: 1.48;
+    }
+    .usage-note strong { color: #173b60; }
 
     .preview-heading { margin: 0 0 13px; text-align: center; color: var(--blue-dark); font-size: 1.35rem; }
     .pages { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 18px; }
@@ -154,14 +166,6 @@
       box-shadow: 0 9px 22px rgba(15, 40, 72, .08);
     }
     .page-preview img { display: block; width: 100%; height: auto; }
-    .page-preview figcaption {
-      padding: 9px 12px;
-      color: #5c6c82;
-      background: #fbfcfe;
-      font-size: .82rem;
-      font-weight: 750;
-      text-align: center;
-    }
     .site-footer {
       display: flex;
       justify-content: center;
@@ -187,7 +191,7 @@
     @media print {
       @page { size: A3 landscape; margin: 0; }
       body { background: #fff; }
-      .site-header, .hero, .guide, .preview-heading, .site-footer { display: none !important; }
+      .site-header, .hero, .guide, .usage-note, .preview-heading, .site-footer { display: none !important; }
       .site-shell { width: auto; margin: 0; }
       main { margin: 0; padding: 0; border: 0; border-radius: 0; box-shadow: none; }
       .pages { display: block; }
@@ -203,7 +207,6 @@
       }
       .page-preview:last-child { break-after: auto; page-break-after: auto; }
       .page-preview img { width: 420mm; height: 297mm; object-fit: fill; }
-      .page-preview figcaption { display: none; }
     }
   </style>
 </head>
@@ -239,12 +242,16 @@
         <div class="guide-card" style="--accent:#b84f7b;--soft:#fff0f6"><strong>3. Agir</strong><span>Choisir un objectif observable et trois actions réalistes.</span></div>
       </section>
 
+      <aside class="usage-note">
+        <strong>Pour l’adulte qui accompagne :</strong> ce support sert au dialogue, pas au diagnostic ni à la notation. L’élève peut passer une question. Ne publiez pas de fiche complétée. Si un écrit révèle une situation préoccupante, suivez le protocole de l’établissement et sollicitez les personnels sociaux ou de santé.
+      </aside>
+
       <h2 class="preview-heading">Aperçu du document complet</h2>
       <section class="pages" aria-label="Aperçu des quatre pages du même document">
-        <figure class="page-preview"><img src="assets/bilan-s1/page-1.png" alt="Page 1 : mon semestre, ce que j’ai appris sur moi"><figcaption>1 · Faire le point sur son semestre</figcaption></figure>
-        <figure class="page-preview"><img src="assets/bilan-s1/page-2.png" alt="Page 2 : comprendre pour progresser"><figcaption>2 · Comprendre ce qui aide ou freine</figcaption></figure>
-        <figure class="page-preview"><img src="assets/bilan-s1/page-3.png" alt="Page 3 : mon profil d’élève"><figcaption>3 · Mieux connaître son profil d’élève</figcaption></figure>
-        <figure class="page-preview"><img src="assets/bilan-s1/page-4.png" alt="Page 4 : je choisis un cap et je m’engage"><figcaption>4 · Choisir un cap et s’engager</figcaption></figure>
+        <figure class="page-preview"><img src="assets/bilan-s1/page-1.png" alt="Page 1 : faire le point sur mon semestre"></figure>
+        <figure class="page-preview"><img src="assets/bilan-s1/page-2.png" alt="Page 2 : comprendre ce qui m’aide ou me freine"></figure>
+        <figure class="page-preview"><img src="assets/bilan-s1/page-3.png" alt="Page 3 : mieux me connaître"></figure>
+        <figure class="page-preview"><img src="assets/bilan-s1/page-4.png" alt="Page 4 : choisir un cap et m’engager"></figure>
       </section>
     </main>
 
