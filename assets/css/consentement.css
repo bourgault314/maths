@@ -9,6 +9,7 @@
 }
 
 .mg-consent[hidden],
+.mg-consent-manage-slot[hidden],
 .mg-consent-manage[hidden],
 .mg-consent__close[hidden] {
   display: none !important;
@@ -139,38 +140,46 @@
   text-underline-offset: 3px;
 }
 
-.mg-consent-manage {
-  position: fixed;
+.mg-consent-manage-slot {
+  position: relative;
   z-index: 2147482999;
-  right: max(10px, env(safe-area-inset-right));
-  bottom: max(10px, env(safe-area-inset-bottom));
-  width: 36px;
-  height: 36px;
-  padding: 8px;
-  border: 1px solid rgba(6, 63, 134, 0.2);
-  border-radius: 999px;
-  background: rgba(255, 255, 255, 0.82);
-  color: var(--mg-consent-blue-dark);
-  box-shadow: 0 4px 14px rgba(15, 23, 42, 0.1);
-  backdrop-filter: blur(8px);
-  opacity: 0.68;
-  transition: opacity 160ms ease, background 160ms ease;
+  box-sizing: border-box;
+  display: flex;
+  flex: 0 0 100%;
+  width: 100%;
+  justify-content: center;
+  padding: 8px 12px max(18px, env(safe-area-inset-bottom));
+  font-family: "Segoe UI", system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
+  text-align: center;
 }
 
-.mg-consent-manage svg {
-  display: block;
-  width: 100%;
-  height: 100%;
-  fill: #fff;
-  stroke: currentColor;
-  stroke-width: 1.7;
-  stroke-linecap: round;
-  stroke-linejoin: round;
+.mg-consent-manage-slot--fixed {
+  position: fixed;
+  right: max(8px, env(safe-area-inset-right));
+  bottom: max(6px, env(safe-area-inset-bottom));
+  width: auto;
+  padding: 0;
+}
+
+.mg-consent-manage {
+  min-height: 32px;
+  padding: 5px 7px;
+  border: 0;
+  border-radius: 8px;
+  background: transparent;
+  color: #526d8d;
+  font-size: 0.78rem;
+  font-weight: 700;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  opacity: 0.82;
+  transition: opacity 160ms ease, background 160ms ease, color 160ms ease;
 }
 
 .mg-consent-manage:hover,
 .mg-consent-manage:focus-visible {
-  background: #fff;
+  background: rgba(255, 255, 255, 0.9);
+  color: var(--mg-consent-blue-dark);
   opacity: 1;
 }
 
@@ -217,11 +226,12 @@
 
 @media print {
   .mg-consent,
+  .mg-consent-manage-slot,
   .mg-consent-manage {
     display: none !important;
   }
 }
 
-:fullscreen .mg-consent-manage {
+:fullscreen .mg-consent-manage-slot {
   display: none !important;
 }

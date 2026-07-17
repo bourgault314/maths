@@ -21,6 +21,7 @@
   let choice = readChoice();
   let analyticsLoaded = false;
   let banner = null;
+  let manageSlot = null;
   let manageButton = null;
   let isSettingsView = false;
 
@@ -159,15 +160,20 @@
       '</div>'
     ].join("");
 
+    manageSlot = document.createElement("div");
+    manageSlot.className = "mg-consent-manage-slot";
+    manageSlot.hidden = true;
+
+    const bodyStyle = window.getComputedStyle(document.body);
+    const rootStyle = window.getComputedStyle(document.documentElement);
+    const viewportLocked = [bodyStyle.overflow, bodyStyle.overflowY, rootStyle.overflow, rootStyle.overflowY]
+      .some(function (value) { return value === "hidden" || value === "clip"; });
+    manageSlot.classList.toggle("mg-consent-manage-slot--fixed", viewportLocked);
+
     manageButton = document.createElement("button");
     manageButton.type = "button";
     manageButton.className = "mg-consent-manage";
-    manageButton.innerHTML = [
-      '<svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">',
-      '  <path d="M4 7h10M18 7h2M4 12h3M11 12h9M4 17h8M16 17h4"/>',
-      '  <circle cx="16" cy="7" r="2"/><circle cx="9" cy="12" r="2"/><circle cx="14" cy="17" r="2"/>',
-      '</svg>'
-    ].join("");
+    manageButton.textContent = "Gérer mes cookies";
     manageButton.setAttribute("aria-label", "Gérer mes choix de cookies");
     manageButton.hidden = true;
 
@@ -184,8 +190,9 @@
       showBanner(true);
     });
 
+    manageSlot.appendChild(manageButton);
     document.body.appendChild(banner);
-    document.body.appendChild(manageButton);
+    document.body.appendChild(manageSlot);
   }
 
   function showBanner(settingsView) {
@@ -206,6 +213,7 @@
     closeButton.hidden = !isSettingsView;
     banner.hidden = false;
     manageButton.hidden = true;
+    manageSlot.hidden = true;
 
     window.requestAnimationFrame(function () {
       banner.classList.add("mg-consent--visible");
@@ -229,7 +237,9 @@
   function updateManageButton() {
     if (!manageButton) return;
     const directControl = document.querySelector("[data-mathsgo-consent-open]");
-    manageButton.hidden = !choice || Boolean(directControl) || (banner && !banner.hidden);
+    const hidden = !choice || Boolean(directControl) || (banner && !banner.hidden);
+    manageButton.hidden = hidden;
+    manageSlot.hidden = hidden;
     manageButton.dataset.consentState = choice || "unset";
   }
 
