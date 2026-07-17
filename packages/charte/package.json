@@ -1,0 +1,9 @@
+{
+  "name": "@mathsgo/charte",
+  "version": "0.1.0",
+  "description": "Charte graphique maths&go en données : couleurs, typographie, espacements. La source unique que tous les objets visuels doivent consommer.",
+  "type": "module",
+  "exports": {
+    ".": "./src/charte.js"
+  }
+}
