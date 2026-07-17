@@ -9,6 +9,7 @@
   --line: #d9e2ec;
   --page: #f6f8fb;
   --shadow: 0 14px 34px rgba(22, 47, 82, 0.09);
+  --brand-gradient: linear-gradient(90deg, #08aaa5 0%, #0b67b2 44%, #f58220 72%, #f9bf3b 100%);
 }
 
 * { box-sizing: border-box; }
@@ -54,19 +55,44 @@ select { cursor: pointer; }
 .skip-link:focus { transform: translateY(0); }
 
 .site-shell {
+  position: relative;
   width: min(1120px, calc(100% - 30px));
   margin: 0 auto;
 }
 
+.site-shell::before,
+.site-header::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  right: 0;
+  left: 0;
+  height: 4px;
+  background: var(--brand-gradient);
+  pointer-events: none;
+}
+
+.site-shell::before { display: none; }
+
 .site-header {
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
   min-height: 66px;
   display: grid;
   grid-template-columns: 1fr auto 1fr;
   align-items: center;
-  padding: 7px 2px 5px;
+  margin: 10px 0 8px;
+  padding: 10px 12px 8px;
+  border: 1px solid rgba(203, 216, 230, 0.92);
+  border-radius: 22px;
+  background: rgba(255, 255, 255, 0.97);
+  box-shadow: 0 10px 24px rgba(22, 47, 82, 0.08);
 }
 
 .brand-link {
+  position: relative;
+  z-index: 1;
   grid-column: 2;
   display: block;
   width: 124px;
@@ -80,6 +106,8 @@ select { cursor: pointer; }
 }
 
 .header-home {
+  position: relative;
+  z-index: 1;
   grid-column: 3;
   justify-self: end;
   display: inline-flex;
@@ -93,10 +121,17 @@ select { cursor: pointer; }
   min-height: 44px;
   justify-content: center;
   padding: 8px 10px;
+  border: 1px solid transparent;
+  border-radius: 999px;
+  transition: color .16s ease, background .16s ease, border-color .16s ease;
 }
 
 .header-home svg { width: 19px; height: 19px; }
-.header-home:hover { color: var(--blue); }
+.header-home:hover {
+  border-color: #d8e4ef;
+  color: var(--blue);
+  background: #f7fafc;
+}
 
 .main-panel {
   margin-bottom: 24px;
@@ -455,6 +490,8 @@ select { cursor: pointer; }
 .results-summary:empty { display: none; }
 
 .catalogue-breadcrumb {
+  position: relative;
+  z-index: 1;
   display: inline-flex;
   align-items: center;
   flex-wrap: wrap;
@@ -596,12 +633,25 @@ select { cursor: pointer; }
     box-shadow: var(--shadow);
   }
 
+  body.catalogue-is-deep .site-shell::before {
+    display: block;
+    z-index: 1;
+  }
+
   body.catalogue-is-deep .site-header {
     min-height: 64px;
     grid-template-columns: auto minmax(0, 1fr);
     gap: 18px;
+    margin: 0;
     padding: 6px 20px 4px;
+    overflow: visible;
+    border: 0;
+    border-radius: 0;
+    background: transparent;
+    box-shadow: none;
   }
+
+  body.catalogue-is-deep .site-header::before { display: none; }
 
   body.catalogue-is-deep .brand-link {
     grid-column: 1;
@@ -815,11 +865,11 @@ select { cursor: pointer; }
 }
 
 .notion-card {
-  min-height: 122px;
+  min-height: 142px;
   display: flex;
   flex-direction: column;
   justify-content: space-between;
-  padding: 12px 15px 11px;
+  padding: 17px 17px 15px;
 }
 
 .notion-card::after,
@@ -854,9 +904,9 @@ select { cursor: pointer; }
 }
 
 .notion-icon {
-  width: 53px;
-  height: 43px;
-  flex: 0 0 53px;
+  width: 58px;
+  height: 47px;
+  flex: 0 0 58px;
   display: grid;
   place-items: center;
 }
@@ -923,17 +973,17 @@ select { cursor: pointer; }
 .notion-card p {
   position: relative;
   z-index: 1;
-  margin: 7px 0 0;
+  margin: 12px 0 0;
   color: #637287;
-  font-size: 0.84rem;
-  line-height: 1.28;
+  font-size: 0.9rem;
+  line-height: 1.4;
 }
 
 .notion-count {
   position: relative;
   z-index: 1;
   display: block;
-  margin-top: 5px;
+  margin-top: 8px;
   color: var(--accent, var(--blue));
   font-size: .76rem;
   font-weight: 800;
@@ -1373,10 +1423,6 @@ select { cursor: pointer; }
 /* Page d'entrée sur ordinateur : l'ancienne composition en deux colonnes,
    resserrée en hauteur sans réduire les illustrations des domaines. */
 @media (min-width: 921px) {
-  body.catalogue-is-deep .site-shell {
-    margin-top: var(--catalogue-stage-top, 16px);
-  }
-
   body:not(.catalogue-is-deep) {
     min-height: 100vh;
     min-height: 100dvh;
@@ -1405,14 +1451,27 @@ select { cursor: pointer; }
     box-shadow: var(--shadow);
   }
 
+  body:not(.catalogue-is-deep) .site-shell::before {
+    display: block;
+    z-index: 4;
+  }
+
   body:not(.catalogue-is-deep) .site-header {
     position: absolute;
     inset: 0 0 auto;
     z-index: 3;
     min-height: 64px;
+    margin: 0;
     padding: 6px 20px 4px;
+    overflow: visible;
+    border: 0;
+    border-radius: 0;
+    background: transparent;
+    box-shadow: none;
     pointer-events: none;
   }
+
+  body:not(.catalogue-is-deep) .site-header::before { display: none; }
 
   body:not(.catalogue-is-deep) .brand-link {
     grid-column: 1;
