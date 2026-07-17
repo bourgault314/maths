@@ -29,7 +29,7 @@
 \newcommand{\LogoFile}{../assets/img/mathsgo-logo.png}
 \newcommand{\MathsGoFooter}{%
 \begin{tikzpicture}[remember picture,overlay]
-  \node[anchor=south west,inner sep=0pt] at ([xshift=0.48cm,yshift=0.44cm]current page.south west)
+  \node[anchor=south west,inner sep=0pt] at ([xshift=0.48cm,yshift=0.26cm]current page.south west)
     {\IfFileExists{\LogoFile}{\includegraphics[width=2.45cm]{\LogoFile}}{\tikz[baseline=-0.6ex]{\node[brandNavy,font=\sffamily\bfseries\fontsize{17}{18}\selectfont]{M};}}};
   \node[anchor=south,text=brandNavy!70,font=\sffamily\bfseries\fontsize{7}{7}\selectfont]
     at ([yshift=0.32cm]current page.south) {mathsgo.re};

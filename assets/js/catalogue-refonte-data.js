@@ -679,14 +679,14 @@ window.MATHSGO_CATALOGUE = {
       "primaryNotion": "pythagore",
       "collections": [],
       "tags": ["schema-barres", "moulin", "pythagore", "gabarit", "imprimable"],
-      "thumbnail": "assets/img/thumbnails/pythagore/gabarit-pythagore.png?v=1",
+      "thumbnail": "assets/img/thumbnails/pythagore/gabarit-pythagore.png?v=2",
       "cardDescription": "Guider pas à pas le calcul d’une longueur avec les carrés colorés, le schéma en barres et une rédaction structurée."
     },
     "outils/gabarit_reciproque_pythagore.pdf": {
       "primaryNotion": "pythagore",
       "collections": [],
       "tags": ["pythagore", "reciproque", "contraposee", "gabarit", "imprimable"],
-      "thumbnail": "assets/img/thumbnails/pythagore/gabarit-reciproque-pythagore.png?v=1",
+      "thumbnail": "assets/img/thumbnails/pythagore/gabarit-reciproque-pythagore.png?v=2",
       "cardDescription": "Comparer séparément le carré du plus grand côté et la somme des deux autres carrés, puis rédiger la conclusion adaptée."
     },
     "outils/fiche_reciproque_thales.pdf": {
@@ -4209,7 +4209,7 @@ window.MATHSGO_CATALOGUE = {
     },
     {
       "id": "outils-gabarit-reciproque-pythagore-pdf",
-      "title": "Gabarit réciproque et contraposé de Pythagore",
+      "title": "Gabarit réciproque et contraposée de Pythagore",
       "description": "Un gabarit à imprimer pour identifier le plus grand côté, effectuer les deux calculs séparément, les comparer et conclure correctement.",
       "path": "outils/gabarit_reciproque_pythagore.pdf",
       "domains": [
