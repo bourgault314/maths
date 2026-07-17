@@ -98,7 +98,7 @@ const mobileThresholds={maxTranslationPx:48,maxRotationDeg:20,exactTranslationPx
   if(!result || result.kind!=='exact') fail('La correction exacte de finition au centre du pavage est absente.');
 }
 
-// Toutes les pièces des neuf pavages sont testées autour de leur pose finale :
+// Toutes les pièces des dix pavages sont testées autour de leur pose finale :
 // décalage tactile + erreur angulaire, avec toutes les voisines déjà en place.
 const html=fs.readFileSync(new URL('../outils/plateaux_manipulation/moulin_pythagore.html',import.meta.url),'utf8');
 const match=html.match(/const EXACT_SOLUTION_UV = (\{[\s\S]*?\n  \});/);
