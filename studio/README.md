@@ -1,9 +1,10 @@
 # Studio pédagogique maths&go
 
-Ce dossier pose les fondations du futur moteur pédagogique de maths&go.
+Ce dossier est la bibliothèque centrale unique du futur moteur pédagogique de
+maths&go.
 
 Le but n'est pas de demander à une IA de recréer une page ou un dessin à chaque
-prompt. Le moteur doit conserver les contenus, les représentations, les règles
+prompt. Le Studio conserve les contenus, les représentations, les règles
 pédagogiques et les gabarits validés. Une IA sert ensuite d'orchestrateur : elle
 cherche les bonnes briques, produit une définition structurée et demande au
 moteur de la rendre.
@@ -17,30 +18,37 @@ moteur de la rendre.
   élève peut fournir des paramètres validés et ouvrir directement le bon exemple.
 - Un contenu peut produire plusieurs sorties : web, téléphone, diaporama, impression
   et PDF.
-- Les contenus passent par les états `draft`, `review`, `validated`, `deprecated`.
+- Les contenus passent par les états `draft`, `review`, `validated`,
+  `deprecated`.
 - Les identifiants stables préparés dans `/auto` sont conservés.
 - Les résultats d'élèves ne sont jamais stockés dans GitHub.
 - Les parents et les élèves n'obtiennent jamais un accès d'écriture au dépôt.
-- Automatismes sera migré progressivement, après stabilisation de ses modules.
+- Automatisme sera migré progressivement, après stabilisation de ses modules.
+- Il n'existe qu'une seule bibliothèque centrale : ce dossier `studio/`.
 
 ## Documents
 
-1. [Vision et principes](docs/01-VISION-ET-PRINCIPES.md)
-2. [Architecture cible](docs/02-ARCHITECTURE-CIBLE.md)
-3. [Charte et contrôle visuel](docs/03-CHARTE-ET-CONTROLE-VISUEL.md)
-4. [Données et résultats](docs/04-DONNEES-ET-RESULTATS.md)
-5. [Feuille de route](docs/05-ROADMAP.md)
-6. [Inventaire et migration](docs/06-INVENTAIRE-MIGRATION.md)
+1. [État réel et périmètre initial](docs/00-ETAT-REEL-20260717.md)
+2. [Vision et principes](docs/01-VISION-ET-PRINCIPES.md)
+3. [Architecture cible](docs/02-ARCHITECTURE-CIBLE.md)
+4. [Charte et contrôle visuel](docs/03-CHARTE-ET-CONTROLE-VISUEL.md)
+5. [Données et résultats](docs/04-DONNEES-ET-RESULTATS.md)
+6. [Feuille de route](docs/05-ROADMAP.md)
+7. [Inventaire et migration](docs/06-INVENTAIRE-MIGRATION.md)
 
-Premier composant pédagogique documenté : [Pythagore](components/pythagore/README.md),
-avec son contrat expérimental [JSON](schemas/pythagore-components.v1.json).
+## Composants déjà documentés
+
+- [Pythagore](components/pythagore/README.md), avec son contrat expérimental
+  [JSON](schemas/pythagore-components.v1.json) et ses rendus exécutables ;
+- [Représentations de pourcentage](components/percentage-table/README.md), premier
+  pilote en cours d'audit.
 
 ## État actuel
 
-Le dossier contient uniquement les contrats de départ et la feuille de route.
-Aucun moteur d'Automatismes n'a encore été déplacé. Les premiers composants ne
-seront créés qu'après validation de leurs paramètres et de leurs références
-visuelles.
+Le Studio possède déjà une base documentaire et un composant Pythagore
+expérimental. Le premier travail de construction porte sur l'extraction des
+représentations de pourcentage existantes. Aucun moteur complet d'Automatismes ne
+doit être déplacé dans ce dossier.
 
-À terme, la partie source pourra être déplacée dans un dépôt privé
-`mathsgo-studio`, tandis que le dépôt public `maths` restera le site publié.
+Les anciennes pages publiques restent les références publiées pendant la
+migration. Le dépôt `mathsgo-automatismes-beta` reste une application séparée.
