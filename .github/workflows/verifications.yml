@@ -1,0 +1,45 @@
+# Vérifications automatiques maths&go
+#
+# Ce workflow tourne sur les serveurs de GitHub à chaque pull request et à
+# chaque mise à jour de main. Il exécute les scripts de contrôle du dossier
+# scripts/ (lecture seule uniquement — les scripts qui écrivent des fichiers
+# en sont volontairement exclus). Si une étape bloquante échoue, la pull
+# request affiche une croix rouge : ne pas fusionner sans comprendre pourquoi.
+
+name: Vérifications
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+jobs:
+  verifications:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Récupérer le dépôt
+        uses: actions/checkout@v4
+
+      - name: Installer Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Catalogue (cohérence des ressources)
+        run: node scripts/validate-catalogue.mjs
+
+      - name: Sitemap (chaque URL correspond à un fichier)
+        run: node scripts/validate-sitemap.mjs
+
+      - name: Automatismes (intégrité de la page publique)
+        run: node scripts/validate-automatismes-public.mjs
+
+      - name: Outils Pythagore
+        run: node scripts/validate-pythagore-tools.mjs
+
+      - name: Moteur d'aimantation Pythagore
+        run: node scripts/validate-pythagore-snap-engine.mjs
+
+      - name: Audit mobile (informatif, ne bloque pas)
+        run: node scripts/audit-mobile.mjs
+        continue-on-error: true
