@@ -60,17 +60,17 @@
   \coordinate (M) at (2.59,-0.58);
   \coordinate (N) at (2.26,1.06);
   \fill[softTeal!38] (A)--(B)--(C)--cycle;
-  \draw[brandNavy,line width=1.20pt] (A)--(B);
-  \draw[brandNavy,line width=1.20pt] (A)--(C);
+  \draw[brandNavy,line width=1.20pt] (A)--(M);
+  \draw[brandNavy,line width=1.20pt] (A)--(N);
+  \draw[brandNavy,line width=1.24pt] (M)--(N);
+  \draw[brandBlue,line width=1.20pt] (M)--(B);
+  \draw[brandBlue,line width=1.20pt] (N)--(C);
   \draw[brandTeal,line width=1.34pt] (B)--(C);
-  \draw[brandBlue,line width=1.24pt,densely dashed] (M)--(N);
   \node[brandOrange,font=\bfseries\small] at (-0.27,-0.25) {$A$};
   \node[brandBlue,font=\bfseries\small] at (2.62,-0.88) {$M$};
   \node[brandBlue,font=\bfseries\small] at (2.04,1.28) {$N$};
   \node[brandTeal,font=\bfseries\small] at (5.68,-1.18) {$B$};
   \node[brandTeal,font=\bfseries\small] at (4.89,2.42) {$C$};
-  \node[brandBlue,font=\bfseries\scriptsize] at (3.68,0.48) {$(MN)$};
-  \node[brandTeal,font=\bfseries\scriptsize] at (6.02,0.78) {$(BC)$};
 \end{tikzpicture}}
 
 \newcommand{\FigurePapillon}[1]{%
@@ -80,17 +80,17 @@
   \coordinate (C) at (2.60,1.90);
   \coordinate (M) at (-2.21,0.78);
   \coordinate (N) at (-1.69,-1.24);
-  \draw[brandNavy,line width=1.20pt] (M)--(A)--(B);
-  \draw[brandNavy,line width=1.20pt] (N)--(A)--(C);
-  \draw[brandBlue,line width=1.24pt,densely dashed] (M)--(N);
+  \draw[brandNavy,line width=1.20pt] (M)--(A);
+  \draw[brandNavy,line width=1.20pt] (N)--(A);
+  \draw[brandNavy,line width=1.24pt] (M)--(N);
+  \draw[brandTeal,line width=1.20pt] (A)--(B);
+  \draw[brandTeal,line width=1.20pt] (A)--(C);
   \draw[brandTeal,line width=1.34pt] (B)--(C);
   \node[brandOrange,font=\bfseries\small] at (-0.05,0.31) {$A$};
   \node[brandBlue,font=\bfseries\small] at (-2.50,0.94) {$M$};
   \node[brandBlue,font=\bfseries\small] at (-1.93,-1.43) {$N$};
   \node[brandTeal,font=\bfseries\small] at (3.68,-1.21) {$B$};
   \node[brandTeal,font=\bfseries\small] at (2.80,2.12) {$C$};
-  \node[brandBlue,font=\bfseries\scriptsize] at (-3.18,-0.18) {$(MN)$};
-  \node[brandTeal,font=\bfseries\scriptsize] at (3.98,0.54) {$(BC)$};
 \end{tikzpicture}}
 
 \newcommand{\OrderLine}[3]{%
@@ -111,10 +111,12 @@
   \coordinate (M) at (2.59,-0.58);
   \coordinate (N) at (2.26,1.06);
   \fill[softTeal!22] (A)--(B)--(C)--cycle;
-  \draw[brandNavy!90,line width=1.10pt] (A)--(B);
-  \draw[brandNavy!90,line width=1.10pt] (A)--(C);
+  \draw[brandNavy!90,line width=1.10pt] (A)--(M);
+  \draw[brandNavy!90,line width=1.10pt] (A)--(N);
+  \draw[brandNavy!90,line width=1.15pt] (M)--(N);
+  \draw[brandBlue,line width=1.10pt] (M)--(B);
+  \draw[brandBlue,line width=1.10pt] (N)--(C);
   \draw[brandTeal,line width=1.18pt] (B)--(C);
-  \draw[brandBlue,line width=1.15pt,densely dashed] (M)--(N);
   \node at (-0.55,-0.45) {\LowDotted{0.48}};
   \node at (2.82,-1.08) {\LowDotted{0.48}};
   \node at (1.82,1.50) {\LowDotted{0.48}};
@@ -129,9 +131,11 @@
   \coordinate (C) at (2.60,1.90);
   \coordinate (M) at (-2.21,0.78);
   \coordinate (N) at (-1.69,-1.24);
-  \draw[brandNavy!90,line width=1.10pt] (M)--(A)--(B);
-  \draw[brandNavy!90,line width=1.10pt] (N)--(A)--(C);
-  \draw[brandBlue,line width=1.15pt,densely dashed] (M)--(N);
+  \draw[brandNavy!90,line width=1.10pt] (M)--(A);
+  \draw[brandNavy!90,line width=1.10pt] (N)--(A);
+  \draw[brandNavy!90,line width=1.15pt] (M)--(N);
+  \draw[brandTeal,line width=1.10pt] (A)--(B);
+  \draw[brandTeal,line width=1.10pt] (A)--(C);
   \draw[brandTeal,line width=1.18pt] (B)--(C);
   \node at (0.00,0.55) {\LowDotted{0.48}};
   \node at (-2.72,1.20) {\LowDotted{0.48}};
@@ -261,31 +265,27 @@ D'après le critère de parallélisme issu du théorème de Thalès, les droites
 \begin{minipage}[t]{5.20cm}
 \vspace{0pt}
 \begin{tikzpicture}[x=1cm,y=1cm]
-\path[use as bounding box] (0,0) rectangle (5.20,-17.55);
-\node[rounded corners=9pt,draw=brandNavy!24,fill=softBlue!30,line width=0.70pt,minimum width=5.05cm,minimum height=17.30cm,anchor=north west] at (0,0) {};
+\path[use as bounding box] (0,0) rectangle (5.20,-22.70);
+\node[rounded corners=9pt,draw=brandNavy!24,fill=softBlue!30,line width=0.70pt,minimum width=5.05cm,minimum height=22.45cm,anchor=north west] at (0,0) {};
 \node[anchor=north west,text=brandNavy,font=\bfseries\fontsize{12.0}{12.8}\selectfont] at (0.22,-0.18) {Mes repères};
 
-\node[circle,fill=brandNavy,text=white,font=\bfseries,minimum size=0.52cm,inner sep=0pt] at (0.47,-1.05) {1};
-\node[anchor=north west,text width=3.92cm,align=left] at (0.84,-0.91) {\bfseries\color{brandNavy}\fontsize{10.2}{10.9}\selectfont Je repère.\par\vspace{0.04cm}
-{\scriptsize\bfseries\color{brandNavy} Sommet commun, alignements, droites à tester.}};
-
-\node[circle,fill=brandNavy,text=white,font=\bfseries,minimum size=0.52cm,inner sep=0pt] at (0.47,-3.75) {2};
-\node[anchor=north west,text width=3.92cm,align=left] at (0.84,-3.61) {\bfseries\color{brandNavy}\fontsize{10.2}{10.9}\selectfont Je choisis les rapports.\par\vspace{0.04cm}
+\node[circle,fill=brandNavy,text=white,font=\bfseries,minimum size=0.52cm,inner sep=0pt] at (0.47,-5.92) {1};
+\node[anchor=north west,text width=3.92cm,align=left] at (0.84,-5.78) {\bfseries\color{brandNavy}\fontsize{10.2}{10.9}\selectfont Je choisis les rapports.\par\vspace{0.04cm}
 {\scriptsize\bfseries\color{brandNavy} Un rapport sur chaque droite support, avec le même modèle.}};
 
-\node[circle,fill=brandNavy,text=white,font=\bfseries,minimum size=0.52cm,inner sep=0pt] at (0.47,-6.63) {3};
-\node[anchor=north west,text width=3.92cm,align=left] at (0.84,-6.49) {\bfseries\color{brandNavy}\fontsize{10.2}{10.9}\selectfont Je calcule.\par\vspace{0.04cm}
+\node[circle,fill=brandNavy,text=white,font=\bfseries,minimum size=0.52cm,inner sep=0pt] at (0.47,-8.38) {2};
+\node[anchor=north west,text width=3.92cm,align=left] at (0.84,-8.24) {\bfseries\color{brandNavy}\fontsize{10.2}{10.9}\selectfont Je calcule et je compare.\par\vspace{0.04cm}
 {\scriptsize\bfseries\color{brandNavy} Je calcule séparément : je ne suppose pas que c'est proportionnel.}};
 
-\node[circle,fill=brandNavy,text=white,font=\bfseries,minimum size=0.52cm,inner sep=0pt] at (0.47,-9.62) {4};
-\node[anchor=north west,text width=3.92cm,align=left] at (0.84,-9.48) {\bfseries\color{brandNavy}\fontsize{10.2}{10.9}\selectfont Je compare.\par\vspace{0.04cm}
+\node[circle,fill=brandNavy,text=white,font=\bfseries,minimum size=0.52cm,inner sep=0pt] at (0.47,-10.88) {3};
+\node[anchor=north west,text width=3.92cm,align=left] at (0.84,-10.74) {\bfseries\color{brandNavy}\fontsize{10.2}{10.9}\selectfont J'observe le résultat.\par\vspace{0.04cm}
 {\scriptsize\bfseries\color{brandNavy} Différents : non-parallélisme. Égaux : disposition puis parallélisme.}};
 
-\node[circle,fill=brandNavy,text=white,font=\bfseries,minimum size=0.52cm,inner sep=0pt] at (0.47,-12.72) {5};
-\node[anchor=north west,text width=3.92cm,align=left] at (0.84,-12.58) {\bfseries\color{brandNavy}\fontsize{10.2}{10.9}\selectfont Je conclus.\par\vspace{0.04cm}
+\node[circle,fill=brandNavy,text=white,font=\bfseries,minimum size=0.52cm,inner sep=0pt] at (0.47,-18.68) {4};
+\node[anchor=north west,text width=3.92cm,align=left] at (0.84,-18.54) {\bfseries\color{brandNavy}\fontsize{10.2}{10.9}\selectfont Je rédige ma conclusion.\par\vspace{0.04cm}
 {\scriptsize\bfseries\color{brandNavy} J'emploie le critère adapté et je réponds à la question.}};
 
-\node[rounded corners=7pt,draw=brandOrange!55,fill=softOrange!45,line width=0.65pt,text width=4.45cm,inner sep=5pt,align=center] at (2.55,-16.02) {\scriptsize\bfseries\color{brandNavy} Sur chaque droite : longueur du sommet jusqu'au premier point / longueur du sommet jusqu'au second point.};
+\node[rounded corners=7pt,draw=brandOrange!55,fill=softOrange!45,line width=0.65pt,text width=4.45cm,inner sep=5pt,align=center] at (2.55,-21.35) {\scriptsize\bfseries\color{brandNavy} Sur chaque droite : longueur du sommet jusqu'au premier point / longueur du sommet jusqu'au second point.};
 \end{tikzpicture}
 \end{minipage}\hfill
 \begin{minipage}[t]{13.20cm}
@@ -312,6 +312,7 @@ D'après le critère de parallélisme issu du théorème de Thalès, les droites
 \vspace{0.20cm}
 \begin{tikzpicture}
 \node[rounded corners=8pt,draw=brandNavy!45,fill=white,line width=0.85pt,text width=12.46cm,inner sep=6.0pt,align=left] {
+{\bfseries\color{brandNavy}\fontsize{9.9}{11.1}\selectfont Contexte donné par la figure}\par\vspace{0.04cm}
 {\fontsize{9.9}{11.1}\selectfont Le sommet commun est : \LowDotted{1.00}\hfill Les droites à tester sont : $(\LowDotted{0.55}\LowDotted{0.55})$ et $(\LowDotted{0.55}\LowDotted{0.55})$}\par\vspace{0.06cm}
 {\fontsize{9.9}{11.1}\selectfont Les points \LowDotted{0.66}, \LowDotted{0.66}, \LowDotted{0.66} sont alignés.}\par\vspace{0.05cm}
 {\fontsize{9.9}{11.1}\selectfont Les points \LowDotted{0.66}, \LowDotted{0.66}, \LowDotted{0.66} sont alignés.}
@@ -319,7 +320,7 @@ D'après le critère de parallélisme issu du théorème de Thalès, les droites
 \end{tikzpicture}
 
 \vspace{0.24cm}
-{\bfseries\color{brandNavy}\fontsize{11.4}{12.2}\selectfont Je choisis puis je calcule les deux rapports}\par\vspace{0.04cm}
+{\bfseries\color{brandNavy}\fontsize{11.4}{12.2}\selectfont Je choisis les deux rapports}\par\vspace{0.04cm}
 \begin{center}
 $\begin{array}{rcl}
 \BigRatio{\dfrac{\LowDotted{0.80}}{\LowDotted{0.80}}} & = & \BigRatio{\dfrac{\LowDotted{0.74}}{\LowDotted{0.74}}=\LowDotted{0.86}}\\[0.30cm]
@@ -327,12 +328,14 @@ $\begin{array}{rcl}
 \end{array}$
 \end{center}
 
-\vspace{0.18cm}
+\vspace{0.06cm}
+{\bfseries\color{brandNavy}\fontsize{11.0}{11.8}\selectfont Je les calcule et je les compare}\par\vspace{0.10cm}
 \begin{tikzpicture}
 \node[rounded corners=7pt,draw=brandOrange!55,fill=softOrange!38,line width=0.65pt,text width=12.46cm,inner sep=4.8pt,align=center] {\bfseries\color{brandNavy} Pour comparer : je simplifie, je calcule les quotients, ou j'utilise l'égalité des produits en croix.};
 \end{tikzpicture}
 
-\vspace{0.26cm}
+\vspace{0.20cm}
+{\bfseries\color{brandNavy}\fontsize{11.0}{11.8}\selectfont J'observe le résultat}\par\vspace{0.08cm}
 \noindent\begin{minipage}[t]{6.30cm}
 \vspace{0pt}
 {\bfseries\color{brandOrange}\fontsize{10.1}{10.8}\selectfont \CheckBox Les rapports sont différents}\par\vspace{0.04cm}
@@ -360,7 +363,8 @@ $\displaystyle \frac{\LowDotted{0.52}}{\LowDotted{0.52}}=\frac{\LowDotted{0.52}}
 \end{tikzpicture}
 \end{minipage}
 
-\vspace{0.38cm}
+\vspace{0.24cm}
+{\bfseries\color{brandNavy}\fontsize{11.0}{11.8}\selectfont Je rédige ma conclusion}\par\vspace{0.05cm}
 \begin{center}
 \tikz[baseline=-0.72ex]{\node[rounded corners=6pt,draw=brandNavy!55,fill=softBlue!18,line width=0.8pt,inner xsep=12pt,inner ysep=6.2pt,font=\bfseries\fontsize{11.0}{11.7}\selectfont\color{brandNavy}]{Donc les droites $(\LowDotted{0.62}\LowDotted{0.62})$ et $(\LowDotted{0.62}\LowDotted{0.62})$ sont \LowDotted{2.35}.};}
 \end{center}
@@ -416,8 +420,7 @@ Les rapports sont égaux et la disposition correspond. D'après le critère de p
 {\fontsize{9.4}{10.1}\selectfont $AM=3$ cm \quad $AB=5$ cm\par $AN=4$ cm \quad $AC=7$ cm}
 \end{minipage}\hfill
 \begin{minipage}[c]{11.50cm}
-{\bfseries\color{brandNavy} Je vérifie le contexte.}\par
-Les points $M,A,B$ sont alignés. Les points $N,A,C$ sont alignés. Le sommet commun est $A$.\par\vspace{0.10cm}
+Dans la configuration donnée, les points $M,A,B$ sont alignés, les points $N,A,C$ sont alignés et $A$ est le sommet commun.\par\vspace{0.10cm}
 {\bfseries\color{brandNavy} Je calcule et je compare.}\par
 \[
 \frac{\AMcol}{\ABcol}=\frac{3}{5}
