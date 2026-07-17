@@ -72,6 +72,11 @@ if(!html.includes('prepareSolutionPoses();')) fail('Les poses de solution doiven
 if(!html.includes('function tryExactSolutionSnap(piece)')) fail('Le snap de finition exact doit être disponible pour tous les puzzles.');
 if(!html.includes('pose.flipX !== piece.flipX')) fail('Le snap ne doit jamais retourner automatiquement une pièce.');
 if(html.includes('bhaskaraPoseTargets')) fail('Le snap Bhaskara ne doit plus dépendre d’une table de poses vide.');
+if(!html.includes('touchFriendlyDistance(SNAP.posStrong, 38)')) fail('Le snap tactile doit conserver une distance physique suffisante sur téléphone.');
+if(!html.includes('stage.setPointerCapture(evt.pointerId)')) fail('Le glissement tactile doit rester capturé par la scène jusqu’au lâcher.');
+if(!html.includes('stage.addEventListener("pointercancel", finishPointerInteraction)')) fail('Une interruption tactile doit terminer proprement le déplacement.');
+if(!html.includes('id="rotateMobile"') || !html.includes('piece.rot = normAngleDeg(piece.rot + 15)')) fail('La rotation mobile par pas de 15° doit être disponible.');
+if(!html.includes('grid-template-columns:minmax(0,1.15fr) minmax(0,1fr) minmax(0,1fr)')) fail('Les commandes mobiles doivent rester contenues dans la largeur du téléphone.');
 
 const pythaFile='outils/pythabarre.html';
 const pytha=fs.readFileSync(new URL(`../${pythaFile}`,import.meta.url),'utf8');
