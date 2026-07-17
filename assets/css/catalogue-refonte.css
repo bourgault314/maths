@@ -1428,7 +1428,7 @@ select { cursor: pointer; }
     min-height: 100dvh;
     display: flex;
     flex-direction: column;
-    padding-block: 16px;
+    padding-block: 0 16px;
   }
 
   body.catalogue-is-deep .site-header {
@@ -1442,7 +1442,7 @@ select { cursor: pointer; }
 
   body:not(.catalogue-is-deep) .site-shell {
     position: relative;
-    margin-block: auto;
+    margin-block: var(--mathsgo-entry-top) auto;
     margin-inline: auto;
     overflow: hidden;
     border: 1px solid rgba(203, 216, 230, 0.9);
