@@ -57,7 +57,7 @@ jobs:
         run: |
           mkdir _site
           rsync -a --exclude '.*' --exclude '_*' \
-            --exclude 'packages' --exclude 'node_modules' \
+            --exclude 'node_modules' --exclude '*.test.js' \
             --exclude 'package.json' --exclude 'package-lock.json' \
             ./ _site/
           echo "Fichiers assemblés : $(find _site -type f | wc -l)"

@@ -5,6 +5,8 @@
   "type": "module",
   "exports": {
     "./jetons": "./src/jetons.js",
-    "./barres": "./src/barres.js"
+    "./barres": "./src/barres.js",
+    "./equation-barres": "./src/equation-barres.js",
+    "./splat": "./src/splat.js"
   }
 }

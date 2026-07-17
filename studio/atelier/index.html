@@ -1,0 +1,345 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex, nofollow">
+<title>Atelier des objets — maths&go (interne)</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --page:#f6f8fb; --papier:#ffffff; --encre:#10294a; --bleu:#063f86;
+    --turquoise:#08b9b2; --orange:#f58220; --attenue:#637287; --ligne:#dce5ef;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--page);color:var(--encre);
+    font-family:"Segoe UI",system-ui,sans-serif;padding:20px;max-width:1060px;margin-inline:auto}
+  h1{font-family:Fredoka;color:var(--bleu);font-size:clamp(24px,4vw,34px);margin:8px 0 2px}
+  .sous{color:var(--attenue);margin:0 0 20px;font-size:14px}
+  section{background:var(--papier);border:1px solid var(--ligne);border-radius:24px;
+    padding:clamp(14px,3vw,26px);margin-bottom:22px}
+  h2{font-family:Fredoka;color:var(--turquoise);margin:0 0 4px;font-size:21px}
+  .aide{color:var(--attenue);font-size:13.5px;margin:0 0 14px}
+  .barreCommandes{display:flex;flex-wrap:wrap;gap:10px;align-items:center;margin-bottom:14px}
+  input[type=text]{font:inherit;font-size:17px;padding:9px 12px;border:2px solid var(--ligne);
+    border-radius:12px;min-width:min(300px,80vw);color:var(--encre)}
+  select,button{font:inherit;font-size:15px;padding:9px 14px;border-radius:12px;border:2px solid var(--ligne);
+    background:#fff;color:var(--encre);cursor:pointer}
+  button.principal{background:linear-gradient(180deg,#60a5fa,#3b82f6);color:#fff;border-color:#3b82f6;font-weight:600}
+  button:active{transform:translateY(1px)}
+  .zoneRendu{overflow-x:auto}
+  .zoneRendu svg{max-width:100%;height:auto}
+  .erreur{color:#b91c1c;font-size:14px;min-height:18px;margin:6px 0 0}
+  .legende{color:var(--attenue);font-size:12.5px;margin-top:8px}
+
+  /* — Plateau de jetons (conventions de l'outil D) — */
+  #plateauJetons{position:relative;height:340px;border:2px solid var(--ligne);border-radius:16px;
+    background-color:#fff;background-image:radial-gradient(#94a3b8 1px, transparent 1px);
+    background-size:24px 24px;overflow:hidden;touch-action:none}
+  .token{position:absolute;width:70px;height:70px;cursor:grab;user-select:none;-webkit-user-select:none;
+    transition:all .5s cubic-bezier(0.34,1.56,0.64,1);z-index:10;touch-action:none}
+  .token svg{display:block;pointer-events:none}
+  .token.enDrag{transition:none;transform:scale(1.15);z-index:1000;cursor:grabbing}
+  .token.paireZero{transform:scale(.95);z-index:5}
+  .badgeZero{position:absolute;font-family:Fredoka;font-size:2.3rem;font-weight:700;color:#374151;
+    text-shadow:0 0 10px #fff;pointer-events:none;z-index:20;animation:popIn .3s cubic-bezier(.175,.885,.32,1.275)}
+  @keyframes popIn{from{transform:scale(0)}to{transform:scale(1)}}
+  #equationJetons{font-family:Fredoka;font-size:clamp(22px,4vw,32px);font-weight:600;margin-top:12px;min-height:40px}
+  #equationJetons .vert{color:#16a34a}#equationJetons .rouge{color:#dc2626}#equationJetons .gris{color:#94a3b8}
+
+  /* — Carte Splat — */
+  #carteSplat{position:relative;border:2px solid var(--ligne);border-radius:16px;background:#fbfbfd;
+    min-height:280px;padding:16px;display:flex;align-items:center;justify-content:center;gap:clamp(8px,4vw,40px);flex-wrap:wrap}
+  .totalBadge{position:absolute;top:-18px;left:50%;transform:translateX(-50%);background:#fff;
+    border:3px solid var(--encre);border-radius:10px;padding:4px 18px;text-align:center;font-family:Fredoka}
+  .totalBadge small{display:block;font-size:11px;letter-spacing:1px}
+  .totalBadge b{font-size:30px}
+  .tache{position:relative;cursor:pointer;-webkit-tap-highlight-color:transparent}
+  .tache .couche{position:absolute;inset:0;transition:opacity .5s ease-in-out}
+  .tache .dessous{display:flex;align-items:center;justify-content:center;font-family:Fredoka;
+    font-size:44px;font-weight:700;color:var(--encre)}
+  .tache.revelee .couverture{opacity:0}
+  .badgeValeur{width:52px;height:52px;border-radius:50%;display:flex;align-items:center;justify-content:center;
+    font-family:Fredoka;font-weight:700;font-size:20px;border:3px solid}
+  .consigneSplat{width:100%;text-align:center;font-weight:600;margin-top:6px}
+</style>
+</head>
+<body>
+<h1>Atelier des objets maths&amp;go</h1>
+<p class="sous">Page interne de validation — les objets ci-dessous sont dessinés et animés par la bibliothèque officielle (<code>packages/objets</code>), jamais à la main. Statut : brouillon, en attente de validation.</p>
+
+<section id="secEquabarre">
+  <h2>Objet ÉquaBarre — l'équation devient un schéma</h2>
+  <p class="aide">Tapez une équation (entiers positifs, + et ×) puis Construire — ou lancez le dé. Cliquez ensuite sur une case : sélection orange → enlevée (hachures grises) → normale.</p>
+  <div class="barreCommandes">
+    <input type="text" id="champEquation" value="2 + 2x + 7 = 3x + 5 + 1" aria-label="Équation">
+    <select id="choixInconnue" aria-label="Affichage de l'inconnue">
+      <option value="lettre">Inconnue : lettre</option>
+      <option value="question">Inconnue : ?</option>
+      <option value="splat">Inconnue : Splat</option>
+    </select>
+    <button class="principal" id="btnConstruire">Construire le schéma</button>
+    <button id="btnDe" title="Équation au hasard">🎲</button>
+  </div>
+  <div class="zoneRendu" id="renduBarres"></div>
+  <p class="erreur" id="erreurEquation"></p>
+</section>
+
+<section id="secJetons">
+  <h2>Objet jetons — manipulables au doigt</h2>
+  <p class="aide">Ajoutez des jetons puis déplacez-les : lâchez un jeton sur un jeton opposé (à moins de 80&nbsp;px, comme dans votre outil) pour former une paire nulle. Attrapez une paire pour la casser.</p>
+  <div class="barreCommandes">
+    <button class="principal" id="btnPlusUn">+ jeton (+1)</button>
+    <button class="principal" id="btnMoinsUn" style="background:linear-gradient(180deg,#f87171,#dc2626);border-color:#dc2626">+ jeton (−1)</button>
+    <button id="btnAutoZero">Paires zéro auto</button>
+    <button id="btnViderJetons">Vider</button>
+  </div>
+  <div id="plateauJetons" aria-label="Plateau de jetons manipulables"></div>
+  <div id="equationJetons" aria-live="polite"></div>
+</section>
+
+<section id="secSplat">
+  <h2>Objet Splat — la carte qui se révèle</h2>
+  <p class="aide">Cliquez une tache pour la révéler (fondu 0,5&nbsp;s, comme vos outils). Sous chaque tache, il y a le même nombre de jetons.</p>
+  <div class="barreCommandes">
+    <button id="btnNouvelleCarte">🎲 Nouvelle carte</button>
+    <button id="btnVersEquabarre">→ Ouvrir dans ÉquaBarre</button>
+  </div>
+  <div id="carteSplat"></div>
+</section>
+
+<p class="legende">Objets : jetons v1 · barres v2 · équation→barres v1 · tache Splat v1 (silhouette portée verbatim de vos outils). Concept Splat original : Steve Wyborney.</p>
+
+<script type="module">
+import { dessinerBarres } from "../../packages/objets/src/barres.js";
+import { barresDepuisEquation } from "../../packages/objets/src/equation-barres.js";
+import { dessinerJeton } from "../../packages/objets/src/jetons.js";
+import { dessinerTache } from "../../packages/objets/src/splat.js";
+import { creerGenerateur } from "../../packages/moteur-exercices/src/aleatoire.js";
+
+/* ========== 1. ÉQUABARRE ========== */
+const champ = document.getElementById("champEquation");
+const rendu = document.getElementById("renduBarres");
+const erreur = document.getElementById("erreurEquation");
+const choixInconnue = document.getElementById("choixInconnue");
+let donneesBarres = null;
+
+function construire() {
+  try {
+    donneesBarres = barresDepuisEquation(champ.value, { affichage: choixInconnue.value });
+    erreur.textContent = "";
+    dessiner();
+  } catch (e) {
+    erreur.textContent = e.message;
+  }
+}
+function dessiner() {
+  if (!donneesBarres) return;
+  donneesBarres.inconnue.affichage = choixInconnue.value;
+  rendu.innerHTML = dessinerBarres({ ...donneesBarres, largeur: Math.min(640, rendu.clientWidth || 640), hauteurPiece: 88 });
+  const svg = rendu.querySelector("svg");
+  const bases = [...svg.querySelectorAll('rect[height="88"]')].filter((r) => !r.getAttribute("fill").startsWith("url"));
+  const toutes = [...donneesBarres.lignes.flatMap((l) => l.pieces)];
+  bases.forEach((rect, i) => {
+    rect.style.cursor = "pointer";
+    rect.addEventListener("click", () => {
+      const piece = toutes[i];
+      piece.etat = piece.etat === undefined ? "selectionSuppression" : piece.etat === "selectionSuppression" ? "supprime" : undefined;
+      if (piece.etat === undefined) delete piece.etat;
+      dessiner();
+    });
+  });
+}
+document.getElementById("btnConstruire").addEventListener("click", construire);
+champ.addEventListener("keydown", (e) => { if (e.key === "Enter") construire(); });
+choixInconnue.addEventListener("change", () => { if (donneesBarres) dessiner(); });
+document.getElementById("btnDe").addEventListener("click", () => {
+  const g = creerGenerateur(`de-${Date.now()}`);
+  const x = g.entier(2, 9);
+  const type = g.entier(0, 3);
+  const b = g.entier(1, 12), a = g.entier(2, 4), c2 = g.entier(1, a - 1) || 1;
+  const eq = [
+    `x + ${b} = ${x + b}`,
+    `${a}x = ${a * x}`,
+    `${a}x + ${b} = ${a * x + b}`,
+    `${a}x + ${b} = ${c2}x + ${(a - c2) * x + b}`,
+  ][type];
+  champ.value = eq;
+  construire();
+});
+construire();
+
+/* ========== 2. JETONS MANIPULABLES (conventions de votre outil D) ========== */
+const TOKEN_SIZE = 70, SNAP = 80, SPACING = 80, LINE_HEIGHT = 120;
+const plateau = document.getElementById("plateauJetons");
+const eqJetons = document.getElementById("equationJetons");
+let jetons = [], prochainId = 1;
+
+function svgJeton(valeur, etat = "normal") {
+  return dessinerJeton({ valeur, etat, contenu: "valeur", taille: TOKEN_SIZE });
+}
+function majEquation() {
+  const libres = jetons.filter((t) => t.pairId === null);
+  const v = libres.filter((t) => t.valeur === 1).length;
+  const r = libres.filter((t) => t.valeur === -1).length;
+  const paires = jetons.filter((t) => t.pairId !== null).length / 2;
+  eqJetons.innerHTML =
+    (v ? `<span class="vert">${v > 1 ? v + " × " : ""}(+1)</span>` : "") +
+    (v && r ? " + " : "") +
+    (r ? `<span class="rouge">${r > 1 ? r + " × " : ""}(−1)</span>` : "") +
+    (paires ? ` <span class="gris">${v || r ? "+ " : ""}${paires} × 0</span>` : "") +
+    (v || r || paires ? ` <span class="gris">=</span> ${v - r >= 0 ? `<span class="vert">${v - r ? "+" + (v - r) : 0}</span>` : `<span class="rouge">−${r - v}</span>`}` : "");
+}
+function positionLibre(saufId) {
+  const autres = jetons.filter((t) => t.id !== saufId);
+  let x = 50, y = 45;
+  for (let essais = 0; essais < 200; essais++) {
+    const libre = autres.every((t) => Math.hypot(t.x - x, t.y - y) >= SPACING - 15);
+    if (libre) break;
+    x += SPACING;
+    if (x > plateau.clientWidth - 60) { x = 50; y += LINE_HEIGHT; }
+  }
+  return { x, y: Math.min(y, plateau.clientHeight - 50) };
+}
+function poserJeton(t, x, y) {
+  t.x = x; t.y = y;
+  t.el.style.left = x - TOKEN_SIZE / 2 + "px";
+  t.el.style.top = y - TOKEN_SIZE / 2 + "px";
+}
+function ajouterJeton(valeur) {
+  const el = document.createElement("div");
+  el.className = "token";
+  el.innerHTML = svgJeton(valeur);
+  const t = { id: prochainId++, valeur, el, x: 0, y: 0, pairId: null };
+  jetons.push(t);
+  plateau.appendChild(el);
+  const p = positionLibre(t.id);
+  poserJeton(t, p.x, p.y);
+  el.addEventListener("pointerdown", (e) => debutDrag(e, t));
+  majEquation();
+}
+function casserPaire(t) {
+  const autre = jetons.find((o) => o.id === t.pairId);
+  for (const j of [t, autre]) {
+    if (!j) continue;
+    j.pairId = null;
+    j.el.classList.remove("paireZero");
+    j.el.innerHTML = svgJeton(j.valeur);
+  }
+  document.getElementById(`badge-${Math.min(t.id, autre?.id ?? t.id)}`)?.remove();
+}
+function fairePaire(t1, t2) {
+  const mx = (t1.x + t2.x) / 2, my = (t1.y + t2.y) / 2;
+  for (const j of [t1, t2]) {
+    poserJeton(j, mx, my);
+    j.el.classList.add("paireZero");
+    j.el.innerHTML = svgJeton(j.valeur, "neutralise");
+  }
+  t1.pairId = t2.id; t2.pairId = t1.id;
+  const badge = document.createElement("div");
+  badge.className = "badgeZero";
+  badge.id = `badge-${Math.min(t1.id, t2.id)}`;
+  badge.textContent = "0";
+  badge.style.left = mx - 12 + "px";
+  badge.style.top = my - 42 + "px";
+  plateau.appendChild(badge);
+  majEquation();
+}
+let drag = null;
+function debutDrag(e, t) {
+  e.preventDefault();
+  if (t.pairId !== null) casserPaire(t);
+  drag = { t, dx: e.clientX - t.el.getBoundingClientRect().left, dy: e.clientY - t.el.getBoundingClientRect().top };
+  t.el.classList.add("enDrag");
+  try { t.el.setPointerCapture(e.pointerId); } catch (_e) { /* pointeur simulé */ }
+  t.el.addEventListener("pointermove", bougeDrag);
+  t.el.addEventListener("pointerup", finDrag);
+  t.el.addEventListener("pointercancel", finDrag);
+}
+function bougeDrag(e) {
+  if (!drag) return;
+  e.preventDefault();
+  const r = plateau.getBoundingClientRect();
+  const nx = e.clientX - r.left - drag.dx, ny = e.clientY - r.top - drag.dy;
+  drag.t.el.style.left = nx + "px";
+  drag.t.el.style.top = ny + "px";
+  drag.t.x = nx + TOKEN_SIZE / 2;
+  drag.t.y = ny + TOKEN_SIZE / 2;
+}
+function finDrag(e) {
+  if (!drag) return;
+  const t = drag.t;
+  t.el.classList.remove("enDrag");
+  t.el.removeEventListener("pointermove", bougeDrag);
+  t.el.removeEventListener("pointerup", finDrag);
+  t.el.removeEventListener("pointercancel", finDrag);
+  drag = null;
+  let meilleur = null, dMin = SNAP;
+  for (const o of jetons) {
+    if (o.valeur !== -t.valeur || o.pairId !== null || o.id === t.id) continue;
+    const d = Math.hypot(o.x - t.x, o.y - t.y);
+    if (d < dMin) { dMin = d; meilleur = o; }
+  }
+  if (meilleur) fairePaire(t, meilleur);
+  majEquation();
+}
+document.getElementById("btnPlusUn").addEventListener("click", () => ajouterJeton(1));
+document.getElementById("btnMoinsUn").addEventListener("click", () => ajouterJeton(-1));
+document.getElementById("btnViderJetons").addEventListener("click", () => {
+  jetons = []; plateau.innerHTML = ""; majEquation();
+});
+document.getElementById("btnAutoZero").addEventListener("click", () => {
+  const libres = (v) => jetons.filter((t) => t.valeur === v && t.pairId === null)
+    .sort((a, b) => a.x - b.x || a.y - b.y);
+  const verts = libres(1), rouges = libres(-1);
+  const n = Math.min(verts.length, rouges.length);
+  for (let i = 0; i < n; i++) {
+    setTimeout(() => {
+      poserJeton(rouges[i], verts[i].x, verts[i].y);
+      setTimeout(() => fairePaire(verts[i], rouges[i]), 350);
+    }, i * 500);
+  }
+});
+[1, 1, 1, -1, -1].forEach((v) => ajouterJeton(v));
+
+/* ========== 3. CARTE SPLAT ========== */
+const carte = document.getElementById("carteSplat");
+const bordsBadges = [["#9d4edd", "#f5f3ff"], ["#08b9b2", "#f0fdfa"], ["#f58220", "#fff7ed"], ["#2563eb", "#eff6ff"]];
+let carteSplat = { total: 47, visibles: [7, 24], cache: 8 };
+
+function dessinerCarte() {
+  const { total, visibles, cache } = carteSplat;
+  carte.innerHTML =
+    `<div class="totalBadge"><small>TOTAL</small><b>${total}</b></div>` +
+    `<div class="badgeValeur" style="border-color:${bordsBadges[0][0]};background:${bordsBadges[0][1]};color:${bordsBadges[0][0]}">${visibles[0]}</div>` +
+    [0, 1].map((i) =>
+      `<div class="tache" data-i="${i}" role="button" aria-label="tache à révéler" style="width:clamp(110px,22vw,170px);height:clamp(110px,22vw,170px)">
+         <div class="couche dessous">${cache}</div>
+         <div class="couche couverture">${dessinerTache({ taille: 999, couleur: "noir" }).replace('width="999" height="999"', 'width="100%" height="100%"')}</div>
+       </div>`,
+    ).join("") +
+    `<div class="badgeValeur" style="border-color:${bordsBadges[1][0]};background:${bordsBadges[1][1]};color:${bordsBadges[1][0]}">${visibles[1]}</div>` +
+    `<p class="consigneSplat">Sous chaque tache, il y a le même nombre de jetons.</p>`;
+  carte.querySelectorAll(".tache").forEach((el) =>
+    el.addEventListener("click", () => el.classList.toggle("revelee")),
+  );
+}
+document.getElementById("btnNouvelleCarte").addEventListener("click", () => {
+  const g = creerGenerateur(`carte-${Date.now()}`);
+  const cache = g.entier(3, 12);
+  const visibles = [g.entier(2, 15), g.entier(11, 29)];
+  carteSplat = { total: visibles[0] + visibles[1] + 2 * cache, visibles, cache };
+  dessinerCarte();
+});
+document.getElementById("btnVersEquabarre").addEventListener("click", () => {
+  const { total, visibles } = carteSplat;
+  champ.value = `${visibles[0] + visibles[1]} + 2x = ${total}`;
+  choixInconnue.value = "splat";
+  construire();
+  document.getElementById("secEquabarre").scrollIntoView({ behavior: "smooth" });
+});
+dessinerCarte();
+</script>
+</body>
+</html>
