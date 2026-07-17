@@ -8,7 +8,7 @@
   <title>Automatismes maths cycle 4 et DNB | maths&amp;go</title>
 <meta name="description" content="Outil d’automatismes de mathématiques pour le cycle 4 et le DNB : entraînez vos élèves en vidéoprojection ou sur téléphone, avec aides et corrections.">
 <link rel="canonical" href="https://mathsgo.re/auto/">
-<link rel="stylesheet" href="styles/setup.css?v=20260717-6">
+<link rel="stylesheet" href="styles/setup.css?v=20260717-7">
 <link rel="stylesheet" href="../assets/css/consentement.css">
 <script defer src="../assets/js/consentement.js" data-analytics-page-location="https://mathsgo.re/auto/"></script>
 </head>
@@ -101,10 +101,14 @@
       </div>
     </section>
   </main>
-  <details class="credit">
-    <summary>Crédits et remerciements</summary>
-    <p>Remerciements à Eric Hakenholz, créateur de <a href="https://doctools.org/dnb/automatismes_dnb.html" target="_blank" rel="noopener noreferrer">DocTools</a>, pour le partage du fichier, et à Claire Lagarde, pour son aide précieuse.</p>
-  </details>
+  <footer class="auto-footer">
+    <details class="credit">
+      <summary>Crédits et remerciements</summary>
+      <p>Remerciements à Eric Hakenholz, créateur de <a href="https://doctools.org/dnb/automatismes_dnb.html" target="_blank" rel="noopener noreferrer">DocTools</a>, pour le partage du fichier, et à Claire Lagarde, pour son aide précieuse.</p>
+    </details>
+    <span class="auto-footer-separator" aria-hidden="true">·</span>
+    <button class="cookie-manage-link" type="button" data-mathsgo-consent-open onclick="window.mathsgoConsentement &amp;&amp; window.mathsgoConsentement.ouvrir()">Gérer mes cookies</button>
+  </footer>
 </div>
 
 <div class="modal-overlay" id="openSeriesOverlay" hidden onclick="if(event.target===this)setOpenSeriesPanel(false)">
