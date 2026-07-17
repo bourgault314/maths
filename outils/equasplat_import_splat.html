@@ -1775,6 +1775,10 @@
     display:none;
   }
 
+  .mobileBottomControls{
+    display:contents;
+  }
+
   @media (max-width:760px){
     body.importMode{
       overflow-x:hidden;
@@ -1787,8 +1791,9 @@
 
     body.importMode .stage:not(:fullscreen){
       min-height:0;
-      padding:6px;
+      padding:6px 6px calc(var(--mobile-controls-height, 0px) + 8px);
       border-radius:18px;
+      backdrop-filter:none;
     }
 
     body.importMode .stage:not(:fullscreen) .stageQuickActions{
@@ -1828,18 +1833,19 @@
     body.importMode .stage:not(:fullscreen) .topbar{
       box-sizing:border-box;
       width:100%;
-      height:auto;
-      min-height:58px;
+      height:110px;
+      min-height:110px;
       max-height:110px;
       padding:2px 3px 5px;
       overflow:hidden;
+      flex:0 0 110px;
     }
 
     body.importMode .stage:not(:fullscreen) .equationHistory{
       box-sizing:border-box;
       width:100%;
-      height:auto;
-      min-height:0;
+      height:102px;
+      min-height:102px;
       max-height:102px;
       padding:0 2px;
       overflow-x:hidden;
@@ -1865,11 +1871,15 @@
     }
 
     body.importMode .stage:not(:fullscreen) .instructionZone{
-      min-height:0;
+      height:42px;
+      min-height:42px;
+      max-height:42px;
       margin:1px auto 4px;
       padding:0 4px;
       font-size:13px;
       line-height:1.18;
+      overflow-y:auto;
+      overscroll-behavior:contain;
     }
 
     body.importMode .stage:not(:fullscreen) .board{
@@ -1888,8 +1898,32 @@
       min-height:0;
     }
 
+    body.importMode .stage:not(:fullscreen) .mobileBottomControls{
+      position:fixed;
+      left:4px;
+      right:4px;
+      bottom:0;
+      z-index:30;
+      display:flex;
+      flex-direction:column;
+      align-items:stretch;
+      padding:5px 6px max(6px, env(safe-area-inset-bottom));
+      border:1px solid rgba(15,23,42,.10);
+      border-bottom:0;
+      border-radius:17px 17px 0 0;
+      background:rgba(255,255,255,.96);
+      box-shadow:0 -10px 28px rgba(15,23,42,.12);
+      backdrop-filter:blur(12px);
+    }
+
+    body.importMode .stage:not(:fullscreen) .mobileBottomControls .actionZone{
+      max-height:110px;
+      overflow-y:auto;
+      overscroll-behavior:contain;
+    }
+
     body.importMode .stage:not(:fullscreen) .toolBar{
-      margin:6px auto 0;
+      margin:0 auto;
       gap:5px;
     }
 
@@ -2087,23 +2121,25 @@
       <svg id="splatSvg" viewBox="0 0 1600 820" aria-label="ÉquaSplat"></svg>
     </div>
 
-    <div class="toolBar" id="toolBar" aria-label="Choix de l’action">
-      <div class="toolRow toolRowObjects" aria-label="Actions sur les objets">
-        <button class="toolBtn active" id="toolDecompose" type="button">Décomposer</button>
-        <button class="toolBtn" id="toolGroup" type="button">Regrouper</button>
-        <button class="toolBtn" id="toolShare" type="button">Partager équitablement</button>
-        <button class="toolBtn unitShareToolBtn" id="toolShareUnits" type="button">Faire des paquets</button>
+    <div class="mobileBottomControls" id="mobileBottomControls">
+      <div class="toolBar" id="toolBar" aria-label="Choix de l’action">
+        <div class="toolRow toolRowObjects" aria-label="Actions sur les objets">
+          <button class="toolBtn active" id="toolDecompose" type="button">Décomposer</button>
+          <button class="toolBtn" id="toolGroup" type="button">Regrouper</button>
+          <button class="toolBtn" id="toolShare" type="button">Partager équitablement</button>
+          <button class="toolBtn unitShareToolBtn" id="toolShareUnits" type="button">Faire des paquets</button>
+        </div>
+
+        <div class="toolRow toolRowEquation" aria-label="Actions sur l’équation">
+          <button class="toolBtn" id="toolDelete" type="button">Enlever dans chaque membre</button>
+          <button class="toolBtn addBothToolBtn" id="toolAddBoth" type="button" title="Ajouter le même jeton dans les deux membres">Ajouter aux deux membres</button>
+          <button class="toolBtn oppositeBothToolBtn" id="toolOppositeBoth" type="button" title="Prendre l’opposé de chaque membre">Prendre l’opposé</button>
+          <button class="toolBtn undoToolBtn" id="toolUndo" type="button" title="Annuler la dernière action">↶ Annuler</button>
+        </div>
       </div>
 
-      <div class="toolRow toolRowEquation" aria-label="Actions sur l’équation">
-        <button class="toolBtn" id="toolDelete" type="button">Enlever dans chaque membre</button>
-        <button class="toolBtn addBothToolBtn" id="toolAddBoth" type="button" title="Ajouter le même jeton dans les deux membres">Ajouter aux deux membres</button>
-        <button class="toolBtn oppositeBothToolBtn" id="toolOppositeBoth" type="button" title="Prendre l’opposé de chaque membre">Prendre l’opposé</button>
-        <button class="toolBtn undoToolBtn" id="toolUndo" type="button" title="Annuler la dernière action">↶ Annuler</button>
-      </div>
+      <div class="actionZone" id="actionZone"></div>
     </div>
-
-    <div class="actionZone" id="actionZone"></div>
     <div class="solution" id="solution"></div>
   </section>
 </main>
@@ -2199,6 +2235,7 @@
   const actionZone = document.getElementById("actionZone");
   const solutionEl = document.getElementById("solution");
   const stageEl = document.getElementById("stage");
+  const mobileBottomControlsEl = document.getElementById("mobileBottomControls");
 
   const modeEl = document.getElementById("mode");
   const removedDisplayModeEl = document.getElementById("removedDisplayMode");
@@ -4485,12 +4522,28 @@
     }
   }
 
+  function syncMobileBottomControlsSpace(){
+    if(!mobileBottomControlsEl) return;
+    const docked = window.matchMedia("(max-width:760px)").matches
+      && document.body.classList.contains("importMode")
+      && !document.fullscreenElement;
+    const height = docked ? Math.ceil(mobileBottomControlsEl.getBoundingClientRect().height) : 0;
+    document.documentElement.style.setProperty("--mobile-controls-height", `${height}px`);
+  }
+
+  if(mobileBottomControlsEl && typeof ResizeObserver === "function"){
+    new ResizeObserver(syncMobileBottomControlsSpace).observe(mobileBottomControlsEl);
+  }
+  window.addEventListener("resize", syncMobileBottomControlsSpace);
+  document.addEventListener("fullscreenchange", syncMobileBottomControlsSpace);
+
   function render(){
     if(!state) return;
     if(getSolvedValue() !== null) updateCurrentEquationStep();
     renderEquationHistory();
     renderSvg();
     renderActions();
+    requestAnimationFrame(syncMobileBottomControlsSpace);
   }
 
   function undo(){
