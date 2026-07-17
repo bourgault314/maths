@@ -113,6 +113,28 @@
   <div id="equationJetons" aria-live="polite"></div>
 </section>
 
+<section id="secGenerateurJetons">
+  <h2>Générateur de jetons — redessinez à volonté</h2>
+  <p class="aide">Changez les nombres : le dessin se refait instantanément, toujours régulier. Puis téléchargez-le pour vos fiches et diaporamas.</p>
+  <div class="barreCommandes">
+    <label class="reglageTaille">+1 <input type="number" id="genPositifs" value="5" min="0" max="30" style="width:60px"></label>
+    <label class="reglageTaille">−1 <input type="number" id="genNegatifs" value="3" min="0" max="30" style="width:60px"></label>
+    <label class="reglageTaille">paires annulées <input type="number" id="genPaires" value="0" min="0" max="30" style="width:60px"></label>
+    <label class="reglageTaille">par rangée <input type="number" id="genParRangee" value="5" min="1" max="12" style="width:60px"></label>
+    <select id="genHabillage" aria-label="Habillage">
+      <option value="contourNoir">Fiches (contour noir)</option>
+      <option value="plateau">Plateau (dégradé)</option>
+    </select>
+    <label class="reglageTaille">Taille <input type="range" id="genTaille" min="32" max="110" value="56" step="2"></label>
+  </div>
+  <div class="zoneRendu" id="renduGenJetons"></div>
+  <p class="erreur" id="erreurGenJetons"></p>
+  <div class="barreCommandes">
+    <button id="btnSvgJetons">⬇ SVG</button>
+    <button id="btnPngJetons">⬇ PNG</button>
+  </div>
+</section>
+
 <section id="secSplat">
   <h2>Objet Splat — la carte qui se révèle</h2>
   <p class="aide">Cliquez une tache pour la révéler (fondu 0,5&nbsp;s, comme vos outils). Sous chaque tache, il y a le même nombre de jetons.</p>
@@ -129,7 +151,7 @@
 <script type="module">
 import { dessinerBarres } from "../../packages/objets/src/barres.js";
 import { barresDepuisEquation } from "../../packages/objets/src/equation-barres.js";
-import { dessinerJeton } from "../../packages/objets/src/jetons.js";
+import { dessinerJeton, dessinerGroupeJetons } from "../../packages/objets/src/jetons.js";
 import { dessinerTache } from "../../packages/objets/src/splat.js";
 import { creerGenerateur } from "../../packages/moteur-exercices/src/aleatoire.js";
 
@@ -381,6 +403,72 @@ document.getElementById("btnVersEquabarre").addEventListener("click", () => {
   document.getElementById("secEquabarre").scrollIntoView({ behavior: "smooth" });
 });
 dessinerCarte();
+
+/* ========== 4. GÉNÉRATEUR DE JETONS + TÉLÉCHARGEMENTS ========== */
+function telechargerFichier(nom, blob) {
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(blob);
+  a.download = nom;
+  a.click();
+  setTimeout(() => URL.revokeObjectURL(a.href), 4000);
+}
+function telechargerSvg(svgTexte, nom) {
+  telechargerFichier(nom + ".svg", new Blob([svgTexte], { type: "image/svg+xml" }));
+}
+function telechargerPng(svgTexte, nom, echelle = 3) {
+  const image = new Image();
+  const url = URL.createObjectURL(new Blob([svgTexte], { type: "image/svg+xml" }));
+  image.onload = () => {
+    const canvas = document.createElement("canvas");
+    canvas.width = image.width * echelle;
+    canvas.height = image.height * echelle;
+    const ctx = canvas.getContext("2d");
+    ctx.fillStyle = "#ffffff";
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+    ctx.drawImage(image, 0, 0, canvas.width, canvas.height);
+    canvas.toBlob((blob) => { telechargerFichier(nom + ".png", blob); URL.revokeObjectURL(url); }, "image/png");
+  };
+  image.src = url;
+}
+
+const renduGen = document.getElementById("renduGenJetons");
+const erreurGen = document.getElementById("erreurGenJetons");
+let dernierSvgGen = "";
+function genererJetons() {
+  try {
+    dernierSvgGen = dessinerGroupeJetons({
+      positifs: Number(document.getElementById("genPositifs").value),
+      negatifs: Number(document.getElementById("genNegatifs").value),
+      pairesNeutralisees: Number(document.getElementById("genPaires").value),
+      parRangee: Number(document.getElementById("genParRangee").value),
+      habillage: document.getElementById("genHabillage").value,
+      contenu: "valeur",
+      taille: Number(document.getElementById("genTaille").value),
+    });
+    renduGen.innerHTML = dernierSvgGen;
+    erreurGen.textContent = "";
+  } catch (e) { erreurGen.textContent = e.message; }
+}
+for (const id of ["genPositifs", "genNegatifs", "genPaires", "genParRangee", "genHabillage", "genTaille"]) {
+  document.getElementById(id).addEventListener("input", genererJetons);
+}
+document.getElementById("btnSvgJetons").addEventListener("click", () => telechargerSvg(dernierSvgGen, "jetons-mathsgo"));
+document.getElementById("btnPngJetons").addEventListener("click", () => telechargerPng(dernierSvgGen, "jetons-mathsgo"));
+genererJetons();
+
+// Téléchargement du schéma en barres courant
+const outilsBarres = document.createElement("div");
+outilsBarres.className = "barreCommandes";
+outilsBarres.innerHTML = '<button id="btnSvgBarres">⬇ SVG</button><button id="btnPngBarres">⬇ PNG</button>';
+rendu.after(outilsBarres);
+document.getElementById("btnSvgBarres").addEventListener("click", () => {
+  const svg = rendu.querySelector("svg");
+  if (svg) telechargerSvg(svg.outerHTML, "schema-barres-mathsgo");
+});
+document.getElementById("btnPngBarres").addEventListener("click", () => {
+  const svg = rendu.querySelector("svg");
+  if (svg) telechargerPng(svg.outerHTML, "schema-barres-mathsgo");
+});
 </script>
 </body>
 </html>
