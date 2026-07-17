@@ -269,9 +269,13 @@
   </div>
 </div>
 
+<script src="../../assets/js/pythagore-snap-engine.js"></script>
 <script>
 (() => {
   "use strict";
+
+  const SnapEngine=window.MathsGoPythagoreSnapEngine;
+  if(!SnapEngine) throw new Error("Le moteur géométrique du Moulin n’est pas chargé.");
 
   const BASE = { b: 420, ratio: 0.5, gap: 170, margin: 60 };
   const COLORS = {
@@ -365,6 +369,7 @@
   function applyWorldTransform(){
     const {s, tx, ty} = state.worldTransform;
     world.setAttribute("transform", `translate(${tx},${ty}) scale(${s})`);
+    updateHandleGeometry();
   }
 
   function isCompactViewport(){
@@ -409,6 +414,27 @@
     if(!ctm) return px;
     const scale = Math.hypot(ctm.a, ctm.b) || 1;
     return px / scale;
+  }
+
+  function updateHandleGeometry(){
+    const compact=isCompactViewport();
+    const hitRadius=compact ? screenPixelsToWorld(25) : 34;
+    const dotRadius=compact ? screenPixelsToWorld(12) : 18;
+    const textSize=compact ? screenPixelsToWorld(20) : 22;
+    for(const piece of state.pieces.values()){
+      if(!piece.handleHitEl) continue;
+      const topExtent=Math.max(0,...piece.verticesLocal.map(vertex=>-vertex.y));
+      const distance=compact
+        ? Math.max(screenPixelsToWorld(56),topExtent+screenPixelsToWorld(34))
+        : 64;
+      piece.handleHitEl.setAttribute("cy",-distance);
+      piece.handleHitEl.setAttribute("r",hitRadius);
+      piece.handleLineEl.setAttribute("y2",-distance);
+      piece.handleDotEl.setAttribute("cy",-distance);
+      piece.handleDotEl.setAttribute("r",dotRadius);
+      piece.handleTextEl.setAttribute("y",-distance);
+      piece.handleTextEl.style.fontSize=`${textSize}px`;
+    }
   }
 
   function touchFriendlyDistance(desktopDistance, mobilePixels){
@@ -680,6 +706,7 @@
     if(!id || !state.pieces.has(id)) return;
     const p = state.pieces.get(id);
     p.flipX = !p.flipX;
+    p.placed=false;
     applyPieceTransform(p);
   }
 
@@ -1143,11 +1170,10 @@
         });
 
         const gh=svgEl("g",{class:"handle","data-id":id,style:"display:none;"});
-        gh.append(
-          svgEl("circle",{cx:0,cy:-64,r:34,class:"handleHit"}),
-          svgEl("line",{x1:0,y1:0,x2:0,y2:-64,class:"handleLine"}),
-          svgEl("circle",{cx:0,cy:-64,r:18,class:"handleDot"})
-        );
+        const handleHit=svgEl("circle",{cx:0,cy:-64,r:34,class:"handleHit"});
+        const handleLine=svgEl("line",{x1:0,y1:0,x2:0,y2:-64,class:"handleLine"});
+        const handleDot=svgEl("circle",{cx:0,cy:-64,r:18,class:"handleDot"});
+        gh.append(handleHit,handleLine,handleDot);
         const it=svgEl("text",{x:0,y:-64,"text-anchor":"middle","dominant-baseline":"central",style:"font-size:22px;font-weight:900;"});
         it.textContent="↻";
         gh.appendChild(it);
@@ -1161,10 +1187,15 @@
           rot:0,
           flipX:false,
           hasMoved:false,
+          placed:false,
           home:{...ctr},
           el:g,
           polyEl:poly,
           handleEl:gh,
+          handleHitEl:handleHit,
+          handleLineEl:handleLine,
+          handleDotEl:handleDot,
+          handleTextEl:it,
           verticesLocal:lPts
         };
 
@@ -1453,58 +1484,15 @@
     return out;
   }
 
-  function closestPointOnSegment(point,a,b){
-    const dx=b.x-a.x, dy=b.y-a.y;
-    const len2=dx*dx+dy*dy;
-    if(len2<1e-9) return {...a};
-    const t=Math.max(0,Math.min(1,((point.x-a.x)*dx+(point.y-a.y)*dy)/len2));
-    return {x:a.x+t*dx,y:a.y+t*dy};
-  }
-
-  function parallelAngleDistance(a,b){
-    const d=Math.abs(normAngleDeg(a-b));
-    return Math.min(d,Math.abs(180-d));
-  }
-
-  function rotationSnapCandidates(piece){
+  function legacySnappedRotation(piece,proposedRot,threshold=SNAP.rot){
     const candidates=[0,90,180,270];
-    if(!isCompactViewport()){
-      if(isBhaskaraPuzzle() && piece && isNearTargetMoulin(piece,260)){
-        for(const localA of edgeAnglesLocal(piece)){
-          for(const targetA of bhaskaraTargetAngles()) candidates.push(normAngleDeg(targetA-localA));
-        }
-      }
-      return candidates;
-    }
-    if(!piece || !isNearTargetMoulin(piece,touchFriendlyDistance(170,90))) return candidates;
-
-    const localEdges=edgeAnglesLocal(piece);
-    const targetMoulin=activePuzzleMoulin();
-    if(targetMoulin){
-      const targetAngles=segmentsFromVertices(targetMoulin.mold.corners)
-        .map(edge=>deg(Math.atan2(edge.b.y-edge.a.y,edge.b.x-edge.a.x)));
-      for(const localA of localEdges){
-        for(const targetA of targetAngles) candidates.push(normAngleDeg(targetA-localA));
+    if(isBhaskaraPuzzle() && piece && isNearTargetMoulin(piece,260)){
+      for(const localA of edgeAnglesLocal(piece)){
+        for(const targetA of bhaskaraTargetAngles()) candidates.push(normAngleDeg(targetA-localA));
       }
     }
-
-    for(const other of state.pieces.values()){
-      if(other.id===piece.id || !other.hasMoved || !isNearTargetMoulin(other,80)) continue;
-      const targetAngles=segmentsFromVertices(pieceWorldVertices(other))
-        .map(edge=>deg(Math.atan2(edge.b.y-edge.a.y,edge.b.x-edge.a.x)));
-      for(const localA of localEdges){
-        for(const targetA of targetAngles) candidates.push(normAngleDeg(targetA-localA));
-      }
-    }
-
-    const exactPose=state.solutionPoses.get(piece.id);
-    if(exactPose && exactPose.flipX===piece.flipX) candidates.push(normAngleDeg(exactPose.rot));
-    return candidates;
-  }
-
-  function snappedRotation(piece,proposedRot,threshold=SNAP.rot){
     let best=proposedRot, bestD=Infinity;
-    for(const candidate of rotationSnapCandidates(piece)){
+    for(const candidate of candidates){
       const d=Math.abs(normAngleDeg(proposedRot-candidate));
       if(d<bestD){bestD=d;best=candidate;}
     }
@@ -1549,69 +1537,6 @@
     if(!best) return false;
     piece.pos.x+=best.delta.x;
     piece.pos.y+=best.delta.y;
-    applyPieceTransform(piece);
-    return true;
-  }
-
-  function tryEdgeSnap(piece){
-    if(!isCompactViewport()) return tryLegacyEdgeSnap(piece);
-    if(!piece || !isNearTargetMoulin(piece,touchFriendlyDistance(180,100))) return false;
-    const targetMoulin = activePuzzleMoulin();
-    if(!targetMoulin) return false;
-
-    const targetSegments = segmentsFromVertices(targetMoulin.mold.corners);
-    for(const [id, other] of state.pieces.entries()){
-      if(id===piece.id || !other.hasMoved || !isNearTargetMoulin(other,80)) continue;
-      targetSegments.push(...segmentsFromVertices(pieceWorldVertices(other)));
-    }
-
-    const current = pieceWorldVertices(piece);
-    const pieceSegments = segmentsFromVertices(current);
-    let best = null;
-    const distanceThreshold=touchFriendlyDistance(SNAP.posStrong,30);
-
-    for(const vertex of current){
-      for(const target of targetSegments){
-        const point=closestPointOnSegment(vertex,target.a,target.b);
-        const distance=Math.hypot(point.x-vertex.x,point.y-vertex.y);
-        if(distance<distanceThreshold && (!best || distance<best.score)){
-          best={delta:{x:point.x-vertex.x,y:point.y-vertex.y},score:distance};
-        }
-      }
-    }
-
-    for(const ps of pieceSegments){
-      const pAngle = deg(Math.atan2(ps.b.y-ps.a.y, ps.b.x-ps.a.x));
-      const pLen = Math.hypot(ps.b.x-ps.a.x, ps.b.y-ps.a.y);
-      for(const ts of targetSegments){
-        const tx=ts.b.x-ts.a.x, ty=ts.b.y-ts.a.y;
-        const tLen = Math.hypot(ts.b.x-ts.a.x, ts.b.y-ts.a.y);
-        if(pLen<1e-8 || tLen<1e-8) continue;
-        const targetAngle=deg(Math.atan2(ty,tx));
-        const angleD=parallelAngleDistance(pAngle,targetAngle);
-        if(angleD>4) continue;
-
-        const ux=tx/tLen, uy=ty/tLen, nx=-uy, ny=ux;
-        const da=(ps.a.x-ts.a.x)*nx+(ps.a.y-ts.a.y)*ny;
-        const db=(ps.b.x-ts.a.x)*nx+(ps.b.y-ts.a.y)*ny;
-        if(Math.max(Math.abs(da),Math.abs(db))>distanceThreshold*1.25) continue;
-
-        const p0=(ps.a.x-ts.a.x)*ux+(ps.a.y-ts.a.y)*uy;
-        const p1=(ps.b.x-ts.a.x)*ux+(ps.b.y-ts.a.y)*uy;
-        const overlap=Math.min(Math.max(p0,p1),tLen)-Math.max(Math.min(p0,p1),0);
-        if(overlap<Math.min(pLen,tLen)*0.18) continue;
-
-        const perpendicular=(da+db)/2;
-        const score=Math.abs(perpendicular)+angleD*2;
-        if(!best || score<best.score){
-          best={delta:{x:-perpendicular*nx,y:-perpendicular*ny},score};
-        }
-      }
-    }
-
-    if(!best) return false;
-    piece.pos.x += best.delta.x;
-    piece.pos.y += best.delta.y;
     applyPieceTransform(piece);
     return true;
   }
@@ -1747,25 +1672,28 @@
       piece.pos.x=drag.startPos.x+(midpoint.x-drag.startMidpoint.x);
       piece.pos.y=drag.startPos.y+(midpoint.y-drag.startMidpoint.y);
       const proposed=drag.startRot+deg(angle-drag.startGestureAngle);
-      piece.rot=state.angleSnapEnabled ? snappedRotation(piece,proposed,5) : proposed;
+      piece.rot=!isCompactViewport() && state.angleSnapEnabled
+        ? legacySnappedRotation(piece,proposed,SNAP.rot)
+        : proposed;
       piece.hasMoved=true;
     } else if(drag.type==="rotate"){
       if(evt.pointerId!==drag.pointerId) return;
       const a=Math.atan2(p.y-piece.pos.y,p.x-piece.pos.x);
       const proposed=drag.startRot+deg(a-drag.startAngleRad);
-      const threshold=!isCompactViewport() && isBhaskaraPuzzle() && isNearTargetMoulin(piece,260) ? 12 : (isCompactViewport()?5:SNAP.rot);
-      piece.rot=state.angleSnapEnabled && !evt.shiftKey ? snappedRotation(piece,proposed,threshold) : proposed;
+      const threshold=isBhaskaraPuzzle() && isNearTargetMoulin(piece,260) ? 12 : SNAP.rot;
+      piece.rot=!isCompactViewport() && state.angleSnapEnabled && !evt.shiftKey
+        ? legacySnappedRotation(piece,proposed,threshold)
+        : proposed;
+      piece.hasMoved=true;
     }
     applyPieceTransform(piece);
   });
 
-  function tryPointSnap(piece){
-    const compact=isCompactViewport();
-    if(!piece || (compact && !isNearTargetMoulin(piece,touchFriendlyDistance(180,100)))) return false;
+  function tryLegacyPointSnap(piece){
+    if(!piece) return false;
     const targets=[...state.snapPoints];
     for(const other of state.pieces.values()){
       if(other.id===piece.id) continue;
-      if(compact && (!other.hasMoved || !isNearTargetMoulin(other,80))) continue;
       for(const vertex of pieceWorldVertices(other)) targets.push(vertex);
     }
 
@@ -1787,6 +1715,51 @@
     return true;
   }
 
+  function snapMobilePiece(piece){
+    const targetMoulin=activePuzzleMoulin();
+    if(!piece || !targetMoulin) return false;
+    const ctm=world.getScreenCTM();
+    const scale=ctm ? Math.hypot(ctm.a,ctm.b)||1 : 1;
+    const targetPolygon=targetMoulin.mold.corners;
+    const placedPolygons=[];
+
+    for(const other of state.pieces.values()){
+      if(other.id===piece.id) continue;
+      if(other.placed) placedPolygons.push({id:other.id,vertices:pieceWorldVertices(other)});
+    }
+
+    const result=SnapEngine.findBestSnap({
+      piece,
+      targetPolygon,
+      placedPolygons,
+      exactPose:state.solutionPoses.get(piece.id)||null,
+      scale,
+      thresholds:{
+        maxTranslationPx:48,
+        maxRotationDeg:20,
+        exactTranslationPx:34,
+        exactRotationDeg:14,
+        containmentTolerancePx:6,
+        contactTolerancePx:1.5,
+        minEdgeOverlapPx:10
+      }
+    });
+
+    if(result){
+      piece.pos={...result.pose.pos};
+      piece.rot=result.pose.rot;
+      piece.flipX=result.pose.flipX;
+      piece.lastSnapKind=result.kind;
+      applyPieceTransform(piece);
+    }
+    const finalVertices=pieceWorldVertices(piece);
+    const overlapsPlaced=placedPolygons.some(other=>
+      SnapEngine.polygonsOverlapInterior(finalVertices,other.vertices,1.5/scale)
+    );
+    piece.placed=SnapEngine.pieceInsideTarget(piece,targetPolygon,scale,4) && !overlapsPlaced;
+    return !!result;
+  }
+
   function snapPieceAfterDrop(piece){
     if(!piece || !piece.hasMoved || !state.snapEnabled) return;
 
@@ -1794,19 +1767,11 @@
       applyBhaskaraAngleSnap(piece,18);
       let snapped=tryExactSolutionSnap(piece);
       if(!snapped && isBhaskaraPuzzle()) snapped=tryBhaskaraEdgeSnap(piece) || tryBhaskaraSquareSnap(piece);
-      if(!snapped) snapped=tryEdgeSnap(piece);
-      if(!snapped) tryPointSnap(piece);
+      if(!snapped) snapped=tryLegacyEdgeSnap(piece);
+      if(!snapped) tryLegacyPointSnap(piece);
       return;
     }
-
-    piece.rot=snappedRotation(piece,piece.rot,5);
-    applyPieceTransform(piece);
-
-    // Le premier snap rencontré est toujours local : bord du carré, bord d'une
-    // pièce déjà descendue, puis sommet. Le pavage exact ne corrige ensuite
-    // qu'un écart résiduel très faible.
-    const locallySnapped=tryEdgeSnap(piece) || tryPointSnap(piece);
-    if(locallySnapped || isNearTargetMoulin(piece,80)) tryExactSolutionSnap(piece);
+    snapMobilePiece(piece);
   }
 
   function finishPointerInteraction(evt){
@@ -1897,6 +1862,7 @@
       p.rot=0;
       p.flipX=false;
       p.hasMoved=false;
+      p.placed=false;
       applyPieceTransform(p);
     });
     setSelected(null);
