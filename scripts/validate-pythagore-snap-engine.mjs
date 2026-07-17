@@ -98,13 +98,14 @@ const mobileThresholds={maxTranslationPx:48,maxRotationDeg:20,exactTranslationPx
   if(!result || result.kind!=='exact') fail('La correction exacte de finition au centre du pavage est absente.');
 }
 
-// Toutes les pièces des cinq pavages sont testées autour de leur pose finale :
+// Toutes les pièces des sept pavages sont testées autour de leur pose finale :
 // décalage tactile + erreur angulaire, avec toutes les voisines déjà en place.
 const html=fs.readFileSync(new URL('../outils/plateaux_manipulation/moulin_pythagore.html',import.meta.url),'utf8');
 const match=html.match(/const EXACT_SOLUTION_UV = (\{[\s\S]*?\n  \});/);
 if(!match) fail('Les pavages exacts sont introuvables.');
 const layouts=vm.runInNewContext(`(${match[1]})`,Object.create(null));
 const side=Math.sqrt(5);
+const sideByPuzzle={sixEquilibre:Math.sqrt(2),tangram:Math.sqrt(2)};
 const bhaskaraCorners=[[side,0],[0,0],[0,side],[side,side]];
 const bhaskaraThird=bhaskaraCorners.map((point,index)=>{
   const next=bhaskaraCorners[(index+1)%bhaskaraCorners.length];
@@ -118,9 +119,10 @@ layouts.bhaskara={
   t4:[bhaskaraCorners[3],bhaskaraCorners[0],bhaskaraThird[3]],
   sq:bhaskaraThird
 };
-const unitSquare=[{x:0,y:0},{x:side,y:0},{x:side,y:side},{x:0,y:side}];
 let tested=0;
 for(const [puzzle,layout] of Object.entries(layouts)){
+  const puzzleSide=sideByPuzzle[puzzle]||side;
+  const unitSquare=[{x:0,y:0},{x:puzzleSide,y:0},{x:puzzleSide,y:puzzleSide},{x:0,y:puzzleSide}];
   const entries=Object.entries(layout).map(([key,points])=>[key,points.map(([x,y])=>({x,y}))]);
   for(const [key,desired] of entries){
     const center=centroid(desired);

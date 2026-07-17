@@ -28,13 +28,23 @@ if(!match) fail('Les poses exactes des puzzles sont absentes.');
 const layouts=match?vm.runInNewContext(`(${match[1]})`,Object.create(null)):{};
 
 const sqrt5=Math.sqrt(5);
+const sqrt2=Math.sqrt(2);
 const P=[1.2,-1.6];
 const sources={
   perigal:{y:[[0,-2],[1,-2],P,[0,-1]],b:[[1,-2],[2,-2],P],g:[[2,0],[2,-2],P],m:[[0,0],[2,0],P,[0,-1]],sq:[[-1,0],[0,0],[0,1],[-1,1]]},
-  mosaiqueOblique:{
-    b1:[[0,-2],[0.625,-2],[0.4,-1.55],[0,-1.75]],b2:[[0.4,-1.55],[0,-0.75],[0,-1.75]],
-    b3:[[0.625,-2],[2,-2],[2,-0.75],[0.4,-1.55]],b4:[[0,-0.75],[0.4,-1.55],[2,-0.75],[2,0],[0,0]],
-    a1:[[-1,1],[-1,0],[0,0],[0,0.25],[-0.375,1]],a2:[[0,0.25],[0,1],[-0.375,1]]
+  lapeyronnie:{
+    t1:[[3,4],[3,2],[2,4]],t2:[[1,4],[2,4],[1,3.5]],q1:[[1,2],[3,2],[2,4],[1,3.5]],
+    t3:[[1,2],[1,1],[0.5,2]],q2:[[0,2],[0,1],[1,1],[0.5,2]]
+  },
+  sixEquilibre:{
+    bL:[[0,0],[1,0],[1,1]],bS1:[[0,0],[0.5,0.5],[0,1]],bS2:[[0.5,0.5],[1,1],[0,1]],
+    aL:[[0,0],[1,0],[1,1]],aS1:[[0,0],[0.5,0.5],[0,1]],aS2:[[0.5,0.5],[1,1],[0,1]]
+  },
+  tangram:{
+    large1:[[0,0],[1,0],[1,1]],large2:[[0,0],[1,1],[0,1]],
+    medium:[[0,0],[1,0],[0.5,0.5]],square:[[0,0.5],[0.5,0.5],[0.5,1],[0,1]],
+    small1:[[0,0],[0.5,0.5],[0,0.5]],small2:[[0.5,1],[1,0.5],[1,1]],
+    parallel:[[0.5,0.5],[1,0],[1,0.5],[0.5,1]]
   },
   leitzmann:{
     bTop:[[0,-2],[2,-2],[4/3,-4/3]],bLeft:[[0,-2],[0,0],[4/3,-4/3]],bBottom:[[0,0],[2,0],[4/3,-4/3]],bRight:[[2,0],[2,-2],[4/3,-4/3]],
@@ -45,19 +55,31 @@ const sources={
   }
 };
 
-const expectedKeys={perigal:['b','g','m','sq','y'],mosaiqueOblique:['a1','a2','b1','b2','b3','b4'],leitzmann:['aBottom','aLeft','aRight','aTop','bBottom','bLeft','bRight','bTop'],quatreIdentiques:['aSq','q1','q2','q3','q4']};
+const expectedKeys={
+  perigal:['b','g','m','sq','y'],
+  lapeyronnie:['q1','q2','t1','t2','t3'],
+  sixEquilibre:['aL','aS1','aS2','bL','bS1','bS2'],
+  tangram:['large1','large2','medium','parallel','small1','small2','square'],
+  leitzmann:['aBottom','aLeft','aRight','aTop','bBottom','bLeft','bRight','bTop'],
+  quatreIdentiques:['aSq','q1','q2','q3','q4']
+};
+const geometry={
+  perigal:{side:sqrt5,area:5},lapeyronnie:{side:sqrt5,area:5},leitzmann:{side:sqrt5,area:5},quatreIdentiques:{side:sqrt5,area:5},
+  sixEquilibre:{side:sqrt2,area:2},tangram:{side:sqrt2,area:2}
+};
 
 for(const [puzzle,keys] of Object.entries(expectedKeys)){
   const layout=layouts[puzzle];
   if(!layout){fail(`La solution ${puzzle} est absente.`);continue;}
+  const {side,targetArea}= {side:geometry[puzzle].side,targetArea:geometry[puzzle].area};
   if(JSON.stringify(Object.keys(layout).sort())!==JSON.stringify(keys)) fail(`Les pièces de la solution ${puzzle} ne correspondent pas au puzzle.`);
   const polygons=Object.entries(layout);
   const total=polygons.reduce((sum,[key,points])=>{
-    if(points.some(([u,v])=>u<-1e-8||v<-1e-8||u>sqrt5+1e-8||v>sqrt5+1e-8)) fail(`La pièce ${puzzle}/${key} dépasse de c².`);
+    if(points.some(([u,v])=>u<-1e-8||v<-1e-8||u>side+1e-8||v>side+1e-8)) fail(`La pièce ${puzzle}/${key} dépasse de c².`);
     if(!congruent(points,sources[puzzle][key])) fail(`La pièce ${puzzle}/${key} n’est pas congruente à sa découpe source.`);
     return sum+area(points);
   },0);
-  if(!near(total,5,2e-7)) fail(`L’aire totale de ${puzzle} vaut ${total} au lieu de 5.`);
+  if(!near(total,targetArea,2e-7)) fail(`L’aire totale de ${puzzle} vaut ${total} au lieu de ${targetArea}.`);
   for(let i=0;i<polygons.length;i++) for(let j=i+1;j<polygons.length;j++) if(area(clip(polygons[i][1],polygons[j][1]))>2e-7) fail(`Chevauchement dans ${puzzle} entre ${polygons[i][0]} et ${polygons[j][0]}.`);
 }
 
@@ -67,6 +89,9 @@ if(!html.includes('leftX+(b+2*a)+BASE.gap,')) fail('Les deux moulins imprimés d
 if(!html.includes('${drawMoulinStatic(L, true)}\n  ${drawMoulinStatic(R, true)}')) fail('Les deux moulins imprimés doivent être identiques et remplis.');
 if(html.includes('id="showSolution"')) fail('La solution ne doit pas être accessible depuis l’interface élève.');
 if(!html.includes('<option value="perigal" selected>')) fail('Périgal doit être le puzzle ouvert par défaut.');
+if(html.includes('mosaiqueOblique') || html.includes('Mosaïque oblique')) fail('La mosaïque oblique non documentée doit avoir été retirée.');
+if(!html.includes('<option value="lapeyronnie">') || !html.includes('<option value="sixEquilibre">') || !html.includes('<option value="tangram">')) fail('Les trois nouveaux découpages doivent être proposés.');
+if(!html.includes('const r=PUZZLES[state.puzzle]?.ratio ?? BASE.ratio;')) fail('Chaque puzzle doit pouvoir choisir son propre triangle rectangle.');
 if(publicThumbnail.includes('102,160 143.6,139.2 143.6,243.2')) fail('La vignette publique ne doit pas montrer le carré final résolu.');
 if(!archivedSolution.includes('102,160 143.6,139.2 143.6,243.2')) fail('L’illustration historique de la solution Périgal doit être conservée.');
 if(!html.includes('function activePuzzleMoulin()')) fail('La validation doit suivre le moulin actif.');
@@ -88,6 +113,7 @@ if(!html.includes('if(other.placed) placedPolygons.push')) fail('Seules les piè
 if(!html.includes('const proposed=drag.startRot+deg(angle-drag.startGestureAngle);') || !html.includes(': proposed;')) fail('La rotation tactile doit rester libre pendant le geste.');
 if(!html.includes('screenPixelsToWorld(25)')) fail('La poignée mobile doit conserver une zone tactile physique suffisante.');
 if(!html.includes('grid-template-columns:repeat(2,minmax(0,1fr))')) fail('Les commandes mobiles doivent rester contenues dans la largeur du téléphone.');
+if(!html.includes('function queueCompletionCheck()') || !html.includes('className="confettiPiece"')) fail('La réussite automatique et les confettis doivent rester actifs.');
 
 const pythaFile='outils/pythabarre.html';
 const pytha=fs.readFileSync(new URL(`../${pythaFile}`,import.meta.url),'utf8');
@@ -102,4 +128,4 @@ if(!pytha.includes('.stage:not(.notStarted):not(:fullscreen) .instructionZone:em
 if(!pytha.includes('class="menuPageHome" href="index.html"') || !pytha.includes('Retour au catalogue des outils')) fail('Le menu PythaBarre doit proposer un retour explicite au catalogue Outils.');
 if(!pytha.includes('class="toolBtn commandToolBtn undoToolBtn"') || !pytha.includes('class="toolBtn commandToolBtn restartToolBtn"')) fail('Annuler et Recommencer doivent utiliser les commandes modernes communes.');
 
-if(!process.exitCode) console.log('OK — 5 puzzles, 5 solutions, snaps exacts et règles mobiles Moulin/PythaBarre contrôlés.');
+if(!process.exitCode) console.log('OK — 7 puzzles, 6 pavages tabulés, snaps exacts, confettis et règles mobiles contrôlés.');
