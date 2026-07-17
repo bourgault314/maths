@@ -3,6 +3,7 @@ import vm from 'node:vm';
 
 const file='outils/plateaux_manipulation/moulin_pythagore.html';
 const html=fs.readFileSync(new URL(`../${file}`,import.meta.url),'utf8');
+const snapEngine=fs.readFileSync(new URL('../assets/js/pythagore-snap-engine.js',import.meta.url),'utf8');
 const publicThumbnail=fs.readFileSync(new URL('../assets/img/thumbnails/moulin-pythagore-capture.svg',import.meta.url),'utf8');
 const archivedSolution=fs.readFileSync(new URL('../assets/img/thumbnails/moulin-pythagore-solution.svg',import.meta.url),'utf8');
 const fail=message=>{console.error(`ERREUR — ${message}`);process.exitCode=1;};
@@ -20,6 +21,7 @@ function clip(subject,mask){let output=subject.map(point=>[...point]);const orie
 
 const inlineScript=html.match(/<script>\s*([\s\S]*?)<\/script>/)?.[1];
 try{new vm.Script(inlineScript||'');}catch(error){fail(`Le JavaScript du Moulin est invalide : ${error.message}`);}
+try{new vm.Script(snapEngine);}catch(error){fail(`Le moteur de snap du Moulin est invalide : ${error.message}`);}
 
 const match=html.match(/const EXACT_SOLUTION_UV = (\{[\s\S]*?\n  \});/);
 if(!match) fail('Les poses exactes des puzzles sont absentes.');
@@ -78,8 +80,13 @@ if(!html.includes('stage.addEventListener("pointercancel", finishPointerInteract
 if(html.includes('id="rotateMobileLeft"') || html.includes('id="rotateMobileRight"')) fail('La rotation mobile ne doit pas dépendre de boutons par pas fixes.');
 if(!html.includes('class:"handleHit"') || html.includes('svg#stage .handle{display:none!important;}')) fail('La poignée de rotation libre doit rester utilisable au doigt sur téléphone.');
 if(!html.includes('drag.startGestureAngle') || !html.includes('drag.type="transform"')) fail('Le geste tactile à deux doigts doit déplacer et tourner librement une pièce.');
-if(!html.includes('closestPointOnSegment(vertex,target.a,target.b)')) fail('Le snap doit accepter tout point des bordures du carré cible.');
-if(!html.includes('!other.hasMoved')) fail('Les pièces encore rangées ne doivent pas attirer une pièce descendue dans c².');
+if(!html.includes('src="../../assets/js/pythagore-snap-engine.js"') || !html.includes('SnapEngine.findBestSnap({')) fail('Le Moulin doit utiliser son moteur géométrique unique sur téléphone.');
+if(!snapEngine.includes('function findBestSnap(options)') || !snapEngine.includes('"edge-endpoint"')) fail('Le moteur doit calculer ensemble rotation et translation pour les coins et les arêtes.');
+if(!snapEngine.includes('polygonInsideTarget(vertices,targetPolygon,containmentTolerance)')) fail('Le moteur doit refuser une pose qui dépasse de c².');
+if(!snapEngine.includes('polygonsOverlapInterior(vertices,item.vertices,tolerance)')) fail('Le moteur doit refuser les chevauchements entre pièces.');
+if(!html.includes('if(other.placed) placedPolygons.push')) fail('Seules les pièces déjà validées dans c² doivent servir de cibles.');
+if(!html.includes('const proposed=drag.startRot+deg(angle-drag.startGestureAngle);') || !html.includes(': proposed;')) fail('La rotation tactile doit rester libre pendant le geste.');
+if(!html.includes('screenPixelsToWorld(25)')) fail('La poignée mobile doit conserver une zone tactile physique suffisante.');
 if(!html.includes('grid-template-columns:repeat(2,minmax(0,1fr))')) fail('Les commandes mobiles doivent rester contenues dans la largeur du téléphone.');
 
 const pythaFile='outils/pythabarre.html';
