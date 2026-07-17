@@ -55,8 +55,8 @@ button { font: inherit; }
   content: "";
   position: absolute;
   top: 0;
-  right: 13%;
-  left: 13%;
+  right: 0;
+  left: 0;
   height: 4px;
   border-radius: 0 0 999px 999px;
   background: linear-gradient(90deg, var(--teal), var(--blue), var(--orange));
