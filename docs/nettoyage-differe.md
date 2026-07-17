@@ -25,7 +25,8 @@ Fonctionnels mais fragiles (les espaces deviennent `%20` dans les adresses) :
   `presque_doubles.html` (vérifié).
 - `outils/plateaux_manipulation/prisme345_h6_patron (1).html` — nom hérité d'un
   téléchargement ; référencé par le catalogue, donc le renommage devra mettre à
-  jour le catalogue en même temps.
+  jour le catalogue en même temps. Précision du propriétaire (17/07/2026) :
+  c'est un travail en cours stocké là, à terminer avant renommage.
 
 ## 2. Variantes à trancher (décisions pédagogiques)
 
