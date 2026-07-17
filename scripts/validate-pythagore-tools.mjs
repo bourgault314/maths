@@ -75,8 +75,10 @@ if(html.includes('bhaskaraPoseTargets')) fail('Le snap Bhaskara ne doit plus dé
 if(!html.includes('touchFriendlyDistance(SNAP.posStrong, 38)')) fail('Le snap tactile doit conserver une distance physique suffisante sur téléphone.');
 if(!html.includes('stage.setPointerCapture(evt.pointerId)')) fail('Le glissement tactile doit rester capturé par la scène jusqu’au lâcher.');
 if(!html.includes('stage.addEventListener("pointercancel", finishPointerInteraction)')) fail('Une interruption tactile doit terminer proprement le déplacement.');
-if(!html.includes('id="rotateMobile"') || !html.includes('piece.rot = normAngleDeg(piece.rot + 15)')) fail('La rotation mobile par pas de 15° doit être disponible.');
-if(!html.includes('grid-template-columns:minmax(0,1.15fr) minmax(0,1fr) minmax(0,1fr)')) fail('Les commandes mobiles doivent rester contenues dans la largeur du téléphone.');
+if(!html.includes('id="rotateMobileLeft"') || !html.includes('id="rotateMobileRight"')) fail('La rotation mobile doit être disponible dans les deux sens.');
+if(!html.includes('rotateSelectedPiece(-5)') || !html.includes('rotateSelectedPiece(5)')) fail('La rotation mobile doit se faire par pas fins de 5°.');
+if(html.includes('piece.rot = normAngleDeg(piece.rot + 15)')) fail('La rotation mobile ne doit pas revenir à un pas trop grossier de 15°.');
+if(!html.includes('grid-template-columns:repeat(4,minmax(0,1fr))')) fail('Les commandes mobiles doivent rester contenues dans la largeur du téléphone.');
 
 const pythaFile='outils/pythabarre.html';
 const pytha=fs.readFileSync(new URL(`../${pythaFile}`,import.meta.url),'utf8');
