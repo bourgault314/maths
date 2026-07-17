@@ -1,12 +1,25 @@
 # Représentations de pourcentage — composant pilote
 
-Statut : `draft`
+Statut : `prototype`
 
-Ce dossier prépare l'extraction des représentations de pourcentage déjà présentes
-dans maths&go. Il ne doit pas contenir une nouvelle interprétation graphique avant
-comparaison avec les sources existantes.
+Ce dossier contient la première brique réellement réutilisable extraite des
+sources existantes de maths&go. Le moteur reçoit des données mathématiques et
+retourne un SVG déterministe ; il ne connaît ni les exercices, ni les
+diapositives, ni le téléphone.
 
-## Sources à comparer
+## Ce qui existe maintenant
+
+- `renderer.js` : rendu autonome des barres de fractions et de pourcentages ;
+- `percentageTablePresets` : jeux de données de démonstration ;
+- `preview.html` : prévisualisation des modes aide, question et correction ;
+- `contract.v1.draft.json` : contrat de données de travail.
+
+Le premier périmètre est volontairement limité aux barres de parts égales,
+dont la grille de 100 parts. Les barres d'évolution, les doubles lignes
+graduées, les sorties imprimables et les références visuelles restent à auditer
+avant d'être déclarées officielles.
+
+## Sources comparées
 
 - `outils/pourcentages_exerciceur.html`
   - `drawSVGBar`
@@ -19,40 +32,19 @@ comparaison avec les sources existantes.
 - `auto/scripts/shared/visuals/arithmetic/fraction-percent-bar.js`
 - `auto/dev/visual-library.html`
 
-## Objectif
+## Règle d'architecture
 
-Créer un composant officiel capable de recevoir des données et de produire les
-représentations validées sans recopier le dessin dans chaque question.
-
-Le composant devra séparer :
-
-1. les données mathématiques ;
-2. les rôles pédagogiques ;
-3. la géométrie calculée ;
-4. le rendu SVG web ;
-5. les adaptations de taille ;
-6. les futures sorties imprimables.
-
-## Variantes à confirmer pendant l'audit
-
-- barre graduée ou colorée ;
-- grille de 100 parts ;
-- barre d'évolution ;
-- affichage avec ou sans accolades ;
-- énoncé, aide et correction ;
-- rendu compact téléphone et rendu projection.
-
-Cette liste n'est pas encore un contrat final. Une variante ne sera déclarée
-officielle qu'après comparaison avec une référence visuelle validée.
+Les données, la pédagogie, la géométrie, le SVG et l'adaptation aux formats
+doivent rester séparés. Une fiche ou une question appellera ce composant avec
+un contrat ; elle ne recopiera pas son code de dessin.
 
 ## Définition de terminé
 
 Le composant sera considéré comme validé lorsque :
 
 - ses paramètres invalides sont refusés ;
-- ses variantes sont identifiées ;
-- son rendu correspond aux références existantes ;
-- il fonctionne dans une page de prévisualisation ;
+- toutes ses variantes sont identifiées ;
+- son rendu correspond aux références visuelles validées ;
 - il est contrôlé en 390×844 et 1440×900 ;
 - son mode correction ne déplace pas la représentation principale ;
 - un premier outil peut l'appeler sans recopier son code ;
