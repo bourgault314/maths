@@ -924,6 +924,13 @@ select { cursor: pointer; }
   transform-origin: center;
 }
 
+/* Le dessin de Pythagore occupe toute la hauteur de son repère : son titre
+   suit donc exactement ce même axe, sans le surplus d’interligne commun. */
+[data-notion-card="pythagore"] .notion-top > h3 {
+  align-self: center;
+  line-height: 1;
+}
+
 .notion-icon.collection-thumbnail {
   width: 98px;
   height: 64px;
