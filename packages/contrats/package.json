@@ -1,0 +1,9 @@
+{
+  "name": "@mathsgo/contrats",
+  "version": "0.1.0",
+  "description": "Contrats de données maths&go : formats standards partagés par le site, Automatismes V2 et le Studio. Données pures, sans dépendance, sans navigateur.",
+  "type": "module",
+  "exports": {
+    "./question": "./src/question.js"
+  }
+}
