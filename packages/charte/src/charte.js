@@ -47,6 +47,38 @@ export const COULEURS = {
   jetonNeutraliseBord: "#6b7280",
 };
 
+// Palette des outils « schémas en barres » (ÉquaBarre, PythaBarre,
+// AngleBarre, Problèmes en barres) — relevée à l'identique dans les
+// outils existants le 18/07/2026. C'est LE langage visuel des barres
+// maths&go : tableau à filets gris-ardoise, cases blanches, inconnue
+// bleu pâle, hachures d'état, conclusion en rouge.
+export const COULEURS_BARRES = {
+  encre: "#0f172a",          // texte des valeurs, --ink des outils
+  attenue: "#64748b",        // étapes passées, textes secondaires
+  filet: "#0f172a",          // traits du tableau (opacité 0.36 appliquée au rendu)
+  nombreFond: "#ffffff",     // case nombre (dégradé vers #f8fafc)
+  nombreFondBas: "#f8fafc",
+  inconnueFond: "#dbeafe",   // case inconnue (dégradé vers #eff6ff)
+  inconnueFondBas: "#eff6ff",
+  inconnueTexte: "#1d4ed8",  // la lettre 𝑥 italique
+  splat: "#050505",          // la tache Splat
+  resultatFond: "#dcfce7",   // case résultat (dégradé vers #f0fdf4)
+  resultatFondBas: "#f0fdf4",
+  conclusion: "#dc2626",     // valeur résolue, conclusion
+  hachureSuppression: "#f97316", // hachures oranges (sélection suppression)
+  hachureAjout: "#16a34a",       // hachures vertes (sélection regroupement)
+  hachureCalcul: "#3b82f6",      // hachures bleues (à calculer)
+  supprimeFond: "#e5e7eb",       // case enlevée (hachures grises, opacité réduite)
+  // Rôles sémantiques fixes (PythaBarre/AngleBarre : mêmes couleurs sur
+  // la barre, la figure et l'équation)
+  roleVert: "#22c55e",
+  roleVertTexte: "#166534",
+  roleBleu: "#3b82f6",
+  roleBleuTexte: "#1d4ed8",
+  roleOrange: "#f97316",
+  roleOrangeTexte: "#9a3412",
+};
+
 export const TYPOGRAPHIE = {
   // Fredoka domine largement les outils (17 pages) : c'est la voix
   // visuelle maths&go pour les titres et les nombres manipulés.
