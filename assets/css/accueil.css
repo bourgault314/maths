@@ -148,6 +148,15 @@ footer {
   }
 }
 
+/* Jusqu'au format tablette, l'accueil reprend le même bord supérieur que
+   l'en-tête du catalogue. Sa carte s'allonge uniquement vers le bas. */
+@media (max-width: 920px) {
+  body {
+    justify-content: flex-start;
+    padding-top: var(--mathsgo-entry-top);
+  }
+}
+
 .footer-line {
   display: inline-flex;
   align-items: baseline;
@@ -230,19 +239,30 @@ footer {
 @media (max-width: 600px) {
   body {
     min-height: 100dvh;
-    padding: 12px;
+    padding: var(--mathsgo-entry-top) 12px 12px;
     justify-content: flex-start;
   }
   .page {
-    min-height: calc(100vh - 34px);
-    min-height: calc(100svh - 34px);
-    margin-top: 10px;
+    min-height: calc(100vh - var(--mathsgo-entry-top) - 12px);
+    min-height: calc(100svh - var(--mathsgo-entry-top) - 12px);
     gap: 18px;
   }
-  .hero-card { padding: 34px 14px 40px; border-radius: 25px; }
-  .brand-logo { width: min(82vw, 330px); }
-  .maths-scene { width: calc(100% + 4px); margin-top: 20px; }
-  .maths-scene svg { transform: scale(1.06); transform-origin: center; }
+  .hero-card {
+    min-height: 500px;
+    min-height: clamp(500px, calc(100svh - 132px), 550px);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: space-between;
+    padding: 34px 14px 40px;
+    border-radius: 25px;
+  }
+  .brand-logo { width: min(82vw, 330px); margin-bottom: 0; }
+  .subtitle,
+  .maths-scene,
+  .btn-start { margin-top: 0; }
+  .maths-scene { width: calc(100% + 4px); }
+  .maths-scene svg { transform: scale(1.08); transform-origin: center; }
   footer {
     flex-direction: column;
     gap: 5px;
