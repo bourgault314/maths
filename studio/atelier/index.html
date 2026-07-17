@@ -63,6 +63,8 @@
   .badgeValeur{width:52px;height:52px;border-radius:50%;display:flex;align-items:center;justify-content:center;
     font-family:Fredoka;font-weight:700;font-size:20px;border:3px solid}
   .consigneSplat{width:100%;text-align:center;font-weight:600;margin-top:6px}
+  .reglageTaille{display:flex;align-items:center;gap:8px;font-size:14px;color:var(--attenue)}
+  .reglageTaille input{accent-color:var(--bleu)}
 </style>
 </head>
 <body>
@@ -81,6 +83,7 @@
     </select>
     <button class="principal" id="btnConstruire">Construire le schéma</button>
     <button id="btnDe" title="Équation au hasard">🎲</button>
+    <label class="reglageTaille">Taille <input type="range" id="tailleBarres" min="56" max="150" value="88" step="2"></label>
   </div>
   <div class="zoneRendu" id="renduBarres"></div>
   <p class="erreur" id="erreurEquation"></p>
@@ -94,6 +97,7 @@
     <button class="principal" id="btnMoinsUn" style="background:linear-gradient(180deg,#f87171,#dc2626);border-color:#dc2626">+ jeton (−1)</button>
     <button id="btnAutoZero">Paires zéro auto</button>
     <button id="btnViderJetons">Vider</button>
+    <label class="reglageTaille">Taille <input type="range" id="tailleJetonsCurseur" min="48" max="120" value="70" step="2"></label>
   </div>
   <div id="plateauJetons" aria-label="Plateau de jetons manipulables"></div>
   <div id="equationJetons" aria-live="polite"></div>
@@ -105,6 +109,7 @@
   <div class="barreCommandes">
     <button id="btnNouvelleCarte">🎲 Nouvelle carte</button>
     <button id="btnVersEquabarre">→ Ouvrir dans ÉquaBarre</button>
+    <label class="reglageTaille">Taille <input type="range" id="tailleTaches" min="90" max="260" value="150" step="5"></label>
   </div>
   <div id="carteSplat"></div>
 </section>
@@ -134,12 +139,14 @@ function construire() {
     erreur.textContent = e.message;
   }
 }
+const curseurBarres = document.getElementById("tailleBarres");
 function dessiner() {
   if (!donneesBarres) return;
+  const hauteur = Number(curseurBarres.value);
   donneesBarres.inconnue.affichage = choixInconnue.value;
-  rendu.innerHTML = dessinerBarres({ ...donneesBarres, largeur: Math.min(640, rendu.clientWidth || 640), hauteurPiece: 88 });
+  rendu.innerHTML = dessinerBarres({ ...donneesBarres, largeur: Math.min(760, rendu.clientWidth || 640), hauteurPiece: hauteur });
   const svg = rendu.querySelector("svg");
-  const bases = [...svg.querySelectorAll('rect[height="88"]')].filter((r) => !r.getAttribute("fill").startsWith("url"));
+  const bases = [...svg.querySelectorAll(`rect[height="${hauteur}"]`)].filter((r) => !r.getAttribute("fill").startsWith("url"));
   const toutes = [...donneesBarres.lignes.flatMap((l) => l.pieces)];
   bases.forEach((rect, i) => {
     rect.style.cursor = "pointer";
@@ -154,6 +161,7 @@ function dessiner() {
 document.getElementById("btnConstruire").addEventListener("click", construire);
 champ.addEventListener("keydown", (e) => { if (e.key === "Enter") construire(); });
 choixInconnue.addEventListener("change", () => { if (donneesBarres) dessiner(); });
+curseurBarres.addEventListener("input", () => { if (donneesBarres) dessiner(); });
 document.getElementById("btnDe").addEventListener("click", () => {
   const g = creerGenerateur(`de-${Date.now()}`);
   const x = g.entier(2, 9);
@@ -171,7 +179,9 @@ document.getElementById("btnDe").addEventListener("click", () => {
 construire();
 
 /* ========== 2. JETONS MANIPULABLES (conventions de votre outil D) ========== */
-const TOKEN_SIZE = 70, SNAP = 80, SPACING = 80, LINE_HEIGHT = 120;
+let TOKEN_SIZE = 70;
+const SNAP_RATIO = 80 / 70, SPACING = 80, LINE_HEIGHT = 120;
+const SNAP = () => TOKEN_SIZE * SNAP_RATIO;
 const plateau = document.getElementById("plateauJetons");
 const eqJetons = document.getElementById("equationJetons");
 let jetons = [], prochainId = 1;
@@ -210,6 +220,7 @@ function poserJeton(t, x, y) {
 function ajouterJeton(valeur) {
   const el = document.createElement("div");
   el.className = "token";
+  el.style.width = el.style.height = TOKEN_SIZE + "px";
   el.innerHTML = svgJeton(valeur);
   const t = { id: prochainId++, valeur, el, x: 0, y: 0, pairId: null };
   jetons.push(t);
@@ -241,8 +252,9 @@ function fairePaire(t1, t2) {
   badge.className = "badgeZero";
   badge.id = `badge-${Math.min(t1.id, t2.id)}`;
   badge.textContent = "0";
+  // placement exact de l'outil D : (milieu − 12 ; milieu − 30)
   badge.style.left = mx - 12 + "px";
-  badge.style.top = my - 42 + "px";
+  badge.style.top = my - 30 + "px";
   plateau.appendChild(badge);
   majEquation();
 }
@@ -275,7 +287,7 @@ function finDrag(e) {
   t.el.removeEventListener("pointerup", finDrag);
   t.el.removeEventListener("pointercancel", finDrag);
   drag = null;
-  let meilleur = null, dMin = SNAP;
+  let meilleur = null, dMin = SNAP();
   for (const o of jetons) {
     if (o.valeur !== -t.valeur || o.pairId !== null || o.id === t.id) continue;
     const d = Math.hypot(o.x - t.x, o.y - t.y);
@@ -301,12 +313,25 @@ document.getElementById("btnAutoZero").addEventListener("click", () => {
     }, i * 500);
   }
 });
+document.getElementById("tailleJetonsCurseur").addEventListener("input", (e) => {
+  TOKEN_SIZE = Number(e.target.value);
+  for (const t of jetons) {
+    t.el.style.width = t.el.style.height = TOKEN_SIZE + "px";
+    t.el.innerHTML = svgJeton(t.valeur, t.pairId !== null ? "neutralise" : "normal");
+    poserJeton(t, t.x, t.y);
+  }
+});
 [1, 1, 1, -1, -1].forEach((v) => ajouterJeton(v));
 
 /* ========== 3. CARTE SPLAT ========== */
 const carte = document.getElementById("carteSplat");
 const bordsBadges = [["#9d4edd", "#f5f3ff"], ["#08b9b2", "#f0fdfa"], ["#f58220", "#fff7ed"], ["#2563eb", "#eff6ff"]];
 let carteSplat = { total: 47, visibles: [7, 24], cache: 8 };
+let tailleSplat = 150;
+document.getElementById("tailleTaches").addEventListener("input", (e) => {
+  tailleSplat = Number(e.target.value);
+  dessinerCarte();
+});
 
 function dessinerCarte() {
   const { total, visibles, cache } = carteSplat;
@@ -314,7 +339,7 @@ function dessinerCarte() {
     `<div class="totalBadge"><small>TOTAL</small><b>${total}</b></div>` +
     `<div class="badgeValeur" style="border-color:${bordsBadges[0][0]};background:${bordsBadges[0][1]};color:${bordsBadges[0][0]}">${visibles[0]}</div>` +
     [0, 1].map((i) =>
-      `<div class="tache" data-i="${i}" role="button" aria-label="tache à révéler" style="width:clamp(110px,22vw,170px);height:clamp(110px,22vw,170px)">
+      `<div class="tache" data-i="${i}" role="button" aria-label="tache à révéler" style="width:${tailleSplat}px;height:${tailleSplat}px">
          <div class="couche dessous">${cache}</div>
          <div class="couche couverture">${dessinerTache({ taille: 999, couleur: "noir" }).replace('width="999" height="999"', 'width="100%" height="100%"')}</div>
        </div>`,
