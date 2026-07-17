@@ -1,0 +1,30 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://mathsgo.re/studio/components/percentage-table/contract.v1.draft.json",
+  "title": "Représentations de pourcentage maths&go — brouillon",
+  "description": "Contrat de travail initial, non définitif, construit à partir des sources existantes.",
+  "type": "object",
+  "required": ["componentId", "version", "status", "variant", "data"],
+  "properties": {
+    "componentId": {
+      "const": "representation.percentage"
+    },
+    "version": {
+      "const": 1
+    },
+    "status": {
+      "const": "draft"
+    },
+    "variant": {
+      "enum": ["parts-100", "bar", "evolution"]
+    },
+    "data": {
+      "type": "object",
+      "additionalProperties": true
+    },
+    "mode": {
+      "enum": ["course", "question", "help", "correction", "slideshow", "printable"]
+    }
+  },
+  "additionalProperties": false
+}
