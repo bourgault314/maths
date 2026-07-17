@@ -151,6 +151,7 @@
   }
 
   @media (max-width:700px){
+    html,body{overflow-x:hidden;}
     /* Sur téléphone, les pièces occupent a² et b² et doivent rejoindre c²
        sur l'unique figure, comme sur ordinateur. */
     #stageWrap{touch-action:pan-y; overflow-x:hidden;}
@@ -158,6 +159,7 @@
     svg#stage.compactLayout .label{display:none!important;}
     svg#stage .piecePoly,
     svg#stage .handle{touch-action:none;}
+    svg#stage .handle{display:none!important;}
     #fullscreen{display:none;}
     #mobilePuzzleHint{display:none;}
   }
@@ -176,8 +178,8 @@
   #mobilePuzzleHint{background:#f8fafc; border-bottom:1px solid #e2e8f0;}
 
   @media (max-width:700px){
-    #toolbar{display:grid; grid-template-columns:1fr; gap:7px; padding:8px 10px;}
-    #toolbar .group{display:flex; border:0; padding:0; margin:0;}
+    #toolbar{display:grid; grid-template-columns:minmax(0,1fr); gap:7px; width:100%; max-width:100%; padding:8px 10px; box-sizing:border-box;}
+    #toolbar .group{display:flex; min-width:0; max-width:100%; border:0; padding:0; margin:0;}
     #toolbar .group:first-child{width:100%;}
     #backMenu{width:44px;min-width:44px;padding:0;font-size:0;}
     #backMenu::before{content:"←";font-size:22px;line-height:1;}
@@ -187,14 +189,17 @@
     #toolbar #checkSolution,
     #toolbar #enonce,
     #toolbar #fullscreen{display:none;}
-    #toolbar .group:nth-child(4){display:flex; justify-content:center; gap:7px;}
-    #toolbar .group:nth-child(4) button{flex:1; min-width:0; padding:9px 7px; font-size:14px;}
+    #toolbar .group:nth-child(4){display:grid; grid-template-columns:minmax(0,1.15fr) minmax(0,1fr) minmax(0,1fr); width:100%; gap:6px;}
+    #toolbar .group:nth-child(4) button{width:100%; min-width:0; padding:9px 5px; font-size:13px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;}
+    #rotateMobile{display:block;}
+    #rotateMobile:disabled{opacity:.45; cursor:default;}
     #mobilePuzzleHint{display:none;}
     #puzzleStatus{font-size:12px; padding-left:8px; padding-right:8px;}
     #stageWrap{min-height:0;}
   }
 
   @media (min-width:701px){
+    #rotateMobile{display:none;}
     #toolbar .group:nth-child(2){order:4;}
     #toolbar .group:nth-child(3){order:5;}
     #toolbar .group:nth-child(4){order:3;}
@@ -230,6 +235,7 @@
     </div>
 
     <div class="group">
+      <button id="rotateMobile" class="primary" aria-label="Tourner la pièce sélectionnée de 15 degrés" title="Sélectionne une pièce, puis tourne-la de 15° à chaque appui" disabled>↻ Tourner</button>
       <button id="flip" class="primary">Retourner</button>
       <button id="reset" class="danger">Réinitialiser</button>
       <button id="checkSolution" class="primary">Vérifier</button>
@@ -330,6 +336,7 @@
   const toggleLetters = document.getElementById("toggleLetters");
   const btnReset = document.getElementById("reset");
   const btnFlip = document.getElementById("flip");
+  const btnRotateMobile = document.getElementById("rotateMobile");
   const btnCheckSolution = document.getElementById("checkSolution");
   const btnFullscreen = document.getElementById("fullscreen");
   const btnEnonce = document.getElementById("enonce");
@@ -399,6 +406,19 @@
   function applyPieceTransform(p){
     const sx = p.flipX ? -1 : 1;
     p.el.setAttribute("transform", `translate(${p.pos.x},${p.pos.y}) rotate(${p.rot}) scale(${sx},1)`);
+  }
+
+  function screenPixelsToWorld(px){
+    const ctm = world.getScreenCTM();
+    if(!ctm) return px;
+    const scale = Math.hypot(ctm.a, ctm.b) || 1;
+    return px / scale;
+  }
+
+  function touchFriendlyDistance(desktopDistance, mobilePixels){
+    return isCompactViewport()
+      ? Math.max(desktopDistance, screenPixelsToWorld(mobilePixels))
+      : desktopDistance;
   }
 
   function signedPolygonArea(points){
@@ -658,6 +678,7 @@
       // au premier plan
       p.el.parentNode.appendChild(p.el);
     }
+    btnRotateMobile.disabled=!id;
   }
 
   function flipPiece(id){
@@ -1488,7 +1509,8 @@
   // la bonne face est orientée et déposée près de sa pose exacte, les petits
   // écarts tactiles sont supprimés pour fermer proprement le pavage.
   function tryExactSolutionSnap(piece){
-    if(!piece || !isNearTargetMoulin(piece,260)) return false;
+    const nearDistance=touchFriendlyDistance(260,150);
+    if(!piece || !isNearTargetMoulin(piece,nearDistance)) return false;
     const pose=state.solutionPoses.get(piece.id);
     if(!pose || pose.flipX !== piece.flipX || !pose.expectedVertices) return false;
 
@@ -1503,7 +1525,11 @@
     const avgD=total/current.length;
     const centerD=Math.hypot(piece.pos.x-pose.pos.x,piece.pos.y-pose.pos.y);
     const rotD=Math.abs(normAngleDeg(piece.rot-pose.rot));
-    const closeEnough=maxD<92 || (avgD<74 && centerD<145) || (centerD<96 && rotD<24);
+    const vertexDistance=touchFriendlyDistance(92,44);
+    const averageDistance=touchFriendlyDistance(74,36);
+    const centerDistance=touchFriendlyDistance(145,68);
+    const closeCenterDistance=touchFriendlyDistance(96,46);
+    const closeEnough=maxD<vertexDistance || (avgD<averageDistance && centerD<centerDistance) || (centerD<closeCenterDistance && rotD<24);
     if(!closeEnough) return false;
 
     piece.pos={...pose.pos};
@@ -1527,7 +1553,9 @@
       startPointer:p0,
       startPos:{...state.pieces.get(id).pos}
     };
-    evt.currentTarget.setPointerCapture(evt.pointerId);
+    state.dragging.pointerId=evt.pointerId;
+    stage.classList.add("isDragging");
+    try{ stage.setPointerCapture(evt.pointerId); }catch(_err){}
   }
 
   function onHandlePointerDown(evt){
@@ -1544,11 +1572,14 @@
       startAngleRad:Math.atan2(p0.y-piece.pos.y,p0.x-piece.pos.x),
       startRot:piece.rot
     };
-    evt.currentTarget.setPointerCapture(evt.pointerId);
+    state.dragging.pointerId=evt.pointerId;
+    stage.classList.add("isDragging");
+    try{ stage.setPointerCapture(evt.pointerId); }catch(_err){}
   }
 
   stage.addEventListener("pointermove", evt => {
     if(!state.dragging) return;
+    evt.preventDefault();
     const piece=state.pieces.get(state.dragging.pieceId);
     const p=clientToWorld(evt);
     state.lastPointerWorld = p;
@@ -1588,14 +1619,20 @@
     applyPieceTransform(piece);
   });
 
-  stage.addEventListener("pointerup", (evt) => {
+  function finishPointerInteraction(evt){
     if(!state.dragging) return;
+    evt.preventDefault();
     const id = state.dragging.pieceId;
     const piece = state.pieces.get(id);
+    const pointerId = state.dragging.pointerId;
 
     // Le retournement par double-clic / double-tap est désactivé :
     // une pièce se retourne uniquement avec le bouton "Retourner".
     state.dragging=null;
+    stage.classList.remove("isDragging");
+    if(pointerId !== undefined){
+      try{ if(stage.hasPointerCapture(pointerId)) stage.releasePointerCapture(pointerId); }catch(_err){}
+    }
 
     // Bhaskara : au lâcher, on corrige d'abord l'angle si une arête est presque
     // parallèle à un côté du carré incliné. Ensuite seulement, le snap par coin
@@ -1621,7 +1658,7 @@
       }
 
       let bestDelta=null, minD=Infinity;
-      const threshold = SNAP.posStrong;
+      const threshold = touchFriendlyDistance(SNAP.posStrong, 38);
 
       for(const v of verts){
         for(const t of targets){
@@ -1639,7 +1676,10 @@
         applyPieceTransform(piece);
       }
     }
-  });
+  }
+
+  stage.addEventListener("pointerup", finishPointerInteraction);
+  stage.addEventListener("pointercancel", finishPointerInteraction);
 
   // Sélection via clic sur le fond
   stage.addEventListener("pointerdown", (evt)=>{
@@ -1695,6 +1735,14 @@
   btnFlip.onclick = () => {
     if(state.mode === "vide") return;
     if(state.selectedId) flipPiece(state.selectedId);
+  };
+
+  btnRotateMobile.onclick = () => {
+    if(state.mode === "vide" || !state.selectedId) return;
+    const piece = state.pieces.get(state.selectedId);
+    if(!piece) return;
+    piece.rot = normAngleDeg(piece.rot + 15);
+    applyPieceTransform(piece);
   };
 
   btnCheckSolution.onclick = () => checkPuzzleSolution();
