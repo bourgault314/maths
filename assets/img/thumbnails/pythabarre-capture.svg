@@ -29,13 +29,13 @@
   </g>
 
   <g transform="translate(235 248)">
-    <g font-family="Segoe UI,Arial,sans-serif" font-size="16" font-weight="850" text-anchor="middle" dominant-baseline="middle">
+    <g font-family="Segoe UI,Arial,sans-serif" font-size="16" font-weight="850" text-anchor="middle">
     <rect x="0" y="0" width="250" height="29" fill="#e2f5e8" stroke="#24994d" stroke-width="2"/>
     <rect x="0" y="29" width="90" height="29" fill="#dceeff" stroke="#0879d0" stroke-width="2"/>
     <rect x="90" y="29" width="160" height="29" fill="#fff0d8" stroke="#e89516" stroke-width="2"/>
-    <text x="125" y="15.5" fill="#187a3c">BC²</text>
-    <text x="45" y="44.5" fill="#0879d0">AB²</text>
-    <text x="170" y="44.5" fill="#b76e00">AC²</text>
+    <text x="125" y="20.1" fill="#187a3c">BC²</text>
+    <text x="45" y="49.1" fill="#0879d0">AB²</text>
+    <text x="170" y="49.1" fill="#b76e00">AC²</text>
   </g>
   </g>
 </svg>
