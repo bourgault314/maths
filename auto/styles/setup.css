@@ -113,10 +113,10 @@ html.share-test .setup-tools{display:flex}
 .modrow strong{font-weight:650}
 .badge{font-size:.7rem;background:#e7f7f5;color:#08756f;border-radius:999px;padding:2px 7px;margin-left:5px;white-space:nowrap}
 .credit{width:max-content;max-width:100%;margin:12px auto 0;text-align:center;color:var(--muted);font-size:.75rem;line-height:1.45}
-.credit>summary{padding:5px 8px;border-radius:8px;cursor:pointer;font-weight:700;list-style:none}
+.credit>summary{display:inline-flex;align-items:center;gap:7px;padding:5px 8px;border-radius:8px;cursor:pointer;font-weight:700;list-style:none}
 .credit>summary::-webkit-details-marker{display:none}
-.credit>summary::after{content:" +";color:#8b9ab3}
-.credit[open]>summary::after{content:" −"}
+.credit>summary::after{content:"";display:inline-block;width:7px;height:7px;border-right:2px solid #8b9ab3;border-bottom:2px solid #8b9ab3;transform:rotate(45deg);transform-origin:center;transition:transform .16s ease}
+.credit[open]>summary::after{transform:rotate(-135deg)}
 .credit p{max-width:720px;margin:5px 8px 0}
 .credit a{color:var(--blue);font-weight:700;text-decoration:none}
 @media(hover:hover) and (pointer:fine){.logo-link:hover .logo{transform:scale(1.025)}.setup-tool-button:hover{border-color:#8eb4df;background:#f5f9ff}.bulk-actions button:hover{border-color:#8fb3db;background:#eef6ff;color:var(--blue)}.segment-btn:hover{border-color:var(--cyan);background:#f1fbfb}.theme-summary:hover{background:linear-gradient(90deg,var(--theme-soft),#fff 38%)}.theme-select-all:hover{filter:saturate(1.08) brightness(.985)}.modrow:hover{background:#eef6ff}.credit>summary:hover{background:#edf3fb;color:var(--blue)}.credit a:hover{text-decoration:underline}}
