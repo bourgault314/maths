@@ -1,8 +1,8 @@
 :root {
-  /* Repère vertical commun aux deux écrans d'entrée. Les hauteurs de
-     référence suivent les trois gabarits du catalogue (compact, standard,
-     grand écran) afin que son cadre conserve sa position actuelle. */
-  --mathsgo-entry-top: 16px;
+  /* Repère vertical commun à l'accueil, aux domaines et aux vues profondes.
+     Il reste fixe sur les écrans tactiles puis suit les trois gabarits du
+     catalogue sur ordinateur. */
+  --mathsgo-entry-top: 10px;
 }
 
 @media (min-width: 921px) {
