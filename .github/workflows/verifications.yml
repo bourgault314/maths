@@ -25,6 +25,9 @@ jobs:
         with:
           node-version: 22
 
+      - name: Tests unitaires des packages
+        run: node --test
+
       - name: Catalogue (cohérence des ressources)
         run: node scripts/validate-catalogue.mjs
 

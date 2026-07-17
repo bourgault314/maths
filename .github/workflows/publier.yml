@@ -46,6 +46,7 @@ jobs:
 
       - name: Vérifications bloquantes
         run: |
+          node --test
           node scripts/validate-catalogue.mjs
           node scripts/validate-sitemap.mjs
           node scripts/validate-automatismes-public.mjs
@@ -55,7 +56,10 @@ jobs:
       - name: Assembler le site
         run: |
           mkdir _site
-          rsync -a --exclude '.*' --exclude '_*' ./ _site/
+          rsync -a --exclude '.*' --exclude '_*' \
+            --exclude 'packages' --exclude 'node_modules' \
+            --exclude 'package.json' --exclude 'package-lock.json' \
+            ./ _site/
           echo "Fichiers assemblés : $(find _site -type f | wc -l)"
 
       - name: Empaqueter pour publication

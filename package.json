@@ -1,0 +1,15 @@
+{
+  "name": "mathsgo",
+  "private": true,
+  "description": "Univers pédagogique maths&go — site, Automatismes et bibliothèques partagées",
+  "engines": {
+    "node": ">=22"
+  },
+  "workspaces": [
+    "packages/*"
+  ],
+  "scripts": {
+    "test": "node --test",
+    "verifier": "node scripts/validate-catalogue.mjs && node scripts/validate-sitemap.mjs && node scripts/validate-automatismes-public.mjs && node scripts/validate-pythagore-tools.mjs && node scripts/validate-pythagore-snap-engine.mjs && node --test"
+  }
+}
