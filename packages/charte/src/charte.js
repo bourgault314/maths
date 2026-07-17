@@ -35,8 +35,15 @@ export const COULEURS = {
   erreur: "#e03434",
   attention: "#ff8a00",
 
-  // Jetons de nombres relatifs (convention écran observée dans les
-  // plateaux ; à confirmer par Gwenaël)
+  // Jetons de nombres relatifs — habillage « fiches et questions »
+  // (aplat, contour noir, texte noir : PDF vert_rouge_contour_noir et
+  // composant relative-tokens d'Automatismes)
+  jetonAplatPositif: "#2e9e5b",
+  jetonAplatNegatif: "#d9584b",
+  jetonContour: "#111111",
+
+  // Jetons — habillage « plateau de manipulation » (dégradé, texte
+  // blanc : outils nombres_relatifs_somme_difference*)
   jetonPositif: "#16a34a",
   jetonPositifClair: "#4ade80",
   jetonPositifBord: "#14532d",

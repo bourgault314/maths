@@ -104,6 +104,10 @@
     <button id="btnAutoZero">Paires zéro auto</button>
     <button id="btnViderJetons">Vider</button>
     <label class="reglageTaille">Taille <input type="range" id="tailleJetonsCurseur" min="48" max="120" value="70" step="2"></label>
+    <select id="habillageJetons" aria-label="Habillage des jetons">
+      <option value="plateau">Habillage : plateau (dégradé)</option>
+      <option value="contourNoir">Habillage : fiches (contour noir)</option>
+    </select>
   </div>
   <div id="plateauJetons" aria-label="Plateau de jetons manipulables"></div>
   <div id="equationJetons" aria-live="polite"></div>
@@ -193,7 +197,8 @@ const eqJetons = document.getElementById("equationJetons");
 let jetons = [], prochainId = 1;
 
 function svgJeton(valeur, etat = "normal") {
-  return dessinerJeton({ valeur, etat, contenu: "valeur", taille: TOKEN_SIZE });
+  const habillage = document.getElementById("habillageJetons").value;
+  return dessinerJeton({ valeur, etat, contenu: "valeur", habillage, taille: TOKEN_SIZE });
 }
 function majEquation() {
   const libres = jetons.filter((t) => t.pairId === null);
@@ -317,6 +322,11 @@ document.getElementById("btnAutoZero").addEventListener("click", () => {
       poserJeton(rouges[i], verts[i].x, verts[i].y);
       setTimeout(() => fairePaire(verts[i], rouges[i]), 350);
     }, i * 500);
+  }
+});
+document.getElementById("habillageJetons").addEventListener("change", () => {
+  for (const t of jetons) {
+    t.el.innerHTML = svgJeton(t.valeur, t.pairId !== null ? "neutralise" : "normal");
   }
 });
 document.getElementById("tailleJetonsCurseur").addEventListener("input", (e) => {

@@ -14,10 +14,17 @@
 
 import { COULEURS, TYPOGRAPHIE } from "../../charte/src/charte.js";
 
-export const VERSION_JETONS = 1;
+export const VERSION_JETONS = 2;
 
 export const ETATS_JETON = ["normal", "neutralise", "barre", "fantome"];
 export const CONTENUS_JETON = ["signe", "valeur", "aucun"];
+// Deux habillages officiels relevés dans l'univers maths&go :
+// - « contourNoir » : aplat vert/rouge, contour noir, texte noir —
+//   celui des fiches PDF (vert_rouge_contour_noir) et des questions
+//   d'Automatismes. C'est l'habillage par défaut.
+// - « plateau » : dégradé radial, texte blanc, bord foncé coloré —
+//   celui des plateaux de manipulation (somme_difference*).
+export const HABILLAGES_JETON = ["contourNoir", "plateau"];
 
 const TAILLE_REFERENCE = 100; // le jeton se dessine dans un carré 100×100
 
@@ -56,7 +63,8 @@ function couleursPour(valeur, etat) {
 export function dessinerJeton({
   valeur = 1,
   etat = "normal",
-  contenu = "signe",
+  contenu = "valeur",
+  habillage = "contourNoir",
   taille = 56,
 } = {}) {
   if (valeur !== 1 && valeur !== -1) {
@@ -68,8 +76,10 @@ export function dessinerJeton({
   if (!CONTENUS_JETON.includes(contenu)) {
     throw new RangeError(`dessinerJeton : contenu inconnu « ${contenu} »`);
   }
+  if (!HABILLAGES_JETON.includes(habillage)) {
+    throw new RangeError(`dessinerJeton : habillage inconnu « ${habillage} »`);
+  }
 
-  const c = couleursPour(valeur, etat);
   const signe = valeur > 0 ? "+" : "−";
   const texte =
     contenu === "aucun" ? "" : contenu === "valeur" ? `${signe}1` : signe;
@@ -78,15 +88,37 @@ export function dessinerJeton({
 
   const morceaux = [
     `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${TAILLE_REFERENCE} ${TAILLE_REFERENCE}" width="${taille}" height="${taille}" role="img" aria-label="jeton ${valeur > 0 ? "plus un" : "moins un"}${etat === "normal" ? "" : ` (${etat})`}" opacity="${opacite}">`,
-    // disque : fond, bord épais, reflet en haut à gauche
-    `<circle cx="50" cy="50" r="46" fill="${c.principale}" stroke="${c.bord}" stroke-width="6"/>`,
-    `<circle cx="50" cy="50" r="43" fill="${c.claire}" opacity="0.45"/>`,
-    `<ellipse cx="38" cy="34" rx="20" ry="14" fill="#ffffff" opacity="0.30"/>`,
   ];
+
+  let c;
+  if (habillage === "contourNoir") {
+    // Aplat des fiches et questions : #2e9e5b / #d9584b, contour #111,
+    // texte noir gras (relative-tokens : stroke-width 2 pour r=22,
+    // soit ~4 pour notre rayon 46).
+    const fond =
+      etat === "neutralise"
+        ? COULEURS.jetonNeutralise
+        : valeur > 0
+          ? COULEURS.jetonAplatPositif
+          : COULEURS.jetonAplatNegatif;
+    c = { bord: COULEURS.jetonContour, texte: COULEURS.jetonContour };
+    morceaux.push(
+      `<circle cx="50" cy="50" r="46" fill="${fond}" stroke="${COULEURS.jetonContour}" stroke-width="4"/>`,
+    );
+  } else {
+    // Dégradé des plateaux de manipulation : reflet et texte blanc.
+    const p = couleursPour(valeur, etat);
+    c = { bord: p.bord, texte: "#ffffff" };
+    morceaux.push(
+      `<circle cx="50" cy="50" r="46" fill="${p.principale}" stroke="${p.bord}" stroke-width="6"/>`,
+      `<circle cx="50" cy="50" r="43" fill="${p.claire}" opacity="0.45"/>`,
+      `<ellipse cx="38" cy="34" rx="20" ry="14" fill="#ffffff" opacity="0.30"/>`,
+    );
+  }
 
   if (texte) {
     morceaux.push(
-      `<text x="50" y="52" font-family='${TYPOGRAPHIE.titres}' font-size="${tailleTexte}" font-weight="600" fill="#ffffff" text-anchor="middle" dominant-baseline="central">${texte}</text>`,
+      `<text x="50" y="52" font-family='${TYPOGRAPHIE.titres}' font-size="${tailleTexte}" font-weight="${habillage === "contourNoir" ? 700 : 600}" fill="${c.texte}" text-anchor="middle" dominant-baseline="central">${texte}</text>`,
     );
   }
   if (etat === "barre") {
@@ -117,7 +149,8 @@ export function dessinerGroupeJetons({
   positifs = 0,
   negatifs = 0,
   parRangee = 5,
-  contenu = "signe",
+  contenu = "valeur",
+  habillage = "contourNoir",
   taille = 56,
   pairesNeutralisees = 0,
 } = {}) {
@@ -162,7 +195,7 @@ export function dessinerGroupeJetons({
   jetons.forEach((jeton, i) => {
     const x = (i % parRangee) * pas;
     const y = Math.floor(i / parRangee) * pas;
-    const interne = dessinerJeton({ ...jeton, contenu, taille: TAILLE_REFERENCE })
+    const interne = dessinerJeton({ ...jeton, contenu, habillage, taille: TAILLE_REFERENCE })
       .replace(/^<svg[^>]*>/, "")
       .replace(/<\/svg>$/, "");
     morceaux.push(`<g transform="translate(${x} ${y})">${interne}</g>`);

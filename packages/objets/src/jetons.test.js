@@ -19,12 +19,23 @@ describe("dessinerJeton", () => {
     assert.match(a, /viewBox="0 0 100 100"/);
   });
 
-  it("vert pour +1, rouge pour −1, gris pour neutralisé (charte uniquement)", () => {
-    assert.ok(dessinerJeton({ valeur: 1 }).includes(COULEURS.jetonPositif));
-    assert.ok(dessinerJeton({ valeur: -1 }).includes(COULEURS.jetonNegatif));
+  it("habillage contourNoir (défaut) : aplats des fiches, contour et texte noirs", () => {
+    const positif = dessinerJeton({ valeur: 1 });
+    assert.ok(positif.includes(COULEURS.jetonAplatPositif));
+    assert.match(positif, new RegExp(`stroke="${COULEURS.jetonContour}"`));
+    assert.match(positif, new RegExp(`fill="${COULEURS.jetonContour}"[^>]*>\\+1<`));
+    assert.ok(dessinerJeton({ valeur: -1 }).includes(COULEURS.jetonAplatNegatif));
     const neutralise = dessinerJeton({ valeur: 1, etat: "neutralise" });
     assert.ok(neutralise.includes(COULEURS.jetonNeutralise));
-    assert.ok(!neutralise.includes(COULEURS.jetonPositif));
+    assert.ok(!neutralise.includes(COULEURS.jetonAplatPositif));
+  });
+
+  it("habillage plateau : dégradé et texte blanc des plateaux de manipulation", () => {
+    const positif = dessinerJeton({ valeur: 1, habillage: "plateau" });
+    assert.ok(positif.includes(COULEURS.jetonPositif));
+    assert.match(positif, /fill="#ffffff"[^>]*>\+1</);
+    assert.ok(dessinerJeton({ valeur: -1, habillage: "plateau" }).includes(COULEURS.jetonNegatif));
+    assert.throws(() => dessinerJeton({ valeur: 1, habillage: "chrome" }), RangeError);
   });
 
   it("n'utilise que des couleurs de la charte (plus le blanc)", () => {
@@ -85,10 +96,13 @@ describe("dessinerGroupeJetons", () => {
   });
 
   it("neutralise autant de positifs que de négatifs", () => {
+    // 2 paires = 4 jetons gris ; en habillage contourNoir la couleur
+    // neutralisée n'apparaît qu'une fois par jeton (l'aplat)
     const svg = dessinerGroupeJetons({ positifs: 3, negatifs: 2, pairesNeutralisees: 2 });
-    // 2 paires = 4 jetons gris ; chaque jeton gris emploie 2 fois la
-    // couleur neutralisée (fond + voile clair)
-    assert.equal(compter(svg, new RegExp(COULEURS.jetonNeutralise, "g")), 8);
+    assert.equal(compter(svg, new RegExp(COULEURS.jetonNeutralise, "g")), 4);
+    // et 2 fois par jeton (fond + voile) en habillage plateau
+    const plateau = dessinerGroupeJetons({ positifs: 3, negatifs: 2, pairesNeutralisees: 2, habillage: "plateau" });
+    assert.equal(compter(plateau, new RegExp(COULEURS.jetonNeutralise, "g")), 8);
   });
 
   it("décrit le groupe aux lecteurs d'écran", () => {
