@@ -189,17 +189,20 @@
     #toolbar #checkSolution,
     #toolbar #enonce,
     #toolbar #fullscreen{display:none;}
-    #toolbar .group:nth-child(4){display:grid; grid-template-columns:minmax(0,1.15fr) minmax(0,1fr) minmax(0,1fr); width:100%; gap:6px;}
+    #toolbar .group:nth-child(4){display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); width:100%; gap:6px;}
     #toolbar .group:nth-child(4) button{width:100%; min-width:0; padding:9px 5px; font-size:13px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;}
-    #rotateMobile{display:block;}
-    #rotateMobile:disabled{opacity:.45; cursor:default;}
+    #rotateMobileLeft,
+    #rotateMobileRight{display:block;}
+    #rotateMobileLeft:disabled,
+    #rotateMobileRight:disabled{opacity:.45; cursor:default;}
     #mobilePuzzleHint{display:none;}
     #puzzleStatus{font-size:12px; padding-left:8px; padding-right:8px;}
     #stageWrap{min-height:0;}
   }
 
   @media (min-width:701px){
-    #rotateMobile{display:none;}
+    #rotateMobileLeft,
+    #rotateMobileRight{display:none;}
     #toolbar .group:nth-child(2){order:4;}
     #toolbar .group:nth-child(3){order:5;}
     #toolbar .group:nth-child(4){order:3;}
@@ -235,7 +238,8 @@
     </div>
 
     <div class="group">
-      <button id="rotateMobile" class="primary" aria-label="Tourner la pièce sélectionnée de 15 degrés" title="Sélectionne une pièce, puis tourne-la de 15° à chaque appui" disabled>↻ Tourner</button>
+      <button id="rotateMobileLeft" class="primary" aria-label="Tourner la pièce sélectionnée de 5 degrés vers la gauche" title="Sélectionne une pièce, puis tourne-la de 5° vers la gauche" disabled>↺ 5°</button>
+      <button id="rotateMobileRight" class="primary" aria-label="Tourner la pièce sélectionnée de 5 degrés vers la droite" title="Sélectionne une pièce, puis tourne-la de 5° vers la droite" disabled>↻ 5°</button>
       <button id="flip" class="primary">Retourner</button>
       <button id="reset" class="danger">Réinitialiser</button>
       <button id="checkSolution" class="primary">Vérifier</button>
@@ -336,7 +340,8 @@
   const toggleLetters = document.getElementById("toggleLetters");
   const btnReset = document.getElementById("reset");
   const btnFlip = document.getElementById("flip");
-  const btnRotateMobile = document.getElementById("rotateMobile");
+  const btnRotateMobileLeft = document.getElementById("rotateMobileLeft");
+  const btnRotateMobileRight = document.getElementById("rotateMobileRight");
   const btnCheckSolution = document.getElementById("checkSolution");
   const btnFullscreen = document.getElementById("fullscreen");
   const btnEnonce = document.getElementById("enonce");
@@ -678,7 +683,8 @@
       // au premier plan
       p.el.parentNode.appendChild(p.el);
     }
-    btnRotateMobile.disabled=!id;
+    btnRotateMobileLeft.disabled=!id;
+    btnRotateMobileRight.disabled=!id;
   }
 
   function flipPiece(id){
@@ -1737,13 +1743,16 @@
     if(state.selectedId) flipPiece(state.selectedId);
   };
 
-  btnRotateMobile.onclick = () => {
+  function rotateSelectedPiece(deltaDeg){
     if(state.mode === "vide" || !state.selectedId) return;
     const piece = state.pieces.get(state.selectedId);
     if(!piece) return;
-    piece.rot = normAngleDeg(piece.rot + 15);
+    piece.rot = normAngleDeg(piece.rot + deltaDeg);
     applyPieceTransform(piece);
-  };
+  }
+
+  btnRotateMobileLeft.onclick = () => rotateSelectedPiece(-5);
+  btnRotateMobileRight.onclick = () => rotateSelectedPiece(5);
 
   btnCheckSolution.onclick = () => checkPuzzleSolution();
 
