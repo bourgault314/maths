@@ -1,0 +1,15 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://mathsgo.re/studio/brand/manifest.v1.json",
+  "title": "Manifeste de marque maths&go",
+  "version": 1,
+  "status": "draft",
+  "canonicalAssets": {
+    "logo": {
+      "id": "brand.mathsgo.logo",
+      "path": "assets/img/mathsgo-logo.png",
+      "role": "global-brand-mark",
+      "isMathematicalComponent": false
+    }
+  }
+}
