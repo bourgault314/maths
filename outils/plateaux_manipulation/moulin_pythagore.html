@@ -102,12 +102,20 @@
   #celebration.on{display:block;}
   .celebrationMessage{
     position:absolute; left:50%; top:42%; transform:translate(-50%,-50%) scale(.82);
-    padding:14px 24px; border:2px solid rgba(37,99,235,.24); border-radius:18px;
-    background:rgba(255,255,255,.96); color:#166534;
-    box-shadow:0 18px 50px rgba(15,23,42,.2);
-    font-size:clamp(28px,7vw,54px); font-weight:950; white-space:nowrap;
+    min-width:min(310px,76vw); padding:18px 26px 17px;
+    border:3px solid rgba(255,255,255,.9); border-radius:26px;
+    background:linear-gradient(135deg,#2563eb 0%,#4f46e5 52%,#7c3aed 100%);
+    color:#fff; text-align:center;
+    box-shadow:0 22px 60px rgba(37,99,235,.32),0 8px 20px rgba(15,23,42,.2);
     animation:bravoPop 2.1s ease both;
   }
+  .celebrationIcon{
+    display:grid; place-items:center; width:52px; height:52px; margin:-42px auto 7px;
+    border:3px solid #fff; border-radius:50%; background:#fbbf24; color:#78350f;
+    box-shadow:0 7px 18px rgba(15,23,42,.2); font-size:29px; line-height:1;
+  }
+  .celebrationTitle{display:block;font-size:clamp(30px,7vw,48px);font-weight:950;line-height:1.04;letter-spacing:-.03em;}
+  .celebrationSubtitle{display:block;margin-top:5px;font-size:clamp(14px,3.5vw,18px);font-weight:750;opacity:.94;}
   .confettiPiece{
     position:absolute; top:-24px; width:10px; height:18px; border-radius:3px;
     background:var(--confetti-color); opacity:0;
@@ -249,9 +257,11 @@
       <option value="bhaskara">2. Bhaskara (4 triangles + 1 carré)</option>
       <option value="leitzmann">3. Liu Hui (8 triangles)</option>
       <option value="quatreIdentiques">4. Découpage croisé (4 pièces + 1 carré)</option>
-      <option value="lapeyronnie">5. IREM — 5 pièces</option>
+      <option value="lapeyronnie">5. Lapeyronnie (5 pièces)</option>
       <option value="sixEquilibre">6. Découpage 3 + 3 (6 pièces)</option>
       <option value="tangram">7. Tangram 2 + 5 (7 pièces)</option>
+      <option value="mosaiqueOblique">8. Mosaïque oblique (6 pièces)</option>
+      <option value="moulinIsocele">9. Moulin isocèle (4 pièces)</option>
     </select>
     </div>
 
@@ -604,6 +614,20 @@
       parallel:[[1.4142135624,0],[1.4142135624,0.7071067812],[1.0606601718,1.0606601718],[1.0606601718,0.3535533906]],
       medium:[[1.4142135624,0.7071067812],[1.4142135624,1.4142135624],[0.7071067812,1.4142135624]]
     },
+    mosaiqueOblique: {
+      b1:[[1.6770509831,2.0124611797],[2.2360679775,1.7329526826],[2.2360679775,2.2360679775],[1.788854382,2.2360679775]],
+      b2:[[2.2360679775,0],[2.2360679775,0.894427191],[1.788854382,0]],
+      b3:[[0,1.7329526826],[1.2298373876,1.1180339887],[1.788854382,2.2360679775],[0,2.2360679775]],
+      b4:[[0,0.894427191],[0,0],[1.788854382,0],[2.1242645786,0.6708203932],[0.3354101966,1.5652475842]],
+      a1:[[1.6770509831,2.0124611797],[1.2298373876,1.1180339887],[2.1242645786,0.6708203932],[2.2360679775,0.894427191],[2.2360679775,1.7329526826]],
+      a2:[[0,0.894427191],[0.3354101966,1.5652475842],[0,1.7329526826]]
+    },
+    moulinIsocele: {
+      b1:[[0,0],[1.4142135624,0],[0.7071067812,0.7071067812]],
+      b2:[[1.4142135624,0],[1.4142135624,1.4142135624],[0.7071067812,0.7071067812]],
+      a1:[[1.4142135624,1.4142135624],[0,1.4142135624],[0.7071067812,0.7071067812]],
+      a2:[[0,1.4142135624],[0,0],[0.7071067812,0.7071067812]]
+    },
     leitzmann: {
       bLeft:[[2.2360679775,2.2360679775],[1.3416407865,0.4472135955],[0.7453559925,2.2360679775]],
       bBottom:[[0.894427191,1.788854382],[0,0],[1.490711985,0]],
@@ -689,7 +713,16 @@
     clearCelebration(false);
     const message=document.createElement("div");
     message.className="celebrationMessage";
-    message.textContent="Bravo !";
+    const icon=document.createElement("span");
+    icon.className="celebrationIcon";
+    icon.textContent="★";
+    const title=document.createElement("strong");
+    title.className="celebrationTitle";
+    title.textContent="Bravo !";
+    const subtitle=document.createElement("span");
+    subtitle.className="celebrationSubtitle";
+    subtitle.textContent="Puzzle réussi";
+    message.append(icon,title,subtitle);
     celebration.appendChild(message);
 
     const colors=["#2563eb","#f59e0b","#16a34a","#db2777","#7c3aed","#ef4444","#06b6d4"];
@@ -913,7 +946,7 @@
     // Puzzle 1 de la construction GeoGebra de Jason Lapeyronnie : trois
     // pièces dans b² et deux dans a², pour le triangle 1:2:√5.
     lapeyronnie: {
-      name: "IREM — 5 pièces",
+      name: "Lapeyronnie — 5 pièces",
       ratio: 0.5,
       generate: (Ax, Ay, b, ratio) => {
         const a = b * ratio;
@@ -967,6 +1000,43 @@
           {key:"small1", fill:COLORS.orange,   points:[[0,0],[0.5,0.5],[0,0.5]].map(([x,y])=>left(x,y))},
           {key:"small2", fill:COLORS.green,    points:[[0.5,1],[1,0.5],[1,1]].map(([x,y])=>left(x,y))},
           {key:"parallel",fill:COLORS.teal,    points:[[0.5,0.5],[1,0],[1,0.5],[0.5,1]].map(([x,y])=>left(x,y))}
+        ];
+      }
+    },
+
+    // Construction oblique déjà présente dans le Moulin : quatre pièces dans
+    // b² et deux dans a². Sa pose finale exacte est conservée et testée.
+    mosaiqueOblique: {
+      name: "Mosaïque oblique",
+      ratio: 0.5,
+      generate: (Ax, Ay, b, ratio) => {
+        const a=b*ratio;
+        const point=(x,y)=>({x:Ax+x*a,y:Ay+y*a});
+        return [
+          {key:"b1",fill:COLORS.yellow, points:[[0,-2],[0.625,-2],[0.4,-1.55],[0,-1.75]].map(([x,y])=>point(x,y))},
+          {key:"b2",fill:COLORS.teal,   points:[[0.4,-1.55],[0,-0.75],[0,-1.75]].map(([x,y])=>point(x,y))},
+          {key:"b3",fill:COLORS.blue,   points:[[0.625,-2],[2,-2],[2,-0.75],[0.4,-1.55]].map(([x,y])=>point(x,y))},
+          {key:"b4",fill:COLORS.orange, points:[[0,-0.75],[0.4,-1.55],[2,-0.75],[2,0],[0,0]].map(([x,y])=>point(x,y))},
+          {key:"a1",fill:COLORS.purple, points:[[-1,1],[-1,0],[0,0],[0,0.25],[-0.375,1]].map(([x,y])=>point(x,y))},
+          {key:"a2",fill:COLORS.green,  points:[[0,0.25],[0,1],[-0.375,1]].map(([x,y])=>point(x,y))}
+        ];
+      }
+    },
+
+    // Deux carrés égaux coupés par une diagonale : les quatre triangles
+    // rectangles isocèles se rejoignent au centre de c² comme quatre ailes.
+    moulinIsocele: {
+      name: "Moulin isocèle",
+      ratio: 1,
+      generate: (Ax, Ay, b, ratio) => {
+        const a=b*ratio;
+        const top=(x,y)=>({x:Ax+x*b,y:Ay-b+y*b});
+        const left=(x,y)=>({x:Ax-a+x*a,y:Ay+y*a});
+        return [
+          {key:"b1",fill:COLORS.blue,    points:[[0,0],[1,0],[1,1]].map(([x,y])=>top(x,y))},
+          {key:"b2",fill:COLORS.magenta, points:[[0,0],[1,1],[0,1]].map(([x,y])=>top(x,y))},
+          {key:"a1",fill:COLORS.yellow,  points:[[0,0],[1,0],[1,1]].map(([x,y])=>left(x,y))},
+          {key:"a2",fill:COLORS.green,   points:[[0,0],[1,1],[0,1]].map(([x,y])=>left(x,y))}
         ];
       }
     },
@@ -1148,7 +1218,7 @@
       `
     },
     lapeyronnie: {
-      title: "Puzzle 5 — IREM, 5 pièces",
+      title: "Puzzle 5 — Lapeyronnie, 5 pièces",
       html: `
         <p><strong>Objectif :</strong> réunir les <strong>3 pièces</strong> de <em>b²</em> et les <strong>2 pièces</strong> de <em>a²</em> dans le carré <em>c²</em>.</p>
         <p class="muted">Construction reprise à partir du puzzle GeoGebra de Jason Lapeyronnie. Commence par le grand quadrilatère bleu.</p>
@@ -1166,6 +1236,20 @@
       html: `
         <p><strong>Objectif :</strong> placer les <strong>7 tans</strong> dans <em>c²</em>.</p>
         <p class="muted">Un carré contient les 2 grands triangles ; l’autre contient les 5 petites pièces du tangram classique.</p>
+      `
+    },
+    mosaiqueOblique: {
+      title: "Puzzle 8 — Mosaïque oblique",
+      html: `
+        <p><strong>Objectif :</strong> déplacer les <strong>6 pièces</strong> issues des deux carrés pour reconstituer <em>c²</em>.</p>
+        <p class="muted">Le découpage est volontairement irrégulier : commence par les deux petites pièces triangulaires, puis raccorde les longues arêtes obliques.</p>
+      `
+    },
+    moulinIsocele: {
+      title: "Puzzle 9 — Moulin isocèle",
+      html: `
+        <p><strong>Objectif :</strong> réunir les <strong>4 triangles rectangles isocèles</strong> dans <em>c²</em>.</p>
+        <p class="muted">Les quatre angles droits se rejoignent au centre et dessinent les ailes d’un moulin.</p>
       `
     },
     leitzmann: {
