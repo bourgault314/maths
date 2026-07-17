@@ -18,6 +18,7 @@
 % Couleurs maths&go reprises de la fiche actuelle
 \definecolor{brandNavy}{RGB}{11,53,112}
 \definecolor{brandBlue}{RGB}{17,70,140}
+\definecolor{brandSky}{RGB}{72,166,220}
 \definecolor{brandTeal}{RGB}{29,174,174}
 \definecolor{brandOrange}{RGB}{255,145,20}
 \definecolor{softBlue}{RGB}{225,238,255}
@@ -63,8 +64,8 @@
   \draw[brandNavy,line width=1.20pt] (A)--(M);
   \draw[brandNavy,line width=1.20pt] (A)--(N);
   \draw[brandNavy,line width=1.24pt] (M)--(N);
-  \draw[brandBlue,line width=1.20pt] (M)--(B);
-  \draw[brandBlue,line width=1.20pt] (N)--(C);
+  \draw[brandSky,line width=1.20pt] (M)--(B);
+  \draw[brandSky,line width=1.20pt] (N)--(C);
   \draw[brandTeal,line width=1.34pt] (B)--(C);
   \node[brandOrange,font=\bfseries\small] at (-0.27,-0.25) {$A$};
   \node[brandBlue,font=\bfseries\small] at (2.62,-0.88) {$M$};
@@ -114,8 +115,8 @@
   \draw[brandNavy!90,line width=1.10pt] (A)--(M);
   \draw[brandNavy!90,line width=1.10pt] (A)--(N);
   \draw[brandNavy!90,line width=1.15pt] (M)--(N);
-  \draw[brandBlue,line width=1.10pt] (M)--(B);
-  \draw[brandBlue,line width=1.10pt] (N)--(C);
+  \draw[brandSky,line width=1.10pt] (M)--(B);
+  \draw[brandSky,line width=1.10pt] (N)--(C);
   \draw[brandTeal,line width=1.18pt] (B)--(C);
   \node at (-0.55,-0.45) {\LowDotted{0.48}};
   \node at (2.82,-1.08) {\LowDotted{0.48}};
@@ -172,8 +173,18 @@
 \end{minipage}
 \end{center}
 
-\vspace{0.22cm}
-\Section{1}{Je construis les deux rapports à comparer}\par\vspace{0.08cm}
+\vspace{0.14cm}
+\Section{1}{Je vérifie le contexte}\par\vspace{0.05cm}
+\begin{center}
+\begin{tikzpicture}
+\node[rounded corners=7pt,draw=brandNavy!42,fill=softBlue!26,line width=.70pt,text width=17.75cm,inner sep=5.5pt,align=center] {
+{\fontsize{9.2}{9.9}\selectfont Les points $A,M,B$ sont alignés. Les points $A,N,C$ sont alignés. $A$ est le sommet commun. Les droites à tester sont $(MN)$ et $(BC)$.}
+};
+\end{tikzpicture}
+\end{center}
+
+\vspace{0.10cm}
+\Section{2}{Je construis les deux rapports à comparer}\par\vspace{0.06cm}
 \begin{center}
 \begin{tikzpicture}
 \node[rounded corners=7pt,draw=brandNavy!42,fill=softBlue!26,line width=.70pt,text width=17.75cm,inner sep=8pt,align=center] {
@@ -185,8 +196,8 @@
 \end{tikzpicture}
 \end{center}
 
-\vspace{0.25cm}
-\Section{2}{Je calcule les deux rapports, puis je les compare}\par\vspace{0.08cm}
+\vspace{0.17cm}
+\Section{3}{Je calcule les deux rapports, puis je les compare}\par\vspace{0.06cm}
 \noindent\begin{minipage}[t]{9.15cm}
 \vspace{0pt}
 \begin{tikzpicture}
@@ -208,8 +219,8 @@
 \end{tikzpicture}
 \end{minipage}
 
-\vspace{0.24cm}
-\Section{3}{J'observe le résultat, puis j'applique le bon critère}\par\vspace{0.08cm}
+\vspace{0.17cm}
+\Section{4}{J'observe le résultat, puis j'applique le bon critère}\par\vspace{0.06cm}
 \begin{center}
 \begin{tikzpicture}
 \node[rounded corners=7pt,draw=brandOrange,fill=brandOrange!6,line width=.80pt,text width=7.70cm,minimum height=3.15cm,inner sep=6.5pt,align=center] (diff) at (-4.70,-1.55)
@@ -228,8 +239,8 @@ $\displaystyle \frac{\AMcol}{\ABcol}=\frac{\ANcol}{\ACcol}$\par\vspace{0.03cm}
 \end{tikzpicture}
 \end{center}
 
-\vspace{0.26cm}
-\Section{4}{Deux rédactions qui expliquent le raisonnement}\par\vspace{0.09cm}
+\vspace{0.17cm}
+\Section{5}{Deux rédactions qui expliquent le raisonnement}\par\vspace{0.06cm}
 \noindent\begin{minipage}[t]{9.15cm}
 \begin{tikzpicture}
 \node[rounded corners=7pt,draw=brandOrange!75,fill=softOrange!28,line width=.70pt,text width=8.67cm,minimum height=2.75cm,inner sep=7pt,align=left] {
@@ -269,19 +280,23 @@ D'après le critère de parallélisme issu du théorème de Thalès, les droites
 \node[rounded corners=9pt,draw=brandNavy!24,fill=softBlue!30,line width=0.70pt,minimum width=5.05cm,minimum height=22.45cm,anchor=north west] at (0,0) {};
 \node[anchor=north west,text=brandNavy,font=\bfseries\fontsize{12.0}{12.8}\selectfont] at (0.22,-0.18) {Mes repères};
 
-\node[circle,fill=brandNavy,text=white,font=\bfseries,minimum size=0.52cm,inner sep=0pt] at (0.47,-5.92) {1};
-\node[anchor=north west,text width=3.92cm,align=left] at (0.84,-5.78) {\bfseries\color{brandNavy}\fontsize{10.2}{10.9}\selectfont Je choisis les rapports.\par\vspace{0.04cm}
+\node[circle,fill=brandNavy,text=white,font=\bfseries,minimum size=0.52cm,inner sep=0pt] at (0.47,-4.08) {1};
+\node[anchor=north west,text width=3.92cm,align=left] at (0.84,-3.94) {\bfseries\color{brandNavy}\fontsize{10.2}{10.9}\selectfont Je vérifie le contexte.\par\vspace{0.04cm}
+{\scriptsize\bfseries\color{brandNavy} Sommet commun, deux alignements, droites à tester.}};
+
+\node[circle,fill=brandNavy,text=white,font=\bfseries,minimum size=0.52cm,inner sep=0pt] at (0.47,-6.62) {2};
+\node[anchor=north west,text width=3.92cm,align=left] at (0.84,-6.48) {\bfseries\color{brandNavy}\fontsize{10.2}{10.9}\selectfont Je choisis les rapports.\par\vspace{0.04cm}
 {\scriptsize\bfseries\color{brandNavy} Un rapport sur chaque droite support, avec le même modèle.}};
 
-\node[circle,fill=brandNavy,text=white,font=\bfseries,minimum size=0.52cm,inner sep=0pt] at (0.47,-8.38) {2};
-\node[anchor=north west,text width=3.92cm,align=left] at (0.84,-8.24) {\bfseries\color{brandNavy}\fontsize{10.2}{10.9}\selectfont Je calcule et je compare.\par\vspace{0.04cm}
+\node[circle,fill=brandNavy,text=white,font=\bfseries,minimum size=0.52cm,inner sep=0pt] at (0.47,-9.10) {3};
+\node[anchor=north west,text width=3.92cm,align=left] at (0.84,-8.96) {\bfseries\color{brandNavy}\fontsize{10.2}{10.9}\selectfont Je calcule et je compare.\par\vspace{0.04cm}
 {\scriptsize\bfseries\color{brandNavy} Je calcule séparément : je ne suppose pas que c'est proportionnel.}};
 
-\node[circle,fill=brandNavy,text=white,font=\bfseries,minimum size=0.52cm,inner sep=0pt] at (0.47,-10.88) {3};
-\node[anchor=north west,text width=3.92cm,align=left] at (0.84,-10.74) {\bfseries\color{brandNavy}\fontsize{10.2}{10.9}\selectfont J'observe le résultat.\par\vspace{0.04cm}
+\node[circle,fill=brandNavy,text=white,font=\bfseries,minimum size=0.52cm,inner sep=0pt] at (0.47,-11.78) {4};
+\node[anchor=north west,text width=3.92cm,align=left] at (0.84,-11.64) {\bfseries\color{brandNavy}\fontsize{10.2}{10.9}\selectfont J'observe le résultat.\par\vspace{0.04cm}
 {\scriptsize\bfseries\color{brandNavy} Différents : non-parallélisme. Égaux : disposition puis parallélisme.}};
 
-\node[circle,fill=brandNavy,text=white,font=\bfseries,minimum size=0.52cm,inner sep=0pt] at (0.47,-18.68) {4};
+\node[circle,fill=brandNavy,text=white,font=\bfseries,minimum size=0.52cm,inner sep=0pt] at (0.47,-18.68) {5};
 \node[anchor=north west,text width=3.92cm,align=left] at (0.84,-18.54) {\bfseries\color{brandNavy}\fontsize{10.2}{10.9}\selectfont Je rédige ma conclusion.\par\vspace{0.04cm}
 {\scriptsize\bfseries\color{brandNavy} J'emploie le critère adapté et je réponds à la question.}};
 
@@ -312,7 +327,7 @@ D'après le critère de parallélisme issu du théorème de Thalès, les droites
 \vspace{0.20cm}
 \begin{tikzpicture}
 \node[rounded corners=8pt,draw=brandNavy!45,fill=white,line width=0.85pt,text width=12.46cm,inner sep=6.0pt,align=left] {
-{\bfseries\color{brandNavy}\fontsize{9.9}{11.1}\selectfont Contexte donné par la figure}\par\vspace{0.04cm}
+{\bfseries\color{brandNavy}\fontsize{9.9}{11.1}\selectfont Je vérifie le contexte}\par\vspace{0.04cm}
 {\fontsize{9.9}{11.1}\selectfont Le sommet commun est : \LowDotted{1.00}\hfill Les droites à tester sont : $(\LowDotted{0.55}\LowDotted{0.55})$ et $(\LowDotted{0.55}\LowDotted{0.55})$}\par\vspace{0.06cm}
 {\fontsize{9.9}{11.1}\selectfont Les points \LowDotted{0.66}, \LowDotted{0.66}, \LowDotted{0.66} sont alignés.}\par\vspace{0.05cm}
 {\fontsize{9.9}{11.1}\selectfont Les points \LowDotted{0.66}, \LowDotted{0.66}, \LowDotted{0.66} sont alignés.}
@@ -395,16 +410,18 @@ $\displaystyle \frac{\LowDotted{0.52}}{\LowDotted{0.52}}=\frac{\LowDotted{0.52}}
 {\fontsize{9.4}{10.1}\selectfont $AM=4$ cm \quad $AB=10$ cm\par $AN=6$ cm \quad $AC=15$ cm}
 \end{minipage}\hfill
 \begin{minipage}[c]{11.50cm}
-{\bfseries\color{brandNavy} Je calcule et je compare.}\par
+{\bfseries\color{brandNavy} 1. Je vérifie le contexte.}\par
+Les points $A,M,B$ sont alignés. Les points $A,N,C$ sont alignés. Le sommet commun est $A$.\par\vspace{0.08cm}
+{\bfseries\color{brandNavy} 2. Je calcule et je compare.}\par
 \[
 \frac{\AMcol}{\ABcol}=\frac{4}{10}
 \qquad\text{et}\qquad
 \frac{\ANcol}{\ACcol}=\frac{6}{15}
 \]
 Avec les produits en croix : $4\times15=60$ et $10\times6=60$. Les rapports sont égaux.\par\vspace{0.10cm}
-{\bfseries\color{brandNavy} Je vérifie alors la disposition.}\par
+{\bfseries\color{brandNavy} 3. Je vérifie alors la disposition.}\par
 Les points sont placés de la même façon sur les deux droites : $A-M-B$ et $A-N-C$.\par\vspace{0.10cm}
-{\bfseries\color{brandTeal} Je conclus.}\par
+{\bfseries\color{brandTeal} 4. Je conclus.}\par
 Les rapports sont égaux et la disposition correspond. D'après le critère de parallélisme issu du théorème de Thalès, les droites $(MN)$ et $(BC)$ sont parallèles.
 \end{minipage}
 };
@@ -420,15 +437,16 @@ Les rapports sont égaux et la disposition correspond. D'après le critère de p
 {\fontsize{9.4}{10.1}\selectfont $AM=3$ cm \quad $AB=5$ cm\par $AN=4$ cm \quad $AC=7$ cm}
 \end{minipage}\hfill
 \begin{minipage}[c]{11.50cm}
-Dans la configuration donnée, les points $M,A,B$ sont alignés, les points $N,A,C$ sont alignés et $A$ est le sommet commun.\par\vspace{0.10cm}
-{\bfseries\color{brandNavy} Je calcule et je compare.}\par
+{\bfseries\color{brandNavy} 1. Je vérifie le contexte.}\par
+Les points $M,A,B$ sont alignés. Les points $N,A,C$ sont alignés. Le sommet commun est $A$.\par\vspace{0.08cm}
+{\bfseries\color{brandNavy} 2. Je calcule et je compare.}\par
 \[
 \frac{\AMcol}{\ABcol}=\frac{3}{5}
 \qquad\text{et}\qquad
 \frac{\ANcol}{\ACcol}=\frac{4}{7}
 \]
 Avec les produits en croix : $3\times7=21$ et $5\times4=20$. Les rapports sont différents.\par\vspace{0.10cm}
-{\bfseries\color{brandOrange} Je conclus.}\par
+{\bfseries\color{brandOrange} 3. Je conclus.}\par
 Si les droites $(MN)$ et $(BC)$ étaient parallèles, le théorème de Thalès donnerait des rapports égaux. Ils sont différents : les droites $(MN)$ et $(BC)$ ne sont pas parallèles.
 \end{minipage}
 };
