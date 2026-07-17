@@ -4,6 +4,7 @@
   "description": "Les objets visuels officiels maths&go : jetons, schémas en barres, équations… Dessinés par le code aux couleurs de la charte, jamais redessinés à la main.",
   "type": "module",
   "exports": {
-    "./jetons": "./src/jetons.js"
+    "./jetons": "./src/jetons.js",
+    "./barres": "./src/barres.js"
   }
 }
