@@ -693,21 +693,21 @@ window.MATHSGO_CATALOGUE = {
       "primaryNotion": "thales",
       "collections": [],
       "tags": ["thales", "theoreme-direct", "longueur", "proportionnalite", "imprimable"],
-      "thumbnail": "assets/img/thumbnails/thales/thales-direct-a-verifier.png?v=2",
+      "thumbnail": "assets/img/thumbnails/thales/thales-direct-a-verifier.png?v=3",
       "cardDescription": "Tableau de proportionnalité, choix des colonnes utiles et rédaction pour calculer une longueur."
     },
     "outils/fiche_reciproque_thales.pdf": {
       "primaryNotion": "thales",
       "collections": [],
       "tags": ["thales", "reciproque", "contraposee", "imprimable"],
-      "thumbnail": "assets/img/thumbnails/thales/reciproque-contraposee.png?v=2",
+      "thumbnail": "assets/img/thumbnails/thales/reciproque-contraposee.png?v=3",
       "cardDescription": "Version 1 : méthode guidée, fiche adaptable et deux exemples pour démontrer un parallélisme ou son contraire."
     },
     "outils/fiche_thales_criteres_a_verifier.pdf": {
       "primaryNotion": "thales",
       "collections": [],
       "tags": ["thales", "reciproque", "contraposee", "criteres", "imprimable"],
-      "thumbnail": "assets/img/thumbnails/thales/tester-parallelisme-a-verifier.png?v=2",
+      "thumbnail": "assets/img/thumbnails/thales/tester-parallelisme-a-verifier.png?v=3",
       "cardDescription": "Version 2 : partir des rapports, les comparer, puis vérifier la disposition seulement en cas d’égalité."
     },
     "outils/gabarits_proportionnalite_tableaux.pdf": { "primaryNotion": "proportionnalite", "collections": [], "tags": ["proportionnalite", "tableau", "gabarit", "imprimable"] },
