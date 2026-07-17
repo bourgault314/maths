@@ -72,13 +72,15 @@ if(!html.includes('prepareSolutionPoses();')) fail('Les poses de solution doiven
 if(!html.includes('function tryExactSolutionSnap(piece)')) fail('Le snap de finition exact doit être disponible pour tous les puzzles.');
 if(!html.includes('pose.flipX !== piece.flipX')) fail('Le snap ne doit jamais retourner automatiquement une pièce.');
 if(html.includes('bhaskaraPoseTargets')) fail('Le snap Bhaskara ne doit plus dépendre d’une table de poses vide.');
-if(!html.includes('touchFriendlyDistance(SNAP.posStrong, 38)')) fail('Le snap tactile doit conserver une distance physique suffisante sur téléphone.');
-if(!html.includes('stage.setPointerCapture(evt.pointerId)')) fail('Le glissement tactile doit rester capturé par la scène jusqu’au lâcher.');
+if(!html.includes('touchFriendlyDistance(SNAP.posStrong,30)')) fail('Le snap tactile doit conserver une distance physique suffisante sur téléphone.');
+if(!html.includes('captureEl.setPointerCapture(evt.pointerId)')) fail('Le glissement tactile doit rester capturé jusqu’au lâcher.');
 if(!html.includes('stage.addEventListener("pointercancel", finishPointerInteraction)')) fail('Une interruption tactile doit terminer proprement le déplacement.');
-if(!html.includes('id="rotateMobileLeft"') || !html.includes('id="rotateMobileRight"')) fail('La rotation mobile doit être disponible dans les deux sens.');
-if(!html.includes('rotateSelectedPiece(-5)') || !html.includes('rotateSelectedPiece(5)')) fail('La rotation mobile doit se faire par pas fins de 5°.');
-if(html.includes('piece.rot = normAngleDeg(piece.rot + 15)')) fail('La rotation mobile ne doit pas revenir à un pas trop grossier de 15°.');
-if(!html.includes('grid-template-columns:repeat(4,minmax(0,1fr))')) fail('Les commandes mobiles doivent rester contenues dans la largeur du téléphone.');
+if(html.includes('id="rotateMobileLeft"') || html.includes('id="rotateMobileRight"')) fail('La rotation mobile ne doit pas dépendre de boutons par pas fixes.');
+if(!html.includes('class:"handleHit"') || html.includes('svg#stage .handle{display:none!important;}')) fail('La poignée de rotation libre doit rester utilisable au doigt sur téléphone.');
+if(!html.includes('drag.startGestureAngle') || !html.includes('drag.type="transform"')) fail('Le geste tactile à deux doigts doit déplacer et tourner librement une pièce.');
+if(!html.includes('closestPointOnSegment(vertex,target.a,target.b)')) fail('Le snap doit accepter tout point des bordures du carré cible.');
+if(!html.includes('!other.hasMoved')) fail('Les pièces encore rangées ne doivent pas attirer une pièce descendue dans c².');
+if(!html.includes('grid-template-columns:repeat(2,minmax(0,1fr))')) fail('Les commandes mobiles doivent rester contenues dans la largeur du téléphone.');
 
 const pythaFile='outils/pythabarre.html';
 const pytha=fs.readFileSync(new URL(`../${pythaFile}`,import.meta.url),'utf8');
