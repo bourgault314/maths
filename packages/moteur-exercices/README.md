@@ -16,6 +16,8 @@ Règles du package :
 | Module | Rôle |
 |---|---|
 | `src/aleatoire.js` | Hasard reproductible : graine texte ou nombre, réels, entiers, choix, mélange. `VERSION_ALEATOIRE` protège les séries déjà partagées. |
+| `src/generation.js` | Registre de générateurs et instanciation : gabarit (donnée) + graine → question conforme au contrat, validée avant d'être rendue. |
+| `src/generateurs/fractions.js` | Premier générateur réel : « fractions.simplifier » (port du module V1 dnb_03), niveaux simple et difficile, correction incluse. |
 
 ## Usage
 

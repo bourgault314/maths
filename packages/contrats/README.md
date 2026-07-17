@@ -18,6 +18,7 @@ Règles du package :
 | Module | Contrat | Rôle |
 |---|---|---|
 | `src/question.js` | `mathsgo.question-instance/1` | Une question prête à afficher : énoncé en blocs (texte/LaTeX à trous `[[reponse]]`), réponses acceptées par champ, aide et correction facultatives, traçabilité d'origine. |
+| `src/gabarit.js` | `mathsgo.gabarit-question/1` | Une famille de questions à valeurs variables : référence un générateur du moteur par nom et version, avec des paramètres en données pures. Remplaçant sûr du `formula_code` de V1. |
 
 La preuve de récupérabilité des contenus V1 fait partie des tests : les
 questions statiques du module réel `dnb_01` sont converties et validées
