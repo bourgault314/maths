@@ -1,161 +1,254 @@
-// Objet officiel « schéma en barres » — version 1, STATUT BROUILLON.
+// Objet officiel « schéma en barres » — version 2, STATUT BROUILLON.
 //
-// LE schéma en barres maths&go : celui des problèmes (partie-tout,
-// comparaison, groupes égaux), d'ÉquaBarre, des aides et des fiches.
-// Un seul objet, des options — plus jamais dix dessins aux détails
-// différents.
+// Réécrit pour reproduire À L'IDENTIQUE le langage visuel des outils
+// maths&go existants (ÉquaBarre, PythaBarre, AngleBarre, Problèmes en
+// barres), relevé dans leur code et à l'écran le 18/07/2026 :
 //
-// Modèle de données (données pures, dans l'esprit des contrats) :
-//   barres    : liste d'étages, chacun { etiquette?, segments: [...] }
-//   segment   : { valeur, etiquette?, role? }
-//     - valeur   : longueur relative (nombre > 0) — les largeurs sont
-//                  proportionnelles, comme dans le modèle de Singapour
-//     - etiquette: texte affiché dans la case (souvent la valeur, ou rien)
-//     - role     : "connu" (bleu) | "second" (turquoise) | "accent"
-//                  (orange) | "inconnu" (case blanche en pointillés,
-//                  pensée pour le « ? » de la progression officielle)
-//   accolades : [{ barre, de, a, position: "haut"|"bas", etiquette }]
-//               — accolade couvrant les segments de..a (inclus) d'un
-//               étage, avec son étiquette (le tout, l'écart…)
+// - un TABLEAU : lignes empilées sans écart, cases collées bord à bord,
+//   filets de 2 px gris-ardoise (encre à 36 %) jamais doublés, AUCUN
+//   coin arrondi ;
+// - largeurs strictement proportionnelles aux valeurs (l'inconnue pèse
+//   sa valeur de solution) ;
+// - PAS d'accolade : l'égalité se lit par l'alignement des lignes, les
+//   valeurs vivent dans les cases ;
+// - case nombre blanche (dégradé très léger), case inconnue bleu pâle
+//   avec 𝑥 italique bleu — ou « ? », ou tache Splat noire, selon le
+//   réglage « affichage de l'inconnue » ;
+// - états par HACHURES diagonales 135° : orange (sélection pour
+//   suppression), vert (sélection pour regroupement), bleu (à
+//   calculer), gris + opacité réduite (case enlevée, « garder
+//   hachuré ») ; résultat en vert doux ; valeur conclue en rouge ;
+// - rôles sémantiques fixes façon PythaBarre (vert/bleu/orange) pour
+//   synchroniser barre, figure et équation ;
+// - chiffres énormes, graisse maximale, virgule décimale française.
 //
-// Rendu : SVG pur, déterministe, couleurs de la charte uniquement.
-// Cycle 2 → collège : mêmes barres, seules les valeurs changent.
+// Ce module rend la version STATIQUE (SVG pur, déterministe) : fiches,
+// questions, corrections, aperçus. La version interactive (clic,
+// pensée tablette — jamais de glisser-déposer dans les outils barres)
+// sera un rendu DOM du même modèle de données.
 
-import { COULEURS, TYPOGRAPHIE } from "../../charte/src/charte.js";
+import { COULEURS_BARRES } from "../../charte/src/charte.js";
 
-export const VERSION_BARRES = 1;
-export const ROLES_SEGMENT = ["connu", "second", "accent", "inconnu"];
+export const VERSION_BARRES = 2;
 
-const HAUTEUR_BARRE = 44;
-const INTER_BARRE = 12;
-const HAUTEUR_ACCOLADE = 16;
-const HAUTEUR_ETIQUETTE = 24;
-const MARGE = 4;
+export const TYPES_DE_PIECE = ["nombre", "inconnue"];
+export const ETATS_PIECE = [
+  "normal",
+  "aCalculer",
+  "selectionSuppression",
+  "selectionAjout",
+  "supprime",
+  "resultat",
+  "conclu",
+];
+export const AFFICHAGES_INCONNUE = ["lettre", "question", "splat"];
+export const ROLES_PIECE = ["aucun", "vert", "bleu", "orange"];
 
-function stylePour(role) {
-  switch (role) {
-    case "second":
-      return { fond: COULEURS.turquoise, texte: "#ffffff", bord: COULEURS.bleuFonce, pointille: false };
-    case "accent":
-      return { fond: COULEURS.orange, texte: "#ffffff", bord: COULEURS.bleuFonce, pointille: false };
-    case "inconnu":
-      return { fond: COULEURS.papier, texte: COULEURS.encre, bord: COULEURS.bleu, pointille: true };
+const OPACITE_FILET = 0.36;
+const POLICE_VALEURS = "'Segoe UI', system-ui, sans-serif";
+const POLICE_LETTRE = "Georgia, 'Times New Roman', serif";
+
+// Tache Splat (blob noir à 5 lobes, silhouette simplifiée de l'icône
+// d'ÉquaBarre), dessinée dans un carré 100×100 centré en (50,50).
+const CHEMIN_SPLAT =
+  "M50 8 C62 10 68 20 78 18 C90 16 96 26 88 36 C82 44 92 50 92 58 " +
+  "C92 70 80 72 74 80 C68 90 56 92 50 84 C44 92 30 92 26 82 C22 72 10 70 10 58 " +
+  "C10 48 20 44 16 34 C12 24 22 14 32 18 C40 20 42 10 50 8 Z";
+
+function fondsPour(piece) {
+  const role = piece.role ?? "aucun";
+  if (piece.etat === "supprime") {
+    return { haut: COULEURS_BARRES.supprimeFond, bas: COULEURS_BARRES.supprimeFond, texte: COULEURS_BARRES.attenue };
+  }
+  if (piece.etat === "resultat" || piece.etat === "conclu") {
+    return { haut: COULEURS_BARRES.resultatFond, bas: COULEURS_BARRES.resultatFondBas, texte: piece.etat === "conclu" ? COULEURS_BARRES.conclusion : COULEURS_BARRES.encre };
+  }
+  if (role === "vert") return { haut: COULEURS_BARRES.roleVert, bas: COULEURS_BARRES.resultatFondBas, texte: COULEURS_BARRES.roleVertTexte, opaciteHaut: 0.19 };
+  if (role === "bleu") return { haut: COULEURS_BARRES.roleBleu, bas: COULEURS_BARRES.inconnueFondBas, texte: COULEURS_BARRES.roleBleuTexte, opaciteHaut: 0.17 };
+  if (role === "orange") return { haut: COULEURS_BARRES.roleOrange, bas: COULEURS_BARRES.nombreFond, texte: COULEURS_BARRES.roleOrangeTexte, opaciteHaut: 0.17 };
+  if (piece.type === "inconnue") {
+    return { haut: COULEURS_BARRES.inconnueFond, bas: COULEURS_BARRES.inconnueFondBas, texte: COULEURS_BARRES.inconnueTexte };
+  }
+  return { haut: COULEURS_BARRES.nombreFond, bas: COULEURS_BARRES.nombreFondBas, texte: COULEURS_BARRES.encre };
+}
+
+function hachuresPour(etat) {
+  switch (etat) {
+    case "selectionSuppression":
+      return { couleur: COULEURS_BARRES.hachureSuppression, opacite: 0.22 };
+    case "selectionAjout":
+      return { couleur: COULEURS_BARRES.hachureAjout, opacite: 0.16 };
+    case "aCalculer":
+      return { couleur: COULEURS_BARRES.hachureCalcul, opacite: 0.12 };
+    case "supprime":
+      return { couleur: COULEURS_BARRES.hachureGris ?? COULEURS_BARRES.filet, opacite: 0.26 };
     default:
-      return { fond: COULEURS.bleu, texte: "#ffffff", bord: COULEURS.bleuFonce, pointille: false };
+      return null;
   }
 }
 
-function cheminAccolade(x1, x2, y, position) {
-  // Accolade horizontale de x1 à x2, pointe au milieu, ouverte vers la
-  // barre ; « haut » = au-dessus (pointe vers le haut), « bas » = dessous.
-  const sens = position === "haut" ? -1 : 1;
-  const h = HAUTEUR_ACCOLADE * sens;
-  const milieu = (x1 + x2) / 2;
-  const c = Math.min(10, (x2 - x1) / 4);
-  return [
-    `M ${x1} ${y}`,
-    `C ${x1} ${y + h / 2} ${x1 + c} ${y + h / 2} ${x1 + c} ${y + h / 2}`,
-    `L ${milieu - c} ${y + h / 2}`,
-    `C ${milieu} ${y + h / 2} ${milieu} ${y + h} ${milieu} ${y + h}`,
-    `C ${milieu} ${y + h} ${milieu} ${y + h / 2} ${milieu + c} ${y + h / 2}`,
-    `L ${x2 - c} ${y + h / 2}`,
-    `C ${x2} ${y + h / 2} ${x2} ${y} ${x2} ${y}`,
-  ].join(" ");
+function texteDePiece(piece, inconnue) {
+  if (piece.etiquette !== undefined) return String(piece.etiquette);
+  if (piece.type === "inconnue") {
+    if (inconnue.affichage === "question") return "?";
+    if (inconnue.affichage === "splat") return "";
+    return inconnue.lettre ?? "x";
+  }
+  return String(piece.valeur).replace(".", ",");
 }
 
 /**
- * Dessine un schéma en barres.
+ * Dessine un schéma en barres façon maths&go (tableau à lignes empilées).
  *
  * @param {object} options
- * @param {Array<{etiquette?: string, segments: Array<{valeur: number, etiquette?: string, role?: string}>}>} options.barres
- * @param {Array<{barre: number, de: number, a: number, position: "haut" | "bas", etiquette: string}>} [options.accolades]
- * @param {number} [options.largeur] — largeur utile du dessin en pixels
+ * @param {Array<{etiquette?: string, pieces: Array<{
+ *   type: "nombre" | "inconnue",
+ *   valeur?: number,          // requis pour un nombre ; poids d'affichage
+ *   etiquette?: string,       // remplace le texte automatique
+ *   etat?: string,            // voir ETATS_PIECE
+ *   role?: string,            // aucun | vert | bleu | orange
+ * }>}>} options.lignes — de haut en bas ; l'égalité se lit par l'alignement
+ * @param {{ affichage?: "lettre" | "question" | "splat", lettre?: string, valeur?: number }} [options.inconnue]
+ *   — valeur = poids d'affichage de chaque case inconnue (la solution)
+ * @param {number} [options.largeur] — largeur totale en pixels
+ * @param {number} [options.hauteurPiece] — hauteur d'une ligne (104 comme les outils)
+ * @param {string} [options.prefixeId] — préfixe des motifs internes (unicité dans la page)
  * @returns {string} balise <svg> autonome
  */
-export function dessinerSchemaBarres({ barres, accolades = [], largeur = 480 } = {}) {
-  if (!Array.isArray(barres) || barres.length === 0) {
-    throw new RangeError("dessinerSchemaBarres : au moins une barre est requise");
+export function dessinerBarres({
+  lignes,
+  inconnue = {},
+  largeur = 640,
+  hauteurPiece = 104,
+  prefixeId = "mgb",
+} = {}) {
+  if (!Array.isArray(lignes) || lignes.length === 0) {
+    throw new RangeError("dessinerBarres : au moins une ligne est requise");
   }
-  for (const [i, barre] of barres.entries()) {
-    if (!Array.isArray(barre.segments) || barre.segments.length === 0) {
-      throw new RangeError(`dessinerSchemaBarres : la barre ${i} n'a aucun segment`);
-    }
-    for (const segment of barre.segments) {
-      if (!(typeof segment.valeur === "number") || !(segment.valeur > 0)) {
-        throw new RangeError(`dessinerSchemaBarres : valeur de segment invalide dans la barre ${i}`);
-      }
-      if (segment.role !== undefined && !ROLES_SEGMENT.includes(segment.role)) {
-        throw new RangeError(`dessinerSchemaBarres : rôle inconnu « ${segment.role} »`);
-      }
-    }
+  const affichage = inconnue.affichage ?? "lettre";
+  if (!AFFICHAGES_INCONNUE.includes(affichage)) {
+    throw new RangeError(`dessinerBarres : affichage d'inconnue inconnu « ${affichage} »`);
   }
-  for (const a of accolades) {
-    const barre = barres[a.barre];
-    if (!barre) throw new RangeError(`accolade : barre ${a.barre} inexistante`);
-    if (!(Number.isInteger(a.de) && Number.isInteger(a.a) && a.de >= 0 && a.a >= a.de && a.a < barre.segments.length)) {
-      throw new RangeError(`accolade : segments ${a.de}..${a.a} invalides pour la barre ${a.barre}`);
+  const poidsInconnue = inconnue.valeur ?? 1;
+  if (!(poidsInconnue > 0)) {
+    throw new RangeError("dessinerBarres : la valeur d'affichage de l'inconnue doit être > 0");
+  }
+
+  const poidsDePiece = (piece) => {
+    if (piece.type === "inconnue") return poidsInconnue;
+    if (piece.type === "nombre") {
+      if (!(typeof piece.valeur === "number") || !(piece.valeur > 0)) {
+        throw new RangeError("dessinerBarres : chaque nombre doit avoir une valeur > 0");
+      }
+      return piece.valeur;
     }
-    if (a.position !== "haut" && a.position !== "bas") {
-      throw new RangeError(`accolade : position « ${a.position} » invalide (haut ou bas)`);
+    throw new RangeError(`dessinerBarres : type de pièce inconnu « ${piece.type} »`);
+  };
+
+  for (const [i, ligne] of lignes.entries()) {
+    if (!Array.isArray(ligne.pieces) || ligne.pieces.length === 0) {
+      throw new RangeError(`dessinerBarres : la ligne ${i} n'a aucune pièce`);
+    }
+    for (const piece of ligne.pieces) {
+      poidsDePiece(piece);
+      if (piece.etat !== undefined && !ETATS_PIECE.includes(piece.etat)) {
+        throw new RangeError(`dessinerBarres : état inconnu « ${piece.etat} »`);
+      }
+      if (piece.role !== undefined && !ROLES_PIECE.includes(piece.role)) {
+        throw new RangeError(`dessinerBarres : rôle inconnu « ${piece.role} »`);
+      }
     }
   }
 
-  const totalMax = Math.max(
-    ...barres.map((b) => b.segments.reduce((s, seg) => s + seg.valeur, 0)),
+  const avecNoms = lignes.some((l) => l.etiquette);
+  const margeGauche = avecNoms ? 96 : 2;
+  const largeurUtile = largeur - margeGauche - 2;
+  const poidsMax = Math.max(
+    ...lignes.map((l) => l.pieces.reduce((s, p) => s + poidsDePiece(p), 0)),
   );
-  const avecNoms = barres.some((b) => b.etiquette);
-  const margeGauche = avecNoms ? 78 : MARGE;
-  const placeAccolade = HAUTEUR_ACCOLADE + HAUTEUR_ETIQUETTE;
-  const margeHaut = accolades.some((a) => a.position === "haut") ? placeAccolade + MARGE : MARGE;
-  const margeBas = accolades.some((a) => a.position === "bas") ? placeAccolade + MARGE : MARGE;
-  const echelle = (largeur - margeGauche - MARGE) / totalMax;
-  const hauteurTotale =
-    margeHaut + barres.length * HAUTEUR_BARRE + (barres.length - 1) * INTER_BARRE + margeBas;
-
-  const yBarre = (i) => margeHaut + i * (HAUTEUR_BARRE + INTER_BARRE);
-  const xSegment = (barre, index) =>
-    margeGauche + barre.segments.slice(0, index).reduce((s, seg) => s + seg.valeur, 0) * echelle;
+  const echelle = largeurUtile / poidsMax;
+  const hauteurTotale = lignes.length * hauteurPiece + 4;
+  const tailleTexte = Math.round(hauteurPiece * 0.38);
 
   const morceaux = [
-    `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${largeur} ${hauteurTotale}" width="${largeur}" height="${hauteurTotale}" role="img" aria-label="schéma en barres, ${barres.length} barre(s)">`,
+    `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${largeur} ${hauteurTotale}" width="${largeur}" height="${hauteurTotale}" role="img" aria-label="schéma en barres maths&amp;go, ${lignes.length} ligne(s)">`,
+    `<defs>` +
+      ["selectionSuppression", "selectionAjout", "aCalculer", "supprime"]
+        .map((etat) => {
+          const h = hachuresPour(etat);
+          return `<pattern id="${prefixeId}-${etat}" width="15" height="15" patternTransform="rotate(135)" patternUnits="userSpaceOnUse"><rect width="15" height="15" fill="#ffffff" fill-opacity="0"/><rect width="8" height="15" fill="${h.couleur}" fill-opacity="${h.opacite}"/></pattern>`;
+        })
+        .join("") +
+      `</defs>`,
   ];
 
-  barres.forEach((barre, i) => {
-    const y = yBarre(i);
-    if (barre.etiquette) {
+  const filet = `stroke="${COULEURS_BARRES.filet}" stroke-opacity="${OPACITE_FILET}" stroke-width="2"`;
+
+  lignes.forEach((ligne, i) => {
+    const y = 2 + i * hauteurPiece;
+    const largeurLigne = ligne.pieces.reduce((s, p) => s + poidsDePiece(p), 0) * echelle;
+
+    if (ligne.etiquette) {
       morceaux.push(
-        `<text x="${margeGauche - 10}" y="${y + HAUTEUR_BARRE / 2}" font-family='${TYPOGRAPHIE.titres}' font-size="17" fill="${COULEURS.encre}" text-anchor="end" dominant-baseline="central">${barre.etiquette}</text>`,
+        `<text x="${margeGauche - 12}" y="${y + hauteurPiece / 2}" font-family="${POLICE_VALEURS}" font-size="${Math.round(tailleTexte * 0.55)}" font-weight="700" fill="${COULEURS_BARRES.encre}" text-anchor="end" dominant-baseline="central">${ligne.etiquette}</text>`,
       );
     }
-    barre.segments.forEach((segment, j) => {
-      const x = xSegment(barre, j);
-      const l = segment.valeur * echelle;
-      const style = stylePour(segment.role ?? "connu");
+
+    let x = margeGauche;
+    ligne.pieces.forEach((piece) => {
+      const l = poidsDePiece(piece) * echelle;
+      const fonds = fondsPour(piece);
+      const opaciteCase = piece.etat === "supprime" ? 0.42 : 1;
+
+      morceaux.push(`<g opacity="${opaciteCase}">`);
       morceaux.push(
-        `<rect x="${x}" y="${y}" width="${l}" height="${HAUTEUR_BARRE}" fill="${style.fond}" stroke="${style.bord}" stroke-width="2"${style.pointille ? ' stroke-dasharray="6 4"' : ""}/>`,
+        `<rect x="${x}" y="${y}" width="${l}" height="${hauteurPiece}" fill="${fonds.haut}"${fonds.opaciteHaut ? ` fill-opacity="${fonds.opaciteHaut}"` : ""}/>`,
       );
-      if (segment.etiquette) {
+      if (!fonds.opaciteHaut) {
         morceaux.push(
-          `<text x="${x + l / 2}" y="${y + HAUTEUR_BARRE / 2}" font-family='${TYPOGRAPHIE.titres}' font-size="19" font-weight="600" fill="${style.texte}" text-anchor="middle" dominant-baseline="central">${segment.etiquette}</text>`,
+          `<rect x="${x}" y="${y + hauteurPiece / 2}" width="${l}" height="${hauteurPiece / 2}" fill="${fonds.bas}" fill-opacity="0.6"/>`,
         );
       }
-    });
-  });
+      const hachures = hachuresPour(piece.etat);
+      if (hachures) {
+        morceaux.push(
+          `<rect x="${x}" y="${y}" width="${l}" height="${hauteurPiece}" fill="url(#${prefixeId}-${piece.etat})"/>`,
+        );
+      }
 
-  for (const a of accolades) {
-    const barre = barres[a.barre];
-    const x1 = xSegment(barre, a.de);
-    const x2 = xSegment(barre, a.a) + barre.segments[a.a].valeur * echelle;
-    const y = a.position === "haut" ? yBarre(a.barre) - MARGE : yBarre(a.barre) + HAUTEUR_BARRE + MARGE;
-    morceaux.push(
-      `<path d="${cheminAccolade(x1, x2, y, a.position)}" fill="none" stroke="${COULEURS.encre}" stroke-width="2.5" stroke-linecap="round"/>`,
-    );
-    const yTexte =
-      a.position === "haut" ? y - HAUTEUR_ACCOLADE - 10 : y + HAUTEUR_ACCOLADE + 12;
-    morceaux.push(
-      `<text x="${(x1 + x2) / 2}" y="${yTexte}" font-family='${TYPOGRAPHIE.titres}' font-size="18" font-weight="600" fill="${COULEURS.encre}" text-anchor="middle" dominant-baseline="central">${a.etiquette}</text>`,
-    );
-  }
+      const texte = texteDePiece(piece, { affichage, lettre: inconnue.lettre });
+      if (piece.type === "inconnue" && affichage === "splat" && piece.etiquette === undefined) {
+        const cote = hauteurPiece * 0.62;
+        morceaux.push(
+          `<g transform="translate(${x + l / 2 - cote / 2} ${y + hauteurPiece / 2 - cote / 2}) scale(${cote / 100})"><path d="${CHEMIN_SPLAT}" fill="${COULEURS_BARRES.splat}"/></g>`,
+        );
+      } else if (texte) {
+        const italique = piece.type === "inconnue" && affichage === "lettre" && piece.etiquette === undefined;
+        morceaux.push(
+          `<text x="${x + l / 2}" y="${y + hauteurPiece / 2}" font-family="${italique ? POLICE_LETTRE : POLICE_VALEURS}"${italique ? ' font-style="italic"' : ""} font-size="${tailleTexte}" font-weight="900" letter-spacing="-1" fill="${fonds.texte}" text-anchor="middle" dominant-baseline="central">${texte}</text>`,
+        );
+      }
+      morceaux.push(`</g>`);
+
+      x += l;
+    });
+
+    // Filets : séparateurs verticaux internes (jamais sur le bord droit),
+    // tracés une seule fois.
+    let xs = margeGauche;
+    ligne.pieces.slice(0, -1).forEach((piece) => {
+      xs += poidsDePiece(piece) * echelle;
+      morceaux.push(`<line x1="${xs}" y1="${y}" x2="${xs}" y2="${y + hauteurPiece}" ${filet}/>`);
+    });
+    // Contour de la ligne : gauche, droite, bas — et haut seulement pour
+    // la première ligne (le trait du milieu n'est jamais doublé).
+    morceaux.push(`<line x1="${margeGauche}" y1="${y}" x2="${margeGauche}" y2="${y + hauteurPiece}" ${filet}/>`);
+    morceaux.push(`<line x1="${margeGauche + largeurLigne}" y1="${y}" x2="${margeGauche + largeurLigne}" y2="${y + hauteurPiece}" ${filet}/>`);
+    if (i === 0) {
+      morceaux.push(`<line x1="${margeGauche}" y1="${y}" x2="${margeGauche + largeurLigne}" y2="${y}" ${filet}/>`);
+    }
+    morceaux.push(`<line x1="${margeGauche}" y1="${y + hauteurPiece}" x2="${margeGauche + largeurLigne}" y2="${y + hauteurPiece}" ${filet}/>`);
+  });
 
   morceaux.push("</svg>");
   return morceaux.join("");

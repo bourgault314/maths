@@ -2,6 +2,7 @@ import { describe, it } from "node:test";
 import assert from "node:assert/strict";
 import {
   COULEURS,
+  COULEURS_BARRES,
   ESPACEMENTS,
   RAYONS,
   STATUT_CHARTE,
@@ -12,7 +13,7 @@ import {
 
 describe("charte — intégrité des données", () => {
   it("toutes les couleurs sont des hexadécimaux valides", () => {
-    for (const [role, valeur] of Object.entries(COULEURS)) {
+    for (const [role, valeur] of Object.entries({ ...COULEURS, ...COULEURS_BARRES })) {
       assert.match(valeur, /^#[0-9a-f]{6}$/, `couleur invalide pour ${role} : ${valeur}`);
     }
   });
