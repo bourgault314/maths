@@ -130,9 +130,12 @@ export function squareRootSvg({x=0,baseline=20,radicand="25",fontSize=18,color="
 export function pythagoreanBarsSvg({x=0,y=0,width=250,height=30,strokeWidth=2,labelFontSize=16}={}){
   const split=width*9/25;
   const c=PYTHAGORE_COLORS;
-  const topLabelY=round(y+height/2+1);
-  const bottomLabelY=round(y+height*1.5+1);
-  return `<g font-family="Segoe UI,Arial,sans-serif" font-size="${labelFontSize}" font-weight="850" text-anchor="middle" dominant-baseline="middle">
+  // Safari ne gère pas toujours dominant-baseline dans un SVG affiché comme image.
+  // On place donc explicitement la ligne de base afin de centrer visuellement les libellés.
+  const labelBaselineOffset=labelFontSize*.35;
+  const topLabelY=round(y+height/2+labelBaselineOffset);
+  const bottomLabelY=round(y+height*1.5+labelBaselineOffset);
+  return `<g font-family="Segoe UI,Arial,sans-serif" font-size="${labelFontSize}" font-weight="850" text-anchor="middle">
     <rect x="${x}" y="${y}" width="${width}" height="${height}" fill="${c.hypFill}" stroke="${c.hypStroke}" stroke-width="${strokeWidth}"/>
     <rect x="${x}" y="${y+height}" width="${round(split)}" height="${height}" fill="${c.leg1Fill}" stroke="${c.leg1Stroke}" stroke-width="${strokeWidth}"/>
     <rect x="${round(x+split)}" y="${y+height}" width="${round(width-split)}" height="${height}" fill="${c.leg2Fill}" stroke="${c.leg2Stroke}" stroke-width="${strokeWidth}"/>
