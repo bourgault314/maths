@@ -1,11 +1,15 @@
 import fs from 'node:fs';
 import vm from 'node:vm';
 
+// Les contrôles comparent des extraits contenant des sauts de ligne : on
+// normalise en LF pour que le résultat soit identique sous Windows (CRLF)
+// et sur les serveurs de vérification (LF).
+const read=url=>fs.readFileSync(url,'utf8').replace(/\r\n/g,'\n');
 const file='outils/plateaux_manipulation/moulin_pythagore.html';
-const html=fs.readFileSync(new URL(`../${file}`,import.meta.url),'utf8');
-const snapEngine=fs.readFileSync(new URL('../assets/js/pythagore-snap-engine.js',import.meta.url),'utf8');
-const publicThumbnail=fs.readFileSync(new URL('../assets/img/thumbnails/moulin-pythagore-capture.svg',import.meta.url),'utf8');
-const archivedSolution=fs.readFileSync(new URL('../assets/img/thumbnails/moulin-pythagore-solution.svg',import.meta.url),'utf8');
+const html=read(new URL(`../${file}`,import.meta.url));
+const snapEngine=read(new URL('../assets/js/pythagore-snap-engine.js',import.meta.url));
+const publicThumbnail=read(new URL('../assets/img/thumbnails/moulin-pythagore-capture.svg',import.meta.url));
+const archivedSolution=read(new URL('../assets/img/thumbnails/moulin-pythagore-solution.svg',import.meta.url));
 const fail=message=>{console.error(`ERREUR — ${message}`);process.exitCode=1;};
 const near=(a,b,tolerance=1e-7)=>Math.abs(a-b)<=tolerance;
 const area=points=>Math.abs(points.reduce((sum,p,index)=>{const q=points[(index+1)%points.length];return sum+p[0]*q[1]-p[1]*q[0];},0)/2);
@@ -137,7 +141,7 @@ if(!html.includes('grid-template-columns:repeat(2,minmax(0,1fr))')) fail('Les co
 if(!html.includes('function queueCompletionCheck()') || !html.includes('className="confettiPiece"') || !html.includes('className="celebrationSubtitle"')) fail('La réussite automatique et la célébration soignée doivent rester actives.');
 
 const pythaFile='outils/pythabarre.html';
-const pytha=fs.readFileSync(new URL(`../${pythaFile}`,import.meta.url),'utf8');
+const pytha=read(new URL(`../${pythaFile}`,import.meta.url));
 const pythaScript=pytha.match(/<script>\s*([\s\S]*?)<\/script>/)?.[1];
 try{new vm.Script(pythaScript||'');}catch(error){fail(`Le JavaScript de PythaBarre est invalide : ${error.message}`);}
 if(!pytha.includes('.stage:not(:fullscreen) #btnFullscreen{display:none;}')) fail('Le plein écran de PythaBarre doit être masqué sur téléphone.');
