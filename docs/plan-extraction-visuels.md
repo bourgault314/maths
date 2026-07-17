@@ -45,6 +45,19 @@ l'inventaire vivant. Statuts : ✅ extrait dans `packages/objets` ·
 | `geometry.angle-vocabulary` — vocabulaire des angles | 13 | `outils/angles/` (gabarits, bandes magnétiques) | ⏸ |
 | `geometry.solid` — solides | 7 | `outils/plateaux_manipulation/cubes_construction.html` (3D) | ⏸ |
 
+## Objets « anti-erreurs GPT » demandés par Gwenaël (19/07)
+
+Douleurs récurrentes avec les IA généralistes, à régler une fois pour
+toutes par des objets à lois mathématiques :
+
+| Douleur | Objet à créer | Statut |
+|---|---|---|
+| Triangles aux angles faux | **objet triangle** (loi des sinus/cosinus, angles testés au millième) | ✅ v1 (19/07) |
+| Flèches des tableaux de proportionnalité toujours droites | objet **flèche courbe ×k** (l'arc « rond », jamais droit) | 🔜 |
+| Pas d'outil pour tracer les quadrilatères et figures usuelles | objet **quadrilatères / figures** | 🔜 |
+| Positionnement anarchique des noms dans les tableaux | objet **tableau** (placement réglé une fois) | 🔜 |
+| Fractions jamais bien écrites | objet **écriture fractionnaire** (empilement et barre corrects) | 🔜 |
+
 ## Méthode d'extraction (validée par l'expérience barres v1→v2)
 
 1. Lire la version du SITE (le gros HTML) — code + rendu réel au navigateur ;
