@@ -114,7 +114,7 @@ html.share-test .setup-tools{display:flex}
 .badge{font-size:.7rem;background:#e7f7f5;color:#08756f;border-radius:999px;padding:2px 7px;margin-left:5px;white-space:nowrap}
 .auto-footer{display:flex;flex-wrap:wrap;align-items:flex-start;justify-content:center;gap:0 6px;max-width:100%;margin:12px auto 0;color:var(--muted);font-size:.75rem;line-height:1.45;text-align:center}
 .credit{width:max-content;max-width:100%;margin:0}
-.credit>summary{padding:5px 2px;border-radius:8px;cursor:pointer;font-weight:700;list-style:none}
+.credit>summary{padding:5px 2px;border-radius:8px;cursor:pointer;font-weight:700;list-style:none;text-decoration:underline;text-underline-offset:3px}
 .credit>summary::-webkit-details-marker{display:none}
 .credit p{max-width:720px;margin:5px 8px 0}
 .credit a{color:var(--blue);font-weight:700;text-decoration:none}
