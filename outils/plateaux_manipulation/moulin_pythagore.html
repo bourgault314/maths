@@ -111,6 +111,7 @@
 
   .pieceSelected .piecePoly{stroke-width:5.2;}
   .handle{pointer-events:auto; cursor:crosshair;}
+  .handleHit{fill:transparent; stroke:none; pointer-events:all;}
   .handleLine{stroke:#111827; stroke-width:3; opacity:.8;}
   .handleDot{fill:#fff; stroke:#111827; stroke-width:3;}
 
@@ -156,10 +157,10 @@
        sur l'unique figure, comme sur ordinateur. */
     #stageWrap{touch-action:pan-y; overflow-x:hidden;}
     svg#stage{touch-action:pan-y;}
+    svg#stage.isDragging{touch-action:none;}
     svg#stage.compactLayout .label{display:none!important;}
     svg#stage .piecePoly,
     svg#stage .handle{touch-action:none;}
-    svg#stage .handle{display:none!important;}
     #fullscreen{display:none;}
     #mobilePuzzleHint{display:none;}
   }
@@ -189,20 +190,14 @@
     #toolbar #checkSolution,
     #toolbar #enonce,
     #toolbar #fullscreen{display:none;}
-    #toolbar .group:nth-child(4){display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); width:100%; gap:6px;}
+    #toolbar .group:nth-child(4){display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); width:100%; gap:6px;}
     #toolbar .group:nth-child(4) button{width:100%; min-width:0; padding:9px 5px; font-size:13px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;}
-    #rotateMobileLeft,
-    #rotateMobileRight{display:block;}
-    #rotateMobileLeft:disabled,
-    #rotateMobileRight:disabled{opacity:.45; cursor:default;}
     #mobilePuzzleHint{display:none;}
     #puzzleStatus{font-size:12px; padding-left:8px; padding-right:8px;}
     #stageWrap{min-height:0;}
   }
 
   @media (min-width:701px){
-    #rotateMobileLeft,
-    #rotateMobileRight{display:none;}
     #toolbar .group:nth-child(2){order:4;}
     #toolbar .group:nth-child(3){order:5;}
     #toolbar .group:nth-child(4){order:3;}
@@ -238,8 +233,6 @@
     </div>
 
     <div class="group">
-      <button id="rotateMobileLeft" class="primary" aria-label="Tourner la pièce sélectionnée de 5 degrés vers la gauche" title="Sélectionne une pièce, puis tourne-la de 5° vers la gauche" disabled>↺ 5°</button>
-      <button id="rotateMobileRight" class="primary" aria-label="Tourner la pièce sélectionnée de 5 degrés vers la droite" title="Sélectionne une pièce, puis tourne-la de 5° vers la droite" disabled>↻ 5°</button>
       <button id="flip" class="primary">Retourner</button>
       <button id="reset" class="danger">Réinitialiser</button>
       <button id="checkSolution" class="primary">Vérifier</button>
@@ -340,8 +333,6 @@
   const toggleLetters = document.getElementById("toggleLetters");
   const btnReset = document.getElementById("reset");
   const btnFlip = document.getElementById("flip");
-  const btnRotateMobileLeft = document.getElementById("rotateMobileLeft");
-  const btnRotateMobileRight = document.getElementById("rotateMobileRight");
   const btnCheckSolution = document.getElementById("checkSolution");
   const btnFullscreen = document.getElementById("fullscreen");
   const btnEnonce = document.getElementById("enonce");
@@ -683,8 +674,6 @@
       // au premier plan
       p.el.parentNode.appendChild(p.el);
     }
-    btnRotateMobileLeft.disabled=!id;
-    btnRotateMobileRight.disabled=!id;
   }
 
   function flipPiece(id){
@@ -971,8 +960,8 @@
         <p><strong>Objectif :</strong> déplacer les <strong>5 pièces</strong> provenant de <em>a²</em> et <em>b²</em> pour reconstituer le carré de l'hypoténuse <em>c²</em>.</p>
         <p class="muted">Conseil : commence par placer la grande pièce quadrilatère, puis complète avec les triangles.</p>
         <ul>
-          <li>Tu peux <strong>tourner</strong> (poignée ↻) et <strong>retourner</strong> une pièce avec le bouton <em>Retourner</em>.</li>
-          <li>Le <strong>snap</strong> est actif : relâche près d'un sommet (carré / autres pièces) pour aimanter.</li>
+          <li>Tu peux <strong>tourner librement</strong> avec la poignée ↻ ou avec deux doigts, et <strong>retourner</strong> une pièce avec le bouton <em>Retourner</em>.</li>
+          <li>Le <strong>snap</strong> est actif : relâche près d'un bord ou d'une pièce déjà placée dans <em>c²</em> pour aimanter.</li>
         </ul>
       `
     },
@@ -1155,6 +1144,7 @@
 
         const gh=svgEl("g",{class:"handle","data-id":id,style:"display:none;"});
         gh.append(
+          svgEl("circle",{cx:0,cy:-64,r:34,class:"handleHit"}),
           svgEl("line",{x1:0,y1:0,x2:0,y2:-64,class:"handleLine"}),
           svgEl("circle",{cx:0,cy:-64,r:18,class:"handleDot"})
         );
@@ -1170,6 +1160,7 @@
           pos:{...ctr},
           rot:0,
           flipX:false,
+          hasMoved:false,
           home:{...ctr},
           el:g,
           polyEl:poly,
@@ -1462,43 +1453,158 @@
     return out;
   }
 
-  // Aimantation complémentaire : lorsque la pièce est déjà orientée comme la
-  // cible, on aligne aussi un bord entier. Cela évite le simple « coin collé »
-  // qui était insuffisant pour les puzzles les plus complexes.
+  function closestPointOnSegment(point,a,b){
+    const dx=b.x-a.x, dy=b.y-a.y;
+    const len2=dx*dx+dy*dy;
+    if(len2<1e-9) return {...a};
+    const t=Math.max(0,Math.min(1,((point.x-a.x)*dx+(point.y-a.y)*dy)/len2));
+    return {x:a.x+t*dx,y:a.y+t*dy};
+  }
+
+  function parallelAngleDistance(a,b){
+    const d=Math.abs(normAngleDeg(a-b));
+    return Math.min(d,Math.abs(180-d));
+  }
+
+  function rotationSnapCandidates(piece){
+    const candidates=[0,90,180,270];
+    if(!isCompactViewport()){
+      if(isBhaskaraPuzzle() && piece && isNearTargetMoulin(piece,260)){
+        for(const localA of edgeAnglesLocal(piece)){
+          for(const targetA of bhaskaraTargetAngles()) candidates.push(normAngleDeg(targetA-localA));
+        }
+      }
+      return candidates;
+    }
+    if(!piece || !isNearTargetMoulin(piece,touchFriendlyDistance(170,90))) return candidates;
+
+    const localEdges=edgeAnglesLocal(piece);
+    const targetMoulin=activePuzzleMoulin();
+    if(targetMoulin){
+      const targetAngles=segmentsFromVertices(targetMoulin.mold.corners)
+        .map(edge=>deg(Math.atan2(edge.b.y-edge.a.y,edge.b.x-edge.a.x)));
+      for(const localA of localEdges){
+        for(const targetA of targetAngles) candidates.push(normAngleDeg(targetA-localA));
+      }
+    }
+
+    for(const other of state.pieces.values()){
+      if(other.id===piece.id || !other.hasMoved || !isNearTargetMoulin(other,80)) continue;
+      const targetAngles=segmentsFromVertices(pieceWorldVertices(other))
+        .map(edge=>deg(Math.atan2(edge.b.y-edge.a.y,edge.b.x-edge.a.x)));
+      for(const localA of localEdges){
+        for(const targetA of targetAngles) candidates.push(normAngleDeg(targetA-localA));
+      }
+    }
+
+    const exactPose=state.solutionPoses.get(piece.id);
+    if(exactPose && exactPose.flipX===piece.flipX) candidates.push(normAngleDeg(exactPose.rot));
+    return candidates;
+  }
+
+  function snappedRotation(piece,proposedRot,threshold=SNAP.rot){
+    let best=proposedRot, bestD=Infinity;
+    for(const candidate of rotationSnapCandidates(piece)){
+      const d=Math.abs(normAngleDeg(proposedRot-candidate));
+      if(d<bestD){bestD=d;best=candidate;}
+    }
+    return bestD<threshold ? best : proposedRot;
+  }
+
+  // Aimantation locale : un sommet peut rejoindre n'importe quel point d'un
+  // bord du carré c², et deux bords presque parallèles peuvent se coller. Les
+  // pièces restées dans leur position de départ ne servent pas de cibles.
+  function tryLegacyEdgeSnap(piece){
+    if(!piece || !isNearTargetMoulin(piece,260)) return false;
+    const targetMoulin=activePuzzleMoulin();
+    if(!targetMoulin) return false;
+
+    const targetSegments=segmentsFromVertices(targetMoulin.mold.corners);
+    for(const [id,other] of state.pieces.entries()){
+      if(id===piece.id || !isNearTargetMoulin(other,260)) continue;
+      targetSegments.push(...segmentsFromVertices(pieceWorldVertices(other)));
+    }
+
+    const pieceSegments=segmentsFromVertices(pieceWorldVertices(piece));
+    let best=null;
+    for(const ps of pieceSegments){
+      const pAngle=deg(Math.atan2(ps.b.y-ps.a.y,ps.b.x-ps.a.x));
+      const pLen=Math.hypot(ps.b.x-ps.a.x,ps.b.y-ps.a.y);
+      for(const ts of targetSegments){
+        const tLen=Math.hypot(ts.b.x-ts.a.x,ts.b.y-ts.a.y);
+        if(Math.abs(pLen-tLen)>SNAP.posStrong*1.8) continue;
+        for(const [ta,tb] of [[ts.a,ts.b],[ts.b,ts.a]]){
+          const targetAngle=deg(Math.atan2(tb.y-ta.y,tb.x-ta.x));
+          const angleD=Math.abs(normAngleDeg(pAngle-targetAngle));
+          if(angleD>12) continue;
+          const delta={x:ta.x-ps.a.x,y:ta.y-ps.a.y};
+          const movedB={x:ps.b.x+delta.x,y:ps.b.y+delta.y};
+          const endD=Math.hypot(movedB.x-tb.x,movedB.y-tb.y);
+          if(endD>42) continue;
+          const score=endD+Math.abs(pLen-tLen)*0.6+angleD*1.4;
+          if(!best || score<best.score) best={delta,score};
+        }
+      }
+    }
+    if(!best) return false;
+    piece.pos.x+=best.delta.x;
+    piece.pos.y+=best.delta.y;
+    applyPieceTransform(piece);
+    return true;
+  }
+
   function tryEdgeSnap(piece){
-    if(!piece || !isNearTargetMoulin(piece, 260)) return false;
+    if(!isCompactViewport()) return tryLegacyEdgeSnap(piece);
+    if(!piece || !isNearTargetMoulin(piece,touchFriendlyDistance(180,100))) return false;
     const targetMoulin = activePuzzleMoulin();
     if(!targetMoulin) return false;
 
     const targetSegments = segmentsFromVertices(targetMoulin.mold.corners);
     for(const [id, other] of state.pieces.entries()){
-      if(id === piece.id || !isNearTargetMoulin(other, 260)) continue;
+      if(id===piece.id || !other.hasMoved || !isNearTargetMoulin(other,80)) continue;
       targetSegments.push(...segmentsFromVertices(pieceWorldVertices(other)));
     }
 
     const current = pieceWorldVertices(piece);
     const pieceSegments = segmentsFromVertices(current);
     let best = null;
+    const distanceThreshold=touchFriendlyDistance(SNAP.posStrong,30);
+
+    for(const vertex of current){
+      for(const target of targetSegments){
+        const point=closestPointOnSegment(vertex,target.a,target.b);
+        const distance=Math.hypot(point.x-vertex.x,point.y-vertex.y);
+        if(distance<distanceThreshold && (!best || distance<best.score)){
+          best={delta:{x:point.x-vertex.x,y:point.y-vertex.y},score:distance};
+        }
+      }
+    }
 
     for(const ps of pieceSegments){
       const pAngle = deg(Math.atan2(ps.b.y-ps.a.y, ps.b.x-ps.a.x));
       const pLen = Math.hypot(ps.b.x-ps.a.x, ps.b.y-ps.a.y);
       for(const ts of targetSegments){
+        const tx=ts.b.x-ts.a.x, ty=ts.b.y-ts.a.y;
         const tLen = Math.hypot(ts.b.x-ts.a.x, ts.b.y-ts.a.y);
-        if(Math.abs(pLen-tLen) > SNAP.posStrong*1.8) continue;
+        if(pLen<1e-8 || tLen<1e-8) continue;
+        const targetAngle=deg(Math.atan2(ty,tx));
+        const angleD=parallelAngleDistance(pAngle,targetAngle);
+        if(angleD>4) continue;
 
-        for(const [ta,tb] of [[ts.a,ts.b],[ts.b,ts.a]]){
-          const targetAngle = deg(Math.atan2(tb.y-ta.y, tb.x-ta.x));
-          const angleD = Math.abs(normAngleDeg(pAngle-targetAngle));
-          if(angleD > 12) continue;
+        const ux=tx/tLen, uy=ty/tLen, nx=-uy, ny=ux;
+        const da=(ps.a.x-ts.a.x)*nx+(ps.a.y-ts.a.y)*ny;
+        const db=(ps.b.x-ts.a.x)*nx+(ps.b.y-ts.a.y)*ny;
+        if(Math.max(Math.abs(da),Math.abs(db))>distanceThreshold*1.25) continue;
 
-          const delta = {x:ta.x-ps.a.x, y:ta.y-ps.a.y};
-          const movedB = {x:ps.b.x+delta.x, y:ps.b.y+delta.y};
-          const endD = Math.hypot(movedB.x-tb.x, movedB.y-tb.y);
-          if(endD > 42) continue;
+        const p0=(ps.a.x-ts.a.x)*ux+(ps.a.y-ts.a.y)*uy;
+        const p1=(ps.b.x-ts.a.x)*ux+(ps.b.y-ts.a.y)*uy;
+        const overlap=Math.min(Math.max(p0,p1),tLen)-Math.max(Math.min(p0,p1),0);
+        if(overlap<Math.min(pLen,tLen)*0.18) continue;
 
-          const score = endD + Math.abs(pLen-tLen)*0.6 + angleD*1.4;
-          if(!best || score < best.score) best = {delta, score};
+        const perpendicular=(da+db)/2;
+        const score=Math.abs(perpendicular)+angleD*2;
+        if(!best || score<best.score){
+          best={delta:{x:-perpendicular*nx,y:-perpendicular*ny},score};
         }
       }
     }
@@ -1515,7 +1621,7 @@
   // la bonne face est orientée et déposée près de sa pose exacte, les petits
   // écarts tactiles sont supprimés pour fermer proprement le pavage.
   function tryExactSolutionSnap(piece){
-    const nearDistance=touchFriendlyDistance(260,150);
+    const nearDistance=isCompactViewport() ? touchFriendlyDistance(180,100) : 260;
     if(!piece || !isNearTargetMoulin(piece,nearDistance)) return false;
     const pose=state.solutionPoses.get(piece.id);
     if(!pose || pose.flipX !== piece.flipX || !pose.expectedVertices) return false;
@@ -1531,11 +1637,13 @@
     const avgD=total/current.length;
     const centerD=Math.hypot(piece.pos.x-pose.pos.x,piece.pos.y-pose.pos.y);
     const rotD=Math.abs(normAngleDeg(piece.rot-pose.rot));
-    const vertexDistance=touchFriendlyDistance(92,44);
-    const averageDistance=touchFriendlyDistance(74,36);
-    const centerDistance=touchFriendlyDistance(145,68);
-    const closeCenterDistance=touchFriendlyDistance(96,46);
-    const closeEnough=maxD<vertexDistance || (avgD<averageDistance && centerD<centerDistance) || (centerD<closeCenterDistance && rotD<24);
+    const compact=isCompactViewport();
+    const vertexDistance=compact ? touchFriendlyDistance(30,18) : 92;
+    const averageDistance=compact ? touchFriendlyDistance(24,14) : 74;
+    const centerDistance=compact ? touchFriendlyDistance(42,24) : 145;
+    const closeEnough=compact
+      ? maxD<vertexDistance || (avgD<averageDistance && centerD<centerDistance && rotD<8)
+      : maxD<vertexDistance || (avgD<averageDistance && centerD<centerDistance) || (centerD<96 && rotD<24);
     if(!closeEnough) return false;
 
     piece.pos={...pose.pos};
@@ -1547,26 +1655,54 @@
 
 
   // ---------- Interactions ----------
+  function addGesturePointer(evt){
+    const drag=state.dragging;
+    if(!drag || (drag.type!=="move" && drag.type!=="transform") || drag.pointers.size>=2) return false;
+    const point=clientToWorld(evt);
+    const captureEl=evt.currentTarget || stage;
+    drag.pointers.set(evt.pointerId,{point,captureEl});
+    try{ captureEl.setPointerCapture(evt.pointerId); }catch(_err){}
+
+    if(drag.pointers.size===2){
+      const entries=[...drag.pointers.entries()];
+      const a=entries[0][1].point, b=entries[1][1].point;
+      const piece=state.pieces.get(drag.pieceId);
+      drag.type="transform";
+      drag.startMidpoint={x:(a.x+b.x)/2,y:(a.y+b.y)/2};
+      drag.startGestureAngle=Math.atan2(b.y-a.y,b.x-a.x);
+      drag.startPos={...piece.pos};
+      drag.startRot=piece.rot;
+    }
+    return true;
+  }
+
   function onPiecePointerDown(evt){
     evt.preventDefault();
     evt.stopPropagation();
     const id=evt.currentTarget.closest("g").getAttribute("data-id");
+
+    if(state.dragging){
+      if(state.dragging.pieceId===id) addGesturePointer(evt);
+      return;
+    }
+
     setSelected(id);
     const p0 = clientToWorld(evt);
     state.dragging={
       type:"move",
       pieceId:id,
       startPointer:p0,
-      startPos:{...state.pieces.get(id).pos}
+      startPos:{...state.pieces.get(id).pos},
+      pointers:new Map()
     };
-    state.dragging.pointerId=evt.pointerId;
     stage.classList.add("isDragging");
-    try{ stage.setPointerCapture(evt.pointerId); }catch(_err){}
+    addGesturePointer(evt);
   }
 
   function onHandlePointerDown(evt){
     evt.preventDefault();
     evt.stopPropagation();
+    if(state.dragging) return;
     const id=evt.currentTarget.getAttribute("data-id");
     const p0=clientToWorld(evt);
     const piece=state.pieces.get(id);
@@ -1576,112 +1712,132 @@
       pieceId:id,
       startPointer:p0,
       startAngleRad:Math.atan2(p0.y-piece.pos.y,p0.x-piece.pos.x),
-      startRot:piece.rot
+      startRot:piece.rot,
+      pointerId:evt.pointerId,
+      captureEl:evt.currentTarget
     };
-    state.dragging.pointerId=evt.pointerId;
     stage.classList.add("isDragging");
-    try{ stage.setPointerCapture(evt.pointerId); }catch(_err){}
+    try{ evt.currentTarget.setPointerCapture(evt.pointerId); }catch(_err){}
   }
 
   stage.addEventListener("pointermove", evt => {
     if(!state.dragging) return;
     evt.preventDefault();
-    const piece=state.pieces.get(state.dragging.pieceId);
+    const drag=state.dragging;
+    const piece=state.pieces.get(drag.pieceId);
     const p=clientToWorld(evt);
     state.lastPointerWorld = p;
 
-    if(state.dragging.type==="move"){
-      piece.pos.x=state.dragging.startPos.x+(p.x-state.dragging.startPointer.x);
-      piece.pos.y=state.dragging.startPos.y+(p.y-state.dragging.startPointer.y);
-    } else {
+    if(drag.type==="move" || drag.type==="transform"){
+      const pointer=drag.pointers.get(evt.pointerId);
+      if(!pointer) return;
+      pointer.point=p;
+    }
+
+    if(drag.type==="move"){
+      piece.pos.x=drag.startPos.x+(p.x-drag.startPointer.x);
+      piece.pos.y=drag.startPos.y+(p.y-drag.startPointer.y);
+      piece.hasMoved=true;
+    } else if(drag.type==="transform"){
+      const pointers=[...drag.pointers.values()];
+      if(pointers.length<2) return;
+      const a=pointers[0].point, b=pointers[1].point;
+      const midpoint={x:(a.x+b.x)/2,y:(a.y+b.y)/2};
+      const angle=Math.atan2(b.y-a.y,b.x-a.x);
+      piece.pos.x=drag.startPos.x+(midpoint.x-drag.startMidpoint.x);
+      piece.pos.y=drag.startPos.y+(midpoint.y-drag.startMidpoint.y);
+      const proposed=drag.startRot+deg(angle-drag.startGestureAngle);
+      piece.rot=state.angleSnapEnabled ? snappedRotation(piece,proposed,5) : proposed;
+      piece.hasMoved=true;
+    } else if(drag.type==="rotate"){
+      if(evt.pointerId!==drag.pointerId) return;
       const a=Math.atan2(p.y-piece.pos.y,p.x-piece.pos.x);
-      piece.rot=state.dragging.startRot+deg(a-state.dragging.startAngleRad);
-      if(state.angleSnapEnabled && !evt.shiftKey){
-        const candidates=[0,90,180,270];
-
-        // Bhaskara : on ajoute des rotations qui alignent une arête de la pièce
-        // avec les côtés du carré incliné c². C'est ce qui aide l'hypoténuse
-        // à devenir vraiment parallèle au bord cible.
-        if(isBhaskaraPuzzle() && isNearTargetMoulin(piece, 260)){
-          const localEdges = edgeAnglesLocal(piece);
-          const targetAngles = bhaskaraTargetAngles();
-          for(const localA of localEdges){
-            for(const targetA of targetAngles){
-              candidates.push(normAngleDeg(targetA - localA));
-            }
-          }
-        }
-
-        let best=null, bestD=Infinity;
-        candidates.forEach(c=>{
-          const d=Math.abs(normAngleDeg(piece.rot-c));
-          if(d<bestD){bestD=d;best=c;}
-        });
-
-        const threshold = (isBhaskaraPuzzle() && isNearTargetMoulin(piece, 260)) ? 12 : SNAP.rot;
-        if(bestD<threshold) piece.rot=best;
-      }
+      const proposed=drag.startRot+deg(a-drag.startAngleRad);
+      const threshold=!isCompactViewport() && isBhaskaraPuzzle() && isNearTargetMoulin(piece,260) ? 12 : (isCompactViewport()?5:SNAP.rot);
+      piece.rot=state.angleSnapEnabled && !evt.shiftKey ? snappedRotation(piece,proposed,threshold) : proposed;
     }
     applyPieceTransform(piece);
   });
 
+  function tryPointSnap(piece){
+    const compact=isCompactViewport();
+    if(!piece || (compact && !isNearTargetMoulin(piece,touchFriendlyDistance(180,100)))) return false;
+    const targets=[...state.snapPoints];
+    for(const other of state.pieces.values()){
+      if(other.id===piece.id) continue;
+      if(compact && (!other.hasMoved || !isNearTargetMoulin(other,80))) continue;
+      for(const vertex of pieceWorldVertices(other)) targets.push(vertex);
+    }
+
+    let bestDelta=null, minD=Infinity;
+    const threshold=touchFriendlyDistance(SNAP.posStrong,30);
+    for(const vertex of pieceWorldVertices(piece)){
+      for(const target of targets){
+        const d=Math.hypot(vertex.x-target.x,vertex.y-target.y);
+        if(d<minD && d<threshold){
+          minD=d;
+          bestDelta={x:target.x-vertex.x,y:target.y-vertex.y};
+        }
+      }
+    }
+    if(!bestDelta) return false;
+    piece.pos.x+=bestDelta.x;
+    piece.pos.y+=bestDelta.y;
+    applyPieceTransform(piece);
+    return true;
+  }
+
+  function snapPieceAfterDrop(piece){
+    if(!piece || !piece.hasMoved || !state.snapEnabled) return;
+
+    if(!isCompactViewport()){
+      applyBhaskaraAngleSnap(piece,18);
+      let snapped=tryExactSolutionSnap(piece);
+      if(!snapped && isBhaskaraPuzzle()) snapped=tryBhaskaraEdgeSnap(piece) || tryBhaskaraSquareSnap(piece);
+      if(!snapped) snapped=tryEdgeSnap(piece);
+      if(!snapped) tryPointSnap(piece);
+      return;
+    }
+
+    piece.rot=snappedRotation(piece,piece.rot,5);
+    applyPieceTransform(piece);
+
+    // Le premier snap rencontré est toujours local : bord du carré, bord d'une
+    // pièce déjà descendue, puis sommet. Le pavage exact ne corrige ensuite
+    // qu'un écart résiduel très faible.
+    const locallySnapped=tryEdgeSnap(piece) || tryPointSnap(piece);
+    if(locallySnapped || isNearTargetMoulin(piece,80)) tryExactSolutionSnap(piece);
+  }
+
   function finishPointerInteraction(evt){
     if(!state.dragging) return;
     evt.preventDefault();
-    const id = state.dragging.pieceId;
+    const drag=state.dragging;
+    const id = drag.pieceId;
     const piece = state.pieces.get(id);
-    const pointerId = state.dragging.pointerId;
 
-    // Le retournement par double-clic / double-tap est désactivé :
-    // une pièce se retourne uniquement avec le bouton "Retourner".
+    if(drag.type==="move" || drag.type==="transform"){
+      const pointer=drag.pointers.get(evt.pointerId);
+      if(!pointer) return;
+      try{ if(pointer.captureEl.hasPointerCapture(evt.pointerId)) pointer.captureEl.releasePointerCapture(evt.pointerId); }catch(_err){}
+      drag.pointers.delete(evt.pointerId);
+
+      if(drag.pointers.size){
+        const [remainingId,remaining]=drag.pointers.entries().next().value;
+        drag.type="move";
+        drag.startPointer={...remaining.point};
+        drag.startPos={...piece.pos};
+        drag.primaryPointerId=remainingId;
+        return;
+      }
+    } else if(drag.type==="rotate"){
+      if(evt.pointerId!==drag.pointerId) return;
+      try{ if(drag.captureEl.hasPointerCapture(evt.pointerId)) drag.captureEl.releasePointerCapture(evt.pointerId); }catch(_err){}
+    }
+
     state.dragging=null;
     stage.classList.remove("isDragging");
-    if(pointerId !== undefined){
-      try{ if(stage.hasPointerCapture(pointerId)) stage.releasePointerCapture(pointerId); }catch(_err){}
-    }
-
-    // Bhaskara : au lâcher, on corrige d'abord l'angle si une arête est presque
-    // parallèle à un côté du carré incliné. Ensuite seulement, le snap par coin
-    // existant peut placer la pièce proprement.
-    let snappedByExact = false;
-    if(piece && state.snapEnabled){
-      applyBhaskaraAngleSnap(piece, 18);
-      snappedByExact = tryExactSolutionSnap(piece);
-      if(!snappedByExact && isBhaskaraPuzzle()) snappedByExact = tryBhaskaraEdgeSnap(piece) || tryBhaskaraSquareSnap(piece);
-      if(!snappedByExact) snappedByExact = tryEdgeSnap(piece);
-    }
-
-    // Snap : vers le carré c² + vers les sommets des autres pièces (pour aider à fermer le pavage)
-    // Si Bhaskara a verrouillé une hypoténuse ou le carré central, on ne relance pas le snap générique.
-    if(piece && state.snapEnabled && !snappedByExact){
-      const verts = pieceWorldVertices(piece);
-      const targets = [...state.snapPoints];
-
-      for(const [oid, op] of state.pieces.entries()){
-        if(oid === id) continue;
-        const oVerts = pieceWorldVertices(op);
-        for(const v of oVerts) targets.push({x:v.x, y:v.y});
-      }
-
-      let bestDelta=null, minD=Infinity;
-      const threshold = touchFriendlyDistance(SNAP.posStrong, 38);
-
-      for(const v of verts){
-        for(const t of targets){
-          const d=Math.hypot(v.x-t.x,v.y-t.y);
-          if(d < minD && d < threshold){
-            minD=d;
-            bestDelta={x:t.x-v.x,y:t.y-v.y};
-          }
-        }
-      }
-
-      if(bestDelta){
-        piece.pos.x += bestDelta.x;
-        piece.pos.y += bestDelta.y;
-        applyPieceTransform(piece);
-      }
-    }
+    snapPieceAfterDrop(piece);
   }
 
   stage.addEventListener("pointerup", finishPointerInteraction);
@@ -1689,6 +1845,14 @@
 
   // Sélection via clic sur le fond
   stage.addEventListener("pointerdown", (evt)=>{
+    // Pendant un glissement tactile, le second doigt peut se poser n'importe
+    // où sur le plateau : il pilote alors librement la rotation de la pièce.
+    if(state.dragging && evt.pointerType==="touch"){
+      evt.preventDefault();
+      evt.stopPropagation();
+      addGesturePointer(evt);
+      return;
+    }
     // si clic sur le fond du SVG (pas sur une pièce)
     if(evt.target === stage || evt.target === world){
       setSelected(null);
@@ -1732,6 +1896,7 @@
       p.pos={...p.home};
       p.rot=0;
       p.flipX=false;
+      p.hasMoved=false;
       applyPieceTransform(p);
     });
     setSelected(null);
@@ -1742,17 +1907,6 @@
     if(state.mode === "vide") return;
     if(state.selectedId) flipPiece(state.selectedId);
   };
-
-  function rotateSelectedPiece(deltaDeg){
-    if(state.mode === "vide" || !state.selectedId) return;
-    const piece = state.pieces.get(state.selectedId);
-    if(!piece) return;
-    piece.rot = normAngleDeg(piece.rot + deltaDeg);
-    applyPieceTransform(piece);
-  }
-
-  btnRotateMobileLeft.onclick = () => rotateSelectedPiece(-5);
-  btnRotateMobileRight.onclick = () => rotateSelectedPiece(5);
 
   btnCheckSolution.onclick = () => checkPuzzleSolution();
 
