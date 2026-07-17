@@ -113,6 +113,30 @@
   <div id="equationJetons" aria-live="polite"></div>
 </section>
 
+<section id="secTriangle">
+  <h2>Objet triangle — les angles sont toujours justes</h2>
+  <p class="aide">Tracé par la loi des sinus et des cosinus : les angles dessinés sont <b>exactement</b> ceux demandés (testé au millième de degré). L'angle droit reçoit son carré rouge automatiquement.</p>
+  <div class="barreCommandes">
+    <label class="reglageTaille">Nom <input type="text" id="triNom" value="ABC" maxlength="3" style="width:56px;text-transform:uppercase"></label>
+    <select id="triMode" aria-label="Mode de construction">
+      <option value="angles">Par les angles (°)</option>
+      <option value="cotes">Par les côtés (cm)</option>
+    </select>
+    <input type="number" id="triV1" value="90" style="width:70px" step="0.5">
+    <input type="number" id="triV2" value="35" style="width:70px" step="0.5">
+    <input type="number" id="triV3" value="55" style="width:70px" step="0.5">
+    <label class="reglageTaille"><input type="checkbox" id="triAffAngles" checked> angles</label>
+    <label class="reglageTaille"><input type="checkbox" id="triAffCotes"> longueurs</label>
+    <label class="reglageTaille">Taille <input type="range" id="triTaille" min="200" max="640" value="360" step="10"></label>
+  </div>
+  <div class="zoneRendu" id="renduTriangle"></div>
+  <p class="erreur" id="erreurTriangle"></p>
+  <div class="barreCommandes">
+    <button id="btnSvgTri">⬇ SVG</button>
+    <button id="btnPngTri">⬇ PNG</button>
+  </div>
+</section>
+
 <section id="secGenerateurJetons">
   <h2>Générateur de jetons — redessinez à volonté</h2>
   <p class="aide">Changez les nombres : le dessin se refait instantanément, toujours régulier. Puis téléchargez-le pour vos fiches et diaporamas.</p>
@@ -153,6 +177,7 @@ import { dessinerBarres } from "../../packages/objets/src/barres.js";
 import { barresDepuisEquation } from "../../packages/objets/src/equation-barres.js";
 import { dessinerJeton, dessinerGroupeJetons } from "../../packages/objets/src/jetons.js";
 import { dessinerTache } from "../../packages/objets/src/splat.js";
+import { dessinerTriangle } from "../../packages/objets/src/triangle.js";
 import { creerGenerateur } from "../../packages/moteur-exercices/src/aleatoire.js";
 
 /* ========== 1. ÉQUABARRE ========== */
@@ -430,6 +455,40 @@ function telechargerPng(svgTexte, nom, echelle = 3) {
   };
   image.src = url;
 }
+
+/* — Triangle aux vraies mesures — */
+const renduTri = document.getElementById("renduTriangle");
+const erreurTri = document.getElementById("erreurTriangle");
+let dernierSvgTri = "";
+function genererTriangle() {
+  try {
+    const valeurs = ["triV1", "triV2", "triV3"].map((id) => Number(document.getElementById(id).value));
+    const mode = document.getElementById("triMode").value;
+    dernierSvgTri = dessinerTriangle({
+      nom: document.getElementById("triNom").value.toUpperCase(),
+      [mode]: valeurs,
+      afficherAngles: document.getElementById("triAffAngles").checked,
+      afficherCotes: document.getElementById("triAffCotes").checked,
+      taille: Number(document.getElementById("triTaille").value),
+    });
+    renduTri.innerHTML = dernierSvgTri;
+    erreurTri.textContent = "";
+  } catch (e) { erreurTri.textContent = e.message; }
+}
+for (const id of ["triNom", "triMode", "triV1", "triV2", "triV3", "triAffAngles", "triAffCotes", "triTaille"]) {
+  document.getElementById(id).addEventListener("input", genererTriangle);
+}
+document.getElementById("triMode").addEventListener("change", () => {
+  const cotes = document.getElementById("triMode").value === "cotes";
+  document.getElementById("triV1").value = cotes ? 5 : 90;
+  document.getElementById("triV2").value = cotes ? 4 : 35;
+  document.getElementById("triV3").value = cotes ? 3 : 55;
+  document.getElementById("triAffCotes").checked = cotes;
+  genererTriangle();
+});
+document.getElementById("btnSvgTri").addEventListener("click", () => telechargerSvg(dernierSvgTri, "triangle-mathsgo"));
+document.getElementById("btnPngTri").addEventListener("click", () => telechargerPng(dernierSvgTri, "triangle-mathsgo"));
+genererTriangle();
 
 const renduGen = document.getElementById("renduGenJetons");
 const erreurGen = document.getElementById("erreurGenJetons");
