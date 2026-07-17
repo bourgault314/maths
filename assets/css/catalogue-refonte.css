@@ -82,7 +82,7 @@ select { cursor: pointer; }
   display: grid;
   grid-template-columns: 1fr auto 1fr;
   align-items: center;
-  margin: 10px 0 8px;
+  margin: var(--mathsgo-entry-top) 0 8px;
   padding: 10px 12px 8px;
   border: 1px solid rgba(203, 216, 230, 0.92);
   border-radius: 22px;
@@ -625,7 +625,7 @@ select { cursor: pointer; }
 
 @media (min-width: 681px) {
   body.catalogue-is-deep .site-shell {
-    margin-top: 16px;
+    margin-top: var(--mathsgo-entry-top);
     overflow: hidden;
     border: 1px solid rgba(203, 216, 230, 0.9);
     border-radius: 28px;
