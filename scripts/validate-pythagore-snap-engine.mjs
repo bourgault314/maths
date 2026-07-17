@@ -105,7 +105,7 @@ const match=html.match(/const EXACT_SOLUTION_UV = (\{[\s\S]*?\n  \});/);
 if(!match) fail('Les pavages exacts sont introuvables.');
 const layouts=vm.runInNewContext(`(${match[1]})`,Object.create(null));
 const side=Math.sqrt(5);
-const sideByPuzzle={sixEquilibre:Math.sqrt(2),tangram:Math.sqrt(2),moulinIsocele:Math.sqrt(2)};
+const sideByPuzzle={sixEquilibre:Math.sqrt(2),tangram:Math.sqrt(2),moulinIsocele:Math.sqrt(2),mosaiqueSept:5/3};
 const bhaskaraCorners=[[side,0],[0,0],[0,side],[side,side]];
 const bhaskaraThird=bhaskaraCorners.map((point,index)=>{
   const next=bhaskaraCorners[(index+1)%bhaskaraCorners.length];

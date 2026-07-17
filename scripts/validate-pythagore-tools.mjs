@@ -56,9 +56,9 @@ const sources={
     a1:[[0,0],[1,0],[1,1]],a2:[[0,0],[1,1],[0,1]]
   },
   mosaiqueSept:{
-    q1:[[0,-2],[0.5,-2],[1,-1],[0,-0.5]],q2:[[2,-2],[2,-1.5],[1,-1],[0.5,-2]],
-    q3:[[2,0],[1.5,0],[1,-1],[2,-1.5]],q4:[[0,0],[0,-0.5],[1,-1],[1.5,0]],
-    tri1:[[-1,0],[0,0],[-0.5,0.5]],tri2:[[0,0],[0,1],[-0.5,0.5]],tri3:[[-1,0],[0,1],[-1,1]]
+    redTop:[[0,-4/3],[4/3,-4/3],[0,-1/3]],redLeft:[[4/3,-4/3],[4/3,-1/3],[0,-1/3]],
+    redTrap:[[0,-1/3],[1,-1/3],[3/4,0],[0,0]],redSquare:[[1,-1/3],[4/3,-1/3],[4/3,0],[1,0]],
+    redSmall:[[3/4,0],[1,-1/3],[1,0]],blueTrap:[[-1,0],[0,0],[-3/4,1],[-1,1]],blueTri:[[0,0],[0,1],[-3/4,1]]
   },
   leitzmann:{
     bTop:[[0,-2],[2,-2],[4/3,-4/3]],bLeft:[[0,-2],[0,0],[4/3,-4/3]],bBottom:[[0,0],[2,0],[4/3,-4/3]],bRight:[[2,0],[2,-2],[4/3,-4/3]],
@@ -76,13 +76,13 @@ const expectedKeys={
   tangram:['large1','large2','medium','parallel','small1','small2','square'],
   mosaiqueOblique:['a1','a2','b1','b2','b3','b4'],
   moulinIsocele:['a1','a2','b1','b2'],
-  mosaiqueSept:['q1','q2','q3','q4','tri1','tri2','tri3'],
+  mosaiqueSept:['blueTrap','blueTri','redLeft','redSmall','redSquare','redTop','redTrap'],
   leitzmann:['aBottom','aLeft','aRight','aTop','bBottom','bLeft','bRight','bTop'],
   quatreIdentiques:['aSq','q1','q2','q3','q4']
 };
 const geometry={
   perigal:{side:sqrt5,area:5},lapeyronnie:{side:sqrt5,area:5},mosaiqueOblique:{side:sqrt5,area:5},leitzmann:{side:sqrt5,area:5},quatreIdentiques:{side:sqrt5,area:5},
-  sixEquilibre:{side:sqrt2,area:2},tangram:{side:sqrt2,area:2},moulinIsocele:{side:sqrt2,area:2},mosaiqueSept:{side:sqrt5,area:5}
+  sixEquilibre:{side:sqrt2,area:2},tangram:{side:sqrt2,area:2},moulinIsocele:{side:sqrt2,area:2},mosaiqueSept:{side:5/3,area:25/9}
 };
 
 for(const [puzzle,keys] of Object.entries(expectedKeys)){
@@ -107,7 +107,7 @@ if(!html.includes('${drawMoulinStatic(L, true)}\n  ${drawMoulinStatic(R, true)}'
 if(html.includes('id="showSolution"')) fail('La solution ne doit pas être accessible depuis l’interface élève.');
 if(!html.includes('<option value="perigal" selected>')) fail('Périgal doit être le puzzle ouvert par défaut.');
 if(!html.includes('<option value="lapeyronnie">5. Lapeyronnie (5 pièces)</option>') || html.includes('IREM — 5 pièces')) fail('Le puzzle de Lapeyronnie doit porter un nom explicite.');
-if(!html.includes('<option value="sixEquilibre">') || !html.includes('<option value="tangram">') || !html.includes('<option value="mosaiqueOblique">') || !html.includes('<option value="moulinIsocele">') || !html.includes('<option value="mosaiqueSept">')) fail('Les découpages ajoutés et restaurés doivent tous être proposés.');
+if(!html.includes('<option value="sixEquilibre">') || !html.includes('<option value="tangram">') || !html.includes('<option value="mosaiqueOblique">') || !html.includes('<option value="moulinIsocele">') || !html.includes('<option value="mosaiqueSept">10. Puzzle de Brest (7 pièces)</option>')) fail('Les découpages ajoutés et restaurés doivent tous être proposés.');
 if(!html.includes('const r=PUZZLES[state.puzzle]?.ratio ?? BASE.ratio;')) fail('Chaque puzzle doit pouvoir choisir son propre triangle rectangle.');
 if(publicThumbnail.includes('102,160 143.6,139.2 143.6,243.2')) fail('La vignette publique ne doit pas montrer le carré final résolu.');
 if(!archivedSolution.includes('102,160 143.6,139.2 143.6,243.2')) fail('L’illustration historique de la solution Périgal doit être conservée.');
