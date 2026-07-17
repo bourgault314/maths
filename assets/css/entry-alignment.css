@@ -1,0 +1,24 @@
+:root {
+  /* Repère vertical commun aux deux écrans d'entrée. Les hauteurs de
+     référence suivent les trois gabarits du catalogue (compact, standard,
+     grand écran) afin que son cadre conserve sa position actuelle. */
+  --mathsgo-entry-top: 16px;
+}
+
+@media (min-width: 921px) {
+  :root {
+    --mathsgo-entry-top: max(16px, calc((100dvh - 803px) / 2));
+  }
+}
+
+@media (min-width: 921px) and (max-height: 820px) {
+  :root {
+    --mathsgo-entry-top: max(16px, calc((100dvh - 679px) / 2));
+  }
+}
+
+@media (min-width: 1600px) and (min-height: 1000px) {
+  :root {
+    --mathsgo-entry-top: max(16px, calc((100dvh - 930px) / 2));
+  }
+}

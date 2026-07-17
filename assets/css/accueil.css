@@ -138,6 +138,16 @@ footer {
   line-height: 1.5;
 }
 
+/* Sur ordinateur, le bord supérieur du cadre reprend exactement le repère
+   de la page des domaines. Le contenu peut ainsi s'ouvrir vers le bas sans
+   que toute la composition saute au clic. */
+@media (min-width: 921px) {
+  body {
+    justify-content: flex-start;
+    padding-top: var(--mathsgo-entry-top);
+  }
+}
+
 .footer-line {
   display: inline-flex;
   align-items: baseline;
