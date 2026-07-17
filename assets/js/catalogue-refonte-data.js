@@ -689,26 +689,26 @@ window.MATHSGO_CATALOGUE = {
       "thumbnail": "assets/img/thumbnails/pythagore/gabarit-reciproque-pythagore.png?v=2",
       "cardDescription": "Comparer séparément le carré du plus grand côté et la somme des deux autres carrés, puis rédiger la conclusion adaptée."
     },
+    "outils/fiche_thales_direct_a_verifier.pdf": {
+      "primaryNotion": "thales",
+      "collections": [],
+      "tags": ["thales", "theoreme-direct", "longueur", "proportionnalite", "imprimable"],
+      "thumbnail": "assets/img/thumbnails/thales/thales-direct-a-verifier.png?v=2",
+      "cardDescription": "Tableau de proportionnalité, choix des colonnes utiles et rédaction pour calculer une longueur."
+    },
     "outils/fiche_reciproque_thales.pdf": {
       "primaryNotion": "thales",
       "collections": [],
       "tags": ["thales", "reciproque", "contraposee", "imprimable"],
-      "thumbnail": "assets/img/thumbnails/thales/reciproque-contraposee.png?v=1",
-      "cardDescription": "Méthode guidée, fiche adaptable et deux exemples rédigés pour démontrer que des droites sont parallèles ou non."
+      "thumbnail": "assets/img/thumbnails/thales/reciproque-contraposee.png?v=2",
+      "cardDescription": "Version 1 : méthode guidée, fiche adaptable et deux exemples pour démontrer un parallélisme ou son contraire."
     },
     "outils/fiche_thales_criteres_a_verifier.pdf": {
       "primaryNotion": "thales",
       "collections": [],
-      "tags": ["thales", "reciproque", "contraposee", "criteres", "imprimable", "a-verifier"],
-      "thumbnail": "assets/img/thumbnails/thales/tester-parallelisme-a-verifier.png?v=1",
-      "cardDescription": "Proposition à vérifier : comprendre puis appliquer un critère de parallélisme ou de non-parallélisme."
-    },
-    "outils/fiche_thales_direct_a_verifier.pdf": {
-      "primaryNotion": "thales",
-      "collections": [],
-      "tags": ["thales", "theoreme-direct", "longueur", "proportionnalite", "imprimable", "a-verifier"],
-      "thumbnail": "assets/img/thumbnails/thales/thales-direct-a-verifier.png?v=1",
-      "cardDescription": "Proposition à vérifier : tableau de proportionnalité, choix des colonnes et rédaction pour calculer une longueur."
+      "tags": ["thales", "reciproque", "contraposee", "criteres", "imprimable"],
+      "thumbnail": "assets/img/thumbnails/thales/tester-parallelisme-a-verifier.png?v=2",
+      "cardDescription": "Version 2 : partir des rapports, les comparer, puis vérifier la disposition seulement en cas d’égalité."
     },
     "outils/gabarits_proportionnalite_tableaux.pdf": { "primaryNotion": "proportionnalite", "collections": [], "tags": ["proportionnalite", "tableau", "gabarit", "imprimable"] },
     "outils/gabarit_proportionnalite_double_ligne_graduee.pdf": { "primaryNotion": "proportionnalite", "collections": [], "tags": ["proportionnalite", "double-ligne-graduee", "gabarit", "imprimable"] },
@@ -5131,9 +5131,40 @@ window.MATHSGO_CATALOGUE = {
       "recent": false
     },
     {
+      "id": "outils-fiche-thales-direct-a-verifier-pdf",
+      "title": "Thalès — calculer une longueur",
+      "description": "Tableau de proportionnalité, choix des colonnes utiles et rédaction pour calculer une longueur.",
+      "path": "outils/fiche_thales_direct_a_verifier.pdf",
+      "domains": [
+        "geometrie"
+      ],
+      "notions": [
+        "thales"
+      ],
+      "uses": [
+        "imprimer",
+        "entrainer"
+      ],
+      "types": [
+        "imprimable"
+      ],
+      "filters": [
+        "materiel-imprimer"
+      ],
+      "keywords": [
+        "théorème de Thalès",
+        "longueur",
+        "tableau de proportionnalité"
+      ],
+      "kind": "document",
+      "status": "published",
+      "featured": false,
+      "recent": true
+    },
+    {
       "id": "outils-fiche-reciproque-thales-pdf",
-      "title": "Thalès — réciproque et contraposée",
-      "description": "Une méthode guidée, un gabarit adaptable et deux exemples rédigés pour démontrer que deux droites sont parallèles ou non.",
+      "title": "Thalès — tester un parallélisme — V1",
+      "description": "Version 1 : méthode guidée, fiche adaptable et deux exemples pour démontrer un parallélisme ou son contraire.",
       "path": "outils/fiche_reciproque_thales.pdf",
       "domains": [
         "geometrie"
@@ -5164,8 +5195,8 @@ window.MATHSGO_CATALOGUE = {
     },
     {
       "id": "outils-fiche-thales-criteres-a-verifier-pdf",
-      "title": "Thalès — tester un parallélisme (à vérifier)",
-      "description": "Une proposition alternative pour comprendre le même coefficient puis appliquer un critère de parallélisme ou de non-parallélisme.",
+      "title": "Thalès — tester un parallélisme — V2",
+      "description": "Version 2 : partir des rapports, les comparer, puis vérifier la disposition seulement en cas d’égalité.",
       "path": "outils/fiche_thales_criteres_a_verifier.pdf",
       "domains": [
         "geometrie"
@@ -5186,40 +5217,7 @@ window.MATHSGO_CATALOGUE = {
       "keywords": [
         "réciproque",
         "contraposée",
-        "critère de parallélisme",
-        "à vérifier"
-      ],
-      "kind": "document",
-      "status": "published",
-      "featured": false,
-      "recent": true
-    },
-    {
-      "id": "outils-fiche-thales-direct-a-verifier-pdf",
-      "title": "Thalès direct — calculer une longueur (à vérifier)",
-      "description": "Une proposition pour comprendre le tableau de proportionnalité, choisir deux colonnes utiles et rédiger le calcul d’une longueur.",
-      "path": "outils/fiche_thales_direct_a_verifier.pdf",
-      "domains": [
-        "geometrie"
-      ],
-      "notions": [
-        "thales"
-      ],
-      "uses": [
-        "imprimer",
-        "entrainer"
-      ],
-      "types": [
-        "imprimable"
-      ],
-      "filters": [
-        "materiel-imprimer"
-      ],
-      "keywords": [
-        "théorème de Thalès",
-        "longueur",
-        "tableau de proportionnalité",
-        "à vérifier"
+        "critère de parallélisme"
       ],
       "kind": "document",
       "status": "published",

@@ -64,17 +64,17 @@
   \coordinate (M) at (2.59,-0.58);
   \coordinate (N) at (2.26,1.06);
   \fill[softTeal!38] (A)--(B)--(C)--cycle;
-  \draw[brandNavy,line width=1.20pt] (A)--(B);
-  \draw[brandNavy,line width=1.20pt] (A)--(C);
+  \draw[brandNavy,line width=1.20pt] (A)--(M);
+  \draw[brandNavy,line width=1.20pt] (A)--(N);
+  \draw[brandNavy,line width=1.24pt] (M)--(N);
+  \draw[brandBlue,line width=1.20pt] (M)--(B);
+  \draw[brandBlue,line width=1.20pt] (N)--(C);
   \draw[brandTeal,line width=1.34pt] (B)--(C);
-  \draw[brandBlue,line width=1.24pt,densely dashed] (M)--(N);
   \node[brandOrange,font=\bfseries\small] at (-0.27,-0.25) {$A$};
   \node[brandBlue,font=\bfseries\small] at (2.62,-0.88) {$M$};
   \node[brandBlue,font=\bfseries\small] at (2.04,1.28) {$N$};
   \node[brandTeal,font=\bfseries\small] at (5.68,-1.18) {$B$};
   \node[brandTeal,font=\bfseries\small] at (4.89,2.42) {$C$};
-  \node[brandBlue,font=\bfseries\scriptsize] at (3.68,0.48) {$(MN)$};
-  \node[brandTeal,font=\bfseries\scriptsize] at (6.02,0.78) {$(BC)$};
 \end{tikzpicture}}
 
 \newcommand{\FigurePapillon}[1]{%
@@ -84,17 +84,17 @@
   \coordinate (C) at (2.60,1.90);
   \coordinate (M) at (-2.21,0.78);
   \coordinate (N) at (-1.69,-1.24);
-  \draw[brandNavy,line width=1.20pt] (M)--(A)--(B);
-  \draw[brandNavy,line width=1.20pt] (N)--(A)--(C);
-  \draw[brandBlue,line width=1.24pt,densely dashed] (M)--(N);
+  \draw[brandNavy,line width=1.20pt] (M)--(A);
+  \draw[brandNavy,line width=1.20pt] (N)--(A);
+  \draw[brandNavy,line width=1.24pt] (M)--(N);
+  \draw[brandTeal,line width=1.20pt] (A)--(B);
+  \draw[brandTeal,line width=1.20pt] (A)--(C);
   \draw[brandTeal,line width=1.34pt] (B)--(C);
   \node[brandOrange,font=\bfseries\small] at (-0.05,0.31) {$A$};
   \node[brandBlue,font=\bfseries\small] at (-2.50,0.94) {$M$};
   \node[brandBlue,font=\bfseries\small] at (-1.93,-1.43) {$N$};
   \node[brandTeal,font=\bfseries\small] at (3.68,-1.21) {$B$};
   \node[brandTeal,font=\bfseries\small] at (2.80,2.12) {$C$};
-  \node[brandBlue,font=\bfseries\scriptsize] at (-3.18,-0.18) {$(MN)$};
-  \node[brandTeal,font=\bfseries\scriptsize] at (3.98,0.54) {$(BC)$};
 \end{tikzpicture}}
 
 \newcommand{\BlankEmboitee}[1]{%
@@ -105,10 +105,12 @@
   \coordinate (M) at (2.59,-0.58);
   \coordinate (N) at (2.26,1.06);
   \fill[softTeal!22] (A)--(B)--(C)--cycle;
-  \draw[brandNavy!90,line width=1.10pt] (A)--(B);
-  \draw[brandNavy!90,line width=1.10pt] (A)--(C);
+  \draw[brandNavy!90,line width=1.10pt] (A)--(M);
+  \draw[brandNavy!90,line width=1.10pt] (A)--(N);
+  \draw[brandNavy!90,line width=1.15pt] (M)--(N);
+  \draw[brandBlue,line width=1.10pt] (M)--(B);
+  \draw[brandBlue,line width=1.10pt] (N)--(C);
   \draw[brandTeal,line width=1.18pt] (B)--(C);
-  \draw[brandBlue,line width=1.15pt,densely dashed] (M)--(N);
   \node at (-0.55,-0.45) {\LowDotted{0.48}};
   \node at (2.82,-1.08) {\LowDotted{0.48}};
   \node at (1.82,1.50) {\LowDotted{0.48}};
@@ -123,9 +125,11 @@
   \coordinate (C) at (2.60,1.90);
   \coordinate (M) at (-2.21,0.78);
   \coordinate (N) at (-1.69,-1.24);
-  \draw[brandNavy!90,line width=1.10pt] (M)--(A)--(B);
-  \draw[brandNavy!90,line width=1.10pt] (N)--(A)--(C);
-  \draw[brandBlue,line width=1.15pt,densely dashed] (M)--(N);
+  \draw[brandNavy!90,line width=1.10pt] (M)--(A);
+  \draw[brandNavy!90,line width=1.10pt] (N)--(A);
+  \draw[brandNavy!90,line width=1.15pt] (M)--(N);
+  \draw[brandTeal,line width=1.10pt] (A)--(B);
+  \draw[brandTeal,line width=1.10pt] (A)--(C);
   \draw[brandTeal,line width=1.18pt] (B)--(C);
   \node at (0.00,0.55) {\LowDotted{0.48}};
   \node at (-2.72,1.20) {\LowDotted{0.48}};
@@ -167,7 +171,7 @@
 \begin{center}
 \begin{tikzpicture}
 \node[rounded corners=7pt,draw=brandNavy!42,fill=softBlue!26,line width=.70pt,text width=17.70cm,inner sep=6pt,align=center] {
-{\fontsize{9.6}{10.3}\selectfont Les points $A,M,B$ sont alignés. Les points $A,N,C$ sont alignés. Les droites $(MN)$ et $(BC)$ sont parallèles.}\par\vspace{0.05cm}
+{\fontsize{9.6}{10.3}\selectfont Les points $\Apt,\Mpt,\Bpt$ sont alignés. Les points $\Apt,\Npt,\Cpt$ sont alignés. Les droites $(\MNcol)$ et $(\BCcol)$ sont parallèles.}\par\vspace{0.05cm}
 {\bfseries\color{brandNavy} Les deux alignements et le parallélisme sont indispensables.}
 };
 \end{tikzpicture}
@@ -182,8 +186,8 @@
 {\renewcommand{\arraystretch}{1.58}\fontsize{10.7}{11.4}\selectfont
 $\displaystyle
 \begin{array}{|c|c|c|c|}\hline
-\substack{\text{Triangle }\Apt\Mpt\Npt\\\text{(en cm)}} & \AMcol & \ANcol & \MNcol\\ \hline
-\substack{\text{Triangle }\Apt\Bpt\Cpt\\\text{(en cm)}} & \ABcol & \ACcol & \BCcol\\ \hline
+\substack{\text{Petit triangle }\Apt\Mpt\Npt\\\text{(en cm)}} & \AMcol & \ANcol & \MNcol\\ \hline
+\substack{\text{Grand triangle }\Apt\Bpt\Cpt\\\text{(en cm)}} & \ABcol & \ACcol & \BCcol\\ \hline
 \end{array}$}\par\vspace{0.22cm}
 {\fontsize{15.5}{16.5}\selectfont
 $\displaystyle \frac{\AMcol}{\ABcol}\mkern-8mu=\mkern-8mu\frac{\ANcol}{\ACcol}\mkern-8mu=\mkern-8mu\frac{\MNcol}{\BCcol}$}
@@ -252,19 +256,19 @@ Je conclus avec une phrase et l'unité : \textbf{« Donc $\ldots=\ldots$ cm. »}
 \node[circle,fill=brandNavy,text=white,font=\bfseries,minimum size=0.52cm,inner sep=0pt] at (0.47,-1.05) {1};
 \node[anchor=north west,text width=3.92cm,align=left] at (0.84,-0.91) {\bfseries\color{brandNavy}\fontsize{10.2}{10.9}\selectfont Je repère.\par\vspace{0.04cm}{\scriptsize\bfseries\color{brandNavy} Sommet, deux alignements, droites parallèles.}};
 
-\node[circle,fill=brandNavy,text=white,font=\bfseries,minimum size=0.52cm,inner sep=0pt] at (0.47,-4.10) {2};
-\node[anchor=north west,text width=3.92cm,align=left] at (0.84,-3.96) {\bfseries\color{brandNavy}\fontsize{10.2}{10.9}\selectfont J'associe.\par\vspace{0.04cm}{\scriptsize\bfseries\color{brandNavy} Une longueur du petit triangle avec la longueur correspondante du grand.}};
+\node[circle,fill=brandNavy,text=white,font=\bfseries,minimum size=0.52cm,inner sep=0pt] at (0.47,-6.42) {2};
+\node[anchor=north west,text width=3.92cm,align=left] at (0.84,-6.28) {\bfseries\color{brandNavy}\fontsize{10.2}{10.9}\selectfont J'associe.\par\vspace{0.04cm}{\scriptsize\bfseries\color{brandNavy} Une longueur du petit triangle avec la longueur correspondante du grand.}};
 
-\node[circle,fill=brandNavy,text=white,font=\bfseries,minimum size=0.52cm,inner sep=0pt] at (0.47,-7.45) {3};
-\node[anchor=north west,text width=3.92cm,align=left] at (0.84,-7.31) {\bfseries\color{brandNavy}\fontsize{10.2}{10.9}\selectfont J'écris Thalès.\par\vspace{0.04cm}{\scriptsize\bfseries\color{brandNavy} Les trois rapports dans le même ordre.}};
+\node[circle,fill=brandNavy,text=white,font=\bfseries,minimum size=0.52cm,inner sep=0pt] at (0.47,-9.48) {3};
+\node[anchor=north west,text width=3.92cm,align=left] at (0.84,-9.34) {\bfseries\color{brandNavy}\fontsize{10.2}{10.9}\selectfont J'écris Thalès.\par\vspace{0.04cm}{\scriptsize\bfseries\color{brandNavy} Les trois rapports dans le même ordre.}};
 
-\node[circle,fill=brandNavy,text=white,font=\bfseries,minimum size=0.52cm,inner sep=0pt] at (0.47,-10.85) {4};
-\node[anchor=north west,text width=3.92cm,align=left] at (0.84,-10.71) {\bfseries\color{brandNavy}\fontsize{10.2}{10.9}\selectfont Je calcule.\par\vspace{0.04cm}{\scriptsize\bfseries\color{brandNavy} Je garde la colonne de l'inconnue et une colonne complète, puis j'utilise les produits en croix.}};
+\node[circle,fill=brandNavy,text=white,font=\bfseries,minimum size=0.52cm,inner sep=0pt] at (0.47,-12.48) {4};
+\node[anchor=north west,text width=3.92cm,align=left] at (0.84,-12.34) {\bfseries\color{brandNavy}\fontsize{10.2}{10.9}\selectfont Je calcule.\par\vspace{0.04cm}{\scriptsize\bfseries\color{brandNavy} Je garde la colonne de l'inconnue et une colonne complète, puis j'utilise les produits en croix.}};
 
-\node[circle,fill=brandNavy,text=white,font=\bfseries,minimum size=0.52cm,inner sep=0pt] at (0.47,-14.30) {5};
-\node[anchor=north west,text width=3.92cm,align=left] at (0.84,-14.16) {\bfseries\color{brandNavy}\fontsize{10.2}{10.9}\selectfont Je conclus.\par\vspace{0.04cm}{\scriptsize\bfseries\color{brandNavy} Je donne la longueur avec son unité.}};
+\node[circle,fill=brandNavy,text=white,font=\bfseries,minimum size=0.52cm,inner sep=0pt] at (0.47,-17.44) {5};
+\node[anchor=north west,text width=3.92cm,align=left] at (0.84,-17.30) {\bfseries\color{brandNavy}\fontsize{10.2}{10.9}\selectfont Je conclus.\par\vspace{0.04cm}{\scriptsize\bfseries\color{brandNavy} Je donne la longueur avec son unité.}};
 
-\node[rounded corners=7pt,draw=brandOrange!55,fill=softOrange!45,line width=0.65pt,text width=4.45cm,inner sep=5pt,align=center] at (2.55,-18.78) {\scriptsize\bfseries\color{brandNavy} Avant tout calcul, je dois avoir les alignements et le parallélisme.};
+\node[rounded corners=7pt,draw=brandOrange!55,fill=softOrange!45,line width=0.65pt,text width=4.45cm,inner sep=5pt,align=center] at (2.55,-19.12) {\scriptsize\bfseries\color{brandNavy} Avant tout calcul, je dois avoir les alignements et le parallélisme.};
 \end{tikzpicture}
 \end{minipage}\hfill
 \begin{minipage}[t]{13.20cm}
