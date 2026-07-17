@@ -107,7 +107,7 @@
     background:linear-gradient(135deg,#2563eb 0%,#4f46e5 52%,#7c3aed 100%);
     color:#fff; text-align:center;
     box-shadow:0 22px 60px rgba(37,99,235,.32),0 8px 20px rgba(15,23,42,.2);
-    animation:bravoPop 2.1s ease both;
+    animation:bravoPop 2.8s ease both;
   }
   .celebrationIcon{
     display:grid; place-items:center; width:52px; height:52px; margin:-42px auto 7px;
@@ -228,10 +228,12 @@
     #toolbar .group:nth-child(2),
     #toolbar .group:nth-child(3),
     #toolbar #checkSolution,
-    #toolbar #enonce,
     #toolbar #fullscreen{display:none;}
     #toolbar .group:nth-child(4){display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); width:100%; gap:6px;}
     #toolbar .group:nth-child(4) button{width:100%; min-width:0; padding:9px 5px; font-size:13px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;}
+    #toolbar .spacer{display:none;}
+    #toolbar .group:last-child{width:100%;}
+    #toolbar #enonce{width:100%; min-height:44px;}
     #mobilePuzzleHint{display:none;}
     #puzzleStatus{font-size:12px; padding-left:8px; padding-right:8px;}
     #stageWrap{min-height:0;}
@@ -251,7 +253,7 @@
 <div id="app">
   <div id="toolbar">
     <div class="group">
-      <a id="backMenu" href="index.html" aria-label="Retour au menu des plateaux" title="Retour au menu">← Menu</a>
+      <a id="backMenu" href="../../index.html?domain=geometrie&amp;notion=pythagore" aria-label="Retour au menu Pythagore" title="Retour au menu Pythagore">← Menu</a>
       <select id="puzzleSelect">
       <option value="perigal" selected>1. Périgal (5 pièces)</option>
       <option value="bhaskara">2. Bhaskara (4 triangles + 1 carré)</option>
@@ -286,7 +288,7 @@
     <div class="spacer"></div>
 
     <div class="group">
-      <button id="enonce">Énoncé</button>
+      <button id="enonce">Fiche</button>
       <button id="fullscreen">⛶</button>
     </div>
   </div>
@@ -744,14 +746,14 @@
       piece.className="confettiPiece";
       piece.style.left=`${2+Math.random()*96}%`;
       piece.style.setProperty("--confetti-color",colors[i%colors.length]);
-      piece.style.setProperty("--confetti-delay",`${Math.random()*0.38}s`);
-      piece.style.setProperty("--confetti-duration",`${1.45+Math.random()*0.7}s`);
+      piece.style.setProperty("--confetti-delay",`${Math.random()*0.5}s`);
+      piece.style.setProperty("--confetti-duration",`${2.8+Math.random()*1.1}s`);
       piece.style.setProperty("--confetti-drift",`${-90+Math.random()*180}px`);
       piece.style.setProperty("--confetti-spin",`${360+Math.random()*900}deg`);
       celebration.appendChild(piece);
     }
     celebration.classList.add("on");
-    state.celebrationTimer=setTimeout(()=>clearCelebration(false),2300);
+    state.celebrationTimer=setTimeout(()=>clearCelebration(false),4400);
   }
 
   // Conservation interne de la solution exacte : elle sert aux contrôles de
@@ -2211,11 +2213,15 @@
 <html lang="fr">
 <head>
   <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <title>Énoncé – Moulin de Pythagore</title>
   <style>
     @page { size: A4 landscape; margin: 7mm; }
     * { box-sizing: border-box; }
     body { font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif; margin: 0; color: #0f172a; }
+    .screenActions { position: sticky; top: 0; z-index: 2; display: flex; justify-content: flex-end; gap: 8px; padding: 10px max(12px, env(safe-area-inset-right)) 10px max(12px, env(safe-area-inset-left)); background: rgba(248,250,252,.96); border-bottom: 1px solid #cbd5e1; }
+    .screenActions button { min-height: 42px; padding: 8px 16px; border: 1px solid #2563eb; border-radius: 10px; background: #2563eb; color: #fff; font: 750 15px/1 system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif; cursor: pointer; }
+    .screenHint { margin: 0; padding: 10px 14px 0; color: #475569; font-size: 13px; }
     .page { break-after: page; padding: 0; }
     .page:last-child { break-after: auto; }
 
@@ -2255,9 +2261,20 @@
     .miniGrid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; break-inside: avoid; }
     .miniCell { border: 0; padding: 0; break-inside: avoid; }
     .miniCell svg { width: 100%; height: auto; display: block; }
+    @media screen and (max-width: 700px) {
+      .page { padding: 12px; }
+      .row { display: block; }
+      .bilanBox { height: 105mm; }
+      h1 { font-size: 20px; }
+      h2 { font-size: 17px; }
+      p { font-size: 14px; }
+    }
+    @media print { .screenActions, .screenHint { display: none !important; } }
   </style>
 </head>
-<body onload="window.print()">
+<body>
+  <div class="screenActions"><button type="button" onclick="window.print()">Imprimer</button></div>
+  <p class="screenHint">Parcours la fiche, puis utilise « Imprimer » lorsque tu es prêt.</p>
 
   <!-- PAGE 1 -->
   <section class="page">
