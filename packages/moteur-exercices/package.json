@@ -4,6 +4,8 @@
   "description": "Cœur des exercices maths&go : hasard reproductible, génération et évaluation. Sans dépendance, sans accès au navigateur.",
   "type": "module",
   "exports": {
-    "./aleatoire": "./src/aleatoire.js"
+    "./aleatoire": "./src/aleatoire.js",
+    "./generation": "./src/generation.js",
+    "./generateurs/fractions": "./src/generateurs/fractions.js"
   }
 }

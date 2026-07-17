@@ -1,0 +1,109 @@
+// Instanciation des questions : gabarit (donnée) + graine → question
+// instanciée conforme au contrat, via un générateur enregistré (code).
+//
+// Sécurité par construction :
+// - les gabarits ne contiennent jamais de code : ils sont validés par
+//   @mathsgo/contrats avant toute utilisation ;
+// - seuls les générateurs enregistrés dans le registre (donc écrits,
+//   relus et testés dans Git) peuvent produire des questions ;
+// - toute question produite est validée contre le contrat avant d'être
+//   rendue ; un générateur défectueux échoue immédiatement et
+//   bruyamment, jamais silencieusement.
+//
+// Déterminisme : la graine de tirage combine l'identifiant du gabarit et
+// la graine de série. Deux gabarits différents d'une même série ne
+// partagent donc jamais la même suite de tirages, et un même couple
+// (gabarit, graine) redonne toujours exactement la même question.
+
+import {
+  validerGabarit,
+} from "../../contrats/src/gabarit.js";
+import {
+  SCHEMA_QUESTION_INSTANCE,
+  validerQuestionInstance,
+} from "../../contrats/src/question.js";
+import { VERSION_ALEATOIRE, creerGenerateur } from "./aleatoire.js";
+
+/**
+ * Crée un registre de générateurs vide.
+ *
+ * Un générateur : {
+ *   nom: "fractions.simplifier",
+ *   version: 1,
+ *   generer: ({ aleatoire, parametres }) => {
+ *     // renvoie { enonce, reponse, aide?, correction? }
+ *   },
+ * }
+ */
+export function creerRegistre() {
+  /** @type {Map<string, any>} */
+  const generateurs = new Map();
+  const cle = (nom, version) => `${nom}@${version}`;
+
+  function enregistrer(generateur) {
+    const { nom, version, generer } = generateur ?? {};
+    if (typeof nom !== "string" || nom.length === 0) {
+      throw new TypeError("enregistrer : nom de générateur requis");
+    }
+    if (!Number.isInteger(version) || version < 1) {
+      throw new TypeError(`enregistrer(${nom}) : version entière ≥ 1 requise`);
+    }
+    if (typeof generer !== "function") {
+      throw new TypeError(`enregistrer(${nom}) : fonction generer requise`);
+    }
+    if (generateurs.has(cle(nom, version))) {
+      throw new Error(`enregistrer(${nom}@${version}) : déjà enregistré`);
+    }
+    generateurs.set(cle(nom, version), generateur);
+  }
+
+  /**
+   * Produit la question instanciée d'un gabarit pour une graine donnée.
+   * @param {object} gabarit — gabarit conforme à mathsgo.gabarit-question/1
+   * @param {number | string} graine — graine de série
+   */
+  function instancier(gabarit, graine) {
+    const controle = validerGabarit(gabarit);
+    if (!controle.valide) {
+      throw new Error(`gabarit invalide : ${controle.erreurs.join(" ; ")}`);
+    }
+    const g = /** @type {any} */ (gabarit);
+    const generateur = generateurs.get(cle(g.generateur.nom, g.generateur.version));
+    if (!generateur) {
+      throw new Error(
+        `générateur inconnu : ${g.generateur.nom}@${g.generateur.version}`,
+      );
+    }
+
+    const aleatoire = creerGenerateur(`${g.id}#${String(graine)}`);
+    const produit = generateur.generer({
+      aleatoire,
+      parametres: g.parametres,
+    });
+
+    const instance = {
+      schema: SCHEMA_QUESTION_INSTANCE,
+      id: `${g.id}@${String(graine)}`,
+      ...produit,
+      origine: {
+        gabarit: g.id,
+        versionGabarit: g.version,
+        generateur: g.generateur.nom,
+        versionGenerateur: g.generateur.version,
+        graine: String(graine),
+        versionAleatoire: VERSION_ALEATOIRE,
+      },
+    };
+
+    const conformite = validerQuestionInstance(instance);
+    if (!conformite.valide) {
+      throw new Error(
+        `le générateur ${g.generateur.nom}@${g.generateur.version} a produit ` +
+          `une question non conforme : ${conformite.erreurs.join(" ; ")}`,
+      );
+    }
+    return instance;
+  }
+
+  return { enregistrer, instancier };
+}
