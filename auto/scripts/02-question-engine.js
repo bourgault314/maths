@@ -1,7 +1,8 @@
-let rngSeed=1, quiz=[];
+let rngSeed=1, quiz=[],lastPythagorasVertexSetIndex=-1;
 function setSeed(s){
   const value=Number.isFinite(Number(s))?Math.trunc(Number(s)):1;
   rngSeed=((value%233280)+233280)%233280;
+  lastPythagorasVertexSetIndex=-1;
   return rngSeed;
 }
 function rnd(){ rngSeed=(rngSeed*9301+49297)%233280; return rngSeed/233280; }
@@ -56,17 +57,6 @@ function stripVisuals(html,keepPlaceholder=false){
     .replace(/<div(?![^>]*visual-placeholder)[^>]*>\s*<\/div>/gi,'');
 }
 
-// Les tirages d'origine pouvaient produire deux propositions identiques dans
-// ces QCM. Les distracteurs sont maintenant construits dans des intervalles
-// disjoints, et les deux multiples de 5 sont forcés à être différents.
-const SQUARE_INTERVAL_QUESTION=RAW_MODULES.find(module=>module.id==='dnb_07')?.questions.find(question=>Number(question.n)===8);
-if(SQUARE_INTERVAL_QUESTION?.options){
-  SQUARE_INTERVAL_QUESTION.options.formula_code='setNB(1)\nn=RD(5,12)\nc=n*n\nlow=floor(c/10)*10\nhigh=low+10\nlow2=low-10\nnlow=high\nnhigh=high+10';
-}
-const DIVISIBILITY_BY_FIVE_QUESTION=RAW_MODULES.find(module=>module.id==='dnb_08')?.questions.find(question=>Number(question.n)===8);
-if(DIVISIBILITY_BY_FIVE_QUESTION?.options){
-  DIVISIBILITY_BY_FIVE_QUESTION.options.formula_code='setNB(1)\nka=RD(10,99)\nkc=RD(10,99,[ka])\na=ka*5\nb=RD(10,99)*10+RD(1,4)\ncc=kc*5\ne=RD(10,99)*10+RD(6,9)';
-}
 function splitQCM(statement){
   let source=String(statement||'').trim();
   let wrapperStart='',wrapperEnd='';
@@ -700,75 +690,6 @@ function makeModule01Instance(mod,q){
   };
 }
 
-const FRACTION_OPS_KINDS=['simplify_simple','simplify_harder','compare_same_den','compare_same_num','add_same_den','subtract_same_den','add_multiple_den'];
-const MODULE03=RAW_MODULES.find(module=>module.id==='dnb_03');
-if(MODULE03){
-  MODULE03.title='Fractions : simplifier, comparer, additionner';
-  MODULE03.questions=MODULE03.questions.slice(0,7).map((question,index)=>({
-    ...question,
-    options:{...(question.options||{}),fraction_ops_kind:FRACTION_OPS_KINDS[index]}
-  }));
-}
-// La manipulation reste présente, mais la majorité des divisions travaille la
-// technique : conserver le premier nombre, multiplier, inverser le diviseur.
-const FRACTION_MUL_DIV_KINDS=['multiply','multiply_cancel','divide_fraction','divide_fraction','divide_mixed','divide_integer_unit'];
-const FRACTION_MUL_DIV_MODULE={
-  id:'dnb_03b',
-  num:3.5,
-  domain:'numbers',
-  title:'Fractions : multiplier et diviser',
-  level_tags:['4e','3e','DNB'],
-  source:'mathsgo',
-  has_svg:true,
-  questions:FRACTION_MUL_DIV_KINDS.map((kind,index)=>({
-    n:index+1,
-    statement:'',
-    answer:'[]',
-    footer:'',
-    options:{fraction_ops_kind:kind}
-  }))
-};
-const MODULE03_INDEX=RAW_MODULES.findIndex(module=>module.id==='dnb_03');
-if(MODULE03_INDEX>=0&&!RAW_MODULES.some(module=>module.id===FRACTION_MUL_DIV_MODULE.id)){
-  RAW_MODULES.splice(MODULE03_INDEX+1,0,FRACTION_MUL_DIV_MODULE);
-}
-const TRIG_NO_CALCULATOR_KINDS=[
-  'condition','locate_side','ratio_definition','choose_ratio','ratio_from_lengths','useful_formula',
-  'formula_analysis','ratio_invariance','choose_method','method_diagnostic','coherence','method_first_step'
-];
-const TRIG_CALCULATOR_KINDS=[
-  'ratio_decimal','missing_adjacent_cos','missing_hypotenuse_cos','missing_opposite_sin',
-  'missing_opposite_tan','missing_angle_cos','missing_angle_sin','missing_angle_tan',
-  'missing_hypotenuse_sin','missing_adjacent_tan','area_application','perimeter_application'
-];
-const TRIG_UPDATED_TEMPLATE_KINDS=new Set([...TRIG_NO_CALCULATOR_KINDS,'ratio_decimal']);
-function trigQuestionTemplate(kind,index){
-  return {
-    n:index+1,statement:'',answer:'[]',footer:'',
-    options:{trig_kind:kind,...(TRIG_UPDATED_TEMPLATE_KINDS.has(kind)?{template_version:3}:{})}
-  };
-}
-const TRIG_MODULE=RAW_MODULES.find(module=>module.id==='dnb_26');
-if(TRIG_MODULE){
-  TRIG_MODULE.title='Trigonométrie sans calculatrice';
-  TRIG_MODULE.level_tags=['3e','DNB'];
-  TRIG_MODULE.questions=TRIG_NO_CALCULATOR_KINDS.map(trigQuestionTemplate);
-  const trigIndex=RAW_MODULES.indexOf(TRIG_MODULE);
-  if(!RAW_MODULES.some(module=>module.id==='dnb_26b')) RAW_MODULES.splice(trigIndex+1,0,{
-    id:'dnb_26b',num:26.5,domain:'geometry',title:'Trigonométrie avec calculatrice',level_tags:['3e'],source:'mathsgo',has_svg:true,
-    questions:TRIG_CALCULATOR_KINDS.map(trigQuestionTemplate)
-  });
-}
-const MODULE11=RAW_MODULES.find(module=>module.id==='dnb_11');
-if(MODULE11&&!MODULE11.questions.some(question=>Number(question.n)===11)){
-  MODULE11.questions.push({
-    n:11,
-    statement:'Calcule la valeur de cette expression :',
-    answer:'[]',
-    footer:'',
-    options:{substitution_kind:'factorised'}
-  });
-}
 
 function fractionOpsReduce(num,den){
   const divisor=GCD(Math.abs(num),Math.abs(den));
@@ -1007,6 +928,36 @@ function equationEquality(leftCoefficient,leftConstant,rightCoefficient,rightCon
   return equationExpression(leftCoefficient,leftConstant)+' = '+equationExpression(rightCoefficient,rightConstant);
 }
 const EQUASPLAT_IMPORT_URL='https://mathsgo.re/outils/equasplat_import_splat.html';
+const EQUABARRE_IMPORT_URL='https://mathsgo.re/outils/equabarre_import_splat.html';
+function equabarreImportUrl(payload){
+  return EQUABARRE_IMPORT_URL+'#data='+encodeURIComponent(JSON.stringify(payload));
+}
+function angleSumEquabarPayload(data){
+  const values=Array.isArray(data&&data.values)?data.values.map(Number):[];
+  const unknownIndexes=Array.isArray(data&&data.unknown)?data.unknown.map(Number):[];
+  if(!values.length||!unknownIndexes.length||data.comparison) return null;
+  const unknownValues=unknownIndexes.map(index=>values[index]);
+  const x=unknownValues[0];
+  if(!Number.isFinite(x)||x<=0||unknownValues.some(value=>Math.abs(value-x)>.0001)) return null;
+  const unknown=new Set(unknownIndexes);
+  return {
+    source:'automatismes_triangle_angles',
+    target:'equabarre_import',
+    variable:'𝑥',
+    unknownDisplay:'letter',
+    fullscreenSize:'compact',
+    lhsSide:'bottom',
+    x,
+    total:180,
+    top:[{type:'number',value:180}],
+    bottom:values.map((value,index)=>unknown.has(index)?{type:'x'}:{type:'number',value})
+  };
+}
+function angleSumEquabarButtonHtml(data){
+  const payload=angleSumEquabarPayload(data);
+  if(!payload) return '';
+  return '<div class="angle-bar-action-row"><a class="angle-bar-resolve-btn" href="'+escapeHtml(equabarreImportUrl(payload))+'" target="_blank" rel="noopener noreferrer" aria-label="Résoudre ce schéma dans ÉquaBarre import">Résoudre dans ÉquaBarre</a></div>';
+}
 function equationImportSide(coefficient,constant){
   const pieces=[];
   const sign=coefficient<0?-1:1;
@@ -2046,26 +1997,26 @@ function makeAngleSumInstance(mod,q){
   let bar=null;
   if(kind==='general'){
     const third=180-Number(scope.a)-Number(scope.b);
-    bar={values:[Number(scope.a),Number(scope.b),third],unknown:[2]};
+    bar={view:'bar',values:[Number(scope.a),Number(scope.b),third],unknown:[2]};
   }
   if(kind==='right'){
-    bar={values:[90,Number(scope.a),90-Number(scope.a)],unknown:[2]};
+    bar={view:'bar',values:[90,Number(scope.a),90-Number(scope.a)],unknown:[2]};
   }
   if(kind==='isosceles_vertex'){
     const base=(180-Number(scope.a))/2;
-    bar={values:[Number(scope.a),base,base],unknown:[1,2]};
+    bar={view:'bar',values:[Number(scope.a),base,base],unknown:[1,2]};
   }
   if(kind==='isosceles_base'){
-    bar={values:[Number(scope.a),Number(scope.a),180-2*Number(scope.a)],unknown:[2]};
+    bar={view:'bar',values:[Number(scope.a),Number(scope.a),180-2*Number(scope.a)],unknown:[2]};
   }
   if(kind==='equilateral'){
-    bar={values:[60,60,60],unknown:[0,1,2]};
+    bar={view:'bar',values:[60,60,60],unknown:[0,1,2]};
   }
   if(kind==='validity_three'||kind==='figure'){
-    bar={values:[Number(scope.a),Number(scope.b),Number(scope.c)],unknown:kind==='figure'?[2]:[]};
+    bar={view:kind==='figure'?'combined':'bar',values:[Number(scope.a),Number(scope.b),Number(scope.c)],unknown:kind==='figure'?[2]:[]};
   }
   if(kind==='invalid_two'){
-    bar={values:[Number(scope.a),Number(scope.b)],unknown:[],comparison:true};
+    bar={view:'bar',values:[Number(scope.a),Number(scope.b)],unknown:[],comparison:true};
   }
   return {module:mod,q,scope,answers,rawStatement,rawFooter,hasSvg:/<svg/i.test(rawStatement+rawFooter),angleSum:{kind,bar}};
 }
@@ -2135,67 +2086,10 @@ function makeRelationInstance(mod,q){
   if(relationKind==='fraction_direct') relation={kind:relationKind,divisor:Number(q.options.divisor),value:Number(scope.n),result:Number(scope.n)/Number(q.options.divisor)};
   if(relationKind==='predecessor') relation={kind:relationKind,value:Number(scope.n),result:Number(scope.n)-1};
   if(relationKind==='successor') relation={kind:relationKind,value:Number(scope.n),result:Number(scope.n)+1};
+  if(relation) relation.prominent=true;
   return {module:mod,q,scope,answers,rawStatement,rawFooter,hasSvg:false,relation};
 }
 
-function placeValueFactorFromKind(kind){
-  if(String(kind).includes('1000')) return 1000;
-  if(String(kind).includes('100')) return 100;
-  return 10;
-}
-function placeValueNumberForShift(shift){
-  const candidates=[0.24,0.37,0.65,0.84,1.25,2.4,3.07,5.09,7.2,12.3,24.6,45.8,72,125,307,540];
-  const valid=candidates.filter(value=>{
-    const result=value*Math.pow(10,shift);
-    return result>=0.001&&result<=9999;
-  });
-  return pick(valid.length?valid:candidates);
-}
-function placeValueDistractors(value,factor,direction){
-  const shift=Math.round(Math.log10(factor))*(direction==='multiply'?1:-1);
-  const candidates=[
-    value*Math.pow(10,-shift),
-    value*Math.pow(10,shift>0?shift-1:shift+1),
-    value+(direction==='multiply'?factor:-factor),
-    value*Math.pow(10,shift+(shift>0?1:-1))
-  ].map(number=>fmt(number));
-  return [...new Set(candidates)];
-}
-function makePlaceValueInstance(mod,q){
-  let kind=q.options.place_value_kind;
-  let direction=String(kind).startsWith('divide')?'divide':'multiply';
-  let factor=placeValueFactorFromKind(kind);
-  if(kind==='mixed'||kind==='qcm_result'||kind==='missing_factor'||kind==='missing_number'){
-    direction=RD(0,1)===0?'multiply':'divide';
-    factor=[10,100,1000][RD(0,2)];
-  }
-  const shift=Math.round(Math.log10(factor))*(direction==='multiply'?1:-1);
-  const value=placeValueNumberForShift(shift);
-  const result=CUT(value*Math.pow(10,shift),6);
-  const symbol=direction==='multiply'?'×':'÷';
-  const data={kind,direction,factor,shift,value,result,symbol};
-  let answers=[fmt(result)],answerChoices=[[fmt(result)]];
-  if(kind==='missing_factor'){
-    answers=[String(factor)];answerChoices=[[String(factor)]];
-    data.prompt='Complète le facteur manquant.';
-    data.equation=fmt(value)+' '+symbol+' … = '+fmt(result);
-  }else if(kind==='missing_number'){
-    answers=[fmt(value)];answerChoices=[[fmt(value)]];
-    data.prompt='Complète le nombre manquant.';
-    data.equation='… '+symbol+' '+factor+' = '+fmt(result);
-  }else{
-    data.prompt='Calcule.';
-    data.equation=fmt(value)+' '+symbol+' '+factor+' = …';
-  }
-  if(kind==='qcm_result'){
-    const options=[fmt(result),...placeValueDistractors(value,factor,direction)].slice(0,4);
-    while(options.length<4) options.push(fmt(result+(options.length+1)*Math.pow(10,-Math.max(0,Math.round(Math.log10(factor))))));
-    const shuffled=shuffledCopy(options);
-    data.qcm={options:shuffled,correctIndex:shuffled.indexOf(fmt(result))+1};
-    answers=[String(data.qcm.correctIndex)];answerChoices=[[String(data.qcm.correctIndex)]];
-  }
-  return {module:mod,q,scope:{},answers,answerChoices,rawStatement:'',rawFooter:'',hasSvg:true,placeValue:data};
-}
 function conversionDataForQuestion(number,scope,answers){
   const metricUnits={length:['km','hm','dam','m','dm','cm','mm'],mass:['kg','hg','dag','g','dg','cg','mg'],capacity:['kL','hL','daL','L','dL','cL','mL']};
   const areaUnits=['km²','hm²','dam²','m²','dm²','cm²','mm²'];
@@ -2533,9 +2427,120 @@ function makeTrigInstance(mod,q){
   return trigDirectInstance(mod,q,'On donne $$\\widehat{'+triangle.angle+'}='+degrees+'°$$ et $$'+triangle.adjacent+'='+adjacent+'\\text{ cm}$$. Calcule le périmètre du triangle. Arrondis au dixième.'+visual,'$$P=[[dec]]\\text{ cm}$$',result,triangle,{kind,degrees,adjacent});
 }
 
+function relativeDisplayNumber(value){
+  const text=String(value);
+  return text.startsWith('-')?'−'+text.slice(1):text;
+}
+function relativeExpression(a,b){
+  return relativeDisplayNumber(a)+' + '+(b<0?'('+relativeDisplayNumber(b)+')':relativeDisplayNumber(b));
+}
+function relativeTokenList(value,zone,prefix){
+  const sign=value<0?-1:1;
+  return Array.from({length:Math.abs(value)},(_,index)=>({id:prefix+String(index+1),sign,zone,origin:zone}));
+}
+function relativePairIndexes(tokens,zone){
+  const positive=[],negative=[];
+  tokens.forEach((token,index)=>{
+    if(token.zone!==zone)return;
+    (token.sign>0?positive:negative).push(index);
+  });
+  const paired=new Set();
+  for(let index=0;index<Math.min(positive.length,negative.length);index++){
+    paired.add(positive[index]);paired.add(negative[index]);
+  }
+  return paired;
+}
+function relativeStaticToken(token,paired=false){
+  return '<span class="relative-token '+(token.sign>0?'relative-token-positive':'relative-token-negative')+(paired?' is-null-pair':'')+'" aria-label="Jeton '+(token.sign>0?'+1':'−1')+'">'+(token.sign>0?'+1':'−1')+'</span>';
+}
+function relativeStaticZoneMarkup(label,zone,tokens){
+  const paired=relativePairIndexes(tokens,zone);
+  const visible=tokens.filter(token=>token.zone===zone);
+  const tokenHtml=visible.map(token=>relativeStaticToken(token,paired.has(tokens.indexOf(token)))).join('');
+  return '<section class="relative-token-zone relative-token-zone-'+zone+'"><h3>'+label+'</h3><div class="relative-token-list">'+(tokenHtml||'<span class="relative-token-empty">—</span>')+'</div></section>';
+}
+function relativeStaticBoardMarkup(data){
+  return '<div class="relative-token-static-board">'+relativeStaticZoneMarkup('Premier nombre','a',data.initialTokens)+relativeStaticZoneMarkup('Deuxième nombre','b',data.initialTokens)+'</div>';
+}
+function makeRelativeAdditionInstance(mod,q){
+  const options=q.options||{};
+  const a=Number(options.relative_a),b=Number(options.relative_b),result=a+b;
+  const initialTokens=[...relativeTokenList(a,'a','a'),...relativeTokenList(b,'b','b')];
+  const questionKind=String(options.relative_addition_kind||'manipulate');
+  const relativeTokens={kind:'addition',questionKind,a,b,result,initialTokens,interactive:questionKind==='manipulate',instanceKey:'addition-'+q.n+'-'+a+'-'+b};
+  if(questionKind==='manipulate'){
+    return {module:mod,q,scope:{},answers:[String(result)],rawStatement:'',rawFooter:'',hasSvg:true,relativeTokens};
+  }
+  const choices=Array.isArray(options.choices)?options.choices:[];
+  const correctChoice=questionKind==='qcm-result'
+    ?relativeDisplayNumber(result)
+    :(questionKind==='qcm-zero-pair'?'Elle vaut 0.':'On rassemble les jetons puis on repère les paires nulles.');
+  const correctIndex=String(Math.max(0,choices.indexOf(correctChoice)+1));
+  const prompt=questionKind==='qcm-result'
+    ?'Calcule '+relativeExpression(a,b)+' en observant les jetons.'
+    :questionKind==='qcm-zero-pair'
+      ?'Que remarques-tu dans '+relativeExpression(a,b)+' ?'
+      :'Quelle méthode décrit correctement '+relativeExpression(a,b)+' ?';
+  return {module:mod,q,scope:{},answers:[correctIndex],rawStatement:prompt+relativeStaticBoardMarkup(relativeTokens)+'&&'+choices.join('&&')+'&&',rawFooter:'',hasSvg:true,relativeTokens};
+}
+const PYTHAGORAS_VERTEX_SETS=Object.freeze(['ABC','DEF','GHI','JKL','MNP','RST','UVW','XYZ']);
+function makePythagorasTactileInstance(mod,q){
+  const options=q.options||{};
+  const vertexSetIndex=RD(0,PYTHAGORAS_VERTEX_SETS.length-1,lastPythagorasVertexSetIndex<0?undefined:[lastPythagorasVertexSetIndex]);
+  lastPythagorasVertexSetIndex=vertexSetIndex;
+  const vertices=PYTHAGORAS_VERTEX_SETS[vertexSetIndex].split('');
+  const rightAnglePosition=['A','B','C'].includes(String(options.right_angle))?String(options.right_angle):'A';
+  const rightAngle=vertices[['A','B','C'].indexOf(rightAnglePosition)];
+  let prompt=String(options.prompt||'Complète la relation de Pythagore.')
+    .replaceAll('{triangle}',vertices.join(''))
+    .replaceAll('{rightAngle}',rightAngle);
+  const namedAnglePattern=new RegExp('rectangle en '+rightAnglePosition+'\\b');
+  prompt=prompt.replace(namedAnglePattern,'rectangle en '+rightAngle);
+  if(/^Le triangle est rectangle/.test(prompt)) prompt=prompt.replace(/^Le triangle /,'Le triangle '+vertices.join('')+' ');
+  const data={
+    task:String(options.pythagoras_tactile_kind||'complete'),
+    vertices,
+    rightAngle,
+    rightAnglePosition,
+    lengths:{legA:Number(options.leg_a),legB:Number(options.leg_b),hypotenuse:Number(options.hypotenuse)},
+    prompt
+  };
+  const model=globalThis.pythagorasBuilderModel(data);
+  return {module:mod,q,scope:{},answers:model.expected,answerChoices:model.expected.map(value=>[value]),rawStatement:'',rawFooter:'',hasSvg:true,pythagorasTactile:{...data,...model}};
+}
+function makeGenericInstance(mod,q,generatedScope=null){
+  let scope=generatedScope;
+  if(scope===null&&q.options&&q.options.formula_code) scope=runCode(q.options.formula_code);
+  if(scope===null) scope={};
+  let answerChoices=parseAnswerChoices(q,scope);
+  let answers=answerChoices.map(choices=>choices[0]||'');
+  let rawStatement=subVars(q.statement||'', scope);
+  const rawFooter=subVars(q.footer||'', scope);
+  if(q.options&&q.options.shuffle_answers){
+    const shuffled=shuffledQcm(rawStatement,answers);
+    rawStatement=shuffled.statement;
+    answers=shuffled.answers;
+    answerChoices=answers.map(answer=>[answer]);
+  }
+  const hasSvg=/<svg/i.test(rawStatement+rawFooter);
+  return {module:mod, q, scope, answers, answerChoices, rawStatement, rawFooter, hasSvg};
+}
 function makeInstance(mod,q){
+  const runtime=globalThis.MATHSGO_MODULE_RUNTIME&&globalThis.MATHSGO_MODULE_RUNTIME.get(mod&&mod.id);
+  if(runtime&&runtime.generator&&typeof runtime.generator.createInstance==='function'
+    &&(!runtime.generator.supports||runtime.generator.supports({module:mod,question:q}))){
+    const instance=runtime.generator.createInstance({
+      module:mod,question:q,randomInt:RD,pick,cut:CUT,format:fmt,shuffle:shuffledCopy
+    });
+    if(!instance||typeof instance!=='object') throw new Error(`Le générateur ${mod.id} doit retourner une instance de question.`);
+    return instance;
+  }
+  if(runtime&&runtime.generator&&typeof runtime.generator.createScope==='function'){
+    const generatedScope=runtime.generator.createScope({module:mod,question:q,randomInt:RD});
+    if(!generatedScope||typeof generatedScope!=='object') throw new Error(`Le générateur ${mod.id} doit retourner un objet de paramètres.`);
+    return makeGenericInstance(mod,q,generatedScope);
+  }
   if(mod&&mod.id==='dnb_01') return makeModule01Instance(mod,q);
-  if(mod&&mod.id==='dnb_02b') return makePlaceValueInstance(mod,q);
   if(mod&&['dnb_03','dnb_03b'].includes(mod.id)) return makeFractionOpsInstance(mod,q);
   if(mod&&mod.id==='dnb_04') return makeFractionPercentInstance(mod,q);
   if(mod&&mod.id==='dnb_05') return makeMultipleFormsInstance(mod,q);
@@ -2550,20 +2555,9 @@ function makeInstance(mod,q){
   if(mod&&mod.id==='dnb_22') return makeAreaInstance(mod,q);
   if(mod&&mod.id==='dnb_30') return makeAverageInstance(mod,q);
   if(mod&&mod.id==='dnb_35') return makeEvolutionInstance(mod,q);
-  let scope={};
-  if(q.options&&q.options.formula_code) scope=runCode(q.options.formula_code);
-  let answerChoices=parseAnswerChoices(q,scope);
-  let answers=answerChoices.map(choices=>choices[0]||'');
-  let rawStatement=subVars(q.statement||'', scope);
-  const rawFooter=subVars(q.footer||'', scope);
-  if(q.options&&q.options.shuffle_answers){
-    const shuffled=shuffledQcm(rawStatement,answers);
-    rawStatement=shuffled.statement;
-    answers=shuffled.answers;
-    answerChoices=answers.map(answer=>[answer]);
-  }
-  const hasSvg=/<svg/i.test(rawStatement+rawFooter);
-  return {module:mod, q, scope, answers, answerChoices, rawStatement, rawFooter, hasSvg};
+  if(mod&&mod.id==='dnb_38') return makeRelativeAdditionInstance(mod,q);
+  if(mod&&mod.id==='dnb_24b') return makePythagorasTactileInstance(mod,q);
+  return makeGenericInstance(mod,q);
 }
 function compactQcmClass(options){
   if(!Array.isArray(options) || options.length!==4) return '';
@@ -2583,6 +2577,7 @@ function renderGenericQuestion(inst, correction=false, mode=null){
   if(mode===null) mode=document.getElementById('visualMode').value;
   let statement=inst.rawStatement;
   let footer=inst.rawFooter;
+  if(inst.module&&inst.module.id==='dnb_14') statement=statement.replace(/([A-Z])\s+:/g,'$1&nbsp;:').replace(/\sheight="auto"/g,'');
   if(isWithoutVisuals(mode)){
     const keepPlaceholder=mode==='without-reveal';
     statement=stripVisuals(statement,keepPlaceholder);
@@ -2604,60 +2599,137 @@ function renderGenericQuestion(inst, correction=false, mode=null){
   return html;
 }
 
-function digitsInPlaceValueColumns(value,columnCount=7,unitsIndex=3){
-  const cells=Array(columnCount).fill('');
-  const normalized=fmt(Math.abs(Number(value))).replace(/\s/g,'').replace(',','.');
-  const parts=normalized.split('.'),integer=(parts[0]||'0').replace(/^\+/,''),decimals=parts[1]||'';
-  [...integer].reverse().forEach((digit,offset)=>{const index=unitsIndex-offset;if(index>=0&&index<columnCount)cells[index]=digit;});
-  [...decimals].forEach((digit,offset)=>{const index=unitsIndex+1+offset;if(index>=0&&index<columnCount)cells[index]=digit;});
-  return cells;
-}
-function placeValueToolHtml(data,correction=false){
-  const labels=['milliers','centaines','dizaines','unités','dixièmes','centièmes','millièmes'];
-  const digits=digitsInPlaceValueColumns(data.value);
-  const shift=correction?data.shift:0;
-  const headers=labels.map(label=>'<div class="place-value-head">'+label+'</div>').join('');
-  const windows=labels.map(()=>'<div class="place-value-window"></div>').join('');
-  const fixed=digits.map((digit,index)=>'<span class="place-value-fixed-digit'+(index===3?' is-units-digit':'')+'">'+digit+'</span>').join('');
-  const strip=Array(13).fill(0).map(()=>'<span class="place-value-strip-digit"></span>').join('');
-  const instruction=correction
-    ? '<strong>'+fmt(data.value)+' '+data.symbol+' '+data.factor+' = '+fmt(data.result)+'</strong>'
-    : '';
-  return '<div class="place-value-tool" data-base-digits="'+escapeHtml(digits.join('|'))+'" data-target-shift="'+data.shift+'" data-initial-shift="'+shift+'">'
-    +'<div class="place-value-grid">'
-      +'<div class="place-value-head-row">'+headers+'</div>'
-      +'<div class="place-value-preview-row"><div class="place-value-strip-viewport"><div class="place-value-strip">'+strip+'</div></div><div class="place-value-window-row">'+windows+'</div><span class="place-value-comma place-value-preview-comma" aria-hidden="true">,</span><div class="place-value-drag-bar" tabindex="0" role="slider" aria-label="Faire glisser la bandelette" aria-valuemin="-3" aria-valuemax="3" aria-valuenow="'+shift+'"><span></span></div></div>'
-      +'<div class="place-value-fixed-row">'+fixed+'<span class="place-value-comma place-value-fixed-comma" aria-hidden="true">,</span></div>'
-    +'</div><div class="place-value-row-labels"><span>Résultat obtenu</span><span>Nombre de départ</span></div>'
-    +(instruction?'<div class="place-value-tool-note">'+instruction+'</div>':'')+'</div>';
-}
-function placeValueNumberMarkup(value,highlightUnits=false){
-  const valueText=fmt(value),parts=valueText.split(','),integer=parts[0]||'0';
-  const integerMarkup=Array.from(integer).map((character,index)=>index===integer.length-1&&highlightUnits
-    ? '<span class="place-value-number-units">'+escapeHtml(character)+'</span>'
-    : escapeHtml(character)).join('');
-  return '<span class="place-value-number">'+integerMarkup+(parts.length>1?'<span class="place-value-number-comma">,</span>'+escapeHtml(parts.slice(1).join(',')):'')+'</span>';
-}
-function renderPlaceValueModule(inst,correction=false,mode=null){
-  if(mode===null) mode=document.getElementById('visualMode').value;
-  const data=inst.placeValue;
-  const completed=data.kind==='missing_factor'?data.factor:(data.kind==='missing_number'?data.value:data.result);
-  const answerMarkup=correction?placeValueNumberMarkup(completed,false):renderPlaceholders('[[dots]]',inst.answers,'question');
-  let equationMarkup='';
-  if(data.kind==='missing_factor') equationMarkup=placeValueNumberMarkup(data.value,true)+' <span>'+data.symbol+'</span> '+answerMarkup+' <span>=</span> '+placeValueNumberMarkup(data.result,false);
-  else if(data.kind==='missing_number') equationMarkup=answerMarkup+' <span>'+data.symbol+'</span> <span>'+data.factor+'</span> <span>=</span> '+placeValueNumberMarkup(data.result,false);
-  else equationMarkup=placeValueNumberMarkup(data.value,true)+' <span>'+data.symbol+'</span> <span>'+data.factor+'</span> <span>=</span> '+answerMarkup;
-  let html='<div class="question place-value-prompt">'+data.prompt+'</div>'
-    +'<div class="place-value-equation">'+equationMarkup+'</div>';
-  if(!isWithoutVisuals(mode)) html+=placeValueToolHtml(data,correction);
-  else html+=visualPlaceholder(mode);
-  if(data.qcm){
-    html+='<div class="options place-value-options options-4">';
-    data.qcm.options.forEach((option,index)=>{html+='<div class="opt '+(correction&&index+1===data.qcm.correctIndex?'correct':'')+'"><strong>'+String.fromCharCode(65+index)+'.</strong> '+renderMathSegments('$$'+option+'$$')+'</div>';});
-    html+='</div>';
+function pythagorasAidVisual(inst,correction=false){
+  const number=Number(inst.q.n),scope=inst.scope||{};
+  const bar=globalThis.MATHSGO_VISUALS&&globalThis.MATHSGO_VISUALS.get('geometry.pythagoras-bar');
+  const reasoning=globalThis.MATHSGO_VISUALS&&globalThis.MATHSGO_VISUALS.get('geometry.pythagoras-reasoning');
+  const mill=globalThis.MATHSGO_VISUALS&&globalThis.MATHSGO_VISUALS.get('geometry.pythagoras-mill');
+  let visual='';
+  if(number===3&&bar){
+    visual=bar.render({phase:'relation',vertices:['B','A','C'],sideNames:{legA:'AB',legB:'BC',hypotenuse:'AC'}},correction);
+  }else if(number===4&&mill){
+    visual=mill.render({mode:'relation',vertices:['T','R','S'],sideNames:{legA:'RT',legB:'ST',hypotenuse:'RS'}},correction);
+  }else if([5,6,7].includes(number)){
+    const a=Number(scope.a),b=Number(scope.b),hypotenuse=Number.isFinite(Number(scope.c))?Number(scope.c):Math.sqrt(a*a+b*b);
+    const target=number===7?'legB':'hypotenuse';
+    const values={legA:a,legB:b,hypotenuse};
+    const sideNames={legA:'a',legB:'b',hypotenuse:number===5||number===6?'h':'c'};
+    if(correction&&reasoning){
+      const step=number===5?'isolate':'root';
+      visual=reasoning.render({step,target,values,sideNames,unit:'cm'},true);
+    }else if(bar){
+      visual=bar.render({phase:number===5?'squares':'lengths',target,values,sideNames,proportional:true},false);
+    }
   }
+  return visual?'<div class="pythagoras-aid-visual">'+visual+'</div>':'';
+}
+
+function renderPythagorasModule(inst,correction=false,mode=null){
+  if(mode===null) mode=document.getElementById('visualMode').value;
+  const number=Number(inst.q.n),usesAid=[3,4,5,6,7].includes(number);
+  let statement=inst.rawStatement,footer=inst.rawFooter;
+  if(isWithoutVisuals(mode)){
+    const keepPlaceholder=mode==='without-reveal';
+    statement=stripVisuals(statement,keepPlaceholder);
+    footer=stripVisuals(footer,keepPlaceholder);
+  }
+  const visual=usesAid?(mode==='with'?pythagorasAidVisual(inst,correction):(mode==='without-reveal'?visualPlaceholder(mode):'')):'';
+  const qcm=splitQCM(statement);
+  const promptClass='question pythagoras-prompt '+(/<svg\b/i.test(qcm?qcm.prompt:statement)?'has-statement-figure':(visual?'has-aid':'is-text-only'));
+  let html='';
+  if(qcm){
+    html+='<div class="'+promptClass+'">'+renderMathSegments(qcm.prompt)+'</div>'+visual;
+    const corrects=new Set(inst.answers.map(value=>String(value)));
+    html+='<div class="options pythagoras-options options-'+qcm.opts.length+compactQcmClass(qcm.opts)+'">';
+    qcm.opts.forEach((option,index)=>{const isCorrect=correction&&corrects.has(String(index+1));html+='<div class="opt '+(isCorrect?'correct':'')+'"><strong>'+String.fromCharCode(65+index)+'.</strong> '+renderMathSegments(option)+'</div>';});
+    html+='</div>';
+  }else{
+    html+='<div class="'+promptClass+'">'+renderMathSegments(statement)+'</div>'+visual;
+  }
+  if(footer) html+='<div class="footer pythagoras-answer">'+renderPlaceholders(footer,inst.answers,correction?'correction':'question')+'</div>';
   return html;
 }
+
+function thalesLengthLabels(inst){
+  const scope=inst.scope||{},number=Number(inst.q.n),value=name=>scope[name]===undefined?'':fmt(scope[name])+' cm';
+  if(number===3) return {AM:value('AD'),AB:value('AB'),AC:value('AC')};
+  if(number===4) return {AM:value('AD'),AN:value('AE'),AC:value('AC')};
+  if(number===5) return {AM:value('AD'),AB:value('AB'),BC:value('BC')};
+  if(number===6) return {AM:value('AD'),AB:value('AB'),AN:value('AE'),AC:value('AC')};
+  if(number===8) return {AM:value('AD'),AB:value('AB'),AC:value('AC')};
+  if(number===10) return {AM:value('AD'),AB:value('AB'),MN:value('DE')};
+  return {};
+}
+
+function thalesQuestionFigure(inst,correction=false,{aid=false}={}){
+  const component=globalThis.MATHSGO_VISUALS&&globalThis.MATHSGO_VISUALS.get('geometry.thales-configuration');
+  if(!component) return '';
+  return '<div class="thales-question-figure">'+component.render({
+    configuration:'nested',
+    style:correction||aid?'course':'exercise',
+    parallel:Number(inst.q.n)!==7,
+    showLineNames:false,
+    labels:{A:'A',M:'D',N:'E',B:'B',C:'C'},
+    lengths:thalesLengthLabels(inst)
+  })+'</div>';
+}
+
+function thalesFact(label,value){
+  return '<span class="thales-fact"><b>'+label+'</b><strong>'+renderMathSegments('$$'+value+'$$')+'</strong></span>';
+}
+
+function thalesStructuredPrompt(inst,prompt,figure=''){
+  const scope=inst.scope||{},number=Number(inst.q.n),measure=name=>fmt(scope[name])+'\\text{ cm}';
+  if(number===6){
+    return renderMathSegments('<div class="thales-task-card"><span class="thales-task-kicker">Tester le parallélisme</span>'
+      +'<div class="thales-task-condition">$$D\\in[AB]$$ et $$E\\in[AC]$$</div>'+figure
+      +'<div class="thales-facts">'+thalesFact('AD',measure('AD'))+thalesFact('AB',measure('AB'))+thalesFact('AE',measure('AE'))+thalesFact('AC',measure('AC'))+'</div>'
+      +'<div class="thales-task-question">Les rapports $$\\dfrac{AD}{AB}$$ et $$\\dfrac{AE}{AC}$$ sont-ils égaux&nbsp;?</div></div>');
+  }
+  if(number===8){
+    return renderMathSegments('<div class="thales-task-card"><span class="thales-task-kicker">Choisir l’égalité adaptée</span>'
+      +'<div class="thales-task-condition">$$D\\in[AB]$$, $$E\\in[AC]$$ et $$(DE)\\parallel(BC)$$</div>'+figure
+      +'<div class="thales-task-target">On cherche <strong>$$x=AE$$</strong></div>'
+      +'<div class="thales-facts">'+thalesFact('AD',measure('AD'))+thalesFact('AB',measure('AB'))+thalesFact('AC',measure('AC'))+'</div>'
+      +'<div class="thales-task-question">Quelle égalité permet de calculer $$x$$&nbsp;?</div></div>');
+  }
+  if(number===9){
+    return renderMathSegments('<div class="thales-task-card thales-coherence-card"><span class="thales-task-kicker">Contrôler un résultat</span>'
+      +'<div class="thales-task-condition">$$D\\in[AB]$$</div>'
+      +'<div class="thales-result-comparison">'+thalesFact('AD',measure('x'))+'<span>alors que</span>'+thalesFact('AB',measure('AB'))+'</div>'
+      +'<div class="thales-task-question">Que faut-il penser de ce résultat&nbsp;?</div></div>');
+  }
+  return renderMathSegments(prompt);
+}
+
+function renderThalesModule(inst,correction=false,mode=null){
+  if(mode===null) mode=document.getElementById('visualMode').value;
+  let statement=inst.rawStatement,footer=inst.rawFooter;
+  const figure=thalesQuestionFigure(inst,correction);
+  if(figure){
+    statement=statement.replace(/<div style="text-align:center"><svg[\s\S]*?<\/svg><\/div>/i,figure);
+  }
+  if(isWithoutVisuals(mode)){
+    const keepPlaceholder=mode==='without-reveal';
+    statement=stripVisuals(statement,keepPlaceholder);
+    footer=stripVisuals(footer,keepPlaceholder);
+  }
+  const qcm=splitQCM(statement);
+  let html='';
+  if(qcm){
+    const number=Number(inst.q.n),aidFigure=mode==='with'&&[6,8].includes(number)?thalesQuestionFigure(inst,correction,{aid:true}):'';
+    html+='<div class="question thales-prompt">'+thalesStructuredPrompt(inst,qcm.prompt,aidFigure)+'</div>';
+    const corrects=new Set(inst.answers.map(value=>String(value)));
+    html+='<div class="options thales-options options-'+qcm.opts.length+compactQcmClass(qcm.opts)+'">';
+    qcm.opts.forEach((option,index)=>{const isCorrect=correction&&corrects.has(String(index+1));html+='<div class="opt '+(isCorrect?'correct':'')+'"><strong>'+String.fromCharCode(65+index)+'.</strong> '+renderMathSegments(option)+'</div>';});
+    html+='</div>';
+  }else{
+    html+='<div class="question thales-prompt">'+renderMathSegments(statement)+'</div>';
+  }
+  if(footer) html+='<div class="footer thales-answer">'+renderPlaceholders(footer,inst.answers,correction?'correction':'question')+'</div>';
+  return html;
+}
+
 function durationValueDisc(value,kind='hour'){
   const className=kind==='second'?'duration-disc-second':(kind==='minute'?'duration-disc-minute':'duration-disc-hour');
   return '<span class="duration-disc '+className+'">'+value+'</span>';
@@ -2679,10 +2751,6 @@ function conversionDurationHtml(data,correction=false){
     +'<div class="duration-second-step">'+durationEquivalencePair('1 min','60 s','minute','second')+'</div>'
     +(correction?'<div class="duration-correction-line"><strong>('+hours+' × 60) + '+minutes+' = '+totalMinutes+' min</strong><span>puis</span><strong>'+totalMinutes+' × 60</strong><span>=</span><b>'+totalSeconds+' s</b></div>':'')
     +'</div>';
-}
-function conversionTheme(data){
-  const themes={length:['#1283ff','#dcecff'],mass:['#16a34a','#e2f5e8'],capacity:['#06b6d4','#ddf7fb'],area:['#f59e0b','#fff0d8'],volume:['#7c3aed','#eee6ff']};
-  return themes[data.family]||themes.length;
 }
 function conversionUnitMarkup(unit){
   return escapeHtml(String(unit||'')).replace(/²/g,'<sup>2</sup>').replace(/³/g,'<sup>3</sup>');
@@ -2709,30 +2777,6 @@ function conversionEquationHtml(inst,correction=false){
   const displayedTarget=number===5?'L':data.target;
   return '<span class="conversion-source-expression"><span class="conversion-source-value">'+conversionValueMarkup(data.value)+'</span> <span class="conversion-source-unit">'+conversionUnitMarkup(data.source)+'</span></span><span class="conversion-equals">=</span>'+answer+'<span class="conversion-target-unit">'+conversionUnitMarkup(displayedTarget)+'</span>';
 }
-function conversionTableHtml(data,correction=false){
-  const units=data.units||[];
-  const slots=Math.max(1,Number(data.slots)||1);
-  const sourceIndex=units.indexOf(data.source),targetIndex=units.indexOf(data.target);
-  const totalSlots=units.length*slots,sourceRightSlot=sourceIndex*slots+(slots-1);
-  const digits=digitsInPlaceValueColumns(data.value,totalSlots,sourceRightSlot);
-  const theme=conversionTheme(data);
-  const crossLabels={'3_2':'kL','4_0':'hL','4_1':'daL','4_2':'L','5_0':'dL','5_1':'cL','5_2':'mL'};
-  let headers='',subcells='';
-  units.forEach((unit,index)=>{
-    for(let slot=0;slot<slots;slot++){
-      const absolute=index*slots+slot,digit=digits[absolute]||'';
-      const isUnitSlot=slot===slots-1;
-      const cross=data.crossLabels?crossLabels[index+'_'+slot]:'';
-      const areaAlias=data.family==='area'&&isUnitSlot?(unit==='hm²'?'ha':(unit==='dam²'?'a':'')):'';
-      headers+='<div class="conversion-unit '+(index===sourceIndex&&isUnitSlot?'source':'')+' '+(index===targetIndex&&isUnitSlot?'target':'')+'" data-unit-index="'+index+'" data-unit-slot="'+(isUnitSlot?'true':'false')+'">'
-        +(isUnitSlot?'<strong>'+unit+'</strong>':'')+(cross?'<small>'+cross+'</small>':'')+(areaAlias?'<small>'+areaAlias+'</small>':'')+'</div>';
-      subcells+='<div class="conversion-slot '+(index===sourceIndex?'source':'')+' '+(index===targetIndex?'target':'')+'" data-slot="'+absolute+'" data-unit-index="'+index+'" data-unit-slot="'+(isUnitSlot?'true':'false')+'" data-digit="'+digit+'">'+digit+'</div>';
-    }
-  });
-  return '<div class="conversion-tool conversion-family-'+data.family+'" data-source-unit="'+sourceIndex+'" data-target-unit="'+targetIndex+'" data-initial-unit="'+(correction?targetIndex:sourceIndex)+'" data-unit-slots="'+slots+'" style="--conversion-slots:'+totalSlots+';--conversion-unit-slots:'+slots+';--conversion-units:'+units.length+';--conversion-color:'+theme[0]+';--conversion-pale:'+theme[1]+'">'
-    +'<div class="conversion-grid-wrap"><div class="conversion-grid">'+headers+subcells+'</div><button class="conversion-cursor" type="button" aria-label="Déplacer le repère vers l’unité demandée" data-unit="'+(correction?targetIndex:sourceIndex)+'"><span class="conversion-cursor-label">L’unité de<br>mesure</span><span class="conversion-cursor-comma">,</span><span class="conversion-cursor-digit-label">Le chiffre des<br>unités</span></button></div>'
-    +'</div>';
-}
 function renderConversionModule(inst,correction=false,mode=null){
   if(mode===null) mode=document.getElementById('visualMode').value;
   const data=inst.conversion;
@@ -2743,78 +2787,6 @@ function renderConversionModule(inst,correction=false,mode=null){
   if(!isWithoutVisuals(mode)) html+=data.family==='duration'?conversionDurationHtml(data,correction):conversionTableHtml(data,correction);
   else html+=visualPlaceholder(mode);
   return html+'</div>';
-}
-
-function fractionPercentPalette(data){
-  if(data.kind==='fraction'){
-    if([2].includes(data.denominator)) return {fill:'#fff4c9',stroke:'#8a7420'};
-    if([3,6].includes(data.denominator)) return {fill:'#fde5eb',stroke:'#9b455f'};
-    if([4,8].includes(data.denominator)) return {fill:'#e5f5e4',stroke:'#477a45'};
-    if(data.denominator===5) return {fill:'#e4f0f9',stroke:'#35658c'};
-    return {fill:'#f2e9fb',stroke:'#6b4c91'};
-  }
-  if(data.percent===50) return {fill:'#fff4c9',stroke:'#8a7420'};
-  if(data.percent===25) return {fill:'#e5f5e4',stroke:'#477a45'};
-  if(data.percent===20) return {fill:'#e4f0f9',stroke:'#35658c'};
-  if(data.percent===10) return {fill:'#fff0df',stroke:'#a55f1a'};
-  if(data.percent===1) return {fill:'#f1e7fb',stroke:'#72509a'};
-  return {fill:'#eef1f7',stroke:'#4f6078'};
-}
-
-function fractionPercentBarSvg(data,correction=false){
-  const W=760,x=30,width=700,topY=18,topH=96,bottomY=114,bottomH=96;
-  const palette=fractionPercentPalette(data);
-  const divisor=Math.max(1,Math.round(data.denominator));
-  const cellW=width/divisor;
-  const hasFractionBrace=data.kind==='fraction';
-  const H=divisor===100?266:(hasFractionBrace?316:230);
-  const text=(cx,cy,value,size=23,weight=800,fill='#17283f')=>`<text x="${cx}" y="${cy}" text-anchor="middle" dominant-baseline="middle" font-family="Arial,Helvetica,sans-serif" font-size="${size}" font-weight="${weight}" fill="${fill}">${escapeHtml(value)}</text>`;
-  const fractionQuantityLabel=(cx,top,numerator,denominator,total,fill)=>{
-    const boxW=210,boxH=58,labelCenter=Math.max(boxW/2,Math.min(W-boxW/2,cx)),left=labelCenter-boxW/2;
-    return `<foreignObject x="${left}" y="${top}" width="${boxW}" height="${boxH}"><div xmlns="http://www.w3.org/1999/xhtml" style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;gap:8px;color:${fill};font-family:Cambria Math,STIX Two Math,Times New Roman,serif;font-size:24px;font-weight:750;line-height:1"><span style="display:inline-flex;flex-direction:column;align-items:center;justify-content:center;line-height:1"><span style="min-width:1.15em;padding:0 .12em .05em;border-bottom:2px solid currentColor;text-align:center">${escapeHtml(numerator)}</span><span style="padding:.05em .12em 0;text-align:center">${escapeHtml(denominator)}</span></span><span style="white-space:nowrap">de ${escapeHtml(fmt(total))}</span></div></foreignObject>`;
-  };
-  const percentStrongFill=percent=>percent===50?'#ffe36d':(percent===25?'#91d88e':(percent===20?'#8fc8ed':(percent===10?'#f6b36a':(percent===1?'#c3a1e5':'#b9cce8'))));
-  let fills=`<rect x="${x}" y="${topY}" width="${width}" height="${topH}" fill="${palette.fill}"/>`;
-  let labels='';
-
-  if(data.kind==='fraction'){
-    labels+=text(x+width/2,topY+topH/2,fmt(data.total),29,850);
-    for(let i=0;i<divisor;i++){
-      const selected=i<data.numerator;
-      fills+=`<rect x="${x+i*cellW}" y="${bottomY}" width="${cellW}" height="${bottomH}" fill="${selected?palette.fill:'#fff'}"/>`;
-      if(correction) labels+=text(x+(i+.5)*cellW,bottomY+bottomH/2,fmt(data.part),Math.max(15,Math.min(23,cellW*.24)),800);
-    }
-    if(hasFractionBrace){
-      const x1=x,x2=x+cellW*data.numerator,mid=(x1+x2)/2,y=bottomY+bottomH+7;
-      labels+=`<path d="M ${x1} ${y} Q ${x1} ${y+13} ${x1+15} ${y+13} L ${mid-11} ${y+13} Q ${mid-4} ${y+13} ${mid} ${y+22} Q ${mid+4} ${y+13} ${mid+11} ${y+13} L ${x2-15} ${y+13} Q ${x2} ${y+13} ${x2} ${y}" fill="none" stroke="${palette.stroke}" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>`;
-      labels+=fractionQuantityLabel(mid,y+20,data.numerator,divisor,data.total,palette.stroke);
-    }
-  }else{
-    labels+=text(x+width/2,topY+topH/2,correction?fmt(data.total):'100 %',29,850);
-    for(let i=0;i<divisor;i++){
-      fills+=`<rect x="${x+i*cellW}" y="${bottomY}" width="${cellW}" height="${bottomH}" fill="${i===0?percentStrongFill(data.percent):palette.fill}"/>`;
-      if(divisor<=10){
-        const label=correction?fmt(data.part):fmt(data.percent)+' %';
-        labels+=text(x+(i+.5)*cellW,bottomY+bottomH/2,label,divisor===10?16:Math.max(16,Math.min(23,cellW*.21)),780);
-      }
-    }
-    if(divisor===100){
-      const firstX=x+cellW/2;
-      const guideY=bottomY+bottomH+25;
-      labels+=`<path d="M ${firstX} ${bottomY+bottomH} L ${firstX+25} ${guideY} L ${firstX+92} ${guideY}" fill="none" stroke="${palette.stroke}" stroke-width="1.8"/>`;
-      labels+=text(firstX+180,guideY,correction?fmt(data.part):'1 case = 1 %',correction?18:16,780,palette.stroke);
-    }
-  }
-
-  // Une seule grille est tracée par-dessus les fonds : aucune bordure commune
-  // n'est donc redessinée deux fois.
-  let grid=`<rect x="${x}" y="${topY}" width="${width}" height="${topH+bottomH}" fill="none" stroke="${palette.stroke}" stroke-width="2.2"/><line x1="${x}" y1="${bottomY}" x2="${x+width}" y2="${bottomY}" stroke="${palette.stroke}" stroke-width="2.2"/>`;
-  for(let i=1;i<divisor;i++){
-    const major=divisor===100&&i%10===0;
-    grid+=`<line x1="${x+i*cellW}" y1="${bottomY}" x2="${x+i*cellW}" y2="${bottomY+bottomH}" stroke="${palette.stroke}" stroke-width="${divisor===100?(major?1.8:.65):1.35}"/>`;
-  }
-
-  return `<div class="fraction-percent-help"><svg class="fraction-percent-svg" viewBox="0 0 ${W} ${H}" role="img" aria-label="Schéma en barres">${fills}${grid}${labels}</svg></div>`;
 }
 
 function renderModule04(inst,correction=false,mode=null){
@@ -3079,35 +3051,20 @@ function renderMultipleFormsModule(inst,correction=false,mode=null){
   return html;
 }
 
-function angleSumBarSvg(data,correction=false){
-  const W=700,H=180,x=45,topY=16,topW=610,barH=66,bottomY=82;
-  const total=data.values.reduce((sum,value)=>sum+Number(value),0);
-  const bottomW=data.comparison?topW*total/180:topW;
-  const label=(cx,cy,value,size=21,mathVariable=false)=>`<text x="${cx}" y="${cy}" text-anchor="middle" dominant-baseline="middle" font-family="${mathVariable?'Cambria Math, STIX Two Math, Times New Roman, serif':'Arial,Helvetica,sans-serif'}" font-size="${size}" font-weight="800" fill="#111">${escapeHtml(value)}</text>`;
-  let fills=`<rect x="${x}" y="${topY}" width="${topW}" height="${barH}" fill="#fff"/><rect x="${x}" y="${bottomY}" width="${bottomW}" height="${barH}" fill="#fff"/>`;
-  let grid=`<rect x="${x}" y="${topY}" width="${topW}" height="${barH}" fill="none" stroke="#111" stroke-width="2.2"/><rect x="${x}" y="${bottomY}" width="${bottomW}" height="${barH}" fill="none" stroke="#111" stroke-width="2.2"/>`;
-  let labels=label(x+topW/2,topY+barH/2,'180°',23);
-  let cursor=x;
-  data.values.forEach((value,index)=>{
-    const cellW=topW*Number(value)/180;
-    if(index>0) grid+=`<line x1="${cursor}" y1="${bottomY}" x2="${cursor}" y2="${bottomY+barH}" stroke="#111" stroke-width="1.7"/>`;
-    const unknown=!correction&&data.unknown.includes(index);
-    labels+=label(cursor+cellW/2,bottomY+barH/2,unknown?'𝑥':fmt(value)+'°',Math.max(15,Math.min(21,cellW*.24)),unknown);
-    cursor+=cellW;
-  });
-  if(data.comparison){
-    labels+=`<line x1="${x+topW}" y1="${topY-4}" x2="${x+topW}" y2="${bottomY+barH+4}" stroke="#111" stroke-width="1.5" stroke-dasharray="6 5"/>`;
-  }
-  return `<div class="angle-bar-help"><svg class="angle-bar-svg" viewBox="0 0 ${W} ${H}" role="img" aria-label="Schéma en barres de la somme des angles">${fills}${grid}${labels}</svg></div>`;
-}
-
 function renderAngleSumModule(inst,correction=false,mode=null){
   if(mode===null) mode=document.getElementById('visualMode').value;
   const qcm=splitQCM(inst.rawStatement);
   const prompt=qcm?qcm.prompt:inst.rawStatement;
   const bar=inst.angleSum&&inst.angleSum.bar;
   let html='<div class="question angle-sum-prompt">'+renderMathSegments(prompt)+'</div>';
-  if(bar) html+=isWithoutVisuals(mode)?visualPlaceholder(mode):angleSumBarSvg(bar,correction);
+  if(bar){
+    if(isWithoutVisuals(mode)) html+=visualPlaceholder(mode);
+    else{
+      const action=angleSumEquabarButtonHtml(bar);
+      if(bar.view==='combined') html+='<div class="triangle-angle-sum-visual">'+triangleAngleSumVisual({...bar,view:'triangle'},correction)+action+triangleAngleSumVisual({...bar,view:'bar'},correction)+'</div>';
+      else html+=action+triangleAngleSumVisual(bar,correction);
+    }
+  }
   if(qcm){
     const corrects=new Set(inst.answers.map(value=>String(value)));
     html+='<div class="options angle-sum-options options-'+qcm.opts.length+'">';
@@ -3231,96 +3188,6 @@ function renderEvolutionModule(inst,correction=false,mode=null){
   return html;
 }
 
-function relationPalette(kind,size){
-  if(kind==='multiple'&&size===2) return {fill:'#fff7d6',stroke:'#8a7420'};
-  if(kind==='multiple'&&size===3) return {fill:'#fde5eb',stroke:'#9b455f'};
-  if(kind==='multiple'&&size===4) return {fill:'#e6f5e4',stroke:'#477a45'};
-  if(kind==='fraction'&&size===2) return {fill:'#fff7d6',stroke:'#8a7420'};
-  if(kind==='fraction'&&size===4) return {fill:'#e6f5e4',stroke:'#477a45'};
-  return {fill:'#e7f1fb',stroke:'#35658c'};
-}
-
-function relationBarSvg(data,correction=false){
-  const x=60,width=640,topY=28,topH=70,bottomY=98,bottomH=70;
-  const text=(x,y,value,size=24,weight=800)=>`<text x="${x}" y="${y}" text-anchor="middle" dominant-baseline="middle" font-family="Arial,Helvetica,sans-serif" font-size="${size}" font-weight="${weight}" fill="#17283f">${escapeHtml(value)}</text>`;
-  let body='';
-
-  if(data.kind==='multiple_direct'||data.kind==='multiple_inverse'){
-    const factor=data.factor;
-    const palette=relationPalette('multiple',factor);
-    const names={2:'LE DOUBLE',3:'LE TRIPLE',4:'LE QUADRUPLE'};
-    const cellW=width/factor;
-    body+=`<rect x="${x}" y="${topY}" width="${width}" height="${topH}" fill="${palette.fill}" stroke="#222" stroke-width="2"/>`;
-    body+=text(x+width/2,topY+topH/2,correction?fmt(data.result):names[factor],25,850);
-    for(let i=0;i<factor;i++){
-      body+=`<rect x="${x+i*cellW}" y="${bottomY}" width="${cellW}" height="${bottomH}" fill="${i===0?palette.fill:'#fff'}" stroke="#222" stroke-width="2" ${i===0?'':'stroke-dasharray="8 6"'}/>`;
-      if(correction) body+=text(x+(i+.5)*cellW,bottomY+bottomH/2,fmt(data.value),21,800);
-    }
-    if(!correction) body+=text(x+cellW/2,bottomY+bottomH/2,'la quantité',Math.min(21,Math.max(15,180/cellW*18)),780);
-  }
-
-  if(data.kind==='fraction_direct'){
-    const divisor=data.divisor;
-    const palette=relationPalette('fraction',divisor);
-    const names={2:'la moitié',4:'le quart'};
-    const cellW=width/divisor;
-    body+=`<rect x="${x}" y="${topY}" width="${width}" height="${topH}" fill="${palette.fill}" stroke="#222" stroke-width="2"/>`;
-    body+=text(x+width/2,topY+topH/2,correction?fmt(data.value):'LE TOUT',25,850);
-    for(let i=0;i<divisor;i++){
-      body+=`<rect x="${x+i*cellW}" y="${bottomY}" width="${cellW}" height="${bottomH}" fill="${i===0?palette.fill:'#fff'}" stroke="#222" stroke-width="2"/>`;
-      if(correction) body+=text(x+(i+.5)*cellW,bottomY+bottomH/2,fmt(data.result),divisor===4?20:22,800);
-    }
-    if(!correction) body+=text(x+cellW/2,bottomY+bottomH/2,names[divisor],divisor===4?18:21,780);
-  }
-
-  if(data.kind==='predecessor'||data.kind==='successor'){
-    const palette=relationPalette('neighbor',1),unitW=82,mainW=width-unitW;
-    const isPredecessor=data.kind==='predecessor';
-    const topLabel=correction
-      ? fmt(isPredecessor?data.value:data.result)
-      : (isPredecessor?'LE NOMBRE : '+fmt(data.value):'LE SUCCESSEUR');
-    const bottomLabel=correction
-      ? fmt(isPredecessor?data.result:data.value)
-      : (isPredecessor?'le prédécesseur':'le nombre : '+fmt(data.value));
-    body+=`<rect x="${x}" y="${topY}" width="${width}" height="${topH}" fill="${palette.fill}" stroke="#222" stroke-width="2"/>`;
-    body+=text(x+width/2,topY+topH/2,topLabel,25,850);
-    body+=`<rect x="${x}" y="${bottomY}" width="${mainW}" height="${bottomH}" fill="${palette.fill}" stroke="#222" stroke-width="2"/>`;
-    body+=`<rect x="${x+mainW}" y="${bottomY}" width="${unitW}" height="${bottomH}" fill="#fff" stroke="#222" stroke-width="2"/>`;
-    body+=text(x+mainW/2,bottomY+bottomH/2,bottomLabel,22,780);
-    body+=text(x+mainW+unitW/2,bottomY+bottomH/2,'1',23,850);
-  }
-
-  return `<div class="relation-bar-help"><svg class="relation-bar-svg" viewBox="0 0 760 198" role="img" aria-label="Schéma en barres">${body}</svg></div>`;
-}
-
-function relationTileUnit(type,sign=1){
-  const positive=sign>0,fill=positive?'#31a98e':'#ef5142';
-  const label=type==='n2'?(positive?'𝑛²':'−𝑛²'):(type==='n'?(positive?'𝑛':'−𝑛'):(positive?'1':'−1'));
-  // Même géométrie que dans le module Réduction : l'unité mesure un tiers
-  // de la longueur de n, et le côté de n² est égal à cette longueur.
-  const viewW=type==='u'?32:96,viewH=type==='n2'?96:32;
-  const scale=.85,w=Math.round(viewW*scale),h=Math.round(viewH*scale);
-  const fs=type==='n2'?27:(type==='n'?24:18),baseline=type==='n2'?50:17;
-  return `<svg class="relation-algebra-tile relation-algebra-tile-${type}" viewBox="0 0 ${viewW} ${viewH}" width="${w}" height="${h}" aria-hidden="true"><rect x="1" y="1" width="${viewW-2}" height="${viewH-2}" fill="${fill}" stroke="#171717" stroke-width="1.7"/><text x="${viewW/2}" y="${baseline}" dominant-baseline="middle" text-anchor="middle" font-family="Cambria Math,STIX Two Math,Times New Roman,serif" font-size="${fs}" font-weight="700" fill="#111">${label}</text></svg>`;
-}
-
-function relationTilesHtml(visual){
-  if(!visual) return '';
-  if(visual.kind==='fraction'){
-    // Une fraction de n garde exactement la géométrie 96 × 32 de la tuile n.
-    // Seule la subdivision interne change.
-    const width=96,height=32,scale=.85,cellW=width/visual.divisor;
-    let cells='';
-    for(let i=0;i<visual.divisor;i++) cells+=`<rect x="${i*cellW}" y="0" width="${cellW}" height="${height}" fill="${i===0?'#31a98e':'#fff'}" stroke="#171717" stroke-width="1.5"/>`;
-    const cx=cellW/2,fractionSize=visual.divisor===4?9.5:11;
-    const fraction=`<text x="${cx}" y="17" text-anchor="middle" dominant-baseline="middle" font-family="Cambria Math,STIX Two Math,Times New Roman,serif" font-size="${fractionSize}" font-style="italic" font-weight="700">n/${visual.divisor}</text>`;
-    return `<div class="relation-tile-help"><svg class="relation-algebra-tile relation-algebra-tile-fraction" viewBox="0 0 ${width} ${height}" width="${Math.round(width*scale)}" height="${Math.round(height*scale)}" aria-hidden="true">${cells}${fraction}</svg></div>`;
-  }
-  let tiles='';
-  visual.items.forEach(item=>{for(let i=0;i<item.count;i++) tiles+=relationTileUnit(item.type,item.sign);});
-  return `<div class="relation-tile-help">${tiles}</div>`;
-}
-
 function relationSummaryItems(value){
   const terms=(...items)=>({kind:'terms',items});
   return [
@@ -3415,6 +3282,11 @@ function renderAreaModule(inst,correction=false,mode=null){
 function perimeterCorrectionForQuestion(inst){
   const n=Number(inst.q.n),s=inst.scope||{},answer=String(inst.answers&&inst.answers[0]!==undefined?inst.answers[0]:'');
   const v=name=>fmt(Number(s[name]));
+  if(n===11){
+    return s.isRadius
+      ?{formula:'P=2\\times\\pi\\times r',calculation:'P=2\\times\\pi\\times'+v('measure')+'='+answer+'\\text{ cm}'}
+      :{formula:'P=\\pi\\times d',calculation:'P=\\pi\\times'+v('measure')+'='+answer+'\\text{ cm}'};
+  }
   const cases={
     1:{formula:'P=2\\times(\\text{longueur}+\\text{largeur})',calculation:'P=2\\times('+v('L')+'+'+v('l')+')='+answer+'\\text{ cm}'},
     2:{formula:'P=4\\times\\text{côté}',calculation:'P=4\\times'+v('c')+'='+answer+'\\text{ cm}'},
@@ -3422,20 +3294,23 @@ function perimeterCorrectionForQuestion(inst){
     4:{formula:'P=5\\times\\text{côté}',calculation:'P=5\\times'+v('c')+'='+answer+'\\text{ cm}'},
     5:{formula:'P=2\\times(\\text{longueur}+\\text{largeur})',calculation:'P=2\\times('+v('L')+'+'+v('l')+')='+answer+'\\text{ cm}'},
     6:{formula:'P=2\\times(\\text{largeur totale}+\\text{hauteur totale})',calculation:'P=2\\times('+v('W')+'+'+v('H')+')='+answer+'\\text{ cm}'},
-    7:{formula:'P=2\\times\\pi\\times r',calculation:'P\\approx2\\times3,14\\times'+v('r')+'='+answer+'\\text{ cm}'},
-    8:{formula:'P=\\pi\\times d',calculation:'P\\approx3,14\\times'+v('d')+'='+answer+'\\text{ cm}'},
+    7:{formula:'P=2\\times\\pi\\times r',calculation:'P\\approx2\\times3,1\\times'+v('r')+'='+answer+'\\text{ cm}'},
+    8:{formula:'P=\\pi\\times d',calculation:'P\\approx3,1\\times'+v('d')+'='+answer+'\\text{ cm}'},
     9:{formula:'P=a+b+c+d',calculation:'P='+v('a')+'+'+v('b')+'+'+v('c')+'+'+v('d')+'='+answer+'\\text{ cm}'},
     10:{formula:'P=6\\times\\text{côté}',calculation:'P=6\\times'+v('c')+'='+answer+'\\text{ cm}'}
   };
   return cases[n]||{formula:'P=\\text{somme des longueurs des côtés}',calculation:'P='+answer+'\\text{ cm}'};
 }
 function renderPerimeterModule(inst,correction=false,mode=null){
-  let html='<div class="perimeter-question"><div class="perimeter-prompt">'+renderMathSegments(inst.rawStatement)+'</div></div>';
+  if(Number(inst.q.n)===12) return renderGenericQuestion(inst,correction,mode);
+  let correctionFlow='';
   if(correction){
     const detail=perimeterCorrectionForQuestion(inst);
-    html+='<div class="perimeter-correction-flow"><div class="perimeter-formula">'+renderMathSegments('$$'+detail.formula+'$$')+'</div><div class="perimeter-calculation">'+renderMathSegments('$$'+detail.calculation+'$$')+'</div></div>';
+    correctionFlow='<div class="perimeter-correction-flow"><div class="perimeter-formula">'+renderMathSegments('$$'+detail.formula+'$$')+'</div><div class="perimeter-calculation">'+renderMathSegments('$$'+detail.calculation+'$$')+'</div></div>';
   }
-  if(inst.rawFooter) html+='<div class="footer perimeter-answer">'+renderPlaceholders('$$P=[[formula]]\\text{ cm}$$',inst.answers,correction?'correction':'question')+'</div>';
+  let html='<div class="perimeter-question">'+correctionFlow+'<div class="perimeter-prompt">'+renderMathSegments(inst.rawStatement)+'</div></div>';
+  const relation=[7,8].includes(Number(inst.q.n))?'\\approx':'=';
+  if(inst.rawFooter) html+='<div class="footer perimeter-answer">'+renderPlaceholders('$$P'+relation+'[[formula]]\\text{ cm}$$',inst.answers,correction?'correction':'question')+'</div>';
   return html;
 }
 function volumeFormulaForQuestion(number){
@@ -3530,160 +3405,10 @@ function renderAverageModule(inst,correction=false,mode=null){
   return html;
 }
 
-function module01PartitionPalette(den){
-  const palettes={
-    1:['#ef5757','#fee3e3','#8d2424'],
-    2:['#b98ae8','#f0e5fb','#654187'],
-    3:['#6eafea','#e5f2fd','#285f8f'],
-    4:['#b98ae8','#f0e5fb','#654187'],
-    5:['#e67dab','#fbe6ef','#8a335b'],
-    6:['#6eafea','#e5f2fd','#285f8f'],
-    8:['#b98ae8','#f0e5fb','#654187'],
-    10:['#78c989','#e5f5e8','#276b42'],
-    12:['#6eafea','#e5f2fd','#285f8f'],
-    15:['#e67dab','#fbe6ef','#8a335b'],
-    16:['#b98ae8','#f0e5fb','#654187'],
-    20:['#62c5c0','#e1f6f4','#276d69'],
-    25:['#ef9b55','#fcebdc','#8a4b18'],
-    50:['#759ccf','#e7eff9','#355c8a'],
-    100:['#f2ca3f','#fff5bf','#4a3b00']
-  };
-  return palettes[den]||['#60bfa8','#e3f5f0','#296a5b'];
-}
-function module01PartitionLayout(den){
-  if(den===4) return {cols:2,rows:2};
-  if(den===6) return {cols:3,rows:2};
-  if(den===8) return {cols:4,rows:2};
-  if(den===12) return {cols:3,rows:4};
-  if(den===15) return {cols:5,rows:3};
-  if(den===16) return {cols:4,rows:4};
-  if(den===20) return {cols:5,rows:4};
-  if(den===25) return {cols:5,rows:5};
-  if(den===50) return {cols:10,rows:5};
-  if(den===100) return {cols:10,rows:10};
-  return {cols:Math.max(1,den),rows:1};
-}
-function module01PartitionOrder(den,cols,rows,orderingDen=null){
-  const rowMajor=Array.from({length:den},(_,i)=>i);
-  if(den===16){
-    const order=[];
-    [[0,0],[2,0],[0,2],[2,2]].forEach(([x0,y0])=>{
-      [[0,0],[0,1],[1,0],[1,1]].forEach(([dx,dy])=>order.push((y0+dy)*cols+x0+dx));
-    });
-    return order;
-  }
-  if(den===15||den===25||den===50||(den===20&&orderingDen===5)){
-    const order=[];
-    for(let col=0;col<cols;col++) for(let row=0;row<rows;row++) order.push(row*cols+col);
-    return order;
-  }
-  return rowMajor;
-}
-function module01HierarchyGuides(x0,y0,size,den,stroke,orderingDen=null){
-  let out='';
-  const v=(ratio,width)=>{const x=x0+ratio*size;out+=`<line x1="${x}" y1="${y0}" x2="${x}" y2="${y0+size}" stroke="${stroke}" stroke-width="${width}"/>`;};
-  const h=(ratio,width)=>{const y=y0+ratio*size;out+=`<line x1="${x0}" y1="${y}" x2="${x0+size}" y2="${y}" stroke="${stroke}" stroke-width="${width}"/>`;};
-  if([4,8,16].includes(den)){v(.5,3.2);h(.5,3.2);}
-  if(den===16){v(.25,2);v(.75,2);}
-  if([3,6,12].includes(den)){v(1/3,2.8);v(2/3,2.8);}
-  if(den===6) h(.5,2.15);
-  if(den===12){h(.25,2);h(.5,2);h(.75,2);}
-  if([5,15,25].includes(den)) for(let i=1;i<5;i++) v(i/5,2.35);
-  if(den===20){
-    if(orderingDen===4){h(.25,2.35);h(.5,2.35);h(.75,2.35);}
-    else for(let i=1;i<5;i++) v(i/5,2.35);
-  }
-  if(den===50) for(let i=1;i<10;i++) v(i/10,i===5?2.5:1.75);
-  if(den===100){v(.5,1.9);h(.5,1.9);}
-  return out;
-}
-function module01HundredGridPart(x0,y0,size,filled,den){
-  const [dark,light,stroke]=module01PartitionPalette(den);
-  const cell=size/10;
-  const selectedParts=Math.max(0,Math.min(den,filled));
-  let out='';
-  for(let row=0;row<10;row++){
-    for(let col=0;col<10;col++){
-      // Les cinquièmes occupent deux colonnes. Les vingtièmes occupent
-      // une demi-ligne : cinq centièmes, puis cinq autres centièmes.
-      const partIndex=den===5?Math.floor(col/2):(row*2+(col>=5?1:0));
-      const selected=partIndex<selectedParts;
-      out+=`<rect class="module01-hundred-cell" x="${x0+col*cell}" y="${y0+row*cell}" width="${cell}" height="${cell}" fill="${selected?dark:light}" stroke="${stroke}" stroke-width=".48" stroke-opacity=".48"/>`;
-    }
-  }
-  if(den===5){
-    for(let i=1;i<5;i++){
-      const x=x0+i*2*cell;
-      out+=`<line class="module01-fraction-guide" x1="${x}" y1="${y0}" x2="${x}" y2="${y0+size}" stroke="${stroke}" stroke-width="3"/>`;
-    }
-  }else{
-    // Chaque demi-ligne vaut 1/20 ; deux lignes complètes valent 1/5.
-    out+=`<line class="module01-twentieth-guide" x1="${x0+size/2}" y1="${y0}" x2="${x0+size/2}" y2="${y0+size}" stroke="${stroke}" stroke-width="1.8"/>`;
-    for(let row=1;row<10;row++){
-      const y=y0+row*cell;
-      const fifthBoundary=row%2===0;
-      out+=`<line class="${fifthBoundary?'module01-fraction-guide':'module01-twentieth-guide'}" x1="${x0}" y1="${y}" x2="${x0+size}" y2="${y}" stroke="${stroke}" stroke-width="${fifthBoundary?3:1.8}"/>`;
-    }
-  }
-  out+=`<rect x="${x0}" y="${y0}" width="${size}" height="${size}" fill="none" stroke="${stroke}" stroke-width="3.2"/>`;
-  if(selectedParts>=den){
-    out+=`<text x="${x0+size/2}" y="${y0+size/2+12}" text-anchor="middle" font-family="Arial,Helvetica,sans-serif" font-size="34" font-weight="850" fill="#b33838">1</text>`;
-  }
-  return out;
-}
-function module01BoardSvgPart(x0,y0,size,filled,den,neutral=false,emphasisDen=null,orderingDen=null){
-  const sourceDen=neutral?100:Math.max(1,den);
-  // Pour passer à l'écriture décimale, les cinquièmes et les
-  // vingtièmes restent bien visibles, mais reposent désormais sur les cent
-  // petites cases de l'unité. Le schéma montre donc directement le passage
-  // 16/20 = 80/100 ou 7/5 = 1 + 40/100.
-  if(!neutral&&(sourceDen===5||sourceDen===20)){
-    return module01HundredGridPart(x0,y0,size,filled,sourceDen);
-  }
-  const {cols,rows}=module01PartitionLayout(sourceDen);
-  const [dark,light,stroke]=module01PartitionPalette(sourceDen);
-  const cellW=size/cols,cellH=size/rows,selected=Math.max(0,Math.min(sourceDen,filled));
-  const selectedCells=new Set(module01PartitionOrder(sourceDen,cols,rows,orderingDen).slice(0,selected));
-  let out='';
-  for(let row=0;row<rows;row++){
-    for(let col=0;col<cols;col++){
-      const index=row*cols+col;
-      out+=`<rect x="${x0+col*cellW}" y="${y0+row*cellH}" width="${cellW}" height="${cellH}" fill="${selectedCells.has(index)?dark:light}" stroke="${stroke}" stroke-width="${sourceDen>=50?.72:1.15}"/>`;
-    }
-  }
-  out+=module01HierarchyGuides(x0,y0,size,sourceDen,stroke,orderingDen);
-  if(rows===1&&emphasisDen&&sourceDen%emphasisDen===0&&emphasisDen<sourceDen){
-    const group=sourceDen/emphasisDen;
-    for(let i=group;i<sourceDen;i+=group){
-      const x=x0+i*cellW;
-      out+=`<line x1="${x}" y1="${y0}" x2="${x}" y2="${y0+size}" stroke="${stroke}" stroke-width="3.2"/>`;
-    }
-  }
-  out+=`<rect x="${x0}" y="${y0}" width="${size}" height="${size}" fill="none" stroke="${stroke}" stroke-width="3.2"/>`;
-  if(selected>=sourceDen){
-    out+=`<text x="${x0+size/2}" y="${y0+size/2+12}" text-anchor="middle" font-family="Arial,Helvetica,sans-serif" font-size="34" font-weight="850" fill="#b33838">1</text>`;
-  }
-  return out;
-}
-function module01GridVisual(num,den,neutral=false,emphasisDen=null,orderingDen=null){
-  const total=neutral?Math.round((num/den)*100):num;
-  const per=neutral?100:Math.max(1,den);
-  const boards=Math.max(1,Math.ceil(total/per));
-  const cols=boards<=3?boards:Math.min(4,boards),rows=Math.ceil(boards/cols);
-  const size=boards===1?205:(boards<=3?176:(boards<=4?142:104));
-  const gap=boards<=4?18:13,pad=6;
-  const w=pad*2+cols*size+(cols-1)*gap,h=pad*2+rows*size+(rows-1)*gap;
-  let remaining=total,shapes='';
-  for(let i=0;i<boards;i++){
-    const col=i%cols,row=Math.floor(i/cols),x=pad+col*(size+gap),y=pad+row*(size+gap);
-    const filled=Math.min(per,remaining);remaining-=filled;
-    shapes+=module01BoardSvgPart(x,y,size,filled,per,false,emphasisDen,orderingDen);
-  }
-  return `<div class="module01-visual"><svg viewBox="0 0 ${w} ${h}" style="max-width:${w}px" role="img" aria-label="${boards===1?'Une unité partagée en '+per+' parts égales':boards+' unités, chacune partagée en '+per+' parts égales'}">${shapes}</svg></div>`;
-}
-function module01VisualHtml(d,correction=false){
-  const g=GCD(d.num,d.den),simplified=correction&&g>1&&d.reduced&&d.reduced.den<d.den;
-  return module01GridVisual(d.num,d.den,d.visualKind==='neutral',simplified?d.reduced.den:null,d.reduced?d.reduced.den:null);
+function module01VisualHtml(data,correction=false){
+  const component=globalThis.MATHSGO_VISUALS&&globalThis.MATHSGO_VISUALS.get('arithmetic.fraction-decimal-grid');
+  if(!component) throw new Error('Le composant arithmetic.fraction-decimal-grid doit être chargé avant dnb_01.');
+  return component.render(data,correction);
 }
 function renderModule01(inst,correction=false,mode=null){
   if(mode===null) mode=document.getElementById('visualMode').value;
@@ -3705,167 +3430,10 @@ function renderModule01(inst,correction=false,mode=null){
   return html;
 }
 
-let fractionOpsSvgCounter=0;
-function fractionOpsColor(den){
-  const colors={2:['#ffd11a','#fff5c7','#8a6d00'],3:['#d9b8ff','#f4eaff','#7042a3'],4:['#7fd000','#e8f7c9','#477a00'],5:['#39b6e8','#dff5fd','#14739a'],6:['#ff7417','#ffeadb','#9b3c00'],8:['#ed68b0','#fde3f1','#963664'],10:['#c51c22','#fbe0e1','#861116'],12:['#79e8ec','#e3fbfc','#237b82']};
-  return colors[den]||['#6aa9e9','#e7f1fb','#295f91'];
-}
-function fractionOpsBandSvg(num,den,options={}){
-  const showWhole=options.showWhole===true;
-  const joinTop=options.joinTop===true;
-  const width=330,height=showWhole?78:54,x=5,y=showWhole?20:3,bandW=320,bandH=48;
-  const [dark,light,stroke]=fractionOpsColor(den);
-  const selected=Math.max(0,Math.min(num,den));
-  const removed=Math.max(0,Math.min(options.removed||0,selected));
-  const removedStart=selected-removed;
-  const pattern='fraction-hatch-'+(++fractionOpsSvgCounter);
-  const hidePartLabels=options.hidePartLabels===true;
-  let cells='';
-  for(let index=0;index<den;index++){
-    const cellX=x+index*bandW/den;
-    const cellWidth=bandW/den;
-    let fill=index<selected?dark:light;
-    if(index>=removedStart&&index<selected&&removed) fill='url(#'+pattern+')';
-    cells+='<rect x="'+cellX+'" y="'+y+'" width="'+(cellWidth+.2)+'" height="'+bandH+'" fill="'+fill+'"/>';
-    if(index>0) cells+='<line x1="'+cellX+'" y1="'+y+'" x2="'+cellX+'" y2="'+(y+bandH)+'" stroke="'+stroke+'" stroke-width="1.4"/>';
-    if(index<selected&&den<=12&&!hidePartLabels){
-      const center=cellX+cellWidth/2;
-      const fontSize=Math.max(7,Math.min(11,cellWidth*.31));
-      const isRemoved=index>=removedStart&&index<selected&&removed;
-      const labelColor=isRemoved?'#ffffff':'#17283f';
-      cells+='<text x="'+center+'" y="'+(y+17)+'" text-anchor="middle" font-family="Cambria Math,Times New Roman,serif" font-size="'+fontSize+'" font-weight="800" fill="'+labelColor+'">1</text>'
-        +'<line x1="'+(center-fontSize*.42)+'" y1="'+(y+22)+'" x2="'+(center+fontSize*.42)+'" y2="'+(y+22)+'" stroke="'+labelColor+'" stroke-width="1.1"/>'
-        +'<text x="'+center+'" y="'+(y+34)+'" text-anchor="middle" font-family="Cambria Math,Times New Roman,serif" font-size="'+fontSize+'" font-weight="800" fill="'+labelColor+'">'+den+'</text>';
-    }
-  }
-  return '<svg class="fraction-ops-band" viewBox="0 0 '+width+' '+height+'" role="img" aria-label="'+selected+' parts colorées sur '+den+'">'
-    +'<defs><pattern id="'+pattern+'" patternUnits="userSpaceOnUse" width="10" height="10" patternTransform="rotate(35)"><rect width="10" height="10" fill="#d45148"/><line x1="0" y1="0" x2="0" y2="10" stroke="#ffffff" stroke-width="2" opacity=".62"/></pattern></defs>'
-    +(showWhole?'<text x="'+(x+bandW/2)+'" y="13" text-anchor="middle" font-family="Cambria Math,Times New Roman,serif" font-size="15" font-weight="850" fill="#60708c">1</text>':'')
-    +cells+(joinTop?'<path d="M '+x+' '+y+' V '+(y+bandH)+' H '+(x+bandW)+' V '+y+'" fill="none" stroke="'+stroke+'" stroke-width="3"/>':'<rect x="'+x+'" y="'+y+'" width="'+bandW+'" height="'+bandH+'" fill="none" stroke="'+stroke+'" stroke-width="3"/>')+'</svg>';
-}
-function fractionOpsBandGroup(num,den,options={}){
-  const units=Math.max(1,Math.ceil(num/den));
-  let remaining=num,html='<div class="fraction-ops-units units-'+Math.min(units,3)+'">';
-  for(let index=0;index<units;index++){
-    const selected=Math.min(den,remaining);remaining-=selected;
-    html+=fractionOpsBandSvg(selected,den,index===units-1?options:{});
-  }
-  return html+'</div>';
-}
-function fractionOpsBandCard(label,num,den,options={}){
-  const hasLabel=String(label||'').trim().length>0;
-  return '<div class="fraction-ops-card'+(hasLabel?'':' is-unlabelled')+'">'
-    +(hasLabel?'<div class="fraction-ops-label">'+renderMathSegments('$$'+label+'$$')+'</div>':'')
-    +fractionOpsBandGroup(num,den,options)+'</div>';
-}
-function fractionOpsComparisonWall(n1,d1,n2,d2){
-  return '<div class="fraction-ops-compare-wall">'
-    +'<div class="fraction-ops-wall-label fraction-ops-wall-label-top">'+renderMathSegments('$$'+fractionOpsLatex(n1,d1)+'$$')+'</div>'
-    +fractionOpsBandSvg(n1,d1,{showWhole:false})
-    +fractionOpsBandSvg(n2,d2,{showWhole:false,joinTop:true})
-    +'<div class="fraction-ops-wall-label fraction-ops-wall-label-bottom">'+renderMathSegments('$$'+fractionOpsLatex(n2,d2)+'$$')+'</div>'
-    +'</div>';
-}
-function fractionOpsStaticAreaSvg(a,den1,b,den2){
-  const width=360,height=330,x=65,y=55,size=265,cellW=size/den1,cellH=size/den2;
-  let cells='';
-  for(let row=0;row<den2;row++) for(let col=0;col<den1;col++){
-    const horizontal=col<a,vertical=row<b;
-    const fill=horizontal&&vertical?'#49a9dc':((horizontal||vertical)?'#cce7f5':'#f0f2f4');
-    cells+='<rect x="'+(x+col*cellW)+'" y="'+(y+row*cellH)+'" width="'+cellW+'" height="'+cellH+'" fill="'+fill+'" stroke="#536274" stroke-width="1.2"/>';
-  }
-  const topCenter=x+(a*cellW)/2,leftCenter=y+(b*cellH)/2;
-  const topFraction='<text x="'+topCenter+'" y="17" text-anchor="middle" font-family="Cambria Math,Times New Roman,serif" font-size="18" font-weight="850" fill="#17283f">'+a+'</text><line x1="'+(topCenter-12)+'" y1="25" x2="'+(topCenter+12)+'" y2="25" stroke="#17283f" stroke-width="2"/><text x="'+topCenter+'" y="47" text-anchor="middle" font-family="Cambria Math,Times New Roman,serif" font-size="18" font-weight="850" fill="#17283f">'+den1+'</text>';
-  const leftFraction='<g transform="translate(25 '+leftCenter+')"><text x="0" y="-13" text-anchor="middle" font-family="Cambria Math,Times New Roman,serif" font-size="18" font-weight="850" fill="#17283f">'+b+'</text><line x1="-12" y1="-6" x2="12" y2="-6" stroke="#17283f" stroke-width="2"/><text x="0" y="13" text-anchor="middle" font-family="Cambria Math,Times New Roman,serif" font-size="18" font-weight="850" fill="#17283f">'+den2+'</text></g>';
-  return '<svg class="fraction-product-static fraction-ops-area" viewBox="0 0 '+width+' '+height+'" role="img" aria-label="Modèle d’aire du produit de deux fractions">'
-    +topFraction+leftFraction
-    +'<line x1="'+x+'" y1="53" x2="'+(x+a*cellW)+'" y2="53" stroke="#17283f" stroke-width="2.2"/>'
-    +'<line x1="57" y1="'+y+'" x2="57" y2="'+(y+b*cellH)+'" stroke="#17283f" stroke-width="2.2"/>'
-    +cells+'<rect x="'+x+'" y="'+y+'" width="'+size+'" height="'+size+'" fill="none" stroke="#17283f" stroke-width="3"/></svg>';
-}
-function fractionOpsAreaSvg(a,den1,b,den2,correction=false){
-  const initialTopDen=correction?den1:1,initialLeftDen=correction?den2:1,initialTopNum=correction?a:0,initialLeftNum=correction?b:0;
-  return '<div class="fraction-product-manipulator" data-target-top-num="'+a+'" data-target-top-den="'+den1+'" data-target-left-num="'+b+'" data-target-left-den="'+den2+'" data-top-num="'+initialTopNum+'" data-top-den="'+initialTopDen+'" data-left-num="'+initialLeftNum+'" data-left-den="'+initialLeftDen+'" data-correction="'+(correction?'1':'0')+'">'
-    +'<div class="fraction-product-layout">'
-      +'<div class="fraction-product-top-label"><span class="fraction-product-live-fraction"><b>'+initialTopNum+'</b><i></i><b>'+initialTopDen+'</b></span></div>'
-      +'<div class="fraction-product-top-axis fraction-product-axis" tabindex="0" role="slider" aria-label="Partage horizontal et colonnes colorées"></div>'
-      +'<div class="fraction-product-left-label"><span class="fraction-product-live-fraction"><b>'+initialLeftNum+'</b><i></i><b>'+initialLeftDen+'</b></span></div>'
-      +'<div class="fraction-product-left-axis fraction-product-axis" tabindex="0" role="slider" aria-label="Partage vertical et lignes colorées"></div>'
-      +'<div class="fraction-product-grid" role="img" aria-label="Grille manipulable du produit de deux fractions"></div>'
-    +'</div></div>'+fractionOpsStaticAreaSvg(a,den1,b,den2);
-}
 function fractionOpsVisualHtml(data,correction=false){
-  const kind=data.kind;
-  if(kind==='simplify_simple'||kind==='simplify_harder'){
-    const bottomLabel=correction?fractionOpsLatex(data.result.num,data.result.den):'';
-    return '<div class="fraction-ops-stack fraction-ops-stack-simplify">'+fractionOpsBandCard(fractionOpsLatex(data.num,data.den),data.num,data.den)
-      +'<div class="fraction-ops-arrow">↓</div>'+fractionOpsBandCard(bottomLabel,data.result.num,data.result.den,{hidePartLabels:true})+'</div>';
-  }
-  if(kind==='compare_same_den'){
-    return fractionOpsComparisonWall(data.n1,data.d1,data.n2,data.d2);
-  }
-  if(kind==='compare_same_num'){
-    return fractionOpsComparisonWall(data.n1,data.d1,data.n2,data.d2);
-  }
-  if(kind==='add_same_den'){
-    let html='<div class="fraction-ops-operation">'+fractionOpsBandCard('',data.a,data.den)+fractionOpsBandCard('',data.b,data.den)+'</div>';
-    if(correction){
-      html+='<div class="fraction-ops-result-visual"><span>=</span>'+fractionOpsBandCard('',data.a+data.b,data.den)+'</div>';
-    }
-    return html;
-  }
-  if(kind==='subtract_same_den'){
-    let html='<div class="fraction-ops-stack fraction-ops-stack-subtract">'+fractionOpsBandCard('',data.a,data.den,{removed:data.b})+'</div>';
-    if(correction) html+='<div class="fraction-ops-result-visual fraction-ops-result-separated"><span>=</span>'+fractionOpsBandCard('',data.a-data.b,data.den)+'</div>';
-    return html;
-  }
-  if(kind==='add_multiple_den'){
-    const firstNum=correction?data.converted:data.a;
-    const firstDen=correction?data.den2:data.den1;
-    return '<div class="fraction-ops-conversion">'
-      +fractionOpsBandCard('',firstNum,firstDen)
-      +fractionOpsBandCard('',data.b,data.den2)
-      +'</div>';
-  }
-  if(kind==='multiply'){
-    return '<div class="fraction-ops-product">'+fractionOpsAreaSvg(data.a,data.den1,data.b,data.den2,correction)+'</div>';
-  }
-  if(kind==='multiply_cancel'){
-    const original=fractionOpsLatex(data.a,data.den1)+'\\times '+fractionOpsLatex(data.b,data.den2);
-    const simplified=fractionOpsLatex(data.reducedA,data.reducedDen1)+'\\times '+fractionOpsLatex(data.reducedB,data.reducedDen2);
-    return '<div class="fraction-ops-method-card">'
-      +'<span class="fraction-ops-method-label">Simplifie avant de multiplier</span>'
-      +'<div class="fraction-ops-method-line">'+renderMathSegments('$$'+original+'$$')+'<span class="fraction-ops-method-arrow">→</span>'+renderMathSegments('$$'+simplified+'$$')+'</div>'
-      +'</div>';
-  }
-  if(kind==='divide_integer_unit'){
-    return '<div class="fraction-ops-counting">'
-      +fractionOpsBandCard(String(data.whole),data.whole*data.unitDen,data.unitDen)
-      +(correction?'<div class="fraction-ops-count-result">'+data.result+' parts de '+renderMathSegments('$$'+fractionOpsLatex(1,data.unitDen)+'$$')+'</div>':'')
-      +'</div>';
-  }
-  if(kind==='divide_fraction'){
-    const division=fractionOpsLatex(data.a,data.den1)+'\\div '+fractionOpsLatex(data.b,data.den2);
-    const product=fractionOpsLatex(data.a,data.den1)+'\\times '+fractionOpsLatex(data.den2,data.b);
-    return '<div class="fraction-ops-method-card fraction-ops-inverse-card">'
-      +'<span class="fraction-ops-method-label">Multiplie par l’inverse du diviseur</span>'
-      +'<div class="fraction-ops-method-line">'+renderMathSegments('$$'+division+'$$')+'<span class="fraction-ops-method-arrow">→</span>'+renderMathSegments('$$'+product+'$$')+'</div>'
-      +'</div>';
-  }
-  if(kind==='divide_mixed'){
-    const fractionByInteger=data.orientation==='fraction_by_integer';
-    const division=fractionByInteger
-      ? fractionOpsLatex(data.a,data.den)+'\\div '+data.k
-      : data.whole+'\\div '+fractionOpsLatex(data.b,data.den);
-    const product=fractionByInteger
-      ? fractionOpsLatex(data.a,data.den)+'\\times '+fractionOpsLatex(1,data.k)
-      : fractionOpsLatex(data.whole,1)+'\\times '+fractionOpsLatex(data.den,data.b);
-    return '<div class="fraction-ops-method-card fraction-ops-inverse-card">'
-      +'<span class="fraction-ops-method-label">Écris l’entier comme une fraction, puis inverse le diviseur</span>'
-      +'<div class="fraction-ops-method-line">'+renderMathSegments('$$'+division+'$$')+'<span class="fraction-ops-method-arrow">→</span>'+renderMathSegments('$$'+product+'$$')+'</div>'
-      +'</div>';
-  }
-  return '';
+  const component=globalThis.MATHSGO_VISUALS&&globalThis.MATHSGO_VISUALS.get('arithmetic.fraction-operations');
+  if(!component) throw new Error('Le composant arithmetic.fraction-operations doit être chargé avant les modules de fractions.');
+  return component.render(data,correction);
 }
 function fractionOpsEquation(data,correction=false){
   if(data.kind==='simplify_simple'||data.kind==='simplify_harder') return {left:fractionOpsLatex(data.num,data.den),right:fractionOpsResultLatex(data.result)};
@@ -3969,83 +3537,6 @@ function renderSubstitutionModule(inst,correction=false,mode=null){
   return html;
 }
 
-function equationTokenSvg(x,y,value){
-  const positive=Number(value)>=0;
-  const fill=positive?'#bbf7d0':'#fecdd3';
-  const stroke=positive?'#36c779':'#d94a68';
-  return '<g transform="translate('+x+' '+y+')">'
-    +'<circle r="30" fill="'+fill+'" stroke="'+stroke+'" stroke-width="4"/>'
-    +'<text x="0" y="8" text-anchor="middle" font-family="Arial,Helvetica,sans-serif" font-size="25" font-weight="850" fill="#071a2f">'+escapeHtml(equationSignedInteger(value))+'</text>'
-    +'</g>';
-}
-function equationBlobPath(cx,cy,r){
-  const n=40;
-  const lobes=5;
-  const pts=[];
-  for(let i=0;i<n;i++){
-    const a=(Math.PI*2*i)/n;
-    const k=0.90+0.16*Math.sin(lobes*a)+0.04*Math.sin(2*lobes*a);
-    const rr=r*k;
-    pts.push([cx+Math.cos(a)*rr,cy+Math.sin(a)*rr]);
-  }
-  function catmullRomToBezier(p0,p1,p2,p3){
-    const t=1/6;
-    const c1x=p1[0]+(p2[0]-p0[0])*t;
-    const c1y=p1[1]+(p2[1]-p0[1])*t;
-    const c2x=p2[0]-(p3[0]-p1[0])*t;
-    const c2y=p2[1]-(p3[1]-p1[1])*t;
-    return [c1x,c1y,c2x,c2y,p2[0],p2[1]];
-  }
-  let d='M '+pts[0][0]+' '+pts[0][1];
-  for(let i=0;i<n;i++){
-    const p0=pts[(i-1+n)%n],p1=pts[i],p2=pts[(i+1)%n],p3=pts[(i+2)%n];
-    const curve=catmullRomToBezier(p0,p1,p2,p3);
-    d+=' C '+curve[0]+' '+curve[1]+', '+curve[2]+' '+curve[3]+', '+curve[4]+' '+curve[5];
-  }
-  return d+' Z';
-}
-function equationSplatSvgItem(x,y,opposite,revealed,solution){
-  const value=opposite?-Number(solution):Number(solution);
-  const path=equationBlobPath(0,0,52);
-  if(!revealed){
-    return '<g transform="translate('+x+' '+y+')"><path d="'+path+'" fill="#080a0b" stroke="#c5c8cb" stroke-width="3.5"/>'
-      +(opposite?'<text x="0" y="7" text-anchor="middle" font-family="Arial,Helvetica,sans-serif" font-size="18" font-weight="900" fill="#ffffff">opposé</text>':'')
-      +'</g>';
-  }
-  const positive=value>=0,fill=positive?'#bbf7d0':'#fecdd3',stroke=positive?'#36c779':'#d94a68';
-  return '<g transform="translate('+x+' '+y+')"><path d="'+path+'" fill="#f8fafc" stroke="#c5c8cb" stroke-width="3.5"/>'
-    +'<circle r="25" fill="'+fill+'" stroke="'+stroke+'" stroke-width="4"/>'
-    +'<text x="0" y="8" text-anchor="middle" font-family="Arial,Helvetica,sans-serif" font-size="22" font-weight="850" fill="#273746">'+escapeHtml(equationSignedInteger(value))+'</text></g>';
-}
-function equationSplatPositions(count,panelX){
-  if(count<=0) return [];
-  const layouts={
-    1:[[250,145]],
-    2:[[145,145],[355,145]],
-    3:[[145,105],[355,105],[250,210]],
-    4:[[145,100],[355,100],[145,210],[355,210]],
-    5:[[105,100],[250,100],[395,100],[175,210],[325,210]]
-  };
-  return (layouts[count]||layouts[5]).map(point=>[panelX+point[0],point[1]]);
-}
-function equationSplatPanel(coefficient,constant,panelX,revealed,solution){
-  let html='';
-  const opposite=coefficient<0;
-  equationSplatPositions(Math.min(5,Math.abs(coefficient)),panelX).forEach(point=>{
-    html+=equationSplatSvgItem(point[0],point[1],opposite,revealed,solution);
-  });
-  if(constant!==0) html+=equationTokenSvg(panelX+250,315,constant);
-  return html;
-}
-function equationSplatSvg(data,revealed=false){
-  return '<svg class="equation-splat-svg" viewBox="0 0 1040 370" role="img" aria-label="Balance représentant la même quantité à gauche et à droite">'
-    +'<rect x="12" y="16" width="500" height="340" rx="28" fill="#f8fafc" stroke="#c9cdd2" stroke-width="4"/>'
-    +'<rect x="528" y="16" width="500" height="340" rx="28" fill="#f8fafc" stroke="#c9cdd2" stroke-width="4"/>'
-    +'<line x1="520" y1="8" x2="520" y2="362" stroke="#0a0a0a" stroke-width="7" stroke-linecap="round"/>'
-    +equationSplatPanel(data.a,data.b,12,revealed,data.solution)
-    +equationSplatPanel(data.c,data.d,528,revealed,data.solution)
-    +'</svg>';
-}
 function equationAlignedRowHtml(equation,className=''){
   const parts=String(equation).split(' = ');
   const left=parts.shift()||'';
@@ -4084,7 +3575,8 @@ function equationDetailHtml(data){
 function renderEquationModule(inst,correction=false,mode=null){
   if(mode===null) mode=document.getElementById('visualMode').value;
   const data=inst.equationData;
-  let html='<div class="question equation-prompt">'+escapeHtml(data.prompt)+'</div>';
+  let html='<div class="equation-resolve-button-row equation-mobile-resolve-button-row">'+equationResolveButtonHtml(data)+'</div>'
+    +'<div class="question equation-prompt">'+escapeHtml(data.prompt)+'</div>';
   if(!data.contextual) html+=equationWithResolveHtml(data,'equation-main');
 
   if(!isWithoutVisuals(mode)){
@@ -4383,10 +3875,42 @@ function renderProportionModule(inst,correction=false,mode=null){
   if(inst.rawFooter) html+='<div class="footer proportion-answer">'+renderPlaceholders(inst.rawFooter,inst.answers,correction?'correction':'question')+'</div>';
   return html;
 }
+function relativeInitialState(data){return {tokens:data.initialTokens.map(token=>({...token})),nextPair:1};}
+function relativeSolutionState(data){
+  const state=relativeInitialState(data);
+  state.tokens.forEach(token=>{token.zone='result';});
+  return state;
+}
+function relativeTokensBoardMarkup(data,state,correction=false){
+  const visible=correction?relativeSolutionState(data):state;
+  const instruction=correction?'Les jetons sont rassemblés. Les paires +1/−1 s’annulent.':'Rassemble les deux groupes dans la zone résultat. Les paires +1/−1 valent zéro.';
+  const controls=correction?'':'<p class="relative-token-instruction">'+instruction+'</p><div class="relative-token-actions"><button type="button" class="relative-token-action" data-relative-action="reset">Recommencer</button></div>';
+  return '<div class="relative-token-board" data-relative-board>'+relativeZoneMarkup('Premier nombre','a',visible.tokens)+relativeZoneMarkup('Deuxième nombre','b',visible.tokens)+relativeZoneMarkup('Résultat','result',visible.tokens)+controls+(correction?'<p class="relative-token-result">'+relativeExpression(data.a,data.b)+' = <strong>'+relativeDisplayNumber(data.result)+'</strong></p>':'')+'</div>';
+}
+function relativeZoneMarkup(label,zone,tokens){
+  const paired=relativePairIndexes(tokens,zone),visible=tokens.filter(token=>token.zone===zone);
+  const tokenHtml=visible.map(token=>relativeStaticToken(token,paired.has(tokens.indexOf(token)))).join('');
+  return '<section class="relative-token-zone relative-token-zone-'+zone+'" data-relative-zone="'+zone+'"><h3>'+label+'</h3><div class="relative-token-list">'+(tokenHtml||'<span class="relative-token-empty">—</span>')+'</div></section>';
+}
+function renderRelativeTokensModule(inst,correction=false,mode=null){
+  if(mode===null)mode=document.getElementById('visualMode').value;
+  const data=inst.relativeTokens;
+  const prompt='<div class="question relative-token-prompt">Calcule <strong>'+relativeExpression(data.a,data.b)+'</strong> en manipulant les jetons.</div>';
+  if(mode==='without-reveal'&&!correction)return prompt+'<div class="visual-placeholder relative-token-placeholder"><button class="btn" onclick="revealVisual()">Afficher l’aide</button></div>';
+  return prompt+relativeTokensBoardMarkup(data,relativeInitialState(data),correction);
+}
 function renderQuestion(inst, correction=false, mode=null){
   if(mode===null) mode=document.getElementById('visualMode').value;
+  const runtime=globalThis.MATHSGO_MODULE_RUNTIME&&globalThis.MATHSGO_MODULE_RUNTIME.get(inst&&inst.module&&inst.module.id);
+  if(runtime&&runtime.renderer&&typeof runtime.renderer.renderQuestion==='function'
+    &&(!runtime.renderer.supports||runtime.renderer.supports({instance:inst,correction,mode}))){
+    return runtime.renderer.renderQuestion({
+      instance:inst,correction,mode,renderGenericQuestion,format:fmt,escapeHtml,
+      renderPlaceholders,renderMathSegments,compactQcmClass,isWithoutVisuals,
+      visualPlaceholder,placeValueToolHtml
+    });
+  }
   if(inst && inst.module && inst.module.id==='dnb_01') return renderModule01(inst, correction, mode);
-  if(inst && inst.module && inst.module.id==='dnb_02b') return renderPlaceValueModule(inst, correction, mode);
   if(inst && inst.module && ['dnb_03','dnb_03b'].includes(inst.module.id)) return renderFractionOpsModule(inst, correction, mode);
   if(inst && inst.module && inst.module.id==='dnb_04') return renderModule04(inst, correction, mode);
   if(inst && inst.module && inst.module.id==='dnb_05') return renderMultipleFormsModule(inst, correction, mode);
@@ -4401,9 +3925,13 @@ function renderQuestion(inst, correction=false, mode=null){
   if(inst && inst.module && inst.module.id==='dnb_21') return renderPerimeterModule(inst, correction, mode);
   if(inst && inst.module && inst.module.id==='dnb_22') return renderAreaModule(inst, correction, mode);
   if(inst && inst.module && inst.module.id==='dnb_23') return renderVolumeModule(inst, correction, mode);
+  if(inst && inst.module && inst.module.id==='dnb_24') return renderPythagorasModule(inst, correction, mode);
+  if(inst && inst.module && inst.module.id==='dnb_24b') return globalThis.pythagorasBuilder(inst.pythagorasTactile,correction);
+  if(inst && inst.module && inst.module.id==='dnb_25') return renderThalesModule(inst, correction, mode);
   if(inst && inst.module && inst.module.id==='dnb_30') return renderAverageModule(inst, correction, mode);
   if(inst && inst.module && inst.module.id==='dnb_34') return renderProportionModule(inst, correction, mode);
   if(inst && inst.module && inst.module.id==='dnb_35') return renderEvolutionModule(inst, correction, mode);
+  if(inst && inst.module && inst.module.id==='dnb_38'&&inst.relativeTokens&&inst.relativeTokens.interactive) return renderRelativeTokensModule(inst, correction, mode);
   if(inst && inst.module && inst.module.id==='dnb_07'){
     return renderModule07(inst, correction, mode);
   }
@@ -4443,7 +3971,9 @@ const LEVEL_5E_QUESTIONS={
   dnb_32:'all',
   dnb_33:[1,2,3,4,8,9,10],
   dnb_34:'all',
-  dnb_37:'all'
+  dnb_37:'all',
+  dnb_38:'all',
+  dnb_39:'all'
 };
 
 // Pendant la transition des programmes, ces contenus sont déjà travaillés
@@ -4459,8 +3989,10 @@ function questionEligibleForLevel(m,q,level){
 }
 function visibleModules(){
   const level=document.getElementById('level').value;
-  if(level==='5e') return RAW_MODULES.filter(m=>Object.prototype.hasOwnProperty.call(LEVEL_5E_QUESTIONS,m.id));
-  return RAW_MODULES.filter(m=> level==='all' || m.level_tags.includes(level) || (level==='3e' && m.level_tags.includes('DNB')) );
+  const interactive=document.getElementById('experienceMode').value==='interactive';
+  const supportFilter=module=>!module.interactive_only||interactive;
+  if(level==='5e') return RAW_MODULES.filter(m=>supportFilter(m)&&Object.prototype.hasOwnProperty.call(LEVEL_5E_QUESTIONS,m.id));
+  return RAW_MODULES.filter(m=>supportFilter(m)&&(level==='all' || m.level_tags.includes(level) || (level==='3e' && m.level_tags.includes('DNB'))) );
 }
 const MODULE_DOMAINS=[
   {id:'numbers',title:'Nombres et calculs'},
@@ -4473,6 +4005,7 @@ const MODULE_MENU_GROUPS={
     {id:'numeration',title:'Numération',moduleIds:['dnb_02','dnb_02b','dnb_14']},
     {id:'entiers-divisibilite',title:'Nombres entiers et divisibilité',moduleIds:['dnb_08','dnb_09']},
     {id:'fractions',title:'Fractions et nombres rationnels',moduleIds:['dnb_01','dnb_03','dnb_03b','dnb_04','dnb_05']},
+    {id:'relatifs',title:'Nombres relatifs',moduleIds:['dnb_38','dnb_39']},
     {id:'puissances',title:'Puissances',moduleIds:['dnb_07','dnb_06']},
     {id:'algebre',title:'Calcul littéral et algèbre',moduleIds:['dnb_10','dnb_11','dnb_12','dnb_13']}
   ],
@@ -4481,6 +4014,7 @@ const MODULE_MENU_GROUPS={
     {id:'transformations',title:'Transformations',moduleIds:['dnb_27']},
     {id:'angles-triangles',title:'Angles et triangles',moduleIds:['dnb_16','dnb_17','dnb_18']},
     {id:'theoremes-trigonometrie',title:'Pythagore, Thalès et trigonométrie',moduleIds:['dnb_24','dnb_25','dnb_26','dnb_26b']},
+    {id:'manipuler-telephone',title:'Manipuler sur téléphone',moduleIds:['dnb_24b']},
     {id:'mesures',title:'Conversions, aires et périmètres',moduleIds:['dnb_19','dnb_21','dnb_22']},
     {id:'espace',title:'Espace, solides et patrons',moduleIds:['dnb_20','dnb_23']}
   ],
@@ -4516,6 +4050,8 @@ function updateThemeCounts(){
       master.checked=boxes.length>0&&checked===boxes.length;
       master.indeterminate=checked>0&&checked<boxes.length;
     }
+    group.classList.toggle('has-selection',checked>0);
+    group.classList.toggle('is-complete',boxes.length>0&&checked===boxes.length);
     if(badge){
       badge.innerHTML='<span class="theme-count-value">'+checked+' / '+boxes.length+'</span><span class="theme-count-label"> sélectionné'+(checked===1?'':'s')+'</span>';
       badge.setAttribute('aria-label',checked+' module'+(checked===1?'':'s')+' sélectionné'+(checked===1?'':'s')+' sur '+boxes.length);
@@ -4526,6 +4062,9 @@ function updateThemeCounts(){
 function renderModuleList(){
   const box=document.getElementById('modules');
   const openTheme=box.querySelector('.theme-group[open]')?.dataset.theme||null;
+  // Les catégories sont reconstruites à chaque changement de réglage. L'icône
+  // doit donc faire partie de ce rendu, et non être ajoutée après coup.
+  const getThemeIconMarkup=globalThis.MATHSGO_SETUP_ICONS?.markup;
   box.innerHTML='';
   const modules=visibleModules();
   MODULE_DOMAINS.forEach(theme=>{
@@ -4537,9 +4076,14 @@ function renderModuleList(){
     group.open=theme.id===openTheme;
     const summary=document.createElement('summary');
     summary.className='theme-summary';
-    summary.innerHTML='<span class="theme-chevron">▶</span><span class="theme-name">'+theme.title+'</span><label class="theme-select-all"><input class="theme-select-cb" type="checkbox" aria-label="Tout sélectionner dans '+theme.title+'"><span>Tout</span></label><span class="theme-count"></span>';
+    const iconMarkup=typeof getThemeIconMarkup==='function'?getThemeIconMarkup(theme.id):'';
+    summary.innerHTML='<span class="theme-icon" aria-hidden="true">'+iconMarkup+'</span><span class="theme-name">'+theme.title+'</span><span class="theme-count"></span><span class="theme-chevron" aria-hidden="true"></span>';
     const items=document.createElement('div');
     items.className='theme-items';
+    const itemsToolbar=document.createElement('div');
+    itemsToolbar.className='theme-items-toolbar';
+    itemsToolbar.innerHTML='<label class="theme-select-all"><input class="theme-select-cb" type="checkbox" aria-label="Tout sélectionner dans '+theme.title+'"><span>Tout sélectionner dans ce domaine</span></label>';
+    items.appendChild(itemsToolbar);
     menuGroupsForTheme(theme.id,members).forEach(menuGroup=>{
       const subgroup=document.createElement('section');
       subgroup.className='module-subgroup';
@@ -4559,9 +4103,7 @@ function renderModuleList(){
       items.appendChild(subgroup);
     });
     group.append(summary,items);
-    const themeSelector=summary.querySelector('.theme-select-all');
-    const themeCheckbox=summary.querySelector('.theme-select-cb');
-    themeSelector.addEventListener('click',event=>event.stopPropagation());
+    const themeCheckbox=itemsToolbar.querySelector('.theme-select-cb');
     themeCheckbox.addEventListener('change',()=>{
       group.querySelectorAll('.modcb').forEach(cb=>cb.checked=themeCheckbox.checked);
       updateThemeCounts();

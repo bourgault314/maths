@@ -73,6 +73,22 @@ function drawFromQuestionDeck(deckKey,questions,count,cycleBuilder=null){
   return selected;
 }
 
+function drawRuntimeModuleQuestions(module,questions,count){
+  const runtime=globalThis.MATHSGO_MODULE_RUNTIME&&globalThis.MATHSGO_MODULE_RUNTIME.get(module&&module.id);
+  const selection=runtime&&runtime.selection;
+  if(selection&&typeof selection.selectQuestions==='function'){
+    return selection.selectQuestions({
+      module,questions,count,shuffle:shuffledCopy,
+      draw:(key,pool,poolCount,cycleBuilder=null)=>drawFromQuestionDeck(key,pool,poolCount,cycleBuilder),
+      drawOrder:drawOrderKey
+    });
+  }
+  const cycleBuilder=selection&&typeof selection.buildCycle==='function'
+    ?()=>selection.buildCycle({module,questions,shuffle:shuffledCopy})
+    :null;
+  return drawFromQuestionDeck(module.id+':all',questions,count,cycleBuilder);
+}
+
 function drawOrderKey(deckKey,keys){
   const signature=[...keys].sort().join('|');
   let deck=quizSelectionState.orderDecks.get(deckKey);
@@ -242,9 +258,15 @@ function visualPolicyForQuestion(m,q){
    *   la question reste disponible et l'élève peut révéler cette seule aide.
    * - "essential" : le dessin contient les données nécessaires (droite,
    *   graphique, figure à lire...). La question n'est jamais affichée sans lui.
+   * - "aid-only" : le dessin est une aide d'étayage. Il est affiché en mode
+   *   « Avec aide » et totalement absent en mode « Sans aide ».
    * Tout nouveau visuel doit être classé selon son rôle pédagogique, pas
    * seulement selon la présence d'une balise SVG.
    */
+  const pedagogyType=globalThis.MATHSGO_PEDAGOGY&&globalThis.MATHSGO_PEDAGOGY.getQuestionType(m.id,q.n);
+  if(pedagogyType&&pedagogyType.visual&&pedagogyType.visual.policy){
+    return pedagogyType.visual.policy;
+  }
   if(m.id==='dnb_01'){
     return q.options&&q.options.module01_kind==='read_visual'?'essential':'optional';
   }
@@ -287,6 +309,7 @@ function slideModeForVisualPolicy(mode,policy){
   if(mode!=='without') return mode;
   if(policy==='essential') return 'with';
   if(policy==='optional') return 'without-reveal';
+  if(policy==='aid-only') return 'without';
   return 'without';
 }
 
@@ -435,10 +458,10 @@ function buildBalancedQuiz(mods,count){
       : item.m.id==='dnb_22'
         ? chooseAreaQuestions(item.m.id,item.questions,moduleCount)
         : item.m.id==='dnb_14'
-          ? chooseNumberLineQuestions(item.m.id,item.questions,moduleCount)
+          ? drawRuntimeModuleQuestions(item.m,item.questions,moduleCount)
         : ['dnb_26','dnb_26b'].includes(item.m.id)
           ? chooseTrigQuestions(item.m.id,item.questions,moduleCount)
-        : drawFromQuestionDeck(item.m.id+':all',item.questions,moduleCount);
+        : drawRuntimeModuleQuestions(item.m,item.questions,moduleCount);
     return {m:item.m,questions:chosen};
   });
 
@@ -449,20 +472,55 @@ function buildBalancedQuiz(mods,count){
 
 let currentSeriesDefinition=null;
 
-function generateFromDefinition(definition,{sameTab=false}={}){
+function writePreparationWindow(targetWindow){
+  if(!targetWindow||targetWindow.closed) return;
+  targetWindow.document.open();
+  targetWindow.document.write('<!doctype html><html lang="fr"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>Préparation — maths&go</title><style>html,body{min-height:100%;margin:0}body{display:grid;place-items:center;padding:24px;background:#f5f7fb;color:#10244a;font:600 16px Arial,sans-serif}.card{width:min(100%,360px);padding:28px 24px;border:1px solid #dbe4f3;border-radius:18px;background:#fff;box-shadow:0 10px 30px rgba(16,36,74,.09);text-align:center}.mark{display:inline-grid;place-items:center;width:38px;height:38px;margin-bottom:14px;border:4px solid #dbe4f3;border-top-color:#06b3ad;border-radius:50%;animation:spin .8s linear infinite}@keyframes spin{to{transform:rotate(360deg)}}p{margin:0;color:#61708f;font-size:.95rem;line-height:1.4}</style></head><body><main class="card"><span class="mark" aria-hidden="true"></span><p>Préparation de la série…</p></main></body></html>');
+  targetWindow.document.close();
+}
+
+function writePreparationError(targetWindow,message){
+  if(!targetWindow||targetWindow.closed) return;
+  const safe=String(message||'Impossible de préparer la série.').replace(/[&<>"']/g,character=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[character]));
+  targetWindow.document.open();
+  targetWindow.document.write('<!doctype html><html lang="fr"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>Erreur — maths&go</title><style>body{margin:0;padding:24px;background:#f5f7fb;color:#10244a;font:16px Arial,sans-serif}.card{max-width:520px;margin:10vh auto;padding:24px;border:1px solid #f1caca;border-radius:18px;background:#fff}.card strong{color:#9d2f2f}</style></head><body><main class="card"><strong>La série n’a pas pu être préparée.</strong><p>'+safe+'</p></main></body></html>');
+  targetWindow.document.close();
+}
+
+function generateFromDefinition(definition,{sameTab=false,targetWindow=null}={}){
   const normalized=normalizeSeriesDefinition(definition);
   const mods=modulesForSeriesDefinition(normalized);
   setSeed(normalized.seed);
   beginQuizBank(mods);
   quiz=buildBalancedQuiz(mods,normalized.questionCount);
-  if(!quiz.length){ alert('Aucune question compatible avec les options choisies.'); return; }
+  if(!quiz.length){ alert('Aucune question compatible avec les options choisies.'); return false; }
   currentSeriesDefinition=normalized;
-  openDiapoWindow(normalized,{sameTab});
+  openDiapoWindow(normalized,{sameTab,targetWindow});
+  return true;
 }
 
-function generate(){
-  try{generateFromDefinition(readSeriesDefinitionFromUi());}
-  catch(error){alert(error&&error.message?error.message:'Impossible de préparer cette série.');}
+async function generate(){
+  if(modulePreparationInProgress) return;
+  const targetWindow=window.open('', '_blank');
+  if(!targetWindow){
+    alert('La nouvelle fenêtre a été bloquée. Autorise les popups pour cette page.');
+    return;
+  }
+  writePreparationWindow(targetWindow);
+  modulePreparationInProgress=true;
+  updateSetupActions();
+  try{
+    const definition=readSeriesDefinitionFromUi();
+    await loadModulesForIds(definition.moduleIds.map(mathsgoLegacyModuleId));
+    if(generateFromDefinition(definition,{targetWindow})===false&&!targetWindow.closed) targetWindow.close();
+  }catch(error){
+    const message=error&&error.message?error.message:'Impossible de préparer cette série.';
+    writePreparationError(targetWindow,message);
+    alert(message);
+  }finally{
+    modulePreparationInProgress=false;
+    updateGenerateButtonLabel();
+  }
 }
 
 document.querySelectorAll('.segmented-control').forEach(group=>{
@@ -499,7 +557,7 @@ function updateSetupActions(){
     const assistance=document.getElementById('visualMode').value==='with'?'Avec aide':'Sans aide';
     settingsSummary.textContent=level+' · '+count+' questions · '+experience+' · '+assistance;
   }
-  if(generateButton) generateButton.disabled=selectedCount===0;
+  if(generateButton) generateButton.disabled=selectedCount===0||modulePreparationInProgress;
   if(generateCount) generateCount.textContent=selectedCount?' · '+selectedCount:'';
   if(shareButton) shareButton.disabled=selectedCount===0;
 }
@@ -507,10 +565,11 @@ function updateGenerateButtonLabel(){
   const button=document.getElementById('generateButton');
   const mode=document.getElementById('experienceMode');
   const label=button?.querySelector('.generate-label');
-  if(label&&mode) label.textContent=mode.value==='interactive'?'Lancer l’entraînement':'Lancer le diaporama';
+  if(label&&mode) label.textContent=modulePreparationInProgress?'Préparation…':(mode.value==='interactive'?'Lancer l’entraînement':'Lancer le diaporama');
   updateSetupActions();
 }
 document.getElementById('experienceMode').addEventListener('change',updateGenerateButtonLabel);
+document.getElementById('experienceMode').addEventListener('change',renderModuleList);
 document.getElementById('visualMode').addEventListener('change',updateSetupActions);
 document.getElementById('count').addEventListener('change',updateSetupActions);
 document.getElementById('level').addEventListener('change',updateSetupActions);
