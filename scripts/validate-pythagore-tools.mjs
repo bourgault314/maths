@@ -108,7 +108,7 @@ if(html.includes('id="showSolution"')) fail('La solution ne doit pas être acces
 if(!html.includes('<option value="perigal" selected>')) fail('Périgal doit être le puzzle ouvert par défaut.');
 if(!html.includes('<option value="lapeyronnie">5. Lapeyronnie (5 pièces)</option>') || html.includes('IREM — 5 pièces')) fail('Le puzzle de Lapeyronnie doit porter un nom explicite.');
 if(!html.includes('<option value="sixEquilibre">') || !html.includes('<option value="tangram">') || !html.includes('<option value="mosaiqueOblique">') || !html.includes('<option value="moulinIsocele">') || !html.includes('<option value="mosaiqueSept">10. Puzzle de Brest (7 pièces)</option>')) fail('Les découpages ajoutés et restaurés doivent tous être proposés.');
-if(!html.includes('href="../../index.html?domain=geometrie&amp;notion=pythagore"') || !html.includes('Retour au menu Pythagore')) fail('La flèche du Moulin doit revenir au menu Pythagore.');
+if(!html.includes('href="../index.html?domain=geometrie&amp;notion=pythagore"') || !html.includes('Retour au menu Pythagore')) fail('La flèche du Moulin doit revenir au menu Pythagore.');
 if(!html.includes('<button id="enonce">Fiche</button>') || !html.includes('class="screenActions"><button type="button" onclick="window.print()">Imprimer</button>')) fail('La fiche doit être consultable avant impression.');
 if(html.includes('<body onload="window.print()">')) fail('La fiche ne doit pas déclencher l’impression avant son aperçu.');
 if(!html.includes('2.8+Math.random()*1.1') || !html.includes('setTimeout(()=>clearCelebration(false),4400)')) fail('Les confettis doivent tomber plus lentement.');
