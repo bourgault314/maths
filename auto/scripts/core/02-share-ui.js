@@ -97,22 +97,24 @@ function downloadSeriesQr(){
   }catch(error){mathsgoSetSeriesMessage(error&&error.message?error.message:'Impossible d’enregistrer le QR code.','bad','share');}
 }
 
-function openSeriesFromEntry(){
+async function openSeriesFromEntry(){
   const input=document.getElementById('seriesCodeInput');
   try{
     const definition=decodeSeriesDefinition(input.value);
     applySeriesDefinitionToUi(definition);
+    await loadModulesForIds(definition.moduleIds.map(mathsgoLegacyModuleId));
     generateFromDefinition(definition,{sameTab:true});
   }catch(error){mathsgoSetSeriesMessage(error&&error.message?error.message:'Impossible d’ouvrir cette série.','bad','open');}
 }
 
-function openSharedSeriesFromLocation(){
+async function openSharedSeriesFromLocation(){
   const params=new URLSearchParams(location.hash.replace(/^#/,''));
   if(!params.has('s')) return false;
   try{
     const definition=decodeSeriesDefinition(location.href);
     applySeriesDefinitionToUi(definition);
-    setTimeout(()=>generateFromDefinition(definition,{sameTab:true}),0);
+    await loadModulesForIds(definition.moduleIds.map(mathsgoLegacyModuleId));
+    generateFromDefinition(definition,{sameTab:true});
     return true;
   }catch(error){
     mathsgoSetSeriesMessage(error&&error.message?error.message:'Le lien de série est invalide.','bad');

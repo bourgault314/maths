@@ -1,6 +1,6 @@
 const MATHSGO_SCHEMA_VERSION=1;
-const MATHSGO_GENERATOR_VERSION='1.12.0';
-const MATHSGO_APP_VERSION='1.15';
+const MATHSGO_GENERATOR_VERSION='1.15.0';
+const MATHSGO_APP_VERSION='1.18';
 const MATHSGO_SERIES_PREFIX='MG1-';
 const MATHSGO_CANONICAL_URL='https://mathsgo.re/auto/';
 const MATHSGO_ALLOWED_LEVELS=new Set(['5e','4e','3e','DNB']);
@@ -51,7 +51,10 @@ const MATHSGO_MODULE_REGISTRY=Object.freeze([
   ['problemes-proportionnalite','dnb_34',36],
   ['evolutions-pourcentage','dnb_35',37],
   ['lire-graphique-dependance','dnb_36',38],
-  ['algorithmique-instructions','dnb_37',39]
+  ['algorithmique-instructions','dnb_37',39],
+  ['relatifs-addition-entiers-jetons','dnb_38',40],
+  ['pythagore-tactile','dnb_24b',41],
+  ['decimaux-relatifs-comparer-calculer','dnb_39',42]
 ].map(([id,legacyId,code])=>Object.freeze({id,legacyId,code,aliases:Object.freeze([legacyId])})));
 
 const MATHSGO_MODULE_BY_ID=new Map(MATHSGO_MODULE_REGISTRY.map(entry=>[entry.id,entry]));
@@ -129,6 +132,7 @@ function normalizeSeriesDefinition(input,{strict=false,generateSeed=false}={}){
   if(!MATHSGO_ALLOWED_VISUAL_MODES.has(visualMode)) throw new MathsgoSeriesError('INVALID_VISUAL_MODE','Le mode d’aide n’est pas reconnu.');
   const experienceMode=String(input.experienceMode||'');
   if(!MATHSGO_ALLOWED_EXPERIENCE_MODES.has(experienceMode)) throw new MathsgoSeriesError('INVALID_EXPERIENCE_MODE','Le mode de travail n’est pas reconnu.');
+  if(moduleIds.includes('pythagore-tactile')&&experienceMode!=='interactive') throw new MathsgoSeriesError('INTERACTIVE_MODULE','Le module Pythagore tactile est disponible uniquement en mode interactif.');
   const expectedSeriesCount=experienceMode==='interactive'?INTERACTIVE_SERIES_COUNT:1;
   if(strict&&input.seriesCount!==undefined&&Number(input.seriesCount)!==expectedSeriesCount){
     throw new MathsgoSeriesError('INVALID_SERIES_COUNT','Le nombre de séries ne correspond pas au mode enregistré.');
@@ -204,12 +208,13 @@ function mathsgoParametersForInstance(instance){
   const result={};
   const scope=mathsgoSanitizeParameters(instance.scope||{});
   if(scope&&Object.keys(scope).length) result.generated=scope;
-  const modelKeys=['module01','placeValue','fractionOps','fractionPercent','multipleForms','relation','reduction','substitution','equationData','angleSum','conversion','area','trig','average','evolution'];
+  const modelKeys=['module01','placeValue','fractionOps','fractionPercent','multipleForms','relation','reduction','substitution','equationData','angleSum','angleSumTactile','conversion','area','trig','average','evolution','pythagorasTactile'];
   modelKeys.forEach(key=>{if(instance[key]!==undefined){const cleaned=mathsgoSanitizeParameters(instance[key],key);if(cleaned!==undefined)result[key]=cleaned;}});
   return result;
 }
 
 function mathsgoResponseTypeForSpec(spec){
+  if(spec.kind==='pythagoras-tactile'||spec.kind==='angle-sum-tactile') return 'drag-and-drop';
   if(spec.kind==='qcm') return spec.multiple?'multiple-choice':'qcm';
   if(spec.kind==='grid-point') return 'coordinates';
   if(spec.layout==='fraction') return 'fraction';

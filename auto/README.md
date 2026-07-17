@@ -1,50 +1,26 @@
-# Automatismes maths&go — application publique 1.15
+# Automatismes maths&go
 
-Application d'automatismes pour le cycle 4 et le DNB, publiée à l'adresse
-`https://mathsgo.re/auto/`.
+Cette application est la version publique des Automatismes cycle 4 et DNB :
 
-## Organisation réellement publiée
+`https://mathsgo.re/auto/`
+
+La page `https://mathsgo.re/outils/automatismes/` présente l'application et
+le livret A5 ; elle n'héberge pas un second exerciseur.
+
+## Organisation
 
 | Chemin | Rôle |
 |---|---|
-| `index.html` | interface de sélection et de partage |
-| `styles/setup.css` | styles de l'écran de préparation |
-| `scripts/data/` | banque de modules par domaine |
-| `scripts/01-modules.js` | assemblage et configuration des modules |
-| `scripts/02-question-engine.js` | génération, réponses et visuels |
-| `scripts/core/01-series-contracts.js` | identifiants, versions et codes MG1 |
-| `scripts/03-slideshow.js` | diaporama, cours, interactions et tentatives |
-| `scripts/04-app.js` | tirage équilibré et lancement |
-| `scripts/core/02-share-ui.js` | lien, QR code et ouverture directe |
-| `scripts/vendor/` | générateur de QR code embarqué |
+| `index.html` | interface de préparation et lancement |
+| `scripts/00-module-manifest.js` | catalogue et chargement des modules |
+| `scripts/modules/` | banques d'automatismes isolées par module |
+| `scripts/shared/pedagogy/` | tâches, réponses, figures et aides |
+| `scripts/shared/visuals/` | composants visuels réutilisables |
+| `scripts/02-question-engine.js` | instanciation et rendu des questions |
+| `scripts/03-slideshow.js` | diaporama, cours, interaction et correction |
+| `scripts/04-app.js` | sélection, tirage et orchestration |
+| `scripts/core/` | contrats de séries, identifiants et partage |
 
-La page publique utilise ces fichiers découpés. L'ancien gros fichier autonome
-n'est plus la source canonique du site.
-
-## Garanties actuelles
-
-- 40 modules enregistrés avec des codes permanents ;
-- mêmes paramètres et même seed : mêmes séries ;
-- modes interactif et diaporama ;
-- partage par lien, code MG1 et QR code ;
-- aucun nom ni résultat d'élève dans le lien ;
-- `AttemptRecorder` préparé mais désactivé ;
-- outil utilisable sans serveur applicatif pour les fonctions pédagogiques.
-
-## Identifiants et versions
-
-Les identifiants du registre dans `scripts/core/01-series-contracts.js` ne doivent
-jamais être réutilisés ou réordonnés. Un nouveau module reçoit un nouveau code.
-
-Le numéro `n` d'un modèle de question reste stable. Une modification de son sens,
-de ses paramètres ou de sa correction augmente `options.template_version`. Une
-retouche purement visuelle ne crée pas une nouvelle question.
-
-## Évolution vers le moteur pédagogique
-
-Automatismes ne doit pas être découpé davantage au hasard. La stratégie de
-migration est documentée dans
-[`../studio/docs/06-INVENTAIRE-MIGRATION.md`](../studio/docs/06-INVENTAIRE-MIGRATION.md).
-
-Les futurs composants seront extraits un module à la fois, après stabilisation
-pédagogique, comparaison des rendus et tests de non-régression.
+Les développements et numéros de version sont suivis dans le dépôt bêta. Les
+lots validés sont ensuite transférés ici sans afficher de numéro de version
+sur le site public.

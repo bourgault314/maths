@@ -5,10 +5,10 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <meta name="theme-color" content="#f5f7fb">
 <script>if(new URLSearchParams(location.search).get('partage')==='1')document.documentElement.classList.add('share-test');</script>
-  <title>Automatismes maths cycle 4 et DNB — version 1.15 | maths&amp;go</title>
+  <title>Automatismes maths cycle 4 et DNB | maths&amp;go</title>
 <meta name="description" content="Outil d’automatismes de mathématiques pour le cycle 4 et le DNB : entraînez vos élèves en vidéoprojection ou sur téléphone, avec aides et corrections.">
 <link rel="canonical" href="https://mathsgo.re/auto/">
-<link rel="stylesheet" href="styles/setup.css">
+<link rel="stylesheet" href="styles/setup.css?v=20260717-5">
 <link rel="stylesheet" href="../assets/css/consentement.css">
 <script defer src="../assets/js/consentement.js" data-analytics-page-location="https://mathsgo.re/auto/"></script>
 </head>
@@ -20,12 +20,16 @@
     </a>
     <div class="title">
       <h1>Automatismes<span class="title-cycle">Cycle 4 – DNB</span></h1>
-      <span class="revision-badge">V1.15</span>
     </div>
   </div>
 
-  <div class="panel">
-    <div class="controls-row">
+  <main class="panel">
+    <section class="settings-card" aria-labelledby="settingsTitle">
+      <div class="section-heading">
+        <span class="section-step section-step-settings" aria-hidden="true">1</span>
+        <h2 id="settingsTitle">Préparer la série</h2>
+      </div>
+      <div class="controls-row">
       <div class="field field-level">
         <label id="levelLabel">Niveau</label>
         <input type="hidden" id="level" value="3e">
@@ -40,8 +44,8 @@
         <label id="visualModeLabel">Aide</label>
         <input type="hidden" id="visualMode" value="with">
         <div class="segmented-control" data-control="visualMode" role="group" aria-labelledby="visualModeLabel">
-          <button type="button" class="segment-btn is-active" data-value="with" aria-pressed="true">Avec</button>
-          <button type="button" class="segment-btn" data-value="without" aria-pressed="false">Sans</button>
+          <button type="button" class="segment-btn is-active" data-value="with" aria-pressed="true">Avec aide</button>
+          <button type="button" class="segment-btn" data-value="without" aria-pressed="false">Sans aide</button>
         </div>
       </div>
       <div class="field field-experience">
@@ -62,22 +66,45 @@
           <button type="button" class="segment-btn" data-value="20" aria-pressed="false">20</button>
         </div>
       </div>
-    </div>
-    <input type="hidden" id="seed" value="">
-    <div class="setup-tools">
-      <button class="setup-tool-button" id="openSeriesButton" type="button" aria-expanded="false" aria-controls="openSeriesOverlay" onclick="setOpenSeriesPanel(true)">Ouvrir une série</button>
-    </div>
-    <div class="modules-toolbar">
-      <h2>Choisir les automatismes</h2>
-      <div class="bulk-actions" role="group" aria-label="Sélection des automatismes">
-        <button class="secondary" type="button" onclick="selectVisible(true)">Tout</button>
-        <button class="secondary" type="button" onclick="selectVisible(false)">Effacer</button>
       </div>
-    </div>
-    <div class="series-message" id="seriesMessage" role="status" aria-live="polite" hidden></div>
-    <div id="modules" class="modules"></div>
-  </div>
-  <p class="credit">Remerciements à Eric Hakenholz, créateur de <a href="https://doctools.org/dnb/automatismes_dnb.html" target="_blank" rel="noopener noreferrer">DocTools</a>, pour le partage du fichier, et à Claire Lagarde, pour son aide précieuse.</p>
+      <input type="hidden" id="seed" value="">
+      <div class="setup-tools">
+        <button class="setup-tool-button" id="openSeriesButton" type="button" aria-expanded="false" aria-controls="openSeriesOverlay" onclick="setOpenSeriesPanel(true)">Ouvrir une série</button>
+      </div>
+    </section>
+
+    <section class="modules-card" aria-labelledby="modulesTitle">
+      <div class="modules-toolbar">
+        <div class="section-heading">
+          <span class="section-step section-step-modules" aria-hidden="true">2</span>
+          <h2 id="modulesTitle">Choisir les automatismes</h2>
+        </div>
+        <div class="bulk-actions" role="group" aria-label="Sélection des automatismes">
+          <button class="secondary" type="button" aria-label="Tout sélectionner" onclick="globalThis.selectVisible?.(true)">Tous</button>
+          <button class="secondary" type="button" aria-label="Tout désélectionner" onclick="globalThis.selectVisible?.(false)">Aucun</button>
+        </div>
+      </div>
+      <div class="series-message" id="seriesMessage" role="status" aria-live="polite" hidden></div>
+      <div id="modules" class="modules" aria-label="Domaines d’automatismes">
+        <details class="theme-group" data-theme="numbers">
+          <summary class="theme-summary"><span class="theme-icon" aria-hidden="true"><svg viewBox="0 0 36 36" focusable="false"><rect x="3.5" y="3.5" width="29" height="29" rx="4.5" fill="#fffaf3" stroke="#173a5e" stroke-width="1.3"/><g fill="none" stroke="#aebfd1" stroke-width="1.2" stroke-linecap="round"><path d="M7.5 11.5h21M7.5 18h21M7.5 24.5h21"/></g><g stroke="#fffdf8" stroke-width=".72"><circle cx="10.5" cy="11.5" r="2.55" fill="#08aaa5"/><circle cx="16" cy="11.5" r="2.55" fill="#08aaa5"/><circle cx="25.5" cy="11.5" r="2.55" fill="#0b67b2"/><circle cx="12.5" cy="18" r="2.55" fill="#f58220"/><circle cx="21" cy="18" r="2.55" fill="#f58220"/><circle cx="26.5" cy="18" r="2.55" fill="#f58220"/><circle cx="9.5" cy="24.5" r="2.55" fill="#0b67b2"/><circle cx="18.5" cy="24.5" r="2.55" fill="#08aaa5"/><circle cx="24" cy="24.5" r="2.55" fill="#08aaa5"/></g></svg></span><span class="theme-name">Nombres et calculs</span><span class="theme-count">0 / 18 sélectionnés</span><span class="theme-chevron" aria-hidden="true"></span></summary>
+        </details>
+        <details class="theme-group" data-theme="geometry">
+          <summary class="theme-summary"><span class="theme-icon theme-icon-truchet" aria-hidden="true"><svg viewBox="0 0 36 36" focusable="false"><rect x="3.5" y="3.5" width="29" height="29" rx="4.5" fill="#f4fbfa"/><rect x="3.5" y="3.5" width="29" height="29" rx="4.5" fill="none" stroke="#173a5e" stroke-width="1.3"/></svg></span><span class="theme-name">Espace et géométrie</span><span class="theme-count">0 / 15 sélectionnés</span><span class="theme-chevron" aria-hidden="true"></span></summary>
+        </details>
+        <details class="theme-group" data-theme="data">
+          <summary class="theme-summary"><span class="theme-icon" aria-hidden="true"><svg viewBox="0 0 36 36" focusable="false"><rect x="3.5" y="3.5" width="29" height="29" rx="4.5" fill="#fffaf5" stroke="#173a5e" stroke-width="1.3"/><path d="M8 28h20" fill="none" stroke="#9eb0c2" stroke-width="1.1" stroke-linecap="round"/><g stroke="#fffdf8" stroke-width=".55"><rect x="8.5" y="19.5" width="4.25" height="8.5" rx=".8" fill="#08aaa5"/><rect x="13.55" y="13.5" width="4.25" height="14.5" rx=".8" fill="#0b67b2"/><rect x="18.6" y="17" width="4.25" height="11" rx=".8" fill="#6553b8"/><rect x="23.65" y="9" width="4.25" height="19" rx=".8" fill="#f58220"/></g></svg></span><span class="theme-name">Données, statistiques et probabilités</span><span class="theme-count">0 / 9 sélectionnés</span><span class="theme-chevron" aria-hidden="true"></span></summary>
+        </details>
+        <details class="theme-group" data-theme="algorithm">
+          <summary class="theme-summary"><span class="theme-icon" aria-hidden="true"><svg viewBox="0 0 36 36" focusable="false"><rect x="3.5" y="3.5" width="29" height="29" rx="4.5" fill="#f5f4ff" stroke="#4f5fb3" stroke-width="1.3"/><g fill="none" stroke="#c7ccee" stroke-width=".85"><path d="M13.3 4v28M22.7 4v28M4 13.5h28M4 22.5h28"/></g><circle cx="8.8" cy="27" r="2.4" fill="#08aaa5" stroke="#087f78" stroke-width=".8"/><path d="M9 27h9v-9h9V9" fill="none" stroke="#6553b8" stroke-width="2.35" stroke-linecap="round" stroke-linejoin="round"/><path d="M27 9V4.8" fill="none" stroke="#b95016" stroke-width="1.35" stroke-linecap="round"/><path d="M27 4.8h5.6L27 8.4Z" fill="#f58220" stroke="#b95016" stroke-width=".7" stroke-linejoin="round"/></svg></span><span class="theme-name">Pensée informatique</span><span class="theme-count">0 / 1 sélectionné</span><span class="theme-chevron" aria-hidden="true"></span></summary>
+        </details>
+      </div>
+    </section>
+  </main>
+  <details class="credit">
+    <summary>Crédits et remerciements</summary>
+    <p>Remerciements à Eric Hakenholz, créateur de <a href="https://doctools.org/dnb/automatismes_dnb.html" target="_blank" rel="noopener noreferrer">DocTools</a>, pour le partage du fichier, et à Claire Lagarde, pour son aide précieuse.</p>
+  </details>
 </div>
 
 <div class="modal-overlay" id="openSeriesOverlay" hidden onclick="if(event.target===this)setOpenSeriesPanel(false)">
@@ -116,16 +143,86 @@
     <button class="generate-action" id="generateButton" type="button" onclick="generate()" disabled><span class="generate-label">Lancer l’entraînement</span><span class="generate-count" id="generateCount" aria-hidden="true"></span></button>
   </div>
 </div>
-<script src="scripts/data/01-numbers.js"></script>
-<script src="scripts/data/02-geometry.js"></script>
-<script src="scripts/data/03-data.js"></script>
-<script src="scripts/data/04-algorithm.js"></script>
-<script src="scripts/01-modules.js"></script>
-<script src="scripts/02-question-engine.js"></script>
-<script src="scripts/core/01-series-contracts.js"></script>
-<script src="scripts/03-slideshow.js"></script>
-<script src="scripts/04-app.js"></script>
-<script src="scripts/vendor/qrcode-generator.js"></script>
-<script src="scripts/core/02-share-ui.js"></script>
+<script defer src="scripts/00-setup-icons.js?v=20260717-7"></script>
+<script defer src="scripts/shared/visuals/00-registry.js"></script>
+<script defer src="scripts/shared/visuals/arithmetic/fraction-decimal-grid.js?v=20260716-7"></script>
+<script defer src="scripts/shared/visuals/arithmetic/fraction-operations.js?v=20260716-1"></script>
+<script defer src="scripts/shared/visuals/numbers/square-area.js?v=20260716-1"></script>
+<script defer src="scripts/shared/pedagogy/00-registry.js?v=20260715-2"></script>
+<script defer src="scripts/shared/pedagogy/numbers/dnb_02.js?v=20260716-7"></script>
+<script defer src="scripts/shared/pedagogy/numbers/dnb_03.js?v=20260716-1"></script>
+<script defer src="scripts/shared/pedagogy/numbers/dnb_03b.js?v=20260716-1"></script>
+<script defer src="scripts/shared/pedagogy/numbers/dnb_06.js?v=20260716-1"></script>
+<script defer src="scripts/shared/pedagogy/numbers/dnb_07.js?v=20260716-1"></script>
+<script defer src="scripts/shared/pedagogy/numbers/dnb_08.js?v=20260716-1"></script>
+<script defer src="scripts/shared/pedagogy/numbers/dnb_10.js?v=20260716-1"></script>
+<script defer src="scripts/shared/pedagogy/numbers/dnb_11.js?v=20260716-1"></script>
+<script defer src="scripts/shared/pedagogy/numbers/dnb_12.js?v=20260716-1"></script>
+<script defer src="scripts/shared/pedagogy/numbers/dnb_01.js?v=20260716-1"></script>
+<script defer src="scripts/shared/pedagogy/numbers/dnb_05.js?v=20260716-1"></script>
+<script defer src="scripts/shared/pedagogy/numbers/dnb_04.js?v=20260716-1"></script>
+<script defer src="scripts/shared/pedagogy/numbers/dnb_13.js?v=20260717-1"></script>
+<script defer src="scripts/shared/pedagogy/geometry/dnb_19.js?v=20260716-1"></script>
+<script defer src="scripts/shared/pedagogy/numbers/dnb_02b.js?v=20260716-5"></script>
+<script defer src="scripts/shared/pedagogy/numbers/dnb_09.js?v=20260716-1"></script>
+<script defer src="scripts/shared/pedagogy/numbers/dnb_14.js?v=20260716-2"></script>
+<script defer src="scripts/shared/pedagogy/geometry/dnb_15.js?v=20260716-2"></script>
+<script defer src="scripts/shared/pedagogy/geometry/dnb_16.js?v=20260716-1"></script>
+<script defer src="scripts/shared/pedagogy/geometry/dnb_17.js?v=20260717-1"></script>
+<script defer src="scripts/shared/pedagogy/geometry/dnb_18.js?v=20260716-2"></script>
+<script defer src="scripts/shared/pedagogy/geometry/dnb_20.js?v=20260716-1"></script>
+<script defer src="scripts/shared/pedagogy/geometry/dnb_21.js?v=20260717-1"></script>
+<script defer src="scripts/shared/pedagogy/geometry/dnb_22.js?v=20260716-1"></script>
+<script defer src="scripts/shared/pedagogy/geometry/dnb_23.js?v=20260716-1"></script>
+<script defer src="scripts/shared/pedagogy/geometry/dnb_24.js?v=20260716-1"></script>
+<script defer src="scripts/shared/pedagogy/geometry/dnb_24b.js?v=20260716-2"></script>
+<script defer src="scripts/shared/pedagogy/geometry/dnb_25.js?v=20260715-3"></script>
+<script defer src="scripts/shared/pedagogy/geometry/dnb_26.js?v=20260716-1"></script>
+<script defer src="scripts/shared/pedagogy/geometry/dnb_26b.js?v=20260716-1"></script>
+<script defer src="scripts/shared/pedagogy/geometry/dnb_27.js?v=20260716-1"></script>
+<script defer src="scripts/shared/pedagogy/data/dnb_28.js?v=20260716-1"></script>
+<script defer src="scripts/shared/pedagogy/data/dnb_29.js?v=20260716-1"></script>
+<script defer src="scripts/shared/pedagogy/data/dnb_30.js?v=20260716-1"></script>
+<script defer src="scripts/shared/pedagogy/data/dnb_31.js?v=20260716-1"></script>
+<script defer src="scripts/shared/pedagogy/data/dnb_32.js?v=20260716-1"></script>
+<script defer src="scripts/shared/pedagogy/data/dnb_33.js?v=20260716-1"></script>
+<script defer src="scripts/shared/pedagogy/data/dnb_34.js?v=20260716-1"></script>
+<script defer src="scripts/shared/pedagogy/data/dnb_35.js?v=20260716-1"></script>
+<script defer src="scripts/shared/pedagogy/data/dnb_36.js?v=20260716-1"></script>
+<script defer src="scripts/shared/pedagogy/algorithm/dnb_37.js?v=20260716-1"></script>
+<script defer src="scripts/shared/pedagogy/numbers/dnb_38.js?v=20260716-1"></script>
+<script defer src="scripts/shared/pedagogy/numbers/dnb_39.js?v=20260716-7"></script>
+<script defer src="scripts/shared/visuals/numbers/number-line.js?v=20260717-5"></script>
+<script defer src="scripts/shared/visuals/numbers/order-cards.js?v=20260716-7"></script>
+<script defer src="scripts/shared/visuals/numbers/place-value-table.js?v=20260716-5"></script>
+<script defer src="scripts/shared/visuals/numbers/relative-tokens.js?v=20260716-1"></script>
+<script defer src="scripts/shared/visuals/geometry/coordinate-plane.js?v=20260716-3"></script>
+<script defer src="scripts/shared/visuals/geometry/angle-vocabulary.js?v=20260717-4"></script>
+<script defer src="scripts/00-module-manifest.js?v=20260717-9"></script>
+<script defer src="scripts/01-modules.js"></script>
+<script defer src="scripts/modules/00-runtime-registry.js?v=20260716-1"></script>
+<script defer src="scripts/shared/visuals/arithmetic/relation-bar.js?v=20260717-1"></script>
+<script defer src="scripts/shared/visuals/arithmetic/fraction-percent-bar.js"></script>
+<script defer src="scripts/shared/visuals/arithmetic/equal-sharing-board.js?v=20260716-2"></script>
+<script defer src="scripts/shared/visuals/arithmetic/fraction-wall.js?v=20260716-1"></script>
+<script defer src="scripts/shared/visuals/measures/conversion-table.js"></script>
+<script defer src="scripts/shared/visuals/algebra/equation-splat.js"></script>
+<script defer src="scripts/shared/visuals/algebra/inquiry-bar.js?v=20260716-1"></script>
+<script defer src="scripts/shared/visuals/algebra/algebra-tiles.js?v=20260716-1"></script>
+<script defer src="scripts/shared/visuals/algebra/area-model.js?v=20260716-7"></script>
+<script defer src="scripts/shared/visuals/algebra/relation-tiles.js?v=20260716-1"></script>
+<script defer src="scripts/shared/visuals/geometry/thales-configuration.js?v=20260715-4"></script>
+<script defer src="scripts/shared/visuals/geometry/triangle-angle-sum.js?v=20260716-3"></script>
+<script defer src="scripts/shared/visuals/geometry/pythagoras-mill.js?v=20260716-1"></script>
+<script defer src="scripts/shared/visuals/geometry/pythagoras-bar.js?v=20260716-2"></script>
+<script defer src="scripts/shared/visuals/geometry/pythagoras-reasoning.js?v=20260716-1"></script>
+<script defer src="scripts/shared/visuals/geometry/pythagoras-builder.js?v=20260716-2"></script>
+<script defer src="scripts/shared/visuals/geometry/solid.js?v=20260716-1"></script>
+<script defer src="scripts/02-question-engine.js?v=20260717-9"></script>
+<script defer src="scripts/core/01-series-contracts.js?v=20260716-9"></script>
+<script defer src="scripts/03-slideshow.js?v=20260717-9"></script>
+<script defer src="scripts/04-app.js?v=20260717-9"></script>
+<script defer src="scripts/vendor/qrcode-generator.js"></script>
+<script defer src="scripts/core/02-share-ui.js?v=20260716-1"></script>
 </body>
 </html>

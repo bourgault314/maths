@@ -1,0 +1,287 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="robots" content="noindex, nofollow, noarchive">
+<title>Catalogue pédagogique et visuel — chantier maths&amp;go</title>
+<style>
+  :root{color-scheme:light;font-family:Arial,Helvetica,sans-serif;color:#071a2f;background:#eef2f7}
+  *{box-sizing:border-box}
+  body{margin:0;padding:32px 18px 64px}
+  main{max-width:1180px;margin:auto}
+  header{display:flex;gap:20px;align-items:flex-start;justify-content:space-between;margin-bottom:28px}
+  h1{margin:0 0 8px;font-size:clamp(1.8rem,4vw,2.8rem)}
+  p{line-height:1.55;margin:0;color:#42556c}
+  .badge{white-space:nowrap;background:#071a2f;color:white;border-radius:999px;padding:8px 12px;font-weight:800;font-size:.78rem;letter-spacing:.04em}
+  .catalogue-nav{display:flex;flex-wrap:wrap;gap:8px;margin:20px 0 30px}.catalogue-nav a{padding:9px 12px;border:1px solid #cbd7e4;border-radius:999px;background:#fff;color:#17384d;font-size:.82rem;font-weight:850;text-decoration:none}
+  .catalogue-block{margin-top:34px}.section-heading{margin:0 0 14px}.section-heading h2{font-size:1.7rem}.section-heading p{margin-top:6px}
+  #pedagogyCatalogue,#manipulationCatalogue,#catalogue{display:grid;gap:18px}
+  .component{background:white;border:1px solid #d9e0e8;border-radius:22px;padding:22px;box-shadow:0 10px 28px rgba(7,26,47,.07)}
+  .component-head{display:flex;gap:16px;align-items:baseline;justify-content:space-between;margin-bottom:18px}
+  h2{margin:0;font-size:1.35rem}
+  code{font-size:.82rem;color:#53677d}
+  .presets{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,440px),1fr));gap:18px}
+  .preset{border:1px solid #e1e6ec;border-radius:16px;padding:16px;background:#fbfcfd}
+  h3{font-size:1rem;margin:0 0 14px}
+  .supports{display:flex;flex-wrap:wrap;gap:5px;margin:-7px 0 12px}.support{padding:4px 7px;border-radius:999px;background:#eaf2fb;color:#35526e;font-size:.68rem;font-weight:800;text-transform:uppercase}
+  .states{display:grid;gap:12px}
+  .pedagogy-table{width:100%;border-collapse:collapse;font-size:.86rem}.pedagogy-table th,.pedagogy-table td{padding:11px 10px;border-top:1px solid #e1e6ec;text-align:left;vertical-align:top}.pedagogy-table thead th{border-top:0;background:#f4f7fa;color:#35526e;font-size:.72rem;text-transform:uppercase;letter-spacing:.04em}.pedagogy-table tbody th{width:62px;color:#0879d0;font-size:1rem}.type-id{display:block;margin-top:4px;color:#6d7d8e;font-size:.72rem}.help-tags{display:flex;flex-wrap:wrap;gap:4px}.help-tag{padding:4px 7px;border-radius:999px;background:#fff0df;color:#8b4a00;font-size:.68rem;font-weight:850}.visual-role{font-weight:850;color:#17384d}.visual-component{display:block;margin-top:4px}
+  .generator-contract{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;margin-top:18px}.contract-card{padding:13px 14px;border:1px solid #dce5ee;border-radius:14px;background:#f8fbfe}.contract-card h3{margin-bottom:8px;color:#17384d}.contract-card ul{margin:0;padding-left:18px;color:#42556c;font-size:.82rem;line-height:1.42}.contract-card li+li{margin-top:5px}.contract-card strong{color:#17384d}
+  .manipulation-status{display:inline-flex;margin-left:auto;padding:5px 8px;border-radius:999px;background:#e8f7ef;color:#087a55;font-size:.68rem;font-weight:900;text-transform:uppercase}.manipulation-status.planned{background:#fff0df;color:#9a4b00}.manipulation-description{margin:-7px 0 14px}.manipulation-meta{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:4px}
+  figure{margin:0;border-radius:12px;border:1px solid #e1e6ec;background:white;overflow:hidden}
+  figcaption{padding:8px 11px;background:#f4f6f8;color:#53677d;font-size:.78rem;font-weight:700}
+  .visual{padding:10px}
+  .visual svg{display:block;width:100%;height:auto}
+  .component[data-component-id="numbers.glisse-nombre"] .presets{grid-template-columns:1fr}
+  .place-value-tool{width:min(100%,1000px);margin:8px auto 0;user-select:none}
+  .place-value-grid{position:relative;overflow:hidden;border:3px solid #17384d;border-radius:14px;background:#fff}
+  .place-value-head-row,.place-value-window-row,.place-value-fixed-row{display:grid;grid-template-columns:repeat(7,minmax(0,1fr))}
+  .place-value-head{display:flex;min-width:0;align-items:center;justify-content:center;height:38px;padding:0 2px;overflow:hidden;border-right:1.5px solid #9fb3c8;border-bottom:1.5px solid #9fb3c8;background:#eef6ff;color:#35526e;font-size:clamp(.48rem,1.25vw,1rem);font-weight:800;line-height:1.05;letter-spacing:-.04em;white-space:nowrap}.place-value-head:nth-child(4){background:#dceeff;color:#0879d0}.place-value-head:last-child{border-right:0}
+  .place-value-preview-row,.place-value-fixed-row{position:relative;height:66px}.place-value-preview-row{background:#f7f8fa}.place-value-fixed-row{border-top:1.5px solid #9fb3c8;background:#fff}
+  .place-value-window-row{position:absolute;inset:0;z-index:5;pointer-events:none}.place-value-window{border-right:1.5px solid #9fb3c8}.place-value-window:last-child{border-right:0}
+  .place-value-strip-viewport{position:absolute;inset:0;z-index:3;overflow:hidden;pointer-events:none}.place-value-strip{position:absolute;inset:0 auto 0 0;display:grid;grid-template-columns:repeat(13,calc(100% / 13));width:calc(100% * 13 / 7);align-items:center;justify-items:center}
+  .place-value-strip-digit,.place-value-fixed-digit{display:grid;place-items:center;color:#0b2147;font-family:Cambria Math,Times New Roman,serif;font-size:clamp(1.8rem,3.8vw,3.2rem);font-weight:850}.place-value-strip-digit.ghost-zero{color:#334d68}.place-value-fixed-digit{border-right:1.5px solid #9fb3c8}.place-value-fixed-digit:nth-child(7){border-right:0}.place-value-fixed-digit.is-units-digit,.place-value-strip-digit.is-units-digit{color:#0879d0}
+  .place-value-drag-bar{position:absolute;z-index:2;left:-24px;right:-24px;top:8px;height:50px;outline:none}.place-value-drag-bar span{display:block;width:100%;height:100%;border:1px solid rgba(107,114,128,.3);background:rgba(209,213,219,.62);box-shadow:inset 0 2px 3px rgba(0,0,0,.12),inset 0 -2px 3px rgba(255,255,255,.55)}
+  .place-value-comma{position:absolute;z-index:7;left:calc(57.142857% - 4px);bottom:4px;color:#e86100;font-family:Cambria Math,serif;font-size:2.6rem;font-weight:900;line-height:1;pointer-events:none}.place-value-row-labels{position:absolute;width:1px;height:1px;overflow:hidden}.place-value-tool-note{display:flex;align-items:center;justify-content:center;min-height:44px;margin-top:8px;color:#31516e;font-size:1.25rem}.place-value-tool-note strong{color:#087a55}
+  .component[data-component-id="measures.conversion-table"] .presets{grid-template-columns:1fr}
+  .component[data-component-id="measures.conversion-table"] .visual{overflow-x:auto;padding:14px 18px}
+  .conversion-tool{width:max(760px,calc(var(--conversion-slots)*48px));margin:76px auto 78px;user-select:none}
+  .conversion-grid-wrap{position:relative}
+  .conversion-grid{position:relative;display:grid;grid-template-columns:repeat(var(--conversion-slots),minmax(0,1fr));gap:4px;isolation:isolate}
+  .conversion-unit{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;min-height:54px;padding:4px 1px;border:2px solid var(--conversion-color);border-radius:8px;background:color-mix(in srgb,var(--conversion-color) 12%,white);color:#17384d;font-size:.88rem;font-weight:800}
+  .conversion-unit strong{font-size:1.08em}.conversion-unit small{color:color-mix(in srgb,var(--conversion-color) 82%,#17384d);font-size:.78em;font-weight:900}.conversion-unit:not([data-unit-slot="true"]){background:transparent;border-color:color-mix(in srgb,var(--conversion-color) 34%,transparent)}
+  .conversion-slot{position:relative;z-index:2;display:grid;place-items:center;min-height:82px;border:2px solid var(--conversion-color);border-radius:8px;background:#fff;color:#0b2147;font-family:Cambria Math,Times New Roman,serif;font-size:2rem;font-weight:750}.conversion-slot.ghost-zero{color:#526a82}.conversion-unit.is-cursor-unit strong,.conversion-slot.is-cursor-unit{color:var(--conversion-color);font-weight:950}
+  .conversion-cursor{position:absolute;z-index:4;top:0;bottom:0;left:0;width:calc(100% / var(--conversion-slots));padding:0;border:3px solid color-mix(in srgb,var(--conversion-color) 72%,#17384d);border-radius:8px;background:color-mix(in srgb,var(--conversion-color) 15%,transparent);outline:none;transition:transform .16s ease}
+  .conversion-cursor-label,.conversion-cursor-digit-label{position:absolute;left:50%;width:142px;padding:10px 8px;border:3px solid #fff;border-radius:14px;background:linear-gradient(135deg,var(--conversion-color),color-mix(in srgb,var(--conversion-color) 78%,#17384d));color:#fff;font-size:.82rem;font-weight:950;line-height:1.05;text-transform:uppercase;box-shadow:0 8px 22px rgba(23,56,77,.24)}
+  .conversion-cursor-label{bottom:calc(100% + 24px);transform:translateX(-50%)}.conversion-cursor-label:after{content:"";position:absolute;left:50%;top:100%;transform:translateX(-50%);border-left:14px solid transparent;border-right:14px solid transparent;border-top:15px solid color-mix(in srgb,var(--conversion-color) 78%,#17384d)}
+  .conversion-cursor-digit-label{top:calc(100% + 25px);transform:translateX(-50%)}.conversion-cursor-digit-label:before{content:"";position:absolute;left:50%;bottom:100%;transform:translateX(-50%);border-left:14px solid transparent;border-right:14px solid transparent;border-bottom:15px solid var(--conversion-color)}
+  .conversion-cursor-comma{position:absolute;right:-13px;bottom:28px;color:color-mix(in srgb,var(--conversion-color) 78%,#17384d);font-family:Nunito,Arial,sans-serif;font-size:3.3rem;font-weight:950;line-height:0;text-shadow:2px 2px 0 #fff,-2px -2px 0 #fff,2px -2px 0 #fff,-2px 2px 0 #fff}
+  details{margin-top:14px;color:#53677d;font-size:.85rem}
+  pre{white-space:pre-wrap;overflow-wrap:anywhere;background:#071a2f;color:#eef6ff;border-radius:10px;padding:12px}
+  @media(max-width:760px){.pedagogy-table,.pedagogy-table tbody,.pedagogy-table tr,.pedagogy-table th,.pedagogy-table td{display:block}.pedagogy-table thead{display:none}.pedagogy-table tr{padding:12px 0;border-top:1px solid #dfe6ee}.pedagogy-table tr:first-child{border-top:0}.pedagogy-table th,.pedagogy-table td{width:auto;padding:5px 0;border:0}.pedagogy-table td:before{content:attr(data-label);display:block;margin-bottom:3px;color:#6d7d8e;font-size:.66rem;font-weight:850;text-transform:uppercase}.generator-contract{grid-template-columns:1fr}}
+  @media(max-width:620px){body{padding:20px 10px 44px}header,.component-head{display:block}.badge{display:inline-block;margin-top:14px}.component{padding:14px}}
+</style>
+</head>
+<body>
+<main>
+  <header>
+    <div>
+      <h1>Bibliothèque pédagogique et visuelle maths&amp;go</h1>
+      <p>Catalogue du chantier : les types de questions, leurs aides et les composants visuels réutilisables sont observables au même endroit.</p>
+    </div>
+    <span class="badge">CHANTIER · HORS PRODUCTION</span>
+  </header>
+  <nav class="catalogue-nav" aria-label="Accès aux catalogues"><a href="#pedagogie">Types de questions et aides</a><a href="#manipulations">Contrats de manipulation</a><a href="#visuels">Composants visuels</a></nav>
+  <section class="catalogue-block" id="pedagogie">
+    <div class="section-heading"><h2>Catalogue pédagogique</h2><p>Classement principal par notion mathématique, puis par tâche demandée à l’élève.</p></div>
+    <div id="pedagogyCatalogue"></div>
+  </section>
+  <section class="catalogue-block" id="manipulations">
+    <div class="section-heading"><h2>Contrats de manipulation</h2><p>État sémantique, actions, remise à zéro, validation et correction indépendants de l’interface.</p></div>
+    <div id="manipulationCatalogue"></div>
+  </section>
+  <section class="catalogue-block" id="visuels">
+    <div class="section-heading"><h2>Catalogue visuel</h2><p>Composants générés par le code, avec leurs préréglages et leurs supports compatibles.</p></div>
+    <div id="catalogue"></div>
+  </section>
+</main>
+<script src="../scripts/shared/visuals/00-registry.js"></script>
+<script src="../scripts/shared/manipulations/00-registry.js?v=20260716-1"></script>
+<script src="../scripts/shared/manipulations/contracts.js?v=20260716-3"></script>
+<script src="../scripts/shared/pedagogy/00-registry.js?v=20260715-2"></script>
+<script src="../scripts/shared/pedagogy/numbers/dnb_01.js?v=20260716-1"></script>
+<script src="../scripts/shared/pedagogy/numbers/dnb_02.js?v=20260716-1"></script>
+<script src="../scripts/shared/pedagogy/numbers/dnb_02b.js?v=20260716-1"></script>
+<script src="../scripts/shared/pedagogy/numbers/dnb_03.js?v=20260716-1"></script>
+<script src="../scripts/shared/pedagogy/numbers/dnb_03b.js?v=20260716-1"></script>
+<script src="../scripts/shared/pedagogy/numbers/dnb_04.js?v=20260716-1"></script>
+<script src="../scripts/shared/pedagogy/numbers/dnb_05.js?v=20260716-1"></script>
+<script src="../scripts/shared/pedagogy/numbers/dnb_06.js?v=20260716-1"></script>
+<script src="../scripts/shared/pedagogy/numbers/dnb_07.js?v=20260716-1"></script>
+<script src="../scripts/shared/pedagogy/numbers/dnb_08.js?v=20260716-1"></script>
+<script src="../scripts/shared/pedagogy/numbers/dnb_09.js?v=20260716-1"></script>
+<script src="../scripts/shared/pedagogy/numbers/dnb_10.js?v=20260716-1"></script>
+<script src="../scripts/shared/pedagogy/numbers/dnb_11.js?v=20260716-1"></script>
+<script src="../scripts/shared/pedagogy/numbers/dnb_12.js?v=20260716-1"></script>
+<script src="../scripts/shared/pedagogy/numbers/dnb_13.js?v=20260716-1"></script>
+<script src="../scripts/shared/pedagogy/numbers/dnb_14.js?v=20260716-1"></script>
+<script src="../scripts/shared/pedagogy/geometry/dnb_15.js?v=20260716-2"></script>
+<script src="../scripts/shared/pedagogy/geometry/dnb_16.js?v=20260716-1"></script>
+<script src="../scripts/shared/pedagogy/geometry/dnb_17.js?v=20260716-1"></script>
+<script src="../scripts/shared/pedagogy/geometry/dnb_18.js?v=20260716-2"></script>
+<script src="../scripts/shared/pedagogy/geometry/dnb_19.js?v=20260716-1"></script>
+<script src="../scripts/shared/pedagogy/geometry/dnb_20.js?v=20260716-1"></script>
+<script src="../scripts/shared/pedagogy/geometry/dnb_21.js?v=20260716-1"></script>
+<script src="../scripts/shared/pedagogy/geometry/dnb_22.js?v=20260716-1"></script>
+<script src="../scripts/shared/pedagogy/geometry/dnb_23.js?v=20260716-1"></script>
+<script src="../scripts/shared/pedagogy/geometry/dnb_24.js?v=20260716-1"></script>
+<script src="../scripts/shared/pedagogy/geometry/dnb_24b.js?v=20260716-2"></script>
+<script src="../scripts/shared/pedagogy/geometry/dnb_25.js?v=20260715-3"></script>
+<script src="../scripts/shared/pedagogy/geometry/dnb_26.js?v=20260716-1"></script>
+<script src="../scripts/shared/pedagogy/geometry/dnb_26b.js?v=20260716-1"></script>
+<script src="../scripts/shared/pedagogy/geometry/dnb_27.js?v=20260716-1"></script>
+<script src="../scripts/shared/pedagogy/data/dnb_28.js?v=20260716-1"></script>
+<script src="../scripts/shared/pedagogy/data/dnb_29.js?v=20260716-1"></script>
+<script src="../scripts/shared/pedagogy/data/dnb_30.js?v=20260716-1"></script>
+<script src="../scripts/shared/pedagogy/data/dnb_31.js?v=20260716-1"></script>
+<script src="../scripts/shared/pedagogy/data/dnb_32.js?v=20260716-1"></script>
+<script src="../scripts/shared/pedagogy/data/dnb_33.js?v=20260716-1"></script>
+<script src="../scripts/shared/pedagogy/data/dnb_34.js?v=20260716-1"></script>
+<script src="../scripts/shared/pedagogy/data/dnb_35.js?v=20260716-1"></script>
+<script src="../scripts/shared/pedagogy/data/dnb_36.js?v=20260716-1"></script>
+<script src="../scripts/shared/pedagogy/algorithm/dnb_37.js?v=20260716-1"></script>
+<script src="../scripts/shared/pedagogy/numbers/dnb_38.js?v=20260716-1"></script>
+<script src="../scripts/shared/pedagogy/numbers/dnb_39.js?v=20260716-1"></script>
+<script src="../scripts/shared/visuals/numbers/number-line.js?v=20260715-2"></script>
+<script src="../scripts/shared/visuals/numbers/order-cards.js?v=20260716-1"></script>
+<script src="../scripts/shared/visuals/numbers/place-value-table.js?v=20260715-3"></script>
+<script src="../scripts/shared/visuals/numbers/square-area.js?v=20260716-1"></script>
+<script src="../scripts/shared/visuals/numbers/relative-tokens.js?v=20260716-2"></script>
+<script src="../scripts/shared/visuals/data/cartesian-graph.js?v=20260716-1"></script>
+<script src="../scripts/shared/visuals/geometry/coordinate-plane.js?v=20260716-3"></script>
+<script src="../scripts/shared/visuals/geometry/angle-vocabulary.js?v=20260717-1"></script>
+<script src="../scripts/shared/visuals/arithmetic/relation-bar.js"></script>
+<script src="../scripts/shared/visuals/arithmetic/fraction-percent-bar.js"></script>
+<script src="../scripts/shared/visuals/arithmetic/equal-sharing-board.js?v=20260716-1"></script>
+<script src="../scripts/shared/visuals/arithmetic/fraction-wall.js?v=20260716-1"></script>
+<script src="../scripts/shared/visuals/arithmetic/fraction-decimal-grid.js?v=20260716-1"></script>
+<script src="../scripts/shared/visuals/arithmetic/fraction-operations.js?v=20260716-1"></script>
+<script src="../scripts/shared/visuals/measures/conversion-table.js"></script>
+<script src="../scripts/shared/visuals/algebra/equation-splat.js"></script>
+<script src="../scripts/shared/visuals/algebra/inquiry-bar.js?v=20260716-1"></script>
+<script src="../scripts/shared/visuals/algebra/algebra-tiles.js?v=20260716-1"></script>
+<script src="../scripts/shared/visuals/algebra/area-model.js?v=20260716-1"></script>
+<script src="../scripts/shared/visuals/algebra/relation-tiles.js?v=20260716-1"></script>
+<script src="../scripts/shared/visuals/geometry/thales-configuration.js?v=20260715-4"></script>
+<script src="../scripts/shared/visuals/geometry/triangle-angle-sum.js?v=20260716-3"></script>
+<script src="../scripts/shared/visuals/geometry/pythagoras-mill.js?v=20260716-1"></script>
+<script src="../scripts/shared/visuals/geometry/pythagoras-bar.js?v=20260716-2"></script>
+<script src="../scripts/shared/visuals/geometry/pythagoras-reasoning.js?v=20260716-1"></script>
+<script src="../scripts/shared/visuals/geometry/pythagoras-builder.js?v=20260716-2"></script>
+<script src="../scripts/shared/visuals/geometry/solid.js?v=20260716-1"></script>
+<script>
+  const pedagogyCatalogue=document.getElementById('pedagogyCatalogue');
+  const responseLabels={'qcm-one':'QCM · une réponse','qcm-multiple':'QCM · plusieurs réponses',numeric:'Réponse numérique'};
+  const visualLabels={essential:'Figure intégrée à la question',optional:'Aide facultative révélable','aid-only':'Figure visible uniquement avec aide',none:'Aucune figure nécessaire'};
+  const helpLabels={conditions:'Conditions',condition:'Triangle rectangle',ratios:'Rapports correspondants',calculation:'Calcul','parallelism-test':'Réciproque / contraposée',coherence:'Vérification','sum-180':'Somme égale à 180°','bar-model':'Modèle en barres','right-angle':'Angle droit','isosceles':'Angles égaux','equilateral':'Trois angles égaux',multiple:'Multiple','unit-fraction':'Fraction unitaire',inverse:'Opération inverse',neighbor:'Nombre voisin',symbolic:'Écriture symbolique',hypotenuse:'Hypoténuse',relation:'Égalité de Pythagore','hypotenuse-calculation':'Addition des carrés','leg-calculation':'Soustraction des carrés',root:'Racine carrée',converse:'Réciproque',references:'Graduations repérées','unit-step':'Pas de 1','compute-step':'Calculer le pas',direction:'Sens de lecture',sign:'Signe',scale:'Échelle',abscissa:'Abscisse',ordinate:'Ordonnée',order:'Ordre (x ; y)',axes:'Axes','zero-coordinate':'Coordonnée nulle','vertical-projection':'Projection verticale','horizontal-projection':'Projection horizontale','fixed-comma':'Virgule fixe','shift-digits':'Déplacer les chiffres','complete-zeroes':'Zéros de position',reverse:'Raisonnement inverse','place-unit-digit':'Chiffre des unités','move-cursor':'Unité demandée','area-volume-slots':'2 ou 3 positions','cross-units':'Volume et capacité','duration-factors':'Facteurs 60',share:'Trouver une part','take-parts':'Prendre plusieurs parts',benchmark:'Pourcentage repère','check-total':'Contrôler la partie',unit:'Unité finale','preserve-equality':'Conserver l’égalité','undo-operation':'Opération inverse','group-x':'Regrouper les x','check-solution':'Vérifier la solution',model:'Mise en équation','fraction-as-division':'Fraction = division','decimal-denominator':'Dénominateur 10 ou 100','count-wholes':'Unités entières',reduce:'Simplifier','check-value':'Contrôler la valeur',hundredths:'Lire les centièmes','scale-to-100':'Passer sur 100',equivalence:'Écritures équivalentes','like-terms':'Termes semblables','zero-pairs':'Paires nulles','read-tiles':'Lire les tuiles','canonical-order':'Ordonner le résultat',verify:'Vérifier',replace:'Remplacer la lettre','parenthesize-negative':'Parenthèses et négatifs',priorities:'Priorités de calcul','coefficient-power':'Coefficient ou exposant',distribute:'Distribuer','partial-products':'Produits partiels','common-factor':'Facteur commun','reverse-check':'Vérifier en développant','area-meaning':'Aire du rectangle','same-parts':'Parts de même taille','same-count':'Même nombre de parts','common-denominator':'Dénominateur commun','operate-numerators':'Calculer les numérateurs','area-product':'Produit par l’aire',multiply:'Multiplier','cancel-first':'Simplifier avant','inverse-divisor':'Inverser le diviseur','integer-as-fraction':'Entier sur 1','place-values':'Rangs de numération','sign-order':'Ordre des nombres négatifs','consecutive-integers':'Entiers consécutifs','align-comma':'Aligner les virgules',estimate:'Ordre de grandeur','mantissa-range':'Mantisse entre 1 et 10','count-shifts':'Compter les déplacements','exponent-sign':'Signe de l’exposant','reverse-shift':'Revenir au décimal','square-product':'Carré = produit','area-model':'Côté et aire','inverse-square':'Retrouver le côté','perfect-square-list':'Carrés connus','operation-priority':'Priorités de calcul','last-digit':'Chiffre des unités','digit-sum':'Somme des chiffres','combine-rules':'Croiser les critères','share-without-remainder':'Partage sans reste','equal-lengths':'Longueurs égales','right-angles':'Angles droits','parallel-sides':'Côtés parallèles','combine-properties':'Croiser les propriétés','perpendicular-bisector':'Médiatrice','angle-range':'Comparer à 90° et 180°','opposite-angles':'Opposés par le sommet','adjacent-angles':'Angles adjacents',complementary:'Complémentaires',supplementary:'Supplémentaires',bases:'Bases du solide','lateral-surfaces':'Surfaces latérales',apex:'Sommet principal','surface-vs-solid':'Surface ou solide',count:'Compter les éléments',boundary:'Suivre le contour','equal-sides':'Côtés égaux','opposite-sides':'Côtés opposés','circle-perimeter':'Périmètre du disque','unit-check':'Contrôler l’unité','rectangle-area':'Aire du rectangle','square-area':'Aire du carré','triangle-area':'Aire du triangle','disk-area':'Aire du disque',decompose:'Décomposer','unit-squared':'Unité au carré','cube-volume':'Volume du cube','cuboid-volume':'Volume du pavé','prism-volume':'Volume du prisme','cylinder-volume':'Volume du cylindre','unit-cubed':'Unité au cube','right-triangle':'Triangle rectangle','side-role':'Rôle des côtés','choose-ratio':'Choisir le rapport','choose-method':'Choisir la méthode','identify-data':'Connu et inconnu',isolate:'Isoler l’inconnue','inverse-function':'Fonction réciproque','round-check':'Arrondir et contrôler','axial-coordinates':'Symétrie axiale','central-coordinates':'Symétrie centrale','translation-vector':'Vecteur de translation',invariants:'Propriétés conservées',construction:'Construire l’image'};
+  MATHSGO_PEDAGOGY.list().forEach(module=>{
+    const section=document.createElement('section');section.className='component pedagogy-component';
+    const head=document.createElement('div');head.className='component-head';
+    const title=document.createElement('h2');title.textContent=module.topic;
+    const id=document.createElement('code');id.textContent=module.id+' · '+module.levelTags.join(' · ');
+    head.append(title,id);
+    const table=document.createElement('table');table.className='pedagogy-table';
+    table.innerHTML='<thead><tr><th>Question</th><th>Type de tâche</th><th>Réponse</th><th>Figure</th><th>Aide proposée</th></tr></thead>';
+    const body=document.createElement('tbody');
+    module.questionTypes.forEach(type=>{
+      const row=document.createElement('tr');
+      const number=document.createElement('th');number.scope='row';number.textContent=type.questions.map(value=>'Q'+value).join(', ');
+      const task=document.createElement('td');task.dataset.label='Type de tâche';task.textContent=type.label;const typeId=document.createElement('code');typeId.className='type-id';typeId.textContent=type.id;task.append(typeId);
+      const response=document.createElement('td');response.dataset.label='Réponse';response.textContent=responseLabels[type.response]||type.response;
+      const visual=document.createElement('td');visual.dataset.label='Figure';const role=document.createElement('span');role.className='visual-role';role.textContent=visualLabels[type.visual.policy]||type.visual.policy;visual.append(role);if(type.visual.component){const component=document.createElement('code');component.className='visual-component';component.textContent=type.visual.component;visual.append(component);}
+      const help=document.createElement('td');help.dataset.label='Aide proposée';const tags=document.createElement('div');tags.className='help-tags';type.helpSections.forEach(name=>{const tag=document.createElement('span');tag.className='help-tag';tag.textContent=helpLabels[name]||name;tags.append(tag);});help.append(tags);
+      row.append(number,task,response,visual,help);body.append(row);
+    });
+    table.append(body);section.append(head,table);
+    const contract=module.generatorContract||{};
+    const contractGrid=document.createElement('div');contractGrid.className='generator-contract';
+    const addContractCard=(title,items,formatter)=>{if(!items||!items.length)return;const card=document.createElement('section');card.className='contract-card';const heading=document.createElement('h3');heading.textContent=title;const list=document.createElement('ul');items.forEach(item=>{const line=document.createElement('li');line.textContent=formatter(item);list.append(line);});card.append(heading,list);contractGrid.append(card);};
+    addContractCard('Configurations',contract.configurations,item=>item.label);
+    addContractCard('Raisonnements',contract.reasoning,item=>item.label+' — '+item.rule);
+    addContractCard('Représentations',contract.representations,item=>item.label+(item.usage==='direct-only'?' · théorème direct':''));
+    addContractCard('Points de vigilance',contract.cautions,item=>item);
+    addContractCard('Règles visuelles',contract.visualRules,item=>item);
+    if(contractGrid.childElementCount)section.append(contractGrid);
+    pedagogyCatalogue.append(section);
+  });
+
+  const manipulationCatalogue=document.getElementById('manipulationCatalogue');
+  const manipulationStatusLabels={active:'Actif',prototype:'Prototype',planned:'Prévu'};
+  MATHSGO_MANIPULATIONS.list().forEach(contract=>{
+    const section=document.createElement('section');section.className='component manipulation-component';
+    const head=document.createElement('div');head.className='component-head';
+    const title=document.createElement('h2');title.textContent=contract.label;
+    const id=document.createElement('code');id.textContent=contract.id+' · v'+contract.version;
+    const status=document.createElement('span');status.className='manipulation-status '+contract.status;status.textContent=manipulationStatusLabels[contract.status]||contract.status;
+    head.append(title,id,status);
+    const description=document.createElement('p');description.className='manipulation-description';description.textContent=contract.description;
+    const meta=document.createElement('div');meta.className='manipulation-meta';
+    [...contract.supports,...contract.inputMethods].forEach(value=>{const badge=document.createElement('span');badge.className='support';badge.textContent=value;meta.append(badge);});
+    const grid=document.createElement('div');grid.className='generator-contract';
+    const addCard=(heading,items)=>{const card=document.createElement('section');card.className='contract-card';const h=document.createElement('h3');h.textContent=heading;const list=document.createElement('ul');items.forEach(text=>{const item=document.createElement('li');item.textContent=text;list.append(item);});card.append(h,list);grid.append(card);};
+    addCard('État',contract.state.map(item=>item.label+(item.serializable?' · sérialisé':'')));
+    addCard('Actions',contract.actions.map(item=>item.label));
+    addCard('Cycle',[`Réinitialisation · ${contract.reset.mode}`,`Validation · ${contract.validation.mode}`,`Correction · ${contract.correction.mode}`]);
+    addCard('Persistance',[contract.serialization.version+' · '+contract.serialization.fields.join(', ')]);
+    section.append(head,description,meta,grid);manipulationCatalogue.append(section);
+  });
+
+  const catalogue=document.getElementById('catalogue');
+  MATHSGO_VISUALS.list().forEach(component=>{
+    const section=document.createElement('section');
+    section.className='component';
+    section.dataset.componentId=component.id;
+    const head=document.createElement('div');
+    head.className='component-head';
+    const title=document.createElement('h2');
+    title.textContent=component.label;
+    const id=document.createElement('code');
+    id.textContent=component.id+' · v'+component.version;
+    head.append(title,id);
+    const presets=document.createElement('div');
+    presets.className='presets';
+    component.presets.forEach(preset=>{
+      const card=document.createElement('article');
+      card.className='preset';
+      const presetTitle=document.createElement('h3');
+      presetTitle.textContent=preset.label;
+      const supports=document.createElement('div');
+      supports.className='supports';
+      const supportLabels={phone:'Téléphone',computer:'Ordinateur',projection:'Projection',print:'Impression'};
+      (preset.supports||component.supports||[]).forEach(name=>{const badge=document.createElement('span');badge.className='support';badge.textContent=supportLabels[name]||name;supports.append(badge);});
+      const states=document.createElement('div');
+      states.className='states';
+      [['Question',false],['Correction',true]].forEach(([label,revealed])=>{
+        const figure=document.createElement('figure');
+        const caption=document.createElement('figcaption');
+        caption.textContent=label;
+        const visual=document.createElement('div');
+        visual.className='visual';
+        visual.innerHTML=component.render(preset.data,revealed);
+        if(typeof component.setup==='function')component.setup(visual);
+        visual.querySelectorAll('.conversion-tool').forEach(tool=>{
+          const units=Number(getComputedStyle(tool).getPropertyValue('--conversion-units'))||7;
+          const unitSlots=Number(tool.dataset.unitSlots)||1;
+          const unit=Number(tool.dataset.initialUnit)||0;
+          const unitSlot=unit*unitSlots+(unitSlots-1);
+          const cursor=tool.querySelector('.conversion-cursor');
+          if(cursor) cursor.style.transform='translateX('+(unitSlot*100)+'%)';
+          const cells=[...tool.querySelectorAll('.conversion-slot')];
+          const occupied=cells.filter(cell=>(cell.dataset.digit||'')!=='').map(cell=>Number(cell.dataset.slot));
+          if(occupied.length){
+            const start=Math.min(occupied[0],unitSlot),end=Math.max(occupied[occupied.length-1],unitSlot);
+            for(let index=start;index<=end;index++) if(cells[index]&&cells[index].textContent===''){cells[index].textContent='0';cells[index].classList.add('ghost-zero');}
+          }
+          const activeHeader=[...tool.querySelectorAll('.conversion-unit')].find(header=>Number(header.dataset.unitIndex)===unit&&header.dataset.unitSlot==='true');
+          if(activeHeader) activeHeader.classList.add('is-cursor-unit');
+          if(cells[unitSlot]) cells[unitSlot].classList.add('is-cursor-unit');
+        });
+        figure.append(caption,visual);
+        states.append(figure);
+      });
+      const details=document.createElement('details');
+      const summary=document.createElement('summary');
+      summary.textContent='Paramètres du préréglage';
+      const data=document.createElement('pre');
+      data.textContent=JSON.stringify(preset.data,null,2);
+      details.append(summary,data);
+      card.append(presetTitle,...(supports.childElementCount?[supports]:[]),states,details);
+      presets.append(card);
+    });
+    section.append(head,presets);
+    catalogue.append(section);
+  });
+</script>
+</body>
+</html>
