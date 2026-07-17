@@ -262,7 +262,7 @@
       <option value="tangram">7. Tangram 2 + 5 (7 pièces)</option>
       <option value="mosaiqueOblique">8. Mosaïque oblique (6 pièces)</option>
       <option value="moulinIsocele">9. Moulin isocèle (4 pièces)</option>
-      <option value="mosaiqueSept">10. Mosaïque en 7 pièces</option>
+      <option value="mosaiqueSept">10. Puzzle de Brest (7 pièces)</option>
     </select>
     </div>
 
@@ -629,17 +629,17 @@
       a1:[[1.4142135624,1.4142135624],[0,1.4142135624],[0.7071067812,0.7071067812]],
       a2:[[0,1.4142135624],[0,0],[0.7071067812,0.7071067812]]
     },
-    // Variante moderne non isocèle : le petit carré est partagé en trois
-    // triangles, le grand en quatre quadrilatères. Aucune appellation
-    // historique n'est revendiquée : ce n'est pas le tangram classique.
+    // Construction publiée par les Kits mathématiques de Brest : quatre
+    // triangles 3-4-5 et un petit carré central. Deux triangles sont coupés
+    // parallèlement à leur petit côté, ce qui donne sept pièces au total.
     mosaiqueSept: {
-      q1:[[0.894427191,0.4472135955],[1.11803398875,0],[2.2360679775,0],[2.2360679775,1.11803398875]],
-      q2:[[1.788854382,0.894427191],[2.2360679775,1.11803398875],[2.2360679775,2.2360679775],[1.11803398875,2.2360679775]],
-      q3:[[1.3416407865,1.788854382],[1.11803398875,2.2360679775],[0,2.2360679775],[0,1.11803398875]],
-      q4:[[0.4472135955,1.3416407865],[0,1.11803398875],[0,0],[1.11803398875,0]],
-      tri1:[[0.4472135955,1.3416407865],[0.894427191,0.4472135955],[1.11803398875,1.11803398875]],
-      tri2:[[0.894427191,0.4472135955],[1.788854382,0.894427191],[1.11803398875,1.11803398875]],
-      tri3:[[0.4472135955,1.3416407865],[1.788854382,0.894427191],[1.3416407865,1.788854382]]
+      redTop:[[0,0],[1.6666666667,0],[1.0666666667,0.8]],
+      redLeft:[[0,1.6666666667],[0,0],[0.8,0.6]],
+      blueTrap:[[0.8666666667,1.0666666667],[1.6666666667,1.6666666667],[1.6666666667,0.4166666667],[1.4666666667,0.2666666667]],
+      redSmall:[[1.6666666667,0],[1.4666666667,0.2666666667],[1.6666666667,0.4166666667]],
+      blueTri:[[1.6666666667,1.6666666667],[0.8666666667,1.0666666667],[0.4166666667,1.6666666667]],
+      redTrap:[[0.6,0.8666666667],[0,1.6666666667],[0.4166666667,1.6666666667],[0.8666666667,1.0666666667]],
+      redSquare:[[1.0666666667,0.8],[0.8666666667,1.0666666667],[0.6,0.8666666667],[0.8,0.6]]
     },
     leitzmann: {
       bLeft:[[2.2360679775,2.2360679775],[1.3416407865,0.4472135955],[0.7453559925,2.2360679775]],
@@ -1054,44 +1054,23 @@
       }
     },
 
-    // Mosaïque moderne à sept pièces pour un triangle rectangle non isocèle.
-    // Les quatre quadrilatères viennent de b² ; a² est découpé en trois
-    // triangles. La pose finale est contrôlée par le même pavage exact.
+    // Puzzle de Brest : un 3-4-5, deux triangles entiers, deux triangles
+    // découpés et le petit carré (5 pièces rouges, 2 bleues).
     mosaiqueSept: {
-      name: "Mosaïque en 7 pièces",
-      ratio: 0.5,
+      name: "Puzzle de Brest",
+      ratio: 0.75,
       generate: (Ax, Ay, b, ratio) => {
-        const a=b*ratio;
-        const c=Math.hypot(a,b);
-        const u={x:b/c,y:-a/c};
-        const v={x:a/c,y:b/c};
-        const center={x:Ax+b/2,y:Ay-b/2};
-        const cutPoint=(dx,dy,xmin,xmax,ymin,ymax)=>{
-          const hits=[];
-          if(Math.abs(dx)>1e-9){
-            for(const x of [xmin,xmax]){const t=(x-center.x)/dx,y=center.y+t*dy;if(y>=ymin-1e-9&&y<=ymax+1e-9) hits.push({x,y});}
-          }
-          if(Math.abs(dy)>1e-9){
-            for(const y of [ymin,ymax]){const t=(y-center.y)/dy,x=center.x+t*dx;if(x>=xmin-1e-9&&x<=xmax+1e-9) hits.push({x,y});}
-          }
-          return hits;
-        };
-        const xmin=Ax,xmax=Ax+b,ymin=Ay-b,ymax=Ay;
-        const all=[...cutPoint(u.x,u.y,xmin,xmax,ymin,ymax),...cutPoint(v.x,v.y,xmin,xmax,ymin,ymax)];
-        const edge=(side,corner)=>all.filter(p=>side==="top"?Math.abs(p.y-ymin)<1e-7:side==="bottom"?Math.abs(p.y-ymax)<1e-7:side==="left"?Math.abs(p.x-xmin)<1e-7:Math.abs(p.x-xmax)<1e-7).sort((p,q)=>Math.hypot(p.x-corner.x,p.y-corner.y)-Math.hypot(q.x-corner.x,q.y-corner.y))[0];
-        const TL={x:xmin,y:ymin},TR={x:xmax,y:ymin},BR={x:xmax,y:ymax},BL={x:xmin,y:ymax};
-        const topTL=edge("top",TL),leftTL=edge("left",TL),rightTR=edge("right",TR),topTR=edge("top",TR);
-        const bottomBR=edge("bottom",BR),rightBR=edge("right",BR),leftBL=edge("left",BL),bottomBL=edge("bottom",BL);
-        const aw={x:Ax-a,y:Ay},a0=aw,a1={x:Ax,y:Ay},a2={x:Ax,y:Ay+a},a3={x:Ax-a,y:Ay+a};
-        const mid={x:Ax-a/2,y:Ay+a/2};
+        const k=b/4;
+        const big=(x,y)=>({x:Ax+x*k,y:Ay-b+y*k});
+        const small=(x,y)=>({x:Ax-b*ratio+x*k,y:Ay+y*k});
         return [
-          {key:"q1",fill:COLORS.red,    points:[TL,topTL,center,leftTL]},
-          {key:"q2",fill:COLORS.yellow, points:[TR,rightTR,center,topTR]},
-          {key:"q3",fill:COLORS.blue,   points:[BR,bottomBR,center,rightBR]},
-          {key:"q4",fill:COLORS.green,  points:[BL,leftBL,center,bottomBL]},
-          {key:"tri1",fill:COLORS.purple,points:[a0,a1,mid]},
-          {key:"tri2",fill:COLORS.orange,points:[a1,a2,mid]},
-          {key:"tri3",fill:COLORS.teal,  points:[a0,a2,a3]}
+          {key:"redTop",fill:COLORS.red, points:[[0,0],[4,0],[0,3]].map(([x,y])=>big(x,y))},
+          {key:"redLeft",fill:COLORS.red,points:[[4,0],[4,3],[0,3]].map(([x,y])=>big(x,y))},
+          {key:"redTrap",fill:COLORS.red,points:[[0,3],[3,3],[2.25,4],[0,4]].map(([x,y])=>big(x,y))},
+          {key:"redSquare",fill:COLORS.red,points:[[3,3],[4,3],[4,4],[3,4]].map(([x,y])=>big(x,y))},
+          {key:"redSmall",fill:COLORS.red,points:[[2.25,4],[3,3],[3,4]].map(([x,y])=>big(x,y))},
+          {key:"blueTrap",fill:COLORS.blue,points:[[0,0],[3,0],[0.75,3],[0,3]].map(([x,y])=>small(x,y))},
+          {key:"blueTri",fill:COLORS.blue,points:[[3,0],[3,3],[0.75,3]].map(([x,y])=>small(x,y))}
         ];
       }
     },
@@ -1308,10 +1287,10 @@
       `
     },
     mosaiqueSept: {
-      title: "Puzzle 10 — Mosaïque en 7 pièces",
+      title: "Puzzle 10 — Puzzle de Brest",
       html: `
-        <p><strong>Objectif :</strong> recomposer <em>c²</em> avec <strong>7 pièces</strong> pour un triangle rectangle non isocèle.</p>
-        <p class="muted">Ce n’est pas le tangram classique : quatre quadrilatères viennent du grand carré et trois triangles du petit. Commence par une grande pièce à angle droit, puis raccorde les arêtes obliques.</p>
+        <p><strong>Objectif :</strong> recomposer <em>c²</em> avec <strong>7 pièces</strong> pour le triangle rectangle <strong>3-4-5</strong>.</p>
+        <p class="muted">Les 2 pièces bleues remplissent <em>a²</em> et les 5 rouges <em>b²</em>. Dans <em>c²</em>, reconstitue quatre triangles rectangles autour du petit carré central.</p>
       `
     },
     leitzmann: {
