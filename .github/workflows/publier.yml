@@ -1,0 +1,75 @@
+# Publication du site maths&go
+#
+# Remplace la publication automatique « brute » de GitHub Pages par une
+# publication contrôlée en deux temps :
+#   1. vérifier (les contrôles bloquants doivent tous passer) ;
+#   2. assembler puis publier le site.
+# Si une vérification échoue, le site en ligne reste sur sa version
+# précédente : rien de cassé ne peut plus être publié.
+#
+# L'assemblage reproduit à l'identique ce que GitHub Pages publiait :
+# tout le dépôt, sauf les fichiers commençant par « . » ou « _ »
+# (sources LaTeX, fichiers techniques) que l'ancien système excluait déjà.
+#
+# Ce workflow ne prend effet que lorsque le réglage GitHub Pages du dépôt
+# est positionné sur « GitHub Actions » (au lieu de « Deploy from a
+# branch »). Retour en arrière possible à tout moment en remettant
+# l'ancien réglage.
+
+name: Publication
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  construire:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Récupérer le dépôt
+        uses: actions/checkout@v4
+
+      - name: Installer Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Vérifications bloquantes
+        run: |
+          node scripts/validate-catalogue.mjs
+          node scripts/validate-sitemap.mjs
+          node scripts/validate-automatismes-public.mjs
+          node scripts/validate-pythagore-tools.mjs
+          node scripts/validate-pythagore-snap-engine.mjs
+
+      - name: Assembler le site
+        run: |
+          mkdir _site
+          rsync -a --exclude '.*' --exclude '_*' ./ _site/
+          echo "Fichiers assemblés : $(find _site -type f | wc -l)"
+
+      - name: Empaqueter pour publication
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: _site
+
+  publier:
+    needs: construire
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Publier sur GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
