@@ -13,6 +13,9 @@
     "./redaction": "./src/redaction.js",
     "./verification": "./src/verification.js",
     "./clavier": "./src/clavier.js",
-    "./fleche": "./src/fleche.js"
+    "./fleche": "./src/fleche.js",
+    "./geometrie": "./src/geometrie.js",
+    "./figure": "./src/figure.js",
+    "./figures-usuelles": "./src/figures-usuelles.js"
   }
 }
