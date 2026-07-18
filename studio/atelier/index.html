@@ -372,10 +372,12 @@ function transformerEquation(texte) {
   // « ? » à la place de la lettre quand l'inconnue est en ? ou Splat
   const lettre = etatEqua.lettre;
   let t = texte;
-  if (document.getElementById("afficherFois").checked) {
+  const symboleInterrogation = choixInconnue.value !== "lettre";
+  if (document.getElementById("afficherFois").checked || symboleInterrogation) {
+    // avec « ? », le signe × est obligatoire : jamais « 2? », toujours « 2 × ? »
     t = t.replace(new RegExp(`(\\d+)${lettre}`, "g"), `$1 × ${lettre}`);
   }
-  if (choixInconnue.value !== "lettre") {
+  if (symboleInterrogation) {
     t = t.split(lettre).join("?");
   }
   return t;
