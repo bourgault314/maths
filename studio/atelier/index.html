@@ -338,6 +338,7 @@ import { dessinerFigure, dessinerCercle } from "../../packages/objets/src/figure
 import { CATEGORIES_FIGURES, FIGURES_USUELLES } from "../../packages/objets/src/figures-usuelles.js";
 import { creerThales, dessinerThales } from "../../packages/objets/src/thales.js";
 import { creerConfigurationAngles, dessinerConfigurationAngles } from "../../packages/objets/src/configurations-angles.js";
+import { PREREGLAGES_BARRE_POURCENTAGE, dessinerBarrePourcentage } from "../../packages/objets/src/barre-pourcentage.js";
 
 /* ========== 0. ACCUEIL — VIGNETTES D'OUTILS ==========
    Chaque vignette est DESSINÉE par l'objet officiel lui-même :
@@ -372,6 +373,8 @@ const OUTILS = [
       ) },
   { nom: "Thalès", href: "./configurations.html", apercu: () =>
       dessinerThales(creerThales({}), { theme: "couleur", taille: 148, noms: false }) },
+  { nom: "Pourcentages", href: "./pourcentages.html", apercu: () =>
+      dessinerBarrePourcentage(PREREGLAGES_BARRE_POURCENTAGE[0].question, { correction: true }).svg },
   { nom: "Labo", href: "./labo.html", apercu: () => {
       const entree = Object.values(FIGURES_USUELLES).find((e) => e.genre === "cercle");
       const description = entree.decrire();
@@ -478,7 +481,7 @@ const PROGRAMME = [
       { t: "Échelles", n: "3e" },
     ] },
     { titre: "Pourcentages", notions: [
-      { t: "Calculer, appliquer un pourcentage", n: "5e·4e", etat: "chantier" },
+      { t: "Calculer, appliquer un pourcentage", n: "5e·4e", etat: "fait", href: "./pourcentages.html" },
       { t: "Augmentations, diminutions, coefficient multiplicateur", n: "4e·3e" },
     ] },
     { titre: "Fonctions", notions: [
