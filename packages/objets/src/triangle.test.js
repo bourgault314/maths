@@ -77,4 +77,60 @@ describe("dessinerTriangle", () => {
   it("rejette un nom invalide", () => {
     assert.throws(() => dessinerTriangle({ nom: "abc", angles: [60, 60, 60] }), /trois lettres/);
   });
+
+  it("chaque arc d'angle bombe vers l'INTÉRIEUR du triangle (le bug de la photo)", () => {
+    // Batterie de triangles, y compris très obtus et très aplatis :
+    // l'ancienne heuristique de balayage se trompait de côté.
+    const estDansTriangle = (p, sommets) => {
+      let interieur = false;
+      for (let i = 0, j = 2; i < 3; j = i++) {
+        const [xi, yi] = sommets[i];
+        const [xj, yj] = sommets[j];
+        if (yi > p[1] !== yj > p[1] && p[0] < ((xj - xi) * (p[1] - yi)) / (yj - yi) + xi) {
+          interieur = !interieur;
+        }
+      }
+      return interieur;
+    };
+    for (const angles of [
+      [50, 60, 70],
+      [120, 40, 20],
+      [150, 15, 15],
+      [10, 10, 160],
+      [89, 89, 2],
+    ]) {
+      const svg = dessinerTriangle({ nom: "ABC", angles });
+      const polygone = svg
+        .match(/<polygon points="([^"]+)"/)[1]
+        .split(" ")
+        .map((paire) => paire.split(",").map(Number));
+      const arcs = [
+        ...svg.matchAll(
+          /<path d="M ([\d.-]+) ([\d.-]+) A ([\d.-]+) [\d.-]+ 0 0 1 ([\d.-]+) ([\d.-]+)"/g,
+        ),
+      ];
+      assert.equal(arcs.length, 3, `angles ${angles} : trois arcs attendus`);
+      for (const [, x1, y1, rayon, x2, y2] of arcs.map((a) => a.map(Number))) {
+        // le sommet de l'arc est le sommet du triangle équidistant des
+        // deux extrémités (à la distance rayon)
+        const v = polygone.find(
+          (p) =>
+            Math.abs(Math.hypot(p[0] - x1, p[1] - y1) - rayon) < 0.5 &&
+            Math.abs(Math.hypot(p[0] - x2, p[1] - y2) - rayon) < 0.5,
+        );
+        assert.ok(v, `angles ${angles} : sommet introuvable pour un arc`);
+        // le point le plus bombé de l'arc (sur la bissectrice) est DANS le triangle
+        const m = [(x1 + x2) / 2, (y1 + y2) / 2];
+        const d = Math.hypot(m[0] - v[0], m[1] - v[1]);
+        const bombe = [
+          v[0] + ((m[0] - v[0]) / d) * rayon,
+          v[1] + ((m[1] - v[1]) / d) * rayon,
+        ];
+        assert.ok(
+          estDansTriangle(bombe, polygone),
+          `angles ${angles} : l'arc du sommet ${JSON.stringify(v)} sort de la figure`,
+        );
+      }
+    }
+  });
 });

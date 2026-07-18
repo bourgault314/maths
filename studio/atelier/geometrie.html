@@ -1,0 +1,375 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex, nofollow">
+<title>Atelier · Géométrie — maths&go (interne)</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --page:#f6f8fb; --papier:#ffffff; --encre:#10294a; --bleu:#063f86;
+    --turquoise:#08b9b2; --orange:#f58220; --attenue:#637287; --ligne:#dce5ef;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--page);color:var(--encre);
+    font-family:"Segoe UI",system-ui,sans-serif;padding:20px;max-width:1060px;margin-inline:auto}
+  h1{font-family:Fredoka;color:var(--bleu);font-size:clamp(24px,4vw,34px);margin:8px 0 2px}
+  .sous{color:var(--attenue);margin:0 0 20px;font-size:14px}
+  .sous a{color:var(--bleu);font-weight:600}
+  section{background:var(--papier);border:1px solid var(--ligne);border-radius:24px;
+    padding:clamp(14px,3vw,26px);margin-bottom:22px}
+  h2{font-family:Fredoka;color:var(--turquoise);margin:0 0 4px;font-size:21px}
+  h3{font-family:Fredoka;color:var(--bleu);margin:18px 0 6px;font-size:16px}
+  .aide{color:var(--attenue);font-size:13.5px;margin:0 0 14px}
+  .barreCommandes{display:flex;flex-wrap:wrap;gap:10px;align-items:center;margin-bottom:12px}
+  select,button{font:inherit;font-size:15px;padding:9px 14px;border-radius:12px;border:2px solid var(--ligne);
+    background:#fff;color:var(--encre);cursor:pointer;max-width:100%}
+  button.principal{background:linear-gradient(180deg,#60a5fa,#3b82f6);color:#fff;border-color:#3b82f6;font-weight:600}
+  button:active{transform:translateY(1px)}
+  .chip{border-radius:999px;font-family:Fredoka;font-weight:600;padding:8px 16px}
+  .chip.actif{background:linear-gradient(180deg,#60a5fa,#3b82f6);color:#fff;border-color:#3b82f6}
+  .reglage{display:flex;align-items:center;gap:8px;font-size:14px;color:var(--attenue);white-space:nowrap}
+  .reglage input[type=range]{accent-color:var(--bleu);width:130px}
+  .reglage output{font-weight:700;color:var(--encre);min-width:34px;text-align:right}
+  .toggles{display:flex;flex-wrap:wrap;gap:6px 16px;margin:10px 0;font-size:14.5px}
+  .toggles label{display:flex;align-items:center;gap:6px;cursor:pointer;white-space:nowrap}
+  .toggles input{accent-color:var(--bleu);width:17px;height:17px}
+  .zoneRendu{overflow-x:auto;text-align:center;padding:8px 0}
+  .zoneRendu svg{max-width:100%;height:auto}
+  .galerie{display:flex;flex-wrap:wrap;gap:14px;align-items:flex-end}
+  .carte{border:1px solid var(--ligne);border-radius:16px;padding:10px;background:#fff;text-align:center}
+  .carte svg{max-width:100%;height:auto;display:block;margin-inline:auto}
+  .carte figcaption{font-size:12.5px;color:var(--attenue);margin-top:6px;font-weight:600}
+  .carte.ok figcaption::before{content:"✓ ";color:#18a85b}
+  figure{margin:0}
+</style>
+</head>
+<body>
+<h1>Atelier · Géométrie</h1>
+<p class="sous"><a href="./index.html">← Retour à l'Atelier des objets</a> — Les figures ci-dessous sont CALCULÉES par la bibliothèque officielle (noyau géométrique + dessinateur de figures), jamais dessinées à la main. Les arcs d'angles sont mathématiquement exacts sous toute rotation. Statut : brouillon, en attente de validation.</p>
+
+<section id="secExplorateur">
+  <h2>Explorer une figure</h2>
+  <p class="aide">Choisissez une figure, réglez ses dimensions, cochez les éléments à afficher, tournez-la : les codages et les arcs suivent, les textes restent droits. Tout s'exporte en SVG.</p>
+  <div class="barreCommandes" id="chipsCategories" role="group" aria-label="Catégories"></div>
+  <div class="barreCommandes">
+    <select id="choixFigure" aria-label="Figure"></select>
+    <label class="reglage">Thème
+      <select id="choixTheme" aria-label="Thème">
+        <option value="noir">noir</option>
+        <option value="couleur">couleur</option>
+      </select>
+    </label>
+    <label class="reglage">Rotation <input type="range" id="regleRotation" min="0" max="359" value="0" step="1"><output id="valRotation">0°</output></label>
+    <label class="reglage"><input type="checkbox" id="caseMiroir" style="width:17px;height:17px;accent-color:var(--bleu)"> miroir</label>
+    <label class="reglage">Taille <input type="range" id="regleTaille" min="220" max="720" value="380" step="20"><output id="valTaille">380</output></label>
+  </div>
+  <div class="barreCommandes" id="zoneParametres"></div>
+  <div class="toggles" id="zoneAffichagePolygone">
+    <label><input type="checkbox" id="afCodages" checked> codages</label>
+    <label><input type="checkbox" id="afNoms" checked> noms des sommets</label>
+    <label><input type="checkbox" id="afSommets"> croix des sommets</label>
+    <label><input type="checkbox" id="afAngles"> arcs des angles</label>
+    <label><input type="checkbox" id="afMesuresAngles"> mesures des angles</label>
+    <label><input type="checkbox" id="afMesuresCotes"> mesures des côtés</label>
+    <label><input type="checkbox" id="afDiagonales"> diagonales</label>
+    <label><input type="checkbox" id="afCentre"> centre</label>
+    <label><input type="checkbox" id="afAxes"> axes de symétrie</label>
+    <label><input type="checkbox" id="afMilieux"> milieux des côtés</label>
+  </div>
+  <div class="toggles" id="zoneAffichageCercle" hidden>
+    <label><input type="checkbox" id="afCentreCercle" checked> centre</label>
+    <label><input type="checkbox" id="afDisque"> disque colorié</label>
+    <label><input type="checkbox" id="afRayon" checked> rayon</label>
+    <label><input type="checkbox" id="afDiametre"> diamètre</label>
+    <label><input type="checkbox" id="afMesuresCercle" checked> mesures</label>
+  </div>
+  <div class="barreCommandes">
+    <button class="principal" id="btnTelechargerSvg">Télécharger le SVG</button>
+    <button id="btnCopierSvg">Copier le code SVG</button>
+    <span class="reglage" id="messageCopie" aria-live="polite"></span>
+  </div>
+  <div class="zoneRendu" id="renduFigure" aria-live="polite"></div>
+</section>
+
+<section id="secPlanche">
+  <h2>Planche de contrôle des angles</h2>
+  <p class="aide">La règle du cahier des charges : l'arc d'un angle reste dans le secteur demandé après N'IMPORTE QUELLE rotation, l'angle droit reçoit sa marque carrée, et les triangles très aplatis ne sont jamais transpercés. Tout ce qui suit est généré par le moteur — si un arc sortait d'une figure, ce serait un bug.</p>
+  <h3>Le même triangle, huit orientations</h3>
+  <div class="galerie" id="plancheRotations"></div>
+  <h3>Triangles extrêmes (très obtus, très aplatis, angle droit)</h3>
+  <div class="galerie" id="plancheExtremes"></div>
+  <h3>Quadrilatère concave : l'angle rentrant est mesuré à plus de 180°</h3>
+  <div class="galerie" id="plancheConcave"></div>
+</section>
+
+<section id="secGalerie">
+  <h2>Toutes les figures du registre, codées, en noir</h2>
+  <p class="aide">Le tri par catégories vient du registre <code>FIGURES_USUELLES</code> : une figure ajoutée au registre apparaît ici automatiquement.</p>
+  <div id="galerieParCategorie"></div>
+</section>
+
+<script type="module">
+import { dessinerCercle, dessinerFigure } from "../../packages/objets/src/figure.js";
+import {
+  CATEGORIES_FIGURES,
+  FIGURES_USUELLES,
+} from "../../packages/objets/src/figures-usuelles.js";
+import { sommetsQuadrilatere, sommetsTriangle } from "../../packages/objets/src/geometrie.js";
+
+const $ = (id) => document.getElementById(id);
+
+// ---------- l'explorateur ----------
+const choixFigure = $("choixFigure");
+for (const categorie of CATEGORIES_FIGURES) {
+  const groupe = document.createElement("optgroup");
+  groupe.label = categorie;
+  for (const [cle, entree] of Object.entries(FIGURES_USUELLES)) {
+    if (entree.categorie !== categorie) continue;
+    const option = document.createElement("option");
+    option.value = cle;
+    option.textContent = entree.titre;
+    groupe.appendChild(option);
+  }
+  choixFigure.appendChild(groupe);
+}
+
+const chips = $("chipsCategories");
+for (const categorie of CATEGORIES_FIGURES) {
+  const bouton = document.createElement("button");
+  bouton.className = "chip";
+  bouton.textContent = categorie;
+  bouton.addEventListener("click", () => {
+    const premiere = Object.entries(FIGURES_USUELLES).find(
+      ([, e]) => e.categorie === categorie,
+    );
+    choixFigure.value = premiere[0];
+    surChangementFigure();
+  });
+  chips.appendChild(bouton);
+}
+
+function majChips() {
+  const categorie = FIGURES_USUELLES[choixFigure.value].categorie;
+  [...chips.children].forEach((c) =>
+    c.classList.toggle("actif", c.textContent === categorie),
+  );
+}
+
+// curseurs de paramètres générés depuis le registre
+const zoneParametres = $("zoneParametres");
+function construireParametres() {
+  zoneParametres.innerHTML = "";
+  const entree = FIGURES_USUELLES[choixFigure.value];
+  for (const p of entree.parametres) {
+    const label = document.createElement("label");
+    label.className = "reglage";
+    const sortie = document.createElement("output");
+    const curseur = document.createElement("input");
+    curseur.type = "range";
+    curseur.min = p.min;
+    curseur.max = p.max;
+    curseur.step = p.pas ?? 0.5;
+    curseur.value = p.defaut;
+    curseur.dataset.cle = p.cle;
+    sortie.textContent = String(p.defaut).replace(".", ",");
+    curseur.addEventListener("input", () => {
+      sortie.textContent = String(curseur.value).replace(".", ",");
+      dessiner();
+    });
+    label.append(`${p.libelle} `, curseur, sortie);
+    zoneParametres.appendChild(label);
+  }
+}
+
+function lireParametres() {
+  const options = {};
+  for (const curseur of zoneParametres.querySelectorAll("input[type=range]")) {
+    options[curseur.dataset.cle] = Number(curseur.value);
+  }
+  return options;
+}
+
+let dernierSvg = "";
+function dessiner() {
+  const entree = FIGURES_USUELLES[choixFigure.value];
+  const enCercle = entree.genre === "cercle";
+  $("zoneAffichagePolygone").hidden = enCercle;
+  $("zoneAffichageCercle").hidden = !enCercle;
+  const theme = $("choixTheme").value;
+  const taille = Number($("regleTaille").value);
+  const description = entree.decrire(lireParametres());
+  description.styles = { ...description.styles, theme };
+  description.sortie = { taille };
+  if (enCercle) {
+    description.visible = {
+      ...description.visible,
+      centre: $("afCentreCercle").checked,
+      disque: $("afDisque").checked,
+      rayonVersDeg: $("afRayon").checked ? description.visible.rayonVersDeg ?? 40 : null,
+      diametreVersDeg: $("afDiametre").checked
+        ? description.visible.diametreVersDeg ?? 25
+        : null,
+      mesureRayon: $("afRayon").checked && $("afMesuresCercle").checked,
+      mesureDiametre: $("afDiametre").checked && $("afMesuresCercle").checked,
+    };
+    if (!$("afRayon").checked) description.points = [];
+    dernierSvg = dessinerCercle(description);
+  } else {
+    if (!$("afCodages").checked) description.codages = [];
+    description.transform = {
+      rotationDeg: Number($("regleRotation").value),
+      miroirX: $("caseMiroir").checked,
+    };
+    description.visible = {
+      noms: $("afNoms").checked,
+      sommets: $("afSommets").checked,
+      angles: $("afAngles").checked,
+      mesuresAngles: $("afMesuresAngles").checked,
+      mesuresCotes: $("afMesuresCotes").checked,
+      diagonales: $("afDiagonales").checked,
+      centre: $("afCentre").checked,
+      axes: $("afAxes").checked,
+      milieux: $("afMilieux").checked,
+    };
+    dernierSvg = dessinerFigure(description);
+  }
+  $("renduFigure").innerHTML = dernierSvg;
+}
+
+function surChangementFigure() {
+  majChips();
+  construireParametres();
+  dessiner();
+}
+
+choixFigure.addEventListener("change", surChangementFigure);
+$("choixTheme").addEventListener("change", dessiner);
+$("caseMiroir").addEventListener("change", dessiner);
+$("regleRotation").addEventListener("input", () => {
+  $("valRotation").textContent = `${$("regleRotation").value}°`;
+  dessiner();
+});
+$("regleTaille").addEventListener("input", () => {
+  $("valTaille").textContent = $("regleTaille").value;
+  dessiner();
+});
+for (const case_ of document.querySelectorAll(".toggles input")) {
+  case_.addEventListener("change", dessiner);
+}
+
+$("btnTelechargerSvg").addEventListener("click", () => {
+  const blob = new Blob([dernierSvg], { type: "image/svg+xml" });
+  const lien = document.createElement("a");
+  lien.href = URL.createObjectURL(blob);
+  lien.download = `${choixFigure.value}.svg`;
+  lien.click();
+  URL.revokeObjectURL(lien.href);
+});
+$("btnCopierSvg").addEventListener("click", async () => {
+  try {
+    await navigator.clipboard.writeText(dernierSvg);
+    $("messageCopie").textContent = "copié !";
+  } catch {
+    $("messageCopie").textContent = "copie impossible ici";
+  }
+  setTimeout(() => ($("messageCopie").textContent = ""), 2000);
+});
+
+// ---------- planche de contrôle des angles ----------
+function carte(svg, legende, valide = true) {
+  const figure = document.createElement("figure");
+  figure.className = valide ? "carte ok" : "carte";
+  figure.innerHTML = svg + `<figcaption></figcaption>`;
+  figure.querySelector("figcaption").textContent = legende;
+  return figure;
+}
+
+const triangleTemoin = sommetsTriangle({ angles: [50, 60, 70] });
+for (let rotation = 0; rotation < 360; rotation += 45) {
+  $("plancheRotations").appendChild(
+    carte(
+      dessinerFigure({
+        sommets: triangleTemoin,
+        transform: { rotationDeg: rotation },
+        visible: { angles: true, mesuresAngles: true },
+        styles: { theme: "couleur" },
+        sortie: { taille: 168, marge: 40 },
+      }),
+      `${rotation}°`,
+    ),
+  );
+}
+
+const extremes = [
+  { angles: [120, 40, 20], legende: "120° · 40° · 20°" },
+  { angles: [150, 15, 15], legende: "150° · 15° · 15°" },
+  { angles: [10, 10, 160], legende: "10° · 10° · 160°" },
+  { angles: [89, 89, 2], legende: "89° · 89° · 2°" },
+  { angles: [90, 45, 45], legende: "90° (marque) · 45° · 45°" },
+];
+for (const { angles, legende } of extremes) {
+  $("plancheExtremes").appendChild(
+    carte(
+      dessinerFigure({
+        sommets: sommetsTriangle({ angles }),
+        transform: { rotationDeg: 20 },
+        visible: { angles: true, mesuresAngles: true },
+        styles: { theme: "couleur" },
+        sortie: { taille: 190, marge: 42 },
+      }),
+      legende,
+    ),
+  );
+}
+
+const concave = sommetsQuadrilatere({ points: [[0, 0], [6, 0], [6, 4], [2, 1]] });
+for (const rotation of [0, 90, 200]) {
+  $("plancheConcave").appendChild(
+    carte(
+      dessinerFigure({
+        sommets: concave,
+        transform: { rotationDeg: rotation },
+        visible: { angles: true, mesuresAngles: true },
+        sortie: { taille: 190, marge: 44 },
+      }),
+      `rotation ${rotation}°`,
+    ),
+  );
+}
+
+// ---------- galerie complète, pilotée par le registre ----------
+const galerie = $("galerieParCategorie");
+for (const categorie of CATEGORIES_FIGURES) {
+  const titre = document.createElement("h3");
+  titre.textContent = categorie;
+  galerie.appendChild(titre);
+  const rangee = document.createElement("div");
+  rangee.className = "galerie";
+  for (const [cle, entree] of Object.entries(FIGURES_USUELLES)) {
+    if (entree.categorie !== categorie) continue;
+    const description = entree.decrire();
+    description.sortie = { taille: 176, marge: 40 };
+    const svg =
+      entree.genre === "cercle"
+        ? dessinerCercle(description)
+        : dessinerFigure(description);
+    const cadre = carte(svg, entree.titre, false);
+    cadre.style.cursor = "pointer";
+    cadre.title = "Ouvrir dans l'explorateur";
+    cadre.addEventListener("click", () => {
+      choixFigure.value = cle;
+      surChangementFigure();
+      $("secExplorateur").scrollIntoView({ behavior: "smooth" });
+    });
+    rangee.appendChild(cadre);
+  }
+  galerie.appendChild(rangee);
+}
+
+surChangementFigure();
+</script>
+</body>
+</html>

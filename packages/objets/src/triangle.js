@@ -11,6 +11,7 @@
 // lettres de sommets bleues avec halo blanc (lisibles sur tout fond).
 
 import { COULEURS_BARRES } from "../../charte/src/charte.js";
+import { distancePointSegment, secteurAngulaire } from "./geometrie.js";
 
 export const VERSION_TRIANGLE = 1;
 
@@ -144,7 +145,15 @@ export function dessinerTriangle({
     const q = points[(i + 2) % 3];
     const dir1 = Math.atan2(p[1] - v[1], p[0] - v[0]);
     const dir2 = Math.atan2(q[1] - v[1], q[0] - v[0]);
-    const rayon = Math.min(30, Math.hypot(p[0] - v[0], p[1] - v[1]) * 0.3, Math.hypot(q[0] - v[0], q[1] - v[1]) * 0.3);
+    // le rayon est aussi plafonné par la distance au côté opposé :
+    // dans un triangle très aplati, l'arc ne doit jamais transpercer
+    // la figure
+    const rayon = Math.min(
+      30,
+      Math.hypot(p[0] - v[0], p[1] - v[1]) * 0.3,
+      Math.hypot(q[0] - v[0], q[1] - v[1]) * 0.3,
+      distancePointSegment(v, p, q) * 0.75,
+    );
     // bissectrice intérieure (vers le centre du triangle)
     const versCentre = Math.atan2(centre[1] - v[1], centre[0] - v[0]);
 
@@ -159,25 +168,28 @@ export function dessinerTriangle({
           `<polyline points="${p1.join(",")} ${p2.join(",")} ${p3.join(",")}" fill="none" stroke="${ANGLE_DROIT}" stroke-width="3.5" stroke-linejoin="round"/>`,
         );
       } else {
-        // arc d'angle : du côté 1 au côté 2 en passant par l'intérieur
-        const a1 = [v[0] + Math.cos(dir1) * rayon, v[1] + Math.sin(dir1) * rayon];
-        const a2 = [v[0] + Math.cos(dir2) * rayon, v[1] + Math.sin(dir2) * rayon];
-        const grandArc = 0;
-        // sens de balayage : celui qui passe par la bissectrice intérieure
-        const milieuHoraire = [
-          v[0] + Math.cos((dir1 + dir2) / 2) * rayon,
-          v[1] + Math.sin((dir1 + dir2) / 2) * rayon,
+        // arc d'angle : le secteur intérieur est CALCULÉ par le noyau
+        // géométrique (le centre du triangle sert de point intérieur),
+        // plus aucune heuristique — l'arc est du bon côté quelle que
+        // soit l'orientation du triangle.
+        const { depart, delta } = secteurAngulaire(v, p, q, centre);
+        const a1 = [v[0] + Math.cos(depart) * rayon, v[1] + Math.sin(depart) * rayon];
+        const a2 = [
+          v[0] + Math.cos(depart + delta) * rayon,
+          v[1] + Math.sin(depart + delta) * rayon,
         ];
-        const versCentrePoint = [v[0] + Math.cos(versCentre) * rayon, v[1] + Math.sin(versCentre) * rayon];
-        const distanceDirecte = Math.hypot(milieuHoraire[0] - versCentrePoint[0], milieuHoraire[1] - versCentrePoint[1]);
-        const sweep = distanceDirecte < rayon ? 1 : 0;
+        // en repère écran (y vers le bas), balayer dans le sens des
+        // angles croissants correspond à sweep = 1 ; delta < π pour un
+        // angle de triangle, donc jamais de grand arc
         morceaux.push(
-          `<path d="M ${a1.join(" ")} A ${rayon} ${rayon} 0 ${grandArc} ${sweep} ${a2.join(" ")}" fill="none" stroke="${COULEURS_ANGLES[i]}" stroke-width="4" stroke-linecap="round"/>`,
+          `<path d="M ${a1.join(" ")} A ${rayon} ${rayon} 0 0 1 ${a2.join(" ")}" fill="none" stroke="${COULEURS_ANGLES[i]}" stroke-width="4" stroke-linecap="round"/>`,
         );
-        // valeur de l'angle, posée sur la bissectrice intérieure
+        // valeur de l'angle, posée sur la bissectrice du secteur
+        // réellement dessiné
+        const bissectrice = depart + delta / 2;
         const texteAngle = `${String(Math.round(anglesReels[i] * 10) / 10).replace(".", ",")}°`;
-        const tx = v[0] + Math.cos(versCentre) * (rayon + 18);
-        const ty = v[1] + Math.sin(versCentre) * (rayon + 18);
+        const tx = v[0] + Math.cos(bissectrice) * (rayon + 18);
+        const ty = v[1] + Math.sin(bissectrice) * (rayon + 18);
         morceaux.push(
           `<text x="${tx}" y="${ty}" font-family="'Segoe UI', system-ui, sans-serif" font-size="15" font-weight="700" fill="${COULEURS_ANGLES[i]}" text-anchor="middle" dominant-baseline="central" stroke="#ffffff" stroke-width="4" paint-order="stroke">${texteAngle}</text>`,
         );

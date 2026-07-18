@@ -54,7 +54,8 @@ toutes par des objets à lois mathématiques :
 |---|---|---|
 | Triangles aux angles faux | **objet triangle** (loi des sinus/cosinus, angles testés au millième) | ✅ v1 (19/07) |
 | Flèches des tableaux de proportionnalité toujours droites | objet **flèche courbe ×k** (l'arc « rond », jamais droit) | 🔜 |
-| Pas d'outil pour tracer les quadrilatères et figures usuelles | objet **quadrilatères / figures** | 🔜 |
+| Pas d'outil pour tracer les quadrilatères et figures usuelles | objet **quadrilatères / figures** | ✅ v1 (noyau géométrique + figures usuelles + Atelier Géométrie, juillet 2026) |
+| Arcs d'angles dessinés du mauvais côté | **secteur angulaire calculé** (atan2 + point intérieur, testé sous 360 rotations) ; arc du triangle v1 corrigé | ✅ v1 |
 | Positionnement anarchique des noms dans les tableaux | objet **tableau** (placement réglé une fois) | 🔜 |
 | Fractions jamais bien écrites | objet **écriture fractionnaire** (empilement et barre corrects) | 🔜 |
 
