@@ -37,7 +37,8 @@
   select,button.action{font:inherit;font-size:14.5px;padding:9px 14px;min-height:44px;border-radius:12px;
     border:2px solid var(--ligne);background:#fff;color:var(--encre);cursor:pointer}
   button.principal{background:linear-gradient(180deg,#60a5fa,#3b82f6);color:#fff;border-color:#3b82f6;font-weight:600}
-  .pilules{display:flex;flex-wrap:wrap;gap:7px;margin:0 0 12px}
+  .pilules{display:flex;flex-wrap:wrap;gap:7px;margin:0 0 8px}
+  .pilules:last-child{margin-bottom:12px}
   .pilules button{font-size:13.5px;padding:8px 13px;min-height:40px;border-radius:999px;
     border:2px solid var(--ligne);background:#fff;color:var(--encre);cursor:pointer}
   .pilules button.actif{background:#dbeafe;border-color:#3b82f6;color:#1d4ed8;font-weight:700}
@@ -73,90 +74,32 @@
     <button class="principal action" id="btnSvg" style="margin-left:auto">⬇ SVG</button>
   </div>
   <div class="barre" id="parametresObjet"></div>
-  <div class="pilules" id="pilulesObjet"></div>
-  <div class="barre">
-    <label class="reglage">↻ <input type="range" id="regleRotation" min="0" max="359" value="0" step="1"><output id="valRotation">0°</output></label>
-    <label class="reglage"><select id="choixTheme" aria-label="Thème"><option value="noir">noir</option><option value="couleur">couleur</option></select></label>
-  </div>
+  <div id="pilulesObjet"></div>
   <div class="apercu" id="apercu" aria-live="polite"></div>
   <h2>Toutes les possibilités</h2>
   <div class="galerie" id="plancheObjet"></div>
 </div>
 
 <script type="module">
-import { dessinerCercle, dessinerFigure } from "../../packages/objets/src/figure.js";
-import { CATEGORIES_FIGURES, FIGURES_USUELLES } from "../../packages/objets/src/figures-usuelles.js";
+import { SERIES, actifsParDefaut, valeursParDefaut } from "./labo-series.js";
 
 const $ = (id) => document.getElementById(id);
-let serieActive = CATEGORIES_FIGURES[0];
-let objetActif = null;
+let serieActive = SERIES[0];
+let cleObjetActif = null;
+let entreeActive = null;
+let valeurs = {};
+let actifs = new Set();
 let dernierSvg = "";
-const actives = new Set(["codages", "noms"]);
-
-function capacitesDe(cle) {
-  const entree = FIGURES_USUELLES[cle];
-  if (entree.genre === "cercle") {
-    return [["centre", "centre"], ["disque", "disque"], ["rayon", "rayon"], ["diametre", "diamètre"],
-      ["corde", "corde"], ["tangente", "tangente"], ["secteur", "secteur"]];
-  }
-  const n = entree.decrire().sommets.length;
-  const liste = [["codages", "codages"], ["noms", "noms"], ["sommets", "croix"], ["angles", "angles"],
-    ["mesuresAngles", "mesures d'angles"], ["mesuresCotes", "mesures des côtés"],
-    ["milieux", "milieux"], ["axes", "axes"]];
-  if (n === 4) liste.push(["diagonales", "diagonales"], ["centre", "centre"]);
-  else liste.push(["centre", "centre"]);
-  if (n === 3) liste.push(["hauteurs", "hauteurs"], ["medianes", "médianes"], ["mediatrices", "médiatrices"],
-    ["bissectrices", "bissectrices"], ["cercleInscrit", "cercle inscrit"],
-    ["cercleCirconscrit", "cercle circonscrit"], ["centresRemarquables", "G H O I"],
-    ["segmentDesMilieux", "segment des milieux"]);
-  if (entree.categorie === "Polygones") liste.push(["rayons", "rayons"], ["apotheme", "apothème"]);
-  return liste;
-}
-
-function lireParametres() {
-  const options = {};
-  for (const curseur of $("parametresObjet").querySelectorAll("input[type=range]")) {
-    options[curseur.dataset.cle] = Number(curseur.value);
-  }
-  return options;
-}
-
-function visibleCercle(actifs) {
-  return {
-    centre: actifs.has("centre"),
-    disque: actifs.has("disque"),
-    rayonVersDeg: actifs.has("rayon") ? 40 : null,
-    mesureRayon: actifs.has("rayon"),
-    diametreVersDeg: actifs.has("diametre") ? 25 : null,
-    mesureDiametre: actifs.has("diametre"),
-    cordes: actifs.has("corde") ? [{ de: 150, a: 245 }] : [],
-    tangente: actifs.has("tangente") ? { en: 40 } : null,
-    secteur: actifs.has("secteur") ? { deDeg: 60, aDeg: 130 } : null,
-  };
-}
 
 function dessinerApercu() {
-  const entree = FIGURES_USUELLES[objetActif];
-  const description = entree.decrire(lireParametres());
-  description.styles = { ...description.styles, theme: $("choixTheme").value };
-  description.sortie = { taille: Math.min(430, window.innerWidth - 60) };
-  if (entree.genre === "cercle") {
-    description.visible = visibleCercle(actives);
-    if (!actives.has("rayon")) description.points = [];
-    dernierSvg = dessinerCercle(description);
-  } else {
-    if (!actives.has("codages")) description.codages = [];
-    const visible = {};
-    for (const [cle] of capacitesDe(objetActif)) {
-      if (cle === "codages") continue;
-      visible[cle] = actives.has(cle);
-    }
-    visible.mesuresDiagonales = actives.has("diagonales");
-    description.visible = visible;
-    description.transform = { rotationDeg: Number($("regleRotation").value) };
-    dernierSvg = dessinerFigure(description);
+  const taille = Math.min(430, window.innerWidth - 60);
+  try {
+    dernierSvg = entreeActive.dessiner(valeurs, actifs, taille);
+    $("apercu").innerHTML = dernierSvg;
+  } catch (erreur) {
+    dernierSvg = "";
+    $("apercu").textContent = `ERREUR — ${erreur.message}`;
   }
-  $("apercu").innerHTML = dernierSvg;
 }
 
 function carte(zone, svg, legende) {
@@ -167,56 +110,116 @@ function carte(zone, svg, legende) {
   zone.appendChild(figure);
 }
 
-function plancheObjet() {
+function carteErreur(zone, legende, message) {
+  const alerte = document.createElement("figure");
+  alerte.className = "carte";
+  alerte.innerHTML = "<figcaption></figcaption>";
+  alerte.querySelector("figcaption").textContent = `${legende} : ERREUR — ${message}`;
+  zone.appendChild(alerte);
+}
+
+function dessinerPlanche() {
   const zone = $("plancheObjet");
   zone.innerHTML = "";
-  const entree = FIGURES_USUELLES[objetActif];
-  for (const [cle, libelle] of capacitesDe(objetActif)) {
+  const cartes = entreeActive.planche ? entreeActive.planche(valeurs) : [];
+  for (const element of cartes) {
     try {
-      const description = entree.decrire(lireParametres());
-      description.sortie = { taille: 150, marge: 38 };
-      if (entree.genre === "cercle") {
-        description.visible = visibleCercle(new Set([cle]));
-        if (cle !== "rayon") description.points = [];
-        carte(zone, dessinerCercle(description), libelle);
-      } else {
-        if (cle !== "codages") description.codages = [];
-        description.visible = { noms: ["noms", "codages"].includes(cle) };
-        if (!["codages", "noms"].includes(cle)) {
-          description.visible[cle] = true;
-          if (cle === "diagonales") description.visible.mesuresDiagonales = true;
-          if (cle === "mesuresAngles") description.visible.angles = true;
-        }
-        carte(zone, dessinerFigure(description), libelle);
-      }
+      carte(zone, element.dessiner(), element.legende);
     } catch (erreur) {
-      const alerte = document.createElement("figure");
-      alerte.className = "carte";
-      alerte.innerHTML = "<figcaption></figcaption>";
-      alerte.querySelector("figcaption").textContent = `${libelle} : ERREUR — ${erreur.message}`;
-      zone.appendChild(alerte);
+      carteErreur(zone, element.legende, erreur.message);
     }
   }
 }
 
-function ouvrirSerie(serie) {
-  serieActive = serie;
-  objetActif = null;
+function construireCurseurs() {
+  const zone = $("parametresObjet");
+  zone.innerHTML = "";
+  for (const parametre of entreeActive.parametres ?? []) {
+    const label = document.createElement("label");
+    label.className = "reglage";
+    const sortie = document.createElement("output");
+    const curseur = document.createElement("input");
+    curseur.type = "range";
+    curseur.min = parametre.min;
+    curseur.max = parametre.max;
+    curseur.step = parametre.pas ?? 0.5;
+    curseur.value = parametre.defaut;
+    sortie.textContent = String(parametre.defaut).replace(".", ",");
+    curseur.addEventListener("input", () => {
+      sortie.textContent = String(curseur.value).replace(".", ",");
+      valeurs[parametre.cle] = Number(curseur.value);
+      dessinerApercu();
+      dessinerPlanche();
+    });
+    label.append(`${parametre.libelle} `, curseur, sortie);
+    zone.appendChild(label);
+  }
+}
+
+function construirePilules() {
+  const conteneur = $("pilulesObjet");
+  conteneur.innerHTML = "";
+  for (const groupe of entreeActive.groupes ?? []) {
+    const rangee = document.createElement("div");
+    rangee.className = "pilules";
+    for (const [valeur, libelle] of groupe.options) {
+      const bouton = document.createElement("button");
+      bouton.textContent = libelle;
+      bouton.classList.toggle("actif", valeurs[groupe.cle] === valeur);
+      bouton.addEventListener("click", () => {
+        valeurs[groupe.cle] = valeur;
+        [...rangee.children].forEach((b) => b.classList.toggle("actif", b === bouton));
+        dessinerApercu();
+      });
+      rangee.appendChild(bouton);
+    }
+    conteneur.appendChild(rangee);
+  }
+  const toggles = entreeActive.toggles ?? [];
+  if (toggles.length) {
+    const rangee = document.createElement("div");
+    rangee.className = "pilules";
+    for (const toggle of toggles) {
+      const bouton = document.createElement("button");
+      bouton.textContent = toggle.libelle;
+      bouton.classList.toggle("actif", actifs.has(toggle.cle));
+      bouton.addEventListener("click", () => {
+        actifs.has(toggle.cle) ? actifs.delete(toggle.cle) : actifs.add(toggle.cle);
+        bouton.classList.toggle("actif", actifs.has(toggle.cle));
+        dessinerApercu();
+      });
+      rangee.appendChild(bouton);
+    }
+    conteneur.appendChild(rangee);
+  }
+}
+
+function ouvrirSerie(nomSerie) {
+  serieActive = SERIES.find((s) => s.nom === nomSerie) ?? SERIES[0];
+  cleObjetActif = null;
+  entreeActive = null;
   $("vueObjet").hidden = true;
   $("vueSerie").hidden = false;
   $("filAriane").textContent = "";
-  [...$("chipsSeries").children].forEach((c) => c.classList.toggle("actif", c.textContent === serie));
+  [...$("chipsSeries").children].forEach((c) => c.classList.toggle("actif", c.textContent === serieActive.nom));
   const vitrine = $("vitrineObjets");
   vitrine.innerHTML = "";
-  for (const [cle, entree] of Object.entries(FIGURES_USUELLES)) {
-    if (entree.categorie !== serie) continue;
-    const description = entree.decrire();
-    description.sortie = { taille: 130, marge: 32 };
-    const svg = entree.genre === "cercle" ? dessinerCercle(description) : dessinerFigure(description);
+  for (const [cle, entree] of Object.entries(serieActive.objets)) {
     const vignette = document.createElement("figure");
     vignette.className = "vignette";
+    let svg = "";
+    let probleme = null;
+    try {
+      svg = entree.vignette
+        ? entree.vignette()
+        : entree.dessiner(valeursParDefaut(entree), actifsParDefaut(entree), 130);
+    } catch (erreur) {
+      probleme = erreur.message;
+    }
     vignette.innerHTML = `${svg}<figcaption></figcaption>`;
-    vignette.querySelector("figcaption").textContent = entree.titre;
+    vignette.querySelector("figcaption").textContent = probleme
+      ? `${entree.titre} : ERREUR — ${probleme}`
+      : entree.titre;
     vignette.addEventListener("click", () => ouvrirObjet(cle));
     vitrine.appendChild(vignette);
   }
@@ -224,75 +227,39 @@ function ouvrirSerie(serie) {
 }
 
 function ouvrirObjet(cle) {
-  objetActif = cle;
-  const entree = FIGURES_USUELLES[cle];
+  cleObjetActif = cle;
+  entreeActive = serieActive.objets[cle];
   $("vueSerie").hidden = true;
   $("vueObjet").hidden = false;
-  $("filAriane").textContent = `· ${serieActive}`;
-  $("titreObjet").textContent = entree.titre;
-  actives.clear();
-  actives.add("codages");
-  actives.add("noms");
-  if (entree.genre === "cercle") { actives.add("centre"); actives.add("rayon"); }
-  const zone = $("parametresObjet");
-  zone.innerHTML = "";
-  for (const parametre of entree.parametres) {
-    const label = document.createElement("label");
-    label.className = "reglage";
-    const sortie = document.createElement("output");
-    const curseur = document.createElement("input");
-    curseur.type = "range";
-    curseur.min = parametre.min; curseur.max = parametre.max;
-    curseur.step = parametre.pas ?? 0.5; curseur.value = parametre.defaut;
-    curseur.dataset.cle = parametre.cle;
-    sortie.textContent = String(parametre.defaut).replace(".", ",");
-    curseur.addEventListener("input", () => {
-      sortie.textContent = String(curseur.value).replace(".", ",");
-      dessinerApercu(); plancheObjet();
-    });
-    label.append(`${parametre.libelle} `, curseur, sortie);
-    zone.appendChild(label);
-  }
-  const pilules = $("pilulesObjet");
-  pilules.innerHTML = "";
-  for (const [cleCapacite, libelle] of capacitesDe(cle)) {
-    const bouton = document.createElement("button");
-    bouton.textContent = libelle;
-    bouton.classList.toggle("actif", actives.has(cleCapacite));
-    bouton.addEventListener("click", () => {
-      actives.has(cleCapacite) ? actives.delete(cleCapacite) : actives.add(cleCapacite);
-      bouton.classList.toggle("actif", actives.has(cleCapacite));
-      dessinerApercu();
-    });
-    pilules.appendChild(bouton);
-  }
+  $("filAriane").textContent = `· ${serieActive.nom}`;
+  $("titreObjet").textContent = entreeActive.titre;
+  valeurs = valeursParDefaut(entreeActive);
+  actifs = actifsParDefaut(entreeActive);
+  construireCurseurs();
+  construirePilules();
   dessinerApercu();
-  plancheObjet();
+  dessinerPlanche();
   window.scrollTo(0, 0);
 }
 
-for (const serie of CATEGORIES_FIGURES) {
+for (const serie of SERIES) {
   const bouton = document.createElement("button");
-  bouton.textContent = serie;
-  bouton.addEventListener("click", () => ouvrirSerie(serie));
+  bouton.textContent = serie.nom;
+  bouton.addEventListener("click", () => ouvrirSerie(serie.nom));
   $("chipsSeries").appendChild(bouton);
 }
-$("btnRetourSerie").addEventListener("click", () => ouvrirSerie(serieActive));
-$("choixTheme").addEventListener("change", dessinerApercu);
-$("regleRotation").addEventListener("input", () => {
-  $("valRotation").textContent = `${$("regleRotation").value}°`;
-  dessinerApercu();
-});
+$("btnRetourSerie").addEventListener("click", () => ouvrirSerie(serieActive.nom));
 $("btnSvg").addEventListener("click", () => {
+  if (!dernierSvg) return;
   const blob = new Blob([dernierSvg], { type: "image/svg+xml" });
   const lien = document.createElement("a");
   lien.href = URL.createObjectURL(blob);
-  lien.download = `${objetActif}.svg`;
+  lien.download = `${cleObjetActif}.svg`;
   lien.click();
   URL.revokeObjectURL(lien.href);
 });
 
-ouvrirSerie(serieActive);
+ouvrirSerie(SERIES[0].nom);
 </script>
 </body>
 </html>
