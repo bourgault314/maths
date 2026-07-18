@@ -22,12 +22,23 @@
     padding:16px 16px 132px;max-width:1020px;margin-inline:auto}
   @media(min-width:700px){body{padding:24px 24px 120px}}
 
-  /* ————— En-tête ————— */
-  header h1{font-family:Fredoka,"Segoe UI",sans-serif;color:var(--bleu);
-    font-size:clamp(26px,4vw,34px);margin:4px 0 0;display:flex;align-items:center;gap:12px;flex-wrap:wrap}
-  .badge-beta{font-family:Fredoka;font-size:13px;font-weight:600;letter-spacing:.4px;
-    color:#fff;background:var(--orange);border-radius:999px;padding:4px 12px;transform:translateY(2px)}
-  .sous-titre{color:var(--attenue);margin:4px 0 20px;font-size:14px;line-height:1.45}
+  /* ————— En-tête « duo » de l'application (logo + titre, liseré tricolore) ————— */
+  .entete-site{position:relative;display:flex;align-items:center;justify-content:center;gap:16px;
+    overflow:hidden;background:var(--papier);border:1px solid var(--ligne);border-radius:20px;
+    padding:14px 16px 12px;box-shadow:0 8px 24px rgba(16,41,74,.06)}
+  .entete-site::before{content:"";position:absolute;top:0;right:0;left:0;height:4px;
+    border-radius:20px 20px 0 0;background:linear-gradient(90deg,var(--turquoise),var(--bleu),var(--orange))}
+  .lien-logo{display:inline-flex;align-items:center;border-radius:12px;outline-offset:4px}
+  .lien-logo:focus-visible{outline:3px solid var(--orange)}
+  .logo{height:58px;object-fit:contain}
+  .titre-site{display:flex;flex-direction:column;align-items:center}
+  .titre-site h1{font-family:Fredoka,"Segoe UI",sans-serif;font-weight:600;color:var(--bleu);
+    font-size:clamp(22px,3.4vw,27px);line-height:1.05;margin:0;text-align:center}
+  .titre-site .titre-cycle{display:block;margin-top:.18em;font-size:.68em;letter-spacing:.02em;font-weight:600}
+  .badge-beta{margin-top:7px;font-family:Fredoka;font-size:11px;font-weight:600;letter-spacing:.5px;
+    color:#fff;background:var(--orange);border-radius:999px;padding:3px 10px}
+  @media(max-width:480px){.logo{height:46px}.entete-site{gap:12px;padding:12px 12px 10px}}
+  .sous-titre{color:var(--attenue);margin:10px 4px 20px;font-size:13px;line-height:1.45;text-align:center}
 
   /* ————— Cartes et étapes ————— */
   section.carte{background:var(--papier);border:1px solid var(--ligne);border-radius:20px;
@@ -50,15 +61,32 @@
   .segments button.est-actif{background:var(--bleu);color:#fff;
     box-shadow:0 4px 12px rgba(6,63,134,.28)}
   .segments button:focus-visible{outline:3px solid rgba(6,63,134,.4);outline-offset:2px}
-  @media(max-width:640px){.segments button{min-height:46px}}
+
+  /* DNB n'est pas un niveau de classe : trait de séparation et couleur à part */
+  .separation-epreuve{width:1px;align-self:stretch;margin:5px 3px;background:var(--ligne);flex:none}
+  .segments .bouton-epreuve.est-actif{background:var(--orange);box-shadow:0 4px 12px rgba(245,130,32,.30)}
+  .segments .bouton-epreuve:focus-visible{outline-color:rgba(245,130,32,.5)}
+  .note-champ{margin:6px 4px 0;font-size:12px;color:var(--attenue);line-height:1.35}
+
+  /* Sur téléphone : Aide et Mode côte à côte, marges resserrées (l'étape 1
+     tenait presque un écran entier) */
+  @media(max-width:640px){
+    .segments button{min-height:44px;font-size:13.5px;padding:8px 6px}
+    .grille-reglages{grid-template-columns:1fr 1fr;gap:12px 10px}
+    .champ-niveau,.champ-questions{grid-column:1 / -1}
+    section.carte{padding:14px}
+    .entete-etape{margin-bottom:12px}
+    .champ label{margin-bottom:4px}
+  }
 
   /* ————— Choix des automatismes ————— */
   .barre-choix{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:16px}
   .barre-choix .entete-etape{margin-bottom:0}
   #toutDeselectionner{border:1px solid var(--ligne);background:#fff;color:var(--attenue);
     font:inherit;font-size:13.5px;font-weight:600;border-radius:999px;padding:8px 16px;cursor:pointer}
-  #toutDeselectionner:hover{background:var(--fond-doux);color:var(--encre)}
+  #toutDeselectionner:hover:not(:disabled){background:var(--fond-doux);color:var(--encre)}
   #toutDeselectionner:focus-visible{outline:3px solid rgba(6,63,134,.4);outline-offset:2px}
+  #toutDeselectionner:disabled{opacity:.4;cursor:default}
 
   .theme-group{border:1px solid var(--ligne);border-radius:16px;background:#fff;margin-bottom:12px;overflow:hidden}
   .theme-group[open]{border-color:#b9d2e8;box-shadow:0 8px 24px rgba(16,41,74,.07)}
@@ -125,7 +153,15 @@
 </head>
 <body>
 <header>
-  <h1>Automatismes <span class="badge-beta">bêta du nouveau menu</span></h1>
+  <div class="entete-site">
+    <a class="lien-logo" href="https://mathsgo.re/outils/" aria-label="Retour aux outils maths&amp;go" title="Retour aux outils maths&amp;go">
+      <img class="logo" src="../../auto/assets/logo-mathsgo.png" alt="maths&amp;go">
+    </a>
+    <div class="titre-site">
+      <h1>Automatismes<span class="titre-cycle">Cycle 4 – DNB</span></h1>
+      <span class="badge-beta">bêta du nouveau menu</span>
+    </div>
+  </div>
   <p class="sous-titre">Page interne de chantier maths&amp;go — le menu est neuf, les questions
   s’ouvrent dans l’application Automatismes actuelle.</p>
 </header>
@@ -137,30 +173,32 @@
       <h2 id="titreReglages">Préparer la série</h2>
     </div>
     <div class="grille-reglages">
-      <div class="champ">
+      <div class="champ champ-niveau">
         <label id="etiquetteNiveau">Niveau</label>
         <div class="segments" data-reglage="level" role="group" aria-labelledby="etiquetteNiveau">
           <button type="button" data-value="5e" aria-pressed="false">5e</button>
           <button type="button" data-value="4e" aria-pressed="false">4e</button>
           <button type="button" class="est-actif" data-value="3e" aria-pressed="true">3e</button>
-          <button type="button" data-value="DNB" aria-pressed="false">DNB</button>
+          <span class="separation-epreuve" aria-hidden="true"></span>
+          <button type="button" class="bouton-epreuve" data-value="DNB" aria-pressed="false">DNB</button>
         </div>
+        <p class="note-champ">DNB : révision de l’épreuve (le niveau 3e l’inclut déjà)</p>
       </div>
-      <div class="champ">
+      <div class="champ champ-aide">
         <label id="etiquetteAide">Aide</label>
         <div class="segments" data-reglage="visualMode" role="group" aria-labelledby="etiquetteAide">
           <button type="button" class="est-actif" data-value="with" aria-pressed="true">Avec aide</button>
           <button type="button" data-value="without" aria-pressed="false">Sans aide</button>
         </div>
       </div>
-      <div class="champ">
+      <div class="champ champ-mode">
         <label id="etiquetteMode">Mode</label>
         <div class="segments" data-reglage="experienceMode" role="group" aria-labelledby="etiquetteMode">
           <button type="button" data-value="presentation" aria-pressed="false">Diaporama</button>
           <button type="button" class="est-actif" data-value="interactive" aria-pressed="true">Interactif</button>
         </div>
       </div>
-      <div class="champ">
+      <div class="champ champ-questions">
         <label id="etiquetteQuestions">Questions</label>
         <div class="segments" data-reglage="count" role="group" aria-labelledby="etiquetteQuestions">
           <button type="button" class="est-actif" data-value="5" aria-pressed="true">5</button>

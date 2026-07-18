@@ -181,6 +181,7 @@
     bouton.textContent = reglages.experienceMode === 'interactive'
       ? 'Lancer l’entraînement'
       : 'Lancer le diaporama';
+    document.getElementById('toutDeselectionner').disabled = total === 0;
   }
 
   function lancer() {
