@@ -1,0 +1,227 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex, nofollow">
+<title>Maquettes — écran élève Pourcentages (interne)</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{--page:#f6f8fb;--papier:#fff;--encre:#10294a;--bleu:#063f86;--attenue:#637287;--ligne:#dce5ef;
+    --vert:#10b981;--accent:#3f7cff}
+  *{box-sizing:border-box}
+  [hidden]{display:none !important}
+  body{margin:0;background:var(--page);color:var(--encre);font-family:"Segoe UI",system-ui,sans-serif;
+    padding:14px;max-width:1100px;margin-inline:auto}
+  h1{font-family:Fredoka;color:var(--bleu);font-size:clamp(20px,4vw,28px);margin:6px 0 2px}
+  .sous{color:var(--attenue);margin:0 0 14px;font-size:13.5px}
+  .retour{font-size:14px;margin:0 0 6px}
+  .retour a{color:#0369a1;font-weight:700;text-decoration:none}
+  .chips{display:flex;flex-wrap:wrap;gap:8px;margin:0 0 14px}
+  .chips button{font-family:Fredoka;font-weight:600;font-size:14.5px;padding:9px 16px;min-height:44px;
+    border-radius:999px;border:2px solid var(--ligne);background:#fff;color:var(--encre);cursor:pointer}
+  .chips button.actif{background:linear-gradient(180deg,#60a5fa,#3b82f6);color:#fff;border-color:#3b82f6}
+  .explication{background:#fff;border:1px solid var(--ligne);border-radius:14px;padding:10px 14px;
+    font-size:13.5px;color:var(--attenue);margin:0 0 14px;line-height:1.45}
+  .explication b{color:var(--encre)}
+
+  /* Le « téléphone » : plein écran sur mobile, cadre 375px sur PC. */
+  .telephone{background:#fff;border:1px solid var(--ligne);border-radius:22px;overflow:hidden;
+    display:flex;flex-direction:column;margin-inline:auto;box-shadow:0 12px 34px rgba(16,41,74,.10)}
+  @media(min-width:700px){.telephone{width:375px;height:740px}}
+  @media(max-width:699px){.telephone{min-height:calc(100vh - 190px)}}
+
+  .ecran{flex:1;display:flex;flex-direction:column;overflow-y:auto}
+  .enTete{display:flex;align-items:center;justify-content:space-between;gap:8px;
+    padding:8px 12px;border-bottom:1px solid var(--ligne);font-family:Fredoka;font-size:13px;color:var(--attenue)}
+  .enTete .serie{font-weight:600}
+  .points{display:flex;gap:5px}
+  .points i{width:8px;height:8px;border-radius:50%;background:#dbe4f0}
+  .points i.fait{background:var(--vert)}
+  .points i.encours{background:var(--accent)}
+
+  .enonce{padding:14px 16px 6px;font-size:19px;font-weight:600;line-height:1.35;text-align:center}
+  .enonce .contexte{font-weight:400;font-size:16px}
+  .schema{padding:4px 8px}
+  .schema svg{display:block;width:100%;height:auto}
+  .indiceBtn{margin:2px auto 6px;display:block;font:inherit;font-size:14px;font-weight:700;
+    color:#1d4ed8;background:#eff6ff;border:1px solid #bfdbfe;border-radius:999px;padding:8px 16px;cursor:pointer}
+
+  .reponse{margin-top:auto;padding:8px 12px 4px;display:flex;align-items:center;justify-content:center;gap:8px}
+  .champ{min-width:120px;min-height:46px;border:2px solid var(--ligne);border-radius:12px;
+    display:flex;align-items:center;justify-content:center;font-size:24px;font-weight:700;background:#fbfdff}
+  .champ.ok{border-color:var(--vert);background:#f0fdf4;color:#166534}
+  .champ.non{border-color:#fca5a5;background:#fef2f2;color:#b91c1c}
+  .unite{font-size:16px;color:var(--attenue);font-weight:600}
+  .verdict{text-align:center;font-size:15.5px;font-weight:700;min-height:22px;padding:0 12px 4px}
+  .verdict.bon{color:#166534}
+  .verdict.mauvais{color:#b91c1c}
+  .zoneClavier{padding:4px 10px 10px}
+
+  /* Le clavier fourni (objet officiel) */
+  .clavier-mathsgo{display:grid;grid-template-columns:repeat(3,1fr);gap:6px}
+  .clavier-touche{font:inherit;font-size:20px;font-weight:700;min-height:46px;border-radius:10px;
+    border:1px solid var(--ligne);background:#fbfdff;color:var(--encre);cursor:pointer}
+  .clavier-touche:active{transform:translateY(1px)}
+  .clavier-touche[data-touche="OK"]{background:linear-gradient(180deg,#34d399,#10b981);color:#fff;border-color:#10b981}
+  .clavier-touche[data-touche="⌫"]{background:#fff7ed;color:#9a3412;border-color:#fed7aa}
+
+  /* Variante B : schéma permanent, clavier repliable */
+  .maquetteB .schema{background:linear-gradient(180deg,#fbfdff,#f4f8fd);border-block:1px solid #eef2f8}
+
+  /* Variante C : bandeau énoncé compact + barre d'actions basse */
+  .maquetteC .enonce{font-size:16px;padding:10px 14px 4px}
+  .barreActions{display:flex;gap:8px;padding:8px 10px;border-top:1px solid var(--ligne);background:#fbfdff}
+  .barreActions button{flex:1;font:inherit;font-size:14.5px;font-weight:700;min-height:46px;border-radius:12px;
+    border:1px solid var(--ligne);background:#fff;color:var(--encre);cursor:pointer}
+  .barreActions button.principal{background:linear-gradient(180deg,#60a5fa,#3b82f6);color:#fff;border-color:#3b82f6}
+</style>
+</head>
+<body>
+<p class="retour"><a href="./index.html">← Retour à l'Atelier</a></p>
+<h1>Écran élève Pourcentages — trois maquettes</h1>
+<p class="sous">À regarder <b>sur téléphone</b> (sur PC, le cadre simule un écran de 375 px). Les trois utilisent le vrai moteur,
+le vrai schéma et le vrai clavier fourni. C'est toujours l'élève qui entre la réponse.</p>
+
+<div class="chips" id="choixMaquette">
+  <button data-m="A" class="actif">A · Diapo</button>
+  <button data-m="B">B · Schéma d'abord</button>
+  <button data-m="C">C · Compact + barre basse</button>
+</div>
+
+<div class="explication" id="explication"></div>
+
+<div class="telephone" id="telephone"></div>
+
+<script type="module">
+import { dessinerBarrePourcentage } from "../../packages/objets/src/barre-pourcentage.js";
+import { construireSerie } from "../../packages/objets/src/pourcentages.js";
+import { creerClavier } from "../../packages/objets/src/clavier.js";
+
+const EXPLICATIONS = {
+  A: "<b>A · Diapo</b> — l'héritière de ton diaporama : l'énoncé domine, le schéma n'apparaît qu'en appuyant sur « Indice », le clavier est toujours en bas. Le schéma est une aide qu'on choisit de révéler.",
+  B: "<b>B · Schéma d'abord</b> — le schéma est visible dès le départ (c'est lui l'outil de pensée), l'énoncé reste au-dessus, la saisie et le clavier en dessous. Zéro bouton d'indice : une étape de moins.",
+  C: "<b>C · Compact + barre basse</b> — énoncé resserré, schéma compacté (cases réduites), et la barre d'actions collée en bas comme dans l'Atelier ÉquaBarre (Indice / Vérifier / Suivant sous le pouce). Le clavier se replie quand on n'écrit pas.",
+};
+
+const serie = construireSerie({
+  types: ["base_50", "base_20", "base_10", "mult_10", "base_25"],
+  niveaux: [1],
+  nombres: ["entiers"],
+  quantite: 5,
+  graine: "maquette-2026",
+});
+
+let maquette = "A";
+let indice = 0;
+let saisie = "";
+let etat = "question"; // question | indice | juge
+let dernierVerdict = null;
+let clavierActif = null;
+
+const $ = (id) => document.getElementById(id);
+
+function question() {
+  return serie.questions[indice];
+}
+
+function reponseAttendue() {
+  return String(question().calcVal).replace(".", ",");
+}
+
+function dessinerSchema(compact) {
+  const options = compact
+    ? { largeurTotale: 460, hauteurBarre: 42, chemin: false }
+    : { largeurTotale: 700, hauteurBarre: 54 };
+  return dessinerBarrePourcentage(question(), { ...options, correction: etat === "juge" && dernierVerdict === true }).svg;
+}
+
+function pointsHtml() {
+  return `<span class="points">${serie.questions
+    .map((_, i) => `<i class="${i < indice ? "fait" : i === indice ? "encours" : ""}"></i>`)
+    .join("")}</span>`;
+}
+
+function verdictHtml() {
+  if (etat !== "juge") return '<div class="verdict"></div>';
+  if (dernierVerdict) return '<div class="verdict bon">✔ C\'est juste !</div>';
+  return `<div class="verdict mauvais">✘ Pas encore — regarde le schéma.</div>`;
+}
+
+function surTouche(touche) {
+  if (touche === "⌫") saisie = saisie.slice(0, -1);
+  else if (touche === "OK") {
+    if (!saisie) return;
+    dernierVerdict = saisie === reponseAttendue();
+    etat = "juge";
+    if (dernierVerdict) {
+      setTimeout(() => {
+        if (indice < serie.questions.length - 1) {
+          indice++;
+          saisie = "";
+          etat = "question";
+          dernierVerdict = null;
+          rendre();
+        }
+      }, 1600);
+    }
+  } else if (saisie.length < 8) saisie += touche;
+  rendre();
+}
+
+function montrerIndice() {
+  etat = "indice";
+  rendre();
+}
+
+function rendre() {
+  const q = question();
+  const tel = $("telephone");
+  tel.className = `telephone maquette${maquette}`;
+  const enTete = `<div class="enTete"><span class="serie">Pourcentages · ${indice + 1}/${serie.questions.length}</span>${pointsHtml()}</div>`;
+  const champ = `<div class="reponse"><div class="champ ${etat === "juge" ? (dernierVerdict ? "ok" : "non") : ""}">${saisie || "&nbsp;"}</div><span class="unite">${q.unite.trim()}</span></div>`;
+  const clavier = `<div class="zoneClavier" id="zoneClavier"></div>`;
+  const schemaVisible = maquette === "B" || etat !== "question";
+  const schema = schemaVisible ? `<div class="schema">${dessinerSchema(maquette === "C")}</div>` : "";
+  const indiceBtn =
+    maquette !== "B" && etat === "question" && maquette !== "C"
+      ? `<button class="indiceBtn" id="btnIndice">💡 Indice : le schéma</button>`
+      : "";
+
+  if (maquette === "C") {
+    const actions = `<div class="barreActions">
+      ${etat === "question" ? '<button id="btnIndice">💡 Indice</button>' : ""}
+      <button class="principal" id="btnOk">Vérifier</button>
+    </div>`;
+    tel.innerHTML = `<div class="ecran">${enTete}<div class="enonce">${q.enonceHtml}</div>${schema}${champ}${verdictHtml()}${clavier}</div>${actions}`;
+  } else {
+    tel.innerHTML = `<div class="ecran">${enTete}<div class="enonce">${q.enonceHtml}</div>${indiceBtn}${schema}${champ}${verdictHtml()}${clavier}</div>`;
+  }
+
+  if (clavierActif) clavierActif.detruire();
+  clavierActif = creerClavier($("zoneClavier"), { disposition: "nombres", surTouche });
+  const btnIndice = $("btnIndice");
+  if (btnIndice) btnIndice.addEventListener("click", montrerIndice);
+  const btnOk = $("btnOk");
+  if (btnOk) btnOk.addEventListener("click", () => surTouche("OK"));
+}
+
+$("choixMaquette").addEventListener("click", (e) => {
+  const bouton = e.target.closest("button[data-m]");
+  if (!bouton) return;
+  maquette = bouton.dataset.m;
+  [...$("choixMaquette").children].forEach((b) => b.classList.toggle("actif", b === bouton));
+  $("explication").innerHTML = EXPLICATIONS[maquette];
+  indice = 0;
+  saisie = "";
+  etat = "question";
+  dernierVerdict = null;
+  rendre();
+});
+
+$("explication").innerHTML = EXPLICATIONS.A;
+rendre();
+</script>
+</body>
+</html>
