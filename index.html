@@ -79,7 +79,7 @@
           <a class="scene-link" href="outils/index.html?domain=geometrie" aria-label="Espace et géométrie">
           <title>Espace et géométrie</title>
           <rect class="scene-hit" x="323" y="2" width="93" height="98" rx="18"/>
-          <g id="frise-geometrie" transform="translate(354 22) rotate(3 39 37)"><g class="scene-item">
+          <g transform="translate(354 22) rotate(3 39 37)"><g class="scene-item">
             <path d="M0 27h18v18H0Z" fill="#dceeff" stroke="#0879d0" stroke-width="1.7" stroke-linejoin="round"/>
             <path d="M18 45h24v24H18Z" fill="#fff0d8" stroke="#e89516" stroke-width="1.7" stroke-linejoin="round"/>
             <path d="M18 27 36 3l24 18-18 24Z" fill="#e2f5e8" stroke="#24994d" stroke-width="1.7" stroke-linejoin="round"/>
@@ -93,7 +93,7 @@
           <a class="scene-link" href="outils/index.html?domain=nombres-calculs" aria-label="Nombres et calculs">
           <title>Nombres et calculs</title>
           <rect class="scene-hit" x="419" y="2" width="127" height="98" rx="18"/>
-          <g id="frise-nombres" transform="translate(428 28) scale(.82)"><g class="scene-item">
+          <g transform="translate(428 28) scale(.82)"><g class="scene-item">
             <ellipse cx="54" cy="53" rx="51" ry="4" fill="#0f172a" opacity=".08"/>
             <rect x="3" y="4" width="102" height="46" rx="5" fill="#fff4cf" stroke="#9a5b12" stroke-width="2"/>
             <path d="M8 19h92M8 36h92" stroke="#7c4810" stroke-width="1.6"/>
@@ -245,27 +245,23 @@
       document.addEventListener("keydown", (event) => { if (event.key === "Escape") document.querySelectorAll(".modal-overlay.is-open").forEach((modal) => closeModal(modal.id)); });
     })();
 
-    // Frise vivante : trois dessins sont regénérés à chaque chargement par la
-    // fabrique d'icônes des Automatismes (auto/scripts/00-setup-icons.js), et
-    // les dés retombent sur de nouvelles faces. Sans script, les dessins
-    // statiques ci-dessus restent en place.
+    // Frise vivante : le diagramme des données est regénéré à chaque
+    // chargement par la fabrique d'icônes des Automatismes
+    // (auto/scripts/00-setup-icons.js), débarrassé de son cadre pour rester
+    // un objet posé comme les autres dessins ; les dés retombent sur de
+    // nouvelles faces. Sans script, les dessins statiques restent en place.
     (() => {
-      const GENERATIVES = [
-        { id: "frise-nombres", theme: "numbers", transform: "translate(448.5 17)", taille: 68 },
-        { id: "frise-geometrie", theme: "geometry", transform: "translate(335.5 17)", taille: 68 },
-        { id: "frise-donnees", theme: "data", transform: "translate(134.5 121)", taille: 62 },
-      ];
       const installerIcones = () => {
         const fabrique = window.MATHSGO_SETUP_ICONS;
         if (!fabrique || typeof fabrique.markup !== "function") return;
-        for (const { id, theme, transform, taille } of GENERATIVES) {
-          const cadre = document.getElementById(id);
-          const item = cadre && cadre.querySelector(".scene-item");
-          const markup = item && fabrique.markup(theme);
-          if (!markup || !markup.startsWith("<svg ")) continue;
-          cadre.setAttribute("transform", transform);
-          item.innerHTML = markup.replace("<svg ", `<svg width="${taille}" height="${taille}" `);
-        }
+        const cadre = document.getElementById("frise-donnees");
+        const item = cadre && cadre.querySelector(".scene-item");
+        const markup = item && fabrique.markup("data");
+        if (!markup || !markup.startsWith("<svg ")) return;
+        cadre.setAttribute("transform", "translate(135 121)");
+        item.innerHTML = markup
+          .replace(/<rect x="3\.5"[^>]*\/>/, "")
+          .replace('viewBox="0 0 36 36"', 'width="60" height="61.5" viewBox="7.5 8 21 21.5"');
       };
       const FACES = {
         1: [[.5, .5]],
