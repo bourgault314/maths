@@ -108,13 +108,23 @@ Sur les 22 objets de `packages/objets/src/` : **aucun `formula_code`, aucun impo
 aucun SVG copié, aucune liste de distracteurs empruntée.** L'audit a comparé *chaque constante
 hexadécimale* de nos objets contre `auto/` et contre `outils/`.
 
-Trois emprunts seulement, tous mineurs, tous des couleurs :
+L'audit avait cru relever trois emprunts de couleurs (`jetons.js`, `thales.js`,
+`studio/components/pythagore/visuals.js`) : des teintes présentes dans `auto/` et absentes de
+`outils/`, dont il déduisait un emprunt.
 
-| Fichier | Emprunt | Correctif |
-| --- | --- | --- |
-| `jetons.js` | 2 aplats (`#2e9e5b`, `#d9584b`) identiques à `relative-tokens.js` de `auto/`, absents de `outils/` | remplacer par des teintes de la charte |
-| `thales.js` | 3 couleurs de `COULEURS_THALES` identiques à `thales-configuration.js` de `auto/` | idem — la construction géométrique, elle, est originale |
-| `studio/components/pythagore/visuals.js` | 6 teintes de `PYTHAGORE_COLORS` identiques à `03-slideshow.js`, même sémantique | **question ouverte** : viennent-elles d'une version antérieure de PythaBarre ? |
+### Ce raisonnement était faux — correction de Gwenaël, 18 juillet 2026
+
+Il ignorait **qui avait écrit `auto/`**. L'application d'origine était en **noir et blanc** :
+des questions, rien d'autre. Aucun visuel, aucune couleur, aucune aide. Tout ce qui est visuel
+dans `auto/` — les couleurs, les schémas, la bibliothèque de 27 composants, le système d'aide,
+le diaporama, l'interface mobile — **a été ajouté par Gwenaël**.
+
+Ces cinq couleurs sont donc les siennes, reprises d'un de ses fichiers vers un autre.
+
+**La fondation V2 ne contient aucun emprunt.** C'est la conclusion corrigée, et elle est plus
+nette que la précédente. Leçon de méthode : « absent de `outils/` » ne voulait pas dire
+« vient d'ailleurs » — il fallait d'abord établir la paternité de `auto/`, ce qu'aucun grep ne
+pouvait faire.
 
 Cas confirmés propres, contre l'intuition : `pourcentages.js` (énoncés retrouvés mot pour mot
 dans l'exerciceur de Gwenaël, absents de `auto/`) et `barre-pourcentage.js` (les mentions de
@@ -142,9 +152,16 @@ pour ne pas être oubliées, sans dramatisation.
 
 ## 6. Ce que l'audit conclut
 
-La dette est **réelle, mesurée, et beaucoup plus concentrée qu'on pouvait le craindre** :
-elle tient presque entièrement dans les `formula_code` de `auto/` et leur interpréteur.
+La dette est **réelle, mesurée, et beaucoup plus concentrée qu'on pouvait le craindre** : elle
+tient dans ce qui vient de l'archive d'origine — les énoncés, les valeurs, les distracteurs et
+surtout les 279 `formula_code` avec leur interpréteur.
 
-Tout ce qui a été reconstruit ces dernières semaines — les barres, les jetons, le Splat, les
-figures, les solides, Thalès, les pourcentages, Pythagore — appartient à maths&go, à cinq
-couleurs près.
+Tout le reste appartient à maths&go. Non seulement ce qui a été reconstruit ces dernières
+semaines — les barres, les jetons, le Splat, les figures, les solides, Thalès, les
+pourcentages, Pythagore — mais aussi **la plus grande partie de `auto/` lui-même** : les
+visuels, les couleurs, l'aide, le diaporama, l'interface. L'application de départ n'était que
+du texte en noir et blanc.
+
+C'est ce qui rend la reconstruction du générateur raisonnable : il ne s'agit pas de tout
+refaire, mais de remplacer le noyau textuel hérité sous une couche visuelle et pédagogique qui
+est déjà, entièrement, celle de Gwenaël.

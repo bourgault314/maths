@@ -56,11 +56,9 @@ export const PROVENANCE_OBJETS = {
     note: "Le concept Splat est crédité à son auteur ; le dessin et le code sont maths&go.",
   },
   "jetons.js": {
-    statut: "reconstruit",
+    statut: "original_mathsgo",
     source: "outils/ — trois habillages relevés dans ses propres codes",
-    aRemplacer: [
-      "Les deux aplats #2e9e5b / #d9584b viennent de auto/scripts/shared/visuals/numbers/relative-tokens.js (absents de outils/) : à remplacer par des teintes de la charte.",
-    ],
+    note: "Les aplats #2e9e5b / #d9584b viennent de auto/, non de outils/ — l'audit y avait vu un emprunt. Correction de Gwenaël (18/07) : l'application d'origine était en NOIR ET BLANC, sans aide ni visuel ; tous les visuels et toutes les couleurs de auto/ sont de lui. Ces teintes sont donc les siennes.",
   },
   "redaction.js": { statut: "original_mathsgo", source: "gabarits de rédaction de Gwenaël" },
   "fleche.js": { statut: "original_mathsgo", source: "outils/equabarre.html (operationArrowSvg)" },
@@ -75,11 +73,9 @@ export const PROVENANCE_OBJETS = {
   "triangle.js": { statut: "reconstruit", source: "prototype, redessiné à neuf" },
   "configurations-angles.js": { statut: "original_mathsgo", source: "écrit pour maths&go" },
   "thales.js": {
-    statut: "reconstruit",
+    statut: "original_mathsgo",
     source: "fiche Thalès de Gwenaël ; construction par homothétie écrite à neuf",
-    aRemplacer: [
-      "Les 3 couleurs de COULEURS_THALES (#ff9114, #11468c, #1daeae) sont identiques à celles de auto/scripts/shared/visuals/geometry/thales-configuration.js (absentes de outils/) : à remplacer par des teintes de la charte.",
-    ],
+    note: "Les 3 couleurs de COULEURS_THALES viennent du composant de auto/ — donc de Gwenaël lui-même (voir jetons.js).",
   },
 
   "pourcentages.js": {
@@ -98,9 +94,9 @@ export const PROVENANCE_OBJETS = {
     source: "outils/pythabarre.html — lu ligne à ligne",
   },
   "pythagore.js": {
-    statut: "a_auditer",
+    statut: "original_mathsgo",
     source: "outils/pythabarre.html + studio/components/pythagore/visuals.js",
-    note: "Dépend de PYTHAGORE_COLORS, dont l'origine est la seule question ouverte de l'audit (voir PROVENANCE_STUDIO).",
+    note: "Question de PYTHAGORE_COLORS tranchée par Gwenaël le 18/07 : ces couleurs sont les siennes (voir jetons.js).",
   },
 };
 
@@ -126,14 +122,36 @@ export const PROVENANCE_STUDIO = {
     note: "Échafaudage temporaire : tombe avec auto/ à la migration du moteur. Ne pas reconstruire.",
   },
   "studio/components/pythagore/visuals.js": {
-    statut: "a_auditer",
-    source: "revendique PythaBarre / Moulin de Pythagore",
-    aRemplacer: [
-      "Les 6 teintes de PYTHAGORE_COLORS figurent à l'identique dans auto/scripts/03-slideshow.js (coursePythagorasVisual), avec la même sémantique, et sont absentes de outils/ aujourd'hui.",
-    ],
-    note: "QUESTION POUR GWENAËL : ces couleurs viennent-elles d'une version de PythaBarre antérieure à celle du dépôt ? Si oui, rien à faire. Sinon, les remplacer par la charte — les géométries du moulin, elles, n'ont aucun équivalent dans auto/ et sont bien à nous.",
+    statut: "original_mathsgo",
+    source: "PythaBarre / Moulin de Pythagore",
+    note: "Les 6 teintes de PYTHAGORE_COLORS figurent aussi dans auto/scripts/03-slideshow.js : c'est le même auteur, Gwenaël. Les géométries du moulin n'ont aucun équivalent ailleurs.",
   },
 };
+
+/*
+ * CORRECTION DE GWENAËL, 18 juillet 2026 — à lire avant toute conclusion.
+ *
+ * L'audit avait cherché les couleurs de nos objets dans `outils/` ; ne les y
+ * trouvant pas, il en a déduit un emprunt à `auto/`. Le raisonnement était
+ * faux, parce qu'il ignorait qui avait écrit `auto/`.
+ *
+ * L'application d'origine était en NOIR ET BLANC : des questions, rien
+ * d'autre. Aucun visuel, aucune aide, aucune couleur. Tout ce qui est visuel
+ * dans `auto/` — les couleurs, les schémas, la bibliothèque de 27 composants,
+ * le système d'aide, le diaporama, l'interface mobile — a été ajouté par
+ * Gwenaël. En volume comme en valeur pédagogique, la majeure partie de
+ * l'application actuelle est son travail.
+ *
+ * Conséquence directe : la fondation V2 ne contient AUCUN emprunt. Les cinq
+ * « emprunts de couleurs » relevés le 18/07 étaient ses propres couleurs,
+ * reprises d'un de ses fichiers vers un autre.
+ *
+ * Ce qui reste réellement en cause se réduit à ce qui vient de l'archive
+ * d'origine : les énoncés, les valeurs, les distracteurs et les
+ * `formula_code` — voir DETTE_PRIORITAIRE. La preuve définitive viendra de
+ * la comparaison avec le fichier d'origine publié (doctools.org), qui dira
+ * ligne par ligne ce qui est de lui et ce qui ne l'est pas.
+ */
 
 /*
  * Les 43 modules de l'application Automatismes — auto/scripts/modules/.

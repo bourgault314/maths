@@ -87,13 +87,22 @@ test("modulesParStatut rend une liste triée", () => {
  */
 test("chaque chantier ouvert décrit un travail concret", async () => {
   const { chantiersOuverts } = await import("./provenance.js");
-  const chantiers = chantiersOuverts();
-  assert.ok(chantiers.length > 0, "l'audit a relevé des emprunts : ils doivent rester visibles");
-  for (const { nom, aRemplacer } of chantiers) {
+  for (const { nom, aRemplacer } of chantiersOuverts()) {
     for (const ligne of aRemplacer) {
       assert.ok(ligne.length > 40, `${nom} : chantier décrit trop vaguement — « ${ligne} »`);
     }
   }
+});
+
+/*
+ * Correction du 18/07 : les 5 « emprunts de couleurs » relevés par l'audit
+ * étaient les couleurs de Gwenaël lui-même. La fondation V2 est intégralement
+ * à nous. Si ce test venait à échouer, c'est qu'un vrai emprunt est apparu.
+ */
+test("aucun objet de la fondation n'a d'emprunt en attente", async () => {
+  const { chantiersOuverts } = await import("./provenance.js");
+  const enAttente = chantiersOuverts().map((c) => c.nom);
+  assert.deepEqual(enAttente, [], `Emprunts à traiter : ${enAttente.join(", ")}`);
 });
 
 test("la dette prioritaire pointe l'interpréteur de formula_code", () => {
