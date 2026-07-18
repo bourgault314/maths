@@ -51,6 +51,51 @@ describe("creerRegistre — garde-fous", () => {
     assert.throws(() => registre.instancier(inconnu, 1), /générateur inconnu/);
   });
 
+  it("un générateur ne peut pas écraser le schéma, l'identifiant ni l'origine", () => {
+    const registre = creerRegistre();
+    registre.enregistrer({
+      nom: "usurpateur",
+      version: 1,
+      generer: () => ({
+        schema: "faux/9",
+        id: "id-pirate",
+        origine: { falsifie: true },
+        enonce: [{ type: "texte", contenu: "Combien font 1 + 1 ?" }],
+        reponse: { type: "texte-exact", champs: [{ valeursAcceptees: ["2"] }] },
+      }),
+    });
+    const gabarit = {
+      ...gabaritSimple(),
+      id: "test-usurpation",
+      generateur: { nom: "usurpateur", version: 1 },
+      parametres: {},
+    };
+    const instance = registre.instancier(gabarit, "g1");
+    assert.equal(instance.schema, "mathsgo.question-instance/1");
+    assert.equal(instance.id, "test-usurpation@g1");
+    assert.equal(instance.origine.falsifie, undefined);
+    assert.equal(instance.origine.gabarit, "test-usurpation");
+  });
+
+  it("refuse une production qui n'est pas une donnée pure", () => {
+    const registre = creerRegistre();
+    registre.enregistrer({
+      nom: "impur",
+      version: 1,
+      generer: () => ({
+        enonce: [{ type: "texte", contenu: "x", rappel: () => 1 }],
+        reponse: { type: "texte-exact", champs: [{ valeursAcceptees: ["1"] }] },
+      }),
+    });
+    const gabarit = {
+      ...gabaritSimple(),
+      id: "test-impur",
+      generateur: { nom: "impur", version: 1 },
+      parametres: {},
+    };
+    assert.throws(() => registre.instancier(gabarit, 1), /données pures/);
+  });
+
   it("refuse une production non conforme au contrat", () => {
     const registre = creerRegistre();
     registre.enregistrer({

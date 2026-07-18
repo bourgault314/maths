@@ -34,6 +34,17 @@ describe("analyserEquation (langage ÉquaBarre)", () => {
     assert.equal(r.solution, 2);
   });
 
+  it("bloque les équations hostiles AVANT de créer les cases", () => {
+    const debut = Date.now();
+    assert.throws(() => analyserEquation("100000000x = 100000000"), /multiplication trop grande/);
+    assert.throws(() => analyserEquation("999(999(x)) = 3"), /multiplication trop grande/);
+    assert.throws(
+      () => analyserEquation("x + 1".repeat(40) + " = 5"),
+      /trop longue/,
+    );
+    assert.ok(Date.now() - debut < 200, "les refus doivent être immédiats");
+  });
+
   it("refuse ce que l'outil refuse, avec des messages clairs", () => {
     assert.throws(() => analyserEquation("x + 5"), /signe =/);
     assert.throws(() => analyserEquation("x - 2 = 5"), /soustractions/);

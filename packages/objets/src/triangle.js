@@ -199,7 +199,8 @@ export function dessinerTriangle({
       const mx = (p[0] + q[0]) / 2;
       const my = (p[1] + q[1]) / 2;
       const versExterieur = Math.atan2(my - centre[1], mx - centre[0]);
-      const etiquette = `${String(cotes[i]).replace(".", ",")}${unite ? " " + unite : ""}`;
+      const uniteSure = String(unite).replace(/[&<>"']/g, "");
+      const etiquette = `${String(cotes[i]).replace(".", ",")}${uniteSure ? " " + uniteSure : ""}`;
       morceaux.push(
         `<text x="${mx + Math.cos(versExterieur) * 20}" y="${my + Math.sin(versExterieur) * 20}" font-family="'Segoe UI', system-ui, sans-serif" font-size="16" font-weight="700" fill="${ENCRE}" text-anchor="middle" dominant-baseline="central" stroke="#ffffff" stroke-width="5" paint-order="stroke">${etiquette}</text>`,
       );

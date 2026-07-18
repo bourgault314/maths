@@ -16,6 +16,11 @@
 
 export const VERSION_EQUATION_BARRES = 1;
 
+// Garde-fous IMMÉDIATS (pas après coup) : une équation hostile comme
+// « 100000000x = … » ne doit jamais créer des millions de cases.
+export const MAX_CASES = 80;
+export const MAX_LONGUEUR_EQUATION = 120;
+
 function analyserMembre(texte, position0) {
   // Grammaire : expr := terme (+ terme)* ; terme := facteur (×? facteur)* ;
   // facteur := entier | lettre | ( expr )
@@ -65,16 +70,21 @@ function analyserMembre(texte, position0) {
       if (!multiplicationExplicite && !multiplicationImplicite) return resultat;
       if (multiplicationExplicite) i += 1;
       const droite = facteur();
-      // répétition : le côté qui est un nombre pur répète l'autre côté
+      // répétition : le côté qui est un nombre pur répète l'autre côté.
+      // Le plafond est vérifié AVANT de créer le moindre tableau.
       const nombrePur = (liste) => liste.length === 1 && liste[0].type === "nombre";
+      const repeter = (fois, morceauxARepeter) => {
+        if (fois * morceauxARepeter.length > MAX_CASES) {
+          erreur(`multiplication trop grande (maximum ${MAX_CASES} cases)`);
+        }
+        return Array.from({ length: fois }, () =>
+          morceauxARepeter.map((p) => ({ ...p })),
+        ).flat();
+      };
       if (nombrePur(resultat)) {
-        resultat = Array.from({ length: resultat[0].valeur }, () =>
-          droite.map((p) => ({ ...p })),
-        ).flat();
+        resultat = repeter(resultat[0].valeur, droite);
       } else if (nombrePur(droite)) {
-        resultat = Array.from({ length: droite[0].valeur }, () =>
-          resultat.map((p) => ({ ...p })),
-        ).flat();
+        resultat = repeter(droite[0].valeur, resultat);
       } else {
         erreur("multiplication entre deux expressions à inconnue non gérée");
       }
@@ -97,7 +107,7 @@ function analyserMembre(texte, position0) {
     }
     erreur(`symbole inattendu « ${texteSansEspaces[i]} »`);
   }
-  if (pieces.length > 80) erreur("membre trop long (80 cases maximum)");
+  if (pieces.length > MAX_CASES) erreur(`membre trop long (${MAX_CASES} cases maximum)`);
   return pieces;
 }
 
@@ -110,6 +120,9 @@ function analyserMembre(texte, position0) {
 export function analyserEquation(texte) {
   if (typeof texte !== "string" || !texte.includes("=")) {
     throw new RangeError("équation : un signe = est requis");
+  }
+  if (texte.length > MAX_LONGUEUR_EQUATION) {
+    throw new RangeError(`équation : trop longue (maximum ${MAX_LONGUEUR_EQUATION} caractères)`);
   }
   const [gauche, droite, ...reste] = texte.split("=");
   if (reste.length > 0) throw new RangeError("équation : un seul signe = attendu");

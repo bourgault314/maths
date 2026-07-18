@@ -16,6 +16,7 @@
 // (gabarit, graine) redonne toujours exactement la même question.
 
 import {
+  estDonneePure,
   validerGabarit,
 } from "../../contrats/src/gabarit.js";
 import {
@@ -81,10 +82,13 @@ export function creerRegistre() {
       parametres: g.parametres,
     });
 
+    // Le produit du générateur est étalé EN PREMIER : il ne peut donc
+    // jamais écraser le schéma, l'identifiant ni la traçabilité, qui
+    // sont estampillés par le moteur après coup.
     const instance = {
+      ...produit,
       schema: SCHEMA_QUESTION_INSTANCE,
       id: `${g.id}@${String(graine)}`,
-      ...produit,
       origine: {
         gabarit: g.id,
         versionGabarit: g.version,
@@ -100,6 +104,12 @@ export function creerRegistre() {
       throw new Error(
         `le générateur ${g.generateur.nom}@${g.generateur.version} a produit ` +
           `une question non conforme : ${conformite.erreurs.join(" ; ")}`,
+      );
+    }
+    if (!estDonneePure(instance)) {
+      throw new Error(
+        `le générateur ${g.generateur.nom}@${g.generateur.version} a produit ` +
+          `autre chose que des données pures (fonction, date ou objet spécial)`,
       );
     }
     return instance;

@@ -114,6 +114,20 @@ describe("dessinerBarres (v2, langage ÉquaBarre)", () => {
     assert.match(svg, new RegExp(`fill="${COULEURS_BARRES.conclusion}"`)); // conclu en rouge
   });
 
+  it("échappe les textes libres : impossible d'injecter du balisage", () => {
+    const svg = dessinerBarres({
+      lignes: [
+        {
+          etiquette: '<img src=x onerror="1">',
+          pieces: [{ type: "nombre", valeur: 2, etiquette: "<script>alert(1)</script>" }],
+        },
+      ],
+    });
+    assert.ok(!svg.includes("<script"), "balise script non échappée");
+    assert.ok(!svg.includes("<img"), "balise img non échappée");
+    assert.match(svg, /&lt;script&gt;/);
+  });
+
   it("virgule décimale française dans les cases", () => {
     const svg = dessinerBarres({ lignes: [{ pieces: [{ type: "nombre", valeur: 2.5 }] }] });
     assert.match(svg, />2,5</);
