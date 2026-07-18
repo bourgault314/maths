@@ -1,0 +1,319 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex, nofollow">
+<title>Labo de validation — maths&go (interne)</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{--page:#f6f8fb;--papier:#fff;--encre:#10294a;--bleu:#063f86;--turquoise:#08b9b2;--attenue:#637287;--ligne:#dce5ef}
+  *{box-sizing:border-box}
+  [hidden]{display:none !important}
+  body{margin:0;background:var(--page);color:var(--encre);font-family:"Segoe UI",system-ui,sans-serif;padding:20px;max-width:1060px;margin-inline:auto}
+  h1{font-family:Fredoka;color:var(--bleu);font-size:clamp(24px,4vw,34px);margin:8px 0 2px}
+  .sous{color:var(--attenue);margin:0 0 18px;font-size:14px}
+  .sous a{color:var(--bleu);font-weight:600}
+  section{background:var(--papier);border:1px solid var(--ligne);border-radius:24px;padding:clamp(14px,3vw,26px);margin-bottom:22px}
+  h2{font-family:Fredoka;color:var(--turquoise);margin:0 0 4px;font-size:21px}
+  h3{font-family:Fredoka;color:var(--bleu);margin:16px 0 6px;font-size:16px}
+  .aide{color:var(--attenue);font-size:13.5px;margin:0 0 14px}
+  .barreCommandes{display:flex;flex-wrap:wrap;gap:10px;align-items:center;margin-bottom:12px}
+  select,button{font:inherit;font-size:15px;padding:9px 14px;border-radius:12px;border:2px solid var(--ligne);background:#fff;color:var(--encre);cursor:pointer;max-width:100%;min-height:44px}
+  button.principal{background:linear-gradient(180deg,#60a5fa,#3b82f6);color:#fff;border-color:#3b82f6;font-weight:600}
+  .chip{border-radius:999px;font-family:Fredoka;font-weight:600;padding:8px 16px}
+  .chip.actif{background:linear-gradient(180deg,#60a5fa,#3b82f6);color:#fff;border-color:#3b82f6}
+  .reglage{display:flex;align-items:center;gap:8px;font-size:14px;color:var(--attenue)}
+  .reglage input[type=range]{accent-color:var(--bleu);width:130px}
+  .reglage output{font-weight:700;color:var(--encre);min-width:34px;text-align:right}
+  .toggles{display:flex;flex-wrap:wrap;gap:8px 16px;margin:10px 0;font-size:14.5px}
+  .toggles label{display:flex;align-items:center;gap:6px;cursor:pointer}
+  .toggles input{accent-color:var(--bleu);width:17px;height:17px}
+  .vitrine{display:grid;grid-template-columns:repeat(auto-fill,minmax(190px,1fr));gap:12px}
+  .vignette{border:1px solid var(--ligne);border-radius:16px;padding:12px;background:#fff;text-align:center;cursor:pointer;transition:box-shadow .12s,transform .12s}
+  .vignette:hover{box-shadow:0 8px 22px rgba(6,63,134,.12);transform:translateY(-2px)}
+  .vignette svg{max-width:100%;height:auto}
+  .vignette figcaption{font-family:Fredoka;font-weight:600;font-size:14.5px;margin-top:6px}
+  .badge{display:inline-block;font-size:11px;font-weight:700;border-radius:999px;padding:2px 10px;margin-top:4px;background:#fef3c7;color:#92400e}
+  .galerie{display:flex;flex-wrap:wrap;gap:12px;align-items:flex-end}
+  .carte{border:1px solid var(--ligne);border-radius:14px;padding:8px;background:#fff;text-align:center}
+  .carte svg{max-width:100%;height:auto}
+  .carte figcaption{font-size:12px;color:var(--attenue);margin-top:5px;font-weight:600}
+  figure{margin:0}
+  .zoneRendu{overflow-x:auto;text-align:center;padding:8px 0}
+  .zoneRendu svg{max-width:100%;height:auto}
+  @media (max-width:560px){
+    body{padding:12px}
+    .reglage{flex:1 1 100%;white-space:normal}
+    .reglage input[type=range]{flex:1;width:auto}
+  }
+</style>
+</head>
+<body>
+<h1>🔬 Labo de validation</h1>
+<p class="sous"><a href="./index.html">← Atelier</a> · <a href="./geometrie.html">explorateur Géométrie</a> · <a href="./configurations.html">angles &amp; Thalès</a> — Une série → tous ses objets. Un objet → LUI SEUL, ses réglages à lui, sa planche bouton par bouton. C'est ici que chaque objet gagne son statut « validé ».</p>
+
+<section>
+  <div class="barreCommandes" id="chipsSeries" role="group" aria-label="Séries"></div>
+  <div id="vueSerie">
+    <h2 id="titreSerie"></h2>
+    <p class="aide">Cliquez un objet pour l'ouvrir seul.</p>
+    <div class="vitrine" id="vitrineObjets"></div>
+  </div>
+  <div id="vueObjet" hidden>
+    <div class="barreCommandes">
+      <button id="btnRetourSerie">← Tous les objets de la série</button>
+      <span class="badge">brouillon — à valider par Gwenaël</span>
+    </div>
+    <h2 id="titreObjet"></h2>
+    <div class="barreCommandes" id="parametresObjet"></div>
+    <div class="toggles" id="togglesObjet"></div>
+    <div class="barreCommandes">
+      <label class="reglage">Rotation <input type="range" id="regleRotation" min="0" max="359" value="0" step="1"><output id="valRotation">0°</output></label>
+      <label class="reglage">Thème <select id="choixTheme"><option value="noir">noir</option><option value="couleur">couleur</option></select></label>
+      <button class="principal" id="btnSvg">⬇ SVG</button>
+    </div>
+    <div class="zoneRendu" id="apercu"></div>
+    <h3>La planche de cet objet : chaque réglage, un par un</h3>
+    <p class="aide">Une carte fausse = son bouton est en cause. Signalez la carte, elle sera corrigée.</p>
+    <div class="galerie" id="plancheObjet"></div>
+  </div>
+</section>
+
+<script type="module">
+import { dessinerCercle, dessinerFigure } from "../../packages/objets/src/figure.js";
+import { CATEGORIES_FIGURES, FIGURES_USUELLES } from "../../packages/objets/src/figures-usuelles.js";
+
+const $ = (id) => document.getElementById(id);
+let serieActive = CATEGORIES_FIGURES[0];
+let objetActif = null;
+let dernierSvg = "";
+
+// — les capacités de chaque objet : on n'affiche QUE ce qu'il sait faire —
+function capacitesDe(cle) {
+  const entree = FIGURES_USUELLES[cle];
+  if (entree.genre === "cercle") {
+    return [
+      ["centre", "centre"], ["disque", "disque colorié"], ["rayon", "rayon + mesure"],
+      ["diametre", "diamètre + mesure"], ["corde", "corde"], ["tangente", "tangente"], ["secteur", "secteur colorié"],
+    ];
+  }
+  const n = entree.decrire().sommets.length;
+  const communes = [
+    ["codages", "codages"], ["noms", "noms des sommets"], ["sommets", "croix des sommets"],
+    ["angles", "arcs des angles"], ["mesuresAngles", "mesures des angles"],
+    ["mesuresCotes", "mesures des côtés"], ["milieux", "milieux (graduations)"], ["axes", "axes de symétrie"],
+  ];
+  if (n === 4) communes.push(["diagonales", "diagonales + longueurs"], ["centre", "centre (croisement)"]);
+  else communes.push(["centre", "centre"]);
+  if (n === 3) {
+    communes.push(
+      ["hauteurs", "hauteurs"], ["medianes", "médianes"], ["mediatrices", "médiatrices"],
+      ["bissectrices", "bissectrices"], ["cercleInscrit", "cercle inscrit"],
+      ["cercleCirconscrit", "cercle circonscrit"], ["centresRemarquables", "centres G, H, O, I"],
+      ["segmentDesMilieux", "segment des milieux"],
+    );
+  }
+  if (entree.categorie === "Polygones") communes.push(["rayons", "rayons"], ["apotheme", "apothème"]);
+  return communes;
+}
+
+function lireParametres() {
+  const options = {};
+  for (const curseur of $("parametresObjet").querySelectorAll("input[type=range]")) {
+    options[curseur.dataset.cle] = Number(curseur.value);
+  }
+  return options;
+}
+
+function descriptionCourante(surcharges = {}) {
+  const entree = FIGURES_USUELLES[objetActif];
+  const description = entree.decrire(lireParametres());
+  if (entree.genre === "cercle") {
+    const actives = Object.fromEntries(
+      [...$("togglesObjet").querySelectorAll("input")].map((c) => [c.dataset.cle, c.checked]),
+    );
+    description.visible = {
+      centre: !!actives.centre,
+      disque: !!actives.disque,
+      rayonVersDeg: actives.rayon ? 40 : null,
+      mesureRayon: !!actives.rayon,
+      diametreVersDeg: actives.diametre ? 25 : null,
+      mesureDiametre: !!actives.diametre,
+      cordes: actives.corde ? [{ de: 150, a: 245 }] : [],
+      tangente: actives.tangente ? { en: 40 } : null,
+      secteur: actives.secteur ? { deDeg: 60, aDeg: 130 } : null,
+    };
+    if (!actives.rayon) description.points = [];
+  } else {
+    const visible = {};
+    let garderCodages = false;
+    for (const case_ of $("togglesObjet").querySelectorAll("input")) {
+      if (case_.dataset.cle === "codages") garderCodages = case_.checked;
+      else if (case_.dataset.cle === "diagonales") {
+        visible.diagonales = case_.checked;
+        visible.mesuresDiagonales = case_.checked;
+      } else visible[case_.dataset.cle] = case_.checked;
+    }
+    if (!garderCodages) description.codages = [];
+    description.visible = visible;
+    description.transform = { rotationDeg: Number($("regleRotation").value) };
+  }
+  description.styles = { ...description.styles, theme: $("choixTheme").value };
+  Object.assign(description, surcharges);
+  return description;
+}
+
+function dessinerApercu() {
+  const entree = FIGURES_USUELLES[objetActif];
+  const description = descriptionCourante({ sortie: { taille: 400 } });
+  dernierSvg = entree.genre === "cercle" ? dessinerCercle(description) : dessinerFigure(description);
+  $("apercu").innerHTML = dernierSvg;
+}
+
+function carte(conteneur, svg, legende) {
+  const figure = document.createElement("figure");
+  figure.className = "carte";
+  figure.innerHTML = svg + "<figcaption></figcaption>";
+  figure.querySelector("figcaption").textContent = legende;
+  conteneur.appendChild(figure);
+}
+
+function plancheObjet() {
+  const zone = $("plancheObjet");
+  zone.innerHTML = "";
+  const entree = FIGURES_USUELLES[objetActif];
+  for (const [cle, libelle] of capacitesDe(objetActif)) {
+    try {
+      let description;
+      if (entree.genre === "cercle") {
+        description = entree.decrire(lireParametres());
+        description.visible = {
+          centre: cle === "centre", disque: cle === "disque",
+          rayonVersDeg: cle === "rayon" ? 40 : null, mesureRayon: cle === "rayon",
+          diametreVersDeg: cle === "diametre" ? 25 : null, mesureDiametre: cle === "diametre",
+          cordes: cle === "corde" ? [{ de: 150, a: 245 }] : [],
+          tangente: cle === "tangente" ? { en: 40 } : null,
+          secteur: cle === "secteur" ? { deDeg: 60, aDeg: 130 } : null,
+        };
+        if (cle !== "rayon") description.points = [];
+        description.sortie = { taille: 150 };
+        carte(zone, dessinerCercle(description), libelle);
+      } else {
+        description = entree.decrire(lireParametres());
+        if (cle !== "codages") description.codages = [];
+        description.visible = { noms: cle === "noms" || cle === "codages" };
+        if (!["codages", "noms"].includes(cle)) {
+          description.visible[cle] = true;
+          if (cle === "diagonales") description.visible.mesuresDiagonales = true;
+          if (cle === "mesuresAngles") description.visible.angles = true;
+        }
+        description.sortie = { taille: 160, marge: 40 };
+        carte(zone, dessinerFigure(description), libelle);
+      }
+    } catch (erreur) {
+      const alerte = document.createElement("figure");
+      alerte.className = "carte";
+      alerte.innerHTML = "<figcaption></figcaption>";
+      alerte.querySelector("figcaption").textContent = `${libelle} : ERREUR — ${erreur.message}`;
+      zone.appendChild(alerte);
+    }
+  }
+}
+
+// — vues —
+function ouvrirSerie(serie) {
+  serieActive = serie;
+  objetActif = null;
+  $("vueObjet").hidden = true;
+  $("vueSerie").hidden = false;
+  $("titreSerie").textContent = serie;
+  [...$("chipsSeries").children].forEach((c) => c.classList.toggle("actif", c.textContent === serie));
+  const vitrine = $("vitrineObjets");
+  vitrine.innerHTML = "";
+  for (const [cle, entree] of Object.entries(FIGURES_USUELLES)) {
+    if (entree.categorie !== serie) continue;
+    const description = entree.decrire();
+    description.sortie = { taille: 150, marge: 36 };
+    const svg = entree.genre === "cercle" ? dessinerCercle(description) : dessinerFigure(description);
+    const vignette = document.createElement("figure");
+    vignette.className = "vignette";
+    vignette.innerHTML = `${svg}<figcaption></figcaption><span class="badge">brouillon</span>`;
+    vignette.querySelector("figcaption").textContent = entree.titre;
+    vignette.addEventListener("click", () => ouvrirObjet(cle));
+    vitrine.appendChild(vignette);
+  }
+  window.scrollTo(0, 0);
+}
+
+function ouvrirObjet(cle) {
+  objetActif = cle;
+  const entree = FIGURES_USUELLES[cle];
+  $("vueSerie").hidden = true;
+  $("vueObjet").hidden = false;
+  $("titreObjet").textContent = entree.titre;
+  // paramètres propres
+  const zone = $("parametresObjet");
+  zone.innerHTML = "";
+  for (const parametre of entree.parametres) {
+    const label = document.createElement("label");
+    label.className = "reglage";
+    const sortie = document.createElement("output");
+    const curseur = document.createElement("input");
+    curseur.type = "range";
+    curseur.min = parametre.min; curseur.max = parametre.max;
+    curseur.step = parametre.pas ?? 0.5; curseur.value = parametre.defaut;
+    curseur.dataset.cle = parametre.cle;
+    sortie.textContent = String(parametre.defaut).replace(".", ",");
+    curseur.addEventListener("input", () => {
+      sortie.textContent = String(curseur.value).replace(".", ",");
+      dessinerApercu(); plancheObjet();
+    });
+    label.append(`${parametre.libelle} `, curseur, sortie);
+    zone.appendChild(label);
+  }
+  // SEULEMENT les possibilités de CET objet
+  const toggles = $("togglesObjet");
+  toggles.innerHTML = "";
+  for (const [cleCapacite, libelle] of capacitesDe(cle)) {
+    const label = document.createElement("label");
+    const case_ = document.createElement("input");
+    case_.type = "checkbox";
+    case_.dataset.cle = cleCapacite;
+    case_.checked = ["codages", "noms", "centre"].includes(cleCapacite) && cleCapacite !== "centre";
+    case_.addEventListener("change", dessinerApercu);
+    label.append(case_, ` ${libelle}`);
+    toggles.appendChild(label);
+  }
+  dessinerApercu();
+  plancheObjet();
+  window.scrollTo(0, 0);
+}
+
+for (const serie of CATEGORIES_FIGURES) {
+  const bouton = document.createElement("button");
+  bouton.className = "chip";
+  bouton.textContent = serie;
+  bouton.addEventListener("click", () => ouvrirSerie(serie));
+  $("chipsSeries").appendChild(bouton);
+}
+$("btnRetourSerie").addEventListener("click", () => ouvrirSerie(serieActive));
+$("choixTheme").addEventListener("change", dessinerApercu);
+$("regleRotation").addEventListener("input", () => {
+  $("valRotation").textContent = `${$("regleRotation").value}°`;
+  dessinerApercu();
+});
+$("btnSvg").addEventListener("click", () => {
+  const blob = new Blob([dernierSvg], { type: "image/svg+xml" });
+  const lien = document.createElement("a");
+  lien.href = URL.createObjectURL(blob);
+  lien.download = `${objetActif}.svg`;
+  lien.click();
+  URL.revokeObjectURL(lien.href);
+});
+
+ouvrirSerie(serieActive);
+</script>
+</body>
+</html>
