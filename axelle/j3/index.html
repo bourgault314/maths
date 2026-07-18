@@ -1,0 +1,76 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+  <title>Jour 3 d’Axelle — Le grand entraînement CM1 | maths&amp;go</title>
+  <meta name="description" content="Deux défis fixes de mathématiques et de français pour revoir la fin du CE2 et préparer le CM1.">
+  <meta name="robots" content="noindex, nofollow">
+  <link rel="stylesheet" href="styles.css?v=20260718-1">
+  <script defer src="content.js?v=20260718-1"></script>
+  <script defer src="app.js?v=20260718-1"></script>
+</head>
+<body>
+  <main class="shell">
+    <header class="topbar">
+      <a class="bureau-link" href="../"><span aria-hidden="true">←</span> Bureau d’Axelle</a>
+      <button id="j3-home" class="j3-home" type="button" aria-label="Revenir à l’accueil du jour 3">Jour 3 · Grand entraînement</button>
+      <a class="brand" href="/" aria-label="Accueil maths&go"><img src="/assets/img/mathsgo-logo.png" alt="maths&go" width="1338" height="622"></a>
+    </header>
+
+    <section id="home-screen" class="screen home-screen">
+      <div class="hero"><div class="hero-dodo" aria-hidden="true">🦤</div><div><p class="eyebrow">Jour 3</p><h1>Le grand entraînement CM1</h1><p>Deux aventures écrites spécialement pour toi. Tu peux te tromper, lire l’explication et continuer.</p></div></div>
+      <div class="challenge-grid">
+        <article class="challenge-card expedition"><span class="badge">Défi 1</span><div class="card-icon" aria-hidden="true">🧭</div><h2>L’expédition</h2><p>Une carte, des fruits et 50 petits défis.</p><div class="challenge-progress"><span id="v0-progress">0 / 50</span><i><b id="v0-bar"></b></i></div><button class="primary" type="button" data-open-version="0">Commencer l’expédition</button></article>
+        <article id="revenge-card" class="challenge-card revenge locked"><span class="badge">Défi 2</span><div class="card-icon" aria-hidden="true">🌈</div><h2>La revanche</h2><p>D’autres histoires, d’autres dessins, les mêmes forces à entraîner.</p><div class="challenge-progress"><span id="v1-progress">0 / 50</span><i><b id="v1-bar"></b></i></div><button id="revenge-button" class="primary purple" type="button" data-open-version="1" disabled>À débloquer après le Défi 1</button></article>
+      </div>
+      <article class="game-callout"><div class="game-preview" aria-hidden="true"><span>🦤</span><span>🍍</span><span>🪨</span></div><div><p class="eyebrow">Jeu calme</p><h2>Le chemin du dodo</h2><p>Ramasse trois fruits en évitant les rochers. Un niveau se débloque après chaque défi.</p></div><button id="open-game" class="secondary" type="button" disabled>Aucun niveau débloqué</button></article>
+    </section>
+
+    <section id="lobby-screen" class="screen" hidden>
+      <button class="back-link" type="button" data-action="home">← Les deux défis</button>
+      <div class="section-heading"><p id="lobby-eyebrow" class="eyebrow"></p><h1 id="lobby-title"></h1><p>Choisis une matière. Les deux progressions sont gardées séparément sur cet appareil.</p></div>
+      <div class="subject-grid">
+        <button class="subject-card maths" type="button" data-subject="math"><span aria-hidden="true">🔢</span><strong>Mathématiques</strong><small>25 questions · dessins et manipulations</small><i><b id="math-lobby-bar"></b></i><em id="math-lobby-progress">0 / 25</em></button>
+        <button class="subject-card french" type="button" data-subject="fr"><span aria-hidden="true">📚</span><strong>Français</strong><small>25 questions · texte, mots et phrases</small><i><b id="fr-lobby-bar"></b></i><em id="fr-lobby-progress">0 / 25</em></button>
+      </div>
+    </section>
+
+    <section id="lesson-screen" class="screen" hidden>
+      <button class="back-link" type="button" data-action="lobby">← Les deux matières</button>
+      <div class="section-heading"><p id="lesson-eyebrow" class="eyebrow">Avant de commencer</p><h1 id="lesson-title">Cinq idées utiles</h1><p>Une seule idée par carte. Regarde surtout le dessin.</p></div>
+      <div id="lesson-grid" class="lesson-grid"></div>
+      <button id="start-subject" class="primary wide" type="button">Commencer les questions →</button>
+    </section>
+
+    <section id="quiz-screen" class="screen quiz-screen" hidden>
+      <div class="quiz-head"><button class="back-link compact" type="button" data-action="lobby">← Matières</button><div><span id="quiz-label"></span><strong id="question-count">1 / 25</strong></div></div>
+      <div class="progress-track" aria-hidden="true"><b id="quiz-progress"></b></div>
+      <article class="question-card">
+        <p id="question-section" class="eyebrow"></p>
+        <h1 id="question-title"></h1>
+        <p id="question-prompt" class="question-prompt"></p>
+        <div id="question-visual" class="question-visual"></div>
+        <div id="answer-zone" class="answer-zone"></div>
+        <div id="feedback" class="feedback" hidden aria-live="polite"></div>
+        <button id="next-question" class="primary wide next-question" type="button" hidden>Question suivante →</button>
+      </article>
+    </section>
+
+    <section id="done-screen" class="screen done-screen" hidden>
+      <div class="done-icon" aria-hidden="true">🏆</div><p class="eyebrow">Matière terminée</p><h1 id="done-title">Bravo Axelle !</h1><p id="done-message"></p><div id="done-actions" class="done-actions"><button class="primary" type="button" data-action="lobby">Voir l’autre matière</button><button class="secondary" type="button" data-action="home">Retour aux défis</button></div>
+    </section>
+
+    <section id="game-screen" class="screen game-screen" hidden>
+      <button class="back-link" type="button" data-action="home">← Les deux défis</button>
+      <div class="section-heading"><p class="eyebrow">Jeu final</p><h1>Le chemin du dodo</h1><p>Déplace le dodo avec les flèches. Attrape les trois fruits sans marcher sur un rocher.</p></div>
+      <div class="level-tabs"><button type="button" data-level="0">Niveau 1 · Expédition</button><button type="button" data-level="1">Niveau 2 · Revanche</button></div>
+      <p id="game-info" class="game-info"></p><div id="dodo-board" class="dodo-board" aria-label="Grille du chemin du dodo"></div>
+      <div class="dodo-controls" aria-label="Déplacer le dodo"><button type="button" data-move="0,-1" aria-label="Monter">↑</button><button type="button" data-move="-1,0" aria-label="Aller à gauche">←</button><button type="button" data-move="1,0" aria-label="Aller à droite">→</button><button type="button" data-move="0,1" aria-label="Descendre">↓</button></div>
+      <button id="restart-level" class="secondary" type="button">Recommencer ce niveau</button>
+    </section>
+  </main>
+  <footer>Un petit espace maths&amp;go · rien n’est envoyé · aucune donnée personnelle</footer>
+</body>
+</html>

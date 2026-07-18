@@ -3,7 +3,7 @@ const fs = require("fs");
 const http = require("http");
 const path = require("path");
 
-const BASE = "http://127.0.0.1:4173/axelle/";
+const BASE = "http://127.0.0.1:4173/axelle/j2/";
 const output = "/tmp/axelle-j2-qa";
 fs.mkdirSync(output, {recursive: true});
 
@@ -54,7 +54,7 @@ async function completeMission(page, subject) {
   for (let index = 0; index < total; index += 1) {
     const question = await page.evaluate(([key, current]) => {
       const value = window.AXELLE_SESSIONS[key].questions[current];
-      return {type: value.type || "qcm", answer: value.answer, target: value.target};
+      return {type: value.type || "qcm", answer: value.answer, target: value.target, visible: value.visible, total: value.total};
     }, [subject, index]);
     if (question.type === "disk-select") {
       for (let sector = 0; sector < question.target; sector += 1) await page.locator(".touch-sector").nth(sector).click();
@@ -66,7 +66,7 @@ async function completeMission(page, subject) {
       }
       await page.locator(".angle-match > .validate-button").click();
     } else if (question.type === "splat-table") {
-      for (const [value, slot] of [["9", "visible"], ["?", "hidden"], ["15", "total"]]) {
+      for (const [value, slot] of [[String(question.visible), "part-a"], ["?", "part-b"], [String(question.total), "total"]]) {
         await page.locator(`.splat-token[data-value="${value}"]`).click();
         await page.locator(`.splat-slot[data-slot="${slot}"]`).click();
       }
@@ -92,6 +92,8 @@ async function auditEveryMathsQuestion(page) {
     type: question.type || "qcm",
     answer: question.answer,
     target: question.target,
+    visible: question.visible,
+    total: question.total,
     title: question.title
   })));
 
@@ -122,7 +124,7 @@ async function auditEveryMathsQuestion(page) {
       }
       await page.locator(".angle-match > .validate-button").click();
     } else if (question.type === "splat-table") {
-      for (const [value, slot] of [["9", "visible"], ["?", "hidden"], ["15", "total"]]) {
+      for (const [value, slot] of [[String(question.visible), "part-a"], ["?", "part-b"], [String(question.total), "total"]]) {
         await page.locator(`.splat-token[data-value="${value}"]`).click();
         await page.locator(`.splat-slot[data-slot="${slot}"]`).click();
       }
@@ -232,15 +234,19 @@ async function auditEveryMathsQuestion(page) {
   await answerCurrentQcm(splatWrong);
   await answerCurrentQcm(splatWrong);
   await answerCurrentQcm(splatWrong);
-  for (const [value, slot] of [["15", "visible"], ["?", "hidden"], ["9", "total"]]) {
+  const splatQuestion = await splatWrong.evaluate(() => {
+    const question = window.AXELLE_SESSIONS.maths.questions[9];
+    return {visible: String(question.visible), total: String(question.total)};
+  });
+  for (const [value, slot] of [[splatQuestion.total, "part-a"], ["?", "part-b"], [splatQuestion.visible, "total"]]) {
     await splatWrong.locator(`.splat-token[data-value="${value}"]`).click();
     await splatWrong.locator(`.splat-slot[data-slot="${slot}"]`).click();
   }
   await splatWrong.locator(".splat-validate").click();
   if (await splatWrong.locator("#next-button").isHidden()) throw new Error("Un tableau de Splat faux bloque la suite.");
   if (!(await splatWrong.locator("#feedback").getAttribute("class")).includes("error")) throw new Error("Le tableau de Splat faux n’affiche pas sa correction.");
-  for (const [slot, expected] of [["visible", "9"], ["hidden", "?"], ["total", "15"]]) {
-    if ((await splatWrong.locator(`.splat-slot[data-slot="${slot}"]`).textContent()).trim() !== expected) throw new Error(`La correction du Splat n’affiche pas ${expected}.`);
+  for (const [slot, expected] of [["part-a", splatQuestion.visible], ["part-b", "?"], ["total", splatQuestion.total]]) {
+    if (!(await splatWrong.locator(`.splat-slot[data-slot="${slot}"]`).textContent()).includes(expected)) throw new Error(`La correction du Splat n’affiche pas ${expected}.`);
   }
   await splatWrong.screenshot({path: `${output}/mobile-splat-wrong.png`, fullPage: true});
 
