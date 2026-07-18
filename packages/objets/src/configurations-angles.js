@@ -111,6 +111,11 @@ export function creerConfigurationAngles(options = {}) {
       ],
       angles,
       relations: [
+        // perpendiculaires : chaque angle est DROIT par construction —
+        // la relation se suffit à elle-même, sans mesure donnée
+        ...(type === "perpendiculaires"
+          ? angles.map((a) => ({ type: "droit", angles: [a.id] }))
+          : []),
         { type: "opposes", angles: [angles[0].id, angles[2].id] },
         { type: "opposes", angles: [angles[1].id, angles[3].id] },
         ...angles.map((a, i) => ({
@@ -362,6 +367,27 @@ export function resoudreConfigurationAngles(instance, { valeurs = {}, inconnue }
     if (!relation.angles.includes(inconnue)) continue;
     const autres = relation.angles.filter((id) => id !== inconnue);
     if (!autres.every((id) => id in valeurs)) continue;
+
+    if (relation.type === "droit") {
+      const [d1, d2] = instance.droites;
+      const nomDroite = (d) => `(${d.lettres.join("")})`;
+      return {
+        inconnue,
+        mesureDeg: 90,
+        relation: "droit",
+        etapes: [
+          {
+            genre: "justification",
+            texte: `Les droites ${nomDroite(d1)} et ${nomDroite(d2)} sont perpendiculaires, donc elles forment quatre angles droits.`,
+          },
+          { genre: "calcul", expression: egalite(angleExpr(nomC(cible)), mesureExpr(90, "°")) },
+          {
+            genre: "conclusion",
+            texte: `Donc ${versUnicode(angleExpr(nomC(cible)))} = ${versUnicode(mesureExpr(90, "°"))}.`,
+          },
+        ],
+      };
+    }
 
     const egaux = ["opposes", "correspondants", "alternes-internes", "alternes-externes", "bissectrice"];
     if (egaux.includes(relation.type)) {

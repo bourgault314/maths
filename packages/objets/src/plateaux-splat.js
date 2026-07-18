@@ -499,8 +499,21 @@ export function dessinerPlateaux(etat, options = {}) {
         suppression: suppression.has(`${cote}:${indice}`),
         regroupement: regroupement.has(`${cote}:${indice}`),
       };
+      // au clavier et au lecteur d'écran : chaque pièce active est un
+      // bouton focalisable, nommé par sa nature et son membre
+      const membre = cote === "gauche" ? "membre gauche" : "membre droit";
+      const nomPiece =
+        piece.type === "tache"
+          ? `${piece.signe < 0 ? "tache opposée moins " : "tache "}${etat.lettre || "x"}`
+          : piece.unitaire
+            ? "bille"
+            : `jeton ${String(piece.valeur).replace("-", "−")}`;
       const attributs = interactif
-        ? ` data-cote="${cote}" data-indice="${indice}" data-type="${piece.type}"${piece.etat === "supprime" ? ` data-supprime="1"` : ""}`
+        ? ` data-cote="${cote}" data-indice="${indice}" data-type="${piece.type}"${
+            piece.etat === "supprime"
+              ? ` data-supprime="1"`
+              : ` tabindex="0" role="button" aria-label="${nomPiece}, ${membre}"`
+          }`
         : "";
       const opacite = piece.etat === "supprime" ? ` opacity=".28"` : "";
       morceaux.push(`<g${attributs}${opacite}>`);

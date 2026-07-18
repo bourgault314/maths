@@ -63,10 +63,14 @@ function auditContent() {
     assert(value !== "2/4", "La fraction 2/4 ne doit pas être utilisée dans J3.");
   });
   assert(DATA.versions[0].fr[0].visual.text !== DATA.versions[1].fr[0].visual.text, "Les deux textes de compréhension sont identiques.");
+  assert(DATA.lessons.math[0].text.includes("4/6"), "La leçon sur les fractions répète encore l’exemple des deux tiers.");
   const byId = Object.fromEntries(DATA.versions.flatMap(version => version.math).map(question => [question.id, question]));
   for (const id of ["m0-05", "m1-05", "m0-09", "m1-09"]) assert(!byId[id].visual, `${id} affiche la réponse avant le choix.`);
   for (const id of ["m0-02", "m1-02"]) assert(byId[id].visual.showNotation === false, `${id} écrit la fraction-réponse sous son dessin.`);
-  for (const id of ["m0-22", "m1-22"]) assert(byId[id].visual.kind === "measure-question" && !byId[id].visual.to, `${id} affiche la conversion-réponse.`);
+  assert(byId["m0-22"].visual.kind === "measure-reference" && !byId["m0-22"].visual.to, "m0-22 affiche la conversion-réponse.");
+  assert(byId["m1-22"].visual.kind === "measure-question" && !byId["m1-22"].visual.to, "m1-22 affiche la conversion-réponse.");
+  assert(byId["m1-01"].denominator === 6 && byId["m1-01"].target === 4, "Le défi 2 répète encore les trois quarts au lieu de quatre sixièmes.");
+  for (const id of ["m0-03", "m1-03"]) assert(byId[id].visual.colors?.length === 2, `${id} ne distingue pas les deux fractions par couleur.`);
   DATA.gameLevels.forEach((level, index) => {
     assert(routeThroughAllFruits(level), `Le niveau ${index + 1} du dodo n’est pas entièrement parcourable.`);
   });
@@ -139,7 +143,7 @@ async function answerCurrent(page, question, makeWrong = false, checkReversible 
     if (checkReversible) {
       await touch(0);
       await touch(0);
-      assert((await page.locator(".selection-note").textContent()).includes("0 part"), `${question.id} n’est pas réversible.`);
+      assert(await page.locator(`${selector}.selected`).count() === 0, `${question.id} n’est pas réversible.`);
     }
     const target = makeWrong ? Math.max(1, question.target - 1) : question.target;
     for (let index = 0; index < target; index += 1) await touch(index);
@@ -252,8 +256,21 @@ async function playLevel(page, levelIndex) {
   const desktop = await browser.newPage({viewport:{width:1366,height:768}});
   desktop.on("pageerror", error => errors.push(`desktop: ${error.message}`));
   await desktop.goto(BASE,{waitUntil:"networkidle"});
-  assert(await desktop.locator("#revenge-button").isDisabled(), "La Revanche est débloquée avant le Défi 1.");
+  assert(!(await desktop.locator("#revenge-button").isDisabled()), "Le Défi 2 n’est pas disponible dès le départ.");
+  await desktop.locator("#revenge-button").click();
+  await desktop.locator("#lobby-screen:not([hidden])").waitFor();
+  await desktop.locator('#lobby-screen [data-action="home"]').click();
   await desktop.screenshot({path:path.join(OUTPUT,"j3-home-desktop.png"),fullPage:true});
+
+  const persistence = await browser.newPage({viewport:{width:390,height:844}});
+  persistence.on("pageerror", error => errors.push(`sauvegarde défi 2: ${error.message}`));
+  await openSubject(persistence,1,"math");
+  await answerCurrent(persistence,DATA.versions[1].math[0]);
+  await persistence.reload({waitUntil:"networkidle"});
+  await persistence.locator("#lobby-screen:not([hidden])").waitFor();
+  assert((await persistence.locator("#math-lobby-progress").textContent()).includes("1 / 30"), "Le Défi 2 ne reprend pas la progression après fermeture et retour.");
+  await persistence.close();
+
   await completeSubject(desktop,0,"math",new Set(["fraction-color","qcm","grid-select"]));
   await desktop.locator('#done-screen [data-action="lobby"]').click();
   await desktop.locator('[data-subject="fr"]').click();
@@ -263,7 +280,7 @@ async function playLevel(page, levelIndex) {
   // Le parcours français est repris par la même routine à partir de sa première question.
   await completeSubject(desktop,0,"fr",new Set(["order"]));
   await desktop.locator('#done-screen [data-action="home"]').click();
-  assert(!(await desktop.locator("#revenge-button").isDisabled()), "La Revanche ne se débloque pas après les 55 réponses du Défi 1.");
+  assert(!(await desktop.locator("#revenge-button").isDisabled()), "Le Défi 2 n’est plus disponible après les 55 réponses du Défi 1.");
   assert((await desktop.locator("#v1-progress").textContent()).includes("0 / 55"), "La progression de la Revanche n’est pas séparée.");
   assert(!(await desktop.locator("#open-game").isDisabled()), "Le niveau 1 du dodo ne se débloque pas.");
 

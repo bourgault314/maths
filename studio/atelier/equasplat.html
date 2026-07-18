@@ -108,6 +108,8 @@
     border-radius:999px;padding:6px 14px;font-size:13px;font-weight:700}
   body.modeImport #blocCreation{display:none}
   body.modeImport #badgeImport{display:inline-block}
+/* pièces du plateau au clavier : un anneau de focus bien visible */
+[data-cote][tabindex]:focus-visible{outline:3px solid #1d4ed8;outline-offset:3px;border-radius:10px}
 </style>
 </head>
 <body>
@@ -198,7 +200,7 @@
 </section>
 
 <div id="dialogueFond" hidden></div>
-<div id="dialogueSplat" role="dialog" aria-modal="true" aria-label="Saisie de la réponse" hidden>
+<div id="dialogueSplat" role="dialog" aria-modal="true" aria-label="Saisie de la réponse" tabindex="-1" hidden>
   <div style="width:100%"><span id="dialogueTexte" style="font-weight:700"></span></div>
   <input type="text" id="dialogueSaisie" style="width:170px;text-align:center;font-size:20px;font-weight:700" readonly inputmode="none" aria-label="Votre réponse">
   <button class="helpMiniBtn" id="btnAideDialogue" hidden>Aide&nbsp;?</button>
@@ -505,6 +507,8 @@ function validerSuppression() {
 /* ————— clics et glisser-déposer sur le plateau ————— */
 
 let glisse = null;
+// le relâchement d'un glisser déclenche aussi un « click » : on le neutralise
+let vientDeGlisser = false;
 
 function pointSvg(svg, evt) {
   const point = svg.createSVGPoint();
@@ -525,6 +529,7 @@ function brancherPlateaux() {
     if (type === "jeton" && !supprime && !(etat.paquets && etat.paquets.cote === cote)) {
       groupe.addEventListener("pointerdown", (e) => {
         if (e.button !== undefined && e.button !== 0) return;
+        vientDeGlisser = false;
         const piece = etat[cote][indice];
         if (!piece || !Number.isFinite(piece.x)) return;
         const p = pointSvg(svg, e);
@@ -552,13 +557,13 @@ function brancherPlateaux() {
         glisse = null;
         try { groupe.releasePointerCapture(e.pointerId); } catch { /* déjà relâché */ }
         if (!g.bouge) return; // simple clic : géré par « click »
+        vientDeGlisser = true;
         const piece = etat[g.cote][g.indice];
         const r = piece.unitaire ? RAYON_BILLE : RAYON_JETON;
         const sure = contraindrePositionJeton(plateauDuCote(g.cote), etat[g.cote], g.cx, g.cy, r);
         piece.x = sure.cx;
         piece.y = sure.cy;
         const cible = chercherFusion(etat, g.cote, g.indice, sure.cx, sure.cy);
-        g.fusionFaite = true;
         dessiner();
         if (cible !== null) {
           ouvrirDialogue({
@@ -572,8 +577,22 @@ function brancherPlateaux() {
     }
 
     groupe.addEventListener("click", () => {
-      if (glisse) return;
+      if (glisse || vientDeGlisser) {
+        vientDeGlisser = false;
+        return;
+      }
       cliquerPiece(cote, indice, type, supprime);
+    });
+
+    // au clavier : Entrée ou Espace agissent comme le clic
+    groupe.addEventListener("keydown", (e) => {
+      if (e.key !== "Enter" && e.key !== " ") return;
+      e.preventDefault();
+      cliquerPiece(cote, indice, type, supprime);
+      if (dialogue.hidden) {
+        const nouveau = rendu.querySelector(`[data-cote="${cote}"][data-indice="${indice}"]`);
+        if (nouveau) nouveau.focus();
+      }
     });
   });
 }
@@ -693,8 +712,18 @@ function miniTache(signe) {
   return `<svg viewBox="0 0 120 120" aria-hidden="true"><path d="${cheminTache(60, 60, 44)}" fill="${fond}" stroke="rgba(0,0,0,.22)" stroke-width="3"/><text x="60" y="66" fill="#fff" font-family="Georgia, serif" font-style="italic" font-size="34" font-weight="700" text-anchor="middle">${etiquette}</text></svg>`;
 }
 
+// le contrôle qui avait le focus avant le dialogue, pour le lui rendre
+let focusAvantDialogue = null;
+
+function focusablesDialogue() {
+  return [...dialogue.querySelectorAll("button, input")].filter(
+    (el) => !el.hidden && !el.disabled && el.getClientRects().length,
+  );
+}
+
 function ouvrirDialogue(demande) {
   demandeDialogue = demande;
+  focusAvantDialogue = document.activeElement;
   chipsDiv.innerHTML = "";
   tachesDiv.innerHTML = "";
   tachesTitre.hidden = true;
@@ -772,7 +801,12 @@ function ouvrirDialogue(demande) {
   }
   dialogueFond.hidden = false;
   dialogue.hidden = false;
-  if (avecSaisie) setTimeout(() => saisie.focus(), 60);
+  // le focus entre TOUJOURS dans le dialogue (pour « partager » aussi)
+  setTimeout(() => {
+    if (dialogue.hidden) return;
+    if (avecSaisie) saisie.focus();
+    else (chipsDiv.querySelector("button") ?? focusablesDialogue()[0] ?? dialogue).focus();
+  }, 60);
 }
 
 function fermerDialogue() {
@@ -781,7 +815,35 @@ function fermerDialogue() {
   demandeDialogue = null;
   clavierActif?.detruire();
   clavierActif = null;
+  // rendre le focus au contrôle d'origine s'il existe encore
+  if (focusAvantDialogue?.isConnected && document.body.contains(focusAvantDialogue)) {
+    focusAvantDialogue.focus();
+  }
+  focusAvantDialogue = null;
 }
+
+// Échap ferme le dialogue ; Tab reste à l'intérieur (dialogue modal)
+document.addEventListener("keydown", (e) => {
+  if (dialogue.hidden) return;
+  if (e.key === "Escape") {
+    e.preventDefault();
+    fermerDialogue();
+    return;
+  }
+  if (e.key === "Tab") {
+    const focusables = focusablesDialogue();
+    if (!focusables.length) return;
+    const premier = focusables[0];
+    const dernier = focusables[focusables.length - 1];
+    if (e.shiftKey && (document.activeElement === premier || !dialogue.contains(document.activeElement))) {
+      e.preventDefault();
+      dernier.focus();
+    } else if (!e.shiftKey && (document.activeElement === dernier || !dialogue.contains(document.activeElement))) {
+      e.preventDefault();
+      premier.focus();
+    }
+  }
+});
 
 saisie.addEventListener("keydown", (e) => {
   if (e.key === "Enter") {
@@ -900,6 +962,8 @@ document.getElementById("btnPng").addEventListener("click", () => {
 
 /* ————— import Splat Équations (l'ancien fichier « _import ») ————— */
 
+let messageImportRefuse = "";
+
 function lireImportUrl() {
   const recherche = new URLSearchParams(window.location.search || "");
   let brut = recherche.get("data") || recherche.get("eqs") || "";
@@ -926,12 +990,18 @@ function lireImportUrl() {
     changerModeOutil("enlever");
     return true;
   } catch (e) {
-    erreur.textContent = e.message;
+    messageImportRefuse = e.message;
     return false;
   }
 }
 
-if (!lireImportUrl()) construire();
+if (!lireImportUrl()) {
+  construire();
+  // le repli ne doit pas effacer la RAISON du refus de l'import
+  if (messageImportRefuse) {
+    erreur.textContent = `Équation importée refusée — ${messageImportRefuse}`;
+  }
+}
 </script>
 </body>
 </html>

@@ -22,6 +22,7 @@
   .chips button.actif{background:linear-gradient(180deg,#60a5fa,#3b82f6);color:#fff;border-color:#3b82f6}
   .vitrine{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:10px}
   .vignette{border:1px solid var(--ligne);border-radius:16px;padding:10px;background:#fff;text-align:center;cursor:pointer}
+  .vignette:focus-visible{outline:3px solid var(--bleu);outline-offset:2px}
   .vignette:active{transform:scale(.98)}
   .vignette svg{max-width:100%;height:auto}
   .vignette figcaption{font-family:Fredoka;font-weight:600;font-size:13.5px;margin-top:4px}
@@ -207,6 +208,9 @@ function ouvrirSerie(nomSerie) {
   for (const [cle, entree] of Object.entries(serieActive.objets)) {
     const vignette = document.createElement("figure");
     vignette.className = "vignette";
+    // activable au clavier comme au clic
+    vignette.tabIndex = 0;
+    vignette.setAttribute("role", "button");
     let svg = "";
     let probleme = null;
     try {
@@ -221,6 +225,11 @@ function ouvrirSerie(nomSerie) {
       ? `${entree.titre} : ERREUR — ${probleme}`
       : entree.titre;
     vignette.addEventListener("click", () => ouvrirObjet(cle));
+    vignette.addEventListener("keydown", (e) => {
+      if (e.key !== "Enter" && e.key !== " ") return;
+      e.preventDefault();
+      ouvrirObjet(cle);
+    });
     vitrine.appendChild(vignette);
   }
   window.scrollTo(0, 0);

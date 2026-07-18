@@ -51,10 +51,9 @@
       const button = document.querySelector(`[data-open-version="${version}"]`);
       if (version === 0) button.textContent = count ? (count === total ? "Revoir l’expédition" : "Continuer l’expédition") : "Commencer l’expédition";
     });
-    const revengeUnlocked = isVersionComplete(0);
-    $("revenge-card").classList.toggle("locked", !revengeUnlocked);
-    $("revenge-button").disabled = !revengeUnlocked;
-    $("revenge-button").textContent = !revengeUnlocked ? "À débloquer après le Défi 1" : (isVersionComplete(1) ? "Revoir la revanche" : answerCount(1,"math") + answerCount(1,"fr") ? "Continuer la revanche" : "Jouer la revanche");
+    $("revenge-card").classList.remove("locked");
+    $("revenge-button").disabled = false;
+    $("revenge-button").textContent = isVersionComplete(1) ? "Revoir la revanche" : answerCount(1,"math") + answerCount(1,"fr") ? "Continuer la revanche" : "Commencer la revanche";
     const availableLevels = Number(isVersionComplete(0)) + Number(isVersionComplete(1));
     $("open-game").disabled = availableLevels === 0;
     $("open-game").textContent = availableLevels ? `${availableLevels} niveau${availableLevels > 1 ? "x" : ""} débloqué${availableLevels > 1 ? "s" : ""}` : "Aucun niveau débloqué";
@@ -67,7 +66,6 @@
   }
 
   function openVersion(version) {
-    if (version === 1 && !isVersionComplete(0)) return;
     currentVersion = version;
     const info = data.versions[version];
     $("lobby-eyebrow").textContent = info.name;
@@ -83,13 +81,13 @@
   }
 
   function lessonVisual(kind) {
-    const fraction = `<div class="lesson-fraction"><span class="stacked-fraction"><b>2</b><i></i><b>3</b></span><svg viewBox="0 0 150 58"><rect x="4" y="9" width="94" height="38" rx="2" fill="#fff"/><rect x="4" y="9" width="62.7" height="38" fill="#facc15"/><rect x="4" y="9" width="94" height="38" rx="2" fill="none" stroke="#143451" stroke-width="3"/><path d="M35.3 9v38M66.7 9v38" stroke="#143451" stroke-width="2"/><path d="M114 13h26M127 3v20" stroke="#087a71" stroke-width="3"/></svg></div>`;
+    const fraction = `<div class="lesson-fraction"><span class="stacked-fraction"><b>4</b><i></i><b>6</b></span><svg class="lesson-fraction-diagram" viewBox="0 0 280 96"><text x="135" y="15" text-anchor="middle" font-size="20" font-weight="900" fill="#143451">1</text><path d="M135 19v8" stroke="#143451" stroke-width="3"/><rect x="12" y="29" width="246" height="52" rx="4" fill="#fff"/><rect x="12" y="29" width="164" height="52" fill="#facc15"/><rect x="12" y="29" width="246" height="52" rx="4" fill="none" stroke="#143451" stroke-width="4"/><path d="M53 29v52M94 29v52M135 29v52M176 29v52M217 29v52" stroke="#143451" stroke-width="3"/></svg></div>`;
     const visuals = {
       fraction,
-      plus9: `<svg viewBox="0 0 180 90"><text x="8" y="28" font-size="19" font-weight="800" fill="#143451">24 + 9</text><path d="M21 62h135" stroke="#143451" stroke-width="3"/><path d="M45 55v14M125 55v14M117 48l8 7 8-7" fill="none" stroke="#087a71" stroke-width="3"/><text x="31" y="85" font-size="14">24</text><text x="112" y="85" font-size="14">34</text><path d="M48 48Q84 13 123 48" fill="none" stroke="#f97316" stroke-width="4"/><text x="72" y="23" font-size="14" font-weight="800" fill="#d95f02">+ 10</text><path d="M123 40q21-18 27 8" fill="none" stroke="#0755b8" stroke-width="3"/><text x="140" y="28" font-size="13" fill="#0755b8">− 1</text></svg>`,
-      lines: `<svg viewBox="0 0 190 100"><path d="M17 22h65M17 55h65" stroke="#0755b8" stroke-width="6" stroke-linecap="round"/><text x="49" y="87" text-anchor="middle" font-size="12" font-weight="800">parallèles</text><path d="M126 12v69M96 47h69" stroke="#6d3ac7" stroke-width="6" stroke-linecap="round"/><path d="M126 47h15v15" fill="none" stroke="#f97316" stroke-width="3"/><text x="131" y="96" text-anchor="middle" font-size="12" font-weight="800">perpendiculaires</text></svg>`,
-      circle: `<svg viewBox="0 0 180 110"><circle cx="76" cy="54" r="43" fill="#fff" stroke="#0755b8" stroke-width="4"/><circle cx="76" cy="54" r="4" fill="#f97316"/><path d="M76 54h43" stroke="#087a71" stroke-width="4"/><path d="M33 54h86" stroke="#6d3ac7" stroke-width="3" opacity=".7"/><text x="91" y="44" font-size="12" fill="#087a71" font-weight="800">rayon</text><text x="48" y="75" font-size="12" fill="#6d3ac7" font-weight="800">diamètre</text></svg>`,
-      cube: `<svg viewBox="0 0 160 112"><path d="M36 31 84 12l41 24-49 21Z" fill="#dbeafe" stroke="#0755b8" stroke-width="3"/><path d="M36 31v47l40 24V57Z" fill="#e9faf6" stroke="#0755b8" stroke-width="3"/><path d="M76 57v45l49-23V36Z" fill="#fff0df" stroke="#0755b8" stroke-width="3"/><circle cx="125" cy="36" r="5" fill="#f97316"/><path d="M76 57v45" stroke="#6d3ac7" stroke-width="6"/></svg>`,
+      plus9: `<svg viewBox="0 0 280 120"><text x="18" y="28" font-size="20" font-weight="900" fill="#143451">38 + 9</text><path d="M25 84h230" stroke="#143451" stroke-width="3"/><g stroke="#143451" stroke-width="3"><path d="M40 76v16M108 76v16M240 76v16"/></g><path d="M40 68Q74 38 108 68" fill="none" stroke="#f97316" stroke-width="5"/><path d="M108 68Q174 24 240 68" fill="none" stroke="#087a71" stroke-width="5"/><g font-size="15" font-weight="900"><text x="40" y="110" text-anchor="middle">38</text><text x="108" y="110" text-anchor="middle">40</text><text x="240" y="110" text-anchor="middle">47</text><text x="74" y="45" text-anchor="middle" fill="#d95f02">+ 2</text><text x="174" y="30" text-anchor="middle" fill="#087a71">+ 7</text></g></svg>`,
+      lines: `<svg viewBox="0 0 290 126"><g stroke="#0755b8" stroke-width="6" stroke-linecap="round"><path d="M20 26h105M20 66h105"/><path d="M218 12v78M172 51h92"/></g><path d="M218 51h20v20" fill="none" stroke="#f97316" stroke-width="4"/><path d="M138 26h15M145 26v40M138 66h15" fill="none" stroke="#087a71" stroke-width="2"/><g font-size="14" font-weight="900" fill="#143451"><text x="72" y="108" text-anchor="middle">parallèles</text><text x="218" y="108" text-anchor="middle">perpendiculaires</text></g></svg>`,
+      circle: `<svg viewBox="0 0 310 134"><g><circle cx="74" cy="58" r="43" fill="#fff" stroke="#0755b8" stroke-width="4"/><circle cx="74" cy="58" r="4" fill="#f97316"/><path d="M74 58 112 36" stroke="#087a71" stroke-width="5"/><text x="50" y="119" font-size="14" font-weight="900" fill="#087a71">rayon</text><text x="67" y="64" font-size="14" font-weight="900">O</text></g><g><circle cx="226" cy="58" r="43" fill="#fff" stroke="#0755b8" stroke-width="4"/><circle cx="226" cy="58" r="4" fill="#f97316"/><path d="M183 58h86" stroke="#6d3ac7" stroke-width="5"/><path d="M183 106v9m0-4h86m0-5v9" stroke="#6d3ac7" stroke-width="3"/><text x="226" y="130" text-anchor="middle" font-size="14" font-weight="900" fill="#6d3ac7">diamètre</text></g></svg>`,
+      cube: `<svg viewBox="0 0 270 145"><path d="M28 42 87 18l53 31-59 27Z" fill="#dbeafe" stroke="#0755b8" stroke-width="3"/><path d="M28 42v57l59 34V76Z" fill="#e9faf6" stroke="#0755b8" stroke-width="3"/><path d="M87 76v57l53-31V49Z" fill="#fff0df" stroke="#0755b8" stroke-width="3"/><path d="M87 76v57" stroke="#f97316" stroke-width="7"/><g fill="#f97316"><circle cx="28" cy="42" r="5"/><circle cx="87" cy="18" r="5"/><circle cx="140" cy="49" r="5"/><circle cx="87" cy="76" r="5"/><circle cx="28" cy="99" r="5"/><circle cx="87" cy="133" r="5"/><circle cx="140" cy="102" r="5"/></g><g font-size="15" font-weight="900"><text x="164" y="45">6 faces</text><text x="164" y="76" fill="#f97316">12 arêtes</text><text x="164" y="107" fill="#d95f02">8 sommets</text></g></svg>`,
       story: `<div style="font-size:48px">🔎 📖</div>`,
       prefix: `<div style="font-weight:950;font-size:1.25rem"><span style="color:#f97316">re</span>faire · <span style="color:#6d3ac7">im</span>possible</div>`,
       sentence: `<div style="display:flex;gap:6px;align-items:center;font-weight:900"><span style="color:#0755b8">Le dodo</span><b>→</b><span style="color:#d95f02">avance</span></div>`,
@@ -104,7 +102,7 @@
     const label = subject === "math" ? "Mathématiques" : "Français";
     $("lesson-eyebrow").textContent = `${data.versions[currentVersion].shortName} · ${label}`;
     $("lesson-title").textContent = subject === "math" ? "Cinq idées utiles" : "Cinq repères pour lire et écrire";
-    $("lesson-grid").innerHTML = data.lessons[subject].map((lesson, index) => `<article class="lesson-card"><div class="lesson-visual">${lessonVisual(lesson.kind)}</div><h2>${index + 1}. ${lesson.title}</h2><p>${lesson.text}</p></article>`).join("");
+    $("lesson-grid").innerHTML = data.lessons[subject].map((lesson, index) => `<article class="lesson-card lesson-${lesson.kind}"><div class="lesson-visual">${lessonVisual(lesson.kind)}</div><h2>${index + 1}. ${lesson.title}</h2><p>${lesson.text}</p></article>`).join("");
     const count = answerCount(currentVersion, subject);
     const total = subjectTotal(currentVersion, subject);
     $("start-subject").textContent = count === total ? "Revoir les réponses →" : count ? `Continuer à la question ${count + 1} →` : "Commencer les questions →";
@@ -131,14 +129,14 @@
     return `<span class="stacked-fraction"><b>${numerator}</b><i></i><b>${denominator}</b></span>`;
   }
 
-  function fractionFigure(numerator, denominator, shape = "band") {
+  function fractionFigure(numerator, denominator, shape = "band", color = "#facc15") {
     if (shape === "disk") {
-      const sectors = Array.from({length: denominator}, (_, index) => `<path d="${sectorPath(90,70,56,index*360/denominator,(index+1)*360/denominator)}" fill="${index < numerator ? "#facc15" : "#fff"}"/>`).join("");
+      const sectors = Array.from({length: denominator}, (_, index) => `<path d="${sectorPath(90,70,56,index*360/denominator,(index+1)*360/denominator)}" fill="${index < numerator ? color : "#fff"}"/>`).join("");
       const rays = Array.from({length: denominator}, (_, index) => { const a = (index * 360 / denominator - 90) * Math.PI / 180; return `<path d="M90 70L${90 + 56*Math.cos(a)} ${70 + 56*Math.sin(a)}"/>`; }).join("");
       return `<svg class="fraction-diagram" viewBox="0 0 180 140" aria-label="${numerator} parts coloriées sur ${denominator}">${sectors}<g fill="none" stroke="#143451" stroke-width="2">${rays}<circle cx="90" cy="70" r="56"/></g></svg>`;
     }
     const width = 210, part = width / denominator;
-    const fills = Array.from({length: denominator}, (_, index) => index < numerator ? `<rect x="${10+index*part}" y="24" width="${part}" height="62" fill="#facc15"/>` : "").join("");
+    const fills = Array.from({length: denominator}, (_, index) => index < numerator ? `<rect x="${10+index*part}" y="24" width="${part}" height="62" fill="${color}"/>` : "").join("");
     const cuts = Array.from({length: denominator-1}, (_, index) => `<path d="M${10+(index+1)*part} 24v62"/>`).join("");
     return `<svg class="fraction-diagram" viewBox="0 0 230 110" aria-label="${numerator} parts coloriées sur ${denominator}">${fills}<g fill="none" stroke="#143451" stroke-width="3"><rect x="10" y="24" width="210" height="62"/>${cuts}</g></svg>`;
   }
@@ -152,9 +150,9 @@
 
   function renderBars(v, compare = false) {
     const max = compare ? v.big : Math.max(...v.rows.map(row => row.reduce((sum, item) => typeof item === "number" ? sum+item : sum, 0)));
-    const width = value => Math.round(value / max * 360);
-    if (compare) return `<div class="bar-model"><div class="bar-caption">${v.labels[0]} · ${v.big}</div><div class="bar-row" style="width:${width(v.big)}px;max-width:100%"><span style="flex:1;background:#bfe9e2">${v.big}</span></div><div class="bar-caption">${v.labels[1]} · ${v.small}</div><div class="bar-row" style="width:${width(v.small)}px;max-width:100%"><span style="flex:1;background:#dbeafe">${v.small}</span></div></div>`;
-    return `<div class="bar-model">${v.rows.map(row => { const nums=row.filter(item=>typeof item==="number"); const label=row.find(item=>typeof item==="string")||""; const total=nums.reduce((a,b)=>a+b,0); return `<div class="bar-caption">${label}</div><div class="bar-row" style="width:${width(total)}px;max-width:100%">${nums.map((n,i)=>`<span style="flex:${n};background:${i?'#ffe0b8':'#bfe9e2'}">${n}</span>`).join("")}</div>`; }).join("")}</div>`;
+    const width = value => Math.round(value / max * 100);
+    if (compare) return `<div class="bar-model"><div class="bar-caption">${v.labels[0]} · ${v.big}</div><div class="bar-row"><span style="width:${width(v.big)}%;background:#bfe9e2">${v.big}</span></div><div class="bar-caption">${v.labels[1]} · ${v.small}</div><div class="bar-row"><span style="width:${width(v.small)}%;background:#dbeafe">${v.small}</span></div></div>`;
+    return `<div class="bar-model">${v.rows.map(row => { const nums=row.filter(item=>typeof item==="number"); const label=row.find(item=>typeof item==="string")||""; const total=nums.reduce((a,b)=>a+b,0); return `<div class="bar-caption">${label}</div><div class="bar-row" style="width:${width(total)}%">${nums.map((n,i)=>`<span style="flex:${n};background:${i?'#ffe0b8':'#bfe9e2'}">${n}</span>`).join("")}</div>`; }).join("")}</div>`;
   }
 
   function renderVisual(v) {
@@ -162,25 +160,26 @@
     if (v.kind === "story") return `<div class="story">${v.text}</div>`;
     if (v.kind === "fraction") return `<div class="fraction-display">${fractionFigure(v.numerator,v.denominator,v.shape)}${v.showNotation === false ? "" : `<span class="fraction-notation">${stacked(v.numerator,v.denominator)}</span>`}</div>`;
     if (v.kind === "fraction-empty") return `<div style="font-size:2rem">À construire : ${stacked(v.target || "?",v.denominator)}</div>`;
-    if (v.kind === "fraction-compare") return `<div class="fraction-comparison"><div class="fraction-choice">${fractionFigure(v.first[0],v.first[1],v.shape)}<div class="fraction-notation">${stacked(...v.first)}</div></div><strong>ou</strong><div class="fraction-choice">${fractionFigure(v.second[0],v.second[1],v.shape)}<div class="fraction-notation">${stacked(...v.second)}</div></div></div>`;
+    if (v.kind === "fraction-compare") return `<div class="fraction-comparison"><div class="fraction-choice">${fractionFigure(v.first[0],v.first[1],v.shape,v.colors?.[0])}<div class="fraction-notation">${stacked(...v.first)}</div></div><strong>ou</strong><div class="fraction-choice">${fractionFigure(v.second[0],v.second[1],v.shape,v.colors?.[1])}<div class="fraction-notation">${stacked(...v.second)}</div></div></div>`;
     if (v.kind === "place-value") return `<div style="font-size:clamp(2.6rem,9vw,5rem);font-weight:950;letter-spacing:.08em">${v.number}</div>`;
     if (v.kind === "place-chart") return `<table style="border-collapse:collapse;text-align:center"><tr>${["milliers","centaines","dizaines","unités"].map((h,i)=>`<th style="padding:8px;border:1px solid #b9cfdd;background:${i===v.highlight?'#fff0c2':'#eef6fb'}">${h}</th>`).join("")}</tr><tr>${v.digits.map((d,i)=>`<td style="font-size:2rem;font-weight:950;padding:10px;border:1px solid #b9cfdd;background:${i===v.highlight?'#facc15':'#fff'}">${d}</td>`).join("")}</tr></table>`;
     if (v.kind === "decomposition") return `<div style="font-size:clamp(1.35rem,5vw,2.2rem);font-weight:950">${v.text}</div>`;
     if (v.kind === "number-line") return renderNumberLine(v);
     if (v.kind === "mental") return `<div class="mental-card">${v.expression}</div>`;
-    if (v.kind === "plus") return `<svg viewBox="0 0 390 125"><path d="M35 73h315" stroke="#143451" stroke-width="3"/><path d="M55 64v18M290 64v18M335 64v18" stroke="#143451" stroke-width="3"/><path d="M55 55Q170 2 290 55" fill="none" stroke="#f97316" stroke-width="5"/><path d="M290 55q29-28 45 0" fill="none" stroke="#0755b8" stroke-width="4"/><text x="55" y="111" text-anchor="middle" font-size="18">${v.start}</text><text x="170" y="25" text-anchor="middle" font-size="18" font-weight="900" fill="#d95f02">+ ${v.jump}</text><text x="322" y="30" text-anchor="middle" font-size="16" font-weight="900" fill="#0755b8">− ${v.back}</text></svg>`;
+    if (v.kind === "make-ten") return `<svg viewBox="0 0 390 125"><path d="M35 78h315" stroke="#143451" stroke-width="3"/><path d="M55 69v18M170 69v18M335 69v18" stroke="#143451" stroke-width="3"/><path d="M55 60Q111 23 170 60" fill="none" stroke="#f97316" stroke-width="5"/><path d="M170 60Q252 9 335 60" fill="none" stroke="#087a71" stroke-width="5"/><text x="55" y="113" text-anchor="middle" font-size="18">${v.start}</text><text x="170" y="113" text-anchor="middle" font-size="18">${v.middle}</text><text x="335" y="113" text-anchor="middle" font-size="18">?</text><text x="112" y="31" text-anchor="middle" font-size="18" font-weight="900" fill="#d95f02">+ ${v.first}</text><text x="252" y="20" text-anchor="middle" font-size="18" font-weight="900" fill="#087a71">+ ${v.second}</text></svg>`;
     if (v.kind === "column") return `<div style="font:950 2.2rem/1.15 ui-monospace,monospace;text-align:right"><div>${v.top}</div><div><span style="float:left">${v.sign}</span>${v.bottom}</div><div style="border-top:4px solid #143451;margin-top:5px">&nbsp;</div></div>`;
     if (v.kind === "bars") return renderBars(v);
     if (v.kind === "bars-compare") return renderBars(v,true);
     if (v.kind === "array") return `<div style="display:grid;grid-template-columns:repeat(${v.cols},26px);gap:5px">${Array.from({length:v.rows*v.cols},()=>`<i style="width:26px;height:26px;border-radius:50%;background:${v.color==='purple'?'#a78bfa':'#37b7ad'};border:2px solid #143451"></i>`).join("")}</div>`;
     if (v.kind === "money") return `<div style="display:flex;gap:14px;flex-wrap:wrap;justify-content:center">${v.groups.map(([count,price,label])=>`<div style="padding:10px 15px;border:2px solid #c8dbe8;border-radius:14px;background:#fff"><b>${count} × ${price} €</b><br><small>${label}</small></div>`).join("")}</div>`;
-    if (v.kind === "triangles-coded") return `<svg viewBox="0 0 540 170"><g fill="#fff" stroke="#0755b8" stroke-width="4" stroke-linejoin="round"><path d="M25 130 55 35l110 95Z"/><path d="M205 130 280 25l75 105Z"/><path d="M390 40v90h125Z"/></g><g stroke="#f97316" stroke-width="5"><path d="M245 74l11 8M311 72l-11 8"/></g><path d="M390 130v-24h24" fill="none" stroke="#f97316" stroke-width="4"/><g font-size="19" font-weight="900" fill="#143451" text-anchor="middle"><text x="95" y="158">A</text><text x="280" y="158">B</text><text x="452" y="158">C</text></g></svg>`;
-    if (v.kind === "lines-choice") return `<svg viewBox="0 0 430 160"><g stroke="#0755b8" stroke-width="7" stroke-linecap="round"><path d="M35 40h135M35 100h135"/><path d="M285 20v120M225 80h120"/></g><path d="M285 80h22v22" fill="none" stroke="#f97316" stroke-width="4"/><text x="102" y="145" text-anchor="middle" font-size="18" font-weight="900">A</text><text x="285" y="158" text-anchor="middle" font-size="18" font-weight="900">B</text></svg>`;
+    if (v.kind === "triangles-coded") return `<svg viewBox="0 0 540 170"><g fill="#fff" stroke="#0755b8" stroke-width="4" stroke-linejoin="round"><path d="M25 130 55 35l110 95Z"/><path d="M205 130 280 25l75 105Z"/><path d="M390 40v90h125Z"/></g><g stroke="#f97316" stroke-width="5"><path d="M243 78l12 8M305 86l12-8"/></g><path d="M390 130v-24h24" fill="none" stroke="#f97316" stroke-width="4"/><g font-size="19" font-weight="900" fill="#143451" text-anchor="middle"><text x="95" y="158">A</text><text x="280" y="158">B</text><text x="452" y="158">C</text></g></svg>`;
+    if (v.kind === "lines-choice") return `<svg viewBox="0 0 430 160"><g stroke="#0755b8" stroke-width="7" stroke-linecap="round"><path d="M35 40h135M35 100h135"/><path d="M285 20v120M225 80h120"/></g><path d="M285 80h22v22" fill="none" stroke="#f97316" stroke-width="5"/><text x="102" y="145" text-anchor="middle" font-size="18" font-weight="900">A</text><text x="285" y="158" text-anchor="middle" font-size="18" font-weight="900">B</text></svg>`;
     if (v.kind === "circle-parts") return v.ask === "radius" ? `<svg viewBox="0 0 300 190"><circle cx="150" cy="92" r="72" fill="#fff" stroke="#0755b8" stroke-width="5"/><path d="M150 92 205 45" stroke="#087a71" stroke-width="5"/><circle cx="150" cy="92" r="5" fill="#f97316"/><g font-size="18" font-weight="900" fill="#143451"><text x="139" y="117">O</text><text x="211" y="40">A</text></g></svg>` : `<svg viewBox="0 0 300 190"><circle cx="150" cy="92" r="72" fill="#fff" stroke="#0755b8" stroke-width="5"/><path d="M78 92h144" stroke="#6d3ac7" stroke-width="5"/><circle cx="150" cy="92" r="5" fill="#f97316"/><g font-size="18" font-weight="900" fill="#143451"><text x="139" y="117">O</text><text x="64" y="87">A</text><text x="228" y="87">B</text></g></svg>`;
     if (v.kind === "right-triangle-named") return `<svg viewBox="0 0 270 185"><path d="M45 25V145H230Z" fill="#fff" stroke="#0755b8" stroke-width="5" stroke-linejoin="round"/><path d="M45 145v-25h25" fill="none" stroke="#f97316" stroke-width="5"/><path d="M70 145A25 25 0 0 0 45 120" fill="none" stroke="#f97316" stroke-width="3"/><g font-size="21" font-weight="900" fill="#0755b8"><text x="28" y="25">A</text><text x="27" y="166">B</text><text x="234" y="163">C</text></g></svg>`;
     if (v.kind === "road-perpendicular") return `<svg viewBox="0 0 300 190"><path d="M30 95h240M150 20v150" stroke="#667b8c" stroke-width="34"/><path d="M30 95h240M150 20v150" stroke="#fff" stroke-width="3" stroke-dasharray="13 10"/><path d="M150 95h23v23" fill="none" stroke="#facc15" stroke-width="5"/></svg>`;
     if (v.kind === "solids") return `<svg viewBox="0 0 650 165" aria-label="Cinq solides non nommés"><g stroke="#0755b8" stroke-width="3" stroke-linejoin="round" fill="#fff"><path d="M18 66 60 40l38 23-42 27Z"/><path d="M18 66v53l38 23V90l42-27v53l-42 26" fill="#dbeafe"/><path d="M119 74 175 47l62 23-57 29Z"/><path d="M119 74v46l61 28V99l57-29v47l-57 31" fill="#eef6ff"/><ellipse cx="304" cy="48" rx="38" ry="14" fill="#e9faf6"/><path d="M266 48v78c0 8 17 15 38 15s38-7 38-15V48" fill="#e9faf6"/><ellipse cx="304" cy="126" rx="38" ry="15"/><path d="M375 137 421 34l47 103Z" fill="#fff0df"/><ellipse cx="421" cy="137" rx="46" ry="14" fill="#fff0df"/><path d="M525 114 569 28l60 87-52 31Z" fill="#f3edff"/><path d="M569 28 577 146M569 28 525 114M569 28 629 115" fill="none"/><path d="M525 114 577 92 629 115" fill="none" stroke-dasharray="6 5"/></g></svg>`;
     if (v.kind === "cube-parts") return lessonVisual("cube");
+    if (v.kind === "measure-reference") return `<div class="measure-reference"><div class="mental-card"><span>${v.from}</span> = <strong>?</strong> <span>${v.unit}</span></div><svg viewBox="0 0 360 70" aria-label="Repère d’un centimètre sur une règle"><path d="M25 40h310" stroke="#143451" stroke-width="5"/><g stroke="#143451" stroke-width="3"><path d="M55 24v32M85 31v25M115 31v25M145 31v25M175 31v25M205 31v25M235 31v25M265 31v25M295 31v25"/></g><path d="M55 14h30" stroke="#f97316" stroke-width="5"/><text x="70" y="12" text-anchor="middle" font-size="15" font-weight="900" fill="#d95f02">1 cm</text><text x="180" y="67" text-anchor="middle" font-size="13" font-weight="800">un petit trait à l’autre : 1 cm</text></svg></div>`;
     if (v.kind === "measure-question") return `<div class="mental-card"><span>${v.from}</span> = <strong>?</strong> <span>${v.unit}</span></div>`;
     if (v.kind === "timeline-clock") return `<div style="display:flex;align-items:center;gap:12px;font-size:clamp(1rem,4vw,1.5rem);font-weight:950"><span>${v.start}</span><b>→</b>${v.middle?`<span>${v.middle}</span><b>→</b>`:""}<span>${v.end}</span></div>`;
     if (v.kind === "chart") { const colors=["#f97316","#0755b8","#087a71"]; return `<svg viewBox="0 0 420 230"><path d="M54 20v170h330" fill="none" stroke="#143451" stroke-width="3"/>${Array.from({length:v.max+1},(_,i)=>{const y=190-i*26;return `<path d="M50 ${y}h334" stroke="#d6e4ec"/><text x="40" y="${y+5}" text-anchor="end" class="chart-label">${i}</text>`}).join("")}${v.values.map((value,i)=>`<rect x="${90+i*95}" y="${190-value*26}" width="52" height="${value*26}" rx="7" fill="${colors[i]}"/><text x="${116+i*95}" y="215" text-anchor="middle" class="chart-label">${v.labels[i]}</text>`).join("")}</svg>`; }
@@ -233,10 +232,9 @@
   function renderFractionTask(question, saved) {
     const selected = new Set(saved ? Array.from({length:question.target},(_,i)=>i) : []);
     const zone = $("answer-zone");
-    zone.innerHTML = `<div class="fraction-task"><div class="fraction-interactive">${question.shape==="disk"?diskTask(question,selected,Boolean(saved)):`<div class="fraction-strip">${Array.from({length:question.denominator},(_,i)=>`<button class="fraction-part${selected.has(i)?" selected":""}" type="button" data-part="${i}" ${saved?"disabled":""} aria-label="Part ${i+1}"></button>`).join("")}</div>`}</div><p class="selection-note"><b>${selected.size}</b> part${selected.size>1?"s":""} coloriée${selected.size>1?"s":""} sur ${question.denominator}</p><button class="validate-button" type="button" ${saved?"disabled":""}>Valider</button></div>`;
+    zone.innerHTML = `<div class="fraction-task"><div class="fraction-interactive">${question.shape==="disk"?diskTask(question,selected,Boolean(saved)):`<div class="fraction-strip">${Array.from({length:question.denominator},(_,i)=>`<button class="fraction-part${selected.has(i)?" selected":""}" type="button" data-part="${i}" ${saved?"disabled":""} aria-label="Part ${i+1}"></button>`).join("")}</div>`}</div><button class="validate-button" type="button" ${saved?"disabled":""}>Valider</button></div>`;
     const refresh = () => {
       zone.querySelector(".fraction-interactive").innerHTML = question.shape==="disk"?diskTask(question,selected,false):`<div class="fraction-strip">${Array.from({length:question.denominator},(_,i)=>`<button class="fraction-part${selected.has(i)?" selected":""}" type="button" data-part="${i}" aria-label="Part ${i+1}"></button>`).join("")}</div>`;
-      zone.querySelector(".selection-note").innerHTML = `<b>${selected.size}</b> part${selected.size>1?"s":""} coloriée${selected.size>1?"s":""} sur ${question.denominator}`;
       bindParts();
     };
     const toggle = index => { if(questionLocked)return; selected.has(index)?selected.delete(index):selected.add(index); refresh(); };
@@ -304,7 +302,7 @@
     $("done-title").textContent = `Tu as terminé le ${label} !`;
     const other = currentSubject === "math" ? "fr" : "math";
     if (isVersionComplete(currentVersion)) {
-      $("done-message").textContent = `${score} réponses justes sur ${total} dans cette matière. Les ${versionTotal(currentVersion)} questions du défi sont terminées : ${currentVersion===0?"la Revanche et le niveau 1 du dodo sont maintenant débloqués.":"le niveau 2 du dodo est maintenant débloqué."}`;
+      $("done-message").textContent = `${score} réponses justes sur ${total} dans cette matière. Les ${versionTotal(currentVersion)} questions du défi sont terminées : le niveau ${currentVersion + 1} du dodo est maintenant débloqué.`;
     } else {
       $("done-message").textContent = `${score} réponses justes sur ${total}. Tu as lu toutes les corrections et tu peux maintenant passer ${other==="math"?"aux mathématiques":"au français"}.`;
     }
@@ -312,14 +310,14 @@
   }
 
   function openGame() {
-    if (!isVersionComplete(0)) return;
+    if (!isVersionComplete(0) && !isVersionComplete(1)) return;
     show("game");
-    document.querySelectorAll("[data-level]").forEach(button=>{const level=Number(button.dataset.level);button.disabled=level===1&&!isVersionComplete(1);});
-    startLevel(isVersionComplete(1) && read("last-level") === 1 ? 1 : 0);
+    document.querySelectorAll("[data-level]").forEach(button=>{const level=Number(button.dataset.level);button.disabled=!isVersionComplete(level);});
+    startLevel(isVersionComplete(0) ? (isVersionComplete(1) && read("last-level") === 1 ? 1 : 0) : 1);
   }
 
   function startLevel(index) {
-    if (index === 1 && !isVersionComplete(1)) return;
+    if (!isVersionComplete(index)) return;
     levelIndex = index;
     write("last-level", index);
     const level = data.gameLevels[index];

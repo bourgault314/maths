@@ -33,9 +33,12 @@
     });
   }
 
-  function retirerModulesInvisibles() {
+  // La sélection est la MÉMOIRE de l'utilisateur : on n'en retire jamais
+  // rien quand un module devient invisible (revenir au réglage précédent
+  // doit la restaurer). Seule la partie visible compte pour le lancement.
+  function selectionVisible() {
     const visibles = new Set(modulesVisibles().map(module => module.idHistorique));
-    [...selection].forEach(id => { if (!visibles.has(id)) selection.delete(id); });
+    return [...selection].filter(id => visibles.has(id));
   }
 
   function creerLigneModule(module) {
@@ -60,7 +63,6 @@
   }
 
   function rendreMenu() {
-    retirerModulesInvisibles();
     const boite = document.getElementById('modules');
     const domaineOuvert = boite.querySelector('.theme-group[open]')?.dataset.theme || null;
     boite.replaceChildren();
@@ -166,7 +168,7 @@
   }
 
   function rafraichirBarreAction() {
-    const total = selection.size;
+    const total = selectionVisible().length;
     const barre = document.querySelector('.barre-action');
     const resume = document.getElementById('resumeSelection');
     const details = document.getElementById('resumeReglages');
@@ -187,8 +189,10 @@
   }
 
   function lancer() {
-    if (!selection.size) return;
-    const idsCanoniques = [...selection].map(id => MODULE_PAR_ID_HISTORIQUE.get(id).id);
+    // seuls les modules VISIBLES avec les réglages courants partent en série
+    const ids = selectionVisible();
+    if (!ids.length) return;
+    const idsCanoniques = ids.map(id => MODULE_PAR_ID_HISTORIQUE.get(id).id);
     const code = MG1.encoderSerie({
       niveau: reglages.level,
       nombreDeQuestions: reglages.count,
@@ -225,7 +229,8 @@
     rafraichirCompteurs();
   });
   document.getElementById('boutonAucun').addEventListener('click', () => {
-    selection.clear();
+    // ne vide que ce qui est visible : les sélections des autres réglages restent
+    selectionVisible().forEach(id => selection.delete(id));
     document.querySelectorAll('.case-module').forEach(caseModule => { caseModule.checked = false; });
     rafraichirCompteurs();
   });

@@ -43,6 +43,11 @@ import {
   creerConfigurationAngles,
   dessinerConfigurationAngles,
 } from "../../packages/objets/src/configurations-angles.js";
+import {
+  GABARITS_REFERENCE_POURCENTAGE,
+  PREREGLAGES_BARRE_POURCENTAGE,
+  dessinerBarrePourcentage,
+} from "../../packages/objets/src/barre-pourcentage.js";
 import { VARIATIONS_THALES, creerThales, dessinerThales } from "../../packages/objets/src/thales.js";
 import { creerGenerateur } from "../../packages/moteur-exercices/src/aleatoire.js";
 
@@ -352,6 +357,89 @@ const entreePlateaux = {
     })),
   vignette: () => svgPlateaux("3x = 12", 130),
 };
+
+// ---------------------------------------------------------------------------
+// Pourcentages : l'objet barre-pourcentage (préréglages + gabarits)
+// ---------------------------------------------------------------------------
+
+function entreePourcentage(preset) {
+  const evolution = preset.question.mode.startsWith("evo_");
+  const avecChemin = [4, 5, 20].includes(preset.question.parts) && preset.question.mode === "direct";
+  const accoladeParDefaut = preset.options?.accolade ?? "auto";
+  const groupes = [
+    {
+      cle: "etiquettes",
+      options: [["valeurs", "valeurs"], ["pourcentages", "rempli en %"], ["vierge", "vierge"]],
+      defaut: "valeurs",
+    },
+  ];
+  if (evolution) {
+    groupes.push({
+      cle: "accolade",
+      options: [["auto", "accolade auto"], ["montant", "accolade montant"], ["coefficient", "coefficient (100 %)"]],
+      defaut: accoladeParDefaut,
+    });
+  }
+  const toggles = [{ cle: "correction", libelle: "correction", defaut: false }];
+  if (avecChemin) toggles.push({ cle: "chemin", libelle: "chemin de calcul", defaut: true });
+  toggles.push({ cle: "accoladePart", libelle: "accolade sous la part", defaut: false });
+  return {
+    titre: preset.titre,
+    parametres: [
+      { cle: "largeurTotale", libelle: "Largeur", min: 240, max: 1200, pas: 20, defaut: 800 },
+      { cle: "hauteurBarre", libelle: "Hauteur", min: 24, max: 110, pas: 2, defaut: 60 },
+    ],
+    groupes,
+    toggles,
+    dessiner(v, actifs) {
+      const options = {
+        ...(preset.options ?? {}),
+        largeurTotale: Number(v.largeurTotale),
+        hauteurBarre: Number(v.hauteurBarre),
+        correction: actifs.has("correction"),
+        chemin: actifs.has("chemin"),
+        accolades: actifs.has("accoladePart") ? "actives" : "auto",
+        etiquettes: v.etiquettes,
+      };
+      if (evolution && v.accolade === "montant") options.accolade = "montant";
+      if (evolution && v.accolade === "coefficient") {
+        options.accolade = "coefficient";
+        options.normalise = true;
+      }
+      return dessinerBarrePourcentage(preset.question, options).svg;
+    },
+    planche() {
+      const tailles = { largeurTotale: 460, hauteurBarre: 40 };
+      const variantes = [
+        ["énoncé", { correction: false }],
+        ["correction", { correction: true }],
+        ["accolade sous la part", { correction: true, accolades: "actives" }],
+        ["rempli en %", { etiquettes: "pourcentages" }],
+        ["vierge", { etiquettes: "vierge" }],
+      ];
+      if (avecChemin) variantes.push(["sans le chemin", { correction: true, chemin: false }]);
+      if (evolution) {
+        variantes.push(
+          ["accolade montant", { correction: true, accolade: "montant" }],
+          ["coefficient (100 %)", { correction: true, accolade: "coefficient", normalise: true }],
+        );
+      }
+      return variantes.map(([legende, options]) => ({
+        legende,
+        dessiner: () =>
+          dessinerBarrePourcentage(preset.question, { ...(preset.options ?? {}), ...tailles, ...options }).svg,
+      }));
+    },
+    vignette: () =>
+      dessinerBarrePourcentage(preset.question, {
+        ...(preset.options ?? {}),
+        largeurTotale: 420,
+        hauteurBarre: 36,
+        chemin: false,
+        etiquettes: preset.id.startsWith("gabarit-") ? "pourcentages" : "valeurs",
+      }).svg,
+  };
+}
 
 // ---------------------------------------------------------------------------
 // Primitives géométriques
@@ -729,6 +817,15 @@ export const SERIES = [
   },
   { nom: "Splat", objets: { tache: entreeTache } },
   { nom: "ÉquaSplat", objets: { plateaux: entreePlateaux } },
+  {
+    nom: "Pourcentages",
+    objets: Object.fromEntries(
+      [...PREREGLAGES_BARRE_POURCENTAGE, ...GABARITS_REFERENCE_POURCENTAGE].map((preset) => [
+        preset.id,
+        entreePourcentage(preset),
+      ]),
+    ),
+  },
   {
     nom: "Primitives",
     objets: {
