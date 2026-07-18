@@ -155,7 +155,8 @@
       groupe.classList.toggle('has-selection', cochees.length > 0);
       const badge = groupe.querySelector('.theme-count');
       if (badge) {
-        badge.textContent = cochees.length + ' / ' + cases.length;
+        badge.innerHTML = '<span class="theme-count-value">' + cochees.length + ' / ' + cases.length +
+          '</span><span class="theme-count-label"> sélectionné' + (cochees.length === 1 ? '' : 's') + '</span>';
         badge.setAttribute('aria-label',
           cochees.length + ' automatisme' + (cochees.length === 1 ? '' : 's') +
           ' sélectionné' + (cochees.length === 1 ? '' : 's') + ' sur ' + cases.length);
@@ -181,7 +182,8 @@
     bouton.textContent = reglages.experienceMode === 'interactive'
       ? 'Lancer l’entraînement'
       : 'Lancer le diaporama';
-    document.getElementById('toutDeselectionner').disabled = total === 0;
+    document.getElementById('boutonAucun').disabled = total === 0;
+    document.getElementById('boutonTous').disabled = total === modulesVisibles().length;
   }
 
   function lancer() {
@@ -217,7 +219,12 @@
     });
   }
 
-  document.getElementById('toutDeselectionner').addEventListener('click', () => {
+  document.getElementById('boutonTous').addEventListener('click', () => {
+    modulesVisibles().forEach(module => selection.add(module.idHistorique));
+    document.querySelectorAll('.case-module').forEach(caseModule => { caseModule.checked = true; });
+    rafraichirCompteurs();
+  });
+  document.getElementById('boutonAucun').addEventListener('click', () => {
     selection.clear();
     document.querySelectorAll('.case-module').forEach(caseModule => { caseModule.checked = false; });
     rafraichirCompteurs();

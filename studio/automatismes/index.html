@@ -9,149 +9,172 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;600;700&display=swap" rel="stylesheet">
 <style>
-  /* Charte maths&go (packages/charte) : couleurs officielles, pas 4 px, rayons 8/12/20. */
+  /* Charte maths&go (packages/charte) + gabarit de l'application Automatismes :
+     même largeur (860 px), même fond, mêmes pastilles d'étapes. */
   :root{
     --page:#f6f8fb; --papier:#ffffff; --encre:#10294a; --bleu:#063f86;
     --turquoise:#08b9b2; --orange:#f58220; --attenue:#637287;
-    --ligne:#dce5ef; --fond-doux:#f5f9fc;
+    --ligne:#dce5ef; --ligne-bouton:#cfdcee; --fond-doux:#f5f9fc;
   }
   *{box-sizing:border-box}
-  html{scroll-padding-bottom:120px}
-  body{margin:0;background:var(--page);color:var(--encre);
+  body{margin:0;color:var(--encre);
+    background:radial-gradient(circle at 8% 0,rgba(8,185,178,.055),transparent 30%),var(--page);
     font-family:"Segoe UI",system-ui,-apple-system,sans-serif;
-    padding:16px 16px 132px;max-width:1020px;margin-inline:auto}
-  @media(min-width:700px){body{padding:24px 24px 120px}}
+    padding:max(18px,env(safe-area-inset-top)) max(18px,env(safe-area-inset-right))
+      max(118px,calc(env(safe-area-inset-bottom) + 100px)) max(18px,env(safe-area-inset-left))}
+  .page{max-width:860px;margin:0 auto}
 
-  /* ————— En-tête « duo » de l'application (logo + titre, liseré tricolore) ————— */
+  /* ————— En-tête « duo » (logo + titre, liseré tricolore) ————— */
   .entete-site{position:relative;display:flex;align-items:center;justify-content:center;gap:16px;
-    overflow:hidden;background:var(--papier);border:1px solid var(--ligne);border-radius:20px;
-    padding:14px 16px 12px;box-shadow:0 8px 24px rgba(16,41,74,.06)}
+    overflow:hidden;background:var(--papier);border:1px solid var(--ligne);border-radius:18px;
+    padding:14px 16px 12px;box-shadow:0 8px 24px rgba(16,41,74,.065)}
   .entete-site::before{content:"";position:absolute;top:0;right:0;left:0;height:4px;
-    border-radius:20px 20px 0 0;background:linear-gradient(90deg,var(--turquoise),var(--bleu),var(--orange))}
+    border-radius:18px 18px 0 0;background:linear-gradient(90deg,var(--turquoise),var(--bleu),var(--orange))}
   .lien-logo{display:inline-flex;align-items:center;border-radius:12px;outline-offset:4px}
   .lien-logo:focus-visible{outline:3px solid var(--orange)}
   .logo{height:58px;object-fit:contain}
   .titre-site{display:flex;flex-direction:column;align-items:center}
   .titre-site h1{font-family:Fredoka,"Segoe UI",sans-serif;font-weight:600;color:var(--bleu);
-    font-size:clamp(22px,3.4vw,27px);line-height:1.05;margin:0;text-align:center}
+    font-size:24px;line-height:1.05;margin:0;text-align:center}
   .titre-site .titre-cycle{display:block;margin-top:.18em;font-size:.68em;letter-spacing:.02em;font-weight:600}
-  .badge-beta{margin-top:7px;font-family:Fredoka;font-size:11px;font-weight:600;letter-spacing:.5px;
-    color:#fff;background:var(--orange);border-radius:999px;padding:3px 10px}
-  @media(max-width:480px){.logo{height:46px}.entete-site{gap:12px;padding:12px 12px 10px}}
-  .sous-titre{color:var(--attenue);margin:10px 4px 20px;font-size:13px;line-height:1.45;text-align:center}
+  .badge-beta{width:max-content;margin:6px auto 0;padding:3px 8px;border-radius:999px;
+    background:#edf3fb;color:#687893;font-size:10px;font-weight:750;letter-spacing:.06em;text-transform:uppercase}
 
   /* ————— Cartes et étapes ————— */
-  section.carte{background:var(--papier);border:1px solid var(--ligne);border-radius:20px;
-    padding:clamp(16px,3vw,24px);margin-bottom:16px}
-  .entete-etape{display:flex;align-items:center;gap:12px;margin-bottom:16px}
-  .pastille-etape{display:inline-grid;place-items:center;width:28px;height:28px;flex:none;
-    border-radius:999px;background:var(--turquoise);color:#fff;
-    font-family:Fredoka;font-weight:700;font-size:15px}
-  .entete-etape h2{font-family:Fredoka;font-weight:600;font-size:20px;margin:0;color:var(--encre)}
+  main{display:grid;gap:12px;margin-top:12px}
+  section.carte{background:var(--papier);border:1px solid var(--ligne);border-radius:18px;
+    padding:16px;box-shadow:0 8px 24px rgba(16,41,74,.065)}
+  .entete-etape{display:flex;align-items:center;gap:10px}
+  .pastille-etape{display:inline-grid;place-items:center;width:25px;height:25px;flex:none;
+    border-radius:8px;color:#fff;font-size:13px;font-weight:900;box-shadow:0 3px 8px rgba(6,63,134,.13)}
+  .pastille-reglages{background:var(--orange)}
+  .pastille-modules{background:var(--turquoise)}
+  .entete-etape h2{font-family:Fredoka,"Segoe UI",sans-serif;font-weight:600;font-size:19px;
+    margin:0;color:var(--bleu)}
 
-  /* ————— Réglages (segments) ————— */
-  .grille-reglages{display:grid;gap:16px;grid-template-columns:repeat(auto-fit,minmax(240px,1fr))}
-  .champ label{display:block;font-size:12.5px;font-weight:700;letter-spacing:.6px;
-    text-transform:uppercase;color:var(--attenue);margin:0 0 6px 4px}
-  .segments{display:flex;background:var(--fond-doux);border:1px solid var(--ligne);
-    border-radius:999px;padding:3px;gap:2px}
-  .segments button{flex:1;border:0;background:transparent;color:var(--encre);cursor:pointer;
-    font:inherit;font-weight:600;font-size:14.5px;min-height:40px;padding:8px 10px;
-    border-radius:999px;transition:background .12s,color .12s,box-shadow .12s;white-space:nowrap}
-  .segments button.est-actif{background:var(--bleu);color:#fff;
-    box-shadow:0 4px 12px rgba(6,63,134,.28)}
+  /* ————— Réglages : quatre groupes sur une ligne, boutons individuels ————— */
+  .grille-reglages{display:grid;grid-template-columns:repeat(2,auto);justify-content:space-evenly;
+    justify-items:center;gap:16px 32px;margin-top:14px}
+  .champ{display:flex;flex-direction:column;align-items:center;gap:7px}
+  .champ label{font-weight:700;font-size:13px;color:var(--encre)}
+  .segments{display:flex;align-items:stretch;gap:7px}
+  .segments button{border:1.5px solid var(--ligne-bouton);background:#fff;color:var(--encre);
+    cursor:pointer;font:inherit;font-weight:700;font-size:14.5px;min-height:44px;min-width:46px;
+    padding:9px 14px;border-radius:12px;white-space:nowrap;
+    transition:background .12s,color .12s,border-color .12s,box-shadow .12s}
+  .segments button:hover{border-color:var(--bleu);background:var(--fond-doux)}
+  .segments button.est-actif{background:var(--bleu);border-color:var(--bleu);color:#fff;
+    box-shadow:0 4px 12px rgba(6,63,134,.26)}
   .segments button:focus-visible{outline:3px solid rgba(6,63,134,.4);outline-offset:2px}
 
   /* DNB n'est pas un niveau de classe : trait de séparation et couleur à part */
-  .separation-epreuve{width:1px;align-self:stretch;margin:5px 3px;background:var(--ligne);flex:none}
-  .segments .bouton-epreuve.est-actif{background:var(--orange);box-shadow:0 4px 12px rgba(245,130,32,.30)}
+  .separation-epreuve{width:1px;align-self:stretch;margin:4px 3px;background:var(--ligne);flex:none}
+  .segments .bouton-epreuve:hover{border-color:var(--orange);background:#fff8f1}
+  .segments .bouton-epreuve.est-actif{background:var(--orange);border-color:var(--orange);
+    box-shadow:0 4px 12px rgba(245,130,32,.30)}
   .segments .bouton-epreuve:focus-visible{outline-color:rgba(245,130,32,.5)}
-  .note-champ{margin:6px 4px 0;font-size:12px;color:var(--attenue);line-height:1.35}
-
-  /* Sur téléphone : Aide et Mode côte à côte, marges resserrées (l'étape 1
-     tenait presque un écran entier) */
-  @media(max-width:640px){
-    .segments button{min-height:44px;font-size:13.5px;padding:8px 6px}
-    .grille-reglages{grid-template-columns:1fr 1fr;gap:12px 10px}
-    .champ-niveau,.champ-questions{grid-column:1 / -1}
-    section.carte{padding:14px}
-    .entete-etape{margin-bottom:12px}
-    .champ label{margin-bottom:4px}
-  }
+  .note-champ{margin:2px 0 0;font-size:11.5px;color:var(--attenue);line-height:1.35;text-align:center}
 
   /* ————— Choix des automatismes ————— */
-  .barre-choix{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:16px}
-  .barre-choix .entete-etape{margin-bottom:0}
-  #toutDeselectionner{border:1px solid var(--ligne);background:#fff;color:var(--attenue);
-    font:inherit;font-size:13.5px;font-weight:600;border-radius:999px;padding:8px 16px;cursor:pointer}
-  #toutDeselectionner:hover:not(:disabled){background:var(--fond-doux);color:var(--encre)}
-  #toutDeselectionner:focus-visible{outline:3px solid rgba(6,63,134,.4);outline-offset:2px}
-  #toutDeselectionner:disabled{opacity:.4;cursor:default}
+  .barre-choix{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:14px}
+  .actions-groupees{display:flex;gap:6px}
+  .actions-groupees button{border:1px solid var(--ligne-bouton);background:#fff;color:var(--attenue);
+    font:inherit;font-size:13px;font-weight:700;border-radius:999px;padding:7px 15px;cursor:pointer}
+  .actions-groupees button:hover:not(:disabled){background:var(--fond-doux);color:var(--encre)}
+  .actions-groupees button:focus-visible{outline:3px solid rgba(6,63,134,.4);outline-offset:2px}
+  .actions-groupees button:disabled{opacity:.4;cursor:default}
 
-  .theme-group{border:1px solid var(--ligne);border-radius:16px;background:#fff;margin-bottom:12px;overflow:hidden}
+  .theme-group{border:1px solid var(--ligne);border-radius:14px;background:#fff;margin-bottom:10px;overflow:hidden}
   .theme-group[open]{border-color:#b9d2e8;box-shadow:0 8px 24px rgba(16,41,74,.07)}
   .theme-group.has-selection{border-color:var(--turquoise)}
-  .theme-summary{display:flex;align-items:center;gap:12px;padding:12px 14px;cursor:pointer;
+  .theme-summary{display:flex;align-items:center;gap:12px;padding:10px 14px;cursor:pointer;
     list-style:none;min-height:56px;-webkit-tap-highlight-color:transparent}
   .theme-summary::-webkit-details-marker{display:none}
   .theme-summary:hover{background:var(--fond-doux)}
   .theme-summary:focus-visible{outline:3px solid rgba(6,63,134,.4);outline-offset:-3px}
-  .theme-icon{width:40px;height:40px;flex:none}
+  .theme-icon{width:38px;height:38px;flex:none}
   .theme-icon svg{width:100%;height:100%;display:block}
-  .theme-name{font-family:Fredoka;font-weight:600;font-size:16.5px;flex:1;line-height:1.25}
-  .theme-count{font-family:Fredoka;font-weight:600;font-size:13.5px;color:var(--attenue);
+  .theme-name{font-family:Fredoka,"Segoe UI",sans-serif;font-weight:600;font-size:16px;flex:1;line-height:1.25}
+  .theme-count{font-weight:700;font-size:12.5px;color:var(--attenue);
     background:var(--fond-doux);border:1px solid var(--ligne);border-radius:999px;
-    padding:4px 12px;white-space:nowrap}
+    padding:4px 11px;white-space:nowrap}
   .has-selection .theme-count{background:var(--turquoise);border-color:var(--turquoise);color:#fff}
-  .theme-chevron{width:10px;height:10px;flex:none;margin-right:4px;
+  .theme-chevron{width:9px;height:9px;flex:none;margin:0 4px;
     border-right:2.5px solid var(--attenue);border-bottom:2.5px solid var(--attenue);
-    transform:rotate(45deg);transition:transform .15s}
-  .theme-group[open] .theme-chevron{transform:rotate(225deg)}
+    transform:rotate(-45deg);transition:transform .15s}
+  .theme-group[open] .theme-chevron{transform:rotate(45deg)}
 
-  .theme-items{padding:0 14px 16px;border-top:1px solid var(--ligne)}
-  .tout-domaine{display:flex;align-items:center;gap:10px;padding:12px 4px;cursor:pointer;
-    font-size:14px;font-weight:600;color:var(--attenue)}
+  .theme-items{padding:0 14px 14px;border-top:1px solid var(--ligne)}
+  .tout-domaine{display:flex;align-items:center;gap:10px;padding:11px 4px;cursor:pointer;
+    font-size:13.5px;font-weight:600;color:var(--attenue)}
   .tout-domaine input{width:18px;height:18px;accent-color:var(--turquoise);cursor:pointer}
-  .module-subgroup-title{font-size:12.5px;font-weight:700;letter-spacing:.6px;text-transform:uppercase;
-    color:var(--attenue);margin:14px 0 8px 4px}
-  .module-subgroup-items{display:grid;gap:8px}
-  @media(min-width:760px){.module-subgroup-items{grid-template-columns:1fr 1fr}}
-  .ligne-module{display:flex;align-items:center;gap:12px;padding:11px 14px;cursor:pointer;
-    border:1px solid var(--ligne);border-radius:12px;background:#fff;min-height:48px;
+  .module-subgroup-title{font-size:12px;font-weight:700;letter-spacing:.6px;text-transform:uppercase;
+    color:var(--attenue);margin:12px 0 7px 4px}
+  .module-subgroup-items{display:grid;gap:7px}
+  @media(min-width:700px){.module-subgroup-items{grid-template-columns:1fr 1fr}}
+  .ligne-module{display:flex;align-items:center;gap:11px;padding:10px 13px;cursor:pointer;
+    border:1px solid var(--ligne);border-radius:12px;background:#fff;min-height:46px;
     transition:background .1s,border-color .1s;-webkit-tap-highlight-color:transparent}
   .ligne-module:hover{background:var(--fond-doux)}
   .ligne-module.est-choisi{border-color:var(--bleu);background:#eef4fc}
-  .case-module{width:20px;height:20px;flex:none;accent-color:var(--bleu);cursor:pointer}
-  .titre-module{font-size:14.5px;font-weight:600;line-height:1.3}
+  .case-module{width:19px;height:19px;flex:none;accent-color:var(--bleu);cursor:pointer}
+  .titre-module{font-size:14px;font-weight:600;line-height:1.3}
 
-  /* ————— Barre d'action (fixe en bas, comme dans les outils) ————— */
-  .barre-action{position:fixed;left:0;right:0;bottom:0;z-index:50;
-    background:rgba(255,255,255,.96);backdrop-filter:blur(6px);
-    border-top:1px solid var(--ligne);box-shadow:0 -10px 30px rgba(16,41,74,.08);
-    padding:10px 16px calc(10px + env(safe-area-inset-bottom))}
-  .barre-action-contenu{max-width:1020px;margin-inline:auto;display:flex;align-items:center;
-    gap:16px;flex-wrap:wrap}
-  .resume{flex:1;min-width:180px}
-  .resume strong{display:block;font-family:Fredoka;font-weight:600;font-size:15.5px}
-  .resume span{display:block;color:var(--attenue);font-size:13px;margin-top:1px}
-  .est-vide .resume strong{color:var(--attenue);font-weight:500}
-  #boutonLancer{border:0;cursor:pointer;font:inherit;font-weight:700;font-size:16px;color:#fff;
+  /* ————— Crédits (repris de l'application) ————— */
+  footer{margin-top:16px;text-align:center;color:var(--attenue);font-size:12.5px}
+  footer details{display:inline-block}
+  footer summary{cursor:pointer;text-decoration:underline;text-underline-offset:3px}
+  footer p{max-width:560px;margin:8px auto 0;line-height:1.5}
+  footer a{color:var(--attenue)}
+
+  /* ————— Barre d'action : carte flottante, comme dans l'application ————— */
+  .barre-action{position:fixed;z-index:50;left:0;right:0;bottom:0;pointer-events:none;
+    padding:10px max(18px,env(safe-area-inset-right)) max(10px,env(safe-area-inset-bottom)) max(18px,env(safe-area-inset-left));
+    background:linear-gradient(180deg,rgba(246,248,251,0),rgba(246,248,251,.96) 28%)}
+  .barre-action-carte{pointer-events:auto;display:grid;grid-template-columns:minmax(0,1fr) auto;
+    align-items:center;gap:10px;width:min(100%,832px);margin:0 auto;padding:10px 12px;
+    border:1px solid #cbdcf1;border-radius:15px;background:rgba(255,255,255,.98);
+    box-shadow:0 12px 34px rgba(6,63,134,.18)}
+  .resume{min-width:0;display:flex;flex-direction:column;gap:2px;padding-left:3px}
+  .resume strong{overflow:hidden;font-size:14.5px;line-height:1.2;color:var(--bleu);
+    text-overflow:ellipsis;white-space:nowrap}
+  .resume span{overflow:hidden;color:var(--attenue);font-size:12px;line-height:1.2;
+    text-overflow:ellipsis;white-space:nowrap}
+  .est-vide .resume strong{color:var(--attenue);font-weight:600}
+  #boutonLancer{border:0;cursor:pointer;font:inherit;font-weight:700;font-size:15.5px;color:#fff;
     background:linear-gradient(180deg,#ff9a3d,var(--orange));border-radius:999px;
-    min-height:48px;padding:12px 28px;box-shadow:0 10px 24px rgba(245,130,32,.30);
+    min-height:48px;padding:11px 26px;box-shadow:0 10px 24px rgba(245,130,32,.30);
     transition:transform .1s,box-shadow .12s}
   #boutonLancer:hover:not(:disabled){transform:translateY(-1px);box-shadow:0 14px 28px rgba(245,130,32,.36)}
   #boutonLancer:active:not(:disabled){transform:translateY(1px);box-shadow:none}
   #boutonLancer:focus-visible{outline:3px solid rgba(245,130,32,.5);outline-offset:3px}
   #boutonLancer:disabled{background:#cdd7e4;box-shadow:none;cursor:not-allowed}
-  @media(max-width:560px){
-    .barre-action-contenu{gap:10px}
-    #boutonLancer{flex:1 1 100%;padding:13px 20px}
-  }
 
-  footer{color:var(--attenue);font-size:12.5px;margin-top:24px;line-height:1.5}
+  /* ————— Téléphone ————— */
+  @media(max-width:650px){
+    body{padding:max(10px,env(safe-area-inset-top)) max(10px,env(safe-area-inset-right))
+      max(84px,calc(env(safe-area-inset-bottom) + 74px)) max(10px,env(safe-area-inset-left))}
+    body:has(.barre-action.est-vide){padding-bottom:max(18px,calc(env(safe-area-inset-bottom) + 10px))}
+    .entete-site{gap:12px;padding:11px 11px 9px}
+    .logo{height:48px}
+    .titre-site h1{font-size:19px}
+    section.carte{padding:12px}
+    .grille-reglages{grid-template-columns:1fr;gap:12px;margin-top:12px}
+    .segments button{min-height:44px;font-size:13.5px;padding:8px 10px;min-width:42px}
+    .theme-summary{gap:9px;min-height:58px;padding:9px 10px}
+    .theme-name{font-size:14.5px}
+    .theme-count-label{display:none}
+    .module-subgroup-items{grid-template-columns:1fr}
+    .barre-action{padding:8px 10px max(8px,env(safe-area-inset-bottom))}
+    .barre-action.est-vide{display:none}
+    .barre-action-carte{display:block;width:100%;padding:8px}
+    .resume{display:none}
+    #boutonLancer{width:100%}
+  }
 </style>
 </head>
 <body>
+<div class="page">
 <header>
   <div class="entete-site">
     <a class="lien-logo" href="https://mathsgo.re/outils/" aria-label="Retour aux outils maths&amp;go" title="Retour aux outils maths&amp;go">
@@ -159,17 +182,15 @@
     </a>
     <div class="titre-site">
       <h1>Automatismes<span class="titre-cycle">Cycle 4 – DNB</span></h1>
-      <span class="badge-beta">bêta du nouveau menu</span>
+      <span class="badge-beta">Bêta</span>
     </div>
   </div>
-  <p class="sous-titre">Page interne de chantier maths&amp;go — le menu est neuf, les questions
-  s’ouvrent dans l’application Automatismes actuelle.</p>
 </header>
 
 <main>
   <section class="carte" aria-labelledby="titreReglages">
     <div class="entete-etape">
-      <span class="pastille-etape" aria-hidden="true">1</span>
+      <span class="pastille-etape pastille-reglages" aria-hidden="true">1</span>
       <h2 id="titreReglages">Préparer la série</h2>
     </div>
     <div class="grille-reglages">
@@ -213,22 +234,28 @@
   <section class="carte" aria-labelledby="titreModules">
     <div class="barre-choix">
       <div class="entete-etape">
-        <span class="pastille-etape" aria-hidden="true">2</span>
+        <span class="pastille-etape pastille-modules" aria-hidden="true">2</span>
         <h2 id="titreModules">Choisir les automatismes</h2>
       </div>
-      <button id="toutDeselectionner" type="button">Tout effacer</button>
+      <div class="actions-groupees" role="group" aria-label="Sélection des automatismes">
+        <button id="boutonTous" type="button" aria-label="Tout sélectionner">Tous</button>
+        <button id="boutonAucun" type="button" aria-label="Tout désélectionner" disabled>Aucun</button>
+      </div>
     </div>
     <div id="modules" aria-label="Domaines d’automatismes"></div>
   </section>
 </main>
 
 <footer>
-  Bêta interne du futur menu Automatismes. Les réglages, domaines et intitulés sont ceux de
-  l’application actuelle ; seul l’habillage change. Le lancement passe par un lien de série MG1.
+  <details class="credit">
+    <summary>Crédits et remerciements</summary>
+    <p>Remerciements à Eric Hakenholz, créateur de <a href="https://doctools.org/dnb/automatismes_dnb.html" target="_blank" rel="noopener noreferrer">DocTools</a>, pour le partage du fichier, et à Claire Lagarde, pour son aide précieuse.</p>
+  </details>
 </footer>
+</div>
 
 <div class="barre-action est-vide" aria-label="Résumé et lancement de la série">
-  <div class="barre-action-contenu">
+  <div class="barre-action-carte">
     <div class="resume" aria-live="polite">
       <strong id="resumeSelection">Choisis au moins un automatisme</strong>
       <span id="resumeReglages">3e · 5 questions · Interactif · Avec aide</span>
