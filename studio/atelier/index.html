@@ -162,8 +162,8 @@
   a.notion:hover{background:#f1f5f9}
   .notion .coche{flex:none;width:19px;height:19px;border-radius:50%;border:2px solid #cbd5e1;
     display:flex;align-items:center;justify-content:center;font-size:11.5px;font-weight:900;color:#fff}
-  .notion.fait .coche{background:#10b981;border-color:#10b981}
-  .notion.chantier .coche{background:conic-gradient(#f59e0b 0 50%,#fff 0 100%);border-color:#f59e0b}
+  .notion.valide .coche{background:#10b981;border-color:#10b981}
+  .notion.construit .coche{background:conic-gradient(#f59e0b 0 50%,#fff 0 100%);border-color:#f59e0b}
   .notion.afaire{color:#8ea0b5}
   .notion .txt{flex:1;min-width:0}
   .notion .badges{flex:none;display:flex;gap:4px;align-items:center}
@@ -187,7 +187,7 @@
 
 <section id="secProgramme">
   <h2>🧭 Le programme du cycle 4, d'un coup d'œil</h2>
-  <p class="legendeProg">✔ fait · ◐ en chantier · ○ à faire — <i class="badgeExemple anc">ancien</i> encore au menu des 4e et 3e pendant la transition (jusqu'en 2028) · <i class="badgeExemple nouv">2026</i> nouveauté du programme publié au BO du 5&nbsp;mars&nbsp;2026 · <i class="badgeExemple auto">⚡4e</i> rubrique «&nbsp;Automatismes&nbsp;» du BO au niveau indiqué (souvent après l'année d'apprentissage).</p>
+  <p class="legendeProg">✔ validé par toi · ◐ construit, à regarder · ○ à faire — <i class="badgeExemple anc">ancien</i> encore au menu des 4e et 3e pendant la transition (jusqu'en 2028) · <i class="badgeExemple nouv">2026</i> nouveauté du programme publié au BO du 5&nbsp;mars&nbsp;2026 · <i class="badgeExemple auto">⚡4e</i> rubrique «&nbsp;Automatismes&nbsp;» du BO au niveau indiqué (souvent après l'année d'apprentissage).</p>
   <div id="zoneProgramme"></div>
   <p class="legendeProg" style="margin-top:14px">Chantier : <a data-vue="secPrototypes" href="#secPrototypes" style="color:#94a3b8;font-weight:700">prototypes</a> · <a href="../../auto/dev/visual-library.html" style="color:#7c3aed;font-weight:700">bibliothèque d'Automatismes</a></p>
 </section>
@@ -434,10 +434,10 @@ const PROGRAMME = [
       { t: "Nombres premiers, décomposition en facteurs", n: "3e", auto: "3e" },
     ] },
     { titre: "Nombres relatifs", notions: [
-      { t: "Découvrir les relatifs, l'opposé", n: "5e", etat: "fait", vue: "secJetons", auto: "4e" },
+      { t: "Découvrir les relatifs, l'opposé", n: "5e", etat: "construit", vue: "secJetons", auto: "4e" },
       { t: "Valeur absolue", n: "5e", nouv: true },
       { t: "Comparer et ranger des relatifs", n: "5e" },
-      { t: "Additionner et soustraire des relatifs", n: "5e", etat: "fait", vue: "secJetons", auto: "4e" },
+      { t: "Additionner et soustraire des relatifs", n: "5e", etat: "construit", vue: "secJetons", auto: "4e" },
       { t: "Multiplier et diviser des relatifs", n: "4e" },
     ] },
     { titre: "Fractions", notions: [
@@ -458,10 +458,10 @@ const PROGRAMME = [
     ] },
     { titre: "Calcul mental et automatismes", notions: [
       { t: "Priorités opératoires, programmes de calcul", n: "5e" },
-      { t: "Les séries d'automatismes (l'appli)", n: "5e→3e", etat: "chantier", href: "../automatismes/" },
+      { t: "Les séries d'automatismes (l'appli)", n: "5e→3e", etat: "construit", href: "../automatismes/" },
     ] },
     { titre: "Schémas en barres", notions: [
-      { t: "L'objet schéma en barres", n: "5e→3e", etat: "fait", vue: "secEquabarre" },
+      { t: "L'objet schéma en barres", n: "5e→3e", etat: "construit", vue: "secEquabarre" },
       { t: "Problèmes modélisés en barres", n: "5e→3e" },
     ] },
   ] },
@@ -478,10 +478,10 @@ const PROGRAMME = [
       { t: "Identités remarquables (les trois)", n: "3e", nouv: true },
     ] },
     { titre: "Équations et inéquations", notions: [
-      { t: "Équations x + b = c et ax = c", n: "5e", etat: "fait", vue: "secEquabarre", auto: "4e·3e" },
-      { t: "Équations ax + b = c, ax + b = cx + d", n: "4e", etat: "fait", vue: "secEquabarre", auto: "3e" },
-      { t: "Mettre un problème en équation", n: "4e", etat: "chantier", vue: "secSplat" },
-      { t: "Rédiger une résolution, vérifier", n: "4e", etat: "fait", vue: "secEquabarre", auto: "4e" },
+      { t: "Équations x + b = c et ax = c", n: "5e", etat: "construit", vue: "secEquabarre", auto: "4e·3e" },
+      { t: "Équations ax + b = c, ax + b = cx + d", n: "4e", etat: "construit", vue: "secEquabarre", auto: "3e" },
+      { t: "Mettre un problème en équation", n: "4e", etat: "construit", vue: "secSplat" },
+      { t: "Rédiger une résolution, vérifier", n: "4e", etat: "construit", vue: "secEquabarre", auto: "4e" },
       { t: "Équation produit nul", n: "3e" },
       { t: "Inéquations du premier degré", n: "3e", nouv: true },
     ] },
@@ -496,7 +496,7 @@ const PROGRAMME = [
       { t: "Échelles", n: "3e", auto: "3e" },
     ] },
     { titre: "Pourcentages", notions: [
-      { t: "Calculer, appliquer un pourcentage", n: "5e·4e", etat: "fait", href: "./pourcentages.html", auto: "5e→3e" },
+      { t: "Calculer, appliquer un pourcentage", n: "5e·4e", etat: "construit", href: "./pourcentages.html", auto: "5e→3e" },
       { t: "Augmentations, diminutions, coefficient multiplicateur", n: "4e·3e", auto: "3e" },
     ] },
     { titre: "Fonctions", notions: [
@@ -511,40 +511,40 @@ const PROGRAMME = [
     { titre: "Grandeurs et mesures", notions: [
       { t: "Conversions d'unités", n: "5e→3e", auto: "5e" },
       { t: "Grandeurs quotients (vitesse, débit…)", n: "4e" },
-      { t: "Aires et périmètres", n: "5e→3e", etat: "chantier", href: "./geometrie.html", auto: "4e" },
+      { t: "Aires et périmètres", n: "5e→3e", etat: "construit", href: "./geometrie.html", auto: "4e" },
       { t: "Temps et durées", n: "5e→3e" },
     ] },
   ] },
   { numero: 4, nom: "Espace et géométrie", couleur: "#16a34a", sousThemes: [
     { titre: "Figures et codages", notions: [
-      { t: "Point, segment, droite, demi-droite", n: "5e→3e", etat: "fait", href: "./labo.html" },
-      { t: "Codages : égalités, angle droit, milieux", n: "5e→3e", etat: "fait", href: "./labo.html", auto: "5e" },
-      { t: "Cercle et disque : corde, tangente, secteur", n: "5e→3e", etat: "fait", href: "./labo.html" },
-      { t: "Polygones réguliers", n: "5e→3e", etat: "fait", href: "./labo.html" },
+      { t: "Point, segment, droite, demi-droite", n: "5e→3e", etat: "construit", href: "./labo.html" },
+      { t: "Codages : égalités, angle droit, milieux", n: "5e→3e", etat: "construit", href: "./labo.html", auto: "5e" },
+      { t: "Cercle et disque : corde, tangente, secteur", n: "5e→3e", etat: "construit", href: "./labo.html" },
+      { t: "Polygones réguliers", n: "5e→3e", etat: "construit", href: "./labo.html" },
     ] },
     { titre: "Angles", notions: [
-      { t: "Adjacents, opposés, supplémentaires…", n: "5e", etat: "fait", href: "./configurations.html", auto: "5e" },
-      { t: "Alternes-internes, correspondants, parallélisme", n: "5e", etat: "fait", href: "./configurations.html" },
+      { t: "Adjacents, opposés, supplémentaires…", n: "5e", etat: "construit", href: "./configurations.html", auto: "5e" },
+      { t: "Alternes-internes, correspondants, parallélisme", n: "5e", etat: "construit", href: "./configurations.html" },
     ] },
     { titre: "Triangles", notions: [
-      { t: "Construire un triangle (données partielles)", n: "5e·4e", etat: "fait", href: "./geometrie.html" },
-      { t: "Somme des angles d'un triangle", n: "5e", etat: "fait", href: "./configurations.html", auto: "5e" },
+      { t: "Construire un triangle (données partielles)", n: "5e·4e", etat: "construit", href: "./geometrie.html" },
+      { t: "Somme des angles d'un triangle", n: "5e", etat: "construit", href: "./configurations.html", auto: "5e" },
       { t: "Inégalité triangulaire", n: "5e" },
-      { t: "Hauteurs, médianes, médiatrices, bissectrices", n: "5e", etat: "fait", href: "./geometrie.html", auto: "4e" },
-      { t: "Points remarquables, droite d'Euler", n: "5e", etat: "fait", href: "./geometrie.html" },
-      { t: "Cercles inscrit et circonscrit", n: "5e", etat: "fait", href: "./geometrie.html", auto: "5e" },
-      { t: "Triangle rectangle et cercle circonscrit", n: "4e", etat: "fait", href: "./geometrie.html", auto: "3e" },
-      { t: "Droite des milieux", n: "4e", etat: "fait", href: "./geometrie.html", auto: "3e" },
+      { t: "Hauteurs, médianes, médiatrices, bissectrices", n: "5e", etat: "construit", href: "./geometrie.html", auto: "4e" },
+      { t: "Points remarquables, droite d'Euler", n: "5e", etat: "construit", href: "./geometrie.html" },
+      { t: "Cercles inscrit et circonscrit", n: "5e", etat: "construit", href: "./geometrie.html", auto: "5e" },
+      { t: "Triangle rectangle et cercle circonscrit", n: "4e", etat: "construit", href: "./geometrie.html", auto: "3e" },
+      { t: "Droite des milieux", n: "4e", etat: "construit", href: "./geometrie.html", auto: "3e" },
       { t: "Cas d'égalité des triangles", n: "4e", anc: true },
       { t: "Triangles semblables", n: "3e", anc: true },
-      { t: "Théorème de Pythagore : calculer une longueur", n: "4e", auto: "3e", etat: "fait", href: "./pythagore.html" },
+      { t: "Théorème de Pythagore : calculer une longueur", n: "4e", auto: "3e", etat: "construit", href: "./pythagore.html" },
       { t: "Réciproque et contraposée de Pythagore", n: "4e", auto: "3e" },
       { t: "Trigonométrie : cosinus, sinus, tangente", n: "3e" },
-      { t: "Théorème de Thalès (emboîtés, papillon)", n: "3e", etat: "fait", href: "./configurations.html" },
+      { t: "Théorème de Thalès (emboîtés, papillon)", n: "3e", etat: "construit", href: "./configurations.html" },
     ] },
     { titre: "Parallélogrammes", notions: [
-      { t: "Parallélogramme : définition, propriétés", n: "5e", etat: "fait", href: "./labo.html", auto: "5e·4e" },
-      { t: "Rectangle, losange, carré", n: "5e", etat: "fait", href: "./labo.html", auto: "5e·4e" },
+      { t: "Parallélogramme : définition, propriétés", n: "5e", etat: "construit", href: "./labo.html", auto: "5e·4e" },
+      { t: "Rectangle, losange, carré", n: "5e", etat: "construit", href: "./labo.html", auto: "5e·4e" },
       { t: "Aire du parallélogramme", n: "5e" },
     ] },
     { titre: "Transformations", notions: [
@@ -560,13 +560,13 @@ const PROGRAMME = [
       { t: "Repérage sur la sphère, latitude et longitude", n: "3e", anc: true },
     ] },
     { titre: "Espace, solides et patrons", notions: [
-      { t: "Perspective cavalière : cube, pavé, prisme, cylindre", n: "5e", auto: "5e→3e", etat: "fait", href: "./solides.html" },
-      { t: "Pyramides et cônes", n: "4e", auto: "3e", etat: "fait", href: "./solides.html" },
-      { t: "Sphère et boule", n: "3e", etat: "fait", href: "./solides.html" },
+      { t: "Perspective cavalière : cube, pavé, prisme, cylindre", n: "5e", auto: "5e→3e", etat: "construit", href: "./solides.html" },
+      { t: "Pyramides et cônes", n: "4e", auto: "3e", etat: "construit", href: "./solides.html" },
+      { t: "Sphère et boule", n: "3e", etat: "construit", href: "./solides.html" },
       { t: "Patrons", n: "5e·3e", auto: "5e·3e" },
       { t: "Sections de solides", n: "3e" },
       { t: "Volumes : les formules", n: "5e→3e", auto: "4e·3e" },
-      { t: "Vues et empilements de cubes", n: "5e", auto: "5e", etat: "chantier", href: "./solides.html" },
+      { t: "Vues et empilements de cubes", n: "5e", auto: "5e", etat: "construit", href: "./solides.html" },
     ] },
   ] },
   { numero: 5, nom: "Données, statistiques et probabilités", couleur: "#7c3aed", sousThemes: [
@@ -610,24 +610,31 @@ const PROGRAMME = [
   ] },
 ];
 
+// Trois états, et UNE règle : c'est Gwenaël qui valide.
+// « construit » = l'objet existe et attend son regard ; « valide » ne se
+// met jamais tout seul. Les anciens noms restent acceptés et retombent
+// sur « construit », pour qu'aucune notion ne disparaisse du tableau.
+const ETATS = { valide: "valide", construit: "construit", fait: "construit", chantier: "construit" };
+const etatDeNotion = (notion) => ETATS[notion.etat] ?? "afaire";
+
 function rendreProgramme() {
   const zone = document.getElementById("zoneProgramme");
-  const totaux = { fait: 0, chantier: 0, afaire: 0 };
+  const totaux = { valide: 0, construit: 0, afaire: 0 };
   let html = "";
   for (const domaine of PROGRAMME) {
-    const compte = { fait: 0, chantier: 0, afaire: 0 };
+    const compte = { valide: 0, construit: 0, afaire: 0 };
     let colonnes = "";
     for (const sousTheme of domaine.sousThemes) {
       let lignes = "";
       for (const notion of sousTheme.notions) {
-        const etat = notion.etat ?? "afaire";
+        const etat = etatDeNotion(notion);
         compte[etat] += 1;
         const badges =
           (notion.n ? `<i>${notion.n}</i>` : "") +
           (notion.anc ? '<i class="anc">ancien</i>' : "") +
           (notion.nouv ? '<i class="nouv">2026</i>' : "") +
           (notion.auto ? `<i class="auto" title="Rubrique « Automatismes » du BO : ${notion.auto}">⚡${notion.auto}</i>` : "");
-        const interieur = `<span class="coche">${etat === "fait" ? "✔" : ""}</span>` +
+        const interieur = `<span class="coche">${etat === "valide" ? "✔" : ""}</span>` +
           `<span class="txt">${notion.t}</span><span class="badges">${badges}</span>`;
         if (notion.vue) lignes += `<a class="notion ${etat}" href="#${notion.vue}" data-vue="${notion.vue}">${interieur}</a>`;
         else if (notion.href) lignes += `<a class="notion ${etat}" href="${notion.href}">${interieur}</a>`;
@@ -635,26 +642,26 @@ function rendreProgramme() {
       }
       colonnes += `<div class="sousTheme"><h4>${sousTheme.titre}</h4>${lignes}</div>`;
     }
-    const total = compte.fait + compte.chantier + compte.afaire;
-    totaux.fait += compte.fait;
-    totaux.chantier += compte.chantier;
+    const total = compte.valide + compte.construit + compte.afaire;
+    totaux.valide += compte.valide;
+    totaux.construit += compte.construit;
     totaux.afaire += compte.afaire;
-    const avancement = total ? Math.round(((compte.fait + compte.chantier / 2) / total) * 100) : 0;
+    const avancement = total ? Math.round(((compte.valide + compte.construit / 2) / total) * 100) : 0;
     html += `<div class="domaine" style="--dcoul:${domaine.couleur}">` +
       `<div class="domaineTete"><span class="domaineNum">${domaine.numero}</span><h3>${domaine.nom}</h3>` +
-      `<span class="domaineScore">${compte.fait}<small>/${total}</small></span>` +
+      `<span class="domaineScore">${compte.valide}<small>/${total}</small></span>` +
       `<div class="jauge"><div style="width:${avancement}%"></div></div></div>` +
       `<div class="notionsColonnes">${colonnes}</div>` +
       (domaine.note ? `<p class="noteDomaine">${domaine.note}</p>` : "") +
       `</div>`;
   }
-  const totalGlobal = totaux.fait + totaux.chantier + totaux.afaire;
+  const totalGlobal = totaux.valide + totaux.construit + totaux.afaire;
   const avancementGlobal = totalGlobal
-    ? Math.round(((totaux.fait + totaux.chantier / 2) / totalGlobal) * 100) : 0;
+    ? Math.round(((totaux.valide + totaux.construit / 2) / totalGlobal) * 100) : 0;
   zone.innerHTML =
     `<div class="bilan">` +
-    `<span class="part"><b style="color:#10b981">${totaux.fait}</b> faites</span>` +
-    `<span class="part"><b style="color:#f59e0b">${totaux.chantier}</b> en chantier</span>` +
+    `<span class="part"><b style="color:#10b981">${totaux.valide}</b> validées par toi</span>` +
+    `<span class="part"><b style="color:#f59e0b">${totaux.construit}</b> à regarder</span>` +
     `<span class="part"><b style="color:#94a3b8">${totaux.afaire}</b> à faire</span>` +
     `<div class="jauge"><div style="width:${avancementGlobal}%"></div></div>` +
     `<span class="part">${totalGlobal} notions du cycle 4</span>` +
