@@ -15,6 +15,7 @@ import {
   sommetsCerfVolant,
   sommetsLosange,
   sommetsParallelogramme,
+  sommetsPolygone,
   sommetsPolygoneRegulier,
   sommetsQuadrilatere,
   sommetsRectangle,
@@ -331,6 +332,35 @@ export function decrireDisqueUsuel({ rayon = 3, nomCentre = "O" } = {}) {
   };
 }
 
+/** Demi-cercle : l'arc supérieur et son diamètre. */
+export function decrireDemiCercle({ rayon = 3, nomCentre = "O" } = {}) {
+  return {
+    rayon,
+    nomCentre,
+    visible: {
+      cercle: false,
+      centre: true,
+      arcs: [{ deDeg: 0, aDeg: 180 }],
+      diametreVersDeg: 0,
+    },
+    legende: `demi-cercle de centre ${nomCentre} et de rayon ${rayon} cm`,
+  };
+}
+
+/** Pentagone irrégulier d'exemple (modifiable point par point). */
+export function decrirePolygoneQuelconque({
+  points = [[0, 0], [4, -1], [6, 2], [3, 5], [-1, 3]],
+  nom = null,
+} = {}) {
+  const sommets = sommetsPolygone({ points });
+  return {
+    sommets,
+    nom: nom ?? "ABCDEFGHIJKL".slice(0, sommets.length),
+    legende: `polygone quelconque à ${sommets.length} côtés`,
+    codages: [],
+  };
+}
+
 // ---------------------------------------------------------------------------
 // Le registre — ce que l'Atelier parcourt pour construire ses menus
 // ---------------------------------------------------------------------------
@@ -478,6 +508,13 @@ export const FIGURES_USUELLES = {
     decrire: decrireQuadrilatere,
     parametres: [],
   },
+  polygoneQuelconque: {
+    titre: "Polygone quelconque",
+    categorie: "Polygones",
+    genre: "polygone",
+    decrire: decrirePolygoneQuelconque,
+    parametres: [],
+  },
   pentagone: {
     titre: "Pentagone régulier",
     categorie: "Polygones",
@@ -514,6 +551,13 @@ export const FIGURES_USUELLES = {
     categorie: "Cercle et disque",
     genre: "cercle",
     decrire: decrireDisqueUsuel,
+    parametres: [nombre("rayon", "Rayon", 3, 0.5, 8)],
+  },
+  demiCercle: {
+    titre: "Demi-cercle",
+    categorie: "Cercle et disque",
+    genre: "cercle",
+    decrire: decrireDemiCercle,
     parametres: [nombre("rayon", "Rayon", 3, 0.5, 8)],
   },
 };

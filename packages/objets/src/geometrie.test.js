@@ -10,12 +10,16 @@ import {
   centroide,
   distance,
   estDansPolygone,
+  intersectionDroites,
   intersectionSegments,
   milieu,
   normaliserAngle,
   perimetre,
+  piedPerpendiculaire,
   pointsArc,
+  pointsRemarquablesTriangle,
   secteurAngulaire,
+  sommetsPolygone,
   sommetsCarre,
   sommetsCerfVolant,
   sommetsLosange,
@@ -329,7 +333,7 @@ describe("triangles — familles", () => {
     proche(angleInterieurPolygone(t, 0).mesureDeg, 90, 1e-6);
     assert.throws(() => sommetsTriangle({ angles: [90, 60, 60] }), /somme des angles/);
     assert.throws(() => sommetsTriangle({ cotes: [1, 2, 5] }), /inégalité triangulaire/);
-    assert.throws(() => sommetsTriangle({}), /soit trois angles/);
+    assert.throws(() => sommetsTriangle({}), /trois angles/);
   });
 });
 
@@ -352,5 +356,158 @@ describe("transformer", () => {
 
   it("refuse une échelle nulle ou négative", () => {
     assert.throws(() => transformer([[0, 0]], { echelle: 0 }), /strictement positive/);
+  });
+});
+
+describe("droites : intersections et pieds de perpendiculaires", () => {
+  it("intersectionDroites travaille sur les droites INFINIES", () => {
+    // segments disjoints, mais droites secantes en (10, 10)
+    const p = intersectionDroites([0, 0], [1, 1], [10, 0], [10, 1]);
+    proche(p[0], 10);
+    proche(p[1], 10);
+    assert.equal(intersectionDroites([0, 0], [1, 0], [0, 1], [1, 1]), null);
+  });
+
+  it("piedPerpendiculaire : projection orthogonale, meme hors du segment", () => {
+    const pied = piedPerpendiculaire([5, 3], [0, 0], [1, 0]);
+    proche(pied[0], 5);
+    proche(pied[1], 0);
+    assert.ok(sontPerpendiculaires([5, 3], pied, [0, 0], [1, 0]));
+  });
+});
+
+describe("constructeurs de triangles complets", () => {
+  it("trois points : acceptes si non alignes", () => {
+    const s = sommetsTriangle({ points: [[0, 0], [4, 1], [2, 5]] });
+    assert.equal(s.length, 3);
+    assert.throws(() => sommetsTriangle({ points: [[0, 0], [1, 1], [3, 3]] }), /alignes|alignés/);
+  });
+
+  it("deux cotes et l'angle compris : longueurs et angle exacts", () => {
+    const s = sommetsTriangle({ deuxCotesEtAngle: { cotes: [5, 3], angleDeg: 40 } });
+    proche(distance(s[0], s[1]), 5, 1e-9);
+    proche(distance(s[0], s[2]), 3, 1e-9);
+    proche(angleInterieurPolygone(s, 0).mesureDeg, 40, 1e-9);
+  });
+
+  it("un cote et deux angles : la construction du rapporteur", () => {
+    const s = sommetsTriangle({ unCoteEtDeuxAngles: { cote: 6, anglesDeg: [50, 60] } });
+    proche(distance(s[0], s[1]), 6, 1e-9);
+    proche(angleInterieurPolygone(s, 0).mesureDeg, 50, 1e-6);
+    proche(angleInterieurPolygone(s, 1).mesureDeg, 60, 1e-6);
+    proche(angleInterieurPolygone(s, 2).mesureDeg, 70, 1e-6);
+    assert.throws(
+      () => sommetsTriangle({ unCoteEtDeuxAngles: { cote: 6, anglesDeg: [100, 80] } }),
+      /somme/,
+    );
+  });
+
+  it("hypotenuse et cathete : Pythagore retrouve", () => {
+    const s = sommetsTriangle({ hypotenuseEtCathete: { hypotenuse: 5, cathete: 3 } });
+    proche(angleInterieurPolygone(s, 0).mesureDeg, 90, 1e-9);
+    proche(distance(s[1], s[2]), 5, 1e-9);
+    proche(distance(s[0], s[2]), 4, 1e-9);
+    assert.throws(
+      () => sommetsTriangle({ hypotenuseEtCathete: { hypotenuse: 3, cathete: 5 } }),
+      /plus longue/,
+    );
+  });
+
+  it("angle droit ou sommet principal en N'IMPORTE quel sommet", () => {
+    for (const sommet of [0, 1, 2]) {
+      const rect = sommetsTriangle({ famille: "rectangle", cathetes: [4, 3], sommet });
+      proche(angleInterieurPolygone(rect, sommet).mesureDeg, 90, 1e-9);
+      const iso = sommetsTriangle({ famille: "isocele", base: 4, sommetDeg: 40, sommet });
+      proche(angleInterieurPolygone(iso, sommet).mesureDeg, 40, 1e-9);
+    }
+    assert.throws(() => sommetsTriangle({ famille: "rectangle", sommet: 5 }), /0, 1 ou 2/);
+  });
+});
+
+describe("pointsRemarquablesTriangle", () => {
+  const triangles = [
+    sommetsTriangle({ angles: [50, 60, 70] }),
+    sommetsTriangle({ angles: [120, 40, 20] }),
+    sommetsTriangle({ cotes: [5, 4, 3] }),
+    transformer(sommetsTriangle({ angles: [80, 55, 45] }), { rotationDeg: 217, miroirX: true }),
+  ];
+
+  it("le centre du cercle circonscrit est equidistant des trois sommets", () => {
+    for (const s of triangles) {
+      const { centreCirconscrit, rayonCirconscrit } = pointsRemarquablesTriangle(s);
+      for (const v of s) proche(distance(centreCirconscrit, v), rayonCirconscrit, 1e-9);
+    }
+  });
+
+  it("le cercle inscrit est tangent aux trois cotes", () => {
+    for (const s of triangles) {
+      const { centreInscrit, rayonInscrit } = pointsRemarquablesTriangle(s);
+      for (let i = 0; i < 3; i++) {
+        const d = Math.abs(
+          ((s[(i + 1) % 3][0] - s[i][0]) * (s[i][1] - centreInscrit[1]) -
+            (s[i][0] - centreInscrit[0]) * (s[(i + 1) % 3][1] - s[i][1])) /
+            distance(s[i], s[(i + 1) % 3]),
+        );
+        proche(d, rayonInscrit, 1e-9);
+      }
+    }
+  });
+
+  it("l'orthocentre est sur les trois hauteurs (perpendiculaires aux cotes)", () => {
+    for (const s of triangles) {
+      const { orthocentre, piedsHauteurs } = pointsRemarquablesTriangle(s);
+      for (let i = 0; i < 3; i++) {
+        const [p, q] = [s[(i + 1) % 3], s[(i + 2) % 3]];
+        // le pied est sur la droite (pq) et la hauteur lui est perpendiculaire
+        assert.ok(sontPerpendiculaires(s[i], piedsHauteurs[i], p, q, 1e-6));
+        // l'orthocentre est aligne avec le sommet et le pied
+        const aireAlignement = aire([s[i], piedsHauteurs[i], orthocentre]);
+        assert.ok(aireAlignement < 1e-6, "orthocentre hors d'une hauteur");
+      }
+    }
+  });
+
+  it("la droite d'Euler : O, G, H alignes et OG:GH = 1:2", () => {
+    for (const s of triangles) {
+      const { centreCirconscrit: O, centreGravite: G, orthocentre: H } =
+        pointsRemarquablesTriangle(s);
+      assert.ok(aire([O, G, H]) < 1e-6, "O, G, H non alignes");
+      proche(distance(G, H), 2 * distance(O, G), 1e-6);
+    }
+  });
+
+  it("pieds des bissectrices : partage du cote oppose dans le rapport des cotes adjacents", () => {
+    const s = sommetsTriangle({ cotes: [5, 4, 3] });
+    const { piedsBissectrices } = pointsRemarquablesTriangle(s);
+    // bissectrice issue du sommet 0 : BD/DC = AB/AC
+    const D = piedsBissectrices[0];
+    proche(
+      distance(s[1], D) / distance(D, s[2]),
+      distance(s[0], s[1]) / distance(s[0], s[2]),
+      1e-9,
+    );
+  });
+
+  it("refuse un triangle plat", () => {
+    assert.throws(() => pointsRemarquablesTriangle([[0, 0], [1, 0], [2, 0]]), /alignes|alignés/);
+  });
+});
+
+describe("sommetsPolygone (quelconque)", () => {
+  it("accepte un pentagone irregulier donne dans l'ordre du tour", () => {
+    const s = sommetsPolygone({ points: [[0, 0], [4, -1], [6, 2], [3, 5], [-1, 3]] });
+    assert.equal(s.length, 5);
+  });
+
+  it("refuse les figures croisees et degenerees", () => {
+    assert.throws(
+      () => sommetsPolygone({ points: [[0, 0], [4, 0], [0, 3], [4, 3]] }),
+      /croisee|croisée/,
+    );
+    assert.throws(
+      () => sommetsPolygone({ points: [[0, 0], [2, 0], [4, 0]] }),
+      /degeneree|dégénérée/,
+    );
+    assert.throws(() => sommetsPolygone({ points: [[0, 0], [1, 1]] }), /trois sommets/);
   });
 });

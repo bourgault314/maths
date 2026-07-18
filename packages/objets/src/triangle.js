@@ -135,10 +135,16 @@ export function dessinerTriangle({
     (points[0][1] + points[1][1] + points[2][1]) / 3,
   ];
 
+  // Ordre de dessin (retour de Gwenaël) : le fond blanc, PUIS les arcs
+  // d'angles, PUIS le trait bleu du triangle — quand un arc arrive sur
+  // un côté, c'est toujours le trait de la figure qui domine. Les
+  // textes viennent en dernier.
   const morceaux = [
     `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${largeurTotale} ${hauteurTotale}" width="${taille}" height="${(taille * hauteurTotale) / largeurTotale}" role="img" aria-label="triangle ${nom}, angles ${anglesReels.map((x) => Math.round(x * 10) / 10 + "°").join(", ")}">`,
-    `<polygon points="${points.map((p) => p.join(",")).join(" ")}" fill="rgba(255,255,255,0.9)" stroke="${CONTOUR}" stroke-width="4" stroke-linejoin="round"/>`,
+    `<polygon points="${points.map((p) => p.join(",")).join(" ")}" fill="rgba(255,255,255,0.9)" stroke="none"/>`,
   ];
+  const arcs = [];
+  const textes = [];
 
   points.forEach((v, i) => {
     const p = points[(i + 1) % 3];
@@ -164,7 +170,7 @@ export function dessinerTriangle({
         const p1 = [v[0] + Math.cos(dir1) * cote, v[1] + Math.sin(dir1) * cote];
         const p3 = [v[0] + Math.cos(dir2) * cote, v[1] + Math.sin(dir2) * cote];
         const p2 = [p1[0] + Math.cos(dir2) * cote, p1[1] + Math.sin(dir2) * cote];
-        morceaux.push(
+        arcs.push(
           `<polyline points="${p1.join(",")} ${p2.join(",")} ${p3.join(",")}" fill="none" stroke="${ANGLE_DROIT}" stroke-width="3.5" stroke-linejoin="round"/>`,
         );
       } else {
@@ -181,7 +187,7 @@ export function dessinerTriangle({
         // en repère écran (y vers le bas), balayer dans le sens des
         // angles croissants correspond à sweep = 1 ; delta < π pour un
         // angle de triangle, donc jamais de grand arc
-        morceaux.push(
+        arcs.push(
           `<path d="M ${a1.join(" ")} A ${rayon} ${rayon} 0 0 1 ${a2.join(" ")}" fill="none" stroke="${COULEURS_ANGLES[i]}" stroke-width="4" stroke-linecap="round"/>`,
         );
         // valeur de l'angle, posée sur la bissectrice du secteur
@@ -190,7 +196,7 @@ export function dessinerTriangle({
         const texteAngle = `${String(Math.round(anglesReels[i] * 10) / 10).replace(".", ",")}°`;
         const tx = v[0] + Math.cos(bissectrice) * (rayon + 18);
         const ty = v[1] + Math.sin(bissectrice) * (rayon + 18);
-        morceaux.push(
+        textes.push(
           `<text x="${tx}" y="${ty}" font-family="'Segoe UI', system-ui, sans-serif" font-size="15" font-weight="700" fill="${COULEURS_ANGLES[i]}" text-anchor="middle" dominant-baseline="central" stroke="#ffffff" stroke-width="4" paint-order="stroke">${texteAngle}</text>`,
         );
       }
@@ -199,10 +205,16 @@ export function dessinerTriangle({
     // lettre du sommet, à l'opposé du centre, halo blanc (convention AngleBarre)
     const lx = v[0] - Math.cos(versCentre) * 22;
     const ly = v[1] - Math.sin(versCentre) * 22;
-    morceaux.push(
+    textes.push(
       `<text x="${lx}" y="${ly}" font-family="'Segoe UI', system-ui, sans-serif" font-size="22" font-weight="700" fill="${CONTOUR}" text-anchor="middle" dominant-baseline="central" stroke="#ffffff" stroke-width="6" paint-order="stroke">${nom[i]}</text>`,
     );
   });
+
+  morceaux.push(...arcs);
+  morceaux.push(
+    `<polygon points="${points.map((p) => p.join(",")).join(" ")}" fill="none" stroke="${CONTOUR}" stroke-width="4" stroke-linejoin="round"/>`,
+  );
+  morceaux.push(...textes);
 
   if (afficherCotes && cotes) {
     [0, 1, 2].forEach((i) => {

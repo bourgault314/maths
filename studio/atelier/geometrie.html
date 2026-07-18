@@ -68,22 +68,46 @@
   </div>
   <div class="barreCommandes" id="zoneParametres"></div>
   <div class="toggles" id="zoneAffichagePolygone">
+    <label class="reglage">Nom <input type="text" id="champNom" size="6" maxlength="12"
+      style="font:inherit;padding:6px 8px;border:2px solid var(--ligne);border-radius:10px;text-transform:uppercase" aria-label="Nom de la figure"></label>
     <label><input type="checkbox" id="afCodages" checked> codages</label>
     <label><input type="checkbox" id="afNoms" checked> noms des sommets</label>
     <label><input type="checkbox" id="afSommets"> croix des sommets</label>
     <label><input type="checkbox" id="afAngles"> arcs des angles</label>
     <label><input type="checkbox" id="afMesuresAngles"> mesures des angles</label>
     <label><input type="checkbox" id="afMesuresCotes"> mesures des côtés</label>
-    <label><input type="checkbox" id="afDiagonales"> diagonales</label>
+    <label class="reglage" id="ligneDiagonales">Diagonales
+      <select id="choixDiagonales" aria-label="Diagonales">
+        <option value="aucune">aucune</option>
+        <option value="premiere">la première</option>
+        <option value="seconde">la seconde</option>
+        <option value="deux">les deux</option>
+      </select>
+    </label>
+    <label id="ligneMesuresDiagonales"><input type="checkbox" id="afMesuresDiagonales"> longueurs des diagonales</label>
     <label><input type="checkbox" id="afCentre"> centre</label>
     <label><input type="checkbox" id="afAxes"> axes de symétrie</label>
     <label><input type="checkbox" id="afMilieux"> milieux des côtés</label>
+  </div>
+  <div class="toggles" id="zoneAffichageTriangle" hidden>
+    <strong style="width:100%;font-size:13px;color:var(--attenue)">Droites remarquables du triangle</strong>
+    <label><input type="checkbox" id="afHauteurs"> hauteurs</label>
+    <label><input type="checkbox" id="afMedianes"> médianes</label>
+    <label><input type="checkbox" id="afMediatrices"> médiatrices</label>
+    <label><input type="checkbox" id="afBissectrices"> bissectrices</label>
+    <label><input type="checkbox" id="afCercleInscrit"> cercle inscrit</label>
+    <label><input type="checkbox" id="afCercleCirconscrit"> cercle circonscrit</label>
+    <label><input type="checkbox" id="afCentresRemarquables"> centres (G, H, O, I)</label>
+    <label><input type="checkbox" id="afSegmentMilieux"> segment des milieux</label>
   </div>
   <div class="toggles" id="zoneAffichageCercle" hidden>
     <label><input type="checkbox" id="afCentreCercle" checked> centre</label>
     <label><input type="checkbox" id="afDisque"> disque colorié</label>
     <label><input type="checkbox" id="afRayon" checked> rayon</label>
     <label><input type="checkbox" id="afDiametre"> diamètre</label>
+    <label><input type="checkbox" id="afCorde"> corde</label>
+    <label><input type="checkbox" id="afTangente"> tangente</label>
+    <label><input type="checkbox" id="afSecteur"> secteur colorié</label>
     <label><input type="checkbox" id="afMesuresCercle" checked> mesures</label>
   </div>
   <div class="barreCommandes">
@@ -92,6 +116,17 @@
     <span class="reglage" id="messageCopie" aria-live="polite"></span>
   </div>
   <div class="zoneRendu" id="renduFigure" aria-live="polite"></div>
+</section>
+
+<section id="secPrimitives">
+  <h2>Primitives : point, segment, droite, demi-droite, angle</h2>
+  <p class="aide">Les briques de base, chacune paramétrable : le point maths&go est une petite croix (jamais un disque), la droite se prolonge jusqu'au cadre même verticale, la demi-droite porte sa flèche du seul côté infini, et l'angle est une vraie primitive (aigu, droit, obtus, plat, rentrant, orienté, secteur colorié, arcs de codage).</p>
+  <h3>Points, segments, droites</h3>
+  <div class="galerie" id="planchePrimitives"></div>
+  <h3>La primitive angle</h3>
+  <div class="galerie" id="plancheAnglesPrimitive"></div>
+  <h3>Cercle enrichi : corde, tangente, secteur, arcs</h3>
+  <div class="galerie" id="plancheCercle"></div>
 </section>
 
 <section id="secPlanche">
@@ -111,13 +146,32 @@
   <div id="galerieParCategorie"></div>
 </section>
 
+<section id="secStress">
+  <h2>Planche de stress</h2>
+  <p class="aide">Les cas qui cassent d'habitude : petite taille téléphone (320&nbsp;px), grande taille projection, noir et couleur, figures tournées et retournées, toutes les mesures et plusieurs codages à la fois, remarquables du triangle, cas limites valides. À contrôler d'un coup d'œil avant validation.</p>
+  <div class="galerie" id="plancheStress"></div>
+</section>
+
 <script type="module">
-import { dessinerCercle, dessinerFigure } from "../../packages/objets/src/figure.js";
+import {
+  dessinerAngle,
+  dessinerCercle,
+  dessinerDemiDroite,
+  dessinerDroite,
+  dessinerFigure,
+  dessinerPoint,
+  dessinerSegment,
+} from "../../packages/objets/src/figure.js";
 import {
   CATEGORIES_FIGURES,
   FIGURES_USUELLES,
 } from "../../packages/objets/src/figures-usuelles.js";
-import { sommetsQuadrilatere, sommetsTriangle } from "../../packages/objets/src/geometrie.js";
+import {
+  sommetsParallelogramme,
+  sommetsPolygoneRegulier,
+  sommetsQuadrilatere,
+  sommetsTriangle,
+} from "../../packages/objets/src/geometrie.js";
 
 const $ = (id) => document.getElementById(id);
 
@@ -200,7 +254,16 @@ function dessiner() {
   $("zoneAffichageCercle").hidden = !enCercle;
   const theme = $("choixTheme").value;
   const taille = Number($("regleTaille").value);
-  const description = entree.decrire(lireParametres());
+  let description = entree.decrire(lireParametres());
+  // nom personnalisé : appliqué s'il a une lettre majuscule distincte par sommet
+  const nomVoulu = $("champNom").value.toUpperCase().trim();
+  if (
+    !enCercle &&
+    new RegExp(`^[A-Z]{${description.sommets.length}}$`).test(nomVoulu) &&
+    new Set(nomVoulu).size === nomVoulu.length
+  ) {
+    description = entree.decrire({ ...lireParametres(), nom: nomVoulu });
+  }
   description.styles = { ...description.styles, theme };
   description.sortie = { taille };
   if (enCercle) {
@@ -214,6 +277,9 @@ function dessiner() {
         : null,
       mesureRayon: $("afRayon").checked && $("afMesuresCercle").checked,
       mesureDiametre: $("afDiametre").checked && $("afMesuresCercle").checked,
+      cordes: $("afCorde").checked ? [{ de: 150, a: 245, mesure: $("afMesuresCercle").checked }] : [],
+      tangente: $("afTangente").checked ? { en: 40 } : null,
+      secteur: $("afSecteur").checked ? { deDeg: 60, aDeg: 130 } : null,
     };
     if (!$("afRayon").checked) description.points = [];
     dernierSvg = dessinerCercle(description);
@@ -223,16 +289,42 @@ function dessiner() {
       rotationDeg: Number($("regleRotation").value),
       miroirX: $("caseMiroir").checked,
     };
+    const estQuadrilatere = description.sommets.length === 4;
+    $("ligneDiagonales").hidden = !estQuadrilatere;
+    $("ligneMesuresDiagonales").hidden = !estQuadrilatere;
+    const lettres = description.nom ?? "ABCDEFGHIJKL".slice(0, description.sommets.length);
+    const [diagonale1, diagonale2] = [lettres[0] + lettres[2], lettres[1] + lettres[3]];
+    const choixDiag = estQuadrilatere ? $("choixDiagonales").value : "aucune";
+    const diagonales =
+      choixDiag === "deux" ? true
+      : choixDiag === "premiere" ? [diagonale1]
+      : choixDiag === "seconde" ? [diagonale2]
+      : false;
+    const estTriangle = description.sommets.length === 3;
+    $("zoneAffichageTriangle").hidden = !estTriangle;
     description.visible = {
       noms: $("afNoms").checked,
       sommets: $("afSommets").checked,
       angles: $("afAngles").checked,
       mesuresAngles: $("afMesuresAngles").checked,
       mesuresCotes: $("afMesuresCotes").checked,
-      diagonales: $("afDiagonales").checked,
+      diagonales,
+      mesuresDiagonales: estQuadrilatere && $("afMesuresDiagonales").checked ? diagonales : false,
       centre: $("afCentre").checked,
       axes: $("afAxes").checked,
       milieux: $("afMilieux").checked,
+      ...(estTriangle
+        ? {
+            hauteurs: $("afHauteurs").checked,
+            medianes: $("afMedianes").checked,
+            mediatrices: $("afMediatrices").checked,
+            bissectrices: $("afBissectrices").checked,
+            cercleInscrit: $("afCercleInscrit").checked,
+            cercleCirconscrit: $("afCercleCirconscrit").checked,
+            centresRemarquables: $("afCentresRemarquables").checked,
+            segmentDesMilieux: $("afSegmentMilieux").checked,
+          }
+        : {}),
     };
     dernierSvg = dessinerFigure(description);
   }
@@ -259,6 +351,8 @@ $("regleTaille").addEventListener("input", () => {
 for (const case_ of document.querySelectorAll(".toggles input")) {
   case_.addEventListener("change", dessiner);
 }
+$("champNom").addEventListener("input", dessiner);
+$("choixDiagonales").addEventListener("change", dessiner);
 
 $("btnTelechargerSvg").addEventListener("click", () => {
   const blob = new Blob([dernierSvg], { type: "image/svg+xml" });
@@ -277,6 +371,82 @@ $("btnCopierSvg").addEventListener("click", async () => {
   }
   setTimeout(() => ($("messageCopie").textContent = ""), 2000);
 });
+
+// ---------- primitives ----------
+function carteVers(conteneur, svg, legende) {
+  $(conteneur).appendChild(carte(svg, legende, false));
+}
+
+carteVers("planchePrimitives", dessinerPoint({ nom: "A" }), "point A");
+carteVers("planchePrimitives", dessinerPoint({ afficherNom: false }), "point sans nom");
+carteVers("planchePrimitives", dessinerPoint({ nom: "M", couleur: "#dc2626" }), "point coloré");
+carteVers(
+  "planchePrimitives",
+  dessinerSegment({ nom: "AB", longueur: 5, mesure: true, sortie: { taille: 230 } }),
+  "segment mesuré",
+);
+carteVers(
+  "planchePrimitives",
+  dessinerSegment({ nom: "CD", codage: 2, milieuVisible: true, nomMilieu: "I", rotationDeg: 25, sortie: { taille: 230 } }),
+  "codage + milieu, tourné",
+);
+carteVers(
+  "planchePrimitives",
+  dessinerSegment({ nom: "EF", texteMesure: "?", fleches: true, pointilles: true, sortie: { taille: 230 } }),
+  "cotation « ? », pointillés",
+);
+carteVers("planchePrimitives", dessinerDroite({ nom: "(d)", rotationDeg: 18, sortie: { taille: 250 } }), "droite (d)");
+carteVers(
+  "planchePrimitives",
+  dessinerDroite({ nom: "(AB)", afficherPoints: true, rotationDeg: 155, sortie: { taille: 250 } }),
+  "droite (AB)",
+);
+carteVers("planchePrimitives", dessinerDroite({ nom: "(v)", rotationDeg: 90, sortie: { taille: 200 } }), "verticale");
+carteVers(
+  "planchePrimitives",
+  dessinerDemiDroite({ nom: "[AB)", rotationDeg: 25, sortie: { taille: 250 } }),
+  "demi-droite [AB)",
+);
+
+for (const [options, legende] of [
+  [{ mesureDeg: 50 }, "aigu 50°"],
+  [{ mesureDeg: 90 }, "droit (marque)"],
+  [{ mesureDeg: 135 }, "obtus 135°"],
+  [{ mesureDeg: 180 }, "plat 180°"],
+  [{ mesureDeg: 220 }, "rentrant 220°"],
+  [{ mesureDeg: 60, oriente: true, couleur: "#1d4ed8" }, "orienté 60°"],
+  [{ mesureDeg: 75, secteur: "#dbeafe", couleur: "#1d4ed8" }, "secteur colorié"],
+  [{ mesureDeg: 40, arcs: 2, couleur: "#f97316" }, "codage 2 arcs"],
+  [{ mesureDeg: 65, texte: "?", couleur: "#16a34a" }, "mesure « ? »"],
+]) {
+  carteVers("plancheAnglesPrimitive", dessinerAngle({ ...options, sortie: { taille: 190 } }), legende);
+}
+
+carteVers(
+  "plancheCercle",
+  dessinerCercle({ rayon: 3, visible: { cordes: [{ de: 150, a: 245, mesure: true }] }, sortie: { taille: 210 } }),
+  "corde mesurée",
+);
+carteVers(
+  "plancheCercle",
+  dessinerCercle({ rayon: 3, visible: { tangente: { en: 40 } }, sortie: { taille: 210 } }),
+  "tangente ⟂ rayon",
+);
+carteVers(
+  "plancheCercle",
+  dessinerCercle({ rayon: 3, visible: { secteur: { deDeg: 20, aDeg: 115 }, rayonsVersDeg: [20, 115] }, sortie: { taille: 210 } }),
+  "secteur angulaire",
+);
+carteVers(
+  "plancheCercle",
+  dessinerCercle({
+    rayon: 3,
+    points: [{ nom: "A", angleDeg: 10 }, { nom: "B", angleDeg: 120 }],
+    visible: { arcs: [{ deDeg: 10, aDeg: 120, couleur: "#f97316", epaisseur: 6 }] },
+    sortie: { taille: 210 },
+  }),
+  "arc AB colorié",
+);
 
 // ---------- planche de contrôle des angles ----------
 function carte(svg, legende, valide = true) {
@@ -367,6 +537,115 @@ for (const categorie of CATEGORIES_FIGURES) {
     rangee.appendChild(cadre);
   }
   galerie.appendChild(rangee);
+}
+
+// ---------- planche de stress ----------
+const stress = [
+  [
+    dessinerFigure({
+      ...FIGURES_USUELLES.carre.decrire(),
+      visible: { mesuresCotes: true, angles: true, diagonales: true, centre: true, axes: true },
+      sortie: { taille: 320 },
+    }),
+    "320 px, tout affiché, noir",
+  ],
+  [
+    dessinerFigure({
+      ...FIGURES_USUELLES.rectangle.decrire(),
+      transform: { rotationDeg: 37, miroirX: true },
+      visible: { mesuresCotes: true, mesuresAngles: true, angles: true },
+      styles: { theme: "couleur" },
+      sortie: { taille: 300 },
+    }),
+    "tourné 37° + miroir, couleur",
+  ],
+  [
+    dessinerFigure({
+      ...FIGURES_USUELLES.losange.decrire(),
+      visible: { diagonales: true, mesuresDiagonales: true, centre: true, axes: true },
+      sortie: { taille: 260 },
+    }),
+    "losange : diagonales mesurées, axes",
+  ],
+  [
+    dessinerFigure({
+      ...FIGURES_USUELLES.cerfVolant.decrire(),
+      visible: { diagonales: true, centre: true },
+      styles: { regions: { AB: "#dbeafe", BC: "#dcfce7", CD: "#fee2e2", DA: "#fef9c3" } },
+      sortie: { taille: 260 },
+    }),
+    "régions des diagonales coloriées",
+  ],
+  [
+    dessinerFigure({
+      ...FIGURES_USUELLES.parallelogramme.decrire(),
+      visible: { hauteur: { de: "D", vers: "AB", mesure: true }, mesuresCotes: true },
+      sortie: { taille: 280 },
+    }),
+    "hauteur du parallélogramme",
+  ],
+  [
+    dessinerFigure({
+      sommets: sommetsTriangle({ angles: [50, 60, 70] }),
+      visible: {
+        medianes: true, cercleInscrit: true, cercleCirconscrit: true,
+        centresRemarquables: true, segmentDesMilieux: true,
+      },
+      sortie: { taille: 300 },
+    }),
+    "triangle : remarquables et cercles",
+  ],
+  [
+    dessinerFigure({
+      sommets: sommetsPolygoneRegulier({ nbCotes: 6, cote: 3 }),
+      visible: { rayons: true, apotheme: true, centre: true },
+      sortie: { taille: 260 },
+    }),
+    "hexagone : rayons et apothème",
+  ],
+  [
+    dessinerFigure({
+      sommets: sommetsTriangle({ angles: [10, 10, 160] }),
+      transform: { rotationDeg: 203 },
+      visible: { angles: true, mesuresAngles: true },
+      styles: { theme: "couleur" },
+      sortie: { taille: 300 },
+    }),
+    "cas limite : 10°-10°-160° tourné",
+  ],
+  [
+    dessinerFigure({
+      ...FIGURES_USUELLES.trapezeIsocele.decrire(),
+      visible: { mesuresCotes: true, milieux: true, sommets: true },
+      styles: { figure: { remplissage: "#eff6ff", pointilles: true } },
+      sortie: { taille: 280 },
+    }),
+    "remplissage + contour pointillé",
+  ],
+  [
+    dessinerCercle({
+      rayon: 3,
+      visible: {
+        disque: true, tangente: { en: 40 }, cordes: [{ de: 150, a: 245 }],
+        secteur: { deDeg: 60, aDeg: 130 }, rayonsVersDeg: [60, 130], mesureRayon: true,
+        rayonVersDeg: 200,
+      },
+      sortie: { taille: 300 },
+    }),
+    "cercle : tout à la fois",
+  ],
+  [
+    dessinerFigure({
+      ...FIGURES_USUELLES.carre.decrire({ cote: 4 }),
+      transform: { rotationDeg: 45 },
+      visible: { angles: true, axes: true },
+      sortie: { taille: 560 },
+    }),
+    "grande taille (projection), 45°",
+  ],
+];
+for (const [svg, legende] of stress) {
+  $("plancheStress").appendChild(carte(svg, legende));
 }
 
 surChangementFigure();

@@ -5,6 +5,7 @@ import { readFile } from "node:fs/promises";
 import { extname, join, normalize } from "node:path";
 
 const racine = process.argv[2] ?? process.cwd();
+const port = Number(process.argv[3] ?? 8123);
 const types = {
   ".html": "text/html; charset=utf-8",
   ".js": "text/javascript; charset=utf-8",
@@ -30,4 +31,4 @@ createServer(async (requete, reponse) => {
     reponse.writeHead(404);
     reponse.end("introuvable");
   }
-}).listen(8123, () => console.log("serveur statique sur http://localhost:8123"));
+}).listen(port, () => console.log(`serveur statique sur http://localhost:${port}`));
