@@ -46,6 +46,20 @@ button, .game-card, .bonus-button { -webkit-tap-highlight-color: transparent; }
   padding: 10px 2px;
 }
 
+.bureau-back {
+  display: inline-flex;
+  align-items: center;
+  min-height: 43px;
+  padding: 8px 14px;
+  color: #0755b8;
+  font-size: .91rem;
+  font-weight: 850;
+  text-decoration: none;
+  border: 1px solid #cbddeb;
+  border-radius: 999px;
+  background: rgba(255,255,255,.9);
+}
+
 .brand-home-button,
 .space-name {
   border: 0;
@@ -408,6 +422,8 @@ footer { min-height: 58px; padding: 18px 16px; color: #718096; text-align: cente
   .app-header { min-height: 57px; padding: 6px 12px; }
   .brand-logo { width: 88px; }
   .space-name { min-height: 37px; padding: 6px 10px; font-size: .77rem; }
+  .app-header .space-name { display: none; }
+  .bureau-back { min-height: 37px; padding: 6px 10px; font-size: .77rem; }
   .space-name svg { width: 17px; height: 17px; }
   .screen { padding: 22px 14px 32px; border-right: 0; border-left: 0; border-radius: 20px; }
   .desk-screen { padding-top: 20px; }
