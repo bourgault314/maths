@@ -387,20 +387,6 @@ export function dessinerFigure(description = {}) {
     }
   }
 
-  // --- le contour, côté par côté (style individuel possible) ---
-  if (visible.figure) {
-    tousCotes.forEach((c) => {
-      const [p, q] = segmentDe(c);
-      const style = {
-        couleur: styleFigure.couleur,
-        epaisseur: styleFigure.epaisseur,
-        pointilles: styleFigure.pointilles,
-        ...(styles.cotes?.[c] ?? styles.cotes?.[c[1] + c[0]]),
-      };
-      morceaux.push(ligne(p, q, style));
-    });
-  }
-
   // --- hauteur générique : perpendiculaire abaissée d'un sommet sur un côté ---
   if (visible.hauteur) {
     const { de, vers, mesure = false } = visible.hauteur;
@@ -582,6 +568,57 @@ export function dessinerFigure(description = {}) {
     }
   }
 
+  // --- codages d'angles égaux (arcs concentriques, SOUS le contour) ---
+  const groupesEgaux = codages.filter((c) => c.type === "anglesEgaux");
+  groupesEgaux.forEach((codage, groupe) => {
+    const arcs = codage.arcs ?? groupe + 1;
+    const couleur =
+      codage.couleur ?? (enCouleur ? COULEURS_ROLES[groupe % 3] : ENCRE);
+    for (const lettre of codage.sommets) {
+      const i = indexDe(lettre);
+      const { depart, delta } = secteurs[i];
+      const base = rayonArc(i);
+      for (let k = 0; k < arcs; k++) {
+        morceaux.push(
+          polyligne(pointsArc(points[i], base - 5 * k, depart, delta), {
+            couleur,
+            epaisseur: 3,
+          }),
+        );
+      }
+    }
+  });
+
+  // --- marques d'angle droit codées (elles aussi sous le contour) ---
+  for (const codage of codages.filter((c) => c.type === "angleDroit")) {
+    for (const lettre of codage.sommets) {
+      morceaux.push(
+        marqueAngleDroit(
+          indexDe(lettre),
+          codage.couleur ?? (enCouleur ? ANGLE_DROIT_COULEUR : ENCRE),
+        ),
+      );
+    }
+  }
+
+  // --- le contour, côté par côté (style individuel possible) ---
+  // Dessiné APRÈS les arcs et marques d'angles : quand un arc arrive
+  // sur un côté, c'est le trait de la figure qui domine (retour de
+  // Gwenaël sur la photo du 55° : le vert ne doit jamais recouvrir le
+  // bleu du triangle).
+  if (visible.figure) {
+    tousCotes.forEach((c) => {
+      const [p, q] = segmentDe(c);
+      const style = {
+        couleur: styleFigure.couleur,
+        epaisseur: styleFigure.epaisseur,
+        pointilles: styleFigure.pointilles,
+        ...(styles.cotes?.[c] ?? styles.cotes?.[c[1] + c[0]]),
+      };
+      morceaux.push(ligne(p, q, style));
+    });
+  }
+
   // --- mesures d'angles, posées sur la bissectrice intérieure ---
   const mesuresAnglesVisibles = listeOuTout(visible.mesuresAngles, lettres.split(""));
   for (const lettre of mesuresAnglesVisibles) {
@@ -606,27 +643,6 @@ export function dessinerFigure(description = {}) {
       ),
     );
   }
-
-  // --- codages ---
-  const groupesEgaux = codages.filter((c) => c.type === "anglesEgaux");
-  groupesEgaux.forEach((codage, groupe) => {
-    const arcs = codage.arcs ?? groupe + 1;
-    const couleur =
-      codage.couleur ?? (enCouleur ? COULEURS_ROLES[groupe % 3] : ENCRE);
-    for (const lettre of codage.sommets) {
-      const i = indexDe(lettre);
-      const { depart, delta } = secteurs[i];
-      const base = rayonArc(i);
-      for (let k = 0; k < arcs; k++) {
-        morceaux.push(
-          polyligne(pointsArc(points[i], base - 5 * k, depart, delta), {
-            couleur,
-            epaisseur: 3,
-          }),
-        );
-      }
-    }
-  });
 
   for (const codage of codages) {
     const couleurCodage =
@@ -689,16 +705,8 @@ export function dessinerFigure(description = {}) {
           }
         }
       }
-    } else if (codage.type === "angleDroit") {
-      for (const lettre of codage.sommets) {
-        morceaux.push(
-          marqueAngleDroit(
-            indexDe(lettre),
-            codage.couleur ?? (enCouleur ? ANGLE_DROIT_COULEUR : ENCRE),
-          ),
-        );
-      }
-    } else if (codage.type !== "anglesEgaux") {
+    } else if (codage.type !== "anglesEgaux" && codage.type !== "angleDroit") {
+      // anglesEgaux et angleDroit sont déjà dessinés, sous le contour
       throw new RangeError(`figure : codage inconnu « ${codage.type} »`);
     }
   }
@@ -1363,8 +1371,6 @@ export function dessinerAngle({
     const pointsSecteur = [sommet, ...pointsArc(sommet, longueurCote, depart, delta)];
     contenu += `<polygon points="${pointsSecteur.map((p) => `${px(p[0])},${px(p[1])}`).join(" ")}" fill="${typeof secteur === "string" ? secteur : "#e2e8f0"}" fill-opacity="0.75" stroke="none"/>`;
   }
-  contenu += ligne(sommet, bout1, { couleur: teinte, epaisseur: 3.5 });
-  contenu += ligne(sommet, bout2, { couleur: teinte, epaisseur: 3.5 });
   const estDroit = Math.abs(mesureDeg - 90) < 1e-9;
   if (afficherArc) {
     if (estDroit) {
@@ -1388,6 +1394,9 @@ export function dessinerAngle({
       }
     }
   }
+  // les deux côtés de l'angle par-dessus l'arc : le trait domine toujours
+  contenu += ligne(sommet, bout1, { couleur: teinte, epaisseur: 3.5 });
+  contenu += ligne(sommet, bout2, { couleur: teinte, epaisseur: 3.5 });
   if ((afficherMesure || texteImpose !== null) && !(estDroit && texteImpose === null)) {
     const bissectrice = depart + delta / 2;
     const contenuMesure =
