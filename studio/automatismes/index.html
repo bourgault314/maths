@@ -131,10 +131,13 @@
   .barre-action{position:fixed;z-index:50;left:0;right:0;bottom:0;pointer-events:none;
     padding:10px max(18px,env(safe-area-inset-right)) max(10px,env(safe-area-inset-bottom)) max(18px,env(safe-area-inset-left));
     background:linear-gradient(180deg,rgba(246,248,251,0),rgba(246,248,251,.96) 28%)}
+  /* Touche « verre dépoli » : le contenu glisse, flouté, sous la barre */
   .barre-action-carte{pointer-events:auto;display:grid;grid-template-columns:minmax(0,1fr) auto;
     align-items:center;gap:10px;width:min(100%,620px);margin:0 auto;padding:10px 12px;
-    border:1px solid #cbdcf1;border-radius:15px;background:rgba(255,255,255,.98);
+    border:1px solid #cbdcf1;border-radius:15px;background:rgba(255,255,255,.72);
+    backdrop-filter:blur(14px) saturate(1.4);-webkit-backdrop-filter:blur(14px) saturate(1.4);
     box-shadow:0 12px 34px rgba(6,63,134,.18)}
+  @supports not (backdrop-filter:blur(1px)){.barre-action-carte{background:rgba(255,255,255,.97)}}
   .resume{min-width:0;display:flex;flex-direction:column;gap:2px;padding-left:3px}
   .resume strong{overflow:hidden;font-size:14.5px;line-height:1.2;color:var(--bleu);
     text-overflow:ellipsis;white-space:nowrap}
@@ -191,40 +194,42 @@
 
 <main>
   <section class="carte carte-reglages" aria-label="Réglages de la série">
-    <div class="rangee-champ">
-      <span class="etiquette" id="etiquetteNiveau">Niveau</span>
-      <div class="segments" data-reglage="level" role="group" aria-labelledby="etiquetteNiveau">
-        <button type="button" data-value="5e" aria-pressed="false">5e</button>
-        <button type="button" data-value="4e" aria-pressed="false">4e</button>
-        <button type="button" class="est-actif" data-value="3e" aria-pressed="true">3e</button>
-        <span class="separation-epreuve" aria-hidden="true"></span>
-        <button type="button" class="bouton-epreuve" data-value="DNB" aria-pressed="false"
-          aria-label="DNB — révision de l’épreuve">DNB<span class="mention-epreuve">épreuve</span></button>
-      </div>
-    </div>
     <div class="rangee-duo">
       <div class="rangee-champ">
-        <span class="etiquette" id="etiquetteAide">Aide</span>
+        <span class="etiquette" id="etiquetteNiveau">Niveau</span>
+        <div class="segments" data-reglage="level" role="group" aria-labelledby="etiquetteNiveau">
+          <button type="button" data-value="5e" aria-pressed="false">5e</button>
+          <button type="button" data-value="4e" aria-pressed="false">4e</button>
+          <button type="button" class="est-actif" data-value="3e" aria-pressed="true">3e</button>
+          <span class="separation-epreuve" aria-hidden="true"></span>
+          <button type="button" class="bouton-epreuve" data-value="DNB" aria-pressed="false"
+            aria-label="DNB — révision de l’épreuve">DNB<span class="mention-epreuve">épreuve</span></button>
+        </div>
+      </div>
+      <div class="rangee-champ">
+        <span class="etiquette etiquette-suite" id="etiquetteAide">Aide</span>
         <div class="segments" data-reglage="visualMode" role="group" aria-labelledby="etiquetteAide">
           <button type="button" class="est-actif" data-value="with" aria-pressed="true">Avec aide</button>
           <button type="button" data-value="without" aria-pressed="false">Sans aide</button>
         </div>
       </div>
+    </div>
+    <div class="rangee-duo">
       <div class="rangee-champ">
-        <span class="etiquette etiquette-suite" id="etiquetteMode">Mode</span>
+        <span class="etiquette" id="etiquetteMode">Mode</span>
         <div class="segments" data-reglage="experienceMode" role="group" aria-labelledby="etiquetteMode">
           <button type="button" data-value="presentation" aria-pressed="false">Diaporama</button>
           <button type="button" class="est-actif" data-value="interactive" aria-pressed="true">Interactif</button>
         </div>
       </div>
-    </div>
-    <div class="rangee-champ">
-      <span class="etiquette" id="etiquetteQuestions">Questions</span>
-      <div class="segments" data-reglage="count" role="group" aria-labelledby="etiquetteQuestions">
-        <button type="button" class="est-actif" data-value="5" aria-pressed="true">5</button>
-        <button type="button" data-value="10" aria-pressed="false">10</button>
-        <button type="button" data-value="15" aria-pressed="false">15</button>
-        <button type="button" data-value="20" aria-pressed="false">20</button>
+      <div class="rangee-champ">
+        <span class="etiquette etiquette-suite" id="etiquetteQuestions">Questions</span>
+        <div class="segments" data-reglage="count" role="group" aria-labelledby="etiquetteQuestions">
+          <button type="button" class="est-actif" data-value="5" aria-pressed="true">5</button>
+          <button type="button" data-value="10" aria-pressed="false">10</button>
+          <button type="button" data-value="15" aria-pressed="false">15</button>
+          <button type="button" data-value="20" aria-pressed="false">20</button>
+        </div>
       </div>
     </div>
   </section>
