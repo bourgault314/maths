@@ -953,5 +953,45 @@ document.getElementById("btnPngBarres").addEventListener("click", () => {
   Page interne maths&go — aucune mesure d'audience ni cookie sur cette page.
   <a href="/mentions-legales.html">Mentions légales</a> · <a href="/confidentialite.html">Confidentialité</a>
 </footer>
+
+<script>
+// Navigation par domaines : l'accueil ne montre que le sommaire ;
+// un domaine cliqué affiche sa section seule (retour possible).
+(function () {
+  const groupes = {
+    secEquabarre: ["secEquabarre"],
+    secJetons: ["secJetons", "secGenerateurJetons"],
+    secSplat: ["secSplat"],
+    secPrototypes: ["secPrototypes"],
+  };
+  const sommaire = document.getElementById("secSommaire");
+  const sections = [...document.querySelectorAll("body > section")].filter((s) => s !== sommaire);
+  const retour = document.createElement("p");
+  retour.innerHTML = '<a href="#" style="font-weight:700;color:#063f86">&larr; Tous les domaines</a>';
+  retour.hidden = true;
+  sommaire.after(retour);
+  function montrer(id) {
+    const cible = groupes[id] ?? null;
+    for (const s of sections) s.hidden = cible ? !cible.includes(s.id) : true;
+    retour.hidden = !cible;
+    sommaire.hidden = !!cible;
+    window.scrollTo(0, 0);
+  }
+  retour.querySelector("a").addEventListener("click", (e) => {
+    e.preventDefault();
+    history.replaceState(null, "", location.pathname);
+    montrer(null);
+  });
+  for (const lien of sommaire.querySelectorAll('a[href^="#"]')) {
+    lien.addEventListener("click", (e) => {
+      e.preventDefault();
+      const id = lien.getAttribute("href").slice(1);
+      history.replaceState(null, "", "#" + id);
+      montrer(id);
+    });
+  }
+  montrer(location.hash ? location.hash.slice(1) : null);
+})();
+</script>
 </body>
 </html>
