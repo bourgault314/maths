@@ -1099,7 +1099,7 @@ function fleche(p, angle, { couleur, epaisseur = 3, taille = 11 }) {
 }
 
 /** Prolonge la droite passant par `c` de direction `angle` jusqu'au cadre. */
-function clipDroiteAuCadre(c, angle, largeur, hauteur, marge) {
+export function clipDroiteAuCadre(c, angle, largeur, hauteur, marge) {
   const d = [Math.cos(angle), Math.sin(angle)];
   let tMin = -Infinity;
   let tMax = Infinity;
@@ -1422,3 +1422,7 @@ export function dessinerAngle({
     contenu,
   );
 }
+
+// Petites briques SVG partagées avec les modules de configurations
+// (droites, angles, scènes) — même trait, même halo, même croix partout.
+export const briquesSvg = { ligne, polyligne, croix, texte, px, enveloppeSvg, fleche };

@@ -16,6 +16,8 @@
     "./fleche": "./src/fleche.js",
     "./geometrie": "./src/geometrie.js",
     "./figure": "./src/figure.js",
-    "./figures-usuelles": "./src/figures-usuelles.js"
+    "./figures-usuelles": "./src/figures-usuelles.js",
+    "./expressions": "./src/expressions.js",
+    "./configurations-angles": "./src/configurations-angles.js"
   }
 }

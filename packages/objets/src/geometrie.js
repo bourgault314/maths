@@ -769,3 +769,42 @@ export function pointsRemarquablesTriangle(sommets) {
     piedsBissectrices: sommets.map((_, i) => piedBissectrice(i)),
   };
 }
+
+// ---------------------------------------------------------------------------
+// Vecteurs et droites paramétriques (chantier configurations)
+// ---------------------------------------------------------------------------
+
+/** Vecteur allant de p vers q. */
+export function vecteur(p, q) {
+  return [q[0] - p[0], q[1] - p[1]];
+}
+
+/** Rotation d'un vecteur de 90° dans le sens direct. */
+export function rotation90(v) {
+  return [-v[1], v[0]];
+}
+
+/**
+ * Angle signé (radians, dans ]-π, π]) pour aller du vecteur u au
+ * vecteur v : atan2(déterminant, produit scalaire).
+ */
+export function angleSigne(u, v) {
+  return Math.atan2(u[0] * v[1] - u[1] * v[0], u[0] * v[0] + u[1] * v[1]);
+}
+
+/** Les trois points sont-ils alignés (aire du triangle quasi nulle) ? */
+export function sontAlignes(a, b, c, tolerance = 1e-9) {
+  const croix = (b[0] - a[0]) * (c[1] - a[1]) - (b[1] - a[1]) * (c[0] - a[0]);
+  const echelleLocale = Math.max(distance(a, b), distance(a, c), 1e-12);
+  return Math.abs(croix) <= tolerance * echelleLocale * echelleLocale;
+}
+
+/**
+ * Paramètre signé t du point p sur la droite (a, direction u) :
+ * la projection de p vaut a + t·u. Permet d'ORDONNER des points
+ * alignés sans regarder l'écran.
+ */
+export function parametreSurDroite(p, a, u) {
+  const long2 = u[0] * u[0] + u[1] * u[1];
+  return ((p[0] - a[0]) * u[0] + (p[1] - a[1]) * u[1]) / long2;
+}
