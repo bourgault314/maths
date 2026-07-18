@@ -106,6 +106,7 @@
   .clavier-touche:active{transform:translateY(1px)}
   .clavier-valider{background:linear-gradient(180deg,#60a5fa,#3b82f6);color:#fff;border-color:#3b82f6}
   #dialogueChips button{font-family:Fredoka;font-weight:600;border-radius:999px;min-width:64px}
+  #dialogueFond[hidden],#dialogueEquabarre[hidden]{display:none}
   #dialogueFond{position:fixed;inset:0;background:rgba(15,23,42,.35);backdrop-filter:blur(3px);z-index:90}
   #dialogueEquabarre{position:fixed;z-index:100;display:flex;flex-wrap:wrap;gap:10px;align-items:center;
     background:#fff;border:1px solid rgba(15,23,42,.10);box-shadow:0 30px 100px rgba(15,23,42,.24);
@@ -125,6 +126,12 @@
 <body>
 <h1>Atelier des objets maths&amp;go</h1>
 <p class="sous">Page interne de validation — les objets ci-dessous sont dessinés et animés par la bibliothèque officielle (<code>packages/objets</code>), jamais à la main. Statut : brouillon, en attente de validation.</p>
+
+<section style="background:#f0fdf4;border-color:#bbf7d0">
+  <h2 style="color:#16a34a">📐 Catégorie Géométrie — figures calculées, arcs exacts</h2>
+  <p class="aide">Triangles, quadrilatères, polygones réguliers, cercle et disque : les figures du collège avec leurs codages (égalités, parallèles, angles droits), diagonales, centre, axes de symétrie, mesures en français. Rotation libre : les arcs d'angles restent mathématiquement justes — testé sous les 360 rotations.</p>
+  <p><a href="./geometrie.html" style="font-weight:700;color:#16a34a">→ Ouvrir l'Atelier Géométrie</a></p>
+</section>
 
 <section style="background:#eff6ff;border-color:#bfdbfe">
   <h2 style="color:#1d4ed8">📚 Vos 27 visuels d'Automatismes — la bibliothèque existante</h2>
@@ -151,7 +158,6 @@
       <option value="masquer">Après suppression : masquer</option>
     </select>
     <label class="reglageTaille"><input type="checkbox" id="afficherFois"> signe × (2 × x)</label>
-    <label class="reglageTaille"><input type="checkbox" id="avecVerification" checked> vérification</label>
   </div>
   <div id="zoneEquabarre" style="display:flex;flex-wrap:wrap;gap:22px;align-items:flex-start">
     <div style="flex:1 1 460px;min-width:300px">
@@ -393,7 +399,7 @@ function dessinerRedactionCourante() {
     largeur: 400,
   });
   // la vérification est un objet SÉPARÉ : on l'ajoute… ou pas
-  if (Logique.estResolue(etatEqua) && document.getElementById("avecVerification").checked) {
+  if (Logique.estResolue(etatEqua)) {
     const initiale = etatEqua.historique[0].equation;
     const texte = initiale
       .replace(new RegExp(`(\\d+)${etatEqua.lettre}`, "g"), `$1 × ${etatEqua.solution}`)
@@ -604,9 +610,6 @@ document.querySelectorAll("#barreOutilsEqua [data-mode]").forEach((bouton) => {
     fermerDialogue();
     dessiner();
   });
-});
-document.getElementById("avecVerification").addEventListener("change", () => {
-  if (etatEqua) dessinerRedactionCourante();
 });
 document.getElementById("afficherFois").addEventListener("change", () => {
   if (etatEqua) dessinerRedactionCourante();
