@@ -1,6 +1,6 @@
 # Studio pédagogique maths&go
 
-> **Raccordement (19/07/2026, suite à la revue croisée).** Deux
+> **Raccordement (18/07/2026, suite à la revue croisée).** Deux
 > fondations coexistaient : les documents de ce dossier (écrits avant
 > le chantier V2) et les bibliothèques `packages/` créées depuis. La
 > règle est désormais unique :
@@ -8,7 +8,7 @@
 >   charte, objets visuels), testé et sans navigateur ;
 > - **`studio/`** est l'atelier de composition et de validation qui
 >   CONSOMME ces packages (`studio/atelier/` en est la première page) ;
-> - chaque objet suit un cycle `brouillon → validé par Gwenaël`
+> - chaque objet suit un cycle `a_faire → construit → valide`
 >   (aujourd'hui dans les en-têtes de fichiers ; à terme dans le
 >   registre central décrit par ces documents) ;
 > - les documents ci-dessous restent la vision pédagogique de
@@ -33,7 +33,8 @@ moteur de la rendre.
   élève peut fournir des paramètres validés et ouvrir directement le bon exemple.
 - Un contenu peut produire plusieurs sorties : web, téléphone, diaporama, impression
   et PDF.
-- Les contenus passent par les états `draft`, `review`, `validated`, `deprecated`.
+- Pour Automatismes V2, les contenus passent par les états `a_faire`,
+  `construit`, `valide`. Les anciens vocabulaires du Studio sont historiques.
 - Les identifiants stables préparés dans `/auto` sont conservés.
 - Les résultats d'élèves ne sont jamais stockés dans GitHub.
 - Les parents et les élèves n'obtiennent jamais un accès d'écriture au dépôt.

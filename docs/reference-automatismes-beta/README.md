@@ -29,25 +29,27 @@ actuellement utilisée par les élèves sait produire, question par question.
   (`dnb_14` : 3, `dnb_15` : 3, `dnb_17` : 10, `dnb_18` : 1) ;
 - 495 définitions exécutables au total.
 
-## Usage prévu : contrat de parité
+## Usage prévu : inventaire de couverture uniquement
 
-Au moment de migrer un module, cet inventaire sert d'oracle : la version
-reconstruite doit savoir produire les mêmes énoncés (empreintes), les mêmes
-réponses et les mêmes options que la bêta. Points de vigilance relevés par
-l'inventaire :
+Au moment de reconstruire une notion, cet inventaire permet de vérifier qu'une
+famille de situations n'a pas été oubliée. Il ne sert jamais d'oracle pour les
+énoncés, les réponses, les options, les paramètres ou les algorithmes. La V2
+doit être écrite indépendamment et sa couverture se mesure par les notions du
+programme. Points de vigilance historiques relevés par l'inventaire :
 
-- les 17 gabarits virtuels n'existent dans aucune banque : une migration qui
-  ne lit que les banques en perdrait 17 types de questions ;
+- les 17 gabarits virtuels n'existent dans aucune banque : ils signalent des
+  familles de situations à examiner, pas des questions à reproduire ;
 - 98 `formula_code` sont encore stockés mais court-circuités par un
-  générateur spécialisé : ne pas les exécuter par erreur, ne pas les
-  supprimer sans preuve de parité ;
-- les options de QCM ont `errorCode: null` dans le contrat persistant, alors
-  que certains générateurs savent produire des distracteurs diagnostiques ;
+  générateur spécialisé : ils documentent la dette de la bêta et ne doivent
+  jamais entrer dans V2 ;
+- les options de QCM ont `errorCode: null` dans le contrat persistant : cette
+  information peut orienter l'étude des erreurs d'élèves, sans autoriser la
+  reprise des distracteurs ;
 - 184 questions déclarent un visuel sans identifiant de composant
   réutilisable : c'est la mesure du travail d'extraction restant.
 
 ## Limite de validité
 
 L'inventaire photographie la bêta au commit ci-dessus. Si la bêta évolue,
-vérifier son commit de tête avant de s'en servir comme oracle, et régénérer
-ou corriger l'inventaire en cas d'écart.
+vérifier son commit de tête avant de l'utiliser pour mesurer la couverture, et
+régénérer ou corriger l'inventaire en cas d'écart.
