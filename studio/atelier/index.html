@@ -65,6 +65,14 @@
   .consigneSplat{width:100%;text-align:center;font-weight:600;margin-top:6px}
   .reglageTaille{display:flex;align-items:center;gap:8px;font-size:14px;color:var(--attenue)}
   .reglageTaille input{accent-color:var(--bleu)}
+  #modesEquabarre button.modeActif{background:linear-gradient(180deg,#60a5fa,#3b82f6);color:#fff;border-color:#3b82f6;font-weight:600}
+  #dialogueEquabarre{display:flex;flex-wrap:wrap;gap:10px;align-items:center;margin:10px 0;padding:12px;
+    background:#eff6ff;border:2px solid #bfdbfe;border-radius:12px}
+  #historiqueEquations{margin-top:12px;font-family:Fredoka;font-size:clamp(18px,3vw,26px);font-weight:600;line-height:1.5}
+  #historiqueEquations .passee{color:#94a3b8}
+  #historiqueEquations .courante{color:#0f172a}
+  #historiqueEquations .egal{color:#3b82f6}
+  #historiqueEquations .bravo{color:#dc2626}
 </style>
 </head>
 <body>
@@ -89,9 +97,29 @@
     </select>
     <button class="principal" id="btnConstruire">Construire le schéma</button>
     <button id="btnDe" title="Équation au hasard">🎲</button>
-    <label class="reglageTaille">Taille <input type="range" id="tailleBarres" min="56" max="150" value="88" step="2"></label>
+    <label class="reglageTaille">Largeur <input type="range" id="largeurBarres" min="320" max="1000" value="640" step="10"></label>
+    <label class="reglageTaille">Hauteur <input type="range" id="tailleBarres" min="56" max="150" value="88" step="2"></label>
+  </div>
+  <div class="barreCommandes" id="modesEquabarre" role="group" aria-label="Opérations">
+    <button data-mode="decomposer">Décomposer</button>
+    <button data-mode="regrouper">Regrouper</button>
+    <button data-mode="partager">Partager équitablement</button>
+    <button data-mode="deplacer">Déplacer</button>
+    <button data-mode="enlever" class="modeActif">Enlever dans chaque membre</button>
+  </div>
+  <div class="barreCommandes">
+    <button class="principal" id="btnValiderSelection" disabled>Enlever la sélection</button>
+    <button id="btnAnnulerOp">↶ Annuler</button>
+    <button id="btnRecommencer">↺ Recommencer</button>
   </div>
   <div class="zoneRendu" id="renduBarres"></div>
+  <div id="dialogueEquabarre" hidden>
+    <span id="dialogueTexte"></span>
+    <input type="text" id="dialogueSaisie" style="width:120px" aria-label="Votre réponse">
+    <button class="principal" id="dialogueValider">Valider</button>
+    <button id="dialogueFermer">Fermer</button>
+  </div>
+  <div id="historiqueEquations" aria-live="polite"></div>
   <p class="erreur" id="erreurEquation"></p>
 </section>
 
@@ -174,51 +202,142 @@
 
 <script type="module">
 import { dessinerBarres } from "../../packages/objets/src/barres.js";
-import { barresDepuisEquation } from "../../packages/objets/src/equation-barres.js";
+import * as Logique from "../../packages/objets/src/equabarre-logique.js";
 import { dessinerJeton, dessinerGroupeJetons } from "../../packages/objets/src/jetons.js";
 import { dessinerTache } from "../../packages/objets/src/splat.js";
 import { dessinerTriangle } from "../../packages/objets/src/triangle.js";
 import { creerGenerateur } from "../../packages/moteur-exercices/src/aleatoire.js";
 
-/* ========== 1. ÉQUABARRE ========== */
+/* ========== 1. ÉQUABARRE MANIPULABLE ========== */
 const champ = document.getElementById("champEquation");
 const rendu = document.getElementById("renduBarres");
 const erreur = document.getElementById("erreurEquation");
 const choixInconnue = document.getElementById("choixInconnue");
-let donneesBarres = null;
+const curseurBarres = document.getElementById("tailleBarres");
+const curseurLargeur = document.getElementById("largeurBarres");
+const historiqueDiv = document.getElementById("historiqueEquations");
+const btnValider = document.getElementById("btnValiderSelection");
+const dialogue = document.getElementById("dialogueEquabarre");
+let etatEqua = null;
+let actionDialogue = null;
 
 function construire() {
   try {
-    donneesBarres = barresDepuisEquation(champ.value, { affichage: choixInconnue.value });
+    etatEqua = Logique.creerEtat(champ.value);
     erreur.textContent = "";
+    fermerDialogue();
     dessiner();
   } catch (e) {
     erreur.textContent = e.message;
   }
 }
-const curseurBarres = document.getElementById("tailleBarres");
+
+function texteHistorique() {
+  if (!etatEqua) return "";
+  const lignesH = etatEqua.historique.map((ligne, i) => {
+    const derniere = i === etatEqua.historique.length - 1;
+    const [g, d] = ligne.split(" = ");
+    return `<div class="${derniere ? "courante" : "passee"}">${g} <span class="egal">=</span> ${d}</div>`;
+  });
+  if (Logique.estResolue(etatEqua)) {
+    lignesH.push(`<div class="bravo">🎉 ${etatEqua.lettre} = ${etatEqua.solution}</div>`);
+  }
+  return lignesH.join("");
+}
+
 function dessiner() {
-  if (!donneesBarres) return;
+  if (!etatEqua) return;
   const hauteur = Number(curseurBarres.value);
-  donneesBarres.inconnue.affichage = choixInconnue.value;
-  rendu.innerHTML = dessinerBarres({ ...donneesBarres, largeur: Math.min(760, rendu.clientWidth || 640), hauteurPiece: hauteur });
+  rendu.innerHTML = dessinerBarres({
+    lignes: etatEqua.lignes,
+    inconnue: { affichage: choixInconnue.value, lettre: etatEqua.lettre, valeur: etatEqua.solution },
+    largeur: Number(curseurLargeur.value),
+    hauteurPiece: hauteur,
+  });
+  historiqueDiv.innerHTML = texteHistorique();
+  btnValider.disabled = !(
+    (etatEqua.mode === "enlever" && Logique.enleverPossible(etatEqua)) ||
+    (etatEqua.mode === "regrouper" && etatEqua.selection.length >= 2)
+  );
+  btnValider.textContent = etatEqua.mode === "regrouper" ? "Regrouper la sélection" : "Enlever la sélection";
+
   const svg = rendu.querySelector("svg");
   const bases = [...svg.querySelectorAll(`rect[height="${hauteur}"]`)].filter((r) => !r.getAttribute("fill").startsWith("url"));
-  const toutes = [...donneesBarres.lignes.flatMap((l) => l.pieces)];
+  const nbHaut = etatEqua.lignes[0].pieces.length;
   bases.forEach((rect, i) => {
     rect.style.cursor = "pointer";
     rect.addEventListener("click", () => {
-      const piece = toutes[i];
-      piece.etat = piece.etat === undefined ? "selectionSuppression" : piece.etat === "selectionSuppression" ? "supprime" : undefined;
-      if (piece.etat === undefined) delete piece.etat;
+      const ligneIdx = i < nbHaut ? 0 : 1;
+      const pieceIdx = i < nbHaut ? i : i - nbHaut;
+      const resultat = Logique.cliquerPiece(etatEqua, ligneIdx, pieceIdx);
+      if (resultat.action === "decomposer" || resultat.action === "partager") {
+        ouvrirDialogue(resultat);
+      }
       dessiner();
     });
   });
 }
+
+function ouvrirDialogue(demande) {
+  actionDialogue = demande;
+  document.getElementById("dialogueTexte").textContent =
+    demande.action === "decomposer"
+      ? `Décomposer ${demande.valeur} en une somme (ex. « 4 + 5 ») :`
+      : `Partager ${demande.valeur} en combien de parts égales ?`;
+  document.getElementById("dialogueSaisie").value = "";
+  dialogue.hidden = false;
+  document.getElementById("dialogueSaisie").focus();
+}
+function fermerDialogue() { dialogue.hidden = true; actionDialogue = null; }
+
+document.getElementById("dialogueValider").addEventListener("click", () => {
+  if (!actionDialogue) return;
+  try {
+    const saisie = document.getElementById("dialogueSaisie").value;
+    if (actionDialogue.action === "decomposer") {
+      const morceaux = saisie.split("+").map((v) => Number(v.trim()));
+      Logique.decomposer(etatEqua, actionDialogue.ligne, actionDialogue.indice, morceaux);
+    } else {
+      Logique.partager(etatEqua, actionDialogue.ligne, actionDialogue.indice, Number(saisie.trim()));
+    }
+    erreur.textContent = "";
+    fermerDialogue();
+    dessiner();
+  } catch (e) { erreur.textContent = e.message; }
+});
+document.getElementById("dialogueFermer").addEventListener("click", fermerDialogue);
+document.getElementById("dialogueSaisie").addEventListener("keydown", (e) => {
+  if (e.key === "Enter") document.getElementById("dialogueValider").click();
+});
+
+document.querySelectorAll("#modesEquabarre button").forEach((bouton) => {
+  bouton.addEventListener("click", () => {
+    if (!etatEqua) return;
+    document.querySelectorAll("#modesEquabarre button").forEach((b) => b.classList.remove("modeActif"));
+    bouton.classList.add("modeActif");
+    Logique.changerMode(etatEqua, bouton.dataset.mode);
+    erreur.textContent = "";
+    fermerDialogue();
+    dessiner();
+  });
+});
+btnValider.addEventListener("click", () => {
+  try {
+    if (etatEqua.mode === "regrouper") Logique.regrouperSelection(etatEqua);
+    else Logique.enleverSelection(etatEqua);
+    erreur.textContent = "";
+    dessiner();
+  } catch (e) { erreur.textContent = e.message; }
+});
+document.getElementById("btnAnnulerOp").addEventListener("click", () => {
+  if (etatEqua) { Logique.annuler(etatEqua); dessiner(); }
+});
+document.getElementById("btnRecommencer").addEventListener("click", construire);
 document.getElementById("btnConstruire").addEventListener("click", construire);
 champ.addEventListener("keydown", (e) => { if (e.key === "Enter") construire(); });
-choixInconnue.addEventListener("change", () => { if (donneesBarres) dessiner(); });
-curseurBarres.addEventListener("input", () => { if (donneesBarres) dessiner(); });
+choixInconnue.addEventListener("change", () => { if (etatEqua) dessiner(); });
+curseurBarres.addEventListener("input", () => { if (etatEqua) dessiner(); });
+curseurLargeur.addEventListener("input", () => { if (etatEqua) dessiner(); });
 document.getElementById("btnDe").addEventListener("click", () => {
   const g = creerGenerateur(`de-${Date.now()}`);
   const x = g.entier(2, 9);
