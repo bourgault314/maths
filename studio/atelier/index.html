@@ -342,12 +342,7 @@ function majZoneAction() {
   } else if (etatEqua.mode === "regrouper") {
     if (nb === 0) instruction("Sélectionne des <strong>nombres d'un même membre</strong> à regrouper.");
     else if (nb === 1) { instruction("Sélectionne au moins un <strong>deuxième nombre</strong>."); effacer(); }
-    else {
-      bouton("Regrouper la sélection", "toolBtn modeActif", () =>
-        ouvrirDialogue({ action: "regrouper", somme: Logique.sommeSelection(etatEqua) }),
-      );
-      effacer();
-    }
+    else effacer();
   } else if (etatEqua.mode === "decomposer") {
     instruction("Clique sur un <strong>nombre</strong> à décomposer.");
   } else if (etatEqua.mode === "partager") {
@@ -451,6 +446,9 @@ function dessiner() {
       const resultat = Logique.cliquerPiece(etatEqua, ligneIdx, pieceIdx);
       if (resultat.action === "decomposer" || resultat.action === "partager") {
         ouvrirDialogue(resultat);
+      } else if (etatEqua.mode === "regrouper" && etatEqua.selection.length >= 2) {
+        // la fenêtre s'ouvre d'elle-même : c'est l'utilisateur qui donne la somme
+        ouvrirDialogue({ action: "regrouper", somme: Logique.sommeSelection(etatEqua) });
       }
       dessiner();
     });
