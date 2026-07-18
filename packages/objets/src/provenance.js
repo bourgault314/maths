@@ -101,6 +101,39 @@ export const PROVENANCE_OBJETS = {
 };
 
 /*
+ * Les autres packages de la fondation — charte, contrats, moteur d'exercices.
+ *
+ * Ce périmètre avait été OUBLIÉ par l'audit du 18/07, qui n'avait regardé que
+ * packages/objets/ et studio/. C'est GPT, en relecture, qui a signalé le seul
+ * emprunt réel de toute la fondation. Leçon : un audit vaut ce que vaut son
+ * périmètre, et le garde-fou couvre désormais tous les packages.
+ */
+export const PROVENANCE_PACKAGES = {
+  "charte/src/charte.js": {
+    statut: "original_mathsgo",
+    source: "charte graphique de Gwenaël, en données",
+  },
+  "contrats/src/gabarit.js": { statut: "original_mathsgo", source: "écrit pour maths&go" },
+  "contrats/src/question.js": { statut: "original_mathsgo", source: "écrit pour maths&go" },
+  "moteur-exercices/src/aleatoire.js": {
+    statut: "original_mathsgo",
+    source: "PRNG seedé écrit pour maths&go",
+  },
+  "moteur-exercices/src/generation.js": {
+    statut: "original_mathsgo",
+    source: "écrit pour maths&go",
+  },
+  "moteur-exercices/src/generateurs/fractions.js": {
+    statut: "herite_doctools",
+    source: "porté de dnb_03 (formula_code « simplify_simple » et « simplify_harder »)",
+    aRemplacer: [
+      "Les couples irréductibles de COUPLES_IRREDUCTIBLES et les bornes de FACTEURS viennent des listes historiques du module V1 : à retirer et à remplacer par une matrice de cas écrite avec Gwenaël.",
+    ],
+    note: "Cartouche d'essai technique, non publié aux élèves. C'est le seul emprunt réel de toute la fondation V2.",
+  },
+};
+
+/*
  * Le studio — pages et composants hors packages/.
  *
  * Le cas de studio/automatismes/ est particulier et parfaitement assumé :
@@ -232,6 +265,7 @@ export const DETTE_PRIORITAIRE = Object.freeze({
 function toutesLesEntrees() {
   return [
     ...Object.entries(PROVENANCE_OBJETS),
+    ...Object.entries(PROVENANCE_PACKAGES),
     ...Object.entries(PROVENANCE_MODULES_AUTOMATISMES),
     ...Object.entries(PROVENANCE_STUDIO),
   ];
@@ -240,6 +274,7 @@ function toutesLesEntrees() {
 export function origineDe(nom) {
   return (
     PROVENANCE_OBJETS[nom] ??
+    PROVENANCE_PACKAGES[nom] ??
     PROVENANCE_MODULES_AUTOMATISMES[nom] ??
     PROVENANCE_STUDIO[nom] ??
     null

@@ -8,6 +8,7 @@ import {
   STATUTS,
   PROVENANCE_OBJETS,
   PROVENANCE_MODULES_AUTOMATISMES,
+  PROVENANCE_PACKAGES,
   PROVENANCE_STUDIO,
   DETTE_PRIORITAIRE,
   origineDe,
@@ -20,6 +21,7 @@ const RACINE = join(ICI, "..", "..", "..");
 
 const TOUT = {
   ...PROVENANCE_OBJETS,
+  ...PROVENANCE_PACKAGES,
   ...PROVENANCE_MODULES_AUTOMATISMES,
   ...PROVENANCE_STUDIO,
 };
@@ -99,10 +101,53 @@ test("chaque chantier ouvert décrit un travail concret", async () => {
  * étaient les couleurs de Gwenaël lui-même. La fondation V2 est intégralement
  * à nous. Si ce test venait à échouer, c'est qu'un vrai emprunt est apparu.
  */
-test("aucun objet de la fondation n'a d'emprunt en attente", async () => {
-  const { chantiersOuverts } = await import("./provenance.js");
-  const enAttente = chantiersOuverts().map((c) => c.nom);
+test("aucun objet visuel n'a d'emprunt en attente", async () => {
+  const { chantiersOuverts, PROVENANCE_OBJETS } = await import("./provenance.js");
+  const enAttente = chantiersOuverts()
+    .map((c) => c.nom)
+    .filter((nom) => nom in PROVENANCE_OBJETS);
   assert.deepEqual(enAttente, [], `Emprunts à traiter : ${enAttente.join(", ")}`);
+});
+
+/*
+ * Le garde-fou élargi. L'audit du 18/07 n'avait regardé que packages/objets/
+ * et studio/, et avait donc manqué le générateur de fractions. On balaie
+ * désormais TOUS les packages : tout fichier de code non déclaré fait échouer
+ * la CI, quel que soit le package où il apparaît.
+ */
+test("tout module des autres packages est déclaré", async () => {
+  const { PROVENANCE_PACKAGES } = await import("./provenance.js");
+  const PACKAGES = join(ICI, "..", "..");
+  const nonDeclares = [];
+
+  const parcourir = (dossier, prefixe) => {
+    for (const entree of readdirSync(dossier, { withFileTypes: true })) {
+      const chemin = join(dossier, entree.name);
+      if (entree.isDirectory()) {
+        parcourir(chemin, `${prefixe}${entree.name}/`);
+      } else if (entree.name.endsWith(".js") && !entree.name.endsWith(".test.js")) {
+        const cle = `${prefixe}${entree.name}`;
+        if (!(cle in PROVENANCE_PACKAGES)) nonDeclares.push(cle);
+      }
+    }
+  };
+
+  for (const paquet of ["charte", "contrats", "moteur-exercices"]) {
+    parcourir(join(PACKAGES, paquet, "src"), `${paquet}/src/`);
+  }
+
+  assert.deepEqual(
+    nonDeclares,
+    [],
+    `Modules sans provenance déclarée : ${nonDeclares.join(", ")}. Voir docs/provenance-et-independance.md.`,
+  );
+});
+
+test("le générateur de fractions est déclaré hérité, avec son chantier", async () => {
+  const { PROVENANCE_PACKAGES } = await import("./provenance.js");
+  const f = PROVENANCE_PACKAGES["moteur-exercices/src/generateurs/fractions.js"];
+  assert.equal(f.statut, "herite_doctools");
+  assert.ok(f.aRemplacer.length > 0);
 });
 
 test("la dette prioritaire pointe l'interpréteur de formula_code", () => {
