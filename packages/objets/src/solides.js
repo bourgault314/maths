@@ -151,51 +151,233 @@ export function creerCube({ arete = 4 } = {}) {
   return { ...cube, type: "cube", roles: { dimensions: { arete } } };
 }
 
-/** Prisme droit debout : deux bases polygonales régulières horizontales. */
-export function creerPrisme({ cotes = 5, cote = 3, hauteur = 4 } = {}) {
-  const n = entierCotes(cotes);
-  nombrePositif(cote, "le côté de la base");
+// --- Bases de prisme -------------------------------------------------------
+// Le programme dit « prisme droit » ; les bases triangulaire, trapézoïdale,
+// parallélogramme… sont des variantes de CETTE famille (cahier §1.2). Chaque
+// base est un polygone plan CONVEXE, décrit dans le plan xy puis recentré.
+// La convexité n'est pas un caprice : c'est elle qui rend valide la règle
+// « une arête est visible si l'une de ses faces l'est » (§6.2).
+
+function centrerBase(points) {
+  const n = points.length;
+  const cx = points.reduce((s, p) => s + p[0], 0) / n;
+  const cy = points.reduce((s, p) => s + p[1], 0) / n;
+  return points.map(([x, y]) => [x - cx, y - cy]);
+}
+
+/** Refuse une base dégénérée ou non convexe, avec un message lisible. */
+export function verifierBaseConvexe(points, nom = "la base") {
+  if (!Array.isArray(points) || points.length < 3) {
+    throw new RangeError(`Solide : ${nom} doit avoir au moins 3 sommets`);
+  }
+  const n = points.length;
+  for (const p of points) {
+    if (!Array.isArray(p) || p.length !== 2 || !Number.isFinite(p[0]) || !Number.isFinite(p[1])) {
+      throw new RangeError(`Solide : ${nom} doit être une liste de points [x, y] finis`);
+    }
+  }
+  let signe = 0;
+  for (let i = 0; i < n; i++) {
+    const a = points[i];
+    const b = points[(i + 1) % n];
+    const c = points[(i + 2) % n];
+    if (Math.hypot(b[0] - a[0], b[1] - a[1]) < 1e-9) {
+      throw new RangeError(`Solide : ${nom} a deux sommets confondus`);
+    }
+    const croix = (b[0] - a[0]) * (c[1] - b[1]) - (b[1] - a[1]) * (c[0] - b[0]);
+    if (Math.abs(croix) < 1e-9) continue; // trois points alignés : toléré
+    const s = Math.sign(croix);
+    if (signe === 0) signe = s;
+    else if (s !== signe) throw new RangeError(`Solide : ${nom} doit être convexe`);
+  }
+  if (signe === 0) throw new RangeError(`Solide : ${nom} est aplatie (sommets alignés)`);
+  // sens direct, pour que les faces latérales suivent l'ordre des côtés
+  return signe > 0 ? points : [...points].reverse();
+}
+
+/**
+ * Les bases prêtes à l'emploi. Chacune rend une liste de points [x, y]
+ * recentrée ; toutes les longueurs sont celles du modèle, jamais celles
+ * du dessin (§6.6 piège 45).
+ */
+export const BASES_PRISME = {
+  reguliere: ({ cotes = 5, cote = 3 } = {}) => {
+    const n = entierCotes(cotes);
+    nombrePositif(cote, "le côté de la base");
+    const rayon = cote / (2 * Math.sin(Math.PI / n));
+    return polygoneRegulier(n, rayon, 0).map(([x, y]) => [x, y]);
+  },
+  // « cote » désigne toujours le côté porté par l'horizontale (la base du
+  // polygone) ; le mot « base » est réservé au CHOIX de la base du prisme.
+  "triangle-quelconque": ({ cote = 5, hauteurTriangle = 3.4, decalage = 1.6 } = {}) => {
+    nombrePositif(cote, "la base du triangle");
+    nombrePositif(hauteurTriangle, "la hauteur du triangle");
+    return centrerBase([[0, 0], [cote, 0], [decalage, hauteurTriangle]]);
+  },
+  "triangle-rectangle": ({ cote1 = 4, cote2 = 3 } = {}) => {
+    nombrePositif(cote1, "le premier côté de l'angle droit");
+    nombrePositif(cote2, "le second côté de l'angle droit");
+    return centrerBase([[0, 0], [cote1, 0], [0, cote2]]);
+  },
+  "triangle-isocele": ({ cote = 4, hauteurTriangle = 3.5 } = {}) => {
+    nombrePositif(cote, "la base du triangle");
+    nombrePositif(hauteurTriangle, "la hauteur du triangle");
+    return centrerBase([[0, 0], [cote, 0], [cote / 2, hauteurTriangle]]);
+  },
+  "triangle-equilateral": ({ cote = 4 } = {}) => {
+    nombrePositif(cote, "le côté du triangle");
+    return centrerBase([[0, 0], [cote, 0], [cote / 2, (cote * Math.sqrt(3)) / 2]]);
+  },
+  parallelogramme: ({ cote = 5, petitCote = 3, angleDeg = 62 } = {}) => {
+    nombrePositif(cote, "la base du parallélogramme");
+    nombrePositif(petitCote, "le côté du parallélogramme");
+    if (!(angleDeg > 10 && angleDeg < 170)) {
+      throw new RangeError("Solide : l'angle du parallélogramme doit rester lisible (10° à 170°)");
+    }
+    const dx = petitCote * Math.cos(angleDeg * RAD);
+    const dy = petitCote * Math.sin(angleDeg * RAD);
+    return centrerBase([[0, 0], [cote, 0], [cote + dx, dy], [dx, dy]]);
+  },
+  // « hauteurTrapeze » : la hauteur du POLYGONE de base, à ne pas confondre
+  // avec la hauteur du prisme — le cahier demande de les distinguer (§5.2).
+  trapeze: ({ grandeBase = 6, petiteBase = 3, hauteurTrapeze = 3, decalage = 1.6 } = {}) => {
+    nombrePositif(grandeBase, "la grande base du trapèze");
+    nombrePositif(petiteBase, "la petite base du trapèze");
+    nombrePositif(hauteurTrapeze, "la hauteur du trapèze");
+    return centrerBase([
+      [0, 0],
+      [grandeBase, 0],
+      [decalage + petiteBase, hauteurTrapeze],
+      [decalage, hauteurTrapeze],
+    ]);
+  },
+  "trapeze-rectangle": ({ grandeBase = 6, petiteBase = 3.5, hauteurTrapeze = 3 } = {}) =>
+    BASES_PRISME.trapeze({ grandeBase, petiteBase, hauteurTrapeze, decalage: 0 }),
+  "trapeze-isocele": ({ grandeBase = 6, petiteBase = 3, hauteurTrapeze = 3 } = {}) =>
+    BASES_PRISME.trapeze({
+      grandeBase,
+      petiteBase,
+      hauteurTrapeze,
+      decalage: (grandeBase - petiteBase) / 2,
+    }),
+};
+
+/** Prisme droit sur une base quelconque : deux bases congruentes et parallèles. */
+export function creerPrismeSurBase({ base, hauteur = 4, type = "prisme", dimensions = {} } = {}) {
+  const polygone = verifierBaseConvexe(base, "la base du prisme");
   const h = nombrePositif(hauteur, "la hauteur") / 2;
-  const rayon = cote / (2 * Math.sin(Math.PI / n));
-  const bas = polygoneRegulier(n, rayon, -h);
-  const haut = polygoneRegulier(n, rayon, h);
+  const n = polygone.length;
+  const bas = polygone.map(([x, y]) => [x, y, -h]);
+  const haut = polygone.map(([x, y]) => [x, y, h]);
   const sommets = [...bas, ...haut];
   const faces = [
     { sommets: bas.map((_, i) => i), role: "base" },
     { sommets: haut.map((_, i) => n + i), role: "base" },
+    // l'ordre suit le cycle des côtés de la base (§6.3 piège 18)
     ...bas.map((_, i) => ({
       sommets: [i, (i + 1) % n, n + ((i + 1) % n), n + i],
       role: "laterale",
     })),
   ];
-  return polyedre("prisme", sommets, faces, { dimensions: { cotes: n, cote, hauteur: h * 2 } });
+  return polyedre(type, sommets, faces, { dimensions: { ...dimensions, hauteur: h * 2 } });
 }
 
-/** Pyramide droite : base régulière (ou rectangulaire) + sommet S à l'aplomb du centre. */
-export function creerPyramide({ cotes = 4, cote = 3.5, hauteur = 4, longueur, largeur } = {}) {
+/**
+ * Prisme droit debout. Sans `base`, la base est le polygone régulier
+ * historique (`cotes`, `cote`) ; sinon c'est l'une des BASES_PRISME, ou
+ * directement une liste de points [x, y].
+ */
+export function creerPrisme({ base, cotes = 5, cote = 3, hauteur = 4, ...parametresBase } = {}) {
+  if (base === undefined || base === "reguliere") {
+    const n = entierCotes(cotes);
+    nombrePositif(cote, "le côté de la base");
+    return creerPrismeSurBase({
+      base: BASES_PRISME.reguliere({ cotes: n, cote }),
+      hauteur,
+      dimensions: { cotes: n, cote },
+    });
+  }
+  if (Array.isArray(base)) {
+    return creerPrismeSurBase({ base, hauteur, dimensions: { cotes: base.length } });
+  }
+  const fabrique = BASES_PRISME[base];
+  if (!fabrique) {
+    throw new RangeError(`Solide : base de prisme inconnue « ${base} » (voir BASES_PRISME)`);
+  }
+  const polygone = fabrique(parametresBase);
+  return creerPrismeSurBase({
+    base: polygone,
+    hauteur,
+    dimensions: { cotes: polygone.length, ...parametresBase },
+  });
+}
+
+/**
+ * Pyramide : une base polygonale, un sommet principal S, des faces
+ * latérales toutes triangulaires (§6.3 piège 19).
+ *
+ * `sommetDecale: [dx, dy]` déplace S dans le plan horizontal : la pyramide
+ * n'est alors PLUS régulière. C'est voulu — le cahier des charges exige de
+ * pouvoir montrer une pyramide à base carrée non régulière, sinon l'image
+ * fabrique une fausse définition (§1.3 et §6.3 piège 21). La hauteur reste
+ * la perpendiculaire au plan de base : son pied H se déplace avec S.
+ */
+export function creerPyramide({
+  cotes = 4,
+  cote = 3.5,
+  hauteur = 4,
+  longueur,
+  largeur,
+  base: baseDemandee,
+  sommetDecale = [0, 0],
+  ...parametresBase
+} = {}) {
   const h = nombrePositif(hauteur, "la hauteur") / 2;
-  let base;
+  let polygone;
   let dimensions;
-  if (longueur !== undefined || largeur !== undefined) {
+  let baseReguliere;
+  if (baseDemandee !== undefined) {
+    const points = Array.isArray(baseDemandee)
+      ? baseDemandee
+      : (BASES_PRISME[baseDemandee] ?? (() => {
+          throw new RangeError(`Solide : base de pyramide inconnue « ${baseDemandee} » (voir BASES_PRISME)`);
+        }))(parametresBase);
+    polygone = verifierBaseConvexe(points, "la base de la pyramide");
+    dimensions = { cotes: polygone.length, ...parametresBase, hauteur: h * 2 };
+    baseReguliere = baseDemandee === "reguliere" || baseDemandee === "triangle-equilateral";
+  } else if (longueur !== undefined || largeur !== undefined) {
     const L = nombrePositif(longueur ?? 4, "la longueur") / 2;
     const l = nombrePositif(largeur ?? 2.5, "la largeur") / 2;
-    base = [[-L, -l, -h], [L, -l, -h], [L, l, -h], [-L, l, -h]];
+    polygone = verifierBaseConvexe([[-L, -l], [L, -l], [L, l], [-L, l]], "la base de la pyramide");
     dimensions = { longueur: L * 2, largeur: l * 2, hauteur: h * 2 };
+    baseReguliere = Math.abs(L - l) < 1e-9; // un carré est régulier, pas un rectangle
   } else {
     const n = entierCotes(cotes);
     nombrePositif(cote, "le côté de la base");
-    base = polygoneRegulier(n, cote / (2 * Math.sin(Math.PI / n)), -h);
+    polygone = verifierBaseConvexe(BASES_PRISME.reguliere({ cotes: n, cote }), "la base de la pyramide");
     dimensions = { cotes: n, cote, hauteur: h * 2 };
+    baseReguliere = true;
   }
-  const n = base.length;
-  const sommets = [...base, [0, 0, h]];
+
+  const [dx, dy] = sommetDecale;
+  if (!Number.isFinite(dx) || !Number.isFinite(dy)) {
+    throw new RangeError("Solide : sommetDecale attend deux nombres finis [dx, dy]");
+  }
+  const n = polygone.length;
+  const base = polygone.map(([x, y]) => [x, y, -h]);
+  const apex = [dx, dy, h];
+  const sommets = [...base, apex];
   const faces = [
     { sommets: base.map((_, i) => i), role: "base" },
     ...base.map((_, i) => ({ sommets: [i, (i + 1) % n, n], role: "laterale" })),
   ];
+  const centre = Math.hypot(dx, dy) < 1e-9;
   const solide = polyedre("pyramide", sommets, faces, {
     dimensions,
     sommetPrincipal: n,
+    // le pied de la hauteur est l'aplomb de S, pas le centre de la base
+    piedHauteur: [dx, dy, -h],
+    reguliere: baseReguliere && centre,
   });
   solide.noms[n] = "S";
   return solide;
@@ -475,9 +657,11 @@ function dessinerPolyedre(solide, optionsVue, reglages) {
   }
 
   if (hauteur && solide.roles.sommetPrincipal !== undefined) {
-    // pyramide : hauteur intérieure du sommet S au centre de la base
+    // Pyramide : la hauteur est la PERPENDICULAIRE au plan de base (§6.3
+    // piège 20). Son pied est l'aplomb de S — qui ne tombe au centre de la
+    // base que si la pyramide est régulière.
     const faceBase = solide.faces.find((f) => f.role === "base");
-    const centreBase = faceBase.sommets
+    const centreBase = solide.roles.piedHauteur ?? faceBase.sommets
       .reduce((acc, i) => ajouter(acc, solide.sommets[i]), [0, 0, 0])
       .map((c) => c / faceBase.sommets.length);
     const pied = placer(vue.projeter(vue.tourner(centreBase)));
@@ -839,6 +1023,113 @@ export const SOLIDES_USUELS = {
     ],
     creer: (p = {}) => creerPrisme(p),
   },
+  "prisme-triangle-quelconque": {
+    titre: "Prisme à base triangulaire quelconque",
+    categorie: "Polyèdres",
+    parametres: [
+      { cle: "cote", libelle: "base du triangle", min: 2, max: 8, pas: 0.5, defaut: 5 },
+      { cle: "hauteurTriangle", libelle: "hauteur du triangle", min: 1, max: 6, pas: 0.5, defaut: 3.4 },
+      { cle: "hauteur", libelle: "hauteur du prisme", min: 1, max: 9, pas: 0.5, defaut: 4 },
+    ],
+    creer: (p = {}) =>
+      creerPrisme({
+        base: "triangle-quelconque",
+        cote: p.cote ?? 5,
+        hauteurTriangle: p.hauteurTriangle ?? 3.4,
+        hauteur: p.hauteur ?? 4,
+      }),
+  },
+  "prisme-triangle-rectangle": {
+    titre: "Prisme à base triangle rectangle",
+    categorie: "Polyèdres",
+    parametres: [
+      { cle: "cote1", libelle: "premier côté de l'angle droit", min: 1, max: 8, pas: 0.5, defaut: 4 },
+      { cle: "cote2", libelle: "second côté de l'angle droit", min: 1, max: 8, pas: 0.5, defaut: 3 },
+      { cle: "hauteur", libelle: "hauteur du prisme", min: 1, max: 9, pas: 0.5, defaut: 4 },
+    ],
+    creer: (p = {}) =>
+      creerPrisme({ base: "triangle-rectangle", cote1: p.cote1 ?? 4, cote2: p.cote2 ?? 3, hauteur: p.hauteur ?? 4 }),
+  },
+  "prisme-triangle-isocele": {
+    titre: "Prisme à base triangle isocèle",
+    categorie: "Polyèdres",
+    parametres: [
+      { cle: "cote", libelle: "base du triangle", min: 1, max: 8, pas: 0.5, defaut: 4 },
+      { cle: "hauteurTriangle", libelle: "hauteur du triangle", min: 1, max: 7, pas: 0.5, defaut: 3.5 },
+      { cle: "hauteur", libelle: "hauteur du prisme", min: 1, max: 9, pas: 0.5, defaut: 4 },
+    ],
+    creer: (p = {}) =>
+      creerPrisme({
+        base: "triangle-isocele",
+        cote: p.cote ?? 4,
+        hauteurTriangle: p.hauteurTriangle ?? 3.5,
+        hauteur: p.hauteur ?? 4,
+      }),
+  },
+  "prisme-triangle-equilateral": {
+    titre: "Prisme à base triangle équilatéral",
+    categorie: "Polyèdres",
+    parametres: [
+      { cle: "cote", libelle: "côté du triangle", min: 1, max: 8, pas: 0.5, defaut: 4 },
+      { cle: "hauteur", libelle: "hauteur du prisme", min: 1, max: 9, pas: 0.5, defaut: 4 },
+    ],
+    creer: (p = {}) => creerPrisme({ base: "triangle-equilateral", cote: p.cote ?? 4, hauteur: p.hauteur ?? 4 }),
+  },
+  "prisme-parallelogramme": {
+    titre: "Prisme à base parallélogramme",
+    categorie: "Polyèdres",
+    parametres: [
+      { cle: "cote", libelle: "base", min: 2, max: 8, pas: 0.5, defaut: 5 },
+      { cle: "petitCote", libelle: "côté", min: 1, max: 6, pas: 0.5, defaut: 3 },
+      { cle: "angleDeg", libelle: "angle", min: 25, max: 155, pas: 1, defaut: 62 },
+      { cle: "hauteur", libelle: "hauteur du prisme", min: 1, max: 9, pas: 0.5, defaut: 4 },
+    ],
+    creer: (p = {}) =>
+      creerPrisme({
+        base: "parallelogramme",
+        cote: p.cote ?? 5,
+        petitCote: p.petitCote ?? 3,
+        angleDeg: p.angleDeg ?? 62,
+        hauteur: p.hauteur ?? 4,
+      }),
+  },
+  "prisme-trapeze-isocele": {
+    titre: "Prisme à base trapèze isocèle",
+    categorie: "Polyèdres",
+    parametres: [
+      { cle: "grandeBase", libelle: "grande base", min: 2, max: 9, pas: 0.5, defaut: 6 },
+      { cle: "petiteBase", libelle: "petite base", min: 1, max: 8, pas: 0.5, defaut: 3 },
+      { cle: "hauteurTrapeze", libelle: "hauteur du trapèze", min: 1, max: 6, pas: 0.5, defaut: 3 },
+      { cle: "hauteur", libelle: "hauteur du prisme", min: 1, max: 9, pas: 0.5, defaut: 4 },
+    ],
+    creer: (p = {}) =>
+      creerPrisme({
+        base: "trapeze-isocele",
+        grandeBase: p.grandeBase ?? 6,
+        // la petite base doit rester strictement plus courte que la grande
+        petiteBase: Math.min(p.petiteBase ?? 3, (p.grandeBase ?? 6) - 0.5),
+        hauteurTrapeze: p.hauteurTrapeze ?? 3,
+        hauteur: p.hauteur ?? 4,
+      }),
+  },
+  "prisme-trapeze-rectangle": {
+    titre: "Prisme à base trapèze rectangle",
+    categorie: "Polyèdres",
+    parametres: [
+      { cle: "grandeBase", libelle: "grande base", min: 2, max: 9, pas: 0.5, defaut: 6 },
+      { cle: "petiteBase", libelle: "petite base", min: 1, max: 8, pas: 0.5, defaut: 3.5 },
+      { cle: "hauteurTrapeze", libelle: "hauteur du trapèze", min: 1, max: 6, pas: 0.5, defaut: 3 },
+      { cle: "hauteur", libelle: "hauteur du prisme", min: 1, max: 9, pas: 0.5, defaut: 4 },
+    ],
+    creer: (p = {}) =>
+      creerPrisme({
+        base: "trapeze-rectangle",
+        grandeBase: p.grandeBase ?? 6,
+        petiteBase: Math.min(p.petiteBase ?? 3.5, (p.grandeBase ?? 6) - 0.5),
+        hauteurTrapeze: p.hauteurTrapeze ?? 3,
+        hauteur: p.hauteur ?? 4,
+      }),
+  },
   pyramide: {
     titre: "Pyramide",
     categorie: "Polyèdres",
@@ -848,6 +1139,22 @@ export const SOLIDES_USUELS = {
       { cle: "hauteur", libelle: "hauteur", min: 1, max: 9, pas: 0.5, defaut: 4 },
     ],
     creer: (p = {}) => creerPyramide(p),
+  },
+  "pyramide-non-reguliere": {
+    titre: "Pyramide non régulière (sommet décentré)",
+    categorie: "Polyèdres",
+    parametres: [
+      { cle: "cote", libelle: "côté de la base carrée", min: 1, max: 7, pas: 0.5, defaut: 3.5 },
+      { cle: "hauteur", libelle: "hauteur", min: 1, max: 9, pas: 0.5, defaut: 4 },
+      { cle: "decalageX", libelle: "décalage du sommet", min: -2.5, max: 2.5, pas: 0.25, defaut: 1.5 },
+    ],
+    creer: (p = {}) =>
+      creerPyramide({
+        cotes: 4,
+        cote: p.cote ?? 3.5,
+        hauteur: p.hauteur ?? 4,
+        sommetDecale: [p.decalageX ?? 1.5, 0],
+      }),
   },
   "pyramide-rectangle": {
     titre: "Pyramide à base rectangulaire",
