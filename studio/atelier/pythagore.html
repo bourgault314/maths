@@ -1,0 +1,393 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex, nofollow">
+<title>Pythagore — maths&go</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{--page:#f6f8fb;--papier:#fff;--encre:#10294a;--bleu:#063f86;--attenue:#637287;--ligne:#dce5ef}
+  *{box-sizing:border-box}
+  [hidden]{display:none !important}
+  body{margin:0;background:var(--page);color:var(--encre);font-family:"Segoe UI",system-ui,sans-serif;
+    padding:14px;max-width:1060px;margin-inline:auto}
+  header{display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:12px}
+  h1{font-family:Fredoka;color:var(--bleu);font-size:clamp(20px,4vw,28px);margin:0}
+  header a{color:var(--attenue);text-decoration:none;font-size:18px;font-weight:600}
+  .barre{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin:0 0 10px}
+  select,button.action{font:inherit;font-size:14.5px;padding:9px 14px;min-height:44px;border-radius:12px;
+    border:2px solid var(--ligne);background:#fff;color:var(--encre);cursor:pointer}
+  .pilules{display:flex;flex-wrap:wrap;gap:7px;margin:0}
+  .pilules button{font-size:13.5px;padding:8px 13px;min-height:40px;border-radius:999px;
+    border:2px solid var(--ligne);background:#fff;color:var(--encre);cursor:pointer}
+  .pilules button.actif{background:#dbeafe;border-color:#3b82f6;color:#1d4ed8;font-weight:700}
+  .enonce{font-family:Fredoka;font-weight:600;font-size:clamp(16px,2.6vw,20px);margin:6px 0 12px}
+  .scene{display:grid;grid-template-columns:minmax(300px,1fr) minmax(300px,1fr);gap:18px;align-items:start}
+  @media (max-width:760px){.scene{grid-template-columns:1fr}}
+  .panneau{background:#fff;border:1px solid var(--ligne);border-radius:18px;padding:12px;text-align:center;overflow:hidden}
+  .panneau svg{max-width:100%;height:auto}
+  .redaction{background:#fff;border:1px solid var(--ligne);border-radius:18px;padding:14px 16px;text-align:left}
+  .redaction .intro{font-weight:600;color:var(--attenue);font-size:14px;margin:0 0 8px}
+  .redaction .lignePreuve{font-family:Fredoka;font-size:clamp(18px,3vw,23px);font-weight:600;
+    line-height:1.7;display:flex;align-items:center;gap:6px;flex-wrap:wrap}
+  .redaction .egal{color:#3b82f6}
+  .terme{font-style:normal}
+  .terme.vert{color:#187a3c}.terme.bleu{color:#0879d0}.terme.orange{color:#b76e00}.terme.violet{color:#6d28d9}
+  button.termeCliquable{font:inherit;border:2px dashed #94a3b8;background:#f8fafc;border-radius:10px;
+    padding:2px 10px;cursor:pointer;min-height:38px}
+  button.termeCliquable.choisi{border-color:#7c3aed;background:#f5f3ff}
+  button.termeCliquable.flashOk{border-color:#16a34a;background:#f0fdf4}
+  button.termeCliquable.flashBad{border-color:#dc2626;background:#fef2f2}
+  .conclusionFinale{color:#15803d}
+  .verification{margin-top:10px;border:1px solid #bbf7d0;background:#f0fdf4;color:#166534;
+    border-radius:14px;padding:9px 14px;font-weight:600;font-size:14px}
+  .messageInstruction{padding:10px 16px;border-radius:16px;background:#f8fafc;
+    border:1px solid rgba(15,23,42,.08);color:#334155;font-size:14px;font-weight:700;line-height:1.35;
+    display:flex;gap:9px;align-items:baseline}
+  .messageInstruction .numero{font-family:Fredoka;color:#fff;background:var(--bleu);border-radius:8px;
+    min-width:24px;text-align:center;padding:1px 0;flex:none;font-size:13px}
+  .note{color:#9a3412;font-weight:700;font-size:14px;padding:6px 2px}
+  .paletteZone{margin-top:12px;display:flex;flex-wrap:wrap;gap:9px;align-items:center;justify-content:center;min-height:52px}
+  .paletteZone .invite{font-family:Fredoka;font-weight:700;font-size:19px;display:flex;align-items:center;gap:4px}
+  .proposition{font-family:Fredoka;font-weight:600;font-size:17px;min-height:46px;min-width:64px;padding:8px 16px;
+    border-radius:999px;border:2px solid var(--ligne);background:#fff;color:var(--encre);cursor:pointer}
+  .proposition:hover{transform:translateY(-1px)}
+  .proposition.choisie{border-color:#7c3aed;background:#f5f3ff;color:#6d28d9}
+  button.principal{background:linear-gradient(180deg,#60a5fa,#3b82f6);color:#fff;border-color:#3b82f6;font-weight:700}
+  .actionsBas{display:flex;flex-wrap:wrap;gap:9px;justify-content:center;margin-top:12px}
+  .undoBtn{background:#fff7ed;border-color:rgba(249,115,22,.28);color:#9a3412}
+  .restartBtn{background:#eef2ff;border-color:rgba(59,130,246,.25);color:#1d4ed8}
+  .toolBtn{border:1px solid rgba(15,23,42,.12);font-weight:700;min-height:44px;padding:9px 16px;
+    border-radius:999px;font-size:14px;cursor:pointer}
+</style>
+</head>
+<body>
+<header>
+  <a href="./index.html" aria-label="Retour à l'Atelier">←</a>
+  <h1>🪁 Pythagore</h1>
+  <span class="badge" style="font-size:11px;font-weight:700;border-radius:999px;padding:3px 10px;background:#fef3c7;color:#92400e">brouillon</span>
+</header>
+
+<div class="barre">
+  <select id="choixCategorie" aria-label="Catégorie d'exemples"></select>
+  <select id="choixInconnue" aria-label="Longueur cherchée">
+    <option value="hasard">Chercher : au hasard</option>
+    <option value="hypotenuse">Chercher : l'hypoténuse</option>
+    <option value="cote">Chercher : un côté</option>
+  </select>
+  <button class="action" id="btnNouveau" title="Nouvel exemple">🎲</button>
+  <span class="pilules" id="pilulesMode" role="group" aria-label="Mode"></span>
+  <span class="pilules" id="pilulesAffichage" role="group" aria-label="Affichages"></span>
+</div>
+
+<p class="enonce" id="enonce"></p>
+
+<div class="scene">
+  <div>
+    <div class="panneau" id="panneauTriangle"></div>
+    <div class="panneau" id="panneauBarres" style="margin-top:12px"></div>
+  </div>
+  <div class="redaction" id="redaction" aria-live="polite"></div>
+</div>
+
+<div id="zoneInstruction" style="margin-top:12px" aria-live="polite"></div>
+<div class="paletteZone" id="palette"></div>
+<div class="actionsBas">
+  <button class="toolBtn undoBtn" id="btnAnnuler">↶ Annuler</button>
+  <button class="toolBtn restartBtn" id="btnRecommencer">↺ Recommencer</button>
+</div>
+
+<script type="module">
+import { creerGenerateur } from "../../packages/moteur-exercices/src/aleatoire.js";
+import * as Logique from "../../packages/objets/src/pythagore-logique.js";
+import {
+  dessinerBarresPythagore,
+  dessinerTrianglePythagore,
+  racineEnLigne,
+  roleCouleur,
+} from "../../packages/objets/src/pythagore.js";
+
+const $ = (id) => document.getElementById(id);
+const CLASSES_ROLES = { hyp: "vert", leg1: "bleu", leg2: "orange" };
+
+let graine = 1;
+let probleme = null;
+let travail = null;
+let historique = [];
+let minuterieFlash = null;
+
+for (const categorie of Logique.CATEGORIES_EXEMPLES) {
+  const option = document.createElement("option");
+  option.value = categorie.id;
+  option.textContent = categorie.label;
+  $("choixCategorie").appendChild(option);
+}
+
+let mode = "guide";
+for (const [cle, libelle] of [["guide", "guidé"], ["auto", "pas à pas (Suivant)"]]) {
+  const bouton = document.createElement("button");
+  bouton.textContent = libelle;
+  bouton.dataset.mode = cle;
+  bouton.addEventListener("click", () => { mode = cle; nouvelExemple(false); });
+  $("pilulesMode").appendChild(bouton);
+}
+const affichages = new Set(["moulin", "barres"]);
+for (const [cle, libelle] of [["moulin", "moulin"], ["barres", "barres"]]) {
+  const bouton = document.createElement("button");
+  bouton.textContent = libelle;
+  bouton.classList.add("actif");
+  bouton.addEventListener("click", () => {
+    affichages.has(cle) ? affichages.delete(cle) : affichages.add(cle);
+    bouton.classList.toggle("actif", affichages.has(cle));
+    rendre();
+  });
+  $("pilulesAffichage").appendChild(bouton);
+}
+
+function pousserHistorique() {
+  historique.push(structuredClone(travail));
+  if (historique.length > 60) historique.shift();
+}
+
+function agir(action) {
+  pousserHistorique();
+  action();
+  apresAction();
+}
+
+function apresAction() {
+  if (travail.flash) {
+    window.clearTimeout(minuterieFlash);
+    minuterieFlash = window.setTimeout(() => {
+      travail.flash = null;
+      rendre();
+    }, 520);
+  }
+  rendre();
+}
+
+function nouvelExemple(nouvelleGraine = true) {
+  if (nouvelleGraine) graine++;
+  const generateur = creerGenerateur(`pythagore-page-${graine}`);
+  const inconnue = $("choixInconnue").value === "hasard" ? undefined : $("choixInconnue").value;
+  probleme = Logique.genererProbleme(generateur, { categorie: $("choixCategorie").value, inconnue });
+  probleme = { ...probleme, modeRelation: mode };
+  travail = Logique.creerTravail();
+  historique = [];
+  rendre();
+}
+
+function melangeur(etape, complement = "") {
+  const generateur = creerGenerateur(`palette-${graine}-${etape}-${complement}`);
+  return (liste) => {
+    const copie = [...liste];
+    for (let i = copie.length - 1; i > 0; i--) {
+      const j = generateur.entier(0, i);
+      [copie[i], copie[j]] = [copie[j], copie[i]];
+    }
+    return copie;
+  };
+}
+
+function boutonProposition(contenu, action, { choisie = false, html = false } = {}) {
+  const bouton = document.createElement("button");
+  bouton.className = `proposition${choisie ? " choisie" : ""}`;
+  if (html) bouton.innerHTML = contenu;
+  else bouton.textContent = contenu;
+  bouton.addEventListener("click", action);
+  return bouton;
+}
+
+function rendrePalette() {
+  const palette = $("palette");
+  palette.innerHTML = "";
+  const etape = Logique.etapeCourante(probleme, travail);
+
+  if (etape === "depart") {
+    const bouton = document.createElement("button");
+    bouton.className = "toolBtn principal";
+    bouton.style.minWidth = "150px";
+    bouton.textContent = probleme.modeRelation === "auto" ? "Suivant" : "Commencer";
+    bouton.addEventListener("click", () => agir(() => Logique.demarrer(travail)));
+    palette.appendChild(bouton);
+    return;
+  }
+  if (probleme.modeRelation === "auto") {
+    if (etape === "fini") return;
+    const bouton = document.createElement("button");
+    bouton.className = "toolBtn principal";
+    bouton.style.minWidth = "150px";
+    bouton.textContent = "Suivant";
+    bouton.addEventListener("click", () => agir(() => Logique.suivantAuto(probleme, travail)));
+    palette.appendChild(bouton);
+    return;
+  }
+
+  if (etape === "remplacer") {
+    const cibles = Logique.ciblesCarres(probleme).filter((t) => !Logique.estRemplace(travail, t.cote));
+    for (const cible of melangeur("remplacer", String(cibles.length))(cibles)) {
+      palette.appendChild(boutonProposition(
+        `${Logique.formaterNombre(cible.valeur)}²`,
+        () => agir(() => Logique.cliquerValeurRemplacement(probleme, travail, cible.cote)),
+        { choisie: travail.selections.valeurRemplacement === cible.cote },
+      ));
+    }
+  } else if (etape === "calculer") {
+    for (const valeur of melangeur("calculer")(Logique.propositionsCarres(probleme, travail))) {
+      palette.appendChild(boutonProposition(
+        Logique.formaterNombre(valeur),
+        () => agir(() => Logique.cliquerValeurCarre(probleme, travail, valeur)),
+        { choisie: travail.selections.valeurCarre === valeur },
+      ));
+    }
+  } else if (etape === "operation") {
+    const invite = document.createElement("span");
+    invite.className = "invite";
+    invite.textContent = `${probleme.inconnue}² =`;
+    palette.appendChild(invite);
+    for (const operation of melangeur("operation")(Logique.propositionsOperations(probleme, travail))) {
+      palette.appendChild(boutonProposition(
+        `${Logique.formaterNombre(operation.gauche)} ${operation.signe === "-" ? "−" : "+"} ${Logique.formaterNombre(operation.droite)}`,
+        () => agir(() => Logique.choisirOperation(probleme, travail, operation.cle)),
+      ));
+    }
+  } else if (etape === "resultat") {
+    const operation = travail.operationChoisie;
+    const invite = document.createElement("span");
+    invite.className = "invite";
+    invite.textContent = `${Logique.formaterNombre(operation.gauche)} ${operation.signe === "-" ? "−" : "+"} ${Logique.formaterNombre(operation.droite)} =`;
+    palette.appendChild(invite);
+    for (const valeur of melangeur("resultat")(Logique.propositionsResultat(operation))) {
+      palette.appendChild(boutonProposition(
+        Logique.formaterNombre(valeur),
+        () => agir(() => Logique.choisirResultat(probleme, travail, valeur)),
+      ));
+    }
+  } else if (etape === "racine") {
+    const invite = document.createElement("span");
+    invite.className = "invite";
+    invite.innerHTML = `${racineEnLigne({ gauche: "", radicande: Logique.formaterNombre(travail.resultat), taillePolice: 21 })} ${Logique.symboleRacine(travail.resultat)}`;
+    palette.appendChild(invite);
+    for (const valeur of melangeur("racine")(Logique.propositionsRacine(travail))) {
+      palette.appendChild(boutonProposition(
+        Logique.formaterNombre(valeur),
+        () => agir(() => Logique.choisirRacine(probleme, travail, valeur)),
+      ));
+    }
+  }
+}
+
+function rendreRedaction() {
+  const zone = $("redaction");
+  if (!travail.demarre || !travail.relationComplete) {
+    zone.innerHTML = travail.demarre
+      ? `<p class="intro">${Logique.phraseIntroduction(probleme)}</p>`
+      : `<p class="intro">La rédaction s'écrira ici, étape par étape.</p>`;
+    return;
+  }
+  let html = `<p class="intro">${Logique.phraseIntroduction(probleme)}</p>`;
+  const lignes = Logique.lignesPreuve(probleme, travail);
+  const rendreTerme = (terme) => {
+    const role = terme.cote ? roleCouleur(probleme, terme.cote) : null;
+    const classe = terme.cote && probleme.valeurs[terme.cote]?.inconnue && !Logique.memeCote(terme.cote, probleme.hyp)
+      ? "violet"
+      : role ? CLASSES_ROLES[role] : "";
+    if (terme.cliquable) {
+      const attribut = terme.cliquable === "remplacer" ? "data-pytha-remplacer" : "data-pytha-calculer";
+      const selections = travail.selections;
+      const choisi = (terme.cliquable === "remplacer" && selections.caseRemplacement === terme.cote)
+        || (terme.cliquable === "calculer" && selections.caseCarre === terme.cote);
+      const flash = travail.flash && terme.cote && Logique.memeCote(travail.flash.cote, terme.cote)
+        ? (travail.flash.genre === "bad" ? " flashBad" : " flashOk") : "";
+      return `<button class="termeCliquable terme ${classe}${choisi ? " choisi" : ""}${flash}" ${attribut}="${terme.cote}">${terme.texte}</button>`;
+    }
+    return `<span class="terme ${classe}">${terme.texte}</span>`;
+  };
+  const dernierIndex = lignes.length - 1;
+  lignes.forEach((ligne, index) => {
+    if (ligne.type === "egalite") {
+      html += `<div class="lignePreuve">${rendreTerme(ligne.gauche)}<span class="egal">=</span>${ligne.droite.map(rendreTerme).join('<span class="egal">+</span>')}</div>`;
+    } else if (ligne.type === "racine") {
+      html += `<div class="lignePreuve">${racineEnLigne({ gauche: ligne.gauche, radicande: ligne.radicande, taillePolice: 21 })}</div>`;
+    } else if (ligne.type === "conclusion") {
+      html += `<div class="lignePreuve${index === dernierIndex ? " conclusionFinale" : ""}"><span class="terme">${ligne.gauche}</span><span class="egal">${ligne.symbole}</span><span class="terme">${ligne.texte}</span></div>`;
+    } else if (ligne.type === "phrase") {
+      html += `<div class="lignePreuve conclusionFinale" style="font-size:clamp(16px,2.6vw,20px)">${ligne.texte}</div>`;
+    }
+  });
+  if (travail.conclu) {
+    const plusGrande = probleme.inconnueEstHyp
+      ? Math.max(probleme.jambe1.valeur, probleme.jambe2.valeur)
+      : Math.max(probleme.jambeConnue.valeur, Logique.valeurCote(probleme, probleme.inconnue));
+    const hypotenuseValeur = probleme.inconnueEstHyp ? Math.sqrt(travail.resultat) : probleme.hypConnue.valeur;
+    html += `<div class="verification">Vérification : ${Logique.formaterNombre(hypotenuseValeur)} &gt; ${Logique.formaterNombre(plusGrande)} : l'hypoténuse est bien le plus grand côté.</div>`;
+  }
+  zone.innerHTML = html;
+}
+
+function rendre() {
+  $("enonce").textContent = Logique.enonce(probleme);
+  [...$("pilulesMode").children].forEach((b) => b.classList.toggle("actif", b.dataset.mode === mode));
+
+  $("panneauTriangle").innerHTML = dessinerTrianglePythagore(probleme, travail, {
+    taille: Math.min(430, window.innerWidth - 70),
+    moulin: affichages.has("moulin"),
+    selection: travail.selections.aire ?? travail.selections.valeurRemplacement,
+  });
+  $("panneauTriangle").hidden = false;
+  const barres = affichages.has("barres")
+    ? dessinerBarresPythagore(probleme, travail, {
+        largeur: Math.min(500, window.innerWidth - 70),
+        selection: travail.selections.caseRemplacement ?? travail.selections.caseCarre ?? travail.selections.slot,
+        flash: travail.flash,
+      })
+    : "";
+  $("panneauBarres").innerHTML = barres;
+  $("panneauBarres").hidden = !barres;
+
+  rendreRedaction();
+
+  const consigne = Logique.instruction(probleme, travail);
+  $("zoneInstruction").innerHTML = consigne
+    ? `<div class="messageInstruction"><span class="numero">${consigne.numero}</span><span>${consigne.texte}</span></div>`
+    : Logique.etapeCourante(probleme, travail) === "fini"
+      ? `<div class="messageInstruction" style="border-color:#bbf7d0;background:#f0fdf4;color:#166534">Bravo : ${probleme.inconnue} est trouvé.</div>`
+      : "";
+  if (travail.message) {
+    $("zoneInstruction").innerHTML += `<div class="note">${travail.message}</div>`;
+  }
+  rendrePalette();
+}
+
+document.addEventListener("click", (evenement) => {
+  const slot = evenement.target.closest("[data-pytha-slot]");
+  if (slot) { agir(() => Logique.cliquerCaseRelation(probleme, travail, slot.dataset.pythaSlot)); return; }
+  const aire = evenement.target.closest("[data-pytha-aire]");
+  if (aire) { agir(() => Logique.cliquerAire(probleme, travail, aire.dataset.pythaAire)); return; }
+  const longueur = evenement.target.closest("[data-pytha-longueur]");
+  if (longueur) { agir(() => Logique.cliquerValeurRemplacement(probleme, travail, longueur.dataset.pythaLongueur)); return; }
+  const remplacer = evenement.target.closest("[data-pytha-remplacer]");
+  if (remplacer) { agir(() => Logique.cliquerCaseRemplacement(probleme, travail, remplacer.dataset.pythaRemplacer)); return; }
+  const calculer = evenement.target.closest("[data-pytha-calculer]");
+  if (calculer) { agir(() => Logique.cliquerCaseCarre(probleme, travail, calculer.dataset.pythaCalculer)); }
+});
+
+$("btnNouveau").addEventListener("click", () => nouvelExemple(true));
+$("choixCategorie").addEventListener("change", () => nouvelExemple(true));
+$("choixInconnue").addEventListener("change", () => nouvelExemple(true));
+$("btnAnnuler").addEventListener("click", () => {
+  const precedent = historique.pop();
+  if (precedent) { travail = precedent; rendre(); }
+});
+$("btnRecommencer").addEventListener("click", () => {
+  travail = Logique.creerTravail();
+  historique = [];
+  rendre();
+});
+
+nouvelExemple(false);
+</script>
+</body>
+</html>
