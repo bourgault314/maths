@@ -73,6 +73,7 @@
     shortTitle: "Jardin des nombres",
     icon: "🌻",
     intro: "On réveille les nombres, les tables et la lecture. Tu peux te tromper : la correction apparaît toujours et tu peux continuer.",
+    bonus: {icon: "🌬️", title: "Le petit redémarrage", text: "Quand une question te résiste, pose les pieds au sol, prends trois respirations lentes, puis relis seulement ce que l’on te demande. Faire une courte pause aide à repartir plus calmement."},
     subjects: {
       math: {label: "Mathématiques", lessonTitle: "Quatre idées pour bien démarrer", lessonIntro: "Regarde les dessins, puis explique chaque idée avec tes mots.", lessons: mathLessons, questions: mathQuestions},
       fr: {label: "Français", lessonTitle: "Lire, repérer et écrire", lessonIntro: "Un petit récit sert de fil conducteur à la mission.", lessons: frenchLessons, questions: frenchQuestions}

@@ -78,6 +78,7 @@
     shortTitle: "Jardin de la classe",
     icon: "🪴",
     intro: "On décompose les nombres, on calcule par étapes et on apprend à observer les groupes de mots.",
+    bonus: {icon: "🧠", title: "Le rappel actif", text: "Après un mémo, détourne les yeux et essaie de redire deux idées sans regarder. Rouvre ensuite le mémo pour comparer : chercher l’information dans sa mémoire aide à mieux la retenir."},
     subjects: {
       math: {label: "Mathématiques", lessonTitle: "Calculer sans se perdre", lessonIntro: "Les dessins montrent comment les nombres et les groupes sont organisés.", lessons: mathLessons, questions: mathQuestions},
       fr: {label: "Français", lessonTitle: "Lire un document et accorder", lessonIntro: "Le carnet du potager permet de travailler la lecture et le groupe nominal.", lessons: frenchLessons, questions: frenchQuestions}

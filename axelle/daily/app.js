@@ -312,6 +312,16 @@
     $("done-icon").textContent = subject === "math" ? "🔢" : "📚";
     $("done-title").textContent = `${data.subjects[subject].label} terminé !`;
     $("done-message").textContent = `Tu as parcouru les ${total} questions et lu toutes les corrections. ${score} réponses étaient justes dès le premier essai.`;
+    let bonus = $("day-bonus");
+    if (!bonus) {
+      bonus = document.createElement("aside");
+      bonus.id = "day-bonus";
+      bonus.className = "cps-bonus";
+      screens.done.querySelector(".done-actions").before(bonus);
+    }
+    const dayComplete = ["math", "fr"].every(name => Object.keys(progress(name).answers).length === data.subjects[name].questions.length);
+    bonus.hidden = !dayComplete || !data.bonus;
+    if (!bonus.hidden) bonus.innerHTML = `<span aria-hidden="true">${data.bonus.icon || "🧠"}</span><div><p class="eyebrow">Petit bonus pour toi</p><h2>${data.bonus.title}</h2><p>${data.bonus.text}</p></div>`;
     show("done");
   }
 

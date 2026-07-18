@@ -73,6 +73,7 @@
     shortTitle: "Défi de la semaine",
     icon: "📗",
     intro: "On calcule, on estime et on vérifie. En français, on apprend à reconnaître et écrire les différents types de phrases.",
+    bonus: {icon: "🌱", title: "Deux minutes demain", text: "Choisis une idée de cette semaine et essaie de la rappeler demain sans regarder. Deux minutes suffisent : revoir après une pause aide la mémoire à devenir plus solide."},
     subjects: {
       math: {label: "Mathématiques", lessonTitle: "Calculer puis contrôler", lessonIntro: "Une estimation ou une opération inverse permet de repérer beaucoup d’erreurs.", lessons: mathLessons, questions: mathQuestions},
       fr: {label: "Français", lessonTitle: "Faire parler les personnages", lessonIntro: "Le dialogue permet de travailler les types de phrases et leur ponctuation.", lessons: frenchLessons, questions: frenchQuestions}

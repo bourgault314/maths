@@ -27,6 +27,7 @@ function auditContent() {
   for (const day of [4, 5, 6, 7]) {
     const data = DATA[day];
     assert(data.day === day, `Le contenu J${day} porte un mauvais numéro.`);
+    assert(data.bonus && data.bonus.title && data.bonus.text, `J${day} n’a pas son petit bonus CPS.`);
     for (const subject of ["math", "fr"]) {
       const mission = data.subjects[subject];
       assert(mission.lessons.length === 4, `J${day} ${subject} n’a pas exactement quatre mémos.`);
@@ -152,9 +153,30 @@ async function completeMission(page, day, subject, wrong, mobile) {
   await dashboard.goto(`${BASE}/axelle/`, {waitUntil: "networkidle"});
   const hrefs = await dashboard.locator(".days > a").evaluateAll(nodes => nodes.map(node => new URL(node.href).pathname));
   assert(JSON.stringify(hrefs) === JSON.stringify(["/axelle/j1/", "/axelle/j2/", "/axelle/j3/", "/axelle/j4/", "/axelle/j5/", "/axelle/j6/", "/axelle/j7/"]), `Le Bureau ne relie pas J1 à J7 : ${hrefs}.`);
+  assert(await dashboard.locator(".tonton-note").isVisible(), "Le petit mot du tonton n’est pas visible sur le Bureau.");
   await noOverflow(dashboard, "Bureau mobile");
   await dashboard.screenshot({path: path.join(OUTPUT, "bureau-mobile.png"), fullPage: true});
   await dashboard.close();
+
+  const bonusPage = await browser.newPage({viewport: {width: 390, height: 844}});
+  bonusPage.on("pageerror", error => errors.push(`Bonus CPS : ${error.message}`));
+  await bonusPage.goto(`${BASE}/axelle/j4/`, {waitUntil: "networkidle"});
+  await bonusPage.evaluate(() => {
+    const answer = {correct: true, value: "test"};
+    localStorage.setItem("axelle-j4-fr-progress", JSON.stringify({answers: Object.fromEntries(Array.from({length: 20}, (_, index) => [index, answer]))}));
+    localStorage.setItem("axelle-j4-math-progress", JSON.stringify({answers: Object.fromEntries(Array.from({length: 19}, (_, index) => [index, answer]))}));
+  });
+  await bonusPage.reload({waitUntil: "networkidle"});
+  await bonusPage.locator('[data-subject="math"]').click();
+  await bonusPage.locator("#start-quiz").click();
+  await bonusPage.locator("#open-answer").fill("Je décris les étapes de mon calcul.");
+  await bonusPage.locator(".validate-button").click();
+  await bonusPage.locator("#next-question").click();
+  await bonusPage.locator("#day-bonus:not([hidden])").waitFor();
+  assert((await bonusPage.locator("#day-bonus").textContent()).includes("Le petit redémarrage"), "Le bonus CPS de fin de journée n’apparaît pas.");
+  await noOverflow(bonusPage, "bonus CPS mobile");
+  await bonusPage.screenshot({path: path.join(OUTPUT, "bonus-cps-mobile.png"), fullPage: true});
+  await bonusPage.close();
 
   for (const day of [4, 5, 6, 7]) {
     for (const subject of ["math", "fr"]) {

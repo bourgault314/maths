@@ -73,6 +73,7 @@
     shortTitle: "Vol des fractions",
     icon: "🪁",
     intro: "On relie les différentes écritures des fractions et on apprend à suivre les pronoms dans un récit.",
+    bonus: {icon: "🧭", title: "Une erreur donne une direction", text: "Une erreur ne juge pas ce que tu vaux : elle montre seulement l’étape à revoir. Repère la dernière étape juste, puis change une seule chose pour ton prochain essai."},
     subjects: {
       math: {label: "Mathématiques", lessonTitle: "Les fractions deviennent des nombres", lessonIntro: "Chaque bande représente exactement une unité partagée en parts égales.", lessons: mathLessons, questions: mathQuestions},
       fr: {label: "Français", lessonTitle: "Suivre et résumer une histoire", lessonIntro: "Lis le récit silencieusement, puis prépare quelques lignes à voix haute.", lessons: frenchLessons, questions: frenchQuestions}
