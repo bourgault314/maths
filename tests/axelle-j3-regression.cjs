@@ -63,6 +63,7 @@ function auditContent() {
     assert(value !== "2/4", "La fraction 2/4 ne doit pas être utilisée dans J3.");
   });
   assert(DATA.versions[0].fr[0].visual.text !== DATA.versions[1].fr[0].visual.text, "Les deux textes de compréhension sont identiques.");
+  assert(DATA.lessons.math[0].text.includes("4/6"), "La leçon sur les fractions répète encore l’exemple des deux tiers.");
   const byId = Object.fromEntries(DATA.versions.flatMap(version => version.math).map(question => [question.id, question]));
   for (const id of ["m0-05", "m1-05", "m0-09", "m1-09"]) assert(!byId[id].visual, `${id} affiche la réponse avant le choix.`);
   for (const id of ["m0-02", "m1-02"]) assert(byId[id].visual.showNotation === false, `${id} écrit la fraction-réponse sous son dessin.`);
