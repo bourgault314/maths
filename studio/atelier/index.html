@@ -74,6 +74,7 @@
      réglages en haut / actions en bas, retour visuel au survol,
      anneau de focus visible au clavier. */
   #barreOutilsEqua{margin-top:12px}
+  #zoneAction{min-height:58px;justify-content:center;align-items:center}
   #barreOutilsEqua .barreCommandes{justify-content:center;gap:10px}
   .toolBtn{border:1px solid rgba(15,23,42,.12);background:#f8fafc;color:#334155;font-weight:700;
     min-height:40px;padding:8px 15px;border-radius:999px;font-size:13.5px;
@@ -109,7 +110,7 @@
   #dialogueChips button{font-family:Fredoka;font-weight:600;border-radius:999px;min-width:64px}
   #dialogueFond[hidden],#dialogueEquabarre[hidden]{display:none}
   #dialogueFond{position:fixed;inset:0;background:rgba(15,23,42,.35);backdrop-filter:blur(3px);z-index:90}
-  #dialogueEquabarre{position:fixed;z-index:100;display:flex;flex-wrap:wrap;gap:10px;align-items:center;
+  #dialogueEquabarre{position:fixed;z-index:100;display:flex;flex-direction:column;gap:12px;align-items:center;text-align:center;
     background:#fff;border:1px solid rgba(15,23,42,.10);box-shadow:0 30px 100px rgba(15,23,42,.24);
     padding:22px;left:50%;top:50%;transform:translate(-50%,-50%);border-radius:24px;
     width:min(500px,calc(100vw - 28px));max-height:86vh;overflow:auto}
@@ -178,19 +179,21 @@
         </div>
       </div>
     </div>
-    <div id="redactionEquation" aria-live="polite" style="flex:0 1 auto"></div>
+    <div style="flex:0 1 auto">
+      <div id="redactionEquation" aria-live="polite"></div>
+      <label class="reglageTaille" id="ctrlVerification" style="margin-top:6px"><input type="checkbox" id="avecVerification" checked> afficher la vérification</label>
+    </div>
   </div>
   <div id="dialogueFond" hidden></div>
   <div id="dialogueEquabarre" role="dialog" aria-modal="true" aria-label="Saisie de la réponse" hidden>
     <div style="width:100%"><span id="dialogueTexte" style="font-weight:700"></span></div>
-    <input type="text" id="dialogueSaisie" style="width:140px" readonly inputmode="none" aria-label="Votre réponse">
+    <input type="text" id="dialogueSaisie" style="width:160px;text-align:center;font-size:20px;font-weight:700" inputmode="numeric" aria-label="Votre réponse">
     <button class="helpMiniBtn" id="btnAideDialogue" hidden>Aide&nbsp;?</button>
     <button class="principal" id="dialogueValider">Valider</button>
     <button class="toolBtn ghostBtn" id="dialogueFermer">Annuler</button>
-    <div class="barreCommandes" id="dialogueChips" role="group" aria-label="Propositions"></div>
+    <div class="barreCommandes" id="dialogueChips" role="group" aria-label="Propositions" style="justify-content:center"></div>
     <div style="width:100%" id="dialogueDiviserTitre" hidden><b>Ou diviser en parts égales :</b></div>
     <div class="barreCommandes" id="dialogueDiviser" role="group" aria-label="Diviser en parts égales"></div>
-    <div id="dialogueClavier" style="width:100%"></div>
   </div>
   <p class="erreur" id="erreurEquation"></p>
 </section>
@@ -277,7 +280,6 @@ import { dessinerBarres } from "../../packages/objets/src/barres.js";
 import * as Logique from "../../packages/objets/src/equabarre-logique.js";
 import { dessinerRedaction } from "../../packages/objets/src/redaction.js";
 import { dessinerVerification } from "../../packages/objets/src/verification.js";
-import { creerClavier } from "../../packages/objets/src/clavier.js";
 import { dessinerJeton, dessinerGroupeJetons } from "../../packages/objets/src/jetons.js";
 import { dessinerTache } from "../../packages/objets/src/splat.js";
 import { dessinerTriangle } from "../../packages/objets/src/triangle.js";
@@ -397,7 +399,7 @@ function dessinerRedactionCourante() {
     largeur: 400,
   });
   // la vérification est un objet SÉPARÉ : on l'ajoute… ou pas
-  if (Logique.estResolue(etatEqua)) {
+  if (Logique.estResolue(etatEqua) && document.getElementById("avecVerification").checked) {
     const initiale = etatEqua.historique[0].equation;
     const texte = initiale
       .replace(new RegExp(`(\\d+)${etatEqua.lettre}`, "g"), `$1 × ${etatEqua.solution}`)
@@ -464,8 +466,6 @@ function dessiner() {
 
 const chipsDiv = document.getElementById("dialogueChips");
 const saisieDialogue = document.getElementById("dialogueSaisie");
-const clavierDiv = document.getElementById("dialogueClavier");
-let clavierActif = null;
 
 function chip(texte, action) {
   const bouton = document.createElement("button");
@@ -487,24 +487,11 @@ const btnAide = document.getElementById("btnAideDialogue");
 const diviserDiv = document.getElementById("dialogueDiviser");
 const diviserTitre = document.getElementById("dialogueDiviserTitre");
 
-function poserClavier(disposition) {
-  clavierActif = creerClavier(clavierDiv, {
-    disposition,
-    surTouche: (touche) => {
-      if (touche === "OK") document.getElementById("dialogueValider").click();
-      else if (touche === "⌫") saisieDialogue.value = saisieDialogue.value.slice(0, -1);
-      else saisieDialogue.value += touche;
-    },
-  });
-}
-
 function ouvrirDialogue(demande) {
   actionDialogue = demande;
   chipsDiv.innerHTML = "";
   diviserDiv.innerHTML = "";
   saisieDialogue.value = "";
-  clavierActif?.detruire();
-  clavierActif = null;
   btnAide.hidden = true;
   btnAide.textContent = "Aide ?";
   diviserTitre.hidden = true;
@@ -520,8 +507,9 @@ function ouvrirDialogue(demande) {
     btnAide.hidden = false;
     btnAide.onclick = () => {
       chipsDiv.innerHTML = "";
-      for (const paire of Logique.propositionsDecomposition(demande.valeur)) {
-        chip(paire.join(" + "), () => { saisieDialogue.value = paire.join(" + "); });
+      // 1re proposition = la décomposition UTILE (jamais mélangée)
+      for (const texte of Logique.aideDecomposition(etatEqua, demande.ligne, demande.valeur, melanger)) {
+        chip(texte, () => { saisieDialogue.value = texte; });
       }
     };
     // « Ou diviser en parts égales » (bloc du dialogue historique)
@@ -543,7 +531,6 @@ function ouvrirDialogue(demande) {
         diviserDiv.appendChild(bouton);
       }
     }
-    poserClavier("calcul");
   } else if (demande.action === "partager") {
     const diviseurs = Logique.diviseursDe(demande.valeur);
     texteDiv.textContent = diviseurs.length
@@ -568,7 +555,6 @@ function ouvrirDialogue(demande) {
         chip(String(proposition), () => { saisieDialogue.value = String(proposition); });
       }
     };
-    poserClavier("nombres");
   }
   document.getElementById("dialogueFond").hidden = false;
   dialogue.hidden = false;
@@ -577,8 +563,6 @@ function fermerDialogue() {
   document.getElementById("dialogueFond").hidden = true;
   dialogue.hidden = true;
   actionDialogue = null;
-  clavierActif?.detruire();
-  clavierActif = null;
 }
 
 document.getElementById("dialogueValider").addEventListener("click", () => {
@@ -596,6 +580,7 @@ document.getElementById("dialogueValider").addEventListener("click", () => {
     dessiner();
   } catch (e) { erreur.textContent = e.message; }
 });
+saisieDialogue.addEventListener("keydown", (e) => { if (e.key === "Enter") document.getElementById("dialogueValider").click(); });
 document.getElementById("dialogueFermer").addEventListener("click", fermerDialogue);
 document.getElementById("dialogueFond").addEventListener("click", fermerDialogue);
 
@@ -616,6 +601,9 @@ document.querySelectorAll("#barreOutilsEqua [data-mode]").forEach((bouton) => {
   });
 });
 document.getElementById("afficherFois").addEventListener("change", () => {
+  if (etatEqua) dessinerRedactionCourante();
+});
+document.getElementById("avecVerification").addEventListener("change", () => {
   if (etatEqua) dessinerRedactionCourante();
 });
 document.getElementById("btnAnnulerOp").addEventListener("click", () => {

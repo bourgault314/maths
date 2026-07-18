@@ -25,9 +25,9 @@ describe("dessinerRedaction", () => {
     const svg = dessinerRedaction(modele());
     // 2 opérations × 2 côtés × (courbe + pointe pleine) = 8 chemins
     assert.equal((svg.match(/<path/g) || []).length, 8);
-    // la courbe verbatim de l'outil, côté gauche et côté droit
-    assert.equal((svg.match(/M9 4 C9 21 24 20 29 32/g) || []).length, 2);
-    assert.equal((svg.match(/M35 4 C35 21 20 20 15 32/g) || []).length, 2);
+    // la courbe v2, côté gauche et côté droit
+    assert.equal((svg.match(/M8 4 C8 19 13 28 24 33/g) || []).length, 2);
+    assert.equal((svg.match(/M36 4 C36 19 31 28 20 33/g) || []).length, 2);
     // le texte de l'opération apparaît à gauche ET à droite
     assert.equal((svg.match(/>−5</g) || []).length, 2);
     assert.equal((svg.match(/>÷3</g) || []).length, 2);

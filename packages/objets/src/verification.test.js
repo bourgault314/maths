@@ -2,9 +2,10 @@ import { describe, it } from "node:test";
 import assert from "node:assert/strict";
 import { dessinerVerification } from "./verification.js";
 import {
+  aideDecomposition,
   aideRegroupement,
+  creerEtat,
   diviseursDe,
-  propositionsDecomposition,
 } from "./equabarre-logique.js";
 
 describe("dessinerVerification (objet séparé)", () => {
@@ -38,16 +39,16 @@ describe("propositions de réponse (pédagogie de l'outil historique)", () => {
     assert.deepEqual(diviseursDe(7), [7]);
   });
 
-  it("décomposer : des suggestions valides et sans doublon", () => {
-    for (const n of [6, 9, 12, 25]) {
-      const paires = propositionsDecomposition(n);
-      assert.ok(paires.length >= 2, `pas assez de suggestions pour ${n}`);
-      for (const [a, b] of paires) {
-        assert.equal(a + b, n, `${a}+${b} ≠ ${n}`);
-        assert.ok(a > 0 && b > 0);
-      }
-      const cles = paires.map((p) => p.join("+"));
-      assert.equal(new Set(cles).size, cles.length);
+  it("décomposer : la PREMIÈRE proposition fait apparaître un nombre de l'autre membre", () => {
+    // 9 = x + 6 : décomposer 9 (bas) doit proposer « 6 + 3 » en premier
+    const etat = creerEtat("9 = x + 6");
+    const propositions = aideDecomposition(etat, 1, 9);
+    assert.equal(propositions[0], "6 + 3");
+    assert.ok(propositions.length >= 2 && propositions.length <= 4);
+    for (const p of propositions) {
+      const somme = p.split("+").reduce((s, v) => s + Number(v.trim()), 0);
+      assert.equal(somme, 9, `${p} ne fait pas 9`);
     }
+    assert.equal(new Set(propositions).size, propositions.length);
   });
 });
