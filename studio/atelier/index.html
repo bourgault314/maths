@@ -76,8 +76,9 @@
   #barreOutilsEqua{margin-top:12px}
   #barreOutilsEqua .barreCommandes{justify-content:center;gap:10px}
   .toolBtn{border:1px solid rgba(15,23,42,.12);background:#f8fafc;color:#334155;font-weight:700;
-    min-height:46px;padding:11px 20px;border-radius:999px;font-size:15px;
+    min-height:40px;padding:8px 15px;border-radius:999px;font-size:13.5px;
     transition:transform .1s, box-shadow .12s, background .12s;cursor:pointer}
+  @media(max-width:640px){.toolBtn{min-height:46px;padding:11px 18px;font-size:15px}}
   .toolBtn:hover{transform:translateY(-1px);box-shadow:0 6px 16px rgba(15,23,42,.10)}
   .toolBtn:active{transform:translateY(1px);box-shadow:none}
   .toolBtn:focus-visible{outline:3px solid rgba(59,130,246,.55);outline-offset:2px}
@@ -419,10 +420,13 @@ function dessiner() {
       return visible;
     }),
   }));
+  // largeur plafonnée à la place réelle : sinon la règle « ne pas
+  // déborder » réduirait tout le dessin, hauteur comprise
+  const largeurMax = (rendu.clientWidth || 640) - 40;
   rendu.innerHTML = dessinerBarres({
     lignes: lignesVisibles,
     inconnue: { affichage: choixInconnue.value, lettre: etatEqua.lettre, valeur: etatEqua.solution },
-    largeur: Number(curseurLargeur.value),
+    largeur: Math.min(Number(curseurLargeur.value), largeurMax),
     hauteurPiece: hauteur,
   });
   dessinerRedactionCourante();
