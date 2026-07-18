@@ -18,6 +18,7 @@
     "./figure": "./src/figure.js",
     "./figures-usuelles": "./src/figures-usuelles.js",
     "./expressions": "./src/expressions.js",
-    "./configurations-angles": "./src/configurations-angles.js"
+    "./configurations-angles": "./src/configurations-angles.js",
+    "./thales": "./src/thales.js"
   }
 }

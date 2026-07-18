@@ -88,6 +88,37 @@
   <div class="galerie" id="plancheRelations"></div>
 </section>
 
+<section id="secThales">
+  <h2>Thalès : la figure de base et ses variations</h2>
+  <p class="aide">UN SEUL modèle par homothétie de centre A : le petit triangle a EXACTEMENT les mêmes proportions que le grand, réduit selon le rapport choisi — emboîté ou papillon. Choisissez l'inconnue : la rédaction suit votre fiche (alignements, parallèles, trois rapports, produits en croix, conclusion).</p>
+  <div class="barreCommandes">
+    <select id="thalesVariation" aria-label="Variation">
+      <option value="base">Base (k = 0,4)</option>
+      <option value="reduite">Réduite (k = 0,25)</option>
+      <option value="moitie">Moitié (k = 0,5)</option>
+      <option value="deuxTiers">Deux tiers (k = 2/3)</option>
+      <option value="papillon">Papillon (k = −0,5)</option>
+      <option value="papillonPetit">Papillon petit (k = −0,35)</option>
+    </select>
+    <label class="reglage">Orientation <input type="range" id="thalesOrientation" min="0" max="359" value="8" step="1"></label>
+    <label class="reglage">Thème
+      <select id="thalesTheme"><option value="couleur" selected>couleur</option><option value="noir">noir</option></select>
+    </label>
+    <label class="reglage">Inconnue
+      <select id="thalesInconnue">
+        <option value="MN">MN</option><option value="AM">AM</option><option value="AN">AN</option>
+        <option value="AB">AB</option><option value="AC">AC</option><option value="BC">BC</option>
+      </select>
+    </label>
+  </div>
+  <div style="display:flex;flex-wrap:wrap;gap:22px;align-items:flex-start">
+    <div class="zoneRendu" id="thalesRendu" style="flex:1 1 380px;min-width:300px"></div>
+    <div id="thalesRedaction" style="background:#f8fafc;border:1px solid var(--ligne);border-radius:14px;padding:14px 18px;max-width:560px"></div>
+  </div>
+  <h3>Les variations côte à côte</h3>
+  <div class="galerie" id="thalesPlanche"></div>
+</section>
+
 <script type="module">
 import {
   creerConfigurationAngles,
@@ -260,6 +291,48 @@ carte(
 );
 
 dessiner();
+
+// ---------- Thalès ----------
+const moduleThales = await import("../../packages/objets/src/thales.js");
+
+function dessinerThalesAtelier() {
+  const instance = moduleThales.creerThales({
+    variation: $("thalesVariation").value,
+    orientationDeg: Number($("thalesOrientation").value),
+  });
+  const inconnue = $("thalesInconnue").value;
+  $("thalesRendu").innerHTML = moduleThales.dessinerThales(instance, {
+    theme: $("thalesTheme").value,
+    longueurs: true,
+    textes: { [inconnue]: "?" },
+    taille: 440,
+  });
+  const solution = moduleThales.resoudreThales(instance, { inconnue });
+  const zone = $("thalesRedaction");
+  zone.innerHTML = "";
+  for (const etape of solution.etapes) {
+    const p = document.createElement("p");
+    p.textContent = etape.texte ?? etape.unicode;
+    if (etape.genre === "calcul") p.style.cssText = "font-family:Fredoka;font-size:18px;font-weight:600;margin:6px 0";
+    if (etape.genre === "conclusion") p.style.cssText = "font-weight:700;color:#dc2626;margin-top:8px";
+    if (etape.genre === "justification") p.style.cssText = "font-size:14.5px;margin:4px 0";
+    zone.appendChild(p);
+  }
+}
+for (const id of ["thalesVariation", "thalesTheme", "thalesInconnue"]) {
+  $(id).addEventListener("change", dessinerThalesAtelier);
+}
+$("thalesOrientation").addEventListener("input", dessinerThalesAtelier);
+
+for (const variation of Object.keys(moduleThales.VARIATIONS_THALES)) {
+  const instance = moduleThales.creerThales({ variation });
+  carte(
+    "thalesPlanche",
+    moduleThales.dessinerThales(instance, { theme: "couleur", taille: 230 }),
+    `${variation} (k = ${String(Math.round(Math.abs(instance.k) * 100) / 100).replace(".", ",")}${instance.configuration === "papillon" ? ", papillon" : ""})`,
+  );
+}
+dessinerThalesAtelier();
 </script>
 </body>
 </html>
