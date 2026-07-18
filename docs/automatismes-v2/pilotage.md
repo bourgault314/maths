@@ -33,13 +33,32 @@ les anciennes questions.
 - les 187 automatismes officiels en données ;
 - le générateur pseudo-aléatoire seedé ;
 - le principe de contrats, gabarits et registre après audit de chaque contrat ;
-- les identifiants stables encore utiles ;
+- le principe d'identifiants stables, avec de nouveaux identifiants maths&go ;
 - la doctrine de provenance.
 
 Les visuels, les aides, le diaporama et l'interface mobile de la bêta sont des
 créations de Gwenaël. Leur propriété est acquise, mais leur présence et leur
 design dans V2 seront décidés au besoin. L'interface, les couleurs et
 l'organisation de la bêta ne sont pas reconduites automatiquement.
+
+Les fondations techniques existantes sont des candidates, pas des contraintes.
+Le chef de projet peut les conserver, les corriger ou les remplacer selon la
+solution la plus robuste pour maths&go. Aucune compatibilité technique avec
+DocTools n'est recherchée.
+
+## Nommage indépendant
+
+V2 ne reprend ni les identifiants `dnb_*`, ni l'arborescence, ni le découpage
+des 43 modules historiques. Les dossiers et identifiants sont créés depuis les
+domaines de maths&go, les notions du programme officiel et le besoin
+pédagogique validé. Une même notion mathématique peut naturellement conduire à
+des calculs semblables ; ce fait ne justifie jamais la reprise d'une
+organisation, d'une formulation ou d'un jeu de paramètres historique.
+
+Les noms anciens peuvent subsister dans `auto/`, dans les inventaires et dans
+les audits afin de décrire la dette existante. Ils ne deviennent jamais des
+noms de source ou des identifiants V2. Le sigle officiel « DNB » peut rester
+utilisé pour désigner l'examen ou un parcours destiné au brevet.
 
 ## Cycle obligatoire d'une notion
 

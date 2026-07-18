@@ -25,18 +25,22 @@
   technique hérité de listes V1. Il est interdit de l'utiliser comme exemple
   pédagogique ou comme première notion V2.
 
-## Dernier chantier terminé
+## Derniers chantiers terminés
 
 La mémoire durable a été installée et les principales contradictions
 documentaires ont été levées. Aucun code du moteur, aucune question et aucune
 interface n'ont été créés pendant ce chantier.
 
+Le socle minimal a ensuite été audité : contrat de question, contrat de
+gabarit, PRNG et registre. Le rapport détaillé est dans
+`audit-socle-2026-07-18.md`.
+
 ## Prochaine étape
 
-Auditer le socle technique minimal réellement nécessaire : contrat de question,
-gabarit, registre et PRNG. À l'issue de cet audit, décider pour chaque fichier :
-conserver, corriger ou retirer. Ne choisir la première notion qu'après cette
-décision.
+Réaliser un lot technique minimal pour retirer les dépendances aux modules V1,
+remplacer les exemples hérités par des fixtures neutres et renforcer les
+garde-fous identifiés par l'audit. Ce lot ne crée aucune notion, aucune question
+pédagogique et aucune interface.
 
 ## Règle de mise à jour
 
