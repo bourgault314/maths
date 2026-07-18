@@ -24,7 +24,7 @@ l'inventaire vivant. Statuts : ✅ extrait dans `packages/objets` ·
 | `geometry.pythagoras-bar` — PythaBarre | 6 | `outils/pythabarre.html` (aires, rôles fixes vert/bleu/orange) | ✅ rôles couverts par barres v2 ; déroulé 6 étapes 🔜 |
 | `algebra.equation-splat` — Splat d'équation | 2 | `outils/splat.html`, `outils/equasplat.html` (+ Splat animé d'`axelle/` à retrouver) | ✅ tache v1 + moteur equasplat-logique + objet deux plateaux + Atelier ÉquaSplat (juillet 2026, import Splat Équations intégré) |
 | `numbers.number-line` — droite graduée | 9 | gabarits LaTeX `outils/_gabarit_*_double_ligne_graduee.tex` + PDF pourcentages/proportionnalité | 🔜 priorité (double ligne graduée) |
-| `arithmetic.fraction-percent-bar` — barre de pourcentage | 7 | gabarits pourcentages (PDF + tex) + `outils/pourcentages_exerciceur.html` | 🔜 priorité |
+| `arithmetic.fraction-percent-bar` — barre de pourcentage | 7 | gabarits pourcentages (PDF + tex) + `outils/pourcentages_exerciceur.html` | 🚧 moteur pur extrait (`packages/objets/src/pourcentages.js` : 20 types, tirages par niveau, 13 habillages, séries seedées) ; objet visuel unifié 🔜 (palette de l'exerciceur = référence, géométrie fixe question/correction) |
 | `measures.conversion-table` — tableau de conversion | 5 | `outils/conversions/` (glisse-unité, tableaux, curseur) | 🔜 (« widget » demandé explicitement) |
 | `algebra.algebra-tiles` — tuiles algébriques | 7 | `outils/tuiles_algebriques/` (expressions, équations — « elles devront bouger ») | 🔜 |
 | `algebra.area-model` — modèle d'aire | 7 | `outils/tuiles_algebriques/` + générateur d'exercices | 🔜 |
