@@ -1182,6 +1182,7 @@ function makeReductionInstance(mod,q){
     }
   };
 }
+const SOLID_NAMES=['un cube','un pavé droit','un prisme droit','un cylindre','une pyramide','un cône','une sphère','une boule'];
 function makeSolidsInstance(mod,q){
   const meta=q.options||{};
   let prompt=q.statement||'';
