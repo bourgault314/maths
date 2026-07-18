@@ -1,0 +1,338 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex, nofollow">
+<title>Atelier · Configurations d'angles — maths&go (interne)</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{--page:#f6f8fb;--papier:#fff;--encre:#10294a;--bleu:#063f86;--turquoise:#08b9b2;--attenue:#637287;--ligne:#dce5ef}
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--page);color:var(--encre);font-family:"Segoe UI",system-ui,sans-serif;padding:20px;max-width:1060px;margin-inline:auto}
+  h1{font-family:Fredoka;color:var(--bleu);font-size:clamp(24px,4vw,34px);margin:8px 0 2px}
+  .sous{color:var(--attenue);margin:0 0 20px;font-size:14px}
+  .sous a{color:var(--bleu);font-weight:600}
+  section{background:var(--papier);border:1px solid var(--ligne);border-radius:24px;padding:clamp(14px,3vw,26px);margin-bottom:22px}
+  h2{font-family:Fredoka;color:var(--turquoise);margin:0 0 4px;font-size:21px}
+  h3{font-family:Fredoka;color:var(--bleu);margin:18px 0 6px;font-size:16px}
+  .aide{color:var(--attenue);font-size:13.5px;margin:0 0 14px}
+  .barreCommandes{display:flex;flex-wrap:wrap;gap:10px;align-items:center;margin-bottom:12px}
+  select,button{font:inherit;font-size:15px;padding:9px 14px;border-radius:12px;border:2px solid var(--ligne);background:#fff;color:var(--encre);cursor:pointer;max-width:100%}
+  button.principal{background:linear-gradient(180deg,#60a5fa,#3b82f6);color:#fff;border-color:#3b82f6;font-weight:600}
+  .reglage{display:flex;align-items:center;gap:8px;font-size:14px;color:var(--attenue);white-space:nowrap}
+  .reglage input[type=range]{accent-color:var(--bleu);width:120px}
+  .reglage output{font-weight:700;color:var(--encre);min-width:34px;text-align:right}
+  .chipsAngles{display:flex;flex-wrap:wrap;gap:6px;margin:8px 0}
+  .chipsAngles button{border-radius:999px;font-size:13.5px;padding:6px 12px;font-family:Fredoka}
+  .chipsAngles button.actif{background:linear-gradient(180deg,#60a5fa,#3b82f6);color:#fff;border-color:#3b82f6}
+  .zoneRendu{overflow-x:auto;text-align:center;padding:8px 0}
+  .zoneRendu svg{max-width:100%;height:auto}
+  .galerie{display:flex;flex-wrap:wrap;gap:14px;align-items:flex-end}
+  .carte{border:1px solid var(--ligne);border-radius:16px;padding:10px;background:#fff;text-align:center}
+  .carte svg{max-width:100%;height:auto;display:block;margin-inline:auto}
+  .carte figcaption{font-size:12.5px;color:var(--attenue);margin-top:6px;font-weight:600}
+  figure{margin:0}
+  #redaction{background:#f8fafc;border:1px solid var(--ligne);border-radius:14px;padding:14px 18px;max-width:560px}
+  #redaction .justification{font-size:14.5px;margin:4px 0}
+  #redaction .calcul{font-family:Fredoka;font-size:19px;font-weight:600;margin:6px 0}
+  #redaction .conclusion{font-size:15px;font-weight:700;color:#dc2626;margin-top:8px}
+</style>
+</head>
+<body>
+<h1>Atelier · Configurations d'angles</h1>
+<p class="sous"><a href="./geometrie.html">← Atelier Géométrie</a> · <a href="./index.html">← Atelier des objets</a> — Famille A du chantier « configurations » : les scènes d'angles du collège, avec leurs RELATIONS connues par construction (opposés, correspondants, alternes-internes…) et leurs rédactions générées. Statut : brouillon.</p>
+
+<section id="secExplorateur">
+  <h2>Explorer une configuration</h2>
+  <p class="aide">Choisissez une scène, tournez-la : les relations ne dépendent jamais de l'orientation. Cliquez des angles pour les colorier, choisissez une inconnue : la rédaction s'écrit toute seule (justification, calcul, conclusion).</p>
+  <div class="barreCommandes">
+    <select id="choixType" aria-label="Configuration">
+      <option value="paralleles-secante">Deux parallèles et une sécante</option>
+      <option value="secantes">Deux droites sécantes</option>
+      <option value="perpendiculaires">Deux droites perpendiculaires</option>
+      <option value="supplementaires">Angles supplémentaires (angle plat)</option>
+      <option value="complementaires">Angles complémentaires (angle droit)</option>
+      <option value="bissectrice">Bissectrice d'un angle</option>
+      <option value="triangle">Angles d'un triangle</option>
+      <option value="angle-exterieur">Angle extérieur d'un triangle</option>
+      <option value="quadrilatere">Angles d'un quadrilatère</option>
+    </select>
+    <label class="reglage">Angle <input type="range" id="regleAngle" min="15" max="165" value="55" step="1"><output id="valAngle">55°</output></label>
+    <label class="reglage">Orientation <input type="range" id="regleOrientation" min="0" max="359" value="12" step="1"><output id="valOrientation">12°</output></label>
+    <label class="reglage"><input type="checkbox" id="caseMiroir" style="width:17px;height:17px;accent-color:var(--bleu)"> miroir</label>
+    <label class="reglage">Thème
+      <select id="choixTheme"><option value="noir">noir</option><option value="couleur" selected>couleur</option></select>
+    </label>
+  </div>
+  <h3>Angles à colorier (cliquez)</h3>
+  <div class="chipsAngles" id="chipsAngles"></div>
+  <div class="barreCommandes">
+    <label class="reglage">Inconnue
+      <select id="choixInconnue"><option value="">aucune</option></select>
+    </label>
+    <button class="principal" id="btnSvg">Télécharger le SVG</button>
+  </div>
+  <div style="display:flex;flex-wrap:wrap;gap:22px;align-items:flex-start">
+    <div class="zoneRendu" id="rendu" style="flex:1 1 380px;min-width:300px"></div>
+    <div id="redaction" hidden></div>
+  </div>
+</section>
+
+<section id="secPlanche">
+  <h2>Planche de contrôle : parallèles et sécante sous toutes les orientations</h2>
+  <p class="aide">Les angles coloriés sont une paire d'ALTERNES-INTERNES (bleu/orange) : ils doivent rester égaux et du bon côté quelle que soit l'orientation — c'est établi par les demi-droites signées, pas par « en haut à gauche ».</p>
+  <div class="galerie" id="plancheParalleles"></div>
+  <h3>Les relations en un coup d'œil</h3>
+  <div class="galerie" id="plancheRelations"></div>
+</section>
+
+<section id="secThales">
+  <h2>Thalès : la figure de base et ses variations</h2>
+  <p class="aide">UN SEUL modèle par homothétie de centre A : le petit triangle a EXACTEMENT les mêmes proportions que le grand, réduit selon le rapport choisi — emboîté ou papillon. Choisissez l'inconnue : la rédaction suit votre fiche (alignements, parallèles, trois rapports, produits en croix, conclusion).</p>
+  <div class="barreCommandes">
+    <select id="thalesVariation" aria-label="Variation">
+      <option value="base">Base (k = 0,4)</option>
+      <option value="reduite">Réduite (k = 0,25)</option>
+      <option value="moitie">Moitié (k = 0,5)</option>
+      <option value="deuxTiers">Deux tiers (k = 2/3)</option>
+      <option value="papillon">Papillon (k = −0,5)</option>
+      <option value="papillonPetit">Papillon petit (k = −0,35)</option>
+    </select>
+    <label class="reglage">Orientation <input type="range" id="thalesOrientation" min="0" max="359" value="8" step="1"></label>
+    <label class="reglage">Thème
+      <select id="thalesTheme"><option value="couleur" selected>couleur</option><option value="noir">noir</option></select>
+    </label>
+    <label class="reglage">Inconnue
+      <select id="thalesInconnue">
+        <option value="MN">MN</option><option value="AM">AM</option><option value="AN">AN</option>
+        <option value="AB">AB</option><option value="AC">AC</option><option value="BC">BC</option>
+      </select>
+    </label>
+  </div>
+  <div style="display:flex;flex-wrap:wrap;gap:22px;align-items:flex-start">
+    <div class="zoneRendu" id="thalesRendu" style="flex:1 1 380px;min-width:300px"></div>
+    <div id="thalesRedaction" style="background:#f8fafc;border:1px solid var(--ligne);border-radius:14px;padding:14px 18px;max-width:560px"></div>
+  </div>
+  <h3>Les variations côte à côte</h3>
+  <div class="galerie" id="thalesPlanche"></div>
+</section>
+
+<script type="module">
+import {
+  creerConfigurationAngles,
+  dessinerConfigurationAngles,
+  redigerConfigurationAngles,
+  resoudreConfigurationAngles,
+} from "../../packages/objets/src/configurations-angles.js";
+
+const $ = (id) => document.getElementById(id);
+const selection = new Set();
+let dernierSvg = "";
+
+function instanceCourante() {
+  return creerConfigurationAngles({
+    type: $("choixType").value,
+    angleDeg: Number($("regleAngle").value),
+    orientationDeg: Number($("regleOrientation").value),
+    miroir: $("caseMiroir").checked,
+  });
+}
+
+function dessiner() {
+  const instance = instanceCourante();
+  // chips des angles
+  const chips = $("chipsAngles");
+  chips.innerHTML = "";
+  for (const a of instance.angles) {
+    const bouton = document.createElement("button");
+    bouton.textContent = `${a.nom} (${String(Math.round(a.mesureDeg * 10) / 10).replace(".", ",")}°)`;
+    bouton.classList.toggle("actif", selection.has(a.id));
+    bouton.addEventListener("click", () => {
+      selection.has(a.id) ? selection.delete(a.id) : selection.add(a.id);
+      dessiner();
+    });
+    chips.appendChild(bouton);
+  }
+  // inconnue
+  const choixInconnue = $("choixInconnue");
+  const inconnueAvant = choixInconnue.value;
+  choixInconnue.innerHTML = `<option value="">aucune</option>`;
+  for (const a of instance.angles) {
+    const option = document.createElement("option");
+    option.value = a.id;
+    option.textContent = a.nom;
+    choixInconnue.appendChild(option);
+  }
+  if ([...instance.angles].some((a) => a.id === inconnueAvant)) choixInconnue.value = inconnueAvant;
+
+  const montrer = instance.angles
+    .filter((a) => selection.has(a.id))
+    .map((a) => ({ id: a.id, texte: a.id === choixInconnue.value ? "?" : undefined }));
+  dernierSvg = dessinerConfigurationAngles(instance, {
+    montrer,
+    theme: $("choixTheme").value,
+    taille: 460,
+  });
+  $("rendu").innerHTML = dernierSvg;
+
+  // rédaction : l'inconnue se déduit des angles sélectionnés connus
+  const zone = $("redaction");
+  if (choixInconnue.value) {
+    try {
+      const valeurs = {};
+      for (const a of instance.angles) {
+        if (a.id !== choixInconnue.value && selection.has(a.id)) {
+          valeurs[a.id] = Math.round(a.mesureDeg * 10) / 10;
+        }
+      }
+      const solution = resoudreConfigurationAngles(instance, {
+        valeurs,
+        inconnue: choixInconnue.value,
+      });
+      const lignes = redigerConfigurationAngles(solution, { profil: "complet" });
+      zone.innerHTML = "";
+      for (const ligne of lignes) {
+        const p = document.createElement("p");
+        p.className = ligne.genre;
+        p.textContent = ligne.genre === "calcul" ? ligne.unicode : ligne.texte;
+        zone.appendChild(p);
+      }
+      zone.hidden = false;
+    } catch (erreur) {
+      zone.innerHTML = "";
+      const p = document.createElement("p");
+      p.className = "justification";
+      p.textContent = `Sélectionnez (en cliquant) les angles CONNUS qui permettent de trouver l'inconnue. (${erreur.message})`;
+      zone.appendChild(p);
+      zone.hidden = false;
+    }
+  } else {
+    zone.hidden = true;
+  }
+}
+
+for (const id of ["choixType", "choixTheme", "choixInconnue"]) $(id).addEventListener("change", dessiner);
+$("caseMiroir").addEventListener("change", dessiner);
+$("regleAngle").addEventListener("input", () => { $("valAngle").textContent = `${$("regleAngle").value}°`; dessiner(); });
+$("regleOrientation").addEventListener("input", () => { $("valOrientation").textContent = `${$("regleOrientation").value}°`; dessiner(); });
+$("choixType").addEventListener("change", () => selection.clear());
+$("btnSvg").addEventListener("click", () => {
+  const blob = new Blob([dernierSvg], { type: "image/svg+xml" });
+  const lien = document.createElement("a");
+  lien.href = URL.createObjectURL(blob);
+  lien.download = `configuration-${$("choixType").value}.svg`;
+  lien.click();
+  URL.revokeObjectURL(lien.href);
+});
+
+// ---------- planches ----------
+function carte(conteneur, svg, legende) {
+  const figure = document.createElement("figure");
+  figure.className = "carte";
+  figure.innerHTML = svg + "<figcaption></figcaption>";
+  figure.querySelector("figcaption").textContent = legende;
+  $(conteneur).appendChild(figure);
+}
+
+for (const orientationDeg of [0, 45, 90, 150, 210, 300]) {
+  const instance = creerConfigurationAngles({ type: "paralleles-secante", angleDeg: 55, orientationDeg });
+  const alternes = instance.relations.find((r) => r.type === "alternes-internes");
+  carte(
+    "plancheParalleles",
+    dessinerConfigurationAngles(instance, {
+      montrer: [
+        { id: alternes.angles[0], couleur: "#3b82f6" },
+        { id: alternes.angles[1], couleur: "#f97316" },
+      ],
+      taille: 230,
+      theme: "couleur",
+    }),
+    `${orientationDeg}°`,
+  );
+}
+
+const demonstrations = [
+  ["secantes", "opposes", "opposés par le sommet"],
+  ["paralleles-secante", "correspondants", "correspondants"],
+  ["paralleles-secante", "alternes-externes", "alternes-externes"],
+  ["paralleles-secante", "co-interieurs", "co-intérieurs (supplémentaires)"],
+  ["complementaires", "complementaires", "complémentaires"],
+  ["bissectrice", "bissectrice", "bissectrice"],
+];
+for (const [type, relationType, legende] of demonstrations) {
+  const instance = creerConfigurationAngles({ type, angleDeg: type === "complementaires" ? 35 : 55, orientationDeg: 18 });
+  const relation = instance.relations.find((r) => r.type === relationType);
+  carte(
+    "plancheRelations",
+    dessinerConfigurationAngles(instance, {
+      montrer: relation.angles.map((id, i) => ({ id, couleur: i === 0 ? "#3b82f6" : "#f97316" })),
+      taille: 230,
+      theme: "couleur",
+    }),
+    legende,
+  );
+}
+
+const triangle = creerConfigurationAngles({ type: "angle-exterieur", angles: [50, 60, 70] });
+carte(
+  "plancheRelations",
+  dessinerConfigurationAngles(triangle, {
+    montrer: [
+      { id: "angle:A", couleur: "#3b82f6" },
+      { id: "angle:B", couleur: "#f97316" },
+      { id: "angle:exterieur", couleur: "#16a34a" },
+    ],
+    taille: 230,
+    theme: "couleur",
+  }),
+  "angle extérieur = somme des non adjacents",
+);
+
+dessiner();
+
+// ---------- Thalès ----------
+const moduleThales = await import("../../packages/objets/src/thales.js");
+
+function dessinerThalesAtelier() {
+  const instance = moduleThales.creerThales({
+    variation: $("thalesVariation").value,
+    orientationDeg: Number($("thalesOrientation").value),
+  });
+  const inconnue = $("thalesInconnue").value;
+  $("thalesRendu").innerHTML = moduleThales.dessinerThales(instance, {
+    theme: $("thalesTheme").value,
+    longueurs: true,
+    textes: { [inconnue]: "?" },
+    taille: 440,
+  });
+  const solution = moduleThales.resoudreThales(instance, { inconnue });
+  const zone = $("thalesRedaction");
+  zone.innerHTML = "";
+  for (const etape of solution.etapes) {
+    const p = document.createElement("p");
+    p.textContent = etape.texte ?? etape.unicode;
+    if (etape.genre === "calcul") p.style.cssText = "font-family:Fredoka;font-size:18px;font-weight:600;margin:6px 0";
+    if (etape.genre === "conclusion") p.style.cssText = "font-weight:700;color:#dc2626;margin-top:8px";
+    if (etape.genre === "justification") p.style.cssText = "font-size:14.5px;margin:4px 0";
+    zone.appendChild(p);
+  }
+}
+for (const id of ["thalesVariation", "thalesTheme", "thalesInconnue"]) {
+  $(id).addEventListener("change", dessinerThalesAtelier);
+}
+$("thalesOrientation").addEventListener("input", dessinerThalesAtelier);
+
+for (const variation of Object.keys(moduleThales.VARIATIONS_THALES)) {
+  const instance = moduleThales.creerThales({ variation });
+  carte(
+    "thalesPlanche",
+    moduleThales.dessinerThales(instance, { theme: "couleur", taille: 230 }),
+    `${variation} (k = ${String(Math.round(Math.abs(instance.k) * 100) / 100).replace(".", ",")}${instance.configuration === "papillon" ? ", papillon" : ""})`,
+  );
+}
+dessinerThalesAtelier();
+</script>
+</body>
+</html>
