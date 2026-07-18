@@ -21,11 +21,13 @@ describe("dessinerRedaction", () => {
     assert.match(a, /aria-label="rédaction de la résolution, 3 étape\(s\)"/);
   });
 
-  it("chaque opération est annotée DES DEUX CÔTÉS avec flèches arrondies", () => {
+  it("chaque opération est annotée DES DEUX CÔTÉS avec LA flèche d'ÉquaBarre", () => {
     const svg = dessinerRedaction(modele());
-    // 2 opérations × 2 côtés × (courbe + pointe) = 8 chemins orange
+    // 2 opérations × 2 côtés × (courbe + pointe pleine) = 8 chemins
     assert.equal((svg.match(/<path/g) || []).length, 8);
-    assert.equal((svg.match(/ Q /g) || []).length, 4, "les flèches doivent être arrondies (courbes)");
+    // la courbe verbatim de l'outil, côté gauche et côté droit
+    assert.equal((svg.match(/M9 4 C9 21 24 20 29 32/g) || []).length, 2);
+    assert.equal((svg.match(/M35 4 C35 21 20 20 15 32/g) || []).length, 2);
     // le texte de l'opération apparaît à gauche ET à droite
     assert.equal((svg.match(/>−5</g) || []).length, 2);
     assert.equal((svg.match(/>÷3</g) || []).length, 2);

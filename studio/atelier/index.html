@@ -65,9 +65,22 @@
   .consigneSplat{width:100%;text-align:center;font-weight:600;margin-top:6px}
   .reglageTaille{display:flex;align-items:center;gap:8px;font-size:14px;color:var(--attenue)}
   .reglageTaille input{accent-color:var(--bleu)}
-  #modesEquabarre button.modeActif{background:linear-gradient(180deg,#60a5fa,#3b82f6);color:#fff;border-color:#3b82f6;font-weight:600}
+  /* barre d'outils — styles repris d'ÉquaBarre (outils/equabarre.html) */
   #barreOutilsEqua{position:sticky;bottom:0;z-index:50;background:rgba(255,255,255,.96);
     border-top:1px solid var(--ligne);margin:0 -12px -12px;padding:10px 12px 12px;backdrop-filter:blur(4px)}
+  #barreOutilsEqua .barreCommandes{justify-content:center}
+  .toolBtn{border:1px solid rgba(15,23,42,.12);background:#f8fafc;color:#334155;font-weight:700;
+    padding:11px 16px;border-radius:14px;font-size:14.5px}
+  .toolBtn.modeActif{background:linear-gradient(180deg,#60a5fa,#3b82f6);color:#fff;
+    border-color:rgba(37,99,235,.30);box-shadow:0 10px 24px rgba(59,130,246,.18)}
+  .undoToolBtn{background:#fff7ed;border-color:rgba(249,115,22,.28);color:#9a3412}
+  .restartToolBtn{background:#eef2ff;border-color:rgba(59,130,246,.25);color:#1d4ed8}
+  button.orangeBtn{background:linear-gradient(180deg,#fb923c,#f97316);color:#fff;border-color:rgba(249,115,22,.4);font-weight:700}
+  button.ghostBtn{background:transparent;border:1px solid rgba(15,23,42,.12);color:#334155}
+  .messageInstruction{padding:10px 14px;border-radius:16px;background:#f8fafc;
+    border:1px solid rgba(15,23,42,.08);color:#334155;font-size:14px;font-weight:700;line-height:1.35}
+  .messageInstruction strong{font-weight:900}
+  .helpMiniBtn{border-radius:999px;font-size:13px;padding:6px 12px;border:1px solid rgba(15,23,42,.12);background:#fff}
   .clavier-mathsgo{display:grid;grid-template-columns:repeat(3,64px);gap:8px;margin-top:10px}
   .clavier-mathsgo[data-colonnes="4"]{grid-template-columns:repeat(4,64px)}
   .clavier-touche{font-family:Fredoka;font-size:20px;font-weight:600;min-height:48px;border-radius:12px;
@@ -112,19 +125,20 @@
       <option value="garder">Après suppression : garder hachuré</option>
       <option value="masquer">Après suppression : masquer</option>
     </select>
+    <label class="reglageTaille"><input type="checkbox" id="afficherFois"> signe × (2 × x)</label>
   </div>
   <div id="barreOutilsEqua">
+    <div class="barreCommandes" id="zoneAction" aria-live="polite"></div>
     <div class="barreCommandes" id="modesEquabarre" role="group" aria-label="Opérations">
-      <button data-mode="decomposer">Décomposer</button>
-      <button data-mode="regrouper">Regrouper</button>
-      <button data-mode="partager">Partager équitablement</button>
-      <button data-mode="deplacer">Déplacer</button>
-      <button data-mode="enlever" class="modeActif">Enlever dans chaque membre</button>
+      <button class="toolBtn" data-mode="decomposer">Décomposer</button>
+      <button class="toolBtn" data-mode="regrouper">Regrouper</button>
+      <button class="toolBtn" data-mode="partager">Partager équitablement</button>
+      <button class="toolBtn" data-mode="deplacer">Déplacer</button>
     </div>
     <div class="barreCommandes">
-      <button class="principal" id="btnValiderSelection" disabled>Enlever la sélection</button>
-      <button id="btnAnnulerOp">↶ Annuler</button>
-      <button id="btnRecommencer">↺ Recommencer</button>
+      <button class="toolBtn modeActif" data-mode="enlever" id="btnModeEnlever">Enlever dans chaque membre</button>
+      <button class="toolBtn undoToolBtn" id="btnAnnulerOp">↺ Annuler</button>
+      <button class="toolBtn restartToolBtn" id="btnRecommencer">↺ Recommencer</button>
       <label class="reglageTaille"><input type="checkbox" id="avecVerification" checked> vérification</label>
     </div>
   </div>
@@ -134,10 +148,13 @@
   </div>
   <div id="dialogueEquabarre" hidden>
     <div style="width:100%"><span id="dialogueTexte" style="font-weight:700"></span></div>
-    <div class="barreCommandes" id="dialogueChips" role="group" aria-label="Propositions"></div>
     <input type="text" id="dialogueSaisie" style="width:140px" readonly inputmode="none" aria-label="Votre réponse">
+    <button class="helpMiniBtn" id="btnAideDialogue" hidden>Aide&nbsp;?</button>
     <button class="principal" id="dialogueValider">Valider</button>
-    <button id="dialogueFermer">Fermer</button>
+    <button class="toolBtn ghostBtn" id="dialogueFermer">Annuler</button>
+    <div class="barreCommandes" id="dialogueChips" role="group" aria-label="Propositions"></div>
+    <div style="width:100%" id="dialogueDiviserTitre" hidden><b>Ou diviser en parts égales :</b></div>
+    <div class="barreCommandes" id="dialogueDiviser" role="group" aria-label="Diviser en parts égales"></div>
     <div id="dialogueClavier" style="width:100%"></div>
   </div>
   <p class="erreur" id="erreurEquation"></p>
@@ -240,7 +257,71 @@ const curseurBarres = document.getElementById("tailleBarres");
 const curseurLargeur = document.getElementById("largeurBarres");
 const redactionDiv = document.getElementById("redactionEquation");
 const apresSuppression = document.getElementById("apresSuppression");
-const btnValider = document.getElementById("btnValiderSelection");
+const zoneAction = document.getElementById("zoneAction");
+
+// Zone d'action dynamique, reprise d'ÉquaBarre : une instruction guide
+// chaque étape, les boutons contextuels n'apparaissent que quand ils
+// ont un sens.
+function majZoneAction() {
+  if (!etatEqua) return;
+  zoneAction.innerHTML = "";
+  const instruction = (html) => {
+    const div = document.createElement("div");
+    div.className = "messageInstruction";
+    div.innerHTML = html;
+    zoneAction.appendChild(div);
+  };
+  const bouton = (texte, classe, action) => {
+    const b = document.createElement("button");
+    b.className = classe;
+    b.textContent = texte;
+    b.addEventListener("click", action);
+    zoneAction.appendChild(b);
+  };
+  const effacer = () => bouton("Effacer la sélection", "toolBtn ghostBtn", () => {
+    Logique.changerMode(etatEqua, etatEqua.mode);
+    dessiner();
+  });
+  const nb = etatEqua.selection.length;
+
+  if (Logique.estResolue(etatEqua)) {
+    instruction(`Bravo : <strong>${etatEqua.lettre} est trouvé.</strong>`);
+    return;
+  }
+  if (etatEqua.mode === "enlever") {
+    const parLigne = [0, 1].map((l) => etatEqua.selection.filter((s) => s.ligne === l).length);
+    if (nb === 0) instruction("Sélectionne la <strong>même quantité</strong> des deux côtés.");
+    else if (parLigne[0] === 0 || parLigne[1] === 0) {
+      instruction("Sélectionne maintenant <strong>l'autre côté</strong>.");
+      effacer();
+    } else if (Logique.enleverPossible(etatEqua)) {
+      instruction("Même quantité sélectionnée.");
+      bouton("Valider la suppression", "toolBtn orangeBtn", () => {
+        try { Logique.enleverSelection(etatEqua); erreur.textContent = ""; dessiner(); }
+        catch (e) { erreur.textContent = e.message; }
+      });
+      effacer();
+    } else {
+      instruction("Ce n'est pas la <strong>même quantité</strong> des deux côtés.");
+      effacer();
+    }
+  } else if (etatEqua.mode === "regrouper") {
+    if (nb === 0) instruction("Sélectionne des <strong>nombres d'un même membre</strong> à regrouper.");
+    else if (nb === 1) { instruction("Sélectionne au moins un <strong>deuxième nombre</strong>."); effacer(); }
+    else {
+      bouton("Regrouper la sélection", "toolBtn modeActif", () =>
+        ouvrirDialogue({ action: "regrouper", somme: Logique.sommeSelection(etatEqua) }),
+      );
+      effacer();
+    }
+  } else if (etatEqua.mode === "decomposer") {
+    instruction("Clique sur un <strong>nombre</strong> à décomposer.");
+  } else if (etatEqua.mode === "partager") {
+    instruction("Clique sur un <strong>nombre</strong> à partager en parts égales.");
+  } else if (etatEqua.mode === "deplacer") {
+    instruction(nb === 0 ? "Clique sur une <strong>première case</strong>." : "Clique sur la case avec qui <strong>échanger</strong>.");
+  }
+}
 const dialogue = document.getElementById("dialogueEquabarre");
 let etatEqua = null;
 let actionDialogue = null;
@@ -256,10 +337,25 @@ function construire() {
   }
 }
 
+function transformerEquation(texte) {
+  // options d'écriture demandées : « 2 × x » au lieu de « 2x », et
+  // « ? » à la place de la lettre quand l'inconnue est en ? ou Splat
+  const lettre = etatEqua.lettre;
+  let t = texte;
+  if (document.getElementById("afficherFois").checked) {
+    t = t.replace(new RegExp(`(\\d+)${lettre}`, "g"), `$1 × ${lettre}`);
+  }
+  if (choixInconnue.value !== "lettre") {
+    t = t.split(lettre).join("?");
+  }
+  return t;
+}
+
 function dessinerRedactionCourante() {
   if (!etatEqua) return;
   const etapes = etatEqua.historique.map((etape, i) => ({
-    ...etape,
+    equation: transformerEquation(etape.equation),
+    ...(etape.operation ? { operation: transformerEquation(etape.operation) } : {}),
     conclusion: i === etatEqua.historique.length - 1 && Logique.estResolue(etatEqua),
   }));
   let html = dessinerRedaction({
@@ -301,18 +397,22 @@ function dessiner() {
     hauteurPiece: hauteur,
   });
   dessinerRedactionCourante();
-  btnValider.disabled = !(
-    (etatEqua.mode === "enlever" && Logique.enleverPossible(etatEqua)) ||
-    (etatEqua.mode === "regrouper" && etatEqua.selection.length >= 2)
-  );
-  btnValider.textContent = etatEqua.mode === "regrouper" ? "Regrouper la sélection" : "Enlever la sélection";
+  majZoneAction();
 
+  // CORRECTIF du bug de clic : les textes et hachures interceptaient
+  // les clics sur les cases. On pose par-dessus TOUT le dessin des
+  // rectangles de capture transparents, un par case — le clic atteint
+  // toujours la bonne pièce, où qu'on vise.
   const svg = rendu.querySelector("svg");
   const bases = [...svg.querySelectorAll(`rect[height="${hauteur}"]`)].filter((r) => !r.getAttribute("fill").startsWith("url"));
   bases.forEach((rect, i) => {
     if (!correspondance[i]) return;
-    rect.style.cursor = "pointer";
-    rect.addEventListener("click", () => {
+    const capture = rect.cloneNode(false);
+    capture.setAttribute("fill", "#000000");
+    capture.setAttribute("fill-opacity", "0");
+    capture.removeAttribute("stroke");
+    capture.style.cursor = "pointer";
+    capture.addEventListener("click", () => {
       const [ligneIdx, pieceIdx] = correspondance[i];
       const resultat = Logique.cliquerPiece(etatEqua, ligneIdx, pieceIdx);
       if (resultat.action === "decomposer" || resultat.action === "partager") {
@@ -320,6 +420,7 @@ function dessiner() {
       }
       dessiner();
     });
+    svg.appendChild(capture);
   });
 }
 
@@ -344,12 +445,31 @@ function melanger(liste) {
   return copie;
 }
 
+const btnAide = document.getElementById("btnAideDialogue");
+const diviserDiv = document.getElementById("dialogueDiviser");
+const diviserTitre = document.getElementById("dialogueDiviserTitre");
+
+function poserClavier(disposition) {
+  clavierActif = creerClavier(clavierDiv, {
+    disposition,
+    surTouche: (touche) => {
+      if (touche === "OK") document.getElementById("dialogueValider").click();
+      else if (touche === "⌫") saisieDialogue.value = saisieDialogue.value.slice(0, -1);
+      else saisieDialogue.value += touche;
+    },
+  });
+}
+
 function ouvrirDialogue(demande) {
   actionDialogue = demande;
   chipsDiv.innerHTML = "";
+  diviserDiv.innerHTML = "";
   saisieDialogue.value = "";
   clavierActif?.detruire();
   clavierActif = null;
+  btnAide.hidden = true;
+  btnAide.textContent = "Aide ?";
+  diviserTitre.hidden = true;
   const texteDiv = document.getElementById("dialogueTexte");
   const avecClavier = demande.action !== "partager";
   saisieDialogue.hidden = !avecClavier;
@@ -357,20 +477,41 @@ function ouvrirDialogue(demande) {
 
   if (demande.action === "decomposer") {
     texteDiv.textContent = `Décomposer ${demande.valeur} en une somme :`;
-    for (const paire of Logique.propositionsDecomposition(demande.valeur)) {
-      chip(paire.join(" + "), () => { saisieDialogue.value = paire.join(" + "); });
+    // l'aide (propositions) n'apparaît que si on la demande — comme
+    // dans l'outil historique
+    btnAide.hidden = false;
+    btnAide.onclick = () => {
+      chipsDiv.innerHTML = "";
+      for (const paire of Logique.propositionsDecomposition(demande.valeur)) {
+        chip(paire.join(" + "), () => { saisieDialogue.value = paire.join(" + "); });
+      }
+    };
+    // « Ou diviser en parts égales » (bloc du dialogue historique)
+    const diviseurs = Logique.diviseursDe(demande.valeur).filter((d) => d < demande.valeur);
+    if (diviseurs.length) {
+      diviserTitre.hidden = false;
+      for (const d of diviseurs) {
+        const bouton = document.createElement("button");
+        bouton.type = "button";
+        bouton.textContent = `${d} parts égales`;
+        bouton.addEventListener("click", () => {
+          try {
+            Logique.partager(etatEqua, demande.ligne, demande.indice, d);
+            erreur.textContent = "";
+            fermerDialogue();
+            dessiner();
+          } catch (e) { erreur.textContent = e.message; }
+        });
+        diviserDiv.appendChild(bouton);
+      }
     }
-    clavierActif = creerClavier(clavierDiv, {
-      disposition: "calcul",
-      surTouche: (touche) => {
-        if (touche === "OK") document.getElementById("dialogueValider").click();
-        else if (touche === "⌫") saisieDialogue.value = saisieDialogue.value.slice(0, -1);
-        else saisieDialogue.value += touche === "×" ? "" : touche;
-      },
-    });
+    poserClavier("calcul");
   } else if (demande.action === "partager") {
-    texteDiv.textContent = `Partager ${demande.valeur} équitablement — en combien de parts ?`;
-    for (const d of Logique.diviseursDe(demande.valeur)) {
+    const diviseurs = Logique.diviseursDe(demande.valeur);
+    texteDiv.textContent = diviseurs.length
+      ? `Partager ${demande.valeur} équitablement — en combien de parts ?`
+      : `${demande.valeur} ne se partage pas en parts entières égales.`;
+    for (const d of diviseurs) {
       chip(`${d} parts`, () => {
         try {
           Logique.partager(etatEqua, demande.ligne, demande.indice, d);
@@ -380,22 +521,16 @@ function ouvrirDialogue(demande) {
         } catch (e) { erreur.textContent = e.message; }
       });
     }
-    if (Logique.diviseursDe(demande.valeur).length === 0) {
-      texteDiv.textContent = `${demande.valeur} ne se partage pas en parts entières égales.`;
-    }
   } else if (demande.action === "regrouper") {
     texteDiv.textContent = "Quelle est la somme des cases sélectionnées ?";
-    for (const proposition of melanger(Logique.propositionsRegroupement(demande.somme))) {
-      chip(String(proposition), () => { saisieDialogue.value = String(proposition); });
-    }
-    clavierActif = creerClavier(clavierDiv, {
-      disposition: "nombres",
-      surTouche: (touche) => {
-        if (touche === "OK") document.getElementById("dialogueValider").click();
-        else if (touche === "⌫") saisieDialogue.value = saisieDialogue.value.slice(0, -1);
-        else saisieDialogue.value += touche;
-      },
-    });
+    btnAide.hidden = false;
+    btnAide.onclick = () => {
+      chipsDiv.innerHTML = "";
+      for (const proposition of Logique.aideRegroupement(demande.somme, melanger)) {
+        chip(String(proposition), () => { saisieDialogue.value = String(proposition); });
+      }
+    };
+    poserClavier("nombres");
   }
   dialogue.hidden = false;
 }
@@ -423,10 +558,10 @@ document.getElementById("dialogueValider").addEventListener("click", () => {
 });
 document.getElementById("dialogueFermer").addEventListener("click", fermerDialogue);
 
-document.querySelectorAll("#modesEquabarre button").forEach((bouton) => {
+document.querySelectorAll("#barreOutilsEqua [data-mode]").forEach((bouton) => {
   bouton.addEventListener("click", () => {
     if (!etatEqua) return;
-    document.querySelectorAll("#modesEquabarre button").forEach((b) => b.classList.remove("modeActif"));
+    document.querySelectorAll("#barreOutilsEqua [data-mode]").forEach((b) => b.classList.remove("modeActif"));
     bouton.classList.add("modeActif");
     Logique.changerMode(etatEqua, bouton.dataset.mode);
     erreur.textContent = "";
@@ -434,19 +569,10 @@ document.querySelectorAll("#modesEquabarre button").forEach((bouton) => {
     dessiner();
   });
 });
-btnValider.addEventListener("click", () => {
-  try {
-    if (etatEqua.mode === "regrouper") {
-      // c'est l'élève qui donne la somme : propositions + clavier
-      ouvrirDialogue({ action: "regrouper", somme: Logique.sommeSelection(etatEqua) });
-      return;
-    }
-    Logique.enleverSelection(etatEqua);
-    erreur.textContent = "";
-    dessiner();
-  } catch (e) { erreur.textContent = e.message; }
-});
 document.getElementById("avecVerification").addEventListener("change", () => {
+  if (etatEqua) dessinerRedactionCourante();
+});
+document.getElementById("afficherFois").addEventListener("change", () => {
   if (etatEqua) dessinerRedactionCourante();
 });
 document.getElementById("btnAnnulerOp").addEventListener("click", () => {

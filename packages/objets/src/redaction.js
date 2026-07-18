@@ -51,15 +51,15 @@ function texteMathematique(texte, lettre) {
   return morceaux;
 }
 
-// Flèche arrondie vers le bas : part près de la ligne du haut, plonge
-// en s'incurvant vers l'intérieur. `sens` = -1 à gauche, +1 à droite.
-function flecheArrondie(x, y, hauteur, sens) {
-  const dx = 10 * sens;
-  const xf = x + dx;
-  const yf = y + hauteur;
+// LA flèche d'opération : celle d'ÉquaBarre, verbatim (objet fleche).
+import { dessinerFlecheOperation } from "./fleche.js";
+
+function flecheIncrustee(x, y, hauteur, cote) {
+  const echelle = hauteur / 44;
   return (
-    `<path d="M ${x} ${y} Q ${x} ${y + hauteur * 0.72} ${xf} ${yf - 4}" fill="none" stroke="${ORANGE}" stroke-width="2.6" stroke-linecap="round"/>` +
-    `<path d="M ${xf - 4.8} ${yf - 8.2} L ${xf + 0.6 * sens} ${yf - 2.6} L ${xf + 4.2} ${yf - 7.4}" fill="none" stroke="${ORANGE}" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/>`
+    `<g transform="translate(${x} ${y}) scale(${echelle})" color="${ORANGE}">` +
+    dessinerFlecheOperation({ cote, fragment: true }) +
+    `</g>`
   );
 }
 
@@ -100,21 +100,19 @@ export function dessinerRedaction({
 
   etapes.forEach((etape, i) => {
     const [gauche, droite] = etape.equation.split("=").map((m) => m.trim());
-    const demiGauche = largeurApprochee(gauche, taillePolice);
-    const demiDroite = largeurApprochee(droite, taillePolice);
 
     if (i > 0 && etape.operation) {
-      // annotations des deux côtés, PROCHES des équations
-      const precedente = etapes[i - 1].equation.split("=").map((m) => m.trim());
-      const ecartGauche = Math.max(demiGauche, largeurApprochee(precedente[0], taillePolice)) + 26;
-      const ecartDroite = Math.max(demiDroite, largeurApprochee(precedente[1], taillePolice)) + 26;
-      const yOperation = y - taillePolice * 0.35;
-      const texteOperation = echapper(etape.operation);
+      // Rangée d'opération façon ÉquaBarre : l'annotation vit AU BORD
+      // (marges fixes), jamais calculée sur la largeur du texte — les
+      // grandes équations ne posent plus de problème.
+      const yOperation = y - taillePolice * 0.55;
+      const tailleFleche = hauteurOperation * 0.82;
+      const largeurEtiquette = largeurApprochee(etape.operation, taillePolice * 0.78);
       morceaux.push(
-        `<text x="${centre - ecartGauche - 20}" y="${yOperation + hauteurOperation * 0.45}" font-family="${POLICE}" font-size="${taillePolice * 0.78}" font-weight="700" fill="${ORANGE}" text-anchor="end">${texteMathematique(etape.operation, lettre)}</text>`,
-        flecheArrondie(centre - ecartGauche - 12, yOperation, hauteurOperation, 1),
-        `<text x="${centre + ecartDroite + 20}" y="${yOperation + hauteurOperation * 0.45}" font-family="${POLICE}" font-size="${taillePolice * 0.78}" font-weight="700" fill="${ORANGE}" text-anchor="start">${texteMathematique(etape.operation, lettre)}</text>`,
-        flecheArrondie(centre + ecartDroite + 12, yOperation, hauteurOperation, -1),
+        `<text x="8" y="${yOperation + hauteurOperation * 0.42}" font-family="${POLICE}" font-size="${taillePolice * 0.78}" font-weight="700" fill="${ORANGE}" text-anchor="start">${texteMathematique(etape.operation, lettre)}</text>`,
+        flecheIncrustee(10 + largeurEtiquette, yOperation, tailleFleche, "gauche"),
+        `<text x="${largeur - 8}" y="${yOperation + hauteurOperation * 0.42}" font-family="${POLICE}" font-size="${taillePolice * 0.78}" font-weight="700" fill="${ORANGE}" text-anchor="end">${texteMathematique(etape.operation, lettre)}</text>`,
+        flecheIncrustee(largeur - 10 - largeurEtiquette - tailleFleche * 1.1, yOperation, tailleFleche, "droite"),
       );
       y += hauteurOperation;
     } else if (i > 0) {
