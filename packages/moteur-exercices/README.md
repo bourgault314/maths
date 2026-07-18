@@ -17,7 +17,7 @@ Règles du package :
 |---|---|
 | `src/aleatoire.js` | Hasard reproductible : graine texte ou nombre, réels, entiers, choix, mélange. `VERSION_ALEATOIRE` protège les séries déjà partagées. |
 | `src/generation.js` | Registre de générateurs et instanciation : gabarit (donnée) + graine → question conforme au contrat, validée avant d'être rendue. |
-| `src/generateurs/fractions.js` | Premier générateur réel : « fractions.simplifier » (port du module V1 dnb_03), niveaux simple et difficile, correction incluse. |
+| `src/generateurs/fractions.js` | Cartouche technique héritée de listes V1, conservée temporairement pour tester le moteur. Elle est quarantainée : ce n'est ni un exemple pédagogique ni une notion V2 publiable. |
 
 ## Usage
 
@@ -30,5 +30,6 @@ g.choix(["a", "b", "c"]);
 g.melange([1, 2, 3, 4]);
 ```
 
-À venir (dans l'ordre prévu) : contrats de question (schémas), génération,
-normalisation des réponses, évaluation.
+Prochaine étape : auditer le contrat de question, le gabarit, le registre et le
+PRNG existants avant de les étendre. Aucun nouveau générateur réel n'est ajouté
+avant validation de la fiche pédagogique de sa notion.

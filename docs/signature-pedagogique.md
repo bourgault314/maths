@@ -5,6 +5,14 @@ Rédigé le 18 juillet 2026 à partir de l'étude des 127 ressources publiées d
 site. Ce document appartient au propriétaire du projet : l'assistant technique
 (IA) le tient à jour, mais seul Gwenaël décide de son contenu.
 
+## Décision déjà validée sur la forme de réponse
+
+Dans Automatismes V2, c'est toujours l'élève qui saisit sa réponse. La seule
+exception déjà décidée concerne le choix de diviseurs proposés au clic. Les
+observations ci-dessous sur la manipulation décrivent la richesse du site,
+mais n'autorisent pas un contrat de manipulation comme réponse sans nouvelle
+décision explicite pour une notion précise.
+
 ## Règle fondatrice du projet
 
 **La pédagogie, c'est Gwenaël.** La technique (moteur, contrats, tests,
@@ -50,10 +58,10 @@ algébriques (expressions puis équations), bandes/disques/mur de fractions,
 bouliers (Rekenrek, Soroban, Montessori, Gerbert), glisse-nombres, engrenages,
 cubes en 3D, piles de moyennes…
 
-→ Pour la V2 : une question n'est pas qu'un champ de réponse ; quand la
-famille s'y prête, la manipulation EST la réponse (poser des jetons, déplacer
-une barre). D'où le contrat de manipulation prévu à côté du contrat de
-question.
+→ Pour la V2 : les manipulations peuvent servir de représentation, d'aide ou
+d'activité séparée. Elles ne remplacent pas automatiquement la réponse saisie.
+Une exception éventuelle sera décidée notion par notion, sans construire de
+contrat générique par anticipation.
 
 ### 3. On fabrique — le pont entre l'écran et la classe réelle
 

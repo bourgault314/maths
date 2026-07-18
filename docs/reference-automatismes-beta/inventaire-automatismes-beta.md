@@ -1,5 +1,10 @@
 # Inventaire de reconstruction — Automatismes maths&go
 
+> **Archive analytique.** Les formulations ci-dessous qui demandent de
+> reproduire la bêta ou d'assurer une parité ont été remplacées par la décision
+> D-002 de `docs/automatismes-v2/decisions.md`. Ce fichier sert uniquement à
+> inventorier la couverture notionnelle et les dépendances historiques.
+
 ## Verdict
 
 Ce travail est utile et nécessaire avant de poursuivre le découpage. La bêta n’est pas encore constituée de 43 outils totalement autonomes : les données sont bien séparées par module, mais une partie importante de la génération, du tirage, du rendu, des réponses, des aides et des corrections demeure dans des moteurs globaux.

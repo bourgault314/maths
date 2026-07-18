@@ -1,4 +1,10 @@
-# Prompt à donner à Claude
+# Archive — prompt remplacé, ne pas exécuter
+
+> Ce prompt imposait une parité avec la bêta. Il est conservé uniquement pour
+> comprendre l'historique du chantier. La décision D-002 de
+> `docs/automatismes-v2/decisions.md` l'a remplacé le 18 juillet 2026.
+
+# Ancien prompt à donner à Claude
 
 Je veux que tu poursuives la fondation de la reconstruction des Automatismes maths&go à partir de la bêta actuelle, sans redessiner l’outil et sans modifier silencieusement son comportement.
 

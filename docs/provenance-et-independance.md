@@ -19,16 +19,22 @@ la liste des notions et des types de questions qu'un élève doit savoir traiter
 Ce qui reste parfaitement légitime : **savoir** qu'il faut un module « pourcentages d'évolution »
 niveau 3e, ou « Pythagore sans calculatrice ». Une notion au programme n'appartient à personne.
 
-## 2. Ce que l'on garde — sans discussion
+## 2. Ce qui est acquis et ce qui reste à décider
 
-Rien de ce qui suit n'est remis en cause :
+Les éléments suivants sont acquis et réutilisables lorsqu'ils répondent au
+besoin de la notion :
 
 - l'**inventaire des notions** et des types d'automatismes ;
-- l'**architecture** actuelle, les niveaux, les filtres, les modes d'utilisation ;
-- l'**interface mobile**, le diaporama, le clavier fourni, le système d'aide ;
 - les **représentations pédagogiques réellement reconstruites** (schémas en barres, jetons,
   Splat, figures, solides, barres de pourcentage…) ;
-- les **choix mathématiques** de Gwenaël et toutes les améliorations apportées.
+- les **187 automatismes officiels**, le PRNG seedé et les fondations génériques
+  dont l'audit confirme l'utilité ;
+- les **choix mathématiques validés** par Gwenaël.
+
+L'interface mobile, le diaporama, le clavier, les aides et les couleurs présents
+dans la bêta sont bien des créations de Gwenaël. Cette provenance ne décide pas
+de leur réutilisation : l'interface, les couleurs, les filtres et les modes de
+V2 seront redéfinis au besoin et validés séparément.
 
 ## 3. Les trois statuts d'origine
 
