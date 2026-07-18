@@ -22,6 +22,9 @@ Automatismes V2, lire dans cet ordre :
 
 - L'ancienne banque et la bêta sont des inventaires de notions, jamais des
   sources d'énoncés, de paramètres, de valeurs, de distracteurs ou de code.
+- Les noms `dnb_*`, l'arborescence des 43 modules et leurs identifiants restent
+  historiques. V2 utilise des noms français issus du programme et de la
+  taxonomie maths&go, sans correspondance un-à-un avec l'ancienne banque.
 - La bêta est gelée, sauf correction critique distincte du chantier V2.
 - Aucun contenu pédagogique réel n'est programmé avant validation de sa fiche
   par Gwenaël.

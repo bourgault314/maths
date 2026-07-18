@@ -56,3 +56,19 @@ GeoGebra n'entre pas dans Automatismes V2 sans demande explicite.
 
 Les règles, décisions, fiches et état du chantier sont versionnés dans le
 dépôt. Une mémoire conversationnelle peut aider, mais ne fait jamais autorité.
+
+### D-011 — Aucun nom ou découpage hérité dans V2
+
+V2 ne reprend ni les noms `dnb_*`, ni les dossiers, ni le découpage des 43
+modules, ni leurs identifiants. Sa nomenclature est créée depuis les sept
+domaines de maths&go, les notions du programme officiel et les choix validés
+par Gwenaël. Les noms historiques ne subsistent que dans l'application
+ancienne, les inventaires et les audits. Le terme officiel « DNB » reste
+utilisable pour parler de l'examen ou d'un parcours de préparation au brevet.
+
+### D-012 — L'existant technique n'est pas une contrainte
+
+Le chef de projet choisit librement de conserver, corriger ou remplacer chaque
+brique existante selon l'intérêt de maths&go. Une brique n'est jamais gardée
+seulement parce qu'elle existe déjà. La compatibilité avec DocTools, son moteur
+ou son organisation n'est pas un objectif.
