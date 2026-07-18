@@ -170,6 +170,7 @@
   .notion .badges i,.badgeExemple{font-style:normal;font-size:10.5px;font-weight:700;color:#94a3b8}
   .notion .badges i.anc,.badgeExemple.anc{background:#fef3c7;color:#92400e;border-radius:999px;padding:1px 7px}
   .notion .badges i.nouv,.badgeExemple.nouv{background:#ccfbf1;color:#0f766e;border-radius:999px;padding:1px 7px}
+  .notion .badges i.auto,.badgeExemple.auto{background:#ede9fe;color:#5b21b6;border-radius:999px;padding:1px 7px}
   .legendeProg{color:var(--attenue);font-size:12.5px;margin:2px 0 14px}
   .noteDomaine{color:var(--attenue);font-size:12.5px;margin:6px 0 0;font-style:italic}
   @media (max-width:560px){.notion{min-height:34px}}
@@ -186,7 +187,7 @@
 
 <section id="secProgramme">
   <h2>🧭 Le programme du cycle 4, d'un coup d'œil</h2>
-  <p class="legendeProg">✔ fait · ◐ en chantier · ○ à faire — <i class="badgeExemple anc">ancien</i> encore au menu des 4e et 3e pendant la transition (jusqu'en 2028) · <i class="badgeExemple nouv">2026</i> nouveauté du programme publié au BO du 5&nbsp;mars&nbsp;2026.</p>
+  <p class="legendeProg">✔ fait · ◐ en chantier · ○ à faire — <i class="badgeExemple anc">ancien</i> encore au menu des 4e et 3e pendant la transition (jusqu'en 2028) · <i class="badgeExemple nouv">2026</i> nouveauté du programme publié au BO du 5&nbsp;mars&nbsp;2026 · <i class="badgeExemple auto">⚡4e</i> rubrique «&nbsp;Automatismes&nbsp;» du BO au niveau indiqué (souvent après l'année d'apprentissage).</p>
   <div id="zoneProgramme"></div>
   <p class="legendeProg" style="margin-top:14px">Chantier : <a data-vue="secPrototypes" href="#secPrototypes" style="color:#94a3b8;font-weight:700">prototypes</a> · <a href="../../auto/dev/visual-library.html" style="color:#7c3aed;font-weight:700">bibliothèque d'Automatismes</a></p>
 </section>
@@ -405,40 +406,43 @@ for (const outil of OUTILS) {
    programme 2026 (BO du 5 mars 2026, annexe 2) niveau par niveau, plus
    les notions de l'ancien programme (2020) encore au menu pendant la
    transition (badge « ancien »), plus les nouveautés 2026 (badge « 2026 »).
+   auto : niveaux où le BO place la notion sous un intertitre « Automatismes »
+   (matrice vérifiée : docs/reference-matrice-automatismes/, correspondance
+   ligne à ligne dans correspondance-tableau-de-bord.md).
    États : fait (un outil V2 le montre), chantier (brouillon visible), à faire. */
 const PROGRAMME = [
   { numero: 1, nom: "Nombres et calculs", couleur: "#dc2626", sousThemes: [
     { titre: "Numération et écritures", notions: [
-      { t: "Écritures multiples d'un même nombre (décimale, fraction, %)", n: "5e" },
-      { t: "Droite graduée : lire et placer une abscisse", n: "5e" },
+      { t: "Écritures multiples d'un même nombre (décimale, fraction, %)", n: "5e", auto: "5e" },
+      { t: "Droite graduée : lire et placer une abscisse", n: "5e", auto: "5e" },
       { t: "Ordres de grandeur, vraisemblance d'un résultat", n: "5e→3e" },
     ] },
     { titre: "Entiers et divisibilité", notions: [
-      { t: "Division euclidienne (quotient, reste)", n: "5e" },
-      { t: "Multiples, diviseurs, critères de divisibilité", n: "5e·3e" },
-      { t: "Nombres premiers, décomposition en facteurs", n: "3e" },
+      { t: "Division euclidienne (quotient, reste)", n: "5e", auto: "5e" },
+      { t: "Multiples, diviseurs, critères de divisibilité", n: "5e·3e", auto: "5e·3e" },
+      { t: "Nombres premiers, décomposition en facteurs", n: "3e", auto: "3e" },
     ] },
     { titre: "Nombres relatifs", notions: [
-      { t: "Découvrir les relatifs, l'opposé", n: "5e", etat: "fait", vue: "secJetons" },
+      { t: "Découvrir les relatifs, l'opposé", n: "5e", etat: "fait", vue: "secJetons", auto: "4e" },
       { t: "Valeur absolue", n: "5e", nouv: true },
       { t: "Comparer et ranger des relatifs", n: "5e" },
-      { t: "Additionner et soustraire des relatifs", n: "5e", etat: "fait", vue: "secJetons" },
+      { t: "Additionner et soustraire des relatifs", n: "5e", etat: "fait", vue: "secJetons", auto: "4e" },
       { t: "Multiplier et diviser des relatifs", n: "4e" },
     ] },
     { titre: "Fractions", notions: [
-      { t: "Fractions égales, comparer des fractions", n: "5e" },
-      { t: "Additionner et soustraire des fractions", n: "5e·4e" },
-      { t: "Multiplier et diviser des fractions, inverse", n: "4e" },
-      { t: "Fraction d'un nombre, d'une quantité", n: "4e" },
-      { t: "Fraction irréductible", n: "3e" },
+      { t: "Fractions égales, comparer des fractions", n: "5e", auto: "5e·4e" },
+      { t: "Additionner et soustraire des fractions", n: "5e·4e", auto: "5e→3e" },
+      { t: "Multiplier et diviser des fractions, inverse", n: "4e", auto: "3e" },
+      { t: "Fraction d'un nombre, d'une quantité", n: "4e", auto: "5e·4e" },
+      { t: "Fraction irréductible", n: "3e", auto: "3e" },
     ] },
     { titre: "Puissances", notions: [
-      { t: "Carré et cube d'un nombre", n: "5e" },
-      { t: "Puissances d'exposant positif", n: "4e" },
+      { t: "Carré et cube d'un nombre", n: "5e", auto: "4e" },
+      { t: "Puissances d'exposant positif", n: "4e", auto: "3e" },
       { t: "Exposants négatifs, notation scientifique", n: "3e" },
     ] },
     { titre: "Racines carrées", notions: [
-      { t: "Racine carrée : définition, encadrement", n: "4e" },
+      { t: "Racine carrée : définition, encadrement", n: "4e", auto: "4e·3e" },
       { t: "Équations x² = a", n: "3e" },
     ] },
     { titre: "Calcul mental et automatismes", notions: [
@@ -452,37 +456,37 @@ const PROGRAMME = [
   ] },
   { numero: 2, nom: "Calcul littéral et algèbre", couleur: "#1d4ed8", sousThemes: [
     { titre: "Patterns et généralisation", notions: [
-      { t: "Suites de motifs, régularités", n: "5e" },
+      { t: "Suites de motifs, régularités", n: "5e", auto: "5e" },
       { t: "Démontrer avec des lettres, contre-exemples", n: "5e·4e" },
     ] },
     { titre: "Expressions littérales", notions: [
-      { t: "Produire des formules, substituer", n: "5e" },
-      { t: "Réduire une expression (3x + 2x = 5x)", n: "5e·4e" },
-      { t: "Distributivité : développer, factoriser", n: "5e·4e" },
+      { t: "Produire des formules, substituer", n: "5e", auto: "4e·3e" },
+      { t: "Réduire une expression (3x + 2x = 5x)", n: "5e·4e", auto: "4e·3e" },
+      { t: "Distributivité : développer, factoriser", n: "5e·4e", auto: "3e" },
       { t: "Double distributivité", n: "3e" },
       { t: "Identités remarquables (les trois)", n: "3e", nouv: true },
     ] },
     { titre: "Équations et inéquations", notions: [
-      { t: "Équations x + b = c et ax = c", n: "5e", etat: "fait", vue: "secEquabarre" },
-      { t: "Équations ax + b = c, ax + b = cx + d", n: "4e", etat: "fait", vue: "secEquabarre" },
+      { t: "Équations x + b = c et ax = c", n: "5e", etat: "fait", vue: "secEquabarre", auto: "4e·3e" },
+      { t: "Équations ax + b = c, ax + b = cx + d", n: "4e", etat: "fait", vue: "secEquabarre", auto: "3e" },
       { t: "Mettre un problème en équation", n: "4e", etat: "chantier", vue: "secSplat" },
-      { t: "Rédiger une résolution, vérifier", n: "4e", etat: "fait", vue: "secEquabarre" },
+      { t: "Rédiger une résolution, vérifier", n: "4e", etat: "fait", vue: "secEquabarre", auto: "4e" },
       { t: "Équation produit nul", n: "3e" },
       { t: "Inéquations du premier degré", n: "3e", nouv: true },
     ] },
   ] },
   { numero: 3, nom: "Proportionnalité, fonctions et grandeurs", couleur: "#b45309", sousThemes: [
     { titre: "Proportionnalité et ratios", notions: [
-      { t: "Reconnaître une situation de proportionnalité", n: "5e" },
+      { t: "Reconnaître une situation de proportionnalité", n: "5e", auto: "5e" },
       { t: "Coefficient de proportionnalité", n: "5e" },
       { t: "Quatrième proportionnelle", n: "4e" },
       { t: "Rapports et ratios", n: "4e" },
-      { t: "Partage proportionnel", n: "4e·3e" },
-      { t: "Échelles", n: "3e" },
+      { t: "Partage proportionnel", n: "4e·3e", auto: "3e" },
+      { t: "Échelles", n: "3e", auto: "3e" },
     ] },
     { titre: "Pourcentages", notions: [
-      { t: "Calculer, appliquer un pourcentage", n: "5e·4e", etat: "fait", href: "./pourcentages.html" },
-      { t: "Augmentations, diminutions, coefficient multiplicateur", n: "4e·3e" },
+      { t: "Calculer, appliquer un pourcentage", n: "5e·4e", etat: "fait", href: "./pourcentages.html", auto: "5e→3e" },
+      { t: "Augmentations, diminutions, coefficient multiplicateur", n: "4e·3e", auto: "3e" },
     ] },
     { titre: "Fonctions", notions: [
       { t: "« En fonction de », tableaux de valeurs", n: "5e" },
@@ -494,78 +498,78 @@ const PROGRAMME = [
       { t: "Fonction carré", n: "3e", nouv: true },
     ] },
     { titre: "Grandeurs et mesures", notions: [
-      { t: "Conversions d'unités", n: "5e→3e" },
+      { t: "Conversions d'unités", n: "5e→3e", auto: "5e" },
       { t: "Grandeurs quotients (vitesse, débit…)", n: "4e" },
-      { t: "Aires et périmètres", n: "5e→3e", etat: "chantier", href: "./geometrie.html" },
+      { t: "Aires et périmètres", n: "5e→3e", etat: "chantier", href: "./geometrie.html", auto: "4e" },
       { t: "Temps et durées", n: "5e→3e" },
     ] },
   ] },
   { numero: 4, nom: "Espace et géométrie", couleur: "#16a34a", sousThemes: [
     { titre: "Figures et codages", notions: [
       { t: "Point, segment, droite, demi-droite", n: "5e→3e", etat: "fait", href: "./labo.html" },
-      { t: "Codages : égalités, angle droit, milieux", n: "5e→3e", etat: "fait", href: "./labo.html" },
+      { t: "Codages : égalités, angle droit, milieux", n: "5e→3e", etat: "fait", href: "./labo.html", auto: "5e" },
       { t: "Cercle et disque : corde, tangente, secteur", n: "5e→3e", etat: "fait", href: "./labo.html" },
       { t: "Polygones réguliers", n: "5e→3e", etat: "fait", href: "./labo.html" },
     ] },
     { titre: "Angles", notions: [
-      { t: "Adjacents, opposés, supplémentaires…", n: "5e", etat: "fait", href: "./configurations.html" },
+      { t: "Adjacents, opposés, supplémentaires…", n: "5e", etat: "fait", href: "./configurations.html", auto: "5e" },
       { t: "Alternes-internes, correspondants, parallélisme", n: "5e", etat: "fait", href: "./configurations.html" },
     ] },
     { titre: "Triangles", notions: [
       { t: "Construire un triangle (données partielles)", n: "5e·4e", etat: "fait", href: "./geometrie.html" },
-      { t: "Somme des angles d'un triangle", n: "5e", etat: "fait", href: "./configurations.html" },
+      { t: "Somme des angles d'un triangle", n: "5e", etat: "fait", href: "./configurations.html", auto: "5e" },
       { t: "Inégalité triangulaire", n: "5e" },
-      { t: "Hauteurs, médianes, médiatrices, bissectrices", n: "5e", etat: "fait", href: "./geometrie.html" },
+      { t: "Hauteurs, médianes, médiatrices, bissectrices", n: "5e", etat: "fait", href: "./geometrie.html", auto: "4e" },
       { t: "Points remarquables, droite d'Euler", n: "5e", etat: "fait", href: "./geometrie.html" },
-      { t: "Cercles inscrit et circonscrit", n: "5e", etat: "fait", href: "./geometrie.html" },
-      { t: "Triangle rectangle et cercle circonscrit", n: "4e", etat: "fait", href: "./geometrie.html" },
-      { t: "Droite des milieux", n: "4e", etat: "fait", href: "./geometrie.html" },
+      { t: "Cercles inscrit et circonscrit", n: "5e", etat: "fait", href: "./geometrie.html", auto: "5e" },
+      { t: "Triangle rectangle et cercle circonscrit", n: "4e", etat: "fait", href: "./geometrie.html", auto: "3e" },
+      { t: "Droite des milieux", n: "4e", etat: "fait", href: "./geometrie.html", auto: "3e" },
       { t: "Cas d'égalité des triangles", n: "4e", anc: true },
       { t: "Triangles semblables", n: "3e", anc: true },
-      { t: "Théorème de Pythagore, réciproque, contraposée", n: "4e" },
+      { t: "Théorème de Pythagore, réciproque, contraposée", n: "4e", auto: "3e" },
       { t: "Trigonométrie : cosinus, sinus, tangente", n: "3e" },
       { t: "Théorème de Thalès (emboîtés, papillon)", n: "3e", etat: "fait", href: "./configurations.html" },
     ] },
     { titre: "Parallélogrammes", notions: [
-      { t: "Parallélogramme : définition, propriétés", n: "5e", etat: "fait", href: "./labo.html" },
-      { t: "Rectangle, losange, carré", n: "5e", etat: "fait", href: "./labo.html" },
+      { t: "Parallélogramme : définition, propriétés", n: "5e", etat: "fait", href: "./labo.html", auto: "5e·4e" },
+      { t: "Rectangle, losange, carré", n: "5e", etat: "fait", href: "./labo.html", auto: "5e·4e" },
       { t: "Aire du parallélogramme", n: "5e" },
     ] },
     { titre: "Transformations", notions: [
-      { t: "Symétrie axiale", n: "5e" },
-      { t: "Symétrie centrale, demi-tour", n: "5e" },
-      { t: "Translations", n: "4e·3e" },
+      { t: "Symétrie axiale", n: "5e", auto: "5e→3e" },
+      { t: "Symétrie centrale, demi-tour", n: "5e", auto: "4e·3e" },
+      { t: "Translations", n: "4e·3e", auto: "3e" },
       { t: "Vecteurs, somme, relation de Chasles", n: "3e", nouv: true },
       { t: "Rotations", n: "4e", anc: true },
       { t: "Homothéties", n: "3e", anc: true },
     ] },
     { titre: "Repérage", notions: [
-      { t: "Droite graduée et repère orthogonal", n: "5e→3e" },
+      { t: "Droite graduée et repère orthogonal", n: "5e→3e", auto: "5e→3e" },
       { t: "Repérage sur la sphère, latitude et longitude", n: "3e", anc: true },
     ] },
     { titre: "Espace, solides et patrons", notions: [
-      { t: "Perspective cavalière : cube, pavé, prisme, cylindre", n: "5e" },
-      { t: "Pyramides et cônes", n: "4e" },
+      { t: "Perspective cavalière : cube, pavé, prisme, cylindre", n: "5e", auto: "5e→3e" },
+      { t: "Pyramides et cônes", n: "4e", auto: "3e" },
       { t: "Sphère et boule", n: "3e" },
-      { t: "Patrons", n: "5e·3e" },
+      { t: "Patrons", n: "5e·3e", auto: "5e·3e" },
       { t: "Sections de solides", n: "3e" },
-      { t: "Volumes : les formules", n: "5e→3e" },
-      { t: "Vues et empilements de cubes", n: "5e" },
+      { t: "Volumes : les formules", n: "5e→3e", auto: "4e·3e" },
+      { t: "Vues et empilements de cubes", n: "5e", auto: "5e" },
     ] },
   ] },
   { numero: 5, nom: "Données, statistiques et probabilités", couleur: "#7c3aed", sousThemes: [
     { titre: "Statistiques", notions: [
       { t: "Recueillir et organiser des données", n: "5e" },
-      { t: "Effectifs et fréquences", n: "5e" },
+      { t: "Effectifs et fréquences", n: "5e", auto: "4e" },
       { t: "Diagrammes : barres, circulaire, cartésien", n: "5e" },
       { t: "Histogrammes", n: "4e", anc: true },
-      { t: "Moyenne simple et pondérée", n: "5e·4e" },
-      { t: "Médiane et étendue", n: "4e" },
+      { t: "Moyenne simple et pondérée", n: "5e·4e", auto: "4e·3e" },
+      { t: "Médiane et étendue", n: "4e", auto: "3e" },
       { t: "Quartiles et boîtes à moustaches", n: "3e", nouv: true },
     ] },
     { titre: "Probabilités", notions: [
-      { t: "Vocabulaire du hasard, échelle de probabilité", n: "5e" },
-      { t: "Équiprobabilité, premiers calculs", n: "5e" },
+      { t: "Vocabulaire du hasard, échelle de probabilité", n: "5e", auto: "5e" },
+      { t: "Équiprobabilité, premiers calculs", n: "5e", auto: "5e" },
       { t: "Langage des ensembles, évènement contraire", n: "4e" },
       { t: "Expériences à deux épreuves", n: "4e" },
       { t: "Fréquences et probabilité, fluctuation", n: "4e·3e" },
@@ -609,7 +613,8 @@ function rendreProgramme() {
         const badges =
           (notion.n ? `<i>${notion.n}</i>` : "") +
           (notion.anc ? '<i class="anc">ancien</i>' : "") +
-          (notion.nouv ? '<i class="nouv">2026</i>' : "");
+          (notion.nouv ? '<i class="nouv">2026</i>' : "") +
+          (notion.auto ? `<i class="auto" title="Rubrique « Automatismes » du BO : ${notion.auto}">⚡${notion.auto}</i>` : "");
         const interieur = `<span class="coche">${etat === "fait" ? "✔" : ""}</span>` +
           `<span class="txt">${notion.t}</span><span class="badges">${badges}</span>`;
         if (notion.vue) lignes += `<a class="notion ${etat}" href="#${notion.vue}" data-vue="${notion.vue}">${interieur}</a>`;
