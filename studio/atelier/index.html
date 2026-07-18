@@ -340,6 +340,7 @@ import { CATEGORIES_FIGURES, FIGURES_USUELLES } from "../../packages/objets/src/
 import { creerThales, dessinerThales } from "../../packages/objets/src/thales.js";
 import { creerConfigurationAngles, dessinerConfigurationAngles } from "../../packages/objets/src/configurations-angles.js";
 import { PREREGLAGES_BARRE_POURCENTAGE, dessinerBarrePourcentage } from "../../packages/objets/src/barre-pourcentage.js";
+import { creerPrisme, dessinerSolide } from "../../packages/objets/src/solides.js";
 
 /* ========== 0. ACCUEIL — VIGNETTES D'OUTILS ==========
    Chaque vignette est DESSINÉE par l'objet officiel lui-même :
@@ -374,6 +375,8 @@ const OUTILS = [
       ) },
   { nom: "Thalès", href: "./configurations.html", apercu: () =>
       dessinerThales(creerThales({}), { theme: "couleur", taille: 148, noms: false }) },
+  { nom: "Solides", href: "./solides.html", apercu: () =>
+      dessinerSolide(creerPrisme({}), { taille: 132, marge: 14 }) },
   { nom: "Pourcentages", href: "./pourcentages.html", apercu: () =>
       dessinerBarrePourcentage(PREREGLAGES_BARRE_POURCENTAGE[0].question, { correction: true }).svg },
   { nom: "Labo", href: "./labo.html", apercu: () => {
@@ -548,13 +551,13 @@ const PROGRAMME = [
       { t: "Repérage sur la sphère, latitude et longitude", n: "3e", anc: true },
     ] },
     { titre: "Espace, solides et patrons", notions: [
-      { t: "Perspective cavalière : cube, pavé, prisme, cylindre", n: "5e", auto: "5e→3e" },
-      { t: "Pyramides et cônes", n: "4e", auto: "3e" },
-      { t: "Sphère et boule", n: "3e" },
+      { t: "Perspective cavalière : cube, pavé, prisme, cylindre", n: "5e", auto: "5e→3e", etat: "fait", href: "./solides.html" },
+      { t: "Pyramides et cônes", n: "4e", auto: "3e", etat: "fait", href: "./solides.html" },
+      { t: "Sphère et boule", n: "3e", etat: "fait", href: "./solides.html" },
       { t: "Patrons", n: "5e·3e", auto: "5e·3e" },
       { t: "Sections de solides", n: "3e" },
       { t: "Volumes : les formules", n: "5e→3e", auto: "4e·3e" },
-      { t: "Vues et empilements de cubes", n: "5e", auto: "5e" },
+      { t: "Vues et empilements de cubes", n: "5e", auto: "5e", etat: "chantier", href: "./solides.html" },
     ] },
   ] },
   { numero: 5, nom: "Données, statistiques et probabilités", couleur: "#7c3aed", sousThemes: [
