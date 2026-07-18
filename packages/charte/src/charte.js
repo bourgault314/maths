@@ -86,6 +86,42 @@ export const COULEURS_BARRES = {
   roleOrangeTexte: "#9a3412",
 };
 
+// Palette OFFICIELLE des pourcentages — celle du générateur de Gwenaël
+// (outils/pourcentages_exerciceur.html) et de ses gabarits imprimés
+// (outils/_gabarits_pourcentages.tex, couleurs « Mathnipulez »). Une
+// couleur par famille de découpage : c'est elle qui fait le lien entre
+// l'écran, la fiche papier et le gabarit plastifié en classe.
+// Les teintes divergentes d'auto/ (fraction-percent-bar) sont appelées
+// à disparaître au profit de celles-ci.
+export const COULEURS_POURCENTAGES = {
+  c100: "#eb6464", // 100 % — rouge
+  c50: "#ffe664", // 50 % (2 parts) — jaune
+  c25: "#96dc96", // 25 % (4 parts) — vert
+  c20: "#96c8eb", // 20 % (5 parts) — bleu
+  c10: "#fab464", // 10 % (10 parts) — orange
+  c5: "#ffa078", // 5 % (20 parts) — saumon
+  c1: "#d2aaff", // 1 % (100 parts) — violet
+  encre: "#1f2a44", // texte et traits (le --text de l'exerciceur)
+  accent: "#3f7cff", // accolades de résultat (--accent)
+  reste: "#10b981", // accolade « Reste » des diminutions (--success)
+  hachureFond: "#e2e8f0", // part retirée : fond des hachures
+  hachureTrait: "#ff4d6d", // part retirée : trait des hachures
+};
+
+/** La couleur de famille d'un découpage en `parts` parts égales. */
+export function couleurFamillePourcentage(parts) {
+  const familles = {
+    1: COULEURS_POURCENTAGES.c100,
+    2: COULEURS_POURCENTAGES.c50,
+    4: COULEURS_POURCENTAGES.c25,
+    5: COULEURS_POURCENTAGES.c20,
+    10: COULEURS_POURCENTAGES.c10,
+    20: COULEURS_POURCENTAGES.c5,
+    100: COULEURS_POURCENTAGES.c1,
+  };
+  return familles[parts] ?? COULEURS_POURCENTAGES.c10;
+}
+
 export const TYPOGRAPHIE = {
   // Fredoka domine largement les outils (17 pages) : c'est la voix
   // visuelle maths&go pour les titres et les nombres manipulés.

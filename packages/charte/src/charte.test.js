@@ -3,6 +3,8 @@ import assert from "node:assert/strict";
 import {
   COULEURS,
   COULEURS_BARRES,
+  COULEURS_POURCENTAGES,
+  couleurFamillePourcentage,
   ESPACEMENTS,
   RAYONS,
   STATUT_CHARTE,
@@ -13,9 +15,24 @@ import {
 
 describe("charte — intégrité des données", () => {
   it("toutes les couleurs sont des hexadécimaux valides", () => {
-    for (const [role, valeur] of Object.entries({ ...COULEURS, ...COULEURS_BARRES })) {
+    for (const [role, valeur] of Object.entries({
+      ...COULEURS,
+      ...COULEURS_BARRES,
+      ...COULEURS_POURCENTAGES,
+    })) {
       assert.match(valeur, /^#[0-9a-f]{6}$/, `couleur invalide pour ${role} : ${valeur}`);
     }
+  });
+
+  it("chaque découpage de pourcentage a sa couleur de famille", () => {
+    assert.equal(couleurFamillePourcentage(2), COULEURS_POURCENTAGES.c50);
+    assert.equal(couleurFamillePourcentage(4), COULEURS_POURCENTAGES.c25);
+    assert.equal(couleurFamillePourcentage(5), COULEURS_POURCENTAGES.c20);
+    assert.equal(couleurFamillePourcentage(10), COULEURS_POURCENTAGES.c10);
+    assert.equal(couleurFamillePourcentage(20), COULEURS_POURCENTAGES.c5);
+    assert.equal(couleurFamillePourcentage(100), COULEURS_POURCENTAGES.c1);
+    // Découpage inconnu : on retombe sur l'orange, comme l'exerciceur.
+    assert.equal(couleurFamillePourcentage(7), COULEURS_POURCENTAGES.c10);
   });
 
   it("les crans d'espacement sont des multiples croissants de la base", () => {

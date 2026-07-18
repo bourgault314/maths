@@ -1,0 +1,266 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex, nofollow">
+<title>Atelier Pourcentages — maths&go (interne)</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --page:#f6f8fb; --papier:#ffffff; --encre:#10294a; --bleu:#063f86;
+    --turquoise:#08b9b2; --orange:#f58220; --attenue:#637287; --ligne:#dce5ef;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--page);color:var(--encre);
+    font-family:"Segoe UI",system-ui,sans-serif;padding:20px;max-width:1280px;margin-inline:auto}
+  h1{font-family:Fredoka;color:var(--bleu);font-size:clamp(24px,4vw,34px);margin:8px 0 2px}
+  .sous{color:var(--attenue);margin:0 0 20px;font-size:14px}
+  .retour{font-size:14px;margin:0 0 6px}
+  .retour a{color:#0369a1;font-weight:700;text-decoration:none}
+  section{background:var(--papier);border:1px solid var(--ligne);border-radius:24px;
+    padding:clamp(14px,3vw,26px);margin-bottom:22px}
+  h2{font-family:Fredoka;color:var(--turquoise);margin:0 0 4px;font-size:21px}
+  .aide{color:var(--attenue);font-size:13.5px;margin:0 0 14px}
+  select,button,input[type=text]{font:inherit;font-size:15px;padding:9px 14px;border-radius:12px;
+    border:2px solid var(--ligne);background:#fff;color:var(--encre);cursor:pointer}
+  input[type=text]{cursor:text;width:110px;text-align:center}
+  button.principal{background:linear-gradient(180deg,#60a5fa,#3b82f6);color:#fff;border-color:#3b82f6;font-weight:600}
+  button:active{transform:translateY(1px)}
+  .barreCommandes{display:flex;flex-wrap:wrap;gap:10px;align-items:center;margin-bottom:14px}
+  .barreCommandes label{font-size:14px;color:var(--attenue);display:flex;align-items:center;gap:6px}
+
+  /* — planche des gabarits — */
+  .planche{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(460px,100%),1fr));gap:14px}
+  .carte{border:1px solid var(--ligne);border-radius:18px;padding:12px;background:linear-gradient(180deg,#fbfdff,#f4f8fd)}
+  .carte h3{margin:0 0 8px;font-size:15px;color:var(--encre)}
+  .carte .cadre{cursor:pointer;border-radius:12px}
+  .carte svg{display:block;width:100%;height:auto}
+  .carte .pied{display:flex;justify-content:space-between;align-items:center;margin-top:8px;gap:8px}
+  .etat{font-size:12.5px;font-weight:700;padding:4px 10px;border-radius:999px;background:#eef2ff;color:#1d4ed8}
+  .etat.correction{background:#dcfce7;color:#166534}
+  .carte .exportBtn{font-size:12.5px;padding:5px 10px;border-radius:999px}
+
+  /* — série d'exemple — */
+  #serie .enonce{font-size:clamp(19px,2.6vw,27px);font-weight:600;line-height:1.35;text-align:center;
+    margin:4px auto 10px;max-width:900px}
+  #serie .schema{display:none;background:linear-gradient(180deg,#fbfdff,#f4f8fd);
+    border:1px solid rgba(15,23,42,.08);border-radius:16px;padding:8px}
+  #serie .schema svg{display:block;width:min(100%,980px);margin:0 auto;height:auto}
+  #serie .correctionTexte{display:none;font-size:clamp(17px,2.3vw,24px);color:#0f766e;
+    text-align:center;line-height:1.4;margin-top:10px}
+  #serie .navigation{display:flex;flex-wrap:wrap;gap:10px;justify-content:center;margin-top:14px}
+  #compteur{font-weight:700;color:var(--attenue);align-self:center;font-size:14.5px}
+  @media(max-width:640px){
+    body{padding:10px}
+    .barreCommandes{gap:8px}
+    #serie .navigation button{flex:1 1 40%;min-height:44px}
+  }
+</style>
+</head>
+<body>
+<p class="retour"><a href="./index.html">← Retour à l'Atelier</a></p>
+<h1>Pourcentages — les schémas en barres</h1>
+<p class="sous">Objet officiel <code>barre-pourcentage</code> + moteur <code>pourcentages</code> (page interne de validation, noindex).
+Couleurs officielles des gabarits : jaune 50 %, vert 25 %, bleu 20 %, orange 10 %, saumon 5 %, violet 1 %.</p>
+
+<section id="secPlanche">
+  <h2>La planche des gabarits</h2>
+  <p class="aide">Tous les gabarits de l'objet, un par carte. <b>Clique une carte</b> pour basculer énoncé ↔ correction
+  (le tableau ne bouge jamais : la place de la réponse est réservée dès l'énoncé).</p>
+  <div class="barreCommandes">
+    <button class="principal" id="btnToutReveler">Tout révéler</button>
+    <button id="btnToutMasquer">Tout masquer</button>
+  </div>
+  <div class="planche" id="planche"></div>
+</section>
+
+<section id="secSerie">
+  <h2>Une série en situation (moteur seedé)</h2>
+  <p class="aide">Le déroulé de classe en trois temps : <b>énoncé</b> → <b>indice (schéma)</b> → <b>correction</b>.
+  Les questions viennent du moteur porté depuis le générateur historique — mêmes tirages de nombres, mêmes habillages.</p>
+  <div class="barreCommandes" id="reglagesSerie">
+    <label>Famille
+      <select id="selFamille"></select>
+    </label>
+    <label>Niveau
+      <select id="selNiveau">
+        <option value="1" selected>1</option>
+        <option value="2">2</option>
+        <option value="3">3</option>
+      </select>
+    </label>
+    <label>Nombres
+      <select id="selNombres">
+        <option value="entiers" selected>Entiers</option>
+        <option value="decimaux">Décimaux</option>
+        <option value="les-deux">Les deux</option>
+      </select>
+    </label>
+    <label>Graine
+      <input type="text" id="inpGraine" value="2026">
+    </label>
+    <button class="principal" id="btnGenerer">Générer 5 questions</button>
+  </div>
+  <div id="serie" hidden>
+    <div class="enonce" id="enonce"></div>
+    <div class="schema" id="schema"></div>
+    <div class="correctionTexte" id="correctionTexte"></div>
+    <div class="navigation">
+      <button id="btnPrecedent">◄ Précédent</button>
+      <span id="compteur"></span>
+      <button class="principal" id="btnSuivant">Indice (schéma) ►</button>
+    </div>
+  </div>
+</section>
+
+<script type="module">
+import {
+  PREREGLAGES_BARRE_POURCENTAGE,
+  dessinerBarrePourcentage,
+} from "../../packages/objets/src/barre-pourcentage.js";
+import {
+  FAMILLES_POURCENTAGES,
+  construireSerie,
+} from "../../packages/objets/src/pourcentages.js";
+
+/* ————— La planche des gabarits ————— */
+const planche = document.getElementById("planche");
+const cartes = [];
+
+function dessinerCarte(carte) {
+  const rendu = dessinerBarrePourcentage(carte.preset.question, {
+    ...(carte.preset.options ?? {}),
+    correction: carte.correction,
+  });
+  carte.cadre.innerHTML = rendu.svg;
+  carte.etat.textContent = carte.correction ? "correction" : "énoncé";
+  carte.etat.classList.toggle("correction", carte.correction);
+}
+
+for (const preset of PREREGLAGES_BARRE_POURCENTAGE) {
+  const div = document.createElement("div");
+  div.className = "carte";
+  div.innerHTML = `<h3></h3><div class="cadre"></div>
+    <div class="pied"><span class="etat"></span><button class="exportBtn">Export SVG</button></div>`;
+  div.querySelector("h3").textContent = preset.titre;
+  const carte = {
+    preset,
+    correction: false,
+    cadre: div.querySelector(".cadre"),
+    etat: div.querySelector(".etat"),
+  };
+  carte.cadre.addEventListener("click", () => {
+    carte.correction = !carte.correction;
+    dessinerCarte(carte);
+  });
+  div.querySelector(".exportBtn").addEventListener("click", () => {
+    const rendu = dessinerBarrePourcentage(preset.question, {
+      ...(preset.options ?? {}),
+      correction: carte.correction,
+    });
+    const blob = new Blob([rendu.svg], { type: "image/svg+xml" });
+    const lien = document.createElement("a");
+    lien.href = URL.createObjectURL(blob);
+    lien.download = `barre-pourcentage-${preset.id}${carte.correction ? "-correction" : ""}.svg`;
+    lien.click();
+    URL.revokeObjectURL(lien.href);
+  });
+  dessinerCarte(carte);
+  cartes.push(carte);
+  planche.appendChild(div);
+}
+
+document.getElementById("btnToutReveler").addEventListener("click", () => {
+  for (const carte of cartes) {
+    carte.correction = true;
+    dessinerCarte(carte);
+  }
+});
+document.getElementById("btnToutMasquer").addEventListener("click", () => {
+  for (const carte of cartes) {
+    carte.correction = false;
+    dessinerCarte(carte);
+  }
+});
+
+/* ————— La série en situation ————— */
+const selFamille = document.getElementById("selFamille");
+for (const famille of FAMILLES_POURCENTAGES) {
+  const option = document.createElement("option");
+  option.value = famille.id;
+  option.textContent = famille.titre;
+  selFamille.appendChild(option);
+}
+
+let serie = null;
+let indice = 0;
+let phase = 0; // 0 énoncé, 1 schéma, 2 correction
+
+function afficherQuestion() {
+  const question = serie.questions[indice];
+  document.getElementById("enonce").innerHTML = question.enonceHtml;
+  const schema = document.getElementById("schema");
+  const correctionTexte = document.getElementById("correctionTexte");
+  schema.style.display = phase >= 1 ? "block" : "none";
+  correctionTexte.style.display = phase >= 2 ? "block" : "none";
+  if (phase >= 1) {
+    schema.innerHTML = dessinerBarrePourcentage(question, { correction: phase >= 2 }).svg;
+  }
+  if (phase >= 2) correctionTexte.innerHTML = question.correctionHtml;
+  document.getElementById("compteur").textContent = `Question ${indice + 1} / ${serie.questions.length}`;
+  const suivant = document.getElementById("btnSuivant");
+  if (phase === 0) suivant.textContent = "Indice (schéma) ►";
+  else if (phase === 1) suivant.textContent = "Correction ►";
+  else suivant.textContent = indice < serie.questions.length - 1 ? "Question suivante ►" : "Terminé ✓";
+  suivant.disabled = phase === 2 && indice === serie.questions.length - 1;
+  document.getElementById("btnPrecedent").disabled = indice === 0 && phase === 0;
+}
+
+document.getElementById("btnGenerer").addEventListener("click", () => {
+  const famille = FAMILLES_POURCENTAGES.find((f) => f.id === selFamille.value);
+  const nombres =
+    document.getElementById("selNombres").value === "les-deux"
+      ? ["entiers", "decimaux"]
+      : [document.getElementById("selNombres").value];
+  serie = construireSerie({
+    types: [...famille.types],
+    niveaux: [Number(document.getElementById("selNiveau").value)],
+    nombres,
+    quantite: 5,
+    graine: document.getElementById("inpGraine").value.trim() || "atelier",
+  });
+  indice = 0;
+  phase = 0;
+  document.getElementById("serie").hidden = false;
+  afficherQuestion();
+});
+
+document.getElementById("btnSuivant").addEventListener("click", () => {
+  if (phase < 2) phase++;
+  else if (indice < serie.questions.length - 1) {
+    indice++;
+    phase = 0;
+  }
+  afficherQuestion();
+});
+document.getElementById("btnPrecedent").addEventListener("click", () => {
+  if (phase > 0) phase--;
+  else if (indice > 0) {
+    indice--;
+    phase = 2;
+  }
+  afficherQuestion();
+});
+document.addEventListener("keydown", (e) => {
+  if (!serie || document.getElementById("serie").hidden) return;
+  if (e.key === "ArrowRight" && !document.getElementById("btnSuivant").disabled) {
+    document.getElementById("btnSuivant").click();
+  } else if (e.key === "ArrowLeft" && !document.getElementById("btnPrecedent").disabled) {
+    document.getElementById("btnPrecedent").click();
+  }
+});
+</script>
+</body>
+</html>
