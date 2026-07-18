@@ -19,7 +19,7 @@ function assert(condition, message) {
 
 function auditContent() {
   assert(DATA.versions.length === 2, "J3 doit contenir exactement deux versions.");
-  const expectedMath = {Fractions: 4, "Nombres entiers": 4, Calcul: 3, Problèmes: 4, Géométrie: 4, Solides: 2, Mesures: 2, Données: 2};
+  const expectedMath = {Fractions: 4, "Nombres entiers": 6, Calcul: 6, Problèmes: 4, Géométrie: 4, Solides: 2, Mesures: 2, Données: 2};
   const expectedFrench = {Compréhension: 6, Vocabulaire: 4, Grammaire: 6, "Mots et accords": 4, Conjugaison: 4, "Petite production": 1};
   const allIds = new Set();
   let answersAudited = 0;
@@ -27,7 +27,8 @@ function auditContent() {
   DATA.versions.forEach((version, versionIndex) => {
     for (const [subject, expected] of [["math", expectedMath], ["fr", expectedFrench]]) {
       const questions = version[subject];
-      assert(questions.length === 25, `${version.name} / ${subject} ne contient pas 25 questions.`);
+      const expectedLength = subject === "math" ? 30 : 25;
+      assert(questions.length === expectedLength, `${version.name} / ${subject} ne contient pas ${expectedLength} questions.`);
       const counts = {};
       questions.forEach((question, index) => {
         assert(question.id && !allIds.has(question.id), `Identifiant absent ou dupliqué : ${question.id}.`);
@@ -48,13 +49,13 @@ function auditContent() {
           assert(question.answer.every(token => question.tokens.includes(token)), `${question.id} attend une étiquette absente.`);
         } else throw new Error(`${question.id} a un type inconnu : ${question.type}.`);
         answersAudited += 1;
-        assert(index < 25, `${question.id} dépasse la série fixe.`);
+        assert(index < expectedLength, `${question.id} dépasse la série fixe.`);
       });
       assert(JSON.stringify(counts) === JSON.stringify(expected), `${version.name} / ${subject} a une répartition incorrecte : ${JSON.stringify(counts)}.`);
     }
     assert(version.math[0].title !== DATA.versions[1-versionIndex].math[0].title || versionIndex === 1, "Les deux entrées de maths sont copiées à l’identique.");
   });
-  assert(answersAudited === 100, `Seulement ${answersAudited} réponses ont été auditées.`);
+  assert(answersAudited === 110, `Seulement ${answersAudited} réponses ont été auditées.`);
   const fractionStrings = JSON.stringify(DATA.versions).match(/\b\d+\/\d+\b/g) || [];
   fractionStrings.forEach(value => {
     const [numerator, denominator] = value.split("/").map(Number);
@@ -62,6 +63,10 @@ function auditContent() {
     assert(value !== "2/4", "La fraction 2/4 ne doit pas être utilisée dans J3.");
   });
   assert(DATA.versions[0].fr[0].visual.text !== DATA.versions[1].fr[0].visual.text, "Les deux textes de compréhension sont identiques.");
+  const byId = Object.fromEntries(DATA.versions.flatMap(version => version.math).map(question => [question.id, question]));
+  for (const id of ["m0-05", "m1-05", "m0-09", "m1-09"]) assert(!byId[id].visual, `${id} affiche la réponse avant le choix.`);
+  for (const id of ["m0-02", "m1-02"]) assert(byId[id].visual.showNotation === false, `${id} écrit la fraction-réponse sous son dessin.`);
+  for (const id of ["m0-22", "m1-22"]) assert(byId[id].visual.kind === "measure-question" && !byId[id].visual.to, `${id} affiche la conversion-réponse.`);
   DATA.gameLevels.forEach((level, index) => {
     assert(routeThroughAllFruits(level), `Le niveau ${index + 1} du dodo n’est pas entièrement parcourable.`);
   });
@@ -169,10 +174,20 @@ async function completeSubject(page, version, subject, wrongKinds = new Set()) {
   const questions = DATA.versions[version][subject];
   for (let index = 0; index < questions.length; index += 1) {
     const question = questions[index];
-    assert((await page.locator("#question-count").textContent()).includes(`${index + 1} / 25`), `Navigation perdue avant ${question.id}.`);
+    assert((await page.locator("#question-count").textContent()).includes(`${index + 1} / ${questions.length}`), `Navigation perdue avant ${question.id}.`);
     const viewport = page.viewportSize();
     await assertNoHorizontalOverflow(page, `${question.id} en ${viewport.width}×${viewport.height}`);
-    if (["m0-01","m0-04","m0-16","m0-19","m0-20","m0-21","m0-24","m0-25","m1-01","m1-16","m1-20","f0-01"].includes(question.id)) await page.screenshot({path:path.join(OUTPUT,`${question.id}-${(await page.viewportSize()).width}.png`),fullPage:true});
+    if (question.type === "fraction-color" && question.shape === "band") {
+      const band = await page.locator(".fraction-strip").evaluate(node => ({width:node.getBoundingClientRect().width,height:node.getBoundingClientRect().height}));
+      assert(band.width >= (viewport.width <= 620 ? 300 : 600) && band.height >= (viewport.width <= 620 ? 95 : 110), `${question.id} rend une bande trop petite : ${JSON.stringify(band)}.`);
+    }
+    if (["m0-01","m0-02","m0-03","m0-04","m0-05","m0-16","m0-20","m0-22","m0-26","m0-28","m1-01","m1-02","m1-03","m1-05","m1-16","m1-20","m1-22","m1-26","m1-28","f0-01"].includes(question.id)) await page.screenshot({path:path.join(OUTPUT,`${question.id}-${(await page.viewportSize()).width}.png`),fullPage:true});
+    if (["m0-02","m0-05","m0-09","m0-16","m0-20","m0-22","m1-02","m1-05","m1-09","m1-20","m1-22"].includes(question.id)) {
+      const beforeAnswer = `${await page.locator("#question-prompt").textContent()} ${await page.locator("#question-visual").textContent()}`.replace(/\s+/g," ").toLowerCase();
+      const correct = String(question.options[question.answer]).replace(/<[^>]+>/g,"").replace(/\s+/g," ").toLowerCase();
+      assert(!beforeAnswer.includes(correct), `${question.id} révèle « ${correct} » avant la réponse.`);
+      assert(!beforeAnswer.includes("2 côtés codés"), `${question.id} nomme le codage qui donne la réponse.`);
+    }
     const makeWrong = wrongKinds.has(question.type);
     if (makeWrong) wrongKinds.delete(question.type);
     await answerCurrent(page, question, makeWrong, question.id === "m0-01" || question.id === "f0-11");
@@ -214,12 +229,25 @@ async function playLevel(page, levelIndex) {
   const yavalath = await links.goto("http://127.0.0.1:4174/axelle/yavalath.html", {waitUntil:"networkidle"});
   assert(yavalath.ok(), "Le bonus Yavalath ne se charge pas.");
   await links.goto("http://127.0.0.1:4174/axelle/j2/", {waitUntil:"networkidle"});
+  assert(!(await links.locator("body").textContent()).includes("\\n"), "J2 affiche encore les caractères \\n dans son en-tête.");
   const j2Counts = await links.evaluate(() => [window.AXELLE_SESSIONS.maths.questions.length, window.AXELLE_SESSIONS.francais.questions.length]);
   assert(JSON.stringify(j2Counts) === JSON.stringify([20,18]), `Le contenu J2 a changé : ${j2Counts}.`);
   assert(await links.locator('a[href="../"]').count() >= 1, "J2 n’a pas de retour au Bureau.");
   assert(await links.locator('a[href="../carres-gloutons.html"]').count() === 1, "Le bonus Carrés gloutons de J2 n’est plus relié.");
   const squares = await links.goto("http://127.0.0.1:4174/axelle/carres-gloutons.html", {waitUntil:"networkidle"});
   assert(squares.ok(), "Le bonus Carrés gloutons ne se charge pas.");
+
+  const fractionMobile = await browser.newPage({viewport:{width:390,height:844}});
+  fractionMobile.on("pageerror", error => errors.push(`fractions mobile: ${error.message}`));
+  await openSubject(fractionMobile,0,"math");
+  await answerCurrent(fractionMobile,DATA.versions[0].math[0]);
+  await fractionMobile.locator("#next-question").click();
+  await answerCurrent(fractionMobile,DATA.versions[0].math[1]);
+  await fractionMobile.locator("#next-question").click();
+  const comparedBandWidth = await fractionMobile.locator(".fraction-choice").first().evaluate(node => node.getBoundingClientRect().width);
+  assert(comparedBandWidth >= 300, `Les deux bandes restent trop petites sur téléphone : ${comparedBandWidth}px.`);
+  await fractionMobile.screenshot({path:path.join(OUTPUT,"m0-03-390.png"),fullPage:true});
+  await fractionMobile.close();
 
   const desktop = await browser.newPage({viewport:{width:1366,height:768}});
   desktop.on("pageerror", error => errors.push(`desktop: ${error.message}`));
@@ -235,8 +263,8 @@ async function playLevel(page, levelIndex) {
   // Le parcours français est repris par la même routine à partir de sa première question.
   await completeSubject(desktop,0,"fr",new Set(["order"]));
   await desktop.locator('#done-screen [data-action="home"]').click();
-  assert(!(await desktop.locator("#revenge-button").isDisabled()), "La Revanche ne se débloque pas après les 50 réponses du Défi 1.");
-  assert((await desktop.locator("#v1-progress").textContent()).includes("0 / 50"), "La progression de la Revanche n’est pas séparée.");
+  assert(!(await desktop.locator("#revenge-button").isDisabled()), "La Revanche ne se débloque pas après les 55 réponses du Défi 1.");
+  assert((await desktop.locator("#v1-progress").textContent()).includes("0 / 55"), "La progression de la Revanche n’est pas séparée.");
   assert(!(await desktop.locator("#open-game").isDisabled()), "Le niveau 1 du dodo ne se débloque pas.");
 
   const mobile = await browser.newPage({viewport:{width:390,height:844}});
@@ -251,7 +279,7 @@ async function playLevel(page, levelIndex) {
   await mobile.locator('#done-screen [data-action="lobby"]').click();
   await completeSubject(mobile,1,"fr",new Set());
   await mobile.locator('#done-screen [data-action="home"]').click();
-  assert((await mobile.locator("#v0-progress").textContent()).includes("50 / 50") && (await mobile.locator("#v1-progress").textContent()).includes("50 / 50"), "Les deux progressions ne sont pas conservées séparément.");
+  assert((await mobile.locator("#v0-progress").textContent()).includes("55 / 55") && (await mobile.locator("#v1-progress").textContent()).includes("55 / 55"), "Les deux progressions ne sont pas conservées séparément.");
   await mobile.locator("#open-game").click();
   await mobile.screenshot({path:path.join(OUTPUT,"dodo-mobile.png"),fullPage:true});
   await playLevel(mobile,0);
@@ -261,5 +289,5 @@ async function playLevel(page, levelIndex) {
   await browser.close();
   await new Promise(resolve => server.close(resolve));
   assert(errors.length === 0, `Erreurs JavaScript :\n${errors.join("\n")}`);
-  console.log(JSON.stringify({ok:true, answersAudited:100, viewports:["1366x768","390x844"], screenshots:fs.readdirSync(OUTPUT).sort()},null,2));
+  console.log(JSON.stringify({ok:true, answersAudited:110, viewports:["1366x768","390x844"], screenshots:fs.readdirSync(OUTPUT).sort()},null,2));
 })().catch(error => { console.error(error); process.exit(1); });
