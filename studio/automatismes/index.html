@@ -22,7 +22,9 @@
     font-family:"Segoe UI",system-ui,-apple-system,sans-serif;
     padding:max(18px,env(safe-area-inset-top)) max(18px,env(safe-area-inset-right))
       max(118px,calc(env(safe-area-inset-bottom) + 100px)) max(18px,env(safe-area-inset-left))}
-  .page{max-width:860px;margin:0 auto}
+  /* Une seule colonne étroite, la même sur téléphone et sur ordinateur :
+     ce menu est un lanceur (réglages + liste + un bouton), pas un catalogue. */
+  .page{max-width:620px;margin:0 auto}
 
   /* ————— En-tête « duo » (logo + titre, liseré tricolore) ————— */
   .entete-site{position:relative;display:flex;align-items:center;justify-content:center;gap:16px;
@@ -42,17 +44,15 @@
   main{display:grid;gap:12px;margin-top:12px}
   section.carte{background:var(--papier);border:1px solid var(--ligne);border-radius:18px;
     padding:16px;box-shadow:0 8px 24px rgba(16,41,74,.065)}
-  .entete-etape{display:flex;align-items:center;gap:10px}
-  .pastille-etape{display:inline-grid;place-items:center;width:25px;height:25px;flex:none;
-    border-radius:8px;color:#fff;font-size:13px;font-weight:900;box-shadow:0 3px 8px rgba(6,63,134,.13)}
-  .pastille-reglages{background:var(--orange)}
-  .pastille-modules{background:var(--turquoise)}
-  .entete-etape h2{font-family:Fredoka,"Segoe UI",sans-serif;font-weight:600;font-size:19px;
+  h2{font-family:Fredoka,"Segoe UI",sans-serif;font-weight:600;font-size:19px;
     margin:0;color:var(--bleu)}
 
-  /* ————— Réglages : quatre groupes sur une ligne, boutons individuels ————— */
-  .grille-reglages{display:flex;flex-direction:column;gap:12px;margin-top:14px}
-  .rangee-reglages{display:flex;flex-wrap:wrap;align-items:center;gap:12px 36px}
+  /* ————— Réglages : étiquettes discrètes, boutons individuels ————— */
+  .grille-reglages{display:flex;flex-direction:column;gap:14px;margin-top:12px}
+  .rangee-duo{display:flex;flex-wrap:wrap;gap:12px 28px}
+  .champ{display:flex;flex-direction:column;align-items:flex-start;gap:6px}
+  .champ label{font-size:11.5px;font-weight:750;letter-spacing:.07em;text-transform:uppercase;
+    color:var(--attenue);margin-left:2px}
   .segments{display:flex;align-items:stretch;gap:7px}
   .segments button{border:1.5px solid var(--ligne-bouton);background:#fff;color:var(--encre);
     cursor:pointer;font:inherit;font-weight:700;font-size:14.5px;min-height:44px;min-width:46px;
@@ -71,7 +71,6 @@
   .segments .bouton-epreuve.est-actif{background:var(--orange);border-color:var(--orange);color:#fff;
     box-shadow:0 4px 12px rgba(245,130,32,.30)}
   .segments .bouton-epreuve:focus-visible{outline-color:rgba(245,130,32,.5)}
-  .suffixe-questions{align-self:center;margin-left:4px;color:var(--attenue);font-size:13px;font-weight:600}
 
   /* ————— Choix des automatismes ————— */
   .barre-choix{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:14px}
@@ -109,7 +108,6 @@
   .module-subgroup-title{font-size:12px;font-weight:700;letter-spacing:.6px;text-transform:uppercase;
     color:var(--attenue);margin:12px 0 7px 4px}
   .module-subgroup-items{display:grid;gap:7px}
-  @media(min-width:700px){.module-subgroup-items{grid-template-columns:1fr 1fr}}
   .ligne-module{display:flex;align-items:center;gap:11px;padding:10px 13px;cursor:pointer;
     border:1px solid var(--ligne);border-radius:12px;background:#fff;min-height:46px;
     transition:background .1s,border-color .1s;-webkit-tap-highlight-color:transparent}
@@ -130,7 +128,7 @@
     padding:10px max(18px,env(safe-area-inset-right)) max(10px,env(safe-area-inset-bottom)) max(18px,env(safe-area-inset-left));
     background:linear-gradient(180deg,rgba(246,248,251,0),rgba(246,248,251,.96) 28%)}
   .barre-action-carte{pointer-events:auto;display:grid;grid-template-columns:minmax(0,1fr) auto;
-    align-items:center;gap:10px;width:min(100%,832px);margin:0 auto;padding:10px 12px;
+    align-items:center;gap:10px;width:min(100%,620px);margin:0 auto;padding:10px 12px;
     border:1px solid #cbdcf1;border-radius:15px;background:rgba(255,255,255,.98);
     box-shadow:0 12px 34px rgba(6,63,134,.18)}
   .resume{min-width:0;display:flex;flex-direction:column;gap:2px;padding-left:3px}
@@ -157,8 +155,8 @@
     .logo{height:48px}
     .titre-site h1{font-size:19px}
     section.carte{padding:12px}
-    .grille-reglages{gap:10px;margin-top:12px}
-    .rangee-reglages{gap:10px 20px}
+    .grille-reglages{gap:12px}
+    .rangee-duo{gap:12px 18px}
     .segments button{min-height:44px;font-size:13.5px;padding:8px 10px;min-width:42px}
     .theme-summary{gap:9px;min-height:58px;padding:9px 10px}
     .theme-name{font-size:14.5px}
@@ -187,35 +185,41 @@
 
 <main>
   <section class="carte" aria-labelledby="titreReglages">
-    <div class="entete-etape">
-      <span class="pastille-etape pastille-reglages" aria-hidden="true">1</span>
-      <h2 id="titreReglages">Préparer la série</h2>
-    </div>
+    <h2 id="titreReglages">Préparer la série</h2>
     <div class="grille-reglages">
-      <div class="rangee-reglages">
-        <div class="segments" data-reglage="level" role="group" aria-label="Niveau">
+      <div class="champ">
+        <label id="etiquetteNiveau">Niveau</label>
+        <div class="segments" data-reglage="level" role="group" aria-labelledby="etiquetteNiveau">
           <button type="button" data-value="5e" aria-pressed="false">5e</button>
           <button type="button" data-value="4e" aria-pressed="false">4e</button>
           <button type="button" class="est-actif" data-value="3e" aria-pressed="true">3e</button>
           <button type="button" class="bouton-epreuve" data-value="DNB" aria-pressed="false"
             aria-label="DNB — révision de l’épreuve">DNB<span class="mention-epreuve">épreuve</span></button>
         </div>
-        <div class="segments" data-reglage="visualMode" role="group" aria-label="Aide">
-          <button type="button" class="est-actif" data-value="with" aria-pressed="true">Avec aide</button>
-          <button type="button" data-value="without" aria-pressed="false">Sans aide</button>
+      </div>
+      <div class="rangee-duo">
+        <div class="champ">
+          <label id="etiquetteAide">Aide</label>
+          <div class="segments" data-reglage="visualMode" role="group" aria-labelledby="etiquetteAide">
+            <button type="button" class="est-actif" data-value="with" aria-pressed="true">Avec aide</button>
+            <button type="button" data-value="without" aria-pressed="false">Sans aide</button>
+          </div>
+        </div>
+        <div class="champ">
+          <label id="etiquetteMode">Mode</label>
+          <div class="segments" data-reglage="experienceMode" role="group" aria-labelledby="etiquetteMode">
+            <button type="button" data-value="presentation" aria-pressed="false">Diaporama</button>
+            <button type="button" class="est-actif" data-value="interactive" aria-pressed="true">Interactif</button>
+          </div>
         </div>
       </div>
-      <div class="rangee-reglages">
-        <div class="segments" data-reglage="experienceMode" role="group" aria-label="Mode">
-          <button type="button" data-value="presentation" aria-pressed="false">Diaporama</button>
-          <button type="button" class="est-actif" data-value="interactive" aria-pressed="true">Interactif</button>
-        </div>
-        <div class="segments" data-reglage="count" role="group" aria-label="Nombre de questions">
+      <div class="champ">
+        <label id="etiquetteQuestions">Questions</label>
+        <div class="segments" data-reglage="count" role="group" aria-labelledby="etiquetteQuestions">
           <button type="button" class="est-actif" data-value="5" aria-pressed="true">5</button>
           <button type="button" data-value="10" aria-pressed="false">10</button>
           <button type="button" data-value="15" aria-pressed="false">15</button>
           <button type="button" data-value="20" aria-pressed="false">20</button>
-          <span class="suffixe-questions" aria-hidden="true">questions</span>
         </div>
       </div>
     </div>
@@ -223,10 +227,7 @@
 
   <section class="carte" aria-labelledby="titreModules">
     <div class="barre-choix">
-      <div class="entete-etape">
-        <span class="pastille-etape pastille-modules" aria-hidden="true">2</span>
-        <h2 id="titreModules">Choisir les automatismes</h2>
-      </div>
+      <h2 id="titreModules">Choisir les automatismes</h2>
       <div class="actions-groupees" role="group" aria-label="Sélection des automatismes">
         <button id="boutonTous" type="button" aria-label="Tout sélectionner">Tous</button>
         <button id="boutonAucun" type="button" aria-label="Tout désélectionner" disabled>Aucun</button>
