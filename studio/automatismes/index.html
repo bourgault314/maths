@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="robots" content="noindex, nofollow">
+<meta name="theme-color" content="#f6f8fb">
+<title>Automatismes — nouveau menu (bêta interne) | maths&amp;go</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+  /* Charte maths&go (packages/charte) : couleurs officielles, pas 4 px, rayons 8/12/20. */
+  :root{
+    --page:#f6f8fb; --papier:#ffffff; --encre:#10294a; --bleu:#063f86;
+    --turquoise:#08b9b2; --orange:#f58220; --attenue:#637287;
+    --ligne:#dce5ef; --fond-doux:#f5f9fc;
+  }
+  *{box-sizing:border-box}
+  html{scroll-padding-bottom:120px}
+  body{margin:0;background:var(--page);color:var(--encre);
+    font-family:"Segoe UI",system-ui,-apple-system,sans-serif;
+    padding:16px 16px 132px;max-width:1020px;margin-inline:auto}
+  @media(min-width:700px){body{padding:24px 24px 120px}}
+
+  /* ————— En-tête ————— */
+  header h1{font-family:Fredoka,"Segoe UI",sans-serif;color:var(--bleu);
+    font-size:clamp(26px,4vw,34px);margin:4px 0 0;display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+  .badge-beta{font-family:Fredoka;font-size:13px;font-weight:600;letter-spacing:.4px;
+    color:#fff;background:var(--orange);border-radius:999px;padding:4px 12px;transform:translateY(2px)}
+  .sous-titre{color:var(--attenue);margin:4px 0 20px;font-size:14px;line-height:1.45}
+
+  /* ————— Cartes et étapes ————— */
+  section.carte{background:var(--papier);border:1px solid var(--ligne);border-radius:20px;
+    padding:clamp(16px,3vw,24px);margin-bottom:16px}
+  .entete-etape{display:flex;align-items:center;gap:12px;margin-bottom:16px}
+  .pastille-etape{display:inline-grid;place-items:center;width:28px;height:28px;flex:none;
+    border-radius:999px;background:var(--turquoise);color:#fff;
+    font-family:Fredoka;font-weight:700;font-size:15px}
+  .entete-etape h2{font-family:Fredoka;font-weight:600;font-size:20px;margin:0;color:var(--encre)}
+
+  /* ————— Réglages (segments) ————— */
+  .grille-reglages{display:grid;gap:16px;grid-template-columns:repeat(auto-fit,minmax(240px,1fr))}
+  .champ label{display:block;font-size:12.5px;font-weight:700;letter-spacing:.6px;
+    text-transform:uppercase;color:var(--attenue);margin:0 0 6px 4px}
+  .segments{display:flex;background:var(--fond-doux);border:1px solid var(--ligne);
+    border-radius:999px;padding:3px;gap:2px}
+  .segments button{flex:1;border:0;background:transparent;color:var(--encre);cursor:pointer;
+    font:inherit;font-weight:600;font-size:14.5px;min-height:40px;padding:8px 10px;
+    border-radius:999px;transition:background .12s,color .12s,box-shadow .12s;white-space:nowrap}
+  .segments button.est-actif{background:var(--bleu);color:#fff;
+    box-shadow:0 4px 12px rgba(6,63,134,.28)}
+  .segments button:focus-visible{outline:3px solid rgba(6,63,134,.4);outline-offset:2px}
+  @media(max-width:640px){.segments button{min-height:46px}}
+
+  /* ————— Choix des automatismes ————— */
+  .barre-choix{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:16px}
+  .barre-choix .entete-etape{margin-bottom:0}
+  #toutDeselectionner{border:1px solid var(--ligne);background:#fff;color:var(--attenue);
+    font:inherit;font-size:13.5px;font-weight:600;border-radius:999px;padding:8px 16px;cursor:pointer}
+  #toutDeselectionner:hover{background:var(--fond-doux);color:var(--encre)}
+  #toutDeselectionner:focus-visible{outline:3px solid rgba(6,63,134,.4);outline-offset:2px}
+
+  .theme-group{border:1px solid var(--ligne);border-radius:16px;background:#fff;margin-bottom:12px;overflow:hidden}
+  .theme-group[open]{border-color:#b9d2e8;box-shadow:0 8px 24px rgba(16,41,74,.07)}
+  .theme-group.has-selection{border-color:var(--turquoise)}
+  .theme-summary{display:flex;align-items:center;gap:12px;padding:12px 14px;cursor:pointer;
+    list-style:none;min-height:56px;-webkit-tap-highlight-color:transparent}
+  .theme-summary::-webkit-details-marker{display:none}
+  .theme-summary:hover{background:var(--fond-doux)}
+  .theme-summary:focus-visible{outline:3px solid rgba(6,63,134,.4);outline-offset:-3px}
+  .theme-icon{width:40px;height:40px;flex:none}
+  .theme-icon svg{width:100%;height:100%;display:block}
+  .theme-name{font-family:Fredoka;font-weight:600;font-size:16.5px;flex:1;line-height:1.25}
+  .theme-count{font-family:Fredoka;font-weight:600;font-size:13.5px;color:var(--attenue);
+    background:var(--fond-doux);border:1px solid var(--ligne);border-radius:999px;
+    padding:4px 12px;white-space:nowrap}
+  .has-selection .theme-count{background:var(--turquoise);border-color:var(--turquoise);color:#fff}
+  .theme-chevron{width:10px;height:10px;flex:none;margin-right:4px;
+    border-right:2.5px solid var(--attenue);border-bottom:2.5px solid var(--attenue);
+    transform:rotate(45deg);transition:transform .15s}
+  .theme-group[open] .theme-chevron{transform:rotate(225deg)}
+
+  .theme-items{padding:0 14px 16px;border-top:1px solid var(--ligne)}
+  .tout-domaine{display:flex;align-items:center;gap:10px;padding:12px 4px;cursor:pointer;
+    font-size:14px;font-weight:600;color:var(--attenue)}
+  .tout-domaine input{width:18px;height:18px;accent-color:var(--turquoise);cursor:pointer}
+  .module-subgroup-title{font-size:12.5px;font-weight:700;letter-spacing:.6px;text-transform:uppercase;
+    color:var(--attenue);margin:14px 0 8px 4px}
+  .module-subgroup-items{display:grid;gap:8px}
+  @media(min-width:760px){.module-subgroup-items{grid-template-columns:1fr 1fr}}
+  .ligne-module{display:flex;align-items:center;gap:12px;padding:11px 14px;cursor:pointer;
+    border:1px solid var(--ligne);border-radius:12px;background:#fff;min-height:48px;
+    transition:background .1s,border-color .1s;-webkit-tap-highlight-color:transparent}
+  .ligne-module:hover{background:var(--fond-doux)}
+  .ligne-module.est-choisi{border-color:var(--bleu);background:#eef4fc}
+  .case-module{width:20px;height:20px;flex:none;accent-color:var(--bleu);cursor:pointer}
+  .titre-module{font-size:14.5px;font-weight:600;line-height:1.3}
+
+  /* ————— Barre d'action (fixe en bas, comme dans les outils) ————— */
+  .barre-action{position:fixed;left:0;right:0;bottom:0;z-index:50;
+    background:rgba(255,255,255,.96);backdrop-filter:blur(6px);
+    border-top:1px solid var(--ligne);box-shadow:0 -10px 30px rgba(16,41,74,.08);
+    padding:10px 16px calc(10px + env(safe-area-inset-bottom))}
+  .barre-action-contenu{max-width:1020px;margin-inline:auto;display:flex;align-items:center;
+    gap:16px;flex-wrap:wrap}
+  .resume{flex:1;min-width:180px}
+  .resume strong{display:block;font-family:Fredoka;font-weight:600;font-size:15.5px}
+  .resume span{display:block;color:var(--attenue);font-size:13px;margin-top:1px}
+  .est-vide .resume strong{color:var(--attenue);font-weight:500}
+  #boutonLancer{border:0;cursor:pointer;font:inherit;font-weight:700;font-size:16px;color:#fff;
+    background:linear-gradient(180deg,#ff9a3d,var(--orange));border-radius:999px;
+    min-height:48px;padding:12px 28px;box-shadow:0 10px 24px rgba(245,130,32,.30);
+    transition:transform .1s,box-shadow .12s}
+  #boutonLancer:hover:not(:disabled){transform:translateY(-1px);box-shadow:0 14px 28px rgba(245,130,32,.36)}
+  #boutonLancer:active:not(:disabled){transform:translateY(1px);box-shadow:none}
+  #boutonLancer:focus-visible{outline:3px solid rgba(245,130,32,.5);outline-offset:3px}
+  #boutonLancer:disabled{background:#cdd7e4;box-shadow:none;cursor:not-allowed}
+  @media(max-width:560px){
+    .barre-action-contenu{gap:10px}
+    #boutonLancer{flex:1 1 100%;padding:13px 20px}
+  }
+
+  footer{color:var(--attenue);font-size:12.5px;margin-top:24px;line-height:1.5}
+</style>
+</head>
+<body>
+<header>
+  <h1>Automatismes <span class="badge-beta">bêta du nouveau menu</span></h1>
+  <p class="sous-titre">Page interne de chantier maths&amp;go — le menu est neuf, les questions
+  s’ouvrent dans l’application Automatismes actuelle.</p>
+</header>
+
+<main>
+  <section class="carte" aria-labelledby="titreReglages">
+    <div class="entete-etape">
+      <span class="pastille-etape" aria-hidden="true">1</span>
+      <h2 id="titreReglages">Préparer la série</h2>
+    </div>
+    <div class="grille-reglages">
+      <div class="champ">
+        <label id="etiquetteNiveau">Niveau</label>
+        <div class="segments" data-reglage="level" role="group" aria-labelledby="etiquetteNiveau">
+          <button type="button" data-value="5e" aria-pressed="false">5e</button>
+          <button type="button" data-value="4e" aria-pressed="false">4e</button>
+          <button type="button" class="est-actif" data-value="3e" aria-pressed="true">3e</button>
+          <button type="button" data-value="DNB" aria-pressed="false">DNB</button>
+        </div>
+      </div>
+      <div class="champ">
+        <label id="etiquetteAide">Aide</label>
+        <div class="segments" data-reglage="visualMode" role="group" aria-labelledby="etiquetteAide">
+          <button type="button" class="est-actif" data-value="with" aria-pressed="true">Avec aide</button>
+          <button type="button" data-value="without" aria-pressed="false">Sans aide</button>
+        </div>
+      </div>
+      <div class="champ">
+        <label id="etiquetteMode">Mode</label>
+        <div class="segments" data-reglage="experienceMode" role="group" aria-labelledby="etiquetteMode">
+          <button type="button" data-value="presentation" aria-pressed="false">Diaporama</button>
+          <button type="button" class="est-actif" data-value="interactive" aria-pressed="true">Interactif</button>
+        </div>
+      </div>
+      <div class="champ">
+        <label id="etiquetteQuestions">Questions</label>
+        <div class="segments" data-reglage="count" role="group" aria-labelledby="etiquetteQuestions">
+          <button type="button" class="est-actif" data-value="5" aria-pressed="true">5</button>
+          <button type="button" data-value="10" aria-pressed="false">10</button>
+          <button type="button" data-value="15" aria-pressed="false">15</button>
+          <button type="button" data-value="20" aria-pressed="false">20</button>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="carte" aria-labelledby="titreModules">
+    <div class="barre-choix">
+      <div class="entete-etape">
+        <span class="pastille-etape" aria-hidden="true">2</span>
+        <h2 id="titreModules">Choisir les automatismes</h2>
+      </div>
+      <button id="toutDeselectionner" type="button">Tout effacer</button>
+    </div>
+    <div id="modules" aria-label="Domaines d’automatismes"></div>
+  </section>
+</main>
+
+<footer>
+  Bêta interne du futur menu Automatismes. Les réglages, domaines et intitulés sont ceux de
+  l’application actuelle ; seul l’habillage change. Le lancement passe par un lien de série MG1.
+</footer>
+
+<div class="barre-action est-vide" aria-label="Résumé et lancement de la série">
+  <div class="barre-action-contenu">
+    <div class="resume" aria-live="polite">
+      <strong id="resumeSelection">Choisis au moins un automatisme</strong>
+      <span id="resumeReglages">3e · 5 questions · Interactif · Avec aide</span>
+    </div>
+    <button id="boutonLancer" type="button" disabled>Lancer l’entraînement</button>
+  </div>
+</div>
+
+<script defer src="../../auto/scripts/00-setup-icons.js"></script>
+<script defer src="catalogue.js"></script>
+<script defer src="mg1.js"></script>
+<script defer src="app.js"></script>
+</body>
+</html>
