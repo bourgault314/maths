@@ -115,6 +115,15 @@ export const PROVENANCE_PACKAGES = {
   },
   "contrats/src/gabarit.js": { statut: "original_mathsgo", source: "écrit pour maths&go" },
   "contrats/src/question.js": { statut: "original_mathsgo", source: "écrit pour maths&go" },
+  "contrats/src/module-questions.js": {
+    statut: "original_mathsgo",
+    source: "cahier des charges du générateur V2, §3.1",
+    note: "Le validateur REFUSE explicitement tout formula_code dans un module V2 : c'est la doctrine rendue exécutable.",
+  },
+  "contrats/src/question-instance-2.js": {
+    statut: "original_mathsgo",
+    source: "cahier des charges du générateur V2, §3.6",
+  },
   "moteur-exercices/src/aleatoire.js": {
     statut: "original_mathsgo",
     source: "PRNG seedé écrit pour maths&go",
@@ -122,6 +131,11 @@ export const PROVENANCE_PACKAGES = {
   "moteur-exercices/src/generation.js": {
     statut: "original_mathsgo",
     source: "écrit pour maths&go",
+  },
+  "moteur-exercices/src/generateurs/divisibilite.js": {
+    statut: "reconstruit",
+    source: "notion « critères de divisibilité » de l'inventaire ; code, énoncés et cas écrits à neuf",
+    note: "PREMIER GÉNÉRATEUR V2. Vérifié à la relecture : aucun formula_code, aucun eval, aucun Math.random, aucun énoncé ni distracteur de l'ancienne banque. Le module hérité dnb_08 reste en ligne tant que celui-ci n'est pas validé par Gwenaël — c'est la règle d'or appliquée pour la première fois.",
   },
   "moteur-exercices/src/generateurs/fractions.js": {
     statut: "herite_doctools",
@@ -218,6 +232,7 @@ const RECONSTRUITS = {
 
 /* Entamés mais pas finis : il reste de la matière d'origine. */
 const PARTIELS = {
+  dnb_08: "remplaçant V2 écrit (moteur-exercices/src/generateurs/divisibilite.js) — l'ancien reste en ligne jusqu'à validation de Gwenaël",
   dnb_01: "7 énoncés sur 16 réécrits, mais 2 formula_code subsistent",
   dnb_19: "9 sur 10 réécrits, mais 10 formula_code subsistent",
   dnb_20: "aucun formula_code, 30 visuels redessinés — 35 énoncés d'origine restent",
