@@ -47,19 +47,14 @@
   h2{font-family:Fredoka,"Segoe UI",sans-serif;font-weight:600;font-size:19px;
     margin:0;color:var(--bleu)}
 
-  /* ————— Réglages : une ligne par réglage, étiquette à gauche ————— */
-  .carte-reglages{display:flex;flex-direction:column;gap:9px}
-  .rangee-champ{display:flex;align-items:center;gap:10px}
-  .etiquette{flex:none;width:86px;font-size:11px;font-weight:750;letter-spacing:.07em;
-    text-transform:uppercase;color:var(--attenue)}
-  .etiquette-suite{width:auto;margin-left:2px}
-  .rangee-duo{display:flex;flex-wrap:wrap;gap:9px 22px}
-  /* Sélecteurs : une barre douce, seul le choix actif ressort en pastille pleine */
-  .segments{display:flex;align-items:stretch;gap:2px;background:var(--fond-doux);
+  /* ————— Réglages : quatre barres pleine largeur, parfaitement alignées.
+     Sélecteurs : une barre douce, seul le choix actif ressort en pastille pleine */
+  .carte-reglages{display:flex;flex-direction:column;gap:8px}
+  .segments{display:flex;align-items:stretch;gap:2px;width:100%;background:var(--fond-doux);
     border:1px solid var(--ligne);border-radius:999px;padding:3px}
-  .segments button{border:0;background:transparent;color:var(--encre);
+  .segments button{flex:1 1 0;border:0;background:transparent;color:var(--encre);
     cursor:pointer;font:inherit;font-weight:600;font-size:14px;min-height:32px;min-width:44px;
-    padding:4px 13px;border-radius:999px;white-space:nowrap;
+    padding:4px 10px;border-radius:999px;white-space:nowrap;
     transition:background .12s,color .12s,box-shadow .12s}
   .segments button:hover{background:#fff}
   .segments button.est-actif{background:var(--bleu);color:#fff;font-weight:700;
@@ -68,9 +63,14 @@
 
   /* DNB n'est pas un niveau de classe : trait de séparation, encre orange */
   .separation-epreuve{width:1px;align-self:stretch;margin:4px 3px;background:var(--ligne);flex:none}
-  .segments .bouton-epreuve{display:flex;flex-direction:column;align-items:center;justify-content:center;
-    gap:1px;line-height:1;padding:2px 11px;color:var(--orange)}
+  .segments .bouton-epreuve{display:flex;flex-direction:row;align-items:center;justify-content:center;
+    gap:7px;line-height:1;padding:2px 11px;color:var(--orange)}
+  .texte-epreuve{display:flex;flex-direction:column;align-items:center;gap:1px}
   .mention-epreuve{font-size:8px;font-weight:750;letter-spacing:.09em;text-transform:uppercase}
+  /* La calculatrice barrée apparaît quand l'épreuve est choisie (sans décaler
+     la rangée : les boutons se partagent la barre à parts fixes) */
+  .calc-barree{display:none;width:17px;height:17px;flex:none}
+  .segments .bouton-epreuve.est-actif .calc-barree{display:block}
   .segments .bouton-epreuve:hover{background:#fff8f1}
   .segments .bouton-epreuve.est-actif{background:var(--orange);color:#fff;
     box-shadow:0 3px 10px rgba(245,130,32,.28)}
@@ -162,11 +162,8 @@
     .logo{height:36px}
     .titre-site h1{font-size:18px}
     section.carte{padding:12px}
-    .carte-reglages{gap:10px}
-    .etiquette{width:74px;font-size:10.5px}
-    .etiquette-suite{width:auto}
-    .rangee-duo{gap:10px 16px}
-    .segments button{min-height:38px;font-size:13.5px;padding:6px 9px;min-width:40px}
+    .carte-reglages{gap:8px}
+    .segments button{min-height:38px;font-size:13.5px;padding:6px 8px;min-width:40px}
     .theme-summary{gap:9px;min-height:54px;padding:8px 10px}
     .theme-name{font-size:14.5px}
     .theme-count-label{display:none}
@@ -194,43 +191,38 @@
 
 <main>
   <section class="carte carte-reglages" aria-label="Réglages de la série">
-    <div class="rangee-duo">
-      <div class="rangee-champ">
-        <span class="etiquette" id="etiquetteNiveau">Niveau</span>
-        <div class="segments" data-reglage="level" role="group" aria-labelledby="etiquetteNiveau">
-          <button type="button" data-value="5e" aria-pressed="false">5e</button>
-          <button type="button" data-value="4e" aria-pressed="false">4e</button>
-          <button type="button" class="est-actif" data-value="3e" aria-pressed="true">3e</button>
-          <span class="separation-epreuve" aria-hidden="true"></span>
-          <button type="button" class="bouton-epreuve" data-value="DNB" aria-pressed="false"
-            aria-label="DNB — révision de l’épreuve">DNB<span class="mention-epreuve">épreuve</span></button>
-        </div>
-      </div>
-      <div class="rangee-champ">
-        <span class="etiquette etiquette-suite" id="etiquetteAide">Aide</span>
-        <div class="segments" data-reglage="visualMode" role="group" aria-labelledby="etiquetteAide">
-          <button type="button" class="est-actif" data-value="with" aria-pressed="true">Avec aide</button>
-          <button type="button" data-value="without" aria-pressed="false">Sans aide</button>
-        </div>
-      </div>
+    <div class="segments" data-reglage="level" role="group" aria-label="Niveau">
+      <button type="button" data-value="5e" aria-pressed="false">5e</button>
+      <button type="button" data-value="4e" aria-pressed="false">4e</button>
+      <button type="button" class="est-actif" data-value="3e" aria-pressed="true">3e</button>
+      <span class="separation-epreuve" aria-hidden="true"></span>
+      <button type="button" class="bouton-epreuve" data-value="DNB" aria-pressed="false"
+        aria-label="DNB — révision de l’épreuve, sans calculatrice">
+        <span class="texte-epreuve">DNB<span class="mention-epreuve">épreuve</span></span>
+        <svg class="calc-barree" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+          <rect x="5.5" y="3" width="13" height="18" rx="2.5" fill="none" stroke="currentColor" stroke-width="1.8"/>
+          <path d="M8.5 7.2h7" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+          <circle cx="9.3" cy="11.6" r="1.15" fill="currentColor"/>
+          <circle cx="14.7" cy="11.6" r="1.15" fill="currentColor"/>
+          <circle cx="9.3" cy="16.2" r="1.15" fill="currentColor"/>
+          <circle cx="14.7" cy="16.2" r="1.15" fill="currentColor"/>
+          <path d="M3.2 21.8 20.8 2.2" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/>
+        </svg>
+      </button>
     </div>
-    <div class="rangee-duo">
-      <div class="rangee-champ">
-        <span class="etiquette" id="etiquetteMode">Mode</span>
-        <div class="segments" data-reglage="experienceMode" role="group" aria-labelledby="etiquetteMode">
-          <button type="button" data-value="presentation" aria-pressed="false">Diaporama</button>
-          <button type="button" class="est-actif" data-value="interactive" aria-pressed="true">Interactif</button>
-        </div>
-      </div>
-      <div class="rangee-champ">
-        <span class="etiquette etiquette-suite" id="etiquetteQuestions">Questions</span>
-        <div class="segments" data-reglage="count" role="group" aria-labelledby="etiquetteQuestions">
-          <button type="button" class="est-actif" data-value="5" aria-pressed="true">5</button>
-          <button type="button" data-value="10" aria-pressed="false">10</button>
-          <button type="button" data-value="15" aria-pressed="false">15</button>
-          <button type="button" data-value="20" aria-pressed="false">20</button>
-        </div>
-      </div>
+    <div class="segments" data-reglage="visualMode" role="group" aria-label="Aide">
+      <button type="button" class="est-actif" data-value="with" aria-pressed="true">Avec aide</button>
+      <button type="button" data-value="without" aria-pressed="false">Sans aide</button>
+    </div>
+    <div class="segments" data-reglage="experienceMode" role="group" aria-label="Mode">
+      <button type="button" data-value="presentation" aria-pressed="false">Diaporama</button>
+      <button type="button" class="est-actif" data-value="interactive" aria-pressed="true">Interactif</button>
+    </div>
+    <div class="segments" data-reglage="count" role="group" aria-label="Nombre de questions">
+      <button type="button" class="est-actif" data-value="5" aria-pressed="true">5</button>
+      <button type="button" data-value="10" aria-pressed="false">10</button>
+      <button type="button" data-value="15" aria-pressed="false">15</button>
+      <button type="button" data-value="20" aria-pressed="false">20</button>
     </div>
   </section>
 
