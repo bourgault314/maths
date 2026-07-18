@@ -124,6 +124,30 @@ export function intersectionSegments(p1, p2, q1, q2) {
   return [p1[0] + t * d1[0], p1[1] + t * d1[1]];
 }
 
+/**
+ * Intersection de deux DROITES (infinies) portées par [p1, p2] et [q1, q2].
+ * @returns {[number, number] | null} null si les droites sont parallèles
+ */
+export function intersectionDroites(p1, p2, q1, q2) {
+  const d1 = [p2[0] - p1[0], p2[1] - p1[1]];
+  const d2 = [q2[0] - q1[0], q2[1] - q1[1]];
+  const den = d1[0] * d2[1] - d1[1] * d2[0];
+  if (Math.abs(den) < 1e-12) return null;
+  const t = ((q1[0] - p1[0]) * d2[1] - (q1[1] - p1[1]) * d2[0]) / den;
+  return [p1[0] + t * d1[0], p1[1] + t * d1[1]];
+}
+
+/**
+ * Pied de la perpendiculaire abaissée de `p` sur la DROITE (AB) —
+ * la projection orthogonale, même en dehors du segment [AB].
+ */
+export function piedPerpendiculaire(p, a, b) {
+  const [dx, dy] = [b[0] - a[0], b[1] - a[1]];
+  const long2 = dx * dx + dy * dy;
+  const t = ((p[0] - a[0]) * dx + (p[1] - a[1]) * dy) / long2;
+  return [a[0] + t * dx, a[1] + t * dy];
+}
+
 /** Deux segments (donnés par leurs extrémités) sont-ils parallèles ? */
 export function sontParalleles(p1, p2, q1, q2, tolerance = 1e-9) {
   const c =
@@ -454,6 +478,40 @@ export function sommetsQuadrilatere({ points } = {}) {
 }
 
 /**
+ * Polygone quelconque par sa liste de sommets, dans l'ordre du tour.
+ * Refuse les polygones croisés (deux côtés non voisins qui se coupent)
+ * et les polygones dégénérés (aire quasi nulle) : une figure presque
+ * plate est illisible et cache presque toujours une erreur de données.
+ */
+export function sommetsPolygone({ points } = {}) {
+  if (!Array.isArray(points) || points.length < 3) {
+    throw new RangeError("polygone : au moins trois sommets attendus");
+  }
+  const n = points.length;
+  // le croisement d'abord : un « nœud papillon » a une aire signée
+  // quasi nulle, il recevrait sinon le mauvais message
+  for (let i = 0; i < n; i++) {
+    for (let j = i + 1; j < n; j++) {
+      if (j === i + 1 || (i === 0 && j === n - 1)) continue; // côtés voisins
+      if (
+        intersectionSegments(points[i], points[(i + 1) % n], points[j], points[(j + 1) % n])
+      ) {
+        throw new RangeError(
+          "polygone : figure croisée (deux côtés non voisins se coupent) — donner les sommets dans l'ordre du tour",
+        );
+      }
+    }
+  }
+  const diametreFigure = Math.max(
+    ...points.map((p) => Math.max(...points.map((q) => distance(p, q)))),
+  );
+  if (!(diametreFigure > 0) || aire(points) < diametreFigure * diametreFigure * 1e-6) {
+    throw new RangeError("polygone : figure dégénérée (aire quasi nulle)");
+  }
+  return points.map((p) => [p[0], p[1]]);
+}
+
+/**
  * Polygone régulier à n côtés, « posé » sur un côté horizontal en bas.
  * @param {object} options
  * @param {number} options.nbCotes
@@ -482,19 +540,39 @@ export function sommetsPolygoneRegulier({ nbCotes, cote = null, rayon = null } =
 
 /**
  * Triangle par ses contraintes — le même moteur exact que l'objet
- * triangle v1 (loi des sinus / loi des cosinus), enrichi des familles.
+ * triangle v1 (loi des sinus / loi des cosinus), enrichi des familles
+ * et de tous les constructeurs du collège.
  *
  * @param {object} donnees
  * @param {[number,number,number]} [donnees.angles] — somme 180
  * @param {[number,number,number]} [donnees.cotes] — inégalité triangulaire
+ * @param {Array<[number,number]>} [donnees.points] — trois points non alignés
+ * @param {object} [donnees.deuxCotesEtAngle] — { cotes: [c1, c2], angleDeg } :
+ *   l'angle compris, au premier sommet
+ * @param {object} [donnees.unCoteEtDeuxAngles] — { cote, anglesDeg: [α, β] } :
+ *   le côté AB et les angles en A et en B
+ * @param {object} [donnees.hypotenuseEtCathete] — { hypotenuse, cathete } :
+ *   triangle rectangle au premier sommet
  * @param {string} [donnees.famille] — « equilateral », « isocele »,
  *   « rectangle », « rectangle-isocele »
+ * @param {number} [donnees.sommet] — pour rectangle/isocèle : indice
+ *   (0, 1 ou 2) du sommet particulier (angle droit ou sommet principal)
  * @param {number} [donnees.cote] — équilatéral / rectangle isocèle
  * @param {[number,number]} [donnees.cathetes] — triangle rectangle
  * @param {number} [donnees.base] et [donnees.sommetDeg] — isocèle
  */
 export function sommetsTriangle(donnees = {}) {
-  const { famille } = donnees;
+  const { famille, sommet = null } = donnees;
+  // Fait tourner l'ordre des sommets pour que le sommet particulier
+  // (canoniquement à l'indice `canonique`) porte la lettre demandée.
+  const placerSommet = (liste, canonique) => {
+    if (sommet === null) return liste;
+    if (![0, 1, 2].includes(sommet)) {
+      throw new RangeError("triangle : `sommet` doit valoir 0, 1 ou 2");
+    }
+    const decalage = (sommet - canonique + 3) % 3;
+    return liste.map((_, k) => liste[(k - decalage + 3) % 3]);
+  };
   if (famille === "equilateral") {
     const c = donnees.cote ?? 4;
     exigerPositif(c, "le côté", "triangle équilatéral");
@@ -504,13 +582,13 @@ export function sommetsTriangle(donnees = {}) {
     const [a, b] = donnees.cathetes ?? [4, 3];
     exigerPositif(a, "la première cathète", "triangle rectangle");
     exigerPositif(b, "la seconde cathète", "triangle rectangle");
-    // angle droit en A, cathètes sur les axes
-    return [[0, 0], [a, 0], [0, b]];
+    // angle droit canoniquement au premier sommet, cathètes sur les axes
+    return placerSommet([[0, 0], [a, 0], [0, b]], 0);
   }
   if (famille === "rectangle-isocele") {
     const c = donnees.cote ?? 4;
     exigerPositif(c, "la cathète", "triangle rectangle isocèle");
-    return [[0, 0], [c, 0], [0, c]];
+    return placerSommet([[0, 0], [c, 0], [0, c]], 0);
   }
   if (famille === "isocele") {
     const sommetDeg = donnees.sommetDeg ?? 40;
@@ -521,8 +599,66 @@ export function sommetsTriangle(donnees = {}) {
     exigerPositif(base, "la base", "triangle isocèle");
     const angleBase = (180 - sommetDeg) / 2;
     const hauteur = (base / 2) * Math.tan(angleBase * RAD);
-    // base AB horizontale, sommet principal C en haut
-    return [[0, 0], [base, 0], [base / 2, hauteur]];
+    // base AB horizontale, sommet principal canoniquement en C
+    return placerSommet([[0, 0], [base, 0], [base / 2, hauteur]], 2);
+  }
+  if (donnees.points) {
+    if (donnees.points.length !== 3) {
+      throw new RangeError("triangle : trois points attendus");
+    }
+    const copie = donnees.points.map((p) => [p[0], p[1]]);
+    const diametreFigure = Math.max(
+      ...copie.map((p) => Math.max(...copie.map((q) => distance(p, q)))),
+    );
+    if (!(diametreFigure > 0) || aire(copie) < diametreFigure * diametreFigure * 1e-9) {
+      throw new RangeError("triangle : les trois points sont alignés");
+    }
+    return copie;
+  }
+  if (donnees.deuxCotesEtAngle) {
+    const { cotes: [c1, c2] = [], angleDeg } = donnees.deuxCotesEtAngle;
+    exigerPositif(c1, "le premier côté", "triangle (deux côtés et l'angle compris)");
+    exigerPositif(c2, "le second côté", "triangle (deux côtés et l'angle compris)");
+    if (!(angleDeg > 0 && angleDeg < 180)) {
+      throw new RangeError("triangle : l'angle compris doit être entre 0° et 180° exclus");
+    }
+    return [
+      [0, 0],
+      [c1, 0],
+      [c2 * Math.cos(angleDeg * RAD), c2 * Math.sin(angleDeg * RAD)],
+    ];
+  }
+  if (donnees.unCoteEtDeuxAngles) {
+    const { cote, anglesDeg: [alpha, beta] = [] } = donnees.unCoteEtDeuxAngles;
+    exigerPositif(cote, "le côté", "triangle (un côté et deux angles)");
+    if (!(alpha > 0) || !(beta > 0) || alpha + beta >= 180) {
+      throw new RangeError(
+        "triangle : les deux angles doivent être positifs et de somme inférieure à 180°",
+      );
+    }
+    // AB horizontal, angle α en A, angle β en B : C est l'intersection
+    // des deux rayons — la construction du compas et du rapporteur
+    const a = [0, 0];
+    const b = [cote, 0];
+    const c = intersectionDroites(
+      a,
+      [Math.cos(alpha * RAD), Math.sin(alpha * RAD)],
+      b,
+      [cote + Math.cos((180 - beta) * RAD), Math.sin((180 - beta) * RAD)],
+    );
+    return [a, b, c];
+  }
+  if (donnees.hypotenuseEtCathete) {
+    const { hypotenuse, cathete } = donnees.hypotenuseEtCathete;
+    exigerPositif(hypotenuse, "l'hypoténuse", "triangle rectangle");
+    exigerPositif(cathete, "la cathète", "triangle rectangle");
+    if (cathete >= hypotenuse) {
+      throw new RangeError(
+        "triangle rectangle : l'hypoténuse doit être plus longue que la cathète",
+      );
+    }
+    const autre = Math.sqrt(hypotenuse * hypotenuse - cathete * cathete);
+    return [[0, 0], [cathete, 0], [0, autre]];
   }
   const { angles, cotes } = donnees;
   let a, b, c; // longueurs des côtés opposés aux sommets 1, 2, 3
@@ -546,7 +682,9 @@ export function sommetsTriangle(donnees = {}) {
       throw new RangeError("triangle : inégalité triangulaire non respectée (ce triangle n'existe pas)");
     }
   } else {
-    throw new RangeError("triangle : donner soit trois angles, soit trois côtés, soit une famille");
+    throw new RangeError(
+      "triangle : donner trois angles, trois côtés, trois points, deux côtés et l'angle compris, un côté et deux angles, hypoténuse et cathète, ou une famille",
+    );
   }
   const cosAngle2 = (a * a + c * c - b * b) / (2 * a * c);
   const angle2 = Math.acos(Math.min(1, Math.max(-1, cosAngle2)));
@@ -556,4 +694,78 @@ export function sommetsTriangle(donnees = {}) {
     [0, 0],
     [a, 0],
   ];
+}
+
+// ---------------------------------------------------------------------------
+// Droites et points remarquables du triangle — tout est CALCULÉ
+// ---------------------------------------------------------------------------
+
+/**
+ * Les points remarquables d'un triangle et leurs supports :
+ * centre de gravité (médianes), orthocentre (hauteurs), centre du
+ * cercle circonscrit (médiatrices), centre du cercle inscrit
+ * (bissectrices), pieds et milieux correspondants.
+ *
+ * Conventions d'indices : l'élément d'indice i est celui issu du
+ * sommet i (pied de SA hauteur, milieu du côté OPPOSÉ, pied de SA
+ * bissectrice).
+ *
+ * @param {Array<[number,number]>} sommets — trois points non alignés
+ */
+export function pointsRemarquablesTriangle(sommets) {
+  if (!Array.isArray(sommets) || sommets.length !== 3) {
+    throw new RangeError("points remarquables : un triangle (trois sommets) est attendu");
+  }
+  const [A, B, C] = sommets;
+  const surface = aire(sommets);
+  const diametreFigure = Math.max(distance(A, B), distance(B, C), distance(A, C));
+  if (!(diametreFigure > 0) || surface < diametreFigure * diametreFigure * 1e-9) {
+    throw new RangeError("points remarquables : les trois sommets sont alignés");
+  }
+  const a = distance(B, C); // côté opposé à A
+  const b = distance(A, C);
+  const c = distance(A, B);
+
+  // médiatrices : perpendiculaires aux côtés en leurs milieux
+  const perpendiculaireEn = (m, p, q) => [m[0] - (q[1] - p[1]), m[1] + (q[0] - p[0])];
+  const mAB = milieu(A, B);
+  const mBC = milieu(B, C);
+  const centreCirconscrit = intersectionDroites(
+    mAB,
+    perpendiculaireEn(mAB, A, B),
+    mBC,
+    perpendiculaireEn(mBC, B, C),
+  );
+  // relation d'Euler (vectorielle) : H = A + B + C − 2·O
+  const orthocentre = [
+    A[0] + B[0] + C[0] - 2 * centreCirconscrit[0],
+    A[1] + B[1] + C[1] - 2 * centreCirconscrit[1],
+  ];
+  // centre du cercle inscrit : barycentre pondéré par les côtés opposés
+  const centreInscrit = [
+    (a * A[0] + b * B[0] + c * C[0]) / (a + b + c),
+    (a * A[1] + b * B[1] + c * C[1]) / (a + b + c),
+  ];
+  // pied de la bissectrice issue de A : partage BC dans le rapport c/b
+  const piedBissectrice = (i) => {
+    const [v, p, q] = [sommets[i], sommets[(i + 1) % 3], sommets[(i + 2) % 3]];
+    const versP = distance(v, p); // longueur du côté adjacent vers p
+    const versQ = distance(v, q);
+    const t = versP / (versP + versQ);
+    return [p[0] + t * (q[0] - p[0]), p[1] + t * (q[1] - p[1])];
+  };
+
+  return {
+    centreGravite: centroide(sommets),
+    orthocentre,
+    centreCirconscrit,
+    rayonCirconscrit: distance(centreCirconscrit, A),
+    centreInscrit,
+    rayonInscrit: surface / ((a + b + c) / 2),
+    piedsHauteurs: sommets.map((v, i) =>
+      piedPerpendiculaire(v, sommets[(i + 1) % 3], sommets[(i + 2) % 3]),
+    ),
+    milieux: sommets.map((_, i) => milieu(sommets[(i + 1) % 3], sommets[(i + 2) % 3])),
+    piedsBissectrices: sommets.map((_, i) => piedBissectrice(i)),
+  };
 }

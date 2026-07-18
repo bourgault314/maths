@@ -56,6 +56,7 @@ toutes par des objets à lois mathématiques :
 | Flèches des tableaux de proportionnalité toujours droites | objet **flèche courbe ×k** (l'arc « rond », jamais droit) | 🔜 |
 | Pas d'outil pour tracer les quadrilatères et figures usuelles | objet **quadrilatères / figures** | ✅ v1 (noyau géométrique + figures usuelles + Atelier Géométrie, juillet 2026) |
 | Arcs d'angles dessinés du mauvais côté | **secteur angulaire calculé** (atan2 + point intérieur, testé sous 360 rotations) ; arc du triangle v1 corrigé | ✅ v1 |
+| Figures planes : lot 1 complet | **primitives** (point-croix, segment, droite, demi-droite, angle rentrant/orienté/secteur), **cercle enrichi** (corde, arc, tangente, secteur, demi-cercle), **triangle V2** (tous constructeurs, hauteurs/médianes/médiatrices/bissectrices, centres G-H-O-I, cercles inscrit/circonscrit), régions/apothème/triangulation, tests aléatoires seedés | ✅ v1 (juillet 2026) |
 | Positionnement anarchique des noms dans les tableaux | objet **tableau** (placement réglé une fois) | 🔜 |
 | Fractions jamais bien écrites | objet **écriture fractionnaire** (empilement et barre corrects) | 🔜 |
 

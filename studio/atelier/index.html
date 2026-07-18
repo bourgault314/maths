@@ -129,22 +129,39 @@
 <h1>Atelier des objets maths&amp;go</h1>
 <p class="sous">Page interne de validation — les objets ci-dessous sont dessinés et animés par la bibliothèque officielle (<code>packages/objets</code>), jamais à la main. Statut : brouillon, en attente de validation.</p>
 
-<section style="background:#f0fdf4;border-color:#bbf7d0">
-  <h2 style="color:#16a34a">📐 Catégorie Géométrie — figures calculées, arcs exacts</h2>
-  <p class="aide">Triangles, quadrilatères, polygones réguliers, cercle et disque : les figures du collège avec leurs codages (égalités, parallèles, angles droits), diagonales, centre, axes de symétrie, mesures en français. Rotation libre : les arcs d'angles restent mathématiquement justes — testé sous les 360 rotations.</p>
-  <p><a href="./geometrie.html" style="font-weight:700;color:#16a34a">→ Ouvrir l'Atelier Géométrie</a></p>
-</section>
-
-<section style="background:#f5f3ff;border-color:#ddd6fe">
-  <h2 style="color:#6d28d9">🟣 Atelier ÉquaSplat — l'équation à deux plateaux</h2>
-  <p class="aide">Le Splat d'équations complet : taches qui cachent l'inconnue (et taches opposées −x), jetons à faire glisser et fusionner, univers positif et relatif, mode billes avec paquets, rédaction fléchée et vérification. Reçoit aussi les équations envoyées par Splat Équations (<code>?data=…</code>).</p>
-  <p><a href="./equasplat.html" style="font-weight:700;color:#6d28d9">→ Ouvrir l'Atelier ÉquaSplat</a></p>
-</section>
-
-<section style="background:#eff6ff;border-color:#bfdbfe">
-  <h2 style="color:#1d4ed8">📚 Vos 27 visuels d'Automatismes — la bibliothèque existante</h2>
-  <p class="aide">Tout était déjà codé : 27 composants enregistrés, 186 exemples préréglés, 285 types de questions, 10 contrats de manipulation. C'est la matière première de l'extraction, composant par composant.</p>
-  <p><a href="../../auto/dev/visual-library.html" style="font-weight:700;color:#1d4ed8">→ Ouvrir la bibliothèque visuelle d'Automatismes</a></p>
+<section id="secSommaire" style="background:#f0f9ff;border-color:#bae6fd">
+  <h2 style="color:#0369a1">🗂️ La bibliothèque, par catégories</h2>
+  <p class="aide">Chaque objet officiel a sa place. Un clic et vous y êtes — tout se règle, tout s'exporte en SVG.</p>
+  <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:10px">
+    <a href="./geometrie.html" style="display:block;background:#fff;border:2px solid #bbf7d0;border-radius:14px;padding:12px 14px;text-decoration:none;color:inherit">
+      <b style="color:#16a34a">📐 Géométrie</b><br>
+      <small style="color:var(--attenue)">points, segments, droites, angles, triangles, quadrilatères, polygones, cercle et disque — codages, mesures, rotation libre</small>
+    </a>
+    <a href="#secEquabarre" style="display:block;background:#fff;border:2px solid #bfdbfe;border-radius:14px;padding:12px 14px;text-decoration:none;color:inherit">
+      <b style="color:#1d4ed8">🟰 Équations — ÉquaBarre</b><br>
+      <small style="color:var(--attenue)">l'équation devient un schéma en barres, manipulable pas à pas, avec rédaction</small>
+    </a>
+    <a href="./equasplat.html" style="display:block;background:#fff;border:2px solid #ddd6fe;border-radius:14px;padding:12px 14px;text-decoration:none;color:inherit">
+      <b style="color:#6d28d9">🟣 Équations — ÉquaSplat</b><br>
+      <small style="color:var(--attenue)">deux plateaux, taches (et taches opposées −x), jetons à glisser, mode billes avec paquets, rédaction — reçoit Splat Équations</small>
+    </a>
+    <a href="#secJetons" style="display:block;background:#fff;border:2px solid #fecaca;border-radius:14px;padding:12px 14px;text-decoration:none;color:inherit">
+      <b style="color:#dc2626">🔴 Nombres relatifs — jetons</b><br>
+      <small style="color:var(--attenue)">jetons manipulables au doigt, paires nulles, générateur pour fiches</small>
+    </a>
+    <a href="#secSplat" style="display:block;background:#fff;border:2px solid #e2e8f0;border-radius:14px;padding:12px 14px;text-decoration:none;color:inherit">
+      <b style="color:#0f172a">⚫ Splat</b><br>
+      <small style="color:var(--attenue)">la carte qui se révèle, reliée à ÉquaBarre</small>
+    </a>
+    <a href="../../auto/dev/visual-library.html" style="display:block;background:#fff;border:2px solid #ddd6fe;border-radius:14px;padding:12px 14px;text-decoration:none;color:inherit">
+      <b style="color:#7c3aed">📚 Bibliothèque d'Automatismes</b><br>
+      <small style="color:var(--attenue)">les 27 visuels existants — la matière première de l'extraction</small>
+    </a>
+    <a href="#secPrototypes" style="display:block;background:#fff;border:2px solid #e2e8f0;border-radius:14px;padding:12px 14px;text-decoration:none;color:inherit">
+      <b style="color:#94a3b8">🗃️ Prototypes</b><br>
+      <small style="color:var(--attenue)">premières versions conservées, remplacées par les catégories ci-dessus</small>
+    </a>
+  </div>
 </section>
 
 <section id="secEquabarre">
@@ -222,30 +239,6 @@
   <div id="equationJetons" aria-live="polite"></div>
 </section>
 
-<section id="secTriangle">
-  <h2>Objet triangle — les angles sont toujours justes</h2>
-  <p class="aide">Tracé par la loi des sinus et des cosinus : les angles dessinés sont <b>exactement</b> ceux demandés (testé au millième de degré). L'angle droit reçoit son carré rouge automatiquement.</p>
-  <div class="barreCommandes">
-    <label class="reglageTaille">Nom <input type="text" id="triNom" value="ABC" maxlength="3" style="width:56px;text-transform:uppercase"></label>
-    <select id="triMode" aria-label="Mode de construction">
-      <option value="angles">Par les angles (°)</option>
-      <option value="cotes">Par les côtés (cm)</option>
-    </select>
-    <input type="number" id="triV1" value="90" style="width:70px" step="0.5" aria-label="Première valeur (angle en degrés ou côté)">
-    <input type="number" id="triV2" value="35" style="width:70px" step="0.5" aria-label="Deuxième valeur">
-    <input type="number" id="triV3" value="55" style="width:70px" step="0.5" aria-label="Troisième valeur">
-    <label class="reglageTaille"><input type="checkbox" id="triAffAngles" checked> angles</label>
-    <label class="reglageTaille"><input type="checkbox" id="triAffCotes"> longueurs</label>
-    <label class="reglageTaille">Taille <input type="range" id="triTaille" min="200" max="640" value="360" step="10"></label>
-  </div>
-  <div class="zoneRendu" id="renduTriangle"></div>
-  <p class="erreur" id="erreurTriangle"></p>
-  <div class="barreCommandes">
-    <button id="btnSvgTri">⬇ SVG</button>
-    <button id="btnPngTri">⬇ PNG</button>
-  </div>
-</section>
-
 <section id="secGenerateurJetons">
   <h2>Générateur de jetons — redessinez à volonté</h2>
   <p class="aide">Changez les nombres : le dessin se refait instantanément, toujours régulier. Puis téléchargez-le pour vos fiches et diaporamas.</p>
@@ -277,6 +270,30 @@
     <label class="reglageTaille">Taille <input type="range" id="tailleTaches" min="90" max="260" value="150" step="5"></label>
   </div>
   <div id="carteSplat"></div>
+</section>
+
+<section id="secPrototypes" style="border-style:dashed">
+  <h2 style="color:#94a3b8">🗃️ Prototype — objet triangle (première version)</h2>
+  <p class="aide">Conservé pour mémoire : la référence pour TOUS les triangles (familles, codages, hauteurs, médianes, cercles inscrit/circonscrit…) est désormais la catégorie <a href="./geometrie.html" style="color:#16a34a;font-weight:700">📐 Géométrie</a>.</p>
+  <div class="barreCommandes">
+    <label class="reglageTaille">Nom <input type="text" id="triNom" value="ABC" maxlength="3" style="width:56px;text-transform:uppercase"></label>
+    <select id="triMode" aria-label="Mode de construction">
+      <option value="angles">Par les angles (°)</option>
+      <option value="cotes">Par les côtés (cm)</option>
+    </select>
+    <input type="number" id="triV1" value="50" style="width:70px" step="0.5" aria-label="Première valeur (angle en degrés ou côté)">
+    <input type="number" id="triV2" value="60" style="width:70px" step="0.5" aria-label="Deuxième valeur">
+    <input type="number" id="triV3" value="70" style="width:70px" step="0.5" aria-label="Troisième valeur">
+    <label class="reglageTaille"><input type="checkbox" id="triAffAngles" checked> angles</label>
+    <label class="reglageTaille"><input type="checkbox" id="triAffCotes"> longueurs</label>
+    <label class="reglageTaille">Taille <input type="range" id="triTaille" min="200" max="640" value="360" step="10"></label>
+  </div>
+  <div class="zoneRendu" id="renduTriangle"></div>
+  <p class="erreur" id="erreurTriangle"></p>
+  <div class="barreCommandes">
+    <button id="btnSvgTri">⬇ SVG</button>
+    <button id="btnPngTri">⬇ PNG</button>
+  </div>
 </section>
 
 <p class="legende">Objets : jetons v2 · barres v2 · équation→barres v1 · tache Splat v1 (silhouette portée verbatim de vos outils). Concept Splat original : Steve Wyborney.</p>
