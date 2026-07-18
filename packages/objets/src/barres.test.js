@@ -89,7 +89,8 @@ describe("dessinerBarres (v2, langage ÉquaBarre)", () => {
     assert.ok(!question.includes("font-style"));
 
     const splat = dessinerBarres({ ...equationEquaBarre(), inconnue: { affichage: "splat", valeur: 3 } });
-    assert.match(splat, new RegExp(`<path d="M50 8[^"]*" fill="${COULEURS_BARRES.splat}"`));
+    // la silhouette est la VRAIE tache des outils (cheminTache : 1er point à 50+40×0,9 = 86)
+    assert.match(splat, new RegExp(`<path d="M 86 50 [^"]*" fill="${COULEURS_BARRES.splat}"`));
   });
 
   it("états : hachures et opacités conformes aux outils", () => {

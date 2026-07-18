@@ -97,8 +97,12 @@
     </select>
     <button class="principal" id="btnConstruire">Construire le schéma</button>
     <button id="btnDe" title="Équation au hasard">🎲</button>
-    <label class="reglageTaille">Largeur <input type="range" id="largeurBarres" min="320" max="1000" value="640" step="10"></label>
+    <label class="reglageTaille">Largeur <input type="range" id="largeurBarres" min="320" max="1000" value="560" step="10"></label>
     <label class="reglageTaille">Hauteur <input type="range" id="tailleBarres" min="56" max="150" value="88" step="2"></label>
+    <select id="apresSuppression" aria-label="Après suppression">
+      <option value="garder">Après suppression : garder hachuré</option>
+      <option value="masquer">Après suppression : masquer</option>
+    </select>
   </div>
   <div class="barreCommandes" id="modesEquabarre" role="group" aria-label="Opérations">
     <button data-mode="decomposer">Décomposer</button>
@@ -112,14 +116,16 @@
     <button id="btnAnnulerOp">↶ Annuler</button>
     <button id="btnRecommencer">↺ Recommencer</button>
   </div>
-  <div class="zoneRendu" id="renduBarres"></div>
+  <div id="zoneEquabarre" style="display:flex;flex-wrap:wrap;gap:22px;align-items:flex-start">
+    <div class="zoneRendu" id="renduBarres" style="flex:1 1 420px;min-width:300px"></div>
+    <div id="redactionEquation" aria-live="polite" style="flex:0 1 auto"></div>
+  </div>
   <div id="dialogueEquabarre" hidden>
     <span id="dialogueTexte"></span>
     <input type="text" id="dialogueSaisie" style="width:120px" aria-label="Votre réponse">
     <button class="principal" id="dialogueValider">Valider</button>
     <button id="dialogueFermer">Fermer</button>
   </div>
-  <div id="historiqueEquations" aria-live="polite"></div>
   <p class="erreur" id="erreurEquation"></p>
 </section>
 
@@ -203,6 +209,7 @@
 <script type="module">
 import { dessinerBarres } from "../../packages/objets/src/barres.js";
 import * as Logique from "../../packages/objets/src/equabarre-logique.js";
+import { dessinerRedaction } from "../../packages/objets/src/redaction.js";
 import { dessinerJeton, dessinerGroupeJetons } from "../../packages/objets/src/jetons.js";
 import { dessinerTache } from "../../packages/objets/src/splat.js";
 import { dessinerTriangle } from "../../packages/objets/src/triangle.js";
@@ -215,7 +222,8 @@ const erreur = document.getElementById("erreurEquation");
 const choixInconnue = document.getElementById("choixInconnue");
 const curseurBarres = document.getElementById("tailleBarres");
 const curseurLargeur = document.getElementById("largeurBarres");
-const historiqueDiv = document.getElementById("historiqueEquations");
+const redactionDiv = document.getElementById("redactionEquation");
+const apresSuppression = document.getElementById("apresSuppression");
 const btnValider = document.getElementById("btnValiderSelection");
 const dialogue = document.getElementById("dialogueEquabarre");
 let etatEqua = null;
@@ -232,29 +240,50 @@ function construire() {
   }
 }
 
-function texteHistorique() {
-  if (!etatEqua) return "";
-  const lignesH = etatEqua.historique.map((ligne, i) => {
-    const derniere = i === etatEqua.historique.length - 1;
-    const [g, d] = ligne.split(" = ");
-    return `<div class="${derniere ? "courante" : "passee"}">${g} <span class="egal">=</span> ${d}</div>`;
-  });
+function dessinerRedactionCourante() {
+  if (!etatEqua) return;
+  const etapes = etatEqua.historique.map((etape, i) => ({
+    ...etape,
+    conclusion: i === etatEqua.historique.length - 1 && Logique.estResolue(etatEqua),
+  }));
+  let verification;
   if (Logique.estResolue(etatEqua)) {
-    lignesH.push(`<div class="bravo">🎉 ${etatEqua.lettre} = ${etatEqua.solution}</div>`);
+    const initiale = etatEqua.historique[0].equation;
+    verification = initiale
+      .replace(new RegExp(`(\\d+)${etatEqua.lettre}`, "g"), `$1 × ${etatEqua.solution}`)
+      .replace(new RegExp(etatEqua.lettre, "g"), String(etatEqua.solution));
   }
-  return lignesH.join("");
+  redactionDiv.innerHTML = dessinerRedaction({
+    etapes,
+    verification,
+    lettre: etatEqua.lettre,
+    taillePolice: 22,
+    largeur: 400,
+  });
 }
 
 function dessiner() {
   if (!etatEqua) return;
   const hauteur = Number(curseurBarres.value);
+  const masquer = apresSuppression.value === "masquer";
+  // en mode « masquer », les cases enlevées disparaissent du dessin ;
+  // on garde la correspondance clic → pièce d'origine
+  const correspondance = [];
+  const lignesVisibles = etatEqua.lignes.map((ligne, ligneIdx) => ({
+    ...ligne,
+    pieces: ligne.pieces.filter((piece, pieceIdx) => {
+      const visible = !masquer || piece.etat !== "supprime";
+      if (visible) correspondance.push([ligneIdx, pieceIdx]);
+      return visible;
+    }),
+  }));
   rendu.innerHTML = dessinerBarres({
-    lignes: etatEqua.lignes,
+    lignes: lignesVisibles,
     inconnue: { affichage: choixInconnue.value, lettre: etatEqua.lettre, valeur: etatEqua.solution },
     largeur: Number(curseurLargeur.value),
     hauteurPiece: hauteur,
   });
-  historiqueDiv.innerHTML = texteHistorique();
+  dessinerRedactionCourante();
   btnValider.disabled = !(
     (etatEqua.mode === "enlever" && Logique.enleverPossible(etatEqua)) ||
     (etatEqua.mode === "regrouper" && etatEqua.selection.length >= 2)
@@ -263,12 +292,11 @@ function dessiner() {
 
   const svg = rendu.querySelector("svg");
   const bases = [...svg.querySelectorAll(`rect[height="${hauteur}"]`)].filter((r) => !r.getAttribute("fill").startsWith("url"));
-  const nbHaut = etatEqua.lignes[0].pieces.length;
   bases.forEach((rect, i) => {
+    if (!correspondance[i]) return;
     rect.style.cursor = "pointer";
     rect.addEventListener("click", () => {
-      const ligneIdx = i < nbHaut ? 0 : 1;
-      const pieceIdx = i < nbHaut ? i : i - nbHaut;
+      const [ligneIdx, pieceIdx] = correspondance[i];
       const resultat = Logique.cliquerPiece(etatEqua, ligneIdx, pieceIdx);
       if (resultat.action === "decomposer" || resultat.action === "partager") {
         ouvrirDialogue(resultat);
@@ -338,6 +366,7 @@ champ.addEventListener("keydown", (e) => { if (e.key === "Enter") construire(); 
 choixInconnue.addEventListener("change", () => { if (etatEqua) dessiner(); });
 curseurBarres.addEventListener("input", () => { if (etatEqua) dessiner(); });
 curseurLargeur.addEventListener("input", () => { if (etatEqua) dessiner(); });
+apresSuppression.addEventListener("change", () => { if (etatEqua) dessiner(); });
 document.getElementById("btnDe").addEventListener("click", () => {
   const g = creerGenerateur(`de-${Date.now()}`);
   const x = g.entier(2, 9);
