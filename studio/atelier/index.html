@@ -123,25 +123,72 @@
   #historiqueEquations .courante{color:#0f172a}
   #historiqueEquations .egal{color:#3b82f6}
   #historiqueEquations .bravo{color:#dc2626}
+
+  /* ————— Accueil : vignettes d'outils (pensées pouce, ≥ 150 px) ————— */
+  .vitrineOutils{display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:10px}
+  .vignette{display:block;border:1px solid var(--ligne);border-radius:18px;padding:12px 10px 10px;
+    background:#fff;text-align:center;cursor:pointer;text-decoration:none;color:inherit;
+    transition:transform .12s, box-shadow .12s;-webkit-tap-highlight-color:transparent}
+  .vignette:hover{transform:translateY(-2px);box-shadow:0 10px 26px rgba(15,23,42,.10)}
+  .vignette:active{transform:scale(.97)}
+  .vignette .apercuV{height:104px;display:flex;align-items:center;justify-content:center;gap:6px;overflow:hidden}
+  .vignette svg{max-width:100%;max-height:104px;height:auto}
+  .vignette .nomV{display:block;font-family:Fredoka;font-weight:600;font-size:14.5px;margin-top:8px}
+  .vignette .egal{font-family:Fredoka;font-size:24px;font-weight:700;color:var(--encre)}
+  .vignetteEmoji{font-size:46px;line-height:104px}
+
+  /* ————— Accueil : tableau de bord du programme ————— */
+  .bilan{display:flex;flex-wrap:wrap;align-items:center;gap:14px;margin:2px 0 16px;
+    background:linear-gradient(135deg,#eff6ff,#f0fdfa);border:1px solid #dbeafe;border-radius:18px;padding:13px 18px}
+  .bilan .part{display:flex;align-items:baseline;gap:6px;font-size:13.5px;color:var(--attenue)}
+  .bilan b{font-family:Fredoka;font-size:22px}
+  .jauge{flex:1 1 150px;height:8px;border-radius:999px;background:#e2e8f0;overflow:hidden;min-width:110px}
+  .jauge>div{height:100%;border-radius:999px;background:linear-gradient(90deg,#34d399,#10b981)}
+  .domaine{border:1px solid var(--ligne);border-left:6px solid var(--dcoul,#94a3b8);border-radius:16px;
+    padding:14px 16px 12px;margin-bottom:12px;background:#fff}
+  .domaineTete{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:8px}
+  .domaineNum{font-family:Fredoka;font-weight:700;color:#fff;background:var(--dcoul);flex:none;
+    width:30px;height:30px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:16px}
+  .domaineTete h3{font-family:Fredoka;margin:0;font-size:18px;color:var(--dcoul)}
+  .domaineScore{margin-left:auto;font-family:Fredoka;font-weight:700;font-size:17px;color:var(--dcoul)}
+  .domaineScore small{color:var(--attenue);font-weight:600;font-size:12.5px}
+  .domaine .jauge{margin-bottom:12px;flex:none;width:100%}
+  .domaine .jauge>div{background:var(--dcoul)}
+  .notionsColonnes{columns:290px;column-gap:24px}
+  .sousTheme{break-inside:avoid;margin-bottom:11px}
+  .sousTheme h4{margin:0 0 3px;font-size:11.5px;letter-spacing:.8px;text-transform:uppercase;color:var(--attenue)}
+  .notion{display:flex;align-items:center;gap:8px;padding:3.5px 6px;border-radius:10px;font-size:14px;
+    color:var(--encre);text-decoration:none}
+  a.notion:hover{background:#f1f5f9}
+  .notion .coche{flex:none;width:19px;height:19px;border-radius:50%;border:2px solid #cbd5e1;
+    display:flex;align-items:center;justify-content:center;font-size:11.5px;font-weight:900;color:#fff}
+  .notion.fait .coche{background:#10b981;border-color:#10b981}
+  .notion.chantier .coche{background:conic-gradient(#f59e0b 0 50%,#fff 0 100%);border-color:#f59e0b}
+  .notion.afaire{color:#8ea0b5}
+  .notion .txt{flex:1;min-width:0}
+  .notion .badges{flex:none;display:flex;gap:4px;align-items:center}
+  .notion .badges i,.badgeExemple{font-style:normal;font-size:10.5px;font-weight:700;color:#94a3b8}
+  .notion .badges i.anc,.badgeExemple.anc{background:#fef3c7;color:#92400e;border-radius:999px;padding:1px 7px}
+  .notion .badges i.nouv,.badgeExemple.nouv{background:#ccfbf1;color:#0f766e;border-radius:999px;padding:1px 7px}
+  .legendeProg{color:var(--attenue);font-size:12.5px;margin:2px 0 14px}
+  .noteDomaine{color:var(--attenue);font-size:12.5px;margin:6px 0 0;font-style:italic}
+  @media (max-width:560px){.notion{min-height:34px}}
 </style>
 </head>
 <body>
-<h1>Atelier des objets maths&amp;go</h1>
-<p class="sous">Page interne de validation — les objets ci-dessous sont dessinés et animés par la bibliothèque officielle (<code>packages/objets</code>), jamais à la main. Statut : brouillon, en attente de validation.</p>
+<h1>Atelier maths&amp;go</h1>
+<p class="sous">Le chantier des outils — page interne.</p>
 
-<section id="secSommaire" style="background:#f0f9ff;border-color:#bae6fd">
-  <h2 style="color:#0369a1">🗂️ La bibliothèque, classée comme le site (et le programme)</h2>
-  <p class="aide">Les 7 domaines de maths&go, dans l'ordre du site. Un clic ouvre le domaine seul ; « Tous les domaines » ramène ici.</p>
-  <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:10px">
-    <a href="#secJetons" style="display:block;background:#fff;border:2px solid #fecaca;border-radius:14px;padding:12px 14px;text-decoration:none;color:inherit"><b style="color:#dc2626">1 · Nombres et calculs</b><br><small style="color:var(--attenue)">numération · entiers et divisibilité · <b>nombres relatifs (jetons ✔)</b> · fractions · puissances · racines carrées · calcul mental · schémas en barres</small></a>
-    <a href="#secEquabarre" style="display:block;background:#fff;border:2px solid #bfdbfe;border-radius:14px;padding:12px 14px;text-decoration:none;color:inherit"><b style="color:#1d4ed8">2 · Calcul littéral et algèbre</b><br><small style="color:var(--attenue)">expressions littérales · <b>équations (ÉquaBarre ✔, Splat ✔)</b> · patterns et généralisation</small></a>
-    <a href="./pourcentages.html" style="display:block;background:#fff;border:2px solid #fde68a;border-radius:14px;padding:12px 14px;text-decoration:none;color:inherit"><b style="color:#b45309">3 · Proportionnalité, fonctions et grandeurs</b><br><small style="color:var(--attenue)">proportionnalité et ratios · <b>pourcentages ✔</b> · fonctions · conversions · aires et périmètres · temps et durées</small></a>
-    <a href="./geometrie.html" style="display:block;background:#fff;border:2px solid #bbf7d0;border-radius:14px;padding:12px 14px;text-decoration:none;color:inherit"><b style="color:#16a34a">4 · Espace et géométrie</b><br><small style="color:var(--attenue)">repérage · transformations · <b>angles ✔</b> · <b>triangles ✔</b> · <b>parallélogrammes ✔</b> · Pythagore · <b>Thalès ✔</b> · espace, solides et patrons</small></a>
-    <div style="display:block;background:#fff;border:2px solid #ddd6fe;border-radius:14px;padding:12px 14px;text-decoration:none;color:inherit;opacity:.55"><b style="color:#7c3aed">5 · Données, statistiques et probabilités</b><br><small style="color:var(--attenue)">statistiques · probabilités</small> <em style="font-size:11px">(à venir)</em></div>
-    <div style="display:block;background:#fff;border:2px solid #99f6e4;border-radius:14px;padding:12px 14px;text-decoration:none;color:inherit;opacity:.55"><b style="color:#0f766e">6 · Pensée informatique</b><br><small style="color:var(--attenue)">algorithmes et programmation</small> <em style="font-size:11px">(à venir)</em></div>
-    <div style="display:block;background:#fff;border:2px solid #fbcfe8;border-radius:14px;padding:12px 14px;text-decoration:none;color:inherit;opacity:.55"><b style="color:#be185d">7 · Jeux, recherches et explorations</b><br><small style="color:var(--attenue)">jeux de stratégie · explorations mathématiques</small> <em style="font-size:11px">(à venir)</em></div>
-  </div>
-  <p class="aide" style="margin-top:12px">Outils du chantier : <a href="./labo.html" style="color:#0369a1;font-weight:700">🔬 Labo de validation</a> ·  <a href="./configurations.html" style="color:#16a34a;font-weight:700">configurations d'angles et Thalès</a> · <a href="../../auto/dev/visual-library.html" style="color:#7c3aed;font-weight:700">bibliothèque d'Automatismes</a> · <a href="#secSplat" style="color:#0f172a;font-weight:700">Splat</a> · <a href="#secPrototypes" style="color:#94a3b8;font-weight:700">prototypes</a></p>
+<section id="secOutils">
+  <h2>🧰 Les outils</h2>
+  <div class="vitrineOutils" id="vitrineOutils"></div>
+</section>
+
+<section id="secProgramme">
+  <h2>🧭 Le programme du cycle 4, d'un coup d'œil</h2>
+  <p class="legendeProg">✔ fait · ◐ en chantier · ○ à faire — <i class="badgeExemple anc">ancien</i> encore au menu des 4e et 3e pendant la transition (jusqu'en 2028) · <i class="badgeExemple nouv">2026</i> nouveauté du programme publié au BO du 5&nbsp;mars&nbsp;2026.</p>
+  <div id="zoneProgramme"></div>
+  <p class="legendeProg" style="margin-top:14px">Chantier : <a data-vue="secPrototypes" href="#secPrototypes" style="color:#94a3b8;font-weight:700">prototypes</a> · <a href="../../auto/dev/visual-library.html" style="color:#7c3aed;font-weight:700">bibliothèque d'Automatismes</a></p>
 </section>
 
 <section id="secEquabarre">
@@ -287,6 +334,316 @@ import { dessinerJeton, dessinerGroupeJetons } from "../../packages/objets/src/j
 import { dessinerTache } from "../../packages/objets/src/splat.js";
 import { dessinerTriangle } from "../../packages/objets/src/triangle.js";
 import { creerGenerateur } from "../../packages/moteur-exercices/src/aleatoire.js";
+import { dessinerFigure, dessinerCercle } from "../../packages/objets/src/figure.js";
+import { CATEGORIES_FIGURES, FIGURES_USUELLES } from "../../packages/objets/src/figures-usuelles.js";
+import { creerThales, dessinerThales } from "../../packages/objets/src/thales.js";
+import { creerConfigurationAngles, dessinerConfigurationAngles } from "../../packages/objets/src/configurations-angles.js";
+import { PREREGLAGES_BARRE_POURCENTAGE, dessinerBarrePourcentage } from "../../packages/objets/src/barre-pourcentage.js";
+
+/* ========== 0. ACCUEIL — VIGNETTES D'OUTILS ==========
+   Chaque vignette est DESSINÉE par l'objet officiel lui-même :
+   l'accueil montre les vrais rendus, jamais des icônes génériques. */
+const OUTILS = [
+  { nom: "ÉquaBarre", vue: "secEquabarre", apercu: () => {
+      const etat = Logique.creerEtat("2x + 3 = 11");
+      return dessinerBarres({
+        lignes: etat.lignes,
+        inconnue: { affichage: "lettre", lettre: etat.lettre, valeur: etat.solution },
+        largeur: 200, hauteurPiece: 34,
+      });
+    } },
+  { nom: "ÉquaSplat", href: "./equasplat.html", apercu: () => {
+      const tache = dessinerTache({ taille: 74, couleur: "noir" });
+      return `${tache}<span class="egal">=</span>${tache}`;
+    } },
+  { nom: "Splat", vue: "secSplat", apercu: () => dessinerTache({ taille: 96, couleur: "noir" }) },
+  { nom: "Jetons", vue: "secJetons", apercu: () =>
+      dessinerGroupeJetons({ positifs: 3, negatifs: 2, pairesNeutralisees: 0, parRangee: 3,
+        habillage: "plateau", contenu: "valeur", taille: 44 }) },
+  { nom: "Géométrie", href: "./geometrie.html", apercu: () => {
+      const entree = Object.values(FIGURES_USUELLES).find((e) => e.categorie === CATEGORIES_FIGURES[0]);
+      const description = entree.decrire();
+      description.sortie = { taille: 104, marge: 26 };
+      return dessinerFigure(description);
+    } },
+  { nom: "Angles", href: "./configurations.html", apercu: () =>
+      dessinerConfigurationAngles(
+        creerConfigurationAngles({ type: "paralleles-secante", angleDeg: 55, orientationDeg: 18 }),
+        { theme: "couleur", taille: 148 },
+      ) },
+  { nom: "Thalès", href: "./configurations.html", apercu: () =>
+      dessinerThales(creerThales({}), { theme: "couleur", taille: 148, noms: false }) },
+  { nom: "Pourcentages", href: "./pourcentages.html", apercu: () =>
+      dessinerBarrePourcentage(PREREGLAGES_BARRE_POURCENTAGE[0].question, { correction: true }).svg },
+  { nom: "Labo", href: "./labo.html", apercu: () => {
+      const entree = Object.values(FIGURES_USUELLES).find((e) => e.genre === "cercle");
+      const description = entree.decrire();
+      description.sortie = { taille: 104, marge: 22 };
+      description.points = [];
+      description.visible = { centre: true, rayonVersDeg: 40, mesureRayon: false,
+        secteur: { deDeg: 200, aDeg: 290 } };
+      return dessinerCercle(description);
+    } },
+  { nom: "Automatismes", href: "../automatismes/", apercu: () => '<span class="vignetteEmoji">⚡</span>' },
+];
+
+const vitrineOutils = document.getElementById("vitrineOutils");
+for (const outil of OUTILS) {
+  const carte = document.createElement("a");
+  carte.className = "vignette";
+  if (outil.vue) { carte.href = `#${outil.vue}`; carte.dataset.vue = outil.vue; }
+  else carte.href = outil.href;
+  let apercu = '<span class="vignetteEmoji">🧩</span>';
+  try { apercu = outil.apercu(); } catch (_e) { /* aperçu de secours */ }
+  carte.innerHTML = `<span class="apercuV">${apercu}</span><span class="nomV"></span>`;
+  carte.querySelector(".nomV").textContent = outil.nom;
+  vitrineOutils.appendChild(carte);
+}
+
+/* ========== 0bis. ACCUEIL — TABLEAU DE BORD DU PROGRAMME ==========
+   Toutes les notions du cycle 4, relevées dans les textes officiels :
+   programme 2026 (BO du 5 mars 2026, annexe 2) niveau par niveau, plus
+   les notions de l'ancien programme (2020) encore au menu pendant la
+   transition (badge « ancien »), plus les nouveautés 2026 (badge « 2026 »).
+   États : fait (un outil V2 le montre), chantier (brouillon visible), à faire. */
+const PROGRAMME = [
+  { numero: 1, nom: "Nombres et calculs", couleur: "#dc2626", sousThemes: [
+    { titre: "Numération et écritures", notions: [
+      { t: "Écritures multiples d'un même nombre (décimale, fraction, %)", n: "5e" },
+      { t: "Droite graduée : lire et placer une abscisse", n: "5e" },
+      { t: "Ordres de grandeur, vraisemblance d'un résultat", n: "5e→3e" },
+    ] },
+    { titre: "Entiers et divisibilité", notions: [
+      { t: "Division euclidienne (quotient, reste)", n: "5e" },
+      { t: "Multiples, diviseurs, critères de divisibilité", n: "5e·3e" },
+      { t: "Nombres premiers, décomposition en facteurs", n: "3e" },
+    ] },
+    { titre: "Nombres relatifs", notions: [
+      { t: "Découvrir les relatifs, l'opposé", n: "5e", etat: "fait", vue: "secJetons" },
+      { t: "Valeur absolue", n: "5e", nouv: true },
+      { t: "Comparer et ranger des relatifs", n: "5e" },
+      { t: "Additionner et soustraire des relatifs", n: "5e", etat: "fait", vue: "secJetons" },
+      { t: "Multiplier et diviser des relatifs", n: "4e" },
+    ] },
+    { titre: "Fractions", notions: [
+      { t: "Fractions égales, comparer des fractions", n: "5e" },
+      { t: "Additionner et soustraire des fractions", n: "5e·4e" },
+      { t: "Multiplier et diviser des fractions, inverse", n: "4e" },
+      { t: "Fraction d'un nombre, d'une quantité", n: "4e" },
+      { t: "Fraction irréductible", n: "3e" },
+    ] },
+    { titre: "Puissances", notions: [
+      { t: "Carré et cube d'un nombre", n: "5e" },
+      { t: "Puissances d'exposant positif", n: "4e" },
+      { t: "Exposants négatifs, notation scientifique", n: "3e" },
+    ] },
+    { titre: "Racines carrées", notions: [
+      { t: "Racine carrée : définition, encadrement", n: "4e" },
+      { t: "Équations x² = a", n: "3e" },
+    ] },
+    { titre: "Calcul mental et automatismes", notions: [
+      { t: "Priorités opératoires, programmes de calcul", n: "5e" },
+      { t: "Les séries d'automatismes (l'appli)", n: "5e→3e", etat: "chantier", href: "../automatismes/" },
+    ] },
+    { titre: "Schémas en barres", notions: [
+      { t: "L'objet schéma en barres", n: "5e→3e", etat: "fait", vue: "secEquabarre" },
+      { t: "Problèmes modélisés en barres", n: "5e→3e" },
+    ] },
+  ] },
+  { numero: 2, nom: "Calcul littéral et algèbre", couleur: "#1d4ed8", sousThemes: [
+    { titre: "Patterns et généralisation", notions: [
+      { t: "Suites de motifs, régularités", n: "5e" },
+      { t: "Démontrer avec des lettres, contre-exemples", n: "5e·4e" },
+    ] },
+    { titre: "Expressions littérales", notions: [
+      { t: "Produire des formules, substituer", n: "5e" },
+      { t: "Réduire une expression (3x + 2x = 5x)", n: "5e·4e" },
+      { t: "Distributivité : développer, factoriser", n: "5e·4e" },
+      { t: "Double distributivité", n: "3e" },
+      { t: "Identités remarquables (les trois)", n: "3e", nouv: true },
+    ] },
+    { titre: "Équations et inéquations", notions: [
+      { t: "Équations x + b = c et ax = c", n: "5e", etat: "fait", vue: "secEquabarre" },
+      { t: "Équations ax + b = c, ax + b = cx + d", n: "4e", etat: "fait", vue: "secEquabarre" },
+      { t: "Mettre un problème en équation", n: "4e", etat: "chantier", vue: "secSplat" },
+      { t: "Rédiger une résolution, vérifier", n: "4e", etat: "fait", vue: "secEquabarre" },
+      { t: "Équation produit nul", n: "3e" },
+      { t: "Inéquations du premier degré", n: "3e", nouv: true },
+    ] },
+  ] },
+  { numero: 3, nom: "Proportionnalité, fonctions et grandeurs", couleur: "#b45309", sousThemes: [
+    { titre: "Proportionnalité et ratios", notions: [
+      { t: "Reconnaître une situation de proportionnalité", n: "5e" },
+      { t: "Coefficient de proportionnalité", n: "5e" },
+      { t: "Quatrième proportionnelle", n: "4e" },
+      { t: "Rapports et ratios", n: "4e" },
+      { t: "Partage proportionnel", n: "4e·3e" },
+      { t: "Échelles", n: "3e" },
+    ] },
+    { titre: "Pourcentages", notions: [
+      { t: "Calculer, appliquer un pourcentage", n: "5e·4e", etat: "fait", href: "./pourcentages.html" },
+      { t: "Augmentations, diminutions, coefficient multiplicateur", n: "4e·3e" },
+    ] },
+    { titre: "Fonctions", notions: [
+      { t: "« En fonction de », tableaux de valeurs", n: "5e" },
+      { t: "Graphiques cartésiens, nuages de points", n: "5e" },
+      { t: "Programmes de calcul et dépendance", n: "4e" },
+      { t: "Image et antécédent", n: "3e" },
+      { t: "Fonctions linéaires", n: "3e" },
+      { t: "Fonctions affines", n: "3e" },
+      { t: "Fonction carré", n: "3e", nouv: true },
+    ] },
+    { titre: "Grandeurs et mesures", notions: [
+      { t: "Conversions d'unités", n: "5e→3e" },
+      { t: "Grandeurs quotients (vitesse, débit…)", n: "4e" },
+      { t: "Aires et périmètres", n: "5e→3e", etat: "chantier", href: "./geometrie.html" },
+      { t: "Temps et durées", n: "5e→3e" },
+    ] },
+  ] },
+  { numero: 4, nom: "Espace et géométrie", couleur: "#16a34a", sousThemes: [
+    { titre: "Figures et codages", notions: [
+      { t: "Point, segment, droite, demi-droite", n: "5e→3e", etat: "fait", href: "./labo.html" },
+      { t: "Codages : égalités, angle droit, milieux", n: "5e→3e", etat: "fait", href: "./labo.html" },
+      { t: "Cercle et disque : corde, tangente, secteur", n: "5e→3e", etat: "fait", href: "./labo.html" },
+      { t: "Polygones réguliers", n: "5e→3e", etat: "fait", href: "./labo.html" },
+    ] },
+    { titre: "Angles", notions: [
+      { t: "Adjacents, opposés, supplémentaires…", n: "5e", etat: "fait", href: "./configurations.html" },
+      { t: "Alternes-internes, correspondants, parallélisme", n: "5e", etat: "fait", href: "./configurations.html" },
+    ] },
+    { titre: "Triangles", notions: [
+      { t: "Construire un triangle (données partielles)", n: "5e·4e", etat: "fait", href: "./geometrie.html" },
+      { t: "Somme des angles d'un triangle", n: "5e", etat: "fait", href: "./configurations.html" },
+      { t: "Inégalité triangulaire", n: "5e" },
+      { t: "Hauteurs, médianes, médiatrices, bissectrices", n: "5e", etat: "fait", href: "./geometrie.html" },
+      { t: "Points remarquables, droite d'Euler", n: "5e", etat: "fait", href: "./geometrie.html" },
+      { t: "Cercles inscrit et circonscrit", n: "5e", etat: "fait", href: "./geometrie.html" },
+      { t: "Triangle rectangle et cercle circonscrit", n: "4e", etat: "fait", href: "./geometrie.html" },
+      { t: "Droite des milieux", n: "4e", etat: "fait", href: "./geometrie.html" },
+      { t: "Cas d'égalité des triangles", n: "4e", anc: true },
+      { t: "Triangles semblables", n: "3e", anc: true },
+      { t: "Théorème de Pythagore, réciproque, contraposée", n: "4e" },
+      { t: "Trigonométrie : cosinus, sinus, tangente", n: "3e" },
+      { t: "Théorème de Thalès (emboîtés, papillon)", n: "3e", etat: "fait", href: "./configurations.html" },
+    ] },
+    { titre: "Parallélogrammes", notions: [
+      { t: "Parallélogramme : définition, propriétés", n: "5e", etat: "fait", href: "./labo.html" },
+      { t: "Rectangle, losange, carré", n: "5e", etat: "fait", href: "./labo.html" },
+      { t: "Aire du parallélogramme", n: "5e" },
+    ] },
+    { titre: "Transformations", notions: [
+      { t: "Symétrie axiale", n: "5e" },
+      { t: "Symétrie centrale, demi-tour", n: "5e" },
+      { t: "Translations", n: "4e·3e" },
+      { t: "Vecteurs, somme, relation de Chasles", n: "3e", nouv: true },
+      { t: "Rotations", n: "4e", anc: true },
+      { t: "Homothéties", n: "3e", anc: true },
+    ] },
+    { titre: "Repérage", notions: [
+      { t: "Droite graduée et repère orthogonal", n: "5e→3e" },
+      { t: "Repérage sur la sphère, latitude et longitude", n: "3e", anc: true },
+    ] },
+    { titre: "Espace, solides et patrons", notions: [
+      { t: "Perspective cavalière : cube, pavé, prisme, cylindre", n: "5e" },
+      { t: "Pyramides et cônes", n: "4e" },
+      { t: "Sphère et boule", n: "3e" },
+      { t: "Patrons", n: "5e·3e" },
+      { t: "Sections de solides", n: "3e" },
+      { t: "Volumes : les formules", n: "5e→3e" },
+      { t: "Vues et empilements de cubes", n: "5e" },
+    ] },
+  ] },
+  { numero: 5, nom: "Données, statistiques et probabilités", couleur: "#7c3aed", sousThemes: [
+    { titre: "Statistiques", notions: [
+      { t: "Recueillir et organiser des données", n: "5e" },
+      { t: "Effectifs et fréquences", n: "5e" },
+      { t: "Diagrammes : barres, circulaire, cartésien", n: "5e" },
+      { t: "Histogrammes", n: "4e", anc: true },
+      { t: "Moyenne simple et pondérée", n: "5e·4e" },
+      { t: "Médiane et étendue", n: "4e" },
+      { t: "Quartiles et boîtes à moustaches", n: "3e", nouv: true },
+    ] },
+    { titre: "Probabilités", notions: [
+      { t: "Vocabulaire du hasard, échelle de probabilité", n: "5e" },
+      { t: "Équiprobabilité, premiers calculs", n: "5e" },
+      { t: "Langage des ensembles, évènement contraire", n: "4e" },
+      { t: "Expériences à deux épreuves", n: "4e" },
+      { t: "Fréquences et probabilité, fluctuation", n: "4e·3e" },
+      { t: "P(A∪B) + P(A∩B) = P(A) + P(B)", n: "3e", nouv: true },
+    ] },
+  ] },
+  { numero: 6, nom: "Pensée informatique", couleur: "#0f766e", sousThemes: [
+    { titre: "Algorithmique et programmation", notions: [
+      { t: "Instructions et séquences", n: "5e" },
+      { t: "Entrées et sorties d'un programme", n: "5e" },
+      { t: "Formules et calculs en blocs", n: "5e" },
+      { t: "Boucles de répétition", n: "5e" },
+      { t: "Conditions et instructions conditionnelles", n: "4e" },
+      { t: "Variables", n: "4e·3e" },
+      { t: "Boucles conditionnelles, structurer un programme", n: "3e" },
+    ] },
+  ] },
+  { numero: 7, nom: "Jeux, recherches et explorations", couleur: "#be185d",
+    note: "Ton domaine libre, hors programme officiel — il se remplit au fil de tes idées.",
+    sousThemes: [
+    { titre: "À inventer", notions: [
+      { t: "Jeux de stratégie", n: "" },
+      { t: "Défis et énigmes", n: "" },
+      { t: "Explorations libres", n: "" },
+    ] },
+  ] },
+];
+
+function rendreProgramme() {
+  const zone = document.getElementById("zoneProgramme");
+  const totaux = { fait: 0, chantier: 0, afaire: 0 };
+  let html = "";
+  for (const domaine of PROGRAMME) {
+    const compte = { fait: 0, chantier: 0, afaire: 0 };
+    let colonnes = "";
+    for (const sousTheme of domaine.sousThemes) {
+      let lignes = "";
+      for (const notion of sousTheme.notions) {
+        const etat = notion.etat ?? "afaire";
+        compte[etat] += 1;
+        const badges =
+          (notion.n ? `<i>${notion.n}</i>` : "") +
+          (notion.anc ? '<i class="anc">ancien</i>' : "") +
+          (notion.nouv ? '<i class="nouv">2026</i>' : "");
+        const interieur = `<span class="coche">${etat === "fait" ? "✔" : ""}</span>` +
+          `<span class="txt">${notion.t}</span><span class="badges">${badges}</span>`;
+        if (notion.vue) lignes += `<a class="notion ${etat}" href="#${notion.vue}" data-vue="${notion.vue}">${interieur}</a>`;
+        else if (notion.href) lignes += `<a class="notion ${etat}" href="${notion.href}">${interieur}</a>`;
+        else lignes += `<div class="notion ${etat}">${interieur}</div>`;
+      }
+      colonnes += `<div class="sousTheme"><h4>${sousTheme.titre}</h4>${lignes}</div>`;
+    }
+    const total = compte.fait + compte.chantier + compte.afaire;
+    totaux.fait += compte.fait;
+    totaux.chantier += compte.chantier;
+    totaux.afaire += compte.afaire;
+    const avancement = total ? Math.round(((compte.fait + compte.chantier / 2) / total) * 100) : 0;
+    html += `<div class="domaine" style="--dcoul:${domaine.couleur}">` +
+      `<div class="domaineTete"><span class="domaineNum">${domaine.numero}</span><h3>${domaine.nom}</h3>` +
+      `<span class="domaineScore">${compte.fait}<small>/${total}</small></span>` +
+      `<div class="jauge"><div style="width:${avancement}%"></div></div></div>` +
+      `<div class="notionsColonnes">${colonnes}</div>` +
+      (domaine.note ? `<p class="noteDomaine">${domaine.note}</p>` : "") +
+      `</div>`;
+  }
+  const totalGlobal = totaux.fait + totaux.chantier + totaux.afaire;
+  const avancementGlobal = totalGlobal
+    ? Math.round(((totaux.fait + totaux.chantier / 2) / totalGlobal) * 100) : 0;
+  zone.innerHTML =
+    `<div class="bilan">` +
+    `<span class="part"><b style="color:#10b981">${totaux.fait}</b> faites</span>` +
+    `<span class="part"><b style="color:#f59e0b">${totaux.chantier}</b> en chantier</span>` +
+    `<span class="part"><b style="color:#94a3b8">${totaux.afaire}</b> à faire</span>` +
+    `<div class="jauge"><div style="width:${avancementGlobal}%"></div></div>` +
+    `<span class="part">${totalGlobal} notions du cycle 4</span>` +
+    `</div>` + html;
+}
+rendreProgramme();
 
 /* ========== 1. ÉQUABARRE MANIPULABLE ========== */
 const champ = document.getElementById("champEquation");
@@ -935,8 +1292,8 @@ document.getElementById("btnPngBarres").addEventListener("click", () => {
 </footer>
 
 <script>
-// Navigation par domaines : l'accueil ne montre que le sommaire ;
-// un domaine cliqué affiche sa section seule (retour possible).
+// Navigation : l'accueil montre les outils et le tableau de bord ;
+// un outil cliqué s'affiche seul (un geste pour entrer, un pour revenir).
 (function () {
   const groupes = {
     secEquabarre: ["secEquabarre"],
@@ -944,17 +1301,18 @@ document.getElementById("btnPngBarres").addEventListener("click", () => {
     secSplat: ["secSplat"],
     secPrototypes: ["secPrototypes"],
   };
-  const sommaire = document.getElementById("secSommaire");
-  const sections = [...document.querySelectorAll("body > section")].filter((s) => s !== sommaire);
+  const accueilIds = ["secOutils", "secProgramme"];
+  const sections = [...document.querySelectorAll("body > section")];
   const retour = document.createElement("p");
-  retour.innerHTML = '<a href="#" style="font-weight:700;color:#063f86">&larr; Tous les domaines</a>';
+  retour.innerHTML = '<a href="#" style="font-weight:700;color:#063f86;font-size:17px;text-decoration:none">&larr; Tous les outils</a>';
   retour.hidden = true;
-  sommaire.after(retour);
+  document.getElementById("secOutils").before(retour);
   function montrer(id) {
     const cible = groupes[id] ?? null;
-    for (const s of sections) s.hidden = cible ? !cible.includes(s.id) : true;
+    for (const s of sections) {
+      s.hidden = cible ? !cible.includes(s.id) : !accueilIds.includes(s.id);
+    }
     retour.hidden = !cible;
-    sommaire.hidden = !!cible;
     window.scrollTo(0, 0);
   }
   retour.querySelector("a").addEventListener("click", (e) => {
@@ -962,14 +1320,15 @@ document.getElementById("btnPngBarres").addEventListener("click", () => {
     history.replaceState(null, "", location.pathname);
     montrer(null);
   });
-  for (const lien of sommaire.querySelectorAll('a[href^="#"]')) {
-    lien.addEventListener("click", (e) => {
-      e.preventDefault();
-      const id = lien.getAttribute("href").slice(1);
-      history.replaceState(null, "", "#" + id);
-      montrer(id);
-    });
-  }
+  // les liens vers les vues internes sont générés après coup (module) :
+  // on écoute donc au niveau du document
+  document.addEventListener("click", (e) => {
+    const lien = e.target.closest("a[data-vue]");
+    if (!lien) return;
+    e.preventDefault();
+    history.replaceState(null, "", "#" + lien.dataset.vue);
+    montrer(lien.dataset.vue);
+  });
   montrer(location.hash ? location.hash.slice(1) : null);
 })();
 </script>
