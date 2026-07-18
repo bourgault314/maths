@@ -177,18 +177,19 @@ const $ = (id) => document.getElementById(id);
 
 // ---------- l'explorateur ----------
 const choixFigure = $("choixFigure");
-for (const categorie of CATEGORIES_FIGURES) {
-  const groupe = document.createElement("optgroup");
-  groupe.label = categorie;
+// la liste ne montre QUE les figures de la categorie active
+function remplirChoixFigure(categorie, valeur = null) {
+  choixFigure.innerHTML = "";
   for (const [cle, entree] of Object.entries(FIGURES_USUELLES)) {
     if (entree.categorie !== categorie) continue;
     const option = document.createElement("option");
     option.value = cle;
     option.textContent = entree.titre;
-    groupe.appendChild(option);
+    choixFigure.appendChild(option);
   }
-  choixFigure.appendChild(groupe);
+  if (valeur) choixFigure.value = valeur;
 }
+remplirChoixFigure(CATEGORIES_FIGURES[0]);
 
 const chips = $("chipsCategories");
 for (const categorie of CATEGORIES_FIGURES) {
@@ -196,10 +197,7 @@ for (const categorie of CATEGORIES_FIGURES) {
   bouton.className = "chip";
   bouton.textContent = categorie;
   bouton.addEventListener("click", () => {
-    const premiere = Object.entries(FIGURES_USUELLES).find(
-      ([, e]) => e.categorie === categorie,
-    );
-    choixFigure.value = premiere[0];
+    remplirChoixFigure(categorie);
     surChangementFigure();
   });
   chips.appendChild(bouton);
@@ -530,7 +528,7 @@ for (const categorie of CATEGORIES_FIGURES) {
     cadre.style.cursor = "pointer";
     cadre.title = "Ouvrir dans l'explorateur";
     cadre.addEventListener("click", () => {
-      choixFigure.value = cle;
+      remplirChoixFigure(entree.categorie, cle);
       surChangementFigure();
       $("secExplorateur").scrollIntoView({ behavior: "smooth" });
     });
