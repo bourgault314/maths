@@ -472,6 +472,19 @@
         api.setLabelVisible(name, false);
       }
 
+      // Les versions de GeoGebra ne proposent pas toutes exactement les mêmes
+      // réglages d'affichage, notamment dans Safari iOS. Un réglage cosmétique
+      // ne doit jamais empêcher la figure de se construire.
+      function callApi(method, ...args) {
+        if (!api || typeof api[method] !== "function") return undefined;
+        try {
+          return api[method](...args);
+        } catch (error) {
+          console.warn(`GeoGebra : ${method} n’a pas pu être appliqué.`, error);
+          return undefined;
+        }
+      }
+
       function stylePoint(name, color = COLORS.blue, size = 8) {
         api.setColor(name, ...color);
         api.setPointSize(name, size);
@@ -554,23 +567,33 @@
         els.hint.textContent = challenge.hint;
         renderTools(challenge);
 
-        api.newConstruction();
-        api.setRepaintingActive(false);
-        api.setErrorDialogsActive(false);
-        api.setAxesVisible(false, false);
-        api.setGridVisible(false);
-        api.setCoordSystem(...challenge.coords);
-        api.setPointCapture(1, 3);
-        api.setOnTheFlyPointCreationActive(challenge.onTheFly !== false);
-        api.evalCommand(challenge.commands.join("\n"));
-        challenge.setup();
-        Array.from(api.getAllObjectNames()).forEach(name => api.setFixed(name, true, true));
-        api.setRepaintingActive(true);
-        api.refreshViews();
-        baseNames = new Set(Array.from(api.getAllObjectNames()));
-        settingUp = false;
-        els.check.disabled = false;
-        setActiveTool(challenge.tools[0].mode, challenge.tools[0].color || null);
+        try {
+          api.newConstruction();
+          callApi("setRepaintingActive", false);
+          callApi("setErrorDialogsActive", false);
+          // setAxesVisible / setGridVisible n'existent plus dans certaines
+          // versions mobiles. Cette API récente est prévue pour ce réglage.
+          callApi("setGraphicsOptions", 1, { axes: false, grid: false, pointCapturing: 3 });
+          callApi("setCoordSystem", ...challenge.coords);
+          callApi("setPointCapture", 1, 3);
+          callApi("setOnTheFlyPointCreationActive", challenge.onTheFly !== false);
+          const created = api.evalCommand(challenge.commands.join("\n"));
+          if (created === false) throw new Error("La figure de départ n’a pas été créée.");
+          challenge.setup();
+          Array.from(api.getAllObjectNames()).forEach(name => api.setFixed(name, true, true));
+          baseNames = new Set(Array.from(api.getAllObjectNames()));
+          els.check.disabled = false;
+          setActiveTool(challenge.tools[0].mode, challenge.tools[0].color || null);
+          return true;
+        } catch (error) {
+          console.error("Initialisation du défi GeoGebra", error);
+          els.loading.innerHTML = "La figure n’a pas pu démarrer correctement.<br>Recharge la page : elle ne doit jamais rester blanche.";
+          return false;
+        } finally {
+          settingUp = false;
+          callApi("setRepaintingActive", true);
+          callApi("refreshViews");
+        }
       }
 
       function onObjectAdded(name) {
@@ -869,10 +892,14 @@
           preventFocus: false,
           appletOnLoad(ggbApi) {
             api = ggbApi;
-            api.registerAddListener(onObjectAdded);
-            api.registerClickListener(onObjectClicked);
-            els.loading.hidden = true;
-            setupChallenge(0);
+            try {
+              api.registerAddListener(onObjectAdded);
+              api.registerClickListener(onObjectClicked);
+              if (setupChallenge(0)) els.loading.hidden = true;
+            } catch (error) {
+              console.error("Chargement de GeoGebra", error);
+              els.loading.innerHTML = "La figure n’a pas pu démarrer correctement.<br>Recharge la page : elle ne doit jamais rester blanche.";
+            }
           }
         }, true);
         applet.inject("ggb-element");
