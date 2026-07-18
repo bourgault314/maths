@@ -17,19 +17,44 @@
 
 import {
   estDonneePure,
+  estIdentifiantValide,
   validerGabarit,
 } from "../../contrats/src/gabarit.js";
 import {
   SCHEMA_QUESTION_INSTANCE,
   validerQuestionInstance,
 } from "../../contrats/src/question.js";
-import { VERSION_ALEATOIRE, creerGenerateur } from "./aleatoire.js";
+import {
+  VERSION_ALEATOIRE,
+  creerGenerateur,
+  validerGraine,
+} from "./aleatoire.js";
+
+/**
+ * Copie une donnée déjà validée, puis fige récursivement la copie.
+ * Le générateur ne peut ainsi modifier ni le gabarit ni un objet partagé par
+ * l'appelant.
+ * @param {any} valeur
+ * @returns {any}
+ */
+function copierEtFiger(valeur) {
+  if (valeur === null || typeof valeur !== "object") return valeur;
+  const copie = Array.isArray(valeur)
+    ? valeur.map(copierEtFiger)
+    : Object.fromEntries(
+        Object.entries(valeur).map(([cle, element]) => [
+          cle,
+          copierEtFiger(element),
+        ]),
+      );
+  return Object.freeze(copie);
+}
 
 /**
  * Crée un registre de générateurs vide.
  *
  * Un générateur : {
- *   nom: "fractions.simplifier",
+ *   nom: "fixture.echo",
  *   version: 1,
  *   generer: ({ aleatoire, parametres }) => {
  *     // renvoie { enonce, reponse, aide?, correction? }
@@ -43,8 +68,10 @@ export function creerRegistre() {
 
   function enregistrer(generateur) {
     const { nom, version, generer } = generateur ?? {};
-    if (typeof nom !== "string" || nom.length === 0) {
-      throw new TypeError("enregistrer : nom de générateur requis");
+    if (!estIdentifiantValide(nom)) {
+      throw new TypeError(
+        "enregistrer : nom de générateur en minuscules requis",
+      );
     }
     if (!Number.isInteger(version) || version < 1) {
       throw new TypeError(`enregistrer(${nom}) : version entière ≥ 1 requise`);
@@ -64,6 +91,7 @@ export function creerRegistre() {
    * @param {number | string} graine — graine de série
    */
   function instancier(gabarit, graine) {
+    validerGraine(graine);
     const controle = validerGabarit(gabarit);
     if (!controle.valide) {
       throw new Error(`gabarit invalide : ${controle.erreurs.join(" ; ")}`);
@@ -76,10 +104,11 @@ export function creerRegistre() {
       );
     }
 
-    const aleatoire = creerGenerateur(`${g.id}#${String(graine)}`);
+    const graineTexte = String(graine);
+    const aleatoire = creerGenerateur(`${g.id}#${graineTexte}`);
     const produit = generateur.generer({
       aleatoire,
-      parametres: g.parametres,
+      parametres: copierEtFiger(g.parametres),
     });
 
     // Le produit du générateur est étalé EN PREMIER : il ne peut donc
@@ -88,13 +117,13 @@ export function creerRegistre() {
     const instance = {
       ...produit,
       schema: SCHEMA_QUESTION_INSTANCE,
-      id: `${g.id}@${String(graine)}`,
+      id: `${g.id}@${aleatoire.graine.toString(36)}`,
       origine: {
         gabarit: g.id,
         versionGabarit: g.version,
         generateur: g.generateur.nom,
         versionGenerateur: g.generateur.version,
-        graine: String(graine),
+        graine: graineTexte,
         versionAleatoire: VERSION_ALEATOIRE,
       },
     };

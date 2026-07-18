@@ -8,11 +8,11 @@ import {
 
 const exempleValide = () => ({
   schema: SCHEMA_GABARIT_QUESTION,
-  id: "fractions.simplifier-simple",
+  id: "fixture.question-variable",
   version: 1,
-  titre: "Simplifier une fraction",
-  generateur: { nom: "fractions.simplifier", version: 1 },
-  parametres: { niveau: "simple" },
+  titre: "Fixture technique",
+  generateur: { nom: "fixture.echo", version: 1 },
+  parametres: { etiquette: "test" },
 });
 
 describe("validerGabarit", () => {
@@ -38,7 +38,7 @@ describe("validerGabarit", () => {
     assert.equal(validerGabarit(sans).valide, false);
     const mauvaiseVersion = {
       ...exempleValide(),
-      generateur: { nom: "fractions.simplifier", version: 0 },
+      generateur: { nom: "fixture.echo", version: 0 },
     };
     assert.equal(validerGabarit(mauvaiseVersion).valide, false);
   });
@@ -64,5 +64,19 @@ describe("estDonneePure", () => {
     assert.equal(estDonneePure(new Date(0)), false);
     assert.equal(estDonneePure(Infinity), false);
     assert.equal(estDonneePure(Object.create({ piege: true })), false);
+  });
+
+  it("refuse cycles, tableaux creux, propriétés accessoires et symboles", () => {
+    const cycle = {};
+    cycle.soi = cycle;
+    assert.equal(estDonneePure(cycle), false);
+    assert.equal(estDonneePure([1, , 3]), false);
+    assert.equal(estDonneePure({ get valeur() { return 1; } }), false);
+    assert.equal(estDonneePure({ [Symbol("cache")]: 1 }), false);
+  });
+
+  it("accepte une même donnée référencée à plusieurs endroits sans cycle", () => {
+    const partagee = { valeur: 1 };
+    assert.equal(estDonneePure({ a: partagee, b: partagee }), true);
   });
 });

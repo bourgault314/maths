@@ -12,6 +12,7 @@ import {
   VERSION_ALEATOIRE,
   creerGenerateur,
   graineDepuisTexte,
+  validerGraine,
 } from "./aleatoire.js";
 
 describe("graineDepuisTexte", () => {
@@ -21,6 +22,27 @@ describe("graineDepuisTexte", () => {
 
   it("produit des graines différentes pour des textes proches", () => {
     assert.notEqual(graineDepuisTexte("serie-6A"), graineDepuisTexte("serie-6B"));
+  });
+
+  it("rejette explicitement une valeur qui n'est pas un texte", () => {
+    assert.throws(() => graineDepuisTexte(null), TypeError);
+  });
+});
+
+describe("validerGraine", () => {
+  it("accepte un texte et les deux bornes numériques non signées", () => {
+    assert.doesNotThrow(() => validerGraine(""));
+    assert.doesNotThrow(() => validerGraine(0));
+    assert.doesNotThrow(() => validerGraine(0xffffffff));
+  });
+
+  it("rejette types, nombres non finis, décimaux et valeurs hors 32 bits", () => {
+    for (const graine of [undefined, null, {}, true]) {
+      assert.throws(() => validerGraine(graine), TypeError);
+    }
+    for (const graine of [NaN, Infinity, -Infinity, 1.5, -1, 0x100000000]) {
+      assert.throws(() => validerGraine(graine), RangeError);
+    }
   });
 });
 
@@ -84,6 +106,8 @@ describe("creerGenerateur — qualité des tirages", () => {
     const g = creerGenerateur(1);
     assert.throws(() => g.entier(5, 2), RangeError);
     assert.throws(() => g.entier(0.5, 3), RangeError);
+    assert.throws(() => g.entier(0, Number.MAX_SAFE_INTEGER), RangeError);
+    assert.throws(() => g.entier(0, 0x100000000), RangeError);
   });
 
   it("choix() rejette une liste vide", () => {
@@ -97,6 +121,12 @@ describe("creerGenerateur — qualité des tirages", () => {
     const resultat = g.melange(origine);
     assert.deepEqual(origine, [1, 2, 3, 4, 5]);
     assert.deepEqual([...resultat].sort(), [1, 2, 3, 4, 5]);
+  });
+
+  it("melange() rejette ce qui n'est pas un tableau", () => {
+    const g = creerGenerateur("tableau");
+    assert.throws(() => g.melange("abc"), TypeError);
+    assert.throws(() => g.melange(null), TypeError);
   });
 
   it("des graines différentes donnent des suites différentes", () => {

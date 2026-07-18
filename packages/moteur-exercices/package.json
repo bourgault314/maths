@@ -5,7 +5,6 @@
   "type": "module",
   "exports": {
     "./aleatoire": "./src/aleatoire.js",
-    "./generation": "./src/generation.js",
-    "./generateurs/fractions": "./src/generateurs/fractions.js"
+    "./generation": "./src/generation.js"
   }
 }

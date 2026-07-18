@@ -1,33 +1,41 @@
 // Contrat « gabarit de question » — version 1.
 //
-// Un gabarit décrit une FAMILLE de questions à valeurs variables :
-// « simplifier une fraction tirée au hasard », « ajouter deux relatifs
-// entre -10 et 10 »… Le gabarit est une donnée pure : il ne contient
-// AUCUN code. Il référence par son nom un générateur — une fonction
-// écrite, relue et testée dans le moteur d'exercices — et lui transmet
-// des paramètres.
-//
-// C'est le remplaçant sûr du « formula_code » de l'ancien Automatismes,
-// qui stockait des programmes sous forme de texte et les exécutait.
-// Ici : les contenus (Studio, banques) ne peuvent que choisir un
-// générateur existant et le paramétrer ; tout le code reste dans Git.
+// Un gabarit décrit une FAMILLE de questions à valeurs variables. C'est une
+// donnée pure : il ne contient AUCUN code. Il référence par son nom un
+// générateur — une fonction écrite, relue et testée dans le moteur
+// d'exercices — et lui transmet des paramètres. Les contenus ne peuvent que
+// choisir un générateur enregistré et le paramétrer ; tout le code reste
+// versionné dans Git.
 //
 // Structure :
 // {
 //   schema: "mathsgo.gabarit-question/1",
-//   id: "fractions.simplifier-simple",   // identifiant stable, en
-//                                        //   minuscules (lettres, chiffres,
-//                                        //   points, tirets)
+//   id: "fixture.question-variable",     // identifiant stable, en minuscules
+//                                        //   (lettres, chiffres, points,
+//                                        //   tirets)
 //   version: 1,                          // version du gabarit lui-même
-//   titre: "Simplifier une fraction",    // pour le Studio et les listes
-//   generateur: { nom: "fractions.simplifier", version: 1 },
+//   titre: "Fixture technique",          // pour le Studio et les listes
+//   generateur: { nom: "fixture.echo", version: 1 },
 //   parametres: { ... },                 // objet libre, validé par le
 //                                        //   générateur à l'instanciation
 // }
 
 export const SCHEMA_GABARIT_QUESTION = "mathsgo.gabarit-question/1";
 
-const FORMAT_ID = /^[a-z0-9]+(?:[.-][a-z0-9]+)*$/;
+const FORMAT_IDENTIFIANT = /^[a-z0-9]+(?:[.-][a-z0-9]+)*$/;
+
+/**
+ * Vérifie le format commun des identifiants de gabarit et de générateur.
+ * @param {unknown} identifiant
+ * @returns {identifiant is string}
+ */
+export function estIdentifiantValide(identifiant) {
+  return (
+    typeof identifiant === "string" &&
+    identifiant.length <= 128 &&
+    FORMAT_IDENTIFIANT.test(identifiant)
+  );
+}
 
 /**
  * Vrai si la valeur est une donnée pure : null, booléen, nombre fini,
@@ -37,16 +45,58 @@ const FORMAT_ID = /^[a-z0-9]+(?:[.-][a-z0-9]+)*$/;
  * @returns {boolean}
  */
 export function estDonneePure(valeur) {
+  return verifierDonneePure(valeur, new WeakSet());
+}
+
+/**
+ * @param {unknown} valeur
+ * @param {WeakSet<object>} chemin
+ * @returns {boolean}
+ */
+function verifierDonneePure(valeur, chemin) {
   if (valeur === null) return true;
   const type = typeof valeur;
   if (type === "boolean" || type === "string") return true;
   if (type === "number") return Number.isFinite(valeur);
-  if (Array.isArray(valeur)) return valeur.every(estDonneePure);
-  if (type === "object") {
-    if (Object.getPrototypeOf(valeur) !== Object.prototype) return false;
-    return Object.values(valeur).every(estDonneePure);
+  if (type !== "object") return false;
+
+  const objet = /** @type {object} */ (valeur);
+  if (chemin.has(objet)) return false;
+
+  if (!Array.isArray(objet) && Object.getPrototypeOf(objet) !== Object.prototype) {
+    return false;
   }
-  return false;
+  const cles = Reflect.ownKeys(objet);
+  if (cles.some((cle) => typeof cle === "symbol")) return false;
+
+  if (Array.isArray(objet)) {
+    if (cles.length !== objet.length + 1 || !cles.includes("length")) return false;
+    for (let i = 0; i < objet.length; i++) {
+      if (!Object.hasOwn(objet, i)) return false;
+    }
+  }
+
+  const descripteurs = Object.entries(Object.getOwnPropertyDescriptors(objet))
+    .filter(([cle]) => !Array.isArray(objet) || cle !== "length")
+    .map(([, descripteur]) => descripteur);
+  if (
+    descripteurs.some(
+      (descripteur) =>
+        !descripteur.enumerable ||
+        !("value" in descripteur) ||
+        typeof descripteur.get === "function" ||
+        typeof descripteur.set === "function",
+    )
+  ) {
+    return false;
+  }
+
+  chemin.add(objet);
+  const pure = Object.values(objet).every((element) =>
+    verifierDonneePure(element, chemin),
+  );
+  chemin.delete(objet);
+  return pure;
 }
 
 /**
@@ -67,9 +117,9 @@ export function validerGabarit(gabarit) {
       `schema : « ${SCHEMA_GABARIT_QUESTION} » attendu, reçu « ${g.schema} »`,
     );
   }
-  if (typeof g.id !== "string" || !FORMAT_ID.test(g.id)) {
+  if (!estIdentifiantValide(g.id)) {
     erreurs.push(
-      "id : identifiant en minuscules requis (lettres, chiffres, points, tirets)",
+      "id : identifiant en minuscules de 1 à 128 caractères requis (lettres, chiffres, points, tirets)",
     );
   }
   if (!Number.isInteger(g.version) || g.version < 1) {
@@ -82,7 +132,7 @@ export function validerGabarit(gabarit) {
   if (typeof g.generateur !== "object" || g.generateur === null) {
     erreurs.push("generateur : objet { nom, version } attendu");
   } else {
-    if (typeof g.generateur.nom !== "string" || !FORMAT_ID.test(g.generateur.nom)) {
+    if (!estIdentifiantValide(g.generateur.nom)) {
       erreurs.push("generateur.nom : identifiant en minuscules requis");
     }
     if (!Number.isInteger(g.generateur.version) || g.generateur.version < 1) {

@@ -12,6 +12,28 @@
 // choisis pour être exacts en arithmétique 32 bits, donc identiques partout.
 
 export const VERSION_ALEATOIRE = 1;
+const MAX_GRAINE_NUMERIQUE = 0xffffffff;
+const NOMBRE_ETATS = 0x100000000;
+
+/**
+ * Vérifie qu'une graine appartient au domaine public du générateur.
+ * @param {unknown} graine
+ * @throws {TypeError | RangeError}
+ */
+export function validerGraine(graine) {
+  if (typeof graine === "string") return;
+  if (typeof graine !== "number") {
+    throw new TypeError("graine : texte ou entier non signé sur 32 bits requis");
+  }
+  if (
+    !Number.isInteger(graine) ||
+    !Number.isFinite(graine) ||
+    graine < 0 ||
+    graine > MAX_GRAINE_NUMERIQUE
+  ) {
+    throw new RangeError("graine : entier compris entre 0 et 4294967295 requis");
+  }
+}
 
 /**
  * Transforme une graine texte quelconque ("serie-6A-2026", code élève…)
@@ -20,6 +42,9 @@ export const VERSION_ALEATOIRE = 1;
  * @returns {number} entier non signé sur 32 bits
  */
 export function graineDepuisTexte(texte) {
+  if (typeof texte !== "string") {
+    throw new TypeError("graineDepuisTexte : texte requis");
+  }
   let h = 1779033703 ^ texte.length;
   for (let i = 0; i < texte.length; i++) {
     h = Math.imul(h ^ texte.charCodeAt(i), 3432918353);
@@ -42,6 +67,7 @@ export function graineDepuisTexte(texte) {
  * }}
  */
 export function creerGenerateur(graine) {
+  validerGraine(graine);
   const graineNormalisee =
     typeof graine === "string" ? graineDepuisTexte(graine) : graine >>> 0;
   let etat = graineNormalisee;
@@ -60,10 +86,20 @@ export function creerGenerateur(graine) {
    * @param {number} min @param {number} max
    */
   function entier(min, max) {
-    if (!Number.isInteger(min) || !Number.isInteger(max) || max < min) {
+    if (
+      !Number.isSafeInteger(min) ||
+      !Number.isSafeInteger(max) ||
+      max < min
+    ) {
       throw new RangeError(`entier(${min}, ${max}) : bornes invalides`);
     }
-    return min + Math.floor(reel() * (max - min + 1));
+    const largeur = max - min + 1;
+    if (!Number.isSafeInteger(largeur) || largeur > NOMBRE_ETATS) {
+      throw new RangeError(
+        `entier(${min}, ${max}) : intervalle limité à 4294967296 valeurs`,
+      );
+    }
+    return min + Math.floor(reel() * largeur);
   }
 
   /**
@@ -82,6 +118,9 @@ export function creerGenerateur(graine) {
    * @template T @param {readonly T[]} liste @returns {T[]}
    */
   function melange(liste) {
+    if (!Array.isArray(liste)) {
+      throw new TypeError("melange() : tableau requis");
+    }
     const copie = [...liste];
     for (let i = copie.length - 1; i > 0; i--) {
       const j = entier(0, i);

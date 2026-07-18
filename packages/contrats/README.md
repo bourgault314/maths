@@ -18,12 +18,7 @@ Règles du package :
 | Module | Contrat | Rôle |
 |---|---|---|
 | `src/question.js` | `mathsgo.question-instance/1` | Une question prête à afficher : énoncé en blocs (texte/LaTeX à trous `[[reponse]]`), réponses acceptées par champ, aide et correction facultatives, traçabilité d'origine. |
-| `src/gabarit.js` | `mathsgo.gabarit-question/1` | Une famille de questions à valeurs variables : référence un générateur du moteur par nom et version, avec des paramètres en données pures. Remplaçant sûr du `formula_code` de V1. |
+| `src/gabarit.js` | `mathsgo.gabarit-question/1` | Une famille de questions à valeurs variables : référence un générateur du moteur par nom et version, avec des paramètres en données pures. |
 
-La preuve de récupérabilité des contenus V1 fait partie des tests : les
-questions statiques du module réel `dnb_01` sont converties et validées
-contre le contrat à chaque exécution de `node --test`.
-
-À venir : contrat de série (`SeriesDefinition`), contrat de gabarit
-(`QuestionTemplate`), contrat d'essai (`AttemptEvent`) — dans cet ordre,
-chacun introduit au moment où un consommateur réel en a besoin.
+Les tests utilisent uniquement des fixtures techniques neutres. Un nouveau
+contrat n'est ajouté que lorsqu'un consommateur réel et validé en a besoin.
