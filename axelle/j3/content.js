@@ -6,7 +6,7 @@
 
   const lessonSets = {
     math: [
-      {kind: "fraction", title: "Une fraction", text: "Les parts doivent être égales. En 2/3, 2 est le nombre de parts prises et 3 le nombre total de parts."},
+      {kind: "fraction", title: "Une fraction", text: "Les parts doivent être égales. En 4/6, 4 est le nombre de parts prises et 6 le nombre total de parts."},
       {kind: "plus9", title: "Ajouter 9", text: "Je vais d’abord jusqu’à la dizaine suivante : 38 + 2 = 40, puis j’ajoute les 7 qui restent."},
       {kind: "lines", title: "Parallèles ou perpendiculaires", text: "Des parallèles ne se croisent jamais. Des perpendiculaires se croisent en formant un angle droit, codé par un petit carré."},
       {kind: "circle", title: "Dans un cercle", text: "Un rayon relie le centre au bord. Un diamètre relie deux bords et passe obligatoirement par le centre."},
