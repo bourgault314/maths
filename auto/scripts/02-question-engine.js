@@ -2790,12 +2790,36 @@ function renderConversionModule(inst,correction=false,mode=null){
   return html+'</div>';
 }
 
+// La barre de pourcentage OFFICIELLE (packages/objets, via le pont
+// 90-objets-officiels.js) : palette des gabarits de Gwenaël, viewBox
+// identique en question et en correction (le tableau ne change plus
+// jamais de taille d'une diapo à l'autre). Repli sur l'ancien dessin
+// si le module n'a pas chargé.
+function objetBarrePourcentage(){
+  return (typeof window!=='undefined'&&window.MATHSGO_OBJETS&&window.MATHSGO_OBJETS.dessinerBarrePourcentage)||null;
+}
+
+function officialPercentBarSvg(data,correction){
+  const dessiner=objetBarrePourcentage();
+  const parts=Math.max(1,Math.round(data.denominator));
+  const rendu=dessiner({
+    mode:'direct',
+    percent:data.percent,
+    parts,
+    activeParts:1,
+    totalVal:data.total,
+    calcVal:data.part
+  },{correction,chemin:false});
+  return '<div class="fraction-percent-help">'+rendu.svg.replace('<svg ','<svg class="fraction-percent-svg" ')+'</div>';
+}
+
 function renderModule04(inst,correction=false,mode=null){
   if(mode===null) mode=document.getElementById('visualMode').value;
   const data=inst.fractionPercent;
   if(!data) return renderGenericQuestion(inst,correction,mode);
   let html='<div class="question fraction-percent-prompt">'+renderMathSegments(inst.rawStatement)+'</div>';
-  html+=isWithoutVisuals(mode)?visualPlaceholder(mode):fractionPercentBarSvg(data,correction);
+  const barreOfficielle=data.kind==='percent'&&objetBarrePourcentage();
+  html+=isWithoutVisuals(mode)?visualPlaceholder(mode):(barreOfficielle?officialPercentBarSvg(data,correction):fractionPercentBarSvg(data,correction));
   let footer=inst.rawFooter;
   if(data.kind==='fraction') footer='$$\\dfrac{'+data.numerator+'}{'+data.denominator+'}\\text{ de }'+fmt(data.total)+'=[[formula]]$$';
   if(data.kind==='percent'&&!data.contextual) footer='$$'+fmt(data.percent)+'\\%\\text{ de }'+fmt(data.total)+'=[[formula]]$$';
@@ -3168,13 +3192,30 @@ function evolutionBarSvg(data,correction=false){
   return `<div class="evolution-help${compactCells?' evolution-help-compact':''}"><svg class="evolution-svg" viewBox="0 0 ${W} ${H}" role="img" aria-label="Schéma en barres d’une évolution en pourcentage">${body}</svg></div>`;
 }
 
+// La barre d'évolution par l'objet officiel : mêmes accolades
+// (nouveau total / reste / montant / coefficient normalisé à 100 %),
+// hachures sur la part retirée, hauteur réservée dès l'énoncé.
+function officialEvolutionBarSvg(data,correction){
+  const dessiner=objetBarrePourcentage();
+  const accolades={newTotal:'nouveauTotal',remainder:'reste',amount:'montant',coefficient:'coefficient'};
+  const rendu=dessiner({
+    mode:data.direction==='increase'?'evo_inc':'evo_dec',
+    percent:data.percent,
+    parts:data.baseCells,
+    activeParts:data.deltaCells,
+    totalVal:data.initial,
+    calcVal:data.newTotal
+  },{correction,accolade:accolades[data.braceMode],normalise:!!data.normalized});
+  return '<div class="evolution-help">'+rendu.svg.replace('<svg ','<svg class="evolution-svg" ')+'</div>';
+}
+
 function renderEvolutionModule(inst,correction=false,mode=null){
   if(mode===null) mode=document.getElementById('visualMode').value;
   const qcm=splitQCM(inst.rawStatement);
   const prompt=qcm?qcm.prompt:inst.rawStatement;
   const promptClass=prompt.includes('legacy-statement-table-wrap')?'question evolution-prompt legacy-statement-question':'question evolution-prompt';
   let html='<div class="'+promptClass+'">'+renderMathSegments(prompt)+'</div>';
-  html+=isWithoutVisuals(mode)?visualPlaceholder(mode):evolutionBarSvg(inst.evolution,correction);
+  html+=isWithoutVisuals(mode)?visualPlaceholder(mode):(objetBarrePourcentage()?officialEvolutionBarSvg(inst.evolution,correction):evolutionBarSvg(inst.evolution,correction));
   if(qcm){
     const corrects=new Set(inst.answers.map(value=>String(value)));
     html+='<div class="options evolution-options options-'+qcm.opts.length+compactQcmClass(qcm.opts)+'">';
