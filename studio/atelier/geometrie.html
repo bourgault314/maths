@@ -44,6 +44,18 @@
   .carte figcaption{font-size:12.5px;color:var(--attenue);margin-top:6px;font-weight:600}
   .carte.ok figcaption::before{content:"✓ ";color:#18a85b}
   figure{margin:0}
+  /* téléphone : commandes pleine largeur, cibles tactiles confortables */
+  @media (max-width:560px){
+    body{padding:12px}
+    section{border-radius:16px}
+    .barreCommandes{gap:8px}
+    .reglage{white-space:normal;flex:1 1 100%}
+    .reglage input[type=range]{flex:1;width:auto;min-width:0}
+    select,button{font-size:14.5px;padding:10px 12px;min-height:44px}
+    .toggles{gap:8px 14px}
+    .toggles label{min-height:32px}
+    .galerie{gap:10px}
+  }
 </style>
 </head>
 <body>
@@ -116,6 +128,13 @@
     <span class="reglage" id="messageCopie" aria-live="polite"></span>
   </div>
   <div class="zoneRendu" id="renduFigure" aria-live="polite"></div>
+</section>
+
+<section id="secReglages">
+  <h2>Test des réglages, un par un</h2>
+  <p class="aide">Pour vérifier que CHAQUE petit bouton fait bien son travail : la figure choisie dans l'explorateur est redessinée ci-dessous avec un seul réglage activé à la fois. Si une carte est fausse, son bouton est en cause — signalez-la.</p>
+  <div class="barreCommandes"><button class="principal" id="btnPlancheReglages">Générer la planche pour la figure choisie</button></div>
+  <div class="galerie" id="plancheReglages"></div>
 </section>
 
 <section id="secPrimitives">
@@ -647,6 +666,84 @@ for (const [svg, legende] of stress) {
 }
 
 surChangementFigure();
+
+// ---------- planche des réglages : chaque bouton, un par un ----------
+function genererPlancheReglages() {
+  const zone = $("plancheReglages");
+  zone.innerHTML = "";
+  const entree = FIGURES_USUELLES[choixFigure.value];
+  if (entree.genre === "cercle") {
+    const variantes = [
+      ["centre", { centre: true }],
+      ["disque colorié", { centre: false, disque: true }],
+      ["rayon + mesure", { centre: false, rayonVersDeg: 40, mesureRayon: true }],
+      ["diamètre + mesure", { centre: false, diametreVersDeg: 25, mesureDiametre: true }],
+      ["corde", { centre: false, cordes: [{ de: 150, a: 245 }] }],
+      ["tangente", { centre: false, tangente: { en: 40 } }],
+      ["secteur", { centre: false, secteur: { deDeg: 60, aDeg: 130 } }],
+    ];
+    for (const [titre, visible] of variantes) {
+      const description = entree.decrire(lireParametres());
+      description.visible = visible;
+      description.sortie = { taille: 150 };
+      zone.appendChild(carte(dessinerCercle(description), titre));
+    }
+    return;
+  }
+  const base = () => {
+    const d = entree.decrire(lireParametres());
+    d.codages = [];
+    d.visible = { noms: true };
+    d.sortie = { taille: 168, marge: 40 };
+    return d;
+  };
+  const nbSommets = base().sommets.length;
+  const variantes = [["codages de la figure", (d) => { d.codages = entree.decrire(lireParametres()).codages; }]];
+  variantes.push(
+    ["noms des sommets", (d) => { d.visible.noms = true; }],
+    ["croix des sommets", (d) => { d.visible = { noms: false, sommets: true }; }],
+    ["arcs des angles", (d) => { d.visible.angles = true; }],
+    ["mesures des angles", (d) => { d.visible.angles = true; d.visible.mesuresAngles = true; }],
+    ["mesures des côtés", (d) => { d.visible.mesuresCotes = true; }],
+    ["milieux des côtés", (d) => { d.visible.milieux = true; }],
+    ["axes de symétrie", (d) => { d.visible.axes = true; }],
+  );
+  if (nbSommets === 4) {
+    variantes.push(
+      ["diagonales + longueurs", (d) => { d.visible.diagonales = true; d.visible.mesuresDiagonales = true; }],
+      ["centre (croisement)", (d) => { d.visible.diagonales = true; d.visible.centre = true; }],
+    );
+  } else {
+    variantes.push(["centre", (d) => { d.visible.centre = true; }]);
+  }
+  if (nbSommets === 3) {
+    variantes.push(
+      ["hauteurs", (d) => { d.visible.hauteurs = true; }],
+      ["médianes", (d) => { d.visible.medianes = true; }],
+      ["médiatrices", (d) => { d.visible.mediatrices = true; }],
+      ["bissectrices", (d) => { d.visible.bissectrices = true; }],
+      ["cercle inscrit", (d) => { d.visible.cercleInscrit = true; }],
+      ["cercle circonscrit", (d) => { d.visible.cercleCirconscrit = true; }],
+      ["centres G, H, O, I", (d) => { d.visible.centresRemarquables = true; }],
+      ["segment des milieux", (d) => { d.visible.segmentDesMilieux = true; }],
+    );
+  }
+  for (const [titre, applique] of variantes) {
+    const description = base();
+    applique(description);
+    try {
+      zone.appendChild(carte(dessinerFigure(description), titre));
+    } catch (erreur) {
+      const alerte = document.createElement("figure");
+      alerte.className = "carte";
+      alerte.innerHTML = "<figcaption></figcaption>";
+      alerte.querySelector("figcaption").textContent = titre + " : ERREUR — " + erreur.message;
+      zone.appendChild(alerte);
+    }
+  }
+}
+$("btnPlancheReglages").addEventListener("click", genererPlancheReglages);
+genererPlancheReglages();
 </script>
 </body>
 </html>
