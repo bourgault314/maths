@@ -35,6 +35,21 @@ describe("creerThales — un seul modèle, toutes les proportions", () => {
     assert.deepEqual(t.alignements[0][1], t.lettres.sommet);
   });
 
+  it("agrandie (k > 1) : l'ordre réel est A,B,M et les rôles suivent la géométrie", () => {
+    const t = creerThales({ k: 2, b: 5, c: 4 });
+    assert.equal(t.configuration, "agrandie");
+    assert.deepEqual(t.alignements, [["A", "B", "M"], ["A", "C", "N"]]);
+    assert.deepEqual(t.lettres.proches, ["B", "C"]);
+    assert.deepEqual(t.lettres.eloignes, ["M", "N"]);
+    const p = t.points;
+    assert.ok(distance(p.A, p.B) < distance(p.A, p.M), "B doit être plus proche de A que M");
+    proche(distance(p.A, p.M) / distance(p.A, p.B), 2, 1e-9);
+  });
+
+  it("refuse k = 1 (les deux triangles seraient confondus)", () => {
+    assert.throws(() => creerThales({ k: 1 }), /k = 1/);
+  });
+
   it("les longueurs annoncées correspondent aux distances réelles", () => {
     const t = creerThales({ k: 0.4, b: 10, c: 9 });
     for (const [nomLongueur, valeur] of Object.entries(t.longueurs)) {
@@ -71,13 +86,16 @@ describe("resoudreThales — produit en croix exact, les six inconnues", () => {
     assert.match(textes, /sont parallèles/);
     assert.match(textes, /AM\/AB = AN\/AC = MN\/BC/);
     assert.match(textes, /produits en croix/);
-    assert.match(textes, /Donc MN = /);
+    // BC est irrationnelle ici : la valeur affichée est arrondie, donc «≈»
+    assert.match(textes, /Donc MN ≈ /);
+    assert.equal(solution.exacte, false);
   });
 
   it("l'inconnue au dénominateur fonctionne aussi (AB inconnu)", () => {
     const t = creerThales({ k: 0.5, b: 8, c: 7 });
     const solution = resoudreThales(t, { inconnue: "AB" });
     proche(solution.valeur, 8, 1e-9);
+    assert.equal(solution.exacte, true);
     assert.match(solution.etapes.at(-1).texte, /Donc AB = 8 cm/);
   });
 
@@ -108,11 +126,22 @@ describe("dessinerThales — construction à l'échelle, jamais figée", () => {
   it("la figure est réellement à l'échelle : MN/BC mesuré dans le SVG = |k|", () => {
     const t = creerThales({ k: 0.4, b: 10, c: 9 });
     const svg = dessinerThales(t, {});
-    const lignes = [...svg.matchAll(/<line x1="([\d.-]+)" y1="([\d.-]+)" x2="([\d.-]+)" y2="([\d.-]+)"/g)]
+    // les CÔTÉS ont l'épaisseur 3.5 (les croix des points sont plus fines)
+    const lignes = [...svg.matchAll(/<line x1="([\d.-]+)" y1="([\d.-]+)" x2="([\d.-]+)" y2="([\d.-]+)" stroke="[^"]*" stroke-width="3.5"/g)]
       .map((m) => m.slice(1, 5).map(Number));
     const longueur = (l) => Math.hypot(l[2] - l[0], l[3] - l[1]);
-    // 4 traits : AB, AC, BC, MN — dans cet ordre
-    proche(longueur(lignes[3]) / longueur(lignes[2]), 0.4, 1e-3);
+    // 6 côtés : AB, AC, BC puis AM, AN, MN — dans cet ordre
+    assert.equal(lignes.length, 6);
+    proche(longueur(lignes[5]) / longueur(lignes[2]), 0.4, 1e-3);
+  });
+
+  it("papillon et agrandie : les côtés du triangle proche sont réellement tracés", () => {
+    for (const options of [{ variation: "papillon" }, { k: 1.5 }]) {
+      const t = creerThales(options);
+      const svg = dessinerThales(t, {});
+      const nbCotes = [...svg.matchAll(/stroke-width="3.5"/g)].length;
+      assert.equal(nbCotes, 6, `${JSON.stringify(options)} : six côtés attendus`);
+    }
   });
 
   it("refuse une longueur d'affichage inconnue", () => {

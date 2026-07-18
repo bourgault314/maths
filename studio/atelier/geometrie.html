@@ -41,6 +41,7 @@
   .zoneRendu svg{max-width:100%;height:auto}
   .galerie{display:flex;flex-wrap:wrap;gap:14px;align-items:flex-end}
   .carte{border:1px solid var(--ligne);border-radius:16px;padding:10px;background:#fff;text-align:center}
+  .carte:focus-visible{outline:3px solid var(--bleu);outline-offset:2px}
   .carte svg{max-width:100%;height:auto;display:block;margin-inline:auto}
   .carte figcaption{font-size:12.5px;color:var(--attenue);margin-top:6px;font-weight:600}
   .carte.ok figcaption::before{content:"✓ ";color:#18a85b}
@@ -547,10 +548,19 @@ for (const categorie of CATEGORIES_FIGURES) {
     const cadre = carte(svg, entree.titre, false);
     cadre.style.cursor = "pointer";
     cadre.title = "Ouvrir dans l'explorateur";
-    cadre.addEventListener("click", () => {
+    // activable au clavier comme au clic
+    cadre.tabIndex = 0;
+    cadre.setAttribute("role", "button");
+    const ouvrir = () => {
       remplirChoixFigure(entree.categorie, cle);
       surChangementFigure();
       $("secExplorateur").scrollIntoView({ behavior: "smooth" });
+    };
+    cadre.addEventListener("click", ouvrir);
+    cadre.addEventListener("keydown", (e) => {
+      if (e.key !== "Enter" && e.key !== " ") return;
+      e.preventDefault();
+      ouvrir();
     });
     rangee.appendChild(cadre);
   }

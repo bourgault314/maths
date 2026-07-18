@@ -1104,13 +1104,17 @@ function normaliserCoteImporte(liste, modeBilles) {
   if (!Array.isArray(liste)) return [];
   const pieces = [];
   for (const brut of liste) {
+    // au-delà du plafond, inutile de continuer : l'import sera refusé
+    if (pieces.length > MAX_PIECES) break;
     const piece = normaliserPieceImportee(brut);
     if (!piece) continue;
     if (piece.type === "jeton" && Number(piece.valeur) === 0) continue;
     if (modeBilles && piece.type === "jeton" && !piece.unitaire) {
       const n = Number(piece.valeur);
-      if (n > 0 && Number.isInteger(n) && n <= 80) {
-        for (let i = 0; i < n; i++) pieces.push(creerJeton(1, { unitaire: true }));
+      if (n > 0 && Number.isInteger(n) && n <= MAX_PIECES) {
+        for (let i = 0; i < n && pieces.length <= MAX_PIECES; i++) {
+          pieces.push(creerJeton(1, { unitaire: true }));
+        }
         continue;
       }
     }
@@ -1172,16 +1176,34 @@ export function importerCharge(charge) {
       : "positif";
   const tachesOpposees = gauche.concat(droite).some((p) => p.type === "tache" && signeTache(p) < 0);
 
+  // les mêmes garde-fous que la saisie normale : plafonds, solution
+  // unique, entière, non nulle — jamais de confiance à la valeur reçue
+  const nbTaches = gauche.concat(droite).filter((p) => p.type === "tache").length;
+  if (nbTaches > MAX_TACHES) {
+    throw new Error("Cette équation crée trop de taches pour rester lisible.");
+  }
+  if (gauche.length + droite.length > MAX_PIECES) {
+    throw new Error("Cette équation crée trop d'objets pour rester lisible.");
+  }
   const bilanGauche = bilanCote(gauche);
   const bilanDroite = bilanCote(droite);
-  let solution = Number(charge.x);
-  if (!Number.isFinite(solution) || solution === 0) {
-    const denominateur = bilanGauche.x - bilanDroite.x;
-    solution =
-      denominateur !== 0 && Number.isFinite((bilanDroite.n - bilanGauche.n) / denominateur)
-        ? (bilanDroite.n - bilanGauche.n) / denominateur
-        : 1;
-    if (solution === 0) solution = 1;
+  const denominateur = bilanGauche.x - bilanDroite.x;
+  if (denominateur === 0) {
+    throw new Error("Cette équation ne donne pas une solution unique utilisable ici.");
+  }
+  const solution = (bilanDroite.n - bilanGauche.n) / denominateur;
+  if (!Number.isInteger(solution)) {
+    throw new Error("Équation refusée : la solution n'est pas un nombre entier.");
+  }
+  if (solution === 0) {
+    throw new Error("Équation refusée : la solution 0 n'est pas prise en charge dans cette version.");
+  }
+  if (univers === "positif" && solution < 0) {
+    throw new Error("En Splat positif, la solution doit être positive.");
+  }
+  const solutionAnnoncee = Number(charge.x);
+  if (Number.isFinite(solutionAnnoncee) && solutionAnnoncee !== solution) {
+    throw new Error("L'équation importée annonce une solution qui ne correspond pas à ses plateaux.");
   }
 
   const etat = {
@@ -1203,9 +1225,13 @@ export function importerCharge(charge) {
   return etat;
 }
 
+// Bien plus qu'il n'en faut pour 80 pièces — au-delà, l'URL est hostile.
+const MAX_LONGUEUR_CHARGE = 20000;
+
 /** Décode « ?data= » ou « #data= » (base64url) vers la charge utile. */
 export function decoderChargeUrl(brut) {
   if (!brut) return null;
+  if (String(brut).length > MAX_LONGUEUR_CHARGE) return null;
   const candidats = [];
   try {
     candidats.push(decodeURIComponent(brut));

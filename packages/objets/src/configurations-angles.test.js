@@ -287,3 +287,25 @@ describe("dessinerConfigurationAngles — le SVG est sain", () => {
     );
   });
 });
+
+describe("perpendiculaires — l'angle droit se déduit sans mesure donnée", () => {
+  it("chaque angle se résout à 90° par la relation « droit », sans valeurs", () => {
+    const instance = creerConfigurationAngles({ type: "perpendiculaires" });
+    for (const a of instance.angles) {
+      const solution = resoudreConfigurationAngles(instance, { inconnue: a.id });
+      assert.equal(solution.mesureDeg, 90);
+      assert.equal(solution.relation, "droit");
+      const textes = solution.etapes.map((e) => e.texte ?? "").join("\n");
+      assert.match(textes, /perpendiculaires/);
+      assert.match(textes, /angles droits/);
+    }
+  });
+
+  it("les sécantes ordinaires, elles, exigent toujours une mesure", () => {
+    const instance = creerConfigurationAngles({ type: "secantes", angleDeg: 55 });
+    assert.throws(
+      () => resoudreConfigurationAngles(instance, { inconnue: instance.angles[0].id }),
+      /aucune relation/,
+    );
+  });
+});

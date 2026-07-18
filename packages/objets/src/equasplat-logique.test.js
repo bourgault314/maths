@@ -450,6 +450,43 @@ describe("import Splat Équations (l'ancien fichier « _import »)", () => {
     assert.throws(() => importerCharge({ top: [], bottom: [3] }), /impossible/);
   });
 
+  it("recalcule TOUJOURS la solution : une valeur x mensongère est refusée", () => {
+    assert.throws(
+      () => importerCharge({ x: 9, top: ["x"], bottom: [4] }),
+      /ne correspond pas/,
+    );
+    // la valeur annoncée juste, elle, passe
+    assert.equal(importerCharge({ x: 4, top: ["x"], bottom: [4] }).solution, 4);
+  });
+
+  it("refuse les équations sans solution unique, non entière ou nulle", () => {
+    // x + 1 = x + 2 : aucune solution
+    assert.throws(() => importerCharge({ top: ["x", 1], bottom: ["x", 2] }), /solution unique/);
+    // 2 = 5 : aucune inconnue
+    assert.throws(() => importerCharge({ top: [2], bottom: [5] }), /solution unique/);
+    // 2x = 7 : solution non entière
+    assert.throws(() => importerCharge({ top: ["x", "x"], bottom: [7] }), /entier/);
+    // x + 4 = 4 : solution 0
+    assert.throws(() => importerCharge({ top: ["x", 4], bottom: [4] }), /solution 0/);
+  });
+
+  it("applique les plafonds de la saisie normale aux charges importées", () => {
+    const dixSeptTaches = Array.from({ length: 17 }, () => "x");
+    assert.throws(() => importerCharge({ top: dixSeptTaches, bottom: [17] }), /taches/);
+    const beaucoupDeJetons = Array.from({ length: 90 }, () => 1);
+    assert.throws(() => importerCharge({ top: ["x"], bottom: beaucoupDeJetons }), /objets/);
+    // même via l'éclatement en billes : des milliers d'éléments sont refusés
+    const grosPaquets = Array.from({ length: 50 }, () => 80);
+    assert.throws(
+      () => importerCharge({ numberMode: "unit", top: ["x"], bottom: grosPaquets }),
+      /objets/,
+    );
+  });
+
+  it("decoderChargeUrl refuse les charges hors gabarit", () => {
+    assert.equal(decoderChargeUrl("x".repeat(20001)), null);
+  });
+
   it("decoderChargeUrl lit le base64url et le JSON nu", () => {
     const charge = { top: ["x"], bottom: [4] };
     const json = JSON.stringify(charge);

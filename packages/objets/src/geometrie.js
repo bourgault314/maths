@@ -144,19 +144,26 @@ export function intersectionDroites(p1, p2, q1, q2) {
 export function piedPerpendiculaire(p, a, b) {
   const [dx, dy] = [b[0] - a[0], b[1] - a[1]];
   const long2 = dx * dx + dy * dy;
+  if (!(long2 > 1e-24)) {
+    throw new RangeError("droite : deux points distincts attendus pour définir la droite (AB)");
+  }
   const t = ((p[0] - a[0]) * dx + (p[1] - a[1]) * dy) / long2;
   return [a[0] + t * dx, a[1] + t * dy];
 }
 
-/** Deux segments (donnés par leurs extrémités) sont-ils parallèles ? */
+/** Deux segments (donnés par leurs extrémités) sont-ils parallèles ?
+ * Un segment de longueur nulle n'a pas de direction : réponse non. */
 export function sontParalleles(p1, p2, q1, q2, tolerance = 1e-9) {
+  if (!(distance(p1, p2) > 0) || !(distance(q1, q2) > 0)) return false;
   const c =
     (p2[0] - p1[0]) * (q2[1] - q1[1]) - (p2[1] - p1[1]) * (q2[0] - q1[0]);
   return Math.abs(c) <= tolerance * distance(p1, p2) * distance(q1, q2);
 }
 
-/** Deux segments sont-ils perpendiculaires ? */
+/** Deux segments sont-ils perpendiculaires ?
+ * Un segment de longueur nulle n'a pas de direction : réponse non. */
 export function sontPerpendiculaires(p1, p2, q1, q2, tolerance = 1e-9) {
+  if (!(distance(p1, p2) > 0) || !(distance(q1, q2) > 0)) return false;
   const s =
     (p2[0] - p1[0]) * (q2[0] - q1[0]) + (p2[1] - p1[1]) * (q2[1] - q1[1]);
   return Math.abs(s) <= tolerance * distance(p1, p2) * distance(q1, q2);
@@ -467,12 +474,23 @@ export function sommetsQuadrilatere({ points } = {}) {
   if (!points || points.length !== 4) {
     throw new RangeError("quadrilatère : quatre sommets attendus");
   }
+  if (points.some((p) => !Number.isFinite(p?.[0]) || !Number.isFinite(p?.[1]))) {
+    throw new RangeError("quadrilatère : coordonnées non finies");
+  }
   const croise01 = intersectionSegments(points[0], points[1], points[2], points[3]);
   const croise12 = intersectionSegments(points[1], points[2], points[3], points[0]);
   if (croise01 || croise12) {
     throw new RangeError(
       "quadrilatère : figure croisée (deux côtés opposés se coupent) — donner les sommets dans l'ordre du tour",
     );
+  }
+  // le même contrôle de dégénérescence que le polygone générique :
+  // quatre points alignés ont une aire nulle, la figure est illisible
+  const diametreFigure = Math.max(
+    ...points.map((p) => Math.max(...points.map((q) => distance(p, q)))),
+  );
+  if (!(diametreFigure > 0) || aire(points) < diametreFigure * diametreFigure * 1e-6) {
+    throw new RangeError("quadrilatère : figure dégénérée (aire quasi nulle)");
   }
   return points.map((p) => [p[0], p[1]]);
 }

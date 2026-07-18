@@ -66,6 +66,9 @@ export function creerThales(options = {}) {
   if (!Number.isFinite(k) || k === 0 || Math.abs(k) > 4) {
     throw new RangeError("Thalès : le rapport k doit être non nul et raisonnable (|k| ≤ 4)");
   }
+  if (k === 1) {
+    throw new RangeError("Thalès : k = 1 confondrait les deux triangles");
+  }
   if (!(angleDeg >= 20 && angleDeg <= 160)) {
     throw new RangeError("Thalès : l'angle au sommet doit rester lisible (20° à 160°)");
   }
@@ -89,7 +92,10 @@ export function creerThales(options = {}) {
     [M]: [k * b * u[0], k * b * u[1]],
     [N]: [k * c * v[0], k * c * v[1]],
   };
-  const configuration = k < 0 ? "papillon" : "emboitee";
+  const configuration = k < 0 ? "papillon" : k > 1 ? "agrandie" : "emboitee";
+  // les rôles GÉOMÉTRIQUES réels : la paire la plus proche du sommet
+  // dépend de |k| (agrandie : M et N sont AU-DELÀ de B et C)
+  const [proches, eloignes] = Math.abs(k) <= 1 ? [[M, N], [B, C]] : [[B, C], [M, N]];
   const longueurs = {
     [`${A}${M}`]: Math.abs(k) * b,
     [`${A}${B}`]: b,
@@ -103,13 +109,16 @@ export function creerThales(options = {}) {
     version: 1,
     configuration,
     k,
-    lettres: { sommet: A, proches: [M, N], eloignes: [B, C] },
+    lettres: { sommet: A, proches, eloignes },
     points,
     longueurs,
     // l'ordre RÉEL des points sur chaque droite (pour la rédaction)
-    alignements: k > 0 ? [[A, M, B], [A, N, C]] : [[M, A, B], [N, A, C]],
+    alignements:
+      k > 0
+        ? [[A, proches[0], eloignes[0]], [A, proches[1], eloignes[1]]]
+        : [[proches[0], A, eloignes[0]], [proches[1], A, eloignes[1]]],
     paralleles: [`(${M}${N})`, `(${B}${C})`],
-    description: `configuration de Thalès ${configuration === "papillon" ? "papillon" : "emboîtée"} de sommet ${A}, rapport ${String(Math.round(Math.abs(k) * 100) / 100).replace(".", ",")}`,
+    description: `configuration de Thalès ${configuration === "papillon" ? "papillon" : configuration === "agrandie" ? "agrandie" : "emboîtée"} de sommet ${A}, rapport ${String(Math.round(Math.abs(k) * 100) / 100).replace(".", ",")}`,
   };
 }
 
@@ -147,6 +156,8 @@ export function resoudreThales(instance, { inconnue } = {}) {
   const [a1, a2, a3] = instance.alignements[0];
   const [b1, b2, b3] = instance.alignements[1];
   const arrondi = (x) => Math.round(x * 100) / 100;
+  // exact AVANT arrondi : la valeur tient-elle en deux décimales ?
+  const exacte = Math.abs(resultat * 100 - Math.round(resultat * 100)) < 1e-9;
 
   const troisRapports = egalite(
     quotient(segmentExpr(rapports[0][0]), segmentExpr(rapports[0][1])),
@@ -169,7 +180,7 @@ export function resoudreThales(instance, { inconnue } = {}) {
   return {
     inconnue,
     valeur: resultat,
-    exacte: Number.isInteger(arrondi(resultat) * 100),
+    exacte,
     etapes: [
       {
         genre: "justification",
@@ -186,7 +197,7 @@ export function resoudreThales(instance, { inconnue } = {}) {
       { genre: "justification", texte: "J'utilise l'égalité des produits en croix, puis j'isole la longueur cherchée :" },
       { genre: "calcul", unicode: produitEnCroix },
       { genre: "calcul", unicode: isolement },
-      { genre: "conclusion", texte: `Donc ${inconnue} = ${nombres(resultat)} cm.` },
+      { genre: "conclusion", texte: `Donc ${inconnue} ${exacte ? "=" : "≈"} ${nombres(resultat)} cm.` },
     ],
   };
 }
@@ -230,11 +241,14 @@ export function dessinerThales(instance, display = {}) {
   const couleurSommet = enCouleur ? COULEURS_THALES.sommet : ENCRE;
   const morceaux = [];
 
-  // le grand triangle (les deux droites portent aussi M et N)
+  // le triangle éloigné d'abord, le proche PAR-DESSUS (emboîtements
+  // lisibles) — et les TROIS côtés de chacun : en papillon comme en
+  // agrandie, aucun point ne reste détaché de ses droites
   morceaux.push(ligne(E[A], E[B], { couleur: couleurGrand, epaisseur: 3.5 }));
   morceaux.push(ligne(E[A], E[C], { couleur: couleurGrand, epaisseur: 3.5 }));
   morceaux.push(ligne(E[B], E[C], { couleur: couleurGrand, epaisseur: 3.5 }));
-  // la base du petit triangle
+  morceaux.push(ligne(E[A], E[M], { couleur: couleurPetit, epaisseur: 3.5 }));
+  morceaux.push(ligne(E[A], E[N], { couleur: couleurPetit, epaisseur: 3.5 }));
   morceaux.push(ligne(E[M], E[N], { couleur: couleurPetit, epaisseur: 3.5 }));
 
   // points : croix maths&go
