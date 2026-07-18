@@ -1,0 +1,912 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+  <meta name="theme-color" content="#173f5f">
+  <meta name="robots" content="noindex, nofollow">
+  <title>Défis de géométrie de Claire | maths&amp;go</title>
+  <meta name="description" content="Cinq défis de géométrie interactifs avec GeoGebra, du CM2 aux constructions de professeur.">
+  <script src="https://www.geogebra.org/apps/deployggb.js"></script>
+  <style>
+    :root {
+      --ink: #17324d;
+      --muted: #607589;
+      --paper: #ffffff;
+      --line: #d9e5ed;
+      --blue: #1769d2;
+      --blue-soft: #eaf3ff;
+      --orange: #f28c28;
+      --orange-soft: #fff5e8;
+      --green: #147a48;
+      --green-soft: #e8f7ef;
+      --red: #c93d3d;
+      --red-soft: #fff0f0;
+      --purple: #7650b7;
+      --shadow: 0 12px 32px rgba(23, 50, 77, .11);
+    }
+
+    * { box-sizing: border-box; }
+    html { background: #edf4f8; }
+
+    body {
+      margin: 0;
+      min-width: 300px;
+      color: var(--ink);
+      background:
+        radial-gradient(circle at 7% 0%, rgba(242, 140, 40, .11), transparent 24rem),
+        linear-gradient(180deg, #f9fcfe 0%, #edf4f8 100%);
+      font-family: Inter, ui-rounded, "Segoe UI", system-ui, -apple-system, sans-serif;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    button { font: inherit; }
+
+    .page {
+      width: min(980px, 100%);
+      margin: 0 auto;
+      padding: max(8px, env(safe-area-inset-top)) 8px max(25px, env(safe-area-inset-bottom));
+    }
+
+    .top {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      padding: 2px 3px 10px;
+    }
+
+    .back {
+      display: inline-flex;
+      align-items: center;
+      gap: 7px;
+      min-height: 42px;
+      color: var(--ink);
+      font-weight: 800;
+      text-decoration: none;
+    }
+
+    .back span { display: grid; place-items: center; width: 34px; height: 34px; border: 1px solid var(--line); border-radius: 11px; background: #fff; }
+    .brand { margin: 0; font-size: clamp(1.05rem, 4vw, 1.45rem); letter-spacing: -.025em; }
+    .brand b { color: var(--orange); }
+
+    .score {
+      flex: 0 0 auto;
+      display: grid;
+      place-items: center;
+      width: 50px;
+      height: 50px;
+      border: 2px solid #ffd3a7;
+      border-radius: 50%;
+      background: #fff8ef;
+      color: #a45108;
+      font-size: .92rem;
+      font-weight: 900;
+    }
+
+    .steps {
+      display: grid;
+      grid-template-columns: repeat(5, 1fr);
+      gap: 5px;
+      margin: 0 0 8px;
+    }
+
+    .step {
+      min-width: 0;
+      min-height: 48px;
+      padding: 5px 2px;
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      background: rgba(255, 255, 255, .84);
+      color: var(--muted);
+      cursor: pointer;
+      font-size: .77rem;
+      font-weight: 850;
+      line-height: 1;
+    }
+
+    .step small { display: block; margin-top: 4px; overflow: hidden; text-overflow: ellipsis; font-size: .61rem; font-weight: 700; white-space: nowrap; }
+    .step[aria-current="step"] { border-color: #6ca7ec; background: var(--blue-soft); color: #0d58b4; }
+    .step.done { border-color: #86cda5; background: var(--green-soft); color: var(--green); }
+
+    .card { overflow: hidden; border: 1px solid var(--line); border-radius: 20px; background: var(--paper); box-shadow: var(--shadow); }
+
+    .task { padding: 13px 13px 10px; border-bottom: 1px solid var(--line); }
+    .task-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 10px; }
+    .eyebrow { margin: 0 0 5px; color: var(--blue); font-size: .72rem; font-weight: 900; letter-spacing: .08em; text-transform: uppercase; }
+    .task h2 { margin: 0; font-size: clamp(1rem, 3.8vw, 1.3rem); line-height: 1.25; letter-spacing: -.012em; }
+    .task > p { margin: 7px 0 0; color: var(--muted); font-size: .87rem; line-height: 1.4; }
+
+    .reset {
+      flex: 0 0 auto;
+      min-width: 42px;
+      min-height: 42px;
+      padding: 0 9px;
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      background: #fff;
+      color: var(--muted);
+      cursor: pointer;
+      font-size: 1.05rem;
+      font-weight: 800;
+    }
+
+    .hint-row { margin-top: 8px; }
+    .hint-button {
+      min-height: 36px;
+      padding: 6px 10px;
+      border: 1px solid #e5c89d;
+      border-radius: 10px;
+      background: var(--orange-soft);
+      color: #915010;
+      cursor: pointer;
+      font-size: .82rem;
+      font-weight: 800;
+    }
+
+    .hint { margin: 7px 0 0; padding: 8px 10px; border-left: 4px solid var(--orange); border-radius: 0 10px 10px 0; background: #fffaf4; color: #6e4a27; font-size: .83rem; line-height: 1.4; }
+    .hint[hidden] { display: none; }
+
+    .tools {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 7px;
+      padding: 9px;
+      border-bottom: 1px solid var(--line);
+      background: #fbfdff;
+    }
+
+    .tool {
+      flex: 1 1 135px;
+      min-height: 46px;
+      padding: 7px 10px;
+      border: 1px solid #c8d8e4;
+      border-radius: 12px;
+      background: #fff;
+      color: var(--ink);
+      cursor: pointer;
+      font-size: .87rem;
+      font-weight: 820;
+    }
+
+    .tool[aria-pressed="true"] { border-color: var(--blue); background: var(--blue); color: #fff; }
+    .tool[data-color="blue"][aria-pressed="true"] { border-color: #1769d2; background: #1769d2; }
+    .tool[data-color="red"][aria-pressed="true"] { border-color: #c93d3d; background: #c93d3d; }
+    .tool:active, .reset:active, .step:active { transform: translateY(1px); }
+
+    .ggb-shell { position: relative; width: 100%; min-height: 395px; background: #fff; }
+    #ggb-element { width: 100%; min-height: 395px; }
+
+    .loading {
+      position: absolute;
+      inset: 0;
+      z-index: 5;
+      display: grid;
+      place-items: center;
+      padding: 28px;
+      background: #fff;
+      color: var(--muted);
+      line-height: 1.45;
+      text-align: center;
+    }
+
+    .loading[hidden] { display: none; }
+
+    .actions {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) auto auto;
+      gap: 8px;
+      padding: 10px;
+      border-top: 1px solid var(--line);
+      background: #fbfdff;
+    }
+
+    .check, .dynamic, .next {
+      min-height: 49px;
+      border: 0;
+      border-radius: 13px;
+      cursor: pointer;
+      font-size: .88rem;
+      font-weight: 900;
+    }
+
+    .check { background: var(--blue); color: #fff; box-shadow: 0 6px 15px rgba(23, 105, 210, .2); }
+    .check:disabled { cursor: wait; opacity: .55; }
+    .dynamic { padding: 0 13px; background: var(--orange-soft); color: #97520d; }
+    .next { padding: 0 15px; background: #e8f0f5; color: var(--ink); }
+    .dynamic[hidden], .next[hidden] { display: none; }
+
+    .feedback { min-height: 0; margin: 0 10px 10px; padding: 0; border-radius: 12px; font-size: .88rem; font-weight: 750; line-height: 1.4; }
+    .feedback:not(:empty) { padding: 10px 12px; }
+    .feedback.ok { background: var(--green-soft); color: var(--green); }
+    .feedback.no { background: var(--red-soft); color: #aa3030; }
+    .feedback.info { background: #eef5fb; color: #34566f; }
+
+    .footnote { margin: 10px 4px 0; color: var(--muted); font-size: .7rem; line-height: 1.45; text-align: center; }
+
+    @media (min-width: 650px) {
+      .page { padding-left: 14px; padding-right: 14px; }
+      .task { padding: 15px 17px 12px; }
+      .tools { flex-wrap: nowrap; padding: 10px 12px; }
+      .tool { flex-basis: auto; }
+      .ggb-shell, #ggb-element { min-height: 505px; }
+    }
+
+    @media (max-width: 600px) {
+      .actions { grid-template-columns: 1fr 1fr; }
+      .check { grid-column: 1 / -1; }
+    }
+
+    @media (max-width: 380px) {
+      .page { padding-left: 5px; padding-right: 5px; }
+      .back { font-size: .82rem; }
+      .score { width: 46px; height: 46px; }
+      .steps { gap: 3px; }
+      .step { min-height: 45px; }
+      .step small { font-size: .56rem; }
+      .tool { flex-basis: 125px; font-size: .82rem; }
+      .actions { grid-template-columns: 1fr; }
+      .check { grid-column: auto; }
+      .dynamic, .next { width: 100%; }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after { scroll-behavior: auto !important; transition: none !important; }
+    }
+  </style>
+</head>
+<body>
+  <main class="page">
+    <header class="top">
+      <a class="back" href="index.html"><span aria-hidden="true">←</span>Accueil de Claire</a>
+      <h1 class="brand">maths<b>&amp;</b>go</h1>
+      <div class="score" id="score" role="status" aria-label="Score">0/5</div>
+    </header>
+
+    <nav class="steps" aria-label="Choisir un défi">
+      <button class="step" type="button" data-index="0" aria-current="step">1<small>Repérer</small></button>
+      <button class="step" type="button" data-index="1">2<small>Couleurs</small></button>
+      <button class="step" type="button" data-index="2">3<small>Équilatéral</small></button>
+      <button class="step" type="button" data-index="3">4<small>Centre</small></button>
+      <button class="step" type="button" data-index="4">5<small>Tangentes</small></button>
+    </nav>
+
+    <section class="card" aria-labelledby="task-title">
+      <div class="task">
+        <div class="task-head">
+          <div>
+            <p class="eyebrow" id="eyebrow">Défi 1 sur 5</p>
+            <h2 id="task-title">Chargement…</h2>
+          </div>
+          <button class="reset" id="reset" type="button" aria-label="Recommencer le défi">↺</button>
+        </div>
+        <p id="task-help"></p>
+        <div class="hint-row">
+          <button class="hint-button" id="hint-button" type="button" aria-expanded="false">Afficher un indice</button>
+          <p class="hint" id="hint" hidden></p>
+        </div>
+      </div>
+
+      <div class="tools" id="tools" role="toolbar" aria-label="Outils GeoGebra disponibles"></div>
+
+      <div class="ggb-shell" id="ggb-shell">
+        <div id="ggb-element" role="application" aria-label="Zone de construction GeoGebra"></div>
+        <div class="loading" id="loading" role="status">Chargement de GeoGebra…<br>Une connexion Internet est nécessaire.</div>
+      </div>
+
+      <div class="actions">
+        <button class="check" id="check" type="button" disabled>Vérifier ma construction</button>
+        <button class="dynamic" id="dynamic" type="button" hidden>Faire bouger</button>
+        <button class="next" id="next" type="button" hidden>Défi suivant →</button>
+      </div>
+      <p class="feedback" id="feedback" role="status" aria-live="polite"></p>
+    </section>
+
+    <p class="footnote">Made with GeoGebra® · La validation porte sur les propriétés de la figure, pas sur le nom ni l’ordre de création des objets.</p>
+  </main>
+
+  <script>
+    (() => {
+      "use strict";
+
+      const COLORS = {
+        blue: [23, 105, 210],
+        red: [201, 61, 61],
+        grey: [82, 101, 119],
+        orange: [226, 117, 22],
+        green: [20, 122, 72],
+        purple: [118, 80, 183],
+        pale: [171, 184, 196]
+      };
+
+      const challenges = [
+        {
+          title: "Repère une parallèle puis une perpendiculaire à (d).",
+          help: "Touche d’abord la droite parallèle à (d), puis celle qui lui est perpendiculaire. Les deux choix seront vérifiés ensemble.",
+          hint: "Les parallèles gardent le même écart. Les perpendiculaires forment un angle droit, même lorsque toute la figure est inclinée.",
+          coords: [-5.2, 5.2, -3.8, 3.8],
+          onTheFly: false,
+          tools: [{ mode: 0, label: "☝ Toucher les droites" }],
+          commands: [
+            "D1=(-4,-1.2)", "D2=(4,1.2)", "d=Line(D1,D2)",
+            "A1=(-4,1)", "A2=(4,3.4)", "a=Line(A1,A2)",
+            "B1=(-2.6,3.3)", "B2=(-0.8,-2.7)", "b=Line(B1,B2)",
+            "C1=(-4,-3)", "C2=(4,-1)", "c=Line(C1,C2)",
+            "E1=(2.4,3.3)", "E2=(4,-2.7)", "e=Line(E1,E2)"
+          ],
+          setup() {
+            ["D1", "D2", "A1", "A2", "B1", "B2", "C1", "C2", "E1", "E2"].forEach(hideObject);
+            styleNamedLine("d", COLORS.orange, 8, "(d)");
+            ["a", "b", "c", "e"].forEach(name => styleNamedLine(name, COLORS.grey, 6, `(${name})`));
+          },
+          verify: verifyRecognition
+        },
+        {
+          title: "Trace la parallèle bleue et la perpendiculaire rouge.",
+          help: "Construis en bleu la parallèle à (d) passant par A, puis en rouge la perpendiculaire à (d) passant par B. Les outils fonctionnent comme dans GeoGebra : touche la droite et le point.",
+          hint: "Tu peux sélectionner la droite puis le point, ou le point puis la droite. Le bouton choisi fixe aussi la couleur de la nouvelle construction.",
+          coords: [-5.2, 5.2, -3.6, 3.6],
+          tools: [
+            { mode: 3, label: "∥ Parallèle bleue", color: "blue" },
+            { mode: 4, label: "⊥ Perpendiculaire rouge", color: "red" },
+            { mode: 0, label: "☝ Observer" }
+          ],
+          commands: ["D1=(-4,-1)", "D2=(4,1.4)", "d=Line(D1,D2)", "A=(-2.8,2.1)", "B=(2.6,-2.1)"],
+          setup() {
+            hideObject("D1");
+            hideObject("D2");
+            styleNamedLine("d", COLORS.grey, 7, "(d)");
+            stylePoint("A", COLORS.blue, 9);
+            stylePoint("B", COLORS.red, 9);
+          },
+          verify: verifyColoredLines
+        },
+        {
+          title: "Construis un triangle équilatéral sur [AB].",
+          help: "Utilise deux cercles de même rayon, crée l’une de leurs intersections, puis termine le triangle avec deux segments.",
+          hint: "Trace le cercle de centre A passant par B, puis le cercle de centre B passant par A. Une intersection des deux cercles peut devenir le troisième sommet.",
+          coords: [-5, 5, -4.2, 4.4],
+          tools: [
+            { mode: 10, label: "○ Cercle centre-point" },
+            { mode: 5, label: "× Intersection" },
+            { mode: 15, label: "— Segment" },
+            { mode: 0, label: "☝ Déplacer" }
+          ],
+          commands: ["A=(-2.2,-1.2)", "B=(2.2,-1.2)", "s=Segment(A,B)", "ABlong=Distance(A,B)"],
+          setup() {
+            stylePoint("A", COLORS.orange, 9);
+            stylePoint("B", COLORS.orange, 9);
+            api.setColor("s", ...COLORS.grey);
+            api.setLineThickness("s", 7);
+            api.setLabelVisible("s", false);
+            hideObject("ABlong");
+          },
+          verify: verifyEquilateral
+        },
+        {
+          title: "Construis le centre du cercle circonscrit à ABC.",
+          help: "L’outil Médiatrice a disparu. Construis deux médiatrices avec des cercles, puis crée leur point d’intersection.",
+          hint: "Pour [AB], trace le cercle de centre A passant par B et celui de centre B passant par A. La droite passant par leurs deux intersections est une médiatrice. Recommence avec un autre côté.",
+          coords: [-5.2, 5.2, -4.6, 4.6],
+          tools: [
+            { mode: 10, label: "○ Cercle centre-point" },
+            { mode: 5, label: "× Intersection" },
+            { mode: 2, label: "╱ Droite" },
+            { mode: 0, label: "☝ Déplacer" }
+          ],
+          commands: ["A=(-2,-1)", "B=(2,-0.5)", "C=(-0.5,2.5)", "sAB=Segment(A,B)", "sBC=Segment(B,C)", "sCA=Segment(C,A)"],
+          dynamic: { point: "C", to: [0.25, 2.85], label: "Bouger le triangle" },
+          setup() {
+            stylePoint("A", COLORS.orange, 8);
+            stylePoint("B", COLORS.orange, 8);
+            stylePoint("C", COLORS.orange, 8);
+            ["sAB", "sBC", "sCA"].forEach(name => {
+              api.setColor(name, ...COLORS.pale);
+              api.setLineThickness(name, 5);
+              api.setLabelVisible(name, false);
+            });
+          },
+          verify: verifyCircumcenter
+        },
+        {
+          title: "Construis les deux tangentes issues de P.",
+          help: "Le cercle de centre O et le point extérieur P sont donnés. Construis les deux tangentes sans utiliser l’outil Tangente.",
+          hint: "Construis le milieu M de [OP], puis le cercle de centre M passant par O. Ses intersections avec le cercle donné sont les deux points de tangence.",
+          coords: [-4.5, 6, -4.3, 4.3],
+          tools: [
+            { mode: 19, label: "◆ Milieu" },
+            { mode: 10, label: "○ Cercle centre-point" },
+            { mode: 5, label: "× Intersection" },
+            { mode: 2, label: "╱ Droite" },
+            { mode: 0, label: "☝ Déplacer" }
+          ],
+          commands: ["O=(-1.1,0)", "R=(1,0)", "k=Circle(O,R)", "P=(4,1.6)", "rayon=Distance(O,R)"],
+          dynamic: { point: "P", to: [4.35, -1.45], label: "Déplacer P" },
+          setup() {
+            stylePoint("O", COLORS.orange, 8);
+            stylePoint("P", COLORS.orange, 9);
+            hideObject("R");
+            hideObject("rayon");
+            api.setColor("k", ...COLORS.grey);
+            api.setLineThickness("k", 7);
+            api.setCaption("k", "cercle donné");
+            api.setLabelStyle("k", 3);
+            api.setLabelVisible("k", true);
+          },
+          verify: verifyTangents
+        }
+      ];
+
+      let api = null;
+      let current = 0;
+      let baseNames = new Set();
+      let settingUp = false;
+      let checking = false;
+      let recognitionChoices = [];
+      let activeColorKey = "blue";
+      let assignedColors = new Map();
+      let dynamicUsed = false;
+      const completed = new Set();
+
+      const els = {
+        title: document.getElementById("task-title"),
+        help: document.getElementById("task-help"),
+        eyebrow: document.getElementById("eyebrow"),
+        hint: document.getElementById("hint"),
+        hintButton: document.getElementById("hint-button"),
+        tools: document.getElementById("tools"),
+        loading: document.getElementById("loading"),
+        feedback: document.getElementById("feedback"),
+        check: document.getElementById("check"),
+        dynamic: document.getElementById("dynamic"),
+        next: document.getElementById("next"),
+        reset: document.getElementById("reset"),
+        score: document.getElementById("score"),
+        shell: document.getElementById("ggb-shell")
+      };
+
+      function hideObject(name) {
+        if (!api.exists(name)) return;
+        api.setVisible(name, false);
+        api.setLabelVisible(name, false);
+      }
+
+      function stylePoint(name, color = COLORS.blue, size = 8) {
+        api.setColor(name, ...color);
+        api.setPointSize(name, size);
+        api.setLabelVisible(name, true);
+        api.setLabelStyle(name, 0);
+        api.setFixed(name, true, true);
+      }
+
+      function styleNamedLine(name, color, thickness, caption) {
+        api.setColor(name, ...color);
+        api.setLineThickness(name, thickness);
+        api.setCaption(name, caption);
+        api.setLabelStyle(name, 3);
+        api.setLabelVisible(name, true);
+        api.setFixed(name, true, true);
+      }
+
+      function showFeedback(message, kind = "info") {
+        els.feedback.textContent = message;
+        els.feedback.className = `feedback ${kind}`;
+      }
+
+      function clearFeedback() {
+        els.feedback.textContent = "";
+        els.feedback.className = "feedback";
+      }
+
+      function setActiveTool(mode, colorKey = null) {
+        if (!api) return;
+        if (colorKey) activeColorKey = colorKey;
+        api.setMode(mode);
+        els.tools.querySelectorAll("[data-mode]").forEach(button => {
+          const sameMode = Number(button.dataset.mode) === mode;
+          const sameColor = !button.dataset.color || button.dataset.color === activeColorKey;
+          button.setAttribute("aria-pressed", String(sameMode && sameColor));
+        });
+      }
+
+      function renderTools(challenge) {
+        els.tools.replaceChildren();
+        challenge.tools.forEach((tool, index) => {
+          const button = document.createElement("button");
+          button.type = "button";
+          button.className = "tool";
+          button.dataset.mode = String(tool.mode);
+          if (tool.color) button.dataset.color = tool.color;
+          button.textContent = tool.label;
+          button.setAttribute("aria-pressed", String(index === 0));
+          button.addEventListener("click", () => setActiveTool(tool.mode, tool.color || null));
+          els.tools.append(button);
+        });
+      }
+
+      function setupChallenge(index) {
+        if (!api) return;
+        current = index;
+        const challenge = challenges[current];
+        settingUp = true;
+        checking = false;
+        dynamicUsed = false;
+        recognitionChoices = [];
+        assignedColors = new Map();
+        activeColorKey = challenge.tools[0].color || "blue";
+        clearFeedback();
+        els.check.disabled = true;
+        els.dynamic.hidden = true;
+        els.next.hidden = true;
+        els.hint.hidden = true;
+        els.hintButton.textContent = "Afficher un indice";
+        els.hintButton.setAttribute("aria-expanded", "false");
+
+        document.querySelectorAll(".step").forEach((step, i) => {
+          if (i === current) step.setAttribute("aria-current", "step");
+          else step.removeAttribute("aria-current");
+        });
+
+        els.eyebrow.textContent = `Défi ${current + 1} sur ${challenges.length}`;
+        els.title.textContent = challenge.title;
+        els.help.textContent = challenge.help;
+        els.hint.textContent = challenge.hint;
+        renderTools(challenge);
+
+        api.newConstruction();
+        api.setRepaintingActive(false);
+        api.setErrorDialogsActive(false);
+        api.setAxesVisible(false, false);
+        api.setGridVisible(false);
+        api.setCoordSystem(...challenge.coords);
+        api.setPointCapture(1, 3);
+        api.setOnTheFlyPointCreationActive(challenge.onTheFly !== false);
+        api.evalCommand(challenge.commands.join("\n"));
+        challenge.setup();
+        Array.from(api.getAllObjectNames()).forEach(name => api.setFixed(name, true, true));
+        api.setRepaintingActive(true);
+        api.refreshViews();
+        baseNames = new Set(Array.from(api.getAllObjectNames()));
+        settingUp = false;
+        els.check.disabled = false;
+        setActiveTool(challenge.tools[0].mode, challenge.tools[0].color || null);
+      }
+
+      function onObjectAdded(name) {
+        if (!api || settingUp || checking || !api.exists(name)) return;
+        const type = String(api.getObjectType(name)).toLowerCase();
+        const color = COLORS[activeColorKey] || COLORS.blue;
+        assignedColors.set(name, activeColorKey);
+        if (type === "point") {
+          api.setColor(name, ...color);
+          api.setPointSize(name, 7);
+          api.setLabelVisible(name, true);
+        } else if (["line", "segment", "ray", "circle", "conic"].includes(type)) {
+          api.setColor(name, ...color);
+          api.setLineThickness(name, type === "line" ? 6 : 4);
+        }
+        clearFeedback();
+      }
+
+      function onObjectClicked(name) {
+        if (!api || settingUp || current !== 0 || !["a", "b", "c", "e"].includes(name)) return;
+        if (recognitionChoices.length >= 2) {
+          recognitionChoices.forEach(oldName => {
+            api.setColor(oldName, ...COLORS.grey);
+            api.setLineThickness(oldName, 6);
+          });
+          recognitionChoices = [];
+        }
+        recognitionChoices.push(name);
+        if (recognitionChoices.length === 1) {
+          api.setColor(name, ...COLORS.blue);
+          api.setLineThickness(name, 8);
+          showFeedback(`Premier choix : (${name}). Touche maintenant une droite perpendiculaire à (d).`, "info");
+        } else {
+          api.setColor(recognitionChoices[0], ...COLORS.blue);
+          api.setColor(name, ...COLORS.purple);
+          api.setLineThickness(recognitionChoices[0], 8);
+          api.setLineThickness(name, 8);
+          showFeedback(`Tes choix : (${recognitionChoices[0]}) parallèle, puis (${name}) perpendiculaire. Tu peux vérifier.`, "info");
+        }
+      }
+
+      function userObjects(types) {
+        const accepted = Array.isArray(types) ? types : [types];
+        return Array.from(api.getAllObjectNames()).filter(name => {
+          return !baseNames.has(name) && accepted.includes(String(api.getObjectType(name)).toLowerCase());
+        });
+      }
+
+      function safeDelete(...names) {
+        names.forEach(name => {
+          if (api.exists(name)) api.deleteObject(name);
+        });
+      }
+
+      function truthValue(expression, name) {
+        safeDelete(name);
+        const created = api.evalCommand(`${name}=${expression}`);
+        const value = created && api.exists(name) && api.getValue(name) === 1;
+        safeDelete(name);
+        return value;
+      }
+
+      function numericValue(expression, name) {
+        safeDelete(name);
+        const created = api.evalCommand(`${name}=${expression}`);
+        const value = created && api.exists(name) ? Math.abs(api.getValue(name)) : Infinity;
+        safeDelete(name);
+        return value;
+      }
+
+      function liesOn(point, object, testName = "TestOn") {
+        return numericValue(`Distance(${point},${object})`, testName) < 0.025;
+      }
+
+      function verifyRecognition() {
+        if (recognitionChoices.length < 2) return { ok: false, empty: true, message: "Touche deux droites : d’abord la parallèle à (d), puis la perpendiculaire à (d)." };
+        const [parallelChoice, perpendicularChoice] = recognitionChoices;
+        const parallelOK = truthValue(`AreParallel(${parallelChoice},d)`, "TestParallel");
+        const perpendicularOK = truthValue(`ArePerpendicular(${perpendicularChoice},d)`, "TestPerpendicular");
+        if (parallelOK && perpendicularOK) return { ok: true, message: `Exact : (${parallelChoice}) est parallèle à (d), et (${perpendicularChoice}) lui est perpendiculaire.` };
+        if (parallelOK) return { ok: false, message: `Le premier choix, (${parallelChoice}), est correct. Le second ne forme pas un angle droit avec (d).` };
+        if (perpendicularOK) return { ok: false, message: `Le second choix, (${perpendicularChoice}), est correct. Le premier n’est pas parallèle à (d).` };
+        return { ok: false, message: "Aucun des deux choix ne possède la propriété demandée. Observe à nouveau les directions." };
+      }
+
+      function verifyColoredLines() {
+        const lines = userObjects("line");
+        if (!lines.length) return { ok: false, empty: true, message: "Construis d’abord les deux nouvelles droites avec les boutons bleu et rouge." };
+
+        let blueGeometry = false;
+        let redGeometry = false;
+        let blueCorrect = null;
+        let redCorrect = null;
+        for (const line of lines) {
+          const parallelAtA = liesOn("A", line, "TestA") && truthValue(`AreParallel(${line},d)`, "TestParA");
+          const perpendicularAtB = liesOn("B", line, "TestB") && truthValue(`ArePerpendicular(${line},d)`, "TestPerpB");
+          if (parallelAtA) {
+            blueGeometry = true;
+            if (assignedColors.get(line) === "blue") blueCorrect = line;
+          }
+          if (perpendicularAtB) {
+            redGeometry = true;
+            if (assignedColors.get(line) === "red") redCorrect = line;
+          }
+        }
+
+        if (blueCorrect && redCorrect) return { ok: true, objects: [blueCorrect, redCorrect], message: "Tout est juste : la bleue passe par A et reste parallèle à (d) ; la rouge passe par B et forme un angle droit avec (d)." };
+        if (blueGeometry && !blueCorrect) return { ok: false, message: "La parallèle passant par A est bien construite, mais elle n’est pas bleue. Recommence-la avec le bouton bleu." };
+        if (redGeometry && !redCorrect) return { ok: false, message: "La perpendiculaire passant par B est bien construite, mais elle n’est pas rouge. Recommence-la avec le bouton rouge." };
+        if (blueCorrect) return { ok: false, message: "La construction bleue est correcte. Il reste à obtenir une droite rouge passant par B et perpendiculaire à (d)." };
+        if (redCorrect) return { ok: false, message: "La construction rouge est correcte. Il reste à obtenir une droite bleue passant par A et parallèle à (d)." };
+        return { ok: false, message: "Les droites ne vérifient pas encore les passages par A et B et les relations demandées." };
+      }
+
+      function segmentJoins(segment, point1, point2, prefix) {
+        return liesOn(point1, segment, `${prefix}A`) && liesOn(point2, segment, `${prefix}B`);
+      }
+
+      function verifyEquilateral() {
+        const points = userObjects("point");
+        const segments = userObjects("segment");
+        if (!points.length) return { ok: false, empty: true, message: "Commence par tracer les deux cercles, puis crée un de leurs points d’intersection." };
+        const ab = Math.abs(api.getValue("ABlong"));
+        let validVertex = null;
+        let sides = [];
+        for (const point of points) {
+          const pa = numericValue(`Distance(${point},A)`, "TestEqA");
+          const pb = numericValue(`Distance(${point},B)`, "TestEqB");
+          if (Math.abs(pa - ab) > 0.025 || Math.abs(pb - ab) > 0.025) continue;
+          const sideA = segments.find(segment => segmentJoins(segment, "A", point, "TestSideA"));
+          const sideB = segments.find(segment => segmentJoins(segment, "B", point, "TestSideB"));
+          if (sideA && sideB) {
+            validVertex = point;
+            sides = [sideA, sideB];
+            break;
+          }
+        }
+        if (validVertex) return { ok: true, objects: [validVertex, ...sides], message: `Construction validée : les trois côtés ont la même longueur. ${validVertex} est bien le troisième sommet d’un triangle équilatéral.` };
+        const equidistant = points.some(point => {
+          const pa = numericValue(`Distance(${point},A)`, "TestNearA");
+          const pb = numericValue(`Distance(${point},B)`, "TestNearB");
+          return Math.abs(pa - ab) < 0.025 && Math.abs(pb - ab) < 0.025;
+        });
+        if (equidistant) return { ok: false, message: "Le troisième sommet est correct. Il reste à le relier à A et à B avec deux segments." };
+        return { ok: false, message: "Le point choisi n’est pas à la même distance de A et de B que la longueur AB. Vérifie les centres et les rayons des deux cercles." };
+      }
+
+      function verifyCircumcenter() {
+        const points = userObjects("point");
+        if (!points.length) return { ok: false, empty: true, message: "Commence par deux cercles de même rayon afin de construire une première médiatrice." };
+        let best = null;
+        let bestSpread = Infinity;
+        for (const point of points) {
+          const distances = [
+            numericValue(`Distance(${point},A)`, "TestCA"),
+            numericValue(`Distance(${point},B)`, "TestCB"),
+            numericValue(`Distance(${point},C)`, "TestCC")
+          ];
+          const spread = Math.max(...distances) - Math.min(...distances);
+          if (spread < bestSpread) {
+            bestSpread = spread;
+            best = point;
+          }
+        }
+        if (best && bestSpread < 0.025 && userObjects("line").length >= 2) {
+          return { ok: true, objects: [best], message: `${best} est à la même distance de A, B et C : c’est bien le centre du cercle circonscrit.` };
+        }
+        if (userObjects("line").length < 2) return { ok: false, message: "Il faut construire deux médiatrices : chacune relie les deux intersections de deux cercles de même rayon." };
+        return { ok: false, message: "Le point obtenu n’est pas encore à égale distance des trois sommets. Vérifie les deux médiatrices puis leur intersection." };
+      }
+
+      function verifyTangents() {
+        const lines = userObjects("line");
+        if (!lines.length) return { ok: false, empty: true, message: "Commence par construire le milieu de [OP] et le cercle de diamètre [OP]." };
+        const radius = Math.abs(api.getValue("rayon"));
+        const tangentLines = lines.filter(line => {
+          const throughP = liesOn("P", line, "TestTP");
+          const distanceToO = numericValue(`Distance(O,${line})`, "TestTO");
+          return throughP && Math.abs(distanceToO - radius) < 0.025;
+        });
+        if (tangentLines.length >= 2) {
+          for (let i = 0; i < tangentLines.length; i += 1) {
+            for (let j = i + 1; j < tangentLines.length; j += 1) {
+              if (!truthValue(`AreParallel(${tangentLines[i]},${tangentLines[j]})`, "TestSameDirection")) {
+                return { ok: true, objects: [tangentLines[i], tangentLines[j]], message: "Les deux droites passent par P et sont tangentes au cercle : la distance de O à chacune est exactement égale au rayon." };
+              }
+            }
+          }
+        }
+        if (tangentLines.length === 1) return { ok: false, message: "Une première tangente est correcte. Il reste à construire la seconde avec l’autre point d’intersection des deux cercles." };
+        return { ok: false, message: "Les droites doivent passer par P et toucher le cercle sans le traverser. Utilise les intersections avec le cercle de diamètre [OP]." };
+      }
+
+      function markSuccess(result) {
+        const objects = result.objects || (result.object ? [result.object] : []);
+        objects.forEach(name => {
+          if (!api.exists(name)) return;
+          api.setColor(name, ...COLORS.green);
+          if (String(api.getObjectType(name)).toLowerCase() === "point") api.setPointSize(name, 9);
+        });
+      }
+
+      function verifyCurrent() {
+        if (!api || checking) return;
+        checking = true;
+        els.check.disabled = true;
+        let result;
+        try {
+          result = challenges[current].verify();
+        } catch (error) {
+          console.error(error);
+          result = { ok: false, message: "La vérification n’a pas pu se terminer. Recommence le défi puis réessaie." };
+        } finally {
+          checking = false;
+          els.check.disabled = false;
+        }
+
+        if (result.ok) {
+          completed.add(current);
+          markSuccess(result);
+          showFeedback(result.message, "ok");
+          updateProgress();
+          els.next.hidden = current >= challenges.length - 1;
+          const dynamic = challenges[current].dynamic;
+          if (dynamic && !dynamicUsed) {
+            els.dynamic.textContent = dynamic.label;
+            els.dynamic.hidden = false;
+          }
+          setActiveTool(0);
+        } else {
+          showFeedback(result.message, result.empty ? "info" : "no");
+        }
+      }
+
+      function runDynamicTest() {
+        const dynamic = challenges[current].dynamic;
+        if (!api || !dynamic || dynamicUsed) return;
+        dynamicUsed = true;
+        els.dynamic.hidden = true;
+        api.setFixed(dynamic.point, false, true);
+        api.setCoords(dynamic.point, dynamic.to[0], dynamic.to[1]);
+        api.setFixed(dynamic.point, true, true);
+        window.setTimeout(() => {
+          let result;
+          try {
+            result = challenges[current].verify();
+          } catch (error) {
+            console.error(error);
+            result = { ok: false };
+          }
+          if (result.ok) {
+            markSuccess(result);
+            showFeedback("La figure a bougé et ta construction reste exacte : elle est vraiment dynamique, pas seulement correcte par hasard.", "ok");
+          } else {
+            showFeedback("La figure était correcte avant le déplacement, mais la construction ne suit pas les points de départ. Il faut relier les objets entre eux, pas placer le résultat à l’œil.", "no");
+          }
+        }, 260);
+      }
+
+      function updateProgress() {
+        els.score.textContent = `${completed.size}/${challenges.length}`;
+        els.score.setAttribute("aria-label", `${completed.size} défi${completed.size > 1 ? "s" : ""} réussi${completed.size > 1 ? "s" : ""} sur ${challenges.length}`);
+        document.querySelectorAll(".step").forEach((step, index) => step.classList.toggle("done", completed.has(index)));
+      }
+
+      function resizeApplet() {
+        if (!api) return;
+        const width = Math.max(300, Math.floor(els.shell.clientWidth));
+        const height = width < 650 ? Math.max(395, Math.min(445, window.innerHeight * .54)) : 510;
+        api.setSize(width, Math.round(height));
+      }
+
+      function startGeoGebra() {
+        if (typeof GGBApplet !== "function") {
+          els.loading.innerHTML = "GeoGebra n’a pas pu être chargé.<br>Vérifie la connexion Internet puis recharge la page.";
+          return;
+        }
+        const width = Math.max(300, Math.floor(els.shell.clientWidth));
+        const height = width < 650 ? Math.max(395, Math.min(445, window.innerHeight * .54)) : 510;
+        const applet = new GGBApplet({
+          id: "ggbAppletClaire",
+          appName: "geometry",
+          width,
+          height: Math.round(height),
+          language: "fr",
+          showToolBar: false,
+          showMenuBar: false,
+          showAlgebraInput: false,
+          showResetIcon: false,
+          showZoomButtons: false,
+          enableRightClick: false,
+          enableLabelDrags: false,
+          enableShiftDragZoom: false,
+          errorDialogsActive: false,
+          useBrowserForJS: true,
+          preventFocus: false,
+          appletOnLoad(ggbApi) {
+            api = ggbApi;
+            api.registerAddListener(onObjectAdded);
+            api.registerClickListener(onObjectClicked);
+            els.loading.hidden = true;
+            setupChallenge(0);
+          }
+        }, true);
+        applet.inject("ggb-element");
+      }
+
+      document.querySelectorAll(".step").forEach(step => {
+        step.addEventListener("click", () => {
+          if (api) setupChallenge(Number(step.dataset.index));
+        });
+      });
+
+      els.reset.addEventListener("click", () => setupChallenge(current));
+      els.hintButton.addEventListener("click", () => {
+        const willShow = els.hint.hidden;
+        els.hint.hidden = !willShow;
+        els.hintButton.textContent = willShow ? "Masquer l’indice" : "Afficher un indice";
+        els.hintButton.setAttribute("aria-expanded", String(willShow));
+      });
+      els.check.addEventListener("click", verifyCurrent);
+      els.dynamic.addEventListener("click", runDynamicTest);
+      els.next.addEventListener("click", () => setupChallenge(Math.min(current + 1, challenges.length - 1)));
+
+      let resizeTimer = null;
+      window.addEventListener("resize", () => {
+        window.clearTimeout(resizeTimer);
+        resizeTimer = window.setTimeout(resizeApplet, 140);
+      }, { passive: true });
+
+      window.setTimeout(() => {
+        if (!api && els.loading) els.loading.innerHTML = "Le chargement de GeoGebra prend plus de temps que prévu.<br>Vérifie la connexion Internet ou recharge la page.";
+      }, 12000);
+
+      startGeoGebra();
+    })();
+  </script>
+</body>
+</html>
