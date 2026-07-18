@@ -30,6 +30,20 @@ describe("dessinerJeton", () => {
     assert.ok(!neutralise.includes(COULEURS.jetonAplatPositif));
   });
 
+  it("habillage contourAssorti : aplats des fiches, contour foncé assorti, texte noir", () => {
+    const positif = dessinerJeton({ valeur: 1, habillage: "contourAssorti" });
+    assert.ok(positif.includes(COULEURS.jetonAplatPositif));
+    assert.match(positif, new RegExp(`stroke="${COULEURS.jetonPositifBord}"`));
+    assert.ok(!positif.includes(`stroke="${COULEURS.jetonContour}"`));
+    assert.match(positif, new RegExp(`fill="${COULEURS.jetonContour}"[^>]*>\\+1<`));
+    const negatif = dessinerJeton({ valeur: -1, habillage: "contourAssorti" });
+    assert.ok(negatif.includes(COULEURS.jetonAplatNegatif));
+    assert.match(negatif, new RegExp(`stroke="${COULEURS.jetonNegatifBord}"`));
+    const neutralise = dessinerJeton({ valeur: 1, etat: "neutralise", habillage: "contourAssorti" });
+    assert.ok(neutralise.includes(COULEURS.jetonNeutralise));
+    assert.ok(neutralise.includes(COULEURS.jetonNeutraliseBord));
+  });
+
   it("habillage plateau : dégradé et texte blanc des plateaux de manipulation", () => {
     const positif = dessinerJeton({ valeur: 1, habillage: "plateau" });
     assert.ok(positif.includes(COULEURS.jetonPositif));

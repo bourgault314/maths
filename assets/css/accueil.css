@@ -88,7 +88,7 @@ h1 {
 }
 
 .maths-scene {
-  width: min(100%, 530px);
+  width: min(100%, 500px);
   margin: clamp(19px, 2.6vw, 25px) auto 0;
 }
 
@@ -98,6 +98,29 @@ h1 {
   height: auto;
   overflow: visible;
   filter: drop-shadow(0 6px 9px rgba(15, 40, 72, 0.055));
+}
+
+/* Chaque raccourci de la frise garde une grande zone tactile invisible
+   (rect .scene-hit) ; seul le dessin grossit au survol ou au focus. */
+.scene-link { outline: none; }
+
+.scene-hit { fill: transparent; }
+
+.scene-item {
+  transform-box: fill-box;
+  transform-origin: center;
+  transition: transform 0.18s ease;
+}
+
+.scene-link:hover .scene-item,
+.scene-link:focus-visible .scene-item {
+  transform: scale(1.12);
+}
+
+.scene-link:focus-visible .scene-hit {
+  fill: rgba(8, 185, 178, 0.1);
+  stroke: var(--teal);
+  stroke-width: 2;
 }
 
 .btn-start {

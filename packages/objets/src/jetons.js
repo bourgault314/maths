@@ -18,13 +18,16 @@ export const VERSION_JETONS = 2;
 
 export const ETATS_JETON = ["normal", "neutralise", "barre", "fantome"];
 export const CONTENUS_JETON = ["signe", "valeur", "aucun"];
-// Deux habillages officiels relevés dans l'univers maths&go :
+// Trois habillages officiels relevés dans l'univers maths&go :
 // - « contourNoir » : aplat vert/rouge, contour noir, texte noir —
 //   celui des fiches PDF (vert_rouge_contour_noir) et des questions
 //   d'Automatismes. C'est l'habillage par défaut.
+// - « contourAssorti » : mêmes aplats, mais contour foncé de la même
+//   teinte que le jeton (moins agressif que le noir) — validé par
+//   Gwenaël sur la frise de l'accueil (juillet 2026).
 // - « plateau » : dégradé radial, texte blanc, bord foncé coloré —
 //   celui des plateaux de manipulation (somme_difference*).
-export const HABILLAGES_JETON = ["contourNoir", "plateau"];
+export const HABILLAGES_JETON = ["contourNoir", "contourAssorti", "plateau"];
 
 const TAILLE_REFERENCE = 100; // le jeton se dessine dans un carré 100×100
 
@@ -105,6 +108,25 @@ export function dessinerJeton({
     morceaux.push(
       `<circle cx="50" cy="50" r="46" fill="${fond}" stroke="${COULEURS.jetonContour}" stroke-width="4"/>`,
     );
+  } else if (habillage === "contourAssorti") {
+    // Mêmes aplats que « contourNoir », mais le contour reprend le bord
+    // foncé de la charte assorti à la teinte du jeton ; texte noir.
+    const fond =
+      etat === "neutralise"
+        ? COULEURS.jetonNeutralise
+        : valeur > 0
+          ? COULEURS.jetonAplatPositif
+          : COULEURS.jetonAplatNegatif;
+    const bord =
+      etat === "neutralise"
+        ? COULEURS.jetonNeutraliseBord
+        : valeur > 0
+          ? COULEURS.jetonPositifBord
+          : COULEURS.jetonNegatifBord;
+    c = { bord, texte: COULEURS.jetonContour };
+    morceaux.push(
+      `<circle cx="50" cy="50" r="46" fill="${fond}" stroke="${bord}" stroke-width="4"/>`,
+    );
   } else {
     // Dégradé des plateaux de manipulation : reflet et texte blanc.
     const p = couleursPour(valeur, etat);
@@ -118,7 +140,7 @@ export function dessinerJeton({
 
   if (texte) {
     morceaux.push(
-      `<text x="50" y="52" font-family='${TYPOGRAPHIE.titres}' font-size="${tailleTexte}" font-weight="${habillage === "contourNoir" ? 700 : 600}" fill="${c.texte}" text-anchor="middle" dominant-baseline="central">${texte}</text>`,
+      `<text x="50" y="52" font-family='${TYPOGRAPHIE.titres}' font-size="${tailleTexte}" font-weight="${habillage === "plateau" ? 600 : 700}" fill="${c.texte}" text-anchor="middle" dominant-baseline="central">${texte}</text>`,
     );
   }
   if (etat === "barre") {
