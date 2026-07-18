@@ -1,0 +1,368 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex, nofollow">
+<title>Solides — maths&go</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{--page:#f6f8fb;--papier:#fff;--encre:#10294a;--bleu:#063f86;--attenue:#637287;--ligne:#dce5ef}
+  *{box-sizing:border-box}
+  [hidden]{display:none !important}
+  body{margin:0;background:var(--page);color:var(--encre);font-family:"Segoe UI",system-ui,sans-serif;
+    padding:14px;max-width:1060px;margin-inline:auto}
+  header{display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:12px}
+  h1{font-family:Fredoka;color:var(--bleu);font-size:clamp(20px,4vw,28px);margin:0}
+  header a{color:var(--attenue);text-decoration:none;font-size:18px;font-weight:600}
+  .chips{display:flex;flex-wrap:wrap;gap:8px;margin:0 0 14px}
+  .chips button{font-family:Fredoka;font-weight:600;font-size:14.5px;padding:9px 16px;min-height:44px;
+    border-radius:999px;border:2px solid var(--ligne);background:#fff;color:var(--encre);cursor:pointer}
+  .chips button.actif{background:linear-gradient(180deg,#60a5fa,#3b82f6);color:#fff;border-color:#3b82f6}
+  .vitrine{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:10px}
+  .vignette{border:1px solid var(--ligne);border-radius:16px;padding:10px;background:#fff;text-align:center;cursor:pointer}
+  .vignette:active{transform:scale(.98)}
+  .vignette svg{max-width:100%;height:auto}
+  .vignette figcaption{font-family:Fredoka;font-weight:600;font-size:13.5px;margin-top:4px}
+  .carte{border:1px solid var(--ligne);border-radius:14px;padding:8px;background:#fff;text-align:center}
+  .carte svg{max-width:100%;height:auto}
+  .carte figcaption{font-size:12px;color:var(--attenue);margin-top:4px;font-weight:600}
+  figure{margin:0}
+  .galerie{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:10px}
+  .barre{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin:0 0 10px}
+  .reglage{display:flex;align-items:center;gap:8px;font-size:13.5px;color:var(--attenue)}
+  .reglage input[type=range]{accent-color:var(--bleu);width:120px;min-height:34px}
+  .reglage output{font-weight:700;color:var(--encre)}
+  button.action{font:inherit;font-size:14.5px;padding:9px 14px;min-height:44px;border-radius:12px;
+    border:2px solid var(--ligne);background:#fff;color:var(--encre);cursor:pointer}
+  button.principal{background:linear-gradient(180deg,#60a5fa,#3b82f6);color:#fff;border-color:#3b82f6;font-weight:600}
+  .pilules{display:flex;flex-wrap:wrap;gap:7px;margin:0 0 12px}
+  .pilules button{font-size:13.5px;padding:8px 13px;min-height:40px;border-radius:999px;
+    border:2px solid var(--ligne);background:#fff;color:var(--encre);cursor:pointer}
+  .pilules button.actif{background:#dbeafe;border-color:#3b82f6;color:#1d4ed8;font-weight:700}
+  .apercu{background:#fff;border:1px solid var(--ligne);border-radius:18px;text-align:center;
+    padding:8px;margin-bottom:14px;overflow:hidden;touch-action:none;cursor:grab}
+  .apercu:active{cursor:grabbing}
+  .apercu svg{max-width:100%;height:auto;pointer-events:none}
+  h2{font-family:Fredoka;color:var(--bleu);font-size:17px;margin:14px 0 8px}
+  .badge{font-size:11px;font-weight:700;border-radius:999px;padding:3px 10px;background:#fef3c7;color:#92400e}
+  @media (max-width:560px){
+    .reglage{flex:1 1 100%}
+    .reglage input[type=range]{flex:1;width:auto}
+  }
+</style>
+</head>
+<body>
+<header>
+  <a href="./index.html" aria-label="Retour à l'Atelier">←</a>
+  <h1>🧊 Solides</h1>
+  <span id="filAriane" style="font-family:Fredoka;color:var(--attenue)"></span>
+</header>
+
+<div class="chips" id="chipsSeries" role="group" aria-label="Séries"></div>
+
+<div id="vueSerie">
+  <div class="vitrine" id="vitrineObjets"></div>
+</div>
+
+<div id="vueObjet" hidden>
+  <div class="barre">
+    <button class="action" id="btnRetourSerie">← Solides</button>
+    <strong id="titreObjet" style="font-family:Fredoka;font-size:18px"></strong>
+    <span class="badge">brouillon</span>
+    <button class="principal action" id="btnSvg" style="margin-left:auto">⬇ SVG</button>
+  </div>
+  <div class="barre" id="parametresObjet"></div>
+  <div class="pilules" id="pilulesObjet"></div>
+  <div class="pilules" id="pilulesProjection" role="group" aria-label="Projection"></div>
+  <div class="barre" id="reglagesCavaliere">
+    <label class="reglage">angle <input type="range" id="regleAngle" min="10" max="80" value="45" step="1"><output id="valAngle">45°</output></label>
+    <label class="reglage">coefficient <input type="range" id="regleCoefficient" min="20" max="90" value="50" step="5"><output id="valCoefficient">0,5</output></label>
+  </div>
+  <div class="barre" id="reglagesLibre" hidden>
+    <label class="reglage">↔ <input type="range" id="regleLacet" min="-180" max="180" value="-28" step="1"><output id="valLacet">−28°</output></label>
+    <label class="reglage">↕ <input type="range" id="regleTangage" min="-89" max="89" value="16" step="1"><output id="valTangage">16°</output></label>
+    <span class="pilules" id="boutonsVues" style="margin:0"></span>
+  </div>
+  <div class="apercu" id="apercu" aria-live="polite"></div>
+  <h2>Toutes les possibilités</h2>
+  <div class="galerie" id="plancheObjet"></div>
+</div>
+
+<script type="module">
+import {
+  CATEGORIES_SOLIDES,
+  SOLIDES_USUELS,
+  VUES_SOLIDES,
+  dessinerSolide,
+} from "../../packages/objets/src/solides.js";
+
+const $ = (id) => document.getElementById(id);
+let serieActive = CATEGORIES_SOLIDES[0];
+let objetActif = null;
+let dernierSvg = "";
+const actives = new Set(["pointilles"]);
+let projection = "cavaliere";
+
+const VUES_BOUTONS = [
+  ["trois-quarts", "¾"],
+  ["face", "face"],
+  ["dessus", "dessus"],
+  ["droite", "droite"],
+  ["gauche", "gauche"],
+  ["dessous", "dessous"],
+];
+
+function capacitesDe(cle) {
+  const type = SOLIDES_USUELS[cle].creer().type;
+  const liste = [["noms", "noms"], ["base", "base"], ["mesures", "mesures"],
+    ["pointilles", "arêtes cachées"], ["couleur", "couleur"]];
+  if (["pyramide", "tetraedre", "cylindre", "cone"].includes(type)) {
+    liste.splice(2, 0, ["hauteur", "hauteur"]);
+  }
+  if (["sphere", "boule", "demi-sphere"].includes(type)) {
+    // pas d'arêtes ni de sommets à nommer sur une sphère pleine
+    return liste.filter(([capacite]) => !["noms", "base"].includes(capacite))
+      .concat(type === "demi-sphere" ? [["base", "base"]] : []);
+  }
+  return liste;
+}
+
+function lireParametres() {
+  const parametres = {};
+  for (const curseur of $("parametresObjet").querySelectorAll("input[type=range]")) {
+    parametres[curseur.dataset.cle] = Number(curseur.value);
+  }
+  return parametres;
+}
+
+function optionsCourantes(taille) {
+  return {
+    projection,
+    angleDeg: Number($("regleAngle").value),
+    coefficient: Number($("regleCoefficient").value) / 100,
+    lacetDeg: projection === "orthographique" ? Number($("regleLacet").value) : 0,
+    tangageDeg: projection === "orthographique" ? Number($("regleTangage").value) : 0,
+    taille,
+    theme: actives.has("couleur") ? "couleur" : "noir",
+    noms: actives.has("noms"),
+    base: actives.has("base"),
+    hauteur: actives.has("hauteur"),
+    mesures: actives.has("mesures"),
+    cachees: actives.has("pointilles") ? "pointilles" : "masquees",
+  };
+}
+
+function dessinerApercu() {
+  const solide = SOLIDES_USUELS[objetActif].creer(lireParametres());
+  dernierSvg = dessinerSolide(solide, optionsCourantes(Math.min(430, window.innerWidth - 60)));
+  $("apercu").innerHTML = dernierSvg;
+}
+
+function carte(zone, svg, legende) {
+  const figure = document.createElement("figure");
+  figure.className = "carte";
+  figure.innerHTML = svg + "<figcaption></figcaption>";
+  figure.querySelector("figcaption").textContent = legende;
+  zone.appendChild(figure);
+}
+
+function plancheObjet() {
+  const zone = $("plancheObjet");
+  zone.innerHTML = "";
+  const entree = SOLIDES_USUELS[objetActif];
+  const parametres = lireParametres();
+  const dessiner = (options, legende) => {
+    try {
+      carte(zone, dessinerSolide(entree.creer(parametres), { taille: 150, marge: 18, ...options }), legende);
+    } catch (erreur) {
+      const alerte = document.createElement("figure");
+      alerte.className = "carte";
+      alerte.innerHTML = "<figcaption></figcaption>";
+      alerte.querySelector("figcaption").textContent = `${legende} : ERREUR — ${erreur.message}`;
+      zone.appendChild(alerte);
+    }
+  };
+  dessiner({}, "cavalière 45°, ½");
+  dessiner({ angleDeg: 30, coefficient: 0.7 }, "cavalière 30°, 0,7");
+  for (const [cle, reglages] of Object.entries(VUES_SOLIDES)) {
+    dessiner({ projection: "orthographique", ...reglages }, `vue : ${cle.replace("trois-quarts", "¾")}`);
+  }
+  // la preuve anti-liste-figée : le même solide sous 4 orientations,
+  // les pointillés changent à chaque fois
+  for (const [lacet, tangage] of [[35, 24], [140, -18], [215, 40], [305, -35]]) {
+    dessiner({ projection: "orthographique", lacetDeg: lacet, tangageDeg: tangage }, `tourné (${lacet}°, ${tangage}°)`);
+  }
+  for (const [capacite, legende] of capacitesDe(objetActif)) {
+    if (capacite === "pointilles" || capacite === "couleur") continue;
+    dessiner({ [capacite]: true }, legende);
+  }
+  dessiner({ cachees: "masquees" }, "cachées masquées");
+  dessiner({ theme: "couleur", base: true }, "couleur");
+}
+
+function ouvrirSerie(serie) {
+  serieActive = serie;
+  objetActif = null;
+  $("vueObjet").hidden = true;
+  $("vueSerie").hidden = false;
+  $("filAriane").textContent = "";
+  [...$("chipsSeries").children].forEach((c) => c.classList.toggle("actif", c.textContent === serie));
+  const vitrine = $("vitrineObjets");
+  vitrine.innerHTML = "";
+  for (const [cle, entree] of Object.entries(SOLIDES_USUELS)) {
+    if (entree.categorie !== serie) continue;
+    const vignette = document.createElement("figure");
+    vignette.className = "vignette";
+    vignette.innerHTML = `${dessinerSolide(entree.creer(), { taille: 130, marge: 16 })}<figcaption></figcaption>`;
+    vignette.querySelector("figcaption").textContent = entree.titre;
+    vignette.addEventListener("click", () => ouvrirObjet(cle));
+    vitrine.appendChild(vignette);
+  }
+  window.scrollTo(0, 0);
+}
+
+function majProjection() {
+  $("reglagesCavaliere").hidden = projection !== "cavaliere";
+  $("reglagesLibre").hidden = projection !== "orthographique";
+  [...$("pilulesProjection").children].forEach((bouton) =>
+    bouton.classList.toggle("actif", bouton.dataset.projection === projection),
+  );
+}
+
+function ouvrirObjet(cle) {
+  objetActif = cle;
+  const entree = SOLIDES_USUELS[cle];
+  $("vueSerie").hidden = true;
+  $("vueObjet").hidden = false;
+  $("filAriane").textContent = `· ${serieActive}`;
+  $("titreObjet").textContent = entree.titre;
+  actives.clear();
+  actives.add("pointilles");
+  const zone = $("parametresObjet");
+  zone.innerHTML = "";
+  for (const parametre of entree.parametres) {
+    const label = document.createElement("label");
+    label.className = "reglage";
+    const sortie = document.createElement("output");
+    const curseur = document.createElement("input");
+    curseur.type = "range";
+    curseur.min = parametre.min;
+    curseur.max = parametre.max;
+    curseur.step = parametre.pas ?? 0.5;
+    curseur.value = parametre.defaut;
+    curseur.dataset.cle = parametre.cle;
+    sortie.textContent = String(parametre.defaut).replace(".", ",");
+    curseur.addEventListener("input", () => {
+      sortie.textContent = String(curseur.value).replace(".", ",");
+      dessinerApercu();
+      plancheObjet();
+    });
+    label.append(`${parametre.libelle} `, curseur, sortie);
+    zone.appendChild(label);
+  }
+  const pilules = $("pilulesObjet");
+  pilules.innerHTML = "";
+  for (const [capacite, libelle] of capacitesDe(cle)) {
+    const bouton = document.createElement("button");
+    bouton.textContent = libelle;
+    bouton.classList.toggle("actif", actives.has(capacite));
+    bouton.addEventListener("click", () => {
+      actives.has(capacite) ? actives.delete(capacite) : actives.add(capacite);
+      bouton.classList.toggle("actif", actives.has(capacite));
+      dessinerApercu();
+    });
+    pilules.appendChild(bouton);
+  }
+  majProjection();
+  dessinerApercu();
+  plancheObjet();
+  window.scrollTo(0, 0);
+}
+
+for (const serie of CATEGORIES_SOLIDES) {
+  const bouton = document.createElement("button");
+  bouton.textContent = serie;
+  bouton.addEventListener("click", () => ouvrirSerie(serie));
+  $("chipsSeries").appendChild(bouton);
+}
+for (const [cle, libelle] of [["cavaliere", "cavalière"], ["orthographique", "libre"]]) {
+  const bouton = document.createElement("button");
+  bouton.textContent = libelle;
+  bouton.dataset.projection = cle;
+  bouton.addEventListener("click", () => {
+    projection = cle;
+    majProjection();
+    dessinerApercu();
+  });
+  $("pilulesProjection").appendChild(bouton);
+}
+for (const [cle, libelle] of VUES_BOUTONS) {
+  const bouton = document.createElement("button");
+  bouton.textContent = libelle;
+  bouton.addEventListener("click", () => {
+    const vue = VUES_SOLIDES[cle];
+    $("regleLacet").value = vue.lacetDeg;
+    $("regleTangage").value = vue.tangageDeg;
+    majSortiesRotation();
+    dessinerApercu();
+  });
+  $("boutonsVues").appendChild(bouton);
+}
+
+function majSortiesRotation() {
+  $("valLacet").textContent = `${$("regleLacet").value}°`.replace("-", "−");
+  $("valTangage").textContent = `${$("regleTangage").value}°`.replace("-", "−");
+}
+$("regleLacet").addEventListener("input", () => { majSortiesRotation(); dessinerApercu(); });
+$("regleTangage").addEventListener("input", () => { majSortiesRotation(); dessinerApercu(); });
+$("regleAngle").addEventListener("input", () => {
+  $("valAngle").textContent = `${$("regleAngle").value}°`;
+  dessinerApercu();
+  plancheObjet();
+});
+$("regleCoefficient").addEventListener("input", () => {
+  $("valCoefficient").textContent = String(Number($("regleCoefficient").value) / 100).replace(".", ",");
+  dessinerApercu();
+});
+
+// rotation au doigt sur l'aperçu — glisser bascule en projection libre
+let glisse = null;
+$("apercu").addEventListener("pointerdown", (e) => {
+  glisse = { x: e.clientX, y: e.clientY, lacet: Number($("regleLacet").value), tangage: Number($("regleTangage").value) };
+  $("apercu").setPointerCapture(e.pointerId);
+});
+$("apercu").addEventListener("pointermove", (e) => {
+  if (!glisse) return;
+  const deltaLacet = (e.clientX - glisse.x) * 0.5;
+  const deltaTangage = (e.clientY - glisse.y) * 0.5;
+  if (projection !== "orthographique" && Math.hypot(deltaLacet, deltaTangage) > 2) {
+    projection = "orthographique";
+    majProjection();
+  }
+  if (projection !== "orthographique") return;
+  const borner = (valeur, borne) => Math.max(-borne, Math.min(borne, valeur));
+  $("regleLacet").value = Math.round(((glisse.lacet + deltaLacet + 540) % 360) - 180);
+  $("regleTangage").value = Math.round(borner(glisse.tangage - deltaTangage, 89));
+  majSortiesRotation();
+  dessinerApercu();
+});
+const finGlisse = () => { glisse = null; };
+$("apercu").addEventListener("pointerup", finGlisse);
+$("apercu").addEventListener("pointercancel", finGlisse);
+
+$("btnRetourSerie").addEventListener("click", () => ouvrirSerie(serieActive));
+$("btnSvg").addEventListener("click", () => {
+  const blob = new Blob([dernierSvg], { type: "image/svg+xml" });
+  const lien = document.createElement("a");
+  lien.href = URL.createObjectURL(blob);
+  lien.download = `${objetActif}.svg`;
+  lien.click();
+  URL.revokeObjectURL(lien.href);
+});
+
+ouvrirSerie(serieActive);
+</script>
+</body>
+</html>
