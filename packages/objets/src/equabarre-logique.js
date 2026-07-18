@@ -99,8 +99,13 @@ function terminerAction(etat, operation) {
       }
     }
   }
-  etat.historique.push({ equation: equationCourante(etat), ...(operation ? { operation } : {}) });
-  if (etat.historique.length > MAX_HISTORIQUE) etat.historique.shift();
+  const equation = equationCourante(etat);
+  const derniere = etat.historique.at(-1);
+  // règle de l'outil : une ligne quand l'équation change (ou opération annotée)
+  if (operation || !derniere || derniere.equation !== equation) {
+    etat.historique.push({ equation, ...(operation ? { operation } : {}) });
+    if (etat.historique.length > MAX_HISTORIQUE) etat.historique.shift();
+  }
 }
 
 /** La pièce est-elle encore en jeu ? */
@@ -160,7 +165,11 @@ export function cliquerPiece(etat, ligneIdx, pieceIdx) {
     memoriser(etat);
     const pieces = etat.lignes[a.ligne].pieces;
     [pieces[a.indice], pieces[b.indice]] = [pieces[b.indice], pieces[a.indice]];
-    terminerAction(etat);
+    // déplacer réorganise l'affichage : l'équation ne change pas
+    etat.selection = [];
+    for (const piece of pieces) {
+      if (piece.etat === "selectionAjout" || piece.etat === "selectionSuppression") delete piece.etat;
+    }
     return { action: "deplace" };
   }
 
@@ -293,20 +302,47 @@ export function diviseursDe(n) {
   return diviseurs;
 }
 
-/** Suggestions de décompositions d'un nombre (chips d'aide). */
-export function propositionsDecomposition(n) {
-  const paires = [];
-  if (n >= 2) paires.push([1, n - 1]);
-  if (n % 2 === 0 && n >= 4) paires.push([n / 2, n / 2]);
-  if (n > 10) paires.push([10, n - 10]);
-  if (n > 5 && n - 5 !== 5 && n - 5 !== 1) paires.push([5, n - 5]);
+/**
+ * Aide à la décomposition, fidèle à buildSuggestions de l'outil : la
+ * PREMIÈRE proposition est la décomposition pédagogiquement UTILE —
+ * faire apparaître un nombre déjà présent dans l'autre membre (pour
+ * préparer « enlever dans chaque membre »). Elle n'est jamais
+ * mélangée. Suivent jusqu'à 3 découpages valides variés.
+ */
+export function aideDecomposition(etat, ligneIdx, valeur, melange = (l) => l) {
+  const propositions = [];
   const vues = new Set();
-  return paires.filter((p) => {
-    const cle = p.join("+");
-    if (vues.has(cle)) return false;
-    vues.add(cle);
-    return true;
-  });
+  const ajouter = (texte, tableau) => {
+    if (texte && !vues.has(texte)) { vues.add(texte); tableau.push(texte); }
+  };
+
+  // 1. la proposition utile : un nombre actif de l'AUTRE membre
+  const autre = etat.lignes[1 - ligneIdx].pieces.filter(
+    (p) => p.type === "nombre" && p.etat !== "supprime" && p.valeur < valeur,
+  );
+  if (autre.length) {
+    const cible = autre.reduce((a, b) => (b.valeur > a.valeur ? b : a)).valeur;
+    ajouter(`${cible} + ${valeur - cible}`, propositions);
+  }
+
+  // 2. autres découpages valides (dizaine, valeur de x, moitié, −5, −10)
+  const candidats = [];
+  for (const [u, v] of [
+    [10, valeur - 10],
+    [etat.solution, valeur - etat.solution],
+    [Math.floor(valeur / 2), valeur - Math.floor(valeur / 2)],
+    [Math.max(1, valeur - 5), Math.min(valeur - 1, 5)],
+    [Math.max(1, valeur - 10), Math.min(valeur - 1, 10)],
+    [1, valeur - 1],
+    [2, valeur - 2],
+  ]) {
+    if (u > 0 && v > 0 && u + v === valeur) ajouter(`${u} + ${v}`, candidats);
+  }
+  for (const c of melange(candidats)) {
+    if (!propositions.includes(c)) propositions.push(c);
+    if (propositions.length >= 4) break;
+  }
+  return propositions.slice(0, 4);
 }
 
 /**

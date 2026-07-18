@@ -9,7 +9,7 @@
 // Elle hérite sa couleur du contexte (currentColor) : orange dans une
 // rédaction, autre couleur ailleurs.
 
-export const VERSION_FLECHE = 1;
+export const VERSION_FLECHE = 2;
 
 /**
  * La flèche d'opération, en fragment SVG à incruster (groupe positionné
@@ -27,12 +27,15 @@ export function dessinerFlecheOperation({ cote = "gauche", taille = 22, fragment
   if (cote !== "gauche" && cote !== "droite") {
     throw new RangeError(`dessinerFlecheOperation : côté inconnu « ${cote} »`);
   }
+  // v2 : courbe en quart de cercle régulier, pointe alignée sur la
+  // tangente — un arrondi plus doux que celui de l'outil historique
+  // (demande explicite de Gwenaël : « fais de meilleurs arrondis »).
   const chemins =
     cote === "gauche"
-      ? `<path d="M9 4 C9 21 24 20 29 32" fill="none" stroke="currentColor" stroke-width="3.2" stroke-linecap="round"/>` +
-        `<path d="M23 31 L31 39 L34 28 Z" fill="currentColor"/>`
-      : `<path d="M35 4 C35 21 20 20 15 32" fill="none" stroke="currentColor" stroke-width="3.2" stroke-linecap="round"/>` +
-        `<path d="M21 31 L13 39 L10 28 Z" fill="currentColor"/>`;
+      ? `<path d="M8 4 C8 19 13 28 24 33" fill="none" stroke="currentColor" stroke-width="3.4" stroke-linecap="round"/>` +
+        `<path d="M17.5 33.5 L26 34 L21.5 26.5 Z" fill="currentColor" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/>`
+      : `<path d="M36 4 C36 19 31 28 20 33" fill="none" stroke="currentColor" stroke-width="3.4" stroke-linecap="round"/>` +
+        `<path d="M26.5 33.5 L18 34 L22.5 26.5 Z" fill="currentColor" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/>`;
   if (fragment) return chemins;
   return (
     `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 44 44" width="${taille * 1.25}" height="${taille}" aria-hidden="true" style="overflow:visible">` +
