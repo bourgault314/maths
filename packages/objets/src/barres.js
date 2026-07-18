@@ -48,6 +48,14 @@ const OPACITE_FILET = 0.36;
 const POLICE_VALEURS = "'Segoe UI', system-ui, sans-serif";
 const POLICE_LETTRE = "Georgia, 'Times New Roman', serif";
 
+// Tout texte libre (étiquettes de pièces et de lignes, lettre de
+// l'inconnue) est échappé avant d'entrer dans le SVG.
+function echapper(texte) {
+  return String(texte).replace(/[&<>"']/g, (c) =>
+    ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&apos;" })[c],
+  );
+}
+
 // Tache Splat (blob noir à 5 lobes, silhouette simplifiée de l'icône
 // d'ÉquaBarre), dessinée dans un carré 100×100 centré en (50,50).
 const CHEMIN_SPLAT =
@@ -190,7 +198,7 @@ export function dessinerBarres({
 
     if (ligne.etiquette) {
       morceaux.push(
-        `<text x="${margeGauche - 12}" y="${y + hauteurPiece / 2}" font-family="${POLICE_VALEURS}" font-size="${Math.round(tailleTexte * 0.55)}" font-weight="700" fill="${COULEURS_BARRES.encre}" text-anchor="end" dominant-baseline="central">${ligne.etiquette}</text>`,
+        `<text x="${margeGauche - 12}" y="${y + hauteurPiece / 2}" font-family="${POLICE_VALEURS}" font-size="${Math.round(tailleTexte * 0.55)}" font-weight="700" fill="${COULEURS_BARRES.encre}" text-anchor="end" dominant-baseline="central">${echapper(ligne.etiquette)}</text>`,
       );
     }
 
@@ -225,7 +233,7 @@ export function dessinerBarres({
       } else if (texte) {
         const italique = piece.type === "inconnue" && affichage === "lettre" && piece.etiquette === undefined;
         morceaux.push(
-          `<text x="${x + l / 2}" y="${y + hauteurPiece / 2}" font-family="${italique ? POLICE_LETTRE : POLICE_VALEURS}"${italique ? ' font-style="italic"' : ""} font-size="${tailleTexte}" font-weight="900" letter-spacing="-1" fill="${fonds.texte}" text-anchor="middle" dominant-baseline="central">${texte}</text>`,
+          `<text x="${x + l / 2}" y="${y + hauteurPiece / 2}" font-family="${italique ? POLICE_LETTRE : POLICE_VALEURS}"${italique ? ' font-style="italic"' : ""} font-size="${tailleTexte}" font-weight="900" letter-spacing="-1" fill="${fonds.texte}" text-anchor="middle" dominant-baseline="central">${echapper(texte)}</text>`,
         );
       }
       morceaux.push(`</g>`);

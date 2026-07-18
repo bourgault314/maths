@@ -1,12 +1,12 @@
 # Plan d'extraction des visuels — la carte des 27 composants
 
-**Créé le 19 juillet 2026.** Règle posée par Gwenaël, gravée ici :
+**Créé le 18 juillet 2026.** Règle posée par Gwenaël, gravée ici :
 
 > Les visuels codés DANS Automatismes (`auto/scripts/shared/visuals/`)
 > sont souvent ratés (générés par GPT). **Les bonnes versions vivent
 > dans les gros HTML du site** (`outils/`). L'extraction se fait donc
 > depuis les outils du site ; Automatismes fournit la *liste des
-> besoins* (27 types de visuels, 204 exemples préréglés, formats de
+> besoins* (27 types de visuels, 186 exemples préréglés, formats de
 > données des questions) — pas la référence visuelle.
 
 La bibliothèque interne `auto/dev/visual-library.html` (reliée depuis
@@ -66,7 +66,7 @@ toutes par des objets à lois mathématiques :
 4. Montrer dans l'Atelier, à côté de l'original ;
 5. Gwenaël corrige puis valide — seul un objet validé entre au registre.
 
-Les données d'Automatismes (204 exemples préréglés, 285 types de
+Les données d'Automatismes (186 exemples préréglés, 285 types de
 questions, contrats de manipulation) servent ensuite à brancher chaque
 objet sur la génération de questions — sans réutiliser les dessins
 ratés.

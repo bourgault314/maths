@@ -1,5 +1,21 @@
 # Studio pédagogique maths&go
 
+> **Raccordement (19/07/2026, suite à la revue croisée).** Deux
+> fondations coexistaient : les documents de ce dossier (écrits avant
+> le chantier V2) et les bibliothèques `packages/` créées depuis. La
+> règle est désormais unique :
+> - **`packages/`** contient le code réutilisable (contrats, moteur,
+>   charte, objets visuels), testé et sans navigateur ;
+> - **`studio/`** est l'atelier de composition et de validation qui
+>   CONSOMME ces packages (`studio/atelier/` en est la première page) ;
+> - chaque objet suit un cycle `brouillon → validé par Gwenaël`
+>   (aujourd'hui dans les en-têtes de fichiers ; à terme dans le
+>   registre central décrit par ces documents) ;
+> - les documents ci-dessous restent la vision pédagogique de
+>   référence, à lire avec cette clé ; leurs choix techniques datés
+>   (ex. `studio/components` comme emplacement du code) sont remplacés
+>   par `packages/`.
+
 Ce dossier pose les fondations du futur moteur pédagogique de maths&go.
 
 Le but n'est pas de demander à une IA de recréer une page ou un dessin à chaque
