@@ -83,6 +83,16 @@ describe("décomposer, partager, regrouper, déplacer", () => {
     assert.equal(etat.historique.at(-1).equation, "3x = 4 + 4 + 4");
   });
 
+  it("regrouper refuse une somme fausse donnée par l'élève", () => {
+    const etat = creerEtat("2x + 4 = x + 5 + 1");
+    changerMode(etat, "regrouper");
+    cliquerPiece(etat, 0, 1);
+    cliquerPiece(etat, 0, 2);
+    assert.throws(() => regrouperSelection(etat, 7), /pas la bonne somme/);
+    regrouperSelection(etat, 6); // la bonne somme passe
+    assert.equal(etat.historique.at(-1).equation, "2x + 4 = x + 6");
+  });
+
   it("regrouper 5 + 1 en 6 (même membre uniquement)", () => {
     const etat = creerEtat("2x + 4 = x + 5 + 1");
     changerMode(etat, "regrouper");

@@ -66,6 +66,15 @@
   .reglageTaille{display:flex;align-items:center;gap:8px;font-size:14px;color:var(--attenue)}
   .reglageTaille input{accent-color:var(--bleu)}
   #modesEquabarre button.modeActif{background:linear-gradient(180deg,#60a5fa,#3b82f6);color:#fff;border-color:#3b82f6;font-weight:600}
+  #barreOutilsEqua{position:sticky;bottom:0;z-index:50;background:rgba(255,255,255,.96);
+    border-top:1px solid var(--ligne);margin:0 -12px -12px;padding:10px 12px 12px;backdrop-filter:blur(4px)}
+  .clavier-mathsgo{display:grid;grid-template-columns:repeat(3,64px);gap:8px;margin-top:10px}
+  .clavier-mathsgo[data-colonnes="4"]{grid-template-columns:repeat(4,64px)}
+  .clavier-touche{font-family:Fredoka;font-size:20px;font-weight:600;min-height:48px;border-radius:12px;
+    border:2px solid var(--ligne);background:#fff;color:var(--encre);cursor:pointer}
+  .clavier-touche:active{transform:translateY(1px)}
+  .clavier-valider{background:linear-gradient(180deg,#60a5fa,#3b82f6);color:#fff;border-color:#3b82f6}
+  #dialogueChips button{font-family:Fredoka;font-weight:600;border-radius:999px;min-width:64px}
   #dialogueEquabarre{display:flex;flex-wrap:wrap;gap:10px;align-items:center;margin:10px 0;padding:12px;
     background:#eff6ff;border:2px solid #bfdbfe;border-radius:12px}
   #historiqueEquations{margin-top:12px;font-family:Fredoka;font-size:clamp(18px,3vw,26px);font-weight:600;line-height:1.5}
@@ -104,27 +113,32 @@
       <option value="masquer">Après suppression : masquer</option>
     </select>
   </div>
-  <div class="barreCommandes" id="modesEquabarre" role="group" aria-label="Opérations">
-    <button data-mode="decomposer">Décomposer</button>
-    <button data-mode="regrouper">Regrouper</button>
-    <button data-mode="partager">Partager équitablement</button>
-    <button data-mode="deplacer">Déplacer</button>
-    <button data-mode="enlever" class="modeActif">Enlever dans chaque membre</button>
-  </div>
-  <div class="barreCommandes">
-    <button class="principal" id="btnValiderSelection" disabled>Enlever la sélection</button>
-    <button id="btnAnnulerOp">↶ Annuler</button>
-    <button id="btnRecommencer">↺ Recommencer</button>
+  <div id="barreOutilsEqua">
+    <div class="barreCommandes" id="modesEquabarre" role="group" aria-label="Opérations">
+      <button data-mode="decomposer">Décomposer</button>
+      <button data-mode="regrouper">Regrouper</button>
+      <button data-mode="partager">Partager équitablement</button>
+      <button data-mode="deplacer">Déplacer</button>
+      <button data-mode="enlever" class="modeActif">Enlever dans chaque membre</button>
+    </div>
+    <div class="barreCommandes">
+      <button class="principal" id="btnValiderSelection" disabled>Enlever la sélection</button>
+      <button id="btnAnnulerOp">↶ Annuler</button>
+      <button id="btnRecommencer">↺ Recommencer</button>
+      <label class="reglageTaille"><input type="checkbox" id="avecVerification" checked> vérification</label>
+    </div>
   </div>
   <div id="zoneEquabarre" style="display:flex;flex-wrap:wrap;gap:22px;align-items:flex-start">
     <div class="zoneRendu" id="renduBarres" style="flex:1 1 420px;min-width:300px"></div>
     <div id="redactionEquation" aria-live="polite" style="flex:0 1 auto"></div>
   </div>
   <div id="dialogueEquabarre" hidden>
-    <span id="dialogueTexte"></span>
-    <input type="text" id="dialogueSaisie" style="width:120px" aria-label="Votre réponse">
+    <div style="width:100%"><span id="dialogueTexte" style="font-weight:700"></span></div>
+    <div class="barreCommandes" id="dialogueChips" role="group" aria-label="Propositions"></div>
+    <input type="text" id="dialogueSaisie" style="width:140px" readonly inputmode="none" aria-label="Votre réponse">
     <button class="principal" id="dialogueValider">Valider</button>
     <button id="dialogueFermer">Fermer</button>
+    <div id="dialogueClavier" style="width:100%"></div>
   </div>
   <p class="erreur" id="erreurEquation"></p>
 </section>
@@ -210,6 +224,8 @@
 import { dessinerBarres } from "../../packages/objets/src/barres.js";
 import * as Logique from "../../packages/objets/src/equabarre-logique.js";
 import { dessinerRedaction } from "../../packages/objets/src/redaction.js";
+import { dessinerVerification } from "../../packages/objets/src/verification.js";
+import { creerClavier } from "../../packages/objets/src/clavier.js";
 import { dessinerJeton, dessinerGroupeJetons } from "../../packages/objets/src/jetons.js";
 import { dessinerTache } from "../../packages/objets/src/splat.js";
 import { dessinerTriangle } from "../../packages/objets/src/triangle.js";
@@ -246,20 +262,21 @@ function dessinerRedactionCourante() {
     ...etape,
     conclusion: i === etatEqua.historique.length - 1 && Logique.estResolue(etatEqua),
   }));
-  let verification;
-  if (Logique.estResolue(etatEqua)) {
-    const initiale = etatEqua.historique[0].equation;
-    verification = initiale
-      .replace(new RegExp(`(\\d+)${etatEqua.lettre}`, "g"), `$1 × ${etatEqua.solution}`)
-      .replace(new RegExp(etatEqua.lettre, "g"), String(etatEqua.solution));
-  }
-  redactionDiv.innerHTML = dessinerRedaction({
+  let html = dessinerRedaction({
     etapes,
-    verification,
     lettre: etatEqua.lettre,
     taillePolice: 22,
     largeur: 400,
   });
+  // la vérification est un objet SÉPARÉ : on l'ajoute… ou pas
+  if (Logique.estResolue(etatEqua) && document.getElementById("avecVerification").checked) {
+    const initiale = etatEqua.historique[0].equation;
+    const texte = initiale
+      .replace(new RegExp(`(\\d+)${etatEqua.lettre}`, "g"), `$1 × ${etatEqua.solution}`)
+      .replace(new RegExp(etatEqua.lettre, "g"), String(etatEqua.solution));
+    html += `<div style="margin-top:8px">${dessinerVerification({ texte, lettre: etatEqua.lettre, largeur: 400 })}</div>`;
+  }
+  redactionDiv.innerHTML = html;
 }
 
 function dessiner() {
@@ -306,27 +323,98 @@ function dessiner() {
   });
 }
 
+const chipsDiv = document.getElementById("dialogueChips");
+const saisieDialogue = document.getElementById("dialogueSaisie");
+const clavierDiv = document.getElementById("dialogueClavier");
+let clavierActif = null;
+
+function chip(texte, action) {
+  const bouton = document.createElement("button");
+  bouton.type = "button";
+  bouton.textContent = texte;
+  bouton.addEventListener("click", action);
+  chipsDiv.appendChild(bouton);
+}
+function melanger(liste) {
+  const copie = [...liste];
+  for (let i = copie.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [copie[i], copie[j]] = [copie[j], copie[i]];
+  }
+  return copie;
+}
+
 function ouvrirDialogue(demande) {
   actionDialogue = demande;
-  document.getElementById("dialogueTexte").textContent =
-    demande.action === "decomposer"
-      ? `Décomposer ${demande.valeur} en une somme (ex. « 4 + 5 ») :`
-      : `Partager ${demande.valeur} en combien de parts égales ?`;
-  document.getElementById("dialogueSaisie").value = "";
+  chipsDiv.innerHTML = "";
+  saisieDialogue.value = "";
+  clavierActif?.detruire();
+  clavierActif = null;
+  const texteDiv = document.getElementById("dialogueTexte");
+  const avecClavier = demande.action !== "partager";
+  saisieDialogue.hidden = !avecClavier;
+  document.getElementById("dialogueValider").hidden = !avecClavier;
+
+  if (demande.action === "decomposer") {
+    texteDiv.textContent = `Décomposer ${demande.valeur} en une somme :`;
+    for (const paire of Logique.propositionsDecomposition(demande.valeur)) {
+      chip(paire.join(" + "), () => { saisieDialogue.value = paire.join(" + "); });
+    }
+    clavierActif = creerClavier(clavierDiv, {
+      disposition: "calcul",
+      surTouche: (touche) => {
+        if (touche === "OK") document.getElementById("dialogueValider").click();
+        else if (touche === "⌫") saisieDialogue.value = saisieDialogue.value.slice(0, -1);
+        else saisieDialogue.value += touche === "×" ? "" : touche;
+      },
+    });
+  } else if (demande.action === "partager") {
+    texteDiv.textContent = `Partager ${demande.valeur} équitablement — en combien de parts ?`;
+    for (const d of Logique.diviseursDe(demande.valeur)) {
+      chip(`${d} parts`, () => {
+        try {
+          Logique.partager(etatEqua, demande.ligne, demande.indice, d);
+          erreur.textContent = "";
+          fermerDialogue();
+          dessiner();
+        } catch (e) { erreur.textContent = e.message; }
+      });
+    }
+    if (Logique.diviseursDe(demande.valeur).length === 0) {
+      texteDiv.textContent = `${demande.valeur} ne se partage pas en parts entières égales.`;
+    }
+  } else if (demande.action === "regrouper") {
+    texteDiv.textContent = "Quelle est la somme des cases sélectionnées ?";
+    for (const proposition of melanger(Logique.propositionsRegroupement(demande.somme))) {
+      chip(String(proposition), () => { saisieDialogue.value = String(proposition); });
+    }
+    clavierActif = creerClavier(clavierDiv, {
+      disposition: "nombres",
+      surTouche: (touche) => {
+        if (touche === "OK") document.getElementById("dialogueValider").click();
+        else if (touche === "⌫") saisieDialogue.value = saisieDialogue.value.slice(0, -1);
+        else saisieDialogue.value += touche;
+      },
+    });
+  }
   dialogue.hidden = false;
-  document.getElementById("dialogueSaisie").focus();
 }
-function fermerDialogue() { dialogue.hidden = true; actionDialogue = null; }
+function fermerDialogue() {
+  dialogue.hidden = true;
+  actionDialogue = null;
+  clavierActif?.detruire();
+  clavierActif = null;
+}
 
 document.getElementById("dialogueValider").addEventListener("click", () => {
   if (!actionDialogue) return;
   try {
-    const saisie = document.getElementById("dialogueSaisie").value;
+    const saisie = saisieDialogue.value;
     if (actionDialogue.action === "decomposer") {
       const morceaux = saisie.split("+").map((v) => Number(v.trim()));
       Logique.decomposer(etatEqua, actionDialogue.ligne, actionDialogue.indice, morceaux);
-    } else {
-      Logique.partager(etatEqua, actionDialogue.ligne, actionDialogue.indice, Number(saisie.trim()));
+    } else if (actionDialogue.action === "regrouper") {
+      Logique.regrouperSelection(etatEqua, Number(saisie.trim()));
     }
     erreur.textContent = "";
     fermerDialogue();
@@ -334,9 +422,6 @@ document.getElementById("dialogueValider").addEventListener("click", () => {
   } catch (e) { erreur.textContent = e.message; }
 });
 document.getElementById("dialogueFermer").addEventListener("click", fermerDialogue);
-document.getElementById("dialogueSaisie").addEventListener("keydown", (e) => {
-  if (e.key === "Enter") document.getElementById("dialogueValider").click();
-});
 
 document.querySelectorAll("#modesEquabarre button").forEach((bouton) => {
   bouton.addEventListener("click", () => {
@@ -351,11 +436,18 @@ document.querySelectorAll("#modesEquabarre button").forEach((bouton) => {
 });
 btnValider.addEventListener("click", () => {
   try {
-    if (etatEqua.mode === "regrouper") Logique.regrouperSelection(etatEqua);
-    else Logique.enleverSelection(etatEqua);
+    if (etatEqua.mode === "regrouper") {
+      // c'est l'élève qui donne la somme : propositions + clavier
+      ouvrirDialogue({ action: "regrouper", somme: Logique.sommeSelection(etatEqua) });
+      return;
+    }
+    Logique.enleverSelection(etatEqua);
     erreur.textContent = "";
     dessiner();
   } catch (e) { erreur.textContent = e.message; }
+});
+document.getElementById("avecVerification").addEventListener("change", () => {
+  if (etatEqua) dessinerRedactionCourante();
 });
 document.getElementById("btnAnnulerOp").addEventListener("click", () => {
   if (etatEqua) { Logique.annuler(etatEqua); dessiner(); }

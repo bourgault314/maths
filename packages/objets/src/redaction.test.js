@@ -10,7 +10,6 @@ const modele = () => ({
     { equation: "3x = 12", operation: "−5" },
     { equation: "x = 4", operation: "÷3", conclusion: true },
   ],
-  verification: "3 × 4 + 5 = 17",
   lettre: "x",
 });
 
@@ -36,12 +35,6 @@ describe("dessinerRedaction", () => {
     const svg = dessinerRedaction(modele());
     assert.match(svg, /fill="#16a34a"[^>]*text-anchor="end"><tspan font-style="italic">x<\/tspan>/);
     assert.match(svg, /fill="#3b82f6"/);
-  });
-
-  it("affiche la ligne de vérification dans son bandeau", () => {
-    const svg = dessinerRedaction(modele());
-    assert.match(svg, /Vérification : 3 × 4 \+ 5 = 17/);
-    assert.match(svg, /<rect[^>]*fill="#f1f5f9"/);
   });
 
   it("échappe les textes hostiles", () => {

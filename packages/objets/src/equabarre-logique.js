@@ -233,8 +233,52 @@ export function partager(etat, ligneIdx, pieceIdx, parts) {
   return decomposer(etat, ligneIdx, pieceIdx, Array.from({ length: parts }, () => piece.valeur / parts));
 }
 
-/** Regroupe les nombres sélectionnés d'un même membre en leur somme. */
-export function regrouperSelection(etat) {
+/** Somme des nombres actuellement sélectionnés (pour le dialogue). */
+export function sommeSelection(etat) {
+  return etat.selection.reduce(
+    (s, { ligne, indice }) => s + (etat.lignes[ligne].pieces[indice].valeur ?? 0),
+    0,
+  );
+}
+
+/**
+ * Propositions de réponse pour un regroupement, comme dans l'outil
+ * historique : la bonne somme accompagnée de distracteurs (±1, ±10, ×2).
+ */
+export function propositionsRegroupement(somme) {
+  const brutes = [somme, somme - 1, somme + 1, somme - 10, somme + 10, somme * 2];
+  return [...new Set(brutes.filter((v) => v > 0))];
+}
+
+/** Diviseurs proposés pour « partager équitablement » (2 à n parts). */
+export function diviseursDe(n) {
+  const diviseurs = [];
+  for (let d = 2; d <= n; d++) if (n % d === 0) diviseurs.push(d);
+  return diviseurs;
+}
+
+/** Suggestions de décompositions d'un nombre (chips d'aide). */
+export function propositionsDecomposition(n) {
+  const paires = [];
+  if (n >= 2) paires.push([1, n - 1]);
+  if (n % 2 === 0 && n >= 4) paires.push([n / 2, n / 2]);
+  if (n > 10) paires.push([10, n - 10]);
+  if (n > 5 && n - 5 !== 5 && n - 5 !== 1) paires.push([5, n - 5]);
+  const vues = new Set();
+  return paires.filter((p) => {
+    const cle = p.join("+");
+    if (vues.has(cle)) return false;
+    vues.add(cle);
+    return true;
+  });
+}
+
+/**
+ * Regroupe les nombres sélectionnés d'un même membre en leur somme.
+ * C'est l'ÉLÈVE qui donne la somme (pédagogie de l'outil historique) :
+ * une somme fausse est refusée avec un message clair.
+ */
+export function regrouperSelection(etat, sommeProposee) {
   if (etat.mode !== "regrouper") throw new Error("passer en mode « regrouper » d'abord");
   if (etat.selection.length < 2) throw new Error("sélectionner au moins deux nombres");
   const ligneIdx = etat.selection[0].ligne;
@@ -243,6 +287,9 @@ export function regrouperSelection(etat) {
     (s, i) => s + etat.lignes[ligneIdx].pieces[i].valeur,
     0,
   );
+  if (sommeProposee !== undefined && sommeProposee !== somme) {
+    throw new Error(`ce n'est pas la bonne somme — recompte et réessaie`);
+  }
   memoriser(etat);
   const pieces = etat.lignes[ligneIdx].pieces;
   for (const i of [...indices].reverse().slice(0, -1)) pieces.splice(i, 1);
