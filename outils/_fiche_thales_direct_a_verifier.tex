@@ -65,11 +65,15 @@
   \coordinate (M) at (2.59,-0.58);
   \coordinate (N) at (2.26,1.06);
   \fill[softTeal!38] (A)--(B)--(C)--cycle;
+  % Le grand triangle reste visible sous le petit : halo leger, puis trait reel
+  % de meme epaisseur que les cotes bleu fonce places au premier plan.
+  \draw[brandSky!65,line width=2.30pt] (A)--(B);
+  \draw[brandSky!65,line width=2.30pt] (A)--(C);
+  \draw[brandSky,line width=1.20pt] (A)--(B);
+  \draw[brandSky,line width=1.20pt] (A)--(C);
   \draw[brandNavy,line width=1.20pt] (A)--(M);
   \draw[brandNavy,line width=1.20pt] (A)--(N);
   \draw[brandNavy,line width=1.24pt] (M)--(N);
-  \draw[brandSky,line width=1.20pt] (M)--(B);
-  \draw[brandSky,line width=1.20pt] (N)--(C);
   \draw[brandTeal,line width=1.34pt] (B)--(C);
   \node[brandOrange,font=\bfseries\small] at (-0.27,-0.25) {$A$};
   \node[brandBlue,font=\bfseries\small] at (2.62,-0.88) {$M$};
@@ -106,11 +110,13 @@
   \coordinate (M) at (2.59,-0.58);
   \coordinate (N) at (2.26,1.06);
   \fill[softTeal!22] (A)--(B)--(C)--cycle;
+  \draw[brandSky!65,line width=2.20pt] (A)--(B);
+  \draw[brandSky!65,line width=2.20pt] (A)--(C);
+  \draw[brandSky,line width=1.10pt] (A)--(B);
+  \draw[brandSky,line width=1.10pt] (A)--(C);
   \draw[brandNavy!90,line width=1.10pt] (A)--(M);
   \draw[brandNavy!90,line width=1.10pt] (A)--(N);
   \draw[brandNavy!90,line width=1.15pt] (M)--(N);
-  \draw[brandSky,line width=1.10pt] (M)--(B);
-  \draw[brandSky,line width=1.10pt] (N)--(C);
   \draw[brandTeal,line width=1.18pt] (B)--(C);
   \node at (-0.55,-0.45) {\LowDotted{0.48}};
   \node at (2.82,-1.08) {\LowDotted{0.48}};
