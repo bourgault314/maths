@@ -213,11 +213,32 @@ function dessiner() {
   }
 }
 
-for (const id of ["choixType", "choixTheme", "choixInconnue"]) $(id).addEventListener("change", dessiner);
+// ces types ignorent le curseur « Angle » : on le masque plutôt que de mentir
+const TYPES_SANS_ANGLE = new Set(["perpendiculaires", "triangle", "angle-exterieur", "quadrilatere"]);
+
+function majReglages() {
+  const type = $("choixType").value;
+  $("regleAngle").closest("label").style.display = TYPES_SANS_ANGLE.has(type) ? "none" : "";
+  // complémentaires : la somme fait 90°, l'angle connu doit rester dessous
+  const max = type === "complementaires" ? 89 : 165;
+  $("regleAngle").max = String(max);
+  if (Number($("regleAngle").value) > max) {
+    $("regleAngle").value = String(max);
+    $("valAngle").textContent = `${max}°`;
+  }
+}
+
+for (const id of ["choixTheme", "choixInconnue"]) $(id).addEventListener("change", dessiner);
 $("caseMiroir").addEventListener("change", dessiner);
 $("regleAngle").addEventListener("input", () => { $("valAngle").textContent = `${$("regleAngle").value}°`; dessiner(); });
 $("regleOrientation").addEventListener("input", () => { $("valOrientation").textContent = `${$("regleOrientation").value}°`; dessiner(); });
-$("choixType").addEventListener("change", () => selection.clear());
+// un SEUL gestionnaire : vider la sélection AVANT de redessiner
+$("choixType").addEventListener("change", () => {
+  selection.clear();
+  majReglages();
+  dessiner();
+});
+majReglages();
 $("btnSvg").addEventListener("click", () => {
   const blob = new Blob([dernierSvg], { type: "image/svg+xml" });
   const lien = document.createElement("a");

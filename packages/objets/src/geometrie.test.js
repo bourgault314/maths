@@ -511,3 +511,32 @@ describe("sommetsPolygone (quelconque)", () => {
     assert.throws(() => sommetsPolygone({ points: [[0, 0], [1, 1]] }), /trois sommets/);
   });
 });
+
+describe("supports dégénérés — refusés explicitement, jamais de NaN", () => {
+  it("piedPerpendiculaire exige deux points distincts", () => {
+    assert.throws(() => piedPerpendiculaire([3, 4], [1, 1], [1, 1]), /points distincts/);
+  });
+
+  it("un segment de longueur nulle n'est ni parallèle ni perpendiculaire", () => {
+    assert.equal(sontParalleles([2, 2], [2, 2], [0, 0], [5, 0]), false);
+    assert.equal(sontPerpendiculaires([2, 2], [2, 2], [0, 0], [5, 0]), false);
+  });
+
+  it("sommetsQuadrilatere refuse les figures plates ou presque plates", () => {
+    // quatre points parfaitement alignés (les côtés opposés se chevauchent)
+    assert.throws(
+      () => sommetsQuadrilatere({ points: [[0, 0], [1, 0], [2, 0], [3, 0]] }),
+      /dégénérée|croisée/,
+    );
+    // presque plat : aucun croisement, mais une aire quasi nulle
+    assert.throws(
+      () => sommetsQuadrilatere({ points: [[0, 0], [2, 1e-8], [4, 0], [2, -1e-8]] }),
+      /dégénérée/,
+    );
+    // coordonnée non finie : jamais de figure NaN silencieuse
+    assert.throws(
+      () => sommetsQuadrilatere({ points: [[0, 0], [1, 0], [NaN, 1], [0, 1]] }),
+      /non finies/,
+    );
+  });
+});
