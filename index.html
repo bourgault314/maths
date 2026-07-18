@@ -28,6 +28,7 @@
   <link rel="stylesheet" href="assets/css/accueil.css?v=frise-domaines-20260718">
   <link rel="stylesheet" href="assets/css/consentement.css?v=frise-domaines-20260718">
   <script defer src="assets/js/consentement.js"></script>
+  <script defer src="auto/scripts/00-setup-icons.js"></script>
 </head>
 <body>
   <main class="page">
@@ -78,7 +79,7 @@
           <a class="scene-link" href="outils/index.html?domain=geometrie" aria-label="Espace et géométrie">
           <title>Espace et géométrie</title>
           <rect class="scene-hit" x="323" y="2" width="93" height="98" rx="18"/>
-          <g transform="translate(354 22) rotate(3 39 37)"><g class="scene-item">
+          <g id="frise-geometrie" transform="translate(354 22) rotate(3 39 37)"><g class="scene-item">
             <path d="M0 27h18v18H0Z" fill="#dceeff" stroke="#0879d0" stroke-width="1.7" stroke-linejoin="round"/>
             <path d="M18 45h24v24H18Z" fill="#fff0d8" stroke="#e89516" stroke-width="1.7" stroke-linejoin="round"/>
             <path d="M18 27 36 3l24 18-18 24Z" fill="#e2f5e8" stroke="#24994d" stroke-width="1.7" stroke-linejoin="round"/>
@@ -92,7 +93,7 @@
           <a class="scene-link" href="outils/index.html?domain=nombres-calculs" aria-label="Nombres et calculs">
           <title>Nombres et calculs</title>
           <rect class="scene-hit" x="419" y="2" width="127" height="98" rx="18"/>
-          <g transform="translate(428 28) scale(.82)"><g class="scene-item">
+          <g id="frise-nombres" transform="translate(428 28) scale(.82)"><g class="scene-item">
             <ellipse cx="54" cy="53" rx="51" ry="4" fill="#0f172a" opacity=".08"/>
             <rect x="3" y="4" width="102" height="46" rx="5" fill="#fff4cf" stroke="#9a5b12" stroke-width="2"/>
             <path d="M8 19h92M8 36h92" stroke="#7c4810" stroke-width="1.6"/>
@@ -134,7 +135,7 @@
           <a class="scene-link" href="outils/index.html?domain=donnees" aria-label="Données, statistiques et probabilités">
           <title>Données, statistiques et probabilités</title>
           <rect class="scene-hit" x="114" y="103" width="103" height="98" rx="18"/>
-          <g transform="translate(135 122)"><g class="scene-item">
+          <g id="frise-donnees" transform="translate(135 122)"><g class="scene-item">
             <g fill="#2563eb" stroke="#60a5fa" stroke-width="1">
               <rect x="6" y="30" width="10" height="14"/>
               <rect x="19" y="18" width="10" height="26"/>
@@ -157,11 +158,11 @@
             <ellipse cx="30" cy="49" rx="28" ry="4" fill="#0f172a" opacity=".08"/>
             <g transform="rotate(-8 15 15)">
               <rect x="2" y="4" width="26" height="26" rx="5" fill="#fff" stroke="#334155" stroke-width="1.8"/>
-              <g fill="#0f172a"><circle cx="9.5" cy="11.5" r="2.3"/><circle cx="20.5" cy="11.5" r="2.3"/><circle cx="15" cy="17" r="2.3"/><circle cx="9.5" cy="22.5" r="2.3"/><circle cx="20.5" cy="22.5" r="2.3"/></g>
+              <g id="frise-de-1" fill="#0f172a"><circle cx="9.5" cy="11.5" r="2.3"/><circle cx="20.5" cy="11.5" r="2.3"/><circle cx="15" cy="17" r="2.3"/><circle cx="9.5" cy="22.5" r="2.3"/><circle cx="20.5" cy="22.5" r="2.3"/></g>
             </g>
             <g transform="rotate(7 42 32)">
               <rect x="30" y="20" width="24" height="24" rx="5" fill="#2f6d3f" stroke="#1c4426" stroke-width="1.8"/>
-              <g fill="#fff"><circle cx="37" cy="27" r="2.1"/><circle cx="42" cy="32" r="2.1"/><circle cx="47" cy="37" r="2.1"/></g>
+              <g id="frise-de-2" fill="#fff"><circle cx="37" cy="27" r="2.1"/><circle cx="42" cy="32" r="2.1"/><circle cx="47" cy="37" r="2.1"/></g>
             </g>
           </g></g>
           </a>
@@ -242,6 +243,53 @@
       document.querySelectorAll("[data-close]").forEach((button) => button.addEventListener("click", () => closeModal(button.dataset.close)));
       document.querySelectorAll(".modal-overlay").forEach((overlay) => overlay.addEventListener("click", (event) => { if (event.target === overlay) closeModal(overlay.id); }));
       document.addEventListener("keydown", (event) => { if (event.key === "Escape") document.querySelectorAll(".modal-overlay.is-open").forEach((modal) => closeModal(modal.id)); });
+    })();
+
+    // Frise vivante : trois dessins sont regénérés à chaque chargement par la
+    // fabrique d'icônes des Automatismes (auto/scripts/00-setup-icons.js), et
+    // les dés retombent sur de nouvelles faces. Sans script, les dessins
+    // statiques ci-dessus restent en place.
+    (() => {
+      const GENERATIVES = [
+        { id: "frise-nombres", theme: "numbers", transform: "translate(448.5 17)", taille: 68 },
+        { id: "frise-geometrie", theme: "geometry", transform: "translate(335.5 17)", taille: 68 },
+        { id: "frise-donnees", theme: "data", transform: "translate(134.5 121)", taille: 62 },
+      ];
+      const installerIcones = () => {
+        const fabrique = window.MATHSGO_SETUP_ICONS;
+        if (!fabrique || typeof fabrique.markup !== "function") return;
+        for (const { id, theme, transform, taille } of GENERATIVES) {
+          const cadre = document.getElementById(id);
+          const item = cadre && cadre.querySelector(".scene-item");
+          const markup = item && fabrique.markup(theme);
+          if (!markup || !markup.startsWith("<svg ")) continue;
+          cadre.setAttribute("transform", transform);
+          item.innerHTML = markup.replace("<svg ", `<svg width="${taille}" height="${taille}" `);
+        }
+      };
+      const FACES = {
+        1: [[.5, .5]],
+        2: [[.27, .27], [.73, .73]],
+        3: [[.27, .27], [.5, .5], [.73, .73]],
+        4: [[.27, .27], [.73, .27], [.27, .73], [.73, .73]],
+        5: [[.27, .27], [.73, .27], [.5, .5], [.27, .73], [.73, .73]],
+        6: [[.27, .27], [.73, .27], [.27, .5], [.73, .5], [.27, .73], [.73, .73]],
+      };
+      const lancerDe = (id, origineX, origineY, cote, rayon) => {
+        const groupe = document.getElementById(id);
+        if (!groupe) return;
+        const valeur = 1 + Math.floor(Math.random() * 6);
+        groupe.innerHTML = FACES[valeur]
+          .map(([fx, fy]) => `<circle cx="${origineX + fx * cote}" cy="${origineY + fy * cote}" r="${rayon}"/>`)
+          .join("");
+      };
+      const lancer = () => {
+        installerIcones();
+        lancerDe("frise-de-1", 2, 4, 26, 2.3);
+        lancerDe("frise-de-2", 30, 20, 24, 2.1);
+      };
+      if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", lancer, { once: true });
+      else lancer();
     })();
   </script>
 </body>
