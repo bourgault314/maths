@@ -37,8 +37,6 @@
   .titre-site h1{font-family:Fredoka,"Segoe UI",sans-serif;font-weight:600;color:var(--bleu);
     font-size:24px;line-height:1.05;margin:0;text-align:center}
   .titre-site .titre-cycle{display:block;margin-top:.18em;font-size:.68em;letter-spacing:.02em;font-weight:600}
-  .badge-beta{width:max-content;margin:6px auto 0;padding:3px 8px;border-radius:999px;
-    background:#edf3fb;color:#687893;font-size:10px;font-weight:750;letter-spacing:.06em;text-transform:uppercase}
 
   /* ————— Cartes et étapes ————— */
   main{display:grid;gap:12px;margin-top:12px}
@@ -53,10 +51,8 @@
     margin:0;color:var(--bleu)}
 
   /* ————— Réglages : quatre groupes sur une ligne, boutons individuels ————— */
-  .grille-reglages{display:grid;grid-template-columns:repeat(2,auto);justify-content:space-evenly;
-    justify-items:center;gap:16px 32px;margin-top:14px}
-  .champ{display:flex;flex-direction:column;align-items:center;gap:7px}
-  .champ label{font-weight:700;font-size:13px;color:var(--encre)}
+  .grille-reglages{display:flex;flex-direction:column;gap:12px;margin-top:14px}
+  .rangee-reglages{display:flex;flex-wrap:wrap;align-items:center;gap:12px 36px}
   .segments{display:flex;align-items:stretch;gap:7px}
   .segments button{border:1.5px solid var(--ligne-bouton);background:#fff;color:var(--encre);
     cursor:pointer;font:inherit;font-weight:700;font-size:14.5px;min-height:44px;min-width:46px;
@@ -67,13 +63,15 @@
     box-shadow:0 4px 12px rgba(6,63,134,.26)}
   .segments button:focus-visible{outline:3px solid rgba(6,63,134,.4);outline-offset:2px}
 
-  /* DNB n'est pas un niveau de classe : trait de séparation et couleur à part */
-  .separation-epreuve{width:1px;align-self:stretch;margin:4px 3px;background:var(--ligne);flex:none}
-  .segments .bouton-epreuve:hover{border-color:var(--orange);background:#fff8f1}
-  .segments .bouton-epreuve.est-actif{background:var(--orange);border-color:var(--orange);
+  /* DNB n'est pas un niveau de classe : cadre orange « épreuve » à part */
+  .segments .bouton-epreuve{display:flex;flex-direction:column;align-items:center;justify-content:center;
+    gap:2px;line-height:1;padding:6px 13px;margin-left:6px;color:var(--orange);border-color:var(--orange)}
+  .mention-epreuve{font-size:9px;font-weight:750;letter-spacing:.09em;text-transform:uppercase}
+  .segments .bouton-epreuve:hover{background:#fff8f1;border-color:var(--orange)}
+  .segments .bouton-epreuve.est-actif{background:var(--orange);border-color:var(--orange);color:#fff;
     box-shadow:0 4px 12px rgba(245,130,32,.30)}
   .segments .bouton-epreuve:focus-visible{outline-color:rgba(245,130,32,.5)}
-  .note-champ{margin:2px 0 0;font-size:11.5px;color:var(--attenue);line-height:1.35;text-align:center}
+  .suffixe-questions{align-self:center;margin-left:4px;color:var(--attenue);font-size:13px;font-weight:600}
 
   /* ————— Choix des automatismes ————— */
   .barre-choix{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:14px}
@@ -159,7 +157,8 @@
     .logo{height:48px}
     .titre-site h1{font-size:19px}
     section.carte{padding:12px}
-    .grille-reglages{grid-template-columns:1fr;gap:12px;margin-top:12px}
+    .grille-reglages{gap:10px;margin-top:12px}
+    .rangee-reglages{gap:10px 20px}
     .segments button{min-height:44px;font-size:13.5px;padding:8px 10px;min-width:42px}
     .theme-summary{gap:9px;min-height:58px;padding:9px 10px}
     .theme-name{font-size:14.5px}
@@ -182,7 +181,6 @@
     </a>
     <div class="titre-site">
       <h1>Automatismes<span class="titre-cycle">Cycle 4 – DNB</span></h1>
-      <span class="badge-beta">Bêta</span>
     </div>
   </div>
 </header>
@@ -194,38 +192,30 @@
       <h2 id="titreReglages">Préparer la série</h2>
     </div>
     <div class="grille-reglages">
-      <div class="champ champ-niveau">
-        <label id="etiquetteNiveau">Niveau</label>
-        <div class="segments" data-reglage="level" role="group" aria-labelledby="etiquetteNiveau">
+      <div class="rangee-reglages">
+        <div class="segments" data-reglage="level" role="group" aria-label="Niveau">
           <button type="button" data-value="5e" aria-pressed="false">5e</button>
           <button type="button" data-value="4e" aria-pressed="false">4e</button>
           <button type="button" class="est-actif" data-value="3e" aria-pressed="true">3e</button>
-          <span class="separation-epreuve" aria-hidden="true"></span>
-          <button type="button" class="bouton-epreuve" data-value="DNB" aria-pressed="false">DNB</button>
+          <button type="button" class="bouton-epreuve" data-value="DNB" aria-pressed="false"
+            aria-label="DNB — révision de l’épreuve">DNB<span class="mention-epreuve">épreuve</span></button>
         </div>
-        <p class="note-champ">DNB : révision de l’épreuve (le niveau 3e l’inclut déjà)</p>
-      </div>
-      <div class="champ champ-aide">
-        <label id="etiquetteAide">Aide</label>
-        <div class="segments" data-reglage="visualMode" role="group" aria-labelledby="etiquetteAide">
+        <div class="segments" data-reglage="visualMode" role="group" aria-label="Aide">
           <button type="button" class="est-actif" data-value="with" aria-pressed="true">Avec aide</button>
           <button type="button" data-value="without" aria-pressed="false">Sans aide</button>
         </div>
       </div>
-      <div class="champ champ-mode">
-        <label id="etiquetteMode">Mode</label>
-        <div class="segments" data-reglage="experienceMode" role="group" aria-labelledby="etiquetteMode">
+      <div class="rangee-reglages">
+        <div class="segments" data-reglage="experienceMode" role="group" aria-label="Mode">
           <button type="button" data-value="presentation" aria-pressed="false">Diaporama</button>
           <button type="button" class="est-actif" data-value="interactive" aria-pressed="true">Interactif</button>
         </div>
-      </div>
-      <div class="champ champ-questions">
-        <label id="etiquetteQuestions">Questions</label>
-        <div class="segments" data-reglage="count" role="group" aria-labelledby="etiquetteQuestions">
+        <div class="segments" data-reglage="count" role="group" aria-label="Nombre de questions">
           <button type="button" class="est-actif" data-value="5" aria-pressed="true">5</button>
           <button type="button" data-value="10" aria-pressed="false">10</button>
           <button type="button" data-value="15" aria-pressed="false">15</button>
           <button type="button" data-value="20" aria-pressed="false">20</button>
+          <span class="suffixe-questions" aria-hidden="true">questions</span>
         </div>
       </div>
     </div>
