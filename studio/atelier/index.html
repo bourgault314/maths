@@ -65,22 +65,40 @@
   .consigneSplat{width:100%;text-align:center;font-weight:600;margin-top:6px}
   .reglageTaille{display:flex;align-items:center;gap:8px;font-size:14px;color:var(--attenue)}
   .reglageTaille input{accent-color:var(--bleu)}
-  /* barre d'outils — styles repris d'ÉquaBarre (outils/equabarre.html) */
-  #barreOutilsEqua{position:sticky;bottom:0;z-index:50;background:rgba(255,255,255,.96);
-    border-top:1px solid var(--ligne);margin:0 -12px -12px;padding:10px 12px 12px;backdrop-filter:blur(4px)}
-  #barreOutilsEqua .barreCommandes{justify-content:center}
+  /* ————— Barre d'outils ÉquaBarre —————
+     Grammaire des couleurs (héritée de l'outil historique) :
+     BLEU  = transformer l'écriture (décomposer, regrouper, partager, déplacer)
+     AMBRE = réduire l'équation (enlever dans chaque membre) et revenir en arrière
+     LAVANDE = tout recommencer
+     Règles d'interface : pastilles pleines et rondes, cibles ≥ 44 px,
+     réglages en haut / actions en bas, retour visuel au survol,
+     anneau de focus visible au clavier. */
+  #barreOutilsEqua{margin-top:12px}
+  #barreOutilsEqua .barreCommandes{justify-content:center;gap:10px}
   .toolBtn{border:1px solid rgba(15,23,42,.12);background:#f8fafc;color:#334155;font-weight:700;
-    padding:11px 16px;border-radius:14px;font-size:14.5px}
+    min-height:46px;padding:11px 20px;border-radius:999px;font-size:15px;
+    transition:transform .1s, box-shadow .12s, background .12s;cursor:pointer}
+  .toolBtn:hover{transform:translateY(-1px);box-shadow:0 6px 16px rgba(15,23,42,.10)}
+  .toolBtn:active{transform:translateY(1px);box-shadow:none}
+  .toolBtn:focus-visible{outline:3px solid rgba(59,130,246,.55);outline-offset:2px}
   .toolBtn.modeActif{background:linear-gradient(180deg,#60a5fa,#3b82f6);color:#fff;
     border-color:rgba(37,99,235,.30);box-shadow:0 10px 24px rgba(59,130,246,.18)}
+  .reduireBtn{background:#fff7ed;border-color:rgba(249,115,22,.28);color:#9a3412}
+  .reduireBtn.modeActif{background:linear-gradient(180deg,#fb923c,#f97316);color:#fff;
+    border-color:rgba(234,88,12,.35);box-shadow:0 10px 24px rgba(249,115,22,.22)}
   .undoToolBtn{background:#fff7ed;border-color:rgba(249,115,22,.28);color:#9a3412}
+  .undoToolBtn:hover{background:#ffedd5}
   .restartToolBtn{background:#eef2ff;border-color:rgba(59,130,246,.25);color:#1d4ed8}
+  .restartToolBtn:hover{background:#e0e7ff}
   button.orangeBtn{background:linear-gradient(180deg,#fb923c,#f97316);color:#fff;border-color:rgba(249,115,22,.4);font-weight:700}
   button.ghostBtn{background:transparent;border:1px solid rgba(15,23,42,.12);color:#334155}
-  .messageInstruction{padding:10px 14px;border-radius:16px;background:#f8fafc;
+  .messageInstruction{padding:10px 16px;border-radius:16px;background:#f8fafc;
     border:1px solid rgba(15,23,42,.08);color:#334155;font-size:14px;font-weight:700;line-height:1.35}
   .messageInstruction strong{font-weight:900}
-  .helpMiniBtn{border-radius:999px;font-size:13px;padding:6px 12px;border:1px solid rgba(15,23,42,.12);background:#fff}
+  .helpMiniBtn{border-radius:999px;font-size:13px;padding:6px 12px;border:1px solid rgba(15,23,42,.12);background:#fff;cursor:pointer}
+  /* le plateau vit dans une carte, comme dans l'outil */
+  #renduBarres{background:linear-gradient(180deg,rgba(255,255,255,.9),rgba(248,250,252,.7));
+    border:1px solid rgba(15,23,42,.08);border-radius:20px;padding:18px}
   .clavier-mathsgo{display:grid;grid-template-columns:repeat(3,64px);gap:8px;margin-top:10px}
   .clavier-mathsgo[data-colonnes="4"]{grid-template-columns:repeat(4,64px)}
   .clavier-touche{font-family:Fredoka;font-size:20px;font-weight:600;min-height:48px;border-radius:12px;
@@ -88,8 +106,15 @@
   .clavier-touche:active{transform:translateY(1px)}
   .clavier-valider{background:linear-gradient(180deg,#60a5fa,#3b82f6);color:#fff;border-color:#3b82f6}
   #dialogueChips button{font-family:Fredoka;font-weight:600;border-radius:999px;min-width:64px}
-  #dialogueEquabarre{display:flex;flex-wrap:wrap;gap:10px;align-items:center;margin:10px 0;padding:12px;
-    background:#eff6ff;border:2px solid #bfdbfe;border-radius:12px}
+  #dialogueFond{position:fixed;inset:0;background:rgba(15,23,42,.35);backdrop-filter:blur(3px);z-index:90}
+  #dialogueEquabarre{position:fixed;z-index:100;display:flex;flex-wrap:wrap;gap:10px;align-items:center;
+    background:#fff;border:1px solid rgba(15,23,42,.10);box-shadow:0 30px 100px rgba(15,23,42,.24);
+    padding:22px;left:50%;top:50%;transform:translate(-50%,-50%);border-radius:24px;
+    width:min(500px,calc(100vw - 28px));max-height:86vh;overflow:auto}
+  @media(max-width:640px){
+    #dialogueEquabarre{top:auto;bottom:0;left:0;transform:none;width:100%;
+      border-radius:24px 24px 0 0;padding-bottom:max(22px, env(safe-area-inset-bottom))}
+  }
   #historiqueEquations{margin-top:12px;font-family:Fredoka;font-size:clamp(18px,3vw,26px);font-weight:600;line-height:1.5}
   #historiqueEquations .passee{color:#94a3b8}
   #historiqueEquations .courante{color:#0f172a}
@@ -126,27 +151,30 @@
       <option value="masquer">Après suppression : masquer</option>
     </select>
     <label class="reglageTaille"><input type="checkbox" id="afficherFois"> signe × (2 × x)</label>
-  </div>
-  <div id="barreOutilsEqua">
-    <div class="barreCommandes" id="zoneAction" aria-live="polite"></div>
-    <div class="barreCommandes" id="modesEquabarre" role="group" aria-label="Opérations">
-      <button class="toolBtn" data-mode="decomposer">Décomposer</button>
-      <button class="toolBtn" data-mode="regrouper">Regrouper</button>
-      <button class="toolBtn" data-mode="partager">Partager équitablement</button>
-      <button class="toolBtn" data-mode="deplacer">Déplacer</button>
-    </div>
-    <div class="barreCommandes">
-      <button class="toolBtn modeActif" data-mode="enlever" id="btnModeEnlever">Enlever dans chaque membre</button>
-      <button class="toolBtn undoToolBtn" id="btnAnnulerOp">↺ Annuler</button>
-      <button class="toolBtn restartToolBtn" id="btnRecommencer">↺ Recommencer</button>
-      <label class="reglageTaille"><input type="checkbox" id="avecVerification" checked> vérification</label>
-    </div>
+    <label class="reglageTaille"><input type="checkbox" id="avecVerification" checked> vérification</label>
   </div>
   <div id="zoneEquabarre" style="display:flex;flex-wrap:wrap;gap:22px;align-items:flex-start">
-    <div class="zoneRendu" id="renduBarres" style="flex:1 1 420px;min-width:300px"></div>
+    <div style="flex:1 1 460px;min-width:300px">
+      <div class="zoneRendu" id="renduBarres"></div>
+  <div id="barreOutilsEqua">
+        <div class="barreCommandes" id="zoneAction" aria-live="polite"></div>
+        <div class="barreCommandes" id="modesEquabarre" role="group" aria-label="Opérations">
+          <button class="toolBtn" data-mode="decomposer">Décomposer</button>
+          <button class="toolBtn" data-mode="regrouper">Regrouper</button>
+          <button class="toolBtn" data-mode="partager">Partager équitablement</button>
+          <button class="toolBtn" data-mode="deplacer">Déplacer</button>
+        </div>
+        <div class="barreCommandes">
+          <button class="toolBtn reduireBtn modeActif" data-mode="enlever" id="btnModeEnlever">Enlever dans chaque membre</button>
+          <button class="toolBtn undoToolBtn" id="btnAnnulerOp">↶ Annuler</button>
+          <button class="toolBtn restartToolBtn" id="btnRecommencer">↺ Recommencer</button>
+        </div>
+      </div>
+    </div>
     <div id="redactionEquation" aria-live="polite" style="flex:0 1 auto"></div>
   </div>
-  <div id="dialogueEquabarre" hidden>
+  <div id="dialogueFond" hidden></div>
+  <div id="dialogueEquabarre" role="dialog" aria-modal="true" aria-label="Saisie de la réponse" hidden>
     <div style="width:100%"><span id="dialogueTexte" style="font-weight:700"></span></div>
     <input type="text" id="dialogueSaisie" style="width:140px" readonly inputmode="none" aria-label="Votre réponse">
     <button class="helpMiniBtn" id="btnAideDialogue" hidden>Aide&nbsp;?</button>
@@ -532,9 +560,11 @@ function ouvrirDialogue(demande) {
     };
     poserClavier("nombres");
   }
+  document.getElementById("dialogueFond").hidden = false;
   dialogue.hidden = false;
 }
 function fermerDialogue() {
+  document.getElementById("dialogueFond").hidden = true;
   dialogue.hidden = true;
   actionDialogue = null;
   clavierActif?.detruire();
@@ -557,12 +587,18 @@ document.getElementById("dialogueValider").addEventListener("click", () => {
   } catch (e) { erreur.textContent = e.message; }
 });
 document.getElementById("dialogueFermer").addEventListener("click", fermerDialogue);
+document.getElementById("dialogueFond").addEventListener("click", fermerDialogue);
 
 document.querySelectorAll("#barreOutilsEqua [data-mode]").forEach((bouton) => {
+  bouton.setAttribute("aria-pressed", bouton.classList.contains("modeActif") ? "true" : "false");
   bouton.addEventListener("click", () => {
     if (!etatEqua) return;
-    document.querySelectorAll("#barreOutilsEqua [data-mode]").forEach((b) => b.classList.remove("modeActif"));
+    document.querySelectorAll("#barreOutilsEqua [data-mode]").forEach((b) => {
+      b.classList.remove("modeActif");
+      b.setAttribute("aria-pressed", "false");
+    });
     bouton.classList.add("modeActif");
+    bouton.setAttribute("aria-pressed", "true");
     Logique.changerMode(etatEqua, bouton.dataset.mode);
     erreur.textContent = "";
     fermerDialogue();
