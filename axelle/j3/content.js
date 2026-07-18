@@ -1,16 +1,16 @@
 (function () {
   const q = (id, section, title, prompt, options, answer, explanation, visual) => ({id, section, type: "qcm", title, prompt, options, answer, explanation, visual});
-  const fraction = (id, title, denominator, target, shape, explanation) => ({id, section: "Fractions", type: "fraction-color", title, prompt: `Touche exactement ${target} part${target > 1 ? "s" : ""}, puis valide. Tu peux retoucher une part pour l’effacer.`, denominator, target, shape, answer: target, explanation, visual: {kind: "fraction-empty", denominator, shape}});
+  const fraction = (id, title, denominator, target, shape, explanation) => ({id, section: "Fractions", type: "fraction-color", title, prompt: "", denominator, target, shape, answer: target, explanation, visual: {kind: "fraction-empty", denominator, shape}});
   const symmetry = (id, title, given, target, explanation) => ({id, section: "Géométrie", type: "grid-select", title, prompt: "Touche les cases qui complètent la figure en miroir. Une case peut être désélectionnée avant de valider.", given, target, answer: target, explanation, visual: null});
   const order = (id, section, title, prompt, tokens, answer, explanation, visual, allowText = false) => ({id, section, type: "order", title, prompt, tokens, answer, explanation, visual, allowText});
 
   const lessonSets = {
     math: [
-      {kind: "fraction", title: "Une fraction", text: "Le haut compte les parts coloriées. Le bas compte toutes les parts égales."},
-      {kind: "plus9", title: "Ajouter 9", text: "J’ajoute 10, puis j’enlève 1."},
-      {kind: "lines", title: "Parallèles ou perpendiculaires", text: "Même écart : parallèles. Coin carré : perpendiculaires."},
-      {kind: "circle", title: "Dans un cercle", text: "Le rayon va du centre au bord. Le diamètre traverse le centre."},
-      {kind: "cube", title: "Décrire un solide", text: "Une face est plate, une arête est un bord, un sommet est un coin."}
+      {kind: "fraction", title: "Une fraction", text: "Les parts doivent être égales. En 2/3, 2 est le nombre de parts prises et 3 le nombre total de parts."},
+      {kind: "plus9", title: "Ajouter 9", text: "Je vais d’abord jusqu’à la dizaine suivante : 38 + 2 = 40, puis j’ajoute les 7 qui restent."},
+      {kind: "lines", title: "Parallèles ou perpendiculaires", text: "Des parallèles ne se croisent jamais. Des perpendiculaires se croisent en formant un angle droit, codé par un petit carré."},
+      {kind: "circle", title: "Dans un cercle", text: "Un rayon relie le centre au bord. Un diamètre relie deux bords et passe obligatoirement par le centre."},
+      {kind: "cube", title: "Décrire un solide", text: "Exemple : un cube a 6 faces, 12 arêtes et 8 sommets. Une face est plate ; une arête est un bord ; un sommet est un coin."}
     ],
     fr: [
       {kind: "story", title: "Comprendre un texte", text: "Je cherche les mots précis du texte, puis ce qu’ils me font comprendre."},
@@ -29,7 +29,7 @@
   const math0 = [
     fraction("m0-01", "Colorie les deux tiers de la bande.", 3, 2, "band", "Deux parts coloriées sur trois parts égales donnent 2/3."),
     q("m0-02", "Fractions", "Comment lit-on cette fraction ?", "Compte les parts coloriées, puis toutes les parts égales.", ["trois quarts", "deux tiers", "un quart"], 0, "3 parts sont prises quand l’unité est partagée en 4 : trois quarts.", {kind: "fraction", numerator: 3, denominator: 4, shape: "disk", showNotation: false}),
-    q("m0-03", "Fractions", "Quelle fraction est la plus grande ?", "Les deux bandes ont exactement la même longueur.", ["1/2", "1/3", "Elles sont égales"], 0, "Une moitié est plus grande qu’un tiers de la même unité.", {kind: "fraction-compare", first: [1,2], second: [1,3]}),
+    q("m0-03", "Fractions", "Quelle fraction est la plus grande ?", "Les deux bandes ont exactement la même longueur.", ["1/2", "1/3", "Elles sont égales"], 0, "Une moitié est plus grande qu’un tiers de la même unité.", {kind: "fraction-compare", first: [1,2], second: [1,3], colors: ["#facc15", "#55b9b0"]}),
     fraction("m0-04", "Colorie les trois quarts du disque.", 4, 3, "disk", "Trois secteurs coloriés sur quatre secteurs égaux donnent 3/4."),
 
     q("m0-05", "Nombres entiers", "Écris ce nombre en chiffres.", "quatre-mille-six-cent-trente-cinq", ["4 635", "4 365", "4 603", "46 035"], 0, "Il y a 4 milliers, 6 centaines, 3 dizaines et 5 unités.", null),
@@ -37,9 +37,9 @@
     q("m0-07", "Nombres entiers", "Quelle autre décomposition vaut 4 635 ?", "Vérifie la valeur de chaque proposition.", ["46 centaines + 35 unités", "46 dizaines + 35 unités", "4 centaines + 635 dizaines"], 0, "46 centaines font 4 600 ; 4 600 + 35 = 4 635.", null),
     q("m0-08", "Nombres entiers", "Quel point correspond à 4 600 ?", "La droite va de 4 000 à 5 000.", ["A", "B", "C"], 1, "4 600 est 100 après 4 500 : c’est le point B.", {kind: "number-line", start: 4000, end: 5000, points: [[4300,"A"],[4600,"B"],[4900,"C"]]}),
 
-    q("m0-09", "Calcul", "Quelle astuce permet de calculer 38 + 9 ?", "Cherche un nombre rond facile à ajouter.", ["38 + 10 − 1", "38 + 9 − 1", "38 + 8 − 1"], 0, "Ajouter 9, c’est ajouter 10 puis enlever 1.", null),
-    q("m0-10", "Calcul", "Calcule 38 + 9.", "Utilise l’astuce + 10 − 1.", ["46", "47", "48", "49"], 1, "38 + 10 = 48, puis 48 − 1 = 47.", {kind: "plus", start: 38, jump: 10, back: 1}),
-    q("m0-11", "Calcul", "Calcule cette addition.", "Les unités, dizaines et centaines sont alignées.", ["462", "472", "482", "572"], 1, "7 + 5 = 12, puis on poursuit avec la retenue : le résultat est 472.", {kind: "column", top: 347, bottom: 125, sign: "+"}),
+    q("m0-09", "Calcul", "Quelle astuce permet de calculer 38 + 9 ?", "Complète d’abord jusqu’à la dizaine suivante.", ["38 + 2 + 7", "38 + 8 − 1", "38 + 9 + 1"], 0, "Pour atteindre 40, il faut ajouter 2. Il reste ensuite 7 à ajouter.", null),
+    q("m0-10", "Calcul", "Calcule 38 + 9.", "Passe d’abord par 40.", ["46", "47", "48", "49"], 1, "38 + 2 = 40, puis 40 + 7 = 47.", {kind: "make-ten", start: 38, first: 2, second: 7, middle: 40}),
+    q("m0-11", "Calcul", "Calcule cette addition.", "Aligne les milliers, centaines, dizaines et unités.", ["3 724", "3 834", "3 924", "4 834"], 1, "8 + 6 = 14 : j’écris 4 et je retiens 1. En continuant colonne par colonne, on obtient 3 834.", {kind: "column", top: "2 458", bottom: "1 376", sign: "+"}),
 
     q("m0-12", "Problèmes", "Combien Noé a-t-il de billes ?", "Mila a 24 billes. Noé en a 9 de plus.", ["15 billes", "33 billes", "216 billes"], 1, "« 9 de plus » signifie qu’on ajoute : 24 + 9 = 33.", {kind: "bars", rows: [[24,"Mila"],[24,9,"Noé"]]}),
     q("m0-13", "Problèmes", "Combien Léo a-t-il de cartes de plus qu’Aya ?", "Léo a 35 cartes et Aya en a 12.", ["23 cartes", "47 cartes", "420 cartes"], 0, "On cherche l’écart : 35 − 12 = 23.", {kind: "bars-compare", big: 35, small: 12, labels: ["Léo","Aya"]}),
@@ -48,13 +48,13 @@
 
     q("m0-16", "Géométrie", "Quel triangle est isocèle ?", "On observe les codages sur les figures.", ["Le triangle A", "Le triangle B", "Le triangle C"], 1, "Le triangle B porte le même trait sur deux côtés : ces deux côtés sont égaux.", {kind: "triangles-coded"}),
     q("m0-17", "Géométrie", "Quelles droites sont perpendiculaires ?", "Cherche le petit carré qui code un angle droit.", ["Les droites A", "Les droites B"], 1, "Les droites B forment un angle droit : elles sont perpendiculaires. Les droites A restent parallèles.", {kind: "lines-choice"}),
-    symmetry("m0-18", "Complète la figure symétrique.", [[1,2],[2,1],[3,2]], [[1,6],[2,7],[3,6]], "Chaque case verte doit être à la même distance de l’axe que la case jaune correspondante."),
+    symmetry("m0-18", "Complète la figure symétrique.", [[1,1],[1,2],[2,1],[2,2],[3,2],[4,2]], [[1,7],[1,6],[2,7],[2,6],[3,6],[4,6]], "Chaque case verte doit être à la même distance de l’axe que la case jaune correspondante."),
     q("m0-19", "Géométrie", "Comment s’appelle le segment [OA] ?", "O est le centre du cercle et A est sur le cercle.", ["un rayon", "un diamètre", "une arête"], 0, "Un segment qui relie le centre à un point du cercle est un rayon.", {kind: "circle-parts", ask: "radius"}),
 
     q("m0-20", "Solides", "Quel solide possède une pointe et des faces latérales triangulaires ?", "Observe les cinq solides.", ["le cylindre", "la pyramide", "le cube", "le pavé droit"], 1, "Une pyramide possède une base et des faces triangulaires qui se rejoignent au sommet.", {kind: "solids", highlight: "pyramid"}),
     q("m0-21", "Solides", "Combien un cube possède-t-il d’arêtes ?", "Une arête est un bord entre deux faces.", ["6", "8", "12", "16"], 2, "Un cube a 6 faces, 12 arêtes et 8 sommets.", {kind: "cube-parts", highlight: "edge"}),
 
-    q("m0-22", "Mesures", "Complète l’égalité : 1 m = … cm", "Choisis la conversion exacte.", ["10", "100", "1 000"], 1, "Un mètre contient exactement 100 centimètres.", {kind: "measure-question", from: "1 m", unit: "cm"}),
+    q("m0-22", "Mesures", "Complète l’égalité : 1 m = … cm", "Repère-toi avec le petit trait de règle : il mesure 1 cm.", ["10", "100", "1 000"], 1, "Un mètre contient exactement 100 centimètres.", {kind: "measure-reference", from: "1 m", unit: "cm"}),
     q("m0-23", "Mesures", "Combien de temps dure le film ?", "Il commence à 14 h 20 et finit à 15 h 05.", ["35 min", "40 min", "45 min", "1 h 45"], 2, "De 14 h 20 à 15 h, il y a 40 min ; puis encore 5 min : 45 min.", {kind: "timeline-clock", start: "14 h 20", middle: "15 h 00", end: "15 h 05"}),
 
     q("m0-24", "Données", "Quel fruit est le plus choisi ?", "Lis la hauteur des barres et l’échelle.", ["la pomme", "la poire", "la banane"], 2, "La barre des bananes atteint 5, c’est la plus haute.", {kind: "chart", labels: ["Pommes","Poires","Bananes"], values: [4,2,5], max: 6}),
@@ -68,9 +68,9 @@
   ];
 
   const math1 = [
-    fraction("m1-01", "Colorie les trois quarts du ruban.", 4, 3, "band", "Trois parts coloriées sur quatre parts égales donnent 3/4."),
+    fraction("m1-01", "Colorie les quatre sixièmes du ruban.", 6, 4, "band", "Quatre parts coloriées sur six parts égales donnent 4/6."),
     q("m1-02", "Fractions", "Quelle fraction représente le disque colorié ?", "Compte les parts coloriées, puis toutes les parts égales.", ["1/2", "1/3", "2/3", "3/4"], 1, "Une part est coloriée sur trois parts égales : c’est 1/3.", {kind: "fraction", numerator: 1, denominator: 3, shape: "disk", showNotation: false}),
-    q("m1-03", "Fractions", "Quelle fraction est la plus grande ?", "Les deux disques ont la même taille.", ["1/4", "1/3", "Elles sont égales"], 1, "Quand la même unité est partagée en 3, chaque part est plus grande que lorsqu’elle est partagée en 4.", {kind: "fraction-compare", first: [1,4], second: [1,3], shape: "disk"}),
+    q("m1-03", "Fractions", "Quelle fraction est la plus grande ?", "Les deux disques ont la même taille.", ["1/4", "1/3", "Elles sont égales"], 1, "Quand la même unité est partagée en 3, chaque part est plus grande que lorsqu’elle est partagée en 4.", {kind: "fraction-compare", first: [1,4], second: [1,3], shape: "disk", colors: ["#facc15", "#55b9b0"]}),
     fraction("m1-04", "Colorie les deux tiers du disque.", 3, 2, "disk", "Deux secteurs coloriés sur trois secteurs égaux donnent 2/3."),
 
     q("m1-05", "Nombres entiers", "Écris ce nombre en chiffres.", "sept-mille-quatre-vingt-deux", ["7 082", "7 802", "7 820", "70 082"], 0, "Il y a 7 milliers, aucune centaine, 8 dizaines et 2 unités.", null),
@@ -78,8 +78,8 @@
     q("m1-07", "Nombres entiers", "Quelle autre décomposition vaut 7 082 ?", "Vérifie la valeur de chaque proposition.", ["70 centaines + 82 unités", "70 dizaines + 82 unités", "7 centaines + 82 dizaines"], 0, "70 centaines font 7 000 ; avec 82, on obtient 7 082.", null),
     q("m1-08", "Nombres entiers", "Quel point correspond à 7 200 ?", "La droite va de 7 000 à 8 000.", ["A", "B", "C"], 0, "7 200 est proche de 7 000 : c’est le point A.", {kind: "number-line", start: 7000, end: 8000, points: [[7200,"A"],[7600,"B"],[7900,"C"]]}),
 
-    q("m1-09", "Calcul", "Quelle astuce permet de calculer 56 + 19 ?", "Cherche la dizaine entière la plus proche de 19.", ["56 + 20 − 1", "56 + 10 − 9", "56 + 19 + 1"], 0, "Ajouter 19, c’est ajouter 20 puis enlever 1.", null),
-    q("m1-10", "Calcul", "Calcule 56 + 19.", "Utilise l’astuce + 20 − 1.", ["74", "75", "76", "85"], 1, "56 + 20 = 76, puis 76 − 1 = 75.", {kind: "plus", start: 56, jump: 20, back: 1}),
+    q("m1-09", "Calcul", "Quelle astuce permet de calculer 56 + 19 ?", "Complète d’abord jusqu’à la dizaine suivante.", ["56 + 4 + 15", "56 + 10 − 9", "56 + 19 + 1"], 0, "Pour atteindre 60, il faut ajouter 4. Il reste ensuite 15 à ajouter.", null),
+    q("m1-10", "Calcul", "Calcule 56 + 19.", "Passe d’abord par 60.", ["74", "75", "76", "85"], 1, "56 + 4 = 60, puis 60 + 15 = 75.", {kind: "make-ten", start: 56, first: 4, second: 15, middle: 60}),
     q("m1-11", "Calcul", "Calcule cette soustraction.", "Les unités, dizaines et centaines sont alignées.", ["315", "325", "335", "345"], 1, "568 − 243 = 325.", {kind: "column", top: 568, bottom: 243, sign: "−"}),
 
     q("m1-12", "Problèmes", "Combien y a-t-il de feutres maintenant ?", "Une boîte contient 18 feutres. On en ajoute 7.", ["11", "24", "25", "126"], 2, "C’est une transformation par ajout : 18 + 7 = 25.", {kind: "bars", rows: [[18,"avant"],[18,7,"après"]]}),
@@ -89,7 +89,7 @@
 
     q("m1-16", "Géométrie", "Quel angle est droit ?", "Le sommet de l’angle est toujours la lettre du milieu.", ["<span class=\"widehat\">ABC</span>", "<span class=\"widehat\">BCA</span>", "<span class=\"widehat\">CAB</span>"], 0, "Le petit carré est placé au sommet B. L’angle droit est donc ABC, avec B au milieu.", {kind: "right-triangle-named"}),
     q("m1-17", "Géométrie", "Comment sont les deux routes ?", "Elles se croisent en formant un coin carré.", ["parallèles", "perpendiculaires", "symétriques"], 1, "Deux droites qui forment un angle droit sont perpendiculaires.", {kind: "road-perpendicular"}),
-    symmetry("m1-18", "Construis le reflet de la flèche.", [[1,1],[1,2],[2,2],[3,2]], [[1,7],[1,6],[2,6],[3,6]], "Le reflet garde la forme et place chaque case à la même distance de l’axe."),
+    symmetry("m1-18", "Construis le reflet de la flèche.", [[1,1],[1,2],[2,2],[2,3],[3,2],[4,2]], [[1,7],[1,6],[2,6],[2,5],[3,6],[4,6]], "Le reflet garde la forme et place chaque case à la même distance de l’axe."),
     q("m1-19", "Géométrie", "Comment s’appelle le segment [AB] ?", "A et B sont sur le cercle et [AB] passe par le centre O.", ["un rayon", "un diamètre", "un côté"], 1, "Un segment qui joint deux points du cercle en passant par le centre est un diamètre.", {kind: "circle-parts", ask: "diameter"}),
 
     q("m1-20", "Solides", "Quel solide peut rouler sur sa surface courbe et possède deux bases circulaires ?", "Observe les solides.", ["le cône", "le cylindre", "le cube", "la pyramide"], 1, "Le cylindre possède deux bases circulaires et une surface courbe.", {kind: "solids", highlight: "cylinder"}),
@@ -173,7 +173,7 @@
   ];
 
   window.AXELLE_J3 = {
-    version: 1,
+    version: 2,
     lessons: lessonSets,
     versions: [
       {id: "expedition", name: "Défi 1 — L’expédition", shortName: "L’expédition", math: math0, fr: french0},
