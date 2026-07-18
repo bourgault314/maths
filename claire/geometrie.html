@@ -68,8 +68,8 @@
     }
 
     .back span { display: grid; place-items: center; width: 34px; height: 34px; border: 1px solid var(--line); border-radius: 11px; background: #fff; }
-    .brand { margin: 0; font-size: clamp(1.05rem, 4vw, 1.45rem); letter-spacing: -.025em; }
-    .brand b { color: var(--orange); }
+    .logo-link { display: inline-flex; align-items: center; }
+    .logo { display: block; width: clamp(82px, 24vw, 118px); height: auto; }
 
     .score {
       flex: 0 0 auto;
@@ -260,7 +260,7 @@
   <main class="page">
     <header class="top">
       <a class="back" href="index.html"><span aria-hidden="true">←</span>Accueil de Claire</a>
-      <h1 class="brand">maths<b>&amp;</b>go</h1>
+      <a class="logo-link" href="/" aria-label="Accueil maths&amp;go"><img class="logo" src="/assets/img/mathsgo-logo.png" alt="maths&amp;go" width="1338" height="622"></a>
       <div class="score" id="score" role="status" aria-label="Score">0/5</div>
     </header>
 
