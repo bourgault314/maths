@@ -70,8 +70,8 @@ function flecheArrondie(x, y, hauteur, sens) {
  * @param {Array<{equation: string, operation?: string, conclusion?: boolean}>} options.etapes
  *   — chaque étape porte son équation « membre = membre » ; `operation`
  *   (ex. « −5 », « ÷3 ») annote le passage DEPUIS la ligne précédente ;
- *   `conclusion` colore la ligne en vert
- * @param {string} [options.verification] — ligne « Vérification : … »
+ *   `conclusion` colore la ligne en vert.
+ *   La vérification est un objet séparé : voir verification.js.
  * @param {string} [options.lettre] — lettre de l'inconnue (italique)
  * @param {number} [options.taillePolice] — hauteur des équations (px)
  * @param {number} [options.largeur] — largeur totale du rendu
@@ -79,7 +79,6 @@ function flecheArrondie(x, y, hauteur, sens) {
  */
 export function dessinerRedaction({
   etapes,
-  verification,
   lettre = "x",
   taillePolice = 26,
   largeur = 420,
@@ -130,15 +129,6 @@ export function dessinerRedaction({
     );
     y += interligne;
   });
-
-  if (verification) {
-    y += taillePolice * 0.3;
-    morceaux.push(
-      `<rect x="0" y="${y - taillePolice * 0.9}" width="${largeur}" height="${taillePolice * 1.5}" fill="#f1f5f9"/>`,
-      `<text x="12" y="${y + taillePolice * 0.12}" font-family="'Segoe UI', system-ui, sans-serif" font-size="${taillePolice * 0.68}" font-weight="700" fill="${ATTENUE}">Vérification : ${texteMathematique(verification, lettre)}</text>`,
-    );
-    y += taillePolice * 1.2;
-  }
 
   const hauteurTotale = y + taillePolice * 0.4;
   return (

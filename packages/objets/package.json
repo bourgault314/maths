@@ -10,6 +10,8 @@
     "./splat": "./src/splat.js",
     "./triangle": "./src/triangle.js",
     "./equabarre-logique": "./src/equabarre-logique.js",
-    "./redaction": "./src/redaction.js"
+    "./redaction": "./src/redaction.js",
+    "./verification": "./src/verification.js",
+    "./clavier": "./src/clavier.js"
   }
 }
