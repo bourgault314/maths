@@ -22,7 +22,7 @@ l'inventaire vivant. Statuts : ✅ extrait dans `packages/objets` ·
 | `arithmetic.relation-bar` — barres de relation | 14 | `outils/equabarre.html`, `outils/problemes_barres.html` | ✅ barres v2 + équation→barres |
 | `algebra.inquiry-bar` — barres d'enquête | 15 | idem barres + `outils/splat_tache_barre.html` | ✅ couvert par barres v2 |
 | `geometry.pythagoras-bar` — PythaBarre | 6 | `outils/pythabarre.html` (aires, rôles fixes vert/bleu/orange) | ✅ rôles couverts par barres v2 ; déroulé 6 étapes 🔜 |
-| `algebra.equation-splat` — Splat d'équation | 2 | `outils/splat.html`, `outils/equasplat.html` (+ Splat animé d'`axelle/` à retrouver) | ✅ tache v1 ; équations/plateaux 🔜 |
+| `algebra.equation-splat` — Splat d'équation | 2 | `outils/splat.html`, `outils/equasplat.html` (+ Splat animé d'`axelle/` à retrouver) | ✅ tache v1 + moteur equasplat-logique + objet deux plateaux + Atelier ÉquaSplat (juillet 2026, import Splat Équations intégré) |
 | `numbers.number-line` — droite graduée | 9 | gabarits LaTeX `outils/_gabarit_*_double_ligne_graduee.tex` + PDF pourcentages/proportionnalité | 🔜 priorité (double ligne graduée) |
 | `arithmetic.fraction-percent-bar` — barre de pourcentage | 7 | gabarits pourcentages (PDF + tex) + `outils/pourcentages_exerciceur.html` | 🔜 priorité |
 | `measures.conversion-table` — tableau de conversion | 5 | `outils/conversions/` (glisse-unité, tableaux, curseur) | 🔜 (« widget » demandé explicitement) |
