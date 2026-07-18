@@ -54,23 +54,26 @@
     text-transform:uppercase;color:var(--attenue)}
   .etiquette-suite{width:auto;margin-left:2px}
   .rangee-duo{display:flex;flex-wrap:wrap;gap:9px 22px}
-  .segments{display:flex;align-items:stretch;gap:7px}
-  .segments button{border:1.5px solid var(--ligne-bouton);background:#fff;color:var(--encre);
-    cursor:pointer;font:inherit;font-weight:700;font-size:14px;min-height:38px;min-width:44px;
-    padding:6px 12px;border-radius:11px;white-space:nowrap;
-    transition:background .12s,color .12s,border-color .12s,box-shadow .12s}
-  .segments button:hover{border-color:var(--bleu);background:var(--fond-doux)}
-  .segments button.est-actif{background:var(--bleu);border-color:var(--bleu);color:#fff;
-    box-shadow:0 4px 12px rgba(6,63,134,.26)}
+  /* Sélecteurs : une barre douce, seul le choix actif ressort en pastille pleine */
+  .segments{display:flex;align-items:stretch;gap:2px;background:var(--fond-doux);
+    border:1px solid var(--ligne);border-radius:999px;padding:3px}
+  .segments button{border:0;background:transparent;color:var(--encre);
+    cursor:pointer;font:inherit;font-weight:600;font-size:14px;min-height:32px;min-width:44px;
+    padding:4px 13px;border-radius:999px;white-space:nowrap;
+    transition:background .12s,color .12s,box-shadow .12s}
+  .segments button:hover{background:#fff}
+  .segments button.est-actif{background:var(--bleu);color:#fff;font-weight:700;
+    box-shadow:0 3px 10px rgba(6,63,134,.25)}
   .segments button:focus-visible{outline:3px solid rgba(6,63,134,.4);outline-offset:2px}
 
-  /* DNB n'est pas un niveau de classe : cadre orange « épreuve » à part */
+  /* DNB n'est pas un niveau de classe : trait de séparation, encre orange */
+  .separation-epreuve{width:1px;align-self:stretch;margin:4px 3px;background:var(--ligne);flex:none}
   .segments .bouton-epreuve{display:flex;flex-direction:column;align-items:center;justify-content:center;
-    gap:2px;line-height:1;padding:3px 11px;margin-left:6px;color:var(--orange);border-color:var(--orange)}
-  .mention-epreuve{font-size:8.5px;font-weight:750;letter-spacing:.09em;text-transform:uppercase}
-  .segments .bouton-epreuve:hover{background:#fff8f1;border-color:var(--orange)}
-  .segments .bouton-epreuve.est-actif{background:var(--orange);border-color:var(--orange);color:#fff;
-    box-shadow:0 4px 12px rgba(245,130,32,.30)}
+    gap:1px;line-height:1;padding:2px 11px;color:var(--orange)}
+  .mention-epreuve{font-size:8px;font-weight:750;letter-spacing:.09em;text-transform:uppercase}
+  .segments .bouton-epreuve:hover{background:#fff8f1}
+  .segments .bouton-epreuve.est-actif{background:var(--orange);color:#fff;
+    box-shadow:0 3px 10px rgba(245,130,32,.28)}
   .segments .bouton-epreuve:focus-visible{outline-color:rgba(245,130,32,.5)}
 
   /* ————— Choix des automatismes ————— */
@@ -160,7 +163,7 @@
     .etiquette{width:74px;font-size:10.5px}
     .etiquette-suite{width:auto}
     .rangee-duo{gap:10px 16px}
-    .segments button{min-height:44px;font-size:13.5px;padding:8px 10px;min-width:42px}
+    .segments button{min-height:38px;font-size:13.5px;padding:6px 9px;min-width:40px}
     .theme-summary{gap:9px;min-height:54px;padding:8px 10px}
     .theme-name{font-size:14.5px}
     .theme-count-label{display:none}
@@ -194,6 +197,7 @@
         <button type="button" data-value="5e" aria-pressed="false">5e</button>
         <button type="button" data-value="4e" aria-pressed="false">4e</button>
         <button type="button" class="est-actif" data-value="3e" aria-pressed="true">3e</button>
+        <span class="separation-epreuve" aria-hidden="true"></span>
         <button type="button" class="bouton-epreuve" data-value="DNB" aria-pressed="false"
           aria-label="DNB — révision de l’épreuve">DNB<span class="mention-epreuve">épreuve</span></button>
       </div>
