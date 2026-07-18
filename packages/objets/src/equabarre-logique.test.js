@@ -80,7 +80,7 @@ describe("décomposer, partager, regrouper, déplacer", () => {
     const etat = creerEtat("3x = 12");
     assert.throws(() => partager(etat, 0, 0, 5), /pas partageable/);
     partager(etat, 0, 0, 3);
-    assert.equal(etat.historique.at(-1).equation, "3x = 4 + 4 + 4");
+    assert.equal(etat.historique.at(-1).equation, "3x = 3 × 4");
   });
 
   it("regrouper refuse une somme fausse donnée par l'élève", () => {

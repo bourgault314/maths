@@ -24,14 +24,27 @@ const MAX_HISTORIQUE = 80;
 
 const clone = (valeur) => JSON.parse(JSON.stringify(valeur));
 
-/** Écrit un membre sous forme de texte : « 2 + 2x + 7 » (cases enlevées exclues). */
+/**
+ * Écrit un membre sous forme de texte : « 2 + 2x + 7 » (cases enlevées
+ * exclues). Un partage équitable s'écrit « n × v » (4 parts de 2 →
+ * « 4 × 2 »), comme dans l'outil historique.
+ */
 export function texteDuMembre(pieces, lettre) {
   const actives = pieces.filter((p) => p.etat !== "supprime");
   const nbX = actives.filter((p) => p.type === "inconnue").length;
   const termes = [];
   if (nbX > 0) termes.push(nbX === 1 ? lettre : `${nbX}${lettre}`);
+  const groupesVus = new Set();
   for (const p of actives) {
-    if (p.type === "nombre") termes.push(String(p.valeur));
+    if (p.type !== "nombre") continue;
+    if (p.groupe !== undefined) {
+      if (groupesVus.has(p.groupe)) continue;
+      groupesVus.add(p.groupe);
+      const effectif = actives.filter((a) => a.groupe === p.groupe).length;
+      termes.push(effectif > 1 ? `${effectif} × ${p.valeur}` : String(p.valeur));
+    } else {
+      termes.push(String(p.valeur));
+    }
   }
   return termes.length ? termes.join(" + ") : "0";
 }
@@ -220,7 +233,11 @@ export function decomposer(etat, ligneIdx, pieceIdx, morceaux) {
   return etat;
 }
 
-/** Partage équitablement un nombre en n parts entières égales. */
+/**
+ * Partage équitablement un nombre en n parts entières égales. Les parts
+ * restent groupées pour que l'équation s'écrive « n × v ».
+ */
+let prochainGroupe = 1;
 export function partager(etat, ligneIdx, pieceIdx, parts) {
   const piece = etat.lignes[ligneIdx]?.pieces[pieceIdx];
   if (!piece || piece.type !== "nombre" || !active(piece)) {
@@ -230,7 +247,15 @@ export function partager(etat, ligneIdx, pieceIdx, parts) {
   if (piece.valeur % parts !== 0) {
     throw new Error(`${piece.valeur} n'est pas partageable en ${parts} parts entières égales`);
   }
-  return decomposer(etat, ligneIdx, pieceIdx, Array.from({ length: parts }, () => piece.valeur / parts));
+  memoriser(etat);
+  const groupe = `partage-${prochainGroupe++}`;
+  etat.lignes[ligneIdx].pieces.splice(
+    pieceIdx,
+    1,
+    ...Array.from({ length: parts }, () => ({ type: "nombre", valeur: piece.valeur / parts, groupe })),
+  );
+  terminerAction(etat);
+  return etat;
 }
 
 /** Somme des nombres actuellement sélectionnés (pour le dialogue). */
@@ -242,12 +267,23 @@ export function sommeSelection(etat) {
 }
 
 /**
- * Propositions de réponse pour un regroupement, comme dans l'outil
- * historique : la bonne somme accompagnée de distracteurs (±1, ±10, ×2).
+ * Aide au regroupement, VERBATIM de l'outil historique
+ * (buildAddSuggestions) : la bonne somme est toujours présente, avec
+ * 3 distracteurs tirés de [+1, −1, +10, −10, ×2]. `melange` doit
+ * mélanger une liste (fourni par l'interface, testable ici).
  */
-export function propositionsRegroupement(somme) {
-  const brutes = [somme, somme - 1, somme + 1, somme - 10, somme + 10, somme * 2];
-  return [...new Set(brutes.filter((v) => v > 0))];
+export function aideRegroupement(somme, melange = (l) => l) {
+  const distracteurs = [
+    somme + 1,
+    Math.max(1, somme - 1),
+    somme + 10,
+    Math.max(1, somme - 10),
+    somme * 2,
+  ].filter(
+    (valeur, index, tableau) =>
+      Number.isFinite(valeur) && valeur > 0 && valeur !== somme && tableau.indexOf(valeur) === index,
+  );
+  return melange([somme, ...melange(distracteurs).slice(0, 3)]);
 }
 
 /** Diviseurs proposés pour « partager équitablement » (2 à n parts). */

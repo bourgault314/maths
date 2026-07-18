@@ -12,6 +12,7 @@
     "./equabarre-logique": "./src/equabarre-logique.js",
     "./redaction": "./src/redaction.js",
     "./verification": "./src/verification.js",
-    "./clavier": "./src/clavier.js"
+    "./clavier": "./src/clavier.js",
+    "./fleche": "./src/fleche.js"
   }
 }

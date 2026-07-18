@@ -2,9 +2,9 @@ import { describe, it } from "node:test";
 import assert from "node:assert/strict";
 import { dessinerVerification } from "./verification.js";
 import {
+  aideRegroupement,
   diviseursDe,
   propositionsDecomposition,
-  propositionsRegroupement,
 } from "./equabarre-logique.js";
 
 describe("dessinerVerification (objet séparé)", () => {
@@ -23,11 +23,14 @@ describe("dessinerVerification (objet séparé)", () => {
 });
 
 describe("propositions de réponse (pédagogie de l'outil historique)", () => {
-  it("regroupement : la bonne somme et ses distracteurs ±1, ±10, ×2", () => {
-    assert.deepEqual(propositionsRegroupement(9), [9, 8, 10, 19, 18]);
-    assert.ok(propositionsRegroupement(9).includes(9));
-    // pas de valeurs négatives ou nulles
-    assert.ok(propositionsRegroupement(3).every((v) => v > 0));
+  it("aide au regroupement, verbatim de l'outil : 4 jetons, la bonne toujours là", () => {
+    // sans mélange : [somme, +1, −1, +10] (3 premiers distracteurs)
+    assert.deepEqual(aideRegroupement(9), [9, 10, 8, 19]);
+    // avec n'importe quel mélange, la bonne réponse est toujours présente
+    const inverse = (l) => [...l].reverse();
+    assert.ok(aideRegroupement(9, inverse).includes(9));
+    assert.equal(aideRegroupement(9, inverse).length, 4);
+    assert.ok(aideRegroupement(3).every((v) => v > 0));
   });
 
   it("partager : tous les diviseurs de 2 à n", () => {
