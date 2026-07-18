@@ -222,7 +222,7 @@ async function playLevel(page, levelIndex) {
   links.on("pageerror", error => errors.push(`liens: ${error.message}`));
   await links.goto("http://127.0.0.1:4174/axelle/", {waitUntil:"networkidle"});
   const deskHrefs = await links.locator(".days > a").evaluateAll(nodes => nodes.map(node => new URL(node.href).pathname));
-  assert(JSON.stringify(deskHrefs) === JSON.stringify(["/axelle/j1/","/axelle/j2/","/axelle/j3/"]), `Le Bureau n’affiche pas exactement J1/J2/J3 : ${deskHrefs}.`);
+  assert(JSON.stringify(deskHrefs) === JSON.stringify(["/axelle/j1/","/axelle/j2/","/axelle/j3/","/axelle/j4/","/axelle/j5/","/axelle/j6/","/axelle/j7/"]), `Le Bureau n’affiche pas exactement J1 à J7 : ${deskHrefs}.`);
   await links.screenshot({path:path.join(OUTPUT,"bureau-desktop.png"),fullPage:true});
   await links.goto("http://127.0.0.1:4174/axelle/j1/", {waitUntil:"networkidle"});
   assert(await links.locator("#start-button").count() === 1 && await links.locator('a[href="../"]').count() >= 1, "J1 ou son retour au Bureau manque.");
