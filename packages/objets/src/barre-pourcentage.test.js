@@ -4,6 +4,7 @@ import { creerGenerateur } from "../../moteur-exercices/src/aleatoire.js";
 import { COULEURS_POURCENTAGES, couleurFamillePourcentage } from "../../charte/src/charte.js";
 import { TYPES_POURCENTAGES, creerQuestion } from "./pourcentages.js";
 import {
+  GABARITS_REFERENCE_POURCENTAGE,
   HAUTEURS_GABARITS,
   PREREGLAGES_BARRE_POURCENTAGE,
   VERSION_BARRE_POURCENTAGE,
@@ -188,6 +189,91 @@ describe("téléphone — affichage compact", () => {
   });
 });
 
+describe("tailles réglables (zoom des cases)", () => {
+  it("largeurTotale et hauteurBarre pilotent le viewBox, la réserve reste identique énoncé/correction", () => {
+    for (const [largeurTotale, hauteurBarre] of [[400, 36], [800, 60], [1200, 90]]) {
+      for (const q of [Q50, Q25, Q1, QINC]) {
+        const enonce = dessinerBarrePourcentage(q, { largeurTotale, hauteurBarre });
+        const correction = dessinerBarrePourcentage(q, { largeurTotale, hauteurBarre, correction: true });
+        assert.equal(viewBoxDe(enonce.svg), viewBoxDe(correction.svg));
+        assert.equal(enonce.largeur, largeurTotale + 200);
+      }
+    }
+  });
+  it("une barre plus haute donne un dessin plus haut, à gabarit égal", () => {
+    const petite = dessinerBarrePourcentage(Q50, { hauteurBarre: 30 });
+    const grande = dessinerBarrePourcentage(Q50, { hauteurBarre: 90 });
+    assert.ok(grande.hauteur > petite.hauteur);
+  });
+  it("les tailles hors bornes sont ramenées dans les limites", () => {
+    const rendu = dessinerBarrePourcentage(Q50, { largeurTotale: 50, hauteurBarre: 500 });
+    assert.equal(rendu.largeur, 240 + 200);
+    assert.equal(rendu.hauteur, 200 + 2 * 120);
+  });
+});
+
+describe("étiquettes : valeurs, pourcentages (verso), vierge (recto)", () => {
+  it("« pourcentages » : 100 % en haut, le pourcentage dans chaque case", () => {
+    const { svg } = dessinerBarrePourcentage(Q50, { etiquettes: "pourcentages", chemin: false });
+    assert.ok(svg.includes(">100 %<"));
+    assert.ok(svg.includes(">50 %<"));
+    assert.ok(!svg.includes(">84<"), "le gabarit de référence ne montre aucune valeur");
+    assert.ok(!svg.includes('fill-opacity="0.4"'), "toutes les cases sont pleines");
+  });
+  it("« pourcentages » sur 100 cases : la flèche dit « Une case = 1 % »", () => {
+    const { svg } = dessinerBarrePourcentage(Q1, { etiquettes: "pourcentages" });
+    assert.ok(svg.includes("Une case = 1 %"));
+  });
+  it("« vierge » : aucune valeur, des pointillés partout", () => {
+    const { svg } = dessinerBarrePourcentage(Q50, { etiquettes: "vierge", chemin: false });
+    assert.ok(!/>[0-9]/.test(svg.replace(/<defs>.*<\/defs>/, "")), "aucun chiffre visible");
+    assert.ok(svg.includes("stroke-dasharray"));
+  });
+  it("le gabarit vierge et le gabarit rempli gardent le même viewBox que la question", () => {
+    for (const etiquettes of ["valeurs", "pourcentages", "vierge"]) {
+      const rendu = dessinerBarrePourcentage(Q50, { etiquettes, chemin: false });
+      assert.equal(viewBoxDe(rendu.svg), "0 0 1000 320");
+    }
+  });
+  it("refuse des étiquettes inconnues", () => {
+    assert.throws(() => dessinerBarrePourcentage(Q50, { etiquettes: "verso" }), RangeError);
+  });
+});
+
+describe("réglage des accolades", () => {
+  it("« actives » : l'accolade apparaît même pour une seule part (20 % de 45)", () => {
+    const auto = dessinerBarrePourcentage(Q25, { correction: true, chemin: false }).svg;
+    assert.ok(!auto.includes(">15<") || auto.includes(">15<"), "référence auto"); // 15 dans la case
+    const toujours = dessinerBarrePourcentage(Q25, {
+      correction: true,
+      chemin: false,
+      accolades: "actives",
+    }).svg;
+    const nbAccolades = (toujours.match(/stroke-width="2\.5"\/><text/g) || []).length;
+    assert.ok(nbAccolades >= 1, "une accolade sous la part active");
+  });
+  it("« aucune » : plus aucune accolade, même en correction", () => {
+    const { svg } = dessinerBarrePourcentage(QTOT, { correction: true, accolades: "aucune" });
+    assert.ok(!svg.includes('stroke-width="2.5"/><text'), "pas d'accolade");
+  });
+  it("refuse un réglage inconnu", () => {
+    assert.throws(() => dessinerBarrePourcentage(Q50, { accolades: "partout" }), RangeError);
+  });
+});
+
+describe("gabarits de référence (recto/verso imprimés)", () => {
+  it("six familles, chacune se dessine en rempli et en vierge", () => {
+    assert.equal(GABARITS_REFERENCE_POURCENTAGE.length, 6);
+    for (const gabarit of GABARITS_REFERENCE_POURCENTAGE) {
+      for (const etiquettes of ["pourcentages", "vierge"]) {
+        const rendu = dessinerBarrePourcentage(gabarit.question, { etiquettes, chemin: false });
+        assert.ok(rendu.svg.startsWith("<svg"), `${gabarit.id} en ${etiquettes}`);
+        assert.ok(!rendu.svg.includes("NaN"));
+      }
+    }
+  });
+});
+
 describe("robustesse", () => {
   it("refuse une question invalide", () => {
     assert.throws(() => dessinerBarrePourcentage(null), TypeError);
@@ -198,7 +284,7 @@ describe("robustesse", () => {
     );
   });
   it("chaque préréglage se dessine sans erreur, en énoncé et en correction", () => {
-    assert.equal(VERSION_BARRE_POURCENTAGE, 1);
+    assert.equal(VERSION_BARRE_POURCENTAGE, 2);
     for (const p of PREREGLAGES_BARRE_POURCENTAGE) {
       for (const correction of [false, true]) {
         const rendu = dessinerBarrePourcentage(p.question, { ...(p.options ?? {}), correction });

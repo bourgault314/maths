@@ -75,7 +75,7 @@
   </div>
   <div class="barre" id="parametresObjet"></div>
   <div class="pilules" id="pilulesObjet"></div>
-  <div class="barre">
+  <div class="barre" id="barreFigure">
     <label class="reglage">↻ <input type="range" id="regleRotation" min="0" max="359" value="0" step="1"><output id="valRotation">0°</output></label>
     <label class="reglage"><select id="choixTheme" aria-label="Thème"><option value="noir">noir</option><option value="couleur">couleur</option></select></label>
   </div>
@@ -87,8 +87,20 @@
 <script type="module">
 import { dessinerCercle, dessinerFigure } from "../../packages/objets/src/figure.js";
 import { CATEGORIES_FIGURES, FIGURES_USUELLES } from "../../packages/objets/src/figures-usuelles.js";
+import {
+  GABARITS_REFERENCE_POURCENTAGE,
+  PREREGLAGES_BARRE_POURCENTAGE,
+  dessinerBarrePourcentage,
+} from "../../packages/objets/src/barre-pourcentage.js";
 
 const $ = (id) => document.getElementById(id);
+
+/* ————— Série « Pourcentages » : l'objet barre-pourcentage ————— */
+const SERIE_POURCENT = "Pourcentages";
+const OBJETS_POURCENTAGES = {};
+for (const preset of [...PREREGLAGES_BARRE_POURCENTAGE, ...GABARITS_REFERENCE_POURCENTAGE]) {
+  OBJETS_POURCENTAGES[preset.id] = preset;
+}
 let serieActive = CATEGORIES_FIGURES[0];
 let objetActif = null;
 let dernierSvg = "";
@@ -134,6 +146,166 @@ function visibleCercle(actifs) {
     tangente: actifs.has("tangente") ? { en: 40 } : null,
     secteur: actifs.has("secteur") ? { deDeg: 60, aDeg: 130 } : null,
   };
+}
+
+// Les « capacités » d'une barre de pourcentage : les réglages de
+// l'objet, à cocher une par une comme pour les figures.
+function capacitesPourcentage(cle) {
+  const entree = OBJETS_POURCENTAGES[cle];
+  const evolution = entree.question.mode.startsWith("evo_");
+  const liste = [["correction", "correction"]];
+  if ([4, 5, 20].includes(entree.question.parts) && entree.question.mode === "direct") {
+    liste.push(["chemin", "chemin de calcul"]);
+  }
+  liste.push(["accoladePart", "accolade sous la part"], ["rempli", "rempli en %"], ["vierge", "vierge"]);
+  if (evolution) {
+    liste.push(["montant", "accolade montant"], ["coefficient", "coefficient (100 %)"]);
+  }
+  return liste;
+}
+
+function optionsPourcentage() {
+  const entree = OBJETS_POURCENTAGES[objetActif];
+  const options = { ...(entree.options ?? {}), ...lireParametres() };
+  options.correction = actives.has("correction");
+  options.chemin = actives.has("chemin");
+  options.accolades = actives.has("accoladePart") ? "actives" : "auto";
+  options.etiquettes = actives.has("rempli") ? "pourcentages" : actives.has("vierge") ? "vierge" : "valeurs";
+  if (actives.has("montant")) options.accolade = "montant";
+  if (actives.has("coefficient")) {
+    options.accolade = "coefficient";
+    options.normalise = true;
+  }
+  return options;
+}
+
+function dessinerApercuPourcentage() {
+  const entree = OBJETS_POURCENTAGES[objetActif];
+  dernierSvg = dessinerBarrePourcentage(entree.question, optionsPourcentage()).svg;
+  $("apercu").innerHTML = dernierSvg;
+}
+
+function plancheObjetPourcentage() {
+  const zone = $("plancheObjet");
+  zone.innerHTML = "";
+  const entree = OBJETS_POURCENTAGES[objetActif];
+  const tailles = { largeurTotale: 460, hauteurBarre: 40 };
+  const variantes = [
+    ["énoncé", { correction: false }],
+    ["correction", { correction: true }],
+    ["accolade sous la part", { correction: true, accolades: "actives" }],
+    ["rempli en %", { etiquettes: "pourcentages" }],
+    ["vierge", { etiquettes: "vierge" }],
+  ];
+  if ([4, 5, 20].includes(entree.question.parts) && entree.question.mode === "direct") {
+    variantes.push(["sans le chemin", { correction: true, chemin: false }]);
+  }
+  if (entree.question.mode.startsWith("evo_")) {
+    variantes.push(
+      ["accolade montant", { correction: true, accolade: "montant" }],
+      ["coefficient (100 %)", { correction: true, accolade: "coefficient", normalise: true }],
+    );
+  }
+  for (const [libelle, options] of variantes) {
+    try {
+      const rendu = dessinerBarrePourcentage(entree.question, {
+        ...(entree.options ?? {}),
+        ...tailles,
+        ...options,
+      });
+      carte(zone, rendu.svg, libelle);
+    } catch (erreur) {
+      const alerte = document.createElement("figure");
+      alerte.className = "carte";
+      alerte.innerHTML = "<figcaption></figcaption>";
+      alerte.querySelector("figcaption").textContent = `${libelle} : ERREUR — ${erreur.message}`;
+      zone.appendChild(alerte);
+    }
+  }
+}
+
+function ouvrirObjetPourcentage(cle) {
+  objetActif = cle;
+  const entree = OBJETS_POURCENTAGES[cle];
+  $("vueSerie").hidden = true;
+  $("vueObjet").hidden = false;
+  $("barreFigure").hidden = true;
+  $("filAriane").textContent = `· ${SERIE_POURCENT}`;
+  $("titreObjet").textContent = entree.titre;
+  actives.clear();
+  const zone = $("parametresObjet");
+  zone.innerHTML = "";
+  const curseurs = [
+    { cle: "largeurTotale", libelle: "Largeur", min: 240, max: 1200, pas: 20, defaut: 800 },
+    { cle: "hauteurBarre", libelle: "Hauteur", min: 24, max: 110, pas: 2, defaut: 60 },
+  ];
+  for (const parametre of curseurs) {
+    const label = document.createElement("label");
+    label.className = "reglage";
+    const sortie = document.createElement("output");
+    const curseur = document.createElement("input");
+    curseur.type = "range";
+    curseur.min = parametre.min;
+    curseur.max = parametre.max;
+    curseur.step = parametre.pas;
+    curseur.value = parametre.defaut;
+    curseur.dataset.cle = parametre.cle;
+    sortie.textContent = String(parametre.defaut);
+    curseur.addEventListener("input", () => {
+      sortie.textContent = String(curseur.value);
+      dessinerApercuPourcentage();
+    });
+    label.append(`${parametre.libelle} `, curseur, sortie);
+    zone.appendChild(label);
+  }
+  if ([4, 5, 20].includes(entree.question.parts) && entree.question.mode === "direct") {
+    actives.add("chemin");
+  }
+  const pilules = $("pilulesObjet");
+  pilules.innerHTML = "";
+  for (const [cleCapacite, libelle] of capacitesPourcentage(cle)) {
+    const bouton = document.createElement("button");
+    bouton.textContent = libelle;
+    bouton.classList.toggle("actif", actives.has(cleCapacite));
+    bouton.addEventListener("click", () => {
+      const exclusifs = { rempli: "vierge", vierge: "rempli", montant: "coefficient", coefficient: "montant" };
+      if (actives.has(cleCapacite)) actives.delete(cleCapacite);
+      else {
+        actives.add(cleCapacite);
+        if (exclusifs[cleCapacite]) actives.delete(exclusifs[cleCapacite]);
+      }
+      for (const b of pilules.children) {
+        const capacite = capacitesPourcentage(cle).find(([, l]) => l === b.textContent);
+        if (capacite) b.classList.toggle("actif", actives.has(capacite[0]));
+      }
+      dessinerApercuPourcentage();
+    });
+    pilules.appendChild(bouton);
+  }
+  dessinerApercuPourcentage();
+  plancheObjetPourcentage();
+  window.scrollTo(0, 0);
+}
+
+function ouvrirSeriePourcentages() {
+  const vitrine = $("vitrineObjets");
+  vitrine.innerHTML = "";
+  for (const [cle, entree] of Object.entries(OBJETS_POURCENTAGES)) {
+    const etiquettes = cle.startsWith("gabarit-") ? "pourcentages" : "valeurs";
+    const rendu = dessinerBarrePourcentage(entree.question, {
+      ...(entree.options ?? {}),
+      largeurTotale: 420,
+      hauteurBarre: 36,
+      chemin: false,
+      etiquettes,
+    });
+    const vignette = document.createElement("figure");
+    vignette.className = "vignette";
+    vignette.innerHTML = `${rendu.svg}<figcaption></figcaption>`;
+    vignette.querySelector("figcaption").textContent = entree.titre;
+    vignette.addEventListener("click", () => ouvrirObjetPourcentage(cle));
+    vitrine.appendChild(vignette);
+  }
 }
 
 function dessinerApercu() {
@@ -207,6 +379,11 @@ function ouvrirSerie(serie) {
   $("vueSerie").hidden = false;
   $("filAriane").textContent = "";
   [...$("chipsSeries").children].forEach((c) => c.classList.toggle("actif", c.textContent === serie));
+  if (serie === SERIE_POURCENT) {
+    ouvrirSeriePourcentages();
+    window.scrollTo(0, 0);
+    return;
+  }
   const vitrine = $("vitrineObjets");
   vitrine.innerHTML = "";
   for (const [cle, entree] of Object.entries(FIGURES_USUELLES)) {
@@ -237,6 +414,7 @@ function ouvrirObjet(cle) {
   const entree = FIGURES_USUELLES[cle];
   $("vueSerie").hidden = true;
   $("vueObjet").hidden = false;
+  $("barreFigure").hidden = false;
   $("filAriane").textContent = `· ${serieActive}`;
   $("titreObjet").textContent = entree.titre;
   actives.clear();
@@ -280,7 +458,7 @@ function ouvrirObjet(cle) {
   window.scrollTo(0, 0);
 }
 
-for (const serie of CATEGORIES_FIGURES) {
+for (const serie of [...CATEGORIES_FIGURES, SERIE_POURCENT]) {
   const bouton = document.createElement("button");
   bouton.textContent = serie;
   bouton.addEventListener("click", () => ouvrirSerie(serie));

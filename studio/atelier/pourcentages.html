@@ -72,8 +72,41 @@ Couleurs officielles des gabarits : jaune 50 %, vert 25 %, bleu 20 %, orange 10 
   <div class="barreCommandes">
     <button class="principal" id="btnToutReveler">Tout révéler</button>
     <button id="btnToutMasquer">Tout masquer</button>
+    <label>Étiquettes
+      <select id="selEtiquettes">
+        <option value="valeurs" selected>Valeurs (question/correction)</option>
+        <option value="pourcentages">Pourcentages (gabarit rempli)</option>
+        <option value="vierge">Vierge (à compléter)</option>
+      </select>
+    </label>
+    <label>Accolades
+      <select id="selAccolades">
+        <option value="auto" selected>Auto (comme l'exerciceur)</option>
+        <option value="actives">Toujours sous la part</option>
+        <option value="aucune">Aucune</option>
+      </select>
+    </label>
+    <label>Largeur
+      <input type="range" id="regleLargeur" min="240" max="1200" step="20" value="800" style="width:130px;accent-color:#3b82f6">
+      <output id="valLargeur">800</output>
+    </label>
+    <label>Hauteur
+      <input type="range" id="regleHauteur" min="24" max="110" step="2" value="60" style="width:110px;accent-color:#3b82f6">
+      <output id="valHauteur">60</output>
+    </label>
   </div>
   <div class="planche" id="planche"></div>
+</section>
+
+<section id="secReference">
+  <h2>Les gabarits de référence (recto / verso)</h2>
+  <p class="aide">Les six familles de tes gabarits imprimés : <b>recto vierge</b> à compléter, <b>verso rempli en pourcentages</b>
+  (100 % en haut, la valeur de chaque case en dessous). Les curseurs de taille ci-dessus s'appliquent aussi ici.</p>
+  <div class="barreCommandes">
+    <button class="principal" id="btnVerso">Verso (rempli en %)</button>
+    <button id="btnRecto">Recto (vierge)</button>
+  </div>
+  <div class="planche" id="plancheReference"></div>
 </section>
 
 <section id="secSerie">
@@ -117,6 +150,7 @@ Couleurs officielles des gabarits : jaune 50 %, vert 25 %, bleu 20 %, orange 10 
 
 <script type="module">
 import {
+  GABARITS_REFERENCE_POURCENTAGE,
   PREREGLAGES_BARRE_POURCENTAGE,
   dessinerBarrePourcentage,
 } from "../../packages/objets/src/barre-pourcentage.js";
@@ -129,9 +163,20 @@ import {
 const planche = document.getElementById("planche");
 const cartes = [];
 
+// Réglages globaux : taille des cases, étiquettes et accolades.
+function reglagesGlobaux() {
+  return {
+    largeurTotale: Number(document.getElementById("regleLargeur").value),
+    hauteurBarre: Number(document.getElementById("regleHauteur").value),
+    etiquettes: document.getElementById("selEtiquettes").value,
+    accolades: document.getElementById("selAccolades").value,
+  };
+}
+
 function dessinerCarte(carte) {
   const rendu = dessinerBarrePourcentage(carte.preset.question, {
     ...(carte.preset.options ?? {}),
+    ...reglagesGlobaux(),
     correction: carte.correction,
   });
   carte.cadre.innerHTML = rendu.svg;
@@ -184,6 +229,54 @@ document.getElementById("btnToutMasquer").addEventListener("click", () => {
     dessinerCarte(carte);
   }
 });
+
+function redessinerPlanche() {
+  for (const carte of cartes) dessinerCarte(carte);
+  dessinerReference();
+}
+for (const id of ["selEtiquettes", "selAccolades"]) {
+  document.getElementById(id).addEventListener("change", redessinerPlanche);
+}
+document.getElementById("regleLargeur").addEventListener("input", () => {
+  document.getElementById("valLargeur").textContent = document.getElementById("regleLargeur").value;
+  redessinerPlanche();
+});
+document.getElementById("regleHauteur").addEventListener("input", () => {
+  document.getElementById("valHauteur").textContent = document.getElementById("regleHauteur").value;
+  redessinerPlanche();
+});
+
+/* ————— Les gabarits de référence recto/verso ————— */
+let faceReference = "pourcentages"; // verso par défaut
+
+function dessinerReference() {
+  const zone = document.getElementById("plancheReference");
+  zone.innerHTML = "";
+  const tailles = reglagesGlobaux();
+  for (const gabarit of GABARITS_REFERENCE_POURCENTAGE) {
+    const rendu = dessinerBarrePourcentage(gabarit.question, {
+      largeurTotale: tailles.largeurTotale,
+      hauteurBarre: tailles.hauteurBarre,
+      etiquettes: faceReference,
+      chemin: false,
+    });
+    const div = document.createElement("div");
+    div.className = "carte";
+    div.innerHTML = `<h3></h3><div class="cadre"></div>`;
+    div.querySelector("h3").textContent = gabarit.titre;
+    div.querySelector(".cadre").innerHTML = rendu.svg;
+    zone.appendChild(div);
+  }
+}
+document.getElementById("btnVerso").addEventListener("click", () => {
+  faceReference = "pourcentages";
+  dessinerReference();
+});
+document.getElementById("btnRecto").addEventListener("click", () => {
+  faceReference = "vierge";
+  dessinerReference();
+});
+dessinerReference();
 
 /* ————— La série en situation ————— */
 const selFamille = document.getElementById("selFamille");

@@ -15,6 +15,13 @@
 //   le même viewBox en énoncé et en correction — le tableau ne bouge
 //   JAMAIS quand on révèle la réponse (leçon du bug de taille
 //   d'auto/) ;
+// - TAILLE RÉGLABLE (demande de Gwenaël) : `largeurTotale` et
+//   `hauteurBarre` zooment/compactent les cases — indispensable sur
+//   téléphone ; la géométrie reste réservée pour chaque réglage ;
+// - TROIS JEUX D'ÉTIQUETTES, comme ses gabarits imprimés :
+//   « valeurs » (la question et sa correction), « pourcentages » (le
+//   verso : 100 % en haut, 20 % dans chaque case), « vierge » (le
+//   recto à compléter : pointillés partout) ;
 // - le CHEMIN DE CALCUL de l'exerciceur : 25 % s'affiche sous la
 //   barre de 50 %, 5 % sous celle de 10 %, 20 % au-dessus de 10 % —
 //   on montre la méthode, pas seulement le résultat ;
@@ -27,23 +34,28 @@
 //   restent muettes plutôt qu'illisibles).
 //
 // Le rendu est une chaîne SVG pure et déterministe : mêmes données,
-// même dessin, partout (diaporama, fiche, atelier, exports).
+// même dessin, partout (diaporama, fiche, atelier, labo, exports).
 
 import {
   COULEURS_POURCENTAGES,
   couleurFamillePourcentage,
 } from "../../charte/src/charte.js";
 
-export const VERSION_BARRE_POURCENTAGE = 1;
+export const VERSION_BARRE_POURCENTAGE = 2;
+
+export const ETIQUETTES_BARRE_POURCENTAGE = Object.freeze(["valeurs", "pourcentages", "vierge"]);
+export const ACCOLADES_BARRE_POURCENTAGE = Object.freeze(["auto", "actives", "aucune"]);
 
 const ENCRE = COULEURS_POURCENTAGES.encre;
 const ACCENT = COULEURS_POURCENTAGES.accent;
 const RESTE = COULEURS_POURCENTAGES.reste;
 const POLICE = "Arial, Helvetica, sans-serif";
 
-// Largeur unique du dessin (le viewBox de l'exerciceur) ; la hauteur
-// dépend du gabarit mais JAMAIS de la phase question/correction.
-const LARGEUR = 1000;
+// Marge de part et d'autre du dessin (accolades et flèches y respirent).
+const MARGE = 100;
+
+// Hauteurs des gabarits pour la hauteur de barre PAR DÉFAUT (60) —
+// données à titre de repère ; le rendu recalcule selon `hauteurBarre`.
 export const HAUTEURS_GABARITS = Object.freeze({
   simple: 320,
   chemin: 520,
@@ -63,6 +75,10 @@ function echapper(texte) {
 
 function fmt(n) {
   return n.toString().replace(".", ",");
+}
+
+function arrondi2(n) {
+  return Number.parseFloat(n.toFixed(2));
 }
 
 function texte(cx, cy, valeur, taille = 24, graisse = 700, couleur = ENCRE, ancre = "middle") {
@@ -87,7 +103,7 @@ function definitions() {
 }
 
 // L'accolade de résultat de l'exerciceur (drawBrace), portée verbatim.
-function accolade(x, y, largeur, contenu, couleur = ENCRE, tailleForcee = null) {
+function accolade(x, y, largeur, contenu, couleur = ENCRE, largeurDessin = 1000, tailleForcee = null) {
   if (largeur <= 0) return "";
   const h = largeur < 20 ? 6 : 12;
   const yPointe = y + h;
@@ -101,7 +117,7 @@ function accolade(x, y, largeur, contenu, couleur = ENCRE, tailleForcee = null) 
   const taille = tailleForcee || (largeur < 20 ? 14 : 20);
   const decalage = largeur < 20 ? 18 : 24;
   // Le libellé ne sort jamais du cadre, même pour une part tout au bord.
-  const cx = Math.max(60, Math.min(LARGEUR - 60, x + largeur / 2));
+  const cx = Math.max(60, Math.min(largeurDessin - 60, x + largeur / 2));
   return (
     `<path d="${d}" fill="none" stroke="${couleur}" stroke-width="2.5"/>` +
     texte(cx, yPointe + decalage, contenu, taille, 700, couleur)
@@ -113,31 +129,62 @@ function tiretMystere(cx, cy, demiLargeur, epaisseur = 3, motif = "4,4") {
   return `<line x1="${cx - demiLargeur}" y1="${cy}" x2="${cx + demiLargeur}" y2="${cy}" stroke="${ENCRE}" stroke-width="${epaisseur}" stroke-dasharray="${motif}"/>`;
 }
 
+// Lecture des options communes : tailles, étiquettes, accolades.
+function lireConfiguration(options) {
+  const hauteurBarre = Number.isFinite(options.hauteurBarre)
+    ? Math.max(20, Math.min(120, options.hauteurBarre))
+    : 60;
+  const largeurTotale = Number.isFinite(options.largeurTotale)
+    ? Math.max(240, Math.min(1600, options.largeurTotale))
+    : 800;
+  const etiquettes = options.etiquettes ?? "valeurs";
+  if (!ETIQUETTES_BARRE_POURCENTAGE.includes(etiquettes)) {
+    throw new RangeError(`dessinerBarrePourcentage : etiquettes invalides « ${etiquettes} »`);
+  }
+  const accolades = options.accolades ?? "auto";
+  if (!ACCOLADES_BARRE_POURCENTAGE.includes(accolades)) {
+    throw new RangeError(`dessinerBarrePourcentage : accolades invalides « ${accolades} »`);
+  }
+  return {
+    h: hauteurBarre,
+    L: largeurTotale,
+    W: largeurTotale + 2 * MARGE,
+    etiquettes,
+    accolades,
+  };
+}
+
 // ---------------------------------------------------------------------------
 // Gabarit « simple » : le tout en haut, le découpage en bas (portage
 // de drawSVGBar). Sert aussi de rangée pour le chemin de calcul.
 // ---------------------------------------------------------------------------
 
-function rangeeSimple(q, correction, yDecalage) {
+function rangeeSimple(q, correction, yDecalage, cfg) {
   const parts = q.parts;
   const actives = q.activeParts;
-  const largeurTotal = 800;
-  const largeurPart = largeurTotal / parts;
-  const hBarre = 60;
-  const xDebut = 100;
+  const largeurPart = cfg.L / parts;
+  const hBarre = cfg.h;
+  const xDebut = MARGE;
   const yHaut = 40 + yDecalage;
   const yBas = yHaut + hBarre;
-  const valeurPart = Number.parseFloat((q.totalVal / parts).toFixed(2));
+  const valeurPart = arrondi2(q.totalVal / parts);
+  const pourcentPart = arrondi2(100 / parts);
   const famille = couleurFamillePourcentage(parts);
   const compact = parts > SEUIL_CASES_COMPACT;
+  const gabaritFixe = cfg.etiquettes !== "valeurs"; // verso « pourcentages » ou recto « vierge »
+  const tailleCase = largeurPart < 45 ? 16 : Math.min(24, hBarre * 0.4);
   let corps = "";
 
   // Barre du haut : le tout, en couleur de famille très claire.
-  corps += `<rect x="${xDebut}" y="${yHaut}" width="${largeurTotal}" height="${hBarre}" fill="${famille}" stroke="${ENCRE}" stroke-width="2.5" fill-opacity="0.15"/>`;
-  if (q.mode === "find_total" && !correction) {
-    corps += tiretMystere(xDebut + largeurTotal / 2, yHaut + hBarre / 2, 20, 3, "5,5");
+  corps += `<rect x="${xDebut}" y="${yHaut}" width="${cfg.L}" height="${hBarre}" fill="${famille}" stroke="${ENCRE}" stroke-width="2.5" fill-opacity="0.15"/>`;
+  if (cfg.etiquettes === "pourcentages") {
+    corps += texte(xDebut + cfg.L / 2, yHaut + hBarre / 2 + 1, "100 %", tailleCase, 700);
+  } else if (cfg.etiquettes === "vierge") {
+    corps += tiretMystere(xDebut + cfg.L / 2, yHaut + hBarre / 2, 20, 3, "5,5");
+  } else if (q.mode === "find_total" && !correction) {
+    corps += tiretMystere(xDebut + cfg.L / 2, yHaut + hBarre / 2, 20, 3, "5,5");
   } else {
-    corps += texte(xDebut + largeurTotal / 2, yHaut + hBarre / 2 + 1, fmt(q.totalVal), 24, 700);
+    corps += texte(xDebut + cfg.L / 2, yHaut + hBarre / 2 + 1, fmt(q.totalVal), tailleCase, 700);
   }
 
   // Les cases du bas.
@@ -145,11 +192,16 @@ function rangeeSimple(q, correction, yDecalage) {
     const xPart = xDebut + i * largeurPart;
     let opacite = i < actives ? "1" : "0.4";
     if (q.mode === "find_percent" && !correction) opacite = "0.4";
+    if (gabaritFixe) opacite = "1"; // le gabarit de référence : toutes les cases égales
     corps += `<rect x="${xPart}" y="${yBas}" width="${largeurPart}" height="${hBarre}" fill="${famille}" stroke="${ENCRE}" stroke-width="2.5" fill-opacity="${opacite}"/>`;
-    if (correction) {
+
+    if (cfg.etiquettes === "pourcentages") {
+      corps += texte(xPart + largeurPart / 2, yBas + hBarre / 2 + 1, `${fmt(pourcentPart)} %`, Math.min(tailleCase, largeurPart * 0.35), 700);
+    } else if (cfg.etiquettes === "vierge") {
+      corps += tiretMystere(xPart + largeurPart / 2, yBas + hBarre / 2, Math.min(12, largeurPart * 0.3));
+    } else if (correction) {
       if (!compact || i === 0) {
-        const taille = largeurPart < 45 ? 16 : 24;
-        corps += texte(xPart + largeurPart / 2, yBas + hBarre / 2 + 1, fmt(valeurPart), taille, 700);
+        corps += texte(xPart + largeurPart / 2, yBas + hBarre / 2 + 1, fmt(valeurPart), tailleCase, 700);
       }
     } else if (!compact) {
       corps += tiretMystere(xPart + largeurPart / 2, yBas + hBarre / 2, 12);
@@ -160,16 +212,25 @@ function rangeeSimple(q, correction, yDecalage) {
 
   // Accolades : la valeur donnée (chercher le tout), puis les résultats.
   const yAccolade = yBas + hBarre + 15;
+  if (cfg.accolades === "aucune" || cfg.etiquettes === "vierge") return corps;
+  if (cfg.etiquettes === "pourcentages") {
+    if (cfg.accolades === "actives" && actives >= 1) {
+      corps += accolade(xDebut, yAccolade, largeurPart * actives, `${fmt(arrondi2(pourcentPart * actives))} %`, ACCENT, cfg.W);
+    }
+    return corps;
+  }
   if (!correction && q.mode === "find_total" && actives > 1) {
-    corps += accolade(xDebut, yAccolade, largeurPart * actives, fmt(q.calcVal), ACCENT);
+    corps += accolade(xDebut, yAccolade, largeurPart * actives, fmt(q.calcVal), ACCENT, cfg.W);
   }
   if (correction) {
-    if (q.mode === "find_percent") {
+    if (cfg.accolades === "actives") {
+      corps += accolade(xDebut, yAccolade, largeurPart * actives, fmt(q.calcVal), ACCENT, cfg.W);
+    } else if (q.mode === "find_percent") {
       if (parts !== 2 && parts !== 4) {
-        corps += accolade(xDebut, yAccolade, largeurPart * actives, fmt(q.calcVal), ACCENT);
+        corps += accolade(xDebut, yAccolade, largeurPart * actives, fmt(q.calcVal), ACCENT, cfg.W);
       }
     } else if (actives > 1) {
-      corps += accolade(xDebut, yAccolade, largeurPart * actives, fmt(q.calcVal), ACCENT);
+      corps += accolade(xDebut, yAccolade, largeurPart * actives, fmt(q.calcVal), ACCENT, cfg.W);
     }
   }
   return corps;
@@ -180,26 +241,30 @@ function rangeeSimple(q, correction, yDecalage) {
 // (portage de draw100Parts).
 // ---------------------------------------------------------------------------
 
-function rangeeCent(q, correction) {
-  const largeurTotal = 800;
-  const hBarre = 60;
-  const xDebut = 100;
+function rangeeCent(q, correction, cfg) {
+  const hBarre = cfg.h;
+  const xDebut = MARGE;
   const yHaut = 70;
   const yBas = yHaut + hBarre;
-  const valeurPart = Number.parseFloat((q.totalVal / 100).toFixed(2));
+  const valeurPart = arrondi2(q.totalVal / 100);
   const famille = couleurFamillePourcentage(100);
+  const gabaritFixe = cfg.etiquettes !== "valeurs";
   let corps = "";
 
-  corps += `<rect x="${xDebut}" y="${yHaut}" width="${largeurTotal}" height="${hBarre}" fill="${famille}" stroke="${ENCRE}" stroke-width="2.5" fill-opacity="0.15"/>`;
-  if (q.mode === "find_total" && !correction) {
-    corps += tiretMystere(xDebut + largeurTotal / 2, yHaut + hBarre / 2, 20, 3, "5,5");
+  corps += `<rect x="${xDebut}" y="${yHaut}" width="${cfg.L}" height="${hBarre}" fill="${famille}" stroke="${ENCRE}" stroke-width="2.5" fill-opacity="0.15"/>`;
+  if (cfg.etiquettes === "pourcentages") {
+    corps += texte(xDebut + cfg.L / 2, yHaut + hBarre / 2 + 1, "100 %", 24, 700);
+  } else if (cfg.etiquettes === "vierge") {
+    corps += tiretMystere(xDebut + cfg.L / 2, yHaut + hBarre / 2, 20, 3, "5,5");
+  } else if (q.mode === "find_total" && !correction) {
+    corps += tiretMystere(xDebut + cfg.L / 2, yHaut + hBarre / 2, 20, 3, "5,5");
   } else {
-    corps += texte(xDebut + largeurTotal / 2, yHaut + hBarre / 2 + 1, fmt(q.totalVal), 24, 700);
+    corps += texte(xDebut + cfg.L / 2, yHaut + hBarre / 2 + 1, fmt(q.totalVal), 24, 700);
   }
 
-  const largeurPart = largeurTotal / 100;
+  const largeurPart = cfg.L / 100;
   for (let i = 0; i < 100; i++) {
-    const opacite = i < q.activeParts ? "1" : "0.4";
+    const opacite = gabaritFixe ? "1" : i < q.activeParts ? "1" : "0.4";
     corps += `<rect x="${xDebut + i * largeurPart}" y="${yBas}" width="${largeurPart}" height="${hBarre}" fill="${famille}" stroke="${ENCRE}" stroke-width="1.5" fill-opacity="${opacite}"/>`;
   }
 
@@ -209,23 +274,25 @@ function rangeeCent(q, correction) {
   const xTexte = xPointe + 40;
   const yTexte = yPointe + 25;
   corps += `<line x1="${xTexte}" y1="${yTexte}" x2="${xPointe + 2}" y2="${yPointe + 5}" stroke="${ENCRE}" stroke-width="2" marker-end="url(#bp-fleche)"/>`;
-  corps += texte(
-    xTexte + 5,
-    yTexte + 5,
-    correction ? `Une case = ${fmt(valeurPart)}` : "Une case = ...",
-    16,
-    700,
-    ENCRE,
-    "start",
-  );
-  if (q.activeParts > 1) {
-    corps += accolade(
-      xDebut,
-      yBas + hBarre + 55,
-      largeurPart * q.activeParts,
-      correction ? fmt(q.calcVal) : "...",
-      ACCENT,
-    );
+  const etiquetteFleche =
+    cfg.etiquettes === "pourcentages"
+      ? "Une case = 1 %"
+      : cfg.etiquettes === "vierge"
+        ? "Une case = ..."
+        : correction
+          ? `Une case = ${fmt(valeurPart)}`
+          : "Une case = ...";
+  corps += texte(xTexte + 5, yTexte + 5, etiquetteFleche, 16, 700, ENCRE, "start");
+
+  if (cfg.accolades === "aucune" || cfg.etiquettes === "vierge") return corps;
+  if (q.activeParts > 1 || (cfg.accolades === "actives" && q.activeParts >= 1)) {
+    const contenu =
+      cfg.etiquettes === "pourcentages"
+        ? `${fmt(q.activeParts)} %`
+        : correction
+          ? fmt(q.calcVal)
+          : "...";
+    corps += accolade(xDebut, yBas + hBarre + 55, largeurPart * q.activeParts, contenu, ACCENT, cfg.W);
   }
   return corps;
 }
@@ -237,22 +304,22 @@ function rangeeCent(q, correction) {
 // et « coefficient », barre normalisée à 100 %.
 // ---------------------------------------------------------------------------
 
-function rangeeEvolution(q, correction, options = {}) {
+function rangeeEvolution(q, correction, options, cfg) {
   const hausse = q.mode === "evo_inc";
   const casesAffichees = q.parts + (hausse ? q.activeParts : 0);
-  const hBarre = 60;
-  const xDebut = 80;
+  const hBarre = cfg.h;
+  const xDebut = MARGE;
   const yHaut = 58;
   const yBas = yHaut + hBarre;
-  const largeurPart = 800 / casesAffichees;
+  const largeurPart = cfg.L / casesAffichees;
   const largeurTout = largeurPart * q.parts;
-  const normalise = options.normalise === true;
-  const accoladeMode =
-    options.accolade ?? (hausse ? "nouveauTotal" : "reste");
-  const valeurPart = Number.parseFloat((q.totalVal / q.parts).toFixed(2));
-  const pourcentPart = Number.parseFloat((100 / q.parts).toFixed(2));
+  const normalise = options.normalise === true || cfg.etiquettes === "pourcentages";
+  const accoladeMode = options.accolade ?? (hausse ? "nouveauTotal" : "reste");
+  const valeurPart = arrondi2(q.totalVal / q.parts);
+  const pourcentPart = arrondi2(100 / q.parts);
   const famille = couleurFamillePourcentage(q.parts);
   const compact = casesAffichees > SEUIL_CASES_COMPACT;
+  const tailleCase = largeurPart < 45 ? 16 : Math.min(24, hBarre * 0.4);
   let corps = "";
 
   corps += `<rect x="${xDebut}" y="${yHaut}" width="${largeurTout}" height="${hBarre}" fill="${famille}" stroke="${ENCRE}" stroke-width="2.5" fill-opacity="0.15"/>`;
@@ -260,7 +327,7 @@ function rangeeEvolution(q, correction, options = {}) {
     xDebut + largeurTout / 2,
     yHaut + hBarre / 2 + 1,
     normalise ? "100 %" : fmt(q.totalVal),
-    24,
+    tailleCase,
     700,
   );
 
@@ -275,18 +342,14 @@ function rangeeEvolution(q, correction, options = {}) {
     if (retiree && correction) remplissage = "url(#bp-hachure)";
     corps += `<rect x="${xPart}" y="${yBas}" width="${largeurPart}" height="${hBarre}" fill="${remplissage}" stroke="${ENCRE}" stroke-width="2.5" fill-opacity="${opacite}"/>`;
 
-    const etiquette = normalise
-      ? `${fmt(pourcentPart)} %`
-      : correction
-        ? fmt(valeurPart)
-        : "...";
-    if (normalise || correction ? !compact || i === 0 : !compact) {
-      const taille = largeurPart < 45 ? 16 : 24;
-      corps += texte(xPart + largeurPart / 2, yBas + hBarre / 2 + 1, etiquette, taille, 700);
+    const etiquette = normalise ? `${fmt(pourcentPart)} %` : correction ? fmt(valeurPart) : "...";
+    const visible = normalise || correction ? !compact || i === 0 : !compact;
+    if (visible) {
+      corps += texte(xPart + largeurPart / 2, yBas + hBarre / 2 + 1, etiquette, tailleCase, 700);
     }
   }
 
-  if (correction || accoladeMode === "coefficient") {
+  if ((correction || accoladeMode === "coefficient") && cfg.accolades !== "aucune") {
     const yAccolade = yBas + hBarre + 15;
     if (accoladeMode === "nouveauTotal") {
       corps += accolade(
@@ -295,6 +358,7 @@ function rangeeEvolution(q, correction, options = {}) {
         largeurPart * casesAffichees,
         `Nouveau total = ${fmt(q.calcVal)}`,
         ACCENT,
+        cfg.W,
       );
     } else if (accoladeMode === "reste") {
       corps += accolade(
@@ -303,16 +367,16 @@ function rangeeEvolution(q, correction, options = {}) {
         largeurPart * (q.parts - q.activeParts),
         `Reste = ${fmt(q.calcVal)}`,
         RESTE,
+        cfg.W,
       );
     } else if (accoladeMode === "montant") {
       corps += accolade(
         xDebut + largeurTout,
         yAccolade,
         largeurPart * q.activeParts,
-        correction
-          ? `Augmentation = ${fmt(Number.parseFloat((q.calcVal - q.totalVal).toFixed(2)))}`
-          : "...",
+        correction ? `Augmentation = ${fmt(arrondi2(q.calcVal - q.totalVal))}` : "...",
         ACCENT,
+        cfg.W,
       );
     } else if (accoladeMode === "coefficient") {
       const pourcentFinal = hausse ? 100 + q.percent : 100 - q.percent;
@@ -325,6 +389,7 @@ function rangeeEvolution(q, correction, options = {}) {
         largeurAccolade,
         `${fmt(pourcentFinal)} %`,
         hausse ? ACCENT : RESTE,
+        cfg.W,
       );
     }
   }
@@ -349,6 +414,14 @@ export function gabaritDeQuestion(q, options = {}) {
   return "simple";
 }
 
+// Hauteur du dessin selon le gabarit et la hauteur de barre : la place
+// des accolades et des flèches est TOUJOURS réservée.
+function hauteurGabarit(gabarit, h) {
+  if (gabarit === "chemin") return 280 + 4 * h;
+  if (gabarit === "evolution") return 260 + 2 * h;
+  return 200 + 2 * h; // simple et cent
+}
+
 // Le chemin de calcul de l'exerciceur : quelle rangée compagnon et
 // dans quel ordre. `null` = la question elle-même.
 function rangeesChemin(q) {
@@ -357,7 +430,7 @@ function rangeesChemin(q) {
     parts,
     activeParts: 0,
     percent: 100 / parts,
-    calcVal: Number.parseFloat((q.totalVal / parts).toFixed(2)),
+    calcVal: arrondi2(q.totalVal / parts),
   });
   if (q.parts === 4) return [compagnon(2), null]; // 50 % au-dessus de 25 %
   if (q.parts === 5) return [null, compagnon(10)]; // 20 % au-dessus de 10 %
@@ -369,14 +442,25 @@ function rangeesChemin(q) {
  * (packages/objets/src/pourcentages.js) — ou de tout objet au même
  * format : { mode, parts, activeParts, percent, totalVal, calcVal }.
  *
- * Le viewBox ne dépend QUE du gabarit, jamais de la phase : révéler la
- * correction ne fait jamais bouger le tableau.
+ * Le viewBox ne dépend QUE du gabarit et des réglages de taille,
+ * jamais de la phase : révéler la correction ne fait rien bouger.
  *
  * @param {object} q — la question.
  * @param {object} [options]
  * @param {boolean} [options.correction=false] — révéler les valeurs.
  * @param {boolean} [options.chemin=true] — chemin de calcul (25 % sous
  *   50 %, 5 % sous 10 %, 20 % sur 10 %) pour les parts en 4, 5, 20.
+ * @param {number} [options.largeurTotale=800] — largeur du « tout »
+ *   (240 à 1600) : c'est le zoom horizontal des cases.
+ * @param {number} [options.hauteurBarre=60] — hauteur d'une barre
+ *   (20 à 120) : c'est le zoom vertical des cases.
+ * @param {"valeurs"|"pourcentages"|"vierge"} [options.etiquettes="valeurs"]
+ *   — « valeurs » = question/correction ; « pourcentages » = le gabarit
+ *   rempli en % (verso imprimé) ; « vierge » = le gabarit à compléter
+ *   (recto imprimé).
+ * @param {"auto"|"actives"|"aucune"} [options.accolades="auto"]
+ *   — « auto » = les accolades de l'exerciceur ; « actives » = toujours
+ *   une accolade sous les parts actives ; « aucune ».
  * @param {"nouveauTotal"|"reste"|"montant"|"coefficient"} [options.accolade]
  *   — accolade d'une évolution (défaut : nouveau total en hausse,
  *   reste en baisse).
@@ -393,36 +477,38 @@ export function dessinerBarrePourcentage(q, options = {}) {
       throw new RangeError(`dessinerBarrePourcentage : champ « ${champ} » invalide`);
     }
   }
+  const cfg = lireConfiguration(options);
   const correction = options.correction === true;
   const gabarit = gabaritDeQuestion(q, options);
-  const hauteur = HAUTEURS_GABARITS[gabarit];
+  const hauteur = hauteurGabarit(gabarit, cfg.h);
   let corps = "";
 
   if (gabarit === "evolution") {
-    corps = rangeeEvolution(q, correction, options);
+    corps = rangeeEvolution(q, correction, options, cfg);
   } else if (gabarit === "cent") {
-    corps = rangeeCent(q, correction);
+    corps = rangeeCent(q, correction, cfg);
   } else if (gabarit === "chemin") {
     const rangees = rangeesChemin(q);
     corps = rangees
-      .map((rangee, i) => rangeeSimple(rangee ?? q, correction, 18 + i * 234))
+      .map((rangee, i) => rangeeSimple(rangee ?? q, correction, 18 + i * (2 * cfg.h + 114), cfg))
       .join("");
   } else {
-    corps = rangeeSimple(q, correction, 18);
+    corps = rangeeSimple(q, correction, 18, cfg);
   }
 
   const svg =
-    `<svg viewBox="0 0 ${LARGEUR} ${hauteur}" role="img" ` +
+    `<svg viewBox="0 0 ${cfg.W} ${hauteur}" role="img" ` +
     `aria-label="Schéma en barres d'un pourcentage" ` +
     `xmlns="http://www.w3.org/2000/svg">` +
     definitions() +
     corps +
     `</svg>`;
-  return { svg, gabarit, largeur: LARGEUR, hauteur };
+  return { svg, gabarit, largeur: cfg.W, hauteur };
 }
 
 // ---------------------------------------------------------------------------
-// Préréglages : un exemple par gabarit, pour le catalogue et l'atelier.
+// Préréglages : un exemple par gabarit, pour le catalogue, l'atelier
+// et le labo.
 // ---------------------------------------------------------------------------
 
 export const PREREGLAGES_BARRE_POURCENTAGE = Object.freeze(
@@ -500,4 +586,23 @@ export const PREREGLAGES_BARRE_POURCENTAGE = Object.freeze(
       options: { accolade: "montant" },
     },
   ].map((p) => Object.freeze({ ...p, question: Object.freeze(p.question) })),
+);
+
+// Les gabarits de référence (imprimables) : un par famille, comme les
+// pages recto/verso de outils/_gabarits_pourcentages.tex.
+export const GABARITS_REFERENCE_POURCENTAGE = Object.freeze(
+  [2, 4, 5, 10, 20, 100].map((parts) =>
+    Object.freeze({
+      id: `gabarit-${parts}`,
+      titre: `Gabarit ${fmt(arrondi2(100 / parts))} % (${parts} cases)`,
+      question: Object.freeze({
+        mode: "direct",
+        percent: arrondi2(100 / parts),
+        parts,
+        activeParts: 1,
+        totalVal: 100,
+        calcVal: arrondi2(100 / parts),
+      }),
+    }),
+  ),
 );
