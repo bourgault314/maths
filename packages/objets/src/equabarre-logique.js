@@ -60,7 +60,7 @@ export function creerEtat(texte) {
     historique: [],
     pileAnnulation: [],
   };
-  etat.historique.push(equationCourante(etat));
+  etat.historique.push({ equation: equationCourante(etat) });
   return etat;
 }
 
@@ -77,7 +77,7 @@ function memoriser(etat) {
   if (etat.pileAnnulation.length > MAX_HISTORIQUE) etat.pileAnnulation.shift();
 }
 
-function terminerAction(etat) {
+function terminerAction(etat, operation) {
   etat.selection = [];
   for (const ligne of etat.lignes) {
     for (const piece of ligne.pieces) {
@@ -86,7 +86,7 @@ function terminerAction(etat) {
       }
     }
   }
-  etat.historique.push(equationCourante(etat));
+  etat.historique.push({ equation: equationCourante(etat), ...(operation ? { operation } : {}) });
   if (etat.historique.length > MAX_HISTORIQUE) etat.historique.shift();
 }
 
@@ -177,10 +177,23 @@ export function enleverSelection(etat) {
     throw new Error("il faut sélectionner la même quantité en haut et en bas (autant d'inconnues, même somme)");
   }
   memoriser(etat);
+  // texte de l'opération pour la rédaction : « −2x », « −6 », « −(2x + 6) »
+  const enleves = etat.selection.filter((s) => s.ligne === 1);
+  let x = 0, somme = 0;
+  for (const { ligne, indice } of enleves) {
+    const piece = etat.lignes[ligne].pieces[indice];
+    if (piece.type === "inconnue") x += 1;
+    else somme += piece.valeur;
+  }
+  const termes = [];
+  if (x > 0) termes.push(x === 1 ? etat.lettre : `${x}${etat.lettre}`);
+  if (somme > 0) termes.push(String(somme));
+  const operation =
+    termes.length > 1 ? `−(${termes.join(" + ")})` : `−${termes[0]}`;
   for (const { ligne, indice } of etat.selection) {
     etat.lignes[ligne].pieces[indice].etat = "supprime";
   }
-  terminerAction(etat);
+  terminerAction(etat, operation);
   return etat;
 }
 

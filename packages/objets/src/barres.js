@@ -56,12 +56,10 @@ function echapper(texte) {
   );
 }
 
-// Tache Splat (blob noir à 5 lobes, silhouette simplifiée de l'icône
-// d'ÉquaBarre), dessinée dans un carré 100×100 centré en (50,50).
-const CHEMIN_SPLAT =
-  "M50 8 C62 10 68 20 78 18 C90 16 96 26 88 36 C82 44 92 50 92 58 " +
-  "C92 70 80 72 74 80 C68 90 56 92 50 84 C44 92 30 92 26 82 C22 72 10 70 10 58 " +
-  "C10 48 20 44 16 34 C12 24 22 14 32 18 C40 20 42 10 50 8 Z";
+// Tache Splat : LA vraie silhouette des outils (blobPath à 5 lobes,
+// portée verbatim dans splat.js), dessinée dans un carré 100×100.
+import { cheminTache } from "./splat.js";
+const CHEMIN_SPLAT = cheminTache(50, 50, 40);
 
 function fondsPour(piece) {
   const role = piece.role ?? "aucun";

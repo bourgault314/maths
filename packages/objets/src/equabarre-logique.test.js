@@ -19,7 +19,7 @@ import {
 describe("creerEtat et équation qui suit", () => {
   it("l'historique démarre avec l'équation écrite depuis les barres", () => {
     const etat = creerEtat("2 + 2x + 7 = 3x + 5 + 1");
-    assert.deepEqual(etat.historique, ["2x + 2 + 7 = 3x + 5 + 1"]);
+    assert.deepEqual(etat.historique, [{ equation: "2x + 2 + 7 = 3x + 5 + 1" }]);
     assert.equal(etat.solution, 3);
   });
 
@@ -44,7 +44,7 @@ describe("enlever dans chaque membre", () => {
     cliquerPiece(etat, 0, 0);
     assert.equal(enleverPossible(etat), true);
     enleverSelection(etat);
-    assert.equal(etat.historique.at(-1), "5 = x + 1");
+    assert.equal(etat.historique.at(-1).equation, "5 = x + 1");
   });
 
   it("des nombres de même somme s'enlèvent aussi (4 contre 3+1)", () => {
@@ -54,7 +54,7 @@ describe("enlever dans chaque membre", () => {
     cliquerPiece(etat, 0, 0); // 4 (haut)
     assert.equal(enleverPossible(etat), true);
     enleverSelection(etat);
-    assert.equal(etat.historique.at(-1), "x = 8");
+    assert.equal(etat.historique.at(-1).equation, "x = 8");
     assert.equal(estResolue(etat), true);
   });
 
@@ -73,14 +73,14 @@ describe("décomposer, partager, regrouper, déplacer", () => {
     const etat = creerEtat("x + 9 = 12");
     assert.throws(() => decomposer(etat, 1, 1, [4, 4]), /la somme fait 8/);
     decomposer(etat, 1, 1, [4, 5]);
-    assert.equal(etat.historique.at(-1), "x + 4 + 5 = 12");
+    assert.equal(etat.historique.at(-1).equation, "x + 4 + 5 = 12");
   });
 
   it("partager 12 en 3 parts égales, refuse le non-divisible", () => {
     const etat = creerEtat("3x = 12");
     assert.throws(() => partager(etat, 0, 0, 5), /pas partageable/);
     partager(etat, 0, 0, 3);
-    assert.equal(etat.historique.at(-1), "3x = 4 + 4 + 4");
+    assert.equal(etat.historique.at(-1).equation, "3x = 4 + 4 + 4");
   });
 
   it("regrouper 5 + 1 en 6 (même membre uniquement)", () => {
@@ -91,7 +91,7 @@ describe("décomposer, partager, regrouper, déplacer", () => {
     assert.equal(refus.action, "rien");
     cliquerPiece(etat, 0, 2); // 1 (haut)
     regrouperSelection(etat);
-    assert.equal(etat.historique.at(-1), "2x + 4 = x + 6");
+    assert.equal(etat.historique.at(-1).equation, "2x + 4 = x + 6");
   });
 
   it("déplacer échange deux cases d'un même membre", () => {
@@ -135,7 +135,7 @@ describe("annuler et résolution", () => {
     cliquerPiece(etat, 0, 3);
     cliquerPiece(etat, 0, 4);
     regrouperSelection(etat);
-    assert.equal(etat.historique.at(-1), "9 = x + 6");
+    assert.equal(etat.historique.at(-1).equation, "9 = x + 6");
     // enlever 6 des deux côtés : décompose 9 en 6 + 3 d'abord
     changerMode(etat, "decomposer");
     decomposer(etat, 1, 0, [6, 3]);
@@ -145,7 +145,7 @@ describe("annuler et résolution", () => {
     cliquerPiece(etat, 1, basSix);
     cliquerPiece(etat, 0, hautSix);
     enleverSelection(etat);
-    assert.equal(etat.historique.at(-1), "3 = x");
+    assert.equal(etat.historique.at(-1).equation, "3 = x");
     assert.equal(estResolue(etat), true);
     assert.equal(etat.solution, 3);
   });
