@@ -8,6 +8,7 @@
     "./barres": "./src/barres.js",
     "./equation-barres": "./src/equation-barres.js",
     "./splat": "./src/splat.js",
-    "./triangle": "./src/triangle.js"
+    "./triangle": "./src/triangle.js",
+    "./equabarre-logique": "./src/equabarre-logique.js"
   }
 }
