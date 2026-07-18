@@ -121,13 +121,13 @@ describe("dessinerFigure — le contrat", () => {
     assert.equal(lignes.length, 4 + 4 + 4);
   });
 
-  it("codage milieu : croix + double codage sur les deux moitiés", () => {
+  it("codage milieu : graduation + double codage sur les deux moitiés", () => {
     const svg = dessinerFigure({
       sommets: sommetsTriangle({ angles: [50, 60, 70] }),
       codages: [{ type: "milieu", cote: "BC", traits: 1 }],
     });
     // 3 côtés + 2 traits d'égalité + 2 traits de croix
-    assert.equal((svg.match(/<line /g) ?? []).length, 7);
+    assert.equal((svg.match(/<line /g) ?? []).length, 6);
   });
 
   it("styles par élément : un côté rouge pointillé, remplissage", () => {

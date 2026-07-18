@@ -106,6 +106,19 @@ function croix(p, { couleur, taille = 6, epaisseur = 2.5 }) {
   );
 }
 
+/**
+ * La marque d'un point SUR un segment : une petite graduation
+ * perpendiculaire au segment (convention de Gwenaël — jamais une croix).
+ */
+function graduation(m, angleSegment, { couleur, taille = 7, epaisseur = 3 }) {
+  const perpendiculaire = angleSegment + Math.PI / 2;
+  return ligne(
+    [m[0] + Math.cos(perpendiculaire) * taille, m[1] + Math.sin(perpendiculaire) * taille],
+    [m[0] - Math.cos(perpendiculaire) * taille, m[1] - Math.sin(perpendiculaire) * taille],
+    { couleur, epaisseur },
+  );
+}
+
 function texte(contenu, [x, y], { couleur, taille = 16, graisse = 700, halo = 5 }) {
   return `<text x="${px(x)}" y="${px(y)}" font-family="${POLICE}" font-size="${taille}" font-weight="${graisse}" fill="${couleur}" text-anchor="middle" dominant-baseline="central" stroke="#ffffff" stroke-width="${halo}" paint-order="stroke" stroke-linejoin="round">${contenu}</text>`;
 }
@@ -452,7 +465,11 @@ export function dessinerFigure(description = {}) {
       morceaux.push(
         ligne(points[i], R.milieux[i], { couleur: couleurDe("medianes"), epaisseur: 2.5, pointilles: true }),
       );
-      morceaux.push(croix(R.milieux[i], { couleur: couleurDe("medianes"), taille: 5 }));
+      morceaux.push(
+        graduation(R.milieux[i], argument(points[(i + 1) % 3], points[(i + 2) % 3]), {
+          couleur: couleurDe("medianes"),
+        }),
+      );
     }
 
     for (const lettre of listeOuTout(visible.mediatrices, lettres.split(""))) {
@@ -489,7 +506,11 @@ export function dessinerFigure(description = {}) {
         morceaux.push(
           ligne(R.milieux[i], R.milieux[j], { couleur: couleurDe("segmentDesMilieux"), epaisseur: 2.5 }),
         );
-        morceaux.push(croix(R.milieux[i], { couleur: couleurDe("segmentDesMilieux"), taille: 5 }));
+        morceaux.push(
+          graduation(R.milieux[i], argument(points[(i + 1) % 3], points[(i + 2) % 3]), {
+            couleur: couleurDe("segmentDesMilieux"),
+          }),
+        );
       }
     }
 
@@ -626,7 +647,9 @@ export function dessinerFigure(description = {}) {
     const { depart, delta, mesureDeg } = secteurs[i];
     if (Math.abs(mesureDeg - 90) < 1e-6 && !(lettre in textesAngles)) continue;
     const bissectrice = depart + delta / 2;
-    const r = rayonArc(i) + 19;
+    // plafonnée : sur une petite figure, l'étiquette ne dépasse jamais
+    // 60 % du chemin vers le centre (photo de Gwenaël : collisions)
+    const r = Math.min(rayonArc(i) + 19, distance(points[i], centre) * 0.6);
     const position = [
       points[i][0] + Math.cos(bissectrice) * r,
       points[i][1] + Math.sin(bissectrice) * r,
@@ -663,6 +686,13 @@ export function dessinerFigure(description = {}) {
         const angle = argument(p, q);
         const m = milieu(p, q);
         const perpendiculaire = angle + Math.PI / 2;
+        if (codage.motif === "rond") {
+          // le petit cercle, autre codage d'égalité du collège
+          morceaux.push(
+            `<circle cx="${px(m[0])}" cy="${px(m[1])}" r="5" fill="none" stroke="${couleurCodage}" stroke-width="2.5"/>`,
+          );
+          continue;
+        }
         for (let k = 0; k < traits; k++) {
           const d = (k - (traits - 1) / 2) * 6;
           const c = [m[0] + Math.cos(angle) * d, m[1] + Math.sin(angle) * d];
@@ -677,7 +707,7 @@ export function dessinerFigure(description = {}) {
       }
       if (codage.type === "milieu") {
         const [p, q] = segmentDe(codage.cote);
-        morceaux.push(croix(milieu(p, q), { couleur: couleurCodage }));
+        morceaux.push(graduation(milieu(p, q), argument(p, q), { couleur: couleurCodage }));
       }
     } else if (codage.type === "paralleles") {
       // chevrons alignés sur chaque côté, à 38 % pour laisser le milieu
@@ -714,7 +744,7 @@ export function dessinerFigure(description = {}) {
   // --- milieux visibles (croix seule) ---
   for (const c of listeOuTout(visible.milieux, tousCotes)) {
     const [p, q] = segmentDe(c);
-    morceaux.push(croix(milieu(p, q), { couleur: styleFigure.couleur }));
+    morceaux.push(graduation(milieu(p, q), argument(p, q), { couleur: styleFigure.couleur }));
   }
 
   // --- mesures des côtés, posées sur la normale extérieure ---
@@ -736,7 +766,7 @@ export function dessinerFigure(description = {}) {
     const impose = placements.cotes?.[c] ?? placements.cotes?.[c[1] + c[0]];
     const position = impose
       ? [m[0] + impose[0], m[1] + impose[1]]
-      : [m[0] + Math.cos(versExterieur) * 20, m[1] + Math.sin(versExterieur) * 20];
+      : [m[0] + Math.cos(versExterieur) * 14, m[1] + Math.sin(versExterieur) * 14];
     morceaux.push(
       texte(contenu, position, {
         couleur: styles.cotes?.[c]?.couleur ?? ENCRE,
@@ -1223,7 +1253,7 @@ export function dessinerSegment({
   }
   if (milieuVisible) {
     const m = milieu(p1, p2);
-    contenu += croix(m, { couleur });
+    contenu += graduation(m, angle, { couleur });
     if (nomMilieu) {
       contenu += texte(echapper(nomMilieu), [
         m[0] + Math.cos(perpendiculaireHaut) * -18,
