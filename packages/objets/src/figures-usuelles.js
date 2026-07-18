@@ -380,8 +380,16 @@ export const FIGURES_USUELLES = {
     titre: "Triangle quelconque",
     categorie: "Triangles",
     genre: "polygone",
-    decrire: decrireTriangle,
-    parametres: [],
+    // vraiment quelconque : deux angles réglables, le troisième déduit
+    // (l'audit avait raison : le moteur savait, l'interface ne montrait rien)
+    decrire: ({ angle1 = 50, angle2 = 60, ...reste } = {}) => {
+      const deuxieme = Math.min(angle2, 172 - angle1);
+      return decrireTriangle({ angles: [angle1, deuxieme, 180 - angle1 - deuxieme], ...reste });
+    },
+    parametres: [
+      nombre("angle1", "Angle en A (°)", 50, 15, 130, 1),
+      nombre("angle2", "Angle en B (°)", 60, 15, 130, 1),
+    ],
   },
   triangleEquilateral: {
     titre: "Triangle équilatéral",

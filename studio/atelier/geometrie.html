@@ -13,6 +13,7 @@
     --turquoise:#08b9b2; --orange:#f58220; --attenue:#637287; --ligne:#dce5ef;
   }
   *{box-sizing:border-box}
+  [hidden]{display:none !important} /* sinon display:flex annule hidden (leçon ÉquaBarre) */
   body{margin:0;background:var(--page);color:var(--encre);
     font-family:"Segoe UI",system-ui,sans-serif;padding:20px;max-width:1060px;margin-inline:auto}
   h1{font-family:Fredoka;color:var(--bleu);font-size:clamp(24px,4vw,34px);margin:8px 0 2px}
