@@ -126,6 +126,75 @@ export const PROVENANCE_STUDIO = {
     source: "PythaBarre / Moulin de Pythagore",
     note: "Les 6 teintes de PYTHAGORE_COLORS figurent aussi dans auto/scripts/03-slideshow.js : c'est le même auteur, Gwenaël. Les géométries du moulin n'ont aucun équivalent ailleurs.",
   },
+  "studio/automatismes-v2/": {
+    statut: "original_mathsgo",
+    source: "banc d'essai du socle V2, écrit pour maths&go",
+    note: "Outil interne de mise au point : pas une interface, pas une maquette. L'interface V2 sera conçue au lot 2 avec Gwenaël.",
+  },
+};
+
+/*
+ * Le SOCLE V2 — lot 0 (contrats, moteur de série, thème, registre d'objets).
+ *
+ * Tout est écrit à neuf : ces fichiers ne reprennent ni algorithme, ni
+ * table de valeurs, ni formulation de la banque héritée. Ils n'en reprennent
+ * pas non plus la structure — le contrat question-instance/2 et le format
+ * de code MG2 sont propres à maths&go.
+ *
+ * Une seule reprise assumée, déjà déclarée par ailleurs : la convention de
+ * nommage des générateurs (« famille/gabarit ») vient du premier module
+ * reconstruit, pas de DocTools.
+ */
+export const PROVENANCE_SOCLE_V2 = {
+  "packages/contrats/src/programme.js": {
+    statut: "original_mathsgo",
+    source: "annexes officielles du BO (cycle 3 2025, cycle 4 2026) et les deux arrêtés de calendrier",
+    note: "Ossature officielle et règles de datation seulement : aucun contenu pédagogique.",
+  },
+  "packages/contrats/src/reponse.js": {
+    statut: "original_mathsgo",
+    source: "écrit pour maths&go",
+    note: "Grammaire fermée : la saisie d'un élève n'est jamais exécutée.",
+  },
+  "packages/contrats/src/visuel.js": { statut: "original_mathsgo", source: "écrit pour maths&go" },
+  "packages/contrats/src/aide.js": { statut: "original_mathsgo", source: "écrit pour maths&go" },
+  "packages/contrats/src/serie.js": {
+    statut: "original_mathsgo",
+    source: "écrit pour maths&go",
+    note: "Sépare ce que l'utilisateur demande de ce que le moteur produit — l'ancien format mêlait les deux.",
+  },
+  "packages/contrats/src/generateur.js": { statut: "original_mathsgo", source: "écrit pour maths&go" },
+  "packages/moteur-exercices/src/graines.js": { statut: "original_mathsgo", source: "écrit pour maths&go" },
+  "packages/moteur-exercices/src/selection.js": {
+    statut: "original_mathsgo",
+    source: "écrit pour maths&go",
+    note: "Aucune reprise des fréquences de tirage ni de l'entrelacement hérités (§1.2).",
+  },
+  "packages/moteur-exercices/src/serie.js": { statut: "original_mathsgo", source: "écrit pour maths&go" },
+  "packages/moteur-exercices/src/registre-v2.js": { statut: "original_mathsgo", source: "écrit pour maths&go" },
+  "packages/moteur-exercices/src/code-serie.js": {
+    statut: "original_mathsgo",
+    source: "écrit pour maths&go",
+    note: "Format MG2, distinct des codes MG1 qui restent gelés avec l'application actuelle.",
+  },
+  "packages/moteur-exercices/src/generateurs/fixture.js": {
+    statut: "original_mathsgo",
+    source: "outillage de test, écrit pour maths&go",
+    note: "Fixtures techniques : aucun contenu de classe.",
+  },
+  "packages/charte/src/theme.js": {
+    statut: "original_mathsgo",
+    source: "rôles sémantiques ; teintes reprises de packages/charte/src/charte.js",
+  },
+  "packages/rendu-questions/src/registre-objets.js": {
+    statut: "original_mathsgo",
+    source: "catalogue déclaratif des objets maths&go",
+  },
+  "packages/banque-automatismes/src/fixtures/module-fixture.js": {
+    statut: "original_mathsgo",
+    source: "outillage de test, écrit pour maths&go",
+    note: "Hors de la banque publique ; état « brouillon » définitif.",
+  },
 };
 
 /*
@@ -234,6 +303,7 @@ function toutesLesEntrees() {
     ...Object.entries(PROVENANCE_OBJETS),
     ...Object.entries(PROVENANCE_MODULES_AUTOMATISMES),
     ...Object.entries(PROVENANCE_STUDIO),
+    ...Object.entries(PROVENANCE_SOCLE_V2),
   ];
 }
 
@@ -242,6 +312,7 @@ export function origineDe(nom) {
     PROVENANCE_OBJETS[nom] ??
     PROVENANCE_MODULES_AUTOMATISMES[nom] ??
     PROVENANCE_STUDIO[nom] ??
+    PROVENANCE_SOCLE_V2[nom] ??
     null
   );
 }

@@ -1,0 +1,9 @@
+{
+  "name": "@mathsgo/rendu-questions",
+  "version": "0.1.0",
+  "description": "Couche de rendu des questions V2. Au lot 0, ne contient que le registre déclaratif des objets officiels : quels objets existent, sous quelle version, dans quels rôles. Aucun dessin, aucune dépendance au navigateur.",
+  "type": "module",
+  "exports": {
+    "./registre-objets": "./src/registre-objets.js"
+  }
+}

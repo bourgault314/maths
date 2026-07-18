@@ -6,6 +6,12 @@
   "exports": {
     "./aleatoire": "./src/aleatoire.js",
     "./generation": "./src/generation.js",
-    "./generateurs/fractions": "./src/generateurs/fractions.js"
+    "./graines": "./src/graines.js",
+    "./selection": "./src/selection.js",
+    "./serie": "./src/serie.js",
+    "./code-serie": "./src/code-serie.js",
+    "./registre-v2": "./src/registre-v2.js",
+    "./generateurs/fractions": "./src/generateurs/fractions.js",
+    "./generateurs/divisibilite": "./src/generateurs/divisibilite.js"
   }
 }

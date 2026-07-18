@@ -1,0 +1,254 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex, nofollow">
+<title>Banc d'essai du socle V2 — maths&go (interne)</title>
+<style>
+  /* Volontairement sobre. Ce n'est PAS une maquette : l'identité visuelle
+     de la V2 sera conçue au lot 2, avec Gwenaël. Toute couleur ici est un
+     outil de lecture, pas une proposition de charte. */
+  :root{
+    --page:#f6f8fb; --papier:#ffffff; --encre:#10294a; --bleu:#063f86;
+    --turquoise:#08b9b2; --attenue:#637287; --ligne:#dce5ef; --alerte:#e03434;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--page);color:var(--encre);
+    font-family:"Segoe UI",system-ui,sans-serif;padding:16px;max-width:1000px;margin-inline:auto}
+  h1{font-size:clamp(20px,4vw,28px);color:var(--bleu);margin:4px 0}
+  .sous{color:var(--attenue);margin:0 0 18px;font-size:14px;line-height:1.5}
+  section{background:var(--papier);border:1px solid var(--ligne);border-radius:16px;
+    padding:clamp(12px,3vw,20px);margin-bottom:16px}
+  h2{font-size:18px;color:var(--turquoise);margin:0 0 10px}
+  .reglages{display:flex;flex-wrap:wrap;gap:10px;align-items:flex-end;margin-bottom:14px}
+  label{display:flex;flex-direction:column;gap:4px;font-size:13px;color:var(--attenue)}
+  input,select,button{font:inherit;font-size:15px;padding:9px 12px;border-radius:10px;
+    border:2px solid var(--ligne);background:#fff;color:var(--encre);min-height:44px}
+  button{cursor:pointer;font-weight:600}
+  button.principal{background:var(--bleu);color:#fff;border-color:var(--bleu)}
+  .code{font-family:ui-monospace,Consolas,monospace;font-size:13px;word-break:break-all;
+    background:#f1f5f9;border-radius:8px;padding:10px;border:1px solid var(--ligne)}
+  ol{padding-left:22px;margin:0}
+  li{margin-bottom:12px;line-height:1.5}
+  .enonce{font-size:17px;font-weight:600}
+  .meta{color:var(--attenue);font-size:12.5px;margin-top:3px}
+  table{border-collapse:collapse;width:100%;font-size:13.5px}
+  th,td{text-align:left;padding:7px 8px;border-bottom:1px solid var(--ligne);vertical-align:top}
+  th{color:var(--attenue);font-weight:600}
+  .pastille{display:inline-block;width:22px;height:22px;border-radius:6px;
+    border:2px solid var(--ligne);vertical-align:middle;margin-right:6px}
+  .erreur{color:var(--alerte);font-weight:600}
+  .note{background:#fff8e6;border:1px solid #f5d78e;border-radius:10px;padding:10px 12px;
+    font-size:13.5px;line-height:1.55;margin-bottom:16px}
+  @media (max-width:420px){ .reglages{flex-direction:column;align-items:stretch} }
+</style>
+</head>
+<body>
+
+<h1>Banc d'essai du socle V2</h1>
+<p class="sous">
+  Outil interne de mise au point du lot 0. Il sert à vérifier que la chaîne
+  <strong>définition → sélection → tirage → série → code partageable → rejeu</strong>
+  fonctionne et reste reproductible.
+</p>
+
+<p class="note">
+  <strong>Ce que cette page n'est pas.</strong> Ce n'est ni une interface, ni une
+  maquette, ni une proposition de couleurs — tout cela viendra au lot 2.
+  Les questions affichées proviennent de <strong>fixtures techniques</strong> :
+  elles n'ont aucune valeur pédagogique et ne doivent jamais être montrées à un élève.
+</p>
+
+<section>
+  <h2>Fabriquer une série</h2>
+  <div class="reglages">
+    <label>Graine
+      <input id="graine" type="number" value="20260718" min="0" step="1">
+    </label>
+    <label>Questions
+      <input id="combien" type="number" value="8" min="1" max="60">
+    </label>
+    <label>Mode
+      <select id="mode">
+        <option value="entrainement">entraînement</option>
+        <option value="projection">projection</option>
+        <option value="exploration">exploration</option>
+      </select>
+    </label>
+    <label>Aide
+      <select id="aide">
+        <option value="a-la-demande">à la demande</option>
+        <option value="apres-erreur">après erreur</option>
+        <option value="aucune">aucune</option>
+        <option value="toujours">toujours</option>
+      </select>
+    </label>
+    <button id="fabriquer" class="principal">Fabriquer</button>
+  </div>
+  <div id="resume" class="meta"></div>
+</section>
+
+<section>
+  <h2>Code partageable (MG2)</h2>
+  <div id="code" class="code">—</div>
+  <p class="meta">
+    Ce code contient tout ce qu'il faut pour reconstruire la série ailleurs,
+    sans serveur. Le bouton ci-dessous le relit et vérifie qu'on retrouve
+    exactement la même série.
+  </p>
+  <button id="rejouer">Relire le code et comparer</button>
+  <div id="verdict" class="meta"></div>
+</section>
+
+<section>
+  <h2>Questions produites</h2>
+  <ol id="questions"></ol>
+</section>
+
+<section>
+  <h2>Rôles de thème</h2>
+  <p class="meta">
+    Les contenus nomment un rôle, jamais une couleur. La correspondance
+    ci-dessous est un point de départ : elle attend la charte V2.
+  </p>
+  <table id="theme"></table>
+</section>
+
+<section>
+  <h2>Objets officiels référençables</h2>
+  <p class="meta">Une question peut nommer ces objets ; elle ne les dessine jamais.</p>
+  <table id="objets"></table>
+</section>
+
+<script type="module">
+import { creerSerie, rejouerSerie } from "../../packages/moteur-exercices/src/serie.js";
+import { creerRegistreV2 } from "../../packages/moteur-exercices/src/registre-v2.js";
+import { encoderSerie, decoderSerie } from "../../packages/moteur-exercices/src/code-serie.js";
+import { GENERATEURS_FIXTURE } from "../../packages/moteur-exercices/src/generateurs/fixture.js";
+import { BANQUE_FIXTURE } from "../../packages/banque-automatismes/src/fixtures/module-fixture.js";
+import { SCHEMA_SERIE_DEFINITION } from "../../packages/contrats/src/serie.js";
+import { tousLesRoles } from "../../packages/charte/src/theme.js";
+import { inventaireObjets } from "../../packages/rendu-questions/src/registre-objets.js";
+import { ecrireValeur } from "../../packages/contrats/src/question-instance-2.js";
+
+const $ = (id) => document.getElementById(id);
+
+function registre() {
+  const r = creerRegistreV2();
+  for (const generateur of GENERATEURS_FIXTURE) r.enregistrer(generateur);
+  return r;
+}
+
+function definitionDepuisLesReglages() {
+  return {
+    schema: SCHEMA_SERIE_DEFINITION,
+    profil: { programme: "cycle4-2026", niveau: "4e", dnb: null },
+    modules: ["fixture-technique"],
+    notions: [],
+    nombreDeQuestions: Number($("combien").value),
+    graine: Number($("graine").value),
+    mode: $("mode").value,
+    politiqueAide: $("aide").value,
+    contenu: "lot0-fixture",
+  };
+}
+
+let serieCourante = null;
+
+function fabriquer() {
+  const questions = $("questions");
+  questions.innerHTML = "";
+  $("verdict").textContent = "";
+  try {
+    serieCourante = creerSerie({
+      definition: definitionDepuisLesReglages(),
+      banque: BANQUE_FIXTURE,
+      registre: registre(),
+    });
+  } catch (erreur) {
+    serieCourante = null;
+    $("resume").innerHTML = `<span class="erreur">${erreur.message}</span>`;
+    $("code").textContent = "—";
+    return;
+  }
+
+  const { structuresConsecutives, questionsIdentiques } = serieCourante.diagnostics;
+  $("resume").textContent =
+    `${serieCourante.questions.length} questions · empreinte ${serieCourante.empreinte} · `
+    + `versions hasard ${serieCourante.versions.aleatoire} / sélection ${serieCourante.versions.selection} `
+    + `/ banque ${serieCourante.versions.banque} · répétitions de structure : ${structuresConsecutives} · `
+    + `questions identiques : ${questionsIdentiques}`;
+
+  $("code").textContent = encoderSerie(serieCourante.definition);
+
+  for (const question of serieCourante.questions) {
+    const li = document.createElement("li");
+    const enonce = document.createElement("div");
+    enonce.className = "enonce";
+    enonce.textContent = question.enonce.map((b) => b.contenu ?? `[objet ${b.objet}]`).join(" ");
+    const meta = document.createElement("div");
+    meta.className = "meta";
+    const erreurs = (question.modelesErreurs ?? [])
+      .map((m) => `${m.id} → ${ecrireValeur(m.valeur)}`)
+      .join(" · ") || "aucun";
+    meta.textContent =
+      `réponse ${ecrireValeur(question.reponse.valeur)} · notion ${question.cible.notion} · `
+      + `gabarit ${question.tracabilite.idGabarit} · graine ${question.tracabilite.graine} · `
+      + `modèles d'erreurs : ${erreurs}`;
+    li.append(enonce, meta);
+    questions.append(li);
+  }
+}
+
+function rejouer() {
+  if (!serieCourante) {
+    $("verdict").textContent = "Fabriquer une série d'abord.";
+    return;
+  }
+  const relu = decoderSerie($("code").textContent);
+  if (!relu.valide) {
+    $("verdict").innerHTML = `<span class="erreur">Code refusé : ${relu.raison}</span>`;
+    return;
+  }
+  const controle = rejouerSerie(
+    { ...serieCourante, definition: relu.definition },
+    BANQUE_FIXTURE,
+    registre(),
+  );
+  $("verdict").textContent = controle.identique
+    ? `Identique : empreinte ${controle.empreinteObtenue} retrouvée à partir du seul code.`
+    : `DIVERGENCE — attendu ${controle.empreinteAttendue}, obtenu ${controle.empreinteObtenue}.`;
+  $("verdict").className = controle.identique ? "meta" : "meta erreur";
+}
+
+function remplirTables() {
+  $("theme").innerHTML =
+    "<tr><th>rôle</th><th>trait</th><th>fond</th><th>texte</th></tr>"
+    + tousLesRoles().map((r) => `
+      <tr>
+        <td><strong>${r.role}</strong></td>
+        <td><span class="pastille" style="background:${r.trait}"></span>${r.trait}</td>
+        <td><span class="pastille" style="background:${r.fond}"></span>${r.fond}</td>
+        <td><span class="pastille" style="background:${r.texte}"></span>${r.texte}</td>
+      </tr>`).join("");
+
+  $("objets").innerHTML =
+    "<tr><th>objet</th><th>version</th><th>rôles</th><th>interactions</th></tr>"
+    + inventaireObjets().map((o) => `
+      <tr>
+        <td><strong>${o.id}</strong></td>
+        <td>${o.version}</td>
+        <td>${o.roles.join(", ")}</td>
+        <td>${o.interactions.join(", ")}</td>
+      </tr>`).join("");
+}
+
+$("fabriquer").addEventListener("click", fabriquer);
+$("rejouer").addEventListener("click", rejouer);
+remplirTables();
+fabriquer();
+</script>
+
+</body>
+</html>

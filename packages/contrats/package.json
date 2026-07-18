@@ -7,6 +7,12 @@
     "./question": "./src/question.js",
     "./question-instance-2": "./src/question-instance-2.js",
     "./module-questions": "./src/module-questions.js",
-    "./gabarit": "./src/gabarit.js"
+    "./gabarit": "./src/gabarit.js",
+    "./programme": "./src/programme.js",
+    "./reponse": "./src/reponse.js",
+    "./visuel": "./src/visuel.js",
+    "./aide": "./src/aide.js",
+    "./serie": "./src/serie.js",
+    "./generateur": "./src/generateur.js"
   }
 }

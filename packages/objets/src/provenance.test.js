@@ -9,6 +9,7 @@ import {
   PROVENANCE_OBJETS,
   PROVENANCE_MODULES_AUTOMATISMES,
   PROVENANCE_STUDIO,
+  PROVENANCE_SOCLE_V2,
   DETTE_PRIORITAIRE,
   origineDe,
   modulesParStatut,
@@ -22,6 +23,7 @@ const TOUT = {
   ...PROVENANCE_OBJETS,
   ...PROVENANCE_MODULES_AUTOMATISMES,
   ...PROVENANCE_STUDIO,
+  ...PROVENANCE_SOCLE_V2,
 };
 
 test("chaque entrée déclare un statut connu et une source", () => {
