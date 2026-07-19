@@ -25,3 +25,11 @@
     --mathsgo-entry-top: max(16px, calc((100dvh - var(--mathsgo-entry-card-height)) / 2));
   }
 }
+
+/* Aperçu isolé : reproduit un viewport de 800 px dans la capture. */
+@media (min-width: 921px) {
+  :root {
+    --mathsgo-entry-card-height: 679px;
+    --mathsgo-entry-top: 60.5px;
+  }
+}

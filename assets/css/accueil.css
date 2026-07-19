@@ -381,3 +381,11 @@ footer {
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { transition: none !important; }
 }
+
+/* Aperçu isolé du format ordinateur peu haut. */
+@media (min-width: 921px) {
+  .hero-card {
+    padding-top: 20px;
+    padding-bottom: 18px;
+  }
+}
