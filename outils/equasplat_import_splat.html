@@ -2426,7 +2426,6 @@
         <option value="keep" selected>Hachuré</option>
         <option value="hide">Caché</option>
       </select>
-      <button class="ghost quickBtn" id="btnStageUndo" type="button" title="Annuler la dernière action" aria-label="Annuler la dernière action">↶</button>
       <button class="ghost quickBtn" id="btnFullscreen" type="button" title="Plein écran" aria-label="Plein écran">⛶</button>
     </div>
 
@@ -2587,7 +2586,6 @@
   const toolOppositeBoth = document.getElementById("toolOppositeBoth");
   const toolUndo = document.getElementById("toolUndo");
   const toolRestart = document.getElementById("toolRestart");
-  const btnStageUndo = document.getElementById("btnStageUndo");
   const btnStageRandom = document.getElementById("btnStageRandom");
   const btnFullscreen = document.getElementById("btnFullscreen");
 
@@ -3280,7 +3278,7 @@
   function isSolvedEquationString(eq){
     const {lhs, rhs} = splitEquation(eq);
     const v = displayedUnknown();
-    return lhs === v && /^−?\d+$/.test(rhs);
+    return (lhs === v && /^−?\d+$/.test(rhs)) || (rhs === v && /^−?\d+$/.test(lhs));
   }
 
   function splitEquation(eq){
@@ -3326,10 +3324,7 @@
       const operation = i > 0 ? operationBetweenRows(state.stepOperations && state.stepOperations[i]) : "";
       return `${operation}<div class="equationRow ${cls}"><span class="lhs">${lhs}</span><span class="eq">=</span><span class="rhs">${rhs}</span></div>`;
     }).join("");
-    const pendingShareOperation = state && state.pendingShareConclusion
-      ? operationBetweenRows(`÷ ${state.pendingShareConclusion.count}`)
-      : "";
-    equationHistory.innerHTML = `<div class="equationList" aria-label="Étapes de résolution">${rows}${pendingShareOperation}</div>`;
+    equationHistory.innerHTML = `<div class="equationList" aria-label="Étapes de résolution">${rows}</div>`;
     equationHistory.scrollTop = equationHistory.scrollHeight;
   }
 
@@ -3618,15 +3613,31 @@
     return null;
   }
 
+  function pendingShareFinalEquation(pending){
+    const unknown = displayedUnknown();
+    const value = formatSignedNumber(pending.each);
+    return pending.xSide === "left" ? `${unknown} = ${value}` : `${value} = ${unknown}`;
+  }
+
   function beginPendingShareConclusion(opportunity, each){
-    state.pendingShareConclusion = {
+    const pending = {
       shareBatch:uid(),
       count:opportunity.count,
-      each,
+      each:Number(each),
       xSide:opportunity.xSide,
       tokenSide:opportunity.tokenSide,
       finalizing:false
     };
+    state.pendingShareConclusion = pending;
+    if(!state.steps) state.steps = [];
+    if(!Array.isArray(state.stepOperations)) state.stepOperations = [];
+    const finalEquation = pendingShareFinalEquation(pending);
+    if(state.steps[state.steps.length - 1] !== finalEquation){
+      const nextIndex = state.steps.length;
+      state.steps.push(finalEquation);
+      state.stepOperations[nextIndex] = nextIndex === 0 ? null : `÷ ${pending.count}`;
+      state.stepOperations.length = state.steps.length;
+    }
   }
 
   function decompositionMatchesFinalShare(opportunity, side, id, values){
@@ -3695,7 +3706,6 @@
     selectedPieceRef = null;
     deleteSelection = [];
     groupSelection = [];
-    recordEquationStep(`÷ ${pending.count}`);
     render();
   }
 
@@ -4645,14 +4655,17 @@
     for(let index=0; index<count; index++){
       const col = index % cols;
       const row = Math.floor(index / cols);
-      const x = outer + col*(cardW + gap);
+      const isCenteredLast = cols === 2 && count % 2 === 1 && index === count - 1;
+      const x = isCenteredLast ? (1600 - cardW)/2 : outer + col*(cardW + gap);
       const y = outer + row*(cardH + gap);
       const g = document.createElementNS("http://www.w3.org/2000/svg", "g");
       g.setAttribute("class", "pendingShareGroup");
       g.style.animationDelay = `${index * 110}ms`;
       g.setAttribute("role", "button");
       g.setAttribute("tabindex", "0");
-      g.setAttribute("aria-label", `Mini-plateau ${index + 1} sur ${count} : une tache à gauche et ${formatSignedNumber(pending.each)} à droite. Choisir ce plateau.`);
+      const leftLabel = pending.xSide === "left" ? displayedUnknown() : formatSignedNumber(pending.each);
+      const rightLabel = pending.xSide === "right" ? displayedUnknown() : formatSignedNumber(pending.each);
+      g.setAttribute("aria-label", `Mini-plateau ${index + 1} sur ${count} : ${leftLabel} à gauche et ${rightLabel} à droite. Choisir ce plateau.`);
       g.dataset.pendingShareGroup = String(index);
 
       const card = document.createElementNS("http://www.w3.org/2000/svg", "rect");
@@ -4665,9 +4678,11 @@
       g.appendChild(card);
 
       const centerY = y + cardH/2;
-      const splatX = x + cardW*.30;
+      const leftX = x + cardW*.30;
       const dividerX = x + cardW*.50;
-      const tokenX = x + cardW*.70;
+      const rightX = x + cardW*.70;
+      const splatX = pending.xSide === "left" ? leftX : rightX;
+      const tokenX = pending.tokenSide === "left" ? leftX : rightX;
       const splatR = Math.min(88, cardH*.30, cardW*.13);
       const tokenR = Math.min(64, cardH*.23, cardW*.10);
       const splat = document.createElementNS("http://www.w3.org/2000/svg", "path");
@@ -5263,7 +5278,6 @@
   if(toolOppositeBoth) toolOppositeBoth.addEventListener("click", takeOppositeOfBothMembers);
   toolUndo.addEventListener("click", undo);
   if(toolRestart) toolRestart.addEventListener("click", restartImportedEquation);
-  btnStageUndo.addEventListener("click", undo);
 
   function mobileMathKeyValue(input, mode, key){
     const raw = String(input.value || "").replace(/−/g, "-");
