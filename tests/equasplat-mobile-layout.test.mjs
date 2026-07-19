@@ -35,17 +35,25 @@ test("Annuler et Recommencer restent disponibles avec une flèche lisible", () =
 test("l’historique bleu réserve dès le départ une grande zone et suit sa dernière ligne", () => {
   assert.match(html, /equationHistory\.scrollTop = equationHistory\.scrollHeight/);
   assert.match(html, /\.equationHistory\{[^}]*overflow-y:auto;/s);
-  assert.match(html, /\.topbar\{\s*order:4;[^}]*height:clamp\(180px,28dvh,220px\);[^}]*min-height:180px;[^}]*max-height:220px;[^}]*border:2px solid #93c5fd;[^}]*background:#eff6ff;/s);
+  assert.match(html, /\.topbar\{\s*order:4;[^}]*height:clamp\(300px,44dvh,380px\);[^}]*min-height:300px;[^}]*max-height:380px;[^}]*border:2px solid #93c5fd;[^}]*background:#eff6ff;/s);
 });
 
 test("le plateau mobile utilise tout son cadre avec des plateaux rectangulaires", () => {
   assert.match(html, /\.board\{\s*order:1;[^}]*height:clamp\(350px,98vw,410px\);[^}]*min-height:350px;[^}]*max-height:410px;/s);
   assert.match(html, /svg\.setAttribute\("viewBox", mobileLayout \? "0 0 1600 1480" : "0 0 1600 820"\)/);
-  assert.match(html, /\? \{x:34, y:54, w:724, h:1372\}/);
+  assert.match(html, /\? \{x:8, y:54, w:760, h:1372\}/);
+  assert.match(html, /: \{x:832, y:54, w:760, h:1372\}/);
   assert.match(html, /return isMobileImportLayout\(\) \? Math\.round\(radius \* 1\.18\) : radius/);
   assert.match(html, /@media \(max-width:760px\) and \(max-height:720px\)/);
   assert.match(html, /\.board\{\s*height:285px;\s*min-height:285px;\s*max-height:285px;/);
-  assert.match(html, /\.topbar\{\s*height:140px;\s*min-height:140px;\s*max-height:140px;/);
+  assert.match(html, /\.topbar\{\s*height:220px;\s*min-height:220px;\s*max-height:220px;/);
+});
+
+test("l’élargissement conserve tous les garde-fous anti-chevauchement", () => {
+  assert.match(html, /if\(tokenOverlapsSplats\(p, splats, r\)\) continue;/);
+  assert.match(html, /if\(tokenOverlapsExisting\(p, placed\)\) continue;/);
+  assert.match(html, /const minDist = tokenRadius\(a\) \+ tokenRadius\(b\) \+ 12;/);
+  assert.match(html, /separateTokenPositions\(tray, visible, tokens, sideName\);/);
 });
 
 test("l’import reste toujours en mode Caché sans contrôle mobile ou rapide", () => {
