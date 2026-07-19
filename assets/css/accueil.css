@@ -371,6 +371,15 @@ footer {
   }
   .scene-grid { inset: 6% 3.5%; }
   .scene-item { transform: scale(1.1); }
+  .scene-item-donnees {
+    left: 4%;
+    transform: scale(1);
+  }
+  .scene-item-geometrie { transform: scale(1); }
+  .scene-item-recherches {
+    left: -8%;
+    transform: scale(0.96);
+  }
   .scene-plate { transform: scale(1.08); transform-origin: center; }
   footer {
     flex-direction: column;
