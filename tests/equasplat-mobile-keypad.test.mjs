@@ -7,16 +7,17 @@ const html = await readFile(new URL("../outils/equasplat.html", import.meta.url)
 test("la scène mobile donne la hauteur libre à l’équation et resserre les plateaux", () => {
   assert.match(html, /html\.equasplatActive,[\s\S]*body\.equasplatActive\{[^}]*height:100svh;[^}]*overflow:hidden;/s);
   assert.match(html, /main\.activeMode\{[^}]*height:calc\(100svh - 12px\);/s);
-  assert.match(html, /grid-template-rows:auto minmax\(150px,1fr\) auto 56px auto !important;/);
+  assert.match(html, /grid-template-rows:auto clamp\(145px,21svh,180px\) minmax\(0,1fr\) 56px auto !important;/);
   assert.match(html, /\.stage:not\(:fullscreen\)\{[^}]*overflow-y:hidden !important;[^}]*overscroll-behavior:none;/s);
-  assert.match(html, /\.stage:not\(:fullscreen\) \.topbar\{[^}]*height:100% !important;[^}]*min-height:150px !important;[^}]*max-height:none !important;/s);
-  assert.match(html, /\.stage:not\(:fullscreen\) \.board\{[^}]*height:clamp\(190px,55vw,220px\) !important;[^}]*max-height:220px !important;[^}]*margin:0 0 -5px !important;[^}]*align-self:end;/s);
+  assert.match(html, /\.stage:not\(:fullscreen\) \.topbar\{[^}]*height:100% !important;[^}]*min-height:0 !important;[^}]*max-height:180px !important;/s);
+  assert.match(html, /\.stage:not\(:fullscreen\) \.board\{[^}]*height:min\(100%, clamp\(250px,76vw,310px\)\) !important;[^}]*max-height:310px !important;[^}]*margin:0 0 -5px !important;[^}]*align-self:end;/s);
   assert.match(html, /function setAppLayout\(mode\)[\s\S]*document\.documentElement\.classList\.toggle\("equasplatActive"[\s\S]*document\.body\.classList\.toggle\("equasplatActive"/);
 });
 
 test("les plateaux mobiles sont plus hauts et occupent le SVG disponible", () => {
-  assert.match(html, /svg\.setAttribute\("viewBox", isPhoneLayout\(\) \? "0 0 1600 980" : "0 0 1600 820"\)/);
-  assert.match(html, /function getTrayForSide\(side\)\{\s*if\(isPhoneLayout\(\)\)\{[\s\S]*\{x:24, y:34, w:736, h:912\}[\s\S]*\{x:840, y:34, w:736, h:912\}/);
+  assert.match(html, /const TOKEN_R_PHONE = 72;/);
+  assert.match(html, /svg\.setAttribute\("viewBox", isPhoneLayout\(\) \? "0 0 1600 1280" : "0 0 1600 820"\)/);
+  assert.match(html, /function getTrayForSide\(side\)\{\s*if\(isPhoneLayout\(\)\)\{[\s\S]*\{x:24, y:34, w:736, h:1212\}[\s\S]*\{x:840, y:34, w:736, h:1212\}/);
   assert.match(html, /return side === "left"\s*\? \{x:40, y:74, w:720, h:650\}\s*: \{x:840, y:74, w:720, h:650\}/);
 });
 
