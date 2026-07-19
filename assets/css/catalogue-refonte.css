@@ -1460,6 +1460,9 @@ select { cursor: pointer; }
 
   body:not(.catalogue-is-deep) .site-shell {
     position: relative;
+    min-height: var(--mathsgo-entry-frame-height);
+    display: flex;
+    flex-direction: column;
     margin-block: var(--mathsgo-entry-top) auto;
     margin-inline: auto;
     overflow: hidden;
@@ -1503,6 +1506,7 @@ select { cursor: pointer; }
   }
 
   body:not(.catalogue-is-deep) .main-panel {
+    flex: 1 1 auto;
     margin-bottom: 0;
     padding: 12px 22px 20px;
     border: 0;
@@ -1510,6 +1514,8 @@ select { cursor: pointer; }
     background: transparent;
     box-shadow: none;
   }
+
+  body:not(.catalogue-is-deep) .site-footer { flex-shrink: 0; }
 
   body:not(.catalogue-is-deep) .hero { margin-bottom: 10px; }
   body:not(.catalogue-is-deep) .hero h1 { font-size: clamp(1.9rem, 2.8vw, 2.45rem); }
