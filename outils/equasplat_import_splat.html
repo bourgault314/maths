@@ -1999,9 +1999,9 @@
       order:2;
       box-sizing:border-box;
       width:calc(100% + 12px);
-      height:clamp(230px,64vw,270px);
-      min-height:230px;
-      max-height:270px;
+      height:clamp(260px,76vw,300px);
+      min-height:260px;
+      max-height:300px;
       margin-left:-6px;
       margin-right:-6px;
       padding:2px;
@@ -2212,9 +2212,9 @@
 
   @media (max-width:760px) and (max-height:720px){
     body.importMode .stage:not(:fullscreen) .board{
-      height:240px;
-      min-height:240px;
-      max-height:240px;
+      height:250px;
+      min-height:250px;
+      max-height:250px;
     }
 
     body.importMode .stage:not(:fullscreen) .instructionZone{
@@ -4010,11 +4010,18 @@
     return pt.matrixTransform(svg.getScreenCTM().inverse());
   }
 
+  function mobileSvgViewHeight(){
+    const width = Math.max(1, svg.clientWidth || 1600);
+    const height = Math.max(1, svg.clientHeight || 1050);
+    return clamp(Math.round(1600 * height / width), 980, 1420);
+  }
+
   function getTrayForSide(side){
     if(isMobileImportLayout()){
+      const viewHeight = mobileSvgViewHeight();
       return side === "left"
-        ? {x:8, y:36, w:760, h:978}
-        : {x:832, y:36, w:760, h:978};
+        ? {x:8, y:36, w:760, h:viewHeight-72}
+        : {x:832, y:36, w:760, h:viewHeight-72};
     }
     return side === "left"
       ? {x:40, y:74, w:720, h:650}
@@ -4429,13 +4436,14 @@
   function renderSvg(){
     svg.innerHTML = "";
     const mobileLayout = isMobileImportLayout();
-    svg.setAttribute("viewBox", mobileLayout ? "0 0 1600 1050" : "0 0 1600 820");
+    const viewHeight = mobileLayout ? mobileSvgViewHeight() : 820;
+    svg.setAttribute("viewBox", `0 0 1600 ${viewHeight}`);
     drawDefs();
     const leftTray = getTrayForSide("left");
     const rightTray = getTrayForSide("right");
     drawTray(leftTray, "");
     drawTray(rightTray, "");
-    drawText(800, mobileLayout ? 525 : 400, "=", "eqMiddle");
+    drawText(800, viewHeight / 2, "=", "eqMiddle");
 
     clearUnitPacketChoiceIfInvalid();
     const packetLayout = applyUnitPacketPositions();
