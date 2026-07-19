@@ -96,10 +96,14 @@ l'interface de la bêta :
   validation, crée une trace conforme et calcule le score depuis les traces ;
 - « Aucun » est exclusif et aucune bonne réponse n'est révélée avant
   l'ouverture volontaire de la correction ;
-- l'aide fait repérer l'unité et composer la somme des chiffres sans effectuer
-  le calcul ni conclure ;
+- l'aide fait repérer l'unité puis composer la somme des chiffres en deux
+  gestes colorés et manipulables, sans effectuer le calcul ni conclure ;
+- la correction distingue visuellement le chiffre des unités, les verdicts
+  pour 2, 5 et 10, la somme des chiffres, les verdicts pour 3 et 9, puis la
+  conclusion, tout en conservant les explications validées ;
 - le diaporama ne crée ni trace ni score et possède ses commandes enseignant
-  pour l'aide, la réponse, la correction et le passage à la suite ;
+  pour l'aide, la réponse, la correction et le passage à la suite ; à partir
+  de 900 px, ses cinq propositions occupent une seule ligne lisible à distance ;
 - à 375 px, il n'existe aucun débordement horizontal et toutes les cibles
   tactiles mesurent au moins 44 px ;
 - à 1 280 px, le panneau latéral de projection occupe 31,9 % de la largeur et

@@ -187,12 +187,32 @@ function nombreQuestion(question) {
   return question.enonce.find((bloc) => bloc.id === "nombre")?.valeur;
 }
 
+function rendreEtape(numero, titre, classe = "") {
+  return `<div class="repere-etape ${classe}">
+    <span aria-hidden="true">${numero}</span>
+    <h3>${echapper(titre)}</h3>
+  </div>`;
+}
+
+function rendreVerdicts(question, diviseurs) {
+  const attendus = new Set(question.reponse.attendus);
+  return `<div class="verdicts-correction">
+    ${diviseurs.map((diviseur) => {
+      const juste = attendus.has(String(diviseur));
+      return `<div class="verdict-correction ${juste ? "positif" : "negatif"}">
+        <span>par ${diviseur}</span>
+        <strong>${juste ? "Oui" : "Non"}</strong>
+      </div>`;
+    }).join("")}
+  </div>`;
+}
+
 function rendreAide(question) {
   if (!etat.aideOuverte) return "";
   const nombre = String(nombreQuestion(question));
   const blocs = question.aide?.blocs ?? [];
   const expression = etat.chiffresSomme.length === 0
-    ? "Sélectionne les chiffres utiles."
+    ? `${[...nombre].map(() => "□").join(" + ")} = □`
     : `${etat.chiffresSomme.map((index) => nombre[index]).join(" + ")} = □`;
   const chiffresSomme = [...nombre].map((chiffre, index) => `
     <button class="chiffre-aide ${etat.chiffresSomme.includes(index) ? "actif" : ""}"
@@ -207,28 +227,35 @@ function rendreAide(question) {
         <h2 id="titre-aide">Un coup de pouce</h2>
         <button class="fermer" data-action="fermer-aide" aria-label="Fermer l'aide">×</button>
       </div>
-      <section class="outil-aide">
-        <h3>${echapper(blocs[0]?.contenu ?? "Observe le chiffre des unités.")}</h3>
+      <section class="outil-aide outil-unites">
+        ${rendreEtape(1, blocs[0]?.contenu ?? "Observe le chiffre des unités.", "repere-unites")}
         <div class="nombre-aide" aria-label="Nombre ${nombre}">
           ${nombre.slice(0, -1).split("").map((chiffre) => `<span>${chiffre}</span>`).join("")}
           <button data-action="unite-aide" class="unite-aide ${etat.uniteReperee ? "actif" : ""}"
             aria-pressed="${etat.uniteReperee}" aria-label="Chiffre des unités : ${unite}">${unite}</button>
         </div>
+        <p class="consigne-manipulation">Appuie sur le chiffre à observer.</p>
       </section>
-      <section class="outil-aide">
-        <h3>${echapper(blocs[1]?.contenu ?? "Additionne tous les chiffres.")}</h3>
+      <section class="outil-aide outil-somme">
+        ${rendreEtape(2, blocs[1]?.contenu ?? "Additionne tous les chiffres.", "repere-somme")}
         <div class="chiffres-aide">${chiffresSomme}</div>
         <output class="expression-aide">${echapper(expression)}</output>
+        <p class="consigne-manipulation">Appuie sur les chiffres pour construire la somme.</p>
       </section>
-      <ul class="indices-aide">
-        ${blocs.slice(2).map((bloc) => `<li>${echapper(bloc.contenu)}</li>`).join("")}
-      </ul>
+      <section class="indices-aide">
+        <h3>À vérifier ensuite</h3>
+        <ul>${blocs.slice(2).map((bloc) => `<li>${echapper(bloc.contenu)}</li>`).join("")}</ul>
+      </section>
     </aside>`;
 }
 
 function rendreCorrection(question) {
   if (!etat.correctionOuverte) return "";
-  const titres = ["Chiffre des unités", "Somme des chiffres", "Conclusion"];
+  const nombre = String(nombreQuestion(question));
+  const chiffres = [...nombre];
+  const somme = chiffres.reduce((total, chiffre) => total + Number(chiffre), 0);
+  const attendus = question.reponse.attendus;
+  const reponses = attendus.includes("aucun") ? ["Aucun"] : attendus;
   return `
     <div class="voile" data-action="fermer-correction" aria-hidden="true"></div>
     <aside class="panneau panneau-correction" id="panneau-correction" aria-labelledby="titre-correction">
@@ -236,11 +263,28 @@ function rendreCorrection(question) {
         <h2 id="titre-correction">Correction expliquée</h2>
         <button class="fermer" data-action="fermer-correction" aria-label="Fermer la correction">×</button>
       </div>
-      ${question.correction.map((bloc, index) => `
-        <section class="etape-correction">
-          <h3>${titres[index]}</h3>
-          <p>${echapper(bloc.contenu)}</p>
-        </section>`).join("")}
+      <section class="etape-correction correction-unites">
+        ${rendreEtape(1, "Regarder le chiffre des unités", "repere-unites")}
+        <div class="nombre-correction" aria-label="Le chiffre des unités de ${nombre} est ${nombre.at(-1)}">
+          ${chiffres.slice(0, -1).map((chiffre) => `<span>${chiffre}</span>`).join("")}
+          <strong>${nombre.at(-1)}</strong>
+        </div>
+        ${rendreVerdicts(question, [2, 5, 10])}
+        <p>${echapper(question.correction[0]?.contenu ?? "")}</p>
+      </section>
+      <section class="etape-correction correction-somme">
+        ${rendreEtape(2, "Additionner tous les chiffres", "repere-somme")}
+        <p class="calcul-correction">${echapper(chiffres.join(" + "))} <span>=</span> <strong>${somme}</strong></p>
+        ${rendreVerdicts(question, [3, 9])}
+        <p>${echapper(question.correction[1]?.contenu ?? "")}</p>
+      </section>
+      <section class="etape-correction correction-conclusion">
+        ${rendreEtape(3, "Conclure", "repere-conclusion")}
+        <div class="reponses-correction" aria-label="Réponse correcte">
+          ${reponses.map((reponse) => `<strong>${echapper(reponse)}</strong>`).join("")}
+        </div>
+        <p>${echapper(question.correction[2]?.contenu ?? "")}</p>
+      </section>
     </aside>`;
 }
 
