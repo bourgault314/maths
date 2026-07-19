@@ -333,6 +333,12 @@
     stroke-width:3;
   }
 
+  .trayDivider{
+    stroke:#94a3b8;
+    stroke-width:4;
+    pointer-events:none;
+  }
+
   .trayTitle{
     font-size:24px;
     fill:#64748b;
@@ -449,16 +455,26 @@
     pointer-events:none;
   }
 
+  .pendingShareGroup{
+    cursor:pointer;
+    outline:none;
+    opacity:0;
+    transform-box:fill-box;
+    transform-origin:center;
+    transition:opacity .24s ease,transform .24s ease;
+    animation:pendingShareEnter .62s cubic-bezier(.22,1,.36,1) both;
+  }
+
+  @keyframes pendingShareEnter{
+    from{opacity:0;transform:translateY(18px) scale(.94)}
+    to{opacity:1;transform:translateY(0) scale(1)}
+  }
+
   .pendingShareGroupCard{
     fill:rgba(248,250,252,.96);
     stroke:rgba(59,130,246,.42);
     stroke-width:4;
     transition:fill .16s ease,stroke .16s ease,stroke-width .16s ease;
-  }
-
-  .pendingShareGroup{
-    cursor:pointer;
-    transition:opacity .22s ease;
   }
 
   .pendingShareGroup:hover .pendingShareGroupCard,
@@ -474,17 +490,29 @@
     stroke-width:10;
   }
 
-  .pendingShareGroup.discarded{
-    opacity:.12;
+  .pendingShareGroup.chosen{
+    animation:none;
+    opacity:1;
   }
 
-  .pendingShareEquals{
-    fill:#64748b;
-    font-size:54px;
-    font-weight:950;
-    text-anchor:middle;
-    dominant-baseline:middle;
+  .pendingShareGroup.discarded{
+    animation:none;
+    opacity:0;
+    transform:scale(.84);
     pointer-events:none;
+  }
+
+  .pendingShareDivider{
+    stroke:#94a3b8;
+    stroke-width:5;
+    pointer-events:none;
+  }
+
+  @media (prefers-reduced-motion:reduce){
+    .pendingShareGroup{
+      animation:none;
+      opacity:1;
+    }
   }
 
   .removedGroup{opacity:.28}
@@ -1322,7 +1350,7 @@
 
   main.activeMode{
     grid-template-columns:minmax(0,1fr);
-    width:min(1280px, calc(100vw - 24px));
+    width:min(1600px, calc(100vw - 24px));
   }
 
   main.activeMode .panel{
@@ -2880,7 +2908,6 @@
         <button class="viewModeOption" id="btnViewRedaction" type="button" aria-pressed="true">Rédaction</button>
       </div>
       <button class="ghost quickBtn diceBtn" id="btnStageRandom" type="button" title="Nouvelle équation aléatoire" aria-label="Nouvelle équation aléatoire">🎲</button>
-      <button class="ghost quickBtn" id="btnStageUndo" type="button" title="Annuler la dernière action" aria-label="Annuler la dernière action">↶</button>
       <button class="ghost quickBtn" id="btnFullscreen" type="button" title="Plein écran" aria-label="Plein écran">⛶</button>
     </div>
 
@@ -4452,7 +4479,6 @@
     selectedPieceRef = null;
     deleteSelection = [];
     groupSelection = [];
-    recordEquationStep(makeBothSidesOperation(`÷ ${pending.count}`));
     render();
   }
 
@@ -4832,15 +4858,56 @@
     return null;
   }
 
+  function pendingShareFinalEquation(pending){
+    const unknown = displayedUnknown();
+    const value = formatSignedNumber(pending.each);
+    return pending.xSide === "left" ? `${unknown} = ${value}` : `${value} = ${unknown}`;
+  }
+
+  function beginPendingShareConclusion(opportunity, each){
+    const pending = {
+      id:uid(),
+      count:opportunity.count,
+      each:Number(each),
+      xSide:opportunity.xSide,
+      tokenSide:opportunity.tokenSide,
+      finalizing:false
+    };
+    state.pendingShareConclusion = pending;
+    if(!state.steps) state.steps = [];
+    if(!state.stepOps) state.stepOps = [];
+    const finalEquation = pendingShareFinalEquation(pending);
+    if(state.steps[state.steps.length - 1] !== finalEquation){
+      if(state.steps.length > 0){
+        state.stepOps.push(makeBothSidesOperation(`÷ ${pending.count}`));
+      }
+      state.steps.push(finalEquation);
+    }
+  }
+
+  function decompositionMatchesFinalShare(opportunity, side, id, values){
+    if(!opportunity || opportunity.tokenSide !== side || opportunity.token.id !== id) return false;
+    if(values.length !== opportunity.count) return false;
+    return values.every(value => Number(value) === Number(opportunity.result));
+  }
+
   function applyTokenSplit(side, id, values, historyMode="record", operation=null){
     const arr = state[side];
     const idx = arr.findIndex(p => p.id === id);
     if(idx < 0) return;
+    const opportunity = getShareOpportunity();
+    const isFinalShare = decompositionMatchesFinalShare(opportunity, side, id, values);
     pushHistory();
-    arr.splice(idx, 1, ...values.map(makeToken));
-    if(historyMode === "record") recordEquationStep(operation);
-    else updateCurrentEquationStep();
+    if(isFinalShare){
+      beginPendingShareConclusion(opportunity, Number(opportunity.result));
+    }else{
+      arr.splice(idx, 1, ...values.map(makeToken));
+      if(historyMode === "record") recordEquationStep(operation);
+      else updateCurrentEquationStep();
+    }
     selectedPieceRef = null;
+    deleteSelection = [];
+    groupSelection = [];
     render();
   }
 
@@ -4854,28 +4921,19 @@
 
     const opportunity = getShareOpportunity();
     pushHistory();
-    arr.splice(idx, 1, ...Array.from({length:count}, () => makeToken(each)));
-    const conclusion = getConclusionInfo();
     const isFinalShare = !!opportunity
-      && !!conclusion
       && opportunity.tokenSide === side
       && opportunity.token.id === id
-      && opportunity.count === count
-      && conclusion.count === count;
+      && opportunity.count === count;
     if(isFinalShare){
-      state.pendingShareConclusion = {
-        id:uid(),
-        count,
-        each,
-        xSide:opportunity.xSide,
-        tokenSide:opportunity.tokenSide,
-        finalizing:false
-      };
+      beginPendingShareConclusion(opportunity, each);
+    }else{
+      arr.splice(idx, 1, ...Array.from({length:count}, () => makeToken(each)));
+      recordEquationStep();
     }
     selectedPieceRef = null;
     deleteSelection = [];
     groupSelection = [];
-    recordEquationStep();
     render();
   }
 
@@ -5313,6 +5371,21 @@
     if(title) drawText(tray.x + tray.w/2, tray.y + 44, title, "trayTitle");
   }
 
+  function drawSharedTray(leftTray, rightTray){
+    const x = leftTray.x;
+    const y = Math.min(leftTray.y, rightTray.y);
+    const right = rightTray.x + rightTray.w;
+    const bottom = Math.max(leftTray.y + leftTray.h, rightTray.y + rightTray.h);
+    drawTray({x, y, w:right-x, h:bottom-y}, "");
+    const divider = document.createElementNS("http://www.w3.org/2000/svg", "line");
+    divider.setAttribute("x1", 800);
+    divider.setAttribute("x2", 800);
+    divider.setAttribute("y1", y);
+    divider.setAttribute("y2", bottom);
+    divider.setAttribute("class", "trayDivider");
+    svg.appendChild(divider);
+  }
+
   function svgPointFromEvent(e){
     const pt = svg.createSVGPoint();
     pt.x = e.clientX;
@@ -5619,24 +5692,27 @@
     if(!pending || pending.count < 2) return false;
 
     const count = pending.count;
-    const cols = 2;
+    const cols = count <= 3 ? 1 : 2;
     const rows = Math.ceil(count / cols);
     const outer = 28;
     const gap = 20;
-    const cardW = (1600 - outer*2 - gap) / cols;
+    const cardW = (1600 - outer*2 - gap*(cols-1)) / cols;
     const cardH = (viewHeight - outer*2 - gap*(rows-1)) / rows;
 
     for(let index=0; index<count; index++){
       const row = Math.floor(index / cols);
       const col = index % cols;
-      const isCenteredLast = count % 2 === 1 && index === count - 1;
+      const isCenteredLast = cols === 2 && count % 2 === 1 && index === count - 1;
       const x = isCenteredLast ? (1600 - cardW)/2 : outer + col*(cardW + gap);
       const y = outer + row*(cardH + gap);
       const g = document.createElementNS("http://www.w3.org/2000/svg", "g");
       g.setAttribute("class", "pendingShareGroup");
+      g.style.animationDelay = `${index * 110}ms`;
       g.setAttribute("role", "button");
       g.setAttribute("tabindex", "0");
-      g.setAttribute("aria-label", `Groupe ${index + 1} sur ${count} : ${displayedUnknown()} égale ${formatSignedNumber(pending.each)}. Choisir ce groupe.`);
+      const leftLabel = pending.xSide === "left" ? displayedUnknown() : formatSignedNumber(pending.each);
+      const rightLabel = pending.xSide === "right" ? displayedUnknown() : formatSignedNumber(pending.each);
+      g.setAttribute("aria-label", `Mini-plateau ${index + 1} sur ${count} : ${leftLabel} à gauche et ${rightLabel} à droite. Choisir ce plateau.`);
       g.dataset.pendingShareGroup = String(index);
 
       const card = document.createElementNS("http://www.w3.org/2000/svg", "rect");
@@ -5650,7 +5726,7 @@
 
       const centerY = y + cardH/2;
       const leftX = x + cardW*.29;
-      const equalsX = x + cardW*.50;
+      const dividerX = x + cardW*.50;
       const rightX = x + cardW*.71;
       const splatX = pending.xSide === "left" ? leftX : rightX;
       const tokenX = pending.tokenSide === "left" ? leftX : rightX;
@@ -5662,7 +5738,14 @@
       splat.setAttribute("class", "splatShape");
       g.appendChild(splat);
       drawText(splatX, centerY + 5, displayedUnknown(), "splatText", g);
-      drawText(equalsX, centerY, "=", "pendingShareEquals", g);
+
+      const divider = document.createElementNS("http://www.w3.org/2000/svg", "line");
+      divider.setAttribute("x1", dividerX);
+      divider.setAttribute("x2", dividerX);
+      divider.setAttribute("y1", y);
+      divider.setAttribute("y2", y + cardH);
+      divider.setAttribute("class", "pendingShareDivider");
+      g.appendChild(divider);
 
       const token = document.createElementNS("http://www.w3.org/2000/svg", "circle");
       token.setAttribute("cx", tokenX);
@@ -5683,7 +5766,7 @@
         fresh.finalizing = true;
         const groups = svg.querySelectorAll(".pendingShareGroup");
         groups.forEach((group, groupIndex) => group.classList.add(groupIndex === index ? "chosen" : "discarded"));
-        setTimeout(() => finalizePendingShare(pending.id), 260);
+        setTimeout(() => finalizePendingShare(pending.id), 420);
       };
       g.addEventListener("click", choose);
       g.addEventListener("keydown", event => {
@@ -5705,9 +5788,7 @@
     if(drawPendingShareGroups(viewHeight)) return;
     const leftTray = getTrayForSide("left");
     const rightTray = getTrayForSide("right");
-    drawTray(leftTray, "");
-    drawTray(rightTray, "");
-    drawText(800, viewHeight/2, "=", "eqMiddle");
+    drawSharedTray(leftTray, rightTray);
 
     const leftItems = renderPiecesForSide("left");
     const rightItems = renderPiecesForSide("right");
@@ -6056,7 +6137,7 @@
   toolAddBoth.addEventListener("click", openAddBothDialog);
   if(toolOppositeBoth) toolOppositeBoth.addEventListener("click", takeOppositeOfBothMembers);
   toolUndo.addEventListener("click", undo);
-  btnStageUndo.addEventListener("click", undo);
+  if(btnStageUndo) btnStageUndo.addEventListener("click", undo);
   btnShowSuggestions.addEventListener("click", showDecomposeSuggestions);
   document.getElementById("btnApplyDecompose").addEventListener("click", applyDecomposeInput);
   document.getElementById("btnCancelDialog").addEventListener("click", () => decomposeDialog.close());
