@@ -3521,6 +3521,13 @@
     render();
   }
 
+  function finalShareOperationLabel(opportunity, side, id, partCount){
+    if(!opportunity || opportunity.tokenSide !== side || opportunity.token.id !== id) return null;
+    const n = Math.round(Number(partCount) || 0);
+    if(n < 2 || n !== opportunity.count) return null;
+    return `÷ ${n}`;
+  }
+
   function parseSum(text){
     const raw = String(text || "").replace(/−/g,"-").replace(/\s+/g,"");
     if(!raw) return null;
@@ -3712,7 +3719,8 @@
         btn.addEventListener("click", () => {
           const n = Number(btn.dataset.n);
           const part = Number(btn.dataset.part);
-          applyTokenSplit(side, id, Array.from({length:n},()=>part), "record", `÷ ${n}`);
+          const operationLabel = finalShareOperationLabel(getShareOpportunity(), side, id, n);
+          applyTokenSplit(side, id, Array.from({length:n},()=>part), "record", operationLabel);
           shareDialog.close();
         });
       });
