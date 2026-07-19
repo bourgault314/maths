@@ -60,6 +60,23 @@ test("les branches sœurs ont rigoureusement la même longueur", () => {
   });
 });
 
+test("tous les bâtons verts ont rigoureusement la même longueur visible", () => {
+  [dailyFactorTree.trees[0], dailyFactorTree.trees[1]].forEach((tree, index) => {
+    const markup = dailyFactorTree.renderTree(tree, index);
+    const positions = dailyFactorTree.positions;
+    const visibleLengths = [
+      ...lineLengths(markup, "top").map((length) => {
+        return length - positions.root.r - positions.branches[0].r;
+      }),
+      ...lineLengths(markup, "bottom").map((length) => {
+        return length - positions.branches[0].r - positions.leaves[0][0].r;
+      })
+    ];
+    assert.ok(Math.max(...visibleLengths) - Math.min(...visibleLengths) < 1e-10);
+    visibleLengths.forEach((length) => assert.ok(Math.abs(length - 8.5) < 1e-10));
+  });
+});
+
 test("les billes centrales du dernier niveau gardent un espace visible", () => {
   const positions = dailyFactorTree.positions.leaves;
   const leftInner = positions[0][1];
@@ -91,3 +108,4 @@ test("l’arbre change chaque jour pendant 24 jours puis le cycle recommence", (
 test("une date invalide est refusée explicitement", () => {
   assert.throws(() => dailyFactorTree.selectionForDate("pas une date"), /Date quotidienne invalide/);
 });
+
