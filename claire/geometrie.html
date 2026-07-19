@@ -175,7 +175,7 @@
     .tool[data-color="red"][aria-pressed="true"] { border-color: #c93d3d; background: #c93d3d; }
     .tool:active, .reset:active, .step:active { transform: translateY(1px); }
 
-    .ggb-shell { position: relative; width: 100%; height: 430px; overflow: hidden; background: #fff; }
+    .ggb-shell { position: relative; width: 100%; aspect-ratio: 8 / 5; overflow: hidden; background: #fff; }
     #ggb-element { width: 100%; height: 100%; }
 
     .loading {
@@ -230,7 +230,6 @@
       .task { padding: 15px 17px 12px; }
       .tools { flex-wrap: nowrap; padding: 10px 12px; }
       .tool { flex-basis: auto; }
-      .ggb-shell { height: 510px; }
     }
 
     @media (max-width: 600px) {
@@ -325,7 +324,7 @@
           title: "Repère une parallèle puis une perpendiculaire à (d).",
           help: "Touche d’abord la droite parallèle à (d), puis celle qui lui est perpendiculaire. Les deux choix seront vérifiés ensemble.",
           hint: "Les parallèles gardent le même écart. Les perpendiculaires forment un angle droit, même lorsque toute la figure est inclinée.",
-          coords: [-5.2, 5.2, -3.8, 3.8],
+          coords: [-5.6, 5.6, -3.2, 3.8],
           onTheFly: false,
           tools: [{ mode: 0, label: "☝ Toucher les droites" }],
           commands: [
@@ -346,7 +345,7 @@
           title: "Trace la parallèle bleue et la perpendiculaire rouge.",
           help: "Construis en bleu la parallèle à (d) passant par A, puis en rouge la perpendiculaire à (d) passant par B. Les outils fonctionnent comme dans GeoGebra : touche la droite et le point.",
           hint: "Tu peux sélectionner la droite puis le point, ou le point puis la droite. Le bouton choisi fixe aussi la couleur de la nouvelle construction.",
-          coords: [-5.2, 5.2, -3.6, 3.6],
+          coords: [-5.2, 5.2, -3.25, 3.25],
           tools: [
             { mode: 3, label: "∥ Parallèle bleue", color: "blue" },
             { mode: 4, label: "⊥ Perpendiculaire rouge", color: "red" },
@@ -366,7 +365,7 @@
           title: "Construis un triangle équilatéral sur [AB].",
           help: "Utilise deux cercles de même rayon, crée l’une de leurs intersections, puis termine le triangle avec deux segments.",
           hint: "Trace le cercle de centre A passant par B, puis le cercle de centre B passant par A. Une intersection des deux cercles peut devenir le troisième sommet.",
-          coords: [-5, 5, -4.2, 4.4],
+          coords: [-7.04, 7.04, -5.6, 3.2],
           tools: [
             { mode: 10, label: "○ Cercle centre-point" },
             { mode: 5, label: "× Intersection" },
@@ -388,7 +387,7 @@
           title: "Construis le centre du cercle circonscrit à ABC.",
           help: "L’outil Médiatrice a disparu. Construis deux médiatrices avec des cercles, puis crée leur point d’intersection.",
           hint: "Pour [AB], trace le cercle de centre A passant par B et celui de centre B passant par A. La droite passant par leurs deux intersections est une médiatrice. Recommence avec un autre côté.",
-          coords: [-5.2, 5.2, -4.6, 4.6],
+          coords: [-6.72, 6.72, -5.2, 3.2],
           tools: [
             { mode: 10, label: "○ Cercle centre-point" },
             { mode: 5, label: "× Intersection" },
@@ -413,7 +412,7 @@
           title: "Construis les deux tangentes issues de P.",
           help: "Le cercle de centre O et le point extérieur P sont donnés. Construis les deux tangentes sans utiliser l’outil Tangente.",
           hint: "Construis le milieu M de [OP], puis le cercle de centre M passant par O. Ses intersections avec le cercle donné sont les deux points de tangence.",
-          coords: [-4.5, 6, -4.3, 4.3],
+          coords: [-5, 6.2, -3, 4],
           tools: [
             { mode: 19, label: "◆ Milieu" },
             { mode: 10, label: "○ Cercle centre-point" },
@@ -571,6 +570,7 @@
           api.newConstruction();
           callApi("setRepaintingActive", false);
           callApi("setErrorDialogsActive", false);
+          callApi("setPerspective", "G");
           // setAxesVisible / setGridVisible n'existent plus dans certaines
           // versions mobiles. Cette API récente est prévue pour ce réglage.
           callApi("setGraphicsOptions", 1, { axes: false, grid: false, pointCapturing: 3 });
@@ -867,6 +867,7 @@
         const applet = new GGBApplet({
           id: "ggbAppletClaire",
           appName: "geometry",
+          perspective: "G",
           // GeoGebra redimensionne lui-même son canevas. C'est indispensable
           // sur les écrans Retina de Safari, où setSize peut laisser une zone
           // blanche sous la figure.
