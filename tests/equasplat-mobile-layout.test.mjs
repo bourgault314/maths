@@ -43,6 +43,9 @@ test("les opérations faites aux deux membres apparaissent entre les équations"
   assert.match(html, /function recordEquationStep\(operationLabel=null\)/);
   assert.match(html, /function operationBetweenRows\(label\)/);
   assert.match(html, /class="equationOperationArrow"[^>]*>↓<\/span>/);
+  assert.match(html, /\.equationOperationSideLeft\{\s*justify-content:flex-start;\s*padding-left:3px;/);
+  assert.match(html, /\.equationOperationSideRight\{\s*justify-content:flex-end;\s*padding-right:3px;/);
+  assert.match(html, /equationOperationSideRight"><span>\$\{safeLabel\}<\/span><span class="equationOperationArrow"/);
   assert.match(html, /Même opération dans les deux membres/);
   assert.match(html, /recordEquationStep\(operation\)/);
   assert.match(html, /recordEquationStep\("× \(−1\)"\)/);
