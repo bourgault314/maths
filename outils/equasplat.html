@@ -434,16 +434,56 @@
   .selectedOutline{
     fill:none;
     stroke:#f97316;
-    stroke-width:7;
-    opacity:.85;
+    stroke-width:14;
+    opacity:1;
+    filter:drop-shadow(0 0 6px rgba(249,115,22,.58));
     pointer-events:none;
   }
 
   .groupSelectedOutline{
     fill:none;
     stroke:#16a34a;
-    stroke-width:7;
-    opacity:.90;
+    stroke-width:14;
+    opacity:1;
+    filter:drop-shadow(0 0 6px rgba(22,163,74,.52));
+    pointer-events:none;
+  }
+
+  .pendingShareGroupCard{
+    fill:rgba(248,250,252,.96);
+    stroke:rgba(59,130,246,.42);
+    stroke-width:4;
+    transition:fill .16s ease,stroke .16s ease,stroke-width .16s ease;
+  }
+
+  .pendingShareGroup{
+    cursor:pointer;
+    transition:opacity .22s ease;
+  }
+
+  .pendingShareGroup:hover .pendingShareGroupCard,
+  .pendingShareGroup:focus .pendingShareGroupCard{
+    fill:rgba(239,246,255,.99);
+    stroke:#3b82f6;
+    stroke-width:8;
+  }
+
+  .pendingShareGroup.chosen .pendingShareGroupCard{
+    fill:rgba(220,252,231,.99);
+    stroke:#16a34a;
+    stroke-width:10;
+  }
+
+  .pendingShareGroup.discarded{
+    opacity:.12;
+  }
+
+  .pendingShareEquals{
+    fill:#64748b;
+    font-size:54px;
+    font-weight:950;
+    text-anchor:middle;
+    dominant-baseline:middle;
     pointer-events:none;
   }
 
@@ -2202,8 +2242,8 @@
     column-gap:20px;
     width:100%;
     padding:1px 0 5px;
-    color:#475569;
-    opacity:.92;
+    color:#2563eb;
+    opacity:1;
     font-size:.58em;
     font-weight:950;
     line-height:1;
@@ -2211,23 +2251,26 @@
 
   .equationOpRow .operationCell{
     min-width:0;
+    width:100%;
+    display:flex;
+    align-items:center;
   }
 
   .operationWrap{
-    display:inline-flex;
+    display:flex;
     align-items:center;
-    gap:.22em;
+    gap:5px;
     white-space:nowrap;
   }
 
   .operationCell.opLeft{
-    text-align:right;
-    justify-self:end;
+    justify-content:flex-start;
+    padding-left:3px;
   }
 
   .operationCell.opRight{
-    text-align:left;
-    justify-self:start;
+    justify-content:flex-end;
+    padding-right:3px;
   }
 
   .opLabel{
@@ -2236,24 +2279,9 @@
     letter-spacing:-.02em;
   }
 
-  .opArrowSvg{
-    width:1.6em;
-    height:1.28em;
-    display:block;
-    overflow:visible;
-  }
-
-  .opArrowSvg path{
-    fill:none;
-    stroke:currentColor;
-    stroke-width:3.2;
-    stroke-linecap:round;
-    stroke-linejoin:round;
-  }
-
-  .opArrowSvg .arrowHead{
-    fill:currentColor;
-    stroke:none;
+  .operationArrow{
+    font-size:1.35em;
+    line-height:.8;
   }
 
   @media (max-width:1050px){
@@ -2340,6 +2368,11 @@
 
   .touchKeypad.open{
     display:grid;
+  }
+
+  dialog.touchKeypadActive .btnrow > .primary,
+  dialog.touchKeypadActive .btnrow > .green{
+    display:none;
   }
 
   input.touchKeypadTarget{
@@ -2526,6 +2559,13 @@
     main.activeMode .stage:not(:fullscreen) .equationRow .eq{
       transform:none !important;
       min-width:1em;
+    }
+
+    main.activeMode .stage:not(:fullscreen) .equationOpRow{
+      grid-template-columns:minmax(0,1fr) auto minmax(0,1fr);
+      column-gap:7px;
+      padding:0 0 2px;
+      font-size:13px;
     }
 
     main.activeMode .stage:not(:fullscreen) .instructionZone,
@@ -3151,12 +3191,16 @@
     prepareTouchInput(input);
     input.blur();
     input.insertAdjacentElement("afterend", touchKeypad);
+    const dialog = input.closest("dialog");
+    if(dialog) dialog.classList.add("touchKeypadActive");
     renderTouchKeypad();
     touchKeypad.classList.add("open");
     return true;
   }
 
   function closeTouchKeypad(){
+    const dialog = touchKeypadInput && touchKeypadInput.closest("dialog");
+    if(dialog) dialog.classList.remove("touchKeypadActive");
     touchKeypad.classList.remove("open");
     restoreTouchInput(touchKeypadInput);
     touchKeypadInput = null;
@@ -3175,6 +3219,7 @@
   const appDialogs = [decomposeDialog, shareDialog, groupDialog, addBothDialog, fusionDialog].filter(Boolean);
   appDialogs.forEach(dialog => {
     dialog.addEventListener("close", () => {
+      dialog.classList.remove("touchKeypadActive");
       if(touchKeypadInput && dialog.contains(touchKeypadInput)) closeTouchKeypad();
       dialog.querySelectorAll(".touchKeypadTarget").forEach(restoreTouchInput);
       if(!appDialogs.some(item => item.open)){
@@ -3239,6 +3284,12 @@
     if(count <= 4) return 108;
     if(count <= 6) return 88;
     return 74;
+  }
+
+  function commonSplatRadius(){
+    if(!state) return splatRadius(1);
+    const countForSide = side => renderPiecesForSide(side).filter(piece => piece.type === "x").length;
+    return splatRadius(Math.max(1, countForSide("left"), countForSide("right")));
   }
 
   let state = null;
@@ -4374,13 +4425,34 @@
     if(!info) return;
     pushHistory();
     simplifyPlateauForConclusion(info);
+    delete state.pendingShareConclusion;
     state.conclusionDone = true;
     selectedPieceRef = null;
     deleteSelection = [];
     groupSelection = [];
     // La conclusion correspond à la division des deux membres par le nombre de taches.
     // C'est ici, et non au moment du partage du plateau, que l'on affiche l'opération.
-    recordEquationStep(makeBothSidesOperation(`:${info.count}`));
+    recordEquationStep(makeBothSidesOperation(`÷ ${info.count}`));
+    render();
+  }
+
+  function finalizePendingShare(expectedId){
+    const pending = state && state.pendingShareConclusion;
+    if(!pending || pending.id !== expectedId) return;
+    pending.finalizing = false;
+    pushHistory();
+    simplifyPlateauForConclusion({
+      value:pending.each,
+      count:pending.count,
+      xSide:pending.xSide,
+      tokenSide:pending.tokenSide
+    });
+    delete state.pendingShareConclusion;
+    state.conclusionDone = true;
+    selectedPieceRef = null;
+    deleteSelection = [];
+    groupSelection = [];
+    recordEquationStep(makeBothSidesOperation(`÷ ${pending.count}`));
     render();
   }
 
@@ -4461,17 +4533,11 @@
       .replace(/"/g, "&quot;");
   }
 
-  function operationArrowSvg(side){
-    if(side === "left"){
-      return `<svg class="opArrowSvg opArrowLeft" viewBox="0 0 44 44" aria-hidden="true" focusable="false"><path d="M9 4 C9 21 24 20 29 32"/><path class="arrowHead" d="M23 31 L31 39 L34 28 Z"/></svg>`;
-    }
-    return `<svg class="opArrowSvg opArrowRight" viewBox="0 0 44 44" aria-hidden="true" focusable="false"><path d="M35 4 C35 21 20 20 15 32"/><path class="arrowHead" d="M21 31 L13 39 L10 28 Z"/></svg>`;
-  }
-
   function renderOperationRow(operation){
-    if(viewMode !== "redaction" || !operation || operation.type !== "bothSides" || !operation.label) return "";
+    if(!operation || operation.type !== "bothSides" || !operation.label) return "";
     const label = escapeHtml(operation.label);
-    return `<div class="equationOpRow"><span class="operationCell opLeft"><span class="operationWrap"><span class="opLabel">${label}</span>${operationArrowSvg("left")}</span></span><span class="eq"></span><span class="operationCell opRight"><span class="operationWrap">${operationArrowSvg("right")}<span class="opLabel">${label}</span></span></span></div>`;
+    const arrow = `<span class="operationArrow" aria-hidden="true">↓</span>`;
+    return `<div class="equationOpRow" aria-label="Même opération dans les deux membres : ${label}"><span class="operationCell opLeft"><span class="operationWrap"><span class="opLabel">${label}</span>${arrow}</span></span><span class="eq"></span><span class="operationCell opRight"><span class="operationWrap">${arrow}<span class="opLabel">${label}</span></span></span></div>`;
   }
 
   function renderEquationHistory(){
@@ -4778,6 +4844,41 @@
     render();
   }
 
+  function applySharedTokenSplit(side, id, partCount, partValue){
+    const arr = state[side];
+    const idx = arr.findIndex(piece => piece.id === id);
+    if(idx < 0) return;
+    const count = Math.round(Number(partCount) || 0);
+    const each = Number(partValue);
+    if(count < 2 || !Number.isFinite(each)) return;
+
+    const opportunity = getShareOpportunity();
+    pushHistory();
+    arr.splice(idx, 1, ...Array.from({length:count}, () => makeToken(each)));
+    const conclusion = getConclusionInfo();
+    const isFinalShare = !!opportunity
+      && !!conclusion
+      && opportunity.tokenSide === side
+      && opportunity.token.id === id
+      && opportunity.count === count
+      && conclusion.count === count;
+    if(isFinalShare){
+      state.pendingShareConclusion = {
+        id:uid(),
+        count,
+        each,
+        xSide:opportunity.xSide,
+        tokenSide:opportunity.tokenSide,
+        finalizing:false
+      };
+    }
+    selectedPieceRef = null;
+    deleteSelection = [];
+    groupSelection = [];
+    recordEquationStep();
+    render();
+  }
+
   function parseSum(text){
     const raw = String(text || "").replace(/−/g,"-").replace(/\s+/g,"");
     if(!raw) return null;
@@ -4917,7 +5018,7 @@
           // Partager équitablement est une action sur le plateau :
           // on fait apparaître le produit (ex. 2 × 12), mais on ne note pas encore :2.
           // La division des deux membres est affichée au moment de "Conclure".
-          applyTokenSplit(side, id, Array.from({length:n},()=>part), "record", null);
+          applySharedTokenSplit(side, id, n, part);
           shareDialog.close();
         });
       });
@@ -4985,7 +5086,7 @@
       ? {x:tray.x+70, y:tray.y+54, w:tray.w-140, h:tray.h*.55}
       : {x:tray.x+70, y:tray.y+80, w:tray.w-140, h:400};
     const rows = rowsForSplats(xs.length);
-    const radius = splatRadius(xs.length);
+    const radius = commonSplatRadius();
     let k = 0;
     for(let r=0;r<rows.length;r++){
       const cols = rows[r];
@@ -5415,13 +5516,13 @@
       }
       if(selectedIds.has(item.id)){
         const outline = document.createElementNS("http://www.w3.org/2000/svg", "path");
-        outline.setAttribute("d", blobPath(pos.cx, pos.cy, pos.r+8));
+        outline.setAttribute("d", blobPath(pos.cx, pos.cy, pos.r+12));
         outline.setAttribute("class", "selectedOutline");
         g.appendChild(outline);
       }
       if(groupSelectedIds && groupSelectedIds.has(item.id)){
         const outline = document.createElementNS("http://www.w3.org/2000/svg", "path");
-        outline.setAttribute("d", blobPath(pos.cx, pos.cy, pos.r+8));
+        outline.setAttribute("d", blobPath(pos.cx, pos.cy, pos.r+12));
         outline.setAttribute("class", "groupSelectedOutline");
         g.appendChild(outline);
       }
@@ -5463,7 +5564,7 @@
         const outline = document.createElementNS("http://www.w3.org/2000/svg", "circle");
         outline.setAttribute("cx", pos.cx);
         outline.setAttribute("cy", pos.cy);
-        outline.setAttribute("r", pos.r+8);
+        outline.setAttribute("r", pos.r+12);
         outline.setAttribute("class", "selectedOutline");
         g.appendChild(outline);
       }
@@ -5471,7 +5572,7 @@
         const outline = document.createElementNS("http://www.w3.org/2000/svg", "circle");
         outline.setAttribute("cx", pos.cx);
         outline.setAttribute("cy", pos.cy);
-        outline.setAttribute("r", pos.r+8);
+        outline.setAttribute("r", pos.r+12);
         outline.setAttribute("class", "groupSelectedOutline");
         g.appendChild(outline);
       }
@@ -5513,15 +5614,100 @@
     });
   }
 
+  function drawPendingShareGroups(viewHeight){
+    const pending = state && state.pendingShareConclusion;
+    if(!pending || pending.count < 2) return false;
+
+    const count = pending.count;
+    const cols = 2;
+    const rows = Math.ceil(count / cols);
+    const outer = 28;
+    const gap = 20;
+    const cardW = (1600 - outer*2 - gap) / cols;
+    const cardH = (viewHeight - outer*2 - gap*(rows-1)) / rows;
+
+    for(let index=0; index<count; index++){
+      const row = Math.floor(index / cols);
+      const col = index % cols;
+      const isCenteredLast = count % 2 === 1 && index === count - 1;
+      const x = isCenteredLast ? (1600 - cardW)/2 : outer + col*(cardW + gap);
+      const y = outer + row*(cardH + gap);
+      const g = document.createElementNS("http://www.w3.org/2000/svg", "g");
+      g.setAttribute("class", "pendingShareGroup");
+      g.setAttribute("role", "button");
+      g.setAttribute("tabindex", "0");
+      g.setAttribute("aria-label", `Groupe ${index + 1} sur ${count} : ${displayedUnknown()} égale ${formatSignedNumber(pending.each)}. Choisir ce groupe.`);
+      g.dataset.pendingShareGroup = String(index);
+
+      const card = document.createElementNS("http://www.w3.org/2000/svg", "rect");
+      card.setAttribute("x", x);
+      card.setAttribute("y", y);
+      card.setAttribute("width", cardW);
+      card.setAttribute("height", cardH);
+      card.setAttribute("rx", Math.min(30, cardH*.14));
+      card.setAttribute("class", "pendingShareGroupCard");
+      g.appendChild(card);
+
+      const centerY = y + cardH/2;
+      const leftX = x + cardW*.29;
+      const equalsX = x + cardW*.50;
+      const rightX = x + cardW*.71;
+      const splatX = pending.xSide === "left" ? leftX : rightX;
+      const tokenX = pending.tokenSide === "left" ? leftX : rightX;
+      const splatR = Math.min(94, cardH*.28, cardW*.13);
+      const tokenR = Math.min(66, cardH*.22, cardW*.10);
+
+      const splat = document.createElementNS("http://www.w3.org/2000/svg", "path");
+      splat.setAttribute("d", blobPath(splatX, centerY, splatR));
+      splat.setAttribute("class", "splatShape");
+      g.appendChild(splat);
+      drawText(splatX, centerY + 5, displayedUnknown(), "splatText", g);
+      drawText(equalsX, centerY, "=", "pendingShareEquals", g);
+
+      const token = document.createElementNS("http://www.w3.org/2000/svg", "circle");
+      token.setAttribute("cx", tokenX);
+      token.setAttribute("cy", centerY);
+      token.setAttribute("r", tokenR);
+      token.setAttribute("class", Number(pending.each) < 0 ? "tokenCircle negative" : "tokenCircle positive");
+      if(!isRelativeUniverse() && Number(pending.each) > 0){
+        const color = positiveTokenColorForValue(pending.each);
+        token.style.fill = color.fill;
+        token.style.stroke = color.stroke;
+      }
+      g.appendChild(token);
+      drawText(tokenX, centerY + 2, formatSignedNumber(pending.each), "tokenText", g);
+
+      const choose = () => {
+        const fresh = state && state.pendingShareConclusion;
+        if(!fresh || fresh.finalizing || fresh.id !== pending.id) return;
+        fresh.finalizing = true;
+        const groups = svg.querySelectorAll(".pendingShareGroup");
+        groups.forEach((group, groupIndex) => group.classList.add(groupIndex === index ? "chosen" : "discarded"));
+        setTimeout(() => finalizePendingShare(pending.id), 260);
+      };
+      g.addEventListener("click", choose);
+      g.addEventListener("keydown", event => {
+        if(event.key === "Enter" || event.key === " "){
+          event.preventDefault();
+          choose();
+        }
+      });
+      svg.appendChild(g);
+    }
+    return true;
+  }
+
   function renderSvg(){
     svg.innerHTML = "";
-    svg.setAttribute("viewBox", isPhoneLayout() ? "0 0 1600 1280" : "0 0 1600 820");
+    const viewHeight = isPhoneLayout() ? 1280 : 820;
+    svg.setAttribute("viewBox", `0 0 1600 ${viewHeight}`);
     drawDefs();
+    if(drawPendingShareGroups(viewHeight)) return;
     const leftTray = getTrayForSide("left");
     const rightTray = getTrayForSide("right");
     drawTray(leftTray, "");
     drawTray(rightTray, "");
-    drawText(800, isPhoneLayout() ? 640 : 400, "=", "eqMiddle");
+    drawText(800, viewHeight/2, "=", "eqMiddle");
 
     const leftItems = renderPiecesForSide("left");
     const rightItems = renderPiecesForSide("right");
@@ -5636,6 +5822,12 @@
   function renderActions(){
     actionZone.innerHTML = "";
     solutionEl.textContent = "";
+
+    if(state && state.pendingShareConclusion){
+      const count = state.pendingShareConclusion.count;
+      setInstruction(`<strong>${count} groupes identiques</strong> — touche-en un.`);
+      return;
+    }
 
     const conclusionInfo = getConclusionInfo();
     if(conclusionInfo){
@@ -5787,6 +5979,10 @@
 
   function render(){
     if(!state) return;
+    const sharePending = !!state.pendingShareConclusion;
+    [toolDecompose, toolGroup, toolShare, toolDelete, toolAddBoth, toolOppositeBoth].forEach(button => {
+      if(button) button.disabled = sharePending;
+    });
     if(getSolvedValue() !== null) updateCurrentEquationStep();
     renderEquationHistory();
     renderSvg();
