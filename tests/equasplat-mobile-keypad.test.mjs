@@ -4,6 +4,13 @@ import test from "node:test";
 
 const html = await readFile(new URL("../outils/equasplat.html", import.meta.url), "utf8");
 
+function functionSource(name){
+  const start = html.indexOf(`function ${name}(`);
+  assert.notEqual(start, -1, `la fonction ${name} doit exister`);
+  const next = html.indexOf("\n  function ", start + 1);
+  return html.slice(start, next === -1 ? html.length : next);
+}
+
 test("la scène mobile donne tout l’espace libre à la vraie zone d’équation", () => {
   assert.match(html, /html\.equasplatActive,[\s\S]*body\.equasplatActive\{[^}]*height:100svh;[^}]*overflow:hidden;/s);
   assert.match(html, /main\.activeMode\{[^}]*height:calc\(100svh - 12px\);/s);
@@ -50,4 +57,19 @@ test("toutes les saisies d’action passent par le dialogue stable", () => {
     assert.match(html, new RegExp(`openAppDialog\\(${name},`));
   }
   assert.match(html, /expression:true,[\s\S]*submitLabel:"Décomposer"/);
+});
+
+test("chaque réécriture visible conserve l’équation précédente", () => {
+  const split = functionSource("applyTokenSplit");
+  const group = functionSource("applyGroup");
+  const fusion = functionSource("applyFusion");
+  const transientZero = functionSource("removeTransientZero");
+
+  assert.match(split, /historyMode="record"/);
+  assert.match(split, /if\(historyMode === "record"\) recordEquationStep\(operation\)/);
+  assert.match(group, /recordEquationStep\(\);/);
+  assert.doesNotMatch(group, /updateCurrentEquationStep\(\)/);
+  assert.match(fusion, /recordEquationStep\(\);/);
+  assert.doesNotMatch(fusion, /updateCurrentEquationStep\(\)/);
+  assert.match(transientZero, /updateCurrentEquationStep\(\);/);
 });
