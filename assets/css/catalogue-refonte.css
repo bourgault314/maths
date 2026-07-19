@@ -1621,6 +1621,23 @@ select { cursor: pointer; }
   }
 }
 
+/* Sur les ordinateurs assez hauts, les deux écrans d'entrée partagent le
+   même bord inférieur. Le catalogue gagne ces quelques pixels en resserrant
+   uniquement ses rangées, sans réduire les dessins ni les textes. */
+@media (min-width: 921px) and (max-width: 1599px) and (min-height: 821px) {
+  body:not(.catalogue-is-deep) .site-shell {
+    min-height: var(--mathsgo-entry-card-height);
+  }
+
+  body:not(.catalogue-is-deep) .domain-card {
+    min-height: 102px;
+  }
+
+  body:not(.catalogue-is-deep) .domain-card-secondary {
+    min-height: 96px;
+  }
+}
+
 /* Ordinateurs portables : tout le menu reste visible sans rapetisser les dessins. */
 @media (min-width: 921px) and (max-height: 820px) {
   body.catalogue-is-deep .site-header,

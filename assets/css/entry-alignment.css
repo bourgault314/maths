@@ -3,6 +3,7 @@
      Il reste fixe sur les écrans tactiles puis suit les trois gabarits du
      catalogue sur ordinateur. */
   --mathsgo-entry-top: 10px;
+  --mathsgo-entry-card-height: 771px;
 }
 
 @media (min-width: 921px) {
