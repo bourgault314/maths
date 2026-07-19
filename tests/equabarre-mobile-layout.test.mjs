@@ -20,9 +20,13 @@ test("l'historique précède le plateau dans la vue mobile", () => {
   assert.match(html, /\.stage\.detailedView:not\(:fullscreen\):not\(\.emptyState\) \.board\{[\s\S]*?order:4 !important/);
   assert.match(html, /\.stage\.detailedView:not\(:fullscreen\):not\(\.emptyState\) \.toolBar\{[\s\S]*?order:6 !important/);
   assert.match(html, /height:clamp\(210px,34svh,290px\) !important/);
-  assert.match(html, /align-items:flex-end !important/);
-  assert.match(html, /margin:auto auto 0 !important/);
+  assert.match(html, /align-items:flex-start !important/);
+  assert.match(html, /margin:0 auto auto !important/);
   assert.match(html, /margin-top:auto !important/);
+});
+
+test("les actions rapides sont centrées au-dessus de l'historique mobile", () => {
+  assert.match(html, /\.stageQuickActions\{[\s\S]*?justify-content:center/);
 });
 
 test("les choix des dialogues tiennent sur deux colonnes au téléphone", () => {
