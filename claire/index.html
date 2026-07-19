@@ -88,27 +88,12 @@
     .phone-note strong { color: #8b5000; }
 
     .activity {
-      display: grid;
-      grid-template-columns: 128px 1fr;
-      gap: 22px;
-      align-items: center;
       padding: 22px;
       border: 2px solid var(--line);
       border-radius: 25px;
       background: rgba(255, 255, 255, .96);
       box-shadow: var(--shadow);
     }
-
-    .art {
-      display: grid;
-      place-items: center;
-      width: 128px;
-      height: 128px;
-      border-radius: 25px;
-      background: linear-gradient(145deg, #e7f4ff, #edfbf8);
-    }
-
-    .art svg { width: 105px; height: 105px; }
     .activity h2 { margin: 0 0 8px; font-size: clamp(1.35rem, 4vw, 1.75rem); }
     .activity p { margin: 0; color: var(--muted); line-height: 1.5; }
     .facts { margin-top: 12px; color: var(--teal); font-size: .9rem; font-weight: 850; }
@@ -138,9 +123,7 @@
       .logo { width: 108px; }
       .hello { font-size: .8rem; }
       .hero { margin-top: 25px; }
-      .activity { grid-template-columns: 1fr; gap: 15px; padding: 18px; text-align: center; }
-      .art { width: 112px; height: 112px; margin: 0 auto; }
-      .art svg { width: 92px; height: 92px; }
+      .activity { padding: 18px; text-align: center; }
       .start { width: 100%; }
       .facts { margin-top: 10px; }
     }
@@ -166,15 +149,6 @@
     </aside>
 
     <section class="activity" aria-labelledby="geometry-title">
-      <div class="art" aria-hidden="true">
-        <svg viewBox="0 0 120 120" fill="none">
-          <circle cx="60" cy="59" r="39" stroke="#078f88" stroke-width="4"/>
-          <path d="M31 79 54 26l38 54Z" fill="#e7f4ff" stroke="#0755b8" stroke-width="4" stroke-linejoin="round"/>
-          <path d="M21 43h31M68 96l28-42" stroke="#f58220" stroke-width="4" stroke-linecap="round"/>
-          <circle cx="60" cy="59" r="4.7" fill="#f58220"/>
-          <path d="m48 48 7 3-3 7" stroke="#d54343" stroke-width="3" stroke-linejoin="round"/>
-        </svg>
-      </div>
       <div>
         <h2 id="geometry-title">Défis de géométrie GeoGebra</h2>
         <p>Reconnaître, tracer en couleur, construire au compas, retrouver le centre d’un cercle puis résoudre un dernier problème de tangentes.</p>
