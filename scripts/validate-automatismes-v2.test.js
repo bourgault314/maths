@@ -13,6 +13,7 @@ import {
   INTERDITS,
   RACINES_V2,
   analyserPerimetre,
+  verifierProvenance,
 } from "./validate-automatismes-v2.mjs";
 
 const RACINE_ESSAI = "packages/objets/src";
@@ -43,8 +44,11 @@ describe("périmètre déclaré", () => {
   });
 
   it("le périmètre réel du dépôt ne contient aucun manquement", () => {
-    const { fichiers, erreurs } = analyserPerimetre();
+    const analyse = analyserPerimetre();
+    const provenance = verifierProvenance();
+    const erreurs = [...analyse.erreurs, ...provenance.erreurs];
     assert.deepEqual(erreurs, [], erreurs.join("\n"));
+    const { fichiers } = analyse;
     assert.ok(fichiers.length > 40, `périmètre étrangement petit : ${fichiers.length} fichiers`);
   });
 
@@ -52,6 +56,77 @@ describe("périmètre déclaré", () => {
     const { fichiers } = analyserPerimetre();
     assert.ok(fichiers.some((chemin) => chemin.startsWith("packages/objets/src/")));
     assert.ok(fichiers.some((chemin) => chemin.startsWith("packages/charte/src/")));
+  });
+});
+
+describe("provenance de chaque fichier de production", () => {
+  function verifierDepotEssai(fichiers, registre) {
+    const base = mkdtempSync(join(tmpdir(), "mathsgo-provenance-"));
+    try {
+      for (const [nom, contenu] of Object.entries(fichiers)) {
+        const chemin = join(base, RACINE_ESSAI, nom);
+        mkdirSync(join(chemin, ".."), { recursive: true });
+        writeFileSync(chemin, contenu, "utf8");
+      }
+      return verifierProvenance({ base, racines: [RACINE_ESSAI], registre });
+    } finally {
+      rmSync(base, { recursive: true, force: true });
+    }
+  }
+
+  const origineValide = {
+    statut: "original_mathsgo",
+    source: "écrit pour le dépôt d'essai",
+  };
+
+  it("refuse un nouveau fichier oublié dans le registre", () => {
+    const { erreurs } = verifierDepotEssai({ "nouveau.js": "export const x = 1;\n" }, {});
+    assert.deepEqual(erreurs, [`${RACINE_ESSAI}/nouveau.js : provenance non déclarée`]);
+  });
+
+  it("refuse une déclaration qui désigne un fichier disparu", () => {
+    const chemin = `${RACINE_ESSAI}/disparu.js`;
+    const { erreurs } = verifierDepotEssai({}, { [chemin]: origineValide });
+    assert.deepEqual(erreurs, [`${chemin} : déclaration de provenance fantôme`]);
+  });
+
+  it("refuse une déclaration sans statut connu ni source", () => {
+    const chemin = `${RACINE_ESSAI}/invalide.js`;
+    const { erreurs } = verifierDepotEssai(
+      { "invalide.js": "export const x = 1;\n" },
+      { [chemin]: { statut: "inconnu", source: "" } },
+    );
+    assert.deepEqual(erreurs, [
+      `${chemin} : statut de provenance inconnu`,
+      `${chemin} : source de provenance manquante`,
+    ]);
+  });
+
+  it("refuse un fichier hérité sans chantier de remplacement", () => {
+    const chemin = `${RACINE_ESSAI}/herite.js`;
+    const { erreurs } = verifierDepotEssai(
+      { "herite.js": "export const x = 1;\n" },
+      {
+        [chemin]: {
+          statut: "herite_doctools",
+          source: "archive historique",
+        },
+      },
+    );
+    assert.deepEqual(erreurs, [`${chemin} : dette héritée sans remplacement décrit`]);
+  });
+
+  it("accepte une déclaration complète et ignore le fichier de test associé", () => {
+    const chemin = `${RACINE_ESSAI}/module.js`;
+    const { fichiers, erreurs } = verifierDepotEssai(
+      {
+        "module.js": "export const x = 1;\n",
+        "module.test.js": "// suit la provenance de module.js\n",
+      },
+      { [chemin]: origineValide },
+    );
+    assert.deepEqual(erreurs, []);
+    assert.deepEqual(fichiers, [chemin]);
   });
 });
 

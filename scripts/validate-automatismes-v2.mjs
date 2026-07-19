@@ -3,6 +3,11 @@ import { existsSync, readdirSync, readFileSync, statSync } from "node:fs";
 import { relative, resolve } from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
 
+import {
+  PROVENANCE_FONDATION_V2,
+  STATUTS,
+} from "../packages/objets/src/provenance.js";
+
 export const RACINE_DEPOT = resolve(fileURLToPath(new URL("..", import.meta.url)));
 
 /*
@@ -75,6 +80,14 @@ function listerFichiers(dossier) {
   });
 }
 
+function fichiersDuPerimetre(base, racines) {
+  return racines
+    .map((racine) => resolve(base, racine))
+    .filter((racine) => existsSync(racine) && statSync(racine).isDirectory())
+    .flatMap(listerFichiers)
+    .filter((chemin) => extensionsLues.has(extension(chemin)));
+}
+
 /**
  * Analyse le périmètre et rend la liste des fichiers lus et les manquements.
  * Paramétrable pour que le test puisse l'exécuter sur un dossier d'essai.
@@ -84,11 +97,7 @@ export function analyserPerimetre({
   racines = RACINES_V2,
   exemptions = EXEMPTIONS,
 } = {}) {
-  const fichiers = racines
-    .map((racine) => resolve(base, racine))
-    .filter((racine) => existsSync(racine) && statSync(racine).isDirectory())
-    .flatMap(listerFichiers)
-    .filter((chemin) => extensionsLues.has(extension(chemin)));
+  const fichiers = fichiersDuPerimetre(base, racines);
 
   const erreurs = [];
   for (const chemin of fichiers) {
@@ -117,11 +126,59 @@ export function analyserPerimetre({
   return { fichiers: fichiers.map((chemin) => relative(base, chemin).replaceAll("\\", "/")), erreurs };
 }
 
+/**
+ * Vérifie que chaque fichier de production V2 déclare son origine et que le
+ * registre ne conserve aucune entrée pour un fichier disparu.
+ */
+export function verifierProvenance({
+  base = RACINE_DEPOT,
+  racines = RACINES_V2,
+  registre = PROVENANCE_FONDATION_V2,
+} = {}) {
+  const surDisque = new Set(
+    fichiersDuPerimetre(base, racines)
+      .map((chemin) => relative(base, chemin).replaceAll("\\", "/"))
+      .filter((chemin) => !chemin.endsWith(".test.js")),
+  );
+  const declares = new Set(Object.keys(registre));
+  const erreurs = [];
+
+  for (const chemin of [...surDisque].sort()) {
+    if (!declares.has(chemin)) erreurs.push(`${chemin} : provenance non déclarée`);
+  }
+
+  for (const chemin of [...declares].sort()) {
+    if (!surDisque.has(chemin)) erreurs.push(`${chemin} : déclaration de provenance fantôme`);
+  }
+
+  for (const [chemin, origine] of Object.entries(registre)) {
+    if (!STATUTS.includes(origine?.statut)) {
+      erreurs.push(`${chemin} : statut de provenance inconnu`);
+    }
+    if (typeof origine?.source !== "string" || origine.source.trim().length === 0) {
+      erreurs.push(`${chemin} : source de provenance manquante`);
+    }
+    if (
+      origine?.statut === "herite_doctools" &&
+      (!Array.isArray(origine.aRemplacer) || origine.aRemplacer.length === 0)
+    ) {
+      erreurs.push(`${chemin} : dette héritée sans remplacement décrit`);
+    }
+  }
+
+  return { fichiers: [...surDisque].sort(), erreurs };
+}
+
 const lanceEnLigneDeCommande =
   process.argv[1] !== undefined && pathToFileURL(process.argv[1]).href === import.meta.url;
 
 if (lanceEnLigneDeCommande) {
-  const { fichiers, erreurs } = analyserPerimetre();
+  const analyse = analyserPerimetre();
+  const provenance = verifierProvenance();
+  const erreurs = [...analyse.erreurs, ...provenance.erreurs];
   assert.deepEqual(erreurs, [], erreurs.join("\n"));
-  console.log(`Automatismes V2 : garde-fous validés sur ${fichiers.length} fichiers.`);
+  console.log(
+    `Automatismes V2 : garde-fous validés sur ${analyse.fichiers.length} fichiers, ` +
+      `${provenance.fichiers.length} fichiers de production avec provenance déclarée.`,
+  );
 }

@@ -21,7 +21,9 @@
   pas le chantier actif et ne doit pas être fusionnée telle quelle. Les
   micro-notions du DNB qui mobilisent des puissances restent bien dans la carte
   et seront traitées à leur rang.
-- La PR #145 reste ouverte mais ne doit pas être fusionnée telle quelle.
+- La PR #145 est fermée sans fusion. Son principe de déclaration systématique
+  de la provenance est repris proprement par la PR #202 sur le socle actuel,
+  sans ses générateurs et contrats supprimés.
 
 ## État fonctionnel
 
@@ -78,6 +80,12 @@ Le deuxième sous-lot technique est construit et testé :
   corrections le 19 juillet 2026 ;
 - les sept garde-fous du dépôt passent sur 74 fichiers et le lot complet
   réussit **827 tests sur 827**.
+
+La PR #202 reconstruit le garde-fou de provenance sur le socle actuel : les 38
+fichiers de production des cinq dossiers V2 déclarent leur statut et leur
+source ; la CI refuse un fichier oublié comme une déclaration fantôme. Ce
+contrôle complète les interdits techniques de la PR #162 sans modifier le
+contenu pédagogique ni l'application visible.
 
 Le clavier numérique, les fractions, le lecteur, le serveur, l'identité de
 l'élève et le chronomètre ne sont pas construits par anticipation.

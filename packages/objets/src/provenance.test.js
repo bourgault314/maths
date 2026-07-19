@@ -7,6 +7,7 @@ import { dirname, join } from "node:path";
 import {
   STATUTS,
   PROVENANCE_OBJETS,
+  PROVENANCE_FONDATION_V2,
   PROVENANCE_MODULES_AUTOMATISMES,
   PROVENANCE_STUDIO,
   DETTE_PRIORITAIRE,
@@ -32,6 +33,12 @@ test("chaque entrée déclare un statut connu et une source", () => {
       `${nom} : source manquante`,
     );
   }
+});
+
+test("les déclarations de la fondation utilisent des chemins complets sans doublon", () => {
+  const chemins = Object.keys(PROVENANCE_FONDATION_V2);
+  assert.equal(chemins.length, new Set(chemins).size);
+  assert.ok(chemins.every((chemin) => chemin.startsWith("packages/") && chemin.includes("/src/")));
 });
 
 /*
@@ -62,8 +69,12 @@ test("les 43 modules Automatismes sont tous suivis", () => {
   assert.equal(Object.keys(PROVENANCE_MODULES_AUTOMATISMES).length, 43);
 });
 
-test("origineDe trouve un objet et un module, et rend null sinon", () => {
+test("origineDe trouve un objet, un fichier V2 et un module, et rend null sinon", () => {
   assert.equal(origineDe("solides.js").statut, "original_mathsgo");
+  assert.equal(
+    origineDe("packages/moteur-exercices/src/aleatoire.js").statut,
+    "original_mathsgo",
+  );
   assert.equal(origineDe("dnb_01").statut, "herite_doctools");
   assert.equal(origineDe("inconnu"), null);
 });
