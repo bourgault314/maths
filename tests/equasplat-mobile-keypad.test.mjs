@@ -4,12 +4,13 @@ import test from "node:test";
 
 const html = await readFile(new URL("../outils/equasplat.html", import.meta.url), "utf8");
 
-test("la scène mobile occupe le viewport et donne le reste de la hauteur au plateau", () => {
+test("la scène mobile donne la hauteur libre à l’équation et resserre les plateaux", () => {
   assert.match(html, /html\.equasplatActive,[\s\S]*body\.equasplatActive\{[^}]*height:100svh;[^}]*overflow:hidden;/s);
   assert.match(html, /main\.activeMode\{[^}]*height:calc\(100svh - 12px\);/s);
-  assert.match(html, /grid-template-rows:auto 118px minmax\(0,1fr\) 56px auto !important;/);
+  assert.match(html, /grid-template-rows:auto minmax\(150px,1fr\) auto 56px auto !important;/);
   assert.match(html, /\.stage:not\(:fullscreen\)\{[^}]*overflow-y:hidden !important;[^}]*overscroll-behavior:none;/s);
-  assert.match(html, /\.stage:not\(:fullscreen\) \.board\{[^}]*height:100% !important;[^}]*min-height:0 !important;[^}]*max-height:none !important;/s);
+  assert.match(html, /\.stage:not\(:fullscreen\) \.topbar\{[^}]*height:100% !important;[^}]*min-height:150px !important;[^}]*max-height:none !important;/s);
+  assert.match(html, /\.stage:not\(:fullscreen\) \.board\{[^}]*height:clamp\(190px,55vw,220px\) !important;[^}]*max-height:220px !important;[^}]*margin:0 0 -5px !important;[^}]*align-self:end;/s);
   assert.match(html, /function setAppLayout\(mode\)[\s\S]*document\.documentElement\.classList\.toggle\("equasplatActive"[\s\S]*document\.body\.classList\.toggle\("equasplatActive"/);
 });
 
