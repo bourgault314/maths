@@ -40,10 +40,7 @@
         return `<line x1="${x.toFixed(1)}" y1="${baselineY}" x2="${x.toFixed(1)}" y2="${y.toFixed(1)}" fill="none" stroke="#be3e68" stroke-width="3" stroke-linecap="butt"/>`;
       })
       .join("");
-    const labels = experiment.counts
-      .map((_, index) => `<text x="${(44 + index * 6.3).toFixed(1)}" y="49.2" fill="#334155" font-family="Arial,sans-serif" font-size="4.2" font-weight="700" text-anchor="middle">${index + 1}</text>`)
-      .join("");
-    return `<g data-mathsgo-die-chart="${experiment.counts.join("-")}"><path d="M42 ${expectedY.toFixed(1)}H77" fill="none" stroke="#7c3aed" stroke-width="1.1" stroke-dasharray="2.4 1.8"/><text x="39.5" y="${(expectedY - 1.2).toFixed(1)}" fill="#6d28d9" font-family="Arial,sans-serif" font-size="3.8" font-weight="800" text-anchor="end">1/6</text>${sticks}${labels}</g>`;
+    return `<g data-mathsgo-die-chart="${experiment.counts.join("-")}"><path d="M42 ${expectedY.toFixed(1)}H77" fill="none" stroke="#7c3aed" stroke-width="1.1" stroke-dasharray="2.4 1.8"/>${sticks}</g>`;
   }
 
   global.MATHSGO_DIE_EXPERIMENT = Object.freeze({ simulateDieThrows, renderDieChart });

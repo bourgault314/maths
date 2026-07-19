@@ -28,15 +28,12 @@ test("une source de hasard invalide est refusée", () => {
   assert.throws(() => simulateDieThrows(1, null), TypeError);
 });
 
-test("le SVG produit six bâtons séparés et les abscisses 1 à 6", () => {
+test("le SVG produit six bâtons séparés sans étiquettes", () => {
   let index = 0;
   const experiment = simulateDieThrows(60, () => ((index++ % 6) + 0.5) / 6);
   const markup = renderDieChart(experiment);
 
   assert.equal((markup.match(/<line /g) || []).length, 6);
-  assert.match(markup, />1\/6<\/text>/);
-  for (let value = 1; value <= 6; value += 1) {
-    assert.match(markup, new RegExp(`>${value}</text>`));
-  }
+  assert.doesNotMatch(markup, /<text/);
   assert.doesNotMatch(markup, /<rect/);
 });
