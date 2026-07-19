@@ -55,6 +55,40 @@ test("les opérations faites aux deux membres apparaissent entre les équations"
   assert.match(html, /finishAddBothAction\(operationDeltaLabel\(sign \* count, currentVar\(\)\)\)/);
 });
 
+test("retirer une tache de chaque membre affiche bien moins x", () => {
+  assert.match(html, /return \{ok:true, type:"x", label:formatXTerm\(leftCoef\), left, right, leftCoef, rightCoef\};/);
+  assert.match(html, /operationDeltaLabel\(-info\.leftCoef, currentVar\(\)\)/);
+  assert.match(html, /suffix && magnitude === 1 \? suffix/);
+});
+
+test("la sélection orange est assez épaisse pour rester visible au doigt", () => {
+  assert.match(html, /\.selectedOutline\{\s*fill:none;\s*stroke:#f97316;\s*stroke-width:12;\s*opacity:1;/);
+});
+
+test("les réponses disposent d’un pavé mathématique uniquement sur téléphone", () => {
+  assert.equal((html.match(/class="mobileMathKeypad"/g) || []).length, 4);
+  assert.match(html, /data-keypad-for="decomposeInput" data-keypad-mode="expression"/);
+  assert.match(html, /data-keypad-for="groupInput" data-keypad-mode="integer"/);
+  assert.match(html, /data-keypad-for="addBothInput" data-keypad-mode="integer"/);
+  assert.match(html, /data-keypad-for="fusionInput" data-keypad-mode="integer"/);
+  assert.match(html, /\.mobileMathKeypad\{\s*display:none;/);
+  assert.match(html, /body\.importMode \.mobileMathKeypad\{\s*display:grid;\s*grid-template-columns:repeat\(4,minmax\(0,1fr\)\)/);
+  assert.match(html, /function mobileMathKeyValue\(input, mode, key\)/);
+  assert.match(html, /\["plus", "\+", "operator"\]/);
+  assert.match(html, /\["minus", "−", "operator"\]/);
+  assert.match(html, /\["backspace", "⌫", "danger"\]/);
+  assert.match(html, /input\.readOnly = active/);
+  assert.match(html, /input\.setAttribute\("inputmode", "none"\)/);
+  assert.match(html, /const allowMinus = isRelativeUniverse\(\)/);
+  assert.match(html, /minusKey\.hidden = !allowMinus/);
+  assert.doesNotMatch(html, /mobileSignBtn/);
+});
+
+test("la décomposition accepte naturellement une soustraction", () => {
+  assert.match(html, /if\(!\/\^\[\+-\]\?\\d\+\(\?:\[\+-\]\\d\+\)\*\$\/\.test\(raw\)\) return null;/);
+  assert.match(html, /raw\.match\(\/\[\+-\]\?\\d\+\/g\)/);
+});
+
 test("le partage final passe par des mini-égalités avant la division", () => {
   assert.match(html, /function applySharedTokenSplit\(side, id, partCount, partValue\)/);
   assert.match(html, /opportunity\.tokenSide === side[\s\S]*opportunity\.token\.id === id[\s\S]*opportunity\.count === count/);
