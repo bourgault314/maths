@@ -94,32 +94,59 @@ test("la sélection des objets est nettement renforcée", () => {
 
 test("les opérations encadrent les équations dans le bon ordre", () => {
   const operationRow = functionSource("renderOperationRow");
-  const finalize = functionSource("finalizePendingShare");
+  const beginPending = functionSource("beginPendingShareConclusion");
 
   assert.doesNotMatch(operationRow, /viewMode !== "redaction"/);
   assert.match(operationRow, /opLeft[\s\S]*opLabel[\s\S]*\$\{arrow\}/);
   assert.match(operationRow, /opRight[\s\S]*\$\{arrow\}[\s\S]*opLabel/);
   assert.match(html, /\.operationWrap\{[^}]*gap:5px;[^}]*white-space:nowrap;/s);
   assert.doesNotMatch(html, /\.operationWrap\{[^}]*justify-content:space-between;/s);
-  assert.match(finalize, /makeBothSidesOperation\(`÷ \$\{pending\.count\}`\)/);
+  assert.match(beginPending, /makeBothSidesOperation\(`÷ \$\{pending\.count\}`\)/);
 });
 
-test("un partage final correct se conclut en touchant une mini-égalité", () => {
+test("un partage final écrit immédiatement la division et la solution", () => {
   const sharedSplit = functionSource("applySharedTokenSplit");
+  const tokenSplit = functionSource("applyTokenSplit");
+  const beginPending = functionSource("beginPendingShareConclusion");
   const groups = functionSource("drawPendingShareGroups");
   const renderSvg = functionSource("renderSvg");
   const finalize = functionSource("finalizePendingShare");
   const actions = functionSource("renderActions");
 
   assert.match(sharedSplit, /opportunity\.tokenSide === side[\s\S]*opportunity\.token\.id === id[\s\S]*opportunity\.count === count/);
-  assert.match(sharedSplit, /state\.pendingShareConclusion = \{[\s\S]*id:uid\(\),[\s\S]*count,[\s\S]*each,[\s\S]*xSide:opportunity\.xSide,[\s\S]*tokenSide:opportunity\.tokenSide,[\s\S]*finalizing:false/s);
-  assert.match(groups, /const cols = 2;/);
+  assert.match(beginPending, /state\.pendingShareConclusion = pending/);
+  assert.match(beginPending, /state\.stepOps\.push\(makeBothSidesOperation\(`÷ \$\{pending\.count\}`\)\)/);
+  assert.match(beginPending, /state\.steps\.push\(finalEquation\)/);
+  assert.match(tokenSplit, /decompositionMatchesFinalShare\(opportunity, side, id, values\)/);
+  assert.match(groups, /const cols = count <= 3 \? 1 : 2;/);
   assert.match(groups, /isCenteredLast[\s\S]*\(1600 - cardW\)\/2/);
   assert.match(groups, /pending\.xSide === "left" \? leftX : rightX/);
+  assert.match(groups, /class", "pendingShareDivider"/);
+  assert.doesNotMatch(groups, /pendingShareEquals/);
+  assert.match(groups, /g\.style\.animationDelay = `\$\{index \* 110\}ms`/);
   assert.match(groups, /g\.setAttribute\("role", "button"\)/);
   assert.match(groups, /classList\.add\(groupIndex === index \? "chosen" : "discarded"\)/);
-  assert.match(groups, /setTimeout\(\(\) => finalizePendingShare\(pending\.id\), 260\)/);
+  assert.match(groups, /setTimeout\(\(\) => finalizePendingShare\(pending\.id\), 420\)/);
   assert.match(renderSvg, /if\(drawPendingShareGroups\(viewHeight\)\) return;/);
+  assert.match(renderSvg, /drawSharedTray\(leftTray, rightTray\)/);
+  assert.doesNotMatch(renderSvg, /drawText\(800, viewHeight\/2, "=", "eqMiddle"\)/);
   assert.match(actions, /groupes identiques<\/strong> — touche-en un/);
   assert.match(finalize, /delete state\.pendingShareConclusion;/);
+  assert.doesNotMatch(finalize, /recordEquationStep/);
+});
+
+test("le grand plateau est unique et le cinquième mini-plateau reste centré", () => {
+  const sharedTray = functionSource("drawSharedTray");
+  const groups = functionSource("drawPendingShareGroups");
+
+  assert.match(sharedTray, /drawTray\(\{x, y, w:right-x, h:bottom-y\}, ""\)/);
+  assert.match(sharedTray, /divider\.setAttribute\("y1", y\)/);
+  assert.match(sharedTray, /divider\.setAttribute\("y2", bottom\)/);
+  assert.match(groups, /cols === 2 && count % 2 === 1/);
+});
+
+test("la scène utilise les grands écrans sans conserver le doublon Annuler", () => {
+  assert.match(html, /main\.activeMode\{[\s\S]*width:min\(1600px, calc\(100vw - 24px\)\);/);
+  assert.doesNotMatch(html, /id="btnStageUndo"/);
+  assert.match(html, /if\(btnStageUndo\) btnStageUndo\.addEventListener\("click", undo\)/);
 });
