@@ -55,6 +55,15 @@ test("les opérations faites aux deux membres apparaissent entre les équations"
   assert.match(html, /finishAddBothAction\(operationDeltaLabel\(sign \* count, currentVar\(\)\)\)/);
 });
 
+test("le partage n’affiche une division que lorsqu’il produit la réponse", () => {
+  assert.match(html, /function finalShareOperationLabel\(opportunity, side, id, partCount\)/);
+  assert.match(html, /opportunity\.tokenSide !== side \|\| opportunity\.token\.id !== id/);
+  assert.match(html, /n < 2 \|\| n !== opportunity\.count/);
+  assert.match(html, /return `÷ \$\{n\}`/);
+  assert.match(html, /finalShareOperationLabel\(getShareOpportunity\(\), side, id, n\)/);
+  assert.doesNotMatch(html, /applyTokenSplit\(side, id, Array\.from\(\{length:n\},\(\)=>part\), "record", `÷ \$\{n\}`\)/);
+});
+
 test("sur téléphone seule la zone bleue défile", () => {
   assert.match(html, /html\.importModeRoot\{[^}]*height:100svh;[^}]*overflow:hidden;[^}]*overscroll-behavior:none;/s);
   assert.match(html, /body\.importMode\{[^}]*position:fixed;[^}]*inset:0;[^}]*width:100%;/s);
