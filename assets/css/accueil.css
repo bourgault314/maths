@@ -37,7 +37,7 @@ button { font: inherit; }
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 12px;
+  gap: 0;
 }
 
 .hero-card {
@@ -197,6 +197,7 @@ h1 {
 .btn-start svg { width: 20px; height: 20px; }
 
 footer {
+  width: 100%;
   min-height: 24px;
   display: flex;
   flex-wrap: wrap;
@@ -206,6 +207,23 @@ footer {
   font-size: 0.84rem;
   text-align: center;
   line-height: 1.5;
+}
+
+/* Sur un écran d'ordinateur assez haut, la carte rejoint le même bord bas
+   que le catalogue. L'espace restant est réparti entre les éléments : aucune
+   taille de logo, d'illustration ou de bouton n'est modifiée. */
+@media (min-width: 921px) and (max-width: 1599px) and (min-height: 821px) {
+  .hero-card {
+    min-height: var(--mathsgo-entry-card-height);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: space-between;
+  }
+
+  .hero-card > footer {
+    margin-top: 18px;
+  }
 }
 
 /* Sur ordinateur, le bord supérieur du cadre reprend exactement le repère
@@ -335,7 +353,7 @@ footer {
   footer {
     flex-direction: column;
     gap: 5px;
-    margin-top: 0;
+    margin-top: 12px;
     padding-bottom: max(2px, env(safe-area-inset-bottom));
   }
   .footer-divider { display: none; }
