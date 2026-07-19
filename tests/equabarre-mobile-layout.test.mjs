@@ -26,7 +26,7 @@ test("l'historique précède le plateau dans la vue mobile", () => {
 });
 
 test("les actions rapides sont centrées au-dessus de l'historique mobile", () => {
-  assert.match(html, /\.stageQuickActions\{[\s\S]*?justify-content:center/);
+  assert.match(html, /align-self:stretch;\s*display:flex;\s*justify-content:center;\s*gap:4px/);
 });
 
 test("les choix des dialogues tiennent sur deux colonnes au téléphone", () => {
