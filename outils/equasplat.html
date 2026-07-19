@@ -434,16 +434,33 @@
   .selectedOutline{
     fill:none;
     stroke:#f97316;
-    stroke-width:7;
-    opacity:.85;
+    stroke-width:14;
+    opacity:1;
+    filter:drop-shadow(0 0 6px rgba(249,115,22,.58));
     pointer-events:none;
   }
 
   .groupSelectedOutline{
     fill:none;
     stroke:#16a34a;
-    stroke-width:7;
-    opacity:.90;
+    stroke-width:14;
+    opacity:1;
+    filter:drop-shadow(0 0 6px rgba(22,163,74,.52));
+    pointer-events:none;
+  }
+
+  .pendingShareGroupCard{
+    fill:rgba(248,250,252,.96);
+    stroke:rgba(59,130,246,.42);
+    stroke-width:4;
+  }
+
+  .pendingShareEquals{
+    fill:#64748b;
+    font-size:54px;
+    font-weight:950;
+    text-anchor:middle;
+    dominant-baseline:middle;
     pointer-events:none;
   }
 
@@ -2202,8 +2219,8 @@
     column-gap:20px;
     width:100%;
     padding:1px 0 5px;
-    color:#475569;
-    opacity:.92;
+    color:#2563eb;
+    opacity:1;
     font-size:.58em;
     font-weight:950;
     line-height:1;
@@ -2211,23 +2228,26 @@
 
   .equationOpRow .operationCell{
     min-width:0;
+    width:100%;
   }
 
   .operationWrap{
-    display:inline-flex;
+    display:flex;
     align-items:center;
+    justify-content:space-between;
+    width:100%;
     gap:.22em;
     white-space:nowrap;
   }
 
   .operationCell.opLeft{
     text-align:right;
-    justify-self:end;
+    justify-self:stretch;
   }
 
   .operationCell.opRight{
     text-align:left;
-    justify-self:start;
+    justify-self:stretch;
   }
 
   .opLabel{
@@ -2526,6 +2546,13 @@
     main.activeMode .stage:not(:fullscreen) .equationRow .eq{
       transform:none !important;
       min-width:1em;
+    }
+
+    main.activeMode .stage:not(:fullscreen) .equationOpRow{
+      grid-template-columns:minmax(0,1fr) auto minmax(0,1fr);
+      column-gap:7px;
+      padding:0 0 2px;
+      font-size:13px;
     }
 
     main.activeMode .stage:not(:fullscreen) .instructionZone,
@@ -3239,6 +3266,12 @@
     if(count <= 4) return 108;
     if(count <= 6) return 88;
     return 74;
+  }
+
+  function commonSplatRadius(){
+    if(!state) return splatRadius(1);
+    const countForSide = side => renderPiecesForSide(side).filter(piece => piece.type === "x").length;
+    return splatRadius(Math.max(1, countForSide("left"), countForSide("right")));
   }
 
   let state = null;
@@ -4374,13 +4407,14 @@
     if(!info) return;
     pushHistory();
     simplifyPlateauForConclusion(info);
+    delete state.pendingShareConclusion;
     state.conclusionDone = true;
     selectedPieceRef = null;
     deleteSelection = [];
     groupSelection = [];
     // La conclusion correspond à la division des deux membres par le nombre de taches.
     // C'est ici, et non au moment du partage du plateau, que l'on affiche l'opération.
-    recordEquationStep(makeBothSidesOperation(`:${info.count}`));
+    recordEquationStep(makeBothSidesOperation(`÷ ${info.count}`));
     render();
   }
 
@@ -4469,7 +4503,7 @@
   }
 
   function renderOperationRow(operation){
-    if(viewMode !== "redaction" || !operation || operation.type !== "bothSides" || !operation.label) return "";
+    if(!operation || operation.type !== "bothSides" || !operation.label) return "";
     const label = escapeHtml(operation.label);
     return `<div class="equationOpRow"><span class="operationCell opLeft"><span class="operationWrap"><span class="opLabel">${label}</span>${operationArrowSvg("left")}</span></span><span class="eq"></span><span class="operationCell opRight"><span class="operationWrap">${operationArrowSvg("right")}<span class="opLabel">${label}</span></span></span></div>`;
   }
@@ -4778,6 +4812,39 @@
     render();
   }
 
+  function applySharedTokenSplit(side, id, partCount, partValue){
+    const arr = state[side];
+    const idx = arr.findIndex(piece => piece.id === id);
+    if(idx < 0) return;
+    const count = Math.round(Number(partCount) || 0);
+    const each = Number(partValue);
+    if(count < 2 || !Number.isFinite(each)) return;
+
+    const opportunity = getShareOpportunity();
+    pushHistory();
+    arr.splice(idx, 1, ...Array.from({length:count}, () => makeToken(each)));
+    const conclusion = getConclusionInfo();
+    const isFinalShare = !!opportunity
+      && !!conclusion
+      && opportunity.tokenSide === side
+      && opportunity.token.id === id
+      && opportunity.count === count
+      && conclusion.count === count;
+    if(isFinalShare){
+      state.pendingShareConclusion = {
+        count,
+        each,
+        xSide:opportunity.xSide,
+        tokenSide:opportunity.tokenSide
+      };
+    }
+    selectedPieceRef = null;
+    deleteSelection = [];
+    groupSelection = [];
+    recordEquationStep();
+    render();
+  }
+
   function parseSum(text){
     const raw = String(text || "").replace(/−/g,"-").replace(/\s+/g,"");
     if(!raw) return null;
@@ -4917,7 +4984,7 @@
           // Partager équitablement est une action sur le plateau :
           // on fait apparaître le produit (ex. 2 × 12), mais on ne note pas encore :2.
           // La division des deux membres est affichée au moment de "Conclure".
-          applyTokenSplit(side, id, Array.from({length:n},()=>part), "record", null);
+          applySharedTokenSplit(side, id, n, part);
           shareDialog.close();
         });
       });
@@ -4985,7 +5052,7 @@
       ? {x:tray.x+70, y:tray.y+54, w:tray.w-140, h:tray.h*.55}
       : {x:tray.x+70, y:tray.y+80, w:tray.w-140, h:400};
     const rows = rowsForSplats(xs.length);
-    const radius = splatRadius(xs.length);
+    const radius = commonSplatRadius();
     let k = 0;
     for(let r=0;r<rows.length;r++){
       const cols = rows[r];
@@ -5415,13 +5482,13 @@
       }
       if(selectedIds.has(item.id)){
         const outline = document.createElementNS("http://www.w3.org/2000/svg", "path");
-        outline.setAttribute("d", blobPath(pos.cx, pos.cy, pos.r+8));
+        outline.setAttribute("d", blobPath(pos.cx, pos.cy, pos.r+12));
         outline.setAttribute("class", "selectedOutline");
         g.appendChild(outline);
       }
       if(groupSelectedIds && groupSelectedIds.has(item.id)){
         const outline = document.createElementNS("http://www.w3.org/2000/svg", "path");
-        outline.setAttribute("d", blobPath(pos.cx, pos.cy, pos.r+8));
+        outline.setAttribute("d", blobPath(pos.cx, pos.cy, pos.r+12));
         outline.setAttribute("class", "groupSelectedOutline");
         g.appendChild(outline);
       }
@@ -5463,7 +5530,7 @@
         const outline = document.createElementNS("http://www.w3.org/2000/svg", "circle");
         outline.setAttribute("cx", pos.cx);
         outline.setAttribute("cy", pos.cy);
-        outline.setAttribute("r", pos.r+8);
+        outline.setAttribute("r", pos.r+12);
         outline.setAttribute("class", "selectedOutline");
         g.appendChild(outline);
       }
@@ -5471,7 +5538,7 @@
         const outline = document.createElementNS("http://www.w3.org/2000/svg", "circle");
         outline.setAttribute("cx", pos.cx);
         outline.setAttribute("cy", pos.cy);
-        outline.setAttribute("r", pos.r+8);
+        outline.setAttribute("r", pos.r+12);
         outline.setAttribute("class", "groupSelectedOutline");
         g.appendChild(outline);
       }
@@ -5513,15 +5580,81 @@
     });
   }
 
+  function drawPendingShareGroups(viewHeight){
+    const pending = state && state.pendingShareConclusion;
+    if(!pending || pending.count < 2) return false;
+
+    const count = pending.count;
+    const cols = 2;
+    const rows = Math.ceil(count / cols);
+    const outer = 28;
+    const gap = 20;
+    const cardW = (1600 - outer*2 - gap) / cols;
+    const cardH = (viewHeight - outer*2 - gap*(rows-1)) / rows;
+
+    for(let index=0; index<count; index++){
+      const row = Math.floor(index / cols);
+      const col = index % cols;
+      const isCenteredLast = count % 2 === 1 && index === count - 1;
+      const x = isCenteredLast ? (1600 - cardW)/2 : outer + col*(cardW + gap);
+      const y = outer + row*(cardH + gap);
+      const g = document.createElementNS("http://www.w3.org/2000/svg", "g");
+      g.setAttribute("class", "pendingShareGroup");
+      g.setAttribute("aria-label", `Égalité ${index + 1} sur ${count} : ${displayedUnknown()} égale ${formatSignedNumber(pending.each)}.`);
+
+      const card = document.createElementNS("http://www.w3.org/2000/svg", "rect");
+      card.setAttribute("x", x);
+      card.setAttribute("y", y);
+      card.setAttribute("width", cardW);
+      card.setAttribute("height", cardH);
+      card.setAttribute("rx", Math.min(30, cardH*.14));
+      card.setAttribute("class", "pendingShareGroupCard");
+      g.appendChild(card);
+
+      const centerY = y + cardH/2;
+      const leftX = x + cardW*.29;
+      const equalsX = x + cardW*.50;
+      const rightX = x + cardW*.71;
+      const splatX = pending.xSide === "left" ? leftX : rightX;
+      const tokenX = pending.tokenSide === "left" ? leftX : rightX;
+      const splatR = Math.min(94, cardH*.28, cardW*.13);
+      const tokenR = Math.min(66, cardH*.22, cardW*.10);
+
+      const splat = document.createElementNS("http://www.w3.org/2000/svg", "path");
+      splat.setAttribute("d", blobPath(splatX, centerY, splatR));
+      splat.setAttribute("class", "splatShape");
+      g.appendChild(splat);
+      drawText(splatX, centerY + 5, displayedUnknown(), "splatText", g);
+      drawText(equalsX, centerY, "=", "pendingShareEquals", g);
+
+      const token = document.createElementNS("http://www.w3.org/2000/svg", "circle");
+      token.setAttribute("cx", tokenX);
+      token.setAttribute("cy", centerY);
+      token.setAttribute("r", tokenR);
+      token.setAttribute("class", Number(pending.each) < 0 ? "tokenCircle negative" : "tokenCircle positive");
+      if(!isRelativeUniverse() && Number(pending.each) > 0){
+        const color = positiveTokenColorForValue(pending.each);
+        token.style.fill = color.fill;
+        token.style.stroke = color.stroke;
+      }
+      g.appendChild(token);
+      drawText(tokenX, centerY + 2, formatSignedNumber(pending.each), "tokenText", g);
+      svg.appendChild(g);
+    }
+    return true;
+  }
+
   function renderSvg(){
     svg.innerHTML = "";
-    svg.setAttribute("viewBox", isPhoneLayout() ? "0 0 1600 1280" : "0 0 1600 820");
+    const viewHeight = isPhoneLayout() ? 1280 : 820;
+    svg.setAttribute("viewBox", `0 0 1600 ${viewHeight}`);
     drawDefs();
+    if(drawPendingShareGroups(viewHeight)) return;
     const leftTray = getTrayForSide("left");
     const rightTray = getTrayForSide("right");
     drawTray(leftTray, "");
     drawTray(rightTray, "");
-    drawText(800, isPhoneLayout() ? 640 : 400, "=", "eqMiddle");
+    drawText(800, viewHeight/2, "=", "eqMiddle");
 
     const leftItems = renderPiecesForSide("left");
     const rightItems = renderPiecesForSide("right");
@@ -5643,7 +5776,11 @@
         setInstruction("");
         return;
       }
-      setInstruction("On voit maintenant la valeur d’une tache. On peut conclure.");
+      if(state && state.pendingShareConclusion){
+        setInstruction(`<strong>${conclusionInfo.count} égalités identiques</strong> : chaque tache correspond à ${formatSignedNumber(conclusionInfo.value)}. On peut conclure.`);
+      }else{
+        setInstruction("On voit maintenant la valeur d’une tache. On peut conclure.");
+      }
       const btn = document.createElement("button");
       btn.className = "green";
       btn.textContent = "Conclure";
@@ -5787,6 +5924,10 @@
 
   function render(){
     if(!state) return;
+    const sharePending = !!state.pendingShareConclusion;
+    [toolDecompose, toolGroup, toolShare, toolDelete, toolAddBoth, toolOppositeBoth].forEach(button => {
+      if(button) button.disabled = sharePending;
+    });
     if(getSolvedValue() !== null) updateCurrentEquationStep();
     renderEquationHistory();
     renderSvg();
