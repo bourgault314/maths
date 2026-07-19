@@ -23,14 +23,14 @@ l'inventaire vivant. Statuts : ✅ extrait dans `packages/objets` ·
 | `algebra.inquiry-bar` — barres d'enquête | 15 | idem barres + `outils/splat_tache_barre.html` | ✅ couvert par barres v2 |
 | `geometry.pythagoras-bar` — PythaBarre | 6 | `outils/pythabarre.html` (aires, rôles fixes vert/bleu/orange) | ✅ rôles couverts par barres v2 ; déroulé 6 étapes 🔜 |
 | `algebra.equation-splat` — Splat d'équation | 2 | `outils/splat.html`, `outils/equasplat.html` (+ Splat animé d'`axelle/` à retrouver) | ✅ tache v1 + moteur equasplat-logique + objet deux plateaux + Atelier ÉquaSplat (juillet 2026, import Splat Équations intégré) |
-| `numbers.number-line` — droite graduée | 9 | gabarits LaTeX `outils/_gabarit_*_double_ligne_graduee.tex` + PDF pourcentages/proportionnalité | 🔜 priorité (double ligne graduée) |
+| `numbers.number-line` — droite graduée | 9 | gabarits LaTeX `outils/_gabarit_*_double_ligne_graduee.tex` + PDF pourcentages/proportionnalité | 🚧 objet extrait (`packages/objets/src/droite-graduee.js`, 39 tests) : droite simple et DOUBLE droite, réglages pilotables en JSON, points multiples au-dessus/en dessous, étiquettes remplaçables, nombres masquables, échelles quarts/cinquièmes ; **habillage à valider par Gwenaël** (allure des graduations, couleurs, marquage d'un point) |
 | `arithmetic.fraction-percent-bar` — barre de pourcentage | 7 | gabarits pourcentages (PDF + tex) + `outils/pourcentages_exerciceur.html` | 🚧 moteur pur extrait (`packages/objets/src/pourcentages.js` : 20 types, tirages par niveau, 13 habillages, séries seedées) ; objet visuel unifié 🔜 (palette de l'exerciceur = référence, géométrie fixe question/correction) |
 | `measures.conversion-table` — tableau de conversion | 5 | `outils/conversions/` (glisse-unité, tableaux, curseur) | 🔜 (« widget » demandé explicitement) |
 | `algebra.algebra-tiles` — tuiles algébriques | 7 | `outils/tuiles_algebriques/` (expressions, équations — « elles devront bouger ») | 🔜 |
 | `algebra.area-model` — modèle d'aire | 7 | `outils/tuiles_algebriques/` + générateur d'exercices | 🔜 |
 | `algebra.relation-tiles` — tuiles de relation | 7 | à comparer avec tuiles du site | ⏸ |
 | `arithmetic.fraction-wall` — mur de fractions | 6 | `outils/fractions/mur_fractions.html` | 🔜 |
-| `arithmetic.fraction-decimal-grid` — grille fraction/décimal | 9 | `outils/fractions/` (bandes, disques) | 🔜 |
+| `arithmetic.fraction-decimal-grid` — grille fraction/décimal | 9 | `outils/fractions/` (bandes, disques) | 🚧 objet extrait (`packages/objets/src/fractions.js`, 34 tests) : bande et grille, écriture fractionnaire DESSINÉE, colonnes et lignes séparées pour montrer les équivalentes (16/20 en 5×4 ou 4×5), grille des centièmes en 10×10 ; **habillage à valider par Gwenaël** ; les disques restent 🔜 |
 | `arithmetic.fraction-operations` — opérations de fractions | 10 | `outils/fractions/fractions_produit_manipulation.html` | 🔜 |
 | `arithmetic.equal-sharing-board` — partage équitable | 4 | gabarits partage équitable (PDF) + `outils/plateaux_manipulation/pgcd_sachets.html` | ⏸ |
 | `numbers.glisse-nombre` — glisse-nombre | 5 | `outils/plateaux_manipulation/glisse_entiers_flex.html`, `glisse_nombres_decimaux.html` | 🔜 |
