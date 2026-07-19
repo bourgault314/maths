@@ -17,6 +17,7 @@ body {
   min-height: 100vh;
   margin: 0;
   padding: clamp(22px, 4vw, 52px);
+  padding-bottom: 16px;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -36,7 +37,7 @@ button { font: inherit; }
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 22px;
+  gap: 12px;
 }
 
 .hero-card {
@@ -312,9 +313,8 @@ footer {
     justify-content: flex-start;
   }
   .page {
-    min-height: calc(100vh - var(--mathsgo-entry-top) - 12px);
-    min-height: calc(100svh - var(--mathsgo-entry-top) - 12px);
-    gap: 18px;
+    min-height: 0;
+    gap: 12px;
   }
   .hero-card {
     min-height: 500px;
@@ -335,7 +335,7 @@ footer {
   footer {
     flex-direction: column;
     gap: 5px;
-    margin-top: auto;
+    margin-top: 0;
     padding-bottom: max(2px, env(safe-area-inset-bottom));
   }
   .footer-divider { display: none; }
