@@ -4,11 +4,11 @@ import test from "node:test";
 
 const html = await readFile(new URL("../outils/equasplat_import_splat.html", import.meta.url), "utf8");
 
-test("ÉquaSplat mobile place le plateau, les commandes puis l’équation dans le flux", () => {
+test("ÉquaSplat mobile place l’équation, le plateau puis les commandes dans le flux", () => {
   assert.match(html, /\.stage:not\(:fullscreen\) \.stageQuickActions\{\s*display:none;/);
-  assert.match(html, /\.stage:not\(:fullscreen\) \.board\{\s*order:1;/);
-  assert.match(html, /\.stage:not\(:fullscreen\) \.instructionZone\{\s*order:2;/);
-  assert.match(html, /\.stage:not\(:fullscreen\) \.topbar\{\s*order:3;/);
+  assert.match(html, /\.stage:not\(:fullscreen\) \.topbar\{\s*order:1;/);
+  assert.match(html, /\.stage:not\(:fullscreen\) \.board\{\s*order:2;/);
+  assert.match(html, /\.stage:not\(:fullscreen\) \.instructionZone\{\s*order:3;/);
   assert.match(html, /\.stage:not\(:fullscreen\) \.mobileBottomControls\{\s*order:4;\s*position:static;/);
 });
 
@@ -35,7 +35,7 @@ test("Annuler et Recommencer restent disponibles avec une flèche lisible", () =
 test("l’historique bleu réserve dès le départ une grande zone et suit sa dernière ligne", () => {
   assert.match(html, /equationHistory\.scrollTop = equationHistory\.scrollHeight/);
   assert.match(html, /\.equationHistory\{[^}]*overflow-y:auto;/s);
-  assert.match(html, /\.topbar\{\s*order:3;[^}]*height:auto;[^}]*min-height:120px;[^}]*max-height:none;[^}]*flex:1 1 120px;[^}]*border:2px solid #93c5fd;[^}]*background:#eff6ff;/s);
+  assert.match(html, /\.topbar\{\s*order:1;[^}]*height:auto;[^}]*min-height:120px;[^}]*max-height:none;[^}]*flex:1 1 120px;[^}]*border:2px solid #93c5fd;[^}]*background:#eff6ff;/s);
   assert.match(html, /\.equationHistory\{[^}]*overflow-y:auto;[^}]*overscroll-behavior:contain;[^}]*-webkit-overflow-scrolling:touch;/s);
 });
 
@@ -63,7 +63,7 @@ test("sur téléphone seule la zone bleue défile", () => {
 });
 
 test("le plateau mobile utilise tout son cadre avec des plateaux rectangulaires", () => {
-  assert.match(html, /\.board\{\s*order:1;[^}]*width:calc\(100% \+ 12px\);[^}]*height:clamp\(350px,98vw,410px\);[^}]*margin-left:-6px;[^}]*margin-right:-6px;/s);
+  assert.match(html, /\.board\{\s*order:2;[^}]*width:calc\(100% \+ 12px\);[^}]*height:clamp\(330px,92vw,380px\);[^}]*margin-left:-6px;[^}]*margin-right:-6px;/s);
   assert.match(html, /svg\.setAttribute\("viewBox", mobileLayout \? "0 0 1600 1480" : "0 0 1600 820"\)/);
   assert.match(html, /\? \{x:8, y:54, w:760, h:1372\}/);
   assert.match(html, /: \{x:832, y:54, w:760, h:1372\}/);
@@ -73,7 +73,7 @@ test("le plateau mobile utilise tout son cadre avec des plateaux rectangulaires"
   assert.match(html, /r:mobileLayout \? 108 : 84/);
   assert.ok((760 - 90) / 3 > 2 * 108, "trois splats agrandis doivent rester séparés sur une ligne");
   assert.match(html, /@media \(max-width:760px\) and \(max-height:720px\)/);
-  assert.match(html, /\.board\{\s*height:285px;\s*min-height:285px;\s*max-height:285px;/);
+  assert.match(html, /\.board\{\s*height:270px;\s*min-height:270px;\s*max-height:270px;/);
   assert.match(html, /\.topbar\{\s*height:auto;\s*min-height:100px;\s*max-height:none;/);
 });
 
