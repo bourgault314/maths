@@ -4,7 +4,7 @@ import { readFile } from "node:fs/promises";
 
 const html = await readFile(new URL("../outils/equabarre.html", import.meta.url), "utf8");
 
-// Ces garde-fous couvrent la composition réellement utilisée en portrait étroit.\n// Ils empêchent notamment le retour d’alignements réservés à la vue ordinateur.
+// Ces garde-fous figent la composition réellement utilisée en portrait étroit,\n// indépendamment des alignements réservés à la vue ordinateur.
 
 test("ÉquaBarre compose les actions mobiles en grilles compactes", () => {
   assert.match(html, /@media \(max-width:700px\)/);
