@@ -453,6 +453,29 @@
     fill:rgba(248,250,252,.96);
     stroke:rgba(59,130,246,.42);
     stroke-width:4;
+    transition:fill .16s ease,stroke .16s ease,stroke-width .16s ease;
+  }
+
+  .pendingShareGroup{
+    cursor:pointer;
+    transition:opacity .22s ease;
+  }
+
+  .pendingShareGroup:hover .pendingShareGroupCard,
+  .pendingShareGroup:focus .pendingShareGroupCard{
+    fill:rgba(239,246,255,.99);
+    stroke:#3b82f6;
+    stroke-width:8;
+  }
+
+  .pendingShareGroup.chosen .pendingShareGroupCard{
+    fill:rgba(220,252,231,.99);
+    stroke:#16a34a;
+    stroke-width:10;
+  }
+
+  .pendingShareGroup.discarded{
+    opacity:.12;
   }
 
   .pendingShareEquals{
@@ -2229,25 +2252,25 @@
   .equationOpRow .operationCell{
     min-width:0;
     width:100%;
+    display:flex;
+    align-items:center;
   }
 
   .operationWrap{
     display:flex;
     align-items:center;
-    justify-content:space-between;
-    width:100%;
-    gap:.22em;
+    gap:5px;
     white-space:nowrap;
   }
 
   .operationCell.opLeft{
-    text-align:right;
-    justify-self:stretch;
+    justify-content:flex-start;
+    padding-left:3px;
   }
 
   .operationCell.opRight{
-    text-align:left;
-    justify-self:stretch;
+    justify-content:flex-end;
+    padding-right:3px;
   }
 
   .opLabel{
@@ -2256,24 +2279,9 @@
     letter-spacing:-.02em;
   }
 
-  .opArrowSvg{
-    width:1.6em;
-    height:1.28em;
-    display:block;
-    overflow:visible;
-  }
-
-  .opArrowSvg path{
-    fill:none;
-    stroke:currentColor;
-    stroke-width:3.2;
-    stroke-linecap:round;
-    stroke-linejoin:round;
-  }
-
-  .opArrowSvg .arrowHead{
-    fill:currentColor;
-    stroke:none;
+  .operationArrow{
+    font-size:1.35em;
+    line-height:.8;
   }
 
   @media (max-width:1050px){
@@ -4418,6 +4426,26 @@
     render();
   }
 
+  function finalizePendingShare(expectedId){
+    const pending = state && state.pendingShareConclusion;
+    if(!pending || pending.id !== expectedId) return;
+    pending.finalizing = false;
+    pushHistory();
+    simplifyPlateauForConclusion({
+      value:pending.each,
+      count:pending.count,
+      xSide:pending.xSide,
+      tokenSide:pending.tokenSide
+    });
+    delete state.pendingShareConclusion;
+    state.conclusionDone = true;
+    selectedPieceRef = null;
+    deleteSelection = [];
+    groupSelection = [];
+    recordEquationStep(makeBothSidesOperation(`÷ ${pending.count}`));
+    render();
+  }
+
   function recordEquationStep(operation=null){
     if(!state) return;
     const eq = currentEquationString();
@@ -4495,17 +4523,11 @@
       .replace(/"/g, "&quot;");
   }
 
-  function operationArrowSvg(side){
-    if(side === "left"){
-      return `<svg class="opArrowSvg opArrowLeft" viewBox="0 0 44 44" aria-hidden="true" focusable="false"><path d="M9 4 C9 21 24 20 29 32"/><path class="arrowHead" d="M23 31 L31 39 L34 28 Z"/></svg>`;
-    }
-    return `<svg class="opArrowSvg opArrowRight" viewBox="0 0 44 44" aria-hidden="true" focusable="false"><path d="M35 4 C35 21 20 20 15 32"/><path class="arrowHead" d="M21 31 L13 39 L10 28 Z"/></svg>`;
-  }
-
   function renderOperationRow(operation){
     if(!operation || operation.type !== "bothSides" || !operation.label) return "";
     const label = escapeHtml(operation.label);
-    return `<div class="equationOpRow"><span class="operationCell opLeft"><span class="operationWrap"><span class="opLabel">${label}</span>${operationArrowSvg("left")}</span></span><span class="eq"></span><span class="operationCell opRight"><span class="operationWrap">${operationArrowSvg("right")}<span class="opLabel">${label}</span></span></span></div>`;
+    const arrow = `<span class="operationArrow" aria-hidden="true">↓</span>`;
+    return `<div class="equationOpRow" aria-label="Même opération dans les deux membres : ${label}"><span class="operationCell opLeft"><span class="operationWrap"><span class="opLabel">${label}</span>${arrow}</span></span><span class="eq"></span><span class="operationCell opRight"><span class="operationWrap">${arrow}<span class="opLabel">${label}</span></span></span></div>`;
   }
 
   function renderEquationHistory(){
@@ -4832,10 +4854,12 @@
       && conclusion.count === count;
     if(isFinalShare){
       state.pendingShareConclusion = {
+        id:uid(),
         count,
         each,
         xSide:opportunity.xSide,
-        tokenSide:opportunity.tokenSide
+        tokenSide:opportunity.tokenSide,
+        finalizing:false
       };
     }
     selectedPieceRef = null;
@@ -5600,7 +5624,10 @@
       const y = outer + row*(cardH + gap);
       const g = document.createElementNS("http://www.w3.org/2000/svg", "g");
       g.setAttribute("class", "pendingShareGroup");
-      g.setAttribute("aria-label", `Égalité ${index + 1} sur ${count} : ${displayedUnknown()} égale ${formatSignedNumber(pending.each)}.`);
+      g.setAttribute("role", "button");
+      g.setAttribute("tabindex", "0");
+      g.setAttribute("aria-label", `Groupe ${index + 1} sur ${count} : ${displayedUnknown()} égale ${formatSignedNumber(pending.each)}. Choisir ce groupe.`);
+      g.dataset.pendingShareGroup = String(index);
 
       const card = document.createElementNS("http://www.w3.org/2000/svg", "rect");
       card.setAttribute("x", x);
@@ -5639,6 +5666,22 @@
       }
       g.appendChild(token);
       drawText(tokenX, centerY + 2, formatSignedNumber(pending.each), "tokenText", g);
+
+      const choose = () => {
+        const fresh = state && state.pendingShareConclusion;
+        if(!fresh || fresh.finalizing || fresh.id !== pending.id) return;
+        fresh.finalizing = true;
+        const groups = svg.querySelectorAll(".pendingShareGroup");
+        groups.forEach((group, groupIndex) => group.classList.add(groupIndex === index ? "chosen" : "discarded"));
+        setTimeout(() => finalizePendingShare(pending.id), 260);
+      };
+      g.addEventListener("click", choose);
+      g.addEventListener("keydown", event => {
+        if(event.key === "Enter" || event.key === " "){
+          event.preventDefault();
+          choose();
+        }
+      });
       svg.appendChild(g);
     }
     return true;
@@ -5770,17 +5813,19 @@
     actionZone.innerHTML = "";
     solutionEl.textContent = "";
 
+    if(state && state.pendingShareConclusion){
+      const count = state.pendingShareConclusion.count;
+      setInstruction(`<strong>${count} groupes identiques</strong> — touche-en un.`);
+      return;
+    }
+
     const conclusionInfo = getConclusionInfo();
     if(conclusionInfo){
       if(conclusionInfo.count === 1 || (state && state.conclusionDone)){
         setInstruction("");
         return;
       }
-      if(state && state.pendingShareConclusion){
-        setInstruction(`<strong>${conclusionInfo.count} égalités identiques</strong> : chaque tache correspond à ${formatSignedNumber(conclusionInfo.value)}. On peut conclure.`);
-      }else{
-        setInstruction("On voit maintenant la valeur d’une tache. On peut conclure.");
-      }
+      setInstruction("On voit maintenant la valeur d’une tache. On peut conclure.");
       const btn = document.createElement("button");
       btn.className = "green";
       btn.textContent = "Conclure";
