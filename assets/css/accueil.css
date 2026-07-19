@@ -412,6 +412,7 @@ body {
   padding: 34px 14px max(24px, env(safe-area-inset-bottom));
   border-radius: 25px;
 }
+.hero-card > footer { margin-top: 12px; }
 .brand-logo {
   width: min(82vw, 330px);
   margin-bottom: 0;
@@ -436,7 +437,6 @@ h1 { font-size: 2.1rem; }
 footer {
   flex-direction: column;
   gap: 5px;
-  margin-top: 12px;
   padding-bottom: max(2px, env(safe-area-inset-bottom));
 }
 .footer-divider { display: none; }
