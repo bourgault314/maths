@@ -207,7 +207,7 @@ test("la validation mobile garde toujours la même hauteur", () => {
   assert.match(html, /renderActions\(\);\s*stabilizeMobileActionZone\(\);/);
 });
 
-test("le lien de gestion des cookies reste hors de la page ÉquaSplat import", () => {
-  assert.match(html, /body\.importMode \.mg-consent-manage-slot,\s*body\.importMode \.mg-consent-manage\{\s*display:none !important;/);
+test("le lien de gestion des cookies reste accessible dans ÉquaSplat import", () => {
+  assert.doesNotMatch(html, /body\.importMode \.mg-consent-manage-slot,\s*body\.importMode \.mg-consent-manage\{\s*display:none !important;/);
   assert.match(html, /document\.documentElement\.classList\.add\("importModeRoot"\)/);
 });
