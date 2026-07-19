@@ -24,13 +24,22 @@
     );
   }
 
+  function applyToLibrary(value) {
+    const library = global.MATHSGO_ICON_LIBRARY;
+    if (!library || typeof library.splat !== "string") return false;
+    library.splat = render(library.splat, value);
+    return true;
+  }
+
   const api = Object.freeze({
     letters: LETTERS,
     weekdayIndex: weekdayIndex,
     letterForDate: letterForDate,
-    render: render
+    render: render,
+    applyToLibrary: applyToLibrary
   });
 
   global.MATHSGO_DAILY_SPLAT_LETTER = api;
+  if (typeof window === "object") applyToLibrary();
   if (typeof module === "object" && module.exports) module.exports = api;
 }(typeof window === "object" ? window : globalThis));
