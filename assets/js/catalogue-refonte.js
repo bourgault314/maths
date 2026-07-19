@@ -438,6 +438,10 @@
       const dailyKoch = window.MATHSGO_DAILY_KOCH;
       if (dailyKoch && typeof dailyKoch.render === "function") return dailyKoch.render(markup);
     }
+    if (name === "strategy" && markup) {
+      const dailyFractal = window.MATHSGO_DAILY_STRATEGY_FRACTAL;
+      if (dailyFractal && typeof dailyFractal.render === "function") return dailyFractal.render(markup);
+    }
     if (name !== "probability-statistics" || !markup) return markup;
     const pips = dataDieFaces[dataDieValue]
       .map(([cx, cy]) => `<circle cx="${cx}" cy="${cy}" r="2.2"/>`)
