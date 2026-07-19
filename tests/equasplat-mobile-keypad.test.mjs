@@ -4,15 +4,15 @@ import test from "node:test";
 
 const html = await readFile(new URL("../outils/equasplat.html", import.meta.url), "utf8");
 
-test("la scène mobile donne la hauteur libre à l’équation et resserre les plateaux", () => {
+test("la scène mobile donne tout l’espace libre à la vraie zone d’équation", () => {
   assert.match(html, /html\.equasplatActive,[\s\S]*body\.equasplatActive\{[^}]*height:100svh;[^}]*overflow:hidden;/s);
   assert.match(html, /main\.activeMode\{[^}]*height:calc\(100svh - 12px\);/s);
-  assert.match(html, /--mobile-equation-height:clamp\(145px,21svh,180px\);[\s\S]*grid-template-rows:auto var\(--mobile-equation-height\) minmax\(0,1fr\) 56px auto !important;/);
+  assert.match(html, /--mobile-equation-min-height:clamp\(145px,21svh,180px\);[\s\S]*grid-template-rows:auto minmax\(var\(--mobile-equation-min-height\),1fr\) auto 56px auto !important;/);
   assert.match(html, /\.stage:not\(:fullscreen\)\{[^}]*overflow-y:hidden !important;[^}]*overscroll-behavior:none;/s);
-  assert.match(html, /\.stage:not\(:fullscreen\) \.topbar\{[^}]*grid-row:2 \/ 4;[^}]*height:100% !important;[^}]*max-height:none !important;[^}]*justify-content:flex-start !important;/s);
-  assert.match(html, /\.stage:not\(:fullscreen\) \.equationHistory\{[^}]*height:calc\(var\(--mobile-equation-height\) - 18px\) !important;[^}]*overflow-y:auto !important;/s);
-  assert.match(html, /\.stage:not\(:fullscreen\) \.board\{[^}]*height:min\(100%, clamp\(250px,76vw,310px\)\) !important;[^}]*max-height:310px !important;[^}]*margin:0 0 -5px !important;[^}]*align-self:end;/s);
-  assert.match(html, /\.stage:not\(:fullscreen\) \.board\{[^}]*background:linear-gradient\(180deg,#fbfdff,#f5f9ff\);/s);
+  assert.match(html, /\.stage:not\(:fullscreen\) \.topbar\{[^}]*grid-area:history;[^}]*height:100% !important;[^}]*max-height:none !important;[^}]*justify-content:flex-start !important;/s);
+  assert.match(html, /\.stage:not\(:fullscreen\) \.equationHistory\{[^}]*height:100% !important;[^}]*max-height:100% !important;[^}]*flex:1 1 auto;[^}]*overflow-y:auto !important;/s);
+  assert.match(html, /\.stage:not\(:fullscreen\) \.board\{[^}]*height:clamp\(250px,76vw,310px\) !important;[^}]*max-height:310px !important;[^}]*margin:0 0 -5px !important;[^}]*align-self:end;/s);
+  assert.doesNotMatch(html, /\.stage:not\(:fullscreen\) \.topbar\{[^}]*grid-row:2 \/ 4;/s);
   assert.match(html, /function setAppLayout\(mode\)[\s\S]*document\.documentElement\.classList\.toggle\("equasplatActive"[\s\S]*document\.body\.classList\.toggle\("equasplatActive"/);
 });
 
