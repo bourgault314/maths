@@ -209,10 +209,10 @@ footer {
   line-height: 1.5;
 }
 
-/* Sur ordinateur, les deux écrans d'entrée occupent exactement le même cadre.
-   Le logo remonte dans l'accueil et le pied de page descend, sans changer la
-   taille du logo, de la scène ou du bouton. */
-@media (min-width: 921px) and (min-height: 821px) {
+/* Sur tous les ordinateurs, y compris les portables peu hauts, les deux écrans
+   d'entrée occupent exactement le même cadre. Le logo, la scène et le bouton
+   conservent leur taille : seuls les espaces verticaux sont redistribués. */
+@media (min-width: 921px) {
   .hero-card {
     height: var(--mathsgo-entry-card-height);
     display: flex;
@@ -224,6 +224,13 @@ footer {
 
   .hero-card > footer {
     margin-top: auto;
+  }
+}
+
+@media (min-width: 921px) and (max-height: 820px) {
+  .hero-card {
+    padding-top: 20px;
+    padding-bottom: 18px;
   }
 }
 

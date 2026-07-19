@@ -1621,14 +1621,18 @@ select { cursor: pointer; }
   }
 }
 
-/* Sur les ordinateurs assez hauts, les deux écrans d'entrée partagent le
-   même bord inférieur. Le catalogue gagne ces quelques pixels en resserrant
-   uniquement ses rangées, sans réduire les dessins ni les textes. */
-@media (min-width: 921px) and (min-height: 821px) {
+/* Le cadre extérieur partage toujours ses deux bords avec l'accueil sur
+   ordinateur, y compris lorsque le navigateur est peu haut. */
+@media (min-width: 921px) {
   body:not(.catalogue-is-deep) .site-shell {
     height: var(--mathsgo-entry-card-height);
   }
+}
 
+/* Sur les ordinateurs assez hauts, le catalogue gagne les quelques pixels
+   nécessaires en resserrant uniquement ses rangées, sans réduire les dessins
+   ni les textes. */
+@media (min-width: 921px) and (min-height: 821px) {
   body:not(.catalogue-is-deep) .domain-card {
     min-height: 99px;
   }
