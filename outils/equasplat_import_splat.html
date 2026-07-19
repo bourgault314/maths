@@ -1219,6 +1219,36 @@
     min-width:0;
   }
 
+  .equationOperation{
+    display:grid;
+    grid-template-columns:minmax(0,1fr) auto minmax(0,1fr);
+    align-items:center;
+    column-gap:20px;
+    width:100%;
+    min-height:30px;
+    color:#2563eb;
+    font-size:.52em;
+    font-weight:900;
+    line-height:1;
+  }
+
+  .equationOperationSide{
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    gap:5px;
+    white-space:nowrap;
+  }
+
+  .equationOperationArrow{
+    font-size:1.35em;
+    line-height:.8;
+  }
+
+  .equationOperationSpacer{
+    min-width:1.1em;
+  }
+
   .equationRow.historyStep{color:#64748b;opacity:.86}
   .equationRow.currentStep{color:#0f172a;opacity:1}
   .equationRow.currentStep .eq{color:#3b82f6}
@@ -1918,6 +1948,13 @@
       grid-template-columns:minmax(0,1fr) auto minmax(0,1fr);
       column-gap:7px;
       padding:1px 0;
+    }
+
+    body.importMode .stage:not(:fullscreen) .equationOperation{
+      grid-template-columns:minmax(0,1fr) auto minmax(0,1fr);
+      column-gap:7px;
+      min-height:25px;
+      font-size:13px;
     }
 
     body.importMode .stage:not(:fullscreen) .equationRow .eq{
@@ -2927,7 +2964,8 @@
       original:{mode:selectedMode, modeLabel:getModeLabel(selectedMode), a,b,rightA,d,x,c:eq.c,varChar},
       left:[],
       right:[],
-      steps:[]
+      steps:[],
+      stepOperations:[]
     };
 
     if(selectedMode === "both"){
@@ -2995,7 +3033,8 @@
       original:{mode:selectedMode, modeLabel:getModeLabel(selectedMode), a,b,rightA,d,x,c:a*x+b,varChar},
       left:[],
       right:[],
-      steps:[]
+      steps:[],
+      stepOperations:[]
     };
 
     if(selectedMode === "both"){
@@ -3104,11 +3143,17 @@
     return `${sideExpression("left")} = ${sideExpression("right")}`;
   }
 
-  function recordEquationStep(){
+  function recordEquationStep(operationLabel=null){
     if(!state) return;
     const eq = currentEquationString();
     if(!state.steps) state.steps = [];
-    if(state.steps[state.steps.length - 1] !== eq) state.steps.push(eq);
+    if(!Array.isArray(state.stepOperations)) state.stepOperations = [];
+    if(state.steps[state.steps.length - 1] !== eq){
+      const nextIndex = state.steps.length;
+      state.steps.push(eq);
+      state.stepOperations[nextIndex] = nextIndex === 0 ? null : (operationLabel || null);
+      state.stepOperations.length = state.steps.length;
+    }
   }
 
   function updateCurrentEquationStep(){
@@ -3134,6 +3179,31 @@
     return {lhs:parts[0].trim(), rhs:parts.slice(1).join("=").trim()};
   }
 
+  function escapeEquationHtml(value){
+    return String(value).replace(/[&<>"']/g, char => ({
+      "&":"&amp;",
+      "<":"&lt;",
+      ">":"&gt;",
+      '"':"&quot;",
+      "'":"&#39;"
+    })[char]);
+  }
+
+  function operationDeltaLabel(value, suffix=""){
+    const n = Number(value);
+    if(!Number.isFinite(n) || n === 0) return "";
+    const magnitude = Math.abs(n);
+    const amount = suffix && magnitude === 1 ? suffix : `${magnitude}${suffix}`;
+    return `${n > 0 ? "+" : "−"} ${amount}`;
+  }
+
+  function operationBetweenRows(label){
+    if(!label) return "";
+    const safeLabel = escapeEquationHtml(label);
+    const side = `<span class="equationOperationSide"><span class="equationOperationArrow" aria-hidden="true">↓</span><span>${safeLabel}</span></span>`;
+    return `<div class="equationOperation" aria-label="Même opération dans les deux membres : ${safeLabel}">${side}<span class="equationOperationSpacer" aria-hidden="true"></span>${side}</div>`;
+  }
+
   function renderEquationHistory(){
     const steps = state.steps || [];
     if(!steps.length){ equationHistory.innerHTML = ""; return; }
@@ -3142,7 +3212,8 @@
       const isCurrent = i === steps.length - 1;
       const solved = isSolvedEquationString(eq);
       const cls = `${isCurrent ? "currentStep" : "historyStep"}${solved ? " solvedStep" : ""}`;
-      return `<div class="equationRow ${cls}"><span class="lhs">${lhs}</span><span class="eq">=</span><span class="rhs">${rhs}</span></div>`;
+      const operation = i > 0 ? operationBetweenRows(state.stepOperations && state.stepOperations[i]) : "";
+      return `${operation}<div class="equationRow ${cls}"><span class="lhs">${lhs}</span><span class="eq">=</span><span class="rhs">${rhs}</span></div>`;
     }).join("");
     equationHistory.innerHTML = `<div class="equationList" aria-label="Étapes de résolution">${rows}</div>`;
     equationHistory.scrollTop = equationHistory.scrollHeight;
@@ -3233,7 +3304,10 @@
       for(const p of state[side]) if(ids.has(p.id)) p.removed = true;
     }
     deleteSelection = [];
-    recordEquationStep();
+    const operation = info.type === "x"
+      ? operationDeltaLabel(-info.leftCoef, currentVar())
+      : operationDeltaLabel(-info.value);
+    recordEquationStep(operation);
     render();
   }
 
@@ -3417,13 +3491,13 @@
     return null;
   }
 
-  function applyTokenSplit(side, id, values, historyMode="update"){
+  function applyTokenSplit(side, id, values, historyMode="update", operationLabel=null){
     const arr = state[side];
     const idx = arr.findIndex(p => p.id === id);
     if(idx < 0) return;
     pushHistory();
     arr.splice(idx, 1, ...values.map(makeToken));
-    if(historyMode === "record") recordEquationStep();
+    if(historyMode === "record") recordEquationStep(operationLabel);
     else updateCurrentEquationStep();
     selectedPieceRef = null;
     render();
@@ -3620,7 +3694,7 @@
         btn.addEventListener("click", () => {
           const n = Number(btn.dataset.n);
           const part = Number(btn.dataset.part);
-          applyTokenSplit(side, id, Array.from({length:n},()=>part), "record");
+          applyTokenSplit(side, id, Array.from({length:n},()=>part), "record", `÷ ${n}`);
           shareDialog.close();
         });
       });
@@ -4390,11 +4464,11 @@
     setTimeout(()=>addBothInput.focus(), 80);
   }
 
-  function finishAddBothAction(){
+  function finishAddBothAction(operationLabel){
     deleteSelection = [];
     groupSelection = [];
     selectedPieceRef = null;
-    recordEquationStep();
+    recordEquationStep(operationLabel);
     addBothDialog.close();
     render();
   }
@@ -4417,7 +4491,7 @@
     pushHistory();
     state.left.push(makeToken(value));
     state.right.push(makeToken(value));
-    finishAddBothAction();
+    finishAddBothAction(operationDeltaLabel(value));
   }
 
   function applyAddBothX(sign){
@@ -4434,7 +4508,7 @@
       state.left.push(makeX(sign));
       state.right.push(makeX(sign));
     }
-    finishAddBothAction();
+    finishAddBothAction(operationDeltaLabel(sign * count, currentVar()));
   }
 
   function takeOppositeOfBothMembers(){
@@ -4450,7 +4524,7 @@
     deleteSelection = [];
     groupSelection = [];
     selectedPieceRef = null;
-    recordEquationStep();
+    recordEquationStep("× (−1)");
     render();
   }
 
@@ -4512,16 +4586,21 @@
     if(!state) return;
     if(state._unitPacketConclusion && Array.isArray(state.steps) && state.steps.length){
       state.steps.pop();
+      if(Array.isArray(state.stepOperations)) state.stepOperations.pop();
     }
     delete state._unitPacketConclusion;
   }
 
-  function addUnitPacketConclusion(value){
+  function addUnitPacketConclusion(value, operationLabel){
     if(!state) return;
     const n = Math.round(Number(value) || 0);
     const eq = `${displayedUnknown()} = ${n}`;
     if(!Array.isArray(state.steps)) state.steps = [];
-    if(state.steps[state.steps.length - 1] !== eq) state.steps.push(eq);
+    if(!Array.isArray(state.stepOperations)) state.stepOperations = [];
+    if(state.steps[state.steps.length - 1] !== eq){
+      state.steps.push(eq);
+      state.stepOperations[state.steps.length - 1] = operationLabel || null;
+    }
     state._unitPacketConclusion = true;
   }
 
@@ -4548,7 +4627,7 @@
     };
 
     if(isCorrectShare){
-      addUnitPacketConclusion(each);
+      addUnitPacketConclusion(each, `÷ ${situation.xCount}`);
     }
 
     deleteSelection = [];
@@ -5143,7 +5222,8 @@
       },
       left:leftPieces,
       right:rightPieces,
-      steps:[]
+      steps:[],
+      stepOperations:[]
     };
 
     recordEquationStep();
