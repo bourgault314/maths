@@ -1630,7 +1630,7 @@ select { cursor: pointer; }
   }
 
   body:not(.catalogue-is-deep) .domain-card {
-    min-height: 102px;
+    min-height: 99px;
   }
 
   body:not(.catalogue-is-deep) .domain-card-secondary {
