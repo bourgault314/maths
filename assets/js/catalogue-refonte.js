@@ -40,7 +40,7 @@
         return `<line x1="${x.toFixed(1)}" y1="${baselineY}" x2="${x.toFixed(1)}" y2="${y.toFixed(1)}" fill="none" stroke="#be3e68" stroke-width="3" stroke-linecap="butt"/>`;
       })
       .join("");
-    return `<g data-mathsgo-die-chart="${experiment.counts.join("-")}"><path d="M42 ${expectedY.toFixed(1)}H77" fill="none" stroke="#7c3aed" stroke-width="1.1" stroke-dasharray="2.4 1.8"/>${sticks}</g>`;
+    return `<g data-mathsgo-die-chart="${experiment.counts.join("-")}"><path d="M42 ${expectedY.toFixed(1)}H77" fill="none" stroke="#08aaa5" stroke-width="1.1" stroke-dasharray="2.4 1.8"/>${sticks}</g>`;
   }
 
   global.MATHSGO_DIE_EXPERIMENT = Object.freeze({ simulateDieThrows, renderDieChart });

@@ -88,39 +88,78 @@ h1 {
 }
 
 .maths-scene {
+  position: relative;
   width: min(100%, 500px);
+  aspect-ratio: 560 / 205;
   margin: clamp(19px, 2.6vw, 25px) auto 0;
 }
 
-.maths-scene svg {
+.scene-plate {
+  position: absolute;
+  inset: 0;
   display: block;
   width: 100%;
-  height: auto;
+  height: 100%;
   overflow: visible;
   filter: drop-shadow(0 6px 9px rgba(15, 40, 72, 0.055));
 }
 
-/* Chaque raccourci de la frise garde une grande zone tactile invisible
-   (rect .scene-hit) ; seul le dessin grossit au survol ou au focus. */
-.scene-link { outline: none; }
+.scene-grid {
+  position: absolute;
+  inset: 8% 4.5%;
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  grid-template-rows: repeat(2, minmax(0, 1fr));
+  align-items: center;
+}
 
-.scene-hit { fill: transparent; }
+.scene-link {
+  min-width: 0;
+  min-height: 0;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 18px;
+  outline: none;
+}
+
+.scene-link:nth-child(n + 5) { transform: translateY(-10%); }
 
 .scene-item {
-  transform-box: fill-box;
-  transform-origin: center;
+  width: min(var(--scene-icon-width, 84px), 88%);
+  height: min(var(--scene-icon-height, 58px), 76%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transform-origin: 50% 50%;
   transition: transform 0.18s ease;
 }
+
+.scene-item svg {
+  display: block;
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+}
+
+.scene-item-automatismes { --scene-icon-width: 55px; --scene-icon-height: 58px; }
+.scene-item-nombres { --scene-icon-width: 80px; --scene-icon-height: 58px; }
+.scene-item-algebre { --scene-icon-width: 51px; --scene-icon-height: 53px; }
+.scene-item-proportionnalite { --scene-icon-width: 96px; --scene-icon-height: 56px; }
+.scene-item-geometrie { --scene-icon-width: 94px; --scene-icon-height: 55px; }
+.scene-item-donnees { position: relative; left: 10%; --scene-icon-width: 82px; --scene-icon-height: 56px; }
+.scene-item-informatique { --scene-icon-width: 76px; --scene-icon-height: 57px; }
+.scene-item-recherches { --scene-icon-width: 62px; --scene-icon-height: 54px; }
 
 .scene-link:hover .scene-item,
 .scene-link:focus-visible .scene-item {
   transform: scale(1.12);
 }
 
-.scene-link:focus-visible .scene-hit {
-  fill: rgba(8, 185, 178, 0.1);
-  stroke: var(--teal);
-  stroke-width: 2;
+.scene-link:focus-visible {
+  background: rgba(8, 185, 178, 0.1);
+  box-shadow: inset 0 0 0 2px var(--teal);
 }
 
 .btn-start {
@@ -285,7 +324,7 @@ footer {
   .maths-scene,
   .btn-start { margin-top: 0; }
   .maths-scene { width: calc(100% + 4px); }
-  .maths-scene svg { transform: scale(1.08); transform-origin: center; }
+  .scene-plate { transform: scale(1.08); transform-origin: center; }
   footer {
     flex-direction: column;
     gap: 5px;
