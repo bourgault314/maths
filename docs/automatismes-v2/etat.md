@@ -7,7 +7,7 @@
 - Dépôt : `bourgault314/maths`.
 - Branche de référence : `main`.
 - Commit de référence vérifié sur GitHub :
-  `a45b8aa530895eed1e19211a9e42012eb0a27cba`.
+  `b2c43c61ccd42ca6e2041cc5bc94f0451202d857`.
 - La PR #170 est fusionnée : la carte DNB, la fiche validée de `NC-01`, les
   storyboards et les décisions D-014 à D-019 sont la mémoire officielle du
   chantier.
@@ -66,7 +66,7 @@ Le premier sous-lot technique est construit et testé :
 - les propriétés non prévues, les coordonnées d'écran et le code exécutable
   sont refusés ;
 - les sept garde-fous du dépôt passent et le lot complet réussit
-  **727 tests sur 727**.
+  **800 tests sur 800**.
 
 Le clavier numérique, les fractions, le lecteur, le serveur, l'identité de
 l'élève et le chronomètre ne sont pas construits par anticipation.
