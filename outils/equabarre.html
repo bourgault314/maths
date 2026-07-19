@@ -885,12 +885,17 @@
     font-size:13px;
   }
 
-  #decomposeInput{
+  #decomposeInput,
+  #addInput{
     text-align:center;
     font-size:26px;
     font-weight:950;
     padding:16px 14px;
     margin-top:8px;
+  }
+
+  .mobileMathKeypad{
+    display:none;
   }
 
   .presetChips{
@@ -3267,25 +3272,30 @@
     .stage.detailedView:not(:fullscreen):not(.emptyState) .topbar{
       order:2 !important;
       width:100% !important;
-      height:64px !important;
-      min-height:64px !important;
-      max-height:64px !important;
-      padding:0 2px 3px !important;
-      margin:0 !important;
+      height:clamp(190px,29svh,250px) !important;
+      min-height:clamp(190px,29svh,250px) !important;
+      max-height:250px !important;
+      padding:10px 8px 8px !important;
+      margin:0 0 4px !important;
       overflow:hidden !important;
-      background:transparent !important;
-      border:0 !important;
-      border-radius:0 !important;
+      background:linear-gradient(180deg,#f8fbff,#eef6ff) !important;
+      border:1px solid rgba(59,130,246,.16) !important;
+      border-radius:14px !important;
+      box-shadow:inset 0 1px 0 rgba(255,255,255,.9) !important;
     }
 
     .stage:not(:fullscreen):not(.emptyState) .equationHistory,
     .stage.detailedView:not(:fullscreen):not(.emptyState) .equationHistory{
       width:100% !important;
-      height:61px !important;
-      max-height:61px !important;
-      padding:1px 2px !important;
+      height:100% !important;
+      max-height:100% !important;
+      padding:4px 3px !important;
       overflow-y:auto !important;
       overflow-x:auto !important;
+      display:flex !important;
+      align-items:flex-end !important;
+      justify-content:center !important;
+      scrollbar-gutter:stable both-edges;
     }
 
     .stage:not(:fullscreen):not(.emptyState) .equationTable,
@@ -3326,6 +3336,7 @@
       min-height:0 !important;
       padding:6px 4px !important;
       border-radius:14px;
+      margin-top:auto !important;
     }
 
     .stage:not(:fullscreen):not(.emptyState) .piece{
@@ -3420,6 +3431,13 @@
       overflow:visible;
     }
 
+    .stage:not(.emptyState) .actionZone:empty{
+      display:none !important;
+      min-height:0 !important;
+      margin:0 !important;
+      padding:0 !important;
+    }
+
     .stage:not(.emptyState) .actionZone button{
       width:100%;
       min-width:0;
@@ -3433,6 +3451,7 @@
     dialog{
       width:min(100% - 16px, 560px);
       max-height:calc(100svh - 16px);
+      overflow-y:auto;
     }
 
     .dialogInner{
@@ -3452,10 +3471,51 @@
 
     #decomposeInput,
     #addInput{
-      min-height:56px;
-      padding:12px;
-      font-size:27px;
+      min-height:50px;
+      padding:9px 12px;
+      font-size:25px;
       border-radius:14px;
+    }
+
+    .mobileMathKeypad{
+      display:grid;
+      grid-template-columns:repeat(4,minmax(0,1fr));
+      gap:6px;
+      width:100%;
+      margin:9px 0 5px;
+    }
+
+    .mobileMathKeypad button{
+      min-width:0;
+      min-height:44px !important;
+      padding:6px !important;
+      border-radius:11px !important;
+      border:1px solid rgba(15,23,42,.12);
+      background:#f8fafc;
+      color:#172033;
+      font-size:21px !important;
+      font-weight:900;
+      box-shadow:none;
+    }
+
+    .mobileMathKeypad button[data-key="backspace"],
+    .mobileMathKeypad button[data-key="clear"]{
+      background:#fff7ed;
+      color:#9a3412;
+    }
+
+    .mobileMathKeypad button[data-key="plus"]{
+      background:#eef6ff;
+      color:#1d4ed8;
+    }
+
+    .mobileMathKeypad button[data-key="0"]{
+      grid-column:1 / -1;
+    }
+
+    .mobileMathKeypad[data-mode="number"] button[data-key="plus"]{
+      visibility:hidden;
+      pointer-events:none;
     }
 
     .helpMiniBtn{
@@ -3641,6 +3701,12 @@
     <div class="dialogText" id="addDialogText"></div>
     <label>Écris la somme</label>
     <input id="addInput" type="text" autocomplete="off" />
+    <div class="mobileMathKeypad" data-keypad-for="addInput" data-mode="number" aria-label="Pavé numérique">
+      <button type="button" data-key="7">7</button><button type="button" data-key="8">8</button><button type="button" data-key="9">9</button><button type="button" data-key="backspace" aria-label="Effacer le dernier chiffre">⌫</button>
+      <button type="button" data-key="4">4</button><button type="button" data-key="5">5</button><button type="button" data-key="6">6</button><button type="button" data-key="clear" aria-label="Tout effacer">C</button>
+      <button type="button" data-key="1">1</button><button type="button" data-key="2">2</button><button type="button" data-key="3">3</button><button type="button" data-key="plus" aria-hidden="true" tabindex="-1">+</button>
+      <button type="button" data-key="0">0</button>
+    </div>
     <button class="helpMiniBtn" id="btnShowAddSuggestions" type="button" title="Afficher des propositions" aria-label="Afficher des propositions">Aide&nbsp;?</button>
     <div class="presetChips" id="addSuggestions"></div>
     <div class="btnrow">
@@ -3656,6 +3722,12 @@
     <div class="dialogText" id="dialogText"></div>
     <label>Écris une somme</label>
     <input id="decomposeInput" type="text" autocomplete="off" />
+    <div class="mobileMathKeypad" data-keypad-for="decomposeInput" data-mode="sum" aria-label="Pavé mathématique">
+      <button type="button" data-key="7">7</button><button type="button" data-key="8">8</button><button type="button" data-key="9">9</button><button type="button" data-key="backspace" aria-label="Effacer le dernier caractère">⌫</button>
+      <button type="button" data-key="4">4</button><button type="button" data-key="5">5</button><button type="button" data-key="6">6</button><button type="button" data-key="clear" aria-label="Tout effacer">C</button>
+      <button type="button" data-key="1">1</button><button type="button" data-key="2">2</button><button type="button" data-key="3">3</button><button type="button" data-key="plus" aria-label="Ajouter un signe plus">+</button>
+      <button type="button" data-key="0">0</button>
+    </div>
     <button class="helpMiniBtn" id="btnShowSuggestions" type="button" title="Afficher des propositions" aria-label="Afficher des propositions">Aide&nbsp;?</button>
     <div class="presetChips" id="presetChips"></div>
     <div class="divideBlock" id="divideBlock">
@@ -3722,6 +3794,52 @@
   const btnShowSuggestions = document.getElementById("btnShowSuggestions");
   const divideBlock = document.getElementById("divideBlock");
   const divideButtons = document.getElementById("divideButtons");
+  const mobileDialogQuery = window.matchMedia("(max-width:700px)");
+
+  function mobileDialogInputEnabled(){
+    return mobileDialogQuery.matches;
+  }
+
+  function syncMobileDialogInputs(){
+    [addInput, decomposeInput].forEach(input => {
+      if(!input) return;
+      if(mobileDialogInputEnabled()){
+        input.readOnly = true;
+        input.setAttribute("inputmode", "none");
+      }else{
+        input.readOnly = false;
+        input.removeAttribute("inputmode");
+      }
+    });
+  }
+
+  function focusDialogInput(input){
+    if(!input || mobileDialogInputEnabled()) return;
+    input.focus();
+  }
+
+  document.querySelectorAll(".mobileMathKeypad").forEach(keypad => {
+    const input = document.getElementById(keypad.dataset.keypadFor || "");
+    if(!input) return;
+    keypad.addEventListener("pointerdown", event => event.preventDefault());
+    keypad.addEventListener("click", event => {
+      const button = event.target.closest("button[data-key]");
+      if(!button) return;
+      const key = button.dataset.key;
+      if(key === "backspace") input.value = input.value.slice(0, -1);
+      else if(key === "clear") input.value = "";
+      else if(key === "plus"){
+        const trimmed = input.value.trimEnd();
+        if(trimmed && !trimmed.endsWith("+")) input.value = `${trimmed} + `;
+      }else if(/^\d$/.test(key || "")) input.value += key;
+      input.dispatchEvent(new Event("input", {bubbles:true}));
+    });
+  });
+
+  syncMobileDialogInputs();
+  if(typeof mobileDialogQuery.addEventListener === "function"){
+    mobileDialogQuery.addEventListener("change", syncMobileDialogInputs);
+  }
 
   const variableChars = ["𝑥", "𝑎", "𝑏", "𝑐", "𝑚", "𝑛", "𝑡"];
 
@@ -4819,7 +4937,7 @@
       chip.textContent = String(value);
       chip.addEventListener("click", () => {
         addInput.value = chip.dataset.value || String(value);
-        addInput.focus();
+        focusDialogInput(addInput);
       });
       addSuggestions.appendChild(chip);
     }
@@ -4839,7 +4957,7 @@
     if(addInput) addInput.value = "";
     renderAddSuggestions(info);
     if(addDialog) addDialog.showModal();
-    setTimeout(() => addInput && addInput.focus(), 80);
+    setTimeout(() => focusDialogInput(addInput), 80);
   }
 
   function applyAdd(){
@@ -4895,7 +5013,7 @@
       chip.innerHTML = formatSuggestionLabel(s);
       chip.addEventListener("click", () => {
         decomposeInput.value = chip.dataset.value || s;
-        decomposeInput.focus();
+        focusDialogInput(decomposeInput);
       });
       presetChips.appendChild(chip);
     }
@@ -4903,7 +5021,7 @@
     if(divideBlock) divideBlock.style.display = "none";
 
     dialog.showModal();
-    setTimeout(() => decomposeInput.focus(), 80);
+    setTimeout(() => focusDialogInput(decomposeInput), 80);
   }
 
   function formatSuggestionLabel(raw){
