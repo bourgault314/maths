@@ -4742,7 +4742,7 @@
     groupSelection = [];
     deleteSelection = [];
     selectedPieceRef = null;
-    updateCurrentEquationStep();
+    recordEquationStep();
     groupDialog.close();
     render();
     setInstruction(`Jetons regroupés : <strong>${formatSignedNumber(info.sum)}</strong>.`);
@@ -4766,7 +4766,7 @@
     return null;
   }
 
-  function applyTokenSplit(side, id, values, historyMode="update", operation=null){
+  function applyTokenSplit(side, id, values, historyMode="record", operation=null){
     const arr = state[side];
     const idx = arr.findIndex(p => p.id === id);
     if(idx < 0) return;
@@ -5325,7 +5325,7 @@
 
     pendingFusion = null;
     fusionDialog.close();
-    updateCurrentEquationStep();
+    recordEquationStep();
     render();
     if(expected === 0){
       setInstruction("Paire nulle : <strong>0</strong> apparaît, puis disparaît.");
