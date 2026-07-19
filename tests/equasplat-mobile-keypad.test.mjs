@@ -44,6 +44,9 @@ test("les dialogues tactiles neutralisent le clavier natif et figent l’arrièr
   assert.match(html, /input\.readOnly = true;\s*input\.setAttribute\("inputmode", "none"\);/);
   assert.match(html, /document\.documentElement\.classList\.add\("dialogOpen"\);/);
   assert.match(html, /html\.dialogOpen,\s*body\.dialogOpen\{\s*overflow:hidden;/);
+  assert.match(html, /dialog\.touchKeypadActive \.btnrow > \.primary,[\s\S]*dialog\.touchKeypadActive \.btnrow > \.green\{\s*display:none;/);
+  assert.match(html, /dialog\.classList\.add\("touchKeypadActive"\)/);
+  assert.match(html, /dialog\.classList\.remove\("touchKeypadActive"\)/);
 });
 
 test("le signe moins du pavé n’est créé que lorsque le mode relatif l’autorise", () => {
