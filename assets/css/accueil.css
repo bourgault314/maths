@@ -375,7 +375,7 @@ footer {
     left: 4%;
     transform: scale(1);
   }
-  .scene-item-geometrie { transform: scale(0.94); }
+  .scene-item-geometrie { transform: scale(0.9); }
   .scene-item-recherches {
     left: -8%;
     transform: scale(0.92);
