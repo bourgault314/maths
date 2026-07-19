@@ -1819,19 +1819,31 @@
 
   @media (max-width:760px){
     body.importMode{
-      overflow-x:hidden;
+      box-sizing:border-box;
+      height:100vh;
+      height:100svh;
+      min-height:0;
+      max-height:100svh;
+      overflow:hidden;
+      overscroll-behavior:none;
     }
 
     body.importMode main{
       width:calc(100vw - 8px);
-      margin:4px auto 10px;
+      height:calc(100% - 8px);
+      max-height:calc(100% - 8px);
+      margin:4px auto;
+      overflow:hidden;
     }
 
     body.importMode .stage:not(:fullscreen){
       display:flex;
       flex-direction:column;
+      height:100%;
       min-height:0;
+      max-height:100%;
       padding:6px;
+      overflow:hidden;
       border-radius:18px;
       backdrop-filter:none;
     }
@@ -1869,13 +1881,13 @@
       order:4;
       box-sizing:border-box;
       width:100%;
-      height:clamp(300px,44dvh,380px);
-      min-height:300px;
-      max-height:380px;
+      height:auto;
+      min-height:120px;
+      max-height:none;
       margin-top:7px;
       padding:5px 4px;
       overflow:hidden;
-      flex:0 0 clamp(300px,44dvh,380px);
+      flex:1 1 120px;
       border:2px solid #93c5fd;
       border-radius:14px;
       background:#eff6ff;
@@ -1891,6 +1903,8 @@
       padding:0 2px;
       overflow-x:hidden;
       overflow-y:auto;
+      overscroll-behavior:contain;
+      -webkit-overflow-scrolling:touch;
       scrollbar-gutter:auto;
     }
 
@@ -2173,10 +2187,10 @@
     }
 
     body.importMode .stage:not(:fullscreen) .topbar{
-      height:220px;
-      min-height:220px;
-      max-height:220px;
-      flex-basis:220px;
+      height:auto;
+      min-height:100px;
+      max-height:none;
+      flex:1 1 100px;
       margin-top:5px;
       padding:4px 3px;
     }
