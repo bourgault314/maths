@@ -97,7 +97,8 @@ test("le partage final passe par des mini-égalités avant la division", () => {
   assert.match(html, /function drawPendingShareGroups\(viewHeight\)/);
   assert.match(html, /const cols = count <= 3 \? 1 : 2;/);
   assert.match(html, /class", "pendingShareGroup"/);
-  assert.match(html, /<strong>\$\{count\} groupes identiques<\/strong> — touche-en un\./);
+  assert.match(html, /<span class="shareInstruction"><strong>\$\{count\} groupes identiques<\/strong> — touche-en un\.<\/span>/);
+  assert.match(html, /\.instructionZone \.shareInstruction\{[\s\S]*?color:#ea580c;/);
   assert.match(html, /setTimeout\(\(\) => finalizePendingShare\(pending\.shareBatch\), 260\)/);
   assert.match(html, /recordEquationStep\(`÷ \$\{pending\.count\}`\)/);
   assert.match(html, /state\[pending\.xSide\] = \[\.\.\.removedX, makeX\(1\)\]/);
