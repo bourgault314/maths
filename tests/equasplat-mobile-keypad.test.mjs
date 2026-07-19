@@ -91,27 +91,32 @@ test("la sélection des objets est nettement renforcée", () => {
 
 test("les opérations encadrent les équations dans le bon ordre", () => {
   const operationRow = functionSource("renderOperationRow");
-  const conclude = functionSource("concludeSolution");
+  const finalize = functionSource("finalizePendingShare");
 
   assert.doesNotMatch(operationRow, /viewMode !== "redaction"/);
-  assert.match(operationRow, /opLeft[\s\S]*opLabel[\s\S]*operationArrowSvg\("left"\)/);
-  assert.match(operationRow, /opRight[\s\S]*operationArrowSvg\("right"\)[\s\S]*opLabel/);
-  assert.match(html, /\.operationWrap\{[^}]*justify-content:space-between;[^}]*width:100%;/s);
-  assert.match(conclude, /makeBothSidesOperation\(`÷ \$\{info\.count\}`\)/);
+  assert.match(operationRow, /opLeft[\s\S]*opLabel[\s\S]*\$\{arrow\}/);
+  assert.match(operationRow, /opRight[\s\S]*\$\{arrow\}[\s\S]*opLabel/);
+  assert.match(html, /\.operationWrap\{[^}]*gap:5px;[^}]*white-space:nowrap;/s);
+  assert.doesNotMatch(html, /\.operationWrap\{[^}]*justify-content:space-between;/s);
+  assert.match(finalize, /makeBothSidesOperation\(`÷ \$\{pending\.count\}`\)/);
 });
 
-test("un partage final correct affiche une grille de mini-égalités jusqu’à Conclure", () => {
+test("un partage final correct se conclut en touchant une mini-égalité", () => {
   const sharedSplit = functionSource("applySharedTokenSplit");
   const groups = functionSource("drawPendingShareGroups");
   const renderSvg = functionSource("renderSvg");
-  const conclude = functionSource("concludeSolution");
+  const finalize = functionSource("finalizePendingShare");
+  const actions = functionSource("renderActions");
 
   assert.match(sharedSplit, /opportunity\.tokenSide === side[\s\S]*opportunity\.token\.id === id[\s\S]*opportunity\.count === count/);
-  assert.match(sharedSplit, /state\.pendingShareConclusion = \{[\s\S]*count,[\s\S]*each,[\s\S]*xSide:opportunity\.xSide,[\s\S]*tokenSide:opportunity\.tokenSide/s);
+  assert.match(sharedSplit, /state\.pendingShareConclusion = \{[\s\S]*id:uid\(\),[\s\S]*count,[\s\S]*each,[\s\S]*xSide:opportunity\.xSide,[\s\S]*tokenSide:opportunity\.tokenSide,[\s\S]*finalizing:false/s);
   assert.match(groups, /const cols = 2;/);
   assert.match(groups, /isCenteredLast[\s\S]*\(1600 - cardW\)\/2/);
   assert.match(groups, /pending\.xSide === "left" \? leftX : rightX/);
+  assert.match(groups, /g\.setAttribute\("role", "button"\)/);
+  assert.match(groups, /classList\.add\(groupIndex === index \? "chosen" : "discarded"\)/);
+  assert.match(groups, /setTimeout\(\(\) => finalizePendingShare\(pending\.id\), 260\)/);
   assert.match(renderSvg, /if\(drawPendingShareGroups\(viewHeight\)\) return;/);
-  assert.match(html, /btn\.textContent = "Conclure";/);
-  assert.match(conclude, /delete state\.pendingShareConclusion;/);
+  assert.match(actions, /groupes identiques<\/strong> — touche-en un/);
+  assert.match(finalize, /delete state\.pendingShareConclusion;/);
 });
