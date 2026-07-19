@@ -310,6 +310,11 @@
 
   .instructionZone strong{font-weight:950}
 
+  .instructionZone .shareInstruction{
+    color:#ea580c;
+    font-weight:900;
+  }
+
   .board{
     background:linear-gradient(180deg,rgba(255,255,255,.72),rgba(255,255,255,.36));
     border:1px solid rgba(15,23,42,.08);
@@ -4889,7 +4894,7 @@
 
     if(state && state.pendingShareConclusion){
       const count = state.pendingShareConclusion.count;
-      setInstruction(`<strong>${count} groupes identiques</strong> — touche-en un.`);
+      setInstruction(`<span class="shareInstruction"><strong>${count} groupes identiques</strong> — touche-en un.</span>`);
       return;
     }
 
