@@ -56,6 +56,8 @@ test("les opérations faites aux deux membres apparaissent entre les équations"
 });
 
 test("sur téléphone seule la zone bleue défile", () => {
+  assert.match(html, /html\.importModeRoot\{[^}]*height:100svh;[^}]*overflow:hidden;[^}]*overscroll-behavior:none;/s);
+  assert.match(html, /body\.importMode\{[^}]*position:fixed;[^}]*inset:0;[^}]*width:100%;/s);
   assert.match(html, /body\.importMode\{[^}]*height:100svh;[^}]*min-height:0;[^}]*max-height:100svh;[^}]*overflow:hidden;[^}]*overscroll-behavior:none;/s);
   assert.match(html, /body\.importMode main\{[^}]*height:calc\(100% - 8px\);[^}]*max-height:calc\(100% - 8px\);[^}]*overflow:hidden;/s);
   assert.match(html, /\.stage:not\(:fullscreen\)\{[^}]*height:100%;[^}]*max-height:100%;[^}]*overflow:hidden;/s);
@@ -63,17 +65,17 @@ test("sur téléphone seule la zone bleue défile", () => {
 });
 
 test("le plateau mobile utilise tout son cadre avec des plateaux rectangulaires", () => {
-  assert.match(html, /\.board\{\s*order:2;[^}]*width:calc\(100% \+ 12px\);[^}]*height:clamp\(330px,92vw,380px\);[^}]*margin-left:-6px;[^}]*margin-right:-6px;/s);
-  assert.match(html, /svg\.setAttribute\("viewBox", mobileLayout \? "0 0 1600 1480" : "0 0 1600 820"\)/);
-  assert.match(html, /\? \{x:8, y:54, w:760, h:1372\}/);
-  assert.match(html, /: \{x:832, y:54, w:760, h:1372\}/);
-  assert.match(html, /return isMobileImportLayout\(\) \? Math\.round\(radius \* 1\.30\) : radius/);
+  assert.match(html, /\.board\{\s*order:2;[^}]*width:calc\(100% \+ 12px\);[^}]*height:clamp\(230px,64vw,270px\);[^}]*margin-left:-6px;[^}]*margin-right:-6px;/s);
+  assert.match(html, /svg\.setAttribute\("viewBox", mobileLayout \? "0 0 1600 1050" : "0 0 1600 820"\)/);
+  assert.match(html, /\? \{x:8, y:36, w:760, h:978\}/);
+  assert.match(html, /: \{x:832, y:36, w:760, h:978\}/);
+  assert.match(html, /return isMobileImportLayout\(\) \? Math\.round\(radius \* 1\.36\) : radius/);
   assert.match(html, /x:tray\.x\+\(mobileLayout \? 45 : 70\)/);
   assert.match(html, /w:tray\.w-\(mobileLayout \? 90 : 140\)/);
   assert.match(html, /r:mobileLayout \? 108 : 84/);
   assert.ok((760 - 90) / 3 > 2 * 108, "trois splats agrandis doivent rester séparés sur une ligne");
   assert.match(html, /@media \(max-width:760px\) and \(max-height:720px\)/);
-  assert.match(html, /\.board\{\s*height:270px;\s*min-height:270px;\s*max-height:270px;/);
+  assert.match(html, /\.board\{\s*height:240px;\s*min-height:240px;\s*max-height:240px;/);
   assert.match(html, /\.topbar\{\s*height:auto;\s*min-height:100px;\s*max-height:none;/);
 });
 
@@ -103,6 +105,7 @@ test("la validation mobile garde toujours la même hauteur", () => {
 });
 
 test("le contrôle des cookies ne se superpose plus aux commandes mobiles", () => {
-  assert.match(html, /\.mg-consent-manage-slot--fixed\{\s*position:relative !important;/);
+  assert.match(html, /\.mg-consent-manage-slot--fixed\{\s*display:none !important;/);
+  assert.match(html, /document\.documentElement\.classList\.add\("importModeRoot"\)/);
   assert.match(html, /getComputedStyle\(mobileBottomControlsEl\)\.position === "fixed"/);
 });
