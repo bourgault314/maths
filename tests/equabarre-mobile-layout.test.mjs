@@ -4,6 +4,8 @@ import { readFile } from "node:fs/promises";
 
 const html = await readFile(new URL("../outils/equabarre.html", import.meta.url), "utf8");
 
+// Ces garde-fous couvrent la composition réellement utilisée en portrait étroit.
+
 test("ÉquaBarre compose les actions mobiles en grilles compactes", () => {
   assert.match(html, /@media \(max-width:700px\)/);
   assert.match(html, /\.toolBarRowMain\{\s*grid-template-columns:repeat\(2,minmax\(0,1fr\)\)/);
