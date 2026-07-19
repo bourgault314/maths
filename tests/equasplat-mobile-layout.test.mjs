@@ -89,7 +89,7 @@ test("la décomposition accepte naturellement une soustraction", () => {
   assert.match(html, /raw\.match\(\/\[\+-\]\?\\d\+\/g\)/);
 });
 
-test("le partage final passe par des mini-égalités avant la division", () => {
+test("le partage final passe par des mini-plateaux avant la division", () => {
   assert.match(html, /function applySharedTokenSplit\(side, id, partCount, partValue\)/);
   assert.match(html, /opportunity\.tokenSide === side[\s\S]*opportunity\.token\.id === id[\s\S]*opportunity\.count === count/);
   assert.match(html, /state\.pendingShareConclusion = \{[\s\S]*shareBatch,[\s\S]*count,[\s\S]*each,[\s\S]*xSide:opportunity\.xSide,[\s\S]*tokenSide:opportunity\.tokenSide/s);
@@ -97,12 +97,32 @@ test("le partage final passe par des mini-égalités avant la division", () => {
   assert.match(html, /function drawPendingShareGroups\(viewHeight\)/);
   assert.match(html, /const cols = count <= 3 \? 1 : 2;/);
   assert.match(html, /class", "pendingShareGroup"/);
+  assert.match(html, /class", "pendingShareDivider"/);
+  assert.match(html, /Mini-plateau \$\{index \+ 1\} sur \$\{count\} : une tache à gauche et \$\{formatSignedNumber\(pending\.each\)\} à droite/);
+  assert.doesNotMatch(html, /pendingShareEquals/);
+  assert.doesNotMatch(html, /\$\{displayedUnknown\(\)\} égale \$\{formatSignedNumber\(pending\.each\)\}/);
   assert.match(html, /<span class="shareInstruction"><strong>\$\{count\} groupes identiques<\/strong> — touche-en un\.<\/span>/);
   assert.match(html, /\.instructionZone \.shareInstruction\{[\s\S]*?color:#ea580c;/);
   assert.match(html, /setTimeout\(\(\) => finalizePendingShare\(pending\.shareBatch\), 260\)/);
   assert.match(html, /recordEquationStep\(`÷ \$\{pending\.count\}`\)/);
   assert.match(html, /state\[pending\.xSide\] = \[\.\.\.removedX, makeX\(1\)\]/);
   assert.match(html, /state\[pending\.tokenSide\] = \[\.\.\.removedTokens, makeToken\(pending\.each\)\]/);
+  assert.match(html, /drawText\(800, viewHeight \/ 2, "=", "eqMiddle"\)/);
+});
+
+test("les taches restantes conservent leur case après une suppression", () => {
+  assert.match(html, /function layoutItems\(tray, items, splatLayoutItems=items\)/);
+  assert.match(html, /splatPositionsForItems\(tray, splatLayoutItems\)/);
+  assert.match(html, /layoutItems\(leftTray, leftItems, state\.left\)/);
+  assert.match(html, /layoutItems\(rightTray, rightItems, state\.right\)/);
+});
+
+test("l’import commence par expliquer l’égalité des deux quantités", () => {
+  assert.match(html, /Il y a la même quantité à gauche qu’à droite\./);
+  assert.match(html, /function showInitialEqualityInstruction\(\)/);
+  assert.match(html, /setActionMode\(unitMode \? "delete" : "decompose"\);\s*showInitialEqualityInstruction\(\);/);
+  assert.match(html, /setActionMode\(isImportedUnitMode\(\) \? "delete" : "decompose"\);\s*showInitialEqualityInstruction\(\);/);
+  assert.match(html, /dismissInitialEqualityInstruction\(\);\s*setActionMode\("decompose"\)/);
 });
 
 test("un partage qui ne conclut pas reste écrit comme un produit", () => {
