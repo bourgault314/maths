@@ -20,8 +20,15 @@ Automatismes V2, lire dans cet ordre :
 
 ## Automatismes V2
 
+- **Périmètre immédiat : exclusivement le DNB.** La liste officielle des
+  attendus de l'épreuve dit ce qui doit être couvert et dans quel ordre ; tout
+  ce qui n'en relève pas attend son tour (D-013).
 - L'ancienne banque et la bêta sont des inventaires de notions, jamais des
   sources d'énoncés, de paramètres, de valeurs, de distracteurs ou de code.
+- L'ancienne banque s'ouvre en **archive**, notion par notion et seulement au
+  moment de traiter cette notion, pour y retrouver les apports de Gwenaël.
+- Aucun élément ancien n'entre dans V2 sans provenance identifiée et validation
+  explicite de Gwenaël — y compris un élément qu'il a écrit lui-même.
 - Les noms `dnb_*`, l'arborescence des 43 modules et leurs identifiants restent
   historiques. V2 utilise des noms français issus du programme et de la
   taxonomie maths&go, sans correspondance un-à-un avec l'ancienne banque.

@@ -16,6 +16,27 @@ neuf.
 La couverture se mesure en notions du programme traitées, pas en parité avec
 les anciennes questions.
 
+## Périmètre immédiat : le DNB
+
+Tant que dure la phase en cours, V2 se construit **exclusivement pour le DNB**
+(décision D-013 du 19 juillet 2026).
+
+La **liste officielle des attendus du DNB** est la source de couverture : c'est
+elle qui dit ce qui doit exister, dans quel ordre, et à quel moment la phase
+est terminée. Cette liste sera écrite dans le dépôt sous forme de carte du DNB,
+notion par notion, avec l'état de chacune.
+
+L'ancienne banque, elle, devient une **archive consultable**. Elle s'ouvre
+notion par notion, au moment où l'on traite cette notion, pour une seule
+raison : retrouver ce que Gwenaël y a lui-même apporté — questions
+retravaillées, aides, choix de progression, ordre des étapes. Elle ne fournit
+toujours ni énoncé, ni paramètre, ni distracteur, ni visuel, ni code.
+
+**Rien d'ancien n'entre automatiquement dans V2**, pas même une contribution de
+Gwenaël retrouvée dans l'archive. Il faut, dans cet ordre : une provenance
+identifiée, puis sa validation explicite. Retrouver quelque chose n'est pas
+décider de le reprendre : c'est seulement le poser sur la table.
+
 ## Responsabilités
 
 - **Gwenaël** est l'auteur et le validateur pédagogique. Aucun contenu réel ne
@@ -110,10 +131,13 @@ introduite dans un contrat.
 - téléphone d'abord, vérification à 375 px ;
 - cibles tactiles d'au moins 44 px.
 
-## Périmètre exact de V2
+## Périmètre technique de V2 : les dossiers surveillés
+
+À ne pas confondre avec le périmètre immédiat (le DNB, plus haut) : celui-ci dit
+*ce que* l'on construit, celui-là dit *où* le code a le droit de vivre.
 
 Ces contraintes ne valent que si l'on sait où elles s'appliquent. La liste
-suivante est la définition de V2, et elle est vérifiée à chaque
+suivante est la définition technique de V2, et elle est vérifiée à chaque
 `npm run verifier` par `scripts/validate-automatismes-v2.mjs` :
 
 - `packages/contrats/src` — contrats de question et de gabarit ;

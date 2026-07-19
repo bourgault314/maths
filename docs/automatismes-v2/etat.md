@@ -6,7 +6,11 @@
 
 - Dépôt : `bourgault314/maths`.
 - Branche de référence : `main`.
-- Commit de départ vérifié : `2b70f1477d6bb8bf7410d976d8c2fa157f7a1cb8`.
+- Commit de référence, vérifié sur GitHub le 19 juillet 2026 :
+  `f9c8404f65a2c3c7b2e5cb11b98788a4c20055ec`.
+- Le commit `2b70f1477d6bb8bf7410d976d8c2fa157f7a1cb8` était le point de départ
+  de l'audit du socle (PR #154). Il n'est plus la tête de `main` : ne plus s'en
+  servir comme référence.
 - PR #151 fusionnée : le contenu prématuré issu de la PR #144 a été retiré.
 - PR #150 fermée sans fusion : son socle surdimensionné ne doit pas être repris.
 - PR #154 fusionnée : l'audit du socle minimal et les décisions D-011 et D-012
@@ -20,6 +24,10 @@
 - La bêta continue de fonctionner séparément et est gelée hors correction
   critique.
 - Aucun contenu pédagogique V2 n'est actuellement autorisé.
+- **Puissances simples (4e) : fiche proposée, en attente de validation.** La
+  PR #156 pose la fiche pédagogique de la notion (automatisme officiel `4-13`),
+  sans aucun générateur ni question. Rien n'avance sur cette notion tant que
+  Gwenaël ne l'a pas validée ou corrigée.
 - Les contrats génériques, le PRNG seedé et le registre ont été nettoyés et
   renforcés. Ils ne dépendent plus d'un générateur ou d'un module historique.
 - Les 187 automatismes officiels et les objets visuels indépendants restent
@@ -63,15 +71,24 @@ tests passent » comme « le socle est indépendant » serait une erreur de lect
 Chantier séparé, sans aucun contenu pédagogique : la palette de Pythagore est
 passée dans `packages/charte`, la dernière dépendance `packages/objets` →
 `studio/` a disparu (le composant du studio réexporte désormais la fondation),
-et le garde-fou de V2 couvre les cinq dossiers du périmètre au lieu de deux.
-Le garde-fou est lui-même testé, règle par règle.
+et le garde-fou de V2 couvre les cinq dossiers du périmètre technique au lieu
+de deux. Le garde-fou est lui-même testé, règle par règle. Le même lot porte le
+cadrage documentaire du périmètre DNB (D-013). **705 tests sur 705**,
+`npm run verifier` vert.
 
-## Prochaine étape
+## Prochaine étape : la carte du DNB
 
-Après fusion du nettoyage technique, choisir la première catégorie depuis les
-données du programme officiel et la taxonomie maths&go, puis préparer la
-première fiche pédagogique de notion. Aucun générateur réel ne sera écrit avant
-validation de cette fiche par Gwenaël.
+Le périmètre immédiat est exclusivement le DNB (D-013). La prochaine étape est
+donc d'établir la **carte du DNB** : écrire dans le dépôt la liste officielle
+des attendus de l'épreuve, notion par notion, avec pour chacune son avancement
+(`a_faire`, `construit`, `valide`), l'automatisme officiel correspondant
+lorsqu'il en existe un, et le renvoi vers l'archive à consulter le moment venu.
+
+C'est cette carte qui commandera l'ordre des fiches suivantes. Elle ne contient
+aucun contenu pédagogique : c'est une liste et des états.
+
+La fiche des puissances simples reste en attente. Aucun générateur réel n'est
+écrit avant l'accord de Gwenaël sur une fiche.
 
 ## Règle de mise à jour
 
