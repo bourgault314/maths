@@ -1,6 +1,6 @@
 # État du chantier Automatismes V2
 
-**Dernière mise à jour : 18 juillet 2026.**
+**Dernière mise à jour : 19 juillet 2026.**
 
 ## Point de départ vérifié
 
@@ -44,6 +44,27 @@ Le socle minimal a ensuite été audité puis nettoyé :
 
 Le rapport de décision détaillé reste dans
 `audit-socle-2026-07-18.md`. Le lot complet réussit **683 tests sur 683**.
+
+## Les tests MG1 sont une passerelle, pas une cible
+
+`studio/automatismes/` est le nouveau menu branché sur le moteur **actuel**.
+Ses tests (`studio/automatismes/mg1.test.js`) exigent volontairement des codes
+de série identiques à ceux de l'application d'aujourd'hui : c'est ce qui permet
+d'essayer le menu avec les vraies questions sans attendre la migration.
+
+Ils mesurent donc une compatibilité temporaire avec l'ancien moteur, jamais
+l'indépendance de V2. La décision D-012 n'est pas contredite : cette passerelle
+est un échafaudage déclaré, qui disparaît avec `auto/` le jour où le moteur est
+migré. Aucun code ni aucun test de V2 ne doit dépendre d'eux ; lire « tous les
+tests passent » comme « le socle est indépendant » serait une erreur de lecture.
+
+## Lot technique du 19 juillet 2026 (en attente de fusion)
+
+Chantier séparé, sans aucun contenu pédagogique : la palette de Pythagore est
+passée dans `packages/charte`, la dernière dépendance `packages/objets` →
+`studio/` a disparu (le composant du studio réexporte désormais la fondation),
+et le garde-fou de V2 couvre les cinq dossiers du périmètre au lieu de deux.
+Le garde-fou est lui-même testé, règle par règle.
 
 ## Prochaine étape
 

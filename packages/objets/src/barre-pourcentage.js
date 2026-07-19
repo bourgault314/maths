@@ -300,8 +300,8 @@ function rangeeCent(q, correction, cfg) {
 // ---------------------------------------------------------------------------
 // Gabarit « évolution » : hausse (cases ajoutées au-delà du tout) ou
 // baisse (cases retirées hachurées) — portage de drawEvolutionBar,
-// enrichi des besoins d'Automatismes (dnb_35) : accolades « montant »
-// et « coefficient », barre normalisée à 100 %.
+// enrichi des besoins de l'application actuelle sur les évolutions :
+// accolades « montant » et « coefficient », barre normalisée à 100 %.
 // ---------------------------------------------------------------------------
 
 function rangeeEvolution(q, correction, options, cfg) {

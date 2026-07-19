@@ -16,7 +16,8 @@
 //
 // NOUVEAU par rapport à l'outil : la catégorie « avec-calculatrice »
 // (racines non entières, l'affichage passe de = à ≈) — la déclinaison
-// n'existait pas dans Automatismes (seuls dnb_24/24b sur triplets).
+// n'existait pas dans l'application actuelle, qui ne traite Pythagore
+// que sur des triplets entiers.
 
 export const VERSION_PYTHAGORE = 1;
 

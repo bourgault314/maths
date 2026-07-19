@@ -2,15 +2,21 @@
 //
 // Dessine les trois vues du problème depuis le moteur pur
 // (pythagore-logique.js) : le schéma en barres (rectangles JOINTIFS aux
-// couleurs de référence de studio/components/pythagore/visuals.js —
-// SANS la case bleu pâle d'auto/), le triangle rectangle aux VRAIES
-// proportions avec son moulin (carrés construits sur les côtés), et la
-// racine carrée DESSINÉE (squareRootSvg — jamais le caractère √).
+// couleurs de la charte — SANS la case bleu pâle d'auto/), le triangle
+// rectangle aux VRAIES proportions avec son moulin (carrés construits
+// sur les côtés), et la racine carrée DESSINÉE (squareRootSvg — jamais
+// le caractère √).
 // Les zones cliquables portent des attributs data-pytha-* ; la page
 // pose les écouteurs.
+//
+// La palette vient de packages/charte : un objet ne sort jamais de
+// packages/ pour aller chercher une couleur dans une page du studio.
+// L'alias local garde le nom court utilisé partout dans le fichier.
 
 import { briquesSvg, echapper } from "./figure.js";
-import { PYTHAGORE_COLORS, squareRootSvg } from "../../../studio/components/pythagore/visuals.js";
+import { COULEURS_PYTHAGORE } from "../../charte/src/charte.js";
+
+const PYTHAGORE_COLORS = COULEURS_PYTHAGORE;
 import {
   estRemplace,
   etapeCourante,
@@ -246,6 +252,26 @@ export function dessinerTrianglePythagore(probleme, travail, options = {}) {
   }
 
   return enveloppeSvg(largeurSvg, hauteurSvg, `triangle ${probleme.lettres.join("")} rectangle en ${probleme.angleDroit}`, contenu);
+}
+
+const arrondiSvg = (valeur) => Math.round(valeur * 1000) / 1000;
+
+/**
+ * Racine française compacte : le radicande commence juste après le crochet.
+ *
+ * Le tracé est celui écrit pour PythaBarre et le Moulin ; il vivait dans
+ * studio/components/pythagore/visuals.js, d'où packages/ le tirait. Il est
+ * désormais ici, du côté des objets, et le composant du studio le réexporte.
+ * Le calcul n'a pas changé d'un millième : pythagore.test.js le vérifie.
+ */
+export function squareRootSvg({ x = 0, baseline = 20, radicand = "25", fontSize = 18, color = "#334155", fontWeight = 750 } = {}) {
+  const round = arrondiSvg;
+  const text = String(radicand);
+  const textWidth = Math.max(fontSize * 0.62, text.length * fontSize * 0.56);
+  const numberX = x + fontSize * 0.68;
+  const barEnd = numberX + textWidth + 1;
+  const d = `M ${round(x)} ${round(baseline - fontSize * 0.36)} l ${round(fontSize * 0.22)} ${round(fontSize * 0.34)} l ${round(fontSize * 0.32)} ${round(-fontSize * 0.82)} H ${round(barEnd)}`;
+  return `<g fill="${color}" stroke="${color}"><path d="${d}" fill="none" stroke-width="${round(Math.max(1.8, fontSize * 0.11))}" stroke-linecap="round" stroke-linejoin="round"/><text x="${round(numberX)}" y="${round(baseline)}" stroke="none" font-family="Segoe UI,Arial,sans-serif" font-size="${fontSize}" font-weight="${fontWeight}">${text}</text></g>`;
 }
 
 /**

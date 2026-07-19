@@ -110,6 +110,34 @@ introduite dans un contrat.
 - téléphone d'abord, vérification à 375 px ;
 - cibles tactiles d'au moins 44 px.
 
+## Périmètre exact de V2
+
+Ces contraintes ne valent que si l'on sait où elles s'appliquent. La liste
+suivante est la définition de V2, et elle est vérifiée à chaque
+`npm run verifier` par `scripts/validate-automatismes-v2.mjs` :
+
+- `packages/contrats/src` — contrats de question et de gabarit ;
+- `packages/moteur-exercices/src` — générateur pseudo-aléatoire seedé et
+  registre de générateurs ;
+- `packages/automatismes/src` — futurs paquets de notions ; le dossier n'existe
+  pas encore, il est déclaré d'avance pour naître déjà surveillé ;
+- `packages/objets/src` — les objets visuels que les questions dessinent ;
+- `packages/charte/src` — couleurs, typographie, espacements.
+
+Y sont refusés : les identifiants historiques `dnb_*`, le mini-langage de calcul
+d'origine, `Math.random()`, `eval`, `new Function`, et toute importation qui
+remonte vers `auto/` ou `studio/`. Les dépendances sont à sens unique :
+l'application et le studio consomment la fondation, la fondation ne les appelle
+jamais.
+
+Restent hors périmètre `auto/`, `studio/`, `outils/` et `scripts/` : ils font
+tourner ou documentent l'existant, et tombent avec lui.
+
+Une seule dispense, nominative : `packages/objets/src/provenance.js` et son test
+peuvent citer les identifiants historiques et le mini-langage d'origine, puisque
+leur métier est de nommer la dette à remplacer. Toutes les autres règles
+s'appliquent à eux comme aux autres.
+
 ## Mémoire et reprise du chantier
 
 La mémoire d'une conversation n'est jamais la référence. À chaque reprise :

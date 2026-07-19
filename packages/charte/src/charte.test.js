@@ -4,6 +4,7 @@ import {
   COULEURS,
   COULEURS_BARRES,
   COULEURS_POURCENTAGES,
+  COULEURS_PYTHAGORE,
   couleurFamillePourcentage,
   ESPACEMENTS,
   RAYONS,
@@ -13,15 +14,46 @@ import {
   contraste,
 } from "./charte.js";
 
+// La palette de Pythagore telle qu'elle était dans le composant du studio
+// avant son déménagement ici. Ce relevé est volontairement écrit en toutes
+// lettres : c'est lui qui garantit qu'un déplacement de fichier n'a jamais
+// changé une teinte à l'écran.
+const PALETTE_PYTHAGORE_ATTENDUE = {
+  hypFill: "#e2f5e8",
+  hypStroke: "#24994d",
+  hypText: "#187a3c",
+  leg1Fill: "#dceeff",
+  leg1Stroke: "#0879d0",
+  leg1Text: "#0879d0",
+  leg2Fill: "#fff0d8",
+  leg2Stroke: "#e89516",
+  leg2Text: "#b76e00",
+  outline: "#172033",
+  blue: "#169de8",
+  green: "#13ad13",
+  gray: "#969696",
+  magenta: "#d90072",
+  yellow: "#ffd071",
+};
+
 describe("charte — intégrité des données", () => {
   it("toutes les couleurs sont des hexadécimaux valides", () => {
     for (const [role, valeur] of Object.entries({
       ...COULEURS,
       ...COULEURS_BARRES,
       ...COULEURS_POURCENTAGES,
+      ...COULEURS_PYTHAGORE,
     })) {
       assert.match(valeur, /^#[0-9a-f]{6}$/, `couleur invalide pour ${role} : ${valeur}`);
     }
+  });
+
+  it("la palette de Pythagore est celle du composant d'origine, au hexadécimal près", () => {
+    assert.deepEqual({ ...COULEURS_PYTHAGORE }, PALETTE_PYTHAGORE_ATTENDUE);
+  });
+
+  it("la palette de Pythagore reste gelée", () => {
+    assert.ok(Object.isFrozen(COULEURS_PYTHAGORE));
   });
 
   it("chaque découpage de pourcentage a sa couleur de famille", () => {

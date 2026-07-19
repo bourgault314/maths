@@ -4,25 +4,18 @@
  * Les fonctions de ce fichier produisent les géométries de référence utilisées
  * par les outils, les cours et les miniatures. Elles sont indépendantes du DOM
  * afin de pouvoir servir dans une page interactive comme dans un générateur SVG.
+ *
+ * La palette et la racine dessinée ne vivent plus ici : la charte porte les
+ * couleurs, packages/objets porte le tracé. Ce fichier les réexporte pour ses
+ * consommateurs historiques — le sens des dépendances va donc du studio vers
+ * packages/, jamais l'inverse.
  */
 
-export const PYTHAGORE_COLORS = Object.freeze({
-  hypFill: "#e2f5e8",
-  hypStroke: "#24994d",
-  hypText: "#187a3c",
-  leg1Fill: "#dceeff",
-  leg1Stroke: "#0879d0",
-  leg1Text: "#0879d0",
-  leg2Fill: "#fff0d8",
-  leg2Stroke: "#e89516",
-  leg2Text: "#b76e00",
-  outline: "#172033",
-  blue: "#169de8",
-  green: "#13ad13",
-  gray: "#969696",
-  magenta: "#d90072",
-  yellow: "#ffd071"
-});
+import { COULEURS_PYTHAGORE } from "../../../packages/charte/src/charte.js";
+
+export { squareRootSvg } from "../../../packages/objets/src/pythagore.js";
+
+export const PYTHAGORE_COLORS = COULEURS_PYTHAGORE;
 
 const p = (x, y) => ({x, y});
 const add = (a, b) => p(a.x + b.x, a.y + b.y);
@@ -114,16 +107,6 @@ export function windmillSvg({x=0,y=0,small=60,medium=120,fillAll=true,fillSource
     {text:"c²",x:(g.B.x+g.Cw.x)/2,y:(g.B.y+g.Cw.y)/2}
   ].map(label => `<text x="${round(label.x)}" y="${round(label.y)}" text-anchor="middle" dominant-baseline="middle">${label.text}</text>`).join("") : "";
   return `<g stroke="${PYTHAGORE_COLORS.outline}" stroke-width="${strokeWidth}" stroke-linejoin="round">${areaMarkup}${pieceMarkup}${outlines}${triangle}${right}<g stroke="none" fill="#172033" font-family="Segoe UI,Arial,sans-serif" font-size="13" font-weight="850">${labelMarkup}</g></g>`;
-}
-
-/** Racine française compacte : le radicande commence juste après le crochet. */
-export function squareRootSvg({x=0,baseline=20,radicand="25",fontSize=18,color="#334155",fontWeight=750}={}){
-  const text=String(radicand);
-  const textWidth=Math.max(fontSize*.62,text.length*fontSize*.56);
-  const numberX=x+fontSize*.68;
-  const barEnd=numberX+textWidth+1;
-  const d=`M ${round(x)} ${round(baseline-fontSize*.36)} l ${round(fontSize*.22)} ${round(fontSize*.34)} l ${round(fontSize*.32)} ${round(-fontSize*.82)} H ${round(barEnd)}`;
-  return `<g fill="${color}" stroke="${color}"><path d="${d}" fill="none" stroke-width="${round(Math.max(1.8,fontSize*.11))}" stroke-linecap="round" stroke-linejoin="round"/><text x="${round(numberX)}" y="${round(baseline)}" stroke="none" font-family="Segoe UI,Arial,sans-serif" font-size="${fontSize}" font-weight="${fontWeight}">${text}</text></g>`;
 }
 
 /** Schéma en barres de Pythagore : rectangles jointifs et seules lettres dans les cases. */
