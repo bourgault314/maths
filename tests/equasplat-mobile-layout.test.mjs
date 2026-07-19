@@ -4,12 +4,12 @@ import test from "node:test";
 
 const html = await readFile(new URL("../outils/equasplat_import_splat.html", import.meta.url), "utf8");
 
-test("ÉquaSplat mobile place le plateau, les commandes puis l’équation dans le flux", () => {
+test("ÉquaSplat mobile place l’équation, le plateau puis les commandes dans le flux", () => {
   assert.match(html, /\.stage:not\(:fullscreen\) \.stageQuickActions\{\s*display:none;/);
-  assert.match(html, /\.stage:not\(:fullscreen\) \.board\{\s*order:1;/);
-  assert.match(html, /\.stage:not\(:fullscreen\) \.instructionZone\{\s*order:2;/);
-  assert.match(html, /\.stage:not\(:fullscreen\) \.mobileBottomControls\{\s*order:3;\s*position:static;/);
-  assert.match(html, /\.stage:not\(:fullscreen\) \.topbar\{\s*order:4;/);
+  assert.match(html, /\.stage:not\(:fullscreen\) \.topbar\{\s*order:1;/);
+  assert.match(html, /\.stage:not\(:fullscreen\) \.board\{\s*order:2;/);
+  assert.match(html, /\.stage:not\(:fullscreen\) \.instructionZone\{\s*order:3;/);
+  assert.match(html, /\.stage:not\(:fullscreen\) \.mobileBottomControls\{\s*order:4;\s*position:static;/);
 });
 
 test("ÉquaSplat mobile compacte les actions objet sur une ligne et sépare les familles", () => {
@@ -35,18 +35,46 @@ test("Annuler et Recommencer restent disponibles avec une flèche lisible", () =
 test("l’historique bleu réserve dès le départ une grande zone et suit sa dernière ligne", () => {
   assert.match(html, /equationHistory\.scrollTop = equationHistory\.scrollHeight/);
   assert.match(html, /\.equationHistory\{[^}]*overflow-y:auto;/s);
-  assert.match(html, /\.topbar\{\s*order:4;[^}]*height:clamp\(300px,44dvh,380px\);[^}]*min-height:300px;[^}]*max-height:380px;[^}]*border:2px solid #93c5fd;[^}]*background:#eff6ff;/s);
+  assert.match(html, /\.topbar\{\s*order:1;[^}]*height:auto;[^}]*min-height:120px;[^}]*max-height:none;[^}]*flex:1 1 120px;[^}]*border:2px solid #93c5fd;[^}]*background:#eff6ff;/s);
+  assert.match(html, /\.equationHistory\{[^}]*overflow-y:auto;[^}]*overscroll-behavior:contain;[^}]*-webkit-overflow-scrolling:touch;/s);
+});
+
+test("les opérations faites aux deux membres apparaissent entre les équations", () => {
+  assert.match(html, /function recordEquationStep\(operationLabel=null\)/);
+  assert.match(html, /function operationBetweenRows\(label\)/);
+  assert.match(html, /class="equationOperationArrow"[^>]*>↓<\/span>/);
+  assert.match(html, /\.equationOperationSideLeft\{\s*justify-content:flex-start;\s*padding-left:3px;/);
+  assert.match(html, /\.equationOperationSideRight\{\s*justify-content:flex-end;\s*padding-right:3px;/);
+  assert.match(html, /equationOperationSideLeft"><span>\$\{safeLabel\}<\/span><span class="equationOperationArrow"/);
+  assert.match(html, /equationOperationSideRight"><span class="equationOperationArrow"[^>]*>↓<\/span><span>\$\{safeLabel\}<\/span>/);
+  assert.match(html, /Même opération dans les deux membres/);
+  assert.match(html, /recordEquationStep\(operation\)/);
+  assert.match(html, /recordEquationStep\("× \(−1\)"\)/);
+  assert.match(html, /`÷ \$\{n\}`/);
+  assert.match(html, /finishAddBothAction\(operationDeltaLabel\(value\)\)/);
+  assert.match(html, /finishAddBothAction\(operationDeltaLabel\(sign \* count, currentVar\(\)\)\)/);
+});
+
+test("sur téléphone seule la zone bleue défile", () => {
+  assert.match(html, /body\.importMode\{[^}]*height:100svh;[^}]*min-height:0;[^}]*max-height:100svh;[^}]*overflow:hidden;[^}]*overscroll-behavior:none;/s);
+  assert.match(html, /body\.importMode main\{[^}]*height:calc\(100% - 8px\);[^}]*max-height:calc\(100% - 8px\);[^}]*overflow:hidden;/s);
+  assert.match(html, /\.stage:not\(:fullscreen\)\{[^}]*height:100%;[^}]*max-height:100%;[^}]*overflow:hidden;/s);
+  assert.match(html, /@media \(max-width:760px\) and \(max-height:720px\)[\s\S]*?\.topbar\{[^}]*height:auto;[^}]*min-height:100px;[^}]*flex:1 1 100px;/);
 });
 
 test("le plateau mobile utilise tout son cadre avec des plateaux rectangulaires", () => {
-  assert.match(html, /\.board\{\s*order:1;[^}]*height:clamp\(350px,98vw,410px\);[^}]*min-height:350px;[^}]*max-height:410px;/s);
+  assert.match(html, /\.board\{\s*order:2;[^}]*width:calc\(100% \+ 12px\);[^}]*height:clamp\(330px,92vw,380px\);[^}]*margin-left:-6px;[^}]*margin-right:-6px;/s);
   assert.match(html, /svg\.setAttribute\("viewBox", mobileLayout \? "0 0 1600 1480" : "0 0 1600 820"\)/);
   assert.match(html, /\? \{x:8, y:54, w:760, h:1372\}/);
   assert.match(html, /: \{x:832, y:54, w:760, h:1372\}/);
-  assert.match(html, /return isMobileImportLayout\(\) \? Math\.round\(radius \* 1\.18\) : radius/);
+  assert.match(html, /return isMobileImportLayout\(\) \? Math\.round\(radius \* 1\.30\) : radius/);
+  assert.match(html, /x:tray\.x\+\(mobileLayout \? 45 : 70\)/);
+  assert.match(html, /w:tray\.w-\(mobileLayout \? 90 : 140\)/);
+  assert.match(html, /r:mobileLayout \? 108 : 84/);
+  assert.ok((760 - 90) / 3 > 2 * 108, "trois splats agrandis doivent rester séparés sur une ligne");
   assert.match(html, /@media \(max-width:760px\) and \(max-height:720px\)/);
-  assert.match(html, /\.board\{\s*height:285px;\s*min-height:285px;\s*max-height:285px;/);
-  assert.match(html, /\.topbar\{\s*height:220px;\s*min-height:220px;\s*max-height:220px;/);
+  assert.match(html, /\.board\{\s*height:270px;\s*min-height:270px;\s*max-height:270px;/);
+  assert.match(html, /\.topbar\{\s*height:auto;\s*min-height:100px;\s*max-height:none;/);
 });
 
 test("l’élargissement conserve tous les garde-fous anti-chevauchement", () => {
@@ -67,6 +95,10 @@ test("la validation mobile garde toujours la même hauteur", () => {
   assert.match(html, /\.mobileBottomControls \.actionZone\{\s*height:44px;\s*min-height:44px;\s*max-height:44px;/);
   assert.match(html, /function stabilizeMobileActionZone\(\)/);
   assert.match(html, /actionZone\.appendChild\(makePlaceholder\("Valider"\)\)/);
+  assert.match(html, /if\(child\.tagName === "BUTTON" && \/\^Effacer\/\.test\(child\.textContent \|\| ""\)\)\{\s*child\.remove\(\);/);
+  assert.doesNotMatch(html, /Désélectionner/);
+  assert.doesNotMatch(html, /makePlaceholder\("Effacer"/);
+  assert.doesNotMatch(html, /actionPlaceholderHidden/);
   assert.match(html, /renderActions\(\);\s*stabilizeMobileActionZone\(\);/);
 });
 
