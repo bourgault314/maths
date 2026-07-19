@@ -104,10 +104,12 @@ l'interface de la bêta :
 - le diaporama ne crée ni trace ni score et possède ses commandes enseignant
   pour l'aide, la réponse, la correction et le passage à la suite ; à partir
   de 900 px, ses cinq propositions occupent une seule ligne lisible à distance ;
+- en projection, la question et la barre enseignant restent fixes dans la
+  hauteur de l'écran : seul le panneau latéral peut défiler ;
 - à 375 px, il n'existe aucun débordement horizontal et toutes les cibles
   tactiles mesurent au moins 44 px ;
-- à 1 280 px, le panneau latéral de projection occupe 31,9 % de la largeur et
-  ne masque pas la question ;
+- à 1 280 px, l'aide occupe 32,9 % de la largeur et la correction 50 %, sans
+  masquer le nombre ni les cinq propositions ;
 - les garde-fous V2 couvrent désormais le lecteur sur 78 fichiers et le dépôt
   complet réussit **843 tests sur 843**.
 

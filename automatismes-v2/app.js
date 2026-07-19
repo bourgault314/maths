@@ -174,9 +174,13 @@ function rendreBarreEnseignant() {
   const derniere = etat.seance.etat.indexQuestion + 1 === etat.seance.nombreQuestions;
   return `
     <nav class="barre-enseignant" aria-label="Commandes du diaporama">
+      <span class="libelle-enseignant" aria-hidden="true">Enseignant</span>
       <button data-action="aide" ${aideDisponible ? "" : "disabled"}
         aria-expanded="${etat.aideOuverte}" aria-controls="panneau-aide">Aide</button>
-      <button data-action="reponse" ${etat.reponseRevelee ? "disabled" : ""}>Réponse</button>
+      <button class="commande-reponse ${etat.reponseRevelee ? "active" : ""}"
+        data-action="reponse" ${etat.reponseRevelee ? "disabled" : ""}>
+        ${etat.reponseRevelee ? "Réponse affichée" : "Réponse"}
+      </button>
       <button data-action="correction" aria-expanded="${etat.correctionOuverte}"
         aria-controls="panneau-correction">Correction</button>
       <button data-action="suivant">${derniere ? "Terminer" : "Suivant"}</button>
@@ -293,8 +297,13 @@ function rendreQuestion() {
   const nombre = nombreQuestion(question);
   const interactif = etat.configuration.mode === "interactif";
   const sansDiviseur = question.reponse.attendus.includes("aucun");
+  const classePanneau = etat.aideOuverte
+    ? "aide-ouverte"
+    : etat.correctionOuverte
+      ? "correction-ouverte"
+      : "";
   return `
-    <div class="lecteur mode-${etat.configuration.mode} ${etat.aideOuverte || etat.correctionOuverte ? "panneau-ouvert" : ""}">
+    <div class="lecteur mode-${etat.configuration.mode} ${etat.aideOuverte || etat.correctionOuverte ? "panneau-ouvert" : ""} ${classePanneau}">
       ${rendreEntete()}
       <div class="espace-lecteur">
         <main class="carte-question">
