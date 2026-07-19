@@ -1,0 +1,35 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="240.0 370.0 750.0 880.0" width="750" height="880" font-family="Segoe UI, Roboto, Helvetica, Arial, sans-serif">
+  <title>Abū al-Wafā — les 9 pièces recomposent c² (PR #6)</title>
+  <rect x="240.0" y="370.0" width="750.0" height="880.0" fill="#ffffff"/>
+  <text x="615.0" y="422.0" text-anchor="middle" font-size="42" font-weight="700" fill="#111827">Abū al-Wafā — les 9 pièces recomposent c² (PR #6)</text>
+  <text x="615.0" y="468.0" text-anchor="middle" font-size="26" fill="#4b5563">Aire totale des 9 pièces = 220500.000 = c² = 220500.000 — aucun trou, aucun recouvrement</text>
+  <!-- carré c² -->
+  <polygon points="300.000,770.000 720.000,560.000 930.000,980.000 510.000,1190.000" fill="#ffffff" stroke="#111827" stroke-width="6"/>
+  <polygon points="300.000,770.000 468.000,896.000 405.000,980.000" fill="#ffcc66" fill-opacity="0.9" stroke="#111827" stroke-width="3" stroke-linejoin="round"/>
+  <text x="391.0" y="890.0" text-anchor="middle" font-size="26" font-weight="700" fill="#111827" stroke="#ffffff" stroke-width="5" paint-order="stroke">t1</text>
+  <polygon points="510.000,1190.000 405.000,980.000 468.000,896.000 636.000,1022.000" fill="#e67e22" fill-opacity="0.9" stroke="#111827" stroke-width="3" stroke-linejoin="round"/>
+  <text x="504.8" y="1030.0" text-anchor="middle" font-size="26" font-weight="700" fill="#111827" stroke="#ffffff" stroke-width="5" paint-order="stroke">q1</text>
+  <polygon points="510.000,665.000 720.000,560.000 594.000,728.000" fill="#0099ff" fill-opacity="0.9" stroke="#111827" stroke-width="3" stroke-linejoin="round"/>
+  <text x="608.0" y="659.0" text-anchor="middle" font-size="26" font-weight="700" fill="#111827" stroke="#ffffff" stroke-width="5" paint-order="stroke">t2</text>
+  <polygon points="468.000,896.000 300.000,770.000 510.000,665.000 594.000,728.000" fill="#1565c0" fill-opacity="0.9" stroke="#111827" stroke-width="3" stroke-linejoin="round"/>
+  <text x="468.0" y="772.8" text-anchor="middle" font-size="26" font-weight="700" fill="#111827" stroke="#ffffff" stroke-width="5" paint-order="stroke">q2</text>
+  <polygon points="510.000,1190.000 636.000,1022.000 720.000,1085.000" fill="#fca5a5" fill-opacity="0.9" stroke="#111827" stroke-width="3" stroke-linejoin="round"/>
+  <text x="622.0" y="1107.0" text-anchor="middle" font-size="26" font-weight="700" fill="#111827" stroke="#ffffff" stroke-width="5" paint-order="stroke">t3</text>
+  <polygon points="720.000,1085.000 636.000,1022.000 762.000,854.000 930.000,980.000" fill="#e74c3c" fill-opacity="0.9" stroke="#111827" stroke-width="3" stroke-linejoin="round"/>
+  <text x="762.0" y="993.3" text-anchor="middle" font-size="26" font-weight="700" fill="#111827" stroke="#ffffff" stroke-width="5" paint-order="stroke">q3</text>
+  <polygon points="762.000,854.000 825.000,770.000 930.000,980.000" fill="#1abc9c" fill-opacity="0.9" stroke="#111827" stroke-width="3" stroke-linejoin="round"/>
+  <text x="839.0" y="876.0" text-anchor="middle" font-size="26" font-weight="700" fill="#111827" stroke="#ffffff" stroke-width="5" paint-order="stroke">t4</text>
+  <polygon points="762.000,854.000 594.000,728.000 720.000,560.000 825.000,770.000" fill="#009900" fill-opacity="0.9" stroke="#111827" stroke-width="3" stroke-linejoin="round"/>
+  <text x="725.2" y="736.0" text-anchor="middle" font-size="26" font-weight="700" fill="#111827" stroke="#ffffff" stroke-width="5" paint-order="stroke">q4</text>
+  <polygon points="468.000,896.000 594.000,728.000 762.000,854.000 636.000,1022.000" fill="#9b59b6" fill-opacity="0.9" stroke="#111827" stroke-width="3" stroke-linejoin="round"/>
+  <text x="615.0" y="883.0" text-anchor="middle" font-size="26" font-weight="700" fill="#111827" stroke="#ffffff" stroke-width="5" paint-order="stroke">sq</text>
+  <polygon points="300.000,770.000 720.000,560.000 930.000,980.000 510.000,1190.000" fill="none" stroke="#111827" stroke-width="6"/>
+  <circle cx="300.0" cy="770.0" r="7" fill="#111827"/>
+  <text x="316.0" y="756.0" font-size="28" font-weight="700" fill="#374151">C</text>
+  <circle cx="720.0" cy="560.0" r="7" fill="#111827"/>
+  <text x="736.0" y="546.0" font-size="28" font-weight="700" fill="#374151">B</text>
+  <circle cx="930.0" cy="980.0" r="7" fill="#111827"/>
+  <text x="946.0" y="966.0" font-size="28" font-weight="700" fill="#374151">Bw</text>
+  <circle cx="510.0" cy="1190.0" r="7" fill="#111827"/>
+  <text x="526.0" y="1176.0" font-size="28" font-weight="700" fill="#374151">Cw</text>
+</svg>

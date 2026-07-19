@@ -1,0 +1,38 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="-30.0 -100.0 1020.0 1370.0" width="1020" height="1370" font-family="Segoe UI, Roboto, Helvetica, Arial, sans-serif">
+  <title>Abū al-Wafā — situation de départ (PR #6)</title>
+  <rect x="-30.0" y="-100.0" width="1020.0" height="1370.0" fill="#ffffff"/>
+  <text x="480.0" y="-48.0" text-anchor="middle" font-size="42" font-weight="700" fill="#111827">Abū al-Wafā — situation de départ (PR #6)</text>
+  <text x="480.0" y="-2.0" text-anchor="middle" font-size="26" fill="#4b5563">Triangle rectangle a = 210, b = 420 (rapport 1:2) — b² est découpé en 8 pièces, a² reste entier</text>
+  <!-- triangle rectangle ABC -->
+  <polygon points="300.000,560.000 720.000,560.000 300.000,770.000" fill="#e5e7eb" stroke="#111827" stroke-width="3"/>
+  <!-- carré c² vide (la cible) -->
+  <polygon points="300.000,770.000 720.000,560.000 930.000,980.000 510.000,1190.000" fill="#f8fafc" stroke="#94a3b8" stroke-width="4" stroke-dasharray="14 10"/>
+  <text x="615.0" y="875.0" text-anchor="middle" font-size="54" font-weight="700" fill="#94a3b8">c²</text>
+  <text x="615.0" y="921.0" text-anchor="middle" font-size="24" fill="#94a3b8">à remplir avec les 9 pièces</text>
+  <!-- les 9 pièces -->
+  <polygon points="300.000,140.000 405.000,140.000 300.000,350.000" fill="#ffcc66" fill-opacity="0.9" stroke="#111827" stroke-width="3" stroke-linejoin="round"/>
+  <text x="335.0" y="218.0" text-anchor="middle" font-size="26" font-weight="700" fill="#111827" stroke="#ffffff" stroke-width="5" paint-order="stroke">t1</text>
+  <polygon points="405.000,140.000 510.000,140.000 510.000,350.000 300.000,350.000" fill="#e67e22" fill-opacity="0.9" stroke="#111827" stroke-width="3" stroke-linejoin="round"/>
+  <text x="431.3" y="253.0" text-anchor="middle" font-size="26" font-weight="700" fill="#111827" stroke="#ffffff" stroke-width="5" paint-order="stroke">q1</text>
+  <polygon points="510.000,140.000 615.000,140.000 510.000,350.000" fill="#0099ff" fill-opacity="0.9" stroke="#111827" stroke-width="3" stroke-linejoin="round"/>
+  <text x="545.0" y="218.0" text-anchor="middle" font-size="26" font-weight="700" fill="#111827" stroke="#ffffff" stroke-width="5" paint-order="stroke">t2</text>
+  <polygon points="615.000,140.000 720.000,140.000 720.000,350.000 510.000,350.000" fill="#1565c0" fill-opacity="0.9" stroke="#111827" stroke-width="3" stroke-linejoin="round"/>
+  <text x="641.3" y="253.0" text-anchor="middle" font-size="26" font-weight="700" fill="#111827" stroke="#ffffff" stroke-width="5" paint-order="stroke">q2</text>
+  <polygon points="300.000,350.000 405.000,350.000 300.000,560.000" fill="#fca5a5" fill-opacity="0.9" stroke="#111827" stroke-width="3" stroke-linejoin="round"/>
+  <text x="335.0" y="428.0" text-anchor="middle" font-size="26" font-weight="700" fill="#111827" stroke="#ffffff" stroke-width="5" paint-order="stroke">t3</text>
+  <polygon points="405.000,350.000 510.000,350.000 510.000,560.000 300.000,560.000" fill="#e74c3c" fill-opacity="0.9" stroke="#111827" stroke-width="3" stroke-linejoin="round"/>
+  <text x="431.3" y="463.0" text-anchor="middle" font-size="26" font-weight="700" fill="#111827" stroke="#ffffff" stroke-width="5" paint-order="stroke">q3</text>
+  <polygon points="510.000,350.000 615.000,350.000 510.000,560.000" fill="#1abc9c" fill-opacity="0.9" stroke="#111827" stroke-width="3" stroke-linejoin="round"/>
+  <text x="545.0" y="428.0" text-anchor="middle" font-size="26" font-weight="700" fill="#111827" stroke="#ffffff" stroke-width="5" paint-order="stroke">t4</text>
+  <polygon points="615.000,350.000 720.000,350.000 720.000,560.000 510.000,560.000" fill="#009900" fill-opacity="0.9" stroke="#111827" stroke-width="3" stroke-linejoin="round"/>
+  <text x="641.3" y="463.0" text-anchor="middle" font-size="26" font-weight="700" fill="#111827" stroke="#ffffff" stroke-width="5" paint-order="stroke">q4</text>
+  <polygon points="90.000,560.000 300.000,560.000 300.000,770.000 90.000,770.000" fill="#9b59b6" fill-opacity="0.9" stroke="#111827" stroke-width="3" stroke-linejoin="round"/>
+  <text x="195.0" y="673.0" text-anchor="middle" font-size="26" font-weight="700" fill="#111827" stroke="#ffffff" stroke-width="5" paint-order="stroke">sq</text>
+  <text x="510.0" y="114.0" text-anchor="middle" font-size="34" font-weight="700" fill="#111827">carré b² — 8 pièces (4 triangles + 4 trapèzes)</text>
+  <text x="40.0" y="900.0" text-anchor="start" font-size="32" font-weight="700" fill="#111827">carré a²</text>
+  <text x="40.0" y="938.0" text-anchor="start" font-size="26" fill="#4b5563">1 seule pièce, non découpée</text>
+  <path d="M 70.0 870.0 L 195.0 750.0" stroke="#4b5563" stroke-width="3" fill="none"/>
+  <text x="326.0" y="544.0" font-size="30" font-weight="700" fill="#374151">A</text>
+  <text x="734.0" y="548.0" font-size="30" font-weight="700" fill="#374151">B</text>
+  <text x="314.0" y="804.0" font-size="30" font-weight="700" fill="#374151">C</text>
+</svg>
