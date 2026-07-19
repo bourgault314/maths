@@ -7,7 +7,7 @@
 - Dépôt : `bourgault314/maths`.
 - Branche de référence : `main`.
 - Commit de référence vérifié sur GitHub :
-  `3d359a5e3cdcd9fb0709670efc08d1b9beca6191`.
+  `72090437992d8e60915e14c7c0a8234775f868ac`.
 - La PR #170 est fusionnée : la carte DNB, la fiche validée de `NC-01`, les
   storyboards et les décisions D-014 à D-019 sont la mémoire officielle du
   chantier.
@@ -15,6 +15,8 @@
   contrats génériques, PRNG seedé, registre, objets indépendants, charte et
   garde-fous du périmètre V2.
 - Le lot de la PR #162 réussit **705 tests sur 705** et `npm run verifier`.
+- La PR #176 est fusionnée : les contrats minimaux de question V2, de séance
+  et de trace nécessaires à `NC-01/F2` sont dans `main`.
 - La PR #156 sur les puissances simples reste un brouillon séparé. Elle n'est
   pas le chantier actif et ne doit pas être fusionnée telle quelle. Les
   micro-notions du DNB qui mobilisent des puissances restent bien dans la carte
@@ -25,7 +27,8 @@
 
 - La bêta continue de fonctionner séparément et reste gelée hors correction
   critique.
-- Aucun générateur pédagogique V2 n'est encore présent dans `main`.
+- Le premier générateur pédagogique V2 est construit dans le lot courant,
+  mais aucun lecteur ne l'expose encore aux élèves.
 - La carte du DNB est établie : **37 cibles officielles distinctes**,
   **38 cibles normalisées** et **88 micro-notions**.
 - Une seule micro-notion est active : `NC-01`, critères de divisibilité par
@@ -52,30 +55,36 @@
 Ces documents autorisent la fabrication de la première tranche verticale. Ils
 ne publient encore aucune question devant les élèves.
 
-## Lot technique courant : contrats minimaux de NC-01/F2
+## Lot technique courant : générateur seedé de NC-01/F2
 
-Le premier sous-lot technique est construit et testé :
+Le deuxième sous-lot technique est construit et testé :
 
-- `mathsgo.question-instance/2` ajoute uniquement les blocs texte/entier, le
-  classement maths&go, la sélection multiple par ensemble exact et les deux
-  outils d'aide nécessaires à `NC-01/F2` ;
-- `mathsgo.seance/1` sépare la sélection et l'avancement de la séance ;
-- `mathsgo.trace-reponse/1` conserve la première validation interactive sans
-  identité, durée ni serveur ;
-- la version 1 du contrat de question reste intacte ;
-- les propriétés non prévues, les coordonnées d'écran et le code exécutable
-  sont refusés ;
-- les sept garde-fous du dépôt passent et le lot complet réussit
-  **806 tests sur 806**.
+- le nouveau paquet `@mathsgo/automatismes` contient le gabarit et le
+  générateur `selection-diviseurs`, puis l'enregistre explicitement dans le
+  moteur ;
+- le registre sait valider le contrat déclaré par chaque générateur : la
+  version 1 reste le défaut et la version 2 est utilisée par `NC-01/F2` ;
+- la génération croise équitablement quatre classes de chiffre des unités et
+  trois classes de somme des chiffres, soit les douze ensembles de réponses
+  mathématiquement possibles ;
+- les nombres possèdent deux, trois ou quatre chiffres, avec les cas de zéro
+  interne et d'unité zéro ;
+- l'aide générale est identique quelle que soit la réponse ; la correction
+  examine séparément 2, 5 et 10, calcule une seule fois la somme des chiffres,
+  puis examine 3 et 9 avant la conclusion ;
+- mille générations seedées vérifient les cinq critères, les implications
+  `9 → 3` et `10 → 2 et 5`, le déterminisme et la variété ;
+- les sept garde-fous du dépôt passent sur 74 fichiers et le lot complet
+  réussit **827 tests sur 827**.
 
 Le clavier numérique, les fractions, le lecteur, le serveur, l'identité de
 l'élève et le chronomètre ne sont pas construits par anticipation.
 
-## Prochaine étape après fusion de ce lot
+## Prochaine étape après validation et fusion de ce lot
 
-Écrire à neuf le générateur seedé de `NC-01/F2`, l'enregistrer dans le moteur
-et tester ses invariants mathématiques, sa variété et son déterminisme. Le
-lecteur interactif et projection viendra dans le sous-lot suivant.
+Présenter à Gwenaël des instances réellement générées, leurs aides et leurs
+corrections. Après sa validation du lot, construire le lecteur commun de
+`NC-01/F2` en interactif et en projection, puis vérifier son aperçu à 375 px.
 
 ## Règle de mise à jour
 

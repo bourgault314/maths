@@ -16,7 +16,7 @@ Règles du package :
 | Module | Rôle |
 |---|---|
 | `src/aleatoire.js` | Hasard reproductible : graine texte ou nombre, réels, entiers, choix, mélange. `VERSION_ALEATOIRE` protège les séries déjà partagées. |
-| `src/generation.js` | Registre de générateurs et instanciation : gabarit (donnée) + graine → question conforme au contrat, validée avant d'être rendue. |
+| `src/generation.js` | Registre de générateurs et instanciation : gabarit (donnée) + graine → question conforme au contrat déclaré par le générateur, validée avant d'être rendue. Les contrats de question V1 et V2 sont pris en charge. |
 
 ## Usage
 
