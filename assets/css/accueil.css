@@ -375,10 +375,10 @@ footer {
     left: 4%;
     transform: scale(1);
   }
-  .scene-item-geometrie { transform: scale(1); }
+  .scene-item-geometrie { transform: scale(0.94); }
   .scene-item-recherches {
     left: -8%;
-    transform: scale(0.96);
+    transform: scale(0.92);
   }
   .scene-plate { transform: scale(1.08); transform-origin: center; }
   footer {

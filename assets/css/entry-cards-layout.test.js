@@ -66,7 +66,7 @@ test("l'accueil mobile remplit la hauteur sûre sans changer sa grille", () => {
   assert.match(mobileRule, /aspect-ratio:\s*560\s*\/\s*230/);
   assert.match(mobileRule, /\.scene-item\s*\{\s*transform:\s*scale\(1\.1\)/);
   assert.match(mobileRule, /\.scene-item-donnees\s*\{[\s\S]*?left:\s*4%;[\s\S]*?scale\(1\)/);
-  assert.match(mobileRule, /\.scene-item-geometrie\s*\{\s*transform:\s*scale\(1\)/);
-  assert.match(mobileRule, /\.scene-item-recherches\s*\{[\s\S]*?left:\s*-8%;[\s\S]*?scale\(0\.96\)/);
+  assert.match(mobileRule, /\.scene-item-geometrie\s*\{\s*transform:\s*scale\(0\.94\)/);
+  assert.match(mobileRule, /\.scene-item-recherches\s*\{[\s\S]*?left:\s*-8%;[\s\S]*?scale\(0\.92\)/);
   assert.match(homeCss, /grid-template-columns:\s*repeat\(4,/);
 });
