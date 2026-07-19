@@ -130,6 +130,19 @@ export const PROVENANCE_FONDATION_V2 = Object.freeze({
     ]),
   ),
 
+  "automatismes-v2/app.js": {
+    statut: "original_mathsgo",
+    source: "storyboards du lecteur NC-01/F2 validés par Gwenaël le 19 juillet 2026",
+  },
+  "automatismes-v2/package.json": {
+    statut: "original_mathsgo",
+    source: "configuration du lecteur écrite pour Automatismes maths&go V2",
+  },
+  "automatismes-v2/src/etat-lecteur.js": {
+    statut: "original_mathsgo",
+    source: "contrats de séance et de trace validés pour Automatismes maths&go V2",
+  },
+
   "packages/objets/src/programme-automatismes.js": {
     statut: "original_mathsgo",
     source: "programmes officiels des cycles 3 et 4, structurés pour maths&go",

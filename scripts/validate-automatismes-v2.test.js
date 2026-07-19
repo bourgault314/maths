@@ -33,8 +33,9 @@ function analyserSource(contenu, { nom = "essai.js", exemptions = {} } = {}) {
 const motifsDe = (erreurs) => erreurs.map((erreur) => erreur.split(" : ").at(-1));
 
 describe("périmètre déclaré", () => {
-  it("couvre les cinq dossiers de la fondation", () => {
+  it("couvre le lecteur et les cinq dossiers de la fondation", () => {
     assert.deepEqual(RACINES_V2, [
+      "automatismes-v2",
       "packages/contrats/src",
       "packages/moteur-exercices/src",
       "packages/automatismes/src",
@@ -54,6 +55,7 @@ describe("périmètre déclaré", () => {
 
   it("surveille bien les objets visuels, pas seulement les contrats", () => {
     const { fichiers } = analyserPerimetre();
+    assert.ok(fichiers.some((chemin) => chemin.startsWith("automatismes-v2/")));
     assert.ok(fichiers.some((chemin) => chemin.startsWith("packages/objets/src/")));
     assert.ok(fichiers.some((chemin) => chemin.startsWith("packages/charte/src/")));
   });

@@ -38,7 +38,13 @@ test("chaque entrée déclare un statut connu et une source", () => {
 test("les déclarations de la fondation utilisent des chemins complets sans doublon", () => {
   const chemins = Object.keys(PROVENANCE_FONDATION_V2);
   assert.equal(chemins.length, new Set(chemins).size);
-  assert.ok(chemins.every((chemin) => chemin.startsWith("packages/") && chemin.includes("/src/")));
+  assert.ok(
+    chemins.every(
+      (chemin) =>
+        chemin.startsWith("automatismes-v2/") ||
+        (chemin.startsWith("packages/") && chemin.includes("/src/")),
+    ),
+  );
 });
 
 /*

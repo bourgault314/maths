@@ -151,6 +151,7 @@ Ces contraintes ne valent que si l'on sait où elles s'appliquent. La liste
 suivante est la définition technique de V2, et elle est vérifiée à chaque
 `npm run verifier` par `scripts/validate-automatismes-v2.mjs` :
 
+- `automatismes-v2` — lecteur commun neuf, interactif et diaporama ;
 - `packages/contrats/src` — contrats de question et de gabarit ;
 - `packages/moteur-exercices/src` — générateur pseudo-aléatoire seedé et
   registre de générateurs ;
@@ -165,7 +166,7 @@ remonte vers `auto/` ou `studio/`. Les dépendances sont à sens unique :
 l'application et le studio consomment la fondation, la fondation ne les appelle
 jamais.
 
-Chaque fichier de production de ces cinq dossiers déclare également son statut
+Chaque fichier de production de ces six dossiers déclare également son statut
 et sa source dans `PROVENANCE_FONDATION_V2`. Le validateur compare le registre
 au disque dans les deux sens : un nouveau fichier oublié et une déclaration
 pointant vers un fichier supprimé font tous deux échouer la CI. Cette exigence
