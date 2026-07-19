@@ -5,6 +5,7 @@ import vm from 'node:vm';
 const index=fs.readFileSync('auto/index.html','utf8');
 const manifest=fs.readFileSync('auto/scripts/00-module-manifest.js','utf8');
 const modules=fs.readFileSync('auto/scripts/01-modules.js','utf8');
+const slideshow=fs.readFileSync('auto/scripts/03-slideshow.js','utf8');
 
 const scriptSources=[...index.matchAll(/<script\b[^>]*\bsrc="([^"]+)"/g)].map(match=>match[1]);
 const requiredOrder=[
@@ -30,5 +31,11 @@ vm.runInContext(modules,context,{filename:'auto/scripts/01-modules.js'});
 const domains=vm.runInContext('[...new Set(RAW_MODULES.map(module=>module.domain))].sort()',context);
 assert.deepEqual([...domains],['algorithm','data','geometry','numbers'],'Les quatre domaines d’automatismes ne sont pas tous disponibles au démarrage.');
 assert.equal(vm.runInContext('RAW_MODULES.length',context),43,'Le catalogue public doit contenir 43 automatismes.');
+assert.match(slideshow,/divisibility_rules:\{title:'Critères de divisibilité'/,'Le catalogue des cours doit raccorder les critères de divisibilité.');
+for(const binding of ['integer_squares:courseCatalog.squares','solid_recognition:courseCatalog.solids','area:courseCatalog.area_formulas','volume:courseCatalog.volume_formulas']){
+  assert.ok(slideshow.includes(binding),`Le cours ${binding.split(':')[0]} n’est pas raccordé au catalogue.`);
+}
+assert.ok(slideshow.includes("'trigonometry_reasoning'].includes"),'La trigonométrie sans calculatrice n’est pas raccordée au moteur des cours.');
+assert.ok(slideshow.includes("'trigonometry_calculation'].includes"),'La trigonométrie avec calculatrice n’est pas raccordée au moteur des cours.');
 
 console.log('Automatismes publics : ordre, cache et catalogue de démarrage validés.');

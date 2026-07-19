@@ -1002,7 +1002,7 @@ function courseReadDataPictogramVisual(){
  return '<div class="read-data-pictogram" role="img" aria-label="Trois symboles, chaque symbole représente cinq élèves"><strong>espagnol</strong><span class="read-data-stars" aria-hidden="true">★ ★ ★</span><span class="read-data-legend">1 ★ représente 5 élèves</span></div><div class="read-data-course-caption"><b>3 × 5 = 15 élèves</b> : on multiplie, on ne compte pas seulement les symboles.</div>';
 }
 const courseCatalog={
-  divisibility:{title:'Critères de divisibilité',rules:[
+  divisibility_rules:{title:'Critères de divisibilité',rules:[
     ['Divisible par 2','Son chiffre des unités est 0, 2, 4, 6 ou 8.<span class="course-example">Exemple : 1 438 se termine par 8, donc il est divisible par 2.</span>'],
     ['Divisible par 3','La somme de ses chiffres est divisible par 3.<span class="course-example">Exemple : 273 → 2 + 7 + 3 = 12, donc 273 est divisible par 3.</span>'],
     ['Divisible par 5','Son chiffre des unités est 0 ou 5.<span class="course-example">Exemple : 1 245 se termine par 5, donc il est divisible par 5.</span>'],
@@ -1223,6 +1223,17 @@ Object.assign(courseCatalog,{
   ]}
 });
 
+// Les identifiants du registre pédagogique sont la référence pour les modules.
+// Ces alias gardent les anciennes clés internes du catalogue utilisables pendant
+// la transition du moteur découpé.
+Object.assign(courseCatalog,{
+  divisibility:courseCatalog.divisibility_rules,
+  integer_squares:courseCatalog.squares,
+  solid_recognition:courseCatalog.solids,
+  area:courseCatalog.area_formulas,
+  volume:courseCatalog.volume_formulas
+});
+
 function courseGcd(a,b){a=Math.abs(Math.trunc(a));b=Math.abs(Math.trunc(b));while(b){const t=b;b=a%b;a=t;}return a||1;}
 function courseNumber(value){const rounded=Math.round(Number(value)*100)/100;return String(rounded).replace('.',',');}
 function percentageMethod(percent){
@@ -1405,8 +1416,8 @@ function courseForSlide(slide){
  if(slide.courseKind==='fraction_quantity_percent') return fractionQuantityCourse(slide.courseContext||{});
  if(slide.courseKind==='percent_change') return percentChangeCourse(slide.courseContext||{});
  if(slide.courseKind==='conversions') return conversionCourse(slide.courseContext||{});
- if(slide.courseKind==='trigonometry_basics') return trigonometryCourse(slide.courseContext||{},false);
- if(slide.courseKind==='trigonometry_calculator') return trigonometryCourse(slide.courseContext||{},true);
+ if(['trigonometry_basics','trigonometry_reasoning'].includes(slide.courseKind)) return trigonometryCourse(slide.courseContext||{},false);
+ if(['trigonometry_calculator','trigonometry_calculation'].includes(slide.courseKind)) return trigonometryCourse(slide.courseContext||{},true);
  if(slide.courseKind==='area_formulas') return contextualAreaCourse(slide.courseContext||{});
  if(slide.courseKind==='volume_formulas') return contextualVolumeCourse(slide.courseContext||{});
  if(slide.courseKind==='angle_vocabulary') return angleVocabularyCourse(slide.courseContext||{});
