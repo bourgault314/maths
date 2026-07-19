@@ -182,6 +182,14 @@ h3,
   grid-template-columns: auto 1fr auto;
 }
 
+.entete-seance.avec-cours {
+  grid-template-columns: auto 1fr auto auto auto;
+}
+
+.entete-projection.avec-cours {
+  grid-template-columns: auto 1fr auto auto;
+}
+
 .bouton-entete {
   padding: 8px 12px;
   border-radius: var(--mg-rayon-petit);
@@ -277,6 +285,94 @@ h3,
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 8px;
+}
+
+.carte-question-solides {
+  padding-top: 18px;
+}
+
+.visuel-solide {
+  width: min(100%, 340px);
+  margin: 4px auto 10px;
+  display: grid;
+  place-items: center;
+}
+
+.visuel-solide svg {
+  width: 100%;
+  max-width: 100%;
+  height: auto;
+  max-height: 34vh;
+  overflow: visible;
+}
+
+.solide-manipulable {
+  padding: 6px;
+  border: 2px dashed color-mix(in srgb, var(--mg-turquoise) 48%, var(--mg-ligne));
+  border-radius: var(--mg-rayon-moyen);
+  background: color-mix(in srgb, var(--mg-turquoise) 4%, var(--mg-papier));
+  cursor: grab;
+  touch-action: pan-y;
+}
+
+.solide-manipulable:active {
+  cursor: grabbing;
+}
+
+.grille-solides {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.grille-solides .choix {
+  min-height: 58px;
+  padding: 10px 8px;
+  font-size: clamp(16px, 5vw, 21px);
+  line-height: 1.15;
+}
+
+.figure-et-donnees {
+  margin: 4px auto 8px;
+  display: grid;
+  gap: 8px;
+  align-items: center;
+}
+
+.carte-question-volumes .visuel-solide {
+  margin-bottom: 0;
+}
+
+.donnees-volume {
+  margin: 0;
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 6px;
+}
+
+.donnees-volume > div {
+  min-width: 96px;
+  padding: 7px 10px;
+  border: 2px solid color-mix(in srgb, var(--mg-turquoise) 42%, var(--mg-ligne));
+  border-radius: var(--mg-rayon-moyen);
+  background: color-mix(in srgb, var(--mg-turquoise) 6%, var(--mg-papier));
+}
+
+.donnees-volume dt {
+  color: var(--mg-texteAttenue);
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.donnees-volume dd {
+  margin: 2px 0 0;
+  color: var(--mg-bleu);
+  font-family: var(--mg-titres);
+  font-size: 18px;
+  font-weight: 800;
+}
+
+.grille-volumes .choix {
+  font-size: clamp(15px, 4.5vw, 20px);
 }
 
 .choix {
@@ -453,6 +549,10 @@ button.choix:hover:not(:disabled) {
   background: var(--mg-reussite);
 }
 
+.repere-observation > span {
+  background: var(--mg-turquoise);
+}
+
 .outil-unites {
   border-color: color-mix(in srgb, var(--mg-orange) 44%, var(--mg-ligne));
   background: color-mix(in srgb, var(--mg-orange) 5%, var(--mg-papier));
@@ -571,6 +671,151 @@ button.choix:hover:not(:disabled) {
 .correction-conclusion {
   border-color: color-mix(in srgb, var(--mg-reussite) 44%, var(--mg-ligne));
   background: color-mix(in srgb, var(--mg-reussite) 5%, var(--mg-papier));
+}
+
+.correction-observation {
+  border-color: color-mix(in srgb, var(--mg-turquoise) 44%, var(--mg-ligne));
+}
+
+.conclusion-solide {
+  color: var(--mg-reussite);
+  font-size: 20px;
+  font-weight: 800;
+  text-align: center;
+}
+
+.ligne-calcul-volume {
+  padding: 10px;
+  border-radius: var(--mg-rayon-petit);
+  color: var(--mg-bleu);
+  background: var(--mg-fondDoux);
+  font-family: var(--mg-titres);
+  font-size: 19px;
+  font-weight: 800;
+  text-align: center;
+}
+
+.commandes-rotation {
+  width: min(100%, 420px);
+  margin: 10px auto 0;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.commandes-rotation button {
+  padding: 8px 12px;
+  border: 2px solid var(--mg-bleu);
+  border-radius: var(--mg-rayon-moyen);
+  color: var(--mg-bleu);
+  background: var(--mg-fondDoux);
+  font-weight: 800;
+}
+
+.panneau-cours {
+  max-height: 92vh;
+}
+
+.panneau-cours .entete-panneau {
+  align-items: flex-start;
+}
+
+.panneau-cours .surtitre {
+  margin-bottom: 4px;
+}
+
+.introduction-cours {
+  max-width: 760px;
+  margin: 0 auto 12px;
+  color: var(--mg-texteAttenue);
+  line-height: 1.5;
+  text-align: center;
+}
+
+.grille-cours-solides {
+  margin-top: 16px;
+  display: grid;
+  gap: 12px;
+}
+
+.carte-cours-solide {
+  padding: 14px;
+  border: 2px solid var(--mg-ligne);
+  border-radius: var(--mg-rayon-moyen);
+  background: var(--mg-papier);
+  text-align: center;
+}
+
+.carte-cours-solide h3 {
+  margin-bottom: 4px;
+  color: var(--mg-bleu);
+  font-size: 20px;
+}
+
+.carte-cours-solide .visuel-solide {
+  width: min(100%, 220px);
+  margin-bottom: 6px;
+}
+
+.carte-cours-solide p {
+  margin: 0;
+  color: var(--mg-texteAttenue);
+  line-height: 1.4;
+}
+
+.grille-cours-volume {
+  margin-top: 16px;
+  display: grid;
+  gap: 12px;
+}
+
+.numero-cours {
+  width: 32px;
+  height: 32px;
+  margin: 0 auto 4px;
+  display: grid;
+  place-items: center;
+  border-radius: 9999px;
+  color: var(--mg-papier);
+  background: var(--mg-turquoise);
+  font-weight: 800;
+}
+
+.empilement-cubes {
+  width: min(100%, 240px);
+  height: auto;
+  margin: 6px auto;
+  display: block;
+  overflow: visible;
+}
+
+.empilement-cubes polygon {
+  stroke: var(--mg-bleu);
+  stroke-width: 1.8;
+  stroke-linejoin: round;
+}
+
+.empilement-cubes .face-haut {
+  fill: color-mix(in srgb, var(--mg-turquoise) 22%, var(--mg-papier));
+}
+
+.empilement-cubes .face-avant {
+  fill: color-mix(in srgb, var(--mg-bleu) 12%, var(--mg-papier));
+}
+
+.empilement-cubes .face-droite {
+  fill: color-mix(in srgb, var(--mg-orange) 18%, var(--mg-papier));
+}
+
+.formule-volume {
+  margin-bottom: 8px !important;
+  padding: 10px;
+  border-radius: var(--mg-rayon-petit);
+  color: var(--mg-bleu) !important;
+  background: color-mix(in srgb, var(--mg-turquoise) 10%, var(--mg-papier));
+  font-family: var(--mg-titres);
+  font-size: 18px;
+  font-weight: 800;
 }
 
 .nombre-correction {
@@ -787,6 +1032,28 @@ button.choix:hover:not(:disabled) {
     width: min(560px, calc(100% - 48px));
     border-radius: var(--mg-rayon-grand);
   }
+
+  .panneau-cours {
+    right: 50%;
+    width: min(1040px, calc(100% - 48px));
+    transform: translateX(50%);
+  }
+
+  .grille-cours-solides {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  .grille-cours-volume {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  .figure-et-donnees {
+    grid-template-columns: minmax(260px, 1.3fr) minmax(210px, 0.7fr);
+  }
+
+  .figure-et-donnees .donnees-volume {
+    display: grid;
+  }
 }
 
 @media (min-width: 900px) {
@@ -838,6 +1105,47 @@ button.choix:hover:not(:disabled) {
     gap: clamp(8px, 1vw, 16px);
   }
 
+  .mode-diaporama .grille-solides.grille-projection {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+
+  .mode-diaporama .carte-question-solides {
+    padding-top: clamp(18px, 2vh, 26px);
+  }
+
+  .mode-diaporama .carte-question-solides .visuel-solide {
+    width: min(100%, 440px);
+    margin-top: 0;
+    margin-bottom: 2px;
+  }
+
+  .mode-diaporama .carte-question-solides .visuel-solide svg {
+    max-height: 39vh;
+  }
+
+  .mode-diaporama .carte-question-volumes .figure-et-donnees {
+    width: min(100%, 920px);
+    margin: 0 auto;
+    grid-template-columns: minmax(320px, 1.3fr) minmax(260px, 0.7fr);
+  }
+
+  .mode-diaporama .carte-question-volumes .visuel-solide {
+    width: min(100%, 380px);
+  }
+
+  .mode-diaporama .carte-question-volumes .visuel-solide svg {
+    max-height: 34vh;
+  }
+
+  .mode-diaporama .carte-question-volumes .donnees-volume dd {
+    font-size: clamp(20px, 2vw, 28px);
+  }
+
+  .mode-diaporama .grille-solides .choix {
+    min-height: clamp(64px, 9vh, 88px);
+    font-size: clamp(22px, min(2.1vw, 3.5vh), 34px);
+  }
+
   .mode-diaporama .barre-enseignant {
     position: static;
     width: min(100% - 32px, 1440px);
@@ -868,6 +1176,14 @@ button.choix:hover:not(:disabled) {
 
   .mode-diaporama.correction-ouverte .espace-lecteur {
     grid-template-columns: minmax(0, 1fr) minmax(440px, 1fr);
+  }
+
+  .mode-diaporama.cours-ouvert .espace-lecteur {
+    display: block;
+  }
+
+  .mode-diaporama.cours-ouvert .carte-question {
+    display: none;
   }
 
   .mode-diaporama.panneau-ouvert .carte-question {
@@ -903,6 +1219,27 @@ button.choix:hover:not(:disabled) {
     border: 2px solid var(--mg-ligne);
     border-radius: var(--mg-rayon-grand);
     box-shadow: none;
+  }
+
+  .mode-diaporama .panneau-cours {
+    max-width: none;
+    transform: none;
+  }
+
+  .mode-diaporama .panneau-cours .grille-cours-solides {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  .mode-diaporama .panneau-cours .grille-cours-volume {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  .mode-diaporama .panneau-cours .carte-cours-solide {
+    padding: 8px;
+  }
+
+  .mode-diaporama .panneau-cours .carte-cours-solide .visuel-solide {
+    width: min(100%, 190px);
   }
 
   .grille-projection .choix {

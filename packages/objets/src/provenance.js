@@ -199,6 +199,14 @@ export const PROVENANCE_FONDATION_V2 = Object.freeze({
     statut: "original_mathsgo",
     source: "fiche NC-01 et contenu F2 validés par Gwenaël le 19 juillet 2026",
   },
+  "packages/automatismes/src/espace-et-geometrie/solides-usuels/reconnaissance.js": {
+    statut: "original_mathsgo",
+    source: "fiche GE-12 validée par Gwenaël le 19 juillet 2026",
+  },
+  "packages/automatismes/src/grandeurs-et-mesures/volumes/calcul-volumes.js": {
+    statut: "original_mathsgo",
+    source: "fiche PG-22 à PG-24 validée par Gwenaël le 19 juillet 2026",
+  },
 });
 
 /*
