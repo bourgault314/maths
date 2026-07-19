@@ -1,3 +1,54 @@
+(function registerDataDieExperiment(global) {
+  "use strict";
+
+  function simulateDieThrows(throwCount = 60, random = Math.random) {
+    if (!Number.isInteger(throwCount) || throwCount <= 0) {
+      throw new RangeError("Le nombre de lancers doit être un entier strictement positif.");
+    }
+    if (typeof random !== "function") {
+      throw new TypeError("La source de hasard doit être une fonction.");
+    }
+
+    const counts = [0, 0, 0, 0, 0, 0];
+    let lastValue = 1;
+    for (let index = 0; index < throwCount; index += 1) {
+      const draw = random();
+      if (!Number.isFinite(draw) || draw < 0 || draw >= 1) {
+        throw new RangeError("La source de hasard doit produire un nombre dans [0, 1[.");
+      }
+      lastValue = 1 + Math.floor(draw * 6);
+      counts[lastValue - 1] += 1;
+    }
+
+    return Object.freeze({
+      throwCount,
+      counts: Object.freeze(counts),
+      lastValue
+    });
+  }
+
+  function renderDieChart(experiment) {
+    const baselineY = 43;
+    const chartHeight = 31;
+    const chartMaximum = Math.max(20, ...experiment.counts);
+    const expectedCount = experiment.throwCount / 6;
+    const expectedY = baselineY - chartHeight * expectedCount / chartMaximum;
+    const sticks = experiment.counts
+      .map((count, index) => {
+        const x = 44 + index * 6.3;
+        const y = baselineY - chartHeight * count / chartMaximum;
+        return `<line x1="${x.toFixed(1)}" y1="${baselineY}" x2="${x.toFixed(1)}" y2="${y.toFixed(1)}" fill="none" stroke="#be3e68" stroke-width="3" stroke-linecap="butt"/>`;
+      })
+      .join("");
+    const labels = experiment.counts
+      .map((_, index) => `<text x="${(44 + index * 6.3).toFixed(1)}" y="49.2" fill="#334155" font-family="Arial,sans-serif" font-size="4.2" font-weight="700" text-anchor="middle">${index + 1}</text>`)
+      .join("");
+    return `<g data-mathsgo-die-chart="${experiment.counts.join("-")}"><path d="M42 ${expectedY.toFixed(1)}H77" fill="none" stroke="#7c3aed" stroke-width="1.1" stroke-dasharray="2.4 1.8"/><text x="39.5" y="${(expectedY - 1.2).toFixed(1)}" fill="#6d28d9" font-family="Arial,sans-serif" font-size="3.8" font-weight="800" text-anchor="end">1/6</text>${sticks}${labels}</g>`;
+  }
+
+  global.MATHSGO_DIE_EXPERIMENT = Object.freeze({ simulateDieThrows, renderDieChart });
+})(typeof window !== "undefined" ? window : globalThis);
+
 (() => {
   "use strict";
 
@@ -21,7 +72,8 @@
     5: [[10, 23], [24, 23], [17, 30], [10, 37], [24, 37]],
     6: [[10, 23], [24, 23], [10, 30], [24, 30], [10, 37], [24, 37]]
   });
-  const dataDieValue = 1 + Math.floor(Math.random() * 6);
+  const dataDieExperiment = window.MATHSGO_DIE_EXPERIMENT?.simulateDieThrows(60) || null;
+  const dataDieValue = dataDieExperiment?.lastValue || 1;
   const resourceFamilyByPath = new Map();
   resourceFamilies.forEach((family) => {
     (family.paths || []).forEach((path) => resourceFamilyByPath.set(path, family));
@@ -446,9 +498,16 @@
     const pips = dataDieFaces[dataDieValue]
       .map(([cx, cy]) => `<circle cx="${cx}" cy="${cy}" r="2.2"/>`)
       .join("");
-    return markup.replace(
+    const dieMarkup = markup.replace(
       /<g fill="#9d174d" data-mathsgo-die-face="">.*?<\/g>/,
       `<g fill="#9d174d" data-mathsgo-die-face="${dataDieValue}">${pips}</g>`
+    );
+    if (!dataDieExperiment) return dieMarkup;
+
+    const chartMarkup = window.MATHSGO_DIE_EXPERIMENT.renderDieChart(dataDieExperiment);
+    return dieMarkup.replace(
+      /<g data-mathsgo-die-chart="">.*?<\/g>/,
+      chartMarkup
     );
   }
 
