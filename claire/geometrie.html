@@ -195,14 +195,14 @@
 
     .actions {
       display: grid;
-      grid-template-columns: minmax(0, 1fr) auto auto;
+      grid-template-columns: minmax(0, 1fr) auto auto auto;
       gap: 8px;
       padding: 10px;
       border-top: 1px solid var(--line);
       background: #fbfdff;
     }
 
-    .check, .dynamic, .next {
+    .check, .undo, .dynamic, .next {
       min-height: 49px;
       border: 0;
       border-radius: 13px;
@@ -213,6 +213,8 @@
 
     .check { background: var(--blue); color: #fff; box-shadow: 0 6px 15px rgba(23, 105, 210, .2); }
     .check:disabled { cursor: wait; opacity: .55; }
+    .undo { padding: 0 13px; border: 1px solid #c8d8e4; background: #fff; color: var(--ink); }
+    .undo:disabled { cursor: not-allowed; opacity: .48; }
     .dynamic { padding: 0 13px; background: var(--orange-soft); color: #97520d; }
     .next { padding: 0 15px; background: #e8f0f5; color: var(--ink); }
     .dynamic[hidden], .next[hidden] { display: none; }
@@ -296,6 +298,7 @@
 
       <div class="actions">
         <button class="check" id="check" type="button" disabled>Vérifier ma construction</button>
+        <button class="undo" id="undo" type="button" disabled aria-label="Annuler la dernière construction">↶ Annuler</button>
         <button class="dynamic" id="dynamic" type="button" hidden>Faire bouger</button>
         <button class="next" id="next" type="button" hidden>Défi suivant →</button>
       </div>
@@ -446,6 +449,7 @@
       let activeColorKey = "blue";
       let assignedColors = new Map();
       let dynamicUsed = false;
+      let undoSteps = 0;
       const completed = new Set();
 
       const els = {
@@ -458,6 +462,7 @@
         loading: document.getElementById("loading"),
         feedback: document.getElementById("feedback"),
         check: document.getElementById("check"),
+        undo: document.getElementById("undo"),
         dynamic: document.getElementById("dynamic"),
         next: document.getElementById("next"),
         reset: document.getElementById("reset"),
@@ -544,11 +549,13 @@
         settingUp = true;
         checking = false;
         dynamicUsed = false;
+        undoSteps = 0;
         recognitionChoices = [];
         assignedColors = new Map();
         activeColorKey = challenge.tools[0].color || "blue";
         clearFeedback();
         els.check.disabled = true;
+        els.undo.disabled = true;
         els.dynamic.hidden = true;
         els.next.hidden = true;
         els.hint.hidden = true;
@@ -601,6 +608,8 @@
         const type = String(api.getObjectType(name)).toLowerCase();
         const color = COLORS[activeColorKey] || COLORS.blue;
         assignedColors.set(name, activeColorKey);
+        undoSteps += 1;
+        els.undo.disabled = false;
         if (type === "point") {
           api.setColor(name, ...color);
           api.setPointSize(name, 7);
@@ -910,6 +919,18 @@
       });
 
       els.reset.addEventListener("click", () => setupChallenge(current));
+      els.undo.addEventListener("click", () => {
+        if (!api || settingUp || undoSteps <= 0) return;
+        try {
+          api.undo();
+          undoSteps -= 1;
+          els.undo.disabled = undoSteps <= 0;
+          clearFeedback();
+        } catch (error) {
+          console.error("Annulation GeoGebra", error);
+          showFeedback("L’annulation n’a pas pu être effectuée. Tu peux recommencer le défi avec ↺.", "info");
+        }
+      });
       els.hintButton.addEventListener("click", () => {
         const willShow = els.hint.hidden;
         els.hint.hidden = !willShow;
