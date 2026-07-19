@@ -7,7 +7,7 @@
 - Dépôt : `bourgault314/maths`.
 - Branche de référence : `main`.
 - Commit de référence vérifié sur GitHub :
-  `48bb7270631d4809ba324a5bc5123b54d93ce2ca`.
+  `1008c7387efca68534eeab7a7850f534fa68d542`.
 - La PR #170 est fusionnée : la carte DNB, la fiche validée de `NC-01`, les
   storyboards et les décisions D-014 à D-019 sont la mémoire officielle du
   chantier.
@@ -27,8 +27,8 @@
 
 - La bêta continue de fonctionner séparément et reste gelée hors correction
   critique.
-- Le premier générateur pédagogique V2 est construit dans le lot courant,
-  mais aucun lecteur ne l'expose encore aux élèves.
+- Le premier générateur pédagogique V2 est construit et validé dans le lot
+  courant, mais aucun lecteur ne l'expose encore aux élèves.
 - La carte du DNB est établie : **37 cibles officielles distinctes**,
   **38 cibles normalisées** et **88 micro-notions**.
 - Une seule micro-notion est active : `NC-01`, critères de divisibilité par
@@ -74,17 +74,18 @@ Le deuxième sous-lot technique est construit et testé :
   puis examine 3 et 9 avant la conclusion ;
 - mille générations seedées vérifient les cinq critères, les implications
   `9 → 3` et `10 → 2 et 5`, le déterminisme et la variété ;
+- Gwenaël a validé explicitement les instances produites, leurs aides et leurs
+  corrections le 19 juillet 2026 ;
 - les sept garde-fous du dépôt passent sur 74 fichiers et le lot complet
   réussit **827 tests sur 827**.
 
 Le clavier numérique, les fractions, le lecteur, le serveur, l'identité de
 l'élève et le chronomètre ne sont pas construits par anticipation.
 
-## Prochaine étape après validation et fusion de ce lot
+## Prochaine étape après fusion de ce lot
 
-Présenter à Gwenaël des instances réellement générées, leurs aides et leurs
-corrections. Après sa validation du lot, construire le lecteur commun de
-`NC-01/F2` en interactif et en projection, puis vérifier son aperçu à 375 px.
+Construire le lecteur commun de `NC-01/F2` en interactif et en projection,
+puis vérifier son aperçu à 375 px avant validation finale de l'affichage.
 
 ## Règle de mise à jour
 
