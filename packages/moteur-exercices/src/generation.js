@@ -25,10 +25,19 @@ import {
   validerQuestionInstance,
 } from "../../contrats/src/question.js";
 import {
+  SCHEMA_QUESTION_INSTANCE_V2,
+  validerQuestionInstanceV2,
+} from "../../contrats/src/question-v2.js";
+import {
   VERSION_ALEATOIRE,
   creerGenerateur,
   validerGraine,
 } from "./aleatoire.js";
+
+const VALIDATEURS_QUESTION = new Map([
+  [SCHEMA_QUESTION_INSTANCE, validerQuestionInstance],
+  [SCHEMA_QUESTION_INSTANCE_V2, validerQuestionInstanceV2],
+]);
 
 /**
  * Copie une donnée déjà validée, puis fige récursivement la copie.
@@ -56,6 +65,7 @@ function copierEtFiger(valeur) {
  * Un générateur : {
  *   nom: "fixture.echo",
  *   version: 1,
+ *   schemaQuestion: "mathsgo.question-instance/1", // version 1 par défaut
  *   generer: ({ aleatoire, parametres }) => {
  *     // renvoie { enonce, reponse, aide?, correction? }
  *   },
@@ -67,7 +77,12 @@ export function creerRegistre() {
   const cle = (nom, version) => `${nom}@${version}`;
 
   function enregistrer(generateur) {
-    const { nom, version, generer } = generateur ?? {};
+    const {
+      nom,
+      version,
+      generer,
+      schemaQuestion = SCHEMA_QUESTION_INSTANCE,
+    } = generateur ?? {};
     if (!estIdentifiantValide(nom)) {
       throw new TypeError(
         "enregistrer : nom de générateur en minuscules requis",
@@ -79,10 +94,20 @@ export function creerRegistre() {
     if (typeof generer !== "function") {
       throw new TypeError(`enregistrer(${nom}) : fonction generer requise`);
     }
+    if (!VALIDATEURS_QUESTION.has(schemaQuestion)) {
+      throw new TypeError(
+        `enregistrer(${nom}) : schéma de question inconnu « ${schemaQuestion} »`,
+      );
+    }
     if (generateurs.has(cle(nom, version))) {
       throw new Error(`enregistrer(${nom}@${version}) : déjà enregistré`);
     }
-    generateurs.set(cle(nom, version), generateur);
+    generateurs.set(cle(nom, version), {
+      nom,
+      version,
+      generer,
+      schemaQuestion,
+    });
   }
 
   /**
@@ -116,7 +141,7 @@ export function creerRegistre() {
     // sont estampillés par le moteur après coup.
     const instance = {
       ...produit,
-      schema: SCHEMA_QUESTION_INSTANCE,
+      schema: generateur.schemaQuestion,
       id: `${g.id}@${aleatoire.graine.toString(36)}`,
       origine: {
         gabarit: g.id,
@@ -128,7 +153,8 @@ export function creerRegistre() {
       },
     };
 
-    const conformite = validerQuestionInstance(instance);
+    const validerQuestion = VALIDATEURS_QUESTION.get(generateur.schemaQuestion);
+    const conformite = validerQuestion(instance);
     if (!conformite.valide) {
       throw new Error(
         `le générateur ${g.generateur.nom}@${g.generateur.version} a produit ` +

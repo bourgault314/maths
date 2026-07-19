@@ -1,6 +1,7 @@
 import { describe, it } from "node:test";
 import assert from "node:assert/strict";
 import { SCHEMA_GABARIT_QUESTION } from "../../contrats/src/gabarit.js";
+import { SCHEMA_QUESTION_INSTANCE_V2 } from "../../contrats/src/question-v2.js";
 import { creerRegistre } from "./generation.js";
 
 const gabaritFixture = () => ({
@@ -68,6 +69,18 @@ describe("creerRegistre — garde-fous", () => {
   it("refuse un double enregistrement de la même version", () => {
     const registre = registrePret();
     assert.throws(() => registre.enregistrer(generateurFixture), /déjà enregistré/);
+  });
+
+  it("refuse un schéma de question qu'il ne sait pas valider", () => {
+    const registre = creerRegistre();
+    assert.throws(
+      () =>
+        registre.enregistrer({
+          ...generateurFixture,
+          schemaQuestion: "mathsgo.question-instance/999",
+        }),
+      /schéma de question inconnu/,
+    );
   });
 
   it("refuse d'instancier un gabarit invalide ou un générateur inconnu", () => {
@@ -146,6 +159,47 @@ describe("creerRegistre — garde-fous", () => {
       parametres: {},
     };
     assert.throws(() => registre.instancier(gabarit, 1), /non conforme/);
+  });
+
+  it("valide une production avec le contrat V2 déclaré par le générateur", () => {
+    const registre = creerRegistre();
+    registre.enregistrer({
+      nom: "fixture.selection",
+      version: 1,
+      schemaQuestion: SCHEMA_QUESTION_INSTANCE_V2,
+      generer: () => ({
+        classement: {
+          domaine: "nombres-et-calculs",
+          notion: "criteres-divisibilite",
+          famille: "selection-diviseurs",
+          cible: "dnb-2026-09",
+          complements: ["critere-divisibilite-10"],
+        },
+        enonce: [
+          { id: "consigne", type: "texte", contenu: "Fixture de sélection." },
+          { id: "nombre", type: "entier", valeur: 330 },
+        ],
+        reponse: {
+          type: "selection-multiple",
+          comparaison: "ensemble-exact",
+          choix: [
+            { id: "2", libelle: "2" },
+            { id: "aucun", libelle: "Aucun", exclusif: true },
+          ],
+          attendus: ["2"],
+        },
+      }),
+    });
+    const gabarit = {
+      ...gabaritFixture(),
+      id: "fixture.selection",
+      generateur: { nom: "fixture.selection", version: 1 },
+      parametres: {},
+    };
+
+    const instance = registre.instancier(gabarit, "v2");
+    assert.equal(instance.schema, SCHEMA_QUESTION_INSTANCE_V2);
+    assert.deepEqual(instance.reponse.attendus, ["2"]);
   });
 
   it("transmet au générateur une copie profondément figée des paramètres", () => {

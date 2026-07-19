@@ -1,0 +1,10 @@
+{
+  "name": "@mathsgo/automatismes",
+  "version": "0.1.0",
+  "description": "Questions pédagogiques validées d’Automatismes maths&go V2.",
+  "type": "module",
+  "exports": {
+    "./registre": "./src/registre.js",
+    "./nombres-et-calculs/criteres-divisibilite/selection-diviseurs": "./src/nombres-et-calculs/criteres-divisibilite/selection-diviseurs.js"
+  }
+}
