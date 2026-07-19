@@ -7,7 +7,7 @@
 - Dépôt : `bourgault314/maths`.
 - Branche de référence : `main`.
 - Commit de référence vérifié sur GitHub :
-  `15b72f0b517814c818bb56bd5c62de29d75d286c`.
+  `a45b8aa530895eed1e19211a9e42012eb0a27cba`.
 - La PR #170 est fusionnée : la carte DNB, la fiche validée de `NC-01`, les
   storyboards et les décisions D-014 à D-019 sont la mémoire officielle du
   chantier.

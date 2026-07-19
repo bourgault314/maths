@@ -1354,9 +1354,20 @@ select { cursor: pointer; }
     width: 94px;
     height: 54px;
   }
+  [data-domain-card="geometrie"] .domain-card-icon {
+    width: 68px;
+    height: 52px;
+  }
+  [data-domain-card="geometrie"] .domain-card-icon svg {
+    transform: scale(1.06);
+  }
   [data-domain-card="donnees"] .domain-card-icon {
     width: 70px;
     height: 54px;
+  }
+  [data-domain-card="informatique"] .domain-card-icon svg {
+    transform: scale(1.1);
+    transform-origin: center;
   }
   .domain-card-copy strong { font-size: .98rem; }
   .domain-card-copy small { display: none; }
