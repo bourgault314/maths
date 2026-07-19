@@ -35,7 +35,15 @@ test("Annuler et Recommencer restent disponibles avec une flèche lisible", () =
 test("l’historique bleu réserve dès le départ une grande zone et suit sa dernière ligne", () => {
   assert.match(html, /equationHistory\.scrollTop = equationHistory\.scrollHeight/);
   assert.match(html, /\.equationHistory\{[^}]*overflow-y:auto;/s);
-  assert.match(html, /\.topbar\{\s*order:4;[^}]*height:clamp\(300px,44dvh,380px\);[^}]*min-height:300px;[^}]*max-height:380px;[^}]*border:2px solid #93c5fd;[^}]*background:#eff6ff;/s);
+  assert.match(html, /\.topbar\{\s*order:4;[^}]*height:auto;[^}]*min-height:120px;[^}]*max-height:none;[^}]*flex:1 1 120px;[^}]*border:2px solid #93c5fd;[^}]*background:#eff6ff;/s);
+  assert.match(html, /\.equationHistory\{[^}]*overflow-y:auto;[^}]*overscroll-behavior:contain;[^}]*-webkit-overflow-scrolling:touch;/s);
+});
+
+test("sur téléphone seule la zone bleue défile", () => {
+  assert.match(html, /body\.importMode\{[^}]*height:100svh;[^}]*min-height:0;[^}]*max-height:100svh;[^}]*overflow:hidden;[^}]*overscroll-behavior:none;/s);
+  assert.match(html, /body\.importMode main\{[^}]*height:calc\(100% - 8px\);[^}]*max-height:calc\(100% - 8px\);[^}]*overflow:hidden;/s);
+  assert.match(html, /\.stage:not\(:fullscreen\)\{[^}]*height:100%;[^}]*max-height:100%;[^}]*overflow:hidden;/s);
+  assert.match(html, /@media \(max-width:760px\) and \(max-height:720px\)[\s\S]*?\.topbar\{[^}]*height:auto;[^}]*min-height:100px;[^}]*flex:1 1 100px;/);
 });
 
 test("le plateau mobile utilise tout son cadre avec des plateaux rectangulaires", () => {
@@ -50,7 +58,7 @@ test("le plateau mobile utilise tout son cadre avec des plateaux rectangulaires"
   assert.ok((760 - 90) / 3 > 2 * 108, "trois splats agrandis doivent rester séparés sur une ligne");
   assert.match(html, /@media \(max-width:760px\) and \(max-height:720px\)/);
   assert.match(html, /\.board\{\s*height:285px;\s*min-height:285px;\s*max-height:285px;/);
-  assert.match(html, /\.topbar\{\s*height:220px;\s*min-height:220px;\s*max-height:220px;/);
+  assert.match(html, /\.topbar\{\s*height:auto;\s*min-height:100px;\s*max-height:none;/);
 });
 
 test("l’élargissement conserve tous les garde-fous anti-chevauchement", () => {
