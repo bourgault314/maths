@@ -41,7 +41,12 @@ La version générative tire l’orientation de chaque tuile au hasard et met en
 ## Icônes de fonctions et de grandeurs
 
 L’identifiant public `function` réutilise l’icône `equal-volume-vase` :
-le vase accompagné de sa courbe de remplissage. L’ancienne machine (x²)
+le vase accompagné de sa courbe de remplissage. Le catalogue remplace ce
+dessin de repli par l’un des six profils calculés dans
+`assets/js/daily-vase-curves.js`. Chaque profil définit son rayon intérieur
+en fonction de la hauteur ; le volume cumulé, les six couches de même volume,
+les points et la courbe `h=f(V)` proviennent tous de ce même modèle. La variante
+change avec la date locale et recommence après six jours. L’ancienne machine (x²)
 reste conservée sous `function-machine`. Le dessin distinct des deux vases
 de même volume porte l’identifiant `equal-volume-vases`.
 
