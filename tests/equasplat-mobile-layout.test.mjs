@@ -92,8 +92,9 @@ test("la décomposition accepte naturellement une soustraction", () => {
 test("le partage final montre la division puis fait choisir un mini-plateau", () => {
   assert.match(html, /function applySharedTokenSplit\(side, id, partCount, partValue\)/);
   assert.match(html, /opportunity\.tokenSide === side[\s\S]*opportunity\.token\.id === id[\s\S]*opportunity\.count === count/);
-  assert.match(html, /state\.pendingShareConclusion = \{[\s\S]*shareBatch,[\s\S]*count,[\s\S]*each,[\s\S]*xSide:opportunity\.xSide,[\s\S]*tokenSide:opportunity\.tokenSide/s);
-  assert.match(html, /if\(isFinalShare\)\{[\s\S]*state\.pendingShareConclusion = \{[\s\S]*\}else\{[\s\S]*arr\.splice\(idx, 1, \.\.\.Array\.from/s);
+  assert.match(html, /function beginPendingShareConclusion\(opportunity, each\)/);
+  assert.match(html, /state\.pendingShareConclusion = \{[\s\S]*shareBatch:uid\(\),[\s\S]*count:opportunity\.count,[\s\S]*each,[\s\S]*xSide:opportunity\.xSide,[\s\S]*tokenSide:opportunity\.tokenSide/s);
+  assert.match(html, /if\(isFinalShare\)\{[\s\S]*beginPendingShareConclusion\(opportunity, each\)[\s\S]*\}else\{[\s\S]*arr\.splice\(idx, 1, \.\.\.Array\.from/s);
   assert.match(html, /if\(state && state\.pendingShareConclusion\) return null;/);
   assert.match(html, /const pendingShareOperation = state && state\.pendingShareConclusion[\s\S]*operationBetweenRows\(`÷ \$\{state\.pendingShareConclusion\.count\}`\)/);
   assert.match(html, /function drawPendingShareGroups\(viewHeight\)/);
@@ -105,7 +106,7 @@ test("le partage final montre la division puis fait choisir un mini-plateau", ()
   assert.doesNotMatch(html, /\$\{displayedUnknown\(\)\} égale \$\{formatSignedNumber\(pending\.each\)\}/);
   assert.match(html, /<span class="shareInstruction"><strong>\$\{count\} groupes identiques<\/strong> — touche-en un\.<\/span>/);
   assert.match(html, /\.instructionZone \.shareInstruction\{[\s\S]*?color:#ea580c;/);
-  assert.match(html, /setTimeout\(\(\) => finalizePendingShare\(pending\.shareBatch\), 260\)/);
+  assert.match(html, /setTimeout\(\(\) => finalizePendingShare\(pending\.shareBatch\), 420\)/);
   assert.match(html, /recordEquationStep\(`÷ \$\{pending\.count\}`\)/);
   assert.match(html, /state\[pending\.xSide\] = \[\.\.\.removedX, makeX\(1\)\]/);
   assert.match(html, /state\[pending\.tokenSide\] = \[\.\.\.removedTokens, makeToken\(pending\.each\)\]/);
@@ -115,6 +116,21 @@ test("le partage final montre la division puis fait choisir un mini-plateau", ()
   assert.match(html, /drawSharedTray\(leftTray, rightTray\)/);
   assert.doesNotMatch(html, /drawText\(800, viewHeight \/ 2, "=", "eqMiddle"\)/);
   assert.match(html, /divider\.setAttribute\("y2", y \+ cardH\)/);
+});
+
+test("décomposer 30 en 10 + 10 + 10 déclenche la même division finale", () => {
+  assert.match(html, /function decompositionMatchesFinalShare\(opportunity, side, id, values\)/);
+  assert.match(html, /values\.length !== opportunity\.count/);
+  assert.match(html, /values\.every\(value => Number\(value\) === Number\(opportunity\.result\)\)/);
+  assert.match(html, /const isFinalShare = decompositionMatchesFinalShare\(opportunity, side, id, values\)/);
+  assert.match(html, /if\(isFinalShare\)\{\s*beginPendingShareConclusion\(opportunity, Number\(opportunity\.result\)\);/);
+});
+
+test("les trois groupes arrivent avec une transition douce", () => {
+  assert.match(html, /@keyframes pendingShareEnter/);
+  assert.match(html, /animation:pendingShareEnter \.62s/);
+  assert.match(html, /g\.style\.animationDelay = `\$\{index \* 110\}ms`/);
+  assert.match(html, /@media \(prefers-reduced-motion:reduce\)/);
 });
 
 test("les taches restantes conservent leur case après une suppression", () => {
@@ -191,8 +207,7 @@ test("la validation mobile garde toujours la même hauteur", () => {
   assert.match(html, /renderActions\(\);\s*stabilizeMobileActionZone\(\);/);
 });
 
-test("le contrôle des cookies ne se superpose plus aux commandes mobiles", () => {
-  assert.match(html, /\.mg-consent-manage-slot--fixed\{\s*display:none !important;/);
+test("le lien de gestion des cookies reste hors de la page ÉquaSplat import", () => {
+  assert.match(html, /body\.importMode \.mg-consent-manage-slot,\s*body\.importMode \.mg-consent-manage\{\s*display:none !important;/);
   assert.match(html, /document\.documentElement\.classList\.add\("importModeRoot"\)/);
-  assert.match(html, /getComputedStyle\(mobileBottomControlsEl\)\.position === "fixed"/);
 });
