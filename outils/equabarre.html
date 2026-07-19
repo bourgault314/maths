@@ -3106,6 +3106,397 @@
     }
   }
 
+
+  /* MOBILE V10 — ÉquaBarre utilisable sans sacrifier la taille tactile.
+     Ce bloc est volontairement indépendant de hover/pointer : il couvre aussi
+     les navigateurs intégrés qui déclarent mal les capacités tactiles. */
+  .mobileLabel{display:none}
+
+  @media (max-width:700px){
+    html,
+    body{
+      min-height:100%;
+      overflow-y:auto;
+    }
+
+    .desktopLabel{display:none}
+    .mobileLabel{display:inline}
+
+    main.startMode,
+    main.activeMode{
+      width:calc(100vw - 8px);
+      margin:4px auto 10px;
+    }
+
+    main.startMode .panel{
+      padding:12px;
+      border-radius:18px;
+    }
+
+    main.startMode .siteHomeBtn{
+      top:10px;
+      left:10px;
+      width:36px;
+      height:36px;
+      border-radius:12px;
+    }
+
+    main.startMode .siteHomeBtn svg{
+      width:21px;
+      height:21px;
+    }
+
+    main.startMode .appTitle{
+      margin:4px 0 14px;
+      font-size:clamp(31px,9vw,38px);
+    }
+
+    main.startMode .creatorBlock{
+      padding:14px;
+      margin-bottom:10px;
+      border-radius:18px;
+    }
+
+    main.startMode .creatorTitle{
+      margin-bottom:10px;
+      font-size:20px;
+    }
+
+    main.startMode label{
+      margin-top:10px;
+      margin-bottom:4px;
+      font-size:11px;
+    }
+
+    main.startMode .equationInput{
+      min-height:52px;
+      padding:10px 12px;
+      font-size:clamp(20px,6vw,24px);
+      border-radius:14px;
+    }
+
+    main.startMode select{
+      min-height:44px;
+      padding:9px 10px;
+      font-size:14px;
+      border-radius:13px;
+    }
+
+    main.startMode .creatorActions{
+      display:grid;
+      grid-template-columns:52px minmax(0,1fr);
+      gap:8px;
+      margin-top:12px;
+    }
+
+    main.startMode .creatorActions .diceBtn{
+      width:52px;
+      min-height:48px;
+      border-radius:14px;
+    }
+
+    main.startMode .creatorActions .buildBtn{
+      width:100%;
+      min-height:48px;
+      font-size:15px;
+      border-radius:14px;
+    }
+
+    main.startMode .panelSeparator{
+      margin:10px 0 8px;
+    }
+
+    main.startMode .settingsGrid{
+      grid-template-columns:1fr 1fr;
+      gap:8px;
+    }
+
+    main.activeMode .stage:not(:fullscreen):not(.emptyState),
+    .stage.detailedView:not(:fullscreen):not(.emptyState){
+      display:flex !important;
+      flex-direction:column !important;
+      height:auto !important;
+      min-height:calc(100svh - 8px) !important;
+      padding:6px !important;
+      overflow:visible !important;
+      border-radius:16px;
+      gap:0 !important;
+    }
+
+    .stageQuickActions{
+      position:relative;
+      top:auto;
+      right:auto;
+      order:1;
+      align-self:stretch;
+      display:flex;
+      justify-content:flex-end;
+      gap:4px;
+      width:100%;
+      margin:0 0 3px;
+      z-index:3;
+    }
+
+    .quickBtn{
+      width:38px;
+      height:38px;
+      min-width:38px;
+      padding:0;
+      border-radius:11px;
+      font-size:18px;
+      box-shadow:0 5px 13px rgba(15,23,42,.11);
+    }
+
+    .menuQuickBtn{
+      width:auto;
+      min-width:50px;
+      padding:0 8px;
+      font-size:12px;
+    }
+
+    .viewModeBtn{
+      width:auto;
+      min-width:72px;
+      padding:0 9px;
+      font-size:12px;
+    }
+
+    #btnFullscreen{display:none}
+
+    .stage:not(:fullscreen):not(.emptyState) .topbar,
+    .stage.detailedView:not(:fullscreen):not(.emptyState) .topbar{
+      order:2 !important;
+      width:100% !important;
+      height:64px !important;
+      min-height:64px !important;
+      max-height:64px !important;
+      padding:0 2px 3px !important;
+      margin:0 !important;
+      overflow:hidden !important;
+      background:transparent !important;
+      border:0 !important;
+      border-radius:0 !important;
+    }
+
+    .stage:not(:fullscreen):not(.emptyState) .equationHistory,
+    .stage.detailedView:not(:fullscreen):not(.emptyState) .equationHistory{
+      width:100% !important;
+      height:61px !important;
+      max-height:61px !important;
+      padding:1px 2px !important;
+      overflow-y:auto !important;
+      overflow-x:auto !important;
+    }
+
+    .stage:not(:fullscreen):not(.emptyState) .equationTable,
+    .stage.detailedView:not(:fullscreen):not(.emptyState) .equationTable{
+      font-size:clamp(18px,5.2vw,22px) !important;
+      line-height:1.12;
+    }
+
+    .stage:not(:fullscreen):not(.emptyState) .equationTable td{
+      padding-left:3px;
+      padding-right:3px;
+    }
+
+    .stage:not(:fullscreen):not(.emptyState) .equationTable .eq{
+      padding-left:7px;
+      padding-right:7px;
+    }
+
+    .stage:not(:fullscreen):not(.emptyState) .instructionZone,
+    .stage.detailedView:not(:fullscreen):not(.emptyState) .instructionZone{
+      order:3 !important;
+      width:100%;
+      min-height:38px !important;
+      height:auto !important;
+      margin:0 auto 4px !important;
+      padding:0 4px;
+      font-size:clamp(15px,4.35vw,18px);
+      line-height:1.18;
+    }
+
+    .stage:not(:fullscreen):not(.emptyState) .board,
+    .stage.detailedView:not(:fullscreen):not(.emptyState) .board{
+      --adaptive-piece-h:clamp(60px,18vw,72px);
+      order:4 !important;
+      flex:0 0 auto !important;
+      width:100% !important;
+      height:auto !important;
+      min-height:0 !important;
+      padding:6px 4px !important;
+      border-radius:14px;
+    }
+
+    .stage:not(:fullscreen):not(.emptyState) .piece{
+      height:var(--adaptive-piece-h);
+    }
+
+    .stage:not(:fullscreen):not(.emptyState) .barLine{
+      min-height:var(--adaptive-piece-h);
+    }
+
+    .stage:not(:fullscreen):not(.emptyState) .pieceValue{
+      font-size:clamp(23px,7.2vw,31px);
+    }
+
+    .stage:not(:fullscreen):not(.emptyState) .splatIcon{
+      width:clamp(38px,12vw,52px);
+      height:clamp(38px,12vw,52px);
+    }
+
+    .stage:not(.emptyState) .solution{
+      order:5 !important;
+      min-height:36px;
+      height:36px;
+      margin:2px 0;
+      font-size:clamp(25px,7.4vw,34px);
+      transform:none;
+    }
+
+    .stage:not(:fullscreen):not(.emptyState) .solution{
+      flex:0 0 36px;
+    }
+
+    .stage:not(.emptyState) .solution:empty{
+      display:none !important;
+      min-height:0 !important;
+      height:0 !important;
+      margin:0 !important;
+      flex-basis:0 !important;
+    }
+
+    .stage:not(:fullscreen):not(.emptyState) .toolBar,
+    .stage.detailedView:not(:fullscreen):not(.emptyState) .toolBar{
+      order:6 !important;
+      width:100% !important;
+      margin:5px 0 0 !important;
+      gap:5px !important;
+    }
+
+    .stage:not(:fullscreen):not(.emptyState) .toolBarRow{
+      display:grid;
+      width:100%;
+      gap:5px;
+    }
+
+    .stage:not(:fullscreen):not(.emptyState) .toolBarRowMain{
+      grid-template-columns:repeat(2,minmax(0,1fr));
+    }
+
+    .stage:not(:fullscreen):not(.emptyState) .toolBarRowGlobal{
+      grid-template-columns:minmax(0,1.35fr) minmax(0,.8fr) minmax(0,1fr);
+      margin-top:0;
+    }
+
+    .stage:not(.emptyState) .toolBtn,
+    .stage:not(.emptyState) .undoToolBtn{
+      box-sizing:border-box;
+      flex:none;
+      width:100%;
+      min-width:0;
+      min-height:44px;
+      padding:7px 5px;
+      border-radius:12px;
+      font-size:13px;
+      line-height:1.08;
+      white-space:normal;
+    }
+
+    .stage:not(.emptyState) .toolBarRowGlobal .toolBtn{
+      font-size:12px;
+    }
+
+    .stage:not(:fullscreen):not(.emptyState) .actionZone,
+    .stage.detailedView:not(:fullscreen):not(.emptyState) .actionZone{
+      order:7 !important;
+      display:grid;
+      grid-template-columns:repeat(2,minmax(0,1fr));
+      gap:5px;
+      width:100% !important;
+      min-height:48px !important;
+      margin:5px 0 0 !important;
+      padding:0 0 2px !important;
+      overflow:visible;
+    }
+
+    .stage:not(.emptyState) .actionZone button{
+      width:100%;
+      min-width:0;
+      min-height:44px;
+      padding:8px 6px;
+      border-radius:12px;
+      font-size:13px;
+      line-height:1.08;
+    }
+
+    dialog{
+      width:min(100% - 16px, 560px);
+      max-height:calc(100svh - 16px);
+    }
+
+    .dialogInner{
+      padding:20px 16px 18px;
+    }
+
+    .dialogTitle{
+      font-size:28px;
+      margin-bottom:10px;
+    }
+
+    .dialogText{
+      font-size:17px;
+      line-height:1.3;
+      margin-bottom:12px;
+    }
+
+    #decomposeInput,
+    #addInput{
+      min-height:56px;
+      padding:12px;
+      font-size:27px;
+      border-radius:14px;
+    }
+
+    .helpMiniBtn{
+      min-width:96px;
+      height:46px;
+      margin:10px auto 2px;
+      font-size:17px;
+    }
+
+    #shareChoices.open,
+    #presetChips.open,
+    #addSuggestions.open{
+      display:grid;
+      grid-template-columns:repeat(2,minmax(0,1fr));
+      gap:7px;
+      margin:10px 0 12px;
+    }
+
+    #shareChoices .chip,
+    #presetChips .chip,
+    #addSuggestions .chip{
+      width:100%;
+      min-height:48px;
+      padding:9px 7px;
+      font-size:16px;
+      line-height:1.08;
+    }
+
+    dialog .btnrow{
+      gap:8px;
+      margin-top:10px;
+    }
+
+    dialog button:not(.helpMiniBtn){
+      min-height:46px;
+      padding:10px 13px;
+      border-radius:14px;
+      font-size:15px;
+    }
+  }
+
 </style>
 <link rel="stylesheet" href="../assets/css/consentement.css">
 <script defer src="../assets/js/consentement.js"></script>
@@ -3217,13 +3608,13 @@
       <div class="toolBarRow toolBarRowMain">
         <button class="toolBtn active" id="toolDecompose" type="button">Décomposer</button>
         <button class="toolBtn" id="toolAdd" type="button">Regrouper</button>
-        <button class="toolBtn" id="toolShare" type="button">Partager équitablement</button>
+        <button class="toolBtn" id="toolShare" type="button"><span class="desktopLabel">Partager équitablement</span><span class="mobileLabel">Partager</span></button>
         <button class="toolBtn" id="toolMove" type="button">Déplacer</button>
       </div>
       <div class="toolBarRow toolBarRowGlobal">
-        <button class="toolBtn globalToolBtn" id="toolDelete" type="button">Enlever dans chaque membre</button>
-        <button class="toolBtn undoToolBtn" id="toolUndo" type="button" title="Annuler la dernière action">↺ Annuler</button>
-        <button class="toolBtn restartToolBtn" id="toolRestart" type="button" title="Revenir au schéma de départ">↺ Recommencer</button>
+        <button class="toolBtn globalToolBtn" id="toolDelete" type="button"><span class="desktopLabel">Enlever dans chaque membre</span><span class="mobileLabel">Enlever des deux côtés</span></button>
+        <button class="toolBtn undoToolBtn" id="toolUndo" type="button" title="Annuler la dernière action"><span class="desktopLabel">↺ Annuler</span><span class="mobileLabel">Annuler</span></button>
+        <button class="toolBtn restartToolBtn" id="toolRestart" type="button" title="Revenir au schéma de départ"><span class="desktopLabel">↺ Recommencer</span><span class="mobileLabel">Recommencer</span></button>
       </div>
     </div>
 
