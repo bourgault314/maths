@@ -5,19 +5,19 @@ import {
 import {
   SCHEMA_TRACE_REPONSE,
   validerTraceReponse,
-} from "../../packages/contrats/src/trace-reponse.js";
+} from "../../packages/contrats/src/trace-reponse.js?v=5";
 import {
   TYPE_REPONSE_CHOIX_UNIQUE,
   estSelectionExacte,
-} from "../../packages/contrats/src/question-v2.js";
+} from "../../packages/contrats/src/question-v2.js?v=5";
 import { graineDepuisTexte } from "../../packages/moteur-exercices/src/aleatoire.js";
-import { creerRegistreAutomatismes } from "../../packages/automatismes/src/registre.js";
-import { GABARIT_RECONNAISSANCE_SOLIDES } from "../../packages/automatismes/src/espace-et-geometrie/solides-usuels/reconnaissance.js";
+import { creerRegistreAutomatismes } from "../../packages/automatismes/src/registre.js?v=5";
+import { GABARIT_RECONNAISSANCE_SOLIDES } from "../../packages/automatismes/src/espace-et-geometrie/solides-usuels/reconnaissance.js?v=5";
 import {
   GABARIT_VOLUME_CUBE_PAVE,
   GABARIT_VOLUME_CYLINDRE,
   GABARIT_VOLUME_PRISME,
-} from "../../packages/automatismes/src/grandeurs-et-mesures/volumes/calcul-volumes.js";
+} from "../../packages/automatismes/src/grandeurs-et-mesures/volumes/calcul-volumes.js?v=5";
 import { GABARIT_SELECTION_DIVISEURS } from "../../packages/automatismes/src/nombres-et-calculs/criteres-divisibilite/selection-diviseurs.js";
 
 export const NOTION_NC01 = "criteres-divisibilite";
