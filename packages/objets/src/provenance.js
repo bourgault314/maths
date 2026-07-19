@@ -96,7 +96,7 @@ export const PROVENANCE_OBJETS = {
   "pythagore.js": {
     statut: "original_mathsgo",
     source: "outils/pythabarre.html + studio/components/pythagore/visuals.js",
-    note: "Question de PYTHAGORE_COLORS tranchée par Gwenaël le 18/07 : ces couleurs sont les siennes (voir jetons.js).",
+    note: "Question des couleurs tranchée par Gwenaël le 18/07 : elles sont les siennes (voir jetons.js). Depuis le 19/07 elles vivent dans packages/charte et la racine dessinée vit ici : ce fichier ne dépend plus du studio.",
   },
 };
 
@@ -124,7 +124,7 @@ export const PROVENANCE_STUDIO = {
   "studio/components/pythagore/visuals.js": {
     statut: "original_mathsgo",
     source: "PythaBarre / Moulin de Pythagore",
-    note: "Les 6 teintes de PYTHAGORE_COLORS figurent aussi dans auto/scripts/03-slideshow.js : c'est le même auteur, Gwenaël. Les géométries du moulin n'ont aucun équivalent ailleurs.",
+    note: "Sept de ces teintes figurent aussi dans auto/scripts/03-slideshow.js : c'est le même auteur, Gwenaël (relevé du 19/07). Depuis cette date le fichier ne garde que les géométries du moulin et réexporte la palette de la charte et la racine des objets.",
   },
 };
 

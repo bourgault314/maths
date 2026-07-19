@@ -122,6 +122,33 @@ export function couleurFamillePourcentage(parts) {
   return familles[parts] ?? COULEURS_POURCENTAGES.c10;
 }
 
+// La palette de Pythagore — schéma en barres, moulin et pièces de Périgal.
+// Elle vient des outils de Gwenaël (PythaBarre, Moulin de Pythagore) ;
+// certaines de ces teintes figurent aussi dans auto/, ce qui est normal :
+// même auteur (question tranchée par Gwenaël le 18/07/2026, voir
+// packages/objets/src/provenance.js).
+// Elle est déclarée ICI parce que la charte est la source unique des
+// couleurs : les objets ne vont plus la chercher dans une page du studio.
+// Objet gelé, comme il l'était à son emplacement précédent : les rendus
+// existants s'appuient sur des valeurs qui ne bougent pas.
+export const COULEURS_PYTHAGORE = Object.freeze({
+  hypFill: "#e2f5e8", // hypoténuse au carré — fond
+  hypStroke: "#24994d", // hypoténuse au carré — trait
+  hypText: "#187a3c", // hypoténuse au carré — texte
+  leg1Fill: "#dceeff", // premier côté de l'angle droit — fond
+  leg1Stroke: "#0879d0", // premier côté — trait
+  leg1Text: "#0879d0", // premier côté — texte
+  leg2Fill: "#fff0d8", // second côté de l'angle droit — fond
+  leg2Stroke: "#e89516", // second côté — trait
+  leg2Text: "#b76e00", // second côté — texte
+  outline: "#172033", // contours de la figure
+  blue: "#169de8", // pièces de Périgal
+  green: "#13ad13",
+  gray: "#969696",
+  magenta: "#d90072",
+  yellow: "#ffd071",
+});
+
 export const TYPOGRAPHIE = {
   // Fredoka domine largement les outils (17 pages) : c'est la voix
   // visuelle maths&go pour les titres et les nombres manipulés.

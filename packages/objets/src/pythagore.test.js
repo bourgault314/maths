@@ -13,7 +13,9 @@ import {
   dessinerTrianglePythagore,
   racineEnLigne,
   roleCouleur,
+  squareRootSvg,
 } from "./pythagore.js";
+import { COULEURS_PYTHAGORE } from "../../charte/src/charte.js";
 
 const probleme = () => creerProbleme({ valeurs: { AB: 3, AC: 4, BC: "?" } });
 
@@ -110,5 +112,39 @@ describe("pythagore : rendu", () => {
     const { p, t } = travailA("remplacer");
     assert.equal(dessinerBarresPythagore(p, t), dessinerBarresPythagore(p, t));
     assert.equal(dessinerTrianglePythagore(p, t), dessinerTrianglePythagore(p, t));
+  });
+});
+
+describe("pythagore : la racine dessinée n'a pas bougé en changeant de fichier", () => {
+  // Relevé de la sortie produite par le composant du studio avant le
+  // déménagement du tracé. Toute divergence, même d'un millième, casse ici.
+  const SORTIE_PAR_DEFAUT =
+    '<g fill="#334155" stroke="#334155">' +
+    '<path d="M 0 13.52 l 3.96 6.12 l 5.76 -14.76 H 33.4" fill="none" stroke-width="1.98"' +
+    ' stroke-linecap="round" stroke-linejoin="round"/>' +
+    '<text x="12.24" y="20" stroke="none" font-family="Segoe UI,Arial,sans-serif"' +
+    ' font-size="18" font-weight="750">25</text></g>';
+
+  it("rend exactement le même SVG qu'avant, valeurs par défaut", () => {
+    assert.equal(squareRootSvg(), SORTIE_PAR_DEFAUT);
+  });
+
+  it("garde les mêmes arrondis au millième sur d'autres tailles", () => {
+    assert.equal(
+      squareRootSvg({ x: 12.5, baseline: 33.7, radicand: "676", fontSize: 20, fontWeight: 800 }),
+      '<g fill="#334155" stroke="#334155">' +
+        '<path d="M 12.5 26.5 l 4.4 6.8 l 6.4 -16.4 H 60.7" fill="none" stroke-width="2.2"' +
+        ' stroke-linecap="round" stroke-linejoin="round"/>' +
+        '<text x="26.1" y="33.7" stroke="none" font-family="Segoe UI,Arial,sans-serif"' +
+        ' font-size="20" font-weight="800">676</text></g>',
+    );
+  });
+
+  it("les barres prennent leurs couleurs dans la charte", () => {
+    const { p, t } = travailA("remplacer");
+    const svg = dessinerBarresPythagore(p, t);
+    assert.ok(svg.includes(COULEURS_PYTHAGORE.hypFill));
+    assert.ok(svg.includes(COULEURS_PYTHAGORE.leg1Stroke));
+    assert.ok(svg.includes(COULEURS_PYTHAGORE.leg2Text));
   });
 });

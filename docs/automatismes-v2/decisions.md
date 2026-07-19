@@ -72,3 +72,26 @@ Le chef de projet choisit librement de conserver, corriger ou remplacer chaque
 brique existante selon l'intérêt de maths&go. Une brique n'est jamais gardée
 seulement parce qu'elle existe déjà. La compatibilité avec DocTools, son moteur
 ou son organisation n'est pas un objectif.
+
+## 19 juillet 2026
+
+### D-013 — Le périmètre immédiat est exclusivement le DNB
+
+Automatismes V2 se construit d'abord pour le DNB, et pour rien d'autre. La
+**liste officielle des attendus du DNB** est la source de couverture de cette
+phase : c'est elle qui dit ce qui doit exister et quand la phase est terminée.
+D-002 n'est pas abandonnée — la couverture se mesure toujours en notions et
+jamais en parité avec les anciennes questions — elle est restreinte au DNB
+tant que cette phase dure. Ce qui ne relève pas du DNB attend son tour.
+
+Le rôle d'inventaire de l'ancienne banque (D-001) est précisé : elle reste une
+**archive consultable notion par notion**. On l'ouvre pour une notion précise,
+au moment où on la traite, afin d'y retrouver ce que Gwenaël y a lui-même
+apporté — questions retravaillées, aides, choix de progression. On ne l'ouvre
+jamais pour y puiser un énoncé, un paramètre, un distracteur, un visuel ou du
+code : D-001 tient entièrement.
+
+**Aucun élément ancien n'entre automatiquement dans V2.** Cela vaut aussi pour
+une contribution de Gwenaël retrouvée dans l'archive : il lui faut une
+provenance identifiée (D-007) et sa validation explicite avant d'entrer.
+Retrouver quelque chose ne vaut pas décider de le reprendre.
