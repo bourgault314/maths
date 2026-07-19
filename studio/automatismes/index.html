@@ -137,12 +137,12 @@
   .case-module{width:19px;height:19px;flex:none;accent-color:var(--bleu);cursor:pointer}
   .titre-module{font-size:14px;font-weight:600;line-height:1.3}
 
-  /* ————— Crédits (repris de l'application) ————— */
-  footer{margin-top:10px;text-align:center;color:var(--attenue);font-size:12.5px}
-  footer details{display:inline-block}
-  footer summary{cursor:pointer;text-decoration:underline;text-underline-offset:3px}
-  footer p{max-width:560px;margin:8px auto 0;line-height:1.5}
-  footer a{color:var(--attenue)}
+  /* ————— Crédits : intégrés à la carte des automatismes ————— */
+  .credit{margin-top:10px;padding-top:9px;border-top:1px solid var(--ligne);
+    text-align:center;color:var(--attenue);font-size:12.5px}
+  .credit summary{display:inline-block;cursor:pointer;text-decoration:underline;text-underline-offset:3px}
+  .credit p{max-width:560px;margin:8px auto 0;line-height:1.5}
+  .credit a{color:var(--attenue)}
 
   /* ————— Barre d'action : carte flottante, comme dans l'application ————— */
   .barre-action{position:fixed;z-index:50;left:0;right:0;bottom:0;pointer-events:none;
@@ -178,11 +178,19 @@
     .entete-site{gap:12px;padding:9px 11px 7px}
     .logo{height:36px}
     .titre-site h1{font-size:18px}
-    section.carte{padding:12px}
-    .carte-reglages{gap:8px}
-    .grille-reglages{grid-template-columns:1fr;gap:8px}
-    .etiquette-reglage{margin-bottom:4px}
-    .segments button{min-height:38px;font-size:13.5px;padding:6px 8px;min-width:40px}
+    section.carte{padding:10px}
+    .carte-reglages{gap:6px}
+    .carte-reglages .entete-etape{gap:7px}
+    .carte-reglages h2{font-size:17px}
+    .carte-reglages .pastille-etape{width:22px;height:22px;font-size:11.5px}
+    .grille-reglages{grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:6px}
+    .etiquette-reglage{margin-bottom:2px;font-size:9.5px}
+    .segments{gap:0;padding:2px}
+    .segments button{min-height:32px;min-width:0;font-size:12px;padding:3px 4px}
+    .separation-epreuve{margin:3px 1px}
+    .segments .bouton-epreuve{gap:2px;padding:1px 4px}
+    .mention-epreuve{font-size:6.5px}
+    .calc-barree{width:14px;height:14px}
     .theme-summary{gap:9px;min-height:54px;padding:8px 10px}
     .theme-name{font-size:14.5px}
     .theme-count-label{display:none}
@@ -192,6 +200,14 @@
     .barre-action-carte{display:block;width:100%;padding:8px}
     .resume{display:none}
     #boutonLancer{width:100%}
+  }
+  @media(max-width:360px){
+    body{padding-left:max(8px,env(safe-area-inset-left));padding-right:max(8px,env(safe-area-inset-right))}
+    section.carte{padding:9px}
+    .grille-reglages{gap:5px}
+    .segments button{min-height:31px;font-size:11.5px;padding:2px}
+    .mention-epreuve{display:none}
+    .segments .bouton-epreuve.est-actif .calc-barree{display:none}
   }
 </style>
 </head>
@@ -278,15 +294,12 @@
       </div>
     </div>
     <div id="modules" aria-label="Domaines d’automatismes"></div>
+    <details class="credit">
+      <summary>Crédits et remerciements</summary>
+      <p>Remerciements à Eric Hakenholz, créateur de <a href="https://doctools.org/dnb/automatismes_dnb.html" target="_blank" rel="noopener noreferrer">DocTools</a>, pour le partage du fichier, et à Claire Lagarde, pour son aide précieuse.</p>
+    </details>
   </section>
 </main>
-
-<footer>
-  <details class="credit">
-    <summary>Crédits et remerciements</summary>
-    <p>Remerciements à Eric Hakenholz, créateur de <a href="https://doctools.org/dnb/automatismes_dnb.html" target="_blank" rel="noopener noreferrer">DocTools</a>, pour le partage du fichier, et à Claire Lagarde, pour son aide précieuse.</p>
-  </details>
-</footer>
 </div>
 
 <div class="barre-action est-vide" aria-label="Résumé et lancement de la série">
