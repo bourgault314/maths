@@ -2,10 +2,11 @@
   "use strict";
 
   const DAY_MS = 24 * 60 * 60 * 1000;
-  const LEVELS = Object.freeze([0, 1, 2, 3, 2, 1]);
-  const PALETTE = Object.freeze(["#f97316", "#06b6d4", "#6366f1", "#facc15"]);
+  const LEVELS = Object.freeze([0, 1, 2, 3, 4, 3, 2, 1]);
+  const PALETTE = Object.freeze(["#f58220", "#08aaa5", "#0b67b2", "#f9bf3b"]);
+  const OUTLINE = "#052f67";
   const LEVEL_TWO_COLOURS = Object.freeze([0, 1, 2, 2, 3, 1, 3, 0, 2]);
-  const STROKE_WIDTHS = Object.freeze([1.1, 0.95, 0.75, 0.45]);
+  const STROKE_WIDTHS = Object.freeze([1.1, 0.95, 0.75, 0.45, 0.22]);
   const OUTER_TRIANGLE = Object.freeze([
     Object.freeze({ x: 24, y: 2 }),
     Object.freeze({ x: 4, y: 34 }),
@@ -29,7 +30,7 @@
   }
 
   function trianglesForLevel(level) {
-    if (!Number.isInteger(level) || level < 0 || level > 3) {
+    if (!Number.isInteger(level) || level < 0 || level > 4) {
       throw new RangeError("Génération de fractale invalide");
     }
     let triangles = [{ points: OUTER_TRIANGLE, address: "" }];
@@ -56,8 +57,11 @@
     if (level === 1) return index;
     if (level === 2) return LEVEL_TWO_COLOURS[index];
     const parentIndex = Number.parseInt(triangle.address.slice(0, 2), 3);
-    const childIndex = Number(triangle.address[2]);
-    return (LEVEL_TWO_COLOURS[parentIndex] + childIndex) % PALETTE.length;
+    let colour = LEVEL_TWO_COLOURS[parentIndex];
+    for (let depth = 2; depth < triangle.address.length; depth += 1) {
+      colour = (colour + Number(triangle.address[depth])) % PALETTE.length;
+    }
+    return colour;
   }
 
   function number(value) {
@@ -75,14 +79,14 @@
       const fill = PALETTE[colourIndex(triangle, level, triangleIndex)];
       return `<path d="${pathForTriangle(triangle)}" fill="${fill}"/>`;
     }).join("");
-    return `<g stroke="#312e81" stroke-width="${STROKE_WIDTHS[level]}" stroke-linejoin="round" data-mathsgo-strategy-fractal="${index}" data-mathsgo-strategy-fractal-level="${level}">${paths}</g>`;
+    return `<g stroke="${OUTLINE}" stroke-width="${STROKE_WIDTHS[level]}" stroke-linejoin="round" data-mathsgo-strategy-fractal="${index}" data-mathsgo-strategy-fractal-level="${level}">${paths}</g>`;
   }
 
   function render(markup, value) {
     if (typeof markup !== "string") return markup;
     const selection = selectionForDate(value);
     return markup.replace(
-      /<g stroke="#312e81" stroke-width="[^"]+" stroke-linejoin="round" data-mathsgo-strategy-fractal="">.*?<\/g>/,
+      /<g stroke="#052f67" stroke-width="[^"]+" stroke-linejoin="round" data-mathsgo-strategy-fractal="">.*?<\/g>/,
       groupForLevel(selection.level, selection.index)
     );
   }
