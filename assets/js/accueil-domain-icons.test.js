@@ -38,18 +38,6 @@ test("la palette partagée harmonise l'arbre et le flocon", () => {
   assert.match(librarySource, /splat:.*fill="#8b5cf6" stroke="#5b21b6"/);
 });
 
-test("le vase quotidien est identique sur l'accueil et dans le catalogue", () => {
-  const dailyVases = require("./daily-vase-curves.js");
-  global.MATHSGO_DAILY_VASES = dailyVases;
-  const date = new Date(2026, 6, 19);
-  const rendered = icons.renderIcon("equal-volume-vase", {
-    library: { "equal-volume-vase": "<svg>vase fixe</svg>" },
-    date: date
-  });
-  assert.equal(rendered, dailyVases.render("", date));
-  assert.match(rendered, /data-mathsgo-vase-profile=/);
-});
-
 test("le montage remplit les huit emplacements", () => {
   const slots = Array.from({ length: 8 }, (_, index) => ({
     dataset: { homeIcon: index === 0 ? "automatismes" : "seigaiha" },

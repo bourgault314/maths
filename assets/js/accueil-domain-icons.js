@@ -86,9 +86,6 @@
     if (name === "strategy" && global.MATHSGO_DAILY_STRATEGY_FRACTAL) {
       return global.MATHSGO_DAILY_STRATEGY_FRACTAL.render(markup, settings.date);
     }
-    if ((name === "equal-volume-vase" || name === "function") && global.MATHSGO_DAILY_VASES) {
-      return global.MATHSGO_DAILY_VASES.render(markup, settings.date);
-    }
     if (name === "probability-statistics") {
       return renderProbabilityIcon(markup, settings.experiment || simulateDieThrows(60, settings.random));
     }
