@@ -65,17 +65,18 @@ test("sur téléphone seule la zone bleue défile", () => {
 });
 
 test("le plateau mobile utilise tout son cadre avec des plateaux rectangulaires", () => {
-  assert.match(html, /\.board\{\s*order:2;[^}]*width:calc\(100% \+ 12px\);[^}]*height:clamp\(230px,64vw,270px\);[^}]*margin-left:-6px;[^}]*margin-right:-6px;/s);
-  assert.match(html, /svg\.setAttribute\("viewBox", mobileLayout \? "0 0 1600 1050" : "0 0 1600 820"\)/);
-  assert.match(html, /\? \{x:8, y:36, w:760, h:978\}/);
-  assert.match(html, /: \{x:832, y:36, w:760, h:978\}/);
+  assert.match(html, /\.board\{\s*order:2;[^}]*width:calc\(100% \+ 12px\);[^}]*height:clamp\(260px,76vw,300px\);[^}]*margin-left:-6px;[^}]*margin-right:-6px;/s);
+  assert.match(html, /function mobileSvgViewHeight\(\)\{[^}]*Math\.round\(1600 \* height \/ width\)[^}]*980, 1420/s);
+  assert.match(html, /svg\.setAttribute\("viewBox", `0 0 1600 \$\{viewHeight\}`\)/);
+  assert.match(html, /\? \{x:8, y:36, w:760, h:viewHeight-72\}/);
+  assert.match(html, /: \{x:832, y:36, w:760, h:viewHeight-72\}/);
   assert.match(html, /return isMobileImportLayout\(\) \? Math\.round\(radius \* 1\.36\) : radius/);
   assert.match(html, /x:tray\.x\+\(mobileLayout \? 45 : 70\)/);
   assert.match(html, /w:tray\.w-\(mobileLayout \? 90 : 140\)/);
   assert.match(html, /r:mobileLayout \? 108 : 84/);
   assert.ok((760 - 90) / 3 > 2 * 108, "trois splats agrandis doivent rester séparés sur une ligne");
   assert.match(html, /@media \(max-width:760px\) and \(max-height:720px\)/);
-  assert.match(html, /\.board\{\s*height:240px;\s*min-height:240px;\s*max-height:240px;/);
+  assert.match(html, /\.board\{\s*height:250px;\s*min-height:250px;\s*max-height:250px;/);
   assert.match(html, /\.topbar\{\s*height:auto;\s*min-height:100px;\s*max-height:none;/);
 });
 
