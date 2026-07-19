@@ -344,7 +344,7 @@ footer {
 
 @media (max-width: 600px) {
   body {
-    min-height: 100dvh;
+    min-height: 100svh;
     padding: var(--mathsgo-entry-top) 12px 12px;
     justify-content: flex-start;
   }
@@ -353,20 +353,24 @@ footer {
     gap: 12px;
   }
   .hero-card {
-    min-height: 500px;
-    min-height: clamp(500px, calc(100svh - 132px), 550px);
+    min-height: calc(100svh - var(--mathsgo-entry-top) - 12px);
     display: flex;
     flex-direction: column;
     align-items: center;
     justify-content: space-between;
-    padding: 34px 14px 40px;
+    padding: 34px 14px max(24px, env(safe-area-inset-bottom));
     border-radius: 25px;
   }
   .brand-logo { width: min(82vw, 330px); margin-bottom: 0; }
   .subtitle,
   .maths-scene,
   .btn-start { margin-top: 0; }
-  .maths-scene { width: calc(100% + 4px); }
+  .maths-scene {
+    width: calc(100% + 4px);
+    aspect-ratio: 560 / 230;
+  }
+  .scene-grid { inset: 6% 3.5%; }
+  .scene-item { transform: scale(1.1); }
   .scene-plate { transform: scale(1.08); transform-origin: center; }
   footer {
     flex-direction: column;
