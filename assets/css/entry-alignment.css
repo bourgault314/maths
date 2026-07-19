@@ -3,25 +3,22 @@
      Il reste fixe sur les écrans tactiles puis suit les trois gabarits du
      catalogue sur ordinateur. */
   --mathsgo-entry-top: 10px;
-  --mathsgo-entry-frame-height: 803px;
 }
 
 @media (min-width: 921px) {
   :root {
-    --mathsgo-entry-top: max(16px, calc((100dvh - var(--mathsgo-entry-frame-height)) / 2));
+    --mathsgo-entry-top: max(16px, calc((100dvh - 803px) / 2));
   }
 }
 
 @media (min-width: 921px) and (max-height: 820px) {
   :root {
-    --mathsgo-entry-frame-height: 679px;
-    --mathsgo-entry-top: max(16px, calc((100dvh - var(--mathsgo-entry-frame-height)) / 2));
+    --mathsgo-entry-top: max(16px, calc((100dvh - 679px) / 2));
   }
 }
 
 @media (min-width: 1600px) and (min-height: 1000px) {
   :root {
-    --mathsgo-entry-frame-height: 930px;
-    --mathsgo-entry-top: max(16px, calc((100dvh - var(--mathsgo-entry-frame-height)) / 2));
+    --mathsgo-entry-top: max(16px, calc((100dvh - 930px) / 2));
   }
 }
