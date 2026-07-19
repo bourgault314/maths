@@ -2324,20 +2324,77 @@
     box-shadow:0 4px 10px rgba(37,99,235,.22);
   }
 
+  html.dialogOpen,
+  body.dialogOpen{
+    overflow:hidden;
+    overscroll-behavior:none;
+  }
+
+  .touchKeypad{
+    display:none;
+    width:min(330px,100%);
+    margin:12px auto 4px;
+    grid-template-columns:repeat(3,minmax(0,1fr));
+    gap:7px;
+  }
+
+  .touchKeypad.open{
+    display:grid;
+  }
+
+  input.touchKeypadTarget{
+    border-color:rgba(59,130,246,.58);
+    box-shadow:0 0 0 4px rgba(59,130,246,.12);
+    caret-color:transparent;
+  }
+
+  .touchKeypadKey,
+  .touchKeypadSpacer{
+    min-width:0;
+    min-height:44px;
+  }
+
+  .touchKeypadKey{
+    padding:7px 5px;
+    border:1px solid rgba(15,23,42,.10);
+    border-radius:12px;
+    background:#f8fafc;
+    color:#0f172a;
+    font-size:20px;
+    font-weight:950;
+    touch-action:manipulation;
+  }
+
+  .touchKeypadKey.action{
+    background:#eef2ff;
+    color:#3730a3;
+    font-size:14px;
+  }
+
+  .touchKeypadKey.validate{
+    background:linear-gradient(180deg,#60a5fa,#3b82f6);
+    color:#fff;
+  }
+
+  .touchKeypadSpacer{
+    visibility:hidden;
+  }
+
   @media (max-width:700px), (max-height:500px) and (pointer:coarse){
     main.activeMode{
       width:calc(100vw - 12px) !important;
+      height:calc(100dvh - 12px);
       min-height:calc(100dvh - 12px);
       margin:6px auto max(16px, env(safe-area-inset-bottom)) !important;
     }
 
     main.activeMode .stage:not(:fullscreen){
+      height:100% !important;
       min-height:0 !important;
-      height:auto !important;
       padding:8px !important;
       display:grid !important;
       grid-template-columns:minmax(0,1fr) !important;
-      grid-template-rows:auto 118px auto 56px auto !important;
+      grid-template-rows:auto 118px minmax(205px,1fr) 56px auto !important;
       grid-template-areas:
         "quick"
         "history"
@@ -2345,7 +2402,9 @@
         "context"
         "tools" !important;
       gap:7px !important;
-      overflow:visible !important;
+      overflow-x:hidden !important;
+      overflow-y:auto !important;
+      overscroll-behavior:contain;
     }
 
     main.activeMode .stageQuickActions{
@@ -2500,9 +2559,9 @@
     main.activeMode .stage:not(:fullscreen) .board{
       grid-area:board;
       width:100% !important;
-      height:clamp(205px,58vw,232px) !important;
+      height:100% !important;
       min-height:205px !important;
-      max-height:232px !important;
+      max-height:none !important;
       margin:0 !important;
       padding:4px !important;
       place-items:center;
@@ -2575,10 +2634,24 @@
 
     dialog{
       max-height:calc(100dvh - 20px);
+      overflow:hidden;
     }
 
     .dialogInner{
+      max-height:calc(100dvh - 20px);
       padding:22px 18px max(20px, env(safe-area-inset-bottom));
+      overflow-y:auto;
+      overscroll-behavior:contain;
+    }
+
+    .touchKeypad{
+      margin-top:10px;
+      gap:6px;
+    }
+
+    .touchKeypadKey,
+    .touchKeypadSpacer{
+      min-height:42px;
     }
   }
 </style>
@@ -2896,6 +2969,197 @@
   const fusionDialogText = document.getElementById("fusionDialogText");
   const fusionInput = document.getElementById("fusionInput");
   const fusionFeedback = document.getElementById("fusionFeedback");
+
+  const touchInputMedia = window.matchMedia("(any-pointer: coarse)");
+  const touchKeypad = document.createElement("div");
+  touchKeypad.className = "touchKeypad";
+  touchKeypad.setAttribute("role", "group");
+  touchKeypad.setAttribute("aria-label", "Clavier numérique");
+  let touchKeypadInput = null;
+  let touchKeypadOptions = null;
+
+  function usesTouchKeypad(){
+    return touchInputMedia.matches || Number(navigator.maxTouchPoints || 0) > 0;
+  }
+
+  function prepareTouchInput(input){
+    if(!input || !usesTouchKeypad()) return;
+    if(!input.dataset.touchOriginalType) input.dataset.touchOriginalType = input.type || "text";
+    if(!input.dataset.touchOriginalInputmode){
+      input.dataset.touchOriginalInputmode = input.getAttribute("inputmode") || "__none__";
+    }
+    input.type = "text";
+    input.readOnly = true;
+    input.setAttribute("inputmode", "none");
+    input.classList.add("touchKeypadTarget");
+  }
+
+  function restoreTouchInput(input){
+    if(!input) return;
+    input.classList.remove("touchKeypadTarget");
+    input.readOnly = false;
+    const originalType = input.dataset.touchOriginalType;
+    if(originalType) input.type = originalType;
+    const originalInputmode = input.dataset.touchOriginalInputmode;
+    if(originalInputmode === "__none__") input.removeAttribute("inputmode");
+    else if(originalInputmode) input.setAttribute("inputmode", originalInputmode);
+    delete input.dataset.touchOriginalType;
+    delete input.dataset.touchOriginalInputmode;
+  }
+
+  function setTouchInputValue(value, caret=null){
+    if(!touchKeypadInput) return;
+    touchKeypadInput.value = value;
+    touchKeypadInput.dispatchEvent(new Event("input", {bubbles:true}));
+    if(caret !== null && typeof touchKeypadInput.setSelectionRange === "function"){
+      try{ touchKeypadInput.setSelectionRange(caret, caret); }catch(_error){}
+    }
+  }
+
+  function insertTouchKey(value){
+    const input = touchKeypadInput;
+    if(!input) return;
+    const options = touchKeypadOptions || {};
+    const current = String(input.value || "");
+
+    if(value === "clear"){
+      setTouchInputValue("", 0);
+      return;
+    }
+    if(value === "backspace"){
+      if(options.expression){
+        const start = Number.isInteger(input.selectionStart) ? input.selectionStart : current.length;
+        const end = Number.isInteger(input.selectionEnd) ? input.selectionEnd : start;
+        const from = start === end ? Math.max(0, start - 1) : start;
+        setTouchInputValue(current.slice(0, from) + current.slice(end), from);
+      }else{
+        setTouchInputValue(current.slice(0, -1), Math.max(0, current.length - 1));
+      }
+      return;
+    }
+    if(value === "submit"){
+      if(typeof options.onSubmit === "function") options.onSubmit();
+      else touchKeypad.classList.remove("open");
+      return;
+    }
+    if(value === "−" && !options.expression){
+      const next = current.startsWith("-") ? current.slice(1) : `-${current}`;
+      setTouchInputValue(next, next.length);
+      return;
+    }
+
+    const text = value === "−" ? "-" : value;
+    const start = options.expression && Number.isInteger(input.selectionStart) ? input.selectionStart : current.length;
+    const end = options.expression && Number.isInteger(input.selectionEnd) ? input.selectionEnd : start;
+    const next = current.slice(0, start) + text + current.slice(end);
+    setTouchInputValue(next, start + text.length);
+  }
+
+  function renderTouchKeypad(){
+    const options = touchKeypadOptions || {};
+    const keys = [
+      ["1","1"], ["2","2"], ["3","3"],
+      ["4","4"], ["5","5"], ["6","6"],
+      ["7","7"], ["8","8"], ["9","9"],
+      options.expression ? ["+","+"] : null,
+      ["0","0"],
+      options.allowMinus ? ["−","−"] : null,
+      ["Effacer","clear","action"], ["⌫","backspace","action"], [options.submitLabel || "Valider","submit","action validate"]
+    ];
+    touchKeypad.innerHTML = "";
+    for(const spec of keys){
+      if(!spec){
+        const spacer = document.createElement("span");
+        spacer.className = "touchKeypadSpacer";
+        spacer.setAttribute("aria-hidden", "true");
+        touchKeypad.appendChild(spacer);
+        continue;
+      }
+      const button = document.createElement("button");
+      button.type = "button";
+      button.className = `touchKeypadKey${spec[2] ? ` ${spec[2]}` : ""}`;
+      button.textContent = spec[0];
+      button.addEventListener("click", () => insertTouchKey(spec[1]));
+      touchKeypad.appendChild(button);
+    }
+  }
+
+  function activateTouchKeypad(input, options={}){
+    if(!input || !usesTouchKeypad()) return false;
+    if(touchKeypadInput && touchKeypadInput !== input) restoreTouchInput(touchKeypadInput);
+    touchKeypadInput = input;
+    touchKeypadOptions = options;
+    prepareTouchInput(input);
+    input.blur();
+    input.insertAdjacentElement("afterend", touchKeypad);
+    renderTouchKeypad();
+    touchKeypad.classList.add("open");
+    return true;
+  }
+
+  function closeTouchKeypad(){
+    touchKeypad.classList.remove("open");
+    restoreTouchInput(touchKeypadInput);
+    touchKeypadInput = null;
+    touchKeypadOptions = null;
+  }
+
+  function openAppDialog(dialog, input=null, options={}){
+    if(!dialog || typeof dialog.showModal !== "function") return;
+    document.documentElement.classList.add("dialogOpen");
+    document.body.classList.add("dialogOpen");
+    dialog.showModal();
+    if(input && activateTouchKeypad(input, options)) return;
+    if(input) setTimeout(() => input.focus({preventScroll:true}), 80);
+  }
+
+  const appDialogs = [decomposeDialog, shareDialog, groupDialog, addBothDialog, fusionDialog].filter(Boolean);
+  appDialogs.forEach(dialog => {
+    dialog.addEventListener("close", () => {
+      if(touchKeypadInput && dialog.contains(touchKeypadInput)) closeTouchKeypad();
+      dialog.querySelectorAll(".touchKeypadTarget").forEach(restoreTouchInput);
+      if(!appDialogs.some(item => item.open)){
+        document.documentElement.classList.remove("dialogOpen");
+        document.body.classList.remove("dialogOpen");
+      }
+    });
+  });
+
+  function bindTouchKeypadInput(input, dialog, optionsFactory){
+    if(!input || !dialog) return;
+    input.addEventListener("pointerdown", event => {
+      if(!dialog.open || !usesTouchKeypad()) return;
+      event.preventDefault();
+      activateTouchKeypad(input, typeof optionsFactory === "function" ? optionsFactory() : {});
+    });
+  }
+
+  bindTouchKeypadInput(decomposeInput, decomposeDialog, () => ({
+    expression:true,
+    allowMinus:isRelativeUniverse(),
+    submitLabel:"Décomposer",
+    onSubmit:applyDecomposeInput
+  }));
+  bindTouchKeypadInput(groupInput, groupDialog, () => ({
+    allowMinus:isRelativeUniverse(),
+    submitLabel:"Regrouper",
+    onSubmit:applyGroup
+  }));
+  bindTouchKeypadInput(addBothInput, addBothDialog, () => ({
+    allowMinus:isRelativeUniverse(),
+    submitLabel:"Ajouter",
+    onSubmit:applyAddBoth
+  }));
+  bindTouchKeypadInput(addBothXCount, addBothDialog, () => ({
+    allowMinus:false,
+    submitLabel:"OK",
+    onSubmit:() => touchKeypad.classList.remove("open")
+  }));
+  bindTouchKeypadInput(fusionInput, fusionDialog, () => ({
+    allowMinus:isRelativeUniverse(),
+    submitLabel:"Fusionner",
+    onSubmit:applyFusion
+  }));
 
   const variableChars = ["𝑥", "𝑎", "𝑏", "𝑐", "𝑚", "𝑛", "𝑡"];
   const phoneLayoutMedia = window.matchMedia(
@@ -4325,8 +4589,11 @@
     groupDialogText.innerHTML = `${values.join(" + ")} = ?`;
     groupInput.value = "";
     groupFeedback.textContent = "";
-    if(typeof groupDialog.showModal === "function") groupDialog.showModal();
-    setTimeout(()=>groupInput.focus(), 80);
+    openAppDialog(groupDialog, groupInput, {
+      allowMinus:isRelativeUniverse(),
+      submitLabel:"Regrouper",
+      onSubmit:applyGroup
+    });
   }
 
   function applyZeroXGroup(info){
@@ -4459,8 +4726,12 @@
     decomposeInput.value = "";
     presetChips.classList.remove("open");
     presetChips.innerHTML = "";
-    if(typeof decomposeDialog.showModal === "function") decomposeDialog.showModal();
-    setTimeout(()=>decomposeInput.focus(), 80);
+    openAppDialog(decomposeDialog, decomposeInput, {
+      expression:true,
+      allowMinus:isRelativeUniverse(),
+      submitLabel:"Décomposer",
+      onSubmit:applyDecomposeInput
+    });
   }
 
   function getSmartDecompositionSuggestions(side, piece){
@@ -4584,7 +4855,7 @@
         });
       });
     }
-    if(typeof shareDialog.showModal === "function") shareDialog.showModal();
+    openAppDialog(shareDialog);
   }
 
   function blobPath(cx, cy, r){
@@ -4912,8 +5183,11 @@
     fusionDialogText.innerHTML = `${formatFusionTerm(a)} + ${formatFusionTerm(b)} = ?`;
     fusionInput.value = "";
     fusionFeedback.textContent = "";
-    if(typeof fusionDialog.showModal === "function") fusionDialog.showModal();
-    setTimeout(()=>fusionInput.focus(), 80);
+    openAppDialog(fusionDialog, fusionInput, {
+      allowMinus:isRelativeUniverse(),
+      submitLabel:"Fusionner",
+      onSubmit:applyFusion
+    });
   }
 
   function removeTransientZero(side, id){
@@ -5198,8 +5472,12 @@
     if(addBothXCount) addBothXCount.value = "1";
     if(btnAddBothPositiveX) btnAddBothPositiveX.innerHTML = miniSplatButtonHtml(1);
     if(btnAddBothNegativeX) btnAddBothNegativeX.innerHTML = miniSplatButtonHtml(-1);
-    if(typeof addBothDialog.showModal === "function") addBothDialog.showModal();
-    setTimeout(()=>addBothInput.focus(), 80);
+    openAppDialog(addBothDialog, addBothInput, {
+      allowMinus:isRelativeUniverse(),
+      submitLabel:"Ajouter",
+      onSubmit:applyAddBoth
+    });
+    if(usesTouchKeypad() && addBothXCount) prepareTouchInput(addBothXCount);
   }
 
   function finishAddBothAction(operation=null){
