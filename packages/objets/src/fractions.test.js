@@ -621,4 +621,21 @@ describe("le catalogue et le registre du dépôt", () => {
     const paquet = JSON.parse(readFileSync(join(ICI, "..", "package.json"), "utf8"));
     assert.equal(paquet.exports["./fractions"], "./src/fractions.js");
   });
+
+  // Défaut constaté à l'usage : un SVG sans largeur ni hauteur ne s'affiche pas
+  // quand on ouvre le fichier seul (export, envoi, visionneuse) — il ne marche
+  // que dans une page web. Tous les objets de la maison donnent les deux.
+  it("porte une largeur ET une hauteur en pixels, comme les autres objets", () => {
+    for (const rendu of [
+      dessinerBandeFraction({ numerateur: 3, denominateur: 4 }),
+      dessinerGrilleFraction({ coloriees: 16, colonnes: 5, lignes: 4 }),
+    ]) {
+      // On vérifie un VRAI dessin, pas le cadre d'erreur : sans ce contrôle,
+      // un mauvais nom de réglage ferait passer le test pour rien.
+      assert.equal(rendu.erreur ?? null, null, "le dessin ne doit pas être un cadre d'erreur");
+      assert.match(rendu.svg, /width="\d+(\.\d+)?"/, "largeur en pixels absente");
+      assert.match(rendu.svg, /height="\d+(\.\d+)?"/, "hauteur en pixels absente");
+      assert.doesNotMatch(rendu.svg, /width="100%"/, "largeur en pourcentage : illisible hors page web");
+    }
+  });
 });
