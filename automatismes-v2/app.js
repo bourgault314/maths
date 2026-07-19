@@ -27,8 +27,8 @@ import {
   revelerReponse,
   tournerSolide,
   validerSelection,
-} from "./src/etat-lecteur.js";
-import { COURS_SOLIDES_USUELS } from "../packages/automatismes/src/espace-et-geometrie/solides-usuels/reconnaissance.js";
+} from "./src/etat-lecteur.js?v=5";
+import { COURS_SOLIDES_USUELS } from "../packages/automatismes/src/espace-et-geometrie/solides-usuels/reconnaissance.js?v=5";
 import {
   creerCone,
   creerCube,
