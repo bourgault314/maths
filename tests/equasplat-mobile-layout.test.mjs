@@ -50,7 +50,7 @@ test("les opérations faites aux deux membres apparaissent entre les équations"
   assert.match(html, /Même opération dans les deux membres/);
   assert.match(html, /recordEquationStep\(operation\)/);
   assert.match(html, /recordEquationStep\("× \(−1\)"\)/);
-  assert.match(html, /recordEquationStep\(`÷ \$\{pending\.count\}`\)/);
+  assert.match(html, /state\.stepOperations\[nextIndex\] = nextIndex === 0 \? null : `÷ \$\{pending\.count\}`/);
   assert.match(html, /finishAddBothAction\(operationDeltaLabel\(value\)\)/);
   assert.match(html, /finishAddBothAction\(operationDeltaLabel\(sign \* count, currentVar\(\)\)\)/);
 });
@@ -89,25 +89,38 @@ test("la décomposition accepte naturellement une soustraction", () => {
   assert.match(html, /raw\.match\(\/\[\+-\]\?\\d\+\/g\)/);
 });
 
-test("le partage final montre la division puis fait choisir un mini-plateau", () => {
+test("le partage final écrit immédiatement la division et la solution", () => {
   assert.match(html, /function applySharedTokenSplit\(side, id, partCount, partValue\)/);
   assert.match(html, /opportunity\.tokenSide === side[\s\S]*opportunity\.token\.id === id[\s\S]*opportunity\.count === count/);
   assert.match(html, /function beginPendingShareConclusion\(opportunity, each\)/);
   assert.match(html, /state\.pendingShareConclusion = \{[\s\S]*shareBatch:uid\(\),[\s\S]*count:opportunity\.count,[\s\S]*each,[\s\S]*xSide:opportunity\.xSide,[\s\S]*tokenSide:opportunity\.tokenSide/s);
   assert.match(html, /if\(isFinalShare\)\{[\s\S]*beginPendingShareConclusion\(opportunity, each\)[\s\S]*\}else\{[\s\S]*arr\.splice\(idx, 1, \.\.\.Array\.from/s);
   assert.match(html, /if\(state && state\.pendingShareConclusion\) return null;/);
-  assert.match(html, /const pendingShareOperation = state && state\.pendingShareConclusion[\s\S]*operationBetweenRows\(`÷ \$\{state\.pendingShareConclusion\.count\}`\)/);
+  assert.match(html, /function pendingShareFinalEquation\(pending\)/);
+  assert.match(html, /pending\.xSide === "left" \? `\$\{unknown\} = \$\{value\}` : `\$\{value\} = \$\{unknown\}`/);
+  assert.match(html, /state\.stepOperations\[nextIndex\] = nextIndex === 0 \? null : `÷ \$\{pending\.count\}`/);
+  assert.match(html, /state\.steps\.push\(finalEquation\)/);
+  assert.doesNotMatch(html, /const pendingShareOperation = state && state\.pendingShareConclusion/);
   assert.match(html, /function drawPendingShareGroups\(viewHeight\)/);
   assert.match(html, /const cols = count <= 3 \? 1 : 2;/);
+  assert.match(html, /const isCenteredLast = cols === 2 && count % 2 === 1 && index === count - 1/);
+  assert.match(html, /isCenteredLast \? \(1600 - cardW\)\/2/);
   assert.match(html, /class", "pendingShareGroup"/);
   assert.match(html, /class", "pendingShareDivider"/);
-  assert.match(html, /Mini-plateau \$\{index \+ 1\} sur \$\{count\} : une tache à gauche et \$\{formatSignedNumber\(pending\.each\)\} à droite/);
+  assert.match(html, /const leftLabel = pending\.xSide === "left" \? displayedUnknown\(\) : formatSignedNumber\(pending\.each\)/);
+  assert.match(html, /const rightLabel = pending\.xSide === "right" \? displayedUnknown\(\) : formatSignedNumber\(pending\.each\)/);
+  assert.match(html, /const splatX = pending\.xSide === "left" \? leftX : rightX/);
+  assert.match(html, /const tokenX = pending\.tokenSide === "left" \? leftX : rightX/);
   assert.doesNotMatch(html, /pendingShareEquals/);
   assert.doesNotMatch(html, /\$\{displayedUnknown\(\)\} égale \$\{formatSignedNumber\(pending\.each\)\}/);
   assert.match(html, /<span class="shareInstruction"><strong>\$\{count\} groupes identiques<\/strong> — touche-en un\.<\/span>/);
   assert.match(html, /\.instructionZone \.shareInstruction\{[\s\S]*?color:#ea580c;/);
   assert.match(html, /setTimeout\(\(\) => finalizePendingShare\(pending\.shareBatch\), 420\)/);
-  assert.match(html, /recordEquationStep\(`÷ \$\{pending\.count\}`\)/);
+  assert.match(html, /state\.stepOperations\[nextIndex\] = nextIndex === 0 \? null : `÷ \$\{pending\.count\}`/);
+  const finalizeStart = html.indexOf("function finalizePendingShare");
+  const finalizeEnd = html.indexOf("function parseSum", finalizeStart);
+  const finalizeSource = html.slice(finalizeStart, finalizeEnd);
+  assert.doesNotMatch(finalizeSource, /recordEquationStep/);
   assert.match(html, /state\[pending\.xSide\] = \[\.\.\.removedX, makeX\(1\)\]/);
   assert.match(html, /state\[pending\.tokenSide\] = \[\.\.\.removedTokens, makeToken\(pending\.each\)\]/);
   assert.match(html, /function drawSharedTray\(leftTray, rightTray\)/);
@@ -116,6 +129,12 @@ test("le partage final montre la division puis fait choisir un mini-plateau", ()
   assert.match(html, /drawSharedTray\(leftTray, rightTray\)/);
   assert.doesNotMatch(html, /drawText\(800, viewHeight \/ 2, "=", "eqMiddle"\)/);
   assert.match(html, /divider\.setAttribute\("y2", y \+ cardH\)/);
+});
+
+test("la conclusion inversée est reconnue et le doublon Annuler a disparu", () => {
+  assert.ok(html.includes('(rhs === v && /^−?\\d+$/.test(lhs))'));
+  assert.doesNotMatch(html, /id="btnStageUndo"/);
+  assert.doesNotMatch(html, /btnStageUndo\.addEventListener/);
 });
 
 test("décomposer 30 en 10 + 10 + 10 déclenche la même division finale", () => {
