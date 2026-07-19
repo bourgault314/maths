@@ -175,8 +175,8 @@
     .tool[data-color="red"][aria-pressed="true"] { border-color: #c93d3d; background: #c93d3d; }
     .tool:active, .reset:active, .step:active { transform: translateY(1px); }
 
-    .ggb-shell { position: relative; width: 100%; min-height: 395px; background: #fff; }
-    #ggb-element { width: 100%; min-height: 395px; }
+    .ggb-shell { position: relative; width: 100%; height: 430px; overflow: hidden; background: #fff; }
+    #ggb-element { width: 100%; height: 100%; }
 
     .loading {
       position: absolute;
@@ -230,7 +230,7 @@
       .task { padding: 15px 17px 12px; }
       .tools { flex-wrap: nowrap; padding: 10px 12px; }
       .tool { flex-basis: auto; }
-      .ggb-shell, #ggb-element { min-height: 505px; }
+      .ggb-shell { height: 510px; }
     }
 
     @media (max-width: 600px) {
@@ -859,25 +859,22 @@
         document.querySelectorAll(".step").forEach((step, index) => step.classList.toggle("done", completed.has(index)));
       }
 
-      function resizeApplet() {
-        if (!api) return;
-        const width = Math.max(300, Math.floor(els.shell.clientWidth));
-        const height = width < 650 ? Math.max(395, Math.min(445, window.innerHeight * .54)) : 510;
-        api.setSize(width, Math.round(height));
-      }
-
       function startGeoGebra() {
         if (typeof GGBApplet !== "function") {
           els.loading.innerHTML = "GeoGebra n’a pas pu être chargé.<br>Vérifie la connexion Internet puis recharge la page.";
           return;
         }
-        const width = Math.max(300, Math.floor(els.shell.clientWidth));
-        const height = width < 650 ? Math.max(395, Math.min(445, window.innerHeight * .54)) : 510;
         const applet = new GGBApplet({
           id: "ggbAppletClaire",
           appName: "geometry",
-          width,
-          height: Math.round(height),
+          // GeoGebra redimensionne lui-même son canevas. C'est indispensable
+          // sur les écrans Retina de Safari, où setSize peut laisser une zone
+          // blanche sous la figure.
+          width: 800,
+          height: 500,
+          scaleContainerClass: "ggb-shell",
+          autoHeight: false,
+          allowUpscale: true,
           language: "fr",
           showToolBar: false,
           showMenuBar: false,
@@ -922,17 +919,14 @@
       els.dynamic.addEventListener("click", runDynamicTest);
       els.next.addEventListener("click", () => setupChallenge(Math.min(current + 1, challenges.length - 1)));
 
-      let resizeTimer = null;
-      window.addEventListener("resize", () => {
-        window.clearTimeout(resizeTimer);
-        resizeTimer = window.setTimeout(resizeApplet, 140);
-      }, { passive: true });
-
-      window.setTimeout(() => {
-        if (!api && els.loading) els.loading.innerHTML = "Le chargement de GeoGebra prend plus de temps que prévu.<br>Vérifie la connexion Internet ou recharge la page.";
-      }, 12000);
-
-      startGeoGebra();
+      // L'injection après le chargement complet est la séquence recommandée
+      // par GeoGebra ; Safari connaît alors les vraies dimensions du téléphone.
+      window.addEventListener("load", () => {
+        startGeoGebra();
+        window.setTimeout(() => {
+          if (!api && els.loading) els.loading.innerHTML = "Le chargement de GeoGebra prend plus de temps que prévu.<br>Vérifie la connexion Internet puis recharge la page.";
+        }, 12000);
+      }, { once: true });
     })();
   </script>
 </body>
