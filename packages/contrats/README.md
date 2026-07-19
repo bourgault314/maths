@@ -18,7 +18,10 @@ Règles du package :
 | Module | Contrat | Rôle |
 |---|---|---|
 | `src/question.js` | `mathsgo.question-instance/1` | Une question prête à afficher : énoncé en blocs (texte/LaTeX à trous `[[reponse]]`), réponses acceptées par champ, aide et correction facultatives, traçabilité d'origine. |
+| `src/question-v2.js` | `mathsgo.question-instance/2` | Première question interactive V2 : blocs texte/entier, classement maths&go, sélection multiple exacte et outils d'aide validés pour NC-01/F2. |
 | `src/gabarit.js` | `mathsgo.gabarit-question/1` | Une famille de questions à valeurs variables : référence un générateur du moteur par nom et version, avec des paramètres en données pures. |
+| `src/seance.js` | `mathsgo.seance/1` | La sélection et l'état d'une séance, sans score recopié, identité, durée ni donnée d'écran. |
+| `src/trace-reponse.js` | `mathsgo.trace-reponse/1` | La première validation interactive d'une sélection multiple, séparable de la question et transmissible plus tard. |
 
 Les tests utilisent uniquement des fixtures techniques neutres. Un nouveau
 contrat n'est ajouté que lorsqu'un consommateur réel et validé en a besoin.

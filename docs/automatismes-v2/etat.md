@@ -7,7 +7,10 @@
 - Dépôt : `bourgault314/maths`.
 - Branche de référence : `main`.
 - Commit de référence vérifié sur GitHub :
-  `5ce53788a373c658ed110df684d1c0bed10f3c87`.
+  `3d359a5e3cdcd9fb0709670efc08d1b9beca6191`.
+- La PR #170 est fusionnée : la carte DNB, la fiche validée de `NC-01`, les
+  storyboards et les décisions D-014 à D-019 sont la mémoire officielle du
+  chantier.
 - La PR #162 est fusionnée. Elle constitue le socle technique actuel :
   contrats génériques, PRNG seedé, registre, objets indépendants, charte et
   garde-fous du périmètre V2.
@@ -35,7 +38,7 @@
   été validés par Gwenaël le 19 juillet 2026.
 - Le parcours DNB actuel ne possède ni niveaux ni paliers.
 
-## Documents de référence ajoutés par le chantier courant
+## Documents de référence fusionnés
 
 - `carte-dnb-2026-mathsgo.md` — liste officielle, taxonomie maths&go, matrice
   de couverture et ordre des 88 micro-notions ;
@@ -49,22 +52,30 @@
 Ces documents autorisent la fabrication de la première tranche verticale. Ils
 ne publient encore aucune question devant les élèves.
 
-## Chantier actif : première tranche NC-01/F2
+## Lot technique courant : contrats minimaux de NC-01/F2
 
-L'ordre technique est désormais :
+Le premier sous-lot technique est construit et testé :
 
-1. versionner les contrats minimaux de question à sélection multiple, de séance
-   et de trace de réponse ;
-2. tester ces contrats sans navigateur ;
-3. écrire à neuf le générateur seedé de `NC-01/F2` et ses tests mathématiques ;
-4. construire le lecteur minimal en mode interactif et en mode projection ;
-5. contrôler réellement le téléphone à 375 px, la tablette et la projection ;
-6. présenter les exemples, l'aide et la correction à Gwenaël ;
-7. obtenir sa validation finale avant toute exposition aux élèves.
+- `mathsgo.question-instance/2` ajoute uniquement les blocs texte/entier, le
+  classement maths&go, la sélection multiple par ensemble exact et les deux
+  outils d'aide nécessaires à `NC-01/F2` ;
+- `mathsgo.seance/1` sépare la sélection et l'avancement de la séance ;
+- `mathsgo.trace-reponse/1` conserve la première validation interactive sans
+  identité, durée ni serveur ;
+- la version 1 du contrat de question reste intacte ;
+- les propriétés non prévues, les coordonnées d'écran et le code exécutable
+  sont refusés ;
+- les sept garde-fous du dépôt passent et le lot complet réussit
+  **806 tests sur 806**.
 
-Le premier contrat ne couvre que le besoin réel de `F2`. Le clavier numérique,
-les fractions, le serveur, l'identité de l'élève et le chronomètre ne sont pas
-construits par anticipation.
+Le clavier numérique, les fractions, le lecteur, le serveur, l'identité de
+l'élève et le chronomètre ne sont pas construits par anticipation.
+
+## Prochaine étape après fusion de ce lot
+
+Écrire à neuf le générateur seedé de `NC-01/F2`, l'enregistrer dans le moteur
+et tester ses invariants mathématiques, sa variété et son déterminisme. Le
+lecteur interactif et projection viendra dans le sous-lot suivant.
 
 ## Règle de mise à jour
 

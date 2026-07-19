@@ -5,6 +5,9 @@
   "type": "module",
   "exports": {
     "./question": "./src/question.js",
-    "./gabarit": "./src/gabarit.js"
+    "./question-v2": "./src/question-v2.js",
+    "./gabarit": "./src/gabarit.js",
+    "./seance": "./src/seance.js",
+    "./trace-reponse": "./src/trace-reponse.js"
   }
 }
