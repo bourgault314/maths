@@ -76,13 +76,15 @@ A5, gabarits d'angles…
 ### 4. On progresse par micro-étapes
 
 La série Rekenrek montre la méthode : doubles niveau 1 → niveau 2 →
-presque-doubles → pont de la dizaine → ajouter 9/8 → enlever 9/10… Chaque
-outil cible UNE micro-compétence, avec des niveaux nommés et une montée en
-difficulté maîtrisée. Même logique dans les variantes des relatifs (addition →
-soustraction → soustraction avancée → annulation).
+presque-doubles → pont de la dizaine → ajouter 9/8 → enlever 9/10… Chaque outil
+cible une micro-compétence et rend la progression lisible. Même logique dans les
+variantes des relatifs.
 
-→ Pour la V2 : les gabarits doivent porter des niveaux explicites, et les
-parcours enchaîneront ces micro-étapes.
+→ Pour la phase DNB de la V2 : les micro-notions organisent la fabrication, mais
+aucun niveau ni palier n'est présenté aux élèves. La variété se construit à
+l'intérieur de chaque notion par les familles de questions, les valeurs et les
+aides. Des niveaux pourront être redécidés plus tard, lorsque le projet couvrira
+l'ensemble du collège.
 
 ### 5. On projette en classe
 

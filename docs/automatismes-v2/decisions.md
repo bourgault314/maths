@@ -95,3 +95,50 @@ code : D-001 tient entièrement.
 une contribution de Gwenaël retrouvée dans l'archive : il lui faut une
 provenance identifiée (D-007) et sa validation explicite avant d'entrer.
 Retrouver quelque chose ne vaut pas décider de le reprendre.
+
+### D-014 — La carte DNB commande la fabrication
+
+La carte DNB versionnée dans le dépôt compte 37 cibles officielles distinctes,
+38 cibles normalisées et 88 micro-notions. Elle fixe la couverture et l'ordre
+de fabrication. `NC-01`, critères de divisibilité, est la seule micro-notion
+active.
+
+### D-015 — Aucun niveau ni palier dans le parcours DNB actuel
+
+Les micro-notions sont des unités de fabrication et de suivi, pas des niveaux
+proposés aux élèves. La variété vient des familles de questions, des valeurs,
+des erreurs travaillées et de l'état de l'aide. Les niveaux éventuels attendent
+la future phase couvrant l'ensemble du collège.
+
+### D-016 — NC-01 inclut 10 et commence par la sélection de diviseurs
+
+`NC-01` travaille les critères par 2, 3, 5, 9 et 10. Les quatre premiers
+relèvent de la cible officielle DNB ; 10 est un complément maths&go validé,
+présent sans filtre supplémentaire dans ce parcours. La notion comporte six
+familles validées. La première tranche technique est `F2`, sélection de tous
+les diviseurs proposés avec « Aucun » exclusif et comparaison de l'ensemble
+exact.
+
+### D-017 — L'aide guide sans répondre
+
+L'aide possède trois états : `ouverte`, `disponible` et `indisponible`. Elle
+peut faire observer le chiffre des unités ou construire la somme des chiffres,
+mais ne calcule ni ne conclut à la place de l'élève. Le cours peut montrer la
+méthode complète ; la correction explique chaque critère.
+
+### D-018 — Un contenu alimente l'interactif et la projection
+
+Une question instanciée porte le contenu mathématique, l'aide et la correction,
+sans coordonnée d'écran. Le lecteur choisit la présentation téléphone,
+tablette, ordinateur, TNI ou projection. Une saisie numérique utilise le clavier
+maths&go ; le clavier système mobile ne s'ouvre pas. Une fraction utilisera deux
+champs distincts et une barre construite par le lecteur, mais ce contrat attend
+la micro-notion concernée.
+
+### D-019 — Séance, question et trace sont séparées
+
+La configuration de séance, la question instanciée et la trace de réponse sont
+trois ensembles distincts. La première version ne collecte aucune identité,
+aucune durée et n'envoie rien à un serveur. La trace est néanmoins conçue pour
+être transmissible plus tard sans changer le contenu mathématique.
+

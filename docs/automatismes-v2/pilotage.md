@@ -1,6 +1,6 @@
 # Pilotage d'Automatismes maths&go V2
 
-**Document opérationnel de référence — 18 juillet 2026.**
+**Document opérationnel de référence — 19 juillet 2026.**
 
 Ce document fixe le cadre du chantier. Une instruction explicite plus récente
 de Gwenaël peut le modifier ; la décision doit alors être consignée dans
@@ -23,8 +23,10 @@ Tant que dure la phase en cours, V2 se construit **exclusivement pour le DNB**
 
 La **liste officielle des attendus du DNB** est la source de couverture : c'est
 elle qui dit ce qui doit exister, dans quel ordre, et à quel moment la phase
-est terminée. Cette liste sera écrite dans le dépôt sous forme de carte du DNB,
-notion par notion, avec l'état de chacune.
+est terminée. Elle est versionnée dans
+[`carte-dnb-2026-mathsgo.md`](carte-dnb-2026-mathsgo.md) : 37 cibles officielles
+distinctes, 38 cibles normalisées pour la fabrication et 88 micro-notions
+ordonnées.
 
 L'ancienne banque, elle, devient une **archive consultable**. Elle s'ouvre
 notion par notion, au moment où l'on traite cette notion, pour une seule
@@ -114,12 +116,21 @@ préparé en masse.
 L'avancement ne prouve pas la provenance, et la provenance ne vaut pas
 validation pédagogique.
 
+## Niveaux et paliers
+
+Le parcours DNB actuel ne possède ni niveaux ni paliers. Les micro-notions
+servent à organiser la fabrication et le suivi, pas à classer les élèves. La
+variété vient des familles de questions, des valeurs, des erreurs travaillées
+et de l'état de l'aide. D'éventuels niveaux appartiendront à une phase ultérieure
+sur le programme complet du collège et demanderont une nouvelle décision.
+
 ## Forme de réponse
 
-Par défaut, c'est toujours l'élève qui saisit sa réponse. La seule exception
-déjà décidée concerne le choix de diviseurs proposés au clic. Toute autre
-exception doit être décidée et validée pour une notion précise avant d'être
-introduite dans un contrat.
+Par défaut, c'est toujours l'élève qui saisit sa réponse. La première exception
+validée concerne le choix de diviseurs proposés au clic dans `NC-01/F2`. Les
+autres formes prévues par la fiche `NC-01` n'entrent dans les contrats qu'au
+moment de fabriquer leur famille. Aucun contrat générique de manipulation n'est
+construit par anticipation.
 
 ## Contraintes techniques
 
