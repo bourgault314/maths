@@ -11,6 +11,7 @@ test("ÉquaBarre compose les actions mobiles en grilles compactes", () => {
   assert.match(html, /min-height:44px/);
   assert.match(html, /<span class="mobileLabel">Partager<\/span>/);
   assert.match(html, /<span class="mobileLabel">Enlever des deux côtés<\/span>/);
+  assert.match(html, /main\.activeMode\{\s*width:calc\(100% - 8px\)/);
 });
 
 test("l'historique précède le plateau dans la vue mobile", () => {
