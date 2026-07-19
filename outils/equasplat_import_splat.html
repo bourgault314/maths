@@ -453,9 +453,16 @@
   .pendingShareGroup{
     cursor:pointer;
     outline:none;
+    opacity:0;
     transform-box:fill-box;
     transform-origin:center;
     transition:opacity .24s ease, transform .24s ease;
+    animation:pendingShareEnter .62s cubic-bezier(.22,1,.36,1) both;
+  }
+
+  @keyframes pendingShareEnter{
+    from{opacity:0;transform:translateY(18px) scale(.94)}
+    to{opacity:1;transform:translateY(0) scale(1)}
   }
 
   .pendingShareGroupCard{
@@ -476,16 +483,34 @@
     stroke:#16a34a;
   }
 
+  .pendingShareGroup.chosen{
+    animation:none;
+    opacity:1;
+  }
+
   .pendingShareGroup.discarded{
+    animation:none;
     opacity:0;
     transform:scale(.84);
     pointer-events:none;
+  }
+
+  @media (prefers-reduced-motion:reduce){
+    .pendingShareGroup{
+      animation:none;
+      opacity:1;
+    }
   }
 
   .pendingShareDivider{
     stroke:#94a3b8;
     stroke-width:5;
     pointer-events:none;
+  }
+
+  body.importMode .mg-consent-manage-slot,
+  body.importMode .mg-consent-manage{
+    display:none !important;
   }
 
   .removedGroup{opacity:.28}
@@ -2260,9 +2285,6 @@
       transform:translateY(1px);
     }
 
-    body.importMode .mg-consent-manage-slot--fixed{
-      display:none !important;
-    }
   }
 
   @media (max-width:760px) and (max-height:720px){
@@ -3601,15 +3623,40 @@
     return null;
   }
 
+  function beginPendingShareConclusion(opportunity, each){
+    state.pendingShareConclusion = {
+      shareBatch:uid(),
+      count:opportunity.count,
+      each,
+      xSide:opportunity.xSide,
+      tokenSide:opportunity.tokenSide,
+      finalizing:false
+    };
+  }
+
+  function decompositionMatchesFinalShare(opportunity, side, id, values){
+    if(!opportunity || opportunity.tokenSide !== side || opportunity.token.id !== id) return false;
+    if(values.length !== opportunity.count) return false;
+    return values.every(value => Number(value) === Number(opportunity.result));
+  }
+
   function applyTokenSplit(side, id, values, historyMode="update", operationLabel=null){
     const arr = state[side];
     const idx = arr.findIndex(p => p.id === id);
     if(idx < 0) return;
+    const opportunity = getShareOpportunity();
+    const isFinalShare = decompositionMatchesFinalShare(opportunity, side, id, values);
     pushHistory();
-    arr.splice(idx, 1, ...values.map(makeToken));
-    if(historyMode === "record") recordEquationStep(operationLabel);
-    else updateCurrentEquationStep();
+    if(isFinalShare){
+      beginPendingShareConclusion(opportunity, Number(opportunity.result));
+    }else{
+      arr.splice(idx, 1, ...values.map(makeToken));
+      if(historyMode === "record") recordEquationStep(operationLabel);
+      else updateCurrentEquationStep();
+    }
     selectedPieceRef = null;
+    deleteSelection = [];
+    groupSelection = [];
     render();
   }
 
@@ -3623,21 +3670,14 @@
     if(count < 2 || !Number.isFinite(each)) return;
 
     pushHistory();
-    const shareBatch = uid();
     const isFinalShare = !!opportunity
       && opportunity.tokenSide === side
       && opportunity.token.id === id
       && opportunity.count === count;
     if(isFinalShare){
-      state.pendingShareConclusion = {
-        shareBatch,
-        count,
-        each,
-        xSide:opportunity.xSide,
-        tokenSide:opportunity.tokenSide,
-        finalizing:false
-      };
+      beginPendingShareConclusion(opportunity, each);
     }else{
+      const shareBatch = uid();
       arr.splice(idx, 1, ...Array.from({length:count}, () => makeToken(each, {shareBatch})));
       recordEquationStep();
     }
@@ -4614,6 +4654,7 @@
       const y = outer + row*(cardH + gap);
       const g = document.createElementNS("http://www.w3.org/2000/svg", "g");
       g.setAttribute("class", "pendingShareGroup");
+      g.style.animationDelay = `${index * 110}ms`;
       g.setAttribute("role", "button");
       g.setAttribute("tabindex", "0");
       g.setAttribute("aria-label", `Mini-plateau ${index + 1} sur ${count} : une tache à gauche et ${formatSignedNumber(pending.each)} à droite. Choisir ce plateau.`);
@@ -4667,7 +4708,7 @@
         fresh.finalizing = true;
         const groups = svg.querySelectorAll(".pendingShareGroup");
         groups.forEach((group, groupIndex) => group.classList.add(groupIndex === index ? "chosen" : "discarded"));
-        setTimeout(() => finalizePendingShare(pending.shareBatch), 260);
+        setTimeout(() => finalizePendingShare(pending.shareBatch), 420);
       };
       g.addEventListener("click", choose);
       g.addEventListener("keydown", event => {
