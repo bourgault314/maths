@@ -2288,6 +2288,283 @@
     }
   }
 
+
+
+  /* PATCH RESPONSIVE ÉQUASPLAT — sélecteur explicite sur ordinateur,
+     composition Classique dédiée au téléphone. */
+  .viewModeSwitch{
+    height:40px;
+    min-width:174px;
+    padding:3px;
+    display:grid;
+    grid-template-columns:1fr 1fr;
+    gap:3px;
+    border:1px solid rgba(15,23,42,.14);
+    border-radius:13px;
+    background:rgba(241,245,249,.96);
+    box-shadow:0 8px 20px rgba(15,23,42,.10);
+  }
+
+  .viewModeOption{
+    min-width:0;
+    height:32px;
+    padding:0 10px;
+    border:0;
+    border-radius:9px;
+    background:transparent;
+    color:#475569;
+    font-size:13px;
+    font-weight:950;
+    box-shadow:none;
+  }
+
+  .viewModeOption.active{
+    background:linear-gradient(180deg,#60a5fa,#3b82f6);
+    color:#fff;
+    box-shadow:0 4px 10px rgba(37,99,235,.22);
+  }
+
+  @media (max-width:700px), (max-height:500px) and (pointer:coarse){
+    main.activeMode{
+      width:calc(100vw - 12px) !important;
+      margin:6px auto max(16px, env(safe-area-inset-bottom)) !important;
+    }
+
+    main.activeMode .stage:not(:fullscreen){
+      min-height:0 !important;
+      height:auto !important;
+      padding:8px !important;
+      display:grid !important;
+      grid-template-columns:minmax(0,1fr) !important;
+      grid-template-rows:auto 118px auto 56px auto !important;
+      grid-template-areas:
+        "quick"
+        "history"
+        "board"
+        "context"
+        "tools" !important;
+      gap:7px !important;
+      overflow:visible !important;
+    }
+
+    main.activeMode .stageQuickActions{
+      grid-area:quick;
+      position:relative;
+      inset:auto;
+      width:100%;
+      min-height:44px;
+      margin:0;
+      display:flex;
+      justify-content:space-between;
+      align-items:center;
+      gap:8px;
+    }
+
+    main.activeMode .viewModeSwitch,
+    main.activeMode #btnStageUndo,
+    main.activeMode #btnFullscreen{
+      display:none !important;
+    }
+
+    main.activeMode .menuQuickBtn,
+    main.activeMode .diceBtn{
+      min-width:52px;
+      width:auto;
+      height:42px;
+      padding:0 13px;
+      border-radius:13px;
+      font-size:14px;
+    }
+
+    main.activeMode .diceBtn{
+      width:44px;
+      min-width:44px;
+      padding:0;
+      font-size:21px;
+    }
+
+    main.activeMode .stage:not(:fullscreen) .topbar{
+      grid-area:history;
+      width:100% !important;
+      height:118px !important;
+      min-height:118px !important;
+      max-height:118px !important;
+      margin:0 !important;
+      padding:8px 9px !important;
+      display:flex !important;
+      align-items:flex-end !important;
+      overflow:hidden !important;
+      border:1px solid rgba(59,130,246,.20);
+      border-radius:18px;
+      background:linear-gradient(180deg,#eff6ff,#dbeafe);
+      box-shadow:inset 0 1px 0 rgba(255,255,255,.85);
+    }
+
+    main.activeMode .stage:not(:fullscreen) .equationHistory{
+      width:100% !important;
+      height:100% !important;
+      min-height:0 !important;
+      max-height:100% !important;
+      margin:0 !important;
+      padding:3px 2px !important;
+      display:block !important;
+      overflow-x:hidden !important;
+      overflow-y:auto !important;
+      overscroll-behavior:contain;
+      scrollbar-width:thin;
+    }
+
+    main.activeMode .stage:not(:fullscreen) .equationList{
+      width:100% !important;
+      min-height:100%;
+      margin:0 !important;
+      display:flex;
+      flex-direction:column;
+      justify-content:flex-end;
+      font-size:clamp(18px,6vw,24px) !important;
+      line-height:1.08 !important;
+    }
+
+    main.activeMode .stage:not(:fullscreen) .equationRow{
+      width:100% !important;
+      grid-template-columns:minmax(0,1fr) auto minmax(0,1fr) !important;
+      column-gap:7px !important;
+    }
+
+    main.activeMode .stage:not(:fullscreen) .equationRow .eq{
+      transform:none !important;
+      min-width:1em;
+    }
+
+    main.activeMode .stage:not(:fullscreen) .instructionZone,
+    main.activeMode .stage:not(:fullscreen) .actionZone{
+      grid-area:context;
+      width:100%;
+      height:56px;
+      min-height:56px !important;
+      margin:0 !important;
+      padding:4px 6px;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      gap:7px;
+      text-align:center;
+      border-radius:14px;
+    }
+
+    main.activeMode .stage:not(:fullscreen) .instructionZone{
+      z-index:1;
+      font-size:14px;
+      line-height:1.18;
+      background:#f8fafc;
+      border:1px solid rgba(15,23,42,.07);
+    }
+
+    main.activeMode .stage:not(:fullscreen) .actionZone{
+      z-index:2;
+      pointer-events:none;
+      opacity:0;
+      background:#fff;
+      border:1px solid transparent;
+    }
+
+    main.activeMode .stage:not(:fullscreen) .actionZone:has(> button){
+      pointer-events:auto;
+      opacity:1;
+      border-color:rgba(15,23,42,.08);
+    }
+
+    main.activeMode .stage:not(:fullscreen) .actionZone button{
+      min-height:44px;
+      padding:8px 12px;
+      border-radius:12px;
+      font-size:13px;
+    }
+
+    main.activeMode .stage:not(:fullscreen) .board{
+      grid-area:board;
+      width:100% !important;
+      height:clamp(205px,58vw,232px) !important;
+      min-height:205px !important;
+      max-height:232px !important;
+      margin:0 !important;
+      padding:4px !important;
+      place-items:center;
+      overflow:hidden;
+    }
+
+    main.activeMode .stage:not(:fullscreen) #splatSvg{
+      width:100% !important;
+      height:100% !important;
+      min-height:0 !important;
+    }
+
+    main.activeMode .tokenText{
+      font-size:60px;
+    }
+
+    main.activeMode .splatText{
+      font-size:48px;
+    }
+
+    main.activeMode .stage:not(:fullscreen) .toolBar{
+      grid-area:tools;
+      width:100% !important;
+      margin:0 !important;
+      gap:7px !important;
+      display:flex !important;
+      flex-direction:column;
+    }
+
+    main.activeMode .stage:not(:fullscreen) .toolRow{
+      width:100%;
+      gap:6px !important;
+      margin:0;
+      padding:0;
+    }
+
+    main.activeMode .stage:not(:fullscreen) .toolRowObjects{
+      display:grid !important;
+      grid-template-columns:repeat(3,minmax(0,1fr));
+    }
+
+    main.activeMode .stage:not(:fullscreen) .toolRowEquation{
+      display:grid !important;
+      grid-template-columns:repeat(2,minmax(0,1fr));
+    }
+
+    main.activeMode .stage:not(:fullscreen) .toolBtn{
+      width:100%;
+      min-width:0;
+      min-height:54px !important;
+      margin:0 !important;
+      padding:8px 5px !important;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      white-space:normal;
+      text-align:center;
+      font-size:12.5px !important;
+      line-height:1.12;
+      border-radius:13px !important;
+    }
+
+    main.activeMode .stage:not(:fullscreen) #toolOppositeBoth{
+      grid-column:1 / -1;
+    }
+
+    main.activeMode .stage:not(:fullscreen) .solution{
+      display:none !important;
+    }
+
+    dialog{
+      max-height:calc(100dvh - 20px);
+    }
+
+    .dialogInner{
+      padding:22px 18px max(20px, env(safe-area-inset-bottom));
+    }
+  }
 </style>
 <link rel="stylesheet" href="../assets/css/consentement.css">
 <script defer src="../assets/js/consentement.js"></script>
@@ -2410,7 +2687,10 @@
   <section class="stage" id="stage">
     <div class="stageQuickActions" aria-label="Actions rapides">
       <button class="ghost quickBtn menuQuickBtn" id="btnBackToMenu" type="button" title="Revenir au menu de départ" aria-label="Revenir au menu de départ">Menu</button>
-      <button class="ghost quickBtn viewModeQuickBtn" id="btnViewMode" type="button" title="Passer en vue classique" aria-label="Passer en vue classique">Classique</button>
+      <div class="viewModeSwitch" id="viewModeSwitch" role="group" aria-label="Choisir la vue">
+        <button class="viewModeOption" id="btnViewClassic" type="button" aria-pressed="false">Classique</button>
+        <button class="viewModeOption" id="btnViewRedaction" type="button" aria-pressed="true">Rédaction</button>
+      </div>
       <button class="ghost quickBtn diceBtn" id="btnStageRandom" type="button" title="Nouvelle équation aléatoire" aria-label="Nouvelle équation aléatoire">🎲</button>
       <button class="ghost quickBtn" id="btnStageUndo" type="button" title="Annuler la dernière action" aria-label="Annuler la dernière action">↶</button>
       <button class="ghost quickBtn" id="btnFullscreen" type="button" title="Plein écran" aria-label="Plein écran">⛶</button>
@@ -2572,7 +2852,8 @@
   const btnStageRandom = document.getElementById("btnStageRandom");
   const btnStageReset = document.getElementById("btnStageReset");
   const btnBackToMenu = document.getElementById("btnBackToMenu");
-  const btnViewMode = document.getElementById("btnViewMode");
+  const btnViewClassic = document.getElementById("btnViewClassic");
+  const btnViewRedaction = document.getElementById("btnViewRedaction");
   const btnFullscreen = document.getElementById("btnFullscreen");
 
   const decomposeDialog = document.getElementById("decomposeDialog");
@@ -2601,9 +2882,20 @@
   const fusionFeedback = document.getElementById("fusionFeedback");
 
   const variableChars = ["𝑥", "𝑎", "𝑏", "𝑐", "𝑚", "𝑛", "𝑡"];
-  // ÉquaSplat 0.5 : jetons un peu plus grands et rayon centralisé.
-  const TOKEN_R = 54;
-  const TOKEN_HIT_EXTRA = 32;
+  const phoneLayoutMedia = window.matchMedia(
+    "(max-width: 700px), (max-height: 500px) and (pointer: coarse)"
+  );
+  function isPhoneLayout(){ return phoneLayoutMedia.matches; }
+
+  // Les objets restent inchangés sur ordinateur et gagnent en lisibilité
+  // et en surface tactile dans la composition dédiée au téléphone.
+  const TOKEN_R_DESKTOP = 54;
+  const TOKEN_R_PHONE = 68;
+  const TOKEN_HIT_EXTRA_DESKTOP = 32;
+  const TOKEN_HIT_EXTRA_PHONE = 50;
+  function tokenRadius(){ return isPhoneLayout() ? TOKEN_R_PHONE : TOKEN_R_DESKTOP; }
+  function tokenHitExtra(){ return isPhoneLayout() ? TOKEN_HIT_EXTRA_PHONE : TOKEN_HIT_EXTRA_DESKTOP; }
+  function splatRadius(){ return isPhoneLayout() ? 108 : 84; }
 
   let state = null;
   let initialState = null;
@@ -2626,9 +2918,15 @@
     appMain.classList.toggle("activeMode", appLayoutMode === "active");
   }
 
-  function setViewMode(mode){
-    viewMode = mode === "redaction" ? "redaction" : "classic";
+  let desktopViewMode = "redaction";
+
+  function setViewMode(mode, options={}){
+    const requested = mode === "redaction" ? "redaction" : "classic";
+    if(options.remember !== false && !isPhoneLayout()) desktopViewMode = requested;
+    viewMode = isPhoneLayout() ? "classic" : requested;
+
     if(appMain){
+      appMain.classList.toggle("phoneLayout", isPhoneLayout());
       appMain.classList.toggle("viewRedaction", viewMode === "redaction");
       appMain.classList.toggle("viewClassic", viewMode === "classic");
     }
@@ -2636,17 +2934,26 @@
       stageEl.classList.toggle("viewRedaction", viewMode === "redaction");
       stageEl.classList.toggle("viewClassic", viewMode === "classic");
     }
-    if(btnViewMode){
-      const target = viewMode === "redaction" ? "Classique" : "Rédaction";
-      btnViewMode.textContent = target;
-      btnViewMode.title = viewMode === "redaction" ? "Passer en vue classique" : "Passer en vue rédaction";
-      btnViewMode.setAttribute("aria-label", btnViewMode.title);
+    if(btnViewClassic){
+      const active = viewMode === "classic";
+      btnViewClassic.classList.toggle("active", active);
+      btnViewClassic.setAttribute("aria-pressed", active ? "true" : "false");
+    }
+    if(btnViewRedaction){
+      const active = viewMode === "redaction";
+      btnViewRedaction.classList.toggle("active", active);
+      btnViewRedaction.setAttribute("aria-pressed", active ? "true" : "false");
     }
   }
 
-  function toggleViewMode(){
-    setViewMode(viewMode === "redaction" ? "classic" : "redaction");
+  function chooseView(mode){
+    setViewMode(mode);
     render();
+  }
+
+  function syncPhoneLayout(){
+    setViewMode(isPhoneLayout() ? "classic" : desktopViewMode, {remember:false});
+    if(state) render();
   }
 
   function openStage(){
@@ -4315,7 +4622,7 @@
       const cy = splatArea.y + splatArea.h*((r+.5)/rows.length);
       for(let c=0;c<cols && k<xs.length;c++){
         const cx = splatArea.x + cellW*(c+.5);
-        out.set(xs[k].id, {cx,cy,r:84});
+        out.set(xs[k].id, {cx,cy,r:splatRadius()});
         k++;
       }
     }
@@ -4380,16 +4687,16 @@
   function randomTokenPositionInTray(tray, sideName, visible, placed){
     const area = tokenAreaForTray(tray);
     const splats = Array.from(splatPositionsForItems(tray, visible).values());
-    const minTokenDist = TOKEN_R * 2.12;
+    const minTokenDist = tokenRadius() * 2.12;
 
     // Placement naturel : on tire des positions dans tout le plateau,
     // mais on refuse les positions sur les taches et, si possible, les
     // positions qui collent trop les jetons entre eux.
     for(let attempt=0; attempt<140; attempt++){
-      const cx = area.x + TOKEN_R + Math.random() * Math.max(1, area.w - 2*TOKEN_R);
-      const cy = area.y + TOKEN_R + Math.random() * Math.max(1, area.h - 2*TOKEN_R);
-      const p = clampTokenPosition(tray, cx, cy, TOKEN_R, true, sideName);
-      if(tokenOverlapsSplats(p, splats, TOKEN_R)) continue;
+      const cx = area.x + tokenRadius() + Math.random() * Math.max(1, area.w - 2*tokenRadius());
+      const cy = area.y + tokenRadius() + Math.random() * Math.max(1, area.h - 2*tokenRadius());
+      const p = clampTokenPosition(tray, cx, cy, tokenRadius(), true, sideName);
+      if(tokenOverlapsSplats(p, splats, tokenRadius())) continue;
       if(tokenOverlapsExisting(p, placed, minTokenDist)) continue;
       return p;
     }
@@ -4397,11 +4704,11 @@
     // Deuxième passe : on accepte que les jetons soient plus proches,
     // mais toujours pas sur une tache.
     for(let attempt=0; attempt<100; attempt++){
-      const cx = area.x + TOKEN_R + Math.random() * Math.max(1, area.w - 2*TOKEN_R);
-      const cy = area.y + TOKEN_R + Math.random() * Math.max(1, area.h - 2*TOKEN_R);
-      const p = clampTokenPosition(tray, cx, cy, TOKEN_R, true, sideName);
-      if(tokenOverlapsSplats(p, splats, TOKEN_R)) continue;
-      if(tokenOverlapsExisting(p, placed, TOKEN_R * 1.82)) continue;
+      const cx = area.x + tokenRadius() + Math.random() * Math.max(1, area.w - 2*tokenRadius());
+      const cy = area.y + tokenRadius() + Math.random() * Math.max(1, area.h - 2*tokenRadius());
+      const p = clampTokenPosition(tray, cx, cy, tokenRadius(), true, sideName);
+      if(tokenOverlapsSplats(p, splats, tokenRadius())) continue;
+      if(tokenOverlapsExisting(p, placed, tokenRadius() * 1.82)) continue;
       return p;
     }
 
@@ -4411,14 +4718,14 @@
       cx: area.x + area.w * (0.28 + Math.random()*0.44),
       cy: area.y + area.h * (0.56 + Math.random()*0.34)
     };
-    return clampTokenPosition(tray, fallback.cx, fallback.cy, TOKEN_R, true, sideName);
+    return clampTokenPosition(tray, fallback.cx, fallback.cy, tokenRadius(), true, sideName);
   }
 
   function separateTokenPositions(tray, visible, tokens, sideName){
     // PATCH 0.7.3 : après le placement naturel, on effectue une petite
     // relaxation géométrique pour supprimer les derniers chevauchements
     // entre jetons, tout en continuant à éviter les taches.
-    const minDist = TOKEN_R * 2.10;
+    const minDist = tokenRadius() * 2.10;
     if(tokens.length < 2) return;
 
     for(let pass=0; pass<18; pass++){
@@ -4443,8 +4750,8 @@
             const ux = dx / dist;
             const uy = dy / dist;
 
-            let pa = clampTokenPosition(tray, a.x - ux * push, a.y - uy * push, TOKEN_R, true, sideName);
-            let pb = clampTokenPosition(tray, b.x + ux * push, b.y + uy * push, TOKEN_R, true, sideName);
+            let pa = clampTokenPosition(tray, a.x - ux * push, a.y - uy * push, tokenRadius(), true, sideName);
+            let pb = clampTokenPosition(tray, b.x + ux * push, b.y + uy * push, tokenRadius(), true, sideName);
 
             a.x = pa.cx;
             a.y = pa.cy;
@@ -4457,7 +4764,7 @@
 
       // Une passe de sécurité contre les taches après les déplacements entre jetons.
       for(const t of tokens){
-        const safe = clampTokenPosition(tray, t.x, t.y, TOKEN_R, true, sideName);
+        const safe = clampTokenPosition(tray, t.x, t.y, tokenRadius(), true, sideName);
         if(Math.abs(safe.cx - t.x) > 0.5 || Math.abs(safe.cy - t.y) > 0.5){
           t.x = safe.cx;
           t.y = safe.cy;
@@ -4482,7 +4789,7 @@
 
     for(const token of tokens){
       if(Number.isFinite(token.x) && Number.isFinite(token.y)){
-        const clamped = clampTokenPosition(tray, token.x, token.y, TOKEN_R, true, sideName);
+        const clamped = clampTokenPosition(tray, token.x, token.y, tokenRadius(), true, sideName);
         token.x = clamped.cx;
         token.y = clamped.cy;
         placedTokens.push({cx:clamped.cx, cy:clamped.cy});
@@ -4496,7 +4803,7 @@
 
     separateTokenPositions(tray, visible, tokens, sideName);
     for(const token of tokens){
-      out.set(token.id, {cx:token.x, cy:token.y, r:TOKEN_R});
+      out.set(token.id, {cx:token.x, cy:token.y, r:tokenRadius()});
     }
 
     return out;
@@ -4567,7 +4874,7 @@
       // Fusion seulement si on dépose vraiment le jeton sur l'autre :
       // seuil assoupli : il faut déposer franchement sur l’autre jeton,
       // mais sans devoir viser parfaitement le centre.
-      if(dist < TOKEN_R * 1.55 && dist < bestDist){
+      if(dist < tokenRadius() * 1.55 && dist < bestDist){
         best = other;
         bestDist = dist;
       }
@@ -4672,7 +4979,7 @@
     if(!dragState) return;
     const p = svgPointFromEvent(e);
     const tray = getTrayForSide(dragState.side);
-    const next = clampTokenPosition(tray, dragState.startCx + (p.x - dragState.startSvg.x), dragState.startCy + (p.y - dragState.startSvg.y), TOKEN_R, false);
+    const next = clampTokenPosition(tray, dragState.startCx + (p.x - dragState.startSvg.x), dragState.startCy + (p.y - dragState.startSvg.y), tokenRadius(), false);
     const dx = next.cx - dragState.startCx;
     const dy = next.cy - dragState.startCy;
     if(Math.hypot(dx, dy) > 3) dragState.moved = true;
@@ -4694,7 +5001,7 @@
       const piece = state && state[ds.side] ? state[ds.side].find(p => p.id === ds.id) : null;
       let fusionTarget = null;
       if(piece){
-        const safe = clampTokenPosition(getTrayForSide(ds.side), ds.cx, ds.cy, TOKEN_R, true, ds.side);
+        const safe = clampTokenPosition(getTrayForSide(ds.side), ds.cx, ds.cy, tokenRadius(), true, ds.side);
         piece.x = safe.cx;
         piece.y = safe.cy;
         fusionTarget = findFusionCandidate(ds.side, ds.id, safe.cx, safe.cy);
@@ -4744,7 +5051,7 @@
       const hit = document.createElementNS("http://www.w3.org/2000/svg", "circle");
       hit.setAttribute("cx", pos.cx);
       hit.setAttribute("cy", pos.cy);
-      hit.setAttribute("r", pos.r + TOKEN_HIT_EXTRA);
+      hit.setAttribute("r", pos.r + tokenHitExtra());
       hit.setAttribute("fill", "transparent");
       hit.setAttribute("class", "tokenHitArea");
       g.appendChild(hit);
@@ -5157,7 +5464,10 @@
   document.getElementById("btnRandom").addEventListener("click", () => fillRandomEquationInput({build:false}));
   document.getElementById("btnReset").addEventListener("click", resetCurrentExercise);
   if(btnBackToMenu) btnBackToMenu.addEventListener("click", returnToStartMenu);
-  if(btnViewMode) btnViewMode.addEventListener("click", toggleViewMode);
+  if(btnViewClassic) btnViewClassic.addEventListener("click", () => chooseView("classic"));
+  if(btnViewRedaction) btnViewRedaction.addEventListener("click", () => chooseView("redaction"));
+  if(phoneLayoutMedia.addEventListener) phoneLayoutMedia.addEventListener("change", syncPhoneLayout);
+  else if(phoneLayoutMedia.addListener) phoneLayoutMedia.addListener(syncPhoneLayout);
   if(btnStageReset) btnStageReset.addEventListener("click", resetCurrentExercise);
   btnStageRandom.addEventListener("click", randomAndOpen);
   toolDecompose.addEventListener("click", () => setActionMode("decompose"));
