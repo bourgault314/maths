@@ -17,7 +17,7 @@ test("les crédits de l'accueil sont placés dans la carte", () => {
 });
 
 test("les deux cartes partagent une hauteur minimale sur les écrans assez hauts", () => {
-  assert.match(alignmentCss, /--mathsgo-entry-card-height:\s*771px/);
+  assert.match(alignmentCss, /--mathsgo-entry-card-height:\s*770px/);
   assert.match(homeCss, /min-height:\s*var\(--mathsgo-entry-card-height\)/);
   assert.match(catalogueCss, /min-height:\s*var\(--mathsgo-entry-card-height\)/);
 });
