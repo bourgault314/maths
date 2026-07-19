@@ -540,27 +540,15 @@
     color:#9a3412;
   }
 
-  .undoArrow{
-    position:relative;
-    width:18px;
-    height:18px;
-    flex:0 0 18px;
-    border:2px solid currentColor;
-    border-right-color:transparent;
-    border-radius:50%;
-    transform:rotate(-28deg);
-  }
-
-  .undoArrow::before{
-    content:"";
-    position:absolute;
-    left:-4px;
-    top:-2px;
-    width:7px;
-    height:7px;
-    border-left:2px solid currentColor;
-    border-top:2px solid currentColor;
-    transform:rotate(-18deg);
+  .undoIcon{
+    width:21px;
+    height:21px;
+    flex:0 0 21px;
+    fill:none;
+    stroke:currentColor;
+    stroke-width:2.2;
+    stroke-linecap:round;
+    stroke-linejoin:round;
   }
 
   .mobileLabel{
@@ -569,6 +557,17 @@
 
   .mobileUndoLabel{
     display:none;
+  }
+
+  .mobileRemovedDisplayMode,
+  .mobileRestartToolBtn{
+    display:none;
+  }
+
+  .restartToolBtn{
+    background:#f8fafc;
+    border-color:rgba(71,85,105,.24);
+    color:#475569;
   }
 
   .solution{
@@ -1835,18 +1834,7 @@
     }
 
     body.importMode .stage:not(:fullscreen) .stageQuickActions{
-      order:1;
-      position:relative;
-      inset:auto;
-      z-index:2;
-      width:100%;
-      min-height:38px;
-      margin:0 0 4px;
-      padding:0 1px;
-      display:flex;
-      justify-content:flex-end;
-      align-items:center;
-      gap:6px;
+      display:none;
     }
 
     body.importMode .stage:not(:fullscreen) #btnStageUndo,
@@ -1875,27 +1863,28 @@
     }
 
     body.importMode .stage:not(:fullscreen) .topbar{
-      order:5;
+      order:4;
       box-sizing:border-box;
       width:100%;
-      height:110px;
-      min-height:110px;
-      max-height:110px;
+      height:136px;
+      min-height:136px;
+      max-height:136px;
       margin-top:7px;
-      padding:5px 3px;
+      padding:5px 4px;
       overflow:hidden;
-      flex:0 0 110px;
-      border:1px solid rgba(59,130,246,.14);
+      flex:0 0 136px;
+      border:2px solid #93c5fd;
       border-radius:14px;
-      background:rgba(239,246,255,.58);
+      background:#eff6ff;
+      box-shadow:inset 0 0 0 1px rgba(255,255,255,.72);
     }
 
     body.importMode .stage:not(:fullscreen) .equationHistory{
       box-sizing:border-box;
       width:100%;
-      height:102px;
-      min-height:102px;
-      max-height:102px;
+      height:124px;
+      min-height:124px;
+      max-height:124px;
       padding:0 2px;
       overflow-x:hidden;
       overflow-y:auto;
@@ -1920,7 +1909,7 @@
     }
 
     body.importMode .stage:not(:fullscreen) .instructionZone{
-      order:3;
+      order:2;
       height:42px;
       min-height:42px;
       max-height:42px;
@@ -1933,12 +1922,12 @@
     }
 
     body.importMode .stage:not(:fullscreen) .board{
-      order:2;
+      order:1;
       box-sizing:border-box;
       width:100%;
-      height:clamp(210px,58vw,250px);
-      min-height:210px;
-      max-height:250px;
+      height:clamp(290px,82vw,340px);
+      min-height:290px;
+      max-height:340px;
       padding:2px;
       border-radius:15px;
     }
@@ -1950,7 +1939,7 @@
     }
 
     body.importMode .stage:not(:fullscreen) .mobileBottomControls{
-      order:4;
+      order:3;
       position:static;
       inset:auto;
       z-index:auto;
@@ -2003,6 +1992,30 @@
       line-height:1.12;
       width:100%;
       max-width:none;
+    }
+
+    body.importMode .stage:not(:fullscreen) .mobileRemovedDisplayMode{
+      display:block;
+      box-sizing:border-box;
+      width:100%;
+      min-width:0;
+      min-height:42px;
+      padding:8px 30px 8px 10px;
+      border:1px solid rgba(59,130,246,.18);
+      border-radius:12px;
+      background:#f8fbff;
+      color:#1e3a5f;
+      font-family:inherit;
+      font-size:13px;
+      font-weight:900;
+      line-height:1.12;
+      box-shadow:none;
+    }
+
+    body.importMode .stage:not(:fullscreen) .mobileRestartToolBtn{
+      display:inline-flex;
+      align-items:center;
+      justify-content:center;
     }
 
     body.importMode .stage:not(:fullscreen) .desktopLabel{
@@ -2120,20 +2133,10 @@
   }
 
   @media (max-width:760px) and (max-height:720px){
-    body.importMode .stage:not(:fullscreen) .stageQuickActions{
-      min-height:32px;
-      margin-bottom:3px;
-    }
-
-    body.importMode .stage:not(:fullscreen) .quickRemovedMode{
-      height:34px;
-      min-height:34px;
-    }
-
     body.importMode .stage:not(:fullscreen) .board{
-      height:180px;
-      min-height:180px;
-      max-height:180px;
+      height:240px;
+      min-height:240px;
+      max-height:240px;
     }
 
     body.importMode .stage:not(:fullscreen) .instructionZone{
@@ -2159,19 +2162,26 @@
       font-size:12px;
     }
 
+    body.importMode .stage:not(:fullscreen) .mobileRemovedDisplayMode{
+      min-height:36px;
+      padding-top:6px;
+      padding-bottom:6px;
+      font-size:12px;
+    }
+
     body.importMode .stage:not(:fullscreen) .topbar{
-      height:90px;
-      min-height:90px;
-      max-height:90px;
-      flex-basis:90px;
+      height:110px;
+      min-height:110px;
+      max-height:110px;
+      flex-basis:110px;
       margin-top:5px;
       padding:4px 3px;
     }
 
     body.importMode .stage:not(:fullscreen) .equationHistory{
-      height:82px;
-      min-height:82px;
-      max-height:82px;
+      height:98px;
+      min-height:98px;
+      max-height:98px;
     }
 
     body.importMode .stage:not(:fullscreen) .equationList{
@@ -2294,13 +2304,18 @@
           <button class="toolBtn" id="toolGroup" type="button">Regrouper</button>
           <button class="toolBtn" id="toolShare" type="button"><span class="desktopLabel">Partager équitablement</span><span class="mobileLabel">Partager</span></button>
           <button class="toolBtn unitShareToolBtn" id="toolShareUnits" type="button">Faire des paquets</button>
+          <select id="mobileRemovedDisplayMode" class="mobileRemovedDisplayMode" title="Affichage des éléments supprimés" aria-label="Affichage des éléments supprimés">
+            <option value="keep">Hachuré</option>
+            <option value="hide" selected>Caché</option>
+          </select>
         </div>
 
         <div class="toolRow toolRowEquation" aria-label="Actions sur l’équation">
           <button class="toolBtn" id="toolDelete" type="button"><span class="desktopLabel">Enlever dans chaque membre</span><span class="mobileLabel">Enlever des deux côtés</span></button>
           <button class="toolBtn addBothToolBtn" id="toolAddBoth" type="button" title="Ajouter le même jeton dans les deux membres"><span class="desktopLabel">Ajouter aux deux membres</span><span class="mobileLabel">Ajouter des deux côtés</span></button>
           <button class="toolBtn oppositeBothToolBtn" id="toolOppositeBoth" type="button" title="Prendre l’opposé de chaque membre">Prendre l’opposé</button>
-          <button class="toolBtn undoToolBtn" id="toolUndo" type="button" title="Annuler la dernière action"><span class="desktopUndoLabel">↶ Annuler</span><span class="mobileUndoLabel"><span class="undoArrow" aria-hidden="true"></span><span>Annuler</span></span></button>
+          <button class="toolBtn undoToolBtn" id="toolUndo" type="button" title="Annuler la dernière action"><span class="desktopUndoLabel">↶ Annuler</span><span class="mobileUndoLabel"><svg class="undoIcon" viewBox="0 0 24 24" aria-hidden="true"><path d="M9 14 4 9l5-5"></path><path d="M4 9h10.5a5.5 5.5 0 0 1 0 11H11"></path></svg><span>Annuler</span></span></button>
+          <button class="toolBtn restartToolBtn mobileRestartToolBtn" id="toolRestart" type="button" title="Recommencer depuis l’équation de départ">Recommencer</button>
         </div>
       </div>
 
@@ -2406,6 +2421,7 @@
   const modeEl = document.getElementById("mode");
   const removedDisplayModeEl = document.getElementById("removedDisplayMode");
   const stageRemovedDisplayModeEl = document.getElementById("stageRemovedDisplayMode");
+  const mobileRemovedDisplayModeEl = document.getElementById("mobileRemovedDisplayMode");
   const workUniverseEl = document.getElementById("workUniverse");
   const oppositeXModeEl = document.getElementById("oppositeXMode");
   const oppositeXModeLabel = document.getElementById("oppositeXModeLabel");
@@ -2431,6 +2447,7 @@
   const toolAddBoth = document.getElementById("toolAddBoth");
   const toolOppositeBoth = document.getElementById("toolOppositeBoth");
   const toolUndo = document.getElementById("toolUndo");
+  const toolRestart = document.getElementById("toolRestart");
   const btnStageUndo = document.getElementById("btnStageUndo");
   const btnStageRandom = document.getElementById("btnStageRandom");
   const btnFullscreen = document.getElementById("btnFullscreen");
@@ -2504,6 +2521,7 @@
     const mode = value === "hide" ? "hide" : "keep";
     if(removedDisplayModeEl) removedDisplayModeEl.value = mode;
     if(stageRemovedDisplayModeEl) stageRemovedDisplayModeEl.value = mode;
+    if(mobileRemovedDisplayModeEl) mobileRemovedDisplayModeEl.value = mode;
   }
   function shouldKeepRemovedPieces(){ return currentRemovedDisplayMode() !== "hide"; }
   function oppositeXEnabled(){
@@ -4773,6 +4791,7 @@
   toolAddBoth.addEventListener("click", openAddBothDialog);
   if(toolOppositeBoth) toolOppositeBoth.addEventListener("click", takeOppositeOfBothMembers);
   toolUndo.addEventListener("click", undo);
+  if(toolRestart) toolRestart.addEventListener("click", restartImportedEquation);
   btnStageUndo.addEventListener("click", undo);
 
   // Sur certains claviers mobiles, inputmode="numeric" ne propose aucun
@@ -4884,6 +4903,12 @@
   if(stageRemovedDisplayModeEl){
     stageRemovedDisplayModeEl.addEventListener("change", () => {
       syncRemovedDisplayControls(stageRemovedDisplayModeEl.value);
+      render();
+    });
+  }
+  if(mobileRemovedDisplayModeEl){
+    mobileRemovedDisplayModeEl.addEventListener("change", () => {
+      syncRemovedDisplayControls(mobileRemovedDisplayModeEl.value);
       render();
     });
   }
@@ -5035,7 +5060,14 @@
     if(oppositeXModeEl) oppositeXModeEl.value = leftPieces.concat(rightPieces).some(p => p.type === "x" && xSign(p) < 0) ? "on" : "off";
     if(unknownDisplayModeEl) unknownDisplayModeEl.value = wantedDisplay;
     importedUnknownDisplayMode = wantedDisplay;
-    syncRemovedDisplayControls("keep");
+    const requestedRemovedDisplay = String(
+      payload.removedDisplayMode || payload.removedDisplay || payload.removedMode || "hide"
+    ).toLowerCase();
+    syncRemovedDisplayControls(
+      requestedRemovedDisplay === "keep" || requestedRemovedDisplay === "hatched" || requestedRemovedDisplay === "hachure"
+        ? "keep"
+        : "hide"
+    );
 
     const importedX = Number(payload.x);
     const xValue = Number.isFinite(importedX) && importedX !== 0 ? importedX : inferImportedX(leftPieces, rightPieces);
