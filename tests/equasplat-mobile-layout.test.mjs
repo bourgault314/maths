@@ -39,6 +39,18 @@ test("l’historique bleu réserve dès le départ une grande zone et suit sa de
   assert.match(html, /\.equationHistory\{[^}]*overflow-y:auto;[^}]*overscroll-behavior:contain;[^}]*-webkit-overflow-scrolling:touch;/s);
 });
 
+test("les opérations faites aux deux membres apparaissent entre les équations", () => {
+  assert.match(html, /function recordEquationStep\(operationLabel=null\)/);
+  assert.match(html, /function operationBetweenRows\(label\)/);
+  assert.match(html, /class="equationOperationArrow"[^>]*>↓<\/span>/);
+  assert.match(html, /Même opération dans les deux membres/);
+  assert.match(html, /recordEquationStep\(operation\)/);
+  assert.match(html, /recordEquationStep\("× \(−1\)"\)/);
+  assert.match(html, /`÷ \$\{n\}`/);
+  assert.match(html, /finishAddBothAction\(operationDeltaLabel\(value\)\)/);
+  assert.match(html, /finishAddBothAction\(operationDeltaLabel\(sign \* count, currentVar\(\)\)\)/);
+});
+
 test("sur téléphone seule la zone bleue défile", () => {
   assert.match(html, /body\.importMode\{[^}]*height:100svh;[^}]*min-height:0;[^}]*max-height:100svh;[^}]*overflow:hidden;[^}]*overscroll-behavior:none;/s);
   assert.match(html, /body\.importMode main\{[^}]*height:calc\(100% - 8px\);[^}]*max-height:calc\(100% - 8px\);[^}]*overflow:hidden;/s);
