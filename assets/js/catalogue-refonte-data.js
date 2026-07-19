@@ -85,6 +85,7 @@ window.MATHSGO_CATALOGUE = {
       "domain": "nombres-calculs",
       "notions": ["numeration"],
       "hub": "bouliers/index.html",
+      "hiddenFromBrowse": true,
       "collapseInNotion": true
     },
     {
