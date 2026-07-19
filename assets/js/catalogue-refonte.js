@@ -30,7 +30,7 @@
     "nombres-calculs": { icon: "factor-tree" },
     algebre: { icon: "splat" },
     "proportionnalite-mesures": { icon: "equal-volume-vase" },
-    geometrie: { icon: "seigaiha" },
+    geometrie: { icon: "geometry-construction" },
     donnees: { icon: "probability-statistics" },
     informatique: { icon: "koch" },
     "jeux-recherches": { icon: "strategy" },
