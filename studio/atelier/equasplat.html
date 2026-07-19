@@ -113,8 +113,28 @@
     border-radius:999px;padding:6px 14px;font-size:13px;font-weight:700}
   body.modeImport #blocCreation{display:none}
   body.modeImport #badgeImport{display:inline-block}
-/* pièces du plateau au clavier : un anneau de focus bien visible */
-[data-cote][tabindex]:focus-visible{outline:3px solid #1d4ed8;outline-offset:3px;border-radius:10px}
+  /* pièces du plateau au clavier : un anneau de focus bien visible */
+  [data-cote][tabindex]:focus-visible{outline:3px solid #1d4ed8;outline-offset:3px;border-radius:10px}
+
+  /* — le plein écran garde ensemble plateaux, actions et rédaction — */
+  #secEquasplat{position:relative}
+  #secEquasplat > h2{padding-right:58px}
+  .pleinEcranBtn{position:absolute;top:14px;right:14px;z-index:5;width:44px;height:44px;
+    padding:0;display:grid;place-items:center;border-radius:14px;font-size:22px;
+    background:rgba(255,255,255,.94);box-shadow:0 8px 22px rgba(15,23,42,.12)}
+  html:fullscreen body{max-width:none;padding:0;overflow:hidden}
+  html:fullscreen body > h1,html:fullscreen body > .sous{display:none}
+  html:fullscreen #secEquasplat{width:100vw;height:100vh;max-width:none;margin:0;padding:18px;
+    border:0;border-radius:0;overflow:auto;background:var(--papier)}
+  html:fullscreen #secEquasplat .pleinEcranBtn{top:10px;right:10px}
+  html:fullscreen #secEquasplat[data-fullscreen-size="compact"]{padding:8px 12px}
+  html:fullscreen #secEquasplat[data-fullscreen-size="compact"] > h2,
+  html:fullscreen #secEquasplat[data-fullscreen-size="compact"] > .aide,
+  html:fullscreen #secEquasplat[data-fullscreen-size="compact"] #blocCreation,
+  html:fullscreen #secEquasplat[data-fullscreen-size="compact"] #reglagesAffichage,
+  html:fullscreen #secEquasplat[data-fullscreen-size="compact"] #actionsExport{display:none}
+  html:fullscreen #secEquasplat[data-fullscreen-size="compact"] #zoneEquasplat{gap:12px}
+  html:fullscreen #secEquasplat[data-fullscreen-size="compact"] #barreOutils{margin-top:6px}
 </style>
 </head>
 <body>
@@ -124,6 +144,8 @@
 <a href="./index.html">← Retour à l'Atelier des objets</a></p>
 
 <section id="secEquasplat">
+  <button class="toolBtn pleinEcranBtn" id="btnPleinEcran" type="button"
+    title="Plein écran" aria-label="Plein écran" aria-pressed="false">⛶</button>
   <h2>Deux plateaux — l'équation en taches et jetons</h2>
   <p class="aide">Écris une équation (ou lance le dé), puis manipule : clique un jeton pour le
   décomposer, fais-le glisser sur un autre pour les fusionner, sélectionne la même quantité des deux
@@ -155,7 +177,7 @@
       <option value="melange">Mélange</option>
     </select>
   </div>
-  <div class="barreCommandes">
+  <div class="barreCommandes" id="reglagesAffichage">
     <span id="badgeImport">Équation reçue de Splat Équations</span>
     <select id="choixInconnue" aria-label="Affichage de l'inconnue">
       <option value="lettre">Inconnue : lettre</option>
@@ -191,7 +213,7 @@
           <button class="toolBtn restartToolBtn" id="btnRecommencer">↺ Recommencer</button>
         </div>
       </div>
-      <div class="barreCommandes">
+      <div class="barreCommandes" id="actionsExport">
         <button id="btnSvg">⬇ SVG</button>
         <button id="btnPng">⬇ PNG</button>
       </div>
@@ -229,6 +251,7 @@ import { creerClavier } from "../../packages/objets/src/clavier.js";
 import { aideRegroupement } from "../../packages/objets/src/equabarre-logique.js";
 import { cheminTache } from "../../packages/objets/src/splat.js";
 import { creerGenerateur } from "../../packages/moteur-exercices/src/aleatoire.js";
+import { depasseSeuilGlissement } from "./equasplat-interactions.js";
 
 const champ = document.getElementById("champEquation");
 const rendu = document.getElementById("renduPlateaux");
@@ -243,6 +266,8 @@ const choixInconnue = document.getElementById("choixInconnue");
 const choixEcriture = document.getElementById("choixEcriture");
 const apresSuppression = document.getElementById("apresSuppression");
 const curseurLargeur = document.getElementById("curseurLargeur");
+const sectionEquasplat = document.getElementById("secEquasplat");
+const btnPleinEcran = document.getElementById("btnPleinEcran");
 
 let etat = null;
 let mode = "enlever";
@@ -538,7 +563,12 @@ function brancherPlateaux() {
         const piece = etat[cote][indice];
         if (!piece || !Number.isFinite(piece.x)) return;
         const p = pointSvg(svg, e);
-        glisse = { cote, indice, groupe, svg, departX: p.x, departY: p.y, cx: piece.x, cy: piece.y, bouge: false };
+        glisse = {
+          cote, indice, groupe, svg,
+          departX: p.x, departY: p.y,
+          departClientX: e.clientX, departClientY: e.clientY,
+          cx: piece.x, cy: piece.y, bouge: false,
+        };
         try { groupe.setPointerCapture(e.pointerId); } catch { /* tactile ancien */ }
       });
       groupe.addEventListener("pointermove", (e) => {
@@ -550,11 +580,19 @@ function brancherPlateaux() {
         const cible = contraindrePositionJeton(zone, [], piece.x + (p.x - glisse.departX), piece.y + (p.y - glisse.departY), r);
         const dx = cible.cx - piece.x;
         const dy = cible.cy - piece.y;
-        if (Math.hypot(dx, dy) > 3) glisse.bouge = true;
+        // Le seuil est mesuré dans l'écran : 7 px restent 7 px, quelle que
+        // soit la réduction du SVG sur un téléphone ou un vidéoprojecteur.
+        if (depasseSeuilGlissement(
+          glisse.departClientX, glisse.departClientY, e.clientX, e.clientY,
+        )) {
+          glisse.bouge = true;
+        }
         glisse.cx = cible.cx;
         glisse.cy = cible.cy;
-        groupe.setAttribute("transform", `translate(${dx} ${dy})`);
-        if (glisse.bouge) e.preventDefault();
+        if (glisse.bouge) {
+          groupe.setAttribute("transform", `translate(${dx} ${dy})`);
+          e.preventDefault();
+        }
       });
       const finir = (e) => {
         if (!glisse || glisse.groupe !== groupe) return;
@@ -906,6 +944,25 @@ document.getElementById("btnOppose").addEventListener("click", () => {
   catch (e) { erreur.textContent = e.message; }
 });
 
+function synchroniserPleinEcran() {
+  const actif = document.fullscreenElement === document.documentElement;
+  btnPleinEcran.setAttribute("aria-pressed", actif ? "true" : "false");
+  btnPleinEcran.setAttribute("aria-label", actif ? "Quitter le plein écran" : "Plein écran");
+  btnPleinEcran.title = actif ? "Quitter le plein écran" : "Plein écran";
+  if (etat) dessiner();
+}
+
+btnPleinEcran.addEventListener("click", async () => {
+  try {
+    if (document.fullscreenElement) await document.exitFullscreen();
+    else if (document.documentElement.requestFullscreen) await document.documentElement.requestFullscreen();
+    else throw new Error("Le plein écran n'est pas disponible dans ce navigateur.");
+  } catch (e) {
+    erreur.textContent = e.message;
+  }
+});
+document.addEventListener("fullscreenchange", synchroniserPleinEcran);
+
 for (const el of [choixUnivers, choixOpposees]) {
   el.addEventListener("change", () => { synchroniserCommandes(); if (!etatImportInitial) lancerDe(); });
 }
@@ -984,6 +1041,11 @@ function lireImportUrl() {
   if (!charge) return false;
   try {
     etat = Logique.importerCharge(charge);
+    // Indication d'interface non mathématique : seule la valeur connue est
+    // acceptée. En mode compact, la projection privilégie le plateau, la
+    // rédaction et les actions au détriment des réglages de création/export.
+    if (charge.fullscreenSize === "compact") sectionEquasplat.dataset.fullscreenSize = "compact";
+    else delete sectionEquasplat.dataset.fullscreenSize;
     etatImportInitial = JSON.parse(JSON.stringify(etat));
     generateurPositions = creerGenerateur(`equasplat-import-${brut.length}`);
     document.body.classList.add("modeImport");
