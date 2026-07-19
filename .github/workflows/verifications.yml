@@ -34,6 +34,9 @@ jobs:
       - name: Sitemap (chaque URL correspond à un fichier)
         run: node scripts/validate-sitemap.mjs
 
+      - name: Icônes (chaque page déclare la sienne)
+        run: node scripts/validate-icone.mjs
+
       - name: Automatismes (intégrité de la page publique)
         run: node scripts/validate-automatismes-public.mjs
 

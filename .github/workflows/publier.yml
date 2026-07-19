@@ -49,6 +49,7 @@ jobs:
           node --test
           node scripts/validate-catalogue.mjs
           node scripts/validate-sitemap.mjs
+          node scripts/validate-icone.mjs
           node scripts/validate-automatismes-public.mjs
           node scripts/validate-pythagore-tools.mjs
           node scripts/validate-pythagore-snap-engine.mjs
