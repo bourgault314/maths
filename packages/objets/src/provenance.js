@@ -89,6 +89,18 @@ export const PROVENANCE_OBJETS = {
     note: "Audit du 18/07 : les mentions de auto/ dans les commentaires ne sont que des références de besoin ; aucune couleur ni donnée copiée.",
   },
 
+  "fractions.js": {
+    statut: "reconstruit",
+    source: "PR #8 — pack de représentations, réécrit pour la fondation V2",
+    note: "Bande et grille fractionnées reprises des sections « fraction-bar » et « fraction-grid » : le geste pédagogique est conservé (écriture fractionnaire dessinée, repère de l'unité, colonnes et lignes séparées), le code est réécrit en module ESM français, coordonnées arrondies à 2 décimales et couleurs prises dans la charte.",
+  },
+
+  "droite-graduee.js": {
+    statut: "reconstruit",
+    source: "PR #8 — pack de représentations, réécrit pour la fondation V2",
+    note: "Sections « number-line » et « double-number-line » : les réglages pédagogiques sont conservés (bornes libres y compris négatives, pas décimal, points multiples étiquetés au-dessus ou en dessous, étiquettes de graduation remplaçables une par une, masquage total des nombres, graduations imposées, garde-fou anti-surcharge, double droite nommée, pourcentages calculés à partir du seul total). Code réécrit en module ESM français, couleurs prises dans la charte, et six défauts du rendu d'origine corrigés : virgule décimale française, vrai signe moins, trait pointillé interrompu devant les nombres, correspondance marquée aussi sur la ligne du bas, coordonnées arrondies à 2 décimales, hauteur ajustée au contenu.",
+  },
+
   "pythagore-logique.js": {
     statut: "original_mathsgo",
     source: "outils/pythabarre.html — lu ligne à ligne",
