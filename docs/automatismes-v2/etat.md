@@ -7,7 +7,7 @@
 - Dépôt : `bourgault314/maths`.
 - Branche de référence : `main`.
 - Commit de référence vérifié sur GitHub :
-  `dd821a50461ffbf72391c99dd72fb98787da3edd`.
+  `5ce53788a373c658ed110df684d1c0bed10f3c87`.
 - La PR #162 est fusionnée. Elle constitue le socle technique actuel :
   contrats génériques, PRNG seedé, registre, objets indépendants, charte et
   garde-fous du périmètre V2.
