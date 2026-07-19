@@ -14,6 +14,7 @@ export const RACINE_DEPOT = resolve(fileURLToPath(new URL("..", import.meta.url)
  * pour que le premier paquet de notions naisse déjà surveillé.
  */
 export const RACINES_V2 = [
+  "automatismes-v2",
   "packages/contrats/src",
   "packages/moteur-exercices/src",
   "packages/automatismes/src",

@@ -7,7 +7,7 @@
 - Dépôt : `bourgault314/maths`.
 - Branche de référence : `main`.
 - Commit de référence vérifié sur GitHub :
-  `1008c7387efca68534eeab7a7850f534fa68d542`.
+  `a93b65bffa440489d578252ffc615aa0dfca9862`.
 - La PR #170 est fusionnée : la carte DNB, la fiche validée de `NC-01`, les
   storyboards et les décisions D-014 à D-019 sont la mémoire officielle du
   chantier.
@@ -17,6 +17,8 @@
 - Le lot de la PR #162 réussit **705 tests sur 705** et `npm run verifier`.
 - La PR #176 est fusionnée : les contrats minimaux de question V2, de séance
   et de trace nécessaires à `NC-01/F2` sont dans `main`.
+- La PR #186 est fusionnée : le gabarit et le générateur seedé de `NC-01/F2`
+  sont dans `main`. Le lot complet réussit **827 tests sur 827**.
 - La PR #156 sur les puissances simples reste un brouillon séparé. Elle n'est
   pas le chantier actif et ne doit pas être fusionnée telle quelle. Les
   micro-notions du DNB qui mobilisent des puissances restent bien dans la carte
@@ -27,8 +29,8 @@
 
 - La bêta continue de fonctionner séparément et reste gelée hors correction
   critique.
-- Le premier générateur pédagogique V2 est construit et validé dans le lot
-  courant, mais aucun lecteur ne l'expose encore aux élèves.
+- Le premier générateur pédagogique V2 est fusionné et validé. Le lecteur neuf
+  qui l'expose en interactif et en diaporama est construit dans le lot courant.
 - La carte du DNB est établie : **37 cibles officielles distinctes**,
   **38 cibles normalisées** et **88 micro-notions**.
 - Une seule micro-notion est active : `NC-01`, critères de divisibilité par
@@ -55,7 +57,7 @@
 Ces documents autorisent la fabrication de la première tranche verticale. Ils
 ne publient encore aucune question devant les élèves.
 
-## Lot technique courant : générateur seedé de NC-01/F2
+## Lot technique fusionné : générateur seedé de NC-01/F2
 
 Le deuxième sous-lot technique est construit et testé :
 
@@ -79,13 +81,36 @@ Le deuxième sous-lot technique est construit et testé :
 - les sept garde-fous du dépôt passent sur 74 fichiers et le lot complet
   réussit **827 tests sur 827**.
 
-Le clavier numérique, les fractions, le lecteur, le serveur, l'identité de
-l'élève et le chronomètre ne sont pas construits par anticipation.
+Le clavier numérique, les fractions, le serveur, l'identité de l'élève et le
+chronomètre ne sont pas construits par anticipation.
 
-## Prochaine étape après fusion de ce lot
+## Lot technique courant : lecteur commun de NC-01/F2
 
-Construire le lecteur commun de `NC-01/F2` en interactif et en projection,
-puis vérifier son aperçu à 375 px avant validation finale de l'affichage.
+Le lecteur est construit à neuf dans `automatismes-v2`, sans reprendre
+l'interface de la bêta :
+
+- le même moteur d'état alimente l'interactif et le diaporama ;
+- l'écran de départ reste générique et récapitule la sélection, le nombre de
+  questions et l'état de l'aide ;
+- l'interactif affiche une grille de six choix, conserve la sélection après
+  validation, crée une trace conforme et calcule le score depuis les traces ;
+- « Aucun » est exclusif et aucune bonne réponse n'est révélée avant
+  l'ouverture volontaire de la correction ;
+- l'aide fait repérer l'unité et composer la somme des chiffres sans effectuer
+  le calcul ni conclure ;
+- le diaporama ne crée ni trace ni score et possède ses commandes enseignant
+  pour l'aide, la réponse, la correction et le passage à la suite ;
+- à 375 px, il n'existe aucun débordement horizontal et toutes les cibles
+  tactiles mesurent au moins 44 px ;
+- à 1 280 px, le panneau latéral de projection occupe 31,9 % de la largeur et
+  ne masque pas la question ;
+- les garde-fous V2 couvrent désormais le lecteur sur 78 fichiers et le dépôt
+  complet réussit **843 tests sur 843**.
+
+## Prochaine étape avant fusion de ce lot
+
+Faire valider l'affichage interactif et projection par Gwenaël, appliquer les
+éventuels ajustements, puis seulement fusionner le lecteur.
 
 ## Règle de mise à jour
 
