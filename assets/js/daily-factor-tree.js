@@ -11,20 +11,36 @@
     primeFill: "#be3e68",
     primeStroke: "#9d174d"
   });
+  const VISIBLE_BRANCH_LENGTH = 8.5;
+  const ROOT_RADIUS = 7.7;
+  const BRANCH_RADIUS = 7.1;
+  const LEAF_RADIUS = 6.2;
+  const TOP_HORIZONTAL_OFFSET = 18.4;
+  const BOTTOM_HORIZONTAL_OFFSET = 10.1;
+  const TOP_CENTER_DISTANCE = VISIBLE_BRANCH_LENGTH + ROOT_RADIUS + BRANCH_RADIUS;
+  const BOTTOM_CENTER_DISTANCE = VISIBLE_BRANCH_LENGTH + BRANCH_RADIUS + LEAF_RADIUS;
+  const ROOT_Y = 8.5;
+  const BRANCH_Y = ROOT_Y + Math.sqrt(
+    TOP_CENTER_DISTANCE * TOP_CENTER_DISTANCE - TOP_HORIZONTAL_OFFSET * TOP_HORIZONTAL_OFFSET
+  );
+  const LEAF_Y = BRANCH_Y + Math.sqrt(
+    BOTTOM_CENTER_DISTANCE * BOTTOM_CENTER_DISTANCE
+      - BOTTOM_HORIZONTAL_OFFSET * BOTTOM_HORIZONTAL_OFFSET
+  );
   const POSITIONS = Object.freeze({
-    root: Object.freeze({ x: 37, y: 9, r: 7.7 }),
+    root: Object.freeze({ x: 37, y: ROOT_Y, r: ROOT_RADIUS }),
     branches: Object.freeze([
-      Object.freeze({ x: 18.5, y: 25, r: 7.1 }),
-      Object.freeze({ x: 55.5, y: 25, r: 7.1 })
+      Object.freeze({ x: 18.6, y: BRANCH_Y, r: BRANCH_RADIUS }),
+      Object.freeze({ x: 55.4, y: BRANCH_Y, r: BRANCH_RADIUS })
     ]),
     leaves: Object.freeze([
       Object.freeze([
-        Object.freeze({ x: 8.5, y: 43, r: 6.2 }),
-        Object.freeze({ x: 28.5, y: 43, r: 6.2 })
+        Object.freeze({ x: 8.5, y: LEAF_Y, r: LEAF_RADIUS }),
+        Object.freeze({ x: 28.7, y: LEAF_Y, r: LEAF_RADIUS })
       ]),
       Object.freeze([
-        Object.freeze({ x: 45.5, y: 43, r: 6.2 }),
-        Object.freeze({ x: 65.5, y: 43, r: 6.2 })
+        Object.freeze({ x: 45.3, y: LEAF_Y, r: LEAF_RADIUS }),
+        Object.freeze({ x: 65.5, y: LEAF_Y, r: LEAF_RADIUS })
       ])
     ])
   });
@@ -172,3 +188,4 @@
   global.MATHSGO_DAILY_FACTOR_TREE = api;
   if (typeof module === "object" && module.exports) module.exports = api;
 }(typeof window === "object" ? window : globalThis));
+
