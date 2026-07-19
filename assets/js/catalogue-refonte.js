@@ -13,6 +13,15 @@
   const facetMap = new Map((catalogue.facets || []).map((facet) => [facet.id, facet]));
   const resourceClassifications = catalogue.resourceClassifications || {};
   const resourceFamilies = catalogue.resourceFamilies || [];
+  const dataDieFaces = Object.freeze({
+    1: [[17, 30]],
+    2: [[10, 23], [24, 37]],
+    3: [[10, 23], [17, 30], [24, 37]],
+    4: [[10, 23], [24, 23], [10, 37], [24, 37]],
+    5: [[10, 23], [24, 23], [17, 30], [10, 37], [24, 37]],
+    6: [[10, 23], [24, 23], [10, 30], [24, 30], [10, 37], [24, 37]]
+  });
+  const dataDieValue = 1 + Math.floor(Math.random() * 6);
   const resourceFamilyByPath = new Map();
   resourceFamilies.forEach((family) => {
     (family.paths || []).forEach((path) => resourceFamilyByPath.set(path, family));
@@ -420,7 +429,15 @@
       }
       return icons.frequencies;
     }
-    return icons[name] || icons.explorations;
+    const markup = icons[name] || icons.explorations;
+    if (name !== "probability-statistics" || !markup) return markup;
+    const pips = dataDieFaces[dataDieValue]
+      .map(([cx, cy]) => `<circle cx="${cx}" cy="${cy}" r="2.2"/>`)
+      .join("");
+    return markup.replace(
+      /<g fill="#9d174d" data-mathsgo-die-face="">.*?<\/g>/,
+      `<g fill="#9d174d" data-mathsgo-die-face="${dataDieValue}">${pips}</g>`
+    );
   }
 
   function collectionVisual(collection) {
