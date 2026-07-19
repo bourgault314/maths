@@ -1869,13 +1869,13 @@
       order:4;
       box-sizing:border-box;
       width:100%;
-      height:clamp(180px,28dvh,220px);
-      min-height:180px;
-      max-height:220px;
+      height:clamp(300px,44dvh,380px);
+      min-height:300px;
+      max-height:380px;
       margin-top:7px;
       padding:5px 4px;
       overflow:hidden;
-      flex:0 0 clamp(180px,28dvh,220px);
+      flex:0 0 clamp(300px,44dvh,380px);
       border:2px solid #93c5fd;
       border-radius:14px;
       background:#eff6ff;
@@ -2171,10 +2171,10 @@
     }
 
     body.importMode .stage:not(:fullscreen) .topbar{
-      height:140px;
-      min-height:140px;
-      max-height:140px;
-      flex-basis:140px;
+      height:220px;
+      min-height:220px;
+      max-height:220px;
+      flex-basis:220px;
       margin-top:5px;
       padding:4px 3px;
     }
@@ -3905,8 +3905,8 @@
   function getTrayForSide(side){
     if(isMobileImportLayout()){
       return side === "left"
-        ? {x:34, y:54, w:724, h:1372}
-        : {x:842, y:54, w:724, h:1372};
+        ? {x:8, y:54, w:760, h:1372}
+        : {x:832, y:54, w:760, h:1372};
     }
     return side === "left"
       ? {x:40, y:74, w:720, h:650}
