@@ -160,9 +160,14 @@ function texte(x, y, valeur, taille, graisse = 700, ancre = "middle", couleur = 
   );
 }
 
+// La balise racine suit la convention des autres objets (barres, jetons,
+// plateaux, triangle) : largeur ET hauteur en pixels, en plus du viewBox.
+// Sans elles, le dessin ne s'affiche pas quand on ouvre le fichier seul,
+// hors d'une page web — c'est le cas d'un export ou d'un envoi de fichier.
 function svg(largeur, hauteur, corps, alternatif) {
   return (
     `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${arrondi2(largeur)} ${arrondi2(hauteur)}" ` +
+    `width="${arrondi2(largeur)}" height="${arrondi2(hauteur)}" ` +
     `role="img" aria-label="${echapper(alternatif)}">${corps}</svg>`
   );
 }

@@ -430,6 +430,10 @@
       return icons.frequencies;
     }
     const markup = icons[name] || icons.explorations;
+    if (name === "factor-tree" && markup) {
+      const dailyTree = window.MATHSGO_DAILY_FACTOR_TREE;
+      if (dailyTree && typeof dailyTree.render === "function") return dailyTree.render(markup);
+    }
     if (name !== "probability-statistics" || !markup) return markup;
     const pips = dataDieFaces[dataDieValue]
       .map(([cx, cy]) => `<circle cx="${cx}" cy="${cy}" r="2.2"/>`)

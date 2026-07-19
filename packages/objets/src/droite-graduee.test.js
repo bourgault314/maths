@@ -573,4 +573,18 @@ describe("tenue générale", () => {
     assert.equal(origine.statut, "reconstruit");
     assert.match(origine.source, /PR #8/);
   });
+
+  // Défaut constaté à l'usage : un SVG sans hauteur ne s'affiche pas quand on
+  // ouvre le fichier seul (export, envoi, visionneuse) — il ne marche que dans
+  // une page web. Tous les objets de la maison donnent largeur ET hauteur.
+  it("porte une largeur ET une hauteur en pixels, comme les autres objets", () => {
+    for (const { svg } of [
+      dessinerDroiteGraduee({ min: 0, max: 10 }),
+      dessinerDoubleDroitePourcentage({ total: 240 }),
+    ]) {
+      assert.match(svg, /width="\d+(\.\d+)?"/, "largeur en pixels absente");
+      assert.match(svg, /height="\d+(\.\d+)?"/, "hauteur en pixels absente");
+      assert.doesNotMatch(svg, /width="100%"/, "largeur en pourcentage : illisible hors page web");
+    }
+  });
 });
