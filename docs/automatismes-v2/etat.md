@@ -6,9 +6,11 @@
 
 - Dépôt : `bourgault314/maths`.
 - Branche de référence : `main`.
-- Commit vérifié : `187579c007ade8dc3210cd42b2b1f88e56f12ea8`.
+- Commit de départ vérifié : `2b70f1477d6bb8bf7410d976d8c2fa157f7a1cb8`.
 - PR #151 fusionnée : le contenu prématuré issu de la PR #144 a été retiré.
 - PR #150 fermée sans fusion : son socle surdimensionné ne doit pas être repris.
+- PR #154 fusionnée : l'audit du socle minimal et les décisions D-011 et D-012
+  sont devenus la référence.
 - PR #145 ouverte : ne pas la fusionner telle quelle, car elle vise aussi des
   fichiers retirés par la PR #151. Son idée de garde-fou de provenance reste à
   réétudier.
@@ -18,12 +20,10 @@
 - La bêta continue de fonctionner séparément et est gelée hors correction
   critique.
 - Aucun contenu pédagogique V2 n'est actuellement autorisé.
-- Les contrats génériques, le PRNG seedé, le registre, les 187 automatismes et
-  les objets visuels indépendants constituent la fondation à auditer et à
-  réutiliser.
-- `packages/moteur-exercices/src/generateurs/fractions.js` est un cartouche
-  technique hérité de listes V1. Il est interdit de l'utiliser comme exemple
-  pédagogique ou comme première notion V2.
+- Les contrats génériques, le PRNG seedé et le registre ont été nettoyés et
+  renforcés. Ils ne dépendent plus d'un générateur ou d'un module historique.
+- Les 187 automatismes officiels et les objets visuels indépendants restent
+  disponibles pour les futures fiches de notion, au besoin.
 
 ## Derniers chantiers terminés
 
@@ -31,16 +31,26 @@ La mémoire durable a été installée et les principales contradictions
 documentaires ont été levées. Aucun code du moteur, aucune question et aucune
 interface n'ont été créés pendant ce chantier.
 
-Le socle minimal a ensuite été audité : contrat de question, contrat de
-gabarit, PRNG et registre. Le rapport détaillé est dans
-`audit-socle-2026-07-18.md`.
+Le socle minimal a ensuite été audité puis nettoyé :
+
+- suppression du générateur de fractions hérité, de son export et des tests
+  qui exécutaient un ancien module ;
+- remplacement de tous les exemples concernés par des fixtures techniques ;
+- validation des données JSON pures, des identifiants, des graines et des
+  intervalles aléatoires ;
+- copie profondément figée des paramètres transmis aux générateurs ;
+- garde-fou exécuté par `npm run verifier` contre les noms historiques, le
+  hasard non seedé et l'exécution dynamique dans le périmètre V2.
+
+Le rapport de décision détaillé reste dans
+`audit-socle-2026-07-18.md`. Le lot complet réussit **683 tests sur 683**.
 
 ## Prochaine étape
 
-Réaliser un lot technique minimal pour retirer les dépendances aux modules V1,
-remplacer les exemples hérités par des fixtures neutres et renforcer les
-garde-fous identifiés par l'audit. Ce lot ne crée aucune notion, aucune question
-pédagogique et aucune interface.
+Après fusion du nettoyage technique, choisir la première catégorie depuis les
+données du programme officiel et la taxonomie maths&go, puis préparer la
+première fiche pédagogique de notion. Aucun générateur réel ne sera écrit avant
+validation de cette fiche par Gwenaël.
 
 ## Règle de mise à jour
 
