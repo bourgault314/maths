@@ -2340,6 +2340,14 @@ function recordInteractiveAttempt(result){
    experienceMode
  });
 }
+function incorrectInteractiveFeedbackDetail(validation,spec){
+ const expected=String(spec.expectedDisplay||'').replace(/^(?:\\s*(?:réponse attendue|réponses?)\\s*:?\\s*)+/i,'');
+ if(spec.kind==='qcm'||spec.kind==='relative-tokens') return expected?'Réponse attendue : '+expected:'';
+ const raw=Array.isArray(validation.rawResponse)?validation.rawResponse:[];
+ const response=raw.every(value=>typeof value!=='object')?raw.map(value=>String(value)).filter(Boolean).join(' ; '):'';
+ const given='Ta réponse : '+(response||'aucune');
+ return expected?given+' · Réponse attendue : '+expected:given;
+}
 function setInteractiveFeedback(message,kind,detail=''){
  const feedback=document.getElementById('answerFeedback');
  if(!feedback) return;
@@ -2367,8 +2375,7 @@ function submitInteractive(){
  if(correct) correctCount++;
  if(correct) setInteractiveFeedback('Bonne réponse ✓','good');
  else{
-   const expected=String(spec.expectedDisplay||'').replace(/^(?:\\s*(?:réponse attendue|réponses?)\\s*:?\\s*)+/i,'');
-   setInteractiveFeedback('Mauvaise réponse','bad',expected?'Réponse : '+expected:'');
+   setInteractiveFeedback('Mauvaise réponse','bad',incorrectInteractiveFeedbackDetail(validation,spec));
  }
  render();
  recordInteractiveAttempt(validation);
