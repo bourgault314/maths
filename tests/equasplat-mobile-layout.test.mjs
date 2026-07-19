@@ -89,11 +89,13 @@ test("la décomposition accepte naturellement une soustraction", () => {
   assert.match(html, /raw\.match\(\/\[\+-\]\?\\d\+\/g\)/);
 });
 
-test("le partage final passe par des mini-plateaux avant la division", () => {
+test("le partage final montre la division puis fait choisir un mini-plateau", () => {
   assert.match(html, /function applySharedTokenSplit\(side, id, partCount, partValue\)/);
   assert.match(html, /opportunity\.tokenSide === side[\s\S]*opportunity\.token\.id === id[\s\S]*opportunity\.count === count/);
   assert.match(html, /state\.pendingShareConclusion = \{[\s\S]*shareBatch,[\s\S]*count,[\s\S]*each,[\s\S]*xSide:opportunity\.xSide,[\s\S]*tokenSide:opportunity\.tokenSide/s);
+  assert.match(html, /if\(isFinalShare\)\{[\s\S]*state\.pendingShareConclusion = \{[\s\S]*\}else\{[\s\S]*arr\.splice\(idx, 1, \.\.\.Array\.from/s);
   assert.match(html, /if\(state && state\.pendingShareConclusion\) return null;/);
+  assert.match(html, /const pendingShareOperation = state && state\.pendingShareConclusion[\s\S]*operationBetweenRows\(`÷ \$\{state\.pendingShareConclusion\.count\}`\)/);
   assert.match(html, /function drawPendingShareGroups\(viewHeight\)/);
   assert.match(html, /const cols = count <= 3 \? 1 : 2;/);
   assert.match(html, /class", "pendingShareGroup"/);
@@ -107,7 +109,12 @@ test("le partage final passe par des mini-plateaux avant la division", () => {
   assert.match(html, /recordEquationStep\(`÷ \$\{pending\.count\}`\)/);
   assert.match(html, /state\[pending\.xSide\] = \[\.\.\.removedX, makeX\(1\)\]/);
   assert.match(html, /state\[pending\.tokenSide\] = \[\.\.\.removedTokens, makeToken\(pending\.each\)\]/);
-  assert.match(html, /drawText\(800, viewHeight \/ 2, "=", "eqMiddle"\)/);
+  assert.match(html, /function drawSharedTray\(leftTray, rightTray\)/);
+  assert.match(html, /divider\.setAttribute\("y1", y\)/);
+  assert.match(html, /divider\.setAttribute\("y2", bottom\)/);
+  assert.match(html, /drawSharedTray\(leftTray, rightTray\)/);
+  assert.doesNotMatch(html, /drawText\(800, viewHeight \/ 2, "=", "eqMiddle"\)/);
+  assert.match(html, /divider\.setAttribute\("y2", y \+ cardH\)/);
 });
 
 test("les taches restantes conservent leur case après une suppression", () => {
