@@ -10,7 +10,7 @@
 <link rel="icon" type="image/png" sizes="192x192" href="/assets/img/favicon-192.png">
 <link rel="apple-touch-icon" href="/assets/img/apple-touch-icon.png">
   <meta name="description" content="Galerie complète des icônes mathématiques créées pour maths&amp;go et réutilisées dans le catalogue et l’accueil.">
-  <script src="../assets/js/mathsgo-icon-library.js?v=icons-library-20260717-15"></script>
+  <script src="../assets/js/mathsgo-icon-library.js?v=domain-stories-20260719-1"></script>
   <script src="../assets/js/mathgo-generative-icons.js?v=generative-library-20260716-2"></script>
   <style>
     :root{--ink:#173a5e;--blue:#0b67b2;--soft:#eef7ff;--line:#dbe7ef;--orange:#f58220}
@@ -76,7 +76,7 @@
 
       <section aria-labelledby="new-series-title">
         <h2 id="new-series-title">Nouvelle série · programme du collège</h2>
-        <p class="new-note">Une première famille dessinée autour de cinq histoires mathématiques : pile ou face construit un arbre, le dé devient une distribution, deux grandeurs changent dans le même rapport, la fonction transforme chaque entrée selon une même règle, et mesurer revient à comparer avec une unité.</p>
+        <p class="new-note">Chaque icône de domaine est une scène plutôt qu’un pictogramme : un nombre se décompose, une même règle agit sur deux grandeurs, une figure se construit, puis une expérience répétée devient une distribution. Elles sont faites pour être regardées, décrites et discutées avec les élèves.</p>
         <div class="icon-grid" id="new-series-icons"></div>
       </section>
 
@@ -110,7 +110,7 @@
       const labels = {
         "truchet-chemin":"Pavage de Truchet · chemin dansant","truchet-rosace":"Pavage de Truchet · rosace",
         "factor-tree":"Arbre de décomposition","euclidean-pgcd":"Pavage d’Euclide · PGCD","equal-volume-vase":"Fonctions · vase et courbe","equal-volume-vases":"Grandeurs · deux vases égaux","ulam":"Spirale d’Ulam",
-        thales:"Thalès","seigaiha":"Espace et géométrie","frequencies":"Données et fréquences",
+        thales:"Thalès","seigaiha":"Espace et géométrie · pavage","geometry-construction":"Espace et géométrie · figure en construction","frequencies":"Données et fréquences",
         koch:"Flocon de Koch",abacus:"Boulier",fractions:"Fractions",relatifs:"Nombres relatifs",
         divisibilite:"Divisibilité et PGCD",powers:"Puissances",roots:"Racines carrées",
         automatismes:"Automatismes · métronome",ratio:"Proportionnalité · ancienne version",proportionnalite:"Proportionnalité",percent:"Pourcentages",functions:"Fonctions · ancienne version","function-machine":"Fonctions · machine x²",function:"Fonctions · vase et courbe",
@@ -118,7 +118,7 @@
         splat:"Équations · Splat",bars:"Schémas en barres",patterns:"Motifs et régularités",angles:"Angles",
         coordinates:"Repérage",transformations:"Transformations",triangles:"Triangles",
         parallelograms:"Parallélogrammes",cube:"Solides","pythagore-home":"Pythagore · accueil sans lettres",pythagore:"Pythagore · avec a², b², c²",stats:"Statistiques · ancienne version",
-        average:"Moyennes",probability:"Probabilités · version actuelle",hasard:"Hasard · arbre pile ou face","probability-statistics":"Probabilité + statistique",grandeur:"Grandeurs · mesurer par unité",computing:"Informatique",strategy:"Jeux et stratégie",cps:"Compétences psychosociales",gears:"Engrenages"
+        average:"Moyennes",probability:"Probabilités · version actuelle",hasard:"Hasard · arbre pile ou face","probability-statistics":"Données · expérience vers fréquences",grandeur:"Grandeurs · mesurer par unité",computing:"Informatique",strategy:"Jeux et stratégie",cps:"Compétences psychosociales",gears:"Engrenages"
       };
       const library = window.MATHSGO_ICON_LIBRARY || {};
       const generator = window.MathsGoGenerativeIcons;
@@ -141,7 +141,7 @@
       const catalogueGrid = document.querySelector("#catalogue-icons");
       Object.keys(library).forEach(key => catalogueGrid.append(card(key)));
       document.querySelector("#icon-count").textContent = "(" + Object.keys(library).length + ")";
-      ["hasard","probability-statistics","proportionnalite","function","grandeur"].forEach(key => document.querySelector("#new-series-icons").append(card(key,true)));
+      ["factor-tree","proportionnalite","geometry-construction","probability-statistics","koch","strategy","splat","cps"].forEach(key => document.querySelector("#new-series-icons").append(card(key,true)));
       ["fractions","relatifs","splat","pythagore-home","abacus"].forEach(key => document.querySelector("#home-icons").append(card(key,true)));
 
       const generativeColors = ["#be3e68", "#0f766e", "#ea7a1a", "#6553b8", "#0b67b2"];
