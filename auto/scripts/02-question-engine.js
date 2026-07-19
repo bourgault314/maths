@@ -12,7 +12,7 @@ function setNB(n){ return n; }
 function GCD(a,b){ a=Math.abs(Math.trunc(a)); b=Math.abs(Math.trunc(b)); while(b){ const t=b; b=a%b; a=t; } return a||1; }
 function CUT(x,d){ return Number(Number(x).toFixed(d===undefined?2:d)); }
 const MATHS = {floor:Math.floor, ceil:Math.ceil, round:Math.round, sin:Math.sin, cos:Math.cos, tan:Math.tan, atan2:Math.atan2, sqrt:Math.sqrt, abs:Math.abs, pi:Math.PI, PI:Math.PI};
-function cleanEvalExpr(expr){ return String(expr).replace(/(\d),(\d)/g,'$1.$2'); }
+function cleanEvalExpr(expr){ return String(expr).replace(/(\d),(\d)/g,'$1.$2').replace(/\^/g,'**'); }
 function evalInScope(expr, scope){
   expr=cleanEvalExpr(expr);
   const target=Object.assign({}, MATHS, {RD,setNB,GCD,CUT}, scope||{});

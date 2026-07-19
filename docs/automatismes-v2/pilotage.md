@@ -166,6 +166,14 @@ remonte vers `auto/` ou `studio/`. Les dépendances sont à sens unique :
 l'application et le studio consomment la fondation, la fondation ne les appelle
 jamais.
 
+Chaque fichier de production de ces six dossiers déclare également son statut
+et sa source dans `PROVENANCE_FONDATION_V2`. Le validateur compare le registre
+au disque dans les deux sens : un nouveau fichier oublié et une déclaration
+pointant vers un fichier supprimé font tous deux échouer la CI. Cette exigence
+rend la provenance explicite ; elle ne remplace ni l'audit du contenu ni la
+validation pédagogique. Un fichier déclaré `herite_doctools` doit en plus
+décrire concrètement ce qui doit être remplacé.
+
 Restent hors périmètre `auto/`, `studio/`, `outils/` et `scripts/` : ils font
 tourner ou documentent l'existant, et tombent avec lui.
 

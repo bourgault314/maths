@@ -7,7 +7,7 @@
 - Dépôt : `bourgault314/maths`.
 - Branche de référence : `main`.
 - Commit de référence vérifié sur GitHub :
-  `a93b65bffa440489d578252ffc615aa0dfca9862`.
+  `e894e65eecce1d6d3886533207fd6e82c1b65229`.
 - La PR #170 est fusionnée : la carte DNB, la fiche validée de `NC-01`, les
   storyboards et les décisions D-014 à D-019 sont la mémoire officielle du
   chantier.
@@ -23,7 +23,9 @@
   pas le chantier actif et ne doit pas être fusionnée telle quelle. Les
   micro-notions du DNB qui mobilisent des puissances restent bien dans la carte
   et seront traitées à leur rang.
-- La PR #145 reste ouverte mais ne doit pas être fusionnée telle quelle.
+- La PR #145 est fermée sans fusion. Son principe de déclaration systématique
+  de la provenance est repris proprement par la PR #202 sur le socle actuel,
+  sans ses générateurs et contrats supprimés.
 
 ## État fonctionnel
 
@@ -81,10 +83,16 @@ Le deuxième sous-lot technique est construit et testé :
 - les sept garde-fous du dépôt passent sur 74 fichiers et le lot complet
   réussit **827 tests sur 827**.
 
-Le clavier numérique, les fractions, le serveur, l'identité de l'élève et le
-chronomètre ne sont pas construits par anticipation.
+La PR #202 reconstruit le garde-fou de provenance sur le socle actuel. Avec le
+lecteur, les 41 fichiers de production des six dossiers V2 déclarent leur
+statut et leur source ; la CI refuse un fichier oublié comme une déclaration fantôme. Ce
+contrôle complète les interdits techniques de la PR #162 sans modifier le
+contenu pédagogique ni l'application visible.
 
-## Lot technique courant : lecteur commun de NC-01/F2
+Le clavier numérique, les fractions, le serveur, l'identité de
+l'élève et le chronomètre ne sont pas construits par anticipation.
+
+## Lot technique fusionné : lecteur commun de NC-01/F2
 
 Le lecteur est construit à neuf dans `automatismes-v2`, sans reprendre
 l'interface de la bêta :
@@ -111,12 +119,14 @@ l'interface de la bêta :
 - à 1 280 px, l'aide occupe 32,9 % de la largeur et la correction 50 %, sans
   masquer le nombre ni les cinq propositions ;
 - les garde-fous V2 couvrent désormais le lecteur sur 78 fichiers et le dépôt
-  complet réussit **843 tests sur 843**.
+  complet réussit **904 tests sur 904**.
+- Gwenaël a validé l'affichage et demandé sa publication le 19 juillet 2026 ;
+  la PR #191 livre cette première tranche verticale sur le site public.
 
-## Prochaine étape avant fusion de ce lot
+## Prochaine étape après publication de ce lot
 
-Faire valider l'affichage interactif et projection par Gwenaël, appliquer les
-éventuels ajustements, puis seulement fusionner le lecteur.
+Essayer le lecteur publié sur téléphone et en projection, puis traiter les
+retours d'usage dans un lot séparé avant d'ouvrir la famille suivante.
 
 ## Règle de mise à jour
 

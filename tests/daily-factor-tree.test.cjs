@@ -10,38 +10,102 @@ function isPrime(value) {
   return true;
 }
 
-test("les 24 arbres sont des décompositions exactes en facteurs premiers", () => {
+function lineLengths(markup, family) {
+  const pattern = /<line x1="([\d.]+)" y1="([\d.]+)" x2="([\d.]+)" y2="([\d.]+)" data-edge-family="(top|bottom)"\/>/g;
+  return [...markup.matchAll(pattern)]
+    .filter((match) => match[5] === family)
+    .map((match) => Math.hypot(Number(match[3]) - Number(match[1]), Number(match[4]) - Number(match[2])));
+}
+
+test("les 24 arbres comprennent 12 cas à trois facteurs et 12 à quatre", () => {
   assert.equal(dailyFactorTree.trees.length, 24);
-  const signatures = new Set();
+  const counts = dailyFactorTree.trees.map(dailyFactorTree.terminalCount);
+  assert.equal(counts.filter((count) => count === 3).length, 12);
+  assert.equal(counts.filter((count) => count === 4).length, 12);
+  assert.equal(counts.some((count) => count < 3), false);
+  assert.equal(new Set(dailyFactorTree.trees.map((tree) => tree.root)).size, 24);
+});
+
+test("chaque arbre est une décomposition exacte en facteurs premiers", () => {
   dailyFactorTree.trees.forEach((tree) => {
-    assert.equal(tree.left, tree.leaves[0] * tree.leaves[1]);
-    assert.equal(tree.right, tree.leaves[2] * tree.leaves[3]);
-    assert.equal(tree.root, tree.left * tree.right);
-    tree.leaves.forEach((leaf) => assert.equal(isPrime(leaf), true));
-    signatures.add(JSON.stringify(tree));
+    assert.equal(tree.branches[0].value * tree.branches[1].value, tree.root);
+    tree.branches.forEach((branch) => {
+      if (branch.factors) {
+        assert.equal(branch.factors.length, 2);
+        assert.equal(branch.factors[0] * branch.factors[1], branch.value);
+        branch.factors.forEach((factor) => assert.equal(isPrime(factor), true));
+      } else {
+        assert.equal(isPrime(branch.value), true);
+      }
+    });
   });
-  assert.equal(signatures.size, 24);
+});
+
+test("les deux côtés courts alternent dans les arbres à trois facteurs", () => {
+  const shortSides = dailyFactorTree.trees
+    .filter((tree) => dailyFactorTree.terminalCount(tree) === 3)
+    .map((tree) => tree.branches[0].factors ? "right" : "left");
+  assert.equal(shortSides.filter((side) => side === "left").length, 6);
+  assert.equal(shortSides.filter((side) => side === "right").length, 6);
+});
+
+test("les branches sœurs ont rigoureusement la même longueur", () => {
+  [dailyFactorTree.trees[0], dailyFactorTree.trees[1]].forEach((tree, index) => {
+    const markup = dailyFactorTree.renderTree(tree, index);
+    ["top", "bottom"].forEach((family) => {
+      const lengths = lineLengths(markup, family);
+      assert.ok(lengths.length >= 2);
+      assert.ok(Math.max(...lengths) - Math.min(...lengths) < 1e-10);
+    });
+  });
+});
+
+test("tous les bâtons verts ont rigoureusement la même longueur visible", () => {
+  [dailyFactorTree.trees[0], dailyFactorTree.trees[1]].forEach((tree, index) => {
+    const markup = dailyFactorTree.renderTree(tree, index);
+    const positions = dailyFactorTree.positions;
+    const visibleLengths = [
+      ...lineLengths(markup, "top").map((length) => {
+        return length - positions.root.r - positions.branches[0].r;
+      }),
+      ...lineLengths(markup, "bottom").map((length) => {
+        return length - positions.branches[0].r - positions.leaves[0][0].r;
+      })
+    ];
+    assert.ok(Math.max(...visibleLengths) - Math.min(...visibleLengths) < 1e-10);
+    visibleLengths.forEach((length) => assert.ok(Math.abs(length - 8.5) < 1e-10));
+  });
+});
+
+test("les billes centrales du dernier niveau gardent un espace visible", () => {
+  const positions = dailyFactorTree.positions.leaves;
+  const leftInner = positions[0][1];
+  const rightInner = positions[1][0];
+  const visibleGap = rightInner.x - leftInner.x - leftInner.r - rightInner.r - 1.15;
+  assert.ok(visibleGap >= 3);
+});
+
+test("le rendu contient le bon nombre de nœuds selon le type", () => {
+  const four = dailyFactorTree.renderTree(dailyFactorTree.trees[0], 0);
+  const three = dailyFactorTree.renderTree(dailyFactorTree.trees[1], 1);
+  assert.equal((four.match(/<circle /g) || []).length, 7);
+  assert.equal((four.match(/<line /g) || []).length, 6);
+  assert.match(four, /data-mathsgo-factor-tree-type="four"/);
+  assert.equal((three.match(/<circle /g) || []).length, 5);
+  assert.equal((three.match(/<line /g) || []).length, 4);
+  assert.match(three, /data-mathsgo-factor-tree-type="three"/);
+  assert.equal((three.match(/data-node-role="prime"/g) || []).length, 3);
 });
 
 test("l’arbre change chaque jour pendant 24 jours puis le cycle recommence", () => {
   const selections = Array.from({ length: 25 }, (_, offset) => {
-    const date = new Date(2026, 0, 1 + offset, 12);
-    return dailyFactorTree.selectionForDate(date);
+    return dailyFactorTree.selectionForDate(new Date(2026, 0, 1 + offset, 12));
   });
   assert.equal(new Set(selections.slice(0, 24).map(({ index }) => index)).size, 24);
   assert.equal(selections[24].index, selections[0].index);
 });
 
-test("le rendu remplace uniquement les nombres de l’arbre", () => {
-  const source = `<svg><path d="M0 0"/><g fill="#fff" font-family="Arial, sans-serif" font-weight="900" text-anchor="middle" data-mathsgo-factor-tree=""><text>ancien</text></g></svg>`;
-  const rendered = dailyFactorTree.render(source, new Date(2026, 0, 1, 12));
-  assert.match(rendered, /data-mathsgo-factor-tree="\d+"/);
-  assert.match(rendered, /data-mathsgo-factor-tree-root="\d+"/);
-  assert.match(rendered, /<path d="M0 0"\/>/);
-  assert.equal(rendered.includes("ancien"), false);
-  assert.equal((rendered.match(/<text /g) || []).length, 7);
-});
-
 test("une date invalide est refusée explicitement", () => {
   assert.throws(() => dailyFactorTree.selectionForDate("pas une date"), /Date quotidienne invalide/);
 });
+

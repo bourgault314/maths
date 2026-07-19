@@ -10,7 +10,8 @@
 <link rel="icon" type="image/png" sizes="192x192" href="/assets/img/favicon-192.png">
 <link rel="apple-touch-icon" href="/assets/img/apple-touch-icon.png">
   <meta name="description" content="Galerie complète des icônes mathématiques créées pour maths&amp;go et réutilisées dans le catalogue et l’accueil.">
-  <script src="../assets/js/mathsgo-icon-library.js?v=icons-library-20260719-4"></script>
+  <script src="../assets/js/mathsgo-icon-library.js?v=icons-library-20260719-8"></script>
+  <script src="../assets/js/daily-vase-curves.js?v=20260719-1"></script>
   <script src="../assets/js/mathgo-generative-icons.js?v=generative-library-20260716-2"></script>
   <style>
     :root{--ink:#173a5e;--blue:#0b67b2;--soft:#eef7ff;--line:#dbe7ef;--orange:#f58220}
@@ -80,6 +81,16 @@
         <div class="icon-grid" id="new-series-icons"></div>
       </section>
 
+      <section class="generative-section" aria-labelledby="vase-series-title">
+        <div class="generative-heading">
+          <div>
+            <h2 id="vase-series-title">Vases et courbes · six profils calculés</h2>
+            <p>Chaque bande contient exactement un sixième du volume total. La courbe donne la hauteur <em>h</em> en fonction du volume versé <em>V</em> ; le catalogue affiche un profil différent chaque jour.</p>
+          </div>
+        </div>
+        <div class="icon-grid" id="vase-series-icons"></div>
+      </section>
+
       <section class="generative-section" aria-labelledby="generative-title">
         <div class="generative-heading">
           <div>
@@ -122,12 +133,14 @@
       };
       const library = window.MATHSGO_ICON_LIBRARY || {};
       const generator = window.MathsGoGenerativeIcons;
+      const dailyVases = window.MATHSGO_DAILY_VASES;
       const card = (key, home = false) => {
         const wrapper = document.createElement("article");
         wrapper.className = "icon-card" + (home ? " home-card" : "");
         const stage = document.createElement("div");
         stage.className = "icon-stage";
-        stage.innerHTML = library[key] || "";
+        const isVase = key === "equal-volume-vase" || key === "function";
+        stage.innerHTML = isVase && dailyVases ? dailyVases.render(library[key]) : (library[key] || "");
         stage.setAttribute("aria-label", labels[key] || key);
         const name = document.createElement("div");
         name.className = "icon-name";
@@ -143,6 +156,26 @@
       document.querySelector("#icon-count").textContent = "(" + Object.keys(library).length + ")";
       ["hasard","probability-statistics","proportionnalite","function","grandeur"].forEach(key => document.querySelector("#new-series-icons").append(card(key,true)));
       ["fractions","relatifs","splat","pythagore-home","abacus"].forEach(key => document.querySelector("#home-icons").append(card(key,true)));
+
+      const vaseGrid = document.querySelector("#vase-series-icons");
+      if (dailyVases) {
+        dailyVases.profiles.forEach((profile, index) => {
+          const wrapper = document.createElement("article");
+          wrapper.className = "icon-card";
+          const stage = document.createElement("div");
+          stage.className = "icon-stage";
+          stage.innerHTML = dailyVases.renderProfile(profile);
+          stage.setAttribute("aria-label", profile.name);
+          const name = document.createElement("div");
+          name.className = "icon-name";
+          name.textContent = profile.name;
+          const id = document.createElement("div");
+          id.className = "icon-key";
+          id.textContent = `variante ${index + 1}/6`;
+          wrapper.append(stage, name, id);
+          vaseGrid.append(wrapper);
+        });
+      }
 
       const generativeColors = ["#be3e68", "#0f766e", "#ea7a1a", "#6553b8", "#0b67b2"];
       let generativeBatch = 0;

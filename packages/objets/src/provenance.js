@@ -113,6 +113,95 @@ export const PROVENANCE_OBJETS = {
 };
 
 /*
+ * Les fichiers de production de toute la fondation V2.
+ *
+ * PROVENANCE_OBJETS reste l'inventaire détaillé des objets visuels. Cette vue
+ * ajoute leur chemin complet et déclare les autres paquets surveillés par le
+ * garde-fou V2. Le validateur compare cette liste au disque : un nouveau
+ * fichier non déclaré, comme une déclaration devenue fantôme, fait échouer la
+ * CI. Les tests suivent la provenance du fichier qu'ils vérifient et ne sont
+ * donc pas répétés ici.
+ */
+export const PROVENANCE_FONDATION_V2 = Object.freeze({
+  ...Object.fromEntries(
+    Object.entries(PROVENANCE_OBJETS).map(([nom, origine]) => [
+      `packages/objets/src/${nom}`,
+      origine,
+    ]),
+  ),
+
+  "automatismes-v2/app.js": {
+    statut: "original_mathsgo",
+    source: "storyboards du lecteur NC-01/F2 validés par Gwenaël le 19 juillet 2026",
+  },
+  "automatismes-v2/package.json": {
+    statut: "original_mathsgo",
+    source: "configuration du lecteur écrite pour Automatismes maths&go V2",
+  },
+  "automatismes-v2/src/etat-lecteur.js": {
+    statut: "original_mathsgo",
+    source: "contrats de séance et de trace validés pour Automatismes maths&go V2",
+  },
+
+  "packages/objets/src/programme-automatismes.js": {
+    statut: "original_mathsgo",
+    source: "programmes officiels des cycles 3 et 4, structurés pour maths&go",
+  },
+  "packages/objets/src/references-programme.js": {
+    statut: "original_mathsgo",
+    source: "références des programmes officiels, structurées pour maths&go",
+  },
+  "packages/objets/src/provenance.js": {
+    statut: "original_mathsgo",
+    source: "doctrine de provenance décidée pour maths&go le 18 juillet 2026",
+  },
+
+  "packages/charte/src/charte.js": {
+    statut: "original_mathsgo",
+    source: "charte graphique de Gwenaël, structurée en données",
+  },
+
+  "packages/contrats/src/gabarit.js": {
+    statut: "original_mathsgo",
+    source: "contrat générique écrit pour Automatismes maths&go V2",
+  },
+  "packages/contrats/src/question-v2.js": {
+    statut: "original_mathsgo",
+    source: "spécification validée de la question V2 maths&go",
+  },
+  "packages/contrats/src/question.js": {
+    statut: "original_mathsgo",
+    source: "contrat générique écrit pour Automatismes maths&go V2",
+  },
+  "packages/contrats/src/seance.js": {
+    statut: "original_mathsgo",
+    source: "spécification validée de la séance V2 maths&go",
+  },
+  "packages/contrats/src/trace-reponse.js": {
+    statut: "original_mathsgo",
+    source: "spécification validée de la trace de réponse V2 maths&go",
+  },
+
+  "packages/moteur-exercices/src/aleatoire.js": {
+    statut: "original_mathsgo",
+    source: "générateur pseudo-aléatoire seedé écrit pour maths&go",
+  },
+  "packages/moteur-exercices/src/generation.js": {
+    statut: "original_mathsgo",
+    source: "registre de génération écrit pour Automatismes maths&go V2",
+  },
+
+  "packages/automatismes/src/registre.js": {
+    statut: "original_mathsgo",
+    source: "registre des notions écrit pour Automatismes maths&go V2",
+  },
+  "packages/automatismes/src/nombres-et-calculs/criteres-divisibilite/selection-diviseurs.js": {
+    statut: "original_mathsgo",
+    source: "fiche NC-01 et contenu F2 validés par Gwenaël le 19 juillet 2026",
+  },
+});
+
+/*
  * Le studio — pages et composants hors packages/.
  *
  * Le cas de studio/automatismes/ est particulier et parfaitement assumé :
@@ -252,6 +341,7 @@ function toutesLesEntrees() {
 export function origineDe(nom) {
   return (
     PROVENANCE_OBJETS[nom] ??
+    PROVENANCE_FONDATION_V2[nom] ??
     PROVENANCE_MODULES_AUTOMATISMES[nom] ??
     PROVENANCE_STUDIO[nom] ??
     null

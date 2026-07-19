@@ -540,6 +540,35 @@
     color:#9a3412;
   }
 
+  .undoIcon{
+    width:21px;
+    height:21px;
+    flex:0 0 21px;
+    fill:none;
+    stroke:currentColor;
+    stroke-width:2.2;
+    stroke-linecap:round;
+    stroke-linejoin:round;
+  }
+
+  .mobileLabel{
+    display:none;
+  }
+
+  .mobileUndoLabel{
+    display:none;
+  }
+
+  .mobileRestartToolBtn{
+    display:none;
+  }
+
+  .restartToolBtn{
+    background:#f8fafc;
+    border-color:rgba(71,85,105,.24);
+    color:#475569;
+  }
+
   .solution{
     display:none;
   }
@@ -1190,6 +1219,45 @@
     min-width:0;
   }
 
+  .equationOperation{
+    display:grid;
+    grid-template-columns:minmax(0,1fr) auto minmax(0,1fr);
+    align-items:center;
+    column-gap:20px;
+    width:100%;
+    min-height:30px;
+    color:#2563eb;
+    font-size:.52em;
+    font-weight:900;
+    line-height:1;
+  }
+
+  .equationOperationSide{
+    display:flex;
+    align-items:center;
+    gap:5px;
+    white-space:nowrap;
+  }
+
+  .equationOperationSideLeft{
+    justify-content:flex-start;
+    padding-left:3px;
+  }
+
+  .equationOperationSideRight{
+    justify-content:flex-end;
+    padding-right:3px;
+  }
+
+  .equationOperationArrow{
+    font-size:1.35em;
+    line-height:.8;
+  }
+
+  .equationOperationSpacer{
+    min-width:1.1em;
+  }
+
   .equationRow.historyStep{color:#64748b;opacity:.86}
   .equationRow.currentStep{color:#0f172a;opacity:1}
   .equationRow.currentStep .eq{color:#3b82f6}
@@ -1209,6 +1277,10 @@
   }
 
   body.importMode #btnStageRandom{
+    display:none;
+  }
+
+  body.importMode #stageRemovedDisplayMode{
     display:none;
   }
 
@@ -1786,33 +1858,42 @@
 
   @media (max-width:760px){
     body.importMode{
-      overflow-x:hidden;
+      box-sizing:border-box;
+      height:100vh;
+      height:100svh;
+      min-height:0;
+      max-height:100svh;
+      overflow:hidden;
+      overscroll-behavior:none;
     }
 
     body.importMode main{
       width:calc(100vw - 8px);
-      margin:4px auto 10px;
+      height:calc(100% - 8px);
+      max-height:calc(100% - 8px);
+      margin:4px auto;
+      overflow:hidden;
     }
 
     body.importMode .stage:not(:fullscreen){
+      display:flex;
+      flex-direction:column;
+      height:100%;
       min-height:0;
-      padding:6px 6px calc(var(--mobile-controls-height, 0px) + 8px);
+      max-height:100%;
+      padding:6px;
+      overflow:hidden;
       border-radius:18px;
       backdrop-filter:none;
     }
 
     body.importMode .stage:not(:fullscreen) .stageQuickActions{
-      position:relative;
-      inset:auto;
-      z-index:2;
-      width:100%;
-      min-height:42px;
-      margin:0 0 3px;
-      padding:0 1px;
-      display:flex;
-      justify-content:flex-end;
-      align-items:center;
-      gap:6px;
+      display:none;
+    }
+
+    body.importMode .stage:not(:fullscreen) #btnStageUndo,
+    body.importMode .stage:not(:fullscreen) #btnFullscreen{
+      display:none;
     }
 
     body.importMode .stage:not(:fullscreen) .quickBtn{
@@ -1836,25 +1917,33 @@
     }
 
     body.importMode .stage:not(:fullscreen) .topbar{
+      order:1;
       box-sizing:border-box;
       width:100%;
-      height:110px;
-      min-height:110px;
-      max-height:110px;
-      padding:2px 3px 5px;
+      height:auto;
+      min-height:120px;
+      max-height:none;
+      margin-top:7px;
+      padding:5px 4px;
       overflow:hidden;
-      flex:0 0 110px;
+      flex:1 1 120px;
+      border:2px solid #93c5fd;
+      border-radius:14px;
+      background:#eff6ff;
+      box-shadow:inset 0 0 0 1px rgba(255,255,255,.72);
     }
 
     body.importMode .stage:not(:fullscreen) .equationHistory{
       box-sizing:border-box;
       width:100%;
-      height:102px;
-      min-height:102px;
-      max-height:102px;
+      height:calc(100% - 2px);
+      min-height:0;
+      max-height:none;
       padding:0 2px;
       overflow-x:hidden;
       overflow-y:auto;
+      overscroll-behavior:contain;
+      -webkit-overflow-scrolling:touch;
       scrollbar-gutter:auto;
     }
 
@@ -1870,12 +1959,20 @@
       padding:1px 0;
     }
 
+    body.importMode .stage:not(:fullscreen) .equationOperation{
+      grid-template-columns:minmax(0,1fr) auto minmax(0,1fr);
+      column-gap:7px;
+      min-height:25px;
+      font-size:13px;
+    }
+
     body.importMode .stage:not(:fullscreen) .equationRow .eq{
       min-width:1em;
       transform:none;
     }
 
     body.importMode .stage:not(:fullscreen) .instructionZone{
+      order:3;
       height:42px;
       min-height:42px;
       max-height:42px;
@@ -1888,11 +1985,14 @@
     }
 
     body.importMode .stage:not(:fullscreen) .board{
+      order:2;
       box-sizing:border-box;
-      width:100%;
-      height:clamp(210px,58vw,250px);
-      min-height:210px;
-      max-height:250px;
+      width:calc(100% + 12px);
+      height:clamp(330px,92vw,380px);
+      min-height:330px;
+      max-height:380px;
+      margin-left:-6px;
+      margin-right:-6px;
       padding:2px;
       border-radius:15px;
     }
@@ -1904,36 +2004,56 @@
     }
 
     body.importMode .stage:not(:fullscreen) .mobileBottomControls{
-      position:fixed;
-      left:4px;
-      right:4px;
-      bottom:0;
-      z-index:30;
+      order:4;
+      position:static;
+      inset:auto;
+      z-index:auto;
       display:flex;
       flex-direction:column;
       align-items:stretch;
-      padding:5px 6px max(6px, env(safe-area-inset-bottom));
-      border:1px solid rgba(15,23,42,.10);
-      border-bottom:0;
-      border-radius:17px 17px 0 0;
-      background:rgba(255,255,255,.96);
-      box-shadow:0 -10px 28px rgba(15,23,42,.12);
-      backdrop-filter:blur(12px);
+      width:100%;
+      padding:0;
+      border:0;
+      border-radius:0;
+      background:transparent;
+      box-shadow:none;
+      backdrop-filter:none;
     }
 
     body.importMode .stage:not(:fullscreen) .mobileBottomControls .actionZone{
-      max-height:110px;
-      overflow-y:auto;
+      height:44px;
+      min-height:44px;
+      max-height:44px;
+      overflow:hidden;
       overscroll-behavior:contain;
     }
 
     body.importMode .stage:not(:fullscreen) .toolBar{
       margin:0 auto;
-      gap:5px;
+      gap:6px;
     }
 
     body.importMode .stage:not(:fullscreen) .toolRow{
+      display:grid;
+      grid-template-columns:repeat(2,minmax(0,1fr));
       gap:5px;
+      padding:5px;
+      border-radius:14px;
+    }
+
+    body.importMode .stage:not(:fullscreen) .toolRowObjects{
+      grid-template-columns:repeat(3,minmax(0,1fr));
+      border:1px solid rgba(59,130,246,.16);
+      background:rgba(239,246,255,.72);
+    }
+
+    body.importUnitMode .stage:not(:fullscreen) .toolRowObjects{
+      grid-template-columns:1fr;
+    }
+
+    body.importMode .stage:not(:fullscreen) .toolRowEquation{
+      border:1px solid rgba(22,163,74,.16);
+      background:rgba(240,253,244,.72);
     }
 
     body.importMode .stage:not(:fullscreen) .toolBtn{
@@ -1942,20 +2062,77 @@
       border-radius:12px;
       font-size:13px;
       line-height:1.12;
-      flex:1 1 145px;
-      max-width:calc(50% - 3px);
+      width:100%;
+      max-width:none;
+    }
+
+    body.importMode .stage:not(:fullscreen) .mobileRestartToolBtn{
+      display:inline-flex;
+      align-items:center;
+      justify-content:center;
+    }
+
+    body.importMode .stage:not(:fullscreen) .desktopLabel{
+      display:none;
+    }
+
+    body.importMode .stage:not(:fullscreen) .mobileLabel{
+      display:inline;
+    }
+
+    body.importMode .stage:not(:fullscreen) .desktopUndoLabel{
+      display:none;
+    }
+
+    body.importMode .stage:not(:fullscreen) .mobileUndoLabel{
+      display:inline-flex;
+      align-items:center;
+      justify-content:center;
+      gap:8px;
+    }
+
+    body.importMode .stage:not(:fullscreen) .toolRowObjects .toolBtn:not(.active){
+      background:#f8fbff;
+      border-color:rgba(59,130,246,.18);
+      color:#1e3a5f;
+    }
+
+    body.importMode .stage:not(:fullscreen) #toolDelete{
+      background:#fff7ed;
+      border-color:rgba(249,115,22,.25);
+      color:#9a3412;
     }
 
     body.importMode .stage:not(:fullscreen) .actionZone{
-      min-height:38px;
+      display:grid;
+      grid-template-columns:repeat(2,minmax(0,1fr));
+      min-height:44px;
       margin-top:4px;
       gap:5px;
+    }
+
+    body.importMode .stage:not(:fullscreen) .actionZone > button:only-child,
+    body.importMode .stage:not(:fullscreen) .actionZone > .btnrow{
+      grid-column:1 / -1;
     }
 
     body.importMode .stage:not(:fullscreen) .actionZone button{
       min-height:40px;
       padding:8px 10px;
       font-size:13px;
+    }
+
+    body.importMode .stage:not(:fullscreen) .actionZone > .btnrow{
+      flex-wrap:nowrap;
+      margin:0;
+      overflow-x:auto;
+      overscroll-behavior-x:contain;
+    }
+
+    body.importMode .stage:not(:fullscreen) .actionPlaceholder{
+      background:#f8fafc;
+      border:1px solid rgba(71,85,105,.16);
+      color:#64748b;
     }
 
     body.importMode dialog{
@@ -2015,6 +2192,63 @@
       background:#e11d48;
       border-color:#be123c;
       color:#fff;
+    }
+
+    body.importMode .mg-consent-manage-slot--fixed{
+      position:relative !important;
+      inset:auto !important;
+      width:100% !important;
+      padding:8px 12px max(18px, env(safe-area-inset-bottom)) !important;
+    }
+  }
+
+  @media (max-width:760px) and (max-height:720px){
+    body.importMode .stage:not(:fullscreen) .board{
+      height:270px;
+      min-height:270px;
+      max-height:270px;
+    }
+
+    body.importMode .stage:not(:fullscreen) .instructionZone{
+      height:34px;
+      min-height:34px;
+      max-height:34px;
+      margin:1px auto 3px;
+      font-size:12px;
+    }
+
+    body.importMode .stage:not(:fullscreen) .toolBar{
+      gap:4px;
+    }
+
+    body.importMode .stage:not(:fullscreen) .toolRow{
+      gap:4px;
+      padding:4px;
+    }
+
+    body.importMode .stage:not(:fullscreen) .toolBtn{
+      min-height:36px;
+      padding:6px 8px;
+      font-size:12px;
+    }
+
+    body.importMode .stage:not(:fullscreen) .topbar{
+      height:auto;
+      min-height:100px;
+      max-height:none;
+      flex:1 1 100px;
+      margin-top:5px;
+      padding:4px 3px;
+    }
+
+    body.importMode .stage:not(:fullscreen) .equationHistory{
+      height:100%;
+      min-height:0;
+      max-height:none;
+    }
+
+    body.importMode .stage:not(:fullscreen) .equationList{
+      font-size:clamp(17px,5.3vw,21px);
     }
   }
 
@@ -2131,15 +2365,16 @@
         <div class="toolRow toolRowObjects" aria-label="Actions sur les objets">
           <button class="toolBtn active" id="toolDecompose" type="button">Décomposer</button>
           <button class="toolBtn" id="toolGroup" type="button">Regrouper</button>
-          <button class="toolBtn" id="toolShare" type="button">Partager équitablement</button>
+          <button class="toolBtn" id="toolShare" type="button"><span class="desktopLabel">Partager équitablement</span><span class="mobileLabel">Partager</span></button>
           <button class="toolBtn unitShareToolBtn" id="toolShareUnits" type="button">Faire des paquets</button>
         </div>
 
         <div class="toolRow toolRowEquation" aria-label="Actions sur l’équation">
-          <button class="toolBtn" id="toolDelete" type="button">Enlever dans chaque membre</button>
-          <button class="toolBtn addBothToolBtn" id="toolAddBoth" type="button" title="Ajouter le même jeton dans les deux membres">Ajouter aux deux membres</button>
+          <button class="toolBtn" id="toolDelete" type="button"><span class="desktopLabel">Enlever dans chaque membre</span><span class="mobileLabel">Enlever des deux côtés</span></button>
+          <button class="toolBtn addBothToolBtn" id="toolAddBoth" type="button" title="Ajouter le même jeton dans les deux membres"><span class="desktopLabel">Ajouter aux deux membres</span><span class="mobileLabel">Ajouter des deux côtés</span></button>
           <button class="toolBtn oppositeBothToolBtn" id="toolOppositeBoth" type="button" title="Prendre l’opposé de chaque membre">Prendre l’opposé</button>
-          <button class="toolBtn undoToolBtn" id="toolUndo" type="button" title="Annuler la dernière action">↶ Annuler</button>
+          <button class="toolBtn undoToolBtn" id="toolUndo" type="button" title="Annuler la dernière action"><span class="desktopUndoLabel">↶ Annuler</span><span class="mobileUndoLabel"><svg class="undoIcon" viewBox="0 0 24 24" aria-hidden="true"><path d="M9 14 4 9l5-5"></path><path d="M4 9h10.5a5.5 5.5 0 0 1 0 11H11"></path></svg><span>Annuler</span></span></button>
+          <button class="toolBtn restartToolBtn mobileRestartToolBtn" id="toolRestart" type="button" title="Recommencer depuis l’équation de départ">Recommencer</button>
         </div>
       </div>
 
@@ -2270,6 +2505,7 @@
   const toolAddBoth = document.getElementById("toolAddBoth");
   const toolOppositeBoth = document.getElementById("toolOppositeBoth");
   const toolUndo = document.getElementById("toolUndo");
+  const toolRestart = document.getElementById("toolRestart");
   const btnStageUndo = document.getElementById("btnStageUndo");
   const btnStageRandom = document.getElementById("btnStageRandom");
   const btnFullscreen = document.getElementById("btnFullscreen");
@@ -2301,11 +2537,23 @@
 
   const variableChars = ["𝑥", "𝑎", "𝑏", "𝑐", "𝑚", "𝑛", "𝑡"];
   // ÉquaSplat import : jetons groupés classiques + petites billes unitaires rapprochées de Splat Équations.
+  const MOBILE_IMPORT_QUERY = "(max-width:760px)";
   const TOKEN_R = 54;
   const TOKEN_UNIT_R = 18;
   const TOKEN_HIT_EXTRA = 32;
-  function tokenRadius(piece){ return piece && piece.unit ? TOKEN_UNIT_R : TOKEN_R; }
-  function tokenHitExtra(piece){ return piece && piece.unit ? 14 : TOKEN_HIT_EXTRA; }
+  function isMobileImportLayout(){
+    return document.body.classList.contains("importMode")
+      && window.matchMedia(MOBILE_IMPORT_QUERY).matches
+      && !document.fullscreenElement;
+  }
+  function tokenRadius(piece){
+    const radius = piece && piece.unit ? TOKEN_UNIT_R : TOKEN_R;
+    return isMobileImportLayout() ? Math.round(radius * 1.30) : radius;
+  }
+  function tokenHitExtra(piece){
+    if(piece && piece.unit) return isMobileImportLayout() ? 22 : 14;
+    return isMobileImportLayout() ? 50 : TOKEN_HIT_EXTRA;
+  }
 
   let state = null;
   let history = [];
@@ -2725,7 +2973,8 @@
       original:{mode:selectedMode, modeLabel:getModeLabel(selectedMode), a,b,rightA,d,x,c:eq.c,varChar},
       left:[],
       right:[],
-      steps:[]
+      steps:[],
+      stepOperations:[]
     };
 
     if(selectedMode === "both"){
@@ -2793,7 +3042,8 @@
       original:{mode:selectedMode, modeLabel:getModeLabel(selectedMode), a,b,rightA,d,x,c:a*x+b,varChar},
       left:[],
       right:[],
-      steps:[]
+      steps:[],
+      stepOperations:[]
     };
 
     if(selectedMode === "both"){
@@ -2902,11 +3152,17 @@
     return `${sideExpression("left")} = ${sideExpression("right")}`;
   }
 
-  function recordEquationStep(){
+  function recordEquationStep(operationLabel=null){
     if(!state) return;
     const eq = currentEquationString();
     if(!state.steps) state.steps = [];
-    if(state.steps[state.steps.length - 1] !== eq) state.steps.push(eq);
+    if(!Array.isArray(state.stepOperations)) state.stepOperations = [];
+    if(state.steps[state.steps.length - 1] !== eq){
+      const nextIndex = state.steps.length;
+      state.steps.push(eq);
+      state.stepOperations[nextIndex] = nextIndex === 0 ? null : (operationLabel || null);
+      state.stepOperations.length = state.steps.length;
+    }
   }
 
   function updateCurrentEquationStep(){
@@ -2932,6 +3188,32 @@
     return {lhs:parts[0].trim(), rhs:parts.slice(1).join("=").trim()};
   }
 
+  function escapeEquationHtml(value){
+    return String(value).replace(/[&<>"']/g, char => ({
+      "&":"&amp;",
+      "<":"&lt;",
+      ">":"&gt;",
+      '"':"&quot;",
+      "'":"&#39;"
+    })[char]);
+  }
+
+  function operationDeltaLabel(value, suffix=""){
+    const n = Number(value);
+    if(!Number.isFinite(n) || n === 0) return "";
+    const magnitude = Math.abs(n);
+    const amount = suffix && magnitude === 1 ? suffix : `${magnitude}${suffix}`;
+    return `${n > 0 ? "+" : "−"} ${amount}`;
+  }
+
+  function operationBetweenRows(label){
+    if(!label) return "";
+    const safeLabel = escapeEquationHtml(label);
+    const left = `<span class="equationOperationSide equationOperationSideLeft"><span>${safeLabel}</span><span class="equationOperationArrow" aria-hidden="true">↓</span></span>`;
+    const right = `<span class="equationOperationSide equationOperationSideRight"><span class="equationOperationArrow" aria-hidden="true">↓</span><span>${safeLabel}</span></span>`;
+    return `<div class="equationOperation" aria-label="Même opération dans les deux membres : ${safeLabel}">${left}<span class="equationOperationSpacer" aria-hidden="true"></span>${right}</div>`;
+  }
+
   function renderEquationHistory(){
     const steps = state.steps || [];
     if(!steps.length){ equationHistory.innerHTML = ""; return; }
@@ -2940,7 +3222,8 @@
       const isCurrent = i === steps.length - 1;
       const solved = isSolvedEquationString(eq);
       const cls = `${isCurrent ? "currentStep" : "historyStep"}${solved ? " solvedStep" : ""}`;
-      return `<div class="equationRow ${cls}"><span class="lhs">${lhs}</span><span class="eq">=</span><span class="rhs">${rhs}</span></div>`;
+      const operation = i > 0 ? operationBetweenRows(state.stepOperations && state.stepOperations[i]) : "";
+      return `${operation}<div class="equationRow ${cls}"><span class="lhs">${lhs}</span><span class="eq">=</span><span class="rhs">${rhs}</span></div>`;
     }).join("");
     equationHistory.innerHTML = `<div class="equationList" aria-label="Étapes de résolution">${rows}</div>`;
     equationHistory.scrollTop = equationHistory.scrollHeight;
@@ -3031,7 +3314,10 @@
       for(const p of state[side]) if(ids.has(p.id)) p.removed = true;
     }
     deleteSelection = [];
-    recordEquationStep();
+    const operation = info.type === "x"
+      ? operationDeltaLabel(-info.leftCoef, currentVar())
+      : operationDeltaLabel(-info.value);
+    recordEquationStep(operation);
     render();
   }
 
@@ -3215,13 +3501,13 @@
     return null;
   }
 
-  function applyTokenSplit(side, id, values, historyMode="update"){
+  function applyTokenSplit(side, id, values, historyMode="update", operationLabel=null){
     const arr = state[side];
     const idx = arr.findIndex(p => p.id === id);
     if(idx < 0) return;
     pushHistory();
     arr.splice(idx, 1, ...values.map(makeToken));
-    if(historyMode === "record") recordEquationStep();
+    if(historyMode === "record") recordEquationStep(operationLabel);
     else updateCurrentEquationStep();
     selectedPieceRef = null;
     render();
@@ -3418,7 +3704,7 @@
         btn.addEventListener("click", () => {
           const n = Number(btn.dataset.n);
           const part = Number(btn.dataset.part);
-          applyTokenSplit(side, id, Array.from({length:n},()=>part), "record");
+          applyTokenSplit(side, id, Array.from({length:n},()=>part), "record", `÷ ${n}`);
           shareDialog.close();
         });
       });
@@ -3468,7 +3754,13 @@
     // PATCH 0.7.2 : taches légèrement plus grandes et mieux espacées.
     // Elles doivent pouvoir cacher visuellement un jeton numéroté,
     // sans se toucher lorsque plusieurs inconnues sont présentes.
-    const splatArea = {x:tray.x+70, y:tray.y+80, w:tray.w-140, h:400};
+    const mobileLayout = isMobileImportLayout();
+    const splatArea = {
+      x:tray.x+(mobileLayout ? 45 : 70),
+      y:tray.y+80,
+      w:tray.w-(mobileLayout ? 90 : 140),
+      h:mobileLayout ? Math.min(760, tray.h * .58) : 400
+    };
     const rows = rowsForSplats(xs.length);
     let k = 0;
     for(let r=0;r<rows.length;r++){
@@ -3477,7 +3769,7 @@
       const cy = splatArea.y + splatArea.h*((r+.5)/rows.length);
       for(let c=0;c<cols && k<xs.length;c++){
         const cx = splatArea.x + cellW*(c+.5);
-        out.set(xs[k].id, {cx,cy,r:84});
+        out.set(xs[k].id, {cx,cy,r:mobileLayout ? 108 : 84});
         k++;
       }
     }
@@ -3711,6 +4003,11 @@
   }
 
   function getTrayForSide(side){
+    if(isMobileImportLayout()){
+      return side === "left"
+        ? {x:8, y:54, w:760, h:1372}
+        : {x:832, y:54, w:760, h:1372};
+    }
     return side === "left"
       ? {x:40, y:74, w:720, h:650}
       : {x:840, y:74, w:720, h:650};
@@ -4123,12 +4420,14 @@
 
   function renderSvg(){
     svg.innerHTML = "";
+    const mobileLayout = isMobileImportLayout();
+    svg.setAttribute("viewBox", mobileLayout ? "0 0 1600 1480" : "0 0 1600 820");
     drawDefs();
     const leftTray = getTrayForSide("left");
     const rightTray = getTrayForSide("right");
     drawTray(leftTray, "");
     drawTray(rightTray, "");
-    drawText(800, 400, "=", "eqMiddle");
+    drawText(800, mobileLayout ? 740 : 400, "=", "eqMiddle");
 
     clearUnitPacketChoiceIfInvalid();
     const packetLayout = applyUnitPacketPositions();
@@ -4175,11 +4474,11 @@
     setTimeout(()=>addBothInput.focus(), 80);
   }
 
-  function finishAddBothAction(){
+  function finishAddBothAction(operationLabel){
     deleteSelection = [];
     groupSelection = [];
     selectedPieceRef = null;
-    recordEquationStep();
+    recordEquationStep(operationLabel);
     addBothDialog.close();
     render();
   }
@@ -4202,7 +4501,7 @@
     pushHistory();
     state.left.push(makeToken(value));
     state.right.push(makeToken(value));
-    finishAddBothAction();
+    finishAddBothAction(operationDeltaLabel(value));
   }
 
   function applyAddBothX(sign){
@@ -4219,7 +4518,7 @@
       state.left.push(makeX(sign));
       state.right.push(makeX(sign));
     }
-    finishAddBothAction();
+    finishAddBothAction(operationDeltaLabel(sign * count, currentVar()));
   }
 
   function takeOppositeOfBothMembers(){
@@ -4235,7 +4534,7 @@
     deleteSelection = [];
     groupSelection = [];
     selectedPieceRef = null;
-    recordEquationStep();
+    recordEquationStep("× (−1)");
     render();
   }
 
@@ -4297,16 +4596,21 @@
     if(!state) return;
     if(state._unitPacketConclusion && Array.isArray(state.steps) && state.steps.length){
       state.steps.pop();
+      if(Array.isArray(state.stepOperations)) state.stepOperations.pop();
     }
     delete state._unitPacketConclusion;
   }
 
-  function addUnitPacketConclusion(value){
+  function addUnitPacketConclusion(value, operationLabel){
     if(!state) return;
     const n = Math.round(Number(value) || 0);
     const eq = `${displayedUnknown()} = ${n}`;
     if(!Array.isArray(state.steps)) state.steps = [];
-    if(state.steps[state.steps.length - 1] !== eq) state.steps.push(eq);
+    if(!Array.isArray(state.stepOperations)) state.stepOperations = [];
+    if(state.steps[state.steps.length - 1] !== eq){
+      state.steps.push(eq);
+      state.stepOperations[state.steps.length - 1] = operationLabel || null;
+    }
     state._unitPacketConclusion = true;
   }
 
@@ -4333,7 +4637,7 @@
     };
 
     if(isCorrectShare){
-      addUnitPacketConclusion(each);
+      addUnitPacketConclusion(each, `÷ ${situation.xCount}`);
     }
 
     deleteSelection = [];
@@ -4527,11 +4831,37 @@
     }
   }
 
+  function stabilizeMobileActionZone(){
+    if(!isMobileImportLayout()) return;
+    for(const child of Array.from(actionZone.children)){
+      if(child.tagName === "BUTTON" && /^Effacer/.test(child.textContent || "")){
+        child.remove();
+      }
+    }
+
+    const children = Array.from(actionZone.children);
+    if(children.some(child => child.classList.contains("btnrow"))) return;
+
+    const makePlaceholder = (label) => {
+      const button = document.createElement("button");
+      button.type = "button";
+      button.disabled = true;
+      button.className = "actionPlaceholder";
+      button.textContent = label;
+      return button;
+    };
+
+    if(children.length === 0){
+      actionZone.appendChild(makePlaceholder("Valider"));
+    }
+  }
+
   function syncMobileBottomControlsSpace(){
     if(!mobileBottomControlsEl) return;
     const docked = window.matchMedia("(max-width:760px)").matches
       && document.body.classList.contains("importMode")
-      && !document.fullscreenElement;
+      && !document.fullscreenElement
+      && window.getComputedStyle(mobileBottomControlsEl).position === "fixed";
     const height = docked ? Math.ceil(mobileBottomControlsEl.getBoundingClientRect().height) : 0;
     document.documentElement.style.setProperty("--mobile-controls-height", `${height}px`);
   }
@@ -4548,8 +4878,14 @@
     renderEquationHistory();
     renderSvg();
     renderActions();
+    stabilizeMobileActionZone();
     requestAnimationFrame(syncMobileBottomControlsSpace);
   }
+
+  const mobileImportMedia = window.matchMedia(MOBILE_IMPORT_QUERY);
+  const rerenderForMobileLayoutChange = () => { if(state) render(); };
+  if(typeof mobileImportMedia.addEventListener === "function") mobileImportMedia.addEventListener("change", rerenderForMobileLayoutChange);
+  else if(typeof mobileImportMedia.addListener === "function") mobileImportMedia.addListener(rerenderForMobileLayoutChange);
 
   function undo(){
     if(!history.length) return;
@@ -4611,6 +4947,7 @@
   toolAddBoth.addEventListener("click", openAddBothDialog);
   if(toolOppositeBoth) toolOppositeBoth.addEventListener("click", takeOppositeOfBothMembers);
   toolUndo.addEventListener("click", undo);
+  if(toolRestart) toolRestart.addEventListener("click", restartImportedEquation);
   btnStageUndo.addEventListener("click", undo);
 
   // Sur certains claviers mobiles, inputmode="numeric" ne propose aucun
@@ -4725,7 +5062,6 @@
       render();
     });
   }
-
   document.addEventListener("keydown", (e) => {
     if(e.key === "Escape") return;
     if(e.key === "z" && (e.ctrlKey || e.metaKey)){ e.preventDefault(); undo(); }
@@ -4873,7 +5209,9 @@
     if(oppositeXModeEl) oppositeXModeEl.value = leftPieces.concat(rightPieces).some(p => p.type === "x" && xSign(p) < 0) ? "on" : "off";
     if(unknownDisplayModeEl) unknownDisplayModeEl.value = wantedDisplay;
     importedUnknownDisplayMode = wantedDisplay;
-    syncRemovedDisplayControls("keep");
+    // Dans l’activité importée, les éléments enlevés disparaissent toujours :
+    // cela libère l’interface et évite toute ambiguïté entre l’état courant et l’historique.
+    syncRemovedDisplayControls("hide");
 
     const importedX = Number(payload.x);
     const xValue = Number.isFinite(importedX) && importedX !== 0 ? importedX : inferImportedX(leftPieces, rightPieces);
@@ -4894,7 +5232,8 @@
       },
       left:leftPieces,
       right:rightPieces,
-      steps:[]
+      steps:[],
+      stepOperations:[]
     };
 
     recordEquationStep();
