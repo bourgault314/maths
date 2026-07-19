@@ -1,19 +1,30 @@
 // Contrat « question instanciée » — version 2.
 //
-// Cette version naît pour le premier besoin pédagogique réel de V2 :
-// NC-01/F2, où l'élève sélectionne tous les diviseurs proposés. Elle ne
-// modifie pas la version 1 et ne préfigure pas les futurs contrats de saisie
-// numérique, de fraction ou de manipulation.
+// Cette version couvre les deux premières formes validées : la sélection
+// multiple de NC-01/F2 et le choix unique accompagné d'un solide sémantique
+// de GE-12/F1. Elle ne préfigure pas les futurs contrats numériques.
 
 import { estDonneePure, estIdentifiantValide } from "./gabarit.js";
 
 export const SCHEMA_QUESTION_INSTANCE_V2 = "mathsgo.question-instance/2";
 export const TYPE_REPONSE_SELECTION_MULTIPLE = "selection-multiple";
+export const TYPE_REPONSE_CHOIX_UNIQUE = "choix-unique";
 export const COMPARAISON_ENSEMBLE_EXACT = "ensemble-exact";
-export const TYPES_BLOC_V2 = Object.freeze(["texte", "entier"]);
+export const COMPARAISON_CHOIX_EXACT = "choix-exact";
+export const TYPES_BLOC_V2 = Object.freeze(["texte", "entier", "solide"]);
 export const TYPES_OUTIL_AIDE_V2 = Object.freeze([
   "observer-unites",
   "composer-somme-chiffres",
+  "tourner-solide",
+]);
+
+const FORMES_SOLIDES_DNB = new Set([
+  "cube",
+  "pave",
+  "prisme",
+  "cylindre",
+  "pyramide",
+  "cone",
 ]);
 
 const FORMAT_ID_INSTANCE = /^[a-z0-9][a-z0-9._:@-]{0,199}$/;
@@ -80,14 +91,12 @@ function validerBlocs(blocs, nom, erreurs, { auMoinsUn = false } = {}) {
       erreurs.push(`${chemin} : bloc attendu`);
       return;
     }
-    validerClesConnues(
-      bloc,
-      bloc.type === "entier"
-        ? ["id", "type", "valeur"]
-        : ["id", "type", "contenu"],
-      chemin,
-      erreurs,
-    );
+    const cles = bloc.type === "entier"
+      ? ["id", "type", "valeur"]
+      : bloc.type === "solide"
+        ? ["id", "type", "forme", "variante", "vue", "mesures"]
+        : ["id", "type", "contenu"];
+    validerClesConnues(bloc, cles, chemin, erreurs);
     if (!estIdentifiantValide(bloc.id)) {
       erreurs.push(`${chemin}.id : identifiant en minuscules requis`);
     } else if (blocsParId.has(bloc.id)) {
@@ -109,6 +118,63 @@ function validerBlocs(blocs, nom, erreurs, { auMoinsUn = false } = {}) {
     ) {
       erreurs.push(`${chemin}.valeur : entier naturel strictement positif requis`);
     }
+    if (bloc.type === "solide") {
+      if (!FORMES_SOLIDES_DNB.has(bloc.forme)) {
+        erreurs.push(`${chemin}.forme : solide DNB inconnu`);
+      }
+      if (bloc.variante !== undefined && !estIdentifiantValide(bloc.variante)) {
+        erreurs.push(`${chemin}.variante : identifiant en minuscules requis`);
+      }
+      const vue = bloc.vue;
+      if (typeof vue !== "object" || vue === null || Array.isArray(vue)) {
+        erreurs.push(`${chemin}.vue : objet attendu`);
+      } else {
+        validerClesConnues(vue, ["lacetDeg", "tangageDeg"], `${chemin}.vue`, erreurs);
+        if (!Number.isFinite(vue.lacetDeg) || vue.lacetDeg < -180 || vue.lacetDeg > 180) {
+          erreurs.push(`${chemin}.vue.lacetDeg : angle entre -180 et 180 requis`);
+        }
+        if (!Number.isFinite(vue.tangageDeg) || vue.tangageDeg < -60 || vue.tangageDeg > 60) {
+          erreurs.push(`${chemin}.vue.tangageDeg : angle entre -60 et 60 requis`);
+        }
+      }
+      if (bloc.mesures !== undefined) {
+        const mesures = bloc.mesures;
+        if (typeof mesures !== "object" || mesures === null || Array.isArray(mesures)) {
+          erreurs.push(`${chemin}.mesures : objet attendu`);
+        } else {
+          const clesMesures = ["arete", "longueur", "largeur", "hauteur", "aireBase", "rayon", "unite", "pi"];
+          validerClesConnues(mesures, clesMesures, `${chemin}.mesures`, erreurs);
+          for (const [cle, valeur] of Object.entries(mesures)) {
+            if (["unite", "pi"].includes(cle)) continue;
+            if (!Number.isFinite(valeur) || valeur <= 0) {
+              erreurs.push(`${chemin}.mesures.${cle} : nombre strictement positif requis`);
+            }
+          }
+          if (mesures.unite !== "cm") {
+            erreurs.push(`${chemin}.mesures.unite : « cm » requis dans cette version`);
+          }
+          if (mesures.pi !== undefined && mesures.pi !== "exact" && mesures.pi !== 3) {
+            erreurs.push(`${chemin}.mesures.pi : « exact » ou 3 requis`);
+          }
+          const attenduesParForme = {
+            cube: ["arete"],
+            pave: ["longueur", "largeur", "hauteur"],
+            prisme: ["aireBase", "hauteur"],
+            cylindre: ["rayon", "hauteur", "pi"],
+          };
+          const attendues = attenduesParForme[bloc.forme];
+          if (attendues) {
+            for (const cle of attendues) {
+              if (!(cle in mesures)) erreurs.push(`${chemin}.mesures.${cle} : mesure requise`);
+            }
+            const permises = new Set([...attendues, "unite"]);
+            for (const cle of Object.keys(mesures)) {
+              if (!permises.has(cle)) erreurs.push(`${chemin}.mesures.${cle} : mesure incompatible avec ${bloc.forme}`);
+            }
+          }
+        }
+      }
+    }
   });
   return blocsParId;
 }
@@ -124,15 +190,16 @@ function validerReponse(reponse, erreurs) {
     "reponse",
     erreurs,
   );
-  if (reponse.type !== TYPE_REPONSE_SELECTION_MULTIPLE) {
-    erreurs.push(
-      `reponse.type : « ${TYPE_REPONSE_SELECTION_MULTIPLE} » attendu`,
-    );
+  const multiple = reponse.type === TYPE_REPONSE_SELECTION_MULTIPLE;
+  const unique = reponse.type === TYPE_REPONSE_CHOIX_UNIQUE;
+  if (!multiple && !unique) {
+    erreurs.push("reponse.type : sélection multiple ou choix unique attendu");
   }
-  if (reponse.comparaison !== COMPARAISON_ENSEMBLE_EXACT) {
-    erreurs.push(
-      `reponse.comparaison : « ${COMPARAISON_ENSEMBLE_EXACT} » attendu`,
-    );
+  const comparaisonAttendue = unique
+    ? COMPARAISON_CHOIX_EXACT
+    : COMPARAISON_ENSEMBLE_EXACT;
+  if (reponse.comparaison !== comparaisonAttendue) {
+    erreurs.push(`reponse.comparaison : « ${comparaisonAttendue} » attendu`);
   }
   if (!Array.isArray(reponse.choix) || reponse.choix.length < 2) {
     erreurs.push("reponse.choix : au moins deux choix sont requis");
@@ -178,6 +245,9 @@ function validerReponse(reponse, erreurs) {
     erreurs.push("reponse.attendus : au moins un choix attendu est requis");
     return;
   }
+  if (unique && reponse.attendus.length !== 1) {
+    erreurs.push("reponse.attendus : un seul choix requis pour un choix unique");
+  }
   if (new Set(reponse.attendus).size !== reponse.attendus.length) {
     erreurs.push("reponse.attendus : doublons interdits");
   }
@@ -221,8 +291,9 @@ function validerAide(aide, blocsEnonce, erreurs) {
       typesVus.add(outil.type);
     }
     const source = blocsEnonce.get(outil.source);
-    if (source?.type !== "entier") {
-      erreurs.push(`${chemin}.source : bloc entier de l'énoncé requis`);
+    const sourceAttendue = outil.type === "tourner-solide" ? "solide" : "entier";
+    if (source?.type !== sourceAttendue) {
+      erreurs.push(`${chemin}.source : bloc ${sourceAttendue} de l'énoncé requis`);
     }
   });
 }

@@ -11,12 +11,18 @@ import {
   demarrer,
   lireConfiguration,
   nombreReussites,
+  NOTION_SOLIDES_USUELS,
+  NOTION_VOLUME_CUBE_PAVE,
+  NOTION_VOLUME_CYLINDRE,
+  NOTION_VOLUME_PRISME,
   ouvrirAide,
   ouvrirCorrection,
+  ouvrirCours,
   passerQuestionSuivante,
   questionCourante,
   recommencer,
   revelerReponse,
+  tournerSolide,
   validerSelection,
 } from "./etat-lecteur.js";
 
@@ -41,6 +47,7 @@ describe("configuration du lecteur", () => {
         aide: "ouverte",
         nombreQuestions: 7,
         graine: "classe-5e",
+        notion: "criteres-divisibilite",
       },
     );
   });
@@ -49,6 +56,67 @@ describe("configuration du lecteur", () => {
     assert.equal(lireConfiguration("?questions=0").nombreQuestions, 10);
     assert.equal(lireConfiguration("?questions=101").nombreQuestions, 10);
     assert.equal(lireConfiguration("?questions=abc").nombreQuestions, 10);
+  });
+});
+
+describe("notion solides usuels", () => {
+  it("lit la notion dans l'URL et génère un choix unique", () => {
+    const configuration = lireConfiguration("?notion=solides-usuels&questions=2");
+    assert.equal(configuration.notion, NOTION_SOLIDES_USUELS);
+    const etat = etatDemarre(configuration);
+    const question = questionCourante(etat);
+    assert.equal(question.classement.notion, "solides-usuels");
+    assert.equal(question.reponse.type, "choix-unique");
+  });
+
+  it("remplace le choix précédent et produit une trace conforme", () => {
+    const etat = etatDemarre({ notion: NOTION_SOLIDES_USUELS });
+    const question = questionCourante(etat);
+    const [premier, second] = question.reponse.choix;
+    basculerChoix(etat, premier.id);
+    basculerChoix(etat, second.id);
+    assert.deepEqual(etat.selection, [second.id]);
+    validerSelection(etat);
+    assert.deepEqual(validerTraceReponse(etat.traces[0]), { valide: true, erreurs: [] });
+    assert.equal(etat.traces[0].reponse.type, "choix-unique");
+  });
+
+  it("n'autorise la rotation que dans l'aide ou le cours", () => {
+    const etat = etatDemarre({ notion: NOTION_SOLIDES_USUELS });
+    tournerSolide(etat, 20, 10);
+    assert.deepEqual(etat.rotationSolide, { lacetDeg: 0, tangageDeg: 0 });
+    ouvrirAide(etat);
+    tournerSolide(etat, 20, 10);
+    assert.deepEqual(etat.rotationSolide, { lacetDeg: 20, tangageDeg: 10 });
+    ouvrirCours(etat);
+    assert.equal(etat.aideOuverte, false);
+    assert.equal(etat.coursOuvert, true);
+    tournerSolide(etat, 400, 80);
+    assert.equal(etat.rotationSolide.tangageDeg, 35);
+    assert.ok(etat.rotationSolide.lacetDeg >= -180 && etat.rotationSolide.lacetDeg < 180);
+  });
+});
+
+describe("notions volumes", () => {
+  it("garde les trois séances DNB séparées", () => {
+    const notions = [NOTION_VOLUME_CUBE_PAVE, NOTION_VOLUME_PRISME, NOTION_VOLUME_CYLINDRE];
+    for (const notion of notions) {
+      const etat = etatDemarre({ notion, nombreQuestions: 2 });
+      assert.equal(etat.seance.selection[0], notion);
+      assert.equal(questionCourante(etat).classement.notion, notion);
+      assert.equal(questionCourante(etat).reponse.type, "choix-unique");
+    }
+  });
+
+  it("ouvre le cours et l'aide manipulable pour un calcul de volume", () => {
+    const etat = etatDemarre({ notion: NOTION_VOLUME_PRISME });
+    ouvrirCours(etat);
+    assert.equal(etat.coursOuvert, true);
+    tournerSolide(etat, 25);
+    assert.equal(etat.rotationSolide.lacetDeg, 25);
+    ouvrirAide(etat);
+    assert.equal(etat.coursOuvert, false);
+    assert.equal(etat.aideOuverte, true);
   });
 });
 

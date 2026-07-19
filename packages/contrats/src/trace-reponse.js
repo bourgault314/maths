@@ -5,7 +5,10 @@
 // La première version couvre uniquement la sélection multiple de NC-01/F2.
 
 import { estDonneePure, estIdentifiantValide } from "./gabarit.js";
-import { TYPE_REPONSE_SELECTION_MULTIPLE } from "./question-v2.js";
+import {
+  TYPE_REPONSE_CHOIX_UNIQUE,
+  TYPE_REPONSE_SELECTION_MULTIPLE,
+} from "./question-v2.js";
 
 export const SCHEMA_TRACE_REPONSE = "mathsgo.trace-reponse/1";
 
@@ -78,9 +81,9 @@ export function validerTraceReponse(trace) {
     erreurs.push("reponse : objet attendu");
   } else {
     validerClesConnues(t.reponse, ["type", "choix"], "reponse", erreurs);
-    if (t.reponse.type !== TYPE_REPONSE_SELECTION_MULTIPLE) {
+    if (![TYPE_REPONSE_SELECTION_MULTIPLE, TYPE_REPONSE_CHOIX_UNIQUE].includes(t.reponse.type)) {
       erreurs.push(
-        `reponse.type : « ${TYPE_REPONSE_SELECTION_MULTIPLE} » attendu`,
+        `reponse.type : « ${TYPE_REPONSE_SELECTION_MULTIPLE} » ou « ${TYPE_REPONSE_CHOIX_UNIQUE} » attendu`,
       );
     }
     if (!Array.isArray(t.reponse.choix) || t.reponse.choix.length === 0) {
@@ -91,6 +94,9 @@ export function validerTraceReponse(trace) {
       }
       if (new Set(t.reponse.choix).size !== t.reponse.choix.length) {
         erreurs.push("reponse.choix : doublons interdits");
+      }
+      if (t.reponse.type === TYPE_REPONSE_CHOIX_UNIQUE && t.reponse.choix.length !== 1) {
+        erreurs.push("reponse.choix : un seul choix requis");
       }
     }
   }
