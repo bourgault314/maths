@@ -385,3 +385,58 @@ footer {
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { transition: none !important; }
 }
+
+/* Aperçu isolé d'un viewport Safari de 390 × 664 px. */
+html {
+  min-height: 664px;
+  background: #f7f7f7;
+}
+body {
+  width: 390px;
+  min-height: 664px;
+  margin: 0 auto;
+  padding: 10px 12px 12px;
+  justify-content: flex-start;
+}
+.page {
+  min-height: 0;
+  gap: 12px;
+}
+.hero-card {
+  height: auto;
+  min-height: 642px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: space-between;
+  padding: 34px 14px max(24px, env(safe-area-inset-bottom));
+  border-radius: 25px;
+}
+.brand-logo {
+  width: min(82vw, 330px);
+  margin-bottom: 0;
+}
+h1 { font-size: 2.1rem; }
+.subtitle {
+  margin-top: 0;
+  font-size: 1rem;
+}
+.maths-scene {
+  width: calc(100% + 4px);
+  margin-top: 0;
+  aspect-ratio: 560 / 230;
+}
+.scene-grid { inset: 6% 3.5%; }
+.scene-item { transform: scale(1.1); }
+.scene-plate {
+  transform: scale(1.08);
+  transform-origin: center;
+}
+.btn-start { margin-top: 0; }
+footer {
+  flex-direction: column;
+  gap: 5px;
+  margin-top: 12px;
+  padding-bottom: max(2px, env(safe-area-inset-bottom));
+}
+.footer-divider { display: none; }
