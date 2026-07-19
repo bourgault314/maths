@@ -2,93 +2,69 @@
 
 **Dernière mise à jour : 19 juillet 2026.**
 
-## Point de départ vérifié
+## Référence vérifiée
 
 - Dépôt : `bourgault314/maths`.
 - Branche de référence : `main`.
-- Commit de référence, vérifié sur GitHub le 19 juillet 2026 :
-  `f9c8404f65a2c3c7b2e5cb11b98788a4c20055ec`.
-- Le commit `2b70f1477d6bb8bf7410d976d8c2fa157f7a1cb8` était le point de départ
-  de l'audit du socle (PR #154). Il n'est plus la tête de `main` : ne plus s'en
-  servir comme référence.
-- PR #151 fusionnée : le contenu prématuré issu de la PR #144 a été retiré.
-- PR #150 fermée sans fusion : son socle surdimensionné ne doit pas être repris.
-- PR #154 fusionnée : l'audit du socle minimal et les décisions D-011 et D-012
-  sont devenus la référence.
-- PR #145 ouverte : ne pas la fusionner telle quelle, car elle vise aussi des
-  fichiers retirés par la PR #151. Son idée de garde-fou de provenance reste à
-  réétudier.
+- Commit de référence vérifié sur GitHub :
+  `5ce53788a373c658ed110df684d1c0bed10f3c87`.
+- La PR #162 est fusionnée. Elle constitue le socle technique actuel :
+  contrats génériques, PRNG seedé, registre, objets indépendants, charte et
+  garde-fous du périmètre V2.
+- Le lot de la PR #162 réussit **705 tests sur 705** et `npm run verifier`.
+- La PR #156 sur les puissances simples reste un brouillon séparé. Elle n'est
+  pas le chantier actif et ne doit pas être fusionnée telle quelle. Les
+  micro-notions du DNB qui mobilisent des puissances restent bien dans la carte
+  et seront traitées à leur rang.
+- La PR #145 reste ouverte mais ne doit pas être fusionnée telle quelle.
 
 ## État fonctionnel
 
-- La bêta continue de fonctionner séparément et est gelée hors correction
+- La bêta continue de fonctionner séparément et reste gelée hors correction
   critique.
-- Aucun contenu pédagogique V2 n'est actuellement autorisé.
-- **Puissances simples (4e) : fiche proposée, en attente de validation.** La
-  PR #156 pose la fiche pédagogique de la notion (automatisme officiel `4-13`),
-  sans aucun générateur ni question. Rien n'avance sur cette notion tant que
-  Gwenaël ne l'a pas validée ou corrigée.
-- Les contrats génériques, le PRNG seedé et le registre ont été nettoyés et
-  renforcés. Ils ne dépendent plus d'un générateur ou d'un module historique.
-- Les 187 automatismes officiels et les objets visuels indépendants restent
-  disponibles pour les futures fiches de notion, au besoin.
+- Aucun générateur pédagogique V2 n'est encore présent dans `main`.
+- La carte du DNB est établie : **37 cibles officielles distinctes**,
+  **38 cibles normalisées** et **88 micro-notions**.
+- Une seule micro-notion est active : `NC-01`, critères de divisibilité par
+  2, 3, 5, 9 et 10.
+- Le critère par 10 est un complément maths&go validé. Il reste proposé dans le
+  parcours DNB, tout en étant distingué des quatre critères officiels dans les
+  données.
+- La fiche `NC-01`, le mini-cours, les six familles de questions, les aides,
+  les corrections, les storyboards et la séparation séance/question/trace ont
+  été validés par Gwenaël le 19 juillet 2026.
+- Le parcours DNB actuel ne possède ni niveaux ni paliers.
 
-## Derniers chantiers terminés
+## Documents de référence ajoutés par le chantier courant
 
-La mémoire durable a été installée et les principales contradictions
-documentaires ont été levées. Aucun code du moteur, aucune question et aucune
-interface n'ont été créés pendant ce chantier.
+- `carte-dnb-2026-mathsgo.md` — liste officielle, taxonomie maths&go, matrice
+  de couverture et ordre des 88 micro-notions ;
+- `fiche-nc-01-criteres-divisibilite.md` — contenu pédagogique validé ;
+- `contenu-nc-01-cours-et-f2.md` — mini-cours et sept spécimens de référence ;
+- `storyboard-parcours-commun.md` — lancement, séance, progression et bilan ;
+- `storyboard-nc-01-f2.md` — carte interactive et projection ;
+- `specification-papier-seance-question-reponse.md` — responsabilités des
+  données avant les contrats techniques.
 
-Le socle minimal a ensuite été audité puis nettoyé :
+Ces documents autorisent la fabrication de la première tranche verticale. Ils
+ne publient encore aucune question devant les élèves.
 
-- suppression du générateur de fractions hérité, de son export et des tests
-  qui exécutaient un ancien module ;
-- remplacement de tous les exemples concernés par des fixtures techniques ;
-- validation des données JSON pures, des identifiants, des graines et des
-  intervalles aléatoires ;
-- copie profondément figée des paramètres transmis aux générateurs ;
-- garde-fou exécuté par `npm run verifier` contre les noms historiques, le
-  hasard non seedé et l'exécution dynamique dans le périmètre V2.
+## Chantier actif : première tranche NC-01/F2
 
-Le rapport de décision détaillé reste dans
-`audit-socle-2026-07-18.md`. Le lot complet réussit **683 tests sur 683**.
+L'ordre technique est désormais :
 
-## Les tests MG1 sont une passerelle, pas une cible
+1. versionner les contrats minimaux de question à sélection multiple, de séance
+   et de trace de réponse ;
+2. tester ces contrats sans navigateur ;
+3. écrire à neuf le générateur seedé de `NC-01/F2` et ses tests mathématiques ;
+4. construire le lecteur minimal en mode interactif et en mode projection ;
+5. contrôler réellement le téléphone à 375 px, la tablette et la projection ;
+6. présenter les exemples, l'aide et la correction à Gwenaël ;
+7. obtenir sa validation finale avant toute exposition aux élèves.
 
-`studio/automatismes/` est le nouveau menu branché sur le moteur **actuel**.
-Ses tests (`studio/automatismes/mg1.test.js`) exigent volontairement des codes
-de série identiques à ceux de l'application d'aujourd'hui : c'est ce qui permet
-d'essayer le menu avec les vraies questions sans attendre la migration.
-
-Ils mesurent donc une compatibilité temporaire avec l'ancien moteur, jamais
-l'indépendance de V2. La décision D-012 n'est pas contredite : cette passerelle
-est un échafaudage déclaré, qui disparaît avec `auto/` le jour où le moteur est
-migré. Aucun code ni aucun test de V2 ne doit dépendre d'eux ; lire « tous les
-tests passent » comme « le socle est indépendant » serait une erreur de lecture.
-
-## Lot technique du 19 juillet 2026 (en attente de fusion)
-
-Chantier séparé, sans aucun contenu pédagogique : la palette de Pythagore est
-passée dans `packages/charte`, la dernière dépendance `packages/objets` →
-`studio/` a disparu (le composant du studio réexporte désormais la fondation),
-et le garde-fou de V2 couvre les cinq dossiers du périmètre technique au lieu
-de deux. Le garde-fou est lui-même testé, règle par règle. Le même lot porte le
-cadrage documentaire du périmètre DNB (D-013). **705 tests sur 705**,
-`npm run verifier` vert.
-
-## Prochaine étape : la carte du DNB
-
-Le périmètre immédiat est exclusivement le DNB (D-013). La prochaine étape est
-donc d'établir la **carte du DNB** : écrire dans le dépôt la liste officielle
-des attendus de l'épreuve, notion par notion, avec pour chacune son avancement
-(`a_faire`, `construit`, `valide`), l'automatisme officiel correspondant
-lorsqu'il en existe un, et le renvoi vers l'archive à consulter le moment venu.
-
-C'est cette carte qui commandera l'ordre des fiches suivantes. Elle ne contient
-aucun contenu pédagogique : c'est une liste et des états.
-
-La fiche des puissances simples reste en attente. Aucun générateur réel n'est
-écrit avant l'accord de Gwenaël sur une fiche.
+Le premier contrat ne couvre que le besoin réel de `F2`. Le clavier numérique,
+les fractions, le serveur, l'identité de l'élève et le chronomètre ne sont pas
+construits par anticipation.
 
 ## Règle de mise à jour
 
