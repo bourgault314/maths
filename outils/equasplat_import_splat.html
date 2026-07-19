@@ -447,6 +447,47 @@
     pointer-events:none;
   }
 
+  .pendingShareGroup{
+    cursor:pointer;
+    outline:none;
+    transform-box:fill-box;
+    transform-origin:center;
+    transition:opacity .24s ease, transform .24s ease;
+  }
+
+  .pendingShareGroupCard{
+    fill:rgba(239,246,255,.84);
+    stroke:rgba(59,130,246,.58);
+    stroke-width:4;
+    transition:fill .18s ease, stroke .18s ease;
+  }
+
+  .pendingShareGroup:hover .pendingShareGroupCard,
+  .pendingShareGroup:focus .pendingShareGroupCard{
+    fill:rgba(219,234,254,.96);
+    stroke:#2563eb;
+  }
+
+  .pendingShareGroup.chosen .pendingShareGroupCard{
+    fill:rgba(220,252,231,.96);
+    stroke:#16a34a;
+  }
+
+  .pendingShareGroup.discarded{
+    opacity:0;
+    transform:scale(.84);
+    pointer-events:none;
+  }
+
+  .pendingShareEquals{
+    fill:#64748b;
+    font-size:54px;
+    font-weight:950;
+    text-anchor:middle;
+    dominant-baseline:middle;
+    pointer-events:none;
+  }
+
   .removedGroup{opacity:.28}
   .removedOverlay{
     fill:url(#hatch);
@@ -1857,8 +1898,19 @@
   }
 
   @media (max-width:760px){
+    html.importModeRoot{
+      width:100%;
+      height:100%;
+      height:100svh;
+      overflow:hidden;
+      overscroll-behavior:none;
+    }
+
     body.importMode{
       box-sizing:border-box;
+      position:fixed;
+      inset:0;
+      width:100%;
       height:100vh;
       height:100svh;
       min-height:0;
@@ -1988,9 +2040,9 @@
       order:2;
       box-sizing:border-box;
       width:calc(100% + 12px);
-      height:clamp(330px,92vw,380px);
-      min-height:330px;
-      max-height:380px;
+      height:clamp(260px,76vw,300px);
+      min-height:260px;
+      max-height:300px;
       margin-left:-6px;
       margin-right:-6px;
       padding:2px;
@@ -2195,18 +2247,15 @@
     }
 
     body.importMode .mg-consent-manage-slot--fixed{
-      position:relative !important;
-      inset:auto !important;
-      width:100% !important;
-      padding:8px 12px max(18px, env(safe-area-inset-bottom)) !important;
+      display:none !important;
     }
   }
 
   @media (max-width:760px) and (max-height:720px){
     body.importMode .stage:not(:fullscreen) .board{
-      height:270px;
-      min-height:270px;
-      max-height:270px;
+      height:250px;
+      min-height:250px;
+      max-height:250px;
     }
 
     body.importMode .stage:not(:fullscreen) .instructionZone{
@@ -2548,7 +2597,7 @@
   }
   function tokenRadius(piece){
     const radius = piece && piece.unit ? TOKEN_UNIT_R : TOKEN_R;
-    return isMobileImportLayout() ? Math.round(radius * 1.30) : radius;
+    return isMobileImportLayout() ? Math.round(radius * 1.36) : radius;
   }
   function tokenHitExtra(piece){
     if(piece && piece.unit) return isMobileImportLayout() ? 22 : 14;
@@ -2621,7 +2670,11 @@
     if(n < 0) return `−${Math.abs(n)}${v}`;
     return `${n}${v}`;
   }
-  function makeToken(value, opts = {}){ return { id:uid(), type:"token", value:Number(value), removed:false, unit:!!opts.unit }; }
+  function makeToken(value, opts = {}){
+    const token = { id:uid(), type:"token", value:Number(value), removed:false, unit:!!opts.unit };
+    if(opts.shareBatch) token.shareBatch = opts.shareBatch;
+    return token;
+  }
   function formatSignedNumber(n){
     const v = Number(n) || 0;
     if(v < 0) return `−${Math.abs(v)}`;
@@ -3076,6 +3129,18 @@
     const unitSum = pieces
       .filter(p => p.type === "token" && p.unit)
       .reduce((sum,p)=>sum + Number(p.value || 0), 0);
+    const renderedShareBatches = new Set();
+    const tokenTerm = piece => {
+      if(!piece.shareBatch) return formatEquationTerm(piece.value);
+      if(renderedShareBatches.has(piece.shareBatch)) return null;
+      renderedShareBatches.add(piece.shareBatch);
+      const batch = pieces.filter(candidate => candidate.type === "token" && candidate.shareBatch === piece.shareBatch);
+      const value = Number(piece.value);
+      if(batch.length < 2 || batch.some(candidate => Number(candidate.value) !== value)) return formatEquationTerm(value);
+      return value < 0
+        ? `−${batch.length} × ${Math.abs(value)}`
+        : `${batch.length} × ${formatSignedNumber(value)}`;
+    };
 
     if(canCombineAllXOfSameSign){
       let xDone = false;
@@ -3093,7 +3158,8 @@
             unitDone = true;
           }
         }else{
-          terms.push(formatEquationTerm(p.value));
+          const term = tokenTerm(p);
+          if(term) terms.push(term);
         }
       }
       return joinEquationTerms(terms);
@@ -3124,7 +3190,8 @@
         }
         i++;
       }else{
-        terms.push(formatEquationTerm(p.value));
+        const term = tokenTerm(p);
+        if(term) terms.push(term);
         i++;
       }
     }
@@ -3132,6 +3199,7 @@
   }
 
   function getSolvedValue(){
+    if(state && state.pendingShareConclusion) return null;
     const left = activePieces("left").filter(p => !(p.type === "token" && Number(p.value) === 0));
     const right = activePieces("right").filter(p => !(p.type === "token" && Number(p.value) === 0));
     if(left.length === 0 || right.length === 0) return null;
@@ -3490,11 +3558,11 @@
     const rightTokens = right.filter(p => p.type === "token");
     const leftX = left.filter(p => p.type === "x");
     const rightX = right.filter(p => p.type === "x");
-    if(rightTokens.length === 1 && rightX.length === 0 && leftTokens.length === 0 && leftX.length >= 2 && leftX.every(p => xSign(p) === xSign(leftX[0]))){
+    if(rightTokens.length === 1 && rightX.length === 0 && leftTokens.length === 0 && leftX.length >= 2 && xSign(leftX[0]) > 0 && leftX.every(p => xSign(p) === xSign(leftX[0]))){
       const value = rightTokens[0].value;
       if(value % leftX.length === 0) return {tokenSide:"right", xSide:"left", token:rightTokens[0], count:leftX.length, result:value/leftX.length};
     }
-    if(leftTokens.length === 1 && leftX.length === 0 && rightTokens.length === 0 && rightX.length >= 2 && rightX.every(p => xSign(p) === xSign(rightX[0]))){
+    if(leftTokens.length === 1 && leftX.length === 0 && rightTokens.length === 0 && rightX.length >= 2 && xSign(rightX[0]) > 0 && rightX.every(p => xSign(p) === xSign(rightX[0]))){
       const value = leftTokens[0].value;
       if(value % rightX.length === 0) return {tokenSide:"left", xSide:"right", token:leftTokens[0], count:rightX.length, result:value/rightX.length};
     }
@@ -3510,6 +3578,56 @@
     if(historyMode === "record") recordEquationStep(operationLabel);
     else updateCurrentEquationStep();
     selectedPieceRef = null;
+    render();
+  }
+
+  function applySharedTokenSplit(side, id, partCount, partValue){
+    const arr = state[side];
+    const idx = arr.findIndex(p => p.id === id);
+    if(idx < 0) return;
+    const opportunity = getShareOpportunity();
+    const count = Math.round(Number(partCount) || 0);
+    const each = Number(partValue);
+    if(count < 2 || !Number.isFinite(each)) return;
+
+    pushHistory();
+    const shareBatch = uid();
+    arr.splice(idx, 1, ...Array.from({length:count}, () => makeToken(each, {shareBatch})));
+    const isFinalShare = !!opportunity
+      && opportunity.tokenSide === side
+      && opportunity.token.id === id
+      && opportunity.count === count;
+    if(isFinalShare){
+      state.pendingShareConclusion = {
+        shareBatch,
+        count,
+        each,
+        xSide:opportunity.xSide,
+        tokenSide:opportunity.tokenSide,
+        finalizing:false
+      };
+    }
+    selectedPieceRef = null;
+    deleteSelection = [];
+    groupSelection = [];
+    recordEquationStep();
+    render();
+  }
+
+  function finalizePendingShare(expectedBatch){
+    const pending = state && state.pendingShareConclusion;
+    if(!pending || pending.shareBatch !== expectedBatch) return;
+    pending.finalizing = false;
+    pushHistory();
+    const removedX = state[pending.xSide].filter(piece => piece.removed);
+    const removedTokens = state[pending.tokenSide].filter(piece => piece.removed);
+    state[pending.xSide] = [...removedX, makeX(1)];
+    state[pending.tokenSide] = [...removedTokens, makeToken(pending.each)];
+    delete state.pendingShareConclusion;
+    selectedPieceRef = null;
+    deleteSelection = [];
+    groupSelection = [];
+    recordEquationStep(`÷ ${pending.count}`);
     render();
   }
 
@@ -3704,7 +3822,7 @@
         btn.addEventListener("click", () => {
           const n = Number(btn.dataset.n);
           const part = Number(btn.dataset.part);
-          applyTokenSplit(side, id, Array.from({length:n},()=>part), "record", `÷ ${n}`);
+          applySharedTokenSplit(side, id, n, part);
           shareDialog.close();
         });
       });
@@ -4002,11 +4120,18 @@
     return pt.matrixTransform(svg.getScreenCTM().inverse());
   }
 
+  function mobileSvgViewHeight(){
+    const width = Math.max(1, svg.clientWidth || 1600);
+    const height = Math.max(1, svg.clientHeight || 1050);
+    return clamp(Math.round(1600 * height / width), 980, 1420);
+  }
+
   function getTrayForSide(side){
     if(isMobileImportLayout()){
+      const viewHeight = mobileSvgViewHeight();
       return side === "left"
-        ? {x:8, y:54, w:760, h:1372}
-        : {x:832, y:54, w:760, h:1372};
+        ? {x:8, y:36, w:760, h:viewHeight-72}
+        : {x:832, y:36, w:760, h:viewHeight-72};
     }
     return side === "left"
       ? {x:40, y:74, w:720, h:650}
@@ -4418,16 +4543,96 @@
     }
   }
 
+  function drawPendingShareGroups(viewHeight){
+    const pending = state && state.pendingShareConclusion;
+    if(!pending) return false;
+    const count = pending.count;
+    const cols = count <= 3 ? 1 : 2;
+    const rows = Math.ceil(count / cols);
+    const outer = 24;
+    const gap = 18;
+    const cardW = (1600 - outer*2 - gap*(cols-1)) / cols;
+    const cardH = (viewHeight - outer*2 - gap*(rows-1)) / rows;
+
+    for(let index=0; index<count; index++){
+      const col = index % cols;
+      const row = Math.floor(index / cols);
+      const x = outer + col*(cardW + gap);
+      const y = outer + row*(cardH + gap);
+      const g = document.createElementNS("http://www.w3.org/2000/svg", "g");
+      g.setAttribute("class", "pendingShareGroup");
+      g.setAttribute("role", "button");
+      g.setAttribute("tabindex", "0");
+      g.setAttribute("aria-label", `Groupe ${index + 1} sur ${count} : ${displayedUnknown()} égale ${formatSignedNumber(pending.each)}. Choisir ce groupe.`);
+      g.dataset.pendingShareGroup = String(index);
+
+      const card = document.createElementNS("http://www.w3.org/2000/svg", "rect");
+      card.setAttribute("x", x);
+      card.setAttribute("y", y);
+      card.setAttribute("width", cardW);
+      card.setAttribute("height", cardH);
+      card.setAttribute("rx", Math.min(28, cardH*.14));
+      card.setAttribute("class", "pendingShareGroupCard");
+      g.appendChild(card);
+
+      const centerY = y + cardH/2;
+      const splatX = x + cardW*.30;
+      const equalsX = x + cardW*.50;
+      const tokenX = x + cardW*.70;
+      const splatR = Math.min(88, cardH*.30, cardW*.13);
+      const tokenR = Math.min(64, cardH*.23, cardW*.10);
+      const splat = document.createElementNS("http://www.w3.org/2000/svg", "path");
+      splat.setAttribute("d", blobPath(splatX, centerY, splatR));
+      splat.setAttribute("class", "splatShape");
+      g.appendChild(splat);
+      drawText(splatX, centerY + 5, displayedUnknown(), "splatText", g);
+      drawText(equalsX, centerY, "=", "pendingShareEquals", g);
+
+      const token = document.createElementNS("http://www.w3.org/2000/svg", "circle");
+      token.setAttribute("cx", tokenX);
+      token.setAttribute("cy", centerY);
+      token.setAttribute("r", tokenR);
+      token.setAttribute("class", Number(pending.each) < 0 ? "tokenCircle negative" : "tokenCircle positive");
+      if(!isRelativeUniverse() && Number(pending.each) > 0){
+        const color = positiveTokenColorForValue(pending.each);
+        token.style.fill = color.fill;
+        token.style.stroke = color.stroke;
+      }
+      g.appendChild(token);
+      drawText(tokenX, centerY + 2, formatSignedNumber(pending.each), "tokenText", g);
+
+      const choose = () => {
+        const fresh = state && state.pendingShareConclusion;
+        if(!fresh || fresh.finalizing || fresh.shareBatch !== pending.shareBatch) return;
+        fresh.finalizing = true;
+        const groups = svg.querySelectorAll(".pendingShareGroup");
+        groups.forEach((group, groupIndex) => group.classList.add(groupIndex === index ? "chosen" : "discarded"));
+        setTimeout(() => finalizePendingShare(pending.shareBatch), 260);
+      };
+      g.addEventListener("click", choose);
+      g.addEventListener("keydown", event => {
+        if(event.key === "Enter" || event.key === " "){
+          event.preventDefault();
+          choose();
+        }
+      });
+      svg.appendChild(g);
+    }
+    return true;
+  }
+
   function renderSvg(){
     svg.innerHTML = "";
     const mobileLayout = isMobileImportLayout();
-    svg.setAttribute("viewBox", mobileLayout ? "0 0 1600 1480" : "0 0 1600 820");
+    const viewHeight = mobileLayout ? mobileSvgViewHeight() : 820;
+    svg.setAttribute("viewBox", `0 0 1600 ${viewHeight}`);
     drawDefs();
+    if(drawPendingShareGroups(viewHeight)) return;
     const leftTray = getTrayForSide("left");
     const rightTray = getTrayForSide("right");
     drawTray(leftTray, "");
     drawTray(rightTray, "");
-    drawText(800, mobileLayout ? 740 : 400, "=", "eqMiddle");
+    drawText(800, viewHeight / 2, "=", "eqMiddle");
 
     clearUnitPacketChoiceIfInvalid();
     const packetLayout = applyUnitPacketPositions();
@@ -4663,6 +4868,12 @@
     actionZone.innerHTML = "";
     solutionEl.textContent = "";
 
+    if(state && state.pendingShareConclusion){
+      const count = state.pendingShareConclusion.count;
+      setInstruction(`<strong>${count} groupes identiques</strong> — touche-en un.`);
+      return;
+    }
+
     if(isImportedUnitMode()){
       const situation = getUnitShareSituation();
       if(situation){
@@ -4874,6 +5085,10 @@
 
   function render(){
     if(!state) return;
+    const sharePending = !!state.pendingShareConclusion;
+    [toolDecompose, toolGroup, toolShare, toolShareUnits, toolDelete, toolAddBoth].forEach(button => {
+      if(button) button.disabled = sharePending;
+    });
     if(getSolvedValue() !== null) updateCurrentEquationStep();
     renderEquationHistory();
     renderSvg();
@@ -5246,6 +5461,7 @@
     syncUniverseUI({validate:false});
     syncTeacherControls({validate:false});
     document.body.classList.add("importMode");
+    document.documentElement.classList.add("importModeRoot");
     document.body.classList.toggle("importUnitMode", unitMode);
     setActionMode(unitMode ? "delete" : "decompose");
     setInstruction("");
@@ -5258,6 +5474,7 @@
     const ok = createImportedEquationState(payload);
     if(!ok){
       document.body.classList.add("importMode");
+      document.documentElement.classList.add("importModeRoot");
       document.body.classList.remove("importUnitMode");
       state = null;
       equationHistory.innerHTML = "";
