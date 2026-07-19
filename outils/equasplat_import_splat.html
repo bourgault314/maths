@@ -1917,7 +1917,7 @@
     }
 
     body.importMode .stage:not(:fullscreen) .topbar{
-      order:4;
+      order:3;
       box-sizing:border-box;
       width:100%;
       height:auto;
@@ -2004,7 +2004,7 @@
     }
 
     body.importMode .stage:not(:fullscreen) .mobileBottomControls{
-      order:3;
+      order:4;
       position:static;
       inset:auto;
       z-index:auto;
@@ -3209,8 +3209,8 @@
   function operationBetweenRows(label){
     if(!label) return "";
     const safeLabel = escapeEquationHtml(label);
-    const left = `<span class="equationOperationSide equationOperationSideLeft"><span class="equationOperationArrow" aria-hidden="true">↓</span><span>${safeLabel}</span></span>`;
-    const right = `<span class="equationOperationSide equationOperationSideRight"><span>${safeLabel}</span><span class="equationOperationArrow" aria-hidden="true">↓</span></span>`;
+    const left = `<span class="equationOperationSide equationOperationSideLeft"><span>${safeLabel}</span><span class="equationOperationArrow" aria-hidden="true">↓</span></span>`;
+    const right = `<span class="equationOperationSide equationOperationSideRight"><span class="equationOperationArrow" aria-hidden="true">↓</span><span>${safeLabel}</span></span>`;
     return `<div class="equationOperation" aria-label="Même opération dans les deux membres : ${safeLabel}">${left}<span class="equationOperationSpacer" aria-hidden="true"></span>${right}</div>`;
   }
 
