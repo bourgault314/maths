@@ -1927,10 +1927,12 @@
     body.importMode .stage:not(:fullscreen) .board{
       order:1;
       box-sizing:border-box;
-      width:100%;
+      width:calc(100% + 12px);
       height:clamp(350px,98vw,410px);
       min-height:350px;
       max-height:410px;
+      margin-left:-6px;
+      margin-right:-6px;
       padding:2px;
       border-radius:15px;
     }
@@ -2071,6 +2073,11 @@
       background:#f8fafc;
       border:1px solid rgba(71,85,105,.16);
       color:#64748b;
+    }
+
+    body.importMode .stage:not(:fullscreen) .actionPlaceholderHidden{
+      visibility:hidden;
+      pointer-events:none;
     }
 
     body.importMode dialog{
@@ -2486,11 +2493,11 @@
   }
   function tokenRadius(piece){
     const radius = piece && piece.unit ? TOKEN_UNIT_R : TOKEN_R;
-    return isMobileImportLayout() ? Math.round(radius * 1.18) : radius;
+    return isMobileImportLayout() ? Math.round(radius * 1.30) : radius;
   }
   function tokenHitExtra(piece){
-    if(piece && piece.unit) return isMobileImportLayout() ? 20 : 14;
-    return isMobileImportLayout() ? 46 : TOKEN_HIT_EXTRA;
+    if(piece && piece.unit) return isMobileImportLayout() ? 22 : 14;
+    return isMobileImportLayout() ? 50 : TOKEN_HIT_EXTRA;
   }
 
   let state = null;
@@ -3656,9 +3663,9 @@
     // sans se toucher lorsque plusieurs inconnues sont présentes.
     const mobileLayout = isMobileImportLayout();
     const splatArea = {
-      x:tray.x+70,
+      x:tray.x+(mobileLayout ? 45 : 70),
       y:tray.y+80,
-      w:tray.w-140,
+      w:tray.w-(mobileLayout ? 90 : 140),
       h:mobileLayout ? Math.min(760, tray.h * .58) : 400
     };
     const rows = rowsForSplats(xs.length);
@@ -3669,7 +3676,7 @@
       const cy = splatArea.y + splatArea.h*((r+.5)/rows.length);
       for(let c=0;c<cols && k<xs.length;c++){
         const cx = splatArea.x + cellW*(c+.5);
-        out.set(xs[k].id, {cx,cy,r:mobileLayout ? 98 : 84});
+        out.set(xs[k].id, {cx,cy,r:mobileLayout ? 108 : 84});
         k++;
       }
     }
@@ -4731,6 +4738,12 @@
     const children = Array.from(actionZone.children);
     if(children.some(child => child.classList.contains("btnrow"))) return;
 
+    for(const child of children){
+      if(child.tagName === "BUTTON" && /^Effacer/.test(child.textContent || "")){
+        child.textContent = "Désélectionner";
+      }
+    }
+
     const makePlaceholder = (label, ghost=false) => {
       const button = document.createElement("button");
       button.type = "button";
@@ -4742,14 +4755,20 @@
 
     if(children.length === 0){
       actionZone.appendChild(makePlaceholder("Valider"));
-      actionZone.appendChild(makePlaceholder("Effacer", true));
       return;
     }
 
     if(children.length === 1){
       const only = children[0];
-      if(/^Effacer/.test(only.textContent || "")) actionZone.insertBefore(makePlaceholder("Valider"), only);
-      else actionZone.appendChild(makePlaceholder("Effacer", true));
+      if(/^Désélectionner/.test(only.textContent || "")){
+        actionZone.insertBefore(makePlaceholder("Valider"), only);
+      }else{
+        const hidden = makePlaceholder("", true);
+        hidden.classList.add("actionPlaceholderHidden");
+        hidden.setAttribute("aria-hidden", "true");
+        hidden.tabIndex = -1;
+        actionZone.appendChild(hidden);
+      }
     }
   }
 
