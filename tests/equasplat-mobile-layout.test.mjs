@@ -39,11 +39,15 @@ test("l’historique bleu réserve dès le départ une grande zone et suit sa de
 });
 
 test("le plateau mobile utilise tout son cadre avec des plateaux rectangulaires", () => {
-  assert.match(html, /\.board\{\s*order:1;[^}]*height:clamp\(350px,98vw,410px\);[^}]*min-height:350px;[^}]*max-height:410px;/s);
+  assert.match(html, /\.board\{\s*order:1;[^}]*width:calc\(100% \+ 12px\);[^}]*height:clamp\(350px,98vw,410px\);[^}]*margin-left:-6px;[^}]*margin-right:-6px;/s);
   assert.match(html, /svg\.setAttribute\("viewBox", mobileLayout \? "0 0 1600 1480" : "0 0 1600 820"\)/);
   assert.match(html, /\? \{x:8, y:54, w:760, h:1372\}/);
   assert.match(html, /: \{x:832, y:54, w:760, h:1372\}/);
-  assert.match(html, /return isMobileImportLayout\(\) \? Math\.round\(radius \* 1\.18\) : radius/);
+  assert.match(html, /return isMobileImportLayout\(\) \? Math\.round\(radius \* 1\.30\) : radius/);
+  assert.match(html, /x:tray\.x\+\(mobileLayout \? 45 : 70\)/);
+  assert.match(html, /w:tray\.w-\(mobileLayout \? 90 : 140\)/);
+  assert.match(html, /r:mobileLayout \? 108 : 84/);
+  assert.ok((760 - 90) / 3 > 2 * 108, "trois splats agrandis doivent rester séparés sur une ligne");
   assert.match(html, /@media \(max-width:760px\) and \(max-height:720px\)/);
   assert.match(html, /\.board\{\s*height:285px;\s*min-height:285px;\s*max-height:285px;/);
   assert.match(html, /\.topbar\{\s*height:220px;\s*min-height:220px;\s*max-height:220px;/);
@@ -67,6 +71,9 @@ test("la validation mobile garde toujours la même hauteur", () => {
   assert.match(html, /\.mobileBottomControls \.actionZone\{\s*height:44px;\s*min-height:44px;\s*max-height:44px;/);
   assert.match(html, /function stabilizeMobileActionZone\(\)/);
   assert.match(html, /actionZone\.appendChild\(makePlaceholder\("Valider"\)\)/);
+  assert.match(html, /child\.textContent = "Désélectionner"/);
+  assert.doesNotMatch(html, /makePlaceholder\("Effacer"/);
+  assert.match(html, /actionPlaceholderHidden/);
   assert.match(html, /renderActions\(\);\s*stabilizeMobileActionZone\(\);/);
 });
 
