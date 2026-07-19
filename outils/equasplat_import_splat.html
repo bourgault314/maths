@@ -1235,9 +1235,18 @@
   .equationOperationSide{
     display:flex;
     align-items:center;
-    justify-content:center;
     gap:5px;
     white-space:nowrap;
+  }
+
+  .equationOperationSideLeft{
+    justify-content:flex-start;
+    padding-left:3px;
+  }
+
+  .equationOperationSideRight{
+    justify-content:flex-end;
+    padding-right:3px;
   }
 
   .equationOperationArrow{
@@ -3200,8 +3209,9 @@
   function operationBetweenRows(label){
     if(!label) return "";
     const safeLabel = escapeEquationHtml(label);
-    const side = `<span class="equationOperationSide"><span class="equationOperationArrow" aria-hidden="true">↓</span><span>${safeLabel}</span></span>`;
-    return `<div class="equationOperation" aria-label="Même opération dans les deux membres : ${safeLabel}">${side}<span class="equationOperationSpacer" aria-hidden="true"></span>${side}</div>`;
+    const left = `<span class="equationOperationSide equationOperationSideLeft"><span class="equationOperationArrow" aria-hidden="true">↓</span><span>${safeLabel}</span></span>`;
+    const right = `<span class="equationOperationSide equationOperationSideRight"><span>${safeLabel}</span><span class="equationOperationArrow" aria-hidden="true">↓</span></span>`;
+    return `<div class="equationOperation" aria-label="Même opération dans les deux membres : ${safeLabel}">${left}<span class="equationOperationSpacer" aria-hidden="true"></span>${right}</div>`;
   }
 
   function renderEquationHistory(){
