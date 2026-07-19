@@ -71,9 +71,10 @@ test("la validation mobile garde toujours la même hauteur", () => {
   assert.match(html, /\.mobileBottomControls \.actionZone\{\s*height:44px;\s*min-height:44px;\s*max-height:44px;/);
   assert.match(html, /function stabilizeMobileActionZone\(\)/);
   assert.match(html, /actionZone\.appendChild\(makePlaceholder\("Valider"\)\)/);
-  assert.match(html, /child\.textContent = "Désélectionner"/);
+  assert.match(html, /if\(child\.tagName === "BUTTON" && \/\^Effacer\/\.test\(child\.textContent \|\| ""\)\)\{\s*child\.remove\(\);/);
+  assert.doesNotMatch(html, /Désélectionner/);
   assert.doesNotMatch(html, /makePlaceholder\("Effacer"/);
-  assert.match(html, /actionPlaceholderHidden/);
+  assert.doesNotMatch(html, /actionPlaceholderHidden/);
   assert.match(html, /renderActions\(\);\s*stabilizeMobileActionZone\(\);/);
 });
 
