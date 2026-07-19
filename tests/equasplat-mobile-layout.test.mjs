@@ -93,7 +93,8 @@ test("le partage final écrit immédiatement la division et la solution", () => 
   assert.match(html, /function applySharedTokenSplit\(side, id, partCount, partValue\)/);
   assert.match(html, /opportunity\.tokenSide === side[\s\S]*opportunity\.token\.id === id[\s\S]*opportunity\.count === count/);
   assert.match(html, /function beginPendingShareConclusion\(opportunity, each\)/);
-  assert.match(html, /state\.pendingShareConclusion = \{[\s\S]*shareBatch:uid\(\),[\s\S]*count:opportunity\.count,[\s\S]*each,[\s\S]*xSide:opportunity\.xSide,[\s\S]*tokenSide:opportunity\.tokenSide/s);
+  assert.match(html, /const pending = \{[\s\S]*shareBatch:uid\(\),[\s\S]*count:opportunity\.count,[\s\S]*each:Number\(each\),[\s\S]*xSide:opportunity\.xSide,[\s\S]*tokenSide:opportunity\.tokenSide/s);
+  assert.match(html, /state\.pendingShareConclusion = pending/);
   assert.match(html, /if\(isFinalShare\)\{[\s\S]*beginPendingShareConclusion\(opportunity, each\)[\s\S]*\}else\{[\s\S]*arr\.splice\(idx, 1, \.\.\.Array\.from/s);
   assert.match(html, /if\(state && state\.pendingShareConclusion\) return null;/);
   assert.match(html, /function pendingShareFinalEquation\(pending\)/);
