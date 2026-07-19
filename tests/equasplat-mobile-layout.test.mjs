@@ -8,8 +8,8 @@ test("ÉquaSplat mobile place le plateau, les commandes puis l’équation dans 
   assert.match(html, /\.stage:not\(:fullscreen\) \.stageQuickActions\{\s*display:none;/);
   assert.match(html, /\.stage:not\(:fullscreen\) \.board\{\s*order:1;/);
   assert.match(html, /\.stage:not\(:fullscreen\) \.instructionZone\{\s*order:2;/);
-  assert.match(html, /\.stage:not\(:fullscreen\) \.mobileBottomControls\{\s*order:3;\s*position:static;/);
-  assert.match(html, /\.stage:not\(:fullscreen\) \.topbar\{\s*order:4;/);
+  assert.match(html, /\.stage:not\(:fullscreen\) \.topbar\{\s*order:3;/);
+  assert.match(html, /\.stage:not\(:fullscreen\) \.mobileBottomControls\{\s*order:4;\s*position:static;/);
 });
 
 test("ÉquaSplat mobile compacte les actions objet sur une ligne et sépare les familles", () => {
@@ -35,7 +35,7 @@ test("Annuler et Recommencer restent disponibles avec une flèche lisible", () =
 test("l’historique bleu réserve dès le départ une grande zone et suit sa dernière ligne", () => {
   assert.match(html, /equationHistory\.scrollTop = equationHistory\.scrollHeight/);
   assert.match(html, /\.equationHistory\{[^}]*overflow-y:auto;/s);
-  assert.match(html, /\.topbar\{\s*order:4;[^}]*height:auto;[^}]*min-height:120px;[^}]*max-height:none;[^}]*flex:1 1 120px;[^}]*border:2px solid #93c5fd;[^}]*background:#eff6ff;/s);
+  assert.match(html, /\.topbar\{\s*order:3;[^}]*height:auto;[^}]*min-height:120px;[^}]*max-height:none;[^}]*flex:1 1 120px;[^}]*border:2px solid #93c5fd;[^}]*background:#eff6ff;/s);
   assert.match(html, /\.equationHistory\{[^}]*overflow-y:auto;[^}]*overscroll-behavior:contain;[^}]*-webkit-overflow-scrolling:touch;/s);
 });
 
@@ -45,7 +45,8 @@ test("les opérations faites aux deux membres apparaissent entre les équations"
   assert.match(html, /class="equationOperationArrow"[^>]*>↓<\/span>/);
   assert.match(html, /\.equationOperationSideLeft\{\s*justify-content:flex-start;\s*padding-left:3px;/);
   assert.match(html, /\.equationOperationSideRight\{\s*justify-content:flex-end;\s*padding-right:3px;/);
-  assert.match(html, /equationOperationSideRight"><span>\$\{safeLabel\}<\/span><span class="equationOperationArrow"/);
+  assert.match(html, /equationOperationSideLeft"><span>\$\{safeLabel\}<\/span><span class="equationOperationArrow"/);
+  assert.match(html, /equationOperationSideRight"><span class="equationOperationArrow"[^>]*>↓<\/span><span>\$\{safeLabel\}<\/span>/);
   assert.match(html, /Même opération dans les deux membres/);
   assert.match(html, /recordEquationStep\(operation\)/);
   assert.match(html, /recordEquationStep\("× \(−1\)"\)/);
