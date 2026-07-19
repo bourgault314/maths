@@ -25,7 +25,7 @@ test("la scène mobile donne tout l’espace libre à la vraie zone d’équatio
 
 test("les plateaux mobiles sont plus hauts et occupent le SVG disponible", () => {
   assert.match(html, /const TOKEN_R_PHONE = 72;/);
-  assert.match(html, /svg\.setAttribute\("viewBox", isPhoneLayout\(\) \? "0 0 1600 1280" : "0 0 1600 820"\)/);
+  assert.match(html, /const viewHeight = isPhoneLayout\(\) \? 1280 : 820;\s*svg\.setAttribute\("viewBox", `0 0 1600 \$\{viewHeight\}`\)/);
   assert.match(html, /function getTrayForSide\(side\)\{\s*if\(isPhoneLayout\(\)\)\{[\s\S]*\{x:24, y:34, w:736, h:1212\}[\s\S]*\{x:840, y:34, w:736, h:1212\}/);
   assert.match(html, /return side === "left"\s*\? \{x:40, y:74, w:720, h:650\}\s*: \{x:840, y:74, w:720, h:650\}/);
 });
@@ -72,4 +72,46 @@ test("chaque réécriture visible conserve l’équation précédente", () => {
   assert.match(fusion, /recordEquationStep\(\);/);
   assert.doesNotMatch(fusion, /updateCurrentEquationStep\(\)/);
   assert.match(transientZero, /updateCurrentEquationStep\(\);/);
+});
+
+test("les deux membres utilisent toujours la même taille de tache", () => {
+  const commonRadius = functionSource("commonSplatRadius");
+  const positions = functionSource("splatPositionsForItems");
+
+  assert.match(commonRadius, /Math\.max\(1, countForSide\("left"\), countForSide\("right"\)\)/);
+  assert.match(positions, /const radius = commonSplatRadius\(\);/);
+  assert.doesNotMatch(positions, /splatRadius\(xs\.length\)/);
+});
+
+test("la sélection des objets est nettement renforcée", () => {
+  assert.match(html, /\.selectedOutline\{[^}]*stroke-width:14;[^}]*opacity:1;[^}]*drop-shadow/s);
+  assert.match(html, /\.groupSelectedOutline\{[^}]*stroke-width:14;[^}]*opacity:1;[^}]*drop-shadow/s);
+  assert.ok((html.match(/pos\.r\+12/g) || []).length >= 4);
+});
+
+test("les opérations encadrent les équations dans le bon ordre", () => {
+  const operationRow = functionSource("renderOperationRow");
+  const conclude = functionSource("concludeSolution");
+
+  assert.doesNotMatch(operationRow, /viewMode !== "redaction"/);
+  assert.match(operationRow, /opLeft[\s\S]*opLabel[\s\S]*operationArrowSvg\("left"\)/);
+  assert.match(operationRow, /opRight[\s\S]*operationArrowSvg\("right"\)[\s\S]*opLabel/);
+  assert.match(html, /\.operationWrap\{[^}]*justify-content:space-between;[^}]*width:100%;/s);
+  assert.match(conclude, /makeBothSidesOperation\(`÷ \$\{info\.count\}`\)/);
+});
+
+test("un partage final correct affiche une grille de mini-égalités jusqu’à Conclure", () => {
+  const sharedSplit = functionSource("applySharedTokenSplit");
+  const groups = functionSource("drawPendingShareGroups");
+  const renderSvg = functionSource("renderSvg");
+  const conclude = functionSource("concludeSolution");
+
+  assert.match(sharedSplit, /opportunity\.tokenSide === side[\s\S]*opportunity\.token\.id === id[\s\S]*opportunity\.count === count/);
+  assert.match(sharedSplit, /state\.pendingShareConclusion = \{[\s\S]*count,[\s\S]*each,[\s\S]*xSide:opportunity\.xSide,[\s\S]*tokenSide:opportunity\.tokenSide/s);
+  assert.match(groups, /const cols = 2;/);
+  assert.match(groups, /isCenteredLast[\s\S]*\(1600 - cardW\)\/2/);
+  assert.match(groups, /pending\.xSide === "left" \? leftX : rightX/);
+  assert.match(renderSvg, /if\(drawPendingShareGroups\(viewHeight\)\) return;/);
+  assert.match(html, /btn\.textContent = "Conclure";/);
+  assert.match(conclude, /delete state\.pendingShareConclusion;/);
 });
