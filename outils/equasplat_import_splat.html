@@ -434,8 +434,8 @@
   .selectedOutline{
     fill:none;
     stroke:#f97316;
-    stroke-width:7;
-    opacity:.85;
+    stroke-width:12;
+    opacity:1;
     pointer-events:none;
   }
 
@@ -1889,7 +1889,7 @@
      Sur téléphone, les actions rapides occupent leur propre ligne : elles ne
      recouvrent plus l'équation. Le plateau et les outils sont ensuite
      compactés sans modifier leur disposition logique. */
-  .mobileSignBtn{
+  .mobileMathKeypad{
     display:none;
   }
 
@@ -2212,38 +2212,52 @@
     body.importMode #addBothInput,
     body.importMode #groupInput,
     body.importMode #fusionInput{
-      width:calc(100% - 58px);
-      vertical-align:middle;
+      width:100%;
     }
 
-    body.importMode .mobileSignBtn{
-      display:inline-grid;
-      place-items:center;
-      width:50px;
-      height:50px;
-      min-height:50px;
-      margin-left:5px;
-      padding:0;
-      vertical-align:middle;
-      border-radius:14px;
-      border:2px solid rgba(190,24,93,.28);
-      background:#fff1f2;
-      color:#9f1239;
-      font-size:25px;
+    body.importMode .mobileMathKeypad{
+      display:grid;
+      grid-template-columns:repeat(4,minmax(0,1fr));
+      gap:7px;
+      margin:10px 0 12px;
+      padding:8px;
+      border:1px solid rgba(59,130,246,.20);
+      border-radius:16px;
+      background:#eff6ff;
+    }
+
+    body.importMode .mobileMathKey{
+      min-width:0;
+      min-height:47px;
+      padding:5px;
+      border:1px solid rgba(15,23,42,.12);
+      border-radius:12px;
+      background:#fff;
+      color:#172554;
+      font-size:22px;
       font-weight:950;
-      line-height:1;
-      box-shadow:none;
+      box-shadow:0 1px 2px rgba(15,23,42,.06);
     }
 
-    body.importMode .mobileSignBtn:active{
-      background:#ffe4e6;
+    body.importMode .mobileMathKey.operator{
+      background:#dbeafe;
+      border-color:rgba(37,99,235,.26);
+      color:#1d4ed8;
+    }
+
+    body.importMode .mobileMathKey.danger{
+      background:#fff7ed;
+      border-color:rgba(234,88,12,.22);
+      color:#9a3412;
+    }
+
+    body.importMode .mobileMathKey.zero{
+      grid-column:span 2;
+    }
+
+    body.importMode .mobileMathKey:active{
+      filter:brightness(.96);
       transform:translateY(1px);
-    }
-
-    body.importMode .mobileSignBtn.active{
-      background:#e11d48;
-      border-color:#be123c;
-      color:#fff;
     }
 
     body.importMode .mg-consent-manage-slot--fixed{
@@ -2439,6 +2453,7 @@
     <div class="dialogText" id="dialogText"></div>
     <label>Écris une somme</label>
     <input id="decomposeInput" type="text" autocomplete="off" />
+    <div class="mobileMathKeypad" data-keypad-for="decomposeInput" data-keypad-mode="expression" aria-label="Pavé de saisie mathématique"></div>
     <button class="helpMiniBtn" id="btnShowSuggestions" type="button" title="Afficher des propositions" aria-label="Afficher des propositions">?</button>
     <div class="presetChips" id="presetChips"></div>
     <div class="btnrow">
@@ -2465,7 +2480,7 @@
     <div class="dialogText" id="groupDialogText"></div>
     <label>Somme des jetons sélectionnés</label>
     <input id="groupInput" type="number" inputmode="numeric" autocomplete="off" />
-    <button class="mobileSignBtn" type="button" data-sign-target="groupInput" aria-label="Ajouter ou retirer le signe moins" title="Changer le signe">−</button>
+    <div class="mobileMathKeypad" data-keypad-for="groupInput" data-keypad-mode="integer" aria-label="Pavé numérique"></div>
     <div class="fusionFeedback" id="groupFeedback"></div>
     <div class="btnrow">
       <button class="green" id="btnApplyGroup" type="button">Regrouper</button>
@@ -2480,7 +2495,7 @@
     <div class="dialogText" id="addBothDialogText">Ajoute le même jeton numérique dans chaque membre.</div>
     <label>Valeur du jeton</label>
     <input id="addBothInput" type="number" min="-99" max="99" inputmode="numeric" autocomplete="off" />
-    <button class="mobileSignBtn" type="button" data-sign-target="addBothInput" aria-label="Ajouter ou retirer le signe moins" title="Changer le signe">−</button>
+    <div class="mobileMathKeypad" data-keypad-for="addBothInput" data-keypad-mode="integer" aria-label="Pavé numérique"></div>
     <div class="fusionFeedback" id="addBothFeedback"></div>
     <div class="addBothXChoices" id="addBothXChoices">
       <div class="addBothXTitle">Ou ajouter une tache</div>
@@ -2506,7 +2521,7 @@
     <div class="dialogText" id="fusionDialogText"></div>
     <label>Résultat</label>
     <input id="fusionInput" type="number" inputmode="numeric" autocomplete="off" />
-    <button class="mobileSignBtn" type="button" data-sign-target="fusionInput" aria-label="Ajouter ou retirer le signe moins" title="Changer le signe">−</button>
+    <div class="mobileMathKeypad" data-keypad-for="fusionInput" data-keypad-mode="integer" aria-label="Pavé numérique"></div>
     <div class="fusionFeedback" id="fusionFeedback"></div>
     <div class="btnrow">
       <button class="primary" id="btnApplyFusion" type="button">Fusionner</button>
@@ -3354,7 +3369,7 @@
       const rightCoef = right.reduce((sum,p)=>sum + xSign(p), 0);
       if(leftCoef !== rightCoef) return {ok:false, reason:"differentXCoef", left, right, leftCoef, rightCoef};
       if(leftCoef === 0) return {ok:false, reason:"zeroXSelection", left, right, leftCoef, rightCoef};
-      return {ok:true, type:"x", label:formatXTerm(leftCoef), left, right};
+      return {ok:true, type:"x", label:formatXTerm(leftCoef), left, right, leftCoef, rightCoef};
     }
     const leftSum = left.reduce((s,p)=>s + Number(p.value || 0), 0);
     const rightSum = right.reduce((s,p)=>s + Number(p.value || 0), 0);
@@ -3462,6 +3477,7 @@
     groupDialogText.innerHTML = `${values.join(" + ")} = ?`;
     groupInput.value = "";
     groupFeedback.textContent = "";
+    syncMobileMathKeypads();
     if(typeof groupDialog.showModal === "function") groupDialog.showModal();
     setTimeout(()=>groupInput.focus(), 80);
   }
@@ -3634,8 +3650,8 @@
   function parseSum(text){
     const raw = String(text || "").replace(/−/g,"-").replace(/\s+/g,"");
     if(!raw) return null;
-    if(!/^-?\d+(?:[+]-?\d+)*$/.test(raw)) return null;
-    return raw.split("+").map(Number).filter(Number.isFinite);
+    if(!/^[+-]?\d+(?:[+-]\d+)*$/.test(raw)) return null;
+    return (raw.match(/[+-]?\d+/g) || []).map(Number).filter(Number.isFinite);
   }
 
   function moveOneDecompositionValue(values, fromIndex, destination){
@@ -3702,6 +3718,7 @@
     decomposeInput.value = "";
     presetChips.classList.remove("open");
     presetChips.innerHTML = "";
+    syncMobileMathKeypads();
     if(typeof decomposeDialog.showModal === "function") decomposeDialog.showModal();
     setTimeout(()=>decomposeInput.focus(), 80);
   }
@@ -4179,6 +4196,7 @@
     fusionDialogText.innerHTML = `${formatFusionTerm(a)} + ${formatFusionTerm(b)} = ?`;
     fusionInput.value = "";
     fusionFeedback.textContent = "";
+    syncMobileMathKeypads();
     if(typeof fusionDialog.showModal === "function") fusionDialog.showModal();
     setTimeout(()=>fusionInput.focus(), 80);
   }
@@ -4675,6 +4693,7 @@
     if(addBothXCount) addBothXCount.value = "1";
     if(btnAddBothPositiveX) btnAddBothPositiveX.innerHTML = miniSplatButtonHtml(1);
     if(btnAddBothNegativeX) btnAddBothNegativeX.innerHTML = miniSplatButtonHtml(-1);
+    syncMobileMathKeypads();
     if(typeof addBothDialog.showModal === "function") addBothDialog.showModal();
     setTimeout(()=>addBothInput.focus(), 80);
   }
@@ -5098,7 +5117,10 @@
   }
 
   const mobileImportMedia = window.matchMedia(MOBILE_IMPORT_QUERY);
-  const rerenderForMobileLayoutChange = () => { if(state) render(); };
+  const rerenderForMobileLayoutChange = () => {
+    syncMobileMathKeypads();
+    if(state) render();
+  };
   if(typeof mobileImportMedia.addEventListener === "function") mobileImportMedia.addEventListener("change", rerenderForMobileLayoutChange);
   else if(typeof mobileImportMedia.addListener === "function") mobileImportMedia.addListener(rerenderForMobileLayoutChange);
 
@@ -5165,49 +5187,77 @@
   if(toolRestart) toolRestart.addEventListener("click", restartImportedEquation);
   btnStageUndo.addEventListener("click", undo);
 
-  // Sur certains claviers mobiles, inputmode="numeric" ne propose aucun
-  // signe moins. Ces boutons permettent de saisir d'abord la valeur absolue
-  // puis d'en changer le signe, ou d'armer le signe avant la saisie.
-  document.querySelectorAll(".mobileSignBtn").forEach(button => {
-    const input = document.getElementById(button.dataset.signTarget || "");
+  function mobileMathKeyValue(input, mode, key){
+    const raw = String(input.value || "").replace(/−/g, "-");
+    if(/^\d$/.test(key)) return raw + key;
+    if(key === "clear") return "";
+    if(key === "backspace") return raw.slice(0, -1);
+
+    if(mode === "integer"){
+      const magnitude = raw.replace(/^[+-]/, "");
+      if(key === "minus") return raw.startsWith("-") ? magnitude : `-${magnitude}`;
+      if(key === "plus") return magnitude;
+      return raw;
+    }
+
+    if(key === "plus"){
+      if(!raw || /[+-]$/.test(raw)) return raw;
+      return `${raw}+`;
+    }
+    if(key === "minus"){
+      if(!raw) return "-";
+      if(raw.endsWith("+")) return `${raw.slice(0, -1)}-`;
+      if(raw.endsWith("-")) return raw;
+      return `${raw}-`;
+    }
+    return raw;
+  }
+
+  function focusMathInputWithoutScrolling(input){
+    try{ input.focus({preventScroll:true}); }
+    catch(_error){ input.focus(); }
+  }
+
+  function syncMobileMathKeypads(){
+    const active = isMobileImportLayout();
+    const allowMinus = isRelativeUniverse();
+    document.querySelectorAll(".mobileMathKeypad").forEach(keypad => {
+      const input = document.getElementById(keypad.dataset.keypadFor || "");
+      if(!input) return;
+      input.readOnly = active;
+      if(active) input.setAttribute("inputmode", "none");
+      else if(input.dataset.desktopInputmode) input.setAttribute("inputmode", input.dataset.desktopInputmode);
+      else input.removeAttribute("inputmode");
+      const minusKey = keypad.querySelector('[data-key="minus"]');
+      if(minusKey) minusKey.hidden = !allowMinus;
+      keypad.setAttribute("aria-hidden", active ? "false" : "true");
+    });
+  }
+
+  const mobileMathKeys = [
+    ["7", "7", ""], ["8", "8", ""], ["9", "9", ""], ["backspace", "⌫", "danger"],
+    ["4", "4", ""], ["5", "5", ""], ["6", "6", ""], ["clear", "C", "danger"],
+    ["1", "1", ""], ["2", "2", ""], ["3", "3", ""], ["plus", "+", "operator"],
+    ["minus", "−", "operator"], ["0", "0", "zero"]
+  ];
+
+  document.querySelectorAll(".mobileMathKeypad").forEach(keypad => {
+    const input = document.getElementById(keypad.dataset.keypadFor || "");
     if(!input) return;
-
-    const clearPendingSign = () => {
-      delete input.dataset.pendingNegative;
-      button.classList.remove("active");
-      button.setAttribute("aria-pressed", "false");
-    };
-
-    button.setAttribute("aria-pressed", "false");
-    button.addEventListener("click", () => {
-      const raw = String(input.value || "").trim().replace(/−/g, "-");
-      if(raw === ""){
-        const armed = input.dataset.pendingNegative === "true";
-        if(armed){
-          clearPendingSign();
-        }else{
-          input.dataset.pendingNegative = "true";
-          button.classList.add("active");
-          button.setAttribute("aria-pressed", "true");
-        }
-      }else{
-        const value = Number(raw);
-        if(Number.isFinite(value)) input.value = String(-value);
-        clearPendingSign();
-      }
-      input.focus();
+    input.dataset.desktopInputmode = input.getAttribute("inputmode") || "";
+    const mode = keypad.dataset.keypadMode === "expression" ? "expression" : "integer";
+    keypad.innerHTML = mobileMathKeys.map(([key, label, className]) =>
+      `<button class="mobileMathKey ${className}" type="button" data-key="${key}" aria-label="${key === "backspace" ? "Effacer le dernier caractère" : (key === "clear" ? "Tout effacer" : label)}">${label}</button>`
+    ).join("");
+    keypad.querySelectorAll(".mobileMathKey").forEach(button => {
+      button.addEventListener("click", () => {
+        input.value = mobileMathKeyValue(input, mode, button.dataset.key || "");
+        input.dispatchEvent(new Event("input", {bubbles:true}));
+        focusMathInputWithoutScrolling(input);
+      });
     });
-
-    input.addEventListener("input", () => {
-      if(input.dataset.pendingNegative !== "true" || input.value === "") return;
-      const value = Number(input.value);
-      if(Number.isFinite(value) && value > 0) input.value = String(-value);
-      clearPendingSign();
-    });
-
-    const ownerDialog = button.closest("dialog");
-    if(ownerDialog) ownerDialog.addEventListener("close", clearPendingSign);
   });
+  syncMobileMathKeypads();
 
   btnShowSuggestions.addEventListener("click", showDecomposeSuggestions);
   document.getElementById("btnApplyDecompose").addEventListener("click", applyDecomposeInput);
