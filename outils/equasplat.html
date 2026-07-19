@@ -2370,6 +2370,11 @@
     display:grid;
   }
 
+  dialog.touchKeypadActive .btnrow > .primary,
+  dialog.touchKeypadActive .btnrow > .green{
+    display:none;
+  }
+
   input.touchKeypadTarget{
     border-color:rgba(59,130,246,.58);
     box-shadow:0 0 0 4px rgba(59,130,246,.12);
@@ -3186,12 +3191,16 @@
     prepareTouchInput(input);
     input.blur();
     input.insertAdjacentElement("afterend", touchKeypad);
+    const dialog = input.closest("dialog");
+    if(dialog) dialog.classList.add("touchKeypadActive");
     renderTouchKeypad();
     touchKeypad.classList.add("open");
     return true;
   }
 
   function closeTouchKeypad(){
+    const dialog = touchKeypadInput && touchKeypadInput.closest("dialog");
+    if(dialog) dialog.classList.remove("touchKeypadActive");
     touchKeypad.classList.remove("open");
     restoreTouchInput(touchKeypadInput);
     touchKeypadInput = null;
@@ -3210,6 +3219,7 @@
   const appDialogs = [decomposeDialog, shareDialog, groupDialog, addBothDialog, fusionDialog].filter(Boolean);
   appDialogs.forEach(dialog => {
     dialog.addEventListener("close", () => {
+      dialog.classList.remove("touchKeypadActive");
       if(touchKeypadInput && dialog.contains(touchKeypadInput)) closeTouchKeypad();
       dialog.querySelectorAll(".touchKeypadTarget").forEach(restoreTouchInput);
       if(!appDialogs.some(item => item.open)){
