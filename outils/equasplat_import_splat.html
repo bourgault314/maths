@@ -484,12 +484,10 @@
     pointer-events:none;
   }
 
-  .pendingShareEquals{
-    fill:#64748b;
-    font-size:54px;
-    font-weight:950;
-    text-anchor:middle;
-    dominant-baseline:middle;
+  .pendingShareDivider{
+    stroke:#94a3b8;
+    stroke-width:5;
+    stroke-linecap:round;
     pointer-events:none;
   }
 
@@ -2633,6 +2631,7 @@
   let dragState = null;
   let suppressNextClickFor = null;
   let pendingFusion = null;
+  let initialEqualityInstructionVisible = false;
   let initialImportState = null;
   let importedUnknownDisplayMode = null;
   let importedNumberMode = "grouped";
@@ -3317,7 +3316,19 @@
     equationHistory.scrollTop = equationHistory.scrollHeight;
   }
 
-  function setInstruction(html){ instructionZone.innerHTML = html || ""; }
+  const INITIAL_EQUALITY_INSTRUCTION = "<strong>Il y a la même quantité à gauche qu’à droite.</strong>";
+  function setInstruction(html){
+    instructionZone.innerHTML = initialEqualityInstructionVisible
+      ? INITIAL_EQUALITY_INSTRUCTION
+      : (html || "");
+  }
+  function dismissInitialEqualityInstruction(){
+    initialEqualityInstructionVisible = false;
+  }
+  function showInitialEqualityInstruction(){
+    initialEqualityInstructionVisible = true;
+    setInstruction("");
+  }
 
   function getPieceBySideAndId(ref){
     if(!ref || !state || !state[ref.side]) return null;
@@ -4068,12 +4079,14 @@
     }
   }
 
-  function layoutItems(tray, items){
+  function layoutItems(tray, items, splatLayoutItems=items){
     const visible = items;
     const tokens = visible.filter(p => p.type === "token");
     const out = new Map();
 
-    const splatPositions = splatPositionsForItems(tray, visible);
+    // Une tache supprimée n'est plus dessinée, mais sa case reste réservée :
+    // les taches encore visibles ne changent pas de place après la suppression.
+    const splatPositions = splatPositionsForItems(tray, splatLayoutItems);
     for(const [id, pos] of splatPositions.entries()) out.set(id, pos);
 
     const sideName = tray.x < 800 ? "left" : "right";
@@ -4428,6 +4441,7 @@
         return;
       }
       if(item.removed) return;
+      dismissInitialEqualityInstruction();
       if(actionMode === "decompose"){
         if(item.type === "token") openDecomposeDialog(side, item.id);
         else setInstruction("En mode Décomposer, clique sur un jeton numérique.");
@@ -4586,7 +4600,7 @@
       g.setAttribute("class", "pendingShareGroup");
       g.setAttribute("role", "button");
       g.setAttribute("tabindex", "0");
-      g.setAttribute("aria-label", `Groupe ${index + 1} sur ${count} : ${displayedUnknown()} égale ${formatSignedNumber(pending.each)}. Choisir ce groupe.`);
+      g.setAttribute("aria-label", `Mini-plateau ${index + 1} sur ${count} : une tache à gauche et ${formatSignedNumber(pending.each)} à droite. Choisir ce plateau.`);
       g.dataset.pendingShareGroup = String(index);
 
       const card = document.createElementNS("http://www.w3.org/2000/svg", "rect");
@@ -4600,7 +4614,7 @@
 
       const centerY = y + cardH/2;
       const splatX = x + cardW*.30;
-      const equalsX = x + cardW*.50;
+      const dividerX = x + cardW*.50;
       const tokenX = x + cardW*.70;
       const splatR = Math.min(88, cardH*.30, cardW*.13);
       const tokenR = Math.min(64, cardH*.23, cardW*.10);
@@ -4609,7 +4623,15 @@
       splat.setAttribute("class", "splatShape");
       g.appendChild(splat);
       drawText(splatX, centerY + 5, displayedUnknown(), "splatText", g);
-      drawText(equalsX, centerY, "=", "pendingShareEquals", g);
+
+      const divider = document.createElementNS("http://www.w3.org/2000/svg", "line");
+      const dividerInset = Math.min(34, cardH*.16);
+      divider.setAttribute("x1", dividerX);
+      divider.setAttribute("x2", dividerX);
+      divider.setAttribute("y1", y + dividerInset);
+      divider.setAttribute("y2", y + cardH - dividerInset);
+      divider.setAttribute("class", "pendingShareDivider");
+      g.appendChild(divider);
 
       const token = document.createElementNS("http://www.w3.org/2000/svg", "circle");
       token.setAttribute("cx", tokenX);
@@ -4661,8 +4683,8 @@
     const packetLayout = applyUnitPacketPositions();
     const leftItems = renderPiecesForSide("left");
     const rightItems = renderPiecesForSide("right");
-    const leftPos = layoutItems(leftTray, leftItems);
-    const rightPos = layoutItems(rightTray, rightItems);
+    const leftPos = layoutItems(leftTray, leftItems, state.left);
+    const rightPos = layoutItems(rightTray, rightItems, state.right);
     drawUnitPacketBoxes(packetLayout);
     const selectedIds = selectedDeleteIds();
     const groupSelectedIds = selectedGroupIds();
@@ -4680,6 +4702,7 @@
 
   function openAddBothDialog(){
     if(!state) return;
+    dismissInitialEqualityInstruction();
     addBothInput.value = "";
     addBothFeedback.textContent = "";
     const canAddX = oppositeXEnabled();
@@ -4879,6 +4902,7 @@
   }
 
   function applyUnitShareTokens(){
+    dismissInitialEqualityInstruction();
     const situation = getUnitShareSituation();
     if(!situation){
       setInstruction("On peut faire des paquets quand il ne reste que plusieurs taches d’un côté et des jetons unitaires de l’autre.");
@@ -5181,11 +5205,11 @@
   document.getElementById("btnRandom").addEventListener("click", randomExercise);
   document.getElementById("btnReset").addEventListener("click", buildFromInputs);
   btnStageRandom.addEventListener("click", randomExercise);
-  toolDecompose.addEventListener("click", () => setActionMode("decompose"));
-  toolGroup.addEventListener("click", () => setActionMode("group"));
-  toolShare.addEventListener("click", () => setActionMode("share"));
+  toolDecompose.addEventListener("click", () => { dismissInitialEqualityInstruction(); setActionMode("decompose"); });
+  toolGroup.addEventListener("click", () => { dismissInitialEqualityInstruction(); setActionMode("group"); });
+  toolShare.addEventListener("click", () => { dismissInitialEqualityInstruction(); setActionMode("share"); });
   if(toolShareUnits) toolShareUnits.addEventListener("click", applyUnitShareTokens);
-  toolDelete.addEventListener("click", () => setActionMode("delete"));
+  toolDelete.addEventListener("click", () => { dismissInitialEqualityInstruction(); setActionMode("delete"); });
   toolAddBoth.addEventListener("click", openAddBothDialog);
   if(toolOppositeBoth) toolOppositeBoth.addEventListener("click", takeOppositeOfBothMembers);
   toolUndo.addEventListener("click", undo);
@@ -5453,6 +5477,7 @@
     groupSelection = [];
     pendingFusion = null;
     setActionMode(isImportedUnitMode() ? "delete" : "decompose");
+    showInitialEqualityInstruction();
   }
 
   function createImportedEquationState(payload){
@@ -5519,7 +5544,7 @@
     document.documentElement.classList.add("importModeRoot");
     document.body.classList.toggle("importUnitMode", unitMode);
     setActionMode(unitMode ? "delete" : "decompose");
-    setInstruction("");
+    showInitialEqualityInstruction();
     return true;
   }
 
