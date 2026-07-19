@@ -16,17 +16,26 @@ test("les crédits de l'accueil sont placés dans la carte", () => {
   );
 });
 
-test("les deux cartes partagent une hauteur minimale sur les écrans assez hauts", () => {
+test("les deux cartes partagent exactement le même cadre sur ordinateur", () => {
   assert.match(alignmentCss, /--mathsgo-entry-card-height:\s*770px/);
-  assert.match(homeCss, /min-height:\s*var\(--mathsgo-entry-card-height\)/);
-  assert.match(catalogueCss, /min-height:\s*var\(--mathsgo-entry-card-height\)/);
+  assert.match(
+    alignmentCss,
+    /--mathsgo-entry-top:\s*max\(16px, calc\(\(100dvh - var\(--mathsgo-entry-card-height\)\) \/ 2\)\)/
+  );
+  assert.match(homeCss, /height:\s*var\(--mathsgo-entry-card-height\)/);
+  assert.match(catalogueCss, /height:\s*var\(--mathsgo-entry-card-height\)/);
 });
 
 test("l'alignement ne redimensionne ni le logo, ni la scène, ni le bouton", () => {
   const alignmentRule = homeCss.match(
-    /@media \(min-width: 921px\) and \(max-width: 1599px\) and \(min-height: 821px\) \{[\s\S]*?\n\}/
+    /@media \(min-width: 921px\) and \(min-height: 821px\) \{[\s\S]*?\n\}/
   );
   assert.ok(alignmentRule);
   assert.doesNotMatch(alignmentRule[0], /brand-logo|maths-scene|btn-start/);
-  assert.doesNotMatch(alignmentRule[0], /\n\s*height:\s*var\(--mathsgo-entry-card-height\)/);
+});
+
+test("la redistribution remonte le contenu et descend les crédits", () => {
+  assert.match(homeCss, /padding-top:\s*38px/);
+  assert.match(homeCss, /padding-bottom:\s*24px/);
+  assert.match(homeCss, /\.hero-card > footer\s*\{\s*margin-top:\s*auto/);
 });

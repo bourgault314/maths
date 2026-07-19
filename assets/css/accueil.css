@@ -209,15 +209,26 @@ footer {
   line-height: 1.5;
 }
 
-/* Sur un écran d'ordinateur assez haut, la carte rejoint le même bord bas
-   que le catalogue. L'espace restant est réparti entre les éléments : aucune
-   taille de logo, d'illustration ou de bouton n'est modifiée. */
-@media (min-width: 921px) and (max-width: 1599px) and (min-height: 821px) {
+/* Sur ordinateur, les deux écrans d'entrée occupent exactement le même cadre.
+   Le logo remonte dans l'accueil et le pied de page descend, sans changer la
+   taille du logo, de la scène ou du bouton. */
+@media (min-width: 921px) and (min-height: 821px) {
   .hero-card {
-    min-height: var(--mathsgo-entry-card-height);
+    height: var(--mathsgo-entry-card-height);
     display: flex;
     flex-direction: column;
     align-items: center;
+    padding-top: 38px;
+    padding-bottom: 24px;
+  }
+
+  .hero-card > footer {
+    margin-top: auto;
+  }
+}
+
+@media (min-width: 1600px) and (min-height: 1000px) {
+  .hero-card {
     justify-content: space-between;
   }
 
