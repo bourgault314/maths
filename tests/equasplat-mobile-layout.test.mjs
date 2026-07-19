@@ -50,18 +50,33 @@ test("les opérations faites aux deux membres apparaissent entre les équations"
   assert.match(html, /Même opération dans les deux membres/);
   assert.match(html, /recordEquationStep\(operation\)/);
   assert.match(html, /recordEquationStep\("× \(−1\)"\)/);
-  assert.match(html, /`÷ \$\{n\}`/);
+  assert.match(html, /recordEquationStep\(`÷ \$\{pending\.count\}`\)/);
   assert.match(html, /finishAddBothAction\(operationDeltaLabel\(value\)\)/);
   assert.match(html, /finishAddBothAction\(operationDeltaLabel\(sign \* count, currentVar\(\)\)\)/);
 });
 
-test("le partage n’affiche une division que lorsqu’il produit la réponse", () => {
-  assert.match(html, /function finalShareOperationLabel\(opportunity, side, id, partCount\)/);
-  assert.match(html, /opportunity\.tokenSide !== side \|\| opportunity\.token\.id !== id/);
-  assert.match(html, /n < 2 \|\| n !== opportunity\.count/);
-  assert.match(html, /return `÷ \$\{n\}`/);
-  assert.match(html, /finalShareOperationLabel\(getShareOpportunity\(\), side, id, n\)/);
-  assert.doesNotMatch(html, /applyTokenSplit\(side, id, Array\.from\(\{length:n\},\(\)=>part\), "record", `÷ \$\{n\}`\)/);
+test("le partage final passe par des mini-égalités avant la division", () => {
+  assert.match(html, /function applySharedTokenSplit\(side, id, partCount, partValue\)/);
+  assert.match(html, /opportunity\.tokenSide === side[\s\S]*opportunity\.token\.id === id[\s\S]*opportunity\.count === count/);
+  assert.match(html, /state\.pendingShareConclusion = \{[\s\S]*shareBatch,[\s\S]*count,[\s\S]*each,[\s\S]*xSide:opportunity\.xSide,[\s\S]*tokenSide:opportunity\.tokenSide/s);
+  assert.match(html, /if\(state && state\.pendingShareConclusion\) return null;/);
+  assert.match(html, /function drawPendingShareGroups\(viewHeight\)/);
+  assert.match(html, /const cols = count <= 3 \? 1 : 2;/);
+  assert.match(html, /class", "pendingShareGroup"/);
+  assert.match(html, /<strong>\$\{count\} groupes identiques<\/strong> — touche-en un\./);
+  assert.match(html, /setTimeout\(\(\) => finalizePendingShare\(pending\.shareBatch\), 260\)/);
+  assert.match(html, /recordEquationStep\(`÷ \$\{pending\.count\}`\)/);
+  assert.match(html, /state\[pending\.xSide\] = \[\.\.\.removedX, makeX\(1\)\]/);
+  assert.match(html, /state\[pending\.tokenSide\] = \[\.\.\.removedTokens, makeToken\(pending\.each\)\]/);
+});
+
+test("un partage qui ne conclut pas reste écrit comme un produit", () => {
+  assert.match(html, /if\(opts\.shareBatch\) token\.shareBatch = opts\.shareBatch/);
+  assert.match(html, /const shareBatch = uid\(\)/);
+  assert.match(html, /makeToken\(each, \{shareBatch\}\)/);
+  assert.match(html, /`−\$\{batch\.length\} × \$\{Math\.abs\(value\)\}`/);
+  assert.match(html, /`\$\{batch\.length\} × \$\{formatSignedNumber\(value\)\}`/);
+  assert.match(html, /applySharedTokenSplit\(side, id, n, part\)/);
 });
 
 test("sur téléphone seule la zone bleue défile", () => {
