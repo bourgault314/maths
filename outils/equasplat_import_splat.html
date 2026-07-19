@@ -1917,7 +1917,7 @@
     }
 
     body.importMode .stage:not(:fullscreen) .topbar{
-      order:3;
+      order:1;
       box-sizing:border-box;
       width:100%;
       height:auto;
@@ -1972,7 +1972,7 @@
     }
 
     body.importMode .stage:not(:fullscreen) .instructionZone{
-      order:2;
+      order:3;
       height:42px;
       min-height:42px;
       max-height:42px;
@@ -1985,12 +1985,12 @@
     }
 
     body.importMode .stage:not(:fullscreen) .board{
-      order:1;
+      order:2;
       box-sizing:border-box;
       width:calc(100% + 12px);
-      height:clamp(350px,98vw,410px);
-      min-height:350px;
-      max-height:410px;
+      height:clamp(330px,92vw,380px);
+      min-height:330px;
+      max-height:380px;
       margin-left:-6px;
       margin-right:-6px;
       padding:2px;
@@ -2204,9 +2204,9 @@
 
   @media (max-width:760px) and (max-height:720px){
     body.importMode .stage:not(:fullscreen) .board{
-      height:285px;
-      min-height:285px;
-      max-height:285px;
+      height:270px;
+      min-height:270px;
+      max-height:270px;
     }
 
     body.importMode .stage:not(:fullscreen) .instructionZone{
