@@ -12,14 +12,15 @@ test("ÉquaSplat mobile place le plateau, les commandes puis l’équation dans 
   assert.match(html, /\.stage:not\(:fullscreen\) \.topbar\{\s*order:4;/);
 });
 
-test("ÉquaSplat mobile garde deux boutons par ligne et sépare les familles", () => {
-  assert.match(html, /grid-template-columns:repeat\(2,minmax\(0,1fr\)\)/);
-  assert.match(html, /\.toolRowObjects\{[^}]*rgba\(239,246,255,/s);
+test("ÉquaSplat mobile compacte les actions objet sur une ligne et sépare les familles", () => {
+  assert.match(html, /\.toolRowObjects\{\s*grid-template-columns:repeat\(3,minmax\(0,1fr\)\)/);
+  assert.match(html, /body\.importUnitMode \.stage:not\(:fullscreen\) \.toolRowObjects\{\s*grid-template-columns:1fr;/);
   assert.match(html, /\.toolRowEquation\{[^}]*rgba\(240,253,244,/s);
+  assert.match(html, /\.toolRowObjects\{[^}]*rgba\(239,246,255,/s);
   assert.match(html, /class="mobileLabel">Partager</);
   assert.match(html, /class="mobileLabel">Enlever des deux côtés</);
   assert.match(html, /class="mobileLabel">Ajouter des deux côtés</);
-  assert.match(html, /id="mobileRemovedDisplayMode"[^>]*class="mobileRemovedDisplayMode"/);
+  assert.doesNotMatch(html, /id="mobileRemovedDisplayMode"/);
   assert.match(html, /id="toolRestart"[^>]*>Recommencer<\/button>/);
 });
 
@@ -31,23 +32,34 @@ test("Annuler et Recommencer restent disponibles avec une flèche lisible", () =
   assert.match(html, /toolRestart\) toolRestart\.addEventListener\("click", restartImportedEquation\)/);
 });
 
-test("l’historique bleu garde une hauteur fixe et suit sa dernière ligne", () => {
+test("l’historique bleu réserve dès le départ une grande zone et suit sa dernière ligne", () => {
   assert.match(html, /equationHistory\.scrollTop = equationHistory\.scrollHeight/);
   assert.match(html, /\.equationHistory\{[^}]*overflow-y:auto;/s);
-  assert.match(html, /\.topbar\{\s*order:4;[^}]*height:136px;[^}]*min-height:136px;[^}]*max-height:136px;[^}]*border:2px solid #93c5fd;[^}]*background:#eff6ff;/s);
+  assert.match(html, /\.topbar\{\s*order:4;[^}]*height:clamp\(180px,28dvh,220px\);[^}]*min-height:180px;[^}]*max-height:220px;[^}]*border:2px solid #93c5fd;[^}]*background:#eff6ff;/s);
 });
 
-test("le plateau est agrandi tout en gardant une variante pour les écrans courts", () => {
-  assert.match(html, /\.board\{\s*order:1;[^}]*height:clamp\(290px,82vw,340px\);[^}]*min-height:290px;[^}]*max-height:340px;/s);
+test("le plateau mobile utilise tout son cadre avec des plateaux rectangulaires", () => {
+  assert.match(html, /\.board\{\s*order:1;[^}]*height:clamp\(350px,98vw,410px\);[^}]*min-height:350px;[^}]*max-height:410px;/s);
+  assert.match(html, /svg\.setAttribute\("viewBox", mobileLayout \? "0 0 1600 1480" : "0 0 1600 820"\)/);
+  assert.match(html, /\? \{x:34, y:54, w:724, h:1372\}/);
+  assert.match(html, /return isMobileImportLayout\(\) \? Math\.round\(radius \* 1\.18\) : radius/);
   assert.match(html, /@media \(max-width:760px\) and \(max-height:720px\)/);
-  assert.match(html, /\.board\{\s*height:240px;\s*min-height:240px;\s*max-height:240px;/);
-  assert.match(html, /\.topbar\{\s*height:110px;\s*min-height:110px;\s*max-height:110px;/);
+  assert.match(html, /\.board\{\s*height:285px;\s*min-height:285px;\s*max-height:285px;/);
+  assert.match(html, /\.topbar\{\s*height:140px;\s*min-height:140px;\s*max-height:140px;/);
 });
 
-test("l’import démarre en Caché mais respecte un paramètre explicite", () => {
-  assert.match(html, /payload\.removedDisplayMode \|\| payload\.removedDisplay \|\| payload\.removedMode \|\| "hide"/);
-  assert.match(html, /requestedRemovedDisplay === "keep" \|\| requestedRemovedDisplay === "hatched"/);
-  assert.match(html, /mobileRemovedDisplayModeEl\.value = mode/);
+test("l’import reste toujours en mode Caché sans contrôle mobile ou rapide", () => {
+  assert.match(html, /body\.importMode #stageRemovedDisplayMode\{\s*display:none;/);
+  assert.match(html, /syncRemovedDisplayControls\("hide"\)/);
+  assert.doesNotMatch(html, /requestedRemovedDisplay/);
+  assert.doesNotMatch(html, /mobileRemovedDisplayModeEl/);
+});
+
+test("la validation mobile garde toujours la même hauteur", () => {
+  assert.match(html, /\.mobileBottomControls \.actionZone\{\s*height:44px;\s*min-height:44px;\s*max-height:44px;/);
+  assert.match(html, /function stabilizeMobileActionZone\(\)/);
+  assert.match(html, /actionZone\.appendChild\(makePlaceholder\("Valider"\)\)/);
+  assert.match(html, /renderActions\(\);\s*stabilizeMobileActionZone\(\);/);
 });
 
 test("le contrôle des cookies ne se superpose plus aux commandes mobiles", () => {
