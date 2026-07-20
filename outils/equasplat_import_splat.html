@@ -1917,6 +1917,38 @@
     display:contents;
   }
 
+  .mobileConsentLink{
+    display:none;
+  }
+
+  .equasplatConsentFooter{
+    display:flex;
+    justify-content:center;
+    width:min(1240px,calc(100vw - 28px));
+    margin:-8px auto 18px;
+  }
+
+  .equasplatConsentLink{
+    min-height:32px;
+    padding:5px 7px;
+    border:0;
+    border-radius:8px;
+    background:transparent;
+    color:#526d8d;
+    font:700 .78rem "Segoe UI",system-ui,-apple-system,BlinkMacSystemFont,sans-serif;
+    text-decoration:underline;
+    text-underline-offset:3px;
+    cursor:pointer;
+  }
+
+  .equasplatConsentLink:hover,
+  .equasplatConsentLink:focus-visible{
+    background:rgba(255,255,255,.9);
+    color:#07336b;
+    outline:3px solid rgba(8,185,178,.3);
+    outline-offset:2px;
+  }
+
   @media (max-width:760px){
     html.importModeRoot{
       width:100%;
@@ -2144,6 +2176,28 @@
       justify-content:center;
     }
 
+    body.importMode .stage:not(:fullscreen) .mobileConsentLink{
+      display:inline-flex;
+      align-items:center;
+      justify-content:center;
+      align-self:center;
+      min-height:32px;
+      margin:1px auto 0;
+      padding:4px 8px;
+      border:0;
+      border-radius:8px;
+      background:transparent;
+      color:#526d8d;
+      font-size:12px;
+      font-weight:700;
+      text-decoration:underline;
+      text-underline-offset:3px;
+    }
+
+    body.importMode .equasplatConsentFooter{
+      display:none;
+    }
+
     body.importMode .stage:not(:fullscreen) .desktopLabel{
       display:none;
     }
@@ -2332,6 +2386,14 @@
     }
   }
 
+  @media (max-width:760px) and (max-height:680px){
+    body.importMode .stage:not(:fullscreen) .board{
+      height:220px;
+      min-height:220px;
+      max-height:220px;
+    }
+  }
+
 </style>
 <link rel="stylesheet" href="../assets/css/consentement.css">
 <script defer src="../assets/js/consentement.js"></script>
@@ -2458,10 +2520,15 @@
       </div>
 
       <div class="actionZone" id="actionZone"></div>
+      <button class="mobileConsentLink" type="button" data-mathsgo-consent-open aria-label="Gérer mes choix de cookies" onclick="window.mathsgoConsentement &amp;&amp; window.mathsgoConsentement.ouvrir()">Gérer mes cookies</button>
     </div>
     <div class="solution" id="solution"></div>
   </section>
 </main>
+
+<footer class="equasplatConsentFooter">
+  <button class="equasplatConsentLink" type="button" data-mathsgo-consent-open aria-label="Gérer mes choix de cookies" onclick="window.mathsgoConsentement &amp;&amp; window.mathsgoConsentement.ouvrir()">Gérer mes cookies</button>
+</footer>
 
 <dialog id="decomposeDialog">
   <div class="dialogInner">

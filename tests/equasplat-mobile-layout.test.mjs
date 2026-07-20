@@ -229,5 +229,11 @@ test("la validation mobile garde toujours la même hauteur", () => {
 
 test("le lien de gestion des cookies reste accessible dans ÉquaSplat import", () => {
   assert.doesNotMatch(html, /body\.importMode \.mg-consent-manage-slot,\s*body\.importMode \.mg-consent-manage\{\s*display:none !important;/);
+  assert.match(html, /<div class="actionZone" id="actionZone"><\/div>\s*<button class="mobileConsentLink"[^>]*data-mathsgo-consent-open[^>]*>Gérer mes cookies<\/button>/);
+  assert.match(html, /<footer class="equasplatConsentFooter">\s*<button class="equasplatConsentLink"[^>]*data-mathsgo-consent-open/);
+  assert.match(html, /\.mobileConsentLink\{\s*display:none;/);
+  assert.match(html, /\.stage:not\(:fullscreen\) \.mobileConsentLink\{\s*display:inline-flex;[^}]*min-height:32px;/s);
+  assert.match(html, /body\.importMode \.equasplatConsentFooter\{\s*display:none;/);
+  assert.match(html, /@media \(max-width:760px\) and \(max-height:680px\)[\s\S]*?\.board\{\s*height:220px;\s*min-height:220px;\s*max-height:220px;/);
   assert.match(html, /document\.documentElement\.classList\.add\("importModeRoot"\)/);
 });
