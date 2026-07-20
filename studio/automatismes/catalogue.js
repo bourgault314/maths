@@ -63,7 +63,7 @@
     ['relations-numeriques', 'dnb_09', 10, 'Double, triple, moitié, prédécesseur, successeur et carré', ['4e', '3e', 'DNB'], 'numbers'],
     ['reduire-expression-litterale', 'dnb_10', 11, 'Simplifier des expressions littérales', ['4e', '3e', 'DNB'], 'numbers'],
     ['substitution-expression', 'dnb_11', 12, "Calculer la valeur d'une expression algébrique", ['4e', '3e', 'DNB'], 'numbers'],
-    ['developper-factoriser', 'dnb_12', 13, 'Développer et factoriser', ['4e', '3e', 'DNB'], 'numbers'],
+    ['developper-factoriser', 'dnb_12', 13, 'Développer et factoriser', ['5e', '4e', '3e', 'DNB'], 'numbers'],
     ['resoudre-equations', 'dnb_13', 14, 'Résoudre des équations', ['4e', '3e', 'DNB'], 'numbers'],
     ['lire-abscisse', 'dnb_14', 15, 'Lire une abscisse sur une droite graduée', ['4e', '3e', 'DNB'], 'numbers'],
     ['lire-coordonnees', 'dnb_15', 16, 'Lire des coordonnées dans un repère', ['4e', '3e', 'DNB'], 'geometry'],
