@@ -168,7 +168,9 @@
     const rootStyle = window.getComputedStyle(document.documentElement);
     const viewportLocked = [bodyStyle.overflow, bodyStyle.overflowY, rootStyle.overflow, rootStyle.overflowY]
       .some(function (value) { return value === "hidden" || value === "clip"; });
-    manageSlot.classList.toggle("mg-consent-manage-slot--fixed", viewportLocked);
+    const horizontalFlexLayout = ["flex", "inline-flex"].indexOf(bodyStyle.display) !== -1
+      && (bodyStyle.flexDirection === "row" || bodyStyle.flexDirection === "row-reverse");
+    manageSlot.classList.toggle("mg-consent-manage-slot--fixed", viewportLocked || horizontalFlexLayout);
 
     manageButton = document.createElement("button");
     manageButton.type = "button";
