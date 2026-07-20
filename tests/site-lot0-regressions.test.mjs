@@ -8,6 +8,14 @@ const catalogueScript = await readFile(new URL("../assets/js/catalogue-refonte.j
 const homePage = await readFile(new URL("../index.html", import.meta.url), "utf8");
 const automatismesPage = await readFile(new URL("../auto/index.html", import.meta.url), "utf8");
 const parentNavigationScript = await readFile(new URL("../assets/js/tool-parent-navigation.js", import.meta.url), "utf8");
+const restoredPrinterPages = Object.fromEntries(await Promise.all([
+  "outils/automatismes/CM_Livret_A5.html",
+  "outils/fabrication_materiel/cartes_premiers_1_100.html",
+  "outils/fabrication_materiel/numeration_decimale_maker.html",
+  "outils/fractions/bandes_maker_v2.html",
+  "outils/fractions/disque_maker.html",
+  "outils/tuiles_algebriques/generateur_exercices_calcul_litteral.html",
+].map(async (path) => [path, await readFile(new URL(`../${path}`, import.meta.url), "utf8")])));
 const returnPages = Object.fromEntries(await Promise.all([
   "outils/plateaux_manipulation/mur_diviseurs.html",
   "outils/plateaux_manipulation/mur_diviseurs_pgcd.html",
@@ -20,19 +28,26 @@ const returnPages = Object.fromEntries(await Promise.all([
   "outils/labo-des-regularites.html",
 ].map(async (path) => [path, await readFile(new URL(`../${path}`, import.meta.url), "utf8")])));
 
-test("le bouton Cookies injecté ne flotte que sur les écrans verrouillés", () => {
+test("le bouton Cookies injecté ne prend jamais toute la hauteur d'une page flex", () => {
   assert.match(consentScript, /const viewportLocked = \[bodyStyle\.overflow, bodyStyle\.overflowY, rootStyle\.overflow, rootStyle\.overflowY\]/);
   assert.match(consentScript, /manageSlot\.classList\.toggle\("mg-consent-manage-slot--fixed", viewportLocked\)/);
   assert.match(
     consentStyles,
-    /\.mg-consent-manage-slot\s*\{[^}]*position:\s*relative;[^}]*flex:\s*0\s+0\s+100%;/s,
-    "le conteneur injecté doit rester dans le pied des pages ordinaires",
+    /\.mg-consent-manage-slot\s*\{[^}]*position:\s*relative;[^}]*flex:\s*0\s+0\s+auto;/s,
+    "le conteneur injecté doit garder sa hauteur de contenu dans les pages flex",
   );
+  assert.doesNotMatch(consentStyles, /\.mg-consent-manage-slot\s*\{[^}]*flex:\s*0\s+0\s+100%;/s);
   assert.match(
     consentStyles,
     /\.mg-consent-manage-slot--fixed\s*\{[^}]*position:\s*fixed;/s,
     "seuls les écrans sans défilement utilisent le secours fixe",
   );
+});
+
+test("les six générateurs retrouvent leur présentation autonome", () => {
+  for (const [path, html] of Object.entries(restoredPrinterPages)) {
+    assert.doesNotMatch(html, /printer-shell\.(?:css|js)/, path);
+  }
 });
 
 test("Automatismes garde les cookies dans son pied de page compact", () => {
@@ -97,6 +112,7 @@ test("les retours injectés connaissent les parents modernes des outils classés
     "/outils/index.html?domain=jeux-recherches&notion=strategie",
     "/outils/index.html?domain=nombres-calculs&notion=divisibilite",
     "/outils/index.html?domain=nombres-calculs&notion=numeration",
+    "/outils/index.html?domain=nombres-calculs&notion=puissances",
     "/outils/index.html?domain=algebre&notion=patterns",
   ]) {
     assert.match(parentNavigationScript, new RegExp(parent.replace(/[?]/g, "\\?")));
@@ -107,4 +123,8 @@ test("les retours injectés connaissent les parents modernes des outils classés
     parentNavigationScript,
     /plateaux_manipulation\\\/\(\?:numeration_decimale\|glisse_nombres_decimaux\|glisse_entiers_flex\)\\\.html\$\/[^\n]+notion=numeration[^\n]+"Numération"/,
   );
+  assert.doesNotMatch(parentNavigationScript, /"\/outils\/plateaux_manipulation\/"/);
+  assert.match(parentNavigationScript, /function makeHistoryAware\(link\)/);
+  assert.match(parentNavigationScript, /window\.history\.back\(\)/);
+  assert.match(parentNavigationScript, /window\.self !== window\.top[\s\S]*?link\.target = "_top"/);
 });
