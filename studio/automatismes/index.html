@@ -19,7 +19,7 @@
   :root{
     --page:#f6f8fb; --papier:#ffffff; --encre:#10294a; --bleu:#063f86;
     --turquoise:#08b9b2; --orange:#f58220; --attenue:#637287;
-    --turquoise-contraste:#00847f; --orange-contraste:#c45100;
+    --turquoise-contraste:#00847f;
     --ligne:#dce5ef; --ligne-bouton:#cfdcee; --fond-doux:#f5f9fc;
   }
   *{box-sizing:border-box}
@@ -58,7 +58,7 @@
   .pastille-etape{display:inline-grid;place-items:center;width:24px;height:24px;flex:none;
     border-radius:8px;color:#fff;font-size:12.5px;font-weight:900;
     box-shadow:0 3px 8px rgba(6,63,134,.13)}
-  .pastille-reglages{background:var(--orange-contraste)}
+  .pastille-reglages{background:var(--orange)}
   .pastille-modules{background:var(--turquoise-contraste)}
 
   /* ————— Réglages : deux colonnes lisibles, sans changer les sélecteurs V10.
@@ -82,7 +82,7 @@
   /* DNB n'est pas un niveau de classe : trait de séparation, encre orange */
   .separation-epreuve{width:1px;align-self:stretch;margin:4px 3px;background:var(--ligne);flex:none}
   .segments .bouton-epreuve{display:flex;flex-direction:row;align-items:center;justify-content:center;
-    gap:7px;line-height:1;padding:2px 11px;color:var(--orange-contraste)}
+    gap:7px;line-height:1;padding:2px 11px;color:var(--orange)}
   /* Sur ordinateur, DNB accueille aussi l’icône « sans calculatrice » :
      une part légèrement plus large garde l’ensemble centré et non rogné. */
   @media(min-width:651px){
@@ -95,8 +95,8 @@
   .calc-barree{display:none;width:17px;height:17px;flex:none}
   .segments .bouton-epreuve.est-actif .calc-barree{display:block}
   .segments .bouton-epreuve:hover{background:#fff8f1}
-  .segments .bouton-epreuve.est-actif{background:var(--orange-contraste);color:#fff;
-    box-shadow:0 3px 10px rgba(196,81,0,.30)}
+  .segments .bouton-epreuve.est-actif{background:var(--orange);color:#fff;
+    box-shadow:0 3px 10px rgba(245,130,32,.28)}
   .segments .bouton-epreuve:focus-visible{outline-color:rgba(245,130,32,.5)}
 
   /* ————— Choix des automatismes ————— */
@@ -173,15 +173,15 @@
     text-overflow:ellipsis;white-space:nowrap}
   .est-vide .resume strong{color:var(--attenue);font-weight:600}
   #boutonLancer{position:relative;border:0;cursor:pointer;font:inherit;font-weight:700;
-    font-size:15.5px;color:#fff;background:linear-gradient(180deg,var(--orange-contraste),#9f3f00);
+    font-size:15.5px;color:#fff;background:linear-gradient(180deg,#ff9a3d,var(--orange));
     border-radius:999px;min-width:248px;min-height:48px;padding:11px 44px;
-    box-shadow:0 10px 24px rgba(159,63,0,.28);transition:transform .1s,box-shadow .12s}
+    box-shadow:0 10px 24px rgba(245,130,32,.30);transition:transform .1s,box-shadow .12s}
   #boutonLancer .calc-lancement{display:none;position:absolute;left:18px;top:50%;
     width:20px;height:20px;transform:translateY(-50%)}
   #boutonLancer.avec-calculatrice-barree .calc-lancement{display:block}
   #boutonLancer .texte-lancement{display:block}
   #boutonLancer:hover:not(:disabled){transform:translateY(-1px);
-    box-shadow:0 14px 28px rgba(159,63,0,.34)}
+    box-shadow:0 14px 28px rgba(245,130,32,.36)}
   #boutonLancer:active:not(:disabled){transform:translateY(1px);box-shadow:none}
   #boutonLancer:focus-visible{outline:3px solid rgba(245,130,32,.5);outline-offset:3px}
   #boutonLancer:disabled{background:#cdd7e4;box-shadow:none;cursor:not-allowed}
@@ -266,7 +266,7 @@
               <circle cx="9.4" cy="16.6" r="1.05" fill="currentColor"/>
               <circle cx="12.2" cy="16.6" r="1.05" fill="currentColor"/>
               <circle cx="15" cy="16.6" r="1.05" fill="currentColor"/>
-              <path d="M3.6 21.4 20.4 2.6" fill="none" stroke="#c45100" stroke-width="4.6" stroke-linecap="round"/>
+              <path d="M3.6 21.4 20.4 2.6" fill="none" stroke="#f58220" stroke-width="4.6" stroke-linecap="round"/>
               <path d="M3.6 21.4 20.4 2.6" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
             </svg>
           </button>
@@ -334,7 +334,7 @@
         <circle cx="9.4" cy="16.6" r="1.05" fill="currentColor"/>
         <circle cx="12.2" cy="16.6" r="1.05" fill="currentColor"/>
         <circle cx="15" cy="16.6" r="1.05" fill="currentColor"/>
-        <path d="M3.6 21.4 20.4 2.6" fill="none" stroke="#ad4600" stroke-width="4.6" stroke-linecap="round"/>
+        <path d="M3.6 21.4 20.4 2.6" fill="none" stroke="#f58220" stroke-width="4.6" stroke-linecap="round"/>
         <path d="M3.6 21.4 20.4 2.6" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
       </svg>
       <span class="texte-lancement">Lancer l’entraînement</span>
