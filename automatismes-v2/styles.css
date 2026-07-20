@@ -1022,7 +1022,7 @@ button.choix:hover:not(:disabled) {
   }
 
   .barre-enseignant {
-    grid-template-columns: repeat(4, minmax(0, 1fr));
+    grid-template-columns: repeat(5, minmax(0, 1fr));
   }
 
   .panneau {
@@ -1057,6 +1057,73 @@ button.choix:hover:not(:disabled) {
 }
 
 @media (min-width: 900px) {
+  .ecran-pret {
+    width: min(100% - 64px, 800px);
+  }
+
+  .ecran-pret::before {
+    width: 80px;
+    height: 7px;
+    margin-bottom: 28px;
+  }
+
+  .ecran-pret .marque {
+    margin-bottom: 28px;
+    font-size: 40px;
+  }
+
+  .ecran-pret .surtitre {
+    font-size: 14px;
+  }
+
+  .ecran-pret h1 {
+    font-size: clamp(44px, 4vw, 64px);
+  }
+
+  .ecran-pret .resume-seance {
+    padding: 30px;
+  }
+
+  .ecran-pret .resume-seance strong {
+    font-size: 26px;
+  }
+
+  .ecran-pret .resume-seance span,
+  .ecran-pret .bouton-large {
+    font-size: 19px;
+  }
+
+  .ecran-pret .bouton-large {
+    min-height: 60px;
+  }
+
+  .ecran-bilan {
+    width: min(100% - 64px, 800px);
+  }
+
+  .mode-interactif .carte-question {
+    width: min(100% - 32px, 900px);
+    padding: 32px 48px;
+  }
+
+  .mode-interactif .carte-question h1 {
+    max-width: 780px;
+    font-size: 38px;
+  }
+
+  .mode-interactif .nombre-question {
+    font-size: 96px;
+  }
+
+  .mode-interactif .precision {
+    font-size: 18px;
+  }
+
+  .mode-interactif .choix {
+    min-height: 72px;
+    font-size: 30px;
+  }
+
   .mode-diaporama {
     height: 100vh;
     min-height: 100vh;
@@ -1067,7 +1134,19 @@ button.choix:hover:not(:disabled) {
   }
 
   .mode-diaporama .entete-seance {
-    min-height: 56px;
+    min-height: 72px;
+    padding: 10px 24px;
+    font-size: 20px;
+  }
+
+  .mode-diaporama .bouton-entete {
+    min-height: 52px;
+    padding: 10px 18px;
+    font-size: 18px;
+  }
+
+  .mode-diaporama .progression {
+    height: 6px;
   }
 
   .mode-diaporama .espace-lecteur {
@@ -1101,7 +1180,7 @@ button.choix:hover:not(:disabled) {
   }
 
   .mode-diaporama .grille-projection {
-    grid-template-columns: repeat(5, minmax(0, 1fr));
+    grid-template-columns: repeat(6, minmax(0, 1fr));
     gap: clamp(8px, 1vw, 16px);
   }
 
@@ -1150,7 +1229,7 @@ button.choix:hover:not(:disabled) {
     position: static;
     width: min(100% - 32px, 1440px);
     margin: 0 auto 12px;
-    grid-template-columns: auto repeat(4, minmax(0, 1fr));
+    grid-template-columns: auto repeat(5, minmax(0, 1fr));
   }
 
   .mode-diaporama .libelle-enseignant {
@@ -1159,8 +1238,12 @@ button.choix:hover:not(:disabled) {
   }
 
   .mode-diaporama .barre-enseignant button {
-    min-height: 48px;
-    font-size: 16px;
+    min-height: 64px;
+    font-size: 20px;
+  }
+
+  .mode-diaporama .libelle-enseignant {
+    font-size: 14px;
   }
 
   .mode-diaporama.panneau-ouvert .espace-lecteur {

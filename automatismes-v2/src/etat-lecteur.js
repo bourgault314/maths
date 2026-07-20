@@ -1,7 +1,7 @@
 import {
   SCHEMA_SEANCE,
   validerSeance,
-} from "../../packages/contrats/src/seance.js";
+} from "../../packages/contrats/src/seance.js?v=6";
 import {
   SCHEMA_TRACE_REPONSE,
   validerTraceReponse,
@@ -31,7 +31,7 @@ export {
 };
 export const NOMBRE_QUESTIONS_PAR_DEFAUT = 10;
 
-const MODES = new Set(["interactif", "diaporama"]);
+const MODES = new Set(["entrainement", "classe"]);
 const AIDES = new Set(["ouverte", "disponible", "indisponible"]);
 
 function exigerConformite(nom, controle) {
@@ -41,9 +41,13 @@ function exigerConformite(nom, controle) {
 }
 
 function normaliserConfiguration(configuration = {}) {
-  const mode = configuration.mode === "projection"
-    ? "diaporama"
-    : configuration.mode ?? "interactif";
+  const modesCompatibles = new Map([
+    ["interactif", "entrainement"],
+    ["diaporama", "classe"],
+    ["projection", "classe"],
+  ]);
+  const modeBrut = configuration.mode ?? "entrainement";
+  const mode = modesCompatibles.get(modeBrut) ?? modeBrut;
   const aide = configuration.aide ?? "disponible";
   const nombreQuestions = configuration.nombreQuestions
     ?? NOMBRE_QUESTIONS_PAR_DEFAUT;
@@ -172,9 +176,9 @@ export function nombreReussites(etat) {
 export function basculerChoix(etat, idChoix) {
   const question = questionCourante(etat);
   if (
-    etat.configuration.mode !== "interactif"
-    || !question
+    !question
     || etat.validation !== null
+    || etat.reponseRevelee
   ) {
     return etat;
   }
@@ -208,9 +212,9 @@ export function basculerChoix(etat, idChoix) {
 export function validerSelection(etat) {
   const question = questionCourante(etat);
   if (
-    etat.configuration.mode !== "interactif"
-    || !question
+    !question
     || etat.validation !== null
+    || etat.reponseRevelee
   ) {
     return etat;
   }
@@ -220,6 +224,13 @@ export function validerSelection(etat) {
   }
 
   const juste = estSelectionExacte(question.reponse.attendus, etat.selection);
+  etat.validation = { juste };
+  etat.erreurValidation = "";
+
+  if (etat.configuration.mode === "classe") {
+    return etat;
+  }
+
   const indexQuestion = etat.seance.etat.indexQuestion;
   const trace = {
     schema: SCHEMA_TRACE_REPONSE,
@@ -237,8 +248,6 @@ export function validerSelection(etat) {
   };
   exigerConformite("trace", validerTraceReponse(trace));
   etat.traces.push(trace);
-  etat.validation = { juste };
-  etat.erreurValidation = "";
   return etat;
 }
 
@@ -309,7 +318,7 @@ export function basculerChiffreAide(etat, index) {
 }
 
 export function revelerReponse(etat) {
-  if (etat.configuration.mode === "diaporama" && questionCourante(etat)) {
+  if (etat.configuration.mode === "classe" && questionCourante(etat)) {
     etat.reponseRevelee = true;
   }
   return etat;
@@ -317,7 +326,7 @@ export function revelerReponse(etat) {
 
 export function ouvrirCorrection(etat) {
   if (!questionCourante(etat)) return etat;
-  if (etat.configuration.mode === "interactif" && etat.validation === null) {
+  if (etat.configuration.mode === "entrainement" && etat.validation === null) {
     return etat;
   }
   etat.correctionOuverte = true;
@@ -333,7 +342,7 @@ export function fermerCorrection(etat) {
 
 export function passerQuestionSuivante(etat) {
   if (etat.seance.etat.phase !== "en-cours") return etat;
-  if (etat.configuration.mode === "interactif" && etat.validation === null) {
+  if (etat.configuration.mode === "entrainement" && etat.validation === null) {
     return etat;
   }
   const prochainIndex = etat.seance.etat.indexQuestion + 1;
