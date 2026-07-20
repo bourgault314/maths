@@ -1,8 +1,8 @@
 const MATHSGO_SCHEMA_VERSION=1;
-const MATHSGO_GENERATOR_VERSION='1.15.0';
-const MATHSGO_APP_VERSION='1.18';
+const MATHSGO_GENERATOR_VERSION='1.17.0';
+const MATHSGO_APP_VERSION='1.19';
 const MATHSGO_SERIES_PREFIX='MG1-';
-const MATHSGO_CANONICAL_URL='https://mathsgo.re/auto/';
+const MATHSGO_CANONICAL_URL='https://bourgault314.github.io/mathsgo-automatismes-beta/auto/';
 const MATHSGO_ALLOWED_LEVELS=new Set(['5e','4e','3e','DNB']);
 const MATHSGO_ALLOWED_COUNTS=new Set([5,10,15,20]);
 const MATHSGO_ALLOWED_VISUAL_MODES=new Set(['with','without']);
@@ -299,13 +299,14 @@ function mathsgoSetSegmentedValue(id,value){
 
 function applySeriesDefinitionToUi(definition){
   const normalized=normalizeSeriesDefinition(definition);
+  const legacyIds=new Set(normalized.moduleIds.map(mathsgoLegacyModuleId));
+  if(typeof replaceRememberedModuleSelections==='function') replaceRememberedModuleSelections(legacyIds);
   mathsgoSetSegmentedValue('level',normalized.level);
   mathsgoSetSegmentedValue('visualMode',normalized.visualMode);
   mathsgoSetSegmentedValue('experienceMode',normalized.experienceMode);
   mathsgoSetSegmentedValue('count',normalized.questionCount);
   document.getElementById('seed').value=String(normalized.seed);
   renderModuleList();
-  const legacyIds=new Set(normalized.moduleIds.map(mathsgoLegacyModuleId));
   document.querySelectorAll('.modcb').forEach(input=>{input.checked=legacyIds.has(input.value);});
   updateThemeCounts();
   if(typeof updateGenerateButtonLabel==='function') updateGenerateButtonLabel();
