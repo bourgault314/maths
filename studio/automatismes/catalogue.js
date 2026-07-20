@@ -59,7 +59,7 @@
     ['nombre-formes-equivalentes', 'dnb_05', 6, 'Un même nombre sous plusieurs formes', ['4e', '3e', 'DNB'], 'numbers'],
     ['notation-scientifique', 'dnb_06', 7, 'Notation scientifique', ['4e', '3e', 'DNB'], 'numbers'],
     ['carres-entiers', 'dnb_07', 8, 'Carrés des entiers de 1 à 12', ['4e', '3e', 'DNB'], 'numbers'],
-    ['criteres-divisibilite', 'dnb_08', 9, 'Critères de divisibilité par 2, 3, 5, 9', ['4e', '3e', 'DNB'], 'numbers'],
+    ['criteres-divisibilite', 'dnb_08', 9, 'Critères de divisibilité par 2, 3, 5, 9 et 10', ['4e', '3e', 'DNB'], 'numbers'],
     ['relations-numeriques', 'dnb_09', 10, 'Double, triple, moitié, prédécesseur, successeur et carré', ['4e', '3e', 'DNB'], 'numbers'],
     ['reduire-expression-litterale', 'dnb_10', 11, 'Simplifier des expressions littérales', ['4e', '3e', 'DNB'], 'numbers'],
     ['substitution-expression', 'dnb_11', 12, "Calculer la valeur d'une expression algébrique", ['4e', '3e', 'DNB'], 'numbers'],
