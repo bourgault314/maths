@@ -1,7 +1,7 @@
 const MODULE_DNB_08 = {
   "id": "dnb_08",
   "num": 8,
-  "title": "Critères de divisibilité par 2, 3, 5, 9",
+  "title": "Critères de divisibilité par 2, 3, 5, 9 et 10",
   "level_tags": [
     "4e",
     "3e",
@@ -12,7 +12,7 @@ const MODULE_DNB_08 = {
   "questions": [
     {
       "n": 1,
-      "statement": "$$${2*P}$$ est divisible par :&&par 2&&par 3&&par 5&&par 9&&",
+      "statement": "$$${2*P}$$ est divisible par :&&par 2&&par 3&&par 5&&par 9&&par 10&&",
       "answer": "[\"1\"]",
       "options": {
         "formula_code": "setNB(1)\nP=[101,103,107,109,113,127,131,137,139,149,151,157,163,167,173,179,181,191,193,197,199,211,223,227,229,233,239,241,251,257][RD(29)]"
@@ -21,7 +21,7 @@ const MODULE_DNB_08 = {
     },
     {
       "n": 2,
-      "statement": "$$${3*P}$$ est divisible par :&&par 2&&par 3&&par 5&&par 9&&",
+      "statement": "$$${3*P}$$ est divisible par :&&par 2&&par 3&&par 5&&par 9&&par 10&&",
       "answer": "[\"2\"]",
       "options": {
         "formula_code": "setNB(1)\nP=[101,103,107,109,113,127,131,137,139,149,151,157,163,167,173,179,181,191,193,197,199,211,223,227,229,233,239,241,251,257][RD(29)]"
@@ -30,7 +30,7 @@ const MODULE_DNB_08 = {
     },
     {
       "n": 3,
-      "statement": "$$${5*P}$$ est divisible par :&&par 2&&par 3&&par 5&&par 9&&",
+      "statement": "$$${5*P}$$ est divisible par :&&par 2&&par 3&&par 5&&par 9&&par 10&&",
       "answer": "[\"3\"]",
       "options": {
         "formula_code": "setNB(1)\nP=[101,103,107,109,113,127,131,137,139,149,151,157,163,167,173,179,181,191,193,197,199,211,223,227,229,233,239,241,251,257][RD(29)]"
@@ -39,7 +39,7 @@ const MODULE_DNB_08 = {
     },
     {
       "n": 4,
-      "statement": "$$${9*P}$$ est divisible par :&&par 2&&par 3&&par 5&&par 9&&",
+      "statement": "$$${9*P}$$ est divisible par :&&par 2&&par 3&&par 5&&par 9&&par 10&&",
       "answer": "[\"2\",\"4\"]",
       "options": {
         "formula_code": "setNB(1)\nP=[101,103,107,109,113,127,131,137,139,149,151,157,163,167,173,179,181,191,193,197,199,211,223,227,229,233,239,241,251,257][RD(29)]"
@@ -48,8 +48,8 @@ const MODULE_DNB_08 = {
     },
     {
       "n": 5,
-      "statement": "$$${10*P}$$ est divisible par :&&par 2&&par 3&&par 5&&par 9&&",
-      "answer": "[\"1\",\"3\"]",
+      "statement": "$$${10*P}$$ est divisible par :&&par 2&&par 3&&par 5&&par 9&&par 10&&",
+      "answer": "[\"1\",\"3\",\"5\"]",
       "options": {
         "formula_code": "setNB(1)\nP=[101,103,107,109,113,127,131,137,139,149,151,157,163,167,173,179,181,191,193,197,199,211,223,227,229,233,239,241,251,257][RD(29)]"
       },
@@ -57,7 +57,7 @@ const MODULE_DNB_08 = {
     },
     {
       "n": 6,
-      "statement": "$$${6*P}$$ est divisible par :&&par 2&&par 3&&par 5&&par 9&&",
+      "statement": "$$${6*P}$$ est divisible par :&&par 2&&par 3&&par 5&&par 9&&par 10&&",
       "answer": "[\"1\",\"2\"]",
       "options": {
         "formula_code": "setNB(1)\nP=[101,103,107,109,113,127,131,137,139,149,151,157,163,167,173,179,181,191,193,197,199,211,223,227,229,233,239,241,251,257][RD(29)]"
@@ -66,7 +66,7 @@ const MODULE_DNB_08 = {
     },
     {
       "n": 7,
-      "statement": "Le nombre $$${15*P}$$ est divisible par :&&par 3&&par 5&&par 9&&par 2&&",
+      "statement": "Le nombre $$${15*P}$$ est divisible par :&&par 3&&par 5&&par 9&&par 2&&par 10&&",
       "answer": "[\"1\",\"2\"]",
       "options": {
         "formula_code": "setNB(1)\nP=[101,103,107,109,113,127,131,137,139,149,151,157,163,167,173,179,181,191,193,197,199,211,223,227,229,233,239,241,251,257][RD(29)]"

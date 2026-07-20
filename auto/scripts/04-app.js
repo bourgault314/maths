@@ -267,6 +267,7 @@ function visualPolicyForQuestion(m,q){
   if(pedagogyType&&pedagogyType.visual&&pedagogyType.visual.policy){
     return pedagogyType.visual.policy;
   }
+  if(q&&q.options&&q.options.visual_policy) return String(q.options.visual_policy);
   if(m.id==='dnb_01'){
     return q.options&&q.options.module01_kind==='read_visual'?'essential':'optional';
   }
@@ -472,21 +473,6 @@ function buildBalancedQuiz(mods,count){
 
 let currentSeriesDefinition=null;
 
-function writePreparationWindow(targetWindow){
-  if(!targetWindow||targetWindow.closed) return;
-  targetWindow.document.open();
-  targetWindow.document.write('<!doctype html><html lang="fr"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>Préparation — maths&go</title><style>html,body{min-height:100%;margin:0}body{display:grid;place-items:center;padding:24px;background:#f5f7fb;color:#10244a;font:600 16px Arial,sans-serif}.card{width:min(100%,360px);padding:28px 24px;border:1px solid #dbe4f3;border-radius:18px;background:#fff;box-shadow:0 10px 30px rgba(16,36,74,.09);text-align:center}.mark{display:inline-grid;place-items:center;width:38px;height:38px;margin-bottom:14px;border:4px solid #dbe4f3;border-top-color:#06b3ad;border-radius:50%;animation:spin .8s linear infinite}@keyframes spin{to{transform:rotate(360deg)}}p{margin:0;color:#61708f;font-size:.95rem;line-height:1.4}</style></head><body><main class="card"><span class="mark" aria-hidden="true"></span><p>Préparation de la série…</p></main></body></html>');
-  targetWindow.document.close();
-}
-
-function writePreparationError(targetWindow,message){
-  if(!targetWindow||targetWindow.closed) return;
-  const safe=String(message||'Impossible de préparer la série.').replace(/[&<>"']/g,character=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[character]));
-  targetWindow.document.open();
-  targetWindow.document.write('<!doctype html><html lang="fr"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>Erreur — maths&go</title><style>body{margin:0;padding:24px;background:#f5f7fb;color:#10244a;font:16px Arial,sans-serif}.card{max-width:520px;margin:10vh auto;padding:24px;border:1px solid #f1caca;border-radius:18px;background:#fff}.card strong{color:#9d2f2f}</style></head><body><main class="card"><strong>La série n’a pas pu être préparée.</strong><p>'+safe+'</p></main></body></html>');
-  targetWindow.document.close();
-}
-
 function generateFromDefinition(definition,{sameTab=false,targetWindow=null}={}){
   const normalized=normalizeSeriesDefinition(definition);
   const mods=modulesForSeriesDefinition(normalized);
@@ -501,21 +487,14 @@ function generateFromDefinition(definition,{sameTab=false,targetWindow=null}={})
 
 async function generate(){
   if(modulePreparationInProgress) return;
-  const targetWindow=window.open('', '_blank');
-  if(!targetWindow){
-    alert('La nouvelle fenêtre a été bloquée. Autorise les popups pour cette page.');
-    return;
-  }
-  writePreparationWindow(targetWindow);
   modulePreparationInProgress=true;
   updateSetupActions();
   try{
     const definition=readSeriesDefinitionFromUi();
     await loadModulesForIds(definition.moduleIds.map(mathsgoLegacyModuleId));
-    if(generateFromDefinition(definition,{targetWindow})===false&&!targetWindow.closed) targetWindow.close();
+    generateFromDefinition(definition,{sameTab:true});
   }catch(error){
     const message=error&&error.message?error.message:'Impossible de préparer cette série.';
-    writePreparationError(targetWindow,message);
     alert(message);
   }finally{
     modulePreparationInProgress=false;
@@ -546,6 +525,9 @@ function updateSetupActions(){
   const generateButton=document.getElementById('generateButton');
   const generateCount=document.getElementById('generateCount');
   const shareButton=document.getElementById('shareButton');
+  const selectAllButton=document.getElementById('selectAllButton');
+  const selectNoneButton=document.getElementById('selectNoneButton');
+  const visibleCount=document.querySelectorAll('.modcb').length;
   document.querySelector('.setup-action-shell')?.classList.toggle('is-empty',selectedCount===0);
   if(selectionSummary) selectionSummary.textContent=selectedCount
     ?selectedCount+' automatisme'+(selectedCount===1?'':'s')+' sélectionné'+(selectedCount===1?'':'s')
@@ -560,6 +542,8 @@ function updateSetupActions(){
   if(generateButton) generateButton.disabled=selectedCount===0||modulePreparationInProgress;
   if(generateCount) generateCount.textContent=selectedCount?' · '+selectedCount:'';
   if(shareButton) shareButton.disabled=selectedCount===0;
+  if(selectNoneButton) selectNoneButton.disabled=selectedCount===0;
+  if(selectAllButton) selectAllButton.disabled=visibleCount>0&&selectedCount===visibleCount;
 }
 function updateGenerateButtonLabel(){
   const button=document.getElementById('generateButton');
