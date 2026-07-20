@@ -539,7 +539,7 @@ window.MATHSGO_CATALOGUE = {
       "primaryGroup": "activites",
       "collections": [],
       "tags": ["proportionnalite", "agrandissement", "reduction", "puzzle", "brousseau"],
-      "thumbnail": "assets/img/thumbnails/proportionnalite/puzzle-brousseau.png?v=1",
+      "thumbnail": "assets/img/thumbnails/proportionnalite/puzzle-brousseau.png?v=2",
       "cardDescription": "Étudier agrandissement et réduction à partir des six pièces du puzzle de Brousseau."
     },
     "outils/gabarits_pourcentages.pdf": {
