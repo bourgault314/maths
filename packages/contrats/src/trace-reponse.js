@@ -8,7 +8,7 @@ import { estDonneePure, estIdentifiantValide } from "./gabarit.js";
 import {
   TYPE_REPONSE_CHOIX_UNIQUE,
   TYPE_REPONSE_SELECTION_MULTIPLE,
-} from "./question-v2.js?v=5";
+} from "./question-v2.js?v=6";
 
 export const SCHEMA_TRACE_REPONSE = "mathsgo.trace-reponse/1";
 
