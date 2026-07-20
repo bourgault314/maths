@@ -19,6 +19,11 @@ const requiredOrder=[
 const sourcePath=source=>source.split('?')[0];
 const positions=requiredOrder.map(required=>scriptSources.findIndex(source=>sourcePath(source)===required));
 
+assert.doesNotMatch(index,/noindex|BÊTA ·/,'La version publique ne doit conserver ni noindex ni le marquage bêta.');
+assert.match(index,/<span class="revision-badge">V1\.25<\/span>/,'La version publique doit identifier le snapshot bêta transféré.');
+assert.match(index,/data-mathsgo-consent-open/,'La gestion des cookies doit rester directement accessible dans le menu public.');
+assert.match(index,/class="segment-btn segment-btn-dnb"/,'Le menu public doit reprendre le bouton DNB de la bêta validée.');
+assert.doesNotMatch(index,/scripts\/90-objets-officiels\.js/,'Le transfert public ne doit pas réactiver un ancien moteur absent de la bêta validée.');
 assert.ok(positions.every(position=>position>=0),'Un script essentiel des Automatismes manque dans auto/index.html.');
 assert.deepEqual(positions,[...positions].sort((left,right)=>left-right),'L’ordre de chargement des scripts essentiels est incorrect.');
 
