@@ -30,7 +30,8 @@ const returnPages = Object.fromEntries(await Promise.all([
 
 test("le bouton Cookies injecté ne prend jamais toute la hauteur d'une page flex", () => {
   assert.match(consentScript, /const viewportLocked = \[bodyStyle\.overflow, bodyStyle\.overflowY, rootStyle\.overflow, rootStyle\.overflowY\]/);
-  assert.match(consentScript, /manageSlot\.classList\.toggle\("mg-consent-manage-slot--fixed", viewportLocked\)/);
+  assert.match(consentScript, /const horizontalFlexLayout = \["flex", "inline-flex"\]/);
+  assert.match(consentScript, /manageSlot\.classList\.toggle\("mg-consent-manage-slot--fixed", viewportLocked \|\| horizontalFlexLayout\)/);
   assert.match(
     consentStyles,
     /\.mg-consent-manage-slot\s*\{[^}]*position:\s*relative;[^}]*flex:\s*0\s+0\s+auto;/s,
@@ -105,25 +106,12 @@ test("les retours explicites pointent vers le parent réel du catalogue", () => 
   }
 });
 
-test("les retours injectés connaissent les parents modernes des outils classés", () => {
-  for (const parent of [
-    "/outils/index.html?domain=algebre&collection=tuiles-algebriques",
-    "/outils/index.html?domain=jeux-recherches&notion=explorations",
-    "/outils/index.html?domain=jeux-recherches&notion=strategie",
-    "/outils/index.html?domain=nombres-calculs&notion=divisibilite",
-    "/outils/index.html?domain=nombres-calculs&notion=numeration",
-    "/outils/index.html?domain=nombres-calculs&notion=puissances",
-    "/outils/index.html?domain=algebre&notion=patterns",
-  ]) {
-    assert.match(parentNavigationScript, new RegExp(parent.replace(/[?]/g, "\\?")));
-  }
-  assert.match(returnPages["outils/labo-des-regularites.html"], /tool-parent-navigation\.js/);
+test("la couche commune n'injecte plus de flèche et respecte seulement un retour déclaré", () => {
   assert.match(returnPages["outils/plateaux_manipulation/pgcd_sachets.html"], /data-mathsgo-parent-link="\.toolbar &gt; \.brand"/);
-  assert.match(
-    parentNavigationScript,
-    /plateaux_manipulation\\\/\(\?:numeration_decimale\|glisse_nombres_decimaux\|glisse_entiers_flex\)\\\.html\$\/[^\n]+notion=numeration[^\n]+"Numération"/,
-  );
-  assert.doesNotMatch(parentNavigationScript, /"\/outils\/plateaux_manipulation\/"/);
+  assert.match(parentNavigationScript, /function installDeclaredNavigation\(\)/);
+  assert.match(parentNavigationScript, /if \(!declaredHref \|\| !declaredLink\) return;/);
+  assert.doesNotMatch(parentNavigationScript, /document\.createElement\("a"\)/);
+  assert.doesNotMatch(parentNavigationScript, /mathsgo-parent-navigation/);
   assert.match(parentNavigationScript, /function makeHistoryAware\(link\)/);
   assert.match(parentNavigationScript, /window\.history\.back\(\)/);
   assert.match(parentNavigationScript, /window\.self !== window\.top[\s\S]*?link\.target = "_top"/);
