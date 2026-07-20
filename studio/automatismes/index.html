@@ -40,7 +40,7 @@
     border-radius:18px 18px 0 0;background:linear-gradient(90deg,var(--turquoise),var(--bleu),var(--orange))}
   .lien-logo{display:inline-flex;align-items:center;border-radius:12px;outline-offset:4px}
   .lien-logo:focus-visible{outline:3px solid var(--orange)}
-  .logo{height:40px;object-fit:contain}
+  .logo{width:auto;height:46px;object-fit:contain}
   .titre-site{display:flex;flex-direction:column;align-items:center}
   .titre-site h1{font-family:Fredoka,"Segoe UI",sans-serif;font-weight:600;color:var(--bleu);
     font-size:20px;line-height:1.05;margin:0;text-align:center}
@@ -112,11 +112,15 @@
   .actions-groupees button:focus-visible{outline:3px solid rgba(6,63,134,.4);outline-offset:2px}
   .actions-groupees button:disabled{opacity:.4;cursor:default}
 
-  .theme-group{border:1px solid var(--ligne);border-radius:14px;background:#fff;margin-bottom:7px;overflow:hidden}
+  .theme-group{border:1px solid var(--ligne);border-radius:14px;background:#fff;margin-bottom:7px;overflow:visible}
   .theme-group[open]{border-color:#b9d2e8;box-shadow:0 8px 24px rgba(16,41,74,.07)}
   .theme-group.has-selection{border-color:var(--turquoise)}
   .theme-summary{display:flex;align-items:center;gap:11px;padding:7px 12px;cursor:pointer;
-    list-style:none;min-height:50px;-webkit-tap-highlight-color:transparent}
+    list-style:none;min-height:50px;background:#fff;border-radius:13px;
+    -webkit-tap-highlight-color:transparent}
+  .theme-group[open]>.theme-summary{position:sticky;z-index:15;
+    top:calc(max(8px,env(safe-area-inset-top)) + 53px);border-radius:13px 13px 0 0;
+    box-shadow:0 7px 14px rgba(16,41,74,.09)}
   .theme-summary::-webkit-details-marker{display:none}
   .theme-summary:hover{background:var(--fond-doux)}
   .theme-summary:focus-visible{outline:3px solid rgba(6,63,134,.4);outline-offset:-3px}
@@ -192,7 +196,7 @@
       max(84px,calc(env(safe-area-inset-bottom) + 74px)) max(10px,env(safe-area-inset-left))}
     body:has(.barre-action.est-vide){padding-bottom:max(18px,calc(env(safe-area-inset-bottom) + 10px))}
     .entete-site{gap:12px;padding:9px 11px 7px}
-    .logo{height:36px}
+    .logo{height:40px}
     .titre-site h1{font-size:18px}
     section.carte{padding:10px}
     .carte-reglages{gap:6px}
