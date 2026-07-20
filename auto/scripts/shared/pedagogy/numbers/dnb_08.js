@@ -1,6 +1,6 @@
 MATHSGO_PEDAGOGY.registerModule('dnb_08',{
   domain:'numbers',
-  topic:'Critères de divisibilité par 2, 3, 5 et 9',
+  topic:'Critères de divisibilité par 2, 3, 5, 9 et 10',
   label:'Divisibilité : chiffre des unités et somme des chiffres',
   levelTags:['4e','3e','DNB'],
   courseKind:'divisibility_rules',
@@ -13,7 +13,7 @@ MATHSGO_PEDAGOGY.registerModule('dnb_08',{
       {id:'sharing',label:'Interpréter la divisibilité comme un partage sans reste'}
     ],
     reasoning:[
-      {id:'last-digit',label:'Observer le chiffre des unités',rule:'Un nombre est divisible par 2 si son chiffre des unités est pair et par 5 s’il se termine par 0 ou 5.'},
+      {id:'last-digit',label:'Observer le chiffre des unités',rule:'Un nombre est divisible par 2 si son chiffre des unités est pair, par 5 s’il se termine par 0 ou 5 et par 10 s’il se termine par 0.'},
       {id:'digit-sum',label:'Additionner les chiffres',rule:'Un nombre est divisible par 3 ou par 9 lorsque la somme de ses chiffres l’est.'},
       {id:'combine-rules',label:'Croiser plusieurs critères',rule:'Tester séparément chaque diviseur proposé ; plusieurs réponses peuvent être vraies.'},
       {id:'share-without-remainder',label:'Relier au partage',rule:'Être divisible par n signifie pouvoir former n parts entières égales sans reste.'},
@@ -31,6 +31,7 @@ MATHSGO_PEDAGOGY.registerModule('dnb_08',{
     cautions:[
       'Un nombre divisible par 9 est aussi divisible par 3.',
       'Le critère de 5 dépend seulement du chiffre des unités.',
+      'Un nombre divisible par 10 est aussi divisible par 2 et par 5.',
       'Ne pas conclure qu’un nombre est divisible par 9 parce qu’il contient le chiffre 9.'
     ]
   },

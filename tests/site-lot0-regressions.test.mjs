@@ -36,7 +36,7 @@ test("le bouton Cookies injecté ne flotte que sur les écrans verrouillés", ()
 });
 
 test("Automatismes garde les cookies dans son pied de page compact", () => {
-  assert.match(automatismesPage, /<footer class="auto-footer">[\s\S]*data-mathsgo-consent-open[\s\S]*Gérer mes cookies[\s\S]*<\/footer>/);
+  assert.match(automatismesPage, /<div class="credit-row">[\s\S]*data-mathsgo-consent-open[\s\S]*Gérer mes cookies[\s\S]*<\/div>/);
   assert.match(automatismesPage, /<div class="setup-action-shell is-empty"/);
   assert.ok(
     automatismesPage.indexOf("data-mathsgo-consent-open") < automatismesPage.indexOf("setup-action-shell is-empty"),

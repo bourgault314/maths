@@ -1183,9 +1183,28 @@ function makeReductionInstance(mod,q){
   };
 }
 const SOLID_NAMES=['un cube','un pavé droit','un prisme droit','un cylindre','une pyramide','un cône','une sphère','une boule'];
+function solidVisualForQuestion(q){
+  const meta=q.options||{};
+  if(!['drawing','count'].includes(meta.solid_category)) return null;
+  const variants={
+    1:{kind:'cube'},2:{kind:'cube',mirror:true},
+    3:{kind:'cuboid'},4:{kind:'cuboid',variant:'tall'},
+    5:{kind:'prism'},6:{kind:'prism',mirror:true},
+    7:{kind:'cylinder'},8:{kind:'cylinder',rotation:90},
+    9:{kind:'pyramid'},10:{kind:'pyramid',variant:'triangular'},
+    11:{kind:'cone'},12:{kind:'cone',mirror:true},
+    13:{kind:'sphere'},14:{kind:'sphere',mirror:true},
+    22:{kind:'cube'},23:{kind:'cuboid'},24:{kind:'prism'},
+    25:{kind:'pyramid'},26:{kind:'pyramid',variant:'pentagonal'},
+    27:{kind:'prism',variant:'pentagonal'},28:{kind:'prism',variant:'pentagonal'},
+    29:{kind:'pyramid',variant:'triangular'},30:{kind:'pyramid',variant:'pentagonal'}
+  };
+  return variants[Number(q.n)]||null;
+}
 function makeSolidsInstance(mod,q){
   const meta=q.options||{};
   let prompt=q.statement||'';
+  let visualPrompt='Quel est le nom le plus précis de ce solide ?';
   let correct='';
   let distractors=[];
 
@@ -1199,6 +1218,7 @@ function makeSolidsInstance(mod,q){
       'Combien de faces possède ce solide ?'
     ];
     correct=Number(meta.solid_counts[elementIndex]);
+    visualPrompt=elementQuestions[elementIndex];
     prompt='<div class="solid-prompt">'+elementQuestions[elementIndex]+'</div>'+prompt;
 
     const closeValues=shuffleLocal([correct-1,correct+1,correct-2,correct+2]);
@@ -1224,7 +1244,8 @@ function makeSolidsInstance(mod,q){
     answers:[correctIndex],
     rawStatement:prompt+'&&'+qcmOptions.join('&&')+'&&',
     rawFooter:'',
-    hasSvg:true
+    hasSvg:true,
+    solids:{prompt:visualPrompt,visual:solidVisualForQuestion(q)}
   };
 }
 
@@ -2790,36 +2811,12 @@ function renderConversionModule(inst,correction=false,mode=null){
   return html+'</div>';
 }
 
-// La barre de pourcentage OFFICIELLE (packages/objets, via le pont
-// 90-objets-officiels.js) : palette des gabarits de Gwenaël, viewBox
-// identique en question et en correction (le tableau ne change plus
-// jamais de taille d'une diapo à l'autre). Repli sur l'ancien dessin
-// si le module n'a pas chargé.
-function objetBarrePourcentage(){
-  return (typeof window!=='undefined'&&window.MATHSGO_OBJETS&&window.MATHSGO_OBJETS.dessinerBarrePourcentage)||null;
-}
-
-function officialPercentBarSvg(data,correction){
-  const dessiner=objetBarrePourcentage();
-  const parts=Math.max(1,Math.round(data.denominator));
-  const rendu=dessiner({
-    mode:'direct',
-    percent:data.percent,
-    parts,
-    activeParts:1,
-    totalVal:data.total,
-    calcVal:data.part
-  },{correction,chemin:false});
-  return '<div class="fraction-percent-help">'+rendu.svg.replace('<svg ','<svg class="fraction-percent-svg" ')+'</div>';
-}
-
 function renderModule04(inst,correction=false,mode=null){
   if(mode===null) mode=document.getElementById('visualMode').value;
   const data=inst.fractionPercent;
   if(!data) return renderGenericQuestion(inst,correction,mode);
   let html='<div class="question fraction-percent-prompt">'+renderMathSegments(inst.rawStatement)+'</div>';
-  const barreOfficielle=data.kind==='percent'&&objetBarrePourcentage();
-  html+=isWithoutVisuals(mode)?visualPlaceholder(mode):(barreOfficielle?officialPercentBarSvg(data,correction):fractionPercentBarSvg(data,correction));
+  html+=isWithoutVisuals(mode)?visualPlaceholder(mode):fractionPercentBarSvg(data,correction);
   let footer=inst.rawFooter;
   if(data.kind==='fraction') footer='$$\\dfrac{'+data.numerator+'}{'+data.denominator+'}\\text{ de }'+fmt(data.total)+'=[[formula]]$$';
   if(data.kind==='percent'&&!data.contextual) footer='$$'+fmt(data.percent)+'\\%\\text{ de }'+fmt(data.total)+'=[[formula]]$$';
@@ -3107,32 +3104,40 @@ function evolutionBraceSvg(x1,x2,y,color,label,W){
   const span=Math.max(1,x2-x1),mid=(x1+x2)/2;
   const inset=Math.min(15,span*.22),gap=Math.min(11,span*.18);
   const labelX=Math.max(125,Math.min(W-125,mid));
-  return `<path d="M ${x1} ${y} Q ${x1} ${y+13} ${x1+inset} ${y+13} L ${mid-gap} ${y+13} Q ${mid-4} ${y+13} ${mid} ${y+22} Q ${mid+4} ${y+13} ${mid+gap} ${y+13} L ${x2-inset} ${y+13} Q ${x2} ${y+13} ${x2} ${y}" fill="none" stroke="${color}" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/><text x="${labelX}" y="${y+49}" text-anchor="middle" font-family="Arial,Helvetica,sans-serif" font-size="22" font-weight="850" fill="${color}">${escapeHtml(label)}</text>`;
+  return `<path d="M ${x1} ${y} Q ${x1} ${y+13} ${x1+inset} ${y+13} L ${mid-gap} ${y+13} Q ${mid-4} ${y+13} ${mid} ${y+22} Q ${mid+4} ${y+13} ${mid+gap} ${y+13} L ${x2-inset} ${y+13} Q ${x2} ${y+13} ${x2} ${y}" fill="none" stroke="${color}" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/><text x="${labelX}" y="${y+49}" text-anchor="middle" font-family="Arial,Helvetica,sans-serif" font-size="28" font-weight="850" fill="${color}">${escapeHtml(label)}</text>`;
 }
 
 function evolutionBarSvg(data,correction=false){
   const increase=data.direction==='increase';
   const totalCells=increase?data.baseCells+data.deltaCells:data.baseCells;
   const compactCells=totalCells>13;
-  const W=compactCells?680:1120,x=compactCells?40:60,available=compactCells?600:900,topY=20,topH=68,bottomY=88,bottomH=68;
+  // La barre utile occupe la même proportion du cadre que le composant
+  // arithmetic.fraction-percent-bar : elle reste donc large et lisible, sans
+  // réserve vide artificielle sur la droite du SVG.
+  const W=compactCells?660:980,x=compactCells?30:40,available=compactCells?600:900;
+  // Les deux rangées gardent la même hauteur visuelle que le gabarit dnb_04
+  // lorsque les barres sont ramenées à une largeur utile commune.
+  // Le SVG compact est moins large : sa hauteur interne est réduite dans la
+  // même proportion pour conserver exactement la même épaisseur à l'écran.
+  const barH=compactCells?84:124;
+  const topY=18,topH=barH,bottomY=topY+topH,bottomH=barH;
   const baseW=increase?available*data.baseCells/totalCells:available;
   const bottomW=increase?available:baseW;
   const cellW=baseW/data.baseCells;
   const border='#18223d';
-  const increaseFill='#f9b35e';
-  // On conserve le code couleur déjà employé dans les repères de pourcentage :
-  // 50 % en jaune, 25 % en vert, 20 % en bleu et 10 % en orange.
-  const decreaseFill=data.percent===50?'#ffe36d':(data.percent===25?'#91d88e':(data.percent===10?'#f6b36a':'#9ed6f4'));
-  const mainFill=increase?increaseFill:decreaseFill;
-  const neutralFill=increase?'#fff7ee':(data.percent===10?'#fff0df':'#fffdf3');
-  const decreaseTopFill=data.percent===50?'#fff9dc':(data.percent===25?'#eef9ec':(data.percent===10?'#fff0df':'#eef8fe'));
-  const braceY=164;
+  // La couleur décrit la valeur d'une case, et non le sens de l'évolution :
+  // deux découpages identiques gardent ainsi la même couleur pédagogique.
+  const cellPercent=100/data.baseCells;
+  const mainFill=cellPercent===50?'#ffe36d':(cellPercent===25?'#91d88e':(cellPercent===10?'#f6b36a':'#9ed6f4'));
+  const neutralFill=cellPercent===10?'#fff0df':'#fffdf3';
+  const familyTopFill=cellPercent===50?'#fff9dc':(cellPercent===25?'#eef9ec':(cellPercent===10?'#fff0df':'#eef8fe'));
+  const braceY=bottomY+bottomH+8;
   // La hauteur est réservée dès l'énoncé : le tableau ne change ainsi jamais
   // d'échelle lorsque l'accolade et la correction apparaissent.
-  const H=238;
-  const text=(cx,cy,value,size=22,weight=800,fill=border)=>`<text x="${cx}" y="${cy}" text-anchor="middle" dominant-baseline="middle" font-family="Arial,Helvetica,sans-serif" font-size="${size}" font-weight="${weight}" fill="${fill}">${escapeHtml(value)}</text>`;
+  const H=braceY+74;
+  const text=(cx,cy,value,size=28,weight=800,fill=border)=>`<text x="${cx}" y="${cy}" text-anchor="middle" dominant-baseline="middle" font-family="Arial,Helvetica,sans-serif" font-size="${size}" font-weight="${weight}" fill="${fill}">${escapeHtml(value)}</text>`;
   let body='<defs><pattern id="evolution-hatch" patternUnits="userSpaceOnUse" width="18" height="18" patternTransform="rotate(45)"><rect width="18" height="18" fill="#fff8fa"/><line x1="0" y1="0" x2="0" y2="18" stroke="#ffb8c6" stroke-width="4"/></pattern></defs>';
-  body+=`<rect x="${x}" y="${topY}" width="${baseW}" height="${topH}" fill="${increase?'#fff6eb':decreaseTopFill}"/>`;
+  body+=`<rect x="${x}" y="${topY}" width="${baseW}" height="${topH}" fill="${familyTopFill}"/>`;
 
   const removedStart=data.baseCells-data.deltaCells;
   for(let i=0;i<totalCells;i++){
@@ -3148,15 +3153,15 @@ function evolutionBarSvg(data,correction=false){
   for(let i=1;i<totalCells;i++) body+=`<line x1="${x+i*cellW}" y1="${bottomY}" x2="${x+i*cellW}" y2="${bottomY+bottomH}" stroke="${border}" stroke-width="2.1"/>`;
 
   const topLabel=data.normalized?'100 %':fmt(data.initial);
-  body+=text(x+baseW/2,topY+topH/2,topLabel,data.normalized?22:25,850);
-  const cellFont=Math.max(11,Math.min(23,cellW*.34));
+  body+=text(x+baseW/2,topY+topH/2,topLabel,data.normalized?37:36,850);
+  const cellFont=Math.max(14,Math.min(30,cellW*.44));
   for(let i=0;i<totalCells;i++){
     // Pour 5 %, vingt subdivisions doivent rester visibles ensemble sur un
     // téléphone. Une seule valeur de part suffit alors dans la correction.
     const cellLabel=compactCells
       ?(correction&&i===0?fmt(data.normalized?100/data.baseCells:data.cellValue):'')
       :(data.normalized?(fmt(100/data.baseCells)+' %'):(correction?fmt(data.cellValue):'...'));
-    body+=text(x+(i+.5)*cellW,bottomY+bottomH/2,cellLabel,data.normalized?Math.max(13,cellFont):(correction?cellFont:Math.max(13,cellFont)),800);
+    body+=text(x+(i+.5)*cellW,bottomY+bottomH/2,cellLabel,data.normalized?Math.max(17,cellFont):(correction?cellFont:Math.max(17,cellFont)),800);
   }
 
   if(correction||data.braceMode==='coefficient'){
@@ -3181,32 +3186,15 @@ function evolutionBarSvg(data,correction=false){
     if(coefficientCalculation){
       const resultingPercent=increase?100+data.percent:100-data.percent;
       const center=Math.max(125,Math.min(W-125,(x1+x2)/2));
-      const fractionCenter=center+15,numberY=199,denominatorY=228;
-      body+=`<text x="${center-92}" y="214" text-anchor="middle" font-family="Arial,Helvetica,sans-serif" font-size="22" font-weight="850" fill="${color}">${escapeHtml(fmt(resultingPercent))} %</text>`;
-      body+=`<text x="${fractionCenter}" y="${numberY}" text-anchor="middle" font-family="Cambria Math,STIX Two Math,Times New Roman,serif" font-size="21" font-weight="750" fill="${color}">${escapeHtml(fmt(resultingPercent))}</text>`;
-      body+=`<line x1="${fractionCenter-27}" y1="205" x2="${fractionCenter+27}" y2="205" stroke="${color}" stroke-width="2.2"/>`;
-      body+=`<text x="${fractionCenter}" y="${denominatorY}" text-anchor="middle" font-family="Cambria Math,STIX Two Math,Times New Roman,serif" font-size="21" font-weight="750" fill="${color}">100</text>`;
-      body+=`<text x="${center+55}" y="214" text-anchor="start" dominant-baseline="middle" font-family="Cambria Math,STIX Two Math,Times New Roman,serif" font-size="23" font-weight="750" fill="${color}">= ${escapeHtml(fmt(data.newTotal))}</text>`;
+      const fractionCenter=center+15,numberY=braceY+35,lineY=braceY+41,calculationY=braceY+50,denominatorY=braceY+64;
+      body+=`<text x="${center-92}" y="${calculationY}" text-anchor="middle" font-family="Arial,Helvetica,sans-serif" font-size="28" font-weight="850" fill="${color}">${escapeHtml(fmt(resultingPercent))} %</text>`;
+      body+=`<text x="${fractionCenter}" y="${numberY}" text-anchor="middle" font-family="Cambria Math,STIX Two Math,Times New Roman,serif" font-size="27" font-weight="750" fill="${color}">${escapeHtml(fmt(resultingPercent))}</text>`;
+      body+=`<line x1="${fractionCenter-27}" y1="${lineY}" x2="${fractionCenter+27}" y2="${lineY}" stroke="${color}" stroke-width="2.2"/>`;
+      body+=`<text x="${fractionCenter}" y="${denominatorY}" text-anchor="middle" font-family="Cambria Math,STIX Two Math,Times New Roman,serif" font-size="27" font-weight="750" fill="${color}">100</text>`;
+      body+=`<text x="${center+55}" y="${calculationY}" text-anchor="start" dominant-baseline="middle" font-family="Cambria Math,STIX Two Math,Times New Roman,serif" font-size="29" font-weight="750" fill="${color}">= ${escapeHtml(fmt(data.newTotal))}</text>`;
     }
   }
   return `<div class="evolution-help${compactCells?' evolution-help-compact':''}"><svg class="evolution-svg" viewBox="0 0 ${W} ${H}" role="img" aria-label="Schéma en barres d’une évolution en pourcentage">${body}</svg></div>`;
-}
-
-// La barre d'évolution par l'objet officiel : mêmes accolades
-// (nouveau total / reste / montant / coefficient normalisé à 100 %),
-// hachures sur la part retirée, hauteur réservée dès l'énoncé.
-function officialEvolutionBarSvg(data,correction){
-  const dessiner=objetBarrePourcentage();
-  const accolades={newTotal:'nouveauTotal',remainder:'reste',amount:'montant',coefficient:'coefficient'};
-  const rendu=dessiner({
-    mode:data.direction==='increase'?'evo_inc':'evo_dec',
-    percent:data.percent,
-    parts:data.baseCells,
-    activeParts:data.deltaCells,
-    totalVal:data.initial,
-    calcVal:data.newTotal
-  },{correction,accolade:accolades[data.braceMode],normalise:!!data.normalized});
-  return '<div class="evolution-help">'+rendu.svg.replace('<svg ','<svg class="evolution-svg" ')+'</div>';
 }
 
 function renderEvolutionModule(inst,correction=false,mode=null){
@@ -3215,7 +3203,7 @@ function renderEvolutionModule(inst,correction=false,mode=null){
   const prompt=qcm?qcm.prompt:inst.rawStatement;
   const promptClass=prompt.includes('legacy-statement-table-wrap')?'question evolution-prompt legacy-statement-question':'question evolution-prompt';
   let html='<div class="'+promptClass+'">'+renderMathSegments(prompt)+'</div>';
-  html+=isWithoutVisuals(mode)?visualPlaceholder(mode):(objetBarrePourcentage()?officialEvolutionBarSvg(inst.evolution,correction):evolutionBarSvg(inst.evolution,correction));
+  html+=isWithoutVisuals(mode)?visualPlaceholder(mode):evolutionBarSvg(inst.evolution,correction);
   if(qcm){
     const corrects=new Set(inst.answers.map(value=>String(value)));
     html+='<div class="options evolution-options options-'+qcm.opts.length+compactQcmClass(qcm.opts)+'">';
@@ -3281,7 +3269,10 @@ function renderSolidsModule(inst,correction=false){
   const qcm=splitQCM(inst.rawStatement);
   if(!qcm) return renderGenericQuestion(inst,correction,'with');
   const corrects=new Set(inst.answers.map(x=>String(x)));
-  let html='<div class="solid-question">'+renderMathSegments(qcm.prompt)+'</div>';
+  const sharedVisual=inst.solids&&inst.solids.visual&&typeof globalThis.solidSvg==='function';
+  let html=sharedVisual
+    ?'<div class="solid-question"><div class="solid-prompt">'+escapeHtml(inst.solids.prompt)+'</div><div class="solid-visual">'+globalThis.solidSvg(inst.solids.visual)+'</div></div>'
+    :'<div class="solid-question">'+renderMathSegments(qcm.prompt)+'</div>';
   html+='<div class="options solid-options">';
   qcm.opts.forEach((option,index)=>{
     const isCorrect=correction&&corrects.has(String(index+1));
@@ -3387,10 +3378,43 @@ function volumeCalculationForQuestion(inst){
   };
   return cases[n]||'V='+answer;
 }
+function volumeVisualForQuestion(inst){
+  if(typeof globalThis.solidSvg!=='function') return '';
+  const n=Number(inst.q.n),s=inst.scope||{},v=name=>fmt(Number(s[name]));
+  const data={
+    1:{kind:'cube',labels:{edge:v('c')+' cm'}},
+    2:{kind:'cuboid',labels:{length:v('L')+' cm',width:v('l')+' cm',height:v('h')+' cm'}},
+    3:{kind:'prism',labels:{base:v('b')+' cm',baseHeight:v('ht')+' cm',length:v('p')+' cm'}},
+    4:{kind:'cylinder',labels:{radius:'r = '+v('r')+' cm',height:v('h')+' cm'}},
+    8:{kind:'prism',labels:{baseArea:'Aire de la base = '+v('a')+' cm²',height:'h = '+v('h')+' cm'}},
+    9:{kind:'cylinder',labels:{diameter:'d = '+v('d')+' cm',height:v('h')+' cm'}}
+  }[n];
+  return data?globalThis.solidSvg(data):'';
+}
+function volumePromptForQuestion(inst){
+  const n=Number(inst.q.n),s=inst.scope||{},v=name=>fmt(Number(s[name]));
+  const prompts={
+    1:'Calcule le volume de ce cube.',
+    2:'Calcule le volume de ce pavé droit.',
+    3:'Calcule le volume de ce prisme droit à base triangulaire.',
+    4:'Calcule le volume de ce cylindre. On prendra $$\\pi\\approx 3,14$$.',
+    8:'Calcule le volume de ce prisme droit.',
+    9:'Calcule le volume de ce cylindre. On prendra $$\\pi\\approx 3,14$$.'
+  };
+  const details={
+    3:'La base triangulaire mesure '+v('b')+' cm et sa hauteur '+v('ht')+' cm. La longueur du prisme est '+v('p')+' cm.',
+    8:'Aire de la base : '+v('a')+' cm² · Hauteur du prisme : '+v('h')+' cm.'
+  };
+  return {prompt:prompts[n]||inst.rawStatement,detail:details[n]||''};
+}
 function renderVolumeModule(inst,correction=false,mode=null){
   if(mode===null) mode=document.getElementById('visualMode').value;
+  const visual=volumeVisualForQuestion(inst);
+  const content=visual?volumePromptForQuestion(inst):{prompt:inst.rawStatement,detail:''};
   let html='<div class="volume-question">';
-  html+='<div class="volume-prompt">'+renderMathSegments(inst.rawStatement)+'</div>';
+  html+='<div class="volume-prompt">'+renderMathSegments(content.prompt)+'</div>';
+  if(visual) html+='<div class="volume-visual">'+visual+'</div>';
+  if(content.detail) html+='<div class="volume-data">'+escapeHtml(content.detail)+'</div>';
   html+='</div>';
   if(correction) html+='<div class="volume-correction-flow"><div class="volume-formula">'+renderMathSegments('$$'+volumeFormulaForQuestion(inst.q.n)+'$$')+'</div><div class="volume-calculation">'+renderMathSegments('$$'+volumeCalculationForQuestion(inst)+'$$')+'</div></div>';
   if(inst.rawFooter){
@@ -3981,7 +4005,8 @@ function renderQuestion(inst, correction=false, mode=null){
 }
 // La progression de 5e est volontairement définie question par question :
 // certains modules contiennent aussi des notions qui n'arrivent qu'en 4e.
-// La progression existante de 4e reste inchangée et 3e reprend le DNB.
+// La 4e consolide jusqu'aux factorisations simples ; la 3e ouvre toute la
+// banque, tandis que le filtre DNB reste volontairement plus classique.
 const LEVEL_5E_QUESTIONS={
   dnb_01:'all',
   dnb_02:'all',
@@ -3994,7 +4019,7 @@ const LEVEL_5E_QUESTIONS={
   dnb_09:[2,3,4,5,6,8,9,10,11,12,13,14,15,16,17,18,19],
   dnb_10:[1,2,5,6],
   dnb_11:[1,4,6,11],
-  dnb_12:[1,2,3,4,5,6,7,9,10],
+  dnb_12:[1,2,3,4,5,6,7,9,10,11,12,13,14],
   dnb_13:[1,2,3],
   dnb_14:'all',
   dnb_15:'all',
@@ -4018,6 +4043,16 @@ const LEVEL_5E_QUESTIONS={
   dnb_39:'all'
 };
 
+const LEVEL_4E_QUESTIONS={
+  dnb_12:Array.from({length:18},(_,index)=>index+1)
+};
+
+// Le filtre DNB reste volontairement classique : calculs directs et QCM
+// courts sur la distributivité simple, sans manipulation ni identité remarquable.
+const LEVEL_DNB_QUESTIONS={
+  dnb_12:[1,2,3,4,5,6,7,8,9,15,16,17]
+};
+
 // Pendant la transition des programmes, ces contenus sont déjà travaillés
 // avant la 3e. Le filtre de 5e ci-dessus reste plus précis, question par question.
 ['dnb_27','dnb_36'].forEach(id=>{
@@ -4025,8 +4060,9 @@ const LEVEL_5E_QUESTIONS={
   if(module&&!module.level_tags.includes('4e')) module.level_tags.unshift('4e');
 });
 function questionEligibleForLevel(m,q,level){
-  if(level!=='5e') return true;
-  const allowed=LEVEL_5E_QUESTIONS[m.id];
+  const catalogue=level==='5e'?LEVEL_5E_QUESTIONS:(level==='4e'?LEVEL_4E_QUESTIONS:(level==='DNB'?LEVEL_DNB_QUESTIONS:null));
+  if(!catalogue||!Object.prototype.hasOwnProperty.call(catalogue,m.id)) return true;
+  const allowed=catalogue[m.id];
   return allowed==='all' || (Array.isArray(allowed) && allowed.includes(Number(q.n)));
 }
 function visibleModules(){
@@ -4070,6 +4106,19 @@ const MODULE_MENU_GROUPS={
     {id:'pensee-informatique',title:'Pensée informatique',moduleIds:['dnb_37']}
   ]
 };
+const MODULE_SELECTION_MEMORY=new Set();
+let skipSelectionCaptureOnce=false;
+function rememberCurrentModuleSelections(){
+  document.querySelectorAll('.modcb').forEach(input=>{
+    if(input.checked) MODULE_SELECTION_MEMORY.add(input.value);
+    else MODULE_SELECTION_MEMORY.delete(input.value);
+  });
+}
+function replaceRememberedModuleSelections(ids){
+  MODULE_SELECTION_MEMORY.clear();
+  ids.forEach(id=>MODULE_SELECTION_MEMORY.add(id));
+  skipSelectionCaptureOnce=true;
+}
 function menuGroupsForTheme(themeId,members){
   const memberById=new Map(members.map(module=>[module.id,module]));
   const used=new Set();
@@ -4104,6 +4153,8 @@ function updateThemeCounts(){
 function renderModuleList(){
   const box=document.getElementById('modules');
   const openTheme=box.querySelector('.theme-group[open]')?.dataset.theme||null;
+  if(skipSelectionCaptureOnce) skipSelectionCaptureOnce=false;
+  else rememberCurrentModuleSelections();
   // Les catégories sont reconstruites à chaque changement de réglage. L'icône
   // doit donc faire partie de ce rendu, et non être ajoutée après coup.
   const getThemeIconMarkup=globalThis.MATHSGO_SETUP_ICONS?.markup;
@@ -4138,7 +4189,13 @@ function renderModuleList(){
       menuGroup.members.forEach(m=>{
         const row=document.createElement('label'); row.className='modrow';
         row.innerHTML='<input type="checkbox" class="modcb" value="'+m.id+'"> <span><strong>'+m.title+'</strong></span>';
-        row.querySelector('input').addEventListener('change',updateThemeCounts);
+        const input=row.querySelector('input');
+        input.checked=MODULE_SELECTION_MEMORY.has(m.id);
+        input.addEventListener('change',()=>{
+          if(input.checked) MODULE_SELECTION_MEMORY.add(input.value);
+          else MODULE_SELECTION_MEMORY.delete(input.value);
+          updateThemeCounts();
+        });
         subgroupItems.appendChild(row);
       });
       subgroup.append(heading,subgroupItems);
@@ -4147,7 +4204,11 @@ function renderModuleList(){
     group.append(summary,items);
     const themeCheckbox=itemsToolbar.querySelector('.theme-select-cb');
     themeCheckbox.addEventListener('change',()=>{
-      group.querySelectorAll('.modcb').forEach(cb=>cb.checked=themeCheckbox.checked);
+      group.querySelectorAll('.modcb').forEach(cb=>{
+        cb.checked=themeCheckbox.checked;
+        if(cb.checked) MODULE_SELECTION_MEMORY.add(cb.value);
+        else MODULE_SELECTION_MEMORY.delete(cb.value);
+      });
       updateThemeCounts();
     });
     group.addEventListener('toggle',()=>{
@@ -4157,7 +4218,14 @@ function renderModuleList(){
   });
   updateThemeCounts();
 }
-function selectVisible(on){ document.querySelectorAll('.modcb').forEach(cb=>cb.checked=on); updateThemeCounts(); }
+function selectVisible(on){
+  document.querySelectorAll('.modcb').forEach(cb=>{
+    cb.checked=on;
+    if(on) MODULE_SELECTION_MEMORY.add(cb.value);
+    else MODULE_SELECTION_MEMORY.delete(cb.value);
+  });
+  updateThemeCounts();
+}
 
 function buildCleanSlideHtml(inst, correction=false, mode=null){
   return renderQuestion(inst, correction, mode);
