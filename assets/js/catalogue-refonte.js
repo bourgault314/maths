@@ -354,16 +354,41 @@
 
   function stateFromUrl() {
     const params = new URLSearchParams(window.location.search);
+    let urlWasSanitised = false;
     state.domain = params.get("domain") || "";
     state.notion = params.get("notion") || "";
     state.collection = params.get("collection") || "";
     state.query = "";
 
-    if (state.notion && !notionMap.has(state.notion)) state.notion = "";
-    if (state.collection && !collectionMap.has(state.collection)) state.collection = "";
-    if (state.domain && !domainMap.has(state.domain)) state.domain = "";
+    if (state.notion && !notionMap.has(state.notion)) {
+      state.notion = "";
+      urlWasSanitised = true;
+    }
+    if (state.collection && !collectionMap.has(state.collection)) {
+      state.collection = "";
+      urlWasSanitised = true;
+    }
+    if (state.domain && !domainMap.has(state.domain)) {
+      state.domain = "";
+      urlWasSanitised = true;
+    }
     if (state.notion) state.domain = notionMap.get(state.notion)?.domain || state.domain;
     if (state.collection) state.domain = collectionMap.get(state.collection)?.domain || state.domain;
+
+    if (state.notion && notionResourceCount(state.notion, state.domain) === 0) {
+      state.notion = "";
+      urlWasSanitised = true;
+    }
+    if (state.collection && collectionResourceCount(state.collection) === 0) {
+      state.collection = "";
+      urlWasSanitised = true;
+    }
+    if (state.domain && domainResourceCount(state.domain) === 0) {
+      state.domain = "";
+      urlWasSanitised = true;
+    }
+
+    return urlWasSanitised;
   }
 
   function viewLevel() {
@@ -424,14 +449,9 @@
   }
 
   function renderBreadcrumb(level, selectedDomain, selectedNotion, selectedCollection) {
-    breadcrumb.hidden = level === "entry";
-    if (level === "entry") {
+    breadcrumb.hidden = level === "entry" || level === "search";
+    if (level === "entry" || level === "search") {
       breadcrumb.innerHTML = "";
-      return;
-    }
-
-    if (level === "search") {
-      breadcrumb.innerHTML = `<button type="button" data-breadcrumb-target="search">← Effacer la recherche</button>`;
       return;
     }
 
@@ -440,7 +460,7 @@
     ];
 
     if (selectedDomain && level !== "domain") {
-      parts.push(`<button type="button" data-breadcrumb-target="domain">${escapeHtml(selectedDomain.title)}</button>`);
+      parts.push(`<button type="button" class="breadcrumb-parent" data-breadcrumb-target="domain" title="Revenir à ${escapeHtml(selectedDomain.title)}">${escapeHtml(selectedDomain.title)}</button>`);
     }
 
     breadcrumb.innerHTML = parts.join("");
@@ -639,11 +659,15 @@
       const domain = domainMap.get(domainId);
       const count = domainResourceCount(domainId);
       const design = domainDesign[domainId] || {};
-      return `<button class="domain-card" type="button" data-domain-card="${escapeHtml(domainId)}" style="${domainStyle(domainId)}">
+      const tag = count ? "button" : "div";
+      const attributes = count
+        ? `type="button" data-domain-card="${escapeHtml(domainId)}"`
+        : `data-domain-card="${escapeHtml(domainId)}" data-domain-disabled="true" aria-disabled="true"`;
+      return `<${tag} class="domain-card${count ? "" : " domain-card-disabled"}" ${attributes} style="${domainStyle(domainId)}">
         <span class="domain-card-icon">${icon(design.icon)}</span>
         <span class="domain-card-copy"><strong>${escapeHtml(domain.title)}</strong><small>${escapeHtml(domain.short)}</small><em>${count ? `${count} ressource${count > 1 ? "s" : ""}` : "Bientôt"}</em></span>
-        <span class="domain-card-arrow" aria-hidden="true">→</span>
-      </button>`;
+        <span class="domain-card-arrow" aria-hidden="true">${count ? "→" : ""}</span>
+      </${tag}>`;
     });
 
     ["jeux-recherches", "cps"].forEach((domainId) => {
@@ -782,14 +806,18 @@
     const notionCards = notions.map((notion) => {
       const design = notionDesign[notion.id] || {};
       const count = notionResourceCount(notion.id, notion.domain);
-      return `<a class="notion-card" data-notion-card="${escapeHtml(notion.id)}" href="${escapeHtml(notionHref(notion))}" style="${domainStyle(notion.domain)}">
+      const tag = count ? "a" : "article";
+      const attributes = count
+        ? `data-notion-card="${escapeHtml(notion.id)}" href="${escapeHtml(notionHref(notion))}"`
+        : `data-notion-card="${escapeHtml(notion.id)}" data-notion-disabled="true" aria-disabled="true"`;
+      return `<${tag} class="notion-card${count ? "" : " notion-card-disabled"}" ${attributes} style="${domainStyle(notion.domain)}">
         <span class="notion-top">
           <span class="notion-icon">${icon(design.icon)}</span>
           <h3>${escapeHtml(notion.title)}</h3>
         </span>
         <p>${escapeHtml(design.description || "Découvrir les outils de ce thème.")}</p>
         <span class="notion-count">${count ? `${count} ressource${count > 1 ? "s" : ""}` : "Bientôt"}</span>
-      </a>`;
+      </${tag}>`;
     });
     const collectionCards = collections.map((collection) => {
       const design = collectionDesign[collection.id] || {};
@@ -1054,6 +1082,7 @@
   domainGrid.addEventListener("click", (event) => {
     const button = event.target.closest("[data-domain-card]");
     if (!button || button.dataset.domainDirect === "true") return;
+    if (button.dataset.domainDisabled === "true") return;
     const fromLevel = viewLevel();
     rememberCurrentScroll();
     state.domain = button.dataset.domainCard || "";
@@ -1069,6 +1098,7 @@
   function openNotionOrCollection(event) {
     const link = event.target.closest("[data-notion-card], [data-collection-card]");
     if (!link || event.button !== 0 || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return;
+    if (link.dataset.notionDisabled === "true") return;
     const collection = collectionMap.get(link.dataset.collectionCard);
     const notion = notionMap.get(link.dataset.notionCard);
     if (!collection && !notion) return;
@@ -1108,14 +1138,6 @@
     if (!control) return;
     const target = control.dataset.breadcrumbTarget;
 
-    if (target === "search") {
-      state.query = "";
-      searchInput.value = "";
-      render();
-      searchInput.focus();
-      return;
-    }
-
     if (target === "domain") {
       if ((state.notion || state.collection) && history.state?.fromLevel === "domain") {
         history.back();
@@ -1148,7 +1170,8 @@
   });
 
   window.addEventListener("popstate", (event) => {
-    stateFromUrl();
+    const urlWasSanitised = stateFromUrl();
+    if (urlWasSanitised) writeHistory("replace", event.state?.fromLevel || null);
     searchInput.value = "";
     render();
     const scrollY = Number.isFinite(event.state?.scrollY) ? event.state.scrollY : 0;
@@ -1157,8 +1180,8 @@
     }));
   });
 
-  stateFromUrl();
+  const urlWasSanitised = stateFromUrl();
   if ("scrollRestoration" in history) history.scrollRestoration = "manual";
-  writeHistory("replace", history.state?.fromLevel || null);
+  writeHistory("replace", urlWasSanitised ? null : (history.state?.fromLevel || null));
   render();
 })();

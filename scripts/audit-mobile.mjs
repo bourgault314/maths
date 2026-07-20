@@ -111,7 +111,14 @@ function auditResource(resource) {
   const fixedWidths = fixedWidthSignals(styles, html);
   const parentNavigation = hasParentNavigation(html, anchors);
   const touchAware = /(pointer(?:down|move|up)|touch(?:start|move|end)|touch-action)/i.test(html);
-  const preventsTouchScrollEverywhere = /(?:html\s*,\s*body|body)[^{]*\{[^}]*touch-action\s*:\s*none/i.test(styles);
+  const hasRekenrekMobileOverride = resourcePath.startsWith("outils/bouliers/rekenrek/")
+    && /tool-parent-navigation\.js/i.test(html)
+    && fs.existsSync(path.join(root, "assets/css/rekenrek-mobile-compat.css"))
+    && /body\s*\{[^}]*touch-action\s*:\s*pan-y pinch-zoom/i.test(
+      fs.readFileSync(path.join(root, "assets/css/rekenrek-mobile-compat.css"), "utf8"),
+    );
+  const preventsTouchScrollEverywhere = /(?:html\s*,\s*body|body)[^{]*\{[^}]*touch-action\s*:\s*none/i.test(styles)
+    && !hasRekenrekMobileOverride;
   const issues = [];
 
   if (!hasViewport) issues.push("Viewport mobile absent");

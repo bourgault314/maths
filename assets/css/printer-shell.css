@@ -1,0 +1,584 @@
+/*
+ * Enveloppe écran commune des imprimeurs maths&go.
+ * Les dimensions physiques des pages restent la responsabilité de chaque outil.
+ */
+
+@media screen {
+  .mathsgo-printer-shell {
+    --mg-navy: #073b78;
+    --mg-blue: #0b72c9;
+    --mg-teal: #009f9b;
+    --mg-orange: #f47c20;
+    --mg-ink: #102a43;
+    --mg-muted: #60758b;
+    --mg-line: #cfdeeb;
+    --mg-surface: #ffffff;
+    --mg-canvas: #edf3f8;
+    min-width: 0 !important;
+    min-height: 100dvh !important;
+    height: auto !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    overflow: hidden !important;
+    background: var(--mg-canvas) !important;
+    color: var(--mg-ink);
+  }
+
+  .mathsgo-printer-shell > header:not(.mg-printer-header),
+  .mathsgo-printer-shell > .topbar-nav {
+    display: none !important;
+  }
+
+  .mg-printer-header {
+    position: relative;
+    z-index: 50;
+    min-height: 66px;
+    display: grid;
+    grid-template-columns: 104px minmax(190px, 1fr) auto;
+    align-items: center;
+    gap: 14px;
+    padding: 8px 16px;
+    border-bottom: 1px solid var(--mg-line);
+    background: rgba(255, 255, 255, .97);
+    box-shadow: 0 3px 16px rgba(16, 42, 67, .08);
+  }
+
+  .mg-printer-brand {
+    display: inline-flex;
+    align-items: center;
+    width: 102px;
+    min-width: 0;
+  }
+
+  .mg-printer-brand img {
+    display: block;
+    width: 100%;
+    height: auto;
+  }
+
+  .mg-printer-heading {
+    min-width: 0;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+
+  .mg-printer-heading h1 {
+    min-width: 0;
+    margin: 0;
+    overflow: hidden;
+    color: var(--mg-navy);
+    font: 800 clamp(1rem, 1.7vw, 1.3rem)/1.15 system-ui, -apple-system, "Segoe UI", sans-serif;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+  }
+
+  .mg-printer-back {
+    min-height: 44px;
+    display: inline-flex;
+    align-items: center;
+    flex: 0 0 auto;
+    padding: 8px 12px;
+    border: 1px solid #bed3e5;
+    border-radius: 999px;
+    background: #f4f9fd;
+    color: var(--mg-navy);
+    font: 750 .84rem/1 system-ui, -apple-system, "Segoe UI", sans-serif;
+    text-decoration: none;
+  }
+
+  .mg-printer-back:hover,
+  .mg-printer-back:focus-visible {
+    border-color: var(--mg-blue);
+    background: #eaf5fd;
+    outline: 3px solid rgba(11, 114, 201, .18);
+    outline-offset: 2px;
+  }
+
+  .mg-printer-view-tabs {
+    display: none;
+  }
+
+  .mg-printer-actions {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 8px;
+  }
+
+  .mg-printer-action,
+  .mg-printer-view-tabs button {
+    min-height: 44px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 7px;
+    padding: 9px 12px;
+    border: 1px solid #bcd0e1;
+    border-radius: 11px;
+    background: #fff;
+    color: var(--mg-navy);
+    font: 800 .84rem/1.1 system-ui, -apple-system, "Segoe UI", sans-serif;
+    cursor: pointer;
+    touch-action: manipulation;
+  }
+
+  .mg-printer-action.is-primary {
+    border-color: var(--mg-blue);
+    background: var(--mg-blue);
+    color: #fff;
+  }
+
+  .mg-printer-action:hover,
+  .mg-printer-action:focus-visible,
+  .mg-printer-view-tabs button:hover,
+  .mg-printer-view-tabs button:focus-visible {
+    outline: 3px solid rgba(244, 124, 32, .28);
+    outline-offset: 2px;
+  }
+
+  .mg-printer-action:disabled {
+    cursor: not-allowed;
+    opacity: .45;
+  }
+
+  .mg-printer-action svg,
+  .mg-printer-view-tabs svg {
+    width: 19px;
+    height: 19px;
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 1.9;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+  }
+
+  .mg-printer-workspace {
+    min-width: 0;
+    min-height: 0;
+    height: calc(100dvh - 66px);
+    display: grid !important;
+    grid-template-columns: minmax(300px, 350px) minmax(0, 1fr) !important;
+    gap: 0 !important;
+    padding: 0 !important;
+    overflow: hidden !important;
+    background: var(--mg-canvas) !important;
+  }
+
+  .mg-printer-settings {
+    grid-column: 1;
+    position: relative !important;
+    inset: auto !important;
+    width: 100% !important;
+    max-width: none !important;
+    height: 100% !important;
+    max-height: none !important;
+    margin: 0 !important;
+    overflow-x: hidden !important;
+    overflow-y: auto !important;
+    border: 0 !important;
+    border-right: 1px solid var(--mg-line) !important;
+    border-radius: 0 !important;
+    background: var(--mg-surface) !important;
+    box-shadow: none !important;
+    scrollbar-gutter: stable;
+  }
+
+  .mg-printer-preview-pane {
+    grid-column: 2;
+    min-width: 0;
+    min-height: 0;
+    overflow: auto;
+    padding: 16px;
+    background: var(--mg-canvas);
+    overscroll-behavior: contain;
+  }
+
+  .mg-printer-preview {
+    min-width: 0 !important;
+    max-width: 100% !important;
+    margin: 0 !important;
+  }
+
+  .mg-printer-summary {
+    width: min(100%, 1040px);
+    min-height: 44px;
+    display: flex;
+    align-items: center;
+    margin: 0 auto 14px;
+    padding: 10px 14px;
+    border: 1px solid var(--mg-line);
+    border-radius: 12px;
+    background: #fff;
+    color: var(--mg-muted);
+    box-shadow: 0 2px 10px rgba(16, 42, 67, .06);
+    font: 700 .82rem/1.35 system-ui, -apple-system, "Segoe UI", sans-serif;
+  }
+
+  .mg-printer-summary-existing {
+    display: block;
+    min-height: 0;
+  }
+
+  [data-mathsgo-original-generate],
+  [data-mathsgo-original-print] {
+    display: none !important;
+  }
+
+  /* Disques de fractions */
+  [data-mathsgo-printer-family="fraction-discs"] .sidebar {
+    display: flex !important;
+  }
+
+  [data-mathsgo-printer-family="fraction-discs"] .settings-container {
+    padding: 16px !important;
+  }
+
+  [data-mathsgo-printer-family="fraction-discs"] .tabs-nav button,
+  [data-mathsgo-printer-family="fraction-discs"] input,
+  [data-mathsgo-printer-family="fraction-discs"] select,
+  [data-mathsgo-printer-family="fraction-discs"] .seg-btn {
+    min-height: 44px;
+  }
+
+  [data-mathsgo-printer-family="fraction-discs"] .sidebar > .action-bar {
+    display: none !important;
+  }
+
+  [data-mathsgo-printer-family="fraction-discs"] .preview-area {
+    width: 100% !important;
+    padding: 0 !important;
+    overflow: visible !important;
+    background: transparent !important;
+  }
+
+  [data-mathsgo-printer-family="fraction-discs"] .page {
+    transform: none !important;
+    transform-origin: top center !important;
+  }
+
+  /* Cartes de nombres */
+  [data-mathsgo-printer-family="number-cards"] .settings-panel {
+    display: grid !important;
+    align-content: start !important;
+    gap: 16px !important;
+    padding: 18px !important;
+  }
+
+  [data-mathsgo-printer-family="number-cards"] .settings-panel h1 {
+    display: none;
+  }
+
+  [data-mathsgo-printer-family="number-cards"] .control-group {
+    min-width: 0;
+  }
+
+  [data-mathsgo-printer-family="number-cards"] .row-inputs {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
+  }
+
+  [data-mathsgo-printer-family="number-cards"] input,
+  [data-mathsgo-printer-family="number-cards"] select,
+  [data-mathsgo-printer-family="number-cards"] .checkbox-group {
+    min-height: 44px;
+  }
+
+  [data-mathsgo-printer-family="number-cards"] input[type="number"],
+  [data-mathsgo-printer-family="number-cards"] select {
+    width: 100% !important;
+  }
+
+  [data-mathsgo-printer-family="number-cards"] .action-buttons {
+    display: none !important;
+  }
+
+  [data-mathsgo-printer-family="number-cards"] #preview-area {
+    width: 100% !important;
+    overflow: visible !important;
+    align-items: center !important;
+    padding: 0 0 24px !important;
+  }
+
+  /* Tuiles algébriques */
+  [data-mathsgo-printer-family="algebra-tiles"] .pro-controls .brand {
+    display: none !important;
+  }
+
+  [data-mathsgo-printer-family="algebra-tiles"] .controls.pro-controls {
+    padding: 14px !important;
+  }
+
+  [data-mathsgo-printer-family="algebra-tiles"] .controls .action-bar {
+    display: none !important;
+  }
+
+  [data-mathsgo-printer-family="algebra-tiles"] .preview-wrap {
+    width: 100% !important;
+    padding: 0 0 24px !important;
+  }
+
+  /* Livret A5 */
+  [data-mathsgo-printer-family="mental-math-booklet"] .topbar {
+    display: block !important;
+    padding: 14px !important;
+  }
+
+  [data-mathsgo-printer-family="mental-math-booklet"] .toolbarMain,
+  [data-mathsgo-printer-family="mental-math-booklet"] .toolbarJson {
+    width: 100% !important;
+    display: grid !important;
+    grid-template-columns: 1fr !important;
+    gap: 12px !important;
+    margin: 0 0 14px !important;
+    padding: 12px !important;
+  }
+
+  [data-mathsgo-printer-family="mental-math-booklet"] .actions,
+  [data-mathsgo-printer-family="mental-math-booklet"] .btncol {
+    display: grid !important;
+    grid-template-columns: 1fr !important;
+    gap: 8px !important;
+  }
+
+  [data-mathsgo-printer-family="mental-math-booklet"] .actions .btn,
+  [data-mathsgo-printer-family="mental-math-booklet"] .btncol .btn,
+  [data-mathsgo-printer-family="mental-math-booklet"] .field input,
+  [data-mathsgo-printer-family="mental-math-booklet"] .field select {
+    width: 100% !important;
+    min-height: 44px !important;
+    height: auto !important;
+  }
+
+  [data-mathsgo-printer-family="mental-math-booklet"] .wrap {
+    width: 100% !important;
+    padding: 0 !important;
+    overflow: visible !important;
+  }
+
+  [data-mathsgo-printer-family="mental-math-booklet"] #pages {
+    align-items: center;
+  }
+}
+
+@media screen and (max-width: 760px) {
+  .mathsgo-printer-shell {
+    padding-bottom: calc(72px + env(safe-area-inset-bottom)) !important;
+    overflow-x: hidden !important;
+    overflow-y: auto !important;
+  }
+
+  .mg-printer-header {
+    position: sticky;
+    top: 0;
+    grid-template-columns: 82px minmax(0, 1fr);
+    gap: 7px 10px;
+    min-height: 0;
+    padding: 7px 10px 8px;
+  }
+
+  .mg-printer-brand {
+    width: 80px;
+  }
+
+  .mg-printer-heading {
+    display: grid;
+    gap: 2px;
+  }
+
+  .mg-printer-heading h1 {
+    font-size: .98rem;
+  }
+
+  .mg-printer-back {
+    min-height: 28px;
+    width: max-content;
+    max-width: 100%;
+    padding: 4px 8px;
+    overflow: hidden;
+    font-size: .72rem;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+  }
+
+  .mg-printer-view-tabs {
+    grid-column: 1 / -1;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 6px;
+  }
+
+  .mg-printer-view-tabs button {
+    min-height: 40px;
+    padding: 7px 10px;
+    border-radius: 10px;
+    background: #f4f8fc;
+    font-size: .8rem;
+  }
+
+  .mg-printer-view-tabs button.is-active {
+    border-color: var(--mg-blue);
+    background: #e7f3fc;
+    color: var(--mg-navy);
+    box-shadow: inset 0 -3px 0 var(--mg-orange);
+  }
+
+  .mg-printer-actions {
+    position: fixed;
+    z-index: 100;
+    right: 0;
+    bottom: 0;
+    left: 0;
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 7px;
+    padding: 9px 10px max(9px, env(safe-area-inset-bottom));
+    border-top: 1px solid var(--mg-line);
+    background: rgba(255, 255, 255, .97);
+    box-shadow: 0 -5px 18px rgba(16, 42, 67, .12);
+    backdrop-filter: blur(10px);
+  }
+
+  .mg-printer-actions:has(.mg-printer-action:nth-child(2):last-child) {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .mg-printer-action {
+    min-width: 0;
+    min-height: 48px;
+    padding: 7px 5px;
+    border-radius: 10px;
+    font-size: .72rem;
+  }
+
+  .mg-printer-action svg {
+    width: 18px;
+    height: 18px;
+  }
+
+  .mg-printer-workspace {
+    display: block !important;
+    width: 100% !important;
+    height: auto !important;
+    min-height: 0 !important;
+    overflow: visible !important;
+  }
+
+  .mg-printer-settings,
+  .mg-printer-preview-pane {
+    width: 100% !important;
+    height: auto !important;
+    max-height: none !important;
+    overflow: visible !important;
+    border: 0 !important;
+  }
+
+  .mg-printer-settings {
+    padding-bottom: 20px !important;
+  }
+
+  .mg-printer-preview-pane {
+    padding: 10px !important;
+  }
+
+  [data-mathsgo-printer-view="settings"] .mg-printer-preview-pane,
+  [data-mathsgo-printer-view="preview"] .mg-printer-settings {
+    display: none !important;
+  }
+
+  .mg-printer-summary {
+    width: 100%;
+    min-height: 0;
+    margin-bottom: 10px;
+    padding: 9px 10px;
+    border-radius: 10px;
+    font-size: .75rem;
+  }
+
+  .mg-printer-preview {
+    width: 100% !important;
+    overflow: visible !important;
+  }
+
+  [data-mathsgo-printer-family="fraction-discs"] .tabs-nav {
+    position: sticky;
+    top: 0;
+    z-index: 5;
+  }
+
+  [data-mathsgo-printer-family="fraction-discs"] .tabs-nav button {
+    min-width: 0;
+    padding: 8px 3px;
+    font-size: .78rem;
+  }
+
+  [data-mathsgo-printer-family="fraction-discs"] .settings-container,
+  [data-mathsgo-printer-family="number-cards"] .settings-panel,
+  [data-mathsgo-printer-family="algebra-tiles"] .controls.pro-controls,
+  [data-mathsgo-printer-family="mental-math-booklet"] .topbar {
+    padding: 12px !important;
+  }
+
+  [data-mathsgo-printer-family="fraction-discs"] fieldset {
+    margin-bottom: 14px;
+    padding: 13px;
+  }
+
+  [data-mathsgo-printer-family="number-cards"] .settings-panel {
+    gap: 12px !important;
+  }
+
+  [data-mathsgo-printer-family="algebra-tiles"] .type-grid .seg-btn,
+  [data-mathsgo-printer-family="algebra-tiles"] .fold-card summary,
+  [data-mathsgo-printer-family="algebra-tiles"] .stepper button,
+  [data-mathsgo-printer-family="algebra-tiles"] .toggle-pill span {
+    min-height: 44px !important;
+  }
+
+  [data-mathsgo-printer-family="mental-math-booklet"] .toolbarMain,
+  [data-mathsgo-printer-family="mental-math-booklet"] .toolbarJson {
+    padding: 10px !important;
+    border-radius: 12px !important;
+  }
+
+  [data-mathsgo-printer-family="mental-math-booklet"] #taSpec {
+    min-height: 150px;
+  }
+}
+
+@media print {
+  .mg-printer-header,
+  .mg-printer-summary {
+    display: none !important;
+  }
+
+  .mathsgo-printer-shell {
+    display: block !important;
+    min-height: 0 !important;
+    height: auto !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    overflow: visible !important;
+    background: #fff !important;
+  }
+
+  .mg-printer-workspace,
+  .mg-printer-preview-pane {
+    display: block !important;
+    width: auto !important;
+    height: auto !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    overflow: visible !important;
+    border: 0 !important;
+    background: #fff !important;
+  }
+
+  .mg-printer-settings {
+    display: none !important;
+  }
+
+  [data-mathsgo-printer-page] {
+    zoom: 1 !important;
+  }
+}
