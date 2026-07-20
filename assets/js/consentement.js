@@ -164,6 +164,12 @@
     manageSlot.className = "mg-consent-manage-slot";
     manageSlot.hidden = true;
 
+    const bodyStyle = window.getComputedStyle(document.body);
+    const rootStyle = window.getComputedStyle(document.documentElement);
+    const viewportLocked = [bodyStyle.overflow, bodyStyle.overflowY, rootStyle.overflow, rootStyle.overflowY]
+      .some(function (value) { return value === "hidden" || value === "clip"; });
+    manageSlot.classList.toggle("mg-consent-manage-slot--fixed", viewportLocked);
+
     manageButton = document.createElement("button");
     manageButton.type = "button";
     manageButton.className = "mg-consent-manage";

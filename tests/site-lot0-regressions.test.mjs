@@ -6,6 +6,7 @@ const consentScript = await readFile(new URL("../assets/js/consentement.js", imp
 const consentStyles = await readFile(new URL("../assets/css/consentement.css", import.meta.url), "utf8");
 const catalogueScript = await readFile(new URL("../assets/js/catalogue-refonte.js", import.meta.url), "utf8");
 const homePage = await readFile(new URL("../index.html", import.meta.url), "utf8");
+const automatismesPage = await readFile(new URL("../auto/index.html", import.meta.url), "utf8");
 const parentNavigationScript = await readFile(new URL("../assets/js/tool-parent-navigation.js", import.meta.url), "utf8");
 const returnPages = Object.fromEntries(await Promise.all([
   "outils/plateaux_manipulation/mur_diviseurs.html",
@@ -19,17 +20,27 @@ const returnPages = Object.fromEntries(await Promise.all([
   "outils/labo-des-regularites.html",
 ].map(async (path) => [path, await readFile(new URL(`../${path}`, import.meta.url), "utf8")])));
 
-test("le bouton Cookies injecte reste hors du flux de mise en page", () => {
-  assert.doesNotMatch(consentScript, /viewportLocked|getComputedStyle\(document\.(?:body|documentElement)\)/);
+test("le bouton Cookies injecté ne flotte que sur les écrans verrouillés", () => {
+  assert.match(consentScript, /const viewportLocked = \[bodyStyle\.overflow, bodyStyle\.overflowY, rootStyle\.overflow, rootStyle\.overflowY\]/);
+  assert.match(consentScript, /manageSlot\.classList\.toggle\("mg-consent-manage-slot--fixed", viewportLocked\)/);
   assert.match(
     consentStyles,
-    /\.mg-consent-manage-slot\s*\{[^}]*position:\s*fixed;/s,
-    "le conteneur injecte doit toujours être positionné par rapport à la fenêtre",
+    /\.mg-consent-manage-slot\s*\{[^}]*position:\s*relative;[^}]*flex:\s*0\s+0\s+100%;/s,
+    "le conteneur injecté doit rester dans le pied des pages ordinaires",
   );
-  assert.doesNotMatch(
+  assert.match(
     consentStyles,
-    /\.mg-consent-manage-slot\s*\{[^}]*flex:\s*0\s+0\s+100%;/s,
-    "le conteneur ne doit jamais réserver toute la hauteur d'un parent flex",
+    /\.mg-consent-manage-slot--fixed\s*\{[^}]*position:\s*fixed;/s,
+    "seuls les écrans sans défilement utilisent le secours fixe",
+  );
+});
+
+test("Automatismes garde les cookies dans son pied de page compact", () => {
+  assert.match(automatismesPage, /<footer class="auto-footer">[\s\S]*data-mathsgo-consent-open[\s\S]*Gérer mes cookies[\s\S]*<\/footer>/);
+  assert.match(automatismesPage, /<div class="setup-action-shell is-empty"/);
+  assert.ok(
+    automatismesPage.indexOf("data-mathsgo-consent-open") < automatismesPage.indexOf("setup-action-shell is-empty"),
+    "le lien Cookies doit rester dans le pied du menu, avant la barre de lancement",
   );
 });
 
