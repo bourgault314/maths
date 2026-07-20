@@ -17,9 +17,9 @@
     <g transform="translate(26 225)"><use href="#h" x="52"/><use href="#h" x="104"/><use href="#h" x="156"/><use href="#h" x="208"/><use href="#h" x="260"/></g>
     <g transform="translate(52 270)"><use href="#h" x="52"/><use href="#h" x="104"/><use href="#h" x="156"/><use href="#h" x="208"/></g>
     <g stroke-width="2">
-      <circle cx="156" cy="165" r="17" fill="#1c1b1a"/><circle cx="197" cy="142" r="17" fill="#d53738"/>
-      <circle cx="239" cy="165" r="17" fill="#1c1b1a"/><circle cx="280" cy="188" r="17" fill="#d53738"/>
-      <circle cx="239" cy="210" r="17" fill="#d53738"/><circle cx="197" cy="233" r="17" fill="#1c1b1a"/>
+      <circle cx="156" cy="165" r="17" fill="#1c1b1a"/><circle cx="208" cy="165" r="17" fill="#d53738"/>
+      <circle cx="260" cy="165" r="17" fill="#1c1b1a"/><circle cx="208" cy="210" r="17" fill="#d53738"/>
+      <circle cx="260" cy="210" r="17" fill="#d53738"/><circle cx="208" cy="255" r="17" fill="#1c1b1a"/>
     </g>
   </g>
 </svg>
