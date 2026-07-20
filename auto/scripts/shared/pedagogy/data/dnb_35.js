@@ -27,7 +27,8 @@ MATHSGO_PEDAGOGY.registerModule('dnb_35',{
     visualRules:[
       'Le schéma de pourcentage est une aide facultative et ne remplace pas le calcul demandé.',
       'La valeur initiale correspond exactement à 100 % ; la hausse est ajoutée au-delà et la baisse est retirée à l’intérieur.',
-      'Les barres de la valeur initiale et de l’évolution restent séparées par une limite nette, sans fractionner la barre principale.'
+      'Les barres de la valeur initiale et de l’évolution restent séparées par une limite nette, sans fractionner la barre principale.',
+      'Le tableau occupe la même largeur utile que la barre de calcul d’un pourcentage, sur téléphone comme sur ordinateur.'
     ],
     cautions:[
       'Ajouter p à une quantité ne signifie pas l’augmenter de p %.',
