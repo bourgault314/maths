@@ -19,6 +19,7 @@
   :root{
     --page:#f6f8fb; --papier:#ffffff; --encre:#10294a; --bleu:#063f86;
     --turquoise:#08b9b2; --orange:#f58220; --attenue:#637287;
+    --turquoise-contraste:#00847f; --orange-contraste:#c45100;
     --ligne:#dce5ef; --ligne-bouton:#cfdcee; --fond-doux:#f5f9fc;
   }
   *{box-sizing:border-box}
@@ -57,8 +58,8 @@
   .pastille-etape{display:inline-grid;place-items:center;width:24px;height:24px;flex:none;
     border-radius:8px;color:#fff;font-size:12.5px;font-weight:900;
     box-shadow:0 3px 8px rgba(6,63,134,.13)}
-  .pastille-reglages{background:var(--orange)}
-  .pastille-modules{background:var(--turquoise)}
+  .pastille-reglages{background:var(--orange-contraste)}
+  .pastille-modules{background:var(--turquoise-contraste)}
 
   /* ————— Réglages : deux colonnes lisibles, sans changer les sélecteurs V10.
      Sélecteurs : une barre douce, seul le choix actif ressort en pastille pleine */
@@ -81,7 +82,7 @@
   /* DNB n'est pas un niveau de classe : trait de séparation, encre orange */
   .separation-epreuve{width:1px;align-self:stretch;margin:4px 3px;background:var(--ligne);flex:none}
   .segments .bouton-epreuve{display:flex;flex-direction:row;align-items:center;justify-content:center;
-    gap:7px;line-height:1;padding:2px 11px;color:var(--orange)}
+    gap:7px;line-height:1;padding:2px 11px;color:var(--orange-contraste)}
   /* Sur ordinateur, DNB accueille aussi l’icône « sans calculatrice » :
      une part légèrement plus large garde l’ensemble centré et non rogné. */
   @media(min-width:651px){
@@ -94,12 +95,16 @@
   .calc-barree{display:none;width:17px;height:17px;flex:none}
   .segments .bouton-epreuve.est-actif .calc-barree{display:block}
   .segments .bouton-epreuve:hover{background:#fff8f1}
-  .segments .bouton-epreuve.est-actif{background:var(--orange);color:#fff;
-    box-shadow:0 3px 10px rgba(245,130,32,.28)}
+  .segments .bouton-epreuve.est-actif{background:var(--orange-contraste);color:#fff;
+    box-shadow:0 3px 10px rgba(196,81,0,.30)}
   .segments .bouton-epreuve:focus-visible{outline-color:rgba(245,130,32,.5)}
 
   /* ————— Choix des automatismes ————— */
-  .barre-choix{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:8px}
+  .barre-choix{position:sticky;z-index:20;top:max(8px,env(safe-area-inset-top));
+    display:flex;align-items:center;justify-content:space-between;gap:12px;
+    margin:-5px -6px 8px;padding:5px 6px;background:rgba(255,255,255,.94);
+    border-bottom:1px solid var(--ligne);border-radius:12px 12px 8px 8px;
+    backdrop-filter:blur(10px) saturate(1.2);-webkit-backdrop-filter:blur(10px) saturate(1.2)}
   .actions-groupees{display:flex;gap:6px}
   .actions-groupees button{border:1px solid var(--ligne-bouton);background:#fff;color:var(--attenue);
     font:inherit;font-size:13px;font-weight:700;border-radius:999px;padding:7px 15px;cursor:pointer}
@@ -121,7 +126,8 @@
   .theme-count{font-weight:700;font-size:12.5px;color:var(--attenue);
     background:var(--fond-doux);border:1px solid var(--ligne);border-radius:999px;
     padding:4px 11px;white-space:nowrap}
-  .has-selection .theme-count{background:var(--turquoise);border-color:var(--turquoise);color:#fff}
+  .has-selection .theme-count{background:var(--turquoise-contraste);
+    border-color:var(--turquoise-contraste);color:#fff}
   .theme-chevron{width:9px;height:9px;flex:none;margin:0 4px;
     border-right:2.5px solid var(--attenue);border-bottom:2.5px solid var(--attenue);
     transform:rotate(-45deg);transition:transform .15s}
@@ -166,11 +172,16 @@
   .resume span{overflow:hidden;color:var(--attenue);font-size:12px;line-height:1.2;
     text-overflow:ellipsis;white-space:nowrap}
   .est-vide .resume strong{color:var(--attenue);font-weight:600}
-  #boutonLancer{border:0;cursor:pointer;font:inherit;font-weight:700;font-size:15.5px;color:#fff;
-    background:linear-gradient(180deg,#ff9a3d,var(--orange));border-radius:999px;
-    min-height:48px;padding:11px 26px;box-shadow:0 10px 24px rgba(245,130,32,.30);
-    transition:transform .1s,box-shadow .12s}
-  #boutonLancer:hover:not(:disabled){transform:translateY(-1px);box-shadow:0 14px 28px rgba(245,130,32,.36)}
+  #boutonLancer{position:relative;border:0;cursor:pointer;font:inherit;font-weight:700;
+    font-size:15.5px;color:#fff;background:linear-gradient(180deg,var(--orange-contraste),#9f3f00);
+    border-radius:999px;min-width:248px;min-height:48px;padding:11px 44px;
+    box-shadow:0 10px 24px rgba(159,63,0,.28);transition:transform .1s,box-shadow .12s}
+  #boutonLancer .calc-lancement{display:none;position:absolute;left:18px;top:50%;
+    width:20px;height:20px;transform:translateY(-50%)}
+  #boutonLancer.avec-calculatrice-barree .calc-lancement{display:block}
+  #boutonLancer .texte-lancement{display:block}
+  #boutonLancer:hover:not(:disabled){transform:translateY(-1px);
+    box-shadow:0 14px 28px rgba(159,63,0,.34)}
   #boutonLancer:active:not(:disabled){transform:translateY(1px);box-shadow:none}
   #boutonLancer:focus-visible{outline:3px solid rgba(245,130,32,.5);outline-offset:3px}
   #boutonLancer:disabled{background:#cdd7e4;box-shadow:none;cursor:not-allowed}
@@ -196,6 +207,7 @@
     .segments .bouton-epreuve{gap:2px;padding:1px 4px}
     .mention-epreuve{font-size:6.5px}
     .calc-barree{width:14px;height:14px}
+    .segments .bouton-epreuve.est-actif .calc-barree{display:none}
     .theme-summary{gap:9px;min-height:54px;padding:8px 10px}
     .theme-name{font-size:14.5px}
     .theme-count-label{display:none}
@@ -204,7 +216,7 @@
     .barre-action.est-vide{display:none}
     .barre-action-carte{display:block;width:100%;padding:8px}
     .resume{display:none}
-    #boutonLancer{width:100%}
+    #boutonLancer{width:100%;min-width:0}
   }
   @media(max-width:360px){
     body{padding-left:max(8px,env(safe-area-inset-left));padding-right:max(8px,env(safe-area-inset-right))}
@@ -212,7 +224,6 @@
     .grille-reglages{gap:5px}
     .segments button{min-height:31px;font-size:11.5px;padding:2px}
     .mention-epreuve{display:none}
-    .segments .bouton-epreuve.est-actif .calc-barree{display:none}
   }
 </style>
 </head>
@@ -255,7 +266,7 @@
               <circle cx="9.4" cy="16.6" r="1.05" fill="currentColor"/>
               <circle cx="12.2" cy="16.6" r="1.05" fill="currentColor"/>
               <circle cx="15" cy="16.6" r="1.05" fill="currentColor"/>
-              <path d="M3.6 21.4 20.4 2.6" fill="none" stroke="#f58220" stroke-width="4.6" stroke-linecap="round"/>
+              <path d="M3.6 21.4 20.4 2.6" fill="none" stroke="#c45100" stroke-width="4.6" stroke-linecap="round"/>
               <path d="M3.6 21.4 20.4 2.6" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
             </svg>
           </button>
@@ -313,7 +324,21 @@
       <strong id="resumeSelection">Choisis au moins un automatisme</strong>
       <span id="resumeReglages">3e · 5 questions · Interactif · Avec aide</span>
     </div>
-    <button id="boutonLancer" type="button" disabled>Lancer l’entraînement</button>
+    <button id="boutonLancer" type="button" disabled>
+      <svg class="calc-lancement" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+        <rect x="6" y="2.8" width="12.4" height="18.4" rx="2.6" fill="none" stroke="currentColor" stroke-width="1.7"/>
+        <rect x="8.5" y="5.5" width="7.4" height="3.6" rx="1" fill="currentColor" opacity=".92"/>
+        <circle cx="9.4" cy="12.6" r="1.05" fill="currentColor"/>
+        <circle cx="12.2" cy="12.6" r="1.05" fill="currentColor"/>
+        <circle cx="15" cy="12.6" r="1.05" fill="currentColor"/>
+        <circle cx="9.4" cy="16.6" r="1.05" fill="currentColor"/>
+        <circle cx="12.2" cy="16.6" r="1.05" fill="currentColor"/>
+        <circle cx="15" cy="16.6" r="1.05" fill="currentColor"/>
+        <path d="M3.6 21.4 20.4 2.6" fill="none" stroke="#ad4600" stroke-width="4.6" stroke-linecap="round"/>
+        <path d="M3.6 21.4 20.4 2.6" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+      </svg>
+      <span class="texte-lancement">Lancer l’entraînement</span>
+    </button>
   </div>
 </div>
 
