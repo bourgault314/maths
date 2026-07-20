@@ -172,3 +172,19 @@ Les dimensions sont choisies dans des corpus contrôlés pour permettre un
 calcul mental sans calculatrice. Pour le cylindre, une réponse est soit exacte
 et contient π, soit approchée avec π ≈ 3 ; dans ce second cas, « environ » est
 écrit dans la consigne, la réponse et la correction.
+
+## 20 juillet 2026
+
+### D-024 — Un registre unique relie une notion au lecteur
+
+Chaque notion exposée par le lecteur déclare dans un registre unique son
+identifiant, son nom, son gabarit, son type de rendu et ses capacités
+d'interaction. Le moteur d'état ne connaît plus directement les générateurs et
+l'interface ne maintient plus une seconde liste d'identifiants.
+
+Les rendus spécialisés restent autorisés : une notion peut demander un visuel,
+une aide ou une correction propres. Ils sont sélectionnés par un type de rendu
+explicite, jamais par un branchement implicite vers une notion par défaut. Une
+interaction réservée aux chiffres ou aux solides est bloquée pour les autres
+familles. Cette architecture précède toute nouvelle micro-notion et ne modifie
+pas le contenu pédagogique déjà validé.
