@@ -1431,10 +1431,10 @@ select { cursor: pointer; }
     font-size: .8rem;
   }
   body.catalogue-is-deep .site-header > .catalogue-breadcrumb:has(.breadcrumb-parent) {
-    display: grid;
-    grid-template-columns: max-content minmax(0, 1fr);
-    align-items: center;
-    gap: 5px;
+    display: block;
+  }
+  body.catalogue-is-deep .site-header > .catalogue-breadcrumb:has(.breadcrumb-parent) .breadcrumb-back {
+    display: none;
   }
   body.catalogue-is-deep .breadcrumb-back {
     min-height: 44px;
@@ -1445,7 +1445,8 @@ select { cursor: pointer; }
     position: relative;
     min-width: 0;
     min-height: 44px;
-    padding: 5px 4px 5px 15px;
+    width: 100%;
+    padding: 5px 10px 5px 31px;
     overflow: hidden;
     border: 0;
     border-radius: 7px;
@@ -1454,13 +1455,14 @@ select { cursor: pointer; }
     font-weight: 720;
     white-space: nowrap;
     text-overflow: ellipsis;
+    text-align: left;
   }
   body.catalogue-is-deep .breadcrumb-parent::before {
-    content: "›";
+    content: "←";
     position: absolute;
-    left: 3px;
-    color: #8ba0b7;
-    font-size: 1rem;
+    left: 9px;
+    color: #0b5fc0;
+    font-size: 1.15rem;
     font-weight: 850;
   }
   body.catalogue-is-deep .breadcrumb-parent:hover,
