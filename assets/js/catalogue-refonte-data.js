@@ -711,9 +711,24 @@ window.MATHSGO_CATALOGUE = {
       "thumbnail": "assets/img/thumbnails/thales/tester-parallelisme-a-verifier.png?v=3",
       "cardDescription": "Version 2 : partir des rapports, les comparer, puis vérifier la disposition seulement en cas d’égalité."
     },
-    "outils/gabarits_proportionnalite_tableaux.pdf": { "primaryNotion": "proportionnalite", "collections": [], "tags": ["proportionnalite", "tableau", "gabarit", "imprimable"] },
-    "outils/gabarit_proportionnalite_double_ligne_graduee.pdf": { "primaryNotion": "proportionnalite", "collections": [], "tags": ["proportionnalite", "double-ligne-graduee", "gabarit", "imprimable"] },
-    "outils/gabarit_proportionnalite_tableau_sans_coefficient.pdf": { "primaryNotion": "proportionnalite", "collections": [], "tags": ["proportionnalite", "tableau", "sans-coefficient", "gabarit", "imprimable"] },
+    "outils/gabarits_proportionnalite_tableaux.pdf": {
+      "primaryNotion": "proportionnalite",
+      "collections": [],
+      "tags": ["proportionnalite", "tableau", "gabarit", "imprimable"],
+      "thumbnail": "assets/img/thumbnails/proportionnalite/gabarits-tableaux.png?v=1"
+    },
+    "outils/gabarit_proportionnalite_double_ligne_graduee.pdf": {
+      "primaryNotion": "proportionnalite",
+      "collections": [],
+      "tags": ["proportionnalite", "double-ligne-graduee", "gabarit", "imprimable"],
+      "thumbnail": "assets/img/thumbnails/proportionnalite/double-ligne-graduee.png?v=1"
+    },
+    "outils/gabarit_proportionnalite_tableau_sans_coefficient.pdf": {
+      "primaryNotion": "proportionnalite",
+      "collections": [],
+      "tags": ["proportionnalite", "tableau", "sans-coefficient", "gabarit", "imprimable"],
+      "thumbnail": "assets/img/thumbnails/proportionnalite/tableau-sans-coefficient.png?v=1"
+    },
     "outils/angles/fiche_angles_triangles.pdf": { "primaryNotion": "angles", "collections": [], "tags": ["angles", "triangles", "imprimable"] }
   },
   "resourceFamilies": [
