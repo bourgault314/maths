@@ -1437,14 +1437,14 @@ select { cursor: pointer; }
     gap: 5px;
   }
   body.catalogue-is-deep .breadcrumb-back {
-    min-height: 36px;
+    min-height: 44px;
     padding: 5px 9px;
     white-space: nowrap;
   }
   body.catalogue-is-deep .breadcrumb-parent {
     position: relative;
     min-width: 0;
-    min-height: 36px;
+    min-height: 44px;
     padding: 5px 4px 5px 15px;
     overflow: hidden;
     border: 0;

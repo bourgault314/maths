@@ -201,7 +201,9 @@
   }
 
   .mg-printer-summary {
+    box-sizing: border-box;
     width: min(100%, 1040px);
+    max-width: 100%;
     min-height: 44px;
     display: flex;
     align-items: center;
@@ -549,6 +551,12 @@
 @media print {
   .mg-printer-header,
   .mg-printer-summary {
+    display: none !important;
+  }
+
+  .mathsgo-printer-shell .no-print,
+  .mathsgo-printer-shell .preview-controls,
+  .mathsgo-printer-shell .preview-toolbar {
     display: none !important;
   }
 

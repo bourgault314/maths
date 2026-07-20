@@ -58,7 +58,12 @@ test("les aperçus sont ajustés à l'écran mais jamais redimensionnés pour l'
 
   const printStyles = shellStyles.slice(shellStyles.lastIndexOf("@media print"));
   assert.match(printStyles, /\[data-mathsgo-printer-page\]\s*\{[^}]*zoom:\s*1\s*!important/s);
+  assert.match(printStyles, /\.mathsgo-printer-shell \.no-print,[\s\S]*?\.mathsgo-printer-shell \.preview-controls,[\s\S]*?display:\s*none\s*!important/s);
   assert.doesNotMatch(printStyles, /(?:\.page|\.page-a4|\.sheet)\s*\{[^}]*(?:width|height|transform)\s*:/s);
+});
+
+test("les résumés restent contenus dans la largeur disponible", () => {
+  assert.match(shellStyles, /\.mg-printer-summary\s*\{[^}]*box-sizing:\s*border-box;[^}]*max-width:\s*100%/s);
 });
 
 test("les boutons communs délèguent aux moteurs existants", () => {

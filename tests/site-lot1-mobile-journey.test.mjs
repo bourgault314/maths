@@ -36,6 +36,8 @@ test("le fil d'Ariane profond distingue clairement le retour et le domaine", () 
   assert.match(catalogueStyles, /catalogue-breadcrumb:has\(\.breadcrumb-parent\)[^{]*\{[^}]*grid-template-columns:\s*max-content minmax\(0, 1fr\)/s);
   assert.match(catalogueStyles, /\.breadcrumb-parent\s*\{[^}]*background:\s*transparent;[^}]*text-overflow:\s*ellipsis/s);
   assert.match(catalogueStyles, /\.breadcrumb-parent::before\s*\{[^}]*content:\s*"›"/s);
+  assert.match(catalogueStyles, /body\.catalogue-is-deep \.breadcrumb-back\s*\{[^}]*min-height:\s*44px/s);
+  assert.match(catalogueStyles, /body\.catalogue-is-deep \.breadcrumb-parent\s*\{[^}]*min-height:\s*44px/s);
 });
 
 test("la couche Rekenrek reste limitée au mobile et conserve les gestes du plateau", () => {
@@ -52,6 +54,7 @@ test("la compatibilité Rekenrek fonctionne aussi sur un aperçu servi dans un s
   assert.match(parentNavigationScript, /currentSitePathname\(\)/);
   assert.match(parentNavigationScript, /new URL\("assets\/css\/rekenrek-mobile-compat\.css\?v=1", siteBaseUrl\)/);
   assert.match(parentNavigationScript, /normaliseViewport\(\)/);
+  assert.match(parentNavigationScript, /@media \(max-width: 520px\)[\s\S]*?\.mathsgo-parent-navigation \{ width: 44px; height: 48px;/);
 });
 
 test("les seize anciens outils Rekenrek chargent la navigation et autorisent le zoom", async () => {

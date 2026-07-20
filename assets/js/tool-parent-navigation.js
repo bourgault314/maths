@@ -184,7 +184,7 @@
         outline-offset: 2px;
       }
       @media (max-width: 520px) {
-        .mathsgo-parent-navigation { width: 42px; height: 48px; border-radius: 0 12px 12px 0; }
+        .mathsgo-parent-navigation { width: 44px; height: 48px; border-radius: 0 12px 12px 0; }
       }
       @media print { .mathsgo-parent-navigation { display: none !important; } }
     `;
