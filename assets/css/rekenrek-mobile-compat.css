@@ -1,10 +1,11 @@
 /*
- * Couche de compatibilité mobile des anciens outils Rekenrek.
- * Elle ne modifie ni les dimensions mathématiques ni le rendu ordinateur :
- * seules la barre d'outils et la surface disponible sont réorganisées.
+ * Couche de compatibilité compacte des anciens outils Rekenrek.
+ * Elle ne modifie pas les dimensions mathématiques : seules la barre d'outils
+ * et la surface disponible sont réorganisées sur téléphone, tablette et petite
+ * fenêtre d'ordinateur.
  */
 
-@media (max-width: 720px) {
+@media (max-width: 1100px) {
   html[data-mathsgo-mobile-family="rekenrek"],
   html[data-mathsgo-mobile-family="rekenrek"] body {
     width: 100% !important;

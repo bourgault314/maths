@@ -67,6 +67,10 @@
     return String(value || "").replace(/\/index\.html$/, "/");
   }
 
+  function isRekenrekTool(pathname) {
+    return /^\/outils\/bouliers\/rekenrek\/(?!index\.html$)/.test(pathname);
+  }
+
   function findParent(pathname) {
     const routes = [
       [/^\/auto\//, "/outils/automatismes/", "Automatismes"],
@@ -77,7 +81,7 @@
       [/^\/outils\/fabrication_materiel\/(?:cartes_premiers_1_100|grille_de_nombres)\.html$/, "/outils/index.html?domain=nombres-calculs&notion=divisibilite", "Divisibilité"],
       [/^\/outils\/fabrication_materiel\/numeration_decimale_maker\.html$/, "/outils/index.html?domain=nombres-calculs&notion=numeration", "Numération"],
       [/^\/outils\/plateaux_manipulation\/(?:numeration_decimale|glisse_nombres_decimaux|glisse_entiers_flex)\.html$/, "/outils/index.html?domain=nombres-calculs&notion=numeration", "Numération"],
-      [/^\/outils\/bouliers\/rekenrek\//, "/outils/bouliers/rekenrek/", "Rekenrek"],
+      [/^\/outils\/bouliers\/rekenrek\//, "/outils/index.html?domain=nombres-calculs&collection=rekenrek", "Rekenrek"],
       [/^\/outils\/bouliers\/boulier_montessori\//, "/outils/bouliers/boulier_montessori/", "Boulier Montessori"],
       [/^\/outils\/bouliers\/abaque_de_gerbert\//, "/outils/bouliers/abaque_de_gerbert/", "Abaque de Gerbert"],
       [/^\/outils\/bouliers\/soroban\//, "/outils/bouliers/soroban/", "Soroban"],
@@ -187,19 +191,60 @@
       @media (max-width: 520px) {
         .mathsgo-parent-navigation { width: 44px; height: 48px; border-radius: 0 12px 12px 0; }
       }
+      .mathsgo-parent-navigation.mathsgo-parent-navigation-inline {
+        position: static;
+        order: -3;
+        flex: 0 0 auto;
+        width: auto;
+        min-width: 44px;
+        height: 44px;
+        min-height: 44px;
+        padding: 0 11px;
+        gap: 6px;
+        border: 1px solid rgba(255, 255, 255, .32);
+        border-radius: 9px;
+        background: rgba(255, 255, 255, .12);
+        color: #fff;
+        box-shadow: none;
+        font: 800 14px/1 system-ui, -apple-system, "Segoe UI", sans-serif;
+        transform: none;
+        opacity: 1;
+        -webkit-backdrop-filter: none;
+        backdrop-filter: none;
+        white-space: nowrap;
+      }
+      .mathsgo-parent-navigation.mathsgo-parent-navigation-inline:hover,
+      .mathsgo-parent-navigation.mathsgo-parent-navigation-inline:focus-visible {
+        color: #fff;
+        background: rgba(255, 255, 255, .2);
+      }
+      @media (max-width: 520px) {
+        .mathsgo-parent-navigation.mathsgo-parent-navigation-inline {
+          width: auto;
+          height: 44px;
+          border-radius: 9px;
+        }
+      }
       @media print { .mathsgo-parent-navigation { display: none !important; } }
     `;
 
+    const pathname = currentSitePathname();
+    const inlineHost = isRekenrekTool(pathname) ? document.querySelector(".toolbar") : null;
     const link = document.createElement("a");
     link.className = "mathsgo-parent-navigation";
     link.dataset.mathsgoParentNavigation = "";
     link.href = siteUrl(parent.href);
-    link.textContent = "←";
+    link.textContent = inlineHost ? `← ${parent.label}` : "←";
     link.title = `Retour à ${parent.label}`;
     link.setAttribute("aria-label", `Retour à ${parent.label}`);
 
     document.head.appendChild(style);
-    document.body.appendChild(link);
+    if (inlineHost) {
+      link.classList.add("mathsgo-parent-navigation-inline");
+      inlineHost.prepend(link);
+    } else {
+      document.body.appendChild(link);
+    }
   }
 
   installMobileCompatibility();

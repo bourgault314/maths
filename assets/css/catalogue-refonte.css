@@ -503,7 +503,7 @@ select { cursor: pointer; }
 }
 
 .catalogue-breadcrumb button {
-  min-height: 40px;
+  min-height: 44px;
   padding: 7px 12px;
   border: 1px solid #d8e4ef;
   border-radius: 999px;

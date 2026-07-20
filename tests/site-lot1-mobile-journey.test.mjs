@@ -38,10 +38,11 @@ test("le fil d'Ariane profond distingue clairement le retour et le domaine", () 
   assert.match(catalogueStyles, /\.breadcrumb-parent::before\s*\{[^}]*content:\s*"›"/s);
   assert.match(catalogueStyles, /body\.catalogue-is-deep \.breadcrumb-back\s*\{[^}]*min-height:\s*44px/s);
   assert.match(catalogueStyles, /body\.catalogue-is-deep \.breadcrumb-parent\s*\{[^}]*min-height:\s*44px/s);
+  assert.match(catalogueStyles, /\.catalogue-breadcrumb button\s*\{[^}]*min-height:\s*44px/s);
 });
 
-test("la couche Rekenrek reste limitée au mobile et conserve les gestes du plateau", () => {
-  assert.match(rekenrekStyles, /@media\s*\(max-width:\s*720px\)/);
+test("la couche compacte Rekenrek couvre les tablettes et conserve les gestes du plateau", () => {
+  assert.match(rekenrekStyles, /@media\s*\(max-width:\s*1100px\)/);
   assert.match(rekenrekStyles, /body\s*\{[^}]*touch-action:\s*pan-y pinch-zoom/s);
   assert.match(rekenrekStyles, /#main-container\s*\{[^}]*touch-action:\s*none/s);
   assert.match(rekenrekStyles, /\.toolbar\s*\{[^}]*flex-wrap:\s*wrap/s);
@@ -54,7 +55,10 @@ test("la compatibilité Rekenrek fonctionne aussi sur un aperçu servi dans un s
   assert.match(parentNavigationScript, /currentSitePathname\(\)/);
   assert.match(parentNavigationScript, /new URL\("assets\/css\/rekenrek-mobile-compat\.css\?v=1", siteBaseUrl\)/);
   assert.match(parentNavigationScript, /normaliseViewport\(\)/);
-  assert.match(parentNavigationScript, /@media \(max-width: 520px\)[\s\S]*?\.mathsgo-parent-navigation \{ width: 44px; height: 48px;/);
+  assert.match(parentNavigationScript, /\.mathsgo-parent-navigation\.mathsgo-parent-navigation-inline\s*\{[\s\S]*?position:\s*static;[\s\S]*?min-height:\s*44px;/);
+  assert.match(parentNavigationScript, /inlineHost\.prepend\(link\)/);
+  assert.match(parentNavigationScript, /link\.textContent = inlineHost \? `← \$\{parent\.label\}` : "←"/);
+  assert.match(parentNavigationScript, /\/outils\/index\.html\?domain=nombres-calculs&collection=rekenrek/);
 });
 
 test("les seize anciens outils Rekenrek chargent la navigation et autorisent le zoom", async () => {
