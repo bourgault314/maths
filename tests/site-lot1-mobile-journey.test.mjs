@@ -31,11 +31,11 @@ const rekenrekPages = [
   "tables.html",
 ];
 
-test("le fil d'Ariane profond distingue clairement le retour et le domaine", () => {
+test("le fil d'Ariane mobile garde un seul retour contextuel", () => {
   assert.match(catalogueScript, /class="breadcrumb-parent" data-breadcrumb-target="domain"/);
-  assert.match(catalogueStyles, /catalogue-breadcrumb:has\(\.breadcrumb-parent\)[^{]*\{[^}]*grid-template-columns:\s*max-content minmax\(0, 1fr\)/s);
-  assert.match(catalogueStyles, /\.breadcrumb-parent\s*\{[^}]*background:\s*transparent;[^}]*text-overflow:\s*ellipsis/s);
-  assert.match(catalogueStyles, /\.breadcrumb-parent::before\s*\{[^}]*content:\s*"›"/s);
+  assert.match(catalogueStyles, /catalogue-breadcrumb:has\(\.breadcrumb-parent\) \.breadcrumb-back\s*\{[^}]*display:\s*none/s);
+  assert.match(catalogueStyles, /body\.catalogue-is-deep \.breadcrumb-parent\s*\{[^}]*width:\s*100%;[^}]*text-overflow:\s*ellipsis/s);
+  assert.match(catalogueStyles, /\.breadcrumb-parent::before\s*\{[^}]*content:\s*"←"/s);
   assert.match(catalogueStyles, /body\.catalogue-is-deep \.breadcrumb-back\s*\{[^}]*min-height:\s*44px/s);
   assert.match(catalogueStyles, /body\.catalogue-is-deep \.breadcrumb-parent\s*\{[^}]*min-height:\s*44px/s);
   assert.match(catalogueStyles, /\.catalogue-breadcrumb button\s*\{[^}]*min-height:\s*44px/s);
@@ -54,12 +54,10 @@ test("la compatibilité Rekenrek fonctionne aussi sur un aperçu servi dans un s
   assert.match(parentNavigationScript, /const siteBaseUrl = new URL\("\.\.\/\.\.\/", scriptSource\)/);
   assert.match(parentNavigationScript, /currentSitePathname\(\)/);
   assert.match(parentNavigationScript, /new URL\("assets\/css\/rekenrek-mobile-compat\.css\?v=1", siteBaseUrl\)/);
-  assert.match(parentNavigationScript, /normaliseViewport\(\)/);
-  assert.match(parentNavigationScript, /\.mathsgo-parent-navigation\.mathsgo-parent-navigation-inline\s*\{[\s\S]*?position:\s*static;[\s\S]*?min-height:\s*44px;/);
-  assert.match(parentNavigationScript, /inlineHost\.prepend\(link\)/);
-  assert.match(parentNavigationScript, /link\.textContent = inlineHost \? `← \$\{parent\.label\}` : "←"/);
+  assert.match(parentNavigationScript, /if \(!\/\^\\\/outils\\\/bouliers\\\/rekenrek\\\//);
+  assert.match(parentNavigationScript, /return;\n\s*normaliseViewport\(\);/);
+  assert.doesNotMatch(parentNavigationScript, /document\.createElement\("a"\)/);
   assert.match(parentNavigationScript, /window\.self !== window\.top[\s\S]*?link\.target = "_top"/);
-  assert.match(parentNavigationScript, /\/outils\/index\.html\?domain=nombres-calculs&collection=rekenrek/);
 });
 
 test("les seize anciens outils Rekenrek chargent la navigation et autorisent le zoom", async () => {
