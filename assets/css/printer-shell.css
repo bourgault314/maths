@@ -259,6 +259,33 @@
     transform-origin: top center !important;
   }
 
+  /* Matériel de numération décimale */
+  [data-mathsgo-printer-family="decimal-material"] .sidebar {
+    display: flex !important;
+  }
+
+  [data-mathsgo-printer-family="decimal-material"] .settings-container {
+    padding: 16px !important;
+  }
+
+  [data-mathsgo-printer-family="decimal-material"] .tabs-nav button,
+  [data-mathsgo-printer-family="decimal-material"] input,
+  [data-mathsgo-printer-family="decimal-material"] select,
+  [data-mathsgo-printer-family="decimal-material"] .choice {
+    min-height: 44px;
+  }
+
+  [data-mathsgo-printer-family="decimal-material"] .sidebar > .action-bar {
+    display: none !important;
+  }
+
+  [data-mathsgo-printer-family="decimal-material"] .preview-area {
+    width: 100% !important;
+    padding: 0 !important;
+    overflow: visible !important;
+    background: transparent !important;
+  }
+
   /* Cartes de nombres */
   [data-mathsgo-printer-family="number-cards"] .settings-panel {
     display: grid !important;
@@ -393,10 +420,10 @@
   }
 
   .mg-printer-back {
-    min-height: 28px;
+    min-height: 44px;
     width: max-content;
     max-width: 100%;
-    padding: 4px 8px;
+    padding: 8px;
     overflow: hidden;
     font-size: .72rem;
     white-space: nowrap;
@@ -411,7 +438,7 @@
   }
 
   .mg-printer-view-tabs button {
-    min-height: 40px;
+    min-height: 44px;
     padding: 7px 10px;
     border-radius: 10px;
     background: #f4f8fc;
@@ -502,26 +529,30 @@
     overflow: visible !important;
   }
 
-  [data-mathsgo-printer-family="fraction-discs"] .tabs-nav {
+  [data-mathsgo-printer-family="fraction-discs"] .tabs-nav,
+  [data-mathsgo-printer-family="decimal-material"] .tabs-nav {
     position: sticky;
     top: 0;
     z-index: 5;
   }
 
-  [data-mathsgo-printer-family="fraction-discs"] .tabs-nav button {
+  [data-mathsgo-printer-family="fraction-discs"] .tabs-nav button,
+  [data-mathsgo-printer-family="decimal-material"] .tabs-nav button {
     min-width: 0;
     padding: 8px 3px;
     font-size: .78rem;
   }
 
   [data-mathsgo-printer-family="fraction-discs"] .settings-container,
+  [data-mathsgo-printer-family="decimal-material"] .settings-container,
   [data-mathsgo-printer-family="number-cards"] .settings-panel,
   [data-mathsgo-printer-family="algebra-tiles"] .controls.pro-controls,
   [data-mathsgo-printer-family="mental-math-booklet"] .topbar {
     padding: 12px !important;
   }
 
-  [data-mathsgo-printer-family="fraction-discs"] fieldset {
+  [data-mathsgo-printer-family="fraction-discs"] fieldset,
+  [data-mathsgo-printer-family="decimal-material"] fieldset {
     margin-bottom: 14px;
     padding: 13px;
   }

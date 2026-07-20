@@ -92,4 +92,8 @@ test("les retours injectés connaissent les parents modernes des outils classés
   }
   assert.match(returnPages["outils/labo-des-regularites.html"], /tool-parent-navigation\.js/);
   assert.match(returnPages["outils/plateaux_manipulation/pgcd_sachets.html"], /data-mathsgo-parent-link="\.toolbar &gt; \.brand"/);
+  assert.match(
+    parentNavigationScript,
+    /plateaux_manipulation\\\/\(\?:numeration_decimale\|glisse_nombres_decimaux\|glisse_entiers_flex\)\\\.html\$\/[^\n]+notion=numeration[^\n]+"Numération"/,
+  );
 });

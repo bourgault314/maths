@@ -76,6 +76,7 @@
       [/^\/outils\/club_maths\/(?:jeu_de_nim|yavalath)\.html$/, "/outils/index.html?domain=jeux-recherches&notion=strategie", "Stratégie"],
       [/^\/outils\/fabrication_materiel\/(?:cartes_premiers_1_100|grille_de_nombres)\.html$/, "/outils/index.html?domain=nombres-calculs&notion=divisibilite", "Divisibilité"],
       [/^\/outils\/fabrication_materiel\/numeration_decimale_maker\.html$/, "/outils/index.html?domain=nombres-calculs&notion=numeration", "Numération"],
+      [/^\/outils\/plateaux_manipulation\/(?:numeration_decimale|glisse_nombres_decimaux|glisse_entiers_flex)\.html$/, "/outils/index.html?domain=nombres-calculs&notion=numeration", "Numération"],
       [/^\/outils\/bouliers\/rekenrek\//, "/outils/bouliers/rekenrek/", "Rekenrek"],
       [/^\/outils\/bouliers\/boulier_montessori\//, "/outils/bouliers/boulier_montessori/", "Boulier Montessori"],
       [/^\/outils\/bouliers\/abaque_de_gerbert\//, "/outils/bouliers/abaque_de_gerbert/", "Abaque de Gerbert"],

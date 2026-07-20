@@ -5,8 +5,10 @@ import test from "node:test";
 const shellScript = await readFile(new URL("../assets/js/printer-shell.js", import.meta.url), "utf8");
 const shellStyles = await readFile(new URL("../assets/css/printer-shell.css", import.meta.url), "utf8");
 const prototypePaths = [
+  "outils/fractions/bandes_maker_v2.html",
   "outils/fractions/disque_maker.html",
   "outils/fabrication_materiel/cartes_premiers_1_100.html",
+  "outils/fabrication_materiel/numeration_decimale_maker.html",
   "outils/tuiles_algebriques/generateur_exercices_calcul_litteral.html",
   "outils/automatismes/CM_Livret_A5.html",
 ];
@@ -15,15 +17,17 @@ const prototypePages = Object.fromEntries(await Promise.all(prototypePaths.map(a
   await readFile(new URL(`../${path}`, import.meta.url), "utf8"),
 ])));
 
-test("les quatre architectures du prototype chargent la même enveloppe", () => {
+test("les six architectures du prototype chargent la même enveloppe", () => {
   for (const [path, html] of Object.entries(prototypePages)) {
     assert.match(html, /assets\/css\/printer-shell\.css\?v=1/, path);
     assert.match(html, /assets\/js\/printer-shell\.js\?v=1/, path);
   }
 
   for (const path of [
+    "/outils/fractions/bandes_maker_v2.html",
     "/outils/fractions/disque_maker.html",
     "/outils/fabrication_materiel/cartes_premiers_1_100.html",
+    "/outils/fabrication_materiel/numeration_decimale_maker.html",
     "/outils/tuiles_algebriques/generateur_exercices_calcul_litteral.html",
     "/outils/automatismes/CM_Livret_A5.html",
   ]) {
@@ -33,8 +37,9 @@ test("les quatre architectures du prototype chargent la même enveloppe", () => 
 
 test("l'enveloppe apporte marque, retour, vues et actions sans emoji", () => {
   assert.match(shellScript, /mathsgo-logo-390\.png/);
-  assert.match(shellScript, /data-printer-view="settings"/);
-  assert.match(shellScript, /data-printer-view="preview"/);
+  assert.match(shellScript, /data-printer-view="settings" aria-pressed="true"/);
+  assert.match(shellScript, /data-printer-view="preview" aria-pressed="false"/);
+  assert.match(shellScript, /button\.setAttribute\("aria-pressed", String\(active\)\)/);
   assert.match(shellScript, /createButton\("preview", "Aperçu", icon\.preview\)/);
   assert.match(shellScript, /createButton\("generate", "Générer", icon\.generate/);
   assert.match(shellScript, /createButton\("print", "Imprimer \/ PDF", icon\.print/);
@@ -49,6 +54,16 @@ test("ordinateur et téléphone ont deux compositions explicites", () => {
   assert.match(shellStyles, /data-mathsgo-printer-view="preview"[^}]*\.mg-printer-settings/s);
   assert.match(shellStyles, /\.mg-printer-actions\s*\{[^}]*position:\s*fixed/s);
   assert.match(shellStyles, /min-height:\s*48px/);
+  assert.doesNotMatch(shellStyles, /\.mg-printer-back\s*\{[^}]*min-height:\s*28px/s);
+  assert.match(shellStyles, /\.mg-printer-view-tabs button\s*\{[^}]*min-height:\s*44px/s);
+});
+
+test("le maker de numération garde son moteur de zoom et son impression", () => {
+  assert.match(shellScript, /numeration_decimale_maker\.html/);
+  assert.match(shellScript, /family:\s*"decimal-material"/);
+  assert.match(shellScript, /summary:\s*"#previewSummary"/);
+  assert.match(shellScript, /managesOwnScale:\s*true/);
+  assert.match(prototypePages["outils/fabrication_materiel/numeration_decimale_maker.html"], /id="print"/);
 });
 
 test("les aperçus sont ajustés à l'écran mais jamais redimensionnés pour l'impression", () => {

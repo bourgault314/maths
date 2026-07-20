@@ -21,6 +21,19 @@
   }
 
   const configurations = {
+    "/outils/fractions/bandes_maker_v2.html": {
+      family: "fraction-discs",
+      title: "Bandes de fractions",
+      parentHref: "/outils/index.html?domain=nombres-calculs&notion=fractions",
+      parentLabel: "Fractions",
+      workspace: "main",
+      settings: ".sidebar",
+      preview: ".preview-area",
+      page: ".page",
+      print: "#print",
+      summary: "#previewSummary",
+      managesOwnScale: true,
+    },
     "/outils/fractions/disque_maker.html": {
       family: "fraction-discs",
       title: "Disques de fractions",
@@ -51,6 +64,19 @@
         const sidePages = count ? Math.ceil(count / perPage) : 0;
         return `A4 portrait · ${count || "—"} cartes · ${sidePages * 2 || "—"} pages (rectos puis versos)`;
       },
+    },
+    "/outils/fabrication_materiel/numeration_decimale_maker.html": {
+      family: "decimal-material",
+      title: "Matériel de numération décimale",
+      parentHref: "/outils/index.html?domain=nombres-calculs&notion=numeration",
+      parentLabel: "Numération",
+      workspace: "main",
+      settings: ".sidebar",
+      preview: ".preview-area",
+      page: ".page",
+      print: "#print",
+      summary: "#previewSummary",
+      managesOwnScale: true,
     },
     "/outils/tuiles_algebriques/generateur_exercices_calcul_litteral.html": {
       family: "algebra-tiles",
@@ -121,8 +147,10 @@
   }
 
   function cleanLegacyLabels(config) {
-    if (config.family === "fraction-discs") {
-      const labels = ["Bases", "Recto", "Verso", "Calages"];
+    if (["fraction-discs", "decimal-material"].includes(config.family)) {
+      const labels = config.family === "decimal-material"
+        ? ["Planches", "Style", "Verso", "Calages"]
+        : ["Bases", "Recto", "Verso", "Calages"];
       document.querySelectorAll(".tabs-nav .tab-btn").forEach((button, index) => {
         if (labels[index]) button.textContent = labels[index];
       });
@@ -178,8 +206,8 @@
         <h1>${config.title}</h1>
       </div>
       <div class="mg-printer-view-tabs" role="group" aria-label="Vue affichée">
-        <button type="button" class="is-active" data-printer-view="settings">${icon.settings}<span>Réglages</span></button>
-        <button type="button" data-printer-view="preview">${icon.preview}<span>Aperçu</span></button>
+        <button type="button" class="is-active" data-printer-view="settings" aria-pressed="true">${icon.settings}<span>Réglages</span></button>
+        <button type="button" data-printer-view="preview" aria-pressed="false">${icon.preview}<span>Aperçu</span></button>
       </div>
     `;
 
