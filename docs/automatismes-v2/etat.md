@@ -7,7 +7,7 @@
 - Dépôt : `bourgault314/maths`.
 - Branche de référence : `main`.
 - Commit de référence de la branche courante :
-  `b0e42f612a1b1fd75d57020a0e3bc8d4eaf85b67`.
+  `49611e1790686f386e2629e63f3a62422a951682`.
 - La PR #170 est fusionnée : la carte DNB, la fiche validée de `NC-01`, les
   storyboards et les décisions D-014 à D-019 sont la mémoire officielle du
   chantier.
@@ -153,9 +153,10 @@ l'interface de la bêta :
 - Gwenaël a validé l'affichage et demandé sa publication le 19 juillet 2026 ;
   la PR #191 livre cette première tranche verticale sur le site public.
 
-## Lot local non publié : « Au tableau » remplace le diaporama séparé
+## Lot publié en PR brouillon : « Au tableau » remplace le diaporama séparé
 
-La branche `agent/automatismes-v2-mode-classe` applique la décision D-025 :
+La PR brouillon #252, sur la branche
+`agent/automatismes-v2-mode-classe`, applique la décision D-025 :
 
 - les deux contextes canoniques sont `entrainement` et `classe` ;
 - les anciens paramètres d'URL sont convertis sans casser les liens existants ;
@@ -168,16 +169,17 @@ La branche `agent/automatismes-v2-mode-classe` applique la décision D-025 :
   classe ; ils ne sont pas construits dans ce lot ;
 - les contrôles visuels couvrent 19 écrans à 390 × 844, 1 280 × 720 et
   1 920 × 1 080, sans débordement horizontal ni cible inférieure à 44 px ;
-- `npm run verifier` réussit **944 tests sur 944**.
+- `npm run verifier` réussit **949 tests sur 949**, localement et dans
+  GitHub Actions.
 
 ## Prochaine étape du lot courant
 
 Le lot courant conserve le registre unique de D-024 et transforme les deux
 contextes visibles en « S'entraîner » et « Au tableau ». Le mode classe accepte
 une réponse collective sans créer de trace d'élève, ou permet de révéler la
-réponse avant la correction. La branche reste destinée à une PR brouillon :
-un essai réel sur téléphone est requis avant fusion. Le mini-cours définitif de
-`NC-01` et son schéma restent reportés à une validation pédagogique dédiée.
+réponse avant la correction. La PR #252 reste en brouillon : un essai réel sur
+téléphone est requis avant fusion. Le mini-cours définitif de `NC-01` et son
+schéma restent reportés à une validation pédagogique dédiée.
 
 ## Règle de mise à jour
 
