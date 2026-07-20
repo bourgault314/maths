@@ -82,6 +82,11 @@
   .separation-epreuve{width:1px;align-self:stretch;margin:4px 3px;background:var(--ligne);flex:none}
   .segments .bouton-epreuve{display:flex;flex-direction:row;align-items:center;justify-content:center;
     gap:7px;line-height:1;padding:2px 11px;color:var(--orange)}
+  /* Sur ordinateur, DNB accueille aussi l’icône « sans calculatrice » :
+     une part légèrement plus large garde l’ensemble centré et non rogné. */
+  @media(min-width:651px){
+    .segments[data-reglage="level"] .bouton-epreuve{flex-grow:1.3;gap:6px;padding:2px 6px}
+  }
   .texte-epreuve{display:flex;flex-direction:column;align-items:center;gap:1px}
   .mention-epreuve{font-size:8px;font-weight:750;letter-spacing:.09em;text-transform:uppercase}
   /* La calculatrice barrée apparaît quand l'épreuve est choisie (sans décaler
