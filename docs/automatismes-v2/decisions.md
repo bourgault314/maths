@@ -135,6 +135,24 @@ maths&go ; le clavier système mobile ne s'ouvre pas. Une fraction utilisera deu
 champs distincts et une barre construite par le lecteur, mais ce contrat attend
 la micro-notion concernée.
 
+### D-020 — GE-12 reste simple et utilise un choix unique
+
+Gwenaël valide la fiche `GE-12` le 19 juillet 2026 avec une exigence REP+ : la
+première tranche demande seulement de reconnaître les six solides du DNB dans
+une figure claire. Le « nom le plus précis », le comptage des faces, arêtes ou
+sommets et les autres extensions collège attendent une phase ultérieure.
+
+Le choix unique parmi quatre noms devient la deuxième exception à D-006. Les
+distracteurs sont diagnostiques et ne doivent jamais être des noms plus
+généraux qui rendraient plusieurs réponses mathématiquement défendables.
+
+### D-021 — La rotation aide à observer, elle n'est pas la tâche
+
+Le modèle 3D maths&go est la source unique des solides de GE-12. La question
+ordinaire conserve une vue fixe choisie pour être lisible. Dans l'aide et le
+mini-cours, le solide peut tourner au doigt ; deux boutons accessibles offrent
+la même action. La visibilité des arêtes est recalculée après chaque rotation.
+
 ### D-019 — Séance, question et trace sont séparées
 
 La configuration de séance, la question instanciée et la trace de réponse sont
@@ -142,3 +160,15 @@ trois ensembles distincts. La première version ne collecte aucune identité,
 aucune durée et n'envoie rien à un serveur. La trace est néanmoins conçue pour
 être transmissible plus tard sans changer le contenu mathématique.
 
+### D-022 — Trois tranches DNB distinctes pour les volumes
+
+Les volumes sont répartis entre `PG-22` (cube et pavé), `PG-23` (prisme droit)
+et `PG-24` (cylindre). Une séance n'active qu'une tranche. Les conversions,
+les capacités, les pyramides et les cônes restent dans leurs notions propres.
+
+### D-023 — Calcul mental et approximation explicite
+
+Les dimensions sont choisies dans des corpus contrôlés pour permettre un
+calcul mental sans calculatrice. Pour le cylindre, une réponse est soit exacte
+et contient π, soit approchée avec π ≈ 3 ; dans ce second cas, « environ » est
+écrit dans la consigne, la réponse et la correction.

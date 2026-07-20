@@ -5,20 +5,44 @@ import {
 import {
   SCHEMA_TRACE_REPONSE,
   validerTraceReponse,
-} from "../../packages/contrats/src/trace-reponse.js";
+} from "../../packages/contrats/src/trace-reponse.js?v=5";
 import {
-  TYPE_REPONSE_SELECTION_MULTIPLE,
+  TYPE_REPONSE_CHOIX_UNIQUE,
   estSelectionExacte,
-} from "../../packages/contrats/src/question-v2.js";
+} from "../../packages/contrats/src/question-v2.js?v=5";
 import { graineDepuisTexte } from "../../packages/moteur-exercices/src/aleatoire.js";
-import { creerRegistreAutomatismes } from "../../packages/automatismes/src/registre.js";
+import { creerRegistreAutomatismes } from "../../packages/automatismes/src/registre.js?v=5";
+import { GABARIT_RECONNAISSANCE_SOLIDES } from "../../packages/automatismes/src/espace-et-geometrie/solides-usuels/reconnaissance.js?v=5";
+import {
+  GABARIT_VOLUME_CUBE_PAVE,
+  GABARIT_VOLUME_CYLINDRE,
+  GABARIT_VOLUME_PRISME,
+} from "../../packages/automatismes/src/grandeurs-et-mesures/volumes/calcul-volumes.js?v=5";
 import { GABARIT_SELECTION_DIVISEURS } from "../../packages/automatismes/src/nombres-et-calculs/criteres-divisibilite/selection-diviseurs.js";
 
 export const NOTION_NC01 = "criteres-divisibilite";
+export const NOTION_SOLIDES_USUELS = "solides-usuels";
+export const NOTION_VOLUME_CUBE_PAVE = "volume-cube-pave";
+export const NOTION_VOLUME_PRISME = "volume-prisme";
+export const NOTION_VOLUME_CYLINDRE = "volume-cylindre";
 export const NOMBRE_QUESTIONS_PAR_DEFAUT = 10;
 
 const MODES = new Set(["interactif", "diaporama"]);
 const AIDES = new Set(["ouverte", "disponible", "indisponible"]);
+const NOTIONS = new Map([
+  [NOTION_NC01, GABARIT_SELECTION_DIVISEURS],
+  [NOTION_SOLIDES_USUELS, GABARIT_RECONNAISSANCE_SOLIDES],
+  [NOTION_VOLUME_CUBE_PAVE, GABARIT_VOLUME_CUBE_PAVE],
+  [NOTION_VOLUME_PRISME, GABARIT_VOLUME_PRISME],
+  [NOTION_VOLUME_CYLINDRE, GABARIT_VOLUME_CYLINDRE],
+]);
+
+const NOTIONS_AVEC_COURS_SOLIDES = new Set([
+  NOTION_SOLIDES_USUELS,
+  NOTION_VOLUME_CUBE_PAVE,
+  NOTION_VOLUME_PRISME,
+  NOTION_VOLUME_CYLINDRE,
+]);
 
 function exigerConformite(nom, controle) {
   if (!controle.valide) {
@@ -33,10 +57,13 @@ function normaliserConfiguration(configuration = {}) {
   const aide = configuration.aide ?? "disponible";
   const nombreQuestions = configuration.nombreQuestions
     ?? NOMBRE_QUESTIONS_PAR_DEFAUT;
-  const graine = configuration.graine ?? "apercu-nc01-f2";
+  const notion = configuration.notion ?? NOTION_NC01;
+  const graine = configuration.graine
+    ?? (notion === NOTION_NC01 ? "apercu-nc01-f2" : `apercu-${notion}`);
 
   if (!MODES.has(mode)) throw new RangeError(`mode inconnu : ${mode}`);
   if (!AIDES.has(aide)) throw new RangeError(`aide inconnue : ${aide}`);
+  if (!NOTIONS.has(notion)) throw new RangeError(`notion inconnue : ${notion}`);
   if (!Number.isInteger(nombreQuestions) || nombreQuestions < 1 || nombreQuestions > 100) {
     throw new RangeError("nombreQuestions doit être compris entre 1 et 100");
   }
@@ -44,7 +71,7 @@ function normaliserConfiguration(configuration = {}) {
     throw new TypeError("graine texte ou entière requise");
   }
 
-  return { mode, aide, nombreQuestions, graine };
+  return { mode, aide, nombreQuestions, graine, notion };
 }
 
 function creerSeance(configuration) {
@@ -53,7 +80,7 @@ function creerSeance(configuration) {
     schema: SCHEMA_SEANCE,
     id: `seance@${suffixe}`,
     contexte: "parcours-dnb",
-    selection: [NOTION_NC01],
+    selection: [configuration.notion],
     mode: configuration.mode,
     nombreQuestions: configuration.nombreQuestions,
     aide: configuration.aide,
@@ -75,9 +102,11 @@ function creerEtatQuestion(etat) {
   etat.aideOuverte = etat.configuration.aide === "ouverte";
   etat.aideConsultee = etat.aideOuverte;
   etat.correctionOuverte = false;
+  etat.coursOuvert = false;
   etat.reponseRevelee = false;
   etat.uniteReperee = false;
   etat.chiffresSomme = [];
+  etat.rotationSolide = { lacetDeg: 0, tangageDeg: 0 };
 }
 
 export function creerEtatLecteur(configuration = {}) {
@@ -93,9 +122,11 @@ export function creerEtatLecteur(configuration = {}) {
     aideOuverte: false,
     aideConsultee: false,
     correctionOuverte: false,
+    coursOuvert: false,
     reponseRevelee: false,
     uniteReperee: false,
     chiffresSomme: [],
+    rotationSolide: { lacetDeg: 0, tangageDeg: 0 },
   };
   creerEtatQuestion(etat);
   etat.aideOuverte = false;
@@ -109,6 +140,7 @@ export function lireConfiguration(recherche = "") {
   return normaliserConfiguration({
     mode: parametres.get("mode") || undefined,
     aide: parametres.get("aide") || undefined,
+    notion: parametres.get("notion") || undefined,
     nombreQuestions:
       Number.isInteger(nombreBrut) && nombreBrut >= 1 && nombreBrut <= 100
         ? nombreBrut
@@ -120,11 +152,12 @@ export function lireConfiguration(recherche = "") {
 export function demarrer(etat) {
   if (etat.seance.etat.phase !== "prete") return etat;
   const registre = creerRegistreAutomatismes();
+  const gabarit = NOTIONS.get(etat.configuration.notion);
   etat.questions = Array.from(
     { length: etat.configuration.nombreQuestions },
     (_, index) =>
       registre.instancier(
-        GABARIT_SELECTION_DIVISEURS,
+        gabarit,
         `${etat.configuration.graine}:${index + 1}`,
       ),
   );
@@ -158,6 +191,12 @@ export function basculerChoix(etat, idChoix) {
   }
   const choix = question.reponse.choix.find(({ id }) => id === idChoix);
   if (!choix) throw new RangeError(`choix inconnu : ${idChoix}`);
+
+  if (question.reponse.type === TYPE_REPONSE_CHOIX_UNIQUE) {
+    etat.selection = [idChoix];
+    etat.erreurValidation = "";
+    return etat;
+  }
 
   const selection = new Set(etat.selection);
   if (choix.exclusif) {
@@ -201,7 +240,7 @@ export function validerSelection(etat) {
     indexQuestion,
     validation: 1,
     reponse: {
-      type: TYPE_REPONSE_SELECTION_MULTIPLE,
+      type: question.reponse.type,
       choix: [...etat.selection],
     },
     juste,
@@ -221,11 +260,38 @@ export function ouvrirAide(etat) {
   etat.aideOuverte = true;
   etat.aideConsultee = true;
   etat.correctionOuverte = false;
+  etat.coursOuvert = false;
   return etat;
 }
 
 export function fermerAide(etat) {
   etat.aideOuverte = false;
+  return etat;
+}
+
+export function ouvrirCours(etat) {
+  if (!NOTIONS_AVEC_COURS_SOLIDES.has(etat.configuration.notion)) return etat;
+  etat.coursOuvert = true;
+  etat.aideOuverte = false;
+  etat.correctionOuverte = false;
+  return etat;
+}
+
+export function fermerCours(etat) {
+  etat.coursOuvert = false;
+  return etat;
+}
+
+export function tournerSolide(etat, deltaLacet, deltaTangage = 0) {
+  if (!Number.isFinite(deltaLacet) || !Number.isFinite(deltaTangage)) {
+    throw new TypeError("tournerSolide : déplacements numériques requis");
+  }
+  if (!etat.aideOuverte && !etat.coursOuvert) return etat;
+  const lacet = etat.rotationSolide.lacetDeg + deltaLacet;
+  etat.rotationSolide = {
+    lacetDeg: ((lacet + 180) % 360 + 360) % 360 - 180,
+    tangageDeg: Math.max(-35, Math.min(35, etat.rotationSolide.tangageDeg + deltaTangage)),
+  };
   return etat;
 }
 
@@ -264,6 +330,7 @@ export function ouvrirCorrection(etat) {
   }
   etat.correctionOuverte = true;
   etat.aideOuverte = false;
+  etat.coursOuvert = false;
   return etat;
 }
 

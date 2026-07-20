@@ -7,7 +7,7 @@
 - Dépôt : `bourgault314/maths`.
 - Branche de référence : `main`.
 - Commit de référence vérifié sur GitHub :
-  `e894e65eecce1d6d3886533207fd6e82c1b65229`.
+  `6b49cf265c98ea948222ce4c2828bec3cf65f451`.
 - La PR #170 est fusionnée : la carte DNB, la fiche validée de `NC-01`, les
   storyboards et les décisions D-014 à D-019 sont la mémoire officielle du
   chantier.
@@ -35,8 +35,9 @@
   qui l'expose en interactif et en diaporama est construit dans le lot courant.
 - La carte du DNB est établie : **37 cibles officielles distinctes**,
   **38 cibles normalisées** et **88 micro-notions**.
-- Une seule micro-notion est active : `NC-01`, critères de divisibilité par
-  2, 3, 5, 9 et 10.
+- Le lot local courant a construit successivement `GE-12`, `PG-22`, `PG-23`
+  et `PG-24`. Une séance n'en active toujours qu'une ; ces ajouts ne sont ni
+  publiés ni fusionnés.
 - Le critère par 10 est un complément maths&go validé. Il reste proposé dans le
   parcours DNB, tout en étant distingué des quatre critères officiels dans les
   données.
@@ -92,6 +93,28 @@ contenu pédagogique ni l'application visible.
 Le clavier numérique, les fractions, le serveur, l'identité de
 l'élève et le chronomètre ne sont pas construits par anticipation.
 
+## Lot local non publié : solides usuels et volumes
+
+La branche locale `feat/v2-solides-volumes-dnb` contient un lot à faire valider
+avant toute publication :
+
+- `GE-12/F1` reconnaît cube, pavé droit, prisme droit, cylindre, pyramide et
+  cône par choix unique ; la question reste fixe, l'aide et le cours permettent
+  la rotation avec recalcul des arêtes cachées ;
+- `PG-22`, `PG-23` et `PG-24` restent trois séances distinctes pour le cube et
+  le pavé, le prisme droit et le cylindre ;
+- les conversions, capacités, pyramides et cônes sont explicitement hors de ce
+  noyau de calcul de volumes ;
+- le cours part de 1 cm³, montre un empilement 3 × 2 × 2 puis verbalise
+  l'invariant « aire de la base × hauteur » ;
+- le cylindre distingue la valeur exacte en π de la valeur approchée avec
+  π ≈ 3 ; « environ » est contrôlé dans consigne, réponse et correction ;
+- les tests ciblés et les 837 tests disponibles du dépôt passent. Les cinq
+  échecs du lancement global proviennent de fichiers absents de cette copie de
+  travail, hors de ce lot ;
+- l'archive PDF des captures « avant » est conservée séparément ; les captures
+  « après » attendent un aperçu public autorisé, sans publication automatique.
+
 ## Lot technique fusionné : lecteur commun de NC-01/F2
 
 Le lecteur est construit à neuf dans `automatismes-v2`, sans reprendre
@@ -123,10 +146,11 @@ l'interface de la bêta :
 - Gwenaël a validé l'affichage et demandé sa publication le 19 juillet 2026 ;
   la PR #191 livre cette première tranche verticale sur le site public.
 
-## Prochaine étape après publication de ce lot
+## Prochaine étape du lot courant
 
-Essayer le lecteur publié sur téléphone et en projection, puis traiter les
-retours d'usage dans un lot séparé avant d'ouvrir la famille suivante.
+Faire relire les contenus et ouvrir un aperçu de branche seulement après accord
+de Gwenaël. Vérifier alors réellement à 375 px et en projection, compléter les
+captures « après », corriger la mise en page, puis seulement décider d'une PR.
 
 ## Règle de mise à jour
 
