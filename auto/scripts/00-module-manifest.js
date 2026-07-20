@@ -16,11 +16,11 @@ const MATHSGO_MODULE_MANIFEST=Object.freeze([
   {id:'dnb_05',title:'Un même nombre sous plusieurs formes',level_tags:['4e','3e','DNB'],domain:'numbers',globalName:'MODULE_DNB_05',file:'scripts/modules/numbers/dnb_05.js'},
   {id:'dnb_06',title:'Notation scientifique',level_tags:['4e','3e','DNB'],domain:'numbers',globalName:'MODULE_DNB_06',file:'scripts/modules/numbers/dnb_06.js'},
   {id:'dnb_07',title:'Carrés des entiers de 1 à 12',level_tags:['4e','3e','DNB'],domain:'numbers',globalName:'MODULE_DNB_07',file:'scripts/modules/numbers/dnb_07.js'},
-  {id:'dnb_08',title:'Critères de divisibilité par 2, 3, 5, 9',level_tags:['4e','3e','DNB'],domain:'numbers',globalName:'MODULE_DNB_08',file:'scripts/modules/numbers/dnb_08.js',runtimeFiles:['scripts/modules/numbers/dnb_08/generate.js','scripts/modules/numbers/dnb_08/selection.js','scripts/modules/numbers/dnb_08/render.js']},
+  {id:'dnb_08',title:'Critères de divisibilité par 2, 3, 5, 9 et 10',level_tags:['4e','3e','DNB'],domain:'numbers',globalName:'MODULE_DNB_08',file:'scripts/modules/numbers/dnb_08.js',runtimeFiles:['scripts/modules/numbers/dnb_08/generate.js','scripts/modules/numbers/dnb_08/selection.js','scripts/modules/numbers/dnb_08/render.js']},
   {id:'dnb_09',title:'Double, triple, moitié, prédécesseur, successeur et carré',level_tags:['4e','3e','DNB'],domain:'numbers',globalName:'MODULE_DNB_09',file:'scripts/modules/numbers/dnb_09.js'},
   {id:'dnb_10',title:'Simplifier des expressions littérales',level_tags:['4e','3e','DNB'],domain:'numbers',globalName:'MODULE_DNB_10',file:'scripts/modules/numbers/dnb_10.js'},
   {id:'dnb_11',title:"Calculer la valeur d'une expression algébrique",level_tags:['4e','3e','DNB'],domain:'numbers',globalName:'MODULE_DNB_11',file:'scripts/modules/numbers/dnb_11.js'},
-  {id:'dnb_12',title:'Développer et factoriser une expression simple',level_tags:['4e','3e','DNB'],domain:'numbers',globalName:'MODULE_DNB_12',file:'scripts/modules/numbers/dnb_12.js'},
+  {id:'dnb_12',title:'Développer et factoriser',level_tags:['5e','4e','3e','DNB'],domain:'numbers',globalName:'MODULE_DNB_12',file:'scripts/modules/numbers/dnb_12.js',runtimeFiles:['scripts/modules/numbers/dnb_12/generate.js','scripts/modules/numbers/dnb_12/selection.js','scripts/modules/numbers/dnb_12/render.js']},
   {id:'dnb_13',title:'Résoudre des équations',level_tags:['4e','3e','DNB'],domain:'numbers',globalName:'MODULE_DNB_13',file:'scripts/modules/numbers/dnb_13.js'},
   {id:'dnb_14',title:'Lire une abscisse sur une droite graduée',level_tags:['4e','3e','DNB'],domain:'numbers',globalName:'MODULE_DNB_14',file:'scripts/modules/numbers/dnb_14.js',runtimeFiles:['scripts/modules/numbers/dnb_14/generate.js','scripts/modules/numbers/dnb_14/selection.js','scripts/modules/numbers/dnb_14/render.js']},
   {id:'dnb_38',title:'Addition de nombres entiers relatifs',level_tags:['5e','4e','3e','DNB'],domain:'numbers',globalName:'MODULE_DNB_38',file:'scripts/modules/numbers/dnb_38.js'},
@@ -63,7 +63,7 @@ function loadModuleScript(src){
   if(MATHSGO_LOADED_MODULE_SCRIPTS.has(src)) return MATHSGO_LOADED_MODULE_SCRIPTS.get(src);
   const promise=new Promise((resolve,reject)=>{
     const script=document.createElement('script');
-    script.src=src+'?v=20260717-9';
+    script.src=src+'?v=20260719-5';
     script.onload=resolve;
     script.onerror=()=>reject(new Error('Impossible de charger un module d’automatismes.'));
     document.head.appendChild(script);
