@@ -81,20 +81,11 @@
       [/^\/outils\/fabrication_materiel\/(?:cartes_premiers_1_100|grille_de_nombres)\.html$/, "/outils/index.html?domain=nombres-calculs&notion=divisibilite", "Divisibilité"],
       [/^\/outils\/fabrication_materiel\/numeration_decimale_maker\.html$/, "/outils/index.html?domain=nombres-calculs&notion=numeration", "Numération"],
       [/^\/outils\/plateaux_manipulation\/(?:numeration_decimale|glisse_nombres_decimaux|glisse_entiers_flex)\.html$/, "/outils/index.html?domain=nombres-calculs&notion=numeration", "Numération"],
+      [/^\/outils\/plateaux_manipulation\/feuille_coupee_puissance\.html$/, "/outils/index.html?domain=nombres-calculs&notion=puissances", "Puissances"],
+      [/^\/outils\/plateaux_manipulation\/(?:mur_diviseurs|mur_diviseurs_pgcd|pgcd_sachets)\.html$/, "/outils/index.html?domain=nombres-calculs&notion=divisibilite", "Divisibilité"],
       [/^\/outils\/bouliers\/rekenrek\//, "/outils/index.html?domain=nombres-calculs&collection=rekenrek", "Rekenrek"],
-      [/^\/outils\/bouliers\/boulier_montessori\//, "/outils/bouliers/boulier_montessori/", "Boulier Montessori"],
-      [/^\/outils\/bouliers\/abaque_de_gerbert\//, "/outils/bouliers/abaque_de_gerbert/", "Abaque de Gerbert"],
-      [/^\/outils\/bouliers\/soroban\//, "/outils/bouliers/soroban/", "Soroban"],
-      [/^\/outils\/bouliers\//, "/outils/bouliers/", "Bouliers et abaques"],
       [/^\/outils\/fractions\//, "/outils/index.html?domain=nombres-calculs&notion=fractions", "Fractions"],
-      [/^\/outils\/conversions\//, "/outils/conversions/", "Conversions"],
-      [/^\/outils\/engrenages\//, "/outils/engrenages/", "Engrenages"],
-      [/^\/outils\/angles\//, "/outils/angles/", "Angles"],
       [/^\/outils\/tuiles_algebriques\//, "/outils/index.html?domain=algebre&collection=tuiles-algebriques", "Tuiles algébriques"],
-      [/^\/outils\/nombres_relatifs\//, "/outils/nombres_relatifs/", "Nombres relatifs"],
-      [/^\/outils\/plateaux_manipulation\//, "/outils/plateaux_manipulation/", "Plateaux de manipulation"],
-      [/^\/outils\/club_maths\//, "/outils/club_maths/", "Club Maths"],
-      [/^\/outils\/fabrication_materiel\//, "/outils/fabrication_materiel/", "Fabrication de matériel"],
       [/^\/outils\/equabarre\.html$/, "/outils/index.html?domain=nombres-calculs&notion=schemas-barres", "Schémas en barres"],
       [/^\/outils\/(?:equasplat|splat|splat_equations|splat_tache_barre)\.html$/, "/outils/index.html?domain=algebre&collection=splat", "Splat"],
       [/^\/outils\/(?:fractions_multiples_exerciseur|pourcentages_exerciceur)\.html$/, "/outils/", "Outils"],
@@ -103,6 +94,29 @@
     ];
     const match = routes.find(([pattern]) => pattern.test(pathname));
     return match ? { href: match[1], label: match[2] } : null;
+  }
+
+  function makeHistoryAware(link) {
+    if (window.self !== window.top) {
+      link.target = "_top";
+      return;
+    }
+
+    link.addEventListener("click", (event) => {
+      if (event.button !== 0 || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return;
+      if (window.history.length <= 1 || !document.referrer) return;
+
+      try {
+        const previous = new URL(document.referrer);
+        const current = new URL(window.location.href);
+        if (previous.origin !== siteBaseUrl.origin || previous.href === current.href) return;
+      } catch (_) {
+        return;
+      }
+
+      event.preventDefault();
+      window.history.back();
+    });
   }
 
   function alreadyHasParentNavigation(parent) {
@@ -146,6 +160,7 @@
         link.href = siteUrl(parent.href);
         link.title = `Retour à ${parent.label}`;
         link.setAttribute("aria-label", `Retour à ${parent.label}`);
+        makeHistoryAware(link);
         return;
       }
     }
@@ -237,6 +252,7 @@
     link.textContent = inlineHost ? `← ${parent.label}` : "←";
     link.title = `Retour à ${parent.label}`;
     link.setAttribute("aria-label", `Retour à ${parent.label}`);
+    makeHistoryAware(link);
 
     document.head.appendChild(style);
     if (inlineHost) {

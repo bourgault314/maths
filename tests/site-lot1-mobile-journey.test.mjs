@@ -58,6 +58,7 @@ test("la compatibilité Rekenrek fonctionne aussi sur un aperçu servi dans un s
   assert.match(parentNavigationScript, /\.mathsgo-parent-navigation\.mathsgo-parent-navigation-inline\s*\{[\s\S]*?position:\s*static;[\s\S]*?min-height:\s*44px;/);
   assert.match(parentNavigationScript, /inlineHost\.prepend\(link\)/);
   assert.match(parentNavigationScript, /link\.textContent = inlineHost \? `← \$\{parent\.label\}` : "←"/);
+  assert.match(parentNavigationScript, /window\.self !== window\.top[\s\S]*?link\.target = "_top"/);
   assert.match(parentNavigationScript, /\/outils\/index\.html\?domain=nombres-calculs&collection=rekenrek/);
 });
 
