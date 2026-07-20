@@ -42,6 +42,27 @@
     return terms.map((term,index)=>signedLabel(term,index)).join(' ').replace(/^\+\s*/,'');
   }
 
+  function mobileQuestionTable(data,rows,columns,factorize,style,correction=false){
+    if(!data.phoneProminent||style!=='table')return '';
+    const title=escapeHtml(data.title||(factorize?'Retrouver les dimensions':'Modèle d’aire'));
+    const columnHeads=columns.map((term,index)=>{
+      if(factorize&&!correction&&data.interactiveHeaders)return `<th class="area-model-slot" data-distributive-slot="${index}" role="button" tabindex="0"><span data-distributive-value="${index}"></span></th>`;
+      return `<th>${factorize&&!correction?'&nbsp;':escapeHtml(signedLabel(term,index))}</th>`;
+    }).join('');
+    const body=rows.map((rowTerm,rowIndex)=>{
+      const rowLabel=factorize&&!data.revealFactorInQuestion?'?':signedLabel(rowTerm,rowIndex);
+      const cells=columns.map((columnTerm,columnIndex)=>{
+        const slotIndex=rowIndex*columns.length+columnIndex;
+        const label=factorize?(Array.isArray(data.cellLabels)&&data.cellLabels[slotIndex]?data.cellLabels[slotIndex]:termLabel(product(rowTerm,columnTerm))):'';
+        const slotClass=columnIndex?'area-model-slot is-dashed':'area-model-slot';
+        if(!correction&&data.interactive)return `<td class="${slotClass}" data-distributive-slot="${slotIndex}" role="button" tabindex="0"><span data-distributive-value="${slotIndex}"></span></td>`;
+        return `<td${columnIndex?' class="is-dashed"':''}>${label?escapeHtml(label):'&nbsp;'}</td>`;
+      }).join('');
+      return `<tr><th>${escapeHtml(rowLabel)}</th>${cells}</tr>`;
+    }).join('');
+    return `<div class="area-model-phone-question" role="img" aria-label="${title}"><h3>${title}</h3><table><thead><tr><th>×</th>${columnHeads}</tr></thead><tbody>${body}</tbody></table></div>`;
+  }
+
   function decimalDecomposition(data,correction=false){
     const rows=(Array.isArray(data.rows)?data.rows:[]).map(term=>Number(term.coefficient));
     const factor=Number(data.columns&&data.columns[0]&&data.columns[0].coefficient);
@@ -53,7 +74,7 @@
         const label=Array.isArray(data.cellLabels)&&data.cellLabels[index]?data.cellLabels[index]:productLabels[index];
         return `<span class="decimal-decomposition-slot is-filled">${escapeHtml(label)}</span>`;
       }
-      if(data.interactive)return `<button class="decimal-decomposition-slot area-model-slot" type="button" data-distributive-slot="${index}" aria-label="Produit partiel ${index+1}"><span data-distributive-value="${index}">…</span></button>`;
+      if(data.interactive)return `<button class="decimal-decomposition-slot area-model-slot" type="button" data-distributive-slot="${index}" aria-label="Produit partiel ${index+1}"><span data-distributive-value="${index}"></span></button>`;
       return `<span class="decimal-decomposition-term">${escapeHtml(productLabels[index])}</span>`;
     };
     const finalLine=correction?`<div class="decimal-decomposition-result">${escapeHtml(data.answer||'')}</div>`:'';
@@ -64,27 +85,36 @@
     if(data.style==='decimal-decomposition') return decimalDecomposition(data,correction);
     const rows=(Array.isArray(data.rows)&&data.rows.length?data.rows:[{coefficient:1,power:1},{coefficient:3,power:0}]).map(term=>({coefficient:Number(term.coefficient),power:Number(term.power)||0}));
     const columns=(Array.isArray(data.columns)&&data.columns.length?data.columns:[{coefficient:1,power:1},{coefficient:4,power:0}]).map(term=>({coefficient:Number(term.coefficient),power:Number(term.power)||0}));
-    const compact=!!data.compact,gridX=compact?142:160,gridY=compact?82:100,gridW=compact?570:560,gridH=compact?104:230,headerW=compact?74:82,headerH=compact?46:54,cellW=gridW/columns.length,cellH=gridH/rows.length,style=data.style==='table'?'table':'tiles',viewHeight=compact?270:410;
-    let body=heading(380,27,data.title||'Modèle d’aire');
+    const compact=!!data.compact,gridX=compact?142:160,gridY=compact?82:100,gridW=compact?570:560,gridH=compact?104:230,headerW=compact?74:82,headerH=compact?46:54,cellW=gridW/columns.length,cellH=gridH/rows.length,style=data.style==='table'?'table':'tiles',viewHeight=compact?270:410,factorize=data.mode==='factorize';
+    let body=heading(380,27,data.title||(factorize?'Retrouver les dimensions':'Modèle d’aire'));
     body+=`<rect x="${gridX-headerW}" y="${gridY-headerH}" width="${headerW}" height="${headerH}" fill="#fff" stroke="#333" stroke-width="1.7"/>${text(gridX-headerW/2,gridY-headerH/2,'×',22,800)}`;
-    columns.forEach((term,index)=>{const x=gridX+index*cellW;body+=`<rect x="${x}" y="${gridY-headerH}" width="${cellW}" height="${headerH}" fill="${style==='table'?'#e9e9e9':'#fff'}" stroke="#333" stroke-width="1.7"/>${text(x+cellW/2,gridY-headerH/2,signedLabel(term,index),20,800)}`;});
-    rows.forEach((term,index)=>{const y=gridY+index*cellH;body+=`<rect x="${gridX-headerW}" y="${y}" width="${headerW}" height="${cellH}" fill="${style==='table'?'#e9e9e9':'#fff'}" stroke="#333" stroke-width="1.7"/>${text(gridX-headerW/2,y+cellH/2,signedLabel(term,index),20,800)}`;});
+    columns.forEach((term,index)=>{
+      const x=gridX+index*cellW,hidden=factorize&&!correction;
+      if(hidden&&data.interactiveHeaders){
+        body+=`<g class="area-model-slot" data-distributive-slot="${index}" role="button" tabindex="0"><rect x="${x}" y="${gridY-headerH}" width="${cellW}" height="${headerH}" fill="#e9e9e9" stroke="#333" stroke-width="1.7"/>`;
+        body+=`<text data-distributive-value="${index}" x="${x+cellW/2}" y="${gridY-headerH/2}" text-anchor="middle" dominant-baseline="middle" font-family="Cambria Math,Times New Roman,serif" font-size="20" font-weight="850" fill="#31516e"></text></g>`;
+      }else{
+        body+=`<rect x="${x}" y="${gridY-headerH}" width="${cellW}" height="${headerH}" fill="${style==='table'?'#e9e9e9':'#fff'}" stroke="#333" stroke-width="1.7"/>${text(x+cellW/2,gridY-headerH/2,hidden?'':signedLabel(term,index),20,800)}`;
+      }
+    });
+    rows.forEach((term,index)=>{const y=gridY+index*cellH,label=factorize&&!correction&&!data.revealFactorInQuestion?'?':signedLabel(term,index);body+=`<rect x="${gridX-headerW}" y="${y}" width="${headerW}" height="${cellH}" fill="${style==='table'?'#e9e9e9':'#fff'}" stroke="#333" stroke-width="1.7"/>${text(gridX-headerW/2,y+cellH/2,label,20,800)}`;});
     rows.forEach((rowTerm,row)=>columns.forEach((columnTerm,column)=>{
       const x=gridX+column*cellW,y=gridY+row*cellH,term=product(rowTerm,columnTerm);
       const slotIndex=row*columns.length+column,interactive=!!data.interactive;
       if(interactive) body+=`<g class="area-model-slot" data-distributive-slot="${slotIndex}" role="button" tabindex="0">`;
       body+=`<rect x="${x}" y="${y}" width="${cellW}" height="${cellH}" fill="${style==='table'?'#f3f3f3':'#fff'}" stroke="#333" stroke-width="1.7" ${style==='table'&&column?'stroke-dasharray="5 5"':''}/>`;
-      if(correction){
+      if(correction||factorize){
         const label=Array.isArray(data.cellLabels)&&data.cellLabels[slotIndex]?data.cellLabels[slotIndex]:termLabel(term);
         body+=style==='tiles'?tileProduct(x+cellW/2,y+cellH/2,term,cellW,cellH):text(x+cellW/2,y+cellH/2,label,compact?19:22,850);
       }else if(interactive){
-        body+=`<text data-distributive-value="${slotIndex}" x="${x+cellW/2}" y="${y+cellH/2}" text-anchor="middle" dominant-baseline="middle" font-family="Cambria Math,Times New Roman,serif" font-size="21" font-weight="850" fill="#31516e">…</text>`;
+        body+=`<text data-distributive-value="${slotIndex}" x="${x+cellW/2}" y="${y+cellH/2}" text-anchor="middle" dominant-baseline="middle" font-family="Cambria Math,Times New Roman,serif" font-size="21" font-weight="850" fill="#31516e"></text>`;
       }
       if(interactive) body+='</g>';
     }));
     const rowFactor=factorLabel(rows),columnFactor=factorLabel(columns),products=rows.flatMap(row=>columns.map(column=>product(row,column))),developed=products.map((term,index)=>signedLabel(term,index)).join(' '),answer=data.answer||`(${rowFactor})(${columnFactor}) = ${developed}`;
     if(correction){const boxY=compact?202:338,textY=compact?230:366;body+=`<rect x="125" y="${boxY}" width="510" height="56" rx="12" fill="#fff8f2" stroke="#f6a13a" stroke-width="2"/>${text(380,textY,answer,compact?19:21,800)}`;}
-    return `<div class="area-model-help${compact?' area-model-compact':''}"><svg class="area-model-svg" viewBox="0 0 760 ${viewHeight}" role="img" aria-label="Modèle d’aire pour la distributivité ou la factorisation">${body}</svg></div>`;
+    const phoneQuestion=!correction?mobileQuestionTable(data,rows,columns,factorize,style,correction):'';
+    return `<div class="area-model-help${compact?' area-model-compact':''}${phoneQuestion?' has-phone-question-table':''}"><svg class="area-model-svg" viewBox="0 0 760 ${viewHeight}" role="img" aria-label="Modèle d’aire pour la distributivité ou la factorisation">${body}</svg>${phoneQuestion}</div>`;
   }
 
   const supports=Object.freeze(['phone','computer','projection','print']);
@@ -101,7 +131,7 @@
 
   if(!global.MATHSGO_VISUALS)throw new Error('Le registre MATHSGO_VISUALS doit être chargé avant area-model.js.');
   global.MATHSGO_VISUALS.register('algebra.area-model',{
-    version:'1.2.0',
+    version:'1.4.0',
     label:'Modèle d’aire — distributivité et factorisation',
     family:'Algèbre',
     description:'Génère les facteurs en bordure, les produits partiels et les tuiles ou cases grises des modèles d’aire du livret.',
