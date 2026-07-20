@@ -11,7 +11,7 @@
   'use strict';
 
   const VERSION_SCHEMA = 1;
-  const VERSION_GENERATEUR = '1.15.0';
+  const VERSION_GENERATEUR = '1.17.0';
   const PREFIXE = 'MG1-';
   const BORNE_SEED = 233280;
   const SERIES_INTERACTIVES = 10;
