@@ -146,6 +146,38 @@ export const PROVENANCE_FONDATION_V2 = Object.freeze({
     statut: "original_mathsgo",
     source: "architecture générique du lecteur décidée après l’audit maths&go du 20 juillet 2026",
   },
+  "automatismes-v2/src/disposition.js": {
+    statut: "original_mathsgo",
+    source: "trois compositions téléphone, ordinateur et TNI décidées après l’audit maths&go du 20 juillet 2026",
+  },
+  "automatismes-v2/src/rendus/outils-rendu.js": {
+    statut: "original_mathsgo",
+    source: "composants communs extraits du lecteur V2 maths&go",
+  },
+  "automatismes-v2/src/rendus/reponse-choix.js": {
+    statut: "original_mathsgo",
+    source: "rendu générique des réponses par choix extrait du lecteur V2 maths&go",
+  },
+  "automatismes-v2/src/rendus/solides.js": {
+    statut: "original_mathsgo",
+    source: "adaptation au lecteur du modèle 3D original maths&go",
+  },
+  "automatismes-v2/src/rendus/divisibilite.js": {
+    statut: "original_mathsgo",
+    source: "rendu de la fiche NC-01 et du contenu F2 validés par Gwenaël",
+  },
+  "automatismes-v2/src/rendus/solide.js": {
+    statut: "original_mathsgo",
+    source: "rendu de la fiche GE-12 validée par Gwenaël",
+  },
+  "automatismes-v2/src/rendus/volume.js": {
+    statut: "original_mathsgo",
+    source: "rendu des fiches PG-22 à PG-24 validées par Gwenaël",
+  },
+  "automatismes-v2/src/rendus/registre-rendus.js": {
+    statut: "original_mathsgo",
+    source: "registre technique des rendus du lecteur V2 maths&go",
+  },
 
   "packages/objets/src/programme-automatismes.js": {
     statut: "original_mathsgo",

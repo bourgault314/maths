@@ -7,7 +7,7 @@
 - Dépôt : `bourgault314/maths`.
 - Branche de référence : `main`.
 - Commit de référence vérifié sur GitHub :
-  `52b6ba34cdfdd62ad77da4b2c66702beecc05525`.
+  `6d0d9b5b2ad122f4d9c2ed48aaf9be1b6c3a5ac8`.
 - La PR #170 est fusionnée : la carte DNB, la fiche validée de `NC-01`, les
   storyboards et les décisions D-014 à D-019 sont la mémoire officielle du
   chantier.
@@ -29,6 +29,10 @@
 - Les PR #240, #241 et #242 sont fusionnées : les solides usuels, les trois
   familles de volumes, leurs ressources et leurs versions de cache sont dans
   `main`.
+- La PR #246 est fusionnée : le registre unique relie les cinq notions au
+  lecteur, au générateur, au type de rendu et aux capacités autorisées. Le lot
+  réussit **947 tests sur 947** et ses 24 écrans restent identiques à ceux de
+  la version précédente.
 - Au démarrage du lot P0, `main` réussit **942 tests sur 942** et
   `npm run verifier`.
 
@@ -148,24 +152,38 @@ l'interface de la bêta :
 - Gwenaël a validé l'affichage et demandé sa publication le 19 juillet 2026 ;
   la PR #191 livre cette première tranche verticale sur le site public.
 
-## Prochaine étape du lot courant
+## Lot P0-2 construit et en attente de validation
 
-Le lot P0 est isolé sur `agent/automatismes-v2-lecteur-generique` :
+Le lot courant est isolé sur
+`agent/automatismes-v2-rendus-dispositions` :
 
-- un registre unique décrit désormais l'identifiant, le nom, le gabarit, le
-  rendu et les capacités de chaque notion ;
-- le moteur d'état n'importe plus directement les cinq générateurs ;
-- l'application choisit question, aide, correction et cours par type de rendu,
-  sans liste parallèle d'identifiants ;
-- les interactions propres aux chiffres ou aux solides sont refusées aux
-  autres familles ;
-- le lot réussit **947 tests sur 947** et `npm run verifier` ;
-- 24 captures comparées octet par octet à `origin/main` sont identiques, sans
-  débordement horizontal ni cible tactile inférieure à 44 px.
+- `app.js` ne contient plus les rendus pédagogiques spécialisés ; un registre
+  de rendus associe chaque type déclaré à ses fonctions de question, d'aide,
+  de correction et, si nécessaire, de cours ;
+- les rendus des choix, des solides, de la divisibilité et des volumes sont
+  séparés en modules indépendants ; un type inconnu provoque une erreur au lieu
+  de tomber silencieusement sur une présentation par défaut ;
+- une fonction testée choisit explicitement la disposition selon la largeur et
+  le mode : téléphone en dessous de 720 px, ordinateur pour l'interactif et
+  TNI pour le diaporama à partir de 900 px ;
+- sur téléphone, aide, cours et correction occupent tout l'écran avec un
+  en-tête accessible pendant le défilement ;
+- sur ordinateur, la question reste visible à côté de l'aide ou de la
+  correction et le cours utilise une grande surface de travail ;
+- sur TNI, les commandes enseignant, les choix, les figures et la correction
+  sont agrandis pour une lecture collective, sans étirer mécaniquement la
+  disposition téléphone ;
+- le contenu mathématique, les générateurs et les traces ne changent pas ;
+- le dépôt complet réussit **955 tests sur 955** et `npm run verifier` ;
+- **72 écrans** ont été contrôlés : 24 états complets de `NC-01`, puis 48
+  états croisant solides usuels et trois familles de volumes avec téléphone,
+  ordinateur et TNI. Aucun débordement horizontal ni bouton visible inférieur
+  à 44 px n'a été détecté.
 
-Ce sous-lot n'est ni publié ni fusionné. Après validation, la suite de P0 doit
-séparer les rendus du fichier `app.js`, puis construire les trois dispositions
-téléphone, ordinateur et TNI sans commencer une nouvelle notion.
+Ce sous-lot n'est ni publié ni fusionné. Après validation visuelle et essai par
+Gwenaël, la suite de P0 doit renforcer l'accessibilité des panneaux — focus,
+touche Échap et restitution du focus — puis rendre le protocole de captures
+durable avant de reprendre le mini-cours de `NC-01`.
 
 ## Règle de mise à jour
 

@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import { it } from "node:test";
 
-function installerFauxNavigateur(recherche) {
+function installerFauxNavigateur(recherche, largeur = 1024) {
   const gestionnaires = new Map();
   const application = {
     innerHTML: "",
@@ -13,7 +13,7 @@ function installerFauxNavigateur(recherche) {
       return { focus() {} };
     },
   };
-  globalThis.window = { location: { search: recherche } };
+  globalThis.window = { location: { search: recherche }, innerWidth: largeur };
   globalThis.document = {
     title: "",
     documentElement: { style: { setProperty() {} } },
@@ -37,6 +37,7 @@ it("rend NC-01 depuis le registre et conserve son aide et sa correction", async 
   );
   await import(`./app.js?fumee=divisibilite-${Date.now()}`);
   assert.match(application.innerHTML, /Critères de divisibilité/);
+  assert.match(application.innerHTML, /disposition-ordinateur/);
   cliquer(gestionnaires, "demarrer");
   assert.match(application.innerHTML, /Critères de divisibilité/);
 
@@ -47,6 +48,22 @@ it("rend NC-01 depuis le registre et conserve son aide et sa correction", async 
   cliquer(gestionnaires, "valider");
   cliquer(gestionnaires, "correction");
   assert.match(application.innerHTML, /Correction expliquée/);
+});
+
+it("choisit les compositions téléphone et TNI depuis le même lecteur", async () => {
+  const telephone = installerFauxNavigateur(
+    "?notion=criteres-divisibilite&questions=1&graine=fumee-telephone",
+    390,
+  );
+  await import(`./app.js?fumee=telephone-${Date.now()}`);
+  assert.match(telephone.application.innerHTML, /disposition-telephone/);
+
+  const tni = installerFauxNavigateur(
+    "?mode=diaporama&notion=criteres-divisibilite&questions=1&graine=fumee-tni",
+    1920,
+  );
+  await import(`./app.js?fumee=tni-${Date.now()}`);
+  assert.match(tni.application.innerHTML, /disposition-tni/);
 });
 
 it("rend les solides, les trois volumes, leurs aides et leurs cours sans erreur", async () => {

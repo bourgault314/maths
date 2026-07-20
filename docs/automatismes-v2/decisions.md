@@ -188,3 +188,18 @@ explicite, jamais par un branchement implicite vers une notion par défaut. Une
 interaction réservée aux chiffres ou aux solides est bloquée pour les autres
 familles. Cette architecture précède toute nouvelle micro-notion et ne modifie
 pas le contenu pédagogique déjà validé.
+
+### D-025 — Le lecteur possède trois dispositions explicites
+
+La même question instanciée alimente le téléphone, l'ordinateur et le TNI sans
+porter de coordonnées d'écran. Le lecteur choisit une disposition à partir du
+mode de séance et de la largeur disponible : le téléphone privilégie des
+panneaux plein écran, l'ordinateur partage l'espace entre la question et le
+panneau utile, le TNI agrandit la lecture collective et les commandes
+enseignant.
+
+Les composants pédagogiques restent communs aux trois dispositions. Une
+nouvelle notion déclare son type de rendu dans le registre ; elle ne crée pas
+une quatrième interface ni un branchement implicite dans `app.js`. Cette
+décision ne change ni les questions, ni les réponses, ni les traces déjà
+validées.
