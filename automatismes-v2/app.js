@@ -14,10 +14,6 @@ import {
   fermerCours,
   lireConfiguration,
   nombreReussites,
-  NOTION_SOLIDES_USUELS,
-  NOTION_VOLUME_CUBE_PAVE,
-  NOTION_VOLUME_CYLINDRE,
-  NOTION_VOLUME_PRISME,
   ouvrirAide,
   ouvrirCorrection,
   ouvrirCours,
@@ -27,8 +23,14 @@ import {
   revelerReponse,
   tournerSolide,
   validerSelection,
-} from "./src/etat-lecteur.js?v=5";
-import { COURS_SOLIDES_USUELS } from "../packages/automatismes/src/espace-et-geometrie/solides-usuels/reconnaissance.js?v=5";
+} from "./src/etat-lecteur.js?v=6";
+import {
+  obtenirNotionLecteur,
+  RENDU_DIVISIBILITE,
+  RENDU_SOLIDE,
+  RENDU_VOLUME,
+} from "./src/registre-lecteur.js?v=6";
+import { COURS_SOLIDES_USUELS } from "../packages/automatismes/src/espace-et-geometrie/solides-usuels/reconnaissance.js?v=6";
 import {
   creerCone,
   creerCube,
@@ -42,34 +44,16 @@ import {
 const application = document.querySelector("#application");
 let etat = creerEtatLecteur(lireConfiguration(window.location.search));
 
-const NOTIONS = {
-  "criteres-divisibilite": "Critères de divisibilité",
-  [NOTION_SOLIDES_USUELS]: "Solides usuels",
-  [NOTION_VOLUME_CUBE_PAVE]: "Volumes — cube et pavé",
-  [NOTION_VOLUME_PRISME]: "Volumes — prisme droit",
-  [NOTION_VOLUME_CYLINDRE]: "Volumes — cylindre",
-};
-
-const NOTIONS_VOLUMES = new Set([
-  NOTION_VOLUME_CUBE_PAVE,
-  NOTION_VOLUME_PRISME,
-  NOTION_VOLUME_CYLINDRE,
-]);
-
-function estNotionReconnaissance() {
-  return etat.configuration.notion === NOTION_SOLIDES_USUELS;
-}
-
-function estNotionVolumes() {
-  return NOTIONS_VOLUMES.has(etat.configuration.notion);
-}
-
-function aCoursSolides() {
-  return estNotionReconnaissance() || estNotionVolumes();
+function definitionNotion() {
+  return obtenirNotionLecteur(etat.configuration.notion);
 }
 
 function nomNotion() {
-  return NOTIONS[etat.configuration.notion] ?? etat.configuration.notion;
+  return definitionNotion().nom;
+}
+
+function aCoursNotion() {
+  return definitionNotion().capacites.cours;
 }
 
 const nomsCouleurs = {
@@ -140,12 +124,12 @@ function rendreEntete() {
   const interactif = etat.configuration.mode === "interactif";
   const aideDisponible = etat.configuration.aide !== "indisponible";
   const progression = Math.round((index / total) * 100);
-  const boutonCours = aCoursSolides()
+  const boutonCours = aCoursNotion()
     ? `<button class="bouton-entete bouton-cours" data-action="cours"
         aria-expanded="${etat.coursOuvert}" aria-controls="panneau-cours">Cours</button>`
     : "";
   return `
-    <header class="entete-seance ${interactif ? "" : "entete-projection"} ${aCoursSolides() ? "avec-cours" : ""}">
+    <header class="entete-seance ${interactif ? "" : "entete-projection"} ${aCoursNotion() ? "avec-cours" : ""}">
       <button class="bouton-entete" data-action="quitter" aria-label="Quitter la séance">Quitter</button>
       <span class="position" aria-label="Question ${index} sur ${total}">${index} / ${total}</span>
       ${interactif
@@ -653,22 +637,6 @@ function rendreCoursVolumes() {
     </aside>`;
 }
 
-function rendreCours() {
-  if (estNotionVolumes()) return rendreCoursVolumes();
-  if (estNotionReconnaissance()) return rendreCoursReconnaissance();
-  return "";
-}
-
-function rendreAide(question) {
-  if (estNotionVolumes()) return rendreAideVolumes(question);
-  return estNotionReconnaissance() ? rendreAideSolides(question) : rendreAideDivisibilite(question);
-}
-
-function rendreCorrection(question) {
-  if (estNotionVolumes()) return rendreCorrectionVolumes(question);
-  return estNotionReconnaissance() ? rendreCorrectionSolides(question) : rendreCorrectionDivisibilite(question);
-}
-
 function classesLecteur() {
   const panneau = etat.aideOuverte || etat.correctionOuverte || etat.coursOuvert;
   const classePanneau = etat.aideOuverte
@@ -691,7 +659,7 @@ function rendreQuestionDivisibilite() {
       ${rendreEntete()}
       <div class="espace-lecteur">
         <main class="carte-question">
-          <p class="etiquette-notion">Critères de divisibilité</p>
+          <p class="etiquette-notion">${echapper(nomNotion())}</p>
           <h1>${echapper(question.enonce[0].contenu)}</h1>
           <p class="nombre-question">${echapper(nombre)}<span aria-hidden="true">.</span></p>
           <p class="precision">${interactif ? "Plusieurs réponses sont peut-être possibles." : "Quels nombres proposés conviennent ?"}</p>
@@ -720,7 +688,7 @@ function rendreQuestionSolides() {
       ${rendreEntete()}
       <div class="espace-lecteur">
         <main class="carte-question carte-question-solides">
-          <p class="etiquette-notion">Solides usuels</p>
+          <p class="etiquette-notion">${echapper(nomNotion())}</p>
           <h1>${echapper(question.enonce[0].contenu)}</h1>
           ${rendreSolide(bloc, { taille: interactif ? 320 : 400 })}
           <p class="precision">${interactif ? "Choisis une seule réponse." : "Choisissez le nom du solide."}</p>
@@ -773,9 +741,50 @@ function rendreQuestionVolumes() {
     </div>`;
 }
 
+const RENDUS_COURS = Object.freeze({
+  [RENDU_SOLIDE]: rendreCoursReconnaissance,
+  [RENDU_VOLUME]: rendreCoursVolumes,
+});
+
+const RENDUS_AIDE = Object.freeze({
+  [RENDU_DIVISIBILITE]: rendreAideDivisibilite,
+  [RENDU_SOLIDE]: rendreAideSolides,
+  [RENDU_VOLUME]: rendreAideVolumes,
+});
+
+const RENDUS_CORRECTION = Object.freeze({
+  [RENDU_DIVISIBILITE]: rendreCorrectionDivisibilite,
+  [RENDU_SOLIDE]: rendreCorrectionSolides,
+  [RENDU_VOLUME]: rendreCorrectionVolumes,
+});
+
+const RENDUS_QUESTION = Object.freeze({
+  [RENDU_DIVISIBILITE]: rendreQuestionDivisibilite,
+  [RENDU_SOLIDE]: rendreQuestionSolides,
+  [RENDU_VOLUME]: rendreQuestionVolumes,
+});
+
+function executerRendu(registre, ...parametres) {
+  const rendu = registre[definitionNotion().rendu];
+  if (!rendu) throw new Error(`rendu absent : ${definitionNotion().rendu}`);
+  return rendu(...parametres);
+}
+
+function rendreCours() {
+  if (!aCoursNotion()) return "";
+  return executerRendu(RENDUS_COURS);
+}
+
+function rendreAide(question) {
+  return executerRendu(RENDUS_AIDE, question);
+}
+
+function rendreCorrection(question) {
+  return executerRendu(RENDUS_CORRECTION, question);
+}
+
 function rendreQuestion() {
-  if (estNotionVolumes()) return rendreQuestionVolumes();
-  return estNotionReconnaissance() ? rendreQuestionSolides() : rendreQuestionDivisibilite();
+  return executerRendu(RENDUS_QUESTION);
 }
 
 function rendreBilan() {

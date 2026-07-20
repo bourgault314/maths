@@ -31,6 +31,24 @@ function cliquer(gestionnaires, action, id) {
   gestionnaires.get("click")[0]({ target: cible });
 }
 
+it("rend NC-01 depuis le registre et conserve son aide et sa correction", async () => {
+  const { application, gestionnaires } = installerFauxNavigateur(
+    "?notion=criteres-divisibilite&questions=1&graine=fumee-registre",
+  );
+  await import(`./app.js?fumee=divisibilite-${Date.now()}`);
+  assert.match(application.innerHTML, /Critères de divisibilité/);
+  cliquer(gestionnaires, "demarrer");
+  assert.match(application.innerHTML, /Critères de divisibilité/);
+
+  cliquer(gestionnaires, "aide");
+  assert.match(application.innerHTML, /Un coup de pouce/);
+  cliquer(gestionnaires, "fermer-aide");
+  cliquer(gestionnaires, "choix", "aucun");
+  cliquer(gestionnaires, "valider");
+  cliquer(gestionnaires, "correction");
+  assert.match(application.innerHTML, /Correction expliquée/);
+});
+
 it("rend les solides, les trois volumes, leurs aides et leurs cours sans erreur", async () => {
   const notions = ["solides-usuels", "volume-cube-pave", "volume-prisme", "volume-cylindre"];
   for (const notion of notions) {

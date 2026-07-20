@@ -5,44 +5,34 @@ import {
 import {
   SCHEMA_TRACE_REPONSE,
   validerTraceReponse,
-} from "../../packages/contrats/src/trace-reponse.js?v=5";
+} from "../../packages/contrats/src/trace-reponse.js?v=6";
 import {
   TYPE_REPONSE_CHOIX_UNIQUE,
   estSelectionExacte,
-} from "../../packages/contrats/src/question-v2.js?v=5";
+} from "../../packages/contrats/src/question-v2.js?v=6";
 import { graineDepuisTexte } from "../../packages/moteur-exercices/src/aleatoire.js";
-import { creerRegistreAutomatismes } from "../../packages/automatismes/src/registre.js?v=5";
-import { GABARIT_RECONNAISSANCE_SOLIDES } from "../../packages/automatismes/src/espace-et-geometrie/solides-usuels/reconnaissance.js?v=5";
+import { creerRegistreAutomatismes } from "../../packages/automatismes/src/registre.js?v=6";
 import {
-  GABARIT_VOLUME_CUBE_PAVE,
-  GABARIT_VOLUME_CYLINDRE,
-  GABARIT_VOLUME_PRISME,
-} from "../../packages/automatismes/src/grandeurs-et-mesures/volumes/calcul-volumes.js?v=5";
-import { GABARIT_SELECTION_DIVISEURS } from "../../packages/automatismes/src/nombres-et-calculs/criteres-divisibilite/selection-diviseurs.js";
+  connaitNotionLecteur,
+  NOTION_NC01,
+  NOTION_SOLIDES_USUELS,
+  NOTION_VOLUME_CUBE_PAVE,
+  NOTION_VOLUME_CYLINDRE,
+  NOTION_VOLUME_PRISME,
+  obtenirNotionLecteur,
+} from "./registre-lecteur.js?v=6";
 
-export const NOTION_NC01 = "criteres-divisibilite";
-export const NOTION_SOLIDES_USUELS = "solides-usuels";
-export const NOTION_VOLUME_CUBE_PAVE = "volume-cube-pave";
-export const NOTION_VOLUME_PRISME = "volume-prisme";
-export const NOTION_VOLUME_CYLINDRE = "volume-cylindre";
+export {
+  NOTION_NC01,
+  NOTION_SOLIDES_USUELS,
+  NOTION_VOLUME_CUBE_PAVE,
+  NOTION_VOLUME_CYLINDRE,
+  NOTION_VOLUME_PRISME,
+};
 export const NOMBRE_QUESTIONS_PAR_DEFAUT = 10;
 
 const MODES = new Set(["interactif", "diaporama"]);
 const AIDES = new Set(["ouverte", "disponible", "indisponible"]);
-const NOTIONS = new Map([
-  [NOTION_NC01, GABARIT_SELECTION_DIVISEURS],
-  [NOTION_SOLIDES_USUELS, GABARIT_RECONNAISSANCE_SOLIDES],
-  [NOTION_VOLUME_CUBE_PAVE, GABARIT_VOLUME_CUBE_PAVE],
-  [NOTION_VOLUME_PRISME, GABARIT_VOLUME_PRISME],
-  [NOTION_VOLUME_CYLINDRE, GABARIT_VOLUME_CYLINDRE],
-]);
-
-const NOTIONS_AVEC_COURS_SOLIDES = new Set([
-  NOTION_SOLIDES_USUELS,
-  NOTION_VOLUME_CUBE_PAVE,
-  NOTION_VOLUME_PRISME,
-  NOTION_VOLUME_CYLINDRE,
-]);
 
 function exigerConformite(nom, controle) {
   if (!controle.valide) {
@@ -58,12 +48,11 @@ function normaliserConfiguration(configuration = {}) {
   const nombreQuestions = configuration.nombreQuestions
     ?? NOMBRE_QUESTIONS_PAR_DEFAUT;
   const notion = configuration.notion ?? NOTION_NC01;
-  const graine = configuration.graine
-    ?? (notion === NOTION_NC01 ? "apercu-nc01-f2" : `apercu-${notion}`);
 
   if (!MODES.has(mode)) throw new RangeError(`mode inconnu : ${mode}`);
   if (!AIDES.has(aide)) throw new RangeError(`aide inconnue : ${aide}`);
-  if (!NOTIONS.has(notion)) throw new RangeError(`notion inconnue : ${notion}`);
+  if (!connaitNotionLecteur(notion)) throw new RangeError(`notion inconnue : ${notion}`);
+  const graine = configuration.graine ?? obtenirNotionLecteur(notion).graineApercu;
   if (!Number.isInteger(nombreQuestions) || nombreQuestions < 1 || nombreQuestions > 100) {
     throw new RangeError("nombreQuestions doit être compris entre 1 et 100");
   }
@@ -152,7 +141,7 @@ export function lireConfiguration(recherche = "") {
 export function demarrer(etat) {
   if (etat.seance.etat.phase !== "prete") return etat;
   const registre = creerRegistreAutomatismes();
-  const gabarit = NOTIONS.get(etat.configuration.notion);
+  const gabarit = obtenirNotionLecteur(etat.configuration.notion).gabarit;
   etat.questions = Array.from(
     { length: etat.configuration.nombreQuestions },
     (_, index) =>
@@ -270,7 +259,7 @@ export function fermerAide(etat) {
 }
 
 export function ouvrirCours(etat) {
-  if (!NOTIONS_AVEC_COURS_SOLIDES.has(etat.configuration.notion)) return etat;
+  if (!obtenirNotionLecteur(etat.configuration.notion).capacites.cours) return etat;
   etat.coursOuvert = true;
   etat.aideOuverte = false;
   etat.correctionOuverte = false;
@@ -286,7 +275,8 @@ export function tournerSolide(etat, deltaLacet, deltaTangage = 0) {
   if (!Number.isFinite(deltaLacet) || !Number.isFinite(deltaTangage)) {
     throw new TypeError("tournerSolide : déplacements numériques requis");
   }
-  if (!etat.aideOuverte && !etat.coursOuvert) return etat;
+  const capacites = obtenirNotionLecteur(etat.configuration.notion).capacites;
+  if (!capacites.rotationSolide || (!etat.aideOuverte && !etat.coursOuvert)) return etat;
   const lacet = etat.rotationSolide.lacetDeg + deltaLacet;
   etat.rotationSolide = {
     lacetDeg: ((lacet + 180) % 360 + 360) % 360 - 180,
@@ -296,14 +286,16 @@ export function tournerSolide(etat, deltaLacet, deltaTangage = 0) {
 }
 
 export function basculerUniteAide(etat) {
-  if (!etat.aideOuverte) return etat;
+  const capacites = obtenirNotionLecteur(etat.configuration.notion).capacites;
+  if (!etat.aideOuverte || !capacites.aideChiffres) return etat;
   etat.uniteReperee = !etat.uniteReperee;
   return etat;
 }
 
 export function basculerChiffreAide(etat, index) {
   const question = questionCourante(etat);
-  if (!etat.aideOuverte || !question) return etat;
+  const capacites = obtenirNotionLecteur(etat.configuration.notion).capacites;
+  if (!etat.aideOuverte || !question || !capacites.aideChiffres) return etat;
   const nombre = question.enonce.find((bloc) => bloc.id === "nombre")?.valeur;
   const longueur = String(nombre).length;
   if (!Number.isInteger(index) || index < 0 || index >= longueur) {

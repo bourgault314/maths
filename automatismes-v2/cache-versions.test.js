@@ -2,15 +2,19 @@ import assert from "node:assert/strict";
 import { readFile } from "node:fs/promises";
 import { it } from "node:test";
 
-const VERSION = "5";
+const VERSION = "6";
 
 const RESSOURCES_VERSIONNEES = new Map([
   ["automatismes-v2/index.html", ["styles.css", "app.js"]],
-  ["automatismes-v2/app.js", ["etat-lecteur.js", "reconnaissance.js"]],
+  ["automatismes-v2/app.js", ["etat-lecteur.js", "registre-lecteur.js", "reconnaissance.js"]],
   ["automatismes-v2/src/etat-lecteur.js", [
     "trace-reponse.js",
     "question-v2.js",
     "registre.js",
+    "registre-lecteur.js",
+  ]],
+  ["automatismes-v2/src/registre-lecteur.js", [
+    "selection-diviseurs.js",
     "reconnaissance.js",
     "calcul-volumes.js",
   ]],

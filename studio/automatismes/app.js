@@ -177,13 +177,19 @@
     resume.textContent = total
       ? total + ' automatisme' + (total === 1 ? '' : 's') + ' sélectionné' + (total === 1 ? '' : 's')
       : 'Choisis au moins un automatisme';
-    details.textContent = reglages.level + ' · ' + reglages.count + ' questions · ' +
+    const sansCalculatrice = reglages.level === 'DNB';
+    const niveauResume = sansCalculatrice ? 'DNB · Sans calculatrice' : reglages.level;
+    const libelleLancement = reglages.experienceMode === 'interactive'
+      ? 'Lancer l’entraînement'
+      : 'Lancer le diaporama';
+    details.textContent = niveauResume + ' · ' + reglages.count + ' questions · ' +
       (reglages.experienceMode === 'interactive' ? 'Interactif' : 'Diaporama') + ' · ' +
       (reglages.visualMode === 'with' ? 'Avec aide' : 'Sans aide');
     bouton.disabled = total === 0;
-    bouton.textContent = reglages.experienceMode === 'interactive'
-      ? 'Lancer l’entraînement'
-      : 'Lancer le diaporama';
+    bouton.classList.toggle('avec-calculatrice-barree', sansCalculatrice);
+    bouton.querySelector('.texte-lancement').textContent = libelleLancement;
+    bouton.setAttribute('aria-label',
+      libelleLancement + (sansCalculatrice ? ', sans calculatrice' : ''));
     document.getElementById('boutonAucun').disabled = total === 0;
     document.getElementById('boutonTous').disabled = total === modulesVisibles().length;
   }

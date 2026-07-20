@@ -142,6 +142,10 @@ export const PROVENANCE_FONDATION_V2 = Object.freeze({
     statut: "original_mathsgo",
     source: "contrats de séance et de trace validés pour Automatismes maths&go V2",
   },
+  "automatismes-v2/src/registre-lecteur.js": {
+    statut: "original_mathsgo",
+    source: "architecture générique du lecteur décidée après l’audit maths&go du 20 juillet 2026",
+  },
 
   "packages/objets/src/programme-automatismes.js": {
     statut: "original_mathsgo",

@@ -1,13 +1,13 @@
 # État du chantier Automatismes V2
 
-**Dernière mise à jour : 19 juillet 2026.**
+**Dernière mise à jour : 20 juillet 2026.**
 
 ## Référence vérifiée
 
 - Dépôt : `bourgault314/maths`.
 - Branche de référence : `main`.
 - Commit de référence vérifié sur GitHub :
-  `6b49cf265c98ea948222ce4c2828bec3cf65f451`.
+  `52b6ba34cdfdd62ad77da4b2c66702beecc05525`.
 - La PR #170 est fusionnée : la carte DNB, la fiche validée de `NC-01`, les
   storyboards et les décisions D-014 à D-019 sont la mémoire officielle du
   chantier.
@@ -26,18 +26,22 @@
 - La PR #145 est fermée sans fusion. Son principe de déclaration systématique
   de la provenance est repris proprement par la PR #202 sur le socle actuel,
   sans ses générateurs et contrats supprimés.
+- Les PR #240, #241 et #242 sont fusionnées : les solides usuels, les trois
+  familles de volumes, leurs ressources et leurs versions de cache sont dans
+  `main`.
+- Au démarrage du lot P0, `main` réussit **942 tests sur 942** et
+  `npm run verifier`.
 
 ## État fonctionnel
 
 - La bêta continue de fonctionner séparément et reste gelée hors correction
   critique.
-- Le premier générateur pédagogique V2 est fusionné et validé. Le lecteur neuf
-  qui l'expose en interactif et en diaporama est construit dans le lot courant.
+- Le lecteur neuf expose en interactif et en diaporama `NC-01/F2`, `GE-12/F1`,
+  `PG-22`, `PG-23` et `PG-24`.
 - La carte du DNB est établie : **37 cibles officielles distinctes**,
   **38 cibles normalisées** et **88 micro-notions**.
-- Le lot local courant a construit successivement `GE-12`, `PG-22`, `PG-23`
-  et `PG-24`. Une séance n'en active toujours qu'une ; ces ajouts ne sont ni
-  publiés ni fusionnés.
+- Une séance n'active toujours qu'une seule notion. Les cinq notions déjà
+  construites restent séparées dans le registre des générateurs.
 - Le critère par 10 est un complément maths&go validé. Il reste proposé dans le
   parcours DNB, tout en étant distingué des quatre critères officiels dans les
   données.
@@ -57,8 +61,8 @@
 - `specification-papier-seance-question-reponse.md` — responsabilités des
   données avant les contrats techniques.
 
-Ces documents autorisent la fabrication de la première tranche verticale. Ils
-ne publient encore aucune question devant les élèves.
+Ces documents ont autorisé la fabrication de la première tranche verticale.
+Leur contenu reste la référence pédagogique des lots déjà fusionnés.
 
 ## Lot technique fusionné : générateur seedé de NC-01/F2
 
@@ -93,10 +97,9 @@ contenu pédagogique ni l'application visible.
 Le clavier numérique, les fractions, le serveur, l'identité de
 l'élève et le chronomètre ne sont pas construits par anticipation.
 
-## Lot local non publié : solides usuels et volumes
+## Lot fusionné : solides usuels et volumes
 
-La branche locale `feat/v2-solides-volumes-dnb` contient un lot à faire valider
-avant toute publication :
+La PR #240 a intégré le lot construit sur `feat/v2-solides-volumes-dnb` :
 
 - `GE-12/F1` reconnaît cube, pavé droit, prisme droit, cylindre, pyramide et
   cône par choix unique ; la question reste fixe, l'aide et le cours permettent
@@ -109,11 +112,10 @@ avant toute publication :
   l'invariant « aire de la base × hauteur » ;
 - le cylindre distingue la valeur exacte en π de la valeur approchée avec
   π ≈ 3 ; « environ » est contrôlé dans consigne, réponse et correction ;
-- les tests ciblés et les 837 tests disponibles du dépôt passent. Les cinq
-  échecs du lancement global proviennent de fichiers absents de cette copie de
-  travail, hors de ce lot ;
-- l'archive PDF des captures « avant » est conservée séparément ; les captures
-  « après » attendent un aperçu public autorisé, sans publication automatique.
+- les tests mathématiques, les tests du lecteur et les garde-fous de provenance
+  passent dans `main` ;
+- les PR #241 et #242 ont ensuite aligné les ressources et les versions de
+  cache nécessaires à leur chargement dans le lecteur.
 
 ## Lot technique fusionné : lecteur commun de NC-01/F2
 
@@ -148,9 +150,22 @@ l'interface de la bêta :
 
 ## Prochaine étape du lot courant
 
-Faire relire les contenus et ouvrir un aperçu de branche seulement après accord
-de Gwenaël. Vérifier alors réellement à 375 px et en projection, compléter les
-captures « après », corriger la mise en page, puis seulement décider d'une PR.
+Le lot P0 est isolé sur `agent/automatismes-v2-lecteur-generique` :
+
+- un registre unique décrit désormais l'identifiant, le nom, le gabarit, le
+  rendu et les capacités de chaque notion ;
+- le moteur d'état n'importe plus directement les cinq générateurs ;
+- l'application choisit question, aide, correction et cours par type de rendu,
+  sans liste parallèle d'identifiants ;
+- les interactions propres aux chiffres ou aux solides sont refusées aux
+  autres familles ;
+- le lot réussit **947 tests sur 947** et `npm run verifier` ;
+- 24 captures comparées octet par octet à `origin/main` sont identiques, sans
+  débordement horizontal ni cible tactile inférieure à 44 px.
+
+Ce sous-lot n'est ni publié ni fusionné. Après validation, la suite de P0 doit
+séparer les rendus du fichier `app.js`, puis construire les trois dispositions
+téléphone, ordinateur et TNI sans commencer une nouvelle notion.
 
 ## Règle de mise à jour
 

@@ -120,6 +120,22 @@ describe("notions volumes", () => {
   });
 });
 
+describe("capacités déclarées par le registre", () => {
+  it("n'applique pas les interactions d'une autre famille de notion", () => {
+    const divisibilite = etatDemarre();
+    ouvrirAide(divisibilite);
+    tournerSolide(divisibilite, 25, 10);
+    assert.deepEqual(divisibilite.rotationSolide, { lacetDeg: 0, tangageDeg: 0 });
+
+    const solides = etatDemarre({ notion: NOTION_SOLIDES_USUELS });
+    ouvrirAide(solides);
+    basculerUniteAide(solides);
+    basculerChiffreAide(solides, 0);
+    assert.equal(solides.uniteReperee, false);
+    assert.deepEqual(solides.chiffresSomme, []);
+  });
+});
+
 describe("démarrage et génération", () => {
   it("instancie toutes les questions avant d'entrer dans la séance", () => {
     const etat = etatDemarre();
