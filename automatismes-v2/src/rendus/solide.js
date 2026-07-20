@@ -1,16 +1,16 @@
-import { COURS_SOLIDES_USUELS } from "../../../packages/automatismes/src/espace-et-geometrie/solides-usuels/reconnaissance.js?v=7";
-import { rendreChoix } from "./reponse-choix.js?v=7";
+import { COURS_SOLIDES_USUELS } from "../../../packages/automatismes/src/espace-et-geometrie/solides-usuels/reconnaissance.js?v=9";
+import { rendreChoix } from "./reponse-choix.js?v=9";
 import {
   echapper,
   rendreEntetePanneau,
   rendreEtape,
   rendreVoile,
-} from "./outils-rendu.js?v=7";
+} from "./outils-rendu.js?v=9";
 import {
   blocSolide,
   commandesRotation,
   rendreSolide,
-} from "./solides.js?v=7";
+} from "./solides.js?v=9";
 
 function rendreQuestion({ etat, question, nomNotion, rendreActionsEleve }) {
   const bloc = blocSolide(question);

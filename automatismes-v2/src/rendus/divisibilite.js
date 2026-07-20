@@ -1,10 +1,10 @@
-import { rendreChoix } from "./reponse-choix.js?v=7";
+import { rendreChoix } from "./reponse-choix.js?v=9";
 import {
   echapper,
   rendreEntetePanneau,
   rendreEtape,
   rendreVoile,
-} from "./outils-rendu.js?v=7";
+} from "./outils-rendu.js?v=9";
 
 function nombreQuestion(question) {
   return question.enonce.find((bloc) => bloc.id === "nombre")?.valeur;

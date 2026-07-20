@@ -2,10 +2,10 @@ import {
   RENDU_DIVISIBILITE as TYPE_DIVISIBILITE,
   RENDU_SOLIDE as TYPE_SOLIDE,
   RENDU_VOLUME as TYPE_VOLUME,
-} from "../registre-lecteur.js?v=7";
-import { RENDU_DIVISIBILITE } from "./divisibilite.js?v=7";
-import { RENDU_SOLIDE } from "./solide.js?v=7";
-import { RENDU_VOLUME } from "./volume.js?v=7";
+} from "../registre-lecteur.js?v=9";
+import { RENDU_DIVISIBILITE } from "./divisibilite.js?v=9";
+import { RENDU_SOLIDE } from "./solide.js?v=9";
+import { RENDU_VOLUME } from "./volume.js?v=9";
 
 const METHODES_OBLIGATOIRES = ["question", "aide", "correction"];
 

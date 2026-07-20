@@ -23,17 +23,24 @@ import {
   revelerReponse,
   tournerSolide,
   validerSelection,
-} from "./src/etat-lecteur.js?v=7";
-import { choisirDisposition } from "./src/disposition.js?v=7";
-import { obtenirNotionLecteur } from "./src/registre-lecteur.js?v=7";
-import { echapper } from "./src/rendus/outils-rendu.js?v=7";
-import { obtenirRenduLecteur } from "./src/rendus/registre-rendus.js?v=7";
+} from "./src/etat-lecteur.js?v=9";
+import {
+  choisirDisposition,
+  estDispositionTniCompacte,
+} from "./src/disposition.js?v=9";
+import { obtenirNotionLecteur } from "./src/registre-lecteur.js?v=9";
+import { echapper } from "./src/rendus/outils-rendu.js?v=9";
+import { obtenirRenduLecteur } from "./src/rendus/registre-rendus.js?v=9";
 
 const application = document.querySelector("#application");
 let etat = creerEtatLecteur(lireConfiguration(window.location.search));
 let disposition = choisirDisposition({
   largeur: window.innerWidth ?? document.documentElement.clientWidth ?? 1024,
   mode: etat.configuration.mode,
+});
+let dispositionTniCompacte = estDispositionTniCompacte({
+  disposition,
+  hauteur: window.innerHeight ?? document.documentElement.clientHeight ?? 768,
 });
 
 function definitionNotion() {
@@ -84,7 +91,7 @@ function texteAide() {
 function rendreEcranPret() {
   const projection = etat.configuration.mode === "diaporama";
   return `
-    <main class="ecran-pret mode-${etat.configuration.mode} disposition-${disposition}">
+    <main class="ecran-pret mode-${etat.configuration.mode} disposition-${disposition} ${dispositionTniCompacte ? "tni-compacte" : ""}">
       <div class="marque" aria-label="maths and go">
         <span class="marque-maths">maths</span><span class="marque-et">&amp;</span><span>go</span>
       </div>
@@ -142,18 +149,25 @@ function rendreRetourValidation() {
 }
 
 function rendreActionsEleve() {
+  const retour = `<div class="zone-retour" aria-live="polite" aria-atomic="true">
+    ${rendreRetourValidation()}
+  </div>`;
   if (etat.validation === null) {
     return `
-      ${rendreRetourValidation()}
-      <button class="bouton-principal bouton-large" data-action="valider">Valider</button>`;
+      ${retour}
+      <div class="zone-commandes-eleve">
+        <button class="bouton-principal bouton-large" data-action="valider">Valider</button>
+      </div>`;
   }
   return `
-    ${rendreRetourValidation()}
-    <div class="actions-eleve">
-      <button class="bouton-secondaire" data-action="correction">Voir la correction</button>
-      <button class="bouton-principal" data-action="suivant">
-        ${etat.seance.etat.indexQuestion + 1 === etat.seance.nombreQuestions ? "Voir le bilan" : "Question suivante"}
-      </button>
+    ${retour}
+    <div class="zone-commandes-eleve">
+      <div class="actions-eleve">
+        <button class="bouton-secondaire" data-action="correction">Voir la correction</button>
+        <button class="bouton-principal" data-action="suivant">
+          ${etat.seance.etat.indexQuestion + 1 === etat.seance.nombreQuestions ? "Voir le bilan" : "Question suivante"}
+        </button>
+      </div>
     </div>`;
 }
 
@@ -188,6 +202,7 @@ function classesLecteur() {
     "lecteur",
     `mode-${etat.configuration.mode}`,
     `disposition-${disposition}`,
+    dispositionTniCompacte ? "tni-compacte" : "",
     panneau ? "panneau-ouvert" : "",
     classePanneau,
   ].filter(Boolean).join(" ");
@@ -305,8 +320,13 @@ window.addEventListener?.("resize", () => {
     largeur: window.innerWidth ?? document.documentElement.clientWidth ?? 1024,
     mode: etat.configuration.mode,
   });
-  if (suivante === disposition) return;
+  const suivanteCompacte = estDispositionTniCompacte({
+    disposition: suivante,
+    hauteur: window.innerHeight ?? document.documentElement.clientHeight ?? 768,
+  });
+  if (suivante === disposition && suivanteCompacte === dispositionTniCompacte) return;
   disposition = suivante;
+  dispositionTniCompacte = suivanteCompacte;
   rendre();
 });
 

@@ -6,8 +6,8 @@ import {
   creerPrisme,
   creerPyramide,
   dessinerSolide,
-} from "../../../packages/objets/src/solides.js?v=7";
-import { echapper } from "./outils-rendu.js?v=7";
+} from "../../../packages/objets/src/solides.js?v=9";
+import { echapper } from "./outils-rendu.js?v=9";
 
 export function blocSolide(question) {
   return question.enonce.find((bloc) => bloc.type === "solide");
@@ -58,6 +58,7 @@ export function rendreSolide(bloc, {
   mettreBasesEnValeur = false,
   afficherMesures = false,
   afficherHauteur = false,
+  logementStable = false,
   rotation = { lacetDeg: 0, tangageDeg: 0 },
 } = {}) {
   const vue = bloc.vue ?? { lacetDeg: -30, tangageDeg: 16 };
@@ -73,8 +74,14 @@ export function rendreSolide(bloc, {
     hauteur: afficherHauteur,
     unite: bloc.mesures?.unite ?? "cm",
     cachees: "pointilles",
+    cadre: manipulable ? "stable" : "ajuste",
   });
-  return `<div class="visuel-solide ${manipulable ? "solide-manipulable" : ""}"
+  const classes = [
+    "visuel-solide",
+    manipulable ? "solide-manipulable" : "",
+    logementStable ? "logement-solide-stable" : "",
+  ].filter(Boolean).join(" ");
+  return `<div class="${classes}"
     ${manipulable ? 'data-manipulable="true" tabindex="0" aria-label="Solide tournable"' : ""}>
     ${svg}
   </div>`;

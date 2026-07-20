@@ -138,6 +138,7 @@ describe("solides : modèle", () => {
     assert.throws(() => creerSphere({ rayon: -2 }), RangeError);
     assert.throws(() => creerVue({ projection: "perspective" }), RangeError);
     assert.throws(() => dessinerSolide(creerCube(), { cachees: "invisibles" }), RangeError);
+    assert.throws(() => dessinerSolide(creerCube(), { cadre: "flottant" }), RangeError);
   });
 });
 
@@ -231,6 +232,35 @@ describe("solides : rendu SVG", () => {
       const deux = dessinerSolide(solide, { taille: 300 });
       assert.ok(un.startsWith("<svg"), cle);
       assert.equal(un, deux, `${cle} : rendu non déterministe`);
+    }
+  });
+
+  it("garde un cadre carré constant quand un solide manipulable tourne", () => {
+    const solides = [
+      creerCube(),
+      creerPave({ longueur: 6, largeur: 3.3, hauteur: 2.8 }),
+      creerPrisme({ base: "triangle-rectangle", cote1: 4, cote2: 3, hauteur: 5 }),
+      creerPyramide({ cotes: 4, cote: 4.2, hauteur: 4.8 }),
+      creerCylindre({ rayon: 2.1, hauteur: 4.7 }),
+      creerCone({ rayon: 2.2, hauteur: 4.8 }),
+    ];
+    for (const solide of solides) {
+      const rendus = [-176, -88, 0, 88, 176].map((lacetDeg) => dessinerSolide(solide, {
+        projection: "orthographique",
+        lacetDeg,
+        tangageDeg: 16,
+        taille: 300,
+        marge: 24,
+        cadre: "stable",
+        noms: true,
+        mesures: true,
+        hauteur: true,
+      }));
+      for (const svg of rendus) {
+        assert.match(svg, /^<svg[^>]*viewBox="0 0 300 300"[^>]*width="300" height="300"/);
+        assert.ok(!svg.includes("NaN"), solide.type);
+      }
+      assert.ok(new Set(rendus).size > 1, `${solide.type} : la silhouette doit encore changer`);
     }
   });
 

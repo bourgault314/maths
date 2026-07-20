@@ -152,7 +152,7 @@ l'interface de la bêta :
 - Gwenaël a validé l'affichage et demandé sa publication le 19 juillet 2026 ;
   la PR #191 livre cette première tranche verticale sur le site public.
 
-## Lot P0-2 construit et en attente de validation
+## Lot P0-2 stabilisé et en attente d'essai
 
 Le lot courant est isolé sur
 `agent/automatismes-v2-rendus-dispositions` :
@@ -173,17 +173,33 @@ Le lot courant est isolé sur
 - sur TNI, les commandes enseignant, les choix, les figures et la correction
   sont agrandis pour une lecture collective, sans étirer mécaniquement la
   disposition téléphone ;
+- la zone de retour accessible reste réservée avant et après validation, et
+  les commandes élève occupent une zone distincte dont la position ne dépend
+  plus de la longueur du message ;
+- le diaporama réserve explicitement la ligne de la barre enseignant, y compris
+  à 1 280 × 720 et sur téléphone ; une variante TNI compacte réduit les
+  espacements sans masquer les choix ni les commandes ;
+- les solides manipulables utilisent un cadre carré, un `viewBox`, un centre
+  et une échelle calculés depuis une enveloppe 3D stable ; la silhouette tourne
+  sans zoom automatique et sans changer le calcul des arêtes visibles ;
+- les figures fixes des questions de volume occupent un logement 4:3 constant
+  entre deux questions, sans déformation du SVG ;
 - le contenu mathématique, les générateurs et les traces ne changent pas ;
-- le dépôt complet réussit **955 tests sur 955** et `npm run verifier` ;
-- **72 écrans** ont été contrôlés : 24 états complets de `NC-01`, puis 48
-  états croisant solides usuels et trois familles de volumes avec téléphone,
-  ordinateur et TNI. Aucun débordement horizontal ni bouton visible inférieur
-  à 44 px n'a été détecté.
+- le dépôt complet réussit **964 tests sur 964** et le script `verifier` ;
+- **279 états** ont été contrôlés sur les cinq notions, en interactif et en
+  diaporama, à 375 × 812, 1 280 × 720 et 1 920 × 1 080, complétés par
+  **96 captures de rotation**. Aucun débordement horizontal, choix sous la
+  barre enseignant, bouton visible inférieur à 44 px, découpage de solide ni
+  erreur de console n'a été détecté ;
+- sur 45 validations vides, justes ou fausses, le déplacement maximal de la
+  première commande, de la carte, de la question et des choix est de **0 px** ;
+  les 18 comparaisons de figures fixes et les 78 scènes rotatives mesurées ont
+  également un écart de cadre de **0 px**.
 
-Ce sous-lot n'est ni publié ni fusionné. Après validation visuelle et essai par
-Gwenaël, la suite de P0 doit renforcer l'accessibilité des panneaux — focus,
-touche Échap et restitution du focus — puis rendre le protocole de captures
-durable avant de reprendre le mini-cours de `NC-01`.
+Ce sous-lot n'est ni publié ni fusionné. Après essai par Gwenaël, la suite de
+P0 doit renforcer l'accessibilité des panneaux — focus, touche Échap et
+restitution du focus — puis rendre le protocole de captures durable avant de
+reprendre le mini-cours de `NC-01`.
 
 ## Règle de mise à jour
 

@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import { it } from "node:test";
 
-function installerFauxNavigateur(recherche, largeur = 1024) {
+function installerFauxNavigateur(recherche, largeur = 1024, hauteur = 768) {
   const gestionnaires = new Map();
   const application = {
     innerHTML: "",
@@ -13,7 +13,7 @@ function installerFauxNavigateur(recherche, largeur = 1024) {
       return { focus() {} };
     },
   };
-  globalThis.window = { location: { search: recherche }, innerWidth: largeur };
+  globalThis.window = { location: { search: recherche }, innerWidth: largeur, innerHeight: hauteur };
   globalThis.document = {
     title: "",
     documentElement: { style: { setProperty() {} } },
@@ -64,6 +64,32 @@ it("choisit les compositions téléphone et TNI depuis le même lecteur", async 
   );
   await import(`./app.js?fumee=tni-${Date.now()}`);
   assert.match(tni.application.innerHTML, /disposition-tni/);
+
+  const tniCompact = installerFauxNavigateur(
+    "?mode=diaporama&notion=criteres-divisibilite&questions=1&graine=fumee-tni-compact",
+    1280,
+    720,
+  );
+  await import(`./app.js?fumee=tni-compact-${Date.now()}`);
+  assert.match(tniCompact.application.innerHTML, /tni-compacte/);
+});
+
+it("réserve toujours le retour accessible et sépare les commandes élève", async () => {
+  const { application, gestionnaires } = installerFauxNavigateur(
+    "?notion=criteres-divisibilite&questions=1&graine=fumee-retour-stable",
+    375,
+    812,
+  );
+  await import(`./app.js?fumee=retour-stable-${Date.now()}`);
+  cliquer(gestionnaires, "demarrer");
+  assert.match(application.innerHTML, /class="zone-retour" aria-live="polite" aria-atomic="true"/);
+  assert.match(application.innerHTML, /class="zone-commandes-eleve"/);
+  assert.match(application.innerHTML, /data-action="valider"/);
+
+  cliquer(gestionnaires, "valider");
+  assert.match(application.innerHTML, /role="alert"/);
+  assert.match(application.innerHTML, /class="zone-commandes-eleve"/);
+  assert.match(application.innerHTML, /data-action="valider"/);
 });
 
 it("rend les solides, les trois volumes, leurs aides et leurs cours sans erreur", async () => {

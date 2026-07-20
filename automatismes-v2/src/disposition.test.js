@@ -5,6 +5,8 @@ import {
   DISPOSITION_ORDINATEUR,
   DISPOSITION_TELEPHONE,
   DISPOSITION_TNI,
+  estDispositionTniCompacte,
+  HAUTEUR_TNI_COMPACTE_MAX,
 } from "./disposition.js";
 
 describe("dispositions du lecteur", () => {
@@ -27,5 +29,18 @@ describe("dispositions du lecteur", () => {
   it("refuse une largeur ou un mode incohérent", () => {
     assert.throws(() => choisirDisposition({ largeur: 0, mode: "interactif" }), TypeError);
     assert.throws(() => choisirDisposition({ largeur: 1024, mode: "inconnu" }), RangeError);
+  });
+
+  it("active explicitement la variante TNI de faible hauteur", () => {
+    assert.equal(HAUTEUR_TNI_COMPACTE_MAX, 820);
+    assert.equal(estDispositionTniCompacte({ disposition: DISPOSITION_TNI, hauteur: 720 }), true);
+    assert.equal(estDispositionTniCompacte({ disposition: DISPOSITION_TNI, hauteur: 820 }), true);
+    assert.equal(estDispositionTniCompacte({ disposition: DISPOSITION_TNI, hauteur: 821 }), false);
+    assert.equal(estDispositionTniCompacte({ disposition: DISPOSITION_ORDINATEUR, hauteur: 720 }), false);
+  });
+
+  it("refuse une hauteur ou une disposition incohérente", () => {
+    assert.throws(() => estDispositionTniCompacte({ disposition: "inconnue", hauteur: 720 }), RangeError);
+    assert.throws(() => estDispositionTniCompacte({ disposition: DISPOSITION_TNI, hauteur: 0 }), TypeError);
   });
 });

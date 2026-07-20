@@ -1,4 +1,4 @@
-import { echapper } from "./outils-rendu.js?v=7";
+import { echapper } from "./outils-rendu.js?v=9";
 
 export function rendreChoix({ etat, question }) {
   const interactif = etat.configuration.mode === "interactif";

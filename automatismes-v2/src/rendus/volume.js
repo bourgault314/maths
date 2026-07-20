@@ -1,17 +1,17 @@
-import { rendreChoix } from "./reponse-choix.js?v=7";
+import { rendreChoix } from "./reponse-choix.js?v=9";
 import {
   echapper,
   rendreEntetePanneau,
   rendreEtape,
   rendreVoile,
-} from "./outils-rendu.js?v=7";
+} from "./outils-rendu.js?v=9";
 import {
   blocSolide,
   commandesRotation,
   rendreDonneesVolume,
   rendreEmpilementCubes,
   rendreSolide,
-} from "./solides.js?v=7";
+} from "./solides.js?v=9";
 
 function rendreQuestion({ etat, question, nomNotion, rendreActionsEleve }) {
   const bloc = blocSolide(question);
@@ -25,6 +25,7 @@ function rendreQuestion({ etat, question, nomNotion, rendreActionsEleve }) {
         mettreBasesEnValeur: ["prisme", "cylindre"].includes(bloc.forme),
         afficherMesures: ["cube", "pave", "cylindre"].includes(bloc.forme),
         afficherHauteur: bloc.forme === "cylindre",
+        logementStable: true,
       })}
       ${rendreDonneesVolume(bloc)}
     </div>

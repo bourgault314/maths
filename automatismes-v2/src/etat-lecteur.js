@@ -5,13 +5,13 @@ import {
 import {
   SCHEMA_TRACE_REPONSE,
   validerTraceReponse,
-} from "../../packages/contrats/src/trace-reponse.js?v=7";
+} from "../../packages/contrats/src/trace-reponse.js?v=9";
 import {
   TYPE_REPONSE_CHOIX_UNIQUE,
   estSelectionExacte,
-} from "../../packages/contrats/src/question-v2.js?v=7";
+} from "../../packages/contrats/src/question-v2.js?v=9";
 import { graineDepuisTexte } from "../../packages/moteur-exercices/src/aleatoire.js";
-import { creerRegistreAutomatismes } from "../../packages/automatismes/src/registre.js?v=7";
+import { creerRegistreAutomatismes } from "../../packages/automatismes/src/registre.js?v=9";
 import {
   connaitNotionLecteur,
   NOTION_NC01,
@@ -20,7 +20,7 @@ import {
   NOTION_VOLUME_CYLINDRE,
   NOTION_VOLUME_PRISME,
   obtenirNotionLecteur,
-} from "./registre-lecteur.js?v=7";
+} from "./registre-lecteur.js?v=9";
 
 export {
   NOTION_NC01,
