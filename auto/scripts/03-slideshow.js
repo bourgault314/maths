@@ -74,7 +74,7 @@ function setupReadDataTools(root=globalThis.document){
   });
 }
 
-function makeDiapoWindowHtml(seriesData,experienceMode='interactive',menuUrl=location.href){
+function makeDiapoWindowHtml(seriesData,experienceMode='interactive',menuUrl='./'){
   const normalizedSeries=Array.isArray(seriesData&&seriesData[0])?seriesData:[seriesData||[]];
   const payload = JSON.stringify(normalizedSeries);
   const experiencePayload=JSON.stringify(experienceMode);
