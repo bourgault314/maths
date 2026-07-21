@@ -45,16 +45,16 @@
   }
   function triangularPrismBody(p,data){
     // Les deux bases sont des triangles translatés par le même vecteur.
-    // Les arêtes arrière cachées ne doivent pas être retracées en trait plein.
+    // Les trois arêtes cachées se rejoignent au sommet aa ; le contour bb-cc reste visible.
     const a=[34,160],b=[82,58],c=[142,160],dx=88,dy=-26;
     const aa=[a[0]+dx,a[1]+dy],bb=[b[0]+dx,b[1]+dy],cc=[c[0]+dx,c[1]+dy];
     const faces=face(`${b} ${bb} ${cc} ${c}`,p.top)
       +face(`${a} ${c} ${cc} ${aa}`,p.side)
       +poly(`${a} ${b} ${c}`,p.front,p.line);
-    const visible=line(a[0],a[1],aa[0],aa[1],p.line)
-      +line(b[0],b[1],bb[0],bb[1],p.line)
-      +line(c[0],c[1],cc[0],cc[1],p.line);
-    const hidden=`<path class="solid-hidden-edges" d="M${aa[0]} ${aa[1]}L${bb[0]} ${bb[1]}L${cc[0]} ${cc[1]}L${aa[0]} ${aa[1]}" fill="none" stroke="${p.line}" stroke-width="2.4"${dash}/>`;
+    const visible=line(b[0],b[1],bb[0],bb[1],p.line)
+      +line(c[0],c[1],cc[0],cc[1],p.line)
+      +line(bb[0],bb[1],cc[0],cc[1],p.line);
+    const hidden=`<path class="solid-hidden-edges" d="M${a[0]} ${a[1]}L${aa[0]} ${aa[1]}L${bb[0]} ${bb[1]}M${aa[0]} ${aa[1]}L${cc[0]} ${cc[1]}" fill="none" stroke="${p.line}" stroke-width="2.4"${dash}/>`;
     const labels=data.labels||{};
     const altitude=labels.baseHeight
       ?`<line class="solid-construction" x1="${b[0]}" y1="${b[1]}" x2="${b[0]}" y2="${a[1]}" stroke="${p.line}" stroke-width="1.8"/>`
@@ -133,6 +133,6 @@
   const presets=Object.freeze([
     ['cube','Cube'],['cuboid','Pavé droit'],['prism','Prisme droit'],['cylinder','Cylindre'],['pyramid','Pyramide'],['cone','Cône'],['sphere','Sphère']
   ].map(([id,label])=>Object.freeze({id,label,data:Object.freeze({kind:id})})));
-  global.MATHSGO_VISUALS.register('geometry.solid',{version:'1.2.1',label:'Solides de l’espace',family:'Géométrie',supports:Object.freeze(['phone','computer','projection','print']),description:'Traceur commun des solides, avec perspectives cohérentes, faces visibles, arêtes cachées pointillées, variantes et mesures.',presets,render});
+  global.MATHSGO_VISUALS.register('geometry.solid',{version:'1.2.2',label:'Solides de l’espace',family:'Géométrie',supports:Object.freeze(['phone','computer','projection','print']),description:'Traceur commun des solides, avec perspectives cohérentes, faces visibles, arêtes cachées pointillées, variantes et mesures.',presets,render});
   global.solidSvg=render;
 })(globalThis);
