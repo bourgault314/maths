@@ -1,0 +1,36 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>Jeux à deux d’Axelle | maths&amp;go</title>
+  <link rel="icon" href="/favicon.ico" sizes="48x48">
+  <link rel="icon" type="image/svg+xml" href="/favicon.svg">
+  <link rel="apple-touch-icon" href="/assets/img/apple-touch-icon.png">
+  <meta name="description" content="Trois jeux tactiles à deux joueurs pour Axelle : stratégie, géométrie et calcul mental CM1.">
+  <meta name="robots" content="noindex, nofollow">
+  <style>
+    :root{--ink:#153451;--blue:#0755b8;--teal:#078a82;--coral:#ef5b45;--line:#d8e6ef}
+    *{box-sizing:border-box}html{min-height:100%;-webkit-text-size-adjust:100%}body{min-height:100vh;margin:0;color:var(--ink);font-family:Inter,ui-rounded,"Arial Rounded MT Bold","Segoe UI",sans-serif;background:radial-gradient(circle at 8% 3%,#dff7f4 0 14%,transparent 35%),radial-gradient(circle at 92% 8%,#fff0d8 0 13%,transparent 34%),linear-gradient(145deg,#f7fbff,#fffdf7)}
+    .topbar{width:min(100%,980px);min-height:62px;margin:auto;padding:8px 16px;display:flex;align-items:center;justify-content:space-between;gap:10px}.topbar img{display:block;width:118px;height:auto}.back{min-height:42px;display:inline-flex;align-items:center;padding:8px 13px;border:1px solid #c8d9e5;border-radius:999px;color:#34546c;background:#fff;text-decoration:none;font-size:.8rem;font-weight:900}
+    main{width:min(980px,100%);margin:auto;padding:14px clamp(14px,4vw,36px) 40px}.hero{text-align:center;max-width:680px;margin:8px auto 25px}.hero-art{height:64px;display:flex;align-items:center;justify-content:center;gap:10px}.hero-art i{position:relative;width:52px;height:52px;display:block;border-radius:16px;background:#e3f0ff}.hero-art i:nth-child(2){background:#f0e5fb}.hero-art i:nth-child(3){background:#ffe7df}.hero-art i::after{content:"";position:absolute;inset:13px;background:#0755b8;clip-path:polygon(50% 0,95% 25%,95% 75%,50% 100%,5% 75%,5% 25%)}.hero-art i:nth-child(2)::after{background:#8a48be;clip-path:polygon(0 0,42% 0,42% 58%,100% 58%,100% 100%,0 100%)}.hero-art i:nth-child(3)::after{inset:15px 11px 10px;background:#ef5b45;border-radius:4px;clip-path:none;box-shadow:inset 0 8px 0 #ff9d82}.eyebrow{margin:8px 0 3px;color:var(--teal);font-size:.78rem;font-weight:950;letter-spacing:.09em;text-transform:uppercase}.hero h1{margin:0;color:#143e62;font-size:clamp(2rem,7vw,3.5rem);line-height:1}.hero p{margin:10px auto 0;color:#4f6a7d;line-height:1.45}
+    .face-note{max-width:700px;margin:0 auto 23px;padding:12px 15px;border:1px solid #f1d291;border-radius:16px;background:#fff9e9;color:#6f541a;font-weight:800;text-align:center}
+    .games{display:grid;grid-template-columns:repeat(3,1fr);gap:16px}.game-card{--accent:var(--blue);min-height:340px;display:flex;flex-direction:column;padding:19px;border:2px solid var(--line);border-radius:24px;color:inherit;background:rgba(255,255,255,.97);box-shadow:0 7px 0 rgba(113,155,181,.18);text-decoration:none;transition:.18s}.game-card:nth-child(2){--accent:#8a48be}.game-card:nth-child(3){--accent:var(--coral)}.game-card:hover,.game-card:focus-visible{transform:translateY(-4px);outline:3px solid #a8d7ff;outline-offset:3px}.tag{align-self:flex-start;padding:5px 9px;border-radius:999px;color:var(--accent);background:color-mix(in srgb,var(--accent) 12%,white);font-size:.7rem;font-weight:950;letter-spacing:.06em;text-transform:uppercase}.preview{height:118px;display:grid;place-items:center;margin:9px 0 5px}.preview-art{position:relative;width:90px;height:72px}.preview-art.crossing::before,.preview-art.crossing::after{content:"";position:absolute;width:58px;height:66px;clip-path:polygon(50% 0,100% 25%,100% 75%,50% 100%,0 75%,0 25%)}.preview-art.crossing::before{left:5px;top:3px;background:#0755b8}.preview-art.crossing::after{right:5px;top:3px;background:#ef5b45;opacity:.82}.preview-art.paving{display:grid;grid-template-columns:repeat(4,1fr);grid-template-rows:repeat(3,1fr);gap:4px}.preview-art.paving i{border-radius:5px;background:#dbe7ee}.preview-art.paving i:nth-child(-n+5){background:#8a48be}.preview-art.paving i:nth-child(6),.preview-art.paving i:nth-child(10){background:#ef5b45}.preview-art.chest{height:55px;margin-top:10px;border:5px solid #8f4e1f;border-radius:10px;background:#f5b323;box-shadow:inset 0 13px 0 #ffcf51}.preview-art.chest::before{content:"";position:absolute;left:31px;top:21px;width:18px;height:24px;border-radius:50% 50% 5px 5px;background:#7a461f}.game-card h2{margin:5px 0 8px;color:#143e62;font-size:1.45rem}.game-card p{margin:0;color:#526d7f;line-height:1.42}.play{display:flex;align-items:center;justify-content:space-between;margin-top:auto;padding-top:17px;color:var(--accent);font-weight:950}.play b{width:38px;height:38px;display:grid;place-items:center;border-radius:50%;color:#fff;background:var(--accent);font-size:1.2rem}
+    .privacy{text-align:center;margin:26px 0 0;color:#688093;font-size:.8rem}
+    @media(max-width:760px){.topbar{min-height:52px;padding-inline:12px}.topbar img{width:102px}.back{min-height:38px;padding:6px 10px;font-size:.73rem}main{padding-top:7px}.hero{margin-top:0}.hero p{font-size:.9rem}.games{grid-template-columns:1fr}.game-card{min-height:0}.preview{height:88px;font-size:3.8rem}.face-note{font-size:.86rem}}
+  </style>
+</head>
+<body>
+  <header class="topbar"><a href="/" aria-label="Accueil maths&go"><img src="/assets/img/mathsgo-logo.png" alt="maths&go" width="1338" height="622"></a><a class="back" href="/axelle/">← Bureau d’Axelle</a></header>
+  <main>
+    <section class="hero"><div class="hero-art" aria-hidden="true"><i></i><i></i><i></i></div><p class="eyebrow">Posez le téléphone entre vous</p><h1>Jeux à deux</h1><p>Trois parties rapides pour jouer face à face. Pas de compte à créer, pas de chronomètre.</p></section>
+    <p class="face-note">Chaque joueur lit son bandeau de son côté du téléphone. Celui qui a le bandeau bleu commence.</p>
+    <nav class="games" aria-label="Les trois jeux à deux">
+      <a class="game-card" href="traversee/"><span class="tag">Stratégie pure</span><span class="preview" aria-hidden="true"><i class="preview-art crossing"></i></span><h2>La Traversée</h2><p>Pose tes galets et fabrique un chemin continu entre tes deux rives.</p><span class="play">Jouer maintenant <b aria-hidden="true">→</b></span></a>
+      <a class="game-card" href="pavage/"><span class="tag">Géométrie</span><span class="preview" aria-hidden="true"><i class="preview-art paving"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></i></span><h2>Pavage duel</h2><p>Tourne et pose tes formes. Laisse ton adversaire sans emplacement.</p><span class="play">Jouer maintenant <b aria-hidden="true">→</b></span></a>
+      <a class="game-card" href="coffres/"><span class="tag">Calcul mental CM1</span><span class="preview" aria-hidden="true"><i class="preview-art chest"></i></span><h2>Coffres magiques</h2><p>Associe deux runes voisines pour gagner les cinq clés du trésor.</p><span class="play">Jouer maintenant <b aria-hidden="true">→</b></span></a>
+    </nav>
+    <p class="privacy">Les parties restent uniquement sur ce téléphone.</p>
+  </main>
+</body>
+</html>

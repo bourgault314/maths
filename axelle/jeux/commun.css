@@ -1,0 +1,227 @@
+:root {
+  --ink: #153451;
+  --muted: #557083;
+  --paper: #ffffff;
+  --line: #d8e6ef;
+  --blue: #0755b8;
+  --blue-soft: #dcebff;
+  --coral: #ef5b45;
+  --coral-soft: #ffe1dc;
+  --teal: #078a82;
+  --gold: #f8b526;
+}
+
+* { box-sizing: border-box; }
+html { min-height: 100%; -webkit-text-size-adjust: 100%; }
+body {
+  min-height: 100vh;
+  min-height: 100svh;
+  margin: 0;
+  color: var(--ink);
+  background:
+    radial-gradient(circle at 8% 2%, #dff7f4 0 12%, transparent 32%),
+    radial-gradient(circle at 92% 8%, #fff0d8 0 11%, transparent 30%),
+    linear-gradient(145deg, #f7fbff, #fffdf7);
+  font-family: Inter, ui-rounded, "Arial Rounded MT Bold", "Segoe UI", sans-serif;
+  overscroll-behavior: none;
+}
+button, a { -webkit-tap-highlight-color: transparent; }
+button { font: inherit; }
+[hidden] { display: none !important; }
+
+.topbar {
+  width: min(100%, 960px);
+  min-height: 52px;
+  margin: 0 auto;
+  padding: 6px 12px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+.brand img { display: block; width: 112px; height: auto; }
+.back-link {
+  min-height: 40px;
+  display: inline-flex;
+  align-items: center;
+  padding: 7px 12px;
+  border: 1px solid #c8d9e5;
+  border-radius: 999px;
+  color: #34546c;
+  background: rgba(255,255,255,.9);
+  text-decoration: none;
+  font-size: .8rem;
+  font-weight: 900;
+}
+
+.duel-page {
+  width: min(100% - 12px, 620px);
+  min-height: calc(100svh - 58px);
+  margin: 0 auto 6px;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  border: 1px solid rgba(203,220,232,.95);
+  border-radius: 26px;
+  background: rgba(255,255,255,.97);
+  box-shadow: 0 16px 45px rgba(28,69,101,.12);
+}
+.player-strip {
+  min-height: 56px;
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  align-items: center;
+  gap: 9px;
+  padding: 8px 15px;
+  border-block: 1px solid transparent;
+  transition: background .18s ease, opacity .18s ease;
+}
+.player-strip.top { transform: rotate(180deg); }
+.player-strip.blue { color: #063f86; background: var(--blue-soft); }
+.player-strip.coral { color: #9f2f21; background: var(--coral-soft); }
+.player-strip:not(.active) { opacity: .58; background: #f4f7f9; }
+.player-token {
+  width: 32px;
+  height: 32px;
+  border: 3px solid #fff;
+  border-radius: 50%;
+  background: var(--player-color);
+  box-shadow: 0 2px 7px rgba(0,0,0,.22);
+}
+.blue { --player-color: var(--blue); }
+.coral { --player-color: var(--coral); }
+.player-name { display: block; font-weight: 950; line-height: 1.05; }
+.player-goal { display: block; margin-top: 2px; font-size: .72rem; font-weight: 800; opacity: .8; }
+.player-score { font-size: 1.18rem; font-weight: 950; white-space: nowrap; }
+
+.game-core {
+  min-height: 0;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 8px 12px 6px;
+}
+.game-heading {
+  width: 100%;
+  display: grid;
+  grid-template-columns: 1fr auto;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 4px;
+}
+.game-heading h1 {
+  margin: 0;
+  color: #143e62;
+  font-size: clamp(1.28rem, 5vw, 1.85rem);
+  line-height: 1.05;
+}
+.game-heading p { margin: 3px 0 0; color: var(--muted); font-size: .78rem; font-weight: 750; }
+.rules-button, .reset-button {
+  min-height: 40px;
+  border: 1px solid #cbdbe6;
+  border-radius: 12px;
+  color: #31546e;
+  background: #fff;
+  font-weight: 900;
+  cursor: pointer;
+}
+.rules-button { padding: 7px 11px; }
+.status-line {
+  width: min(100%, 500px);
+  min-height: 34px;
+  display: grid;
+  place-items: center;
+  margin: 2px auto 6px;
+  padding: 5px 10px;
+  border-radius: 11px;
+  color: #31546e;
+  background: #f0f6fa;
+  font-size: .82rem;
+  font-weight: 900;
+  text-align: center;
+}
+.status-line.good { color: #07644f; background: #e3f8ef; }
+.status-line.wrong { color: #97382f; background: #fff0ed; }
+
+.toolbar {
+  min-height: 48px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 8px;
+  padding: 5px 10px 7px;
+  border-top: 1px solid #e2ebf1;
+  background: #fbfdfe;
+}
+.reset-button { min-width: 128px; padding: 7px 14px; }
+
+.overlay {
+  position: fixed;
+  z-index: 30;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  padding: 16px;
+  background: rgba(11,35,54,.68);
+  backdrop-filter: blur(5px);
+}
+.dialog-card {
+  width: min(100%, 470px);
+  max-height: calc(100svh - 28px);
+  overflow: auto;
+  padding: 24px;
+  border-radius: 24px;
+  background: #fff;
+  box-shadow: 0 24px 70px rgba(0,0,0,.28);
+  text-align: center;
+}
+.dialog-icon { font-size: 2.6rem; }
+.dialog-card h2 { margin: 5px 0 10px; color: #143e62; font-size: 1.65rem; }
+.dialog-card p { margin: 8px 0; color: #49677b; line-height: 1.42; }
+.rule-steps { margin: 15px 0; padding: 0; display: grid; gap: 8px; list-style: none; text-align: left; }
+.rule-steps li { padding: 10px 12px; border-radius: 13px; background: #f2f7fa; color: #34546c; font-weight: 750; line-height: 1.35; }
+.primary-button {
+  width: 100%;
+  min-height: 50px;
+  margin-top: 9px;
+  border: 0;
+  border-radius: 15px;
+  color: #fff;
+  background: linear-gradient(145deg, #087c75, #0755b8);
+  font-weight: 950;
+  cursor: pointer;
+  box-shadow: 0 8px 18px rgba(7,85,184,.2);
+}
+.result-score { font-size: 1.2rem; font-weight: 950; color: #143e62; }
+
+@media (max-width: 520px) {
+  .topbar { min-height: 46px; padding-block: 4px; }
+  .brand img { width: 98px; }
+  .back-link { min-height: 36px; padding: 6px 10px; font-size: .73rem; }
+  .duel-page { min-height: calc(100svh - 50px); border-radius: 21px; }
+  .player-strip { min-height: 50px; padding: 6px 12px; }
+  .player-token { width: 28px; height: 28px; }
+  .player-score { font-size: 1rem; }
+  .game-core { padding: 6px 8px 4px; }
+  .game-heading p { font-size: .7rem; }
+  .rules-button { min-height: 36px; padding: 5px 9px; font-size: .78rem; }
+  .status-line { min-height: 30px; margin-bottom: 4px; padding-block: 3px; font-size: .76rem; }
+  .toolbar { min-height: 44px; padding-block: 4px; }
+  .reset-button { min-height: 37px; }
+  .dialog-card { padding: 21px 17px; }
+}
+
+@media (max-height: 720px) and (orientation: portrait) {
+  .topbar { min-height: 42px; }
+  .duel-page { min-height: calc(100svh - 46px); }
+  .player-strip { min-height: 44px; }
+  .game-heading p { display: none; }
+  .status-line { min-height: 27px; }
+  .toolbar { min-height: 40px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { scroll-behavior: auto !important; transition: none !important; animation: none !important; }
+}

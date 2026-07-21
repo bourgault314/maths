@@ -1,0 +1,93 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>Pavage duel | Jeux d’Axelle</title>
+  <link rel="icon" href="/favicon.ico" sizes="48x48">
+  <link rel="icon" type="image/svg+xml" href="/favicon.svg">
+  <link rel="stylesheet" href="../commun.css?v=1">
+  <meta name="robots" content="noindex, nofollow">
+  <style>
+    .piece-tools {
+      width: min(100%, 430px);
+      display: grid;
+      grid-template-columns: repeat(3,1fr) auto;
+      gap: 6px;
+      margin: 1px auto 6px;
+      transition: transform .22s ease;
+    }
+    .piece-tools.facing-top { transform: rotate(180deg); }
+    .piece-choice,.rotate-piece {
+      min-height: 48px;
+      border: 2px solid #d4e1ea;
+      border-radius: 12px;
+      color: #36576e;
+      background: #fff;
+      font-weight: 900;
+      cursor: pointer;
+    }
+    .piece-choice { display:flex; align-items:center; justify-content:center; gap:5px; padding:4px 5px; }
+    .piece-choice.selected { color:#0755b8; border-color:#4386d6; background:#edf5ff; }
+    .piece-choice[disabled] { opacity:.35; cursor:not-allowed; }
+    .piece-name { font-size:.68rem; line-height:1.05; }
+    .piece-count { display:block; margin-top:2px; font-size:.62rem; }
+    .rotate-piece { width:49px; padding:0; color:#7b3db1; font-size:1.55rem; }
+    .mini-piece { --mini:#71869a; width:32px; height:32px; display:grid; grid-template-columns:repeat(3,1fr); grid-template-rows:repeat(3,1fr); gap:1px; }
+    .selected .mini-piece { --mini:#0755b8; }
+    .mini-piece i { border-radius:2px; background:var(--mini); }
+
+    .paving-board {
+      width: min(78vw, 348px);
+      aspect-ratio: 1;
+      display: grid;
+      grid-template-columns: repeat(6,1fr);
+      gap: 4px;
+      margin: 0 auto;
+      padding: 7px;
+      border: 3px solid #9bb4c5;
+      border-radius: 17px;
+      background: #dfeaf0;
+      box-shadow: inset 0 2px 8px rgba(34,73,100,.15);
+      touch-action: manipulation;
+    }
+    .paving-cell {
+      min-width:0;
+      padding:0;
+      border:1px solid #c6d6e0;
+      border-radius:8px;
+      background:#fff;
+      cursor:pointer;
+    }
+    .paving-cell:hover,.paving-cell:focus-visible { outline:3px solid #f8b526; outline-offset:-3px; }
+    .paving-cell.blue { border-color:#06499d; background:linear-gradient(145deg,#55a7ff,#0755b8); box-shadow:inset 0 0 0 2px rgba(255,255,255,.28); }
+    .paving-cell.coral { border-color:#aa3425; background:linear-gradient(145deg,#ff9d8d,#ef5b45); box-shadow:inset 0 0 0 2px rgba(255,255,255,.3); }
+    .paving-cell.preview { outline:3px solid #f8b526; outline-offset:-3px; }
+    @media(max-width:400px){.paving-board{width:min(82vw,330px);gap:3px}.piece-choice{gap:2px}.piece-name{font-size:.61rem}.mini-piece{width:27px;height:27px}}
+    @media(max-height:720px) and (orientation:portrait){.paving-board{width:min(70vw,292px)}.piece-tools{margin-bottom:3px}.piece-choice,.rotate-piece{min-height:42px}}
+  </style>
+  <script src="app.js" defer></script>
+</head>
+<body>
+  <header class="topbar"><a class="brand" href="/" aria-label="Accueil maths&go"><img src="/assets/img/mathsgo-logo.png" alt="maths&go" width="1338" height="622"></a><a class="back-link" href="../">← Les 3 jeux</a></header>
+  <main class="duel-page">
+    <section id="top-player" class="player-strip coral top" aria-label="Joueur corail, côté haut"><span class="player-token" aria-hidden="true"></span><span><strong class="player-name">Joueur corail</strong><small class="player-goal">Pose tes 6 pièces</small></span><strong id="coral-score" class="player-score">0 / 6</strong></section>
+    <section class="game-core">
+      <header class="game-heading"><div><h1>Pavage duel</h1><p>Choisis, tourne, puis pose une forme sur les cases libres.</p></div><button id="rules-button" class="rules-button" type="button">Règle</button></header>
+      <div id="status" class="status-line" aria-live="polite">Au joueur bleu : choisis une pièce.</div>
+      <div id="piece-tools" class="piece-tools" aria-label="Pièces disponibles">
+        <button class="piece-choice selected" type="button" data-shape="domino" aria-label="Choisir le domino"></button>
+        <button class="piece-choice" type="button" data-shape="bar" aria-label="Choisir la barre de trois cases"></button>
+        <button class="piece-choice" type="button" data-shape="elbow" aria-label="Choisir la pièce en L"></button>
+        <button id="rotate-piece" class="rotate-piece" type="button" aria-label="Tourner la pièce d’un quart de tour">↻</button>
+      </div>
+      <div id="board" class="paving-board" role="grid" aria-label="Plateau de pavage de 6 cases sur 6"></div>
+    </section>
+    <section id="bottom-player" class="player-strip blue active" aria-label="Joueur bleu, côté bas"><span class="player-token" aria-hidden="true"></span><span><strong class="player-name">Joueur bleu</strong><small class="player-goal">Pose tes 6 pièces</small></span><strong id="blue-score" class="player-score">0 / 6</strong></section>
+    <div class="toolbar"><button id="reset-button" class="reset-button" type="button">Nouvelle partie</button></div>
+  </main>
+
+  <section id="rules" class="overlay" hidden><div class="dialog-card"><div class="dialog-icon" aria-hidden="true">🧩</div><h2>Pave le plateau</h2><ol class="rule-steps"><li>Choisis un <strong>domino</strong> ou un <strong>triomino</strong>.</li><li>Tu peux tourner la pièce, puis toucher la case où placer son coin supérieur gauche.</li><li>Le premier qui pose ses six pièces gagne. Tu gagnes aussi si l’autre joueur ne peut plus poser aucune de ses pièces.</li></ol><p>Les formes ne doivent ni se chevaucher ni sortir du plateau.</p><button class="primary-button close-rules" type="button">C’est parti</button></div></section>
+  <section id="result" class="overlay" hidden><div class="dialog-card"><div class="dialog-icon" aria-hidden="true">🏆</div><h2 id="result-title">Pavage réussi !</h2><p id="result-text"></p><button id="play-again" class="primary-button" type="button">Rejouer</button></div></section>
+</body>
+</html>

@@ -1,0 +1,83 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>Coffres magiques | Jeux d’Axelle</title>
+  <link rel="icon" href="/favicon.ico" sizes="48x48">
+  <link rel="icon" type="image/svg+xml" href="/favicon.svg">
+  <link rel="stylesheet" href="../commun.css?v=1">
+  <meta name="robots" content="noindex, nofollow">
+  <style>
+    .challenge {
+      width: min(100%,430px);
+      min-height: 66px;
+      display:grid;
+      place-items:center;
+      margin: 1px auto 7px;
+      border:2px solid #e9c65e;
+      border-radius:17px;
+      background:linear-gradient(145deg,#fff9dc,#fff0ae);
+      box-shadow:0 5px 0 rgba(196,144,19,.15);
+    }
+    .challenge-face { display:flex; align-items:center; justify-content:center; gap:10px; transition:transform .22s ease; }
+    .game-core.facing-top .challenge-face,.game-core.facing-top .rune span { transform:rotate(180deg); }
+    .lock-icon { font-size:1.7rem; }
+    .challenge-copy { color:#76550c; font-size:.7rem; font-weight:900; text-align:left; text-transform:uppercase; letter-spacing:.04em; }
+    .challenge-copy strong { display:block; color:#3d4860; font-size:1.42rem; line-height:1.05; letter-spacing:0; text-transform:none; }
+    .rune-board {
+      width:min(82vw,348px);
+      aspect-ratio:1;
+      display:grid;
+      grid-template-columns:repeat(4,1fr);
+      gap:8px;
+      margin:0 auto;
+      padding:9px;
+      border:3px solid #8b6b4d;
+      border-radius:21px;
+      background:linear-gradient(145deg,#a77b50,#6d4b32);
+      box-shadow:inset 0 3px 10px rgba(49,28,14,.4),0 5px 13px rgba(50,42,34,.13);
+      touch-action:manipulation;
+    }
+    .rune {
+      min-width:0;
+      display:grid;
+      place-items:center;
+      padding:0;
+      border:2px solid #bfd4de;
+      border-radius:16px;
+      color:#17405e;
+      background:radial-gradient(circle at 36% 28%,#fff 0 12%,#ddf3f4 52%,#a9d6d7 100%);
+      box-shadow:inset -3px -4px 7px rgba(12,80,87,.16),0 3px 5px rgba(0,0,0,.2);
+      font-size:clamp(1.45rem,8vw,2.25rem);
+      font-weight:950;
+      cursor:pointer;
+    }
+    .rune span { transition:transform .22s ease; }
+    .rune:hover,.rune:focus-visible { outline:4px solid #f8b526; outline-offset:-3px; }
+    .rune.selected { border-color:#f0a800; background:radial-gradient(circle at 36% 28%,#fffbe5,#ffd863 56%,#eca900 100%); transform:scale(.94); }
+    .rune.success { border-color:#087a55; background:#bff0d8; }
+    .rune.failure { border-color:#b83a3a; background:#ffd4cf; }
+    @media(max-width:400px){.rune-board{width:min(84vw,330px);gap:6px}.challenge{min-height:59px}}
+    @media(max-height:720px) and (orientation:portrait){.rune-board{width:min(70vw,292px);gap:6px}.challenge{min-height:52px;margin-bottom:4px}.challenge-copy strong{font-size:1.2rem}}
+  </style>
+  <script src="app.js" defer></script>
+</head>
+<body>
+  <header class="topbar"><a class="brand" href="/" aria-label="Accueil maths&go"><img src="/assets/img/mathsgo-logo.png" alt="maths&go" width="1338" height="622"></a><a class="back-link" href="../">← Les 3 jeux</a></header>
+  <main class="duel-page">
+    <section id="top-player" class="player-strip coral top" aria-label="Joueur corail, côté haut"><span class="player-token" aria-hidden="true"></span><span><strong class="player-name">Joueur corail</strong><small class="player-goal">Trouve deux runes voisines</small></span><strong id="coral-score" class="player-score">🔑 0 / 5</strong></section>
+    <section id="game-core" class="game-core">
+      <header class="game-heading"><div><h1>Coffres magiques</h1><p>Une bonne paire de runes gagne une clé.</p></div><button id="rules-button" class="rules-button" type="button">Règle</button></header>
+      <div id="status" class="status-line" aria-live="polite">Au joueur bleu : choisis deux runes voisines.</div>
+      <div class="challenge" aria-label="Défi du coffre"><div class="challenge-face"><span class="lock-icon" aria-hidden="true">🔒</span><span class="challenge-copy">Ouvre le coffre avec<strong id="challenge-text">une somme de 12</strong></span></div></div>
+      <div id="board" class="rune-board" role="grid" aria-label="Seize runes numérotées"></div>
+    </section>
+    <section id="bottom-player" class="player-strip blue active" aria-label="Joueur bleu, côté bas"><span class="player-token" aria-hidden="true"></span><span><strong class="player-name">Joueur bleu</strong><small class="player-goal">Trouve deux runes voisines</small></span><strong id="blue-score" class="player-score">🔑 0 / 5</strong></section>
+    <div class="toolbar"><button id="reset-button" class="reset-button" type="button">Nouvelle partie</button></div>
+  </main>
+
+  <section id="rules" class="overlay" hidden><div class="dialog-card"><div class="dialog-icon" aria-hidden="true">🗝️</div><h2>Gagne cinq clés</h2><ol class="rule-steps"><li>Le coffre demande une <strong>somme</strong> ou un <strong>produit</strong>.</li><li>Choisis deux runes qui se touchent par un côté.</li><li>Si elles ouvrent le coffre, tu gagnes une clé. Puis c’est au tour de l’autre joueur.</li></ol><p>Les runes et le défi se retournent automatiquement vers le joueur qui doit jouer.</p><button class="primary-button close-rules" type="button">C’est parti</button></div></section>
+  <section id="result" class="overlay" hidden><div class="dialog-card"><div class="dialog-icon" aria-hidden="true">🏰</div><h2 id="result-title">Trésor ouvert !</h2><p id="result-text"></p><p id="result-score" class="result-score"></p><button id="play-again" class="primary-button" type="button">Rejouer</button></div></section>
+</body>
+</html>

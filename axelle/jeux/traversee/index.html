@@ -1,0 +1,76 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>La Traversée | Jeux d’Axelle</title>
+  <link rel="icon" href="/favicon.ico" sizes="48x48">
+  <link rel="icon" type="image/svg+xml" href="/favicon.svg">
+  <link rel="stylesheet" href="../commun.css?v=1">
+  <meta name="robots" content="noindex, nofollow">
+  <style>
+    .crossing-board {
+      position: relative;
+      width: min(100%, 372px);
+      aspect-ratio: 372 / 252;
+      margin: 3px auto;
+      border: 8px solid transparent;
+      border-block-color: rgba(239,91,69,.75);
+      border-inline-color: rgba(7,85,184,.72);
+      border-radius: 26px;
+      background:
+        linear-gradient(#fff,#fff) padding-box,
+        radial-gradient(circle at 50% 45%,#f6fbfd,#e7f2f7) padding-box;
+      touch-action: manipulation;
+    }
+    .hex {
+      position: absolute;
+      width: 46px;
+      height: 52px;
+      display: grid;
+      place-items: center;
+      padding: 0;
+      border: 0;
+      clip-path: polygon(50% 1%,99% 25%,99% 75%,50% 99%,1% 75%,1% 25%);
+      color: transparent;
+      background: #91adbd;
+      box-shadow: 0 1px 2px rgba(40,75,96,.2);
+      cursor: pointer;
+      transition: transform .12s ease, filter .12s ease;
+    }
+    .hex::before { content:""; position:absolute; inset:3px; clip-path:polygon(50% 1%,99% 25%,99% 75%,50% 99%,1% 75%,1% 25%); background:#f8fcfe; }
+    .hex::after { content:""; position:relative; z-index:1; width: 25px; height: 25px; border-radius: 50%; background: transparent; box-shadow: none; }
+    .hex:hover,.hex:focus-visible { z-index: 3; filter: brightness(.96); outline: none; transform: scale(1.07); }
+    .hex.blue::after { background: radial-gradient(circle at 34% 27%,#79bcff 0 17%,#0c6de1 58%,#063f86 100%); box-shadow: 0 3px 5px rgba(0,0,0,.22); }
+    .hex.coral::after { background: radial-gradient(circle at 34% 27%,#ffc2b8 0 17%,#ef5b45 58%,#a72e20 100%); box-shadow: 0 3px 5px rgba(0,0,0,.22); }
+    .hex.path { filter: drop-shadow(0 0 6px #f8b526); }
+    .hex.path::after { outline: 4px solid #ffd765; outline-offset: 2px; }
+    .shore-label { position:absolute; z-index:5; color:#fff; font-size:.61rem; font-weight:950; letter-spacing:.05em; text-transform:uppercase; pointer-events:none; }
+    .shore-label.top { top:-7px; left:50%; transform:translateX(-50%); }
+    .shore-label.bottom { bottom:-7px; left:50%; transform:translateX(-50%) rotate(180deg); }
+    .shore-label.left { left:-8px; top:50%; transform:translateY(-50%) rotate(-90deg); }
+    .shore-label.right { right:-8px; top:50%; transform:translateY(-50%) rotate(90deg); }
+    @media(max-width:400px){.crossing-board{transform:scale(.94);margin-block:-3px}}
+    @media(max-height:720px) and (orientation:portrait){.crossing-board{width:min(100%,335px)}}
+  </style>
+  <script src="app.js" defer></script>
+</head>
+<body>
+  <header class="topbar"><a class="brand" href="/" aria-label="Accueil maths&go"><img src="/assets/img/mathsgo-logo.png" alt="maths&go" width="1338" height="622"></a><a class="back-link" href="../">← Les 3 jeux</a></header>
+  <main class="duel-page">
+    <section id="top-player" class="player-strip coral top" aria-label="Joueur corail, côté haut"><span class="player-token" aria-hidden="true"></span><span><strong class="player-name">Joueur corail</strong><small class="player-goal">Relie le haut et le bas</small></span><strong class="player-score">Rive ↕</strong></section>
+    <section class="game-core">
+      <header class="game-heading"><div><h1>La Traversée</h1><p>Un chemin continu entre tes deux rives gagne la partie.</p></div><button id="rules-button" class="rules-button" type="button">Règle</button></header>
+      <div id="status" class="status-line" aria-live="polite">Au joueur bleu : touche une case.</div>
+      <div id="board" class="crossing-board" role="grid" aria-label="Plateau de 25 cases hexagonales">
+        <span class="shore-label top" aria-hidden="true">Rive corail</span><span class="shore-label bottom" aria-hidden="true">Rive corail</span><span class="shore-label left" aria-hidden="true">Rive bleue</span><span class="shore-label right" aria-hidden="true">Rive bleue</span>
+      </div>
+    </section>
+    <section id="bottom-player" class="player-strip blue active" aria-label="Joueur bleu, côté bas"><span class="player-token" aria-hidden="true"></span><span><strong class="player-name">Joueur bleu</strong><small class="player-goal">Relie la gauche et la droite</small></span><strong class="player-score">Rive ↔</strong></section>
+    <div class="toolbar"><button id="reset-button" class="reset-button" type="button">Nouvelle partie</button></div>
+  </main>
+
+  <section id="rules" class="overlay" hidden><div class="dialog-card"><div class="dialog-icon" aria-hidden="true">🔷</div><h2>Relie tes deux rives</h2><ol class="rule-steps"><li><strong>Bleu</strong> relie le bord gauche au bord droit.</li><li><strong>Corail</strong> relie le bord du haut à celui du bas.</li><li>À ton tour, pose un galet sur une case libre. Les galets voisins doivent se toucher.</li></ol><p>Il n’y a pas de match nul : un chemin finira toujours par traverser le plateau.</p><button class="primary-button close-rules" type="button">C’est parti</button></div></section>
+  <section id="result" class="overlay" hidden><div class="dialog-card"><div class="dialog-icon" aria-hidden="true">🏝️</div><h2 id="result-title">Traversée réussie !</h2><p id="result-text"></p><button id="play-again" class="primary-button" type="button">Rejouer</button></div></section>
+</body>
+</html>
