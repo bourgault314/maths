@@ -63,16 +63,18 @@ test('la correction des volumes conserve le même cadre que la question',()=>{
   assert.match(slideshowSource,/\.volume-response-zone\{[^}]*min-height:150px/);
   assert.doesNotMatch(slideshowSource,/correction-visible \.volume-visual/);
   assert.doesNotMatch(slideshowSource,/correction-visible \.volume-prompt/);
-  assert.match(solidSource,/version:'1\.2\.1'/);
+  assert.match(solidSource,/version:'1\.2\.2'/);
   assert.match(solidSource,/class="solid-dimension-line"/);
 
   const visualContext={MATHSGO_VISUALS:{register:()=>{}}};
   visualContext.globalThis=visualContext;
   vm.runInNewContext(solidSource,visualContext);
   const prism=visualContext.solidSvg({kind:'prism'});
-  const rearEdges=prism.match(/<path class="solid-hidden-edges" d="([^"]+)"/);
-  assert.ok(rearEdges);
-  assert.equal((rearEdges[1].match(/L/g)||[]).length,3);
+  const hiddenEdges=prism.match(/<path class="solid-hidden-edges" d="([^"]+)"/);
+  assert.ok(hiddenEdges);
+  assert.equal(hiddenEdges[1],'M34 160L122 134L170 32M122 134L230 134');
+  assert.match(prism,/<line x1="170" y1="32" x2="230" y2="134"/);
+  assert.doesNotMatch(hiddenEdges[1],/L170 32L230 134/);
 });
 
 test('la fin interactive garde dix séries et tous les retours au menu',()=>{
