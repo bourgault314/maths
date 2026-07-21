@@ -17,6 +17,9 @@
   function poly(points,fill,line){
     return `<polygon points="${points}" fill="${fill}" stroke="${line}" stroke-width="2.4" stroke-linejoin="round"/>`;
   }
+  function face(points,fill){
+    return `<polygon points="${points}" fill="${fill}"/>`;
+  }
   function line(x1,y1,x2,y2,color,hidden=false){
     return `<line x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}" fill="none" stroke="${color}" stroke-width="2.4"${hidden?dash:''}/>`;
   }
@@ -36,18 +39,22 @@
     const labelHtml=kind==='cube'
       ?measure(x+w/2,y+h+24,labels.edge)
       :measure(x+w/2,y+h+24,labels.length)
-        +measure(x-10,y+h/2+5,labels.height,'end')
+        +measure(x+8,y+h/2+5,labels.height,'start')
         +measure(x+w+dx/2+8,y+dy/2-4,labels.width);
     return faces+hidden+labelHtml;
   }
   function triangularPrismBody(p,data){
-    const a=[28,158],b=[78,52],c=[134,158],dx=108,dy=-18;
+    // Les deux bases sont des triangles translatés par le même vecteur.
+    // Les arêtes arrière cachées ne doivent pas être retracées en trait plein.
+    const a=[34,160],b=[82,58],c=[142,160],dx=88,dy=-26;
     const aa=[a[0]+dx,a[1]+dy],bb=[b[0]+dx,b[1]+dy],cc=[c[0]+dx,c[1]+dy];
-    const faces=poly(`${a} ${b} ${c}`,p.front,p.line)
-      +poly(`${b} ${bb} ${cc} ${c}`,p.top,p.line)
-      +poly(`${a} ${c} ${cc} ${aa}`,p.side,p.line);
-    const visible=line(a[0],a[1],aa[0],aa[1],p.line)+line(b[0],b[1],bb[0],bb[1],p.line)+line(c[0],c[1],cc[0],cc[1],p.line)+line(bb[0],bb[1],cc[0],cc[1],p.line);
-    const hidden=`<path class="solid-hidden-edges" d="M${aa[0]} ${aa[1]}L${bb[0]} ${bb[1]}M${aa[0]} ${aa[1]}L${cc[0]} ${cc[1]}" fill="none" stroke="${p.line}" stroke-width="2.4"${dash}/>`;
+    const faces=face(`${b} ${bb} ${cc} ${c}`,p.top)
+      +face(`${a} ${c} ${cc} ${aa}`,p.side)
+      +poly(`${a} ${b} ${c}`,p.front,p.line);
+    const visible=line(a[0],a[1],aa[0],aa[1],p.line)
+      +line(b[0],b[1],bb[0],bb[1],p.line)
+      +line(c[0],c[1],cc[0],cc[1],p.line);
+    const hidden=`<path class="solid-hidden-edges" d="M${aa[0]} ${aa[1]}L${bb[0]} ${bb[1]}L${cc[0]} ${cc[1]}L${aa[0]} ${aa[1]}" fill="none" stroke="${p.line}" stroke-width="2.4"${dash}/>`;
     const labels=data.labels||{};
     const altitude=labels.baseHeight
       ?`<line class="solid-construction" x1="${b[0]}" y1="${b[1]}" x2="${b[0]}" y2="${a[1]}" stroke="${p.line}" stroke-width="1.8"/>`
@@ -55,10 +62,9 @@
       :'';
     return faces+visible+hidden+altitude
       +measure((a[0]+c[0])/2,a[1]+24,labels.base)
-      +measure(b[0]-6,(b[1]+a[1])/2+25,labels.baseHeight,'end')
-      +measure((b[0]+bb[0])/2,b[1]+dy/2-8,labels.length)
-      +measure(135,198,labels.baseArea)
-      +measure(232,181,labels.height,'end');
+      +measure(b[0]-10,(b[1]+a[1])/2+22,labels.baseHeight,'end')
+      +measure((b[0]+bb[0])/2,(b[1]+bb[1])/2-10,labels.length||labels.height)
+      +measure(135,198,labels.baseArea);
   }
   function pentagonalPrismBody(p){
     const near=[[43,89],[76,48],[127,65],[120,126],[61,143]],dx=98,dy=-17;
@@ -83,7 +89,11 @@
     const topMeasure=labels.diameter
       ?line(left,top,right,top,p.line)+measure(cx,top-10,labels.diameter)
       :labels.radius?line(cx,top,right,top,p.line)+measure(cx+rx/2,top-10,labels.radius):'';
-    return body+topMeasure+measure(right+14,(top+bottom)/2+5,labels.height,'start');
+    const heightMeasure=labels.height
+      ?`<g class="solid-dimension-line">${line(right+7,top,right+7,bottom,p.line)}${line(right+2,top,right+12,top,p.line)}${line(right+2,bottom,right+12,bottom,p.line)}</g>`
+        +measure(right+15,(top+bottom)/2+5,labels.height,'start')
+      :'';
+    return body+topMeasure+heightMeasure;
   }
   function pyramidBody(p,data){
     const variant=data.variant||'square';
@@ -123,6 +133,6 @@
   const presets=Object.freeze([
     ['cube','Cube'],['cuboid','Pavé droit'],['prism','Prisme droit'],['cylinder','Cylindre'],['pyramid','Pyramide'],['cone','Cône'],['sphere','Sphère']
   ].map(([id,label])=>Object.freeze({id,label,data:Object.freeze({kind:id})})));
-  global.MATHSGO_VISUALS.register('geometry.solid',{version:'1.1.0',label:'Solides de l’espace',family:'Géométrie',supports:Object.freeze(['phone','computer','projection','print']),description:'Traceur commun des solides, avec perspectives cohérentes, faces visibles, arêtes cachées pointillées, variantes et mesures.',presets,render});
+  global.MATHSGO_VISUALS.register('geometry.solid',{version:'1.2.1',label:'Solides de l’espace',family:'Géométrie',supports:Object.freeze(['phone','computer','projection','print']),description:'Traceur commun des solides, avec perspectives cohérentes, faces visibles, arêtes cachées pointillées, variantes et mesures.',presets,render});
   global.solidSvg=render;
 })(globalThis);

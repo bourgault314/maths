@@ -3378,6 +3378,16 @@ function volumeCalculationForQuestion(inst){
   };
   return cases[n]||'V='+answer;
 }
+function renderVolumeCalculation(inst){
+  const calculation=volumeCalculationForQuestion(inst);
+  const answer=String(inst.answers&&inst.answers[0]!==undefined?inst.answers[0]:'');
+  const answerIndex=calculation.lastIndexOf(answer);
+  if(!answer||answerIndex<0) return renderMathSegments('$$'+calculation+'$$');
+  const prefix=calculation.slice(0,answerIndex);
+  const result=calculation.slice(answerIndex);
+  return renderMathSegments('$$'+prefix+'$$')
+    +'<strong class="volume-result">'+renderMathSegments('$$'+result+'$$')+'</strong>';
+}
 function volumeVisualForQuestion(inst){
   if(typeof globalThis.solidSvg!=='function') return '';
   const n=Number(inst.q.n),s=inst.scope||{},v=name=>fmt(Number(s[name]));
@@ -3392,7 +3402,7 @@ function volumeVisualForQuestion(inst){
   return data?globalThis.solidSvg(data):'';
 }
 function volumePromptForQuestion(inst){
-  const n=Number(inst.q.n),s=inst.scope||{},v=name=>fmt(Number(s[name]));
+  const n=Number(inst.q.n);
   const prompts={
     1:'Calcule le volume de ce cube.',
     2:'Calcule le volume de ce pavé droit.',
@@ -3401,11 +3411,7 @@ function volumePromptForQuestion(inst){
     8:'Calcule le volume de ce prisme droit.',
     9:'Calcule le volume de ce cylindre. On prendra $$\\pi\\approx 3,14$$.'
   };
-  const details={
-    3:'La base triangulaire mesure '+v('b')+' cm et sa hauteur '+v('ht')+' cm. La longueur du prisme est '+v('p')+' cm.',
-    8:'Aire de la base : '+v('a')+' cm² · Hauteur du prisme : '+v('h')+' cm.'
-  };
-  return {prompt:prompts[n]||inst.rawStatement,detail:details[n]||''};
+  return {prompt:prompts[n]||inst.rawStatement,detail:''};
 }
 function renderVolumeModule(inst,correction=false,mode=null){
   if(mode===null) mode=document.getElementById('visualMode').value;
@@ -3416,10 +3422,13 @@ function renderVolumeModule(inst,correction=false,mode=null){
   if(visual) html+='<div class="volume-visual">'+visual+'</div>';
   if(content.detail) html+='<div class="volume-data">'+escapeHtml(content.detail)+'</div>';
   html+='</div>';
-  if(correction) html+='<div class="volume-correction-flow"><div class="volume-formula">'+renderMathSegments('$$'+volumeFormulaForQuestion(inst.q.n)+'$$')+'</div><div class="volume-calculation">'+renderMathSegments('$$'+volumeCalculationForQuestion(inst)+'$$')+'</div></div>';
-  if(inst.rawFooter){
-    html+='<div class="footer volume-answer">'+renderPlaceholders(inst.rawFooter,inst.answers,correction?'correction':'question')+'</div>';
+  html+='<div class="volume-response-zone">';
+  if(correction){
+    html+='<div class="volume-correction-flow"><div class="volume-formula">'+renderMathSegments('$$'+volumeFormulaForQuestion(inst.q.n)+'$$')+'</div><div class="volume-calculation">'+renderVolumeCalculation(inst)+'</div></div>';
+  }else if(inst.rawFooter){
+    html+='<div class="footer volume-answer">'+renderPlaceholders(inst.rawFooter,inst.answers,'question')+'</div>';
   }
+  html+='</div>';
   return html;
 }
 function averageVisualHtml(d){
