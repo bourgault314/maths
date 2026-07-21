@@ -27,7 +27,8 @@ MATHSGO_PEDAGOGY.registerModule('dnb_23',{
     visualRules:[
       'La hauteur utilisée est celle du prisme ou du cylindre, distincte d’une hauteur dans la base.',
       'Rayon et diamètre sont explicitement différenciés.',
-      'Les dimensions cachées restent lisibles sans surcharger le solide.'
+      'Les dimensions cachées restent lisibles sans surcharger le solide.',
+      'Le solide et ses cotes conservent exactement la même taille et la même position entre la question et la correction.'
     ],
     cautions:[
       'Ne pas confondre aire de base et périmètre de base.',

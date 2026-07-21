@@ -21,6 +21,7 @@ le livret A5 ; elle n'héberge pas un second exerciseur.
 | `scripts/04-app.js` | sélection, tirage et orchestration |
 | `scripts/core/` | contrats de séries, identifiants et partage |
 
-Les développements et numéros de version sont suivis dans le dépôt bêta. Les
-lots validés sont ensuite transférés ici sans afficher de numéro de version
-sur le site public.
+Les corrections de la version publique sont désormais préparées directement
+dans ce dépôt, sur une branche courte issue de `main`, puis vérifiées avant
+publication. Le dépôt bêta reste un historique et un espace d’observation ; il
+n’est plus une étape obligatoire ni une source de fichiers à recopier.
