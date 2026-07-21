@@ -557,5 +557,16 @@ document.getElementById('experienceMode').addEventListener('change',renderModule
 document.getElementById('visualMode').addEventListener('change',updateSetupActions);
 document.getElementById('count').addEventListener('change',updateSetupActions);
 document.getElementById('level').addEventListener('change',updateSetupActions);
+function restoreSeriesDefinitionAfterReturn(){
+  let saved='';
+  try{
+    saved=sessionStorage.getItem('mathsgo:auto:return-definition')||'';
+    sessionStorage.removeItem('mathsgo:auto:return-definition');
+  }catch(error){return false;}
+  if(!saved) return false;
+  try{applySeriesDefinitionToUi(JSON.parse(saved));return true;}catch(error){return false;}
+}
+
 updateGenerateButtonLabel();
 renderModuleList();
+restoreSeriesDefinitionAfterReturn();
