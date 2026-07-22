@@ -95,6 +95,13 @@ test("chaque journée charge le catalogue commun et les fichiers existent", () =
   }
 });
 
+test("le pavé numérique garde trois colonnes sur téléphone", () => {
+  const css = fs.readFileSync(path.join(ROOT, "axelle/daily/styles.css"), "utf8");
+  assert.match(css, /\.numeric-keyboard\{display:grid;grid-template-columns:repeat\(3,1fr\)/);
+  assert.match(css, /\.input-task>\.numeric-keyboard\{grid-template-columns:repeat\(3,minmax\(0,1fr\)\)\}/);
+  assert.doesNotMatch(css, /\.input-task>div\{grid-template-columns:1fr\}/);
+});
+
 test("les réponses utilisent des claviers virtuels sans ouvrir le clavier natif", () => {
   const dailyApp = fs.readFileSync(path.join(ROOT, "axelle/daily/app.js"), "utf8");
   assert.match(dailyApp, /inputmode="none"/);
