@@ -6,10 +6,10 @@
   <meta name="robots" content="noindex, nofollow">
   <title>Défi tables d’Axelle | maths&amp;go</title>
   <link rel="icon" href="/favicon.ico" sizes="48x48">
-  <link rel="stylesheet" href="../styles.css?v=20260722-1">
+  <link rel="stylesheet" href="../styles.css?v=20260722-2">
   <script>window.AXELLE_CHALLENGE={kind:"tables",total:25,duration:60,storageKey:"axelle-defi-tables-best",message:score=>score>=12?"Les faits de tables sont déjà bien disponibles. Continue pour gagner encore en rapidité.":score>=8?"Tu connais plusieurs tables. Quelques essais réguliers vont rendre les réponses plus rapides.":"Prends le temps de revoir une ou deux tables, puis retente une nouvelle série sans te juger."};</script>
-  <script defer src="../logic.js?v=20260722-1"></script>
-  <script defer src="../app.js?v=20260722-1"></script>
+  <script defer src="../logic.js?v=20260722-2"></script>
+  <script defer src="../app.js?v=20260722-2"></script>
 </head>
 <body>
   <main class="shell">
@@ -17,7 +17,7 @@
     <section class="panel">
       <div id="intro" class="intro"><span class="hero-icon" aria-hidden="true">✖️</span><p class="eyebrow">Défi tables</p><h1>25 égalités en 1 minute</h1><p>Produits et facteurs manquants, comme dans l’évaluation de début de CM1. Une série différente est créée à chaque essai.</p><p id="best-intro" class="best"></p><button id="start" class="primary" type="button">Lancer le défi</button></div>
       <div id="play" hidden><div class="status"><span id="question-count">1 / 25</span><strong id="time" aria-live="polite">1:00</strong></div><div class="progress-track"><b id="progress"></b></div><article class="question"><p id="question-kind" class="eyebrow">Produit</p><div id="expression" class="expression"></div><label for="answer">Ta réponse</label><input id="answer" class="answer" inputmode="none" readonly aria-readonly="true"><div class="keypad" aria-label="Clavier numérique"><button type="button" data-key="1">1</button><button type="button" data-key="2">2</button><button type="button" data-key="3">3</button><button type="button" data-key="4">4</button><button type="button" data-key="5">5</button><button type="button" data-key="6">6</button><button type="button" data-key="7">7</button><button type="button" data-key="8">8</button><button type="button" data-key="9">9</button><button type="button" data-key="clear">Effacer</button><button type="button" data-key="0">0</button><button type="button" data-key="backspace" aria-label="Effacer un chiffre">⌫</button></div><div class="actions"><button id="validate" class="primary" type="button">Valider</button><button id="skip" class="secondary" type="button">Passer</button></div></article></div>
-      <div id="result" class="result" hidden><span class="hero-icon" aria-hidden="true">🏁</span><p class="eyebrow">Défi terminé</p><h1 id="result-title"></h1><p id="result-detail"></p><p id="result-message" class="result-message"></p><p id="result-best" class="best"></p><div class="result-actions"><button id="retry" class="primary" type="button">Nouvelle série</button><a class="secondary" href="../../">Retour au Bureau</a></div></div>
+      <div id="result" class="result" hidden><span class="hero-icon" aria-hidden="true">🏁</span><p class="eyebrow">Défi terminé</p><h1 id="result-title"></h1><p id="result-detail"></p><p id="result-message" class="result-message"></p><p id="result-best" class="best"></p><section id="corrections" class="corrections" aria-live="polite"></section><div class="result-actions"><button id="retry" class="primary" type="button">Nouvelle série</button><a class="secondary" href="../../">Retour au Bureau</a></div></div>
     </section>
   </main><footer>Aucun résultat n’est envoyé</footer>
 </body>
