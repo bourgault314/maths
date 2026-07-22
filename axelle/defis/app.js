@@ -6,7 +6,7 @@
   if (!config || !logic) return;
   const $ = id => document.getElementById(id);
   const generator = config.kind === "tables" ? logic.generateTables : logic.generateCalculations;
-  const state = {questions: [], index: 0, correct: 0, answered: 0, running: false, timer: null, endAt: 0, signature: ""};
+  const state = {questions: [], responses: [], index: 0, correct: 0, answered: 0, running: false, timer: null, endAt: 0, signature: ""};
 
   function best() {
     try { return Number(localStorage.getItem(config.storageKey)) || 0; } catch (_) { return 0; }
@@ -44,6 +44,42 @@
     state.timer = null;
   }
 
+  function renderCorrections() {
+    const corrections = $("corrections");
+    const mistakes = logic.buildCorrections(state.questions, state.responses);
+    corrections.replaceChildren();
+    const title = document.createElement("h2");
+    title.textContent = mistakes.length ? "Tes corrections" : "Aucune erreur à corriger";
+    corrections.append(title);
+    if (!mistakes.length) {
+      const message = document.createElement("p");
+      message.textContent = "Toutes les réponses que tu as données sont justes.";
+      corrections.append(message);
+      return;
+    }
+    const intro = document.createElement("p");
+    intro.textContent = "Regarde les calculs à reprendre avant de lancer une nouvelle série.";
+    corrections.append(intro);
+    const list = document.createElement("ol");
+    list.className = "correction-list";
+    mistakes.forEach(mistake => {
+      const item = document.createElement("li");
+      const expression = document.createElement("strong");
+      expression.textContent = `${mistake.number}. ${mistake.prompt}`;
+      const answers = document.createElement("div");
+      const given = document.createElement("span");
+      given.className = "given-answer";
+      given.textContent = `Ta réponse : ${mistake.given}`;
+      const expected = document.createElement("span");
+      expected.className = "expected-answer";
+      expected.textContent = `Réponse attendue : ${mistake.expected}`;
+      answers.append(given, expected);
+      item.append(expression, answers);
+      list.append(item);
+    });
+    corrections.append(list);
+  }
+
   function finish() {
     if (!state.running) return;
     state.running = false;
@@ -56,6 +92,7 @@
     $("result-detail").textContent = remaining ? `Le temps est écoulé. ${state.answered} réponse${state.answered > 1 ? "s" : ""} saisie${state.answered > 1 ? "s" : ""}, et ${remaining} calcul${remaining > 1 ? "s" : ""} non parcouru${remaining > 1 ? "s" : ""}.` : "Toute la série a été parcourue avant la fin du temps.";
     $("result-message").textContent = config.message(state.correct);
     $("result-best").textContent = state.correct > oldBest ? `Nouveau meilleur score : ${newBest} / ${config.total} !` : `Meilleur score : ${newBest} / ${config.total}.`;
+    renderCorrections();
     show("result");
   }
 
@@ -76,6 +113,7 @@
       signature = questions.map(question => question.prompt).join("|");
     }
     state.questions = questions;
+    state.responses = [];
     state.signature = signature;
     state.index = 0;
     state.correct = 0;
@@ -95,7 +133,11 @@
     if (!skip && !/^\d+$/.test(value)) return;
     if (!skip) {
       state.answered += 1;
-      if (Number(value) === state.questions[state.index].answer) state.correct += 1;
+      const correct = Number(value) === state.questions[state.index].answer;
+      state.responses[state.index] = {value: Number(value), correct, skipped: false};
+      if (correct) state.correct += 1;
+    } else {
+      state.responses[state.index] = {value: null, correct: false, skipped: true};
     }
     state.index += 1;
     if (state.index >= config.total) finish();

@@ -99,7 +99,19 @@
     });
   }
 
-  const api = {generateTables, generateCalculations};
+  function buildCorrections(questions, responses) {
+    return responses.flatMap((response, index) => {
+      if (!response || response.correct) return [];
+      return [{
+        number: index + 1,
+        prompt: questions[index].prompt,
+        given: response.skipped ? "Pas de réponse" : String(response.value),
+        expected: String(questions[index].answer)
+      }];
+    });
+  }
+
+  const api = {generateTables, generateCalculations, buildCorrections};
   root.AXELLE_CHALLENGE_LOGIC = api;
   if (typeof module !== "undefined" && module.exports) module.exports = api;
 })(typeof window !== "undefined" ? window : globalThis);

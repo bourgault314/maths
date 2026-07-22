@@ -1,6 +1,6 @@
 const test = require("node:test");
 const assert = require("node:assert/strict");
-const {generateTables, generateCalculations} = require("../axelle/defis/logic.js");
+const {generateTables, generateCalculations, buildCorrections} = require("../axelle/defis/logic.js");
 
 function seeded(seed) {
   let value = seed >>> 0;
@@ -37,4 +37,22 @@ test("les deux générations sont reproductibles avec une graine", () => {
   assert.deepEqual(generateTables(seeded(17)), generateTables(seeded(17)));
   assert.notDeepEqual(generateTables(seeded(17)), generateTables(seeded(18)));
   assert.deepEqual(generateCalculations(seeded(41)), generateCalculations(seeded(41)));
+});
+
+test("le bilan ne reprend que les erreurs avec la réponse donnée et la correction", () => {
+  const questions = [
+    {prompt:"3 × 4 = ?",answer:12},
+    {prompt:"35 = 5 × ?",answer:7},
+    {prompt:"9 × ? = 54",answer:6},
+    {prompt:"8 × 8 = ?",answer:64}
+  ];
+  const responses = [
+    {value:11,correct:false,skipped:false},
+    {value:7,correct:true,skipped:false},
+    {value:null,correct:false,skipped:true}
+  ];
+  assert.deepEqual(buildCorrections(questions,responses), [
+    {number:1,prompt:"3 × 4 = ?",given:"11",expected:"12"},
+    {number:3,prompt:"9 × ? = 54",given:"Pas de réponse",expected:"6"}
+  ]);
 });
