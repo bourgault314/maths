@@ -4,13 +4,10 @@
 
   const $ = id => document.getElementById(id);
   const subjectGrid = document.querySelector("#home-screen .subject-grid");
-  subjectGrid.insertAdjacentHTML("beforeend", `<button id="tables-card" class="tables-card" type="button"><span aria-hidden="true">⏱️</span><span><strong>Défi tables</strong><small>25 calculs · 1 minute · une nouvelle série à chaque essai</small></span><span><em id="tables-best-home">Aucun score pour le moment</em><b id="tables-card-label">Commencer</b></span></button>`);
+  subjectGrid.insertAdjacentHTML("afterend", `<nav class="daily-challenges" aria-label="Les défis chronométrés"><a href="../defis/tables/"><span aria-hidden="true">✖️</span><span><strong>Défi tables</strong><small>25 égalités · 1 minute</small></span><b>Jouer →</b></a><a href="../defis/calcul/"><span aria-hidden="true">⚡</span><span><strong>Défi calcul</strong><small>30 calculs · 3 minutes</small></span><b>Jouer →</b></a></nav>`);
   $("home-screen").insertAdjacentHTML("beforeend", `<aside id="home-reward" class="gloutons-reward" hidden><span aria-hidden="true">🟨</span><div><p class="eyebrow">Bonus débloqué</p><h2>Les Carrés gloutons</h2><p>Les deux missions sont terminées : tu peux jouer deux parties contre Gloubi.</p><a class="primary gloutons-link" href="../carres-gloutons.html">Jouer aux Carrés gloutons →</a></div></aside>`);
-  $("home-screen").insertAdjacentHTML("afterend", `<section id="tables-screen" class="screen tables-screen" hidden><button class="back-link" type="button" data-action="home">← Les missions du jour</button><div id="tables-intro" class="tables-panel"><span class="tables-hero" aria-hidden="true">⏱️</span><p class="eyebrow">Défi tables · Jour ${data.day}</p><h1>25 calculs en 1 minute</h1><p>Produits, facteurs manquants et questions formulées autrement : réponds de tête, à ton rythme. Le défi ne bloque pas les missions.</p><p id="tables-best-intro" class="tables-best"></p><button id="start-tables" class="primary" type="button">Lancer le défi</button></div><div id="tables-play" class="tables-play" hidden><div class="tables-status"><span id="tables-question-count">1 / 25</span><strong id="tables-time" aria-live="polite">1:00</strong></div><div class="progress-track" aria-hidden="true"><b id="tables-progress"></b></div><article class="tables-question"><p id="tables-question-kind" class="eyebrow">Calcul</p><div id="tables-expression" class="tables-expression"></div><form id="tables-form" class="tables-form"><label for="tables-answer">Ta réponse</label><div><input id="tables-answer" inputmode="numeric" pattern="[0-9]*" autocomplete="off"><button class="validate-button" type="submit">Valider</button></div><button id="skip-table" class="secondary" type="button">Passer</button></form></article></div><div id="tables-result" class="tables-panel" hidden><span class="tables-hero" aria-hidden="true">🏁</span><p class="eyebrow">Défi terminé</p><h1 id="tables-result-title"></h1><p id="tables-result-message"></p><p id="tables-result-best" class="tables-best"></p><div class="tables-result-actions"><button id="retry-tables" class="primary" type="button">Refaire avec une nouvelle série</button><button class="secondary" type="button" data-action="home">Retour aux missions</button></div></div></section>`);
-
   const screens = {
     home: $("home-screen"),
-    tables: $("tables-screen"),
     lesson: $("lesson-screen"),
     quiz: $("quiz-screen"),
     done: $("done-screen")
@@ -18,20 +15,7 @@
   let subject = "math";
   let questionIndex = 0;
   let locked = false;
-  const TABLE_TOTAL = 25;
-  const TABLE_DURATION = 60;
-  const generateTableQuestions = window.AXELLE_TABLES_LOGIC.generateQuestions;
-  const tablesState = {
-    questions: [],
-    index: 0,
-    correct: 0,
-    answered: 0,
-    remaining: TABLE_DURATION,
-    running: false,
-    timer: null,
-    endAt: 0,
-    lastSignature: ""
-  };
+  let fluencyTimer = null;
 
   function key(name) {
     return `axelle-j${data.day}-${name}`;
@@ -76,12 +60,6 @@
     return ["math", "fr"].every(name => Object.keys(progress(name).answers).length === data.subjects[name].questions.length);
   }
 
-  function updateTablesCard() {
-    const best = read("tables-best", null);
-    $("tables-best-home").textContent = best === null ? "Aucun score pour le moment" : `Meilleur score : ${best} / ${TABLE_TOTAL}`;
-    $("tables-card-label").textContent = best === null ? "Commencer" : "Rejouer";
-  }
-
   function updateReward() {
     const complete = isDayComplete();
     $("home-reward").hidden = !complete;
@@ -97,7 +75,6 @@
       button.textContent = count === total ? "Revoir la mission" : count ? "Continuer" : "Commencer";
     });
     $("day-badge").hidden = !isDayComplete();
-    updateTablesCard();
     updateReward();
   }
 
@@ -163,6 +140,10 @@
 
   function renderVisual(visual) {
     if (!visual) return "";
+    if (visual.kind === "audio" || visual.kind === "audio-story") {
+      const label = visual.kind === "audio-story" ? "Écouter le texte" : "Écouter la dictée";
+      return `<article class="audio-card"><span aria-hidden="true">${visual.kind === "audio-story" ? "🎧" : "🔊"}</span><div><p class="eyebrow">${visual.kind === "audio-story" ? "Compréhension orale" : "Dictée"}</p><h2>${escapeHtml(visual.title || label)}</h2><p>${escapeHtml(visual.instructions || "Tu peux écouter deux fois avant de répondre.")}</p><button class="secondary speak-button" type="button" data-speech="${encodeURIComponent(visual.text)}">${label}</button></div></article>`;
+    }
     if (visual.kind === "mental") return `<div class="mental-card">${visual.expression}</div>`;
     if (visual.kind === "sentence") return `<div class="sentence-card">${visual.text}</div>`;
     if (visual.kind === "story") return `<article class="story-card">${visual.title ? `<h2>${visual.title}</h2>` : ""}<p>${visual.text}</p></article>`;
@@ -182,6 +163,10 @@
     if (visual.kind === "steps") return `<div class="steps-visual">${visual.items.map((item, index) => `${index ? "<b aria-hidden=\"true\">→</b>" : ""}<span>${item}</span>`).join("")}</div>`;
     if (visual.kind === "column") return `<div class="column-calc"><span>${visual.top}</span><span><b>${visual.sign}</b>${visual.bottom}</span><i></i></div>`;
     if (visual.kind === "money") return `<div class="money-row">${visual.items.map(item => `<span>${item}</span>`).join("")}</div>`;
+    if (visual.kind === "chart") {
+      const maximum = Math.max(...visual.items.map(item => item.value), 1);
+      return `<div class="mini-chart" role="img" aria-label="Diagramme en barres">${visual.items.map(item => `<div><span><i style="height:${item.value / maximum * 100}%"></i></span><b>${escapeHtml(item.label)}</b><strong>${item.value}</strong></div>`).join("")}</div>`;
+    }
     if (visual.kind === "punctuation") return `<div class="punctuation-row">${visual.marks.map(mark => `<span>${mark}</span>`).join("")}</div>`;
     return "";
   }
@@ -230,18 +215,64 @@
     }
   }
 
+  function keyboardMarkup(mode) {
+    if (mode === "text") {
+      const rows = ["AZERTYUIOP", "QSDFGHJKLM", "WXCVBN"];
+      return `<div class="virtual-keyboard alpha-keyboard" aria-label="Clavier virtuel">${rows.map(row => `<div>${[...row].map(letter => `<button type="button" data-key="${letter.toLowerCase()}">${letter}</button>`).join("")}</div>`).join("")}<div class="keyboard-tools"><button type="button" data-key="é">É</button><button type="button" data-key="è">È</button><button type="button" data-key="ê">Ê</button><button type="button" data-key="à">À</button><button type="button" data-key="ç">Ç</button><button class="space-key" type="button" data-key=" ">Espace</button><button type="button" data-key="backspace" aria-label="Effacer une lettre">⌫</button></div></div>`;
+    }
+    return `<div class="virtual-keyboard numeric-keyboard" aria-label="Clavier numérique">${[1,2,3,4,5,6,7,8,9].map(value => `<button type="button" data-key="${value}">${value}</button>`).join("")}<button type="button" data-key="clear">Effacer</button><button type="button" data-key="0">0</button><button type="button" data-key="backspace" aria-label="Effacer un chiffre">⌫</button></div>`;
+  }
+
+  function normalizeTyped(value, mode) {
+    const normalized = value.trim().replace(/’/g, "'").replace(/\s+/g, " ");
+    return mode === "text" ? normalized.toLocaleLowerCase("fr") : normalized.replace(/\s/g, "").replace(",", ".");
+  }
+
   function renderInput(question, saved) {
-    $("answer-zone").innerHTML = `<div class="input-task"><label for="short-answer">Ta réponse</label><div><input id="short-answer" inputmode="${question.inputMode || "numeric"}" autocomplete="off" value="${saved ? escapeHtml(saved.value) : ""}" ${saved ? "disabled" : ""}><button class="validate-button" type="button" ${saved ? "disabled" : ""}>Valider</button></div></div>`;
+    const mode = question.inputMode === "text" ? "text" : "numeric";
+    $("answer-zone").innerHTML = `<div class="input-task"><label for="short-answer">Ta réponse</label><div><input id="short-answer" inputmode="none" autocomplete="off" value="${saved ? escapeHtml(saved.value) : ""}" readonly aria-readonly="true"><button class="validate-button" type="button" ${saved ? "disabled" : ""}>Valider</button></div>${saved ? "" : keyboardMarkup(mode)}</div>`;
     if (!saved) {
       const input = $("short-answer");
       const validate = () => {
-        const value = input.value.trim().replace(",", ".");
-        if (!value) { input.focus(); return; }
-        answer(question.accepted.map(String).includes(value), value);
+        const value = input.value.trim();
+        if (!value) return;
+        const normalized = normalizeTyped(value, mode);
+        const accepted = question.accepted.map(item => normalizeTyped(String(item), mode));
+        answer(accepted.includes(normalized), value);
       };
       $("answer-zone").querySelector(".validate-button").addEventListener("click", validate);
-      input.addEventListener("keydown", event => { if (event.key === "Enter") validate(); });
+      $("answer-zone").querySelectorAll("[data-key]").forEach(button => button.addEventListener("click", () => {
+        const keyValue = button.dataset.key;
+        if (keyValue === "backspace") input.value = input.value.slice(0, -1);
+        else if (keyValue === "clear") input.value = "";
+        else if (input.value.length < 42) input.value += keyValue;
+      }));
     }
+  }
+
+  function renderFluency(question, saved) {
+    const zone = $("answer-zone");
+    if (saved) {
+      zone.innerHTML = `<article class="fluency-task"><p class="fluency-text">${escapeHtml(question.text)}</p><strong>Lecture enregistrée.</strong></article>`;
+      return;
+    }
+    zone.innerHTML = `<article class="fluency-task"><div class="fluency-start"><span aria-hidden="true">⏱️</span><p>Quand tu es prête, lis le texte à voix haute. Le minuteur s’arrête après une minute.</p><button class="primary" type="button">Démarrer la minute</button></div></article>`;
+    zone.querySelector("button").addEventListener("click", () => {
+      const task = zone.querySelector(".fluency-task");
+      task.innerHTML = `<div class="fluency-status"><strong aria-live="polite">1:00</strong><span>Lis à voix haute</span></div><p class="fluency-text">${escapeHtml(question.text)}</p><button class="validate-button" type="button">J’ai terminé</button>`;
+      const startedAt = Date.now();
+      const finish = () => {
+        if (fluencyTimer !== null) window.clearInterval(fluencyTimer);
+        fluencyTimer = null;
+        answer(true, {elapsed: Math.min(60, Math.max(1, Math.round((Date.now() - startedAt) / 1000)))});
+      };
+      task.querySelector(".validate-button").addEventListener("click", finish);
+      fluencyTimer = window.setInterval(() => {
+        const remaining = Math.max(0, 60 - Math.floor((Date.now() - startedAt) / 1000));
+        task.querySelector(".fluency-status strong").textContent = `${Math.floor(remaining / 60)}:${String(remaining % 60).padStart(2, "0")}`;
+        if (remaining === 0) finish();
+      }, 250);
+    });
   }
 
   function fractionInteractive(question, selected, saved) {
@@ -304,6 +335,10 @@
   }
 
   function renderQuestion() {
+    if (fluencyTimer !== null) {
+      window.clearInterval(fluencyTimer);
+      fluencyTimer = null;
+    }
     const question = questions()[questionIndex];
     const saved = progress(subject).answers[questionIndex];
     locked = Boolean(saved);
@@ -319,6 +354,7 @@
     $("feedback").className = "feedback";
     $("next-question").hidden = true;
     if (question.type === "input") renderInput(question, saved);
+    else if (question.type === "fluency") renderFluency(question, saved);
     else if (question.type === "fraction") renderFraction(question, saved);
     else if (question.type === "order") renderOrder(question, saved);
     else if (question.type === "open") renderOpen(question, saved);
@@ -385,111 +421,21 @@
     show("done");
   }
 
-  function tablesBestText() {
-    const best = read("tables-best", null);
-    return best === null ? "Tu poseras ici ton premier score." : `Ton meilleur score du jour : ${best} / ${TABLE_TOTAL}.`;
-  }
-
-  function openTables() {
-    cancelTables();
-    $("tables-intro").hidden = false;
-    $("tables-play").hidden = true;
-    $("tables-result").hidden = true;
-    $("tables-best-intro").textContent = tablesBestText();
-    $("start-tables").textContent = read("tables-best", null) === null ? "Lancer le défi" : "Lancer une nouvelle série";
-    show("tables");
-  }
-
-  function renderTableQuestion() {
-    const question = tablesState.questions[tablesState.index];
-    $("tables-question-count").textContent = `${tablesState.index + 1} / ${TABLE_TOTAL}`;
-    setBar($("tables-progress"), tablesState.index, TABLE_TOTAL);
-    $("tables-question-kind").textContent = question.kind;
-    $("tables-expression").textContent = question.prompt;
-    $("tables-answer").value = "";
-    $("tables-answer").focus({preventScroll: true});
-  }
-
-  function updateTablesTimer() {
-    if (!tablesState.running) return;
-    tablesState.remaining = Math.max(0, Math.ceil((tablesState.endAt - Date.now()) / 1000));
-    const seconds = String(tablesState.remaining % 60).padStart(2, "0");
-    $("tables-time").textContent = `${Math.floor(tablesState.remaining / 60)}:${seconds}`;
-    $("tables-time").classList.toggle("urgent", tablesState.remaining <= 10);
-    if (tablesState.remaining <= 0) finishTables();
-  }
-
-  function startTables() {
-    let questions = generateTableQuestions();
-    let signature = questions.map(question => question.prompt).join("|");
-    for (let attempt = 0; signature === tablesState.lastSignature && attempt < 4; attempt += 1) {
-      questions = generateTableQuestions();
-      signature = questions.map(question => question.prompt).join("|");
-    }
-    tablesState.questions = questions;
-    tablesState.lastSignature = signature;
-    tablesState.index = 0;
-    tablesState.correct = 0;
-    tablesState.answered = 0;
-    tablesState.remaining = TABLE_DURATION;
-    tablesState.running = true;
-    tablesState.endAt = Date.now() + TABLE_DURATION * 1000;
-    $("tables-intro").hidden = true;
-    $("tables-result").hidden = true;
-    $("tables-play").hidden = false;
-    $("tables-time").textContent = "1:00";
-    $("tables-time").classList.remove("urgent");
-    renderTableQuestion();
-    tablesState.timer = window.setInterval(updateTablesTimer, 250);
-  }
-
-  function answerTable(skip) {
-    if (!tablesState.running) return;
-    const input = $("tables-answer");
-    const value = input.value.trim();
-    if (!skip && !/^\d+$/.test(value)) {
-      input.focus();
-      return;
-    }
-    if (!skip && Number(value) === tablesState.questions[tablesState.index].answer) tablesState.correct += 1;
-    tablesState.answered += 1;
-    tablesState.index += 1;
-    if (tablesState.index >= TABLE_TOTAL) finishTables();
-    else renderTableQuestion();
-  }
-
-  function finishTables() {
-    if (!tablesState.running) return;
-    tablesState.running = false;
-    window.clearInterval(tablesState.timer);
-    tablesState.timer = null;
-    const previousBest = read("tables-best", null);
-    const best = Math.max(previousBest === null ? 0 : previousBest, tablesState.correct);
-    write("tables-best", best);
-    $("tables-play").hidden = true;
-    $("tables-result").hidden = false;
-    $("tables-result-title").textContent = `${tablesState.correct} bonne${tablesState.correct > 1 ? "s" : ""} réponse${tablesState.correct > 1 ? "s" : ""} sur ${TABLE_TOTAL}`;
-    const unfinished = TABLE_TOTAL - tablesState.answered;
-    $("tables-result-message").textContent = unfinished ? `Le temps est écoulé. Tu as répondu à ${tablesState.answered} calcul${tablesState.answered > 1 ? "s" : ""} ; ${unfinished} restaient à voir.` : "Tu as parcouru toute la série avant la fin de la minute.";
-    $("tables-result-best").textContent = previousBest === null || tablesState.correct > previousBest ? `Nouveau meilleur score : ${best} / ${TABLE_TOTAL} !` : `Meilleur score : ${best} / ${TABLE_TOTAL}.`;
-    updateTablesCard();
-  }
-
-  function cancelTables() {
-    if (tablesState.timer !== null) window.clearInterval(tablesState.timer);
-    tablesState.timer = null;
-    tablesState.running = false;
+  function speak(encodedText) {
+    if (!("speechSynthesis" in window) || !("SpeechSynthesisUtterance" in window)) return;
+    window.speechSynthesis.cancel();
+    const utterance = new SpeechSynthesisUtterance(decodeURIComponent(encodedText));
+    utterance.lang = "fr-FR";
+    utterance.rate = 0.88;
+    window.speechSynthesis.speak(utterance);
   }
 
   document.querySelectorAll("[data-subject]").forEach(button => button.addEventListener("click", () => openSubject(button.dataset.subject)));
-  document.querySelectorAll("[data-action=home]").forEach(button => button.addEventListener("click", () => { cancelTables(); updateHome(); show("home"); }));
-  $("tables-card").addEventListener("click", openTables);
-  $("start-tables").addEventListener("click", startTables);
-  $("retry-tables").addEventListener("click", startTables);
-  $("tables-form").addEventListener("submit", event => { event.preventDefault(); answerTable(false); });
-  $("skip-table").addEventListener("click", () => answerTable(true));
+  document.querySelectorAll("[data-action=home]").forEach(button => button.addEventListener("click", () => { updateHome(); show("home"); }));
   document.addEventListener("click", event => {
     if (event.target.closest(".gloutons-link")) sessionStorage.setItem("axelle-game-pass", "ready");
+    const speakButton = event.target.closest("[data-speech]");
+    if (speakButton) speak(speakButton.dataset.speech);
   });
   $("start-quiz").addEventListener("click", startQuiz);
   $("back-to-lesson").addEventListener("click", () => { renderLessons(); show("lesson"); });
@@ -501,6 +447,5 @@
   $("day-intro").textContent = data.intro;
   $("day-icon").textContent = data.icon;
   $("day-home").textContent = `Jour ${data.day} · ${data.shortTitle}`;
-  window.AXELLE_TABLES = {generateQuestions: generateTableQuestions, getState: () => ({...tablesState, questions: tablesState.questions.map(question => ({...question}))})};
   updateHome();
 })();
