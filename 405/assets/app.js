@@ -26,6 +26,10 @@
     return `#${safeRouteName(route.type)}`;
   }
 
+  function routeToHistoryUrl(route) {
+    return `${window.location.pathname}${window.location.search}${routeToHash(route)}`;
+  }
+
   function routeFromHash() {
     const hash = window.location.hash.replace(/^#/, "");
     if (!hash) return { type: "home" };
@@ -69,7 +73,7 @@
 
   function navigate(route, options = {}) {
     state.currentRoute = route;
-    if (options.push !== false) window.history.pushState({ route }, "", routeToHash(route));
+    if (options.push !== false) window.history.pushState({ route }, "", routeToHistoryUrl(route));
     renderRoute(route);
     if (options.focus !== false) afterNavigation();
   }
@@ -381,7 +385,7 @@
 
   window.addEventListener("popstate", () => navigate(routeFromHash(), { push: false }));
   const initialRoute = routeFromHash();
-  window.history.replaceState({ route: initialRoute }, "", routeToHash(initialRoute));
+  window.history.replaceState({ route: initialRoute }, "", routeToHistoryUrl(initialRoute));
   navigate(initialRoute, { push: false, focus: false });
 
   if ("serviceWorker" in navigator && (window.isSecureContext || location.hostname === "localhost")) {
