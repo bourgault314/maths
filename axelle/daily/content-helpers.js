@@ -25,5 +25,9 @@
     return {...base(id, section, title, prompt, explanation, visual), type: "open", placeholder};
   }
 
-  window.AXELLE_BUILD = {q, input, fraction, order, open};
+  function fluency(id, section, title, prompt, text, explanation) {
+    return {...base(id, section, title, prompt, explanation), type: "fluency", text, correctLabel: "lecture terminée"};
+  }
+
+  window.AXELLE_BUILD = {q, input, fraction, order, open, fluency};
 })();
