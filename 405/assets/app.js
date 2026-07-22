@@ -27,7 +27,7 @@
   }
 
   function routeToHistoryUrl(route) {
-    return `${window.location.pathname}${window.location.search}${routeToHash(route)}`;
+    return `${window.location.origin}${window.location.pathname}${window.location.search}${routeToHash(route)}`;
   }
 
   function routeFromHash() {
