@@ -42,13 +42,24 @@ La version générative tire l’orientation de chaque tuile au hasard et met en
 
 L’identifiant public `function` réutilise l’icône `equal-volume-vase` :
 le vase accompagné de sa courbe de remplissage. Le catalogue remplace ce
-dessin de repli par l’un des six profils calculés dans
+dessin de repli par l’un des sept profils calculés dans
 `assets/js/daily-vase-curves.js`. Chaque profil définit son rayon intérieur
 en fonction de la hauteur ; le volume cumulé, les six couches de même volume,
 les points et la courbe `h=f(V)` proviennent tous de ce même modèle. La variante
-change avec la date locale et recommence après six jours. L’ancienne machine (x²)
+change avec la date locale et recommence après sept jours. L’ancienne machine (x²)
 reste conservée sous `function-machine`. Le dessin distinct des deux vases
 de même volume porte l’identifiant `equal-volume-vases`.
+
+L’accueil et le catalogue remplacent également l’icône statique `seigaiha` par l’une des sept
+rosaces calculées dans `assets/js/daily-rosettes.js`, des ordres 3 à 9. Les
+vagues restent dans la bibliothèque comme dessin de repli. Le moteur des
+rosaces reste séparé de celui des vases : chacun peut être réutilisé et testé
+sans dépendre des calculs de l’autre.
+
+`assets/js/domain-icon-renderer.js` est l’unique adaptateur des variantes
+quotidiennes pour l’accueil et le catalogue. Il garantit le même vase, la même
+rosace, le même Splat bleu et la même lettre sur les deux pages. Le dé et son
+histogramme restent volontairement aléatoires à chaque chargement.
 
 Ces identifiants doivent rester uniques : deux propriétés homonymes dans la
 bibliothèque JavaScript conduiraient la dernière à masquer la première.

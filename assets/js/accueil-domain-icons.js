@@ -68,37 +68,27 @@
     const library = settings.library || global.MATHSGO_ICON_LIBRARY || {};
     const markup = library[name];
     if (typeof markup !== "string") return "";
-
-    if (name === "factor-tree" && global.MATHSGO_DAILY_FACTOR_TREE) {
-      return global.MATHSGO_DAILY_FACTOR_TREE.render(markup, settings.date);
-    }
-    if (name === "splat") {
-      const dailySplat = global.MATHSGO_DAILY_SPLAT_LETTER;
-      const rendered = dailySplat ? dailySplat.render(markup, settings.date) : markup;
-      return rendered.replace(
-        'fill="#8b5cf6" stroke="#5b21b6"',
-        'fill="#0b67b2" stroke="#063f86"'
-      );
-    }
-    if (name === "koch" && global.MATHSGO_DAILY_KOCH) {
-      return global.MATHSGO_DAILY_KOCH.render(markup, settings.date);
-    }
-    if (name === "strategy" && global.MATHSGO_DAILY_STRATEGY_FRACTAL) {
-      return global.MATHSGO_DAILY_STRATEGY_FRACTAL.render(markup, settings.date);
-    }
+    const sharedRenderer = settings.renderer || global.MATHSGO_DOMAIN_ICON_RENDERER;
+    const rendered = sharedRenderer && typeof sharedRenderer.renderIcon === "function"
+      ? sharedRenderer.renderIcon(name, { library: library, date: settings.date })
+      : markup;
     if (name === "probability-statistics") {
-      return renderProbabilityIcon(markup, settings.experiment || simulateDieThrows(60, settings.random));
+      return renderProbabilityIcon(rendered, settings.experiment || simulateDieThrows(60, settings.random));
     }
-    return markup;
+    return rendered;
   }
 
-  function mount(root) {
+  function mount(root, options) {
+    const settings = options || {};
     const scope = root || global.document;
     if (!scope || typeof scope.querySelectorAll !== "function") return 0;
-    const experiment = simulateDieThrows(60);
+    const experiment = settings.experiment || simulateDieThrows(60, settings.random);
     const slots = scope.querySelectorAll("[data-home-icon]");
     slots.forEach(function (slot) {
-      slot.innerHTML = renderIcon(slot.dataset.homeIcon, { experiment: experiment });
+      slot.innerHTML = renderIcon(slot.dataset.homeIcon, {
+        date: settings.date,
+        experiment: experiment
+      });
     });
     return slots.length;
   }

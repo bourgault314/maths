@@ -499,27 +499,15 @@
       return icons.frequencies;
     }
     const markup = icons[name] || icons.explorations;
-    if (name === "factor-tree" && markup) {
-      const dailyTree = window.MATHSGO_DAILY_FACTOR_TREE;
-      if (dailyTree && typeof dailyTree.render === "function") return dailyTree.render(markup);
-    }
-    if (name === "koch" && markup) {
-      const dailyKoch = window.MATHSGO_DAILY_KOCH;
-      if (dailyKoch && typeof dailyKoch.render === "function") return dailyKoch.render(markup);
-    }
-    if (name === "strategy" && markup) {
-      const dailyFractal = window.MATHSGO_DAILY_STRATEGY_FRACTAL;
-      if (dailyFractal && typeof dailyFractal.render === "function") return dailyFractal.render(markup);
-    }
-    if ((name === "equal-volume-vase" || name === "function") && markup) {
-      const dailyVases = window.MATHSGO_DAILY_VASES;
-      if (dailyVases && typeof dailyVases.render === "function") return dailyVases.render(markup);
-    }
-    if (name !== "probability-statistics" || !markup) return markup;
+    const sharedRenderer = window.MATHSGO_DOMAIN_ICON_RENDERER;
+    const rendered = sharedRenderer && typeof sharedRenderer.renderIcon === "function"
+      ? sharedRenderer.renderIcon(name, { library: icons })
+      : markup;
+    if (name !== "probability-statistics" || !rendered) return rendered;
     const pips = dataDieFaces[dataDieValue]
       .map(([cx, cy]) => `<circle cx="${cx}" cy="${cy}" r="2.2"/>`)
       .join("");
-    const dieMarkup = markup.replace(
+    const dieMarkup = rendered.replace(
       /<g fill="#9d174d" data-mathsgo-die-face="">.*?<\/g>/,
       `<g fill="#9d174d" data-mathsgo-die-face="${dataDieValue}">${pips}</g>`
     );

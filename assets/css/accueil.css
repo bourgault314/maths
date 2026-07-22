@@ -156,7 +156,7 @@ h1 {
 .scene-item-algebre { --scene-icon-width: 51px; --scene-icon-height: 53px; }
 .scene-item-proportionnalite { position: relative; left: -5%; --scene-icon-width: 96px; --scene-icon-height: 56px; }
 .scene-item-geometrie { --scene-icon-width: 84px; --scene-icon-height: 49px; }
-.scene-item-donnees { position: relative; left: 10%; --scene-icon-width: 82px; --scene-icon-height: 56px; }
+.scene-item-donnees { position: relative; left: 0; --scene-icon-width: 82px; --scene-icon-height: 56px; }
 .scene-item-informatique { --scene-icon-width: 76px; --scene-icon-height: 57px; }
 .scene-item-recherches { position: relative; left: -6%; --scene-icon-width: 62px; --scene-icon-height: 54px; }
 

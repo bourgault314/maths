@@ -26,7 +26,7 @@
     Object.freeze({
       id: "resserrement",
       name: "Vase qui se resserre",
-      radius: function (height) { return 0.82 - 0.48 * clampUnit(height); }
+      radius: function (height) { return 0.82 - 0.52 * clampUnit(height); }
     }),
     Object.freeze({
       id: "panse-et-col",
@@ -49,6 +49,18 @@
       name: "Vase ondulé",
       radius: function (height) {
         return 0.55 + 0.18 * Math.cos(4 * Math.PI * clampUnit(height));
+      }
+    }),
+    Object.freeze({
+      id: "bouteille-epaulement",
+      name: "Bouteille à épaulement",
+      radius: function (height) {
+        const position = clampUnit(height);
+        if (position <= 0.62) return 0.78;
+        if (position >= 0.82) return 0.28;
+        const progress = (position - 0.62) / 0.20;
+        const smoothShoulder = progress * progress * (3 - 2 * progress);
+        return 0.78 - 0.50 * smoothShoulder;
       }
     })
   ]);

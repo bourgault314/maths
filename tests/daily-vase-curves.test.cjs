@@ -13,8 +13,8 @@ function independentVolume(profile, start, end, steps = 12000) {
   return sum * width;
 }
 
-test("les six profils restent physiques, positifs et réellement distincts", () => {
-  assert.equal(dailyVases.profiles.length, 6);
+test("les sept profils restent physiques, positifs et réellement distincts", () => {
+  assert.equal(dailyVases.profiles.length, 7);
   const ids = new Set();
   const signatures = new Set();
 
@@ -29,8 +29,8 @@ test("les six profils restent physiques, positifs et réellement distincts", () 
     signatures.add(radii.join("|"));
   });
 
-  assert.equal(ids.size, 6);
-  assert.equal(signatures.size, 6);
+  assert.equal(ids.size, 7);
+  assert.equal(signatures.size, 7);
 });
 
 test("chaque séparation découpe exactement le vase en six volumes égaux", () => {
@@ -93,6 +93,38 @@ test("l’élargissement et le resserrement donnent les épaisseurs attendues", 
   }
 });
 
+test("l’évasement et le resserrement sont les renversements exacts l’un de l’autre", () => {
+  for (let index = 0; index <= 100; index += 1) {
+    const height = index / 100;
+    assert.equal(
+      Math.abs(
+        dailyVases.radiusAt("evasement", height)
+        - dailyVases.radiusAt("resserrement", 1 - height)
+      ) < 1e-12,
+      true
+    );
+  }
+});
+
+test("la bouteille garde un corps cylindrique puis un col fin", () => {
+  const bodyRadius = dailyVases.radiusAt("bouteille-epaulement", 0.2);
+  assert.equal(bodyRadius, dailyVases.radiusAt("bouteille-epaulement", 0.6));
+  assert.equal(dailyVases.radiusAt("bouteille-epaulement", 0.85), 0.28);
+  assert.equal(dailyVases.radiusAt("bouteille-epaulement", 1), 0.28);
+
+  const model = dailyVases.buildModel("bouteille-epaulement");
+  const boundaries = Array.from({ length: 7 }, (_, index) => {
+    return model.heightAtVolumeFraction(index / 6);
+  });
+  const firstFiveHeights = boundaries.slice(1, 6).map((height, index) => {
+    return height - boundaries[index];
+  });
+  firstFiveHeights.forEach((height) => {
+    assert.equal(Math.abs(height - firstFiveHeights[0]) < 1e-3, true);
+  });
+  assert.equal(1 - boundaries[5] > 3 * firstFiveHeights[0], true);
+});
+
 test("le SVG est entièrement produit par le profil, ses couches et sa courbe", () => {
   dailyVases.profiles.forEach((profile) => {
     const svg = dailyVases.renderProfile(profile);
@@ -107,11 +139,11 @@ test("le SVG est entièrement produit par le profil, ses couches et sa courbe", 
   });
 });
 
-test("un nouveau profil apparaît chaque jour puis le cycle de six jours recommence", () => {
-  const selections = Array.from({ length: 7 }, (_, offset) => {
+test("un nouveau profil apparaît chaque jour puis le cycle de sept jours recommence", () => {
+  const selections = Array.from({ length: 8 }, (_, offset) => {
     return dailyVases.selectionForDate(new Date(2026, 0, 1 + offset, 12));
   });
-  assert.equal(new Set(selections.slice(0, 6).map(({ index }) => index)).size, 6);
-  assert.equal(selections[6].index, selections[0].index);
+  assert.equal(new Set(selections.slice(0, 7).map(({ index }) => index)).size, 7);
+  assert.equal(selections[7].index, selections[0].index);
   assert.throws(() => dailyVases.selectionForDate("pas une date"), /Date quotidienne invalide/);
 });
