@@ -1,0 +1,27 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="robots" content="noindex, nofollow, noarchive">
+  <title>Recette mobile 405</title>
+  <style>
+    html, body { margin: 0; overflow: hidden; background: #fff; }
+    iframe { display: block; width: 390px; height: 844px; border: 0; background: #fff; }
+  </style>
+</head>
+<body>
+  <iframe id="preview" title="Aperçu mobile de la 405"></iframe>
+  <script>
+    const params = new URLSearchParams(location.search);
+    const width = Math.min(430, Math.max(320, Number(params.get("w")) || 390));
+    const height = Math.min(932, Math.max(568, Number(params.get("h")) || 844));
+    const allowedScreens = new Set(["home", "class", "learn", "reflexes", "challenges", "sources"]);
+    const screen = allowedScreens.has(params.get("screen")) ? params.get("screen") : "home";
+    const frame = document.querySelector("#preview");
+    frame.style.width = `${width}px`;
+    frame.style.height = `${height}px`;
+    frame.src = `./#${screen}`;
+  </script>
+</body>
+</html>
