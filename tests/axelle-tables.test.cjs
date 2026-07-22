@@ -1,5 +1,7 @@
 const test = require("node:test");
 const assert = require("node:assert/strict");
+const fs = require("node:fs");
+const path = require("node:path");
 const {generateTables, generateCalculations, buildCorrections} = require("../axelle/defis/logic.js");
 
 function seeded(seed) {
@@ -55,4 +57,19 @@ test("le bilan ne reprend que les erreurs avec la réponse donnée et la correct
     {number:1,prompt:"3 × 4 = ?",given:"11",expected:"12"},
     {number:3,prompt:"9 × ? = 54",given:"Pas de réponse",expected:"6"}
   ]);
+});
+
+test("l’écran mobile actif réserve toute la hauteur aux commandes", () => {
+  const root = path.resolve(__dirname, "..");
+  const app = fs.readFileSync(path.join(root, "axelle/defis/app.js"), "utf8");
+  const styles = fs.readFileSync(path.join(root, "axelle/defis/styles.css"), "utf8");
+  assert.match(app, /classList\.toggle\("challenge-playing", name === "play"\)/);
+  assert.match(styles, /\.challenge-playing\{height:100dvh;overflow:hidden\}/);
+  assert.match(styles, /\.challenge-playing \.question\{flex:1;min-height:0;[^}]*justify-content:center/);
+  assert.match(styles, /\.challenge-playing \.keypad button\{min-height:44px;height:44px\}/);
+  for (const kind of ["tables", "calcul"]) {
+    const html = fs.readFileSync(path.join(root, `axelle/defis/${kind}/index.html`), "utf8");
+    assert.match(html, /styles\.css\?v=20260722-3/);
+    assert.match(html, /app\.js\?v=20260722-3/);
+  }
 });

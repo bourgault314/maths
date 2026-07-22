@@ -22,6 +22,7 @@
 
   function show(name) {
     ["intro", "play", "result"].forEach(id => { $(id).hidden = id !== name; });
+    document.body.classList.toggle("challenge-playing", name === "play");
     window.scrollTo({top: 0, behavior: "instant"});
   }
 
