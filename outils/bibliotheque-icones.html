@@ -11,7 +11,8 @@
 <link rel="apple-touch-icon" href="/assets/img/apple-touch-icon.png">
   <meta name="description" content="Galerie complète des icônes mathématiques créées pour maths&amp;go et réutilisées dans le catalogue et l’accueil.">
   <script src="../assets/js/mathsgo-icon-library.js?v=icons-library-20260719-8"></script>
-  <script src="../assets/js/daily-vase-curves.js?v=20260719-1"></script>
+  <script src="../assets/js/daily-vase-curves.js?v=20260722-1"></script>
+  <script src="../assets/js/daily-rosettes.js?v=20260722-1"></script>
   <script src="../assets/js/mathgo-generative-icons.js?v=generative-library-20260716-2"></script>
   <style>
     :root{--ink:#173a5e;--blue:#0b67b2;--soft:#eef7ff;--line:#dbe7ef;--orange:#f58220}
@@ -84,11 +85,21 @@
       <section class="generative-section" aria-labelledby="vase-series-title">
         <div class="generative-heading">
           <div>
-            <h2 id="vase-series-title">Vases et courbes · six profils calculés</h2>
+            <h2 id="vase-series-title">Vases et courbes · sept profils calculés</h2>
             <p>Chaque bande contient exactement un sixième du volume total. La courbe donne la hauteur <em>h</em> en fonction du volume versé <em>V</em> ; le catalogue affiche un profil différent chaque jour.</p>
           </div>
         </div>
         <div class="icon-grid" id="vase-series-icons"></div>
+      </section>
+
+      <section class="generative-section" aria-labelledby="rosette-series-title">
+        <div class="generative-heading">
+          <div>
+            <h2 id="rosette-series-title">Rosaces au compas · ordres 3 à 9</h2>
+            <p>Sept constructions fondées sur des cercles de même rayon, des polygones réguliers et leurs diagonales. Les vagues <code>seigaiha</code> restent conservées dans la bibliothèque.</p>
+          </div>
+        </div>
+        <div class="icon-grid" id="rosette-series-icons"></div>
       </section>
 
       <section class="generative-section" aria-labelledby="generative-title">
@@ -134,6 +145,7 @@
       const library = window.MATHSGO_ICON_LIBRARY || {};
       const generator = window.MathsGoGenerativeIcons;
       const dailyVases = window.MATHSGO_DAILY_VASES;
+      const dailyRosettes = window.MATHSGO_DAILY_ROSETTES;
       const card = (key, home = false) => {
         const wrapper = document.createElement("article");
         wrapper.className = "icon-card" + (home ? " home-card" : "");
@@ -171,9 +183,29 @@
           name.textContent = profile.name;
           const id = document.createElement("div");
           id.className = "icon-key";
-          id.textContent = `variante ${index + 1}/6`;
+          id.textContent = `variante ${index + 1}/7`;
           wrapper.append(stage, name, id);
           vaseGrid.append(wrapper);
+        });
+      }
+
+      const rosetteGrid = document.querySelector("#rosette-series-icons");
+      if (dailyRosettes) {
+        dailyRosettes.patterns.forEach((pattern, index) => {
+          const wrapper = document.createElement("article");
+          wrapper.className = "icon-card";
+          const stage = document.createElement("div");
+          stage.className = "icon-stage";
+          stage.innerHTML = dailyRosettes.renderPattern(pattern);
+          stage.setAttribute("aria-label", pattern.name);
+          const name = document.createElement("div");
+          name.className = "icon-name";
+          name.textContent = `${pattern.name} · ordre ${pattern.order}`;
+          const id = document.createElement("div");
+          id.className = "icon-key";
+          id.textContent = `variante ${index + 1}/7`;
+          wrapper.append(stage, name, id);
+          rosetteGrid.append(wrapper);
         });
       }
 
