@@ -1,0 +1,216 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#171b3d">
+  <meta name="description" content="Prototype élève de la 405 Dopamine : activités courtes, outils pour apprendre et traces collectives.">
+  <meta name="robots" content="noindex, nofollow, noarchive">
+  <title>405 Dopamine · proposition élève</title>
+  <link rel="icon" href="/favicon.ico" sizes="48x48">
+  <link rel="stylesheet" href="assets/styles.css?v=20260722-1">
+  <script defer src="assets/app.js?v=20260722-1"></script>
+</head>
+<body>
+  <a class="skip-link" href="#main-content">Aller au contenu</a>
+
+  <div class="app-shell">
+    <main id="main-content" tabindex="-1">
+      <section class="screen is-active" data-screen="home" aria-labelledby="home-title">
+        <article class="hero-card dopamine-hero">
+          <div class="hero-content">
+            <p class="eyebrow">405 · 2026–2027</p>
+            <h1 id="home-title">4e <span>Dopamine</span></h1>
+            <p>Comprendre comment on apprend.<br>Choisir comment avancer.</p>
+          </div>
+          <div class="network-art" aria-hidden="true">
+            <svg viewBox="0 0 300 210">
+              <defs>
+                <linearGradient id="trial-path-gradient" x1="20" y1="30" x2="280" y2="190" gradientUnits="userSpaceOnUse">
+                  <stop stop-color="#42b8a5"/><stop offset=".48" stop-color="#8d7af0"/><stop offset="1" stop-color="#f06d59"/>
+                </linearGradient>
+              </defs>
+              <g fill="none" stroke="url(#trial-path-gradient)" stroke-width="5" stroke-linecap="round">
+                <path d="M37 118 91 65l57 34 49-55 63 44-26 68-74 12-50-31-67 25"/>
+                <path d="m91 65 19 72m38-38 12 69m37-124 37 112" opacity=".42"/>
+              </g>
+              <g stroke="#fff" stroke-width="5">
+                <circle cx="37" cy="118" r="14" fill="#42b8a5"/><circle cx="91" cy="65" r="18" fill="#f4bf45"/>
+                <circle cx="148" cy="99" r="15" fill="#8d7af0"/><circle cx="197" cy="44" r="12" fill="#f06d59"/>
+                <circle cx="260" cy="88" r="17" fill="#42b8a5"/><circle cx="234" cy="156" r="13" fill="#f4bf45"/>
+                <circle cx="160" cy="168" r="18" fill="#f06d59"/><circle cx="110" cy="137" r="12" fill="#8d7af0"/>
+                <circle cx="43" cy="162" r="10" fill="#f4bf45"/>
+              </g>
+            </svg>
+          </div>
+        </article>
+
+        <div class="home-prompt">
+          <p class="eyebrow">Aujourd’hui</p>
+          <h2>De quoi as-tu besoin&nbsp;?</h2>
+          <p>Choisis une activité courte ou un coup de pouce pour avancer.</p>
+        </div>
+
+        <article class="now-card">
+          <div class="now-heading">
+            <span class="live-dot" aria-hidden="true"></span>
+            <p>Activité du moment</p>
+            <span class="duration">3 min</span>
+          </div>
+          <div class="now-body">
+            <div>
+              <span class="card-emoji" aria-hidden="true">🎯</span>
+              <h2>Mission anti-distraction</h2>
+              <p>Tu as dix minutes pour apprendre. À toi de préparer le terrain.</p>
+            </div>
+            <button class="primary-button" type="button" data-open="focus-mission">J’essaie <span aria-hidden="true">→</span></button>
+          </div>
+        </article>
+
+        <section class="needs-section" aria-labelledby="needs-title">
+          <div class="section-heading">
+            <div><p class="eyebrow">Un coup de pouce</p><h2 id="needs-title">Là, tout de suite…</h2></div>
+            <button class="small-link" type="button" data-route="tools">Tout voir</button>
+          </div>
+          <div class="needs-grid">
+            <button class="need-card need-start" type="button" data-tool="start">
+              <span aria-hidden="true">▶</span><strong>Je n’arrive pas<br>à commencer</strong><small>Une première action</small>
+            </button>
+            <button class="need-card need-focus" type="button" data-tool="focus">
+              <span aria-hidden="true">◎</span><strong>Je suis<br>distrait</strong><small>Choisir une parade</small>
+            </button>
+            <button class="need-card need-blocked" type="button" data-tool="blocked">
+              <span aria-hidden="true">?</span><strong>Je suis<br>bloqué</strong><small>Trouver où ça coince</small>
+            </button>
+            <button class="need-card need-memory" type="button" data-tool="memory">
+              <span aria-hidden="true">↻</span><strong>Je dois<br>réviser</strong><small>Essayer avant de relire</small>
+            </button>
+          </div>
+        </section>
+
+        <section class="try-section" aria-labelledby="try-title">
+          <div class="section-heading">
+            <div><p class="eyebrow">À toi de jouer</p><h2 id="try-title">Des activités très courtes</h2></div>
+            <button class="small-link" type="button" data-route="activities">Tout voir</button>
+          </div>
+          <div class="activity-strip">
+            <button class="activity-card activity-memory" type="button" data-open="memory-challenge">
+              <span class="activity-top"><span>2 min</span><b aria-hidden="true">🧠</b></span>
+              <strong>Le piège de la mémoire</strong>
+              <small>Regarder n’est pas toujours retenir.</small>
+            </button>
+            <button class="activity-card activity-error" type="button" data-open="error-detective">
+              <span class="activity-top"><span>2 min</span><b aria-hidden="true">🔎</b></span>
+              <strong>Erreur détective</strong>
+              <small>Trouve la première étape qui déraille.</small>
+            </button>
+            <button class="activity-card activity-help" type="button" data-open="help-challenge">
+              <span class="activity-top"><span>1 min</span><b aria-hidden="true">💬</b></span>
+              <strong>Le meilleur SOS</strong>
+              <small>Quelle demande aide vraiment&nbsp;?</small>
+            </button>
+          </div>
+        </section>
+
+        <button class="class-preview" type="button" data-route="classroom">
+          <span class="class-preview-icon" aria-hidden="true">✦</span>
+          <span><small>Dans la 405</small><strong>Ce que nous construisons ensemble</strong></span>
+          <span aria-hidden="true">→</span>
+        </button>
+      </section>
+
+      <section class="screen" data-screen="tools" hidden aria-labelledby="tools-title">
+        <header class="page-heading">
+          <p class="eyebrow">Ma boîte à outils</p>
+          <h1 id="tools-title">Quand ça coince</h1>
+          <p>Pas de recette magique : une petite action à essayer au bon moment.</p>
+        </header>
+        <div class="tool-grid">
+          <button class="tool-card tool-start" type="button" data-tool="start"><span>▶</span><div><strong>Démarrer</strong><small>Transformer « je dois travailler » en première action.</small></div><b>2 min</b></button>
+          <button class="tool-card tool-focus" type="button" data-tool="focus"><span>◎</span><div><strong>Éloigner un distracteur</strong><small>Choisir une parade adaptée à ce qui m’attire.</small></div><b>1 min</b></button>
+          <button class="tool-card tool-blocked" type="button" data-tool="blocked"><span>?</span><div><strong>Comprendre mon blocage</strong><small>Consigne, démarrage, méthode ou vérification&nbsp;?</small></div><b>2 min</b></button>
+          <button class="tool-card tool-help" type="button" data-tool="help"><span>💬</span><div><strong>Demander une aide utile</strong><small>Dire ce que j’ai compris, essayé et où je bloque.</small></div><b>2 min</b></button>
+          <button class="tool-card tool-error" type="button" data-tool="error"><span>↯</span><div><strong>Utiliser une erreur</strong><small>Retrouver la première étape à modifier.</small></div><b>3 min</b></button>
+          <button class="tool-card tool-memory" type="button" data-tool="memory"><span>↻</span><div><strong>Réviser sans seulement relire</strong><small>Essayer de retrouver, vérifier, puis corriger.</small></div><b>3 min</b></button>
+          <button class="tool-card tool-pause" type="button" data-tool="pause"><span>Ⅱ</span><div><strong>Faire une pause avant d’agir</strong><small>Stopper, relire le but, puis choisir une action.</small></div><b>30 s</b></button>
+        </div>
+      </section>
+
+      <section class="screen" data-screen="activities" hidden aria-labelledby="activities-title">
+        <header class="page-heading">
+          <p class="eyebrow">Essayer · comprendre · réutiliser</p>
+          <h1 id="activities-title">Activités express</h1>
+          <p>Pour jouer un peu, réfléchir beaucoup et repartir avec une idée utilisable.</p>
+        </header>
+        <div class="activity-list">
+          <button class="wide-activity wide-focus" type="button" data-open="focus-mission"><span class="wide-icon">🎯</span><span><small>Choix</small><strong>Mission anti-distraction</strong><em>Prépare dix minutes de travail.</em></span><b>3 min</b></button>
+          <button class="wide-activity wide-memory" type="button" data-open="memory-challenge"><span class="wide-icon">🧠</span><span><small>Mémoire</small><strong>Le piège de la mémoire</strong><em>Teste « reconnaître » et « retrouver ».</em></span><b>2 min</b></button>
+          <button class="wide-activity wide-error" type="button" data-open="error-detective"><span class="wide-icon">🔎</span><span><small>Maths</small><strong>Erreur détective</strong><em>Repère la première ligne incorrecte.</em></span><b>2 min</b></button>
+          <button class="wide-activity wide-help" type="button" data-open="help-challenge"><span class="wide-icon">💬</span><span><small>CPS</small><strong>Le meilleur SOS</strong><em>Transforme « j’ai rien compris ».</em></span><b>1 min</b></button>
+          <button class="wide-activity wide-maths" type="button" data-open="maths-minute"><span class="wide-icon">⚡</span><span><small>Révision</small><strong>Maths minute</strong><em>Une question, une correction utile.</em></span><b>1 min</b></button>
+          <button class="wide-activity wide-privacy" type="button" data-open="privacy-challenge"><span class="wide-icon">🛡</span><span><small>Numérique</small><strong>Public ou privé&nbsp;?</strong><em>Décide ce qui peut aller sur cette page.</em></span><b>2 min</b></button>
+        </div>
+      </section>
+
+      <section class="screen" data-screen="classroom" hidden aria-labelledby="class-title">
+        <header class="page-heading class-heading">
+          <p class="eyebrow">405 Dopamine</p>
+          <h1 id="class-title">Notre espace collectif</h1>
+          <p>Des traces de notre travail, sans exposer la vie de la classe.</p>
+        </header>
+
+        <article class="weekly-focus">
+          <span class="weekly-number">01</span>
+          <div><small>Notre premier cap</small><h2>Attention, distracteurs et demande d’aide</h2><p>Observer ce qui nous fait décrocher, essayer des parades et apprendre à demander une aide précise.</p></div>
+        </article>
+
+        <section class="class-section" aria-labelledby="traces-title">
+          <div class="section-heading"><div><p class="eyebrow">Nos traces</p><h2 id="traces-title">Ce que nous pourrons publier</h2></div></div>
+          <div class="trace-grid">
+            <article><span aria-hidden="true">💡</span><small>Astuce collective</small><strong>« Pour commencer, je choisis une action minuscule. »</strong></article>
+            <article><span aria-hidden="true">💬</span><small>Phrase construite</small><strong>« J’ai essayé…, mais je bloque à cette étape. »</strong></article>
+            <article><span aria-hidden="true">↯</span><small>Découverte</small><strong>« Une erreur précise peut indiquer quoi essayer ensuite. »</strong></article>
+          </div>
+          <p class="example-note">Ici, nous garderons seulement des formulations et productions collectives, sans nom ni visage.</p>
+        </section>
+
+        <section class="class-section" aria-labelledby="coming-title">
+          <div class="section-heading"><div><p class="eyebrow">Période 1</p><h2 id="coming-title">Les sujets qui arrivent</h2></div></div>
+          <div class="topic-row" aria-label="Thèmes prévus">
+            <span>Attention</span><span>Distractions</span><span>Erreur</span><span>Impulsivité</span><span>Demande d’aide</span><span>Motivation</span>
+          </div>
+        </section>
+
+        <article class="privacy-card">
+          <span aria-hidden="true">🛡</span>
+          <div><h2>Les informations pratiques restent ailleurs</h2><p>Dates précises, lieux, sorties, réunions et messages destinés aux familles passent par l’ENT ou l’outil sécurisé de l’établissement.</p></div>
+        </article>
+
+      </section>
+    </main>
+
+    <footer class="site-note">
+      <span>Aucun compte · aucune réponse conservée</span>
+    </footer>
+  </div>
+
+  <nav class="bottom-nav" aria-label="Navigation principale">
+    <button class="nav-item is-active" type="button" data-route="home" aria-current="page"><span aria-hidden="true">⌂</span><strong>Aujourd’hui</strong></button>
+    <button class="nav-item" type="button" data-route="tools"><span aria-hidden="true">✦</span><strong>Mes outils</strong></button>
+    <button class="nav-item" type="button" data-route="activities"><span aria-hidden="true">⚡</span><strong>Activités</strong></button>
+    <button class="nav-item" type="button" data-route="classroom"><span aria-hidden="true">405</span><strong>La classe</strong></button>
+  </nav>
+
+  <dialog id="activity-dialog" class="activity-dialog" aria-labelledby="dialog-title">
+    <div class="dialog-shell">
+      <header class="dialog-header">
+        <div><p id="dialog-kicker" class="eyebrow"></p><h1 id="dialog-title" tabindex="-1"></h1></div>
+        <button id="dialog-close" class="close-button" type="button" aria-label="Fermer">×</button>
+      </header>
+      <div id="dialog-content" class="dialog-content"></div>
+    </div>
+  </dialog>
+
+  <noscript><p class="noscript">Cette proposition a besoin de JavaScript pour ouvrir les activités.</p></noscript>
+</body>
+</html>
