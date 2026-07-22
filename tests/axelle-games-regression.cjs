@@ -71,9 +71,8 @@ function findCofferPair(state) {
   const home = await browser.newPage({viewport:{width:390,height:844}});
   home.on("pageerror",error => errors.push(`Bureau : ${error.message}`));
   await home.goto(`${BASE}/axelle/`,{waitUntil:"networkidle"});
-  assert(await home.locator('.quick-games[href="jeux/"]').isVisible(),"Le bouton Jeux à deux n’est pas visible dans l’en-tête du Bureau.");
-  const callout = await home.locator('.games-callout[href="jeux/"]').boundingBox();
-  assert(callout && callout.y < 844,"La nouvelle rubrique Jeux n’est pas visible dans le premier écran du Bureau.");
+  assert(await home.locator('.quick-games[href="jeux/"]').count() === 0,"Le bouton Jeux à deux est encore visible dans l’en-tête du Bureau.");
+  assert(await home.locator('.games-callout[href="jeux/"]').count() === 0,"La rubrique Jeux est encore visible sur le Bureau.");
   await home.screenshot({path:path.join(OUTPUT,"bureau-mobile.png"),fullPage:true});
 
   await home.goto(`${BASE}/axelle/jeux/`,{waitUntil:"networkidle"});

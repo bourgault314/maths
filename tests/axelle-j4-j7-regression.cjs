@@ -152,11 +152,35 @@ async function completeMission(page, day, subject, wrong, mobile) {
   dashboard.on("pageerror", error => errors.push(`Bureau : ${error.message}`));
   await dashboard.goto(`${BASE}/axelle/`, {waitUntil: "networkidle"});
   const hrefs = await dashboard.locator(".days > a").evaluateAll(nodes => nodes.map(node => new URL(node.href).pathname));
-  assert(JSON.stringify(hrefs) === JSON.stringify(["/axelle/j1/", "/axelle/j2/", "/axelle/j3/", "/axelle/j4/", "/axelle/j5/", "/axelle/j6/", "/axelle/j7/"]), `Le Bureau ne relie pas J1 à J7 : ${hrefs}.`);
+  assert(JSON.stringify(hrefs) === JSON.stringify(["/axelle/j4/", "/axelle/j5/", "/axelle/j6/", "/axelle/j7/"]), `Le Bureau ne commence pas au J4 : ${hrefs}.`);
   assert(await dashboard.locator(".tonton-note").isVisible(), "Le petit mot du tonton n’est pas visible sur le Bureau.");
+  assert((await dashboard.locator(".tonton-note").textContent()).includes("l’hôtel à Maurice") && (await dashboard.locator(".tonton-note").textContent()).includes("travailler"), "Le petit mot du tonton ne parle pas des vacances à Maurice et du travail.");
+  assert(await dashboard.locator('a[href="jeux/"]').count() === 0, "Un lien vers les jeux à deux est encore visible sur le Bureau.");
   await noOverflow(dashboard, "Bureau mobile");
   await dashboard.screenshot({path: path.join(OUTPUT, "bureau-mobile.png"), fullPage: true});
   await dashboard.close();
+
+  const tablesPage = await browser.newPage({viewport: {width: 390, height: 844}});
+  tablesPage.on("pageerror", error => errors.push(`Défi tables : ${error.message}`));
+  await tablesPage.goto(`${BASE}/axelle/j4/`, {waitUntil: "networkidle"});
+  assert((await tablesPage.locator("#tables-card").textContent()).includes("25 calculs · 1 minute"), "Le défi tables n’annonce pas le format officiel choisi.");
+  await tablesPage.locator("#tables-card").click();
+  await tablesPage.locator("#start-tables").click();
+  const firstSeries = await tablesPage.evaluate(() => window.AXELLE_TABLES.getState().questions.map(question => question.prompt));
+  assert(firstSeries.length === 25 && new Set(firstSeries).size === 25, "La première série du défi tables n’a pas 25 calculs distincts.");
+  for (let index = 0; index < 25; index += 1) {
+    const state = await tablesPage.evaluate(() => window.AXELLE_TABLES.getState());
+    await tablesPage.locator("#tables-answer").fill(String(state.questions[state.index].answer));
+    await tablesPage.locator("#tables-form").evaluate(form => form.requestSubmit());
+  }
+  await tablesPage.locator("#tables-result:not([hidden])").waitFor();
+  assert((await tablesPage.locator("#tables-result-title").textContent()).includes("25 bonnes réponses"), "Le défi ne calcule pas correctement un sans-faute.");
+  await tablesPage.locator("#retry-tables").click();
+  const secondSeries = await tablesPage.evaluate(() => window.AXELLE_TABLES.getState().questions.map(question => question.prompt));
+  assert(JSON.stringify(firstSeries) !== JSON.stringify(secondSeries), "Rejouer le défi conserve exactement les mêmes questions.");
+  await noOverflow(tablesPage, "défi tables mobile");
+  await tablesPage.screenshot({path: path.join(OUTPUT, "defi-tables-mobile.png"), fullPage: true});
+  await tablesPage.close();
 
   const bonusPage = await browser.newPage({viewport: {width: 390, height: 844}});
   bonusPage.on("pageerror", error => errors.push(`Bonus CPS : ${error.message}`));
@@ -174,6 +198,8 @@ async function completeMission(page, day, subject, wrong, mobile) {
   await bonusPage.locator("#next-question").click();
   await bonusPage.locator("#day-bonus:not([hidden])").waitFor();
   assert((await bonusPage.locator("#day-bonus").textContent()).includes("Le petit redémarrage"), "Le bonus CPS de fin de journée n’apparaît pas.");
+  await bonusPage.locator("#done-reward:not([hidden])").waitFor();
+  assert((await bonusPage.locator("#done-reward").textContent()).includes("Carrés gloutons"), "Les Carrés gloutons ne sont pas débloqués après les deux missions.");
   await noOverflow(bonusPage, "bonus CPS mobile");
   await bonusPage.screenshot({path: path.join(OUTPUT, "bonus-cps-mobile.png"), fullPage: true});
   await bonusPage.close();
