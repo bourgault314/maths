@@ -3,8 +3,14 @@
   if (!data) return;
 
   const $ = id => document.getElementById(id);
+  const subjectGrid = document.querySelector("#home-screen .subject-grid");
+  subjectGrid.insertAdjacentHTML("beforeend", `<button id="tables-card" class="tables-card" type="button"><span aria-hidden="true">⏱️</span><span><strong>Défi tables</strong><small>25 calculs · 1 minute · une nouvelle série à chaque essai</small></span><span><em id="tables-best-home">Aucun score pour le moment</em><b id="tables-card-label">Commencer</b></span></button>`);
+  $("home-screen").insertAdjacentHTML("beforeend", `<aside id="home-reward" class="gloutons-reward" hidden><span aria-hidden="true">🟨</span><div><p class="eyebrow">Bonus débloqué</p><h2>Les Carrés gloutons</h2><p>Les deux missions sont terminées : tu peux jouer deux parties contre Gloubi.</p><a class="primary gloutons-link" href="../carres-gloutons.html">Jouer aux Carrés gloutons →</a></div></aside>`);
+  $("home-screen").insertAdjacentHTML("afterend", `<section id="tables-screen" class="screen tables-screen" hidden><button class="back-link" type="button" data-action="home">← Les missions du jour</button><div id="tables-intro" class="tables-panel"><span class="tables-hero" aria-hidden="true">⏱️</span><p class="eyebrow">Défi tables · Jour ${data.day}</p><h1>25 calculs en 1 minute</h1><p>Produits, facteurs manquants et questions formulées autrement : réponds de tête, à ton rythme. Le défi ne bloque pas les missions.</p><p id="tables-best-intro" class="tables-best"></p><button id="start-tables" class="primary" type="button">Lancer le défi</button></div><div id="tables-play" class="tables-play" hidden><div class="tables-status"><span id="tables-question-count">1 / 25</span><strong id="tables-time" aria-live="polite">1:00</strong></div><div class="progress-track" aria-hidden="true"><b id="tables-progress"></b></div><article class="tables-question"><p id="tables-question-kind" class="eyebrow">Calcul</p><div id="tables-expression" class="tables-expression"></div><form id="tables-form" class="tables-form"><label for="tables-answer">Ta réponse</label><div><input id="tables-answer" inputmode="numeric" pattern="[0-9]*" autocomplete="off"><button class="validate-button" type="submit">Valider</button></div><button id="skip-table" class="secondary" type="button">Passer</button></form></article></div><div id="tables-result" class="tables-panel" hidden><span class="tables-hero" aria-hidden="true">🏁</span><p class="eyebrow">Défi terminé</p><h1 id="tables-result-title"></h1><p id="tables-result-message"></p><p id="tables-result-best" class="tables-best"></p><div class="tables-result-actions"><button id="retry-tables" class="primary" type="button">Refaire avec une nouvelle série</button><button class="secondary" type="button" data-action="home">Retour aux missions</button></div></div></section>`);
+
   const screens = {
     home: $("home-screen"),
+    tables: $("tables-screen"),
     lesson: $("lesson-screen"),
     quiz: $("quiz-screen"),
     done: $("done-screen")
@@ -12,6 +18,20 @@
   let subject = "math";
   let questionIndex = 0;
   let locked = false;
+  const TABLE_TOTAL = 25;
+  const TABLE_DURATION = 60;
+  const generateTableQuestions = window.AXELLE_TABLES_LOGIC.generateQuestions;
+  const tablesState = {
+    questions: [],
+    index: 0,
+    correct: 0,
+    answered: 0,
+    remaining: TABLE_DURATION,
+    running: false,
+    timer: null,
+    endAt: 0,
+    lastSignature: ""
+  };
 
   function key(name) {
     return `axelle-j${data.day}-${name}`;
@@ -52,6 +72,21 @@
     node.style.width = `${total ? Math.min(100, value / total * 100) : 0}%`;
   }
 
+  function isDayComplete() {
+    return ["math", "fr"].every(name => Object.keys(progress(name).answers).length === data.subjects[name].questions.length);
+  }
+
+  function updateTablesCard() {
+    const best = read("tables-best", null);
+    $("tables-best-home").textContent = best === null ? "Aucun score pour le moment" : `Meilleur score : ${best} / ${TABLE_TOTAL}`;
+    $("tables-card-label").textContent = best === null ? "Commencer" : "Rejouer";
+  }
+
+  function updateReward() {
+    const complete = isDayComplete();
+    $("home-reward").hidden = !complete;
+  }
+
   function updateHome() {
     ["math", "fr"].forEach(name => {
       const count = Object.keys(progress(name).answers).length;
@@ -61,8 +96,9 @@
       const button = document.querySelector(`[data-subject="${name}"] .start-label`);
       button.textContent = count === total ? "Revoir la mission" : count ? "Continuer" : "Commencer";
     });
-    const allDone = ["math", "fr"].every(name => Object.keys(progress(name).answers).length === data.subjects[name].questions.length);
-    $("day-badge").hidden = !allDone;
+    $("day-badge").hidden = !isDayComplete();
+    updateTablesCard();
+    updateReward();
   }
 
   function escapeHtml(value) {
@@ -114,6 +150,17 @@
     }).join("")}</svg>`;
   }
 
+  function renderFractionPair(visual) {
+    const operator = visual.kind === "fraction-operation" ? `<b class="fraction-operator" aria-hidden="true">${visual.operator}</b>` : "";
+    return `<div class="fraction-pair${operator ? " with-operator" : ""}">${visual.items.map((item, index) => `${index ? operator : ""}<div class="fraction-pair-item">${fractionBar({...item, showFraction: false})}<strong>${escapeHtml(item.label)}</strong></div>`).join("")}</div>`;
+  }
+
+  function renderBars(visual) {
+    const totals = visual.rows.map(row => row.parts.reduce((sum, part) => sum + Number(part.value ?? part.flex ?? 1), 0));
+    const maximum = Math.max(...totals, 1);
+    return `<div class="bar-model">${visual.rows.map((row, rowIndex) => `<div><span>${row.label}</span><i style="width:${totals[rowIndex] / maximum * 100}%">${row.parts.map(part => `<b style="flex:${Number(part.value ?? part.flex ?? 1)};background:${part.color || "#fff"}">${part.text || ""}</b>`).join("")}</i></div>`).join("")}</div>`;
+  }
+
   function renderVisual(visual) {
     if (!visual) return "";
     if (visual.kind === "mental") return `<div class="mental-card">${visual.expression}</div>`;
@@ -125,11 +172,14 @@
       return `<div class="place-value"><div><span>Milliers</span><b>${digits[0]}</b></div><div><span>Centaines</span><b>${digits[1]}</b></div><div><span>Dizaines</span><b>${digits[2]}</b></div><div><span>Unités</span><b>${digits[3]}</b></div></div>`;
     }
     if (visual.kind === "decomposition") return `<div class="decomposition">${visual.parts.map((part,index) => `${index ? "<b>+</b>" : ""}<span>${part}</span>`).join("")}</div>`;
+    if (visual.kind === "number-list") return `<div class="number-list">${visual.numbers.map(number => `<span>${number}</span>`).join("")}</div>`;
     if (visual.kind === "number-line") return numberLine(visual);
     if (visual.kind === "fraction-bar") return fractionBar(visual);
+    if (visual.kind === "fraction-pair" || visual.kind === "fraction-operation") return renderFractionPair(visual);
     if (visual.kind === "array") return `<div class="array-wrap"><div class="dot-array" style="--cols:${visual.cols}">${Array.from({length: visual.rows * visual.cols}, () => "<i></i>").join("")}</div><strong>${visual.caption || `${visual.rows} groupes de ${visual.cols}`}</strong></div>`;
     if (visual.kind === "groups-pair") return `<div class="groups-pair">${visual.items.map(item => `<div>${renderVisual({kind: "array", ...item})}<b>${item.operation}</b></div>`).join("")}</div>`;
-    if (visual.kind === "bars") return `<div class="bar-model">${visual.rows.map(row => `<div><span>${row.label}</span><i>${row.parts.map(part => `<b style="flex:${part.flex || 1};background:${part.color || "#fff"}">${part.text || ""}</b>`).join("")}</i></div>`).join("")}</div>`;
+    if (visual.kind === "bars") return renderBars(visual);
+    if (visual.kind === "steps") return `<div class="steps-visual">${visual.items.map((item, index) => `${index ? "<b aria-hidden=\"true\">→</b>" : ""}<span>${item}</span>`).join("")}</div>`;
     if (visual.kind === "column") return `<div class="column-calc"><span>${visual.top}</span><span><b>${visual.sign}</b>${visual.bottom}</span><i></i></div>`;
     if (visual.kind === "money") return `<div class="money-row">${visual.items.map(item => `<span>${item}</span>`).join("")}</div>`;
     if (visual.kind === "punctuation") return `<div class="punctuation-row">${visual.marks.map(mark => `<span>${mark}</span>`).join("")}</div>`;
@@ -319,14 +369,128 @@
       bonus.className = "cps-bonus";
       screens.done.querySelector(".done-actions").before(bonus);
     }
-    const dayComplete = ["math", "fr"].every(name => Object.keys(progress(name).answers).length === data.subjects[name].questions.length);
+    const dayComplete = isDayComplete();
     bonus.hidden = !dayComplete || !data.bonus;
     if (!bonus.hidden) bonus.innerHTML = `<span aria-hidden="true">${data.bonus.icon || "🧠"}</span><div><p class="eyebrow">Petit bonus pour toi</p><h2>${data.bonus.title}</h2><p>${data.bonus.text}</p></div>`;
+    let reward = $("done-reward");
+    if (!reward) {
+      reward = document.createElement("aside");
+      reward.id = "done-reward";
+      reward.className = "gloutons-reward";
+      screens.done.querySelector(".done-actions").before(reward);
+    }
+    reward.hidden = !dayComplete;
+    if (!reward.hidden) reward.innerHTML = `<span aria-hidden="true">🟨</span><div><p class="eyebrow">Bonus débloqué</p><h2>Les Carrés gloutons</h2><p>Tu as terminé le français et les mathématiques. Deux parties contre Gloubi t’attendent !</p><a class="primary gloutons-link" href="../carres-gloutons.html">Jouer aux Carrés gloutons →</a></div>`;
+    updateReward();
     show("done");
   }
 
+  function tablesBestText() {
+    const best = read("tables-best", null);
+    return best === null ? "Tu poseras ici ton premier score." : `Ton meilleur score du jour : ${best} / ${TABLE_TOTAL}.`;
+  }
+
+  function openTables() {
+    cancelTables();
+    $("tables-intro").hidden = false;
+    $("tables-play").hidden = true;
+    $("tables-result").hidden = true;
+    $("tables-best-intro").textContent = tablesBestText();
+    $("start-tables").textContent = read("tables-best", null) === null ? "Lancer le défi" : "Lancer une nouvelle série";
+    show("tables");
+  }
+
+  function renderTableQuestion() {
+    const question = tablesState.questions[tablesState.index];
+    $("tables-question-count").textContent = `${tablesState.index + 1} / ${TABLE_TOTAL}`;
+    setBar($("tables-progress"), tablesState.index, TABLE_TOTAL);
+    $("tables-question-kind").textContent = question.kind;
+    $("tables-expression").textContent = question.prompt;
+    $("tables-answer").value = "";
+    $("tables-answer").focus({preventScroll: true});
+  }
+
+  function updateTablesTimer() {
+    if (!tablesState.running) return;
+    tablesState.remaining = Math.max(0, Math.ceil((tablesState.endAt - Date.now()) / 1000));
+    const seconds = String(tablesState.remaining % 60).padStart(2, "0");
+    $("tables-time").textContent = `${Math.floor(tablesState.remaining / 60)}:${seconds}`;
+    $("tables-time").classList.toggle("urgent", tablesState.remaining <= 10);
+    if (tablesState.remaining <= 0) finishTables();
+  }
+
+  function startTables() {
+    let questions = generateTableQuestions();
+    let signature = questions.map(question => question.prompt).join("|");
+    for (let attempt = 0; signature === tablesState.lastSignature && attempt < 4; attempt += 1) {
+      questions = generateTableQuestions();
+      signature = questions.map(question => question.prompt).join("|");
+    }
+    tablesState.questions = questions;
+    tablesState.lastSignature = signature;
+    tablesState.index = 0;
+    tablesState.correct = 0;
+    tablesState.answered = 0;
+    tablesState.remaining = TABLE_DURATION;
+    tablesState.running = true;
+    tablesState.endAt = Date.now() + TABLE_DURATION * 1000;
+    $("tables-intro").hidden = true;
+    $("tables-result").hidden = true;
+    $("tables-play").hidden = false;
+    $("tables-time").textContent = "1:00";
+    $("tables-time").classList.remove("urgent");
+    renderTableQuestion();
+    tablesState.timer = window.setInterval(updateTablesTimer, 250);
+  }
+
+  function answerTable(skip) {
+    if (!tablesState.running) return;
+    const input = $("tables-answer");
+    const value = input.value.trim();
+    if (!skip && !/^\d+$/.test(value)) {
+      input.focus();
+      return;
+    }
+    if (!skip && Number(value) === tablesState.questions[tablesState.index].answer) tablesState.correct += 1;
+    tablesState.answered += 1;
+    tablesState.index += 1;
+    if (tablesState.index >= TABLE_TOTAL) finishTables();
+    else renderTableQuestion();
+  }
+
+  function finishTables() {
+    if (!tablesState.running) return;
+    tablesState.running = false;
+    window.clearInterval(tablesState.timer);
+    tablesState.timer = null;
+    const previousBest = read("tables-best", null);
+    const best = Math.max(previousBest === null ? 0 : previousBest, tablesState.correct);
+    write("tables-best", best);
+    $("tables-play").hidden = true;
+    $("tables-result").hidden = false;
+    $("tables-result-title").textContent = `${tablesState.correct} bonne${tablesState.correct > 1 ? "s" : ""} réponse${tablesState.correct > 1 ? "s" : ""} sur ${TABLE_TOTAL}`;
+    const unfinished = TABLE_TOTAL - tablesState.answered;
+    $("tables-result-message").textContent = unfinished ? `Le temps est écoulé. Tu as répondu à ${tablesState.answered} calcul${tablesState.answered > 1 ? "s" : ""} ; ${unfinished} restaient à voir.` : "Tu as parcouru toute la série avant la fin de la minute.";
+    $("tables-result-best").textContent = previousBest === null || tablesState.correct > previousBest ? `Nouveau meilleur score : ${best} / ${TABLE_TOTAL} !` : `Meilleur score : ${best} / ${TABLE_TOTAL}.`;
+    updateTablesCard();
+  }
+
+  function cancelTables() {
+    if (tablesState.timer !== null) window.clearInterval(tablesState.timer);
+    tablesState.timer = null;
+    tablesState.running = false;
+  }
+
   document.querySelectorAll("[data-subject]").forEach(button => button.addEventListener("click", () => openSubject(button.dataset.subject)));
-  document.querySelectorAll("[data-action=home]").forEach(button => button.addEventListener("click", () => { updateHome(); show("home"); }));
+  document.querySelectorAll("[data-action=home]").forEach(button => button.addEventListener("click", () => { cancelTables(); updateHome(); show("home"); }));
+  $("tables-card").addEventListener("click", openTables);
+  $("start-tables").addEventListener("click", startTables);
+  $("retry-tables").addEventListener("click", startTables);
+  $("tables-form").addEventListener("submit", event => { event.preventDefault(); answerTable(false); });
+  $("skip-table").addEventListener("click", () => answerTable(true));
+  document.addEventListener("click", event => {
+    if (event.target.closest(".gloutons-link")) sessionStorage.setItem("axelle-game-pass", "ready");
+  });
   $("start-quiz").addEventListener("click", startQuiz);
   $("back-to-lesson").addEventListener("click", () => { renderLessons(); show("lesson"); });
   $("next-question").addEventListener("click", nextQuestion);
@@ -337,5 +501,6 @@
   $("day-intro").textContent = data.intro;
   $("day-icon").textContent = data.icon;
   $("day-home").textContent = `Jour ${data.day} · ${data.shortTitle}`;
+  window.AXELLE_TABLES = {generateQuestions: generateTableQuestions, getState: () => ({...tablesState, questions: tablesState.questions.map(question => ({...question}))})};
   updateHome();
 })();
