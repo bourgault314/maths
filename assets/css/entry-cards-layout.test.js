@@ -70,3 +70,14 @@ test("l'accueil mobile remplit la hauteur sûre sans changer sa grille", () => {
   assert.match(mobileRule, /\.scene-item-recherches\s*\{[\s\S]*?left:\s*-8%;[\s\S]*?scale\(0\.92\)/);
   assert.match(homeCss, /grid-template-columns:\s*repeat\(4,/);
 });
+
+test("la rosace de géométrie reste dans sa zone sur mobile", () => {
+  assert.match(
+    catalogueCss,
+    /\[data-domain-card="geometrie"\] \.domain-card-icon\s*\{\s*width:\s*62px;\s*height:\s*52px;\s*overflow:\s*hidden;/
+  );
+  assert.match(
+    catalogueCss,
+    /\[data-domain-card="geometrie"\] \.domain-card-icon svg\s*\{\s*width:\s*52px;\s*height:\s*52px;\s*max-width:\s*100%;\s*max-height:\s*100%;\s*transform:\s*none;/
+  );
+});
