@@ -71,6 +71,13 @@ test("l'accueil mobile remplit la hauteur sûre sans changer sa grille", () => {
   assert.match(homeCss, /grid-template-columns:\s*repeat\(4,/);
 });
 
+test("la rosace de géométrie est réduite et centrée sur ordinateur", () => {
+  assert.match(
+    catalogueCss,
+    /\[data-domain-card="geometrie"\] \.domain-card-icon svg\s*\{\s*width:\s*calc\(100% - 2px\);\s*height:\s*auto;\s*aspect-ratio:\s*1;\s*display:\s*block;\s*transform:\s*none;/
+  );
+});
+
 test("la rosace de géométrie reste dans sa zone sur mobile", () => {
   assert.match(
     catalogueCss,
