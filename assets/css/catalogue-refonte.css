@@ -846,7 +846,7 @@ select { cursor: pointer; }
   height: auto;
   aspect-ratio: 1;
   display: block;
-  transform: none;
+  transform: translateY(-5px);
 }
 [data-domain-card="donnees"] .domain-card-icon {
   width: 68px;
