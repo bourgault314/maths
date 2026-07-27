@@ -270,6 +270,7 @@
       <option value="mosaiqueOblique">8. Mosaïque oblique (6 pièces)</option>
       <option value="moulinIsocele">9. Moulin isocèle (4 pièces)</option>
       <option value="mosaiqueSept">10. Puzzle de Brest (7 pièces)</option>
+      <option value="liuHuiSept">11. Liu Hui — 2 + 5 (7 pièces)</option>
     </select>
     </div>
 
@@ -647,6 +648,18 @@
       blueTri:[[1.6666666667,1.6666666667],[0.8666666667,1.0666666667],[0.4166666667,1.6666666667]],
       redTrap:[[0.6,0.8666666667],[0,1.6666666667],[0.4166666667,1.6666666667],[0.8666666667,1.0666666667]],
       redSquare:[[1.0666666667,0.8],[0.8666666667,1.0666666667],[0.6,0.8666666667],[0.8,0.6]]
+    },
+    // Reconstruction possible du diagramme perdu de Liu Hui. Pour a:b=3:5,
+    // les cinq pièces bleues de b² et les deux triangles rouges de a²
+    // remplissent exactement c². Les coordonnées sont normalisées avec a=1.
+    liuHuiSept: {
+      bLargeTop:[[0,0],[0,1.9436506316],[0.8574929257,1.4291548762]],
+      bLargeRight:[[1.0861577059,0.5144957554],[1.9436506316,1.9436506316],[1.9436506316,0]],
+      bWedgeTop:[[0,0],[1.3719886811,0.3429971703],[1.9436506316,0]],
+      bWedgeRight:[[0,1.9436506316],[0.5716619505,1.6006534613],[1.9436506316,1.9436506316]],
+      bSquare:[[0.5144957554,0.8574929257],[0.8574929257,1.4291548762],[1.4291548762,1.0861577059],[1.0861577059,0.5144957554]],
+      aTriangleTop:[[0,0],[0.5144957554,0.8574929257],[1.3719886811,0.3429971703]],
+      aTriangleBottom:[[0.5716619505,1.6006534613],[1.4291548762,1.0861577059],[1.9436506316,1.9436506316]]
     },
     leitzmann: {
       bLeft:[[2.2360679775,2.2360679775],[1.3416407865,0.4472135955],[0.7453559925,2.2360679775]],
@@ -1082,6 +1095,29 @@
       }
     },
 
+    // Reconstruction moderne possible du diagramme aujourd'hui perdu de
+    // Liu Hui : b² est découpé en cinq pièces et a² selon sa diagonale.
+    // Le découpage fonctionne pour a<b ; ici a:b=3:5, comme sur le document.
+    liuHuiSept: {
+      name: "Liu Hui — 2 + 5",
+      ratio: 3/5,
+      generate: (Ax, Ay, b, ratio) => {
+        const a=b*ratio;
+        const d=b-a;
+        const top=(x,y)=>({x:Ax+x,y:Ay-b+y});
+        const left=(x,y)=>({x:Ax-a+x,y:Ay+y});
+        return [
+          {key:"bLargeTop",fill:COLORS.blue,points:[[0,0],[b,0],[0,a]].map(([x,y])=>top(x,y))},
+          {key:"bLargeRight",fill:COLORS.blue,points:[[b,0],[b,b],[d,b]].map(([x,y])=>top(x,y))},
+          {key:"bWedgeTop",fill:COLORS.blue,points:[[b,0],[0,a],[d,a]].map(([x,y])=>top(x,y))},
+          {key:"bWedgeRight",fill:COLORS.blue,points:[[b,0],[d,a],[d,b]].map(([x,y])=>top(x,y))},
+          {key:"bSquare",fill:COLORS.blue,points:[[0,a],[d,a],[d,b],[0,b]].map(([x,y])=>top(x,y))},
+          {key:"aTriangleTop",fill:COLORS.red,points:[[0,0],[a,0],[a,a]].map(([x,y])=>left(x,y))},
+          {key:"aTriangleBottom",fill:COLORS.red,points:[[0,0],[a,a],[0,a]].map(([x,y])=>left(x,y))}
+        ];
+      }
+    },
+
     // Liu Hui (construction stable inspirée du document fourni)
     // 1 droite passant par A parallèle à l'hypoténuse BC
     // 1 droite passant par TL perpendiculaire à BC
@@ -1298,6 +1334,14 @@
       html: `
         <p><strong>Objectif :</strong> recomposer <em>c²</em> avec <strong>7 pièces</strong> pour le triangle rectangle <strong>3-4-5</strong>.</p>
         <p class="muted">Les 2 pièces bleues remplissent <em>a²</em> et les 5 rouges <em>b²</em>. Dans <em>c²</em>, reconstitue quatre triangles rectangles autour du petit carré central.</p>
+      `
+    },
+    liuHuiSept: {
+      title: "Puzzle 11 — Liu Hui, 2 + 5",
+      html: `
+        <p><strong>Objectif :</strong> réunir les <strong>2 triangles rouges</strong> de <em>a²</em> et les <strong>5 pièces bleues</strong> de <em>b²</em> pour reconstituer <em>c²</em>.</p>
+        <p class="muted">Le triangle rectangle est non isocèle, avec le rapport <strong>3:5</strong>. Le petit carré bleu a pour côté la différence <em>b − a</em>.</p>
+        <p class="muted">Le dessin original de Liu Hui n’a pas été conservé : cette figure est une reconstruction moderne possible de sa méthode de découpage et de recomposition.</p>
       `
     },
     leitzmann: {
@@ -2208,6 +2252,12 @@
   // Énoncé (impression) — reprise fidèle de l’énoncé d’origine, mais adaptable au puzzle sélectionné
   function buildEnonceHTML() {
   const puzzleLabel = PUZZLES[state.puzzle]?.name || "Puzzle";
+  const puzzleHint = state.puzzle === "liuHuiSept"
+    ? `<p class="hint"><b>Repère :</b> le triangle rectangle est non isocèle, dans le rapport 3:5. Les 2 pièces rouges viennent de <i>a²</i> et les 5 bleues de <i>b²</i>. Cette figure est une reconstruction moderne possible de la méthode décrite par Liu Hui.</p>`
+    : `<p class="hint">Conseil : commence par placer les plus grandes pièces, puis complète avec les plus petites.</p>`;
+  const bilanQuestion = state.puzzle === "liuHuiSept"
+    ? `D’où viennent les pièces rouges et les pièces bleues ? Explique pourquoi leur réunion montre que l’aire de <i>c²</i> est égale à la somme des aires de <i>a²</i> et de <i>b²</i>.`
+    : `Quels liens y a-t-il entre l'aire du petit carré, du moyen carré et du grand carré ? Explique avec tes mots.`;
   const svgPage1 = buildPage1SVG();
   const svgEmptyDouble = buildEmptyDoubleSVG();
   const svgApplication = buildApplicationMoulinSVG(5, 12);
@@ -2285,14 +2335,14 @@
   <section class="page">
     <h1>Moulin de Pythagore – ${escapeHTML(puzzleLabel)}</h1>
     <p><b>Consigne :</b> Découpe les pièces du moulin <b>1</b>. Sans découper le moulin <b>2</b>, reconstitue le grand carré blanc du moulin 2 à l'aide des pièces découpées.</p>
-    <p class="hint">Conseil : commence par placer les plus grandes pièces, puis complète avec les plus petites.</p>
+    ${puzzleHint}
     <div class="figureWrap">${svgPage1}</div>
   </section>
 
   <!-- PAGE 2 -->
   <section class="page">
     <h2>Bilan</h2>
-    <p><b>Question :</b> Quels liens y a-t-il entre l'aire du petit carré, du moyen carré et du grand carré ? Explique avec tes mots.</p>
+    <p><b>Question :</b> ${bilanQuestion}</p>
     <div class="bilanBox"></div>
   </section>
 

@@ -64,6 +64,12 @@ const sources={
     redTrap:[[0,-1/3],[1,-1/3],[3/4,0],[0,0]],redSquare:[[1,-1/3],[4/3,-1/3],[4/3,0],[1,0]],
     redSmall:[[3/4,0],[1,-1/3],[1,0]],blueTrap:[[-1,0],[0,0],[-3/4,1],[-1,1]],blueTri:[[0,0],[0,1],[-3/4,1]]
   },
+  liuHuiSept:{
+    bLargeTop:[[0,0],[5/3,0],[0,1]],bLargeRight:[[5/3,0],[5/3,5/3],[2/3,5/3]],
+    bWedgeTop:[[5/3,0],[0,1],[2/3,1]],bWedgeRight:[[5/3,0],[2/3,1],[2/3,5/3]],
+    bSquare:[[0,1],[2/3,1],[2/3,5/3],[0,5/3]],
+    aTriangleTop:[[0,0],[1,0],[1,1]],aTriangleBottom:[[0,0],[1,1],[0,1]]
+  },
   leitzmann:{
     bTop:[[0,-2],[2,-2],[4/3,-4/3]],bLeft:[[0,-2],[0,0],[4/3,-4/3]],bBottom:[[0,0],[2,0],[4/3,-4/3]],bRight:[[2,0],[2,-2],[4/3,-4/3]],
     aTop:[[-1,0],[0,0],[-1/3,1/3]],aLeft:[[-1,0],[-1,1],[-1/3,1/3]],aBottom:[[-1,1],[0,1],[-1/3,1/3]],aRight:[[0,1],[0,0],[-1/3,1/3]]
@@ -81,12 +87,14 @@ const expectedKeys={
   mosaiqueOblique:['a1','a2','b1','b2','b3','b4'],
   moulinIsocele:['a1','a2','b1','b2'],
   mosaiqueSept:['blueTrap','blueTri','redLeft','redSmall','redSquare','redTop','redTrap'],
+  liuHuiSept:['aTriangleBottom','aTriangleTop','bLargeRight','bLargeTop','bSquare','bWedgeRight','bWedgeTop'],
   leitzmann:['aBottom','aLeft','aRight','aTop','bBottom','bLeft','bRight','bTop'],
   quatreIdentiques:['aSq','q1','q2','q3','q4']
 };
 const geometry={
   perigal:{side:sqrt5,area:5},lapeyronnie:{side:sqrt5,area:5},mosaiqueOblique:{side:sqrt5,area:5},leitzmann:{side:sqrt5,area:5},quatreIdentiques:{side:sqrt5,area:5},
-  sixEquilibre:{side:sqrt2,area:2},tangram:{side:sqrt2,area:2},moulinIsocele:{side:sqrt2,area:2},mosaiqueSept:{side:5/3,area:25/9}
+  sixEquilibre:{side:sqrt2,area:2},tangram:{side:sqrt2,area:2},moulinIsocele:{side:sqrt2,area:2},mosaiqueSept:{side:5/3,area:25/9},
+  liuHuiSept:{side:Math.sqrt(34)/3,area:34/9}
 };
 
 for(const [puzzle,keys] of Object.entries(expectedKeys)){
@@ -111,7 +119,8 @@ if(!html.includes('${drawMoulinStatic(L, true)}\n  ${drawMoulinStatic(R, true)}'
 if(html.includes('id="showSolution"')) fail('La solution ne doit pas être accessible depuis l’interface élève.');
 if(!html.includes('<option value="perigal" selected>')) fail('Périgal doit être le puzzle ouvert par défaut.');
 if(!html.includes('<option value="lapeyronnie">5. Lapeyronnie (5 pièces)</option>') || html.includes('IREM — 5 pièces')) fail('Le puzzle de Lapeyronnie doit porter un nom explicite.');
-if(!html.includes('<option value="sixEquilibre">') || !html.includes('<option value="tangram">') || !html.includes('<option value="mosaiqueOblique">') || !html.includes('<option value="moulinIsocele">') || !html.includes('<option value="mosaiqueSept">10. Puzzle de Brest (7 pièces)</option>')) fail('Les découpages ajoutés et restaurés doivent tous être proposés.');
+if(!html.includes('<option value="sixEquilibre">') || !html.includes('<option value="tangram">') || !html.includes('<option value="mosaiqueOblique">') || !html.includes('<option value="moulinIsocele">') || !html.includes('<option value="mosaiqueSept">10. Puzzle de Brest (7 pièces)</option>') || !html.includes('<option value="liuHuiSept">11. Liu Hui — 2 + 5 (7 pièces)</option>')) fail('Les découpages ajoutés et restaurés doivent tous être proposés.');
+if(!html.includes('ratio: 3/5,') || !html.includes('Le petit carré bleu a pour côté la différence <em>b − a</em>.')) fail('La construction 3:5 de Liu Hui et son repère pédagogique doivent rester explicites.');
 if(!html.includes('href="../index.html?domain=geometrie&amp;notion=pythagore"') || !html.includes('Retour au menu Pythagore')) fail('La flèche du Moulin doit revenir au menu Pythagore.');
 if(!html.includes('<button id="enonce">Fiche</button>') || !html.includes('class="screenActions"><button type="button" onclick="window.print()">Imprimer</button>')) fail('La fiche doit être consultable avant impression.');
 if(html.includes('<body onload="window.print()">')) fail('La fiche ne doit pas déclencher l’impression avant son aperçu.');
@@ -153,4 +162,4 @@ if(!pytha.includes('.stage:not(.notStarted):not(:fullscreen) .instructionZone:em
 if(!pytha.includes('class="menuPageHome" href="index.html"') || !pytha.includes('Retour au catalogue des outils')) fail('Le menu PythaBarre doit proposer un retour explicite au catalogue Outils.');
 if(!pytha.includes('class="toolBtn commandToolBtn undoToolBtn"') || !pytha.includes('class="toolBtn commandToolBtn restartToolBtn"')) fail('Annuler et Recommencer doivent utiliser les commandes modernes communes.');
 
-if(!process.exitCode) console.log('OK — 10 puzzles, 9 pavages tabulés, snaps exacts, célébration et règles mobiles contrôlés.');
+if(!process.exitCode) console.log('OK — 11 puzzles, 10 pavages tabulés, snaps exacts, célébration et règles mobiles contrôlés.');
