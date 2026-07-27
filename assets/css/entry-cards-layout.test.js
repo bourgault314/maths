@@ -74,7 +74,7 @@ test("l'accueil mobile remplit la hauteur sûre sans changer sa grille", () => {
 test("la rosace de géométrie est réduite et centrée sur ordinateur", () => {
   assert.match(
     catalogueCss,
-    /\[data-domain-card="geometrie"\] \.domain-card-icon svg\s*\{\s*width:\s*calc\(100% - 2px\);\s*height:\s*auto;\s*aspect-ratio:\s*1;\s*display:\s*block;\s*transform:\s*none;/
+    /\[data-domain-card="geometrie"\] \.domain-card-icon svg\s*\{\s*width:\s*calc\(100% - 2px\);\s*height:\s*auto;\s*aspect-ratio:\s*1;\s*display:\s*block;\s*transform:\s*translateY\(-5px\);/
   );
 });
 
