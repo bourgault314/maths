@@ -98,10 +98,13 @@
       const refresh=()=>{step=grid.clientWidth/columnCount;apply(shift,false);};
       const requestFrame=typeof globalThis.requestAnimationFrame==='function'?globalThis.requestAnimationFrame.bind(globalThis):(callback=>callback());
       requestFrame(()=>{refresh();if(autoShift)requestFrame(()=>apply(targetShift,true));});
-      bar.addEventListener('pointerdown',event=>{event.preventDefault();clearTapSelection();refresh();startX=event.clientX;startPx=currentPx;bar.setPointerCapture(event.pointerId);});
-      bar.addEventListener('pointermove',event=>{if(!bar.hasPointerCapture(event.pointerId))return;const px=clamp(startPx+(event.clientX-startX),-3*step,3*step),next=clamp(Math.round(-px/step),-3,3);if(next!==shift){shift=next;renderDigits(shift);bar.setAttribute('aria-valuenow',String(shift));}setTransforms(px,false);});
-      const end=event=>{if(!bar.hasPointerCapture(event.pointerId))return;bar.releasePointerCapture(event.pointerId);apply(shift,true);};
-      bar.addEventListener('pointerup',end);bar.addEventListener('pointercancel',end);
+      bar.addEventListener('pointerdown',event=>{
+        if(event.button>0)return;
+        event.preventDefault();clearTapSelection();refresh();startX=event.clientX;startPx=currentPx;
+        const move=moveEvent=>{const px=clamp(startPx+(moveEvent.clientX-startX),-3*step,3*step),next=clamp(Math.round(-px/step),-3,3);if(next!==shift){shift=next;renderDigits(shift);bar.setAttribute('aria-valuenow',String(shift));}setTransforms(px,false);};
+        const finish=()=>apply(shift,true);
+        globalThis.beginTrackedPointerDrag(bar,event,{move,end:finish,cancel:finish});
+      });
       bar.addEventListener('keydown',event=>{if(event.key!=='ArrowLeft'&&event.key!=='ArrowRight')return;event.preventDefault();refresh();apply(shift+(event.key==='ArrowLeft'?1:-1),true);});
       if(source){
         source.addEventListener('click',toggleTapSelection);
