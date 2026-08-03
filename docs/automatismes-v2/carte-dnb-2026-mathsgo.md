@@ -307,6 +307,5 @@ le parcours DNB ; il ne modifie pas la liste officielle.
 La fiche pédagogique, le mini-cours, les six familles et l'ordre de fabrication
 interne ont été validés par Gwenaël le 19 juillet 2026. La prochaine production
 est la première tranche technique `NC-01/F2` : contrats minimaux, générateur
-seedé, tests, lecteur interactif et projection. Aucune autre micro-notion ne
+seedé, tests, lecteur commun pour l'entraînement et le mode classe. Aucune autre micro-notion ne
 s'ouvre avant la validation finale de `NC-01`.
-

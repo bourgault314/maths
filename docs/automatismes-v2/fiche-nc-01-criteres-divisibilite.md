@@ -2,7 +2,8 @@
 
 ## Statut
 
-**Contenu validé et fabrication technique autorisée par Gwenaël le 19 juillet 2026.**
+**Questions, aides et corrections validées, fabrication technique autorisée par
+Gwenaël le 19 juillet 2026. Mini-cours définitif reporté le 20 juillet 2026.**
 
 Cette fiche fixe le contenu avant toute programmation. La validation pédagogique et l'autorisation d'ouvrir la fabrication technique sont deux décisions distinctes ; elles sont désormais toutes les deux acquises.
 
@@ -175,6 +176,10 @@ On évalue ainsi la divisibilité, pas une addition de chiffres isolée de son b
 
 ## Cours associé
 
+> **Statut actuel :** ces quatre cartes sont une base pédagogique à retravailler.
+> Elles ne doivent pas être affichées dans le lecteur avant une nouvelle
+> validation explicite de Gwenaël.
+
 Le mini-cours commun à `NC-01` comporte quatre cartes :
 
 1. le sens de « divisible par » et du partage sans reste ;
@@ -277,14 +282,16 @@ Les proportions seront fixées dans le futur contrat du générateur. Elles emp�
 
 ## Deux présentations d’un même contenu
 
-### Projection / diaporama
+### Mode « Au tableau »
 
 - question lisible de loin ;
 - aucune réponse élève cliquable ;
 - l’enseignant peut révéler l’aide, la réponse puis la correction ;
-- les grilles, phrases et choix conservent la même structure mathématique qu’en interactif.
+- les grilles, phrases et choix conservent la même structure mathématique qu'en entraînement ;
+- le professeur peut saisir et vérifier une réponse collective ou révéler
+  directement la réponse attendue.
 
-### Mode interactif
+### Mode « S'entraîner »
 
 - téléphone, tablette, ordinateur ou TNI ;
 - avant la première question, écran générique « Prêt à commencer » résumant le nombre de notions, le nombre de questions et la disponibilité de l’aide ;
@@ -308,7 +315,7 @@ La progression des questions, le nombre de réussites et un futur temps restant 
 
 Cet ordre est technique ; il n’impose aucune progression à l’élève.
 
-1. **F2 — Tous les diviseurs proposés** : première tranche verticale complète avec aide, correction, projection et interactif.
+1. **F2 — Tous les diviseurs proposés** : première tranche verticale complète avec aide, correction, entraînement et mode classe.
 2. **F1 — Critère précis** : ajout du vrai/faux ou oui/non simple.
 3. **F3 — Plusieurs nombres** : ajout de la sélection dans une grille.
 4. **F4 — Affirmation et justification** : ajout des raisonnements, du vrai/faux et de l’appui sur une justification.
@@ -333,7 +340,10 @@ Chaque question devra pouvoir être classée par :
 - type de réponse et réponse attendue canonique ;
 - état de l’aide.
 
-Le diaporama ne crée aucune tentative élève. Le mode interactif pourra plus tard transmettre une tentative structurée à un serveur distinct, sans changer le contenu mathématique. Aucun serveur ni stockage de réponses n’est construit dans cette phase.
+Le mode classe ne crée aucune tentative élève. Le mode entraînement pourra plus
+tard transmettre une tentative structurée à un serveur distinct, sans changer
+le contenu mathématique. Aucun serveur ni stockage de réponses n'est construit
+dans cette phase.
 
 ## Critères de validation pédagogique
 
@@ -347,7 +357,11 @@ La fiche pourra devenir la référence de `NC-01` si Gwenaël valide expliciteme
 6. l’absence totale de niveaux et de paliers ;
 7. l’ordre de fabrication commençant par F2.
 
-La validation pédagogique et l'autorisation de fabrication étant acquises, le chantier technique ouvre la première tranche verticale F2. Elle comprend le générateur seedé, les tests, le contenu structuré, la projection, l'interactif, l'aide, la correction et les aperçus, mais aucune autre famille avant présentation de la précédente.
+La validation pédagogique et l'autorisation de fabrication étant acquises, le
+chantier technique ouvre la première tranche verticale F2. Elle comprend le
+générateur seedé, les tests, le contenu structuré, l'entraînement, le mode
+classe, l'aide, la correction et les aperçus, mais aucune autre famille avant
+présentation de la précédente.
 
 ## Provenance et indépendance
 
@@ -356,4 +370,3 @@ La validation pédagogique et l'autorisation de fabrication étant acquises, le 
 - contenu et formulations reconstruits pour maths&go ;
 - aucune formulation, valeur, liste de distracteurs, organisation, donnée ou code de l’ancienne banque ou de la bêta n’est repris ;
 - les erreurs d’élèves sont des mécanismes pédagogiques à valider, jamais une copie de distracteurs historiques.
-

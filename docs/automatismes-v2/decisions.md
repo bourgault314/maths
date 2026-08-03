@@ -126,14 +126,14 @@ peut faire observer le chiffre des unités ou construire la somme des chiffres,
 mais ne calcule ni ne conclut à la place de l'élève. Le cours peut montrer la
 méthode complète ; la correction explique chaque critère.
 
-### D-018 — Un contenu alimente l'interactif et la projection
+### D-018 — Un contenu alimente l'entraînement et le mode classe
 
 Une question instanciée porte le contenu mathématique, l'aide et la correction,
 sans coordonnée d'écran. Le lecteur choisit la présentation téléphone,
-tablette, ordinateur, TNI ou projection. Une saisie numérique utilise le clavier
-maths&go ; le clavier système mobile ne s'ouvre pas. Une fraction utilisera deux
-champs distincts et une barre construite par le lecteur, mais ce contrat attend
-la micro-notion concernée.
+tablette, ordinateur ou TNI. Le même rendu sert à « S'entraîner » et à « Au
+tableau ». Une saisie numérique utilise le clavier maths&go ; le clavier système
+mobile ne s'ouvre pas. Une fraction utilisera deux champs distincts et une barre
+construite par le lecteur, mais ce contrat attend la micro-notion concernée.
 
 ### D-020 — GE-12 reste simple et utilise un choix unique
 
@@ -188,3 +188,31 @@ explicite, jamais par un branchement implicite vers une notion par défaut. Une
 interaction réservée aux chiffres ou aux solides est bloquée pour les autres
 familles. Cette architecture précède toute nouvelle micro-notion et ne modifie
 pas le contenu pédagogique déjà validé.
+
+### D-025 — Le diaporama devient une option du mode « Au tableau »
+
+Gwenaël décide le 20 juillet 2026 que le diaporama ne constitue plus un produit
+ni un parcours séparé. Le lecteur propose deux contextes visibles :
+« S'entraîner » et « Au tableau ». Ils partagent le même moteur, les mêmes
+questions, figures, aides, cours et corrections.
+
+Dans « Au tableau », le professeur peut sélectionner et vérifier une réponse
+collective, la révéler directement, ouvrir l'aide ou la correction et avancer
+manuellement. Cette vérification ne crée aucune trace d'élève et n'alimente
+aucun score individuel. L'avancement automatique et le chronomètre seront plus
+tard des réglages de ce même mode, jamais un troisième lecteur.
+
+Les anciens paramètres d'URL `interactif`, `diaporama` et `projection` restent
+acceptés comme alias pour ne casser aucun lien. Les contrats ne conservent que
+les valeurs canoniques `entrainement` et `classe`. Le futur mode en direct avec
+les téléphones des élèves reste un chantier distinct et n'est pas implémenté
+par anticipation.
+
+### D-026 — Le mini-cours définitif de NC-01 attend sa propre validation
+
+Les questions F2, leurs aides et leurs corrections restent validées. En
+revanche, Gwenaël décide le 20 juillet 2026 de reprendre plus tard le véritable
+mini-cours de `NC-01` et son schéma. Les quatre cartes déjà décrites constituent
+une base de travail, pas un contenu à exposer automatiquement aux élèves. Le
+lecteur réserve l'emplacement « Cours », mais aucun cours provisoire de `NC-01`
+n'est rendu tant que cette révision pédagogique n'a pas été validée.

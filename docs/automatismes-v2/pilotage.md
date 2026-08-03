@@ -151,7 +151,7 @@ Ces contraintes ne valent que si l'on sait où elles s'appliquent. La liste
 suivante est la définition technique de V2, et elle est vérifiée à chaque
 `npm run verifier` par `scripts/validate-automatismes-v2.mjs` :
 
-- `automatismes-v2` — lecteur commun neuf, interactif et diaporama ;
+- `automatismes-v2` — lecteur commun neuf pour « S'entraîner » et « Au tableau » ;
 - `packages/contrats/src` — contrats de question et de gabarit ;
 - `packages/moteur-exercices/src` — générateur pseudo-aléatoire seedé et
   registre de générateurs ;

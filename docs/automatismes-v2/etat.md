@@ -6,8 +6,8 @@
 
 - Dépôt : `bourgault314/maths`.
 - Branche de référence : `main`.
-- Commit de référence vérifié sur GitHub :
-  `52b6ba34cdfdd62ad77da4b2c66702beecc05525`.
+- Commit de référence de la branche courante :
+  `49611e1790686f386e2629e63f3a62422a951682`.
 - La PR #170 est fusionnée : la carte DNB, la fiche validée de `NC-01`, les
   storyboards et les décisions D-014 à D-019 sont la mémoire officielle du
   chantier.
@@ -36,8 +36,9 @@
 
 - La bêta continue de fonctionner séparément et reste gelée hors correction
   critique.
-- Le lecteur neuf expose en interactif et en diaporama `NC-01/F2`, `GE-12/F1`,
-  `PG-22`, `PG-23` et `PG-24`.
+- Le lecteur neuf expose `NC-01/F2`, `GE-12/F1`, `PG-22`, `PG-23`
+  et `PG-24` dans « S'entraîner » et « Au tableau », avec un moteur commun
+  et le registre unique de notions.
 - La carte du DNB est établie : **37 cibles officielles distinctes**,
   **38 cibles normalisées** et **88 micro-notions**.
 - Une séance n'active toujours qu'une seule notion. Les cinq notions déjà
@@ -45,9 +46,10 @@
 - Le critère par 10 est un complément maths&go validé. Il reste proposé dans le
   parcours DNB, tout en étant distingué des quatre critères officiels dans les
   données.
-- La fiche `NC-01`, le mini-cours, les six familles de questions, les aides,
-  les corrections, les storyboards et la séparation séance/question/trace ont
-  été validés par Gwenaël le 19 juillet 2026.
+- La fiche `NC-01`, les six familles de questions, les aides, les corrections,
+  les storyboards et la séparation séance/question/trace ont été validés par
+  Gwenaël le 19 juillet 2026. Le mini-cours et son schéma doivent être repris
+  puis validés séparément avant affichage, décision du 20 juillet 2026.
 - Le parcours DNB actuel ne possède ni niveaux ni paliers.
 
 ## Documents de référence fusionnés
@@ -122,10 +124,10 @@ La PR #240 a intégré le lot construit sur `feat/v2-solides-volumes-dnb` :
 Le lecteur est construit à neuf dans `automatismes-v2`, sans reprendre
 l'interface de la bêta :
 
-- le même moteur d'état alimente l'interactif et le diaporama ;
+- le même moteur d'état alimente l'entraînement et le mode classe ;
 - l'écran de départ reste générique et récapitule la sélection, le nombre de
   questions et l'état de l'aide ;
-- l'interactif affiche une grille de six choix, conserve la sélection après
+- l'entraînement affiche une grille de six choix, conserve la sélection après
   validation, crée une trace conforme et calcule le score depuis les traces ;
 - « Aucun » est exclusif et aucune bonne réponse n'est révélée avant
   l'ouverture volontaire de la correction ;
@@ -134,9 +136,12 @@ l'interface de la bêta :
 - la correction distingue visuellement le chiffre des unités, les verdicts
   pour 2, 5 et 10, la somme des chiffres, les verdicts pour 3 et 9, puis la
   conclusion, tout en conservant les explications validées ;
-- le diaporama ne crée ni trace ni score et possède ses commandes enseignant
-  pour l'aide, la réponse, la correction et le passage à la suite ; à partir
-  de 900 px, ses cinq propositions occupent une seule ligne lisible à distance ;
+- le mode « Au tableau » ne crée ni trace d'élève ni score individuel. Il permet
+  de saisir et vérifier une réponse collective ou de révéler directement la
+  réponse, puis d'ouvrir l'aide ou la correction et de passer à la suite ;
+- les anciens liens `mode=interactif`, `mode=diaporama` et `mode=projection`
+  restent compatibles, mais les valeurs canoniques sont `entrainement` et
+  `classe` ;
 - en projection, la question et la barre enseignant restent fixes dans la
   hauteur de l'écran : seul le panneau latéral peut défiler ;
 - à 375 px, il n'existe aucun débordement horizontal et toutes les cibles
@@ -148,24 +153,33 @@ l'interface de la bêta :
 - Gwenaël a validé l'affichage et demandé sa publication le 19 juillet 2026 ;
   la PR #191 livre cette première tranche verticale sur le site public.
 
+## Lot publié en PR brouillon : « Au tableau » remplace le diaporama séparé
+
+La PR brouillon #252, sur la branche
+`agent/automatismes-v2-mode-classe`, applique la décision D-025 :
+
+- les deux contextes canoniques sont `entrainement` et `classe` ;
+- les anciens paramètres d'URL sont convertis sans casser les liens existants ;
+- au tableau, le professeur peut sélectionner puis vérifier une réponse
+  collective, ou révéler directement la réponse attendue ;
+- cette vérification ne produit aucune trace d'élève et aucun score individuel ;
+- les libellés visibles parlent de « S'entraîner » et « Au tableau », jamais
+  d'un deuxième produit nommé « diaporama » ;
+- le rythme automatique et le chronomètre restent des réglages futurs du mode
+  classe ; ils ne sont pas construits dans ce lot ;
+- les contrôles visuels couvrent 19 écrans à 390 × 844, 1 280 × 720 et
+  1 920 × 1 080, sans débordement horizontal ni cible inférieure à 44 px ;
+- `npm run verifier` réussit **949 tests sur 949**, localement et dans
+  GitHub Actions.
+
 ## Prochaine étape du lot courant
 
-Le lot P0 est isolé sur `agent/automatismes-v2-lecteur-generique` :
-
-- un registre unique décrit désormais l'identifiant, le nom, le gabarit, le
-  rendu et les capacités de chaque notion ;
-- le moteur d'état n'importe plus directement les cinq générateurs ;
-- l'application choisit question, aide, correction et cours par type de rendu,
-  sans liste parallèle d'identifiants ;
-- les interactions propres aux chiffres ou aux solides sont refusées aux
-  autres familles ;
-- le lot réussit **947 tests sur 947** et `npm run verifier` ;
-- 24 captures comparées octet par octet à `origin/main` sont identiques, sans
-  débordement horizontal ni cible tactile inférieure à 44 px.
-
-Ce sous-lot n'est ni publié ni fusionné. Après validation, la suite de P0 doit
-séparer les rendus du fichier `app.js`, puis construire les trois dispositions
-téléphone, ordinateur et TNI sans commencer une nouvelle notion.
+Le lot courant conserve le registre unique de D-024 et transforme les deux
+contextes visibles en « S'entraîner » et « Au tableau ». Le mode classe accepte
+une réponse collective sans créer de trace d'élève, ou permet de révéler la
+réponse avant la correction. La PR #252 reste en brouillon : un essai réel sur
+téléphone est requis avant fusion. Le mini-cours définitif de `NC-01` et son
+schéma restent reportés à une validation pédagogique dédiée.
 
 ## Règle de mise à jour
 

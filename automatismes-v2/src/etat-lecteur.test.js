@@ -31,25 +31,27 @@ function etatDemarre(configuration = {}) {
 }
 
 describe("configuration du lecteur", () => {
-  it("prépare par défaut une séance interactive de dix questions", () => {
+  it("prépare par défaut un entraînement de dix questions", () => {
     const etat = creerEtatLecteur();
-    assert.equal(etat.seance.mode, "interactif");
+    assert.equal(etat.seance.mode, "entrainement");
     assert.equal(etat.seance.nombreQuestions, 10);
     assert.equal(etat.seance.etat.phase, "prete");
     assert.deepEqual(validerSeance(etat.seance), { valide: true, erreurs: [] });
   });
 
-  it("lit les réglages utiles de l'URL et accepte le mot projection", () => {
+  it("lit les réglages utiles de l'URL et convertit les anciens liens de projection", () => {
     assert.deepEqual(
       lireConfiguration("?mode=projection&aide=ouverte&questions=7&graine=classe-5e"),
       {
-        mode: "diaporama",
+        mode: "classe",
         aide: "ouverte",
         nombreQuestions: 7,
         graine: "classe-5e",
         notion: "criteres-divisibilite",
       },
     );
+    assert.equal(lireConfiguration("?mode=diaporama").mode, "classe");
+    assert.equal(lireConfiguration("?mode=interactif").mode, "entrainement");
   });
 
   it("ignore un nombre de questions invalide dans l'URL", () => {
@@ -153,7 +155,7 @@ describe("démarrage et génération", () => {
   });
 });
 
-describe("réponse interactive", () => {
+describe("réponse d'entraînement", () => {
   it("rend Aucun exclusif des autres choix", () => {
     const etat = etatDemarre();
     basculerChoix(etat, "2");
@@ -217,7 +219,7 @@ describe("réponse interactive", () => {
 });
 
 describe("enchaînement de la séance", () => {
-  it("exige une validation avant de passer à la suite en interactif", () => {
+  it("exige une validation avant de passer à la suite en entraînement", () => {
     const etat = etatDemarre();
     passerQuestionSuivante(etat);
     assert.equal(etat.seance.etat.indexQuestion, 0);
@@ -237,26 +239,33 @@ describe("enchaînement de la séance", () => {
   });
 
   it("repart sur un écran prêt avec la même configuration", () => {
-    const etat = etatDemarre({ mode: "diaporama", aide: "ouverte" });
+    const etat = etatDemarre({ mode: "classe", aide: "ouverte" });
     const nouveau = recommencer(etat);
     assert.equal(nouveau.seance.etat.phase, "prete");
-    assert.equal(nouveau.configuration.mode, "diaporama");
+    assert.equal(nouveau.configuration.mode, "classe");
     assert.equal(nouveau.configuration.aide, "ouverte");
   });
 });
 
-describe("mode diaporama", () => {
-  it("ne crée ni sélection ni trace et peut révéler la réponse", () => {
-    const etat = etatDemarre({ mode: "diaporama" });
+describe("mode Au tableau", () => {
+  it("permet de saisir et vérifier une réponse sans créer de trace d'élève", () => {
+    const etat = etatDemarre({ mode: "classe" });
     basculerChoix(etat, "2");
-    assert.deepEqual(etat.selection, []);
+    assert.deepEqual(etat.selection, ["2"]);
+    validerSelection(etat);
+    assert.notEqual(etat.validation, null);
+    assert.equal(etat.traces.length, 0);
+  });
+
+  it("peut révéler directement la réponse sans créer de trace", () => {
+    const etat = etatDemarre({ mode: "classe" });
     revelerReponse(etat);
     assert.equal(etat.reponseRevelee, true);
     assert.equal(etat.traces.length, 0);
   });
 
   it("autorise la correction et le passage direct à la question suivante", () => {
-    const etat = etatDemarre({ mode: "diaporama" });
+    const etat = etatDemarre({ mode: "classe" });
     ouvrirCorrection(etat);
     assert.equal(etat.correctionOuverte, true);
     passerQuestionSuivante(etat);

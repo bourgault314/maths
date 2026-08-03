@@ -8,6 +8,7 @@ const RESSOURCES_VERSIONNEES = new Map([
   ["automatismes-v2/index.html", ["styles.css", "app.js"]],
   ["automatismes-v2/app.js", ["etat-lecteur.js", "registre-lecteur.js", "reconnaissance.js"]],
   ["automatismes-v2/src/etat-lecteur.js", [
+    "seance.js",
     "trace-reponse.js",
     "question-v2.js",
     "registre.js",

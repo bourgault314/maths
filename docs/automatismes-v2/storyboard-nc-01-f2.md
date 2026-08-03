@@ -8,7 +8,7 @@ Ce document fixe les zones et les états de la question. Le lancement, l’en-t�
 
 ## Principes
 
-- le même contenu alimente le mode interactif et le mode projection ;
+- le même contenu alimente « S'entraîner » et « Au tableau » ;
 - le nombre à étudier reste l’élément principal ;
 - la réponse de l’élève reste visible après validation ;
 - l’aide et la correction s’ouvrent sans détruire l’état de la question ;
@@ -279,6 +279,10 @@ La moitié gauche conserve le nombre et les propositions. La moitié droite affi
 
 ## Écran du mini-cours
 
+**À reprendre avant intégration.** Ce storyboard conserve la structure envisagée,
+mais le contenu définitif et son schéma attendent une nouvelle validation de
+Gwenaël conformément à D-026.
+
 Le mini-cours utilise une carte à la fois, avec une navigation « Précédent / Suivant » et un repère « 1/4 ».
 
 Pour la première carte :
@@ -349,4 +353,3 @@ Le storyboard est prêt à être contrôlé sur sept décisions visibles :
 7. lancement, en-tête, progression, réussites et bilan portés par le storyboard commun, sans titre de séance interminable.
 
 Ces sept points sont arrêtés. La configuration de séance, la question instanciée et la trace de réponse sont décrites séparément dans la spécification papier. Le prochain chantier peut donc créer leurs contrats techniques minimaux, avant le générateur.
-

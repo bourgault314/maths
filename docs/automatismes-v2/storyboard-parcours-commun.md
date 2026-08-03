@@ -2,9 +2,10 @@
 
 ## Statut
 
-**Architecture fonctionnelle version 1, validée par Gwenaël le 19 juillet 2026.**
+**Architecture fonctionnelle version 2, révisée par Gwenaël le 20 juillet 2026.**
 
-Ce document décrit l’enveloppe commune du diaporama et du mode interactif. Il ne redessine pas la page d’accueil et ne contient aucun code.
+Ce document décrit l'enveloppe commune de « S'entraîner » et « Au tableau ».
+Il ne redessine pas la page d'accueil et ne contient aucun code.
 
 ## Pourquoi cette étape précède le JSON des questions
 
@@ -12,7 +13,8 @@ La page d’accueil choisit un contenu. Le lecteur fait vivre une séance. Une q
 
 Trois futurs ensembles de données seront donc distincts :
 
-- la **configuration de séance** : mode, sélection, nombre de questions, politique d’aide et graine ; aucun chronométrage en V1 ;
+- la **configuration de séance** : contexte, sélection, nombre de questions,
+  politique d'aide et graine ; aucun chronométrage dans cette version ;
 - la **question instanciée** : énoncé, représentation, réponse attendue, aide et correction ;
 - la **trace de réponse** : réponse réellement validée, résultat et consultation éventuelle de l’aide.
 
@@ -59,7 +61,7 @@ Règles :
 - la liste détaillée s’ouvre dans un panneau refermable et ne surcharge pas l’écran principal ;
 - le résumé montre seulement ce qui aide à décider de commencer : mode, volume et aide ; un éventuel temps viendra avec le futur mode concerné ;
 - un seul bouton principal lance la séance ;
-- en mode projection, le libellé peut devenir « Diaporama prêt » et « Démarrer le diaporama ».
+- en mode classe, le libellé devient « Prêt pour la classe ? » et « Commencer au tableau ».
 
 Cet écran sert également de sas avant le plein écran, la projection ou un futur chronomètre. Il n’est donc pas supprimé lorsque la sélection devient riche.
 
@@ -67,7 +69,7 @@ Cet écran sert également de sas avant le plein écran, la projection ou un fut
 
 Le lecteur n’affiche pas une longue liste de domaines. Il montre l’état de la séance et, dans la carte, la notion de la question courante.
 
-### Mode interactif — téléphone
+### Mode « S'entraîner » — téléphone
 
 ```text
 ┌─────────────────────────────────┐
@@ -84,14 +86,18 @@ L’en-tête comporte quatre informations seulement :
 
 1. quitter ou revenir ;
 2. position dans la séance ;
-3. nombre de réussites en mode interactif ;
+3. nombre de réussites en mode entraînement ;
 4. aide, lorsqu’elle est autorisée.
 
 La ligne « Nombres et calculs · Divisibilité » appartient à la question courante. Elle change naturellement dans une séance mélangée et n’essaie pas de résumer toute la sélection.
 
-### Mode projection
+### Mode « Au tableau »
 
-Le même en-tête conserve la sortie, « Question 3/10 » et la progression. Le compteur de réussites disparaît, puisqu’aucune réponse individuelle n’est enregistrée. Les commandes de révélation destinées à l’enseignant restent dans leur barre propre.
+Le même en-tête conserve la sortie, « Question 3/10 » et la progression. Le
+compteur de réussites disparaît, puisqu'aucune réponse individuelle n'est
+enregistrée. Le professeur peut sélectionner puis vérifier une réponse
+collective, ou révéler directement la réponse attendue. L'aide, la correction
+et le passage à la suite restent dans une barre de commandes stable.
 
 ## Progression, réussites et temps
 
@@ -111,7 +117,8 @@ Ces trois informations ne sont jamais confondues.
 - le résultat de la première validation reste la trace de référence si une possibilité de nouvel essai est ajoutée plus tard ;
 - l’en-tête montre un compteur compact, par exemple `✓ 2` ;
 - le bilan final écrit la formulation complète, par exemple « 7 réponses justes sur 10 » ;
-- le diaporama ne possède pas de score, faute de réponses enregistrées.
+- le mode classe ne possède pas de score individuel ; sa vérification sert à la
+  discussion collective et ne produit aucune trace d'élève.
 
 ### Temps futur
 
@@ -211,4 +218,3 @@ La première version reste sobre : total, réussites et trois actions maximum. L
 3. créer la nouvelle version des contrats JSON ;
 4. construire une tranche verticale avec la première famille validée de `NC-01` ;
 5. contrôler réellement le téléphone 375 px et la projection avant d’étendre les familles.
-

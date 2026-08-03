@@ -8,7 +8,7 @@ const seancePrete = () => ({
   id: "seance.fixture@1",
   contexte: "parcours-dnb",
   selection: ["criteres-divisibilite"],
-  mode: "interactif",
+  mode: "entrainement",
   nombreQuestions: 3,
   aide: "disponible",
   graine: "fixture-1",
@@ -45,6 +45,12 @@ describe("validerSeance — phases", () => {
     };
     assert.equal(validerSeance(seance).valide, true);
   });
+
+  it("accepte le mode classe sans créer un contrat distinct", () => {
+    const seance = seancePrete();
+    seance.mode = "classe";
+    assert.deepEqual(validerSeance(seance), { valide: true, erreurs: [] });
+  });
 });
 
 describe("validerSeance — garde-fous", () => {
@@ -60,6 +66,12 @@ describe("validerSeance — garde-fous", () => {
     const mode = seancePrete();
     mode.mode = "telephone";
     assert.match(validerSeance(mode).erreurs.join("\n"), /mode/);
+
+    for (const ancienMode of ["interactif", "diaporama", "projection"]) {
+      const ancien = seancePrete();
+      ancien.mode = ancienMode;
+      assert.match(validerSeance(ancien).erreurs.join("\n"), /mode/);
+    }
   });
 
   it("refuse les incohérences entre phase, questions et index", () => {

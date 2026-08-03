@@ -2,7 +2,7 @@
 
 ## Statut
 
-**Architecture de données fonctionnelle version 1, validée par Gwenaël le 19 juillet 2026.**
+**Architecture de données fonctionnelle version 2, révisée par Gwenaël le 20 juillet 2026.**
 
 Ce document ne définit aucun nom de propriété définitif, aucun schéma JSON et aucun code. Il fixe les responsabilités pour éviter que le menu, le lecteur, les questions et le futur serveur se mélangent.
 
@@ -36,7 +36,7 @@ La page d’accueil remet au lecteur une préparation courte et stable.
 | --- | --- | --- |
 | contexte de lancement | distinguer un parcours DNB d’un entraînement personnalisé | parcours DNB |
 | sélection | liste des micro-notions maths&go demandées | `NC-01` |
-| mode | choisir entre réponse élève et conduite collective | interactif ou diaporama |
+| mode | choisir entre réponse individuelle et conduite collective | `entrainement` ou `classe` |
 | nombre de questions | fixer la longueur et la progression | 10 |
 | politique d’aide | dire si l’aide est ouverte, disponible ou indisponible | disponible |
 | graine | reproduire exactement la même séance | graine choisie ou créée |
@@ -52,7 +52,8 @@ Le titre affiché n’est pas enregistré comme une longue chaîne fabriquée pa
 - score, qui résulte des réponses ;
 - chronomètre dans la première version.
 
-Pour la V1, la séance ne contient donc aucune donnée de temps. La barre indique seulement l’avancement des questions.
+Dans la version actuelle, la séance ne contient donc aucune donnée de temps. La
+barre indique seulement l'avancement des questions.
 
 ## 2. État de la séance dans le lecteur
 
@@ -67,7 +68,9 @@ Une fois l’action « Commencer » déclenchée, le lecteur conserve :
 
 La progression visible est toujours calculée avec la position courante et le total. Elle n’est jamais recopiée dans chaque question.
 
-En diaporama, le lecteur conserve la position et les états de révélation, mais ne produit ni réponse élève ni score.
+En mode classe, le lecteur conserve la position, la sélection collective, son
+éventuelle vérification et les états de révélation. Il ne produit ni trace
+d'élève ni score individuel.
 
 ## 3. Question instanciée
 
@@ -245,4 +248,3 @@ Cette liste guide l’architecture, mais n’autorise pas leur programmation ant
 3. définir le contrat minimal de séance et de trace ;
 4. écrire les tests des contrats avant le générateur pédagogique ;
 5. construire ensuite la première tranche verticale de `NC-01`.
-

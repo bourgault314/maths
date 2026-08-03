@@ -52,6 +52,10 @@ function nomNotion() {
   return definitionNotion().nom;
 }
 
+function estEntrainement() {
+  return etat.configuration.mode === "entrainement";
+}
+
 function aCoursNotion() {
   return definitionNotion().capacites.cours;
 }
@@ -99,21 +103,21 @@ function texteAide() {
 }
 
 function rendreEcranPret() {
-  const projection = etat.configuration.mode === "diaporama";
+  const entrainement = estEntrainement();
   return `
     <main class="ecran-pret">
       <div class="marque" aria-label="maths and go">
         <span class="marque-maths">maths</span><span class="marque-et">&amp;</span><span>go</span>
       </div>
       <p class="surtitre">Automatismes du DNB</p>
-      <h1>${projection ? "Diaporama prêt" : "Prêt à commencer ?"}</h1>
+      <h1>${entrainement ? "Prêt à commencer ?" : "Prêt pour la classe ?"}</h1>
       <section class="resume-seance" aria-label="Contenu de la séance">
         <strong>${echapper(nomNotion())}</strong>
         <span>${etat.configuration.nombreQuestions} ${etat.configuration.nombreQuestions === 1 ? "question" : "questions"}</span>
         <span>${echapper(texteAide())}</span>
       </section>
       <button class="bouton-principal bouton-large" data-action="demarrer">
-        ${projection ? "Lancer le diaporama" : "Commencer"}
+        ${entrainement ? "Commencer" : "Commencer au tableau"}
       </button>
     </main>`;
 }
@@ -121,7 +125,7 @@ function rendreEcranPret() {
 function rendreEntete() {
   const index = etat.seance.etat.indexQuestion + 1;
   const total = etat.seance.nombreQuestions;
-  const interactif = etat.configuration.mode === "interactif";
+  const entrainement = estEntrainement();
   const aideDisponible = etat.configuration.aide !== "indisponible";
   const progression = Math.round((index / total) * 100);
   const boutonCours = aCoursNotion()
@@ -129,10 +133,10 @@ function rendreEntete() {
         aria-expanded="${etat.coursOuvert}" aria-controls="panneau-cours">Cours</button>`
     : "";
   return `
-    <header class="entete-seance ${interactif ? "" : "entete-projection"} ${aCoursNotion() ? "avec-cours" : ""}">
+    <header class="entete-seance ${entrainement ? "" : "entete-projection"} ${aCoursNotion() ? "avec-cours" : ""}">
       <button class="bouton-entete" data-action="quitter" aria-label="Quitter la séance">Quitter</button>
       <span class="position" aria-label="Question ${index} sur ${total}">${index} / ${total}</span>
-      ${interactif
+      ${entrainement
         ? `<span class="score" aria-label="${nombreReussites(etat)} bonnes réponses">✓ ${nombreReussites(etat)}</span>
           ${boutonCours}
           <button class="bouton-entete bouton-aide" data-action="aide"
@@ -141,7 +145,7 @@ function rendreEntete() {
             aria-controls="panneau-aide">
             ${aideDisponible ? "Aide" : "Sans aide"}
           </button>`
-        : `<span class="mode-court">Diaporama</span>${boutonCours}`}
+        : `<span class="mode-court">Au tableau</span>${boutonCours}`}
     </header>
     <div class="progression" aria-label="Progression : ${progression} %">
       <span style="width: ${progression}%"></span>
@@ -149,15 +153,12 @@ function rendreEntete() {
 }
 
 function rendreChoix(question) {
-  const interactif = etat.configuration.mode === "interactif";
-  const choixVisibles = interactif
-    ? question.reponse.choix
-    : question.reponse.choix.filter((choix) => !choix.exclusif);
-  return choixVisibles.map((choix) => {
+  const entrainement = estEntrainement();
+  return question.reponse.choix.map((choix) => {
     const selectionne = etat.selection.includes(choix.id);
     const attendu = question.reponse.attendus.includes(choix.id);
-    const reveleCorrect = !interactif && etat.reponseRevelee && attendu;
-    const estompe = !interactif && etat.reponseRevelee && !attendu;
+    const reveleCorrect = !entrainement && etat.reponseRevelee && attendu;
+    const estompe = !entrainement && etat.reponseRevelee && !attendu;
     const classes = [
       "choix",
       selectionne ? "selectionne" : "",
@@ -165,18 +166,14 @@ function rendreChoix(question) {
       estompe ? "estompe" : "",
     ].filter(Boolean).join(" ");
 
-    if (!interactif) {
-      return `<div class="${classes}">
-        ${reveleCorrect ? '<span class="coche" aria-hidden="true">✓</span>' : ""}
-        <span>${echapper(choix.libelle)}</span>
-        ${reveleCorrect ? '<span class="visuellement-cache">Correct</span>' : ""}
-      </div>`;
-    }
     const radio = question.reponse.type === "choix-unique";
     return `<button class="${classes}" data-action="choix" data-id="${echapper(choix.id)}"
       role="${radio ? "radio" : "checkbox"}" aria-checked="${selectionne}"
-      aria-pressed="${selectionne}" ${etat.validation === null ? "" : "disabled"}>
+      aria-pressed="${selectionne}"
+      ${etat.validation === null && !etat.reponseRevelee ? "" : "disabled"}>
+      ${reveleCorrect ? '<span class="coche" aria-hidden="true">✓</span>' : ""}
       ${echapper(choix.libelle)}
+      ${reveleCorrect ? '<span class="visuellement-cache">Correct</span>' : ""}
     </button>`;
   }).join("");
 }
@@ -186,6 +183,11 @@ function rendreRetourValidation() {
     return `<p class="message message-erreur" role="alert">${echapper(etat.erreurValidation)}</p>`;
   }
   if (etat.validation === null) return "";
+  if (!estEntrainement()) {
+    return etat.validation.juste
+      ? '<p class="message message-reussite" role="status"><strong>Réponse correcte.</strong></p>'
+      : '<p class="message message-erreur" role="status"><strong>Réponse à revoir.</strong> La sélection reste affichée.</p>';
+  }
   return etat.validation.juste
     ? '<p class="message message-reussite" role="status"><strong>Bravo !</strong> Ta réponse est correcte.</p>'
     : '<p class="message message-erreur" role="status"><strong>Pas encore.</strong> Ta sélection est conservée. Tu peux regarder la correction.</p>';
@@ -211,13 +213,16 @@ function rendreBarreEnseignant() {
   const aideDisponible = etat.configuration.aide !== "indisponible";
   const derniere = etat.seance.etat.indexQuestion + 1 === etat.seance.nombreQuestions;
   return `
-    <nav class="barre-enseignant" aria-label="Commandes du diaporama">
+    <nav class="barre-enseignant" aria-label="Commandes du mode Au tableau">
       <span class="libelle-enseignant" aria-hidden="true">Enseignant</span>
       <button data-action="aide" ${aideDisponible ? "" : "disabled"}
         aria-expanded="${etat.aideOuverte}" aria-controls="panneau-aide">Aide</button>
+      <button data-action="valider" ${etat.validation === null && !etat.reponseRevelee ? "" : "disabled"}>
+        ${etat.validation === null ? "Vérifier" : "Réponse vérifiée"}
+      </button>
       <button class="commande-reponse ${etat.reponseRevelee ? "active" : ""}"
         data-action="reponse" ${etat.reponseRevelee ? "disabled" : ""}>
-        ${etat.reponseRevelee ? "Réponse affichée" : "Réponse"}
+        ${etat.reponseRevelee ? "Réponse affichée" : "Révéler"}
       </button>
       <button data-action="correction" aria-expanded="${etat.correctionOuverte}"
         aria-controls="panneau-correction">Correction</button>
@@ -369,7 +374,7 @@ function rendreAideDivisibilite(question) {
   const unite = nombre.at(-1);
   return `
     <div class="voile" data-action="fermer-aide" aria-hidden="true"></div>
-    <aside class="panneau panneau-aide" id="panneau-aide" aria-labelledby="titre-aide">
+    <aside class="panneau panneau-aide" id="panneau-aide" role="dialog" aria-labelledby="titre-aide">
       <div class="entete-panneau">
         <h2 id="titre-aide">Un coup de pouce</h2>
         <button class="fermer" data-action="fermer-aide" aria-label="Fermer l'aide">×</button>
@@ -405,7 +410,7 @@ function rendreCorrectionDivisibilite(question) {
   const reponses = attendus.includes("aucun") ? ["Aucun"] : attendus;
   return `
     <div class="voile" data-action="fermer-correction" aria-hidden="true"></div>
-    <aside class="panneau panneau-correction" id="panneau-correction" aria-labelledby="titre-correction">
+    <aside class="panneau panneau-correction" id="panneau-correction" role="dialog" aria-labelledby="titre-correction">
       <div class="entete-panneau">
         <h2 id="titre-correction">Correction expliquée</h2>
         <button class="fermer" data-action="fermer-correction" aria-label="Fermer la correction">×</button>
@@ -441,7 +446,7 @@ function rendreAideSolides(question) {
   const indice = question.aide?.blocs?.[0]?.contenu ?? "Observe la forme du solide.";
   return `
     <div class="voile" data-action="fermer-aide" aria-hidden="true"></div>
-    <aside class="panneau panneau-aide panneau-solides" id="panneau-aide" aria-labelledby="titre-aide">
+    <aside class="panneau panneau-aide panneau-solides" id="panneau-aide" role="dialog" aria-labelledby="titre-aide">
       <div class="entete-panneau">
         <h2 id="titre-aide">Observe sans deviner</h2>
         <button class="fermer" data-action="fermer-aide" aria-label="Fermer l'aide">×</button>
@@ -466,7 +471,7 @@ function rendreCorrectionSolides(question) {
   const conclusion = question.correction?.[1]?.contenu ?? "";
   return `
     <div class="voile" data-action="fermer-correction" aria-hidden="true"></div>
-    <aside class="panneau panneau-correction panneau-solides" id="panneau-correction" aria-labelledby="titre-correction">
+    <aside class="panneau panneau-correction panneau-solides" id="panneau-correction" role="dialog" aria-labelledby="titre-correction">
       <div class="entete-panneau">
         <h2 id="titre-correction">Correction expliquée</h2>
         <button class="fermer" data-action="fermer-correction" aria-label="Fermer la correction">×</button>
@@ -487,7 +492,7 @@ function rendreCoursReconnaissance() {
   if (!etat.coursOuvert) return "";
   return `
     <div class="voile" data-action="fermer-cours" aria-hidden="true"></div>
-    <aside class="panneau panneau-cours" id="panneau-cours" aria-labelledby="titre-cours">
+    <aside class="panneau panneau-cours" id="panneau-cours" role="dialog" aria-labelledby="titre-cours">
       <div class="entete-panneau">
         <div>
           <p class="surtitre">Mémo visuel</p>
@@ -519,7 +524,7 @@ function rendreAideVolumes(question) {
   const aides = question.aide?.blocs ?? [];
   return `
     <div class="voile" data-action="fermer-aide" aria-hidden="true"></div>
-    <aside class="panneau panneau-aide panneau-solides" id="panneau-aide" aria-labelledby="titre-aide">
+    <aside class="panneau panneau-aide panneau-solides" id="panneau-aide" role="dialog" aria-labelledby="titre-aide">
       <div class="entete-panneau">
         <h2 id="titre-aide">Calcul guidé</h2>
         <button class="fermer" data-action="fermer-aide" aria-label="Fermer l'aide">×</button>
@@ -549,7 +554,7 @@ function rendreCorrectionVolumes(question) {
   const titres = ["Écrire la formule", "Remplacer par les données", "Calculer", "Conclure avec l'unité"];
   return `
     <div class="voile" data-action="fermer-correction" aria-hidden="true"></div>
-    <aside class="panneau panneau-correction panneau-solides" id="panneau-correction" aria-labelledby="titre-correction">
+    <aside class="panneau panneau-correction panneau-solides" id="panneau-correction" role="dialog" aria-labelledby="titre-correction">
       <div class="entete-panneau">
         <h2 id="titre-correction">Correction expliquée</h2>
         <button class="fermer" data-action="fermer-correction" aria-label="Fermer la correction">×</button>
@@ -604,7 +609,7 @@ function rendreCoursVolumes() {
         : "V = π × rayon × rayon × hauteur";
   return `
     <div class="voile" data-action="fermer-cours" aria-hidden="true"></div>
-    <aside class="panneau panneau-cours" id="panneau-cours" aria-labelledby="titre-cours">
+    <aside class="panneau panneau-cours" id="panneau-cours" role="dialog" aria-labelledby="titre-cours">
       <div class="entete-panneau">
         <div><p class="surtitre">Cours à comprendre</p><h2 id="titre-cours">Du cube unité à la formule</h2></div>
         <button class="fermer" data-action="fermer-cours" aria-label="Fermer le cours">×</button>
@@ -646,13 +651,14 @@ function classesLecteur() {
       : etat.coursOuvert
         ? "cours-ouvert"
         : "";
-  return `lecteur mode-${etat.configuration.mode} ${panneau ? "panneau-ouvert" : ""} ${classePanneau}`;
+  const classeMode = estEntrainement() ? "mode-interactif" : "mode-diaporama";
+  return `lecteur ${classeMode} ${panneau ? "panneau-ouvert" : ""} ${classePanneau}`;
 }
 
 function rendreQuestionDivisibilite() {
   const question = questionCourante(etat);
   const nombre = nombreQuestion(question);
-  const interactif = etat.configuration.mode === "interactif";
+  const entrainement = estEntrainement();
   const sansDiviseur = question.reponse.attendus.includes("aucun");
   return `
     <div class="${classesLecteur()}">
@@ -662,27 +668,27 @@ function rendreQuestionDivisibilite() {
           <p class="etiquette-notion">${echapper(nomNotion())}</p>
           <h1>${echapper(question.enonce[0].contenu)}</h1>
           <p class="nombre-question">${echapper(nombre)}<span aria-hidden="true">.</span></p>
-          <p class="precision">${interactif ? "Plusieurs réponses sont peut-être possibles." : "Quels nombres proposés conviennent ?"}</p>
-          <div class="grille-choix ${interactif ? "" : "grille-projection"}" aria-label="Réponses proposées">
+          <p class="precision">${entrainement ? "Plusieurs réponses sont peut-être possibles." : "Quels nombres proposés conviennent ?"}</p>
+          <div class="grille-choix ${entrainement ? "" : "grille-projection"}" aria-label="Réponses proposées">
             ${rendreChoix(question)}
           </div>
-          ${!interactif && etat.reponseRevelee && sansDiviseur
+          ${!entrainement && etat.reponseRevelee && sansDiviseur
             ? '<p class="reponse-aucun" role="status">Réponse : aucun des nombres proposés.</p>'
             : ""}
-          ${interactif ? `<div class="zone-actions">${rendreActionsEleve()}</div>` : ""}
+          ${entrainement ? `<div class="zone-actions">${rendreActionsEleve()}</div>` : rendreRetourValidation()}
         </main>
         ${rendreAide(question)}
         ${rendreCorrection(question)}
         ${rendreCours()}
       </div>
-      ${interactif ? "" : rendreBarreEnseignant()}
+      ${entrainement ? "" : rendreBarreEnseignant()}
     </div>`;
 }
 
 function rendreQuestionSolides() {
   const question = questionCourante(etat);
   const bloc = blocSolide(question);
-  const interactif = etat.configuration.mode === "interactif";
+  const entrainement = estEntrainement();
   return `
     <div class="${classesLecteur()}">
       ${rendreEntete()}
@@ -690,26 +696,26 @@ function rendreQuestionSolides() {
         <main class="carte-question carte-question-solides">
           <p class="etiquette-notion">${echapper(nomNotion())}</p>
           <h1>${echapper(question.enonce[0].contenu)}</h1>
-          ${rendreSolide(bloc, { taille: interactif ? 320 : 400 })}
-          <p class="precision">${interactif ? "Choisis une seule réponse." : "Choisissez le nom du solide."}</p>
-          <div class="grille-choix grille-solides ${interactif ? "" : "grille-projection"}"
-            role="${interactif ? "radiogroup" : "group"}" aria-label="Noms proposés">
+          ${rendreSolide(bloc, { taille: entrainement ? 320 : 400 })}
+          <p class="precision">${entrainement ? "Choisis une seule réponse." : "Choisissez le nom du solide."}</p>
+          <div class="grille-choix grille-solides ${entrainement ? "" : "grille-projection"}"
+            role="radiogroup" aria-label="Noms proposés">
             ${rendreChoix(question)}
           </div>
-          ${interactif ? `<div class="zone-actions">${rendreActionsEleve()}</div>` : ""}
+          ${entrainement ? `<div class="zone-actions">${rendreActionsEleve()}</div>` : rendreRetourValidation()}
         </main>
         ${rendreAide(question)}
         ${rendreCorrection(question)}
         ${rendreCours()}
       </div>
-      ${interactif ? "" : rendreBarreEnseignant()}
+      ${entrainement ? "" : rendreBarreEnseignant()}
     </div>`;
 }
 
 function rendreQuestionVolumes() {
   const question = questionCourante(etat);
   const bloc = blocSolide(question);
-  const interactif = etat.configuration.mode === "interactif";
+  const entrainement = estEntrainement();
   return `
     <div class="${classesLecteur()}">
       ${rendreEntete()}
@@ -719,7 +725,7 @@ function rendreQuestionVolumes() {
           <h1>${echapper(question.enonce[0].contenu)}</h1>
           <div class="figure-et-donnees">
             ${rendreSolide(bloc, {
-              taille: interactif ? 290 : 360,
+              taille: entrainement ? 290 : 360,
               mettreBasesEnValeur: ["prisme", "cylindre"].includes(bloc.forme),
               afficherMesures: ["cube", "pave", "cylindre"].includes(bloc.forme),
               afficherHauteur: bloc.forme === "cylindre",
@@ -727,17 +733,17 @@ function rendreQuestionVolumes() {
             ${rendreDonneesVolume(bloc)}
           </div>
           <p class="precision">Calcul mental, sans calculatrice. Choisis une seule réponse.</p>
-          <div class="grille-choix grille-solides grille-volumes ${interactif ? "" : "grille-projection"}"
-            role="${interactif ? "radiogroup" : "group"}" aria-label="Volumes proposés">
+          <div class="grille-choix grille-solides grille-volumes ${entrainement ? "" : "grille-projection"}"
+            role="radiogroup" aria-label="Volumes proposés">
             ${rendreChoix(question)}
           </div>
-          ${interactif ? `<div class="zone-actions">${rendreActionsEleve()}</div>` : ""}
+          ${entrainement ? `<div class="zone-actions">${rendreActionsEleve()}</div>` : rendreRetourValidation()}
         </main>
         ${rendreAide(question)}
         ${rendreCorrection(question)}
         ${rendreCours()}
       </div>
-      ${interactif ? "" : rendreBarreEnseignant()}
+      ${entrainement ? "" : rendreBarreEnseignant()}
     </div>`;
 }
 
@@ -788,20 +794,20 @@ function rendreQuestion() {
 }
 
 function rendreBilan() {
-  const interactif = etat.configuration.mode === "interactif";
+  const entrainement = estEntrainement();
   return `
     <main class="ecran-pret ecran-bilan">
       <p class="surtitre">Séance terminée</p>
-      <h1>${interactif ? "Ton bilan" : "Diaporama terminé"}</h1>
-      ${interactif
+      <h1>${entrainement ? "Ton bilan" : "Séance terminée"}</h1>
+      ${entrainement
         ? `<p class="resultat-bilan"><strong>${nombreReussites(etat)}</strong><span>bonnes réponses sur ${etat.seance.nombreQuestions}</span></p>`
-        : '<p class="texte-bilan">Toutes les questions ont été présentées.</p>'}
+        : '<p class="texte-bilan">Toutes les questions ont été travaillées au tableau.</p>'}
       <p class="notion-bilan">${echapper(nomNotion())}</p>
       <button class="bouton-principal bouton-large" data-action="recommencer">Recommencer</button>
     </main>`;
 }
 
-function rendre({ focusPanneau = false } = {}) {
+function rendre({ focusPanneau = false, restaurerAction = "" } = {}) {
   const phase = etat.seance.etat.phase;
   application.innerHTML = phase === "prete"
     ? rendreEcranPret()
@@ -813,6 +819,10 @@ function rendre({ focusPanneau = false } = {}) {
     : "Automatismes maths&go";
   if (focusPanneau) {
     requestAnimationFrame(() => application.querySelector(".panneau .fermer")?.focus());
+  } else if (restaurerAction) {
+    requestAnimationFrame(() => {
+      application.querySelector(`[data-action="${restaurerAction}"]`)?.focus();
+    });
   }
 }
 
@@ -821,6 +831,7 @@ application.addEventListener("click", (evenement) => {
   if (!cible) return;
   const action = cible.dataset.action;
   let focusPanneau = false;
+  let restaurerAction = "";
   if (action === "demarrer") demarrer(etat);
   if (action === "quitter") etat = recommencer(etat);
   if (action === "choix") basculerChoix(etat, cible.dataset.id);
@@ -829,7 +840,10 @@ application.addEventListener("click", (evenement) => {
     ouvrirAide(etat);
     focusPanneau = etat.aideOuverte;
   }
-  if (action === "fermer-aide") fermerAide(etat);
+  if (action === "fermer-aide") {
+    fermerAide(etat);
+    restaurerAction = "aide";
+  }
   if (action === "unite-aide") basculerUniteAide(etat);
   if (action === "chiffre-aide") basculerChiffreAide(etat, Number(cible.dataset.index));
   if (action === "reponse") revelerReponse(etat);
@@ -837,17 +851,41 @@ application.addEventListener("click", (evenement) => {
     ouvrirCorrection(etat);
     focusPanneau = etat.correctionOuverte;
   }
-  if (action === "fermer-correction") fermerCorrection(etat);
+  if (action === "fermer-correction") {
+    fermerCorrection(etat);
+    restaurerAction = "correction";
+  }
   if (action === "cours") {
     ouvrirCours(etat);
     focusPanneau = etat.coursOuvert;
   }
-  if (action === "fermer-cours") fermerCours(etat);
+  if (action === "fermer-cours") {
+    fermerCours(etat);
+    restaurerAction = "cours";
+  }
   if (action === "tourner-gauche") tournerSolide(etat, -22);
   if (action === "tourner-droite") tournerSolide(etat, 22);
   if (action === "suivant") passerQuestionSuivante(etat);
   if (action === "recommencer") etat = recommencer(etat);
-  rendre({ focusPanneau });
+  rendre({ focusPanneau, restaurerAction });
+});
+
+application.addEventListener("keydown", (evenement) => {
+  if (evenement.key !== "Escape") return;
+  let restaurerAction = "";
+  if (etat.aideOuverte) {
+    fermerAide(etat);
+    restaurerAction = "aide";
+  } else if (etat.correctionOuverte) {
+    fermerCorrection(etat);
+    restaurerAction = "correction";
+  } else if (etat.coursOuvert) {
+    fermerCours(etat);
+    restaurerAction = "cours";
+  }
+  if (!restaurerAction) return;
+  evenement.preventDefault();
+  rendre({ restaurerAction });
 });
 
 let debutGlissement = null;

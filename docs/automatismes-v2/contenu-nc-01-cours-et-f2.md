@@ -2,9 +2,15 @@
 
 ## Statut
 
-**Contenu validé par Gwenaël le 19 juillet 2026.**
+**F2, ses aides et ses corrections restent validées. Le mini-cours est une base
+à retravailler et n'est pas autorisé à l'affichage, décision du 20 juillet
+2026.**
 
-Ce document ne contient ni JSON, ni générateur, ni code d’interface. Il fixe les formulations, les réponses, les aides, les corrections et les états d’écran qui serviront ensuite de références reproductibles. La représentation du cours est arrêtée ci-dessous à partir de la validation et des indications visuelles de Gwenaël.
+Ce document ne contient ni JSON, ni générateur, ni code d'interface. Il fixe les
+formulations, les réponses, les aides, les corrections et les états d'écran qui
+serviront ensuite de références reproductibles. La partie A conserve les idées
+déjà préparées pour le futur travail pédagogique ; son texte et son schéma
+devront être revus puis validés avant toute intégration au lecteur.
 
 ## Partie A — Mini-cours « Critères de divisibilité »
 
@@ -131,7 +137,7 @@ Les teintes exactes viendront de la charte maths&go. Un contour, un motif ou un 
 
 ### Consigne commune
 
-**Mode interactif :**
+**Mode « S'entraîner » :**
 
 > Parmi 2, 3, 5, 9 et 10, sélectionne tous les nombres qui divisent **N**.
 
@@ -328,7 +334,7 @@ Ces nombres servent à valider le contenu et les cas limites. Ils ne constituent
 
 ## Déroulé des écrans
 
-### Mode interactif
+### Mode « S'entraîner »
 
 1. La question, le nombre et les six choix sont visibles.
 2. Si l’aide est `disponible`, le bouton « Aide » ouvre les deux blocs « unités » et « somme ».
@@ -361,4 +367,3 @@ Gwenaël valide :
 8. l’usage de couleurs pédagogiques et de représentations stables produites par des objets pilotés par des données.
 
 Les storyboards de la carte et du parcours commun sont désormais arrêtés. L'étape suivante est la définition des contrats techniques minimaux, avant le générateur et le lecteur.
-
