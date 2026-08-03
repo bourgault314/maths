@@ -5,6 +5,7 @@ import vm from 'node:vm';
 
 const engineSource=fs.readFileSync('auto/scripts/02-question-engine.js','utf8');
 const slideshowSource=fs.readFileSync('auto/scripts/03-slideshow.js','utf8');
+const pointerDragSource=fs.readFileSync('auto/scripts/shared/interactions/pointer-drag.js','utf8');
 const solidSource=fs.readFileSync('auto/scripts/shared/visuals/geometry/solid.js','utf8');
 const engineCore=engineSource.slice(0,engineSource.indexOf('function subVars'));
 const volumeModule=fs.readFileSync('auto/scripts/modules/geometry/dnb_23.js','utf8');
@@ -34,7 +35,7 @@ test('le prisme 71 × 14 produit et accepte 994',()=>{
     equationDetailHtml:()=>'',
     equationSplatSvg:()=>''
   });
-  vm.runInContext(`${slideshowSource}\nglobalThis.__makeDiapoWindowHtml=makeDiapoWindowHtml;`,slideshowContext);
+  vm.runInContext(`${pointerDragSource}\n${slideshowSource}\nglobalThis.__makeDiapoWindowHtml=makeDiapoWindowHtml;`,slideshowContext);
   const html=slideshowContext.__makeDiapoWindowHtml([],'interactive');
   const validationCode=html.slice(
     html.indexOf('function normalizeInteractiveAnswer'),

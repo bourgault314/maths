@@ -925,6 +925,7 @@ const menuUrl=${menuUrlPayload};
 const placeValueCourseExamples=${placeValueCoursePayload};
 const equationCourseExample=${equationCourseExamplePayload};
 const equationCourseSplat=${equationCourseSplatPayload};
+${beginTrackedPointerDrag.toString()}
 ${setupPlaceValueTools.toString()}
 ${setupReadDataTools.toString()}
 const interactiveMode=experienceMode==='interactive';
@@ -1753,7 +1754,6 @@ function setupDecimalCardInteraction(spec){
      const value=String(card.dataset.decimalCard||'');
      if(!value||interactiveValues.includes(value))return;
      const startX=event.clientX,startY=event.clientY;let moved=false;
-     card.setPointerCapture?.(event.pointerId);
      const move=moveEvent=>{
        const dx=moveEvent.clientX-startX,dy=moveEvent.clientY-startY;
        if(Math.hypot(dx,dy)>7)moved=true;
@@ -1761,15 +1761,13 @@ function setupDecimalCardInteraction(spec){
        moveEvent.preventDefault();card.classList.add('is-dragging');card.style.transform='translate('+dx+'px,'+dy+'px)';
      };
      const finish=(endEvent,cancelled=false)=>{
-       card.releasePointerCapture?.(endEvent.pointerId);card.removeEventListener('pointermove',move);card.removeEventListener('pointerup',end);card.removeEventListener('pointercancel',cancel);
        card.classList.remove('is-dragging');card.style.transform='';
        if(!moved||cancelled)return;
        decimalSuppressClickUntil=Date.now()+300;
        const target=document.elementsFromPoint(endEvent.clientX,endEvent.clientY).map(node=>node.closest?.('[data-decimal-slot],[data-distributive-slot]')).find(Boolean);
        if(target)place(value,Number(target.dataset.decimalSlot??target.dataset.distributiveSlot));
      };
-     const end=endEvent=>finish(endEvent,false),cancel=endEvent=>finish(endEvent,true);
-     card.addEventListener('pointermove',move);card.addEventListener('pointerup',end);card.addEventListener('pointercancel',cancel);
+     beginTrackedPointerDrag(card,event,{move,end:endEvent=>finish(endEvent,false),cancel:endEvent=>finish(endEvent,true)});
    };
  });
  slots.forEach(slot=>{
@@ -1867,14 +1865,14 @@ function setupNumberLinePointInteraction(spec){
  const indexFromClientX=clientX=>{const rect=svg.getBoundingClientRect(),viewX=(clientX-rect.left)*(680/rect.width);return Math.round((viewX-left)/(right-left)*(tickCount-1));};
  if(handle){
    handle.onpointerdown=event=>{
+     if(event.button>0)return;
      event.preventDefault();event.stopPropagation();setSelected(true);svg.classList.add('is-dragging');
      const startX=event.clientX;let dragged=false;
-     try{handle.setPointerCapture(event.pointerId);}catch(error){}
      const ghost=document.createElementNS('http://www.w3.org/2000/svg','line');ghost.setAttribute('class','number-line-drag-ghost');ghost.setAttribute('y1',String(axisY-20));ghost.setAttribute('y2',String(axisY+20));svg.insertBefore(ghost,point);
      const move=moveEvent=>{if(Math.abs(moveEvent.clientX-startX)>4)dragged=true;const index=Math.max(0,Math.min(tickCount-1,indexFromClientX(moveEvent.clientX)));update(index,true);const x=xFor(index);ghost.setAttribute('x1',String(x));ghost.setAttribute('x2',String(x));};
      move(event);
-     const end=endEvent=>{try{handle.releasePointerCapture(endEvent.pointerId);}catch(error){}svg.classList.remove('is-dragging');ghost.remove();svg.removeEventListener('pointermove',move);window.removeEventListener('pointerup',end);window.removeEventListener('pointercancel',end);setSelected(!dragged);};
-     svg.addEventListener('pointermove',move);window.addEventListener('pointerup',end);window.addEventListener('pointercancel',end);
+     const finish=()=>{svg.classList.remove('is-dragging');ghost.remove();setSelected(!dragged);};
+     beginTrackedPointerDrag(handle,event,{move,end:finish,cancel:finish});
    };
    handle.onclick=event=>event.stopPropagation();
    handle.onkeydown=event=>{
@@ -1925,12 +1923,11 @@ function setupPythagorasTactileInteraction(spec){
    node.classList.toggle('is-used',used);node.classList.toggle('is-selected',!!pythagorasSelectedToken&&pythagorasSelectedToken.value===value&&pythagorasSelectedToken.group===group);node.disabled=interactiveLocked||used;
    node.onclick=()=>{if(interactiveLocked||used||Date.now()<pythagorasSuppressClickUntil)return;pythagorasSelectedToken=pythagorasSelectedToken&&pythagorasSelectedToken.value===value&&pythagorasSelectedToken.group===group?null:{value,group};pythagorasBuilderFeedback(pythagorasSelectedToken?'Touche maintenant une case.':'Sélection annulée.');setupPythagorasTactileInteraction(spec);};
    node.onpointerdown=event=>{
-     if(interactiveLocked||used)return;
+     if(interactiveLocked||used||event.button>0)return;
      const startX=event.clientX,startY=event.clientY;let moved=false;
-     node.setPointerCapture?.(event.pointerId);
      const move=moveEvent=>{const dx=moveEvent.clientX-startX,dy=moveEvent.clientY-startY;if(Math.hypot(dx,dy)>7)moved=true;if(moved){moveEvent.preventDefault();node.classList.add('is-dragging');node.style.transform='translate('+dx+'px,'+dy+'px)';}};
-     const end=endEvent=>{node.releasePointerCapture?.(endEvent.pointerId);node.removeEventListener('pointermove',move);node.removeEventListener('pointerup',end);node.removeEventListener('pointercancel',end);node.classList.remove('is-dragging');node.style.transform='';if(!moved)return;pythagorasSuppressClickUntil=Date.now()+250;const target=document.elementFromPoint(endEvent.clientX,endEvent.clientY)?.closest?.('[data-pythagoras-slot]');if(target)placePythagorasBuilderToken(spec,value,group,Number(target.dataset.pythagorasSlot));};
-     node.addEventListener('pointermove',move);node.addEventListener('pointerup',end);node.addEventListener('pointercancel',end);
+     const finish=(endEvent,cancelled=false)=>{node.classList.remove('is-dragging');node.style.transform='';if(!moved||cancelled)return;pythagorasSuppressClickUntil=Date.now()+250;const target=document.elementFromPoint(endEvent.clientX,endEvent.clientY)?.closest?.('[data-pythagoras-slot]');if(target)placePythagorasBuilderToken(spec,value,group,Number(target.dataset.pythagorasSlot));};
+     beginTrackedPointerDrag(node,event,{move,end:endEvent=>finish(endEvent,false),cancel:endEvent=>finish(endEvent,true)});
    };
  });
 }
@@ -1973,11 +1970,9 @@ function setupAngleSumTactileInteraction(spec){
    node.onpointerdown=event=>{
      if(interactiveLocked||angleSumPlacementValidated||used||event.button>0)return;
      const startX=event.clientX,startY=event.clientY;let moved=false;
-     node.setPointerCapture?.(event.pointerId);
      const move=moveEvent=>{const dx=moveEvent.clientX-startX,dy=moveEvent.clientY-startY;if(Math.hypot(dx,dy)>7)moved=true;if(moved){moveEvent.preventDefault();node.classList.add('is-dragging');node.style.transform='translate('+dx+'px,'+dy+'px)';}};
-     const finish=(endEvent,cancelled=false)=>{node.releasePointerCapture?.(endEvent.pointerId);node.removeEventListener('pointermove',move);node.removeEventListener('pointerup',end);node.removeEventListener('pointercancel',cancel);node.classList.remove('is-dragging');node.style.transform='';if(!moved||cancelled)return;angleSumSuppressClickUntil=Date.now()+300;const target=document.elementsFromPoint(endEvent.clientX,endEvent.clientY).map(item=>item.closest?.('[data-angle-sum-slot]')).find(Boolean);if(target)placeAngleSumBuilderToken(spec,value,Number(target.dataset.angleSumSlot));};
-     const end=endEvent=>finish(endEvent,false),cancel=endEvent=>finish(endEvent,true);
-     node.addEventListener('pointermove',move);node.addEventListener('pointerup',end);node.addEventListener('pointercancel',cancel);
+     const finish=(endEvent,cancelled=false)=>{node.classList.remove('is-dragging');node.style.transform='';if(!moved||cancelled)return;angleSumSuppressClickUntil=Date.now()+300;const target=document.elementsFromPoint(endEvent.clientX,endEvent.clientY).map(item=>item.closest?.('[data-angle-sum-slot]')).find(Boolean);if(target)placeAngleSumBuilderToken(spec,value,Number(target.dataset.angleSumSlot));};
+     beginTrackedPointerDrag(node,event,{move,end:endEvent=>finish(endEvent,false),cancel:endEvent=>finish(endEvent,true)});
    };
  });
  const reset=root.querySelector('[data-angle-sum-reset]');
@@ -2062,22 +2057,23 @@ function setupConversionTools(){
    };
    requestAnimationFrame(()=>apply(true,false));
    cursor.addEventListener('pointerdown',event=>{
-     event.preventDefault();refresh();dragging=true;startX=event.clientX;startPx=currentPx;cursor.setPointerCapture(event.pointerId);
-   });
-   cursor.addEventListener('pointermove',event=>{
-     if(!dragging||!cursor.hasPointerCapture(event.pointerId))return;
-     const minPx=(unitSlots-1)*slotWidth,maxPx=(totalSlots-1)*slotWidth;
-     setCursor(clamp(startPx+(event.clientX-startX),minPx,maxPx),false);
-   });
-   const end=event=>{
-     if(!dragging||!cursor.hasPointerCapture(event.pointerId))return;
-     dragging=false;cursor.releasePointerCapture(event.pointerId);
-     const rect=grid.getBoundingClientRect();
-     unit=clamp(Math.floor((event.clientX-rect.left)/rect.width*units),0,units-1);
-     apply(true,true);
+     if(event.button>0)return;
+     event.preventDefault();refresh();dragging=true;startX=event.clientX;startPx=currentPx;
+     const move=moveEvent=>{
+       if(!dragging)return;
+       const minPx=(unitSlots-1)*slotWidth,maxPx=(totalSlots-1)*slotWidth;
+       setCursor(clamp(startPx+(moveEvent.clientX-startX),minPx,maxPx),false);
+     };
+     const end=endEvent=>{
+       if(!dragging)return;
+       dragging=false;
+       const rect=grid.getBoundingClientRect();
+       unit=clamp(Math.floor((endEvent.clientX-rect.left)/rect.width*units),0,units-1);
+       apply(true,true);
+     };
+     const cancel=()=>{if(!dragging)return;dragging=false;apply(true,true);};
+     beginTrackedPointerDrag(cursor,event,{move,end,cancel});
    };
-   cursor.addEventListener('pointerup',end);
-   cursor.addEventListener('pointercancel',event=>{if(!dragging)return;dragging=false;try{cursor.releasePointerCapture(event.pointerId);}catch(_){ }apply(true,true);});
    cursor.addEventListener('keydown',event=>{if(event.key!=='ArrowLeft'&&event.key!=='ArrowRight')return;event.preventDefault();unit+=event.key==='ArrowLeft'?-1:1;apply(true,true);});
  });
 }
@@ -2107,9 +2103,9 @@ function setupFractionProductTools(){
      }
    };
    const startDrag=(axis,vertical)=>(event=>{
-     if(tool.dataset.correction==='1')return;event.preventDefault();const denominator=!!event.target.closest('.fraction-product-den-handle');axis.setPointerCapture(event.pointerId);
+     if(tool.dataset.correction==='1'||event.button>0)return;event.preventDefault();const denominator=!!event.target.closest('.fraction-product-den-handle');
      const update=moveEvent=>{const rect=axis.getBoundingClientRect(),ratio=clamp(vertical?(moveEvent.clientY-rect.top)/rect.height:(moveEvent.clientX-rect.left)/rect.width,0,1);if(vertical){if(denominator){leftDen=denominatorFromRatio(ratio);leftNum=Math.min(leftNum,leftDen);}else leftNum=Math.round(ratio*leftDen);}else{if(denominator){topDen=denominatorFromRatio(ratio);topNum=Math.min(topNum,topDen);}else topNum=Math.round(ratio*topDen);}render();};
-     update(event);const move=moveEvent=>update(moveEvent),end=endEvent=>{try{axis.releasePointerCapture(endEvent.pointerId);}catch(error){}axis.removeEventListener('pointermove',move);axis.removeEventListener('pointerup',end);axis.removeEventListener('pointercancel',end);};axis.addEventListener('pointermove',move);axis.addEventListener('pointerup',end);axis.addEventListener('pointercancel',end);
+     update(event);beginTrackedPointerDrag(axis,event,{move:update,end:()=>{},cancel:()=>{}});
    });
    topAxis.addEventListener('pointerdown',startDrag(topAxis,false));leftAxis.addEventListener('pointerdown',startDrag(leftAxis,true));
    topAxis.addEventListener('keydown',event=>{if(event.key!=='ArrowLeft'&&event.key!=='ArrowRight')return;event.preventDefault();topNum+=event.key==='ArrowRight'?1:-1;render();});
