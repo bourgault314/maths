@@ -85,6 +85,8 @@ test('le questionnaire embarque le moteur commun avec les interactions',()=>{
   });
   vm.runInContext(`${helperSource}\n${slideshowSource}\nglobalThis.__makeDiapoWindowHtml=makeDiapoWindowHtml;`,context);
   const html=context.__makeDiapoWindowHtml([],'interactive');
+  const script=html.slice(html.indexOf('<script>')+8,html.lastIndexOf('</script>'));
+  assert.doesNotThrow(()=>new vm.Script(script));
   assert.match(html,/function beginTrackedPointerDrag/);
   assert.match(html,/beginTrackedPointerDrag\(cursor,event/);
   assert.match(html,/beginTrackedPointerDrag\(axis,event/);

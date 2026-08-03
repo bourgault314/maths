@@ -2073,7 +2073,7 @@ function setupConversionTools(){
      };
      const cancel=()=>{if(!dragging)return;dragging=false;apply(true,true);};
      beginTrackedPointerDrag(cursor,event,{move,end,cancel});
-   };
+   });
    cursor.addEventListener('keydown',event=>{if(event.key!=='ArrowLeft'&&event.key!=='ArrowRight')return;event.preventDefault();unit+=event.key==='ArrowLeft'?-1:1;apply(true,true);});
  });
 }
