@@ -1,10 +1,10 @@
 import { creerRegistre } from "../../moteur-exercices/src/generation.js";
-import { GENERATEUR_RECONNAISSANCE_SOLIDES } from "./espace-et-geometrie/solides-usuels/reconnaissance.js?v=6";
+import { GENERATEUR_RECONNAISSANCE_SOLIDES } from "./espace-et-geometrie/solides-usuels/reconnaissance.js?v=9";
 import {
   GENERATEUR_VOLUME_CUBE_PAVE,
   GENERATEUR_VOLUME_CYLINDRE,
   GENERATEUR_VOLUME_PRISME,
-} from "./grandeurs-et-mesures/volumes/calcul-volumes.js?v=6";
+} from "./grandeurs-et-mesures/volumes/calcul-volumes.js?v=9";
 import { GENERATEUR_SELECTION_DIVISEURS } from "./nombres-et-calculs/criteres-divisibilite/selection-diviseurs.js";
 
 /**

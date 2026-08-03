@@ -1,0 +1,798 @@
+/*
+ * Trois compositions explicites pour un même contenu mathématique.
+ * Le téléphone privilégie le flux et les panneaux plein écran, l'ordinateur
+ * partage l'espace avec un panneau latéral, le TNI agrandit tout pour la classe.
+ */
+
+/* Téléphone ------------------------------------------------------------- */
+
+.disposition-telephone.ecran-pret {
+  width: min(100% - 24px, 520px);
+  padding: 32px 0;
+}
+
+.disposition-telephone.ecran-pret .marque {
+  margin-bottom: 18px;
+}
+
+.disposition-telephone.ecran-pret .resume-seance {
+  margin-bottom: 20px;
+  padding: 20px 16px;
+}
+
+.disposition-telephone.lecteur {
+  padding-bottom: 12px;
+}
+
+.disposition-telephone.mode-diaporama.lecteur {
+  height: 100dvh;
+  min-height: 100dvh;
+  padding-bottom: 0;
+  display: grid;
+  grid-template-rows: auto auto minmax(0, 1fr) auto;
+  overflow: hidden;
+}
+
+.disposition-telephone.mode-diaporama .entete-seance {
+  position: static;
+}
+
+.disposition-telephone.mode-diaporama .espace-lecteur {
+  grid-row: 3;
+  width: 100%;
+  height: 100%;
+  min-height: 0;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+
+.disposition-telephone .entete-seance {
+  position: sticky;
+  top: 0;
+  z-index: 12;
+  min-height: 60px;
+}
+
+.disposition-telephone .carte-question {
+  width: calc(100% - 16px);
+  margin: 12px auto;
+  padding: 20px 12px;
+}
+
+.disposition-telephone .carte-question h1 {
+  font-size: clamp(22px, 6.4vw, 28px);
+}
+
+.disposition-telephone .nombre-question {
+  font-size: clamp(52px, 17vw, 68px);
+}
+
+.disposition-telephone .precision {
+  margin-bottom: 16px;
+}
+
+.disposition-telephone .choix {
+  min-height: 60px;
+}
+
+.disposition-telephone .zone-actions {
+  --hauteur-retour: calc(3 * 1.35rem + 40px);
+  --hauteur-commandes: calc(2 * 50px + 8px);
+  margin-top: 16px;
+}
+
+.disposition-telephone .voile {
+  display: none;
+}
+
+.disposition-telephone .panneau {
+  inset: 0;
+  width: 100%;
+  height: 100dvh;
+  max-height: none;
+  padding: 16px;
+  border-radius: 0;
+  box-shadow: none;
+  overscroll-behavior: contain;
+}
+
+.disposition-telephone .entete-panneau {
+  top: -16px;
+  padding-top: 8px;
+  border-bottom: 1px solid var(--mg-ligne);
+}
+
+.disposition-telephone .panneau-cours {
+  max-height: none;
+}
+
+.disposition-telephone .grille-cours-solides,
+.disposition-telephone .grille-cours-volume {
+  grid-template-columns: 1fr;
+}
+
+.disposition-telephone .barre-enseignant {
+  grid-row: 4;
+  position: static;
+  width: calc(100% - 16px);
+  margin-bottom: 8px;
+}
+
+/* Ordinateur ------------------------------------------------------------ */
+
+@media (min-width: 720px) {
+  .disposition-ordinateur.ecran-pret {
+    width: min(100% - 64px, 880px);
+    padding: 56px 0;
+  }
+
+  .disposition-ordinateur.ecran-pret h1 {
+    font-size: clamp(46px, 5vw, 58px);
+  }
+
+  .disposition-ordinateur.ecran-pret .resume-seance {
+    width: min(100%, 720px);
+    padding: 28px 40px;
+  }
+
+  .disposition-ordinateur.ecran-pret .resume-seance strong {
+    font-size: 24px;
+  }
+
+  .disposition-ordinateur.ecran-pret .bouton-large {
+    width: min(100%, 720px);
+    min-height: 56px;
+    font-size: 18px;
+  }
+
+  .disposition-ordinateur.lecteur {
+    min-height: 100vh;
+    padding-bottom: 0;
+    display: grid;
+    grid-template-rows: auto auto minmax(0, 1fr);
+  }
+
+  .disposition-ordinateur .entete-seance {
+    min-height: 72px;
+    padding: 10px 24px;
+    font-size: 17px;
+  }
+
+  .disposition-ordinateur .bouton-entete {
+    min-height: 48px;
+    padding-inline: 16px;
+  }
+
+  .disposition-ordinateur .progression {
+    height: 5px;
+  }
+
+  .disposition-ordinateur .espace-lecteur {
+    width: min(100% - 48px, 1320px);
+    min-height: 0;
+    padding: 24px 0;
+    display: grid;
+    align-items: center;
+  }
+
+  .disposition-ordinateur .carte-question {
+    width: min(100%, 1040px);
+    margin: 0 auto;
+    padding: 32px clamp(32px, 4vw, 56px);
+  }
+
+  .disposition-ordinateur .carte-question h1 {
+    max-width: 880px;
+    font-size: clamp(30px, 2.8vw, 40px);
+  }
+
+  .disposition-ordinateur .nombre-question {
+    font-size: clamp(78px, 7vw, 100px);
+  }
+
+  .disposition-ordinateur .precision {
+    margin-bottom: 22px;
+    font-size: 17px;
+  }
+
+  .disposition-ordinateur .grille-choix {
+    grid-template-columns: repeat(6, minmax(0, 1fr));
+    gap: 12px;
+  }
+
+  .disposition-ordinateur .grille-solides {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+
+  .disposition-ordinateur .choix {
+    min-height: 72px;
+    font-size: clamp(24px, 2.4vw, 32px);
+  }
+
+  .disposition-ordinateur .grille-solides .choix {
+    min-height: 68px;
+    font-size: clamp(19px, 1.8vw, 26px);
+  }
+
+  .disposition-ordinateur .zone-actions {
+    --hauteur-retour: calc(2 * 1.35rem + 40px);
+    --hauteur-commandes: 50px;
+    width: min(100%, 760px);
+    margin: 24px auto 0;
+  }
+
+  .disposition-ordinateur .actions-eleve {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .disposition-ordinateur .figure-et-donnees {
+    width: min(100%, 820px);
+    grid-template-columns: minmax(300px, 1.25fr) minmax(230px, 0.75fr);
+  }
+
+  .disposition-ordinateur .figure-et-donnees .donnees-volume {
+    display: grid;
+  }
+
+  .disposition-ordinateur .voile {
+    display: none;
+  }
+
+  .disposition-ordinateur.panneau-ouvert .espace-lecteur {
+    gap: 24px;
+    align-items: stretch;
+  }
+
+  .disposition-ordinateur.aide-ouverte .espace-lecteur {
+    grid-template-columns: minmax(500px, 1.35fr) minmax(400px, 0.65fr);
+  }
+
+  .disposition-ordinateur.correction-ouverte .espace-lecteur {
+    grid-template-columns: minmax(480px, 0.9fr) minmax(560px, 1.1fr);
+  }
+
+  .disposition-ordinateur.panneau-ouvert .carte-question {
+    width: 100%;
+    margin: auto 0;
+    padding-inline: 28px;
+  }
+
+  .disposition-ordinateur.panneau-ouvert .carte-question h1 {
+    font-size: clamp(27px, 2.2vw, 34px);
+  }
+
+  .disposition-ordinateur.panneau-ouvert .nombre-question {
+    font-size: clamp(68px, 6vw, 88px);
+  }
+
+  .disposition-ordinateur.panneau-ouvert .grille-choix {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  .disposition-ordinateur.panneau-ouvert .grille-solides {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .disposition-ordinateur .panneau {
+    position: static;
+    z-index: auto;
+    right: auto;
+    bottom: auto;
+    left: auto;
+    width: 100%;
+    height: 100%;
+    max-height: calc(100vh - 126px);
+    margin: 0;
+    border: 2px solid var(--mg-ligne);
+    border-radius: var(--mg-rayon-grand);
+    box-shadow: none;
+  }
+
+  .disposition-ordinateur .entete-panneau {
+    top: -16px;
+  }
+
+  .disposition-ordinateur .panneau-correction:not(.panneau-solides) {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 12px;
+  }
+
+  .disposition-ordinateur .panneau-correction:not(.panneau-solides) .entete-panneau,
+  .disposition-ordinateur .panneau-correction:not(.panneau-solides) .correction-conclusion {
+    grid-column: 1 / -1;
+  }
+
+  .disposition-ordinateur .panneau-correction:not(.panneau-solides) .etape-correction {
+    margin-bottom: 0;
+  }
+
+  .disposition-ordinateur .etapes-correction-volume {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 12px;
+  }
+
+  .disposition-ordinateur.cours-ouvert .espace-lecteur {
+    display: block;
+  }
+
+  .disposition-ordinateur.cours-ouvert .carte-question {
+    display: none;
+  }
+
+  .disposition-ordinateur .panneau-cours {
+    max-height: calc(100vh - 126px);
+  }
+
+  .disposition-ordinateur .grille-cours-solides,
+  .disposition-ordinateur .grille-cours-volume {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  .disposition-ordinateur .barre-enseignant {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+}
+
+/* TNI et vidéoprojection ------------------------------------------------ */
+
+@media (min-width: 900px) {
+  .disposition-tni.ecran-pret {
+    width: min(100% - 96px, 1040px);
+    padding: 48px 0;
+  }
+
+  .disposition-tni.ecran-pret::before {
+    width: 96px;
+    height: 8px;
+  }
+
+  .disposition-tni.ecran-pret .marque {
+    font-size: 48px;
+  }
+
+  .disposition-tni.ecran-pret h1 {
+    font-size: clamp(58px, 5vw, 76px);
+  }
+
+  .disposition-tni.ecran-pret .resume-seance {
+    width: min(100%, 820px);
+    padding: 32px 48px;
+  }
+
+  .disposition-tni.ecran-pret .resume-seance strong {
+    font-size: 30px;
+  }
+
+  .disposition-tni.ecran-pret .resume-seance span {
+    font-size: 21px;
+  }
+
+  .disposition-tni.ecran-pret .bouton-large {
+    width: min(100%, 820px);
+    min-height: 72px;
+    font-size: 23px;
+  }
+
+  .disposition-tni.lecteur {
+    height: 100vh;
+    min-height: 100vh;
+    padding-bottom: 0;
+    display: grid;
+    grid-template-rows: auto auto minmax(0, 1fr) auto;
+    overflow: hidden;
+  }
+
+  .disposition-tni .entete-seance {
+    min-height: 76px;
+    padding: 8px 24px;
+    font-size: 22px;
+  }
+
+  .disposition-tni .bouton-entete {
+    min-height: 60px;
+    padding: 10px 22px;
+    font-size: 20px;
+  }
+
+  .disposition-tni .position,
+  .disposition-tni .mode-court {
+    font-size: 22px;
+  }
+
+  .disposition-tni .progression {
+    height: 6px;
+  }
+
+  .disposition-tni .espace-lecteur {
+    grid-row: 3;
+    width: min(100% - 48px, 1800px);
+    height: 100%;
+    min-height: 0;
+    padding: 18px 0;
+    display: flex;
+    align-items: center;
+    overflow: hidden;
+  }
+
+  .disposition-tni .carte-question {
+    width: min(100%, 1640px);
+    margin: 0 auto;
+    padding: clamp(28px, 3vh, 44px) clamp(48px, 5vw, 84px);
+  }
+
+  .disposition-tni .etiquette-notion {
+    font-size: 16px;
+  }
+
+  .disposition-tni .carte-question h1 {
+    max-width: 1360px;
+    font-size: clamp(40px, min(3.4vw, 5.2vh), 58px);
+    line-height: 1.15;
+  }
+
+  .disposition-tni .nombre-question {
+    font-size: clamp(104px, min(9vw, 15vh), 150px);
+  }
+
+  .disposition-tni .precision {
+    margin-bottom: clamp(20px, 3vh, 32px);
+    font-size: clamp(20px, 1.45vw, 26px);
+  }
+
+  .disposition-tni .grille-projection {
+    grid-template-columns: repeat(5, minmax(0, 1fr));
+    gap: clamp(12px, 1.2vw, 20px);
+  }
+
+  .disposition-tni .grille-solides.grille-projection {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+
+  .disposition-tni .grille-projection .choix {
+    min-height: clamp(84px, 11vh, 116px);
+    font-size: clamp(38px, min(3.2vw, 5.2vh), 56px);
+  }
+
+  .disposition-tni .grille-solides .choix {
+    font-size: clamp(28px, min(2.4vw, 4vh), 40px);
+  }
+
+  .disposition-tni .carte-question-solides .visuel-solide {
+    width: min(100%, 500px);
+  }
+
+  .disposition-tni .carte-question-solides .visuel-solide svg {
+    max-height: 40vh;
+  }
+
+  .disposition-tni .carte-question-volumes .figure-et-donnees {
+    width: min(100%, 1040px);
+    grid-template-columns: minmax(400px, 1.35fr) minmax(280px, 0.65fr);
+  }
+
+  .disposition-tni .carte-question-volumes .visuel-solide {
+    width: min(100%, 440px);
+  }
+
+  .disposition-tni .carte-question-volumes .donnees-volume dd {
+    font-size: 28px;
+  }
+
+  .disposition-tni .barre-enseignant {
+    grid-row: 4;
+    position: static;
+    width: min(100% - 48px, 1800px);
+    min-height: 76px;
+    margin: 0 auto 14px;
+    padding: 8px;
+    grid-template-columns: auto repeat(4, minmax(0, 1fr));
+    gap: 12px;
+  }
+
+  .disposition-tni .libelle-enseignant {
+    grid-column: auto;
+    padding-inline: 14px;
+    font-size: 15px;
+  }
+
+  .disposition-tni .barre-enseignant button {
+    min-height: 58px;
+    font-size: 20px;
+  }
+
+  .disposition-tni .voile {
+    display: none;
+  }
+
+  .disposition-tni.panneau-ouvert .espace-lecteur {
+    display: grid;
+    gap: 24px;
+    align-items: stretch;
+  }
+
+  .disposition-tni.aide-ouverte .espace-lecteur {
+    grid-template-columns: minmax(0, 1.8fr) minmax(540px, 1fr);
+  }
+
+  .disposition-tni.correction-ouverte .espace-lecteur {
+    grid-template-columns: minmax(0, 1fr) minmax(760px, 1.15fr);
+  }
+
+  .disposition-tni.panneau-ouvert .carte-question {
+    width: 100%;
+    margin: auto 0;
+    padding: 28px 36px;
+  }
+
+  .disposition-tni.panneau-ouvert .carte-question h1 {
+    font-size: clamp(34px, min(2.5vw, 4.5vh), 46px);
+  }
+
+  .disposition-tni.panneau-ouvert .nombre-question {
+    font-size: clamp(88px, min(7vw, 13vh), 122px);
+  }
+
+  .disposition-tni.panneau-ouvert .grille-projection .choix {
+    min-height: clamp(76px, 9vh, 96px);
+    font-size: clamp(32px, min(2.6vw, 4.5vh), 46px);
+  }
+
+  .disposition-tni .panneau {
+    position: static;
+    z-index: auto;
+    right: auto;
+    bottom: auto;
+    left: auto;
+    width: 100%;
+    height: 100%;
+    min-height: 0;
+    max-height: none;
+    margin: 0;
+    padding: 20px;
+    border: 3px solid var(--mg-ligne);
+    border-radius: var(--mg-rayon-grand);
+    box-shadow: none;
+    font-size: 19px;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+  }
+
+  .disposition-tni .entete-panneau {
+    top: -20px;
+    margin-bottom: 18px;
+    padding: 14px 0 10px;
+  }
+
+  .disposition-tni .entete-panneau h2 {
+    font-size: 34px;
+  }
+
+  .disposition-tni .repere-etape {
+    grid-template-columns: 48px 1fr;
+  }
+
+  .disposition-tni .repere-etape > span {
+    width: 48px;
+    height: 48px;
+    font-size: 23px;
+  }
+
+  .disposition-tni .repere-etape h3 {
+    font-size: 23px;
+  }
+
+  .disposition-tni .outil-aide,
+  .disposition-tni .etape-correction,
+  .disposition-tni .indices-aide {
+    padding: 18px;
+  }
+
+  .disposition-tni .etape-correction p,
+  .disposition-tni .indices-aide {
+    font-size: 18px;
+    line-height: 1.5;
+  }
+
+  .disposition-tni .panneau-correction:not(.panneau-solides) {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 16px;
+  }
+
+  .disposition-tni .panneau-correction:not(.panneau-solides) .entete-panneau,
+  .disposition-tni .panneau-correction:not(.panneau-solides) .correction-conclusion {
+    grid-column: 1 / -1;
+  }
+
+  .disposition-tni .panneau-correction:not(.panneau-solides) .etape-correction {
+    margin-bottom: 0;
+  }
+
+  .disposition-tni .etapes-correction-volume {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 16px;
+  }
+
+  .disposition-tni.cours-ouvert .espace-lecteur {
+    display: block;
+  }
+
+  .disposition-tni.cours-ouvert .carte-question {
+    display: none;
+  }
+
+  .disposition-tni .panneau-cours .grille-cours-solides,
+  .disposition-tni .panneau-cours .grille-cours-volume {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  .disposition-tni .panneau-cours .carte-cours-solide h3 {
+    font-size: 24px;
+  }
+
+  .disposition-tni .panneau-cours .carte-cours-solide p {
+    font-size: 18px;
+  }
+
+  .disposition-tni.ecran-bilan .resultat-bilan strong {
+    font-size: 92px;
+  }
+}
+
+@media (min-width: 900px) {
+  .disposition-tni.tni-compacte .entete-seance {
+    min-height: 60px;
+    padding: 6px 18px;
+    font-size: 17px;
+  }
+
+  .disposition-tni.tni-compacte .bouton-entete {
+    min-height: 44px;
+    padding: 6px 14px;
+    font-size: 16px;
+  }
+
+  .disposition-tni.tni-compacte .position,
+  .disposition-tni.tni-compacte .mode-court {
+    font-size: 18px;
+  }
+
+  .disposition-tni.tni-compacte .progression {
+    height: 4px;
+  }
+
+  .disposition-tni.tni-compacte .espace-lecteur {
+    width: min(100% - 32px, 1800px);
+    padding: 6px 0;
+  }
+
+  .disposition-tni.tni-compacte .carte-question {
+    padding: 12px 24px;
+  }
+
+  .disposition-tni.tni-compacte .etiquette-notion {
+    margin-bottom: 6px;
+    padding: 4px 10px;
+    font-size: 12px;
+  }
+
+  .disposition-tni.tni-compacte .carte-question h1 {
+    margin-bottom: 4px;
+    font-size: clamp(28px, min(2.8vw, 4.5vh), 36px);
+  }
+
+  .disposition-tni.tni-compacte .nombre-question {
+    margin-bottom: 4px;
+    font-size: clamp(68px, min(7vw, 11vh), 82px);
+  }
+
+  .disposition-tni.tni-compacte .precision {
+    margin-bottom: 8px;
+    font-size: 16px;
+  }
+
+  .disposition-tni.tni-compacte .grille-projection {
+    gap: 8px;
+  }
+
+  .disposition-tni.tni-compacte .grille-projection .choix,
+  .disposition-tni.tni-compacte.panneau-ouvert .grille-projection .choix {
+    min-height: 56px;
+    font-size: clamp(24px, min(2.4vw, 3.8vh), 30px);
+  }
+
+  .disposition-tni.tni-compacte .grille-solides .choix {
+    min-height: 54px;
+    font-size: clamp(20px, min(2vw, 3.4vh), 26px);
+  }
+
+  .disposition-tni.tni-compacte .carte-question-solides .visuel-solide {
+    width: min(100%, 240px);
+    margin-block: 0 4px;
+  }
+
+  .disposition-tni.tni-compacte .carte-question-solides .visuel-solide:not(.logement-solide-stable) svg {
+    max-height: 150px;
+  }
+
+  .disposition-tni.tni-compacte .carte-question-volumes .figure-et-donnees {
+    width: min(100%, 760px);
+    grid-template-columns: minmax(220px, 1.2fr) minmax(220px, 0.8fr);
+  }
+
+  .disposition-tni.tni-compacte .carte-question-volumes .visuel-solide {
+    width: min(100%, 240px);
+  }
+
+  .disposition-tni.tni-compacte .carte-question-volumes .donnees-volume dd {
+    font-size: 20px;
+  }
+
+  .disposition-tni.tni-compacte .barre-enseignant {
+    width: min(100% - 32px, 1800px);
+    min-height: 60px;
+    margin-bottom: 8px;
+    padding: 6px;
+    gap: 8px;
+  }
+
+  .disposition-tni.tni-compacte .libelle-enseignant {
+    padding-inline: 8px;
+    font-size: 12px;
+  }
+
+  .disposition-tni.tni-compacte .barre-enseignant button {
+    min-height: 44px;
+    font-size: 16px;
+  }
+
+  .disposition-tni.tni-compacte .panneau {
+    padding: 14px;
+    font-size: 16px;
+  }
+
+  .disposition-tni.tni-compacte .entete-panneau {
+    top: -14px;
+    margin-bottom: 10px;
+    padding-block: 8px;
+  }
+
+  .disposition-tni.tni-compacte .entete-panneau h2 {
+    font-size: 26px;
+  }
+
+  .disposition-tni.tni-compacte .outil-aide,
+  .disposition-tni.tni-compacte .etape-correction,
+  .disposition-tni.tni-compacte .indices-aide {
+    margin-bottom: 10px;
+    padding: 12px;
+  }
+
+  .disposition-tni.tni-compacte .panneau .solide-manipulable {
+    width: min(100%, 200px);
+  }
+
+  .disposition-tni.tni-compacte .panneau-cours .grille-cours-solides,
+  .disposition-tni.tni-compacte .panneau-cours .grille-cours-volume {
+    gap: 8px;
+  }
+
+  .disposition-tni.tni-compacte .panneau-cours .carte-cours-solide {
+    padding: 8px;
+  }
+
+  .disposition-tni.tni-compacte .panneau-cours .carte-cours-solide .visuel-solide {
+    width: min(100%, 160px);
+  }
+
+  .disposition-tni.tni-compacte .panneau-cours .carte-cours-solide h3 {
+    font-size: 19px;
+  }
+
+  .disposition-tni.tni-compacte .panneau-cours .carte-cours-solide p {
+    font-size: 15px;
+  }
+}

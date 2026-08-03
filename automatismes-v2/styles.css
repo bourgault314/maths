@@ -306,7 +306,29 @@ h3,
   overflow: visible;
 }
 
+.logement-solide-stable {
+  position: relative;
+  aspect-ratio: 4 / 3;
+  min-height: 0;
+  display: block;
+}
+
+.logement-solide-stable svg {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  max-height: none;
+}
+
+.solide-manipulable svg {
+  width: 100%;
+  height: 100%;
+  max-height: none;
+}
+
 .solide-manipulable {
+  aspect-ratio: 1;
   padding: 6px;
   border: 2px dashed color-mix(in srgb, var(--mg-turquoise) 48%, var(--mg-ligne));
   border-radius: var(--mg-rayon-moyen);
@@ -418,13 +440,30 @@ button.choix:hover:not(:disabled) {
 }
 
 .zone-actions {
+  --hauteur-retour: calc(2 * 1.35rem + 40px);
+  --hauteur-commandes: 50px;
   margin-top: 24px;
 }
 
+.zone-retour {
+  min-height: var(--hauteur-retour);
+  padding-bottom: 16px;
+  display: flex;
+  align-items: flex-start;
+}
+
+.zone-commandes-eleve {
+  min-height: var(--hauteur-commandes);
+  display: grid;
+  align-content: start;
+}
+
 .message {
-  margin-bottom: 16px;
+  width: 100%;
+  margin: 0;
   padding: 12px;
   border-radius: var(--mg-rayon-moyen);
+  line-height: 1.35;
   text-align: left;
 }
 
@@ -1014,273 +1053,6 @@ button.choix:hover:not(:disabled) {
 .notion-bilan,
 .texte-bilan {
   color: var(--mg-texteAttenue);
-}
-
-@media (min-width: 720px) {
-  .actions-eleve {
-    grid-template-columns: 1fr 1fr;
-  }
-
-  .barre-enseignant {
-    grid-template-columns: repeat(4, minmax(0, 1fr));
-  }
-
-  .panneau {
-    right: 24px;
-    bottom: 24px;
-    left: auto;
-    width: min(560px, calc(100% - 48px));
-    border-radius: var(--mg-rayon-grand);
-  }
-
-  .panneau-cours {
-    right: 50%;
-    width: min(1040px, calc(100% - 48px));
-    transform: translateX(50%);
-  }
-
-  .grille-cours-solides {
-    grid-template-columns: repeat(3, minmax(0, 1fr));
-  }
-
-  .grille-cours-volume {
-    grid-template-columns: repeat(3, minmax(0, 1fr));
-  }
-
-  .figure-et-donnees {
-    grid-template-columns: minmax(260px, 1.3fr) minmax(210px, 0.7fr);
-  }
-
-  .figure-et-donnees .donnees-volume {
-    display: grid;
-  }
-}
-
-@media (min-width: 900px) {
-  .mode-diaporama {
-    height: 100vh;
-    min-height: 100vh;
-    padding-bottom: 0;
-    display: grid;
-    grid-template-rows: auto auto minmax(0, 1fr) auto;
-    overflow: hidden;
-  }
-
-  .mode-diaporama .entete-seance {
-    min-height: 56px;
-  }
-
-  .mode-diaporama .espace-lecteur {
-    width: min(100% - 32px, 1600px);
-    height: 100%;
-    min-height: 0;
-    padding: 16px 0;
-    display: flex;
-    align-items: center;
-  }
-
-  .mode-diaporama .carte-question {
-    width: min(100%, 1440px);
-    margin: 0 auto;
-    padding: clamp(24px, 3vh, 40px) clamp(32px, 4vw, 64px);
-  }
-
-  .mode-diaporama .carte-question h1 {
-    max-width: 1200px;
-    font-size: clamp(32px, min(3vw, 5vh), 52px);
-    line-height: 1.18;
-  }
-
-  .mode-diaporama .nombre-question {
-    font-size: clamp(84px, min(9vw, 15vh), 136px);
-  }
-
-  .mode-diaporama .precision {
-    margin-bottom: clamp(20px, 3vh, 32px);
-    font-size: clamp(18px, min(1.5vw, 2.5vh), 24px);
-  }
-
-  .mode-diaporama .grille-projection {
-    grid-template-columns: repeat(5, minmax(0, 1fr));
-    gap: clamp(8px, 1vw, 16px);
-  }
-
-  .mode-diaporama .grille-solides.grille-projection {
-    grid-template-columns: repeat(4, minmax(0, 1fr));
-  }
-
-  .mode-diaporama .carte-question-solides {
-    padding-top: clamp(18px, 2vh, 26px);
-  }
-
-  .mode-diaporama .carte-question-solides .visuel-solide {
-    width: min(100%, 440px);
-    margin-top: 0;
-    margin-bottom: 2px;
-  }
-
-  .mode-diaporama .carte-question-solides .visuel-solide svg {
-    max-height: 39vh;
-  }
-
-  .mode-diaporama .carte-question-volumes .figure-et-donnees {
-    width: min(100%, 920px);
-    margin: 0 auto;
-    grid-template-columns: minmax(320px, 1.3fr) minmax(260px, 0.7fr);
-  }
-
-  .mode-diaporama .carte-question-volumes .visuel-solide {
-    width: min(100%, 380px);
-  }
-
-  .mode-diaporama .carte-question-volumes .visuel-solide svg {
-    max-height: 34vh;
-  }
-
-  .mode-diaporama .carte-question-volumes .donnees-volume dd {
-    font-size: clamp(20px, 2vw, 28px);
-  }
-
-  .mode-diaporama .grille-solides .choix {
-    min-height: clamp(64px, 9vh, 88px);
-    font-size: clamp(22px, min(2.1vw, 3.5vh), 34px);
-  }
-
-  .mode-diaporama .barre-enseignant {
-    position: static;
-    width: min(100% - 32px, 1440px);
-    margin: 0 auto 12px;
-    grid-template-columns: auto repeat(4, minmax(0, 1fr));
-  }
-
-  .mode-diaporama .libelle-enseignant {
-    grid-column: auto;
-    padding: 0 12px 0 8px;
-  }
-
-  .mode-diaporama .barre-enseignant button {
-    min-height: 48px;
-    font-size: 16px;
-  }
-
-  .mode-diaporama.panneau-ouvert .espace-lecteur {
-    width: min(100% - 32px, 1600px);
-    display: grid;
-    gap: 16px;
-    align-items: stretch;
-  }
-
-  .mode-diaporama.aide-ouverte .espace-lecteur {
-    grid-template-columns: minmax(0, 2fr) minmax(320px, 1fr);
-  }
-
-  .mode-diaporama.correction-ouverte .espace-lecteur {
-    grid-template-columns: minmax(0, 1fr) minmax(440px, 1fr);
-  }
-
-  .mode-diaporama.cours-ouvert .espace-lecteur {
-    display: block;
-  }
-
-  .mode-diaporama.cours-ouvert .carte-question {
-    display: none;
-  }
-
-  .mode-diaporama.panneau-ouvert .carte-question {
-    width: 100%;
-    margin: auto 0;
-    padding: clamp(20px, 2.5vh, 32px) clamp(20px, 2vw, 32px);
-  }
-
-  .mode-diaporama.panneau-ouvert .carte-question h1 {
-    font-size: clamp(28px, min(2.5vw, 4.5vh), 42px);
-  }
-
-  .mode-diaporama.panneau-ouvert .nombre-question {
-    font-size: clamp(72px, min(7vw, 13vh), 112px);
-  }
-
-  .mode-diaporama.panneau-ouvert .precision {
-    margin-bottom: 16px;
-    font-size: clamp(16px, min(1.35vw, 2.3vh), 21px);
-  }
-
-  .mode-diaporama .voile {
-    display: none;
-  }
-
-  .mode-diaporama .panneau {
-    position: static;
-    z-index: auto;
-    width: 100%;
-    height: 100%;
-    max-height: none;
-    margin: 0;
-    border: 2px solid var(--mg-ligne);
-    border-radius: var(--mg-rayon-grand);
-    box-shadow: none;
-  }
-
-  .mode-diaporama .panneau-cours {
-    max-width: none;
-    transform: none;
-  }
-
-  .mode-diaporama .panneau-cours .grille-cours-solides {
-    grid-template-columns: repeat(3, minmax(0, 1fr));
-  }
-
-  .mode-diaporama .panneau-cours .grille-cours-volume {
-    grid-template-columns: repeat(3, minmax(0, 1fr));
-  }
-
-  .mode-diaporama .panneau-cours .carte-cours-solide {
-    padding: 8px;
-  }
-
-  .mode-diaporama .panneau-cours .carte-cours-solide .visuel-solide {
-    width: min(100%, 190px);
-  }
-
-  .grille-projection .choix {
-    min-height: clamp(76px, 12vh, 112px);
-    font-size: clamp(34px, min(3.2vw, 5.5vh), 52px);
-  }
-
-  .mode-diaporama.panneau-ouvert .grille-projection .choix {
-    min-height: clamp(68px, 10vh, 96px);
-    font-size: clamp(30px, min(2.7vw, 4.8vh), 44px);
-  }
-}
-
-@media (min-width: 900px) and (max-height: 820px) {
-  .mode-diaporama .panneau {
-    padding: 12px;
-  }
-
-  .mode-diaporama .entete-panneau {
-    top: -12px;
-    margin-bottom: 12px;
-    padding: 8px 0;
-  }
-
-  .mode-diaporama .outil-aide,
-  .mode-diaporama .etape-correction {
-    margin-bottom: 12px;
-    padding: 12px;
-  }
-
-  .mode-diaporama .repere-etape {
-    margin-bottom: 12px;
-  }
-
-  .mode-diaporama .nombre-correction {
-    margin-bottom: 12px;
-  }
-
-  .mode-diaporama .verdicts-correction {
-    margin-bottom: 12px;
-  }
 }
 
 @media (prefers-reduced-motion: reduce) {

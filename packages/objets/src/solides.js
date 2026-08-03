@@ -520,7 +520,36 @@ export function calculerVisibilite(solide, options = {}) {
 // Rendu SVG
 // ---------------------------------------------------------------------------
 
-function cadre(pointsEcran, taille, marge) {
+function enveloppeStable3d(solide) {
+  if (solide.nature === "revolution") {
+    const demiHauteur = (solide.hauteur ?? 0) / 2;
+    return {
+      centre: [0, 0, 0],
+      rayon: Math.hypot(solide.rayon, demiHauteur),
+    };
+  }
+  const mins = [Infinity, Infinity, Infinity];
+  const maxs = [-Infinity, -Infinity, -Infinity];
+  for (const point of solide.sommets) {
+    for (let axe = 0; axe < 3; axe += 1) {
+      mins[axe] = Math.min(mins[axe], point[axe]);
+      maxs[axe] = Math.max(maxs[axe], point[axe]);
+    }
+  }
+  const centre = mins.map((minimum, axe) => (minimum + maxs[axe]) / 2);
+  const rayon = Math.max(...solide.sommets.map((point) => norme(soustraire(point, centre))));
+  return { centre, rayon };
+}
+
+function cadre(pointsEcran, taille, marge, stable = null) {
+  if (stable) {
+    const echelle = (taille - 2 * marge) / Math.max(2 * stable.rayon, EPSILON);
+    const placer = ([x, y]) => [
+      taille / 2 + (x - stable.centreEcran[0]) * echelle,
+      taille / 2 + (y - stable.centreEcran[1]) * echelle,
+    ];
+    return { placer, largeur: taille, hauteur: taille, echelle };
+  }
   let minX = Infinity;
   let minY = Infinity;
   let maxX = -Infinity;
@@ -608,22 +637,34 @@ export function dessinerSolide(solide, options = {}) {
     mesures = false,
     unite = "cm",
     cachees = "pointilles",
+    cadre: modeCadre = "ajuste",
   } = options;
   if (cachees !== "pointilles" && cachees !== "masquees") {
     throw new RangeError("Solide : cachees « pointilles » ou « masquees »");
   }
+  if (modeCadre !== "ajuste" && modeCadre !== "stable") {
+    throw new RangeError("Solide : cadre « ajuste » ou « stable »");
+  }
   const rendu = solide.nature === "polyedre"
-    ? dessinerPolyedre(solide, options, { taille, marge, theme, noms, base, hauteur, mesures, unite, cachees })
-    : dessinerRevolution(solide, options, { taille, marge, theme, base, hauteur, mesures, unite, cachees, noms });
+    ? dessinerPolyedre(solide, options, { taille, marge, theme, noms, base, hauteur, mesures, unite, cachees, modeCadre })
+    : dessinerRevolution(solide, options, { taille, marge, theme, base, hauteur, mesures, unite, cachees, noms, modeCadre });
   return rendu;
 }
 
 function dessinerPolyedre(solide, optionsVue, reglages) {
-  const { taille, marge, theme, noms, base, hauteur, mesures, unite, cachees } = reglages;
+  const { taille, marge, theme, noms, base, hauteur, mesures, unite, cachees, modeCadre } = reglages;
   const vue = creerVue(optionsVue);
   const { facesVisibles, aretes } = calculerVisibilite(solide, optionsVue);
   const ecrans = solide.sommets.map((p) => vue.projeter(vue.tourner(p)));
-  const { placer, largeur, hauteur: hauteurSvg } = cadre(ecrans, taille, marge);
+  const enveloppe = modeCadre === "stable" ? enveloppeStable3d(solide) : null;
+  const cadreStable = enveloppe
+    ? {
+        centreEcran: vue.projeter(vue.tourner(enveloppe.centre)),
+        rayon: enveloppe.rayon,
+      }
+    : null;
+  const margeCadre = cadreStable ? Math.max(marge, 32) : marge;
+  const { placer, largeur, hauteur: hauteurSvg } = cadre(ecrans, taille, margeCadre, cadreStable);
   const places = ecrans.map(placer);
   const couleurs = traitsDe(theme);
 
@@ -765,7 +806,7 @@ function pointsCercle(centre, rayon, u, v) {
 }
 
 function dessinerRevolution(solide, optionsVue, reglages) {
-  const { taille, marge, theme, base, hauteur, mesures, unite, cachees, noms } = reglages;
+  const { taille, marge, theme, base, hauteur, mesures, unite, cachees, noms, modeCadre } = reglages;
   const vue = creerVue(optionsVue);
   const couleurs = traitsDe(theme);
   const r = solide.rayon;
@@ -803,7 +844,15 @@ function dessinerRevolution(solide, optionsVue, reglages) {
       candidats.push(projeterModele(point.modele));
     }
   }
-  const { placer, largeur, hauteur: hauteurSvg } = cadre(candidats, taille, marge);
+  const enveloppe = modeCadre === "stable" ? enveloppeStable3d(solide) : null;
+  const cadreStable = enveloppe
+    ? {
+        centreEcran: vue.projeter(vue.tourner(enveloppe.centre)),
+        rayon: enveloppe.rayon,
+      }
+    : null;
+  const margeCadre = cadreStable ? Math.max(marge, 32) : marge;
+  const { placer, largeur, hauteur: hauteurSvg } = cadre(candidats, taille, margeCadre, cadreStable);
   const poser = (p) => placer(projeterModele(p));
 
   let dessin = "";
