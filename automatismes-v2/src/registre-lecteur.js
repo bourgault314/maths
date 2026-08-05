@@ -1,10 +1,11 @@
-import { GABARIT_RECONNAISSANCE_SOLIDES } from "../../packages/automatismes/src/espace-et-geometrie/solides-usuels/reconnaissance.js?v=6";
+import { GABARIT_RECONNAISSANCE_SOLIDES } from "../../packages/automatismes/src/espace-et-geometrie/solides-usuels/reconnaissance.js?v=9";
 import {
   GABARIT_VOLUME_CUBE_PAVE,
   GABARIT_VOLUME_CYLINDRE,
   GABARIT_VOLUME_PRISME,
-} from "../../packages/automatismes/src/grandeurs-et-mesures/volumes/calcul-volumes.js?v=6";
-import { GABARIT_SELECTION_DIVISEURS } from "../../packages/automatismes/src/nombres-et-calculs/criteres-divisibilite/selection-diviseurs.js?v=6";
+} from "../../packages/automatismes/src/grandeurs-et-mesures/volumes/calcul-volumes.js?v=9";
+import { GABARIT_SELECTION_DIVISEURS } from "../../packages/automatismes/src/nombres-et-calculs/criteres-divisibilite/selection-diviseurs.js?v=9";
+import { genererSerieNC01 } from "../../packages/automatismes/src/nombres-et-calculs/criteres-divisibilite/serie.js?v=9";
 
 export const NOTION_NC01 = "criteres-divisibilite";
 export const NOTION_SOLIDES_USUELS = "solides-usuels";
@@ -31,6 +32,7 @@ function definirNotion({
   cours = false,
   aideChiffres = false,
   rotationSolide = false,
+  creerSerie = null,
 }) {
   if (typeof id !== "string" || !/^[a-z0-9][a-z0-9-]*$/.test(id)) {
     throw new TypeError(`identifiant de notion invalide : ${id}`);
@@ -47,6 +49,9 @@ function definirNotion({
   if (![cours, aideChiffres, rotationSolide].every((valeur) => typeof valeur === "boolean")) {
     throw new TypeError(`capacités de notion invalides : ${id}`);
   }
+  if (creerSerie !== null && typeof creerSerie !== "function") {
+    throw new TypeError(`fabrique de série invalide : ${id}`);
+  }
   return Object.freeze({
     id,
     nom,
@@ -54,6 +59,7 @@ function definirNotion({
     rendu,
     graineApercu,
     capacites: Object.freeze({ cours, aideChiffres, rotationSolide }),
+    creerSerie,
   });
 }
 
@@ -63,8 +69,10 @@ const DEFINITIONS = Object.freeze([
     nom: "Critères de divisibilité",
     gabarit: GABARIT_SELECTION_DIVISEURS,
     rendu: RENDU_DIVISIBILITE,
-    graineApercu: "apercu-nc01-f2",
+    graineApercu: "apercu-nc01-complet",
+    cours: true,
     aideChiffres: true,
+    creerSerie: genererSerieNC01,
   }),
   definirNotion({
     id: NOTION_SOLIDES_USUELS,

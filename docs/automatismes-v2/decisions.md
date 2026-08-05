@@ -188,3 +188,49 @@ explicite, jamais par un branchement implicite vers une notion par défaut. Une
 interaction réservée aux chiffres ou aux solides est bloquée pour les autres
 familles. Cette architecture précède toute nouvelle micro-notion et ne modifie
 pas le contenu pédagogique déjà validé.
+
+## 5 août 2026
+
+### D-025 — Une trame pédagogique commune, adaptée à chaque notion
+
+Les nouvelles notions suivent « Je montre → Nous faisons → Tu fais accompagné
+→ Tu fais seul → correction immédiate puis réactivation ». Le cours montre la
+méthode, « Me guider » oriente sans répondre et la correction explique. Une
+manipulation n'est construite que lorsqu'elle apporte un sens mathématique
+identifiable ; elle n'est jamais ajoutée pour remplir une case d'interface.
+
+Le gabarit versionné `gabarit-fiche-pedagogique.md` rend cette trame obligatoire
+à la conception, sans imposer les six familles particulières de NC-01 aux
+autres notions.
+
+### D-026 — Deux contextes visibles : S'entraîner et Au tableau
+
+Le lanceur V2 expose uniquement **S'entraîner** et **Au tableau**. Les libellés
+historiques « Interactif » et « Diaporama » ne sont plus des produits visibles.
+Le principe de D-018 reste acquis : une même question structurée alimente les
+deux contextes et le lecteur choisit sa présentation.
+
+En entraînement, l'aide est accessible pendant la série. Le futur mode examen,
+le chronomètre, le partage par code et la collecte de résultats restent hors du
+périmètre actuel et n'apparaissent pas dans le menu.
+
+### D-027 — Le lanceur V2 reprend la coque validée de `/auto/`
+
+Le menu V2 reprend la coque visuelle minimaliste actuellement publiée sur
+`/auto/` : en-tête, cartes numérotées, contrôles segmentés, domaines repliables,
+icônes et barre basse orange. Il ne reprend ni le moteur V1, ni MG1, ni son
+catalogue, ni ses crédits.
+
+Le catalogue V2 possède six domaines :
+
+1. Nombres et calculs ;
+2. Calcul littéral et algèbre ;
+3. Proportionnalité, fonctions et grandeurs ;
+4. Espace et géométrie ;
+5. Données, statistiques et probabilités ;
+6. Pensée informatique.
+
+Seuls les domaines contenant au moins une notion V2 explicitement ouverte à
+l'essai sont affichés. Au 5 août, seul **Nombres et calculs**, avec NC-01, est
+visible. Les autres domaines et leurs futures icônes restent absents tant
+qu'ils sont vides.

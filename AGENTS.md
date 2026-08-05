@@ -6,7 +6,8 @@ Automatismes V2, lire dans cet ordre :
 1. `docs/automatismes-v2/pilotage.md` ;
 2. `docs/automatismes-v2/etat.md` ;
 3. `docs/automatismes-v2/decisions.md` ;
-4. la fiche de la notion concernée, lorsqu'elle existe.
+4. `docs/automatismes-v2/gabarit-fiche-pedagogique.md` ;
+5. la fiche de la notion concernée, lorsqu'elle existe.
 
 ## Règles générales
 

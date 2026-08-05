@@ -1,17 +1,18 @@
-// Contrat minimal de séance — version 1.
+// Contrat minimal de séance — version 2.
 //
-// La séance décrit la sélection et l'avancement communs au mode interactif et
-// au diaporama. Le score se calcule depuis les traces ; aucune identité, durée,
-// donnée d'écran ou configuration de clavier n'entre dans ce contrat.
+// La séance décrit la sélection et l'avancement communs aux contextes
+// « S'entraîner » et « Au tableau ». Le score se calcule depuis les traces ;
+// aucune identité, durée, donnée d'écran ou configuration de clavier n'entre
+// dans ce contrat.
 
 import { estDonneePure, estIdentifiantValide } from "./gabarit.js";
 
-export const SCHEMA_SEANCE = "mathsgo.seance/1";
+export const SCHEMA_SEANCE = "mathsgo.seance/2";
 export const CONTEXTES_SEANCE = Object.freeze([
   "parcours-dnb",
   "entrainement-personnalise",
 ]);
-export const MODES_SEANCE = Object.freeze(["interactif", "diaporama"]);
+export const MODES_SEANCE = Object.freeze(["entrainement", "tableau"]);
 export const POLITIQUES_AIDE = Object.freeze([
   "ouverte",
   "disponible",

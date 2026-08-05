@@ -35,7 +35,7 @@ describe("registre du lecteur", () => {
       [RENDU_DIVISIBILITE, RENDU_SOLIDE, RENDU_VOLUME, RENDU_VOLUME, RENDU_VOLUME],
     );
     assert.equal(obtenirNotionLecteur(NOTION_NC01).capacites.aideChiffres, true);
-    assert.equal(obtenirNotionLecteur(NOTION_NC01).capacites.cours, false);
+    assert.equal(obtenirNotionLecteur(NOTION_NC01).capacites.cours, true);
     assert.equal(obtenirNotionLecteur(NOTION_SOLIDES_USUELS).capacites.rotationSolide, true);
     assert.equal(obtenirNotionLecteur(NOTION_VOLUME_PRISME).capacites.cours, true);
   });
@@ -43,7 +43,7 @@ describe("registre du lecteur", () => {
   it("fournit une définition immuable et refuse une notion inconnue", () => {
     const definition = obtenirNotionLecteur(NOTION_NC01);
     assert.equal(definition.nom, "Critères de divisibilité");
-    assert.equal(definition.graineApercu, "apercu-nc01-f2");
+    assert.equal(definition.graineApercu, "apercu-nc01-complet");
     assert.equal(Object.isFrozen(definition), true);
     assert.equal(Object.isFrozen(definition.capacites), true);
     assert.equal(connaitNotionLecteur("notion-inconnue"), false);

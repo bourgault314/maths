@@ -3,8 +3,11 @@ import assert from "node:assert/strict";
 
 import {
   COMPARAISON_ENSEMBLE_EXACT,
+  COMPARAISON_VALEUR_EXACTE,
   SCHEMA_QUESTION_INSTANCE_V2,
+  TYPE_REPONSE_ENTIER_NATUREL,
   TYPE_REPONSE_SELECTION_MULTIPLE,
+  estEntierExact,
   estSelectionExacte,
   validerQuestionInstanceV2,
 } from "./question-v2.js";
@@ -76,6 +79,18 @@ describe("validerQuestionInstanceV2 — cas valides", () => {
     delete question.correction;
     assert.equal(validerQuestionInstanceV2(question).valide, true);
   });
+
+  it("accepte la saisie d'un entier naturel borné réellement requise par NC-01", () => {
+    const question = questionValide();
+    question.reponse = {
+      type: TYPE_REPONSE_ENTIER_NATUREL,
+      comparaison: COMPARAISON_VALEUR_EXACTE,
+      attendu: 4,
+      minimum: 0,
+      maximum: 9,
+    };
+    assert.equal(validerQuestionInstanceV2(question).valide, true);
+  });
 });
 
 describe("validerQuestionInstanceV2 — garde-fous", () => {
@@ -143,6 +158,21 @@ describe("validerQuestionInstanceV2 — garde-fous", () => {
     );
   });
 
+  it("refuse un entier attendu hors des bornes annoncées", () => {
+    const question = questionValide();
+    question.reponse = {
+      type: TYPE_REPONSE_ENTIER_NATUREL,
+      comparaison: COMPARAISON_VALEUR_EXACTE,
+      attendu: 10,
+      minimum: 0,
+      maximum: 9,
+    };
+    assert.match(
+      validerQuestionInstanceV2(question).erreurs.join("\n"),
+      /compris dans les bornes/,
+    );
+  });
+
   it("refuse le code, les coordonnées et les propriétés non prévues", () => {
     const avecCode = questionValide();
     avecCode.origine.executer = () => true;
@@ -173,5 +203,14 @@ describe("estSelectionExacte", () => {
     assert.equal(estSelectionExacte([], []), false);
     assert.equal(estSelectionExacte(["choix invalide"], ["choix invalide"]), false);
     assert.equal(estSelectionExacte(null, ["2"]), false);
+  });
+});
+
+describe("estEntierExact", () => {
+  it("exige le même entier naturel sans conversion implicite", () => {
+    assert.equal(estEntierExact(4, 4), true);
+    assert.equal(estEntierExact(4, "4"), false);
+    assert.equal(estEntierExact(4, 5), false);
+    assert.equal(estEntierExact(-1, -1), false);
   });
 });

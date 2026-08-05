@@ -1,7 +1,10 @@
 import { describe, it } from "node:test";
 import assert from "node:assert/strict";
 
-import { TYPE_REPONSE_SELECTION_MULTIPLE } from "./question-v2.js";
+import {
+  TYPE_REPONSE_ENTIER_NATUREL,
+  TYPE_REPONSE_SELECTION_MULTIPLE,
+} from "./question-v2.js";
 import {
   SCHEMA_TRACE_REPONSE,
   validerTraceReponse,
@@ -34,6 +37,12 @@ describe("validerTraceReponse", () => {
     const trace = traceValide();
     trace.indexQuestion = 4;
     trace.reponse.choix = ["10", "2", "5", "3"];
+    assert.equal(validerTraceReponse(trace).valide, true);
+  });
+
+  it("accepte une réponse entière naturelle", () => {
+    const trace = traceValide();
+    trace.reponse = { type: TYPE_REPONSE_ENTIER_NATUREL, valeur: 4 };
     assert.equal(validerTraceReponse(trace).valide, true);
   });
 

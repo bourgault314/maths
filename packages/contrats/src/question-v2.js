@@ -1,16 +1,19 @@
 // Contrat « question instanciée » — version 2.
 //
-// Cette version couvre les deux premières formes validées : la sélection
-// multiple de NC-01/F2 et le choix unique accompagné d'un solide sémantique
-// de GE-12/F1. Elle ne préfigure pas les futurs contrats numériques.
+// Cette version couvre les choix simples ou multiples et la première saisie
+// numérique réellement nécessaire : un entier naturel borné. Cette dernière
+// sert aux familles NC-01/F5 et F6, sans anticiper les fractions, décimaux ou
+// expressions algébriques.
 
 import { estDonneePure, estIdentifiantValide } from "./gabarit.js";
 
 export const SCHEMA_QUESTION_INSTANCE_V2 = "mathsgo.question-instance/2";
 export const TYPE_REPONSE_SELECTION_MULTIPLE = "selection-multiple";
 export const TYPE_REPONSE_CHOIX_UNIQUE = "choix-unique";
+export const TYPE_REPONSE_ENTIER_NATUREL = "entier-naturel";
 export const COMPARAISON_ENSEMBLE_EXACT = "ensemble-exact";
 export const COMPARAISON_CHOIX_EXACT = "choix-exact";
+export const COMPARAISON_VALEUR_EXACTE = "valeur-exacte";
 export const TYPES_BLOC_V2 = Object.freeze(["texte", "entier", "solide"]);
 export const TYPES_OUTIL_AIDE_V2 = Object.freeze([
   "observer-unites",
@@ -184,17 +187,55 @@ function validerReponse(reponse, erreurs) {
     erreurs.push("reponse : objet attendu");
     return;
   }
+  const multiple = reponse.type === TYPE_REPONSE_SELECTION_MULTIPLE;
+  const unique = reponse.type === TYPE_REPONSE_CHOIX_UNIQUE;
+  const entier = reponse.type === TYPE_REPONSE_ENTIER_NATUREL;
+  if (!multiple && !unique && !entier) {
+    erreurs.push(
+      "reponse.type : sélection multiple, choix unique ou entier naturel attendu",
+    );
+    return;
+  }
+
+  if (entier) {
+    validerClesConnues(
+      reponse,
+      ["type", "comparaison", "attendu", "minimum", "maximum"],
+      "reponse",
+      erreurs,
+    );
+    if (reponse.comparaison !== COMPARAISON_VALEUR_EXACTE) {
+      erreurs.push(
+        `reponse.comparaison : « ${COMPARAISON_VALEUR_EXACTE} » attendu`,
+      );
+    }
+    if (!Number.isSafeInteger(reponse.minimum) || reponse.minimum < 0) {
+      erreurs.push("reponse.minimum : entier naturel requis");
+    }
+    if (
+      !Number.isSafeInteger(reponse.maximum) ||
+      reponse.maximum < reponse.minimum
+    ) {
+      erreurs.push(
+        "reponse.maximum : entier supérieur ou égal au minimum requis",
+      );
+    }
+    if (
+      !Number.isSafeInteger(reponse.attendu) ||
+      reponse.attendu < reponse.minimum ||
+      reponse.attendu > reponse.maximum
+    ) {
+      erreurs.push("reponse.attendu : entier compris dans les bornes requis");
+    }
+    return;
+  }
+
   validerClesConnues(
     reponse,
     ["type", "comparaison", "choix", "attendus"],
     "reponse",
     erreurs,
   );
-  const multiple = reponse.type === TYPE_REPONSE_SELECTION_MULTIPLE;
-  const unique = reponse.type === TYPE_REPONSE_CHOIX_UNIQUE;
-  if (!multiple && !unique) {
-    erreurs.push("reponse.type : sélection multiple ou choix unique attendu");
-  }
   const comparaisonAttendue = unique
     ? COMPARAISON_CHOIX_EXACT
     : COMPARAISON_ENSEMBLE_EXACT;
@@ -369,4 +410,20 @@ export function estSelectionExacte(attendus, recus) {
   if (attendus.length !== recus.length) return false;
   const ensembleRecu = new Set(recus);
   return attendus.every((id) => ensembleRecu.has(id));
+}
+
+/**
+ * Compare une saisie à l'entier naturel attendu sans conversion implicite.
+ * Le lecteur convertit explicitement son afficheur avant cet appel.
+ * @param {unknown} attendu
+ * @param {unknown} recu
+ */
+export function estEntierExact(attendu, recu) {
+  return (
+    Number.isSafeInteger(attendu) &&
+    attendu >= 0 &&
+    Number.isSafeInteger(recu) &&
+    recu >= 0 &&
+    attendu === recu
+  );
 }

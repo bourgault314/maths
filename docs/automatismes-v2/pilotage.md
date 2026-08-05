@@ -1,6 +1,6 @@
 # Pilotage d'Automatismes maths&go V2
 
-**Document opérationnel de référence — 20 juillet 2026.**
+**Document opérationnel de référence — mis à jour le 5 août 2026.**
 
 Ce document fixe le cadre du chantier. Une instruction explicite plus récente
 de Gwenaël peut le modifier ; la décision doit alors être consignée dans
@@ -97,6 +97,29 @@ utilisé pour désigner l'examen ou un parcours destiné au brevet.
 
 Une seule notion est active à la fois. Aucun répertoire de contenu réel n'est
 préparé en masse.
+
+## Modèle pédagogique commun
+
+Chaque notion part du gabarit
+[`gabarit-fiche-pedagogique.md`](gabarit-fiche-pedagogique.md). La progression
+commune est :
+
+1. **Je montre** — le cours explicite la méthode, une idée à la fois ;
+2. **Nous faisons** — l'élève réalise les étapes avec un guidage visible ;
+3. **Tu fais accompagné** — « Me guider » reste accessible sans conclure à sa
+   place ;
+4. **Tu fais seul** — l'étayage s'efface, sans changer artificiellement de
+   difficulté ;
+5. **Correction immédiate et explicite**, puis réactivation ultérieure.
+
+Le cours, « Me guider » et la correction ont trois fonctions distinctes. Une
+manipulation n'est ajoutée que si le geste rend un objet, une relation ou une
+procédure mathématique réellement perceptible. Un clic décoratif ou une
+manipulation qui mime la tâche sans aider à raisonner est écarté.
+
+Cette trame est réutilisable, pas mécanique : chaque fiche explique ce que
+signifient concrètement ses cinq temps pour la notion concernée et peut justifier
+qu'un temps soit très court ou qu'aucune manipulation séparée ne soit utile.
 
 ## Deux statuts indépendants
 

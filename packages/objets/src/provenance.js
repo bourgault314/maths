@@ -132,7 +132,7 @@ export const PROVENANCE_FONDATION_V2 = Object.freeze({
 
   "automatismes-v2/app.js": {
     statut: "original_mathsgo",
-    source: "storyboards du lecteur NC-01/F2 validés par Gwenaël le 19 juillet 2026",
+    source: "parcours complet NC-01 et décisions de disposition téléphone du 3 août 2026",
   },
   "automatismes-v2/package.json": {
     statut: "original_mathsgo",
@@ -202,6 +202,30 @@ export const PROVENANCE_FONDATION_V2 = Object.freeze({
   "packages/automatismes/src/nombres-et-calculs/criteres-divisibilite/selection-diviseurs.js": {
     statut: "original_mathsgo",
     source: "fiche NC-01 et contenu F2 validés par Gwenaël le 19 juillet 2026",
+  },
+  "packages/automatismes/src/nombres-et-calculs/criteres-divisibilite/critere-precis.js": {
+    statut: "original_mathsgo",
+    source: "fiche NC-01/F1 validée par Gwenaël le 19 juillet 2026",
+  },
+  "packages/automatismes/src/nombres-et-calculs/criteres-divisibilite/selection-nombres.js": {
+    statut: "original_mathsgo",
+    source: "fiche NC-01/F3 validée par Gwenaël le 19 juillet 2026",
+  },
+  "packages/automatismes/src/nombres-et-calculs/criteres-divisibilite/affirmation-divisibilite.js": {
+    statut: "original_mathsgo",
+    source: "fiche NC-01/F4 validée par Gwenaël le 19 juillet 2026",
+  },
+  "packages/automatismes/src/nombres-et-calculs/criteres-divisibilite/chiffre-manquant.js": {
+    statut: "original_mathsgo",
+    source: "fiche NC-01/F5 validée par Gwenaël le 19 juillet 2026",
+  },
+  "packages/automatismes/src/nombres-et-calculs/criteres-divisibilite/partage-court.js": {
+    statut: "original_mathsgo",
+    source: "fiche NC-01/F6 validée par Gwenaël le 19 juillet 2026",
+  },
+  "packages/automatismes/src/nombres-et-calculs/criteres-divisibilite/serie.js": {
+    statut: "original_mathsgo",
+    source: "recette de série complète NC-01 décidée avec Gwenaël le 3 août 2026",
   },
   "packages/automatismes/src/espace-et-geometrie/solides-usuels/reconnaissance.js": {
     statut: "original_mathsgo",

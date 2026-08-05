@@ -1,6 +1,51 @@
 # État du chantier Automatismes V2
 
-**Dernière mise à jour : 20 juillet 2026.**
+**Dernière mise à jour : 5 août 2026.**
+
+## Point de reprise vérifié du 5 août
+
+- Le dépôt de référence reste `bourgault314/maths`; `main` a été vérifié au
+  commit `d18a8c5cc4c6d10f90cea690d5a334dbecc472fe`.
+- Le menu apprécié par Gwenaël n'a jamais disparu : sa version publique est
+  dans `auto/` et sa filiation dans `studio/automatismes/`.
+- La candidate NC-01 complète avait été conservée dans un dépôt Git séparé de
+  ChatGPT Sites. Elle est rapatriée sur la branche
+  `agent/automatismes-v2-menu-nc01`, issue du `main` courant.
+- `/auto/` et la V1 publique restent inchangés.
+
+### Candidate NC-01 actuelle
+
+- Les six familles F1 à F6, le planificateur de séries 5/10/15/20, le cours en
+  quatre écrans, les aides, les corrections et les deux contextes sont
+  **construits** et testés.
+- Leur statut n'est pas encore `valide` : Gwenaël a indiqué que la candidate est
+  presque définitive mais doit encore recevoir ses derniers retours
+  pédagogiques.
+- Le lanceur reprend la coque visuelle de `/auto/`, avec seulement
+  `S'entraîner / Au tableau`, le nombre de questions et NC-01.
+- Les six domaines V2 sont enregistrés dans la structure du menu ; seuls les
+  domaines non vides sont rendus. Au départ, seul « Nombres et calculs » est
+  visible avec son icône originale.
+- Les solides et volumes présents dans le registre technique restent exclus du
+  menu par liste blanche ; ils ne peuvent pas apparaître accidentellement.
+
+### Vérifications de cette reprise
+
+- `npm run verifier` : **1 055 tests sur 1 055 réussis** ;
+- garde-fous V2 : 98 fichiers surveillés, 50 fichiers de production avec
+  provenance déclarée ;
+- contrôles réels à 320 × 568, 390 × 844 et 1 280 × 720 ;
+- aucun débordement horizontal ;
+- commandes du menu d'au moins 44 px ;
+- liaison vérifiée jusqu'à une vraie question NC-01 en entraînement et au
+  tableau.
+
+### Prochaine étape
+
+Recueillir les derniers retours de Gwenaël sur NC-01, corriger uniquement ces
+points, puis obtenir sa validation explicite avant d'ouvrir la notion DNB
+suivante. Le menu et la structure pédagogique ne doivent plus être redessinés
+pendant cette étape.
 
 ## Référence vérifiée
 
