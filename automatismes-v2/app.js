@@ -26,15 +26,15 @@ import {
   saisirChiffre,
   tournerSolide,
   validerReponse,
-} from "./src/etat-lecteur.js?v=9";
-import { TYPE_REPONSE_ENTIER_NATUREL } from "../packages/contrats/src/question-v2.js?v=9";
+} from "./src/etat-lecteur.js?v=10";
+import { TYPE_REPONSE_ENTIER_NATUREL } from "../packages/contrats/src/question-v2.js?v=10";
 import {
   obtenirNotionLecteur,
   RENDU_DIVISIBILITE,
   RENDU_SOLIDE,
   RENDU_VOLUME,
-} from "./src/registre-lecteur.js?v=9";
-import { COURS_SOLIDES_USUELS } from "../packages/automatismes/src/espace-et-geometrie/solides-usuels/reconnaissance.js?v=9";
+} from "./src/registre-lecteur.js?v=10";
+import { COURS_SOLIDES_USUELS } from "../packages/automatismes/src/espace-et-geometrie/solides-usuels/reconnaissance.js?v=10";
 import {
   creerCone,
   creerCube,
@@ -51,6 +51,7 @@ let etat = creerEtatLecteur(lireConfiguration(rechercheInitiale));
 let menuAccueilOuvert = rechercheInitiale.length === 0;
 let menuSessionOuvert = false;
 let pageCoursDivisibilite = 0;
+let compteurSeries = 0;
 let configurationMenu = {
   mode: "entrainement",
   aide: "disponible",
@@ -59,6 +60,11 @@ let configurationMenu = {
 };
 
 const VOLUMES_MENU = Object.freeze([5, 10, 15, 20]);
+
+function creerGraineSerie() {
+  compteurSeries += 1;
+  return `serie-${Date.now()}-${compteurSeries}`;
+}
 
 const DOMAINES_MENU = Object.freeze([
   Object.freeze({
@@ -120,15 +126,6 @@ function echapper(valeur) {
     .replaceAll(">", "&gt;")
     .replaceAll('"', "&quot;")
     .replaceAll("'", "&#039;");
-}
-
-function texteAide() {
-  const libelles = {
-    ouverte: "aide affichée",
-    disponible: "aide accessible",
-    indisponible: "sans aide",
-  };
-  return libelles[etat.configuration.aide];
 }
 
 function libelleMode(mode = etat.configuration.mode) {
@@ -278,20 +275,14 @@ function rendreMenuAccueil() {
 function rendreEcranPret() {
   const entrainement = estEntrainement();
   return `
-    <main class="ecran-pret">
+    <main class="ecran-pret ${etat.coursOuvert ? "cours-pret-ouvert" : ""}">
       <button class="retour-lancement" type="button" data-action="retour-menu">← Modifier</button>
       ${rendreMarque()}
       <p class="surtitre">Préparation au brevet</p>
       <h1>${entrainement ? "Prêt à t'entraîner ?" : "Prêt pour la classe ?"}</h1>
       <section class="resume-seance" aria-label="Contenu de la séance">
-        <span class="pastille-mode">${libelleMode()}</span>
         <strong>${echapper(nomNotion())}</strong>
         <span>${etat.configuration.nombreQuestions} ${etat.configuration.nombreQuestions === 1 ? "question" : "questions"}</span>
-        <span>${echapper(texteAide())} · correction expliquée</span>
-      </section>
-      <section class="rappel-methode-pret" aria-label="Les deux observations à connaître">
-        <p><strong>Chiffre des unités</strong><span>pour 2, 5 et 10</span></p>
-        <p><strong>Somme de tous les chiffres</strong><span>pour 3 et 9</span></p>
       </section>
       <div class="actions-pret">
         <button class="bouton-secondaire bouton-large" data-action="cours">Voir le cours</button>
@@ -859,10 +850,11 @@ function rendreAideDivisibilite(question) {
     return rendreAideDivisibiliteGenerique(question);
   }
   const nombre = String(nombreQuestion(question));
-  const blocs = question.aide?.blocs ?? [];
-  const expression = etat.chiffresSomme.length === 0
-    ? `${[...nombre].map(() => "□").join(" + ")} = □`
-    : `${etat.chiffresSomme.map((index) => nombre[index]).join(" + ")} = □`;
+  const termes = [...nombre].map((chiffre, index) =>
+    etat.chiffresSomme.includes(index) ? chiffre : "□");
+  const tousLesChiffresSontSelectionnes = etat.chiffresSomme.length === nombre.length;
+  const somme = [...nombre].reduce((total, chiffre) => total + Number(chiffre), 0);
+  const expression = `${termes.join(" + ")} = ${tousLesChiffresSontSelectionnes ? somme : "□"}`;
   const chiffresSomme = [...nombre].map((chiffre, index) => `
     <button class="chiffre-aide ${etat.chiffresSomme.includes(index) ? "actif" : ""}"
       data-action="chiffre-aide" data-index="${index}" aria-pressed="${etat.chiffresSomme.includes(index)}">
@@ -879,24 +871,23 @@ function rendreAideDivisibilite(question) {
       ${rendreRappelQuestion(question)}
       ${rendreAccesCoursDepuisAide()}
       <section class="outil-aide outil-unites">
-        ${rendreEtape(1, blocs[0]?.contenu ?? "Observe le chiffre des unités.", "repere-unites")}
+        ${rendreEtape(1, "Regarde le chiffre des unités", "repere-unites")}
         <div class="nombre-aide" aria-label="Nombre ${nombre}">
           ${nombre.slice(0, -1).split("").map((chiffre) => `<span>${chiffre}</span>`).join("")}
           <button data-action="unite-aide" class="unite-aide ${etat.uniteReperee ? "actif" : ""}"
             aria-pressed="${etat.uniteReperee}" aria-label="Chiffre des unités : ${unite}">${unite}</button>
         </div>
-        <p class="consigne-manipulation">Appuie sur le chiffre à observer.</p>
+        <p class="consigne-manipulation">Appuie sur le chiffre des unités.</p>
+        <p class="question-guidage">Convient-il pour 2 ? Pour 5 ? Pour 10 ?</p>
       </section>
       <section class="outil-aide outil-somme">
-        ${rendreEtape(2, blocs[1]?.contenu ?? "Additionne tous les chiffres.", "repere-somme")}
+        ${rendreEtape(2, "Additionne tous les chiffres", "repere-somme")}
         <div class="chiffres-aide">${chiffresSomme}</div>
-        <output class="expression-aide">${echapper(expression)}</output>
-        <p class="consigne-manipulation">Appuie sur les chiffres pour construire la somme.</p>
+        <output class="expression-aide" aria-live="polite" aria-atomic="true">${echapper(expression)}</output>
+        <p class="consigne-manipulation">Appuie sur chaque chiffre pour construire la somme.</p>
+        <p class="question-guidage">La somme est-elle un multiple de 3 ? De 9 ?</p>
       </section>
-      <section class="indices-aide">
-        <h3>À vérifier ensuite</h3>
-        <ul>${blocs.slice(2).map((bloc) => `<li>${echapper(bloc.contenu)}</li>`).join("")}</ul>
-      </section>
+      <p class="indication-aide">Plusieurs réponses peuvent être correctes.</p>
     </aside>`;
 }
 
@@ -951,8 +942,9 @@ function rendreCarteCoursDivisibilite(index) {
   if (index === 0) {
     return `<article class="carte-cours-divisibilite">
       <span class="numero-cours">1</span>
-      <h3>Divisible signifie « sans reste »</h3>
-      <p class="modelage-cours">Je partage en parts égales, puis je regarde le reste.</p>
+      <h3>Divisible : le reste est égal à 0</h3>
+      <p class="definition-cours">Un nombre est divisible par un autre lorsque le reste de la division est nul, c’est-à-dire égal à 0.</p>
+      <p class="modelage-cours">On peut alors partager en parts égales sans qu’il reste d’objet.</p>
       <div class="comparaison-partages">
         <div class="barre-partage partage-exact" aria-label="12 partagé en 3 parts égales de 4, reste zéro">
           <strong>12</strong><div><span>4</span><span>4</span><span>4</span></div><small>reste 0</small>
@@ -967,53 +959,48 @@ function rendreCarteCoursDivisibilite(index) {
   if (index === 1) {
     return `<article class="carte-cours-divisibilite">
       <span class="numero-cours">2</span>
-      <h3>Pour 2, 5 et 10 : je regarde l’unité</h3>
+      <h3>Pour 2, 5 et 10, je regarde le chiffre des unités</h3>
       <ul class="regles-unites-cours">
-        <li><strong>par 2</strong><span>0, 2, 4, 6 ou 8</span></li>
-        <li><strong>par 5</strong><span>0 ou 5</span></li>
-        <li><strong>par 10</strong><span>0</span></li>
+        <li><strong>Divisible par 2 :</strong><span>le chiffre des unités est 0, 2, 4, 6 ou 8.</span></li>
+        <li><strong>Divisible par 5 :</strong><span>le chiffre des unités est 0 ou 5.</span></li>
+        <li><strong>Divisible par 10 :</strong><span>le chiffre des unités est 0.</span></li>
       </ul>
-      <div class="exemples-contrastes-unites" aria-label="Trois exemples comparés">
-        <p>23<strong>0</strong><span>2, 5 et 10</span></p>
-        <p>23<strong>5</strong><span>5 seulement</span></p>
-        <p>23<strong>6</strong><span>2 seulement</span></p>
-      </div>
-    </article>`;
-  }
-  if (index === 2) {
-    return `<article class="carte-cours-divisibilite">
-      <span class="numero-cours">3</span>
-      <h3>Pour 3 et 9 : j’additionne tous les chiffres</h3>
-      <div class="exemples-sommes-cours">
-        <section><strong>372</strong><p>3 + 7 + 2 = <b>12</b></p><span>12 est multiple de 3, pas de 9.</span><em>372 est divisible par 3 seulement.</em></section>
-        <section><strong>729</strong><p>7 + 2 + 9 = <b>18</b></p><span>18 est multiple de 3 et de 9.</span><em>729 est divisible par 3 et par 9.</em></section>
+      <div class="exemples-unites-cours" aria-label="Trois exemples">
+        <p><strong>230</strong><span>Son chiffre des unités est 0 : il est divisible par 2, par 5 et par 10.</span></p>
+        <p><strong>235</strong><span>Son chiffre des unités est 5 : il est divisible par 5, mais pas par 2 ni par 10.</span></p>
+        <p><strong>236</strong><span>Son chiffre des unités est 6 : il est divisible par 2, mais pas par 5 ni par 10.</span></p>
       </div>
     </article>`;
   }
   return `<article class="carte-cours-divisibilite">
-    <span class="numero-cours">4</span>
-    <h3>Je garde deux liens en tête</h3>
-    <div class="liens-divisibilite"><strong>divisible par 9 <span>implique</span> divisible par 3</strong><strong>divisible par 10 <span>implique</span> divisible par 2 et par 5</strong></div>
-    <div class="attention-cours"><strong>Attention au sens inverse</strong><p>Divisible par 3 ne signifie pas toujours divisible par 9.<br>Divisible par 5 ne signifie pas toujours divisible par 10.</p></div>
+    <span class="numero-cours">3</span>
+    <h3>Pour 3 et 9, j’additionne tous les chiffres</h3>
+    <ul class="regles-unites-cours regles-sommes-cours">
+      <li><strong>Divisible par 3 :</strong><span>la somme de tous les chiffres est un multiple de 3.</span></li>
+      <li><strong>Divisible par 9 :</strong><span>la somme de tous les chiffres est un multiple de 9.</span></li>
+    </ul>
+    <div class="exemples-sommes-cours">
+      <section><strong>372</strong><p>3 + 7 + 2 = <b>12</b></p><span>12 est multiple de 3, mais pas de 9.</span><em>372 est divisible par 3, mais pas par 9.</em></section>
+      <section><strong>729</strong><p>7 + 2 + 9 = <b>18</b></p><span>18 est multiple de 3 et de 9.</span><em>729 est divisible par 3 et par 9.</em></section>
+    </div>
   </article>`;
 }
 
 function rendreCoursDivisibilite() {
   if (!etat.coursOuvert) return "";
-  const derniere = pageCoursDivisibilite === 3;
+  const derniere = pageCoursDivisibilite === 2;
   return `
     <div class="voile" data-action="fermer-cours" aria-hidden="true"></div>
     <aside class="panneau panneau-cours panneau-cours-divisibilite" id="panneau-cours"
       role="dialog" aria-modal="true" aria-labelledby="titre-cours">
       <div class="entete-panneau">
-        <div><p class="surtitre">Cours · ${pageCoursDivisibilite + 1} / 4</p><h2 id="titre-cours">Les critères de divisibilité</h2></div>
+        <div><p class="surtitre">Cours · ${pageCoursDivisibilite + 1} / 3</p><h2 id="titre-cours">Les critères de divisibilité</h2></div>
         <button class="fermer" data-action="fermer-cours" aria-label="Fermer le cours">Retour</button>
       </div>
-      <p class="introduction-cours">Une idée à la fois : observe l’exemple, puis dis la règle avec tes mots.</p>
       <div class="cours-une-carte" aria-live="polite">${rendreCarteCoursDivisibilite(pageCoursDivisibilite)}</div>
       <nav class="navigation-cours" aria-label="Navigation dans le cours">
         <button class="bouton-secondaire" type="button" data-action="cours-precedent" ${pageCoursDivisibilite === 0 ? "disabled" : ""}>Précédent</button>
-        <div class="points-cours" aria-label="Page ${pageCoursDivisibilite + 1} sur 4">${[0, 1, 2, 3].map((page) => `<span class="${page === pageCoursDivisibilite ? "actif" : ""}"></span>`).join("")}</div>
+        <div class="points-cours" aria-label="Page ${pageCoursDivisibilite + 1} sur 3">${[0, 1, 2].map((page) => `<span class="${page === pageCoursDivisibilite ? "actif" : ""}"></span>`).join("")}</div>
         <button class="bouton-principal" type="button" data-action="${derniere ? "fermer-cours" : "cours-suivant"}">${derniere ? "J’ai compris" : "Suivant"}</button>
       </nav>
     </aside>`;
@@ -1244,6 +1231,7 @@ function rendreClavierEntier(question) {
       : "?";
   return `<section class="saisie-numerique" aria-label="Réponse numérique">
     <output class="afficheur-reponse ${etat.saisie ? "rempli" : ""}">${echapper(valeurAffichee)}</output>
+    ${entrainement ? '<p class="indication-clavier-physique">Touches 0 à 9 · Retour arrière pour effacer · Entrée pour valider</p>' : ""}
     ${entrainement ? `<div class="clavier-mathsgo" aria-label="Clavier chiffres">
       ${[1, 2, 3, 4, 5, 6, 7, 8, 9].map((chiffre) => `<button type="button" data-action="chiffre" data-value="${chiffre}">${chiffre}</button>`).join("")}
       <button class="touche-effacer" type="button" data-action="effacer-saisie" aria-label="Effacer le dernier chiffre">Effacer</button>
@@ -1470,13 +1458,15 @@ function rendreBilan() {
       <p class="notion-bilan">${echapper(nomNotion())}</p>
       ${entrainement ? `<p class="conseil-bilan">${echapper(conseil)}</p>` : ""}
       <div class="actions-bilan">
-        <button class="bouton-principal bouton-large" data-action="recommencer">Refaire cette série</button>
+        <button class="bouton-principal bouton-large" data-action="nouvelle-serie">Nouvelle série</button>
+        <button class="bouton-secondaire bouton-large" data-action="recommencer">Refaire la même série</button>
         <button class="bouton-secondaire bouton-large" data-action="retour-menu">Choisir une autre série</button>
       </div>
     </main>`;
 }
 
 function rendre({ focusPanneau = false, focusSelector = "" } = {}) {
+  const positionPanneau = application.querySelector?.(".panneau")?.scrollTop ?? 0;
   const phase = etat.seance.etat.phase;
   application.innerHTML = menuAccueilOuvert
     ? rendreMenuAccueil()
@@ -1490,10 +1480,25 @@ function rendre({ focusPanneau = false, focusSelector = "" } = {}) {
     : phase === "en-cours"
     ? `Question ${etat.seance.etat.indexQuestion + 1} — Automatismes maths&go`
     : "Automatismes maths&go";
-  if (focusPanneau) {
-    application.querySelector(".menu-session button, .panneau .fermer")?.focus();
-  } else if (focusSelector) {
-    application.querySelector(focusSelector)?.focus();
+  const panneau = application.querySelector?.(".panneau");
+  if (panneau && positionPanneau > 0) panneau.scrollTop = positionPanneau;
+  const cibleFocus = focusPanneau
+    ? application.querySelector(".menu-session button, .panneau .fermer")
+    : focusSelector
+      ? application.querySelector(focusSelector)
+      : null;
+  if (cibleFocus) {
+    try {
+      cibleFocus.focus({ preventScroll: true });
+    } catch {
+      cibleFocus.focus();
+    }
+  }
+  if (panneau) {
+    panneau.scrollTop = positionPanneau;
+    globalThis.requestAnimationFrame?.(() => {
+      panneau.scrollTop = positionPanneau;
+    });
   }
 }
 
@@ -1518,7 +1523,7 @@ application.addEventListener("click", (evenement) => {
     if (configurationMenu.notion !== NOTION_NC01) return;
     etat = creerEtatLecteur({
       ...configurationMenu,
-      graine: `serie-${Date.now()}`,
+      graine: creerGraineSerie(),
     });
     menuAccueilOuvert = false;
   }
@@ -1596,8 +1601,8 @@ application.addEventListener("click", (evenement) => {
     focusSelector = '[data-action="cours-precedent"]';
   }
   if (action === "cours-suivant") {
-    pageCoursDivisibilite = Math.min(3, pageCoursDivisibilite + 1);
-    focusSelector = pageCoursDivisibilite === 3
+    pageCoursDivisibilite = Math.min(2, pageCoursDivisibilite + 1);
+    focusSelector = pageCoursDivisibilite === 2
       ? '[data-action="fermer-cours"].bouton-principal'
       : '[data-action="cours-suivant"]';
   }
@@ -1617,6 +1622,13 @@ application.addEventListener("click", (evenement) => {
   }
   if (action === "suivant") passerQuestionSuivante(etat);
   if (action === "recommencer") etat = recommencer(etat);
+  if (action === "nouvelle-serie") {
+    etat = creerEtatLecteur({
+      ...etat.configuration,
+      graine: creerGraineSerie(),
+    });
+    menuAccueilOuvert = false;
+  }
   rendre({ focusPanneau, focusSelector });
 });
 

@@ -82,7 +82,6 @@ describe("NC-01/F2 — question instanciée", () => {
       "Observe le chiffre des unités.",
       "Additionne tous les chiffres.",
       "La somme obtenue est-elle un multiple de 3 ? Et de 9 ?",
-      "Attention : être divisible par 3 ne signifie pas forcément être divisible par 9.",
       "Plusieurs réponses sont peut-être possibles.",
     ]);
   });

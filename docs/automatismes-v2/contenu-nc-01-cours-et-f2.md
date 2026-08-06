@@ -2,7 +2,7 @@
 
 ## Statut
 
-**Contenu validé par Gwenaël le 19 juillet 2026.**
+**Contenu validé par Gwenaël le 19 juillet 2026, puis simplifié avec lui le 6 août 2026.**
 
 Ce document ne contient ni JSON, ni générateur, ni code d’interface. Il fixe les formulations, les réponses, les aides, les corrections et les états d’écran qui serviront ensuite de références reproductibles. La représentation du cours est arrêtée ci-dessous à partir de la validation et des indications visuelles de Gwenaël.
 
@@ -10,13 +10,15 @@ Ce document ne contient ni JSON, ni générateur, ni code d’interface. Il fixe
 
 Le cours est court. Il ne crée ni niveau ni palier. Il sert de référence commune aux questions, aux aides et aux corrections.
 
-### Carte 1 — Que signifie « divisible par » ?
+### Page 1 — Que signifie « divisible par » ?
 
-**Titre proposé :** Partager sans reste
+**Titre :** Divisible : le reste est égal à 0
 
 **Texte élève :**
 
-> Un nombre est divisible par un autre nombre lorsqu’on peut effectuer le partage sans reste.
+> Un nombre est divisible par un autre lorsque le reste de la division est nul, c’est-à-dire égal à 0.
+
+> On peut alors partager en parts égales sans qu’il reste d’objet.
 
 **Exemple principal :**
 
@@ -31,11 +33,13 @@ Le cours est court. Il ne crée ni niveau ni palier. Il sert de référence comm
 
 Ce schéma montre le tout, les trois parts égales et l’absence de reste dans un seul objet compact, lisible sur téléphone comme en projection.
 
+Toutes les pièces mathématiques du schéma sont rectangulaires : barre entière, parts et reste. Aucun coin arrondi ne modifie la lecture des longueurs.
+
 **Action facultative :** appuyer sur « Partager en 3 » pour faire apparaître successivement les trois séparations et les valeurs 4. Aucun glisser-déposer n’est demandé.
 
-### Carte 2 — Observer le chiffre des unités
+### Page 2 — Observer le chiffre des unités
 
-**Titre proposé :** Pour 2, 5 et 10, regarde le dernier chiffre
+**Titre :** Pour 2, 5 et 10, je regarde le chiffre des unités
 
 **Règles :**
 
@@ -51,9 +55,9 @@ Ce schéma montre le tout, les trois parts égales et l’absence de reste dans 
 
 **Action facultative :** l’élève appuie sur le chiffre des unités. Le chiffre est alors encadré et la mention « chiffre des unités » apparaît. Le cours affiche ensuite les trois règles et la conclusion complète.
 
-### Carte 3 — Additionner tous les chiffres
+### Page 3 — Additionner tous les chiffres
 
-**Titre proposé :** Pour 3 et 9, additionne tous les chiffres
+**Titre :** Pour 3 et 9, j’additionne tous les chiffres
 
 **Règles :**
 
@@ -66,28 +70,11 @@ Ce schéma montre le tout, les trois parts égales et l’absence de reste dans 
 
 **Deuxième exemple bref :**
 
-> Pour 486 : `4 + 8 + 6 = 18`. Comme 18 est un multiple de 3 et de 9, 486 est divisible par 3 et par 9.
+> Pour 729 : `7 + 2 + 9 = 18`. Comme 18 est un multiple de 3 et de 9, 729 est divisible par 3 et par 9.
 
 **Représentation :** chaque chiffre sélectionné apparaît une fois, dans son ordre d’écriture, dans une zone somme.
 
-**Action facultative :** l’élève appuie successivement sur tous les chiffres. La zone construit `3 + 7 + 2 = □`. Dans le cours, il peut saisir 12 puis afficher l’explication. Pendant une aide de question, le résultat n’est jamais rempli automatiquement.
-
-### Carte 4 — Des liens à connaître
-
-**Titre proposé :** Un nombre peut avoir plusieurs diviseurs
-
-**À retenir :**
-
-- divisible par 9 implique divisible par 3 ;
-- divisible par 3 ne signifie pas forcément divisible par 9 ;
-- divisible par 10 implique divisible par 2 et par 5 ;
-- un même nombre peut donc avoir plusieurs réponses correctes.
-
-**Exemple :**
-
-> 90 est divisible par 2, 3, 5, 9 et 10.
-
-**Représentation :** deux petites chaînes de conséquences, `9 → 3` et `10 → 2 et 5`, accompagnées de phrases complètes accessibles. Les flèches seules ne portent jamais le sens.
+**Action facultative :** l’élève appuie successivement sur tous les chiffres. La zone conserve les emplacements vides, puis affiche `3 + 7 + 2 = 12` seulement lorsque les trois chiffres ont été sélectionnés. Elle ne conclut pas à la place de l’élève sur la divisibilité.
 
 ## Langage visuel commun
 
@@ -95,7 +82,7 @@ Le cours, l’aide et la correction utilisent les mêmes trois objets :
 
 1. **le nombre affiché**, dont chaque chiffre peut être ciblé séparément ;
 2. **le repère des unités**, qui encadre le dernier chiffre ;
-3. **la zone somme**, qui assemble tous les chiffres dans leur ordre et laisse l’élève saisir le résultat lorsqu’elle sert d’aide.
+3. **la zone somme**, qui assemble tous les chiffres dans leur ordre et révèle le total seulement quand ils ont tous été sélectionnés.
 
 Les différences d’état sont visibles par un contour, une icône ou un libellé, jamais par la couleur seule. Toutes les actions restent possibles par appui au doigt, au stylet ou à la souris.
 
@@ -154,23 +141,23 @@ Les teintes exactes viendront de la charte maths&go. Un contour, un motif ou un 
 
 L’aide ne varie pas selon la réponse correcte de l’instance : elle ne révèle donc pas indirectement le résultat.
 
-**Bloc “unités” :**
+**Étape 1 — Regarde le chiffre des unités :**
 
 > Observe le chiffre des unités.
 
 L’élève peut appuyer sur le dernier chiffre pour l’encadrer. Aucune conclusion n’est affichée à sa place.
 
-**Bloc “somme” :**
+> Convient-il pour 2 ? Pour 5 ? Pour 10 ?
+
+**Étape 2 — Additionne tous les chiffres :**
 
 > Additionne tous les chiffres.
 
-L’élève peut sélectionner chaque chiffre. La zone somme construit l’addition et laisse le résultat vide. L’élève saisit lui-même la somme.
+L’élève peut sélectionner chaque chiffre. La zone somme conserve les cases vides, puis calcule le total quand tous les chiffres ont été sélectionnés.
 
 **Questions de guidage :**
 
-> La somme obtenue est-elle un multiple de 3 ? Et de 9 ?
-
-> Attention : être divisible par 3 ne signifie pas forcément être divisible par 9.
+> La somme est-elle un multiple de 3 ? De 9 ?
 
 > Plusieurs réponses sont peut-être possibles.
 
@@ -198,7 +185,7 @@ Ces nombres servent à valider le contenu et les cas limites. Ils ne constituent
 
 **Réponse attendue :** `Aucun`.
 
-**Aide ouverte :** l’élève peut encadrer 7 comme chiffre des unités et construire `7 + 7 = □`. Il saisit lui-même 14. L’aide ne conclut pas.
+**Aide ouverte :** l’élève peut encadrer 7 comme chiffre des unités et construire `7 + 7 = 14` en sélectionnant les deux chiffres. L’aide ne conclut pas.
 
 **Correction :**
 
@@ -216,7 +203,7 @@ Ces nombres servent à valider le contenu et les cas limites. Ils ne constituent
 
 **Réponse attendue :** `2`.
 
-**Aide ouverte :** l’élève peut encadrer 4 et construire `1 + 2 + 4 = □`. Il saisit lui-même 7.
+**Aide ouverte :** l’élève peut encadrer 4 et construire `1 + 2 + 4 = 7` en sélectionnant les trois chiffres.
 
 **Correction :**
 
@@ -234,7 +221,7 @@ Ces nombres servent à valider le contenu et les cas limites. Ils ne constituent
 
 **Réponse attendue :** `5`.
 
-**Aide ouverte :** l’élève peut encadrer 5 et construire `1 + 4 + 5 = □`. Il saisit lui-même 10.
+**Aide ouverte :** l’élève peut encadrer 5 et construire `1 + 4 + 5 = 10` en sélectionnant les trois chiffres.
 
 **Correction :**
 
@@ -252,7 +239,7 @@ Ces nombres servent à valider le contenu et les cas limites. Ils ne constituent
 
 **Réponse attendue :** `3`.
 
-**Aide ouverte :** l’élève peut encadrer 3 et construire `1 + 2 + 3 = □`. Il saisit lui-même 6.
+**Aide ouverte :** l’élève peut encadrer 3 et construire `1 + 2 + 3 = 6` en sélectionnant les trois chiffres.
 
 **Correction :**
 
@@ -270,7 +257,7 @@ Ces nombres servent à valider le contenu et les cas limites. Ils ne constituent
 
 **Réponse attendue :** `3` et `9`.
 
-**Aide ouverte :** l’élève peut encadrer 7 et construire `1 + 1 + 7 = □`. Il saisit lui-même 9.
+**Aide ouverte :** l’élève peut encadrer 7 et construire `1 + 1 + 7 = 9` en sélectionnant les trois chiffres.
 
 **Correction :**
 
@@ -278,7 +265,7 @@ Ces nombres servent à valider le contenu et les cas limites. Ils ne constituent
 - `1 + 1 + 7 = 9` : 9 est un multiple de 3 et de 9 ;
 - conclusion : 3 et 9 divisent 117.
 
-**Rôle du spécimen :** vérifier la conséquence « divisible par 9 implique divisible par 3 ».
+**Rôle du spécimen :** vérifier les réponses simultanées 3 et 9.
 
 ### Spécimen 6 — Plusieurs diviseurs, mais pas 9
 
@@ -288,7 +275,7 @@ Ces nombres servent à valider le contenu et les cas limites. Ils ne constituent
 
 **Réponse attendue :** `2`, `3`, `5` et `10`.
 
-**Aide ouverte :** l’élève peut encadrer 0 et construire `3 + 3 + 0 = □`. Il saisit lui-même 6. Chaque occurrence du chiffre 3 est sélectionnable séparément et le zéro reste visible dans la somme.
+**Aide ouverte :** l’élève peut encadrer 0 et construire `3 + 3 + 0 = 6` en sélectionnant les trois chiffres. Chaque occurrence du chiffre 3 est sélectionnable séparément et le zéro reste visible dans la somme.
 
 **Correction :**
 
@@ -306,7 +293,7 @@ Ces nombres servent à valider le contenu et les cas limites. Ils ne constituent
 
 **Réponse attendue :** `2`, `3`, `5`, `9` et `10`.
 
-**Aide ouverte :** l’élève peut encadrer 0 et construire `9 + 0 = □`. Il saisit lui-même 9.
+**Aide ouverte :** l’élève peut encadrer 0 et construire `9 + 0 = 9` en sélectionnant les deux chiffres.
 
 **Correction :**
 
@@ -351,10 +338,10 @@ La révélation de la réponse ne dépend pas d’un clic sur les diviseurs : le
 
 Gwenaël valide :
 
-1. les quatre cartes du mini-cours, avec le schéma en barres comme représentation principale de la première carte ;
+1. les trois pages du mini-cours, avec le schéma en barres rectangulaire comme représentation principale de la première page ;
 2. les formulations communes de la question ;
 3. les sept spécimens et leurs corrections ;
-4. la zone somme qui laisse l’élève saisir le résultat ;
+4. la zone somme qui affiche le résultat après sélection de tous les chiffres, sans conclure sur la divisibilité ;
 5. l’absence complète de glisser-déposer ;
 6. les quatre états successifs de la projection ;
 7. la règle selon laquelle les aides restent générales et ne changent pas en fonction de la bonne réponse ;

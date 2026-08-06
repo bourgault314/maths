@@ -13,12 +13,12 @@ import {
   COMPARAISON_ENSEMBLE_EXACT,
   SCHEMA_QUESTION_INSTANCE_V2,
   TYPE_REPONSE_SELECTION_MULTIPLE,
-} from "../../../../contrats/src/question-v2.js?v=9";
+} from "../../../../contrats/src/question-v2.js?v=10";
 import {
   DIVISEURS_CRITERES_NC01,
   construireCorrectionCritere,
   tirerNombreSelonDivisibilite,
-} from "./critere-precis.js?v=9";
+} from "./critere-precis.js?v=10";
 
 export const NOM_GENERATEUR_SELECTION_NOMBRES =
   "nombres-et-calculs.criteres-divisibilite.selection-nombres";

@@ -9,7 +9,7 @@ import {
   TYPE_REPONSE_CHOIX_UNIQUE,
   TYPE_REPONSE_ENTIER_NATUREL,
   TYPE_REPONSE_SELECTION_MULTIPLE,
-} from "./question-v2.js?v=9";
+} from "./question-v2.js?v=10";
 
 export const SCHEMA_TRACE_REPONSE = "mathsgo.trace-reponse/1";
 

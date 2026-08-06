@@ -339,42 +339,6 @@ body {
   font-weight: 800;
 }
 
-.pastille-mode {
-  width: fit-content;
-  margin: 0 auto 4px;
-  padding: 5px 10px;
-  border-radius: 9999px;
-  color: var(--mg-bleu) !important;
-  background: color-mix(in srgb, var(--mg-turquoise) 12%, var(--mg-papier));
-  font-size: 13px;
-  font-weight: 800;
-}
-
-.rappel-methode-pret {
-  width: 100%;
-  margin: -16px 0 20px;
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 8px;
-}
-
-.rappel-methode-pret p {
-  margin: 0;
-  padding: 11px;
-  display: grid;
-  gap: 3px;
-  border: 1px solid var(--mg-ligne);
-  border-radius: var(--mg-rayon-moyen);
-  color: var(--mg-bleu);
-  background: var(--mg-fondDoux);
-  font-size: 13px;
-}
-
-.rappel-methode-pret span {
-  color: var(--mg-texteAttenue);
-  font-size: 12px;
-}
-
 .actions-pret {
   width: 100%;
   display: grid;
@@ -865,6 +829,10 @@ body {
   flex-direction: column;
 }
 
+.ecran-pret .panneau-cours-divisibilite {
+  transform: none;
+}
+
 .panneau-cours-divisibilite .introduction-cours {
   margin: 0 0 12px;
   color: var(--mg-texteAttenue);
@@ -904,6 +872,13 @@ body {
   font-weight: 700;
 }
 
+.definition-cours {
+  margin: 0 0 8px;
+  color: var(--mg-encre);
+  font-weight: 700;
+  line-height: 1.45;
+}
+
 .comparaison-partages {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -923,7 +898,7 @@ body {
 }
 
 .barre-partage > strong {
-  border-radius: 12px 12px 0 0;
+  border-radius: 0;
   color: var(--mg-papier);
   background: var(--mg-bleu);
   font-size: 22px;
@@ -955,14 +930,14 @@ body {
   place-items: center;
   border: 2px solid var(--mg-ligne);
   border-top: 0;
-  border-radius: 0 0 10px 10px;
+  border-radius: 0;
   color: var(--mg-texteAttenue);
   background: var(--mg-fondDoux);
   font-weight: 800;
 }
 
 .barre-partage > div + small {
-  border-radius: 0 0 10px 10px;
+  border-radius: 0;
 }
 
 .barre-partage > div {
@@ -997,11 +972,15 @@ body {
   min-height: 48px;
   padding: 8px 11px;
   display: grid;
-  grid-template-columns: 88px minmax(0, 1fr);
+  grid-template-columns: minmax(128px, auto) minmax(0, 1fr);
   gap: 8px;
   align-items: center;
   border-radius: 12px;
   background: var(--mg-fondDoux);
+}
+
+.regles-sommes-cours li {
+  grid-template-columns: minmax(142px, auto) minmax(0, 1fr);
 }
 
 .regles-unites-cours strong {
@@ -1013,41 +992,34 @@ body {
   font-weight: 800;
 }
 
-.exemples-contrastes-unites {
+.exemples-unites-cours {
   display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 7px;
 }
 
-.exemples-contrastes-unites p {
+.exemples-unites-cours p {
   margin: 0;
-  padding: 10px 5px;
+  padding: 10px 12px;
   display: grid;
-  place-items: center;
+  grid-template-columns: 64px minmax(0, 1fr);
+  gap: 10px;
+  align-items: center;
   border: 2px solid var(--mg-ligne);
   border-radius: 12px;
+  background: var(--mg-fondDoux);
+}
+
+.exemples-unites-cours p strong {
   color: var(--mg-bleu);
   font-family: var(--mg-titres);
-  font-size: clamp(24px, 8vw, 36px);
+  font-size: 25px;
 }
 
-.exemples-contrastes-unites p strong {
-  min-width: 32px;
-  padding: 1px 4px;
-  display: inline-grid;
-  place-items: center;
-  border: 3px solid var(--mg-orange);
-  border-radius: 8px;
-  color: var(--mg-encre);
-  background: color-mix(in srgb, var(--mg-orange) 10%, var(--mg-papier));
-}
-
-.exemples-contrastes-unites p span {
+.exemples-unites-cours p span {
   color: var(--mg-texteAttenue);
-  font-family: var(--mg-texte);
-  font-size: 11px;
-  font-weight: 800;
-  text-align: center;
+  font-size: 13px;
+  font-weight: 700;
+  line-height: 1.4;
 }
 
 .exemples-sommes-cours {
@@ -1326,6 +1298,15 @@ body {
   font-size: 12px;
 }
 
+.indication-clavier-physique {
+  display: none;
+  margin: 0;
+  color: var(--mg-texteAttenue);
+  font-size: 13px;
+  font-weight: 700;
+  text-align: center;
+}
+
 .situation-question strong {
   display: inline-block;
   padding: 1px 6px;
@@ -1474,10 +1455,6 @@ body {
 }
 
 @media (max-width: 430px) {
-  .rappel-methode-pret {
-    grid-template-columns: 1fr;
-  }
-
   .comparaison-partages {
     gap: 6px;
   }
@@ -1491,17 +1468,14 @@ body {
     min-height: 36px;
   }
 
-  .regles-unites-cours li {
-    grid-template-columns: 78px minmax(0, 1fr);
+  .regles-unites-cours li,
+  .regles-sommes-cours li {
+    grid-template-columns: 1fr;
     font-size: 13px;
   }
 
-  .exemples-contrastes-unites p {
-    font-size: 23px;
-  }
-
-  .exemples-contrastes-unites p strong {
-    min-width: 28px;
+  .exemples-unites-cours p {
+    grid-template-columns: 54px minmax(0, 1fr);
   }
 
   .exemples-sommes-cours section {
@@ -1585,6 +1559,20 @@ body {
 }
 
 @media (min-width: 900px) {
+  .cours-pret-ouvert .panneau-cours {
+    position: fixed;
+    inset: 24px auto 24px 50%;
+    width: min(900px, calc(100% - 48px));
+    height: auto;
+    max-height: calc(100dvh - 48px);
+    padding: 18px;
+    overflow-y: auto;
+    border: 2px solid var(--mg-ligne);
+    border-radius: var(--mg-rayon-grand);
+    box-shadow: 0 20px 56px color-mix(in srgb, var(--mg-bleuFonce) 28%, transparent);
+    transform: translateX(-50%);
+  }
+
   .entete-seance,
   .entete-seance.avec-cours,
   .entete-projection,
@@ -1799,5 +1787,25 @@ body {
 
   .mode-tableau .zone-retour {
     min-height: 30px;
+  }
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .mode-entrainement .clavier-mathsgo {
+    display: none;
+  }
+
+  .mode-entrainement .indication-clavier-physique {
+    display: block;
+  }
+}
+
+@media (any-pointer: coarse) {
+  .mode-entrainement .clavier-mathsgo {
+    display: grid;
+  }
+
+  .mode-entrainement .indication-clavier-physique {
+    display: none;
   }
 }

@@ -18,34 +18,28 @@ function occurrences(plan) {
 }
 
 describe("NC-01 — plan équilibré de série", () => {
-  it("fait de cinq questions une révision courte incluant le sens du partage", () => {
-    const compte = occurrences(planifierSerieNC01({
-      graine: "cinq",
-      nombreQuestions: 5,
-    }));
-    assert.deepEqual(
-      [...compte.keys()].sort(),
-      [
-        FAMILLES_NC01.F1,
-        FAMILLES_NC01.F2,
-        FAMILLES_NC01.F3,
-        FAMILLES_NC01.F4,
-        FAMILLES_NC01.F6,
-      ].sort(),
-    );
-    assert.equal(compte.has(FAMILLES_NC01.F5), false);
-  });
-
-  it("garantit les quotas 2/2/2/2/1/1 pour dix questions", () => {
-    for (let graine = 0; graine < 300; graine += 1) {
-      const plan = planifierSerieNC01({ graine: `quota-${graine}`, nombreQuestions: 10 });
-      const compte = occurrences(plan);
-      assert.equal(compte.get(FAMILLES_NC01.F1), 2);
-      assert.equal(compte.get(FAMILLES_NC01.F2), 2);
-      assert.equal(compte.get(FAMILLES_NC01.F3), 2);
-      assert.equal(compte.get(FAMILLES_NC01.F4), 2);
-      assert.equal(compte.get(FAMILLES_NC01.F5), 1);
-      assert.equal(compte.get(FAMILLES_NC01.F6), 1);
+  it("garantit les quotas validés pour 5, 10, 15 et 20 questions", () => {
+    const quotas = new Map([
+      [5, [1, 2, 1, 0, 1]],
+      [10, [2, 3, 2, 1, 2]],
+      [15, [3, 4, 3, 2, 3]],
+      [20, [4, 5, 4, 3, 4]],
+    ]);
+    const familles = [
+      FAMILLES_NC01.F1,
+      FAMILLES_NC01.F2,
+      FAMILLES_NC01.F3,
+      FAMILLES_NC01.F5,
+      FAMILLES_NC01.F6,
+    ];
+    for (const [nombreQuestions, attendus] of quotas) {
+      for (let graine = 0; graine < 100; graine += 1) {
+        const compte = occurrences(planifierSerieNC01({
+          graine: `quota-${nombreQuestions}-${graine}`,
+          nombreQuestions,
+        }));
+        assert.deepEqual(familles.map((famille) => compte.get(famille) ?? 0), attendus);
+      }
     }
   });
 
@@ -54,31 +48,21 @@ describe("NC-01 — plan équilibré de série", () => {
     const compte = occurrences(plan);
     assert.deepEqual(
       [...compte.values()].sort((a, b) => a - b),
-      [3, 3, 3, 3, 4, 4],
+      [3, 4, 4, 4, 5],
     );
     assert.deepEqual(
       plan.filter(({ famille }) => famille === FAMILLES_NC01.F5)
         .map(({ parametres }) => parametres.sousForme).sort(),
       ["plus-petit", "toutes-solutions", "unique"],
     );
+    const sousFormesPartage = plan
+      .filter(({ famille }) => famille === FAMILLES_NC01.F6)
+      .map(({ parametres }) => parametres.sousForme);
+    assert.equal(sousFormesPartage.filter((sousForme) => sousForme === "oui-non").length, 1);
     assert.deepEqual(
-      plan.filter(({ famille }) => famille === FAMILLES_NC01.F6)
-        .map(({ parametres }) => parametres.sousForme).sort(),
-      ["groupes-possibles", "oui-non", "retrait-minimal"],
+      [...new Set(sousFormesPartage)],
+      ["oui-non", "groupes-possibles", "retrait-minimal"],
     );
-  });
-
-  it("renforce F5 et F6 dans une consolidation de quinze questions", () => {
-    const compte = occurrences(planifierSerieNC01({
-      graine: "quinze",
-      nombreQuestions: 15,
-    }));
-    assert.equal(compte.get(FAMILLES_NC01.F1), 3);
-    assert.equal(compte.get(FAMILLES_NC01.F2), 3);
-    assert.equal(compte.get(FAMILLES_NC01.F3), 3);
-    assert.equal(compte.get(FAMILLES_NC01.F4), 2);
-    assert.equal(compte.get(FAMILLES_NC01.F5), 2);
-    assert.equal(compte.get(FAMILLES_NC01.F6), 2);
   });
 
   it("commence simplement et n'enchaîne jamais deux familles identiques", () => {
@@ -92,8 +76,8 @@ describe("NC-01 — plan équilibré de série", () => {
   });
 
   it("reste fiable pour toutes les longueurs acceptées par le lecteur", () => {
-    for (const nombreQuestions of [1, 2, 9, 10, 30, 40, 50, 75, 100]) {
-      for (let graine = 0; graine < 40; graine += 1) {
+    for (let nombreQuestions = 1; nombreQuestions <= 100; nombreQuestions += 1) {
+      for (let graine = 0; graine < 10; graine += 1) {
         const plan = planifierSerieNC01({
           graine: `longueur-${nombreQuestions}-${graine}`,
           nombreQuestions,
@@ -120,16 +104,9 @@ describe("NC-01 — plan équilibré de série", () => {
           .map(({ parametres }) => parametres.verdict).sort(),
         ["non", "oui"],
       );
-      assert.deepEqual(
-        plan.filter(({ famille }) => famille === FAMILLES_NC01.F4)
-          .map(({ parametres }) => parametres.verdict).sort(),
-        ["faux", "vrai"],
-      );
-      assert.deepEqual(
-        plan.filter(({ famille }) => famille === FAMILLES_NC01.F4)
-          .map(({ parametres }) => parametres.sousForme).sort(),
-        ["justification", "vrai-faux"],
-      );
+      const partages = plan.filter(({ famille }) => famille === FAMILLES_NC01.F6);
+      assert.equal(partages.filter(({ parametres }) => parametres.sousForme === "oui-non").length, 1);
+      assert.ok(["groupes-possibles", "retrait-minimal"].includes(partages[1].parametres.sousForme));
     }
   });
 
@@ -142,7 +119,7 @@ describe("NC-01 — plan équilibré de série", () => {
 });
 
 describe("NC-01 — génération de la série", () => {
-  it("produit dix questions des six familles sans doublon visible", () => {
+  it("produit dix questions des cinq familles sans doublon visible", () => {
     const questions = genererSerieNC01({
       registre: creerRegistreAutomatismes(),
       graine: "serie-complete",
@@ -163,5 +140,28 @@ describe("NC-01 — génération de la série", () => {
     const b = genererSerieNC01({ registre, graine: "b", nombreQuestions: 10 });
     assert.deepEqual(a, encoreA);
     assert.notDeepEqual(a, b);
+  });
+
+  it("laisse « Aucun » apparaître naturellement sans l'imposer à chaque série", () => {
+    const registre = creerRegistreAutomatismes();
+    let seriesAvecAucun = 0;
+    let occurrencesAucun = 0;
+    let questionsF2 = 0;
+    for (let graine = 0; graine < 300; graine += 1) {
+      const questions = genererSerieNC01({
+        registre,
+        graine: `aucun-naturel-${graine}`,
+        nombreQuestions: 10,
+      });
+      const f2 = questions.filter((question) =>
+        question.classement.famille === FAMILLES_NC01.F2);
+      const nombreAucun = f2.filter((question) =>
+        question.reponse.attendus.includes("aucun")).length;
+      questionsF2 += f2.length;
+      occurrencesAucun += nombreAucun;
+      if (nombreAucun > 0) seriesAvecAucun += 1;
+    }
+    assert.ok(occurrencesAucun > 0 && occurrencesAucun < questionsF2);
+    assert.ok(seriesAvecAucun > 0 && seriesAvecAucun < 300);
   });
 });

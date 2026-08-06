@@ -2,7 +2,7 @@
 
 **Dernière mise à jour : 6 août 2026.**
 
-## Point de reprise vérifié du 5 août
+## Point de reprise vérifié du 6 août
 
 - Le dépôt de référence reste `bourgault314/maths`; `main` a été vérifié au
   commit `d18a8c5cc4c6d10f90cea690d5a334dbecc472fe`.
@@ -15,9 +15,11 @@
 
 ### Candidate NC-01 actuelle
 
-- Les six familles F1 à F6, le planificateur de séries 5/10/15/20, le cours en
-  quatre écrans, les aides, les corrections et les deux contextes sont
+- Les cinq familles actives F1, F2, F3, F5 et F6, le planificateur de séries
+  5/10/15/20, le cours en trois pages, les aides, les corrections et les deux contextes sont
   **construits** et testés.
+- F4 est retirée de toutes les séries actives sans renuméroter les identifiants
+  stables. Le cas « Aucun » reste naturel et n'est pas forcé dans chaque série.
 - Leur statut n'est pas encore `valide` : Gwenaël a indiqué que la candidate est
   presque définitive mais doit encore recevoir ses derniers retours
   pédagogiques.
@@ -31,6 +33,15 @@
   visible avec son icône originale.
 - Les solides et volumes présents dans le registre technique restent exclus du
   menu par liste blanche ; ils ne peuvent pas apparaître accidentellement.
+- L'écran « Prêt à t'entraîner ? » ne répète plus les règles : il conserve la
+  notion, le nombre de questions, « Voir le cours » et « Commencer ».
+- Le cours accessible avant la série utilise le même panneau stable que pendant
+  la série. L'aide F2 ne fait plus défiler l'écran et regroupe ses vérifications
+  dans deux étapes autonomes.
+- Le pavé maths&go est masqué sur un ordinateur muni d'une souris et d'un
+  clavier, mais reste visible sur téléphone, tablette, appareil hybride et TNI.
+- Le bilan propose « Nouvelle série », « Refaire la même série » et « Choisir
+  une autre série ».
 
 ### Vérifications de cette reprise
 
@@ -45,13 +56,16 @@
 - inventaire technique de `auto/`, `studio/automatismes/` et des fondations V2
   consigné dans `inventaire-auto-studio.md` ; il distingue les briques déjà
   reprises, les candidates à adapter et le moteur historique à laisser isolé.
+- tests ciblés NC-01 et lecteur : **91 sur 91 réussis** ; construction du site
+  d'essai et contrôle réel du cours et de l'aide sur ordinateur réussis.
 
 ### Prochaine étape
 
-Faire tester le lanceur muni du repère sans calculatrice, puis recueillir les
-derniers retours de Gwenaël sur NC-01. Corriger uniquement ces points et obtenir
-sa validation explicite avant d'ouvrir la notion DNB suivante. Le menu et la
-structure pédagogique ne doivent plus être redessinés pendant cette étape.
+Publier cette révision sur le site d'essai ChatGPT et laisser Gwenaël la
+contrôler. La PR #278 reste en brouillon et `/auto/` reste intact. Après sa
+validation explicite, fusionner la PR afin que GitHub Pages remplace le contenu
+de la route non liée `/automatismes-v2/`, puis vérifier cette route et `/auto/`
+avant de transmettre le lien à Claire.
 
 ## Référence vérifiée
 
@@ -96,9 +110,10 @@ structure pédagogique ne doivent plus être redessinés pendant cette étape.
 - Le critère par 10 est un complément maths&go validé. Il reste proposé dans le
   parcours DNB, tout en étant distingué des quatre critères officiels dans les
   données.
-- La fiche `NC-01`, le mini-cours, les six familles de questions, les aides,
-  les corrections, les storyboards et la séparation séance/question/trace ont
-  été validés par Gwenaël le 19 juillet 2026.
+- La fiche `NC-01`, le mini-cours, les six familles initiales, les aides, les
+  corrections, les storyboards et la séparation séance/question/trace ont été
+  validés par Gwenaël le 19 juillet 2026. Le 6 août, F4 a été retirée de la
+  série active et le cours ramené à trois pages par la décision D-029.
 - Le parcours DNB actuel ne possède ni niveaux ni paliers.
 
 ## Documents de référence fusionnés

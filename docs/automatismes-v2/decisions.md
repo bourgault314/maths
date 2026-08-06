@@ -244,3 +244,54 @@ Le lanceur V2 affiche en permanence la calculatrice barrée de la coque validée
 phase V2 actuelle est entièrement consacrée à l'épreuve DNB sans calculatrice.
 Il reste donc visible dans **S'entraîner** comme dans **Au tableau**, y compris
 sur téléphone, avec un libellé accessible explicite.
+
+### D-029 — NC-01 conserve cinq familles actives et reste simple
+
+Cette décision remplace la partie de D-016 qui annonçait six familles actives.
+`F4`, fondée sur des phrases, du vrai/faux et des justifications, est retirée de
+la série standard : elle ajoutait surtout de la lecture et du vocabulaire
+logique à l'automatisme central. Les identifiants ne sont pas renumérotés ; les
+familles actives sont `F1`, `F2`, `F3`, `F5` et `F6`.
+
+Les quotas pour 5, 10, 15 et 20 questions sont respectivement
+`1/2/1/0/1`, `2/3/2/1/2`, `3/4/3/2/3` et `4/5/4/3/4` dans cet ordre de
+familles. Le cas « Aucun » appartient toujours aux sélections, mais il apparaît
+naturellement : aucune série n'est artificiellement obligée de le contenir.
+
+Lorsque la série contient au moins deux situations F6, une question Oui/Non de
+partage est garantie et les autres alternent entre choix des groupes possibles
+et retrait minimal. Avec une seule F6, les trois sous-formes restent possibles.
+
+### D-030 — Le départ, le cours, l'aide et le bilan de NC-01 sont allégés
+
+L'écran prêt montre seulement le contexte brevet, le titre, la notion, le
+nombre de questions, « Voir le cours » et « Commencer ». Il ne répète plus les
+règles de divisibilité.
+
+Le cours possède trois pages : reste nul ; chiffre des unités pour 2, 5 et 10 ;
+somme de tous les chiffres pour 3 et 9. La page d'implications disparaît, les
+règles complètes précèdent les exemples et toutes les pièces des schémas en
+barres sont rectangulaires.
+
+L'aide F2 comporte deux étapes autonomes. Chaque clic conserve le défilement et
+le focus sans saut ; la somme n'est affichée qu'après la sélection de tous les
+chiffres. Sur ordinateur avec souris et clavier, le pavé interne est masqué et
+le clavier physique est utilisé. Il reste affiché sur les appareils tactiles,
+y compris les hybrides et TNI.
+
+Le bilan propose au maximum trois actions : générer une **Nouvelle série** avec
+les mêmes critères, **Refaire la même série**, ou **Choisir une autre série**.
+
+### D-031 — GitHub est la source et Sites est l'aperçu avant publication
+
+La branche de la PR #278 reste la source durable de la candidate. Le site
+ChatGPT ne contient qu'un miroir d'essai vérifié de ce commit. Chaque révision
+est d'abord enregistrée et testée sur la PR, puis montrée à Gwenaël sur le site
+d'essai.
+
+Après validation explicite seulement, la PR peut être fusionnée. GitHub Pages
+publie alors la route existante `/automatismes-v2/`, laissée hors de la
+navigation et du plan du site avec `noindex,nofollow` pendant le pilote.
+`/auto/` reste indépendant et doit être vérifié après chaque publication. Un
+lien non référencé n'étant pas un contrôle d'accès, le site ChatGPT reste le
+support approprié lorsqu'une vraie confidentialité est nécessaire.

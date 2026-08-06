@@ -16,7 +16,7 @@ import {
   TYPE_REPONSE_CHOIX_UNIQUE,
   TYPE_REPONSE_ENTIER_NATUREL,
   TYPE_REPONSE_SELECTION_MULTIPLE,
-} from "../../../../contrats/src/question-v2.js?v=9";
+} from "../../../../contrats/src/question-v2.js?v=10";
 
 export const NOM_GENERATEUR_PARTAGE_COURT =
   "nombres-et-calculs.criteres-divisibilite.partage-court";

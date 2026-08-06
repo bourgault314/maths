@@ -2,7 +2,7 @@ import assert from "node:assert/strict";
 import { readFile } from "node:fs/promises";
 import { it } from "node:test";
 
-const VERSION = "9";
+const VERSION = "10";
 
 const RESSOURCES_VERSIONNEES = new Map([
   ["automatismes-v2/index.html", ["styles.css", "interface.css"]],
@@ -38,7 +38,6 @@ const RESSOURCES_VERSIONNEES = new Map([
     "critere-precis.js",
     "selection-diviseurs.js",
     "selection-nombres.js",
-    "affirmation-divisibilite.js",
     "chiffre-manquant.js",
     "partage-court.js",
   ]],
@@ -69,5 +68,5 @@ it("charge une version cohérente de tous les modules modifiés d'Automatismes V
 it("invalide le cache du menu et du lanceur V2 modifiés", async () => {
   const source = await readFile(new URL("../automatismes-v2/index.html", import.meta.url), "utf8");
   assert.match(source, /menu\.css\?v=11/);
-  assert.match(source, /app\.js\?v=11/);
+  assert.match(source, /app\.js\?v=12/);
 });

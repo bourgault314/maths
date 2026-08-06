@@ -2,7 +2,7 @@
 
 ## Statut
 
-**Contenu validé et fabrication technique autorisée par Gwenaël le 19 juillet 2026.**
+**Contenu validé et fabrication technique autorisée par Gwenaël le 19 juillet 2026, puis simplifié avec lui le 6 août 2026.**
 
 Cette fiche fixe le contenu avant toute programmation. La validation pédagogique et l'autorisation d'ouvrir la fabrication technique sont deux décisions distinctes ; elles sont désormais toutes les deux acquises.
 
@@ -32,9 +32,7 @@ L’élève mobilise :
 
 - le chiffre des unités pour 2, 5 et 10 ;
 - la somme de tous les chiffres pour 3 et 9 ;
-- le fait qu’un nombre peut vérifier plusieurs critères à la fois ;
-- le fait que divisible par 9 implique divisible par 3, mais que la réciproque est fausse.
-- le fait que divisible par 10 implique divisible par 2 et par 5.
+- le fait qu’un nombre peut vérifier plusieurs critères à la fois.
 
 ## Prérequis
 
@@ -45,9 +43,9 @@ L’élève mobilise :
 - connaître les multiples simples de 3 et de 9 ;
 - comprendre les mots « diviseur », « divisible par » et « sans reste ».
 
-## Découpage retenu : six familles de questions
+## Découpage retenu : cinq familles actives
 
-La variété est nécessaire pour un entraînement fréquent. Elle vient de six tâches mathématiques différentes, pas de niveaux ou de paliers.
+La variété est nécessaire pour un entraînement fréquent. Elle vient de cinq tâches mathématiques simples, pas de niveaux ou de paliers. Les identifiants historiques restent stables : les familles actives sont `F1`, `F2`, `F3`, `F5` et `F6`. `F4` est retirée de la série standard et n'est pas renumérotée.
 
 ### F1 — Appliquer un critère précis
 
@@ -89,31 +87,6 @@ L’élève choisit plusieurs nombres dans une petite grille. Il ne les déplace
 
 Cette sélection tactile constitue une forme de réponse propre à `NC-01`, à consigner avant son introduction dans le contrat technique.
 
-### F4 — Juger une affirmation : vrai ou faux
-
-Une phrase très courte présente un raisonnement d’élève :
-
-> Lina dit : « 372 est divisible par 9 car 3 + 7 + 2 = 12. » Vrai ou faux ?
-
-Deux formes simples alternent dans cette même famille :
-
-- répondre **Vrai** ou **Faux**, puis lire l’explication ;
-- appuyer sur la justification qui identifie correctement l’erreur ou le raisonnement juste.
-
-La seconde forme ne devient pas une étape obligatoire après chaque vrai/faux. Elle sert lorsqu’on veut vérifier que l’élève comprend la raison, sans lui demander une rédaction longue.
-
-Les affirmations vraies et fausses sont équilibrées. Les erreurs travaillées proviennent de mécanismes pédagogiques explicites :
-
-- regarder le dernier chiffre pour 3 ou 9 ;
-- additionner seulement certains chiffres ;
-- croire que la somme doit être exactement 3 ou 9 ;
-- croire que divisible par 3 implique divisible par 9 ;
-- croire que la présence d’un chiffre 3 ou 9 suffit ;
-- oublier le chiffre des unités 0 pour les critères par 2, par 5 et par 10 ;
-- croire qu’un nombre terminé par 5 est divisible par 10 ;
-- oublier que divisible par 10 implique divisible par 2 et par 5 ;
-- confondre un diviseur et un multiple.
-
 ### F5 — Trouver un chiffre manquant
 
 Exemple :
@@ -151,6 +124,10 @@ Cette famille emploiera un objet de partage égal : une quantité source, des fl
 
 ## Ce qui n’est pas une famille de questions
 
+### Juger une phrase ou une justification
+
+L'ancienne famille `F4` est retirée le 6 août 2026. Elle ajoutait surtout de la lecture, du vocabulaire logique et des distracteurs à un automatisme qui doit rester direct. Les erreurs utiles restent disponibles dans les corrections, mais aucune phrase à juger ni implication à reconnaître n'entre dans la série standard.
+
 ### Reconnaître ou associer les règles
 
 Associer « par 3 » à « somme des chiffres multiple de 3 » ne devient pas une famille notée. L’élève retrouverait directement la réponse dans le rappel de cours, et la tâche mesurerait surtout la lecture d’une carte.
@@ -175,12 +152,11 @@ On évalue ainsi la divisibilité, pas une addition de chiffres isolée de son b
 
 ## Cours associé
 
-Le mini-cours commun à `NC-01` comporte quatre cartes :
+Le mini-cours commun à `NC-01` comporte trois pages :
 
-1. le sens de « divisible par » et du partage sans reste ;
+1. le sens de « divisible par » : le reste de la division est nul, c'est-à-dire égal à 0 ;
 2. les critères par 2, 5 et 10 à partir du chiffre des unités ;
-3. les critères par 3 et 9 à partir de la somme de tous les chiffres ;
-4. les liens « divisible par 9 implique divisible par 3 » et « divisible par 10 implique divisible par 2 et par 5 ».
+3. les critères par 3 et 9 à partir de la somme de tous les chiffres.
 
 Le cours peut montrer complètement la méthode. Les aides, elles, se contentent de guider. Le même langage visuel est repris dans le cours, l’aide et la correction : chiffre des unités encadré, chiffres sélectionnables et zone somme.
 
@@ -208,7 +184,6 @@ L’aide donne une orientation sans donner la réponse :
 - « Additionne tous les chiffres. » ;
 - « La somme obtenue est-elle un multiple de 3 ? » ;
 - « La somme obtenue est-elle un multiple de 9 ? » ;
-- « Attention : être divisible par 3 ne signifie pas forcément être divisible par 9. » ;
 - « Plusieurs réponses sont peut-être possibles. ».
 
 Quand l’aide porte sur 3 ou 9, elle peut mettre en évidence tous les chiffres et préparer leur addition. Quand elle porte sur 2, 5 ou 10, elle met en évidence uniquement le chiffre des unités.
@@ -216,9 +191,9 @@ Quand l’aide porte sur 3 ou 9, elle peut mettre en évidence tous les chiffres
 Deux manipulations d’aide sont retenues :
 
 - l’élève peut appuyer sur le chiffre des unités pour l’identifier ;
-- il peut sélectionner tous les chiffres pour construire une écriture comme `5 + 3 + 7 = □`, puis saisir lui-même la somme.
+- il peut sélectionner tous les chiffres pour construire une écriture comme `5 + 3 + 7 = 15` ; la somme n'apparaît qu'après la sélection de tous les chiffres.
 
-La zone somme ne calcule pas à la place de l’élève et ne conclut jamais sur la divisibilité. Ces manipulations restent facultatives : elles sont accessibles lorsque l’aide est ouverte ou disponible, et absentes lorsque l’aide est indisponible.
+La zone somme effectue ce calcul intermédiaire après la manipulation, mais ne conclut jamais sur la divisibilité. Ces manipulations restent facultatives : elles sont accessibles lorsque l’aide est ouverte ou disponible, et absentes lorsque l’aide est indisponible.
 
 ## Correction commune
 
@@ -227,7 +202,6 @@ La correction ne se limite jamais à « juste » ou « faux ».
 - pour 2, 5 et 10, elle montre le chiffre des unités et rappelle le critère concerné ;
 - pour 3 et 9, elle calcule une seule fois la somme de tous les chiffres puis la compare aux multiples utiles ;
 - pour une sélection multiple, elle explique chaque choix séparément ;
-- pour une affirmation, elle nomme précisément le raisonnement correct ou l’erreur ;
 - pour un chiffre manquant, elle montre toutes les solutions demandées par la consigne ;
 - pour une situation de partage, elle relie la conclusion à « sans reste ».
 
@@ -259,7 +233,7 @@ La correction n’utilise pas de division posée : elle renforce le critère tra
 
 ## Variété sans paliers
 
-Il n’existe ni palier 1, ni palier 2, ni palier 3 dans le parcours DNB actuel. Les séries mélangent les six familles validées selon les choix de l’activité.
+Il n’existe ni palier 1, ni palier 2, ni palier 3 dans le parcours DNB actuel. Les séries mélangent les cinq familles actives selon un plan stable.
 
 La variété vient de :
 
@@ -268,12 +242,18 @@ La variété vient de :
 - la longueur et les chiffres du nombre ;
 - le nombre de réponses correctes ;
 - la présence de zéros ;
-- les liens 9 → 3 et non 3 → 9 ;
-- le lien 10 → 2 et 5 ;
-- l’erreur pédagogique ciblée ;
 - l’état de l’aide.
 
-Les proportions seront fixées dans le futur contrat du générateur. Elles empêcheront une stratégie superficielle, par exemple répondre toujours « Faux » dans F4 ou attendre toujours deux bonnes réponses dans une sélection multiple.
+Les quotas validés sont les suivants :
+
+| Questions | F1 | F2 | F3 | F5 | F6 |
+|---:|---:|---:|---:|---:|---:|
+| 5 | 1 | 2 | 1 | 0 | 1 |
+| 10 | 2 | 3 | 2 | 1 | 2 |
+| 15 | 3 | 4 | 3 | 2 | 3 |
+| 20 | 4 | 5 | 4 | 3 | 4 |
+
+Les nombres et sous-cas varient avec une graine reproductible. Le cas « Aucun » existe dans les sélections et apparaît naturellement ; il n'est jamais forcé dans chaque série.
 
 ## Deux présentations d’un même contenu
 
@@ -292,11 +272,12 @@ Les proportions seront fixées dans le futur contrat du générateur. Elles emp�
 - nom de la notion courante présenté discrètement dans la carte et non comme titre de toute la séance ;
 - grandes cibles d’au moins 44 px ;
 - utilisation au doigt, au stylet ou à la souris ;
-- sélection, vrai/faux, appui sur une justification ou saisie numérique selon la famille ;
-- zone de réponse stable dont le contenu s’adapte au type de question : choix, vrai/faux, grille, justification ou afficheur numérique ;
-- pour toute saisie numérique, clavier maths&go affiché dans l’application ; le clavier système du téléphone ou de la tablette ne s’ouvre pas ;
+- sélection, oui/non, grille ou saisie numérique selon la famille ;
+- zone de réponse stable dont le contenu s’adapte au type de question : choix, oui/non, grille ou afficheur numérique ;
+- pour toute saisie numérique tactile, clavier maths&go affiché dans l’application ; le clavier système du téléphone ou de la tablette ne s’ouvre pas ;
 - clavier adapté à la nature de la réponse : NC-01 utilise le profil « entier naturel » ; le signe moins ou la virgule n’apparaîtront que pour les notions qui les autorisent, sans déplacer les chiffres ;
-- le même clavier reste utilisable à la souris sur ordinateur et au toucher sur TNI, tandis que le clavier physique est également accepté ;
+- sur ordinateur muni d'une souris et d'un clavier, le pavé interne est masqué et le clavier physique est accepté ;
+- sur téléphone, tablette, appareil hybride ou TNI tactile, le pavé maths&go reste affiché ;
 - état sélectionné perceptible autrement que par la seule couleur ;
 - appui sur le chiffre des unités ou sélection des chiffres dans l’aide lorsque cela est utile ;
 - aucun glisser-déposer obligatoire : toute action est réalisable par appui ;
@@ -311,9 +292,8 @@ Cet ordre est technique ; il n’impose aucune progression à l’élève.
 1. **F2 — Tous les diviseurs proposés** : première tranche verticale complète avec aide, correction, projection et interactif.
 2. **F1 — Critère précis** : ajout du vrai/faux ou oui/non simple.
 3. **F3 — Plusieurs nombres** : ajout de la sélection dans une grille.
-4. **F4 — Affirmation et justification** : ajout des raisonnements, du vrai/faux et de l’appui sur une justification.
-5. **F5 — Chiffre manquant** : ajout de la saisie ou sélection de chiffres et gestion de plusieurs solutions.
-6. **F6 — Situation de partage** : ajout du transfert de sens très court.
+4. **F5 — Chiffre manquant** : ajout de la saisie ou sélection de chiffres et gestion de plusieurs solutions.
+5. **F6 — Situation de partage** : ajout du transfert de sens très court.
 
 Chaque famille est montrée à Gwenaël avec des exemples réels avant de passer à la suivante. La fiche peut être validée en une fois, mais la fabrication reste progressive et contrôlable.
 
@@ -324,7 +304,7 @@ Chaque question devra pouvoir être classée par :
 - domaine maths&go ;
 - cible officielle ;
 - micro-notion ;
-- famille F1 à F6 ;
+- famille active F1, F2, F3, F5 ou F6 ;
 - critère ou critères travaillés ;
 - erreur pédagogique ciblée, lorsqu’il y en a une ;
 - statut `dnb_officiel` ou, plus tard, `complement_mathsgo` ;
@@ -340,12 +320,11 @@ Le diaporama ne crée aucune tentative élève. Le mode interactif pourra plus t
 La fiche pourra devenir la référence de `NC-01` si Gwenaël valide explicitement :
 
 1. l’intégration de 2, 3, 5, 9 et 10 dans le même module, y compris depuis le parcours DNB, avec 10 identifié comme complément maths&go dans les données seulement ;
-2. les six familles F1 à F6 ;
+2. les cinq familles actives F1, F2, F3, F5 et F6, avec retrait de F4 ;
 3. le retrait des deux fausses familles « reconnaître les règles » et « calculer la somme des chiffres » ;
-4. les questions vrai/faux courtes et l’appui sur une justification pour discuter les raisonnements et erreurs ;
-5. les états d’aide `ouverte`, `disponible` et `indisponible` ;
-6. l’absence totale de niveaux et de paliers ;
-7. l’ordre de fabrication commençant par F2.
+4. les états d’aide `ouverte`, `disponible` et `indisponible` ;
+5. l’absence totale de niveaux et de paliers ;
+6. l’ordre de fabrication commençant par F2.
 
 La validation pédagogique et l'autorisation de fabrication étant acquises, le chantier technique ouvre la première tranche verticale F2. Elle comprend le générateur seedé, les tests, le contenu structuré, la projection, l'interactif, l'aide, la correction et les aperçus, mais aucune autre famille avant présentation de la précédente.
 

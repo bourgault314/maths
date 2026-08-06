@@ -40,14 +40,12 @@ Cet écran existe aussi lorsque plusieurs domaines ou plusieurs notions ont ét�
 ┌─────────────────────────────────┐
 │ [Retour]                        │
 │                                 │
-│       Prêt à commencer ?        │
+│      Prêt à t'entraîner ?       │
 │                                 │
-│ Entraînement personnalisé       │
-│ 6 notions sélectionnées [Voir]  │
+│ Critères de divisibilité        │
 │ 10 questions                    │
-│ Aide disponible                 │
 │                                 │
-│          [ Commencer ]          │
+│ [ Voir le cours ] [ Commencer ] │
 └─────────────────────────────────┘
 ```
 
@@ -57,7 +55,8 @@ Règles :
 - avec une seule notion, son nom peut apparaître dans le résumé sans remplacer le titre générique ;
 - avec plusieurs notions, l’écran affiche leur nombre et un bouton « Voir la sélection » ;
 - la liste détaillée s’ouvre dans un panneau refermable et ne surcharge pas l’écran principal ;
-- le résumé montre seulement ce qui aide à décider de commencer : mode, volume et aide ; un éventuel temps viendra avec le futur mode concerné ;
+- le résumé montre seulement la notion et le nombre de questions ; le contexte est déjà donné par le titre ;
+- le cours reste accessible depuis cet écran dans le même panneau que pendant la série ;
 - un seul bouton principal lance la séance ;
 - en mode projection, le libellé peut devenir « Diaporama prêt » et « Démarrer le diaporama ».
 
@@ -158,6 +157,11 @@ Règles communes :
 - chaque touche est un vrai bouton nommé, atteignable au clavier et d’au moins 44 px ;
 - le clavier réserve sa hauteur et ne masque ni la réponse ni les éléments ayant le focus.
 
+Sur un ordinateur muni d'une souris et d'un clavier, le pavé interne est masqué
+et le clavier physique est utilisé. Sur téléphone, tablette, appareil hybride
+ou TNI tactile, le pavé maths&go reste visible. Le clavier système du téléphone
+ne recouvre jamais l'exercice.
+
 Le futur contenu ne donnera pas une liste graphique de touches. Il décrira une réponse comme « entier naturel » ou « décimal relatif » ; le lecteur choisira le profil de clavier correspondant.
 
 Pour une fraction, l’élève touche le champ du numérateur ou celui du dénominateur, puis remplit le champ actif avec le clavier. Il ne saisit jamais de barre oblique : le lecteur affiche lui-même la barre de fraction entre les deux champs.
@@ -174,13 +178,13 @@ Pour `NC-01`, seul le profil « entier naturel » est nécessaire.
 │                                 │
 │      7 réponses justes sur 10   │
 │                                 │
-│ [ Revoir les corrections ]      │
-│ [ Recommencer ]                 │
-│ [ Retour à l’accueil ]          │
+│ [ Nouvelle série ]              │
+│ [ Refaire la même série ]       │
+│ [ Choisir une autre série ]     │
 └─────────────────────────────────┘
 ```
 
-La première version reste sobre : total, réussites et trois actions maximum. Le détail par notion et l’envoi vers un serveur appartiennent à une évolution ultérieure, mais les réponses devront être conservables avec leurs identifiants dès la conception du contrat.
+La première version reste sobre : total, réussites et trois actions maximum. « Nouvelle série » conserve les critères et produit une nouvelle graine ; « Refaire la même série » conserve aussi la graine ; « Choisir une autre série » revient au lanceur. Le détail par notion et l’envoi vers un serveur appartiennent à une évolution ultérieure, mais les réponses devront être conservables avec leurs identifiants dès la conception du contrat.
 
 ## Ce qui est décidé avant le JSON
 

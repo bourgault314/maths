@@ -1,78 +1,43 @@
-// Plan de série NC-01 — mélange les six familles validées.
+// Plan de série NC-01 — mélange les cinq familles retenues.
 //
 // La logique reste volontairement locale à NC-01 : les quotas, alternances et
 // critères n'ont pas vocation à devenir un moteur générique pour les futures
 // notions. Même graine + même longueur = même plan et mêmes questions.
 
 import { creerGenerateur } from "../../../../moteur-exercices/src/aleatoire.js";
-import { GABARIT_AFFIRMATION_DIVISIBILITE } from "./affirmation-divisibilite.js?v=9";
-import { GABARIT_CHIFFRE_MANQUANT } from "./chiffre-manquant.js?v=9";
-import { GABARIT_CRITERE_PRECIS } from "./critere-precis.js?v=9";
-import { GABARIT_PARTAGE_COURT } from "./partage-court.js?v=9";
-import { GABARIT_SELECTION_DIVISEURS } from "./selection-diviseurs.js?v=9";
-import { GABARIT_SELECTION_NOMBRES } from "./selection-nombres.js?v=9";
+import { GABARIT_CHIFFRE_MANQUANT } from "./chiffre-manquant.js?v=10";
+import { GABARIT_CRITERE_PRECIS } from "./critere-precis.js?v=10";
+import { GABARIT_PARTAGE_COURT } from "./partage-court.js?v=10";
+import { GABARIT_SELECTION_DIVISEURS } from "./selection-diviseurs.js?v=10";
+import { GABARIT_SELECTION_NOMBRES } from "./selection-nombres.js?v=10";
 
-export const VERSION_PLAN_SERIE_NC01 = 3;
+export const VERSION_PLAN_SERIE_NC01 = 4;
 
 export const FAMILLES_NC01 = Object.freeze({
   F1: "critere-precis",
   F2: "selection-diviseurs",
   F3: "selection-nombres",
-  F4: "affirmation-divisibilite",
   F5: "chiffre-manquant",
   F6: "partage-court",
 });
 
 const DIVISEURS = Object.freeze([2, 3, 5, 9, 10]);
-const RECETTE_DIX = Object.freeze([
+// Les cinq premières positions donnent la révision courte validée : une F1,
+// deux F2, une F3 et une situation de partage. Chaque bloc de cinq suivant
+// ajoute ensuite une occurrence de chaque famille. Les séries 5, 10, 15 et 20
+// portent donc exactement les quotas décidés, sans cas « Aucun » imposé.
+const RECETTE_INITIALE = Object.freeze([
   FAMILLES_NC01.F1,
   FAMILLES_NC01.F2,
   FAMILLES_NC01.F3,
-  FAMILLES_NC01.F4,
-  FAMILLES_NC01.F5,
-  FAMILLES_NC01.F1,
-  FAMILLES_NC01.F2,
-  FAMILLES_NC01.F3,
-  FAMILLES_NC01.F4,
   FAMILLES_NC01.F6,
+  FAMILLES_NC01.F2,
 ]);
 
-// Une série courte reste une révision, pas une validation exhaustive. Elle
-// conserve néanmoins le sens du partage (F6), plus utile ici qu'une première
-// tâche inverse sur le chiffre manquant. Dès dix questions, les six familles
-// et les cinq critères sont réellement distribués.
-const RECETTE_RESTE = Object.freeze([
+const COMPLEMENT_CINQ = Object.freeze([
   FAMILLES_NC01.F1,
   FAMILLES_NC01.F2,
   FAMILLES_NC01.F3,
-  FAMILLES_NC01.F4,
-  FAMILLES_NC01.F6,
-  FAMILLES_NC01.F5,
-  FAMILLES_NC01.F1,
-  FAMILLES_NC01.F2,
-  FAMILLES_NC01.F3,
-]);
-
-const COMPLEMENT_QUINZE = Object.freeze([
-  FAMILLES_NC01.F1,
-  FAMILLES_NC01.F2,
-  FAMILLES_NC01.F3,
-  FAMILLES_NC01.F5,
-  FAMILLES_NC01.F6,
-]);
-
-// À vingt questions, les trois sous-formes de F5 et les trois sous-formes de
-// F6 doivent toutes apparaître. Cela approfondit la couverture sans laisser
-// croire qu'une seule réussite suffit à attester une maîtrise durable.
-const COMPLEMENT_VINGT = Object.freeze([
-  FAMILLES_NC01.F1,
-  FAMILLES_NC01.F2,
-  FAMILLES_NC01.F3,
-  FAMILLES_NC01.F4,
-  FAMILLES_NC01.F5,
-  FAMILLES_NC01.F6,
-  FAMILLES_NC01.F1,
-  FAMILLES_NC01.F2,
   FAMILLES_NC01.F5,
   FAMILLES_NC01.F6,
 ]);
@@ -81,7 +46,6 @@ const GABARITS = Object.freeze({
   [FAMILLES_NC01.F1]: GABARIT_CRITERE_PRECIS,
   [FAMILLES_NC01.F2]: GABARIT_SELECTION_DIVISEURS,
   [FAMILLES_NC01.F3]: GABARIT_SELECTION_NOMBRES,
-  [FAMILLES_NC01.F4]: GABARIT_AFFIRMATION_DIVISIBILITE,
   [FAMILLES_NC01.F5]: GABARIT_CHIFFRE_MANQUANT,
   [FAMILLES_NC01.F6]: GABARIT_PARTAGE_COURT,
 });
@@ -96,19 +60,18 @@ function exigerConfiguration(graine, nombreQuestions) {
 }
 
 function recettePour(nombreQuestions) {
-  if (nombreQuestions === 20) {
-    return [...RECETTE_DIX, ...COMPLEMENT_VINGT];
-  }
-  const cyclesComplets = Math.floor(nombreQuestions / RECETTE_DIX.length);
-  const reste = nombreQuestions % RECETTE_DIX.length;
-  const recette = Array.from(
-    { length: cyclesComplets },
-    () => RECETTE_DIX,
-  ).flat();
-  const complement = reste === 5 && cyclesComplets > 0
-    ? COMPLEMENT_QUINZE
-    : RECETTE_RESTE;
-  return [...recette, ...complement.slice(0, reste)];
+  const initiale = RECETTE_INITIALE.slice(
+    0,
+    Math.min(nombreQuestions, RECETTE_INITIALE.length),
+  );
+  const restant = nombreQuestions - initiale.length;
+  const cyclesComplets = Math.floor(restant / COMPLEMENT_CINQ.length);
+  const reste = restant % COMPLEMENT_CINQ.length;
+  return [
+    ...initiale,
+    ...Array.from({ length: cyclesComplets }, () => COMPLEMENT_CINQ).flat(),
+    ...COMPLEMENT_CINQ.slice(0, reste),
+  ];
 }
 
 function resteArrangeable(compte, precedent) {
@@ -190,19 +153,26 @@ function parametrerFamilles(aleatoire, familles) {
   valeursCycliques(aleatoire, ["oui", "non"], f1.length)
     .forEach((verdict, index) => { f1[index].parametres.verdict = verdict; });
 
-  const f4 = descripteurs.filter(({ famille }) => famille === FAMILLES_NC01.F4);
-  valeursCycliques(aleatoire, ["vrai", "faux"], f4.length)
-    .forEach((verdict, index) => { f4[index].parametres.verdict = verdict; });
-  valeursCycliques(aleatoire, ["vrai-faux", "justification"], f4.length)
-    .forEach((sousForme, index) => { f4[index].parametres.sousForme = sousForme; });
-
   const f5 = descripteurs.filter(({ famille }) => famille === FAMILLES_NC01.F5);
   valeursCycliques(aleatoire, ["unique", "toutes-solutions", "plus-petit"], f5.length)
     .forEach((sousForme, index) => { f5[index].parametres.sousForme = sousForme; });
 
   const f6 = descripteurs.filter(({ famille }) => famille === FAMILLES_NC01.F6);
-  valeursCycliques(aleatoire, ["oui-non", "groupes-possibles", "retrait-minimal"], f6.length)
-    .forEach((sousForme, index) => {
+  const alternativesPartage = aleatoire.melange(["groupes-possibles", "retrait-minimal"]);
+  const sousFormesPartage = f6.length >= 2
+    ? [
+        "oui-non",
+        ...Array.from(
+          { length: f6.length - 1 },
+          (_, index) => alternativesPartage[index % alternativesPartage.length],
+        ),
+      ]
+    : valeursCycliques(
+        aleatoire,
+        ["oui-non", ...alternativesPartage],
+        f6.length,
+      );
+  sousFormesPartage.forEach((sousForme, index) => {
       f6[index].parametres.sousForme = sousForme;
       if (sousForme !== "groupes-possibles") {
         f6[index].parametres.diviseur = aleatoire.choix(DIVISEURS);
@@ -210,7 +180,7 @@ function parametrerFamilles(aleatoire, familles) {
       if (sousForme === "oui-non") {
         f6[index].parametres.verdict = aleatoire.choix(["oui", "non"]);
       }
-    });
+  });
 
   attribuerCriteres(aleatoire, descripteurs);
   return descripteurs;

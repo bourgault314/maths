@@ -631,6 +631,22 @@ button.choix:hover:not(:disabled) {
   text-align: center;
 }
 
+.question-guidage {
+  margin: 10px 0 0;
+  color: var(--mg-bleu);
+  font-weight: 800;
+  line-height: 1.4;
+  text-align: center;
+}
+
+.indication-aide {
+  margin: 0;
+  color: var(--mg-texteAttenue);
+  font-size: 14px;
+  font-weight: 700;
+  text-align: center;
+}
+
 .indices-aide {
   margin: 0;
   padding: 16px;

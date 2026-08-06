@@ -4,6 +4,8 @@ import { it } from "node:test";
 function installerFauxNavigateur(recherche) {
   const gestionnaires = new Map();
   const focusRecus = [];
+  const optionsFocus = [];
+  const panneau = { scrollTop: 0 };
   const application = {
     innerHTML: "",
     addEventListener(type, gestionnaire) {
@@ -11,7 +13,8 @@ function installerFauxNavigateur(recherche) {
       gestionnaires.get(type).push(gestionnaire);
     },
     querySelector(selecteur) {
-      return { focus() { focusRecus.push(selecteur); } };
+      if (selecteur === ".panneau") return panneau;
+      return { focus(options) { focusRecus.push(selecteur); optionsFocus.push(options); } };
     },
   };
   globalThis.window = {
@@ -27,7 +30,7 @@ function installerFauxNavigateur(recherche) {
     querySelector() { return application; },
   };
   globalThis.requestAnimationFrame = (rappel) => rappel();
-  return { application, gestionnaires, focusRecus };
+  return { application, gestionnaires, focusRecus, optionsFocus, panneau };
 }
 
 function cliquer(gestionnaires, action, id, value) {
@@ -45,7 +48,7 @@ function appuyer(gestionnaires, key) {
 }
 
 it("rend NC-01 depuis le registre et conserve son aide et sa correction", async () => {
-  const { application, gestionnaires, focusRecus } = installerFauxNavigateur(
+  const { application, gestionnaires, focusRecus, optionsFocus, panneau } = installerFauxNavigateur(
     "?notion=criteres-divisibilite&questions=1&graine=fumee-registre",
   );
   await import(`./app.js?fumee=divisibilite-${Date.now()}`);
@@ -59,20 +62,20 @@ it("rend NC-01 depuis le registre et conserve son aide et sa correction", async 
   assert.match(application.innerHTML, /Ouvrir le cours/);
   cliquer(gestionnaires, "cours");
   assert.match(application.innerHTML, /Les critères de divisibilité/);
-  assert.match(application.innerHTML, /1 \/ 4/);
+  assert.match(application.innerHTML, /1 \/ 3/);
+  assert.match(application.innerHTML, /reste de la division est nul/);
   assert.match(application.innerHTML, /12 = 3 × 4 \+ 0/);
   cliquer(gestionnaires, "cours-suivant");
-  assert.match(application.innerHTML, /2 \/ 4/);
-  assert.match(application.innerHTML, /23<strong>0/);
-  assert.match(application.innerHTML, /23<strong>5/);
-  assert.match(application.innerHTML, /23<strong>6/);
+  assert.match(application.innerHTML, /2 \/ 3/);
+  assert.match(application.innerHTML, /chiffre des unités/);
+  assert.match(application.innerHTML, /<strong>230<\/strong>/);
+  assert.match(application.innerHTML, /<strong>235<\/strong>/);
+  assert.match(application.innerHTML, /<strong>236<\/strong>/);
   cliquer(gestionnaires, "cours-suivant");
-  assert.match(application.innerHTML, /3 \/ 4/);
+  assert.match(application.innerHTML, /3 \/ 3/);
   assert.match(application.innerHTML, /372/);
   assert.match(application.innerHTML, /729/);
-  cliquer(gestionnaires, "cours-suivant");
-  assert.match(application.innerHTML, /4 \/ 4/);
-  assert.match(application.innerHTML, /divisible par 10/);
+  assert.doesNotMatch(application.innerHTML, /implique|Une idée à la fois/);
   assert.doesNotMatch(application.innerHTML, /Série en cours/);
   cliquer(gestionnaires, "fermer-cours");
   const premierChoix = application.innerHTML.match(/data-action="choix" data-id="([^"]+)"/)?.[1];
@@ -84,6 +87,13 @@ it("rend NC-01 depuis le registre et conserve son aide et sa correction", async 
   appuyer(gestionnaires, "Escape");
   assert.doesNotMatch(application.innerHTML, /Correction expliquée/);
   assert.equal(focusRecus.at(-1), '[data-action="correction"]');
+  assert.deepEqual(optionsFocus.at(-1), { preventScroll: true });
+
+  cliquer(gestionnaires, "aide");
+  panneau.scrollTop = 180;
+  cliquer(gestionnaires, "chiffre-aide", undefined, "0");
+  assert.equal(panneau.scrollTop, 180);
+  assert.deepEqual(optionsFocus.at(-1), { preventScroll: true });
 });
 
 it("propose le parcours DNB puis lance Au tableau sans saisie ni score", async () => {
@@ -114,6 +124,11 @@ it("propose le parcours DNB puis lance Au tableau sans saisie ni score", async (
   cliquer(gestionnaires, "preparer");
   assert.match(application.innerHTML, /Prêt pour la classe/);
   assert.match(application.innerHTML, /15 questions/);
+  assert.doesNotMatch(application.innerHTML, /aide accessible|correction expliquée|Chiffre des unités<\/strong>|Somme de tous les chiffres<\/strong>|pastille-mode/);
+  cliquer(gestionnaires, "cours");
+  assert.match(application.innerHTML, /cours-pret-ouvert/);
+  assert.match(application.innerHTML, /1 \/ 3/);
+  cliquer(gestionnaires, "fermer-cours");
   cliquer(gestionnaires, "demarrer");
 
   assert.match(application.innerHTML, /Au tableau/);
@@ -130,11 +145,11 @@ it("propose le parcours DNB puis lance Au tableau sans saisie ni score", async (
   assert.match(application.innerHTML, /Réponse affichée/);
 });
 
-it("parcourt les six familles NC-01, leur aide, leur réponse et leur correction", async () => {
+it("parcourt les cinq familles NC-01, leur aide, leur réponse et leur correction", async () => {
   const { application, gestionnaires } = installerFauxNavigateur(
-    "?notion=criteres-divisibilite&questions=10&graine=fumee-six-familles",
+    "?notion=criteres-divisibilite&questions=10&graine=fumee-cinq-familles",
   );
-  await import(`./app.js?fumee=six-familles-${Date.now()}`);
+  await import(`./app.js?fumee=cinq-familles-${Date.now()}`);
   cliquer(gestionnaires, "demarrer");
 
   const familles = new Set();
@@ -171,7 +186,6 @@ it("parcourt les six familles NC-01, leur aide, leur réponse et leur correction
   }
 
   assert.deepEqual([...familles].sort(), [
-    "affirmation-divisibilite",
     "chiffre-manquant",
     "critere-precis",
     "partage-court",
@@ -180,6 +194,35 @@ it("parcourt les six familles NC-01, leur aide, leur réponse et leur correction
   ]);
   assert.match(application.innerHTML, /Ton bilan/);
   assert.match(application.innerHTML, /Pour confirmer la maîtrise/);
+  assert.match(application.innerHTML, /data-action="nouvelle-serie">Nouvelle série/);
+  assert.match(application.innerHTML, /data-action="recommencer">Refaire la même série/);
+  assert.match(application.innerHTML, /data-action="retour-menu">Choisir une autre série/);
+});
+
+it("distingue refaire la même série et générer une nouvelle série", async () => {
+  const { application, gestionnaires } = installerFauxNavigateur(
+    "?notion=criteres-divisibilite&questions=1&graine=bilan-actions",
+  );
+  await import(`./app.js?fumee=bilan-actions-${Date.now()}`);
+  cliquer(gestionnaires, "demarrer");
+  const premiereQuestion = application.innerHTML;
+  const choix = application.innerHTML.match(/data-action="choix" data-id="([^"]+)"/)?.[1];
+  assert.ok(choix);
+  cliquer(gestionnaires, "choix", choix);
+  cliquer(gestionnaires, "valider");
+  cliquer(gestionnaires, "suivant");
+
+  cliquer(gestionnaires, "recommencer");
+  cliquer(gestionnaires, "demarrer");
+  assert.equal(application.innerHTML, premiereQuestion);
+
+  const choixRejoue = application.innerHTML.match(/data-action="choix" data-id="([^"]+)"/)?.[1];
+  cliquer(gestionnaires, "choix", choixRejoue);
+  cliquer(gestionnaires, "valider");
+  cliquer(gestionnaires, "suivant");
+  cliquer(gestionnaires, "nouvelle-serie");
+  cliquer(gestionnaires, "demarrer");
+  assert.notEqual(application.innerHTML, premiereQuestion);
 });
 
 it("rend les solides, les trois volumes, leurs aides et leurs cours sans erreur", async () => {
