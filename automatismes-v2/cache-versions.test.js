@@ -68,6 +68,6 @@ it("charge une version cohérente de tous les modules modifiés d'Automatismes V
 
 it("invalide le cache du menu et du lanceur V2 modifiés", async () => {
   const source = await readFile(new URL("../automatismes-v2/index.html", import.meta.url), "utf8");
-  assert.match(source, /menu\.css\?v=10/);
-  assert.match(source, /app\.js\?v=10/);
+  assert.match(source, /menu\.css\?v=11/);
+  assert.match(source, /app\.js\?v=11/);
 });

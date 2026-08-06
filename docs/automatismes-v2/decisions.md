@@ -234,3 +234,13 @@ Seuls les domaines contenant au moins une notion V2 explicitement ouverte à
 l'essai sont affichés. Au 5 août, seul **Nombres et calculs**, avec NC-01, est
 visible. Les autres domaines et leurs futures icônes restent absents tant
 qu'ils sont vides.
+
+## 6 août 2026
+
+### D-028 — Le contexte DNB sans calculatrice reste visible
+
+Le lanceur V2 affiche en permanence la calculatrice barrée de la coque validée,
+à gauche du bouton de lancement. Ce repère n'est ni un réglage ni un mode : la
+phase V2 actuelle est entièrement consacrée à l'épreuve DNB sans calculatrice.
+Il reste donc visible dans **S'entraîner** comme dans **Au tableau**, y compris
+sur téléphone, avec un libellé accessible explicite.

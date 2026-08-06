@@ -98,6 +98,9 @@ it("propose le parcours DNB puis lance Au tableau sans saisie ni score", async (
   assert.match(application.innerHTML, /Choisir les automatismes/);
   assert.match(application.innerHTML, /Nombres et calculs/);
   assert.match(application.innerHTML, /M7\.5 11\.5h21M7\.5 18h21M7\.5 24\.5h21/);
+  assert.match(application.innerHTML, /aria-label="Épreuve DNB sans calculatrice"/);
+  assert.match(application.innerHTML, /class="dnb-launch-icon"/);
+  assert.match(application.innerHTML, /M3\.6 21\.4 20\.4 2\.6/);
   assert.match(application.innerHTML, /Critères de divisibilité/);
   assert.doesNotMatch(application.innerHTML, /Solides usuels|Calculer un volume/);
   assert.doesNotMatch(application.innerHTML, /Avec aide|Sans aide|Diaporama|Crédits et remerciements|Ouvrir une série/);

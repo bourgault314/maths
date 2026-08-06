@@ -161,6 +161,20 @@ function rendreIconeNombresCalculs() {
   </svg>`;
 }
 
+function rendreIconeCalculatriceBarree() {
+  return `<svg class="dnb-launch-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+    <rect x="6" y="2.8" width="12.4" height="18.4" rx="2.6" fill="none" stroke="currentColor" stroke-width="1.7"/>
+    <rect x="8.5" y="5.5" width="7.4" height="3.6" rx="1" fill="currentColor" opacity=".9"/>
+    <circle cx="9.4" cy="12.6" r="1.05" fill="currentColor"/>
+    <circle cx="12.2" cy="12.6" r="1.05" fill="currentColor"/>
+    <circle cx="15" cy="12.6" r="1.05" fill="currentColor"/>
+    <circle cx="9.4" cy="16.6" r="1.05" fill="currentColor"/>
+    <circle cx="12.2" cy="16.6" r="1.05" fill="currentColor"/>
+    <circle cx="15" cy="16.6" r="1.05" fill="currentColor"/>
+    <path d="M3.6 21.4 20.4 2.6" fill="none" stroke="#f58220" stroke-width="3.4" stroke-linecap="round"/>
+  </svg>`;
+}
+
 function rendreDomainesMenu() {
   return DOMAINES_MENU
     .filter((domaine) => domaine.notions.length > 0)
@@ -250,7 +264,12 @@ function rendreMenuAccueil() {
           <strong>${notionSelectionnee ? "1 automatisme sélectionné" : "Choisis au moins un automatisme"}</strong>
           <span>${configurationMenu.nombreQuestions} questions · ${libelleMode(configurationMenu.mode)}</span>
         </div>
-        <button class="generate-action" type="button" data-action="preparer" ${notionSelectionnee ? "" : "disabled"}>Lancer la série</button>
+        <div class="launch-cluster">
+          <span class="dnb-launch-context" role="img" aria-label="Épreuve DNB sans calculatrice" title="Épreuve sans calculatrice">
+            ${rendreIconeCalculatriceBarree()}
+          </span>
+          <button class="generate-action" type="button" data-action="preparer" ${notionSelectionnee ? "" : "disabled"}>Lancer la série</button>
+        </div>
       </div>
     </div>
   </main>`;

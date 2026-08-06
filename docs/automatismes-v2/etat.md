@@ -1,6 +1,6 @@
 # État du chantier Automatismes V2
 
-**Dernière mise à jour : 5 août 2026.**
+**Dernière mise à jour : 6 août 2026.**
 
 ## Point de reprise vérifié du 5 août
 
@@ -23,6 +23,9 @@
   pédagogiques.
 - Le lanceur reprend la coque visuelle de `/auto/`, avec seulement
   `S'entraîner / Au tableau`, le nombre de questions et NC-01.
+- La calculatrice barrée historique est restaurée dans la barre de lancement :
+  V2 étant exclusivement DNB, elle reste visible dans les deux contextes et
+  porte le libellé accessible « Épreuve DNB sans calculatrice ».
 - Les six domaines V2 sont enregistrés dans la structure du menu ; seuls les
   domaines non vides sont rendus. Au départ, seul « Nombres et calculs » est
   visible avec son icône originale.
@@ -39,13 +42,16 @@
 - commandes du menu d'au moins 44 px ;
 - liaison vérifiée jusqu'à une vraie question NC-01 en entraînement et au
   tableau.
+- inventaire technique de `auto/`, `studio/automatismes/` et des fondations V2
+  consigné dans `inventaire-auto-studio.md` ; il distingue les briques déjà
+  reprises, les candidates à adapter et le moteur historique à laisser isolé.
 
 ### Prochaine étape
 
-Recueillir les derniers retours de Gwenaël sur NC-01, corriger uniquement ces
-points, puis obtenir sa validation explicite avant d'ouvrir la notion DNB
-suivante. Le menu et la structure pédagogique ne doivent plus être redessinés
-pendant cette étape.
+Faire tester le lanceur muni du repère sans calculatrice, puis recueillir les
+derniers retours de Gwenaël sur NC-01. Corriger uniquement ces points et obtenir
+sa validation explicite avant d'ouvrir la notion DNB suivante. Le menu et la
+structure pédagogique ne doivent plus être redessinés pendant cette étape.
 
 ## Référence vérifiée
 

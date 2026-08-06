@@ -59,6 +59,13 @@ décider de le reprendre : c'est seulement le poser sur la table.
 - le principe d'identifiants stables, avec de nouveaux identifiants maths&go ;
 - la doctrine de provenance.
 
+L'inventaire technique durable de l'ancien travail est tenu dans
+[`inventaire-auto-studio.md`](inventaire-auto-studio.md). Avant d'ouvrir la
+fabrication d'une notion, le chef de projet vérifie d'abord les fondations V2,
+puis les composants techniques correspondants de cet inventaire. Cette étape
+évite de refaire un objet acquis sans transformer l'archive en source de
+questions.
+
 Les visuels, les aides, le diaporama et l'interface mobile de la bêta sont des
 créations de Gwenaël. Leur propriété est acquise, mais leur présence et leur
 design dans V2 seront décidés au besoin. L'interface, les couleurs et
@@ -213,5 +220,6 @@ La mémoire d'une conversation n'est jamais la référence. À chaque reprise :
 2. lire le présent document ;
 3. lire `etat.md` et vérifier que son commit de référence correspond à GitHub ;
 4. lire les dernières décisions ;
-5. annoncer la prochaine action avant de modifier le dépôt ;
-6. mettre à jour `etat.md` avant de terminer une étape ou une pull request.
+5. lire l'inventaire `auto` / `studio` ;
+6. annoncer la prochaine action avant de modifier le dépôt ;
+7. mettre à jour `etat.md` avant de terminer une étape ou une pull request.
