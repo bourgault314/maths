@@ -53,7 +53,8 @@ describe("moule responsive commun", () => {
 
     const touche = blocCss(".clavier-mathsgo button");
     assert.match(touche, /min-height:\s*44px/);
-    assert.match(css, /@media \(any-pointer: coarse\)/);
+    assert.match(css, /@media \(pointer: coarse\) and \(hover: none\)/);
+    assert.doesNotMatch(css, /@media \(any-pointer: coarse\)/);
     assert.doesNotMatch(css, /@media \(max-width:\s*679px\)[^{]*\{[^}]*avec-pave/s);
   });
 });

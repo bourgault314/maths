@@ -352,3 +352,35 @@ une série mélangée, tout en conservant des filtres plus fins. En particulier,
 conversion, mais appartiendront à une même catégorie visible « Fractions
 simples et décimaux ». Les familles directes et inverses de `NC-02` restent,
 elles, dans une seule micro-notion.
+
+### D-035 — Le guidage et les repères du moule NC-01 sont uniformisés
+
+Le cours nomme explicitement ses trois pages. Les pages de critères portent
+« Critères pour 2, 5 et 10 » puis « Critères pour 3 et 9 ». Le chiffre des
+unités conserve la même forme encadrée dans le cours, « Me guider » et la
+correction ; tous les chiffres d'un nombre, y compris ceux qui ne sont pas
+encadrés, gardent la même taille.
+
+« Me guider » rappelle toujours le critère complet utile. Il n'oblige donc pas
+l'élève à ouvrir le cours et ne crée aucun niveau d'aide supplémentaire. Pour
+une question portant sur un seul nombre et sur 3 ou 9, le même geste produit
+toujours le même résultat : l'élève sélectionne tous les chiffres et le total
+de la somme n'apparaît qu'au dernier appui. Lorsqu'aucune manipulation n'aide à
+comprendre la tâche, notamment pour quatre nombres ou un chiffre manquant, le
+calcul reste à effectuer par l'élève. Le clic décoratif sur le chiffre des
+unités est supprimé : l'unité utile est encadrée dès l'ouverture de l'aide.
+Les textes des corrections complètes restent inchangés.
+
+Dans l'en-tête, « Aide » reste à sa place fixe mais devient plus visible. Le
+score est centré et séparé de la position dans la série. Une réponse numérique
+unique à un chiffre manquant apparaît directement dans la case de l'énoncé ;
+la case reste vide lorsque plusieurs chiffres doivent être sélectionnés. Les
+boutons Oui/Non sont centrés.
+
+Le bouton « Valider » conserve exactement sa taille sur téléphone. Il est
+seulement limité en largeur sur ordinateur. Le pavé interne dépend désormais
+du pointeur principal : il apparaît sur un appareil utilisé principalement au
+toucher et reste masqué sur un ordinateur dont l'interaction principale est la
+souris, même si son écran est aussi tactile. Cette règle remplace, pour le
+moule courant, les mentions plus larges des décisions D-030 à D-033 sur tous
+les appareils hybrides et TNI.

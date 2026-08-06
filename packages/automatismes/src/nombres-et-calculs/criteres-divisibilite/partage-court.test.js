@@ -17,6 +17,7 @@ import {
   calculerRetraitMinimal,
   genererQuestionPartageCourt,
 } from "./partage-court.js";
+import { formulationCritereDivisibilite } from "./critere-precis.js";
 
 const DIVISEURS = [2, 3, 5, 9, 10];
 
@@ -253,6 +254,7 @@ describe("NC-01/F6 — aide et correction", () => {
       const aide = texteDes(oui.aide.blocs);
       assert.doesNotMatch(aide, /le partage est|le partage n'est|possible sans reste|impossible/iu);
       assert.match(aide, /unités|chiffres/iu);
+      assert.ok(aide.includes(formulationCritereDivisibilite(diviseur)));
     }
   });
 

@@ -13,23 +13,24 @@ import {
   COMPARAISON_ENSEMBLE_EXACT,
   SCHEMA_QUESTION_INSTANCE_V2,
   TYPE_REPONSE_SELECTION_MULTIPLE,
-} from "../../../../contrats/src/question-v2.js?v=14";
+} from "../../../../contrats/src/question-v2.js?v=15";
 import {
   DIVISEURS_CRITERES_NC01,
   construireCorrectionCritere,
+  formulationCritereDivisibilite,
   tirerNombreSelonDivisibilite,
-} from "./critere-precis.js?v=14";
+} from "./critere-precis.js?v=15";
 
 export const NOM_GENERATEUR_SELECTION_NOMBRES =
   "nombres-et-calculs.criteres-divisibilite.selection-nombres";
-export const VERSION_GENERATEUR_SELECTION_NOMBRES = 3;
+export const VERSION_GENERATEUR_SELECTION_NOMBRES = 4;
 
 const PARAMETRES_AUTORISES = new Set(["diviseur"]);
 
 export const GABARIT_SELECTION_NOMBRES = Object.freeze({
   schema: SCHEMA_GABARIT_QUESTION,
   id: NOM_GENERATEUR_SELECTION_NOMBRES,
-  version: 3,
+  version: 4,
   titre: "Critères de divisibilité — sélectionner plusieurs nombres",
   generateur: Object.freeze({
     nom: NOM_GENERATEUR_SELECTION_NOMBRES,
@@ -112,11 +113,14 @@ function construireAide(diviseur) {
             "Pour chaque nombre, observe uniquement le chiffre des unités.",
         },
         {
+          id: "aide-critere",
+          type: "texte",
+          contenu: formulationCritereDivisibilite(diviseur),
+        },
+        {
           id: "aide-un-par-un",
           type: "texte",
-          contenu:
-            `Applique le critère de divisibilité par ${diviseur}, ` +
-            "un nombre après l'autre.",
+          contenu: "Applique ce critère à un nombre après l'autre.",
         },
         {
           id: "aide-plusieurs",
@@ -135,9 +139,14 @@ function construireAide(diviseur) {
         contenu: "Pour chaque nombre, additionne tous ses chiffres.",
       },
       {
+        id: "aide-critere",
+        type: "texte",
+        contenu: formulationCritereDivisibilite(diviseur),
+      },
+      {
         id: "aide-multiples",
         type: "texte",
-        contenu: `Compare chaque somme aux multiples de ${diviseur}.`,
+        contenu: "Compare chaque somme à ce critère.",
       },
       {
         id: "aide-plusieurs",

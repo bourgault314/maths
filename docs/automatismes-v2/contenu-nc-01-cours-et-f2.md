@@ -53,7 +53,9 @@ Toutes les pièces mathématiques du schéma sont rectangulaires : barre entièr
 
 **Représentation :** `23[0]`, où le chiffre des unités est entouré et porte aussi une marque visuelle autre que la couleur.
 
-**Action facultative :** l’élève appuie sur le chiffre des unités. Le chiffre est alors encadré et la mention « chiffre des unités » apparaît. Le cours affiche ensuite les trois règles et la conclusion complète.
+Le chiffre des unités est encadré dès l'affichage. Les trois règles et la
+conclusion complète sont directement lisibles ; aucun clic décoratif n'est
+demandé.
 
 ### Page 3 — Additionner tous les chiffres
 
@@ -145,9 +147,9 @@ L’aide ne varie pas selon la réponse correcte de l’instance : elle ne rév�
 
 > Observe le chiffre des unités.
 
-L’élève peut appuyer sur le dernier chiffre pour l’encadrer. Aucune conclusion n’est affichée à sa place.
-
-> Convient-il pour 2 ? Pour 5 ? Pour 10 ?
+Le chiffre des unités est désormais encadré dès l'ouverture. L'aide rappelle
+explicitement les trois critères : pour 2, l'unité est 0, 2, 4, 6 ou 8 ; pour
+5, elle est 0 ou 5 ; pour 10, elle est 0.
 
 **Étape 2 — Additionne tous les chiffres :**
 
@@ -155,9 +157,10 @@ L’élève peut appuyer sur le dernier chiffre pour l’encadrer. Aucune conclu
 
 L’élève peut sélectionner chaque chiffre. La zone somme conserve les cases vides, puis calcule le total quand tous les chiffres ont été sélectionnés.
 
-**Questions de guidage :**
+**Rappels de guidage :**
 
-> La somme est-elle un multiple de 3 ? De 9 ?
+> Pour 3, la somme de tous les chiffres doit être un multiple de 3. Pour 9,
+> elle doit être un multiple de 9.
 
 > Plusieurs réponses sont peut-être possibles.
 

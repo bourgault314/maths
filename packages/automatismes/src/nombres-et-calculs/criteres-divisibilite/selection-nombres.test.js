@@ -13,6 +13,7 @@ import {
   GENERATEUR_SELECTION_NOMBRES,
   genererQuestionSelectionNombres,
 } from "./selection-nombres.js";
+import { formulationCritereDivisibilite } from "./critere-precis.js";
 
 const registre = creerRegistre();
 registre.enregistrer(GENERATEUR_SELECTION_NOMBRES);
@@ -147,6 +148,7 @@ describe("NC-01/F3 — déterminisme et exactitude", () => {
 
       const aide = question.aide.blocs.map((bloc) => bloc.contenu).join(" ");
       assert.doesNotMatch(aide, /est divisible|n'est pas divisible|bonne réponse/i);
+      assert.ok(aide.includes(formulationCritereDivisibilite(diviseur)));
       assert.match(aide, /Vérifie les quatre nombres/);
       if ([2, 5, 10].includes(diviseur)) {
         assert.match(aide, /chiffre des unités/);

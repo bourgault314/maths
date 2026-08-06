@@ -14,11 +14,12 @@ import {
   SCHEMA_QUESTION_INSTANCE_V2,
   TYPE_REPONSE_CHOIX_UNIQUE,
   TYPE_REPONSE_ENTIER_NATUREL,
-} from "../../../../contrats/src/question-v2.js?v=14";
+} from "../../../../contrats/src/question-v2.js?v=15";
+import { formulationCritereDivisibilite } from "./critere-precis.js?v=15";
 
 export const NOM_GENERATEUR_PARTAGE_COURT =
   "nombres-et-calculs.criteres-divisibilite.partage-court";
-export const VERSION_GENERATEUR_PARTAGE_COURT = 3;
+export const VERSION_GENERATEUR_PARTAGE_COURT = 4;
 
 export const SOUS_FORME_OUI_NON = "oui-non";
 export const SOUS_FORME_RETRAIT_MINIMAL = "retrait-minimal";
@@ -45,7 +46,7 @@ const CHOIX_OUI_NON = Object.freeze([
 export const GABARIT_PARTAGE_COURT = Object.freeze({
   schema: SCHEMA_GABARIT_QUESTION,
   id: NOM_GENERATEUR_PARTAGE_COURT,
-  version: 3,
+  version: 4,
   titre: "Critères de divisibilité — situation de partage",
   generateur: Object.freeze({
     nom: NOM_GENERATEUR_PARTAGE_COURT,
@@ -171,16 +172,10 @@ export function calculerRetraitMinimal(total, diviseur) {
 }
 
 function indicationCritere(diviseur) {
-  if (diviseur === 2) {
-    return "Observe le chiffre des unités : pour 2, il doit être pair.";
-  }
-  if (diviseur === 5) {
-    return "Observe le chiffre des unités : pour 5, il doit être 0 ou 5.";
-  }
-  if (diviseur === 10) {
-    return "Observe le chiffre des unités : pour 10, il doit être 0.";
-  }
-  return `Additionne tous les chiffres, puis vérifie si la somme est un multiple de ${diviseur}.`;
+  const action = diviseur === 3 || diviseur === 9
+    ? "Additionne tous les chiffres."
+    : "Observe le chiffre des unités.";
+  return `${action} ${formulationCritereDivisibilite(diviseur)}`;
 }
 
 function outilPourCritere(diviseur) {

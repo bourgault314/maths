@@ -62,7 +62,7 @@ describe("NC-01/F2 — question instanciée", () => {
       erreurs: [],
     });
     assert.equal(question.origine.generateur, GABARIT_SELECTION_DIVISEURS.generateur.nom);
-    assert.equal(question.origine.versionGenerateur, 1);
+    assert.equal(question.origine.versionGenerateur, 2);
     assert.deepEqual(question.classement, {
       domaine: "nombres-et-calculs",
       notion: "criteres-divisibilite",
@@ -80,8 +80,12 @@ describe("NC-01/F2 — question instanciée", () => {
     ]);
     assert.deepEqual(question.aide.blocs.map((bloc) => bloc.contenu), [
       "Observe le chiffre des unités.",
+      "Le chiffre des unités doit être 0, 2, 4, 6 ou 8.",
+      "Le chiffre des unités doit être 0 ou 5.",
+      "Le chiffre des unités doit être 0.",
       "Additionne tous les chiffres.",
-      "La somme obtenue est-elle un multiple de 3 ? Et de 9 ?",
+      "La somme de tous les chiffres doit être un multiple de 3.",
+      "La somme de tous les chiffres doit être un multiple de 9.",
       "Plusieurs réponses sont peut-être possibles.",
     ]);
   });
@@ -92,7 +96,7 @@ describe("NC-01/F2 — question instanciée", () => {
     assert.deepEqual(a, b);
   });
 
-  it("refuse tout paramètre pédagogique non prévu en version 1", () => {
+  it("refuse tout paramètre pédagogique non prévu en version 2", () => {
     const aleatoire = creerGenerateur("nc01-f2-parametres");
     assert.throws(
       () =>

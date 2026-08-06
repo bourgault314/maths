@@ -12,11 +12,11 @@ import {
   COMPARAISON_CHOIX_EXACT,
   SCHEMA_QUESTION_INSTANCE_V2,
   TYPE_REPONSE_CHOIX_UNIQUE,
-} from "../../../../contrats/src/question-v2.js?v=14";
+} from "../../../../contrats/src/question-v2.js?v=15";
 
 export const NOM_GENERATEUR_CRITERE_PRECIS =
   "nombres-et-calculs.criteres-divisibilite.critere-precis";
-export const VERSION_GENERATEUR_CRITERE_PRECIS = 2;
+export const VERSION_GENERATEUR_CRITERE_PRECIS = 3;
 
 export const DIVISEURS_CRITERES_NC01 = Object.freeze([2, 3, 5, 9, 10]);
 
@@ -30,7 +30,7 @@ const CHOIX_REPONSE = Object.freeze([
 export const GABARIT_CRITERE_PRECIS = Object.freeze({
   schema: SCHEMA_GABARIT_QUESTION,
   id: NOM_GENERATEUR_CRITERE_PRECIS,
-  version: 2,
+  version: 3,
   titre: "Critères de divisibilité — critère précis",
   generateur: Object.freeze({
     nom: NOM_GENERATEUR_CRITERE_PRECIS,
@@ -175,6 +175,18 @@ function listeUnites(diviseur) {
   return "0";
 }
 
+export function formulationCritereDivisibilite(diviseur) {
+  if (!DIVISEURS_CRITERES_NC01.includes(diviseur)) {
+    throw new RangeError(
+      "formulationCritereDivisibilite : diviseur attendu parmi 2, 3, 5, 9 et 10",
+    );
+  }
+  if ([2, 5, 10].includes(diviseur)) {
+    return `Le chiffre des unités doit être ${listeUnites(diviseur)}.`;
+  }
+  return `La somme de tous les chiffres doit être un multiple de ${diviseur}.`;
+}
+
 /** Produit l'explication complète d'un nombre pour un critère donné. */
 export function construireCorrectionCritere(nombre, diviseur) {
   const divisible = estDivisibleParCritere(nombre, diviseur);
@@ -213,7 +225,7 @@ function construireAide(diviseur) {
         {
           id: "aide-critere",
           type: "texte",
-          contenu: `Applique ensuite le critère de divisibilité par ${diviseur}.`,
+          contenu: formulationCritereDivisibilite(diviseur),
         },
       ],
       outils: [{ type: "observer-unites", source: "nombre" }],
@@ -229,7 +241,7 @@ function construireAide(diviseur) {
       {
         id: "aide-multiple",
         type: "texte",
-        contenu: `La somme obtenue est-elle un multiple de ${diviseur} ?`,
+        contenu: formulationCritereDivisibilite(diviseur),
       },
     ],
     outils: [{ type: "composer-somme-chiffres", source: "nombre" }],
