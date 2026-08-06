@@ -5,15 +5,15 @@ import {
 import {
   SCHEMA_TRACE_REPONSE,
   validerTraceReponse,
-} from "../../packages/contrats/src/trace-reponse.js?v=10";
+} from "../../packages/contrats/src/trace-reponse.js?v=11";
 import {
   TYPE_REPONSE_ENTIER_NATUREL,
   TYPE_REPONSE_CHOIX_UNIQUE,
   estEntierExact,
   estSelectionExacte,
-} from "../../packages/contrats/src/question-v2.js?v=10";
+} from "../../packages/contrats/src/question-v2.js?v=11";
 import { graineDepuisTexte } from "../../packages/moteur-exercices/src/aleatoire.js";
-import { creerRegistreAutomatismes } from "../../packages/automatismes/src/registre.js?v=10";
+import { creerRegistreAutomatismes } from "../../packages/automatismes/src/registre.js?v=11";
 import {
   connaitNotionLecteur,
   NOTION_NC01,
@@ -22,7 +22,7 @@ import {
   NOTION_VOLUME_CYLINDRE,
   NOTION_VOLUME_PRISME,
   obtenirNotionLecteur,
-} from "./registre-lecteur.js?v=10";
+} from "./registre-lecteur.js?v=11";
 
 export {
   NOTION_NC01,

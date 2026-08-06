@@ -686,3 +686,10 @@
     height: 27px;
   }
 }
+
+@media (min-width: 361px) and (max-width: 430px) {
+  .menu-v10 .controls-row {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 6px;
+  }
+}

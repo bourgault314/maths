@@ -42,6 +42,14 @@
   clavier, mais reste visible sur téléphone, tablette, appareil hybride et TNI.
 - Le bilan propose « Nouvelle série », « Refaire la même série » et « Choisir
   une autre série ».
+- F3 présente quatre nombres au lieu de six pour limiter le nombre de sommes à
+  effectuer dans une seule question ; « Aucun » reste un cas naturel.
+- Le cours relie désormais chaque schéma de partage à son égalité et à sa
+  conclusion. Les chiffres observés sont encadrés dans le cours et centrés dans
+  la correction.
+- Le pavé tactile est placé dans un bandeau stable sous la carte ; il ne peut
+  plus augmenter sa hauteur. Les consignes Oui/Non redondantes sont supprimées,
+  tandis que la validation séparée est conservée.
 
 ### Vérifications de cette reprise
 

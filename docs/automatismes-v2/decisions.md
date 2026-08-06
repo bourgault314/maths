@@ -295,3 +295,23 @@ navigation et du plan du site avec `noindex,nofollow` pendant le pilote.
 `/auto/` reste indépendant et doit être vérifié après chaque publication. Un
 lien non référencé n'étant pas un contrôle d'accès, le site ChatGPT reste le
 support approprié lorsqu'une vraie confidentialité est nécessaire.
+
+### D-032 — Les dernières finitions de NC-01 réduisent la charge visuelle
+
+La famille F3 propose quatre nombres au lieu de six. Cette réduction conserve
+la variété et le cas naturel « Aucun », mais évite de demander jusqu'à six
+sommes de chiffres dans une seule question.
+
+Les questions Oui/Non n'ajoutent plus la consigne redondante « Choisis Oui ou
+Non ». Le bouton « Valider » reste séparé des réponses pour prévenir les appuis
+accidentels et garder le même geste dans toutes les familles à choix.
+
+Sur ordinateur avec clavier et souris, l'élève utilise le clavier physique. Sur
+téléphone, tablette, appareil hybride ou TNI tactile, le pavé maths&go est placé
+dans un bandeau sous la carte et au-dessus des actions : il n'agrandit plus la
+carte de question et le clavier système mobile ne s'ouvre pas.
+
+Dans le cours et la correction, le chiffre des unités et chaque chiffre utilisé
+pour une somme sont encadrés et centrés. Les égalités des deux partages sont
+placées sous le schéma correspondant, avec une conclusion explicite reliée à la
+valeur du reste.

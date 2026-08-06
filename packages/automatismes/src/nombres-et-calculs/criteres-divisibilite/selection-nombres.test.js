@@ -107,7 +107,7 @@ describe("NC-01/F3 — déterminisme et exactitude", () => {
     assert.deepEqual(a, b);
   });
 
-  it("produit six nombres distincts et l'ensemble exact sur mille graines", () => {
+  it("produit quatre nombres distincts et l'ensemble exact sur mille graines", () => {
     for (let index = 0; index < 1000; index++) {
       const question = instancier(`nc01-f3-exactitude-${index}`);
       const { diviseur, nombres } = donneesDe(question);
@@ -120,19 +120,19 @@ describe("NC-01/F3 — déterminisme et exactitude", () => {
         ? ["aucun"]
         : nombresAttendus;
 
-      assert.equal(question.reponse.choix.length, 7);
+      assert.equal(question.reponse.choix.length, 5);
       assert.deepEqual(question.reponse.choix.at(-1), {
         id: "aucun",
         libelle: "Aucun",
         exclusif: true,
       });
-      assert.equal(new Set(nombres).size, 6, `doublon dans ${nombres.join(", ")}`);
+      assert.equal(new Set(nombres).size, 4, `doublon dans ${nombres.join(", ")}`);
       assert.ok(nombres.every((nombre) => nombre >= 10 && nombre <= 9999));
-      assert.ok([0, 1, 2, 3, 4].includes(nombresAttendus.length));
+      assert.ok([0, 1, 2, 3].includes(nombresAttendus.length));
       assert.deepEqual(question.reponse.attendus, attendusCalcules);
-      assert.equal(question.correction.length, 6);
+      assert.equal(question.correction.length, 4);
 
-      for (let position = 0; position < 6; position++) {
+      for (let position = 0; position < 4; position++) {
         const nombre = nombres[position];
         const divisible = nombre % diviseur === 0;
         const texte = question.correction[position].contenu;
@@ -147,14 +147,14 @@ describe("NC-01/F3 — déterminisme et exactitude", () => {
 
       const aide = question.aide.blocs.map((bloc) => bloc.contenu).join(" ");
       assert.doesNotMatch(aide, /est divisible|n'est pas divisible|bonne réponse/i);
-      assert.match(aide, /Vérifie les six nombres/);
+      assert.match(aide, /Vérifie les quatre nombres/);
       if ([2, 5, 10].includes(diviseur)) {
         assert.match(aide, /chiffre des unités/);
         assert.deepEqual(question.aide.outils, []);
       } else {
         assert.match(aide, /additionne tous ses chiffres/);
         assert.deepEqual(question.aide.outils, []);
-        for (let position = 0; position < 6; position++) {
+        for (let position = 0; position < 4; position++) {
           const nombre = nombres[position];
           const chiffres = String(nombre).split("").map(Number);
           const somme = chiffres.reduce((total, chiffre) => total + chiffre, 0);
@@ -169,7 +169,7 @@ describe("NC-01/F3 — déterminisme et exactitude", () => {
 });
 
 describe("NC-01/F3 — variété", () => {
-  it("couvre les critères, de zéro à quatre nombres corrects et les longueurs", () => {
+  it("couvre les critères, de zéro à trois nombres corrects et les longueurs", () => {
     const diviseurs = new Set();
     const nombresDeReponses = new Set();
     const longueurs = new Set();
@@ -196,7 +196,7 @@ describe("NC-01/F3 — variété", () => {
     }
 
     assert.deepEqual([...diviseurs].sort((a, b) => a - b), [2, 3, 5, 9, 10]);
-    assert.deepEqual([...nombresDeReponses].sort(), [0, 1, 2, 3, 4]);
+    assert.deepEqual([...nombresDeReponses].sort(), [0, 1, 2, 3]);
     assert.deepEqual([...longueurs].sort(), [2, 3, 4]);
     assert.ok(grilles.size >= 790, `variété insuffisante : ${grilles.size} grilles`);
     assert.equal(zeroInterneVu, true);

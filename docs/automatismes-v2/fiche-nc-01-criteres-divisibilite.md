@@ -80,7 +80,8 @@ Question en grille :
 
 L’élève choisit plusieurs nombres dans une petite grille. Il ne les déplace pas dans des catégories exclusives.
 
-- la grille reste courte et lisible sur téléphone ;
+- la grille contient quatre nombres, afin que l'application d'un critère reste
+  un automatisme court, notamment lorsque l'élève doit additionner les chiffres ;
 - elle peut contenir aucune, une ou plusieurs bonnes réponses si la consigne le permet explicitement ;
 - les nombres sont choisis pour obliger à appliquer le critère, sans indice graphique artificiel ;
 - le glisser-déposer n’est jamais l’unique interaction.

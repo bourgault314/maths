@@ -68,9 +68,9 @@ it("rend NC-01 depuis le registre et conserve son aide et sa correction", async 
   cliquer(gestionnaires, "cours-suivant");
   assert.match(application.innerHTML, /2 \/ 3/);
   assert.match(application.innerHTML, /chiffre des unités/);
-  assert.match(application.innerHTML, /<strong>230<\/strong>/);
-  assert.match(application.innerHTML, /<strong>235<\/strong>/);
-  assert.match(application.innerHTML, /<strong>236<\/strong>/);
+  assert.match(application.innerHTML, /aria-label="230, chiffre des unités 0"[^>]*><span>2<\/span><span>3<\/span><b>0<\/b>/);
+  assert.match(application.innerHTML, /aria-label="235, chiffre des unités 5"[^>]*><span>2<\/span><span>3<\/span><b>5<\/b>/);
+  assert.match(application.innerHTML, /aria-label="236, chiffre des unités 6"[^>]*><span>2<\/span><span>3<\/span><b>6<\/b>/);
   cliquer(gestionnaires, "cours-suivant");
   assert.match(application.innerHTML, /3 \/ 3/);
   assert.match(application.innerHTML, /372/);
@@ -162,7 +162,7 @@ it("parcourt les cinq familles NC-01, leur aide, leur réponse et leur correctio
       ? [...application.innerHTML.matchAll(/data-id="nombre-(\d+)"/g)]
         .map((correspondance) => correspondance[1])
       : [];
-    if (famille === "selection-nombres") assert.equal(nombresF3.length, 6);
+    if (famille === "selection-nombres") assert.equal(nombresF3.length, 4);
 
     cliquer(gestionnaires, "aide");
     assert.match(application.innerHTML, /Me guider/);

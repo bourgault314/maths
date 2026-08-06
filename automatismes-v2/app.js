@@ -26,15 +26,15 @@ import {
   saisirChiffre,
   tournerSolide,
   validerReponse,
-} from "./src/etat-lecteur.js?v=10";
-import { TYPE_REPONSE_ENTIER_NATUREL } from "../packages/contrats/src/question-v2.js?v=10";
+} from "./src/etat-lecteur.js?v=11";
+import { TYPE_REPONSE_ENTIER_NATUREL } from "../packages/contrats/src/question-v2.js?v=11";
 import {
   obtenirNotionLecteur,
   RENDU_DIVISIBILITE,
   RENDU_SOLIDE,
   RENDU_VOLUME,
-} from "./src/registre-lecteur.js?v=10";
-import { COURS_SOLIDES_USUELS } from "../packages/automatismes/src/espace-et-geometrie/solides-usuels/reconnaissance.js?v=10";
+} from "./src/registre-lecteur.js?v=11";
+import { COURS_SOLIDES_USUELS } from "../packages/automatismes/src/espace-et-geometrie/solides-usuels/reconnaissance.js?v=11";
 import {
   creerCone,
   creerCube,
@@ -946,14 +946,19 @@ function rendreCarteCoursDivisibilite(index) {
       <p class="definition-cours">Un nombre est divisible par un autre lorsque le reste de la division est nul, c’est-à-dire égal à 0.</p>
       <p class="modelage-cours">On peut alors partager en parts égales sans qu’il reste d’objet.</p>
       <div class="comparaison-partages">
-        <div class="barre-partage partage-exact" aria-label="12 partagé en 3 parts égales de 4, reste zéro">
-          <strong>12</strong><div><span>4</span><span>4</span><span>4</span></div><small>reste 0</small>
-        </div>
-        <div class="barre-partage partage-avec-reste" aria-label="13 partagé en 3 parts égales de 4, reste un">
-          <strong>13</strong><div><span>4</span><span>4</span><span>4</span><i>1</i></div><small>reste 1</small>
-        </div>
+        <section class="exemple-partage-cours">
+          <div class="barre-partage partage-exact" aria-label="12 partagé en 3 parts égales de 4, reste zéro">
+            <strong>12</strong><div><span>4</span><span>4</span><span>4</span></div><small>reste 0</small>
+          </div>
+          <p><strong>12 = 3 × 4 + 0</strong><span>Le reste est égal à 0 : 12 est divisible par 3.</span></p>
+        </section>
+        <section class="exemple-partage-cours">
+          <div class="barre-partage partage-avec-reste" aria-label="13 partagé en 3 parts égales de 4, reste un">
+            <strong>13</strong><div><span>4</span><span>4</span><span>4</span><i>1</i></div><small>reste 1</small>
+          </div>
+          <p><strong>13 = 3 × 4 + 1</strong><span>Le reste n’est pas égal à 0 : 13 n’est pas divisible par 3.</span></p>
+        </section>
       </div>
-      <p><strong>12 = 3 × 4 + 0</strong> : 12 est divisible par 3.<br><strong>13 = 3 × 4 + 1</strong> : 13 ne l’est pas.</p>
     </article>`;
   }
   if (index === 1) {
@@ -966,9 +971,9 @@ function rendreCarteCoursDivisibilite(index) {
         <li><strong>Divisible par 10 :</strong><span>le chiffre des unités est 0.</span></li>
       </ul>
       <div class="exemples-unites-cours" aria-label="Trois exemples">
-        <p><strong>230</strong><span>Son chiffre des unités est 0 : il est divisible par 2, par 5 et par 10.</span></p>
-        <p><strong>235</strong><span>Son chiffre des unités est 5 : il est divisible par 5, mais pas par 2 ni par 10.</span></p>
-        <p><strong>236</strong><span>Son chiffre des unités est 6 : il est divisible par 2, mais pas par 5 ni par 10.</span></p>
+        <p><strong class="nombre-unite-cours" aria-label="230, chiffre des unités 0"><span>2</span><span>3</span><b>0</b></strong><span>Son chiffre des unités est 0 : il est divisible par 2, par 5 et par 10.</span></p>
+        <p><strong class="nombre-unite-cours" aria-label="235, chiffre des unités 5"><span>2</span><span>3</span><b>5</b></strong><span>Son chiffre des unités est 5 : il est divisible par 5, mais pas par 2 ni par 10.</span></p>
+        <p><strong class="nombre-unite-cours" aria-label="236, chiffre des unités 6"><span>2</span><span>3</span><b>6</b></strong><span>Son chiffre des unités est 6 : il est divisible par 2, mais pas par 5 ni par 10.</span></p>
       </div>
     </article>`;
   }
@@ -980,8 +985,8 @@ function rendreCarteCoursDivisibilite(index) {
       <li><strong>Divisible par 9 :</strong><span>la somme de tous les chiffres est un multiple de 9.</span></li>
     </ul>
     <div class="exemples-sommes-cours">
-      <section><strong>372</strong><p>3 + 7 + 2 = <b>12</b></p><span>12 est multiple de 3, mais pas de 9.</span><em>372 est divisible par 3, mais pas par 9.</em></section>
-      <section><strong>729</strong><p>7 + 2 + 9 = <b>18</b></p><span>18 est multiple de 3 et de 9.</span><em>729 est divisible par 3 et par 9.</em></section>
+      <section><p aria-label="3 plus 7 plus 2 égale 12"><b>3</b><i>+</i><b>7</b><i>+</i><b>2</b><i>=</i><strong>12</strong></p><span>12 est multiple de 3, mais pas de 9.</span><em>372 est divisible par 3, mais pas par 9.</em></section>
+      <section><p aria-label="7 plus 2 plus 9 égale 18"><b>7</b><i>+</i><b>2</b><i>+</i><b>9</b><i>=</i><strong>18</strong></p><span>18 est multiple de 3 et de 9.</span><em>729 est divisible par 3 et par 9.</em></section>
     </div>
   </article>`;
 }
@@ -1232,12 +1237,22 @@ function rendreClavierEntier(question) {
   return `<section class="saisie-numerique" aria-label="Réponse numérique">
     <output class="afficheur-reponse ${etat.saisie ? "rempli" : ""}">${echapper(valeurAffichee)}</output>
     ${entrainement ? '<p class="indication-clavier-physique">Touches 0 à 9 · Retour arrière pour effacer · Entrée pour valider</p>' : ""}
-    ${entrainement ? `<div class="clavier-mathsgo" aria-label="Clavier chiffres">
+  </section>`;
+}
+
+function rendrePaveMathsgo(question) {
+  if (
+    !estEntrainement()
+    || etat.validation !== null
+    || question.reponse.type !== TYPE_REPONSE_ENTIER_NATUREL
+  ) return "";
+  return `<section class="pave-mathsgo-dock" aria-label="Saisie de la réponse">
+    <div class="clavier-mathsgo" aria-label="Clavier chiffres">
       ${[1, 2, 3, 4, 5, 6, 7, 8, 9].map((chiffre) => `<button type="button" data-action="chiffre" data-value="${chiffre}">${chiffre}</button>`).join("")}
       <button class="touche-effacer" type="button" data-action="effacer-saisie" aria-label="Effacer le dernier chiffre">Effacer</button>
       <button type="button" data-action="chiffre" data-value="0">0</button>
       <span aria-hidden="true"></span>
-    </div>` : ""}
+    </div>
   </section>`;
 }
 
@@ -1283,12 +1298,11 @@ function rendreContenuQuestionDivisibilite(question) {
   }
   if (famille === "critere-precis") {
     return `<h1>${echapper(texteBloc(question, "consigne"))}</h1>
-      <p class="nombre-question">${echapper(nombreQuestion(question))}</p>
-      <p class="precision">Choisis Oui ou Non.</p>`;
+      <p class="nombre-question">${echapper(nombreQuestion(question))}</p>`;
   }
   if (famille === "selection-nombres") {
     return `<h1>${echapper(texteBloc(question, "consigne"))}</h1>
-      <p class="precision">Observe chaque nombre. Plusieurs réponses sont attendues.</p>`;
+      <p class="precision">Plusieurs réponses peuvent être correctes.</p>`;
   }
   if (famille === "affirmation-divisibilite") {
     return `<h1>${echapper(texteBloc(question, "consigne"))}</h1>
@@ -1301,10 +1315,12 @@ function rendreContenuQuestionDivisibilite(question) {
       <p class="precision">${question.reponse.type === TYPE_REPONSE_ENTIER_NATUREL ? "Entre un chiffre." : "Plusieurs chiffres sont peut-être possibles."}</p>`;
   }
   if (famille === "partage-court") {
+    const ouiNon = question.reponse.choix?.length === 2
+      && question.reponse.choix.every((choix) => ["oui", "non"].includes(choix.id));
     return `<h1>Partager sans reste</h1>
       <p class="situation-question">${rendrePhraseStructuree(question)}</p>
       ${rendrePlateauPartage(question)}
-      <p class="precision">${question.reponse.type === TYPE_REPONSE_ENTIER_NATUREL ? "Entre le plus petit nombre à retirer." : "Relie la situation à un critère de divisibilité."}</p>`;
+      ${ouiNon ? "" : `<p class="precision">${question.reponse.type === TYPE_REPONSE_ENTIER_NATUREL ? "Entre le plus petit nombre à retirer." : "Plusieurs réponses peuvent être correctes."}</p>`}`;
   }
   return `<h1>${echapper(question.enonce[0]?.contenu ?? "Question")}</h1>`;
 }
@@ -1313,7 +1329,7 @@ function rendreQuestionDivisibilite() {
   const question = questionCourante(etat);
   const entrainement = estEntrainement();
   return `
-    <div class="${classesLecteur()}">
+    <div class="${classesLecteur()} ${question.reponse.type === TYPE_REPONSE_ENTIER_NATUREL && etat.validation === null ? "avec-pave" : ""}">
       ${rendreEntete()}
       <div class="espace-lecteur">
         <main class="carte-question carte-question-divisibilite famille-${echapper(familleQuestion(question))}">
@@ -1326,6 +1342,7 @@ function rendreQuestionDivisibilite() {
         ${rendreCorrection(question)}
         ${rendreCours()}
       </div>
+      ${rendrePaveMathsgo(question)}
       ${entrainement ? rendreBarreEleve() : rendreBarreEnseignant()}
       ${rendreMenuSession()}
     </div>`;

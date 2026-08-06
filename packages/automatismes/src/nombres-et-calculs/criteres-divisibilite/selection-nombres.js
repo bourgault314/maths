@@ -1,7 +1,7 @@
 // NC-01/F3 — sélectionner plusieurs nombres divisibles par un critère donné.
 //
 // Contenu validé dans la fiche pédagogique NC-01 le 19 juillet 2026.
-// La grille contient toujours six nombres distincts. Zéro à quatre nombres
+// La grille contient toujours quatre nombres distincts. Zéro à trois nombres
 // sont corrects, sans que ce nombre soit révélé à l'élève ; « Aucun » permet
 // de répondre explicitement lorsque les six tests sont négatifs.
 
@@ -13,12 +13,12 @@ import {
   COMPARAISON_ENSEMBLE_EXACT,
   SCHEMA_QUESTION_INSTANCE_V2,
   TYPE_REPONSE_SELECTION_MULTIPLE,
-} from "../../../../contrats/src/question-v2.js?v=10";
+} from "../../../../contrats/src/question-v2.js?v=11";
 import {
   DIVISEURS_CRITERES_NC01,
   construireCorrectionCritere,
   tirerNombreSelonDivisibilite,
-} from "./critere-precis.js?v=10";
+} from "./critere-precis.js?v=11";
 
 export const NOM_GENERATEUR_SELECTION_NOMBRES =
   "nombres-et-calculs.criteres-divisibilite.selection-nombres";
@@ -96,7 +96,7 @@ function tirerNombresDistincts(aleatoire, diviseur, profils) {
       }
     }
     throw new Error(
-      "selection-nombres : impossible de produire six nombres distincts",
+      "selection-nombres : impossible de produire quatre nombres distincts",
     );
   });
 }
@@ -121,7 +121,7 @@ function construireAide(diviseur) {
         {
           id: "aide-plusieurs",
           type: "texte",
-          contenu: "Vérifie les six nombres avant de conclure.",
+          contenu: "Vérifie les quatre nombres avant de conclure.",
         },
       ],
       outils: [],
@@ -142,7 +142,7 @@ function construireAide(diviseur) {
       {
         id: "aide-plusieurs",
         type: "texte",
-      contenu: "Vérifie les six nombres avant de conclure.",
+      contenu: "Vérifie les quatre nombres avant de conclure.",
       },
     ],
     outils: [],
@@ -156,10 +156,10 @@ export function genererQuestionSelectionNombres({ aleatoire, parametres }) {
   const diviseur = Object.hasOwn(parametres, "diviseur")
     ? parametres.diviseur
     : aleatoire.choix(DIVISEURS_CRITERES_NC01);
-  const nombreDeBonnesReponses = aleatoire.choix([0, 1, 2, 3, 4]);
+  const nombreDeBonnesReponses = aleatoire.choix([0, 1, 2, 3]);
   const profils = [
     ...Array.from({ length: nombreDeBonnesReponses }, () => true),
-    ...Array.from({ length: 6 - nombreDeBonnesReponses }, () => false),
+    ...Array.from({ length: 4 - nombreDeBonnesReponses }, () => false),
   ];
   const nombres = aleatoire.melange(
     tirerNombresDistincts(aleatoire, diviseur, profils),

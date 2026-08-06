@@ -357,6 +357,10 @@ body {
   overflow: hidden;
 }
 
+.lecteur.avec-pave {
+  grid-template-rows: auto 4px minmax(0, 1fr) auto auto;
+}
+
 .entete-seance,
 .entete-seance.avec-cours,
 .entete-projection,
@@ -885,6 +889,30 @@ body {
   gap: 10px;
 }
 
+.exemple-partage-cours {
+  min-width: 0;
+}
+
+.exemple-partage-cours > p {
+  margin: 0;
+  display: grid;
+  gap: 4px;
+  color: var(--mg-encre);
+  font-size: 13px;
+  line-height: 1.35;
+}
+
+.exemple-partage-cours > p strong {
+  color: var(--mg-bleu);
+  font-family: var(--mg-titres);
+  font-size: 17px;
+}
+
+.exemple-partage-cours > p span {
+  color: var(--mg-texteAttenue);
+  font-weight: 700;
+}
+
 .barre-partage > strong,
 .barre-partage > div {
   min-height: 44px;
@@ -1015,6 +1043,27 @@ body {
   font-size: 25px;
 }
 
+.nombre-unite-cours {
+  display: flex;
+  align-items: center;
+  letter-spacing: 0;
+}
+
+.nombre-unite-cours span,
+.nombre-unite-cours b {
+  min-width: 22px;
+  min-height: 34px;
+  display: inline-grid;
+  place-items: center;
+}
+
+.nombre-unite-cours b {
+  border: 3px solid var(--mg-orange);
+  border-radius: 6px;
+  color: var(--mg-orange);
+  background: color-mix(in srgb, var(--mg-orange) 10%, var(--mg-papier));
+}
+
 .exemples-unites-cours p span {
   color: var(--mg-texteAttenue);
   font-size: 13px;
@@ -1030,8 +1079,8 @@ body {
 .exemples-sommes-cours section {
   padding: 12px;
   display: grid;
-  grid-template-columns: 74px minmax(0, 1fr);
-  gap: 3px 10px;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 5px;
   align-items: center;
   border: 2px solid var(--mg-ligne);
   border-radius: 14px;
@@ -1043,6 +1092,39 @@ body {
   color: var(--mg-bleu);
   font-family: var(--mg-titres);
   font-size: 30px;
+}
+
+.exemples-sommes-cours p > b {
+  min-width: 32px;
+  min-height: 36px;
+  display: inline-grid;
+  place-items: center;
+  border: 2px solid var(--mg-turquoise);
+  border-radius: 5px;
+  color: var(--mg-bleu);
+  background: var(--mg-papier);
+  font-style: normal;
+}
+
+.exemples-sommes-cours p {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+}
+
+.exemples-sommes-cours section > span,
+.exemples-sommes-cours section > em {
+  text-align: center;
+}
+
+.exemples-sommes-cours p i {
+  color: var(--mg-texteAttenue);
+  font-style: normal;
+}
+
+.exemples-sommes-cours p > strong {
+  color: var(--mg-turquoise);
 }
 
 .exemples-sommes-cours p,
@@ -1270,6 +1352,18 @@ body {
   gap: 7px;
 }
 
+.pave-mathsgo-dock {
+  display: none;
+  padding: 8px 12px;
+  border-top: 1px solid var(--mg-ligne);
+  background: var(--mg-papier);
+}
+
+.pave-mathsgo-dock .clavier-mathsgo {
+  width: min(100%, 360px);
+  margin: 0 auto;
+}
+
 .clavier-mathsgo button,
 .clavier-mathsgo > span {
   min-width: 0;
@@ -1456,6 +1550,7 @@ body {
 
 @media (max-width: 430px) {
   .comparaison-partages {
+    grid-template-columns: minmax(0, 1fr);
     gap: 6px;
   }
 
@@ -1479,12 +1574,8 @@ body {
   }
 
   .exemples-sommes-cours section {
-    grid-template-columns: 58px minmax(0, 1fr);
+    grid-template-columns: minmax(0, 1fr);
     padding: 10px;
-  }
-
-  .exemples-sommes-cours section > strong {
-    font-size: 25px;
   }
 
   .navigation-cours {
@@ -1801,7 +1892,11 @@ body {
 }
 
 @media (any-pointer: coarse) {
-  .mode-entrainement .clavier-mathsgo {
+  .mode-entrainement .pave-mathsgo-dock {
+    display: block;
+  }
+
+  .mode-entrainement .pave-mathsgo-dock .clavier-mathsgo {
     display: grid;
   }
 
