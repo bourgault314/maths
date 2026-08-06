@@ -368,13 +368,54 @@ body {
 .entete-projection.avec-cours {
   min-height: 56px;
   padding: max(6px, env(safe-area-inset-top)) 12px 6px;
-  grid-template-columns: auto auto minmax(44px, 1fr) auto;
+  grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
   gap: 6px;
+}
+
+.actions-entete {
+  min-width: 0;
+  display: flex;
+  gap: 6px;
+  justify-self: start;
 }
 
 .bouton-entete {
   min-width: 0;
+  min-height: 44px;
   justify-self: start;
+}
+
+.bouton-aide-entete {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  border: 2px solid var(--mg-turquoise);
+  color: var(--mg-bleu);
+  background: color-mix(in srgb, var(--mg-turquoise) 18%, var(--mg-papier));
+  box-shadow: 0 2px 8px color-mix(in srgb, var(--mg-turquoise) 20%, transparent);
+}
+
+.bouton-aide-entete > span {
+  width: 19px;
+  height: 19px;
+  display: inline-grid;
+  place-items: center;
+  border-radius: 9999px;
+  color: var(--mg-papier);
+  background: var(--mg-bleu);
+  font-family: var(--mg-titres);
+  font-size: 12px;
+  font-weight: 900;
+}
+
+.bouton-aide-entete > strong {
+  font-weight: 800;
+}
+
+.bouton-aide-entete[aria-expanded="true"] {
+  border-color: var(--mg-bleu);
+  background: color-mix(in srgb, var(--mg-turquoise) 30%, var(--mg-papier));
+  box-shadow: inset 0 0 0 1px var(--mg-bleu);
 }
 
 .score,
@@ -384,7 +425,7 @@ body {
   padding: 6px 9px;
   display: inline-grid;
   place-items: center;
-  justify-self: end;
+  justify-self: center;
   border: 2px solid color-mix(in srgb, var(--mg-reussite) 35%, var(--mg-ligne));
   border-radius: 9999px;
   background: color-mix(in srgb, var(--mg-reussite) 7%, var(--mg-papier));
@@ -727,6 +768,59 @@ body {
   background: color-mix(in srgb, var(--mg-orange) 10%, var(--mg-papier));
 }
 
+.nombre-aide .nombre-observe {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--mg-bleu);
+  font-size: 32px;
+  letter-spacing: 0;
+}
+
+.nombre-aide .nombre-observe > span,
+.nombre-aide .nombre-observe > strong {
+  min-width: 44px;
+  min-height: 48px;
+  display: inline-grid;
+  place-items: center;
+}
+
+.chiffre-unite-encadre {
+  border: 3px solid var(--mg-orange);
+  border-radius: 6px;
+  color: var(--mg-orange);
+  background: color-mix(in srgb, var(--mg-orange) 10%, var(--mg-papier));
+}
+
+.rappels-criteres-aide {
+  margin-top: 12px;
+  display: grid;
+  gap: 6px;
+}
+
+.rappels-criteres-aide p {
+  margin: 0;
+  padding: 8px 10px;
+  display: grid;
+  grid-template-columns: minmax(94px, auto) minmax(0, 1fr);
+  gap: 8px;
+  align-items: center;
+  border-radius: 10px;
+  background: var(--mg-fondDoux);
+  font-size: 13px;
+  line-height: 1.35;
+  text-align: left;
+}
+
+.rappels-criteres-aide strong {
+  color: var(--mg-bleu);
+}
+
+.rappels-criteres-aide span {
+  color: var(--mg-encre);
+  font-weight: 700;
+}
+
 .somme-a-completer {
   color: var(--mg-texteAttenue);
   font-size: 12px;
@@ -746,6 +840,22 @@ body {
   font-weight: 800;
   letter-spacing: .08em;
   text-align: center;
+}
+
+.motif-aide-structure {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: .08em;
+  letter-spacing: 0;
+}
+
+.motif-aide-structure > span,
+.motif-aide-structure > strong {
+  min-width: .7em;
+  min-height: 1em;
+  display: inline-grid;
+  place-items: center;
 }
 
 .aide-chiffre-manquant .expression-aide {
@@ -1102,6 +1212,11 @@ body {
   place-items: center;
 }
 
+.nombre-unite-cours span {
+  color: inherit;
+  font-size: inherit;
+}
+
 .nombre-unite-cours b {
   border: 3px solid var(--mg-orange);
   border-radius: 6px;
@@ -1109,11 +1224,20 @@ body {
   background: color-mix(in srgb, var(--mg-orange) 10%, var(--mg-papier));
 }
 
-.exemples-unites-cours p span {
+.exemples-unites-cours p > span {
   color: var(--mg-texteAttenue);
   font-size: 13px;
   font-weight: 700;
   line-height: 1.4;
+}
+
+.nombre-observe strong.chiffre-unite-encadre,
+.nombre-unite-cours b.chiffre-unite-encadre,
+.nombre-correction strong.chiffre-unite-encadre {
+  border: 3px solid var(--mg-orange);
+  border-radius: 6px;
+  color: var(--mg-orange);
+  background: color-mix(in srgb, var(--mg-orange) 10%, var(--mg-papier));
 }
 
 .exemples-sommes-cours {
@@ -1345,12 +1469,43 @@ body {
 
 .nombre-a-completer {
   margin: 8px 0 10px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: .08em;
   color: var(--mg-bleu);
   font-family: var(--mg-titres);
   font-size: clamp(50px, 16vw, 74px);
   font-weight: 800;
-  letter-spacing: .08em;
   line-height: 1.08;
+}
+
+.nombre-a-completer > span:not(.case-chiffre-manquant) {
+  min-width: .62em;
+}
+
+.case-chiffre-manquant {
+  width: .8em;
+  height: 1.05em;
+  display: inline-grid;
+  place-items: center;
+  border: 4px solid var(--mg-orange);
+  border-radius: 10px;
+  color: var(--mg-orange);
+  background: color-mix(in srgb, var(--mg-orange) 8%, var(--mg-papier));
+  line-height: 1;
+}
+
+.case-chiffre-manquant.remplie {
+  color: var(--mg-bleu);
+  background: color-mix(in srgb, var(--mg-turquoise) 10%, var(--mg-papier));
+}
+
+.symbole-chiffre-manquant {
+  width: .8em;
+  display: inline-grid;
+  place-items: center;
+  color: var(--mg-orange);
 }
 
 .grille-chiffres {
@@ -1577,8 +1732,13 @@ body {
     font-size: 13px;
   }
 
+  .rappels-criteres-aide p {
+    grid-template-columns: 1fr;
+    gap: 3px;
+  }
+
   .exemples-unites-cours p {
-    grid-template-columns: 54px minmax(0, 1fr);
+    grid-template-columns: 70px minmax(0, 1fr);
   }
 
   .exemples-sommes-cours section {
@@ -1604,6 +1764,24 @@ body {
     width: 36px;
   }
 
+}
+
+@media (max-width: 430px) {
+  .actions-entete {
+    gap: 4px;
+  }
+
+  .actions-entete .bouton-entete {
+    padding-inline: 6px;
+  }
+
+  .bouton-aide-entete {
+    gap: 0;
+  }
+
+  .bouton-aide-entete > span {
+    display: none;
+  }
 }
 
 @media (min-width: 680px) {
@@ -1651,6 +1829,11 @@ body {
 
   .carte-question {
     padding: 20px 22px 12px;
+  }
+
+  .mode-entrainement .barre-avant-validation .bouton-principal {
+    width: min(100%, 360px);
+    justify-self: center;
   }
 }
 
@@ -1901,7 +2084,7 @@ body {
   }
 }
 
-@media (any-pointer: coarse) {
+@media (pointer: coarse) and (hover: none) {
   .mode-entrainement.avec-pave .pave-mathsgo-dock {
     display: block;
   }

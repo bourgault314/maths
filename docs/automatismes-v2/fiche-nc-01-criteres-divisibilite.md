@@ -185,22 +185,30 @@ Ces états ne sont ni des paliers ni des niveaux. Une même famille et une même
 
 ### Contenu des aides
 
-L’aide donne une orientation sans donner la réponse :
+L’aide donne une orientation sans donner la réponse. Elle rappelle toujours
+le critère complet utile, sans obliger l'élève à rouvrir le cours :
 
 - « Observe le chiffre des unités. » ;
 - « Additionne tous les chiffres. » ;
-- « La somme obtenue est-elle un multiple de 3 ? » ;
-- « La somme obtenue est-elle un multiple de 9 ? » ;
+- « La somme de tous les chiffres doit être un multiple de 3. » ;
+- « La somme de tous les chiffres doit être un multiple de 9. » ;
 - « Plusieurs réponses sont peut-être possibles. ».
 
 Quand l’aide porte sur 3 ou 9, elle peut mettre en évidence tous les chiffres et préparer leur addition. Quand elle porte sur 2, 5 ou 10, elle met en évidence uniquement le chiffre des unités.
 
-Deux manipulations d’aide sont retenues :
+Une seule manipulation d’aide est retenue lorsque la question porte sur un
+nombre et demande d'utiliser la somme de ses chiffres :
 
-- l’élève peut appuyer sur le chiffre des unités pour l’identifier ;
 - il peut sélectionner tous les chiffres pour construire une écriture comme `5 + 3 + 7 = 15` ; la somme n'apparaît qu'après la sélection de tous les chiffres.
 
-La zone somme effectue ce calcul intermédiaire après la manipulation, mais ne conclut jamais sur la divisibilité. Ces manipulations restent facultatives : elles sont accessibles lorsque l’aide est ouverte ou disponible, et absentes lorsque l’aide est indisponible.
+Le chiffre des unités utile est encadré dès l'ouverture de l'aide : un clic qui
+ne ferait que répéter ce repérage n'est pas demandé. Pour 2, 5 et 10, l'aide
+rappelle les chiffres des unités permis. Pour 3 et 9, elle rappelle que la somme
+de tous les chiffres doit être un multiple du critère. La zone somme effectue
+ce calcul intermédiaire après la manipulation, mais ne conclut jamais sur la
+divisibilité. La manipulation reste facultative et n'apparaît pas dans les
+tâches où elle alourdirait la vérification, notamment la grille de quatre
+nombres et la recherche d'un chiffre manquant.
 
 ## Correction commune
 
@@ -284,9 +292,9 @@ Les nombres et sous-cas varient avec une graine reproductible. Le cas « Aucun �
 - pour toute saisie numérique tactile, clavier maths&go affiché dans l’application ; le clavier système du téléphone ou de la tablette ne s’ouvre pas ;
 - clavier adapté à la nature de la réponse : NC-01 utilise le profil « entier naturel » ; le signe moins ou la virgule n’apparaîtront que pour les notions qui les autorisent, sans déplacer les chiffres ;
 - sur ordinateur muni d'une souris et d'un clavier, le pavé interne est masqué et le clavier physique est accepté ;
-- sur téléphone, tablette, appareil hybride ou TNI tactile, le pavé maths&go reste affiché ;
+- sur un appareil dont le pointeur principal est tactile, le pavé maths&go reste affiché ; un ordinateur principalement utilisé à la souris le masque même si son écran est tactile ;
 - état sélectionné perceptible autrement que par la seule couleur ;
-- appui sur le chiffre des unités ou sélection des chiffres dans l’aide lorsque cela est utile ;
+- chiffre des unités encadré immédiatement ou sélection des chiffres dans l’aide lorsque cela est utile ;
 - aucun glisser-déposer obligatoire : toute action est réalisable par appui ;
 - fonctionnement vérifié à 375 px sans débordement horizontal.
 

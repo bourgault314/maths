@@ -151,10 +151,12 @@ L’aide s’ouvre dans un panneau remontant depuis le bas. Le panneau est refer
 
 Décisions :
 
-- appuyer sur le chiffre des unités l’encadre ;
+- le chiffre des unités est encadré dès l'ouverture de l'aide ;
+- les critères complets pour 2, 5 et 10 sont rappelés sous ce repère ;
 - chaque occurrence d’un chiffre peut être sélectionnée séparément ;
 - les chiffres apparaissent dans leur ordre dans la zone somme ;
-- la somme reste vide tant que l’élève ne l’a pas saisie ;
+- le total de la somme apparaît uniquement lorsque tous les chiffres ont été sélectionnés ;
+- les critères complets pour 3 et 9 sont rappelés sous la somme ;
 - le panneau ne confirme ni la somme ni les diviseurs ;
 - le rappel « divisible par 3 ne signifie pas forcément divisible par 9 » peut apparaître sous les deux questions de guidage ;
 - aucune aide n’est adaptée secrètement à la bonne réponse de l’instance.

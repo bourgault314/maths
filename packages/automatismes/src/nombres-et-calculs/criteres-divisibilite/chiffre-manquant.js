@@ -14,16 +14,17 @@ import {
   SCHEMA_QUESTION_INSTANCE_V2,
   TYPE_REPONSE_ENTIER_NATUREL,
   TYPE_REPONSE_SELECTION_MULTIPLE,
-} from "../../../../contrats/src/question-v2.js?v=14";
+} from "../../../../contrats/src/question-v2.js?v=15";
+import { formulationCritereDivisibilite } from "./critere-precis.js?v=15";
 
 export const NOM_GENERATEUR_CHIFFRE_MANQUANT =
   "nombres-et-calculs.criteres-divisibilite.chiffre-manquant";
-export const VERSION_GENERATEUR_CHIFFRE_MANQUANT = 1;
+export const VERSION_GENERATEUR_CHIFFRE_MANQUANT = 2;
 
 export const GABARIT_CHIFFRE_MANQUANT = Object.freeze({
   schema: SCHEMA_GABARIT_QUESTION,
   id: NOM_GENERATEUR_CHIFFRE_MANQUANT,
-  version: 1,
+  version: 2,
   titre: "Critères de divisibilité — chiffre manquant",
   generateur: Object.freeze({
     nom: NOM_GENERATEUR_CHIFFRE_MANQUANT,
@@ -251,10 +252,14 @@ function aidePour(critere, sousForme) {
           contenu: "Additionne d'abord tous les chiffres déjà écrits.",
         },
         {
+          id: "rappeler-critere",
+          type: "texte",
+          contenu: formulationCritereDivisibilite(critere),
+        },
+        {
           id: "tester-somme",
           type: "texte",
-          contenu:
-            `Cherche quels chiffres rendraient la somme obtenue multiple de ${critere}.`,
+          contenu: "Cherche quels chiffres permettraient de respecter ce critère.",
         },
       ]
     : [
@@ -266,7 +271,7 @@ function aidePour(critere, sousForme) {
         {
           id: "rappeler-critere",
           type: "texte",
-          contenu: `Compare-le au critère de divisibilité par ${critere}.`,
+          contenu: formulationCritereDivisibilite(critere),
         },
       ];
 

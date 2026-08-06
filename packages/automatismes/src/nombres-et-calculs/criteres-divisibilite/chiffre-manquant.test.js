@@ -13,6 +13,7 @@ import {
   calculerSolutionsChiffreManquant,
   genererQuestionChiffreManquant,
 } from "./chiffre-manquant.js";
+import { formulationCritereDivisibilite } from "./critere-precis.js";
 
 const CRITERES = [2, 3, 5, 9, 10];
 
@@ -89,6 +90,7 @@ function verifierQuestion(question) {
 
   const aide = question.aide.blocs.map((bloc) => bloc.contenu).join(" ");
   assert.doesNotMatch(aide, /Le seul chiffre|Tous les chiffres possibles|Le plus petit de ces chiffres/);
+  assert.ok(aide.includes(formulationCritereDivisibilite(critere)));
 }
 
 describe("NC-01/F5 — calcul exhaustif", () => {

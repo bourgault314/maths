@@ -10,6 +10,7 @@ import {
   GABARIT_CRITERE_PRECIS,
   GENERATEUR_CRITERE_PRECIS,
   estDivisibleParCritere,
+  formulationCritereDivisibilite,
   genererQuestionCriterePrecis,
 } from "./critere-precis.js";
 
@@ -173,6 +174,7 @@ describe("NC-01/F1 — déterminisme et exactitude", () => {
 
       const aide = question.aide.blocs.map((bloc) => bloc.contenu).join(" ");
       assert.doesNotMatch(aide, /est divisible|n'est pas divisible|bonne réponse/i);
+      assert.ok(aide.includes(formulationCritereDivisibilite(diviseur)));
       if ([2, 5, 10].includes(diviseur)) {
         assert.match(aide, /unités/);
         assert.deepEqual(question.aide.outils, [

@@ -85,7 +85,7 @@ it("rend NC-01 depuis le registre et conserve son aide et sa correction", async 
   assert.match(application.innerHTML, /Question en cours/);
   assert.match(application.innerHTML, /Ouvrir le cours/);
   cliquer(gestionnaires, "cours");
-  assert.match(application.innerHTML, /Les critères de divisibilité/);
+  assert.match(application.innerHTML, /Comprendre « divisible »/);
   assert.match(application.innerHTML, /1 \/ 3/);
   assert.match(application.innerHTML, /class="corps-panneau"/);
   assert.match(application.innerHTML, /class="pied-panneau"/);
@@ -93,12 +93,15 @@ it("rend NC-01 depuis le registre et conserve son aide et sa correction", async 
   assert.match(application.innerHTML, /12 = 3 × 4 \+ 0/);
   cliquer(gestionnaires, "cours-suivant");
   assert.match(application.innerHTML, /2 \/ 3/);
+  assert.match(application.innerHTML, /Critères pour 2, 5 et 10/);
   assert.match(application.innerHTML, /chiffre des unités/);
   assert.match(application.innerHTML, /aria-label="230, chiffre des unités 0"/);
+  assert.match(application.innerHTML, /<span>2<\/span><span>3<\/span><b class="chiffre-unite-encadre">0<\/b>/);
   assert.match(application.innerHTML, /aria-label="235, chiffre des unités 5"/);
   assert.match(application.innerHTML, /aria-label="236, chiffre des unités 6"/);
   cliquer(gestionnaires, "cours-suivant");
   assert.match(application.innerHTML, /3 \/ 3/);
+  assert.match(application.innerHTML, /Critères pour 3 et 9/);
   assert.match(application.innerHTML, /372/);
   assert.match(application.innerHTML, /729/);
   assert.doesNotMatch(application.innerHTML, /implique|Une idée à la fois/);
@@ -119,9 +122,22 @@ it("rend NC-01 depuis le registre et conserve son aide et sa correction", async 
 
   cliquer(gestionnaires, "aide");
   corpsPanneau.scrollTop = 180;
-  cliquer(gestionnaires, "chiffre-aide", undefined, undefined, "0");
+  const chiffresAide = [...application.innerHTML.matchAll(
+    /data-action="chiffre-aide" data-index="(\d+)"[^>]*>(\d)<\/button>/g,
+  )].map((correspondance) => ({ index: correspondance[1], chiffre: Number(correspondance[2]) }));
+  assert.ok(chiffresAide.length > 0);
+  for (const { index } of chiffresAide) {
+    cliquer(gestionnaires, "chiffre-aide", undefined, undefined, index);
+  }
   assert.equal(corpsPanneau.scrollTop, 180);
   assert.deepEqual(optionsFocus.at(-1), { preventScroll: true });
+  const somme = chiffresAide.reduce((total, { chiffre }) => total + chiffre, 0);
+  assert.match(application.innerHTML, new RegExp(`= ${somme}<\\/output>`));
+  cliquer(gestionnaires, "chiffre-aide", undefined, undefined, chiffresAide[0].index);
+  assert.match(application.innerHTML, /= □<\/output>/);
+  assert.match(application.innerHTML, /Critère par 3/);
+  assert.match(application.innerHTML, /La somme de tous les chiffres doit être un multiple de 3/);
+  assert.doesNotMatch(application.innerHTML, /Applique ensuite le critère/);
 });
 
 it("propose le parcours DNB puis lance Au tableau sans saisie ni score", async () => {
@@ -194,10 +210,31 @@ it("parcourt les cinq familles NC-01, leur aide, leur réponse et leur correctio
 
     cliquer(gestionnaires, "aide");
     assert.match(application.innerHTML, /Me guider/);
+    assert.match(application.innerHTML, /Critère par (?:2|3|5|9|10)/);
     for (const nombre of nombresF3) {
       assert.match(application.innerHTML, new RegExp(`>${nombre}<`));
     }
+    const chiffresGuidage = [...application.innerHTML.matchAll(
+      /data-action="chiffre-aide" data-index="(\d+)"[^>]*>(\d)<\/button>/g,
+    )].map((correspondance) => ({ index: correspondance[1], chiffre: Number(correspondance[2]) }));
+    if (chiffresGuidage.length > 0) {
+      assert.match(application.innerHTML, /= □<\/output>/);
+      for (const { index: indexChiffre } of chiffresGuidage) {
+        cliquer(gestionnaires, "chiffre-aide", undefined, undefined, indexChiffre);
+      }
+      const sommeGuidage = chiffresGuidage.reduce((total, { chiffre }) => total + chiffre, 0);
+      assert.match(application.innerHTML, new RegExp(`= ${sommeGuidage}<\\/output>`));
+    }
+    if (famille === "selection-diviseurs") {
+      for (const critere of [2, 3, 5, 9, 10]) {
+        assert.match(application.innerHTML, new RegExp(`Critère par ${critere}`));
+      }
+    }
     cliquer(gestionnaires, "fermer-aide");
+
+    if (famille === "partage-court" && application.innerHTML.includes('data-id="oui"')) {
+      assert.match(application.innerHTML, /grille-partage grille-oui-non/);
+    }
 
     if (application.innerHTML.includes('data-action="chiffre"')) {
       cliquer(gestionnaires, "chiffre", undefined, "0");
@@ -225,6 +262,80 @@ it("parcourt les cinq familles NC-01, leur aide, leur réponse et leur correctio
   assert.match(application.innerHTML, /data-action="nouvelle-serie">Nouvelle série/);
   assert.match(application.innerHTML, /data-action="recommencer">Refaire la même série/);
   assert.match(application.innerHTML, /data-action="retour-menu">Choisir une autre série/);
+});
+
+it("place une réponse unique dans la case du chiffre manquant", async () => {
+  const { application, gestionnaires } = installerFauxNavigateur(
+    "?notion=criteres-divisibilite&questions=10&graine=inline-0",
+  );
+  await import(`./app.js?fumee=chiffre-inline-${Date.now()}`);
+  cliquer(gestionnaires, "demarrer");
+
+  for (let index = 0; index < 10; index += 1) {
+    const famille = application.innerHTML.match(/famille-([a-z-]+)"/)?.[1];
+    if (famille === "chiffre-manquant") break;
+    if (application.innerHTML.includes('data-action="chiffre"')) {
+      cliquer(gestionnaires, "chiffre", undefined, "0");
+    } else {
+      const choix = application.innerHTML.match(/data-action="choix" data-id="([^"]+)"/)?.[1];
+      assert.ok(choix);
+      cliquer(gestionnaires, "choix", choix);
+    }
+    cliquer(gestionnaires, "valider");
+    cliquer(gestionnaires, "suivant");
+  }
+
+  assert.match(application.innerHTML, /famille-chiffre-manquant/);
+  assert.match(application.innerHTML, /<output class="case-chiffre-manquant "/);
+  assert.doesNotMatch(application.innerHTML, /class="afficheur-reponse/);
+  cliquer(gestionnaires, "chiffre", undefined, "5");
+  assert.match(application.innerHTML, /<output class="case-chiffre-manquant remplie"[^>]*>5<\/output>/);
+});
+
+it("conserve le carré dans une question à plusieurs chiffres possibles", async () => {
+  const { application, gestionnaires } = installerFauxNavigateur(
+    "?notion=criteres-divisibilite&questions=10&graine=multi-0",
+  );
+  await import(`./app.js?fumee=chiffre-multiple-${Date.now()}`);
+  cliquer(gestionnaires, "demarrer");
+
+  for (let index = 0; index < 10; index += 1) {
+    const famille = application.innerHTML.match(/famille-([a-z-]+)"/)?.[1];
+    if (famille === "chiffre-manquant") break;
+    if (application.innerHTML.includes('data-action="chiffre"')) {
+      cliquer(gestionnaires, "chiffre", undefined, "0");
+    } else {
+      const choix = application.innerHTML.match(/data-action="choix" data-id="([^"]+)"/)?.[1];
+      assert.ok(choix);
+      cliquer(gestionnaires, "choix", choix);
+    }
+    cliquer(gestionnaires, "valider");
+    cliquer(gestionnaires, "suivant");
+  }
+
+  assert.match(application.innerHTML, /famille-chiffre-manquant/);
+  assert.match(application.innerHTML, /class="symbole-chiffre-manquant"[^>]*>□<\/span>/);
+  assert.doesNotMatch(application.innerHTML, /class="case-chiffre-manquant/);
+});
+
+it("révèle dans la case la réponse au chiffre manquant en mode Au tableau", async () => {
+  const { application, gestionnaires } = installerFauxNavigateur(
+    "?mode=tableau&notion=criteres-divisibilite&questions=10&graine=inline-0",
+  );
+  await import(`./app.js?fumee=chiffre-tableau-${Date.now()}`);
+  cliquer(gestionnaires, "demarrer");
+
+  for (let index = 0; index < 10; index += 1) {
+    if (application.innerHTML.includes("famille-chiffre-manquant")
+      && application.innerHTML.includes('class="case-chiffre-manquant ')) break;
+    cliquer(gestionnaires, "reponse");
+    cliquer(gestionnaires, "suivant");
+  }
+
+  assert.match(application.innerHTML, /famille-chiffre-manquant/);
+  assert.match(application.innerHTML, /<output class="case-chiffre-manquant "[^>]*><\/output>/);
+  cliquer(gestionnaires, "reponse");
+  assert.match(application.innerHTML, /<output class="case-chiffre-manquant remplie"[^>]*>[0-9]<\/output>/);
 });
 
 it("distingue refaire la même série et générer une nouvelle série", async () => {

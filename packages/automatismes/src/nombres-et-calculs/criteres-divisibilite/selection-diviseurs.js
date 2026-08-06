@@ -10,11 +10,12 @@ import {
   COMPARAISON_ENSEMBLE_EXACT,
   SCHEMA_QUESTION_INSTANCE_V2,
   TYPE_REPONSE_SELECTION_MULTIPLE,
-} from "../../../../contrats/src/question-v2.js?v=14";
+} from "../../../../contrats/src/question-v2.js?v=15";
+import { formulationCritereDivisibilite } from "./critere-precis.js?v=15";
 
 export const NOM_GENERATEUR_SELECTION_DIVISEURS =
   "nombres-et-calculs.criteres-divisibilite.selection-diviseurs";
-export const VERSION_GENERATEUR_SELECTION_DIVISEURS = 1;
+export const VERSION_GENERATEUR_SELECTION_DIVISEURS = 2;
 
 const DIVISEURS_PROPOSES = Object.freeze([2, 3, 5, 9, 10]);
 
@@ -43,7 +44,7 @@ const CHOIX_REPONSE = Object.freeze([
 export const GABARIT_SELECTION_DIVISEURS = Object.freeze({
   schema: SCHEMA_GABARIT_QUESTION,
   id: NOM_GENERATEUR_SELECTION_DIVISEURS,
-  version: 1,
+  version: 2,
   titre: "Critères de divisibilité — tous les diviseurs proposés",
   generateur: Object.freeze({
     nom: NOM_GENERATEUR_SELECTION_DIVISEURS,
@@ -70,7 +71,7 @@ function exigerContexte(aleatoire, parametres) {
     Object.keys(parametres).length !== 0
   ) {
     throw new TypeError(
-      "selection-diviseurs : aucun paramètre de contenu n'est autorisé en version 1",
+      "selection-diviseurs : aucun paramètre de contenu n'est autorisé en version 2",
     );
   }
 }
@@ -213,17 +214,21 @@ export function genererQuestionSelectionDiviseurs({ aleatoire, parametres }) {
           type: "texte",
           contenu: "Observe le chiffre des unités.",
         },
+        ...[2, 5, 10].map((diviseur) => ({
+          id: `aide-critere-${diviseur}`,
+          type: "texte",
+          contenu: formulationCritereDivisibilite(diviseur),
+        })),
         {
           id: "aide-somme",
           type: "texte",
           contenu: "Additionne tous les chiffres.",
         },
-        {
-          id: "aide-multiples",
+        ...[3, 9].map((diviseur) => ({
+          id: `aide-critere-${diviseur}`,
           type: "texte",
-          contenu:
-            "La somme obtenue est-elle un multiple de 3 ? Et de 9 ?",
-        },
+          contenu: formulationCritereDivisibilite(diviseur),
+        })),
         {
           id: "aide-plusieurs",
           type: "texte",

@@ -6,7 +6,6 @@ import {
 import {
   basculerChiffreAide,
   basculerChoix,
-  basculerUniteAide,
   creerEtatLecteur,
   demarrer,
   effacerSaisie,
@@ -26,15 +25,15 @@ import {
   saisirChiffre,
   tournerSolide,
   validerReponse,
-} from "./src/etat-lecteur.js?v=14";
-import { TYPE_REPONSE_ENTIER_NATUREL } from "../packages/contrats/src/question-v2.js?v=14";
+} from "./src/etat-lecteur.js?v=15";
+import { TYPE_REPONSE_ENTIER_NATUREL } from "../packages/contrats/src/question-v2.js?v=15";
 import {
   obtenirNotionLecteur,
   RENDU_DIVISIBILITE,
   RENDU_SOLIDE,
   RENDU_VOLUME,
-} from "./src/registre-lecteur.js?v=14";
-import { COURS_SOLIDES_USUELS } from "../packages/automatismes/src/espace-et-geometrie/solides-usuels/reconnaissance.js?v=14";
+} from "./src/registre-lecteur.js?v=15";
+import { COURS_SOLIDES_USUELS } from "../packages/automatismes/src/espace-et-geometrie/solides-usuels/reconnaissance.js?v=15";
 import {
   creerCone,
   creerCube,
@@ -49,7 +48,8 @@ import {
   ACTION_TOUCHE_SAISIR,
   ACTION_TOUCHE_VALIDER,
   obtenirDispositionClavier,
-} from "../packages/objets/src/clavier.js?v=14";
+} from "../packages/objets/src/clavier.js?v=15";
+import { formulationCritereDivisibilite } from "../packages/automatismes/src/nombres-et-calculs/criteres-divisibilite/critere-precis.js?v=15";
 
 const application = document.querySelector("#application");
 const rechercheInitiale = window.location.search;
@@ -308,16 +308,19 @@ function rendreEntete() {
   const progression = Math.round((index / total) * 100);
   return `
     <header class="entete-seance ${entrainement ? "" : "entete-tableau"}">
-      <button class="bouton-entete bouton-menu" data-action="menu" aria-expanded="${menuSessionOuvert}">Menu</button>
-      <button class="bouton-entete bouton-aide-entete" data-action="aide"
-        ${aideDisponible ? "" : "disabled"} aria-expanded="${etat.aideOuverte}"
-        aria-controls="panneau-aide">Aide</button>
+      <div class="actions-entete">
+        <button class="bouton-entete bouton-menu" data-action="menu" aria-expanded="${menuSessionOuvert}">Menu</button>
+        <button class="bouton-entete bouton-aide-entete" data-action="aide"
+          ${aideDisponible ? "" : "disabled"} aria-expanded="${etat.aideOuverte}"
+          aria-controls="panneau-aide"><span aria-hidden="true">?</span><strong>Aide</strong></button>
+      </div>
       ${entrainement
         ? `<span class="score" aria-label="${nombreReussites(etat)} bonnes réponses">✓ ${nombreReussites(etat)}</span>`
         : '<span class="mode-court">Au tableau</span>'}
       <span class="position" aria-label="Question ${index} sur ${total}">${index} / ${total}</span>
     </header>
-    <div class="progression" aria-label="Progression : ${progression} %">
+    <div class="progression" role="progressbar" aria-label="Progression des questions"
+      aria-valuemin="0" aria-valuemax="100" aria-valuenow="${progression}">
       <span style="width: ${progression}%"></span>
     </div>`;
 }
@@ -693,6 +696,8 @@ function rendrePlateauPartage(question, { corrige = false } = {}) {
 }
 
 function critereQuestion(question) {
+  const diviseur = blocQuestion(question, "diviseur")?.valeur;
+  if ([2, 3, 5, 9, 10].includes(diviseur)) return diviseur;
   const texte = question.enonce
     .filter((bloc) => bloc.type === "texte")
     .map((bloc) => bloc.contenu)
@@ -701,15 +706,41 @@ function critereQuestion(question) {
   return correspondance ? Number(correspondance[1]) : null;
 }
 
-function rappelCritereUnites(critere) {
-  if (critere === 2) return "0, 2, 4, 6 ou 8";
-  if (critere === 5) return "0 ou 5";
-  return "0";
+function rendreRappelsCriteres(criteres) {
+  return `<div class="rappels-criteres-aide" aria-label="Critères à appliquer">
+    ${criteres.map((critere) => `<p><strong>Critère par ${critere}</strong><span>${echapper(formulationCritereDivisibilite(critere))}</span></p>`).join("")}
+  </div>`;
 }
 
 function rendreNombreAvecUnite(nombre) {
   const chiffres = [...String(nombre)];
-  return `<span class="nombre-observe">${chiffres.slice(0, -1).map((chiffre) => `<span>${chiffre}</span>`).join("")}<strong>${chiffres.at(-1)}</strong></span>`;
+  return `<span class="nombre-observe nombre-avec-unite">${chiffres.slice(0, -1).map((chiffre) => `<span>${chiffre}</span>`).join("")}<strong class="chiffre-unite-encadre">${chiffres.at(-1)}</strong></span>`;
+}
+
+function rendreMotifAide(motif, encadrerUnite) {
+  return `<p class="motif-aide motif-aide-structure" aria-label="Nombre incomplet ${echapper(motif)}">
+    ${[...motif].map((caractere, index, caracteres) => {
+      const unite = encadrerUnite && index === caracteres.length - 1;
+      const balise = unite ? "strong" : "span";
+      return `<${balise} class="${unite ? "chiffre-unite-encadre" : ""}">${echapper(caractere)}</${balise}>`;
+    }).join("")}
+  </p>`;
+}
+
+function rendreSommeInteractive(nombre, numeroEtape = 1) {
+  const chiffres = [...String(nombre)];
+  const selectionnes = new Set(etat.chiffresSomme);
+  const tousSelectionnes = chiffres.every((_, index) => selectionnes.has(index));
+  const somme = chiffres.reduce((total, chiffre) => total + Number(chiffre), 0);
+  const expression = `${chiffres.map((chiffre, index) => selectionnes.has(index) ? chiffre : "□").join(" + ")} = ${tousSelectionnes ? somme : "□"}`;
+  return `<section class="outil-aide outil-somme">
+    ${rendreEtape(numeroEtape, "Additionne tous les chiffres", "repere-somme")}
+    <div class="chiffres-aide">${chiffres.map((chiffre, index) => `
+      <button class="chiffre-aide ${selectionnes.has(index) ? "actif" : ""}"
+        data-action="chiffre-aide" data-index="${index}" aria-pressed="${selectionnes.has(index)}">${chiffre}</button>`).join("")}</div>
+    <output class="expression-aide" aria-live="polite" aria-atomic="true">${echapper(expression)}</output>
+    <p class="consigne-manipulation">Appuie sur chaque chiffre : la somme apparaît quand ils sont tous sélectionnés.</p>
+  </section>`;
 }
 
 function rendreAideSelectionNombres(question) {
@@ -730,12 +761,13 @@ function rendreAideSelectionNombres(question) {
               : `<strong class="nombre-observe">${nombre}</strong><span class="somme-a-completer">${[...String(nombre)].join(" + ")} = ?</span>`}
           </article>`).join("")}
         </div>
+        ${rendreRappelsCriteres([critere])}
     </section>
     <section class="indices-aide aide-courte">
         <h3>Une seule règle, quatre vérifications</h3>
         <p>${utiliseUnite
-          ? `Pour ${critere}, l'unité doit être ${rappelCritereUnites(critere)}.`
-          : `Pour ${critere}, calcule chaque somme puis demande-toi si elle est un multiple de ${critere}.`}</p>
+          ? "Compare le chiffre encadré au critère rappelé ci-dessus."
+          : "Calcule chaque somme, puis compare-la au critère rappelé ci-dessus."}</p>
         <p>Examine les nombres un par un, puis sélectionne ceux qui conviennent — ou « Aucun » si les quatre tests sont négatifs.</p>
     </section>`;
   return rendreCadrePanneau({
@@ -750,7 +782,6 @@ function rendreAideChiffreManquant(question) {
   const critere = critereQuestion(question);
   const motif = texteBloc(question, "nombre-a-completer");
   const utiliseUnite = [2, 5, 10].includes(critere);
-  const chiffresFixes = [...motif].filter((caractere) => /\d/.test(caractere));
   const strategie = question.aide?.blocs?.find(({ id }) =>
     ["verifier-tous", "partir-zero"].includes(id));
   const contenu = `
@@ -758,12 +789,13 @@ function rendreAideChiffreManquant(question) {
     ${rendreAccesCoursDepuisAide()}
     <section class="outil-aide aide-chiffre-manquant">
         ${rendreEtape(1, utiliseUnite ? "Regarde la place des unités" : "Écris la somme avec le chiffre manquant", utiliseUnite ? "repere-unites" : "repere-somme")}
-        <p class="motif-aide">${echapper(motif)}</p>
+        ${rendreMotifAide(motif, utiliseUnite)}
         ${utiliseUnite
-          ? `<p>Pour ${critere}, le chiffre des unités doit être <strong>${rappelCritereUnites(critere)}</strong>.</p>
+          ? `${rendreRappelsCriteres([critere])}
             <p>${motif.at(-1) === "□" ? "Le chiffre manquant est justement l'unité." : `L'unité est déjà ${echapper(motif.at(-1))} : vérifie si changer l'autre chiffre peut modifier ce critère.`}</p>`
-          : `<p class="expression-aide">${chiffresFixes.join(" + ")} + □ = ?</p>
-            <p>Le résultat doit être un multiple de <strong>${critere}</strong>. Teste seulement les chiffres demandés par la consigne.</p>`}
+          : `<p class="expression-aide">${[...motif].join(" + ")} = ?</p>
+            ${rendreRappelsCriteres([critere])}
+            <p>Teste seulement les chiffres demandés par la consigne.</p>`}
     </section>
     ${strategie ? `<p class="indication-aide">${echapper(strategie.contenu)}</p>` : ""}`;
   return rendreCadrePanneau({
@@ -781,32 +813,27 @@ function rendreAideDivisibiliteGenerique(question) {
   const chiffres = nombre === undefined ? [] : [...String(nombre)];
   const peutObserver = outils.has("observer-unites");
   const peutComposer = outils.has("composer-somme-chiffres");
-  const expression = etat.chiffresSomme.length === 0
-    ? `${chiffres.map(() => "□").join(" + ")} = □`
-    : `${etat.chiffresSomme.map((index) => chiffres[index]).join(" + ")} = □`;
+  const critere = critereQuestion(question);
+  const famille = familleQuestion(question);
+  const idsSpecifiques = famille === "partage-court"
+    ? new Set(["relier-partage", "partir-du-plus-petit"])
+    : new Set();
+  const indicationsSpecifiques = blocs.filter((bloc) => idsSpecifiques.has(bloc.id));
   const contenu = `
     ${rendreRappelQuestion(question)}
     ${rendreAccesCoursDepuisAide()}
     ${familleQuestion(question) === "partage-court" ? rendrePlateauPartage(question) : ""}
     ${peutObserver && chiffres.length > 0 ? `<section class="outil-aide outil-unites">
         ${rendreEtape(1, "Repère le chiffre des unités", "repere-unites")}
-        <div class="nombre-aide" aria-label="Nombre ${nombre}">
-          ${chiffres.slice(0, -1).map((chiffre) => `<span>${chiffre}</span>`).join("")}
-          <button data-action="unite-aide" class="unite-aide ${etat.uniteReperee ? "actif" : ""}"
-            aria-pressed="${etat.uniteReperee}">${chiffres.at(-1)}</button>
-        </div>
+        <div class="nombre-aide" aria-label="Nombre ${nombre}, chiffre des unités ${chiffres.at(-1)}">${rendreNombreAvecUnite(nombre)}</div>
+        ${critere === null ? "" : rendreRappelsCriteres([critere])}
       </section>` : ""}
-      ${peutComposer && chiffres.length > 0 ? `<section class="outil-aide outil-somme">
-        ${rendreEtape(peutObserver ? 2 : 1, "Construis la somme de tous les chiffres", "repere-somme")}
-        <div class="chiffres-aide">${chiffres.map((chiffre, index) => `
-          <button class="chiffre-aide ${etat.chiffresSomme.includes(index) ? "actif" : ""}"
-            data-action="chiffre-aide" data-index="${index}" aria-pressed="${etat.chiffresSomme.includes(index)}">${chiffre}</button>`).join("")}</div>
-        <output class="expression-aide">${echapper(expression)}</output>
-      </section>` : ""}
-    <section class="indices-aide aide-generique">
-        <h3>À toi de vérifier</h3>
-        <ol>${blocs.map((bloc) => `<li>${echapper(bloc.contenu)}</li>`).join("")}</ol>
-    </section>`;
+      ${peutComposer && chiffres.length > 0 ? `${rendreSommeInteractive(nombre, peutObserver ? 2 : 1)}
+        ${critere === null ? "" : rendreRappelsCriteres([critere])}` : ""}
+    ${indicationsSpecifiques.length === 0 ? "" : `<section class="indices-aide aide-generique">
+        <h3>À toi de conclure</h3>
+        <ol>${indicationsSpecifiques.map((bloc) => `<li>${echapper(bloc.contenu)}</li>`).join("")}</ol>
+    </section>`}`;
   return rendreCadrePanneau({
     type: "aide",
     surtitre: "Aide",
@@ -886,37 +913,18 @@ function rendreAideDivisibilite(question) {
     return rendreAideDivisibiliteGenerique(question);
   }
   const nombre = String(nombreQuestion(question));
-  const termes = [...nombre].map((chiffre, index) =>
-    etat.chiffresSomme.includes(index) ? chiffre : "□");
-  const tousLesChiffresSontSelectionnes = etat.chiffresSomme.length === nombre.length;
-  const somme = [...nombre].reduce((total, chiffre) => total + Number(chiffre), 0);
-  const expression = `${termes.join(" + ")} = ${tousLesChiffresSontSelectionnes ? somme : "□"}`;
-  const chiffresSomme = [...nombre].map((chiffre, index) => `
-    <button class="chiffre-aide ${etat.chiffresSomme.includes(index) ? "actif" : ""}"
-      data-action="chiffre-aide" data-index="${index}" aria-pressed="${etat.chiffresSomme.includes(index)}">
-      ${chiffre}
-    </button>`).join("");
   const unite = nombre.at(-1);
   const contenu = `
     ${rendreRappelQuestion(question)}
     ${rendreAccesCoursDepuisAide()}
     <section class="outil-aide outil-unites">
         ${rendreEtape(1, "Regarde le chiffre des unités", "repere-unites")}
-        <div class="nombre-aide" aria-label="Nombre ${nombre}">
-          ${nombre.slice(0, -1).split("").map((chiffre) => `<span>${chiffre}</span>`).join("")}
-          <button data-action="unite-aide" class="unite-aide ${etat.uniteReperee ? "actif" : ""}"
-            aria-pressed="${etat.uniteReperee}" aria-label="Chiffre des unités : ${unite}">${unite}</button>
-        </div>
-        <p class="consigne-manipulation">Appuie sur le chiffre des unités.</p>
-        <p class="question-guidage">Convient-il pour 2 ? Pour 5 ? Pour 10 ?</p>
+        <div class="nombre-aide" aria-label="Nombre ${nombre}, chiffre des unités ${unite}">${rendreNombreAvecUnite(nombre)}</div>
+        ${rendreRappelsCriteres([2, 5, 10])}
+        <p class="question-guidage">À toi de décider quels critères conviennent.</p>
     </section>
-    <section class="outil-aide outil-somme">
-        ${rendreEtape(2, "Additionne tous les chiffres", "repere-somme")}
-        <div class="chiffres-aide">${chiffresSomme}</div>
-        <output class="expression-aide" aria-live="polite" aria-atomic="true">${echapper(expression)}</output>
-        <p class="consigne-manipulation">Appuie sur chaque chiffre pour construire la somme.</p>
-        <p class="question-guidage">La somme est-elle un multiple de 3 ? De 9 ?</p>
-    </section>
+    ${rendreSommeInteractive(nombre, 2)}
+    ${rendreRappelsCriteres([3, 9])}
     <p class="indication-aide">Plusieurs réponses peuvent être correctes.</p>`;
   return rendreCadrePanneau({
     type: "aide",
@@ -946,7 +954,7 @@ function rendreCorrectionDivisibilite(question) {
         ${rendreEtape(1, "Regarder le chiffre des unités", "repere-unites")}
         <div class="nombre-correction" aria-label="Le chiffre des unités de ${nombre} est ${nombre.at(-1)}">
           ${chiffres.slice(0, -1).map((chiffre) => `<span>${chiffre}</span>`).join("")}
-          <strong>${nombre.at(-1)}</strong>
+          <strong class="chiffre-unite-encadre">${nombre.at(-1)}</strong>
         </div>
         ${rendreVerdicts(question, [2, 5, 10])}
         <p>${echapper(question.correction[0]?.contenu ?? "")}</p>
@@ -1005,9 +1013,9 @@ function rendreCarteCoursDivisibilite(index) {
         <li><strong>Divisible par 10 :</strong><span>le chiffre des unités est 0.</span></li>
       </ul>
       <div class="exemples-unites-cours" aria-label="Trois exemples">
-        <p><strong class="nombre-unite-cours" aria-label="230, chiffre des unités 0"><span>2</span><span>3</span><b>0</b></strong><span>Son chiffre des unités est 0 : il est divisible par 2, par 5 et par 10.</span></p>
-        <p><strong class="nombre-unite-cours" aria-label="235, chiffre des unités 5"><span>2</span><span>3</span><b>5</b></strong><span>Son chiffre des unités est 5 : il est divisible par 5, mais pas par 2 ni par 10.</span></p>
-        <p><strong class="nombre-unite-cours" aria-label="236, chiffre des unités 6"><span>2</span><span>3</span><b>6</b></strong><span>Son chiffre des unités est 6 : il est divisible par 2, mais pas par 5 ni par 10.</span></p>
+        <p><strong class="nombre-unite-cours" aria-label="230, chiffre des unités 0"><span>2</span><span>3</span><b class="chiffre-unite-encadre">0</b></strong><span>Son chiffre des unités est 0 : il est divisible par 2, par 5 et par 10.</span></p>
+        <p><strong class="nombre-unite-cours" aria-label="235, chiffre des unités 5"><span>2</span><span>3</span><b class="chiffre-unite-encadre">5</b></strong><span>Son chiffre des unités est 5 : il est divisible par 5, mais pas par 2 ni par 10.</span></p>
+        <p><strong class="nombre-unite-cours" aria-label="236, chiffre des unités 6"><span>2</span><span>3</span><b class="chiffre-unite-encadre">6</b></strong><span>Son chiffre des unités est 6 : il est divisible par 2, mais pas par 5 ni par 10.</span></p>
       </div>
     </article>`;
   }
@@ -1028,6 +1036,11 @@ function rendreCarteCoursDivisibilite(index) {
 function rendreCoursDivisibilite() {
   if (!etat.coursOuvert) return "";
   const derniere = pageCoursDivisibilite === 2;
+  const titresPages = [
+    "Comprendre « divisible »",
+    "Critères pour 2, 5 et 10",
+    "Critères pour 3 et 9",
+  ];
   const contenu = `<div class="cours-une-carte" aria-live="polite">${rendreCarteCoursDivisibilite(pageCoursDivisibilite)}</div>`;
   const pied = `<nav class="navigation-cours" aria-label="Navigation dans le cours">
         <button class="bouton-secondaire" type="button" data-action="cours-precedent" ${pageCoursDivisibilite === 0 ? "disabled" : ""}>Précédent</button>
@@ -1037,7 +1050,7 @@ function rendreCoursDivisibilite() {
   return rendreCadrePanneau({
     type: "cours",
     surtitre: `Cours · ${pageCoursDivisibilite + 1} / 3`,
-    titre: "Les critères de divisibilité",
+    titre: titresPages[pageCoursDivisibilite],
     contenu,
     pied,
     classes: "panneau-cours-divisibilite",
@@ -1264,6 +1277,25 @@ function rendreClavierEntier(question) {
   </section>`;
 }
 
+function rendreMotifChiffreManquant(question) {
+  const motif = texteBloc(question, "nombre-a-completer");
+  const saisieDansLaCase = question.reponse.type === TYPE_REPONSE_ENTIER_NATUREL;
+  const contenu = [...motif].map((caractere) => {
+    if (caractere !== "□") return `<span>${echapper(caractere)}</span>`;
+    if (!saisieDansLaCase) {
+      return '<span class="symbole-chiffre-manquant" aria-label="Case à compléter">□</span>';
+    }
+    const valeur = estEntrainement()
+      ? etat.saisie
+      : etat.reponseRevelee
+        ? String(question.reponse.attendu)
+        : "";
+    return `<output class="case-chiffre-manquant ${valeur ? "remplie" : ""}" aria-live="polite" aria-atomic="true"
+      aria-label="${valeur ? `Chiffre saisi : ${echapper(valeur)}` : "Case à compléter"}">${echapper(valeur)}</output>`;
+  }).join("");
+  return `<p class="nombre-a-completer">${contenu}</p>`;
+}
+
 function rendrePaveMathsgo(question) {
   if (
     !estEntrainement()
@@ -1304,13 +1336,22 @@ function classeGrilleDivisibilite(question) {
   const famille = familleQuestion(question);
   if (famille === "selection-nombres") return "grille-nombres";
   if (famille === "chiffre-manquant") return "grille-chiffres";
-  if (famille === "partage-court") return "grille-partage";
+  if (famille === "partage-court") {
+    const ouiNon = question.reponse.choix?.length === 2
+      && question.reponse.choix.every((choix) => ["oui", "non"].includes(choix.id));
+    return `grille-partage ${ouiNon ? "grille-oui-non" : ""}`;
+  }
   if (famille === "critere-precis") return "grille-oui-non";
   return "";
 }
 
 function rendreZoneReponseDivisibilite(question) {
   if (question.reponse.type === TYPE_REPONSE_ENTIER_NATUREL) {
+    if (familleQuestion(question) === "chiffre-manquant") {
+      return estEntrainement()
+        ? '<p class="indication-clavier-physique">Touches 0 à 9 · Retour arrière pour effacer · Entrée pour valider</p>'
+        : "";
+    }
     return rendreClavierEntier(question);
   }
   return `<div class="grille-choix ${classeGrilleDivisibilite(question)} ${estEntrainement() ? "" : "grille-projection"}"
@@ -1335,7 +1376,7 @@ function rendreContenuQuestionDivisibilite(question) {
   }
   if (famille === "chiffre-manquant") {
     return `<h1>${echapper(texteBloc(question, "consigne"))}</h1>
-      <p class="nombre-a-completer">${echapper(texteBloc(question, "nombre-a-completer"))}</p>
+      ${rendreMotifChiffreManquant(question)}
       <p class="precision">${question.reponse.type === TYPE_REPONSE_ENTIER_NATUREL ? "Entre un chiffre." : "Plusieurs chiffres sont peut-être possibles."}</p>`;
   }
   if (famille === "partage-court") {
@@ -1627,10 +1668,6 @@ application.addEventListener("click", (evenement) => {
   if (action === "fermer-aide") {
     fermerAide(etat);
     focusSelector = '[data-action="aide"]';
-  }
-  if (action === "unite-aide") {
-    basculerUniteAide(etat);
-    focusSelector = '[data-action="unite-aide"]';
   }
   if (action === "chiffre-aide") {
     basculerChiffreAide(etat, Number(cible.dataset.index));

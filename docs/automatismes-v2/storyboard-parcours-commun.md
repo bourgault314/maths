@@ -157,10 +157,10 @@ Règles communes :
 - chaque touche est un vrai bouton nommé, atteignable au clavier et d’au moins 44 px ;
 - le clavier réserve sa hauteur et ne masque ni la réponse ni les éléments ayant le focus.
 
-Sur un ordinateur muni d'une souris et d'un clavier, le pavé interne est masqué
-et le clavier physique est utilisé. Sur téléphone, tablette, appareil hybride
-ou TNI tactile, le pavé maths&go reste visible. Le clavier système du téléphone
-ne recouvre jamais l'exercice.
+Sur un appareil dont le pointeur principal est tactile, le pavé maths&go reste
+visible. Sur un ordinateur principalement utilisé à la souris, il est masqué,
+même si l'écran est aussi tactile, et le clavier physique est utilisé. Le
+clavier système du téléphone ne recouvre jamais l'exercice.
 
 Le futur contenu ne donnera pas une liste graphique de touches. Il décrira une réponse comme « entier naturel » ou « décimal relatif » ; le lecteur choisira le profil de clavier correspondant.
 
