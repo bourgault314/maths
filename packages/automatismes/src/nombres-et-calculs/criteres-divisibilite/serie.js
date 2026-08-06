@@ -5,13 +5,13 @@
 // notions. Même graine + même longueur = même plan et mêmes questions.
 
 import { creerGenerateur } from "../../../../moteur-exercices/src/aleatoire.js";
-import { GABARIT_CHIFFRE_MANQUANT } from "./chiffre-manquant.js?v=11";
-import { GABARIT_CRITERE_PRECIS } from "./critere-precis.js?v=11";
-import { GABARIT_PARTAGE_COURT } from "./partage-court.js?v=11";
-import { GABARIT_SELECTION_DIVISEURS } from "./selection-diviseurs.js?v=11";
-import { GABARIT_SELECTION_NOMBRES } from "./selection-nombres.js?v=11";
+import { GABARIT_CHIFFRE_MANQUANT } from "./chiffre-manquant.js?v=14";
+import { GABARIT_CRITERE_PRECIS } from "./critere-precis.js?v=14";
+import { GABARIT_PARTAGE_COURT } from "./partage-court.js?v=14";
+import { GABARIT_SELECTION_DIVISEURS } from "./selection-diviseurs.js?v=14";
+import { GABARIT_SELECTION_NOMBRES } from "./selection-nombres.js?v=14";
 
-export const VERSION_PLAN_SERIE_NC01 = 4;
+export const VERSION_PLAN_SERIE_NC01 = 5;
 
 export const FAMILLES_NC01 = Object.freeze({
   F1: "critere-precis",
@@ -158,25 +158,12 @@ function parametrerFamilles(aleatoire, familles) {
     .forEach((sousForme, index) => { f5[index].parametres.sousForme = sousForme; });
 
   const f6 = descripteurs.filter(({ famille }) => famille === FAMILLES_NC01.F6);
-  const alternativesPartage = aleatoire.melange(["groupes-possibles", "retrait-minimal"]);
-  const sousFormesPartage = f6.length >= 2
-    ? [
-        "oui-non",
-        ...Array.from(
-          { length: f6.length - 1 },
-          (_, index) => alternativesPartage[index % alternativesPartage.length],
-        ),
-      ]
-    : valeursCycliques(
-        aleatoire,
-        ["oui-non", ...alternativesPartage],
-        f6.length,
-      );
+  const sousFormesPartage = f6.length === 1
+    ? ["oui-non"]
+    : valeursCycliques(aleatoire, ["oui-non", "retrait-minimal"], f6.length);
   sousFormesPartage.forEach((sousForme, index) => {
       f6[index].parametres.sousForme = sousForme;
-      if (sousForme !== "groupes-possibles") {
-        f6[index].parametres.diviseur = aleatoire.choix(DIVISEURS);
-      }
+      f6[index].parametres.diviseur = aleatoire.choix(DIVISEURS);
       if (sousForme === "oui-non") {
         f6[index].parametres.verdict = aleatoire.choix(["oui", "non"]);
       }

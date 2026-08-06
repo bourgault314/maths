@@ -128,7 +128,7 @@ describe("NC-01/F3 — déterminisme et exactitude", () => {
       });
       assert.equal(new Set(nombres).size, 4, `doublon dans ${nombres.join(", ")}`);
       assert.ok(nombres.every((nombre) => nombre >= 10 && nombre <= 9999));
-      assert.ok([0, 1, 2, 3].includes(nombresAttendus.length));
+      assert.ok([0, 1, 2, 3, 4].includes(nombresAttendus.length));
       assert.deepEqual(question.reponse.attendus, attendusCalcules);
       assert.equal(question.correction.length, 4);
 
@@ -169,7 +169,7 @@ describe("NC-01/F3 — déterminisme et exactitude", () => {
 });
 
 describe("NC-01/F3 — variété", () => {
-  it("couvre les critères, de zéro à trois nombres corrects et les longueurs", () => {
+  it("couvre les critères, de zéro à quatre nombres corrects et les longueurs", () => {
     const diviseurs = new Set();
     const nombresDeReponses = new Set();
     const longueurs = new Set();
@@ -196,7 +196,7 @@ describe("NC-01/F3 — variété", () => {
     }
 
     assert.deepEqual([...diviseurs].sort((a, b) => a - b), [2, 3, 5, 9, 10]);
-    assert.deepEqual([...nombresDeReponses].sort(), [0, 1, 2, 3]);
+    assert.deepEqual([...nombresDeReponses].sort(), [0, 1, 2, 3, 4]);
     assert.deepEqual([...longueurs].sort(), [2, 3, 4]);
     assert.ok(grilles.size >= 790, `variété insuffisante : ${grilles.size} grilles`);
     assert.equal(zeroInterneVu, true);

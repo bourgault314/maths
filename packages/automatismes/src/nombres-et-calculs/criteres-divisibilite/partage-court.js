@@ -10,35 +10,31 @@ import {
 } from "../../../../contrats/src/gabarit.js";
 import {
   COMPARAISON_CHOIX_EXACT,
-  COMPARAISON_ENSEMBLE_EXACT,
   COMPARAISON_VALEUR_EXACTE,
   SCHEMA_QUESTION_INSTANCE_V2,
   TYPE_REPONSE_CHOIX_UNIQUE,
   TYPE_REPONSE_ENTIER_NATUREL,
-  TYPE_REPONSE_SELECTION_MULTIPLE,
-} from "../../../../contrats/src/question-v2.js?v=11";
+} from "../../../../contrats/src/question-v2.js?v=14";
 
 export const NOM_GENERATEUR_PARTAGE_COURT =
   "nombres-et-calculs.criteres-divisibilite.partage-court";
-export const VERSION_GENERATEUR_PARTAGE_COURT = 2;
+export const VERSION_GENERATEUR_PARTAGE_COURT = 3;
 
 export const SOUS_FORME_OUI_NON = "oui-non";
-export const SOUS_FORME_GROUPES_POSSIBLES = "groupes-possibles";
 export const SOUS_FORME_RETRAIT_MINIMAL = "retrait-minimal";
 
 const SOUS_FORMES = Object.freeze([
   SOUS_FORME_OUI_NON,
-  SOUS_FORME_GROUPES_POSSIBLES,
   SOUS_FORME_RETRAIT_MINIMAL,
 ]);
 const DIVISEURS = Object.freeze([2, 3, 5, 9, 10]);
 const VERDICTS = Object.freeze(["oui", "non"]);
 
 const CONTEXTES = Object.freeze([
-  Object.freeze({ objets: "bonbons", contenants: "sachets" }),
-  Object.freeze({ objets: "jetons", contenants: "boîtes" }),
-  Object.freeze({ objets: "cartes", contenants: "pochettes" }),
-  Object.freeze({ objets: "perles", contenants: "sachets" }),
+  Object.freeze({ objet: "bonbon", objets: "bonbons", contenants: "sachets" }),
+  Object.freeze({ objet: "jeton", objets: "jetons", contenants: "boîtes" }),
+  Object.freeze({ objet: "carte", objets: "cartes", contenants: "pochettes" }),
+  Object.freeze({ objet: "perle", objets: "perles", contenants: "sachets" }),
 ]);
 
 const CHOIX_OUI_NON = Object.freeze([
@@ -46,19 +42,10 @@ const CHOIX_OUI_NON = Object.freeze([
   Object.freeze({ id: "non", libelle: "Non" }),
 ]);
 
-const CHOIX_GROUPES = Object.freeze([
-  Object.freeze({ id: "2", libelle: "2" }),
-  Object.freeze({ id: "3", libelle: "3" }),
-  Object.freeze({ id: "5", libelle: "5" }),
-  Object.freeze({ id: "9", libelle: "9" }),
-  Object.freeze({ id: "10", libelle: "10" }),
-  Object.freeze({ id: "aucun", libelle: "Aucun", exclusif: true }),
-]);
-
 export const GABARIT_PARTAGE_COURT = Object.freeze({
   schema: SCHEMA_GABARIT_QUESTION,
   id: NOM_GENERATEUR_PARTAGE_COURT,
-  version: 2,
+  version: 3,
   titre: "Critères de divisibilité — situation de partage",
   generateur: Object.freeze({
     nom: NOM_GENERATEUR_PARTAGE_COURT,
@@ -102,7 +89,7 @@ function exigerContexte(aleatoire, parametres) {
     && !SOUS_FORMES.includes(parametres.sousForme)
   ) {
     throw new RangeError(
-      "partage-court : sousForme doit être oui-non, groupes-possibles ou retrait-minimal",
+      "partage-court : sousForme doit être oui-non ou retrait-minimal",
     );
   }
   if (
@@ -119,14 +106,6 @@ function exigerContexte(aleatoire, parametres) {
   ) {
     throw new RangeError(
       "partage-court : verdict doit être « oui » ou « non »",
-    );
-  }
-  if (
-    parametres.sousForme === SOUS_FORME_GROUPES_POSSIBLES
-    && parametres.diviseur !== undefined
-  ) {
-    throw new TypeError(
-      "partage-court : diviseur n'est pas utilisé avec groupes-possibles",
     );
   }
   if (
@@ -169,29 +148,12 @@ function tirerTotalAvecVerdict(aleatoire, diviseur, divisible) {
   return quotient * diviseur + reste;
 }
 
-function tirerTotalLibre(aleatoire) {
-  const longueur = aleatoire.entier(2, 4);
-  const { minimum, maximum } = bornesPourLongueur(longueur);
-  return aleatoire.entier(minimum, maximum);
-}
-
 function chiffresDe(nombre) {
   return String(nombre).split("").map(Number);
 }
 
 function sommeDesChiffres(nombre) {
   return chiffresDe(nombre).reduce((somme, chiffre) => somme + chiffre, 0);
-}
-
-export function calculerGroupesPossibles(total) {
-  if (!Number.isSafeInteger(total) || total < 10 || total > 9999) {
-    throw new RangeError(
-      "calculerGroupesPossibles : entier de 2 à 4 chiffres requis",
-    );
-  }
-  const possibles = DIVISEURS.filter((diviseur) => total % diviseur === 0)
-    .map(String);
-  return possibles.length === 0 ? ["aucun"] : possibles;
 }
 
 export function calculerRetraitMinimal(total, diviseur) {
@@ -259,23 +221,6 @@ function classement(diviseur) {
 }
 
 function blocsEnonce({ sousForme, total, diviseur, contexte }) {
-  if (sousForme === SOUS_FORME_GROUPES_POSSIBLES) {
-    return [
-      {
-        id: "consigne",
-        type: "texte",
-        contenu: "Sélectionne tous les nombres de contenants possibles.",
-      },
-      { id: "debut-situation", type: "texte", contenu: "On a" },
-      { id: "total", type: "entier", valeur: total },
-      {
-        id: "fin-situation",
-        type: "texte",
-        contenu: `${contexte.objets} à répartir équitablement dans des ${contexte.contenants} identiques, sans reste.`,
-      },
-    ];
-  }
-
   const fin = sousForme === SOUS_FORME_OUI_NON
     ? `${contexte.contenants} identiques, sans reste. Est-ce possible ?`
     : `${contexte.contenants} identiques. Quel est le plus petit nombre de ${contexte.objets} à retirer pour qu'il ne reste rien ?`;
@@ -340,63 +285,6 @@ function questionOuiNon({ total, diviseur, contexte }) {
   };
 }
 
-function enumerationFrancaise(elements) {
-  if (elements.length === 1) return elements[0];
-  return `${elements.slice(0, -1).join(", ")} et ${elements.at(-1)}`;
-}
-
-function questionGroupesPossibles({ total, contexte }) {
-  const attendus = calculerGroupesPossibles(total);
-  const conclusion = attendus[0] === "aucun"
-    ? `Aucun des cinq nombres proposés ne permet de répartir les ${total} ${contexte.objets} sans reste.`
-    : `On peut utiliser ${enumerationFrancaise(attendus)} ${contexte.contenants}, sans reste.`;
-  return {
-    classement: classement(undefined),
-    enonce: blocsEnonce({
-      sousForme: SOUS_FORME_GROUPES_POSSIBLES,
-      total,
-      contexte,
-    }),
-    reponse: {
-      type: TYPE_REPONSE_SELECTION_MULTIPLE,
-      comparaison: COMPARAISON_ENSEMBLE_EXACT,
-      choix: CHOIX_GROUPES.map((choix) => ({ ...choix })),
-      attendus,
-    },
-    aide: {
-      blocs: [
-        {
-          id: "observer-unites",
-          type: "texte",
-          contenu: "Pour 2, 5 et 10, observe le chiffre des unités.",
-        },
-        {
-          id: "additionner-chiffres",
-          type: "texte",
-          contenu: "Pour 3 et 9, additionne tous les chiffres.",
-        },
-        {
-          id: "plusieurs-possibilites",
-          type: "texte",
-          contenu: "Vérifie chaque nombre proposé : plusieurs possibilités sont peut-être correctes.",
-        },
-      ],
-      outils: [
-        { type: "observer-unites", source: "total" },
-        { type: "composer-somme-chiffres", source: "total" },
-      ],
-    },
-    correction: [
-      ...DIVISEURS.map((diviseur) => ({
-        id: `critere-${diviseur}`,
-        type: "texte",
-        contenu: diagnosticCritere(total, diviseur),
-      })),
-      { id: "conclusion-partage", type: "texte", contenu: conclusion },
-    ],
-  };
-}
-
 function questionRetraitMinimal({ total, diviseur, contexte }) {
   const retrait = calculerRetraitMinimal(total, diviseur);
   if (retrait === 0) {
@@ -449,7 +337,7 @@ function questionRetraitMinimal({ total, diviseur, contexte }) {
       {
         id: "conclusion-retrait",
         type: "texte",
-        contenu: `${nouveauTotal} se partage sans reste. Il faut donc retirer ${retrait} ${contexte.objets}.`,
+        contenu: `${nouveauTotal} se partage sans reste. Il faut donc retirer ${retrait} ${retrait === 1 ? contexte.objet : contexte.objets}.`,
       },
     ],
   };
@@ -459,13 +347,6 @@ export function genererQuestionPartageCourt({ aleatoire, parametres }) {
   exigerContexte(aleatoire, parametres);
   const sousForme = choisirSousForme(aleatoire, parametres);
   const contexte = aleatoire.choix(CONTEXTES);
-
-  if (sousForme === SOUS_FORME_GROUPES_POSSIBLES) {
-    return questionGroupesPossibles({
-      total: tirerTotalLibre(aleatoire),
-      contexte,
-    });
-  }
 
   const diviseur = parametres.diviseur ?? aleatoire.choix(DIVISEURS);
   if (sousForme === SOUS_FORME_RETRAIT_MINIMAL) {

@@ -10,7 +10,7 @@ import {
   COMPARAISON_ENSEMBLE_EXACT,
   SCHEMA_QUESTION_INSTANCE_V2,
   TYPE_REPONSE_SELECTION_MULTIPLE,
-} from "../../../../contrats/src/question-v2.js?v=11";
+} from "../../../../contrats/src/question-v2.js?v=14";
 
 export const NOM_GENERATEUR_SELECTION_DIVISEURS =
   "nombres-et-calculs.criteres-divisibilite.selection-diviseurs";

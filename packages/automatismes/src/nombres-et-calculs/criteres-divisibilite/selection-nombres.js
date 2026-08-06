@@ -1,9 +1,9 @@
 // NC-01/F3 — sélectionner plusieurs nombres divisibles par un critère donné.
 //
 // Contenu validé dans la fiche pédagogique NC-01 le 19 juillet 2026.
-// La grille contient toujours quatre nombres distincts. Zéro à trois nombres
+// La grille contient toujours quatre nombres distincts. Zéro à quatre nombres
 // sont corrects, sans que ce nombre soit révélé à l'élève ; « Aucun » permet
-// de répondre explicitement lorsque les six tests sont négatifs.
+// de répondre explicitement lorsque les quatre tests sont négatifs.
 
 import {
   SCHEMA_GABARIT_QUESTION,
@@ -13,23 +13,23 @@ import {
   COMPARAISON_ENSEMBLE_EXACT,
   SCHEMA_QUESTION_INSTANCE_V2,
   TYPE_REPONSE_SELECTION_MULTIPLE,
-} from "../../../../contrats/src/question-v2.js?v=11";
+} from "../../../../contrats/src/question-v2.js?v=14";
 import {
   DIVISEURS_CRITERES_NC01,
   construireCorrectionCritere,
   tirerNombreSelonDivisibilite,
-} from "./critere-precis.js?v=11";
+} from "./critere-precis.js?v=14";
 
 export const NOM_GENERATEUR_SELECTION_NOMBRES =
   "nombres-et-calculs.criteres-divisibilite.selection-nombres";
-export const VERSION_GENERATEUR_SELECTION_NOMBRES = 2;
+export const VERSION_GENERATEUR_SELECTION_NOMBRES = 3;
 
 const PARAMETRES_AUTORISES = new Set(["diviseur"]);
 
 export const GABARIT_SELECTION_NOMBRES = Object.freeze({
   schema: SCHEMA_GABARIT_QUESTION,
   id: NOM_GENERATEUR_SELECTION_NOMBRES,
-  version: 2,
+  version: 3,
   titre: "Critères de divisibilité — sélectionner plusieurs nombres",
   generateur: Object.freeze({
     nom: NOM_GENERATEUR_SELECTION_NOMBRES,
@@ -156,7 +156,7 @@ export function genererQuestionSelectionNombres({ aleatoire, parametres }) {
   const diviseur = Object.hasOwn(parametres, "diviseur")
     ? parametres.diviseur
     : aleatoire.choix(DIVISEURS_CRITERES_NC01);
-  const nombreDeBonnesReponses = aleatoire.choix([0, 1, 2, 3]);
+  const nombreDeBonnesReponses = aleatoire.choix([0, 1, 2, 3, 4]);
   const profils = [
     ...Array.from({ length: nombreDeBonnesReponses }, () => true),
     ...Array.from({ length: 4 - nombreDeBonnesReponses }, () => false),

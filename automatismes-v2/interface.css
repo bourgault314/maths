@@ -13,6 +13,11 @@ body {
   min-height: 100dvh;
 }
 
+.ecran-pret {
+  min-height: 100vh;
+  min-height: 100dvh;
+}
+
 .menu-lancement {
   width: min(100% - 28px, 920px);
   margin: 0 auto;
@@ -357,17 +362,13 @@ body {
   overflow: hidden;
 }
 
-.lecteur.avec-pave {
-  grid-template-rows: auto 4px minmax(0, 1fr) auto auto;
-}
-
 .entete-seance,
 .entete-seance.avec-cours,
 .entete-projection,
 .entete-projection.avec-cours {
   min-height: 56px;
   padding: max(6px, env(safe-area-inset-top)) 12px 6px;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
+  grid-template-columns: auto auto minmax(44px, 1fr) auto;
   gap: 6px;
 }
 
@@ -383,7 +384,7 @@ body {
   padding: 6px 9px;
   display: inline-grid;
   place-items: center;
-  justify-self: center;
+  justify-self: end;
   border: 2px solid color-mix(in srgb, var(--mg-reussite) 35%, var(--mg-ligne));
   border-radius: 9999px;
   background: color-mix(in srgb, var(--mg-reussite) 7%, var(--mg-papier));
@@ -403,8 +404,17 @@ body {
 
 .espace-lecteur {
   width: 100%;
+  height: 100%;
   min-height: 0;
   margin: 0;
+  padding: 0;
+  overflow: hidden;
+}
+
+.zone-question-scroll {
+  width: 100%;
+  height: 100%;
+  min-height: 0;
   padding: 12px;
   overflow-x: hidden;
   overflow-y: auto;
@@ -507,10 +517,13 @@ body {
   grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 8px;
   border: 0;
-  border-top: 1px solid var(--mg-ligne);
   border-radius: 0;
   background: var(--mg-papier);
-  box-shadow: 0 -8px 24px color-mix(in srgb, var(--mg-bleuFonce) 9%, transparent);
+  box-shadow: none;
+}
+
+.barre-avant-validation {
+  grid-template-columns: minmax(0, 1fr);
 }
 
 .barre-eleve button,
@@ -525,22 +538,56 @@ body {
   grid-template-columns: repeat(2, minmax(0, 1fr));
 }
 
+.dock-question {
+  position: relative;
+  z-index: 10;
+  width: 100%;
+  min-width: 0;
+  border-top: 1px solid var(--mg-ligne);
+  background: var(--mg-papier);
+  box-shadow: 0 -8px 24px color-mix(in srgb, var(--mg-bleuFonce) 9%, transparent);
+}
+
 .panneau {
+  position: fixed;
   inset: 0;
   width: 100%;
   height: 100vh;
   height: 100dvh;
   max-height: none;
-  padding: 14px;
-  padding-bottom: calc(18px + env(safe-area-inset-bottom));
+  padding: 0 14px;
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr) auto;
+  overflow: hidden;
   border-radius: 0;
 }
 
 .entete-panneau {
-  top: -14px;
-  margin-bottom: 10px;
+  position: static;
+  top: auto;
+  margin: 0;
   padding: max(10px, env(safe-area-inset-top)) 0 9px;
   border-bottom: 1px solid var(--mg-ligne);
+}
+
+.corps-panneau {
+  min-width: 0;
+  min-height: 0;
+  padding: 10px 0 calc(18px + env(safe-area-inset-bottom));
+  overflow-x: hidden;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+
+.panneau-avec-pied .corps-panneau {
+  padding-bottom: 10px;
+}
+
+.pied-panneau {
+  min-width: 0;
+  padding: 9px 0 calc(9px + env(safe-area-inset-bottom));
+  border-top: 1px solid var(--mg-ligne);
+  background: var(--mg-papier);
 }
 
 .entete-panneau .surtitre {
@@ -829,8 +876,7 @@ body {
 }
 
 .panneau-cours-divisibilite {
-  display: flex;
-  flex-direction: column;
+  grid-template-rows: auto minmax(0, 1fr) auto;
 }
 
 .ecran-pret .panneau-cours-divisibilite {
@@ -845,7 +891,6 @@ body {
 }
 
 .cours-une-carte {
-  flex: 1 1 auto;
   min-height: 0;
 }
 
@@ -1172,8 +1217,7 @@ body {
 }
 
 .navigation-cours {
-  flex: 0 0 auto;
-  margin-top: 12px;
+  margin: 0;
   display: grid;
   grid-template-columns: minmax(92px, 1fr) auto minmax(92px, 1fr);
   gap: 8px;
@@ -1348,32 +1392,31 @@ body {
 
 .clavier-mathsgo {
   display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 7px;
+  grid-template-columns: repeat(var(--colonnes-clavier, 3), minmax(0, 1fr));
+  gap: 4px;
 }
 
 .pave-mathsgo-dock {
   display: none;
-  padding: 8px 12px;
-  border-top: 1px solid var(--mg-ligne);
+  padding: 5px 10px;
   background: var(--mg-papier);
 }
 
 .pave-mathsgo-dock .clavier-mathsgo {
-  width: min(100%, 360px);
+  width: min(100%, 318px);
   margin: 0 auto;
 }
 
-.clavier-mathsgo button,
-.clavier-mathsgo > span {
+.clavier-mathsgo button {
   min-width: 0;
-  min-height: 48px;
+  min-height: 44px;
+  padding: 4px 6px;
   border: 2px solid var(--mg-ligne);
-  border-radius: 12px;
+  border-radius: 10px;
   color: var(--mg-bleu);
   background: var(--mg-fondDoux);
   font-family: var(--mg-titres);
-  font-size: 22px;
+  font-size: 20px;
   font-weight: 800;
 }
 
@@ -1382,14 +1425,17 @@ body {
   background: color-mix(in srgb, var(--mg-turquoise) 14%, var(--mg-papier));
 }
 
-.clavier-mathsgo > span {
-  border-color: transparent;
-  background: transparent;
-}
-
 .clavier-mathsgo .touche-effacer {
   font-family: var(--mg-texte);
-  font-size: 12px;
+  font-size: 11px;
+}
+
+.clavier-mathsgo .touche-valider {
+  border-color: var(--mg-bleu);
+  color: var(--mg-papier);
+  background: var(--mg-bleu);
+  font-family: var(--mg-texte);
+  font-size: 13px;
 }
 
 .indication-clavier-physique {
@@ -1491,44 +1537,6 @@ body {
   text-align: center;
 }
 
-.plateau-groupes > div {
-  display: grid;
-  grid-template-columns: repeat(5, minmax(0, 1fr));
-  gap: 4px;
-}
-
-.plateau-groupes > div > span {
-  position: relative;
-  min-height: 48px;
-  padding: 4px 2px;
-  display: grid;
-  place-items: center;
-  border: 2px solid var(--mg-turquoise);
-  border-radius: 10px;
-  color: var(--mg-bleu);
-  background: var(--mg-papier);
-  font-weight: 800;
-}
-
-.plateau-groupes > div > .groupe-correct {
-  border-color: var(--mg-reussite);
-  color: var(--mg-reussite);
-  background: color-mix(in srgb, var(--mg-reussite) 9%, var(--mg-papier));
-}
-
-.plateau-groupes > div > .groupe-incorrect {
-  border-color: var(--mg-ligne);
-  color: var(--mg-texteAttenue);
-  background: var(--mg-fondDoux);
-}
-
-.plateau-groupes > div > span b {
-  position: absolute;
-  top: 2px;
-  right: 5px;
-  font-size: 13px;
-}
-
 .aide-generique ol {
   margin: 0;
   padding-left: 22px;
@@ -1596,9 +1604,6 @@ body {
     width: 36px;
   }
 
-  .plateau-groupes > div {
-    grid-template-columns: repeat(3, minmax(0, 1fr));
-  }
 }
 
 @media (min-width: 680px) {
@@ -1654,10 +1659,10 @@ body {
     position: fixed;
     inset: 24px auto 24px 50%;
     width: min(900px, calc(100% - 48px));
-    height: auto;
-    max-height: calc(100dvh - 48px);
-    padding: 18px;
-    overflow-y: auto;
+    height: calc(100dvh - 48px);
+    max-height: 820px;
+    padding: 0 18px;
+    overflow: hidden;
     border: 2px solid var(--mg-ligne);
     border-radius: var(--mg-rayon-grand);
     box-shadow: 0 20px 56px color-mix(in srgb, var(--mg-bleuFonce) 28%, transparent);
@@ -1673,6 +1678,11 @@ body {
   }
 
   .espace-lecteur {
+    padding: 0;
+    display: block;
+  }
+
+  .zone-question-scroll {
     padding: 18px;
     display: flex;
     align-items: center;
@@ -1719,6 +1729,13 @@ body {
     overflow: hidden;
   }
 
+  .panneau-ouvert .zone-question-scroll {
+    min-height: 0;
+    padding: 18px;
+    display: flex;
+    align-items: center;
+  }
+
   .panneau-ouvert .carte-question {
     width: 100%;
     margin: auto 0;
@@ -1750,16 +1767,13 @@ body {
     min-height: 0;
     max-height: none;
     margin: 0;
-    padding: 16px;
-    overflow-y: auto;
+    padding: 0 16px;
+    display: grid;
+    overflow: hidden;
     border: 2px solid var(--mg-ligne);
     border-radius: var(--mg-rayon-grand);
     box-shadow: none;
     transform: none;
-  }
-
-  .panneau-ouvert .entete-panneau {
-    top: -16px;
   }
 
   .mode-tableau .carte-question {
@@ -1813,7 +1827,7 @@ body {
   }
 
   .mode-tableau .barre-enseignant {
-    grid-template-columns: repeat(5, minmax(0, 1fr));
+    grid-template-columns: repeat(4, minmax(0, 1fr));
     padding-inline: max(18px, calc((100% - 1440px) / 2));
   }
 
@@ -1852,7 +1866,7 @@ body {
 }
 
 @media (min-width: 900px) and (max-height: 740px) {
-  .espace-lecteur {
+  .zone-question-scroll {
     padding-block: 10px;
   }
 
@@ -1881,26 +1895,26 @@ body {
   }
 }
 
-@media (hover: hover) and (pointer: fine) {
-  .mode-entrainement .clavier-mathsgo {
-    display: none;
-  }
-
+@media (hover: hover) and (pointer: fine) and (min-width: 680px) {
   .mode-entrainement .indication-clavier-physique {
     display: block;
   }
 }
 
 @media (any-pointer: coarse) {
-  .mode-entrainement .pave-mathsgo-dock {
+  .mode-entrainement.avec-pave .pave-mathsgo-dock {
     display: block;
   }
 
-  .mode-entrainement .pave-mathsgo-dock .clavier-mathsgo {
+  .mode-entrainement.avec-pave .pave-mathsgo-dock .clavier-mathsgo {
     display: grid;
   }
 
   .mode-entrainement .indication-clavier-physique {
+    display: none;
+  }
+
+  .mode-entrainement.avec-pave .barre-saisie-numerique {
     display: none;
   }
 }

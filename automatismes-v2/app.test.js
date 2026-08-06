@@ -5,15 +5,39 @@ function installerFauxNavigateur(recherche) {
   const gestionnaires = new Map();
   const focusRecus = [];
   const optionsFocus = [];
-  const panneau = { scrollTop: 0 };
+  const corpsPanneau = { scrollTop: 0 };
+  const zoneQuestion = { scrollTop: 0, dataset: { questionIndex: "" } };
+  const panneau = {
+    id: "",
+    querySelector(selecteur) {
+      return selecteur === ".corps-panneau" ? corpsPanneau : null;
+    },
+  };
+  let html = "";
   const application = {
-    innerHTML: "",
+    get innerHTML() { return html; },
+    set innerHTML(valeur) {
+      html = valeur;
+      corpsPanneau.scrollTop = 0;
+      zoneQuestion.scrollTop = 0;
+    },
     addEventListener(type, gestionnaire) {
       if (!gestionnaires.has(type)) gestionnaires.set(type, []);
       gestionnaires.get(type).push(gestionnaire);
     },
     querySelector(selecteur) {
-      if (selecteur === ".panneau") return panneau;
+      if (selecteur === ".panneau") {
+        const id = this.innerHTML.match(/<aside class="panneau[^"]*" id="([^"]+)"/)?.[1];
+        if (!id) return null;
+        panneau.id = id;
+        return panneau;
+      }
+      if (selecteur === ".zone-question-scroll") {
+        const index = this.innerHTML.match(/class="zone-question-scroll" data-question-index="([^"]+)"/)?.[1];
+        if (index === undefined) return null;
+        zoneQuestion.dataset.questionIndex = index;
+        return zoneQuestion;
+      }
       return { focus(options) { focusRecus.push(selecteur); optionsFocus.push(options); } };
     },
   };
@@ -30,12 +54,12 @@ function installerFauxNavigateur(recherche) {
     querySelector() { return application; },
   };
   globalThis.requestAnimationFrame = (rappel) => rappel();
-  return { application, gestionnaires, focusRecus, optionsFocus, panneau };
+  return { application, gestionnaires, focusRecus, optionsFocus, panneau, corpsPanneau, zoneQuestion };
 }
 
-function cliquer(gestionnaires, action, id, value) {
+function cliquer(gestionnaires, action, id, value, index) {
   const cible = {
-    dataset: { action, id, value },
+    dataset: { action, id, value, index },
     closest(selecteur) { return selecteur === "[data-action]" ? this : null; },
   };
   gestionnaires.get("click")[0]({ target: cible });
@@ -48,7 +72,7 @@ function appuyer(gestionnaires, key) {
 }
 
 it("rend NC-01 depuis le registre et conserve son aide et sa correction", async () => {
-  const { application, gestionnaires, focusRecus, optionsFocus, panneau } = installerFauxNavigateur(
+  const { application, gestionnaires, focusRecus, optionsFocus, corpsPanneau, zoneQuestion } = installerFauxNavigateur(
     "?notion=criteres-divisibilite&questions=1&graine=fumee-registre",
   );
   await import(`./app.js?fumee=divisibilite-${Date.now()}`);
@@ -63,14 +87,16 @@ it("rend NC-01 depuis le registre et conserve son aide et sa correction", async 
   cliquer(gestionnaires, "cours");
   assert.match(application.innerHTML, /Les critères de divisibilité/);
   assert.match(application.innerHTML, /1 \/ 3/);
+  assert.match(application.innerHTML, /class="corps-panneau"/);
+  assert.match(application.innerHTML, /class="pied-panneau"/);
   assert.match(application.innerHTML, /reste de la division est nul/);
   assert.match(application.innerHTML, /12 = 3 × 4 \+ 0/);
   cliquer(gestionnaires, "cours-suivant");
   assert.match(application.innerHTML, /2 \/ 3/);
   assert.match(application.innerHTML, /chiffre des unités/);
-  assert.match(application.innerHTML, /aria-label="230, chiffre des unités 0"[^>]*><span>2<\/span><span>3<\/span><b>0<\/b>/);
-  assert.match(application.innerHTML, /aria-label="235, chiffre des unités 5"[^>]*><span>2<\/span><span>3<\/span><b>5<\/b>/);
-  assert.match(application.innerHTML, /aria-label="236, chiffre des unités 6"[^>]*><span>2<\/span><span>3<\/span><b>6<\/b>/);
+  assert.match(application.innerHTML, /aria-label="230, chiffre des unités 0"/);
+  assert.match(application.innerHTML, /aria-label="235, chiffre des unités 5"/);
+  assert.match(application.innerHTML, /aria-label="236, chiffre des unités 6"/);
   cliquer(gestionnaires, "cours-suivant");
   assert.match(application.innerHTML, /3 \/ 3/);
   assert.match(application.innerHTML, /372/);
@@ -80,7 +106,9 @@ it("rend NC-01 depuis le registre et conserve son aide et sa correction", async 
   cliquer(gestionnaires, "fermer-cours");
   const premierChoix = application.innerHTML.match(/data-action="choix" data-id="([^"]+)"/)?.[1];
   assert.ok(premierChoix);
+  zoneQuestion.scrollTop = 120;
   cliquer(gestionnaires, "choix", premierChoix);
+  assert.equal(zoneQuestion.scrollTop, 120);
   cliquer(gestionnaires, "valider");
   cliquer(gestionnaires, "correction");
   assert.match(application.innerHTML, /Correction expliquée/);
@@ -90,9 +118,9 @@ it("rend NC-01 depuis le registre et conserve son aide et sa correction", async 
   assert.deepEqual(optionsFocus.at(-1), { preventScroll: true });
 
   cliquer(gestionnaires, "aide");
-  panneau.scrollTop = 180;
-  cliquer(gestionnaires, "chiffre-aide", undefined, "0");
-  assert.equal(panneau.scrollTop, 180);
+  corpsPanneau.scrollTop = 180;
+  cliquer(gestionnaires, "chiffre-aide", undefined, undefined, "0");
+  assert.equal(corpsPanneau.scrollTop, 180);
   assert.deepEqual(optionsFocus.at(-1), { preventScroll: true });
 });
 

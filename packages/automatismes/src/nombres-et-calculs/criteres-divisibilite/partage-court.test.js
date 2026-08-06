@@ -5,7 +5,6 @@ import { SCHEMA_GABARIT_QUESTION } from "../../../../contrats/src/gabarit.js";
 import {
   TYPE_REPONSE_CHOIX_UNIQUE,
   TYPE_REPONSE_ENTIER_NATUREL,
-  TYPE_REPONSE_SELECTION_MULTIPLE,
   validerQuestionInstanceV2,
 } from "../../../../contrats/src/question-v2.js";
 import { creerRegistre } from "../../../../moteur-exercices/src/generation.js";
@@ -13,10 +12,8 @@ import { creerGenerateur } from "../../../../moteur-exercices/src/aleatoire.js";
 import {
   GABARIT_PARTAGE_COURT,
   GENERATEUR_PARTAGE_COURT,
-  SOUS_FORME_GROUPES_POSSIBLES,
   SOUS_FORME_OUI_NON,
   SOUS_FORME_RETRAIT_MINIMAL,
-  calculerGroupesPossibles,
   calculerRetraitMinimal,
   genererQuestionPartageCourt,
 } from "./partage-court.js";
@@ -49,14 +46,6 @@ function texteDes(blocs) {
 }
 
 describe("NC-01/F6 — calculs de référence", () => {
-  it("calcule tous les nombres de groupes proposés qui conviennent", () => {
-    assert.deepEqual(calculerGroupesPossibles(77), ["aucun"]);
-    assert.deepEqual(calculerGroupesPossibles(124), ["2"]);
-    assert.deepEqual(calculerGroupesPossibles(117), ["3", "9"]);
-    assert.deepEqual(calculerGroupesPossibles(330), ["2", "3", "5", "10"]);
-    assert.deepEqual(calculerGroupesPossibles(90), ["2", "3", "5", "9", "10"]);
-  });
-
   it("calcule le plus petit retrait vers le multiple inférieur", () => {
     assert.equal(calculerRetraitMinimal(418, 3), 1);
     assert.equal(calculerRetraitMinimal(127, 5), 2);
@@ -66,7 +55,6 @@ describe("NC-01/F6 — calculs de référence", () => {
 
   it("refuse les valeurs hors du périmètre", () => {
     for (const total of [0, 9, 10000, -12, 12.5, NaN, Infinity]) {
-      assert.throws(() => calculerGroupesPossibles(total), RangeError);
       assert.throws(() => calculerRetraitMinimal(total, 3), RangeError);
     }
     for (const diviseur of [0, 1, 4, 8, 11, 3.5]) {
@@ -76,10 +64,9 @@ describe("NC-01/F6 — calculs de référence", () => {
 });
 
 describe("NC-01/F6 — contrat, données de partage et déterminisme", () => {
-  it("produit une question V2 conforme pour chacune des trois sous-formes", () => {
+  it("produit une question V2 conforme pour chacune des deux sous-formes", () => {
     for (const sousForme of [
       SOUS_FORME_OUI_NON,
-      SOUS_FORME_GROUPES_POSSIBLES,
       SOUS_FORME_RETRAIT_MINIMAL,
     ]) {
       const question = instancier(`nc01-f6-contrat-${sousForme}`, { sousForme });
@@ -89,18 +76,13 @@ describe("NC-01/F6 — contrat, données de partage et déterminisme", () => {
       });
       assert.equal(question.classement.famille, "partage-court");
       assert.ok(Number.isSafeInteger(blocEntier(question, "total")));
-      if (sousForme === SOUS_FORME_GROUPES_POSSIBLES) {
-        assert.equal(blocEntier(question, "diviseur"), undefined);
-      } else {
-        assert.ok(DIVISEURS.includes(blocEntier(question, "diviseur")));
-      }
+      assert.ok(DIVISEURS.includes(blocEntier(question, "diviseur")));
     }
   });
 
   it("reproduit exactement les mêmes questions pour les mêmes graines et paramètres", () => {
     const jeux = [
       { sousForme: SOUS_FORME_OUI_NON, diviseur: 9, verdict: "oui" },
-      { sousForme: SOUS_FORME_GROUPES_POSSIBLES },
       { sousForme: SOUS_FORME_RETRAIT_MINIMAL, diviseur: 10 },
       {},
     ];
@@ -168,9 +150,9 @@ describe("NC-01/F6 — paramètres du plan de série", () => {
     const casInvalides = [
       { autre: true },
       { sousForme: "inconnue" },
+      { sousForme: "groupes-possibles" },
       { diviseur: 4 },
       { verdict: true },
-      { sousForme: SOUS_FORME_GROUPES_POSSIBLES, diviseur: 3 },
       { sousForme: SOUS_FORME_RETRAIT_MINIMAL, verdict: "non" },
     ];
     for (const [index, parametres] of casInvalides.entries()) {
@@ -211,29 +193,6 @@ describe("NC-01/F6 — exactitude sur mille graines par sous-forme", () => {
     assert.deepEqual([...longueursVues].sort(), [2, 3, 4]);
   });
 
-  it("donne exactement tous les nombres de groupes possibles", () => {
-    const signatures = new Set();
-    const longueursVues = new Set();
-
-    for (let index = 0; index < 1000; index++) {
-      const question = instancier(`nc01-f6-groupes-${index}`, {
-        sousForme: SOUS_FORME_GROUPES_POSSIBLES,
-      });
-      const total = blocEntier(question, "total");
-      const attendus = DIVISEURS.filter((diviseur) => total % diviseur === 0)
-        .map(String);
-      const exacts = attendus.length === 0 ? ["aucun"] : attendus;
-
-      assert.equal(question.reponse.type, TYPE_REPONSE_SELECTION_MULTIPLE);
-      assert.deepEqual(question.reponse.attendus, exacts);
-      signatures.add(exacts.join(","));
-      longueursVues.add(String(total).length);
-    }
-
-    assert.ok(signatures.size >= 10, `variété insuffisante : ${signatures.size} profils`);
-    assert.deepEqual([...longueursVues].sort(), [2, 3, 4]);
-  });
-
   it("génère uniquement un retrait non nul, exact et minimal", () => {
     const diviseursVus = new Set();
     const retraitsVus = new Set();
@@ -253,6 +212,12 @@ describe("NC-01/F6 — exactitude sur mille graines par sous-forme", () => {
       assert.ok(retrait >= 1 && retrait <= 9, `retrait nul ou hors bornes : ${retrait}`);
       assert.equal(retrait, total % diviseur);
       assert.equal((total - retrait) % diviseur, 0);
+      if (retrait === 1) {
+        assert.match(
+          question.correction.at(-1).contenu,
+          /retirer 1 (bonbon|jeton|carte|perle)\.$/,
+        );
+      }
       for (let candidat = 0; candidat < retrait; candidat++) {
         assert.notEqual(
           (total - candidat) % diviseur,
@@ -294,7 +259,6 @@ describe("NC-01/F6 — aide et correction", () => {
   it("explique chaque conclusion sans division posée", () => {
     for (const sousForme of [
       SOUS_FORME_OUI_NON,
-      SOUS_FORME_GROUPES_POSSIBLES,
       SOUS_FORME_RETRAIT_MINIMAL,
     ]) {
       for (let index = 0; index < 100; index++) {

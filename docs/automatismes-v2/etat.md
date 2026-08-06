@@ -20,9 +20,8 @@
   **construits** et testés.
 - F4 est retirée de toutes les séries actives sans renuméroter les identifiants
   stables. Le cas « Aucun » reste naturel et n'est pas forcé dans chaque série.
-- Leur statut n'est pas encore `valide` : Gwenaël a indiqué que la candidate est
-  presque définitive mais doit encore recevoir ses derniers retours
-  pédagogiques.
+- `NC-01` est désormais `valide` : Gwenaël a validé le dernier moule et autorisé
+  explicitement sa publication sur la route pilote non liée.
 - Le lanceur reprend la coque visuelle de `/auto/`, avec seulement
   `S'entraîner / Au tableau`, le nombre de questions et NC-01.
 - La calculatrice barrée historique est restaurée dans la barre de lancement :
@@ -50,11 +49,17 @@
 - Le pavé tactile est placé dans un bandeau stable sous la carte ; il ne peut
   plus augmenter sa hauteur. Les consignes Oui/Non redondantes sont supprimées,
   tandis que la validation séparée est conservée.
+- La sous-forme F6 « groupes possibles » est supprimée. F6 alterne uniquement
+  entre une réponse Oui/Non et la recherche du retrait minimal.
+- Le cours, l'aide et la correction utilisent une coque commune avec contenu
+  défilable et commandes toujours accessibles. Le pavé contextuel intègre
+  « Valider » et prépare les futurs profils avec virgule ou signe moins sans les
+  afficher dans NC-01.
 
 ### Vérifications de cette reprise
 
-- `npm run verifier` : **1 055 tests sur 1 055 réussis** ;
-- garde-fous V2 : 98 fichiers surveillés, 50 fichiers de production avec
+- `npm run verifier` : **1 056 tests sur 1 056 réussis** ;
+- garde-fous V2 : 98 fichiers surveillés, 49 fichiers de production avec
   provenance déclarée ;
 - contrôles réels à 320 × 568, 390 × 844 et 1 280 × 720 ;
 - aucun débordement horizontal ;
@@ -67,13 +72,13 @@
 - tests ciblés NC-01 et lecteur : **91 sur 91 réussis** ; construction du site
   d'essai et contrôle réel du cours et de l'aide sur ordinateur réussis.
 
-### Prochaine étape
+### Publication autorisée
 
-Publier cette révision sur le site d'essai ChatGPT et laisser Gwenaël la
-contrôler. La PR #278 reste en brouillon et `/auto/` reste intact. Après sa
-validation explicite, fusionner la PR afin que GitHub Pages remplace le contenu
-de la route non liée `/automatismes-v2/`, puis vérifier cette route et `/auto/`
-avant de transmettre le lien à Claire.
+La PR #278 porte exactement la dernière candidate contrôlée par Gwenaël. Sa
+fusion et la publication de la route non liée `/automatismes-v2/` sont
+explicitement autorisées. `/auto/` reste intact et doit être contrôlé après le
+déploiement. La route pilote demeure hors navigation et hors sitemap, avec
+`noindex,nofollow` ; elle n'est donc pas privée pour autant.
 
 ## Référence vérifiée
 
@@ -118,10 +123,11 @@ avant de transmettre le lien à Claire.
 - Le critère par 10 est un complément maths&go validé. Il reste proposé dans le
   parcours DNB, tout en étant distingué des quatre critères officiels dans les
   données.
-- La fiche `NC-01`, le mini-cours, les six familles initiales, les aides, les
-  corrections, les storyboards et la séparation séance/question/trace ont été
-  validés par Gwenaël le 19 juillet 2026. Le 6 août, F4 a été retirée de la
-  série active et le cours ramené à trois pages par la décision D-029.
+- La fiche `NC-01`, le mini-cours, les six familles initialement étudiées, les
+  aides, les corrections, les storyboards et la séparation
+  séance/question/trace ont été validés par Gwenaël le 19 juillet 2026. Le 6
+  août, F4 et la sous-forme F6 « groupes possibles » ont été retirées ; les cinq
+  familles actives et le moule commun ont été finalisés par D-029 à D-033.
 - Le parcours DNB actuel ne possède ni niveaux ni paliers.
 
 ## Documents de référence fusionnés
@@ -224,22 +230,16 @@ l'interface de la bêta :
 
 ## Prochaine étape du lot courant
 
-Le lot P0 est isolé sur `agent/automatismes-v2-lecteur-generique` :
+Après la vérification de la route publiée, aucun contenu de `NC-02` ne doit être
+programmé avant sa fiche pédagogique. Cette fiche partira de la cible unique
+« carrés des entiers de 1 à 12 » et distinguera les familles directe et inverse
+sans créer deux micro-notions.
 
-- un registre unique décrit désormais l'identifiant, le nom, le gabarit, le
-  rendu et les capacités de chaque notion ;
-- le moteur d'état n'importe plus directement les cinq générateurs ;
-- l'application choisit question, aide, correction et cours par type de rendu,
-  sans liste parallèle d'identifiants ;
-- les interactions propres aux chiffres ou aux solides sont refusées aux
-  autres familles ;
-- le lot réussit **947 tests sur 947** et `npm run verifier` ;
-- 24 captures comparées octet par octet à `origin/main` sont identiques, sans
-  débordement horizontal ni cible tactile inférieure à 44 px.
-
-Ce sous-lot n'est ni publié ni fusionné. Après validation, la suite de P0 doit
-séparer les rendus du fichier `app.js`, puis construire les trois dispositions
-téléphone, ordinateur et TNI sans commencer une nouvelle notion.
+La carte de couverture conserve 88 micro-notions internes, mais elles ne
+deviennent pas 88 questionnaires visibles. Les catégories du menu pourront
+regrouper plusieurs micro-notions : `NC-03` et `NC-04`, par exemple, formeront
+une même catégorie visible « Fractions simples et décimaux » tout en gardant
+deux générateurs et deux suivis internes.
 
 ## Règle de mise à jour
 

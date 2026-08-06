@@ -110,16 +110,22 @@ Exemple :
 
 La lecture ne doit pas devenir la difficulté principale. La situation sert uniquement à relier le critère de divisibilité au sens du partage sans reste.
 
-Deux formes restent possibles :
+Deux formes restent actives :
 
 - réponse **Oui / Non** pour un nombre de groupes donné ;
-- sélection de tous les nombres de groupes possibles parmi 2, 3, 5, 9 et 10.
+- lorsque le partage est impossible, recherche du plus petit nombre d’objets à
+  retirer pour obtenir un partage sans reste.
 
-Une troisième forme est validée : lorsque le partage est impossible, demander le plus petit nombre d’objets à retirer pour obtenir un partage sans reste.
+La sélection de tous les nombres de groupes possibles est retirée : elle
+mélangeait la recherche de diviseurs et la représentation du partage dans une
+même question. Le nombre de groupes est désormais toujours donné.
 
 > On a 418 bonbons. Peut-on les répartir équitablement dans 3 sachets ? Si non, combien faut-il en retirer au minimum ?
 
-Réponse : non ; il faut retirer 1 bonbon. Le total 417 montré dans l’image de référence est déjà divisible par 3, puisque `4 + 1 + 7 = 12` ; il convient donc pour une réponse « Oui », tandis que 418 convient pour travailler le retrait d’un objet.
+Réponse : il faut retirer 1 bonbon. Le total 417 montré dans l’image de
+référence est déjà divisible par 3, puisque `4 + 1 + 7 = 12` ; il convient donc
+pour une réponse « Oui », tandis que 418 convient pour travailler le retrait
+d’un objet.
 
 Cette famille emploiera un objet de partage égal : une quantité source, des flèches et des parts ou sachets identiques. Le concept visuel fourni par Gwenaël est retenu, mais aucun ancien dessin ni ancien code n’est repris.
 

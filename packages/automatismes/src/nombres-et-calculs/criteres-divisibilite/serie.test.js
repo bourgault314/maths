@@ -43,7 +43,7 @@ describe("NC-01 — plan équilibré de série", () => {
     }
   });
 
-  it("couvre les trois sous-formes de production et de partage en vingt questions", () => {
+  it("couvre les sous-formes de production et les deux partages simples en vingt questions", () => {
     const plan = planifierSerieNC01({ graine: "vingt", nombreQuestions: 20 });
     const compte = occurrences(plan);
     assert.deepEqual(
@@ -58,11 +58,8 @@ describe("NC-01 — plan équilibré de série", () => {
     const sousFormesPartage = plan
       .filter(({ famille }) => famille === FAMILLES_NC01.F6)
       .map(({ parametres }) => parametres.sousForme);
-    assert.equal(sousFormesPartage.filter((sousForme) => sousForme === "oui-non").length, 1);
-    assert.deepEqual(
-      [...new Set(sousFormesPartage)],
-      ["oui-non", "groupes-possibles", "retrait-minimal"],
-    );
+    assert.equal(sousFormesPartage.filter((sousForme) => sousForme === "oui-non").length, 2);
+    assert.equal(sousFormesPartage.filter((sousForme) => sousForme === "retrait-minimal").length, 2);
   });
 
   it("commence simplement et n'enchaîne jamais deux familles identiques", () => {
@@ -106,7 +103,7 @@ describe("NC-01 — plan équilibré de série", () => {
       );
       const partages = plan.filter(({ famille }) => famille === FAMILLES_NC01.F6);
       assert.equal(partages.filter(({ parametres }) => parametres.sousForme === "oui-non").length, 1);
-      assert.ok(["groupes-possibles", "retrait-minimal"].includes(partages[1].parametres.sousForme));
+      assert.equal(partages.filter(({ parametres }) => parametres.sousForme === "retrait-minimal").length, 1);
     }
   });
 

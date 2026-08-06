@@ -26,15 +26,15 @@ import {
   saisirChiffre,
   tournerSolide,
   validerReponse,
-} from "./src/etat-lecteur.js?v=11";
-import { TYPE_REPONSE_ENTIER_NATUREL } from "../packages/contrats/src/question-v2.js?v=11";
+} from "./src/etat-lecteur.js?v=14";
+import { TYPE_REPONSE_ENTIER_NATUREL } from "../packages/contrats/src/question-v2.js?v=14";
 import {
   obtenirNotionLecteur,
   RENDU_DIVISIBILITE,
   RENDU_SOLIDE,
   RENDU_VOLUME,
-} from "./src/registre-lecteur.js?v=11";
-import { COURS_SOLIDES_USUELS } from "../packages/automatismes/src/espace-et-geometrie/solides-usuels/reconnaissance.js?v=11";
+} from "./src/registre-lecteur.js?v=14";
+import { COURS_SOLIDES_USUELS } from "../packages/automatismes/src/espace-et-geometrie/solides-usuels/reconnaissance.js?v=14";
 import {
   creerCone,
   creerCube,
@@ -44,6 +44,12 @@ import {
   creerPyramide,
   dessinerSolide,
 } from "../packages/objets/src/solides.js";
+import {
+  ACTION_TOUCHE_EFFACER,
+  ACTION_TOUCHE_SAISIR,
+  ACTION_TOUCHE_VALIDER,
+  obtenirDispositionClavier,
+} from "../packages/objets/src/clavier.js?v=14";
 
 const application = document.querySelector("#application");
 const rechercheInitiale = window.location.search;
@@ -298,10 +304,14 @@ function rendreEntete() {
   const index = etat.seance.etat.indexQuestion + 1;
   const total = etat.seance.nombreQuestions;
   const entrainement = estEntrainement();
+  const aideDisponible = etat.configuration.aide !== "indisponible";
   const progression = Math.round((index / total) * 100);
   return `
     <header class="entete-seance ${entrainement ? "" : "entete-tableau"}">
       <button class="bouton-entete bouton-menu" data-action="menu" aria-expanded="${menuSessionOuvert}">Menu</button>
+      <button class="bouton-entete bouton-aide-entete" data-action="aide"
+        ${aideDisponible ? "" : "disabled"} aria-expanded="${etat.aideOuverte}"
+        aria-controls="panneau-aide">Aide</button>
       ${entrainement
         ? `<span class="score" aria-label="${nombreReussites(etat)} bonnes réponses">✓ ${nombreReussites(etat)}</span>`
         : '<span class="mode-court">Au tableau</span>'}
@@ -365,12 +375,11 @@ function rendreZoneRetour() {
   return `<div class="zone-retour" aria-live="polite" aria-atomic="true">${rendreRetourValidation()}</div>`;
 }
 
-function rendreBarreEleve() {
-  const aideDisponible = etat.configuration.aide !== "indisponible";
+function rendreBarreEleve(question) {
   if (etat.validation === null) {
-    return `<nav class="barre-eleve" aria-label="Actions de la question">
-      <button class="bouton-secondaire" data-action="aide" ${aideDisponible ? "" : "disabled"}
-        aria-expanded="${etat.aideOuverte}" aria-controls="panneau-aide">Aide</button>
+    const saisieNumerique = question.reponse.type === TYPE_REPONSE_ENTIER_NATUREL;
+    return `<nav class="barre-eleve barre-avant-validation ${saisieNumerique ? "barre-saisie-numerique" : ""}"
+      aria-label="Actions de la question">
       <button class="bouton-principal" data-action="valider">Valider</button>
     </nav>`;
   }
@@ -384,12 +393,9 @@ function rendreBarreEleve() {
 }
 
 function rendreBarreEnseignant() {
-  const aideDisponible = etat.configuration.aide !== "indisponible";
   const derniere = etat.seance.etat.indexQuestion + 1 === etat.seance.nombreQuestions;
   return `
     <nav class="barre-enseignant" aria-label="Commandes du mode Au tableau">
-      <button data-action="aide" ${aideDisponible ? "" : "disabled"}
-        aria-expanded="${etat.aideOuverte}" aria-controls="panneau-aide">Aide</button>
       ${aCoursNotion()
         ? `<button class="commande-cours" data-action="cours" aria-expanded="${etat.coursOuvert}"
           aria-controls="panneau-cours">Cours</button>`
@@ -424,6 +430,52 @@ function rendreAccesCoursDepuisAide() {
   return `<button class="aide-vers-cours" type="button" data-action="cours">
     <span>Besoin de revoir la règle ?</span><strong>Ouvrir le cours</strong>
   </button>`;
+}
+
+const CONFIGURATION_PANNEAUX = Object.freeze({
+  aide: Object.freeze({
+    id: "panneau-aide",
+    titreId: "titre-aide",
+    actionFermer: "fermer-aide",
+    ariaFermer: "Revenir à la question",
+  }),
+  correction: Object.freeze({
+    id: "panneau-correction",
+    titreId: "titre-correction",
+    actionFermer: "fermer-correction",
+    ariaFermer: "Revenir à la question",
+  }),
+  cours: Object.freeze({
+    id: "panneau-cours",
+    titreId: "titre-cours",
+    actionFermer: "fermer-cours",
+    ariaFermer: "Fermer le cours",
+  }),
+});
+
+function rendreCadrePanneau({
+  type,
+  titre,
+  contenu,
+  surtitre = "",
+  pied = "",
+  classes = "",
+}) {
+  const configuration = CONFIGURATION_PANNEAUX[type];
+  if (!configuration) throw new RangeError(`type de panneau inconnu : ${type}`);
+  const classePied = pied ? "panneau-avec-pied" : "panneau-sans-pied";
+  return `
+    <div class="voile" data-action="${configuration.actionFermer}" aria-hidden="true"></div>
+    <aside class="panneau panneau-${type} ${classePied} ${classes}" id="${configuration.id}"
+      role="dialog" aria-modal="true" aria-labelledby="${configuration.titreId}">
+      <div class="entete-panneau">
+        <div>${surtitre ? `<p class="surtitre">${echapper(surtitre)}</p>` : ""}<h2 id="${configuration.titreId}">${echapper(titre)}</h2></div>
+        <button class="fermer" data-action="${configuration.actionFermer}"
+          aria-label="${configuration.ariaFermer}">Retour</button>
+      </div>
+      <div class="corps-panneau">${contenu}</div>
+      ${pied ? `<div class="pied-panneau">${pied}</div>` : ""}
+    </aside>`;
 }
 
 function rendreReponseEleve(question) {
@@ -621,21 +673,7 @@ function rendreVerdicts(question, diviseurs) {
 function rendrePlateauPartage(question, { corrige = false } = {}) {
   const total = blocQuestion(question, "total")?.valeur;
   const diviseur = blocQuestion(question, "diviseur")?.valeur;
-  if (!Number.isSafeInteger(total)) return "";
-  if (!Number.isSafeInteger(diviseur)) {
-    const attendus = new Set(question.reponse.attendus ?? []);
-    return `<div class="plateau-partage plateau-groupes" aria-label="${total} éléments et plusieurs nombres de groupes à tester">
-      <strong>${total}<small> éléments</small></strong>
-      <span class="fleche-partage" aria-hidden="true">→</span>
-      <div>${[2, 3, 5, 9, 10].map((groupe) => {
-        const correct = attendus.has(String(groupe));
-        const classe = corrige ? (correct ? "groupe-correct" : "groupe-incorrect") : "";
-        return `<span class="${classe}">${groupe}<small>groupes</small>${corrige
-          ? `<b aria-label="${correct ? "convient" : "ne convient pas"}">${correct ? "✓" : "×"}</b>`
-          : ""}</span>`;
-      }).join("")}</div>
-    </div>`;
-  }
+  if (!Number.isSafeInteger(total) || !Number.isSafeInteger(diviseur)) return "";
   const reste = total % diviseur;
   const totalPartage = total - reste;
   const parPart = totalPartage / diviseur;
@@ -680,16 +718,10 @@ function rendreAideSelectionNombres(question) {
     .filter((choix) => choix.id.startsWith("nombre-"))
     .map((choix) => Number(choix.libelle));
   const utiliseUnite = [2, 5, 10].includes(critere);
-  return `
-    <div class="voile" data-action="fermer-aide" aria-hidden="true"></div>
-    <aside class="panneau panneau-aide" id="panneau-aide" role="dialog" aria-modal="true" aria-labelledby="titre-aide">
-      <div class="entete-panneau">
-        <div><p class="surtitre">Aide</p><h2 id="titre-aide">Me guider</h2></div>
-        <button class="fermer" data-action="fermer-aide" aria-label="Revenir à la question">Retour</button>
-      </div>
-      ${rendreRappelQuestion(question)}
-      ${rendreAccesCoursDepuisAide()}
-      <section class="outil-aide aide-grille-nombres">
+  const contenu = `
+    ${rendreRappelQuestion(question)}
+    ${rendreAccesCoursDepuisAide()}
+    <section class="outil-aide aide-grille-nombres">
         ${rendreEtape(1, utiliseUnite ? "Observe les unités" : "Prépare les sommes", utiliseUnite ? "repere-unites" : "repere-somme")}
         <div class="grille-observation-aide">
           ${nombres.map((nombre) => `<article>
@@ -698,15 +730,20 @@ function rendreAideSelectionNombres(question) {
               : `<strong class="nombre-observe">${nombre}</strong><span class="somme-a-completer">${[...String(nombre)].join(" + ")} = ?</span>`}
           </article>`).join("")}
         </div>
-      </section>
-      <section class="indices-aide aide-courte">
-        <h3>Une seule règle, six vérifications</h3>
+    </section>
+    <section class="indices-aide aide-courte">
+        <h3>Une seule règle, quatre vérifications</h3>
         <p>${utiliseUnite
           ? `Pour ${critere}, l'unité doit être ${rappelCritereUnites(critere)}.`
           : `Pour ${critere}, calcule chaque somme puis demande-toi si elle est un multiple de ${critere}.`}</p>
-        <p>Examine les nombres un par un, puis sélectionne ceux qui conviennent — ou « Aucun » si les six tests sont négatifs.</p>
-      </section>
-    </aside>`;
+        <p>Examine les nombres un par un, puis sélectionne ceux qui conviennent — ou « Aucun » si les quatre tests sont négatifs.</p>
+    </section>`;
+  return rendreCadrePanneau({
+    type: "aide",
+    surtitre: "Aide",
+    titre: "Me guider",
+    contenu,
+  });
 }
 
 function rendreAideChiffreManquant(question) {
@@ -714,16 +751,12 @@ function rendreAideChiffreManquant(question) {
   const motif = texteBloc(question, "nombre-a-completer");
   const utiliseUnite = [2, 5, 10].includes(critere);
   const chiffresFixes = [...motif].filter((caractere) => /\d/.test(caractere));
-  return `
-    <div class="voile" data-action="fermer-aide" aria-hidden="true"></div>
-    <aside class="panneau panneau-aide" id="panneau-aide" role="dialog" aria-modal="true" aria-labelledby="titre-aide">
-      <div class="entete-panneau">
-        <div><p class="surtitre">Aide</p><h2 id="titre-aide">Me guider</h2></div>
-        <button class="fermer" data-action="fermer-aide" aria-label="Revenir à la question">Retour</button>
-      </div>
-      ${rendreRappelQuestion(question)}
-      ${rendreAccesCoursDepuisAide()}
-      <section class="outil-aide aide-chiffre-manquant">
+  const strategie = question.aide?.blocs?.find(({ id }) =>
+    ["verifier-tous", "partir-zero"].includes(id));
+  const contenu = `
+    ${rendreRappelQuestion(question)}
+    ${rendreAccesCoursDepuisAide()}
+    <section class="outil-aide aide-chiffre-manquant">
         ${rendreEtape(1, utiliseUnite ? "Regarde la place des unités" : "Écris la somme avec le chiffre manquant", utiliseUnite ? "repere-unites" : "repere-somme")}
         <p class="motif-aide">${echapper(motif)}</p>
         ${utiliseUnite
@@ -731,8 +764,14 @@ function rendreAideChiffreManquant(question) {
             <p>${motif.at(-1) === "□" ? "Le chiffre manquant est justement l'unité." : `L'unité est déjà ${echapper(motif.at(-1))} : vérifie si changer l'autre chiffre peut modifier ce critère.`}</p>`
           : `<p class="expression-aide">${chiffresFixes.join(" + ")} + □ = ?</p>
             <p>Le résultat doit être un multiple de <strong>${critere}</strong>. Teste seulement les chiffres demandés par la consigne.</p>`}
-      </section>
-    </aside>`;
+    </section>
+    ${strategie ? `<p class="indication-aide">${echapper(strategie.contenu)}</p>` : ""}`;
+  return rendreCadrePanneau({
+    type: "aide",
+    surtitre: "Aide",
+    titre: "Me guider",
+    contenu,
+  });
 }
 
 function rendreAideDivisibiliteGenerique(question) {
@@ -745,17 +784,11 @@ function rendreAideDivisibiliteGenerique(question) {
   const expression = etat.chiffresSomme.length === 0
     ? `${chiffres.map(() => "□").join(" + ")} = □`
     : `${etat.chiffresSomme.map((index) => chiffres[index]).join(" + ")} = □`;
-  return `
-    <div class="voile" data-action="fermer-aide" aria-hidden="true"></div>
-    <aside class="panneau panneau-aide" id="panneau-aide" role="dialog" aria-modal="true" aria-labelledby="titre-aide">
-      <div class="entete-panneau">
-        <div><p class="surtitre">Aide</p><h2 id="titre-aide">Me guider</h2></div>
-        <button class="fermer" data-action="fermer-aide" aria-label="Revenir à la question">Retour</button>
-      </div>
-      ${rendreRappelQuestion(question)}
-      ${rendreAccesCoursDepuisAide()}
-      ${familleQuestion(question) === "partage-court" ? rendrePlateauPartage(question) : ""}
-      ${peutObserver && chiffres.length > 0 ? `<section class="outil-aide outil-unites">
+  const contenu = `
+    ${rendreRappelQuestion(question)}
+    ${rendreAccesCoursDepuisAide()}
+    ${familleQuestion(question) === "partage-court" ? rendrePlateauPartage(question) : ""}
+    ${peutObserver && chiffres.length > 0 ? `<section class="outil-aide outil-unites">
         ${rendreEtape(1, "Repère le chiffre des unités", "repere-unites")}
         <div class="nombre-aide" aria-label="Nombre ${nombre}">
           ${chiffres.slice(0, -1).map((chiffre) => `<span>${chiffre}</span>`).join("")}
@@ -770,27 +803,26 @@ function rendreAideDivisibiliteGenerique(question) {
             data-action="chiffre-aide" data-index="${index}" aria-pressed="${etat.chiffresSomme.includes(index)}">${chiffre}</button>`).join("")}</div>
         <output class="expression-aide">${echapper(expression)}</output>
       </section>` : ""}
-      <section class="indices-aide aide-generique">
+    <section class="indices-aide aide-generique">
         <h3>À toi de vérifier</h3>
         <ol>${blocs.map((bloc) => `<li>${echapper(bloc.contenu)}</li>`).join("")}</ol>
-      </section>
-    </aside>`;
+    </section>`;
+  return rendreCadrePanneau({
+    type: "aide",
+    surtitre: "Aide",
+    titre: "Me guider",
+    contenu,
+  });
 }
 
 function rendreCorrectionSelectionNombres(question) {
   const critere = critereQuestion(question);
   const attendus = new Set(question.reponse.attendus);
   const utiliseUnite = [2, 5, 10].includes(critere);
-  return `
-    <div class="voile" data-action="fermer-correction" aria-hidden="true"></div>
-    <aside class="panneau panneau-correction" id="panneau-correction" role="dialog" aria-modal="true" aria-labelledby="titre-correction">
-      <div class="entete-panneau">
-        <div><p class="surtitre">Après la réponse</p><h2 id="titre-correction">Correction expliquée</h2></div>
-        <button class="fermer" data-action="fermer-correction" aria-label="Revenir à la question">Retour</button>
-      </div>
-      ${rendreRappelQuestion(question)}
-      ${rendreReponseEleve(question)}
-      <section class="etape-correction correction-observation">
+  const contenu = `
+    ${rendreRappelQuestion(question)}
+    ${rendreReponseEleve(question)}
+    <section class="etape-correction correction-observation">
         ${rendreEtape(1, utiliseUnite ? "Vérifier chaque unité" : "Vérifier chaque somme", utiliseUnite ? "repere-unites" : "repere-somme")}
         <div class="grille-diagnostics-nombres">
           ${question.reponse.choix.filter((choix) => choix.id.startsWith("nombre-")).map((choix) => {
@@ -806,36 +838,40 @@ function rendreCorrectionSelectionNombres(question) {
             </article>`;
           }).join("")}
         </div>
-      </section>
-      <section class="etape-correction correction-conclusion reponse-finale-correction">
+    </section>
+    <section class="etape-correction correction-conclusion reponse-finale-correction">
         ${rendreEtape(2, "Conclure", "repere-conclusion")}
         <h3>Réponse correcte</h3>${rendreReponseCorrecte(question)}
-      </section>
-    </aside>`;
+    </section>`;
+  return rendreCadrePanneau({
+    type: "correction",
+    surtitre: "Après la réponse",
+    titre: "Correction expliquée",
+    contenu,
+  });
 }
 
 function rendreCorrectionDivisibiliteGenerique(question) {
   const correction = question.correction ?? [];
-  return `
-    <div class="voile" data-action="fermer-correction" aria-hidden="true"></div>
-    <aside class="panneau panneau-correction" id="panneau-correction" role="dialog" aria-modal="true" aria-labelledby="titre-correction">
-      <div class="entete-panneau">
-        <div><p class="surtitre">Après la réponse</p><h2 id="titre-correction">Correction expliquée</h2></div>
-        <button class="fermer" data-action="fermer-correction" aria-label="Revenir à la question">Retour</button>
-      </div>
-      ${rendreRappelQuestion(question)}
-      ${rendreReponseEleve(question)}
-      ${familleQuestion(question) === "partage-court" ? rendrePlateauPartage(question, { corrige: true }) : ""}
-      <div class="correction-generique">
+  const contenu = `
+    ${rendreRappelQuestion(question)}
+    ${rendreReponseEleve(question)}
+    ${familleQuestion(question) === "partage-court" ? rendrePlateauPartage(question, { corrige: true }) : ""}
+    <div class="correction-generique">
         ${correction.map((bloc, index) => `<section class="etape-correction ${index === correction.length - 1 ? "correction-conclusion" : "correction-observation"}">
           ${rendreEtape(index + 1, index === correction.length - 1 ? "Conclure" : "Vérifier")}
           <p>${echapper(bloc.contenu)}</p>
         </section>`).join("")}
-      </div>
-      <section class="etape-correction correction-conclusion reponse-finale-correction">
+    </div>
+    <section class="etape-correction correction-conclusion reponse-finale-correction">
         <h3>Réponse correcte</h3>${rendreReponseCorrecte(question)}
-      </section>
-    </aside>`;
+    </section>`;
+  return rendreCadrePanneau({
+    type: "correction",
+    surtitre: "Après la réponse",
+    titre: "Correction expliquée",
+    contenu,
+  });
 }
 
 function rendreAideDivisibilite(question) {
@@ -861,16 +897,10 @@ function rendreAideDivisibilite(question) {
       ${chiffre}
     </button>`).join("");
   const unite = nombre.at(-1);
-  return `
-    <div class="voile" data-action="fermer-aide" aria-hidden="true"></div>
-    <aside class="panneau panneau-aide" id="panneau-aide" role="dialog" aria-modal="true" aria-labelledby="titre-aide">
-      <div class="entete-panneau">
-        <div><p class="surtitre">Aide</p><h2 id="titre-aide">Me guider</h2></div>
-        <button class="fermer" data-action="fermer-aide" aria-label="Revenir à la question">Retour</button>
-      </div>
-      ${rendreRappelQuestion(question)}
-      ${rendreAccesCoursDepuisAide()}
-      <section class="outil-aide outil-unites">
+  const contenu = `
+    ${rendreRappelQuestion(question)}
+    ${rendreAccesCoursDepuisAide()}
+    <section class="outil-aide outil-unites">
         ${rendreEtape(1, "Regarde le chiffre des unités", "repere-unites")}
         <div class="nombre-aide" aria-label="Nombre ${nombre}">
           ${nombre.slice(0, -1).split("").map((chiffre) => `<span>${chiffre}</span>`).join("")}
@@ -879,16 +909,21 @@ function rendreAideDivisibilite(question) {
         </div>
         <p class="consigne-manipulation">Appuie sur le chiffre des unités.</p>
         <p class="question-guidage">Convient-il pour 2 ? Pour 5 ? Pour 10 ?</p>
-      </section>
-      <section class="outil-aide outil-somme">
+    </section>
+    <section class="outil-aide outil-somme">
         ${rendreEtape(2, "Additionne tous les chiffres", "repere-somme")}
         <div class="chiffres-aide">${chiffresSomme}</div>
         <output class="expression-aide" aria-live="polite" aria-atomic="true">${echapper(expression)}</output>
         <p class="consigne-manipulation">Appuie sur chaque chiffre pour construire la somme.</p>
         <p class="question-guidage">La somme est-elle un multiple de 3 ? De 9 ?</p>
-      </section>
-      <p class="indication-aide">Plusieurs réponses peuvent être correctes.</p>
-    </aside>`;
+    </section>
+    <p class="indication-aide">Plusieurs réponses peuvent être correctes.</p>`;
+  return rendreCadrePanneau({
+    type: "aide",
+    surtitre: "Aide",
+    titre: "Me guider",
+    contenu,
+  });
 }
 
 function rendreCorrectionDivisibilite(question) {
@@ -904,16 +939,10 @@ function rendreCorrectionDivisibilite(question) {
   const somme = chiffres.reduce((total, chiffre) => total + Number(chiffre), 0);
   const attendus = question.reponse.attendus;
   const reponses = attendus.includes("aucun") ? ["Aucun"] : attendus;
-  return `
-    <div class="voile" data-action="fermer-correction" aria-hidden="true"></div>
-    <aside class="panneau panneau-correction" id="panneau-correction" role="dialog" aria-modal="true" aria-labelledby="titre-correction">
-      <div class="entete-panneau">
-        <div><p class="surtitre">Après la réponse</p><h2 id="titre-correction">Correction expliquée</h2></div>
-        <button class="fermer" data-action="fermer-correction" aria-label="Revenir à la question">Retour</button>
-      </div>
-      ${rendreRappelQuestion(question)}
-      ${rendreReponseEleve(question)}
-      <section class="etape-correction correction-unites">
+  const contenu = `
+    ${rendreRappelQuestion(question)}
+    ${rendreReponseEleve(question)}
+    <section class="etape-correction correction-unites">
         ${rendreEtape(1, "Regarder le chiffre des unités", "repere-unites")}
         <div class="nombre-correction" aria-label="Le chiffre des unités de ${nombre} est ${nombre.at(-1)}">
           ${chiffres.slice(0, -1).map((chiffre) => `<span>${chiffre}</span>`).join("")}
@@ -921,21 +950,26 @@ function rendreCorrectionDivisibilite(question) {
         </div>
         ${rendreVerdicts(question, [2, 5, 10])}
         <p>${echapper(question.correction[0]?.contenu ?? "")}</p>
-      </section>
-      <section class="etape-correction correction-somme">
+    </section>
+    <section class="etape-correction correction-somme">
         ${rendreEtape(2, "Additionner tous les chiffres", "repere-somme")}
         <p class="calcul-correction">${echapper(chiffres.join(" + "))} <span>=</span> <strong>${somme}</strong></p>
         ${rendreVerdicts(question, [3, 9])}
         <p>${echapper(question.correction[1]?.contenu ?? "")}</p>
-      </section>
-      <section class="etape-correction correction-conclusion">
+    </section>
+    <section class="etape-correction correction-conclusion">
         ${rendreEtape(3, "Conclure", "repere-conclusion")}
         <div class="reponses-correction" aria-label="Réponse correcte">
           ${reponses.map((reponse) => `<strong>${echapper(reponse)}</strong>`).join("")}
         </div>
         <p>${echapper(question.correction[2]?.contenu ?? "")}</p>
-      </section>
-    </aside>`;
+    </section>`;
+  return rendreCadrePanneau({
+    type: "correction",
+    surtitre: "Après la réponse",
+    titre: "Correction expliquée",
+    contenu,
+  });
 }
 
 function rendreCarteCoursDivisibilite(index) {
@@ -994,46 +1028,44 @@ function rendreCarteCoursDivisibilite(index) {
 function rendreCoursDivisibilite() {
   if (!etat.coursOuvert) return "";
   const derniere = pageCoursDivisibilite === 2;
-  return `
-    <div class="voile" data-action="fermer-cours" aria-hidden="true"></div>
-    <aside class="panneau panneau-cours panneau-cours-divisibilite" id="panneau-cours"
-      role="dialog" aria-modal="true" aria-labelledby="titre-cours">
-      <div class="entete-panneau">
-        <div><p class="surtitre">Cours · ${pageCoursDivisibilite + 1} / 3</p><h2 id="titre-cours">Les critères de divisibilité</h2></div>
-        <button class="fermer" data-action="fermer-cours" aria-label="Fermer le cours">Retour</button>
-      </div>
-      <div class="cours-une-carte" aria-live="polite">${rendreCarteCoursDivisibilite(pageCoursDivisibilite)}</div>
-      <nav class="navigation-cours" aria-label="Navigation dans le cours">
+  const contenu = `<div class="cours-une-carte" aria-live="polite">${rendreCarteCoursDivisibilite(pageCoursDivisibilite)}</div>`;
+  const pied = `<nav class="navigation-cours" aria-label="Navigation dans le cours">
         <button class="bouton-secondaire" type="button" data-action="cours-precedent" ${pageCoursDivisibilite === 0 ? "disabled" : ""}>Précédent</button>
         <div class="points-cours" aria-label="Page ${pageCoursDivisibilite + 1} sur 3">${[0, 1, 2].map((page) => `<span class="${page === pageCoursDivisibilite ? "actif" : ""}"></span>`).join("")}</div>
         <button class="bouton-principal" type="button" data-action="${derniere ? "fermer-cours" : "cours-suivant"}">${derniere ? "J’ai compris" : "Suivant"}</button>
-      </nav>
-    </aside>`;
+      </nav>`;
+  return rendreCadrePanneau({
+    type: "cours",
+    surtitre: `Cours · ${pageCoursDivisibilite + 1} / 3`,
+    titre: "Les critères de divisibilité",
+    contenu,
+    pied,
+    classes: "panneau-cours-divisibilite",
+  });
 }
 
 function rendreAideSolides(question) {
   if (!etat.aideOuverte) return "";
   const bloc = blocSolide(question);
   const indice = question.aide?.blocs?.[0]?.contenu ?? "Observe la forme du solide.";
-  return `
-    <div class="voile" data-action="fermer-aide" aria-hidden="true"></div>
-    <aside class="panneau panneau-aide panneau-solides" id="panneau-aide" aria-labelledby="titre-aide">
-      <div class="entete-panneau">
-        <h2 id="titre-aide">Observe sans deviner</h2>
-        <button class="fermer" data-action="fermer-aide" aria-label="Fermer l'aide">×</button>
-      </div>
-      ${rendreAccesCoursDepuisAide()}
-      <section class="outil-aide outil-solide">
+  const contenu = `
+    ${rendreAccesCoursDepuisAide()}
+    <section class="outil-aide outil-solide">
         ${rendreEtape(1, indice, "repere-observation")}
         ${rendreSolide(bloc, { taille: 360, manipulable: true, rotation: etat.rotationSolide })}
         ${commandesRotation()}
         <p class="consigne-manipulation">Fais glisser la figure ou utilise les boutons. Le nom n'est pas révélé.</p>
-      </section>
-      <section class="indices-aide">
+    </section>
+    <section class="indices-aide">
         <h3>Ce qu'il faut regarder</h3>
         <p>Les faces planes, les surfaces courbes et la présence éventuelle d'un sommet en pointe.</p>
-      </section>
-    </aside>`;
+    </section>`;
+  return rendreCadrePanneau({
+    type: "aide",
+    titre: "Observe sans deviner",
+    contenu,
+    classes: "panneau-solides",
+  });
 }
 
 function rendreCorrectionSolides(question) {
@@ -1041,40 +1073,30 @@ function rendreCorrectionSolides(question) {
   const bloc = blocSolide(question);
   const propriete = question.correction?.[0]?.contenu ?? "";
   const conclusion = question.correction?.[1]?.contenu ?? "";
-  return `
-    <div class="voile" data-action="fermer-correction" aria-hidden="true"></div>
-    <aside class="panneau panneau-correction panneau-solides" id="panneau-correction" aria-labelledby="titre-correction">
-      <div class="entete-panneau">
-        <h2 id="titre-correction">Correction expliquée</h2>
-        <button class="fermer" data-action="fermer-correction" aria-label="Fermer la correction">×</button>
-      </div>
-      <section class="etape-correction correction-observation">
+  const contenu = `
+    <section class="etape-correction correction-observation">
         ${rendreEtape(1, "Observer les propriétés", "repere-observation")}
         ${rendreSolide(bloc, { taille: 320, mettreBasesEnValeur: ["prisme", "cylindre"].includes(bloc.forme) })}
         <p>${echapper(propriete)}</p>
-      </section>
-      <section class="etape-correction correction-conclusion">
+    </section>
+    <section class="etape-correction correction-conclusion">
         ${rendreEtape(2, "Nommer le solide", "repere-conclusion")}
         <p class="conclusion-solide">${echapper(conclusion)}</p>
-      </section>
-    </aside>`;
+    </section>`;
+  return rendreCadrePanneau({
+    type: "correction",
+    titre: "Correction expliquée",
+    contenu,
+    classes: "panneau-solides",
+  });
 }
 
 function rendreCoursReconnaissance() {
   if (!etat.coursOuvert) return "";
-  return `
-    <div class="voile" data-action="fermer-cours" aria-hidden="true"></div>
-    <aside class="panneau panneau-cours" id="panneau-cours" aria-labelledby="titre-cours">
-      <div class="entete-panneau">
-        <div>
-          <p class="surtitre">Mémo visuel</p>
-          <h2 id="titre-cours">Les six solides à reconnaître</h2>
-        </div>
-        <button class="fermer" data-action="fermer-cours" aria-label="Fermer le cours">×</button>
-      </div>
-      <p class="introduction-cours">On reconnaît un solide grâce à ses propriétés, pas grâce à sa position sur l'écran. Tourne les figures pour le vérifier.</p>
-      ${commandesRotation()}
-      <div class="grille-cours-solides">
+  const contenu = `
+    <p class="introduction-cours">On reconnaît un solide grâce à ses propriétés, pas grâce à sa position sur l'écran. Tourne les figures pour le vérifier.</p>
+    ${commandesRotation()}
+    <div class="grille-cours-solides">
         ${COURS_SOLIDES_USUELS.map((solide) => `
           <article class="carte-cours-solide">
             <h3>${echapper(solide.nom)}</h3>
@@ -1086,23 +1108,22 @@ function rendreCoursReconnaissance() {
             })}
             <p>${echapper(solide.phrase)}</p>
           </article>`).join("")}
-      </div>
-    </aside>`;
+    </div>`;
+  return rendreCadrePanneau({
+    type: "cours",
+    surtitre: "Mémo visuel",
+    titre: "Les six solides à reconnaître",
+    contenu,
+  });
 }
 
 function rendreAideVolumes(question) {
   if (!etat.aideOuverte) return "";
   const bloc = blocSolide(question);
   const aides = question.aide?.blocs ?? [];
-  return `
-    <div class="voile" data-action="fermer-aide" aria-hidden="true"></div>
-    <aside class="panneau panneau-aide panneau-solides" id="panneau-aide" aria-labelledby="titre-aide">
-      <div class="entete-panneau">
-        <h2 id="titre-aide">Calcul guidé</h2>
-        <button class="fermer" data-action="fermer-aide" aria-label="Fermer l'aide">×</button>
-      </div>
-      ${rendreAccesCoursDepuisAide()}
-      <section class="outil-aide outil-solide">
+  const contenu = `
+    ${rendreAccesCoursDepuisAide()}
+    <section class="outil-aide outil-solide">
         ${rendreSolide(bloc, {
           taille: 300,
           manipulable: true,
@@ -1113,32 +1134,36 @@ function rendreAideVolumes(question) {
         })}
         ${rendreDonneesVolume(bloc)}
         ${commandesRotation()}
-      </section>
-      <div class="etapes-aide-volume">
+    </section>
+    <div class="etapes-aide-volume">
         ${aides.map((aide, index) => `<section class="outil-aide">
           ${rendreEtape(index + 1, aide.contenu, index === 0 ? "repere-observation" : "")}
         </section>`).join("")}
-      </div>
-    </aside>`;
+    </div>`;
+  return rendreCadrePanneau({
+    type: "aide",
+    titre: "Calcul guidé",
+    contenu,
+    classes: "panneau-solides",
+  });
 }
 
 function rendreCorrectionVolumes(question) {
   if (!etat.correctionOuverte) return "";
   const titres = ["Écrire la formule", "Remplacer par les données", "Calculer", "Conclure avec l'unité"];
-  return `
-    <div class="voile" data-action="fermer-correction" aria-hidden="true"></div>
-    <aside class="panneau panneau-correction panneau-solides" id="panneau-correction" aria-labelledby="titre-correction">
-      <div class="entete-panneau">
-        <h2 id="titre-correction">Correction expliquée</h2>
-        <button class="fermer" data-action="fermer-correction" aria-label="Fermer la correction">×</button>
-      </div>
-      <div class="etapes-correction-volume">
+  const contenu = `
+    <div class="etapes-correction-volume">
         ${question.correction.map((bloc, index) => `<section class="etape-correction ${index === 3 ? "correction-conclusion" : "correction-observation"}">
           ${rendreEtape(index + 1, titres[index], index === 3 ? "repere-conclusion" : "repere-observation")}
           <p class="ligne-calcul-volume">${echapper(bloc.contenu)}</p>
         </section>`).join("")}
-      </div>
-    </aside>`;
+    </div>`;
+  return rendreCadrePanneau({
+    type: "correction",
+    titre: "Correction expliquée",
+    contenu,
+    classes: "panneau-solides",
+  });
 }
 
 function rendreEmpilementCubes() {
@@ -1180,15 +1205,9 @@ function rendreCoursVolumes() {
       : bloc.forme === "prisme"
         ? "V = aire de la base × hauteur"
         : "V = π × rayon × rayon × hauteur";
-  return `
-    <div class="voile" data-action="fermer-cours" aria-hidden="true"></div>
-    <aside class="panneau panneau-cours" id="panneau-cours" aria-labelledby="titre-cours">
-      <div class="entete-panneau">
-        <div><p class="surtitre">Cours à comprendre</p><h2 id="titre-cours">Du cube unité à la formule</h2></div>
-        <button class="fermer" data-action="fermer-cours" aria-label="Fermer le cours">×</button>
-      </div>
-      <p class="introduction-cours">Le volume mesure la place occupée par un solide. On le mesure avec des cubes unité.</p>
-      <div class="grille-cours-volume">
+  const contenu = `
+    <p class="introduction-cours">Le volume mesure la place occupée par un solide. On le mesure avec des cubes unité.</p>
+    <div class="grille-cours-volume">
         <article class="carte-cours-solide">
           <span class="numero-cours">1</span><h3>Un cube unité</h3>
           ${rendreSolide({ forme: "cube", variante: "standard", mesures: { arete: 1, unite: "cm" }, vue: { lacetDeg: -32, tangageDeg: 18 } }, { taille: 200, afficherMesures: true })}
@@ -1210,9 +1229,14 @@ function rendreCoursVolumes() {
           <p class="formule-volume">${echapper(formule)}</p>
           <p>La vue peut changer ; la formule et le volume ne changent pas.</p>
         </article>
-      </div>
-      ${commandesRotation()}
-    </aside>`;
+    </div>
+    ${commandesRotation()}`;
+  return rendreCadrePanneau({
+    type: "cours",
+    surtitre: "Cours à comprendre",
+    titre: "Du cube unité à la formule",
+    contenu,
+  });
 }
 
 function classesLecteur() {
@@ -1246,12 +1270,22 @@ function rendrePaveMathsgo(question) {
     || etat.validation !== null
     || question.reponse.type !== TYPE_REPONSE_ENTIER_NATUREL
   ) return "";
+  const disposition = obtenirDispositionClavier("entier-naturel");
+  const touches = disposition.touches.map((touche) => {
+    const attributAction = touche.action === ACTION_TOUCHE_SAISIR
+      ? `data-action="chiffre" data-value="${echapper(touche.valeur)}"`
+      : touche.action === ACTION_TOUCHE_EFFACER
+        ? 'data-action="effacer-saisie"'
+        : touche.action === ACTION_TOUCHE_VALIDER
+          ? 'data-action="valider"'
+          : "";
+    return `<button class="${echapper(touche.classe)}" type="button" ${attributAction}
+      ${touche.ariaLabel ? `aria-label="${echapper(touche.ariaLabel)}"` : ""}>${echapper(touche.libelle)}</button>`;
+  }).join("");
   return `<section class="pave-mathsgo-dock" aria-label="Saisie de la réponse">
-    <div class="clavier-mathsgo" aria-label="Clavier chiffres">
-      ${[1, 2, 3, 4, 5, 6, 7, 8, 9].map((chiffre) => `<button type="button" data-action="chiffre" data-value="${chiffre}">${chiffre}</button>`).join("")}
-      <button class="touche-effacer" type="button" data-action="effacer-saisie" aria-label="Effacer le dernier chiffre">Effacer</button>
-      <button type="button" data-action="chiffre" data-value="0">0</button>
-      <span aria-hidden="true"></span>
+    <div class="clavier-mathsgo" data-profil="${disposition.id}"
+      style="--colonnes-clavier: ${disposition.colonnes}" aria-label="Clavier chiffres">
+      ${touches}
     </div>
   </section>`;
 }
@@ -1269,11 +1303,6 @@ function rendrePhraseStructuree(question) {
 function classeGrilleDivisibilite(question) {
   const famille = familleQuestion(question);
   if (famille === "selection-nombres") return "grille-nombres";
-  if (famille === "affirmation-divisibilite") {
-    return question.reponse.choix.length === 2
-      ? "grille-oui-non"
-      : "grille-justifications";
-  }
   if (famille === "chiffre-manquant") return "grille-chiffres";
   if (famille === "partage-court") return "grille-partage";
   if (famille === "critere-precis") return "grille-oui-non";
@@ -1304,11 +1333,6 @@ function rendreContenuQuestionDivisibilite(question) {
     return `<h1>${echapper(texteBloc(question, "consigne"))}</h1>
       <p class="precision">Plusieurs réponses peuvent être correctes.</p>`;
   }
-  if (famille === "affirmation-divisibilite") {
-    return `<h1>${echapper(texteBloc(question, "consigne"))}</h1>
-      <blockquote class="affirmation-question">${echapper(texteBloc(question, "affirmation"))}</blockquote>
-      <p class="precision">Vérifie le critère avant de choisir.</p>`;
-  }
   if (famille === "chiffre-manquant") {
     return `<h1>${echapper(texteBloc(question, "consigne"))}</h1>
       <p class="nombre-a-completer">${echapper(texteBloc(question, "nombre-a-completer"))}</p>
@@ -1325,91 +1349,82 @@ function rendreContenuQuestionDivisibilite(question) {
   return `<h1>${echapper(question.enonce[0]?.contenu ?? "Question")}</h1>`;
 }
 
-function rendreQuestionDivisibilite() {
-  const question = questionCourante(etat);
+function rendreCoqueLecteur(question, carteQuestion) {
   const entrainement = estEntrainement();
+  const paveActif = entrainement
+    && etat.validation === null
+    && question.reponse.type === TYPE_REPONSE_ENTIER_NATUREL;
   return `
-    <div class="${classesLecteur()} ${question.reponse.type === TYPE_REPONSE_ENTIER_NATUREL && etat.validation === null ? "avec-pave" : ""}">
+    <div class="${classesLecteur()} ${paveActif ? "avec-pave" : ""}">
       ${rendreEntete()}
       <div class="espace-lecteur">
-        <main class="carte-question carte-question-divisibilite famille-${echapper(familleQuestion(question))}">
-          <p class="etiquette-notion">${echapper(nomNotion())}</p>
-          ${rendreContenuQuestionDivisibilite(question)}
-          ${rendreZoneReponseDivisibilite(question)}
-          ${entrainement ? rendreZoneRetour() : '<div class="zone-retour" aria-hidden="true"></div>'}
-        </main>
+        <div class="zone-question-scroll" data-question-index="${etat.seance.etat.indexQuestion}">${carteQuestion}</div>
         ${rendreAide(question)}
         ${rendreCorrection(question)}
         ${rendreCours()}
       </div>
-      ${rendrePaveMathsgo(question)}
-      ${entrainement ? rendreBarreEleve() : rendreBarreEnseignant()}
+      <footer class="dock-question ${paveActif ? "dock-avec-pave" : ""}">
+        ${rendrePaveMathsgo(question)}
+        ${entrainement ? rendreBarreEleve(question) : rendreBarreEnseignant()}
+      </footer>
       ${rendreMenuSession()}
     </div>`;
+}
+
+function rendreQuestionDivisibilite() {
+  const question = questionCourante(etat);
+  const entrainement = estEntrainement();
+  const carteQuestion = `<main class="carte-question carte-question-divisibilite famille-${echapper(familleQuestion(question))}">
+    <p class="etiquette-notion">${echapper(nomNotion())}</p>
+    ${rendreContenuQuestionDivisibilite(question)}
+    ${rendreZoneReponseDivisibilite(question)}
+    ${entrainement ? rendreZoneRetour() : '<div class="zone-retour" aria-hidden="true"></div>'}
+  </main>`;
+  return rendreCoqueLecteur(question, carteQuestion);
 }
 
 function rendreQuestionSolides() {
   const question = questionCourante(etat);
   const bloc = blocSolide(question);
   const entrainement = estEntrainement();
-  return `
-    <div class="${classesLecteur()}">
-      ${rendreEntete()}
-      <div class="espace-lecteur">
-        <main class="carte-question carte-question-solides">
-          <p class="etiquette-notion">${echapper(nomNotion())}</p>
-          <h1>${echapper(question.enonce[0].contenu)}</h1>
-          ${rendreSolide(bloc, { taille: entrainement ? 320 : 400 })}
-          <p class="precision">${entrainement ? "Choisis une seule réponse." : "Choisissez le nom du solide."}</p>
-          <div class="grille-choix grille-solides ${entrainement ? "" : "grille-projection"}"
-            role="${entrainement ? "radiogroup" : "group"}" aria-label="Noms proposés">
-            ${rendreChoix(question)}
-          </div>
-          ${entrainement ? rendreZoneRetour() : '<div class="zone-retour" aria-hidden="true"></div>'}
-        </main>
-        ${rendreAide(question)}
-        ${rendreCorrection(question)}
-        ${rendreCours()}
-      </div>
-      ${entrainement ? rendreBarreEleve() : rendreBarreEnseignant()}
-      ${rendreMenuSession()}
-    </div>`;
+  const carteQuestion = `<main class="carte-question carte-question-solides">
+    <p class="etiquette-notion">${echapper(nomNotion())}</p>
+    <h1>${echapper(question.enonce[0].contenu)}</h1>
+    ${rendreSolide(bloc, { taille: entrainement ? 320 : 400 })}
+    <p class="precision">${entrainement ? "Choisis une seule réponse." : "Choisissez le nom du solide."}</p>
+    <div class="grille-choix grille-solides ${entrainement ? "" : "grille-projection"}"
+      role="${entrainement ? "radiogroup" : "group"}" aria-label="Noms proposés">
+      ${rendreChoix(question)}
+    </div>
+    ${entrainement ? rendreZoneRetour() : '<div class="zone-retour" aria-hidden="true"></div>'}
+  </main>`;
+  return rendreCoqueLecteur(question, carteQuestion);
 }
 
 function rendreQuestionVolumes() {
   const question = questionCourante(etat);
   const bloc = blocSolide(question);
   const entrainement = estEntrainement();
-  return `
-    <div class="${classesLecteur()}">
-      ${rendreEntete()}
-      <div class="espace-lecteur">
-        <main class="carte-question carte-question-solides carte-question-volumes">
-          <p class="etiquette-notion">${echapper(nomNotion())}</p>
-          <h1>${echapper(question.enonce[0].contenu)}</h1>
-          <div class="figure-et-donnees">
-            ${rendreSolide(bloc, {
-              taille: entrainement ? 290 : 360,
-              mettreBasesEnValeur: ["prisme", "cylindre"].includes(bloc.forme),
-              afficherMesures: ["cube", "pave", "cylindre"].includes(bloc.forme),
-              afficherHauteur: bloc.forme === "cylindre",
-            })}
-            ${rendreDonneesVolume(bloc)}
-          </div>
-          <p class="precision">Calcul mental, sans calculatrice. Choisis une seule réponse.</p>
-          <div class="grille-choix grille-solides grille-volumes ${entrainement ? "" : "grille-projection"}"
-            role="${entrainement ? "radiogroup" : "group"}" aria-label="Volumes proposés">
-            ${rendreChoix(question)}
-          </div>
-          ${entrainement ? rendreZoneRetour() : '<div class="zone-retour" aria-hidden="true"></div>'}
-        </main>
-        ${rendreAide(question)}
-        ${rendreCorrection(question)}
-        ${rendreCours()}
-      </div>
-      ${entrainement ? rendreBarreEleve() : rendreBarreEnseignant()}
-      ${rendreMenuSession()}
-    </div>`;
+  const carteQuestion = `<main class="carte-question carte-question-solides carte-question-volumes">
+    <p class="etiquette-notion">${echapper(nomNotion())}</p>
+    <h1>${echapper(question.enonce[0].contenu)}</h1>
+    <div class="figure-et-donnees">
+      ${rendreSolide(bloc, {
+        taille: entrainement ? 290 : 360,
+        mettreBasesEnValeur: ["prisme", "cylindre"].includes(bloc.forme),
+        afficherMesures: ["cube", "pave", "cylindre"].includes(bloc.forme),
+        afficherHauteur: bloc.forme === "cylindre",
+      })}
+      ${rendreDonneesVolume(bloc)}
+    </div>
+    <p class="precision">Calcul mental, sans calculatrice. Choisis une seule réponse.</p>
+    <div class="grille-choix grille-solides grille-volumes ${entrainement ? "" : "grille-projection"}"
+      role="${entrainement ? "radiogroup" : "group"}" aria-label="Volumes proposés">
+      ${rendreChoix(question)}
+    </div>
+    ${entrainement ? rendreZoneRetour() : '<div class="zone-retour" aria-hidden="true"></div>'}
+  </main>`;
+  return rendreCoqueLecteur(question, carteQuestion);
 }
 
 const RENDUS_COURS = Object.freeze({
@@ -1482,8 +1497,17 @@ function rendreBilan() {
     </main>`;
 }
 
-function rendre({ focusPanneau = false, focusSelector = "" } = {}) {
-  const positionPanneau = application.querySelector?.(".panneau")?.scrollTop ?? 0;
+function rendre({
+  focusPanneau = false,
+  focusSelector = "",
+  reinitialiserDefilementPanneau = false,
+} = {}) {
+  const panneauAvant = application.querySelector?.(".panneau");
+  const idPanneauAvant = panneauAvant?.id ?? "";
+  const positionPanneau = panneauAvant?.querySelector?.(".corps-panneau")?.scrollTop ?? 0;
+  const zoneQuestionAvant = application.querySelector?.(".zone-question-scroll");
+  const indexQuestionAvant = zoneQuestionAvant?.dataset?.questionIndex ?? "";
+  const positionQuestion = zoneQuestionAvant?.scrollTop ?? 0;
   const phase = etat.seance.etat.phase;
   application.innerHTML = menuAccueilOuvert
     ? rendreMenuAccueil()
@@ -1498,7 +1522,15 @@ function rendre({ focusPanneau = false, focusSelector = "" } = {}) {
     ? `Question ${etat.seance.etat.indexQuestion + 1} — Automatismes maths&go`
     : "Automatismes maths&go";
   const panneau = application.querySelector?.(".panneau");
-  if (panneau && positionPanneau > 0) panneau.scrollTop = positionPanneau;
+  const corpsPanneau = panneau?.querySelector?.(".corps-panneau");
+  const zoneQuestion = application.querySelector?.(".zone-question-scroll");
+  const doitRestaurerQuestion = zoneQuestion?.dataset?.questionIndex === indexQuestionAvant
+    && positionQuestion > 0;
+  const doitRestaurerDefilement = !reinitialiserDefilementPanneau
+    && panneau?.id === idPanneauAvant
+    && positionPanneau > 0;
+  if (doitRestaurerDefilement && corpsPanneau) corpsPanneau.scrollTop = positionPanneau;
+  if (doitRestaurerQuestion && zoneQuestion) zoneQuestion.scrollTop = positionQuestion;
   const cibleFocus = focusPanneau
     ? application.querySelector(".menu-session button, .panneau .fermer")
     : focusSelector
@@ -1511,10 +1543,16 @@ function rendre({ focusPanneau = false, focusSelector = "" } = {}) {
       cibleFocus.focus();
     }
   }
-  if (panneau) {
-    panneau.scrollTop = positionPanneau;
+  if (doitRestaurerDefilement && corpsPanneau) {
+    corpsPanneau.scrollTop = positionPanneau;
     globalThis.requestAnimationFrame?.(() => {
-      panneau.scrollTop = positionPanneau;
+      corpsPanneau.scrollTop = positionPanneau;
+    });
+  }
+  if (doitRestaurerQuestion && zoneQuestion) {
+    zoneQuestion.scrollTop = positionQuestion;
+    globalThis.requestAnimationFrame?.(() => {
+      zoneQuestion.scrollTop = positionQuestion;
     });
   }
 }
@@ -1526,6 +1564,7 @@ application.addEventListener("click", (evenement) => {
   if (action === "interieur-menu") return;
   let focusPanneau = false;
   let focusSelector = "";
+  let reinitialiserDefilementPanneau = false;
   if (action === "choisir-mode") {
     configurationMenu.mode = cible.dataset.value === "tableau" ? "tableau" : "entrainement";
   }
@@ -1615,10 +1654,12 @@ application.addEventListener("click", (evenement) => {
   }
   if (action === "cours-precedent") {
     pageCoursDivisibilite = Math.max(0, pageCoursDivisibilite - 1);
+    reinitialiserDefilementPanneau = true;
     focusSelector = '[data-action="cours-precedent"]';
   }
   if (action === "cours-suivant") {
     pageCoursDivisibilite = Math.min(2, pageCoursDivisibilite + 1);
+    reinitialiserDefilementPanneau = true;
     focusSelector = pageCoursDivisibilite === 2
       ? '[data-action="fermer-cours"].bouton-principal'
       : '[data-action="cours-suivant"]';
@@ -1646,7 +1687,7 @@ application.addEventListener("click", (evenement) => {
     });
     menuAccueilOuvert = false;
   }
-  rendre({ focusPanneau, focusSelector });
+  rendre({ focusPanneau, focusSelector, reinitialiserDefilementPanneau });
 });
 
 window.addEventListener?.("keydown", (evenement) => {

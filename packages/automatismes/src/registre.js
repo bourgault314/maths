@@ -1,16 +1,15 @@
 import { creerRegistre } from "../../moteur-exercices/src/generation.js";
-import { GENERATEUR_RECONNAISSANCE_SOLIDES } from "./espace-et-geometrie/solides-usuels/reconnaissance.js?v=11";
+import { GENERATEUR_RECONNAISSANCE_SOLIDES } from "./espace-et-geometrie/solides-usuels/reconnaissance.js?v=14";
 import {
   GENERATEUR_VOLUME_CUBE_PAVE,
   GENERATEUR_VOLUME_CYLINDRE,
   GENERATEUR_VOLUME_PRISME,
-} from "./grandeurs-et-mesures/volumes/calcul-volumes.js?v=11";
-import { GENERATEUR_AFFIRMATION_DIVISIBILITE } from "./nombres-et-calculs/criteres-divisibilite/affirmation-divisibilite.js?v=11";
-import { GENERATEUR_CHIFFRE_MANQUANT } from "./nombres-et-calculs/criteres-divisibilite/chiffre-manquant.js?v=11";
-import { GENERATEUR_CRITERE_PRECIS } from "./nombres-et-calculs/criteres-divisibilite/critere-precis.js?v=11";
-import { GENERATEUR_PARTAGE_COURT } from "./nombres-et-calculs/criteres-divisibilite/partage-court.js?v=11";
-import { GENERATEUR_SELECTION_DIVISEURS } from "./nombres-et-calculs/criteres-divisibilite/selection-diviseurs.js?v=11";
-import { GENERATEUR_SELECTION_NOMBRES } from "./nombres-et-calculs/criteres-divisibilite/selection-nombres.js?v=11";
+} from "./grandeurs-et-mesures/volumes/calcul-volumes.js?v=14";
+import { GENERATEUR_CHIFFRE_MANQUANT } from "./nombres-et-calculs/criteres-divisibilite/chiffre-manquant.js?v=14";
+import { GENERATEUR_CRITERE_PRECIS } from "./nombres-et-calculs/criteres-divisibilite/critere-precis.js?v=14";
+import { GENERATEUR_PARTAGE_COURT } from "./nombres-et-calculs/criteres-divisibilite/partage-court.js?v=14";
+import { GENERATEUR_SELECTION_DIVISEURS } from "./nombres-et-calculs/criteres-divisibilite/selection-diviseurs.js?v=14";
+import { GENERATEUR_SELECTION_NOMBRES } from "./nombres-et-calculs/criteres-divisibilite/selection-nombres.js?v=14";
 
 /**
  * Crée le registre des seuls générateurs pédagogiques V2 déjà construits.
@@ -21,7 +20,6 @@ export function creerRegistreAutomatismes() {
   registre.enregistrer(GENERATEUR_CRITERE_PRECIS);
   registre.enregistrer(GENERATEUR_SELECTION_DIVISEURS);
   registre.enregistrer(GENERATEUR_SELECTION_NOMBRES);
-  registre.enregistrer(GENERATEUR_AFFIRMATION_DIVISIBILITE);
   registre.enregistrer(GENERATEUR_CHIFFRE_MANQUANT);
   registre.enregistrer(GENERATEUR_PARTAGE_COURT);
   registre.enregistrer(GENERATEUR_RECONNAISSANCE_SOLIDES);

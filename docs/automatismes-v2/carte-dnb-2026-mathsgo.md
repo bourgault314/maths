@@ -1,11 +1,11 @@
 # Carte des automatismes DNB 2026 - maths&go V2
 
-**Statut : carte arrêtée et ordre de fabrication validé, 19 juillet 2026.**  
+**Statut : carte de couverture arrêtée le 19 juillet 2026 ; granularité produit clarifiée le 6 août 2026.**
 **Périmètre : partie Automatismes du DNB, sans code de question.**
 
 ## 1. Sources et règles de lecture
 
-Source principale : [liste indicative officielle DNB 2026](https://www.education.gouv.fr/sites/default/files/2025-10/dnb-2026-liste-indicative-d-automatismes-susceptibles-d-tre-mobilis-s-lors-de-l-preuve-crite-de-math-matiques-s-ries-g-n-rale-et-professionnelle--442401.pdf), publiée en octobre 2025 pour les séries générale et professionnelle.
+Source principale : [liste indicative officielle DNB 2026](https://eduscol.education.gouv.fr/sites/default/files/document/liste-indicative-dautomatismes-pour-le-dnbpdf-116340.pdf), publiée en octobre 2025 pour les séries générale et professionnelle.
 
 Sources secondaires du dépôt :
 
@@ -15,9 +15,8 @@ Sources secondaires du dépôt :
 - `docs/reference-matrice-automatismes/matrice.json` pour les correspondances avec les nouveaux programmes ;
 - `packages/objets/src/references-programme.js` pour les objets maths&go candidats.
 
-Le PDF présente 38 occurrences de puces, mais répète exactement la ligne sur le
-périmètre d'un polygone ou d'un disque. Il contient donc **37 cibles officielles
-distinctes**. Une cible associe deux savoir-faire de domaines différents :
+Le PDF canonique actuellement relié par Éduscol présente **37 cibles
+officielles**. Une cible associe deux savoir-faire de domaines différents :
 prendre une fraction d'une quantité et calculer un pourcentage repère. Elle est
 scindée pour la fabrication. La carte maths&go comporte ainsi **38 cibles
 normalisées**.
@@ -64,8 +63,6 @@ identifiants de source V2.
 | G-11 | Situation, rapports et contrôle critique pour Thalès |
 | G-12 | Situation, rapport et contrôle critique pour le cosinus |
 | G-13 | Propriétés des symétries axiale et centrale et de la translation |
-
-Le PDF répète `G-07` une seconde fois ; la matrice ne le compte qu'une fois.
 
 ### Organisation et gestion de données et probabilités - 5 cibles
 
@@ -116,10 +113,12 @@ le cosinus, les fonctions et la pensée informatique sont bien dans la liste
 DNB, même lorsqu'ils ne figurent pas sous un intertitre « Automatismes » du
 nouveau programme.
 
-Toutes les lignes V2 restent actuellement `a_faire` au sens de l'avancement du
-produit : aucun générateur pédagogique n'est encore construit. La fiche de
-`NC-01` est toutefois validée et sa fabrication technique est autorisée ; elle
-est la seule micro-notion active.
+La carte sépare désormais quatre niveaux : cible officielle, catégorie visible,
+micro-notion interne et famille de questions. Les 88 micro-notions sont des
+unités de fabrication et de suivi ; elles ne préfigurent pas 88 questionnaires
+dans le menu. Une catégorie visible peut regrouper plusieurs micro-notions
+proches. `NC-01` est validée ; les autres lignes restent inchangées tant que
+leur fiche n'est pas ouverte.
 
 | Repère | Cible normalisée | Domaine | Micro-notions | Nouveaux BO correspondants | V2 |
 |---|---|---:|---|---|---|
@@ -131,7 +130,7 @@ est la seule micro-notion active.
 | DNB26-06 | Écrire un nombre sous plusieurs formes | 1 | NC-05 | 5-19 | `a_faire` |
 | DNB26-07 | Passer à la notation scientifique | 1 | NC-17 | 3-02 partiel ; pas d'équivalent direct | `a_faire` |
 | DNB26-08 | Connaître les carrés de 1 à 12 | 1 | NC-02 | 4-11, 4-15, 3-05 | `a_faire` |
-| DNB26-09 | Appliquer les critères de divisibilité | 1 | NC-01 | 5-01, 3-09 | `a_faire` |
+| DNB26-09 | Appliquer les critères de divisibilité | 1 | NC-01 | 5-01, 3-09 | `valide` |
 | DNB26-10 | Exprimer des relations simples avec `n` | 2 | AL-01 à AL-03 | 4-20, 3-15 partiel | `a_faire` |
 | DNB26-11 | Simplifier une expression littérale | 2 | AL-04 à AL-05 | 4-18, 4-19, 3-11, 3-16 | `a_faire` |
 | DNB26-12 | Calculer la valeur d'une expression | 2 | AL-06, AL-12 | 4-16, 4-21, 3-12 | `a_faire` |
@@ -298,15 +297,20 @@ doctrine du dépôt. Elles devront cependant être auditées pour leur adéquati
 exacte à chaque fiche. Elles ne fournissent automatiquement ni énoncés, ni
 valeurs, ni générateurs à V2.
 
-## 7. Première étape autorisée
+## 7. Première étape achevée
 
 La première micro-notion est `NC-01`, « critères de divisibilité par 2, 3, 5,
 9 et 10 ». Le critère par 10 est un complément maths&go assumé, y compris dans
 le parcours DNB ; il ne modifie pas la liste officielle.
 
-La fiche pédagogique, le mini-cours, les six familles et l'ordre de fabrication
-interne ont été validés par Gwenaël le 19 juillet 2026. La prochaine production
-est la première tranche technique `NC-01/F2` : contrats minimaux, générateur
-seedé, tests, lecteur interactif et projection. Aucune autre micro-notion ne
-s'ouvre avant la validation finale de `NC-01`.
+La fiche pédagogique, le mini-cours et les cinq familles actives ont été
+validés puis finalisés avec Gwenaël. `F4` et la sous-forme de partage « groupes
+possibles » ont été retirées. Le lecteur commun, les générateurs seedés, les
+tests, l'entraînement et le contexte « Au tableau » sont construits.
+
+`NC-02`, les carrés des entiers de 1 à 12, est la prochaine micro-notion. Avant
+sa fabrication, sa fiche précisera ses familles sans créer une nouvelle entrée
+de menu par sens de question. De même, `NC-03` et `NC-04` restent distinctes en
+interne mais formeront une seule catégorie visible « Fractions simples et
+décimaux ».
 

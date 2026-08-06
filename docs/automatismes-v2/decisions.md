@@ -315,3 +315,40 @@ Dans le cours et la correction, le chiffre des unités et chaque chiffre utilis�
 pour une somme sont encadrés et centrés. Les égalités des deux partages sont
 placées sous le schéma correspondant, avec une conclusion explicite reliée à la
 valeur du reste.
+
+### D-033 — Le moule commun et F6 sont stabilisés avant NC-02
+
+Cette décision remplace le dernier paragraphe de D-029. F6 ne conserve que deux
+sous-formes : répondre Oui/Non pour un nombre de groupes donné et trouver le
+retrait minimal lorsque le partage n'est pas exact. La sélection de tous les
+nombres de groupes possibles est supprimée : elle mélangeait deux tâches dans
+une même question. Lorsque deux F6 figurent dans une série, les deux sous-formes
+sont représentées ; avec une seule F6, la forme Oui/Non est retenue.
+
+Le lecteur commun possède désormais trois zones : un en-tête stable, un contenu
+central défilable et un pied de commandes stable. Les panneaux de cours, d'aide
+et de correction utilisent la même coque avec en-tête et navigation toujours
+accessibles. Le contenu d'une future notion ne redéfinit donc ni les dimensions
+de l'écran, ni la place des commandes.
+
+Sur écran tactile, le pavé maths&go utilise des profils contextuels et place
+« Valider » dans sa dernière rangée. Le profil de NC-01 n'affiche que les
+chiffres et « Effacer » ; les profils futurs prévoient notamment la virgule et
+le signe moins sans les montrer lorsqu'ils sont inutiles. Sur ordinateur étroit
+muni d'un clavier et d'une souris, le pavé reste masqué. « Aide » demeure dans
+l'en-tête et toutes les cibles tactiles utiles mesurent au moins 44 pixels.
+
+### D-034 — La couverture, le menu et la fabrication ont des granularités distinctes
+
+La liste officielle, les catégories visibles, les micro-notions internes et les
+familles de questions ne sont pas le même niveau de découpage. Les 37 lignes
+officielles servent à prouver la couverture ; les 88 micro-notions servent à
+fabriquer, tester et suivre des générateurs précis ; elles ne deviendront pas
+88 entrées de menu.
+
+Une catégorie visible peut regrouper plusieurs micro-notions proches et proposer
+une série mélangée, tout en conservant des filtres plus fins. En particulier,
+`NC-03` et `NC-04` restent deux unités internes pour distinguer les deux sens de
+conversion, mais appartiendront à une même catégorie visible « Fractions
+simples et décimaux ». Les familles directes et inverses de `NC-02` restent,
+elles, dans une seule micro-notion.

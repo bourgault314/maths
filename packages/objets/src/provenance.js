@@ -211,10 +211,6 @@ export const PROVENANCE_FONDATION_V2 = Object.freeze({
     statut: "original_mathsgo",
     source: "fiche NC-01/F3 validée par Gwenaël le 19 juillet 2026",
   },
-  "packages/automatismes/src/nombres-et-calculs/criteres-divisibilite/affirmation-divisibilite.js": {
-    statut: "original_mathsgo",
-    source: "fiche NC-01/F4 validée par Gwenaël le 19 juillet 2026",
-  },
   "packages/automatismes/src/nombres-et-calculs/criteres-divisibilite/chiffre-manquant.js": {
     statut: "original_mathsgo",
     source: "fiche NC-01/F5 validée par Gwenaël le 19 juillet 2026",
