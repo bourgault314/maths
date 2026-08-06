@@ -188,3 +188,167 @@ explicite, jamais par un branchement implicite vers une notion par défaut. Une
 interaction réservée aux chiffres ou aux solides est bloquée pour les autres
 familles. Cette architecture précède toute nouvelle micro-notion et ne modifie
 pas le contenu pédagogique déjà validé.
+
+## 5 août 2026
+
+### D-025 — Une trame pédagogique commune, adaptée à chaque notion
+
+Les nouvelles notions suivent « Je montre → Nous faisons → Tu fais accompagné
+→ Tu fais seul → correction immédiate puis réactivation ». Le cours montre la
+méthode, « Me guider » oriente sans répondre et la correction explique. Une
+manipulation n'est construite que lorsqu'elle apporte un sens mathématique
+identifiable ; elle n'est jamais ajoutée pour remplir une case d'interface.
+
+Le gabarit versionné `gabarit-fiche-pedagogique.md` rend cette trame obligatoire
+à la conception, sans imposer les six familles particulières de NC-01 aux
+autres notions.
+
+### D-026 — Deux contextes visibles : S'entraîner et Au tableau
+
+Le lanceur V2 expose uniquement **S'entraîner** et **Au tableau**. Les libellés
+historiques « Interactif » et « Diaporama » ne sont plus des produits visibles.
+Le principe de D-018 reste acquis : une même question structurée alimente les
+deux contextes et le lecteur choisit sa présentation.
+
+En entraînement, l'aide est accessible pendant la série. Le futur mode examen,
+le chronomètre, le partage par code et la collecte de résultats restent hors du
+périmètre actuel et n'apparaissent pas dans le menu.
+
+### D-027 — Le lanceur V2 reprend la coque validée de `/auto/`
+
+Le menu V2 reprend la coque visuelle minimaliste actuellement publiée sur
+`/auto/` : en-tête, cartes numérotées, contrôles segmentés, domaines repliables,
+icônes et barre basse orange. Il ne reprend ni le moteur V1, ni MG1, ni son
+catalogue, ni ses crédits.
+
+Le catalogue V2 possède six domaines :
+
+1. Nombres et calculs ;
+2. Calcul littéral et algèbre ;
+3. Proportionnalité, fonctions et grandeurs ;
+4. Espace et géométrie ;
+5. Données, statistiques et probabilités ;
+6. Pensée informatique.
+
+Seuls les domaines contenant au moins une notion V2 explicitement ouverte à
+l'essai sont affichés. Au 5 août, seul **Nombres et calculs**, avec NC-01, est
+visible. Les autres domaines et leurs futures icônes restent absents tant
+qu'ils sont vides.
+
+## 6 août 2026
+
+### D-028 — Le contexte DNB sans calculatrice reste visible
+
+Le lanceur V2 affiche en permanence la calculatrice barrée de la coque validée,
+à gauche du bouton de lancement. Ce repère n'est ni un réglage ni un mode : la
+phase V2 actuelle est entièrement consacrée à l'épreuve DNB sans calculatrice.
+Il reste donc visible dans **S'entraîner** comme dans **Au tableau**, y compris
+sur téléphone, avec un libellé accessible explicite.
+
+### D-029 — NC-01 conserve cinq familles actives et reste simple
+
+Cette décision remplace la partie de D-016 qui annonçait six familles actives.
+`F4`, fondée sur des phrases, du vrai/faux et des justifications, est retirée de
+la série standard : elle ajoutait surtout de la lecture et du vocabulaire
+logique à l'automatisme central. Les identifiants ne sont pas renumérotés ; les
+familles actives sont `F1`, `F2`, `F3`, `F5` et `F6`.
+
+Les quotas pour 5, 10, 15 et 20 questions sont respectivement
+`1/2/1/0/1`, `2/3/2/1/2`, `3/4/3/2/3` et `4/5/4/3/4` dans cet ordre de
+familles. Le cas « Aucun » appartient toujours aux sélections, mais il apparaît
+naturellement : aucune série n'est artificiellement obligée de le contenir.
+
+Lorsque la série contient au moins deux situations F6, une question Oui/Non de
+partage est garantie et les autres alternent entre choix des groupes possibles
+et retrait minimal. Avec une seule F6, les trois sous-formes restent possibles.
+
+### D-030 — Le départ, le cours, l'aide et le bilan de NC-01 sont allégés
+
+L'écran prêt montre seulement le contexte brevet, le titre, la notion, le
+nombre de questions, « Voir le cours » et « Commencer ». Il ne répète plus les
+règles de divisibilité.
+
+Le cours possède trois pages : reste nul ; chiffre des unités pour 2, 5 et 10 ;
+somme de tous les chiffres pour 3 et 9. La page d'implications disparaît, les
+règles complètes précèdent les exemples et toutes les pièces des schémas en
+barres sont rectangulaires.
+
+L'aide F2 comporte deux étapes autonomes. Chaque clic conserve le défilement et
+le focus sans saut ; la somme n'est affichée qu'après la sélection de tous les
+chiffres. Sur ordinateur avec souris et clavier, le pavé interne est masqué et
+le clavier physique est utilisé. Il reste affiché sur les appareils tactiles,
+y compris les hybrides et TNI.
+
+Le bilan propose au maximum trois actions : générer une **Nouvelle série** avec
+les mêmes critères, **Refaire la même série**, ou **Choisir une autre série**.
+
+### D-031 — GitHub est la source et Sites est l'aperçu avant publication
+
+La branche de la PR #278 reste la source durable de la candidate. Le site
+ChatGPT ne contient qu'un miroir d'essai vérifié de ce commit. Chaque révision
+est d'abord enregistrée et testée sur la PR, puis montrée à Gwenaël sur le site
+d'essai.
+
+Après validation explicite seulement, la PR peut être fusionnée. GitHub Pages
+publie alors la route existante `/automatismes-v2/`, laissée hors de la
+navigation et du plan du site avec `noindex,nofollow` pendant le pilote.
+`/auto/` reste indépendant et doit être vérifié après chaque publication. Un
+lien non référencé n'étant pas un contrôle d'accès, le site ChatGPT reste le
+support approprié lorsqu'une vraie confidentialité est nécessaire.
+
+### D-032 — Les dernières finitions de NC-01 réduisent la charge visuelle
+
+La famille F3 propose quatre nombres au lieu de six. Cette réduction conserve
+la variété et le cas naturel « Aucun », mais évite de demander jusqu'à six
+sommes de chiffres dans une seule question.
+
+Les questions Oui/Non n'ajoutent plus la consigne redondante « Choisis Oui ou
+Non ». Le bouton « Valider » reste séparé des réponses pour prévenir les appuis
+accidentels et garder le même geste dans toutes les familles à choix.
+
+Sur ordinateur avec clavier et souris, l'élève utilise le clavier physique. Sur
+téléphone, tablette, appareil hybride ou TNI tactile, le pavé maths&go est placé
+dans un bandeau sous la carte et au-dessus des actions : il n'agrandit plus la
+carte de question et le clavier système mobile ne s'ouvre pas.
+
+Dans le cours et la correction, le chiffre des unités et chaque chiffre utilisé
+pour une somme sont encadrés et centrés. Les égalités des deux partages sont
+placées sous le schéma correspondant, avec une conclusion explicite reliée à la
+valeur du reste.
+
+### D-033 — Le moule commun et F6 sont stabilisés avant NC-02
+
+Cette décision remplace le dernier paragraphe de D-029. F6 ne conserve que deux
+sous-formes : répondre Oui/Non pour un nombre de groupes donné et trouver le
+retrait minimal lorsque le partage n'est pas exact. La sélection de tous les
+nombres de groupes possibles est supprimée : elle mélangeait deux tâches dans
+une même question. Lorsque deux F6 figurent dans une série, les deux sous-formes
+sont représentées ; avec une seule F6, la forme Oui/Non est retenue.
+
+Le lecteur commun possède désormais trois zones : un en-tête stable, un contenu
+central défilable et un pied de commandes stable. Les panneaux de cours, d'aide
+et de correction utilisent la même coque avec en-tête et navigation toujours
+accessibles. Le contenu d'une future notion ne redéfinit donc ni les dimensions
+de l'écran, ni la place des commandes.
+
+Sur écran tactile, le pavé maths&go utilise des profils contextuels et place
+« Valider » dans sa dernière rangée. Le profil de NC-01 n'affiche que les
+chiffres et « Effacer » ; les profils futurs prévoient notamment la virgule et
+le signe moins sans les montrer lorsqu'ils sont inutiles. Sur ordinateur étroit
+muni d'un clavier et d'une souris, le pavé reste masqué. « Aide » demeure dans
+l'en-tête et toutes les cibles tactiles utiles mesurent au moins 44 pixels.
+
+### D-034 — La couverture, le menu et la fabrication ont des granularités distinctes
+
+La liste officielle, les catégories visibles, les micro-notions internes et les
+familles de questions ne sont pas le même niveau de découpage. Les 37 lignes
+officielles servent à prouver la couverture ; les 88 micro-notions servent à
+fabriquer, tester et suivre des générateurs précis ; elles ne deviendront pas
+88 entrées de menu.
+
+Une catégorie visible peut regrouper plusieurs micro-notions proches et proposer
+une série mélangée, tout en conservant des filtres plus fins. En particulier,
+`NC-03` et `NC-04` restent deux unités internes pour distinguer les deux sens de
+conversion, mais appartiendront à une même catégorie visible « Fractions
+simples et décimaux ». Les familles directes et inverses de `NC-02` restent,
+elles, dans une seule micro-notion.

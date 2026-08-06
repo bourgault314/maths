@@ -1,6 +1,6 @@
 # Pilotage d'Automatismes maths&go V2
 
-**Document opérationnel de référence — 20 juillet 2026.**
+**Document opérationnel de référence — mis à jour le 5 août 2026.**
 
 Ce document fixe le cadre du chantier. Une instruction explicite plus récente
 de Gwenaël peut le modifier ; la décision doit alors être consignée dans
@@ -59,6 +59,13 @@ décider de le reprendre : c'est seulement le poser sur la table.
 - le principe d'identifiants stables, avec de nouveaux identifiants maths&go ;
 - la doctrine de provenance.
 
+L'inventaire technique durable de l'ancien travail est tenu dans
+[`inventaire-auto-studio.md`](inventaire-auto-studio.md). Avant d'ouvrir la
+fabrication d'une notion, le chef de projet vérifie d'abord les fondations V2,
+puis les composants techniques correspondants de cet inventaire. Cette étape
+évite de refaire un objet acquis sans transformer l'archive en source de
+questions.
+
 Les visuels, les aides, le diaporama et l'interface mobile de la bêta sont des
 créations de Gwenaël. Leur propriété est acquise, mais leur présence et leur
 design dans V2 seront décidés au besoin. L'interface, les couleurs et
@@ -97,6 +104,29 @@ utilisé pour désigner l'examen ou un parcours destiné au brevet.
 
 Une seule notion est active à la fois. Aucun répertoire de contenu réel n'est
 préparé en masse.
+
+## Modèle pédagogique commun
+
+Chaque notion part du gabarit
+[`gabarit-fiche-pedagogique.md`](gabarit-fiche-pedagogique.md). La progression
+commune est :
+
+1. **Je montre** — le cours explicite la méthode, une idée à la fois ;
+2. **Nous faisons** — l'élève réalise les étapes avec un guidage visible ;
+3. **Tu fais accompagné** — « Me guider » reste accessible sans conclure à sa
+   place ;
+4. **Tu fais seul** — l'étayage s'efface, sans changer artificiellement de
+   difficulté ;
+5. **Correction immédiate et explicite**, puis réactivation ultérieure.
+
+Le cours, « Me guider » et la correction ont trois fonctions distinctes. Une
+manipulation n'est ajoutée que si le geste rend un objet, une relation ou une
+procédure mathématique réellement perceptible. Un clic décoratif ou une
+manipulation qui mime la tâche sans aider à raisonner est écarté.
+
+Cette trame est réutilisable, pas mécanique : chaque fiche explique ce que
+signifient concrètement ses cinq temps pour la notion concernée et peut justifier
+qu'un temps soit très court ou qu'aucune manipulation séparée ne soit utile.
 
 ## Deux statuts indépendants
 
@@ -190,5 +220,6 @@ La mémoire d'une conversation n'est jamais la référence. À chaque reprise :
 2. lire le présent document ;
 3. lire `etat.md` et vérifier que son commit de référence correspond à GitHub ;
 4. lire les dernières décisions ;
-5. annoncer la prochaine action avant de modifier le dépôt ;
-6. mettre à jour `etat.md` avant de terminer une étape ou une pull request.
+5. lire l'inventaire `auto` / `studio` ;
+6. annoncer la prochaine action avant de modifier le dépôt ;
+7. mettre à jour `etat.md` avant de terminer une étape ou une pull request.

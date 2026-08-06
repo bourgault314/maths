@@ -7,8 +7,9 @@
 import { estDonneePure, estIdentifiantValide } from "./gabarit.js";
 import {
   TYPE_REPONSE_CHOIX_UNIQUE,
+  TYPE_REPONSE_ENTIER_NATUREL,
   TYPE_REPONSE_SELECTION_MULTIPLE,
-} from "./question-v2.js?v=6";
+} from "./question-v2.js?v=14";
 
 export const SCHEMA_TRACE_REPONSE = "mathsgo.trace-reponse/1";
 
@@ -80,13 +81,27 @@ export function validerTraceReponse(trace) {
   if (typeof t.reponse !== "object" || t.reponse === null) {
     erreurs.push("reponse : objet attendu");
   } else {
-    validerClesConnues(t.reponse, ["type", "choix"], "reponse", erreurs);
-    if (![TYPE_REPONSE_SELECTION_MULTIPLE, TYPE_REPONSE_CHOIX_UNIQUE].includes(t.reponse.type)) {
+    const typeChoix = [
+      TYPE_REPONSE_SELECTION_MULTIPLE,
+      TYPE_REPONSE_CHOIX_UNIQUE,
+    ].includes(t.reponse.type);
+    const typeEntier = t.reponse.type === TYPE_REPONSE_ENTIER_NATUREL;
+    validerClesConnues(
+      t.reponse,
+      typeEntier ? ["type", "valeur"] : ["type", "choix"],
+      "reponse",
+      erreurs,
+    );
+    if (!typeChoix && !typeEntier) {
       erreurs.push(
-        `reponse.type : « ${TYPE_REPONSE_SELECTION_MULTIPLE} » ou « ${TYPE_REPONSE_CHOIX_UNIQUE} » attendu`,
+        `reponse.type : « ${TYPE_REPONSE_SELECTION_MULTIPLE} », « ${TYPE_REPONSE_CHOIX_UNIQUE} » ou « ${TYPE_REPONSE_ENTIER_NATUREL} » attendu`,
       );
     }
-    if (!Array.isArray(t.reponse.choix) || t.reponse.choix.length === 0) {
+    if (typeEntier) {
+      if (!Number.isSafeInteger(t.reponse.valeur) || t.reponse.valeur < 0) {
+        erreurs.push("reponse.valeur : entier naturel requis");
+      }
+    } else if (!Array.isArray(t.reponse.choix) || t.reponse.choix.length === 0) {
       erreurs.push("reponse.choix : sélection non vide requise");
     } else {
       if (t.reponse.choix.some((id) => !estIdentifiantValide(id))) {

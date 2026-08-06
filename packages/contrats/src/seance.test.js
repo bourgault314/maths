@@ -8,7 +8,7 @@ const seancePrete = () => ({
   id: "seance.fixture@1",
   contexte: "parcours-dnb",
   selection: ["criteres-divisibilite"],
-  mode: "interactif",
+  mode: "entrainement",
   nombreQuestions: 3,
   aide: "disponible",
   graine: "fixture-1",

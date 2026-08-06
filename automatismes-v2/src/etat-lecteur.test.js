@@ -3,12 +3,14 @@ import { describe, it } from "node:test";
 
 import { validerSeance } from "../../packages/contrats/src/seance.js";
 import { validerTraceReponse } from "../../packages/contrats/src/trace-reponse.js";
+import { TYPE_REPONSE_ENTIER_NATUREL } from "../../packages/contrats/src/question-v2.js";
 import {
   basculerChiffreAide,
   basculerChoix,
   basculerUniteAide,
   creerEtatLecteur,
   demarrer,
+  effacerSaisie,
   lireConfiguration,
   nombreReussites,
   NOTION_SOLIDES_USUELS,
@@ -22,6 +24,7 @@ import {
   questionCourante,
   recommencer,
   revelerReponse,
+  saisirChiffre,
   tournerSolide,
   validerSelection,
 } from "./etat-lecteur.js";
@@ -30,26 +33,56 @@ function etatDemarre(configuration = {}) {
   return demarrer(creerEtatLecteur({ nombreQuestions: 3, ...configuration }));
 }
 
+function etatSurQuestionNumerique() {
+  for (let indexGraine = 0; indexGraine < 100; indexGraine += 1) {
+    const etat = etatDemarre({
+      graine: `numerique-${indexGraine}`,
+      nombreQuestions: 10,
+    });
+    const index = etat.questions.findIndex(
+      (question) => question.reponse.type === TYPE_REPONSE_ENTIER_NATUREL,
+    );
+    if (index !== -1) {
+      etat.seance.etat.indexQuestion = index;
+      return etat;
+    }
+  }
+  throw new Error("fixture : aucune question numérique NC-01 générée");
+}
+
+function etatSurFamille(famille, graine = `fixture-${famille}`) {
+  const etat = etatDemarre({ graine, nombreQuestions: 10 });
+  const index = etat.questions.findIndex(
+    (question) => question.classement.famille === famille,
+  );
+  if (index === -1) throw new Error(`fixture : famille absente ${famille}`);
+  etat.seance.etat.indexQuestion = index;
+  return etat;
+}
+
 describe("configuration du lecteur", () => {
-  it("prépare par défaut une séance interactive de dix questions", () => {
+  it("prépare par défaut une séance d'entraînement de dix questions", () => {
     const etat = creerEtatLecteur();
-    assert.equal(etat.seance.mode, "interactif");
+    assert.equal(etat.seance.mode, "entrainement");
     assert.equal(etat.seance.nombreQuestions, 10);
     assert.equal(etat.seance.etat.phase, "prete");
     assert.deepEqual(validerSeance(etat.seance), { valide: true, erreurs: [] });
   });
 
-  it("lit les réglages utiles de l'URL et accepte le mot projection", () => {
+  it("normalise les anciens mots d'URL vers les deux contextes visibles", () => {
     assert.deepEqual(
       lireConfiguration("?mode=projection&aide=ouverte&questions=7&graine=classe-5e"),
       {
-        mode: "diaporama",
+        mode: "tableau",
         aide: "ouverte",
         nombreQuestions: 7,
         graine: "classe-5e",
         notion: "criteres-divisibilite",
       },
     );
+    assert.equal(lireConfiguration("?mode=interactif").mode, "entrainement");
+    assert.equal(lireConfiguration("?mode=diaporama").mode, "tableau");
+    assert.equal(lireConfiguration("?mode=classe").mode, "tableau");
   });
 
   it("ignore un nombre de questions invalide dans l'URL", () => {
@@ -155,7 +188,7 @@ describe("démarrage et génération", () => {
 
 describe("réponse interactive", () => {
   it("rend Aucun exclusif des autres choix", () => {
-    const etat = etatDemarre();
+    const etat = etatSurFamille("selection-diviseurs");
     basculerChoix(etat, "2");
     basculerChoix(etat, "5");
     assert.deepEqual(etat.selection, ["2", "5"]);
@@ -189,7 +222,7 @@ describe("réponse interactive", () => {
   });
 
   it("fige la sélection après validation", () => {
-    const etat = etatDemarre();
+    const etat = etatSurFamille("selection-diviseurs");
     basculerChoix(etat, "aucun");
     validerSelection(etat);
     basculerChoix(etat, "2");
@@ -197,7 +230,7 @@ describe("réponse interactive", () => {
   });
 
   it("mémorise que l'aide a été consultée", () => {
-    const etat = etatDemarre({ aide: "disponible" });
+    const etat = etatSurFamille("selection-diviseurs");
     ouvrirAide(etat);
     basculerUniteAide(etat);
     basculerChiffreAide(etat, 0);
@@ -208,16 +241,53 @@ describe("réponse interactive", () => {
     assert.deepEqual(etat.chiffresSomme, [0]);
   });
 
+  it("utilise aussi le total du partage comme source de l'outil d'aide F6", () => {
+    let etat;
+    let index = -1;
+    for (let tentative = 0; tentative < 40 && index === -1; tentative += 1) {
+      etat = etatDemarre({
+        graine: `aide-partage-somme-${tentative}`,
+        nombreQuestions: 20,
+      });
+      index = etat.questions.findIndex((question) =>
+        question.classement.famille === "partage-court" &&
+        question.aide.outils.some((outil) => outil.type === "composer-somme-chiffres"),
+      );
+    }
+    assert.ok(etat);
+    assert.notEqual(index, -1, "aucun partage par 3 ou 9 trouvé dans les graines de test");
+    etat.seance.etat.indexQuestion = index;
+    ouvrirAide(etat);
+    basculerChiffreAide(etat, 0);
+    assert.deepEqual(etat.chiffresSomme, [0]);
+  });
+
   it("n'ouvre jamais une aide rendue indisponible", () => {
     const etat = etatDemarre({ aide: "indisponible" });
     ouvrirAide(etat);
     assert.equal(etat.aideOuverte, false);
     assert.equal(etat.aideConsultee, false);
   });
+
+  it("saisit, efface et trace une réponse numérique avec le clavier maths&go", () => {
+    const etat = etatSurQuestionNumerique();
+    const attendu = questionCourante(etat).reponse.attendu;
+    saisirChiffre(etat, (attendu + 1) % 10);
+    effacerSaisie(etat);
+    assert.equal(etat.saisie, "");
+    saisirChiffre(etat, attendu);
+    validerSelection(etat);
+    assert.deepEqual(etat.validation, { juste: true });
+    assert.deepEqual(etat.traces[0].reponse, {
+      type: TYPE_REPONSE_ENTIER_NATUREL,
+      valeur: attendu,
+    });
+    assert.deepEqual(validerTraceReponse(etat.traces[0]), { valide: true, erreurs: [] });
+  });
 });
 
 describe("enchaînement de la séance", () => {
-  it("exige une validation avant de passer à la suite en interactif", () => {
+  it("exige une validation avant de passer à la suite en entraînement", () => {
     const etat = etatDemarre();
     passerQuestionSuivante(etat);
     assert.equal(etat.seance.etat.indexQuestion, 0);
@@ -237,17 +307,17 @@ describe("enchaînement de la séance", () => {
   });
 
   it("repart sur un écran prêt avec la même configuration", () => {
-    const etat = etatDemarre({ mode: "diaporama", aide: "ouverte" });
+    const etat = etatDemarre({ mode: "tableau", aide: "ouverte" });
     const nouveau = recommencer(etat);
     assert.equal(nouveau.seance.etat.phase, "prete");
-    assert.equal(nouveau.configuration.mode, "diaporama");
+    assert.equal(nouveau.configuration.mode, "tableau");
     assert.equal(nouveau.configuration.aide, "ouverte");
   });
 });
 
-describe("mode diaporama", () => {
+describe("contexte Au tableau", () => {
   it("ne crée ni sélection ni trace et peut révéler la réponse", () => {
-    const etat = etatDemarre({ mode: "diaporama" });
+    const etat = etatDemarre({ mode: "tableau" });
     basculerChoix(etat, "2");
     assert.deepEqual(etat.selection, []);
     revelerReponse(etat);
@@ -256,7 +326,7 @@ describe("mode diaporama", () => {
   });
 
   it("autorise la correction et le passage direct à la question suivante", () => {
-    const etat = etatDemarre({ mode: "diaporama" });
+    const etat = etatDemarre({ mode: "tableau" });
     ouvrirCorrection(etat);
     assert.equal(etat.correctionOuverte, true);
     passerQuestionSuivante(etat);

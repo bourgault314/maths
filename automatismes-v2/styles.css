@@ -4,7 +4,7 @@
 
 html,
 body {
-  min-width: 320px;
+  min-width: 0;
   min-height: 100%;
   margin: 0;
 }
@@ -631,6 +631,22 @@ button.choix:hover:not(:disabled) {
   text-align: center;
 }
 
+.question-guidage {
+  margin: 10px 0 0;
+  color: var(--mg-bleu);
+  font-weight: 800;
+  line-height: 1.4;
+  text-align: center;
+}
+
+.indication-aide {
+  margin: 0;
+  color: var(--mg-texteAttenue);
+  font-size: 14px;
+  font-weight: 700;
+  text-align: center;
+}
+
 .indices-aide {
   margin: 0;
   padding: 16px;
@@ -832,12 +848,16 @@ button.choix:hover:not(:disabled) {
 
 .nombre-correction span,
 .nombre-correction strong {
-  min-width: 36px;
-  padding: 8px 2px;
+  width: 52px;
+  height: 58px;
+  padding: 0;
+  display: inline-grid;
+  place-items: center;
+  box-sizing: border-box;
 }
 
 .nombre-correction strong {
-  border-bottom: 5px solid var(--mg-orange);
+  border: 3px solid var(--mg-orange);
   border-radius: var(--mg-rayon-petit);
   color: var(--mg-orange);
   background: color-mix(in srgb, var(--mg-orange) 10%, var(--mg-papier));

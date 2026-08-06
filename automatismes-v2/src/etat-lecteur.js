@@ -5,13 +5,15 @@ import {
 import {
   SCHEMA_TRACE_REPONSE,
   validerTraceReponse,
-} from "../../packages/contrats/src/trace-reponse.js?v=6";
+} from "../../packages/contrats/src/trace-reponse.js?v=14";
 import {
+  TYPE_REPONSE_ENTIER_NATUREL,
   TYPE_REPONSE_CHOIX_UNIQUE,
+  estEntierExact,
   estSelectionExacte,
-} from "../../packages/contrats/src/question-v2.js?v=6";
+} from "../../packages/contrats/src/question-v2.js?v=14";
 import { graineDepuisTexte } from "../../packages/moteur-exercices/src/aleatoire.js";
-import { creerRegistreAutomatismes } from "../../packages/automatismes/src/registre.js?v=6";
+import { creerRegistreAutomatismes } from "../../packages/automatismes/src/registre.js?v=14";
 import {
   connaitNotionLecteur,
   NOTION_NC01,
@@ -20,7 +22,7 @@ import {
   NOTION_VOLUME_CYLINDRE,
   NOTION_VOLUME_PRISME,
   obtenirNotionLecteur,
-} from "./registre-lecteur.js?v=6";
+} from "./registre-lecteur.js?v=14";
 
 export {
   NOTION_NC01,
@@ -31,7 +33,13 @@ export {
 };
 export const NOMBRE_QUESTIONS_PAR_DEFAUT = 10;
 
-const MODES = new Set(["interactif", "diaporama"]);
+const MODES = new Set(["entrainement", "tableau"]);
+const ALIAS_MODES = new Map([
+  ["interactif", "entrainement"],
+  ["diaporama", "tableau"],
+  ["projection", "tableau"],
+  ["classe", "tableau"],
+]);
 const AIDES = new Set(["ouverte", "disponible", "indisponible"]);
 
 function exigerConformite(nom, controle) {
@@ -41,9 +49,8 @@ function exigerConformite(nom, controle) {
 }
 
 function normaliserConfiguration(configuration = {}) {
-  const mode = configuration.mode === "projection"
-    ? "diaporama"
-    : configuration.mode ?? "interactif";
+  const modeDemande = configuration.mode ?? "entrainement";
+  const mode = ALIAS_MODES.get(modeDemande) ?? modeDemande;
   const aide = configuration.aide ?? "disponible";
   const nombreQuestions = configuration.nombreQuestions
     ?? NOMBRE_QUESTIONS_PAR_DEFAUT;
@@ -64,7 +71,9 @@ function normaliserConfiguration(configuration = {}) {
 }
 
 function creerSeance(configuration) {
-  const suffixe = graineDepuisTexte(String(configuration.graine)).toString(36);
+  const suffixe = graineDepuisTexte(
+    `${configuration.notion}:${configuration.nombreQuestions}:${configuration.graine}`,
+  ).toString(36);
   const seance = {
     schema: SCHEMA_SEANCE,
     id: `seance@${suffixe}`,
@@ -86,6 +95,7 @@ function creerSeance(configuration) {
 
 function creerEtatQuestion(etat) {
   etat.selection = [];
+  etat.saisie = "";
   etat.validation = null;
   etat.erreurValidation = "";
   etat.aideOuverte = etat.configuration.aide === "ouverte";
@@ -106,6 +116,7 @@ export function creerEtatLecteur(configuration = {}) {
     questions: [],
     traces: [],
     selection: [],
+    saisie: "",
     validation: null,
     erreurValidation: "",
     aideOuverte: false,
@@ -141,15 +152,21 @@ export function lireConfiguration(recherche = "") {
 export function demarrer(etat) {
   if (etat.seance.etat.phase !== "prete") return etat;
   const registre = creerRegistreAutomatismes();
-  const gabarit = obtenirNotionLecteur(etat.configuration.notion).gabarit;
-  etat.questions = Array.from(
-    { length: etat.configuration.nombreQuestions },
-    (_, index) =>
-      registre.instancier(
-        gabarit,
-        `${etat.configuration.graine}:${index + 1}`,
-      ),
-  );
+  const definition = obtenirNotionLecteur(etat.configuration.notion);
+  etat.questions = definition.creerSerie
+    ? definition.creerSerie({
+        registre,
+        graine: etat.configuration.graine,
+        nombreQuestions: etat.configuration.nombreQuestions,
+      })
+    : Array.from(
+        { length: etat.configuration.nombreQuestions },
+        (_, index) =>
+          registre.instancier(
+            definition.gabarit,
+            `${etat.configuration.graine}:${index + 1}`,
+          ),
+      );
   etat.seance.etat = {
     phase: "en-cours",
     questions: etat.questions.map((question) => question.id),
@@ -172,12 +189,13 @@ export function nombreReussites(etat) {
 export function basculerChoix(etat, idChoix) {
   const question = questionCourante(etat);
   if (
-    etat.configuration.mode !== "interactif"
+    etat.configuration.mode !== "entrainement"
     || !question
     || etat.validation !== null
   ) {
     return etat;
   }
+  if (question.reponse.type === TYPE_REPONSE_ENTIER_NATUREL) return etat;
   const choix = question.reponse.choix.find(({ id }) => id === idChoix);
   if (!choix) throw new RangeError(`choix inconnu : ${idChoix}`);
 
@@ -205,21 +223,67 @@ export function basculerChoix(etat, idChoix) {
   return etat;
 }
 
-export function validerSelection(etat) {
+export function saisirChiffre(etat, chiffre) {
   const question = questionCourante(etat);
   if (
-    etat.configuration.mode !== "interactif"
+    etat.configuration.mode !== "entrainement" ||
+    !question ||
+    question.reponse.type !== TYPE_REPONSE_ENTIER_NATUREL ||
+    etat.validation !== null ||
+    !Number.isInteger(chiffre) ||
+    chiffre < 0 ||
+    chiffre > 9
+  ) {
+    return etat;
+  }
+  const proposition = etat.saisie === "0"
+    ? String(chiffre)
+    : `${etat.saisie}${chiffre}`;
+  const maximum = question.reponse.maximum;
+  const longueurMaximale = String(maximum).length;
+  if (proposition.length <= longueurMaximale && Number(proposition) <= maximum) {
+    etat.saisie = proposition;
+    etat.erreurValidation = "";
+  }
+  return etat;
+}
+
+export function effacerSaisie(etat) {
+  const question = questionCourante(etat);
+  if (
+    etat.configuration.mode === "entrainement" &&
+    question?.reponse.type === TYPE_REPONSE_ENTIER_NATUREL &&
+    etat.validation === null
+  ) {
+    etat.saisie = etat.saisie.slice(0, -1);
+    etat.erreurValidation = "";
+  }
+  return etat;
+}
+
+export function validerReponse(etat) {
+  const question = questionCourante(etat);
+  if (
+    etat.configuration.mode !== "entrainement"
     || !question
     || etat.validation !== null
   ) {
     return etat;
   }
-  if (etat.selection.length === 0) {
+  const reponseNumerique = question.reponse.type === TYPE_REPONSE_ENTIER_NATUREL;
+  if (reponseNumerique && etat.saisie === "") {
+    etat.erreurValidation = "Entre une réponse.";
+    return etat;
+  }
+  if (!reponseNumerique && etat.selection.length === 0) {
     etat.erreurValidation = "Sélectionne au moins une réponse.";
     return etat;
   }
 
-  const juste = estSelectionExacte(question.reponse.attendus, etat.selection);
+  const valeurSaisie = reponseNumerique ? Number(etat.saisie) : null;
+  const juste = reponseNumerique
+    ? estEntierExact(question.reponse.attendu, valeurSaisie)
+    : estSelectionExacte(question.reponse.attendus, etat.selection);
   const indexQuestion = etat.seance.etat.indexQuestion;
   const trace = {
     schema: SCHEMA_TRACE_REPONSE,
@@ -230,7 +294,9 @@ export function validerSelection(etat) {
     validation: 1,
     reponse: {
       type: question.reponse.type,
-      choix: [...etat.selection],
+      ...(reponseNumerique
+        ? { valeur: valeurSaisie }
+        : { choix: [...etat.selection] }),
     },
     juste,
     aideConsultee: etat.aideConsultee,
@@ -241,6 +307,9 @@ export function validerSelection(etat) {
   etat.erreurValidation = "";
   return etat;
 }
+
+// Nom conservé pour les appels existants pendant la migration du lecteur.
+export const validerSelection = validerReponse;
 
 export function ouvrirAide(etat) {
   if (!questionCourante(etat) || etat.configuration.aide === "indisponible") {
@@ -296,7 +365,11 @@ export function basculerChiffreAide(etat, index) {
   const question = questionCourante(etat);
   const capacites = obtenirNotionLecteur(etat.configuration.notion).capacites;
   if (!etat.aideOuverte || !question || !capacites.aideChiffres) return etat;
-  const nombre = question.enonce.find((bloc) => bloc.id === "nombre")?.valeur;
+  const source = question.aide?.outils?.find(
+    (outil) => outil.type === "composer-somme-chiffres",
+  )?.source;
+  const nombre = question.enonce.find((bloc) => bloc.id === source)?.valeur;
+  if (!Number.isSafeInteger(nombre)) return etat;
   const longueur = String(nombre).length;
   if (!Number.isInteger(index) || index < 0 || index >= longueur) {
     throw new RangeError(`index de chiffre invalide : ${index}`);
@@ -309,7 +382,7 @@ export function basculerChiffreAide(etat, index) {
 }
 
 export function revelerReponse(etat) {
-  if (etat.configuration.mode === "diaporama" && questionCourante(etat)) {
+  if (etat.configuration.mode === "tableau" && questionCourante(etat)) {
     etat.reponseRevelee = true;
   }
   return etat;
@@ -317,9 +390,10 @@ export function revelerReponse(etat) {
 
 export function ouvrirCorrection(etat) {
   if (!questionCourante(etat)) return etat;
-  if (etat.configuration.mode === "interactif" && etat.validation === null) {
+  if (etat.configuration.mode === "entrainement" && etat.validation === null) {
     return etat;
   }
+  if (etat.configuration.mode === "tableau") etat.reponseRevelee = true;
   etat.correctionOuverte = true;
   etat.aideOuverte = false;
   etat.coursOuvert = false;
@@ -333,7 +407,7 @@ export function fermerCorrection(etat) {
 
 export function passerQuestionSuivante(etat) {
   if (etat.seance.etat.phase !== "en-cours") return etat;
-  if (etat.configuration.mode === "interactif" && etat.validation === null) {
+  if (etat.configuration.mode === "entrainement" && etat.validation === null) {
     return etat;
   }
   const prochainIndex = etat.seance.etat.indexQuestion + 1;

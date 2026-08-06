@@ -10,7 +10,7 @@ import {
   COMPARAISON_ENSEMBLE_EXACT,
   SCHEMA_QUESTION_INSTANCE_V2,
   TYPE_REPONSE_SELECTION_MULTIPLE,
-} from "../../../../contrats/src/question-v2.js";
+} from "../../../../contrats/src/question-v2.js?v=14";
 
 export const NOM_GENERATEUR_SELECTION_DIVISEURS =
   "nombres-et-calculs.criteres-divisibilite.selection-diviseurs";
@@ -223,12 +223,6 @@ export function genererQuestionSelectionDiviseurs({ aleatoire, parametres }) {
           type: "texte",
           contenu:
             "La somme obtenue est-elle un multiple de 3 ? Et de 9 ?",
-        },
-        {
-          id: "aide-attention",
-          type: "texte",
-          contenu:
-            "Attention : être divisible par 3 ne signifie pas forcément être divisible par 9.",
         },
         {
           id: "aide-plusieurs",

@@ -1,6 +1,84 @@
 # État du chantier Automatismes V2
 
-**Dernière mise à jour : 20 juillet 2026.**
+**Dernière mise à jour : 6 août 2026.**
+
+## Point de reprise vérifié du 6 août
+
+- Le dépôt de référence reste `bourgault314/maths`; `main` a été vérifié au
+  commit `d18a8c5cc4c6d10f90cea690d5a334dbecc472fe`.
+- Le menu apprécié par Gwenaël n'a jamais disparu : sa version publique est
+  dans `auto/` et sa filiation dans `studio/automatismes/`.
+- La candidate NC-01 complète avait été conservée dans un dépôt Git séparé de
+  ChatGPT Sites. Elle est rapatriée sur la branche
+  `agent/automatismes-v2-menu-nc01`, issue du `main` courant.
+- `/auto/` et la V1 publique restent inchangés.
+
+### Candidate NC-01 actuelle
+
+- Les cinq familles actives F1, F2, F3, F5 et F6, le planificateur de séries
+  5/10/15/20, le cours en trois pages, les aides, les corrections et les deux contextes sont
+  **construits** et testés.
+- F4 est retirée de toutes les séries actives sans renuméroter les identifiants
+  stables. Le cas « Aucun » reste naturel et n'est pas forcé dans chaque série.
+- `NC-01` est désormais `valide` : Gwenaël a validé le dernier moule et autorisé
+  explicitement sa publication sur la route pilote non liée.
+- Le lanceur reprend la coque visuelle de `/auto/`, avec seulement
+  `S'entraîner / Au tableau`, le nombre de questions et NC-01.
+- La calculatrice barrée historique est restaurée dans la barre de lancement :
+  V2 étant exclusivement DNB, elle reste visible dans les deux contextes et
+  porte le libellé accessible « Épreuve DNB sans calculatrice ».
+- Les six domaines V2 sont enregistrés dans la structure du menu ; seuls les
+  domaines non vides sont rendus. Au départ, seul « Nombres et calculs » est
+  visible avec son icône originale.
+- Les solides et volumes présents dans le registre technique restent exclus du
+  menu par liste blanche ; ils ne peuvent pas apparaître accidentellement.
+- L'écran « Prêt à t'entraîner ? » ne répète plus les règles : il conserve la
+  notion, le nombre de questions, « Voir le cours » et « Commencer ».
+- Le cours accessible avant la série utilise le même panneau stable que pendant
+  la série. L'aide F2 ne fait plus défiler l'écran et regroupe ses vérifications
+  dans deux étapes autonomes.
+- Le pavé maths&go est masqué sur un ordinateur muni d'une souris et d'un
+  clavier, mais reste visible sur téléphone, tablette, appareil hybride et TNI.
+- Le bilan propose « Nouvelle série », « Refaire la même série » et « Choisir
+  une autre série ».
+- F3 présente quatre nombres au lieu de six pour limiter le nombre de sommes à
+  effectuer dans une seule question ; « Aucun » reste un cas naturel.
+- Le cours relie désormais chaque schéma de partage à son égalité et à sa
+  conclusion. Les chiffres observés sont encadrés dans le cours et centrés dans
+  la correction.
+- Le pavé tactile est placé dans un bandeau stable sous la carte ; il ne peut
+  plus augmenter sa hauteur. Les consignes Oui/Non redondantes sont supprimées,
+  tandis que la validation séparée est conservée.
+- La sous-forme F6 « groupes possibles » est supprimée. F6 alterne uniquement
+  entre une réponse Oui/Non et la recherche du retrait minimal.
+- Le cours, l'aide et la correction utilisent une coque commune avec contenu
+  défilable et commandes toujours accessibles. Le pavé contextuel intègre
+  « Valider » et prépare les futurs profils avec virgule ou signe moins sans les
+  afficher dans NC-01.
+
+### Vérifications de cette reprise
+
+- `npm run verifier` : **1 056 tests sur 1 056 réussis** ;
+- garde-fous V2 : 98 fichiers surveillés, 49 fichiers de production avec
+  provenance déclarée ;
+- contrôles réels à 320 × 568, 390 × 844 et 1 280 × 720 ;
+- aucun débordement horizontal ;
+- commandes du menu d'au moins 44 px ;
+- liaison vérifiée jusqu'à une vraie question NC-01 en entraînement et au
+  tableau.
+- inventaire technique de `auto/`, `studio/automatismes/` et des fondations V2
+  consigné dans `inventaire-auto-studio.md` ; il distingue les briques déjà
+  reprises, les candidates à adapter et le moteur historique à laisser isolé.
+- tests ciblés NC-01 et lecteur : **91 sur 91 réussis** ; construction du site
+  d'essai et contrôle réel du cours et de l'aide sur ordinateur réussis.
+
+### Publication autorisée
+
+La PR #278 porte exactement la dernière candidate contrôlée par Gwenaël. Sa
+fusion et la publication de la route non liée `/automatismes-v2/` sont
+explicitement autorisées. `/auto/` reste intact et doit être contrôlé après le
+déploiement. La route pilote demeure hors navigation et hors sitemap, avec
+`noindex,nofollow` ; elle n'est donc pas privée pour autant.
 
 ## Référence vérifiée
 
@@ -45,9 +123,11 @@
 - Le critère par 10 est un complément maths&go validé. Il reste proposé dans le
   parcours DNB, tout en étant distingué des quatre critères officiels dans les
   données.
-- La fiche `NC-01`, le mini-cours, les six familles de questions, les aides,
-  les corrections, les storyboards et la séparation séance/question/trace ont
-  été validés par Gwenaël le 19 juillet 2026.
+- La fiche `NC-01`, le mini-cours, les six familles initialement étudiées, les
+  aides, les corrections, les storyboards et la séparation
+  séance/question/trace ont été validés par Gwenaël le 19 juillet 2026. Le 6
+  août, F4 et la sous-forme F6 « groupes possibles » ont été retirées ; les cinq
+  familles actives et le moule commun ont été finalisés par D-029 à D-033.
 - Le parcours DNB actuel ne possède ni niveaux ni paliers.
 
 ## Documents de référence fusionnés
@@ -150,22 +230,16 @@ l'interface de la bêta :
 
 ## Prochaine étape du lot courant
 
-Le lot P0 est isolé sur `agent/automatismes-v2-lecteur-generique` :
+Après la vérification de la route publiée, aucun contenu de `NC-02` ne doit être
+programmé avant sa fiche pédagogique. Cette fiche partira de la cible unique
+« carrés des entiers de 1 à 12 » et distinguera les familles directe et inverse
+sans créer deux micro-notions.
 
-- un registre unique décrit désormais l'identifiant, le nom, le gabarit, le
-  rendu et les capacités de chaque notion ;
-- le moteur d'état n'importe plus directement les cinq générateurs ;
-- l'application choisit question, aide, correction et cours par type de rendu,
-  sans liste parallèle d'identifiants ;
-- les interactions propres aux chiffres ou aux solides sont refusées aux
-  autres familles ;
-- le lot réussit **947 tests sur 947** et `npm run verifier` ;
-- 24 captures comparées octet par octet à `origin/main` sont identiques, sans
-  débordement horizontal ni cible tactile inférieure à 44 px.
-
-Ce sous-lot n'est ni publié ni fusionné. Après validation, la suite de P0 doit
-séparer les rendus du fichier `app.js`, puis construire les trois dispositions
-téléphone, ordinateur et TNI sans commencer une nouvelle notion.
+La carte de couverture conserve 88 micro-notions internes, mais elles ne
+deviennent pas 88 questionnaires visibles. Les catégories du menu pourront
+regrouper plusieurs micro-notions : `NC-03` et `NC-04`, par exemple, formeront
+une même catégorie visible « Fractions simples et décimaux » tout en gardant
+deux générateurs et deux suivis internes.
 
 ## Règle de mise à jour
 
