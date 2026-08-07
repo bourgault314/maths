@@ -105,9 +105,12 @@ coordonnées dans le contenu mathématique.
 
 Avant de passer la notion à `valide`, fournir :
 
-- des spécimens de toutes les familles ;
-- les aides, corrections et pages de cours ;
+- un parcours navigable déterministe qui couvre toutes les sous-formes, pas
+  seulement une série par défaut ;
+- un inventaire visuel de toutes les familles et sous-formes ;
+- toutes les pages de cours et au moins une aide et une correction par famille ;
 - les cas limites et erreurs ciblées ;
 - les garanties de déterminisme et de couverture ;
-- les contrôles téléphone, ordinateur et TNI ;
+- les contrôles téléphone, ordinateur, TNI et zoom, y compris les marges à
+  l'intérieur des schémas et SVG ;
 - l'accord pédagogique explicite de Gwenaël.

@@ -2,14 +2,15 @@
 //
 // La trace enregistre ce que l'élève a validé, pas la bonne réponse. Elle ne
 // contient aucune identité, durée, donnée d'écran ou information de serveur.
-// La première version couvre uniquement la sélection multiple de NC-01/F2.
+// Cette version couvre les choix, un entier naturel et deux champs entiers.
 
 import { estDonneePure, estIdentifiantValide } from "./gabarit.js";
 import {
   TYPE_REPONSE_CHOIX_UNIQUE,
+  TYPE_REPONSE_DEUX_ENTIERS,
   TYPE_REPONSE_ENTIER_NATUREL,
   TYPE_REPONSE_SELECTION_MULTIPLE,
-} from "./question-v2.js?v=15";
+} from "./question-v2.js?v=17";
 
 export const SCHEMA_TRACE_REPONSE = "mathsgo.trace-reponse/1";
 
@@ -28,7 +29,7 @@ function estIdInstanceValide(id) {
 }
 
 /**
- * Valide la trace de la première réponse interactive prise en charge.
+ * Valide une trace de réponse interactive prise en charge par le lecteur V2.
  * @param {unknown} trace
  * @returns {{ valide: boolean, erreurs: string[] }}
  */
@@ -86,24 +87,39 @@ export function validerTraceReponse(trace) {
       TYPE_REPONSE_CHOIX_UNIQUE,
     ].includes(t.reponse.type);
     const typeEntier = t.reponse.type === TYPE_REPONSE_ENTIER_NATUREL;
+    const typeDeuxEntiers = t.reponse.type === TYPE_REPONSE_DEUX_ENTIERS;
     validerClesConnues(
       t.reponse,
-      typeEntier ? ["type", "valeur"] : ["type", "choix"],
+      typeEntier
+        ? ["type", "valeur"]
+        : typeDeuxEntiers
+          ? ["type", "valeurs"]
+          : ["type", "choix"],
       "reponse",
       erreurs,
     );
-    if (!typeChoix && !typeEntier) {
+    if (!typeChoix && !typeEntier && !typeDeuxEntiers) {
       erreurs.push(
-        `reponse.type : « ${TYPE_REPONSE_SELECTION_MULTIPLE} », « ${TYPE_REPONSE_CHOIX_UNIQUE} » ou « ${TYPE_REPONSE_ENTIER_NATUREL} » attendu`,
+        `reponse.type : « ${TYPE_REPONSE_SELECTION_MULTIPLE} », « ${TYPE_REPONSE_CHOIX_UNIQUE} », « ${TYPE_REPONSE_ENTIER_NATUREL} » ou « ${TYPE_REPONSE_DEUX_ENTIERS} » attendu`,
       );
     }
     if (typeEntier) {
       if (!Number.isSafeInteger(t.reponse.valeur) || t.reponse.valeur < 0) {
         erreurs.push("reponse.valeur : entier naturel requis");
       }
-    } else if (!Array.isArray(t.reponse.choix) || t.reponse.choix.length === 0) {
+    } else if (typeDeuxEntiers) {
+      if (!Array.isArray(t.reponse.valeurs) || t.reponse.valeurs.length !== 2) {
+        erreurs.push("reponse.valeurs : exactement deux entiers sont requis");
+      } else if (
+        t.reponse.valeurs.some(
+          (valeur) => !Number.isSafeInteger(valeur) || valeur < 0,
+        )
+      ) {
+        erreurs.push("reponse.valeurs : deux entiers naturels requis");
+      }
+    } else if (typeChoix && (!Array.isArray(t.reponse.choix) || t.reponse.choix.length === 0)) {
       erreurs.push("reponse.choix : sélection non vide requise");
-    } else {
+    } else if (typeChoix) {
       if (t.reponse.choix.some((id) => !estIdentifiantValide(id))) {
         erreurs.push("reponse.choix : identifiants en minuscules requis");
       }

@@ -15,6 +15,7 @@ import {
   lireConfiguration,
   nombreReussites,
   NOTION_NC01,
+  NOTION_NC02,
   ouvrirAide,
   ouvrirCorrection,
   ouvrirCours,
@@ -22,18 +23,25 @@ import {
   questionCourante,
   recommencer,
   revelerReponse,
+  selectionnerChampSaisie,
   saisirChiffre,
   tournerSolide,
   validerReponse,
-} from "./src/etat-lecteur.js?v=15";
-import { TYPE_REPONSE_ENTIER_NATUREL } from "../packages/contrats/src/question-v2.js?v=15";
+} from "./src/etat-lecteur.js?v=17";
 import {
+  TYPE_REPONSE_DEUX_ENTIERS,
+  TYPE_REPONSE_ENTIER_NATUREL,
+  TYPE_REPONSE_CHOIX_UNIQUE,
+} from "../packages/contrats/src/question-v2.js?v=17";
+import {
+  connaitNotionLecteur,
   obtenirNotionLecteur,
+  RENDU_CARRES,
   RENDU_DIVISIBILITE,
   RENDU_SOLIDE,
   RENDU_VOLUME,
-} from "./src/registre-lecteur.js?v=15";
-import { COURS_SOLIDES_USUELS } from "../packages/automatismes/src/espace-et-geometrie/solides-usuels/reconnaissance.js?v=15";
+} from "./src/registre-lecteur.js?v=17";
+import { COURS_SOLIDES_USUELS } from "../packages/automatismes/src/espace-et-geometrie/solides-usuels/reconnaissance.js?v=17";
 import {
   creerCone,
   creerCube,
@@ -48,15 +56,24 @@ import {
   ACTION_TOUCHE_SAISIR,
   ACTION_TOUCHE_VALIDER,
   obtenirDispositionClavier,
-} from "../packages/objets/src/clavier.js?v=15";
-import { formulationCritereDivisibilite } from "../packages/automatismes/src/nombres-et-calculs/criteres-divisibilite/critere-precis.js?v=15";
+} from "../packages/objets/src/clavier.js?v=17";
+import { formulationCritereDivisibilite } from "../packages/automatismes/src/nombres-et-calculs/criteres-divisibilite/critere-precis.js?v=17";
+import {
+  nombre,
+  puissance,
+  variable,
+  versHtmlSemantique,
+} from "../packages/objets/src/expressions.js?v=17";
+import {
+  dessinerCarreQuadrille,
+} from "../packages/objets/src/carre-quadrille.js?v=17";
 
 const application = document.querySelector("#application");
 const rechercheInitiale = window.location.search;
 let etat = creerEtatLecteur(lireConfiguration(rechercheInitiale));
 let menuAccueilOuvert = rechercheInitiale.length === 0;
 let menuSessionOuvert = false;
-let pageCoursDivisibilite = 0;
+let pageCoursCourante = 0;
 let compteurSeries = 0;
 let configurationMenu = {
   mode: "entrainement",
@@ -76,7 +93,7 @@ const DOMAINES_MENU = Object.freeze([
   Object.freeze({
     id: "nombres-calculs",
     nom: "Nombres et calculs",
-    notions: Object.freeze([NOTION_NC01]),
+    notions: Object.freeze([NOTION_NC01, NOTION_NC02]),
   }),
   Object.freeze({ id: "calcul-litteral-algebre", nom: "Calcul littéral et algèbre", notions: Object.freeze([]) }),
   Object.freeze({ id: "proportionnalite-fonctions-grandeurs", nom: "Proportionnalité, fonctions et grandeurs", notions: Object.freeze([]) }),
@@ -84,6 +101,17 @@ const DOMAINES_MENU = Object.freeze([
   Object.freeze({ id: "donnees-statistiques-probabilites", nom: "Données, statistiques et probabilités", notions: Object.freeze([]) }),
   Object.freeze({ id: "pensee-informatique", nom: "Pensée informatique", notions: Object.freeze([]) }),
 ]);
+
+const LIBELLES_MODULES_MENU = Object.freeze({
+  [NOTION_NC01]: Object.freeze({
+    titre: "Critères de divisibilité",
+    precision: "Par 2, 3, 5, 9 et 10",
+  }),
+  [NOTION_NC02]: Object.freeze({
+    titre: "Carrés des entiers",
+    precision: "De 0 à 12",
+  }),
+});
 
 function definitionNotion() {
   return obtenirNotionLecteur(etat.configuration.notion);
@@ -99,6 +127,19 @@ function estEntrainement() {
 
 function aCoursNotion() {
   return definitionNotion().capacites.cours;
+}
+
+function estReponseNumerique(question) {
+  return [TYPE_REPONSE_ENTIER_NATUREL, TYPE_REPONSE_DEUX_ENTIERS]
+    .includes(question.reponse.type);
+}
+
+function rendrePuissance(base, exposant = 2) {
+  return versHtmlSemantique(puissance(nombre(base), exposant));
+}
+
+function nombrePagesCours() {
+  return definitionNotion().pagesCours;
 }
 
 const nomsCouleurs = {
@@ -182,23 +223,27 @@ function rendreDomainesMenu() {
   return DOMAINES_MENU
     .filter((domaine) => domaine.notions.length > 0)
     .map((domaine) => {
-      const selectionnee = configurationMenu.notion === NOTION_NC01;
+      const selectionnee = domaine.notions.includes(configurationMenu.notion);
       const nombreSelectionne = selectionnee ? 1 : 0;
       return `<details class="theme-group ${selectionnee ? "has-selection is-complete" : ""}"
         data-theme="numbers" open>
         <summary class="theme-summary">
           <span class="theme-icon" aria-hidden="true">${rendreIconeNombresCalculs()}</span>
           <span class="theme-name">${echapper(domaine.nom)}</span>
-          <span class="theme-count">${nombreSelectionne} / 1 <span class="theme-count-label">sélectionné</span></span>
+          <span class="theme-count">${nombreSelectionne} / ${domaine.notions.length} <span class="theme-count-label">sélectionné</span></span>
           <span class="theme-chevron" aria-hidden="true"></span>
         </summary>
         <div class="theme-items">
           <div class="module-subgroup-items">
-            <label class="modrow">
-              <input type="checkbox" data-action="choisir-notion" data-value="${NOTION_NC01}"
-                ${selectionnee ? "checked" : ""}>
-              <span><strong>Critères de divisibilité</strong><small>Par 2, 3, 5, 9 et 10</small></span>
-            </label>
+            ${domaine.notions.map((idNotion) => {
+              const libelle = LIBELLES_MODULES_MENU[idNotion];
+              const estSelectionnee = configurationMenu.notion === idNotion;
+              return `<label class="modrow">
+                <input type="checkbox" data-action="choisir-notion" data-value="${echapper(idNotion)}"
+                  ${estSelectionnee ? "checked" : ""}>
+                <span><strong>${echapper(libelle.titre)}</strong><small>${echapper(libelle.precision)}</small></span>
+              </label>`;
+            }).join("")}
           </div>
         </div>
       </details>`;
@@ -208,7 +253,8 @@ function rendreDomainesMenu() {
 
 function rendreMenuAccueil() {
   const entrainement = configurationMenu.mode === "entrainement";
-  const notionSelectionnee = configurationMenu.notion === NOTION_NC01;
+  const notionSelectionnee = configurationMenu.notion !== null
+    && connaitNotionLecteur(configurationMenu.notion);
   return `<main class="menu-v10">
     <div class="app">
       <header class="header">
@@ -296,7 +342,7 @@ function rendreEcranPret() {
           ${entrainement ? "Commencer" : "Commencer au tableau"}
         </button>
       </div>
-      ${rendreCoursDivisibilite()}
+      ${rendreCours()}
     </main>`;
 }
 
@@ -309,7 +355,9 @@ function rendreEntete() {
   return `
     <header class="entete-seance ${entrainement ? "" : "entete-tableau"}">
       <div class="actions-entete">
-        <button class="bouton-entete bouton-menu" data-action="menu" aria-expanded="${menuSessionOuvert}">Menu</button>
+        <button class="bouton-entete bouton-menu" data-action="menu" aria-expanded="${menuSessionOuvert}">
+          <span aria-hidden="true">☰</span><strong>Menu</strong>
+        </button>
         <button class="bouton-entete bouton-aide-entete" data-action="aide"
           ${aideDisponible ? "" : "disabled"} aria-expanded="${etat.aideOuverte}"
           aria-controls="panneau-aide"><span aria-hidden="true">?</span><strong>Aide</strong></button>
@@ -380,7 +428,7 @@ function rendreZoneRetour() {
 
 function rendreBarreEleve(question) {
   if (etat.validation === null) {
-    const saisieNumerique = question.reponse.type === TYPE_REPONSE_ENTIER_NATUREL;
+    const saisieNumerique = estReponseNumerique(question);
     return `<nav class="barre-eleve barre-avant-validation ${saisieNumerique ? "barre-saisie-numerique" : ""}"
       aria-label="Actions de la question">
       <button class="bouton-principal" data-action="valider">Valider</button>
@@ -393,6 +441,13 @@ function rendreBarreEleve(question) {
       ${etat.seance.etat.indexQuestion + 1 === etat.seance.nombreQuestions ? "Voir le bilan" : "Question suivante"}
     </button>
   </nav>`;
+}
+
+function rendreBlocMathematique(bloc) {
+  if (bloc.type === "texte") return `<span>${echapper(bloc.contenu)}</span>`;
+  if (bloc.type === "entier") return `<strong>${echapper(bloc.valeur)}</strong>`;
+  if (bloc.type === "puissance") return rendrePuissance(bloc.base, bloc.exposant);
+  return "";
 }
 
 function rendreBarreEnseignant() {
@@ -417,9 +472,8 @@ function rendreRappelQuestion(question) {
   const nombre = nombreQuestion(question);
   const phrase = question.enonce
     .filter((bloc) => bloc.id !== "nombre")
-    .map((bloc) => bloc.type === "texte" ? bloc.contenu : bloc.valeur)
-    .filter((contenu) => contenu !== undefined)
-    .map(echapper)
+    .map(rendreBlocMathematique)
+    .filter(Boolean)
     .join(" ");
   return `<section class="rappel-question" aria-label="Question en cours">
     <span>Question en cours</span>
@@ -485,7 +539,9 @@ function rendreReponseEleve(question) {
   if (!estEntrainement() || etat.validation === null) return "";
   const reponse = question.reponse.type === TYPE_REPONSE_ENTIER_NATUREL
     ? etat.saisie
-    : question.reponse.choix
+    : question.reponse.type === TYPE_REPONSE_DEUX_ENTIERS
+      ? etat.saisies.join(" × ")
+      : question.reponse.choix
       .filter((choix) => etat.selection.includes(choix.id))
       .map((choix) => choix.libelle)
       .join(", ");
@@ -534,6 +590,9 @@ function nombreSourceAide(question) {
 function libellesReponseCorrecte(question) {
   if (question.reponse.type === TYPE_REPONSE_ENTIER_NATUREL) {
     return [String(question.reponse.attendu)];
+  }
+  if (question.reponse.type === TYPE_REPONSE_DEUX_ENTIERS) {
+    return [question.reponse.attendus.join(" × ")];
   }
   return question.reponse.choix
     .filter((choix) => question.reponse.attendus.includes(choix.id))
@@ -657,6 +716,17 @@ function rendreEtape(numero, titre, classe = "") {
   return `<div class="repere-etape ${classe}">
     <span aria-hidden="true">${numero}</span>
     <h3>${echapper(titre)}</h3>
+  </div>`;
+}
+
+function rendreEtapeCarres(numero, titre, classe = "") {
+  const contenu = echapper(titre).replaceAll(
+    "□",
+    '<span class="case-vide-aide" aria-label="case vide"></span>',
+  );
+  return `<div class="repere-etape ${classe}">
+    <span aria-hidden="true">${numero}</span>
+    <h3>${contenu}</h3>
   </div>`;
 }
 
@@ -1035,22 +1105,22 @@ function rendreCarteCoursDivisibilite(index) {
 
 function rendreCoursDivisibilite() {
   if (!etat.coursOuvert) return "";
-  const derniere = pageCoursDivisibilite === 2;
+  const derniere = pageCoursCourante === 2;
   const titresPages = [
     "Comprendre « divisible »",
     "Critères pour 2, 5 et 10",
     "Critères pour 3 et 9",
   ];
-  const contenu = `<div class="cours-une-carte" aria-live="polite">${rendreCarteCoursDivisibilite(pageCoursDivisibilite)}</div>`;
+  const contenu = `<div class="cours-une-carte" aria-live="polite">${rendreCarteCoursDivisibilite(pageCoursCourante)}</div>`;
   const pied = `<nav class="navigation-cours" aria-label="Navigation dans le cours">
-        <button class="bouton-secondaire" type="button" data-action="cours-precedent" ${pageCoursDivisibilite === 0 ? "disabled" : ""}>Précédent</button>
-        <div class="points-cours" aria-label="Page ${pageCoursDivisibilite + 1} sur 3">${[0, 1, 2].map((page) => `<span class="${page === pageCoursDivisibilite ? "actif" : ""}"></span>`).join("")}</div>
+        <button class="bouton-secondaire" type="button" data-action="cours-precedent" ${pageCoursCourante === 0 ? "disabled" : ""}>Précédent</button>
+        <div class="points-cours" aria-label="Page ${pageCoursCourante + 1} sur 3">${[0, 1, 2].map((page) => `<span class="${page === pageCoursCourante ? "actif" : ""}"></span>`).join("")}</div>
         <button class="bouton-principal" type="button" data-action="${derniere ? "fermer-cours" : "cours-suivant"}">${derniere ? "J’ai compris" : "Suivant"}</button>
       </nav>`;
   return rendreCadrePanneau({
     type: "cours",
-    surtitre: `Cours · ${pageCoursDivisibilite + 1} / 3`,
-    titre: titresPages[pageCoursDivisibilite],
+    surtitre: `Cours · ${pageCoursCourante + 1} / 3`,
+    titre: titresPages[pageCoursCourante],
     contenu,
     pied,
     classes: "panneau-cours-divisibilite",
@@ -1252,6 +1322,296 @@ function rendreCoursVolumes() {
   });
 }
 
+function baseQuestionCarres(question) {
+  const puissanceQuestion = question.enonce.find((bloc) => bloc.type === "puissance")
+    ?? question.correction?.find((bloc) => bloc.type === "puissance");
+  if (puissanceQuestion) return puissanceQuestion.base;
+  const baseExplicite = blocQuestion(question, "base")?.valeur;
+  if (Number.isSafeInteger(baseExplicite)) return baseExplicite;
+  const cible = question.enonce.find((bloc) =>
+    bloc.type === "entier" && bloc.id.includes("cible"),
+  )?.valeur;
+  const racine = Math.sqrt(cible);
+  return Number.isSafeInteger(racine) ? racine : null;
+}
+
+function cibleQuestionCarres(question) {
+  return question.enonce.find((bloc) =>
+    bloc.type === "entier" && bloc.id.includes("cible"),
+  )?.valeur;
+}
+
+function valeurChampReponse(question, index = 0) {
+  if (estEntrainement()) {
+    return question.reponse.type === TYPE_REPONSE_DEUX_ENTIERS
+      ? etat.saisies[index]
+      : etat.saisie;
+  }
+  if (!etat.reponseRevelee && !etat.correctionOuverte) return "";
+  return String(
+    question.reponse.type === TYPE_REPONSE_DEUX_ENTIERS
+      ? question.reponse.attendus[index]
+      : question.reponse.attendu,
+  );
+}
+
+function rendreCaseReponseCarres(question, index = 0, { puissance = false } = {}) {
+  const valeur = valeurChampReponse(question, index);
+  const modifiable = estEntrainement() && etat.validation === null;
+  const active = question.reponse.type !== TYPE_REPONSE_DEUX_ENTIERS
+    || etat.champSaisieActif === index;
+  const classes = [
+    "case-reponse-carres",
+    valeur ? "remplie" : "",
+    active && modifiable ? "active" : "",
+    etat.validation?.juste ? "juste" : "",
+    etat.validation && !etat.validation.juste ? "fausse" : "",
+    puissance ? "case-puissance" : "",
+  ].filter(Boolean).join(" ");
+  const contenu = puissance
+    ? versHtmlSemantique(puissanceNoeudSaisie(valeur))
+    : echapper(valeur || (estEntrainement() ? "…" : "?"));
+  const etiquette = valeur
+    ? `Champ ${index + 1}, valeur ${valeur}`
+    : `Champ ${index + 1} à compléter`;
+  if (modifiable) {
+    return `<button class="${classes}" type="button" data-action="champ-reponse" data-index="${index}"
+      aria-label="${echapper(etiquette)}" aria-pressed="${active}">${contenu}</button>`;
+  }
+  return `<output class="${classes}" aria-label="${echapper(etiquette)}">${contenu}</output>`;
+}
+
+function puissanceNoeudSaisie(valeur) {
+  return puissance(variable(valeur || "□"), 2);
+}
+
+function rendreCarreQuadrilleDansLecteur(options) {
+  const dessin = dessinerCarreQuadrille(options);
+  return `<figure class="visuel-carre-quadrille">${dessin.svg}</figure>`;
+}
+
+function rendreCalculAligne(base, signe, terme, resultat) {
+  const carre = base * base;
+  return `<div class="calcul-aligne" aria-label="${base} au carré ${signe} ${terme} égale ${resultat}">
+    <p><span>${rendrePuissance(base)} ${echapper(signe)} ${terme}</span><span>=</span><span>${carre} ${echapper(signe)} ${terme}</span></p>
+    <p><span aria-hidden="true"></span><span>=</span><strong>${resultat}</strong></p>
+  </div>`;
+}
+
+function rendreDecompositionCarre(base) {
+  const reste = base - 10;
+  const resultat = base * base;
+  return `<section class="decomposition-carre">
+    <h4>${rendrePuissance(base)} : partager ${base} en 10 + ${reste}</h4>
+    ${rendreCarreQuadrilleDansLecteur({
+      cote: base,
+      mode: "decomposition",
+    })}
+    <div class="calcul-decomposition" aria-label="Calcul détaillé de ${base} au carré">
+      <p><span>${rendrePuissance(base)}</span><span>=</span><span>${base} × (10 + ${reste})</span></p>
+      <p><span></span><span>=</span><span>${base} × 10 + ${base} × ${reste}</span></p>
+      <p><span></span><span>=</span><span>${base * 10} + ${base * reste}</span></p>
+      <p><span></span><span>=</span><strong>${resultat}</strong></p>
+    </div>
+  </section>`;
+}
+
+function rendreCarteCoursCarres(index) {
+  if (index === 0) {
+    return `<article class="carte-cours-carres">
+      <span class="numero-cours">1</span>
+      <h3>Un carré : autant de rangées que de colonnes</h3>
+      <div class="cours-carre-sens">
+        ${rendreCarreQuadrilleDansLecteur({
+          cote: 4,
+          mode: "sens",
+          texteAlternatif: "Carré de quatre rangées et quatre colonnes",
+        })}
+        <div>
+          <p>4 rangées de 4 carreaux donnent <strong>4 × 4 = 16</strong>.</p>
+          <p class="chaine-carre">${rendrePuissance(4)} <span>=</span> <strong>4 × 4</strong> <span>=</span> <strong>16</strong></p>
+          <p><strong>Le carré d'un nombre</strong> est le produit de ce nombre par lui-même.</p>
+          <p class="alerte-carre">${rendrePuissance(4)} signifie 4 × 4, <strong>pas 4 × 2</strong>.</p>
+        </div>
+      </div>
+    </article>`;
+  }
+  if (index === 1) {
+    const bases = Array.from({ length: 13 }, (_, base) => base);
+    return `<article class="carte-cours-carres">
+      <span class="numero-cours">2</span>
+      <h3>Les carrés de 0 à 12</h3>
+      <div class="table-carres-cours">
+        ${bases.map((base) =>
+          `<p>${rendrePuissance(base)} <span>=</span> <span>${base} × ${base}</span> <span>=</span> <strong>${base * base}</strong></p>`,
+        ).join("")}
+      </div>
+      <p class="definition-cours">Ces résultats sont des <strong>nombres carrés</strong>, aussi appelés <strong>carrés parfaits</strong>.</p>
+    </article>`;
+  }
+  if (index === 2) {
+    return `<article class="carte-cours-carres">
+      <span class="numero-cours">3</span>
+      <h3>Retrouver ${rendrePuissance(11)} et ${rendrePuissance(12)}</h3>
+      <p class="introduction-decomposition">On découpe le carré après 10 colonnes. Les deux zones réunies forment toujours le carré entier.</p>
+      <div class="grille-decompositions-carres">
+        ${rendreDecompositionCarre(11)}
+        ${rendreDecompositionCarre(12)}
+      </div>
+    </article>`;
+  }
+  if (index === 3) {
+    return `<article class="carte-cours-carres">
+      <span class="numero-cours">4</span>
+      <h3>Aller dans les deux sens</h3>
+      <div class="cours-deux-sens-carres">
+        <section>
+          <h4>Je calcule le carré</h4>
+          <p class="chaine-carre">${rendrePuissance(8)} <span>=</span> 8 × 8 <span>=</span> <strong>64</strong></p>
+          <p>Le carré de 8 est 64.</p>
+        </section>
+        <section>
+          <h4>Je retrouve l'entier</h4>
+          ${rendreCarreQuadrilleDansLecteur({
+            cote: 8,
+            mode: "cote-inconnu",
+            texteAlternatif: "Carré contenant 64 carreaux dont les côtés égaux sont à retrouver",
+          })}
+          <p>64 = 8 × 8, donc l'entier recherché est <strong>8</strong>.</p>
+        </section>
+      </div>
+    </article>`;
+  }
+  return `<article class="carte-cours-carres">
+    <span class="numero-cours">5</span>
+    <h3>Dans un calcul, je commence par le carré</h3>
+    <div class="exemples-calcul-court">
+      <section><p>Je calcule d'abord le carré, puis l'addition.</p>${rendreCalculAligne(7, "+", 1, 50)}</section>
+      <section><p>Je calcule d'abord le carré, puis la soustraction.</p>${rendreCalculAligne(4, "−", 3, 13)}</section>
+    </div>
+  </article>`;
+}
+
+function rendreCoursCarres() {
+  if (!etat.coursOuvert) return "";
+  const total = nombrePagesCours();
+  const titres = [
+    "Comprendre « au carré »",
+    "Les carrés de 0 à 12",
+    "Retrouver 11² et 12²",
+    "Direct et inverse",
+    "Calculer dans le bon ordre",
+  ];
+  const derniere = pageCoursCourante === total - 1;
+  const contenu = `<div class="cours-une-carte" aria-live="polite">${rendreCarteCoursCarres(pageCoursCourante)}</div>`;
+  const pied = `<nav class="navigation-cours" aria-label="Navigation dans le cours">
+    <button class="bouton-secondaire" type="button" data-action="cours-precedent" ${pageCoursCourante === 0 ? "disabled" : ""}>Précédent</button>
+    <div class="points-cours" aria-label="Page ${pageCoursCourante + 1} sur ${total}">${Array.from({ length: total }, (_, page) => `<span class="${page === pageCoursCourante ? "actif" : ""}"></span>`).join("")}</div>
+    <button class="bouton-principal" type="button" data-action="${derniere ? "fermer-cours" : "cours-suivant"}">${derniere ? "J’ai compris" : "Suivant"}</button>
+  </nav>`;
+  return rendreCadrePanneau({
+    type: "cours",
+    surtitre: `Cours · ${pageCoursCourante + 1} / ${total}`,
+    titre: titres[pageCoursCourante],
+    contenu,
+    pied,
+    classes: "panneau-cours-carres",
+  });
+}
+
+function rendreAideCarres(question) {
+  if (!etat.aideOuverte) return "";
+  const famille = familleQuestion(question);
+  const base = baseQuestionCarres(question) ?? 4;
+  let visuel = "";
+  if (famille === "calcul-direct" && base > 0) {
+    visuel = rendreCarreQuadrilleDansLecteur({ cote: base, mode: "aire-inconnue" });
+  }
+  if (famille === "retrouver-entier" && base > 0) {
+    visuel = rendreCarreQuadrilleDansLecteur({
+      cote: base,
+      mode: "cote-inconnu",
+      texteAlternatif: `Carré contenant ${cibleQuestionCarres(question)} carreaux dont les côtés égaux sont inconnus`,
+    });
+  }
+  if (famille === "carre-quadrille") {
+    const trouverCote = Boolean(blocQuestion(question, "carre-quadrille-aire"));
+    visuel = trouverCote
+      ? rendreCarreQuadrilleDansLecteur({ cote: base, mode: "cote-inconnu" })
+      : rendreCarreQuadrilleDansLecteur({
+          cote: base,
+          mode: "aire-inconnue",
+          miseEnEvidence: { ligne: 1, colonne: 1 },
+        });
+  }
+  const aides = question.aide?.blocs?.filter((bloc) => bloc.type === "texte") ?? [];
+  const contenu = `${rendreRappelQuestion(question)}
+    ${rendreAccesCoursDepuisAide()}
+    ${visuel}
+    <div class="etapes-aide-carres">
+      ${aides.map((aide, index) => `<section class="outil-aide">
+        ${rendreEtapeCarres(index + 1, aide.contenu, index === 0 ? "repere-observation" : "")}
+      </section>`).join("")}
+    </div>`;
+  return rendreCadrePanneau({
+    type: "aide",
+    titre: "Me guider",
+    contenu,
+    classes: "panneau-carres",
+  });
+}
+
+function rendreCorrectionCarres(question) {
+  if (!etat.correctionOuverte) return "";
+  const famille = familleQuestion(question);
+  const base = baseQuestionCarres(question);
+  const erreurDouble = famille === "calcul-direct"
+    && Number(etat.saisie) === base * 2
+    && Number(etat.saisie) !== question.reponse.attendu;
+  const titres = {
+    "calcul-direct": ["Lire", "Écrire le produit", "Calculer", "Conclure"],
+    "retrouver-entier": ["Chercher le facteur répété", "Écrire le carré", "Vérifier", "Conclure"],
+    "sens-notation": ["Traduire", "Écarter le produit par 2", "Écarter l'addition", "Écarter l'ajout de 2"],
+    "reconnaitre-carres": ["Vérifier la première carte", "Vérifier la deuxième carte", "Vérifier la troisième carte", "Vérifier la quatrième carte"],
+    "carre-quadrille": ["Lire les dimensions", "Écrire le produit", "Relier à l'écriture au carré", "Conclure"],
+    "calcul-court": ["Calculer le carré", "Effectuer la seconde opération", "Conclure"],
+  }[famille] ?? [];
+  const blocs = question.correction ?? [];
+  const correctionCalculCourt = famille === "calcul-court"
+    ? (() => {
+        const signe = texteBloc(question, "operation");
+        const terme = blocQuestion(question, "terme")?.valeur;
+        return `<section class="correction-calcul-aligne">
+          <p>On calcule d'abord le carré, puis ${signe === "+" ? "la somme" : "la différence"}.</p>
+          ${rendreCalculAligne(base, signe, terme, question.reponse.attendu)}
+        </section>`;
+      })()
+    : "";
+  const contenu = `${rendreRappelQuestion(question)}
+    ${rendreReponseEleve(question)}
+    ${erreurDouble ? `<p class="diagnostic-erreur-carre">Tu as calculé ${base} × 2. Le petit 2 demande deux facteurs égaux à ${base}.</p>` : ""}
+    ${correctionCalculCourt || `<div class="etapes-correction-carres">
+      ${blocs.map((bloc, index) => {
+        const estConclusion = index === blocs.length - 1
+          && !["sens-notation", "reconnaitre-carres"].includes(famille);
+        return `<section class="etape-correction ${estConclusion ? "correction-conclusion" : "correction-observation"}">
+        ${rendreEtape(index + 1, titres[index] ?? `Étape ${index + 1}`, estConclusion ? "repere-conclusion" : "repere-observation")}
+        <p class="ligne-correction-carres">${bloc.type === "puissance"
+          ? `${rendrePuissance(bloc.base, bloc.exposant)} <span>=</span> <strong>${bloc.base} × ${bloc.base}</strong>`
+          : rendreBlocMathematique(bloc)}</p>
+      </section>`;
+      }).join("")}
+    </div>`}
+    ${rendreReponseCorrecte(question)}`;
+  return rendreCadrePanneau({
+    type: "correction",
+    surtitre: "Après la réponse",
+    titre: "Correction expliquée",
+    contenu,
+    classes: "panneau-carres",
+  });
+}
+
 function classesLecteur() {
   const panneau = etat.aideOuverte || etat.correctionOuverte || etat.coursOuvert;
   const classePanneau = etat.aideOuverte
@@ -1300,7 +1660,7 @@ function rendrePaveMathsgo(question) {
   if (
     !estEntrainement()
     || etat.validation !== null
-    || question.reponse.type !== TYPE_REPONSE_ENTIER_NATUREL
+    || !estReponseNumerique(question)
   ) return "";
   const disposition = obtenirDispositionClavier("entier-naturel");
   const touches = disposition.touches.map((touche) => {
@@ -1394,7 +1754,7 @@ function rendreCoqueLecteur(question, carteQuestion) {
   const entrainement = estEntrainement();
   const paveActif = entrainement
     && etat.validation === null
-    && question.reponse.type === TYPE_REPONSE_ENTIER_NATUREL;
+    && estReponseNumerique(question);
   return `
     <div class="${classesLecteur()} ${paveActif ? "avec-pave" : ""}">
       ${rendreEntete()}
@@ -1468,26 +1828,131 @@ function rendreQuestionVolumes() {
   return rendreCoqueLecteur(question, carteQuestion);
 }
 
+function rendreContenuQuestionCarres(question) {
+  const famille = familleQuestion(question);
+  const base = baseQuestionCarres(question);
+  const consigne = question.enonce.find((bloc) => bloc.type === "texte")?.contenu
+    ?? "Complète.";
+  if (famille === "calcul-direct") {
+    const questionVerbale = blocQuestion(question, "consigne-carre-de") !== undefined;
+    const qcmDirect = question.reponse.type === TYPE_REPONSE_CHOIX_UNIQUE;
+    const encadrement = blocQuestion(question, "consigne-encadrer-resultat") !== undefined;
+    if (qcmDirect) {
+      return encadrement
+        ? `<h1>Quel encadrement est correct ?</h1>
+          <p class="expression-question-carres">${rendrePuissance(base)}</p>
+          <p class="precision">Choisis une seule réponse.</p>`
+        : `<h1>Quel est le carré de ${base} ?</h1>
+          <p class="precision">Choisis une seule réponse.</p>`;
+    }
+    return questionVerbale
+      ? `<h1>${echapper(consigne)} ${base} ?</h1>
+        <p class="egalite-carres phrase-reponse-carres"><span>Le carré de ${base} est</span>${rendreCaseReponseCarres(question)}<span>.</span></p>`
+      : `<h1>${echapper(consigne)}</h1>
+        <p class="egalite-carres">${rendrePuissance(base)} <span>=</span> ${rendreCaseReponseCarres(question)}</p>`;
+  }
+  if (famille === "retrouver-entier") {
+    const cible = cibleQuestionCarres(question);
+    if (blocQuestion(question, "produit-facteurs-egaux-cible")) {
+      return `<h1>${echapper(consigne)}</h1>
+        <p class="egalite-carres egalite-deux-champs"><strong>${cible}</strong><span>=</span>
+          ${rendreCaseReponseCarres(question, 0)}<span>×</span>${rendreCaseReponseCarres(question, 1)}</p>
+        <p class="precision">Remplis les deux cases.</p>`;
+    }
+    if (blocQuestion(question, "egalite-carre-cible")) {
+      return `<h1>${echapper(consigne)}</h1>
+        <p class="egalite-carres">${rendreCaseReponseCarres(question, 0, { puissance: true })}<span>=</span><strong>${cible}</strong></p>`;
+    }
+    return `<h1>${echapper(consigne)} ${cible} ?</h1>
+      <p class="egalite-carres phrase-reponse-carres"><span>L'entier recherché est</span>${rendreCaseReponseCarres(question)}<span>.</span></p>`;
+  }
+  if (famille === "sens-notation") {
+    return `<h1>${echapper(consigne)}</h1>
+      <p class="expression-question-carres">${rendrePuissance(base)}</p>
+      <p class="precision">Choisis une seule réponse.</p>`;
+  }
+  if (famille === "reconnaitre-carres") {
+    return `<h1>${echapper(consigne)}</h1>
+      <p class="precision">Il peut y avoir une ou plusieurs réponses.</p>`;
+  }
+  if (famille === "carre-quadrille") {
+    const trouverCote = Boolean(blocQuestion(question, "carre-quadrille-aire"));
+    const motCarreau = base === 1 ? "carreau" : "carreaux";
+    const questionComplete = trouverCote
+      ? `${consigne} ${base * base} ${texteBloc(question, "question-trouver-cote")}`
+      : `Ce carré a ${base} ${motCarreau} sur chaque côté. Combien en contient-il en tout ?`;
+    return `<h1>${echapper(questionComplete)}</h1>
+      ${trouverCote
+        ? rendreCarreQuadrilleDansLecteur({
+            cote: base,
+            mode: "cote-inconnu",
+            texteAlternatif: `Carré contenant ${base * base} carreaux, avec deux côtés égaux à retrouver`,
+          })
+        : rendreCarreQuadrilleDansLecteur({
+            cote: base,
+            mode: "aire-inconnue",
+            texteAlternatif: `Carré quadrillé de ${base} rangées et ${base} colonnes, aire à calculer`,
+          })}
+      <p class="egalite-carres phrase-reponse-carres"><span>${trouverCote ? "Chaque côté compte" : "Nombre total de carreaux :"}</span>
+        ${rendreCaseReponseCarres(question)}<span>${trouverCote ? `${motCarreau}.` : ""}</span></p>`;
+  }
+  if (famille === "calcul-court") {
+    const signe = texteBloc(question, "operation");
+    const terme = blocQuestion(question, "terme")?.valeur;
+    return `<h1>${echapper(consigne)}</h1>
+      <p class="egalite-carres calcul-court-question">${rendrePuissance(base)}<span>${echapper(signe)}</span><strong>${terme}</strong><span>=</span>${rendreCaseReponseCarres(question)}</p>
+      <p class="precision">Calcule d'abord le carré.</p>`;
+  }
+  return `<h1>${echapper(consigne)}</h1>`;
+}
+
+function rendreZoneReponseCarres(question) {
+  if (estReponseNumerique(question)) {
+    return estEntrainement()
+      ? '<p class="indication-clavier-physique">Touches 0 à 9 · Clique sur une case pour la choisir · Retour arrière pour effacer · Entrée pour valider</p>'
+      : "";
+  }
+  const famille = familleQuestion(question);
+  return `<div class="grille-choix ${famille === "reconnaitre-carres" ? "grille-carres-multiples" : "grille-carres-qcm"} ${estEntrainement() ? "" : "grille-projection"}"
+    role="${question.reponse.type === "choix-unique" && estEntrainement() ? "radiogroup" : "group"}"
+    aria-label="Réponses proposées">${rendreChoix(question)}</div>`;
+}
+
+function rendreQuestionCarres() {
+  const question = questionCourante(etat);
+  const carteQuestion = `<main class="carte-question carte-question-carres famille-${echapper(familleQuestion(question))}">
+    <p class="etiquette-notion">${echapper(nomNotion())}</p>
+    ${rendreContenuQuestionCarres(question)}
+    ${rendreZoneReponseCarres(question)}
+    ${estEntrainement() ? rendreZoneRetour() : '<div class="zone-retour" aria-hidden="true"></div>'}
+  </main>`;
+  return rendreCoqueLecteur(question, carteQuestion);
+}
+
 const RENDUS_COURS = Object.freeze({
   [RENDU_DIVISIBILITE]: rendreCoursDivisibilite,
+  [RENDU_CARRES]: rendreCoursCarres,
   [RENDU_SOLIDE]: rendreCoursReconnaissance,
   [RENDU_VOLUME]: rendreCoursVolumes,
 });
 
 const RENDUS_AIDE = Object.freeze({
   [RENDU_DIVISIBILITE]: rendreAideDivisibilite,
+  [RENDU_CARRES]: rendreAideCarres,
   [RENDU_SOLIDE]: rendreAideSolides,
   [RENDU_VOLUME]: rendreAideVolumes,
 });
 
 const RENDUS_CORRECTION = Object.freeze({
   [RENDU_DIVISIBILITE]: rendreCorrectionDivisibilite,
+  [RENDU_CARRES]: rendreCorrectionCarres,
   [RENDU_SOLIDE]: rendreCorrectionSolides,
   [RENDU_VOLUME]: rendreCorrectionVolumes,
 });
 
 const RENDUS_QUESTION = Object.freeze({
   [RENDU_DIVISIBILITE]: rendreQuestionDivisibilite,
+  [RENDU_CARRES]: rendreQuestionCarres,
   [RENDU_SOLIDE]: rendreQuestionSolides,
   [RENDU_VOLUME]: rendreQuestionVolumes,
 });
@@ -1614,10 +2079,15 @@ application.addEventListener("click", (evenement) => {
     if (VOLUMES_MENU.includes(volume)) configurationMenu.nombreQuestions = volume;
   }
   if (action === "choisir-notion") {
-    configurationMenu.notion = configurationMenu.notion === NOTION_NC01 ? null : NOTION_NC01;
+    const notionDemandee = cible.dataset.value;
+    if (DOMAINES_MENU.some((domaine) => domaine.notions.includes(notionDemandee))) {
+      configurationMenu.notion = configurationMenu.notion === notionDemandee
+        ? null
+        : notionDemandee;
+    }
   }
   if (action === "preparer") {
-    if (configurationMenu.notion !== NOTION_NC01) return;
+    if (!configurationMenu.notion || !connaitNotionLecteur(configurationMenu.notion)) return;
     etat = creerEtatLecteur({
       ...configurationMenu,
       graine: creerGraineSerie(),
@@ -1647,6 +2117,10 @@ application.addEventListener("click", (evenement) => {
   if (action === "choix") {
     basculerChoix(etat, cible.dataset.id);
     focusSelector = `[data-action="choix"][data-id="${cible.dataset.id}"]`;
+  }
+  if (action === "champ-reponse") {
+    selectionnerChampSaisie(etat, Number(cible.dataset.index));
+    focusSelector = `[data-action="champ-reponse"][data-index="${cible.dataset.index}"]`;
   }
   if (action === "chiffre") {
     saisirChiffre(etat, Number(cible.dataset.value));
@@ -1685,19 +2159,20 @@ application.addEventListener("click", (evenement) => {
   }
   if (action === "cours") {
     menuSessionOuvert = false;
-    pageCoursDivisibilite = 0;
+    pageCoursCourante = 0;
     ouvrirCours(etat);
     focusPanneau = etat.coursOuvert;
   }
   if (action === "cours-precedent") {
-    pageCoursDivisibilite = Math.max(0, pageCoursDivisibilite - 1);
+    pageCoursCourante = Math.max(0, pageCoursCourante - 1);
     reinitialiserDefilementPanneau = true;
     focusSelector = '[data-action="cours-precedent"]';
   }
   if (action === "cours-suivant") {
-    pageCoursDivisibilite = Math.min(2, pageCoursDivisibilite + 1);
+    const dernierePage = nombrePagesCours() - 1;
+    pageCoursCourante = Math.min(dernierePage, pageCoursCourante + 1);
     reinitialiserDefilementPanneau = true;
-    focusSelector = pageCoursDivisibilite === 2
+    focusSelector = pageCoursCourante === dernierePage
       ? '[data-action="fermer-cours"].bouton-principal'
       : '[data-action="cours-suivant"]';
   }
@@ -1776,7 +2251,7 @@ window.addEventListener?.("keydown", (evenement) => {
   }
   if (menuSessionOuvert || etat.aideOuverte || etat.correctionOuverte || etat.coursOuvert) return;
   const question = questionCourante(etat);
-  if (question?.reponse.type !== TYPE_REPONSE_ENTIER_NATUREL) return;
+  if (!question || !estReponseNumerique(question)) return;
   if (/^[0-9]$/.test(evenement.key)) {
     evenement.preventDefault?.();
     saisirChiffre(etat, Number(evenement.key));

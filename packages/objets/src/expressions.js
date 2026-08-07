@@ -1,4 +1,6 @@
-// Écriture mathématique structurée maths&go — version 1, STATUT BROUILLON.
+// Écriture mathématique structurée maths&go — version 1.
+// Le rendu HTML sémantique des puissances est stabilisé pour NC-02 ; les
+// autres rendus historiques conservent leur statut de fondation évolutive.
 //
 // Le principe du chantier « configurations » : une rédaction n'est
 // JAMAIS un texte concaténé à la main. C'est un ARBRE d'expressions
@@ -11,6 +13,8 @@
 //   - versUnicode : écriture compacte affichable SANS moteur TeX
 //     (BC² = AB² + AC², AB̂C, √144, 7,5 × 4) — celle des rédactions
 //     de l'Atelier tant que le moteur TeX n'est pas tranché.
+//   - versHtmlSemantique : fragment HTML autonome, sûr et accessible, avec
+//     un vrai élément <sup> pour les puissances et une verbalisation française.
 //
 // La couleur et la mise en page ne vivent PAS ici : un nœud peut porter
 // un `role` sémantique (« hypotenuse », « inconnue »…) que le rendu
@@ -219,4 +223,75 @@ export function versTexte(noeud) {
     default:
       throw new RangeError(`expression : nœud inconnu « ${noeud.type} »`);
   }
+}
+
+// ---------------------------------------------------------------------------
+// versHtmlSemantique — le rendu HTML canonique, sûr et accessible
+// ---------------------------------------------------------------------------
+
+function echapperHtml(valeur) {
+  return String(valeur)
+    .replaceAll("&", "&amp;")
+    .replaceAll("<", "&lt;")
+    .replaceAll(">", "&gt;");
+}
+
+function echapperAttributHtml(valeur) {
+  return echapperHtml(valeur)
+    .replaceAll('"', "&quot;")
+    .replaceAll("'", "&#39;");
+}
+
+function contenuHtml(noeud) {
+  switch (noeud.type) {
+    case "nombre":
+      return echapperHtml(nombreFrancais(noeud.valeur, noeud.decimales));
+    case "variable":
+      return echapperHtml(noeud.lettre);
+    case "segment":
+      return echapperHtml(noeud.lettres);
+    case "angle":
+      return echapperHtml(chapeaute(noeud.lettres));
+    case "mesure": {
+      const valeur = echapperHtml(nombreFrancais(noeud.valeur, noeud.decimales));
+      if (noeud.unite === "°") return `${valeur}°`;
+      return noeud.unite
+        ? `${valeur}\u00A0${echapperHtml(noeud.unite)}`
+        : valeur;
+    }
+    case "somme":
+      return noeud.termes.map(contenuHtml).join(" + ");
+    case "difference":
+      return `${contenuHtml(noeud.gauche)} − ${contenuHtml(noeud.droite)}`;
+    case "produit":
+      return noeud.facteurs.map(contenuHtml).join(" × ");
+    case "quotient":
+      return `${contenuHtml(noeud.numerateur)}/${contenuHtml(noeud.denominateur)}`;
+    case "puissance":
+      return `${contenuHtml(noeud.base)}<sup>${echapperHtml(noeud.exposant)}</sup>`;
+    case "racine":
+      return `√${contenuHtml(noeud.contenu)}`;
+    case "trig":
+      return `${echapperHtml(noeud.fonction)}(${contenuHtml(noeud.angle)})`;
+    case "reciproqueTrig":
+      return `${echapperHtml(noeud.fonction)}(${contenuHtml(noeud.contenu)})`;
+    case "relation":
+      return noeud.membres.map(contenuHtml).join(` ${echapperHtml(noeud.signe)} `);
+    case "texte":
+      return echapperHtml(noeud.texte);
+    default:
+      throw new RangeError(`expression : nœud inconnu « ${noeud.type} »`);
+  }
+}
+
+/**
+ * Rend une expression en fragment HTML autonome.
+ *
+ * Le contenu visible est échappé avant l'ajout des seules balises produites
+ * ici. Le libellé français permet au lecteur d'écran de lire notamment
+ * « 7 au carré » au lieu d'interpréter visuellement l'exposant.
+ */
+export function versHtmlSemantique(noeud) {
+  const verbalisation = echapperAttributHtml(versTexte(noeud));
+  return `<span class="mathsgo-expression" role="math" aria-label="${verbalisation}">${contenuHtml(noeud)}</span>`;
 }

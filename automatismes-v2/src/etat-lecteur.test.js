@@ -3,7 +3,10 @@ import { describe, it } from "node:test";
 
 import { validerSeance } from "../../packages/contrats/src/seance.js";
 import { validerTraceReponse } from "../../packages/contrats/src/trace-reponse.js";
-import { TYPE_REPONSE_ENTIER_NATUREL } from "../../packages/contrats/src/question-v2.js";
+import {
+  TYPE_REPONSE_DEUX_ENTIERS,
+  TYPE_REPONSE_ENTIER_NATUREL,
+} from "../../packages/contrats/src/question-v2.js";
 import {
   basculerChiffreAide,
   basculerChoix,
@@ -24,6 +27,7 @@ import {
   questionCourante,
   recommencer,
   revelerReponse,
+  selectionnerChampSaisie,
   saisirChiffre,
   tournerSolide,
   validerSelection,
@@ -57,6 +61,30 @@ function etatSurFamille(famille, graine = `fixture-${famille}`) {
   );
   if (index === -1) throw new Error(`fixture : famille absente ${famille}`);
   etat.seance.etat.indexQuestion = index;
+  return etat;
+}
+
+function etatSurQuestionDeuxEntiers({
+  attendus = [3, 4],
+  minimum = 0,
+  maximum = 12,
+  nombreQuestions = 2,
+} = {}) {
+  const etat = etatDemarre({
+    graine: "fixture-deux-entiers",
+    nombreQuestions,
+  });
+  const question = questionCourante(etat);
+  etat.questions[0] = {
+    ...question,
+    reponse: {
+      type: TYPE_REPONSE_DEUX_ENTIERS,
+      comparaison: "valeurs-exactes",
+      attendus,
+      minimum,
+      maximum,
+    },
+  };
   return etat;
 }
 
@@ -283,6 +311,123 @@ describe("réponse interactive", () => {
       valeur: attendu,
     });
     assert.deepEqual(validerTraceReponse(etat.traces[0]), { valide: true, erreurs: [] });
+  });
+
+  it("saisit et trace zéro comme un entier naturel", () => {
+    const etat = etatSurQuestionNumerique();
+    etat.questions[etat.seance.etat.indexQuestion].reponse = {
+      type: TYPE_REPONSE_ENTIER_NATUREL,
+      comparaison: "entier-exact",
+      attendu: 0,
+      minimum: 0,
+      maximum: 144,
+    };
+    saisirChiffre(etat, 0);
+    validerSelection(etat);
+    assert.deepEqual(etat.validation, { juste: true });
+    assert.deepEqual(etat.traces[0].reponse, {
+      type: TYPE_REPONSE_ENTIER_NATUREL,
+      valeur: 0,
+    });
+  });
+});
+
+describe("réponse avec deux champs entiers", () => {
+  it("sélectionne le champ actif et saisit chaque entier indépendamment", () => {
+    const etat = etatSurQuestionDeuxEntiers();
+    assert.deepEqual(etat.saisies, ["", ""]);
+    assert.equal(etat.champSaisieActif, 0);
+
+    saisirChiffre(etat, 1);
+    saisirChiffre(etat, 2);
+    selectionnerChampSaisie(etat, 1);
+    saisirChiffre(etat, 4);
+
+    assert.deepEqual(etat.saisies, ["12", "4"]);
+    assert.equal(etat.champSaisieActif, 1);
+    assert.throws(
+      () => selectionnerChampSaisie(etat, 2),
+      /index de champ invalide/,
+    );
+  });
+
+  it("applique la borne maximale aux deux champs et efface seulement le champ actif", () => {
+    const etat = etatSurQuestionDeuxEntiers({ maximum: 12 });
+    saisirChiffre(etat, 9);
+    saisirChiffre(etat, 9);
+    assert.deepEqual(etat.saisies, ["9", ""]);
+
+    selectionnerChampSaisie(etat, 1);
+    saisirChiffre(etat, 1);
+    saisirChiffre(etat, 2);
+    effacerSaisie(etat);
+    assert.deepEqual(etat.saisies, ["9", "1"]);
+
+    selectionnerChampSaisie(etat, 0);
+    effacerSaisie(etat);
+    assert.deepEqual(etat.saisies, ["", "1"]);
+  });
+
+  it("refuse une validation vide ou partielle", () => {
+    const etat = etatSurQuestionDeuxEntiers();
+    validerSelection(etat);
+    assert.equal(etat.erreurValidation, "Complète les deux cases.");
+    assert.equal(etat.traces.length, 0);
+
+    saisirChiffre(etat, 3);
+    validerSelection(etat);
+    assert.equal(etat.erreurValidation, "Complète les deux cases.");
+    assert.equal(etat.traces.length, 0);
+  });
+
+  it("compare les deux valeurs, crée la trace exacte et fige la saisie", () => {
+    const etat = etatSurQuestionDeuxEntiers();
+    saisirChiffre(etat, 3);
+    selectionnerChampSaisie(etat, 1);
+    saisirChiffre(etat, 4);
+    validerSelection(etat);
+
+    assert.deepEqual(etat.validation, { juste: true });
+    assert.deepEqual(etat.traces[0].reponse, {
+      type: TYPE_REPONSE_DEUX_ENTIERS,
+      valeurs: [3, 4],
+    });
+    assert.deepEqual(validerTraceReponse(etat.traces[0]), {
+      valide: true,
+      erreurs: [],
+    });
+
+    selectionnerChampSaisie(etat, 0);
+    saisirChiffre(etat, 5);
+    effacerSaisie(etat);
+    assert.deepEqual(etat.saisies, ["3", "4"]);
+    assert.equal(etat.champSaisieActif, 1);
+  });
+
+  it("accepte et trace deux zéros indépendants", () => {
+    const etat = etatSurQuestionDeuxEntiers({ attendus: [0, 0] });
+    saisirChiffre(etat, 0);
+    selectionnerChampSaisie(etat, 1);
+    saisirChiffre(etat, 0);
+    validerSelection(etat);
+
+    assert.deepEqual(etat.validation, { juste: true });
+    assert.deepEqual(etat.traces[0].reponse, {
+      type: TYPE_REPONSE_DEUX_ENTIERS,
+      valeurs: [0, 0],
+    });
+  });
+
+  it("réinitialise les deux champs au passage à la question suivante", () => {
+    const etat = etatSurQuestionDeuxEntiers();
+    saisirChiffre(etat, 3);
+    selectionnerChampSaisie(etat, 1);
+    saisirChiffre(etat, 4);
+    validerSelection(etat);
+    passerQuestionSuivante(etat);
+
+    assert.deepEqual(etat.saisies, ["", ""]);
+    assert.equal(etat.champSaisieActif, 0);
   });
 });
 

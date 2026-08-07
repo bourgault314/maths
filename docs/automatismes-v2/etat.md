@@ -1,60 +1,125 @@
 # État du chantier Automatismes V2
 
-**Dernière mise à jour : 6 août 2026.**
+**Dernière mise à jour : 7 août 2026.**
 
-## Point de reprise vérifié du 6 août
+## Point de reprise vérifié du 7 août
 
-- La PR #278 a publié la première version au commit `98fdb5ff…`. Le présent
-  lot de finition publie la route pilote `/automatismes-v2/` en `v15`, toujours
-  avec `noindex,nofollow`.
+- La PR #279 est fusionnée dans `main` au commit
+  `2c5e509`. Elle constitue la base publique et stabilisée de `NC-01` sur la
+  route pilote `/automatismes-v2/`, avec le graphe de cache `v15` et toujours
+  `noindex,nofollow`.
 - `/auto/` reste indépendant. Son arbre Git de référence avant le lot de
   finition est `6942c4733b5cffad03c396a03f8c550e7367351f`.
-- Le lot de finition demandé après l'essai réel de `v14` est construit sur la
-  branche courte `agent/nc01-uniformite-interface`.
+- Le lot technique conserve l'identifiant
+  `carres-entiers-1-a-12`, mais son nom visible devient
+  `NC-02 — Carrés des entiers de 0 à 12`. Il est construit depuis cette base
+  sur `agent/nc02-carres-v2`, puis livré sur la même route pilote.
+- Gwenaël a approuvé le 7 août l'extension à 0, les cinq pages de cours, les
+  distracteurs diagnostiques, la rédaction des calculs et le principe d'une
+  compaction strictement locale autour du pavé. Il a demandé la publication
+  après modification et recette ; la livraison D-038 rend donc NC-02
+  disponible dans le lecteur public, toujours hors indexation.
 
-### Lot de finition NC-01
+### Livraison NC-02
 
-- Le cours distingue explicitement « Critères pour 2, 5 et 10 » et « Critères
-  pour 3 et 9 ». Les chiffres de `230`, `235` et `236` ont la même taille.
-- Le chiffre des unités utilise le même encadrement dans le cours, l'aide et la
-  correction. Il est repéré immédiatement : le clic décoratif est supprimé.
-- Les cinq familles F1, F2, F3, F5 et F6 portent et affichent désormais le
-  critère complet dans « Me guider ». La somme interactive a le même
-  comportement dans toutes les questions à un nombre : le total apparaît au
-  dernier chiffre sélectionné, sans niveau d'aide supplémentaire.
-- Les corrections complètes validées ne sont pas réécrites.
-- « Aide » reste en haut mais devient plus visible. Le score est centré et
-  séparé de la position dans la série.
-- Une réponse unique au chiffre manquant apparaît dans la case de l'énoncé ; la
-  sélection de plusieurs chiffres conserve le carré. La révélation fonctionne
-  aussi en mode « Au tableau ».
-- Les réponses Oui/Non sont centrées. Le pavé interne dépend du pointeur
-  principal et reste donc masqué sur un PC utilisé à la souris.
-- La taille de « Valider » est strictement conservée sur téléphone. Seule sa
-  largeur sur ordinateur est limitée.
+- Les six familles sont : calcul direct, recherche inverse, sens de la
+  notation, reconnaissance de carrés, carré quadrillé et calcul court. Les
+  quotas d'une série de 20 sont respectivement `8 / 5 / 1 / 2 / 2 / 2` : le
+  rappel direct et inverse demeure donc le cœur de la séance.
+- Le cours comporte cinq pages : donner du sens avec le carré, connaître les
+  treize faits de 0 à 12, reconstruire 11 et 12 par des bandes `10 + 1` et
+  `10 + 2`, passer du sens direct au sens inverse, puis rédiger le calcul du
+  carré avant une addition ou une soustraction courte.
+- Le même panneau « Me guider » fournit des étapes ordonnées ; chaque
+  correction explicite la lecture, le produit, le calcul et la conclusion sans
+  transformer l'aide en révélation de la réponse.
+- Les puissances sont des données structurées rendues par le composant commun
+  avec un véritable élément HTML `<sup>`. Le carré quadrillé est un objet SVG
+  partagé, stable et accessible ; il ne fabrique pas 144 éléments pour
+  représenter `12 × 12`.
+- La forme `49 = □ × □` utilise deux champs indépendants et obligatoires, avec
+  sélection explicite du champ actif au clavier, à la souris ou au toucher.
+- F1 contient désormais trois formes de saisie, un QCM direct et un
+  encadrement rare entre multiples de 10. F4 alterne « nombres carrés » et
+  « carrés parfaits » avec des distracteurs diagnostiques. Les deux F5 d'une
+  série de 20 utilisent des côtés différents.
+- Le carré commun affiche seulement un nombre sur chacun des deux côtés. Son
+  total central tient sur deux lignes, sur fond léger, avec une marge interne
+  testée ; les mots « rangées », « colonnes » et « carreaux » restent dans le
+  texte explicatif.
+- Le fait 0 au carré appartient au cours, aux rappels et à la reconnaissance,
+  mais aucun carré quadrillé `0 × 0` n'est dessiné. La famille visuelle F5
+  conserve les côtés de 2 à 12.
+- Le pavé, ses douze touches, le dock et leurs dimensions restent communs et
+  inchangés. Seules les questions numériques NC-02 peuvent compacter leurs
+  marges, leurs espacements et leur dessin sur une petite hauteur ; NC-01 et
+  les autres notions ne reçoivent aucune exception.
+- Le graphe de cache du lot est livré d'un seul tenant en `v17` afin qu'aucun
+  navigateur ne mélange l'ancien lecteur et les nouveaux modules.
+- La recette reproductible ouvre directement la série déterministe de
+  20 questions avec la graine `apercu-nc02-complet` sur la route publique du
+  lecteur.
 
-### Vérifications du lot publié
+### Vérifications de la livraison NC-02
 
-- `npm run verifier` réussit : **1 067 tests sur 1 067**.
-- Les contrôles réels à 320 × 568, 390 × 844 et 1 280 × 720 confirment
-  l'absence de chevauchement et de débordement horizontal, le pavé visible sur
-  téléphone mais masqué sur ordinateur, les commandes du cours toujours
-  accessibles et les réponses en ligne dans les chiffres manquants.
-- À 390 px, « Valider » conserve sa largeur mobile de 366 px et sa hauteur de
-  52 px ; à 1 280 px, seule sa largeur est limitée à 360 px.
-- Le graphe de cache est publié d'un seul tenant en `v15`.
-- La route pilote demeure hors navigation et hors sitemap, avec
-  `noindex,nofollow`.
-- Aucun chemin sous `/auto/` n'appartient au diff ; son arbre Git de référence
-  demeure `6942c4733b5cffad03c396a03f8c550e7367351f` et son contenu public est
-  recontrôlé après publication.
+- La version livrée réussit `npm run verifier` avec **1 134 tests sur 1 134**,
+  après les changements pédagogiques, graphiques, responsive et de cache de
+  la décision D-038.
+- Les contrats, les six générateurs seedés, leurs quotas, le lecteur, le rendu
+  des exposants, l'objet carré et le graphe de cache sont couverts par les
+  tests automatisés.
+- La série déterministe de 20 questions a été jouée intégralement dans un vrai
+  navigateur sur chacun des trois formats `320 × 568`, `390 × 844` et
+  `1 280 × 720` : ouverture de l'aide, saisie ou choix, validation, correction
+  et passage à la suite. La recette totalise 255 états géométriques mesurés et
+  78 captures, sans débordement, chevauchement ni cible inférieure à 44 px.
+- L'inventaire visuel contient les cinq pages du cours, les vingt questions,
+  une aide et une correction par famille, les deux champs F2 et les deux sens
+  F5. Le cas maximal `144 carreaux` conserve une marge nette dans le SVG ; les
+  cinq pages tiennent sans défilement sur l'écran d'ordinateur contrôlé.
+- Les contrôles responsive antérieurs restent couverts par les garde-fous
+  téléphone `320 × 568` et `390 × 844`, ordinateur `1 280 × 720`, TNI
+  `1 920 × 1 080` et zoom équivalent à 200 %. La nouvelle revue ajoute le
+  contrôle explicite des marges à l'intérieur du SVG.
+- La saisie tactile des deux champs a été exécutée au pavé, le carré quadrillé
+  utilise bien des côtés de 2 à 12, la question inverse sur l'aire demande
+  explicitement le côté et la correction au tableau montre
+  successivement l'écriture au carré, le produit de deux facteurs égaux et le
+  résultat. Les contenus plus hauts défilent dans la zone centrale sans
+  déplacer le dock.
+- L'accord pédagogique, la recette finale et la demande de publication sont
+  acquis. Les contrôles de cache et de provenance passent avec le lot complet.
+- Aucun chemin sous `/auto/` n'appartient au lot ; son arbre Git de
+  référence reste `6942c4733b5cffad03c396a03f8c550e7367351f`.
+
+## Invariant permanent d'homogénéité
+
+L'homogénéité n'est pas une consigne ponctuelle de `NC-02` : elle s'applique à
+toutes les notions suivantes. Elles conservent la même coque, le même ordre
+question → réponse → validation, les mêmes panneaux de cours, d'aide et de
+correction, les mêmes emplacements de commandes et les mêmes comportements
+après validation. Un objet mathématique ou visuel commun est réemployé dans
+tous les contextes au lieu d'être redessiné localement.
+
+Cette invariance couvre aussi les usages : données et réponses identiques dans
+« S'entraîner » et « Au tableau », cibles d'au moins 44 px, clavier physique,
+souris et toucher, zone centrale défilable sans déplacement du dock, aucune
+barre horizontale sur téléphone et lisibilité à distance sur TNI. Toute future
+fiche et toute recette doivent la vérifier sans qu'elle ait à être redemandée.
+
+La décision D-038 ne crée aucune variante du clavier commun. Sur une petite
+hauteur, la compaction autorisée est bornée à la carte d'une question numérique
+NC-02. Elle ne change ni le nombre ou la taille des touches, ni le dock, ni
+l'en-tête, ni le comportement de NC-01.
 
 ## Référence vérifiée
 
 - Dépôt : `bourgault314/maths`.
 - Branche de référence : `main`.
 - Commit de référence vérifié sur GitHub :
-  `52b6ba34cdfdd62ad77da4b2c66702beecc05525`.
+  `2c5e509`.
+- La PR #279 est fusionnée : elle fixe le moule public `v15` et la finition de
+  `NC-01` dont part la livraison `NC-02` en `v17`.
 - La PR #170 est fusionnée : la carte DNB, la fiche validée de `NC-01`, les
   storyboards et les décisions D-014 à D-019 sont la mémoire officielle du
   chantier.
@@ -83,12 +148,13 @@
 
 - La bêta continue de fonctionner séparément et reste gelée hors correction
   critique.
-- Le lecteur neuf expose en interactif et en diaporama `NC-01/F2`, `GE-12/F1`,
-  `PG-22`, `PG-23` et `PG-24`.
+- Le lecteur neuf expose en interactif et en diaporama `NC-01/F2`, `NC-02`,
+  `GE-12/F1`, `PG-22`, `PG-23` et `PG-24`. NC-02 et ses six familles sont
+  disponibles dans « S'entraîner » comme dans « Au tableau ».
 - La carte du DNB est établie : **37 cibles officielles distinctes**,
   **38 cibles normalisées** et **88 micro-notions**.
-- Une séance n'active toujours qu'une seule notion. Les cinq notions déjà
-  construites restent séparées dans le registre des générateurs.
+- Une séance n'active toujours qu'une seule notion. Les six notions publiques
+  restent séparées dans le registre.
 - Le critère par 10 est un complément maths&go validé. Il reste proposé dans le
   parcours DNB, tout en étant distingué des quatre critères officiels dans les
   données.
@@ -112,6 +178,15 @@
 
 Ces documents ont autorisé la fabrication de la première tranche verticale.
 Leur contenu reste la référence pédagogique des lots déjà fusionnés.
+
+## Document de référence NC-02
+
+- `fiche-nc-02-carres-1-a-12.md` — périmètre, cinq pages de cours, six
+  familles, aides, corrections, contrats visuels et recette de `NC-02`.
+
+Cette fiche a autorisé la fabrication puis reçu les décisions pédagogiques du
+7 août. La publication demandée a lieu après la vérification technique et la
+recette visuelle du lecteur terminé.
 
 ## Lot technique fusionné : générateur seedé de NC-01/F2
 
@@ -197,12 +272,19 @@ l'interface de la bêta :
 - Gwenaël a validé l'affichage et demandé sa publication le 19 juillet 2026 ;
   la PR #191 livre cette première tranche verticale sur le site public.
 
-## Prochaine étape du lot courant
+## Point de livraison D-038
 
-Après la vérification de la route publiée, aucun contenu de `NC-02` ne doit être
-programmé avant sa fiche pédagogique. Cette fiche partira de la cible unique
-« carrés des entiers de 1 à 12 » et distinguera les familles directe et inverse
-sans créer deux micro-notions.
+D-038 est achevée sans variante du clavier commun : treize bases, cinq pages,
+aucune représentation `0 × 0`, champs à contour unique et compaction locale
+des questions numériques NC-02. Les tests complets, le validateur V2, le
+graphe de cache et la recette réelle à `320 × 568`, `390 × 844` et
+`1 280 × 720` sont réussis.
+
+La branche est figée, fusionnée conformément à la demande de publication puis
+contrôlée après GitHub Pages. Avant le push, après le commit et après le
+déploiement, l'arbre `/auto/` reste exactement
+`6942c4733b5cffad03c396a03f8c550e7367351f`. Le prochain chantier pédagogique
+ne commence qu'après ce contrôle public.
 
 La carte de couverture conserve 88 micro-notions internes, mais elles ne
 deviennent pas 88 questionnaires visibles. Les catégories du menu pourront

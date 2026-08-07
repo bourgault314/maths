@@ -65,6 +65,38 @@ sont disponibles selon les besoins des futures notions :
 Leur présence ne dispense pas de vérifier qu'ils répondent exactement à la
 fiche pédagogique de la notion.
 
+### Cas audité : NC-02, carrés et écriture des puissances
+
+Le nom « Studio puissance objet v6 » ne correspond à aucun chemin du dépôt
+actuel. Cela ne signifie pas que le prototype n'a jamais existé : ses traces
+utiles sont aujourd'hui dispersées dans plusieurs sources historiques :
+
+- `auto/scripts/shared/visuals/numbers/square-area.js` pour le carré et son
+  aire ;
+- `auto/scripts/modules/numbers/dnb_07.js` pour les anciennes formes de
+  questions sur les carrés ;
+- la règle `.squares-mode` de `auto/scripts/03-slideshow.js` pour le réglage
+  typographique historique de l'exposant ;
+- `outils/labo-des-regularites.html` et `outils/patterns.html` pour les carrés
+  représentés par des régularités ;
+- `outils/plateaux_manipulation/feuille_coupee_puissance.html` pour un travail
+  sur le doublement `2^n`, utile comme trace du chantier « puissances » mais
+  hors du périmètre pédagogique de `NC-02`.
+
+L'audit a conduit à deux briques communes du candidat V2 :
+
+- `packages/objets/src/expressions.js` reçoit une puissance structurée et rend
+  un véritable élément HTML `<sup>` avec son libellé accessible ;
+- `packages/objets/src/carre-quadrille.js` produit le carré de sens, l'aire
+  inconnue ou le côté inconnu depuis un même objet SVG testé.
+
+Le lecteur ajoute aussi une réponse à deux entiers indépendants pour
+`49 = □ × □`. Ces briques sont neuves et déclarées dans la fondation V2 : elles
+n'importent ni le mini-parseur, ni le SVG, ni les valeurs, formulations ou
+distracteurs historiques. Le travail ancien fixe l'intention et les points de
+comparaison ; le composant V2 constitue désormais la source commune du
+candidat.
+
 ## Réservoirs techniques à examiner au besoin
 
 ### Bibliothèque de visuels
@@ -126,6 +158,18 @@ Ils servent de liste de contrôle, pas d'implémentation à copier.
 La séparation génération / sélection / rendu présente dans quelques modules
 V1 est une leçon d'architecture déjà intégrée au registre V2 ; elle ne justifie
 pas de porter leur code.
+
+## Invariant permanent d'homogénéité
+
+Chaque notion V2 réemploie la coque, l'ordre question → réponse → validation,
+les panneaux de cours, d'aide et de correction, les commandes et les profils
+d'entrée déjà communs. Un même objet doit avoir le même rendu dans le cours,
+la question, l'aide, la correction, « S'entraîner » et « Au tableau ».
+
+Cet invariant vaut pour toutes les fabrications futures. Le rituel ci-dessous
+doit contrôler sa stabilité sur téléphone, ordinateur et TNI, au clavier, à la
+souris et au toucher ; l'homogénéité ne doit pas dépendre d'un rappel propre à
+chaque micro-notion.
 
 ## Rituel obligatoire avant chaque nouvelle notion
 

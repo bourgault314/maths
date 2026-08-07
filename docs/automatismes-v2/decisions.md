@@ -384,3 +384,101 @@ toucher et reste masqué sur un ordinateur dont l'interaction principale est la
 souris, même si son écran est aussi tactile. Cette règle remplace, pour le
 moule courant, les mentions plus larges des décisions D-030 à D-033 sur tous
 les appareils hybrides et TNI.
+
+### D-036 — NC-02 garde le rappel au centre et partage ses objets
+
+`NC-02` réunit dans une seule micro-notion le calcul direct des carrés de 1 à
+12 et la recherche inverse de l'entier positif. Six familles sont actives :
+calcul direct, sens inverse, sens de la notation, reconnaissance, carré
+quadrillé et calcul court de la forme carré puis `+ k` ou `- k`. Les deux
+premières représentent 65 % d'une série de 20 ; les calculs courts restent
+limités à 10 % et n'introduisent ni parenthèses au carré ni règles générales
+sur les puissances.
+
+Le cours comporte quatre pages : comprendre le carré, connaître les douze
+faits, aller dans les deux sens, puis calculer le carré avant une seconde
+opération. « Me guider » conserve un seul panneau avec des étapes ordonnées,
+comme NC-01. Le carré quadrillé intervient dans le cours, l'aide et la famille
+de sens ; il ne transforme pas chaque question en comptage de cellules.
+
+L'écriture `49 = □ × □` possède deux champs réellement indépendants, tous deux
+obligatoires et sans validation partielle. Toute puissance est une donnée
+structurée rendue par un composant HTML commun avec un véritable élément
+`sup`. Un objet SVG commun rend les carrés de 1 à 12. Aucun générateur ni SVG
+ne fabrique localement un exposant, et aucun code, paramètre, énoncé,
+distracteur ou dessin de l'ancienne banque n'est repris.
+
+L'homogénéité de la coque, des panneaux, des commandes, des réponses après
+validation, des cibles tactiles et des profils de clavier devient un invariant
+documenté du parcours. Elle s'applique aux notions suivantes sans devoir être
+redemandée à chaque fabrication.
+
+### D-037 — La revue doit montrer tout le candidat et tester ses objets de l'intérieur
+
+Une validation pédagogique ne peut pas reposer sur quelques captures dites
+« représentatives ». Pour chaque nouvelle notion, le candidat est fourni sous
+la forme d'un parcours navigable déterministe couvrant toutes ses sous-formes.
+Il est accompagné d'un inventaire visuel des pages de cours, des formulations
+de questions, des aides et des corrections. Les captures téléphone,
+ordinateur, TNI et zoom restent des tests de stress supplémentaires ; elles ne
+remplacent pas cet inventaire complet.
+
+La recette vérifie aussi l'intérieur des objets communs. L'absence de barre de
+défilement dans la page ne suffit pas : texte, quadrillage, étiquettes et
+contours d'un SVG doivent garder des marges mesurables entre eux. Dans le carré
+de NC-02, les deux côtés affichent seulement leur nombre ; la phrase voisine
+porte les mots « rangées », « colonnes » et « carreaux ». Le total central est
+posé sur deux lignes avec un fond léger. Ce choix évite à la fois le
+débordement et une accumulation de texte dans le schéma.
+
+NC-02 emploie « nombre carré » et « carré parfait » comme synonymes. Deux
+sous-formes rares restent à l'intérieur de F1 : un QCM « Quel est le carré de
+n ? » et un encadrement entre des multiples de 10. Elles remplacent des
+questions directes dans la série ; elles ne créent ni famille ni longueur
+supplémentaire. Leurs distracteurs, comme ceux de F3 et F4, représentent des
+erreurs plausibles et contrôlées. Les deux F5 d'une série de 20 utilisent des
+côtés différents. Les carreaux restent sans unité métrique : introduire `cm²`
+ajouterait une autre micro-notion.
+
+## 7 août 2026
+
+### D-038 — NC-02 s'étend à 0–12 sans modifier son moule commun
+
+Cette décision remplace dans D-036 les bornes de la notion, le nombre de pages
+du cours et le périmètre de l'objet carré ; le reste de D-036 demeure acquis.
+
+La cible officielle DNB reste « carrés des entiers de 1 à 12 ». Le nouveau
+programme du cycle 4 demande les carrés des entiers de 0 à 12 : NC-02 ajoute
+donc `0` comme complément maths&go explicite. Le nom visible devient « Carrés
+des entiers de 0 à 12 », mais l'identifiant technique stable
+`carres-entiers-1-a-12` et la ligne `DNB26-08` ne sont pas renommés.
+
+Le fait `0` au carré entre dans le cours, le rappel direct et inverse, le sens
+de la notation et la reconnaissance des carrés parfaits. Une série de 20
+couvre exactement une fois les treize bases de 0 à 12 dans les treize rappels
+F1 et F2. Aucun carré quadrillé `0 × 0` n'est dessiné : F5 conserve les côtés
+de 2 à 12 et l'égalité numérique suffit pour le zéro.
+
+Le cours passe de quatre à cinq pages : comprendre le carré ; écrire en entier
+les treize égalités de `0` au carré à `12` au carré ; reconstruire 11 et 12 par
+un dessin en bandes `10 + 1` et `10 + 2` raccordé aux produits partiels ; aller
+dans les deux sens ; rédiger un calcul court. La dernière page montre une
+égalité enchaînée — le carré est remplacé par sa valeur, puis l'addition ou la
+soustraction est effectuée sur la ligne suivante — et non une liste d'étapes
+numérotées.
+
+Les distracteurs du QCM direct et de l'encadrement représentent des erreurs
+diagnostiques. L'encadrement est réservé aux bases 5 à 12 et peut notamment
+opposer, pour `12` au carré, l'encadrement de `12 × 2 = 24`, celui d'un carré
+ou d'un produit voisin et l'encadrement correct entre 140 et 150. Les questions
+de sélection stabilisent le terme « carrés parfaits », défini dans le cours
+comme synonyme de « nombres carrés ».
+
+Un champ de réponse inactif possède un seul contour turquoise ; le champ actif
+remplace ce contour par un seul contour orange, sans second cadre tactile. Le
+pavé maths&go commun, ses douze touches, leurs dimensions d'au moins 44 pixels,
+le dock et son comportement restent strictement inchangés. Sur une petite
+hauteur, seules les questions numériques de NC-02 compactent localement leurs
+marges, leurs espacements et, si nécessaire, leur dessin. La zone centrale
+reste défilable. Cette exception locale ne modifie ni NC-01, ni les autres
+notions, ni le fonctionnement partagé du clavier.

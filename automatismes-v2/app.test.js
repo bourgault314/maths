@@ -140,6 +140,146 @@ it("rend NC-01 depuis le registre et conserve son aide et sa correction", async 
   assert.doesNotMatch(application.innerHTML, /Applique ensuite le critère/);
 });
 
+it("rend le cours en cinq pages et les six familles de NC-02", async () => {
+  const { application, gestionnaires } = installerFauxNavigateur(
+    "?notion=carres-entiers-1-a-12&questions=20&graine=fumee-nc02-six-familles",
+  );
+  await import(`./app.js?fumee=nc02-${Date.now()}`);
+  assert.match(application.innerHTML, /Carrés des entiers de 0 à 12/);
+
+  cliquer(gestionnaires, "cours");
+  assert.match(application.innerHTML, /Comprendre « au carré »/);
+  assert.match(application.innerHTML, /1 \/ 5/);
+  assert.match(application.innerHTML, /Carré de quatre rangées et quatre colonnes/);
+  assert.match(application.innerHTML, /<sup>2<\/sup>/);
+  cliquer(gestionnaires, "cours-suivant");
+  assert.match(application.innerHTML, /Les carrés de 0 à 12/);
+  assert.match(application.innerHTML, /2 \/ 5/);
+  assert.match(application.innerHTML, /carrés parfaits/);
+  assert.match(application.innerHTML, /<span>0 × 0<\/span> <span>=<\/span> <strong>0<\/strong>/);
+  assert.match(application.innerHTML, /<span>12 × 12<\/span> <span>=<\/span> <strong>144<\/strong>/);
+  assert.match(application.innerHTML, /144/);
+  cliquer(gestionnaires, "cours-suivant");
+  assert.match(application.innerHTML, /Retrouver 11² et 12²/);
+  assert.match(application.innerHTML, /3 \/ 5/);
+  assert.match(application.innerHTML, /11 × 10 \+ 11 × 1 = 121 carreaux/);
+  assert.match(application.innerHTML, /11 × 10 \+ 11 × 1/);
+  assert.match(application.innerHTML, /12 × 10 \+ 12 × 2/);
+  cliquer(gestionnaires, "cours-suivant");
+  assert.match(application.innerHTML, /Direct et inverse/);
+  assert.match(application.innerHTML, /4 \/ 5/);
+  cliquer(gestionnaires, "cours-suivant");
+  assert.match(application.innerHTML, /Calculer dans le bon ordre/);
+  assert.match(application.innerHTML, /5 \/ 5/);
+  assert.match(application.innerHTML, /49 \+ 1/);
+  assert.match(application.innerHTML, /<strong>50<\/strong>/);
+  assert.doesNotMatch(application.innerHTML, /<ol>/);
+  cliquer(gestionnaires, "fermer-cours");
+  cliquer(gestionnaires, "demarrer");
+
+  const familles = new Set();
+  let deuxChampsVus = false;
+  let questionCoteF5Vue = false;
+  let qcmDirectVu = false;
+  let encadrementVu = false;
+  let carresParfaitsVus = false;
+  for (let index = 0; index < 20; index += 1) {
+    const famille = application.innerHTML.match(/famille-([a-z-]+)"/)?.[1];
+    assert.ok(famille, `famille NC-02 absente à la question ${index + 1}`);
+    familles.add(famille);
+    assert.match(application.innerHTML, /Carrés des entiers de 0 à 12/);
+    assert.doesNotMatch(application.innerHTML, /\^2|²/);
+    if (
+      famille === "carre-quadrille" &&
+      application.innerHTML.includes("Combien y en a-t-il sur chaque côté ?")
+    ) {
+      questionCoteF5Vue = true;
+    }
+    if (
+      famille === "calcul-direct" &&
+      application.innerHTML.includes("Quel est le carré de") &&
+      application.innerHTML.includes("grille-carres-qcm")
+    ) {
+      qcmDirectVu = true;
+    }
+    if (application.innerHTML.includes("Quel encadrement est correct ?")) {
+      encadrementVu = true;
+    }
+    if (application.innerHTML.includes("Sélectionne tous les carrés parfaits.")) {
+      carresParfaitsVus = true;
+    }
+    if (famille === "sens-notation") {
+      assert.match(application.innerHTML, /Quelle écriture correspond/);
+    }
+
+    cliquer(gestionnaires, "aide");
+    assert.match(application.innerHTML, /Me guider/);
+    assert.match(application.innerHTML, /Question en cours/);
+    if (application.innerHTML.includes("egalite-deux-champs")) {
+      assert.equal(
+        [...application.innerHTML.matchAll(/class="case-vide-aide"/g)].length,
+        2,
+      );
+    }
+    if (["calcul-direct", "carre-quadrille"].includes(famille)) {
+      assert.ok(
+        [...application.innerHTML.matchAll(/class="repere-etape/g)].length >= 2,
+      );
+    }
+    cliquer(gestionnaires, "fermer-aide");
+
+    const champs = [...application.innerHTML.matchAll(
+      /data-action="champ-reponse" data-index="(\d+)"/g,
+    )].map((correspondance) => correspondance[1]);
+    if (champs.length === 2) {
+      deuxChampsVus = true;
+      cliquer(gestionnaires, "champ-reponse", undefined, undefined, "0");
+      cliquer(gestionnaires, "chiffre", undefined, "1");
+      cliquer(gestionnaires, "champ-reponse", undefined, undefined, "1");
+      cliquer(gestionnaires, "chiffre", undefined, "1");
+      assert.match(application.innerHTML, /Champ 1, valeur 1/);
+      assert.match(application.innerHTML, /Champ 2, valeur 1/);
+    } else if (champs.length === 1) {
+      assert.match(application.innerHTML, /avec-pave/);
+      cliquer(gestionnaires, "chiffre", undefined, "1");
+    } else {
+      const choix = application.innerHTML.match(/data-action="choix" data-id="([^"]+)"/)?.[1];
+      assert.ok(choix, `réponse NC-02 absente pour ${famille}`);
+      cliquer(gestionnaires, "choix", choix);
+    }
+    cliquer(gestionnaires, "valider");
+    assert.doesNotMatch(application.innerHTML, /avec-pave/);
+    cliquer(gestionnaires, "correction");
+    assert.match(application.innerHTML, /Correction expliquée/);
+    assert.match(application.innerHTML, /Réponse correcte/);
+    if (famille === "sens-notation") {
+      assert.match(application.innerHTML, /Écarter l&#039;ajout de 2/);
+      assert.doesNotMatch(application.innerHTML, /correction-conclusion/);
+    }
+    if (famille === "calcul-court") {
+      assert.match(application.innerHTML, /correction-calcul-aligne/);
+      assert.match(application.innerHTML, /On calcule d'abord le carré/);
+    }
+    cliquer(gestionnaires, "fermer-correction");
+    cliquer(gestionnaires, "suivant");
+  }
+
+  assert.equal(deuxChampsVus, true);
+  assert.equal(questionCoteF5Vue, true);
+  assert.equal(qcmDirectVu, true);
+  assert.equal(encadrementVu, true);
+  assert.equal(carresParfaitsVus, true);
+  assert.deepEqual([...familles].sort(), [
+    "calcul-court",
+    "calcul-direct",
+    "carre-quadrille",
+    "reconnaitre-carres",
+    "retrouver-entier",
+    "sens-notation",
+  ]);
+  assert.match(application.innerHTML, /Ton bilan/);
+});
+
 it("propose le parcours DNB puis lance Au tableau sans saisie ni score", async () => {
   const { application, gestionnaires } = installerFauxNavigateur("");
   await import(`./app.js?fumee=menu-${Date.now()}`);
@@ -156,6 +296,8 @@ it("propose le parcours DNB puis lance Au tableau sans saisie ni score", async (
   assert.match(application.innerHTML, /class="dnb-launch-icon"/);
   assert.match(application.innerHTML, /M3\.6 21\.4 20\.4 2\.6/);
   assert.match(application.innerHTML, /Critères de divisibilité/);
+  assert.match(application.innerHTML, /Carrés des entiers/);
+  assert.match(application.innerHTML, /1 \/ 2/);
   assert.doesNotMatch(application.innerHTML, /Solides usuels|Calculer un volume/);
   assert.doesNotMatch(application.innerHTML, /Avec aide|Sans aide|Diaporama|Crédits et remerciements|Ouvrir une série/);
   for (const volume of [5, 10, 15, 20]) {
