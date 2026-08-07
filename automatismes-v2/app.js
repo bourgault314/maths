@@ -28,12 +28,12 @@ import {
   saisirChiffre,
   tournerSolide,
   validerReponse,
-} from "./src/etat-lecteur.js?v=18";
+} from "./src/etat-lecteur.js?v=19";
 import {
   TYPE_REPONSE_DEUX_ENTIERS,
   TYPE_REPONSE_ENTIER_NATUREL,
   TYPE_REPONSE_CHOIX_UNIQUE,
-} from "../packages/contrats/src/question-v2.js?v=18";
+} from "../packages/contrats/src/question-v2.js?v=19";
 import {
   connaitNotionLecteur,
   obtenirNotionLecteur,
@@ -41,8 +41,8 @@ import {
   RENDU_DIVISIBILITE,
   RENDU_SOLIDE,
   RENDU_VOLUME,
-} from "./src/registre-lecteur.js?v=18";
-import { COURS_SOLIDES_USUELS } from "../packages/automatismes/src/espace-et-geometrie/solides-usuels/reconnaissance.js?v=18";
+} from "./src/registre-lecteur.js?v=19";
+import { COURS_SOLIDES_USUELS } from "../packages/automatismes/src/espace-et-geometrie/solides-usuels/reconnaissance.js?v=19";
 import {
   creerCone,
   creerCube,
@@ -57,17 +57,17 @@ import {
   ACTION_TOUCHE_SAISIR,
   ACTION_TOUCHE_VALIDER,
   obtenirDispositionClavier,
-} from "../packages/objets/src/clavier.js?v=18";
-import { formulationCritereDivisibilite } from "../packages/automatismes/src/nombres-et-calculs/criteres-divisibilite/critere-precis.js?v=18";
+} from "../packages/objets/src/clavier.js?v=19";
+import { formulationCritereDivisibilite } from "../packages/automatismes/src/nombres-et-calculs/criteres-divisibilite/critere-precis.js?v=19";
 import {
   nombre,
   puissance,
   variable,
   versHtmlSemantique,
-} from "../packages/objets/src/expressions.js?v=18";
+} from "../packages/objets/src/expressions.js?v=19";
 import {
   dessinerCarreQuadrille,
-} from "../packages/objets/src/carre-quadrille.js?v=18";
+} from "../packages/objets/src/carre-quadrille.js?v=19";
 
 const application = document.querySelector("#application");
 const rechercheInitiale = window.location.search;
@@ -873,7 +873,7 @@ function rendreMotifAide(motif, encadrerUnite) {
   </p>`;
 }
 
-function rendreSommeInteractive(nombre, numeroEtape = 1) {
+function rendreSommeInteractive(nombre, numeroEtape = 1, criteres = []) {
   const chiffres = [...String(nombre)];
   const selectionnes = new Set(etat.chiffresSomme);
   const tousSelectionnes = chiffres.every((_, index) => selectionnes.has(index));
@@ -886,6 +886,7 @@ function rendreSommeInteractive(nombre, numeroEtape = 1) {
         data-action="chiffre-aide" data-index="${index}" aria-pressed="${selectionnes.has(index)}">${chiffre}</button>`).join("")}</div>
     <output class="expression-aide" aria-live="polite" aria-atomic="true">${echapper(expression)}</output>
     <p class="consigne-manipulation">Appuie sur chaque chiffre : la somme apparaît quand ils sont tous sélectionnés.</p>
+    ${criteres.length === 0 ? "" : rendreRappelsCriteres(criteres)}
   </section>`;
 }
 
@@ -974,8 +975,13 @@ function rendreAideDivisibiliteGenerique(question) {
         <div class="nombre-aide" aria-label="Nombre ${nombre}, chiffre des unités ${chiffres.at(-1)}">${rendreNombreAvecUnite(nombre)}</div>
         ${critere === null ? "" : rendreRappelsCriteres([critere])}
       </section>` : ""}
-      ${peutComposer && chiffres.length > 0 ? `${rendreSommeInteractive(nombre, peutObserver ? 2 : 1)}
-        ${critere === null ? "" : rendreRappelsCriteres([critere])}` : ""}
+      ${peutComposer && chiffres.length > 0
+        ? rendreSommeInteractive(
+          nombre,
+          peutObserver ? 2 : 1,
+          critere === null ? [] : [critere],
+        )
+        : ""}
     ${indicationsSpecifiques.length === 0 ? "" : `<section class="indices-aide aide-generique">
         <h3>À toi de conclure</h3>
         <ol>${indicationsSpecifiques.map((bloc) => `<li>${echapper(bloc.contenu)}</li>`).join("")}</ol>
@@ -1069,8 +1075,7 @@ function rendreAideDivisibilite(question) {
         ${rendreRappelsCriteres([2, 5, 10])}
         <p class="question-guidage">À toi de décider quels critères conviennent.</p>
     </section>
-    ${rendreSommeInteractive(nombre, 2)}
-    ${rendreRappelsCriteres([3, 9])}
+    ${rendreSommeInteractive(nombre, 2, [3, 9])}
     <p class="indication-aide">Plusieurs réponses peuvent être correctes.</p>`;
   return rendreCadrePanneau({
     type: "aide",
