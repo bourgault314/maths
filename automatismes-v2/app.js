@@ -16,6 +16,7 @@ import {
   nombreReussites,
   NOTION_NC01,
   NOTION_NC02,
+  notionCourante,
   ouvrirAide,
   ouvrirCorrection,
   ouvrirCours,
@@ -27,12 +28,12 @@ import {
   saisirChiffre,
   tournerSolide,
   validerReponse,
-} from "./src/etat-lecteur.js?v=17";
+} from "./src/etat-lecteur.js?v=18";
 import {
   TYPE_REPONSE_DEUX_ENTIERS,
   TYPE_REPONSE_ENTIER_NATUREL,
   TYPE_REPONSE_CHOIX_UNIQUE,
-} from "../packages/contrats/src/question-v2.js?v=17";
+} from "../packages/contrats/src/question-v2.js?v=18";
 import {
   connaitNotionLecteur,
   obtenirNotionLecteur,
@@ -40,8 +41,8 @@ import {
   RENDU_DIVISIBILITE,
   RENDU_SOLIDE,
   RENDU_VOLUME,
-} from "./src/registre-lecteur.js?v=17";
-import { COURS_SOLIDES_USUELS } from "../packages/automatismes/src/espace-et-geometrie/solides-usuels/reconnaissance.js?v=17";
+} from "./src/registre-lecteur.js?v=18";
+import { COURS_SOLIDES_USUELS } from "../packages/automatismes/src/espace-et-geometrie/solides-usuels/reconnaissance.js?v=18";
 import {
   creerCone,
   creerCube,
@@ -56,17 +57,17 @@ import {
   ACTION_TOUCHE_SAISIR,
   ACTION_TOUCHE_VALIDER,
   obtenirDispositionClavier,
-} from "../packages/objets/src/clavier.js?v=17";
-import { formulationCritereDivisibilite } from "../packages/automatismes/src/nombres-et-calculs/criteres-divisibilite/critere-precis.js?v=17";
+} from "../packages/objets/src/clavier.js?v=18";
+import { formulationCritereDivisibilite } from "../packages/automatismes/src/nombres-et-calculs/criteres-divisibilite/critere-precis.js?v=18";
 import {
   nombre,
   puissance,
   variable,
   versHtmlSemantique,
-} from "../packages/objets/src/expressions.js?v=17";
+} from "../packages/objets/src/expressions.js?v=18";
 import {
   dessinerCarreQuadrille,
-} from "../packages/objets/src/carre-quadrille.js?v=17";
+} from "../packages/objets/src/carre-quadrille.js?v=18";
 
 const application = document.querySelector("#application");
 const rechercheInitiale = window.location.search;
@@ -75,14 +76,15 @@ let menuAccueilOuvert = rechercheInitiale.length === 0;
 let menuSessionOuvert = false;
 let pageCoursCourante = 0;
 let compteurSeries = 0;
-let configurationMenu = {
-  mode: "entrainement",
-  aide: "disponible",
-  nombreQuestions: 10,
-  notion: NOTION_NC01,
-};
-
 const VOLUMES_MENU = Object.freeze([5, 10, 15, 20]);
+let configurationMenu = {
+  mode: etat.configuration.mode,
+  aide: etat.configuration.aide,
+  nombreQuestions: VOLUMES_MENU.includes(etat.configuration.nombreQuestions)
+    ? etat.configuration.nombreQuestions
+    : 10,
+  notions: [...etat.configuration.notions],
+};
 
 function creerGraineSerie() {
   compteurSeries += 1;
@@ -113,12 +115,17 @@ const LIBELLES_MODULES_MENU = Object.freeze({
   }),
 });
 
-function definitionNotion() {
-  return obtenirNotionLecteur(etat.configuration.notion);
+function identifiantNotionContexte() {
+  if (etat.coursOuvert && etat.notionCoursOuverte) return etat.notionCoursOuverte;
+  return notionCourante(etat) ?? etat.configuration.notions[0];
 }
 
-function nomNotion() {
-  return definitionNotion().nom;
+function definitionNotion(id = identifiantNotionContexte()) {
+  return obtenirNotionLecteur(id);
+}
+
+function nomNotion(id = identifiantNotionContexte()) {
+  return definitionNotion(id).nom;
 }
 
 function estEntrainement() {
@@ -140,6 +147,38 @@ function rendrePuissance(base, exposant = 2) {
 
 function nombrePagesCours() {
   return definitionNotion().pagesCours;
+}
+
+function definitionsSelectionnees(notions = etat.configuration.notions) {
+  return notions.map(obtenirNotionLecteur);
+}
+
+function libelleNombreAutomatismes(nombre) {
+  return `${nombre} automatisme${nombre === 1 ? "" : "s"}`;
+}
+
+function quotasEquilibres(nombreNotions, nombreQuestions) {
+  if (nombreNotions < 1) return [];
+  const minimum = Math.floor(nombreQuestions / nombreNotions);
+  const reste = nombreQuestions % nombreNotions;
+  return Array.from(
+    { length: nombreNotions },
+    (_, index) => minimum + (index < reste ? 1 : 0),
+  );
+}
+
+function libelleRepartition(nombreNotions, nombreQuestions) {
+  if (nombreNotions <= 1) return "";
+  const quotas = quotasEquilibres(nombreNotions, nombreQuestions);
+  return new Set(quotas).size === 1
+    ? `${quotas[0]} par automatisme`
+    : `répartition ${quotas.join(" + ")}`;
+}
+
+function trierNotionsMenu(notions) {
+  const ordre = DOMAINES_MENU.flatMap((domaine) => domaine.notions);
+  const selection = new Set(notions);
+  return ordre.filter((notion) => selection.has(notion));
 }
 
 const nomsCouleurs = {
@@ -220,24 +259,26 @@ function rendreIconeCalculatriceBarree() {
 }
 
 function rendreDomainesMenu() {
+  const selection = new Set(configurationMenu.notions);
   return DOMAINES_MENU
     .filter((domaine) => domaine.notions.length > 0)
     .map((domaine) => {
-      const selectionnee = domaine.notions.includes(configurationMenu.notion);
-      const nombreSelectionne = selectionnee ? 1 : 0;
-      return `<details class="theme-group ${selectionnee ? "has-selection is-complete" : ""}"
+      const nombreSelectionne = domaine.notions.filter((notion) => selection.has(notion)).length;
+      const selectionnee = nombreSelectionne > 0;
+      const complete = nombreSelectionne === domaine.notions.length;
+      return `<details class="theme-group ${selectionnee ? "has-selection" : ""} ${complete ? "is-complete" : ""}"
         data-theme="numbers" open>
         <summary class="theme-summary">
           <span class="theme-icon" aria-hidden="true">${rendreIconeNombresCalculs()}</span>
           <span class="theme-name">${echapper(domaine.nom)}</span>
-          <span class="theme-count">${nombreSelectionne} / ${domaine.notions.length} <span class="theme-count-label">sélectionné</span></span>
+          <span class="theme-count">${nombreSelectionne} / ${domaine.notions.length} <span class="theme-count-label">sélectionné${nombreSelectionne > 1 ? "s" : ""}</span></span>
           <span class="theme-chevron" aria-hidden="true"></span>
         </summary>
         <div class="theme-items">
           <div class="module-subgroup-items">
             ${domaine.notions.map((idNotion) => {
               const libelle = LIBELLES_MODULES_MENU[idNotion];
-              const estSelectionnee = configurationMenu.notion === idNotion;
+              const estSelectionnee = selection.has(idNotion);
               return `<label class="modrow">
                 <input type="checkbox" data-action="choisir-notion" data-value="${echapper(idNotion)}"
                   ${estSelectionnee ? "checked" : ""}>
@@ -253,8 +294,14 @@ function rendreDomainesMenu() {
 
 function rendreMenuAccueil() {
   const entrainement = configurationMenu.mode === "entrainement";
-  const notionSelectionnee = configurationMenu.notion !== null
-    && connaitNotionLecteur(configurationMenu.notion);
+  const nombreSelectionne = configurationMenu.notions.length;
+  const selectionValide = nombreSelectionne > 0
+    && configurationMenu.notions.every(connaitNotionLecteur)
+    && nombreSelectionne <= configurationMenu.nombreQuestions;
+  const repartition = libelleRepartition(
+    nombreSelectionne,
+    configurationMenu.nombreQuestions,
+  );
   return `<main class="menu-v10">
     <div class="app">
       <header class="header">
@@ -287,7 +334,8 @@ function rendreMenuAccueil() {
               <div class="segmented-control" role="group" aria-labelledby="countLabel">
                 ${VOLUMES_MENU.map((volume) => `<button type="button" class="segment-btn ${configurationMenu.nombreQuestions === volume ? "is-active" : ""}"
                   data-action="choisir-volume" data-value="${volume}"
-                  aria-pressed="${configurationMenu.nombreQuestions === volume}">${volume}</button>`).join("")}
+                  aria-pressed="${configurationMenu.nombreQuestions === volume}"
+                  ${volume < nombreSelectionne ? "disabled" : ""}>${volume}</button>`).join("")}
               </div>
             </div>
           </div>
@@ -307,25 +355,52 @@ function rendreMenuAccueil() {
       </div>
     </div>
 
-    <div class="setup-action-shell ${notionSelectionnee ? "" : "is-empty"}" aria-label="Résumé et lancement de la série">
+    <div class="setup-action-shell ${selectionValide ? "" : "is-empty"}" aria-label="Résumé et lancement de la série">
       <div class="setup-action-bar">
         <div class="setup-summary" aria-live="polite">
-          <strong>${notionSelectionnee ? "1 automatisme sélectionné" : "Choisis au moins un automatisme"}</strong>
-          <span>${configurationMenu.nombreQuestions} questions · ${libelleMode(configurationMenu.mode)}</span>
+          <strong>${selectionValide ? `${libelleNombreAutomatismes(nombreSelectionne)} sélectionné${nombreSelectionne === 1 ? "" : "s"}` : "Choisis au moins un automatisme"}</strong>
+          <span>${configurationMenu.nombreQuestions} questions${repartition ? ` · ${echapper(repartition)}` : ""} · ${libelleMode(configurationMenu.mode)}</span>
         </div>
         <div class="launch-cluster">
           <span class="dnb-launch-context" role="img" aria-label="Épreuve DNB sans calculatrice" title="Épreuve sans calculatrice">
             ${rendreIconeCalculatriceBarree()}
           </span>
-          <button class="generate-action" type="button" data-action="preparer" ${notionSelectionnee ? "" : "disabled"}>Lancer la série</button>
+          <button class="generate-action" type="button" data-action="preparer" ${selectionValide ? "" : "disabled"}>Lancer la série</button>
         </div>
       </div>
     </div>
   </main>`;
 }
 
+function rendreListeNotionsSelectionnees({ compacte = false } = {}) {
+  const definitions = definitionsSelectionnees();
+  if (definitions.length === 1) return echapper(definitions[0].nom);
+  const classe = compacte ? "liste-notions-selectionnees compacte" : "liste-notions-selectionnees";
+  return `<ul class="${classe}" aria-label="Automatismes de la série">
+    ${definitions.map(({ nom }) => `<li>${echapper(nom)}</li>`).join("")}
+  </ul>`;
+}
+
+function rendreAccesCoursAvantSerie() {
+  const cours = definitionsSelectionnees().filter(({ capacites }) => capacites.cours);
+  if (cours.length === 0) return "";
+  if (cours.length === 1) {
+    return `<button class="bouton-secondaire bouton-large" data-action="cours-notion"
+      data-notion="${echapper(cours[0].id)}">Voir le cours</button>`;
+  }
+  return `<details class="choix-cours-pret">
+    <summary class="bouton-secondaire bouton-large">Voir les cours</summary>
+    <nav class="liste-cours-pret" aria-label="Cours des automatismes sélectionnés">
+      ${cours.map(({ id, nom }) => `<button class="bouton-secondaire" type="button"
+        data-action="cours-notion" data-notion="${echapper(id)}">${echapper(nom)}</button>`).join("")}
+    </nav>
+  </details>`;
+}
+
 function rendreEcranPret() {
   const entrainement = estEntrainement();
+  const nombreNotions = etat.configuration.notions.length;
+  const repartition = libelleRepartition(nombreNotions, etat.configuration.nombreQuestions);
   return `
     <main class="ecran-pret ${etat.coursOuvert ? "cours-pret-ouvert" : ""}">
       <button class="retour-lancement" type="button" data-action="retour-menu">← Modifier</button>
@@ -333,11 +408,12 @@ function rendreEcranPret() {
       <p class="surtitre">Préparation au brevet</p>
       <h1>${entrainement ? "Prêt à t'entraîner ?" : "Prêt pour la classe ?"}</h1>
       <section class="resume-seance" aria-label="Contenu de la séance">
-        <strong>${echapper(nomNotion())}</strong>
-        <span>${etat.configuration.nombreQuestions} ${etat.configuration.nombreQuestions === 1 ? "question" : "questions"}</span>
+        <strong>${nombreNotions === 1 ? echapper(nomNotion(etat.configuration.notions[0])) : `${libelleNombreAutomatismes(nombreNotions)} sélectionnés`}</strong>
+        ${nombreNotions === 1 ? "" : rendreListeNotionsSelectionnees()}
+        <span>${etat.configuration.nombreQuestions} ${etat.configuration.nombreQuestions === 1 ? "question" : "questions"}${repartition ? ` · ${echapper(repartition)}` : ""}</span>
       </section>
       <div class="actions-pret">
-        <button class="bouton-secondaire bouton-large" data-action="cours">Voir le cours</button>
+        ${rendreAccesCoursAvantSerie()}
         <button class="bouton-principal bouton-large" data-action="demarrer">
           ${entrainement ? "Commencer" : "Commencer au tableau"}
         </button>
@@ -1983,6 +2059,7 @@ function rendreQuestion() {
 function rendreBilan() {
   const entrainement = estEntrainement();
   const volume = etat.seance.nombreQuestions;
+  const nombreNotions = etat.configuration.notions.length;
   const conseil = volume < 10
     ? "Cette révision courte ne couvre pas toutes les formes. Choisis 10 questions pour une série standard."
     : "Ce score décrit cette série. Pour confirmer la maîtrise, réussis de nouveau une série à un autre moment.";
@@ -1993,7 +2070,9 @@ function rendreBilan() {
       ${entrainement
         ? `<p class="resultat-bilan"><strong>${nombreReussites(etat)}</strong><span>bonnes réponses sur ${etat.seance.nombreQuestions}</span></p>`
         : '<p class="texte-bilan">Toutes les questions ont été présentées.</p>'}
-      <p class="notion-bilan">${echapper(nomNotion())}</p>
+      <div class="notion-bilan">${nombreNotions === 1
+        ? echapper(nomNotion(etat.configuration.notions[0]))
+        : `<strong>${libelleNombreAutomatismes(nombreNotions)} révisés</strong>${rendreListeNotionsSelectionnees({ compacte: true })}`}</div>
       ${entrainement ? `<p class="conseil-bilan">${echapper(conseil)}</p>` : ""}
       <div class="actions-bilan">
         <button class="bouton-principal bouton-large" data-action="nouvelle-serie">Nouvelle série</button>
@@ -2076,20 +2155,36 @@ application.addEventListener("click", (evenement) => {
   }
   if (action === "choisir-volume") {
     const volume = Number(cible.dataset.value);
-    if (VOLUMES_MENU.includes(volume)) configurationMenu.nombreQuestions = volume;
+    if (VOLUMES_MENU.includes(volume) && volume >= configurationMenu.notions.length) {
+      configurationMenu.nombreQuestions = volume;
+    }
   }
   if (action === "choisir-notion") {
     const notionDemandee = cible.dataset.value;
     if (DOMAINES_MENU.some((domaine) => domaine.notions.includes(notionDemandee))) {
-      configurationMenu.notion = configurationMenu.notion === notionDemandee
-        ? null
-        : notionDemandee;
+      const selection = new Set(configurationMenu.notions);
+      if (selection.has(notionDemandee)) {
+        selection.delete(notionDemandee);
+      } else if (selection.size < VOLUMES_MENU.at(-1)) {
+        selection.add(notionDemandee);
+      }
+      configurationMenu.notions = trierNotionsMenu([...selection]);
+      if (configurationMenu.nombreQuestions < configurationMenu.notions.length) {
+        configurationMenu.nombreQuestions = VOLUMES_MENU.find(
+          (volume) => volume >= configurationMenu.notions.length,
+        ) ?? VOLUMES_MENU.at(-1);
+      }
     }
   }
   if (action === "preparer") {
-    if (!configurationMenu.notion || !connaitNotionLecteur(configurationMenu.notion)) return;
+    if (
+      configurationMenu.notions.length === 0
+      || configurationMenu.notions.some((notion) => !connaitNotionLecteur(notion))
+      || configurationMenu.notions.length > configurationMenu.nombreQuestions
+    ) return;
     etat = creerEtatLecteur({
       ...configurationMenu,
+      notions: [...configurationMenu.notions],
       graine: creerGraineSerie(),
     });
     menuAccueilOuvert = false;
@@ -2161,6 +2256,12 @@ application.addEventListener("click", (evenement) => {
     menuSessionOuvert = false;
     pageCoursCourante = 0;
     ouvrirCours(etat);
+    focusPanneau = etat.coursOuvert;
+  }
+  if (action === "cours-notion") {
+    menuSessionOuvert = false;
+    pageCoursCourante = 0;
+    ouvrirCours(etat, cible.dataset.notion);
     focusPanneau = etat.coursOuvert;
   }
   if (action === "cours-precedent") {

@@ -482,3 +482,38 @@ hauteur, seules les questions numériques de NC-02 compactent localement leurs
 marges, leurs espacements et, si nécessaire, leur dessin. La zone centrale
 reste défilable. Cette exception locale ne modifie ni NC-01, ni les autres
 notions, ni le fonctionnement partagé du clavier.
+
+### D-039 — Une séance peut mélanger un nombre quelconque d'automatismes
+
+Gwenaël valide le 7 août 2026 la sélection multiple générique et demande sa
+publication avant la fabrication de NC-03. Cette décision concrétise D-034 :
+les cases du menu deviennent réellement indépendantes et aucun troisième mode
+« Mélange » n'est créé. Une seule notion produit toujours un entraînement
+ciblé ; plusieurs notions produisent une révision mélangée.
+
+Le nombre choisi reste le total de la séance. Pour `N` notions et `Q`
+questions, chaque notion reçoit `⌊Q / N⌋` questions, puis les `Q mod N`
+questions restantes sont attribuées de façon seedée. L'écart entre deux quotas
+ne dépasse donc jamais une question. Chaque notion est représentée dès que
+`Q ≥ N` ; une longueur plus courte que le nombre de notions est indisponible
+dans le menu et la première longueur suffisante est proposée sans effacer la
+sélection.
+
+Chaque générateur conserve sa recette et l'ordre de sa sous-série. Le moteur
+commun ne remélange pas les questions à l'intérieur d'une notion : il
+intercale les files obtenues dans un ordre déterministe, sans deux notions
+identiques voisines lorsque plusieurs notions sont sélectionnées. « Refaire la
+même série » conserve répartition, questions et ordre ; « Nouvelle série »
+change la graine, donc le mélange.
+
+Le résumé emploie le pluriel et annonce la répartition. Avant le départ,
+« Voir les cours » propose la liste des cours sélectionnés. Pendant la séance,
+le nom, le rendu, l'aide, le cours, la correction, le clavier et les capacités
+d'interaction sont toujours résolus depuis la notion de la question courante.
+Le bilan conserve la liste complète.
+
+Les URL historiques `?notion=...` restent valides et plusieurs paramètres
+`notion` peuvent décrire une sélection. Les quatre recettes isolées validées de
+NC-02 pour 5, 10, 15 et 20 questions restent identiques ; des préfixes de 1 à
+20 questions sont ajoutés uniquement afin de fournir ses sous-séries dans un
+mélange, notamment les répartitions `3 + 2`, `8 + 7` ou `7 + 7 + 6`.

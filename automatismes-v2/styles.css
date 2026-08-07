@@ -136,6 +136,30 @@ h3,
   color: var(--mg-texteAttenue);
 }
 
+.liste-notions-selectionnees {
+  margin: 2px 0 4px;
+  padding: 0;
+  display: grid;
+  gap: 4px;
+  list-style: none;
+  color: var(--mg-encre);
+  font-size: 15px;
+  font-weight: 700;
+}
+
+.liste-notions-selectionnees li::before {
+  content: "✓";
+  margin-right: 7px;
+  color: var(--mg-turquoise);
+}
+
+.liste-notions-selectionnees.compacte {
+  margin-top: 8px;
+  color: var(--mg-texteAttenue);
+  font-size: 14px;
+  font-weight: 600;
+}
+
 .bouton-principal,
 .bouton-secondaire {
   border-radius: var(--mg-rayon-moyen);
@@ -1034,6 +1058,10 @@ button.choix:hover:not(:disabled) {
 .notion-bilan,
 .texte-bilan {
   color: var(--mg-texteAttenue);
+}
+
+.notion-bilan > strong {
+  color: var(--mg-bleu);
 }
 
 @media (min-width: 720px) {

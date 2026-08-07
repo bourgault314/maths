@@ -57,9 +57,9 @@ function installerFauxNavigateur(recherche) {
   return { application, gestionnaires, focusRecus, optionsFocus, panneau, corpsPanneau, zoneQuestion };
 }
 
-function cliquer(gestionnaires, action, id, value, index) {
+function cliquer(gestionnaires, action, id, value, index, notion) {
   const cible = {
-    dataset: { action, id, value, index },
+    dataset: { action, id, value, index, notion },
     closest(selecteur) { return selecteur === "[data-action]" ? this : null; },
   };
   gestionnaires.get("click")[0]({ target: cible });
@@ -329,6 +329,106 @@ it("propose le parcours DNB puis lance Au tableau sans saisie ni score", async (
   cliquer(gestionnaires, "fermer-menu");
   cliquer(gestionnaires, "reponse");
   assert.match(application.innerHTML, /Réponse affichée/);
+});
+
+it("sélectionne, révise et rejoue plusieurs automatismes dans une même série", async () => {
+  const { application, gestionnaires } = installerFauxNavigateur("");
+  await import(`./app.js?fumee=multi-${Date.now()}`);
+
+  cliquer(gestionnaires, "choisir-notion", undefined, "criteres-divisibilite");
+  assert.match(application.innerHTML, /Choisis au moins un automatisme/);
+  assert.match(application.innerHTML, /data-action="preparer" disabled/);
+  cliquer(gestionnaires, "choisir-notion", undefined, "criteres-divisibilite");
+  cliquer(gestionnaires, "choisir-notion", undefined, "carres-entiers-1-a-12");
+  assert.match(application.innerHTML, /2 \/ 2 <span class="theme-count-label">sélectionnés/);
+  assert.match(application.innerHTML, /2 automatismes sélectionnés/);
+  assert.match(
+    application.innerHTML,
+    /data-value="criteres-divisibilite"\s+checked/,
+  );
+  assert.match(
+    application.innerHTML,
+    /data-value="carres-entiers-1-a-12"\s+checked/,
+  );
+
+  cliquer(gestionnaires, "choisir-volume", undefined, "5");
+  assert.match(application.innerHTML, /5 questions · répartition 3 \+ 2/);
+  cliquer(gestionnaires, "preparer");
+  assert.match(application.innerHTML, /2 automatismes sélectionnés/);
+  assert.match(application.innerHTML, /Critères de divisibilité/);
+  assert.match(application.innerHTML, /Carrés des entiers de 0 à 12/);
+  assert.match(application.innerHTML, /Voir les cours/);
+
+  cliquer(
+    gestionnaires,
+    "cours-notion",
+    undefined,
+    undefined,
+    undefined,
+    "carres-entiers-1-a-12",
+  );
+  assert.match(application.innerHTML, /Comprendre « au carré »/);
+  assert.match(application.innerHTML, /1 \/ 5/);
+  cliquer(gestionnaires, "fermer-cours");
+  cliquer(
+    gestionnaires,
+    "cours-notion",
+    undefined,
+    undefined,
+    undefined,
+    "criteres-divisibilite",
+  );
+  assert.match(application.innerHTML, /Comprendre « divisible »/);
+  assert.match(application.innerHTML, /1 \/ 3/);
+  cliquer(gestionnaires, "fermer-cours");
+  cliquer(gestionnaires, "demarrer");
+
+  const notionsVues = new Set();
+  for (let index = 0; index < 5; index += 1) {
+    const estCarres = application.innerHTML.includes(
+      '<p class="etiquette-notion">Carrés des entiers de 0 à 12</p>',
+    );
+    const notion = estCarres ? "carres" : "divisibilite";
+    notionsVues.add(notion);
+
+    cliquer(gestionnaires, "aide");
+    assert.match(application.innerHTML, /Me guider/);
+    cliquer(gestionnaires, "cours");
+    assert.match(
+      application.innerHTML,
+      estCarres ? /Comprendre « au carré »/ : /Comprendre « divisible »/,
+    );
+    cliquer(gestionnaires, "fermer-cours");
+
+    const champs = [...application.innerHTML.matchAll(
+      /data-action="champ-reponse" data-index="(\d+)"/g,
+    )].map((correspondance) => correspondance[1]);
+    if (champs.length === 2) {
+      for (const champ of champs) {
+        cliquer(gestionnaires, "champ-reponse", undefined, undefined, champ);
+        cliquer(gestionnaires, "chiffre", undefined, "0");
+      }
+    } else if (application.innerHTML.includes('data-action="chiffre"')) {
+      cliquer(gestionnaires, "chiffre", undefined, "0");
+    } else {
+      const choix = application.innerHTML.match(/data-action="choix" data-id="([^"]+)"/)?.[1];
+      assert.ok(choix);
+      cliquer(gestionnaires, "choix", choix);
+    }
+    cliquer(gestionnaires, "valider");
+    cliquer(gestionnaires, "correction");
+    assert.match(application.innerHTML, /Correction expliquée/);
+    cliquer(gestionnaires, "fermer-correction");
+    cliquer(gestionnaires, "suivant");
+  }
+
+  assert.deepEqual([...notionsVues].sort(), ["carres", "divisibilite"]);
+  assert.match(application.innerHTML, /2 automatismes révisés/);
+  assert.match(application.innerHTML, /Critères de divisibilité/);
+  assert.match(application.innerHTML, /Carrés des entiers de 0 à 12/);
+  cliquer(gestionnaires, "recommencer");
+  assert.match(application.innerHTML, /2 automatismes sélectionnés/);
+  assert.match(application.innerHTML, /répartition 3 \+ 2/);
 });
 
 it("parcourt les cinq familles NC-01, leur aide, leur réponse et leur correction", async () => {

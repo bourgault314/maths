@@ -151,6 +151,11 @@ export const PROVENANCE_FONDATION_V2 = Object.freeze({
     statut: "original_mathsgo",
     source: "architecture générique du lecteur décidée après l’audit maths&go du 20 juillet 2026",
   },
+  "automatismes-v2/src/serie-multinotions.js": {
+    statut: "original_mathsgo",
+    source: "sélection multiple et répartition équilibrée validées par Gwenaël le 7 août 2026",
+    note: "Le plan conserve la recette interne de chaque notion, répartit le total avec un écart maximal d’une question et intercale les sous-séries de façon seedée.",
+  },
 
   "packages/objets/src/programme-automatismes.js": {
     statut: "original_mathsgo",

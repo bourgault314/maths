@@ -170,11 +170,31 @@ describe("NC-02 — plan de série", () => {
     );
   });
 
-  it("refuse les longueurs qui ne correspondent pas aux choix du lecteur", () => {
-    for (const nombreQuestions of [0, 1, 6, 19, 21, 100]) {
+  it("fournit un préfixe pédagogique pour chaque longueur intermédiaire d'un mélange", () => {
+    for (let nombreQuestions = 1; nombreQuestions <= 20; nombreQuestions += 1) {
+      for (let graine = 0; graine < 100; graine += 1) {
+        const plan = planifierSerieNC02({
+          graine: `intermediaire-${nombreQuestions}-${graine}`,
+          nombreQuestions,
+        });
+        assert.equal(plan.length, nombreQuestions);
+        assert.ok([FAMILLES_NC02.F1, FAMILLES_NC02.F2].includes(plan[0].famille));
+        plan.slice(1).forEach((element, index) => {
+          assert.notEqual(element.famille, plan[index].famille);
+        });
+        if (nombreQuestions >= 2) {
+          assert.ok(plan.some(({ famille }) => famille === FAMILLES_NC02.F1));
+          assert.ok(plan.some(({ famille }) => famille === FAMILLES_NC02.F2));
+        }
+      }
+    }
+  });
+
+  it("refuse les longueurs hors de la plage utile au lecteur", () => {
+    for (const nombreQuestions of [0, 21, 100, 1.5]) {
       assert.throws(
         () => planifierSerieNC02({ graine: "invalide", nombreQuestions }),
-        /5, 10, 15 et 20/,
+        /entre 1 et 20/,
       );
     }
   });
@@ -194,6 +214,27 @@ describe("NC-02 — génération de séries complètes", () => {
         assert.equal(
           new Set(questions.map(signatureVisibleQuestion)).size,
           nombreQuestions,
+        );
+      }
+    }
+  });
+
+  it("génère aussi les sous-séries de deux et trois questions requises par le mélange", () => {
+    const registre = creerRegistreAutomatismes();
+    for (const nombreQuestions of [2, 3]) {
+      for (let graine = 0; graine < 200; graine += 1) {
+        const questions = genererSerieNC02({
+          registre,
+          graine: `sous-serie-${nombreQuestions}-${graine}`,
+          nombreQuestions,
+        });
+        assert.equal(questions.length, nombreQuestions);
+        assert.equal(new Set(questions.map(signatureVisibleQuestion)).size, nombreQuestions);
+        assert.deepEqual(
+          [...new Set(questions.map(({ classement }) => classement.famille))].sort(),
+          nombreQuestions === 2
+            ? [FAMILLES_NC02.F1, FAMILLES_NC02.F2].sort()
+            : [FAMILLES_NC02.F1, FAMILLES_NC02.F2, FAMILLES_NC02.F3].sort(),
         );
       }
     }

@@ -4,16 +4,16 @@
 
 ## Point de reprise vérifié du 7 août
 
-- La PR #279 est fusionnée dans `main` au commit
-  `2c5e509`. Elle constitue la base publique et stabilisée de `NC-01` sur la
-  route pilote `/automatismes-v2/`, avec le graphe de cache `v15` et toujours
-  `noindex,nofollow`.
+- La PR #280 est fusionnée dans `main` au commit
+  `b57aece`. Elle constitue la base publique et stabilisée de `NC-01` et
+  `NC-02` sur la route pilote `/automatismes-v2/`, avec le graphe de cache
+  `v17` et toujours `noindex,nofollow`.
 - `/auto/` reste indépendant. Son arbre Git de référence avant le lot de
   finition est `6942c4733b5cffad03c396a03f8c550e7367351f`.
-- Le lot technique conserve l'identifiant
-  `carres-entiers-1-a-12`, mais son nom visible devient
-  `NC-02 — Carrés des entiers de 0 à 12`. Il est construit depuis cette base
-  sur `agent/nc02-carres-v2`, puis livré sur la même route pilote.
+- Le lot D-039 est construit depuis cette base sur
+  `agent/automatismes-v2-selection-multiple`. Il rend indépendantes les cases
+  du menu et permet de cibler une notion ou d'en mélanger plusieurs dans une
+  même séance, sans troisième mode d'utilisation.
 - Gwenaël a approuvé le 7 août l'extension à 0, les cinq pages de cours, les
   distracteurs diagnostiques, la rédaction des calculs et le principe d'une
   compaction strictement locale autour du pavé. Il a demandé la publication
@@ -92,6 +92,32 @@
 - Aucun chemin sous `/auto/` n'appartient au lot ; son arbre Git de
   référence reste `6942c4733b5cffad03c396a03f8c550e7367351f`.
 
+### Livraison de la sélection multiple
+
+- Le contrat de séance conserve `selection` comme liste et exige désormais
+  que le nombre total de questions permette de représenter chaque notion. Le
+  menu désactive les longueurs trop courtes au lieu de supprimer une case
+  cochée.
+- Pour `N` notions et `Q` questions, le lecteur attribue `⌊Q / N⌋` questions
+  à chacune, puis répartit le reste de manière seedée. L'écart maximal reste
+  d'une question et aucune notion n'est absente.
+- Les sous-séries sont consommées dans leur ordre pédagogique propre, puis
+  intercalées de façon déterministe sans deux notions identiques voisines. Les
+  séances historiques à une seule notion conservent exactement leur graine et
+  leur génération.
+- Le résumé, l'écran prêt, la liste des cours et le bilan affichent toute la
+  sélection. Pendant le parcours, le rendu, l'aide, la correction, le cours et
+  les capacités d'interaction suivent toujours la notion de la question
+  courante.
+- Les URL historiques avec un seul paramètre `notion` restent valides. Une URL
+  mélangée répète ce paramètre, par exemple
+  `?notion=criteres-divisibilite&notion=carres-entiers-1-a-12`.
+- Les recettes canoniques de NC-02 à 5, 10, 15 et 20 questions restent
+  inchangées. Des préfixes de 1 à 20 questions permettent seulement de
+  produire ses quotas intermédiaires dans une séance mélangée.
+- Le graphe de cache est livré d'un seul tenant en `v18`. Aucun chemin sous
+  `/auto/` n'est modifié.
+
 ## Invariant permanent d'homogénéité
 
 L'homogénéité n'est pas une consigne ponctuelle de `NC-02` : elle s'applique à
@@ -117,9 +143,11 @@ l'en-tête, ni le comportement de NC-01.
 - Dépôt : `bourgault314/maths`.
 - Branche de référence : `main`.
 - Commit de référence vérifié sur GitHub :
-  `2c5e509`.
+  `b57aece`.
+- La PR #280 est fusionnée : elle publie `NC-02` avec le graphe `v17`, à côté
+  de `NC-01`, et constitue la base de la sélection multiple `v18`.
 - La PR #279 est fusionnée : elle fixe le moule public `v15` et la finition de
-  `NC-01` dont part la livraison `NC-02` en `v17`.
+  `NC-01` dont est partie la livraison `NC-02`.
 - La PR #170 est fusionnée : la carte DNB, la fiche validée de `NC-01`, les
   storyboards et les décisions D-014 à D-019 sont la mémoire officielle du
   chantier.
@@ -153,8 +181,9 @@ l'en-tête, ni le comportement de NC-01.
   disponibles dans « S'entraîner » comme dans « Au tableau ».
 - La carte du DNB est établie : **37 cibles officielles distinctes**,
   **38 cibles normalisées** et **88 micro-notions**.
-- Une séance n'active toujours qu'une seule notion. Les six notions publiques
-  restent séparées dans le registre.
+- Une séance peut cibler une seule notion ou mélanger un nombre quelconque de
+  notions validées. Les six notions publiques restent séparées dans le
+  registre et conservent chacune leur propre générateur.
 - Le critère par 10 est un complément maths&go validé. Il reste proposé dans le
   parcours DNB, tout en étant distingué des quatre critères officiels dans les
   données.

@@ -7,33 +7,33 @@ import {
   GABARIT_CALCUL_COURT_CARRE,
   BASES_CALCUL_COURT,
   OPERATIONS_CALCUL_COURT,
-} from "./calcul-court.js?v=17";
+} from "./calcul-court.js?v=18";
 import {
   BASES_ENCADREMENT_CARRE,
   FORMULATIONS_CALCUL_DIRECT,
   FORMULATIONS_CALCUL_DIRECT_QCM,
   GABARIT_CALCUL_DIRECT_CARRE,
-} from "./calcul-direct.js?v=17";
+} from "./calcul-direct.js?v=18";
 import {
   BASES_CARRE_QUADRILLE,
   FORMES_CARRE_QUADRILLE,
   GABARIT_CARRE_QUADRILLE,
-} from "./carre-quadrille.js?v=17";
+} from "./carre-quadrille.js?v=18";
 import {
   BASES_CARRES_ENTIERS,
-} from "./commun.js?v=17";
+} from "./commun.js?v=18";
 import {
   FORMULATIONS_RECONNAITRE_CARRES,
   GABARIT_RECONNAITRE_CARRES,
-} from "./reconnaitre-carres.js?v=17";
+} from "./reconnaitre-carres.js?v=18";
 import {
   FORMES_RETROUVER_ENTIER,
   GABARIT_RETROUVER_ENTIER_CARRE,
-} from "./retrouver-entier.js?v=17";
+} from "./retrouver-entier.js?v=18";
 import {
   BASES_SENS_NOTATION,
   GABARIT_SENS_NOTATION_CARRE,
-} from "./sens-notation.js?v=17";
+} from "./sens-notation.js?v=18";
 
 export const VERSION_PLAN_SERIE_NC02 = 1;
 
@@ -52,6 +52,32 @@ export const QUOTAS_SERIES_NC02 = Object.freeze({
   15: Object.freeze([6, 4, 1, 1, 1, 2]),
   20: Object.freeze([8, 5, 1, 2, 2, 2]),
 });
+
+// Les longueurs intermédiaires servent uniquement lorsqu'une séance mélange
+// plusieurs notions. Les quatre jalons validés ci-dessus conservent exactement
+// leurs quotas et leur génération historiques.
+const RECETTE_PROGRESSIVE_NC02 = Object.freeze([
+  FAMILLES_NC02.F1,
+  FAMILLES_NC02.F2,
+  FAMILLES_NC02.F3,
+  FAMILLES_NC02.F1,
+  FAMILLES_NC02.F4,
+  FAMILLES_NC02.F2,
+  FAMILLES_NC02.F5,
+  FAMILLES_NC02.F6,
+  FAMILLES_NC02.F1,
+  FAMILLES_NC02.F1,
+  FAMILLES_NC02.F2,
+  FAMILLES_NC02.F6,
+  FAMILLES_NC02.F1,
+  FAMILLES_NC02.F2,
+  FAMILLES_NC02.F1,
+  FAMILLES_NC02.F4,
+  FAMILLES_NC02.F1,
+  FAMILLES_NC02.F5,
+  FAMILLES_NC02.F2,
+  FAMILLES_NC02.F1,
+]);
 
 const ORDRE_FAMILLES = Object.freeze(Object.values(FAMILLES_NC02));
 const GABARITS = Object.freeze({
@@ -75,15 +101,19 @@ function exigerConfiguration(graine, nombreQuestions) {
   }
   if (
     !Number.isInteger(nombreQuestions) ||
-    !Object.hasOwn(QUOTAS_SERIES_NC02, nombreQuestions)
+    nombreQuestions < 1 ||
+    nombreQuestions > 20
   ) {
-    throw new RangeError("serie NC-02 : longueur attendue parmi 5, 10, 15 et 20");
+    throw new RangeError("serie NC-02 : longueur attendue entre 1 et 20");
   }
 }
 
 function recettePour(nombreQuestions) {
-  return QUOTAS_SERIES_NC02[nombreQuestions].flatMap((nombre, index) =>
-    Array.from({ length: nombre }, () => ORDRE_FAMILLES[index]));
+  if (Object.hasOwn(QUOTAS_SERIES_NC02, nombreQuestions)) {
+    return QUOTAS_SERIES_NC02[nombreQuestions].flatMap((nombre, index) =>
+      Array.from({ length: nombre }, () => ORDRE_FAMILLES[index]));
+  }
+  return RECETTE_PROGRESSIVE_NC02.slice(0, nombreQuestions);
 }
 
 function resteArrangeable(compte, precedent) {
@@ -185,6 +215,10 @@ function formulationsDirectes(aleatoire, nombre) {
   const saisies = FORMULATIONS_CALCUL_DIRECT.filter(
     (formulation) => !FORMULATIONS_CALCUL_DIRECT_QCM.includes(formulation),
   );
+  if (nombre === 0) return [];
+  if ([1, 3].includes(nombre)) {
+    return valeursCycliques(aleatoire, saisies, nombre);
+  }
   if (nombre === 2) return aleatoire.melange(["calculer", "carre-de"]);
   if (nombre === 4) {
     return aleatoire.melange([
@@ -192,9 +226,17 @@ function formulationsDirectes(aleatoire, nombre) {
       aleatoire.choix(FORMULATIONS_CALCUL_DIRECT_QCM),
     ]);
   }
+  if (nombre === 5) {
+    return aleatoire.melange([
+      ...valeursCycliques(aleatoire, saisies, 4),
+      aleatoire.choix(FORMULATIONS_CALCUL_DIRECT_QCM),
+    ]);
+  }
   const coeur = nombre === 6
     ? ["calculer", "calculer", "carre-de", "completer"]
-    : ["calculer", "calculer", "calculer", "carre-de", "carre-de", "completer"];
+    : nombre === 8
+      ? ["calculer", "calculer", "calculer", "carre-de", "carre-de", "completer"]
+      : valeursCycliques(aleatoire, saisies, Math.max(0, nombre - 2));
   return aleatoire.melange([...coeur, ...FORMULATIONS_CALCUL_DIRECT_QCM]);
 }
 
@@ -215,7 +257,7 @@ function parametrerFamilles(aleatoire, familles) {
   attribuerBasesRappel(aleatoire, descripteurs);
 
   const notation = descripteurs.find(({ famille }) => famille === FAMILLES_NC02.F3);
-  notation.parametres.base = aleatoire.choix(BASES_SENS_NOTATION);
+  if (notation) notation.parametres.base = aleatoire.choix(BASES_SENS_NOTATION);
 
   const reconnaissances = descripteurs.filter(
     ({ famille }) => famille === FAMILLES_NC02.F4,
