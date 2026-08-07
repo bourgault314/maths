@@ -62,6 +62,13 @@ describe("validerSeance — garde-fous", () => {
     assert.match(validerSeance(mode).erreurs.join("\n"), /mode/);
   });
 
+  it("refuse davantage de notions que de questions", () => {
+    const seance = seancePrete();
+    seance.nombreQuestions = 1;
+    seance.selection = ["notion-a", "notion-b"];
+    assert.match(validerSeance(seance).erreurs.join("\n"), /chaque notion/);
+  });
+
   it("refuse les incohérences entre phase, questions et index", () => {
     const prete = seancePrete();
     prete.etat.questions = idsQuestions;

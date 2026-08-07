@@ -1,11 +1,11 @@
 import {
   SCHEMA_SEANCE,
   validerSeance,
-} from "../../packages/contrats/src/seance.js";
+} from "../../packages/contrats/src/seance.js?v=18";
 import {
   SCHEMA_TRACE_REPONSE,
   validerTraceReponse,
-} from "../../packages/contrats/src/trace-reponse.js?v=17";
+} from "../../packages/contrats/src/trace-reponse.js?v=18";
 import {
   TYPE_REPONSE_ENTIER_NATUREL,
   TYPE_REPONSE_DEUX_ENTIERS,
@@ -13,11 +13,12 @@ import {
   estDeuxEntiersExacts,
   estEntierExact,
   estSelectionExacte,
-} from "../../packages/contrats/src/question-v2.js?v=17";
+} from "../../packages/contrats/src/question-v2.js?v=18";
 import { graineDepuisTexte } from "../../packages/moteur-exercices/src/aleatoire.js";
-import { creerRegistreAutomatismes } from "../../packages/automatismes/src/registre.js?v=17";
+import { creerRegistreAutomatismes } from "../../packages/automatismes/src/registre.js?v=18";
 import {
   connaitNotionLecteur,
+  listerNotionsLecteur,
   NOTION_NC01,
   NOTION_NC02,
   NOTION_SOLIDES_USUELS,
@@ -25,7 +26,8 @@ import {
   NOTION_VOLUME_CYLINDRE,
   NOTION_VOLUME_PRISME,
   obtenirNotionLecteur,
-} from "./registre-lecteur.js?v=17";
+} from "./registre-lecteur.js?v=18";
+import { genererSerieMultinotions } from "./serie-multinotions.js?v=18";
 
 export {
   NOTION_NC01,
@@ -52,37 +54,63 @@ function exigerConformite(nom, controle) {
   }
 }
 
+function normaliserNotions(configuration) {
+  const demandees = configuration.notions
+    ?? (configuration.notion === undefined ? [NOTION_NC01] : [configuration.notion]);
+  if (!Array.isArray(demandees) || demandees.length === 0) {
+    throw new RangeError("au moins une notion est requise");
+  }
+  if (demandees.some((notion) => typeof notion !== "string" || notion === "")) {
+    throw new TypeError("identifiants de notions requis");
+  }
+  if (new Set(demandees).size !== demandees.length) {
+    throw new RangeError("doublons de notions interdits");
+  }
+  for (const notion of demandees) {
+    if (!connaitNotionLecteur(notion)) throw new RangeError(`notion inconnue : ${notion}`);
+  }
+  const ensemble = new Set(demandees);
+  return listerNotionsLecteur()
+    .map(({ id }) => id)
+    .filter((id) => ensemble.has(id));
+}
+
 function normaliserConfiguration(configuration = {}) {
   const modeDemande = configuration.mode ?? "entrainement";
   const mode = ALIAS_MODES.get(modeDemande) ?? modeDemande;
   const aide = configuration.aide ?? "disponible";
   const nombreQuestions = configuration.nombreQuestions
     ?? NOMBRE_QUESTIONS_PAR_DEFAUT;
-  const notion = configuration.notion ?? NOTION_NC01;
+  const notions = normaliserNotions(configuration);
 
   if (!MODES.has(mode)) throw new RangeError(`mode inconnu : ${mode}`);
   if (!AIDES.has(aide)) throw new RangeError(`aide inconnue : ${aide}`);
-  if (!connaitNotionLecteur(notion)) throw new RangeError(`notion inconnue : ${notion}`);
-  const graine = configuration.graine ?? obtenirNotionLecteur(notion).graineApercu;
   if (!Number.isInteger(nombreQuestions) || nombreQuestions < 1 || nombreQuestions > 100) {
     throw new RangeError("nombreQuestions doit être compris entre 1 et 100");
   }
+  if (notions.length > nombreQuestions) {
+    throw new RangeError("nombreQuestions doit permettre au moins une question par notion");
+  }
+  const graine = configuration.graine
+    ?? (notions.length === 1
+      ? obtenirNotionLecteur(notions[0]).graineApercu
+      : `apercu-melange-${notions.join("-")}`);
   if (typeof graine !== "string" && !Number.isInteger(graine)) {
     throw new TypeError("graine texte ou entière requise");
   }
 
-  return { mode, aide, nombreQuestions, graine, notion };
+  return { mode, aide, nombreQuestions, graine, notions };
 }
 
 function creerSeance(configuration) {
   const suffixe = graineDepuisTexte(
-    `${configuration.notion}:${configuration.nombreQuestions}:${configuration.graine}`,
+    `${configuration.notions.join("|")}:${configuration.nombreQuestions}:${configuration.graine}`,
   ).toString(36);
   const seance = {
     schema: SCHEMA_SEANCE,
     id: `seance@${suffixe}`,
     contexte: "parcours-dnb",
-    selection: [configuration.notion],
+    selection: [...configuration.notions],
     mode: configuration.mode,
     nombreQuestions: configuration.nombreQuestions,
     aide: configuration.aide,
@@ -108,6 +136,7 @@ function creerEtatQuestion(etat) {
   etat.aideConsultee = etat.aideOuverte;
   etat.correctionOuverte = false;
   etat.coursOuvert = false;
+  etat.notionCoursOuverte = null;
   etat.reponseRevelee = false;
   etat.uniteReperee = false;
   etat.chiffresSomme = [];
@@ -131,6 +160,7 @@ export function creerEtatLecteur(configuration = {}) {
     aideConsultee: false,
     correctionOuverte: false,
     coursOuvert: false,
+    notionCoursOuverte: null,
     reponseRevelee: false,
     uniteReperee: false,
     chiffresSomme: [],
@@ -145,10 +175,19 @@ export function creerEtatLecteur(configuration = {}) {
 export function lireConfiguration(recherche = "") {
   const parametres = new URLSearchParams(recherche);
   const nombreBrut = Number(parametres.get("questions"));
+  const notionsCompactes = parametres.get("notions")
+    ?.split(",")
+    .map((notion) => notion.trim())
+    .filter(Boolean) ?? [];
+  const notionsRepetees = parametres.getAll("notion")
+    .flatMap((notion) => notion.split(","))
+    .map((notion) => notion.trim())
+    .filter(Boolean);
+  const notions = notionsCompactes.length > 0 ? notionsCompactes : notionsRepetees;
   return normaliserConfiguration({
     mode: parametres.get("mode") || undefined,
     aide: parametres.get("aide") || undefined,
-    notion: parametres.get("notion") || undefined,
+    notions: notions.length > 0 ? notions : undefined,
     nombreQuestions:
       Number.isInteger(nombreBrut) && nombreBrut >= 1 && nombreBrut <= 100
         ? nombreBrut
@@ -160,21 +199,13 @@ export function lireConfiguration(recherche = "") {
 export function demarrer(etat) {
   if (etat.seance.etat.phase !== "prete") return etat;
   const registre = creerRegistreAutomatismes();
-  const definition = obtenirNotionLecteur(etat.configuration.notion);
-  etat.questions = definition.creerSerie
-    ? definition.creerSerie({
-        registre,
-        graine: etat.configuration.graine,
-        nombreQuestions: etat.configuration.nombreQuestions,
-      })
-    : Array.from(
-        { length: etat.configuration.nombreQuestions },
-        (_, index) =>
-          registre.instancier(
-            definition.gabarit,
-            `${etat.configuration.graine}:${index + 1}`,
-          ),
-      );
+  const definitions = etat.configuration.notions.map(obtenirNotionLecteur);
+  etat.questions = genererSerieMultinotions({
+    definitions,
+    registre,
+    graine: etat.configuration.graine,
+    nombreQuestions: etat.configuration.nombreQuestions,
+  });
   etat.seance.etat = {
     phase: "en-cours",
     questions: etat.questions.map((question) => question.id),
@@ -188,6 +219,17 @@ export function demarrer(etat) {
 export function questionCourante(etat) {
   if (etat.seance.etat.phase !== "en-cours") return null;
   return etat.questions[etat.seance.etat.indexQuestion] ?? null;
+}
+
+export function notionCourante(etat) {
+  return questionCourante(etat)?.classement?.notion ?? null;
+}
+
+function definitionContexte(etat) {
+  const notion = etat.coursOuvert
+    ? etat.notionCoursOuverte
+    : notionCourante(etat);
+  return obtenirNotionLecteur(notion ?? etat.configuration.notions[0]);
 }
 
 export function nombreReussites(etat) {
@@ -379,6 +421,7 @@ export function ouvrirAide(etat) {
   etat.aideConsultee = true;
   etat.correctionOuverte = false;
   etat.coursOuvert = false;
+  etat.notionCoursOuverte = null;
   return etat;
 }
 
@@ -387,9 +430,12 @@ export function fermerAide(etat) {
   return etat;
 }
 
-export function ouvrirCours(etat) {
-  if (!obtenirNotionLecteur(etat.configuration.notion).capacites.cours) return etat;
+export function ouvrirCours(etat, notionDemandee = undefined) {
+  const notion = notionDemandee ?? notionCourante(etat) ?? etat.configuration.notions[0];
+  if (!etat.configuration.notions.includes(notion)) return etat;
+  if (!obtenirNotionLecteur(notion).capacites.cours) return etat;
   etat.coursOuvert = true;
+  etat.notionCoursOuverte = notion;
   etat.aideOuverte = false;
   etat.correctionOuverte = false;
   return etat;
@@ -397,6 +443,7 @@ export function ouvrirCours(etat) {
 
 export function fermerCours(etat) {
   etat.coursOuvert = false;
+  etat.notionCoursOuverte = null;
   return etat;
 }
 
@@ -404,7 +451,7 @@ export function tournerSolide(etat, deltaLacet, deltaTangage = 0) {
   if (!Number.isFinite(deltaLacet) || !Number.isFinite(deltaTangage)) {
     throw new TypeError("tournerSolide : déplacements numériques requis");
   }
-  const capacites = obtenirNotionLecteur(etat.configuration.notion).capacites;
+  const capacites = definitionContexte(etat).capacites;
   if (!capacites.rotationSolide || (!etat.aideOuverte && !etat.coursOuvert)) return etat;
   const lacet = etat.rotationSolide.lacetDeg + deltaLacet;
   etat.rotationSolide = {
@@ -415,7 +462,7 @@ export function tournerSolide(etat, deltaLacet, deltaTangage = 0) {
 }
 
 export function basculerUniteAide(etat) {
-  const capacites = obtenirNotionLecteur(etat.configuration.notion).capacites;
+  const capacites = definitionContexte(etat).capacites;
   if (!etat.aideOuverte || !capacites.aideChiffres) return etat;
   etat.uniteReperee = !etat.uniteReperee;
   return etat;
@@ -423,7 +470,7 @@ export function basculerUniteAide(etat) {
 
 export function basculerChiffreAide(etat, index) {
   const question = questionCourante(etat);
-  const capacites = obtenirNotionLecteur(etat.configuration.notion).capacites;
+  const capacites = definitionContexte(etat).capacites;
   if (!etat.aideOuverte || !question || !capacites.aideChiffres) return etat;
   const source = question.aide?.outils?.find(
     (outil) => outil.type === "composer-somme-chiffres",
@@ -457,6 +504,7 @@ export function ouvrirCorrection(etat) {
   etat.correctionOuverte = true;
   etat.aideOuverte = false;
   etat.coursOuvert = false;
+  etat.notionCoursOuverte = null;
   return etat;
 }
 

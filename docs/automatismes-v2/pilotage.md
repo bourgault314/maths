@@ -102,8 +102,10 @@ utilisé pour désigner l'examen ou un parcours destiné au brevet.
 6. Présenter des exemples, l'aide, la correction et les cas limites.
 7. Obtenir la validation finale avant publication.
 
-Une seule notion est active à la fois. Aucun répertoire de contenu réel n'est
-préparé en masse.
+Une seule notion est active à la fois pendant sa fabrication et sa validation.
+Une séance publique peut ensuite cibler une notion validée ou en mélanger
+plusieurs conformément à D-039. Aucun répertoire de contenu réel n'est préparé
+en masse.
 
 ## Modèle pédagogique commun
 

@@ -729,6 +729,55 @@ body {
   gap: 9px;
 }
 
+.choix-cours-pret {
+  min-width: 0;
+  position: relative;
+}
+
+.choix-cours-pret > summary {
+  min-height: 100%;
+  display: grid;
+  place-items: center;
+  cursor: pointer;
+  list-style: none;
+}
+
+.choix-cours-pret > summary::-webkit-details-marker {
+  display: none;
+}
+
+.choix-cours-pret > summary::after {
+  content: "▾";
+  margin-left: 7px;
+}
+
+.choix-cours-pret[open] {
+  grid-column: 1 / -1;
+  display: grid;
+  gap: 8px;
+}
+
+.choix-cours-pret[open] + .bouton-principal {
+  grid-column: 1 / -1;
+}
+
+.liste-cours-pret {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.liste-cours-pret .bouton-secondaire {
+  min-height: 48px;
+  padding: 9px 12px;
+}
+
+@media (max-width: 420px) {
+  .liste-cours-pret {
+    grid-template-columns: 1fr;
+  }
+}
+
 .lecteur {
   width: 100%;
   height: 100vh;

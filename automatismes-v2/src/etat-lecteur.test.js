@@ -16,6 +16,8 @@ import {
   effacerSaisie,
   lireConfiguration,
   nombreReussites,
+  NOTION_NC01,
+  NOTION_NC02,
   NOTION_SOLIDES_USUELS,
   NOTION_VOLUME_CUBE_PAVE,
   NOTION_VOLUME_CYLINDRE,
@@ -105,7 +107,7 @@ describe("configuration du lecteur", () => {
         aide: "ouverte",
         nombreQuestions: 7,
         graine: "classe-5e",
-        notion: "criteres-divisibilite",
+        notions: ["criteres-divisibilite"],
       },
     );
     assert.equal(lireConfiguration("?mode=interactif").mode, "entrainement");
@@ -118,12 +120,38 @@ describe("configuration du lecteur", () => {
     assert.equal(lireConfiguration("?questions=101").nombreQuestions, 10);
     assert.equal(lireConfiguration("?questions=abc").nombreQuestions, 10);
   });
+
+  it("lit plusieurs notions, les canonise et conserve l'ancien paramètre singulier", () => {
+    assert.deepEqual(
+      lireConfiguration("?notion=carres-entiers-1-a-12&notion=criteres-divisibilite&questions=10").notions,
+      [NOTION_NC01, NOTION_NC02],
+    );
+    assert.deepEqual(
+      lireConfiguration("?notions=carres-entiers-1-a-12,criteres-divisibilite&questions=10").notions,
+      [NOTION_NC01, NOTION_NC02],
+    );
+    assert.deepEqual(
+      lireConfiguration("?notion=solides-usuels&questions=2").notions,
+      [NOTION_SOLIDES_USUELS],
+    );
+  });
+
+  it("refuse les doublons et une série trop courte pour sa sélection", () => {
+    assert.throws(
+      () => creerEtatLecteur({ notions: [NOTION_NC01, NOTION_NC01] }),
+      /doublons/,
+    );
+    assert.throws(
+      () => creerEtatLecteur({ notions: [NOTION_NC01, NOTION_NC02], nombreQuestions: 1 }),
+      /au moins une question par notion/,
+    );
+  });
 });
 
 describe("notion solides usuels", () => {
   it("lit la notion dans l'URL et génère un choix unique", () => {
     const configuration = lireConfiguration("?notion=solides-usuels&questions=2");
-    assert.equal(configuration.notion, NOTION_SOLIDES_USUELS);
+    assert.deepEqual(configuration.notions, [NOTION_SOLIDES_USUELS]);
     const etat = etatDemarre(configuration);
     const question = questionCourante(etat);
     assert.equal(question.classement.notion, "solides-usuels");
@@ -195,6 +223,29 @@ describe("capacités déclarées par le registre", () => {
     assert.equal(solides.uniteReperee, false);
     assert.deepEqual(solides.chiffresSomme, []);
   });
+
+  it("suit la notion de la question courante dans une séance mélangée", () => {
+    const configuration = {
+      notions: [NOTION_NC01, NOTION_SOLIDES_USUELS],
+      nombreQuestions: 6,
+      graine: "capacites-mixtes",
+    };
+    const solide = etatDemarre(configuration);
+    solide.seance.etat.indexQuestion = solide.questions.findIndex(
+      ({ classement }) => classement.notion === NOTION_SOLIDES_USUELS,
+    );
+    ouvrirAide(solide);
+    tournerSolide(solide, 25, 10);
+    assert.deepEqual(solide.rotationSolide, { lacetDeg: 25, tangageDeg: 10 });
+
+    const divisibilite = etatDemarre(configuration);
+    divisibilite.seance.etat.indexQuestion = divisibilite.questions.findIndex(
+      ({ classement }) => classement.notion === NOTION_NC01,
+    );
+    ouvrirAide(divisibilite);
+    tournerSolide(divisibilite, 25, 10);
+    assert.deepEqual(divisibilite.rotationSolide, { lacetDeg: 0, tangageDeg: 0 });
+  });
 });
 
 describe("démarrage et génération", () => {
@@ -211,6 +262,40 @@ describe("démarrage et génération", () => {
     const premiere = etatDemarre({ graine: "serie-a" });
     const seconde = etatDemarre({ graine: "serie-a" });
     assert.deepEqual(premiere.questions, seconde.questions);
+  });
+
+  it("mélange NC-01 et NC-02 avec une répartition équilibrée à toutes les longueurs", () => {
+    for (const nombreQuestions of [5, 10, 15, 20]) {
+      const configuration = {
+        notions: [NOTION_NC02, NOTION_NC01],
+        graine: `melange-${nombreQuestions}`,
+        nombreQuestions,
+      };
+      const etat = etatDemarre(configuration);
+      const notions = etat.questions.map(({ classement }) => classement.notion);
+      const comptes = [NOTION_NC01, NOTION_NC02].map(
+        (notion) => notions.filter((candidate) => candidate === notion).length,
+      );
+      assert.equal(etat.questions.length, nombreQuestions);
+      assert.equal(new Set(etat.questions.map(({ id }) => id)).size, nombreQuestions);
+      assert.ok(comptes.every((compte) => compte >= 1));
+      assert.ok(Math.max(...comptes) - Math.min(...comptes) <= 1);
+      assert.ok(notions.every((notion, index) => index === 0 || notion !== notions[index - 1]));
+      assert.deepEqual(etat.seance.selection, [NOTION_NC01, NOTION_NC02]);
+      assert.deepEqual(etat.questions, etatDemarre(configuration).questions);
+    }
+  });
+
+  it("ouvre avant la série chacun des cours sélectionnés", () => {
+    const etat = creerEtatLecteur({
+      notions: [NOTION_NC01, NOTION_NC02],
+      nombreQuestions: 10,
+    });
+    ouvrirCours(etat, NOTION_NC02);
+    assert.equal(etat.coursOuvert, true);
+    assert.equal(etat.notionCoursOuverte, NOTION_NC02);
+    ouvrirCours(etat, NOTION_NC01);
+    assert.equal(etat.notionCoursOuverte, NOTION_NC01);
   });
 });
 
@@ -452,11 +537,17 @@ describe("enchaînement de la séance", () => {
   });
 
   it("repart sur un écran prêt avec la même configuration", () => {
-    const etat = etatDemarre({ mode: "tableau", aide: "ouverte" });
+    const etat = etatDemarre({
+      mode: "tableau",
+      aide: "ouverte",
+      notions: [NOTION_NC01, NOTION_NC02],
+      nombreQuestions: 6,
+    });
     const nouveau = recommencer(etat);
     assert.equal(nouveau.seance.etat.phase, "prete");
     assert.equal(nouveau.configuration.mode, "tableau");
     assert.equal(nouveau.configuration.aide, "ouverte");
+    assert.deepEqual(nouveau.configuration.notions, [NOTION_NC01, NOTION_NC02]);
   });
 });
 

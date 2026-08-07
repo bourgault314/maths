@@ -2,7 +2,7 @@ import assert from "node:assert/strict";
 import { readFile } from "node:fs/promises";
 import { it } from "node:test";
 
-const VERSION = "17";
+const VERSION = "18";
 
 const RESSOURCES_VERSIONNEES = new Map([
   ["automatismes-v2/index.html", ["styles.css", "interface.css", "menu.css", "app.js"]],
@@ -17,10 +17,12 @@ const RESSOURCES_VERSIONNEES = new Map([
     "carre-quadrille.js",
   ]],
   ["automatismes-v2/src/etat-lecteur.js", [
+    "seance.js",
     "trace-reponse.js",
     "question-v2.js",
     "registre.js",
     "registre-lecteur.js",
+    "serie-multinotions.js",
   ]],
   ["automatismes-v2/src/registre-lecteur.js", [
     "selection-diviseurs.js",

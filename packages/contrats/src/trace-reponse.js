@@ -10,7 +10,7 @@ import {
   TYPE_REPONSE_DEUX_ENTIERS,
   TYPE_REPONSE_ENTIER_NATUREL,
   TYPE_REPONSE_SELECTION_MULTIPLE,
-} from "./question-v2.js?v=17";
+} from "./question-v2.js?v=18";
 
 export const SCHEMA_TRACE_REPONSE = "mathsgo.trace-reponse/1";
 
