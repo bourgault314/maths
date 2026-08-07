@@ -4,16 +4,27 @@
 
 ## Point de reprise vérifié du 7 août
 
-- La PR #280 est fusionnée dans `main` au commit
-  `b57aece`. Elle constitue la base publique et stabilisée de `NC-01` et
-  `NC-02` sur la route pilote `/automatismes-v2/`, avec le graphe de cache
-  `v17` et toujours `noindex,nofollow`.
+- La PR #281 est fusionnée dans `main` au commit `c8634e4`. Elle constitue la
+  base publique et stabilisée de `NC-01`, `NC-02` et de la sélection multiple
+  sur la route pilote `/automatismes-v2/`, avec le graphe de cache `v18` et
+  toujours `noindex,nofollow`.
 - `/auto/` reste indépendant. Son arbre Git de référence avant le lot de
   finition est `6942c4733b5cffad03c396a03f8c550e7367351f`.
-- Le lot D-039 est construit depuis cette base sur
-  `agent/automatismes-v2-selection-multiple`. Il rend indépendantes les cases
-  du menu et permet de cibler une notion ou d'en mélanger plusieurs dans une
-  même séance, sans troisième mode d'utilisation.
+- D-039 rend désormais indépendantes les cases du menu et permet de cibler une
+  notion ou d'en mélanger plusieurs dans une même séance, sans troisième mode
+  d'utilisation.
+- Le correctif du cadre d'aide de `NC-01` part exactement de `c8634e4`. Les
+  rappels des critères par 3 et 9 sont injectés par le composant commun de la
+  somme avant la fermeture du cadre turquoise. Cette correction couvre F2,
+  ainsi que F1 et F6 lorsqu'elles travaillent 3 ou 9 ; elle ne modifie ni les
+  données pédagogiques, ni les corrections expliquées, ni `NC-02`.
+- Un test de structure vérifie désormais que les rappels 3 et 9 sont des
+  descendants du cadre de somme dans les trois familles concernées. Le graphe
+  de cache du correctif passe d'un seul tenant en `v19`.
+- Le dépôt complet réussit **1 151 tests sur 1 151**. La recette dans Chromium
+  couvre `320 × 568`, `390 × 844`, `1 280 × 720` et `1 920 × 1 080`, avant et
+  après sélection des chiffres : aucun rappel orphelin ni débordement
+  horizontal n'est présent et le contenu vertical reste accessible.
 - Gwenaël a approuvé le 7 août l'extension à 0, les cinq pages de cours, les
   distracteurs diagnostiques, la rédaction des calculs et le principe d'une
   compaction strictement locale autour du pavé. Il a demandé la publication
@@ -143,7 +154,9 @@ l'en-tête, ni le comportement de NC-01.
 - Dépôt : `bourgault314/maths`.
 - Branche de référence : `main`.
 - Commit de référence vérifié sur GitHub :
-  `b57aece`.
+  `c8634e4`.
+- La PR #281 est fusionnée : elle publie la sélection multiple avec le graphe
+  `v18` sur la base de `NC-01` et `NC-02`.
 - La PR #280 est fusionnée : elle publie `NC-02` avec le graphe `v17`, à côté
   de `NC-01`, et constitue la base de la sélection multiple `v18`.
 - La PR #279 est fusionnée : elle fixe le moule public `v15` et la finition de

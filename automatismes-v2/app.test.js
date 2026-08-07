@@ -433,13 +433,14 @@ it("sélectionne, révise et rejoue plusieurs automatismes dans une même série
 
 it("parcourt les cinq familles NC-01, leur aide, leur réponse et leur correction", async () => {
   const { application, gestionnaires } = installerFauxNavigateur(
-    "?notion=criteres-divisibilite&questions=10&graine=fumee-cinq-familles",
+    "?notion=criteres-divisibilite&questions=20&graine=a",
   );
   await import(`./app.js?fumee=cinq-familles-${Date.now()}`);
   cliquer(gestionnaires, "demarrer");
 
   const familles = new Set();
-  for (let index = 0; index < 10; index += 1) {
+  const famillesAvecSomme = new Set();
+  for (let index = 0; index < 20; index += 1) {
     const famille = application.innerHTML.match(/famille-([a-z-]+)"/)?.[1];
     assert.ok(famille, `famille absente à la question ${index + 1}`);
     familles.add(famille);
@@ -460,6 +461,12 @@ it("parcourt les cinq familles NC-01, leur aide, leur réponse et leur correctio
       /data-action="chiffre-aide" data-index="(\d+)"[^>]*>(\d)<\/button>/g,
     )].map((correspondance) => ({ index: correspondance[1], chiffre: Number(correspondance[2]) }));
     if (chiffresGuidage.length > 0) {
+      famillesAvecSomme.add(famille);
+      const cadreSomme = application.innerHTML.match(
+        /<section class="outil-aide outil-somme">([\s\S]*?)<\/section>/,
+      )?.[1];
+      assert.ok(cadreSomme, `cadre de somme absent pour ${famille}`);
+      assert.match(cadreSomme, /Critère par (?:3|9)/);
       assert.match(application.innerHTML, /= □<\/output>/);
       for (const { index: indexChiffre } of chiffresGuidage) {
         cliquer(gestionnaires, "chiffre-aide", undefined, undefined, indexChiffre);
@@ -471,6 +478,11 @@ it("parcourt les cinq familles NC-01, leur aide, leur réponse et leur correctio
       for (const critere of [2, 3, 5, 9, 10]) {
         assert.match(application.innerHTML, new RegExp(`Critère par ${critere}`));
       }
+      const cadreSomme = application.innerHTML.match(
+        /<section class="outil-aide outil-somme">([\s\S]*?)<\/section>/,
+      )?.[1];
+      assert.match(cadreSomme, /Critère par 3/);
+      assert.match(cadreSomme, /Critère par 9/);
     }
     cliquer(gestionnaires, "fermer-aide");
 
@@ -498,6 +510,11 @@ it("parcourt les cinq familles NC-01, leur aide, leur réponse et leur correctio
     "partage-court",
     "selection-diviseurs",
     "selection-nombres",
+  ]);
+  assert.deepEqual([...famillesAvecSomme].sort(), [
+    "critere-precis",
+    "partage-court",
+    "selection-diviseurs",
   ]);
   assert.match(application.innerHTML, /Ton bilan/);
   assert.match(application.innerHTML, /Pour confirmer la maîtrise/);

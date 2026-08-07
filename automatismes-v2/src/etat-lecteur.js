@@ -1,11 +1,11 @@
 import {
   SCHEMA_SEANCE,
   validerSeance,
-} from "../../packages/contrats/src/seance.js?v=18";
+} from "../../packages/contrats/src/seance.js?v=19";
 import {
   SCHEMA_TRACE_REPONSE,
   validerTraceReponse,
-} from "../../packages/contrats/src/trace-reponse.js?v=18";
+} from "../../packages/contrats/src/trace-reponse.js?v=19";
 import {
   TYPE_REPONSE_ENTIER_NATUREL,
   TYPE_REPONSE_DEUX_ENTIERS,
@@ -13,9 +13,9 @@ import {
   estDeuxEntiersExacts,
   estEntierExact,
   estSelectionExacte,
-} from "../../packages/contrats/src/question-v2.js?v=18";
+} from "../../packages/contrats/src/question-v2.js?v=19";
 import { graineDepuisTexte } from "../../packages/moteur-exercices/src/aleatoire.js";
-import { creerRegistreAutomatismes } from "../../packages/automatismes/src/registre.js?v=18";
+import { creerRegistreAutomatismes } from "../../packages/automatismes/src/registre.js?v=19";
 import {
   connaitNotionLecteur,
   listerNotionsLecteur,
@@ -26,8 +26,8 @@ import {
   NOTION_VOLUME_CYLINDRE,
   NOTION_VOLUME_PRISME,
   obtenirNotionLecteur,
-} from "./registre-lecteur.js?v=18";
-import { genererSerieMultinotions } from "./serie-multinotions.js?v=18";
+} from "./registre-lecteur.js?v=19";
+import { genererSerieMultinotions } from "./serie-multinotions.js?v=19";
 
 export {
   NOTION_NC01,
