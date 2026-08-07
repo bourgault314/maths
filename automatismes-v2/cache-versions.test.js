@@ -2,7 +2,7 @@ import assert from "node:assert/strict";
 import { readFile } from "node:fs/promises";
 import { it } from "node:test";
 
-const VERSION = "15";
+const VERSION = "17";
 
 const RESSOURCES_VERSIONNEES = new Map([
   ["automatismes-v2/index.html", ["styles.css", "interface.css", "menu.css", "app.js"]],
@@ -13,6 +13,8 @@ const RESSOURCES_VERSIONNEES = new Map([
     "reconnaissance.js",
     "clavier.js",
     "critere-precis.js",
+    "expressions.js",
+    "carre-quadrille.js",
   ]],
   ["automatismes-v2/src/etat-lecteur.js", [
     "trace-reponse.js",
@@ -25,6 +27,7 @@ const RESSOURCES_VERSIONNEES = new Map([
     "serie.js",
     "reconnaissance.js",
     "calcul-volumes.js",
+    "calcul-direct.js",
   ]],
   ["packages/automatismes/src/registre.js", [
     "reconnaissance.js",
@@ -34,6 +37,12 @@ const RESSOURCES_VERSIONNEES = new Map([
     "selection-nombres.js",
     "chiffre-manquant.js",
     "partage-court.js",
+    "calcul-court.js",
+    "calcul-direct.js",
+    "carre-quadrille.js",
+    "reconnaitre-carres.js",
+    "retrouver-entier.js",
+    "sens-notation.js",
   ]],
   ["packages/automatismes/src/nombres-et-calculs/criteres-divisibilite/serie.js", [
     "critere-precis.js",
@@ -47,6 +56,22 @@ const RESSOURCES_VERSIONNEES = new Map([
   ["packages/automatismes/src/nombres-et-calculs/criteres-divisibilite/selection-nombres.js", ["question-v2.js", "critere-precis.js"]],
   ["packages/automatismes/src/nombres-et-calculs/criteres-divisibilite/chiffre-manquant.js", ["question-v2.js", "critere-precis.js"]],
   ["packages/automatismes/src/nombres-et-calculs/criteres-divisibilite/partage-court.js", ["question-v2.js", "critere-precis.js"]],
+  ["packages/automatismes/src/nombres-et-calculs/carres-entiers-1-a-12/serie.js", [
+    "calcul-court.js",
+    "calcul-direct.js",
+    "carre-quadrille.js",
+    "commun.js",
+    "reconnaitre-carres.js",
+    "retrouver-entier.js",
+    "sens-notation.js",
+  ]],
+  ["packages/automatismes/src/nombres-et-calculs/carres-entiers-1-a-12/commun.js", ["question-v2.js"]],
+  ["packages/automatismes/src/nombres-et-calculs/carres-entiers-1-a-12/calcul-direct.js", ["question-v2.js", "commun.js"]],
+  ["packages/automatismes/src/nombres-et-calculs/carres-entiers-1-a-12/retrouver-entier.js", ["question-v2.js", "commun.js"]],
+  ["packages/automatismes/src/nombres-et-calculs/carres-entiers-1-a-12/sens-notation.js", ["question-v2.js", "commun.js"]],
+  ["packages/automatismes/src/nombres-et-calculs/carres-entiers-1-a-12/reconnaitre-carres.js", ["question-v2.js", "commun.js"]],
+  ["packages/automatismes/src/nombres-et-calculs/carres-entiers-1-a-12/carre-quadrille.js", ["question-v2.js", "commun.js"]],
+  ["packages/automatismes/src/nombres-et-calculs/carres-entiers-1-a-12/calcul-court.js", ["question-v2.js", "commun.js"]],
   ["packages/automatismes/src/espace-et-geometrie/solides-usuels/reconnaissance.js", ["question-v2.js"]],
   ["packages/automatismes/src/grandeurs-et-mesures/volumes/calcul-volumes.js", ["question-v2.js"]],
   ["packages/contrats/src/trace-reponse.js", ["question-v2.js"]],
@@ -60,6 +85,19 @@ it("charge une version cohérente de tous les modules modifiés d'Automatismes V
         source,
         new RegExp(`${ressource.replace(".", "\\.")}\\?v=${VERSION}`),
         `${chemin} doit charger ${ressource} en v${VERSION}`,
+      );
+    }
+  }
+});
+
+it("ne conserve aucune version de cache antérieure dans le graphe V2", async () => {
+  for (const chemin of RESSOURCES_VERSIONNEES.keys()) {
+    const source = await readFile(new URL(`../${chemin}`, import.meta.url), "utf8");
+    for (const correspondance of source.matchAll(/\?v=(\d+)/g)) {
+      assert.equal(
+        correspondance[1],
+        VERSION,
+        `${chemin} charge encore une ressource en v${correspondance[1]}`,
       );
     }
   }

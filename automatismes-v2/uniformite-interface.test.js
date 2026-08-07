@@ -26,9 +26,12 @@ it("sépare les actions, le score centré et la progression", () => {
   assert.match(interfaceCss, /@media \(max-width: 430px\)[\s\S]*?\.actions-entete \.bouton-entete\s*\{[^}]*padding-inline:\s*6px[\s\S]*?\.bouton-aide-entete > span\s*\{[^}]*display:\s*none/s);
 });
 
-it("rend Aide visible en haut sans déplacer le bouton", () => {
+it("rend Menu et Aide visibles dans la même coque sans double encadrement", () => {
+  assert.match(app, /bouton-menu[\s\S]*?<span aria-hidden="true">☰<\/span><strong>Menu<\/strong>/);
   assert.match(app, /bouton-aide-entete[\s\S]*?<span aria-hidden="true">\?<\/span><strong>Aide<\/strong>/);
-  assert.match(interfaceCss, /\.bouton-aide-entete\s*\{[^}]*border:\s*2px solid var\(--mg-turquoise\)/s);
+  assert.match(interfaceCss, /\.bouton-menu,\s*\.bouton-aide-entete\s*\{[^}]*border:\s*2px solid/s);
+  assert.match(interfaceCss, /\.bouton-aide-entete\s*\{[^}]*border-color:[^}]*var\(--mg-turquoise\)/s);
+  assert.doesNotMatch(interfaceCss, /\.bouton-aide-entete\[aria-expanded="true"\][^}]*box-shadow:\s*inset/s);
   assert.match(interfaceCss, /\.bouton-entete\s*\{[^}]*min-height:\s*44px/s);
 });
 

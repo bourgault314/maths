@@ -9,6 +9,384 @@ body,
   overflow-x: hidden;
 }
 
+/* NC-02 — composants communs des carrés et des puissances. */
+.mathsgo-expression {
+  display: inline-block;
+  white-space: nowrap;
+  font-family: "Cambria Math", "STIX Two Math", "Times New Roman", serif;
+  font-variant-numeric: lining-nums tabular-nums;
+  line-height: 1.16;
+}
+
+.mathsgo-expression sup {
+  margin-left: 0.03em;
+  font-size: 0.55em;
+  line-height: 0;
+  vertical-align: 0.8em;
+}
+
+.carte-question-carres {
+  gap: clamp(10px, 2.2vh, 22px);
+}
+
+.carte-question-carres h1 {
+  max-width: 760px;
+  margin-inline: auto;
+  text-wrap: balance;
+}
+
+.expression-question-carres,
+.egalite-carres,
+.modele-produit-carre,
+.chaine-carre {
+  font-size: clamp(1.55rem, 5vw, 2.5rem);
+  font-weight: 700;
+  color: var(--mg-encre);
+}
+
+.expression-question-carres {
+  margin: 4px auto;
+  text-align: center;
+}
+
+.egalite-carres {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: clamp(8px, 2vw, 16px);
+  width: min(100%, 680px);
+  min-width: 0;
+  margin: 4px auto;
+  line-height: 1.25;
+}
+
+.phrase-reponse-carres {
+  flex-wrap: wrap;
+  font-size: clamp(1.2rem, 3.7vw, 1.75rem);
+}
+
+.egalite-deux-champs,
+.calcul-court-question {
+  flex-wrap: nowrap;
+}
+
+.case-reponse-carres {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: 0 0 auto;
+  min-width: 62px;
+  min-height: 58px;
+  padding: 4px 12px;
+  border: 3px solid var(--mg-turquoise);
+  border-radius: var(--mg-rayon-moyen);
+  background: var(--mg-papier);
+  color: var(--mg-encre);
+  font: inherit;
+  font-weight: 800;
+  line-height: 1;
+  box-shadow: 0 3px 0 color-mix(in srgb, var(--mg-turquoise) 30%, transparent);
+}
+
+.mode-entrainement .case-reponse-carres {
+  width: 98px;
+}
+
+button.case-reponse-carres {
+  cursor: pointer;
+}
+
+.case-reponse-carres.active {
+  border-color: var(--mg-orange);
+  background: color-mix(in srgb, var(--mg-orange) 8%, var(--mg-papier));
+  box-shadow: 0 3px 0 color-mix(in srgb, var(--mg-orange) 32%, transparent);
+}
+
+.case-reponse-carres.juste {
+  border-color: var(--mg-reussite);
+}
+
+.case-reponse-carres.fausse {
+  border-color: var(--mg-erreur);
+}
+
+.case-puissance {
+  min-width: 76px;
+  overflow: visible;
+}
+
+.visuel-carre-quadrille {
+  display: grid;
+  place-items: center;
+  width: min(100%, 250px);
+  margin: 0 auto;
+}
+
+.visuel-carre-quadrille svg {
+  display: block;
+  width: min(100%, 240px);
+  height: auto;
+  overflow: visible;
+}
+
+.grille-carres-qcm,
+.grille-carres-multiples {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  width: min(100%, 620px);
+  margin-inline: auto;
+}
+
+.grille-carres-qcm .choix,
+.grille-carres-multiples .choix {
+  min-height: 58px;
+  font-size: clamp(1.1rem, 3vw, 1.45rem);
+}
+
+.modele-produit-carre {
+  display: flex;
+  align-items: baseline;
+  justify-content: center;
+  gap: 10px;
+  margin: 4px auto 12px;
+}
+
+.panneau-carres .visuel-carre-quadrille {
+  width: min(100%, 220px);
+}
+
+.etapes-aide-carres,
+.etapes-correction-carres {
+  display: grid;
+  gap: 12px;
+  margin-top: 16px;
+}
+
+.etapes-aide-carres .outil-aide,
+.etapes-correction-carres .etape-correction {
+  margin: 0;
+}
+
+.ligne-correction-carres {
+  margin: 10px 0 0;
+  font-size: 1.05rem;
+  line-height: 1.55;
+}
+
+.ligne-correction-carres .mathsgo-expression {
+  font-size: 1.35em;
+}
+
+.diagnostic-erreur-carre {
+  padding: 12px 14px;
+  border: 2px solid var(--mg-orange);
+  border-radius: var(--mg-rayon-moyen);
+  background: color-mix(in srgb, var(--mg-orange) 10%, var(--mg-papier));
+  font-weight: 700;
+}
+
+.carte-cours-carres {
+  display: grid;
+  gap: 18px;
+}
+
+.carte-cours-carres > h3 {
+  margin: 0;
+  text-align: center;
+}
+
+.cours-carre-sens,
+.cours-deux-sens-carres,
+.exemples-calcul-court,
+.grille-decompositions-carres {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 18px;
+  align-items: center;
+}
+
+.cours-carre-sens > div,
+.cours-deux-sens-carres section,
+.exemples-calcul-court section,
+.decomposition-carre {
+  padding: 14px;
+  border: 1px solid var(--mg-ligne);
+  border-radius: var(--mg-rayon-moyen);
+  background: var(--mg-fondDoux);
+}
+
+.cours-deux-sens-carres section,
+.exemples-calcul-court section,
+.decomposition-carre {
+  height: 100%;
+}
+
+.cours-deux-sens-carres h4,
+.exemples-calcul-court > section > p,
+.decomposition-carre h4 {
+  margin-top: 0;
+  color: var(--mg-bleuFonce);
+}
+
+.alerte-carre {
+  padding: 10px 12px;
+  border-left: 5px solid var(--mg-orange);
+  background: var(--mg-papier);
+}
+
+.table-carres-cours {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 9px;
+}
+
+.table-carres-cours p {
+  display: flex;
+  align-items: baseline;
+  justify-content: center;
+  gap: 5px;
+  min-width: 0;
+  margin: 0;
+  padding: 11px 6px;
+  border: 1px solid var(--mg-ligne);
+  border-radius: var(--mg-rayon-moyen);
+  background: var(--mg-papier);
+  font-size: clamp(.95rem, 2vw, 1.18rem);
+  white-space: nowrap;
+}
+
+.introduction-decomposition {
+  max-width: 720px;
+  margin: -5px auto 0;
+  text-align: center;
+}
+
+.decomposition-carre {
+  display: grid;
+  gap: 8px;
+  align-content: start;
+}
+
+.decomposition-carre h4 {
+  margin: 0;
+  text-align: center;
+}
+
+.decomposition-carre .visuel-carre-quadrille {
+  width: min(100%, 205px);
+}
+
+.calcul-decomposition,
+.calcul-aligne {
+  display: grid;
+  gap: 3px;
+  width: fit-content;
+  max-width: 100%;
+  margin-inline: auto;
+  font-family: "Cambria Math", "STIX Two Math", "Times New Roman", serif;
+  font-size: clamp(1rem, 2.4vw, 1.25rem);
+  font-variant-numeric: lining-nums tabular-nums;
+}
+
+.calcul-decomposition p,
+.calcul-aligne p {
+  display: grid;
+  grid-template-columns: minmax(30px, auto) 18px minmax(0, auto);
+  gap: 5px;
+  align-items: baseline;
+  margin: 0;
+}
+
+.calcul-decomposition p > :nth-child(2),
+.calcul-aligne p > :nth-child(2) {
+  text-align: center;
+}
+
+.calcul-decomposition strong,
+.calcul-aligne strong {
+  color: var(--mg-bleuFonce);
+}
+
+@media (min-width: 900px) and (max-height: 760px) {
+  .panneau-cours-carres .grille-decompositions-carres {
+    gap: 12px;
+  }
+
+  .panneau-cours-carres .decomposition-carre {
+    gap: 5px;
+    padding: 10px;
+  }
+
+  .panneau-cours-carres .decomposition-carre .visuel-carre-quadrille {
+    width: min(100%, 185px);
+  }
+}
+
+.correction-calcul-aligne {
+  margin-top: 16px;
+  padding: 16px;
+  border: 2px solid var(--mg-turquoise);
+  border-radius: var(--mg-rayon-moyen);
+  background: var(--mg-fondDoux);
+}
+
+.correction-calcul-aligne > p {
+  margin: 0 0 12px;
+  font-weight: 700;
+}
+
+@media (max-width: 620px) {
+  .cours-carre-sens,
+  .cours-deux-sens-carres,
+  .exemples-calcul-court,
+  .grille-decompositions-carres {
+    grid-template-columns: 1fr;
+  }
+
+  .table-carres-cours {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 6px;
+  }
+
+  .table-carres-cours p {
+    gap: 3px;
+    padding-inline: 3px;
+    font-size: clamp(.82rem, 3.7vw, 1rem);
+  }
+
+  .carte-question-carres .visuel-carre-quadrille {
+    width: min(100%, 205px);
+  }
+
+  .egalite-carres {
+    gap: 7px;
+  }
+
+  .case-reponse-carres {
+    min-width: 54px;
+    min-height: 54px;
+    padding-inline: 8px;
+  }
+
+  .mode-entrainement .case-reponse-carres {
+    width: 76px;
+  }
+}
+
+@media (min-width: 900px) {
+  .mode-tableau .carte-question-carres .expression-question-carres,
+  .mode-tableau .carte-question-carres .egalite-carres {
+    font-size: clamp(2.3rem, 4.4vw, 4rem);
+  }
+
+  .mode-tableau .carte-question-carres .visuel-carre-quadrille {
+    width: min(100%, 320px);
+  }
+
+  .mode-tableau .carte-question-carres .visuel-carre-quadrille svg {
+    width: 100%;
+  }
+}
+
 body {
   min-height: 100dvh;
 }
@@ -385,14 +763,25 @@ body {
   justify-self: start;
 }
 
+.bouton-menu,
 .bouton-aide-entete {
   display: inline-flex;
   align-items: center;
   gap: 5px;
-  border: 2px solid var(--mg-turquoise);
+  border: 2px solid color-mix(in srgb, var(--mg-bleu) 36%, var(--mg-ligne));
   color: var(--mg-bleu);
-  background: color-mix(in srgb, var(--mg-turquoise) 18%, var(--mg-papier));
-  box-shadow: 0 2px 8px color-mix(in srgb, var(--mg-turquoise) 20%, transparent);
+  background: color-mix(in srgb, var(--mg-bleu) 5%, var(--mg-papier));
+  box-shadow: 0 2px 6px color-mix(in srgb, var(--mg-bleu) 10%, transparent);
+}
+
+.bouton-aide-entete {
+  border-color: color-mix(in srgb, var(--mg-turquoise) 72%, var(--mg-ligne));
+  background: color-mix(in srgb, var(--mg-turquoise) 12%, var(--mg-papier));
+}
+
+.bouton-menu > span {
+  font-size: 17px;
+  line-height: 1;
 }
 
 .bouton-aide-entete > span {
@@ -408,14 +797,15 @@ body {
   font-weight: 900;
 }
 
+.bouton-menu > strong,
 .bouton-aide-entete > strong {
   font-weight: 800;
 }
 
 .bouton-aide-entete[aria-expanded="true"] {
-  border-color: var(--mg-bleu);
-  background: color-mix(in srgb, var(--mg-turquoise) 30%, var(--mg-papier));
-  box-shadow: inset 0 0 0 1px var(--mg-bleu);
+  border-color: var(--mg-turquoise);
+  background: color-mix(in srgb, var(--mg-turquoise) 24%, var(--mg-papier));
+  box-shadow: 0 2px 6px color-mix(in srgb, var(--mg-turquoise) 20%, transparent);
 }
 
 .score,
@@ -676,12 +1066,18 @@ body {
   line-height: 1.3;
 }
 
-.rappel-question strong {
+.rappel-question > strong {
   grid-column: 2;
   grid-row: 1 / span 2;
   color: var(--mg-bleu);
   font-family: var(--mg-titres);
   font-size: clamp(26px, 8vw, 38px);
+}
+
+.rappel-question p strong {
+  color: inherit;
+  font: inherit;
+  font-weight: 800;
 }
 
 .aide-vers-cours {
@@ -913,6 +1309,16 @@ body {
 
 .repere-etape {
   margin-bottom: 12px;
+}
+
+.case-vide-aide {
+  display: inline-block;
+  width: 0.88em;
+  height: 0.88em;
+  margin-inline: 0.08em;
+  vertical-align: -0.08em;
+  border: 2px solid currentColor;
+  border-radius: 0.16em;
 }
 
 .voile-menu {
@@ -1357,6 +1763,14 @@ body {
   justify-self: stretch;
 }
 
+.navigation-cours button:disabled {
+  border-color: var(--mg-ligne);
+  color: var(--mg-texteAttenue);
+  background: var(--mg-fondDoux);
+  box-shadow: none;
+  opacity: .48;
+}
+
 .points-cours {
   display: flex;
   gap: 5px;
@@ -1766,6 +2180,43 @@ body {
 
 }
 
+@media (max-width: 360px) {
+  .table-carres-cours p {
+    font-size: .79rem;
+  }
+}
+
+@media (min-width: 600px) and (max-height: 480px) {
+  .zone-question-scroll {
+    padding-block: 6px;
+  }
+
+  .carte-question-carres {
+    padding-top: 10px;
+    gap: 4px;
+  }
+
+  .carte-question-carres .etiquette-notion,
+  .carte-question-carres .precision {
+    margin-bottom: 2px;
+  }
+
+  .carte-question-carres h1 {
+    margin: 0;
+    font-size: clamp(20px, 6vh, 27px);
+  }
+
+  .carte-question-carres .egalite-carres,
+  .carte-question-carres .expression-question-carres {
+    margin-block: 0;
+    font-size: clamp(1.4rem, 8vh, 2rem);
+  }
+
+  .carte-question-carres .zone-retour {
+    min-height: 24px;
+  }
+}
+
 @media (max-width: 430px) {
   .actions-entete {
     gap: 4px;
@@ -2099,5 +2550,82 @@ body {
 
   .mode-entrainement.avec-pave .barre-saisie-numerique {
     display: none;
+  }
+
+  .mode-entrainement.avec-pave .carte-question-carres {
+    padding-top: clamp(12px, 3vh, 24px);
+    gap: clamp(6px, 1.2vh, 10px);
+  }
+
+  .mode-entrainement.avec-pave .carte-question-carres .etiquette-notion {
+    margin-bottom: 2px;
+  }
+
+  .mode-entrainement.avec-pave .carte-question-carres .egalite-carres {
+    margin-block: 0;
+  }
+
+  .mode-entrainement.avec-pave .carte-question-carres .zone-retour:empty {
+    display: none;
+  }
+}
+
+@media (pointer: coarse) and (hover: none) and (max-height: 700px) {
+  .mode-entrainement.avec-pave
+    .carte-question-carres.famille-carre-quadrille {
+    grid-template-columns: minmax(112px, .9fr) minmax(0, 1.1fr);
+    column-gap: 6px;
+  }
+
+  .mode-entrainement.avec-pave
+    .carte-question-carres.famille-carre-quadrille
+    > .etiquette-notion,
+  .mode-entrainement.avec-pave
+    .carte-question-carres.famille-carre-quadrille
+    > h1,
+  .mode-entrainement.avec-pave
+    .carte-question-carres.famille-carre-quadrille
+    > .zone-retour {
+    grid-column: 1 / -1;
+  }
+
+  .mode-entrainement.avec-pave
+    .carte-question-carres.famille-carre-quadrille
+    .visuel-carre-quadrille {
+    grid-column: 1;
+    width: min(100%, clamp(112px, 20dvh, 160px));
+  }
+
+  .mode-entrainement.avec-pave
+    .carte-question-carres.famille-carre-quadrille
+    > .phrase-reponse-carres {
+    grid-column: 2;
+    align-self: center;
+    flex-direction: column;
+    gap: 3px;
+    font-size: .95rem;
+  }
+}
+
+@media (min-width: 900px) {
+  .mode-tableau .grille-projection.grille-carres-qcm,
+  .mode-tableau .grille-projection.grille-carres-multiples,
+  .mode-tableau.panneau-ouvert .grille-projection.grille-carres-qcm,
+  .mode-tableau.panneau-ouvert .grille-projection.grille-carres-multiples {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    width: min(100%, 980px);
+    margin-inline: auto;
+  }
+
+  .mode-tableau .panneau-carres .rappel-question p,
+  .mode-tableau .panneau-carres .ligne-correction-carres,
+  .mode-tableau .panneau-carres .outil-aide,
+  .mode-tableau .panneau-carres .etape-correction {
+    font-size: clamp(18px, 1.15vw, 23px);
+    line-height: 1.42;
+  }
+
+  .mode-tableau .panneau-carres .repere-etape {
+    font-size: clamp(18px, 1.05vw, 21px);
   }
 }

@@ -1,9 +1,9 @@
 // Contrat « question instanciée » — version 2.
 //
-// Cette version couvre les choix simples ou multiples et la première saisie
-// numérique réellement nécessaire : un entier naturel borné. Cette dernière
-// sert aux familles NC-01/F5 et F6, sans anticiper les fractions, décimaux ou
-// expressions algébriques.
+// Cette version couvre les choix simples ou multiples, un entier naturel
+// borné et deux champs entiers indépendants. Les énoncés peuvent porter une
+// puissance structurée, sans accepter de HTML produit par les générateurs.
+// Le contrat n'anticipe ni fractions, ni décimaux, ni expressions algébriques.
 
 import { estDonneePure, estIdentifiantValide } from "./gabarit.js";
 
@@ -11,10 +11,17 @@ export const SCHEMA_QUESTION_INSTANCE_V2 = "mathsgo.question-instance/2";
 export const TYPE_REPONSE_SELECTION_MULTIPLE = "selection-multiple";
 export const TYPE_REPONSE_CHOIX_UNIQUE = "choix-unique";
 export const TYPE_REPONSE_ENTIER_NATUREL = "entier-naturel";
+export const TYPE_REPONSE_DEUX_ENTIERS = "deux-entiers";
 export const COMPARAISON_ENSEMBLE_EXACT = "ensemble-exact";
 export const COMPARAISON_CHOIX_EXACT = "choix-exact";
 export const COMPARAISON_VALEUR_EXACTE = "valeur-exacte";
-export const TYPES_BLOC_V2 = Object.freeze(["texte", "entier", "solide"]);
+export const COMPARAISON_VALEURS_EXACTES = "valeurs-exactes";
+export const TYPES_BLOC_V2 = Object.freeze([
+  "texte",
+  "entier",
+  "puissance",
+  "solide",
+]);
 export const TYPES_OUTIL_AIDE_V2 = Object.freeze([
   "observer-unites",
   "composer-somme-chiffres",
@@ -96,6 +103,8 @@ function validerBlocs(blocs, nom, erreurs, { auMoinsUn = false } = {}) {
     }
     const cles = bloc.type === "entier"
       ? ["id", "type", "valeur"]
+      : bloc.type === "puissance"
+        ? ["id", "type", "base", "exposant"]
       : bloc.type === "solide"
         ? ["id", "type", "forme", "variante", "vue", "mesures"]
         : ["id", "type", "contenu"];
@@ -117,9 +126,17 @@ function validerBlocs(blocs, nom, erreurs, { auMoinsUn = false } = {}) {
     }
     if (
       bloc.type === "entier" &&
-      (!Number.isSafeInteger(bloc.valeur) || bloc.valeur <= 0)
+      (!Number.isSafeInteger(bloc.valeur) || bloc.valeur < 0)
     ) {
-      erreurs.push(`${chemin}.valeur : entier naturel strictement positif requis`);
+      erreurs.push(`${chemin}.valeur : entier naturel requis`);
+    }
+    if (bloc.type === "puissance") {
+      if (!Number.isSafeInteger(bloc.base) || bloc.base < 0) {
+        erreurs.push(`${chemin}.base : entier naturel requis`);
+      }
+      if (!Number.isSafeInteger(bloc.exposant) || bloc.exposant <= 0) {
+        erreurs.push(`${chemin}.exposant : entier naturel strictement positif requis`);
+      }
     }
     if (bloc.type === "solide") {
       if (!FORMES_SOLIDES_DNB.has(bloc.forme)) {
@@ -190,23 +207,29 @@ function validerReponse(reponse, erreurs) {
   const multiple = reponse.type === TYPE_REPONSE_SELECTION_MULTIPLE;
   const unique = reponse.type === TYPE_REPONSE_CHOIX_UNIQUE;
   const entier = reponse.type === TYPE_REPONSE_ENTIER_NATUREL;
-  if (!multiple && !unique && !entier) {
+  const deuxEntiers = reponse.type === TYPE_REPONSE_DEUX_ENTIERS;
+  if (!multiple && !unique && !entier && !deuxEntiers) {
     erreurs.push(
-      "reponse.type : sélection multiple, choix unique ou entier naturel attendu",
+      "reponse.type : sélection multiple, choix unique, entier naturel ou deux entiers attendus",
     );
     return;
   }
 
-  if (entier) {
+  if (entier || deuxEntiers) {
     validerClesConnues(
       reponse,
-      ["type", "comparaison", "attendu", "minimum", "maximum"],
+      entier
+        ? ["type", "comparaison", "attendu", "minimum", "maximum"]
+        : ["type", "comparaison", "attendus", "minimum", "maximum"],
       "reponse",
       erreurs,
     );
-    if (reponse.comparaison !== COMPARAISON_VALEUR_EXACTE) {
+    const comparaisonAttendue = entier
+      ? COMPARAISON_VALEUR_EXACTE
+      : COMPARAISON_VALEURS_EXACTES;
+    if (reponse.comparaison !== comparaisonAttendue) {
       erreurs.push(
-        `reponse.comparaison : « ${COMPARAISON_VALEUR_EXACTE} » attendu`,
+        `reponse.comparaison : « ${comparaisonAttendue} » attendu`,
       );
     }
     if (!Number.isSafeInteger(reponse.minimum) || reponse.minimum < 0) {
@@ -220,12 +243,28 @@ function validerReponse(reponse, erreurs) {
         "reponse.maximum : entier supérieur ou égal au minimum requis",
       );
     }
-    if (
-      !Number.isSafeInteger(reponse.attendu) ||
-      reponse.attendu < reponse.minimum ||
-      reponse.attendu > reponse.maximum
-    ) {
-      erreurs.push("reponse.attendu : entier compris dans les bornes requis");
+    if (entier) {
+      if (
+        !Number.isSafeInteger(reponse.attendu) ||
+        reponse.attendu < reponse.minimum ||
+        reponse.attendu > reponse.maximum
+      ) {
+        erreurs.push("reponse.attendu : entier compris dans les bornes requis");
+      }
+    } else if (!Array.isArray(reponse.attendus) || reponse.attendus.length !== 2) {
+      erreurs.push("reponse.attendus : exactement deux entiers sont requis");
+    } else {
+      reponse.attendus.forEach((attendu, index) => {
+        if (
+          !Number.isSafeInteger(attendu) ||
+          attendu < reponse.minimum ||
+          attendu > reponse.maximum
+        ) {
+          erreurs.push(
+            `reponse.attendus[${index}] : entier compris dans les bornes requis`,
+          );
+        }
+      });
     }
     return;
   }
@@ -340,7 +379,7 @@ function validerAide(aide, blocsEnonce, erreurs) {
 }
 
 /**
- * Valide une question contre le contrat V2 limité à la sélection multiple.
+ * Valide une question contre le contrat V2.
  * @param {unknown} question
  * @returns {{ valide: boolean, erreurs: string[] }}
  */
@@ -426,4 +465,22 @@ export function estEntierExact(attendu, recu) {
     recu >= 0 &&
     attendu === recu
   );
+}
+
+/**
+ * Compare deux champs entiers dans leur ordre, sans conversion implicite.
+ * Les deux tableaux doivent contenir exactement deux entiers naturels.
+ * @param {unknown} attendus
+ * @param {unknown} recus
+ */
+export function estDeuxEntiersExacts(attendus, recus) {
+  if (!Array.isArray(attendus) || !Array.isArray(recus)) return false;
+  if (attendus.length !== 2 || recus.length !== 2) return false;
+  if (
+    attendus.some((valeur) => !Number.isSafeInteger(valeur) || valeur < 0) ||
+    recus.some((valeur) => !Number.isSafeInteger(valeur) || valeur < 0)
+  ) {
+    return false;
+  }
+  return attendus[0] === recus[0] && attendus[1] === recus[1];
 }

@@ -2,6 +2,7 @@ import { describe, it } from "node:test";
 import assert from "node:assert/strict";
 
 import {
+  TYPE_REPONSE_DEUX_ENTIERS,
   TYPE_REPONSE_ENTIER_NATUREL,
   TYPE_REPONSE_SELECTION_MULTIPLE,
 } from "./question-v2.js";
@@ -44,6 +45,48 @@ describe("validerTraceReponse", () => {
     const trace = traceValide();
     trace.reponse = { type: TYPE_REPONSE_ENTIER_NATUREL, valeur: 4 };
     assert.equal(validerTraceReponse(trace).valide, true);
+  });
+
+  it("accepte la trace ordonnée de deux champs entiers", () => {
+    const trace = traceValide();
+    trace.reponse = {
+      type: TYPE_REPONSE_DEUX_ENTIERS,
+      valeurs: [7, 7],
+    };
+    assert.equal(validerTraceReponse(trace).valide, true);
+  });
+
+  it("refuse une trace de deux entiers incomplète, convertie ou enrichie", () => {
+    const incomplet = traceValide();
+    incomplet.reponse = {
+      type: TYPE_REPONSE_DEUX_ENTIERS,
+      valeurs: [7],
+    };
+    assert.match(
+      validerTraceReponse(incomplet).erreurs.join("\n"),
+      /exactement deux entiers/,
+    );
+
+    const converti = traceValide();
+    converti.reponse = {
+      type: TYPE_REPONSE_DEUX_ENTIERS,
+      valeurs: ["7", "7"],
+    };
+    assert.match(
+      validerTraceReponse(converti).erreurs.join("\n"),
+      /deux entiers naturels/,
+    );
+
+    const enrichi = traceValide();
+    enrichi.reponse = {
+      type: TYPE_REPONSE_DEUX_ENTIERS,
+      valeurs: [7, 7],
+      champActif: 1,
+    };
+    assert.match(
+      validerTraceReponse(enrichi).erreurs.join("\n"),
+      /propriété inconnue/,
+    );
   });
 
   it("refuse réponse vide, doublons et type inconnu", () => {

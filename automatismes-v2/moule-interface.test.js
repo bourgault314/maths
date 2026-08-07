@@ -4,6 +4,7 @@ import { describe, it } from "node:test";
 
 const app = await readFile(new URL("./app.js", import.meta.url), "utf8");
 const css = await readFile(new URL("./interface.css", import.meta.url), "utf8");
+const cssCommun = await readFile(new URL("./styles.css", import.meta.url), "utf8");
 
 function blocCss(selecteur) {
   const motif = new RegExp(`${selecteur.replaceAll(".", "\\.")}\\s*\\{([^}]+)\\}`);
@@ -15,7 +16,7 @@ function blocCss(selecteur) {
 describe("moule responsive commun", () => {
   it("impose une seule coque aux rendus de questions", () => {
     assert.equal((app.match(/<footer class="dock-question/g) ?? []).length, 1);
-    assert.equal((app.match(/return rendreCoqueLecteur\(question, carteQuestion\);/g) ?? []).length, 3);
+    assert.equal((app.match(/return rendreCoqueLecteur\(question, carteQuestion\);/g) ?? []).length, 4);
     assert.equal((app.match(/<aside class="panneau/g) ?? []).length, 1);
     assert.match(app, /function rendreCadrePanneau\(/);
   });
@@ -56,5 +57,20 @@ describe("moule responsive commun", () => {
     assert.match(css, /@media \(pointer: coarse\) and \(hover: none\)/);
     assert.doesNotMatch(css, /@media \(any-pointer: coarse\)/);
     assert.doesNotMatch(css, /@media \(max-width:\s*679px\)[^{]*\{[^}]*avec-pave/s);
+  });
+
+  it("compacte uniquement la carte NC-02 quand le pavé tactile est visible", () => {
+    assert.match(css, /@media \(pointer: coarse\) and \(hover: none\)[\s\S]*?\.mode-entrainement\.avec-pave \.carte-question-carres/);
+    assert.match(css, /max-height:\s*700px[\s\S]*?\.famille-carre-quadrille[\s\S]*?\.visuel-carre-quadrille/);
+    assert.match(css, /\.carte-question-carres\.famille-carre-quadrille\s*\{[^}]*grid-template-columns:/s);
+    assert.doesNotMatch(css, /\.mode-entrainement\.avec-pave \.carte-question-divisibilite/);
+  });
+
+  it("utilise un seul contour persistant pour le champ actif", () => {
+    const active = blocCss(".case-reponse-carres.active");
+    assert.match(active, /border-color:\s*var\(--mg-orange\)/);
+    assert.doesNotMatch(active, /outline|outline-offset/);
+    assert.match(css, /\.mode-entrainement \.case-reponse-carres\s*\{[^}]*width:\s*98px/s);
+    assert.match(cssCommun, /button:focus-visible/);
   });
 });

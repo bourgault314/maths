@@ -65,6 +65,11 @@ export const PROVENANCE_OBJETS = {
   "verification.js": { statut: "original_mathsgo", source: "écrit pour maths&go" },
   "clavier.js": { statut: "original_mathsgo", source: "écrit pour maths&go" },
   "expressions.js": { statut: "original_mathsgo", source: "écrit pour maths&go" },
+  "carre-quadrille.js": {
+    statut: "original_mathsgo",
+    source: "fiche NC-02 et décision D-038 approuvées par Gwenaël les 6 et 7 août 2026 ; modèle aire = côté × côté écrit pour maths&go",
+    note: "Les prototypes personnels historiques auto/scripts/shared/visuals/numbers/square-area.js et Labo des régularités ont été consultés comme inventaire d'intentions pédagogiques (aire inconnue, côté inconnu, rangées et colonnes). Aucun code, SVG, coordonnée, libellé ni couleur n'a été réemployé : l'objet officiel a été redessiné et réécrit à neuf pour la fondation V2. L'extension numérique de NC-02 à 0 ne crée aucun carré quadrillé 0 × 0 ; l'objet reste utilisé de 2 à 12 dans les questions.",
+  },
 
   "geometrie.js": { statut: "original_mathsgo", source: "écrit pour maths&go (calcul pur)" },
   "figure.js": { statut: "original_mathsgo", source: "écrit pour maths&go (fabrique déclarative)" },
@@ -132,7 +137,7 @@ export const PROVENANCE_FONDATION_V2 = Object.freeze({
 
   "automatismes-v2/app.js": {
     statut: "original_mathsgo",
-    source: "parcours complet NC-01 et décisions de disposition téléphone du 3 août 2026",
+    source: "parcours complets NC-01 et NC-02, décisions de disposition des 3, 6 et 7 août 2026",
   },
   "automatismes-v2/package.json": {
     statut: "original_mathsgo",
@@ -197,7 +202,7 @@ export const PROVENANCE_FONDATION_V2 = Object.freeze({
 
   "packages/automatismes/src/registre.js": {
     statut: "original_mathsgo",
-    source: "registre des notions écrit pour Automatismes maths&go V2",
+    source: "registre des notions NC-01 et NC-02 écrit pour Automatismes maths&go V2",
   },
   "packages/automatismes/src/nombres-et-calculs/criteres-divisibilite/selection-diviseurs.js": {
     statut: "original_mathsgo",
@@ -222,6 +227,38 @@ export const PROVENANCE_FONDATION_V2 = Object.freeze({
   "packages/automatismes/src/nombres-et-calculs/criteres-divisibilite/serie.js": {
     statut: "original_mathsgo",
     source: "recette de série complète NC-01 décidée avec Gwenaël le 3 août 2026",
+  },
+  "packages/automatismes/src/nombres-et-calculs/carres-entiers-1-a-12/commun.js": {
+    statut: "original_mathsgo",
+    source: "invariants mathématiques de 0 à 12 et fiche NC-02 révisée approuvée par Gwenaël les 6 et 7 août 2026",
+  },
+  "packages/automatismes/src/nombres-et-calculs/carres-entiers-1-a-12/calcul-direct.js": {
+    statut: "original_mathsgo",
+    source: "famille F1 et distracteurs diagnostiques de la fiche NC-02 approuvés les 6 et 7 août 2026",
+  },
+  "packages/automatismes/src/nombres-et-calculs/carres-entiers-1-a-12/retrouver-entier.js": {
+    statut: "original_mathsgo",
+    source: "famille F2 de 0 à 12 et deux champs indépendants approuvés les 6 et 7 août 2026",
+  },
+  "packages/automatismes/src/nombres-et-calculs/carres-entiers-1-a-12/sens-notation.js": {
+    statut: "original_mathsgo",
+    source: "famille F3 de la fiche NC-02 approuvée par Gwenaël les 6 et 7 août 2026",
+  },
+  "packages/automatismes/src/nombres-et-calculs/carres-entiers-1-a-12/reconnaitre-carres.js": {
+    statut: "original_mathsgo",
+    source: "famille F4 et vocabulaire carrés parfaits approuvés les 6 et 7 août 2026",
+  },
+  "packages/automatismes/src/nombres-et-calculs/carres-entiers-1-a-12/carre-quadrille.js": {
+    statut: "original_mathsgo",
+    source: "famille F5 de 2 à 12, sans dessin 0 × 0, approuvée les 6 et 7 août 2026",
+  },
+  "packages/automatismes/src/nombres-et-calculs/carres-entiers-1-a-12/calcul-court.js": {
+    statut: "original_mathsgo",
+    source: "famille F6 et rédaction des calculs approuvées les 6 et 7 août 2026",
+  },
+  "packages/automatismes/src/nombres-et-calculs/carres-entiers-1-a-12/serie.js": {
+    statut: "original_mathsgo",
+    source: "quotas et couverture déterministe des treize bases NC-02 approuvés les 6 et 7 août 2026",
   },
   "packages/automatismes/src/espace-et-geometrie/solides-usuels/reconnaissance.js": {
     statut: "original_mathsgo",

@@ -4,9 +4,12 @@ import assert from "node:assert/strict";
 import {
   COMPARAISON_ENSEMBLE_EXACT,
   COMPARAISON_VALEUR_EXACTE,
+  COMPARAISON_VALEURS_EXACTES,
   SCHEMA_QUESTION_INSTANCE_V2,
+  TYPE_REPONSE_DEUX_ENTIERS,
   TYPE_REPONSE_ENTIER_NATUREL,
   TYPE_REPONSE_SELECTION_MULTIPLE,
+  estDeuxEntiersExacts,
   estEntierExact,
   estSelectionExacte,
   validerQuestionInstanceV2,
@@ -91,6 +94,48 @@ describe("validerQuestionInstanceV2 — cas valides", () => {
     };
     assert.equal(validerQuestionInstanceV2(question).valide, true);
   });
+
+  it("accepte un bloc puissance structuré avec un vrai exposant numérique", () => {
+    const question = questionValide();
+    question.enonce.push({
+      id: "carre",
+      type: "puissance",
+      base: 7,
+      exposant: 2,
+    });
+    assert.equal(validerQuestionInstanceV2(question).valide, true);
+  });
+
+  it("accepte zéro comme entier naturel et comme base d'une puissance", () => {
+    const question = questionValide();
+    question.enonce[1].valeur = 0;
+    question.enonce.push({
+      id: "carre-zero",
+      type: "puissance",
+      base: 0,
+      exposant: 2,
+    });
+    question.reponse = {
+      type: TYPE_REPONSE_ENTIER_NATUREL,
+      comparaison: COMPARAISON_VALEUR_EXACTE,
+      attendu: 0,
+      minimum: 0,
+      maximum: 12,
+    };
+    assert.equal(validerQuestionInstanceV2(question).valide, true);
+  });
+
+  it("accepte deux champs entiers indépendants avec les mêmes bornes", () => {
+    const question = questionValide();
+    question.reponse = {
+      type: TYPE_REPONSE_DEUX_ENTIERS,
+      comparaison: COMPARAISON_VALEURS_EXACTES,
+      attendus: [7, 7],
+      minimum: 1,
+      maximum: 12,
+    };
+    assert.equal(validerQuestionInstanceV2(question).valide, true);
+  });
 });
 
 describe("validerQuestionInstanceV2 — garde-fous", () => {
@@ -112,10 +157,10 @@ describe("validerQuestionInstanceV2 — garde-fous", () => {
     );
 
     const entier = questionValide();
-    entier.enonce[1].valeur = 0;
+    entier.enonce[1].valeur = -1;
     assert.match(
       validerQuestionInstanceV2(entier).erreurs.join("\n"),
-      /strictement positif/,
+      /entier naturel requis/,
     );
   });
 
@@ -173,6 +218,59 @@ describe("validerQuestionInstanceV2 — garde-fous", () => {
     );
   });
 
+  it("refuse une puissance mal structurée ou une propriété HTML ajoutée", () => {
+    const base = questionValide();
+    base.enonce.push({
+      id: "carre",
+      type: "puissance",
+      base: -1,
+      exposant: 2,
+    });
+    assert.match(
+      validerQuestionInstanceV2(base).erreurs.join("\n"),
+      /\.base : entier naturel requis/,
+    );
+
+    const exposant = questionValide();
+    exposant.enonce.push({
+      id: "carre",
+      type: "puissance",
+      base: 7,
+      exposant: "2",
+      html: "<sup>2</sup>",
+    });
+    const erreurs = validerQuestionInstanceV2(exposant).erreurs.join("\n");
+    assert.match(erreurs, /\.exposant : entier naturel strictement positif/);
+    assert.match(erreurs, /\.html : propriété inconnue/);
+  });
+
+  it("refuse deux entiers incomplets, hors bornes ou avec la mauvaise comparaison", () => {
+    const incomplet = questionValide();
+    incomplet.reponse = {
+      type: TYPE_REPONSE_DEUX_ENTIERS,
+      comparaison: COMPARAISON_VALEURS_EXACTES,
+      attendus: [7],
+      minimum: 1,
+      maximum: 12,
+    };
+    assert.match(
+      validerQuestionInstanceV2(incomplet).erreurs.join("\n"),
+      /exactement deux entiers/,
+    );
+
+    const horsBornes = questionValide();
+    horsBornes.reponse = {
+      type: TYPE_REPONSE_DEUX_ENTIERS,
+      comparaison: COMPARAISON_VALEUR_EXACTE,
+      attendus: [7, 13],
+      minimum: 1,
+      maximum: 12,
+    };
+    const erreurs = validerQuestionInstanceV2(horsBornes).erreurs.join("\n");
+    assert.match(erreurs, /valeurs-exactes/);
+    assert.match(erreurs, /attendus\[1\].*compris dans les bornes/);
+  });
+
   it("refuse le code, les coordonnées et les propriétés non prévues", () => {
     const avecCode = questionValide();
     avecCode.origine.executer = () => true;
@@ -212,5 +310,20 @@ describe("estEntierExact", () => {
     assert.equal(estEntierExact(4, "4"), false);
     assert.equal(estEntierExact(4, 5), false);
     assert.equal(estEntierExact(-1, -1), false);
+  });
+});
+
+describe("estDeuxEntiersExacts", () => {
+  it("compare les deux champs un par un, dans leur ordre", () => {
+    assert.equal(estDeuxEntiersExacts([7, 7], [7, 7]), true);
+    assert.equal(estDeuxEntiersExacts([7, 8], [8, 7]), false);
+    assert.equal(estDeuxEntiersExacts([7, 7], [7, 8]), false);
+  });
+
+  it("refuse conversion implicite, champ manquant et entier négatif", () => {
+    assert.equal(estDeuxEntiersExacts([7, 7], ["7", "7"]), false);
+    assert.equal(estDeuxEntiersExacts([7, 7], [7]), false);
+    assert.equal(estDeuxEntiersExacts([-1, -1], [-1, -1]), false);
+    assert.equal(estDeuxEntiersExacts(null, [7, 7]), false);
   });
 });

@@ -5,27 +5,31 @@ import {
 import {
   SCHEMA_TRACE_REPONSE,
   validerTraceReponse,
-} from "../../packages/contrats/src/trace-reponse.js?v=15";
+} from "../../packages/contrats/src/trace-reponse.js?v=17";
 import {
   TYPE_REPONSE_ENTIER_NATUREL,
+  TYPE_REPONSE_DEUX_ENTIERS,
   TYPE_REPONSE_CHOIX_UNIQUE,
+  estDeuxEntiersExacts,
   estEntierExact,
   estSelectionExacte,
-} from "../../packages/contrats/src/question-v2.js?v=15";
+} from "../../packages/contrats/src/question-v2.js?v=17";
 import { graineDepuisTexte } from "../../packages/moteur-exercices/src/aleatoire.js";
-import { creerRegistreAutomatismes } from "../../packages/automatismes/src/registre.js?v=15";
+import { creerRegistreAutomatismes } from "../../packages/automatismes/src/registre.js?v=17";
 import {
   connaitNotionLecteur,
   NOTION_NC01,
+  NOTION_NC02,
   NOTION_SOLIDES_USUELS,
   NOTION_VOLUME_CUBE_PAVE,
   NOTION_VOLUME_CYLINDRE,
   NOTION_VOLUME_PRISME,
   obtenirNotionLecteur,
-} from "./registre-lecteur.js?v=15";
+} from "./registre-lecteur.js?v=17";
 
 export {
   NOTION_NC01,
+  NOTION_NC02,
   NOTION_SOLIDES_USUELS,
   NOTION_VOLUME_CUBE_PAVE,
   NOTION_VOLUME_CYLINDRE,
@@ -96,6 +100,8 @@ function creerSeance(configuration) {
 function creerEtatQuestion(etat) {
   etat.selection = [];
   etat.saisie = "";
+  etat.saisies = ["", ""];
+  etat.champSaisieActif = 0;
   etat.validation = null;
   etat.erreurValidation = "";
   etat.aideOuverte = etat.configuration.aide === "ouverte";
@@ -117,6 +123,8 @@ export function creerEtatLecteur(configuration = {}) {
     traces: [],
     selection: [],
     saisie: "",
+    saisies: ["", ""],
+    champSaisieActif: 0,
     validation: null,
     erreurValidation: "",
     aideOuverte: false,
@@ -195,7 +203,12 @@ export function basculerChoix(etat, idChoix) {
   ) {
     return etat;
   }
-  if (question.reponse.type === TYPE_REPONSE_ENTIER_NATUREL) return etat;
+  if (
+    question.reponse.type === TYPE_REPONSE_ENTIER_NATUREL
+    || question.reponse.type === TYPE_REPONSE_DEUX_ENTIERS
+  ) {
+    return etat;
+  }
   const choix = question.reponse.choix.find(({ id }) => id === idChoix);
   if (!choix) throw new RangeError(`choix inconnu : ${idChoix}`);
 
@@ -223,12 +236,32 @@ export function basculerChoix(etat, idChoix) {
   return etat;
 }
 
+export function selectionnerChampSaisie(etat, index) {
+  const question = questionCourante(etat);
+  if (
+    etat.configuration.mode !== "entrainement"
+    || !question
+    || question.reponse.type !== TYPE_REPONSE_DEUX_ENTIERS
+    || etat.validation !== null
+  ) {
+    return etat;
+  }
+  if (!Number.isInteger(index) || index < 0 || index > 1) {
+    throw new RangeError(`index de champ invalide : ${index}`);
+  }
+  etat.champSaisieActif = index;
+  etat.erreurValidation = "";
+  return etat;
+}
+
 export function saisirChiffre(etat, chiffre) {
   const question = questionCourante(etat);
+  const typeEntier = question?.reponse.type === TYPE_REPONSE_ENTIER_NATUREL;
+  const typeDeuxEntiers = question?.reponse.type === TYPE_REPONSE_DEUX_ENTIERS;
   if (
     etat.configuration.mode !== "entrainement" ||
     !question ||
-    question.reponse.type !== TYPE_REPONSE_ENTIER_NATUREL ||
+    (!typeEntier && !typeDeuxEntiers) ||
     etat.validation !== null ||
     !Number.isInteger(chiffre) ||
     chiffre < 0 ||
@@ -236,13 +269,20 @@ export function saisirChiffre(etat, chiffre) {
   ) {
     return etat;
   }
-  const proposition = etat.saisie === "0"
+  const saisieCourante = typeDeuxEntiers
+    ? etat.saisies[etat.champSaisieActif]
+    : etat.saisie;
+  const proposition = saisieCourante === "0"
     ? String(chiffre)
-    : `${etat.saisie}${chiffre}`;
+    : `${saisieCourante}${chiffre}`;
   const maximum = question.reponse.maximum;
   const longueurMaximale = String(maximum).length;
   if (proposition.length <= longueurMaximale && Number(proposition) <= maximum) {
-    etat.saisie = proposition;
+    if (typeDeuxEntiers) {
+      etat.saisies[etat.champSaisieActif] = proposition;
+    } else {
+      etat.saisie = proposition;
+    }
     etat.erreurValidation = "";
   }
   return etat;
@@ -250,12 +290,19 @@ export function saisirChiffre(etat, chiffre) {
 
 export function effacerSaisie(etat) {
   const question = questionCourante(etat);
+  const typeEntier = question?.reponse.type === TYPE_REPONSE_ENTIER_NATUREL;
+  const typeDeuxEntiers = question?.reponse.type === TYPE_REPONSE_DEUX_ENTIERS;
   if (
     etat.configuration.mode === "entrainement" &&
-    question?.reponse.type === TYPE_REPONSE_ENTIER_NATUREL &&
+    (typeEntier || typeDeuxEntiers) &&
     etat.validation === null
   ) {
-    etat.saisie = etat.saisie.slice(0, -1);
+    if (typeDeuxEntiers) {
+      const index = etat.champSaisieActif;
+      etat.saisies[index] = etat.saisies[index].slice(0, -1);
+    } else {
+      etat.saisie = etat.saisie.slice(0, -1);
+    }
     etat.erreurValidation = "";
   }
   return etat;
@@ -270,9 +317,15 @@ export function validerReponse(etat) {
   ) {
     return etat;
   }
-  const reponseNumerique = question.reponse.type === TYPE_REPONSE_ENTIER_NATUREL;
-  if (reponseNumerique && etat.saisie === "") {
+  const reponseEntiere = question.reponse.type === TYPE_REPONSE_ENTIER_NATUREL;
+  const reponseDeuxEntiers = question.reponse.type === TYPE_REPONSE_DEUX_ENTIERS;
+  const reponseNumerique = reponseEntiere || reponseDeuxEntiers;
+  if (reponseEntiere && etat.saisie === "") {
     etat.erreurValidation = "Entre une réponse.";
+    return etat;
+  }
+  if (reponseDeuxEntiers && etat.saisies.some((saisie) => saisie === "")) {
+    etat.erreurValidation = "Complète les deux cases.";
     return etat;
   }
   if (!reponseNumerique && etat.selection.length === 0) {
@@ -280,10 +333,15 @@ export function validerReponse(etat) {
     return etat;
   }
 
-  const valeurSaisie = reponseNumerique ? Number(etat.saisie) : null;
-  const juste = reponseNumerique
+  const valeurSaisie = reponseEntiere ? Number(etat.saisie) : null;
+  const valeursSaisies = reponseDeuxEntiers
+    ? etat.saisies.map((saisie) => Number(saisie))
+    : null;
+  const juste = reponseEntiere
     ? estEntierExact(question.reponse.attendu, valeurSaisie)
-    : estSelectionExacte(question.reponse.attendus, etat.selection);
+    : reponseDeuxEntiers
+      ? estDeuxEntiersExacts(question.reponse.attendus, valeursSaisies)
+      : estSelectionExacte(question.reponse.attendus, etat.selection);
   const indexQuestion = etat.seance.etat.indexQuestion;
   const trace = {
     schema: SCHEMA_TRACE_REPONSE,
@@ -294,9 +352,11 @@ export function validerReponse(etat) {
     validation: 1,
     reponse: {
       type: question.reponse.type,
-      ...(reponseNumerique
+      ...(reponseEntiere
         ? { valeur: valeurSaisie }
-        : { choix: [...etat.selection] }),
+        : reponseDeuxEntiers
+          ? { valeurs: valeursSaisies }
+          : { choix: [...etat.selection] }),
     },
     juste,
     aideConsultee: etat.aideConsultee,
