@@ -29,6 +29,7 @@ build _fiche_thales_criteres_a_verifier.tex fiche_thales_criteres_a_verifier.pdf
 build _fiche_thales_direct_a_verifier.tex fiche_thales_direct_a_verifier.pdf
 build _pythabarre_recto_verso.tex pythabarre_recto_verso.pdf
 build _gabarit_reciproque_pythagore.tex gabarit_reciproque_pythagore.pdf
+build _gabarit_criteres_divisibilite.tex gabarit_criteres_divisibilite.pdf
 build angles/_fiche_angles_triangles.tex angles/fiche_angles_triangles.pdf
 
 python3 "$ROOT/scripts/uniformiser-signature-pdf.py" \
