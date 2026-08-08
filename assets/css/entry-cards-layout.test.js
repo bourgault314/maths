@@ -8,6 +8,7 @@ const homeHtml = fs.readFileSync(path.join(root, "index.html"), "utf8");
 const homeCss = fs.readFileSync(path.join(__dirname, "accueil.css"), "utf8");
 const catalogueCss = fs.readFileSync(path.join(__dirname, "catalogue-refonte.css"), "utf8");
 const alignmentCss = fs.readFileSync(path.join(__dirname, "entry-alignment.css"), "utf8");
+const catalogueJs = fs.readFileSync(path.join(root, "assets/js/catalogue-refonte.js"), "utf8");
 
 test("les crédits de l'accueil sont placés dans la carte", () => {
   assert.match(
@@ -29,7 +30,18 @@ test("les deux cartes partagent exactement le même cadre sur ordinateur", () =>
   );
   assert.match(
     catalogueCss,
-    /@media \(min-width: 921px\) \{[\s\S]*?body:not\(\.catalogue-is-deep\) \.site-shell\s*\{\s*height:\s*var\(--mathsgo-entry-card-height\)/
+    /@media \(min-width: 921px\) \{[\s\S]*?body:not\(\.catalogue-is-deep\):not\(\.catalogue-is-search\) \.site-shell\s*\{\s*height:\s*var\(--mathsgo-entry-card-height\)/
+  );
+});
+
+test("la recherche peut dépasser le cadre d’entrée et faire défiler la page", () => {
+  assert.match(
+    catalogueJs,
+    /document\.body\.classList\.toggle\("catalogue-is-search", level === "search"\)/
+  );
+  assert.match(
+    catalogueCss,
+    /body\.catalogue-is-search \.site-shell\s*\{\s*min-height:\s*var\(--mathsgo-entry-card-height\);\s*height:\s*auto;/
   );
 });
 
