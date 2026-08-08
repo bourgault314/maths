@@ -993,6 +993,7 @@
 
     mainPanel.classList.toggle("catalogue-deep-view", enteringDeepView);
     document.body.classList.toggle("catalogue-is-deep", enteringDeepView);
+    document.body.classList.toggle("catalogue-is-search", level === "search");
     mainPanel.dataset.catalogueView = level;
     renderBreadcrumb(level, selectedDomain, selectedNotion, selectedCollection);
 
