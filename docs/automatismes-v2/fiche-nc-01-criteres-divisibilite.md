@@ -96,9 +96,11 @@ Exemple :
 
 Trois formulations seulement sont autorisées :
 
-- « Trouve le chiffre » lorsqu’une seule réponse existe ;
-- « Sélectionne tous les chiffres possibles » lorsqu’il y en a plusieurs ;
-- « Trouve le plus petit chiffre possible » lorsque cette contrainte est demandée.
+- « Trouve le chiffre » lorsqu’une seule réponse existe, pour les critères par
+  9 ou par 10 ; le cas par 10 conserve notamment la réponse exacte `0` ;
+- « Sélectionne tous les chiffres possibles » pour chacun des critères par 2,
+  3, 5, 9 ou 10 ;
+- « Trouve le plus petit chiffre possible » uniquement pour le critère par 3.
 
 Le générateur calcule l’ensemble complet des solutions avant d’écrire la consigne. La question ne doit jamais être ambiguë.
 

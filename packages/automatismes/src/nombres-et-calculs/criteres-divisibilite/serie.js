@@ -5,13 +5,13 @@
 // notions. Même graine + même longueur = même plan et mêmes questions.
 
 import { creerGenerateur } from "../../../../moteur-exercices/src/aleatoire.js";
-import { GABARIT_CHIFFRE_MANQUANT } from "./chiffre-manquant.js?v=19";
-import { GABARIT_CRITERE_PRECIS } from "./critere-precis.js?v=19";
-import { GABARIT_PARTAGE_COURT } from "./partage-court.js?v=19";
-import { GABARIT_SELECTION_DIVISEURS } from "./selection-diviseurs.js?v=19";
-import { GABARIT_SELECTION_NOMBRES } from "./selection-nombres.js?v=19";
+import { GABARIT_CHIFFRE_MANQUANT } from "./chiffre-manquant.js?v=20";
+import { GABARIT_CRITERE_PRECIS } from "./critere-precis.js?v=20";
+import { GABARIT_PARTAGE_COURT } from "./partage-court.js?v=20";
+import { GABARIT_SELECTION_DIVISEURS } from "./selection-diviseurs.js?v=20";
+import { GABARIT_SELECTION_NOMBRES } from "./selection-nombres.js?v=20";
 
-export const VERSION_PLAN_SERIE_NC01 = 5;
+export const VERSION_PLAN_SERIE_NC01 = 6;
 
 export const FAMILLES_NC01 = Object.freeze({
   F1: "critere-precis",
@@ -123,27 +123,29 @@ function attribuerCriteres(aleatoire, descripteurs) {
     FAMILLES_NC01.F3,
     FAMILLES_NC01.F5,
   ].includes(famille));
-  const criteres = valeursCycliques(aleatoire, DIVISEURS, cibles.length);
-  cibles.forEach((descripteur, index) => {
+  const criteresDisponibles = valeursCycliques(aleatoire, DIVISEURS, cibles.length);
+  const attribuer = (descripteur, critere) => {
     const cle = descripteur.famille === FAMILLES_NC01.F5 ? "critere" : "diviseur";
-    descripteur.parametres[cle] = criteres[index];
-  });
+    descripteur.parametres[cle] = critere;
+  };
+  const contraints = cibles.filter(({ famille, parametres }) =>
+    famille === FAMILLES_NC01.F5 &&
+    ["unique", "plus-petit"].includes(parametres.sousForme));
 
-  for (const chiffreManquant of cibles.filter(({ famille }) => famille === FAMILLES_NC01.F5)) {
-    if (chiffreManquant.parametres.sousForme !== "unique") continue;
-    if ([9, 10].includes(chiffreManquant.parametres.critere)) continue;
-    const echange = cibles.find((candidat) =>
-      candidat !== chiffreManquant &&
-      [9, 10].includes(candidat.parametres.diviseur),
-    );
-    if (!echange) {
-      chiffreManquant.parametres.sousForme = "plus-petit";
-      continue;
+  for (const descripteur of contraints) {
+    const compatibles = descripteur.parametres.sousForme === "unique" ? [9, 10] : [3];
+    const index = criteresDisponibles.findIndex((critere) => compatibles.includes(critere));
+    if (index === -1) {
+      throw new Error(
+        `serie NC-01 : aucun critère compatible avec ${descripteur.parametres.sousForme}`,
+      );
     }
-    const ancien = chiffreManquant.parametres.critere;
-    chiffreManquant.parametres.critere = echange.parametres.diviseur;
-    echange.parametres.diviseur = ancien;
+    attribuer(descripteur, criteresDisponibles.splice(index, 1)[0]);
   }
+
+  cibles
+    .filter((descripteur) => !contraints.includes(descripteur))
+    .forEach((descripteur) => attribuer(descripteur, criteresDisponibles.shift()));
 }
 
 function parametrerFamilles(aleatoire, familles) {

@@ -99,7 +99,7 @@ describe("NC-02/F1 — calcul direct", () => {
             for (const choix of question.reponse.choix) {
               const [, minimum, maximum] = choix.libelle.match(/^Entre (\d+) et (\d+)$/)
                 .map(Number);
-              const contientLeCarre = minimum < base * base && base * base < maximum;
+              const contientLeCarre = minimum <= base * base && base * base <= maximum;
               assert.equal(
                 contientLeCarre,
                 choix.id === "encadrement-correct",
@@ -162,6 +162,24 @@ describe("NC-02/F1 — calcul direct", () => {
         "Entre 140 et 150",
       ]),
     );
+  });
+
+  it("ne propose aucun distracteur dont une borne touche le carré", () => {
+    for (const base of BASES_ENCADREMENT_CARRE) {
+      const resultat = base * base;
+      const question = instancier(
+        GABARIT_CALCUL_DIRECT_CARRE,
+        { base, formulation: "encadrer-resultat" },
+        `f1-encadrement-bornes-${base}`,
+      );
+      for (const choix of question.reponse.choix) {
+        if (choix.id === "encadrement-correct") continue;
+        const [, minimum, maximum] = choix.libelle.match(/^Entre (\d+) et (\d+)$/)
+          .map(Number);
+        assert.notEqual(minimum, resultat, `${choix.libelle} touche ${resultat}`);
+        assert.notEqual(maximum, resultat, `${choix.libelle} touche ${resultat}`);
+      }
+    }
   });
 });
 
@@ -251,8 +269,11 @@ describe("NC-02/F4 — reconnaissance", () => {
     );
   });
 
-  it("emploie une seule consigne avec le vocabulaire « carrés parfaits »", () => {
-    assert.deepEqual(FORMULATIONS_RECONNAITRE_CARRES, ["carres-parfaits"]);
+  it("emploie les deux formulations validées pour les nombres carrés", () => {
+    assert.deepEqual(FORMULATIONS_RECONNAITRE_CARRES, [
+      "nombres-carres",
+      "carres-parfaits",
+    ]);
     const consignes = FORMULATIONS_RECONNAITRE_CARRES.map((formulation) =>
       instancier(
         GABARIT_RECONNAITRE_CARRES,
@@ -260,7 +281,8 @@ describe("NC-02/F4 — reconnaissance", () => {
         `f4-${formulation}`,
       ).enonce[0].contenu);
     assert.deepEqual(consignes, [
-      "Sélectionne tous les carrés parfaits.",
+      "Sélectionne tous les nombres carrés.",
+      "Parmi ces nombres, lesquels sont des carrés parfaits ?",
     ]);
   });
 });

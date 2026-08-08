@@ -4,7 +4,7 @@ import {
   COMPARAISON_CHOIX_EXACT,
   SCHEMA_QUESTION_INSTANCE_V2,
   TYPE_REPONSE_CHOIX_UNIQUE,
-} from "../../../../contrats/src/question-v2.js?v=19";
+} from "../../../../contrats/src/question-v2.js?v=20";
 import {
   BASES_CARRES_ENTIERS,
   blocPuissance,
@@ -15,11 +15,11 @@ import {
   exigerParametresCarres,
   reponseEntier,
   valeurParametreOuTirage,
-} from "./commun.js?v=19";
+} from "./commun.js?v=20";
 
 export const NOM_GENERATEUR_CALCUL_DIRECT_CARRE =
   "nombres-et-calculs.carres-entiers-1-a-12.calcul-direct";
-export const VERSION_GENERATEUR_CALCUL_DIRECT_CARRE = 1;
+export const VERSION_GENERATEUR_CALCUL_DIRECT_CARRE = 2;
 
 export const FORMULATIONS_CALCUL_DIRECT = Object.freeze([
   "calculer",
@@ -140,7 +140,8 @@ function choixEncadrement(aleatoire, base, resultat) {
   ];
   const autres = valeursErreurs
     .map(bornesEncadrement)
-    .filter(([minimum, maximum]) => minimum >= 0 && !(minimum < resultat && resultat < maximum));
+    .filter(([minimum, maximum]) =>
+      minimum >= 0 && (resultat < minimum || resultat > maximum));
   const uniques = [...new Map(autres.map((bornes) => [bornes.join(":"), bornes])).values()];
   const distracteurs = uniques.slice(0, 3);
   if (distracteurs.length !== 3) {

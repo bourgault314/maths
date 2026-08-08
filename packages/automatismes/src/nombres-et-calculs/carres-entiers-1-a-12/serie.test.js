@@ -146,7 +146,7 @@ describe("NC-02 — plan de série", () => {
     }
   });
 
-  it("emploie uniquement la formulation « carrés parfaits » dans la série de vingt", () => {
+  it("emploie les deux formulations de reconnaissance dans la série de vingt", () => {
     for (let graine = 0; graine < 500; graine += 1) {
       const formulations = planifierSerieNC02({
         graine: `vocabulaire-carres-${graine}`,
@@ -155,7 +155,7 @@ describe("NC-02 — plan de série", () => {
         .filter(({ famille }) => famille === FAMILLES_NC02.F4)
         .map(({ parametres }) => parametres.formulation)
         .sort();
-      assert.deepEqual(formulations, ["carres-parfaits", "carres-parfaits"]);
+      assert.deepEqual(formulations, ["carres-parfaits", "nombres-carres"]);
     }
   });
 

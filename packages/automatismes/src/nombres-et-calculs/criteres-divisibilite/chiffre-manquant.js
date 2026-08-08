@@ -14,17 +14,17 @@ import {
   SCHEMA_QUESTION_INSTANCE_V2,
   TYPE_REPONSE_ENTIER_NATUREL,
   TYPE_REPONSE_SELECTION_MULTIPLE,
-} from "../../../../contrats/src/question-v2.js?v=19";
-import { formulationCritereDivisibilite } from "./critere-precis.js?v=19";
+} from "../../../../contrats/src/question-v2.js?v=20";
+import { formulationCritereDivisibilite } from "./critere-precis.js?v=20";
 
 export const NOM_GENERATEUR_CHIFFRE_MANQUANT =
   "nombres-et-calculs.criteres-divisibilite.chiffre-manquant";
-export const VERSION_GENERATEUR_CHIFFRE_MANQUANT = 2;
+export const VERSION_GENERATEUR_CHIFFRE_MANQUANT = 3;
 
 export const GABARIT_CHIFFRE_MANQUANT = Object.freeze({
   schema: SCHEMA_GABARIT_QUESTION,
   id: NOM_GENERATEUR_CHIFFRE_MANQUANT,
-  version: 2,
+  version: 3,
   titre: "Critères de divisibilité — chiffre manquant",
   generateur: Object.freeze({
     nom: NOM_GENERATEUR_CHIFFRE_MANQUANT,
@@ -86,13 +86,15 @@ export function calculerSolutionsChiffreManquant(motif, critere) {
 }
 
 function formesCompatibles(critere) {
-  return critere === 9 || critere === 10
-    ? SOUS_FORMES
-    : ["toutes-solutions", "plus-petit"];
+  if (critere === 3) return ["toutes-solutions", "plus-petit"];
+  if (critere === 9 || critere === 10) return ["unique", "toutes-solutions"];
+  return ["toutes-solutions"];
 }
 
 function criteresCompatibles(sousForme) {
-  return sousForme === "unique" ? [9, 10] : CRITERES;
+  if (sousForme === "unique") return [9, 10];
+  if (sousForme === "plus-petit") return [3];
+  return CRITERES;
 }
 
 function exigerContexte(aleatoire, parametres) {
@@ -131,12 +133,13 @@ function exigerContexte(aleatoire, parametres) {
   }
   if (parametres.critere !== undefined) exigerCritere(parametres.critere);
   if (
-    parametres.sousForme === "unique" &&
+    parametres.sousForme !== undefined &&
     parametres.critere !== undefined &&
-    !criteresCompatibles("unique").includes(parametres.critere)
+    !criteresCompatibles(parametres.sousForme).includes(parametres.critere)
   ) {
     throw new RangeError(
-      "chiffre-manquant : une solution unique n'existe qu'avec les critères par 9 ou par 10",
+      `chiffre-manquant : la sous-forme « ${parametres.sousForme} » ` +
+      `n'est pas compatible avec le critère par ${parametres.critere}`,
     );
   }
 }

@@ -28,12 +28,12 @@ import {
   saisirChiffre,
   tournerSolide,
   validerReponse,
-} from "./src/etat-lecteur.js?v=19";
+} from "./src/etat-lecteur.js?v=20";
 import {
   TYPE_REPONSE_DEUX_ENTIERS,
   TYPE_REPONSE_ENTIER_NATUREL,
   TYPE_REPONSE_CHOIX_UNIQUE,
-} from "../packages/contrats/src/question-v2.js?v=19";
+} from "../packages/contrats/src/question-v2.js?v=20";
 import {
   connaitNotionLecteur,
   obtenirNotionLecteur,
@@ -41,8 +41,8 @@ import {
   RENDU_DIVISIBILITE,
   RENDU_SOLIDE,
   RENDU_VOLUME,
-} from "./src/registre-lecteur.js?v=19";
-import { COURS_SOLIDES_USUELS } from "../packages/automatismes/src/espace-et-geometrie/solides-usuels/reconnaissance.js?v=19";
+} from "./src/registre-lecteur.js?v=20";
+import { COURS_SOLIDES_USUELS } from "../packages/automatismes/src/espace-et-geometrie/solides-usuels/reconnaissance.js?v=20";
 import {
   creerCone,
   creerCube,
@@ -57,17 +57,17 @@ import {
   ACTION_TOUCHE_SAISIR,
   ACTION_TOUCHE_VALIDER,
   obtenirDispositionClavier,
-} from "../packages/objets/src/clavier.js?v=19";
-import { formulationCritereDivisibilite } from "../packages/automatismes/src/nombres-et-calculs/criteres-divisibilite/critere-precis.js?v=19";
+} from "../packages/objets/src/clavier.js?v=20";
+import { formulationCritereDivisibilite } from "../packages/automatismes/src/nombres-et-calculs/criteres-divisibilite/critere-precis.js?v=20";
 import {
   nombre,
   puissance,
   variable,
   versHtmlSemantique,
-} from "../packages/objets/src/expressions.js?v=19";
+} from "../packages/objets/src/expressions.js?v=20";
 import {
   dessinerCarreQuadrille,
-} from "../packages/objets/src/carre-quadrille.js?v=19";
+} from "../packages/objets/src/carre-quadrille.js?v=20";
 
 const application = document.querySelector("#application");
 const rechercheInitiale = window.location.search;
@@ -279,7 +279,7 @@ function rendreDomainesMenu() {
             ${domaine.notions.map((idNotion) => {
               const libelle = LIBELLES_MODULES_MENU[idNotion];
               const estSelectionnee = selection.has(idNotion);
-              return `<label class="modrow">
+              return `<label class="modrow ${estSelectionnee ? "is-selected" : ""}">
                 <input type="checkbox" data-action="choisir-notion" data-value="${echapper(idNotion)}"
                   ${estSelectionnee ? "checked" : ""}>
                 <span><strong>${echapper(libelle.titre)}</strong><small>${echapper(libelle.precision)}</small></span>
@@ -1579,7 +1579,7 @@ function rendreCoursCarres() {
   const titres = [
     "Comprendre « au carré »",
     "Les carrés de 0 à 12",
-    "Retrouver 11² et 12²",
+    "Retrouver les carrés de 11 et de 12",
     "Direct et inverse",
     "Calculer dans le bon ordre",
   ];

@@ -115,6 +115,45 @@ button.case-reponse-carres {
   overflow: visible;
 }
 
+.case-reponse-carres.case-puissance {
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: var(--mg-bleu);
+  box-shadow: none;
+}
+
+.case-puissance .mathsgo-puissance-base {
+  min-width: 62px;
+  min-height: 58px;
+  display: inline-grid;
+  place-items: center;
+  padding: 4px 12px;
+  border: 3px solid var(--mg-turquoise);
+  border-radius: var(--mg-rayon-moyen);
+  background: var(--mg-papier);
+  color: var(--mg-encre);
+  box-shadow: 0 3px 0 color-mix(in srgb, var(--mg-turquoise) 30%, transparent);
+}
+
+.case-puissance.active .mathsgo-puissance-base {
+  border-color: var(--mg-orange);
+  background: color-mix(in srgb, var(--mg-orange) 8%, var(--mg-papier));
+  box-shadow: 0 3px 0 color-mix(in srgb, var(--mg-orange) 32%, transparent);
+}
+
+.case-puissance.juste .mathsgo-puissance-base {
+  border-color: var(--mg-reussite);
+}
+
+.case-puissance.fausse .mathsgo-puissance-base {
+  border-color: var(--mg-erreur);
+}
+
+.case-puissance sup {
+  color: var(--mg-bleu);
+}
+
 .visuel-carre-quadrille {
   display: grid;
   place-items: center;
@@ -362,6 +401,12 @@ button.case-reponse-carres {
   }
 
   .case-reponse-carres {
+    min-width: 54px;
+    min-height: 54px;
+    padding-inline: 8px;
+  }
+
+  .case-puissance .mathsgo-puissance-base {
     min-width: 54px;
     min-height: 54px;
     padding-inline: 8px;
@@ -868,6 +913,10 @@ body {
   border: 2px solid color-mix(in srgb, var(--mg-reussite) 35%, var(--mg-ligne));
   border-radius: 9999px;
   background: color-mix(in srgb, var(--mg-reussite) 7%, var(--mg-papier));
+}
+
+.score {
+  color: color-mix(in srgb, var(--mg-reussite) 60%, var(--mg-encre));
 }
 
 .mode-court {

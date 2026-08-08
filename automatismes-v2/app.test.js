@@ -160,7 +160,8 @@ it("rend le cours en cinq pages et les six familles de NC-02", async () => {
   assert.match(application.innerHTML, /<span>12 × 12<\/span> <span>=<\/span> <strong>144<\/strong>/);
   assert.match(application.innerHTML, /144/);
   cliquer(gestionnaires, "cours-suivant");
-  assert.match(application.innerHTML, /Retrouver 11² et 12²/);
+  assert.match(application.innerHTML, /Retrouver les carrés de 11 et de 12/);
+  assert.doesNotMatch(application.innerHTML, /Retrouver 11² et 12²/);
   assert.match(application.innerHTML, /3 \/ 5/);
   assert.match(application.innerHTML, /11 × 10 \+ 11 × 1 = 121 carreaux/);
   assert.match(application.innerHTML, /11 × 10 \+ 11 × 1/);
@@ -182,7 +183,9 @@ it("rend le cours en cinq pages et les six familles de NC-02", async () => {
   let questionCoteF5Vue = false;
   let qcmDirectVu = false;
   let encadrementVu = false;
+  let nombresCarresVus = false;
   let carresParfaitsVus = false;
+  let puissanceSaisieVue = false;
   for (let index = 0; index < 20; index += 1) {
     const famille = application.innerHTML.match(/famille-([a-z-]+)"/)?.[1];
     assert.ok(famille, `famille NC-02 absente à la question ${index + 1}`);
@@ -205,8 +208,18 @@ it("rend le cours en cinq pages et les six familles de NC-02", async () => {
     if (application.innerHTML.includes("Quel encadrement est correct ?")) {
       encadrementVu = true;
     }
-    if (application.innerHTML.includes("Sélectionne tous les carrés parfaits.")) {
+    if (application.innerHTML.includes("Sélectionne tous les nombres carrés.")) {
+      nombresCarresVus = true;
+    }
+    if (application.innerHTML.includes("Parmi ces nombres, lesquels sont des carrés parfaits ?")) {
       carresParfaitsVus = true;
+    }
+    if (application.innerHTML.includes("case-puissance")) {
+      puissanceSaisieVue = true;
+      assert.match(
+        application.innerHTML,
+        /<span class="mathsgo-puissance-base">□<\/span><sup>2<\/sup>/,
+      );
     }
     if (famille === "sens-notation") {
       assert.match(application.innerHTML, /Quelle écriture correspond/);
@@ -268,7 +281,9 @@ it("rend le cours en cinq pages et les six familles de NC-02", async () => {
   assert.equal(questionCoteF5Vue, true);
   assert.equal(qcmDirectVu, true);
   assert.equal(encadrementVu, true);
+  assert.equal(nombresCarresVus, true);
   assert.equal(carresParfaitsVus, true);
+  assert.equal(puissanceSaisieVue, true);
   assert.deepEqual([...familles].sort(), [
     "calcul-court",
     "calcul-direct",
@@ -298,6 +313,10 @@ it("propose le parcours DNB puis lance Au tableau sans saisie ni score", async (
   assert.match(application.innerHTML, /Critères de divisibilité/);
   assert.match(application.innerHTML, /Carrés des entiers/);
   assert.match(application.innerHTML, /1 \/ 2/);
+  assert.equal(
+    [...application.innerHTML.matchAll(/class="modrow is-selected"/g)].length,
+    1,
+  );
   assert.doesNotMatch(application.innerHTML, /Solides usuels|Calculer un volume/);
   assert.doesNotMatch(application.innerHTML, /Avec aide|Sans aide|Diaporama|Crédits et remerciements|Ouvrir une série/);
   for (const volume of [5, 10, 15, 20]) {
@@ -338,6 +357,10 @@ it("sélectionne, révise et rejoue plusieurs automatismes dans une même série
   cliquer(gestionnaires, "choisir-notion", undefined, "criteres-divisibilite");
   assert.match(application.innerHTML, /Choisis au moins un automatisme/);
   assert.match(application.innerHTML, /data-action="preparer" disabled/);
+  assert.equal(
+    [...application.innerHTML.matchAll(/class="modrow is-selected"/g)].length,
+    0,
+  );
   cliquer(gestionnaires, "choisir-notion", undefined, "criteres-divisibilite");
   cliquer(gestionnaires, "choisir-notion", undefined, "carres-entiers-1-a-12");
   assert.match(application.innerHTML, /2 \/ 2 <span class="theme-count-label">sélectionnés/);
@@ -349,6 +372,10 @@ it("sélectionne, révise et rejoue plusieurs automatismes dans une même série
   assert.match(
     application.innerHTML,
     /data-value="carres-entiers-1-a-12"\s+checked/,
+  );
+  assert.equal(
+    [...application.innerHTML.matchAll(/class="modrow is-selected"/g)].length,
+    2,
   );
 
   cliquer(gestionnaires, "choisir-volume", undefined, "5");
@@ -553,7 +580,7 @@ it("place une réponse unique dans la case du chiffre manquant", async () => {
 
 it("conserve le carré dans une question à plusieurs chiffres possibles", async () => {
   const { application, gestionnaires } = installerFauxNavigateur(
-    "?notion=criteres-divisibilite&questions=10&graine=multi-0",
+    "?notion=criteres-divisibilite&questions=10&graine=multi-6",
   );
   await import(`./app.js?fumee=chiffre-multiple-${Date.now()}`);
   cliquer(gestionnaires, "demarrer");
