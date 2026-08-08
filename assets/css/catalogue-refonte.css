@@ -1685,8 +1685,13 @@ select { cursor: pointer; }
 /* Le cadre extérieur partage toujours ses deux bords avec l'accueil sur
    ordinateur, y compris lorsque le navigateur est peu haut. */
 @media (min-width: 921px) {
-  body:not(.catalogue-is-deep) .site-shell {
+  body:not(.catalogue-is-deep):not(.catalogue-is-search) .site-shell {
     height: var(--mathsgo-entry-card-height);
+  }
+
+  body.catalogue-is-search .site-shell {
+    min-height: var(--mathsgo-entry-card-height);
+    height: auto;
   }
 }
 
