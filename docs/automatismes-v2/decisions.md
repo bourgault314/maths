@@ -517,3 +517,43 @@ Les URL historiques `?notion=...` restent valides et plusieurs paramètres
 NC-02 pour 5, 10, 15 et 20 questions restent identiques ; des préfixes de 1 à
 20 questions sont ajoutés uniquement afin de fournir ses sous-séries dans un
 mélange, notamment les répartitions `3 + 2`, `8 + 7` ou `7 + 7 + 6`.
+
+## 8 août 2026
+
+### D-040 — La finition auditée fixe les règles publiques de NC-01 et NC-02
+
+Gwenaël valide les corrections issues de la recette et autorise leur
+publication. Le lecteur public accepte durablement de 1 à 20 questions. Une
+valeur d'URL inférieure à 1 ou supérieure à 20 est ignorée au profit des 10
+questions par défaut, afin qu'une URL comme `questions=30` reste démarrable.
+Cette borne appartient au lecteur : les contrats et générateurs génériques
+internes conservent leur capacité de 1 à 100.
+
+Dans `NC-01/F5`, « Trouve le plus petit chiffre » est réservé au critère par 3,
+seul critère du périmètre qui rend cette sous-forme utile sans rendre la réponse
+presque toujours prévisible. La forme à réponse unique reste compatible avec 9
+et 10 ; le cas par 10 dont la réponse est `0` est explicitement conservé. La
+forme « sélectionne tous » reste disponible pour 2, 3, 5, 9 et 10. Le plan
+seedé attribue d'abord les critères compatibles aux sous-formes contraintes,
+puis équilibre le reste sans changer les quotas ni la distribution aléatoire
+des familles.
+
+Dans `NC-02/F1`, aucun distracteur d'encadrement ne peut contenir le carré
+cherché, y compris lorsque celui-ci est égal à une borne. `NC-02/F4` alterne
+exactement « Sélectionne tous les nombres carrés. » et « Parmi ces nombres,
+lesquels sont des carrés parfaits ? ». La phrase « compris entre 0 et 12 » et
+la distribution seedée des séries ne changent pas.
+
+Dans le menu, seule une carte réellement sélectionnée reçoit le fond
+turquoise ; les autres restent blanches. Dans la forme inverse `[case]` au
+carré `= résultat`, le contour du champ entoure seulement la base saisie : le
+véritable élément HTML `sup` du composant commun reste bleu foncé et hors du
+cadre. Le titre technique du panneau de cours n'emploie plus de caractère
+exposant Unicode. Le texte du bouton orange et celui du score sont foncés pour
+atteindre le contraste AA sans modifier l'identité visuelle.
+
+Tout le graphe de modules V2 est invalidé ensemble en `v20`. Le registre
+importe aussi le moteur de génération avec cette version et celui-ci importe
+`question-v2` avec la même version ; aucune seconde instance non versionnée du
+contrat ne doit pouvoir entrer dans la page. `/auto/` demeure strictement hors
+du lot.

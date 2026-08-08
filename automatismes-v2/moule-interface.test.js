@@ -73,4 +73,26 @@ describe("moule responsive commun", () => {
     assert.match(css, /\.mode-entrainement \.case-reponse-carres\s*\{[^}]*width:\s*98px/s);
     assert.match(cssCommun, /button:focus-visible/);
   });
+
+  it("place l'exposant hors du contour du champ inverse", () => {
+    const casePuissance = blocCss(".case-reponse-carres.case-puissance");
+    assert.match(casePuissance, /border:\s*0/);
+    assert.match(casePuissance, /background:\s*transparent/);
+    assert.match(casePuissance, /box-shadow:\s*none/);
+
+    const base = blocCss(".case-puissance .mathsgo-puissance-base");
+    assert.match(base, /min-height:\s*58px/);
+    assert.match(base, /border:\s*3px solid var\(--mg-turquoise\)/);
+
+    const active = blocCss(".case-puissance.active .mathsgo-puissance-base");
+    assert.match(active, /border-color:\s*var\(--mg-orange\)/);
+
+    const exposant = blocCss(".case-puissance sup");
+    assert.match(exposant, /color:\s*var\(--mg-bleu\)/);
+
+    assert.match(
+      css,
+      /@media \(max-width: 620px\)[\s\S]*?\.case-puissance \.mathsgo-puissance-base\s*\{[^}]*min-width:\s*54px;[^}]*min-height:\s*54px;[^}]*padding-inline:\s*8px;/,
+    );
+  });
 });

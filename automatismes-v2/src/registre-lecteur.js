@@ -1,13 +1,13 @@
-import { GABARIT_RECONNAISSANCE_SOLIDES } from "../../packages/automatismes/src/espace-et-geometrie/solides-usuels/reconnaissance.js?v=19";
+import { GABARIT_RECONNAISSANCE_SOLIDES } from "../../packages/automatismes/src/espace-et-geometrie/solides-usuels/reconnaissance.js?v=20";
 import {
   GABARIT_VOLUME_CUBE_PAVE,
   GABARIT_VOLUME_CYLINDRE,
   GABARIT_VOLUME_PRISME,
-} from "../../packages/automatismes/src/grandeurs-et-mesures/volumes/calcul-volumes.js?v=19";
-import { GABARIT_SELECTION_DIVISEURS } from "../../packages/automatismes/src/nombres-et-calculs/criteres-divisibilite/selection-diviseurs.js?v=19";
-import { genererSerieNC01 } from "../../packages/automatismes/src/nombres-et-calculs/criteres-divisibilite/serie.js?v=19";
-import { GABARIT_CALCUL_DIRECT_CARRE } from "../../packages/automatismes/src/nombres-et-calculs/carres-entiers-1-a-12/calcul-direct.js?v=19";
-import { genererSerieNC02 } from "../../packages/automatismes/src/nombres-et-calculs/carres-entiers-1-a-12/serie.js?v=19";
+} from "../../packages/automatismes/src/grandeurs-et-mesures/volumes/calcul-volumes.js?v=20";
+import { GABARIT_SELECTION_DIVISEURS } from "../../packages/automatismes/src/nombres-et-calculs/criteres-divisibilite/selection-diviseurs.js?v=20";
+import { genererSerieNC01 } from "../../packages/automatismes/src/nombres-et-calculs/criteres-divisibilite/serie.js?v=20";
+import { GABARIT_CALCUL_DIRECT_CARRE } from "../../packages/automatismes/src/nombres-et-calculs/carres-entiers-1-a-12/calcul-direct.js?v=20";
+import { genererSerieNC02 } from "../../packages/automatismes/src/nombres-et-calculs/carres-entiers-1-a-12/serie.js?v=20";
 
 export const NOTION_NC01 = "criteres-divisibilite";
 export const NOTION_NC02 = "carres-entiers-1-a-12";

@@ -1,11 +1,11 @@
 import {
   SCHEMA_SEANCE,
   validerSeance,
-} from "../../packages/contrats/src/seance.js?v=19";
+} from "../../packages/contrats/src/seance.js?v=20";
 import {
   SCHEMA_TRACE_REPONSE,
   validerTraceReponse,
-} from "../../packages/contrats/src/trace-reponse.js?v=19";
+} from "../../packages/contrats/src/trace-reponse.js?v=20";
 import {
   TYPE_REPONSE_ENTIER_NATUREL,
   TYPE_REPONSE_DEUX_ENTIERS,
@@ -13,9 +13,9 @@ import {
   estDeuxEntiersExacts,
   estEntierExact,
   estSelectionExacte,
-} from "../../packages/contrats/src/question-v2.js?v=19";
+} from "../../packages/contrats/src/question-v2.js?v=20";
 import { graineDepuisTexte } from "../../packages/moteur-exercices/src/aleatoire.js";
-import { creerRegistreAutomatismes } from "../../packages/automatismes/src/registre.js?v=19";
+import { creerRegistreAutomatismes } from "../../packages/automatismes/src/registre.js?v=20";
 import {
   connaitNotionLecteur,
   listerNotionsLecteur,
@@ -26,8 +26,8 @@ import {
   NOTION_VOLUME_CYLINDRE,
   NOTION_VOLUME_PRISME,
   obtenirNotionLecteur,
-} from "./registre-lecteur.js?v=19";
-import { genererSerieMultinotions } from "./serie-multinotions.js?v=19";
+} from "./registre-lecteur.js?v=20";
+import { genererSerieMultinotions } from "./serie-multinotions.js?v=20";
 
 export {
   NOTION_NC01,
@@ -38,6 +38,7 @@ export {
   NOTION_VOLUME_PRISME,
 };
 export const NOMBRE_QUESTIONS_PAR_DEFAUT = 10;
+export const NOMBRE_QUESTIONS_MAXIMUM = 20;
 
 const MODES = new Set(["entrainement", "tableau"]);
 const ALIAS_MODES = new Map([
@@ -85,8 +86,14 @@ function normaliserConfiguration(configuration = {}) {
 
   if (!MODES.has(mode)) throw new RangeError(`mode inconnu : ${mode}`);
   if (!AIDES.has(aide)) throw new RangeError(`aide inconnue : ${aide}`);
-  if (!Number.isInteger(nombreQuestions) || nombreQuestions < 1 || nombreQuestions > 100) {
-    throw new RangeError("nombreQuestions doit être compris entre 1 et 100");
+  if (
+    !Number.isInteger(nombreQuestions) ||
+    nombreQuestions < 1 ||
+    nombreQuestions > NOMBRE_QUESTIONS_MAXIMUM
+  ) {
+    throw new RangeError(
+      `nombreQuestions doit être compris entre 1 et ${NOMBRE_QUESTIONS_MAXIMUM}`,
+    );
   }
   if (notions.length > nombreQuestions) {
     throw new RangeError("nombreQuestions doit permettre au moins une question par notion");
@@ -189,7 +196,9 @@ export function lireConfiguration(recherche = "") {
     aide: parametres.get("aide") || undefined,
     notions: notions.length > 0 ? notions : undefined,
     nombreQuestions:
-      Number.isInteger(nombreBrut) && nombreBrut >= 1 && nombreBrut <= 100
+      Number.isInteger(nombreBrut) &&
+      nombreBrut >= 1 &&
+      nombreBrut <= NOMBRE_QUESTIONS_MAXIMUM
         ? nombreBrut
         : undefined,
     graine: parametres.get("graine") || undefined,

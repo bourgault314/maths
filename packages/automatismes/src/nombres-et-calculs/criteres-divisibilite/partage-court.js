@@ -14,8 +14,8 @@ import {
   SCHEMA_QUESTION_INSTANCE_V2,
   TYPE_REPONSE_CHOIX_UNIQUE,
   TYPE_REPONSE_ENTIER_NATUREL,
-} from "../../../../contrats/src/question-v2.js?v=19";
-import { formulationCritereDivisibilite } from "./critere-precis.js?v=19";
+} from "../../../../contrats/src/question-v2.js?v=20";
+import { formulationCritereDivisibilite } from "./critere-precis.js?v=20";
 
 export const NOM_GENERATEUR_PARTAGE_COURT =
   "nombres-et-calculs.criteres-divisibilite.partage-court";

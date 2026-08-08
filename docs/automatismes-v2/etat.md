@@ -1,35 +1,36 @@
 # État du chantier Automatismes V2
 
-**Dernière mise à jour : 7 août 2026.**
+**Dernière mise à jour : 8 août 2026.**
 
-## Point de reprise vérifié du 7 août
+## Point de reprise vérifié du 8 août
 
-- La PR #281 est fusionnée dans `main` au commit `c8634e4`. Elle constitue la
-  base publique et stabilisée de `NC-01`, `NC-02` et de la sélection multiple
-  sur la route pilote `/automatismes-v2/`, avec le graphe de cache `v18` et
+- La PR #282 est fusionnée dans `main` au commit `c55a2b2`. Elle constitue la
+  base publique vérifiée de `NC-01`, `NC-02` et de la sélection multiple sur
+  la route pilote `/automatismes-v2/`, avec le graphe de cache `v19` et
   toujours `noindex,nofollow`.
 - `/auto/` reste indépendant. Son arbre Git de référence avant le lot de
   finition est `6942c4733b5cffad03c396a03f8c550e7367351f`.
-- D-039 rend désormais indépendantes les cases du menu et permet de cibler une
-  notion ou d'en mélanger plusieurs dans une même séance, sans troisième mode
-  d'utilisation.
-- Le correctif du cadre d'aide de `NC-01` part exactement de `c8634e4`. Les
-  rappels des critères par 3 et 9 sont injectés par le composant commun de la
-  somme avant la fermeture du cadre turquoise. Cette correction couvre F2,
-  ainsi que F1 et F6 lorsqu'elles travaillent 3 ou 9 ; elle ne modifie ni les
-  données pédagogiques, ni les corrections expliquées, ni `NC-02`.
-- Un test de structure vérifie désormais que les rappels 3 et 9 sont des
-  descendants du cadre de somme dans les trois familles concernées. Le graphe
-  de cache du correctif passe d'un seul tenant en `v19`.
-- Le dépôt complet réussit **1 151 tests sur 1 151**. La recette dans Chromium
-  couvre `320 × 568`, `390 × 844`, `1 280 × 720` et `1 920 × 1 080`, avant et
-  après sélection des chiffres : aucun rappel orphelin ni débordement
-  horizontal n'est présent et le contenu vertical reste accessible.
-- Gwenaël a approuvé le 7 août l'extension à 0, les cinq pages de cours, les
-  distracteurs diagnostiques, la rédaction des calculs et le principe d'une
-  compaction strictement locale autour du pavé. Il a demandé la publication
-  après modification et recette ; la livraison D-038 rend donc NC-02
-  disponible dans le lecteur public, toujours hors indexation.
+- D-040 consigne les finitions acceptées : seule une notion choisie est
+  surlignée dans le menu ; dans l'égalité inverse, le contour orange entoure
+  la base saisie et laisse le véritable exposant à l'extérieur ; les couleurs
+  du bouton orange et du score atteignent le contraste AA.
+- `NC-01/F5` réserve désormais « trouve le plus petit » au critère par 3. La
+  forme à réponse unique reste disponible pour 9 et 10, notamment pour la
+  réponse exacte `0` avec le critère par 10.
+- `NC-02/F1` ne propose plus aucun encadrement distracteur qui contient le
+  résultat, même sur une borne. `NC-02/F4` alterne exactement les formulations
+  validées « nombres carrés » et « carrés parfaits ».
+- Le lecteur public accepte durablement de 1 à 20 questions. Une URL hors
+  borne revient à 10 questions sans faire échouer le démarrage ; les contrats
+  et générateurs génériques internes conservent leur plage 1 à 100.
+- Le graphe de cache passe d'un seul tenant en `v20`, y compris les arêtes du
+  registre vers le moteur de génération et du moteur vers `question-v2`. Une
+  seule instance versionnée du contrat de question est ainsi chargée.
+- Le dépôt complet réussit **1 159 tests sur 1 159** avec les validateurs du
+  catalogue, du sitemap, des routes publiques et d'Automatismes V2.
+- `NC-02` est `valide` et disponible avec `NC-01` dans les deux contextes du
+  lecteur. La distribution seedée des séries et la phrase « compris entre 0
+  et 12 » restent inchangées.
 
 ### Livraison NC-02
 
@@ -154,7 +155,9 @@ l'en-tête, ni le comportement de NC-01.
 - Dépôt : `bourgault314/maths`.
 - Branche de référence : `main`.
 - Commit de référence vérifié sur GitHub :
-  `c8634e4`.
+  `c55a2b2`.
+- La PR #282 est fusionnée : elle corrige le cadre d'aide de NC-01 et publie
+  le graphe `v19`, base exacte du lot de finition D-040.
 - La PR #281 est fusionnée : elle publie la sélection multiple avec le graphe
   `v18` sur la base de `NC-01` et `NC-02`.
 - La PR #280 est fusionnée : elle publie `NC-02` avec le graphe `v17`, à côté

@@ -80,6 +80,15 @@ describe("NC-01 — plan équilibré de série", () => {
           nombreQuestions,
         });
         assert.equal(plan.length, nombreQuestions);
+        for (const { famille, parametres } of plan) {
+          if (famille !== FAMILLES_NC01.F5) continue;
+          if (parametres.sousForme === "unique") {
+            assert.ok([9, 10].includes(parametres.critere));
+          }
+          if (parametres.sousForme === "plus-petit") {
+            assert.equal(parametres.critere, 3);
+          }
+        }
         plan.slice(1).forEach((element, index) => {
           assert.notEqual(element.famille, plan[index].famille);
         });

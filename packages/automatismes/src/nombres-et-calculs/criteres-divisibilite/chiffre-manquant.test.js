@@ -117,6 +117,7 @@ describe("NC-01/F5 — trois formulations non ambiguës", () => {
     for (const sousForme of ["unique", "toutes-solutions", "plus-petit"]) {
       for (const critere of CRITERES) {
         if (sousForme === "unique" && ![9, 10].includes(critere)) continue;
+        if (sousForme === "plus-petit" && critere !== 3) continue;
         const question = instancier(`nc01-f5-${sousForme}-${critere}`, {
           sousForme,
           critere,
@@ -132,7 +133,18 @@ describe("NC-01/F5 — trois formulations non ambiguës", () => {
     }
   });
 
-  it("limite explicitement la solution unique aux critères qui la permettent", () => {
+  it("conserve la solution unique par 10 et sa réponse exacte 0", () => {
+    const question = instancier("nc01-f5-unique-10", {
+      sousForme: "unique",
+      critere: 10,
+    });
+    assert.equal(sousFormeDe(question), "unique");
+    assert.equal(critereDe(question), 10);
+    assert.equal(question.reponse.attendu, 0);
+    verifierQuestion(question);
+  });
+
+  it("limite explicitement chaque sous-forme aux critères compatibles", () => {
     for (const critere of [2, 3, 5]) {
       assert.throws(
         () =>
@@ -140,7 +152,17 @@ describe("NC-01/F5 — trois formulations non ambiguës", () => {
             sousForme: "unique",
             critere,
           }),
-        /solution unique.*9 ou par 10/,
+        /n'est pas compatible/,
+      );
+    }
+    for (const critere of [2, 5, 9, 10]) {
+      assert.throws(
+        () =>
+          instancier(`nc01-f5-plus-petit-incompatible-${critere}`, {
+            sousForme: "plus-petit",
+            critere,
+          }),
+        /n'est pas compatible/,
       );
     }
   });
@@ -195,6 +217,9 @@ describe("NC-01/F5 — force brute, couverture et déterminisme", () => {
       const motif = contenu(premiere, "nombre-a-completer");
       formesVues.add(sousFormeDe(premiere));
       criteresVus.add(critereDe(premiere));
+      if (sousFormeDe(premiere) === "plus-petit") {
+        assert.equal(critereDe(premiere), 3);
+      }
       motifsVus.add(motif);
       zeroInterneVu ||= motif.slice(1, -1).includes("0");
       carreAuxUnitesVu ||= motif.endsWith("□");

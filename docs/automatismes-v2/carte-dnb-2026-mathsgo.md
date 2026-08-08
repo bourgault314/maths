@@ -1,6 +1,6 @@
 # Carte des automatismes DNB 2026 - maths&go V2
 
-**Statut : carte de couverture arrêtée le 19 juillet 2026 ; granularité produit clarifiée le 6 août et extension NC-02 consignée le 7 août 2026.**
+**Statut : carte de couverture arrêtée le 19 juillet 2026 ; granularité produit clarifiée le 6 août, extension NC-02 consignée le 7 août et notion validée le 8 août 2026.**
 **Périmètre : partie Automatismes du DNB, sans code de question.**
 
 ## 1. Sources et règles de lecture
@@ -117,11 +117,12 @@ La carte sépare désormais quatre niveaux : cible officielle, catégorie visibl
 micro-notion interne et famille de questions. Les 88 micro-notions sont des
 unités de fabrication et de suivi ; elles ne préfigurent pas 88 questionnaires
 dans le menu. Une catégorie visible peut regrouper plusieurs micro-notions
-proches. `NC-01` est validée. Les choix pédagogiques révisés de `NC-02` ont été
-approuvés le 7 août ; le candidat reste `construit` jusqu'à sa recette technique
-finale. Sa cible DNB conserve la borne officielle 1 à 12, tandis que le produit
-visible l'étend de 0 à 12 conformément au nouveau programme du cycle 4. Les
-autres lignes restent à faire tant que leur fiche n'est pas ouverte.
+proches. `NC-01` et `NC-02` sont validées. Les choix pédagogiques révisés de
+`NC-02` ont été approuvés le 7 août, puis sa recette technique et ses finitions
+ont été validées le 8 août. Sa cible DNB conserve la borne officielle 1 à 12,
+tandis que le produit visible l'étend de 0 à 12 conformément au nouveau
+programme du cycle 4. Les autres états de la matrice restent inchangés dans ce
+lot.
 
 | Repère | Cible normalisée | Domaine | Micro-notions | Nouveaux BO correspondants | V2 |
 |---|---|---:|---|---|---|
@@ -132,7 +133,7 @@ autres lignes restent à faire tant que leur fiche n'est pas ouverte.
 | DNB26-05 | Calculer 100 %, 50 %, 25 %, 10 % ou 1 % | 3 | PG-01 | 5-18, 4-39, 4-40, 3-35 | `a_faire` |
 | DNB26-06 | Écrire un nombre sous plusieurs formes | 1 | NC-05 | 5-19 | `a_faire` |
 | DNB26-07 | Passer à la notation scientifique | 1 | NC-17 | 3-02 partiel ; pas d'équivalent direct | `a_faire` |
-| DNB26-08 | Connaître les carrés de 1 à 12 | 1 | NC-02 | 4-11, 4-15, 3-05 | `construit` |
+| DNB26-08 | Connaître les carrés de 1 à 12 | 1 | NC-02 | 4-11, 4-15, 3-05 | `valide` |
 | DNB26-09 | Appliquer les critères de divisibilité | 1 | NC-01 | 5-01, 3-09 | `valide` |
 | DNB26-10 | Exprimer des relations simples avec `n` | 2 | AL-01 à AL-03 | 4-20, 3-15 partiel | `a_faire` |
 | DNB26-11 | Simplifier une expression littérale | 2 | AL-04 à AL-05 | 4-18, 4-19, 3-11, 3-16 | `a_faire` |
@@ -300,7 +301,7 @@ doctrine du dépôt. Elles devront cependant être auditées pour leur adéquati
 exacte à chaque fiche. Elles ne fournissent automatiquement ni énoncés, ni
 valeurs, ni générateurs à V2.
 
-## 7. Première étape achevée
+## 7. Deux premières étapes achevées
 
 La première micro-notion est `NC-01`, « critères de divisibilité par 2, 3, 5,
 9 et 10 ». Le critère par 10 est un complément maths&go assumé, y compris dans
@@ -311,9 +312,10 @@ validés puis finalisés avec Gwenaël. `F4` et la sous-forme de partage « grou
 possibles » ont été retirées. Le lecteur commun, les générateurs seedés, les
 tests, l'entraînement et le contexte « Au tableau » sont construits.
 
-`NC-02`, les carrés des entiers de 0 à 12 dans le produit visible, est le
-candidat actif. Sa cible officielle demeure « de 1 à 12 » et son identifiant
+`NC-02`, les carrés des entiers de 0 à 12 dans le produit visible, est validée
+et publiée. Sa cible officielle demeure « de 1 à 12 » et son identifiant
 technique `carres-entiers-1-a-12` reste stable. Ses six familles partagent une
 seule entrée de menu ; le fait 0 au carré ne produit aucun carré quadrillé
-`0 × 0`. De même, `NC-03` et `NC-04` restent distinctes en interne mais
+`0 × 0`. `NC-03` devient le prochain candidat. `NC-03` et `NC-04` restent
+distinctes en interne mais
 formeront une seule catégorie visible « Fractions simples et décimaux ».

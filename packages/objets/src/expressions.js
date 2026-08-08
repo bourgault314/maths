@@ -20,7 +20,7 @@
 // un `role` sémantique (« hypotenuse », « inconnue »…) que le rendu
 // habillera — jamais l'inverse.
 
-export const VERSION_EXPRESSIONS = 1;
+export const VERSION_EXPRESSIONS = 2;
 
 const CHAPEAU = "̂"; // accent circonflexe combinant
 
@@ -268,7 +268,10 @@ function contenuHtml(noeud) {
     case "quotient":
       return `${contenuHtml(noeud.numerateur)}/${contenuHtml(noeud.denominateur)}`;
     case "puissance":
-      return `${contenuHtml(noeud.base)}<sup>${echapperHtml(noeud.exposant)}</sup>`;
+      return (
+        `<span class="mathsgo-puissance-base">${contenuHtml(noeud.base)}</span>` +
+        `<sup>${echapperHtml(noeud.exposant)}</sup>`
+      );
     case "racine":
       return `√${contenuHtml(noeud.contenu)}`;
     case "trig":

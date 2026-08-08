@@ -2,7 +2,7 @@ import assert from "node:assert/strict";
 import { readFile } from "node:fs/promises";
 import { it } from "node:test";
 
-const VERSION = "19";
+const VERSION = "20";
 
 const RESSOURCES_VERSIONNEES = new Map([
   ["automatismes-v2/index.html", ["styles.css", "interface.css", "menu.css", "app.js"]],
@@ -32,6 +32,7 @@ const RESSOURCES_VERSIONNEES = new Map([
     "calcul-direct.js",
   ]],
   ["packages/automatismes/src/registre.js", [
+    "generation.js",
     "reconnaissance.js",
     "calcul-volumes.js",
     "critere-precis.js",
@@ -46,6 +47,7 @@ const RESSOURCES_VERSIONNEES = new Map([
     "retrouver-entier.js",
     "sens-notation.js",
   ]],
+  ["packages/moteur-exercices/src/generation.js", ["question-v2.js"]],
   ["packages/automatismes/src/nombres-et-calculs/criteres-divisibilite/serie.js", [
     "critere-precis.js",
     "selection-diviseurs.js",
@@ -100,6 +102,21 @@ it("ne conserve aucune version de cache antérieure dans le graphe V2", async ()
         correspondance[1],
         VERSION,
         `${chemin} charge encore une ressource en v${correspondance[1]}`,
+      );
+    }
+  }
+});
+
+it("charge question-v2 dans une seule instance versionnée", async () => {
+  for (const chemin of RESSOURCES_VERSIONNEES.keys()) {
+    const source = await readFile(new URL(`../${chemin}`, import.meta.url), "utf8");
+    for (const correspondance of source.matchAll(
+      /from\s+["'][^"']*question-v2\.js([^"']*)["']/g,
+    )) {
+      assert.equal(
+        correspondance[1],
+        `?v=${VERSION}`,
+        `${chemin} charge question-v2 sans la version v${VERSION}`,
       );
     }
   }

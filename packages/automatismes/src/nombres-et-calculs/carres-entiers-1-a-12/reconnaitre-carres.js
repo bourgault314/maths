@@ -4,7 +4,7 @@ import {
   COMPARAISON_ENSEMBLE_EXACT,
   SCHEMA_QUESTION_INSTANCE_V2,
   TYPE_REPONSE_SELECTION_MULTIPLE,
-} from "../../../../contrats/src/question-v2.js?v=19";
+} from "../../../../contrats/src/question-v2.js?v=20";
 import {
   BASES_CARRES_ENTIERS,
   calculerCarre,
@@ -14,11 +14,11 @@ import {
   exigerAleatoireCarres,
   exigerParametresCarres,
   retrouverBaseCarree,
-} from "./commun.js?v=19";
+} from "./commun.js?v=20";
 
 export const NOM_GENERATEUR_RECONNAITRE_CARRES =
   "nombres-et-calculs.carres-entiers-1-a-12.reconnaitre-carres";
-export const VERSION_GENERATEUR_RECONNAITRE_CARRES = 1;
+export const VERSION_GENERATEUR_RECONNAITRE_CARRES = 2;
 
 export const GABARIT_RECONNAITRE_CARRES = creerGabaritCarres({
   id: NOM_GENERATEUR_RECONNAITRE_CARRES,
@@ -27,6 +27,7 @@ export const GABARIT_RECONNAITRE_CARRES = creerGabaritCarres({
 });
 
 export const FORMULATIONS_RECONNAITRE_CARRES = Object.freeze([
+  "nombres-carres",
   "carres-parfaits",
 ]);
 
@@ -133,7 +134,9 @@ export function genererQuestionReconnaitreCarres({ aleatoire, parametres }) {
       {
         id: "consigne-selection",
         type: "texte",
-        contenu: "Sélectionne tous les carrés parfaits.",
+        contenu: formulation === "nombres-carres"
+          ? "Sélectionne tous les nombres carrés."
+          : "Parmi ces nombres, lesquels sont des carrés parfaits ?",
       },
     ],
     reponse: {

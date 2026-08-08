@@ -2,9 +2,9 @@
 
 ## Statut
 
-**Principes pédagogiques validés et fabrication technique autorisée par
-Gwenaël les 6 et 7 août 2026. Le périmètre visible est étendu de 0 à 12 ; la
-recette technique finale précède encore la publication demandée.**
+**Notion validée par Gwenaël et publiée après recette technique. Le périmètre
+visible est étendu de 0 à 12 ; les finitions issues de l'audit ont été validées
+le 8 août 2026.**
 
 Cette fiche remplace la proposition de conception préparée avant la publication
 de NC-01. Elle intègre les retours donnés après cette première proposition :
@@ -201,6 +201,8 @@ jamais demandé d'appliquer une règle générale de priorités non expliquée.
   des erreurs identifiables, notamment `n × 2`, un carré voisin, `n(n - 1)` ou
   `n × 10`. Pour 12 au carré, « entre 20 et 30 » diagnostique ainsi le calcul
   `12 × 2 = 24`, tandis que « entre 140 et 150 » est la réponse correcte.
+- Aucun encadrement distracteur ne contient le carré attendu, même lorsque ce
+  carré serait exactement égal à l'une de ses bornes.
 - Correction : lecture → produit égal → calcul → conclusion.
 
 Exemples : « Quel est le carré de 4 ? » et « Quel encadrement est correct pour
@@ -210,13 +212,16 @@ Exemples : « Quel est le carré de 4 ? » et « Quel encadrement est correct po
 
 Trois formes alternent :
 
-- « Quel entier de 0 à 12 a pour carré 81 ? » ;
+- « Quel entier compris entre 0 et 12 a pour carré 81 ? » ;
 - `[case]` au carré `= 121` ;
 - `49 = [case] × [case]`.
 
 Dans la troisième forme, les deux cases sont indépendantes. L'élève clique
 sur chacune et remplit les deux facteurs. La réponse n'est validée que si les
 deux valeurs sont exactes ; aucun demi-point ni remplissage automatique.
+
+Dans la deuxième forme, le contour du champ entoure seulement la base saisie.
+Le véritable exposant HTML reste bleu foncé et placé hors de ce contour.
 
 La formulation mentionne l'intervalle 0 à 12 afin de ne pas introduire les
 solutions négatives d'une équation.

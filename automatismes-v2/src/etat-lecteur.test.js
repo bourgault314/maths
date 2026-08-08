@@ -16,6 +16,7 @@ import {
   effacerSaisie,
   lireConfiguration,
   nombreReussites,
+  NOMBRE_QUESTIONS_MAXIMUM,
   NOTION_NC01,
   NOTION_NC02,
   NOTION_SOLIDES_USUELS,
@@ -116,9 +117,29 @@ describe("configuration du lecteur", () => {
   });
 
   it("ignore un nombre de questions invalide dans l'URL", () => {
+    assert.equal(NOMBRE_QUESTIONS_MAXIMUM, 20);
+    assert.equal(lireConfiguration("?questions=20").nombreQuestions, 20);
     assert.equal(lireConfiguration("?questions=0").nombreQuestions, 10);
-    assert.equal(lireConfiguration("?questions=101").nombreQuestions, 10);
+    assert.equal(lireConfiguration("?questions=21").nombreQuestions, 10);
+    assert.equal(lireConfiguration("?questions=30").nombreQuestions, 10);
     assert.equal(lireConfiguration("?questions=abc").nombreQuestions, 10);
+  });
+
+  it("ramène une URL NC-02 hors borne à une série démarrable de dix questions", () => {
+    const configuration = lireConfiguration(
+      "?notion=carres-entiers-1-a-12&questions=30&graine=url-hors-borne",
+    );
+    const etat = etatDemarre(configuration);
+    assert.equal(etat.configuration.nombreQuestions, 10);
+    assert.equal(etat.questions.length, 10);
+    assert.equal(etat.seance.etat.phase, "en-cours");
+  });
+
+  it("refuse une configuration programmatique de plus de vingt questions", () => {
+    assert.throws(
+      () => creerEtatLecteur({ nombreQuestions: 21 }),
+      /compris entre 1 et 20/,
+    );
   });
 
   it("lit plusieurs notions, les canonise et conserve l'ancien paramètre singulier", () => {
