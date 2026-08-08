@@ -1,6 +1,6 @@
 # Sources et signature des PDF imprimables
 
-Ce document est l'inventaire technique des 29 PDF publics de maths&go.
+Ce document est l'inventaire technique des 30 PDF publics de maths&go.
 
 ## Référence graphique
 
@@ -15,7 +15,7 @@ Ce document est l'inventaire technique des 29 PDF publics de maths&go.
 
 ## PDF possédant une source LaTeX
 
-Ces 14 documents sont entièrement modifiables et recompilables :
+Ces 15 documents sont entièrement modifiables et recompilables :
 
 | PDF public | Source |
 |---|---|
@@ -23,6 +23,7 @@ Ces 14 documents sont entièrement modifiables et recompilables :
 | `fiche_reciproque_thales.pdf` | `_fiche_reciproque_thales.tex` |
 | `fiche_thales_criteres_a_verifier.pdf` | `_fiche_thales_criteres_a_verifier.tex` |
 | `fiche_thales_direct_a_verifier.pdf` | `_fiche_thales_direct_a_verifier.tex` |
+| `gabarit_criteres_divisibilite.pdf` | `_gabarit_criteres_divisibilite.tex` |
 | `gabarit_pourcentages_double_ligne_graduee.pdf` | `_gabarit_pourcentages_double_ligne_graduee.tex` |
 | `gabarit_proportionnalite_double_ligne_graduee.pdf` | `_gabarit_proportionnalite_double_ligne_graduee.tex` |
 | `gabarit_proportionnalite_tableau_sans_coefficient.pdf` | `_gabarit_proportionnalite_tableau_sans_coefficient.tex` |
@@ -68,7 +69,7 @@ importé, et non à chaque compilation générale.
 
 ## Classement public
 
-Les 29 PDF sont tous déclarés dans `assets/js/catalogue-refonte-data.js` et dans
+Les 30 PDF sont tous déclarés dans `assets/js/catalogue-refonte-data.js` et dans
 `sitemap.xml`. Leur classement visible se fait par domaine et notion dans le
 catalogue ; leur chemin physique historique n'a pas été déplacé afin de préserver
 les liens publics existants.

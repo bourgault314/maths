@@ -502,6 +502,14 @@ window.MATHSGO_CATALOGUE = {
       "thumbnail": "assets/img/thumbnails/divisibilite/partages-pgcd.png?v=1",
       "cardDescription": "Chercher le plus grand nombre de paquets identiques en manipulant deux quantités."
     },
+    "outils/gabarit_criteres_divisibilite.pdf": {
+      "primaryNotion": "divisibilite",
+      "primaryGroup": "imprimer",
+      "collections": [],
+      "tags": ["divisibilite", "criteres", "gabarit", "imprimer"],
+      "thumbnail": "assets/img/thumbnails/divisibilite/gabarit-criteres-divisibilite.png?v=1",
+      "cardDescription": "Tester un nombre avec les critères de 2, 3, 5, 9 et 10 : chiffre des unités d'un côté, somme des chiffres de l'autre."
+    },
     "outils/plateaux_manipulation/feuille_coupee_puissance.html": {
       "primaryNotion": "puissances",
       "primaryGroup": "activites",
@@ -3939,6 +3947,38 @@ window.MATHSGO_CATALOGUE = {
       "status": "published",
       "featured": false,
       "recent": false
+    },
+    {
+      "id": "outils-gabarit-criteres-divisibilite-pdf",
+      "title": "Gabarit critères de divisibilité",
+      "description": "Un gabarit à imprimer et plastifier pour tester un nombre : chiffre des unités pour 2, 5 et 10, somme des chiffres pour 3 et 9, avec un exemple rédigé au verso.",
+      "path": "outils/gabarit_criteres_divisibilite.pdf",
+      "domains": [
+        "nombres-calculs"
+      ],
+      "notions": [
+        "divisibilite"
+      ],
+      "uses": [
+        "imprimer",
+        "entrainer"
+      ],
+      "types": [
+        "imprimable"
+      ],
+      "filters": [
+        "materiel-imprimer"
+      ],
+      "keywords": [
+        "critères de divisibilité",
+        "divisible par 2",
+        "somme des chiffres",
+        "gabarit"
+      ],
+      "kind": "document",
+      "status": "published",
+      "featured": false,
+      "recent": true
     },
     {
       "id": "outils-patterns-html",
