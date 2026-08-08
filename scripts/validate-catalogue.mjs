@@ -13,7 +13,7 @@ vm.runInContext(source, context);
 
 const catalogue = context.window.MATHSGO_CATALOGUE;
 const errors = [];
-const validGroups = new Set(["manipuler", "generer", "imprimer", "activites", "cours", "jeux"]);
+const validGroups = new Set(["manipuler", "entrainer", "generer", "imprimer", "activites", "cours", "jeux"]);
 const domainIds = new Set(catalogue.domains.map(({ id }) => id));
 const notionById = new Map(catalogue.notions.map((notion) => [notion.id, notion]));
 const collectionIds = new Set((catalogue.collections || []).map(({ id }) => id));
@@ -23,6 +23,10 @@ const classifications = catalogue.resourceClassifications || {};
 
 function fail(message) {
   errors.push(message);
+}
+
+if (catalogue.schemaVersion !== 5) {
+  fail(`Version de schéma attendue : 5 (reçue : ${catalogue.schemaVersion})`);
 }
 
 for (const family of catalogue.resourceFamilies || []) {
@@ -42,6 +46,12 @@ for (const [resourcePath, classification] of Object.entries(classifications)) {
   }
 }
 
+for (const resource of catalogue.resources) {
+  if (!classifications[resource.path]?.primaryGroup) {
+    fail(`${resource.path}: aucun groupe principal explicite`);
+  }
+}
+
 for (const resource of published) {
   const classification = classifications[resource.path] || {};
   const primaryNotionId = classification.primaryNotion || resource.notions?.[0];
@@ -58,6 +68,8 @@ for (const resource of published) {
   }
   if (!primaryNotion) {
     fail(`${resource.path}: aucune notion principale valide`);
+  } else if (!(resource.notions || []).includes(primaryNotionId)) {
+    fail(`${resource.path}: la notion principale « ${primaryNotionId} » n’est pas déclarée dans la ressource`);
   } else if (!(resource.domains || []).includes(primaryNotion.domain)) {
     fail(`${resource.path}: la notion principale « ${primaryNotionId} » appartient au domaine « ${primaryNotion.domain} », absent de la ressource`);
   }

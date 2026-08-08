@@ -58,7 +58,7 @@
   const notionMap = new Map(catalogue.notions.map((notion) => [notion.id, notion]));
   const collectionMap = new Map((catalogue.collections || []).map((collection) => [collection.id, collection]));
   const typeMap = new Map(catalogue.types.map((type) => [type.id, type]));
-  const facetMap = new Map((catalogue.facets || []).map((facet) => [facet.id, facet]));
+  const useMap = new Map((catalogue.uses || []).map((use) => [use.id, use]));
   const resourceClassifications = catalogue.resourceClassifications || {};
   const resourceFamilies = catalogue.resourceFamilies || [];
   const dataDieFaces = Object.freeze({
@@ -528,16 +528,20 @@
     return `<span class="notion-icon">${icon(design.icon)}</span>`;
   }
 
-  function typeIcon(resource) {
+  function typeIcon(resource, group = "") {
     const types = resource.types || [];
+    const exerciseIcon = `<svg viewBox="0 0 32 32" aria-hidden="true"><rect x="4" y="5" width="24" height="21" rx="4" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="m10 15 4 4 8-9" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
+    const generatorIcon = `<svg viewBox="0 0 32 32" aria-hidden="true"><path d="M7 8h18M7 16h18M7 24h18" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/><circle cx="12" cy="8" r="3" fill="#fff" stroke="currentColor" stroke-width="1.7"/><circle cx="21" cy="16" r="3" fill="#fff" stroke="currentColor" stroke-width="1.7"/><circle cx="15" cy="24" r="3" fill="#fff" stroke="currentColor" stroke-width="1.7"/></svg>`;
+    if ((group || resourceClassification(resource).primaryGroup) === "entrainer") return exerciseIcon;
+    if ((group || resourceClassification(resource).primaryGroup) === "generer") return generatorIcon;
     if (resource.kind === "document" || types.includes("imprimable")) {
       return `<svg viewBox="0 0 32 32" aria-hidden="true"><path d="M7 3h12l6 6v20H7Z" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/><path d="M19 3v7h6M11 16h10M11 21h10" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/></svg>`;
     }
     if (types.includes("generateur")) {
-      return `<svg viewBox="0 0 32 32" aria-hidden="true"><path d="M7 8h18M7 16h18M7 24h18" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/><circle cx="12" cy="8" r="3" fill="#fff" stroke="currentColor" stroke-width="1.7"/><circle cx="21" cy="16" r="3" fill="#fff" stroke="currentColor" stroke-width="1.7"/><circle cx="15" cy="24" r="3" fill="#fff" stroke="currentColor" stroke-width="1.7"/></svg>`;
+      return generatorIcon;
     }
     if (types.includes("exerciseur")) {
-      return `<svg viewBox="0 0 32 32" aria-hidden="true"><rect x="4" y="5" width="24" height="21" rx="4" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="m10 15 4 4 8-9" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
+      return exerciseIcon;
     }
     return `<svg viewBox="0 0 32 32" aria-hidden="true"><path d="m4 9 18-4 6 15-18 5Z" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/><circle cx="11" cy="13" r="2.5" fill="currentColor"/><rect x="18" y="10" width="5" height="5" rx="1" fill="currentColor"/><path d="M13 21h9" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/></svg>`;
   }
@@ -621,9 +625,11 @@
     const facets = new Set();
     const types = resource.types || [];
     const uses = resource.uses || [];
-    const source = normalise([resource.title, resource.path, resource.description, ...(resource.keywords || [])].join(" "));
+    const tags = resourceTags(resource);
+    const source = normalise([resource.title, resource.path, resource.description, ...(resource.keywords || []), ...tags].join(" "));
 
     if (uses.includes("manipuler") || types.includes("plateau")) facets.add("manipuler");
+    if (uses.includes("entrainer") || types.includes("exerciseur")) facets.add("entrainer");
     if (types.includes("generateur") || source.includes("generateur") || source.includes("maker")) facets.add("generer");
     if (
       source.match(/gabarit|rapporteur|materiel|cartes|grille|patron|tuiles a decouper/) ||
@@ -632,7 +638,11 @@
     if (resource.kind === "document" || types.includes("imprimable") || uses.includes("imprimer")) facets.add("imprimer");
     if (source.match(/activite|seance|recherche|enquete|detective|puzzle|problemes|narration|feuille coupee/)) facets.add("activites");
     if (source.match(/cours|synthese/) || resource.path.includes("livret_litteral")) facets.add("cours");
-    if (resource.domains.includes("jeux-recherches") || source.match(/jeu de|yavalath|chaos|tables modulaires|grand pari/)) facets.add("jeux");
+    if (
+      resource.domains.includes("jeux-recherches") ||
+      tags.some((tag) => ["jeu", "strategie", "exploration"].includes(normalise(tag))) ||
+      source.match(/yavalath|tables modulaires|grand pari/)
+    ) facets.add("jeux");
     return facets;
   }
 
@@ -827,18 +837,45 @@
 
   function resourceMeta(resource) {
     const notion = notionMap.get(resourcePrimaryNotion(resource));
-    const facetLabels = [...resourceFacets(resource)].slice(0, 2).map((id) => facetMap.get(id)?.label).filter(Boolean);
     const fallback = (resource.types || []).map((id) => typeMap.get(id)?.label).find(Boolean);
-    return [notion?.title, ...facetLabels, facetLabels.length ? "" : (fallback || "Outil interactif")].filter(Boolean).join(" · ");
+    return notion?.title || fallback || "Outil interactif";
+  }
+
+  const resourceUseOrder = ["manipuler", "projeter", "imprimer", "entrainer"];
+  const primaryUseByGroup = {
+    manipuler: "manipuler",
+    entrainer: "entrainer",
+    imprimer: "imprimer"
+  };
+
+  function usageLabels(uses, group) {
+    const declared = new Set(uses || []);
+    const primaryUse = primaryUseByGroup[group];
+    const secondary = resourceUseOrder.filter((id) => declared.has(id) && id !== primaryUse);
+    const selected = secondary.length
+      ? secondary.slice(0, 2)
+      : resourceUseOrder.filter((id) => declared.has(id)).slice(0, 2);
+    return selected.map((id) => useMap.get(id)?.label).filter(Boolean);
+  }
+
+  function resourceUsageMeta(resource, group = primaryResourceGroup(resource)) {
+    return usageLabels(resource.uses, group).join(" · ");
+  }
+
+  function familyUsageMeta(family, variants) {
+    const commonUses = resourceUseOrder.filter((id) => variants.every((resource) => (resource.uses || []).includes(id)));
+    const sourceUses = commonUses.length ? commonUses : (variants[0]?.uses || []);
+    return usageLabels(sourceUses, family.group).join(" · ");
   }
 
   const resourceGroups = [
     { id: "manipuler", label: "Manipuler et visualiser" },
-    { id: "generer", label: "Générer et personnaliser" },
-    { id: "imprimer", label: "Imprimer et fabriquer" },
+    { id: "entrainer", label: "S’entraîner" },
+    { id: "generer", label: "Créer et personnaliser" },
+    { id: "imprimer", label: "Prêts à imprimer" },
     { id: "activites", label: "Activités et séances" },
-    { id: "cours", label: "Cours et synthèses" },
-    { id: "jeux", label: "Jouer et explorer" }
+    { id: "cours", label: "Cours et progressions" },
+    { id: "jeux", label: "Jeux et explorations" }
   ];
 
   const resourceGroupIds = new Set(resourceGroups.map((group) => group.id));
@@ -854,12 +891,36 @@
     const explicitGroup = resourceClassification(resource).primaryGroup;
     if (explicitGroup && resourceGroups.some((group) => group.id === explicitGroup)) return explicitGroup;
     const facets = resourceFacets(resource);
+    const types = resource.types || [];
+    const uses = resource.uses || [];
+    const source = normalise([
+      resource.title,
+      resource.path,
+      resource.description,
+      ...(resource.keywords || []),
+      ...resourceTags(resource)
+    ].join(" "));
+
+    // Les trois identités pédagogiques fortes priment sur le support technique.
     if (facets.has("jeux")) return "jeux";
-    if (facets.has("cours")) return "cours";
-    if (facets.has("generer")) return "generer";
-    if (facets.has("gabarits")) return "imprimer";
     if (facets.has("activites")) return "activites";
+    if (facets.has("cours")) return "cours";
+
+    // Un entraînement suppose une boucle question-réponse avec validation.
+    const hasResponseValidationLoop = types.includes("exerciseur") && (
+      uses.includes("entrainer") ||
+      source.match(/verifier|verification|valider|validation|score|feedback|correction automatique|reponse/)
+    );
+    if (hasResponseValidationLoop) return "entrainer";
+
+    // Un support produit à partir de réglages est une création, même s’il s’imprime.
+    if (facets.has("generer")) return "generer";
+
+    // Les plateaux ouverts et objets déplaçables restent des manipulations.
     if (facets.has("manipuler")) return "manipuler";
+
+    // Le dernier cas est un document fixe, directement prêt à imprimer.
+    if (facets.has("gabarits")) return "imprimer";
     if (facets.has("imprimer")) return "imprimer";
     return "manipuler";
   }
@@ -869,11 +930,13 @@
     const classification = resourceClassification(resource);
     const thumbnail = classification.thumbnail || resource.thumbnail;
     const description = classification.cardDescription || resource.description;
+    const group = primaryResourceGroup(resource);
+    const usages = resourceUsageMeta(resource, group);
     return `<a class="resource-card${thumbnail ? " resource-card-visual" : ""}" href="${escapeHtml(rootPrefix + resource.path)}" style="${domainStyle(domainId)}">
       ${thumbnail
         ? `<span class="resource-thumbnail"><img src="${escapeHtml(rootPrefix + thumbnail)}" alt="" loading="lazy"></span>`
-        : `<span class="resource-type-icon">${typeIcon(resource)}</span>`}
-      <span class="resource-copy"><h3>${escapeHtml(resource.title)}</h3>${thumbnail ? `<span class="resource-description">${escapeHtml(description)}</span>` : `<span class="resource-meta">${escapeHtml(resourceMeta(resource))}</span>`}</span>
+        : `<span class="resource-type-icon">${typeIcon(resource, group)}</span>`}
+      <span class="resource-copy"><h3>${escapeHtml(resource.title)}</h3>${thumbnail ? `<span class="resource-description">${escapeHtml(description)}</span>` : `<span class="resource-meta">${escapeHtml(resourceMeta(resource))}</span>`}${usages ? `<span class="resource-meta resource-uses">${escapeHtml(usages)}</span>` : ""}</span>
       <span class="resource-arrow" aria-hidden="true">→</span>
     </a>`;
   }
@@ -891,12 +954,13 @@
     const versionLabel = `${variants.length} version${variants.length > 1 ? "s" : ""}`;
     const thumbnail = family.thumbnail;
     const description = family.cardDescription || family.description || "Choisir une version.";
+    const usages = familyUsageMeta(family, variants);
     return `<details class="resource-family-card${thumbnail ? " resource-family-card-visual" : ""}" style="${domainStyle(domainId)}">
       <summary class="resource-family-summary">
         ${thumbnail
           ? `<span class="resource-thumbnail"><img src="${escapeHtml(rootPrefix + thumbnail)}" alt="" loading="lazy"></span>`
-          : `<span class="resource-type-icon">${typeIcon(representative)}</span>`}
-        <span class="resource-copy"><h3>${escapeHtml(family.title)}</h3>${thumbnail ? `<span class="resource-description">${escapeHtml(`${versionLabel} · ${description}`)}</span>` : `<span class="resource-meta">${escapeHtml(`${versionLabel} · ${description}`)}</span>`}</span>
+          : `<span class="resource-type-icon">${typeIcon(representative, family.group)}</span>`}
+        <span class="resource-copy"><h3>${escapeHtml(family.title)}</h3>${thumbnail ? `<span class="resource-description">${escapeHtml(`${versionLabel} · ${description}`)}</span>` : `<span class="resource-meta">${escapeHtml(`${versionLabel} · ${description}`)}</span>`}${usages ? `<span class="resource-meta resource-uses">${escapeHtml(usages)}</span>` : ""}</span>
         <span class="resource-family-toggle" aria-hidden="true">⌄</span>
       </summary>
       <div class="resource-variants" aria-label="${escapeHtml(`Versions de ${family.title}`)}">
