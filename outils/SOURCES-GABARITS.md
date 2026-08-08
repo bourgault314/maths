@@ -1,6 +1,6 @@
 # Sources et signature des PDF imprimables
 
-Ce document est l'inventaire technique des 30 PDF publics de maths&go.
+Ce document est l'inventaire technique des 31 PDF publics de maths&go.
 
 ## Référence graphique
 
@@ -67,9 +67,17 @@ bash scripts/uniformiser-pdf-sans-source.sh
 Ce traitement se fait en place. Il doit être lancé sur un PDF d'origine nouvellement
 importé, et non à chaque compilation générale.
 
+## PDF possédant des sources Python et JSON
+
+Le livret `chat-cest-toi-le-chat.pdf` est entièrement modifiable. Ses sources sont
+conservées dans `../_sources/chat-le-chat/` : modèle du jeu, données des 20 séries,
+générateur du livret et vérification exhaustive. La procédure de régénération est
+décrite dans le `README.md` de ce dossier. Une publication ordinaire réutilise le
+PDF déjà validé sans exécuter cette chaîne.
+
 ## Classement public
 
-Les 30 PDF sont tous déclarés dans `assets/js/catalogue-refonte-data.js` et dans
+Les 31 PDF sont tous déclarés dans `assets/js/catalogue-refonte-data.js` et dans
 `sitemap.xml`. Leur classement visible se fait par domaine et notion dans le
 catalogue ; leur chemin physique historique n'a pas été déplacé afin de préserver
 les liens publics existants.

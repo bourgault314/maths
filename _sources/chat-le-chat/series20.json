@@ -1,0 +1,752 @@
+[
+ {
+  "num": 1,
+  "level": 1,
+  "note": "nouvelle",
+  "cards": {
+   "1": {
+    "back": "P",
+    "right": "P"
+   },
+   "4": {
+    "back": "P",
+    "left": "P"
+   },
+   "2": {
+    "front": "P",
+    "right": "P"
+   },
+   "3": {
+    "front": "P",
+    "left": "P"
+   }
+  },
+  "sol": [
+   [
+    1,
+    4,
+    0
+   ],
+   [
+    2,
+    3,
+    0
+   ]
+  ],
+  "n_sols": 2
+ },
+ {
+  "num": 2,
+  "level": 1,
+  "note": "nouvelle",
+  "cards": {
+   "2": {
+    "back": "X",
+    "right": "P"
+   },
+   "1": {
+    "back": "P",
+    "left": "P"
+   },
+   "4": {
+    "back": "X",
+    "right": "X"
+   },
+   "3": {
+    "front": "P",
+    "right": "X"
+   }
+  },
+  "sol": [
+   [
+    0,
+    2,
+    1
+   ],
+   [
+    4,
+    0,
+    3
+   ]
+  ],
+  "n_sols": 2
+ },
+ {
+  "num": 3,
+  "level": 1,
+  "note": "série 6 d'origine",
+  "cards": {
+   "1": {
+    "right": "P",
+    "back": "X"
+   },
+   "2": {
+    "back": "P"
+   },
+   "3": {
+    "front": "P",
+    "left": "X"
+   },
+   "4": {
+    "front": "X",
+    "left": "P",
+    "back": "X"
+   }
+  },
+  "sol": [
+   [
+    2,
+    0,
+    0
+   ],
+   [
+    3,
+    1,
+    4
+   ]
+  ],
+  "n_sols": 5
+ },
+ {
+  "num": 4,
+  "level": 1,
+  "note": "série 7 d'origine",
+  "cards": {
+   "1": {
+    "front": "P",
+    "right": "X"
+   },
+   "2": {
+    "right": "P",
+    "back": "X"
+   },
+   "3": {
+    "left": "P",
+    "back": "X"
+   },
+   "4": {
+    "left": "P"
+   }
+  },
+  "sol": [
+   [
+    2,
+    4,
+    3
+   ],
+   [
+    0,
+    1,
+    0
+   ]
+  ],
+  "n_sols": 2
+ },
+ {
+  "num": 5,
+  "level": 1,
+  "note": "série 1 d'origine",
+  "cards": {
+   "1": {
+    "front": "P"
+   },
+   "2": {
+    "back": "P"
+   },
+   "3": {
+    "right": "P",
+    "back": "X"
+   },
+   "4": {
+    "left": "P",
+    "back": "X"
+   }
+  },
+  "sol": [
+   [
+    3,
+    2,
+    0
+   ],
+   [
+    0,
+    1,
+    4
+   ]
+  ],
+  "n_sols": 8
+ },
+ {
+  "num": 6,
+  "level": 2,
+  "note": "série 3 d'origine, reconstituée",
+  "cards": {
+   "2": {
+    "front": "X",
+    "back": "P",
+    "left": "X",
+    "right": "X"
+   },
+   "4": {
+    "front": "X",
+    "back": "X",
+    "left": "X",
+    "right": "X"
+   },
+   "3": {
+    "front": "P",
+    "back": "X",
+    "left": "X",
+    "right": "P"
+   },
+   "1": {
+    "front": "X",
+    "back": "X",
+    "left": "P",
+    "right": "X"
+   }
+  },
+  "sol": [
+   [
+    2,
+    0,
+    4
+   ],
+   [
+    3,
+    1,
+    0
+   ]
+  ],
+  "n_sols": 1
+ },
+ {
+  "num": 7,
+  "level": 2,
+  "note": "nouvelle",
+  "cards": {
+   "3": {
+    "front": "X",
+    "back": "X",
+    "left": "X",
+    "right": "P"
+   },
+   "1": {
+    "front": "X",
+    "back": "P",
+    "left": "P",
+    "right": "X"
+   },
+   "4": {
+    "front": "P",
+    "back": "X",
+    "left": "X",
+    "right": "P"
+   },
+   "2": {
+    "front": "X",
+    "back": "X",
+    "left": "P",
+    "right": "X"
+   }
+  },
+  "sol": [
+   [
+    3,
+    1,
+    0
+   ],
+   [
+    0,
+    4,
+    2
+   ]
+  ],
+  "n_sols": 1
+ },
+ {
+  "num": 8,
+  "level": 2,
+  "note": "série 10 d'origine (inventée par toi)",
+  "cards": {
+   "1": {
+    "front": "X",
+    "left": "X",
+    "right": "P",
+    "back": "P"
+   },
+   "2": {
+    "front": "X",
+    "left": "X",
+    "right": "P",
+    "back": "X"
+   },
+   "3": {
+    "front": "X",
+    "left": "P",
+    "right": "X",
+    "back": "X"
+   },
+   "4": {
+    "front": "P",
+    "left": "P",
+    "right": "X",
+    "back": "X"
+   }
+  },
+  "sol": [
+   [
+    0,
+    1,
+    3
+   ],
+   [
+    2,
+    4,
+    0
+   ]
+  ],
+  "n_sols": 1
+ },
+ {
+  "num": 9,
+  "level": 2,
+  "note": "série 4 d'origine",
+  "cards": {
+   "1": {
+    "front": "P",
+    "left": "P",
+    "right": "X",
+    "back": "X"
+   },
+   "2": {
+    "front": "P",
+    "left": "X",
+    "right": "P",
+    "back": "X"
+   },
+   "3": {
+    "front": "X",
+    "left": "P",
+    "right": "X",
+    "back": "P"
+   },
+   "4": {
+    "front": "X",
+    "left": "X",
+    "right": "P",
+    "back": "P"
+   }
+  },
+  "sol": [
+   [
+    0,
+    4,
+    3
+   ],
+   [
+    0,
+    2,
+    1
+   ]
+  ],
+  "n_sols": 2
+ },
+ {
+  "num": 10,
+  "level": 2,
+  "note": "série 5 d'origine",
+  "cards": {
+   "1": {
+    "front": "P",
+    "left": "X",
+    "right": "X",
+    "back": "X"
+   },
+   "2": {
+    "front": "P",
+    "left": "X",
+    "right": "X",
+    "back": "X"
+   },
+   "3": {
+    "front": "X",
+    "left": "X",
+    "right": "X",
+    "back": "P"
+   },
+   "4": {
+    "front": "X",
+    "left": "X",
+    "right": "X",
+    "back": "P"
+   }
+  },
+  "sol": [
+   [
+    4,
+    0,
+    3
+   ],
+   [
+    1,
+    0,
+    2
+   ]
+  ],
+  "n_sols": 4
+ },
+ {
+  "num": 11,
+  "level": 3,
+  "note": "série 2 d'origine",
+  "cards": {
+   "1": {
+    "right": "P",
+    "back": "X"
+   },
+   "2": {
+    "back": "P"
+   },
+   "3": {
+    "front": "P",
+    "left": "X",
+    "right": "P"
+   },
+   "4": {
+    "front": "X",
+    "left": "P",
+    "back": "X"
+   }
+  },
+  "sol": [
+   [
+    1,
+    2,
+    0
+   ],
+   [
+    0,
+    3,
+    4
+   ]
+  ],
+  "n_sols": 2
+ },
+ {
+  "num": 12,
+  "level": 3,
+  "note": "série 8 d'origine, reconstituée",
+  "cards": {
+   "4": {
+    "left": "X",
+    "right": "X"
+   },
+   "1": {
+    "front": "P",
+    "right": "P"
+   },
+   "2": {
+    "front": "X",
+    "left": "P"
+   },
+   "3": {
+    "back": "X",
+    "left": "P"
+   }
+  },
+  "sol": [
+   [
+    4,
+    0,
+    0
+   ],
+   [
+    1,
+    2,
+    3
+   ]
+  ],
+  "n_sols": 2
+ },
+ {
+  "num": 13,
+  "level": 3,
+  "note": "nouvelle",
+  "cards": {
+   "2": {
+    "back": "X",
+    "right": "X"
+   },
+   "4": {
+    "left": "X",
+    "right": "X"
+   },
+   "1": {
+    "front": "X",
+    "back": "X"
+   },
+   "3": {
+    "front": "P",
+    "left": "P"
+   }
+  },
+  "sol": [
+   [
+    2,
+    0,
+    4
+   ],
+   [
+    0,
+    1,
+    3
+   ]
+  ],
+  "n_sols": 2
+ },
+ {
+  "num": 14,
+  "level": 3,
+  "note": "nouvelle",
+  "cards": {
+   "1": {
+    "back": "P",
+    "left": "X"
+   },
+   "3": {
+    "front": "X",
+    "left": "P"
+   },
+   "4": {
+    "front": "P",
+    "left": "X"
+   },
+   "2": {
+    "front": "X",
+    "left": "X"
+   }
+  },
+  "sol": [
+   [
+    1,
+    3,
+    0
+   ],
+   [
+    4,
+    0,
+    2
+   ]
+  ],
+  "n_sols": 2
+ },
+ {
+  "num": 15,
+  "level": 3,
+  "note": "nouvelle",
+  "cards": {
+   "4": {
+    "left": "X",
+    "right": "P"
+   },
+   "1": {
+    "front": "X",
+    "back": "X"
+   },
+   "3": {
+    "back": "X",
+    "left": "X"
+   },
+   "2": {
+    "front": "P",
+    "back": "X"
+   }
+  },
+  "sol": [
+   [
+    0,
+    4,
+    1
+   ],
+   [
+    3,
+    2,
+    0
+   ]
+  ],
+  "n_sols": 2
+ },
+ {
+  "num": 16,
+  "level": 4,
+  "note": "série 9 d'origine (inventée par toi)",
+  "cards": {
+   "1": {
+    "front": "X",
+    "left": "X",
+    "right": "X",
+    "back": "X"
+   },
+   "2": {
+    "back": "P"
+   },
+   "3": {
+    "front": "P",
+    "right": "P"
+   },
+   "4": {
+    "right": "X"
+   }
+  },
+  "sol": [
+   [
+    2,
+    0,
+    1
+   ],
+   [
+    3,
+    4,
+    0
+   ]
+  ],
+  "n_sols": 1
+ },
+ {
+  "num": 17,
+  "level": 4,
+  "note": "nouvelle",
+  "cards": {
+   "1": {
+    "back": "P"
+   },
+   "2": {
+    "front": "X",
+    "left": "X",
+    "right": "X"
+   },
+   "3": {
+    "right": "P"
+   },
+   "4": {
+    "front": "X"
+   }
+  },
+  "sol": [
+   [
+    1,
+    0,
+    2
+   ],
+   [
+    3,
+    4,
+    0
+   ]
+  ],
+  "n_sols": 1
+ },
+ {
+  "num": 18,
+  "level": 4,
+  "note": "nouvelle",
+  "cards": {
+   "1": {
+    "back": "P",
+    "right": "P"
+   },
+   "3": {
+    "front": "X",
+    "right": "X"
+   },
+   "2": {
+    "front": "X"
+   },
+   "4": {
+    "left": "P"
+   }
+  },
+  "sol": [
+   [
+    0,
+    1,
+    3
+   ],
+   [
+    2,
+    4,
+    0
+   ]
+  ],
+  "n_sols": 1
+ },
+ {
+  "num": 19,
+  "level": 4,
+  "note": "nouvelle",
+  "cards": {
+   "3": {
+    "front": "X",
+    "right": "P"
+   },
+   "1": {
+    "back": "P",
+    "left": "P"
+   },
+   "2": {
+    "right": "P"
+   },
+   "4": {
+    "front": "X"
+   }
+  },
+  "sol": [
+   [
+    3,
+    1,
+    0
+   ],
+   [
+    0,
+    2,
+    4
+   ]
+  ],
+  "n_sols": 1
+ },
+ {
+  "num": 20,
+  "level": 4,
+  "note": "nouvelle",
+  "cards": {
+   "2": {
+    "back": "P",
+    "right": "P"
+   },
+   "3": {
+    "left": "P"
+   },
+   "1": {
+    "front": "P"
+   },
+   "4": {
+    "left": "X",
+    "right": "X"
+   }
+  },
+  "sol": [
+   [
+    2,
+    3,
+    0
+   ],
+   [
+    1,
+    0,
+    4
+   ]
+  ],
+  "n_sols": 1
+ }
+]

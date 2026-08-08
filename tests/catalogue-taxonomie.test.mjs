@@ -39,7 +39,7 @@ const expectedGroupCounts = {
   imprimer: 14,
   activites: 10,
   cours: 11,
-  jeux: 4
+  jeux: 5
 };
 
 const expectedVisibleCardCounts = {
@@ -49,7 +49,7 @@ const expectedVisibleCardCounts = {
   imprimer: 12,
   activites: 8,
   cours: 5,
-  jeux: 4
+  jeux: 5
 };
 
 function resolvedPrimaryGroup(resource) {
@@ -64,10 +64,10 @@ function assertPathsInGroup(group, paths) {
   }
 }
 
-test("le catalogue conserve 144 entrées dont 128 publiées", () => {
+test("le catalogue conserve 145 entrées dont 129 publiées", () => {
   assert.equal(catalogue.schemaVersion, 5);
-  assert.equal(resources.length, 144);
-  assert.equal(published.length, 128);
+  assert.equal(resources.length, 145);
+  assert.equal(published.length, 129);
   assert.equal(new Set(resources.map((resource) => resource.path)).size, resources.length, "Chaque chemin doit être unique.");
 });
 
@@ -112,7 +112,7 @@ test("aucune carte publiée ne conserve la description générique", () => {
   assert.deepEqual(offenders, []);
 });
 
-test("la répartition arbitrée des 128 ressources reste stable", () => {
+test("la répartition arbitrée des 129 ressources reste stable", () => {
   const actual = Object.fromEntries([...allowedGroups].map((group) => [group, 0]));
   for (const resource of published) actual[resolvedPrimaryGroup(resource)] += 1;
   assert.deepEqual(actual, expectedGroupCounts);
@@ -180,7 +180,10 @@ test("les arbitrages pédagogiques clés restent explicites", () => {
   assertPathsInGroup("generer", ["outils/labo-des-regularites.html"]);
   assertPathsInGroup("entrainer", ["auto/index.html"]);
   assertPathsInGroup("imprimer", ["outils/angles/fiche_angles_triangles.pdf"]);
-  assertPathsInGroup("jeux", ["outils/club_maths/tables_modulaires.html"]);
+  assertPathsInGroup("jeux", [
+    "outils/club_maths/tables_modulaires.html",
+    "outils/chat-cest-toi-le-chat.pdf"
+  ]);
 });
 
 test("aucun titre publié n’expose un marqueur technique ou de version", () => {
@@ -222,6 +225,6 @@ test("les familles regroupent toutes leurs variantes sans perte ni chevauchement
   for (const family of families) visibleCardsByGroup[family.group] += 1;
 
   assert.equal(representedResourceCount, published.length, "Aucune variante publiée ne doit disparaître du catalogue.");
-  assert.equal(visibleCardCount, 114, "Les 128 ressources doivent être représentées par 114 cartes après regroupement.");
+  assert.equal(visibleCardCount, 115, "Les 129 ressources doivent être représentées par 115 cartes après regroupement.");
   assert.deepEqual(visibleCardsByGroup, expectedVisibleCardCounts);
 });

@@ -425,6 +425,14 @@ window.MATHSGO_CATALOGUE = {
       "thumbnail": "assets/img/thumbnails/fractions/fractions-multiples-problemes.png?v=2",
       "cardDescription": "Résoudre et inventer des problèmes de fractions d’une quantité à partir de schémas en barres."
     },
+    "outils/chat-cest-toi-le-chat.pdf": {
+      "primaryNotion": "reperage",
+      "primaryGroup": "jeux",
+      "collections": [],
+      "tags": ["reperage-spatial", "cycle-1", "maternelle", "communication", "cooperation", "devant-derriere", "gauche-droite", "jeu-collectif", "cerceaux", "cercles-au-sol", "imprimable"],
+      "thumbnail": "assets/img/thumbnails/reperage/chat-cest-toi-le-chat.png?v=1",
+      "cardDescription": "Un jeu coopératif dès la maternelle : quatre élèves communiquent pour se placer dans six zones au sol, matérialisées par des cerceaux ou des cercles tracés."
+    },
     "outils/fractions_multiples_exerciseur.html": {
       "primaryNotion": "fractions",
       "primaryGroup": "generer",
@@ -2657,6 +2665,48 @@ window.MATHSGO_CATALOGUE = {
       "status": "published",
       "featured": false,
       "recent": false
+    },
+    {
+      "id": "outils-chat-cest-toi-le-chat-pdf",
+      "title": "Chat, c’est toi le chat !",
+      "description": "Un jeu coopératif de repérage spatial dès la maternelle : quatre élèves communiquent pour se placer dans six zones circulaires, matérialisées par des cerceaux ou des cercles tracés au sol. Vingt séries progressives en quatre niveaux, avec solutions.",
+      "path": "outils/chat-cest-toi-le-chat.pdf",
+      "domains": [
+        "geometrie"
+      ],
+      "notions": [
+        "reperage"
+      ],
+      "uses": [
+        "manipuler",
+        "imprimer"
+      ],
+      "types": [
+        "imprimable"
+      ],
+      "filters": [
+        "materiel-imprimer"
+      ],
+      "keywords": [
+        "cycle 1",
+        "maternelle",
+        "repérage spatial",
+        "positionnement dans l’espace",
+        "communication",
+        "coopération",
+        "devant",
+        "derrière",
+        "gauche",
+        "droite",
+        "cerceaux",
+        "cercles tracés au sol",
+        "20 séries",
+        "4 niveaux"
+      ],
+      "kind": "document",
+      "status": "published",
+      "featured": false,
+      "recent": true
     },
     {
       "id": "outils-angles-gabarits-angles-html",
