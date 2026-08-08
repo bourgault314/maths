@@ -226,7 +226,7 @@ window.MATHSGO_CATALOGUE = {
       "primaryGroup": "jeux",
       "collections": [],
       "tags": ["jeu", "strategie", "alignement", "hexagones"],
-      "thumbnail": "assets/img/thumbnails/jeux/yavalath.svg?v=1",
+      "thumbnail": "assets/img/thumbnails/jeux/yavalath.svg?v=2",
       "cardDescription": "Aligner quatre pions sur le plateau hexagonal sans perdre en formant d’abord une ligne de trois."
     },
     "outils/club_maths/tables_modulaires.html": {
@@ -234,7 +234,7 @@ window.MATHSGO_CATALOGUE = {
       "primaryGroup": "jeux",
       "collections": [],
       "tags": ["exploration", "tables", "modulo", "courbes", "cercle"],
-      "thumbnail": "assets/img/thumbnails/jeux/tables-modulaires.svg?v=1",
+      "thumbnail": "assets/img/thumbnails/jeux/tables-modulaires.svg?v=2",
       "cardDescription": "Relier les multiples sur un cercle et observer les courbes produites par les tables modulaires."
     },
     "outils/club_maths/jeu_du_chaos.html": {
