@@ -10,6 +10,9 @@
     <loc>https://mathsgo.re/confidentialite.html</loc>
   </url>
   <url>
+    <loc>https://mathsgo.re/cps/bilan-s1.html</loc>
+  </url>
+  <url>
     <loc>https://mathsgo.re/mentions-legales.html</loc>
   </url>
   <url>
@@ -19,49 +22,13 @@
     <loc>https://mathsgo.re/outils/angles/</loc>
   </url>
   <url>
-    <loc>https://mathsgo.re/outils/automatismes/</loc>
-  </url>
-  <url>
-    <loc>https://mathsgo.re/outils/bouliers/</loc>
-  </url>
-  <url>
-    <loc>https://mathsgo.re/outils/calcul_litteral/</loc>
-  </url>
-  <url>
-    <loc>https://mathsgo.re/outils/club_maths/</loc>
-  </url>
-  <url>
-    <loc>https://mathsgo.re/outils/conversions/</loc>
-  </url>
-  <url>
-    <loc>https://mathsgo.re/outils/engrenages/</loc>
-  </url>
-  <url>
-    <loc>https://mathsgo.re/outils/fabrication_materiel/</loc>
-  </url>
-  <url>
-    <loc>https://mathsgo.re/outils/fractions/index_fractions.html</loc>
-  </url>
-  <url>
-    <loc>https://mathsgo.re/outils/labo-des-regularites.html</loc>
-  </url>
-  <url>
-    <loc>https://mathsgo.re/outils/nombres_relatifs/</loc>
-  </url>
-  <url>
-    <loc>https://mathsgo.re/outils/plateaux_manipulation/</loc>
-  </url>
-  <url>
-    <loc>https://mathsgo.re/outils/splat/</loc>
-  </url>
-  <url>
-    <loc>https://mathsgo.re/outils/tuiles_algebriques/</loc>
-  </url>
-  <url>
     <loc>https://mathsgo.re/outils/angles/anglebarre.html</loc>
   </url>
   <url>
     <loc>https://mathsgo.re/outils/angles/bandes_magnetiques.html</loc>
+  </url>
+  <url>
+    <loc>https://mathsgo.re/outils/angles/fiche_angles_triangles.pdf</loc>
   </url>
   <url>
     <loc>https://mathsgo.re/outils/angles/gabarits_angles_generateur.html</loc>
@@ -73,10 +40,16 @@
     <loc>https://mathsgo.re/outils/angles/generateur-rapporteurs-calque.html</loc>
   </url>
   <url>
-    <loc>https://mathsgo.re/outils/angles/fiche_angles_triangles.pdf</loc>
+    <loc>https://mathsgo.re/outils/automatismes/</loc>
   </url>
   <url>
     <loc>https://mathsgo.re/outils/automatismes/CM_Livret_A5.html</loc>
+  </url>
+  <url>
+    <loc>https://mathsgo.re/outils/bouliers/</loc>
+  </url>
+  <url>
+    <loc>https://mathsgo.re/outils/bouliers/abaque_de_gerbert/</loc>
   </url>
   <url>
     <loc>https://mathsgo.re/outils/bouliers/abaque_de_gerbert/abaque_gerbert_addition.html</loc>
@@ -86,6 +59,9 @@
   </url>
   <url>
     <loc>https://mathsgo.re/outils/bouliers/abaque_de_gerbert/abaque_gerbert.html</loc>
+  </url>
+  <url>
+    <loc>https://mathsgo.re/outils/bouliers/boulier_montessori/</loc>
   </url>
   <url>
     <loc>https://mathsgo.re/outils/bouliers/boulier_montessori/boulier-cycle3-petit-additions-soustractions.html</loc>
@@ -98,6 +74,9 @@
   </url>
   <url>
     <loc>https://mathsgo.re/outils/bouliers/boulier_montessori/transition_rekenrek-montessori.html</loc>
+  </url>
+  <url>
+    <loc>https://mathsgo.re/outils/bouliers/rekenrek/</loc>
   </url>
   <url>
     <loc>https://mathsgo.re/outils/bouliers/rekenrek/ajouter9_ajouter8.html</loc>
@@ -178,10 +157,19 @@
     <loc>https://mathsgo.re/outils/bouliers/rekenrek/voisins_generateur_compact.html</loc>
   </url>
   <url>
+    <loc>https://mathsgo.re/outils/bouliers/soroban/</loc>
+  </url>
+  <url>
     <loc>https://mathsgo.re/outils/bouliers/soroban/soroban-placement-nombres.html</loc>
   </url>
   <url>
     <loc>https://mathsgo.re/outils/bouliers/soroban/soroban.html</loc>
+  </url>
+  <url>
+    <loc>https://mathsgo.re/outils/calcul_litteral/</loc>
+  </url>
+  <url>
+    <loc>https://mathsgo.re/outils/club_maths/</loc>
   </url>
   <url>
     <loc>https://mathsgo.re/outils/club_maths/jeu_de_nim.html</loc>
@@ -194,6 +182,9 @@
   </url>
   <url>
     <loc>https://mathsgo.re/outils/club_maths/yavalath.html</loc>
+  </url>
+  <url>
+    <loc>https://mathsgo.re/outils/conversions/</loc>
   </url>
   <url>
     <loc>https://mathsgo.re/outils/conversions/conversions_exerciseur.html</loc>
@@ -220,6 +211,9 @@
     <loc>https://mathsgo.re/outils/detective_des_grandeurs_multiplicative__1.pdf</loc>
   </url>
   <url>
+    <loc>https://mathsgo.re/outils/engrenages/</loc>
+  </url>
+  <url>
     <loc>https://mathsgo.re/outils/engrenages/engrenages_exerciseur.html</loc>
   </url>
   <url>
@@ -232,6 +226,9 @@
     <loc>https://mathsgo.re/outils/equasplat.html</loc>
   </url>
   <url>
+    <loc>https://mathsgo.re/outils/fabrication_materiel/</loc>
+  </url>
+  <url>
     <loc>https://mathsgo.re/outils/fabrication_materiel/cartes_premiers_1_100.html</loc>
   </url>
   <url>
@@ -241,6 +238,15 @@
     <loc>https://mathsgo.re/outils/fabrication_materiel/numeration_decimale_maker.html</loc>
   </url>
   <url>
+    <loc>https://mathsgo.re/outils/fiche_reciproque_thales.pdf</loc>
+  </url>
+  <url>
+    <loc>https://mathsgo.re/outils/fiche_thales_criteres_a_verifier.pdf</loc>
+  </url>
+  <url>
+    <loc>https://mathsgo.re/outils/fiche_thales_direct_a_verifier.pdf</loc>
+  </url>
+  <url>
     <loc>https://mathsgo.re/outils/fractions_multiples_exerciseur.html</loc>
   </url>
   <url>
@@ -248,6 +254,9 @@
   </url>
   <url>
     <loc>https://mathsgo.re/outils/fractions/bandes_fractions.html</loc>
+  </url>
+  <url>
+    <loc>https://mathsgo.re/outils/fractions/bandes_maker_v2.html</loc>
   </url>
   <url>
     <loc>https://mathsgo.re/outils/fractions/disque_maker.html</loc>
@@ -262,7 +271,13 @@
     <loc>https://mathsgo.re/outils/fractions/gabarits_fractions.pdf</loc>
   </url>
   <url>
+    <loc>https://mathsgo.re/outils/fractions/index_fractions.html</loc>
+  </url>
+  <url>
     <loc>https://mathsgo.re/outils/fractions/mur_fractions.html</loc>
+  </url>
+  <url>
+    <loc>https://mathsgo.re/outils/gabarit_criteres_divisibilite.pdf</loc>
   </url>
   <url>
     <loc>https://mathsgo.re/outils/gabarit_pourcentages_double_ligne_graduee.pdf</loc>
@@ -274,16 +289,7 @@
     <loc>https://mathsgo.re/outils/gabarit_proportionnalite_tableau_sans_coefficient.pdf</loc>
   </url>
   <url>
-    <loc>https://mathsgo.re/outils/gabarits_proportionnalite_tableaux.pdf</loc>
-  </url>
-  <url>
-    <loc>https://mathsgo.re/outils/fiche_reciproque_thales.pdf</loc>
-  </url>
-  <url>
-    <loc>https://mathsgo.re/outils/fiche_thales_criteres_a_verifier.pdf</loc>
-  </url>
-  <url>
-    <loc>https://mathsgo.re/outils/fiche_thales_direct_a_verifier.pdf</loc>
+    <loc>https://mathsgo.re/outils/gabarit_reciproque_pythagore.pdf</loc>
   </url>
   <url>
     <loc>https://mathsgo.re/outils/gabarits_enquetes_additive.pdf</loc>
@@ -298,7 +304,16 @@
     <loc>https://mathsgo.re/outils/gabarits_pourcentages.pdf</loc>
   </url>
   <url>
+    <loc>https://mathsgo.re/outils/gabarits_proportionnalite_tableaux.pdf</loc>
+  </url>
+  <url>
+    <loc>https://mathsgo.re/outils/labo-des-regularites.html</loc>
+  </url>
+  <url>
     <loc>https://mathsgo.re/outils/multiples_et_fractions_d_une_quantite.pdf</loc>
+  </url>
+  <url>
+    <loc>https://mathsgo.re/outils/nombres_relatifs/</loc>
   </url>
   <url>
     <loc>https://mathsgo.re/outils/nombres_relatifs/nombres_relatifs_couleur_mathsgo.pdf</loc>
@@ -310,10 +325,25 @@
     <loc>https://mathsgo.re/outils/nombres_relatifs/nombres_relatifs_somme_difference.html</loc>
   </url>
   <url>
+    <loc>https://mathsgo.re/outils/nombres_relatifs/nombres_relatifs_somme_differenceB.html</loc>
+  </url>
+  <url>
+    <loc>https://mathsgo.re/outils/nombres_relatifs/nombres_relatifs_somme_differenceBClaire.html</loc>
+  </url>
+  <url>
+    <loc>https://mathsgo.re/outils/nombres_relatifs/nombres_relatifs_somme_differenceC.html</loc>
+  </url>
+  <url>
+    <loc>https://mathsgo.re/outils/nombres_relatifs/nombres_relatifs_somme_differenceD.html</loc>
+  </url>
+  <url>
     <loc>https://mathsgo.re/outils/nombres_relatifs/nombres_relatifs_vert_rouge_contour_noir.pdf</loc>
   </url>
   <url>
     <loc>https://mathsgo.re/outils/nombres_relatifs/nombres_relatifs_vert_rouge_ecriture_blanche.pdf</loc>
+  </url>
+  <url>
+    <loc>https://mathsgo.re/outils/plateaux_manipulation/</loc>
   </url>
   <url>
     <loc>https://mathsgo.re/outils/plateaux_manipulation/aire_perimetre_plateau.html</loc>
@@ -373,16 +403,10 @@
     <loc>https://mathsgo.re/outils/problemes_barres.html</loc>
   </url>
   <url>
-    <loc>https://mathsgo.re/outils/pythabarre.html</loc>
-  </url>
-  <url>
     <loc>https://mathsgo.re/outils/pythabarre_recto_verso.pdf</loc>
   </url>
   <url>
-    <loc>https://mathsgo.re/outils/gabarit_reciproque_pythagore.pdf</loc>
-  </url>
-  <url>
-    <loc>https://mathsgo.re/outils/gabarit_criteres_divisibilite.pdf</loc>
+    <loc>https://mathsgo.re/outils/pythabarre.html</loc>
   </url>
   <url>
     <loc>https://mathsgo.re/outils/splat_equations.html</loc>
@@ -392,6 +416,15 @@
   </url>
   <url>
     <loc>https://mathsgo.re/outils/splat.html</loc>
+  </url>
+  <url>
+    <loc>https://mathsgo.re/outils/splat/</loc>
+  </url>
+  <url>
+    <loc>https://mathsgo.re/outils/toutes-les-ressources.html</loc>
+  </url>
+  <url>
+    <loc>https://mathsgo.re/outils/tuiles_algebriques/</loc>
   </url>
   <url>
     <loc>https://mathsgo.re/outils/tuiles_algebriques/generateur_exercices_calcul_litteral.html</loc>
@@ -416,8 +449,5 @@
   </url>
   <url>
     <loc>https://mathsgo.re/outils/tuiles_algebriques/tuiles_algebriques.html</loc>
-  </url>
-  <url>
-    <loc>https://mathsgo.re/cps/bilan-s1.html</loc>
   </url>
 </urlset>

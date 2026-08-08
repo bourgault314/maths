@@ -9,13 +9,14 @@
 <link rel="icon" type="image/png" sizes="32x32" href="/assets/img/favicon-32.png">
 <link rel="icon" type="image/png" sizes="192x192" href="/assets/img/favicon-192.png">
 <link rel="apple-touch-icon" href="/assets/img/apple-touch-icon.png">
-  <meta name="description" content="Explorez les outils maths&go par thème : mathématiques, jeux de recherche et ressources autour des compétences psychosociales.">
+  <meta name="description" content="Explorez les outils maths&amp;go par thème : nombres, calcul, algèbre, géométrie, grandeurs, données, jeux et compétences psychosociales.">
   <link rel="canonical" href="https://mathsgo.re/outils/">
+  <meta name="robots" content="index, follow, max-image-preview:large">
   <link rel="stylesheet" href="../assets/css/entry-alignment.css?v=cartes-alignees-20260719-4">
-  <link rel="stylesheet" href="../assets/css/catalogue-refonte.css?v=classement-20260808-1">
+  <link rel="stylesheet" href="../assets/css/catalogue-refonte.css?v=classement-20260808-2">
   <link rel="stylesheet" href="../assets/css/consentement.css">
   <script defer src="../assets/js/consentement.js"></script>
-  <script defer src="../assets/js/catalogue-refonte-data.js?v=classement-20260808-1"></script>
+  <script defer src="../assets/js/catalogue-refonte-data.js?v=classement-20260808-2"></script>
   <script defer src="../assets/js/mathsgo-icon-library.js?v=icons-library-20260719-9"></script>
   <script defer src="../assets/js/daily-metronome.js?v=20260719-1"></script>
   <script defer src="../assets/js/mathgo-generative-icons.js?v=20260716-1"></script>
@@ -26,7 +27,7 @@
   <script defer src="../assets/js/daily-vase-curves.js?v=20260722-1"></script>
   <script defer src="../assets/js/daily-rosettes.js?v=20260722-1"></script>
   <script defer src="../assets/js/domain-icon-renderer.js?v=20260722-1"></script>
-  <script defer src="../assets/js/catalogue-refonte.js?v=classement-20260808-1"></script>
+  <script defer src="../assets/js/catalogue-refonte.js?v=classement-20260808-2"></script>
 </head>
 <body data-root-prefix="../">
   <a class="skip-link" href="#catalogue">Aller aux thèmes</a>
@@ -77,56 +78,57 @@
         </div>
 
         <div class="domain-grid catalogue-first-paint-shell" id="domain-grid" data-catalogue-shell="true" aria-label="Domaines d’outils">
-          <div class="domain-card catalogue-shell-card" aria-hidden="true" style="--accent:#0b67b2;--soft:#eaf5ff">
+          <a class="domain-card catalogue-shell-card" href="?domain=nombres-calculs" data-domain-card="nombres-calculs" style="--accent:#0b67b2;--soft:#eaf5ff">
             <span class="domain-card-icon catalogue-shell-icon"></span>
             <span class="domain-card-copy"><strong>Nombres et calculs</strong><small>Comprendre les nombres, calculer et raisonner.</small></span>
-            <span class="domain-card-arrow" aria-hidden="true"></span>
-          </div>
-          <div class="domain-card catalogue-shell-card" aria-hidden="true" style="--accent:#7b42b4;--soft:#f5edff">
+            <span class="domain-card-arrow" aria-hidden="true">→</span>
+          </a>
+          <a class="domain-card catalogue-shell-card" href="?domain=algebre" data-domain-card="algebre" style="--accent:#7b42b4;--soft:#f5edff">
             <span class="domain-card-icon catalogue-shell-icon"></span>
             <span class="domain-card-copy"><strong>Calcul littéral et algèbre</strong><small>Représenter l’inconnu, généraliser et résoudre.</small></span>
-            <span class="domain-card-arrow" aria-hidden="true"></span>
-          </div>
-          <div class="domain-card catalogue-shell-card" aria-hidden="true" style="--accent:#d86b16;--soft:#fff2e7">
+            <span class="domain-card-arrow" aria-hidden="true">→</span>
+          </a>
+          <a class="domain-card catalogue-shell-card" href="?domain=proportionnalite-mesures" data-domain-card="proportionnalite-mesures" style="--accent:#d86b16;--soft:#fff2e7">
             <span class="domain-card-icon catalogue-shell-icon"></span>
             <span class="domain-card-copy"><strong>Proportionnalité, fonctions et grandeurs</strong><small>Comparer, mesurer, représenter des dépendances et modéliser.</small></span>
-            <span class="domain-card-arrow" aria-hidden="true"></span>
-          </div>
-          <div class="domain-card catalogue-shell-card" aria-hidden="true" style="--accent:#087f78;--soft:#e8f8f5">
+            <span class="domain-card-arrow" aria-hidden="true">→</span>
+          </a>
+          <a class="domain-card catalogue-shell-card" href="?domain=geometrie" data-domain-card="geometrie" style="--accent:#087f78;--soft:#e8f8f5">
             <span class="domain-card-icon catalogue-shell-icon"></span>
             <span class="domain-card-copy"><strong>Espace et géométrie</strong><small>Construire, manipuler et démontrer.</small></span>
-            <span class="domain-card-arrow" aria-hidden="true"></span>
-          </div>
-          <div class="domain-card catalogue-shell-card" aria-hidden="true" style="--accent:#be3e68;--soft:#fff0f5">
+            <span class="domain-card-arrow" aria-hidden="true">→</span>
+          </a>
+          <a class="domain-card catalogue-shell-card" href="?domain=donnees" data-domain-card="donnees" style="--accent:#be3e68;--soft:#fff0f5">
             <span class="domain-card-icon catalogue-shell-icon"></span>
             <span class="domain-card-copy"><strong>Données, statistiques et probabilités</strong><small>Organiser, représenter et interpréter des données.</small></span>
-            <span class="domain-card-arrow" aria-hidden="true"></span>
-          </div>
-          <div class="domain-card catalogue-shell-card" aria-hidden="true" style="--accent:#4f5fb3;--soft:#eef0ff">
+            <span class="domain-card-arrow" aria-hidden="true">→</span>
+          </a>
+          <div class="domain-card domain-card-disabled catalogue-shell-card" data-domain-disabled="true" aria-disabled="true" style="--accent:#4f5fb3;--soft:#eef0ff">
             <span class="domain-card-icon catalogue-shell-icon"></span>
             <span class="domain-card-copy"><strong>Pensée informatique</strong><small>Décomposer, programmer et raisonner avec des algorithmes.</small></span>
             <span class="domain-card-arrow" aria-hidden="true"></span>
           </div>
-          <div class="domain-card domain-card-secondary catalogue-shell-card" aria-hidden="true" style="--accent:#2f6d3f;--soft:#edf8ef">
+          <a class="domain-card domain-card-secondary catalogue-shell-card" href="?domain=jeux-recherches" data-domain-card="jeux-recherches" style="--accent:#2f6d3f;--soft:#edf8ef">
             <span class="domain-card-icon catalogue-shell-icon"></span>
             <span class="domain-card-copy"><strong>Jeux, recherches et explorations</strong><small>Chercher, conjecturer et élaborer une stratégie.</small></span>
-            <span class="domain-card-arrow" aria-hidden="true"></span>
-          </div>
-          <div class="domain-card domain-card-secondary catalogue-shell-card" aria-hidden="true" style="--accent:#b84f7b;--soft:#fff0f6">
+            <span class="domain-card-arrow" aria-hidden="true">→</span>
+          </a>
+          <a class="domain-card domain-card-secondary catalogue-shell-card" href="../cps/bilan-s1.html" data-domain-card="cps" data-domain-direct="true" style="--accent:#b84f7b;--soft:#fff0f6">
             <span class="domain-card-icon catalogue-shell-icon"></span>
             <span class="domain-card-copy"><strong>Compétences psychosociales</strong><small>Se connaître, coopérer et avancer avec confiance.</small></span>
-            <span class="domain-card-arrow" aria-hidden="true"></span>
-          </div>
+            <span class="domain-card-arrow" aria-hidden="true">→</span>
+          </a>
         </div>
         <div class="notion-grid" id="notion-grid"></div>
         <div class="resource-grid" id="resource-grid" hidden></div>
-        <noscript><p class="empty-state">Activez JavaScript pour afficher le catalogue des thèmes.</p></noscript>
+        <noscript><p class="empty-state">Le catalogue interactif nécessite JavaScript. Vous pouvez consulter <a href="toutes-les-ressources.html">la liste complète des ressources</a>.</p></noscript>
       </section>
     </main>
 
     <footer class="site-footer">
       <span>Gwenaël Bourgault</span><span aria-hidden="true">·</span>
       <a href="mailto:gwenael@mathsgo.re?subject=Contact%20depuis%20mathsgo.re">Me contacter</a><span aria-hidden="true">·</span>
+      <a href="toutes-les-ressources.html">Toutes les ressources</a><span aria-hidden="true">·</span>
       <a href="../mentions-legales.html">Mentions légales</a><span aria-hidden="true">·</span>
       <a href="../confidentialite.html">Confidentialité</a><span aria-hidden="true">·</span>
       <button type="button" data-mathsgo-consent-open onclick="window.mathsgoConsentement &amp;&amp; window.mathsgoConsentement.ouvrir()">Gérer mes cookies</button>
