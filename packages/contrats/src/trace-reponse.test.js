@@ -4,6 +4,8 @@ import assert from "node:assert/strict";
 import {
   TYPE_REPONSE_DEUX_ENTIERS,
   TYPE_REPONSE_ENTIER_NATUREL,
+  TYPE_REPONSE_FRACTION_EQUIVALENTE,
+  TYPE_REPONSE_NOMBRE_DECIMAL,
   TYPE_REPONSE_SELECTION_MULTIPLE,
 } from "./question-v2.js";
 import {
@@ -54,6 +56,62 @@ describe("validerTraceReponse", () => {
       valeurs: [7, 7],
     };
     assert.equal(validerTraceReponse(trace).valide, true);
+  });
+
+  it("accepte la saisie décimale brute avec sa valeur rationnelle normalisée", () => {
+    const trace = traceValide();
+    trace.microNotion = "nc-03";
+    trace.reponse = {
+      type: TYPE_REPONSE_NOMBRE_DECIMAL,
+      saisie: " 0,500 ",
+      valeur: { numerateur: 1, denominateur: 2 },
+    };
+    assert.equal(validerTraceReponse(trace).valide, true);
+  });
+
+  it("refuse une valeur rationnelle qui contredit la saisie décimale", () => {
+    const trace = traceValide();
+    trace.microNotion = "nc-03";
+    trace.reponse = {
+      type: TYPE_REPONSE_NOMBRE_DECIMAL,
+      saisie: "0,5",
+      valeur: { numerateur: 1, denominateur: 3 },
+    };
+    assert.match(
+      validerTraceReponse(trace).erreurs.join("\n"),
+      /incohérente avec la saisie/,
+    );
+  });
+
+  it("accepte une fraction libre non réduite et refuse un dénominateur nul", () => {
+    const trace = traceValide();
+    trace.microNotion = "nc-04";
+    trace.reponse = {
+      type: TYPE_REPONSE_FRACTION_EQUIVALENTE,
+      valeurs: [30, 20],
+    };
+    assert.equal(validerTraceReponse(trace).valide, true);
+
+    trace.reponse.valeurs = [3, 0];
+    assert.match(
+      validerTraceReponse(trace).erreurs.join("\n"),
+      /dénominateur strictement positif/,
+    );
+  });
+
+  it("refuse les notations décimales ambiguës ou non décimales", () => {
+    for (const saisie of ["1,2,3", "1e-2", "3/4", "-0,5", "0,5001"]) {
+      const trace = traceValide();
+      trace.reponse = {
+        type: TYPE_REPONSE_NOMBRE_DECIMAL,
+        saisie,
+        valeur: { numerateur: 1, denominateur: 2 },
+      };
+      assert.match(
+        validerTraceReponse(trace).erreurs.join("\n"),
+        /nombre décimal positif/,
+      );
+    }
   });
 
   it("refuse une trace de deux entiers incomplète, convertie ou enrichie", () => {

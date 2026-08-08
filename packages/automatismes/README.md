@@ -12,6 +12,9 @@ des gabarits en données pures et des générateurs enregistrables dans
 | Module | Rôle |
 |---|---|
 | `nombres-et-calculs/criteres-divisibilite/selection-diviseurs` | Première famille de `NC-01` : sélectionner tous les diviseurs proposés parmi 2, 3, 5, 9 et 10. |
+| `nombres-et-calculs/fractions-simples-decimaux/fraction-vers-decimal` | `NC-03` : passer d'une fraction simple ou décimale à son écriture décimale exacte. |
+| `nombres-et-calculs/fractions-simples-decimaux/decimal-vers-fraction` | `NC-04` : compléter une fraction à dénominateur fixé ou saisir une fraction équivalente. |
+| `nombres-et-calculs/fractions-simples-decimaux/serie` | Recette commune intercalée, équilibrée et seedée de la catégorie visible. |
 | `registre` | Registre du moteur contenant les seuls générateurs pédagogiques construits et testés. |
 
 Le lecteur interactif et le mode projection ne font pas partie de ce paquet.

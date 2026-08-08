@@ -7,6 +7,7 @@ import {
   listerNotionsLecteur,
   NOTION_NC01,
   NOTION_NC02,
+  NOTION_FRACTIONS_SIMPLES_DECIMAUX,
   NOTION_SOLIDES_USUELS,
   NOTION_VOLUME_CUBE_PAVE,
   NOTION_VOLUME_CYLINDRE,
@@ -14,6 +15,7 @@ import {
   obtenirNotionLecteur,
   RENDU_DIVISIBILITE,
   RENDU_CARRES,
+  RENDU_FRACTIONS_DECIMAUX,
   RENDU_SOLIDE,
   RENDU_VOLUME,
 } from "./registre-lecteur.js";
@@ -26,6 +28,7 @@ describe("registre du lecteur", () => {
       [
         NOTION_NC01,
         NOTION_NC02,
+        NOTION_FRACTIONS_SIMPLES_DECIMAUX,
         NOTION_SOLIDES_USUELS,
         NOTION_VOLUME_CUBE_PAVE,
         NOTION_VOLUME_PRISME,
@@ -35,12 +38,26 @@ describe("registre du lecteur", () => {
     assert.equal(new Set(notions.map(({ id }) => id)).size, notions.length);
     assert.deepEqual(
       notions.map(({ rendu }) => rendu),
-      [RENDU_DIVISIBILITE, RENDU_CARRES, RENDU_SOLIDE, RENDU_VOLUME, RENDU_VOLUME, RENDU_VOLUME],
+      [
+        RENDU_DIVISIBILITE,
+        RENDU_CARRES,
+        RENDU_FRACTIONS_DECIMAUX,
+        RENDU_SOLIDE,
+        RENDU_VOLUME,
+        RENDU_VOLUME,
+        RENDU_VOLUME,
+      ],
     );
     assert.equal(obtenirNotionLecteur(NOTION_NC01).capacites.aideChiffres, true);
     assert.equal(obtenirNotionLecteur(NOTION_NC01).capacites.cours, true);
     assert.equal(obtenirNotionLecteur(NOTION_NC02).pagesCours, 5);
+    assert.equal(obtenirNotionLecteur(NOTION_NC02).nombreQuestionsMaximum, 20);
     assert.equal(obtenirNotionLecteur(NOTION_NC02).nom, "Carrés des entiers de 0 à 12");
+    assert.equal(obtenirNotionLecteur(NOTION_FRACTIONS_SIMPLES_DECIMAUX).pagesCours, 6);
+    assert.equal(
+      obtenirNotionLecteur(NOTION_FRACTIONS_SIMPLES_DECIMAUX).nombreQuestionsMaximum,
+      20,
+    );
     assert.equal(obtenirNotionLecteur(NOTION_SOLIDES_USUELS).capacites.rotationSolide, true);
     assert.equal(obtenirNotionLecteur(NOTION_VOLUME_PRISME).capacites.cours, true);
   });

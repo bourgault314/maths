@@ -48,6 +48,11 @@
 // même dessin, partout (diaporama, fiche, atelier, labo, exports).
 
 import { COULEURS } from "../../charte/src/charte.js";
+import {
+  mesurerEcritureFractionSvg,
+  rendreFractionSvg,
+  verbaliserFraction,
+} from "./expressions.js?v=21";
 
 export const VERSION_DROITE_GRADUEE = 1;
 
@@ -88,7 +93,9 @@ const TAILLE_NOM_LIGNE = 13;
 const TAILLE_NOM_MIN = 9; // en dessous, un nom de ligne n'est plus lisible au tableau
 const X_NOM = 12; // les noms de ligne sont calés à gauche, à cette abscisse
 const TAILLE_NOMBRES = 13;
-const TAILLE_ETIQUETTE = 13;
+const TAILLE_ETIQUETTE_DEFAUT = 13;
+const TAILLE_ETIQUETTE_MIN = 9;
+const TAILLE_ETIQUETTE_MAX = 40;
 const DEMI_GRADUATION = 8; // hauteur d'un trait de graduation, de part et d'autre
 const DECALAGE_NOMBRES_DESSUS = 15; // ligne de base des nombres au-dessus de l'axe
 const DECALAGE_NOMBRES_DESSOUS = 27; // ligne de base des nombres en dessous
@@ -111,6 +118,12 @@ const DECALAGE_ETIQUETTE = Object.freeze({
   dessus: Object.freeze({ proche: 26, loin: 46 }),
   dessous: Object.freeze({ proche: 30, loin: 54 }),
 });
+
+// Une fraction est un bloc à deux étages : sa barre ne peut pas être placée
+// comme la ligne de base d'une simple étiquette. Cette marge sépare son bord
+// réel des graduations ou, lorsqu'ils sont du même côté, des nombres déjà
+// écrits sur la droite.
+const ECART_FRACTION_ELEMENT = 6;
 
 const EPSILON = 1e-9;
 
@@ -284,6 +297,36 @@ function normaliserEtiquettes(etiquettes, quoi) {
   return table;
 }
 
+function estEtiquetteFraction(etiquette) {
+  return etiquette?.type === "fraction";
+}
+
+function normaliserEtiquettePoint(etiquette, quoi) {
+  if (etiquette == null) return null;
+  if (typeof etiquette !== "object" || Array.isArray(etiquette)) {
+    return String(etiquette);
+  }
+  if (!estEtiquetteFraction(etiquette)) {
+    throw new RangeError(`${quoi} : le type de l'étiquette structurée doit être « fraction ».`);
+  }
+  const clesInconnues = Object.keys(etiquette)
+    .filter((cle) => !["type", "numerateur", "denominateur"].includes(cle));
+  if (clesInconnues.length > 0) {
+    throw new TypeError(`${quoi} : propriété inconnue « ${clesInconnues[0]} » dans la fraction.`);
+  }
+  if (!Number.isSafeInteger(etiquette.numerateur)) {
+    throw new RangeError(`${quoi} : le numérateur de la fraction doit être un entier.`);
+  }
+  if (!Number.isSafeInteger(etiquette.denominateur) || etiquette.denominateur <= 0) {
+    throw new RangeError(`${quoi} : le dénominateur de la fraction doit être un entier strictement positif.`);
+  }
+  return Object.freeze({
+    type: "fraction",
+    numerateur: etiquette.numerateur,
+    denominateur: etiquette.denominateur,
+  });
+}
+
 function normaliserPoints(points, min, max, quoi) {
   if (points == null) return [];
   if (!Array.isArray(points)) {
@@ -308,7 +351,10 @@ function normaliserPoints(points, min, max, quoi) {
     }
     return {
       valeur,
-      etiquette: brut.etiquette == null ? null : String(brut.etiquette),
+      etiquette: normaliserEtiquettePoint(
+        brut.etiquette,
+        `${quoi} : étiquette du point n° ${i + 1}`,
+      ),
       couleur: lireCouleur(brut.couleur, COULEURS_DROITE.point, `${quoi} : couleur du point n° ${i + 1}`),
       position,
     };
@@ -368,6 +414,15 @@ function normaliserLigne(options, coteNombres, quoi) {
   }
 
   const seuil = o.seuilNombres == null ? SEUIL_NOMBRES : nombreFini(o.seuilNombres, `${quoi} : seuilNombres`);
+  const tailleEtiquetteDemandee = o.tailleEtiquette == null
+    ? TAILLE_ETIQUETTE_DEFAUT
+    : nombreFini(o.tailleEtiquette, `${quoi} : tailleEtiquette`);
+  const tailleEtiquette = Math.round(tailleEtiquetteDemandee);
+  if (tailleEtiquette < TAILLE_ETIQUETTE_MIN || tailleEtiquette > TAILLE_ETIQUETTE_MAX) {
+    throw new RangeError(
+      `${quoi} : tailleEtiquette doit être comprise entre ${TAILLE_ETIQUETTE_MIN} et ${TAILLE_ETIQUETTE_MAX}.`,
+    );
+  }
   // Masquage total demandé, ou garde-fou anti-surcharge.
   const nombresVisibles = o.afficherNombres === false ? false : graduations.length <= seuil;
 
@@ -380,6 +435,7 @@ function normaliserLigne(options, coteNombres, quoi) {
     coteNombres,
     points: normaliserPoints(o.points, min, max, quoi),
     nom: o.nom == null ? null : String(o.nom),
+    tailleEtiquette,
   };
 }
 
@@ -399,6 +455,48 @@ function bandeDesNombres(coteNombres) {
     : { haut: DECALAGE_NOMBRES_DESSOUS - 11, bas: DECALAGE_NOMBRES_DESSOUS + 5 };
 }
 
+/**
+ * Géométrie d'une fraction par rapport à l'axe (axe = 0).
+ *
+ * Le bord le plus proche reste au-delà des traits de graduation. Si les
+ * nombres occupent déjà ce côté, la fraction passe entièrement après leur
+ * bande. La taille du numérateur ou du dénominateur ne peut donc plus la
+ * ramener sur l'axe.
+ */
+function geometrieFraction(point, ligne) {
+  const mesure = mesurerEcritureFractionSvg(
+    point.etiquette.numerateur,
+    point.etiquette.denominateur,
+    { taille: ligne.tailleEtiquette },
+  );
+  const memeCote = ligne.nombresVisibles && point.position === ligne.coteNombres;
+  const bande = memeCote ? bandeDesNombres(ligne.coteNombres) : null;
+
+  if (point.position === "dessus") {
+    const bordBas = bande
+      ? bande.haut - ECART_FRACTION_ELEMENT
+      : -DEMI_GRADUATION - ECART_FRACTION_ELEMENT;
+    const yBarre = bordBas - mesure.debordBas;
+    return {
+      mesure,
+      yBarre,
+      bordHaut: yBarre - mesure.debordHaut,
+      bordBas,
+    };
+  }
+
+  const bordHaut = bande
+    ? bande.bas + ECART_FRACTION_ELEMENT
+    : DEMI_GRADUATION + ECART_FRACTION_ELEMENT;
+  const yBarre = bordHaut + mesure.debordHaut;
+  return {
+    mesure,
+    yBarre,
+    bordHaut,
+    bordBas: yBarre + mesure.debordBas,
+  };
+}
+
 /** Combien de place la ligne prend au-dessus et en dessous de son axe. */
 function mesurerLigne(ligne) {
   let haut = DEMI_GRADUATION + 4;
@@ -411,7 +509,14 @@ function mesurerLigne(ligne) {
   for (const point of ligne.points) {
     if (point.etiquette == null) continue;
     const d = decalageEtiquette(point.position, ligne);
-    if (point.position === "dessus") haut = Math.max(haut, d + 14);
+    if (estEtiquetteFraction(point.etiquette)) {
+      const geometrie = geometrieFraction(point, ligne);
+      if (point.position === "dessus") {
+        haut = Math.max(haut, -geometrie.bordHaut + 4);
+      } else {
+        bas = Math.max(bas, geometrie.bordBas + 4);
+      }
+    } else if (point.position === "dessus") haut = Math.max(haut, d + 14);
     else bas = Math.max(bas, d + 8);
   }
   return { haut, bas };
@@ -511,13 +616,41 @@ function dessinerLigne(ligne, yAxe, xGauche, xDroite) {
       corps += traitPointille(px, yAxe - 9, yAxe + 9, point.couleur, null);
     } else {
       const d = decalageEtiquette(point.position, ligne);
-      const yHaut = point.position === "dessus" ? yAxe - d + 6 : yAxe - 9;
-      const yBas = point.position === "dessus" ? yAxe + 9 : yAxe + d - 11;
+      const fraction = estEtiquetteFraction(point.etiquette);
+      const geometrie = fraction ? geometrieFraction(point, ligne) : null;
+      const yBarreFraction = fraction ? yAxe + geometrie.yBarre : null;
+      const yHaut = point.position === "dessus"
+        ? fraction
+          ? yAxe + geometrie.bordBas + 2
+          : yAxe - d + 6
+        : yAxe - 9;
+      const yBas = point.position === "dessus"
+        ? yAxe + 9
+        : fraction
+          ? yAxe + geometrie.bordHaut - 2
+          : yAxe + d - 11;
       const trouRelatif = trouDuTrait(px, nombresPoses, ligne, point.position);
       const trou = trouRelatif ? { haut: yAxe + trouRelatif.haut, bas: yAxe + trouRelatif.bas } : null;
       corps += traitPointille(px, yHaut, yBas, point.couleur, trou);
-      const yEtiquette = point.position === "dessus" ? yAxe - d : yAxe + d;
-      corps += texte(px, yEtiquette, point.etiquette, TAILLE_ETIQUETTE, 700, point.couleur);
+      if (fraction) {
+        corps += rendreFractionSvg(
+          point.etiquette.numerateur,
+          point.etiquette.denominateur,
+          {
+            centreX: px,
+            yBarre: yBarreFraction,
+            taille: ligne.tailleEtiquette,
+            couleur: point.couleur,
+            libelleAccessible: verbaliserFraction(
+              point.etiquette.numerateur,
+              point.etiquette.denominateur,
+            ),
+          },
+        );
+      } else {
+        const yEtiquette = point.position === "dessus" ? yAxe - d : yAxe + d;
+        corps += texte(px, yEtiquette, point.etiquette, ligne.tailleEtiquette, 700, point.couleur);
+      }
     }
     // Le disque cerclé de blanc, posé en dernier : il reste lisible
     // même quand le trait pointillé passe dessous.
@@ -552,7 +685,10 @@ function lireLargeur(valeur, quoi) {
  *   les nombres (exercice « où se trouve ce nombre ? »).
  * @param {number} [options.seuilNombres=21] — au-delà de ce nombre de
  *   graduations, les nombres ne sont plus écrits.
- * @param {Array<{valeur:number, etiquette?:string, couleur?:string,
+ * @param {number} [options.tailleEtiquette=13] — taille des étiquettes de
+ *   points, de 9 à 40 pixels dans le dessin SVG.
+ * @param {Array<{valeur:number, etiquette?:string|{type:"fraction",
+ *   numerateur:number,denominateur:number}, couleur?:string,
  *   position?:"dessus"|"dessous"}>} [options.points] — les points repérés.
  *   La couleur s'écrit en hexadécimal (#2f6fb2).
  * @param {"dessus"|"dessous"} [options.coteNombres="dessus"] — de quel

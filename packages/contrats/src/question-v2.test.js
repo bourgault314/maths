@@ -4,14 +4,18 @@ import assert from "node:assert/strict";
 import {
   COMPARAISON_ENSEMBLE_EXACT,
   COMPARAISON_VALEUR_EXACTE,
+  COMPARAISON_VALEUR_RATIONNELLE_EXACTE,
   COMPARAISON_VALEURS_EXACTES,
   SCHEMA_QUESTION_INSTANCE_V2,
   TYPE_REPONSE_DEUX_ENTIERS,
   TYPE_REPONSE_ENTIER_NATUREL,
+  TYPE_REPONSE_FRACTION_EQUIVALENTE,
+  TYPE_REPONSE_NOMBRE_DECIMAL,
   TYPE_REPONSE_SELECTION_MULTIPLE,
   estDeuxEntiersExacts,
   estEntierExact,
   estSelectionExacte,
+  estValeurRationnelleExacte,
   validerQuestionInstanceV2,
 } from "./question-v2.js";
 
@@ -134,6 +138,50 @@ describe("validerQuestionInstanceV2 — cas valides", () => {
       minimum: 1,
       maximum: 12,
     };
+    assert.equal(validerQuestionInstanceV2(question).valide, true);
+  });
+
+  it("accepte un rationnel affiché en fraction et une saisie décimale exacte", () => {
+    const question = questionValide();
+    question.classement.microNotion = "nc-03";
+    question.enonce = [
+      { id: "consigne", type: "texte", contenu: "Écris en décimal." },
+      {
+        id: "nombre",
+        type: "rationnel",
+        numerateur: 3,
+        denominateur: 2,
+        ecriture: "fraction",
+      },
+    ];
+    question.reponse = {
+      type: TYPE_REPONSE_NOMBRE_DECIMAL,
+      comparaison: COMPARAISON_VALEUR_RATIONNELLE_EXACTE,
+      attendu: { numerateur: 3, denominateur: 2 },
+    };
+    delete question.aide;
+    assert.equal(validerQuestionInstanceV2(question).valide, true);
+  });
+
+  it("accepte une fraction libre équivalente sans imposer sa réduction", () => {
+    const question = questionValide();
+    question.classement.microNotion = "nc-04";
+    question.enonce = [
+      { id: "consigne", type: "texte", contenu: "Écris en fraction." },
+      {
+        id: "nombre",
+        type: "rationnel",
+        numerateur: 15,
+        denominateur: 10,
+        ecriture: "decimal",
+      },
+    ];
+    question.reponse = {
+      type: TYPE_REPONSE_FRACTION_EQUIVALENTE,
+      comparaison: COMPARAISON_VALEUR_RATIONNELLE_EXACTE,
+      attendu: { numerateur: 3, denominateur: 2 },
+    };
+    delete question.aide;
     assert.equal(validerQuestionInstanceV2(question).valide, true);
   });
 });
@@ -271,6 +319,50 @@ describe("validerQuestionInstanceV2 — garde-fous", () => {
     assert.match(erreurs, /attendus\[1\].*compris dans les bornes/);
   });
 
+  it("refuse un rationnel incomplet, un dénominateur nul et une écriture inconnue", () => {
+    const question = questionValide();
+    question.enonce.push({
+      id: "fraction",
+      type: "rationnel",
+      numerateur: 3,
+      denominateur: 0,
+      ecriture: "latex",
+      html: "3/0",
+    });
+    question.reponse = {
+      type: TYPE_REPONSE_NOMBRE_DECIMAL,
+      comparaison: COMPARAISON_VALEUR_RATIONNELLE_EXACTE,
+      attendu: { numerateur: 3, denominateur: 0 },
+    };
+    const erreurs = validerQuestionInstanceV2(question).erreurs.join("\n");
+    assert.match(erreurs, /denominateur.*strictement positif/);
+    assert.match(erreurs, /ecriture.*fraction.*decimal/);
+    assert.match(erreurs, /html : propriété inconnue/);
+  });
+
+  it("refuse un rationnel décimal que le lecteur ne peut ni rendre ni saisir", () => {
+    const question = questionValide();
+    question.enonce = [
+      { id: "consigne", type: "texte", contenu: "Écris en décimal." },
+      {
+        id: "fraction",
+        type: "rationnel",
+        numerateur: 1,
+        denominateur: 3,
+        ecriture: "decimal",
+      },
+    ];
+    question.reponse = {
+      type: TYPE_REPONSE_NOMBRE_DECIMAL,
+      comparaison: COMPARAISON_VALEUR_RATIONNELLE_EXACTE,
+      attendu: { numerateur: 1, denominateur: 3 },
+    };
+    assert.match(
+      validerQuestionInstanceV2(question).erreurs.join("\n"),
+      /dénominateur décimal rendu requis/,
+    );
+  });
+
   it("refuse le code, les coordonnées et les propriétés non prévues", () => {
     const avecCode = questionValide();
     avecCode.origine.executer = () => true;
@@ -325,5 +417,41 @@ describe("estDeuxEntiersExacts", () => {
     assert.equal(estDeuxEntiersExacts([7, 7], [7]), false);
     assert.equal(estDeuxEntiersExacts([-1, -1], [-1, -1]), false);
     assert.equal(estDeuxEntiersExacts(null, [7, 7]), false);
+  });
+});
+
+describe("estValeurRationnelleExacte", () => {
+  it("compare par produit en croix sans exiger une fraction irréductible", () => {
+    assert.equal(
+      estValeurRationnelleExacte(
+        { numerateur: 3, denominateur: 2 },
+        { numerateur: 30, denominateur: 20 },
+      ),
+      true,
+    );
+    assert.equal(
+      estValeurRationnelleExacte(
+        { numerateur: 3, denominateur: 2 },
+        { numerateur: 2, denominateur: 3 },
+      ),
+      false,
+    );
+  });
+
+  it("refuse les valeurs incomplètes, converties ou au dénominateur nul", () => {
+    assert.equal(
+      estValeurRationnelleExacte(
+        { numerateur: 3, denominateur: 2 },
+        { numerateur: "3", denominateur: 2 },
+      ),
+      false,
+    );
+    assert.equal(
+      estValeurRationnelleExacte(
+        { numerateur: 3, denominateur: 2 },
+        { numerateur: 3, denominateur: 0 },
+      ),
+      false,
+    );
   });
 });

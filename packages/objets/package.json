@@ -23,6 +23,7 @@
     "./configurations-angles": "./src/configurations-angles.js",
     "./thales": "./src/thales.js",
     "./fractions": "./src/fractions.js",
+    "./fractions-decimaux": "./src/fractions-decimaux.js",
     "./droite-graduee": "./src/droite-graduee.js"
   }
 }

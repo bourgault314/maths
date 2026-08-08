@@ -1,9 +1,9 @@
 // Contrat « question instanciée » — version 2.
 //
-// Cette version couvre les choix simples ou multiples, un entier naturel
-// borné et deux champs entiers indépendants. Les énoncés peuvent porter une
-// puissance structurée, sans accepter de HTML produit par les générateurs.
-// Le contrat n'anticipe ni fractions, ni décimaux, ni expressions algébriques.
+// Cette version couvre les choix simples ou multiples, les saisies entières,
+// les décimaux positifs et les fractions équivalentes. Les énoncés peuvent
+// porter des rationnels ou une puissance structurée, sans accepter de HTML
+// produit par les générateurs.
 
 import { estDonneePure, estIdentifiantValide } from "./gabarit.js";
 
@@ -12,13 +12,19 @@ export const TYPE_REPONSE_SELECTION_MULTIPLE = "selection-multiple";
 export const TYPE_REPONSE_CHOIX_UNIQUE = "choix-unique";
 export const TYPE_REPONSE_ENTIER_NATUREL = "entier-naturel";
 export const TYPE_REPONSE_DEUX_ENTIERS = "deux-entiers";
+export const TYPE_REPONSE_NOMBRE_DECIMAL = "nombre-decimal";
+export const TYPE_REPONSE_FRACTION_EQUIVALENTE = "fraction-equivalente";
 export const COMPARAISON_ENSEMBLE_EXACT = "ensemble-exact";
 export const COMPARAISON_CHOIX_EXACT = "choix-exact";
 export const COMPARAISON_VALEUR_EXACTE = "valeur-exacte";
 export const COMPARAISON_VALEURS_EXACTES = "valeurs-exactes";
+export const COMPARAISON_VALEUR_RATIONNELLE_EXACTE =
+  "valeur-rationnelle-exacte";
+const DENOMINATEURS_DECIMAUX_RENDUS = new Set([1, 2, 4, 10, 100, 1000]);
 export const TYPES_BLOC_V2 = Object.freeze([
   "texte",
   "entier",
+  "rationnel",
   "puissance",
   "solide",
 ]);
@@ -61,7 +67,14 @@ function validerClassement(classement, erreurs) {
   }
   validerClesConnues(
     classement,
-    ["domaine", "notion", "famille", "cible", "complements"],
+    [
+      "domaine",
+      "notion",
+      "microNotion",
+      "famille",
+      "cible",
+      "complements",
+    ],
     "classement",
     erreurs,
   );
@@ -69,6 +82,12 @@ function validerClassement(classement, erreurs) {
     if (!estIdentifiantValide(classement[champ])) {
       erreurs.push(`classement.${champ} : identifiant en minuscules requis`);
     }
+  }
+  if (
+    classement.microNotion !== undefined &&
+    !estIdentifiantValide(classement.microNotion)
+  ) {
+    erreurs.push("classement.microNotion : identifiant en minuscules requis");
   }
   if (!Array.isArray(classement.complements)) {
     erreurs.push("classement.complements : liste attendue");
@@ -103,6 +122,8 @@ function validerBlocs(blocs, nom, erreurs, { auMoinsUn = false } = {}) {
     }
     const cles = bloc.type === "entier"
       ? ["id", "type", "valeur"]
+      : bloc.type === "rationnel"
+        ? ["id", "type", "numerateur", "denominateur", "ecriture"]
       : bloc.type === "puissance"
         ? ["id", "type", "base", "exposant"]
       : bloc.type === "solide"
@@ -129,6 +150,27 @@ function validerBlocs(blocs, nom, erreurs, { auMoinsUn = false } = {}) {
       (!Number.isSafeInteger(bloc.valeur) || bloc.valeur < 0)
     ) {
       erreurs.push(`${chemin}.valeur : entier naturel requis`);
+    }
+    if (bloc.type === "rationnel") {
+      if (!Number.isSafeInteger(bloc.numerateur) || bloc.numerateur < 0) {
+        erreurs.push(`${chemin}.numerateur : entier naturel requis`);
+      }
+      if (!Number.isSafeInteger(bloc.denominateur) || bloc.denominateur <= 0) {
+        erreurs.push(
+          `${chemin}.denominateur : entier naturel strictement positif requis`,
+        );
+      }
+      if (bloc.ecriture !== "fraction" && bloc.ecriture !== "decimal") {
+        erreurs.push(`${chemin}.ecriture : « fraction » ou « decimal » requis`);
+      } else if (
+        bloc.ecriture === "decimal"
+        && Number.isSafeInteger(bloc.denominateur)
+        && !DENOMINATEURS_DECIMAUX_RENDUS.has(bloc.denominateur)
+      ) {
+        erreurs.push(
+          `${chemin}.denominateur : dénominateur décimal rendu requis`,
+        );
+      }
     }
     if (bloc.type === "puissance") {
       if (!Number.isSafeInteger(bloc.base) || bloc.base < 0) {
@@ -208,10 +250,53 @@ function validerReponse(reponse, erreurs) {
   const unique = reponse.type === TYPE_REPONSE_CHOIX_UNIQUE;
   const entier = reponse.type === TYPE_REPONSE_ENTIER_NATUREL;
   const deuxEntiers = reponse.type === TYPE_REPONSE_DEUX_ENTIERS;
-  if (!multiple && !unique && !entier && !deuxEntiers) {
+  const decimal = reponse.type === TYPE_REPONSE_NOMBRE_DECIMAL;
+  const fraction = reponse.type === TYPE_REPONSE_FRACTION_EQUIVALENTE;
+  if (!multiple && !unique && !entier && !deuxEntiers && !decimal && !fraction) {
     erreurs.push(
-      "reponse.type : sélection multiple, choix unique, entier naturel ou deux entiers attendus",
+      "reponse.type : sélection multiple, choix unique, entier naturel, deux entiers, nombre décimal ou fraction équivalente attendus",
     );
+    return;
+  }
+
+  if (decimal || fraction) {
+    validerClesConnues(
+      reponse,
+      ["type", "comparaison", "attendu"],
+      "reponse",
+      erreurs,
+    );
+    if (reponse.comparaison !== COMPARAISON_VALEUR_RATIONNELLE_EXACTE) {
+      erreurs.push(
+        `reponse.comparaison : « ${COMPARAISON_VALEUR_RATIONNELLE_EXACTE} » attendu`,
+      );
+    }
+    const attendu = reponse.attendu;
+    if (typeof attendu !== "object" || attendu === null || Array.isArray(attendu)) {
+      erreurs.push("reponse.attendu : rationnel attendu");
+      return;
+    }
+    validerClesConnues(
+      attendu,
+      ["numerateur", "denominateur"],
+      "reponse.attendu",
+      erreurs,
+    );
+    if (!Number.isSafeInteger(attendu.numerateur) || attendu.numerateur < 0) {
+      erreurs.push("reponse.attendu.numerateur : entier naturel requis");
+    }
+    if (!Number.isSafeInteger(attendu.denominateur) || attendu.denominateur <= 0) {
+      erreurs.push(
+        "reponse.attendu.denominateur : entier naturel strictement positif requis",
+      );
+    } else if (
+      decimal
+      && !DENOMINATEURS_DECIMAUX_RENDUS.has(attendu.denominateur)
+    ) {
+      erreurs.push(
+        "reponse.attendu.denominateur : dénominateur décimal rendu requis",
+      );
+    }
     return;
   }
 
@@ -483,4 +568,25 @@ export function estDeuxEntiersExacts(attendus, recus) {
     return false;
   }
   return attendus[0] === recus[0] && attendus[1] === recus[1];
+}
+
+/**
+ * Compare exactement deux rationnels positifs par produit en croix.
+ * Les fractions n'ont pas besoin d'être réduites.
+ * @param {unknown} attendu
+ * @param {unknown} recu
+ */
+export function estValeurRationnelleExacte(attendu, recu) {
+  const rationnelValide = (valeur) =>
+    typeof valeur === "object" &&
+    valeur !== null &&
+    Number.isSafeInteger(valeur.numerateur) &&
+    valeur.numerateur >= 0 &&
+    Number.isSafeInteger(valeur.denominateur) &&
+    valeur.denominateur > 0;
+  if (!rationnelValide(attendu) || !rationnelValide(recu)) return false;
+  return (
+    BigInt(attendu.numerateur) * BigInt(recu.denominateur) ===
+    BigInt(recu.numerateur) * BigInt(attendu.denominateur)
+  );
 }

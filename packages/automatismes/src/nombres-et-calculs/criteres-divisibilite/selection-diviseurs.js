@@ -10,8 +10,8 @@ import {
   COMPARAISON_ENSEMBLE_EXACT,
   SCHEMA_QUESTION_INSTANCE_V2,
   TYPE_REPONSE_SELECTION_MULTIPLE,
-} from "../../../../contrats/src/question-v2.js?v=20";
-import { formulationCritereDivisibilite } from "./critere-precis.js?v=20";
+} from "../../../../contrats/src/question-v2.js?v=21";
+import { formulationCritereDivisibilite } from "./critere-precis.js?v=21";
 
 export const NOM_GENERATEUR_SELECTION_DIVISEURS =
   "nombres-et-calculs.criteres-divisibilite.selection-diviseurs";

@@ -4,6 +4,7 @@ import {
   TYPOGRAPHIE,
 } from "../packages/charte/src/charte.js";
 import {
+  avancerFractionAide,
   basculerChiffreAide,
   basculerChoix,
   creerEtatLecteur,
@@ -25,24 +26,33 @@ import {
   recommencer,
   revelerReponse,
   selectionnerChampSaisie,
+  selectionnerRepereAide,
+  choisirRangFractionAide,
+  grouperUniteFractionAide,
+  positionnerFractionAide,
+  saisirCaractere,
   saisirChiffre,
   tournerSolide,
   validerReponse,
-} from "./src/etat-lecteur.js?v=20";
+} from "./src/etat-lecteur.js?v=21";
 import {
   TYPE_REPONSE_DEUX_ENTIERS,
   TYPE_REPONSE_ENTIER_NATUREL,
+  TYPE_REPONSE_FRACTION_EQUIVALENTE,
+  TYPE_REPONSE_NOMBRE_DECIMAL,
   TYPE_REPONSE_CHOIX_UNIQUE,
-} from "../packages/contrats/src/question-v2.js?v=20";
+} from "../packages/contrats/src/question-v2.js?v=21";
 import {
   connaitNotionLecteur,
   obtenirNotionLecteur,
   RENDU_CARRES,
   RENDU_DIVISIBILITE,
+  RENDU_FRACTIONS_DECIMAUX,
   RENDU_SOLIDE,
   RENDU_VOLUME,
-} from "./src/registre-lecteur.js?v=20";
-import { COURS_SOLIDES_USUELS } from "../packages/automatismes/src/espace-et-geometrie/solides-usuels/reconnaissance.js?v=20";
+  NOTION_FRACTIONS_SIMPLES_DECIMAUX,
+} from "./src/registre-lecteur.js?v=21";
+import { COURS_SOLIDES_USUELS } from "../packages/automatismes/src/espace-et-geometrie/solides-usuels/reconnaissance.js?v=21";
 import {
   creerCone,
   creerCube,
@@ -57,17 +67,29 @@ import {
   ACTION_TOUCHE_SAISIR,
   ACTION_TOUCHE_VALIDER,
   obtenirDispositionClavier,
-} from "../packages/objets/src/clavier.js?v=20";
-import { formulationCritereDivisibilite } from "../packages/automatismes/src/nombres-et-calculs/criteres-divisibilite/critere-precis.js?v=20";
+} from "../packages/objets/src/clavier.js?v=21";
+import { formulationCritereDivisibilite } from "../packages/automatismes/src/nombres-et-calculs/criteres-divisibilite/critere-precis.js?v=21";
 import {
   nombre,
   puissance,
   variable,
   versHtmlSemantique,
-} from "../packages/objets/src/expressions.js?v=20";
+} from "../packages/objets/src/expressions.js?v=21";
 import {
   dessinerCarreQuadrille,
-} from "../packages/objets/src/carre-quadrille.js?v=20";
+} from "../packages/objets/src/carre-quadrille.js?v=21";
+import { dessinerGrilleFraction } from "../packages/objets/src/fractions.js?v=21";
+import { dessinerDoubleDroiteGraduee } from "../packages/objets/src/droite-graduee.js?v=21";
+import {
+  construireGroupementFraction,
+  construireDonneesTableauDepuisFraction,
+  formaterFractionEnDecimal,
+} from "../packages/objets/src/fractions-decimaux.js?v=21";
+import {
+  diagnostiquerDecimalVersNumerateur,
+  diagnostiquerFractionLibre,
+  diagnostiquerFractionVersDecimal,
+} from "./src/diagnostic-fractions-decimaux.js?v=21";
 
 const application = document.querySelector("#application");
 const rechercheInitiale = window.location.search;
@@ -75,6 +97,7 @@ let etat = creerEtatLecteur(lireConfiguration(rechercheInitiale));
 let menuAccueilOuvert = rechercheInitiale.length === 0;
 let menuSessionOuvert = false;
 let pageCoursCourante = 0;
+let denominateurCoursFraction = 100;
 let compteurSeries = 0;
 const VOLUMES_MENU = Object.freeze([5, 10, 15, 20]);
 let configurationMenu = {
@@ -95,7 +118,11 @@ const DOMAINES_MENU = Object.freeze([
   Object.freeze({
     id: "nombres-calculs",
     nom: "Nombres et calculs",
-    notions: Object.freeze([NOTION_NC01, NOTION_NC02]),
+    notions: Object.freeze([
+      NOTION_NC01,
+      NOTION_NC02,
+      NOTION_FRACTIONS_SIMPLES_DECIMAUX,
+    ]),
   }),
   Object.freeze({ id: "calcul-litteral-algebre", nom: "Calcul littéral et algèbre", notions: Object.freeze([]) }),
   Object.freeze({ id: "proportionnalite-fonctions-grandeurs", nom: "Proportionnalité, fonctions et grandeurs", notions: Object.freeze([]) }),
@@ -112,6 +139,10 @@ const LIBELLES_MODULES_MENU = Object.freeze({
   [NOTION_NC02]: Object.freeze({
     titre: "Carrés des entiers",
     precision: "De 0 à 12",
+  }),
+  [NOTION_FRACTIONS_SIMPLES_DECIMAUX]: Object.freeze({
+    titre: "Fractions simples et décimaux",
+    precision: "Dans les deux sens",
   }),
 });
 
@@ -137,7 +168,12 @@ function aCoursNotion() {
 }
 
 function estReponseNumerique(question) {
-  return [TYPE_REPONSE_ENTIER_NATUREL, TYPE_REPONSE_DEUX_ENTIERS]
+  return [
+    TYPE_REPONSE_ENTIER_NATUREL,
+    TYPE_REPONSE_DEUX_ENTIERS,
+    TYPE_REPONSE_NOMBRE_DECIMAL,
+    TYPE_REPONSE_FRACTION_EQUIVALENTE,
+  ]
     .includes(question.reponse.type);
 }
 
@@ -431,10 +467,12 @@ function rendreEntete() {
   return `
     <header class="entete-seance ${entrainement ? "" : "entete-tableau"}">
       <div class="actions-entete">
-        <button class="bouton-entete bouton-menu" data-action="menu" aria-expanded="${menuSessionOuvert}">
+        <button class="bouton-entete bouton-menu" data-action="menu"
+          aria-label="Menu" aria-expanded="${menuSessionOuvert}">
           <span aria-hidden="true">☰</span><strong>Menu</strong>
         </button>
         <button class="bouton-entete bouton-aide-entete" data-action="aide"
+          aria-label="Aide"
           ${aideDisponible ? "" : "disabled"} aria-expanded="${etat.aideOuverte}"
           aria-controls="panneau-aide"><span aria-hidden="true">?</span><strong>Aide</strong></button>
       </div>
@@ -449,7 +487,7 @@ function rendreEntete() {
     </div>`;
 }
 
-function rendreChoix(question) {
+function rendreChoix(question, rendreLibelle = (choix) => echapper(choix.libelle)) {
   const entrainement = estEntrainement();
   const correctionVisible = entrainement
     ? etat.correctionOuverte
@@ -473,7 +511,7 @@ function rendreChoix(question) {
     if (!entrainement) {
       return `<div class="${classes}">
         ${reveleCorrect ? '<span class="coche" aria-hidden="true">✓</span>' : ""}
-        <span>${echapper(choix.libelle)}</span>
+        <span>${rendreLibelle(choix)}</span>
         ${reveleCorrect ? '<span class="visuellement-cache">Correct</span>' : ""}
       </div>`;
     }
@@ -483,9 +521,42 @@ function rendreChoix(question) {
       aria-pressed="${selectionne}" ${etat.validation === null ? "" : "disabled"}>
       ${selectionFausse ? '<span class="icone-verdict" aria-hidden="true">×</span>' : ""}
       ${selectionJuste ? '<span class="icone-verdict" aria-hidden="true">✓</span>' : ""}
-      <span>${echapper(choix.libelle)}</span>
+      <span>${rendreLibelle(choix)}</span>
     </button>`;
   }).join("");
+}
+
+function diagnosticErreurFractions() {
+  const question = questionCourante(etat);
+  if (!question || etat.validation?.juste !== false) return null;
+  const source = blocRationnelQuestion(question);
+  if (!source) return null;
+  if (question.reponse.type === TYPE_REPONSE_NOMBRE_DECIMAL) {
+    return diagnostiquerFractionVersDecimal({
+      numerateur: source.numerateur,
+      denominateur: source.denominateur,
+      saisie: etat.saisie,
+    });
+  }
+  if (question.reponse.type === TYPE_REPONSE_FRACTION_EQUIVALENTE) {
+    return diagnostiquerFractionLibre({
+      numerateur: source.numerateur,
+      denominateur: source.denominateur,
+      numerateurSaisi: Number(etat.saisies[0]),
+      denominateurSaisi: Number(etat.saisies[1]),
+    });
+  }
+  if (
+    question.classement.microNotion === "nc-04"
+    && question.reponse.type === TYPE_REPONSE_ENTIER_NATUREL
+  ) {
+    return diagnostiquerDecimalVersNumerateur({
+      numerateur: question.reponse.attendu,
+      denominateur: source.denominateur,
+      valeur: Number(etat.saisie),
+    });
+  }
+  return null;
 }
 
 function rendreRetourValidation() {
@@ -493,9 +564,13 @@ function rendreRetourValidation() {
     return `<p class="message message-erreur" role="alert">${echapper(etat.erreurValidation)}</p>`;
   }
   if (etat.validation === null) return "";
-  return etat.validation.juste
-    ? '<p class="message message-reussite" role="status"><strong>Bien joué !</strong> Ta réponse est correcte.</p>'
-    : '<p class="message message-erreur" role="status"><strong>À revoir.</strong> Ta réponse reste affichée.</p>';
+  if (etat.validation.juste) {
+    return '<p class="message message-reussite" role="status"><strong>Bien joué !</strong> Ta réponse est correcte.</p>';
+  }
+  const diagnostic = diagnosticErreurFractions();
+  return `<p class="message message-erreur" role="status"><strong>À revoir.</strong> ${diagnostic
+    ? echapper(diagnostic.message)
+    : "Ta réponse reste affichée."}</p>`;
 }
 
 function rendreZoneRetour() {
@@ -523,6 +598,11 @@ function rendreBlocMathematique(bloc) {
   if (bloc.type === "texte") return `<span>${echapper(bloc.contenu)}</span>`;
   if (bloc.type === "entier") return `<strong>${echapper(bloc.valeur)}</strong>`;
   if (bloc.type === "puissance") return rendrePuissance(bloc.base, bloc.exposant);
+  if (bloc.type === "rationnel") {
+    return bloc.ecriture === "fraction"
+      ? rendreFractionEmpilee(bloc.numerateur, bloc.denominateur)
+      : `<strong>${echapper(formaterFractionEnDecimal(bloc.numerateur, bloc.denominateur))}</strong>`;
+  }
   return "";
 }
 
@@ -615,8 +695,13 @@ function rendreReponseEleve(question) {
   if (!estEntrainement() || etat.validation === null) return "";
   const reponse = question.reponse.type === TYPE_REPONSE_ENTIER_NATUREL
     ? etat.saisie
-    : question.reponse.type === TYPE_REPONSE_DEUX_ENTIERS
-      ? etat.saisies.join(" × ")
+    : [TYPE_REPONSE_DEUX_ENTIERS, TYPE_REPONSE_FRACTION_EQUIVALENTE]
+        .includes(question.reponse.type)
+      ? etat.saisies.join(
+        question.reponse.type === TYPE_REPONSE_FRACTION_EQUIVALENTE ? " / " : " × ",
+      )
+      : question.reponse.type === TYPE_REPONSE_NOMBRE_DECIMAL
+        ? etat.saisie
       : question.reponse.choix
       .filter((choix) => etat.selection.includes(choix.id))
       .map((choix) => choix.libelle)
@@ -669,6 +754,15 @@ function libellesReponseCorrecte(question) {
   }
   if (question.reponse.type === TYPE_REPONSE_DEUX_ENTIERS) {
     return [question.reponse.attendus.join(" × ")];
+  }
+  if (question.reponse.type === TYPE_REPONSE_NOMBRE_DECIMAL) {
+    return [formaterFractionEnDecimal(
+      question.reponse.attendu.numerateur,
+      question.reponse.attendu.denominateur,
+    )];
+  }
+  if (question.reponse.type === TYPE_REPONSE_FRACTION_EQUIVALENTE) {
+    return [`${question.reponse.attendu.numerateur} / ${question.reponse.attendu.denominateur}`];
   }
   return question.reponse.choix
     .filter((choix) => question.reponse.attendus.includes(choix.id))
@@ -1743,10 +1837,13 @@ function rendrePaveMathsgo(question) {
     || etat.validation !== null
     || !estReponseNumerique(question)
   ) return "";
-  const disposition = obtenirDispositionClavier("entier-naturel");
+  const profil = question.reponse.type === TYPE_REPONSE_NOMBRE_DECIMAL
+    ? "decimal-positif"
+    : "entier-naturel";
+  const disposition = obtenirDispositionClavier(profil);
   const touches = disposition.touches.map((touche) => {
     const attributAction = touche.action === ACTION_TOUCHE_SAISIR
-      ? `data-action="chiffre" data-value="${echapper(touche.valeur)}"`
+      ? `${touche.valeur === "," ? 'data-action="caractere"' : 'data-action="chiffre"'} data-value="${echapper(touche.valeur)}"`
       : touche.action === ACTION_TOUCHE_EFFACER
         ? 'data-action="effacer-saisie"'
         : touche.action === ACTION_TOUCHE_VALIDER
@@ -1757,7 +1854,7 @@ function rendrePaveMathsgo(question) {
   }).join("");
   return `<section class="pave-mathsgo-dock" aria-label="Saisie de la réponse">
     <div class="clavier-mathsgo" data-profil="${disposition.id}"
-      style="--colonnes-clavier: ${disposition.colonnes}" aria-label="Clavier chiffres">
+      style="--colonnes-clavier: ${disposition.colonnes}" aria-label="Clavier de saisie">
       ${touches}
     </div>
   </section>`;
@@ -2010,9 +2107,928 @@ function rendreQuestionCarres() {
   return rendreCoqueLecteur(question, carteQuestion);
 }
 
+function blocRationnelQuestion(question) {
+  return question.enonce.find((bloc) => bloc.type === "rationnel");
+}
+
+function rendreFractionEmpilee(
+  numerateur,
+  denominateur,
+  { classe = "", numerateurHtml = null, denominateurHtml = null } = {},
+) {
+  const numerateurLisible = numerateurHtml ?? echapper(numerateur);
+  const denominateurLisible = denominateurHtml ?? echapper(denominateur);
+  const fractionACompleter = numerateurHtml !== null && denominateurHtml !== null;
+  const semantique = fractionACompleter
+    ? 'role="group" aria-label="Fraction à compléter"'
+    : `role="math" aria-label="${echapper(numerateur)} sur ${echapper(denominateur)}"`;
+  return `<span class="fraction-empilee ${classe}" ${semantique}>
+    <span class="numerateur">${numerateurLisible}</span>
+    <span class="barre-fraction" aria-hidden="true"></span>
+    <span class="denominateur">${denominateurLisible}</span>
+  </span>`;
+}
+
+function rendreEgaliteRationnelle(numerateur, denominateur) {
+  return `<p class="egalite-rationnelle">
+    ${rendreFractionEmpilee(numerateur, denominateur)}
+    <span>=</span>
+    <strong>${echapper(formaterFractionEnDecimal(numerateur, denominateur))}</strong>
+  </p>`;
+}
+
+const RANGS_DECIMAUX = Object.freeze([
+  Object.freeze({ id: "dixiemes", libelle: "dixièmes", denominateur: 10 }),
+  Object.freeze({ id: "centiemes", libelle: "centièmes", denominateur: 100 }),
+  Object.freeze({ id: "milliemes", libelle: "millièmes", denominateur: 1000 }),
+]);
+const ABREVIATIONS_RANGS_DECIMAUX = Object.freeze({
+  unites: "Unit.",
+  dixiemes: "Dix.",
+  centiemes: "Cent.",
+  milliemes: "Mill.",
+});
+
+function donneesTableauAvecRang(numerateur, denominateur) {
+  const rang = RANGS_DECIMAUX.find(
+    (element) => element.denominateur === denominateur,
+  );
+  if (!rang) {
+    return construireDonneesTableauDepuisFraction(numerateur, denominateur);
+  }
+  const nombreDecimales = Math.log10(denominateur);
+  const chiffres = String(numerateur).padStart(nombreDecimales + 1, "0");
+  const partieEntiere = chiffres.slice(0, -nombreDecimales) || "0";
+  const decimales = chiffres.slice(-nombreDecimales);
+  return {
+    ecritureDecimale: formaterFractionEnDecimal(numerateur, denominateur),
+    colonnes: [
+      { id: "unites", libelle: "Unités", chiffre: partieEntiere },
+      { id: "dixiemes", libelle: "Dixièmes", chiffre: decimales[0] ?? null },
+      { id: "centiemes", libelle: "Centièmes", chiffre: decimales[1] ?? null },
+      { id: "milliemes", libelle: "Millièmes", chiffre: decimales[2] ?? null },
+    ],
+    dernierRang: rang.id,
+  };
+}
+
+function rendreTableauNumeration(
+  numerateur,
+  denominateur,
+  { afficherChiffres = true, colonneMiseEnEvidence = null } = {},
+) {
+  const donnees = donneesTableauAvecRang(numerateur, denominateur);
+  return `<figure class="figure-tableau-numeration">
+    <table aria-label="Tableau de numération de ${echapper(donnees.ecritureDecimale)}">
+      <thead><tr>${donnees.colonnes.map((colonne) =>
+      `<th class="${colonne.id === colonneMiseEnEvidence ? "rang-cible" : ""}"><span class="libelle-rang-complet">${echapper(colonne.libelle)}</span><abbr class="libelle-rang-court" title="${echapper(colonne.libelle)}" aria-label="${echapper(colonne.libelle)}">${echapper(ABREVIATIONS_RANGS_DECIMAUX[colonne.id])}</abbr></th>`,
+      ).join("")}</tr></thead>
+      <tbody><tr>${donnees.colonnes.map((colonne) =>
+        `<td class="${colonne.id === colonneMiseEnEvidence ? "rang-cible" : ""}">${afficherChiffres
+          ? colonne.chiffre === null
+            ? '<span aria-hidden="true">—</span>'
+            : `<strong>${echapper(colonne.chiffre)}</strong>`
+          : '<span class="case-tableau-vide" aria-hidden="true">?</span>'}</td>`,
+      ).join("")}</tr></tbody>
+    </table>
+    ${afficherChiffres ? `<figcaption>${rendreEgaliteRationnelle(numerateur, denominateur)}</figcaption>` : ""}
+  </figure>`;
+}
+
+function presentationQuestionFractions(question) {
+  return question.classement.complements
+    .find((complement) => complement.startsWith("presentation-"))
+    ?.slice("presentation-".length) ?? "abstraite";
+}
+
+function rendreFigureFraction(dessin, classes = "", legende = "") {
+  return `<figure class="figure-fraction ${classes}">
+    ${dessin.svg}
+    ${legende ? `<figcaption>${echapper(legende)}</figcaption>` : ""}
+  </figure>`;
+}
+
+function nomPartFraction(denominateur, quantite = 1) {
+  const singulier = {
+    1: "unité",
+    2: "demi",
+    4: "quart",
+    10: "dixième",
+    100: "centième",
+    1000: "millième",
+  }[denominateur] ?? "part";
+  if (quantite === 1) return singulier;
+  return singulier === "demi" ? "demis" : `${singulier}s`;
+}
+
+function configurationDoubleDroiteFraction(numerateur, denominateur) {
+  const valeur = numerateur / denominateur;
+  const maximum = Math.max(1, Number.isInteger(valeur) ? valeur + 1 : Math.ceil(valeur));
+  const nombreGraduations = maximum * denominateur;
+  const graduations = nombreGraduations <= 32
+    ? Array.from({ length: nombreGraduations + 1 }, (_, index) => index / denominateur)
+    : [...Array.from({ length: maximum + 1 }, (_, index) => index), valeur]
+      .sort((a, b) => a - b)
+      .filter((element, index, liste) => index === 0 || element !== liste[index - 1]);
+  const etiquettes = Object.fromEntries(
+    graduations.filter((graduation) => !Number.isInteger(graduation))
+      .map((graduation) => [String(graduation), ""]),
+  );
+  return { valeur, maximum, graduations, etiquettes };
+}
+
+function rendreDoubleDroiteRiche(
+  numerateur,
+  denominateur,
+  {
+    sens = "nc-03",
+    progression = null,
+    reveler = false,
+    compacte = false,
+  } = {},
+) {
+  const { valeur, maximum, graduations, etiquettes } =
+    configurationDoubleDroiteFraction(numerateur, denominateur);
+  const progressionValide = Number.isInteger(progression)
+    && progression >= 0
+    && progression <= numerateur;
+  const terminee = progressionValide && progression === numerateur;
+  const fractionCible = { type: "fraction", numerateur, denominateur };
+  const decimalCible = formaterFractionEnDecimal(numerateur, denominateur);
+  const pointsHaut = [{
+    valeur,
+    etiquette: sens === "nc-04" && !reveler && !terminee ? "?" : fractionCible,
+    couleur: COULEURS.bleu,
+    position: "dessus",
+  }];
+  const pointsBas = [{
+    valeur,
+    etiquette: sens === "nc-03" && !reveler && !terminee ? "?" : decimalCible,
+    couleur: COULEURS.bleu,
+    position: "dessous",
+  }];
+  if (progressionValide && progression > 0 && !terminee) {
+    const valeurConstruite = progression / denominateur;
+    pointsHaut.push({
+      valeur: valeurConstruite,
+      etiquette: { type: "fraction", numerateur: progression, denominateur },
+      couleur: COULEURS.orange,
+      position: "dessus",
+    });
+    pointsBas.push({
+      valeur: valeurConstruite,
+      etiquette: formaterFractionEnDecimal(progression, denominateur),
+      couleur: COULEURS.orange,
+      position: "dessous",
+    });
+  }
+  const rendreVariante = (largeur, tailleEtiquette, classeVariante = "") =>
+    rendreFigureFraction(
+      dessinerDoubleDroiteGraduee({
+        largeur,
+        description: "Double droite graduée mettant en regard fractions et écritures décimales.",
+        haut: {
+          min: 0,
+          max: maximum,
+          graduations,
+          etiquettes,
+          points: pointsHaut,
+          nom: "Fractions",
+          tailleEtiquette,
+        },
+        bas: {
+          min: 0,
+          max: maximum,
+          graduations,
+          etiquettes,
+          points: pointsBas,
+          nom: "Décimaux",
+          tailleEtiquette,
+        },
+      }),
+      `figure-double-droite-fraction ${classeVariante}`,
+    );
+  if (compacte) return rendreVariante(560, 17);
+  return `<div class="double-droite-responsive">
+    ${rendreVariante(720, 20, "figure-double-droite-large")}
+    ${rendreVariante(340, 18, "figure-double-droite-mobile")}
+  </div>`;
+}
+
+function classesCaseRationnelle(active = false) {
+  return [
+    "case-reponse-rationnelle",
+    active ? "active" : "",
+    etat.validation?.juste ? "juste" : "",
+    etat.validation && !etat.validation.juste ? "fausse" : "",
+  ].filter(Boolean).join(" ");
+}
+
+function rendreChampFractionLibre(index) {
+  const question = questionCourante(etat);
+  const valeur = estEntrainement()
+    ? etat.saisies[index]
+    : etat.reponseRevelee || etat.correctionOuverte
+      ? String(question.reponse.attendu[
+        index === 0 ? "numerateur" : "denominateur"
+      ])
+      : "";
+  const modifiable = estEntrainement() && etat.validation === null;
+  const active = modifiable && etat.champSaisieActif === index;
+  const contenu = echapper(valeur || (estEntrainement() ? "…" : "?"));
+  if (!modifiable) {
+    return `<output class="${classesCaseRationnelle(active)}">${contenu}</output>`;
+  }
+  return `<button class="${classesCaseRationnelle(active)}" type="button"
+    data-action="champ-reponse" data-index="${index}"
+    aria-label="${index === 0 ? "Numérateur" : "Dénominateur"}${valeur ? ` : ${echapper(valeur)}` : " à compléter"}"
+    aria-pressed="${active}">${contenu}</button>`;
+}
+
+function rendreZoneReponseFractions(question) {
+  const source = blocRationnelQuestion(question);
+  if (question.reponse.type === TYPE_REPONSE_NOMBRE_DECIMAL) {
+    const valeur = estEntrainement()
+      ? etat.saisie
+      : etat.reponseRevelee || etat.correctionOuverte
+        ? formaterFractionEnDecimal(
+          question.reponse.attendu.numerateur,
+          question.reponse.attendu.denominateur,
+        )
+        : "";
+    return `<p class="egalite-question-rationnelle">
+      ${rendreFractionEmpilee(source.numerateur, source.denominateur, { classe: "fraction-question" })}
+      <span>=</span>
+      <output class="${classesCaseRationnelle()} case-decimale">${echapper(valeur || (estEntrainement() ? "…" : "?"))}</output>
+    </p>
+    ${estEntrainement() ? '<p class="indication-clavier-physique">Chiffres · point ou virgule · Retour arrière · Entrée pour valider</p>' : ""}`;
+  }
+  const decimal = formaterFractionEnDecimal(
+    source.numerateur,
+    source.denominateur,
+  );
+  if (question.reponse.type === TYPE_REPONSE_FRACTION_EQUIVALENTE) {
+    return `<p class="egalite-question-rationnelle">
+      <strong class="decimal-question">${echapper(decimal)}</strong><span>=</span>
+      ${rendreFractionEmpilee("case", "case", {
+        classe: "fraction-reponse",
+        numerateurHtml: rendreChampFractionLibre(0),
+        denominateurHtml: rendreChampFractionLibre(1),
+      })}
+    </p>
+    ${estEntrainement() ? '<p class="precision">Choisis une case, puis saisis une fraction égale. Tab change de case.</p>' : ""}`;
+  }
+  const denominateur = blocQuestion(question, "denominateur-impose").valeur;
+  const numerateur = estEntrainement()
+    ? etat.saisie
+    : etat.reponseRevelee || etat.correctionOuverte
+      ? String(question.reponse.attendu)
+      : "";
+  return `<p class="egalite-question-rationnelle">
+    <strong class="decimal-question">${echapper(decimal)}</strong><span>=</span>
+    ${rendreFractionEmpilee(numerateur || "case", denominateur, {
+      classe: "fraction-reponse",
+      numerateurHtml: `<output class="${classesCaseRationnelle()}">${echapper(numerateur || (estEntrainement() ? "…" : "?"))}</output>`,
+    })}
+  </p>`;
+}
+
+function rendreLibelleChoixFraction(choix) {
+  const correspondance = /^(\d+)\/(\d+)$/.exec(choix.libelle);
+  return correspondance
+    ? rendreFractionEmpilee(Number(correspondance[1]), Number(correspondance[2]))
+    : echapper(choix.libelle);
+}
+
+function rendreQuestionFractionsDecimaux() {
+  const question = questionCourante(etat);
+  const consigne = texteBloc(question, "consigne") || "Complète l'égalité.";
+  const source = blocRationnelQuestion(question);
+  const presentation = presentationQuestionFractions(question);
+  const qcm = question.reponse.type === TYPE_REPONSE_CHOIX_UNIQUE;
+  const doubleDroite = presentation === "double-droite";
+  const cibleQcm = question.classement.microNotion === "nc-04"
+    ? `<strong class="decimal-question">${echapper(formaterFractionEnDecimal(source.numerateur, source.denominateur))}</strong>`
+    : rendreFractionEmpilee(source.numerateur, source.denominateur);
+  const carteQuestion = `<main class="carte-question carte-question-fractions famille-${echapper(familleQuestion(question))}">
+    <p class="etiquette-notion">${echapper(nomNotion())}</p>
+    <h1>${echapper(consigne)}</h1>
+    ${doubleDroite
+      ? rendreDoubleDroiteRiche(source.numerateur, source.denominateur, {
+        sens: question.classement.microNotion,
+      })
+      : ""}
+    ${qcm
+      ? `<p class="cible-qcm-rationnelle">${cibleQcm}</p>
+        <div class="grille-choix grille-qcm-fractions ${estEntrainement() ? "" : "grille-projection"}"
+          role="${estEntrainement() ? "radiogroup" : "group"}" aria-label="Réponses proposées">
+          ${rendreChoix(question, question.classement.microNotion === "nc-04"
+            ? rendreLibelleChoixFraction
+            : undefined)}
+        </div>`
+      : rendreZoneReponseFractions(question)}
+    ${estEntrainement() ? rendreZoneRetour() : '<div class="zone-retour" aria-hidden="true"></div>'}
+  </main>`;
+  return rendreCoqueLecteur(question, carteQuestion);
+}
+
+function rendreCommandesProgressionFraction(source, { retour, suite } = {}) {
+  const libelleRetour = retour ?? `Retirer un ${nomPartFraction(source.denominateur)}`;
+  const libelleSuite = suite ?? `Ajouter un ${nomPartFraction(source.denominateur)}`;
+  return `<div class="commandes-progression-fraction">
+    <button class="bouton-secondaire" type="button" data-action="pas-fraction-precedent"
+      ${etat.pasFractionAide === 0 ? "disabled" : ""}>← ${echapper(libelleRetour)}</button>
+    <button class="bouton-principal" type="button" data-action="pas-fraction-suivant"
+      ${etat.pasFractionAide === source.numerateur ? "disabled" : ""}>${echapper(libelleSuite)} →</button>
+  </div>`;
+}
+
+function rendreAideDoubleDroiteRiche(question, source) {
+  const pas = etat.pasFractionAide;
+  const terminee = pas === source.numerateur;
+  const decimalCourant = formaterFractionEnDecimal(pas, source.denominateur);
+  return `<section class="atelier-fraction atelier-double-droite">
+    <p class="consigne-atelier"><strong>Fais avancer les deux écritures ensemble.</strong>
+      Chaque déplacement vaut un ${nomPartFraction(source.denominateur)} ; les deux points restent alignés.</p>
+    ${rendreDoubleDroiteRiche(source.numerateur, source.denominateur, {
+      sens: question.classement.microNotion,
+      progression: pas,
+    })}
+    <label class="controle-curseur-fraction" for="curseur-fraction-aide">
+      <span>Position construite : ${rendreFractionEmpilee(pas, source.denominateur)} = <strong>${echapper(decimalCourant)}</strong></span>
+      <input id="curseur-fraction-aide" class="curseur-fraction" type="range"
+        min="0" max="${source.numerateur}" step="1" value="${pas}"
+        data-action="position-fraction" aria-label="Construire la correspondance une part à la fois">
+    </label>
+    ${rendreCommandesProgressionFraction(source, {
+      retour: `Reculer d’un ${nomPartFraction(source.denominateur)}`,
+      suite: `Avancer d’un ${nomPartFraction(source.denominateur)}`,
+    })}
+    <p class="conclusion-atelier ${terminee ? "visible" : ""}" aria-live="polite">${terminee
+      ? `Les deux points sont alignés : ${rendreFractionEmpilee(source.numerateur, source.denominateur)} = <strong>${echapper(decimalCourant)}</strong>.`
+      : "Avance jusqu’au point demandé pour révéler l’autre écriture."}</p>
+  </section>`;
+}
+
+function rendreAideCentiemesRiche(question, source) {
+  const pas = etat.pasFractionAide;
+  const casesParPart = 100 / source.denominateur;
+  const coloriees = pas * casesParPart;
+  const terminee = pas === source.numerateur;
+  const decimal = formaterFractionEnDecimal(source.numerateur, source.denominateur);
+  const chaine = question.classement.microNotion === "nc-04"
+    ? `<strong>${echapper(decimal)}</strong> = ${rendreFractionEmpilee(source.numerateur * casesParPart, 100)} = ${rendreFractionEmpilee(source.numerateur, source.denominateur)}`
+    : `${rendreFractionEmpilee(source.numerateur, source.denominateur)} = ${rendreFractionEmpilee(source.numerateur * casesParPart, 100)} = <strong>${echapper(decimal)}</strong>`;
+  return `<section class="atelier-fraction atelier-centiemes">
+    <p class="consigne-atelier"><strong>Construis le nombre dans une unité de 100 cases.</strong>
+      Un ${nomPartFraction(source.denominateur)} occupe ${casesParPart} cases.</p>
+    ${rendreFigureFraction(
+      dessinerGrilleFraction({
+        colonnes: 10,
+        lignes: 10,
+        coloriees,
+        cote: 220,
+        ecriture: false,
+      }),
+      "figure-grille-centiemes figure-grille-manipulation",
+    )}
+    <p class="equivalence-en-construction">
+      ${rendreFractionEmpilee(pas, source.denominateur)} = ${rendreFractionEmpilee(coloriees, 100)}
+      <span>${coloriees} case${coloriees > 1 ? "s" : ""} sur 100</span>
+    </p>
+    <input class="curseur-fraction" type="range" min="0" max="${source.numerateur}"
+      step="1" value="${pas}" data-action="position-fraction"
+      aria-label="Colorier la grille une part à la fois">
+    ${rendreCommandesProgressionFraction(source, {
+      retour: `Retirer un ${nomPartFraction(source.denominateur)}`,
+      suite: `Colorier un ${nomPartFraction(source.denominateur)}`,
+    })}
+    <p class="conclusion-atelier ${terminee ? "visible" : ""}" aria-live="polite">${terminee
+      ? `${chaine}.`
+      : "Ajoute les parts demandées ; l’écriture équivalente se construit en même temps."}</p>
+  </section>`;
+}
+
+function rendreGroupesPartsRiche(source, groupesFormes) {
+  const groupement = construireGroupementFraction(
+    source.numerateur,
+    source.denominateur,
+  );
+  const rendreBarre = (remplissage) => `<div class="barre-parts" aria-hidden="true">
+    ${Array.from({ length: source.denominateur }, (_, index) => index < remplissage
+      ? `<i class="part-unitaire">${rendreFractionEmpilee(1, source.denominateur)}</i>`
+      : '<i class="part-unitaire part-vide"></i>').join("")}
+  </div>`;
+  const groupes = groupement.groupes.map((groupe) => {
+    if (groupe.type === "reste") {
+      return `<article class="groupe-parts groupe-reste"
+        aria-label="Reste : ${groupe.remplissage} ${nomPartFraction(source.denominateur, groupe.remplissage)}">
+        <span>Reste : ${groupe.remplissage} ${nomPartFraction(source.denominateur, groupe.remplissage)}</span>
+        ${rendreBarre(groupe.remplissage)}
+      </article>`;
+    }
+    const formee = groupe.index <= groupesFormes;
+    const libelleComplet = `Unité ${groupe.index} : ${source.denominateur} ${nomPartFraction(source.denominateur, source.denominateur)} = 1`;
+    return `<article class="groupe-parts ${formee ? "unite-formee" : "unite-a-former"}"
+      aria-label="${echapper(libelleComplet)}">
+      <span>${formee
+        ? echapper(libelleComplet)
+        : `${source.denominateur} ${nomPartFraction(source.denominateur, source.denominateur)} à grouper`}</span>
+      ${rendreBarre(groupe.remplissage)}
+    </article>`;
+  }).join("");
+  return `<div class="groupes-parts" style="--parts-par-unite:${source.denominateur}"
+    aria-label="${groupement.unites} unité${groupement.unites > 1 ? "s" : ""} complète${groupement.unites > 1 ? "s" : ""} et ${groupement.reste} ${nomPartFraction(source.denominateur, groupement.reste)} restant${groupement.reste > 1 ? "s" : ""}">${groupes}</div>`;
+}
+
+function rendreAideGroupementRiche(question, source) {
+  const unites = Math.floor(source.numerateur / source.denominateur);
+  const reste = source.numerateur % source.denominateur;
+  const groupes = etat.groupesFractionAide;
+  const terminee = groupes === unites;
+  const decimal = formaterFractionEnDecimal(source.numerateur, source.denominateur);
+  const resteDecimal = formaterFractionEnDecimal(reste, source.denominateur);
+  const fraction = rendreFractionEmpilee(
+    source.numerateur,
+    source.denominateur,
+  );
+  const fractionReste = rendreFractionEmpilee(reste, source.denominateur);
+  const direct = question.classement.microNotion === "nc-03";
+  const conclusion = reste === 0
+    ? direct
+      ? `${fraction} = <strong>${unites}</strong>`
+      : `<strong>${echapper(decimal)}</strong> = ${fraction}`
+    : direct
+      ? `${fraction} = ${unites} + ${fractionReste} = ${unites} + ${echapper(resteDecimal)} = <strong>${echapper(decimal)}</strong>`
+      : `<strong>${echapper(decimal)}</strong> = ${unites} + ${echapper(resteDecimal)} = ${unites} + ${fractionReste} = ${fraction}`;
+  return `<section class="atelier-fraction atelier-groupement">
+    <p class="consigne-atelier"><strong>Forme les unités une par une.</strong>
+      Il faut ${source.denominateur} ${nomPartFraction(source.denominateur, source.denominateur)} pour faire 1 unité.</p>
+    ${rendreGroupesPartsRiche(source, groupes)}
+    <p class="compteur-groupes"><strong>${groupes}</strong> unité${groupes > 1 ? "s" : ""} formée${groupes > 1 ? "s" : ""} sur ${unites}</p>
+    <div class="commandes-progression-fraction">
+      <button class="bouton-secondaire" type="button" data-action="groupe-unite-precedent"
+        ${groupes === 0 ? "disabled" : ""}>← Défaire une unité</button>
+      <button class="bouton-principal" type="button" data-action="groupe-unite-suivant"
+        ${terminee ? "disabled" : ""}>Former une unité →</button>
+    </div>
+    <p class="conclusion-atelier ${terminee ? "visible" : ""}" aria-live="polite">${terminee
+      ? `${conclusion}.`
+      : "Groupe toutes les unités complètes avant de traiter ce qui reste."}</p>
+  </section>`;
+}
+
+function rendreAideTableauRiche(question, source) {
+  const cible = RANGS_DECIMAUX.find((rang) => rang.denominateur === source.denominateur);
+  const selection = etat.rangFractionAide;
+  const juste = selection === cible.id;
+  const decimal = formaterFractionEnDecimal(source.numerateur, source.denominateur);
+  const chaine = question.classement.microNotion === "nc-04"
+    ? `<strong>${echapper(decimal)}</strong> = ${rendreFractionEmpilee(source.numerateur, source.denominateur)}`
+    : `${rendreFractionEmpilee(source.numerateur, source.denominateur)} = <strong>${echapper(decimal)}</strong>`;
+  return `<section class="atelier-fraction atelier-tableau-decimal">
+    <p class="consigne-atelier"><strong>Que nomme le dénominateur ${source.denominateur} ?</strong>
+      Choisis le rang du dernier chiffre. Le tableau reste visible et se remplit après ce choix.</p>
+    <div class="choix-rang-fraction" role="radiogroup" aria-label="Choisir le rang décimal">
+      ${RANGS_DECIMAUX.map((rang) => `<button type="button" class="${selection === rang.id ? "selectionne" : ""}"
+        data-action="rang-fraction" data-rang="${rang.id}" role="radio"
+        aria-checked="${selection === rang.id}">${rang.libelle}</button>`).join("")}
+    </div>
+    ${rendreTableauNumeration(source.numerateur, source.denominateur, {
+      afficherChiffres: juste,
+      colonneMiseEnEvidence: selection,
+    })}
+    <p class="conclusion-atelier ${juste ? "visible" : ""}" aria-live="polite">${selection === null
+      ? "Lis le dénominateur, puis choisis la colonne correspondante."
+      : juste
+        ? `Oui : ${chaine}.`
+        : `Ce n’est pas le rang nommé par ${source.denominateur}. Essaie une autre colonne.`}</p>
+  </section>`;
+}
+
+function rendreAideUnitesRiche(source) {
+  return `<section class="atelier-fraction atelier-unites">
+    <p class="consigne-atelier"><strong>Regarde le dénominateur.</strong>
+      Avec un dénominateur égal à 1, chaque part est déjà une unité entière.</p>
+    <div class="tuiles-unites" aria-label="${source.numerateur} unités">
+      ${Array.from({ length: source.numerateur }, (_, index) => `<span>${index + 1}</span>`).join("")}
+    </div>
+    <p class="conclusion-atelier visible">${rendreFractionEmpilee(source.numerateur, 1)} = <strong>${source.numerateur}</strong>.</p>
+  </section>`;
+}
+
+function rendreRappelQuestionFractions(question) {
+  const source = blocRationnelQuestion(question);
+  const decimal = formaterFractionEnDecimal(source.numerateur, source.denominateur);
+  const direct = question.classement.microNotion === "nc-03";
+  const fractionLibre = question.reponse.type === TYPE_REPONSE_FRACTION_EQUIVALENTE;
+  const qcm = question.reponse.type === TYPE_REPONSE_CHOIX_UNIQUE;
+  const equation = direct
+    ? `${rendreFractionEmpilee(source.numerateur, source.denominateur)}<span>=</span><strong>?</strong>`
+    : qcm || fractionLibre
+      ? `<strong>${echapper(decimal)}</strong><span>=</span>${rendreFractionEmpilee("?", "?")}`
+      : `<strong>${echapper(decimal)}</strong><span>=</span>${rendreFractionEmpilee("?", source.denominateur)}`;
+  return `<section class="rappel-question rappel-question-fractions" aria-label="Question en cours">
+    <span>Question en cours</span>
+    <p>${echapper(texteBloc(question, "consigne"))}</p>
+    <div class="rappel-equation-fractions">${equation}</div>
+  </section>`;
+}
+
+function rendreAideFractionsDecimaux(question) {
+  if (!etat.aideOuverte) return "";
+  const source = blocRationnelQuestion(question);
+  const presentation = presentationQuestionFractions(question);
+  const atelier = presentation === "double-droite"
+    ? rendreAideDoubleDroiteRiche(question, source)
+    : [2, 4].includes(source.denominateur) && source.numerateur <= source.denominateur
+      ? rendreAideCentiemesRiche(question, source)
+      : [2, 4].includes(source.denominateur)
+        ? rendreAideGroupementRiche(question, source)
+        : [10, 100, 1000].includes(source.denominateur)
+          ? rendreAideTableauRiche(question, source)
+          : rendreAideUnitesRiche(source);
+  const contenu = `${rendreRappelQuestionFractions(question)}${atelier}${rendreAccesCoursDepuisAide()}`;
+  return rendreCadrePanneau({
+    type: "aide",
+    surtitre: "Pendant la question",
+    titre: "Me guider pas à pas",
+    contenu,
+    classes: "panneau-aide-fractions panneau-fractions",
+  });
+}
+
+function rendreReponseEleveFractions(question, source) {
+  if (!estEntrainement() || etat.validation === null) return "";
+  if (question.reponse.type === TYPE_REPONSE_CHOIX_UNIQUE) {
+    return rendreReponseEleve(question);
+  }
+  if (question.reponse.type === TYPE_REPONSE_NOMBRE_DECIMAL) {
+    return `<p class="rappel-reponse-eleve"><span>Ta réponse</span><strong>${echapper(etat.saisie)}</strong></p>`;
+  }
+  const numerateur = question.reponse.type === TYPE_REPONSE_FRACTION_EQUIVALENTE
+    ? etat.saisies[0]
+    : etat.saisie;
+  const denominateur = question.reponse.type === TYPE_REPONSE_FRACTION_EQUIVALENTE
+    ? etat.saisies[1]
+    : source.denominateur;
+  return `<div class="rappel-reponse-eleve rappel-fraction-eleve"><span>Ta réponse</span>${rendreFractionEmpilee(numerateur, denominateur)}</div>`;
+}
+
+function rendreReponseCorrecteFractions(question, source) {
+  if (question.reponse.type === TYPE_REPONSE_CHOIX_UNIQUE) {
+    const choix = question.reponse.choix.find(({ id }) => question.reponse.attendus.includes(id));
+    if (!choix) return "";
+    const contenu = question.classement.microNotion === "nc-04"
+      ? rendreLibelleChoixFraction(choix)
+      : `<strong>${echapper(choix.libelle)}</strong>`;
+    return `<div class="reponses-correction">${contenu}</div>`;
+  }
+  if (question.reponse.type === TYPE_REPONSE_NOMBRE_DECIMAL) {
+    return `<div class="reponses-correction"><strong>${echapper(formaterFractionEnDecimal(source.numerateur, source.denominateur))}</strong></div>`;
+  }
+  return `<div class="reponses-correction">${rendreFractionEmpilee(source.numerateur, source.denominateur)}</div>`;
+}
+
+function diagnosticQcmFractions(question) {
+  if (
+    question.reponse.type !== TYPE_REPONSE_CHOIX_UNIQUE
+    || etat.validation?.juste
+    || etat.selection.length === 0
+  ) return "";
+  const diagnostic = question.correction?.find(
+    (bloc) => bloc.id === `diagnostic-${etat.selection[0]}`,
+  );
+  return diagnostic
+    ? `<p class="diagnostic-fraction"><strong>Ce qui a pu te piéger</strong><span>${echapper(diagnostic.contenu)}</span></p>`
+    : "";
+}
+
+function chaineCorrectionFractions(question, source) {
+  const decimal = formaterFractionEnDecimal(source.numerateur, source.denominateur);
+  const fraction = rendreFractionEmpilee(source.numerateur, source.denominateur);
+  if (question.classement.microNotion === "nc-03") {
+    return `${fraction}<span>=</span><strong>${echapper(decimal)}</strong>`;
+  }
+  if (question.reponse.type === TYPE_REPONSE_FRACTION_EQUIVALENTE) {
+    const numerateurDecimal = source.denominateur === 2
+      ? source.numerateur * 5
+      : source.numerateur * 25;
+    const denominateurDecimal = source.denominateur === 2 ? 10 : 100;
+    return `<strong>${echapper(decimal)}</strong><span>=</span>${rendreFractionEmpilee(numerateurDecimal, denominateurDecimal)}<span>=</span>${fraction}`;
+  }
+  return `<strong>${echapper(decimal)}</strong><span>=</span>${fraction}`;
+}
+
+function rendreVisuelCorrectionFractions(question, source) {
+  if (presentationQuestionFractions(question) === "double-droite") {
+    return rendreDoubleDroiteRiche(source.numerateur, source.denominateur, {
+      sens: question.classement.microNotion,
+      reveler: true,
+    });
+  }
+  if ([10, 100, 1000].includes(source.denominateur)) {
+    const rang = RANGS_DECIMAUX.find(
+      (element) => element.denominateur === source.denominateur,
+    );
+    return rendreTableauNumeration(source.numerateur, source.denominateur, {
+      afficherChiffres: true,
+      colonneMiseEnEvidence: rang.id,
+    });
+  }
+  if ([2, 4].includes(source.denominateur) && source.numerateur <= source.denominateur) {
+    return rendreFigureFraction(
+      dessinerGrilleFraction({
+        colonnes: 10,
+        lignes: 10,
+        coloriees: source.numerateur * (100 / source.denominateur),
+        cote: 190,
+        ecriture: false,
+      }),
+      "figure-grille-centiemes figure-correction-fraction",
+    );
+  }
+  if ([2, 4].includes(source.denominateur)) {
+    return rendreGroupesPartsRiche(
+      source,
+      Math.floor(source.numerateur / source.denominateur),
+    );
+  }
+  return `<div class="tuiles-unites correction-unites" aria-label="${source.numerateur} unités">
+    ${Array.from({ length: source.numerateur }, (_, index) => `<span>${index + 1}</span>`).join("")}
+  </div>`;
+}
+
+function rendreExplicationCorrectionFractions(question, source) {
+  const direct = question.classement.microNotion === "nc-03";
+  const decimal = formaterFractionEnDecimal(source.numerateur, source.denominateur);
+  const chaine = chaineCorrectionFractions(question, source);
+  const rang = RANGS_DECIMAUX.find(
+    (element) => element.denominateur === source.denominateur,
+  );
+  if (rang) {
+    return `<section class="etape-correction correction-observation">
+      ${rendreEtape(1, direct
+        ? `Lire le dénominateur : ${source.denominateur} nomme les ${rang.libelle}`
+        : `Lire ${decimal} jusqu’au rang des ${rang.libelle}`, "repere-observation")}
+      <p>${direct
+        ? `Le dernier chiffre du numérateur se place dans la colonne des <strong>${rang.libelle}</strong>.`
+        : `Tous les chiffres lus en ${rang.libelle} donnent le numérateur ; ${source.denominateur} donne le dénominateur.`}</p>
+    </section>
+    <section class="etape-correction correction-conclusion">
+      ${rendreEtape(2, "Lire le tableau rempli dans l’autre sens", "repere-conclusion")}
+      ${rendreVisuelCorrectionFractions(question, source)}
+      <p class="chaine-fraction">${chaine}</p>
+    </section>`;
+  }
+  if ([2, 4].includes(source.denominateur) && source.numerateur <= source.denominateur) {
+    const centiemes = source.numerateur * (100 / source.denominateur);
+    return `<section class="etape-correction correction-observation">
+      ${rendreEtape(1, direct
+        ? "Transformer le repère en centièmes"
+        : "Retrouver le repère dans une unité de 100 cases", "repere-observation")}
+      <p>Un ${nomPartFraction(source.denominateur)} occupe ${100 / source.denominateur} cases sur 100 ;
+        ${source.numerateur} ${nomPartFraction(source.denominateur, source.numerateur)} ${source.numerateur === 1 ? "en occupe" : "en occupent"} <strong>${centiemes}</strong>.</p>
+      ${rendreVisuelCorrectionFractions(question, source)}
+    </section>
+    <section class="etape-correction correction-conclusion">
+      ${rendreEtape(2, direct ? "Écrire les centièmes avec une virgule" : "Lire la fraction correspondante", "repere-conclusion")}
+      <p class="chaine-fraction">${chaine}</p>
+    </section>`;
+  }
+  if ([2, 4].includes(source.denominateur)) {
+    const unites = Math.floor(source.numerateur / source.denominateur);
+    const reste = source.numerateur % source.denominateur;
+    return `<section class="etape-correction correction-observation">
+      ${rendreEtape(1, "Former toutes les unités complètes", "repere-observation")}
+      ${rendreVisuelCorrectionFractions(question, source)}
+      <p>${source.numerateur} = ${unites} × ${source.denominateur} + ${reste} : on obtient <strong>${unites} unité${unites > 1 ? "s" : ""}</strong>${reste ? ` et ${reste} ${nomPartFraction(source.denominateur, reste)}` : ", sans reste"}.</p>
+    </section>
+    <section class="etape-correction correction-conclusion">
+      ${rendreEtape(2, reste ? "Convertir seulement ce qui reste" : "Lire le nombre d’unités", "repere-conclusion")}
+      <p class="chaine-fraction">${chaine}</p>
+    </section>`;
+  }
+  return `<section class="etape-correction correction-observation">
+    ${rendreEtape(1, "Compter les unités", "repere-observation")}
+    ${rendreVisuelCorrectionFractions(question, source)}
+    <p>Le dénominateur 1 signifie que chaque part vaut déjà une unité.</p>
+  </section>
+  <section class="etape-correction correction-conclusion">
+    ${rendreEtape(2, "Conserver le même nombre", "repere-conclusion")}
+    <p class="chaine-fraction">${chaine}</p>
+  </section>`;
+}
+
+function rendreCorrectionFractionsDecimaux(question) {
+  if (!etat.correctionOuverte) return "";
+  const source = blocRationnelQuestion(question);
+  const contenu = `${rendreRappelQuestionFractions(question)}
+    ${rendreReponseEleveFractions(question, source)}
+    ${diagnosticQcmFractions(question)}
+    <div class="etapes-correction-fractions">
+      ${rendreExplicationCorrectionFractions(question, source)}
+    </div>
+    <p class="titre-reponse-correcte">Réponse correcte</p>
+    ${rendreReponseCorrecteFractions(question, source)}`;
+  return rendreCadrePanneau({
+    type: "correction",
+    surtitre: "Après la réponse",
+    titre: "Correction expliquée",
+    contenu,
+    classes: "panneau-correction-fractions panneau-fractions",
+  });
+}
+
+function rendreDoubleDroiteCoursReperes() {
+  const graduations = [0, 0.25, 0.5, 0.75, 1];
+  const etiquettes = { "0.25": "", "0.5": "", "0.75": "" };
+  const reperes = [
+    { numerateur: 1, denominateur: 4, valeur: 0.25, decimal: "0,25", couleur: COULEURS.orange },
+    { numerateur: 1, denominateur: 2, valeur: 0.5, decimal: "0,5", couleur: COULEURS.bleu },
+    { numerateur: 3, denominateur: 4, valeur: 0.75, decimal: "0,75", couleur: COULEURS.turquoise },
+  ];
+  const rendreVariante = (largeur, classeVariante) => rendreFigureFraction(
+    dessinerDoubleDroiteGraduee({
+      largeur,
+      description: "Double droite graduée : un quart, un demi et trois quarts sont alignés avec 0,25, 0,5 et 0,75.",
+      haut: {
+        min: 0,
+        max: 1,
+        graduations,
+        etiquettes,
+        nom: "Fractions",
+        tailleEtiquette: 18,
+        points: reperes.map((repere) => ({
+          valeur: repere.valeur,
+          etiquette: {
+            type: "fraction",
+            numerateur: repere.numerateur,
+            denominateur: repere.denominateur,
+          },
+          couleur: repere.couleur,
+          position: "dessus",
+        })),
+      },
+      bas: {
+        min: 0,
+        max: 1,
+        graduations,
+        etiquettes,
+        nom: "Décimaux",
+        tailleEtiquette: 18,
+        points: reperes.map((repere) => ({
+          valeur: repere.valeur,
+          etiquette: repere.decimal,
+          couleur: repere.couleur,
+          position: "dessous",
+        })),
+      },
+    }),
+    `figure-double-droite-fraction figure-double-droite-cours ${classeVariante}`,
+  );
+  return `<div class="double-droite-responsive">
+    ${rendreVariante(720, "figure-double-droite-large")}
+    ${rendreVariante(340, "figure-double-droite-mobile")}
+  </div>`;
+}
+
+function rendreCarteRepereCours(numerateur, denominateur) {
+  const centiemes = numerateur * (100 / denominateur);
+  return `<article class="carte-repere-fraction">
+    ${rendreFigureFraction(
+      dessinerGrilleFraction({
+        colonnes: 10,
+        lignes: 10,
+        coloriees: centiemes,
+        cote: 132,
+        ecriture: false,
+      }),
+      "figure-grille-repere",
+    )}
+    <p>${rendreFractionEmpilee(numerateur, denominateur)} <span>=</span>
+      ${rendreFractionEmpilee(centiemes, 100)} <span>=</span>
+      <strong>${echapper(formaterFractionEnDecimal(numerateur, denominateur))}</strong></p>
+  </article>`;
+}
+
+function rendreCoursRangFractions(sens) {
+  const exemples = {
+    10: { numerateur: 7, denominateur: 10 },
+    100: { numerateur: 51, denominateur: 100 },
+    1000: { numerateur: 725, denominateur: 1000 },
+  };
+  const exemple = exemples[denominateurCoursFraction];
+  const rang = RANGS_DECIMAUX.find(
+    (element) => element.denominateur === exemple.denominateur,
+  );
+  const decimal = formaterFractionEnDecimal(exemple.numerateur, exemple.denominateur);
+  const direct = sens === "nc-03";
+  return `<article class="carte-cours-fractions carte-cours-rangs">
+    <span class="numero-cours">${direct ? 3 : 4}</span>
+    <h3>${direct ? "Du dénominateur vers la virgule" : "De la virgule vers la fraction"}</h3>
+    <div class="onglets-rangs-cours" role="radiogroup" aria-label="Choisir un rang">
+      ${RANGS_DECIMAUX.map((element) => `<button type="button" data-action="cours-rang-fraction"
+        data-denominateur="${element.denominateur}" role="radio"
+        aria-checked="${denominateurCoursFraction === element.denominateur}"
+        class="${denominateurCoursFraction === element.denominateur ? "selectionne" : ""}">${element.libelle}</button>`).join("")}
+    </div>
+    <p class="lecture-rang-cours">${direct
+      ? `${rendreFractionEmpilee(exemple.numerateur, exemple.denominateur)} se lit « ${exemple.numerateur} ${rang.libelle} » : le dernier chiffre va dans cette colonne.`
+      : `<strong>${echapper(decimal)}</strong> se lit « ${exemple.numerateur} ${rang.libelle} » : ${exemple.numerateur} devient le numérateur et ${exemple.denominateur} le dénominateur.`}</p>
+    ${rendreTableauNumeration(exemple.numerateur, exemple.denominateur, {
+      afficherChiffres: true,
+      colonneMiseEnEvidence: rang.id,
+    })}
+    <p class="chaine-fraction">${direct
+      ? `${rendreFractionEmpilee(exemple.numerateur, exemple.denominateur)} <span>=</span> <strong>${echapper(decimal)}</strong>`
+      : `<strong>${echapper(decimal)}</strong> <span>=</span> ${rendreFractionEmpilee(exemple.numerateur, exemple.denominateur)}`}</p>
+  </article>`;
+}
+
+function rendreCarteCoursFractions(index) {
+  if (index === 0) {
+    return `<article class="carte-cours-fractions carte-cours-correspondance">
+      <span class="numero-cours">1</span><h3>Un même nombre peut avoir deux écritures</h3>
+      <p class="introduction-cours">Les points placés l’un sous l’autre représentent exactement la même quantité.</p>
+      ${rendreDoubleDroiteCoursReperes()}
+      <p class="definition-cours">La fraction est sur la ligne du haut ; son écriture décimale est juste en dessous. Changer d’écriture ne déplace pas le nombre.</p>
+    </article>`;
+  }
+  if (index === 1) {
+    return `<article class="carte-cours-fractions">
+      <span class="numero-cours">2</span><h3>Trois repères indispensables</h3>
+      <div class="cartes-reperes-fractions-refonte">
+        ${rendreCarteRepereCours(1, 2)}
+        ${rendreCarteRepereCours(1, 4)}
+        ${rendreCarteRepereCours(3, 4)}
+      </div>
+      <p class="definition-cours">Chaque dessin garde la même unité de 100 cases : on lit directement 50, 25 ou 75 centièmes.</p>
+    </article>`;
+  }
+  if (index === 2) return rendreCoursRangFractions("nc-03");
+  if (index === 3) return rendreCoursRangFractions("nc-04");
+  if (index === 4) {
+    return `<article class="carte-cours-fractions carte-cours-unites">
+      <span class="numero-cours">5</span><h3>Quand la fraction dépasse 1</h3>
+      <p class="introduction-cours">On forme d’abord toutes les unités complètes, puis on convertit seulement les parts restantes.</p>
+      <p class="definition-cours">Chaque cadre garde la même taille : un demi occupe toujours la moitié d’une unité et un quart toujours le quart. Les cases pointillées montrent ce qui manque pour reformer une unité.</p>
+      <div class="exemples-groupement-cours">
+        <section><h4>${rendreFractionEmpilee(5, 2)}</h4>
+          ${rendreGroupesPartsRiche({ numerateur: 5, denominateur: 2 }, 2)}
+          <p>${rendreFractionEmpilee(5, 2)} = 2 + ${rendreFractionEmpilee(1, 2)} = <strong>2,5</strong></p></section>
+        <section><h4>${rendreFractionEmpilee(7, 4)}</h4>
+          ${rendreGroupesPartsRiche({ numerateur: 7, denominateur: 4 }, 1)}
+          <p>${rendreFractionEmpilee(7, 4)} = 1 + ${rendreFractionEmpilee(3, 4)} = <strong>1,75</strong></p></section>
+      </div>
+    </article>`;
+  }
+  return `<article class="carte-cours-fractions carte-cours-strategie">
+    <span class="numero-cours">6</span><h3>Entiers cachés, équivalences et stratégie</h3>
+    <div class="encadres-equivalences">
+      <section><h4>Le dénominateur 1</h4>${rendreEgaliteRationnelle(7, 1)}<p>Sept unités entières restent 7.</p></section>
+      <section><h4>Plusieurs fractions possibles</h4><p class="chaine-equivalences"><strong>1,5</strong><span>=</span>${rendreFractionEmpilee(3, 2)}<span>=</span>${rendreFractionEmpilee(6, 4)}<span>=</span>${rendreFractionEmpilee(15, 10)}</p><p>Elles repèrent le même nombre : une fraction équivalente est correcte, même si elle n’est pas irréductible.</p></section>
+    </div>
+    <ol class="strategies-fractions">
+      <li><strong>10, 100 ou 1 000</strong><span>J’utilise le tableau de numération, dans le sens demandé.</span></li>
+      <li><strong>Demi ou quart inférieur à 1</strong><span>Je pense aux repères 0,5 ; 0,25 ; 0,75.</span></li>
+      <li><strong>Fraction supérieure à 1</strong><span>Je forme les unités, puis je traite le reste.</span></li>
+    </ol>
+    <div class="verification-grandeur-fraction"><strong>Contrôle rapide</strong><p>Numérateur plus petit que le dénominateur : résultat entre 0 et 1. Numérateur plus grand : résultat supérieur à 1.</p></div>
+  </article>`;
+}
+
+function rendreCoursFractionsDecimaux() {
+  if (!etat.coursOuvert) return "";
+  const total = nombrePagesCours();
+  const titres = [
+    "Même nombre, même position",
+    "Les repères indispensables",
+    "Fraction vers décimal",
+    "Décimal vers fraction",
+    "Dépasser l’unité",
+    "Choisir la bonne stratégie",
+  ];
+  const derniere = pageCoursCourante === total - 1;
+  const pied = `<nav class="navigation-cours" aria-label="Navigation dans le cours">
+    <button class="bouton-secondaire" type="button" data-action="cours-precedent" ${pageCoursCourante === 0 ? "disabled" : ""}>Précédent</button>
+    <div class="points-cours" aria-label="Page ${pageCoursCourante + 1} sur ${total}">${Array.from({ length: total }, (_, page) => `<span class="${page === pageCoursCourante ? "actif" : ""}"></span>`).join("")}</div>
+    <button class="bouton-principal" type="button" data-action="${derniere ? "fermer-cours" : "cours-suivant"}">${derniere ? "J’ai compris" : "Suivant"}</button>
+  </nav>`;
+  return rendreCadrePanneau({
+    type: "cours",
+    surtitre: `Cours · ${pageCoursCourante + 1} / ${total}`,
+    titre: titres[pageCoursCourante],
+    contenu: `<div class="cours-une-carte">${rendreCarteCoursFractions(pageCoursCourante)}</div>`,
+    pied,
+    classes: "panneau-cours-fractions panneau-fractions",
+  });
+}
+
 const RENDUS_COURS = Object.freeze({
   [RENDU_DIVISIBILITE]: rendreCoursDivisibilite,
   [RENDU_CARRES]: rendreCoursCarres,
+  [RENDU_FRACTIONS_DECIMAUX]: rendreCoursFractionsDecimaux,
   [RENDU_SOLIDE]: rendreCoursReconnaissance,
   [RENDU_VOLUME]: rendreCoursVolumes,
 });
@@ -2020,6 +3036,7 @@ const RENDUS_COURS = Object.freeze({
 const RENDUS_AIDE = Object.freeze({
   [RENDU_DIVISIBILITE]: rendreAideDivisibilite,
   [RENDU_CARRES]: rendreAideCarres,
+  [RENDU_FRACTIONS_DECIMAUX]: rendreAideFractionsDecimaux,
   [RENDU_SOLIDE]: rendreAideSolides,
   [RENDU_VOLUME]: rendreAideVolumes,
 });
@@ -2027,6 +3044,7 @@ const RENDUS_AIDE = Object.freeze({
 const RENDUS_CORRECTION = Object.freeze({
   [RENDU_DIVISIBILITE]: rendreCorrectionDivisibilite,
   [RENDU_CARRES]: rendreCorrectionCarres,
+  [RENDU_FRACTIONS_DECIMAUX]: rendreCorrectionFractionsDecimaux,
   [RENDU_SOLIDE]: rendreCorrectionSolides,
   [RENDU_VOLUME]: rendreCorrectionVolumes,
 });
@@ -2034,6 +3052,7 @@ const RENDUS_CORRECTION = Object.freeze({
 const RENDUS_QUESTION = Object.freeze({
   [RENDU_DIVISIBILITE]: rendreQuestionDivisibilite,
   [RENDU_CARRES]: rendreQuestionCarres,
+  [RENDU_FRACTIONS_DECIMAUX]: rendreQuestionFractionsDecimaux,
   [RENDU_SOLIDE]: rendreQuestionSolides,
   [RENDU_VOLUME]: rendreQuestionVolumes,
 });
@@ -2061,6 +3080,30 @@ function rendreQuestion() {
   return executerRendu(RENDUS_QUESTION);
 }
 
+function rendreBilanFractionsDecimaux() {
+  if (
+    !estEntrainement()
+    || !etat.configuration.notions.includes(NOTION_FRACTIONS_SIMPLES_DECIMAUX)
+  ) {
+    return "";
+  }
+  const traces = etat.traces.filter((trace) =>
+    ["nc-03", "nc-04"].includes(trace.microNotion));
+  const ligne = (microNotion, libelle) => {
+    const sousEnsemble = traces.filter(
+      (trace) => trace.microNotion === microNotion,
+    );
+    const reussites = sousEnsemble.filter((trace) => trace.juste).length;
+    return `<p><span>${echapper(libelle)}</span><strong>${reussites} / ${sousEnsemble.length}</strong></p>`;
+  };
+  const aides = traces.filter((trace) => trace.aideConsultee).length;
+  return `<section class="detail-bilan-fractions" aria-label="Détail fractions et décimaux">
+    ${ligne("nc-03", "Fraction → décimal")}
+    ${ligne("nc-04", "Décimal → fraction")}
+    <p><span>Aides ouvertes</span><strong>${aides} / ${traces.length}</strong></p>
+  </section>`;
+}
+
 function rendreBilan() {
   const entrainement = estEntrainement();
   const volume = etat.seance.nombreQuestions;
@@ -2078,6 +3121,7 @@ function rendreBilan() {
       <div class="notion-bilan">${nombreNotions === 1
         ? echapper(nomNotion(etat.configuration.notions[0]))
         : `<strong>${libelleNombreAutomatismes(nombreNotions)} révisés</strong>${rendreListeNotionsSelectionnees({ compacte: true })}`}</div>
+      ${rendreBilanFractionsDecimaux()}
       ${entrainement ? `<p class="conseil-bilan">${echapper(conseil)}</p>` : ""}
       <div class="actions-bilan">
         <button class="bouton-principal bouton-large" data-action="nouvelle-serie">Nouvelle série</button>
@@ -2226,6 +3270,10 @@ application.addEventListener("click", (evenement) => {
     saisirChiffre(etat, Number(cible.dataset.value));
     focusSelector = `[data-action="chiffre"][data-value="${cible.dataset.value}"]`;
   }
+  if (action === "caractere") {
+    saisirCaractere(etat, cible.dataset.value);
+    focusSelector = `[data-action="caractere"][data-value="${cible.dataset.value}"]`;
+  }
   if (action === "effacer-saisie") {
     effacerSaisie(etat);
     focusSelector = '[data-action="effacer-saisie"]';
@@ -2246,6 +3294,32 @@ application.addEventListener("click", (evenement) => {
   if (action === "chiffre-aide") {
     basculerChiffreAide(etat, Number(cible.dataset.index));
     focusSelector = `[data-action="chiffre-aide"][data-index="${cible.dataset.index}"]`;
+  }
+  if (action === "repere-aide") {
+    selectionnerRepereAide(etat, cible.dataset.value);
+    focusSelector = `[data-action="repere-aide"][data-value="${cible.dataset.value}"]`;
+  }
+  if (action === "pas-fraction-precedent") {
+    avancerFractionAide(etat, -1);
+    focusSelector = '[data-action="pas-fraction-precedent"]';
+  }
+  if (action === "pas-fraction-suivant") {
+    avancerFractionAide(etat, 1);
+    focusSelector = etat.pasFractionAide === blocRationnelQuestion(questionCourante(etat))?.numerateur
+      ? '[data-action="pas-fraction-precedent"]'
+      : '[data-action="pas-fraction-suivant"]';
+  }
+  if (action === "groupe-unite-precedent") {
+    grouperUniteFractionAide(etat, -1);
+    focusSelector = '[data-action="groupe-unite-precedent"]';
+  }
+  if (action === "groupe-unite-suivant") {
+    grouperUniteFractionAide(etat, 1);
+    focusSelector = '[data-action="groupe-unite-precedent"]';
+  }
+  if (action === "rang-fraction") {
+    choisirRangFractionAide(etat, cible.dataset.rang);
+    focusSelector = `[data-action="rang-fraction"][data-rang="${cible.dataset.rang}"]`;
   }
   if (action === "reponse") revelerReponse(etat);
   if (action === "correction") {
@@ -2282,6 +3356,13 @@ application.addEventListener("click", (evenement) => {
       ? '[data-action="fermer-cours"].bouton-principal'
       : '[data-action="cours-suivant"]';
   }
+  if (action === "cours-rang-fraction") {
+    const denominateur = Number(cible.dataset.denominateur);
+    if ([10, 100, 1000].includes(denominateur)) {
+      denominateurCoursFraction = denominateur;
+    }
+    focusSelector = `[data-action="cours-rang-fraction"][data-denominateur="${denominateurCoursFraction}"]`;
+  }
   if (action === "fermer-cours") {
     fermerCours(etat);
     focusSelector = etat.seance.etat.phase === "prete" || !estEntrainement()
@@ -2306,6 +3387,15 @@ application.addEventListener("click", (evenement) => {
     menuAccueilOuvert = false;
   }
   rendre({ focusPanneau, focusSelector, reinitialiserDefilementPanneau });
+});
+
+application.addEventListener("input", (evenement) => {
+  const cible = evenement.target.closest?.('[data-action="position-fraction"]');
+  if (!cible) return;
+  positionnerFractionAide(etat, Number(cible.value));
+  rendre({
+    focusSelector: '[data-action="position-fraction"]',
+  });
 });
 
 window.addEventListener?.("keydown", (evenement) => {
@@ -2352,6 +3442,31 @@ window.addEventListener?.("keydown", (evenement) => {
           premier.focus();
         }
       }
+    } else {
+      const question = questionCourante(etat);
+      const champFocus = document.activeElement?.closest?.(
+        '[data-action="champ-reponse"]',
+      );
+      if (
+        estEntrainement()
+        && etat.validation === null
+        && question?.reponse.type === TYPE_REPONSE_FRACTION_EQUIVALENTE
+        && champFocus
+      ) {
+        const indexCourant = Number(champFocus.dataset.index);
+        const index = !evenement.shiftKey && indexCourant === 0
+          ? 1
+          : evenement.shiftKey && indexCourant === 1
+            ? 0
+            : null;
+        if (index !== null) {
+          evenement.preventDefault?.();
+          selectionnerChampSaisie(etat, index);
+          rendre({
+            focusSelector: `[data-action="champ-reponse"][data-index="${index}"]`,
+          });
+        }
+      }
     }
     return;
   }
@@ -2360,17 +3475,43 @@ window.addEventListener?.("keydown", (evenement) => {
   if (!question || !estReponseNumerique(question)) return;
   if (/^[0-9]$/.test(evenement.key)) {
     evenement.preventDefault?.();
-    saisirChiffre(etat, Number(evenement.key));
+    saisirCaractere(etat, evenement.key);
+    rendre({
+      focusSelector: question.reponse.type === TYPE_REPONSE_FRACTION_EQUIVALENTE
+        ? `[data-action="champ-reponse"][data-index="${etat.champSaisieActif}"]`
+        : "",
+    });
+  } else if (
+    question.reponse.type === TYPE_REPONSE_NOMBRE_DECIMAL
+    && [".", ","].includes(evenement.key)
+  ) {
+    evenement.preventDefault?.();
+    saisirCaractere(etat, evenement.key);
     rendre();
   } else if (evenement.key === "Backspace") {
     evenement.preventDefault?.();
     effacerSaisie(etat);
-    rendre();
+    rendre({
+      focusSelector: question.reponse.type === TYPE_REPONSE_FRACTION_EQUIVALENTE
+        ? `[data-action="champ-reponse"][data-index="${etat.champSaisieActif}"]`
+        : "",
+    });
   } else if (evenement.key === "Enter") {
     evenement.preventDefault?.();
     validerReponse(etat);
     rendre();
   }
+});
+
+application.addEventListener("focusin", (evenement) => {
+  const cible = evenement.target.closest?.('[data-action="champ-reponse"]');
+  if (!cible || etat.validation !== null) return;
+  const index = Number(cible.dataset.index);
+  if (etat.champSaisieActif === index) return;
+  selectionnerChampSaisie(etat, index);
+  rendre({
+    focusSelector: `[data-action="champ-reponse"][data-index="${index}"]`,
+  });
 });
 
 let debutGlissement = null;

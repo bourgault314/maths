@@ -100,6 +100,12 @@ export const PROVENANCE_OBJETS = {
     note: "Bande et grille fractionnées reprises des sections « fraction-bar » et « fraction-grid » : le geste pédagogique est conservé (écriture fractionnaire dessinée, repère de l'unité, colonnes et lignes séparées), le code est réécrit en module ESM français, coordonnées arrondies à 2 décimales et couleurs prises dans la charte.",
   },
 
+  "fractions-decimaux.js": {
+    statut: "original_mathsgo",
+    source: "conception NC-03/NC-04 validée par Gwenaël le 7 août 2026 ; calcul rationnel exact et données de droite et de tableau écrits pour maths&go",
+    note: "La brique partage uniquement des données mathématiques et des normalisations exactes. Aucun code, énoncé ou visuel de l'application historique n'est repris.",
+  },
+
   "droite-graduee.js": {
     statut: "reconstruit",
     source: "PR #8 — pack de représentations, réécrit pour la fondation V2",
@@ -137,7 +143,7 @@ export const PROVENANCE_FONDATION_V2 = Object.freeze({
 
   "automatismes-v2/app.js": {
     statut: "original_mathsgo",
-    source: "parcours complets NC-01 et NC-02, décisions de disposition des 3, 6 et 7 août 2026",
+    source: "parcours complets du lecteur V2, incluant NC-01 à NC-04 et les notions GE/PG, décisions de disposition des 3, 6 et 7 août 2026",
   },
   "automatismes-v2/package.json": {
     statut: "original_mathsgo",
@@ -146,6 +152,10 @@ export const PROVENANCE_FONDATION_V2 = Object.freeze({
   "automatismes-v2/src/etat-lecteur.js": {
     statut: "original_mathsgo",
     source: "contrats de séance et de trace validés pour Automatismes maths&go V2",
+  },
+  "automatismes-v2/src/diagnostic-fractions-decimaux.js": {
+    statut: "original_mathsgo",
+    source: "diagnostics NC-03/NC-04 bornés aux mécanismes identifiables, validés par Gwenaël le 7 août 2026",
   },
   "automatismes-v2/src/registre-lecteur.js": {
     statut: "original_mathsgo",
@@ -207,7 +217,7 @@ export const PROVENANCE_FONDATION_V2 = Object.freeze({
 
   "packages/automatismes/src/registre.js": {
     statut: "original_mathsgo",
-    source: "registre des notions NC-01 et NC-02 écrit pour Automatismes maths&go V2",
+    source: "registre des notions NC, GE et PG du lecteur écrit pour Automatismes maths&go V2",
   },
   "packages/automatismes/src/nombres-et-calculs/criteres-divisibilite/selection-diviseurs.js": {
     statut: "original_mathsgo",
@@ -264,6 +274,22 @@ export const PROVENANCE_FONDATION_V2 = Object.freeze({
   "packages/automatismes/src/nombres-et-calculs/carres-entiers-1-a-12/serie.js": {
     statut: "original_mathsgo",
     source: "quotas et couverture déterministe des treize bases NC-02 approuvés les 6 et 7 août 2026",
+  },
+  "packages/automatismes/src/nombres-et-calculs/fractions-simples-decimaux/commun.js": {
+    statut: "original_mathsgo",
+    source: "invariants communs NC-03/NC-04 et catégorie visible unique validés par Gwenaël le 7 août 2026",
+  },
+  "packages/automatismes/src/nombres-et-calculs/fractions-simples-decimaux/fraction-vers-decimal.js": {
+    statut: "original_mathsgo",
+    source: "générateur NC-03 écrit à neuf pour maths&go d'après la fiche validée le 7 août 2026",
+  },
+  "packages/automatismes/src/nombres-et-calculs/fractions-simples-decimaux/decimal-vers-fraction.js": {
+    statut: "original_mathsgo",
+    source: "générateur NC-04 écrit à neuf pour maths&go d'après la fiche validée le 7 août 2026",
+  },
+  "packages/automatismes/src/nombres-et-calculs/fractions-simples-decimaux/serie.js": {
+    statut: "original_mathsgo",
+    source: "recette déterministe commune NC-03/NC-04, quota 10/10 et item libre validés par Gwenaël le 7 août 2026",
   },
   "packages/automatismes/src/espace-et-geometrie/solides-usuels/reconnaissance.js": {
     statut: "original_mathsgo",

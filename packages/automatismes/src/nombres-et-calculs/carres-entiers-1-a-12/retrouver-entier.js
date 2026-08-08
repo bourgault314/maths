@@ -4,7 +4,7 @@ import {
   COMPARAISON_VALEURS_EXACTES,
   SCHEMA_QUESTION_INSTANCE_V2,
   TYPE_REPONSE_DEUX_ENTIERS,
-} from "../../../../contrats/src/question-v2.js?v=20";
+} from "../../../../contrats/src/question-v2.js?v=21";
 import {
   BASES_CARRES_ENTIERS,
   blocPuissance,
@@ -15,7 +15,7 @@ import {
   exigerParametresCarres,
   reponseEntier,
   valeurParametreOuTirage,
-} from "./commun.js?v=20";
+} from "./commun.js?v=21";
 
 export const NOM_GENERATEUR_RETROUVER_ENTIER_CARRE =
   "nombres-et-calculs.carres-entiers-1-a-12.retrouver-entier";
