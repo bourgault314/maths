@@ -31,6 +31,9 @@ jobs:
       - name: Catalogue (cohérence des ressources)
         run: node scripts/validate-catalogue.mjs
 
+      - name: Référencement (métadonnées et pages hors catalogue)
+        run: node scripts/generate-seo.mjs --check
+
       - name: Sitemap (chaque URL correspond à un fichier)
         run: node scripts/validate-sitemap.mjs
 

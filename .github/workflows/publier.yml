@@ -48,6 +48,7 @@ jobs:
         run: |
           node --test
           node scripts/validate-catalogue.mjs
+          node scripts/generate-seo.mjs --check
           node scripts/validate-sitemap.mjs
           node scripts/validate-icone.mjs
           node scripts/validate-automatismes-public.mjs
@@ -61,7 +62,9 @@ jobs:
           rsync -a --exclude '.*' --exclude '_*' \
             --exclude 'node_modules' --exclude '*.test.js' \
             --exclude 'package.json' --exclude 'package-lock.json' \
+            --exclude 'axelle/daily/template-index.html' \
             ./ _site/
+          test ! -e _site/axelle/daily/template-index.html
           echo "Fichiers assemblés : $(find _site -type f | wc -l)"
 
       - name: Empaqueter pour publication
