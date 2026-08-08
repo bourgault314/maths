@@ -1,6 +1,6 @@
 window.MATHSGO_CATALOGUE = {
-  "schemaVersion": 4,
-  "generatedAt": "2026-07-16T00:00:00.000Z",
+  "schemaVersion": 5,
+  "generatedAt": "2026-08-08T00:00:00.000Z",
   "description": "Catalogue des ressources maths&go : domaines, notions, collections et facettes cumulables.",
   "uses": [
     {
@@ -54,8 +54,12 @@ window.MATHSGO_CATALOGUE = {
       "label": "Manipuler"
     },
     {
+      "id": "entrainer",
+      "label": "S’entraîner"
+    },
+    {
       "id": "generer",
-      "label": "Générer / personnaliser"
+      "label": "Créer / personnaliser"
     },
     {
       "id": "gabarits",
@@ -63,7 +67,7 @@ window.MATHSGO_CATALOGUE = {
     },
     {
       "id": "imprimer",
-      "label": "Imprimer / fabriquer"
+      "label": "Prêt à imprimer"
     },
     {
       "id": "activites",
@@ -71,11 +75,11 @@ window.MATHSGO_CATALOGUE = {
     },
     {
       "id": "cours",
-      "label": "Cours et synthèses"
+      "label": "Cours et progressions"
     },
     {
       "id": "jeux",
-      "label": "Jouer / explorer"
+      "label": "Jeux / explorations"
     }
   ],
   "collections": [
@@ -149,14 +153,14 @@ window.MATHSGO_CATALOGUE = {
   "resourceClassifications": {
     "cps/bilan-s1.html": {
       "primaryNotion": "bilans-cps",
-      "primaryGroup": "imprimer",
+      "primaryGroup": "activites",
       "collections": [],
       "tags": ["cps", "bilan", "connaissance-de-soi", "engagement"],
       "thumbnail": "cps/assets/bilan-s1/page-1.png",
       "cardDescription": "Un bilan guidé en quatre pages pour relire son semestre, comprendre son fonctionnement et choisir un petit pas concret."
     },
-    "outils/box_barre_final.html": { "primaryNotion": "schemas-barres", "collections": [], "tags": ["boite", "schema-barres"] },
-    "outils/box_pasbarre_final.html": { "primaryNotion": "calcul-litteral", "collections": [], "tags": ["boite", "archive"] },
+    "outils/box_barre_final.html": { "primaryNotion": "schemas-barres", "primaryGroup": "activites", "collections": [], "tags": ["boite", "schema-barres"] },
+    "outils/box_pasbarre_final.html": { "primaryNotion": "calcul-litteral", "primaryGroup": "activites", "collections": [], "tags": ["boite", "archive"] },
     "outils/tuiles_algebriques/tuiles_algebriques.html": {
       "primaryNotion": "calcul-litteral",
       "primaryGroup": "manipuler",
@@ -173,9 +177,9 @@ window.MATHSGO_CATALOGUE = {
       "thumbnail": "assets/img/thumbnails/tuiles-algebriques/plateau-equations.png?v=2",
       "cardDescription": "Poser puis résoudre une équation du premier degré en manipulant les deux membres."
     },
-    "outils/detective_des_grandeurs_additive__1.pdf": { "primaryNotion": "schemas-barres", "collections": [], "tags": ["schema-barres", "resolution-problemes", "enquete"] },
-    "outils/detective_des_grandeurs_additive__2.pdf": { "primaryNotion": "schemas-barres", "collections": [], "tags": ["schema-barres", "resolution-problemes", "enquete"] },
-    "outils/detective_des_grandeurs_multiplicative__1.pdf": { "primaryNotion": "schemas-barres", "collections": [], "tags": ["schema-barres", "resolution-problemes", "enquete"] },
+    "outils/detective_des_grandeurs_additive__1.pdf": { "primaryNotion": "schemas-barres", "primaryGroup": "activites", "collections": [], "tags": ["schema-barres", "resolution-problemes", "enquete"] },
+    "outils/detective_des_grandeurs_additive__2.pdf": { "primaryNotion": "schemas-barres", "primaryGroup": "activites", "collections": [], "tags": ["schema-barres", "resolution-problemes", "enquete"] },
+    "outils/detective_des_grandeurs_multiplicative__1.pdf": { "primaryNotion": "schemas-barres", "primaryGroup": "activites", "collections": [], "tags": ["schema-barres", "resolution-problemes", "enquete"] },
     "outils/equabarre.html": {
       "primaryNotion": "schemas-barres",
       "primaryGroup": "manipuler",
@@ -192,17 +196,18 @@ window.MATHSGO_CATALOGUE = {
       "thumbnail": "assets/img/thumbnails/splat/equasplat.png?v=2",
       "cardDescription": "Construire une équation avec des taches et des jetons puis agir de la même façon sur les deux membres."
     },
-    "outils/gabarits_enquetes_additive.pdf": { "primaryNotion": "schemas-barres", "collections": [], "tags": ["schema-barres", "resolution-problemes", "gabarit"] },
-    "outils/gabarits_enquetes_multiplicative.pdf": { "primaryNotion": "schemas-barres", "collections": [], "tags": ["schema-barres", "resolution-problemes", "gabarit"] },
-    "outils/gabarits_partage_equitable_2_3_4_5.pdf": { "primaryNotion": "schemas-barres", "collections": [], "tags": ["schema-barres", "resolution-problemes", "gabarit"] },
-    "outils/sheet_generator_schema_partie_tout.html": { "primaryNotion": "schemas-barres", "collections": [], "tags": ["ancien-index", "schema-barres"] },
-    "outils/tuiles_algebriques/livret_litteral_blanc_gris.pdf": { "primaryNotion": "calcul-litteral", "collections": ["tuiles-algebriques"], "tags": ["tuiles-algebriques"] },
-    "outils/tuiles_algebriques/livret_litteral_bleu_jaune.pdf": { "primaryNotion": "calcul-litteral", "collections": ["tuiles-algebriques"], "tags": ["tuiles-algebriques"] },
-    "outils/tuiles_algebriques/livret_litteral_mathigon.pdf": { "primaryNotion": "calcul-litteral", "collections": ["tuiles-algebriques"], "tags": ["tuiles-algebriques"] },
-    "outils/tuiles_algebriques/livret_litteral_vert_rouge.pdf": { "primaryNotion": "calcul-litteral", "collections": ["tuiles-algebriques"], "tags": ["tuiles-algebriques"] },
-    "outils/fabrication_materiel/maths_barre.html": { "primaryNotion": "schemas-barres", "collections": [], "tags": ["schema-barres", "reference-technique"] },
+    "outils/gabarits_enquetes_additive.pdf": { "primaryNotion": "schemas-barres", "primaryGroup": "imprimer", "collections": [], "tags": ["schema-barres", "resolution-problemes", "gabarit"] },
+    "outils/gabarits_enquetes_multiplicative.pdf": { "primaryNotion": "schemas-barres", "primaryGroup": "imprimer", "collections": [], "tags": ["schema-barres", "resolution-problemes", "gabarit"] },
+    "outils/gabarits_partage_equitable_2_3_4_5.pdf": { "primaryNotion": "schemas-barres", "primaryGroup": "imprimer", "collections": [], "tags": ["schema-barres", "resolution-problemes", "gabarit"] },
+    "outils/sheet_generator_schema_partie_tout.html": { "primaryNotion": "schemas-barres", "primaryGroup": "generer", "collections": [], "tags": ["ancien-index", "schema-barres"] },
+    "outils/tuiles_algebriques/livret_litteral_blanc_gris.pdf": { "primaryNotion": "calcul-litteral", "primaryGroup": "cours", "collections": ["tuiles-algebriques"], "tags": ["tuiles-algebriques"] },
+    "outils/tuiles_algebriques/livret_litteral_bleu_jaune.pdf": { "primaryNotion": "calcul-litteral", "primaryGroup": "cours", "collections": ["tuiles-algebriques"], "tags": ["tuiles-algebriques"] },
+    "outils/tuiles_algebriques/livret_litteral_mathigon.pdf": { "primaryNotion": "calcul-litteral", "primaryGroup": "cours", "collections": ["tuiles-algebriques"], "tags": ["tuiles-algebriques"] },
+    "outils/tuiles_algebriques/livret_litteral_vert_rouge.pdf": { "primaryNotion": "calcul-litteral", "primaryGroup": "cours", "collections": ["tuiles-algebriques"], "tags": ["tuiles-algebriques"] },
+    "outils/fabrication_materiel/maths_barre.html": { "primaryNotion": "schemas-barres", "primaryGroup": "generer", "collections": [], "tags": ["schema-barres", "reference-technique"] },
     "outils/labo-des-regularites.html": {
       "primaryNotion": "patterns",
+      "primaryGroup": "generer",
       "collections": [],
       "tags": ["patterns", "generalisation", "laboratoire", "regularites", "algebre", "figures"],
       "thumbnail": "assets/img/thumbnails/patterns-card.svg?v=2",
@@ -234,7 +239,7 @@ window.MATHSGO_CATALOGUE = {
     },
     "outils/club_maths/jeu_du_chaos.html": {
       "primaryNotion": "explorations",
-      "primaryGroup": "jeux",
+      "primaryGroup": "activites",
       "collections": [],
       "tags": ["exploration", "fractale", "hasard", "sierpinski", "scratch"],
       "thumbnail": "assets/img/thumbnails/jeux/jeu-chaos.svg?v=1",
@@ -268,13 +273,13 @@ window.MATHSGO_CATALOGUE = {
       "primaryNotion": "espace-constructions",
       "primaryGroup": "manipuler",
       "collections": [],
-      "tags": ["espace", "cubes", "volume", "scene3d", "construction"],
+      "tags": ["espace", "cubes", "volume", "scene3d", "construction", "outil-externe"],
       "thumbnail": "assets/img/thumbnails/notions/scene3d.svg?v=1",
-      "cardDescription": "Accéder à SCÈNE3D pour construire, faire tourner et dénombrer des assemblages de cubes."
+      "cardDescription": "Ouvrir l’outil externe SCÈNE3D pour construire, faire tourner et dénombrer des assemblages de cubes."
     },
     "outils/plateaux_manipulation/stats_city.html": {
       "primaryNotion": "statistiques",
-      "primaryGroup": "manipuler",
+      "primaryGroup": "entrainer",
       "collections": [],
       "tags": ["statistiques", "mediane", "moyenne", "etendue", "donnees"],
       "thumbnail": "assets/img/thumbnails/notions/stats-city.png?v=3",
@@ -322,7 +327,7 @@ window.MATHSGO_CATALOGUE = {
     },
     "auto/index.html": {
       "primaryNotion": "calcul-mental",
-      "primaryGroup": "generer",
+      "primaryGroup": "entrainer",
       "collections": [],
       "tags": ["automatismes", "cycle-4", "dnb", "entrainement", "diaporama", "interactif"],
       "thumbnail": "assets/img/thumbnails/automatismes/entrainement-cycle4.svg?v=1",
@@ -336,12 +341,42 @@ window.MATHSGO_CATALOGUE = {
       "thumbnail": "assets/img/thumbnails/automatismes/livret-a5.svg?v=1",
       "cardDescription": "Composer puis imprimer un livret A5 de six blocs pouvant mobiliser tous les domaines."
     },
-    "outils/problemes_barres_M974.html": { "primaryNotion": "schemas-barres", "collections": [], "tags": ["schema-barres", "resolution-problemes", "version-travail"] },
-    "outils/nombres_relatifs/nombres_relatifs_somme_difference.html": { "primaryNotion": "relatifs", "collections": [], "tags": ["nombres-relatifs", "plateau-manipulation"] },
-    "outils/nombres_relatifs/nombres_relatifs_somme_differenceB.html": { "primaryNotion": "relatifs", "collections": [], "tags": ["nombres-relatifs", "plateau-manipulation"] },
-    "outils/nombres_relatifs/nombres_relatifs_somme_differenceBClaire.html": { "primaryNotion": "relatifs", "collections": [], "tags": ["nombres-relatifs", "plateau-manipulation"] },
-    "outils/nombres_relatifs/nombres_relatifs_somme_differenceC.html": { "primaryNotion": "relatifs", "collections": [], "tags": ["nombres-relatifs", "plateau-manipulation"] },
-    "outils/nombres_relatifs/nombres_relatifs_somme_differenceD.html": { "primaryNotion": "relatifs", "collections": [], "tags": ["nombres-relatifs", "plateau-manipulation"] },
+    "outils/problemes_barres_M974.html": { "primaryNotion": "schemas-barres", "primaryGroup": "generer", "collections": [], "tags": ["schema-barres", "resolution-problemes", "version-travail"] },
+    "outils/nombres_relatifs/nombres_relatifs_somme_difference.html": {
+      "primaryNotion": "relatifs",
+      "primaryGroup": "manipuler",
+      "collections": [],
+      "tags": ["nombres-relatifs", "plateau-manipulation"],
+      "cardDescription": "Modéliser additions et soustractions de nombres relatifs avec des jetons positifs, négatifs et des paires nulles."
+    },
+    "outils/nombres_relatifs/nombres_relatifs_somme_differenceB.html": {
+      "primaryNotion": "relatifs",
+      "primaryGroup": "manipuler",
+      "collections": [],
+      "tags": ["nombres-relatifs", "plateau-manipulation"],
+      "cardDescription": "Transformer une soustraction de nombres relatifs en manipulant des jetons et des paires nulles."
+    },
+    "outils/nombres_relatifs/nombres_relatifs_somme_differenceBClaire.html": {
+      "primaryNotion": "relatifs",
+      "primaryGroup": "manipuler",
+      "collections": [],
+      "tags": ["nombres-relatifs", "plateau-manipulation"],
+      "cardDescription": "Manipuler additions et soustractions de relatifs dans une interface claire adaptée à la projection."
+    },
+    "outils/nombres_relatifs/nombres_relatifs_somme_differenceC.html": {
+      "primaryNotion": "relatifs",
+      "primaryGroup": "manipuler",
+      "collections": [],
+      "tags": ["nombres-relatifs", "plateau-manipulation"],
+      "cardDescription": "Passer de la soustraction à l’addition de l’opposé puis simplifier les paires de jetons."
+    },
+    "outils/nombres_relatifs/nombres_relatifs_somme_differenceD.html": {
+      "primaryNotion": "relatifs",
+      "primaryGroup": "manipuler",
+      "collections": [],
+      "tags": ["nombres-relatifs", "plateau-manipulation"],
+      "cardDescription": "Manipuler les nombres relatifs avec rangement, simplification animée et retour en arrière."
+    },
     "outils/splat.html": {
       "primaryNotion": "calcul-litteral",
       "primaryGroup": "generer",
@@ -440,7 +475,7 @@ window.MATHSGO_CATALOGUE = {
     },
     "outils/fractions/mur_fractions.html": {
       "primaryNotion": "fractions",
-      "primaryGroup": "manipuler",
+      "primaryGroup": "generer",
       "collections": [],
       "tags": ["fractions", "mur", "equivalences", "comparaison"],
       "thumbnail": "assets/img/thumbnails/fractions/mur-fractions.png?v=2",
@@ -480,7 +515,7 @@ window.MATHSGO_CATALOGUE = {
     },
     "outils/plateaux_manipulation/mur_diviseurs.html": {
       "primaryNotion": "divisibilite",
-      "primaryGroup": "manipuler",
+      "primaryGroup": "generer",
       "collections": [],
       "tags": ["divisibilite", "diviseurs", "multiplication", "mur"],
       "thumbnail": "assets/img/thumbnails/divisibilite/mur-diviseurs.png?v=1",
@@ -672,6 +707,7 @@ window.MATHSGO_CATALOGUE = {
     },
     "outils/plateaux_manipulation/moulin_pythagore.html": {
       "primaryNotion": "pythagore",
+      "primaryGroup": "activites",
       "collections": [],
       "tags": ["puzzle", "aires", "pythagore"],
       "thumbnail": "assets/img/thumbnails/moulin-pythagore-capture.svg?v=7",
@@ -679,6 +715,7 @@ window.MATHSGO_CATALOGUE = {
     },
     "outils/pythabarre.html": {
       "primaryNotion": "pythagore",
+      "primaryGroup": "manipuler",
       "collections": [],
       "tags": ["schema-barres", "moulin", "pythagore"],
       "thumbnail": "assets/img/thumbnails/pythabarre-capture.svg?v=6",
@@ -686,6 +723,7 @@ window.MATHSGO_CATALOGUE = {
     },
     "outils/pythabarre_recto_verso.pdf": {
       "primaryNotion": "pythagore",
+      "primaryGroup": "imprimer",
       "collections": [],
       "tags": ["schema-barres", "moulin", "pythagore", "gabarit", "imprimable"],
       "thumbnail": "assets/img/thumbnails/pythagore/gabarit-pythagore.png?v=2",
@@ -693,6 +731,7 @@ window.MATHSGO_CATALOGUE = {
     },
     "outils/gabarit_reciproque_pythagore.pdf": {
       "primaryNotion": "pythagore",
+      "primaryGroup": "imprimer",
       "collections": [],
       "tags": ["pythagore", "reciproque", "contraposee", "gabarit", "imprimable"],
       "thumbnail": "assets/img/thumbnails/pythagore/gabarit-reciproque-pythagore.png?v=2",
@@ -700,6 +739,7 @@ window.MATHSGO_CATALOGUE = {
     },
     "outils/fiche_thales_direct_a_verifier.pdf": {
       "primaryNotion": "thales",
+      "primaryGroup": "cours",
       "collections": [],
       "tags": ["thales", "theoreme-direct", "longueur", "proportionnalite", "imprimable"],
       "thumbnail": "assets/img/thumbnails/thales/thales-direct-a-verifier.png?v=3",
@@ -707,44 +747,388 @@ window.MATHSGO_CATALOGUE = {
     },
     "outils/fiche_reciproque_thales.pdf": {
       "primaryNotion": "thales",
+      "primaryGroup": "cours",
       "collections": [],
       "tags": ["thales", "reciproque", "contraposee", "imprimable"],
       "thumbnail": "assets/img/thumbnails/thales/reciproque-contraposee.png?v=3",
-      "cardDescription": "Version 1 : méthode guidée, fiche adaptable et deux exemples pour démontrer un parallélisme ou son contraire."
+      "cardDescription": "Une méthode guidée, une fiche adaptable et deux exemples pour utiliser la réciproque ou la contraposée de Thalès."
     },
     "outils/fiche_thales_criteres_a_verifier.pdf": {
       "primaryNotion": "thales",
+      "primaryGroup": "cours",
       "collections": [],
       "tags": ["thales", "reciproque", "contraposee", "criteres", "imprimable"],
       "thumbnail": "assets/img/thumbnails/thales/tester-parallelisme-a-verifier.png?v=3",
-      "cardDescription": "Version 2 : partir des rapports, les comparer, puis vérifier la disposition seulement en cas d’égalité."
+      "cardDescription": "Une fiche-guide pour calculer et comparer les rapports, puis vérifier la disposition des points lorsque nécessaire."
     },
     "outils/gabarits_proportionnalite_tableaux.pdf": {
       "primaryNotion": "proportionnalite",
+      "primaryGroup": "imprimer",
       "collections": [],
       "tags": ["proportionnalite", "tableau", "gabarit", "imprimable"],
       "thumbnail": "assets/img/thumbnails/proportionnalite/gabarits-tableaux.png?v=1"
     },
     "outils/gabarit_proportionnalite_double_ligne_graduee.pdf": {
       "primaryNotion": "proportionnalite",
+      "primaryGroup": "imprimer",
       "collections": [],
       "tags": ["proportionnalite", "double-ligne-graduee", "gabarit", "imprimable"],
       "thumbnail": "assets/img/thumbnails/proportionnalite/double-ligne-graduee.png?v=1"
     },
     "outils/gabarit_proportionnalite_tableau_sans_coefficient.pdf": {
       "primaryNotion": "proportionnalite",
+      "primaryGroup": "imprimer",
       "collections": [],
       "tags": ["proportionnalite", "tableau", "sans-coefficient", "gabarit", "imprimable"],
       "thumbnail": "assets/img/thumbnails/proportionnalite/tableau-sans-coefficient.png?v=1"
     },
-    "outils/angles/fiche_angles_triangles.pdf": { "primaryNotion": "angles", "collections": [], "tags": ["angles", "triangles", "imprimable"] }
+    "outils/angles/fiche_angles_triangles.pdf": { "primaryNotion": "angles", "primaryGroup": "imprimer", "collections": [], "tags": ["angles", "triangles", "imprimable"] },
+    "outils/bouliers/abaque_de_gerbert/abaque_gerbert_addition.html": {
+      "primaryNotion": "calcul-mental",
+      "primaryGroup": "entrainer",
+      "collections": ["gerbert"],
+      "tags": ["abaque", "addition", "echange", "entrainement"],
+      "cardDescription": "S’entraîner aux additions sur l’abaque de Gerbert avec échanges, validation et nouveau calcul."
+    },
+    "outils/bouliers/abaque_de_gerbert/abaque_gerbert_multiplication_V1.html": {
+      "primaryNotion": "calcul-mental",
+      "primaryGroup": "entrainer",
+      "collections": ["gerbert"],
+      "tags": ["abaque", "multiplication", "entrainement"]
+    },
+    "outils/bouliers/abaque_de_gerbert/abaque_gerbert_multiplication_V2.html": {
+      "primaryNotion": "calcul-mental",
+      "primaryGroup": "entrainer",
+      "collections": ["gerbert"],
+      "tags": ["abaque", "multiplication", "entrainement"]
+    },
+    "outils/bouliers/abaque_de_gerbert/abaque_gerbert_multiplication_V3.html": {
+      "primaryNotion": "calcul-mental",
+      "primaryGroup": "entrainer",
+      "collections": ["gerbert"],
+      "tags": ["abaque", "multiplication", "entrainement"]
+    },
+    "outils/bouliers/abaque_de_gerbert/abaque_gerbert_soustraction.html": {
+      "primaryNotion": "calcul-mental",
+      "primaryGroup": "entrainer",
+      "collections": ["gerbert"],
+      "tags": ["abaque", "soustraction", "echange", "entrainement"],
+      "cardDescription": "S’entraîner aux soustractions sur l’abaque de Gerbert avec échanges et vérification."
+    },
+    "outils/bouliers/abaque_de_gerbert/abaque_gerbert.html": {
+      "primaryNotion": "numeration",
+      "primaryGroup": "manipuler",
+      "collections": ["gerbert"],
+      "tags": ["abaque", "numeration", "valeur-position", "manipulation"],
+      "cardDescription": "Poser et déplacer les apices pour représenter des nombres et effectuer des échanges sur l’abaque."
+    },
+    "outils/bouliers/rekenrek/ajouter9_ajouter8.html": {
+      "primaryNotion": "calcul-mental",
+      "primaryGroup": "entrainer",
+      "collections": ["rekenrek"],
+      "tags": ["rekenrek", "addition", "ajouter-8", "ajouter-9", "entrainement"],
+      "cardDescription": "S’entraîner à ajouter 8 ou 9 en s’appuyant sur le passage par la dizaine."
+    },
+    "auto/": {
+      "primaryNotion": "calcul-mental",
+      "primaryGroup": "entrainer",
+      "collections": [],
+      "tags": ["automatismes", "archive", "entrainement"]
+    },
+    "outils/plateaux_manipulation/boite_bonbons.html": {
+      "primaryNotion": "espace-constructions",
+      "primaryGroup": "manipuler",
+      "collections": [],
+      "tags": ["espace", "solides", "patron", "manipulation"]
+    },
+    "outils/plateaux_manipulation/boite_bonbons_3d_toutes_boites.html": {
+      "primaryNotion": "espace-constructions",
+      "primaryGroup": "manipuler",
+      "collections": [],
+      "tags": ["espace", "solides", "patron", "manipulation"]
+    },
+    "outils/bouliers/rekenrek/rekenrek_FD.html": {
+      "primaryNotion": "fractions",
+      "primaryGroup": "manipuler",
+      "collections": ["rekenrek"],
+      "tags": ["rekenrek", "centiemes", "fractions", "decimaux", "manipulation"],
+      "cardDescription": "Représenter des centièmes et passer entre écriture décimale, fractionnaire et monétaire sur un rekenrek."
+    },
+    "outils/bouliers/boulier_montessori/boulier-cycle3-petit-additions-soustractions.html": {
+      "primaryNotion": "calcul-mental",
+      "primaryGroup": "entrainer",
+      "collections": ["montessori"],
+      "tags": ["boulier-montessori", "addition", "soustraction", "entrainement"],
+      "cardDescription": "Effectuer des additions et des soustractions sur le boulier Montessori, puis vérifier le résultat."
+    },
+    "outils/bouliers/boulier_montessori/boulier-cycle3-petit-placer-nombres.html": {
+      "primaryNotion": "numeration",
+      "primaryGroup": "entrainer",
+      "collections": ["montessori"],
+      "tags": ["boulier-montessori", "numeration", "valeur-position", "entrainement"],
+      "cardDescription": "Composer le nombre demandé sur le boulier Montessori et vérifier chaque réponse."
+    },
+    "outils/bouliers/boulier_montessori/boulier-cycle3-petit.html": {
+      "primaryNotion": "numeration",
+      "primaryGroup": "manipuler",
+      "collections": ["montessori"],
+      "tags": ["boulier-montessori", "numeration", "valeur-position", "manipulation"],
+      "cardDescription": "Manipuler librement un boulier Montessori et relier les boules à l’écriture du nombre."
+    },
+    "outils/bouliers/boulier_montessori/transition_rekenrek-montessori.html": {
+      "primaryNotion": "numeration",
+      "primaryGroup": "manipuler",
+      "collections": ["montessori", "rekenrek"],
+      "tags": ["rekenrek", "boulier-montessori", "numeration", "manipulation"],
+      "cardDescription": "Manipuler un rekenrek libre et faire varier ses couleurs et son organisation jusqu’à 100 billes."
+    },
+    "outils/bouliers/rekenrek/rekenrek.html": {
+      "primaryNotion": "numeration",
+      "primaryGroup": "manipuler",
+      "collections": ["rekenrek"],
+      "tags": ["rekenrek", "numeration", "subitisation", "manipulation"],
+      "cardDescription": "Manipuler librement les billes du rekenrek, masquer une partie et annoter la situation projetée."
+    },
+    "outils/plateaux_manipulation/engrenages_plateau.html": {
+      "primaryNotion": "proportionnalite",
+      "primaryGroup": "manipuler",
+      "collections": [],
+      "tags": ["proportionnalite", "engrenages", "ratio", "manipulation"]
+    },
+    "outils/bouliers/rekenrek/enlever9_enlever8.html": {
+      "primaryNotion": "calcul-mental",
+      "primaryGroup": "entrainer",
+      "collections": ["rekenrek"],
+      "tags": ["rekenrek", "soustraction", "enlever-8", "enlever-9", "entrainement"],
+      "cardDescription": "S’entraîner à enlever 8 ou 9 avec trois niveaux, une aide rekenrek et un score."
+    },
+    "outils/bouliers/rekenrek/force_5.html": {
+      "primaryNotion": "calcul-mental",
+      "primaryGroup": "entrainer",
+      "collections": ["rekenrek"],
+      "tags": ["rekenrek", "addition", "structure-du-5", "entrainement"],
+      "cardDescription": "S’entraîner aux additions en utilisant la structure du 5 sur le rekenrek."
+    },
+    "outils/bouliers/rekenrek/force_5_soustraction.html": {
+      "primaryNotion": "calcul-mental",
+      "primaryGroup": "entrainer",
+      "collections": ["rekenrek"],
+      "tags": ["rekenrek", "soustraction", "structure-du-5", "entrainement"],
+      "cardDescription": "S’entraîner aux soustractions avec une aide rekenrek révélable et trois niveaux."
+    },
+    "outils/bouliers/rekenrek/generateur_rekenrek_cartes.html": {
+      "primaryNotion": "numeration",
+      "primaryGroup": "generer",
+      "collections": ["rekenrek"],
+      "tags": ["rekenrek", "cartes", "generateur", "imprimer"],
+      "cardDescription": "Créer des cartes rekenrek recto verso en choisissant la plage de nombres, les couleurs et le calibrage."
+    },
+    "outils/bouliers/rekenrek/lecture_0_100_generateur2.html": {
+      "primaryNotion": "numeration",
+      "primaryGroup": "generer",
+      "collections": ["rekenrek"],
+      "tags": ["rekenrek", "dizaines", "unites", "generateur", "imprimer"],
+      "cardDescription": "Créer des fiches ou flashcards reliant dizaines, unités, écritures chiffrées et mots-nombres."
+    },
+    "outils/bouliers/rekenrek/lecture_0_100_generateur.html": {
+      "primaryNotion": "numeration",
+      "primaryGroup": "generer",
+      "collections": ["rekenrek"],
+      "tags": ["rekenrek", "lecture", "nombres", "generateur", "imprimer"],
+      "cardDescription": "Créer des fiches de lecture de nombres sur rekenrek, avec correction ou cartes recto verso."
+    },
+    "outils/bouliers/rekenrek/voisins_generateur_compact.html": {
+      "primaryNotion": "numeration",
+      "primaryGroup": "generer",
+      "collections": ["rekenrek"],
+      "tags": ["rekenrek", "nombres-voisins", "generateur", "imprimer"],
+      "cardDescription": "Composer des fiches sur le nombre précédent, le suivant et les voisins dans une plage choisie."
+    },
+    "outils/nombres_relatifs/nombres_relatifs_couleur_mathsgo.pdf": {
+      "primaryNotion": "relatifs",
+      "primaryGroup": "cours",
+      "collections": [],
+      "tags": ["nombres-relatifs", "jetons", "progression", "cours"],
+      "cardDescription": "Suivre une progression sur l’addition et la soustraction des nombres relatifs avec des jetons aux couleurs maths&go."
+    },
+    "outils/nombres_relatifs/nombres_relatifs_vert_rouge_ecriture_blanche.pdf": {
+      "primaryNotion": "relatifs",
+      "primaryGroup": "cours",
+      "collections": [],
+      "tags": ["nombres-relatifs", "jetons", "progression", "cours"],
+      "cardDescription": "Suivre une progression sur l’addition et la soustraction des nombres relatifs avec des jetons rouges et verts à écriture blanche."
+    },
+    "outils/nombres_relatifs/nombres_relatifs_gris_blanc.pdf": {
+      "primaryNotion": "relatifs",
+      "primaryGroup": "cours",
+      "collections": [],
+      "tags": ["nombres-relatifs", "jetons", "progression", "cours"],
+      "cardDescription": "Suivre une progression sur l’addition et la soustraction des nombres relatifs avec des jetons gris et blancs."
+    },
+    "outils/nombres_relatifs/nombres_relatifs_vert_rouge_contour_noir.pdf": {
+      "primaryNotion": "relatifs",
+      "primaryGroup": "cours",
+      "collections": [],
+      "tags": ["nombres-relatifs", "jetons", "progression", "cours"],
+      "cardDescription": "Suivre une progression sur l’addition et la soustraction des nombres relatifs avec des jetons rouges et verts à contour noir."
+    },
+    "outils/bouliers/rekenrek/boss_final.html": {
+      "primaryNotion": "calcul-mental",
+      "primaryGroup": "entrainer",
+      "collections": ["rekenrek"],
+      "tags": ["rekenrek", "calcul-mental", "defi", "entrainement"]
+    },
+    "outils/bouliers/rekenrek/grignoteur.html": {
+      "primaryNotion": "calcul-mental",
+      "primaryGroup": "entrainer",
+      "collections": ["rekenrek"],
+      "tags": ["rekenrek", "calcul-mental", "entrainement"],
+      "cardDescription": "Répondre à une série de calculs, suivre son score et révéler le rekenrek en cas de besoin."
+    },
+    "outils/bouliers/rekenrek/pont_dizaine.html": {
+      "primaryNotion": "calcul-mental",
+      "primaryGroup": "entrainer",
+      "collections": ["rekenrek"],
+      "tags": ["rekenrek", "passage-dizaine", "addition", "entrainement"],
+      "cardDescription": "S’entraîner aux calculs qui franchissent la dizaine avec vérification et aide visuelle."
+    },
+    "outils/plateaux_manipulation/prisme345_h6_patron (1).html": {
+      "primaryNotion": "espace-constructions",
+      "primaryGroup": "manipuler",
+      "collections": [],
+      "tags": ["espace", "prisme", "patron", "manipulation"]
+    },
+    "outils/bouliers/rekenrek/jeu_des_doubles.html": {
+      "primaryNotion": "calcul-mental",
+      "primaryGroup": "entrainer",
+      "collections": ["rekenrek"],
+      "tags": ["rekenrek", "doubles", "calcul-mental", "entrainement"],
+      "cardDescription": "S’entraîner aux doubles par plages et niveaux avec une vérification immédiate."
+    },
+    "outils/bouliers/rekenrek/suivant_precedent.html": {
+      "primaryNotion": "numeration",
+      "primaryGroup": "entrainer",
+      "collections": ["rekenrek"],
+      "tags": ["rekenrek", "precedent", "suivant", "entrainement"],
+      "cardDescription": "Trouver le nombre précédent ou suivant, puis vérifier la réponse avec l’appui du rekenrek."
+    },
+    "outils/bouliers/rekenrek/presque_doubles.html": {
+      "primaryNotion": "calcul-mental",
+      "primaryGroup": "entrainer",
+      "collections": ["rekenrek"],
+      "tags": ["rekenrek", "presque-doubles", "calcul-mental", "entrainement"],
+      "cardDescription": "S’entraîner aux presque-doubles en mode visuel, libre ou mental avec aide révélable."
+    },
+    "outils/bouliers/rekenrek/double_niv1.html": {
+      "primaryNotion": "calcul-mental",
+      "primaryGroup": "generer",
+      "collections": ["rekenrek"],
+      "tags": ["rekenrek", "doubles", "generateur", "imprimer"],
+      "cardDescription": "Générer des grilles imprimables sur les doubles de niveau 1 avec pièges et correction."
+    },
+    "outils/bouliers/rekenrek/double_niv2.html": {
+      "primaryNotion": "calcul-mental",
+      "primaryGroup": "generer",
+      "collections": ["rekenrek"],
+      "tags": ["rekenrek", "doubles", "generateur", "imprimer"],
+      "cardDescription": "Générer des grilles imprimables sur les doubles de niveau 2, avec ou sans correction."
+    },
+    "outils/bouliers/rekenrek/rekenrek_sheet_generator_2_difference.html": {
+      "primaryNotion": "calcul-mental",
+      "primaryGroup": "generer",
+      "collections": ["rekenrek"],
+      "tags": ["rekenrek", "difference", "generateur", "imprimer"]
+    },
+    "outils/bouliers/rekenrek/rekenrek_sheet_generator_somme.html": {
+      "primaryNotion": "calcul-mental",
+      "primaryGroup": "generer",
+      "collections": ["rekenrek"],
+      "tags": ["rekenrek", "somme", "generateur", "imprimer"]
+    },
+    "outils/bouliers/rekenrek/cache cache.html": {
+      "primaryNotion": "calcul-mental",
+      "primaryGroup": "generer",
+      "collections": ["rekenrek"],
+      "tags": ["rekenrek", "complements", "generateur", "imprimer"],
+      "cardDescription": "Générer des planches de compléments à 10, 20 ou 100 sur rekenrek, avec correction."
+    },
+    "outils/bouliers/rekenrek/presque double.html": {
+      "primaryNotion": "calcul-mental",
+      "primaryGroup": "generer",
+      "collections": ["rekenrek"],
+      "tags": ["rekenrek", "presque-doubles", "generateur", "imprimer"],
+      "cardDescription": "Générer des grilles imprimables sur les presque-doubles avec choix des pièges et de l’affichage."
+    },
+    "outils/bouliers/rekenrek/cache cache barre.html": {
+      "primaryNotion": "calcul-mental",
+      "primaryGroup": "generer",
+      "collections": ["rekenrek"],
+      "tags": ["rekenrek", "complements", "schema-barres", "generateur", "imprimer"],
+      "cardDescription": "Générer des fiches de compléments sur rekenrek accompagnées de schémas en barres."
+    },
+    "outils/bouliers/rekenrek/tables_generateur.html": {
+      "primaryNotion": "calcul-mental",
+      "primaryGroup": "generer",
+      "collections": ["rekenrek"],
+      "tags": ["rekenrek", "tables", "multiplication", "division", "generateur", "imprimer"],
+      "cardDescription": "Générer des fiches de tables de multiplication et de division avec affichage rekenrek et correction."
+    },
+    "outils/bouliers/rekenrek/cache-cache.html": {
+      "primaryNotion": "calcul-mental",
+      "primaryGroup": "entrainer",
+      "collections": ["rekenrek"],
+      "tags": ["rekenrek", "complements", "rideau", "entrainement"],
+      "cardDescription": "Déterminer combien de billes sont cachées derrière le rideau, puis vérifier la réponse."
+    },
+    "outils/bouliers/rekenrek/comparateur.html": {
+      "primaryNotion": "numeration",
+      "primaryGroup": "entrainer",
+      "collections": ["rekenrek"],
+      "tags": ["rekenrek", "comparaison", "rangement", "entrainement"],
+      "cardDescription": "Comparer et ranger des quantités représentées sur rekenrek à travers cinq niveaux progressifs."
+    },
+    "outils/bouliers/rekenrek/pousser_des_nombres.html": {
+      "primaryNotion": "numeration",
+      "primaryGroup": "entrainer",
+      "collections": ["rekenrek"],
+      "tags": ["rekenrek", "composer-un-nombre", "numeration", "entrainement"],
+      "cardDescription": "Pousser les billes pour construire le nombre demandé, puis valider la représentation."
+    },
+    "outils/bouliers/rekenrek/lecture_de_nombres.html": {
+      "primaryNotion": "numeration",
+      "primaryGroup": "entrainer",
+      "collections": ["rekenrek"],
+      "tags": ["rekenrek", "lecture-flash", "subitisation", "entrainement"],
+      "cardDescription": "Lire une configuration affichée brièvement sur le rekenrek puis saisir le nombre observé."
+    },
+    "outils/bouliers/soroban/soroban-placement-nombres.html": {
+      "primaryNotion": "numeration",
+      "primaryGroup": "entrainer",
+      "collections": ["soroban"],
+      "tags": ["soroban", "placer-un-nombre", "numeration", "entrainement"],
+      "cardDescription": "Placer le nombre demandé sur le soroban, vérifier automatiquement et suivre son score."
+    },
+    "outils/bouliers/soroban/soroban.html": {
+      "primaryNotion": "numeration",
+      "primaryGroup": "manipuler",
+      "collections": ["soroban"],
+      "tags": ["soroban", "numeration", "valeur-position", "manipulation"],
+      "cardDescription": "Manipuler librement un soroban, adapter le nombre de colonnes et exporter la représentation."
+    },
+    "outils/bouliers/rekenrek/tables.html": {
+      "primaryNotion": "calcul-mental",
+      "primaryGroup": "entrainer",
+      "collections": ["rekenrek"],
+      "tags": ["rekenrek", "tables", "multiplication", "entrainement"],
+      "cardDescription": "S’entraîner aux tables de multiplication sur un grand rekenrek avec niveaux et vérification."
+    }
   },
   "resourceFamilies": [
     {
       "id": "cours-tuiles-algebriques",
-      "title": "Cours avec les tuiles algébriques",
-      "description": "Choisir la version couleur du livret.",
-      "cardDescription": "Le même livret d’activités proposé dans quatre styles de tuiles.",
+      "title": "Parcours de calcul littéral avec les tuiles",
+      "description": "Choisir la version graphique du parcours.",
+      "cardDescription": "Une progression de huit activités et bilans proposée dans quatre styles de tuiles.",
       "thumbnail": "assets/img/thumbnails/tuiles-algebriques/livrets.png?v=1",
       "group": "cours",
       "labels": {
@@ -784,9 +1168,9 @@ window.MATHSGO_CATALOGUE = {
     },
     {
       "id": "cours-nombres-relatifs",
-      "title": "Cours imprimables — nombres relatifs",
-      "description": "Choisir la version graphique du cours.",
-      "cardDescription": "Le même recueil avec plusieurs styles de jetons.",
+      "title": "Parcours — nombres relatifs avec des jetons",
+      "description": "Choisir la version graphique du parcours.",
+      "cardDescription": "Une progression sur l’addition et la soustraction proposée avec plusieurs styles de jetons.",
       "thumbnail": "assets/img/thumbnails/relatifs/cours-relatifs.png?v=1",
       "group": "cours",
       "labels": {
@@ -1058,13 +1442,14 @@ window.MATHSGO_CATALOGUE = {
     {
       "id": "outils-bouliers-abaque-de-gerbert-abaque-gerbert-addition-html",
       "title": "Abaque de Gerbert – Additions",
-      "description": "Une ressource maths&go pour travailler numération.",
+      "description": "S’entraîner aux additions sur l’abaque de Gerbert avec échanges, validation et nouveau calcul.",
       "path": "outils/bouliers/abaque_de_gerbert/abaque_gerbert_addition.html",
       "domains": [
         "nombres-calculs"
       ],
       "notions": [
-        "numeration"
+        "numeration",
+        "calcul-mental"
       ],
       "uses": [
         "manipuler",
@@ -1194,13 +1579,14 @@ window.MATHSGO_CATALOGUE = {
     {
       "id": "outils-bouliers-abaque-de-gerbert-abaque-gerbert-soustraction-html",
       "title": "Abaque de Gerbert – Soustractions",
-      "description": "Une ressource maths&go pour travailler numération.",
+      "description": "S’entraîner aux soustractions sur l’abaque de Gerbert avec échanges et vérification.",
       "path": "outils/bouliers/abaque_de_gerbert/abaque_gerbert_soustraction.html",
       "domains": [
         "nombres-calculs"
       ],
       "notions": [
-        "numeration"
+        "numeration",
+        "calcul-mental"
       ],
       "uses": [
         "manipuler",
@@ -1228,7 +1614,7 @@ window.MATHSGO_CATALOGUE = {
     {
       "id": "outils-bouliers-abaque-de-gerbert-abaque-gerbert-html",
       "title": "Abaque de Gerbert avec zéro",
-      "description": "Une ressource maths&go pour travailler numération.",
+      "description": "Poser et déplacer les apices pour représenter des nombres et effectuer des échanges sur l’abaque.",
       "path": "outils/bouliers/abaque_de_gerbert/abaque_gerbert.html",
       "domains": [
         "nombres-calculs"
@@ -1238,12 +1624,10 @@ window.MATHSGO_CATALOGUE = {
       ],
       "uses": [
         "manipuler",
-        "projeter",
-        "entrainer"
+        "projeter"
       ],
       "types": [
-        "plateau",
-        "exerciseur"
+        "plateau"
       ],
       "filters": [],
       "keywords": [
@@ -1287,8 +1671,8 @@ window.MATHSGO_CATALOGUE = {
     },
     {
       "id": "outils-bouliers-rekenrek-ajouter9-ajouter8-html",
-      "title": "Ajouter 9, ajouter 10",
-      "description": "Une ressource maths&go pour travailler numération.",
+      "title": "Ajouter 8 ou 9",
+      "description": "S’entraîner à ajouter 8 ou 9 en s’appuyant sur le passage par la dizaine.",
       "path": "outils/bouliers/rekenrek/ajouter9_ajouter8.html",
       "domains": [
         "nombres-calculs"
@@ -1356,6 +1740,7 @@ window.MATHSGO_CATALOGUE = {
         "conversions"
       ],
       "uses": [
+        "manipuler",
         "projeter"
       ],
       "types": [
@@ -1380,6 +1765,7 @@ window.MATHSGO_CATALOGUE = {
         "conversions"
       ],
       "uses": [
+        "manipuler",
         "projeter"
       ],
       "types": [
@@ -1535,9 +1921,42 @@ window.MATHSGO_CATALOGUE = {
     },
     {
       "id": "outils-bouliers-rekenrek-rekenrek-fd-html",
-      "title": "Boulier Canari - Version Centièmes",
-      "description": "Une ressource maths&go pour travailler numération.",
+      "title": "Rekenrek — fractions et centièmes",
+      "description": "Représenter des centièmes et passer entre écriture décimale, fractionnaire et monétaire sur un rekenrek.",
       "path": "outils/bouliers/rekenrek/rekenrek_FD.html",
+      "domains": [
+        "nombres-calculs"
+      ],
+      "notions": [
+        "numeration",
+        "fractions"
+      ],
+      "uses": [
+        "manipuler",
+        "projeter"
+      ],
+      "types": [
+        "plateau"
+      ],
+      "filters": [],
+      "keywords": [
+        "boulier",
+        "rekenrek",
+        "soroban",
+        "abaque",
+        "numération",
+        "calcul mental"
+      ],
+      "kind": "tool",
+      "status": "published",
+      "featured": false,
+      "recent": false
+    },
+    {
+      "id": "outils-bouliers-boulier-montessori-boulier-cycle3-petit-additions-soustractions-html",
+      "title": "Boulier Montessori — opérations",
+      "description": "Effectuer des additions et des soustractions sur le boulier Montessori, puis vérifier le résultat.",
+      "path": "outils/bouliers/boulier_montessori/boulier-cycle3-petit-additions-soustractions.html",
       "domains": [
         "nombres-calculs"
       ],
@@ -1569,43 +1988,9 @@ window.MATHSGO_CATALOGUE = {
       "recent": false
     },
     {
-      "id": "outils-bouliers-boulier-montessori-boulier-cycle3-petit-additions-soustractions-html",
-      "title": "Boulier Montessori – Opérations (Layout)",
-      "description": "Une ressource maths&go pour travailler numération.",
-      "path": "outils/bouliers/boulier_montessori/boulier-cycle3-petit-additions-soustractions.html",
-      "domains": [
-        "nombres-calculs"
-      ],
-      "notions": [
-        "numeration"
-      ],
-      "uses": [
-        "manipuler",
-        "projeter",
-        "entrainer"
-      ],
-      "types": [
-        "plateau",
-        "exerciseur"
-      ],
-      "filters": [],
-      "keywords": [
-        "boulier",
-        "rekenrek",
-        "soroban",
-        "abaque",
-        "numération",
-        "calcul mental"
-      ],
-      "kind": "tool",
-      "status": "published",
-      "featured": false,
-      "recent": false
-    },
-    {
       "id": "outils-bouliers-boulier-montessori-boulier-cycle3-petit-placer-nombres-html",
       "title": "Boulier Montessori – Placer le nombre",
-      "description": "Une ressource maths&go pour travailler numération.",
+      "description": "Composer le nombre demandé sur le boulier Montessori et vérifier chaque réponse.",
       "path": "outils/bouliers/boulier_montessori/boulier-cycle3-petit-placer-nombres.html",
       "domains": [
         "nombres-calculs"
@@ -1638,8 +2023,8 @@ window.MATHSGO_CATALOGUE = {
     },
     {
       "id": "outils-bouliers-boulier-montessori-boulier-cycle3-petit-html",
-      "title": "Boulier Montessori (Final)",
-      "description": "Une ressource maths&go pour travailler numération.",
+      "title": "Boulier Montessori",
+      "description": "Manipuler librement un boulier Montessori et relier les boules à l’écriture du nombre.",
       "path": "outils/bouliers/boulier_montessori/boulier-cycle3-petit.html",
       "domains": [
         "nombres-calculs"
@@ -1649,12 +2034,10 @@ window.MATHSGO_CATALOGUE = {
       ],
       "uses": [
         "manipuler",
-        "projeter",
-        "entrainer"
+        "projeter"
       ],
       "types": [
-        "plateau",
-        "exerciseur"
+        "plateau"
       ],
       "filters": [],
       "keywords": [
@@ -1673,7 +2056,7 @@ window.MATHSGO_CATALOGUE = {
     {
       "id": "outils-bouliers-boulier-montessori-transition-rekenrek-montessori-html",
       "title": "Boulier Rekenrek",
-      "description": "Une ressource maths&go pour travailler numération.",
+      "description": "Manipuler un rekenrek libre et faire varier ses couleurs et son organisation jusqu’à 100 billes.",
       "path": "outils/bouliers/boulier_montessori/transition_rekenrek-montessori.html",
       "domains": [
         "nombres-calculs"
@@ -1684,12 +2067,10 @@ window.MATHSGO_CATALOGUE = {
       ],
       "uses": [
         "manipuler",
-        "projeter",
-        "entrainer"
+        "projeter"
       ],
       "types": [
-        "plateau",
-        "exerciseur"
+        "plateau"
       ],
       "filters": [],
       "keywords": [
@@ -1707,8 +2088,8 @@ window.MATHSGO_CATALOGUE = {
     },
     {
       "id": "outils-bouliers-rekenrek-rekenrek-html",
-      "title": "Boulier Rekenrek Pro - Version Équilibre",
-      "description": "Une ressource maths&go pour travailler numération.",
+      "title": "Rekenrek interactif",
+      "description": "Manipuler librement les billes du rekenrek, masquer une partie et annoter la situation projetée.",
       "path": "outils/bouliers/rekenrek/rekenrek.html",
       "domains": [
         "nombres-calculs"
@@ -1719,12 +2100,10 @@ window.MATHSGO_CATALOGUE = {
       ],
       "uses": [
         "manipuler",
-        "projeter",
-        "entrainer"
+        "projeter"
       ],
       "types": [
-        "plateau",
-        "exerciseur"
+        "plateau"
       ],
       "filters": [],
       "keywords": [
@@ -1858,12 +2237,12 @@ window.MATHSGO_CATALOGUE = {
         "explorations"
       ],
       "uses": [
-        "manipuler",
         "projeter",
-        "entrainer"
+        "imprimer"
       ],
       "types": [
-        "exerciseur"
+        "plateau",
+        "imprimable"
       ],
       "filters": [],
       "keywords": [],
@@ -1887,10 +2266,10 @@ window.MATHSGO_CATALOGUE = {
       "uses": [
         "manipuler",
         "projeter",
-        "entrainer"
+        "imprimer"
       ],
       "types": [
-        "exerciseur"
+        "plateau"
       ],
       "filters": [],
       "keywords": [],
@@ -2036,8 +2415,8 @@ window.MATHSGO_CATALOGUE = {
     },
     {
       "id": "outils-bouliers-rekenrek-enlever9-enlever8-html",
-      "title": "Enlever 9, enlever10",
-      "description": "Une ressource maths&go pour travailler numération.",
+      "title": "Enlever 8 ou 9",
+      "description": "S’entraîner à enlever 8 ou 9 avec trois niveaux, une aide rekenrek et un score.",
       "path": "outils/bouliers/rekenrek/enlever9_enlever8.html",
       "domains": [
         "nombres-calculs"
@@ -2156,8 +2535,8 @@ window.MATHSGO_CATALOGUE = {
     },
     {
       "id": "outils-bouliers-rekenrek-force-5-html",
-      "title": "Force 5 - Version Pro",
-      "description": "Une ressource maths&go pour travailler numération.",
+      "title": "Force 5 — additions",
+      "description": "S’entraîner aux additions en utilisant la structure du 5 sur le rekenrek.",
       "path": "outils/bouliers/rekenrek/force_5.html",
       "domains": [
         "nombres-calculs"
@@ -2190,8 +2569,8 @@ window.MATHSGO_CATALOGUE = {
     },
     {
       "id": "outils-bouliers-rekenrek-force-5-soustraction-html",
-      "title": "Force 5 - Version Pro",
-      "description": "Une ressource maths&go pour travailler numération.",
+      "title": "Force 5 — soustractions",
+      "description": "S’entraîner aux soustractions avec une aide rekenrek révélable et trois niveaux.",
       "path": "outils/bouliers/rekenrek/force_5_soustraction.html",
       "domains": [
         "nombres-calculs"
@@ -2264,9 +2643,7 @@ window.MATHSGO_CATALOGUE = {
       ],
       "uses": [
         "imprimer",
-        "entrainer",
-        "manipuler",
-        "projeter"
+        "entrainer"
       ],
       "types": [
         "imprimable"
@@ -2293,16 +2670,13 @@ window.MATHSGO_CATALOGUE = {
         "angles"
       ],
       "uses": [
-        "projeter",
-        "imprimer"
+        "manipuler",
+        "projeter"
       ],
       "types": [
-        "plateau",
-        "imprimable"
+        "plateau"
       ],
-      "filters": [
-        "materiel-imprimer"
-      ],
+      "filters": [],
       "keywords": [],
       "kind": "tool",
       "status": "published",
@@ -2524,12 +2898,11 @@ window.MATHSGO_CATALOGUE = {
         "proportionnalite"
       ],
       "uses": [
-        "manipuler",
         "projeter",
+        "imprimer",
         "entrainer"
       ],
       "types": [
-        "exerciseur",
         "generateur"
       ],
       "filters": [
@@ -2545,7 +2918,7 @@ window.MATHSGO_CATALOGUE = {
     },
     {
       "id": "outils-fabrication-materiel-cartes-premiers-1-100-html",
-      "title": "Cartes de nombres",
+      "title": "Générateur de cartes de nombres",
       "description": "Créer des cartes recto verso avec décomposition, critères et listes de diviseurs.",
       "path": "outils/fabrication_materiel/cartes_premiers_1_100.html",
       "domains": [
@@ -2556,8 +2929,6 @@ window.MATHSGO_CATALOGUE = {
         "numeration"
       ],
       "uses": [
-        "manipuler",
-        "projeter",
         "imprimer"
       ],
       "types": [
@@ -2581,7 +2952,7 @@ window.MATHSGO_CATALOGUE = {
     {
       "id": "outils-bouliers-rekenrek-generateur-rekenrek-cartes-html",
       "title": "Générateur de cartes Rekenrek",
-      "description": "Une ressource maths&go pour travailler numération.",
+      "description": "Créer des cartes rekenrek recto verso en choisissant la plage de nombres, les couleurs et le calibrage.",
       "path": "outils/bouliers/rekenrek/generateur_rekenrek_cartes.html",
       "domains": [
         "nombres-calculs"
@@ -2591,13 +2962,9 @@ window.MATHSGO_CATALOGUE = {
         "calcul-mental"
       ],
       "uses": [
-        "manipuler",
-        "projeter",
-        "imprimer",
-        "entrainer"
+        "imprimer"
       ],
       "types": [
-        "exerciseur",
         "generateur",
         "imprimable"
       ],
@@ -2628,10 +2995,10 @@ window.MATHSGO_CATALOGUE = {
       ],
       "uses": [
         "projeter",
+        "imprimer",
         "entrainer"
       ],
       "types": [
-        "exerciseur",
         "generateur"
       ],
       "filters": [
@@ -2656,12 +3023,11 @@ window.MATHSGO_CATALOGUE = {
         "divisibilite"
       ],
       "uses": [
-        "manipuler",
-        "entrainer",
-        "projeter"
+        "projeter",
+        "imprimer",
+        "entrainer"
       ],
       "types": [
-        "exerciseur",
         "generateur"
       ],
       "filters": [
@@ -2717,10 +3083,11 @@ window.MATHSGO_CATALOGUE = {
       ],
       "uses": [
         "entrainer",
-        "projeter"
+        "projeter",
+        "imprimer"
       ],
       "types": [
-        "exerciseur"
+        "generateur"
       ],
       "filters": [
         "generateur-exercices"
@@ -2773,8 +3140,7 @@ window.MATHSGO_CATALOGUE = {
         "fractions"
       ],
       "uses": [
-        "imprimer",
-        "projeter"
+        "imprimer"
       ],
       "types": [
         "generateur",
@@ -2826,7 +3192,7 @@ window.MATHSGO_CATALOGUE = {
     {
       "id": "outils-bouliers-rekenrek-lecture-0-100-generateur2-html",
       "title": "Générateur Rekenrek — dizaines et unités",
-      "description": "Une ressource maths&go pour travailler numération.",
+      "description": "Créer des fiches ou flashcards reliant dizaines, unités, écritures chiffrées et mots-nombres.",
       "path": "outils/bouliers/rekenrek/lecture_0_100_generateur2.html",
       "domains": [
         "nombres-calculs"
@@ -2836,13 +3202,9 @@ window.MATHSGO_CATALOGUE = {
         "calcul-mental"
       ],
       "uses": [
-        "manipuler",
-        "projeter",
-        "imprimer",
-        "entrainer"
+        "imprimer"
       ],
       "types": [
-        "exerciseur",
         "generateur",
         "imprimable"
       ],
@@ -2865,7 +3227,7 @@ window.MATHSGO_CATALOGUE = {
     {
       "id": "outils-bouliers-rekenrek-lecture-0-100-generateur-html",
       "title": "Générateur Rekenrek — lecture de 0 à 100",
-      "description": "Une ressource maths&go pour travailler numération.",
+      "description": "Créer des fiches de lecture de nombres sur rekenrek, avec correction ou cartes recto verso.",
       "path": "outils/bouliers/rekenrek/lecture_0_100_generateur.html",
       "domains": [
         "nombres-calculs"
@@ -2875,13 +3237,9 @@ window.MATHSGO_CATALOGUE = {
         "calcul-mental"
       ],
       "uses": [
-        "manipuler",
-        "projeter",
-        "imprimer",
-        "entrainer"
+        "imprimer"
       ],
       "types": [
-        "exerciseur",
         "generateur",
         "imprimable"
       ],
@@ -2904,7 +3262,7 @@ window.MATHSGO_CATALOGUE = {
     {
       "id": "outils-bouliers-rekenrek-voisins-generateur-compact-html",
       "title": "Générateur Rekenrek — nombres voisins",
-      "description": "Une ressource maths&go pour travailler numération.",
+      "description": "Composer des fiches sur le nombre précédent, le suivant et les voisins dans une plage choisie.",
       "path": "outils/bouliers/rekenrek/voisins_generateur_compact.html",
       "domains": [
         "nombres-calculs"
@@ -2914,13 +3272,9 @@ window.MATHSGO_CATALOGUE = {
         "calcul-mental"
       ],
       "uses": [
-        "manipuler",
-        "projeter",
-        "imprimer",
-        "entrainer"
+        "imprimer"
       ],
       "types": [
-        "exerciseur",
         "generateur",
         "imprimable"
       ],
@@ -2953,7 +3307,8 @@ window.MATHSGO_CATALOGUE = {
       ],
       "uses": [
         "projeter",
-        "manipuler"
+        "manipuler",
+        "imprimer"
       ],
       "types": [
         "plateau"
@@ -3032,7 +3387,6 @@ window.MATHSGO_CATALOGUE = {
         "numeration"
       ],
       "uses": [
-        "manipuler",
         "projeter",
         "imprimer"
       ],
@@ -3055,8 +3409,8 @@ window.MATHSGO_CATALOGUE = {
     },
     {
       "id": "outils-nombres-relatifs-nombres-relatifs-couleur-mathsgo-pdf",
-      "title": "Jetons de nombres relatifs — couleurs maths&go",
-      "description": "Une ressource maths&go pour travailler nombres relatifs.",
+      "title": "Livret de nombres relatifs — couleurs maths&go",
+      "description": "Suivre une progression sur l’addition et la soustraction des nombres relatifs avec des jetons aux couleurs maths&go.",
       "path": "outils/nombres_relatifs/nombres_relatifs_couleur_mathsgo.pdf",
       "domains": [
         "nombres-calculs"
@@ -3065,9 +3419,8 @@ window.MATHSGO_CATALOGUE = {
         "relatifs"
       ],
       "uses": [
-        "manipuler",
-        "projeter",
-        "imprimer"
+        "imprimer",
+        "entrainer"
       ],
       "types": [
         "imprimable"
@@ -3083,8 +3436,8 @@ window.MATHSGO_CATALOGUE = {
     },
     {
       "id": "outils-nombres-relatifs-nombres-relatifs-vert-rouge-ecriture-blanche-pdf",
-      "title": "Jetons de nombres relatifs — écriture blanche",
-      "description": "Une ressource maths&go pour travailler nombres relatifs.",
+      "title": "Livret de nombres relatifs — écriture blanche",
+      "description": "Suivre une progression sur l’addition et la soustraction des nombres relatifs avec des jetons rouges et verts à écriture blanche.",
       "path": "outils/nombres_relatifs/nombres_relatifs_vert_rouge_ecriture_blanche.pdf",
       "domains": [
         "nombres-calculs"
@@ -3093,9 +3446,8 @@ window.MATHSGO_CATALOGUE = {
         "relatifs"
       ],
       "uses": [
-        "manipuler",
-        "projeter",
-        "imprimer"
+        "imprimer",
+        "entrainer"
       ],
       "types": [
         "imprimable"
@@ -3111,8 +3463,8 @@ window.MATHSGO_CATALOGUE = {
     },
     {
       "id": "outils-nombres-relatifs-nombres-relatifs-gris-blanc-pdf",
-      "title": "Jetons de nombres relatifs — gris et blanc",
-      "description": "Une ressource maths&go pour travailler nombres relatifs.",
+      "title": "Livret de nombres relatifs — gris et blanc",
+      "description": "Suivre une progression sur l’addition et la soustraction des nombres relatifs avec des jetons gris et blancs.",
       "path": "outils/nombres_relatifs/nombres_relatifs_gris_blanc.pdf",
       "domains": [
         "nombres-calculs"
@@ -3121,9 +3473,8 @@ window.MATHSGO_CATALOGUE = {
         "relatifs"
       ],
       "uses": [
-        "manipuler",
-        "projeter",
-        "imprimer"
+        "imprimer",
+        "entrainer"
       ],
       "types": [
         "imprimable"
@@ -3139,8 +3490,8 @@ window.MATHSGO_CATALOGUE = {
     },
     {
       "id": "outils-nombres-relatifs-nombres-relatifs-vert-rouge-contour-noir-pdf",
-      "title": "Jetons de nombres relatifs — vert et rouge",
-      "description": "Une ressource maths&go pour travailler nombres relatifs.",
+      "title": "Livret de nombres relatifs — vert et rouge",
+      "description": "Suivre une progression sur l’addition et la soustraction des nombres relatifs avec des jetons rouges et verts à contour noir.",
       "path": "outils/nombres_relatifs/nombres_relatifs_vert_rouge_contour_noir.pdf",
       "domains": [
         "nombres-calculs"
@@ -3149,9 +3500,8 @@ window.MATHSGO_CATALOGUE = {
         "relatifs"
       ],
       "uses": [
-        "manipuler",
-        "projeter",
-        "imprimer"
+        "imprimer",
+        "entrainer"
       ],
       "types": [
         "imprimable"
@@ -3179,10 +3529,10 @@ window.MATHSGO_CATALOGUE = {
       "uses": [
         "manipuler",
         "projeter",
-        "entrainer"
+        "imprimer"
       ],
       "types": [
-        "exerciseur"
+        "plateau"
       ],
       "filters": [],
       "keywords": [],
@@ -3264,11 +3614,10 @@ window.MATHSGO_CATALOGUE = {
       "uses": [
         "manipuler",
         "projeter",
-        "entrainer"
+        "imprimer"
       ],
       "types": [
-        "plateau",
-        "exerciseur"
+        "plateau"
       ],
       "filters": [],
       "keywords": [],
@@ -3280,7 +3629,7 @@ window.MATHSGO_CATALOGUE = {
     {
       "id": "outils-bouliers-rekenrek-grignoteur-html",
       "title": "Le Grignoteur",
-      "description": "Une ressource maths&go pour travailler numération.",
+      "description": "Répondre à une série de calculs, suivre son score et révéler le rekenrek en cas de besoin.",
       "path": "outils/bouliers/rekenrek/grignoteur.html",
       "domains": [
         "nombres-calculs"
@@ -3314,7 +3663,7 @@ window.MATHSGO_CATALOGUE = {
     {
       "id": "outils-bouliers-rekenrek-pont-dizaine-html",
       "title": "Le Pont de la Dizaine",
-      "description": "Une ressource maths&go pour travailler numération.",
+      "description": "S’entraîner aux calculs qui franchissent la dizaine avec vérification et aide visuelle.",
       "path": "outils/bouliers/rekenrek/pont_dizaine.html",
       "domains": [
         "nombres-calculs"
@@ -3477,12 +3826,9 @@ window.MATHSGO_CATALOGUE = {
         "calcul-mental"
       ],
       "uses": [
-        "projeter",
-        "entrainer",
         "imprimer"
       ],
       "types": [
-        "exerciseur",
         "generateur",
         "imprimable"
       ],
@@ -3512,12 +3858,10 @@ window.MATHSGO_CATALOGUE = {
       ],
       "uses": [
         "manipuler",
-        "projeter",
-        "entrainer"
+        "projeter"
       ],
       "types": [
-        "plateau",
-        "exerciseur"
+        "plateau"
       ],
       "filters": [],
       "keywords": [],
@@ -3540,8 +3884,6 @@ window.MATHSGO_CATALOGUE = {
         "proportionnalite"
       ],
       "uses": [
-        "manipuler",
-        "projeter",
         "imprimer"
       ],
       "types": [
@@ -3627,9 +3969,7 @@ window.MATHSGO_CATALOGUE = {
         "divisibilite"
       ],
       "uses": [
-        "imprimer",
-        "manipuler",
-        "projeter"
+        "imprimer"
       ],
       "types": [
         "imprimable"
@@ -3656,11 +3996,12 @@ window.MATHSGO_CATALOGUE = {
         "fractions"
       ],
       "uses": [
-        "manipuler",
-        "projeter"
+        "projeter",
+        "imprimer"
       ],
       "types": [
-        "plateau"
+        "generateur",
+        "imprimable"
       ],
       "filters": [],
       "keywords": [
@@ -3684,11 +4025,12 @@ window.MATHSGO_CATALOGUE = {
         "divisibilite"
       ],
       "uses": [
-        "manipuler",
-        "projeter"
+        "projeter",
+        "imprimer"
       ],
       "types": [
-        "plateau"
+        "generateur",
+        "imprimable"
       ],
       "filters": [],
       "keywords": [
@@ -3714,7 +4056,8 @@ window.MATHSGO_CATALOGUE = {
       ],
       "uses": [
         "manipuler",
-        "projeter"
+        "projeter",
+        "imprimer"
       ],
       "types": [
         "plateau"
@@ -3761,8 +4104,8 @@ window.MATHSGO_CATALOGUE = {
     },
     {
       "id": "outils-nombres-relatifs-nombres-relatifs-somme-difference-html",
-      "title": "Opérations Nombres Relatifs - Fusion Finale",
-      "description": "Une ressource maths&go pour travailler nombres relatifs.",
+      "title": "Nombres relatifs — sommes et différences",
+      "description": "Modéliser additions et soustractions de nombres relatifs avec des jetons positifs, négatifs et des paires nulles.",
       "path": "outils/nombres_relatifs/nombres_relatifs_somme_difference.html",
       "domains": [
         "nombres-calculs"
@@ -3772,11 +4115,10 @@ window.MATHSGO_CATALOGUE = {
       ],
       "uses": [
         "manipuler",
-        "projeter",
-        "entrainer"
+        "projeter"
       ],
       "types": [
-        "exerciseur"
+        "plateau"
       ],
       "filters": [],
       "keywords": [],
@@ -3787,8 +4129,8 @@ window.MATHSGO_CATALOGUE = {
     },
     {
       "id": "outils-nombres-relatifs-nombres-relatifs-somme-differenced-html",
-      "title": "Opérations Relatifs - Expert & Undo",
-      "description": "Une ressource maths&go pour travailler nombres relatifs.",
+      "title": "Nombres relatifs — soustraction experte",
+      "description": "Manipuler les nombres relatifs avec rangement, simplification animée et retour en arrière.",
       "path": "outils/nombres_relatifs/nombres_relatifs_somme_differenceD.html",
       "domains": [
         "nombres-calculs"
@@ -3798,11 +4140,10 @@ window.MATHSGO_CATALOGUE = {
       ],
       "uses": [
         "manipuler",
-        "projeter",
-        "entrainer"
+        "projeter"
       ],
       "types": [
-        "exerciseur"
+        "plateau"
       ],
       "filters": [],
       "keywords": [],
@@ -3813,8 +4154,8 @@ window.MATHSGO_CATALOGUE = {
     },
     {
       "id": "outils-nombres-relatifs-nombres-relatifs-somme-differenceb-html",
-      "title": "Opérations Relatifs - La Soustraction",
-      "description": "Une ressource maths&go pour travailler nombres relatifs.",
+      "title": "Nombres relatifs — soustraction avec des jetons",
+      "description": "Transformer une soustraction de nombres relatifs en manipulant des jetons et des paires nulles.",
       "path": "outils/nombres_relatifs/nombres_relatifs_somme_differenceB.html",
       "domains": [
         "nombres-calculs"
@@ -3824,11 +4165,10 @@ window.MATHSGO_CATALOGUE = {
       ],
       "uses": [
         "manipuler",
-        "projeter",
-        "entrainer"
+        "projeter"
       ],
       "types": [
-        "exerciseur"
+        "plateau"
       ],
       "filters": [],
       "keywords": [],
@@ -3839,8 +4179,8 @@ window.MATHSGO_CATALOGUE = {
     },
     {
       "id": "outils-nombres-relatifs-nombres-relatifs-somme-differencebclaire-html",
-      "title": "Opérations Relatifs - La Soustraction",
-      "description": "Une ressource maths&go pour travailler nombres relatifs.",
+      "title": "Nombres relatifs — sommes et différences en couleurs claires",
+      "description": "Manipuler additions et soustractions de relatifs dans une interface claire adaptée à la projection.",
       "path": "outils/nombres_relatifs/nombres_relatifs_somme_differenceBClaire.html",
       "domains": [
         "nombres-calculs"
@@ -3850,11 +4190,10 @@ window.MATHSGO_CATALOGUE = {
       ],
       "uses": [
         "manipuler",
-        "projeter",
-        "entrainer"
+        "projeter"
       ],
       "types": [
-        "exerciseur"
+        "plateau"
       ],
       "filters": [],
       "keywords": [],
@@ -3865,8 +4204,8 @@ window.MATHSGO_CATALOGUE = {
     },
     {
       "id": "outils-nombres-relatifs-nombres-relatifs-somme-differencec-html",
-      "title": "Opérations Relatifs - La Soustraction (Expert)",
-      "description": "Une ressource maths&go pour travailler nombres relatifs.",
+      "title": "Nombres relatifs — soustraction, niveau expert",
+      "description": "Passer de la soustraction à l’addition de l’opposé puis simplifier les paires de jetons.",
       "path": "outils/nombres_relatifs/nombres_relatifs_somme_differenceC.html",
       "domains": [
         "nombres-calculs"
@@ -3876,11 +4215,10 @@ window.MATHSGO_CATALOGUE = {
       ],
       "uses": [
         "manipuler",
-        "projeter",
-        "entrainer"
+        "projeter"
       ],
       "types": [
-        "exerciseur"
+        "plateau"
       ],
       "filters": [],
       "keywords": [],
@@ -3902,12 +4240,10 @@ window.MATHSGO_CATALOGUE = {
       ],
       "uses": [
         "manipuler",
-        "projeter",
-        "entrainer"
+        "projeter"
       ],
       "types": [
-        "plateau",
-        "exerciseur"
+        "plateau"
       ],
       "filters": [],
       "keywords": [],
@@ -3929,12 +4265,10 @@ window.MATHSGO_CATALOGUE = {
       ],
       "uses": [
         "manipuler",
-        "projeter",
-        "entrainer"
+        "projeter"
       ],
       "types": [
-        "plateau",
-        "exerciseur"
+        "plateau"
       ],
       "filters": [],
       "keywords": [
@@ -3992,12 +4326,11 @@ window.MATHSGO_CATALOGUE = {
         "patterns"
       ],
       "uses": [
-        "manipuler",
         "projeter",
-        "entrainer"
+        "imprimer"
       ],
       "types": [
-        "exerciseur"
+        "generateur"
       ],
       "filters": [],
       "keywords": [],
@@ -4020,16 +4353,13 @@ window.MATHSGO_CATALOGUE = {
         "fractions"
       ],
       "uses": [
-        "imprimer",
+        "manipuler",
         "projeter"
       ],
       "types": [
-        "plateau",
-        "imprimable"
+        "plateau"
       ],
-      "filters": [
-        "materiel-imprimer"
-      ],
+      "filters": [],
       "keywords": [
         "fraction",
         "partage"
@@ -4051,16 +4381,13 @@ window.MATHSGO_CATALOGUE = {
         "fractions"
       ],
       "uses": [
-        "imprimer",
+        "manipuler",
         "projeter"
       ],
       "types": [
-        "plateau",
-        "imprimable"
+        "plateau"
       ],
-      "filters": [
-        "materiel-imprimer"
-      ],
+      "filters": [],
       "keywords": [
         "fraction",
         "partage"
@@ -4134,7 +4461,8 @@ window.MATHSGO_CATALOGUE = {
         "schemas-barres"
       ],
       "uses": [
-        "projeter"
+        "projeter",
+        "imprimer"
       ],
       "types": [
         "generateur",
@@ -4376,8 +4704,8 @@ window.MATHSGO_CATALOGUE = {
     },
     {
       "id": "outils-bouliers-rekenrek-jeu-des-doubles-html",
-      "title": "Rekenrek - Le Jeu des Doubles Pro",
-      "description": "Une ressource maths&go pour travailler numération.",
+      "title": "Rekenrek — entraînement aux doubles",
+      "description": "S’entraîner aux doubles par plages et niveaux avec une vérification immédiate.",
       "path": "outils/bouliers/rekenrek/jeu_des_doubles.html",
       "domains": [
         "nombres-calculs"
@@ -4411,7 +4739,7 @@ window.MATHSGO_CATALOGUE = {
     {
       "id": "outils-bouliers-rekenrek-suivant-precedent-html",
       "title": "Rekenrek - Le Voisin (Suivant/Précédent)",
-      "description": "Une ressource maths&go pour travailler numération.",
+      "description": "Trouver le nombre précédent ou suivant, puis vérifier la réponse avec l’appui du rekenrek.",
       "path": "outils/bouliers/rekenrek/suivant_precedent.html",
       "domains": [
         "nombres-calculs"
@@ -4444,8 +4772,8 @@ window.MATHSGO_CATALOGUE = {
     },
     {
       "id": "outils-bouliers-rekenrek-presque-doubles-html",
-      "title": "Rekenrek - Les Presque-Doubles (Final)",
-      "description": "Une ressource maths&go pour travailler numération.",
+      "title": "Rekenrek — entraînement aux presque-doubles",
+      "description": "S’entraîner aux presque-doubles en mode visuel, libre ou mental avec aide révélable.",
       "path": "outils/bouliers/rekenrek/presque_doubles.html",
       "domains": [
         "nombres-calculs"
@@ -4478,8 +4806,8 @@ window.MATHSGO_CATALOGUE = {
     },
     {
       "id": "outils-bouliers-rekenrek-double-niv1-html",
-      "title": "REKENREK — DOUBLES NIVEAU 1",
-      "description": "Une ressource maths&go pour travailler numération.",
+      "title": "Générateur Rekenrek — doubles, niveau 1",
+      "description": "Générer des grilles imprimables sur les doubles de niveau 1 avec pièges et correction.",
       "path": "outils/bouliers/rekenrek/double_niv1.html",
       "domains": [
         "nombres-calculs"
@@ -4489,14 +4817,15 @@ window.MATHSGO_CATALOGUE = {
         "calcul-mental"
       ],
       "uses": [
-        "manipuler",
-        "projeter",
-        "entrainer"
+        "imprimer"
       ],
       "types": [
-        "exerciseur"
+        "generateur",
+        "imprimable"
       ],
-      "filters": [],
+      "filters": [
+        "generateur-exercices"
+      ],
       "keywords": [
         "boulier",
         "rekenrek",
@@ -4512,8 +4841,8 @@ window.MATHSGO_CATALOGUE = {
     },
     {
       "id": "outils-bouliers-rekenrek-double-niv2-html",
-      "title": "REKENREK — DOUBLES NIVEAU 2",
-      "description": "Une ressource maths&go pour travailler numération.",
+      "title": "Générateur Rekenrek — doubles, niveau 2",
+      "description": "Générer des grilles imprimables sur les doubles de niveau 2, avec ou sans correction.",
       "path": "outils/bouliers/rekenrek/double_niv2.html",
       "domains": [
         "nombres-calculs"
@@ -4523,14 +4852,15 @@ window.MATHSGO_CATALOGUE = {
         "calcul-mental"
       ],
       "uses": [
-        "manipuler",
-        "projeter",
-        "entrainer"
+        "imprimer"
       ],
       "types": [
-        "exerciseur"
+        "generateur",
+        "imprimable"
       ],
-      "filters": [],
+      "filters": [
+        "generateur-exercices"
+      ],
       "keywords": [
         "boulier",
         "rekenrek",
@@ -4620,8 +4950,8 @@ window.MATHSGO_CATALOGUE = {
     },
     {
       "id": "outils-bouliers-rekenrek-jeu-rideau-html",
-      "title": "Rekenrek — jeu du rideau",
-      "description": "Une ressource maths&go pour travailler numération.",
+      "title": "Générateur Rekenrek — compléments cachés",
+      "description": "Générer des planches de compléments à 10, 20 ou 100 sur rekenrek, avec correction.",
       "path": "outils/bouliers/rekenrek/cache cache.html",
       "domains": [
         "nombres-calculs"
@@ -4631,14 +4961,15 @@ window.MATHSGO_CATALOGUE = {
         "calcul-mental"
       ],
       "uses": [
-        "manipuler",
-        "projeter",
-        "entrainer"
+        "imprimer"
       ],
       "types": [
-        "exerciseur"
+        "generateur",
+        "imprimable"
       ],
-      "filters": [],
+      "filters": [
+        "generateur-exercices"
+      ],
       "keywords": [
         "boulier",
         "rekenrek",
@@ -4654,8 +4985,8 @@ window.MATHSGO_CATALOGUE = {
     },
     {
       "id": "outils-bouliers-rekenrek-presque-double-html",
-      "title": "REKENREK — PRESQUE DOUBLES",
-      "description": "Une ressource maths&go pour travailler numération.",
+      "title": "Générateur Rekenrek — presque-doubles",
+      "description": "Générer des grilles imprimables sur les presque-doubles avec choix des pièges et de l’affichage.",
       "path": "outils/bouliers/rekenrek/presque double.html",
       "domains": [
         "nombres-calculs"
@@ -4665,14 +4996,15 @@ window.MATHSGO_CATALOGUE = {
         "calcul-mental"
       ],
       "uses": [
-        "manipuler",
-        "projeter",
-        "entrainer"
+        "imprimer"
       ],
       "types": [
-        "exerciseur"
+        "generateur",
+        "imprimable"
       ],
-      "filters": [],
+      "filters": [
+        "generateur-exercices"
+      ],
       "keywords": [
         "boulier",
         "rekenrek",
@@ -4688,8 +5020,8 @@ window.MATHSGO_CATALOGUE = {
     },
     {
       "id": "outils-bouliers-rekenrek-cache-cache-barre-html",
-      "title": "Rekenrek — schémas et compléments",
-      "description": "Une ressource maths&go pour travailler numération.",
+      "title": "Générateur Rekenrek — schémas et compléments",
+      "description": "Générer des fiches de compléments sur rekenrek accompagnées de schémas en barres.",
       "path": "outils/bouliers/rekenrek/cache cache barre.html",
       "domains": [
         "nombres-calculs"
@@ -4699,14 +5031,15 @@ window.MATHSGO_CATALOGUE = {
         "calcul-mental"
       ],
       "uses": [
-        "manipuler",
-        "projeter",
-        "entrainer"
+        "imprimer"
       ],
       "types": [
-        "exerciseur"
+        "generateur",
+        "imprimable"
       ],
-      "filters": [],
+      "filters": [
+        "generateur-exercices"
+      ],
       "keywords": [
         "boulier",
         "rekenrek",
@@ -4722,8 +5055,8 @@ window.MATHSGO_CATALOGUE = {
     },
     {
       "id": "outils-bouliers-rekenrek-tables-generateur-html",
-      "title": "REKENREK — TABLES DE MULTIPLICATION",
-      "description": "Une ressource maths&go pour travailler numération.",
+      "title": "Générateur Rekenrek — tables de multiplication",
+      "description": "Générer des fiches de tables de multiplication et de division avec affichage rekenrek et correction.",
       "path": "outils/bouliers/rekenrek/tables_generateur.html",
       "domains": [
         "nombres-calculs"
@@ -4733,13 +5066,9 @@ window.MATHSGO_CATALOGUE = {
         "calcul-mental"
       ],
       "uses": [
-        "manipuler",
-        "projeter",
-        "imprimer",
-        "entrainer"
+        "imprimer"
       ],
       "types": [
-        "exerciseur",
         "generateur",
         "imprimable"
       ],
@@ -4761,8 +5090,8 @@ window.MATHSGO_CATALOGUE = {
     },
     {
       "id": "outils-bouliers-rekenrek-cache-cache-rideau-millimetre-html",
-      "title": "Rekenrek Cache-Cache - Rideau Millimétré",
-      "description": "Une ressource maths&go pour travailler numération.",
+      "title": "Rekenrek — perles cachées",
+      "description": "Déterminer combien de billes sont cachées derrière le rideau, puis vérifier la réponse.",
       "path": "outils/bouliers/rekenrek/cache-cache.html",
       "domains": [
         "nombres-calculs"
@@ -4795,8 +5124,8 @@ window.MATHSGO_CATALOGUE = {
     },
     {
       "id": "outils-bouliers-rekenrek-comparateur-html",
-      "title": "Rekenrek Comparateur - Final V27",
-      "description": "Une ressource maths&go pour travailler numération.",
+      "title": "Rekenrek — comparer et ranger",
+      "description": "Comparer et ranger des quantités représentées sur rekenrek à travers cinq niveaux progressifs.",
       "path": "outils/bouliers/rekenrek/comparateur.html",
       "domains": [
         "nombres-calculs"
@@ -4829,8 +5158,8 @@ window.MATHSGO_CATALOGUE = {
     },
     {
       "id": "outils-bouliers-rekenrek-pousser-des-nombres-html",
-      "title": "Rekenrek Constructeur - Version Pro",
-      "description": "Une ressource maths&go pour travailler numération.",
+      "title": "Rekenrek — construire un nombre",
+      "description": "Pousser les billes pour construire le nombre demandé, puis valider la représentation.",
       "path": "outils/bouliers/rekenrek/pousser_des_nombres.html",
       "domains": [
         "nombres-calculs"
@@ -4863,8 +5192,8 @@ window.MATHSGO_CATALOGUE = {
     },
     {
       "id": "outils-bouliers-rekenrek-lecture-de-nombres-html",
-      "title": "Rekenrek Flash - Version XL Stable",
-      "description": "Une ressource maths&go pour travailler numération.",
+      "title": "Rekenrek — lecture flash",
+      "description": "Lire une configuration affichée brièvement sur le rekenrek puis saisir le nombre observé.",
       "path": "outils/bouliers/rekenrek/lecture_de_nombres.html",
       "domains": [
         "nombres-calculs"
@@ -4898,7 +5227,7 @@ window.MATHSGO_CATALOGUE = {
     {
       "id": "outils-bouliers-soroban-soroban-placement-nombres-html",
       "title": "Soroban interactif — Entraînement (vérification auto)",
-      "description": "Une ressource maths&go pour travailler numération.",
+      "description": "Placer le nombre demandé sur le soroban, vérifier automatiquement et suivre son score.",
       "path": "outils/bouliers/soroban/soroban-placement-nombres.html",
       "domains": [
         "nombres-calculs"
@@ -4931,8 +5260,8 @@ window.MATHSGO_CATALOGUE = {
     },
     {
       "id": "outils-bouliers-soroban-soroban-html",
-      "title": "Soroban interactif — zoom étendu + barre haute 0.30",
-      "description": "Une ressource maths&go pour travailler numération.",
+      "title": "Soroban interactif",
+      "description": "Manipuler librement un soroban, adapter le nombre de colonnes et exporter la représentation.",
       "path": "outils/bouliers/soroban/soroban.html",
       "domains": [
         "nombres-calculs"
@@ -4942,12 +5271,10 @@ window.MATHSGO_CATALOGUE = {
       ],
       "uses": [
         "manipuler",
-        "projeter",
-        "entrainer"
+        "projeter"
       ],
       "types": [
-        "plateau",
-        "exerciseur"
+        "plateau"
       ],
       "filters": [],
       "keywords": [
@@ -4978,10 +5305,12 @@ window.MATHSGO_CATALOGUE = {
       ],
       "uses": [
         "manipuler",
-        "projeter"
+        "projeter",
+        "imprimer"
       ],
       "types": [
-        "plateau"
+        "generateur",
+        "imprimable"
       ],
       "filters": [],
       "keywords": [
@@ -5010,10 +5339,12 @@ window.MATHSGO_CATALOGUE = {
       ],
       "uses": [
         "manipuler",
-        "projeter"
+        "projeter",
+        "imprimer"
       ],
       "types": [
-        "plateau"
+        "generateur",
+        "imprimable"
       ],
       "filters": [],
       "keywords": [
@@ -5044,10 +5375,12 @@ window.MATHSGO_CATALOGUE = {
       ],
       "uses": [
         "manipuler",
-        "projeter"
+        "projeter",
+        "imprimer"
       ],
       "types": [
-        "plateau"
+        "generateur",
+        "imprimable"
       ],
       "filters": [],
       "keywords": [
@@ -5091,7 +5424,7 @@ window.MATHSGO_CATALOGUE = {
     {
       "id": "outils-bouliers-rekenrek-tables-html",
       "title": "Tables de multiplication",
-      "description": "Une ressource maths&go pour travailler numération.",
+      "description": "S’entraîner aux tables de multiplication sur un grand rekenrek avec niveaux et vérification.",
       "path": "outils/bouliers/rekenrek/tables.html",
       "domains": [
         "nombres-calculs"
@@ -5134,13 +5467,11 @@ window.MATHSGO_CATALOGUE = {
         "calcul-litteral"
       ],
       "uses": [
-        "manipuler",
         "projeter",
         "imprimer",
         "entrainer"
       ],
       "types": [
-        "exerciseur",
         "generateur",
         "imprimable"
       ],
@@ -5167,8 +5498,6 @@ window.MATHSGO_CATALOGUE = {
         "calcul-litteral"
       ],
       "uses": [
-        "manipuler",
-        "projeter",
         "imprimer"
       ],
       "types": [
@@ -5219,8 +5548,8 @@ window.MATHSGO_CATALOGUE = {
     },
     {
       "id": "outils-fiche-reciproque-thales-pdf",
-      "title": "Thalès — tester un parallélisme — V1",
-      "description": "Version 1 : méthode guidée, fiche adaptable et deux exemples pour démontrer un parallélisme ou son contraire.",
+      "title": "Thalès — réciproque et contraposée",
+      "description": "Une méthode guidée, une fiche adaptable et deux exemples pour utiliser la réciproque ou la contraposée de Thalès.",
       "path": "outils/fiche_reciproque_thales.pdf",
       "domains": [
         "geometrie"
@@ -5251,8 +5580,8 @@ window.MATHSGO_CATALOGUE = {
     },
     {
       "id": "outils-fiche-thales-criteres-a-verifier-pdf",
-      "title": "Thalès — tester un parallélisme — V2",
-      "description": "Version 2 : partir des rapports, les comparer, puis vérifier la disposition seulement en cas d’égalité.",
+      "title": "Thalès — fiche-guide pour tester un parallélisme",
+      "description": "Une fiche-guide pour calculer et comparer les rapports, puis vérifier la disposition des points lorsque nécessaire.",
       "path": "outils/fiche_thales_criteres_a_verifier.pdf",
       "domains": [
         "geometrie"
@@ -5383,11 +5712,10 @@ window.MATHSGO_CATALOGUE = {
       ],
       "uses": [
         "manipuler",
-        "projeter",
-        "entrainer"
+        "projeter"
       ],
       "types": [
-        "exerciseur"
+        "plateau"
       ],
       "filters": [],
       "keywords": [],
