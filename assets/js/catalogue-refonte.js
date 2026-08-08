@@ -199,8 +199,8 @@
       hub: "angles/index.html"
     },
     reperage: {
-      description: "Lire et placer des points sur une droite ou dans un repère.",
-      keywords: "abscisse ordonnée coordonnées droite graduée plan repère",
+      description: "Se situer, décrire des positions et placer des points sur une droite ou dans un repère.",
+      keywords: "espace position devant derrière gauche droite abscisse ordonnée coordonnées droite graduée plan repère",
       icon: "coordinates"
     },
     transformations: {
