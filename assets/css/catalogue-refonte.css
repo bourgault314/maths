@@ -688,10 +688,6 @@ select { cursor: pointer; }
   contain: layout paint;
 }
 
-.catalogue-shell-card {
-  pointer-events: none;
-}
-
 .catalogue-shell-icon {
   position: relative;
   z-index: 1;

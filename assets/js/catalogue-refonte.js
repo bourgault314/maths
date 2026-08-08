@@ -646,6 +646,10 @@
     return facets;
   }
 
+  function domainHref(domainId) {
+    return `?domain=${encodeURIComponent(domainId)}`;
+  }
+
   function renderDomains() {
     domainGrid.hidden = false;
     notionGrid.hidden = true;
@@ -657,9 +661,9 @@
       const domain = domainMap.get(domainId);
       const count = domainResourceCount(domainId);
       const design = domainDesign[domainId] || {};
-      const tag = count ? "button" : "div";
+      const tag = count ? "a" : "div";
       const attributes = count
-        ? `type="button" data-domain-card="${escapeHtml(domainId)}"`
+        ? `href="${escapeHtml(domainHref(domainId))}" data-domain-card="${escapeHtml(domainId)}"`
         : `data-domain-card="${escapeHtml(domainId)}" data-domain-disabled="true" aria-disabled="true"`;
       return `<${tag} class="domain-card${count ? "" : " domain-card-disabled"}" ${attributes} style="${domainStyle(domainId)}">
         <span class="domain-card-icon">${icon(design.icon)}</span>
@@ -672,10 +676,10 @@
       const domain = domainMap.get(domainId);
       const count = domainResourceCount(domainId);
       const directCps = domainId === "cps";
-      const tag = directCps ? "a" : "button";
+      const tag = "a";
       const attributes = directCps
         ? `href="${escapeHtml(rootPrefix + "cps/bilan-s1.html")}" data-domain-card="cps" data-domain-direct="true"`
-        : `type="button" data-domain-card="${escapeHtml(domainId)}"`;
+        : `href="${escapeHtml(domainHref(domainId))}" data-domain-card="${escapeHtml(domainId)}"`;
       cards.push(`<${tag} class="domain-card domain-card-secondary" ${attributes} style="${domainStyle(domainId)}">
         <span class="domain-card-icon">${icon(domainDesign[domainId].icon)}</span>
         <span class="domain-card-copy"><strong>${escapeHtml(domain.title)}</strong><small>${escapeHtml(domain.short)}</small><em>${count ? `${count} ressource${count > 1 ? "s" : ""}` : "Bientôt"}</em></span>
@@ -1136,6 +1140,8 @@
     const button = event.target.closest("[data-domain-card]");
     if (!button || button.dataset.domainDirect === "true") return;
     if (button.dataset.domainDisabled === "true") return;
+    if (event.button !== 0 || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return;
+    event.preventDefault();
     const fromLevel = viewLevel();
     rememberCurrentScroll();
     state.domain = button.dataset.domainCard || "";

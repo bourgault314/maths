@@ -3,7 +3,10 @@
 <head>
     <meta charset="utf-8"/>
     <meta name="viewport" content="width=device-width, initial-scale=1"/>
-    <title>Rekenrek - Menu Principal</title>
+    <title>Rekenrek : boulier interactif et activités de calcul | maths&amp;go</title>
+  <meta name="description" content="Une progression complète d’outils Rekenrek pour représenter les nombres, travailler les compléments, les doubles et le calcul mental.">
+  <link rel="canonical" href="https://mathsgo.re/outils/bouliers/rekenrek/">
+  <meta name="robots" content="index, follow, max-image-preview:large">
 <link rel="icon" href="/favicon.ico" sizes="48x48">
 <link rel="icon" type="image/svg+xml" href="/favicon.svg">
 <link rel="icon" type="image/png" sizes="32x32" href="/assets/img/favicon-32.png">
@@ -70,6 +73,16 @@
             margin: 0 auto;
             padding: 0 1rem;
         }
+
+        .hub-intro {
+            margin: 0 0 2rem;
+            padding: 1.4rem 1.6rem;
+            border: 1px solid #dbeafe;
+            border-radius: 16px;
+            background: #eff6ff;
+        }
+        .hub-intro h2 { margin: 0 0 .45rem; font-size: 1.35rem; }
+        .hub-intro p { margin: 0; color: var(--text-muted); line-height: 1.6; }
 
         /* SECTIONS */
         .section-title {
@@ -158,144 +171,157 @@
 </header>
 
 <main class="wrapper">
+    <section class="hub-intro" aria-labelledby="rekenrek-intro-title">
+        <h2 id="rekenrek-intro-title">Découvrir et utiliser le Rekenrek</h2>
+        <p>Manipulez un rekenrek en ligne, puis travaillez la numération, les compléments, les doubles et le passage de la dizaine. Les activités et générateurs ci-dessous suivent le catalogue publié de maths&amp;go.</p>
+    </section>
 
-    <h2 class="section-title">🔢 Numération & Manipulation <span class="badge">Les bases</span></h2>
+    <h2 class="section-title">Manipuler et comprendre <span class="badge">Les bases</span></h2>
     <section class="grid cat-bases">
-        <a href="rekenrek.html" class="card-link">
+        <a href="../boulier_montessori/transition_rekenrek-montessori.html" class="card-link">
             <div class="icon-box">🧮</div>
-            <h3>Rekenrek Libre</h3>
-            <p>L'outil interactif pour manipuler librement.</p>
+            <h3>Boulier Rekenrek</h3>
+            <p>Manipuler un rekenrek libre et faire varier ses couleurs et son organisation jusqu’à 100 billes.</p>
         </a>
-        
         <a href="rekenrek_FD.html" class="card-link">
             <div class="icon-box">🧮</div>
-            <h3>Rekenrek écriture décimale</h3>
-            <p>L'outil interactif pour comprendre les deux premières décimales</p>
+            <h3>Rekenrek — fractions et centièmes</h3>
+            <p>Représenter des centièmes et passer entre écriture décimale, fractionnaire et monétaire sur un rekenrek.</p>
         </a>
-        
-        <a href="lecture_de_nombres.html" class="card-link">
-            <div class="icon-box">👁️</div>
-            <h3>Lecture de nombres</h3>
-            <p>Reconnaître rapidement une quantité ("Subitizing").</p>
-        </a>
-
-        <a href="pousser_des_nombres.html" class="card-link">
-            <div class="icon-box">👆</div>
-            <h3>Pousser des nombres</h3>
-            <p>Construire un nombre demandé en déplaçant les billes.</p>
-        </a>
-
-        <a href="comparateur.html" class="card-link">
-            <div class="icon-box">⚖️</div>
-            <h3>Comparateur</h3>
-            <p>Comparer deux quantités : Plus grand, plus petit ou égal ?</p>
-        </a>
-
-        <a href="suivant_precedent.html" class="card-link">
-            <div class="icon-box">↔️</div>
-            <h3>Les Voisins</h3>
-            <p>Trouver le nombre précédent et le nombre suivant.</p>
-        </a>
-
-        <a href="cache-cache.html" class="card-link">
-            <div class="icon-box">🙈</div>
-            <h3>Cache-cache</h3>
-            <p>Trouver le nombre de billes cachées (Compléments).</p>
-        </a>
-        <a href="rekenrek_sheet_generator_lecture.html" class="card-link">
-            <div class="icon-box">🖨️</div>
-            <h3>Générateur de fiches de calcul</h3>
-            <p>Lecture, compléments</p>
+        <a href="rekenrek.html" class="card-link">
+            <div class="icon-box">🧮</div>
+            <h3>Rekenrek interactif</h3>
+            <p>Manipuler librement les billes du rekenrek, masquer une partie et annoter la situation projetée.</p>
         </a>
     </section>
 
-
-    <h2 class="section-title">➕ Stratégies d'Addition</h2>
+    <h2 class="section-title">S’entraîner <span class="badge">Activités interactives</span></h2>
     <section class="grid cat-add">
-        <a href="force_5.html" class="card-link">
-            <div class="icon-box">🖐️</div>
-            <h3>Force 5</h3>
-            <p>Calculer en utilisant le repère de 5.</p>
-        </a>
-
-        <a href="pont_dizaine.html" class="card-link">
-            <div class="icon-box">🌉</div>
-            <h3>Le Pont</h3>
-            <p>Passer à la dizaine supérieure (Compléments à 10).</p>
-        </a>
-
         <a href="ajouter9_ajouter8.html" class="card-link">
-            <div class="icon-box">🚀</div>
+            <div class="icon-box">🎯</div>
             <h3>Ajouter 8 ou 9</h3>
-            <p>Technique rapide : Faire +10 puis enlever 1 ou 2.</p>
+            <p>S’entraîner à ajouter 8 ou 9 en s’appuyant sur le passage par la dizaine.</p>
         </a>
-    </section>
-
-
-    <h2 class="section-title">➖ Stratégies de Soustraction</h2>
-    <section class="grid cat-sub">
+        <a href="enlever9_enlever8.html" class="card-link">
+            <div class="icon-box">🎯</div>
+            <h3>Enlever 8 ou 9</h3>
+            <p>S’entraîner à enlever 8 ou 9 avec trois niveaux, une aide rekenrek et un score.</p>
+        </a>
+        <a href="force_5.html" class="card-link">
+            <div class="icon-box">🎯</div>
+            <h3>Force 5 — additions</h3>
+            <p>S’entraîner aux additions en utilisant la structure du 5 sur le rekenrek.</p>
+        </a>
         <a href="force_5_soustraction.html" class="card-link">
-            <div class="icon-box">🖐️</div>
-            <h3>Force 5</h3>
-            <p>Soustraire à partir de 5</p>
+            <div class="icon-box">🎯</div>
+            <h3>Force 5 — soustractions</h3>
+            <p>S’entraîner aux soustractions avec une aide rekenrek révélable et trois niveaux.</p>
         </a>
         <a href="grignoteur.html" class="card-link">
-            <div class="icon-box">🦖</div>
+            <div class="icon-box">🎯</div>
             <h3>Le Grignoteur</h3>
-            <p>Soustraire en reculant (Passage de la dizaine).</p>
+            <p>Répondre à une série de calculs, suivre son score et révéler le rekenrek en cas de besoin.</p>
         </a>
-
-        <a href="enlever9_enlever8.html" class="card-link">
-            <div class="icon-box">📉</div>
-            <h3>Enlever 8 ou 9</h3>
-            <p>Technique rapide : Enlever 10 puis remettre 1 ou 2.</p>
+        <a href="pont_dizaine.html" class="card-link">
+            <div class="icon-box">🎯</div>
+            <h3>Le Pont de la Dizaine</h3>
+            <p>S’entraîner aux calculs qui franchissent la dizaine avec vérification et aide visuelle.</p>
         </a>
-    </section>
-
-
-    <h2 class="section-title">✖️ Doubles & Multiplication</h2>
-    <section class="grid cat-mult">
+        <a href="suivant_precedent.html" class="card-link">
+            <div class="icon-box">🎯</div>
+            <h3>Rekenrek - Le Voisin (Suivant/Précédent)</h3>
+            <p>Trouver le nombre précédent ou suivant, puis vérifier la réponse avec l’appui du rekenrek.</p>
+        </a>
+        <a href="comparateur.html" class="card-link">
+            <div class="icon-box">🎯</div>
+            <h3>Rekenrek — comparer et ranger</h3>
+            <p>Comparer et ranger des quantités représentées sur rekenrek à travers cinq niveaux progressifs.</p>
+        </a>
+        <a href="pousser_des_nombres.html" class="card-link">
+            <div class="icon-box">🎯</div>
+            <h3>Rekenrek — construire un nombre</h3>
+            <p>Pousser les billes pour construire le nombre demandé, puis valider la représentation.</p>
+        </a>
         <a href="jeu_des_doubles.html" class="card-link">
-            <div class="icon-box">✌️</div>
-            <h3>Jeu des doubles</h3>
-            <p>Mémoriser les doubles (1+1, 2+2...).</p>
+            <div class="icon-box">🎯</div>
+            <h3>Rekenrek — entraînement aux doubles</h3>
+            <p>S’entraîner aux doubles par plages et niveaux avec une vérification immédiate.</p>
         </a>
-
         <a href="presque_doubles.html" class="card-link">
-            <div class="icon-box">🤏</div>
-            <h3>Presque doubles</h3>
-            <p>Calculer 6+7 en utilisant les doubles (6+6+1).</p>
+            <div class="icon-box">🎯</div>
+            <h3>Rekenrek — entraînement aux presque-doubles</h3>
+            <p>S’entraîner aux presque-doubles en mode visuel, libre ou mental avec aide révélable.</p>
         </a>
-
+        <a href="lecture_de_nombres.html" class="card-link">
+            <div class="icon-box">🎯</div>
+            <h3>Rekenrek — lecture flash</h3>
+            <p>Lire une configuration affichée brièvement sur le rekenrek puis saisir le nombre observé.</p>
+        </a>
+        <a href="cache-cache.html" class="card-link">
+            <div class="icon-box">🎯</div>
+            <h3>Rekenrek — perles cachées</h3>
+            <p>Déterminer combien de billes sont cachées derrière le rideau, puis vérifier la réponse.</p>
+        </a>
         <a href="tables.html" class="card-link">
-            <div class="icon-box">📚</div>
+            <div class="icon-box">🎯</div>
             <h3>Tables de multiplication</h3>
-            <p>Visualiser les tables sur le boulier.</p>
+            <p>S’entraîner aux tables de multiplication sur un grand rekenrek avec niveaux et vérification.</p>
         </a>
-        <a href="rekenrek_sheet_generator_double_niv1.html" class="card-link">
-            <div class="icon-box">🖨️</div>
-            <h3>Générateur de fiches de calcul</h3>
-            <p>Double, tables</p>
-        </a>
-        
     </section>
 
-
-    <h2 class="section-title">🏆 Défis & Outils Prof</h2>
+    <h2 class="section-title">Créer des fiches <span class="badge">Outils enseignant</span></h2>
     <section class="grid cat-tools">
-        <a href="boss_final.html" class="card-link">
-            <div class="icon-box">⏱️</div>
-            <h3>Le BOSS Final</h3>
-            <p>Le défi ultime chronométré mélangeant toutes les opérations.</p>
-        </a>
-
         <a href="generateur_rekenrek_cartes.html" class="card-link">
             <div class="icon-box">🖨️</div>
-            <h3>Générateur de Cartes</h3>
-            <p>Créer des fiches PDF à imprimer (Flashcards).</p>
+            <h3>Générateur de cartes Rekenrek</h3>
+            <p>Créer des cartes rekenrek recto verso en choisissant la plage de nombres, les couleurs et le calibrage.</p>
+        </a>
+        <a href="cache%20cache.html" class="card-link">
+            <div class="icon-box">🖨️</div>
+            <h3>Générateur Rekenrek — compléments cachés</h3>
+            <p>Générer des planches de compléments à 10, 20 ou 100 sur rekenrek, avec correction.</p>
+        </a>
+        <a href="lecture_0_100_generateur2.html" class="card-link">
+            <div class="icon-box">🖨️</div>
+            <h3>Générateur Rekenrek — dizaines et unités</h3>
+            <p>Créer des fiches ou flashcards reliant dizaines, unités, écritures chiffrées et mots-nombres.</p>
+        </a>
+        <a href="double_niv1.html" class="card-link">
+            <div class="icon-box">🖨️</div>
+            <h3>Générateur Rekenrek — doubles, niveau 1</h3>
+            <p>Générer des grilles imprimables sur les doubles de niveau 1 avec pièges et correction.</p>
+        </a>
+        <a href="double_niv2.html" class="card-link">
+            <div class="icon-box">🖨️</div>
+            <h3>Générateur Rekenrek — doubles, niveau 2</h3>
+            <p>Générer des grilles imprimables sur les doubles de niveau 2, avec ou sans correction.</p>
+        </a>
+        <a href="lecture_0_100_generateur.html" class="card-link">
+            <div class="icon-box">🖨️</div>
+            <h3>Générateur Rekenrek — lecture de 0 à 100</h3>
+            <p>Créer des fiches de lecture de nombres sur rekenrek, avec correction ou cartes recto verso.</p>
+        </a>
+        <a href="voisins_generateur_compact.html" class="card-link">
+            <div class="icon-box">🖨️</div>
+            <h3>Générateur Rekenrek — nombres voisins</h3>
+            <p>Composer des fiches sur le nombre précédent, le suivant et les voisins dans une plage choisie.</p>
+        </a>
+        <a href="presque%20double.html" class="card-link">
+            <div class="icon-box">🖨️</div>
+            <h3>Générateur Rekenrek — presque-doubles</h3>
+            <p>Générer des grilles imprimables sur les presque-doubles avec choix des pièges et de l’affichage.</p>
+        </a>
+        <a href="cache%20cache%20barre.html" class="card-link">
+            <div class="icon-box">🖨️</div>
+            <h3>Générateur Rekenrek — schémas et compléments</h3>
+            <p>Générer des fiches de compléments sur rekenrek accompagnées de schémas en barres.</p>
+        </a>
+        <a href="tables_generateur.html" class="card-link">
+            <div class="icon-box">🖨️</div>
+            <h3>Générateur Rekenrek — tables de multiplication</h3>
+            <p>Générer des fiches de tables de multiplication et de division avec affichage rekenrek et correction.</p>
         </a>
     </section>
-
 </main>
 
 <footer>

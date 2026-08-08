@@ -25,6 +25,15 @@ function fail(message) {
   errors.push(message);
 }
 
+for (const collection of catalogue.collections || []) {
+  if (!collection.hub) {
+    fail(`Collection ${collection.id}: aucun hub déclaré`);
+    continue;
+  }
+  const hubPath = path.join(root, "outils", collection.hub);
+  if (!fs.existsSync(hubPath)) fail(`Collection ${collection.id}: hub absent « outils/${collection.hub} »`);
+}
+
 if (catalogue.schemaVersion !== 5) {
   fail(`Version de schéma attendue : 5 (reçue : ${catalogue.schemaVersion})`);
 }

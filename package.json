@@ -10,6 +10,8 @@
   ],
   "scripts": {
     "test": "node --test",
-    "verifier": "node scripts/validate-catalogue.mjs && node scripts/validate-sitemap.mjs && node scripts/validate-icone.mjs && node scripts/validate-automatismes-public.mjs && node scripts/validate-automatismes-v2.mjs && node scripts/validate-pythagore-tools.mjs && node scripts/validate-pythagore-snap-engine.mjs && node --test"
+    "seo:generer": "node scripts/generate-seo.mjs",
+    "seo:verifier": "node scripts/generate-seo.mjs --check",
+    "verifier": "node scripts/validate-catalogue.mjs && node scripts/generate-seo.mjs --check && node scripts/validate-sitemap.mjs && node scripts/validate-icone.mjs && node scripts/validate-automatismes-public.mjs && node scripts/validate-automatismes-v2.mjs && node scripts/validate-pythagore-tools.mjs && node scripts/validate-pythagore-snap-engine.mjs && node --test"
   }
 }
