@@ -114,7 +114,7 @@ def rule_page():
   <div class="rulecols">
     <div>
       <h3>Matériel</h3>
-      <p>6 cerceaux posés au sol en deux lignes de trois · une série de 4 cartes · 4 joueurs · un adulte (ou un meneur) pour valider.</p>
+      <p>6 zones circulaires en deux lignes de trois (cerceaux ou cercles tracés au sol) · une série de 4 cartes · 4 joueurs · un adulte (ou un meneur) pour valider.</p>
       <h3>Mise en place</h3>
       {diagram}
       <p class="small">Marquer le « devant » (un plot, le tableau…). Tous les enfants
@@ -135,7 +135,7 @@ def rule_page():
       <h3>Déroulement</h3>
       <p>Chaque enfant reçoit une carte de la même série et ne la montre pas.
       En se parlant (« j'ai quelqu'un devant moi », « personne à ma droite »…),
-      les 4 enfants cherchent chacun leur cerceau. Deux cerceaux resteront vides.
+      les 4 enfants cherchent chacun leur place. Deux zones resteront vides.
       Quand tout le monde est placé, l'adulte vérifie carte par carte.</p>
       <h3>Variantes</h3>
       <p class="small">Se placer sans parler · dessiner d'abord la solution sur papier ·

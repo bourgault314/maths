@@ -1,12 +1,12 @@
 #!/usr/bin/env python3
 """Chat, c'est toi le chat ! — modèle du jeu + solveur.
 
-Grille : 2 rangées x 3 colonnes de cerceaux. Tous les joueurs regardent
-vers le "haut" (rangée 0 = rangée avant). 4 joueurs, 2 cerceaux vides.
+Grille : 2 rangées x 3 colonnes de zones circulaires. Tous les joueurs regardent
+vers le "haut" (rangée 0 = rangée avant). 4 joueurs, 2 zones vides.
 
 Carte d'un joueur : contraintes sur les 4 voisins orthogonaux :
   'P' = un chat (quelqu'un est là)
-  'X' = chat barré (personne : cerceau vide OU hors grille)
+  'X' = chat barré (personne : zone vide OU hors grille)
   absent = aucune information
 """
 from itertools import permutations
@@ -15,7 +15,7 @@ ROWS, COLS = 2, 3
 DIRS = {"front": (-1, 0), "back": (1, 0), "left": (0, -1), "right": (0, 1)}
 
 # ---------------------------------------------------------------- transcription
-# sol : grille [rangée avant, rangée arrière], 0 = cerceau vide, n = joueur n
+# sol : grille [rangée avant, rangée arrière], 0 = zone vide, n = joueur n
 SERIES = {
     1: {
         "cards": {

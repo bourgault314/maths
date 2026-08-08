@@ -429,9 +429,9 @@ window.MATHSGO_CATALOGUE = {
       "primaryNotion": "reperage",
       "primaryGroup": "jeux",
       "collections": [],
-      "tags": ["reperage-spatial", "cycle-1", "maternelle", "communication", "cooperation", "devant-derriere", "gauche-droite", "jeu-collectif", "imprimable"],
+      "tags": ["reperage-spatial", "cycle-1", "maternelle", "communication", "cooperation", "devant-derriere", "gauche-droite", "jeu-collectif", "cerceaux", "cercles-au-sol", "imprimable"],
       "thumbnail": "assets/img/thumbnails/reperage/chat-cest-toi-le-chat.png?v=1",
-      "cardDescription": "Un jeu coopératif dès la maternelle : quatre élèves communiquent pour se placer dans six cerceaux, au fil de 20 séries en 4 niveaux."
+      "cardDescription": "Un jeu coopératif dès la maternelle : quatre élèves communiquent pour se placer dans six zones au sol, matérialisées par des cerceaux ou des cercles tracés."
     },
     "outils/fractions_multiples_exerciseur.html": {
       "primaryNotion": "fractions",
@@ -2669,7 +2669,7 @@ window.MATHSGO_CATALOGUE = {
     {
       "id": "outils-chat-cest-toi-le-chat-pdf",
       "title": "Chat, c’est toi le chat !",
-      "description": "Un jeu coopératif de repérage spatial dès la maternelle : quatre élèves communiquent pour se placer dans six cerceaux avec devant, derrière, à gauche et à droite. Vingt séries progressives en quatre niveaux, avec solutions.",
+      "description": "Un jeu coopératif de repérage spatial dès la maternelle : quatre élèves communiquent pour se placer dans six zones circulaires, matérialisées par des cerceaux ou des cercles tracés au sol. Vingt séries progressives en quatre niveaux, avec solutions.",
       "path": "outils/chat-cest-toi-le-chat.pdf",
       "domains": [
         "geometrie"
@@ -2698,6 +2698,8 @@ window.MATHSGO_CATALOGUE = {
         "derrière",
         "gauche",
         "droite",
+        "cerceaux",
+        "cercles tracés au sol",
         "20 séries",
         "4 niveaux"
       ],
