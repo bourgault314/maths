@@ -197,6 +197,35 @@ export function publicEntries(catalogue) {
   });
 }
 
+export function allHtmlFilePaths(root) {
+  const files = [];
+
+  function walk(directory, relativeDirectory = "") {
+    for (const entry of fs.readdirSync(directory, { withFileTypes: true })) {
+      if (entry.name.startsWith(".") || entry.name.startsWith("_") || entry.name === "node_modules") continue;
+      const absolutePath = path.join(directory, entry.name);
+      const relativePath = path.posix.join(relativeDirectory, entry.name);
+      if (entry.isDirectory()) {
+        walk(absolutePath, relativePath);
+      } else if (/\.html?$/i.test(entry.name)) {
+        files.push(relativePath);
+      }
+    }
+  }
+
+  walk(root);
+  return files.sort((a, b) => a.localeCompare(b, "fr"));
+}
+
+export function nonPublicHtmlPaths(root, catalogue) {
+  const publicPaths = new Set(
+    publicEntries(catalogue)
+      .map(({ filePath }) => filePath)
+      .filter((filePath) => filePath.endsWith(".html"))
+  );
+  return allHtmlFilePaths(root).filter((filePath) => !publicPaths.has(filePath));
+}
+
 function escapeHtml(value) {
   return String(value)
     .replaceAll("&", "&amp;")
@@ -256,6 +285,31 @@ export function updateHtmlMetadata(html, page) {
   head = head.split("\n").map((line) => (
     managedTags.some((tag) => line.includes(tag)) ? line.replace(/\r$/, "") : line
   )).join("\n");
+
+  return html.replace(headMatch[0], head);
+}
+
+export function hasNoindexDirective(html) {
+  const robots = html.match(/<meta\b(?=[^>]*\bname\s*=\s*["']robots["'])[^>]*>/i)?.[0] || "";
+  return /\bnoindex\b/i.test(robots);
+}
+
+export function updateHtmlNoindex(html, pagePath) {
+  if (hasNoindexDirective(html)) return html;
+
+  const headMatch = html.match(/<head\b[^>]*>[\s\S]*?<\/head>/i);
+  if (!headMatch) throw new Error(`${pagePath}: élément <head> introuvable`);
+
+  let head = headMatch[0];
+  const robots = '<meta name="robots" content="noindex, follow">';
+  const robotsMatcher = /<meta\b(?=[^>]*\bname\s*=\s*["']robots["'])[^>]*>/i;
+  if (robotsMatcher.test(head)) {
+    head = head.replace(robotsMatcher, robots);
+  } else if (/<title\b[^>]*>[\s\S]*?<\/title>/i.test(head)) {
+    head = head.replace(/<title\b[^>]*>[\s\S]*?<\/title>/i, (match) => `${match}\n  ${robots}`);
+  } else {
+    head = head.replace(/<head\b[^>]*>/i, (match) => `${match}\n  ${robots}`);
+  }
 
   return html.replace(headMatch[0], head);
 }

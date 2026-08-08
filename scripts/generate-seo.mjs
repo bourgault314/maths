@@ -8,8 +8,10 @@ import {
   buildSitemapXml,
   loadCatalogue,
   metadataPages,
+  nonPublicHtmlPaths,
   publicEntries,
   updateHtmlMetadata,
+  updateHtmlNoindex,
   updateRekenrekHub
 } from "./lib/seo-publication.mjs";
 
@@ -45,6 +47,12 @@ for (const page of metadataPages(catalogue)) {
     expected = updateRekenrekHub(expected, catalogue);
   }
   syncFile(page.path, expected);
+}
+
+for (const relativePath of nonPublicHtmlPaths(root, catalogue)) {
+  const target = path.join(root, relativePath);
+  const current = fs.readFileSync(target, "utf8");
+  syncFile(relativePath, updateHtmlNoindex(current, relativePath));
 }
 
 syncFile("outils/toutes-les-ressources.html", buildDirectoryHtml(catalogue));

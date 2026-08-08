@@ -8,7 +8,13 @@
 import fs from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
-import { loadCatalogue, publicEntries, SITE_ORIGIN } from "./lib/seo-publication.mjs";
+import {
+  hasNoindexDirective,
+  loadCatalogue,
+  nonPublicHtmlPaths,
+  publicEntries,
+  SITE_ORIGIN
+} from "./lib/seo-publication.mjs";
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const sitemap = fs.readFileSync(path.join(root, "sitemap.xml"), "utf8");
@@ -71,6 +77,13 @@ for (const url of locs) {
     } else if (canonical[1] !== url) {
       errors.push(`Canonical incorrecte : ${url} → ${canonical[1]}`);
     }
+  }
+}
+
+for (const relativePath of nonPublicHtmlPaths(root, catalogue)) {
+  const html = fs.readFileSync(path.join(root, relativePath), "utf8");
+  if (!hasNoindexDirective(html)) {
+    errors.push(`Page hors catalogue public sans noindex : ${relativePath}`);
   }
 }
 
