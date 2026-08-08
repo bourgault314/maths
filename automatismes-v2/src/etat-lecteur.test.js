@@ -4,8 +4,11 @@ import { describe, it } from "node:test";
 import { validerSeance } from "../../packages/contrats/src/seance.js";
 import { validerTraceReponse } from "../../packages/contrats/src/trace-reponse.js";
 import {
+  COMPARAISON_VALEUR_RATIONNELLE_EXACTE,
   TYPE_REPONSE_DEUX_ENTIERS,
   TYPE_REPONSE_ENTIER_NATUREL,
+  TYPE_REPONSE_FRACTION_EQUIVALENTE,
+  TYPE_REPONSE_NOMBRE_DECIMAL,
 } from "../../packages/contrats/src/question-v2.js";
 import {
   basculerChiffreAide,
@@ -14,9 +17,11 @@ import {
   creerEtatLecteur,
   demarrer,
   effacerSaisie,
+  fermerAide,
   lireConfiguration,
   nombreReussites,
   NOMBRE_QUESTIONS_MAXIMUM,
+  NOTION_FRACTIONS_SIMPLES_DECIMAUX,
   NOTION_NC01,
   NOTION_NC02,
   NOTION_SOLIDES_USUELS,
@@ -31,6 +36,8 @@ import {
   recommencer,
   revelerReponse,
   selectionnerChampSaisie,
+  selectionnerRepereAide,
+  saisirCaractere,
   saisirChiffre,
   tournerSolide,
   validerSelection,
@@ -86,6 +93,26 @@ function etatSurQuestionDeuxEntiers({
       attendus,
       minimum,
       maximum,
+    },
+  };
+  return etat;
+}
+
+function etatSurQuestionRationnelle(type, attendu, microNotion = undefined) {
+  const etat = etatDemarre({
+    graine: `fixture-${type}`,
+    nombreQuestions: 2,
+  });
+  etat.questions[0] = {
+    ...questionCourante(etat),
+    classement: {
+      ...questionCourante(etat).classement,
+      ...(microNotion === undefined ? {} : { microNotion }),
+    },
+    reponse: {
+      type,
+      comparaison: COMPARAISON_VALEUR_RATIONNELLE_EXACTE,
+      attendu,
     },
   };
   return etat;
@@ -165,6 +192,13 @@ describe("configuration du lecteur", () => {
     assert.throws(
       () => creerEtatLecteur({ notions: [NOTION_NC01, NOTION_NC02], nombreQuestions: 1 }),
       /au moins une question par notion/,
+    );
+    assert.throws(
+      () => creerEtatLecteur({
+        notion: NOTION_FRACTIONS_SIMPLES_DECIMAUX,
+        nombreQuestions: 21,
+      }),
+      /entre 1 et 20/,
     );
   });
 });
@@ -375,6 +409,25 @@ describe("réponse interactive", () => {
     assert.deepEqual(etat.chiffresSomme, [0]);
   });
 
+  it("conserve un repère choisi dans l'aide et le réinitialise à la question suivante", () => {
+    const etat = etatSurQuestionDeuxEntiers();
+    ouvrirAide(etat);
+    selectionnerRepereAide(etat, "demi-1");
+    assert.equal(etat.repereAide, "demi-1");
+
+    fermerAide(etat);
+    selectionnerRepereAide(etat, 2);
+    assert.equal(etat.repereAide, "demi-1");
+    assert.throws(() => selectionnerRepereAide(etat, -1), /indice positif/);
+
+    saisirChiffre(etat, 3);
+    selectionnerChampSaisie(etat, 1);
+    saisirChiffre(etat, 4);
+    validerSelection(etat);
+    passerQuestionSuivante(etat);
+    assert.equal(etat.repereAide, null);
+  });
+
   it("utilise aussi le total du partage comme source de l'outil d'aide F6", () => {
     let etat;
     let index = -1;
@@ -434,6 +487,109 @@ describe("réponse interactive", () => {
     assert.deepEqual(etat.traces[0].reponse, {
       type: TYPE_REPONSE_ENTIER_NATUREL,
       valeur: 0,
+    });
+  });
+});
+
+describe("réponse décimale positive", () => {
+  it("accepte le point physique, affiche une virgule et trace la valeur rationnelle exacte", () => {
+    const etat = etatSurQuestionRationnelle(
+      TYPE_REPONSE_NOMBRE_DECIMAL,
+      { numerateur: 1, denominateur: 2 },
+      "fraction-vers-decimal",
+    );
+    saisirCaractere(etat, 0);
+    saisirCaractere(etat, ".");
+    saisirCaractere(etat, 5);
+    saisirCaractere(etat, 0);
+    saisirCaractere(etat, ",");
+    saisirCaractere(etat, "-");
+
+    assert.equal(etat.saisie, "0,50");
+    validerSelection(etat);
+    assert.deepEqual(etat.validation, { juste: true });
+    assert.deepEqual(etat.traces[0].reponse, {
+      type: TYPE_REPONSE_NOMBRE_DECIMAL,
+      saisie: "0,50",
+      valeur: { numerateur: 1, denominateur: 2 },
+    });
+    assert.deepEqual(validerTraceReponse(etat.traces[0]), {
+      valide: true,
+      erreurs: [],
+    });
+    assert.equal(etat.traces[0].microNotion, "fraction-vers-decimal");
+
+    saisirCaractere(etat, 9);
+    effacerSaisie(etat);
+    assert.equal(etat.saisie, "0,50");
+  });
+
+  it("accepte la virgule tactile et conserve une saisie trop précise pour la signaler", () => {
+    const etat = etatSurQuestionRationnelle(
+      TYPE_REPONSE_NOMBRE_DECIMAL,
+      { numerateur: 7, denominateur: 100 },
+    );
+    saisirCaractere(etat, ",");
+    saisirCaractere(etat, 0);
+    saisirCaractere(etat, 7);
+    assert.equal(etat.saisie, "0,07");
+    effacerSaisie(etat);
+    assert.equal(etat.saisie, "0,0");
+    saisirCaractere(etat, 7);
+    validerSelection(etat);
+    assert.deepEqual(etat.validation, { juste: true });
+
+    const tropPrecis = etatSurQuestionRationnelle(
+      TYPE_REPONSE_NOMBRE_DECIMAL,
+      { numerateur: 123, denominateur: 1000 },
+    );
+    for (const caractere of ["0", ",", "1", "2", "3", "4"]) {
+      saisirCaractere(tropPrecis, caractere);
+    }
+    assert.equal(tropPrecis.saisie, "0,1234");
+    assert.match(tropPrecis.erreurValidation, /limitée aux millièmes/);
+    validerSelection(tropPrecis);
+    assert.equal(tropPrecis.validation, null);
+    assert.equal(tropPrecis.traces.length, 0);
+
+    effacerSaisie(tropPrecis);
+    assert.equal(tropPrecis.saisie, "0,123");
+    validerSelection(tropPrecis);
+    assert.deepEqual(tropPrecis.validation, { juste: true });
+  });
+
+  it("ne transforme jamais une quatrième décimale tentée en réponse juste tronquée", () => {
+    const etat = etatSurQuestionRationnelle(
+      TYPE_REPONSE_NOMBRE_DECIMAL,
+      { numerateur: 1, denominateur: 2 },
+    );
+    for (const caractere of ["0", ",", "5", "0", "0", "1"]) {
+      saisirCaractere(etat, caractere);
+    }
+    assert.equal(etat.saisie, "0,5001");
+    validerSelection(etat);
+    assert.equal(etat.validation, null);
+    assert.equal(etat.traces.length, 0);
+    assert.match(etat.erreurValidation, /écriture décimale valide/);
+  });
+
+  it("refuse une validation vide et compare sans flottants", () => {
+    const etat = etatSurQuestionRationnelle(
+      TYPE_REPONSE_NOMBRE_DECIMAL,
+      { numerateur: 51, denominateur: 100 },
+    );
+    validerSelection(etat);
+    assert.equal(etat.erreurValidation, "Entre une réponse.");
+    assert.equal(etat.traces.length, 0);
+
+    for (const caractere of ["0", ",", "5", "1"]) {
+      saisirCaractere(etat, caractere);
+    }
+    validerSelection(etat);
+    assert.deepEqual(etat.validation, { juste: true });
+    assert.deepEqual(etat.traces[0].reponse.valeur, {
+      numerateur: 51,
+      denominateur: 100,
     });
   });
 });
@@ -534,6 +690,65 @@ describe("réponse avec deux champs entiers", () => {
 
     assert.deepEqual(etat.saisies, ["", ""]);
     assert.equal(etat.champSaisieActif, 0);
+  });
+});
+
+describe("réponse par fraction équivalente", () => {
+  it("compare les deux champs par produit en croix et trace la fraction saisie", () => {
+    const etat = etatSurQuestionRationnelle(
+      TYPE_REPONSE_FRACTION_EQUIVALENTE,
+      { numerateur: 3, denominateur: 2 },
+    );
+    saisirChiffre(etat, 1);
+    saisirChiffre(etat, 5);
+    selectionnerChampSaisie(etat, 1);
+    saisirChiffre(etat, 1);
+    saisirChiffre(etat, 0);
+    validerSelection(etat);
+
+    assert.deepEqual(etat.validation, { juste: true });
+    assert.deepEqual(etat.traces[0].reponse, {
+      type: TYPE_REPONSE_FRACTION_EQUIVALENTE,
+      valeurs: [15, 10],
+    });
+    assert.deepEqual(validerTraceReponse(etat.traces[0]), {
+      valide: true,
+      erreurs: [],
+    });
+  });
+
+  it("signale un dénominateur nul, permet de l'effacer puis de valider", () => {
+    const etat = etatSurQuestionRationnelle(
+      TYPE_REPONSE_FRACTION_EQUIVALENTE,
+      { numerateur: 3, denominateur: 2 },
+    );
+    saisirChiffre(etat, 3);
+    selectionnerChampSaisie(etat, 1);
+    saisirChiffre(etat, 0);
+    validerSelection(etat);
+    assert.equal(etat.erreurValidation, "Le dénominateur doit être différent de 0.");
+    assert.equal(etat.traces.length, 0);
+
+    effacerSaisie(etat);
+    saisirChiffre(etat, 2);
+    validerSelection(etat);
+    assert.deepEqual(etat.validation, { juste: true });
+  });
+
+  it("refuse une fraction incomplète et distingue une fraction non équivalente", () => {
+    const etat = etatSurQuestionRationnelle(
+      TYPE_REPONSE_FRACTION_EQUIVALENTE,
+      { numerateur: 3, denominateur: 2 },
+    );
+    saisirChiffre(etat, 2);
+    validerSelection(etat);
+    assert.equal(etat.erreurValidation, "Complète les deux cases.");
+    assert.equal(etat.traces.length, 0);
+
+    selectionnerChampSaisie(etat, 1);
+    saisirChiffre(etat, 3);
+    validerSelection(etat);
+    assert.deepEqual(etat.validation, { juste: false });
   });
 });
 

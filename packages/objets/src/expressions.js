@@ -1,4 +1,4 @@
-// Écriture mathématique structurée maths&go — version 1.
+// Écriture mathématique structurée maths&go — version 3.
 // Le rendu HTML sémantique des puissances est stabilisé pour NC-02 ; les
 // autres rendus historiques conservent leur statut de fondation évolutive.
 //
@@ -14,13 +14,16 @@
 //     (BC² = AB² + AC², AB̂C, √144, 7,5 × 4) — celle des rédactions
 //     de l'Atelier tant que le moteur TeX n'est pas tranché.
 //   - versHtmlSemantique : fragment HTML autonome, sûr et accessible, avec
-//     un vrai élément <sup> pour les puissances et une verbalisation française.
+//     un vrai élément <sup> pour les puissances, une fraction étagée canonique
+//     et une verbalisation française.
 //
 // La couleur et la mise en page ne vivent PAS ici : un nœud peut porter
 // un `role` sémantique (« hypotenuse », « inconnue »…) que le rendu
 // habillera — jamais l'inverse.
 
-export const VERSION_EXPRESSIONS = 2;
+import { TYPOGRAPHIE } from "../../charte/src/charte.js?v=21";
+
+export const VERSION_EXPRESSIONS = 3;
 
 const CHAPEAU = "̂"; // accent circonflexe combinant
 
@@ -199,7 +202,7 @@ export function versTexte(noeud) {
     case "produit":
       return noeud.facteurs.map(versTexte).join(" fois ");
     case "quotient":
-      return `${versTexte(noeud.numerateur)} divisé par ${versTexte(noeud.denominateur)}`;
+      return `${versTexte(noeud.numerateur)} sur ${versTexte(noeud.denominateur)}`;
     case "puissance":
       return noeud.exposant === 2
         ? `${versTexte(noeud.base)} au carré`
@@ -242,6 +245,178 @@ function echapperAttributHtml(valeur) {
     .replaceAll("'", "&#39;");
 }
 
+// ---------------------------------------------------------------------------
+// Fraction étagée canonique — une seule géométrie SVG dans tous les contextes
+// ---------------------------------------------------------------------------
+
+const POLICE_FRACTION_SVG = TYPOGRAPHIE.mathematiques.replaceAll('"', "'");
+
+function contenuFraction(valeur, nom) {
+  if (valeur === null || valeur === undefined) {
+    throw new TypeError(`fraction : ${nom} requis`);
+  }
+  return String(valeur).replaceAll(".", ",");
+}
+
+/** Verbalisation française commune aux rendus accessibles. */
+export function verbaliserFraction(numerateur, denominateur) {
+  return `${contenuFraction(numerateur, "numérateur")} sur ${contenuFraction(denominateur, "dénominateur")}`;
+}
+
+function exigerNombreFiniPositif(valeur, nom) {
+  const n = Number(valeur);
+  if (!Number.isFinite(n) || n <= 0) {
+    throw new RangeError(`fraction SVG : ${nom} doit être strictement positif`);
+  }
+  return n;
+}
+
+function largeurApprocheeSvg(contenu, taille) {
+  let unites = 0;
+  for (const caractere of String(contenu)) {
+    if (/[0-9]/.test(caractere)) unites += 0.62;
+    else if (/[A-Z]/.test(caractere)) unites += 0.7;
+    else if (/[a-z]/.test(caractere)) unites += 0.56;
+    else if ([",", ".", "'"].includes(caractere)) unites += 0.28;
+    else if (caractere === " ") unites += 0.32;
+    else unites += 0.64;
+  }
+  return unites * taille;
+}
+
+function arrondiFractionSvg(nombre) {
+  return Number.parseFloat(Number(nombre).toFixed(2));
+}
+
+/**
+ * Mesure la place réellement nécessaire autour de la barre d'une fraction SVG.
+ * Les largeurs suivent le terme le plus long : `3/100` n'a donc jamais une
+ * barre plus courte que son dénominateur.
+ */
+export function mesurerEcritureFractionSvg(numerateur, denominateur, options = {}) {
+  const taille = exigerNombreFiniPositif(options.taille ?? 17, "taille");
+  const n = contenuFraction(numerateur, "numérateur");
+  const d = contenuFraction(denominateur, "dénominateur");
+  const largeurContenu = Math.max(
+    largeurApprocheeSvg(n, taille),
+    largeurApprocheeSvg(d, taille),
+  );
+  const largeurBarre = Math.max(taille * 1.28, largeurContenu + taille * 0.42);
+  // Les ordonnées sont des lignes de base SVG, pas les bords visibles des
+  // glyphes. Avec les anciens coefficients (-0,5 et 1,05), les chiffres du
+  // numérateur laissaient sensiblement plus d'air au-dessus de la barre que
+  // ceux du dénominateur en dessous. Ces deux positions sont réglées sur la
+  // police Latin Modern embarquée et donnent le même blanc optique des deux
+  // côtés de la barre, dans le SVG inline comme sur les droites graduées.
+  const yNumerateur = -taille * 0.4;
+  const yDenominateur = taille * 1.04;
+  // Le débord reste volontairement plus large que les seuls chiffres de
+  // NC-03 : la primitive commune accepte aussi des lettres avec ascendantes
+  // ou descendantes dans d'autres objets mathématiques.
+  const debordHaut = taille * 1.4;
+  const debordBas = taille * 1.4;
+  return Object.freeze({
+    largeur: arrondiFractionSvg(largeurBarre),
+    hauteur: arrondiFractionSvg(debordHaut + debordBas),
+    debordHaut: arrondiFractionSvg(debordHaut),
+    debordBas: arrondiFractionSvg(debordBas),
+    yNumerateur: arrondiFractionSvg(yNumerateur),
+    yDenominateur: arrondiFractionSvg(yDenominateur),
+  });
+}
+
+/** Rend les trois éléments SVG canoniques : numérateur, barre, dénominateur. */
+export function rendreFractionSvg(numerateur, denominateur, options = {}) {
+  const centreX = Number(options.centreX ?? 0);
+  const yBarre = Number(options.yBarre ?? 0);
+  if (!Number.isFinite(centreX) || !Number.isFinite(yBarre)) {
+    throw new RangeError("fraction SVG : centreX et yBarre doivent être des nombres finis");
+  }
+  const taille = exigerNombreFiniPositif(options.taille ?? 17, "taille");
+  const epaisseur = exigerNombreFiniPositif(options.epaisseur ?? 1.8, "épaisseur");
+  const graisse = Number(options.graisse ?? 700);
+  if (!Number.isFinite(graisse) || graisse <= 0) {
+    throw new RangeError("fraction SVG : graisse doit être strictement positive");
+  }
+
+  const n = contenuFraction(numerateur, "numérateur");
+  const d = contenuFraction(denominateur, "dénominateur");
+  const mesure = mesurerEcritureFractionSvg(n, d, { taille });
+  const classe = String(options.classe ?? "ecriture-fraction");
+  const couleur = String(options.couleur ?? "currentColor");
+  const police = String(options.police ?? POLICE_FRACTION_SVG).replaceAll('"', "'");
+  const libelleAccessible = Object.hasOwn(options, "libelleAccessible")
+    ? options.libelleAccessible
+    : verbaliserFraction(n, d);
+  const attributsAccessibles = libelleAccessible == null
+    ? ""
+    : ` role="math" aria-label="${echapperAttributHtml(libelleAccessible)}"`;
+  const x1 = centreX - mesure.largeur / 2;
+  const x2 = centreX + mesure.largeur / 2;
+  const attributsTexte =
+    `text-anchor="middle" font-family="${echapperAttributHtml(police)}" ` +
+    `font-size="${arrondiFractionSvg(taille)}" font-weight="${arrondiFractionSvg(graisse)}" ` +
+    `fill="${echapperAttributHtml(couleur)}"`;
+
+  return (
+    `<g class="${echapperAttributHtml(classe)}"${attributsAccessibles}>` +
+    `<text class="${echapperAttributHtml(`${classe}-numerateur`)}" x="${arrondiFractionSvg(centreX)}" ` +
+    `y="${arrondiFractionSvg(yBarre + mesure.yNumerateur)}" ${attributsTexte}>${echapperHtml(n)}</text>` +
+    `<line class="${echapperAttributHtml(`${classe}-barre`)}" x1="${arrondiFractionSvg(x1)}" ` +
+    `y1="${arrondiFractionSvg(yBarre)}" x2="${arrondiFractionSvg(x2)}" ` +
+    `y2="${arrondiFractionSvg(yBarre)}" stroke="${echapperAttributHtml(couleur)}" ` +
+    `stroke-width="${arrondiFractionSvg(epaisseur)}"/>` +
+    `<text class="${echapperAttributHtml(`${classe}-denominateur`)}" x="${arrondiFractionSvg(centreX)}" ` +
+    `y="${arrondiFractionSvg(yBarre + mesure.yDenominateur)}" ${attributsTexte}>${echapperHtml(d)}</text>` +
+    `</g>`
+  );
+}
+
+/**
+ * Rend une fraction dans le flux HTML avec exactement la même primitive SVG
+ * que les droites graduées, les bandes et les grilles. La police embarquée et
+ * le viewBox explicite rendent la composition indépendante des boîtes de ligne
+ * propres à Safari, Chromium ou Firefox.
+ */
+export function rendreFractionHtml(numerateur, denominateur, options = {}) {
+  const n = contenuFraction(numerateur, "numérateur");
+  const d = contenuFraction(denominateur, "dénominateur");
+  const libelleAccessible = Object.hasOwn(options, "libelleAccessible")
+    ? options.libelleAccessible
+    : verbaliserFraction(n, d);
+  const taille = 100;
+  const mesure = mesurerEcritureFractionSvg(n, d, { taille });
+  // Dans le flux HTML, la boîte peut épouser plus étroitement les chiffres :
+  // les grands débords de `mesurerEcritureFractionSvg` restent réservés aux
+  // droites graduées, où ils garantissent la distance avec l'axe.
+  const debordInline = taille * 1.2;
+  const hauteurBoite = debordInline * 2;
+  const largeurBoite = Math.max(mesure.largeur, taille * 1.72);
+  const hauteurEm = 2.18;
+  const largeurEm = hauteurEm * largeurBoite / hauteurBoite;
+  const dessin = rendreFractionSvg(n, d, {
+    centreX: 0,
+    yBarre: 0,
+    taille,
+    epaisseur: taille * 0.08,
+    graisse: 700,
+    classe: "ecriture-fraction",
+    libelleAccessible: null,
+  });
+  const accessibilite = libelleAccessible == null
+    ? ' aria-hidden="true" focusable="false"'
+    : ` role="math" aria-label="${echapperAttributHtml(libelleAccessible)}" focusable="false"`;
+
+  return (
+    `<svg class="mathsgo-fraction mathsgo-fraction-svg"` +
+    ` data-numerateur="${echapperAttributHtml(n)}" data-denominateur="${echapperAttributHtml(d)}"` +
+    ` viewBox="${arrondiFractionSvg(-largeurBoite / 2)} ${arrondiFractionSvg(-debordInline)} ` +
+    `${arrondiFractionSvg(largeurBoite)} ${arrondiFractionSvg(hauteurBoite)}"` +
+    ` width="${arrondiFractionSvg(largeurEm)}em" height="${hauteurEm}em"` +
+    ` preserveAspectRatio="xMidYMid meet"${accessibilite}>${dessin}</svg>`
+  );
+}
+
 function contenuHtml(noeud) {
   switch (noeud.type) {
     case "nombre":
@@ -266,7 +441,11 @@ function contenuHtml(noeud) {
     case "produit":
       return noeud.facteurs.map(contenuHtml).join(" × ");
     case "quotient":
-      return `${contenuHtml(noeud.numerateur)}/${contenuHtml(noeud.denominateur)}`;
+      return rendreFractionHtml(
+        versUnicode(noeud.numerateur),
+        versUnicode(noeud.denominateur),
+        { libelleAccessible: null },
+      );
     case "puissance":
       return (
         `<span class="mathsgo-puissance-base">${contenuHtml(noeud.base)}</span>` +

@@ -55,6 +55,25 @@ export const DISPOSITIONS_CLAVIER = Object.freeze({
     colonnes: 3,
     touches: [...chiffresTelephone, effacer, toucheSaisie("0"), valider],
   }),
+  "decimal-positif": figerDisposition({
+    id: "decimal-positif",
+    colonnes: 4,
+    touches: [
+      toucheSaisie("1"),
+      toucheSaisie("2"),
+      toucheSaisie("3"),
+      effacer,
+      toucheSaisie("4"),
+      toucheSaisie("5"),
+      toucheSaisie("6"),
+      toucheSaisie(",", { id: "virgule-positive", ariaLabel: "Virgule décimale" }),
+      toucheSaisie("7"),
+      toucheSaisie("8"),
+      toucheSaisie("9"),
+      valider,
+      toucheSaisie("0", { classe: "touche-zero-large" }),
+    ],
+  }),
   // Préparée pour les futures réponses décimales. Elle n'est pas utilisée par
   // NC-01 et ses touches restent donc invisibles aujourd'hui.
   "nombre-decimal": figerDisposition({
@@ -115,7 +134,7 @@ export const DISPOSITIONS = Object.freeze({
  * Fabrique DOM conservée pour les autres outils maths&go.
  * @param {HTMLElement} conteneur
  * @param {object} options
- * @param {"entier-naturel" | "nombre-decimal" | "nombres" | "calcul"} [options.disposition]
+ * @param {"entier-naturel" | "decimal-positif" | "nombre-decimal" | "nombres" | "calcul"} [options.disposition]
  * @param {(touche: string) => void} options.surTouche
  * @returns {{ detruire: () => void }}
  */

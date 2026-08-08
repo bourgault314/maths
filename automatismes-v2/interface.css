@@ -432,6 +432,743 @@ button.case-reponse-carres {
   }
 }
 
+/* Fractions simples et décimaux — représentations riches restaurées. */
+.cible-qcm-rationnelle {
+  min-height: 76px;
+  margin: 2px auto 6px;
+  display: grid;
+  place-items: center;
+  color: var(--mg-encre);
+  font-family: var(--mg-titres);
+  font-size: clamp(2.2rem, 10vw, 4rem);
+  font-weight: 800;
+  line-height: 1;
+}
+
+.cible-qcm-rationnelle .fraction-empilee {
+  min-width: 1.65em;
+}
+
+.grille-qcm-fractions {
+  width: min(100%, 640px);
+  margin-inline: auto;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.grille-qcm-fractions .choix {
+  min-height: 68px;
+  font-size: clamp(1.1rem, 4.2vw, 1.45rem);
+  font-variant-numeric: lining-nums tabular-nums;
+}
+
+.grille-qcm-fractions .fraction-empilee {
+  font-size: 1.2em;
+}
+
+.figure-fraction {
+  width: min(100%, 680px);
+  min-width: 0;
+  margin: 0 auto;
+  display: grid;
+  justify-items: center;
+  gap: 5px;
+}
+
+.figure-fraction svg {
+  display: block;
+  width: 100%;
+  max-width: 100%;
+  height: auto;
+  overflow: visible;
+}
+
+.figure-fraction figcaption {
+  max-width: 560px;
+  color: var(--mg-texteAttenue);
+  font-size: 12px;
+  font-weight: 700;
+  line-height: 1.35;
+  text-align: center;
+}
+
+.panneau-aide-fractions .rappel-question p,
+.panneau-correction-fractions .rappel-question p {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 7px;
+}
+
+.panneau-aide-fractions .rappel-question .fraction-empilee,
+.panneau-correction-fractions .rappel-question .fraction-empilee {
+  font-size: 1.35em;
+}
+
+.rappel-question-fractions {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 3px 14px;
+  align-items: center;
+}
+
+.rappel-question-fractions > span,
+.rappel-question-fractions > p {
+  grid-column: 1;
+}
+
+.rappel-question-fractions > p {
+  margin: 0;
+}
+
+.rappel-equation-fractions {
+  grid-column: 2;
+  grid-row: 1 / span 2;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  color: var(--mg-bleu);
+  font-family: var(--mg-titres);
+  font-size: clamp(1.15rem, 4vw, 1.5rem);
+  font-weight: 800;
+}
+
+.panneau-aide-fractions .aide-vers-cours {
+  margin: 12px 0 0;
+}
+
+.atelier-fraction {
+  width: 100%;
+  min-width: 0;
+  padding: clamp(11px, 3vw, 16px);
+  display: grid;
+  gap: 12px;
+  border: 2px solid var(--mg-ligne);
+  border-radius: var(--mg-rayon-grand);
+  background: var(--mg-fondDoux);
+}
+
+.consigne-atelier {
+  margin: 0;
+  color: var(--mg-encre);
+  font-size: 14px;
+  line-height: 1.45;
+}
+
+.consigne-atelier strong {
+  display: block;
+  margin-bottom: 2px;
+  color: var(--mg-bleu);
+  font-family: var(--mg-titres);
+  font-size: 1.05em;
+}
+
+.double-droite-responsive {
+  width: 100%;
+  min-width: 0;
+  display: grid;
+  justify-items: center;
+}
+
+.figure-double-droite-fraction {
+  width: min(100%, 680px);
+  display: block;
+  padding: 2px 0 6px;
+  overflow-x: auto;
+  overscroll-behavior-inline: contain;
+  scrollbar-color: var(--mg-turquoise) var(--mg-fondDoux);
+  scrollbar-width: thin;
+}
+
+.figure-double-droite-cours {
+  width: min(100%, 720px);
+}
+
+.figure-double-droite-fraction svg {
+  width: 100%;
+  min-width: 520px;
+  max-width: none;
+}
+
+.figure-double-droite-mobile {
+  display: none;
+}
+
+.controle-curseur-fraction {
+  display: grid;
+  gap: 5px;
+  color: var(--mg-texteAttenue);
+  font-size: 13px;
+  font-weight: 700;
+  line-height: 1.35;
+}
+
+.controle-curseur-fraction > span {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  text-align: center;
+}
+
+.controle-curseur-fraction strong {
+  color: var(--mg-bleu);
+}
+
+.curseur-fraction {
+  width: 100%;
+  min-height: 44px;
+  margin: 0;
+  accent-color: var(--mg-orange);
+  cursor: pointer;
+}
+
+.curseur-fraction:focus-visible {
+  outline: 4px solid var(--mg-orange);
+  outline-offset: 2px;
+  border-radius: var(--mg-rayon-petit);
+}
+
+.commandes-progression-fraction {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.commandes-progression-fraction button {
+  min-width: 0;
+  min-height: 50px;
+  padding: 9px 10px;
+  line-height: 1.25;
+}
+
+.commandes-progression-fraction button:disabled {
+  border-color: var(--mg-ligne);
+  color: var(--mg-texteAttenue);
+  background: var(--mg-papier);
+  box-shadow: none;
+  opacity: .55;
+}
+
+.conclusion-atelier {
+  min-height: 48px;
+  margin: 0;
+  padding: 10px 12px;
+  border-left: 5px solid var(--mg-ligne);
+  border-radius: var(--mg-rayon-moyen);
+  color: var(--mg-texteAttenue);
+  background: var(--mg-papier);
+  font-size: 13px;
+  font-weight: 700;
+  line-height: 1.4;
+}
+
+.conclusion-atelier.visible {
+  border-left-color: var(--mg-reussite);
+  color: var(--mg-encre);
+  background: color-mix(in srgb, var(--mg-reussite) 8%, var(--mg-papier));
+}
+
+.conclusion-atelier strong {
+  color: var(--mg-bleuFonce);
+}
+
+.figure-grille-centiemes,
+.figure-grille-manipulation {
+  width: min(100%, 220px);
+}
+
+.equivalence-en-construction {
+  margin: 0;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  color: var(--mg-bleu);
+  font-family: var(--mg-titres);
+  font-size: clamp(1.25rem, 5vw, 1.65rem);
+  font-weight: 800;
+  text-align: center;
+}
+
+.equivalence-en-construction > span {
+  flex-basis: 100%;
+  color: var(--mg-texteAttenue);
+  font-family: var(--mg-texte);
+  font-size: 12px;
+}
+
+.groupes-parts {
+  width: 100%;
+  min-width: 0;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(112px, 1fr));
+  gap: 8px;
+}
+
+.groupe-parts {
+  min-width: 0;
+  padding: 9px;
+  display: grid;
+  gap: 7px;
+  align-content: start;
+  border: 2px dashed var(--mg-ligne);
+  border-radius: var(--mg-rayon-moyen);
+  background: var(--mg-papier);
+}
+
+.groupe-parts > span {
+  min-height: 2.5em;
+  color: var(--mg-texteAttenue);
+  font-size: 11px;
+  font-weight: 800;
+  line-height: 1.25;
+  text-align: center;
+}
+
+.groupe-parts > .barre-parts {
+  min-width: 0;
+  display: grid;
+  grid-template-columns: repeat(var(--parts-par-unite), minmax(0, 1fr));
+  gap: 3px;
+}
+
+.groupe-parts i {
+  min-width: 0;
+  min-height: 38px;
+  display: grid;
+  place-items: center;
+  border: 2px solid color-mix(in srgb, var(--mg-bleu) 45%, var(--mg-ligne));
+  border-radius: 6px;
+  color: var(--mg-bleu);
+  background: var(--mg-fondDoux);
+  font-style: normal;
+}
+
+.groupe-parts i .fraction-empilee {
+  min-width: 1.15em;
+  grid-template-rows: auto 1px auto;
+  font-size: clamp(.66rem, 2.5vw, .82rem);
+}
+
+.groupe-parts i .fraction-empilee > .barre-fraction {
+  min-width: 1.15em;
+  height: 1px;
+}
+
+.groupe-parts i.part-vide {
+  border-style: dashed;
+  border-color: var(--mg-ligne);
+  background: transparent;
+  opacity: .58;
+}
+
+.groupe-parts.unite-formee {
+  border-style: solid;
+  border-color: var(--mg-turquoise);
+  background: color-mix(in srgb, var(--mg-turquoise) 9%, var(--mg-papier));
+}
+
+.groupe-parts.unite-formee > span {
+  color: var(--mg-bleu);
+}
+
+.groupe-parts.unite-formee i {
+  border-color: var(--mg-turquoise);
+  background: color-mix(in srgb, var(--mg-turquoise) 34%, var(--mg-papier));
+}
+
+.groupe-parts.groupe-reste {
+  border-style: solid;
+  border-color: var(--mg-orange);
+  background: color-mix(in srgb, var(--mg-orange) 7%, var(--mg-papier));
+}
+
+.groupe-parts.groupe-reste > span {
+  color: var(--mg-orange);
+}
+
+.groupe-parts.groupe-reste i {
+  border-color: var(--mg-orange);
+  color: var(--mg-orange);
+  background: color-mix(in srgb, var(--mg-orange) 24%, var(--mg-papier));
+}
+
+.groupe-parts.groupe-reste i.part-vide {
+  border-color: var(--mg-ligne);
+  background: transparent;
+}
+
+.compteur-groupes {
+  margin: 0;
+  color: var(--mg-texteAttenue);
+  font-size: 13px;
+  font-weight: 800;
+  text-align: center;
+}
+
+.compteur-groupes strong {
+  margin-right: 3px;
+  color: var(--mg-bleu);
+  font-size: 24px;
+}
+
+.choix-rang-fraction,
+.onglets-rangs-cours {
+  width: 100%;
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 7px;
+}
+
+.choix-rang-fraction button,
+.onglets-rangs-cours button {
+  min-width: 0;
+  min-height: 48px;
+  padding: 7px 6px;
+  border: 2px solid var(--mg-ligne);
+  border-radius: var(--mg-rayon-moyen);
+  color: var(--mg-bleu);
+  background: var(--mg-papier);
+  font-size: clamp(11px, 3.4vw, 14px);
+  font-weight: 800;
+  line-height: 1.2;
+  white-space: nowrap;
+}
+
+.choix-rang-fraction button.selectionne,
+.choix-rang-fraction button[aria-checked="true"],
+.onglets-rangs-cours button.selectionne,
+.onglets-rangs-cours button[aria-checked="true"] {
+  border-color: var(--mg-bleu);
+  color: var(--mg-papier);
+  background: var(--mg-bleu);
+  box-shadow: inset 0 0 0 1px var(--mg-papier);
+}
+
+.case-tableau-vide {
+  color: var(--mg-texteAttenue);
+  opacity: .52;
+}
+
+.tuiles-unites {
+  width: min(100%, 560px);
+  margin-inline: auto;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(44px, 1fr));
+  gap: 7px;
+}
+
+.tuiles-unites > span {
+  min-width: 0;
+  min-height: 48px;
+  display: grid;
+  place-items: center;
+  border: 2px solid var(--mg-turquoise);
+  border-radius: var(--mg-rayon-moyen);
+  color: var(--mg-bleu);
+  background: color-mix(in srgb, var(--mg-turquoise) 12%, var(--mg-papier));
+  font-family: var(--mg-titres);
+  font-size: 18px;
+  font-weight: 800;
+}
+
+.diagnostic-fraction {
+  margin: 0;
+  padding: 12px;
+  display: grid;
+  gap: 4px;
+  border-left: 5px solid var(--mg-orange);
+  border-radius: var(--mg-rayon-moyen);
+  color: var(--mg-encre);
+  background: color-mix(in srgb, var(--mg-orange) 9%, var(--mg-papier));
+  line-height: 1.4;
+}
+
+.diagnostic-fraction strong {
+  color: var(--mg-bleu);
+}
+
+.etapes-correction-fractions {
+  display: grid;
+  gap: 10px;
+}
+
+.panneau-correction-fractions .figure-correction-fraction,
+.correction-unites {
+  margin-block: 10px 4px;
+}
+
+.chaine-fraction {
+  margin: 8px auto;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  color: var(--mg-encre);
+  font-family: var(--mg-titres);
+  font-size: clamp(1.35rem, 5vw, 2rem);
+  font-weight: 800;
+}
+
+.panneau-cours-fractions .carte-cours-fractions {
+  position: relative;
+  width: min(100%, 780px);
+  min-width: 0;
+  min-height: 100%;
+  margin: 0 auto;
+  padding: clamp(13px, 3vw, 18px);
+  display: grid;
+  gap: 12px;
+  align-content: start;
+  border: 2px solid var(--mg-ligne);
+  border-radius: var(--mg-rayon-grand);
+  background: var(--mg-papier);
+  text-align: left;
+}
+
+.panneau-cours-fractions .carte-cours-fractions > h3 {
+  margin: 0;
+  padding-right: 38px;
+  color: var(--mg-bleu);
+  font-size: clamp(18px, 5vw, 23px);
+  line-height: 1.18;
+  text-wrap: balance;
+}
+
+.panneau-cours-fractions .numero-cours {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  width: 32px;
+  height: 32px;
+  display: grid;
+  place-items: center;
+  border-radius: 999px;
+  color: var(--mg-papier);
+  background: var(--mg-bleu);
+  font-weight: 900;
+}
+
+.panneau-cours-fractions .introduction-cours,
+.panneau-cours-fractions .definition-cours {
+  margin: 0;
+  font-size: 13px;
+  line-height: 1.45;
+}
+
+.panneau-cours-fractions .introduction-cours {
+  color: var(--mg-texteAttenue);
+}
+
+.panneau-cours-fractions .definition-cours {
+  padding: 10px 11px;
+  border-left: 5px solid var(--mg-turquoise);
+  border-radius: var(--mg-rayon-moyen);
+  background: var(--mg-fondDoux);
+}
+
+.cartes-reperes-fractions-refonte {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 9px;
+}
+
+.carte-repere-fraction {
+  min-width: 0;
+  padding: 10px 8px;
+  display: grid;
+  justify-items: center;
+  gap: 8px;
+  border: 2px solid var(--mg-ligne);
+  border-radius: var(--mg-rayon-moyen);
+  background: var(--mg-fondDoux);
+}
+
+.figure-grille-repere {
+  width: min(100%, 132px);
+}
+
+.carte-repere-fraction > p {
+  margin: 0;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+  color: var(--mg-encre);
+  font-family: var(--mg-titres);
+  font-size: clamp(1rem, 3vw, 1.25rem);
+  font-weight: 800;
+  line-height: 1.25;
+  text-align: center;
+}
+
+.carte-repere-fraction > p strong {
+  color: var(--mg-bleu);
+}
+
+.lecture-rang-cours {
+  margin: 0;
+  padding: 9px 11px;
+  border-radius: var(--mg-rayon-moyen);
+  color: var(--mg-encre);
+  background: var(--mg-fondDoux);
+  font-weight: 700;
+  line-height: 1.45;
+  text-align: center;
+}
+
+.exemples-groupement-cours {
+  display: grid;
+  gap: 10px;
+}
+
+.exemples-groupement-cours > section {
+  min-width: 0;
+  padding: 11px;
+  display: grid;
+  gap: 9px;
+  border: 2px solid var(--mg-ligne);
+  border-radius: var(--mg-rayon-moyen);
+  background: var(--mg-fondDoux);
+}
+
+.exemples-groupement-cours h4 {
+  margin: 0;
+  color: var(--mg-bleu);
+  font-family: var(--mg-titres);
+  font-size: 25px;
+  text-align: center;
+}
+
+.exemples-groupement-cours section > p {
+  margin: 0;
+  color: var(--mg-encre);
+  font-family: var(--mg-titres);
+  font-size: 17px;
+  font-weight: 800;
+  line-height: 1.35;
+  text-align: center;
+}
+
+.strategies-fractions {
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 9px;
+  counter-reset: strategie-fraction;
+  list-style: none;
+}
+
+.strategies-fractions > li {
+  min-width: 0;
+  padding: 11px;
+  display: grid;
+  grid-template-columns: 32px minmax(0, 1fr);
+  gap: 3px 10px;
+  align-items: center;
+  border: 2px solid var(--mg-ligne);
+  border-radius: var(--mg-rayon-moyen);
+  background: var(--mg-fondDoux);
+  counter-increment: strategie-fraction;
+}
+
+.strategies-fractions > li::before {
+  content: counter(strategie-fraction);
+  grid-row: 1 / span 2;
+  width: 32px;
+  height: 32px;
+  display: grid;
+  place-items: center;
+  border-radius: 999px;
+  color: var(--mg-papier);
+  background: var(--mg-bleu);
+  font-weight: 900;
+}
+
+.strategies-fractions strong {
+  color: var(--mg-bleu);
+  font-size: 14px;
+  line-height: 1.25;
+}
+
+.strategies-fractions span {
+  color: var(--mg-texteAttenue);
+  font-size: 12px;
+  line-height: 1.35;
+}
+
+.verification-grandeur-fraction {
+  padding: 11px 12px;
+  border-left: 5px solid var(--mg-orange);
+  border-radius: var(--mg-rayon-moyen);
+  background: color-mix(in srgb, var(--mg-orange) 9%, var(--mg-papier));
+}
+
+.verification-grandeur-fraction p {
+  margin: 5px 0 0;
+  color: var(--mg-texteAttenue);
+  font-size: 13px;
+  line-height: 1.4;
+}
+
+@container (min-width: 560px) {
+  .cartes-reperes-fractions-refonte {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  .exemples-groupement-cours {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@container (max-width: 559px) {
+  .carte-repere-fraction {
+    grid-template-columns: minmax(88px, 108px) minmax(0, 1fr);
+    align-items: center;
+  }
+}
+
+@media (max-width: 600px) {
+  .double-droite-responsive .figure-double-droite-large {
+    display: none;
+  }
+
+  .double-droite-responsive .figure-double-droite-mobile {
+    display: block;
+  }
+
+  .double-droite-responsive .figure-double-droite-mobile svg {
+    min-width: 320px;
+  }
+
+  .grille-qcm-fractions {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .commandes-progression-fraction {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+@media (forced-colors: active) {
+  .choix-rang-fraction button[aria-checked="true"],
+  .onglets-rangs-cours button[aria-checked="true"] {
+    border-color: Highlight;
+    color: HighlightText;
+    background: Highlight;
+  }
+
+  .groupe-parts.unite-formee,
+  .conclusion-atelier.visible {
+    border-color: Highlight;
+  }
+}
+
 body {
   min-height: 100dvh;
 }
@@ -1102,6 +1839,7 @@ body {
 .corps-panneau {
   min-width: 0;
   min-height: 0;
+  container-type: inline-size;
   padding: 10px 0 calc(18px + env(safe-area-inset-bottom));
   overflow-x: hidden;
   overflow-y: auto;
@@ -2105,6 +2843,482 @@ body {
   font-size: 13px;
 }
 
+.clavier-mathsgo[data-profil="decimal-positif"] .touche-zero-large {
+  grid-column: 1 / -1;
+}
+
+.carte-question-fractions {
+  gap: clamp(10px, 2.2vh, 22px);
+  text-align: center;
+}
+
+.carte-question-fractions h1 {
+  max-width: 680px;
+  margin-inline: auto;
+  text-wrap: balance;
+}
+
+.fraction-empilee {
+  min-width: 1.8em;
+  display: inline-grid;
+  grid-template-rows: auto 2px auto;
+  gap: .08em;
+  align-items: center;
+  justify-items: stretch;
+  color: var(--mg-encre);
+  font-family: var(--mg-titres);
+  font-size: 1em;
+  font-weight: 800;
+  line-height: 1.05;
+  text-align: center;
+  vertical-align: middle;
+}
+
+.fraction-empilee > .numerateur,
+.fraction-empilee > .denominateur {
+  min-width: 0;
+  display: grid;
+  place-items: center;
+}
+
+.fraction-empilee > .barre-fraction {
+  width: 100%;
+  min-width: 1.8em;
+  height: 2px;
+  display: block;
+  background: currentColor;
+}
+
+.egalite-question-rationnelle {
+  width: min(100%, 620px);
+  min-width: 0;
+  margin: clamp(4px, 2vh, 18px) auto;
+  display: flex;
+  flex-wrap: nowrap;
+  gap: clamp(10px, 4vw, 26px);
+  align-items: center;
+  justify-content: center;
+  color: var(--mg-encre);
+  font-family: var(--mg-titres);
+  font-size: clamp(2rem, 10vw, 4rem);
+  font-weight: 800;
+}
+
+.egalite-question-rationnelle .fraction-question {
+  font-size: 1em;
+}
+
+.egalite-question-rationnelle .fraction-reponse {
+  min-width: 1.7em;
+  font-size: .76em;
+}
+
+.decimal-question {
+  color: var(--mg-bleu);
+  font-size: 1.05em;
+}
+
+.case-reponse-rationnelle {
+  min-width: 76px;
+  min-height: 54px;
+  padding: 5px 10px;
+  display: inline-grid;
+  place-items: center;
+  border: 3px solid var(--mg-turquoise);
+  border-radius: var(--mg-rayon-moyen);
+  color: var(--mg-encre);
+  background: var(--mg-papier);
+  font: inherit;
+  font-size: clamp(1.35rem, 6vw, 2.2rem);
+  font-weight: 800;
+  line-height: 1;
+  box-shadow: 0 3px 0 color-mix(in srgb, var(--mg-turquoise) 30%, transparent);
+}
+
+.case-reponse-rationnelle.active {
+  border-color: var(--mg-orange);
+  background: color-mix(in srgb, var(--mg-orange) 8%, var(--mg-papier));
+  box-shadow: 0 3px 0 color-mix(in srgb, var(--mg-orange) 32%, transparent);
+}
+
+.case-reponse-rationnelle.juste {
+  border-color: var(--mg-reussite);
+}
+
+.case-reponse-rationnelle.fausse {
+  border-color: var(--mg-erreur);
+}
+
+.case-decimale {
+  min-width: clamp(112px, 34vw, 190px);
+}
+
+.egalite-rationnelle,
+.chaine-equivalences {
+  margin: 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  align-items: center;
+  justify-content: center;
+  color: var(--mg-bleu);
+  font-family: var(--mg-titres);
+  font-size: clamp(1.25rem, 5vw, 1.8rem);
+}
+
+.figure-droite-fractionnaire,
+.figure-tableau-numeration {
+  width: min(100%, 620px);
+  margin: 14px auto 4px;
+  padding: 14px;
+  border: 2px solid var(--mg-ligne);
+  border-radius: var(--mg-rayon-moyen);
+  background: var(--mg-papier);
+}
+
+.axe-fractionnaire {
+  position: relative;
+  width: calc(100% - 24px);
+  height: 58px;
+  margin: 8px auto 4px;
+  border-top: 4px solid var(--mg-bleu);
+}
+
+.axe-fractionnaire::after {
+  content: "";
+  position: absolute;
+  top: -8px;
+  right: -7px;
+  width: 12px;
+  height: 12px;
+  border-top: 4px solid var(--mg-bleu);
+  border-right: 4px solid var(--mg-bleu);
+  transform: rotate(45deg);
+}
+
+.graduation-droite {
+  position: absolute;
+  top: -9px;
+  left: var(--position-droite);
+  width: 1px;
+  height: 34px;
+}
+
+.trait-graduation {
+  position: absolute;
+  top: 0;
+  left: -2px;
+  width: 4px;
+  height: 18px;
+  border-radius: 4px;
+  background: var(--mg-bleu);
+}
+
+.graduation-droite.cible .trait-graduation {
+  top: -5px;
+  left: -7px;
+  width: 15px;
+  height: 28px;
+  border: 4px solid var(--mg-papier);
+  border-radius: 9999px;
+  background: var(--mg-orange);
+  box-shadow: 0 0 0 2px var(--mg-orange);
+}
+
+.etiquette-graduation {
+  position: absolute;
+  top: 25px;
+  left: 0;
+  color: var(--mg-bleu);
+  font-family: var(--mg-titres);
+  font-size: 13px;
+  font-weight: 800;
+  transform: translateX(-50%);
+}
+
+.figure-droite-fractionnaire figcaption,
+.figure-tableau-numeration figcaption {
+  margin-top: 8px;
+}
+
+.figure-tableau-numeration {
+  overflow: hidden;
+}
+
+.figure-tableau-numeration table {
+  width: 100%;
+  table-layout: fixed;
+  border-collapse: separate;
+  border-spacing: 3px;
+}
+
+.figure-tableau-numeration th,
+.figure-tableau-numeration td {
+  min-width: 0;
+  padding: 7px 3px;
+  border: 2px solid var(--mg-ligne);
+  border-radius: 7px;
+  text-align: center;
+}
+
+.figure-tableau-numeration th {
+  color: var(--mg-texteAttenue);
+  background: var(--mg-fondDoux);
+  font-size: clamp(.62rem, 2.8vw, .82rem);
+  line-height: 1.15;
+}
+
+.libelle-rang-court {
+  display: none;
+  color: inherit;
+  text-decoration: none;
+}
+
+.figure-tableau-numeration td {
+  height: 52px;
+  color: var(--mg-bleu);
+  background: var(--mg-papier);
+  font-family: var(--mg-titres);
+  font-size: clamp(1.35rem, 6vw, 2rem);
+}
+
+.figure-tableau-numeration .rang-cible {
+  border-color: var(--mg-orange);
+  background: color-mix(in srgb, var(--mg-orange) 9%, var(--mg-papier));
+}
+
+.guidage-fractions {
+  width: min(100%, 680px);
+  margin: 0 auto;
+}
+
+.guidage-fractions h3 {
+  margin-bottom: 12px;
+  color: var(--mg-bleu);
+  font-size: 18px;
+  text-align: center;
+}
+
+.choix-reperes {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.choix-repere-aide {
+  min-width: 0;
+  min-height: 56px;
+  padding: 7px;
+  border: 2px solid var(--mg-bleu);
+  border-radius: var(--mg-rayon-moyen);
+  color: var(--mg-bleu);
+  background: var(--mg-fondDoux);
+  font-weight: 800;
+}
+
+.choix-repere-aide.selectionne {
+  border-color: var(--mg-orange);
+  background: color-mix(in srgb, var(--mg-orange) 10%, var(--mg-papier));
+  box-shadow: inset 0 0 0 2px var(--mg-orange);
+}
+
+.choix-repere-aide .fraction-empilee {
+  font-size: 1.2rem;
+}
+
+.message-guidage {
+  margin: 10px 0 0;
+  padding: 10px;
+  border-left: 5px solid var(--mg-orange);
+  border-radius: var(--mg-rayon-petit);
+  color: var(--mg-encre);
+  background: color-mix(in srgb, var(--mg-orange) 8%, var(--mg-papier));
+  font-weight: 700;
+}
+
+.introduction-aide-fractions,
+.methode-correction-fractions {
+  max-width: 660px;
+  margin: 0 auto 14px;
+  color: var(--mg-texteAttenue);
+  line-height: 1.5;
+  text-align: center;
+}
+
+.cas-denominateur-un,
+.carte-cours-fractions,
+.encadres-equivalences section {
+  padding: 14px;
+  border: 2px solid var(--mg-ligne);
+  border-radius: var(--mg-rayon-moyen);
+  background: var(--mg-papier);
+}
+
+.cas-denominateur-un {
+  width: min(100%, 560px);
+  margin: 0 auto;
+  text-align: center;
+}
+
+.rappel-fraction-eleve {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  justify-content: center;
+}
+
+.rappel-fraction-eleve .fraction-empilee,
+.reponses-correction .fraction-empilee {
+  font-size: 1.55rem;
+}
+
+.titre-reponse-correcte {
+  margin: 18px 0 8px;
+  color: var(--mg-texteAttenue);
+  font-size: 13px;
+  font-weight: 800;
+  text-align: center;
+  text-transform: uppercase;
+}
+
+.carte-cours-fractions {
+  width: min(100%, 760px);
+  margin: 0 auto;
+  text-align: center;
+}
+
+.carte-cours-fractions h3 {
+  color: var(--mg-bleu);
+  font-size: clamp(1.25rem, 5vw, 1.75rem);
+}
+
+.carte-cours-fractions > p {
+  line-height: 1.55;
+}
+
+.exemples-rationnels {
+  margin: 14px 0;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.exemples-rationnels .egalite-rationnelle,
+.encadres-equivalences section {
+  min-height: 76px;
+  padding: 9px;
+  border-radius: var(--mg-rayon-petit);
+  background: var(--mg-fondDoux);
+}
+
+.grille-tableaux-cours,
+.encadres-equivalences {
+  display: grid;
+  gap: 10px;
+}
+
+.grille-tableaux-cours .figure-tableau-numeration {
+  margin-block: 6px;
+}
+
+.encadres-equivalences h4 {
+  margin: 0 0 10px;
+  color: var(--mg-bleu);
+}
+
+.encadres-equivalences p:last-child {
+  margin-bottom: 0;
+}
+
+.detail-bilan-fractions {
+  width: 100%;
+  margin: -12px 0 20px;
+  padding: 12px;
+  display: grid;
+  gap: 7px;
+  border: 2px solid var(--mg-ligne);
+  border-radius: var(--mg-rayon-moyen);
+  background: var(--mg-papier);
+}
+
+.detail-bilan-fractions p {
+  margin: 0;
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.detail-bilan-fractions span {
+  color: var(--mg-texteAttenue);
+  font-size: 14px;
+  font-weight: 700;
+}
+
+.detail-bilan-fractions strong {
+  color: var(--mg-bleu);
+}
+
+@media (max-width: 360px) {
+  .egalite-question-rationnelle {
+    gap: 8px;
+    font-size: 1.85rem;
+  }
+
+  .case-reponse-rationnelle {
+    min-width: 64px;
+    padding-inline: 6px;
+  }
+
+  .case-decimale {
+    min-width: 104px;
+  }
+
+  .figure-droite-fractionnaire,
+  .figure-tableau-numeration {
+    padding-inline: 8px;
+  }
+
+  .choix-rangs .choix-repere-aide {
+    padding-inline: 3px;
+    font-size: 12px;
+  }
+}
+
+@media (pointer: coarse) and (hover: none) {
+  .mode-entrainement.avec-pave .carte-question-fractions {
+    padding-top: clamp(10px, 2.5vh, 20px);
+    gap: 6px;
+  }
+
+  .mode-entrainement.avec-pave .carte-question-fractions h1 {
+    font-size: clamp(19px, 5.7vw, 25px);
+  }
+
+  .mode-entrainement.avec-pave .carte-question-fractions .egalite-question-rationnelle {
+    margin-block: 0;
+  }
+
+  .mode-entrainement.avec-pave .carte-question-fractions .zone-retour:empty {
+    display: none;
+  }
+}
+
+@media (min-width: 720px) {
+  .encadres-equivalences,
+  .grille-tableaux-cours {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .grille-tableaux-cours .libelle-rang-complet {
+    display: none;
+  }
+
+  .grille-tableaux-cours .libelle-rang-court {
+    display: inline;
+  }
+}
+
 .indication-clavier-physique {
   display: none;
   margin: 0;
@@ -2330,6 +3544,32 @@ body {
 
   .bouton-aide-entete > span {
     display: none;
+  }
+}
+
+@media (max-width: 374px) {
+  .actions-entete .bouton-entete {
+    width: 44px;
+    padding-inline: 4px;
+    justify-content: center;
+    gap: 0;
+  }
+
+  .bouton-menu > strong,
+  .bouton-aide-entete > strong {
+    display: none;
+  }
+
+  .bouton-aide-entete > span {
+    display: inline-grid;
+  }
+
+  .figure-tableau-numeration .libelle-rang-complet {
+    display: none;
+  }
+
+  .figure-tableau-numeration .libelle-rang-court {
+    display: inline;
   }
 }
 

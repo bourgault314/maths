@@ -2,6 +2,34 @@
 
 **Dernière mise à jour : 8 août 2026.**
 
+## Pilote public NC-03 / NC-04 du 8 août
+
+- Gwenaël autorise la publication afin que Claire puisse également essayer le
+  module. La route `/automatismes-v2/` reste publique mais non référencée,
+  absente du sitemap et marquée `noindex,nofollow`.
+- Le lot est intégré au-dessus de `cff0ff2`, état de `main` après la PR #283 :
+  les finitions de `NC-01` et `NC-02` sont conservées.
+- Une seule entrée « Fractions simples et décimaux » couvre les deux sens ;
+  chaque question conserve `NC-03` ou `NC-04` dans son classement et sa trace.
+- Une série de 20 équilibre `10 / 10`, utilise vingt valeurs rationnelles
+  distinctes, une double droite et deux QCM par sens, un millième et une
+  fraction libre. Deux séries partagent nettement moins de valeurs que dans le
+  premier candidat.
+- Le cours comporte six pages. Les aides et corrections partagent la double
+  droite, la grille de 100, le tableau de numération et les groupements en
+  unités complètes. Chaque demi ou quart conserve la même taille, y compris
+  dans le reste après les unités entières.
+- Le cache du graphe public passe d'un seul tenant en `v21`. Les contrôles
+  spécifiques du pilote couvrent aussi les fractions équivalentes, le clavier,
+  les deux contextes et la diversité seedée.
+- Le dépôt complet réussit **1 234 tests sur 1 234**, ainsi que tous les
+  validateurs de publication.
+- Le module reste `construit` pendant les essais de Gwenaël et Claire. Leurs
+  retours peuvent encore conduire à des corrections avant son passage à
+  `valide`.
+- `/auto/` reste hors du lot ; son arbre Git de référence demeure
+  `6942c4733b5cffad03c396a03f8c550e7367351f`.
+
 ## Point de reprise vérifié du 8 août
 
 - La PR #282 est fusionnée dans `main` au commit `c55a2b2`. Elle constitue la
@@ -192,14 +220,15 @@ l'en-tête, ni le comportement de NC-01.
 
 - La bêta continue de fonctionner séparément et reste gelée hors correction
   critique.
-- Le lecteur neuf expose en interactif et en diaporama `NC-01/F2`, `NC-02`,
-  `GE-12/F1`, `PG-22`, `PG-23` et `PG-24`. NC-02 et ses six familles sont
-  disponibles dans « S'entraîner » comme dans « Au tableau ».
+- Le lecteur neuf expose dans « S'entraîner » et « Au tableau » `NC-01`,
+  `NC-02`, le pilote commun `NC-03/NC-04`, `GE-12/F1`, `PG-22`, `PG-23` et
+  `PG-24`.
 - La carte du DNB est établie : **37 cibles officielles distinctes**,
   **38 cibles normalisées** et **88 micro-notions**.
 - Une séance peut cibler une seule notion ou mélanger un nombre quelconque de
-  notions validées. Les six notions publiques restent séparées dans le
-  registre et conservent chacune leur propre générateur.
+  notions disponibles. Les sept entrées publiques restent séparées dans le
+  registre ; l'entrée fractions emploie une recette commune à ses deux
+  micro-notions internes.
 - Le critère par 10 est un complément maths&go validé. Il reste proposé dans le
   parcours DNB, tout en étant distingué des quatre critères officiels dans les
   données.

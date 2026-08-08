@@ -557,3 +557,28 @@ importe aussi le moteur de génération avec cette version et celui-ci importe
 `question-v2` avec la même version ; aucune seconde instance non versionnée du
 contrat ne doit pouvoir entrer dans la page. `/auto/` demeure strictement hors
 du lot.
+
+### D-041 — Le module hybride NC-03/NC-04 est publié comme pilote partagé
+
+Gwenaël autorise le 8 août 2026 la publication du module pour que Claire puisse
+l'essayer, tout en précisant que leurs retours pourront conduire à de nouvelles
+corrections. Le statut reste donc `construit` pendant ce pilote : la route
+`/automatismes-v2/` est publique mais demeure absente de la navigation, hors du
+sitemap et marquée `noindex,nofollow`.
+
+Une seule entrée « Fractions simples et décimaux » réunit les deux sens visibles
+tout en conservant `NC-03` et `NC-04` dans les traces. La version finale du
+pilote reprend le parcours pédagogique riche : double droite, grille de 100,
+tableau de numération, groupements en unités complètes et fractions empilées.
+Le cours comporte six pages et les aides construisent progressivement la même
+représentation que la correction.
+
+Une série de 20 comporte dix questions dans chaque sens, vingt valeurs
+rationnelles distinctes, une double droite et deux QCM diagnostiques par sens,
+un seul millième et une seule fraction libre. Les groupements gardent une
+capacité fixe de deux ou quatre parts ; le reste ne peut donc plus être dessiné
+à l'échelle d'une unité entière.
+
+L'intégration part de `cff0ff2`, état de la PR #283, et conserve toutes les
+finitions de `NC-01` et `NC-02`. Le graphe public reçoit une nouvelle version de
+cache cohérente `v21`. Aucun fichier sous `/auto/` n'appartient au lot.

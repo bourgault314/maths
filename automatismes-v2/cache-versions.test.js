@@ -2,7 +2,7 @@ import assert from "node:assert/strict";
 import { readFile } from "node:fs/promises";
 import { it } from "node:test";
 
-const VERSION = "20";
+const VERSION = "21";
 
 const RESSOURCES_VERSIONNEES = new Map([
   ["automatismes-v2/index.html", ["styles.css", "interface.css", "menu.css", "app.js"]],
@@ -15,6 +15,10 @@ const RESSOURCES_VERSIONNEES = new Map([
     "critere-precis.js",
     "expressions.js",
     "carre-quadrille.js",
+    "fractions.js",
+    "droite-graduee.js",
+    "fractions-decimaux.js",
+    "diagnostic-fractions-decimaux.js",
   ]],
   ["automatismes-v2/src/etat-lecteur.js", [
     "seance.js",
@@ -23,13 +27,18 @@ const RESSOURCES_VERSIONNEES = new Map([
     "registre.js",
     "registre-lecteur.js",
     "serie-multinotions.js",
+    "fractions-decimaux.js",
   ]],
   ["automatismes-v2/src/registre-lecteur.js", [
     "selection-diviseurs.js",
-    "serie.js",
+    "criteres-divisibilite/serie.js",
     "reconnaissance.js",
     "calcul-volumes.js",
     "calcul-direct.js",
+    "carres-entiers-1-a-12/serie.js",
+    "fractions-simples-decimaux/commun.js",
+    "fractions-simples-decimaux/fraction-vers-decimal.js",
+    "fractions-simples-decimaux/serie.js",
   ]],
   ["packages/automatismes/src/registre.js", [
     "generation.js",
@@ -46,6 +55,8 @@ const RESSOURCES_VERSIONNEES = new Map([
     "reconnaitre-carres.js",
     "retrouver-entier.js",
     "sens-notation.js",
+    "decimal-vers-fraction.js",
+    "fraction-vers-decimal.js",
   ]],
   ["packages/moteur-exercices/src/generation.js", ["question-v2.js"]],
   ["packages/automatismes/src/nombres-et-calculs/criteres-divisibilite/serie.js", [
@@ -76,9 +87,32 @@ const RESSOURCES_VERSIONNEES = new Map([
   ["packages/automatismes/src/nombres-et-calculs/carres-entiers-1-a-12/reconnaitre-carres.js", ["question-v2.js", "commun.js"]],
   ["packages/automatismes/src/nombres-et-calculs/carres-entiers-1-a-12/carre-quadrille.js", ["question-v2.js", "commun.js"]],
   ["packages/automatismes/src/nombres-et-calculs/carres-entiers-1-a-12/calcul-court.js", ["question-v2.js", "commun.js"]],
+  ["automatismes-v2/src/diagnostic-fractions-decimaux.js", ["fractions-decimaux.js"]],
+  ["packages/automatismes/src/nombres-et-calculs/fractions-simples-decimaux/commun.js", [
+    "gabarit.js",
+    "question-v2.js",
+  ]],
+  ["packages/automatismes/src/nombres-et-calculs/fractions-simples-decimaux/fraction-vers-decimal.js", [
+    "question-v2.js",
+    "commun.js",
+  ]],
+  ["packages/automatismes/src/nombres-et-calculs/fractions-simples-decimaux/decimal-vers-fraction.js", [
+    "question-v2.js",
+    "fractions-decimaux.js",
+    "commun.js",
+    "fraction-vers-decimal.js",
+  ]],
+  ["packages/automatismes/src/nombres-et-calculs/fractions-simples-decimaux/serie.js", [
+    "aleatoire.js",
+    "decimal-vers-fraction.js",
+    "fraction-vers-decimal.js",
+    "commun.js",
+  ]],
   ["packages/automatismes/src/espace-et-geometrie/solides-usuels/reconnaissance.js", ["question-v2.js"]],
   ["packages/automatismes/src/grandeurs-et-mesures/volumes/calcul-volumes.js", ["question-v2.js"]],
   ["packages/contrats/src/trace-reponse.js", ["question-v2.js"]],
+  ["packages/objets/src/droite-graduee.js", ["expressions.js"]],
+  ["packages/objets/src/expressions.js", ["charte.js"]],
 ]);
 
 it("charge une version cohérente de tous les modules modifiés d'Automatismes V2", async () => {

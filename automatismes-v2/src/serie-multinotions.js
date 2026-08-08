@@ -98,6 +98,12 @@ export function ordonnerNotionsDansSerie({ repartition, graine }) {
 }
 
 function genererSousSerie({ definition, registre, graine, nombreQuestions }) {
+  const maximum = definition.nombreQuestionsMaximum ?? 100;
+  if (!Number.isInteger(maximum) || maximum < 1 || nombreQuestions > maximum) {
+    throw new RangeError(
+      `serie multi-notions : ${definition.id} accepte au plus ${maximum} questions`,
+    );
+  }
   const questions = definition.creerSerie
     ? definition.creerSerie({ registre, graine, nombreQuestions })
     : Array.from(

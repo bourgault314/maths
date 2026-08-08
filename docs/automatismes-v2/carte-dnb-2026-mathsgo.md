@@ -122,11 +122,12 @@ proches. `NC-01` et `NC-02` sont validées. Les choix pédagogiques révisés de
 ont été validées le 8 août. Sa cible DNB conserve la borne officielle 1 à 12,
 tandis que le produit visible l'étend de 0 à 12 conformément au nouveau
 programme du cycle 4. Les autres états de la matrice restent inchangés dans ce
-lot.
+lot, à l'exception de `NC-03` et `NC-04` désormais réunies dans un même module
+`construit` et ouvert en pilote public non référencé.
 
 | Repère | Cible normalisée | Domaine | Micro-notions | Nouveaux BO correspondants | V2 |
 |---|---|---:|---|---|---|
-| DNB26-01 | Fraction simple vers décimal et retour | 1 | NC-03 à NC-04 | 6-02, 6-08, 5-10 | `a_faire` |
+| DNB26-01 | Fraction simple vers décimal et retour | 1 | NC-03 à NC-04 | 6-02, 6-08, 5-10 | `construit` |
 | DNB26-02 | Comparer et calculer avec des décimaux | 1 | NC-07 à NC-11 | 5-04, 5-06, 5-07, 4-01 | `a_faire` |
 | DNB26-03 | Simplifier, comparer et calculer des fractions | 1 | NC-12 à NC-16 | 6-09, 5-13, 5-14, 5-16, 4-07, 4-08, 3-01, 3-07, 3-08 | `a_faire` |
 | DNB26-04 | Prendre une fraction d'une quantité | 1 | NC-06 | 6-10, 5-17, 4-10 | `a_faire` |
@@ -301,7 +302,7 @@ doctrine du dépôt. Elles devront cependant être auditées pour leur adéquati
 exacte à chaque fiche. Elles ne fournissent automatiquement ni énoncés, ni
 valeurs, ni générateurs à V2.
 
-## 7. Deux premières étapes achevées
+## 7. Trois premières étapes achevées ou en pilote
 
 La première micro-notion est `NC-01`, « critères de divisibilité par 2, 3, 5,
 9 et 10 ». Le critère par 10 est un complément maths&go assumé, y compris dans
@@ -316,6 +317,8 @@ tests, l'entraînement et le contexte « Au tableau » sont construits.
 et publiée. Sa cible officielle demeure « de 1 à 12 » et son identifiant
 technique `carres-entiers-1-a-12` reste stable. Ses six familles partagent une
 seule entrée de menu ; le fait 0 au carré ne produit aucun carré quadrillé
-`0 × 0`. `NC-03` devient le prochain candidat. `NC-03` et `NC-04` restent
-distinctes en interne mais
-formeront une seule catégorie visible « Fractions simples et décimaux ».
+`0 × 0`. `NC-03` et `NC-04` restent distinctes en interne mais forment une
+seule catégorie visible « Fractions simples et décimaux ». Le module travaille
+les deux sens, conserve les représentations riches validées et est publié sur
+la route pilote non référencée pour recueillir les retours de Gwenaël et de
+Claire avant validation pédagogique finale.

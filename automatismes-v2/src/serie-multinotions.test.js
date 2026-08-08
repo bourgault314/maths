@@ -159,4 +159,22 @@ describe("génération multi-notions", () => {
     });
     assert.equal(graineRecue, "graine-publique");
   });
+
+  it("refuse avant la fabrique un quota supérieur à la capacité déclarée", () => {
+    const definition = {
+      id: "a",
+      gabarit: { id: "a" },
+      nombreQuestionsMaximum: 20,
+      creerSerie() { throw new Error("la fabrique ne doit pas être appelée"); },
+    };
+    assert.throws(
+      () => genererSerieMultinotions({
+        definitions: [definition],
+        registre: { instancier() {} },
+        graine: "trop-longue",
+        nombreQuestions: 21,
+      }),
+      /accepte au plus 20 questions/,
+    );
+  });
 });

@@ -1,16 +1,26 @@
-import { GABARIT_RECONNAISSANCE_SOLIDES } from "../../packages/automatismes/src/espace-et-geometrie/solides-usuels/reconnaissance.js?v=20";
+import { GABARIT_RECONNAISSANCE_SOLIDES } from "../../packages/automatismes/src/espace-et-geometrie/solides-usuels/reconnaissance.js?v=21";
 import {
   GABARIT_VOLUME_CUBE_PAVE,
   GABARIT_VOLUME_CYLINDRE,
   GABARIT_VOLUME_PRISME,
-} from "../../packages/automatismes/src/grandeurs-et-mesures/volumes/calcul-volumes.js?v=20";
-import { GABARIT_SELECTION_DIVISEURS } from "../../packages/automatismes/src/nombres-et-calculs/criteres-divisibilite/selection-diviseurs.js?v=20";
-import { genererSerieNC01 } from "../../packages/automatismes/src/nombres-et-calculs/criteres-divisibilite/serie.js?v=20";
-import { GABARIT_CALCUL_DIRECT_CARRE } from "../../packages/automatismes/src/nombres-et-calculs/carres-entiers-1-a-12/calcul-direct.js?v=20";
-import { genererSerieNC02 } from "../../packages/automatismes/src/nombres-et-calculs/carres-entiers-1-a-12/serie.js?v=20";
+} from "../../packages/automatismes/src/grandeurs-et-mesures/volumes/calcul-volumes.js?v=21";
+import { GABARIT_SELECTION_DIVISEURS } from "../../packages/automatismes/src/nombres-et-calculs/criteres-divisibilite/selection-diviseurs.js?v=21";
+import { genererSerieNC01 } from "../../packages/automatismes/src/nombres-et-calculs/criteres-divisibilite/serie.js?v=21";
+import { GABARIT_CALCUL_DIRECT_CARRE } from "../../packages/automatismes/src/nombres-et-calculs/carres-entiers-1-a-12/calcul-direct.js?v=21";
+import { genererSerieNC02 } from "../../packages/automatismes/src/nombres-et-calculs/carres-entiers-1-a-12/serie.js?v=21";
+import {
+  NOTION_FRACTIONS_SIMPLES_DECIMAUX,
+} from "../../packages/automatismes/src/nombres-et-calculs/fractions-simples-decimaux/commun.js?v=21";
+import {
+  GABARIT_FRACTION_VERS_DECIMAL,
+} from "../../packages/automatismes/src/nombres-et-calculs/fractions-simples-decimaux/fraction-vers-decimal.js?v=21";
+import {
+  genererSerieFractionsDecimaux,
+} from "../../packages/automatismes/src/nombres-et-calculs/fractions-simples-decimaux/serie.js?v=21";
 
 export const NOTION_NC01 = "criteres-divisibilite";
 export const NOTION_NC02 = "carres-entiers-1-a-12";
+export { NOTION_FRACTIONS_SIMPLES_DECIMAUX };
 export const NOTION_SOLIDES_USUELS = "solides-usuels";
 export const NOTION_VOLUME_CUBE_PAVE = "volume-cube-pave";
 export const NOTION_VOLUME_PRISME = "volume-prisme";
@@ -18,12 +28,14 @@ export const NOTION_VOLUME_CYLINDRE = "volume-cylindre";
 
 export const RENDU_DIVISIBILITE = "divisibilite";
 export const RENDU_CARRES = "carres";
+export const RENDU_FRACTIONS_DECIMAUX = "fractions-decimaux";
 export const RENDU_SOLIDE = "solide";
 export const RENDU_VOLUME = "volume";
 
 const RENDUS = new Set([
   RENDU_DIVISIBILITE,
   RENDU_CARRES,
+  RENDU_FRACTIONS_DECIMAUX,
   RENDU_SOLIDE,
   RENDU_VOLUME,
 ]);
@@ -39,6 +51,7 @@ function definirNotion({
   aideChiffres = false,
   rotationSolide = false,
   creerSerie = null,
+  nombreQuestionsMaximum = 100,
 }) {
   if (typeof id !== "string" || !/^[a-z0-9][a-z0-9-]*$/.test(id)) {
     throw new TypeError(`identifiant de notion invalide : ${id}`);
@@ -61,6 +74,13 @@ function definirNotion({
   if (creerSerie !== null && typeof creerSerie !== "function") {
     throw new TypeError(`fabrique de série invalide : ${id}`);
   }
+  if (
+    !Number.isInteger(nombreQuestionsMaximum)
+    || nombreQuestionsMaximum < 1
+    || nombreQuestionsMaximum > 100
+  ) {
+    throw new RangeError(`capacité de série invalide : ${id}`);
+  }
   return Object.freeze({
     id,
     nom,
@@ -70,6 +90,7 @@ function definirNotion({
     capacites: Object.freeze({ cours, aideChiffres, rotationSolide }),
     pagesCours,
     creerSerie,
+    nombreQuestionsMaximum,
   });
 }
 
@@ -94,6 +115,18 @@ const DEFINITIONS = Object.freeze([
     cours: true,
     pagesCours: 5,
     creerSerie: genererSerieNC02,
+    nombreQuestionsMaximum: 20,
+  }),
+  definirNotion({
+    id: NOTION_FRACTIONS_SIMPLES_DECIMAUX,
+    nom: "Fractions simples et décimaux",
+    gabarit: GABARIT_FRACTION_VERS_DECIMAL,
+    rendu: RENDU_FRACTIONS_DECIMAUX,
+    graineApercu: "apercu-nc03-nc04-complet",
+    cours: true,
+    pagesCours: 6,
+    creerSerie: genererSerieFractionsDecimaux,
+    nombreQuestionsMaximum: 20,
   }),
   definirNotion({
     id: NOTION_SOLIDES_USUELS,
