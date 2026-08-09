@@ -35,7 +35,7 @@ SERIES = {
         },
         "sol": [[1, 2, 0], [0, 3, 4]],
     },
-    3: {  # cartes manquantes (photo à venir) — solution seule
+    3: {  # cartes non retrouvées — solution seule
         "cards": None,
         "sol": [[2, 0, 4], [3, 1, 0]],
     },
@@ -77,8 +77,14 @@ SERIES = {
         },
         "sol": [[2, 4, 3], [0, 1, 0]],
     },
-    8: {  # cartes manquantes (photo à venir) — solution seule (lecture incertaine r1c2)
-        "cards": None,
+    8: {
+        # Transcription de la photo des cartes 8.1 à 8.4.
+        "cards": {
+            1: {"front": "P", "right": "P"},
+            2: {"left": "P", "back": "X"},
+            3: {"left": "P", "right": "X", "back": "X"},
+            4: {"right": "X"},
+        },
         "sol": [[4, 0, 0], [1, 2, 3]],
     },
     9: {

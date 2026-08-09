@@ -5,7 +5,7 @@ import re
 import sys
 from pathlib import Path
 
-from game import SERIES, solve, check, placement_of, ROWS, COLS
+from game import SERIES, solve, check, grid_of, placement_of, ROWS, COLS
 
 HERE = Path(__file__).resolve().parent
 series = json.loads((HERE / "series20.json").read_text(encoding="utf-8"))
@@ -13,6 +13,27 @@ errors, warnings = [], []
 
 def err(msg): errors.append(msg)
 def warn(msg): warnings.append(msg)
+
+def solution_set(cards):
+    normalized = {int(player): constraints for player, constraints in cards.items()}
+    return {tuple(map(tuple, grid_of(placement))) for placement in solve(normalized)}
+
+def every_card_needed(cards):
+    base = solution_set(cards)
+    return all(
+        solution_set({other: constraints for other, constraints in cards.items() if other != player}) != base
+        for player in cards
+    )
+
+def every_clue_needed(cards):
+    base = solution_set(cards)
+    for player, constraints in cards.items():
+        for direction in constraints:
+            reduced = {other: dict(values) for other, values in cards.items()}
+            del reduced[player][direction]
+            if solution_set(reduced) == base:
+                return False
+    return True
 
 # ---------------------------------------------------------------- 1. données
 assert len(series) == 20, "il faut 20 séries"
@@ -45,7 +66,7 @@ for s in series:
     # cartes identiques ?
     sigs = [tuple(sorted(c.items())) for c in cards.values()]
     if len(set(sigs)) < 4:
-        if s["note"].startswith("série 5"):
+        if "(ancienne série 5)" in s["note"]:
             pass  # série symétrique voulue (ex-série 5 : cartes jumelles + flèches)
         else:
             err(f"série {n} : cartes identiques non prévues")
@@ -69,29 +90,45 @@ for s in series:
             err(f"série {n} (niv 3) : une carte a plus de 3 infos")
     if lvl == 4 and s["n_sols"] != 1:
         err(f"série {n} (niv 4) : placement non unique")
+    if s["note"] == "nouvelle série maths&go" and lvl in (3, 4) and not every_card_needed(cards):
+        err(f"série {n} : une carte peut être retirée sans changer les placements")
+    if s["note"] == "nouvelle série maths&go" and lvl == 4 and not every_clue_needed(cards):
+        err(f"série {n} : un indice peut être retiré sans changer le placement")
 
 # ---------------------------------------------------------------- 3. doublons entre séries
+TRANSFORMS = (
+    {"front": "front", "back": "back", "left": "left", "right": "right"},
+    {"front": "front", "back": "back", "left": "right", "right": "left"},
+    {"front": "back", "back": "front", "left": "left", "right": "right"},
+    {"front": "back", "back": "front", "left": "right", "right": "left"},
+)
+
 def canon(cards):
-    return frozenset(tuple(sorted(c.items())) for c in cards.values())
+    variants = []
+    for transform in TRANSFORMS:
+        variants.append(tuple(sorted(
+            tuple(sorted((transform[direction], value) for direction, value in card.items()))
+            for card in cards.values()
+        )))
+    return min(variants)
+
 seen = {}
 for s in series:
     k = canon(s["cards"])
     if k in seen:
-        err(f"séries {seen[k]} et {s['num']} : jeux de cartes identiques")
+        err(f"séries {seen[k]} et {s['num']} : jeux de cartes équivalents par symétrie")
     seen[k] = s["num"]
 
 # ---------------------------------------------------------------- 4. fidélité aux originales
-MAPPING = {1: 5, 2: 11, 4: 9, 5: 10, 6: 3, 7: 4, 9: 16, 10: 8}  # ancienne -> livret
+MAPPING = {1: 2, 2: 11, 4: 9, 5: 10, 6: 5, 7: 3, 8: 12, 9: 16, 10: 8}  # ancienne -> livret
 by_num = {s["num"]: s for s in series}
 for old, new in MAPPING.items():
     orig = {str(p): c for p, c in SERIES[old]["cards"].items()}
     if by_num[new]["cards"] != orig:
         err(f"ancienne série {old} ≠ série {new} du livret")
-# reconstruites : la solution du livret doit être celle de la feuille manuscrite
+# La seule série reconstruite conserve la solution de la feuille manuscrite.
 if by_num[6]["sol"] != SERIES[3]["sol"]:
     err("série 6 : solution ≠ feuille manuscrite (ancienne 3)")
-if by_num[12]["sol"] != SERIES[8]["sol"]:
-    err("série 12 : solution ≠ feuille manuscrite (ancienne 8)")
 
 # ---------------------------------------------------------------- 5. HTML généré conforme
 html = (HERE / "out" / "livret.html").read_text(encoding="utf-8")
@@ -104,6 +141,15 @@ for internal_note in ("inventée par toi", "d'origine", "reconstituée"):
         err(f"note interne visible dans le livret : {internal_note}")
 if "autre(s)" in html or "placement(s)" in html or "juste(s)" in html:
     err("singulier/pluriel non résolu dans les solutions")
+for required_text in (
+    "GS-CP, adaptable en MS avec accompagnement",
+    "cerceaux ou cercles tracés au sol",
+    "cercle vide, ou pas de cercle",
+    "une seule solution suffit",
+    "chacun lit sa carte à voix haute",
+):
+    if required_text not in html:
+        err(f"consigne absente du livret : {required_text}")
 pages = html.split('<section class="page">')[1:]
 if len(pages) != 23:
     err(f"{len(pages)} pages au lieu de 23")
@@ -126,20 +172,24 @@ for page in serie_pages:
     expected = by_num[num]["cards"]
     if found != expected:
         err(f"page série {num} : HTML ≠ données ({found} vs {expected})")
-# grilles de solutions dans le HTML
-sol_pages = [p for p in pages if "Solutions" in p]
-grids = []
-for p in sol_pages:
-    for m in re.finditer(r'<h4>Série (\d+)</h4><div class="solgrid">(.*?)<div class="small">', p.replace("\n", ""), re.S):
-        num = int(m.group(1))
-        cells = re.findall(r'<div class="hoop"[^>]*>(\d?)</div>', m.group(2))
-        g = [[int(c) if c else 0 for c in cells[:3]], [int(c) if c else 0 for c in cells[3:]]]
-        grids.append((num, g))
-if len(grids) != 20:
-    err(f"solutions HTML : {len(grids)} grilles trouvées au lieu de 20")
-for num, g in grids:
-    if g != by_num[num]["sol"]:
-        err(f"solutions HTML série {num} : grille {g} ≠ {by_num[num]['sol']}")
+# Toutes les grilles valides, et seulement elles, doivent figurer dans le HTML.
+displayed = {}
+for encoded, raw_num in re.findall(
+    r'<div class="solgrid" data-grid="([0-4]{3}/[0-4]{3})" data-series="(\d+)">',
+    html,
+):
+    grid = [[int(value) for value in row] for row in encoded.split("/")]
+    displayed.setdefault(int(raw_num), []).append(grid)
+if set(displayed) != set(by_num):
+    err(f"solutions HTML : séries présentes {sorted(displayed)}")
+for num, s in by_num.items():
+    shown = displayed.get(num, [])
+    expected = solution_set(s["cards"])
+    shown_set = {tuple(map(tuple, grid)) for grid in shown}
+    if shown_set != expected or len(shown) != len(expected):
+        err(f"solutions HTML série {num} : {len(shown)} grilles affichées, {len(expected)} attendues")
+    if shown and shown[0] != s["sol"]:
+        err(f"solutions HTML série {num} : la grille principale n'est pas affichée en premier")
 # chaque carte porte le M dans la pastille et l'adresse en bas ; pas d'autre logo
 for page in serie_pages:
     if page.count("mbadge") != 4:

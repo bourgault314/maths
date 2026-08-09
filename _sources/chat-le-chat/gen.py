@@ -5,7 +5,7 @@ import json
 import re
 from pathlib import Path
 
-from game import ROWS, COLS
+from game import ROWS, COLS, grid_of, solve
 
 HERE = Path(__file__).resolve().parent
 SITE_ROOT = HERE.parents[1]
@@ -22,7 +22,7 @@ LEVELS = {
     1: ("Découverte", TEAL, "Beaucoup d'indices positifs : on apprend à lire sa carte et à se placer."),
     2: ("Cartes complètes", NAVY, "Chaque carte montre les 4 places voisines : devant, derrière, à gauche, à droite."),
     3: ("Cartes partielles", ORANGE, "Chaque carte ne dit pas tout : il faut échanger pour se placer."),
-    4: ("Expertes", RED, "Très peu d'indices et un seul placement possible : personne ne peut réussir sans écouter les autres."),
+    4: ("Expertes", RED, "Très peu d'indices et un seul placement possible : il faut croiser les informations du groupe."),
 }
 
 favicon = FAVICON_FILE.read_text(encoding="utf-8")
@@ -66,7 +66,7 @@ def card_html(num, cons, cat_px=95, extra_class=""):
     return f'<div class="card {extra_class}">{brand}{"".join(cells)}</div>'
 
 # ---------------------------------------------------------------- mini-grille solution
-def sol_grid(grid, cell=31):
+def sol_grid(grid, cell=31, series=None):
     rows = []
     for r in range(ROWS):
         tds = []
@@ -74,7 +74,9 @@ def sol_grid(grid, cell=31):
             v = grid[r][c]
             tds.append(f'<div class="hoop" style="width:{cell}px;height:{cell}px">{v if v else ""}</div>')
         rows.append(f'<div class="hooprow">{"".join(tds)}</div>')
-    return f'<div class="solgrid">{"".join(rows)}</div>'
+    encoded = "/".join("".join(str(value) for value in row) for row in grid)
+    series_attr = f' data-series="{series}"' if series is not None else ""
+    return f'<div class="solgrid" data-grid="{encoded}"{series_attr}>{"".join(rows)}</div>'
 
 # ---------------------------------------------------------------- pages
 def serie_page(s):
@@ -84,7 +86,7 @@ def serie_page(s):
     return f'''<section class="page">
   <div class="pagehead" style="border-color:{lcolor}"><h2>Série {num}</h2>
     <span class="lvlbadge" style="background:{lcolor}">Niveau {lvl} · {lname}</span></div>
-  <div class="lvldesc">{ldesc}</div>
+  <div class="lvldesc">{ldesc} · {"Un seul placement correct." if s["n_sols"] == 1 else str(s["n_sols"]) + " placements corrects (voir solutions)."}</div>
   <div class="cardgrid">{cards}</div>
   <div class="cutnote">✂ Découper les 4 cartes le long des traits. Une carte par enfant.</div>
 </section>'''
@@ -101,20 +103,20 @@ def rule_page():
       <div class="dzone">{hoops}</div></div>'''
     ex_card = card_html("EX", {"front": "P", "right": "X"}, cat_px=52, extra_class="excard")
     niveaux = "".join(
-        f'<li><b style="color:{c}">Niveau {l} · {n}</b> — {d}</li>'
+        f'<li><b style="color:{c}">Niveau {l} · {n}</b> - {d}</li>'
         for l, (n, c, d) in LEVELS.items())
     return f'''<section class="page">
   <div class="titleband">
     <img class="logo" src="data:image/png;base64,{LOGO}">
     <h1>Chat, c'est toi le chat&nbsp;!</h1>
-    <p class="subtitle">Un jeu de positionnement dans l'espace et de communication · dès la maternelle
-    <br>d'après une situation de « Un rallye mathématique en maternelle&nbsp;? Oui, c'est possible&nbsp;! »
-    (C.&nbsp;Emprin-Chartoote et F.&nbsp;Emprin, CRDP Champagne-Ardenne)</p>
+    <p class="subtitle">Un jeu de positionnement dans l'espace et de communication · GS-CP, adaptable en MS avec accompagnement
+    <br>d'après une situation de « Un rallye mathématique à l'école maternelle&nbsp;? Oui, c'est possible&nbsp;! »
+    (Fabien&nbsp;Emprin et Fabienne&nbsp;Emprin-Charotte, CRDP Champagne-Ardenne)</p>
   </div>
   <div class="rulecols">
     <div>
       <h3>Matériel</h3>
-      <p>6 zones circulaires en deux lignes de trois (cerceaux ou cercles tracés au sol) · une série de 4 cartes · 4 joueurs · un adulte (ou un meneur) pour valider.</p>
+      <p>6 zones circulaires - cerceaux ou cercles tracés au sol - en deux lignes de trois · une série de 4 cartes · 4 joueurs · un adulte (ou un meneur) pour valider.</p>
       <h3>Mise en place</h3>
       {diagram}
       <p class="small">Marquer le « devant » (un plot, le tableau…). Tous les enfants
@@ -128,15 +130,20 @@ def rule_page():
         <ul class="legend">
           <li><span class="chip" style="border:3px solid {TEAL}"></span> le chat encadré, c'est <b>toi</b></li>
           <li>🐱 un chat = <b>quelqu'un</b> est à cette place</li>
-          <li><span style="color:{RED};font-weight:800">✕</span> un chat barré = <b>personne</b> à cette place</li>
+          <li><span style="color:{RED};font-weight:800">✕</span> un chat barré = <b>personne</b> juste à côté dans cette direction (cercle vide, ou pas de cercle)</li>
           <li>rien de dessiné = on ne sait pas</li>
           <li>le haut de la carte = <b>devant</b></li>
         </ul></div>
       <h3>Déroulement</h3>
-      <p>Chaque enfant reçoit une carte de la même série et ne la montre pas.
-      En se parlant (« j'ai quelqu'un devant moi », « personne à ma droite »…),
-      les 4 enfants cherchent chacun leur place. Deux zones resteront vides.
-      Quand tout le monde est placé, l'adulte vérifie carte par carte.</p>
+      <p>Chaque enfant reçoit une carte de la même série. <b>Règle d'or : on ne montre
+      jamais sa carte aux autres</b> - on la garde pour soi et on parle.
+      En échangeant (« j'ai quelqu'un devant moi », « personne à ma droite »…),
+      les 4 enfants cherchent un placement qui rende les quatre cartes vraies -
+      une seule solution suffit. Deux zones resteront vides.</p>
+      <h3>Validation</h3>
+      <p>Quand le groupe pense avoir réussi, chacun lit sa carte à voix haute :
+      le groupe gagne si les quatre cartes sont vraies. Une série peut avoir
+      plusieurs placements corrects - ils sont tous dans les pages solutions.</p>
       <h3>Variantes</h3>
       <p class="small">Se placer sans parler · dessiner d'abord la solution sur papier ·
       chronométrer · faire créer de nouvelles cartes par les élèves.</p>
@@ -154,22 +161,22 @@ def solutions_pages(series):
             group = [s for s in series if s["level"] == lvl]
             items = ""
             for s in group:
-                alternatives = s["n_sols"] - 1
-                if alternatives == 0:
-                    extra = "placement unique"
-                elif alternatives == 1:
-                    extra = "+ 1 autre placement juste"
-                else:
-                    extra = f"+ {alternatives} autres placements justes"
-                items += f'''<div class="solblock"><h4>Série {s["num"]}</h4>{sol_grid(s["sol"])}
-                  <div class="small">{extra}</div></div>'''
+                cards = {int(p): c for p, c in s["cards"].items()}
+                grids = [grid_of(placement) for placement in solve(cards)]
+                grids.sort(key=lambda grid: grid != s["sol"])
+                count = "placement unique" if len(grids) == 1 else f"{len(grids)} placements corrects"
+                span = "" if len(grids) <= 2 else (" span2" if len(grids) <= 5 else " span4")
+                shown = "".join(sol_grid(grid, cell=22 if len(grids) > 1 else 28, series=s["num"]) for grid in grids)
+                items += f'''<div class="solblock{span}"><h4>Série {s["num"]} <span class="nsols">{count}</span></h4>
+                  <div class="gridrow">{shown}</div></div>'''
             blocks += f'''<h3 style="color:{lcolor}">Niveau {lvl} · {lname}</h3>
                 <div class="solwrap">{items}</div>'''
         pages.append(f'''<section class="page">
   <div class="pagehead"><h2>Solutions (pour l'adulte)</h2></div>
-  <p class="small">Le haut des grilles = « devant ». Quand plusieurs placements sont justes
-  (translations, échanges symétriques), on valide en relisant les cartes une à une :
-  c'est gagné dès que chaque carte est vraie.</p>
+  <p class="small">Le haut des grilles = « devant ». Certaines séries admettent plusieurs
+  placements corrects (groupe décalé d'une colonne, échanges symétriques…) : ils sont
+  tous dessinés ci-dessous. Une seule solution suffit. Dans tous les cas, on valide en
+  relisant les cartes une à une : c'est gagné dès que chaque carte est vraie.</p>
   {blocks}
   {FOOTER}
 </section>''')
@@ -228,8 +235,13 @@ ul.legend {{ font-size:11.5px; line-height:1.7; padding-left:16px; margin:0; }}
 .mbadge {{ width:13px; height:13px; border-radius:3px; }}
 .cardurl {{ position:absolute; bottom:5px; left:0; right:0; text-align:center;
             font-size:8px; color:#c4bbac; letter-spacing:.8px; }}
-.solwrap {{ display:grid; grid-template-columns:repeat(5,1fr); gap:3mm 3mm; }}
+.solwrap {{ display:grid; grid-template-columns:repeat(4,1fr); gap:3mm 3mm; grid-auto-flow:dense; }}
 .solblock {{ background:{CREAM}; border-radius:10px; padding:7px 8px; }}
+.nsols {{ font-weight:400; font-size:9px; color:#6d6558; }}
+.gridrow {{ display:flex; flex-wrap:wrap; gap:2px 10px; align-items:flex-start; }}
+.solgrid {{ flex:none; }}
+.solblock.span2 {{ grid-column:span 2; }}
+.solblock.span4 {{ grid-column:span 4; }}
 .hooprow {{ display:flex; gap:4px; margin:2px 0; }}
 .hoop {{ border:3.5px solid {TEAL}; border-radius:50%; display:flex; align-items:center;
          justify-content:center; font-weight:800; font-size:13px; color:{NAVY}; background:white;}}

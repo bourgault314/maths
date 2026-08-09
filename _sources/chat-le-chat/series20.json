@@ -2,23 +2,23 @@
  {
   "num": 1,
   "level": 1,
-  "note": "nouvelle",
+  "note": "nouvelle série maths&go",
   "cards": {
    "1": {
-    "back": "P",
-    "right": "P"
+    "right": "P",
+    "back": "P"
    },
    "4": {
     "back": "P",
     "left": "P"
    },
    "2": {
-    "front": "P",
-    "right": "P"
+    "right": "P",
+    "front": "P"
    },
    "3": {
-    "front": "P",
-    "left": "P"
+    "left": "P",
+    "front": "P"
    }
   },
   "sol": [
@@ -38,15 +38,84 @@
  {
   "num": 2,
   "level": 1,
-  "note": "nouvelle",
+  "note": "reprise du jeu papier (ancienne série 1)",
+  "cards": {
+   "1": {
+    "front": "P"
+   },
+   "2": {
+    "back": "P"
+   },
+   "3": {
+    "right": "P",
+    "back": "X"
+   },
+   "4": {
+    "left": "P",
+    "back": "X"
+   }
+  },
+  "sol": [
+   [
+    3,
+    2,
+    0
+   ],
+   [
+    0,
+    1,
+    4
+   ]
+  ],
+  "n_sols": 8
+ },
+ {
+  "num": 3,
+  "level": 1,
+  "note": "reprise du jeu papier (ancienne série 7)",
+  "cards": {
+   "1": {
+    "front": "P",
+    "right": "X"
+   },
+   "2": {
+    "right": "P",
+    "back": "X"
+   },
+   "3": {
+    "left": "P",
+    "back": "X"
+   },
+   "4": {
+    "left": "P"
+   }
+  },
+  "sol": [
+   [
+    2,
+    4,
+    3
+   ],
+   [
+    0,
+    1,
+    0
+   ]
+  ],
+  "n_sols": 2
+ },
+ {
+  "num": 4,
+  "level": 1,
+  "note": "nouvelle série maths&go",
   "cards": {
    "2": {
-    "back": "X",
-    "right": "P"
+    "right": "P",
+    "back": "X"
    },
    "1": {
-    "back": "P",
-    "left": "P"
+    "left": "P",
+    "back": "P"
    },
    "4": {
     "back": "X",
@@ -72,9 +141,9 @@
   "n_sols": 2
  },
  {
-  "num": 3,
+  "num": 5,
   "level": 1,
-  "note": "série 6 d'origine",
+  "note": "reprise du jeu papier (ancienne série 6)",
   "cards": {
    "1": {
     "right": "P",
@@ -108,78 +177,9 @@
   "n_sols": 5
  },
  {
-  "num": 4,
-  "level": 1,
-  "note": "série 7 d'origine",
-  "cards": {
-   "1": {
-    "front": "P",
-    "right": "X"
-   },
-   "2": {
-    "right": "P",
-    "back": "X"
-   },
-   "3": {
-    "left": "P",
-    "back": "X"
-   },
-   "4": {
-    "left": "P"
-   }
-  },
-  "sol": [
-   [
-    2,
-    4,
-    3
-   ],
-   [
-    0,
-    1,
-    0
-   ]
-  ],
-  "n_sols": 2
- },
- {
-  "num": 5,
-  "level": 1,
-  "note": "série 1 d'origine",
-  "cards": {
-   "1": {
-    "front": "P"
-   },
-   "2": {
-    "back": "P"
-   },
-   "3": {
-    "right": "P",
-    "back": "X"
-   },
-   "4": {
-    "left": "P",
-    "back": "X"
-   }
-  },
-  "sol": [
-   [
-    3,
-    2,
-    0
-   ],
-   [
-    0,
-    1,
-    4
-   ]
-  ],
-  "n_sols": 8
- },
- {
   "num": 6,
   "level": 2,
-  "note": "série 3 d'origine, reconstituée",
+  "note": "ancienne série 3, reconstituée d'après la feuille de solutions",
   "cards": {
    "2": {
     "front": "X",
@@ -223,9 +223,9 @@
  {
   "num": 7,
   "level": 2,
-  "note": "nouvelle",
+  "note": "nouvelle série maths&go",
   "cards": {
-   "3": {
+   "4": {
     "front": "X",
     "back": "X",
     "left": "X",
@@ -235,12 +235,6 @@
     "front": "X",
     "back": "P",
     "left": "P",
-    "right": "X"
-   },
-   "4": {
-    "front": "P",
-    "back": "X",
-    "left": "X",
     "right": "P"
    },
    "2": {
@@ -248,18 +242,24 @@
     "back": "X",
     "left": "P",
     "right": "X"
+   },
+   "3": {
+    "front": "P",
+    "back": "X",
+    "left": "X",
+    "right": "X"
    }
   },
   "sol": [
    [
-    3,
+    4,
     1,
-    0
+    2
    ],
    [
     0,
-    4,
-    2
+    3,
+    0
    ]
   ],
   "n_sols": 1
@@ -267,7 +267,7 @@
  {
   "num": 8,
   "level": 2,
-  "note": "série 10 d'origine (inventée par toi)",
+  "note": "reprise du jeu papier (ancienne série 10)",
   "cards": {
    "1": {
     "front": "X",
@@ -311,7 +311,7 @@
  {
   "num": 9,
   "level": 2,
-  "note": "série 4 d'origine",
+  "note": "reprise du jeu papier (ancienne série 4)",
   "cards": {
    "1": {
     "front": "P",
@@ -355,7 +355,7 @@
  {
   "num": 10,
   "level": 2,
-  "note": "série 5 d'origine",
+  "note": "reprise du jeu papier (ancienne série 5)",
   "cards": {
    "1": {
     "front": "P",
@@ -399,7 +399,7 @@
  {
   "num": 11,
   "level": 3,
-  "note": "série 2 d'origine",
+  "note": "reprise du jeu papier (ancienne série 2)",
   "cards": {
    "1": {
     "right": "P",
@@ -436,23 +436,23 @@
  {
   "num": 12,
   "level": 3,
-  "note": "série 8 d'origine, reconstituée",
+  "note": "reprise du jeu papier (ancienne série 8)",
   "cards": {
-   "4": {
-    "left": "X",
-    "right": "X"
-   },
    "1": {
     "front": "P",
     "right": "P"
    },
    "2": {
-    "front": "X",
-    "left": "P"
+    "left": "P",
+    "back": "X"
    },
    "3": {
-    "back": "X",
-    "left": "P"
+    "left": "P",
+    "right": "X",
+    "back": "X"
+   },
+   "4": {
+    "right": "X"
    }
   },
   "sol": [
@@ -467,40 +467,40 @@
     3
    ]
   ],
-  "n_sols": 2
+  "n_sols": 1
  },
  {
   "num": 13,
   "level": 3,
-  "note": "nouvelle",
+  "note": "nouvelle série maths&go",
   "cards": {
    "2": {
-    "back": "X",
-    "right": "X"
+    "right": "X",
+    "back": "P"
    },
    "4": {
-    "left": "X",
-    "right": "X"
-   },
-   "1": {
     "front": "X",
-    "back": "X"
+    "right": "P"
    },
    "3": {
-    "front": "P",
+    "left": "P",
+    "right": "P"
+   },
+   "1": {
+    "right": "X",
     "left": "P"
    }
   },
   "sol": [
    [
-    2,
     0,
-    4
+    2,
+    0
    ],
    [
-    0,
-    1,
-    3
+    4,
+    3,
+    1
    ]
   ],
   "n_sols": 2
@@ -508,15 +508,15 @@
  {
   "num": 14,
   "level": 3,
-  "note": "nouvelle",
+  "note": "nouvelle série maths&go",
   "cards": {
    "1": {
-    "back": "P",
-    "left": "X"
+    "left": "X",
+    "back": "P"
    },
    "3": {
-    "front": "X",
-    "left": "P"
+    "left": "P",
+    "front": "X"
    },
    "4": {
     "front": "P",
@@ -544,23 +544,23 @@
  {
   "num": 15,
   "level": 3,
-  "note": "nouvelle",
+  "note": "nouvelle série maths&go",
   "cards": {
    "4": {
-    "left": "X",
-    "right": "P"
-   },
-   "1": {
-    "front": "X",
-    "back": "X"
-   },
-   "3": {
-    "back": "X",
+    "right": "P",
     "left": "X"
    },
-   "2": {
-    "front": "P",
+   "1": {
+    "back": "X",
+    "front": "X"
+   },
+   "3": {
+    "left": "X",
     "back": "X"
+   },
+   "2": {
+    "back": "X",
+    "front": "P"
    }
   },
   "sol": [
@@ -580,7 +580,7 @@
  {
   "num": 16,
   "level": 4,
-  "note": "série 9 d'origine (inventée par toi)",
+  "note": "reprise du jeu papier (ancienne série 9)",
   "cards": {
    "1": {
     "front": "X",
@@ -616,15 +616,15 @@
  {
   "num": 17,
   "level": 4,
-  "note": "nouvelle",
+  "note": "nouvelle série maths&go",
   "cards": {
    "1": {
     "back": "P"
    },
    "2": {
+    "right": "X",
     "front": "X",
-    "left": "X",
-    "right": "X"
+    "left": "X"
    },
    "3": {
     "right": "P"
@@ -650,15 +650,15 @@
  {
   "num": 18,
   "level": 4,
-  "note": "nouvelle",
+  "note": "nouvelle série maths&go",
   "cards": {
    "1": {
     "back": "P",
     "right": "P"
    },
    "3": {
-    "front": "X",
-    "right": "X"
+    "right": "X",
+    "front": "X"
    },
    "2": {
     "front": "X"
@@ -684,11 +684,11 @@
  {
   "num": 19,
   "level": 4,
-  "note": "nouvelle",
+  "note": "nouvelle série maths&go",
   "cards": {
    "3": {
-    "front": "X",
-    "right": "P"
+    "right": "P",
+    "front": "X"
    },
    "1": {
     "back": "P",
@@ -718,33 +718,32 @@
  {
   "num": 20,
   "level": 4,
-  "note": "nouvelle",
+  "note": "nouvelle série maths&go",
   "cards": {
-   "2": {
-    "back": "P",
-    "right": "P"
-   },
    "3": {
-    "left": "P"
+    "right": "X"
    },
-   "1": {
+   "2": {
     "front": "P"
    },
    "4": {
-    "left": "X",
-    "right": "X"
+    "right": "P",
+    "left": "P"
+   },
+   "1": {
+    "left": "P"
    }
   },
   "sol": [
    [
-    2,
     3,
+    0,
     0
    ],
    [
-    1,
-    0,
-    4
+    2,
+    4,
+    1
    ]
   ],
   "n_sols": 1
