@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Construit les 20 séries : originales reclassées + reconstructions (3, 8) + nouvelles.
+"""Construit les 20 séries : originales reclassées + reconstruction (3) + nouvelles.
 
 Niveaux :
   1 Découverte      : 1-2 infos par carte, surtout des chats « pleins »
@@ -9,7 +9,6 @@ Niveaux :
 """
 import json
 import random
-from itertools import combinations, permutations
 from pathlib import Path
 
 from game import SERIES, solve, check, placement_of, grid_of, ROWS, COLS, DIRS
@@ -48,6 +47,15 @@ def distinct_cards(cards):
     sigs = [tuple(sorted(c.items())) for c in cards.values()]
     return len(set(sigs)) == len(sigs)
 
+def every_card_needed(cards):
+    """Vrai si retirer n'importe quelle carte change l'ensemble des placements."""
+    base = {tuple(map(tuple, grid_of(p))) for p in solve(cards)}
+    for player in cards:
+        test = {p: c for p, c in cards.items() if p != player}
+        if {tuple(map(tuple, grid_of(p))) for p in solve(test)} == base:
+            return False
+    return True
+
 # ------------------------------------------------------------------ recherche
 def make_level1(grid, tries=400):
     """1-2 infos/carte, ≥ moitié de 'P', jouable (la solution cible est valide)."""
@@ -76,8 +84,8 @@ def make_level1(grid, tries=400):
             best = (score, cards, len(sols))
     return best and (best[1], best[2])
 
-def make_level3(grid, tries=800):
-    """2-3 infos/carte, ≤ 2 placements."""
+def make_level3(grid, tries=800, need_all=False):
+    """2-3 infos/carte, ≤ 2 placements ; éventuellement 4 cartes indispensables."""
     full = full_constraints(grid)
     best = None
     for _ in range(tries):
@@ -87,6 +95,8 @@ def make_level3(grid, tries=800):
             continue
         sols = solve(cards)
         if not (1 <= len(sols) <= 2):
+            continue
+        if need_all and not every_card_needed(cards):
             continue
         score = (n_infos(cards), len(sols) * -1)  # peu d'infos, 2 placements ok
         if best is None or score < best[0]:
@@ -112,7 +122,7 @@ def make_level4(grid, restarts=300):
             if len(solve(cards)) != 1:
                 keep[p].add(d)
         cards = subset_cards(full, {q: list(v) for q, v in keep.items()})
-        if not distinct_cards(cards):
+        if not distinct_cards(cards) or not every_card_needed(cards):
             continue
         score = n_infos(cards)
         if best is None or score < best[0]:
@@ -130,61 +140,131 @@ ORIG = {n: SERIES[n] for n in SERIES}
 NEW_GRIDS = {
     "n1a": G("140/230"),   # bloc gauche
     "n1b": G("021/403"),   # zigzag inversé
-    "n2a": G("310/042"),   # colonnes écartées
-    "n3a": G("204/013"),   # coins + centre bas
+    "n2b": G("412/030"),   # forme en T, cartes complètes
+    "n3d": G("020/431"),   # T inversé, 4 cartes indispensables
     "n3b": G("130/402"),
     "n3c": G("041/320"),
     "n4a": G("102/340"),
     "n4b": G("013/240"),
     "n4c": G("310/024"),
-    "n4d": G("230/104"),
+    "n4e": G("300/241"),   # forme en L, 5 indices indispensables
     "r3":  G("204/310"),   # solution de la feuille pour l'ancienne série 3
-    "r8":  G("400/123"),   # solution de la feuille pour l'ancienne série 8
 }
+
+# Cartes retenues après l'audit pédagogique. Les conserver explicitement évite
+# qu'une autre version de Python choisisse une variante aléatoire équivalente.
+# Les fonctions make_level* restent disponibles pour concevoir de futures
+# séries, mais la publication est entièrement reproductible.
+NEW_CARDS = {
+    "n1a": {
+        1: {"right": "P", "back": "P"},
+        4: {"back": "P", "left": "P"},
+        2: {"right": "P", "front": "P"},
+        3: {"left": "P", "front": "P"},
+    },
+    "n1b": {
+        2: {"right": "P", "back": "X"},
+        1: {"left": "P", "back": "P"},
+        4: {"back": "X", "right": "X"},
+        3: {"front": "P", "right": "X"},
+    },
+    "n3d": {
+        2: {"right": "X", "back": "P"},
+        4: {"front": "X", "right": "P"},
+        3: {"left": "P", "right": "P"},
+        1: {"right": "X", "left": "P"},
+    },
+    "n3b": {
+        1: {"left": "X", "back": "P"},
+        3: {"left": "P", "front": "X"},
+        4: {"front": "P", "left": "X"},
+        2: {"front": "X", "left": "X"},
+    },
+    "n3c": {
+        4: {"right": "P", "left": "X"},
+        1: {"back": "X", "front": "X"},
+        3: {"left": "X", "back": "X"},
+        2: {"back": "X", "front": "P"},
+    },
+    "n4a": {
+        1: {"back": "P"},
+        2: {"right": "X", "front": "X", "left": "X"},
+        3: {"right": "P"},
+        4: {"front": "X"},
+    },
+    "n4b": {
+        1: {"back": "P", "right": "P"},
+        3: {"right": "X", "front": "X"},
+        2: {"front": "X"},
+        4: {"left": "P"},
+    },
+    "n4c": {
+        3: {"right": "P", "front": "X"},
+        1: {"back": "P", "left": "P"},
+        2: {"right": "P"},
+        4: {"front": "X"},
+    },
+    "n4e": {
+        3: {"right": "X"},
+        2: {"front": "P"},
+        4: {"right": "P", "left": "P"},
+        1: {"left": "P"},
+    },
+}
+
+def curated(key):
+    cards = NEW_CARDS[key]
+    assert check(placement_of(NEW_GRIDS[key]), cards), f"{key} : grille cible invalide"
+    return cards, len(solve(cards))
 
 def build():
     lineup = []  # (niveau, note_origine, cards, sol_grid, n_sols)
 
     # ---- Niveau 1 : découverte
-    lineup.append((1, "série 1 d'origine", ORIG[1]["cards"], ORIG[1]["sol"], len(solve(ORIG[1]["cards"]))))
-    lineup.append((1, "série 6 d'origine", ORIG[6]["cards"], ORIG[6]["sol"], len(solve(ORIG[6]["cards"]))))
-    lineup.append((1, "série 7 d'origine", ORIG[7]["cards"], ORIG[7]["sol"], len(solve(ORIG[7]["cards"]))))
+    lineup.append((1, "reprise du jeu papier (ancienne série 1)", ORIG[1]["cards"], ORIG[1]["sol"], len(solve(ORIG[1]["cards"]))))
+    lineup.append((1, "reprise du jeu papier (ancienne série 6)", ORIG[6]["cards"], ORIG[6]["sol"], len(solve(ORIG[6]["cards"]))))
+    lineup.append((1, "reprise du jeu papier (ancienne série 7)", ORIG[7]["cards"], ORIG[7]["sol"], len(solve(ORIG[7]["cards"]))))
     for key in ("n1a", "n1b"):
-        cards, ns = make_level1(NEW_GRIDS[key])
-        lineup.append((1, "nouvelle", cards, NEW_GRIDS[key], ns))
+        cards, ns = curated(key)
+        lineup.append((1, "nouvelle série maths&go", cards, NEW_GRIDS[key], ns))
 
     # ---- Niveau 2 : cartes complètes
     r3 = full_constraints(NEW_GRIDS["r3"])
-    lineup.append((2, "série 3 d'origine, reconstituée", r3, NEW_GRIDS["r3"], len(solve(r3))))
-    lineup.append((2, "série 4 d'origine", ORIG[4]["cards"], ORIG[4]["sol_alt"], len(solve(ORIG[4]["cards"]))))
-    lineup.append((2, "série 5 d'origine", ORIG[5]["cards"], ORIG[5]["sol"], len(solve(ORIG[5]["cards"]))))
-    n2a = full_constraints(NEW_GRIDS["n2a"])
-    lineup.append((2, "nouvelle", n2a, NEW_GRIDS["n2a"], len(solve(n2a))))
-    lineup.append((2, "série 10 d'origine (inventée par toi)", ORIG[10]["cards"], ORIG[10]["sol"], 1))
+    lineup.append((2, "ancienne série 3, reconstituée d'après la feuille de solutions", r3, NEW_GRIDS["r3"], len(solve(r3))))
+    lineup.append((2, "reprise du jeu papier (ancienne série 4)", ORIG[4]["cards"], ORIG[4]["sol_alt"], len(solve(ORIG[4]["cards"]))))
+    lineup.append((2, "reprise du jeu papier (ancienne série 5)", ORIG[5]["cards"], ORIG[5]["sol"], len(solve(ORIG[5]["cards"]))))
+    n2b = full_constraints(NEW_GRIDS["n2b"])
+    lineup.append((2, "nouvelle série maths&go", n2b, NEW_GRIDS["n2b"], len(solve(n2b))))
+    lineup.append((2, "reprise du jeu papier (ancienne série 10)", ORIG[10]["cards"], ORIG[10]["sol"], 1))
 
     # ---- Niveau 3 : cartes partielles
-    lineup.append((3, "série 2 d'origine", ORIG[2]["cards"], ORIG[2]["sol"], len(solve(ORIG[2]["cards"]))))
-    cards, ns = make_level3(NEW_GRIDS["r8"])
-    lineup.append((3, "série 8 d'origine, reconstituée", cards, NEW_GRIDS["r8"], ns))
-    for key in ("n3a", "n3b", "n3c"):
-        cards, ns = make_level3(NEW_GRIDS[key])
-        lineup.append((3, "nouvelle", cards, NEW_GRIDS[key], ns))
+    lineup.append((3, "reprise du jeu papier (ancienne série 2)", ORIG[2]["cards"], ORIG[2]["sol"], len(solve(ORIG[2]["cards"]))))
+    lineup.append((3, "reprise du jeu papier (ancienne série 8)", ORIG[8]["cards"], ORIG[8]["sol"], len(solve(ORIG[8]["cards"]))))
+    for key in ("n3d", "n3b", "n3c"):
+        cards, ns = curated(key)
+        lineup.append((3, "nouvelle série maths&go", cards, NEW_GRIDS[key], ns))
 
     # ---- Niveau 4 : expertes
-    lineup.append((4, "série 9 d'origine (inventée par toi)", ORIG[9]["cards"], ORIG[9]["sol"], 1))
-    for key in ("n4a", "n4b", "n4c", "n4d"):
-        res = make_level4(NEW_GRIDS[key])
-        if res is None:
-            print(f"!! {key} : pas de solution unique en infos complètes, config à changer")
-            continue
-        cards, ns = res
-        lineup.append((4, "nouvelle", cards, NEW_GRIDS[key], ns))
+    lineup.append((4, "reprise du jeu papier (ancienne série 9)", ORIG[9]["cards"], ORIG[9]["sol"], 1))
+    for key in ("n4a", "n4b", "n4c", "n4e"):
+        cards, ns = curated(key)
+        lineup.append((4, "nouvelle série maths&go", cards, NEW_GRIDS[key], ns))
 
-    # tri intra-niveau : de la plus bavarde à la plus muette
+    # Niveau 1 : introduction progressive des indices négatifs. Les autres
+    # niveaux restent rangés de la carte la plus bavarde à la plus concise.
+    def n_negative(cards):
+        return sum(v == "X" for c in cards.values() for v in c.values())
+
+    def n_positive(cards):
+        return sum(v == "P" for c in cards.values() for v in c.values())
+
     final = []
     for lvl in (1, 2, 3, 4):
         group = [x for x in lineup if x[0] == lvl]
-        group.sort(key=lambda x: (-n_infos(x[2]), x[4]))
+        if lvl == 1:
+            group.sort(key=lambda x: (n_negative(x[2]), -n_positive(x[2]), x[4]))
+        else:
+            group.sort(key=lambda x: (-n_infos(x[2]), x[4]))
         final.extend(group)
     return final
 
