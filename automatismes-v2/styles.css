@@ -416,11 +416,16 @@ h3,
   font-weight: 800;
 }
 
+button.choix:not(:disabled) {
+  touch-action: manipulation;
+}
+
 button.choix:hover:not(:disabled) {
   border-color: var(--mg-turquoise);
 }
 
-.choix.selectionne {
+.choix.selectionne,
+button.choix:active:not(:disabled) {
   border-color: var(--mg-bleu);
   color: var(--mg-bleu);
   background: color-mix(in srgb, var(--mg-turquoise) 14%, var(--mg-papier));

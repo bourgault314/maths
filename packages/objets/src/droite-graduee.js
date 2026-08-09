@@ -52,7 +52,7 @@ import {
   mesurerEcritureFractionSvg,
   rendreFractionSvg,
   verbaliserFraction,
-} from "./expressions.js?v=21";
+} from "./expressions.js?v=22";
 
 export const VERSION_DROITE_GRADUEE = 1;
 

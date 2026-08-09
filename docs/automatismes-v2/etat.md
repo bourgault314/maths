@@ -1,6 +1,35 @@
 # État du chantier Automatismes V2
 
-**Dernière mise à jour : 8 août 2026.**
+**Dernière mise à jour : 9 août 2026.**
+
+## Finitions NC-01 du 9 août
+
+- Le lot est livré au-dessus de `c5592c5`, état de `main` après la PR #291.
+  Il conserve les contenus, les aides et les corrections déjà validés pour les
+  autres notions.
+- Les trois pages du cours `NC-01` restent distinctes. Elles explicitent
+  désormais les formulations « divise », « est divisible par » et « est un
+  multiple de », le lien entre les critères par 2, 5 et 10, puis les repères
+  séparés des multiples de 3 et de 9 utiles lorsque la somme des chiffres ne
+  dépasse pas 36.
+- Les exemples `43` et `49` montrent concrètement qu'une terminaison par 3 ou
+  par 9 ne suffit pas. Le cours rappelle aussi que tout multiple de 9 est un
+  multiple de 3, sans ajouter de page ni modifier l'aide pas à pas.
+- Dans `NC-01/F3`, une grille qui comporte une mauvaise réponse peut recevoir,
+  de manière seedée et occasionnelle, un seul piège de terminaison. Sa valeur,
+  sa longueur et sa position varient ; les autres mauvaises réponses de la
+  grille ne répètent pas ce même motif.
+- Les parts turquoise des schémas de partage remplissent maintenant toute leur
+  case, y compris sur téléphone, au zoom et lorsque le texte agrandit la ligne.
+  Les boutons de réponse donnent un retour bleu dès l'appui, puis conservent la
+  sélection réelle au relâchement avec les mêmes attributs ARIA et le même
+  comportement au clavier.
+- Le graphe de cache public passe d'un seul tenant en `v22`. Le dépôt complet
+  réussit **1 261 tests sur 1 261**, ainsi que les validateurs du catalogue, du
+  sitemap, des routes et d'Automatismes V2.
+- La publication a été explicitement autorisée par Gwenaël. `/auto/` reste hors
+  du lot ; son arbre Git de référence demeure
+  `6a72d5c5ed4dd47b2e52c3109913c93bd276eb49`.
 
 ## Pilote public NC-03 / NC-04 du 8 août
 

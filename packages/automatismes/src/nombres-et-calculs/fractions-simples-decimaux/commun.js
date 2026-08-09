@@ -5,7 +5,7 @@
 import {
   SCHEMA_GABARIT_QUESTION,
   estDonneePure,
-} from "../../../../contrats/src/gabarit.js?v=21";
+} from "../../../../contrats/src/gabarit.js?v=22";
 import {
   COMPARAISON_CHOIX_EXACT,
   COMPARAISON_VALEUR_EXACTE,
@@ -14,7 +14,7 @@ import {
   TYPE_REPONSE_ENTIER_NATUREL,
   TYPE_REPONSE_FRACTION_EQUIVALENTE,
   TYPE_REPONSE_NOMBRE_DECIMAL,
-} from "../../../../contrats/src/question-v2.js?v=21";
+} from "../../../../contrats/src/question-v2.js?v=22";
 
 export const NOTION_FRACTIONS_SIMPLES_DECIMAUX =
   "fractions-simples-decimaux";

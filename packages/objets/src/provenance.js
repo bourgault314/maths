@@ -143,7 +143,7 @@ export const PROVENANCE_FONDATION_V2 = Object.freeze({
 
   "automatismes-v2/app.js": {
     statut: "original_mathsgo",
-    source: "parcours complets du lecteur V2, incluant NC-01 à NC-04 et les notions GE/PG, décisions de disposition des 3, 6 et 7 août 2026",
+    source: "parcours complets du lecteur V2, incluant NC-01 à NC-04 et les notions GE/PG, décisions de disposition des 3, 6, 7 et 9 août 2026",
   },
   "automatismes-v2/package.json": {
     statut: "original_mathsgo",
@@ -229,7 +229,7 @@ export const PROVENANCE_FONDATION_V2 = Object.freeze({
   },
   "packages/automatismes/src/nombres-et-calculs/criteres-divisibilite/selection-nombres.js": {
     statut: "original_mathsgo",
-    source: "fiche NC-01/F3 validée par Gwenaël le 19 juillet 2026",
+    source: "fiche NC-01/F3 validée par Gwenaël le 19 juillet 2026, distracteurs diagnostiques enrichis avec lui le 9 août 2026",
   },
   "packages/automatismes/src/nombres-et-calculs/criteres-divisibilite/chiffre-manquant.js": {
     statut: "original_mathsgo",

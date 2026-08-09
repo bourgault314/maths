@@ -13,24 +13,24 @@ import {
   COMPARAISON_ENSEMBLE_EXACT,
   SCHEMA_QUESTION_INSTANCE_V2,
   TYPE_REPONSE_SELECTION_MULTIPLE,
-} from "../../../../contrats/src/question-v2.js?v=21";
+} from "../../../../contrats/src/question-v2.js?v=22";
 import {
   DIVISEURS_CRITERES_NC01,
   construireCorrectionCritere,
   formulationCritereDivisibilite,
   tirerNombreSelonDivisibilite,
-} from "./critere-precis.js?v=21";
+} from "./critere-precis.js?v=22";
 
 export const NOM_GENERATEUR_SELECTION_NOMBRES =
   "nombres-et-calculs.criteres-divisibilite.selection-nombres";
-export const VERSION_GENERATEUR_SELECTION_NOMBRES = 4;
+export const VERSION_GENERATEUR_SELECTION_NOMBRES = 5;
 
 const PARAMETRES_AUTORISES = new Set(["diviseur"]);
 
 export const GABARIT_SELECTION_NOMBRES = Object.freeze({
   schema: SCHEMA_GABARIT_QUESTION,
   id: NOM_GENERATEUR_SELECTION_NOMBRES,
-  version: 4,
+  version: 5,
   titre: "Critères de divisibilité — sélectionner plusieurs nombres",
   generateur: Object.freeze({
     nom: NOM_GENERATEUR_SELECTION_NOMBRES,
@@ -82,15 +82,35 @@ function exigerParametres(parametres) {
   }
 }
 
-function tirerNombresDistincts(aleatoire, diviseur, profils) {
+function estPiegeTerminaison(nombre, diviseur) {
+  return [3, 9].includes(diviseur)
+    && nombre % 10 === diviseur
+    && nombre % diviseur !== 0;
+}
+
+function tirerPiegeTerminaison(aleatoire, diviseur) {
+  const longueur = aleatoire.entier(2, 4);
+  const minimumPrefixe = 10 ** (longueur - 2);
+  const maximumPrefixe = 10 ** (longueur - 1) - 1;
+  for (let tentative = 0; tentative < 100; tentative++) {
+    const prefixe = aleatoire.entier(minimumPrefixe, maximumPrefixe);
+    if (prefixe % diviseur !== 0) return prefixe * 10 + diviseur;
+  }
+  throw new Error(
+    "selection-nombres : impossible de produire un piège de terminaison",
+  );
+}
+
+function tirerNombresDistincts(aleatoire, diviseur, profils, indexPiege) {
   const dejaTires = new Set();
-  return profils.map((divisible) => {
+  return profils.map((divisible, index) => {
     for (let tentative = 0; tentative < 100; tentative++) {
-      const nombre = tirerNombreSelonDivisibilite(
-        aleatoire,
-        diviseur,
-        divisible,
-      );
+      const nombre = index === indexPiege
+        ? tirerPiegeTerminaison(aleatoire, diviseur)
+        : tirerNombreSelonDivisibilite(aleatoire, diviseur, divisible);
+      if (!divisible && index !== indexPiege && estPiegeTerminaison(nombre, diviseur)) {
+        continue;
+      }
       if (!dejaTires.has(nombre)) {
         dejaTires.add(nombre);
         return { nombre, divisible };
@@ -170,8 +190,14 @@ export function genererQuestionSelectionNombres({ aleatoire, parametres }) {
     ...Array.from({ length: nombreDeBonnesReponses }, () => true),
     ...Array.from({ length: 4 - nombreDeBonnesReponses }, () => false),
   ];
+  const premierIndexFaux = profils.indexOf(false);
+  const indexPiege = [3, 9].includes(diviseur)
+    && premierIndexFaux !== -1
+    && aleatoire.entier(1, 4) === 1
+    ? premierIndexFaux
+    : -1;
   const nombres = aleatoire.melange(
-    tirerNombresDistincts(aleatoire, diviseur, profils),
+    tirerNombresDistincts(aleatoire, diviseur, profils, indexPiege),
   );
   const choix = [
     ...nombres.map(({ nombre }) => ({

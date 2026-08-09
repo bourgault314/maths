@@ -59,6 +59,17 @@ describe("moule responsive commun", () => {
     assert.doesNotMatch(css, /@media \(max-width:\s*679px\)[^{]*\{[^}]*avec-pave/s);
   });
 
+  it("déclare un état visuel d'appui sans changer le geste de sélection", () => {
+    assert.match(
+      cssCommun,
+      /button\.choix:not\(:disabled\)\s*\{[^}]*touch-action:\s*manipulation;/s,
+    );
+    assert.match(
+      cssCommun,
+      /\.choix\.selectionne,\s*button\.choix:active:not\(:disabled\)\s*\{[^}]*border-color:\s*var\(--mg-bleu\)[^}]*color:\s*var\(--mg-bleu\)[^}]*background:[^}]*var\(--mg-turquoise\)[^}]*box-shadow:\s*inset 0 0 0 2px var\(--mg-bleu\)/s,
+    );
+  });
+
   it("compacte uniquement la carte NC-02 quand le pavé tactile est visible", () => {
     assert.match(css, /@media \(pointer: coarse\) and \(hover: none\)[\s\S]*?\.mode-entrainement\.avec-pave \.carte-question-carres/);
     assert.match(css, /max-height:\s*700px[\s\S]*?\.famille-carre-quadrille[\s\S]*?\.visuel-carre-quadrille/);

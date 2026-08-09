@@ -2,7 +2,7 @@
 
 ## Statut
 
-**Contenu validé par Gwenaël le 19 juillet 2026, puis simplifié avec lui le 6 août 2026.**
+**Contenu validé par Gwenaël le 19 juillet 2026, simplifié avec lui le 6 août puis enrichi de repères ciblés le 9 août 2026.**
 
 Ce document ne contient ni JSON, ni générateur, ni code d’interface. Il fixe les formulations, les réponses, les aides, les corrections et les états d’écran qui serviront ensuite de références reproductibles. La représentation du cours est arrêtée ci-dessous à partir de la validation et des indications visuelles de Gwenaël.
 
@@ -33,6 +33,10 @@ Le cours est court. Il ne crée ni niveau ni palier. Il sert de référence comm
 
 Ce schéma montre le tout, les trois parts égales et l’absence de reste dans un seul objet compact, lisible sur téléphone comme en projection.
 
+Le vocabulaire est relié explicitement sous les deux partages :
+
+> `3 divise 12` ⇔ `12 est divisible par 3` ⇔ `12 est un multiple de 3`.
+
 Toutes les pièces mathématiques du schéma sont rectangulaires : barre entière, parts et reste. Aucun coin arrondi ne modifie la lecture des longueurs.
 
 **Action facultative :** appuyer sur « Partager en 3 » pour faire apparaître successivement les trois séparations et les valeurs 4. Aucun glisser-déposer n’est demandé.
@@ -57,6 +61,10 @@ Le chiffre des unités est encadré dès l'affichage. Les trois règles et la
 conclusion complète sont directement lisibles ; aucun clic décoratif n'est
 demandé.
 
+La conséquence suivante est formulée sans créer une nouvelle page de cours :
+
+> Un nombre est divisible par 10 exactement quand il est divisible à la fois par 2 et par 5.
+
 ### Page 3 — Additionner tous les chiffres
 
 **Titre :** Pour 3 et 9, j’additionne tous les chiffres
@@ -66,6 +74,15 @@ demandé.
 - divisible par 3 : la somme de tous les chiffres est un multiple de 3 ;
 - divisible par 9 : la somme de tous les chiffres est un multiple de 9.
 
+Dans NC-01, les nombres ont au plus quatre chiffres : la somme de leurs chiffres
+ne dépasse donc pas 36. Deux repères restent visuellement séparés :
+
+- multiples de 3 possibles pour la somme : `3, 6, 9, 12, 15, 18, 21, 24, 27, 30, 33, 36` ;
+- multiples de 9 possibles pour la somme : `9, 18, 27, 36`.
+
+Ces listes sont bornées aux sommes possibles dans le module ; elles ne sont
+pas présentées comme des tables complètes à apprendre.
+
 **Premier exemple :**
 
 > Pour 372 : `3 + 7 + 2 = 12`. Comme 12 est un multiple de 3 mais pas de 9, 372 est divisible par 3 mais pas par 9.
@@ -73,6 +90,16 @@ demandé.
 **Deuxième exemple bref :**
 
 > Pour 729 : `7 + 2 + 9 = 18`. Comme 18 est un multiple de 3 et de 9, 729 est divisible par 3 et par 9.
+
+**Contre-exemples concrets :**
+
+> 43 se termine par 3, mais `4 + 3 = 7` : il n’est pas divisible par 3.
+
+> 49 se termine par 9, mais `4 + 9 = 13` : il n’est pas divisible par 9.
+
+Le cours conclut aussi : « Tout nombre divisible par 9 est aussi divisible par
+3. » Il ne demande pas de réadditionner une somme comme 18 jusqu’à obtenir un
+seul chiffre.
 
 **Représentation :** chaque chiffre sélectionné apparaît une fois, dans son ordre d’écriture, dans une zone somme.
 

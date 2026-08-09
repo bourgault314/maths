@@ -101,6 +101,9 @@ it("rend NC-01 depuis le registre et conserve son aide et sa correction", async 
   assert.match(application.innerHTML, /class="pied-panneau"/);
   assert.match(application.innerHTML, /reste de la division est nul/);
   assert.match(application.innerHTML, /12 = 3 × 4 \+ 0/);
+  assert.match(application.innerHTML, /3 divise 12/);
+  assert.match(application.innerHTML, /12 est divisible par 3/);
+  assert.match(application.innerHTML, /12 est un multiple de 3/);
   cliquer(gestionnaires, "cours-suivant");
   assert.match(application.innerHTML, /2 \/ 3/);
   assert.match(application.innerHTML, /Critères pour 2, 5 et 10/);
@@ -109,12 +112,19 @@ it("rend NC-01 depuis le registre et conserve son aide et sa correction", async 
   assert.match(application.innerHTML, /<span>2<\/span><span>3<\/span><b class="chiffre-unite-encadre">0<\/b>/);
   assert.match(application.innerHTML, /aria-label="235, chiffre des unités 5"/);
   assert.match(application.innerHTML, /aria-label="236, chiffre des unités 6"/);
+  assert.match(application.innerHTML, /divisible par 10 exactement quand il est divisible à la fois par 2 et par 5/);
   cliquer(gestionnaires, "cours-suivant");
   assert.match(application.innerHTML, /3 \/ 3/);
   assert.match(application.innerHTML, /Critères pour 3 et 9/);
   assert.match(application.innerHTML, /372/);
   assert.match(application.innerHTML, /729/);
-  assert.doesNotMatch(application.innerHTML, /implique|Une idée à la fois/);
+  assert.match(application.innerHTML, /somme de leurs chiffres ne dépasse pas 36/);
+  assert.match(application.innerHTML, /3, 6, 9, 12, 15, 18, 21, 24, 27, 30, 33, 36/);
+  assert.match(application.innerHTML, /9, 18, 27, 36/);
+  assert.match(application.innerHTML, /43[\s\S]*4 \+ 3 = 7[\s\S]*pas divisible par 3/);
+  assert.match(application.innerHTML, /49[\s\S]*4 \+ 9 = 13[\s\S]*pas divisible par 9/);
+  assert.match(application.innerHTML, /tout nombre divisible par 9 est aussi divisible par 3/);
+  assert.doesNotMatch(application.innerHTML, /Une idée à la fois/);
   assert.doesNotMatch(application.innerHTML, /Série en cours/);
   cliquer(gestionnaires, "fermer-cours");
   const premierChoix = application.innerHTML.match(/data-action="choix" data-id="([^"]+)"/)?.[1];
@@ -122,6 +132,12 @@ it("rend NC-01 depuis le registre et conserve son aide et sa correction", async 
   zoneQuestion.scrollTop = 120;
   cliquer(gestionnaires, "choix", premierChoix);
   assert.equal(zoneQuestion.scrollTop, 120);
+  assert.match(
+    application.innerHTML,
+    new RegExp(`class="choix selectionne" data-action="choix" data-id="${premierChoix}"[\\s\\S]*?aria-checked="true"[\\s\\S]*?aria-pressed="true"`),
+  );
+  assert.equal(focusRecus.at(-1), `[data-action="choix"][data-id="${premierChoix}"]`);
+  assert.deepEqual(optionsFocus.at(-1), { preventScroll: true });
   cliquer(gestionnaires, "valider");
   cliquer(gestionnaires, "correction");
   assert.match(application.innerHTML, /Correction expliquée/);

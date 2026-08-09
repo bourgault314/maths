@@ -2,7 +2,7 @@
 
 ## Statut
 
-**Contenu validé et fabrication technique autorisée par Gwenaël le 19 juillet 2026, puis simplifié avec lui le 6 août 2026.**
+**Contenu validé et fabrication technique autorisée par Gwenaël le 19 juillet 2026, simplifié avec lui le 6 août puis enrichi dans le lot de republication demandé le 9 août 2026.**
 
 Cette fiche fixe le contenu avant toute programmation. La validation pédagogique et l'autorisation d'ouvrir la fabrication technique sont deux décisions distinctes ; elles sont désormais toutes les deux acquises.
 
@@ -84,6 +84,11 @@ L’élève choisit plusieurs nombres dans une petite grille. Il ne les déplace
   un automatisme court, notamment lorsque l'élève doit additionner les chiffres ;
 - elle peut contenir aucune, une ou plusieurs bonnes réponses si la consigne le permet explicitement ;
 - les nombres sont choisis pour obliger à appliquer le critère, sans indice graphique artificiel ;
+- pour les critères par 3 et par 9, une grille éligible sur quatre environ
+  contient au plus un distracteur diagnostique qui se termine respectivement
+  par 3 ou par 9 sans être divisible par ce nombre ; sa valeur et sa position
+  restent générées par la graine, et les autres distracteurs de la grille
+  n'imitent pas la même terminaison ;
 - le glisser-déposer n’est jamais l’unique interaction.
 
 Cette sélection tactile constitue une forme de réponse propre à `NC-01`, à consigner avant son introduction dans le contrat technique.
@@ -167,6 +172,12 @@ Le mini-cours commun à `NC-01` comporte trois pages :
 2. les critères par 2, 5 et 10 à partir du chiffre des unités ;
 3. les critères par 3 et 9 à partir de la somme de tous les chiffres.
 
+Sans ajouter de quatrième page, il relie les trois formulations « divise »,
+« est divisible par » et « est un multiple de », puis explicite les liens
+`10 ⇔ 2 et 5` et `9 ⇒ 3`. La troisième page sépare les multiples de 3 et de 9
+possibles pour une somme bornée à 36. Les contre-exemples `43` et `49` montrent
+concrètement que le dernier chiffre ne permet pas de conclure pour 3 ou 9.
+
 Le cours peut montrer complètement la méthode. Les aides, elles, se contentent de guider. Le même langage visuel est repris dans le cours, l’aide et la correction : chiffre des unités encadré, chiffres sélectionnables et zone somme.
 
 La première carte utilise un schéma en barres piloté par des données : une barre entière de 12 puis la même longueur découpée en trois parts de 4, avec `12 = 3 × 4` et un reste nul. La famille des situations concrètes utilise, elle, un plateau de partage égal avec des sachets ou des parts. Même pour un cours fixe, aucun de ces visuels n’est dessiné manuellement ou stocké comme une image figée.
@@ -234,6 +245,8 @@ La correction n’utilise pas de division posée : elle renforce le critère tra
 - cas divisible par 3 mais pas par 9 ;
 - cas divisible par 9, donc aussi par 3 ;
 - cas divisible par 10, donc aussi par 2 et par 5 ;
+- distracteurs occasionnels finissant par 3 ou par 9 sans vérifier le critère,
+  sans valeur fixe ni répétition systématique ;
 - nombres assez courts pour que la somme des chiffres reste accessible mentalement ;
 - pour F5, cas à solution unique, solutions multiples ou recherche du plus petit chiffre, avec une consigne correspondante.
 
