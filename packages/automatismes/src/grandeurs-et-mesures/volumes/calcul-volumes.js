@@ -1,4 +1,4 @@
-// PG-22 à PG-24 — calcul mental de volumes.
+// GM-13 à GM-15 — calcul mental de volumes (anciens codes PG-22 à PG-24).
 // Contenu validé dans la fiche pédagogique du 19 juillet 2026.
 
 import { SCHEMA_GABARIT_QUESTION } from "../../../../contrats/src/gabarit.js";
@@ -6,7 +6,11 @@ import {
   COMPARAISON_CHOIX_EXACT,
   SCHEMA_QUESTION_INSTANCE_V2,
   TYPE_REPONSE_CHOIX_UNIQUE,
-} from "../../../../contrats/src/question-v2.js?v=22";
+} from "../../../../contrats/src/question-v2.js?v=23";
+import {
+  IDENTITES_AUTOMATISMES,
+  creerClassementAutomatisme,
+} from "../../identifiants.js?v=23";
 
 const VERSION = 1;
 const VUES = Object.freeze([
@@ -84,15 +88,9 @@ function choixNumeriques(aleatoire, resultat, distracteurs, format = (n) => `${n
   })));
 }
 
-function questionCommune({ notion, cible, consigne, solide, choix, resultat, aide, correction }) {
+function questionCommune({ identite, consigne, solide, choix, resultat, aide, correction }) {
   return {
-    classement: {
-      domaine: "grandeurs-et-mesures",
-      notion,
-      famille: "calcul-volume",
-      cible,
-      complements: [],
-    },
+    classement: creerClassementAutomatisme(identite, "calcul-volume"),
     enonce: [
       { id: "consigne", type: "texte", contenu: consigne },
       { id: "solide", type: "solide", ...solide },
@@ -126,8 +124,7 @@ export function genererQuestionVolumeCubePave({ aleatoire, parametres }) {
       resultat - arete,
     ]);
     return questionCommune({
-      notion: "volume-cube-pave",
-      cible: "dnb-2026-24",
+      identite: IDENTITES_AUTOMATISMES.VOLUME_CUBE_PAVE,
       consigne: "Quel est le volume de ce cube ?",
       solide: { forme: "cube", variante: "standard", vue, mesures: { arete, unite: "cm" } },
       choix,
@@ -154,8 +151,7 @@ export function genererQuestionVolumeCubePave({ aleatoire, parametres }) {
     longueur * largeur + hauteur,
   ]);
   return questionCommune({
-    notion: "volume-cube-pave",
-    cible: "dnb-2026-24",
+    identite: IDENTITES_AUTOMATISMES.VOLUME_CUBE_PAVE,
     consigne: "Quel est le volume de ce pavé droit ?",
     solide: {
       forme: "pave",
@@ -186,8 +182,7 @@ export function genererQuestionVolumePrisme({ aleatoire, parametres }) {
   const resultat = aireBase * hauteur;
   const choix = choixNumeriques(aleatoire, resultat, [aireBase + hauteur, aireBase * 2, resultat + aireBase]);
   return questionCommune({
-    notion: "volume-prisme",
-    cible: "dnb-2026-24",
+    identite: IDENTITES_AUTOMATISMES.VOLUME_PRISME_DROIT,
     consigne: "Quel est le volume de ce prisme droit ?",
     solide: {
       forme: "prisme",
@@ -228,8 +223,7 @@ export function genererQuestionVolumeCylindre({ aleatoire, parametres }) {
     ? "Quel est le volume exact de ce cylindre ?"
     : "Avec π ≈ 3, quel volume obtient-on environ pour ce cylindre ?";
   return questionCommune({
-    notion: "volume-cylindre",
-    cible: "dnb-2026-24",
+    identite: IDENTITES_AUTOMATISMES.VOLUME_CYLINDRE,
     consigne,
     solide: {
       forme: "cylindre",

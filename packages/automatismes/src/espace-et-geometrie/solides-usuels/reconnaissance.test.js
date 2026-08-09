@@ -15,6 +15,14 @@ describe("GE-12/F1 — reconnaissance des solides usuels", () => {
     const b = instancier("ge12-contrat");
     assert.deepEqual(a, b);
     assert.deepEqual(validerQuestionInstanceV2(a), { valide: true, erreurs: [] });
+    assert.deepEqual(a.classement, {
+      domaine: "espace-et-geometrie",
+      notion: "solides-usuels",
+      microNotion: "reconnaitre-solides-usuels",
+      famille: "reconnaissance",
+      cible: "dnb-2026-21",
+      complements: [],
+    });
     assert.equal(a.reponse.choix.length, 4);
     assert.equal(a.reponse.attendus.length, 1);
     assert.equal(new Set(a.reponse.choix.map(({ id }) => id)).size, 4);

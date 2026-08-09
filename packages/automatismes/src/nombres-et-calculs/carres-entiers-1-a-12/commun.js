@@ -11,10 +11,16 @@ import {
 import {
   COMPARAISON_VALEUR_EXACTE,
   TYPE_REPONSE_ENTIER_NATUREL,
-} from "../../../../contrats/src/question-v2.js?v=22";
+} from "../../../../contrats/src/question-v2.js?v=23";
+import {
+  IDENTITES_AUTOMATISMES,
+  creerClassementAutomatisme,
+} from "../../identifiants.js?v=23";
 
-export const NOTION_CARRES_ENTIERS = "carres-entiers-1-a-12";
-export const CIBLE_CARRES_ENTIERS = "dnb-2026-08";
+export const NOTION_CARRES_ENTIERS =
+  IDENTITES_AUTOMATISMES.CARRES_ENTIERS.module;
+export const CIBLE_CARRES_ENTIERS =
+  IDENTITES_AUTOMATISMES.CARRES_ENTIERS.cible;
 export const BASES_CARRES_ENTIERS = Object.freeze(
   Array.from({ length: 13 }, (_, index) => index),
 );
@@ -92,13 +98,11 @@ export function blocPuissance(id, base) {
 }
 
 export function classementCarres(famille, complements = []) {
-  return {
-    domaine: "nombres-et-calculs",
-    notion: NOTION_CARRES_ENTIERS,
+  return creerClassementAutomatisme(
+    IDENTITES_AUTOMATISMES.CARRES_ENTIERS,
     famille,
-    cible: CIBLE_CARRES_ENTIERS,
-    complements: [...complements],
-  };
+    complements,
+  );
 }
 
 export function reponseEntier(attendu, minimum = 0, maximum = 200) {

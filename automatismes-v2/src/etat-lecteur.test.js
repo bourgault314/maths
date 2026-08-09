@@ -158,6 +158,7 @@ describe("configuration du lecteur", () => {
     );
     const etat = etatDemarre(configuration);
     assert.equal(etat.configuration.nombreQuestions, 10);
+    assert.deepEqual(etat.configuration.notions, [NOTION_NC02]);
     assert.equal(etat.questions.length, 10);
     assert.equal(etat.seance.etat.phase, "en-cours");
   });
@@ -386,6 +387,29 @@ describe("réponse interactive", () => {
       valide: true,
       erreurs: [],
     });
+    assert.deepEqual(etat.traces[0].classement, {
+      referentiel: "mathsgo.taxonomie-competences/1",
+      domaine: question.classement.domaine,
+      module: question.classement.notion,
+      microNotion: question.classement.microNotion,
+      famille: question.classement.famille,
+      cibles: [question.classement.cible],
+      complements: question.classement.complements,
+    });
+    assert.deepEqual(etat.traces[0].contenu, {
+      gabarit: {
+        id: question.origine.gabarit,
+        version: question.origine.versionGabarit,
+      },
+      generateur: {
+        id: question.origine.generateur,
+        version: question.origine.versionGenerateur,
+      },
+      aleatoire: {
+        graine: question.origine.graine,
+        version: question.origine.versionAleatoire,
+      },
+    });
     assert.equal(nombreReussites(etat), 1);
   });
 
@@ -517,7 +541,10 @@ describe("réponse décimale positive", () => {
       valide: true,
       erreurs: [],
     });
-    assert.equal(etat.traces[0].microNotion, "fraction-vers-decimal");
+    assert.equal(
+      etat.traces[0].classement.microNotion,
+      "fraction-vers-decimal",
+    );
 
     saisirCaractere(etat, 9);
     effacerSaisie(etat);

@@ -9,7 +9,9 @@ import {
   TYPE_REPONSE_SELECTION_MULTIPLE,
 } from "./question-v2.js";
 import {
+  REFERENTIEL_COMPETENCES,
   SCHEMA_TRACE_REPONSE,
+  SCHEMA_TRACE_REPONSE_V1,
   validerTraceReponse,
 } from "./trace-reponse.js";
 
@@ -18,6 +20,26 @@ const traceValide = () => ({
   id: "trace.fixture@1",
   seance: "seance.fixture@1",
   question: "criteres-divisibilite.selection@a",
+  classement: {
+    referentiel: REFERENTIEL_COMPETENCES,
+    domaine: "nombres-et-calculs",
+    module: "criteres-divisibilite",
+    microNotion: "criteres-divisibilite",
+    famille: "selection-diviseurs",
+    cibles: ["dnb-2026-09"],
+    complements: ["critere-divisibilite-10"],
+  },
+  contenu: {
+    gabarit: {
+      id: "nombres-et-calculs.criteres-divisibilite.selection-diviseurs",
+      version: 1,
+    },
+    generateur: {
+      id: "nombres-et-calculs.criteres-divisibilite.selection-diviseurs",
+      version: 2,
+    },
+    aleatoire: { graine: "fixture", version: 1 },
+  },
   indexQuestion: 0,
   validation: 1,
   reponse: {
@@ -29,6 +51,18 @@ const traceValide = () => ({
 });
 
 describe("validerTraceReponse", () => {
+  it("continue de lire une trace version 1 sans la réécrire", () => {
+    const trace = traceValide();
+    trace.schema = SCHEMA_TRACE_REPONSE_V1;
+    trace.microNotion = "nc-03";
+    delete trace.classement;
+    delete trace.contenu;
+    assert.deepEqual(validerTraceReponse(trace), {
+      valide: true,
+      erreurs: [],
+    });
+  });
+
   it("accepte la première validation d'une sélection multiple", () => {
     assert.deepEqual(validerTraceReponse(traceValide()), {
       valide: true,
@@ -60,7 +94,7 @@ describe("validerTraceReponse", () => {
 
   it("accepte la saisie décimale brute avec sa valeur rationnelle normalisée", () => {
     const trace = traceValide();
-    trace.microNotion = "nc-03";
+    trace.classement.microNotion = "fraction-vers-decimal";
     trace.reponse = {
       type: TYPE_REPONSE_NOMBRE_DECIMAL,
       saisie: " 0,500 ",
@@ -71,7 +105,7 @@ describe("validerTraceReponse", () => {
 
   it("refuse une valeur rationnelle qui contredit la saisie décimale", () => {
     const trace = traceValide();
-    trace.microNotion = "nc-03";
+    trace.classement.microNotion = "fraction-vers-decimal";
     trace.reponse = {
       type: TYPE_REPONSE_NOMBRE_DECIMAL,
       saisie: "0,5",
@@ -85,7 +119,7 @@ describe("validerTraceReponse", () => {
 
   it("accepte une fraction libre non réduite et refuse un dénominateur nul", () => {
     const trace = traceValide();
-    trace.microNotion = "nc-04";
+    trace.classement.microNotion = "decimal-vers-fraction";
     trace.reponse = {
       type: TYPE_REPONSE_FRACTION_EQUIVALENTE,
       valeurs: [30, 20],
@@ -175,6 +209,22 @@ describe("validerTraceReponse", () => {
         `${cle} accepté à tort`,
       );
     }
+  });
+
+  it("exige le classement canonique et les versions du contenu en version 2", () => {
+    const sansClassement = traceValide();
+    delete sansClassement.classement;
+    assert.match(
+      validerTraceReponse(sansClassement).erreurs.join("\n"),
+      /classement : objet attendu/,
+    );
+
+    const sansVersion = traceValide();
+    delete sansVersion.contenu.generateur.version;
+    assert.match(
+      validerTraceReponse(sansVersion).erreurs.join("\n"),
+      /generateur.version/,
+    );
   });
 
   it("refuse code, mauvais identifiants et indicateurs non booléens", () => {

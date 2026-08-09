@@ -1,6 +1,6 @@
 # Carte des automatismes DNB 2026 - maths&go V2
 
-**Statut : carte de couverture arrêtée le 19 juillet 2026 ; granularité produit clarifiée le 6 août, extension NC-02 consignée le 7 août et notion validée le 8 août 2026.**
+**Statut : carte de couverture arrêtée le 19 juillet 2026 ; granularité produit clarifiée le 6 août, puis nomenclature consolidée par D-043 le 9 août 2026.**
 **Périmètre : partie Automatismes du DNB, sans code de question.**
 
 ## 1. Sources et règles de lecture
@@ -12,6 +12,8 @@ Sources secondaires du dépôt :
 - `docs/automatismes-v2/pilotage.md` ;
 - `docs/automatismes-v2/etat.md` ;
 - `docs/automatismes-v2/decisions.md` ;
+- `docs/automatismes-v2/taxonomie-competences.json` pour les identifiants
+  canoniques, alias, rangs et statuts ;
 - `docs/reference-matrice-automatismes/matrice.json` pour les correspondances avec les nouveaux programmes ;
 - `packages/objets/src/references-programme.js` pour les objets maths&go candidats.
 
@@ -21,9 +23,14 @@ prendre une fraction d'une quantité et calculer un pourcentage repère. Elle es
 scindée pour la fabrication. La carte maths&go comporte ainsi **38 cibles
 normalisées**.
 
-Les repères `O`, `G`, `D`, `P`, `I`, `DNB26`, `NC`, `AL`, `PG`, `DS`, `GE` et
-`PI` sont des repères documentaires. Ils ne préjugent pas des futurs
-identifiants de source V2.
+Les repères `O`, `G`, `D`, `P` et `I` localisent les puces de la liste source ;
+ils ne sont pas des numéros publiés par Éduscol. `DNB26` repère les 38 cibles
+normalisées par maths&go ; `DNB26-01` est représenté par la référence machine
+`dnb-2026-01`, et ainsi de suite. Une cible reste une référence externe, pas
+l'identifiant d'une compétence. Les codes `NC`, `AL`, `PF`, `GM`, `GE`, `DS` et
+`PI` sont des alias humains de pilotage. Les identifiants canoniques V2 sont
+descriptifs et indépendants de ces codes, des rangs ci-dessous et de l'ordre du
+menu. Les anciens codes `PG` restent lisibles comme alias historiques.
 
 ## 2. Liste officielle complète
 
@@ -91,19 +98,20 @@ identifiants de source V2.
 
 ## 3. Taxonomie maths&go
 
-| Domaine maths&go | Cibles normalisées | Micro-notions prévues |
-|---|---:|---:|
-| 1. Nombres et calculs | 8 | 17 |
-| 2. Calcul littéral et algèbre | 5 | 12 |
-| 3. Proportionnalité, fonctions et grandeurs | 9 | 24 |
-| 4. Espace et géométrie | 10 | 24 |
-| 5. Données, stats et probabilités | 5 | 8 |
-| 6. Pensée informatique | 1 | 3 |
-| 7. Jeux, recherches et explorations | 0 | 0 |
-| **Total** | **38** | **88** |
+| Domaine disciplinaire V2 | Alias | Cibles normalisées | Micro-notions prévues |
+|---|---|---:|---:|
+| Nombres et calculs | `NC` | 8 | 17 |
+| Calcul littéral et algèbre | `AL` | 5 | 12 |
+| Proportionnalité et fonctions | `PF` | 5 | 9 |
+| Grandeurs et mesures | `GM` | 4 | 15 |
+| Espace et géométrie | `GE` | 10 | 24 |
+| Données, statistiques et probabilités | `DS` | 5 | 8 |
+| Pensée informatique | `PI` | 1 | 3 |
+| **Total** |  | **38** | **88** |
 
-Le domaine 7 reste disponible comme modalité pédagogique, mais il ne constitue
-pas une cible officielle autonome du DNB.
+« Jeux, recherches et explorations » reste disponible comme modalité
+pédagogique applicable à n'importe quel domaine. Il ne constitue ni un domaine
+de classement des résultats, ni une cible officielle autonome du DNB.
 
 ## 4. Matrice de couverture
 
@@ -113,11 +121,12 @@ le cosinus, les fonctions et la pensée informatique sont bien dans la liste
 DNB, même lorsqu'ils ne figurent pas sous un intertitre « Automatismes » du
 nouveau programme.
 
-La carte sépare désormais quatre niveaux : cible officielle, catégorie visible,
-micro-notion interne et famille de questions. Les 88 micro-notions sont des
-unités de fabrication et de suivi ; elles ne préfigurent pas 88 questionnaires
-dans le menu. Une catégorie visible peut regrouper plusieurs micro-notions
-proches. `NC-01` et `NC-02` sont validées. Les choix pédagogiques révisés de
+La carte sépare désormais la puce source, la cible DNB normalisée, le module
+visible, la micro-notion interne et la famille de questions. Les 88
+micro-notions sont des compétences atomiques de suivi ; elles ne préfigurent ni
+88 chantiers séparés, ni 88 questionnaires dans le menu. Un module visible peut
+regrouper plusieurs micro-notions proches. `NC-01` et `NC-02` sont validées. Les
+choix pédagogiques révisés de
 `NC-02` ont été approuvés le 7 août, puis sa recette technique et ses finitions
 ont été validées le 8 août. Sa cible DNB conserve la borne officielle 1 à 12,
 tandis que le produit visible l'étend de 0 à 12 conformément au nouveau
@@ -125,61 +134,67 @@ programme du cycle 4. Les autres états de la matrice restent inchangés dans ce
 lot, à l'exception de `NC-03` et `NC-04` désormais réunies dans un même module
 `construit` et ouvert en pilote public non référencé.
 
-| Repère | Cible normalisée | Domaine | Micro-notions | Nouveaux BO correspondants | V2 |
-|---|---|---:|---|---|---|
-| DNB26-01 | Fraction simple vers décimal et retour | 1 | NC-03 à NC-04 | 6-02, 6-08, 5-10 | `construit` |
-| DNB26-02 | Comparer et calculer avec des décimaux | 1 | NC-07 à NC-11 | 5-04, 5-06, 5-07, 4-01 | `a_faire` |
-| DNB26-03 | Simplifier, comparer et calculer des fractions | 1 | NC-12 à NC-16 | 6-09, 5-13, 5-14, 5-16, 4-07, 4-08, 3-01, 3-07, 3-08 | `a_faire` |
-| DNB26-04 | Prendre une fraction d'une quantité | 1 | NC-06 | 6-10, 5-17, 4-10 | `a_faire` |
-| DNB26-05 | Calculer 100 %, 50 %, 25 %, 10 % ou 1 % | 3 | PG-01 | 5-18, 4-39, 4-40, 3-35 | `a_faire` |
-| DNB26-06 | Écrire un nombre sous plusieurs formes | 1 | NC-05 | 5-19 | `a_faire` |
-| DNB26-07 | Passer à la notation scientifique | 1 | NC-17 | 3-02 partiel ; pas d'équivalent direct | `a_faire` |
-| DNB26-08 | Connaître les carrés de 1 à 12 | 1 | NC-02 | 4-11, 4-15, 3-05 | `valide` |
-| DNB26-09 | Appliquer les critères de divisibilité | 1 | NC-01 | 5-01, 3-09 | `valide` |
-| DNB26-10 | Exprimer des relations simples avec `n` | 2 | AL-01 à AL-03 | 4-20, 3-15 partiel | `a_faire` |
-| DNB26-11 | Simplifier une expression littérale | 2 | AL-04 à AL-05 | 4-18, 4-19, 3-11, 3-16 | `a_faire` |
-| DNB26-12 | Calculer la valeur d'une expression | 2 | AL-06, AL-12 | 4-16, 4-21, 3-12 | `a_faire` |
-| DNB26-13 | Développer et factoriser | 2 | AL-07 à AL-08 | 3-14 | `a_faire` |
-| DNB26-14 | Résoudre trois formes d'équations | 2 | AL-09 à AL-11 | 4-17, 3-10 | `a_faire` |
-| DNB26-15 | Lire et placer sur une droite graduée | 4 | GE-01 à GE-02 | 5-12, 5-25, 5-26, 4-23, 4-24, 3-17, 3-18 | `a_faire` |
-| DNB26-16 | Lire et placer dans un repère | 4 | GE-03 à GE-04 | 4-25, 4-26, 3-19, 3-20 | `a_faire` |
-| DNB26-17 | Identifier des figures par codage | 4 | GE-05 à GE-07 | 6-26, 6-27, 6-29, 5-37, 5-39 à 5-41, 4-33 à 4-35 | `a_faire` |
-| DNB26-18 | Reconnaître, nommer et mesurer des angles | 4 | GE-08 à GE-10 | 5-33 à 5-36 | `a_faire` |
-| DNB26-19 | Utiliser la somme des angles d'un triangle | 4 | GE-11 | 5-38 | `a_faire` |
-| DNB26-20 | Convertir des unités | 3 | PG-10 à PG-16 | 6-11 à 6-13, 6-17, 6-19, 6-20, 6-23, 6-25, 5-20 | `a_faire` |
-| DNB26-21 | Reconnaître des solides usuels | 4 | GE-12 | 6-30, 5-27 à 5-30, 4-27, 4-29, 3-21, 3-23, 3-24 | `a_faire` |
-| DNB26-22 | Calculer des périmètres | 3 | PG-17 à PG-18 | 6-15 | `a_faire` |
-| DNB26-23 | Calculer des aires | 3 | PG-19 à PG-21 | 6-16 à 6-20, 4-30 | `a_faire` |
-| DNB26-24 | Calculer des volumes | 3 | PG-22 à PG-24 | 4-28 | `a_faire` |
-| DNB26-25 | Mobiliser Pythagore | 4 | GE-16 à GE-18 | 3-26 partiel | `a_faire` |
-| DNB26-26 | Mobiliser Thalès | 4 | GE-19 à GE-21 | aucune ligne BO-Auto directe | `a_faire` |
-| DNB26-27 | Mobiliser le cosinus | 4 | GE-22 à GE-24 | aucune ligne BO-Auto directe | `a_faire` |
-| DNB26-28 | Mobiliser les transformations | 4 | GE-13 à GE-15 | 5-31, 5-32, 4-22, 4-31, 4-32, 3-28 | `a_faire` |
-| DNB26-29 | Attribuer une probabilité simple | 5 | DS-08 | 5-42 à 5-44 | `a_faire` |
-| DNB26-30 | Exprimer une fréquence | 5 | DS-07 | 4-38 | `a_faire` |
-| DNB26-31 | Calculer une moyenne | 5 | DS-05 | 4-36, 3-29 | `a_faire` |
-| DNB26-32 | Déterminer une médiane | 5 | DS-06 | 3-30 | `a_faire` |
-| DNB26-33 | Lire tableaux, diagrammes et graphiques | 5 | DS-01 à DS-04 | 6-31 | `a_faire` |
-| DNB26-34 | Reconnaître la proportionnalité | 3 | PG-02 | 5-45 | `a_faire` |
-| DNB26-35 | Choisir une procédure de proportionnalité | 3 | PG-03 à PG-05 | 5-46 | `a_faire` |
-| DNB26-36 | Appliquer une évolution en pourcentage | 3 | PG-06 à PG-07 | 3-37 | `a_faire` |
-| DNB26-37 | Lire un graphique de dépendance | 3 | PG-08 à PG-09 | aucune ligne BO-Auto directe | `a_faire` |
-| DNB26-38 | Interpréter une suite d'instructions | 6 | PI-01 à PI-03 | aucune ligne BO-Auto directe | `a_faire` |
+| Cible normalisée | Puce source | Cible résumée | Domaine canonique | Alias micro-notions | Nouveaux BO correspondants | V2 |
+|---|---|---|---|---|---|---|
+| DNB26-01 | O-01 | Fraction simple vers décimal et retour | `nombres-et-calculs` | NC-03 à NC-04 | 6-02, 6-08, 5-10 | `construit` |
+| DNB26-02 | O-02 | Comparer et calculer avec des décimaux | `nombres-et-calculs` | NC-07 à NC-11 | 5-04, 5-06, 5-07, 4-01 | `a_faire` |
+| DNB26-03 | O-03 | Simplifier, comparer et calculer des fractions | `nombres-et-calculs` | NC-12 à NC-16 | 6-09, 5-13, 5-14, 5-16, 4-07, 4-08, 3-01, 3-07, 3-08 | `a_faire` |
+| DNB26-04 | O-04 | Prendre une fraction d'une quantité | `nombres-et-calculs` | NC-06 | 6-10, 5-17, 4-10 | `a_faire` |
+| DNB26-05 | O-04 | Calculer 100 %, 50 %, 25 %, 10 % ou 1 % | `proportionnalite-et-fonctions` | PF-01 | 5-18, 4-39, 4-40, 3-35 | `a_faire` |
+| DNB26-06 | O-05 | Écrire un nombre sous plusieurs formes | `nombres-et-calculs` | NC-05 | 5-19 | `a_faire` |
+| DNB26-07 | O-06 | Passer à la notation scientifique | `nombres-et-calculs` | NC-17 | 3-02 partiel ; pas d'équivalent direct | `a_faire` |
+| DNB26-08 | O-07 | Connaître les carrés de 1 à 12 | `nombres-et-calculs` | NC-02 | 4-11, 4-15, 3-05 | `valide` |
+| DNB26-09 | O-08 | Appliquer les critères de divisibilité | `nombres-et-calculs` | NC-01 | 5-01, 3-09 | `valide` |
+| DNB26-10 | O-09 | Exprimer des relations simples avec `n` | `calcul-litteral-et-algebre` | AL-01 à AL-03 | 4-20, 3-15 partiel | `a_faire` |
+| DNB26-11 | O-10 | Simplifier une expression littérale | `calcul-litteral-et-algebre` | AL-04 à AL-05 | 4-18, 4-19, 3-11, 3-16 | `a_faire` |
+| DNB26-12 | O-11 | Calculer la valeur d'une expression | `calcul-litteral-et-algebre` | AL-06, AL-12 | 4-16, 4-21, 3-12 | `a_faire` |
+| DNB26-13 | O-12 | Développer et factoriser | `calcul-litteral-et-algebre` | AL-07 à AL-08 | 3-14 | `a_faire` |
+| DNB26-14 | O-13 | Résoudre trois formes d'équations | `calcul-litteral-et-algebre` | AL-09 à AL-11 | 4-17, 3-10 | `a_faire` |
+| DNB26-15 | O-14 | Lire et placer sur une droite graduée | `espace-et-geometrie` | GE-01 à GE-02 | 5-12, 5-25, 5-26, 4-23, 4-24, 3-17, 3-18 | `a_faire` |
+| DNB26-16 | G-01 | Lire et placer dans un repère | `espace-et-geometrie` | GE-03 à GE-04 | 4-25, 4-26, 3-19, 3-20 | `a_faire` |
+| DNB26-17 | G-02 | Identifier des figures par codage | `espace-et-geometrie` | GE-05 à GE-07 | 6-26, 6-27, 6-29, 5-37, 5-39 à 5-41, 4-33 à 4-35 | `a_faire` |
+| DNB26-18 | G-03 | Reconnaître, nommer et mesurer des angles | `espace-et-geometrie` | GE-08 à GE-10 | 5-33 à 5-36 | `a_faire` |
+| DNB26-19 | G-04 | Utiliser la somme des angles d'un triangle | `espace-et-geometrie` | GE-11 | 5-38 | `a_faire` |
+| DNB26-20 | G-05 | Convertir des unités | `grandeurs-et-mesures` | GM-01 à GM-07 | 6-11 à 6-13, 6-17, 6-19, 6-20, 6-23, 6-25, 5-20 | `a_faire` |
+| DNB26-21 | G-06 | Reconnaître des solides usuels | `espace-et-geometrie` | GE-12 | 6-30, 5-27 à 5-30, 4-27, 4-29, 3-21, 3-23, 3-24 | `valide` |
+| DNB26-22 | G-07 | Calculer des périmètres | `grandeurs-et-mesures` | GM-08 à GM-09 | 6-15 | `a_faire` |
+| DNB26-23 | G-08 | Calculer des aires | `grandeurs-et-mesures` | GM-10 à GM-12 | 6-16 à 6-20, 4-30 | `a_faire` |
+| DNB26-24 | G-09 | Calculer des volumes | `grandeurs-et-mesures` | GM-13 à GM-15 | 4-28 | `valide` |
+| DNB26-25 | G-10 | Mobiliser Pythagore | `espace-et-geometrie` | GE-16 à GE-18 | 3-26 partiel | `a_faire` |
+| DNB26-26 | G-11 | Mobiliser Thalès | `espace-et-geometrie` | GE-19 à GE-21 | aucune ligne BO-Auto directe | `a_faire` |
+| DNB26-27 | G-12 | Mobiliser le cosinus | `espace-et-geometrie` | GE-22 à GE-24 | aucune ligne BO-Auto directe | `a_faire` |
+| DNB26-28 | G-13 | Mobiliser les transformations | `espace-et-geometrie` | GE-13 à GE-15 | 5-31, 5-32, 4-22, 4-31, 4-32, 3-28 | `a_faire` |
+| DNB26-29 | D-01 | Attribuer une probabilité simple | `donnees-statistiques-et-probabilites` | DS-08 | 5-42 à 5-44 | `a_faire` |
+| DNB26-30 | D-02 | Exprimer une fréquence | `donnees-statistiques-et-probabilites` | DS-07 | 4-38 | `a_faire` |
+| DNB26-31 | D-03 | Calculer une moyenne | `donnees-statistiques-et-probabilites` | DS-05 | 4-36, 3-29 | `a_faire` |
+| DNB26-32 | D-04 | Déterminer une médiane | `donnees-statistiques-et-probabilites` | DS-06 | 3-30 | `a_faire` |
+| DNB26-33 | D-05 | Lire tableaux, diagrammes et graphiques | `donnees-statistiques-et-probabilites` | DS-01 à DS-04 | 6-31 | `a_faire` |
+| DNB26-34 | P-01 | Reconnaître la proportionnalité | `proportionnalite-et-fonctions` | PF-02 | 5-45 | `a_faire` |
+| DNB26-35 | P-02 | Choisir une procédure de proportionnalité | `proportionnalite-et-fonctions` | PF-03 à PF-05 | 5-46 | `a_faire` |
+| DNB26-36 | P-03 | Appliquer une évolution en pourcentage | `proportionnalite-et-fonctions` | PF-06 à PF-07 | 3-37 | `a_faire` |
+| DNB26-37 | P-04 | Lire un graphique de dépendance | `proportionnalite-et-fonctions` | PF-08 à PF-09 | aucune ligne BO-Auto directe | `a_faire` |
+| DNB26-38 | I-01 | Interpréter une suite d'instructions | `pensee-informatique` | PI-01 à PI-03 | aucune ligne BO-Auto directe | `a_faire` |
 
 ## 5. Ordre de fabrication des 88 micro-notions
 
 L'ordre suit quatre critères : dépendances mathématiques, simplicité d'une
 première tranche verticale, réutilisation raisonnée des objets maths&go et
-report des contrats visuels ou interactifs les plus risqués. Une seule
-micro-notion sera active à la fois.
+report des contrats visuels ou interactifs les plus risqués. Il s'agit d'un
+ordre de pilotage modifiable, jamais d'une propriété des identifiants. Un seul
+module visible est actif à la fois ; ce module peut couvrir plusieurs
+micro-notions proches.
+
+Dans cette liste, les codes courts sont des alias humains. Les identifiants
+descriptifs sont fixés dans la fiche et dans
+`taxonomie-competences.json`, source canonique de la taxonomie.
 
 ### Lot 1 - Nombres et calculs (rangs 1 à 17)
 
-1. `NC-01` - critères de divisibilité par 2, 3, 5 et 9, avec 10 comme complément maths&go ;
-2. `NC-02` - carrés des entiers de 0 à 12, avec 0 comme complément à la cible DNB ;
-3. `NC-03` - fraction simple vers écriture décimale ;
-4. `NC-04` - écriture décimale vers fraction simple ;
-5. `NC-05` - écritures multiples d'un même nombre ;
+1. `NC-01` - `criteres-divisibilite`, avec 10 comme complément maths&go ;
+2. `NC-02` - `carres-entiers-0-a-12`, avec 0 comme complément à la cible DNB ;
+3. `NC-03` - `fraction-vers-decimal`, dans le module `fractions-simples-decimaux` ;
+4. `NC-04` - `decimal-vers-fraction`, dans le même module visible ;
+5. `NC-05` - `ecritures-multiples-nombre` ;
 6. `NC-06` - fraction simple d'une quantité ;
 7. `NC-07` - comparaison de décimaux positifs ;
 8. `NC-08` - comparaison de décimaux relatifs ;
@@ -208,32 +223,38 @@ micro-notion sera active à la fois.
 28. `AL-11` - équation `ax + b = c` ;
 29. `AL-12` - valeur d'une expression avec puissances.
 
-### Lot 3 - Proportionnalité, fonctions et grandeurs (rangs 30 à 53)
+### Lot 3a - Proportionnalité et fonctions (rangs 30 à 38)
 
-30. `PG-01` - pourcentages repères 100 %, 50 %, 25 %, 10 % et 1 % ;
-31. `PG-02` - reconnaître une situation de proportionnalité ;
-32. `PG-03` - linéarité multiplicative ;
-33. `PG-04` - linéarité additive ;
-34. `PG-05` - retour à l'unité ;
-35. `PG-06` - augmentation en pourcentage ;
-36. `PG-07` - diminution en pourcentage ;
-37. `PG-08` - lire l'image d'une abscisse sur un graphique ;
-38. `PG-09` - retrouver une abscisse depuis une ordonnée ;
-39. `PG-10` - conversions de longueurs ;
-40. `PG-11` - conversions de masses ;
-41. `PG-12` - conversions de capacités ;
-42. `PG-13` - conversions de durées ;
-43. `PG-14` - conversions d'aires ;
-44. `PG-15` - conversions de volumes ;
-45. `PG-16` - correspondances entre capacité et volume ;
-46. `PG-17` - périmètre d'un polygone ;
-47. `PG-18` - périmètre d'un disque ;
-48. `PG-19` - aire d'un rectangle ;
-49. `PG-20` - aire d'un triangle ;
-50. `PG-21` - aire d'un disque ;
-51. `PG-22` - volume d'un cube ou d'un pavé ;
-52. `PG-23` - volume d'un prisme droit ;
-53. `PG-24` - volume d'un cylindre.
+30. `PF-01` - pourcentages repères 100 %, 50 %, 25 %, 10 % et 1 % ;
+31. `PF-02` - reconnaître une situation de proportionnalité ;
+32. `PF-03` - linéarité multiplicative ;
+33. `PF-04` - linéarité additive ;
+34. `PF-05` - retour à l'unité ;
+35. `PF-06` - augmentation en pourcentage ;
+36. `PF-07` - diminution en pourcentage ;
+37. `PF-08` - lire l'image d'une abscisse sur un graphique ;
+38. `PF-09` - retrouver une abscisse depuis une ordonnée.
+
+### Lot 3b - Grandeurs et mesures (rangs 39 à 53)
+
+39. `GM-01` - conversions de longueurs ;
+40. `GM-02` - conversions de masses ;
+41. `GM-03` - conversions de capacités ;
+42. `GM-04` - conversions de durées ;
+43. `GM-05` - conversions d'aires ;
+44. `GM-06` - conversions de volumes ;
+45. `GM-07` - correspondances entre capacité et volume ;
+46. `GM-08` - périmètre d'un polygone ;
+47. `GM-09` - périmètre d'un disque ;
+48. `GM-10` - aire d'un rectangle ;
+49. `GM-11` - aire d'un triangle ;
+50. `GM-12` - aire d'un disque ;
+51. `GM-13` - `volume-cube-pave` ;
+52. `GM-14` - `volume-prisme-droit`, dans le module `volume-prisme` ;
+53. `GM-15` - `volume-cylindre`.
+
+Les anciens alias `PG-01` à `PG-24` restent acceptés dans les documents et
+données historiques selon la correspondance définie par D-043.
 
 ### Lot 4 - Données, statistiques et probabilités (rangs 54 à 61)
 
@@ -304,9 +325,10 @@ valeurs, ni générateurs à V2.
 
 ## 7. Trois premières étapes achevées ou en pilote
 
-La première micro-notion est `NC-01`, « critères de divisibilité par 2, 3, 5,
-9 et 10 ». Le critère par 10 est un complément maths&go assumé, y compris dans
-le parcours DNB ; il ne modifie pas la liste officielle.
+La première micro-notion canonique est `criteres-divisibilite`, alias humain
+`NC-01`, « critères de divisibilité par 2, 3, 5, 9 et 10 ». Le critère par 10
+est un complément maths&go assumé, y compris dans le parcours DNB ; il ne
+modifie pas la liste officielle.
 
 La fiche pédagogique, le mini-cours et les cinq familles actives ont été
 validés puis finalisés avec Gwenaël. `F4` et la sous-forme de partage « groupes
@@ -314,11 +336,14 @@ possibles » ont été retirées. Le lecteur commun, les générateurs seedés, 
 tests, l'entraînement et le contexte « Au tableau » sont construits.
 
 `NC-02`, les carrés des entiers de 0 à 12 dans le produit visible, est validée
-et publiée. Sa cible officielle demeure « de 1 à 12 » et son identifiant
-technique `carres-entiers-1-a-12` reste stable. Ses six familles partagent une
-seule entrée de menu ; le fait 0 au carré ne produit aucun carré quadrillé
-`0 × 0`. `NC-03` et `NC-04` restent distinctes en interne mais forment une
-seule catégorie visible « Fractions simples et décimaux ». Le module travaille
-les deux sens, conserve les représentations riches validées et est publié sur
-la route pilote non référencée pour recueillir les retours de Gwenaël et de
-Claire avant validation pédagogique finale.
+et publiée. Sa cible officielle demeure « de 1 à 12 ». Son identifiant
+canonique est `carres-entiers-0-a-12` ; `carres-entiers-1-a-12` reste un alias
+historique technique et d'URL. Ses six familles partagent une seule entrée de
+menu ; le fait 0 au carré ne produit aucun carré quadrillé `0 × 0`.
+
+Le module canonique `fractions-simples-decimaux` contient les micro-notions
+`fraction-vers-decimal` et `decimal-vers-fraction`, dont `NC-03` et `NC-04` sont
+les alias humains. Le module travaille les deux sens, conserve les
+représentations riches validées et est publié sur la route pilote non référencée
+pour recueillir les retours de Gwenaël et de Claire avant validation
+pédagogique finale.

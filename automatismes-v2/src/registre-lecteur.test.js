@@ -60,6 +60,8 @@ describe("registre du lecteur", () => {
     );
     assert.equal(obtenirNotionLecteur(NOTION_SOLIDES_USUELS).capacites.rotationSolide, true);
     assert.equal(obtenirNotionLecteur(NOTION_VOLUME_PRISME).capacites.cours, true);
+    assert.equal(NOTION_NC02, "carres-entiers-0-a-12");
+    assert.equal(connaitNotionLecteur("carres-entiers-1-a-12"), false);
   });
 
   it("fournit une définition immuable et refuse une notion inconnue", () => {

@@ -1,11 +1,12 @@
 import {
   SCHEMA_SEANCE,
   validerSeance,
-} from "../../packages/contrats/src/seance.js?v=22";
+} from "../../packages/contrats/src/seance.js?v=23";
 import {
+  REFERENTIEL_COMPETENCES,
   SCHEMA_TRACE_REPONSE,
   validerTraceReponse,
-} from "../../packages/contrats/src/trace-reponse.js?v=22";
+} from "../../packages/contrats/src/trace-reponse.js?v=23";
 import {
   TYPE_REPONSE_ENTIER_NATUREL,
   TYPE_REPONSE_DEUX_ENTIERS,
@@ -15,13 +16,16 @@ import {
   estDeuxEntiersExacts,
   estEntierExact,
   estSelectionExacte,
-} from "../../packages/contrats/src/question-v2.js?v=22";
+} from "../../packages/contrats/src/question-v2.js?v=23";
 import {
   analyserEcritureDecimalePositive,
   fractionsEgales,
-} from "../../packages/objets/src/fractions-decimaux.js?v=22";
+} from "../../packages/objets/src/fractions-decimaux.js?v=23";
 import { graineDepuisTexte } from "../../packages/moteur-exercices/src/aleatoire.js";
-import { creerRegistreAutomatismes } from "../../packages/automatismes/src/registre.js?v=22";
+import { creerRegistreAutomatismes } from "../../packages/automatismes/src/registre.js?v=23";
+import {
+  normaliserIdentifiantModule,
+} from "../../packages/automatismes/src/identifiants.js?v=23";
 import {
   connaitNotionLecteur,
   listerNotionsLecteur,
@@ -33,8 +37,8 @@ import {
   NOTION_VOLUME_CYLINDRE,
   NOTION_VOLUME_PRISME,
   obtenirNotionLecteur,
-} from "./registre-lecteur.js?v=22";
-import { genererSerieMultinotions } from "./serie-multinotions.js?v=22";
+} from "./registre-lecteur.js?v=23";
+import { genererSerieMultinotions } from "./serie-multinotions.js?v=23";
 
 export {
   NOTION_FRACTIONS_SIMPLES_DECIMAUX,
@@ -64,14 +68,15 @@ function exigerConformite(nom, controle) {
 }
 
 function normaliserNotions(configuration) {
-  const demandees = configuration.notions
+  const demandeesBrutes = configuration.notions
     ?? (configuration.notion === undefined ? [NOTION_NC01] : [configuration.notion]);
-  if (!Array.isArray(demandees) || demandees.length === 0) {
+  if (!Array.isArray(demandeesBrutes) || demandeesBrutes.length === 0) {
     throw new RangeError("au moins une notion est requise");
   }
-  if (demandees.some((notion) => typeof notion !== "string" || notion === "")) {
+  if (demandeesBrutes.some((notion) => typeof notion !== "string" || notion === "")) {
     throw new TypeError("identifiants de notions requis");
   }
+  const demandees = demandeesBrutes.map(normaliserIdentifiantModule);
   if (new Set(demandees).size !== demandees.length) {
     throw new RangeError("doublons de notions interdits");
   }
@@ -516,9 +521,29 @@ export function validerReponse(etat) {
     id: `trace@${etat.seance.id.slice(7)}-${indexQuestion + 1}`,
     seance: etat.seance.id,
     question: question.id,
-    ...(question.classement.microNotion === undefined
-      ? {}
-      : { microNotion: question.classement.microNotion }),
+    classement: {
+      referentiel: REFERENTIEL_COMPETENCES,
+      domaine: question.classement.domaine,
+      module: question.classement.notion,
+      microNotion: question.classement.microNotion,
+      famille: question.classement.famille,
+      cibles: [question.classement.cible],
+      complements: [...question.classement.complements],
+    },
+    contenu: {
+      gabarit: {
+        id: question.origine.gabarit,
+        version: question.origine.versionGabarit,
+      },
+      generateur: {
+        id: question.origine.generateur,
+        version: question.origine.versionGenerateur,
+      },
+      aleatoire: {
+        graine: question.origine.graine,
+        version: question.origine.versionAleatoire,
+      },
+    },
     indexQuestion,
     validation: 1,
     reponse: {

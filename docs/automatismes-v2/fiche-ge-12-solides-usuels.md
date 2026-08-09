@@ -1,6 +1,17 @@
-# GE-12 — Reconnaître les six solides usuels
+# Solides usuels — alias GE-12
 
 **Fiche pédagogique validée par Gwenaël le 19 juillet 2026.**
+
+## Identité et statut
+
+- module visible canonique : `solides-usuels` ;
+- micro-notion canonique : `reconnaitre-solides-usuels` ;
+- alias humain de pilotage : `GE-12` ;
+- domaine canonique : `espace-et-geometrie` ;
+- puce source : `G-06` ; cible normalisée : `DNB26-21` ; référence machine :
+  `dnb-2026-21` ;
+- statut : `valide` — contenu validé, générateur construit et publié sur la
+  route pilote.
 
 ## Cible DNB
 

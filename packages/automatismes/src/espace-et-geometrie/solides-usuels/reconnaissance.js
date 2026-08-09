@@ -8,7 +8,11 @@ import {
   COMPARAISON_CHOIX_EXACT,
   SCHEMA_QUESTION_INSTANCE_V2,
   TYPE_REPONSE_CHOIX_UNIQUE,
-} from "../../../../contrats/src/question-v2.js?v=22";
+} from "../../../../contrats/src/question-v2.js?v=23";
+import {
+  IDENTITES_AUTOMATISMES,
+  creerClassementAutomatisme,
+} from "../../identifiants.js?v=23";
 
 export const NOM_GENERATEUR_RECONNAISSANCE_SOLIDES =
   "espace-et-geometrie.solides-usuels.reconnaissance";
@@ -116,13 +120,10 @@ export function genererQuestionReconnaissanceSolides({ aleatoire, parametres }) 
   }));
 
   return {
-    classement: {
-      domaine: "espace-et-geometrie",
-      notion: "solides-usuels",
-      famille: "reconnaissance",
-      cible: "dnb-2026-21",
-      complements: [],
-    },
+    classement: creerClassementAutomatisme(
+      IDENTITES_AUTOMATISMES.RECONNAITRE_SOLIDES_USUELS,
+      "reconnaissance",
+    ),
     enonce: [
       { id: "consigne", type: "texte", contenu: "Quel est le nom de ce solide ?" },
       { id: "solide", type: "solide", forme, variante, vue: { ...vue } },

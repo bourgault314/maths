@@ -1,6 +1,6 @@
 # Pilotage d'Automatismes maths&go V2
 
-**Document opérationnel de référence — mis à jour le 5 août 2026.**
+**Document opérationnel de référence — mis à jour le 9 août 2026.**
 
 Ce document fixe le cadre du chantier. Une instruction explicite plus récente
 de Gwenaël peut le modifier ; la décision doit alors être consignée dans
@@ -22,8 +22,9 @@ Tant que dure la phase en cours, V2 se construit **exclusivement pour le DNB**
 (décision D-013 du 19 juillet 2026).
 
 La **liste officielle des attendus du DNB** est la source de couverture : c'est
-elle qui dit ce qui doit exister, dans quel ordre, et à quel moment la phase
-est terminée. Elle est versionnée dans
+elle qui dit ce qui doit exister et à quel moment la phase est terminée. Elle ne
+fixe aucun ordre de fabrication. L'ordre de travail est une décision maths&go,
+séparée des identifiants et versionnée dans
 [`carte-dnb-2026-mathsgo.md`](carte-dnb-2026-mathsgo.md) : 37 cibles officielles
 distinctes, 38 cibles normalisées pour la fabrication et 88 micro-notions
 ordonnées.
@@ -90,9 +91,29 @@ les audits afin de décrire la dette existante. Ils ne deviennent jamais des
 noms de source ou des identifiants V2. Le sigle officiel « DNB » peut rester
 utilisé pour désigner l'examen ou un parcours destiné au brevet.
 
-## Cycle obligatoire d'une notion
+Les identifiants canoniques V2 sont des noms descriptifs français stables, par
+exemple `criteres-divisibilite`, `carres-entiers-0-a-12` ou
+`fractions-simples-decimaux`. Les codes courts `NC-01`, `AL-04`, `PF-02`,
+`GM-13`, `GE-12`, `DS-05` et `PI-01` sont des alias humains de pilotage. Ils ne
+servent ni d'identifiant primaire dans les données, ni d'ordre de menu, ni de
+preuve de correspondance avec une cible officielle.
 
-1. Lire les automatismes officiels concernés.
+La source de données canonique de cette taxonomie est
+`docs/automatismes-v2/taxonomie-competences.json`. Les fiches en expliquent les
+choix pédagogiques ; elles ne maintiennent pas une seconde table concurrente.
+
+Les sept domaines disciplinaires V2 sont : nombres et calculs ; calcul littéral
+et algèbre ; proportionnalité et fonctions ; grandeurs et mesures ; espace et
+géométrie ; données, statistiques et probabilités ; pensée informatique. Les
+jeux, recherches et explorations constituent une modalité pédagogique, pas un
+domaine de classement des résultats. Les codes de pilotage sont désormais
+`PF-01` à `PF-09` et `GM-01` à `GM-15`. Les anciens `PG-01` à `PG-24` restent
+lisibles comme alias historiques selon la correspondance du manifeste.
+
+## Cycle obligatoire d'un module visible
+
+1. Lire les automatismes officiels concernés et leurs correspondances dans la
+   carte, sans déduire un ordre de travail de leur position dans la liste.
 2. Consulter l'ancienne banque uniquement pour inventorier les notions et les
    familles de situations.
 3. Préparer une fiche pédagogique : savoir-faire, prérequis, limites, familles
@@ -102,10 +123,11 @@ utilisé pour désigner l'examen ou un parcours destiné au brevet.
 6. Présenter des exemples, l'aide, la correction et les cas limites.
 7. Obtenir la validation finale avant publication.
 
-Une seule notion est active à la fois pendant sa fabrication et sa validation.
-Une séance publique peut ensuite cibler une notion validée ou en mélanger
-plusieurs conformément à D-039. Aucun répertoire de contenu réel n'est préparé
-en masse.
+Un seul module visible est actif à la fois pendant sa fabrication et sa
+validation. Ce module peut réunir plusieurs micro-notions proches, comme les
+deux sens de « Fractions simples et décimaux ». Une séance publique peut ensuite
+cibler un module validé ou en mélanger plusieurs conformément à D-039. Aucun
+répertoire de contenu réel n'est préparé en masse.
 
 ## Modèle pédagogique commun
 
@@ -151,10 +173,12 @@ validation pédagogique.
 ## Niveaux et paliers
 
 Le parcours DNB actuel ne possède ni niveaux ni paliers. Les micro-notions
-servent à organiser la fabrication et le suivi, pas à classer les élèves. La
-variété vient des familles de questions, des valeurs, des erreurs travaillées
-et de l'état de l'aide. D'éventuels niveaux appartiendront à une phase ultérieure
-sur le programme complet du collège et demanderont une nouvelle décision.
+décrivent des compétences atomiques et organisent le suivi, pas un classement
+des élèves. Le module visible est l'unité de chantier et de sélection dans le
+menu. La variété vient des familles de questions, des valeurs, des erreurs
+travaillées et de l'état de l'aide. D'éventuels niveaux appartiendront à une
+phase ultérieure sur le programme complet du collège et demanderont une
+nouvelle décision.
 
 ## Forme de réponse
 
@@ -220,8 +244,9 @@ La mémoire d'une conversation n'est jamais la référence. À chaque reprise :
 
 1. lire `AGENTS.md` ;
 2. lire le présent document ;
-3. lire `etat.md` et vérifier que son commit de référence correspond à GitHub ;
-4. lire les dernières décisions ;
-5. lire l'inventaire `auto` / `studio` ;
-6. annoncer la prochaine action avant de modifier le dépôt ;
-7. mettre à jour `etat.md` avant de terminer une étape ou une pull request.
+3. lire `taxonomie-competences.json` et la fiche du module concerné ;
+4. lire `etat.md` et vérifier que son commit de référence correspond à GitHub ;
+5. lire les dernières décisions ;
+6. lire l'inventaire `auto` / `studio` ;
+7. annoncer la prochaine action avant de modifier le dépôt ;
+8. mettre à jour `etat.md` avant de terminer une étape ou une pull request.

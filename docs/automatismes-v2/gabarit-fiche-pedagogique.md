@@ -1,15 +1,29 @@
 # Gabarit d'une fiche pédagogique — Automatismes V2
 
-Ce document est la trame obligatoire avant de programmer une nouvelle notion.
-Il ne remplace ni l'analyse du programme ni la validation de Gwenaël.
+Ce document est la trame obligatoire avant de programmer un nouveau module
+visible ou d'ajouter une micro-notion à un module. Il ne remplace ni l'analyse
+du programme ni la validation de Gwenaël.
 
 ## 1. Identité et statut
 
-- identifiant de la micro-notion ;
-- domaine maths&go ;
-- cible officielle et place dans la carte DNB ;
-- statut : `a_faire`, `construit` ou `valide` ;
+- identifiant canonique descriptif du module visible et libellé affiché ;
+- identifiant canonique descriptif de chaque micro-notion qu'il contient ;
+- alias humains de pilotage (`NC-xx`, `PF-xx`, etc.) et anciens alias à
+  conserver en lecture ;
+- identifiant canonique du domaine disciplinaire ;
+- puce source DNB, cible normalisée documentaire `DNB26-xx`, référence machine
+  `dnb-2026-xx` et correspondances avec les programmes, sans les confondre avec
+  l'identifiant de la compétence ;
+- statut du module et, s'ils diffèrent, statut de ses micro-notions :
+  `a_faire`, `construit` ou `valide` ;
+- ordre de menu et rang de fabrication, documentés séparément et jamais
+  encodés dans un identifiant ;
 - provenance des choix pédagogiques.
+
+Les identifiants canoniques sont en minuscules, descriptifs et stables. Une
+fiche peut couvrir plusieurs micro-notions lorsqu'elles appartiennent au même
+module visible ; elle explique alors pourquoi leur parcours commun est plus
+cohérent qu'une séparation en plusieurs entrées.
 
 ## 2. Savoir-faire visé
 

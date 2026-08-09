@@ -82,6 +82,8 @@ describe("NC-02/F1 — calcul direct", () => {
           { base, formulation },
           `f1-${base}-${formulation}`,
         );
+        assert.equal(question.classement.notion, "carres-entiers-0-a-12");
+        assert.equal(question.classement.microNotion, "carres-entiers-0-a-12");
         assert.equal(question.classement.famille, "calcul-direct");
         assert.ok(question.classement.complements.includes(`forme-${formulation}`));
         if (FORMULATIONS_CALCUL_DIRECT_QCM.includes(formulation)) {

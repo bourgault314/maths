@@ -1,18 +1,22 @@
 # Correspondance modules Automatismes ↔ matrice du BO
 
-**Statut : ébauche de Claude (18 juillet 2026), à valider par Gwenaël.**
+**Statut : archive V1 de Claude (18 juillet 2026), non validée. Cette
+correspondance avec les 43 modules et les identifiants `dnb_*` n'est pas une
+source de nomenclature, de couverture ou de migration pour Automatismes V2.**
 
 Pour chacun des 43 modules de l'appli Automatismes (titres relevés dans
 `docs/reference-automatismes-beta/inventaire-automatismes-beta.md`), les
 lignes de la matrice (`matrice-automatismes-nouveaux-programmes.md`) que le
-module entraîne. Usage prévu : quand le futur menu saura filtrer, distinguer
-ce qui relève du label officiel « Automatismes » du BO d'un entraînement
-pédagogique plus large (principe du §10 de la matrice).
+module entraîne. L'usage envisagé pour la V1 était de distinguer, dans un futur
+filtre, ce qui relevait du label officiel « Automatismes » du BO d'un
+entraînement pédagogique plus large (principe du §10 de la matrice).
 
-La correspondance est faite au niveau du module (pas question par question) :
-c'est une première passe, à affiner au moment de la migration de chaque
-module grâce à l'inventaire question par question
-(`inventaire-automatismes-beta.json`).
+La correspondance est faite au niveau du module, pas question par question.
+L'hypothèse d'une migration de chaque module, envisagée lors de cette première
+passe, a été abandonnée par D-011 puis explicitement écartée de la nomenclature
+V2 par D-043. Le tableau reste utile uniquement pour comprendre l'ancienne
+banque et retrouver les apports de Gwenaël au moment où une notion précise est
+auditée.
 
 ## Modules adossés à des automatismes officiels
 
@@ -74,8 +78,8 @@ de savoir comment les présenter dans le futur filtre (décision Gwenaël) :
 
 ## Automatismes du BO sans module dédié aujourd'hui
 
-Première liste des manques (à confirmer question par question lors de la
-migration) — candidats naturels pour de futures séries :
+Liste historique des manques repérés dans la V1 — simple index d'audit, jamais
+ordre de fabrication ni liste de candidats automatiques pour V2 :
 
 - calcul mental de 5e : produits liés aux tables (5-04), additions à trou
   (5-08), abscisses en tiers et quarts (5-12 est partiellement couvert par

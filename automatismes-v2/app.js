@@ -34,14 +34,14 @@ import {
   saisirChiffre,
   tournerSolide,
   validerReponse,
-} from "./src/etat-lecteur.js?v=22";
+} from "./src/etat-lecteur.js?v=23";
 import {
   TYPE_REPONSE_DEUX_ENTIERS,
   TYPE_REPONSE_ENTIER_NATUREL,
   TYPE_REPONSE_FRACTION_EQUIVALENTE,
   TYPE_REPONSE_NOMBRE_DECIMAL,
   TYPE_REPONSE_CHOIX_UNIQUE,
-} from "../packages/contrats/src/question-v2.js?v=22";
+} from "../packages/contrats/src/question-v2.js?v=23";
 import {
   connaitNotionLecteur,
   obtenirNotionLecteur,
@@ -51,8 +51,13 @@ import {
   RENDU_SOLIDE,
   RENDU_VOLUME,
   NOTION_FRACTIONS_SIMPLES_DECIMAUX,
-} from "./src/registre-lecteur.js?v=22";
-import { COURS_SOLIDES_USUELS } from "../packages/automatismes/src/espace-et-geometrie/solides-usuels/reconnaissance.js?v=22";
+} from "./src/registre-lecteur.js?v=23";
+import {
+  DOMAINES_AUTOMATISMES,
+  MICRO_NOTIONS_AUTOMATISMES,
+  normaliserIdentifiantMicroNotion,
+} from "../packages/automatismes/src/identifiants.js?v=23";
+import { COURS_SOLIDES_USUELS } from "../packages/automatismes/src/espace-et-geometrie/solides-usuels/reconnaissance.js?v=23";
 import {
   creerCone,
   creerCube,
@@ -67,29 +72,34 @@ import {
   ACTION_TOUCHE_SAISIR,
   ACTION_TOUCHE_VALIDER,
   obtenirDispositionClavier,
-} from "../packages/objets/src/clavier.js?v=22";
-import { formulationCritereDivisibilite } from "../packages/automatismes/src/nombres-et-calculs/criteres-divisibilite/critere-precis.js?v=22";
+} from "../packages/objets/src/clavier.js?v=23";
+import { formulationCritereDivisibilite } from "../packages/automatismes/src/nombres-et-calculs/criteres-divisibilite/critere-precis.js?v=23";
 import {
   nombre,
   puissance,
   variable,
   versHtmlSemantique,
-} from "../packages/objets/src/expressions.js?v=22";
+} from "../packages/objets/src/expressions.js?v=23";
 import {
   dessinerCarreQuadrille,
-} from "../packages/objets/src/carre-quadrille.js?v=22";
-import { dessinerGrilleFraction } from "../packages/objets/src/fractions.js?v=22";
-import { dessinerDoubleDroiteGraduee } from "../packages/objets/src/droite-graduee.js?v=22";
+} from "../packages/objets/src/carre-quadrille.js?v=23";
+import { dessinerGrilleFraction } from "../packages/objets/src/fractions.js?v=23";
+import { dessinerDoubleDroiteGraduee } from "../packages/objets/src/droite-graduee.js?v=23";
 import {
   construireGroupementFraction,
   construireDonneesTableauDepuisFraction,
   formaterFractionEnDecimal,
-} from "../packages/objets/src/fractions-decimaux.js?v=22";
+} from "../packages/objets/src/fractions-decimaux.js?v=23";
 import {
   diagnostiquerDecimalVersNumerateur,
   diagnostiquerFractionLibre,
   diagnostiquerFractionVersDecimal,
-} from "./src/diagnostic-fractions-decimaux.js?v=22";
+} from "./src/diagnostic-fractions-decimaux.js?v=23";
+
+const MICRO_NOTION_FRACTION_VERS_DECIMAL =
+  MICRO_NOTIONS_AUTOMATISMES.FRACTION_VERS_DECIMAL;
+const MICRO_NOTION_DECIMAL_VERS_FRACTION =
+  MICRO_NOTIONS_AUTOMATISMES.DECIMAL_VERS_FRACTION;
 
 const application = document.querySelector("#application");
 const rechercheInitiale = window.location.search;
@@ -116,7 +126,7 @@ function creerGraineSerie() {
 
 const DOMAINES_MENU = Object.freeze([
   Object.freeze({
-    id: "nombres-calculs",
+    id: DOMAINES_AUTOMATISMES.NC,
     nom: "Nombres et calculs",
     notions: Object.freeze([
       NOTION_NC01,
@@ -124,11 +134,36 @@ const DOMAINES_MENU = Object.freeze([
       NOTION_FRACTIONS_SIMPLES_DECIMAUX,
     ]),
   }),
-  Object.freeze({ id: "calcul-litteral-algebre", nom: "Calcul littéral et algèbre", notions: Object.freeze([]) }),
-  Object.freeze({ id: "proportionnalite-fonctions-grandeurs", nom: "Proportionnalité, fonctions et grandeurs", notions: Object.freeze([]) }),
-  Object.freeze({ id: "espace-geometrie", nom: "Espace et géométrie", notions: Object.freeze([]) }),
-  Object.freeze({ id: "donnees-statistiques-probabilites", nom: "Données, statistiques et probabilités", notions: Object.freeze([]) }),
-  Object.freeze({ id: "pensee-informatique", nom: "Pensée informatique", notions: Object.freeze([]) }),
+  Object.freeze({
+    id: DOMAINES_AUTOMATISMES.AL,
+    nom: "Calcul littéral et algèbre",
+    notions: Object.freeze([]),
+  }),
+  Object.freeze({
+    id: DOMAINES_AUTOMATISMES.PF,
+    nom: "Proportionnalité et fonctions",
+    notions: Object.freeze([]),
+  }),
+  Object.freeze({
+    id: DOMAINES_AUTOMATISMES.GM,
+    nom: "Grandeurs et mesures",
+    notions: Object.freeze([]),
+  }),
+  Object.freeze({
+    id: DOMAINES_AUTOMATISMES.GE,
+    nom: "Espace et géométrie",
+    notions: Object.freeze([]),
+  }),
+  Object.freeze({
+    id: DOMAINES_AUTOMATISMES.DS,
+    nom: "Données, statistiques et probabilités",
+    notions: Object.freeze([]),
+  }),
+  Object.freeze({
+    id: DOMAINES_AUTOMATISMES.PI,
+    nom: "Pensée informatique",
+    notions: Object.freeze([]),
+  }),
 ]);
 
 const LIBELLES_MODULES_MENU = Object.freeze({
@@ -547,7 +582,7 @@ function diagnosticErreurFractions() {
     });
   }
   if (
-    question.classement.microNotion === "nc-04"
+    question.classement.microNotion === MICRO_NOTION_DECIMAL_VERS_FRACTION
     && question.reponse.type === TYPE_REPONSE_ENTIER_NATUREL
   ) {
     return diagnostiquerDecimalVersNumerateur({
@@ -2262,7 +2297,7 @@ function rendreDoubleDroiteRiche(
   numerateur,
   denominateur,
   {
-    sens = "nc-03",
+    sens = MICRO_NOTION_FRACTION_VERS_DECIMAL,
     progression = null,
     reveler = false,
     compacte = false,
@@ -2278,13 +2313,13 @@ function rendreDoubleDroiteRiche(
   const decimalCible = formaterFractionEnDecimal(numerateur, denominateur);
   const pointsHaut = [{
     valeur,
-    etiquette: sens === "nc-04" && !reveler && !terminee ? "?" : fractionCible,
+    etiquette: sens === MICRO_NOTION_DECIMAL_VERS_FRACTION && !reveler && !terminee ? "?" : fractionCible,
     couleur: COULEURS.bleu,
     position: "dessus",
   }];
   const pointsBas = [{
     valeur,
-    etiquette: sens === "nc-03" && !reveler && !terminee ? "?" : decimalCible,
+    etiquette: sens === MICRO_NOTION_FRACTION_VERS_DECIMAL && !reveler && !terminee ? "?" : decimalCible,
     couleur: COULEURS.bleu,
     position: "dessous",
   }];
@@ -2428,7 +2463,7 @@ function rendreQuestionFractionsDecimaux() {
   const presentation = presentationQuestionFractions(question);
   const qcm = question.reponse.type === TYPE_REPONSE_CHOIX_UNIQUE;
   const doubleDroite = presentation === "double-droite";
-  const cibleQcm = question.classement.microNotion === "nc-04"
+  const cibleQcm = question.classement.microNotion === MICRO_NOTION_DECIMAL_VERS_FRACTION
     ? `<strong class="decimal-question">${echapper(formaterFractionEnDecimal(source.numerateur, source.denominateur))}</strong>`
     : rendreFractionEmpilee(source.numerateur, source.denominateur);
   const carteQuestion = `<main class="carte-question carte-question-fractions famille-${echapper(familleQuestion(question))}">
@@ -2443,7 +2478,7 @@ function rendreQuestionFractionsDecimaux() {
       ? `<p class="cible-qcm-rationnelle">${cibleQcm}</p>
         <div class="grille-choix grille-qcm-fractions ${estEntrainement() ? "" : "grille-projection"}"
           role="${estEntrainement() ? "radiogroup" : "group"}" aria-label="Réponses proposées">
-          ${rendreChoix(question, question.classement.microNotion === "nc-04"
+          ${rendreChoix(question, question.classement.microNotion === MICRO_NOTION_DECIMAL_VERS_FRACTION
             ? rendreLibelleChoixFraction
             : undefined)}
         </div>`
@@ -2497,7 +2532,7 @@ function rendreAideCentiemesRiche(question, source) {
   const coloriees = pas * casesParPart;
   const terminee = pas === source.numerateur;
   const decimal = formaterFractionEnDecimal(source.numerateur, source.denominateur);
-  const chaine = question.classement.microNotion === "nc-04"
+  const chaine = question.classement.microNotion === MICRO_NOTION_DECIMAL_VERS_FRACTION
     ? `<strong>${echapper(decimal)}</strong> = ${rendreFractionEmpilee(source.numerateur * casesParPart, 100)} = ${rendreFractionEmpilee(source.numerateur, source.denominateur)}`
     : `${rendreFractionEmpilee(source.numerateur, source.denominateur)} = ${rendreFractionEmpilee(source.numerateur * casesParPart, 100)} = <strong>${echapper(decimal)}</strong>`;
   return `<section class="atelier-fraction atelier-centiemes">
@@ -2574,7 +2609,7 @@ function rendreAideGroupementRiche(question, source) {
     source.denominateur,
   );
   const fractionReste = rendreFractionEmpilee(reste, source.denominateur);
-  const direct = question.classement.microNotion === "nc-03";
+  const direct = question.classement.microNotion === MICRO_NOTION_FRACTION_VERS_DECIMAL;
   const conclusion = reste === 0
     ? direct
       ? `${fraction} = <strong>${unites}</strong>`
@@ -2604,7 +2639,7 @@ function rendreAideTableauRiche(question, source) {
   const selection = etat.rangFractionAide;
   const juste = selection === cible.id;
   const decimal = formaterFractionEnDecimal(source.numerateur, source.denominateur);
-  const chaine = question.classement.microNotion === "nc-04"
+  const chaine = question.classement.microNotion === MICRO_NOTION_DECIMAL_VERS_FRACTION
     ? `<strong>${echapper(decimal)}</strong> = ${rendreFractionEmpilee(source.numerateur, source.denominateur)}`
     : `${rendreFractionEmpilee(source.numerateur, source.denominateur)} = <strong>${echapper(decimal)}</strong>`;
   return `<section class="atelier-fraction atelier-tableau-decimal">
@@ -2641,7 +2676,7 @@ function rendreAideUnitesRiche(source) {
 function rendreRappelQuestionFractions(question) {
   const source = blocRationnelQuestion(question);
   const decimal = formaterFractionEnDecimal(source.numerateur, source.denominateur);
-  const direct = question.classement.microNotion === "nc-03";
+  const direct = question.classement.microNotion === MICRO_NOTION_FRACTION_VERS_DECIMAL;
   const fractionLibre = question.reponse.type === TYPE_REPONSE_FRACTION_EQUIVALENTE;
   const qcm = question.reponse.type === TYPE_REPONSE_CHOIX_UNIQUE;
   const equation = direct
@@ -2700,7 +2735,7 @@ function rendreReponseCorrecteFractions(question, source) {
   if (question.reponse.type === TYPE_REPONSE_CHOIX_UNIQUE) {
     const choix = question.reponse.choix.find(({ id }) => question.reponse.attendus.includes(id));
     if (!choix) return "";
-    const contenu = question.classement.microNotion === "nc-04"
+    const contenu = question.classement.microNotion === MICRO_NOTION_DECIMAL_VERS_FRACTION
       ? rendreLibelleChoixFraction(choix)
       : `<strong>${echapper(choix.libelle)}</strong>`;
     return `<div class="reponses-correction">${contenu}</div>`;
@@ -2728,7 +2763,7 @@ function diagnosticQcmFractions(question) {
 function chaineCorrectionFractions(question, source) {
   const decimal = formaterFractionEnDecimal(source.numerateur, source.denominateur);
   const fraction = rendreFractionEmpilee(source.numerateur, source.denominateur);
-  if (question.classement.microNotion === "nc-03") {
+  if (question.classement.microNotion === MICRO_NOTION_FRACTION_VERS_DECIMAL) {
     return `${fraction}<span>=</span><strong>${echapper(decimal)}</strong>`;
   }
   if (question.reponse.type === TYPE_REPONSE_FRACTION_EQUIVALENTE) {
@@ -2781,7 +2816,7 @@ function rendreVisuelCorrectionFractions(question, source) {
 }
 
 function rendreExplicationCorrectionFractions(question, source) {
-  const direct = question.classement.microNotion === "nc-03";
+  const direct = question.classement.microNotion === MICRO_NOTION_FRACTION_VERS_DECIMAL;
   const decimal = formaterFractionEnDecimal(source.numerateur, source.denominateur);
   const chaine = chaineCorrectionFractions(question, source);
   const rang = RANGS_DECIMAUX.find(
@@ -2944,7 +2979,7 @@ function rendreCoursRangFractions(sens) {
     (element) => element.denominateur === exemple.denominateur,
   );
   const decimal = formaterFractionEnDecimal(exemple.numerateur, exemple.denominateur);
-  const direct = sens === "nc-03";
+  const direct = sens === MICRO_NOTION_FRACTION_VERS_DECIMAL;
   return `<article class="carte-cours-fractions carte-cours-rangs">
     <span class="numero-cours">${direct ? 3 : 4}</span>
     <h3>${direct ? "Du dénominateur vers la virgule" : "De la virgule vers la fraction"}</h3>
@@ -2987,8 +3022,8 @@ function rendreCarteCoursFractions(index) {
       <p class="definition-cours">Chaque dessin garde la même unité de 100 cases : on lit directement 50, 25 ou 75 centièmes.</p>
     </article>`;
   }
-  if (index === 2) return rendreCoursRangFractions("nc-03");
-  if (index === 3) return rendreCoursRangFractions("nc-04");
+  if (index === 2) return rendreCoursRangFractions(MICRO_NOTION_FRACTION_VERS_DECIMAL);
+  if (index === 3) return rendreCoursRangFractions(MICRO_NOTION_DECIMAL_VERS_FRACTION);
   if (index === 4) {
     return `<article class="carte-cours-fractions carte-cours-unites">
       <span class="numero-cours">5</span><h3>Quand la fraction dépasse 1</h3>
@@ -3101,6 +3136,12 @@ function rendreQuestion() {
   return executerRendu(RENDUS_QUESTION);
 }
 
+function microNotionTrace(trace) {
+  return normaliserIdentifiantMicroNotion(
+    trace.classement?.microNotion ?? trace.microNotion,
+  );
+}
+
 function rendreBilanFractionsDecimaux() {
   if (
     !estEntrainement()
@@ -3108,19 +3149,21 @@ function rendreBilanFractionsDecimaux() {
   ) {
     return "";
   }
-  const traces = etat.traces.filter((trace) =>
-    ["nc-03", "nc-04"].includes(trace.microNotion));
+  const traces = etat.traces.filter((trace) => [
+    MICRO_NOTION_FRACTION_VERS_DECIMAL,
+    MICRO_NOTION_DECIMAL_VERS_FRACTION,
+  ].includes(microNotionTrace(trace)));
   const ligne = (microNotion, libelle) => {
     const sousEnsemble = traces.filter(
-      (trace) => trace.microNotion === microNotion,
+      (trace) => microNotionTrace(trace) === microNotion,
     );
     const reussites = sousEnsemble.filter((trace) => trace.juste).length;
     return `<p><span>${echapper(libelle)}</span><strong>${reussites} / ${sousEnsemble.length}</strong></p>`;
   };
   const aides = traces.filter((trace) => trace.aideConsultee).length;
   return `<section class="detail-bilan-fractions" aria-label="Détail fractions et décimaux">
-    ${ligne("nc-03", "Fraction → décimal")}
-    ${ligne("nc-04", "Décimal → fraction")}
+    ${ligne(MICRO_NOTION_FRACTION_VERS_DECIMAL, "Fraction → décimal")}
+    ${ligne(MICRO_NOTION_DECIMAL_VERS_FRACTION, "Décimal → fraction")}
     <p><span>Aides ouvertes</span><strong>${aides} / ${traces.length}</strong></p>
   </section>`;
 }

@@ -614,3 +614,91 @@ sélection réelle reste confiée à l'événement d'activation standard `click`
 commun au toucher, à la souris et au clavier ; focus, défilement et attributs
 ARIA restent inchangés. Le graphe V2 est invalidé d'un seul tenant en `v22` et
 `/auto/` reste hors du lot.
+
+### D-043 — La nomenclature devient descriptive, stable et exploitable pour le suivi
+
+Cette décision remplace les passages de D-014, D-022, D-027, D-034, D-038 et
+D-041 qui faisaient porter à un numéro de micro-notion un ordre de fabrication,
+un identifiant technique ou une identité de trace. Elle ne modifie aucun choix
+pédagogique, aucune famille de questions et aucun contenu déjà validé.
+
+La liste officielle DNB fixe le **périmètre** de la première phase et permet de
+constater quand elle est complète. Elle ne fixe pas l'ordre de fabrication.
+Celui-ci reste un choix maths&go, modifiable sans renommer une compétence. De
+même, l'ordre du menu et l'ordre de fabrication sont deux données distinctes.
+
+L'unité de chantier est désormais le **module visible**, c'est-à-dire une entrée
+que l'utilisateur peut sélectionner. Un module peut contenir une ou plusieurs
+**micro-notions**, compétences atomiques utilisées pour la génération et le
+suivi. « Fractions simples et décimaux » constitue ainsi un seul module visible
+avec deux micro-notions. Une seule entrée visible est en chantier à la fois,
+sans imposer de fabriquer séparément ses deux sens lorsqu'ils forment un
+parcours pédagogique commun.
+
+Les identifiants canoniques V2 sont descriptifs, en minuscules et indépendants
+d'un programme ou d'un ordre. Les codes `NC-xx`, `AL-xx`, `PF-xx`, `GM-xx`,
+`GE-xx`, `DS-xx` et `PI-xx` sont des alias humains de pilotage. `DNB26-xx` est
+le libellé documentaire d'une référence normalisée de couverture, représentée
+dans les données par `dnb-2026-xx` ; ce n'est pas l'identifiant d'une
+compétence. Les anciens codes et anciennes routes restent lisibles par une
+table d'alias ; ils ne sont plus émis comme identifiants canoniques dans les
+nouvelles données.
+
+Les sept domaines disciplinaires canoniques sont :
+
+1. `nombres-et-calculs` — alias `NC` ;
+2. `calcul-litteral-et-algebre` — alias `AL` ;
+3. `proportionnalite-et-fonctions` — alias `PF` ;
+4. `grandeurs-et-mesures` — alias `GM` ;
+5. `espace-et-geometrie` — alias `GE` ;
+6. `donnees-statistiques-et-probabilites` — alias `DS` ;
+7. `pensee-informatique` — alias `PI`.
+
+« Jeux, recherches et explorations » devient une modalité pédagogique qui peut
+s'appliquer à n'importe quel domaine ; ce n'est plus un huitième domaine de
+classement. L'ancien domaine composite `PG` est scindé sans modifier la
+couverture ni les rangs de travail : les codes de pilotage deviennent `PF-01`
+à `PF-09` puis `GM-01` à `GM-15`. Les anciens `PG-01` à `PG-24` restent des
+alias historiques entrants selon la correspondance du manifeste.
+
+Les identités existantes sont clarifiées :
+
+- `criteres-divisibilite`, alias `NC-01` ;
+- `carres-entiers-0-a-12`, alias `NC-02`, avec
+  `carres-entiers-1-a-12` comme ancien alias technique et d'URL ;
+- module `fractions-simples-decimaux`, contenant les micro-notions
+  `fraction-vers-decimal` et `decimal-vers-fraction`, alias `NC-03` et `NC-04` ;
+- module `solides-usuels`, micro-notion `reconnaitre-solides-usuels`, alias
+  `GE-12` ;
+- modules `volume-cube-pave`, `volume-prisme` et `volume-cylindre`, contenant
+  respectivement les micro-notions `volume-cube-pave`, `volume-prisme-droit` et
+  `volume-cylindre`, alias `GM-13`, `GM-14` et `GM-15`, et anciens alias
+  `PG-22`, `PG-23`, `PG-24`.
+
+La prochaine compétence reste l'ancienne `NC-05`, sous l'identifiant canonique
+`ecritures-multiples-nombre`. Sa cible de couverture est `DNB26-06` ; la
+coïncidence entre les deux nombres ne leur donne aucune relation d'identité.
+
+La source canonique unique `docs/automatismes-v2/taxonomie-competences.json`
+relie domaines, modules, micro-notions, alias, statuts, ordres et cibles DNB ;
+les familles restent déclarées par chaque module. La carte conserve le détail
+documentaire des puces sources et des correspondances avec les nouveaux
+programmes, sans créer une seconde identité de compétence. Les documents de
+matrice et de correspondance avec les 43 modules restent des archives de la V1
+et ne peuvent pas alimenter cette nomenclature V2.
+
+Le manifeste est versionné : une modification sémantique ne réécrit pas une
+version déjà citée par des traces. L'extension au programme complet du collège
+pourra rattacher de nouvelles références externes aux mêmes identifiants
+descriptifs, dans une nouvelle version, sans renuméroter les compétences. Une
+compétence dont le sens change reçoit en revanche un nouvel identifiant.
+
+La trace de réponse version 2 est autonome pour l'analyse : référentiel
+versionné, identifiant de module, identifiant de micro-notion, famille, version
+du générateur et cibles externes utiles. Les correspondances détaillées avec
+les programmes peuvent être jointes depuis la version citée du manifeste au
+lieu d'être recopiées dans chaque réponse. La trace version 1 demeure lisible au
+moyen des alias et des identifiants de question ; aucune donnée existante n'est
+invalidée. L'identité de l'élève, le serveur, la transmission et le format
+concret d'export restent hors du présent chantier et feront l'objet de décisions
+ultérieures.

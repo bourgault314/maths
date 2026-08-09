@@ -13,13 +13,17 @@ import {
   COMPARAISON_ENSEMBLE_EXACT,
   SCHEMA_QUESTION_INSTANCE_V2,
   TYPE_REPONSE_SELECTION_MULTIPLE,
-} from "../../../../contrats/src/question-v2.js?v=22";
+} from "../../../../contrats/src/question-v2.js?v=23";
+import {
+  IDENTITES_AUTOMATISMES,
+  creerClassementAutomatisme,
+} from "../../identifiants.js?v=23";
 import {
   DIVISEURS_CRITERES_NC01,
   construireCorrectionCritere,
   formulationCritereDivisibilite,
   tirerNombreSelonDivisibilite,
-} from "./critere-precis.js?v=22";
+} from "./critere-precis.js?v=23";
 
 export const NOM_GENERATEUR_SELECTION_NOMBRES =
   "nombres-et-calculs.criteres-divisibilite.selection-nombres";
@@ -212,13 +216,11 @@ export function genererQuestionSelectionNombres({ aleatoire, parametres }) {
   const attendus = nombresAttendus.length === 0 ? ["aucun"] : nombresAttendus;
 
   return {
-    classement: {
-      domaine: "nombres-et-calculs",
-      notion: "criteres-divisibilite",
-      famille: "selection-nombres",
-      cible: "dnb-2026-09",
-      complements: diviseur === 10 ? ["critere-divisibilite-10"] : [],
-    },
+    classement: creerClassementAutomatisme(
+      IDENTITES_AUTOMATISMES.CRITERES_DIVISIBILITE,
+      "selection-nombres",
+      diviseur === 10 ? ["critere-divisibilite-10"] : [],
+    ),
     enonce: [
       {
         id: "consigne",

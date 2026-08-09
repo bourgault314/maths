@@ -66,6 +66,7 @@ describe("NC-01/F2 — question instanciée", () => {
     assert.deepEqual(question.classement, {
       domaine: "nombres-et-calculs",
       notion: "criteres-divisibilite",
+      microNotion: "criteres-divisibilite",
       famille: "selection-diviseurs",
       cible: "dnb-2026-09",
       complements: ["critere-divisibilite-10"],

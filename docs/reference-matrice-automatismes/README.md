@@ -1,5 +1,9 @@
 # Référence — matrice des automatismes des nouveaux programmes
 
+**Statut : archive de référence V1, conservée pour la provenance et les lignes
+du BO. Ce dossier ne définit ni la taxonomie, ni les identifiants, ni l'ordre de
+fabrication d'Automatismes V2. D-043 et la carte V2 prévalent.**
+
 Dossier de référence pour le classement des contenus maths&go selon les
 automatismes officiellement demandés par les nouveaux programmes (CM1 à 3e).
 
@@ -12,6 +16,13 @@ automatismes officiellement demandés par les nouveaux programmes (CM1 à 3e).
   explicitement comme automatisme : rubriques « Calcul mental » du cours moyen
   et intertitres « Automatismes » de la 6e à la 3e, classés selon les
   7 domaines de maths&go.
+
+La classification en sept domaines mentionnée ici décrit l'état historique de
+la V1 au 18 juillet. V2 emploie sept domaines disciplinaires différents après
+séparation de « Proportionnalité et fonctions » et « Grandeurs et mesures » ;
+« Jeux, recherches et explorations » y est une modalité. La matrice brute n'est
+pas réécrite silencieusement : ses lignes sont reliées à V2 par une
+correspondance versionnée distincte.
 
 ## Vérification (Claude, 18 juillet 2026)
 
@@ -63,7 +74,7 @@ Résultat :
 |---|---|
 | `matrice-automatismes-nouveaux-programmes.md` | La matrice complète : 187 automatismes identifiés (ID par niveau), classés dans les 7 domaines maths&go, avec rubrique officielle d'origine, statut et année d'application. |
 
-## Usage prévu
+## Usage historique et limites
 
 - **Tableau de bord de l'Atelier** (`studio/atelier/index.html`) : ajouter aux
   notions concernées un badge « Automatisme BO » avec le niveau où le BO le
@@ -71,6 +82,10 @@ Résultat :
 - **Registre des objets** : alimenter les métadonnées proposées au §10 de la
   matrice (niveau d'apprentissage ≠ niveau d'automatisation, statut officiel,
   forme du contenu).
-- **Futur menu Automatismes** : mapper les 43 modules actuels sur ces
-  187 lignes pour distinguer ce qui relève du label officiel « Automatismes »
-  d'un entraînement pédagogique plus large.
+- **Menu Automatismes V1 envisagé en juillet 2026** : mapper les 43 modules
+  historiques sur ces 187 lignes. Cette piste est archivée ; elle ne décrit pas
+  la construction V2, qui ne reprend ni ce découpage, ni ses identifiants.
+
+Les 187 identifiants de lignes peuvent rester des références externes de
+programme. Ils ne deviennent jamais les identifiants canoniques d'un module ou
+d'une micro-notion V2.

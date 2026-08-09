@@ -2,6 +2,44 @@
 
 **Dernière mise à jour : 9 août 2026.**
 
+## Nomenclature stable et traces autonomes du 9 août
+
+- Le lot candidat est préparé sur la branche
+  `agent/v2-nomenclature-stable`, au-dessus de `3f0564e`, état vérifié de
+  `main`. Il n'est ni publié ni fusionné à ce stade et ne modifie aucun contenu
+  pédagogique.
+- Le manifeste `taxonomie-competences.json` fixe 7 domaines disciplinaires,
+  88 micro-notions descriptives, leurs cibles DNB, leur ordre de fabrication
+  séparé et leurs statuts. Les codes `NC`, `AL`, `PF`, `GM`, `GE`, `DS` et `PI`
+  restent des repères humains ; ils ne sont plus des identifiants primaires de
+  données.
+- L'ancien domaine composite `PG` est séparé en `PF` et `GM`. Les 24 codes
+  `PG-01` à `PG-24` restent des alias historiques. Les volumes utilisent
+  désormais `GM-13`, `GM-14` et `GM-15` comme codes de pilotage.
+- Les 8 micro-notions déjà construites utilisent leurs identifiants canoniques
+  dans le code et les questions. Le module des carrés devient
+  `carres-entiers-0-a-12` ; l'ancien slug `carres-entiers-1-a-12` reste accepté
+  dans les URL et configurations. Le module fractions garde une entrée visible
+  et deux micro-notions : `fraction-vers-decimal` et
+  `decimal-vers-fraction`.
+- La trace `mathsgo.trace-reponse/2` recopie le référentiel, le domaine, le
+  module, la micro-notion, la famille, les cibles, les compléments et les
+  versions du gabarit, du générateur et de l'aléatoire. Elle reste donc
+  interprétable pour un futur regroupement même sans conserver la question
+  complète. La version 1 reste lisible sans réécriture destructive.
+- L'identité de l'élève, la classe, la tentative, le serveur, le transport et
+  le format concret d'export restent volontairement hors de ce lot : ils
+  appartiendront à une future enveloppe de collecte, avant toute récolte réelle.
+- Le graphe public est invalidé d'un seul tenant en `v23`. `/auto/` reste hors
+  du lot ; son arbre Git de référence demeure
+  `6a72d5c5ed4dd47b2e52c3109913c93bd276eb49`.
+- `npm run verifier` réussit **1 276 tests sur 1 276**, ainsi que les
+  validateurs du catalogue, du référencement, des routes publiques, de la
+  provenance et d'Automatismes V2.
+- La prochaine compétence pédagogique reste `ecritures-multiples-nombre`,
+  alias humain `NC-05`, pour la cible `DNB26-06`. Elle ne commence qu'après la
+  validation de ce lot de nomenclature.
+
 ## Finitions NC-01 du 9 août
 
 - Le lot est livré au-dessus de `c5592c5`, état de `main` après la PR #291.
@@ -39,7 +77,9 @@
 - Le lot est intégré au-dessus de `cff0ff2`, état de `main` après la PR #283 :
   les finitions de `NC-01` et `NC-02` sont conservées.
 - Une seule entrée « Fractions simples et décimaux » couvre les deux sens ;
-  chaque question conserve `NC-03` ou `NC-04` dans son classement et sa trace.
+  chaque question conserve `fraction-vers-decimal` ou
+  `decimal-vers-fraction` dans son classement et sa trace, avec `NC-03` et
+  `NC-04` comme alias humains.
 - Une série de 20 équilibre `10 / 10`, utilise vingt valeurs rationnelles
   distinctes, une double droite et deux QCM par sens, un millième et une
   fraction libre. Deux séries partagent nettement moins de valeurs que dans le
@@ -179,8 +219,9 @@
   les capacités d'interaction suivent toujours la notion de la question
   courante.
 - Les URL historiques avec un seul paramètre `notion` restent valides. Une URL
-  mélangée répète ce paramètre, par exemple
-  `?notion=criteres-divisibilite&notion=carres-entiers-1-a-12`.
+  mélangée répète ce paramètre. La forme canonique emploie par exemple
+  `?notion=criteres-divisibilite&notion=carres-entiers-0-a-12` ; l'ancien slug
+  `carres-entiers-1-a-12` reste accepté.
 - Les recettes canoniques de NC-02 à 5, 10, 15 et 20 questions restent
   inchangées. Des préfixes de 1 à 20 questions permettent seulement de
   produire ses quotas intermédiaires dans une séance mélangée.
@@ -212,7 +253,7 @@ l'en-tête, ni le comportement de NC-01.
 - Dépôt : `bourgault314/maths`.
 - Branche de référence : `main`.
 - Commit de référence vérifié sur GitHub :
-  `c55a2b2`.
+  `3f0564e`.
 - La PR #282 est fusionnée : elle corrige le cadre d'aide de NC-01 et publie
   le graphe `v19`, base exacte du lot de finition D-040.
 - La PR #281 est fusionnée : elle publie la sélection multiple avec le graphe
@@ -249,9 +290,10 @@ l'en-tête, ni le comportement de NC-01.
 
 - La bêta continue de fonctionner séparément et reste gelée hors correction
   critique.
-- Le lecteur neuf expose dans « S'entraîner » et « Au tableau » `NC-01`,
-  `NC-02`, le pilote commun `NC-03/NC-04`, `GE-12/F1`, `PG-22`, `PG-23` et
-  `PG-24`.
+- Le lecteur neuf expose dans « S'entraîner » et « Au tableau » les modules
+  `criteres-divisibilite`, `carres-entiers-0-a-12`,
+  `fractions-simples-decimaux`, `solides-usuels`, `volume-cube-pave`,
+  `volume-prisme` et `volume-cylindre`.
 - La carte du DNB est établie : **37 cibles officielles distinctes**,
   **38 cibles normalisées** et **88 micro-notions**.
 - Une séance peut cibler une seule notion ou mélanger un nombre quelconque de
@@ -331,8 +373,9 @@ La PR #240 a intégré le lot construit sur `feat/v2-solides-volumes-dnb` :
 - `GE-12/F1` reconnaît cube, pavé droit, prisme droit, cylindre, pyramide et
   cône par choix unique ; la question reste fixe, l'aide et le cours permettent
   la rotation avec recalcul des arêtes cachées ;
-- `PG-22`, `PG-23` et `PG-24` restent trois séances distinctes pour le cube et
-  le pavé, le prisme droit et le cylindre ;
+- Les actuels `GM-13`, `GM-14` et `GM-15`, encore nommés `PG-22`, `PG-23` et
+  `PG-24` lors de cette livraison historique, restent trois séances distinctes
+  pour le cube et le pavé, le prisme droit et le cylindre ;
 - les conversions, capacités, pyramides et cônes sont explicitement hors de ce
   noyau de calcul de volumes ;
 - le cours part de 1 cm³, montre un empilement 3 × 2 × 2 puis verbalise
