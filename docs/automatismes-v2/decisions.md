@@ -582,3 +582,35 @@ capacité fixe de deux ou quatre parts ; le reste ne peut donc plus être dessin
 L'intégration part de `cff0ff2`, état de la PR #283, et conserve toutes les
 finitions de `NC-01` et `NC-02`. Le graphe public reçoit une nouvelle version de
 cache cohérente `v21`. Aucun fichier sous `/auto/` n'appartient au lot.
+
+## 9 août 2026
+
+### D-042 — NC-01 reçoit des repères ciblés sans alourdir son aide
+
+Gwenaël valide l'enrichissement final de `NC-01` et demande sa publication. Le
+cours conserve exactement trois pages ; l'aide pas à pas et les corrections ne
+sont pas modifiées. La disparition de la page d'implications décidée en D-030
+reste acquise : seuls des liens compacts prennent place dans les pages
+existantes.
+
+La première page relie « 3 divise 12 », « 12 est divisible par 3 » et « 12 est
+un multiple de 3 ». La deuxième explicite que la divisibilité par 10 équivaut à
+la divisibilité simultanée par 2 et par 5. La troisième annonce que la somme des
+chiffres ne dépasse pas 36 dans le module, puis sépare visuellement les multiples
+de 3 possibles de ceux de 9. Elle conserve les exemples 372 et 729, ajoute les
+contre-exemples concrets 43 et 49 et rappelle que la divisibilité par 9 entraîne
+celle par 3. La réaddition répétée d'une somme n'entre pas dans le cours.
+
+Dans `NC-01/F3`, un distracteur de terminaison apparaît de façon seedée dans
+environ une grille éligible sur quatre pour les critères par 3 ou par 9. Il
+n'est jamais fixe, reste le seul distracteur de ce type dans sa grille et ne
+change ni le nombre de bonnes réponses, ni les quotas, ni le cas naturel « Aucun ». Un vrai multiple
+peut conserver la même terminaison afin de ne pas fabriquer une règle inverse.
+
+Le turquoise des parts du schéma de partage s'étire désormais jusqu'aux bords
+intérieurs, y compris sur téléphone. Tous les boutons de choix reçoivent un
+état visuel pendant l'appui et déclarent `touch-action: manipulation`. La
+sélection réelle reste confiée à l'événement d'activation standard `click`,
+commun au toucher, à la souris et au clavier ; focus, défilement et attributs
+ARIA restent inchangés. Le graphe V2 est invalidé d'un seul tenant en `v22` et
+`/auto/` reste hors du lot.

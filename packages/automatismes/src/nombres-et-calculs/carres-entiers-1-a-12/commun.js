@@ -11,7 +11,7 @@ import {
 import {
   COMPARAISON_VALEUR_EXACTE,
   TYPE_REPONSE_ENTIER_NATUREL,
-} from "../../../../contrats/src/question-v2.js?v=21";
+} from "../../../../contrats/src/question-v2.js?v=22";
 
 export const NOTION_CARRES_ENTIERS = "carres-entiers-1-a-12";
 export const CIBLE_CARRES_ENTIERS = "dnb-2026-08";

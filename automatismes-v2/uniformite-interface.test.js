@@ -17,6 +17,21 @@ it("garde les trois chiffres des exemples du cours à la même taille", () => {
   assert.match(interfaceCss, /\.exemples-unites-cours p\s*\{[^}]*grid-template-columns:\s*70px minmax\(0, 1fr\)/s);
 });
 
+it("étire le turquoise jusqu'aux bords des parts du cours sur téléphone", () => {
+  assert.match(
+    interfaceCss,
+    /\.barre-partage > div\s*\{[^}]*align-items:\s*stretch;/s,
+  );
+  assert.match(
+    interfaceCss,
+    /@container \(max-width: 559px\)[\s\S]*?\.reperes-multiples-cours\s*\{[^}]*grid-template-columns:\s*minmax\(0, 1fr\)/s,
+  );
+  assert.match(
+    interfaceCss,
+    /@container \(max-width: 559px\)[\s\S]*?\.equivalence-cours p\s*\{[^}]*flex-direction:\s*column/s,
+  );
+});
+
 it("sépare les actions, le score centré et la progression", () => {
   assert.match(app, /class="actions-entete"/);
   assert.match(interfaceCss, /grid-template-columns:\s*minmax\(0, 1fr\) auto minmax\(0, 1fr\)/);

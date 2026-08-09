@@ -1,11 +1,11 @@
 import {
   SCHEMA_SEANCE,
   validerSeance,
-} from "../../packages/contrats/src/seance.js?v=21";
+} from "../../packages/contrats/src/seance.js?v=22";
 import {
   SCHEMA_TRACE_REPONSE,
   validerTraceReponse,
-} from "../../packages/contrats/src/trace-reponse.js?v=21";
+} from "../../packages/contrats/src/trace-reponse.js?v=22";
 import {
   TYPE_REPONSE_ENTIER_NATUREL,
   TYPE_REPONSE_DEUX_ENTIERS,
@@ -15,13 +15,13 @@ import {
   estDeuxEntiersExacts,
   estEntierExact,
   estSelectionExacte,
-} from "../../packages/contrats/src/question-v2.js?v=21";
+} from "../../packages/contrats/src/question-v2.js?v=22";
 import {
   analyserEcritureDecimalePositive,
   fractionsEgales,
-} from "../../packages/objets/src/fractions-decimaux.js?v=21";
+} from "../../packages/objets/src/fractions-decimaux.js?v=22";
 import { graineDepuisTexte } from "../../packages/moteur-exercices/src/aleatoire.js";
-import { creerRegistreAutomatismes } from "../../packages/automatismes/src/registre.js?v=21";
+import { creerRegistreAutomatismes } from "../../packages/automatismes/src/registre.js?v=22";
 import {
   connaitNotionLecteur,
   listerNotionsLecteur,
@@ -33,8 +33,8 @@ import {
   NOTION_VOLUME_CYLINDRE,
   NOTION_VOLUME_PRISME,
   obtenirNotionLecteur,
-} from "./registre-lecteur.js?v=21";
-import { genererSerieMultinotions } from "./serie-multinotions.js?v=21";
+} from "./registre-lecteur.js?v=22";
+import { genererSerieMultinotions } from "./serie-multinotions.js?v=22";
 
 export {
   NOTION_FRACTIONS_SIMPLES_DECIMAUX,

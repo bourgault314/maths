@@ -13,7 +13,7 @@ import {
   TYPE_REPONSE_FRACTION_EQUIVALENTE,
   TYPE_REPONSE_NOMBRE_DECIMAL,
   TYPE_REPONSE_SELECTION_MULTIPLE,
-} from "./question-v2.js?v=21";
+} from "./question-v2.js?v=22";
 
 export const SCHEMA_TRACE_REPONSE = "mathsgo.trace-reponse/1";
 

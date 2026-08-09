@@ -204,4 +204,50 @@ describe("NC-01/F3 — variété", () => {
     assert.equal(zeroInterneVu, true);
     assert.equal(uniteZeroVue, true);
   });
+
+  it("propose occasionnellement un seul piège de terminaison, toujours varié", () => {
+    for (const diviseur of [3, 9]) {
+      let grillesEligibles = 0;
+      let grillesAvecPiege = 0;
+      let aucunAvecPiege = false;
+      let aucunSansPiege = false;
+      const valeursPieges = new Set();
+      const longueursPieges = new Set();
+      const positionsPieges = new Set();
+
+      for (let index = 0; index < 4000; index++) {
+        const question = instancier(`nc01-f3-piege-${diviseur}-${index}`, {
+          diviseur,
+        });
+        const { nombres } = donneesDe(question);
+        const pieges = nombres
+          .map((nombre, position) => ({ nombre, position }))
+          .filter(({ nombre }) =>
+            nombre % 10 === diviseur && nombre % diviseur !== 0);
+        const aUneReponseFausse = nombres.some((nombre) => nombre % diviseur !== 0);
+
+        assert.ok(pieges.length <= 1, `plusieurs pièges dans ${nombres.join(", ")}`);
+        if (aUneReponseFausse) grillesEligibles += 1;
+        if (pieges.length === 1) {
+          grillesAvecPiege += 1;
+          valeursPieges.add(pieges[0].nombre);
+          longueursPieges.add(String(pieges[0].nombre).length);
+          positionsPieges.add(pieges[0].position);
+        }
+
+        if (question.reponse.attendus.includes("aucun")) {
+          if (pieges.length === 1) aucunAvecPiege = true;
+          else aucunSansPiege = true;
+        }
+      }
+
+      const frequence = grillesAvecPiege / grillesEligibles;
+      assert.ok(frequence >= 0.18 && frequence <= 0.32, `fréquence ${diviseur} : ${frequence}`);
+      assert.ok(valeursPieges.size >= 100, `variété ${diviseur} : ${valeursPieges.size}`);
+      assert.deepEqual([...longueursPieges].sort(), [2, 3, 4]);
+      assert.deepEqual([...positionsPieges].sort(), [0, 1, 2, 3]);
+      assert.equal(aucunAvecPiege, true);
+      assert.equal(aucunSansPiege, true);
+    }
+  });
 });

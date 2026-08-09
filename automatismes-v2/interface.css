@@ -2331,6 +2331,7 @@ body {
 
 .barre-partage > div {
   grid-template-columns: repeat(3, 1fr);
+  align-items: stretch;
   border-top: 0;
   border-radius: 0 0 12px 12px;
 }
@@ -2473,6 +2474,117 @@ body {
   line-height: 1.4;
 }
 
+.equivalence-cours,
+.consequence-cours {
+  margin: 12px 0 0;
+  padding: 10px 12px;
+  border-radius: 11px;
+  color: var(--mg-encre);
+  background: color-mix(in srgb, var(--mg-turquoise) 10%, var(--mg-papier));
+  font-size: 13px;
+  font-weight: 750;
+  line-height: 1.4;
+}
+
+.equivalence-cours > strong {
+  display: block;
+  margin-bottom: 6px;
+  color: var(--mg-bleu);
+}
+
+.equivalence-cours p {
+  margin: 0;
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 5px 8px;
+}
+
+.equivalence-cours span {
+  font-weight: 800;
+}
+
+.equivalence-cours .suite-equivalence {
+  min-width: 0;
+  display: inline-flex;
+  align-items: baseline;
+  gap: 8px;
+}
+
+.equivalence-cours .suite-equivalence b {
+  font: inherit;
+}
+
+.equivalence-cours i {
+  color: var(--mg-orange);
+  font-style: normal;
+  font-weight: 900;
+}
+
+.consequence-cours strong {
+  color: var(--mg-bleu);
+}
+
+.borne-sommes-cours {
+  margin: 0 0 10px;
+  color: var(--mg-texteAttenue);
+  font-size: 13px;
+  font-weight: 700;
+  line-height: 1.4;
+}
+
+.reperes-multiples-cours {
+  margin-bottom: 10px;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.reperes-multiples-cours section {
+  min-width: 0;
+  padding: 10px;
+  border: 2px solid color-mix(in srgb, var(--mg-turquoise) 48%, var(--mg-ligne));
+  border-radius: 12px;
+  background: color-mix(in srgb, var(--mg-turquoise) 7%, var(--mg-papier));
+}
+
+.reperes-multiples-cours h4,
+.reperes-multiples-cours p {
+  margin: 0;
+}
+
+.reperes-multiples-cours h4 {
+  color: var(--mg-bleu);
+  font-size: 14px;
+}
+
+.reperes-multiples-cours p {
+  margin-top: 4px;
+  color: var(--mg-texteAttenue);
+  font-size: 12px;
+  font-weight: 700;
+  line-height: 1.35;
+}
+
+.reperes-multiples-cours strong {
+  margin-top: 7px;
+  display: block;
+  color: var(--mg-encre);
+  font-size: 13px;
+  line-height: 1.45;
+}
+
+@container (max-width: 559px) {
+  .equivalence-cours p {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .reperes-multiples-cours {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
 .nombre-observe strong.chiffre-unite-encadre,
 .nombre-unite-cours b.chiffre-unite-encadre,
 .nombre-correction strong.chiffre-unite-encadre {
@@ -2580,6 +2692,10 @@ body {
   color: var(--mg-texteAttenue);
   font-size: 13px;
   line-height: 1.4;
+}
+
+.attention-terminaisons-cours b {
+  color: var(--mg-bleu);
 }
 
 .navigation-cours {

@@ -34,14 +34,14 @@ import {
   saisirChiffre,
   tournerSolide,
   validerReponse,
-} from "./src/etat-lecteur.js?v=21";
+} from "./src/etat-lecteur.js?v=22";
 import {
   TYPE_REPONSE_DEUX_ENTIERS,
   TYPE_REPONSE_ENTIER_NATUREL,
   TYPE_REPONSE_FRACTION_EQUIVALENTE,
   TYPE_REPONSE_NOMBRE_DECIMAL,
   TYPE_REPONSE_CHOIX_UNIQUE,
-} from "../packages/contrats/src/question-v2.js?v=21";
+} from "../packages/contrats/src/question-v2.js?v=22";
 import {
   connaitNotionLecteur,
   obtenirNotionLecteur,
@@ -51,8 +51,8 @@ import {
   RENDU_SOLIDE,
   RENDU_VOLUME,
   NOTION_FRACTIONS_SIMPLES_DECIMAUX,
-} from "./src/registre-lecteur.js?v=21";
-import { COURS_SOLIDES_USUELS } from "../packages/automatismes/src/espace-et-geometrie/solides-usuels/reconnaissance.js?v=21";
+} from "./src/registre-lecteur.js?v=22";
+import { COURS_SOLIDES_USUELS } from "../packages/automatismes/src/espace-et-geometrie/solides-usuels/reconnaissance.js?v=22";
 import {
   creerCone,
   creerCube,
@@ -67,29 +67,29 @@ import {
   ACTION_TOUCHE_SAISIR,
   ACTION_TOUCHE_VALIDER,
   obtenirDispositionClavier,
-} from "../packages/objets/src/clavier.js?v=21";
-import { formulationCritereDivisibilite } from "../packages/automatismes/src/nombres-et-calculs/criteres-divisibilite/critere-precis.js?v=21";
+} from "../packages/objets/src/clavier.js?v=22";
+import { formulationCritereDivisibilite } from "../packages/automatismes/src/nombres-et-calculs/criteres-divisibilite/critere-precis.js?v=22";
 import {
   nombre,
   puissance,
   variable,
   versHtmlSemantique,
-} from "../packages/objets/src/expressions.js?v=21";
+} from "../packages/objets/src/expressions.js?v=22";
 import {
   dessinerCarreQuadrille,
-} from "../packages/objets/src/carre-quadrille.js?v=21";
-import { dessinerGrilleFraction } from "../packages/objets/src/fractions.js?v=21";
-import { dessinerDoubleDroiteGraduee } from "../packages/objets/src/droite-graduee.js?v=21";
+} from "../packages/objets/src/carre-quadrille.js?v=22";
+import { dessinerGrilleFraction } from "../packages/objets/src/fractions.js?v=22";
+import { dessinerDoubleDroiteGraduee } from "../packages/objets/src/droite-graduee.js?v=22";
 import {
   construireGroupementFraction,
   construireDonneesTableauDepuisFraction,
   formaterFractionEnDecimal,
-} from "../packages/objets/src/fractions-decimaux.js?v=21";
+} from "../packages/objets/src/fractions-decimaux.js?v=22";
 import {
   diagnostiquerDecimalVersNumerateur,
   diagnostiquerFractionLibre,
   diagnostiquerFractionVersDecimal,
-} from "./src/diagnostic-fractions-decimaux.js?v=21";
+} from "./src/diagnostic-fractions-decimaux.js?v=22";
 
 const application = document.querySelector("#application");
 const rechercheInitiale = window.location.search;
@@ -1246,6 +1246,12 @@ function rendreCarteCoursDivisibilite(index) {
           <p><strong>13 = 3 × 4 + 1</strong><span>Le reste n’est pas égal à 0 : 13 n’est pas divisible par 3.</span></p>
         </section>
       </div>
+      <div class="equivalence-cours">
+        <strong>Trois façons de dire la même chose</strong>
+        <p aria-label="3 divise 12 équivaut à 12 est divisible par 3, qui équivaut à 12 est un multiple de 3">
+          <span>3 divise 12</span><span class="suite-equivalence"><i aria-hidden="true">⇔</i><b>12 est divisible par 3</b></span><span class="suite-equivalence"><i aria-hidden="true">⇔</i><b>12 est un multiple de 3</b></span>
+        </p>
+      </div>
     </article>`;
   }
   if (index === 1) {
@@ -1262,19 +1268,34 @@ function rendreCarteCoursDivisibilite(index) {
         <p><strong class="nombre-unite-cours" aria-label="235, chiffre des unités 5"><span>2</span><span>3</span><b class="chiffre-unite-encadre">5</b></strong><span>Son chiffre des unités est 5 : il est divisible par 5, mais pas par 2 ni par 10.</span></p>
         <p><strong class="nombre-unite-cours" aria-label="236, chiffre des unités 6"><span>2</span><span>3</span><b class="chiffre-unite-encadre">6</b></strong><span>Son chiffre des unités est 6 : il est divisible par 2, mais pas par 5 ni par 10.</span></p>
       </div>
+      <p class="consequence-cours"><strong>À retenir :</strong> un nombre est divisible par 10 exactement quand il est divisible à la fois par 2 et par 5.</p>
     </article>`;
   }
   return `<article class="carte-cours-divisibilite">
     <span class="numero-cours">3</span>
     <h3>Pour 3 et 9, j’additionne tous les chiffres</h3>
-    <ul class="regles-unites-cours regles-sommes-cours">
-      <li><strong>Divisible par 3 :</strong><span>la somme de tous les chiffres est un multiple de 3.</span></li>
-      <li><strong>Divisible par 9 :</strong><span>la somme de tous les chiffres est un multiple de 9.</span></li>
-    </ul>
+    <p class="borne-sommes-cours">Dans ces exercices, les nombres ont au plus quatre chiffres : la somme de leurs chiffres ne dépasse pas 36.</p>
+    <div class="reperes-multiples-cours">
+      <section>
+        <h4>Pour être divisible par 3</h4>
+        <p>La somme doit être l’un de ces multiples de 3 :</p>
+        <strong>3, 6, 9, 12, 15, 18, 21, 24, 27, 30, 33, 36</strong>
+      </section>
+      <section>
+        <h4>Pour être divisible par 9</h4>
+        <p>La somme doit être l’un de ces multiples de 9 :</p>
+        <strong>9, 18, 27, 36</strong>
+      </section>
+    </div>
     <div class="exemples-sommes-cours">
       <section><p aria-label="3 plus 7 plus 2 égale 12"><b>3</b><i>+</i><b>7</b><i>+</i><b>2</b><i>=</i><strong>12</strong></p><span>12 est multiple de 3, mais pas de 9.</span><em>372 est divisible par 3, mais pas par 9.</em></section>
       <section><p aria-label="7 plus 2 plus 9 égale 18"><b>7</b><i>+</i><b>2</b><i>+</i><b>9</b><i>=</i><strong>18</strong></p><span>18 est multiple de 3 et de 9.</span><em>729 est divisible par 3 et par 9.</em></section>
     </div>
+    <div class="attention-cours attention-terminaisons-cours">
+      <strong>Attention : le dernier chiffre ne suffit pas.</strong>
+      <p><b>43</b> se termine par 3, mais 4 + 3 = 7 : il n’est pas divisible par 3.<br><b>49</b> se termine par 9, mais 4 + 9 = 13 : il n’est pas divisible par 9.</p>
+    </div>
+    <p class="consequence-cours"><strong>Lien utile :</strong> tout nombre divisible par 9 est aussi divisible par 3.</p>
   </article>`;
 }
 
