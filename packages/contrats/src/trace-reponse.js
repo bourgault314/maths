@@ -1,9 +1,10 @@
-// Contrat minimal de trace de réponse — version 1.
+// Contrat de trace de réponse — versions 1 et 2.
 //
 // La trace enregistre ce que l'élève a validé, pas la bonne réponse. Elle ne
 // contient aucune identité, durée, donnée d'écran ou information de serveur.
-// Cette version couvre les choix, les entiers, les décimaux positifs et les
-// fractions équivalentes.
+// La version 2 ajoute le classement canonique et les versions du contenu afin
+// qu'un futur export reste interprétable sans la question complète. La version
+// 1 reste lisible telle qu'elle a été publiée ; elle n'est jamais réécrite.
 
 import { estDonneePure, estIdentifiantValide } from "./gabarit.js";
 import {
@@ -13,9 +14,11 @@ import {
   TYPE_REPONSE_FRACTION_EQUIVALENTE,
   TYPE_REPONSE_NOMBRE_DECIMAL,
   TYPE_REPONSE_SELECTION_MULTIPLE,
-} from "./question-v2.js?v=22";
+} from "./question-v2.js?v=23";
 
-export const SCHEMA_TRACE_REPONSE = "mathsgo.trace-reponse/1";
+export const SCHEMA_TRACE_REPONSE_V1 = "mathsgo.trace-reponse/1";
+export const SCHEMA_TRACE_REPONSE = "mathsgo.trace-reponse/2";
+export const REFERENTIEL_COMPETENCES = "mathsgo.taxonomie-competences/1";
 
 const FORMAT_ID_INSTANCE = /^[a-z0-9][a-z0-9._:@-]{0,199}$/;
 const FORMAT_DECIMAL_POSITIF = /^(?:\d+(?:[.,]\d*)?|[.,]\d+)$/;
@@ -52,6 +55,105 @@ function estIdInstanceValide(id) {
   return typeof id === "string" && FORMAT_ID_INSTANCE.test(id);
 }
 
+function validerListeIdentifiants(liste, nom, erreurs, { nonVide = false } = {}) {
+  if (!Array.isArray(liste)) {
+    erreurs.push(`${nom} : liste attendue`);
+    return;
+  }
+  if (nonVide && liste.length === 0) {
+    erreurs.push(`${nom} : liste non vide requise`);
+  }
+  if (liste.some((identifiant) => !estIdentifiantValide(identifiant))) {
+    erreurs.push(`${nom} : identifiants en minuscules requis`);
+  }
+  if (new Set(liste).size !== liste.length) {
+    erreurs.push(`${nom} : doublons interdits`);
+  }
+}
+
+function validerClassementV2(classement, erreurs) {
+  if (typeof classement !== "object" || classement === null) {
+    erreurs.push("classement : objet attendu");
+    return;
+  }
+  validerClesConnues(
+    classement,
+    [
+      "referentiel",
+      "domaine",
+      "module",
+      "microNotion",
+      "famille",
+      "cibles",
+      "complements",
+    ],
+    "classement",
+    erreurs,
+  );
+  if (classement.referentiel !== REFERENTIEL_COMPETENCES) {
+    erreurs.push(
+      `classement.referentiel : « ${REFERENTIEL_COMPETENCES} » attendu`,
+    );
+  }
+  for (const champ of ["domaine", "module", "microNotion", "famille"]) {
+    if (!estIdentifiantValide(classement[champ])) {
+      erreurs.push(`classement.${champ} : identifiant en minuscules requis`);
+    }
+  }
+  validerListeIdentifiants(classement.cibles, "classement.cibles", erreurs, {
+    nonVide: true,
+  });
+  validerListeIdentifiants(
+    classement.complements,
+    "classement.complements",
+    erreurs,
+  );
+}
+
+function validerContenuV2(contenu, erreurs) {
+  if (typeof contenu !== "object" || contenu === null) {
+    erreurs.push("contenu : objet attendu");
+    return;
+  }
+  validerClesConnues(
+    contenu,
+    ["gabarit", "generateur", "aleatoire"],
+    "contenu",
+    erreurs,
+  );
+  for (const champ of ["gabarit", "generateur"]) {
+    const valeur = contenu[champ];
+    if (typeof valeur !== "object" || valeur === null) {
+      erreurs.push(`contenu.${champ} : objet attendu`);
+      continue;
+    }
+    validerClesConnues(valeur, ["id", "version"], `contenu.${champ}`, erreurs);
+    if (!estIdentifiantValide(valeur.id)) {
+      erreurs.push(`contenu.${champ}.id : identifiant en minuscules requis`);
+    }
+    if (!Number.isInteger(valeur.version) || valeur.version < 1) {
+      erreurs.push(`contenu.${champ}.version : entier supérieur ou égal à 1 requis`);
+    }
+  }
+  const aleatoire = contenu.aleatoire;
+  if (typeof aleatoire !== "object" || aleatoire === null) {
+    erreurs.push("contenu.aleatoire : objet attendu");
+    return;
+  }
+  validerClesConnues(
+    aleatoire,
+    ["graine", "version"],
+    "contenu.aleatoire",
+    erreurs,
+  );
+  if (typeof aleatoire.graine !== "string") {
+    erreurs.push("contenu.aleatoire.graine : texte requis");
+  }
+  if (!Number.isInteger(aleatoire.version) || aleatoire.version < 1) {
+    erreurs.push("contenu.aleatoire.version : entier supérieur ou égal à 1 requis");
+  }
+}
+
 /**
  * Valide une trace de réponse interactive prise en charge par le lecteur V2.
  * @param {unknown} trace
@@ -66,34 +168,57 @@ export function validerTraceReponse(trace) {
     return { valide: false, erreurs: ["trace : données JSON pures uniquement"] };
   }
   const t = /** @type {Record<string, any>} */ (trace);
+  const version1 = t.schema === SCHEMA_TRACE_REPONSE_V1;
+  const version2 = t.schema === SCHEMA_TRACE_REPONSE;
   validerClesConnues(
     t,
-    [
-      "schema",
-      "id",
-      "seance",
-      "question",
-      "microNotion",
-      "indexQuestion",
-      "validation",
-      "reponse",
-      "juste",
-      "aideConsultee",
-    ],
+    version1
+      ? [
+        "schema",
+        "id",
+        "seance",
+        "question",
+        "microNotion",
+        "indexQuestion",
+        "validation",
+        "reponse",
+        "juste",
+        "aideConsultee",
+      ]
+      : [
+        "schema",
+        "id",
+        "seance",
+        "question",
+        "classement",
+        "contenu",
+        "indexQuestion",
+        "validation",
+        "reponse",
+        "juste",
+        "aideConsultee",
+      ],
     "trace",
     erreurs,
   );
 
-  if (t.schema !== SCHEMA_TRACE_REPONSE) {
-    erreurs.push(`schema : « ${SCHEMA_TRACE_REPONSE} » attendu`);
+  if (!version1 && !version2) {
+    erreurs.push(
+      `schema : « ${SCHEMA_TRACE_REPONSE_V1} » ou « ${SCHEMA_TRACE_REPONSE} » attendu`,
+    );
   }
   for (const champ of ["id", "seance", "question"]) {
     if (!estIdInstanceValide(t[champ])) {
       erreurs.push(`${champ} : identifiant d'instance en minuscules requis`);
     }
   }
-  if (t.microNotion !== undefined && !estIdentifiantValide(t.microNotion)) {
-    erreurs.push("microNotion : identifiant en minuscules requis");
+  if (version1) {
+    if (t.microNotion !== undefined && !estIdentifiantValide(t.microNotion)) {
+      erreurs.push("microNotion : identifiant en minuscules requis");
+    }
+  } else if (version2) {
+    validerClassementV2(t.classement, erreurs);
+    validerContenuV2(t.contenu, erreurs);
   }
   if (!Number.isInteger(t.indexQuestion) || t.indexQuestion < 0) {
     erreurs.push("indexQuestion : entier positif ou nul requis");

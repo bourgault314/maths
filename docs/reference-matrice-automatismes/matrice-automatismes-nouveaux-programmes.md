@@ -1,5 +1,10 @@
 # Matrice de couverture des automatismes des nouveaux programmes de mathématiques
 
+**Statut : archive de référence V1. Cette matrice conserve les formulations et
+le classement historique des lignes du BO ; elle n'est pas une source de
+taxonomie, d'identifiants, de statuts ou d'ordre de fabrication pour
+Automatismes V2. D-043, le manifeste canonique et la carte V2 prévalent.**
+
 ## CM1, CM2, 6e, 5e, 4e et 3e — classement selon les 7 domaines de maths&go
 
 **Version de référence : juillet 2026**  
@@ -379,4 +384,3 @@ Les domaines 6 et 7 restent pleinement utiles : le domaine 6 contient des appren
 ## 12. Points laissés à vérifier
 
 **Aucun point de programme n’a dû être inventé pour établir cette matrice.** La seule formulation officielle particulièrement elliptique est « Nombre quotient » dans les automatismes de calcul littéral et algébrique de 5e ; elle a été conservée et signalée comme telle dans la ligne 5-24.
-

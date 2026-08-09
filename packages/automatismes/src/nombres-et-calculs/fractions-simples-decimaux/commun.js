@@ -5,7 +5,7 @@
 import {
   SCHEMA_GABARIT_QUESTION,
   estDonneePure,
-} from "../../../../contrats/src/gabarit.js?v=22";
+} from "../../../../contrats/src/gabarit.js?v=23";
 import {
   COMPARAISON_CHOIX_EXACT,
   COMPARAISON_VALEUR_EXACTE,
@@ -14,13 +14,20 @@ import {
   TYPE_REPONSE_ENTIER_NATUREL,
   TYPE_REPONSE_FRACTION_EQUIVALENTE,
   TYPE_REPONSE_NOMBRE_DECIMAL,
-} from "../../../../contrats/src/question-v2.js?v=22";
+} from "../../../../contrats/src/question-v2.js?v=23";
+import {
+  IDENTITES_AUTOMATISMES,
+  creerClassementAutomatisme,
+} from "../../identifiants.js?v=23";
 
 export const NOTION_FRACTIONS_SIMPLES_DECIMAUX =
-  "fractions-simples-decimaux";
-export const MICRO_NOTION_NC03 = "nc-03";
-export const MICRO_NOTION_NC04 = "nc-04";
-export const CIBLE_FRACTIONS_SIMPLES_DECIMAUX = "dnb-2026-01";
+  IDENTITES_AUTOMATISMES.FRACTION_VERS_DECIMAL.module;
+export const MICRO_NOTION_NC03 =
+  IDENTITES_AUTOMATISMES.FRACTION_VERS_DECIMAL.microNotion;
+export const MICRO_NOTION_NC04 =
+  IDENTITES_AUTOMATISMES.DECIMAL_VERS_FRACTION.microNotion;
+export const CIBLE_FRACTIONS_SIMPLES_DECIMAUX =
+  IDENTITES_AUTOMATISMES.FRACTION_VERS_DECIMAL.cible;
 export const PRESENTATIONS_FRACTIONS_DECIMAUX = Object.freeze([
   "abstraite",
   "double-droite",
@@ -156,17 +163,17 @@ export function blocRationnel(id, numerateur, denominateur, ecriture) {
 }
 
 export function classementFractions(microNotion, famille, complements = []) {
-  if (![MICRO_NOTION_NC03, MICRO_NOTION_NC04].includes(microNotion)) {
-    throw new RangeError("classementFractions : micro-notion NC-03 ou NC-04 requise");
+  const identite = microNotion === MICRO_NOTION_NC03
+    ? IDENTITES_AUTOMATISMES.FRACTION_VERS_DECIMAL
+    : microNotion === MICRO_NOTION_NC04
+      ? IDENTITES_AUTOMATISMES.DECIMAL_VERS_FRACTION
+      : null;
+  if (!identite) {
+    throw new RangeError(
+      "classementFractions : micro-notion fraction-vers-decimal ou decimal-vers-fraction requise",
+    );
   }
-  return {
-    domaine: "nombres-et-calculs",
-    notion: NOTION_FRACTIONS_SIMPLES_DECIMAUX,
-    microNotion,
-    famille,
-    cible: CIBLE_FRACTIONS_SIMPLES_DECIMAUX,
-    complements: [...complements],
-  };
+  return creerClassementAutomatisme(identite, famille, complements);
 }
 
 export function reponseNombreDecimal(numerateur, denominateur) {

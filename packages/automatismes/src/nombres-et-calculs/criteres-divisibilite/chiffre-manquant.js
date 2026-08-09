@@ -14,8 +14,12 @@ import {
   SCHEMA_QUESTION_INSTANCE_V2,
   TYPE_REPONSE_ENTIER_NATUREL,
   TYPE_REPONSE_SELECTION_MULTIPLE,
-} from "../../../../contrats/src/question-v2.js?v=22";
-import { formulationCritereDivisibilite } from "./critere-precis.js?v=22";
+} from "../../../../contrats/src/question-v2.js?v=23";
+import {
+  IDENTITES_AUTOMATISMES,
+  creerClassementAutomatisme,
+} from "../../identifiants.js?v=23";
+import { formulationCritereDivisibilite } from "./critere-precis.js?v=23";
 
 export const NOM_GENERATEUR_CHIFFRE_MANQUANT =
   "nombres-et-calculs.criteres-divisibilite.chiffre-manquant";
@@ -375,13 +379,11 @@ export function genererQuestionChiffreManquant({ aleatoire, parametres }) {
   const { motif, solutions } = trouverMotif(aleatoire, critere, sousForme);
 
   return {
-    classement: {
-      domaine: "nombres-et-calculs",
-      notion: "criteres-divisibilite",
-      famille: "chiffre-manquant",
-      cible: "dnb-2026-09",
-      complements: critere === 10 ? ["critere-divisibilite-10"] : [],
-    },
+    classement: creerClassementAutomatisme(
+      IDENTITES_AUTOMATISMES.CRITERES_DIVISIBILITE,
+      "chiffre-manquant",
+      critere === 10 ? ["critere-divisibilite-10"] : [],
+    ),
     enonce: [
       { id: "consigne", type: "texte", contenu: consignePour(sousForme, critere) },
       { id: "nombre-a-completer", type: "texte", contenu: motif },

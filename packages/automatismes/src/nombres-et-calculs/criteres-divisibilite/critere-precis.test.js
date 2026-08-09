@@ -51,6 +51,7 @@ describe("NC-01/F1 — contrat et paramètres", () => {
     assert.deepEqual(question.classement, {
       domaine: "nombres-et-calculs",
       notion: "criteres-divisibilite",
+      microNotion: "criteres-divisibilite",
       famille: "critere-precis",
       cible: "dnb-2026-09",
       complements: ["critere-divisibilite-10"],

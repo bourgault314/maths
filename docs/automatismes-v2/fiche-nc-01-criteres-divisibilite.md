@@ -9,9 +9,11 @@ Cette fiche fixe le contenu avant toute programmation. La validation pédagogiqu
 ## Ancrage dans le parcours DNB
 
 - Cible officielle DNB 2026 : « Appliquer les critères de divisibilité par 2, 3, 5, 9. »
-- Ligne de la carte : `DNB26-09`.
-- Micro-notion maths&go : `NC-01`.
-- Domaine maths&go : nombres et calculs.
+- Ligne de la carte : `DNB26-09` ; référence machine : `dnb-2026-09`.
+- Identifiant canonique du module et de la micro-notion :
+  `criteres-divisibilite`.
+- Alias humain de pilotage : `NC-01`.
+- Domaine canonique : `nombres-et-calculs`.
 - Correspondance programme : automatisme `3-09`.
 - Place dans l’ordre de fabrication : rang 1 sur 88.
 

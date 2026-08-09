@@ -1,6 +1,8 @@
 # Correspondance matrice ↔ tableau de bord de l'Atelier
 
-**Statut : proposition de Claude (18 juillet 2026), à valider par Gwenaël.**
+**Statut : archive V1 de Claude (18 juillet 2026), non validée. Cette table de
+badges du Studio ne définit ni les domaines, ni les identifiants, ni la
+couverture d'Automatismes V2. D-043 et la carte V2 prévalent.**
 
 Chaque badge « ⚡ auto » du tableau de bord (`studio/atelier/index.html`,
 champ `auto` de `PROGRAMME`) vient de cette table : pour chaque notion du
@@ -106,12 +108,12 @@ explicites du BO) : pas de badge, conformément à la matrice.
 Aucun automatisme étiqueté par le BO (pensée informatique : absence
 explicite ; domaine 7 : hors programme officiel). Aucun badge.
 
-## Reste à faire (prochains chantiers)
+## Suites envisagées à l'époque — désormais archivées
 
-- Faire valider cette correspondance par Gwenaël (c'est un classement
-  pédagogique : la règle « la pédagogie, c'est moi » s'applique).
-- Mapper les 43 modules de l'appli Automatismes sur les identifiants de la
-  matrice (`docs/reference-automatismes-beta/` fournit l'inventaire), pour
-  que le futur menu sache filtrer par automatisme officiel.
-- Reporter les métadonnées du §10 de la matrice (niveau d'apprentissage ≠
-  niveau d'automatisation) dans le registre des objets quand il sera enrichi.
+- Cette correspondance devait être validée par Gwenaël ; elle ne l'a pas été et
+  reste donc une proposition historique.
+- Le projet de mapper les 43 modules historiques pour alimenter un futur menu
+  concernait la V1. Il est abandonné pour V2, qui possède ses propres modules
+  descriptifs et une correspondance de programme indépendante.
+- Le report envisagé des métadonnées du §10 n'a pas valeur de décision V2 ; la
+  taxonomie canonique D-043 porte désormais ses propres correspondances.

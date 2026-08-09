@@ -59,7 +59,7 @@ test("une série longue équilibre les deux sens et leurs représentations", () 
     assert.equal(plan.filter(({ denominateur }) => denominateur === 1000).length, 1);
     assert.equal(plan.filter(({ forme }) => forme === "fraction-libre").length, 1);
 
-    for (const microNotion of ["nc-03", "nc-04"]) {
+    for (const microNotion of ["fraction-vers-decimal", "decimal-vers-fraction"]) {
       const questions = plan.filter((element) => element.microNotion === microNotion);
       assert.equal(questions.length, 10);
       assert.equal(
@@ -79,7 +79,7 @@ test("une série longue équilibre les deux sens et leurs représentations", () 
         && element.numerateur % element.denominateur !== 0));
     }
     assert.ok(plan.some((element) =>
-      element.microNotion === "nc-04"
+      element.microNotion === "decimal-vers-fraction"
       && [2, 4].includes(element.denominateur)
       && element.numerateur % element.denominateur === 0));
     assert.equal(
@@ -143,11 +143,11 @@ test("les questions instanciées demandent réellement le sens annoncé", () => 
     for (const question of questions) {
       const source = question.enonce.find((bloc) => bloc.type === "rationnel");
       assert.ok(source);
-      if (question.classement.microNotion === "nc-03") {
+      if (question.classement.microNotion === "fraction-vers-decimal") {
         assert.equal(source.ecriture, "fraction");
         assert.ok(["nombre-decimal", "choix-unique"].includes(question.reponse.type));
       } else {
-        assert.equal(question.classement.microNotion, "nc-04");
+        assert.equal(question.classement.microNotion, "decimal-vers-fraction");
         assert.equal(source.ecriture, "decimal");
         assert.ok([
           "entier-naturel",

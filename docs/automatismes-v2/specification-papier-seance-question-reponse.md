@@ -2,9 +2,12 @@
 
 ## Statut
 
-**Architecture de données fonctionnelle version 1, validée par Gwenaël le 19 juillet 2026.**
+**Architecture de données fonctionnelle version 1, validée par Gwenaël le 19 juillet 2026 ; nomenclature et trace autonome version 2 précisées par D-043 le 9 août 2026.**
 
-Ce document ne définit aucun nom de propriété définitif, aucun schéma JSON et aucun code. Il fixe les responsabilités pour éviter que le menu, le lecteur, les questions et le futur serveur se mélangent.
+Ce document fixe les responsabilités fonctionnelles pour éviter que le
+menu, le lecteur, les questions et le futur serveur se mélangent. Les noms de
+propriété, schémas JSON et contrats techniques restent définis dans le code ;
+les identifiants canoniques, eux, relèvent de la taxonomie D-043.
 
 ## Principe directeur
 
@@ -35,13 +38,17 @@ La page d’accueil remet au lecteur une préparation courte et stable.
 | Information | Rôle | Exemple |
 | --- | --- | --- |
 | contexte de lancement | distinguer un parcours DNB d’un entraînement personnalisé | parcours DNB |
-| sélection | liste des micro-notions maths&go demandées | `NC-01` |
+| sélection | liste des modules visibles demandés, par identifiant canonique | `criteres-divisibilite` |
 | mode | choisir entre réponse élève et conduite collective | interactif ou diaporama |
 | nombre de questions | fixer la longueur et la progression | 10 |
 | politique d’aide | dire si l’aide est ouverte, disponible ou indisponible | disponible |
 | graine | reproduire exactement la même séance | graine choisie ou créée |
 
-Le titre affiché n’est pas enregistré comme une longue chaîne fabriquée par le menu. Le lecteur le compose depuis la sélection : nom de la notion lorsqu’elle est seule, ou « 6 notions sélectionnées » lorsqu’elles sont nombreuses.
+Le titre affiché n’est pas enregistré comme une longue chaîne fabriquée par le
+menu. Le lecteur le compose depuis la sélection : nom du module lorsqu’il est
+seul, ou nombre de modules sélectionnés lorsqu’ils sont plusieurs. Une entrée
+peut couvrir plusieurs micro-notions sans les transformer en plusieurs choix de
+menu.
 
 ### Ce qui n’appartient pas à cette préparation
 
@@ -78,12 +85,18 @@ Une question instanciée est entièrement prête à afficher : les valeurs sont 
 La question doit permettre de retrouver :
 
 - son identifiant d’instance ;
-- son domaine maths&go ;
-- sa micro-notion ;
-- sa famille pédagogique ;
-- la cible officielle correspondante ;
+- l'identifiant canonique de son module visible ;
+- l'identifiant canonique de son domaine disciplinaire ;
+- l'identifiant canonique de sa micro-notion ;
+- l'identifiant canonique de sa famille pédagogique ;
+- les références de programme correspondantes : au minimum la cible machine
+  `dnb-2026-xx` dans le classement courant ; la puce source et les lignes des
+  nouveaux programmes sont retrouvées dans le catalogue versionné ;
+- les alias humains ou historiques nécessaires à la lecture des anciennes
+  données, sans les émettre comme identifiants principaux ;
 - les éventuels compléments maths&go, comme le critère par 10 ;
-- la graine et la version du générateur qui l’ont produite.
+- la graine, la version du catalogue et la version du générateur qui l’ont
+  produite.
 
 Ces informations permettront le classement et le futur suivi sans afficher leurs codes à l’élève.
 
@@ -187,6 +200,33 @@ Dans la première version :
 
 Le score affiché est une conséquence des traces. Il n’est pas écrit dans les questions et ne modifie jamais leur contenu.
 
+### Trace version 2 autonome
+
+La trace version 2 reste analysable même si la question instanciée n'est plus
+disponible. Elle porte donc au minimum :
+
+- la version du catalogue de compétences ;
+- l'identifiant canonique du module visible ;
+- l'identifiant canonique de la micro-notion ;
+- l'identifiant canonique de la famille ;
+- la version du générateur ;
+- les cibles externes nécessaires au regroupement demandé, actuellement sous
+  la forme `dnb-2026-xx`.
+
+La puce de la liste officielle et les correspondances détaillées avec les
+nouveaux programmes ne sont pas dupliquées dans chaque trace : le référentiel
+versionné permet de les joindre aux identifiants stables lors d'une analyse.
+
+Les codes courts tels que `NC-03` ou l'ancien `PG-22` restent acceptés à
+l'import au moyen d'une table d'alias, mais une trace version 2 émet les
+identifiants descriptifs. Les traces version 1 restent lisibles grâce à leur
+identifiant de question et aux alias : aucune migration destructive n'est
+requise.
+
+Cette préparation ne décide ni de l'identité de l'élève, ni d'un serveur, ni du
+transport, ni du format du futur tableau d'export. Ces sujets restent hors du
+chantier actuel et demanderont une décision séparée avant toute collecte.
+
 ## 6. Décision enregistrée pour les fractions
 
 Une réponse fractionnaire ne sera pas saisie sous la forme d’un texte contenant `/`.
@@ -227,7 +267,9 @@ Cette liste guide l’architecture, mais n’autorise pas leur programmation ant
 
 ## 8. Enchaînement complet pour NC-01 F2
 
-1. L’accueil prépare une séance contenant `NC-01`, le mode, dix questions, la politique d’aide et une graine.
+1. L’accueil prépare une séance contenant le module canonique
+   `criteres-divisibilite` (alias humain `NC-01`), le mode, dix questions, la
+   politique d’aide et une graine.
 2. L’écran « Prêt à commencer » résume cette préparation.
 3. « Commencer » crée la séance ordonnée.
 4. Le lecteur reçoit une première question instanciée de la famille F2.
@@ -238,11 +280,15 @@ Cette liste guide l’architecture, mais n’autorise pas leur programmation ant
 9. « Suivant » fait avancer la séance et la barre de progression.
 10. Le bilan est calculé à partir de toutes les traces.
 
-## 9. Prochaine étape autorisée
+## 9. Étape de données ultérieure
 
-1. donner des noms techniques stables aux trois ensembles ;
-2. définir la nouvelle version du contrat de question pour la sélection multiple F2 ;
-3. définir le contrat minimal de séance et de trace ;
-4. écrire les tests des contrats avant le générateur pédagogique ;
-5. construire ensuite la première tranche verticale de `NC-01`.
+La taxonomie canonique et les contrats de séance, de question et de trace
+version 2 sont construits. Le prochain chantier de données, distinct de la
+fabrication des modules pédagogiques, consistera à :
+
+1. maintenir la correspondance entre la taxonomie, les identités du code et les
+   traces par des tests de cohérence ;
+2. conserver la lecture des traces version 1 par la table d'alias ;
+3. décider séparément de l'identité, du serveur, du transport et des exports
+   avec Gwenaël avant toute collecte réelle.
 

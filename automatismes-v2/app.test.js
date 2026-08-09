@@ -542,7 +542,7 @@ it("sélectionne, révise et rejoue plusieurs automatismes dans une même série
     0,
   );
   cliquer(gestionnaires, "choisir-notion", undefined, "criteres-divisibilite");
-  cliquer(gestionnaires, "choisir-notion", undefined, "carres-entiers-1-a-12");
+  cliquer(gestionnaires, "choisir-notion", undefined, "carres-entiers-0-a-12");
   assert.match(application.innerHTML, /2 \/ 3 <span class="theme-count-label">sélectionnés/);
   assert.match(application.innerHTML, /2 automatismes sélectionnés/);
   assert.match(
@@ -551,7 +551,7 @@ it("sélectionne, révise et rejoue plusieurs automatismes dans une même série
   );
   assert.match(
     application.innerHTML,
-    /data-value="carres-entiers-1-a-12"\s+checked/,
+    /data-value="carres-entiers-0-a-12"\s+checked/,
   );
   assert.equal(
     [...application.innerHTML.matchAll(/class="modrow is-selected"/g)].length,
@@ -572,7 +572,7 @@ it("sélectionne, révise et rejoue plusieurs automatismes dans une même série
     undefined,
     undefined,
     undefined,
-    "carres-entiers-1-a-12",
+    "carres-entiers-0-a-12",
   );
   assert.match(application.innerHTML, /Comprendre « au carré »/);
   assert.match(application.innerHTML, /1 \/ 5/);

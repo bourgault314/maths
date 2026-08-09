@@ -2,7 +2,7 @@
 
 import {
   SCHEMA_QUESTION_INSTANCE_V2,
-} from "../../../../contrats/src/question-v2.js?v=22";
+} from "../../../../contrats/src/question-v2.js?v=23";
 import {
   MICRO_NOTION_NC03,
   PRESENTATIONS_FRACTIONS_DECIMAUX,
@@ -18,10 +18,10 @@ import {
   nomDuRang,
   reponseChoixUnique,
   reponseNombreDecimal,
-} from "./commun.js?v=22";
+} from "./commun.js?v=23";
 import {
   formaterFractionEnDecimal,
-} from "../../../../objets/src/fractions-decimaux.js?v=22";
+} from "../../../../objets/src/fractions-decimaux.js?v=23";
 
 export const NOM_GENERATEUR_FRACTION_VERS_DECIMAL =
   "nombres-et-calculs.fractions-simples-decimaux.fraction-vers-decimal";

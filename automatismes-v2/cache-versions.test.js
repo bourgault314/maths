@@ -2,7 +2,7 @@ import assert from "node:assert/strict";
 import { readFile } from "node:fs/promises";
 import { it } from "node:test";
 
-const VERSION = "22";
+const VERSION = "23";
 
 const RESSOURCES_VERSIONNEES = new Map([
   ["automatismes-v2/index.html", ["styles.css", "interface.css", "menu.css", "app.js"]],
@@ -10,6 +10,7 @@ const RESSOURCES_VERSIONNEES = new Map([
     "etat-lecteur.js",
     "question-v2.js",
     "registre-lecteur.js",
+    "identifiants.js",
     "reconnaissance.js",
     "clavier.js",
     "critere-precis.js",
@@ -25,6 +26,7 @@ const RESSOURCES_VERSIONNEES = new Map([
     "trace-reponse.js",
     "question-v2.js",
     "registre.js",
+    "identifiants.js",
     "registre-lecteur.js",
     "serie-multinotions.js",
     "fractions-decimaux.js",
@@ -36,9 +38,9 @@ const RESSOURCES_VERSIONNEES = new Map([
     "calcul-volumes.js",
     "calcul-direct.js",
     "carres-entiers-1-a-12/serie.js",
-    "fractions-simples-decimaux/commun.js",
     "fractions-simples-decimaux/fraction-vers-decimal.js",
     "fractions-simples-decimaux/serie.js",
+    "identifiants.js",
   ]],
   ["packages/automatismes/src/registre.js", [
     "generation.js",
@@ -66,11 +68,11 @@ const RESSOURCES_VERSIONNEES = new Map([
     "chiffre-manquant.js",
     "partage-court.js",
   ]],
-  ["packages/automatismes/src/nombres-et-calculs/criteres-divisibilite/critere-precis.js", ["question-v2.js"]],
-  ["packages/automatismes/src/nombres-et-calculs/criteres-divisibilite/selection-diviseurs.js", ["question-v2.js", "critere-precis.js"]],
-  ["packages/automatismes/src/nombres-et-calculs/criteres-divisibilite/selection-nombres.js", ["question-v2.js", "critere-precis.js"]],
-  ["packages/automatismes/src/nombres-et-calculs/criteres-divisibilite/chiffre-manquant.js", ["question-v2.js", "critere-precis.js"]],
-  ["packages/automatismes/src/nombres-et-calculs/criteres-divisibilite/partage-court.js", ["question-v2.js", "critere-precis.js"]],
+  ["packages/automatismes/src/nombres-et-calculs/criteres-divisibilite/critere-precis.js", ["question-v2.js", "identifiants.js"]],
+  ["packages/automatismes/src/nombres-et-calculs/criteres-divisibilite/selection-diviseurs.js", ["question-v2.js", "critere-precis.js", "identifiants.js"]],
+  ["packages/automatismes/src/nombres-et-calculs/criteres-divisibilite/selection-nombres.js", ["question-v2.js", "critere-precis.js", "identifiants.js"]],
+  ["packages/automatismes/src/nombres-et-calculs/criteres-divisibilite/chiffre-manquant.js", ["question-v2.js", "critere-precis.js", "identifiants.js"]],
+  ["packages/automatismes/src/nombres-et-calculs/criteres-divisibilite/partage-court.js", ["question-v2.js", "critere-precis.js", "identifiants.js"]],
   ["packages/automatismes/src/nombres-et-calculs/carres-entiers-1-a-12/serie.js", [
     "calcul-court.js",
     "calcul-direct.js",
@@ -80,7 +82,7 @@ const RESSOURCES_VERSIONNEES = new Map([
     "retrouver-entier.js",
     "sens-notation.js",
   ]],
-  ["packages/automatismes/src/nombres-et-calculs/carres-entiers-1-a-12/commun.js", ["question-v2.js"]],
+  ["packages/automatismes/src/nombres-et-calculs/carres-entiers-1-a-12/commun.js", ["question-v2.js", "identifiants.js"]],
   ["packages/automatismes/src/nombres-et-calculs/carres-entiers-1-a-12/calcul-direct.js", ["question-v2.js", "commun.js"]],
   ["packages/automatismes/src/nombres-et-calculs/carres-entiers-1-a-12/retrouver-entier.js", ["question-v2.js", "commun.js"]],
   ["packages/automatismes/src/nombres-et-calculs/carres-entiers-1-a-12/sens-notation.js", ["question-v2.js", "commun.js"]],
@@ -91,6 +93,7 @@ const RESSOURCES_VERSIONNEES = new Map([
   ["packages/automatismes/src/nombres-et-calculs/fractions-simples-decimaux/commun.js", [
     "gabarit.js",
     "question-v2.js",
+    "identifiants.js",
   ]],
   ["packages/automatismes/src/nombres-et-calculs/fractions-simples-decimaux/fraction-vers-decimal.js", [
     "question-v2.js",
@@ -108,8 +111,8 @@ const RESSOURCES_VERSIONNEES = new Map([
     "fraction-vers-decimal.js",
     "commun.js",
   ]],
-  ["packages/automatismes/src/espace-et-geometrie/solides-usuels/reconnaissance.js", ["question-v2.js"]],
-  ["packages/automatismes/src/grandeurs-et-mesures/volumes/calcul-volumes.js", ["question-v2.js"]],
+  ["packages/automatismes/src/espace-et-geometrie/solides-usuels/reconnaissance.js", ["question-v2.js", "identifiants.js"]],
+  ["packages/automatismes/src/grandeurs-et-mesures/volumes/calcul-volumes.js", ["question-v2.js", "identifiants.js"]],
   ["packages/contrats/src/trace-reponse.js", ["question-v2.js"]],
   ["packages/objets/src/droite-graduee.js", ["expressions.js"]],
   ["packages/objets/src/expressions.js", ["charte.js"]],

@@ -1,6 +1,20 @@
-# PG-22 à PG-24 — Calculer des volumes
+# Volumes usuels — alias GM-13 à GM-15
 
 **Statut : contenu validé par Gwenaël dans l'échange du 19 juillet 2026.**
+
+## Identité et statut
+
+- domaine canonique : `grandeurs-et-mesures` ;
+- puce source : `G-09` ; cible normalisée : `DNB26-24` ; référence machine :
+  `dnb-2026-24` ;
+- module et micro-notion `volume-cube-pave`, alias `GM-13`, ancien alias
+  `PG-22` ;
+- module `volume-prisme`, micro-notion `volume-prisme-droit`, alias `GM-14`,
+  ancien alias `PG-23` ;
+- module et micro-notion `volume-cylindre`, alias `GM-15`, ancien alias
+  `PG-24` ;
+- statut des trois modules : `valide` — contenus validés, générateurs construits
+  et publiés sur la route pilote.
 
 ## Intention
 
@@ -10,9 +24,9 @@ une seule décision et garde le solide visible.
 
 Le noyau DNB est séparé des extensions du collège :
 
-- `PG-22` : cube et pavé droit ;
-- `PG-23` : prisme droit, avec aire de la base donnée ;
-- `PG-24` : cylindre, sous forme exacte avec π ou avec π ≈ 3.
+- `GM-13` : cube et pavé droit ;
+- `GM-14` : prisme droit, avec aire de la base donnée ;
+- `GM-15` : cylindre, sous forme exacte avec π ou avec π ≈ 3.
 
 Les pyramides, les cônes, les conversions de volume et les correspondances
 volume-capacité ne font pas partie de cette première tranche.
@@ -44,7 +58,7 @@ avec les écritures usuelles adaptées aux élèves.
 
 ## Familles de questions
 
-### PG-22/F1 — Cube ou pavé droit
+### GM-13/F1 — Cube ou pavé droit
 
 - dessin stable et données explicites ;
 - cube : `V = côté × côté × côté` ;
@@ -52,14 +66,14 @@ avec les écritures usuelles adaptées aux élèves.
 - dimensions choisies dans un corpus contrôlé, résultat entier inférieur ou
   égal à 216 cm³.
 
-### PG-23/F1 — Prisme droit
+### GM-14/F1 — Prisme droit
 
 - aire de la base fournie directement ;
 - hauteur fournie ;
 - calcul : `V = aire de la base × hauteur` ;
 - résultat entier inférieur ou égal à 120 cm³.
 
-### PG-24/F1 — Cylindre
+### GM-15/F1 — Cylindre
 
 - rayon et hauteur fournis ;
 - calcul : `V = π × rayon × rayon × hauteur` ;

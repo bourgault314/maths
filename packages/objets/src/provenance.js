@@ -217,7 +217,11 @@ export const PROVENANCE_FONDATION_V2 = Object.freeze({
 
   "packages/automatismes/src/registre.js": {
     statut: "original_mathsgo",
-    source: "registre des notions NC, GE et PG du lecteur écrit pour Automatismes maths&go V2",
+    source: "registre des modules exposés du lecteur écrit pour Automatismes maths&go V2",
+  },
+  "packages/automatismes/src/identifiants.js": {
+    statut: "original_mathsgo",
+    source: "nomenclature canonique NC, AL, PF, GM, GE, DS et PI décidée pour les futurs exports d'Automatismes maths&go V2 le 9 août 2026",
   },
   "packages/automatismes/src/nombres-et-calculs/criteres-divisibilite/selection-diviseurs.js": {
     statut: "original_mathsgo",
@@ -297,7 +301,7 @@ export const PROVENANCE_FONDATION_V2 = Object.freeze({
   },
   "packages/automatismes/src/grandeurs-et-mesures/volumes/calcul-volumes.js": {
     statut: "original_mathsgo",
-    source: "fiche PG-22 à PG-24 validée par Gwenaël le 19 juillet 2026",
+    source: "fiche GM-13 à GM-15, anciennement PG-22 à PG-24, validée par Gwenaël le 19 juillet 2026",
   },
 });
 

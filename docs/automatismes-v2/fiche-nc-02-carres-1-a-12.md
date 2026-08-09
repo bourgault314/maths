@@ -19,18 +19,21 @@ locale des seules questions NC-02 qui affichent le pavé commun.
 ## Ancrage dans le parcours DNB
 
 - Cible officielle DNB 2026 : « Connaître les carrés des entiers de 1 à 12. »
-- Ligne de la carte : `DNB26-08`.
-- Micro-notion maths&go : `NC-02`.
-- Identifiant technique : `carres-entiers-1-a-12`.
-- Domaine maths&go : nombres et calculs.
+- Ligne de la carte : `DNB26-08` ; référence machine : `dnb-2026-08`.
+- Identifiant canonique du module et de la micro-notion :
+  `carres-entiers-0-a-12`.
+- Alias humain de pilotage : `NC-02`.
+- Ancien alias technique et d'URL : `carres-entiers-1-a-12`.
+- Domaine canonique : `nombres-et-calculs`.
 - Place dans l'ordre de fabrication : rang 2 sur 88.
 
 La cible DNB reste citée mot pour mot et porte donc sur 1 à 12. Le nouveau
 programme du cycle 4 demande les carrés des entiers de 0 à 12 : maths&go ajoute
-donc `0` comme complément explicite, sans modifier la cible DNB ni
-l'identifiant technique déjà attribué. Les sens direct et inverse appartiennent
-à une seule micro-notion. NC-02 ne devient pas un chapitre général sur les
-puissances.
+donc `0` comme complément explicite, sans modifier la cible DNB. Le nouvel
+identifiant canonique décrit le périmètre réel ; l'ancien reste accepté en
+lecture pour préserver les liens et traces antérieurs. Les sens direct et
+inverse appartiennent à une seule micro-notion. NC-02 ne devient pas un chapitre
+général sur les puissances.
 
 ## Savoir-faire visé
 

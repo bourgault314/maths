@@ -10,15 +10,28 @@ import {
 } from "./calcul-volumes.js";
 
 const GABARITS = [GABARIT_VOLUME_CUBE_PAVE, GABARIT_VOLUME_PRISME, GABARIT_VOLUME_CYLINDRE];
+const CLASSEMENTS_ATTENDUS = [
+  [GABARIT_VOLUME_CUBE_PAVE, "volume-cube-pave", "volume-cube-pave"],
+  [GABARIT_VOLUME_PRISME, "volume-prisme", "volume-prisme-droit"],
+  [GABARIT_VOLUME_CYLINDRE, "volume-cylindre", "volume-cylindre"],
+];
 
-describe("PG-22 à PG-24 — calcul mental de volumes", () => {
+describe("GM-13 à GM-15 — calcul mental de volumes", () => {
   it("produit trois familles conformes, déterministes et à choix unique", () => {
     const registre = creerRegistreAutomatismes();
-    for (const gabarit of GABARITS) {
+    for (const [gabarit, notion, microNotion] of CLASSEMENTS_ATTENDUS) {
       const premiere = registre.instancier(gabarit, "volume-test");
       const seconde = registre.instancier(gabarit, "volume-test");
       assert.deepEqual(premiere, seconde);
       assert.deepEqual(validerQuestionInstanceV2(premiere), { valide: true, erreurs: [] });
+      assert.deepEqual(premiere.classement, {
+        domaine: "grandeurs-et-mesures",
+        notion,
+        microNotion,
+        famille: "calcul-volume",
+        cible: "dnb-2026-24",
+        complements: [],
+      });
       assert.equal(premiere.reponse.type, "choix-unique");
       assert.equal(premiere.reponse.choix.length, 4);
       assert.equal(new Set(premiere.reponse.choix.map(({ id }) => id)).size, 4);

@@ -2,12 +2,15 @@
 
 ## 1. Identité et statut
 
-- **Catégorie visible** : `fractions-simples-decimaux` — « Fractions simples
-  et décimaux ».
-- **Micro-notions internes** : `NC-03`, fraction vers écriture décimale, et
-  `NC-04`, écriture décimale vers fraction.
-- **Domaine** : nombres et calculs.
-- **Cible** : `DNB26-01`, « Fraction simple vers décimal et retour ».
+- **Module visible canonique** : `fractions-simples-decimaux` — « Fractions
+  simples et décimaux ».
+- **Micro-notions canoniques** : `fraction-vers-decimal` et
+  `decimal-vers-fraction`.
+- **Alias humains de pilotage** : `NC-03` et `NC-04` respectivement ; les traces
+  version 1 qui les utilisent restent lisibles.
+- **Domaine canonique** : `nombres-et-calculs`.
+- **Cible** : `DNB26-01`, référence machine `dnb-2026-01`, « Fraction
+  simple vers décimal et retour ».
 - **Statut** : `construit`, publié sur la route pilote non référencée pour les
   essais de Gwenaël et de Claire. Le passage à `valide` attend leur retour
   pédagogique final.

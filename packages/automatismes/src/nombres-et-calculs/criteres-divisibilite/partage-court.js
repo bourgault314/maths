@@ -14,8 +14,12 @@ import {
   SCHEMA_QUESTION_INSTANCE_V2,
   TYPE_REPONSE_CHOIX_UNIQUE,
   TYPE_REPONSE_ENTIER_NATUREL,
-} from "../../../../contrats/src/question-v2.js?v=22";
-import { formulationCritereDivisibilite } from "./critere-precis.js?v=22";
+} from "../../../../contrats/src/question-v2.js?v=23";
+import {
+  IDENTITES_AUTOMATISMES,
+  creerClassementAutomatisme,
+} from "../../identifiants.js?v=23";
+import { formulationCritereDivisibilite } from "./critere-precis.js?v=23";
 
 export const NOM_GENERATEUR_PARTAGE_COURT =
   "nombres-et-calculs.criteres-divisibilite.partage-court";
@@ -204,15 +208,13 @@ function diagnosticCritere(nombre, diviseur) {
 }
 
 function classement(diviseur) {
-  return {
-    domaine: "nombres-et-calculs",
-    notion: "criteres-divisibilite",
-    famille: "partage-court",
-    cible: "dnb-2026-09",
-    complements: diviseur === 10 || diviseur === undefined
+  return creerClassementAutomatisme(
+    IDENTITES_AUTOMATISMES.CRITERES_DIVISIBILITE,
+    "partage-court",
+    diviseur === 10 || diviseur === undefined
       ? ["critere-divisibilite-10"]
       : [],
-  };
+  );
 }
 
 function blocsEnonce({ sousForme, total, diviseur, contexte }) {
