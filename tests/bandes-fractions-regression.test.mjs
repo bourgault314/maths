@@ -110,6 +110,19 @@ test('la barre d’outils reste défilable sans afficher d’ascenseur horizonta
   }
 });
 
+test('la palette est escamotable et le son a entièrement disparu', () => {
+  assert.match(
+    html,
+    /id="btn-palette-toggle"[^>]+aria-controls="projection-palette-bar"[^>]+aria-expanded="true"/,
+  );
+  assert.match(html, /function setPaletteCollapsed\(collapsed\)/);
+  assert.match(html, /classList\.toggle\('palette-collapsed', isCollapsed\)/);
+  assert.match(html, /setPaletteCollapsed\(false\);\s*applyFixedLayout\(\);/);
+  assert.match(html, /body\.palette-collapsed #projection-palette-bar\{ display:none !important; \}/);
+  assert.doesNotMatch(html, /id="btn-sound"/);
+  assert.doesNotMatch(html, /AudioContext|SOUND_ENABLED|playSound\(/);
+});
+
 test('les écritures compactes de la palette restent dans les petites parts', () => {
   const prototype = appPrototype();
   assert.equal(prototype.menuLabelFontSize.call({labelMode:'text'}, 2, 'text'), 12);
