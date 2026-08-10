@@ -312,6 +312,7 @@
     collection: new URLSearchParams(window.location.search).get("collection") || ""
   };
   let pendingBreadcrumbFocusLevel = "";
+  let pendingBreadcrumbFocusCard = "";
 
   const domainGrid = document.getElementById("domain-grid");
   const notionGrid = document.getElementById("notion-grid");
@@ -444,15 +445,50 @@
     }
   }
 
-  function moveToTopAndFocus() {
-    window.scrollTo({ top: 0, behavior: "auto" });
-    window.requestAnimationFrame(() => pageTitle.focus({ preventScroll: true }));
+  function afterLayout(callback) {
+    window.requestAnimationFrame(() => window.requestAnimationFrame(callback));
   }
 
-  function focusBreadcrumbDestination(level) {
+  function scrollInstantlyTo(top) {
+    const previousScrollBehavior = document.documentElement.style.scrollBehavior;
+    document.documentElement.style.scrollBehavior = "auto";
+    window.scrollTo({ top, behavior: "auto" });
+    document.documentElement.style.scrollBehavior = previousScrollBehavior;
+  }
+
+  function moveToTopAndFocus() {
+    scrollInstantlyTo(0);
+    afterLayout(() => {
+      // Sur Safari mobile, le passage de la grille à une vue profonde peut
+      // rétablir l’ancien ancrage après la première demande de défilement.
+      pageTitle.focus({ preventScroll: true });
+      scrollInstantlyTo(0);
+    });
+  }
+
+  function focusBreadcrumbDestination(level, cardId = "") {
     if (!level || level !== viewLevel()) return;
-    title.tabIndex = -1;
-    title.focus({ preventScroll: true });
+    const returnedCard = level === "domain" && cardId
+      ? [...notionGrid.querySelectorAll("[data-notion-card], [data-collection-card]")]
+        .find((card) => card.dataset.notionCard === cardId || card.dataset.collectionCard === cardId)
+      : null;
+    const destination = level === "entry" ? title : (returnedCard || pageTitle);
+    if (destination === title || destination === pageTitle) destination.tabIndex = -1;
+    destination.focus({ preventScroll: true });
+  }
+
+  function entryChooserTop() {
+    if (!window.matchMedia("(max-width: 920px)").matches) return 0;
+    return Math.max(0, Math.round(title.getBoundingClientRect().top + window.scrollY - 16));
+  }
+
+  function moveToEntryChooserAndFocus() {
+    afterLayout(() => {
+      const destinationY = entryChooserTop();
+      focusBreadcrumbDestination("entry");
+      scrollInstantlyTo(destinationY);
+      rememberCurrentScroll();
+    });
   }
 
   function renderBreadcrumb(level, selectedDomain, selectedNotion, selectedCollection) {
@@ -682,11 +718,8 @@
     ["jeux-recherches", "cps"].forEach((domainId) => {
       const domain = domainMap.get(domainId);
       const count = domainResourceCount(domainId);
-      const directCps = domainId === "cps";
       const tag = "a";
-      const attributes = directCps
-        ? `href="${escapeHtml(rootPrefix + "cps/bilan-s1.html")}" data-domain-card="cps" data-domain-direct="true"`
-        : `href="${escapeHtml(domainHref(domainId))}" data-domain-card="${escapeHtml(domainId)}"`;
+      const attributes = `href="${escapeHtml(domainHref(domainId))}" data-domain-card="${escapeHtml(domainId)}"`;
       cards.push(`<${tag} class="domain-card domain-card-secondary" ${attributes} style="${domainStyle(domainId)}">
         <span class="domain-card-icon">${icon(domainDesign[domainId].icon)}</span>
         <span class="domain-card-copy"><strong>${escapeHtml(domain.title)}</strong><small>${escapeHtml(domain.short)}</small><em>${count ? `${count} ressource${count > 1 ? "s" : ""}` : "Bientôt"}</em></span>
@@ -1145,7 +1178,7 @@
 
   domainGrid.addEventListener("click", (event) => {
     const button = event.target.closest("[data-domain-card]");
-    if (!button || button.dataset.domainDirect === "true") return;
+    if (!button) return;
     if (button.dataset.domainDisabled === "true") return;
     if (event.button !== 0 || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return;
     event.preventDefault();
@@ -1207,6 +1240,7 @@
     if (target === "domain") {
       if ((state.notion || state.collection) && history.state?.fromLevel === "domain") {
         pendingBreadcrumbFocusLevel = "domain";
+        pendingBreadcrumbFocusCard = state.notion || state.collection;
         history.back();
         return;
       }
@@ -1223,6 +1257,7 @@
       const entryHistoryOffset = history.state?.entryHistoryOffset || 0;
       if (entryHistoryOffset > 0) {
         pendingBreadcrumbFocusLevel = "entry";
+        pendingBreadcrumbFocusCard = "";
         history.go(-entryHistoryOffset);
         return;
       }
@@ -1233,22 +1268,28 @@
       searchInput.value = "";
       writeHistory("replace");
       render();
-      moveToTopAndFocus();
+      moveToEntryChooserAndFocus();
     }
   });
 
   window.addEventListener("popstate", (event) => {
     const breadcrumbFocusLevel = pendingBreadcrumbFocusLevel;
+    const breadcrumbFocusCard = pendingBreadcrumbFocusCard;
     pendingBreadcrumbFocusLevel = "";
+    pendingBreadcrumbFocusCard = "";
     const urlWasSanitised = stateFromUrl();
     if (urlWasSanitised) writeHistory("replace", event.state?.fromLevel || null);
     searchInput.value = "";
     render();
     const scrollY = Number.isFinite(event.state?.scrollY) ? event.state.scrollY : 0;
-    window.requestAnimationFrame(() => window.requestAnimationFrame(() => {
-      window.scrollTo({ top: scrollY, behavior: "auto" });
-      focusBreadcrumbDestination(breadcrumbFocusLevel);
-    }));
+    afterLayout(() => {
+      const destinationY = breadcrumbFocusLevel === "entry"
+        ? entryChooserTop()
+        : scrollY;
+      focusBreadcrumbDestination(breadcrumbFocusLevel, breadcrumbFocusCard);
+      scrollInstantlyTo(destinationY);
+      if (breadcrumbFocusLevel === "entry") rememberCurrentScroll();
+    });
   });
 
   const urlWasSanitised = stateFromUrl();

@@ -16,12 +16,12 @@ const sitemap = fs.readFileSync(path.join(root, "sitemap.xml"), "utf8");
 test("les domaines ayant des ressources sont de vrais liens dans le HTML initial", () => {
   for (const domain of catalogue.domains) {
     const count = catalogue.resources.filter(({ status, domains }) => status === "published" && domains.includes(domain.id)).length;
-    if (domain.id === "cps") {
-      assert.match(catalogueHtml, /<a[^>]+data-domain-card="cps"[^>]+data-domain-direct="true"/);
-    } else if (count > 0) {
+    if (count > 0) {
       assert.match(catalogueHtml, new RegExp(`<a[^>]+href="\\?domain=${domain.id}"[^>]+data-domain-card="${domain.id}"`));
     }
   }
+  assert.doesNotMatch(catalogueHtml, /\bdata-domain-direct\b/);
+  assert.doesNotMatch(catalogueJs, /\b(?:data-domain-direct|domainDirect|directCps)\b/);
   assert.match(catalogueJs, /const tag = count \? "a" : "div";/);
   assert.match(catalogueJs, /event\.preventDefault\(\);/);
 });
