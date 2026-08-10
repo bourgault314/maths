@@ -1030,6 +1030,7 @@ HTML_TEMPLATE = r'''<!doctype html>
           return;
         }
         const falseCards = [1,2,3,4].filter(player => !cardIsTrue(item, player, displayGrid));
+        const cardWord = falseCards.length === 1 ? 'carte est fausse' : 'cartes sont fausses';
         const remainingFalseMessage = falseCards.length === 1
           ? 'Une carte reste fausse.'
           : `${falseCards.length} cartes restent fausses.`;
