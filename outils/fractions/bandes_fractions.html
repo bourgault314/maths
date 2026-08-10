@@ -453,6 +453,60 @@
     /* Projection : masque la palette pour maximiser le plateau (idéal vidéoprojecteur) */
     body.projection-mode aside { display: none !important; }
 
+    /* Palette escamotable : le bouton reste accessible sans encombrer la barre d’outils. */
+    #projection-palette-area{
+      position:relative;
+      flex:0 0 auto;
+      z-index:25;
+    }
+    #btn-palette-toggle{
+      position:absolute;
+      left:50%;
+      bottom:-15px;
+      transform:translateX(-50%);
+      min-height:30px;
+      padding:4px 13px;
+      border:1px solid #bfdbfe;
+      border-radius:0 0 11px 11px;
+      background:#eff6ff;
+      color:#1e3a8a;
+      box-shadow:0 3px 8px rgba(15,23,42,0.16);
+      display:flex;
+      align-items:center;
+      gap:6px;
+      font-family:'Fredoka', sans-serif;
+      font-size:12px;
+      font-weight:800;
+      line-height:1;
+      cursor:pointer;
+      touch-action:manipulation;
+      white-space:nowrap;
+    }
+    #btn-palette-toggle:hover{ background:#dbeafe; }
+    #btn-palette-toggle:focus-visible{
+      outline:3px solid rgba(37,99,235,0.35);
+      outline-offset:2px;
+    }
+    #palette-toggle-chevron{
+      display:inline-block;
+      font-size:15px;
+      transition:transform 0.15s ease;
+    }
+    body.palette-collapsed #projection-palette-area{ height:30px; }
+    body.palette-collapsed #projection-palette-bar{ display:none !important; }
+    body.palette-collapsed #btn-palette-toggle{
+      top:0;
+      bottom:auto;
+    }
+    body.palette-collapsed #palette-toggle-chevron{ transform:rotate(180deg); }
+    @media (max-width: 640px){
+      #btn-palette-toggle{
+        min-height:40px;
+        padding-inline:16px;
+      }
+      body.palette-collapsed #projection-palette-area{ height:40px; }
+    }
+
     /* Sélecteur compact de graduation de la demi-droite */
     .nl-grad-select{
       height: 38px;
@@ -472,9 +526,6 @@
     .nl-grad-select:focus{
       box-shadow: 0 0 0 3px rgba(59,130,246,0.18);
     }
-
-    /* Boutons état */
-    .is-off { opacity: 0.55; }
 
   </style>
 <link rel="stylesheet" href="../../assets/css/consentement.css">
@@ -659,15 +710,6 @@
         <span class="text-[10px] font-extrabold leading-none">Aide</span>
       </button>
 
-      <button id="btn-sound" class="p-2 rounded bg-white shadow text-gray-700 hover:bg-slate-50 active:scale-95 transition flex flex-col items-center gap-0.5" title="Son : ON/OFF">
-        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-          <path d="M11 5 6 9H2v6h4l5 4V5z"/>
-          <path d="M19.07 4.93a10 10 0 0 1 0 14.14"/>
-          <path d="M15.54 8.46a5 5 0 0 1 0 7.07"/>
-        </svg>
-        <span id="sound-label" class="text-[10px] font-extrabold leading-none">Son</span>
-      </button>
-
       <button id="btn-fullscreen" class="p-2 rounded bg-white shadow text-gray-700 hover:bg-slate-50 active:scale-95 transition flex flex-col items-center gap-0.5" title="Plein écran">
         <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
           <path d="M8 3H5a2 2 0 0 0-2 2v3"/>
@@ -681,8 +723,14 @@
 
   </header>
 
-  <div id="projection-palette-bar" class="bg-blue-50 border-b border-blue-200 px-2 py-2 flex justify-center overflow-x-auto no-scrollbar">
-    <!-- Palette déplacée ici en mode projection -->
+  <div id="projection-palette-area">
+    <div id="projection-palette-bar" class="bg-blue-50 border-b border-blue-200 px-2 py-2 flex justify-center overflow-x-auto no-scrollbar">
+      <!-- Palette déplacée ici en mode projection -->
+    </div>
+    <button type="button" id="btn-palette-toggle" aria-controls="projection-palette-bar" aria-expanded="true" title="Masquer les bandes">
+      <span id="palette-toggle-label">Masquer</span>
+      <span id="palette-toggle-chevron" aria-hidden="true">⌃</span>
+    </button>
   </div>
 
   <div class="flex flex-1 overflow-hidden relative">
@@ -910,75 +958,11 @@
   }
   /* BANDES_FRACTIONS_PURE_END */
 
-  let audioCtx = null;
-  try{ audioCtx = new (window.AudioContext || window.webkitAudioContext)(); }catch(_){ audioCtx = null; }
-
-  function playSound(type){
-    if (!audioCtx) return;
-    if (!window.SOUND_ENABLED) return;
-    if (audioCtx.state === 'suspended') audioCtx.resume().catch(()=>{});
-    const osc = audioCtx.createOscillator();
-    const gain = audioCtx.createGain();
-    osc.connect(gain); gain.connect(audioCtx.destination);
-    const now = audioCtx.currentTime;
-    const stop = (t)=>{ try{ osc.stop(t); }catch(_){} };
-    if(type==='pop'){
-      osc.type='sine';
-      osc.frequency.setValueAtTime(320, now);
-      osc.frequency.exponentialRampToValueAtTime(560, now+0.08);
-      gain.gain.setValueAtTime(0.10, now);
-      gain.gain.linearRampToValueAtTime(0, now+0.10);
-      osc.start(now); stop(now+0.10);
-    } else if(type==='flip'){
-      osc.type='triangle';
-      osc.frequency.setValueAtTime(210, now);
-      osc.frequency.linearRampToValueAtTime(440, now+0.16);
-      gain.gain.setValueAtTime(0.10, now);
-      gain.gain.linearRampToValueAtTime(0, now+0.18);
-      osc.start(now); stop(now+0.18);
-    } else if(type==='whoosh'){
-      osc.type='triangle';
-      osc.frequency.setValueAtTime(360, now);
-      osc.frequency.exponentialRampToValueAtTime(60, now+0.22);
-      gain.gain.setValueAtTime(0.06, now);
-      gain.gain.linearRampToValueAtTime(0, now+0.22);
-      osc.start(now); stop(now+0.22);
-    }
-  }
-
-  // --- Préférences (son) ---
-  const PREFS_KEY = 'fractionstrips_prefs_v1';
   const SCENES_KEY = 'fractionstrips_scenes_v1';
 
-  function loadPrefs(){
-    try{
-      const raw = localStorage.getItem(PREFS_KEY);
-      return raw ? JSON.parse(raw) : {};
-    }catch(_){ return {}; }
-  }
-  function savePrefs(p){
-    try{ localStorage.setItem(PREFS_KEY, JSON.stringify(p)); }catch(_){}
-  }
-
-  function updateUtilityButtonsUI(){
-    const prefs = loadPrefs();
-    const sound = (prefs.sound !== false);
-
-    const soundBtn = document.getElementById('btn-sound');
-    const soundLab = document.getElementById('sound-label');
-    if(soundBtn){
-      soundBtn.classList.toggle('is-off', !sound);
-      if(soundLab) soundLab.textContent = sound ? 'Son' : 'Muet';
-      soundBtn.title = sound ? 'Son : ON (cliquer pour couper)' : 'Son : OFF (cliquer pour activer)';
-    }
-  }
-
-  function applyPrefs(p){
-    // Réglages imposés : projection toujours ON + bordures toujours noires
-    const theme = 'black';
+  function applyFixedLayout(){
+    // Réglages imposés : projection toujours ON + bordures toujours noires.
     const proj  = true;
-
-    window.SOUND_ENABLED = (p.sound !== false);
 
     document.body.classList.add('projection-mode');
     document.body.classList.remove('theme-soft');
@@ -1097,7 +1081,25 @@ palette.querySelectorAll('.palette-item').forEach(item=>{
       }
     });
 
-    updateUtilityButtonsUI();
+  }
+
+  function setPaletteCollapsed(collapsed){
+    const isCollapsed = !!collapsed;
+    const button = document.getElementById('btn-palette-toggle');
+    const label = document.getElementById('palette-toggle-label');
+    document.body.classList.toggle('palette-collapsed', isCollapsed);
+    if(button){
+      button.setAttribute('aria-expanded', String(!isCollapsed));
+      button.title = isCollapsed ? 'Afficher les bandes' : 'Masquer les bandes';
+    }
+    if(label) label.textContent = isCollapsed ? 'Bandes' : 'Masquer';
+
+    requestAnimationFrame(()=>{
+      if(window.app){
+        try{ window.app.updateTransform?.(); }catch(_){}
+        try{ window.app.updateNumberLineEl?.(); }catch(_){}
+      }
+    });
   }
 
   function showToast(msg, ms=1600){
@@ -1251,15 +1253,8 @@ palette.querySelectorAll('.palette-item').forEach(item=>{
     document.getElementById('btn-session')?.addEventListener('click', ()=> openSessionModal());
     document.getElementById('btn-session-close')?.addEventListener('click', ()=> closeModal('modal-session'));
     document.getElementById('btn-fullscreen')?.addEventListener('click', ()=> toggleFullscreen());
-
-    // Toggles
-    document.getElementById('btn-sound')?.addEventListener('click', ()=>{
-      const p = loadPrefs();
-      const current = (p.sound !== false);
-      p.sound = !current;
-      savePrefs(p);
-      applyPrefs(p);
-      showToast(p.sound ? 'Son activé' : 'Son coupé');
+    document.getElementById('btn-palette-toggle')?.addEventListener('click', ()=>{
+      setPaletteCollapsed(!document.body.classList.contains('palette-collapsed'));
     });
 
     // Session modal actions
@@ -1339,9 +1334,9 @@ palette.querySelectorAll('.palette-item').forEach(item=>{
     });
 
     // État initial
-    const p0 = loadPrefs();
-    // Projection forcée + bordures noires : on garde uniquement la préférence du son.
-    applyPrefs(p0);
+    // La palette est toujours visible à l’ouverture, puis reste escamotable à la demande.
+    setPaletteCollapsed(false);
+    applyFixedLayout();
 }
 
 
@@ -1581,7 +1576,6 @@ palette.querySelectorAll('.palette-item').forEach(item=>{
       this.refreshTokenSelectedClass();
       this.updateTransform();
       this.updateSelectionUI();
-      playSound('whoosh');
     }
 
     getTextLabel(denom){
@@ -1928,7 +1922,6 @@ palette.querySelectorAll('.palette-item').forEach(item=>{
         this.numberLine.selectedRowId = row.id;
         this.numberLine.initialized = true;
       }
-      playSound(this.numberLine.active ? 'pop' : 'whoosh');
       this.updateNumberLineEl();
     }
 
@@ -1952,7 +1945,6 @@ palette.querySelectorAll('.palette-item').forEach(item=>{
       this.numberLine.selectedRowId = row.id;
       this.selectToken(null);
       this.updateNumberLineEl();
-      playSound('pop');
     }
 
     deleteNumberLine(rowId = this.numberLine?.selectedRowId){
@@ -1967,7 +1959,6 @@ palette.querySelectorAll('.palette-item').forEach(item=>{
         this.numberLine.initialized = false;
       }
       this.updateNumberLineEl();
-      playSound('whoosh');
     }
 
     selectNumberLine(rowId){
@@ -2409,7 +2400,6 @@ palette.querySelectorAll('.palette-item').forEach(item=>{
       document.body.classList.toggle('show-text-labels', this.labelMode === 'text');
       this.updateModeUI();
       this.buildPalette();
-      playSound('pop');
     }
 
     updateModeUI(){
@@ -2833,7 +2823,6 @@ window.addEventListener('resize', () => {
 
     addToken({denom, kind, x=null, y=null}){
       this.saveState();
-      playSound('pop');
       const pos = (x===null || y===null) ? {x: 40 + Math.random()*40, y: 40 + Math.random()*30} : {x, y};
 
       const w = (kind === 'band') ? this.unitW : this.pieceW(denom);
@@ -2921,7 +2910,6 @@ window.addEventListener('resize', () => {
         }
       }
       this.updateSelectionUI();
-      playSound('flip');
     }
 
     toggleHideSelected(){
@@ -2935,7 +2923,6 @@ window.addEventListener('resize', () => {
           s._el.classList.toggle('content-hidden', s.hidden);
         }
       }
-      playSound('pop');
     }
 
     duplicateSelected(){
@@ -2969,7 +2956,6 @@ window.addEventListener('resize', () => {
       this.selectedId = copies.length ? copies[copies.length - 1] : null;
       this.refreshTokenSelectedClass();
       this.updateSelectionUI();
-      playSound('pop');
     }
     deleteSelected(){
       const list = this.selectedTokens;
@@ -2985,7 +2971,6 @@ window.addEventListener('resize', () => {
       this.tokens = this.tokens.filter(t => !idsToDelete.has(t.id));
       this.selectToken(null);
       this.updateSeamBorders();
-      playSound('whoosh');
     }
 
 
@@ -3012,7 +2997,6 @@ window.addEventListener('resize', () => {
       }
       this.selectToken(this.tokens[this.tokens.length - denom].id);
       this.updateSeamBorders();
-      playSound('pop');
     }
 
     getFusionPlan(list){
@@ -3125,7 +3109,7 @@ window.addEventListener('resize', () => {
     fuseSelected(){
       const list = this.selectedTokens;
       const plan = this.getFusionPlan(list);
-      if(!plan.ok){ playSound('whoosh'); return; }
+      if(!plan.ok) return;
 
       this.saveState();
 
@@ -3153,7 +3137,6 @@ window.addEventListener('resize', () => {
       this.selectToken(merged.id);
 
       this.updateSeamBorders();
-      playSound('pop');
     }
 
     canCut(t){
@@ -3195,7 +3178,6 @@ window.addEventListener('resize', () => {
         this.selectToken(p1.id);
       }
       this.updateSeamBorders();
-      playSound('pop');
     }
     handleDragStart(e){
       const isTouch = !!e.touches;
@@ -3472,11 +3454,9 @@ window.addEventListener('resize', () => {
         considerX(ox - w, prioX);
       }
 
-      let snapped = false;
       if(bestX !== null){
         t.x = bestX;
         if(t._el) t._el.style.left = t.x + 'px';
-        snapped = true;
       } else {
         const rx = this.roundPos(t.x);
         if(Math.abs(rx - t.x) > 0.001){
@@ -3488,7 +3468,6 @@ window.addEventListener('resize', () => {
       if(bestY !== null){
         t.y = bestY;
         if(t._el) t._el.style.top = t.y + 'px';
-        snapped = true;
       } else {
         const ry = this.roundPos(t.y);
         if(Math.abs(ry - t.y) > 0.001){
@@ -3497,7 +3476,6 @@ window.addEventListener('resize', () => {
         }
       }
 
-      if(snapped && !opts.silent) playSound('pop');
       this.updateSeamBorders();
     }
 
@@ -4106,14 +4084,10 @@ for(let i=0;i<this.tokens.length;i++){
     }
 
     undoLastStroke(){
-      if(!this.strokes || !this.strokes.length){
-        playSound('whoosh');
-        return;
-      }
+      if(!this.strokes || !this.strokes.length) return;
       this.strokes.pop();
       this.clearDrawing(true);
       this.redrawStrokes();
-      playSound('pop');
     }
 
     clearAllTokens(withHistory=true){
@@ -4135,7 +4109,6 @@ for(let i=0;i<this.tokens.length;i++){
       this.clearAllTokens(false);
       this.clearDrawing();
       this.resetView();
-      playSound('whoosh');
     }
   }
 
@@ -4175,9 +4148,6 @@ for(let i=0;i<this.tokens.length;i++){
   window.addEventListener('DOMContentLoaded', () => {
     const t = runSelfTests();
     if(!t.ok) return;
-
-    // Valeurs par défaut (préférences utilisateur appliquées juste après)
-    window.SOUND_ENABLED = true;
 
     window.app = new FractionStripsApp();
     if(typeof setupExtraUI === 'function') setupExtraUI(window.app);
