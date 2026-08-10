@@ -12,7 +12,8 @@
 <link rel="icon" type="image/png" sizes="32x32" href="/assets/img/favicon-32.png">
 <link rel="icon" type="image/png" sizes="192x192" href="/assets/img/favicon-192.png">
 <link rel="apple-touch-icon" href="/assets/img/apple-touch-icon.png">
-  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Tailwind 3.4.17 précompilé depuis cette page : aucun compilateur n’est exécuté au chargement. -->
+  <link rel="stylesheet" href="../../assets/css/bandes-fractions-tailwind.css?v=1">
   <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;600;800&display=swap" rel="stylesheet">
 
   <style>
@@ -28,7 +29,8 @@
       font-family: 'Fredoka', sans-serif;
       background: #ffffff;
       overflow: hidden;
-      touch-action: none;
+      height: 100dvh !important;
+      touch-action: auto;
       user-select: none;
       -webkit-user-select: none;
     }
@@ -48,6 +50,7 @@
       /* RETOUR À GRAB (Main ouverte) */
       cursor: grab; 
       background: var(--boardBg);
+      touch-action: none;
     }
     #board-container.panning{ cursor: grabbing; }
 
@@ -106,6 +109,17 @@
     }
     #number-line.hidden{ display:none; }
     #number-line text{ font-family:'Fredoka', sans-serif; font-weight:800; }
+    .number-line-row{
+      position:absolute;
+      pointer-events:auto;
+      cursor:ns-resize;
+      touch-action:none;
+    }
+    .number-line-row svg{ overflow:visible; }
+    .number-line-row.is-selected svg{
+      filter: drop-shadow(0 0 2px rgba(37,99,235,0.7));
+    }
+    .pen-mode .number-line-row{ pointer-events:none; }
 
     /* --- Poignées de la demi-droite (non-scalées, au-dessus du plateau) --- */
     #nl-handles-layer{
@@ -138,6 +152,13 @@
     .nl-handle.origin{ cursor: grab; }
     .nl-handle.origin:active{ cursor: grabbing; }
     .nl-handle.end{ cursor: ew-resize; font-size:16px; letter-spacing:-2px; line-height:1; }
+    .nl-handle.close{
+      cursor:pointer;
+      border-color:#e11d48;
+      color:#e11d48;
+      font-size:19px;
+      line-height:1;
+    }
 
     .no-scrollbar::-webkit-scrollbar{ display:none; }
     .no-scrollbar{ -ms-overflow-style:none; scrollbar-width:none; }
@@ -355,10 +376,10 @@
     .frac.menu .bar{ width: 0.9em; height: 2px; margin: 2px 0; background: rgba(0,0,0,0.70); }
 
     /* Mode crayon */
-    body.pen-mode #board-container{ cursor: crosshair; touch-action: none; }
-    body.pen-mode #board-container.panning{ cursor: grabbing; }
-    body.pen-mode .strip{ cursor: crosshair; }
-    body.pen-mode .strip.dragging{ cursor: grabbing; }
+    .pen-mode #board-container{ cursor: crosshair; touch-action: none; }
+    .pen-mode #board-container.panning{ cursor: grabbing; }
+    .pen-mode .strip{ cursor: crosshair; }
+    .pen-mode .strip.dragging{ cursor: grabbing; }
 
     .mode-btn {
       padding: 5px 8px;
@@ -380,6 +401,39 @@
 
     @media (max-width: 640px){
       :root{ --stripH: 52; }
+
+      header{
+        overflow-x:auto;
+        overflow-y:hidden;
+        justify-content:flex-start;
+        padding:4px !important;
+        gap:4px !important;
+        touch-action:pan-x;
+        scrollbar-width:thin;
+      }
+      #header-left{
+        flex:0 0 auto !important;
+        overflow:visible !important;
+        gap:4px !important;
+      }
+      #utility-actions{ flex:0 0 auto; }
+      header button,
+      .mode-btn{
+        min-width:44px;
+        min-height:44px;
+      }
+      .mode-btn{ padding:6px 9px; }
+      .nl-grad-select{ height:44px; }
+      #projection-palette-bar{
+        justify-content:flex-start !important;
+        touch-action:pan-x;
+        overscroll-behavior-x:contain;
+      }
+      #modal-help > div,
+      #modal-session > div{
+        max-height:90dvh;
+        overflow-y:auto;
+      }
     }
   
 
@@ -435,22 +489,33 @@
         </svg>
       </button>
 
-      <div id="mode-selector" class="flex bg-blue-200/50 rounded-lg p-1 gap-0.5 border border-blue-200 shadow-inner">
-        <button class="mode-btn active" data-mode="numeric" title="Fraction">1/2</button>
-        <button class="mode-btn" data-mode="text" title="Lettres">ABC</button>
-        <button class="mode-btn" data-mode="percent" title="Pourcentage">%</button>
-        <button class="mode-btn" data-mode="decimal" title="Décimal">0,5</button>
-        <button class="mode-btn" data-mode="empty" title="Vide (sans texte)">
+      <div id="mode-selector" role="group" aria-label="Écriture des prochains objets" class="flex bg-blue-200/50 rounded-lg p-1 gap-0.5 border border-blue-200 shadow-inner">
+        <button type="button" class="mode-btn active" data-mode="numeric" title="Fraction" aria-pressed="true">1/2</button>
+        <button type="button" class="mode-btn" data-mode="text" title="Lettres" aria-pressed="false">ABC</button>
+        <button type="button" class="mode-btn" data-mode="percent" title="Pourcentage" aria-pressed="false">%</button>
+        <button type="button" class="mode-btn" data-mode="decimal" title="Décimal" aria-pressed="false">0,5</button>
+        <button type="button" class="mode-btn" data-mode="empty" title="Vide (sans texte)" aria-pressed="false">
             <div class="w-3.5 h-3.5 border-2 border-current rounded-sm"></div>
         </button>
       </div>
 
-      <button id="btn-numberline" class="bg-white text-slate-800 hover:bg-slate-100 p-2 rounded-lg font-bold border border-slate-200 shadow-sm active:scale-95 transition" title="Afficher / masquer la demi-droite">
+      <button id="btn-numberline" class="bg-white text-slate-800 hover:bg-slate-100 p-2 rounded-lg font-bold border border-slate-200 shadow-sm active:scale-95 transition" title="Afficher / masquer les droites graduées" aria-label="Afficher ou masquer les droites graduées">
         <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
           <path d="M4 14H18" />
           <path d="M18 14l-3-3" />
           <path d="M18 14l-3 3" />
           <path d="M4 10v8" />
+        </svg>
+      </button>
+
+      <button id="btn-numberline-add" class="bg-white text-blue-700 hover:bg-blue-50 p-2 rounded-lg font-bold border border-blue-200 shadow-sm active:scale-95 transition" title="Ajouter une droite alignée" aria-label="Ajouter une droite alignée">
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <path d="M3 15h13" />
+          <path d="m16 15-3-3" />
+          <path d="m16 15-3 3" />
+          <path d="M3 11v8" />
+          <path d="M20 5v6" />
+          <path d="M17 8h6" />
         </svg>
       </button>
 
@@ -485,10 +550,10 @@
 
       <button id="btn-flip" disabled class="bg-amber-500 hover:bg-amber-600 disabled:bg-amber-200 text-white px-2 py-1 rounded-lg shadow-sm border border-amber-200 disabled:opacity-40 disabled:cursor-not-allowed active:scale-95 transition flex flex-col items-center gap-0.5" title="Retourner (double-clic aussi)">
         <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-          <path d="M3 12a9 9 0 0 1 9-9"/>
-          <path d="M3 4v8h8"/>
-          <path d="M21 12a9 9 0 0 1-9 9"/>
-          <path d="M21 20v-8h-8"/>
+          <path d="M4 7h13"/>
+          <path d="m14 4 3 3-3 3"/>
+          <path d="M20 17H7"/>
+          <path d="m10 14-3 3 3 3"/>
         </svg>
         <span class="text-[10px] font-extrabold leading-none">Retourner</span>
       </button>
@@ -624,14 +689,15 @@
           <canvas id="drawing-canvas"></canvas>
           <div id="number-line" class="hidden"></div>
         </div>
-        <div id="nl-handles-layer" aria-hidden="true">
-          <div id="nl-handle-end" class="nl-handle end hidden" title="Régler la longueur">
+        <div id="nl-handles-layer">
+          <button type="button" id="nl-handle-end" class="nl-handle end hidden" title="Régler la longueur des droites" aria-label="Régler la longueur des droites">
             <svg width="20" height="12" viewBox="0 0 20 12" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
               <line x1="8" y1="6" x2="12" y2="6" stroke="rgba(17,24,39,0.9)" stroke-width="2" stroke-linecap="round" />
               <polygon points="4,6 8,3 8,9" fill="rgba(17,24,39,0.9)" />
               <polygon points="16,6 12,3 12,9" fill="rgba(17,24,39,0.9)" />
             </svg>
-          </div>
+          </button>
+          <button type="button" id="nl-handle-close" class="nl-handle close hidden" title="Fermer cette droite" aria-label="Fermer la droite sélectionnée">×</button>
         </div>
         <div id="marquee" aria-hidden="true"></div>
       </div>
@@ -642,7 +708,7 @@
 
   <!-- Modales / UI auxiliaire -->
   <div id="modal-session" class="fixed inset-0 hidden items-center justify-center bg-black/50 z-[100]">
-    <div class="bg-white rounded-2xl shadow-2xl w-[560px] max-w-[95vw] p-4 border border-slate-200">
+    <div class="bg-white rounded-2xl shadow-2xl w-[95vw] max-w-[560px] p-4 border border-slate-200">
       <div class="flex items-center justify-between mb-3">
         <div class="text-lg font-extrabold text-slate-800">Séance</div>
         <button id="btn-session-close" class="px-3 py-1 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold" title="Fermer">✕</button>
@@ -678,7 +744,7 @@
   </div>
 
   <div id="modal-help" class="fixed inset-0 hidden items-center justify-center bg-black/50 z-[100]">
-    <div class="bg-white rounded-2xl shadow-2xl w-[660px] max-w-[95vw] p-4 border border-slate-200">
+    <div class="bg-white rounded-2xl shadow-2xl w-[95vw] max-w-[660px] p-4 border border-slate-200">
       <div class="flex items-center justify-between mb-3">
         <div class="text-lg font-extrabold text-slate-800">Aide — raccourcis & gestes</div>
         <button id="btn-help-close" class="px-3 py-1 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold" title="Fermer">✕</button>
@@ -699,14 +765,14 @@
         </div>
 
         <div class="grid gap-2">
-          <div class="font-extrabold text-slate-800">Demi-droite graduée</div>
+          <div class="font-extrabold text-slate-800">Droites graduées</div>
           <ul class="list-disc pl-5 space-y-1">
-            <li>Bouton <b>demi-droite</b> : afficher / masquer la droite graduée.</li>
-            <li>Menu <b>Grad.</b> : choisir le pas des graduations : unité, demis, tiers, quarts, cinquièmes, sixièmes, huitièmes, dixièmes ou douzièmes.</li>
+            <li>Bouton <b>droite</b> : afficher / masquer les droites ; bouton <b>+</b> : en ajouter une, alignée sur le même zéro.</li>
+            <li>Clique une droite pour la sélectionner, puis <b>glisse-la verticalement</b> pour régler l’écart.</li>
+            <li>Menu <b>Grad.</b> : choisir ses graduations. L’écriture choisie en haut s’applique aux <b>nouvelles</b> droites.</li>
             <li>La distance <b>0 → 1</b> correspond à la largeur d’une bande unité.</li>
-            <li>Glisser la <b>flèche</b> de la demi-droite : changer sa longueur ; <b>double-clic</b> sur la flèche : revenir au réglage par défaut.</li>
-            <li>Quand la demi-droite est affichée, les bandes et pièces proches se calent horizontalement sur les graduations.</li>
-            <li><b>Alt + glisser</b> : poser librement sans aimantation à la demi-droite.</li>
+            <li>Glisser la <b>flèche</b> : changer la longueur commune ; bouton <b>×</b> ou <b>Suppr</b> : fermer uniquement la droite sélectionnée.</li>
+            <li>Les bandes proches se calent sur les graduations ; <b>Alt + glisser</b> désactive cette aimantation.</li>
           </ul>
         </div>
 
@@ -726,7 +792,7 @@
           <div class="font-extrabold text-slate-800">Raccourcis essentiels</div>
           <ul class="list-disc pl-5 space-y-1">
             <li><b>Ctrl+Z</b> (ou ⌘Z) : annuler la dernière action (en mode crayon : annuler le dernier trait).</li>
-            <li><b>Suppr</b> (Delete / Backspace) : supprimer la/les bandes sélectionnées.</li>
+            <li><b>Suppr</b> (Delete / Backspace) : supprimer les bandes sélectionnées, ou la droite sélectionnée s’il n’y a aucune bande sélectionnée.</li>
             <li><b>Échap</b> : désélectionner.</li>
             <li><b>D</b> : dupliquer ; <b>T</b> : retourner ; <b>S</b> : séparer ; <b>C</b> : couper ; <b>F</b> : fusionner.</li>
             <li><b>1,2,3,4,5,6,8,0</b> : créer rapidement une bande au centre du plateau (0 = dixième). Le douzième se prend dans la palette.</li>
@@ -755,6 +821,84 @@
     { denom: 10, name: 'Dixième',   color: '#b91c1c', border: '#7f1d1d', text: '#111827' },
     { denom: 12, name: 'Douzième',  color: '#7dd3fc', border: '#0369a1', text: '#0b1220' },
   ];
+
+  /* BANDES_FRACTIONS_PURE_START */
+  const LABEL_MODES = new Set(['numeric', 'text', 'percent', 'decimal', 'empty']);
+
+  function normalizeLabelMode(mode, fallback='numeric'){
+    return LABEL_MODES.has(mode) ? mode : fallback;
+  }
+
+  function gcdInt(a, b){
+    a = Math.abs(Math.trunc(a));
+    b = Math.abs(Math.trunc(b));
+    while(b){ const t = a % b; a = b; b = t; }
+    return a || 1;
+  }
+
+  function hasFiniteDecimal(numerator, denominator){
+    if(!Number.isFinite(numerator) || !Number.isFinite(denominator) || denominator === 0) return false;
+    const g = gcdInt(numerator, denominator);
+    let d = Math.abs(Math.trunc(denominator / g));
+    while(d % 2 === 0) d /= 2;
+    while(d % 5 === 0) d /= 5;
+    return d === 1;
+  }
+
+  function frenchCardinal(n){
+    const words = [
+      'zéro','un','deux','trois','quatre','cinq','six','sept','huit','neuf',
+      'dix','onze','douze','treize','quatorze','quinze','seize','dix-sept',
+      'dix-huit','dix-neuf','vingt'
+    ];
+    return Number.isInteger(n) && n >= 0 && n < words.length ? words[n] : String(n);
+  }
+
+  function formatTextFraction(numerator, denominator){
+    if(numerator === 0) return 'zéro';
+    if(denominator <= 1 || numerator % denominator === 0){
+      const units = denominator <= 1 ? numerator : numerator / denominator;
+      return units === 1 ? 'une unité' : `${frenchCardinal(units)} unités`;
+    }
+    const names = {
+      2:['demi','demis'], 3:['tiers','tiers'], 4:['quart','quarts'],
+      5:['cinquième','cinquièmes'], 6:['sixième','sixièmes'],
+      8:['huitième','huitièmes'], 10:['dixième','dixièmes'],
+      12:['douzième','douzièmes']
+    };
+    const pair = names[denominator] || [`${denominator}e`,`${denominator}es`];
+    return `${frenchCardinal(numerator)} ${numerator === 1 ? pair[0] : pair[1]}`;
+  }
+
+  function formatRationalLabel(numerator, denominator, mode, options={}){
+    const normalizedMode = normalizeLabelMode(mode);
+    const n = Number(numerator);
+    const d = Number(denominator);
+    if(!Number.isFinite(n) || !Number.isFinite(d) || d === 0) return '';
+    if(normalizedMode === 'empty') return '';
+    if(normalizedMode === 'numeric'){
+      if(d <= 1 || n % d === 0) return String(d <= 1 ? n : n / d);
+      return `${n}/${d}`;
+    }
+    if(normalizedMode === 'text') return formatTextFraction(n, d);
+
+    const isPercent = normalizedMode === 'percent';
+    const exact = isPercent ? hasFiniteDecimal(n * 100, d) : hasFiniteDecimal(n, d);
+    const value = isPercent ? (n * 100 / d) : (n / d);
+    const maximumFractionDigits = isPercent
+      ? (options.percentDigits ?? 2)
+      : (options.decimalDigits ?? 3);
+    const text = value.toLocaleString('fr-FR', { maximumFractionDigits });
+    return `${exact ? '' : '≈ '}${text}${isPercent ? ' %' : ''}`;
+  }
+
+  function normalizeTokenLabelModes(tokens, legacyMode='numeric'){
+    const fallback = normalizeLabelMode(legacyMode);
+    return Array.isArray(tokens)
+      ? tokens.map(t => ({...t, labelMode: normalizeLabelMode(t?.labelMode, fallback)}))
+      : [];
+  }
+  /* BANDES_FRACTIONS_PURE_END */
 
   let audioCtx = null;
   try{ audioCtx = new (window.AudioContext || window.webkitAudioContext)(); }catch(_){ audioCtx = null; }
@@ -938,7 +1082,6 @@ palette.querySelectorAll('.palette-item').forEach(item=>{
     // Recalcul dimensions après changement de layout (projection / palette)
     requestAnimationFrame(()=>{
       if(window.app){
-        try{ window.app.resizeCanvas?.(); }catch(_){}
         try{ window.app.updateTransform?.(); }catch(_){}
         try{ window.app.updateNumberLineEl?.(); }catch(_){}
       }
@@ -970,11 +1113,12 @@ palette.querySelectorAll('.palette-item').forEach(item=>{
 
   function getSnapshot(app){
     return {
-      version: 1,
+      version: 2,
       createdAt: new Date().toISOString(),
       tokens: app.tokens.map(t => ({
         id: t.id, denom: t.denom, kind: t.kind, side: t.side,
-        x: t.x, y: t.y, z: t.z, hidden: t.hidden
+        x: t.x, y: t.y, z: t.z, hidden: t.hidden,
+        labelMode: normalizeLabelMode(t.labelMode, app.labelMode)
       })),
       nextId: app.nextId,
       topZ: app.topZ,
@@ -982,17 +1126,7 @@ palette.querySelectorAll('.palette-item').forEach(item=>{
       pan: {...app.pan},
       scale: app.scale,
       labelMode: app.labelMode,
-      numberLine: app.numberLine ? {
-        active: !!app.numberLine.active,
-        initialized: !!app.numberLine.initialized,
-        x: app.numberLine.x,
-        y: app.numberLine.y,
-        len: app.numberLine.len,
-        defaultLen: app.numberLine.defaultLen,
-        baselineOffset: app.numberLine.baselineOffset,
-        height: app.numberLine.height,
-        gradDenom: app.numberLine.gradDenom || 0
-      } : null
+      numberLine: app.serializeNumberLine?.() || null
     };
   }
 
@@ -1000,21 +1134,15 @@ palette.querySelectorAll('.palette-item').forEach(item=>{
     if(!snap || !Array.isArray(snap.tokens)) throw new Error('Snapshot invalide');
     if(pushUndo) app.saveState();
     app.clearAllTokens(false);
-    app.tokens = snap.tokens.map(t => ({...t}));
+    app.tokens = normalizeTokenLabelModes(snap.tokens, snap.labelMode || 'numeric');
     app.nextId = snap.nextId || (Math.max(0, ...app.tokens.map(t=>t.id)) + 1);
     app.topZ = snap.topZ || 200;
     app.selectedId = snap.selectedId ?? null;
     app.pan = snap.pan || {x:0,y:0};
     app.scale = snap.scale || 1;
-    app.labelMode = snap.labelMode || 'numeric';
-    if(snap.numberLine && app.numberLine){
-      app.numberLine = {
-        ...app.numberLine,
-        ...snap.numberLine,
-        gradDenom: Number(snap.numberLine.gradDenom || 0)
-      };
-      if(app.numberLine.len == null) app.numberLine.len = app.numberLine.defaultLen || 900;
-      if(app.numberLine.defaultLen == null) app.numberLine.defaultLen = app.numberLine.len || 900;
+    app.labelMode = normalizeLabelMode(snap.labelMode);
+    if(app.numberLine){
+      app.numberLine = app.normalizeNumberLineState(snap.numberLine || {});
     }
     app.updateModeUI();
     app.updateNumberLineGradUI?.();
@@ -1243,11 +1371,18 @@ palette.querySelectorAll('.palette-item').forEach(item=>{
 
       this.canvas = document.getElementById('drawing-canvas');
       this.ctx = this.canvas.getContext('2d');
+      this._canvasReady = false;
+      this._canvasWorldSize = 5000;
+      this._canvasDpr = 1;
+      this.canvas.width = 1;
+      this.canvas.height = 1;
+      this.canvas.style.width = `${this._canvasWorldSize}px`;
+      this.canvas.style.height = `${this._canvasWorldSize}px`;
 
       this.numberLineEl = document.getElementById('number-line');
       this.nlHandlesLayer = document.getElementById('nl-handles-layer');
-      this.nlHandle0 = document.getElementById('nl-handle0');
       this.nlHandleEnd = document.getElementById('nl-handle-end');
+      this.nlHandleClose = document.getElementById('nl-handle-close');
 
       this.marqueeEl = document.getElementById('marquee');
       this.isMarqueeSelecting = false;
@@ -1257,13 +1392,15 @@ palette.querySelectorAll('.palette-item').forEach(item=>{
         active: false,
         initialized: false,
         x: 0,
-        y: 0,
         // Longueur "raisonnable" au départ (en px monde). Ajustable via poignées.
         len: 900,
         defaultLen: 900,
         baselineOffset: 18,
         height: 46,
-        gradDenom: 0
+        defaultGap: 104,
+        rows: [],
+        selectedRowId: null,
+        nextRowId: 1
       };
 
       this._nlRAF = null;
@@ -1274,7 +1411,6 @@ palette.querySelectorAll('.palette-item').forEach(item=>{
       this.initUI();
       this.initBoardListeners();
       this.initNumberLineHandles();
-      this.resizeCanvas();
       this.updateTransform();
       this.updateSelectionUI();
       this.updateNumberLineEl();
@@ -1295,6 +1431,81 @@ palette.querySelectorAll('.palette-item').forEach(item=>{
       return Math.round(v * 2) / 2;
     }
 
+    serializeNumberLine(){
+      if(!this.numberLine) return null;
+      const rows = Array.isArray(this.numberLine.rows)
+        ? this.numberLine.rows.map(row => ({
+            id: Number(row.id),
+            y: Number(row.y),
+            gradDenom: Number(row.gradDenom || 0),
+            displayMode: normalizeLabelMode(row.displayMode)
+          }))
+        : [];
+      const first = rows[0] || null;
+      return {
+        active: !!this.numberLine.active,
+        initialized: !!this.numberLine.initialized,
+        x: Number(this.numberLine.x || 0),
+        y: first?.y ?? 0,
+        len: Number(this.numberLine.len || 900),
+        defaultLen: Number(this.numberLine.defaultLen || this.numberLine.len || 900),
+        baselineOffset: Number(this.numberLine.baselineOffset || 18),
+        height: Number(this.numberLine.height || 46),
+        gradDenom: first?.gradDenom || 0,
+        defaultGap: Number(this.numberLine.defaultGap || 104),
+        rows,
+        selectedRowId: this.numberLine.selectedRowId ?? first?.id ?? null,
+        nextRowId: Number(this.numberLine.nextRowId || (Math.max(0, ...rows.map(r=>r.id)) + 1))
+      };
+    }
+
+    normalizeNumberLineState(raw){
+      const source = raw && typeof raw === 'object' ? raw : {};
+      const allowedDenoms = new Set([0, 1, ...FRACTIONS.map(f => f.denom)]);
+      let rows = Array.isArray(source.rows)
+        ? source.rows.map((row, index) => ({
+            id: Number.isFinite(Number(row?.id)) ? Number(row.id) : index + 1,
+            y: Number.isFinite(Number(row?.y)) ? Number(row.y) : index * 104,
+            gradDenom: allowedDenoms.has(Number(row?.gradDenom || 0)) ? Number(row.gradDenom || 0) : 0,
+            displayMode: normalizeLabelMode(row?.displayMode)
+          }))
+        : [];
+
+      // Migration des scènes v1 : l'unique droite était toujours écrite en fractions.
+      if(rows.length === 0 && (source.initialized || source.active)){
+        rows = [{
+          id: 1,
+          y: Number.isFinite(Number(source.y)) ? Number(source.y) : 0,
+          gradDenom: allowedDenoms.has(Number(source.gradDenom || 0)) ? Number(source.gradDenom || 0) : 0,
+          displayMode: 'numeric'
+        }];
+      }
+
+      const maxId = Math.max(0, ...rows.map(row => row.id));
+      const selectedCandidate = Number(source.selectedRowId);
+      const selectedRowId = rows.some(row => row.id === selectedCandidate)
+        ? selectedCandidate
+        : (rows[0]?.id ?? null);
+      return {
+        active: !!source.active && rows.length > 0,
+        initialized: rows.length > 0,
+        x: Number.isFinite(Number(source.x)) ? Number(source.x) : 0,
+        len: Number.isFinite(Number(source.len)) ? Number(source.len) : 900,
+        defaultLen: Number.isFinite(Number(source.defaultLen)) ? Number(source.defaultLen) : (Number(source.len) || 900),
+        baselineOffset: Number(source.baselineOffset || 18),
+        height: Number(source.height || 46),
+        defaultGap: Math.max(64, Number(source.defaultGap || 104)),
+        rows,
+        selectedRowId,
+        nextRowId: Math.max(maxId + 1, Number(source.nextRowId || 1))
+      };
+    }
+
+    getSelectedNumberLineRow(){
+      const rows = this.numberLine?.rows || [];
+      return rows.find(row => row.id === this.numberLine.selectedRowId) || rows[0] || null;
+    }
+
     saveState(){
       const snapshot = {
         tokens: this.tokens.map(t => ({
@@ -1305,7 +1516,8 @@ palette.querySelectorAll('.palette-item').forEach(item=>{
           x:t.x, 
           y:t.y, 
           z:t.z, 
-          hidden: t.hidden 
+          hidden: t.hidden,
+          labelMode: normalizeLabelMode(t.labelMode, this.labelMode)
         })),
         nextId: this.nextId,
         topZ: this.topZ,
@@ -1314,17 +1526,7 @@ palette.querySelectorAll('.palette-item').forEach(item=>{
         pan: {...this.pan},
         scale: this.scale,
         labelMode: this.labelMode,
-        numberLine: this.numberLine ? {
-          active: !!this.numberLine.active,
-          initialized: !!this.numberLine.initialized,
-          x: this.numberLine.x,
-          y: this.numberLine.y,
-          len: this.numberLine.len,
-          defaultLen: this.numberLine.defaultLen,
-          baselineOffset: this.numberLine.baselineOffset,
-          height: this.numberLine.height,
-          gradDenom: this.numberLine.gradDenom || 0
-        } : null
+        numberLine: this.serializeNumberLine()
       };
       this.history.push(snapshot);
       if(this.history.length > 30) this.history.shift();
@@ -1334,7 +1536,7 @@ palette.querySelectorAll('.palette-item').forEach(item=>{
       const snap = this.history.pop();
       if(!snap) return;
       this.clearAllTokens(false);
-      this.tokens = snap.tokens.map(t => ({...t}));
+      this.tokens = normalizeTokenLabelModes(snap.tokens, snap.labelMode || 'numeric');
       this.nextId = snap.nextId;
       this.topZ = snap.topZ || 200;
       
@@ -1353,13 +1555,9 @@ palette.querySelectorAll('.palette-item').forEach(item=>{
       }
       this.pan = snap.pan;
       this.scale = snap.scale;
-      this.labelMode = snap.labelMode || 'numeric';
+      this.labelMode = normalizeLabelMode(snap.labelMode);
       if(snap.numberLine && this.numberLine){
-        this.numberLine = {
-          ...this.numberLine,
-          ...snap.numberLine,
-          gradDenom: Number(snap.numberLine.gradDenom || 0)
-        };
+        this.numberLine = this.normalizeNumberLineState(snap.numberLine);
       }
       this.updateModeUI();
       this.updateNumberLineGradUI();
@@ -1386,20 +1584,21 @@ palette.querySelectorAll('.palette-item').forEach(item=>{
       return (denom >= 5 && denom !== 7 && denom !== 9); 
     }
 
-    getLabelHTML(denom, isBackOfBand = false){
-      if(this.labelMode === 'empty') return '';
+    getLabelHTML(denom, isBackOfBand = false, requestedMode = this.labelMode){
+      const mode = normalizeLabelMode(requestedMode, this.labelMode);
+      if(mode === 'empty') return '';
 
       if(isBackOfBand){
-        if(this.labelMode === 'text'){
+        if(mode === 'text'){
           return `<span class="text-label" style="font-size:18px;">une unité</span>`;
-        } else if(this.labelMode === 'percent'){
+        } else if(mode === 'percent'){
           return `<span class="back-one" style="font-size:22px;">100 %</span>`;
         } else {
           return `<span class="back-one">1</span>`;
         }
       }
 
-      if(this.labelMode === 'text'){
+      if(mode === 'text'){
         const txt = this.getTextLabel(denom);
         const rotated = this.isRotatedText(denom);
         let fs;
@@ -1415,9 +1614,8 @@ palette.querySelectorAll('.palette-item').forEach(item=>{
         const cls = rotated ? 'text-label text-rotated' : 'text-label';
         return `<span class="${cls}" style="font-size:${fs};">${txt}</span>`;
       } 
-      else if(this.labelMode === 'percent'){
-        const val = (100 / denom);
-        const txt = val.toLocaleString('fr-FR', { maximumFractionDigits: 2 }) + ' %';
+      else if(mode === 'percent'){
+        const txt = formatRationalLabel(1, denom, mode);
         let fs = '14px';
         if(denom >= 12) fs = '9px';
         else if(denom >= 10) fs = '10px';
@@ -1426,9 +1624,8 @@ palette.querySelectorAll('.palette-item').forEach(item=>{
         else if(denom === 5) fs = '12px';
         return `<span class="text-label" style="font-size:${fs};">${txt}</span>`;
       }
-      else if(this.labelMode === 'decimal'){
-        const val = (1 / denom);
-        const txt = val.toLocaleString('fr-FR', { maximumFractionDigits: 3 });
+      else if(mode === 'decimal'){
+        const txt = formatRationalLabel(1, denom, mode);
         let fs = '15px';
         if(denom >= 12) fs = '9px';
         else if(denom >= 10) fs = '10px';
@@ -1443,9 +1640,10 @@ palette.querySelectorAll('.palette-item').forEach(item=>{
       }
     }
 
-    fontSizeFor(denom, kind){
-      if(this.labelMode === 'empty') return 0;
-      if(this.labelMode !== 'numeric') return 16;
+    fontSizeFor(denom, kind, requestedMode = this.labelMode){
+      const mode = normalizeLabelMode(requestedMode, this.labelMode);
+      if(mode === 'empty') return 0;
+      if(mode !== 'numeric') return 16;
       if(kind === 'piece'){
         if(denom >= 12) return 13;
         if(denom >= 10) return 14;
@@ -1492,6 +1690,9 @@ palette.querySelectorAll('.palette-item').forEach(item=>{
       tile.style.background = cfg.color;
       tile.style.borderColor = cfg.border;
       tile.setAttribute('draggable', 'false');
+      tile.setAttribute('role', 'button');
+      tile.setAttribute('tabindex', '0');
+      tile.setAttribute('aria-label', `${kind === 'band' ? 'Ajouter une bande' : 'Ajouter une pièce'} en ${this.getTextLabel(denom)}`);
       tile.title = (kind === 'band') ? 'Ajouter une bande' : 'Ajouter une pièce';
       const menuBandW = this.menuBandW || 170;
       const w = (kind === 'band') ? menuBandW : Math.max(18, Math.round(menuBandW / denom));
@@ -1503,22 +1704,22 @@ palette.querySelectorAll('.palette-item').forEach(item=>{
         seg.className = 'spawn-seg';
         seg.style.color = cfg.text;
         
-        if(this.labelMode === 'empty'){
-           seg.innerHTML = '';
-        } else {
-           const fsMenu = (denom >= 12) ? 8 : (denom >= 10) ? 9 : (denom >= 8) ? 10 : (denom >= 6) ? 11 : 12;
-           seg.style.fontSize = fsMenu + 'px';
-           if(denom === 1){
-             seg.innerHTML = `<span class="back-one" style="font-size:${Math.max(fsMenu,12)}px;color:${cfg.text}">1</span>`;
-           } else {
-             seg.innerHTML = `<span class="frac menu" style="color:${cfg.text};font-size:${fsMenu}px"><span class="num">1</span><span class="bar"></span><span class="den">${denom}</span></span>`;
-           }
-        }
+        const fsMenu = (denom >= 12) ? 8 : (denom >= 10) ? 9 : (denom >= 8) ? 10 : (denom >= 6) ? 11 : 12;
+        seg.style.fontSize = fsMenu + 'px';
+        seg.innerHTML = this.getLabelHTML(denom, false, this.labelMode);
         tile.appendChild(seg);
       }
       const start = (e) => this.startSpawnDrag(e, denom, kind);
       tile.addEventListener('mousedown', start);
       tile.addEventListener('touchstart', start, {passive:false});
+      tile.addEventListener('keydown', (e) => {
+        if(e.key !== 'Enter' && e.key !== ' ') return;
+        e.preventDefault();
+        const br = this.boardContainer.getBoundingClientRect();
+        const center = this.getWorldPos(br.left + br.width * 0.5, br.top + br.height * 0.35);
+        const created = this.addToken({denom, kind, x:center.x, y:center.y});
+        this.snapToken(created, {silent:true});
+      });
       return tile;
     }
 
@@ -1661,39 +1862,84 @@ palette.querySelectorAll('.palette-item').forEach(item=>{
     }
 
     toggleNumberLine(){
+      this.saveState();
       this.numberLine.active = !this.numberLine.active;
-      if(this.numberLine.active){
-        // Initialise une longueur par défaut une seule fois (pas d'auto-ajustement ensuite).
-        if(!this.numberLine.initialized){
-          const br0 = this.boardContainer.getBoundingClientRect();
-          const proposed = Math.max(520, Math.min(2400, (br0.width * 0.62) / this.scale));
-          this.numberLine.len = proposed;
-          this.numberLine.defaultLen = proposed;
-          this.numberLine.initialized = true;
-        }
-
+      if(this.numberLine.active && (!this.numberLine.initialized || !this.numberLine.rows.length)){
         const br = this.boardContainer.getBoundingClientRect();
-        // Place l'origine (0) à gauche dans la zone blanche visible (plein écran ou non)
-        const lenWorld = (this.numberLine.len || this.numberLine.defaultLen || 900);
-        const lenScreen = lenWorld * this.scale;
-        const leftMargin = 18;
-        const startScreenX = br.left + leftMargin;
-        const startScreenY = br.top + br.height * 0.50;
-        const p = this.getWorldPos(startScreenX, startScreenY);
+        const proposed = Math.max(520, Math.min(2400, (br.width * 0.62) / this.scale));
+        const p = this.getWorldPos(br.left + 28, br.top + br.height * 0.46);
+        this.numberLine.len = proposed;
+        this.numberLine.defaultLen = proposed;
         this.numberLine.x = p.x;
-        this.numberLine.y = p.y;
-
-        playSound('pop');
-      } else {
-        playSound('whoosh');
+        const row = {
+          id: this.numberLine.nextRowId++,
+          y: p.y,
+          gradDenom: 2,
+          displayMode: normalizeLabelMode(this.labelMode)
+        };
+        this.numberLine.rows = [row];
+        this.numberLine.selectedRowId = row.id;
+        this.numberLine.initialized = true;
       }
+      playSound(this.numberLine.active ? 'pop' : 'whoosh');
+      this.updateNumberLineEl();
+    }
+
+    addNumberLine(){
+      if(!this.numberLine.initialized){
+        this.toggleNumberLine();
+        return;
+      }
+      this.saveState();
+      this.numberLine.active = true;
+      const selected = this.getSelectedNumberLineRow();
+      const rows = this.numberLine.rows || [];
+      const baseY = selected?.y ?? rows.at(-1)?.y ?? 0;
+      const row = {
+        id: this.numberLine.nextRowId++,
+        y: baseY + (this.numberLine.defaultGap || 104),
+        gradDenom: Number(selected?.gradDenom || 2),
+        displayMode: normalizeLabelMode(this.labelMode)
+      };
+      rows.push(row);
+      this.numberLine.selectedRowId = row.id;
+      this.selectToken(null);
+      this.updateNumberLineEl();
+      playSound('pop');
+    }
+
+    deleteNumberLine(rowId = this.numberLine?.selectedRowId){
+      if(!this.numberLine?.active || rowId == null) return;
+      const index = this.numberLine.rows.findIndex(row => row.id === rowId);
+      if(index < 0) return;
+      this.saveState();
+      this.numberLine.rows.splice(index, 1);
+      const next = this.numberLine.rows[Math.min(index, this.numberLine.rows.length - 1)] || null;
+      this.numberLine.selectedRowId = next?.id ?? null;
+      if(!next){
+        this.numberLine.active = false;
+        this.numberLine.initialized = false;
+      }
+      this.updateNumberLineEl();
+      playSound('whoosh');
+    }
+
+    selectNumberLine(rowId){
+      if(!this.numberLine?.rows.some(row => row.id === rowId)) return;
+      this.numberLine.selectedRowId = rowId;
+      this.selectToken(null);
       this.updateNumberLineEl();
     }
 
     setNumberLineGraduation(denom){
+      const row = this.getSelectedNumberLineRow();
+      if(!row) return;
       const d = Number(denom || 0);
       const allowed = new Set([0, 1, ...FRACTIONS.map(f => f.denom)]);
-      this.numberLine.gradDenom = allowed.has(d) ? d : 0;
+      const next = allowed.has(d) ? d : 0;
+      if(next === row.gradDenom) return;
+      this.saveState();
+      row.gradDenom = next;
       this.updateNumberLineGradUI();
       this.updateNumberLineEl();
     }
@@ -1701,25 +1947,23 @@ palette.querySelectorAll('.palette-item').forEach(item=>{
     updateNumberLineGradUI(){
       const sel = document.getElementById('numberline-grad');
       if(!sel || !this.numberLine) return;
-      sel.value = String(this.numberLine.gradDenom || 0);
-      const d = this.numberLine.gradDenom || 0;
+      const row = this.getSelectedNumberLineRow();
+      const d = Number(row?.gradDenom || 0);
+      sel.disabled = !row;
+      sel.value = String(d);
       if(d === 0) sel.title = 'Graduation : aucune';
       else if(d === 1) sel.title = 'Graduation : unités';
       else sel.title = `Graduation : ${d} parts par unité`;
     }
 
-    formatNumberLineTickLabel(k, denom){
-      if(k === 0) return '0';
-      if(denom <= 1) return String(k);
-      if(k % denom === 0) return String(k / denom);
-      // Choix volontaire : on garde le dénominateur choisi sur la droite.
-      // Exemple en douzièmes : 13/12, 14/12, etc. au lieu de nombres mixtes.
-      return `${k}/${denom}`;
+    formatNumberLineTickLabel(k, denom, displayMode='numeric'){
+      return formatRationalLabel(k, Math.max(1, denom), displayMode);
     }
 
-    buildNumberLineGraduationSVG({len, lineEnd, y}){
-      const denom = Number(this.numberLine?.gradDenom || 0);
+    buildNumberLineGraduationSVG({lineEnd, y, row}){
+      const denom = Number(row?.gradDenom || 0);
       if(!denom) return '';
+      const displayMode = normalizeLabelMode(row?.displayMode);
 
       const unitW = this.unitW;
       const step = unitW / denom;
@@ -1733,7 +1977,7 @@ palette.querySelectorAll('.palette-item').forEach(item=>{
       // mais les étiquettes s'espacent automatiquement si le zoom rend tout trop serré.
       const pxStep = step * this.scale;
       let labelEvery = 1;
-      const minLabelPx = (denom >= 10) ? 31 : (denom >= 6 ? 36 : 42);
+      const minLabelPx = displayMode === 'text' ? 82 : (displayMode === 'percent' ? 62 : ((denom >= 10) ? 31 : (denom >= 6 ? 36 : 42)));
       if(pxStep < minLabelPx){
         labelEvery = Math.ceil(minLabelPx / Math.max(1, pxStep));
       }
@@ -1757,7 +2001,7 @@ palette.querySelectorAll('.palette-item').forEach(item=>{
 
         const shouldLabel = isInteger || k === 0 || (k % labelEvery === 0);
         if(shouldLabel){
-          const lab = this.formatNumberLineTickLabel(k, denom);
+          const lab = this.formatNumberLineTickLabel(k, denom, displayMode);
           const ly = labelY;
           const weight = isInteger ? 900 : 800;
           // Le 0 reste centré exactement sous sa graduation :
@@ -1766,6 +2010,36 @@ palette.querySelectorAll('.palette-item').forEach(item=>{
         }
       }
       return parts.join('\n');
+    }
+
+    startNumberLineRowDrag(e, rowId){
+      if(this.currentTool === 'pen') return;
+      if(e.pointerType === 'mouse' && e.button !== 0) return;
+      const row = this.numberLine.rows.find(item => item.id === rowId);
+      if(!row) return;
+      e.preventDefault();
+      e.stopPropagation();
+      this.selectNumberLine(rowId);
+      this.saveState();
+      const startClientY = e.clientY;
+      const startY = row.y;
+      const pointerId = e.pointerId;
+
+      const move = (ev) => {
+        if(ev.pointerId !== pointerId) return;
+        ev.preventDefault();
+        row.y = this.roundPos(startY + (ev.clientY - startClientY) / this.scale);
+        this.scheduleNumberLineUpdate();
+      };
+      const end = (ev) => {
+        if(ev.pointerId !== pointerId) return;
+        document.removeEventListener('pointermove', move);
+        document.removeEventListener('pointerup', end);
+        document.removeEventListener('pointercancel', end);
+      };
+      document.addEventListener('pointermove', move, {passive:false});
+      document.addEventListener('pointerup', end);
+      document.addEventListener('pointercancel', end);
     }
 
     updateNumberLineEl(){
@@ -1778,71 +2052,69 @@ palette.querySelectorAll('.palette-item').forEach(item=>{
         return;
       }
       const nl = this.numberLine;
-
-      // Longueur manuelle : pas d'ajustement automatique au bord droit.
       nl.len = Math.max(80, Math.min(20000, (nl.len || nl.defaultLen || 900)));
-
       const len = Math.round(nl.len);
-      const hasGrad = !!Number(nl.gradDenom || 0);
-      const base = hasGrad ? 24 : nl.baselineOffset;
-      const H = hasGrad ? 92 : nl.height;
-      // Marge SVG à gauche : elle permet au texte "0", centré sur x=0,
-      // d'être visible en entier sans déplacer la graduation d'origine.
       const svgPadL = 18;
-      this.numberLineEl.style.left = `${nl.x - svgPadL}px`;
-      this.numberLineEl.style.top  = `${nl.y - base}px`;
-      const arrowX = len;
-      const a = 12;           // longueur de la flèche (en coordonnées monde)
-      const ah = 7;           // demi-hauteur de la flèche
+      this.numberLineEl.style.left = '0px';
+      this.numberLineEl.style.top = '0px';
+      const a = 12;
+      const ah = 7;
       const lineEnd = Math.max(0, len - a);
-      const y = base;
-      const gradSvg = this.buildNumberLineGraduationSVG({len, lineEnd, y});
-      const zeroOnly = hasGrad ? '' : `<line x1="0" y1="${y-10}" x2="0" y2="${y+10}" stroke="rgba(17,24,39,0.9)" stroke-width="1.5" stroke-linecap="round" />\n<text x="0" y="${y+20}" text-anchor="middle" font-size="18" font-family="Fredoka, sans-serif" font-weight="800" fill="#111827">0</text>`;
-
       this.numberLineEl.classList.remove('hidden');
-      this.numberLineEl.innerHTML = `
-        <svg width="${len+1+svgPadL}" height="${H}" viewBox="${-svgPadL} 0 ${len+1+svgPadL} ${H}" xmlns="http://www.w3.org/2000/svg">
-          <line x1="0" y1="${y}" x2="${lineEnd}" y2="${y}" stroke="rgba(17,24,39,0.9)" stroke-width="1.5" stroke-linecap="round" />
-          <polygon points="${len},${y} ${lineEnd},${y-ah} ${lineEnd},${y+ah}" fill="rgba(17,24,39,0.9)" />
-          ${hasGrad ? gradSvg : zeroOnly}
-        </svg>
-      `;
+      this.numberLineEl.replaceChildren();
+      for(const row of nl.rows){
+        row.displayMode = normalizeLabelMode(row.displayMode, 'numeric');
+        const hasGrad = !!Number(row.gradDenom || 0);
+        const base = hasGrad ? 24 : nl.baselineOffset;
+        const H = hasGrad ? 92 : nl.height;
+        const gradSvg = this.buildNumberLineGraduationSVG({lineEnd, y:base, row});
+        const zeroOnly = hasGrad ? '' : `<line x1="0" y1="${base-10}" x2="0" y2="${base+10}" stroke="rgba(17,24,39,0.9)" stroke-width="1.5" stroke-linecap="round" />\n<text x="0" y="${base+20}" text-anchor="middle" font-size="18" font-family="Fredoka, sans-serif" font-weight="800" fill="#111827">0</text>`;
+        const rowEl = document.createElement('div');
+        rowEl.className = `number-line-row${row.id === nl.selectedRowId ? ' is-selected' : ''}`;
+        rowEl.dataset.rowId = String(row.id);
+        rowEl.style.left = `${nl.x - svgPadL}px`;
+        rowEl.style.top = `${row.y - base}px`;
+        rowEl.setAttribute('role', 'button');
+        rowEl.setAttribute('aria-label', 'Sélectionner et déplacer verticalement cette droite');
+        rowEl.innerHTML = `
+          <svg width="${len+1+svgPadL}" height="${H}" viewBox="${-svgPadL} 0 ${len+1+svgPadL} ${H}" xmlns="http://www.w3.org/2000/svg">
+            <line x1="0" y1="${base}" x2="${lineEnd}" y2="${base}" stroke="rgba(17,24,39,0.9)" stroke-width="1.5" stroke-linecap="round" />
+            <polygon points="${len},${base} ${lineEnd},${base-ah} ${lineEnd},${base+ah}" fill="rgba(17,24,39,0.9)" />
+            ${hasGrad ? gradSvg : zeroOnly}
+          </svg>`;
+        rowEl.addEventListener('pointerdown', (e) => this.startNumberLineRowDrag(e, row.id));
+        this.numberLineEl.appendChild(rowEl);
+      }
       this.updateNumberLineHandles();
       this.updateNumberLineGradUI();
     }
 
 
     updateNumberLineHandles(){
-      // On ne garde que la poignée de fin (flèche). Le 0 reste dessiné dans le SVG.
       if(!this.nlHandleEnd) return;
 
-      if(!this.numberLine || !this.numberLine.active){
-        if(this.nlHandle0) this.nlHandle0.classList.add('hidden');
+      const row = this.getSelectedNumberLineRow();
+      if(!this.numberLine || !this.numberLine.active || !row){
         this.nlHandleEnd.classList.add('hidden');
+        if(this.nlHandleClose) this.nlHandleClose.classList.add('hidden');
         return;
       }
       const nl = this.numberLine;
       const size = 28;
-
-      // Position écran (dans #board-container) de la fin
-      const baseY  = this.pan.y + nl.y * this.scale;
+      const baseY  = this.pan.y + row.y * this.scale;
       const endX   = this.pan.x + (nl.x + nl.len) * this.scale;
-
       const top = baseY - size/2;
-
-      if(this.nlHandle0){
-        // (au cas où) — mais normalement supprimée
-        const startX = this.pan.x + nl.x * this.scale;
-        this.nlHandle0.style.left = `${startX - size/2}px`;
-        this.nlHandle0.style.top  = `${top}px`;
-        this.nlHandle0.classList.remove('hidden');
-      }
-
-      // Poignée placée à droite de la flèche (hors de la demi-droite)
       const handleOffsetPx = 20;
       this.nlHandleEnd.style.left = `${endX + handleOffsetPx - size/2}px`;
       this.nlHandleEnd.style.top  = `${top}px`;
       this.nlHandleEnd.classList.remove('hidden');
+      if(this.nlHandleClose){
+        const rightLimit = Math.max(8, this.boardContainer.clientWidth - size - 8);
+        const closeLeft = Math.max(8, Math.min(rightLimit, endX + 46));
+        this.nlHandleClose.style.left = `${closeLeft}px`;
+        this.nlHandleClose.style.top = `${top}px`;
+        this.nlHandleClose.classList.remove('hidden');
+      }
     }
 
     initNumberLineHandles(){
@@ -1858,7 +2130,8 @@ palette.querySelectorAll('.palette-item').forEach(item=>{
         e.preventDefault();
         e.stopPropagation();
 
-        const nl0 = {...this.numberLine};
+        this.saveState();
+        const startLen = this.numberLine.len;
         const p0 = getPt(e);
 
         const move = (ev) => {
@@ -1867,7 +2140,7 @@ palette.querySelectorAll('.palette-item').forEach(item=>{
           const p = getPt(ev);
           const dxWorld = (p.x - p0.x) / this.scale;
 
-          const newLen = nl0.len + dxWorld;
+          const newLen = startLen + dxWorld;
           this.numberLine.len = Math.max(80, Math.min(20000, newLen));
           this.scheduleNumberLineUpdate();
         };
@@ -1893,11 +2166,19 @@ palette.querySelectorAll('.palette-item').forEach(item=>{
 
       this.nlHandleEnd.addEventListener('mousedown', (e) => startDragEnd(e));
       this.nlHandleEnd.addEventListener('touchstart', (e) => startDragEnd(e), {passive:false});
+      if(this.nlHandleClose){
+        this.nlHandleClose.addEventListener('click', (e) => {
+          e.preventDefault();
+          e.stopPropagation();
+          this.deleteNumberLine();
+        });
+      }
 
       // Double-clic sur la flèche : revient à la longueur par défaut
       this.nlHandleEnd.addEventListener('dblclick', (e) => {
         e.preventDefault();
         e.stopPropagation();
+        this.saveState();
         const nl = this.numberLine;
         nl.len = nl.defaultLen || 900;
         this.scheduleNumberLineUpdate();
@@ -1967,6 +2248,7 @@ palette.querySelectorAll('.palette-item').forEach(item=>{
       });
 
       this._bind('btn-numberline','click', () => this.toggleNumberLine());
+      this._bind('btn-numberline-add','click', () => this.addNumberLine());
       const gradSelect = document.getElementById('numberline-grad');
       if(gradSelect){
         gradSelect.addEventListener('change', (e) => this.setNumberLineGraduation(e.currentTarget.value));
@@ -2022,7 +2304,8 @@ palette.querySelectorAll('.palette-item').forEach(item=>{
         }
 
         if(e.key === 'Delete' || e.key === 'Backspace') {
-          this.deleteSelected();
+          if(this.selectedTokens.length) this.deleteSelected();
+          else if(this.numberLine?.active) this.deleteNumberLine();
           return;
         }
 
@@ -2067,31 +2350,20 @@ palette.querySelectorAll('.palette-item').forEach(item=>{
     }
 
     setLabelMode(newMode){
-      this.labelMode = newMode;
+      this.labelMode = normalizeLabelMode(newMode, this.labelMode);
       document.body.classList.toggle('show-text-labels', this.labelMode === 'text');
       this.updateModeUI();
-      
       this.buildPalette();
-
-      const selId = this.selectedId;
-      const selIds = this.selectedIds ? Array.from(this.selectedIds) : (selId ? [selId] : []);
-
-      this.tokens.forEach(t => { if(t._el) t._el.remove(); });
-      this.tokens.forEach(t => this.mountToken(t));
-
-      // Restaure la sélection (multi si besoin)
-      this.selectToken(null);
-      for(const id of selIds){
-        if(id) this.selectToken(id, {toggle:true});
-      }
       playSound('pop');
     }
 
     updateModeUI(){
+       document.body.classList.toggle('show-text-labels', this.labelMode === 'text');
        const modeButtons = document.querySelectorAll('.mode-btn');
        modeButtons.forEach(btn => {
-         if(btn.dataset.mode === this.labelMode) btn.classList.add('active');
-         else btn.classList.remove('active');
+         const active = btn.dataset.mode === this.labelMode;
+         btn.classList.toggle('active', active);
+         btn.setAttribute('aria-pressed', String(active));
        });
     }
     updateSelectionUI(){
@@ -2256,6 +2528,7 @@ endMarquee(){
         if(!wantsPan) return;
         if(e.target.closest('.strip')) return;
         if(e.target.closest('.nl-handle')) return;
+        if(e.target.closest('.number-line-row')) return;
         this.isPanning = true;
         this.panStart = {x: e.clientX - this.pan.x, y: e.clientY - this.pan.y};
         this.boardContainer.classList.add('panning');
@@ -2273,12 +2546,22 @@ this.boardContainer.addEventListener('mousedown', (e) => {
         if(this.currentTool === 'pen' && e.button === 0 && !ignoreMouse) this.startDraw(e);
       });
 
-      // --- Support stylet (Pointer Events) : Surface / iPad / tablettes ---
-      // Le stylet envoie souvent des PointerEvents de type "pen" (et pas forcément des mousedown/touchstart).
-      // On écoute donc pointerdown/move/up pour le crayon, sans toucher au moteur du reste.
+      // Le doigt déplace le plateau en mode Main. Le stylet ou le doigt dessine en mode Crayon.
       this.boardContainer.addEventListener('pointerdown', (e) => {
+        if(this.currentTool === 'hand' && e.pointerType === 'touch'){
+          if(e.target.closest('.strip, .nl-handle, .number-line-row')) return;
+          e.preventDefault();
+          this._activePanPointerId = e.pointerId;
+          this.panStart = {x:e.clientX - this.pan.x, y:e.clientY - this.pan.y};
+          this.boardContainer.classList.add('panning');
+          document.body.classList.add('is-dragging-global');
+          this.selectToken(null);
+          try{ this.boardContainer.setPointerCapture(e.pointerId); }catch(_){}
+          return;
+        }
         if(this.currentTool !== 'pen') return;
-        if(e.pointerType !== 'pen') return;
+        if(e.pointerType !== 'pen' && e.pointerType !== 'touch') return;
+        if(this._activePenPointerId != null) return;
         // Bloque les mousedevents synthétiques qui suivent parfois.
         this._ignoreMouseUntil = Date.now() + 500;
         this._activePenPointerId = e.pointerId;
@@ -2289,6 +2572,13 @@ this.boardContainer.addEventListener('mousedown', (e) => {
       }, {passive:false});
 
       this.boardContainer.addEventListener('pointermove', (e) => {
+        if(this._activePanPointerId === e.pointerId){
+          e.preventDefault();
+          this.pan.x = e.clientX - this.panStart.x;
+          this.pan.y = e.clientY - this.panStart.y;
+          this.updateTransform();
+          return;
+        }
         if(this.currentTool !== 'pen') return;
         if(!this.isDrawing) return;
         if(this._activePenPointerId != null && e.pointerId !== this._activePenPointerId) return;
@@ -2297,6 +2587,13 @@ this.boardContainer.addEventListener('mousedown', (e) => {
       }, {passive:false});
 
       const endPenPointer = (e) => {
+        if(this._activePanPointerId === e.pointerId){
+          try{ this.boardContainer.releasePointerCapture(e.pointerId); }catch(_){}
+          this._activePanPointerId = null;
+          this.boardContainer.classList.remove('panning');
+          document.body.classList.remove('is-dragging-global');
+          return;
+        }
         if(this._activePenPointerId == null) return;
         if(e.pointerId !== this._activePenPointerId) return;
         if(this.isDrawing && this.currentTool === 'pen') this.endDraw();
@@ -2353,12 +2650,13 @@ window.addEventListener('mouseup', () => {
       });
 
 window.addEventListener('resize', () => {
-        this.resizeCanvas();
+        if(this._canvasReady) this.resizeCanvas();
         if(this.numberLine && this.numberLine.active) this.scheduleNumberLineUpdate();
       });
     }
 
     mountToken(token){
+      token.labelMode = normalizeLabelMode(token.labelMode, this.labelMode);
       const cfg = this.getFractionConfig(token.denom);
       const el = document.createElement('div');
       el.className = 'strip';
@@ -2394,8 +2692,8 @@ window.addEventListener('resize', () => {
         const seg = document.createElement('div');
         seg.className = 'seg';
         seg.style.color = cfg.text;
-        seg.style.fontSize = `${this.fontSizeFor(token.denom, token.kind)}px`;
-        seg.innerHTML = this.getLabelHTML(token.denom, false);
+        seg.style.fontSize = `${this.fontSizeFor(token.denom, token.kind, token.labelMode)}px`;
+        seg.innerHTML = this.getLabelHTML(token.denom, false, token.labelMode);
         faceFront.appendChild(seg);
       }
 
@@ -2404,8 +2702,8 @@ window.addEventListener('resize', () => {
       backSeg.style.color = cfg.text;
       
       const isBandBack = (token.kind === 'band' || token.denom === 1);
-      backSeg.style.fontSize = `${this.fontSizeFor(isBandBack ? 1 : token.denom, isBandBack ? 'band' : 'piece')}px`;
-      backSeg.innerHTML = this.getLabelHTML(token.denom, isBandBack);
+      backSeg.style.fontSize = `${this.fontSizeFor(isBandBack ? 1 : token.denom, isBandBack ? 'band' : 'piece', token.labelMode)}px`;
+      backSeg.innerHTML = this.getLabelHTML(token.denom, isBandBack, token.labelMode);
       
       faceBack.appendChild(backSeg);
 
@@ -2492,7 +2790,8 @@ window.addEventListener('resize', () => {
         x: this.roundPos(rawX),
         y: this.roundPos(rawY),
         z: ++this.topZ,
-        hidden: false, 
+        hidden: false,
+        labelMode: normalizeLabelMode(this.labelMode),
         _new: true,
       };
       this.tokens.push(token);
@@ -2591,7 +2890,8 @@ window.addEventListener('resize', () => {
           x: s.x + 24,
           y: s.y + 24,
           z: ++this.topZ,
-          hidden: s.hidden
+          hidden: s.hidden,
+          labelMode: normalizeLabelMode(s.labelMode, this.labelMode)
         };
         this.tokens.push(copy);
         this.mountToken(copy);
@@ -2634,13 +2934,14 @@ window.addEventListener('resize', () => {
       const denom = s.denom;
       const side = s.side;
       const wasHidden = s.hidden;
+      const labelMode = normalizeLabelMode(s.labelMode, this.labelMode);
 
       if(s._el) s._el.remove();
       this.tokens = this.tokens.filter(t => t.id !== s.id);
 
       const pw = this.pieceW(denom);
       for(let i=0;i<denom;i++){
-        const piece = { id: this.nextId++, denom, kind:'piece', side, x: baseX + i*pw, y: baseY, z: ++this.topZ, hidden: wasHidden };
+        const piece = { id: this.nextId++, denom, kind:'piece', side, x: baseX + i*pw, y: baseY, z: ++this.topZ, hidden: wasHidden, labelMode };
         this.tokens.push(piece);
         this.mountToken(piece);
       }
@@ -2777,7 +3078,10 @@ window.addEventListener('resize', () => {
         x: plan.baseX,
         y: plan.baseY,
         z: ++this.topZ,
-        hidden: plan.anyHidden
+        hidden: plan.anyHidden,
+        labelMode: list.every(t => normalizeLabelMode(t.labelMode, this.labelMode) === normalizeLabelMode(list[0].labelMode, this.labelMode))
+          ? normalizeLabelMode(list[0].labelMode, this.labelMode)
+          : normalizeLabelMode(this.labelMode)
       };
       this.tokens.push(merged);
       this.mountToken(merged);
@@ -2804,6 +3108,7 @@ window.addEventListener('resize', () => {
       const x = s.x;
       const y = s.y;
       const wasHidden = s.hidden;
+      const labelMode = normalizeLabelMode(s.labelMode, this.labelMode);
 
       this.saveState();
 
@@ -2811,14 +3116,14 @@ window.addEventListener('resize', () => {
       this.tokens = this.tokens.filter(t => t.id !== s.id);
 
       if(s.kind === 'band'){
-        const band = { id: this.nextId++, denom: d2, kind:'band', side, x, y, z: ++this.topZ, hidden: wasHidden };
+        const band = { id: this.nextId++, denom: d2, kind:'band', side, x, y, z: ++this.topZ, hidden: wasHidden, labelMode };
         this.tokens.push(band);
         this.mountToken(band);
         this.selectToken(band.id);
       } else {
         const pw2 = this.pieceW(d2);
-        const p1 = { id: this.nextId++, denom: d2, kind:'piece', side, x: x,      y, z: ++this.topZ, hidden: wasHidden };
-        const p2 = { id: this.nextId++, denom: d2, kind:'piece', side, x: x+pw2,   y, z: ++this.topZ, hidden: wasHidden };
+        const p1 = { id: this.nextId++, denom: d2, kind:'piece', side, x: x,      y, z: ++this.topZ, hidden: wasHidden, labelMode };
+        const p2 = { id: this.nextId++, denom: d2, kind:'piece', side, x: x+pw2,   y, z: ++this.topZ, hidden: wasHidden, labelMode };
         this.tokens.push(p1, p2);
         this.mountToken(p1);
         this.mountToken(p2);
@@ -2911,11 +3216,17 @@ window.addEventListener('resize', () => {
         const {h} = this.tokenDims(token);
         if(this.numberLine && this.numberLine.active && !lastAltSnapOff){
           const lockThresh = 18 / this.scale;
-          const dAbove = Math.abs((wy + h) - this.numberLine.y);
-          const dBelow = Math.abs(wy - this.numberLine.y);
-          const d = Math.min(dAbove, dBelow);
-          if(d < lockThresh){
-            wy = (dAbove <= dBelow) ? (this.numberLine.y - h) : this.numberLine.y;
+          let bestLine = null;
+          for(const row of this.numberLine.rows || []){
+            const dAbove = Math.abs((wy + h) - row.y);
+            const dBelow = Math.abs(wy - row.y);
+            const candidate = dAbove <= dBelow
+              ? {distance:dAbove, y:row.y - h}
+              : {distance:dBelow, y:row.y};
+            if(!bestLine || candidate.distance < bestLine.distance) bestLine = candidate;
+          }
+          if(bestLine && bestLine.distance < lockThresh){
+            wy = bestLine.y;
           }
         }
 
@@ -3028,19 +3339,26 @@ window.addEventListener('resize', () => {
       };
 
       if(this.numberLine && this.numberLine.active && !disableNumberLineSnap){
-        // Aimantation douce à la demi-droite :
-        // - verticalement, on garde l'ancien comportement (poser au-dessus ou au-dessous),
-        // - horizontalement, le bord gauche peut se caler sur chaque graduation visible.
         const nlSnapThresh = 14 / this.scale;
         const nlYSnapThresh = 18 / this.scale;
         const nl = this.numberLine;
-        considerY(nl.y - h, 0, nlYSnapThresh);
-        considerY(nl.y, 0, nlYSnapThresh);
+        const rows = nl.rows || [];
+        let closestRow = this.getSelectedNumberLineRow();
+        let closestDistance = Infinity;
+        for(const row of rows){
+          considerY(row.y - h, 0, nlYSnapThresh);
+          considerY(row.y, 0, nlYSnapThresh);
+          const distance = Math.min(Math.abs((t.y + h) - row.y), Math.abs(t.y - row.y));
+          if(distance < closestDistance){
+            closestDistance = distance;
+            closestRow = row;
+          }
+        }
 
         const len = Math.max(80, Math.min(20000, (nl.len || nl.defaultLen || 900)));
         const arrow = 12;
         const lineEnd = Math.max(0, len - arrow);
-        const gradDenom = Number(nl.gradDenom || 0);
+        const gradDenom = Number(closestRow?.gradDenom || 0);
         const step = gradDenom ? (this.unitW / gradDenom) : this.unitW;
 
         if(Number.isFinite(step) && step > 0){
@@ -3350,17 +3668,37 @@ for(let i=0;i<this.tokens.length;i++){
 
       const penMode = (tool === 'pen');
       document.body.classList.toggle('pen-mode', penMode);
+      if(penMode && !this._canvasReady){
+        const warmCanvas = () => {
+          if(this.currentTool === 'pen' && !this._canvasReady) this.ensureCanvas();
+        };
+        if(typeof window.requestIdleCallback === 'function'){
+          window.requestIdleCallback(warmCanvas, {timeout:400});
+        } else {
+          window.setTimeout(warmCanvas, 32);
+        }
+      }
     }
 
-    resizeCanvas(){
+    ensureCanvas(){
+      if(!this._canvasReady) this.resizeCanvas({force:true});
+    }
+
+    resizeCanvas({force=false} = {}){
       const offset = 2500;
       const worldSize = 5000;
-      const dpr = Math.min(2, window.devicePixelRatio || 1);
+      const coarsePointer = !!window.matchMedia?.('(pointer: coarse)').matches;
+      const maxPixels = coarsePointer ? 16000000 : 25000000;
+      const maxDpr = Math.sqrt(maxPixels / (worldSize * worldSize));
+      const dpr = Math.max(0.65, Math.min(window.devicePixelRatio || 1, maxDpr));
+      const width = Math.round(worldSize * dpr);
+      const height = Math.round(worldSize * dpr);
+      if(!force && this._canvasReady && this.canvas.width === width && this.canvas.height === height) return;
       this._canvasWorldSize = worldSize;
       this._canvasDpr = dpr;
 
-      this.canvas.width = Math.round(worldSize * dpr);
-      this.canvas.height = Math.round(worldSize * dpr);
+      this.canvas.width = width;
+      this.canvas.height = height;
       this.canvas.style.width = `${worldSize}px`;
       this.canvas.style.height = `${worldSize}px`;
 
@@ -3371,10 +3709,12 @@ for(let i=0;i<this.tokens.length;i++){
       this.ctx.strokeStyle = '#111827';
       this.ctx.imageSmoothingEnabled = true;
       this.ctx.globalCompositeOperation = 'source-over';
+      this._canvasReady = true;
+      if(this.strokes?.length) this.redrawStrokes();
     }
 
     startDraw(e){
-
+      this.ensureCanvas();
       this.isDrawing = true;
 
       this.drawPoints = [];
@@ -3623,7 +3963,7 @@ for(let i=0;i<this.tokens.length;i++){
       this._boardRect = null; // rect cache : on le recalculera au prochain trait
 
 
-      if(this._currentStroke && this._currentStroke.pts && this._currentStroke.pts.length > 1){
+      if(this._currentStroke && this._currentStroke.pts && this._currentStroke.pts.length >= 1){
 
         this.strokes.push(this._currentStroke);
 
@@ -3637,6 +3977,7 @@ for(let i=0;i<this.tokens.length;i++){
       if(!keepStrokes){
         this.strokes = [];
       }
+      if(!this._canvasReady) return;
       this.ctx.save();
       this.ctx.setTransform(1, 0, 0, 1, 0, 0);
       this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
@@ -3648,7 +3989,7 @@ for(let i=0;i<this.tokens.length;i++){
     }
 
     redrawStrokes(){
-      if(!this.strokes || !this.strokes.length) return;
+      if(!this._canvasReady || !this.strokes || !this.strokes.length) return;
       this.ctx.save();
       this.ctx.strokeStyle = '#111827';
       this.ctx.lineCap = 'round';
@@ -3657,8 +3998,17 @@ for(let i=0;i<this.tokens.length;i++){
 
       for(const s of this.strokes){
         const pts = s.pts || [];
-        if(pts.length < 2) continue;
+        if(!pts.length) continue;
         this.ctx.lineWidth = s.width || Math.max(1.05, this.basePenPx / this.scale);
+
+        if(pts.length === 1){
+          const p = pts[0];
+          this.ctx.beginPath();
+          this.ctx.arc(p.x, p.y, this.ctx.lineWidth / 2, 0, Math.PI * 2);
+          this.ctx.fillStyle = this.ctx.strokeStyle || '#111827';
+          this.ctx.fill();
+          continue;
+        }
 
         this.ctx.beginPath();
         this.ctx.moveTo(pts[0].x, pts[0].y);
@@ -3668,8 +4018,14 @@ for(let i=0;i<this.tokens.length;i++){
           continue;
         }
 
-        for(let i=1;i<pts.length;i++){
-          const p1 = pts[i-1];
+        const firstMid = {
+          x: (pts[0].x + pts[1].x) / 2,
+          y: (pts[0].y + pts[1].y) / 2
+        };
+        this.ctx.lineTo(firstMid.x, firstMid.y);
+
+        for(let i=2;i<pts.length;i++){
+          const p1 = pts[i - 1];
           const p2 = pts[i];
           const midX = (p1.x + p2.x) / 2;
           const midY = (p1.y + p2.y) / 2;
@@ -3720,10 +4076,10 @@ for(let i=0;i<this.tokens.length;i++){
 
   function runSelfTests(){
     const required = [
-      'btn-undo','btn-clear','mode-selector','btn-numberline','numberline-grad','btn-zoom-in','btn-zoom-out','btn-reset-view',
+      'btn-undo','btn-clear','mode-selector','btn-numberline','btn-numberline-add','numberline-grad','btn-zoom-in','btn-zoom-out','btn-reset-view',
       'btn-flip','btn-separate','btn-cut','btn-fuse','btn-duplicate','btn-delete',
       'tool-hand','tool-pen','btn-undo-drawing','btn-clear-drawing',
-      'board-container','board-world','palette','drawing-canvas','number-line'
+      'board-container','board-world','palette','drawing-canvas','number-line','nl-handle-end','nl-handle-close'
     ];
     const missing = required.filter(id => !document.getElementById(id));
     if(missing.length){
@@ -3734,7 +4090,7 @@ for(let i=0;i<this.tokens.length;i++){
     try{
       // Test non destructif : on vérifie les méthodes sur le prototype,
       // sans instancier une première application qui ajouterait déjà des écouteurs d'événements.
-      const okMethods = ['scheduleSeamUpdate','updateSeamBorders','addToken','snapToken','toggleNumberLine','setNumberLineGraduation','buildNumberLineGraduationSVG']
+      const okMethods = ['scheduleSeamUpdate','updateSeamBorders','addToken','snapToken','toggleNumberLine','addNumberLine','deleteNumberLine','setNumberLineGraduation','buildNumberLineGraduationSVG','ensureCanvas']
         .every(m => typeof FractionStripsApp.prototype[m] === 'function');
       if(!okMethods) throw new Error('Méthodes clés manquantes');
 
