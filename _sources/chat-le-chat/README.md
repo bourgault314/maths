@@ -11,18 +11,20 @@ Emprin-Charotte, CRDP Champagne-Ardenne). Version modernisée pour maths&go :
 - `game.py` — modèle du jeu, solveur et transcription des cartes disponibles ;
 - `gen_series.py` — fabrique les 20 séries et écrit `series20.json` ;
 - `series20.json` — données publiables et provenance éditoriale de chaque série ;
-- `gen.py` — génère `out/livret.html` (règle, exemple guidé, cartes et solutions) ;
+- `gen.py` — génère `out/livret.html` (règle, exemple guidé, cartes et solutions)
+  ainsi que `out/cartes-compactes.html` (huit cartes par feuille) ;
 - `verify.py` — vérifie les données, les niveaux et le HTML généré ;
 - `projection_cases.json` — exemple guidé et 12 défis inédits à projeter ;
 - `gen_projection.py` — valide ces défis et génère la page projetable autonome ;
 - `out/livret.pdf` — livret final de 24 pages (non versionné ici ; la copie
   publique est `../../outils/chat-cest-toi-le-chat.pdf`).
+- `out/cartes-compactes.pdf` — dix feuilles A4 paysage contenant chacune deux
+  séries de quatre cartes en portrait (copie publique :
+  `../../outils/chat-cest-toi-le-chat-cartes-compactes.pdf`).
 
 La page projetable publique est
-`../../outils/chat-cest-toi-le-chat-projection.html`. Toute la classe peut
-chercher depuis sa place, puis vérifier les cartes à voix haute lors de la mise
-en commun. Reproduire le placement au sol avec quatre joueurs reste une variante
-possible, mais n'est pas nécessaire pour utiliser la projection.
+`../../outils/chat-cest-toi-le-chat-projection.html`. Toute la classe cherche
+depuis sa place, puis vérifie les cartes à voix haute lors de la mise en commun.
 
 Les notes de provenance restent dans `series20.json` pour permettre les futures
 modifications, mais elles ne sont pas imprimées sur les pages de solutions.
@@ -72,6 +74,10 @@ chromium --headless --no-sandbox --disable-gpu \
   --no-pdf-header-footer \
   --print-to-pdf="$src/out/livret.pdf" \
   "file://$src/out/livret.html"
+chromium --headless --no-sandbox --disable-gpu \
+  --no-pdf-header-footer \
+  --print-to-pdf="$src/out/cartes-compactes.pdf" \
+  "file://$src/out/cartes-compactes.html"
 ```
 
 Selon l'installation, la commande du navigateur peut s'appeler
@@ -80,6 +86,8 @@ PDF, mettre à jour la copie publique :
 
 ```sh
 cp "$src/out/livret.pdf" /chemin/vers/le-depot/outils/chat-cest-toi-le-chat.pdf
+cp "$src/out/cartes-compactes.pdf" \
+  /chemin/vers/le-depot/outils/chat-cest-toi-le-chat-cartes-compactes.pdf
 ```
 
 Le générateur attend le logo `assets/img/mathsgo-logo-780.png` et le fichier

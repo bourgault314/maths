@@ -133,6 +133,7 @@ if by_num[6]["sol"] != SERIES[3]["sol"]:
 
 # ---------------------------------------------------------------- 5. HTML généré conforme
 html = (HERE / "out" / "livret.html").read_text(encoding="utf-8")
+compact_html = (HERE / "out" / "cartes-compactes.html").read_text(encoding="utf-8")
 if "<title>Chat, c'est toi le chat ! - maths&amp;go</title>" not in html:
     err("titre HTML absent ou incorrect")
 if '<div class="origin">' in html:
@@ -250,13 +251,13 @@ if html.count('data-guide-state="wrong"') != 1 or html.count('data-guide-state="
     err("les deux placements de l'exemple guidé ne sont pas rendus une fois chacun")
 guided_page_html = pages[1] if len(pages) >= 2 else ""
 guided_steps = (
-    "Carte 1</b> : 4 est bien à gauche de 1.",
-    "Carte 2</b> : personne n'est devant ni à gauche de 2.",
+    "Carte 1</b> : il y a bien un chat à gauche.",
+    "Carte 2</b> : un chat est attendu devant et à gauche, mais les deux places sont vides ; aucun chat à droite ni derrière.",
     "Dès qu'une carte est fausse, on sait que le placement est incorrect.",
-    "Carte 1</b> : 4 est à gauche de 1.",
-    "Carte 2</b> : 1 est devant, 3 à gauche ; personne à droite ni derrière.",
-    "Carte 3</b> : 4 est devant 3.",
-    "Carte 4</b> : 1 est à droite et 3 derrière.",
+    "Carte 1</b> : il y a bien un chat à gauche.",
+    "Carte 2</b> : il y a bien un chat devant et à gauche ; aucun chat à droite ni derrière.",
+    "Carte 3</b> : il y a bien un chat devant.",
+    "Carte 4</b> : il y a bien un chat à droite et derrière.",
     "Les quatre cartes sont vraies : le placement est correct.",
 )
 cursor = -1
@@ -320,6 +321,34 @@ for player in range(1, 5):
     count = series_html.count(f'aria-label="carte {player}"')
     if count != 20:
         err(f"numéro {player} : {count} médaillons au lieu de 20")
+
+# La variante compacte garde les cartes en portrait sur dix feuilles A4 paysage.
+compact_pages_html = re.findall(
+    r'<section class="compact-page" data-series="(\d+)-(\d+)">(.*?)</section>',
+    compact_html,
+    re.S,
+)
+if len(compact_pages_html) != 10:
+    err(f"cartes compactes : {len(compact_pages_html)} pages au lieu de 10")
+if "@page { size: A4 landscape;" not in compact_html:
+    err("cartes compactes : les feuilles doivent être en A4 paysage")
+if "grid-template-columns:repeat(4,1fr)" not in compact_html or "grid-template-rows:repeat(2,1fr)" not in compact_html:
+    err("cartes compactes : la feuille doit contenir quatre colonnes et deux rangées")
+if compact_html.count("compactcard") != 80:
+    err("cartes compactes : il faut exactement 80 cartes")
+if compact_html.count('class="player-badge"') != 80:
+    err("cartes compactes : chaque carte doit avoir un seul chat central numéroté")
+if compact_html.count('class="cardurl">mathsgo.re<') != 80:
+    err("cartes compactes : l'adresse mathsgo.re doit figurer sur chaque carte")
+for page_index, (first, second, page_body) in enumerate(compact_pages_html):
+    expected_first = page_index * 2 + 1
+    if (int(first), int(second)) != (expected_first, expected_first + 1):
+        err(f"cartes compactes page {page_index + 1} : séries {first}-{second}")
+    if page_body.count("compactcard") != 8:
+        err(f"cartes compactes page {page_index + 1} : huit cartes attendues")
+    for series_number in (int(first), int(second)):
+        if page_body.count(f"Série {series_number}") != 4:
+            err(f"cartes compactes : série {series_number} incomplète")
 
 # ---------------------------------------------------------------- bilan
 print(f"{len(errors)} erreur(s), {len(warnings)} avertissement(s)")

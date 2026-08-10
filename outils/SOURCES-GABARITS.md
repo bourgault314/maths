@@ -69,11 +69,14 @@ importé, et non à chaque compilation générale.
 
 ## PDF possédant des sources Python et JSON
 
-Le livret `chat-cest-toi-le-chat.pdf` est entièrement modifiable. Ses sources sont
-conservées dans `../_sources/chat-le-chat/` : modèle du jeu, données des 20 séries,
-générateur du livret et vérification exhaustive. La procédure de régénération est
-décrite dans le `README.md` de ce dossier. Une publication ordinaire réutilise le
-PDF déjà validé sans exécuter cette chaîne.
+Le livret `chat-cest-toi-le-chat.pdf` et sa variante
+`chat-cest-toi-le-chat-cartes-compactes.pdf` sont entièrement modifiables. Le
+premier propose quatre grandes cartes par page ; le second, huit cartes portrait
+sur une feuille A4 paysage. Leurs sources sont conservées dans
+`../_sources/chat-le-chat/` : modèle du jeu, données des 20 séries, générateurs et
+vérification exhaustive. La procédure de régénération est décrite dans le
+`README.md` de ce dossier. Une publication ordinaire réutilise les PDF déjà
+validés sans exécuter cette chaîne.
 
 ## Ressource projetée possédant des sources Python et JSON
 
@@ -81,13 +84,12 @@ L'activité collective `chat-cest-toi-le-chat-projection.html` est générée de
 le même dossier `../_sources/chat-le-chat/`. Le fichier `projection_cases.json`
 contient l'exemple guidé et les défis projetés ; `gen_projection.py` construit la
 page publique à partir de ces données. Chaque élève peut chercher depuis sa
-place, avant une vérification collective des quatre cartes. La reproduction du
-placement au sol reste proposée comme variante. La procédure de régénération et
-de contrôle est décrite dans le `README.md` du dossier source.
+place, avant une vérification collective des quatre cartes. La procédure de
+régénération et de contrôle est décrite dans le `README.md` du dossier source.
 
 ## Classement public
 
-Les 31 PDF sont tous déclarés dans `assets/js/catalogue-refonte-data.js` et dans
+Les PDF sont tous déclarés dans `assets/js/catalogue-refonte-data.js` et dans
 `sitemap.xml`. Leur classement visible se fait par domaine et notion dans le
 catalogue ; leur chemin physique historique n'a pas été déplacé afin de préserver
 les liens publics existants.

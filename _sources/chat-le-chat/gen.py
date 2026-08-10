@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Génère le HTML imprimable « Chat, c'est toi le chat ! »."""
+"""Génère le livret et les cartes compactes « Chat, c'est toi le chat ! »."""
 import base64
 import json
 import re
@@ -72,7 +72,7 @@ def cat_svg(size=100, crossed=False, number=None):
 </svg>'''
 
 # ---------------------------------------------------------------- carte de jeu
-def card_html(label, cons, player_number, cat_px=95, extra_class=""):
+def card_html(label, cons, player_number, cat_px=95, extra_class="", branded=True):
     def slot(name, content):
         return f'<div class="slot {name}">{content}</div>'
     # Le numéro appartient uniquement au chat encadré. Tous les chats qui
@@ -82,8 +82,10 @@ def card_html(label, cons, player_number, cat_px=95, extra_class=""):
         if d in cons:
             pos = {"front": "top", "back": "bottom", "left": "left", "right": "right"}[d]
             cells.append(slot(pos, cat_svg(cat_px, crossed=(cons[d] == "X"))))
-    brand = "" if extra_class else f'<div class="cardnum">{M_BADGE}{label}</div><div class="cardurl">mathsgo.re</div>'
-    brand = brand or f'<div class="cardnum">{label}</div>'
+    if branded:
+        brand = f'<div class="cardnum">{M_BADGE}{label}</div><div class="cardurl">mathsgo.re</div>'
+    else:
+        brand = f'<div class="cardnum">{label}</div>'
     return (f'<div class="card {extra_class}" data-card-number="{player_number}">'
             f'{brand}{"".join(cells)}</div>')
 
@@ -130,7 +132,7 @@ def rule_page():
     </div>'''
     ex_card = card_html(
         "EX", {"front": "P", "right": "X"}, player_number=2,
-        cat_px=39, extra_class="excard",
+        cat_px=39, extra_class="excard", branded=False,
     )
     niveaux = "".join(
         f'''<article class="rules-level" style="--level-color:{c}">
@@ -238,7 +240,7 @@ def guided_page():
 
     cards = "".join(
         card_html("Exemple", GUIDED_CARDS[player], player_number=player,
-                  cat_px=58, extra_class="guidecard")
+                  cat_px=58, extra_class="guidecard", branded=False)
         for player in (1, 2, 3, 4)
     )
     return f'''<section class="page guided-page">
@@ -255,8 +257,8 @@ def guided_page():
         <h3>1. On essaie ce placement</h3>
         {guided_grid(GUIDED_WRONG, "wrong")}
         <ol class="guide-checks" aria-label="Vérification du placement proposé">
-          <li class="ok"><span><b>Carte 1</b> : 4 est bien à gauche de 1.</span><strong>Vraie</strong></li>
-          <li class="bad"><span><b>Carte 2</b> : personne n'est devant ni à gauche de 2.</span><strong>Fausse</strong></li>
+          <li class="ok"><span><b>Carte 1</b> : il y a bien un chat à gauche.</span><strong>Vraie</strong></li>
+          <li class="bad"><span><b>Carte 2</b> : un chat est attendu devant et à gauche, mais les deux places sont vides ; aucun chat à droite ni derrière.</span><strong>Fausse</strong></li>
         </ol>
         <p class="guide-conclusion"><b>Dès qu'une carte est fausse, on sait que le placement est incorrect.</b></p>
       </article>
@@ -265,10 +267,10 @@ def guided_page():
         <h3>2. On corrige le placement</h3>
         {guided_grid(GUIDED_CORRECT, "correct")}
         <ol class="guide-checks guide-checks-all" aria-label="Vérification du placement corrigé">
-          <li class="ok"><span><b>Carte 1</b> : 4 est à gauche de 1.</span><strong>Vraie</strong></li>
-          <li class="ok"><span><b>Carte 2</b> : 1 est devant, 3 à gauche ; personne à droite ni derrière.</span><strong>Vraie</strong></li>
-          <li class="ok"><span><b>Carte 3</b> : 4 est devant 3.</span><strong>Vraie</strong></li>
-          <li class="ok"><span><b>Carte 4</b> : 1 est à droite et 3 derrière.</span><strong>Vraie</strong></li>
+          <li class="ok"><span><b>Carte 1</b> : il y a bien un chat à gauche.</span><strong>Vraie</strong></li>
+          <li class="ok"><span><b>Carte 2</b> : il y a bien un chat devant et à gauche ; aucun chat à droite ni derrière.</span><strong>Vraie</strong></li>
+          <li class="ok"><span><b>Carte 3</b> : il y a bien un chat devant.</span><strong>Vraie</strong></li>
+          <li class="ok"><span><b>Carte 4</b> : il y a bien un chat à droite et derrière.</span><strong>Vraie</strong></li>
         </ol>
         <p class="guide-conclusion"><b>Les quatre cartes sont vraies : le placement est correct.</b></p>
       </article>
@@ -309,6 +311,30 @@ def solutions_pages(series):
 </section>''')
     return pages
 
+
+def compact_pages(series):
+    """Deux séries par feuille A4 paysage, avec huit cartes restant en portrait."""
+    pages = []
+    for start in range(0, len(series), 2):
+        pair = series[start:start + 2]
+        cards = "".join(
+            card_html(
+                f"Série {item['num']}",
+                item["cards"][str(player)],
+                player_number=player,
+                cat_px=68,
+                extra_class=f"compactcard level-{item['level']}",
+            )
+            for item in pair
+            for player in (1, 2, 3, 4)
+        )
+        pages.append(
+            f'''<section class="compact-page" data-series="{pair[0]['num']}-{pair[-1]['num']}">
+  <div class="compact-grid">{cards}</div>
+</section>'''
+        )
+    return pages
+
 # ---------------------------------------------------------------- assemblage
 CSS = f'''
 @page {{ size: A4 portrait; margin: 0; }}
@@ -316,9 +342,9 @@ CSS = f'''
 body {{ margin:0; font-family:'Segoe UI',system-ui,sans-serif; color:{NAVY}; }}
 .page {{ width:210mm; height:296mm; padding:14mm 12mm 10mm; page-break-after:always;
          position:relative; background:white; overflow:hidden; }}
-footer {{ position:absolute; bottom:6mm; left:0; right:0; text-align:center;
+footer {{ position:absolute; bottom:6mm; left:0; width:210mm; text-align:center;
           font-size:9px; color:#b3a998; letter-spacing:.5px; }}
-.fline {{ display:inline-flex; align-items:center; gap:5px; }}
+.fline {{ display:flex; align-items:center; justify-content:center; gap:5px; }}
 .mmark {{ width:12px; height:12px; opacity:.9; }}
 h1 {{ font-size:30px; margin:6px 0 2px; }}
 h2 {{ font-size:22px; margin:0; }}
@@ -475,18 +501,60 @@ p {{ font-size:12.5px; line-height:1.45; margin:4px 0; }}
 .guide-conclusion {{ padding-top:1mm; }}
 '''
 
+COMPACT_CSS = f'''
+@page {{ size: A4 landscape; margin: 0; }}
+* {{ box-sizing:border-box; }}
+html, body {{ margin:0; padding:0; font-family:'Segoe UI',system-ui,sans-serif; color:{NAVY}; }}
+.compact-page {{ width:296mm; height:209mm; padding:7mm 7mm 6mm; page-break-after:always;
+                 position:relative; background:white; overflow:hidden; }}
+.compact-grid {{ width:100%; height:100%; display:grid; grid-template-columns:repeat(4,1fr);
+                 grid-template-rows:repeat(2,1fr); gap:3mm; }}
+.card {{ position:relative; min-width:0; min-height:0; border:1.4px dashed #b8ad9d;
+         border-radius:8px; background:white; overflow:hidden; }}
+.card::before {{ content:""; position:absolute; z-index:3; top:0; left:0; right:0;
+                 height:2px; background:var(--level-color); }}
+.card.level-1 {{ --level-color:{TEAL}; }}
+.card.level-2 {{ --level-color:{NAVY}; }}
+.card.level-3 {{ --level-color:{ORANGE}; }}
+.card.level-4 {{ --level-color:{RED}; }}
+.slot {{ position:absolute; width:33%; height:33%; display:flex; align-items:center; justify-content:center; }}
+.slot.top    {{ left:33.5%; top:2%; }}
+.slot.left   {{ left:2%;    top:34%; }}
+.slot.center {{ left:33.5%; top:34%; }}
+.slot.right  {{ left:65%;   top:34%; }}
+.slot.bottom {{ left:33.5%; top:66%; }}
+.you {{ border:3px solid {TEAL}; border-radius:9px; }}
+.cardnum {{ position:absolute; z-index:2; top:4px; right:5px; display:flex; align-items:center;
+            gap:4px; padding:1px 5px; border-radius:6px; color:#817664; background:{CREAM};
+            font-size:10px; line-height:1.2; font-weight:800; }}
+.mbadge {{ width:10px; height:10px; border-radius:2px; }}
+.cardurl {{ position:absolute; bottom:3px; left:0; right:0; text-align:center;
+            color:#b8ad9d; font-size:7px; letter-spacing:.7px; }}
+'''
+
 def main():
     series = json.loads(SERIES_FILE.read_text(encoding="utf-8"))
     pages = [rule_page(), guided_page()] + [serie_page(s) for s in series] + solutions_pages(series)
     html = (
         '<!DOCTYPE html><html lang="fr"><head><meta charset="utf-8">'
+        '<link rel="icon" href="/favicon.svg" type="image/svg+xml">'
         '<title>Chat, c\'est toi le chat ! - maths&amp;go</title>'
         f'<style>{CSS}</style></head><body>{"".join(pages)}</body></html>'
     )
     OUT_DIR.mkdir(parents=True, exist_ok=True)
     output = OUT_DIR / "livret.html"
     output.write_text(html, encoding="utf-8")
+    compact = compact_pages(series)
+    compact_html = (
+        '<!DOCTYPE html><html lang="fr"><head><meta charset="utf-8">'
+        '<link rel="icon" href="/favicon.svg" type="image/svg+xml">'
+        '<title>Chat, c\'est toi le chat ! - cartes compactes - maths&amp;go</title>'
+        f'<style>{COMPACT_CSS}</style></head><body>{"".join(compact)}</body></html>'
+    )
+    compact_output = OUT_DIR / "cartes-compactes.html"
+    compact_output.write_text(compact_html, encoding="utf-8")
     print(f"HTML ok, {len(pages)} pages → {output}")
+    print(f"HTML compact ok, {len(compact)} pages → {compact_output}")
 
 if __name__ == "__main__":
     main()

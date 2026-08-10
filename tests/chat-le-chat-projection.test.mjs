@@ -149,7 +149,8 @@ test("le HTML publié est autonome, synchronisé et adapté à une réflexion co
 
   for (const id of [
     "home-screen", "challenge-screen", "placement-grid", "cards-grid",
-    "reveal-button", "fullscreen-button", "previous-button", "next-button"
+    "catalog-button", "home-button", "reveal-button", "fullscreen-button",
+    "previous-button", "next-button"
   ]) assert.match(html, new RegExp(`id="${id}"`));
   assert.equal(
     (html.match(/revealButton\.addEventListener\('click', revealNextCard\)/g) || []).length,
@@ -163,13 +164,18 @@ test("le HTML publié est autonome, synchronisé et adapté à une réflexion co
   );
 
   assert.match(html, /observe le placement projeté depuis sa place/i);
-  assert.match(html, /Variante au sol/i);
+  assert.doesNotMatch(html, /Variante au sol/i);
+  assert.doesNotMatch(html, /Chacun cherche d'abord depuis sa place/i);
   assert.match(html, /12 défis inédits · École et collège/i);
   assert.match(html, /de la maternelle au collège/i);
   assert.doesNotMatch(html, /12 défis inédits · GS-CP/i);
   assert.match(html, /vérifiez les cartes à voix haute/i);
   assert.match(html, /un chat barré signifie « personne dans ce cercle, ou aucun cercle dans cette direction »/i);
   assert.match(html, /alt="maths&amp;go"/, "La barre doit employer le logo horizontal maths&go.");
+  assert.match(html, /class="brand" href="index\.html"/, "Le logo doit revenir au catalogue des outils.");
+  assert.match(html, /id="catalog-button" href="index\.html"/, "L’accueil du module doit proposer un retour visible au catalogue.");
+  assert.match(html, /\.picker-grid \{[^}]*grid-template-columns:repeat\(6,minmax\(58px,1fr\)\)/s,
+    "Les douze défis doivent tenir sur deux rangées de six.");
   assert.match(html, /M78 88 C 96 82, 98 60, 88 52/, "La projection doit reprendre le chat du PDF.");
   assert.doesNotMatch(html, /M26 32 19 8l23 13/, "L’ancienne silhouette de face ne doit plus être utilisée.");
   assert.match(
@@ -178,6 +184,13 @@ test("le HTML publié est autonome, synchronisé et adapté à une réflexion co
     "Le focus doit garder un double contour visible sur fonds clairs et foncés."
   );
   assert.doesNotMatch(html, /Compétences|Sac à maths|chronomètre|score|draggable/i);
+  assert.doesNotMatch(html, /Tous ses indices correspondent au placement/i);
+  assert.match(html, /function constraintFeedback\(item, player, grid\)/,
+    "La correction doit expliciter chaque direction de la carte.");
+  assert.match(html, /\.card-self-cat, \.cat-mark \{[^}]*width:86%; height:96%/s,
+    "Le chat central et les chats voisins doivent garder exactement la même taille.");
+  assert.match(html, /\.card-cell\.self::before \{[^}]*inset:-8%/s,
+    "Le cadre central doit s’agrandir autour du chat, sans réduire le pictogramme.");
   assert.doesNotMatch(html, /<(?:script|img)[^>]+src="https?:/i, "Aucune dépendance externe ne doit être chargée.");
 });
 

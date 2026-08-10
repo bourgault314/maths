@@ -298,16 +298,16 @@ HTML_TEMPLATE = r'''<!doctype html>
     .icon-button, .nav-button, .primary-button, .secondary-button, .picker-button {
       border:0; border-radius:14px; cursor:pointer; min-height:46px; font-weight:800; transition:.16s ease; }
     .icon-button { display:inline-flex; align-items:center; justify-content:center; gap:8px;
-      padding:0 14px; color:var(--navy); background:#edf2f6; }
+      padding:0 14px; color:var(--navy); background:#edf2f6; text-decoration:none; }
     .icon-button:hover { color:white; background:var(--navy); }
     .icon { font-size:21px; line-height:1; }
     main { flex:1; min-height:0; }
     .screen { min-height:calc(100dvh - 64px); }
 
     /* Accueil */
-    .home { overflow:auto; padding:clamp(18px,3vw,38px); }
+    .home { overflow:auto; padding:clamp(14px,2.2vw,28px); }
     .home-inner { width:min(1320px,100%); margin:0 auto; }
-    .hero { display:grid; grid-template-columns:minmax(0,1.04fr) minmax(400px,.96fr); gap:24px; align-items:start; }
+    .hero { display:grid; grid-template-columns:minmax(0,1.04fr) minmax(400px,.96fr); gap:22px; align-items:stretch; }
     .hero-copy, .guided { background:white; border-radius:var(--radius); box-shadow:var(--shadow); }
     .hero-copy { padding:clamp(24px,3.2vw,40px); display:flex; flex-direction:column; justify-content:flex-start; align-self:start; }
     .eyebrow { color:var(--orange); font-weight:900; text-transform:uppercase; letter-spacing:.1em; font-size:13px; }
@@ -315,7 +315,6 @@ HTML_TEMPLATE = r'''<!doctype html>
     .lead { margin:0; font-size:clamp(17px,2vw,23px); line-height:1.45; color:#405a73; }
     .class-note { margin:22px 0 10px; padding:15px 17px; border-left:5px solid var(--teal);
       border-radius:12px; background:var(--teal-soft); font-weight:750; line-height:1.45; }
-    .floor-option { margin:0 0 22px; color:var(--muted); font-size:14px; line-height:1.45; }
     .primary-button { padding:12px 22px; color:white; background:var(--teal); box-shadow:0 7px 18px rgba(19,155,145,.24); }
     .primary-button:hover { background:#0d827a; transform:translateY(-1px); }
     .primary-button.large { align-self:flex-start; min-height:56px; font-size:18px; }
@@ -334,11 +333,11 @@ HTML_TEMPLATE = r'''<!doctype html>
     .guided-cards { margin-top:14px; }
     .guided-result { margin:12px 0 0 !important; padding:10px 12px; color:var(--navy) !important;
       border-radius:12px; background:#fff4e6; font-weight:750; }
-    .picker { margin-top:24px; padding:22px; background:white; border-radius:var(--radius); box-shadow:var(--shadow); }
-    .picker-head { display:flex; align-items:end; justify-content:space-between; gap:16px; margin-bottom:14px; }
+    .picker { margin-top:20px; padding-top:17px; border-top:2px solid #e4eaef; }
+    .picker-head { display:flex; align-items:end; justify-content:space-between; gap:16px; margin-bottom:10px; }
     .picker-head p { margin:0; color:var(--muted); }
-    .picker-grid { display:grid; grid-template-columns:repeat(12,minmax(58px,1fr)); gap:8px; }
-    .picker-button { position:relative; padding:11px 6px; color:var(--navy); background:#eef3f7; }
+    .picker-grid { display:grid; grid-template-columns:repeat(6,minmax(58px,1fr)); gap:7px; }
+    .picker-button { position:relative; min-height:43px; padding:7px 5px; color:var(--navy); background:#eef3f7; }
     .picker-button:hover { color:white; background:var(--navy-2); }
     .picker-button small { display:block; margin-top:2px; font-size:10px; color:var(--muted); }
     .picker-button:hover small { color:#dceaf4; }
@@ -376,6 +375,7 @@ HTML_TEMPLATE = r'''<!doctype html>
     .cards-title h2 { margin:0; color:var(--navy); font-size:clamp(18px,2vw,26px); }
     .cards-title small { color:var(--muted); font-weight:700; }
     .cards-grid { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:9px; }
+    .cards-panel > .cards-grid { flex:1; min-height:0; grid-template-rows:repeat(2,minmax(0,1fr)); }
     .logic-card { min-width:0; padding:7px 9px 9px; border:2px solid #d8e0e7; border-radius:12px;
       background:white; box-shadow:0 3px 10px rgba(31,58,104,.07); transition:.2s ease; }
     .logic-card.pending { color:var(--ink); }
@@ -388,20 +388,28 @@ HTML_TEMPLATE = r'''<!doctype html>
     .true .card-status { color:#176746; background:#d7f2e4; }
     .false .card-status { color:#a12437; background:#ffe0e5; }
     .card-map { display:grid; grid-template-columns:repeat(3,1fr); grid-template-rows:repeat(3,1fr);
-      width:min(100%,196px); aspect-ratio:1.16; margin:auto; }
+      width:min(100%,220px); aspect-ratio:1.16; margin:auto; }
     .card-cell { display:grid; place-items:center; min-width:0; min-height:0; }
     .card-cell.front { grid-column:2; grid-row:1; }
     .card-cell.left { grid-column:1; grid-row:2; }
-    .card-cell.self { grid-column:2; grid-row:2; border:3px solid var(--teal-art); border-radius:7px; background:white; }
+    .card-cell.self { position:relative; isolation:isolate; grid-column:2; grid-row:2; }
+    .card-cell.self::before { content:""; position:absolute; z-index:0; inset:-8%; border:3px solid var(--teal-art);
+      border-radius:9px; background:white; }
     .card-cell.right { grid-column:3; grid-row:2; }
     .card-cell.back { grid-column:2; grid-row:3; }
-    .card-self-cat { display:block; width:86%; height:96%; overflow:visible; }
-    .cat-mark { position:relative; width:72%; height:82%; display:grid; place-items:center; }
+    .card-self-cat, .cat-mark { position:relative; z-index:1; width:86%; height:96%; overflow:visible; }
+    .card-self-cat { display:block; }
+    .cat-mark { display:grid; place-items:center; }
     .cat-mark svg { display:block; width:100%; height:100%; overflow:visible; }
-    .feedback { flex:1; min-height:78px; margin-top:9px; padding:11px 13px; border-radius:14px;
+    .feedback { flex:0 0 auto; min-height:54px; margin-top:9px; padding:9px 12px; border-radius:14px;
       color:#405a73; background:#f0f4f7; line-height:1.4; }
     .feedback strong { color:var(--navy); }
-    .feedback ul { margin:5px 0 0; padding-left:20px; }
+    .feedback ul { margin:6px 0 0; padding:0; list-style:none; display:grid;
+      grid-template-columns:repeat(2,minmax(0,1fr)); gap:4px 12px; font-size:13px; }
+    .feedback li { padding-left:18px; position:relative; }
+    .feedback li::before { position:absolute; left:0; font-weight:900; }
+    .feedback li.ok::before { content:"✓"; color:var(--green); }
+    .feedback li.bad::before { content:"✕"; color:var(--red); }
     .reveal-row { display:flex; align-items:center; gap:10px; margin-top:9px; }
     .reveal-row .primary-button { flex:1; }
     .key-hint { color:var(--muted); font-size:11px; white-space:nowrap; }
@@ -427,7 +435,7 @@ HTML_TEMPLATE = r'''<!doctype html>
     .guided-cards .logic-card { padding:5px; border-width:2px; }
     .guided-cards .card-head { font-size:11px; margin:0; }
     .guided-cards .card-map { width:min(100%,145px); }
-    .guided-cards .card-self-cat { width:84%; height:94%; }
+    .guided-cards .card-self-cat, .guided-cards .cat-mark { width:84%; height:94%; }
 
     @media (max-width:1050px) {
       .hero { grid-template-columns:1fr; }
@@ -446,7 +454,7 @@ HTML_TEMPLATE = r'''<!doctype html>
       .brand-sub, .button-label, .key-hint { display:none; }
       .icon-button { width:46px; padding:0; }
       .home { padding:12px; }
-      .hero-copy, .guided, .picker { padding:17px; border-radius:17px; }
+      .hero-copy, .guided { padding:17px; border-radius:17px; }
       .guided-flow { grid-template-columns:1fr; }
       .flow-arrow { transform:rotate(90deg); text-align:center; }
       .picker-grid { grid-template-columns:repeat(4,1fr); }
@@ -459,6 +467,7 @@ HTML_TEMPLATE = r'''<!doctype html>
       .card-head { font-size:11px; }
       .card-status { padding:2px 4px; font-size:9px; }
       .card-map { aspect-ratio:1.05; }
+      .feedback ul { grid-template-columns:1fr; }
       .nav-button { min-width:0; flex:1; }
       .nav-center { display:none; }
       .verdict { align-items:flex-start; flex-wrap:wrap; }
@@ -474,7 +483,7 @@ HTML_TEMPLATE = r'''<!doctype html>
       .placement-grid { --zone:clamp(88px,10.2vw,134px); gap:9px; padding:5px; }
       .question { margin-top:2px; font-size:clamp(20px,2.3vw,30px); }
       .question-hint { margin-top:2px; font-size:14px; }
-      .card-map { width:min(100%,160px); aspect-ratio:1.1; }
+      .card-map { width:min(100%,180px); aspect-ratio:1.1; }
       .logic-card { padding:5px 7px; }
       .feedback { min-height:52px; margin-top:6px; padding:6px 10px; font-size:13px; }
       .reveal-row { margin-top:6px; }
@@ -493,7 +502,7 @@ HTML_TEMPLATE = r'''<!doctype html>
 <body>
   <div class="app">
     <header class="topbar">
-      <a class="brand" href="#" id="brand-home" aria-label="Revenir à l'accueil">
+      <a class="brand" href="index.html" id="brand-home" aria-label="Retourner au catalogue des outils maths&amp;go">
         <img class="brand-logo" src="@@LOGO@@" alt="maths&amp;go" width="390" height="181">
         <span class="brand-copy">
           <span class="brand-title">Chat, c'est toi le chat&nbsp;!</span>
@@ -501,6 +510,9 @@ HTML_TEMPLATE = r'''<!doctype html>
         </span>
       </a>
       <div class="top-actions">
+        <a class="icon-button" id="catalog-button" href="index.html" aria-label="Retourner au catalogue des outils">
+          <span class="icon" aria-hidden="true"><svg viewBox="0 0 24 24" width="22" height="22"><path d="M3 11.5 12 4l9 7.5M5.5 10v10h13V10M9.5 20v-6h5v6" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg></span><span class="button-label">Outils</span>
+        </a>
         <button class="icon-button" id="home-button" type="button" aria-label="Accueil" hidden>
           <span class="icon" aria-hidden="true"><svg viewBox="0 0 24 24" width="22" height="22"><path d="M3 11.5 12 4l9 7.5M5.5 10v10h13V10M9.5 20v-6h5v6" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg></span><span class="button-label">Accueil</span>
         </button>
@@ -519,13 +531,17 @@ HTML_TEMPLATE = r'''<!doctype html>
               <h1>Observer, chercher, justifier.</h1>
               <p class="lead">Toute la classe observe le placement projeté depuis sa place. Chacun réfléchit d'abord seul, avec son ardoise s'il le souhaite, puis les idées sont mises en commun.</p>
               <p class="class-note"><strong>Le défi se joue tous ensemble.</strong> Demandez « correct ou non ? » et faites justifier les réponses. Puis vérifiez les cartes à voix haute, une à une.</p>
-              <p class="floor-option"><strong>Variante au sol :</strong> quatre joueurs reproduisent réellement le plan dans six cerceaux ou cercles tracés au sol.</p>
               <button class="primary-button large" id="start-button" type="button">Commencer le défi 1</button>
+              <section class="picker" aria-labelledby="picker-title">
+                <div class="picker-head">
+                  <div><h2 id="picker-title">Choisir un défi</h2><p>Trois étapes progressives de quatre situations.</p></div>
+                </div>
+                <div class="picker-grid" id="picker-grid"></div>
+              </section>
             </div>
 
             <aside class="guided" aria-labelledby="guided-title">
               <h2 id="guided-title">Exemple guidé</h2>
-              <p>Chacun cherche d'abord depuis sa place, puis la classe met ses idées en commun et vérifie chaque carte à voix haute.</p>
               <p class="guided-legend"><strong>Rappel :</strong> un chat signifie « quelqu’un dans le cercle voisin » ; un chat barré signifie « personne dans ce cercle, ou aucun cercle dans cette direction ».</p>
               <div class="guided-flow">
                 <div class="mini-stage">
@@ -542,13 +558,6 @@ HTML_TEMPLATE = r'''<!doctype html>
               <p class="guided-result">Dans le premier placement, seule la carte 2 est fausse. Le chat 2 change de cercle : les quatre cartes deviennent vraies.</p>
             </aside>
           </div>
-
-          <section class="picker" aria-labelledby="picker-title">
-            <div class="picker-head">
-              <div><h2 id="picker-title">Choisir un défi</h2><p>Trois étapes progressives de quatre situations.</p></div>
-            </div>
-            <div class="picker-grid" id="picker-grid"></div>
-          </section>
         </div>
       </section>
 
@@ -598,6 +607,7 @@ HTML_TEMPLATE = r'''<!doctype html>
       const $ = (selector) => document.querySelector(selector);
       const homeScreen = $('#home-screen');
       const challengeScreen = $('#challenge-screen');
+      const catalogButton = $('#catalog-button');
       const homeButton = $('#home-button');
       const fullscreenButton = $('#fullscreen-button');
       const revealButton = $('#reveal-button');
@@ -606,6 +616,9 @@ HTML_TEMPLATE = r'''<!doctype html>
       const state = { index: 0, revealed: 0, showingCorrection: false };
       const directionClass = { front:'front', back:'back', left:'left', right:'right' };
       const directionLabel = { front:'devant', back:'derrière', left:'à gauche', right:'à droite' };
+      const directionTitle = { front:'Devant', back:'Derrière', left:'À gauche', right:'À droite' };
+      const directionDelta = { front:[-1,0], back:[1,0], left:[0,-1], right:[0,1] };
+      const directionOrder = ['front', 'left', 'right', 'back'];
 
       function catSVG(number = null, crossed = false, className = '') {
         const badge = number === null ? '' : `<g class="player-badge">
@@ -674,9 +687,41 @@ HTML_TEMPLATE = r'''<!doctype html>
 
       function currentCase() { return DATA.cases[state.index]; }
 
+      function constraintFeedback(item, player, grid) {
+        const positions = {};
+        grid.forEach((row, rowIndex) => row.forEach((occupant, columnIndex) => {
+          if (occupant) positions[occupant] = [rowIndex, columnIndex];
+        }));
+        const [row, column] = positions[player];
+        return directionOrder
+          .filter(direction => Object.hasOwn(item.cards[String(player)], direction))
+          .map(direction => {
+            const wanted = item.cards[String(player)][direction];
+            const [deltaRow, deltaColumn] = directionDelta[direction];
+            const neighborRow = row + deltaRow;
+            const neighborColumn = column + deltaColumn;
+            const inside = neighborRow >= 0 && neighborRow < 2 && neighborColumn >= 0 && neighborColumn < 3;
+            const somebody = inside && Boolean(grid[neighborRow][neighborColumn]);
+            const respected = wanted === 'P' ? somebody : !somebody;
+            let message;
+            if (wanted === 'P') {
+              message = respected
+                ? 'il y a bien un chat.'
+                : inside ? 'un chat devrait être là, mais le cercle est vide.' : 'un chat devrait être là, mais il n’y a pas de cercle.';
+            } else {
+              message = respected
+                ? 'il n’y a bien aucun chat.'
+                : 'il ne devrait y avoir aucun chat, mais le cercle est occupé.';
+            }
+            return `<li class="${respected ? 'ok' : 'bad'}"><b>${directionTitle[direction]}</b> : ${message}</li>`;
+          })
+          .join('');
+      }
+
       function showHome(updateHash = true) {
         homeScreen.hidden = false;
         challengeScreen.hidden = true;
+        catalogButton.hidden = false;
         homeButton.hidden = true;
         if (updateHash && location.hash) history.pushState(null, '', location.pathname + location.search);
         window.scrollTo(0, 0);
@@ -688,6 +733,7 @@ HTML_TEMPLATE = r'''<!doctype html>
         state.showingCorrection = false;
         homeScreen.hidden = true;
         challengeScreen.hidden = false;
+        catalogButton.hidden = true;
         homeButton.hidden = false;
         if (updateHash) history.pushState(null, '', `#${currentCase().id}`);
         renderChallenge();
@@ -724,9 +770,10 @@ HTML_TEMPLATE = r'''<!doctype html>
           $('#card-feedback').innerHTML = '<strong>À vous de jouer.</strong> Quand la classe a choisi, commencez par la carte 1.';
         } else {
           const issues = playerErrors(item, state.revealed);
-          $('#card-feedback').innerHTML = issues.length
-            ? `<strong>✕ La carte ${state.revealed} est fausse.</strong><ul>${issues.map(issue => `<li>${issue.message}</li>`).join('')}</ul>`
-            : `<strong>✓ La carte ${state.revealed} est vraie.</strong> Tous ses indices correspondent au placement.`;
+          const details = constraintFeedback(item, state.revealed, item.proposed);
+          $('#card-feedback').innerHTML = `${issues.length
+            ? `<strong>✕ La carte ${state.revealed} est fausse.</strong>`
+            : `<strong>✓ La carte ${state.revealed} est vraie.</strong>`}<ul>${details}</ul>`;
         }
         revealButton.hidden = state.revealed >= 4;
         revealRow.hidden = revealButton.hidden;
@@ -790,7 +837,6 @@ HTML_TEMPLATE = r'''<!doctype html>
       }
 
       $('#start-button').addEventListener('click', () => openChallenge(0));
-      $('#brand-home').addEventListener('click', event => { event.preventDefault(); showHome(); });
       homeButton.addEventListener('click', () => showHome());
       fullscreenButton.addEventListener('click', toggleFullscreen);
       document.addEventListener('fullscreenchange', syncFullscreenLabel);
