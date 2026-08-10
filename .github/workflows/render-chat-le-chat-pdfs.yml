@@ -23,6 +23,11 @@ jobs:
           python3 _sources/chat-le-chat/gen.py
           python3 _sources/chat-le-chat/verify.py
 
+      - name: Installer le contrôle PDF
+        run: |
+          sudo apt-get update
+          sudo apt-get install --yes poppler-utils
+
       - name: Produire les deux PDF avec Chromium
         run: python3 _sources/chat-le-chat/render_pdfs.py --publish
 
