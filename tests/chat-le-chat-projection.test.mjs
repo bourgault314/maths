@@ -328,6 +328,12 @@ test("le HTML publié est autonome, synchronisé et adapté à une réflexion co
     "Le verdict faux doit inviter la classe à construire sa correction.");
   assert.match(html, /Cette correction ne suffit pas[\s\S]*?Réessayer[\s\S]*?Voir la solution/,
     "Une tentative fausse doit pouvoir être recommencée ou remplacée par la solution préparée.");
+  assert.match(html, /const remainingFalseMessage = falseCards\.length === 1[\s\S]*?cartes restent fausses/,
+    "Le verdict d’une tentative doit rester naturel au singulier comme au pluriel.");
+  assert.doesNotMatch(html, /cartes sont fausses encore/,
+    "Le verdict ne doit pas conserver la formulation maladroite repérée en production.");
+  assert.match(html, /Quel chat faut-il déplacer ou échanger\\u00a0\?/,
+    "Le point d’interrogation de la grande question ne doit pas rester seul sur une ligne.");
   assert.match(html, /\.zone\.selected \{[^}]*border-color:var\(--orange-art\)/s,
     "Le chat sélectionné doit être signalé autrement que par le texte seul.");
   assert.match(html, /\.zone\.target \{[^}]*outline:4px dashed/s,
