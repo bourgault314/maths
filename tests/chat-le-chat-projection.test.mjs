@@ -53,6 +53,24 @@ function isValid(status) {
   return Object.values(status).every(Boolean);
 }
 
+function countOneMoveCorrections(cards, grid) {
+  const playerPositions = positions(grid);
+  const emptyCells = [];
+  grid.forEach((row, rowIndex) => row.forEach((player, columnIndex) => {
+    if (!player) emptyCells.push([rowIndex, columnIndex]);
+  }));
+  let count = 0;
+  for (const [player, [sourceRow, sourceColumn]] of playerPositions) {
+    for (const [targetRow, targetColumn] of emptyCells) {
+      const candidate = grid.map(row => [...row]);
+      candidate[sourceRow][sourceColumn] = 0;
+      candidate[targetRow][targetColumn] = player;
+      if (isValid(evaluate(cards, candidate))) count += 1;
+    }
+  }
+  return count;
+}
+
 function assertGrid(grid, label) {
   assert.equal(grid.length, 2, `${label} doit avoir deux rangées.`);
   assert.ok(grid.every(row => row.length === 3), `${label} doit avoir trois colonnes.`);
@@ -129,6 +147,18 @@ test("les douze défis sont progressifs, équilibrés et corrigibles par un seul
   assert.equal(verdicts.filter(Boolean).length, 6);
 });
 
+test("le nombre de corrections en un déplacement est calculé sans cas particulier", () => {
+  const expectedCounts = [0, 2, 1, 0, 3, 0, 0, 1, 1, 0, 1, 0];
+  assert.deepEqual(
+    data.cases.map(item => item.correction ? countOneMoveCorrections(item.cards, item.proposed) : 0),
+    expectedCounts
+  );
+  const payloadMatch = html.match(/<script id="projection-data" type="application\/json">(.*?)<\/script>/s);
+  assert.ok(payloadMatch);
+  const payload = JSON.parse(payloadMatch[1]);
+  assert.deepEqual(payload.cases.map(item => item.correctionCount), expectedCounts);
+});
+
 test("les défis projetés ne dupliquent ni les séries imprimées ni un autre défi par symétrie", () => {
   const printed = new Set(printedSeries.map(item => canonical(item.cards)));
   const projected = data.cases.map(item => canonical(item.cards));
@@ -182,10 +212,16 @@ test("le HTML publié est autonome, synchronisé et adapté à une réflexion co
     "Les douze défis doivent tenir sur deux rangées de six.");
   assert.match(html, /@media \(min-width:950px\) and \(max-height:900px\) \{[\s\S]*?\.home \{ padding:10px 18px; \}[\s\S]*?\.picker-button \{ min-height:38px; padding:4px; \}/,
     "L’accueil et la projection doivent se compacter dès que la fenêtre est moins haute qu’un plein écran courant.");
-  assert.match(html, /\.cards-panel \{[^}]*--feedback-height:86px; --decision-height:76px/s,
+  assert.match(html, /\.cards-panel \{[^}]*--feedback-height:108px; --decision-height:76px/s,
     "Le panneau doit réserver dès le départ la place maximale des explications et du verdict.");
   assert.match(html, /\.feedback \{[^}]*flex:0 0 var\(--feedback-height\);[^}]*height:var\(--feedback-height\)[^}]*max-height:var\(--feedback-height\)/s,
     "Les explications ne doivent plus redimensionner les cartes pendant la vérification.");
+  assert.match(html, /\.feedback \{[^}]*overflow:hidden/s,
+    "Une explication ne doit pas dépendre d'une barre de défilement interne.");
+  assert.match(html, /\.feedback ul\.three-clauses \{[^}]*grid-template-columns:repeat\(3,minmax\(0,1fr\)\)/s,
+    "Les cartes à trois indications doivent présenter leurs explications sur trois colonnes.");
+  assert.match(html, /@media \(min-width:950px\) and \(max-height:720px\) \{[\s\S]*?\.card-map \{ width:min\(100%,120px\); \}/,
+    "Une fenêtre basse doit réduire les cartes sans les redimensionner pendant la vérification.");
   assert.match(html, /<div class="decision-slot">[\s\S]*?<div class="reveal-row" id="reveal-row">[\s\S]*?<div class="verdict" id="verdict"/,
     "Le bouton et le verdict doivent partager une zone réservée de hauteur stable.");
   assert.match(html, /M78 88 C 96 82, 98 60, 88 52/, "La projection doit reprendre le chat du PDF.");
@@ -199,6 +235,14 @@ test("le HTML publié est autonome, synchronisé et adapté à une réflexion co
   assert.doesNotMatch(html, /Tous ses indices correspondent au placement/i);
   assert.match(html, /function constraintFeedback\(item, player, grid\)/,
     "La correction doit expliciter chaque direction de la carte.");
+  assert.match(html, /state\.revealed = state\.showingCorrection \? 0 : 4/,
+    "L'affichage d'une correction doit remettre les quatre cartes en attente.");
+  assert.match(html, /state\.showingCorrection \|\| playerErrors\(item, player\)\.length === 0/,
+    "Les cartes corrigées ne doivent devenir vraies qu'après leur nouvelle vérification.");
+  assert.match(html, /Une autre correction existe : la classe peut la chercher/,
+    "Les défis qui admettent plusieurs corrections doivent le signaler.");
+  assert.match(html, /Deux autres corrections existent : la classe peut les chercher/,
+    "Le message doit aussi accorder plusieurs corrections alternatives.");
   assert.match(html, /\.card-self-cat, \.cat-mark svg \{[^}]*width:66%; height:auto/s,
     "Le chat central et les chats voisins doivent utiliser exactement la même échelle SVG.");
   assert.match(html, /\.cat-mark \{[^}]*width:100%; height:100%; display:grid; place-items:center/s,

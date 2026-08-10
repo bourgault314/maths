@@ -137,6 +137,29 @@ def moved_players(before: list[list[int]], after: list[list[int]]) -> list[int]:
     return [player for player in range(1, 5) if first[player] != second[player]]
 
 
+def one_move_corrections(
+    cards: dict[str, dict[str, str]], grid: list[list[int]]
+) -> list[list[list[int]]]:
+    """Énumère les placements vrais obtenus en déplaçant un seul chat."""
+    placement = placement_of(grid)
+    empty_cells = [
+        (row, col)
+        for row in range(ROWS)
+        for col in range(COLS)
+        if grid[row][col] == 0
+    ]
+    corrections = []
+    for player, (source_row, source_col) in placement.items():
+        for target_row, target_col in empty_cells:
+            candidate = [row[:] for row in grid]
+            candidate[source_row][source_col] = 0
+            candidate[target_row][target_col] = player
+            valid, _ = evaluate(cards, candidate)
+            if valid:
+                corrections.append(candidate)
+    return corrections
+
+
 def prepare_payload(raw_data: dict, printed_series: list[dict]) -> dict:
     if raw_data.get("version") != 1:
         raise ValueError("projection_cases.json: version attendue = 1")
@@ -189,6 +212,7 @@ def prepare_payload(raw_data: dict, printed_series: list[dict]) -> dict:
             raise ValueError(f"{context}: correction absente pour un placement faux")
 
         moved: list[int] = []
+        corrections = one_move_corrections(cards, proposed) if not valid else []
         if correction is not None:
             correction_valid, correction_errors = evaluate(cards, correction)
             if not correction_valid:
@@ -197,6 +221,10 @@ def prepare_payload(raw_data: dict, printed_series: list[dict]) -> dict:
             if len(moved) != 1:
                 raise ValueError(
                     f"{context}: la correction doit déplacer un seul enfant, pas {moved}"
+                )
+            if correction not in corrections:
+                raise ValueError(
+                    f"{context}: la correction n'appartient pas aux corrections en un déplacement"
                 )
 
         prepared.append(
@@ -210,6 +238,7 @@ def prepare_payload(raw_data: dict, printed_series: list[dict]) -> dict:
                 "valid": valid,
                 "errors": errors,
                 "movedPlayers": moved,
+                "correctionCount": len(corrections),
             }
         )
 
@@ -371,7 +400,7 @@ HTML_TEMPLATE = r'''<!doctype html>
     .question { margin:6px 0 0; text-align:center; color:var(--navy); font-size:clamp(20px,2.6vw,34px); font-weight:950; }
     .question-hint { margin:5px 0 0; text-align:center; color:var(--muted); font-weight:650; }
 
-    .cards-panel { --feedback-height:86px; --decision-height:76px; display:flex; flex-direction:column; }
+    .cards-panel { --feedback-height:108px; --decision-height:76px; display:flex; flex-direction:column; }
     .cards-title { display:flex; align-items:center; justify-content:space-between; gap:12px; margin-bottom:9px; }
     .cards-title h2 { margin:0; color:var(--navy); font-size:clamp(18px,2vw,26px); }
     .cards-title small { color:var(--muted); font-weight:700; }
@@ -402,11 +431,13 @@ HTML_TEMPLATE = r'''<!doctype html>
     .card-self-cat, .cat-mark svg { display:block; width:66%; height:auto; overflow:visible; }
     .cat-mark { width:100%; height:100%; display:grid; place-items:center; }
     .feedback { flex:0 0 var(--feedback-height); height:var(--feedback-height); min-height:var(--feedback-height);
-      max-height:var(--feedback-height); margin-top:9px; padding:9px 12px; overflow:auto; border-radius:14px;
+      max-height:var(--feedback-height); margin-top:9px; padding:9px 12px; overflow:hidden; border-radius:14px;
       color:#405a73; background:#f0f4f7; line-height:1.4; }
     .feedback strong { color:var(--navy); }
     .feedback ul { margin:6px 0 0; padding:0; list-style:none; display:grid;
       grid-template-columns:repeat(2,minmax(0,1fr)); gap:4px 12px; font-size:13px; }
+    .feedback ul.three-clauses { grid-template-columns:repeat(3,minmax(0,1fr));
+      gap:4px 8px; font-size:12px; line-height:1.25; }
     .feedback li { padding-left:18px; position:relative; }
     .feedback li::before { position:absolute; left:0; font-weight:900; }
     .feedback li.ok::before { content:"✓"; color:var(--green); }
@@ -511,9 +542,9 @@ HTML_TEMPLATE = r'''<!doctype html>
       .placement-grid { --zone:clamp(88px,10.2vw,134px); gap:9px; padding:5px; }
       .question { margin-top:2px; font-size:clamp(20px,2.3vw,30px); }
       .question-hint { margin-top:2px; font-size:14px; }
-      .card-map { width:min(100%,180px); aspect-ratio:1.1; }
+      .card-map { width:min(100%,clamp(148px,21dvh,180px)); aspect-ratio:1.1; }
       .logic-card { padding:5px 7px; }
-      .cards-panel { --feedback-height:76px; --decision-height:68px; }
+      .cards-panel { --feedback-height:108px; --decision-height:68px; }
       .feedback { margin-top:6px; padding:6px 10px; font-size:13px; }
       .decision-slot { margin-top:6px; }
       .verdict { padding:6px 10px; }
@@ -522,6 +553,14 @@ HTML_TEMPLATE = r'''<!doctype html>
       .verdict-copy strong { font-size:15px; }
       .challenge-nav { margin-top:3px; }
       .nav-button { min-height:40px; padding:6px 14px; }
+    }
+    @media (min-width:950px) and (max-height:720px) {
+      .card-map { width:min(100%,120px); }
+    }
+    @media (min-width:950px) and (max-height:680px) {
+      .challenge { overflow-y:auto; }
+      .workspace { flex:0 0 530px; }
+      .card-map { width:min(100%,110px); }
     }
     @media (prefers-reduced-motion:reduce) {
       *, *::before, *::after { scroll-behavior:auto !important; animation:none !important; transition:none !important; }
@@ -773,37 +812,54 @@ HTML_TEMPLATE = r'''<!doctype html>
 
       function playerErrors(item, player) { return item.errors[String(player)] || []; }
 
+      function alternativeCorrectionMessage(item) {
+        const alternatives = item.correctionCount - 1;
+        if (alternatives === 1) return ' Une autre correction existe : la classe peut la chercher.';
+        if (alternatives === 2) return ' Deux autres corrections existent : la classe peut les chercher.';
+        return alternatives > 2
+          ? ` ${alternatives} autres corrections existent : la classe peut les chercher.`
+          : '';
+      }
+
       function renderChallenge() {
         const item = currentCase();
+        const displayGrid = state.showingCorrection ? item.correction : item.proposed;
+        const correctionLabel = item.correctionCount > 1
+          ? `Une correction parmi ${item.correctionCount}`
+          : 'Une correction possible';
+        const placementLabel = state.showingCorrection ? correctionLabel : 'Placement proposé';
         $('#difficulty-label').textContent = `Étape ${item.difficulty}`;
         $('#challenge-title').textContent = `Défi ${item.number}`;
         $('#counter').textContent = `${item.number} / ${DATA.cases.length}`;
-        $('#placement-title').textContent = state.showingCorrection ? 'Une correction possible' : 'Placement proposé';
+        $('#placement-title').textContent = placementLabel;
         $('#placement-grid').innerHTML = gridHTML(
-          state.showingCorrection ? item.correction : item.proposed,
+          displayGrid,
           false,
           state.showingCorrection ? item.movedPlayers : [],
           state.showingCorrection ? item.proposed : null
         );
-        $('#placement-grid').setAttribute('aria-label', state.showingCorrection ? 'Une correction possible' : 'Placement proposé dans les six zones');
+        $('#placement-grid').setAttribute('aria-label', state.showingCorrection ? correctionLabel : 'Placement proposé dans les six zones');
 
         $('#cards-grid').innerHTML = [1,2,3,4].map(player => {
           const revealed = state.revealed >= player;
-          const result = state.showingCorrection ? true : (revealed ? playerErrors(item, player).length === 0 : null);
+          const result = revealed
+            ? (state.showingCorrection || playerErrors(item, player).length === 0)
+            : null;
           return cardHTML(player, item.cards[String(player)], result);
         }).join('');
 
         const nextPlayer = state.revealed + 1;
-        if (state.showingCorrection) {
-          $('#card-feedback').innerHTML = '<strong>✓ Les quatre cartes sont maintenant vraies.</strong> La classe peut les relire pour valider cette correction.';
-        } else if (state.revealed === 0) {
-          $('#card-feedback').innerHTML = '<strong>À vous de jouer.</strong> Quand la classe a choisi, commencez par la carte 1.';
+        if (state.revealed === 0) {
+          $('#card-feedback').innerHTML = state.showingCorrection
+            ? `<strong>Une correction possible est affichée.</strong> Vérifiez-la à nouveau, carte par carte, avec la classe.${alternativeCorrectionMessage(item)}`
+            : '<strong>À vous de jouer.</strong> Quand la classe a choisi, commencez par la carte 1.';
         } else {
-          const issues = playerErrors(item, state.revealed);
-          const details = constraintFeedback(item, state.revealed, item.proposed);
+          const issues = state.showingCorrection ? [] : playerErrors(item, state.revealed);
+          const details = constraintFeedback(item, state.revealed, displayGrid);
+          const clauseCount = Object.keys(item.cards[String(state.revealed)]).length;
           $('#card-feedback').innerHTML = `${issues.length
             ? `<strong>✕ La carte ${state.revealed} est fausse.</strong>`
-            : `<strong>✓ La carte ${state.revealed} est vraie.</strong>`}<ul>${details}</ul>`;
+            : `<strong>✓ La carte ${state.revealed} est vraie.</strong>`}<ul class="${clauseCount === 3 ? 'three-clauses' : ''}">${details}</ul>`;
         }
         revealButton.hidden = state.revealed >= 4;
         revealRow.hidden = revealButton.hidden;
@@ -815,7 +871,7 @@ HTML_TEMPLATE = r'''<!doctype html>
       }
 
       function revealNextCard() {
-        if (challengeScreen.hidden || state.revealed >= 4 || state.showingCorrection) return;
+        if (challengeScreen.hidden || state.revealed >= 4) return;
         state.revealed += 1;
         const player = state.revealed;
         renderChallenge();
@@ -836,7 +892,7 @@ HTML_TEMPLATE = r'''<!doctype html>
         if (state.showingCorrection) {
           const moved = item.movedPlayers[0];
           verdict.className = 'verdict good';
-          verdict.innerHTML = `<span class="verdict-icon" aria-hidden="true">✓</span><div class="verdict-copy"><strong>Une correction possible</strong>Le chat ${moved} change de cercle. Les quatre cartes deviennent vraies.</div><button class="secondary-button" id="toggle-correction" type="button">Revoir le placement proposé</button>`;
+          verdict.innerHTML = `<span class="verdict-icon" aria-hidden="true">✓</span><div class="verdict-copy"><strong>Correction validée.</strong>Le chat ${moved} change de cercle. Les quatre cartes sont vraies.</div><button class="secondary-button" id="toggle-correction" type="button">Revoir le placement proposé</button>`;
         } else {
           verdict.className = 'verdict bad';
           verdict.innerHTML = `<span class="verdict-icon" aria-hidden="true">✕</span><div class="verdict-copy"><strong>Non : ${falseCards.length} ${cardWord}.</strong>Demandez d'abord à la classe quel chat devrait changer de cercle, et pourquoi.</div><button class="primary-button" id="toggle-correction" type="button">Voir une correction possible</button>`;
@@ -848,6 +904,7 @@ HTML_TEMPLATE = r'''<!doctype html>
         const item = currentCase();
         if (!item.correction || state.revealed < 4) return;
         state.showingCorrection = !state.showingCorrection;
+        state.revealed = state.showingCorrection ? 0 : 4;
         renderChallenge();
       }
 
