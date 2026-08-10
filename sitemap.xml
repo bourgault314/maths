@@ -169,6 +169,15 @@
     <loc>https://mathsgo.re/outils/calcul_litteral/</loc>
   </url>
   <url>
+    <loc>https://mathsgo.re/outils/calcul_mental/coffres_magiques_solo.html</loc>
+  </url>
+  <url>
+    <loc>https://mathsgo.re/outils/calcul_mental/defi_calcul.html</loc>
+  </url>
+  <url>
+    <loc>https://mathsgo.re/outils/calcul_mental/defi_tables.html</loc>
+  </url>
+  <url>
     <loc>https://mathsgo.re/outils/chat-cest-toi-le-chat-cartes-compactes.pdf</loc>
   </url>
   <url>
@@ -185,6 +194,9 @@
   </url>
   <url>
     <loc>https://mathsgo.re/outils/club_maths/carres_gloutons.html</loc>
+  </url>
+  <url>
+    <loc>https://mathsgo.re/outils/club_maths/coffres_magiques.html</loc>
   </url>
   <url>
     <loc>https://mathsgo.re/outils/club_maths/jeu_de_nim.html</loc>

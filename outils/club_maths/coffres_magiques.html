@@ -1,0 +1,689 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>Coffres magiques — à deux | maths&amp;go</title>
+  <meta name="description" content="Un duel de calcul mental : choisir deux nombres voisins dont la somme ou le produit donne la cible et remporter cinq clés.">
+  <link rel="canonical" href="https://mathsgo.re/outils/club_maths/coffres_magiques.html">
+  <meta name="robots" content="index, follow, max-image-preview:large">
+  <link rel="icon" href="/favicon.ico" sizes="48x48">
+  <link rel="icon" type="image/svg+xml" href="/favicon.svg">
+  <link rel="icon" type="image/png" sizes="32x32" href="/assets/img/favicon-32.png">
+  <link rel="icon" type="image/png" sizes="192x192" href="/assets/img/favicon-192.png">
+  <link rel="apple-touch-icon" href="/assets/img/apple-touch-icon.png">
+  <style>
+    :root {
+      --ink: #153451;
+      --muted: #557083;
+      --line: #d8e6ef;
+      --blue: #0755b8;
+      --blue-soft: #dcebff;
+      --coral: #ef5b45;
+      --coral-soft: #ffe1dc;
+      --gold: #f8b526;
+      color: var(--ink);
+      font-family: Inter, ui-rounded, "Arial Rounded MT Bold", "Segoe UI", sans-serif;
+    }
+
+    * { box-sizing: border-box; }
+    [hidden] { display: none !important; }
+
+    html {
+      min-height: 100%;
+      -webkit-text-size-adjust: 100%;
+    }
+
+    body {
+      min-height: 100vh;
+      min-height: 100svh;
+      margin: 0;
+      overflow-x: hidden;
+      overscroll-behavior: none;
+      background:
+        radial-gradient(circle at 8% 2%, #dff7f4 0 12%, transparent 32%),
+        radial-gradient(circle at 92% 8%, #fff0d8 0 11%, transparent 30%),
+        linear-gradient(145deg, #f7fbff, #fffdf7);
+    }
+
+    button,
+    a {
+      font: inherit;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    button { cursor: pointer; }
+
+    :focus-visible {
+      outline: 3px solid rgba(7, 85, 184, .3);
+      outline-offset: 3px;
+    }
+
+    .topbar {
+      width: min(100%, 960px);
+      min-height: 52px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      margin: 0 auto;
+      padding: 6px 12px;
+    }
+
+    .brand img {
+      display: block;
+      width: 112px;
+      height: auto;
+    }
+
+    .back-link {
+      min-height: 40px;
+      display: inline-flex;
+      align-items: center;
+      padding: 7px 12px;
+      border: 1px solid #c8d9e5;
+      border-radius: 999px;
+      color: #34546c;
+      background: rgba(255, 255, 255, .92);
+      font-size: .8rem;
+      font-weight: 900;
+      text-decoration: none;
+    }
+
+    .duel-page {
+      width: min(100% - 12px, 620px);
+      min-height: calc(100svh - 58px);
+      display: flex;
+      flex-direction: column;
+      margin: 0 auto 6px;
+      overflow: hidden;
+      border: 1px solid rgba(203, 220, 232, .95);
+      border-radius: 26px;
+      background: rgba(255, 255, 255, .97);
+      box-shadow: 0 16px 45px rgba(28, 69, 101, .12);
+    }
+
+    .player-strip {
+      min-height: 56px;
+      display: grid;
+      grid-template-columns: auto 1fr auto;
+      align-items: center;
+      gap: 9px;
+      padding: 8px 15px;
+      border-block: 1px solid transparent;
+      transition: background .18s ease, opacity .18s ease;
+    }
+
+    .player-strip.top { transform: rotate(180deg); }
+    .player-strip.blue { color: #063f86; background: var(--blue-soft); }
+    .player-strip.coral { color: #9f2f21; background: var(--coral-soft); }
+    .player-strip:not(.active) { opacity: .58; background: #f4f7f9; }
+
+    .player-token {
+      width: 32px;
+      height: 32px;
+      border: 3px solid #fff;
+      border-radius: 50%;
+      background: var(--player-color);
+      box-shadow: 0 2px 7px rgba(0, 0, 0, .22);
+    }
+
+    .blue { --player-color: var(--blue); }
+    .coral { --player-color: var(--coral); }
+    .player-name { display: block; font-weight: 950; line-height: 1.05; }
+    .player-goal { display: block; margin-top: 2px; font-size: .72rem; font-weight: 800; opacity: .8; }
+    .player-score { font-size: 1.18rem; font-weight: 950; white-space: nowrap; }
+
+    .game-core {
+      min-height: 0;
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 8px 12px 6px;
+      overflow-anchor: none;
+    }
+
+    .game-heading {
+      width: 100%;
+      display: grid;
+      grid-template-columns: 1fr auto;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 4px;
+    }
+
+    .game-heading h1 {
+      margin: 0;
+      color: #143e62;
+      font-size: clamp(1.28rem, 5vw, 1.85rem);
+      line-height: 1.05;
+    }
+
+    .game-heading p {
+      margin: 3px 0 0;
+      color: var(--muted);
+      font-size: .78rem;
+      font-weight: 750;
+    }
+
+    .rules-button,
+    .reset-button,
+    .secondary-button {
+      min-height: 40px;
+      border: 1px solid #cbdbe6;
+      border-radius: 12px;
+      color: #31546e;
+      background: #fff;
+      font-weight: 900;
+    }
+
+    .rules-button { padding: 7px 11px; }
+
+    .status-line {
+      width: min(100%, 500px);
+      min-height: 38px;
+      display: grid;
+      place-items: center;
+      margin: 2px auto 6px;
+      padding: 5px 10px;
+      border-radius: 11px;
+      color: #31546e;
+      background: #f0f6fa;
+      font-size: .82rem;
+      font-weight: 900;
+      line-height: 1.25;
+      text-align: center;
+    }
+
+    .status-line.good { color: #07644f; background: #e3f8ef; }
+    .status-line.wrong { color: #97382f; background: #fff0ed; }
+
+    .challenge {
+      width: min(100%, 430px);
+      min-height: 66px;
+      display: grid;
+      place-items: center;
+      margin: 1px auto 7px;
+      border: 2px solid #e9c65e;
+      border-radius: 17px;
+      background: linear-gradient(145deg, #fff9dc, #fff0ae);
+      box-shadow: 0 5px 0 rgba(196, 144, 19, .15);
+    }
+
+    .challenge-face {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      transition: transform .22s ease;
+    }
+
+    .game-core.facing-top .challenge-face,
+    .game-core.facing-top .rune span { transform: rotate(180deg); }
+    .lock-icon {
+      position: relative;
+      display: inline-block;
+      width: 25px;
+      height: 21px;
+      margin-top: 9px;
+      border: 3px solid #76550c;
+      border-radius: 5px;
+    }
+    .lock-icon::before {
+      content: "";
+      position: absolute;
+      left: 5px;
+      top: -14px;
+      width: 9px;
+      height: 11px;
+      border: 3px solid #76550c;
+      border-bottom: 0;
+      border-radius: 8px 8px 0 0;
+    }
+
+    .challenge-copy {
+      color: #76550c;
+      font-size: .7rem;
+      font-weight: 900;
+      letter-spacing: .04em;
+      text-align: left;
+      text-transform: uppercase;
+    }
+
+    .challenge-copy strong {
+      display: block;
+      color: #3d4860;
+      font-size: 1.42rem;
+      line-height: 1.05;
+      letter-spacing: 0;
+      text-transform: none;
+    }
+
+    .rune-board {
+      width: min(82vw, 348px);
+      aspect-ratio: 1;
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 8px;
+      margin: 0 auto;
+      padding: 9px;
+      border: 3px solid #8b6b4d;
+      border-radius: 21px;
+      background: linear-gradient(145deg, #a77b50, #6d4b32);
+      box-shadow: inset 0 3px 10px rgba(49, 28, 14, .4), 0 5px 13px rgba(50, 42, 34, .13);
+      touch-action: manipulation;
+    }
+
+    .rune {
+      min-width: 0;
+      min-height: 44px;
+      display: grid;
+      place-items: center;
+      padding: 0;
+      border: 2px solid #bfd4de;
+      border-radius: 16px;
+      color: #17405e;
+      background: radial-gradient(circle at 36% 28%, #fff 0 12%, #ddf3f4 52%, #a9d6d7 100%);
+      box-shadow: inset -3px -4px 7px rgba(12, 80, 87, .16), 0 3px 5px rgba(0, 0, 0, .2);
+      font-size: clamp(1.45rem, 8vw, 2.25rem);
+      font-weight: 950;
+      cursor: pointer;
+    }
+
+    .rune span { transition: transform .22s ease; }
+    .rune:hover,
+    .rune:focus-visible { outline: 4px solid var(--gold); outline-offset: -3px; }
+    .rune.selected { border-color: #f0a800; background: radial-gradient(circle at 36% 28%, #fffbe5, #ffd863 56%, #eca900 100%); transform: scale(.94); }
+    .rune.success { border-color: #087a55; background: #bff0d8; }
+    .rune.failure { border-color: #b83a3a; background: #ffd4cf; }
+
+    .toolbar {
+      min-height: 48px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      padding: 5px 10px 7px;
+      border-top: 1px solid #e2ebf1;
+      background: #fbfdfe;
+    }
+
+    .reset-button { min-width: 128px; padding: 7px 14px; }
+
+    .overlay {
+      position: fixed;
+      z-index: 30;
+      inset: 0;
+      display: grid;
+      place-items: center;
+      padding: 16px;
+      background: rgba(11, 35, 54, .68);
+      backdrop-filter: blur(5px);
+    }
+
+    .dialog-card {
+      width: min(100%, 470px);
+      max-height: calc(100svh - 28px);
+      overflow: auto;
+      padding: 24px;
+      border-radius: 24px;
+      background: #fff;
+      box-shadow: 0 24px 70px rgba(0, 0, 0, .28);
+      text-align: center;
+    }
+
+    .dialog-icon { font-size: 2.6rem; }
+    .dialog-card h2 { margin: 5px 0 10px; color: #143e62; font-size: 1.65rem; }
+    .dialog-card p { margin: 8px 0; color: #49677b; line-height: 1.42; }
+
+    .rule-steps {
+      display: grid;
+      gap: 8px;
+      margin: 15px 0;
+      padding: 0;
+      list-style: none;
+      text-align: left;
+    }
+
+    .rule-steps li {
+      padding: 10px 12px;
+      border-radius: 13px;
+      color: #34546c;
+      background: #f2f7fa;
+      font-weight: 750;
+      line-height: 1.35;
+    }
+
+    .primary-button {
+      width: 100%;
+      min-height: 50px;
+      margin-top: 9px;
+      border: 0;
+      border-radius: 15px;
+      color: #fff;
+      background: linear-gradient(145deg, #087c75, #0755b8);
+      box-shadow: 0 8px 18px rgba(7, 85, 184, .2);
+      font-weight: 950;
+    }
+
+    .secondary-button {
+      min-height: 46px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      margin-top: 8px;
+      padding: 7px 14px;
+      text-decoration: none;
+    }
+
+    .result-score { color: #143e62 !important; font-size: 1.2rem; font-weight: 950; }
+
+    @media (max-width: 520px) {
+      .topbar { min-height: 46px; padding-block: 4px; }
+      .brand img { width: 98px; }
+      .back-link { min-height: 36px; padding: 6px 10px; font-size: .73rem; }
+      .duel-page { min-height: calc(100svh - 50px); border-radius: 21px; }
+      .player-strip { min-height: 50px; padding: 6px 12px; }
+      .player-token { width: 28px; height: 28px; }
+      .player-score { font-size: 1rem; }
+      .game-core { padding: 6px 8px 4px; }
+      .game-heading p { font-size: .7rem; }
+      .rules-button { min-height: 36px; padding: 5px 9px; font-size: .78rem; }
+      .status-line { min-height: 36px; margin-bottom: 4px; padding-block: 3px; font-size: .76rem; }
+      .toolbar { min-height: 44px; padding-block: 4px; }
+      .reset-button { min-height: 37px; }
+      .dialog-card { padding: 21px 17px; }
+    }
+
+    @media (max-width: 400px) {
+      .rune-board { width: min(84vw, 330px); gap: 6px; }
+      .challenge { min-height: 59px; }
+    }
+
+    @media (max-height: 720px) and (orientation: portrait) {
+      .topbar { min-height: 42px; }
+      .duel-page { min-height: calc(100svh - 46px); }
+      .player-strip { min-height: 44px; }
+      .game-heading p { display: none; }
+      .status-line { min-height: 32px; }
+      .challenge { min-height: 52px; margin-bottom: 4px; }
+      .challenge-copy strong { font-size: 1.2rem; }
+      .rune-board { width: min(70vw, 292px); gap: 6px; }
+      .toolbar { min-height: 40px; }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      *,
+      *::before,
+      *::after {
+        animation: none !important;
+        scroll-behavior: auto !important;
+        transition: none !important;
+      }
+    }
+  </style>
+</head>
+<body>
+  <header class="topbar">
+    <a class="brand" href="/" aria-label="Accueil maths&go"><img src="/assets/img/mathsgo-logo.png" alt="maths&go" width="1338" height="622"></a>
+    <a class="back-link" href="../index.html?domain=jeux-recherches&amp;notion=strategie">← Jeux de stratégie</a>
+  </header>
+
+  <main class="duel-page">
+    <section id="top-player" class="player-strip coral top" aria-label="Joueur corail, côté haut">
+      <span class="player-token" aria-hidden="true"></span>
+      <span><strong class="player-name">Joueur corail</strong><small class="player-goal">Trouve deux runes voisines</small></span>
+      <strong id="coral-score" class="player-score">0 / 5 clés</strong>
+    </section>
+
+    <section id="game-core" class="game-core">
+      <header class="game-heading">
+        <div><h1>Coffres magiques</h1><p>Une bonne paire de runes gagne une clé.</p></div>
+        <button id="rules-button" class="rules-button" type="button">Règle</button>
+      </header>
+      <div id="status" class="status-line" aria-live="polite">Au joueur bleu : choisis deux runes voisines.</div>
+      <div class="challenge" aria-label="Défi du coffre">
+        <div class="challenge-face">
+          <span class="lock-icon" aria-hidden="true"></span>
+          <span class="challenge-copy">Ouvre le coffre avec<strong id="challenge-text">une somme de 12</strong></span>
+        </div>
+      </div>
+      <div id="board" class="rune-board" role="grid" aria-label="Seize runes numérotées"></div>
+    </section>
+
+    <section id="bottom-player" class="player-strip blue active" aria-label="Joueur bleu, côté bas">
+      <span class="player-token" aria-hidden="true"></span>
+      <span><strong class="player-name">Joueur bleu</strong><small class="player-goal">Trouve deux runes voisines</small></span>
+      <strong id="blue-score" class="player-score">0 / 5 clés</strong>
+    </section>
+
+    <div class="toolbar"><button id="reset-button" class="reset-button" type="button">Nouvelle partie</button></div>
+  </main>
+
+  <section id="rules" class="overlay" hidden role="dialog" aria-modal="true" aria-labelledby="rules-title">
+    <div class="dialog-card">
+      <div class="dialog-icon" aria-hidden="true">★</div>
+      <h2 id="rules-title">Gagne cinq clés</h2>
+      <ol class="rule-steps">
+        <li>Le coffre demande une <strong>somme</strong> ou un <strong>produit</strong>.</li>
+        <li>Choisis deux runes qui se touchent par un côté.</li>
+        <li>Si elles ouvrent le coffre, tu gagnes une clé. Puis c’est au tour de l’autre joueur.</li>
+      </ol>
+      <p>Les runes et le défi se retournent automatiquement vers le joueur qui doit jouer.</p>
+      <button class="primary-button close-rules" type="button">C’est parti</button>
+    </div>
+  </section>
+
+  <section id="result" class="overlay" hidden role="dialog" aria-modal="true" aria-labelledby="result-title">
+    <div class="dialog-card">
+      <div class="dialog-icon" aria-hidden="true">★</div>
+      <h2 id="result-title">Trésor ouvert !</h2>
+      <p id="result-text"></p>
+      <p id="result-score" class="result-score"></p>
+      <button id="play-again" class="primary-button" type="button">Rejouer</button>
+      <a class="secondary-button" href="../index.html?domain=jeux-recherches&amp;notion=strategie">Retour aux jeux de stratégie</a>
+    </div>
+  </section>
+
+  <script>
+    (() => {
+      "use strict";
+
+      const SIZE = 4;
+      const KEYS_TO_WIN = 5;
+      const players = ["blue", "coral"];
+      const labels = { blue: "bleu", coral: "corail" };
+      const boardNode = document.querySelector("#board");
+      const gameCore = document.querySelector("#game-core");
+      const statusNode = document.querySelector("#status");
+      const challengeNode = document.querySelector("#challenge-text");
+      const topPlayer = document.querySelector("#top-player");
+      const bottomPlayer = document.querySelector("#bottom-player");
+      const rules = document.querySelector("#rules");
+      const result = document.querySelector("#result");
+      let values = [];
+      let mode = "sum";
+      let target = 0;
+      let turn = 0;
+      let scores = [0, 0];
+      let firstSelection = null;
+      let challengeNumber = 0;
+      let locked = false;
+      let finished = false;
+      let pendingTimer = null;
+
+      function randomInteger(minimum, maximum) {
+        return minimum + Math.floor(Math.random() * (maximum - minimum + 1));
+      }
+
+      function row(position) { return Math.floor(position / SIZE); }
+      function column(position) { return position % SIZE; }
+      function adjacent(first, second) { return Math.abs(row(first) - row(second)) + Math.abs(column(first) - column(second)) === 1; }
+      function operation(first, second) { return mode === "sum" ? first + second : first * second; }
+      function expression(first, second) { return `${first} ${mode === "sum" ? "+" : "×"} ${second} = ${operation(first, second)}`; }
+
+      function neighborPairs() {
+        const pairs = [];
+        for (let position = 0; position < SIZE * SIZE; position += 1) {
+          if (column(position) < SIZE - 1) pairs.push([position, position + 1]);
+          if (row(position) < SIZE - 1) pairs.push([position, position + SIZE]);
+        }
+        return pairs;
+      }
+
+      function makeChallenge() {
+        challengeNumber += 1;
+        mode = challengeNumber % 2 ? "sum" : "product";
+        values = Array.from({ length: SIZE * SIZE }, () => randomInteger(2, 9));
+        const pairs = neighborPairs();
+        const [firstPosition, secondPosition] = pairs[randomInteger(0, pairs.length - 1)];
+        const firstValue = mode === "sum" ? randomInteger(3, 9) : randomInteger(2, 9);
+        const secondValue = randomInteger(2, 9);
+        values[firstPosition] = firstValue;
+        values[secondPosition] = secondValue;
+        target = operation(firstValue, secondValue);
+        firstSelection = null;
+        locked = false;
+        challengeNode.textContent = mode === "sum" ? `une somme de ${target}` : `un produit de ${target}`;
+        renderBoard();
+      }
+
+      function renderBoard() {
+        boardNode.replaceChildren();
+        values.forEach((value, position) => {
+          const button = document.createElement("button");
+          button.type = "button";
+          button.className = "rune";
+          button.dataset.index = String(position);
+          button.dataset.value = String(value);
+          button.setAttribute("role", "gridcell");
+          button.setAttribute("aria-label", `Rune ${value}, ligne ${row(position) + 1}, colonne ${column(position) + 1}`);
+          const text = document.createElement("span");
+          text.textContent = String(value);
+          button.append(text);
+          boardNode.append(button);
+        });
+      }
+
+      function updateTurn(message) {
+        const player = players[turn];
+        topPlayer.classList.toggle("active", player === "coral");
+        bottomPlayer.classList.toggle("active", player === "blue");
+        gameCore.classList.toggle("facing-top", turn === 1);
+        document.querySelector("#blue-score").textContent = `${scores[0]} / ${KEYS_TO_WIN} clés`;
+        document.querySelector("#coral-score").textContent = `${scores[1]} / ${KEYS_TO_WIN} clés`;
+        statusNode.className = "status-line";
+        statusNode.textContent = message || `Au joueur ${labels[player]} : choisis deux runes voisines.`;
+      }
+
+      function finish() {
+        finished = true;
+        locked = true;
+        const player = labels[players[turn]];
+        statusNode.className = "status-line good";
+        statusNode.textContent = `Le joueur ${player} a gagné les cinq clés !`;
+        document.querySelector("#result-title").textContent = `Trésor du joueur ${player} !`;
+        document.querySelector("#result-text").textContent = "Les cinq serrures sont ouvertes.";
+        document.querySelector("#result-score").textContent = `${scores[0]} clé${scores[0] > 1 ? "s" : ""} à ${scores[1]}`;
+        pendingTimer = window.setTimeout(() => { result.hidden = false; }, 450);
+      }
+
+      function nextTurn() {
+        turn = 1 - turn;
+        makeChallenge();
+        updateTurn();
+      }
+
+      function resolve(secondPosition) {
+        const firstButton = boardNode.querySelector(`[data-index="${firstSelection}"]`);
+        const secondButton = boardNode.querySelector(`[data-index="${secondPosition}"]`);
+        const firstValue = values[firstSelection];
+        const secondValue = values[secondPosition];
+        const correct = operation(firstValue, secondValue) === target;
+        locked = true;
+        firstButton.classList.add(correct ? "success" : "failure");
+        secondButton.classList.add(correct ? "success" : "failure");
+
+        if (correct) {
+          scores[turn] += 1;
+          updateTurn(`${expression(firstValue, secondValue)} : une clé gagnée !`);
+          statusNode.className = "status-line good";
+          if (scores[turn] === KEYS_TO_WIN) {
+            finish();
+            return;
+          }
+        } else {
+          updateTurn(`${expression(firstValue, secondValue)} : le coffre reste fermé.`);
+          statusNode.className = "status-line wrong";
+        }
+        pendingTimer = window.setTimeout(nextTurn, 850);
+      }
+
+      function select(position) {
+        if (locked || finished) return;
+
+        if (firstSelection === position) {
+          boardNode.querySelector(`[data-index="${position}"]`).classList.remove("selected");
+          firstSelection = null;
+          statusNode.className = "status-line";
+          statusNode.textContent = "Choisis deux runes voisines.";
+          return;
+        }
+
+        if (firstSelection === null) {
+          firstSelection = position;
+          boardNode.querySelector(`[data-index="${position}"]`).classList.add("selected");
+          statusNode.className = "status-line";
+          statusNode.textContent = "Maintenant, choisis une rune qui la touche par un côté.";
+          return;
+        }
+
+        if (!adjacent(firstSelection, position)) {
+          boardNode.querySelector(`[data-index="${firstSelection}"]`).classList.remove("selected");
+          firstSelection = position;
+          boardNode.querySelector(`[data-index="${position}"]`).classList.add("selected");
+          statusNode.className = "status-line wrong";
+          statusNode.textContent = "Ces runes ne sont pas voisines. Cette nouvelle rune devient la première.";
+          return;
+        }
+
+        resolve(position);
+      }
+
+      function start() {
+        if (pendingTimer) window.clearTimeout(pendingTimer);
+        turn = 0;
+        scores = [0, 0];
+        challengeNumber = 0;
+        firstSelection = null;
+        locked = false;
+        finished = false;
+        result.hidden = true;
+        makeChallenge();
+        updateTurn();
+      }
+
+      boardNode.addEventListener("click", event => {
+        const button = event.target.closest(".rune");
+        if (button) select(Number(button.dataset.index));
+      });
+      document.querySelector("#rules-button").addEventListener("click", () => { rules.hidden = false; });
+      document.querySelector(".close-rules").addEventListener("click", () => { rules.hidden = true; });
+      document.querySelector("#reset-button").addEventListener("click", start);
+      document.querySelector("#play-again").addEventListener("click", start);
+      rules.addEventListener("click", event => { if (event.target === rules) rules.hidden = true; });
+
+      window.MATHSGO_COFFRES_DUEL = {
+        adjacent,
+        operation,
+        start,
+        getState: () => ({ values: [...values], mode, target, turn, scores: [...scores] })
+      };
+
+      start();
+    })();
+  </script>
+</body>
+</html>

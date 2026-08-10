@@ -1,0 +1,342 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>Défi calcul | maths&amp;go</title>
+  <meta name="description" content="Un entraînement chronométré de 30 calculs variés en trois minutes pour automatiser les stratégies de calcul mental.">
+  <link rel="canonical" href="https://mathsgo.re/outils/calcul_mental/defi_calcul.html">
+  <meta name="robots" content="index, follow, max-image-preview:large">
+  <link rel="icon" href="/favicon.ico" sizes="48x48">
+  <link rel="icon" type="image/svg+xml" href="/favicon.svg">
+  <link rel="icon" type="image/png" sizes="32x32" href="/assets/img/favicon-32.png">
+  <link rel="icon" type="image/png" sizes="192x192" href="/assets/img/favicon-192.png">
+  <link rel="apple-touch-icon" href="/assets/img/apple-touch-icon.png">
+  <style>
+    :root{--ink:#143451;--muted:#506b7d;--line:#d4e3ed;--blue:#0755b8;--teal:#087a71;--green:#147447;--green-soft:#e5f7eb;--red:#a93030;--red-soft:#ffebeb;color-scheme:light;font-family:Inter,ui-rounded,"Arial Rounded MT Bold","Segoe UI",sans-serif}
+    *{box-sizing:border-box}[hidden]{display:none!important}html{min-height:100%;background:#edf5fb;-webkit-text-size-adjust:100%}body{min-height:100vh;margin:0;color:var(--ink);background:radial-gradient(circle at 8% 5%,rgba(8,168,159,.14),transparent 26rem),radial-gradient(circle at 92% 7%,rgba(250,204,21,.18),transparent 24rem),linear-gradient(#fbfdff,#edf5fb)}button,a,input{font:inherit;-webkit-tap-highlight-color:transparent}button:focus-visible,a:focus-visible{outline:3px solid rgba(15,108,249,.3);outline-offset:3px}
+    .shell{width:min(850px,calc(100% - 28px));margin:auto;padding-bottom:30px}.topbar{min-height:70px;display:flex;align-items:center;justify-content:space-between;gap:12px}.brand img{display:block;width:105px;height:auto}.catalogue-link{min-height:39px;display:inline-flex;align-items:center;padding:0 13px;border:1px solid #d5e1ec;border-radius:999px;color:#24415f;background:#fff;font-size:.8rem;font-weight:900;text-decoration:none}.panel{min-height:650px;padding:clamp(20px,5vw,42px);overflow-anchor:none;border:1px solid var(--line);border-radius:28px;background:rgba(255,255,255,.97);box-shadow:0 18px 55px rgba(26,66,100,.12)}
+    .intro,.result{max-width:650px;margin:40px auto;text-align:center}.hero-icon{display:block;font-size:4.2rem}.eyebrow{margin:8px 0;color:var(--teal);font-size:.8rem;font-weight:950;letter-spacing:.1em;text-transform:uppercase}h1{margin:0;font-size:clamp(2rem,6vw,3.35rem);line-height:1.03}p{line-height:1.5}.intro>p:not(.eyebrow),.result>p:not(.eyebrow){color:var(--muted)}.best{padding:11px 14px;border-radius:13px;color:#735d00!important;background:#fff6ca!important;font-weight:900}
+    .primary,.secondary{min-height:48px;display:inline-flex;align-items:center;justify-content:center;padding:10px 17px;border-radius:13px;font-weight:950;text-decoration:none;cursor:pointer}.primary{color:#fff;border:0;background:var(--blue);box-shadow:0 5px 0 #043f8c}.secondary{color:var(--blue);border:1px solid #c5d9e6;background:#fff}.status{display:flex;align-items:center;justify-content:space-between;gap:12px;font-weight:950}.status strong{min-width:92px;padding:7px 13px;border-radius:999px;color:var(--green);background:var(--green-soft);font-size:1.25rem;text-align:center}.status strong.urgent{color:var(--red);background:var(--red-soft)}
+    .progress-track{height:10px;margin:12px 0 18px;overflow:hidden;border-radius:99px;background:#dfebf3}.progress-track b{display:block;width:0;height:100%;background:linear-gradient(90deg,var(--teal),var(--blue));transition:width .2s}.question{min-height:480px;padding:clamp(19px,5vw,34px);border:2px solid var(--line);border-radius:23px;background:#fff;text-align:center}.expression{min-height:155px;display:grid;place-items:center;margin:10px 0 16px;padding:15px;border-radius:18px;background:#f3f8fb;font-size:clamp(2.2rem,9vw,4.2rem);font-weight:950}.answer{width:100%;min-height:62px;padding:10px 14px;border:3px solid #aac9dc;border-radius:14px;color:var(--ink);background:#fff;font-size:1.7rem;font-weight:950;text-align:center}.answer.invalid{border-color:var(--red);background:var(--red-soft)}
+    .keypad{max-width:390px;display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin:12px auto}.keypad button{min-height:49px;border:1px solid #a9c8da;border-radius:10px;color:var(--ink);background:#f8fcff;box-shadow:0 2px 0 #c3d8e5;font-weight:950;cursor:pointer}.actions{display:flex;justify-content:center;gap:9px;margin-top:13px}.result-message{padding:12px 15px;border-radius:14px;color:#31566c!important;background:#eef8ff;font-weight:850}.corrections{margin:20px 0;padding:16px;border:2px solid #efc9c9;border-radius:18px;background:#fffafa;text-align:left}.corrections h2{margin:0;font-size:1.3rem}.corrections>p{margin:6px 0 0;color:var(--muted)}.correction-list{display:grid;gap:9px;margin:14px 0 0;padding:0;list-style:none}.correction-list li{padding:12px;border:1px solid #efd5d5;border-radius:13px;background:#fff}.correction-list li>strong{display:block;margin-bottom:8px;font-size:1.12rem}.correction-list li>div{display:flex;flex-wrap:wrap;gap:7px}.correction-list span{padding:6px 9px;border-radius:9px;font-weight:850}.given-answer{color:var(--red);background:var(--red-soft)}.expected-answer{color:var(--green);background:var(--green-soft)}.result-actions{display:flex;justify-content:center;gap:10px;margin-top:16px}footer{padding:17px;color:#5b7283;font-size:.84rem;text-align:center}
+    @media(max-width:620px){.shell{width:100%}.topbar{min-height:58px;padding:5px 10px}.brand img{width:82px}.catalogue-link{min-height:36px;padding:0 10px;font-size:.73rem}.panel{min-height:calc(100vh - 96px);padding:18px 12px 27px;border-right:0;border-left:0;border-radius:20px}.intro,.result{margin:25px auto}.question{min-height:560px;padding:19px 10px}.expression{min-height:135px}.keypad button{min-height:47px}.result-actions{flex-direction:column}.challenge-playing{height:100dvh;overflow:hidden}.challenge-playing .shell{height:100dvh;display:grid;grid-template-rows:auto minmax(0,1fr);padding:0}.challenge-playing .topbar{min-height:48px;padding:max(3px,env(safe-area-inset-top)) 10px 3px}.challenge-playing .brand img{width:74px}.challenge-playing .panel{min-height:0;height:auto;padding:6px 10px max(7px,env(safe-area-inset-bottom));overflow:hidden;border-radius:16px 16px 0 0}.challenge-playing #play{height:100%;display:flex;flex-direction:column}.challenge-playing .status{min-height:34px}.challenge-playing .status strong{min-width:78px;padding:4px 10px;font-size:1.05rem}.challenge-playing .progress-track{height:6px;margin:4px 0 6px}.challenge-playing .question{flex:1;min-height:0;display:flex;flex-direction:column;justify-content:center;padding:6px 10px 8px;overflow:hidden}.challenge-playing .question>.eyebrow{margin:0 0 3px}.challenge-playing .expression{min-height:clamp(68px,12dvh,92px);margin:3px 0 6px;padding:7px;font-size:clamp(2rem,9vw,3.2rem)}.challenge-playing .question label{font-size:.94rem;line-height:1.2}.challenge-playing .answer{min-height:48px;height:48px;padding:5px 10px;font-size:1.5rem}.challenge-playing .keypad{width:min(100%,330px);gap:5px;margin:6px auto}.challenge-playing .keypad button{min-height:44px;height:44px}.challenge-playing .actions{margin-top:5px}.challenge-playing .actions .primary,.challenge-playing .actions .secondary{min-height:44px;padding:7px 15px}.challenge-playing footer{display:none}}
+    @media(prefers-reduced-motion:reduce){*,*::before,*::after{transition:none!important}}
+  </style>
+</head>
+<body>
+  <main class="shell">
+    <header class="topbar">
+      <a class="brand" href="/" aria-label="Accueil maths&amp;go"><img src="/assets/img/mathsgo-logo.png" alt="maths&amp;go" width="1338" height="622"></a>
+      <a class="catalogue-link" href="../index.html?domain=nombres-calculs&amp;notion=calcul-mental">← Calcul mental</a>
+    </header>
+
+    <section class="panel">
+      <div id="intro" class="intro">
+        <span class="hero-icon" aria-hidden="true">⚡</span>
+        <p class="eyebrow">Calcul mental · automatismes</p>
+        <h1>30 calculs en 3 minutes</h1>
+        <p>Additions, soustractions, compléments et multiplications par 10 ou 100. Chaque essai crée une nouvelle série.</p>
+        <p id="best-intro" class="best"></p>
+        <button id="start" class="primary" type="button">Lancer le défi</button>
+      </div>
+
+      <div id="play" hidden>
+        <div class="status"><span id="question-count">1 / 30</span><strong id="time" aria-live="polite">3:00</strong></div>
+        <div class="progress-track" aria-hidden="true"><b id="progress"></b></div>
+        <article class="question">
+          <p id="question-kind" class="eyebrow">Calcul</p>
+          <div id="expression" class="expression"></div>
+          <label for="answer">Ta réponse</label>
+          <input id="answer" class="answer" type="text" inputmode="none" readonly aria-readonly="true">
+          <div class="keypad" role="group" aria-label="Clavier numérique">
+            <button type="button" data-key="1">1</button><button type="button" data-key="2">2</button><button type="button" data-key="3">3</button>
+            <button type="button" data-key="4">4</button><button type="button" data-key="5">5</button><button type="button" data-key="6">6</button>
+            <button type="button" data-key="7">7</button><button type="button" data-key="8">8</button><button type="button" data-key="9">9</button>
+            <button type="button" data-key="clear">Effacer</button><button type="button" data-key="0">0</button><button type="button" data-key="backspace" aria-label="Effacer un chiffre">⌫</button>
+          </div>
+          <div class="actions"><button id="validate" class="primary" type="button">Valider</button><button id="skip" class="secondary" type="button">Passer</button></div>
+        </article>
+      </div>
+
+      <div id="result" class="result" hidden>
+        <span class="hero-icon" aria-hidden="true">✓</span>
+        <p class="eyebrow">Défi terminé</p>
+        <h1 id="result-title">Résultat</h1>
+        <p id="result-detail"></p>
+        <p id="result-message" class="result-message"></p>
+        <p id="result-best" class="best"></p>
+        <section id="corrections" class="corrections" aria-live="polite"></section>
+        <div class="result-actions"><button id="retry" class="primary" type="button">Nouvelle série</button><a class="secondary" href="../index.html?domain=nombres-calculs&amp;notion=calcul-mental">Retour au calcul mental</a></div>
+      </div>
+    </section>
+  </main>
+  <footer>Le meilleur score reste enregistré uniquement sur cet appareil.</footer>
+
+  <script>
+    (() => {
+      "use strict";
+
+      const TOTAL = 30;
+      const DURATION = 180;
+      const STORAGE_KEY = "mathsgo-defi-calcul-best-v1";
+      const $ = id => document.getElementById(id);
+      const state = {questions: [], responses: [], index: 0, correct: 0, answered: 0, running: false, timer: null, endAt: 0, signature: ""};
+
+      function shuffle(items, random = Math.random) {
+        const copy = items.slice();
+        for (let index = copy.length - 1; index > 0; index -= 1) {
+          const swap = Math.floor(random() * (index + 1));
+          [copy[index], copy[swap]] = [copy[swap], copy[index]];
+        }
+        return copy;
+      }
+
+      function integer(minimum, maximum) {
+        return minimum + Math.floor(Math.random() * (maximum - minimum + 1));
+      }
+
+      function calculationQuestion(type) {
+        if (type === "add") {
+          const first = integer(18, 89), second = integer(11, 68);
+          return {type, kind: "Addition", prompt: `${first} + ${second} = ?`, answer: first + second};
+        }
+        if (type === "add-near") {
+          const second = [9, 19, 29, 39][integer(0, 3)], first = integer(23, 780);
+          return {type, kind: "Ajouter rapidement", prompt: `${first} + ${second} = ?`, answer: first + second};
+        }
+        if (type === "add-place") {
+          const second = [10, 20, 30, 100, 200, 300][integer(0, 5)], first = integer(12, 89) * 10 + integer(0, 9);
+          return {type, kind: "Numération", prompt: `${first} + ${second} = ?`, answer: first + second};
+        }
+        if (type === "subtract") {
+          const first = integer(35, 130), second = integer(3, Math.min(48, first - 1));
+          return {type, kind: "Soustraction", prompt: `${first} − ${second} = ?`, answer: first - second};
+        }
+        if (type === "subtract-near") {
+          const second = [9, 19, 29][integer(0, 2)], first = integer(second + 25, 850);
+          return {type, kind: "Retrancher rapidement", prompt: `${first} − ${second} = ?`, answer: first - second};
+        }
+        if (type === "subtract-place") {
+          const second = [10, 20, 50, 100, 200, 300][integer(0, 5)], first = integer(Math.ceil((second + 100) / 10), 900) * 10;
+          return {type, kind: "Numération", prompt: `${first} − ${second} = ?`, answer: first - second};
+        }
+        if (type === "complement") {
+          const target = [100, 300, 1000][integer(0, 2)];
+          const step = target === 100 ? 5 : target === 300 ? 10 : 50;
+          const known = integer(2, Math.floor(target / step) - 2) * step;
+          return {type, kind: "Complément", prompt: `${known} + ? = ${target}`, answer: target - known};
+        }
+        const factor = Math.random() < .62 ? 10 : 100;
+        const first = integer(2, factor === 10 ? 99 : 27);
+        return {type, kind: "Multiplier", prompt: `${first} × ${factor} = ?`, answer: first * factor};
+      }
+
+      function generateQuestions() {
+        const plan = shuffle([
+          ...Array(6).fill("add"),
+          ...Array(4).fill("add-near"),
+          ...Array(3).fill("add-place"),
+          ...Array(5).fill("subtract"),
+          ...Array(3).fill("subtract-near"),
+          ...Array(3).fill("subtract-place"),
+          ...Array(4).fill("complement"),
+          ...Array(2).fill("multiply")
+        ]);
+        const prompts = new Set();
+        return plan.map(type => {
+          let question = calculationQuestion(type);
+          for (let attempt = 0; prompts.has(question.prompt) && attempt < 12; attempt += 1) question = calculationQuestion(type);
+          prompts.add(question.prompt);
+          return question;
+        });
+      }
+
+      function best() {
+        try { return Number(localStorage.getItem(STORAGE_KEY)) || 0; } catch (_) { return 0; }
+      }
+
+      function saveBest(value) {
+        try { localStorage.setItem(STORAGE_KEY, String(value)); } catch (_) { /* Stockage facultatif. */ }
+      }
+
+      function formatTime(seconds) {
+        return `${Math.floor(seconds / 60)}:${String(seconds % 60).padStart(2, "0")}`;
+      }
+
+      function show(name) {
+        ["intro", "play", "result"].forEach(id => { $(id).hidden = id !== name; });
+        document.body.classList.toggle("challenge-playing", name === "play");
+        window.scrollTo({top: 0, behavior: "auto"});
+      }
+
+      function updateBestCopy() {
+        const score = best();
+        $("best-intro").textContent = score ? `Meilleur score : ${score} / ${TOTAL}` : "Ton premier score apparaîtra ici.";
+      }
+
+      function renderQuestion() {
+        const question = state.questions[state.index];
+        $("question-count").textContent = `${state.index + 1} / ${TOTAL}`;
+        $("progress").style.width = `${state.index / TOTAL * 100}%`;
+        $("question-kind").textContent = question.kind;
+        $("expression").textContent = question.prompt;
+        $("answer").value = "";
+        $("answer").classList.remove("invalid");
+      }
+
+      function stopTimer() {
+        if (state.timer !== null) window.clearInterval(state.timer);
+        state.timer = null;
+      }
+
+      function corrections() {
+        return state.responses.flatMap((response, index) => {
+          if (!response || response.correct) return [];
+          return [{number: index + 1, prompt: state.questions[index].prompt, given: response.skipped ? "Pas de réponse" : String(response.value), expected: String(state.questions[index].answer)}];
+        });
+      }
+
+      function renderCorrections() {
+        const zone = $("corrections");
+        const mistakes = corrections();
+        zone.replaceChildren();
+        const title = document.createElement("h2");
+        title.textContent = mistakes.length ? "Tes corrections" : "Aucune erreur à corriger";
+        zone.append(title);
+        if (!mistakes.length) {
+          const message = document.createElement("p");
+          message.textContent = "Toutes les réponses que tu as données sont justes.";
+          zone.append(message);
+          return;
+        }
+        const intro = document.createElement("p");
+        intro.textContent = "Regarde les calculs à reprendre avant de lancer une nouvelle série.";
+        const list = document.createElement("ol");
+        list.className = "correction-list";
+        mistakes.forEach(mistake => {
+          const item = document.createElement("li");
+          const expression = document.createElement("strong");
+          expression.textContent = `${mistake.number}. ${mistake.prompt}`;
+          const answers = document.createElement("div");
+          const given = document.createElement("span");
+          given.className = "given-answer";
+          given.textContent = `Ta réponse : ${mistake.given}`;
+          const expected = document.createElement("span");
+          expected.className = "expected-answer";
+          expected.textContent = `Réponse attendue : ${mistake.expected}`;
+          answers.append(given, expected);
+          item.append(expression, answers);
+          list.append(item);
+        });
+        zone.append(intro, list);
+      }
+
+      function scoreMessage(score) {
+        if (score >= 15) return "Tes procédures de calcul deviennent rapides et sûres. Essaie encore pour battre ton score.";
+        if (score >= 8) return "Plusieurs procédures sont en place. Refaire de petites séries va les automatiser.";
+        return "Commence tranquillement par les compléments et les calculs avec 9, puis retente une série.";
+      }
+
+      function finish() {
+        if (!state.running) return;
+        state.running = false;
+        stopTimer();
+        const oldBest = best();
+        const newBest = Math.max(oldBest, state.correct);
+        saveBest(newBest);
+        $("result-title").textContent = `${state.correct} bonne${state.correct > 1 ? "s" : ""} réponse${state.correct > 1 ? "s" : ""} sur ${TOTAL}`;
+        const remaining = TOTAL - state.index;
+        $("result-detail").textContent = remaining
+          ? `Le temps est écoulé. ${state.answered} réponse${state.answered > 1 ? "s" : ""} saisie${state.answered > 1 ? "s" : ""}, et ${remaining} calcul${remaining > 1 ? "s" : ""} non parcouru${remaining > 1 ? "s" : ""}.`
+          : "Toute la série a été parcourue avant la fin du temps.";
+        $("result-message").textContent = scoreMessage(state.correct);
+        $("result-best").textContent = state.correct > oldBest ? `Nouveau meilleur score : ${newBest} / ${TOTAL} !` : `Meilleur score : ${newBest} / ${TOTAL}.`;
+        renderCorrections();
+        show("result");
+      }
+
+      function updateTimer() {
+        if (!state.running) return;
+        const remaining = Math.max(0, Math.ceil((state.endAt - Date.now()) / 1000));
+        $("time").textContent = formatTime(remaining);
+        $("time").classList.toggle("urgent", remaining <= 10);
+        if (!remaining) finish();
+      }
+
+      function start() {
+        stopTimer();
+        let questions = generateQuestions();
+        let signature = questions.map(question => question.prompt).join("|");
+        for (let attempt = 0; signature === state.signature && attempt < 5; attempt += 1) {
+          questions = generateQuestions();
+          signature = questions.map(question => question.prompt).join("|");
+        }
+        state.questions = questions;
+        state.responses = [];
+        state.signature = signature;
+        state.index = 0;
+        state.correct = 0;
+        state.answered = 0;
+        state.running = true;
+        state.endAt = Date.now() + DURATION * 1000;
+        $("time").textContent = formatTime(DURATION);
+        $("time").classList.remove("urgent");
+        show("play");
+        renderQuestion();
+        state.timer = window.setInterval(updateTimer, 200);
+      }
+
+      function next(skip) {
+        if (!state.running) return;
+        const value = $("answer").value;
+        if (!skip && !/^\d+$/.test(value)) {
+          $("answer").classList.add("invalid");
+          return;
+        }
+        if (!skip) {
+          state.answered += 1;
+          const correct = Number(value) === state.questions[state.index].answer;
+          state.responses[state.index] = {value: Number(value), correct, skipped: false};
+          if (correct) state.correct += 1;
+        } else {
+          state.responses[state.index] = {value: null, correct: false, skipped: true};
+        }
+        state.index += 1;
+        if (state.index >= TOTAL) finish();
+        else renderQuestion();
+      }
+
+      function enterDigit(digit) {
+        if (!state.running || $("answer").value.length >= 6) return;
+        $("answer").value += digit;
+        $("answer").classList.remove("invalid");
+      }
+
+      document.querySelectorAll("[data-key]").forEach(button => button.addEventListener("click", () => {
+        const key = button.dataset.key;
+        if (key === "clear") $("answer").value = "";
+        else if (key === "backspace") $("answer").value = $("answer").value.slice(0, -1);
+        else enterDigit(key);
+        $("answer").classList.remove("invalid");
+      }));
+      $("validate").addEventListener("click", () => next(false));
+      $("skip").addEventListener("click", () => next(true));
+      $("start").addEventListener("click", start);
+      $("retry").addEventListener("click", start);
+      document.addEventListener("keydown", event => {
+        if (!state.running) return;
+        if (/^\d$/.test(event.key)) enterDigit(event.key);
+        else if (event.key === "Backspace") $("answer").value = $("answer").value.slice(0, -1);
+        else if (event.key === "Delete" || event.key === "Escape") $("answer").value = "";
+        else if (event.key === "Enter") next(false);
+        else return;
+        event.preventDefault();
+      });
+      document.addEventListener("visibilitychange", updateTimer);
+      window.addEventListener("pagehide", stopTimer);
+      updateBestCopy();
+    })();
+  </script>
+</body>
+</html>
