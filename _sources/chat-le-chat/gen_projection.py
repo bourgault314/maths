@@ -397,10 +397,9 @@ HTML_TEMPLATE = r'''<!doctype html>
       border-radius:9px; background:white; }
     .card-cell.right { grid-column:3; grid-row:2; }
     .card-cell.back { grid-column:2; grid-row:3; }
-    .card-self-cat, .cat-mark { position:relative; z-index:1; width:74%; height:78%; overflow:visible; }
-    .card-self-cat { display:block; }
-    .cat-mark { display:grid; place-items:center; }
-    .cat-mark svg { display:block; width:100%; height:100%; overflow:visible; }
+    .card-self-cat, .cat-mark { position:relative; z-index:1; overflow:visible; }
+    .card-self-cat, .cat-mark svg { display:block; width:66%; height:auto; overflow:visible; }
+    .cat-mark { width:100%; height:100%; display:grid; place-items:center; }
     .feedback { flex:0 0 auto; min-height:54px; margin-top:9px; padding:9px 12px; border-radius:14px;
       color:#405a73; background:#f0f4f7; line-height:1.4; }
     .feedback strong { color:var(--navy); }
