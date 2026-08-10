@@ -433,6 +433,14 @@ window.MATHSGO_CATALOGUE = {
       "thumbnail": "assets/img/thumbnails/reperage/chat-cest-toi-le-chat.png?v=1",
       "cardDescription": "Un jeu coopératif pour GS-CP, adaptable en MS avec accompagnement : quatre élèves communiquent pour se placer dans six zones au sol, matérialisées par des cerceaux ou des cercles tracés."
     },
+    "outils/chat-cest-toi-le-chat-projection.html": {
+      "primaryNotion": "reperage",
+      "primaryGroup": "jeux",
+      "collections": [],
+      "tags": ["reperage-spatial", "cycle-1", "cycle-2", "maternelle", "moyenne-section", "grande-section", "cp", "communication", "cooperation", "devant-derriere", "gauche-droite", "jeu-collectif", "projection", "vrai-faux", "placement"],
+      "thumbnail": "assets/img/thumbnails/reperage/chat-cest-toi-le-chat-projection.png?v=2",
+      "cardDescription": "Une activité collective à projeter : chacun observe un placement depuis sa place, puis la classe vérifie les quatre cartes pas à pas."
+    },
     "outils/fractions_multiples_exerciseur.html": {
       "primaryNotion": "fractions",
       "primaryGroup": "generer",
@@ -2668,7 +2676,7 @@ window.MATHSGO_CATALOGUE = {
     },
     {
       "id": "outils-chat-cest-toi-le-chat-pdf",
-      "title": "Chat, c’est toi le chat !",
+      "title": "Chat, c’est toi le chat ! — À imprimer",
       "description": "Un jeu coopératif de repérage spatial pour GS-CP, adaptable en MS avec accompagnement : quatre élèves communiquent pour se placer dans six zones circulaires, matérialisées par des cerceaux ou des cercles tracés au sol. Vingt séries progressives en quatre niveaux, avec toutes les solutions.",
       "path": "outils/chat-cest-toi-le-chat.pdf",
       "domains": [
@@ -2704,6 +2712,48 @@ window.MATHSGO_CATALOGUE = {
         "4 niveaux"
       ],
       "kind": "document",
+      "status": "published",
+      "featured": false,
+      "recent": true
+    },
+    {
+      "id": "outils-chat-cest-toi-le-chat-projection-html",
+      "title": "Chat, c’est toi le chat ! — À projeter",
+      "description": "Une activité collective de repérage spatial à projeter : toute la classe observe un placement, argumente puis vérifie les quatre cartes pas à pas.",
+      "path": "outils/chat-cest-toi-le-chat-projection.html",
+      "domains": [
+        "geometrie"
+      ],
+      "notions": [
+        "reperage"
+      ],
+      "uses": [
+        "projeter"
+      ],
+      "types": [
+        "exerciseur"
+      ],
+      "filters": [],
+      "keywords": [
+        "cycle 1",
+        "cycle 2",
+        "maternelle",
+        "grande section",
+        "CP",
+        "repérage spatial",
+        "positionnement dans l’espace",
+        "communication",
+        "coopération",
+        "devant",
+        "derrière",
+        "gauche",
+        "droite",
+        "projection",
+        "placement",
+        "vrai ou faux",
+        "jeu collectif"
+      ],
+      "kind": "tool",
       "status": "published",
       "featured": false,
       "recent": true

@@ -1,0 +1,159 @@
+{
+  "version": 1,
+  "guided": {
+    "cards": {
+      "1": {"left": "P"},
+      "2": {"front": "P", "left": "P", "right": "X", "back": "X"},
+      "3": {"front": "P"},
+      "4": {"right": "P", "back": "P"}
+    },
+    "proposed": [[4, 1, 0], [3, 0, 2]],
+    "correction": [[4, 1, 0], [3, 2, 0]]
+  },
+  "cases": [
+    {
+      "id": "defi-01",
+      "difficulty": 1,
+      "cards": {
+        "1": {"back": "P", "right": "P"},
+        "2": {"left": "P"},
+        "3": {"right": "P"},
+        "4": {"front": "P", "left": "P"}
+      },
+      "proposed": [[1, 2, 0], [3, 4, 0]],
+      "correction": null
+    },
+    {
+      "id": "defi-02",
+      "difficulty": 1,
+      "cards": {
+        "1": {"left": "P"},
+        "2": {"back": "X", "right": "P"},
+        "3": {"front": "P", "left": "P"},
+        "4": {"back": "P"}
+      },
+      "proposed": [[1, 4, 0], [2, 3, 0]],
+      "correction": [[0, 4, 1], [2, 3, 0]]
+    },
+    {
+      "id": "defi-03",
+      "difficulty": 1,
+      "cards": {
+        "1": {"right": "P"},
+        "2": {"front": "P", "left": "P"},
+        "3": {"left": "P"},
+        "4": {"back": "P", "right": "X"}
+      },
+      "proposed": [[0, 4, 3], [1, 2, 0]],
+      "correction": [[0, 4, 0], [1, 2, 3]]
+    },
+    {
+      "id": "defi-04",
+      "difficulty": 1,
+      "cards": {
+        "1": {"left": "X", "right": "P"},
+        "2": {"right": "P"},
+        "3": {"left": "P"},
+        "4": {"front": "P"}
+      },
+      "proposed": [[1, 2, 3], [0, 4, 0]],
+      "correction": null
+    },
+    {
+      "id": "defi-05",
+      "difficulty": 2,
+      "cards": {
+        "1": {"back": "X", "front": "X", "left": "X"},
+        "2": {"back": "X", "front": "X"},
+        "3": {"back": "P", "front": "X", "right": "X"},
+        "4": {"back": "X", "right": "X"}
+      },
+      "proposed": [[0, 2, 3], [0, 1, 4]],
+      "correction": [[1, 2, 3], [0, 0, 4]]
+    },
+    {
+      "id": "defi-06",
+      "difficulty": 2,
+      "cards": {
+        "1": {"back": "P", "left": "X"},
+        "2": {"back": "X", "right": "P"},
+        "3": {"left": "P", "right": "X"},
+        "4": {"back": "X", "left": "X"}
+      },
+      "proposed": [[1, 2, 3], [4, 0, 0]],
+      "correction": null
+    },
+    {
+      "id": "defi-07",
+      "difficulty": 2,
+      "cards": {
+        "1": {"back": "X", "front": "X", "right": "P"},
+        "2": {"back": "P", "left": "P"},
+        "3": {"back": "X", "front": "P", "left": "X"},
+        "4": {"front": "X", "left": "P"}
+      },
+      "proposed": [[1, 2, 0], [0, 3, 4]],
+      "correction": null
+    },
+    {
+      "id": "defi-08",
+      "difficulty": 2,
+      "cards": {
+        "1": {"back": "P", "front": "X"},
+        "2": {"left": "P", "right": "X"},
+        "3": {"back": "X", "right": "P"},
+        "4": {"back": "X", "left": "P", "right": "X"}
+      },
+      "proposed": [[0, 1, 2], [0, 4, 3]],
+      "correction": [[0, 1, 2], [3, 4, 0]]
+    },
+    {
+      "id": "defi-09",
+      "difficulty": 3,
+      "cards": {
+        "1": {"back": "P", "left": "X"},
+        "2": {"back": "X", "front": "X"},
+        "3": {"left": "P", "right": "P"},
+        "4": {"front": "X", "right": "X"}
+      },
+      "proposed": [[0, 1, 2], [0, 3, 4]],
+      "correction": [[0, 1, 0], [2, 3, 4]]
+    },
+    {
+      "id": "defi-10",
+      "difficulty": 3,
+      "cards": {
+        "1": {"left": "X", "right": "X"},
+        "2": {"back": "X", "right": "X"},
+        "3": {"front": "P"},
+        "4": {"left": "P"}
+      },
+      "proposed": [[1, 0, 2], [3, 4, 0]],
+      "correction": null
+    },
+    {
+      "id": "defi-11",
+      "difficulty": 3,
+      "cards": {
+        "1": {"front": "X", "right": "X"},
+        "2": {"right": "X"},
+        "3": {"front": "X", "left": "X"},
+        "4": {"back": "P", "left": "X"}
+      },
+      "proposed": [[0, 1, 4], [0, 3, 2]],
+      "correction": [[1, 0, 4], [0, 3, 2]]
+    },
+    {
+      "id": "defi-12",
+      "difficulty": 3,
+      "cards": {
+        "1": {"back": "P", "left": "P"},
+        "2": {"right": "P"},
+        "3": {"front": "X", "left": "X"},
+        "4": {"front": "X", "left": "P"}
+      },
+      "proposed": [[3, 1, 0], [0, 2, 4]],
+      "correction": null
+    }
+  ]
+}

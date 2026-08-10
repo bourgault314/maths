@@ -108,21 +108,31 @@ SERIES = {
 }
 
 
+def check_card(placement, player, constraints):
+    """Vérifie la carte d'un joueur dans un placement.
+
+    ``P`` exige un joueur dans la zone voisine. ``X`` exige qu'il n'y en ait
+    aucun : la contrainte est donc vraie aussi quand cette zone n'existe pas,
+    au bord de la grille.
+    """
+    occupied = set(placement.values())
+    r, c = placement[player]
+    for direction, wanted in constraints.items():
+        dr, dc = DIRS[direction]
+        nr, nc = r + dr, c + dc
+        inside = 0 <= nr < ROWS and 0 <= nc < COLS
+        somebody = inside and (nr, nc) in occupied
+        if wanted == "P" and not somebody:
+            return False
+        if wanted == "X" and somebody:
+            return False
+    return True
+
+
 def check(placement, cards):
     """placement : dict joueur -> (r, c). Vérifie toutes les cartes."""
-    occupied = set(placement.values())
-    for player, cons in cards.items():
-        r, c = placement[player]
-        for d, want in cons.items():
-            dr, dc = DIRS[d]
-            nr, nc = r + dr, c + dc
-            inside = 0 <= nr < ROWS and 0 <= nc < COLS
-            somebody = inside and (nr, nc) in occupied
-            if want == "P" and not somebody:
-                return False
-            if want == "X" and somebody:
-                return False
-    return True
+    return all(check_card(placement, player, constraints)
+               for player, constraints in cards.items())
 
 
 def solve(cards):

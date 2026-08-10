@@ -11,10 +11,18 @@ Emprin-Charotte, CRDP Champagne-Ardenne). Version modernisée pour maths&go :
 - `game.py` — modèle du jeu, solveur et transcription des cartes disponibles ;
 - `gen_series.py` — fabrique les 20 séries et écrit `series20.json` ;
 - `series20.json` — données publiables et provenance éditoriale de chaque série ;
-- `gen.py` — génère `out/livret.html` ;
+- `gen.py` — génère `out/livret.html` (règle, exemple guidé, cartes et solutions) ;
 - `verify.py` — vérifie les données, les niveaux et le HTML généré ;
-- `out/livret.pdf` — livret final de 23 pages (non versionné ici ; la copie
+- `projection_cases.json` — exemple guidé et 12 défis inédits à projeter ;
+- `gen_projection.py` — valide ces défis et génère la page projetable autonome ;
+- `out/livret.pdf` — livret final de 24 pages (non versionné ici ; la copie
   publique est `../../outils/chat-cest-toi-le-chat.pdf`).
+
+La page projetable publique est
+`../../outils/chat-cest-toi-le-chat-projection.html`. Toute la classe peut
+chercher depuis sa place, puis vérifier les cartes à voix haute lors de la mise
+en commun. Reproduire le placement au sol avec quatre enfants reste une variante
+possible, mais n'est pas nécessaire pour utiliser la projection.
 
 Les notes de provenance restent dans `series20.json` pour permettre les futures
 modifications, mais elles ne sont pas imprimées sur les pages de solutions.
@@ -49,9 +57,12 @@ peuvent donc être lancés depuis n'importe quel répertoire :
 python3 /chemin/vers/le-depot/_sources/chat-le-chat/gen_series.py
 python3 /chemin/vers/le-depot/_sources/chat-le-chat/gen.py
 python3 /chemin/vers/le-depot/_sources/chat-le-chat/verify.py
+python3 /chemin/vers/le-depot/_sources/chat-le-chat/gen_projection.py
+python3 /chemin/vers/le-depot/_sources/chat-le-chat/gen_projection.py --check
 ```
 
-La dernière commande doit afficher `0 erreur(s)`.
+Le vérificateur du livret doit afficher `0 erreur(s)` et le contrôle de la page
+projetable doit confirmer 12 défis inédits, 6 vrais et 6 faux.
 
 Pour produire le PDF avec Chrome ou Chromium :
 
