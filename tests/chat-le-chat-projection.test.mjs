@@ -189,10 +189,12 @@ test("le HTML publié est autonome, synchronisé et adapté à une réflexion co
   assert.doesNotMatch(html, /Tous ses indices correspondent au placement/i);
   assert.match(html, /function constraintFeedback\(item, player, grid\)/,
     "La correction doit expliciter chaque direction de la carte.");
-  assert.match(html, /\.card-self-cat, \.cat-mark \{[^}]*width:86%; height:96%/s,
-    "Le chat central et les chats voisins doivent garder exactement la même taille.");
+  assert.match(html, /\.card-self-cat, \.cat-mark \{[^}]*width:74%; height:78%/s,
+    "Tous les chats des cartes doivent rester à la même taille avec un espace entre deux directions.");
+  assert.doesNotMatch(html, /\.guided-cards \.card-self-cat, \.guided-cards \.cat-mark \{/,
+    "L’exemple guidé doit hériter exactement de la même réduction que les défis.");
   assert.match(html, /\.card-cell\.self::before \{[^}]*inset:-8%/s,
-    "Le cadre central doit s’agrandir autour du chat, sans réduire le pictogramme.");
+    "Le cadre central doit rester agrandi autour du chat.");
   assert.doesNotMatch(html, /<(?:script|img)[^>]+src="https?:/i, "Aucune dépendance externe ne doit être chargée.");
 });
 
