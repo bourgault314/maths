@@ -344,20 +344,6 @@
       background: #fff;
     }
 
-    .visual-equation {
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      gap: 7px;
-    }
-
-    .visual-sign {
-      color: #607a8d;
-      font-size: 1.15rem;
-      font-weight: 950;
-    }
-
-    .dot-row,
     .dot-array {
       --dot-color: #0b73c8;
       display: grid;
@@ -366,11 +352,7 @@
       justify-content: center;
     }
 
-    .dot-row.coral-dots { --dot-color: #ef5b45; }
-    .dot-row.joined-dots { --dot-color: #087a71; }
-    .dot-row i,
-    .dot-array i,
-    .quotient-pair i {
+    .dot-array i {
       width: 11px;
       height: 11px;
       border-radius: 50%;
@@ -378,16 +360,169 @@
       box-shadow: inset 0 -1px 0 rgba(0, 0, 0, .18);
     }
 
-    .difference-picture { align-content: center; }
-    .difference-lines {
+    .quantity-model,
+    .comparison-model {
+      width: min(100%, 370px);
       display: grid;
-      gap: 8px;
-      padding: 7px 10px;
-      border-left: 2px solid #9bb5c6;
+      gap: 0;
     }
-    .difference-lines .dot-row { --dot-columns: 5; justify-content: start; }
-    .difference-lines .unmatched { --dot-color: #e29b0b; background: var(--dot-color); }
-    .difference-caption { color: #8a5b00; font-size: .72rem; font-weight: 900; }
+
+    .sum-marker-row {
+      min-height: 33px;
+      display: grid;
+      align-items: end;
+    }
+
+    .sum-marker-row { grid-template-columns: minmax(0, 1fr); }
+
+    .sum-marker {
+      position: relative;
+      align-self: end;
+      margin-bottom: 6px;
+      border-bottom: 2px solid #bd7900;
+      color: #765000;
+      font-size: .74rem;
+      font-weight: 950;
+      line-height: 1.2;
+      text-align: center;
+    }
+
+    .sum-marker::before,
+    .sum-marker::after {
+      content: "";
+      position: absolute;
+      bottom: -7px;
+      width: 2px;
+      height: 7px;
+      background: #bd7900;
+    }
+
+    .sum-marker::before { left: 0; }
+    .sum-marker::after { right: 0; }
+
+    .sum-marker span { display: block; margin-bottom: 4px; }
+
+    .quantity-row {
+      min-width: 0;
+      min-height: 38px;
+      display: flex;
+      overflow: hidden;
+      border: 2px solid #54758a;
+      border-radius: 0;
+      background: #fff;
+    }
+
+    .quantity-row + .quantity-row { border-top: 0; }
+    .quantity-total { background: #ecfaf6; }
+
+    .quantity-segment {
+      min-width: 0;
+      flex: var(--quantity-value) 1 0;
+      display: grid;
+      place-items: center;
+    }
+
+    .quantity-segment + .quantity-segment { border-left: 2px solid #54758a; }
+    .quantity-first { background: #e4f2ff; }
+    .quantity-second { background: #fff0ea; }
+
+    .quantity-dots {
+      --quantity-dot-color: #087a71;
+      width: 100%;
+      display: grid;
+      grid-template-columns: repeat(var(--dot-count), minmax(0, 1fr));
+      align-items: center;
+      justify-items: center;
+      padding: 6px 4px;
+    }
+
+    .quantity-first .quantity-dots { --quantity-dot-color: #0b73c8; }
+    .quantity-second .quantity-dots { --quantity-dot-color: #ef5b45; }
+
+    .quantity-dot {
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      background: var(--quantity-dot-color);
+      box-shadow: inset 0 -1px 0 rgba(0, 0, 0, .2);
+    }
+
+    .comparison-upper {
+      min-height: 38px;
+      display: grid;
+      grid-template-columns: repeat(var(--unit-count), minmax(0, 1fr));
+      border: 2px solid #54758a;
+      border-radius: 0;
+      background: #f7fbfe;
+    }
+
+    .comparison-unit {
+      min-width: 0;
+      display: grid;
+      place-items: center;
+    }
+
+    .comparison-unit .quantity-dot { --quantity-dot-color: #0b73c8; }
+    .comparison-unit.unmatched .quantity-dot {
+      --quantity-dot-color: #e29b0b;
+      outline: 3px solid #fff0bf;
+      outline-offset: 1px;
+    }
+
+    .comparison-lower {
+      min-height: 54px;
+      display: grid;
+      grid-template-columns: repeat(var(--unit-count), minmax(0, 1fr));
+      grid-template-rows: 36px minmax(18px, auto);
+      align-items: start;
+    }
+
+    .compare-known {
+      min-height: 36px;
+      display: grid;
+      grid-template-columns: repeat(var(--known-count), minmax(0, 1fr));
+      border: 2px solid #54758a;
+      border-top: 0;
+      border-radius: 0;
+      background: #e4f2ff;
+    }
+
+    .compare-known .quantity-dot { --quantity-dot-color: #0b73c8; }
+
+    .difference-marker {
+      position: relative;
+      min-width: 0;
+      align-self: start;
+      margin-top: 7px;
+      border-top: 2px solid #bd7900;
+    }
+
+    .difference-marker-label {
+      grid-column: 1 / -1;
+      grid-row: 2;
+      justify-self: end;
+      max-width: 100%;
+      margin-top: 2px;
+      color: #765000;
+      font-size: .7rem;
+      font-weight: 950;
+      line-height: 1.05;
+      text-align: right;
+      white-space: nowrap;
+    }
+
+    .difference-marker::before,
+    .difference-marker::after {
+      content: "";
+      position: absolute;
+      top: -7px;
+      width: 2px;
+      height: 7px;
+      background: #bd7900;
+    }
+
+    .difference-marker::before { left: 0; }
+    .difference-marker::after { right: 0; }
 
     .dot-array {
       --dot-color: #6d3ac7;
@@ -396,6 +531,77 @@
       border: 2px solid #d8c7f2;
       border-radius: 10px;
       background: #f8f2ff;
+    }
+
+    .array-dimension-model {
+      display: grid;
+      grid-template-columns: auto auto;
+      grid-template-rows: auto auto;
+      align-items: stretch;
+      justify-content: center;
+      gap: 5px;
+    }
+
+    .dimension-columns {
+      position: relative;
+      grid-column: 2;
+      grid-row: 1;
+      align-self: end;
+      padding-bottom: 4px;
+      border-bottom: 2px solid #6d3ac7;
+      color: #69419b;
+      font-size: .64rem;
+      font-weight: 950;
+      line-height: 1.15;
+      text-align: center;
+    }
+
+    .dimension-columns::before,
+    .dimension-columns::after {
+      content: "";
+      position: absolute;
+      bottom: -6px;
+      width: 2px;
+      height: 6px;
+      background: #6d3ac7;
+    }
+
+    .dimension-columns::before { left: 0; }
+    .dimension-columns::after { right: 0; }
+
+    .dimension-rows {
+      position: relative;
+      grid-column: 1;
+      grid-row: 2;
+      padding-right: 4px;
+      border-right: 2px solid #6d3ac7;
+      color: #69419b;
+      font-size: .64rem;
+      font-weight: 950;
+      line-height: 1.1;
+      writing-mode: vertical-rl;
+      text-align: center;
+    }
+
+    .dimension-rows span { display: block; transform: rotate(180deg); }
+
+    .dimension-rows::before,
+    .dimension-rows::after {
+      content: "";
+      position: absolute;
+      right: -6px;
+      width: 6px;
+      height: 2px;
+      background: #6d3ac7;
+    }
+
+    .dimension-rows::before { top: 0; }
+    .dimension-rows::after { bottom: 0; }
+
+    .array-dimension-model .dot-array,
+    .array-dimension-model .demo-dot-grid {
+      grid-column: 2;
+      grid-row: 2;
     }
 
     .product-note { color: #69419b; font-size: .73rem; font-weight: 900; text-align: center; }
@@ -425,24 +631,44 @@
       text-align: center;
     }
 
-    .quotient-groups {
+    .quotient-bar {
+      width: 100%;
+      min-height: 32px;
       display: flex;
-      flex-wrap: wrap;
-      justify-content: center;
-      gap: 5px;
+      overflow: hidden;
+      border: 2px solid #39766f;
+      border-radius: 0;
+      background: #fff;
     }
 
-    .quotient-pair {
-      --dot-color: #087a71;
-      display: flex;
-      gap: 4px;
-      padding: 6px;
-      border: 2px solid #a9ddd5;
-      border-radius: 999px;
-      background: #ebfaf7;
+    .quotient-bar-group {
+      min-width: 0;
+      flex: var(--group-size) 1 0;
+      display: grid;
+      grid-template-columns: repeat(var(--group-size), minmax(0, 1fr));
+      background: #e9faf6;
     }
 
-    .quotient-pair.four-points { border-radius: 12px; }
+    .quotient-bar-group:nth-child(even) { background: #e6f3ff; }
+    .quotient-bar-group + .quotient-bar-group { border-left: 3px solid #39766f; }
+
+    .quotient-bar-unit {
+      min-width: 0;
+      min-height: 28px;
+      display: grid;
+      place-items: center;
+    }
+
+    .quotient-bar-unit + .quotient-bar-unit { border-left: 1px solid #9bcac3; }
+
+    .quotient-bar-unit::after {
+      content: "";
+      width: clamp(3px, 48%, 8px);
+      aspect-ratio: 1;
+      border-radius: 50%;
+      background: #087a71;
+      box-shadow: inset 0 -1px 0 rgba(0, 0, 0, .18);
+    }
 
     .help-card,
     .correction-card { width: min(620px, 100%); }
@@ -474,25 +700,10 @@
       background: #fff;
     }
 
-    .demo-equation,
-    .demo-dot-row,
-    .demo-groups {
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      flex-wrap: wrap;
-      gap: 5px;
-    }
-
-    .demo-dot-row,
     .demo-dot-grid { --demo-color: #0b73c8; }
-    .demo-dot-row.coral { --demo-color: #ef5b45; }
-    .demo-dot-row.joined { --demo-color: #087a71; }
-    .demo-dot-row .demo-dot.unmatched { --demo-color: #e29b0b; }
 
     .demo-dot,
-    .demo-dot-grid .demo-dot,
-    .demo-group .demo-dot {
+    .demo-dot-grid .demo-dot {
       width: var(--demo-dot);
       height: var(--demo-dot);
       flex: 0 0 var(--demo-dot);
@@ -509,27 +720,6 @@
       border: 2px solid #d8c7f2;
       border-radius: 10px;
       background: #f8f2ff;
-    }
-
-    .demo-comparison {
-      display: grid;
-      justify-items: start;
-      gap: 7px;
-      padding-left: 8px;
-      border-left: 2px solid #9bb5c6;
-    }
-
-    .demo-group {
-      --demo-color: #087a71;
-      display: flex;
-      flex-wrap: wrap;
-      justify-content: center;
-      gap: 3px;
-      max-width: 90px;
-      padding: 6px;
-      border: 2px solid #a9ddd5;
-      border-radius: 12px;
-      background: #ebfaf7;
     }
 
     .demo-interpretations {
@@ -664,6 +854,8 @@
       .operation-grid { grid-template-columns: 1fr; }
       .dialog-card { padding: 21px 17px; }
       .learning-demo { --demo-dot: 9px; padding-inline: 7px; }
+      .quantity-dot { width: 9px; height: 9px; }
+      .demo-interpretations { grid-template-columns: 1fr; }
     }
 
     @media (max-width: 400px) {
@@ -672,9 +864,10 @@
 
     @media (max-width: 350px) {
       .dual-learning-views,
-      .quotient-interpretations,
-      .demo-interpretations { grid-template-columns: 1fr; }
+      .quotient-interpretations { grid-template-columns: 1fr; }
       .learning-demo { --demo-dot: 8px; }
+      .quantity-dot { width: 8px; height: 8px; }
+      .difference-marker-label { font-size: .64rem; }
     }
 
     @media (prefers-reduced-motion: reduce) {
@@ -723,40 +916,50 @@
       <h2 id="lesson-title" tabindex="-1">Quatre mots à connaître</h2>
       <p>À chaque coffre, choisis deux cases qui se touchent par un côté.</p>
       <div class="operation-grid">
-        <article>
-          <h3>Somme : on réunit</h3>
-          <div class="operation-picture" role="img" aria-label="Trois points et deux points sont réunis : cinq points en tout">
-            <div class="visual-equation" aria-hidden="true">
-              <span class="dot-row" style="--dot-columns:3"><i></i><i></i><i></i></span><span class="visual-sign">+</span>
-              <span class="dot-row coral-dots" style="--dot-columns:2"><i></i><i></i></span><span class="visual-sign">→</span>
-              <span class="dot-row joined-dots" style="--dot-columns:5"><i></i><i></i><i></i><i></i><i></i></span>
+        <article data-operation="sum">
+          <h3>Somme : deux quantités réunies</h3>
+          <div class="operation-picture" role="img" aria-label="Un repère aligné au-dessus de toute la largeur indique : somme égale 5. Le rectangle du haut contient 5 points. Juste en dessous, deux rectangles jointifs contiennent 3 points puis 2 points. Les deux lignes ont exactement la même longueur. 3 plus 2 égale 5.">
+            <div class="quantity-model" aria-hidden="true">
+              <div class="sum-marker-row"><span class="sum-marker"><span>somme = 5</span></span></div>
+              <div class="quantity-row quantity-total">
+                <span class="quantity-segment" style="--quantity-value:5"><span class="quantity-dots" style="--dot-count:5"><i class="quantity-dot"></i><i class="quantity-dot"></i><i class="quantity-dot"></i><i class="quantity-dot"></i><i class="quantity-dot"></i></span></span>
+              </div>
+              <div class="quantity-row">
+                <span class="quantity-segment quantity-first" style="--quantity-value:3"><span class="quantity-dots" style="--dot-count:3"><i class="quantity-dot"></i><i class="quantity-dot"></i><i class="quantity-dot"></i></span></span>
+                <span class="quantity-segment quantity-second" style="--quantity-value:2"><span class="quantity-dots" style="--dot-count:2"><i class="quantity-dot"></i><i class="quantity-dot"></i></span></span>
+              </div>
             </div>
           </div>
-          <p>La somme est le résultat d’une addition : on réunit les valeurs des deux cases voisines et on compte tout.</p>
+          <p>La somme est le résultat d’une addition. Les 3 points et les 2 points sont réunis dans deux rectangles accolés. La ligne complète correspond aux 5 points du rectangle du haut.</p>
           <strong>3 + 2 = 5</strong>
         </article>
-        <article>
-          <h3>Différence : on compare</h3>
-          <div class="operation-picture difference-picture" role="img" aria-label="Cinq points sont alignés avec deux points : trois points restent sans paire, l’écart vaut trois">
-            <div class="difference-lines" aria-hidden="true">
-              <span class="dot-row"><i></i><i></i><i class="unmatched"></i><i class="unmatched"></i><i class="unmatched"></i></span>
-              <span class="dot-row coral-dots"><i></i><i></i></span>
+        <article data-operation="difference">
+          <h3>Différence : les points non appariés</h3>
+          <div class="operation-picture" role="img" aria-label="Dans l’espace vide de la ligne inférieure, un repère orienté vers le haut est placé exactement sous les 3 points non appariés et indique : différence égale 3. Le rectangle du haut contient 5 points alignés. Le rectangle du bas, collé dessous et aligné à gauche, contient 2 points sous les deux premiers. Les 3 points restants du haut sont mis en évidence et n’ont pas de point apparié dessous. 5 moins 2 égale 3.">
+            <div class="comparison-model" style="--unit-count:5" aria-hidden="true">
+              <div class="comparison-upper">
+                <span class="comparison-unit"><i class="quantity-dot"></i></span><span class="comparison-unit"><i class="quantity-dot"></i></span><span class="comparison-unit unmatched"><i class="quantity-dot"></i></span><span class="comparison-unit unmatched"><i class="quantity-dot"></i></span><span class="comparison-unit unmatched"><i class="quantity-dot"></i></span>
+              </div>
+              <div class="comparison-lower">
+                <span class="compare-known" style="--known-count:2;grid-column:1 / span 2"><span class="comparison-unit"><i class="quantity-dot"></i></span><span class="comparison-unit"><i class="quantity-dot"></i></span></span>
+                <span class="difference-marker" style="grid-column:3 / -1"></span>
+                <span class="difference-marker-label">différence = 3</span>
+              </div>
             </div>
-            <span class="difference-caption">3 points sans paire : c’est l’écart.</span>
           </div>
-          <p>La différence est le résultat d’une soustraction. Dans ce jeu, on retire le plus petit nombre du plus grand : l’ordre de sélection des cases ne change pas l’écart.</p>
+          <p>La différence est le résultat d’une soustraction. On aligne les 2 points sous les 2 premiers des 5 points. Les 3 points du haut qui n’ont rien en dessous donnent la différence. L’ordre de sélection ne change pas le résultat.</p>
           <strong>5 − 2 = 3</strong>
         </article>
         <article>
           <h3>Produit : des rangées égales</h3>
           <div class="operation-picture" role="group" aria-label="Deux rectangles orientés montrent que trois fois quatre et quatre fois trois donnent tous les deux douze">
             <div class="dual-learning-views">
-              <div class="mini-learning-view" role="img" aria-label="Trois rangées de quatre points font douze points">
-                <span class="dot-array" style="--dot-columns:4" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></span>
+              <div class="mini-learning-view" role="img" aria-label="Un réseau de 3 rangées et 4 colonnes contient 12 points. Le repère supérieur indique 4 colonnes et le repère latéral indique 3 rangées.">
+                <span class="array-dimension-model" aria-hidden="true"><span class="dimension-columns"><span>4 colonnes</span></span><span class="dimension-rows"><span>3 rangées</span></span><span class="dot-array" style="--dot-columns:4"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></span></span>
                 <span>3 rangées de 4</span>
               </div>
-              <div class="mini-learning-view" role="img" aria-label="Quatre rangées de trois points font douze points">
-                <span class="dot-array" style="--dot-columns:3" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></span>
+              <div class="mini-learning-view" role="img" aria-label="Un réseau de 4 rangées et 3 colonnes contient 12 points. Le repère supérieur indique 3 colonnes et le repère latéral indique 4 rangées.">
+                <span class="array-dimension-model" aria-hidden="true"><span class="dimension-columns"><span>3 colonnes</span></span><span class="dimension-rows"><span>4 rangées</span></span><span class="dot-array" style="--dot-columns:3"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></span></span>
                 <span>4 rangées de 3</span>
               </div>
             </div>
@@ -764,27 +967,27 @@
           <p>Le produit est le résultat d’une multiplication. Les deux nombres donnent les dimensions d’un rectangle de points. En tournant le rectangle, le total ne change pas.</p>
           <strong>3 × 4 = 12 ; 4 × 3 = 12 aussi</strong>
         </article>
-        <article>
+        <article data-operation="quotient">
           <h3>Quotient : grouper ou partager</h3>
-          <div class="operation-picture" role="group" aria-label="Deux façons de comprendre huit divisé par deux">
+          <div class="operation-picture" role="group" aria-label="Deux barres rectangulaires montrent deux façons de comprendre huit divisé par deux">
             <div class="quotient-interpretations">
-              <div class="mini-learning-view" role="img" aria-label="Huit points forment quatre groupes de deux points">
-                <div class="quotient-groups" aria-hidden="true">
-                  <span class="quotient-pair"><i></i><i></i></span><span class="quotient-pair"><i></i><i></i></span><span class="quotient-pair"><i></i><i></i></span><span class="quotient-pair"><i></i><i></i></span>
+              <div class="mini-learning-view" role="img" aria-label="Une barre rectangulaire de 8 unités est divisée en 4 paquets de 2 unités. Combien de paquets de 2 dans 8 ? 4.">
+                <div class="quotient-bar" data-group-count="4" data-group-size="2" data-total-units="8" aria-hidden="true">
+                  <span class="quotient-bar-group" style="--group-size:2"><i class="quotient-bar-unit"></i><i class="quotient-bar-unit"></i></span><span class="quotient-bar-group" style="--group-size:2"><i class="quotient-bar-unit"></i><i class="quotient-bar-unit"></i></span><span class="quotient-bar-group" style="--group-size:2"><i class="quotient-bar-unit"></i><i class="quotient-bar-unit"></i></span><span class="quotient-bar-group" style="--group-size:2"><i class="quotient-bar-unit"></i><i class="quotient-bar-unit"></i></span>
                 </div>
-                <span>4 groupes de 2</span>
+                <span>Combien de paquets de 2 dans 8 ? 4</span>
               </div>
-              <div class="mini-learning-view" role="img" aria-label="Huit points sont partagés en deux groupes de quatre points">
-                <div class="quotient-groups" aria-hidden="true">
-                  <span class="quotient-pair four-points"><i></i><i></i><i></i><i></i></span><span class="quotient-pair four-points"><i></i><i></i><i></i><i></i></span>
+              <div class="mini-learning-view" role="img" aria-label="Une barre rectangulaire de 8 unités est divisée en 2 paquets de 4 unités. Partager 8 en 2 paquets : 4 dans chacun.">
+                <div class="quotient-bar" data-group-count="2" data-group-size="4" data-total-units="8" aria-hidden="true">
+                  <span class="quotient-bar-group" style="--group-size:4"><i class="quotient-bar-unit"></i><i class="quotient-bar-unit"></i><i class="quotient-bar-unit"></i><i class="quotient-bar-unit"></i></span><span class="quotient-bar-group" style="--group-size:4"><i class="quotient-bar-unit"></i><i class="quotient-bar-unit"></i><i class="quotient-bar-unit"></i><i class="quotient-bar-unit"></i></span>
                 </div>
-                <span>2 groupes de 4</span>
+                <span>Partager 8 en 2 paquets : 4 dans chacun</span>
               </div>
             </div>
           </div>
-          <p>Le quotient est le résultat d’une division. Dans ce jeu, la division doit tomber juste et on divise le plus grand nombre par le plus petit. La division peut chercher combien de groupes on peut faire, ou combien il y aura dans chaque groupe.</p>
-          <strong>8 ÷ 2 : combien de groupes de 2 dans 8 ? 4</strong>
-          <strong>8 ÷ 2 : partager 8 en 2 groupes : 4 dans chaque groupe</strong>
+          <p>Le quotient est le résultat d’une division. Dans ce jeu, la division doit tomber juste et on divise le plus grand nombre par le plus petit. La division peut chercher combien de paquets on peut faire, ou combien il y aura dans chaque paquet.</p>
+          <strong>8 ÷ 2 : combien de paquets de 2 dans 8 ? 4</strong>
+          <strong>8 ÷ 2 : partager 8 en 2 paquets : 4 dans chacun</strong>
         </article>
       </div>
       <div class="lesson-actions">
@@ -1102,15 +1305,15 @@
 
       const learningNotes = {
         sum: {
-          title: "La somme réunit deux quantités",
-          help: "Imagine les points des deux cases réunis dans une seule collection.",
-          correction: "La somme est le résultat d’une addition : on réunit les deux quantités et on compte tout.",
+          title: "La somme : deux quantités réunies",
+          help: "Observe les deux rectangles accolés du bas : chacun contient les points d’un nombre. En les réunissant, on obtient exactement les points du rectangle du haut.",
+          correction: "La somme est le résultat d’une addition. Les deux rectangles de points du bas sont jointifs ; ensemble, ils ont la même longueur et le même nombre de points que le rectangle du haut.",
           example: [3, 2]
         },
         difference: {
-          title: "La différence mesure un écart",
-          help: "Aligne les deux quantités : les points qui restent sans paire donnent l’écart.",
-          correction: "La différence est le résultat d’une soustraction. Dans ce jeu, on retire le plus petit nombre du plus grand.",
+          title: "La différence : les points non appariés",
+          help: "Aligne les points du plus petit nombre sous ceux du plus grand. Les points du haut qui n’ont aucun point en dessous donnent la différence.",
+          correction: "La différence est le résultat d’une soustraction. On aligne les points du plus petit nombre sous ceux du plus grand ; les points non appariés, mis en évidence, donnent la différence.",
           example: [5, 2]
         },
         product: {
@@ -1121,7 +1324,7 @@
         },
         quotient: {
           title: "Le quotient sert à grouper ou à partager",
-          help: "Tu peux chercher combien de groupes égaux on forme, ou combien il y a dans chaque groupe.",
+          help: "Observe les unités de la barre : tu peux chercher combien de paquets égaux on forme, ou combien d’unités il y a dans chacun des paquets.",
           correction: "Le quotient est le résultat d’une division. Dans ce jeu, la division doit tomber juste et on divise le plus grand nombre par le plus petit.",
           example: [8, 2]
         }
@@ -1134,33 +1337,117 @@
         return node;
       }
 
-      function makeDots(count, className = "demo-dot-row", unmatchedFrom = Number.POSITIVE_INFINITY) {
-        const rowNode = makeElement("span", className);
-        for (let index = 0; index < count; index += 1) {
-          const dot = makeElement("i", `demo-dot${index >= unmatchedFrom ? " unmatched" : ""}`);
+      function pointLabel(count) {
+        return `${count} point${count > 1 ? "s" : ""}`;
+      }
+
+      function makeQuantityDot(className = "quantity-dot") {
+        const dot = makeElement("i", className);
+        dot.setAttribute("aria-hidden", "true");
+        return dot;
+      }
+
+      function makeQuantityDots(count) {
+        const dots = makeElement("span", "quantity-dots");
+        dots.style.setProperty("--dot-count", String(count));
+        for (let index = 0; index < count; index += 1) dots.append(makeQuantityDot());
+        return dots;
+      }
+
+      function makeQuantitySegment(value, className = "") {
+        const segment = makeElement("span", `quantity-segment${className ? ` ${className}` : ""}`);
+        segment.style.setProperty("--quantity-value", String(value));
+        segment.append(makeQuantityDots(value));
+        return segment;
+      }
+
+      function createSumQuantityModel(model) {
+        const diagram = makeElement("div", "quantity-model");
+        diagram.setAttribute("aria-hidden", "true");
+        const markerRow = makeElement("div", "sum-marker-row");
+        const marker = makeElement("span", "sum-marker");
+        marker.append(makeElement("span", "", `somme = ${model.total}`));
+        markerRow.append(marker);
+        const totalRow = makeElement("div", "quantity-row quantity-total");
+        const partsRow = makeElement("div", "quantity-row");
+        totalRow.append(makeQuantitySegment(model.total));
+        partsRow.append(
+          makeQuantitySegment(model.first, "quantity-first"),
+          makeQuantitySegment(model.second, "quantity-second")
+        );
+        diagram.append(markerRow, totalRow, partsRow);
+        return diagram;
+      }
+
+      function createDifferenceComparison(model) {
+        const diagram = makeElement("div", "comparison-model");
+        diagram.style.setProperty("--unit-count", String(model.high));
+        diagram.setAttribute("aria-hidden", "true");
+
+        const upper = makeElement("div", "comparison-upper");
+        for (let index = 0; index < model.high; index += 1) {
+          const unit = makeElement("span", `comparison-unit${index >= model.low ? " unmatched" : ""}`);
+          unit.append(makeQuantityDot());
+          upper.append(unit);
+        }
+
+        const lower = makeElement("div", "comparison-lower");
+        const known = makeElement("span", "compare-known");
+        known.style.setProperty("--known-count", String(model.low));
+        known.style.gridColumn = `1 / span ${model.low}`;
+        for (let index = 0; index < model.low; index += 1) {
+          const unit = makeElement("span", "comparison-unit");
+          unit.append(makeQuantityDot());
+          known.append(unit);
+        }
+        lower.append(known);
+
+        const marker = makeElement("span", "difference-marker");
+        marker.style.gridColumn = `${model.low + 1} / -1`;
+        const markerLabel = makeElement("span", "difference-marker-label", `différence = ${model.difference}`);
+        lower.append(marker, markerLabel);
+        diagram.append(upper, lower);
+        return diagram;
+      }
+
+      function createProductArray(model) {
+        const wrapper = makeElement("div", "array-dimension-model");
+        wrapper.setAttribute("aria-hidden", "true");
+        const columnsMarker = makeElement("span", "dimension-columns");
+        const rowsMarker = makeElement("span", "dimension-rows");
+        columnsMarker.append(makeElement("span", "", `${model.columns} colonnes`));
+        rowsMarker.append(makeElement("span", "", `${model.rows} rangées`));
+        const grid = makeElement("div", "demo-dot-grid");
+        grid.style.setProperty("--demo-columns", String(model.columns));
+        for (let index = 0; index < model.total; index += 1) {
+          const dot = makeElement("i", "demo-dot");
           dot.setAttribute("aria-hidden", "true");
-          rowNode.append(dot);
+          grid.append(dot);
         }
-        return rowNode;
+        wrapper.append(columnsMarker, rowsMarker, grid);
+        return wrapper;
       }
 
-      function makeGroups(groupCount, groupSize) {
-        const groups = makeElement("div", "demo-groups");
+      function makeQuotientBar(groupCount, groupSize) {
+        const bar = makeElement("div", "quotient-bar");
+        bar.dataset.groupCount = String(groupCount);
+        bar.dataset.groupSize = String(groupSize);
+        bar.dataset.totalUnits = String(groupCount * groupSize);
+        bar.setAttribute("aria-hidden", "true");
         for (let groupIndex = 0; groupIndex < groupCount; groupIndex += 1) {
-          const group = makeElement("span", "demo-group");
-          for (let dotIndex = 0; dotIndex < groupSize; dotIndex += 1) {
-            const dot = makeElement("i", "demo-dot");
-            dot.setAttribute("aria-hidden", "true");
-            group.append(dot);
+          const group = makeElement("span", "quotient-bar-group");
+          group.style.setProperty("--group-size", String(groupSize));
+          for (let unitIndex = 0; unitIndex < groupSize; unitIndex += 1) {
+            group.append(makeElement("i", "quotient-bar-unit"));
           }
-          groups.append(group);
+          bar.append(group);
         }
-        return groups;
+        return bar;
       }
 
-      function makeInterpretation(label, groups) {
+      function makeInterpretation(label, diagram) {
         const view = makeElement("div", "demo-interpretation");
-        view.append(makeElement("span", "demo-caption", label), groups);
+        view.append(makeElement("span", "demo-caption", label), diagram);
         return view;
       }
 
@@ -1170,40 +1457,27 @@
         demo.setAttribute("role", "img");
 
         if (nextMode === "sum") {
-          demo.setAttribute("aria-label", `${model.first} points et ${model.second} points sont réunis : ${model.total} points en tout.`);
-          const equation = makeElement("div", "demo-equation");
-          equation.append(
-            makeDots(model.first),
-            makeElement("span", "visual-sign", "+"),
-            makeDots(model.second, "demo-dot-row coral"),
-            makeElement("span", "visual-sign", "→"),
-            makeDots(model.total, "demo-dot-row joined")
+          demo.setAttribute("aria-label", `Un repère aligné au-dessus de toute la largeur indique : somme égale ${model.total}. Le rectangle du haut contient ${pointLabel(model.total)}. Juste en dessous, deux rectangles jointifs contiennent ${pointLabel(model.first)} puis ${pointLabel(model.second)}. Les deux lignes ont exactement la même longueur. ${model.first} plus ${model.second} égale ${model.total}.`);
+          demo.append(
+            createSumQuantityModel(model),
+            makeElement("span", "demo-caption", `${model.first} + ${model.second} = ${model.total} : les deux quantités réunies donnent le total.`)
           );
-          demo.append(equation, makeElement("span", "demo-caption", `${model.first} + ${model.second} = ${model.total} : on réunit et on compte tout.`));
         } else if (nextMode === "difference") {
-          demo.setAttribute("aria-label", `${model.high} points sont alignés avec ${model.low} points. ${model.difference} points restent sans paire : l’écart vaut ${model.difference}.`);
-          const comparison = makeElement("div", "demo-comparison");
-          comparison.append(
-            makeDots(model.high, "demo-dot-row", model.low),
-            makeDots(model.low, "demo-dot-row coral")
+          const alignment = model.low === 1 ? "sous le premier" : `sous les ${model.low} premiers`;
+          demo.setAttribute("aria-label", `Dans l’espace vide de la ligne inférieure, un repère orienté vers le haut est placé exactement sous les ${pointLabel(model.difference)} non appariés et indique : différence égale ${model.difference}. Le rectangle du haut contient ${pointLabel(model.high)} alignés. Le rectangle du bas, collé dessous et aligné à gauche, contient ${pointLabel(model.low)} ${alignment}. Les ${pointLabel(model.difference)} restants du haut sont mis en évidence et n’ont pas de point apparié dessous. ${model.high} moins ${model.low} égale ${model.difference}.`);
+          demo.append(
+            createDifferenceComparison(model),
+            makeElement("span", "demo-caption", `${model.high} − ${model.low} = ${model.difference}.`)
           );
-          demo.append(comparison, makeElement("span", "demo-caption", `${model.high} − ${model.low} = ${model.difference} : ${model.difference} point${model.difference > 1 ? "s" : ""} sans paire.`));
         } else if (nextMode === "product") {
-          demo.setAttribute("aria-label", `${model.rows} rangées de ${model.columns} points font ${model.total} points.`);
-          const grid = makeElement("div", "demo-dot-grid");
-          grid.style.setProperty("--demo-columns", String(model.columns));
-          for (let index = 0; index < model.total; index += 1) {
-            const dot = makeElement("i", "demo-dot");
-            dot.setAttribute("aria-hidden", "true");
-            grid.append(dot);
-          }
-          demo.append(grid, makeElement("span", "demo-caption", `${model.rows} rangées de ${model.columns} : ${model.rows} × ${model.columns} = ${model.total}.`));
+          demo.setAttribute("aria-label", `Un réseau de ${model.rows} rangées et ${model.columns} colonnes contient ${model.total} points. Le repère supérieur indique ${model.columns} colonnes et le repère latéral indique ${model.rows} rangées. ${model.rows} fois ${model.columns} égale ${model.total}.`);
+          demo.append(createProductArray(model), makeElement("span", "demo-caption", `${model.rows} rangées de ${model.columns} : ${model.rows} × ${model.columns} = ${model.total}.`));
         } else {
-          demo.setAttribute("aria-label", `${model.total} divisé par ${model.groupSize} vaut ${model.groupCount}. On peut former ${model.groupCount} groupes de ${model.groupSize}, ou partager en ${model.shareGroups} groupes avec ${model.each} dans chacun.`);
+          demo.setAttribute("aria-label", `${model.total} divisé par ${model.groupSize} vaut ${model.groupCount}. Une première barre rectangulaire de ${model.total} unités est divisée en ${model.groupCount} paquets de ${model.groupSize} unités. Combien de paquets de ${model.groupSize} dans ${model.total} ? ${model.groupCount}. Une seconde barre rectangulaire de ${model.total} unités est divisée en ${model.shareGroups} paquets de ${model.each} unités. Partager ${model.total} en ${model.shareGroups} paquets : ${model.each} dans chacun.`);
           const views = makeElement("div", "demo-interpretations");
           views.append(
-            makeInterpretation(`Combien de groupes de ${model.groupSize} dans ${model.total} ? ${model.groupCount}.`, makeGroups(model.groupCount, model.groupSize)),
-            makeInterpretation(`Partager ${model.total} en ${model.shareGroups} groupes : ${model.each} dans chacun.`, makeGroups(model.shareGroups, model.each))
+            makeInterpretation(`Combien de paquets de ${model.groupSize} dans ${model.total} ? ${model.groupCount}`, makeQuotientBar(model.groupCount, model.groupSize)),
+            makeInterpretation(`Partager ${model.total} en ${model.shareGroups} paquets : ${model.each} dans chacun`, makeQuotientBar(model.shareGroups, model.each))
           );
           demo.append(views, makeElement("span", "demo-caption", `${model.total} ÷ ${model.groupSize} = ${model.groupCount}.`));
         }
@@ -1439,6 +1713,7 @@
         expression,
         operationModel,
         findSolutionPair,
+        createOperationVisual,
         start,
         getState: () => ({ values: values.slice(), modes: modes.slice(), mode, target, keys, locked, boardId })
       };

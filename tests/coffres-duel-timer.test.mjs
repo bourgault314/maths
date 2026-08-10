@@ -47,3 +47,19 @@ test("le focus clavier est remappé après réponse ou expiration sans suivre la
   assert.match(html, /document\.activeElement\.matches\(":focus-visible"\)/);
   assert.match(html, /data-index="\$\{focusedRune\}"[\s\S]*focus\(\{ preventScroll: true \}\)/);
 });
+
+test("les quatre opérations sont servies équitablement aux deux joueurs", () => {
+  assert.match(html, /const OPERATION_MODES = \["sum", "difference", "product", "quotient"\];/);
+  assert.match(html, /const positionInBlock = \(challengeNumber - 1\) % \(OPERATION_MODES\.length \* 2\);/);
+  assert.match(html, /if \(positionInBlock === 0\) operationCycle = shuffle\(OPERATION_MODES\);/);
+  assert.match(html, /return operationCycle\[Math\.floor\(positionInBlock \/ 2\)\];/);
+  assert.match(html, /mode = nextBalancedMode\(\);/);
+});
+
+test("la différence et le quotient suivent les mêmes conventions que le solo", () => {
+  assert.match(html, /if \(nextMode === "difference"\) return high - low;/);
+  assert.match(html, /if \(mode === "quotient" && high % low !== 0\) return Number\.NaN;/);
+  assert.match(html, /const divisor = randomInteger\(2, 6\);[\s\S]*const quotient = randomInteger\(2, 6\);[\s\S]*return \[divisor \* quotient, divisor\];/);
+  assert.match(html, /mode === "difference" \|\| mode === "quotient" \? high : first/);
+  assert.match(html, /n’est pas divisible par/);
+});

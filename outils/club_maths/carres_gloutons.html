@@ -232,7 +232,8 @@
     #board {
       display: block;
       width: 100%;
-      max-height: 61vh;
+      height: auto;
+      aspect-ratio: 1;
       touch-action: manipulation;
     }
 
@@ -522,32 +523,59 @@
       50% { transform: translateY(-5px); }
     }
 
-    @media (min-width: 900px) {
-      .shell { padding: 8px 0 20px; }
+    @media (min-width: 561px) {
+      .shell {
+        width: min(1180px, calc(100% - 24px));
+        padding: 5px 0 14px;
+      }
+
+      .site-header { min-height: 51px; }
 
       .game {
-        min-height: min(720px, calc(100dvh - 114px));
+        min-height: 0;
         display: grid;
-        grid-template-columns: minmax(360px, .82fr) minmax(500px, 1.18fr);
+        grid-template-columns: minmax(180px, .72fr) minmax(300px, 1.28fr);
         grid-template-areas:
           "title board"
           "dashboard board"
           "status board"
           "result board";
-        grid-template-rows: auto auto auto 1fr;
-        column-gap: clamp(28px, 4vw, 54px);
+        grid-template-rows: auto auto auto minmax(0, 1fr);
+        column-gap: clamp(14px, 3vw, 38px);
         align-items: start;
-        padding: clamp(24px, 3vw, 38px);
+        padding: clamp(13px, 2vw, 22px);
       }
 
-      .title-row { grid-area: title; }
+      .title-row {
+        grid-area: title;
+        display: grid;
+        grid-template-columns: minmax(0, 1fr);
+        gap: 8px;
+      }
+
+      .title-actions { justify-content: flex-start; }
+      .rules-button,
+      .fullscreen-button {
+        min-height: 36px;
+        padding-inline: 10px;
+        font-size: .76rem;
+      }
+
+      .eyebrow { margin-bottom: 3px; }
+      h1 { font-size: clamp(2rem, 3.5vw, 3rem); }
+      .subtitle {
+        margin-top: 6px;
+        font-size: .84rem;
+        line-height: 1.35;
+      }
+
       .dashboard { grid-area: dashboard; }
       .status { grid-area: status; }
       .result { grid-area: result; max-height: 270px; overflow: auto; }
       .board-wrap {
         grid-area: board;
         align-self: center;
-        width: min(100%, 72vh, 590px);
+        width: min(100%, calc(100dvh - 132px), 520px);
         margin: 0 auto;
       }
 
@@ -558,9 +586,36 @@
         max-height: none;
       }
 
-      h1 { font-size: clamp(2.5rem, 3.8vw, 3.55rem); }
-      .dashboard { margin-top: 22px; }
-      .status { margin-top: 2px; }
+      .dashboard {
+        gap: 6px;
+        margin: 10px 0 8px;
+      }
+
+      .dashboard > div { padding: 7px 4px; }
+      .dashboard strong { font-size: .9rem; }
+      #round-label { font-size: .73rem; }
+
+      .status {
+        height: 54px;
+        margin-top: 0;
+        padding: 6px 8px;
+        font-size: .84rem;
+      }
+    }
+
+    @media (min-width: 1000px) {
+      .game {
+        grid-template-columns: minmax(330px, .76fr) minmax(470px, 1.24fr);
+        column-gap: clamp(28px, 3vw, 44px);
+        padding: clamp(18px, 2vw, 24px);
+      }
+
+      .board-wrap { width: min(100%, calc(100dvh - 132px), 590px); }
+      h1 { font-size: clamp(2.35rem, 3.2vw, 3.15rem); }
+      .subtitle { font-size: .88rem; }
+      .dashboard > div { padding-block: 8px; }
+      .dashboard strong { font-size: .96rem; }
+      #round-label { font-size: .78rem; }
     }
 
     .game:fullscreen,
@@ -669,7 +724,6 @@
 
       .dashboard { margin-top: 12px; }
       .dashboard > div { padding: 8px 4px; }
-      #board { max-height: 58vh; }
       .rules { grid-template-columns: 1fr; }
 
       .rule {
@@ -734,9 +788,9 @@
       </div>
 
       <div class="dashboard">
-        <div><span>Manche</span><strong id="round-label">1 · premier à 2</strong></div>
-        <div><span>Les carrés</span><strong id="square-score">0 – 0</strong></div>
-        <div><span>Les victoires</span><strong id="match-score">0 – 0</strong></div>
+        <div><span>Manche</span><strong id="round-label">1 / 2 · tu commences</strong></div>
+        <div><span>Cette manche</span><strong id="square-score">0 – 0</strong></div>
+        <div><span>Total du match</span><strong id="match-score">0 – 0</strong></div>
       </div>
 
       <div id="status" class="status" aria-live="polite">
@@ -809,7 +863,7 @@
         </article>
       </div>
       <button id="start-game" class="primary" type="button">J’ai compris, je joue !</button>
-      <p class="two-games">Premier à 2 victoires · le premier joueur alterne à chaque manche.</p>
+      <p class="two-games">Match aller-retour : tu commences une manche, Gloubi l’autre. Le total des carrés des deux manches désigne le vainqueur ; 9 à 9 donne un match nul.</p>
     </section>
   </div>
 
@@ -823,15 +877,16 @@
       const PAD = 42;
       const PLAYER = "player";
       const AI = "ai";
-      const WINS_TO_TAKE_MATCH = 2;
+      const ROUNDS_PER_MATCH = 2;
       const edges = new Map();
       const boxes = new Map();
       let current = PLAYER;
       let round = 1;
       let gameOver = false;
       let thinking = false;
-      let playerWins = 0;
-      let aiWins = 0;
+      let playerMatchSquares = 0;
+      let aiMatchSquares = 0;
+      let roundCounted = false;
       let matchOver = false;
       let started = false;
 
@@ -863,6 +918,16 @@
       const vKey = (row, col) => `v-${row}-${col}`;
       const bKey = (row, col) => `b-${row}-${col}`;
       const emptyEdgeKeys = () => Array.from(edges.keys()).filter(key => !edges.get(key));
+
+      function starterForRound(roundNumber) {
+        return roundNumber % 2 === 1 ? PLAYER : AI;
+      }
+
+      function matchOutcome(playerTotal, aiTotal) {
+        if (playerTotal > aiTotal) return PLAYER;
+        if (aiTotal > playerTotal) return AI;
+        return "tie";
+      }
 
       function makeSvg(tag, attributes = {}) {
         const node = document.createElementNS(SVG_NS, tag);
@@ -1127,9 +1192,11 @@
 
         const playerSquares = Array.from(boxes.values()).filter(value => value === PLAYER).length;
         const aiSquares = Array.from(boxes.values()).filter(value => value === AI).length;
+        const displayedPlayerTotal = playerMatchSquares + (roundCounted ? 0 : playerSquares);
+        const displayedAiTotal = aiMatchSquares + (roundCounted ? 0 : aiSquares);
         squareScore.textContent = `${playerSquares} – ${aiSquares}`;
-        matchScore.textContent = `${playerWins} – ${aiWins}`;
-        roundLabel.textContent = `${round} · premier à ${WINS_TO_TAKE_MATCH}`;
+        matchScore.textContent = `${displayedPlayerTotal} – ${displayedAiTotal}`;
+        roundLabel.textContent = `${round} / ${ROUNDS_PER_MATCH} · ${starterForRound(round) === PLAYER ? "tu commences" : "Gloubi commence"}`;
         renderStatus();
         if (focusedEdge?.classList.contains("taken")) restoreFocusAfterTakenEdge(focusedEdge.dataset.edge);
       }
@@ -1152,29 +1219,30 @@
         const playerWon = playerSquares > aiSquares;
         const aiWon = aiSquares > playerSquares;
 
-        if (playerWon) playerWins += 1;
-        else if (aiWon) aiWins += 1;
+        playerMatchSquares += playerSquares;
+        aiMatchSquares += aiSquares;
+        roundCounted = true;
+        matchOver = round >= ROUNDS_PER_MATCH;
+        const outcome = matchOutcome(playerMatchSquares, aiMatchSquares);
 
-        matchOver = playerWins >= WINS_TO_TAKE_MATCH || aiWins >= WINS_TO_TAKE_MATCH;
-
-        matchScore.textContent = `${playerWins} – ${aiWins}`;
-        result.className = `result${aiWon ? " lose" : ""}`;
+        matchScore.textContent = `${playerMatchSquares} – ${aiMatchSquares}`;
+        result.className = `result${(matchOver ? outcome === AI : aiWon) ? " lose" : ""}`;
         resultTitle.textContent = matchOver
-          ? playerWins >= WINS_TO_TAKE_MATCH ? "Tu remportes le match !" : "Gloubi remporte le match."
+          ? outcome === PLAYER ? "Tu remportes le match !" : outcome === AI ? "Gloubi remporte le match." : "Match nul !"
           : playerWon ? "Tu gagnes cette manche !" : aiWon ? "Gloubi gagne cette manche." : "Manche nulle !";
 
         const roundSummary = `${playerSquares} carré${playerSquares > 1 ? "s" : ""} pour toi, ${aiSquares} pour Gloubi.`;
-        const winSummary = ` Score des victoires : ${playerWins} à ${aiWins}.`;
-        const nextSummary = playerWon || aiWon
-          ? ` La manche ${round + 1} change le premier joueur.`
-          : ` Aucune victoire attribuée : la manche ${round + 1} change le premier joueur.`;
-        const matchSummary = playerWins >= WINS_TO_TAKE_MATCH
-          ? " Tu es le premier à gagner deux manches."
-          : " Gloubi est le premier à gagner deux manches ; il accepte déjà une revanche.";
-        resultText.textContent = roundSummary + winSummary + (matchOver ? matchSummary : nextSummary);
+        const totalSummary = ` Total du match : ${playerMatchSquares} à ${aiMatchSquares}.`;
+        const nextSummary = ` La manche ${round + 1} commencera avec ${starterForRound(round + 1) === PLAYER ? "toi" : "Gloubi"}.`;
+        const matchSummary = outcome === PLAYER
+          ? " Tu gagnes au cumul des deux manches."
+          : outcome === AI
+            ? " Gloubi gagne au cumul des deux manches ; il accepte déjà une revanche."
+            : " Les deux manches donnent 9 carrés chacun : la revanche vous départagera.";
+        resultText.textContent = roundSummary + totalSummary + (matchOver ? matchSummary : nextSummary);
         statusText.textContent = matchOver
-          ? playerWins >= WINS_TO_TAKE_MATCH ? "Match gagné : bravo !" : "Match terminé : revanche ?"
-          : `Manche ${round} terminée. Score des victoires : ${playerWins} à ${aiWins}.`;
+          ? outcome === PLAYER ? "Match gagné : bravo !" : outcome === AI ? "Match terminé : revanche ?" : "Match nul : revanche ?"
+          : `Manche ${round} terminée. Total provisoire : ${playerMatchSquares} à ${aiMatchSquares}.`;
         nextRound.textContent = matchOver ? "Rejouer le match" : `Jouer la manche ${round + 1}`;
         result.hidden = false;
         result.scrollIntoView({ behavior: "smooth", block: "nearest" });
@@ -1183,9 +1251,10 @@
       function resetBoard() {
         edges.forEach((_, key) => edges.set(key, null));
         boxes.forEach((_, key) => boxes.set(key, null));
-        current = round % 2 === 1 ? PLAYER : AI;
+        current = starterForRound(round);
         gameOver = false;
         thinking = false;
+        roundCounted = false;
         result.hidden = true;
         render();
         if (current === AI) scheduleAi();
@@ -1194,8 +1263,8 @@
       nextRound.addEventListener("click", () => {
         if (matchOver) {
           round = 1;
-          playerWins = 0;
-          aiWins = 0;
+          playerMatchSquares = 0;
+          aiMatchSquares = 0;
           matchOver = false;
         } else {
           round += 1;
