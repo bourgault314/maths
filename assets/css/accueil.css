@@ -305,6 +305,11 @@ h1 {
   cursor: pointer;
 }
 
+.footer-row-legal .footer-link {
+  color: #526d8d;
+  font-weight: 500;
+}
+
 .modal-overlay {
   display: none;
   position: fixed;
