@@ -39,7 +39,7 @@ const expectedGroupCounts = {
   imprimer: 14,
   activites: 10,
   cours: 11,
-  jeux: 5
+  jeux: 6
 };
 
 const expectedVisibleCardCounts = {
@@ -49,7 +49,7 @@ const expectedVisibleCardCounts = {
   imprimer: 12,
   activites: 8,
   cours: 5,
-  jeux: 5
+  jeux: 6
 };
 
 function resolvedPrimaryGroup(resource) {
@@ -64,10 +64,10 @@ function assertPathsInGroup(group, paths) {
   }
 }
 
-test("le catalogue conserve 145 entrées dont 129 publiées", () => {
+test("le catalogue conserve 146 entrées dont 130 publiées", () => {
   assert.equal(catalogue.schemaVersion, 5);
-  assert.equal(resources.length, 145);
-  assert.equal(published.length, 129);
+  assert.equal(resources.length, 146);
+  assert.equal(published.length, 130);
   assert.equal(new Set(resources.map((resource) => resource.path)).size, resources.length, "Chaque chemin doit être unique.");
 });
 
@@ -112,7 +112,7 @@ test("aucune carte publiée ne conserve la description générique", () => {
   assert.deepEqual(offenders, []);
 });
 
-test("la répartition arbitrée des 129 ressources reste stable", () => {
+test("la répartition arbitrée des 130 ressources reste stable", () => {
   const actual = Object.fromEntries([...allowedGroups].map((group) => [group, 0]));
   for (const resource of published) actual[resolvedPrimaryGroup(resource)] += 1;
   assert.deepEqual(actual, expectedGroupCounts);
@@ -182,8 +182,40 @@ test("les arbitrages pédagogiques clés restent explicites", () => {
   assertPathsInGroup("imprimer", ["outils/angles/fiche_angles_triangles.pdf"]);
   assertPathsInGroup("jeux", [
     "outils/club_maths/tables_modulaires.html",
-    "outils/chat-cest-toi-le-chat.pdf"
+    "outils/chat-cest-toi-le-chat.pdf",
+    "outils/chat-cest-toi-le-chat-projection.html"
   ]);
+});
+
+test("les deux ressources Chat restent autonomes et adaptées à leur usage", () => {
+  const printable = publishedByPath.get("outils/chat-cest-toi-le-chat.pdf");
+  const projected = publishedByPath.get("outils/chat-cest-toi-le-chat-projection.html");
+  const chatResources = [printable, projected];
+
+  assert.equal(printable?.title, "Chat, c’est toi le chat ! — À imprimer");
+  assert.deepEqual(Array.from(printable?.uses || []), ["manipuler", "imprimer"]);
+  assert.equal(printable?.kind, "document");
+
+  assert.equal(projected?.title, "Chat, c’est toi le chat ! — À projeter");
+  assert.deepEqual(Array.from(projected?.uses || []), ["projeter"]);
+  assert.deepEqual(Array.from(projected?.types || []), ["exerciseur"]);
+  assert.equal(projected?.kind, "tool");
+  assert.equal(families.some((family) => (family.paths || []).includes(projected.path)), false);
+
+  for (const resource of chatResources) {
+    const classification = classifications[resource.path];
+    const publicDescriptions = [resource.description, classification.cardDescription];
+    for (const description of publicDescriptions) {
+      assert.match(description, /de la maternelle au collège/i);
+      assert.doesNotMatch(description, /\bGS\s*[-–—]\s*CP\b/i);
+    }
+    for (const keyword of ["cycle 3", "cycle 4", "école élémentaire", "collège"]) {
+      assert.ok(Array.from(resource.keywords || []).includes(keyword), `${resource.path} doit conserver le mot-clé « ${keyword} ».`);
+    }
+    for (const tag of ["cycle-3", "cycle-4", "ecole-elementaire", "college"]) {
+      assert.ok(Array.from(classification.tags || []).includes(tag), `${resource.path} doit conserver le tag « ${tag} ».`);
+    }
+  }
 });
 
 test("aucun titre publié n’expose un marqueur technique ou de version", () => {
@@ -225,6 +257,6 @@ test("les familles regroupent toutes leurs variantes sans perte ni chevauchement
   for (const family of families) visibleCardsByGroup[family.group] += 1;
 
   assert.equal(representedResourceCount, published.length, "Aucune variante publiée ne doit disparaître du catalogue.");
-  assert.equal(visibleCardCount, 115, "Les 129 ressources doivent être représentées par 115 cartes après regroupement.");
+  assert.equal(visibleCardCount, 116, "Les 130 ressources doivent être représentées par 116 cartes après regroupement.");
   assert.deepEqual(visibleCardsByGroup, expectedVisibleCardCounts);
 });

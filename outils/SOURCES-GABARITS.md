@@ -75,6 +75,16 @@ générateur du livret et vérification exhaustive. La procédure de régénéra
 décrite dans le `README.md` de ce dossier. Une publication ordinaire réutilise le
 PDF déjà validé sans exécuter cette chaîne.
 
+## Ressource projetée possédant des sources Python et JSON
+
+L'activité collective `chat-cest-toi-le-chat-projection.html` est générée depuis
+le même dossier `../_sources/chat-le-chat/`. Le fichier `projection_cases.json`
+contient l'exemple guidé et les défis projetés ; `gen_projection.py` construit la
+page publique à partir de ces données. Chaque élève peut chercher depuis sa
+place, avant une vérification collective des quatre cartes. La reproduction du
+placement au sol reste proposée comme variante. La procédure de régénération et
+de contrôle est décrite dans le `README.md` du dossier source.
+
 ## Classement public
 
 Les 31 PDF sont tous déclarés dans `assets/js/catalogue-refonte-data.js` et dans

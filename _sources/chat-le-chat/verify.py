@@ -5,7 +5,8 @@ import re
 import sys
 from pathlib import Path
 
-from game import SERIES, solve, check, grid_of, placement_of, ROWS, COLS
+from game import SERIES, solve, check, check_card, grid_of, placement_of, ROWS, COLS
+from gen import GUIDED_CARDS, GUIDED_CORRECT, GUIDED_WRONG
 
 HERE = Path(__file__).resolve().parent
 series = json.loads((HERE / "series20.json").read_text(encoding="utf-8"))
@@ -142,17 +143,67 @@ for internal_note in ("inventée par toi", "d'origine", "reconstituée"):
 if "autre(s)" in html or "placement(s)" in html or "juste(s)" in html:
     err("singulier/pluriel non résolu dans les solutions")
 for required_text in (
-    "GS-CP, adaptable en MS avec accompagnement",
+    "de la maternelle au collège",
+    "Un rallye mathématique à l'école maternelle&nbsp;? Oui, c'est possible&nbsp;!",
     "cerceaux ou cercles tracés au sol",
     "cercle vide, ou pas de cercle",
     "une seule solution suffit",
     "chacun lit sa carte à voix haute",
+    "Tous les joueurs",
+    "Chaque joueur reçoit une carte",
+    "les 4 joueurs cherchent un placement",
+    "désignent les joueurs qui ont les cartes 1 à 4",
+    "ce même numéro indique la place du joueur qui tient cette carte",
+    "Une carte par joueur.",
+    "Donner les quatre cartes à un élève : il dessine seul un placement qui les rend toutes vraies",
+    "faire créer de nouvelles cartes par les élèves.",
 ):
     if required_text not in html:
         err(f"consigne absente du livret : {required_text}")
-pages = html.split('<section class="page">')[1:]
-if len(pages) != 23:
-    err(f"{len(pages)} pages au lieu de 23")
+for forbidden_text in (
+    "Compétences",
+    "Sac à maths",
+    "Une carte par enfant.",
+    "enfant",
+    "GS-CP",
+    "adaptable en MS",
+    "Se placer sans parler",
+):
+    if forbidden_text.casefold() in html.casefold():
+        err(f"mention éditoriale non souhaitée dans le livret : {forbidden_text}")
+pages = re.findall(r'<section class="page(?: [^"]*)?">(.*?)</section>', html, re.S)
+if len(pages) != 24:
+    err(f"{len(pages)} pages au lieu de 24")
+rule_page_html = pages[0] if pages else ""
+for required_rule_text in (
+    "Avant de jouer",
+    "Lire une carte",
+    "Comment jouer",
+    "Distribuer",
+    "Échanger et se placer",
+    "Vérifier",
+    "20 séries progressives",
+    "Variantes",
+):
+    if required_rule_text not in rule_page_html:
+        err(f"page de règle : bloc ou étape absent : {required_rule_text}")
+for class_name, expected_count in (
+    ("rules-panel", 2),
+    ("play-step", 3),
+    ("rules-level", 4),
+    ("rules-variants", 1),
+):
+    count = len(re.findall(rf'class="[^"]*\b{class_name}\b[^"]*"', rule_page_html))
+    if count != expected_count:
+        err(f"page de règle : {count} bloc(s) {class_name} au lieu de {expected_count}")
+rule_order = ("rules-hero", "rules-basics", "rules-play", "rules-levels", "rules-variants")
+rule_positions = [rule_page_html.find(f'class="{class_name}') for class_name in rule_order]
+if any(position < 0 for position in rule_positions) or rule_positions != sorted(rule_positions):
+    err("page de règle : ordre éditorial en-tête → préparation → jeu → niveaux → variantes non respecté")
+if "grid-template-columns:1fr 1fr; grid-template-rows:1fr 1fr;" not in html:
+    err("page de règle : les quatre niveaux ne sont pas disposés en grille 2 × 2")
+if len(pages) >= 2 and "Exemple guidé" not in pages[1]:
+    err("la page 2 n'est pas l'exemple guidé")
 POS2DIR = {"top": "front", "bottom": "back", "left": "left", "right": "right"}
 serie_pages = [p for p in pages if re.search(r"<h2>Série (\d+)</h2>", p)]
 if len(serie_pages) != 20:
@@ -160,10 +211,17 @@ if len(serie_pages) != 20:
 for page in serie_pages:
     num = int(re.search(r"<h2>Série (\d+)</h2>", page).group(1))
     found = {}
-    for m in re.finditer(r'<div class="card ">(.*?)(?=<div class="card ">|\s*<div class="cutnote")', page, re.S):
-        body = m.group(1)
-        cardnum = re.search(r'class="cardnum">(?:<svg.*?</svg>)?(\d+)\.(\d+)<', body, re.S)
-        p = cardnum.group(2)
+    for m in re.finditer(r'<div class="card " data-card-number="([1-4])">(.*?)(?=<div class="card "|\s*<div class="cutnote")', page, re.S):
+        p = m.group(1)
+        body = m.group(2)
+        if f"Série {num}" not in body:
+            err(f"page série {num} carte {p} : identité de série absente")
+        badges = re.findall(r'class="player-badge" aria-label="carte ([1-4])"', body)
+        if badges != [p]:
+            err(f"page série {num} carte {p} : médaillon central {badges}")
+        for neighbor in re.finditer(r'<div class="slot (?:top|left|right|bottom)">(.*?)</svg>', body, re.S):
+            if "player-badge" in neighbor.group(1):
+                err(f"page série {num} carte {p} : un chat voisin est numéroté")
         cons = {}
         for sm in re.finditer(r'<div class="slot (top|left|right|bottom)">(.*?)</svg>', body, re.S):
             pos, svg = sm.group(1), sm.group(2)
@@ -172,6 +230,63 @@ for page in serie_pages:
     expected = by_num[num]["cards"]
     if found != expected:
         err(f"page série {num} : HTML ≠ données ({found} vs {expected})")
+
+# Le nouvel exemple explique une erreur unique sur la carte 2, puis sa correction.
+guided_wrong_placement = placement_of(GUIDED_WRONG)
+guided_correct_placement = placement_of(GUIDED_CORRECT)
+wrong_status = {
+    player: check_card(guided_wrong_placement, player, constraints)
+    for player, constraints in GUIDED_CARDS.items()
+}
+correct_status = {
+    player: check_card(guided_correct_placement, player, constraints)
+    for player, constraints in GUIDED_CARDS.items()
+}
+if wrong_status != {1: True, 2: False, 3: True, 4: True}:
+    err(f"exemple guidé faux : statuts {wrong_status}")
+if not all(correct_status.values()):
+    err(f"exemple guidé corrigé : statuts {correct_status}")
+if html.count('data-guide-state="wrong"') != 1 or html.count('data-guide-state="correct"') != 1:
+    err("les deux placements de l'exemple guidé ne sont pas rendus une fois chacun")
+guided_page_html = pages[1] if len(pages) >= 2 else ""
+guided_steps = (
+    "Carte 1</b> : 4 est bien à gauche de 1.",
+    "Carte 2</b> : personne n'est devant ni à gauche de 2.",
+    "Dès qu'une carte est fausse, on sait que le placement est incorrect.",
+    "Carte 1</b> : 4 est à gauche de 1.",
+    "Carte 2</b> : 1 est devant, 3 à gauche ; personne à droite ni derrière.",
+    "Carte 3</b> : 4 est devant 3.",
+    "Carte 4</b> : 1 est à droite et 3 derrière.",
+    "Les quatre cartes sont vraies : le placement est correct.",
+)
+cursor = -1
+for step in guided_steps:
+    position = guided_page_html.find(step, cursor + 1)
+    if position == -1:
+        err(f"exemple guidé : étape de validation absente ou dans le désordre : {step}")
+        break
+    cursor = position
+if guided_page_html.count("<strong>Vraie</strong>") != 5:
+    err("exemple guidé : la carte 1 de l'essai puis les quatre cartes corrigées doivent être marquées vraies")
+if guided_page_html.count("<strong>Fausse</strong>") != 1:
+    err("exemple guidé : seule la carte 2 de l'essai doit être marquée fausse")
+for removed_text in (
+    "Les dessins servent seulement à expliquer.",
+    "ce sont bien les enfants qui se déplacent dans les zones au sol",
+):
+    if removed_text in guided_page_html:
+        err(f"exemple guidé : ancien encadré encore présent : {removed_text}")
+# L'exemple du PDF et celui de l'outil projeté doivent rester une seule et même
+# situation pédagogique, même s'ils sont générés par deux scripts distincts.
+projection_data = json.loads((HERE / "projection_cases.json").read_text(encoding="utf-8"))
+projection_guided = projection_data.get("guided", {})
+expected_guided_cards = {str(player): constraints for player, constraints in GUIDED_CARDS.items()}
+if projection_guided.get("cards") != expected_guided_cards:
+    err("exemple guidé : cartes différentes entre le PDF et l'outil projeté")
+if projection_guided.get("proposed") != GUIDED_WRONG:
+    err("exemple guidé : placement faux différent entre le PDF et l'outil projeté")
+if projection_guided.get("correction") != GUIDED_CORRECT:
+    err("exemple guidé : correction différente entre le PDF et l'outil projeté")
 # Toutes les grilles valides, et seulement elles, doivent figurer dans le HTML.
 displayed = {}
 for encoded, raw_num in re.findall(
@@ -198,6 +313,13 @@ for page in serie_pages:
         err("page de cartes : adresse mathsgo.re manquante sur une carte")
     if "mmark" in page or "base64" in page:
         err("logo de pied de page présent sur une page de cartes")
+series_html = "".join(serie_pages)
+if series_html.count('class="player-badge"') != 80:
+    err("le livret doit contenir exactement 80 chats centraux numérotés dans les séries")
+for player in range(1, 5):
+    count = series_html.count(f'aria-label="carte {player}"')
+    if count != 20:
+        err(f"numéro {player} : {count} médaillons au lieu de 20")
 
 # ---------------------------------------------------------------- bilan
 print(f"{len(errors)} erreur(s), {len(warnings)} avertissement(s)")
