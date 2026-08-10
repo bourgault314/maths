@@ -1,6 +1,6 @@
 <svg xmlns="http://www.w3.org/2000/svg" width="720" height="320" viewBox="0 0 720 320" role="img" aria-labelledby="title description">
   <title id="title">Coffres magiques à deux</title>
-  <desc id="description">Un défi de somme et un plateau de seize runes pour deux joueurs bleu et corail.</desc>
+  <desc id="description">Un défi sur les quatre opérations et un plateau de seize runes pour deux joueurs bleu et corail.</desc>
   <defs>
     <linearGradient id="background" x1="0" y1="0" x2="1" y2="1">
       <stop stop-color="#f0fbf9"/>
@@ -34,7 +34,7 @@
     <text x="36" y="108" fill="#143e62" font-size="40" font-weight="850">Coffres</text>
     <text x="36" y="151" fill="#143e62" font-size="40" font-weight="850">magiques</text>
     <text x="39" y="190" fill="#557083" font-size="17" font-weight="650">Deux runes voisines,</text>
-    <text x="39" y="217" fill="#557083" font-size="17" font-weight="650">une somme ou un produit.</text>
+    <text x="39" y="217" fill="#557083" font-size="16" font-weight="650">+  −  ×  ÷  : quatre opérations.</text>
 
     <g transform="translate(39 247)">
       <rect width="112" height="38" rx="19" fill="#dcebff"/>
@@ -57,7 +57,7 @@
         <circle cx="12.5" cy="20" r="2" fill="#76550c"/>
       </g>
       <text x="162" y="22" fill="#76550c" font-family="Inter, system-ui, sans-serif" font-size="11" font-weight="850" text-anchor="middle" letter-spacing="1.5">OUVRE LE COFFRE AVEC</text>
-      <text x="162" y="44" fill="#3d4860" font-family="Inter, system-ui, sans-serif" font-size="21" font-weight="900" text-anchor="middle">une somme de 12</text>
+      <text x="162" y="44" fill="#3d4860" font-family="Inter, system-ui, sans-serif" font-size="21" font-weight="900" text-anchor="middle">un quotient de 4</text>
     </g>
 
     <g transform="translate(61 82)">
@@ -73,7 +73,7 @@
         <rect x="108" y="44" width="48" height="38" rx="10" fill="#bff0d8" stroke="#087a55" stroke-width="3"/>
         <g fill="#17405e">
           <text x="24" y="19">8</text><text x="78" y="19">3</text><text x="132" y="19">9</text><text x="186" y="19">4</text>
-          <text x="24" y="63">2</text><text x="78" y="63">5</text><text x="132" y="63">7</text><text x="186" y="63">6</text>
+          <text x="24" y="63">2</text><text x="78" y="63">8</text><text x="132" y="63">2</text><text x="186" y="63">6</text>
           <text x="24" y="107">4</text><text x="78" y="107">8</text><text x="132" y="107">3</text><text x="186" y="107">9</text>
           <text x="24" y="151">6</text><text x="78" y="151">2</text><text x="132" y="151">5</text><text x="186" y="151">7</text>
         </g>

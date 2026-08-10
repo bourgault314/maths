@@ -31,7 +31,14 @@ async function activeElement(page) {
 }
 
 function duelSolution(state) {
-  const value = (first, second) => state.mode === "sum" ? first + second : first * second;
+  const value = (first, second) => {
+    const high = Math.max(first, second);
+    const low = Math.min(first, second);
+    if (state.mode === "sum") return first + second;
+    if (state.mode === "difference") return high - low;
+    if (state.mode === "product") return first * second;
+    return high % low === 0 ? high / low : NaN;
+  };
   for (let first = 0; first < 16; first += 1) {
     for (const second of [first + 1, first + 4]) {
       if (second >= 16 || (second === first + 1 && Math.floor(first / 4) !== Math.floor(second / 4))) continue;
@@ -61,14 +68,18 @@ function soloSolution(state) {
 
 async function solveDuel(page) {
   let lastSecond = null;
+  const modesByPlayer = [new Set(), new Set()];
   for (let success = 0; success < 9; success += 1) {
     const state = await page.evaluate(() => window.MATHSGO_COFFRES_DUEL.getState());
+    modesByPlayer[state.turn].add(state.mode);
     const [first, second] = duelSolution(state);
     lastSecond = second;
     await page.locator(`.rune[data-index="${first}"]`).click();
     await page.locator(`.rune[data-index="${second}"]`).click();
     await page.waitForTimeout(35);
   }
+  assert(modesByPlayer[0].size === 4, `Le joueur bleu n’a rencontré que : ${[...modesByPlayer[0]].join(", ")}.`);
+  assert(modesByPlayer[1].size === 4, `Le joueur corail n’a rencontré que : ${[...modesByPlayer[1]].join(", ")}.`);
   await page.locator("#result:not([hidden])").waitFor();
   return lastSecond;
 }

@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <title>Coffres magiques — à deux | maths&amp;go</title>
-  <meta name="description" content="Un duel de calcul mental : trouver en 20 secondes deux nombres voisins dont la somme ou le produit donne la cible et remporter cinq clés.">
+  <meta name="description" content="Un duel de calcul mental sur les quatre opérations : trouver en 20 secondes deux nombres voisins et remporter cinq clés.">
   <link rel="canonical" href="https://mathsgo.re/outils/club_maths/coffres_magiques.html">
   <meta name="robots" content="index, follow, max-image-preview:large">
   <link rel="icon" href="/favicon.ico" sizes="48x48">
@@ -517,24 +517,166 @@
       text-align: center;
     }
 
-    .dots-equation {
-      min-height: 72px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      gap: 7px;
-      padding: 8px;
+    .operation-picture {
+      min-height: 82px;
+      display: grid;
+      place-items: center;
+      gap: 5px;
+      padding: 9px;
       border-radius: 12px;
       background: #fff;
     }
 
-    .dots-sign {
-      color: #607a8d;
-      font-size: 1.2rem;
-      font-weight: 950;
+    .bar-model {
+      min-height: 112px;
+      display: grid;
+      place-items: center;
+      padding: 10px;
+      border-radius: 12px;
+      background: #fff;
     }
 
-    .dot-set,
+    .bar-diagram {
+      width: min(100%, 250px);
+      display: grid;
+      gap: 0;
+    }
+
+    .bar-row {
+      min-height: 38px;
+      display: grid;
+      grid-template-columns: repeat(5, minmax(0, 1fr));
+      overflow: hidden;
+      border: 0;
+      border-radius: 0;
+      background: #fff;
+      box-shadow: inset 2px 0 0 #7898ac, inset -2px 0 0 #7898ac, inset 0 2px 0 #7898ac, inset 0 -2px 0 #7898ac;
+    }
+
+    .bar-row + .bar-row {
+      box-shadow: inset 2px 0 0 #7898ac, inset -2px 0 0 #7898ac, inset 0 -2px 0 #7898ac;
+    }
+
+    .bar-segment {
+      display: grid;
+      place-items: center;
+      min-width: 0;
+      padding: 4px 0;
+    }
+
+    .bar-segment:not(:last-child) { box-shadow: inset -2px 0 0 #7898ac; }
+    .bar-segment.units-2 { grid-column: span 2; }
+    .bar-segment.units-3 { grid-column: span 3; }
+    .bar-segment.units-5 { grid-column: span 5; }
+    .bar-segment.blue-part { background: #b9dcff; }
+    .bar-segment.coral-part { background: #ffd2ca; }
+    .bar-segment.whole-part { background: #c9eee6; }
+
+    .bar-points {
+      width: 100%;
+      min-height: 26px;
+      display: grid;
+      grid-template-columns: repeat(var(--points), minmax(0, 1fr));
+      place-items: center;
+    }
+
+    .bar-dot {
+      width: 12px;
+      height: 12px;
+      border-radius: 50%;
+      background: #087a71;
+      box-shadow: inset 0 -1px 0 rgba(0, 0, 0, .2);
+    }
+
+    .blue-part .bar-dot,
+    .bar-dot.matched { background: #0755b8; }
+    .coral-part .bar-dot { background: #d94a36; }
+
+    .bar-dot.unmatched {
+      background: #e29b0b;
+      outline: 4px solid rgba(248, 181, 38, .3);
+      transform: scale(1.08);
+    }
+
+    .difference-total { background: #f5f9fc; }
+
+    .measure-marker-row {
+      min-height: 30px;
+      display: grid;
+      grid-template-columns: repeat(5, minmax(0, 1fr));
+    }
+
+    .measure-marker {
+      position: relative;
+      align-self: stretch;
+      display: grid;
+      align-content: start;
+      min-width: 0;
+      padding: 0 2px 9px;
+      color: #765000;
+      font-size: .7rem;
+      font-weight: 950;
+      line-height: 1.1;
+      text-align: center;
+    }
+
+    .measure-marker::before {
+      content: "";
+      position: absolute;
+      right: 0;
+      bottom: 0;
+      left: 0;
+      height: 7px;
+      border-top: 2px solid #bd7900;
+      border-right: 2px solid #bd7900;
+      border-left: 2px solid #bd7900;
+    }
+
+    .sum-marker { grid-column: 1 / -1; }
+
+    .difference-lower {
+      min-height: 44px;
+      display: grid;
+      grid-template-columns: repeat(5, minmax(0, 1fr));
+      align-items: stretch;
+    }
+
+    .difference-known {
+      grid-column: span 2;
+      display: grid;
+      place-items: center;
+      min-width: 0;
+      padding: 4px 0;
+      background: #d7e8ff;
+      box-shadow: inset 2px 0 0 #7898ac, inset -2px 0 0 #7898ac, inset 0 -2px 0 #7898ac;
+    }
+
+    .difference-marker {
+      position: relative;
+      grid-column: 3 / -1;
+      display: grid;
+      align-content: start;
+      min-width: 0;
+      padding: 14px 2px 2px;
+      color: #765000;
+      font-size: .7rem;
+      font-weight: 950;
+      line-height: 1.1;
+      text-align: center;
+    }
+
+    .difference-marker::before {
+      content: "";
+      position: absolute;
+      top: 0;
+      right: 0;
+      left: 0;
+      height: 8px;
+      border-right: 2px solid #bd7900;
+      border-bottom: 2px solid #bd7900;
+      border-left: 2px solid #bd7900;
+    }
+
     .dot-array {
       --dot-color: #0b73c8;
       display: grid;
@@ -544,9 +686,6 @@
       justify-content: center;
     }
 
-    .dot-set.coral-dots { --dot-color: #ef5b45; }
-    .dot-set.joined-dots { --dot-color: #087a71; --dot-columns: 5; }
-    .dot-set i,
     .dot-array i {
       width: 11px;
       height: 11px;
@@ -569,9 +708,110 @@
       --dot-columns: 4;
       padding: 7px 10px;
       border: 2px solid #d8c7f2;
-      border-radius: 10px;
+      border-radius: 0;
       background: #f8f2ff;
     }
+
+    .dimensioned-array {
+      display: grid;
+      grid-template-columns: 13px auto;
+      grid-template-rows: 14px auto;
+      grid-template-areas:
+        ". top"
+        "side array";
+      align-items: center;
+      justify-items: center;
+      gap: 2px 3px;
+    }
+
+    .dimensioned-array .dot-array { grid-area: array; }
+
+    .array-dimension {
+      color: #69419b;
+      font-size: .72rem;
+      font-weight: 950;
+      line-height: 1;
+    }
+
+    .array-dimension-top { grid-area: top; }
+    .array-dimension-side { grid-area: side; }
+
+    .dual-operation-views {
+      width: 100%;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 7px;
+    }
+
+    .mini-operation-view {
+      min-width: 0;
+      display: grid;
+      align-content: center;
+      justify-items: center;
+      gap: 5px;
+      padding: 7px 5px;
+      border: 1px solid #d8e5ed;
+      border-radius: 10px;
+      color: #48677b;
+      background: #fbfdff;
+      font-size: .68rem;
+      font-weight: 900;
+      line-height: 1.25;
+      text-align: center;
+    }
+
+    .quotient-bar {
+      width: 100%;
+      max-width: 210px;
+      display: grid;
+      overflow: hidden;
+      border: 2px solid #168b80;
+      border-radius: 0;
+      background: #ebfaf7;
+    }
+
+    .quotient-bar.groups-of-two { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+    .quotient-bar.groups-of-four { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+
+    .quotient-package {
+      display: grid;
+      grid-template-columns: repeat(var(--package-size), minmax(0, 1fr));
+      min-width: 0;
+    }
+
+    .quotient-package + .quotient-package { border-left: 3px solid #168b80; }
+    .quotient-package:nth-child(even) i { background: #d9f2ed; }
+
+    .quotient-package i {
+      position: relative;
+      min-width: 0;
+      height: 28px;
+      background: #eefaf8;
+    }
+
+    .quotient-package i + i { border-left: 1px solid #a9ddd5; }
+
+    .quotient-package i::before {
+      content: "";
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      background: #087a71;
+      transform: translate(-50%, -50%);
+    }
+
+    .quotient-question {
+      display: block;
+      color: #405f74;
+      font-size: .66rem;
+      font-weight: 850;
+      line-height: 1.25;
+    }
+
+    .quotient-question strong { color: #143451; }
 
     .rule-steps {
       display: grid;
@@ -711,6 +951,10 @@
       .challenge { min-height: 59px; }
     }
 
+    @media (max-width: 350px) {
+      .dual-operation-views { grid-template-columns: 1fr; }
+    }
+
     @media (max-width: 600px) and (orientation: portrait) {
       .player-strip.top { transform: rotate(180deg); }
       .game-core.facing-top .challenge-face,
@@ -794,32 +1038,103 @@
   <section id="rules" class="overlay" hidden role="dialog" aria-modal="true" aria-labelledby="rules-title">
     <div class="dialog-card">
       <div class="rules-scroll">
-        <div class="dialog-icon" aria-hidden="true">★</div>
+        <div class="dialog-icon" aria-hidden="true">+ − × ÷</div>
         <h2 id="rules-title" tabindex="-1">Gagne cinq clés</h2>
         <div class="operation-visuals">
           <article class="operation-visual-card">
             <h3>Somme : on réunit</h3>
-            <div class="dots-equation" role="img" aria-label="Trois points et deux points sont réunis : on compte cinq points en tout">
-              <span class="dot-set" style="--dot-columns:3" aria-hidden="true"><i></i><i></i><i></i></span>
-              <span class="dots-sign" aria-hidden="true">+</span>
-              <span class="dot-set coral-dots" style="--dot-columns:2" aria-hidden="true"><i></i><i></i></span>
-              <span class="dots-sign" aria-hidden="true">→</span>
-              <span class="dot-set joined-dots" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i></span>
+            <div class="bar-model sum-bar-model" role="img" aria-label="Un crochet placé au-dessus des cinq colonnes indique somme égale cinq. Cinq points dans la barre du haut sont alignés avec trois points et deux points dans deux rectangles jointifs en dessous. Les groupes de trois et de deux réunis forment cinq. Trois plus deux égale cinq.">
+              <div class="bar-diagram" aria-hidden="true">
+                <div class="measure-marker-row">
+                  <span class="measure-marker sum-marker">somme = 5</span>
+                </div>
+                <div class="bar-row">
+                  <span class="bar-segment units-5 whole-part">
+                    <span class="bar-points" style="--points:5"><i class="bar-dot"></i><i class="bar-dot"></i><i class="bar-dot"></i><i class="bar-dot"></i><i class="bar-dot"></i></span>
+                  </span>
+                </div>
+                <div class="bar-row">
+                  <span class="bar-segment units-3 blue-part">
+                    <span class="bar-points" style="--points:3"><i class="bar-dot"></i><i class="bar-dot"></i><i class="bar-dot"></i></span>
+                  </span>
+                  <span class="bar-segment units-2 coral-part">
+                    <span class="bar-points" style="--points:2"><i class="bar-dot"></i><i class="bar-dot"></i></span>
+                  </span>
+                </div>
+              </div>
             </div>
             <div class="operation-equation">3 + 2 = 5</div>
-            <p>Avec les deux runes voisines, on réunit les deux quantités et on compte tout.</p>
+            <p>La somme est le résultat d’une addition. On réunit les 3 points et les 2 points ; la ligne complète en contient 5.</p>
+          </article>
+          <article class="operation-visual-card">
+            <h3>Différence : les points non appariés</h3>
+            <div class="bar-model difference-bar-model" role="img" aria-label="Cinq points sont alignés au-dessus de deux points. Les deux premiers sont appariés. Les trois autres, surlignés, ne sont pas appariés. Sous ces trois derniers points, dans l’espace vide de la ligne inférieure, un crochet tourné vers eux indique différence égale trois. Cinq moins deux égale trois.">
+              <div class="bar-diagram" aria-hidden="true">
+                <div class="bar-row">
+                  <span class="bar-segment units-5 difference-total">
+                    <span class="bar-points" style="--points:5"><i class="bar-dot matched"></i><i class="bar-dot matched"></i><i class="bar-dot unmatched"></i><i class="bar-dot unmatched"></i><i class="bar-dot unmatched"></i></span>
+                  </span>
+                </div>
+                <div class="difference-lower">
+                  <span class="difference-known">
+                    <span class="bar-points" style="--points:2"><i class="bar-dot matched"></i><i class="bar-dot matched"></i></span>
+                  </span>
+                  <span class="difference-marker">différence = 3</span>
+                </div>
+              </div>
+            </div>
+            <div class="operation-equation">5 − 2 = 3</div>
+            <p>La différence est le résultat d’une soustraction. On aligne 5 points au-dessus de 2 points : les deux premiers ont un correspondant, et les 3 points non appariés donnent la différence. Dans ce jeu, on retire toujours le plus petit du plus grand.</p>
           </article>
           <article class="operation-visual-card">
             <h3>Produit : des rangées égales</h3>
-            <div class="product-picture" role="img" aria-label="Trois rangées de quatre points font douze points">
-              <span class="dot-array" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></span>
+            <div class="operation-picture" role="group" aria-label="Deux rectangles orientés montrent que trois fois quatre et quatre fois trois donnent tous les deux douze">
+              <div class="dual-operation-views">
+                <div class="mini-operation-view" role="img" aria-label="Un rectangle de douze points a quatre colonnes, nombre quatre indiqué au-dessus, et trois rangées, nombre trois indiqué sur le côté">
+                  <span class="dimensioned-array" aria-hidden="true">
+                    <span class="array-dimension array-dimension-top">4</span>
+                    <span class="array-dimension array-dimension-side">3</span>
+                    <span class="dot-array" style="--dot-columns:4"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></span>
+                  </span>
+                  <span>3 × 4</span>
+                </div>
+                <div class="mini-operation-view" role="img" aria-label="Le même rectangle tourné a trois colonnes, nombre trois indiqué au-dessus, et quatre rangées, nombre quatre indiqué sur le côté">
+                  <span class="dimensioned-array" aria-hidden="true">
+                    <span class="array-dimension array-dimension-top">3</span>
+                    <span class="array-dimension array-dimension-side">4</span>
+                    <span class="dot-array" style="--dot-columns:3"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></span>
+                  </span>
+                  <span>4 × 3</span>
+                </div>
+              </div>
             </div>
-            <div class="operation-equation">3 rangées de 4 : 3 × 4 = 12</div>
-            <p>Les deux runes donnent le nombre de rangées et le nombre de points dans chaque rangée.</p>
+            <div class="operation-equation">3 × 4 = 12 ; 4 × 3 = 12 aussi</div>
+            <p>Le produit est le résultat d’une multiplication. Les deux runes donnent les dimensions d’un rectangle de points ; le tourner ne change pas le total.</p>
+          </article>
+          <article class="operation-visual-card">
+            <h3>Quotient : grouper ou partager</h3>
+            <div class="operation-picture" role="group" aria-label="Deux façons de comprendre huit divisé par deux">
+              <div class="dual-operation-views">
+                <div class="mini-operation-view" role="img" aria-label="Une barre de huit unités est groupée en quatre paquets rectangulaires de deux. Combien de paquets de deux dans huit ? Quatre.">
+                  <div class="quotient-bar groups-of-two" aria-hidden="true">
+                    <span class="quotient-package" style="--package-size:2"><i></i><i></i></span><span class="quotient-package" style="--package-size:2"><i></i><i></i></span><span class="quotient-package" style="--package-size:2"><i></i><i></i></span><span class="quotient-package" style="--package-size:2"><i></i><i></i></span>
+                  </div>
+                  <span class="quotient-question">combien de paquets de 2 dans 8 ? <strong>4</strong></span>
+                </div>
+                <div class="mini-operation-view" role="img" aria-label="Une barre de huit unités est partagée en deux paquets rectangulaires de quatre. Partager huit en deux paquets : quatre dans chacun.">
+                  <div class="quotient-bar groups-of-four" aria-hidden="true">
+                    <span class="quotient-package" style="--package-size:4"><i></i><i></i><i></i><i></i></span><span class="quotient-package" style="--package-size:4"><i></i><i></i><i></i><i></i></span>
+                  </div>
+                  <span class="quotient-question">partager 8 en 2 paquets : <strong>4 dans chacun</strong></span>
+                </div>
+              </div>
+            </div>
+            <div class="operation-equation">8 ÷ 2 = 4</div>
+            <p>Le quotient est le résultat d’une division. On divise le plus grand nombre par le plus petit, seulement si la division tombe juste : on peut chercher combien de paquets on forme, ou combien il y a dans chacun.</p>
           </article>
         </div>
         <ol class="rule-steps">
-          <li>Le coffre demande une <strong>somme</strong> ou un <strong>produit</strong>.</li>
+          <li>Le coffre demande une <strong>somme</strong>, une <strong>différence</strong>, un <strong>produit</strong> ou un <strong>quotient</strong>.</li>
           <li>Choisis deux runes qui se touchent par un côté.</li>
           <li>Tu as <strong>20 secondes</strong>. Si le temps est écoulé, tu ne gagnes pas de clé et le tour passe.</li>
           <li>Bonne réponse : tu gagnes une clé, puis le tour passe. Réponse fausse : aucune clé et le tour passe aussi.</li>
@@ -860,6 +1175,14 @@
       const TIMER_WARNING_SECONDS = 5;
       const players = ["blue", "coral"];
       const labels = { blue: "bleu", coral: "corail" };
+      const OPERATION_MODES = ["sum", "difference", "product", "quotient"];
+      const challengeLabels = {
+        sum: "une somme",
+        difference: "une différence",
+        product: "un produit",
+        quotient: "un quotient"
+      };
+      const symbols = { sum: "+", difference: "−", product: "×", quotient: "÷" };
       const boardNode = document.querySelector("#board");
       const gameCore = document.querySelector("#game-core");
       const statusNode = document.querySelector("#status");
@@ -879,6 +1202,7 @@
       let scores = [0, 0];
       let firstSelection = null;
       let challengeNumber = 0;
+      let operationCycle = [];
       let locked = false;
       let finished = false;
       let pendingTimer = null;
@@ -1130,11 +1454,43 @@
         return minimum + Math.floor(Math.random() * (maximum - minimum + 1));
       }
 
+      function shuffle(items) {
+        const copy = items.slice();
+        for (let index = copy.length - 1; index > 0; index -= 1) {
+          const swap = randomInteger(0, index);
+          [copy[index], copy[swap]] = [copy[swap], copy[index]];
+        }
+        return copy;
+      }
+
       function row(position) { return Math.floor(position / SIZE); }
       function column(position) { return position % SIZE; }
       function adjacent(first, second) { return Math.abs(row(first) - row(second)) + Math.abs(column(first) - column(second)) === 1; }
-      function operation(first, second) { return mode === "sum" ? first + second : first * second; }
-      function expression(first, second) { return `${first} ${mode === "sum" ? "+" : "×"} ${second} = ${operation(first, second)}`; }
+
+      function calculate(nextMode, first, second) {
+        const high = Math.max(first, second);
+        const low = Math.min(first, second);
+        if (nextMode === "sum") return first + second;
+        if (nextMode === "difference") return high - low;
+        if (nextMode === "product") return first * second;
+        return high / low;
+      }
+
+      function operation(first, second) {
+        const high = Math.max(first, second);
+        const low = Math.min(first, second);
+        if (mode === "quotient" && high % low !== 0) return Number.NaN;
+        return calculate(mode, first, second);
+      }
+
+      function expression(first, second) {
+        const high = Math.max(first, second);
+        const low = Math.min(first, second);
+        const left = mode === "difference" || mode === "quotient" ? high : first;
+        const right = mode === "difference" || mode === "quotient" ? low : second;
+        if (mode === "quotient" && high % low !== 0) return `${high} n’est pas divisible par ${low}`;
+        return `${left} ${symbols[mode]} ${right} = ${calculate(mode, first, second)}`;
+      }
 
       function neighborPairs() {
         const pairs = [];
@@ -1145,20 +1501,37 @@
         return pairs;
       }
 
+      function pairFor(nextMode) {
+        if (nextMode === "sum" || nextMode === "product") return [randomInteger(2, 9), randomInteger(2, 9)];
+        if (nextMode === "difference") {
+          const difference = randomInteger(2, 8);
+          const low = randomInteger(1, 12 - difference);
+          return [low + difference, low];
+        }
+        const divisor = randomInteger(2, 6);
+        const quotient = randomInteger(2, 6);
+        return [divisor * quotient, divisor];
+      }
+
+      function nextBalancedMode() {
+        const positionInBlock = (challengeNumber - 1) % (OPERATION_MODES.length * 2);
+        if (positionInBlock === 0) operationCycle = shuffle(OPERATION_MODES);
+        return operationCycle[Math.floor(positionInBlock / 2)];
+      }
+
       function makeChallenge() {
         challengeNumber += 1;
-        mode = challengeNumber % 2 ? "sum" : "product";
-        values = Array.from({ length: SIZE * SIZE }, () => randomInteger(2, 9));
+        mode = nextBalancedMode();
+        values = Array.from({ length: SIZE * SIZE }, () => randomInteger(1, 12));
         const pairs = neighborPairs();
         const [firstPosition, secondPosition] = pairs[randomInteger(0, pairs.length - 1)];
-        const firstValue = mode === "sum" ? randomInteger(3, 9) : randomInteger(2, 9);
-        const secondValue = randomInteger(2, 9);
+        const [firstValue, secondValue] = pairFor(mode);
         values[firstPosition] = firstValue;
         values[secondPosition] = secondValue;
-        target = operation(firstValue, secondValue);
+        target = calculate(mode, firstValue, secondValue);
         firstSelection = null;
         locked = false;
-        challengeNode.textContent = mode === "sum" ? `une somme de ${target}` : `un produit de ${target}`;
+        challengeNode.textContent = `${challengeLabels[mode]} de ${target}`;
         renderBoard();
       }
 
@@ -1324,6 +1697,7 @@
         turn = 0;
         scores = [0, 0];
         challengeNumber = 0;
+        operationCycle = [];
         firstSelection = null;
         locked = false;
         finished = false;
@@ -1364,6 +1738,7 @@
 
       window.MATHSGO_COFFRES_DUEL = {
         adjacent,
+        calculate,
         operation,
         start,
         getState: () => ({
@@ -1373,6 +1748,7 @@
           turn,
           scores: [...scores],
           challengeNumber,
+          operationCycle: [...operationCycle],
           locked,
           timerActive: turnClockActive,
           timerPaused: turnClockPauseReasons.size > 0,

@@ -62,8 +62,11 @@ test("les cinq adaptations sont publiques, autonomes et reliées à leur vrai pa
 });
 
 test("les règles et durées approuvées restent explicites", () => {
-  assert.match(pages["outils/club_maths/coffres_magiques.html"], /const KEYS_TO_WIN = 5;/);
-  assert.match(pages["outils/club_maths/coffres_magiques.html"], /mode = challengeNumber % 2 \? "sum" : "product";/);
+  const duel = pages["outils/club_maths/coffres_magiques.html"];
+  assert.match(duel, /const KEYS_TO_WIN = 5;/);
+  assert.match(duel, /const OPERATION_MODES = \["sum", "difference", "product", "quotient"\];/);
+  assert.match(duel, /positionInBlock = \(challengeNumber - 1\) % \(OPERATION_MODES\.length \* 2\)/);
+  assert.match(duel, /operationCycle\[Math\.floor\(positionInBlock \/ 2\)\]/);
 
   const solo = pages["outils/calcul_mental/coffres_magiques_solo.html"];
   assert.match(solo, /const GOAL = 10;/);
@@ -92,6 +95,11 @@ test("le catalogue publie les cinq cartes dans les groupes validés", () => {
     assert.ok(classification?.thumbnail, path);
   }
   assert.equal(catalogue.resourceClassifications["outils/club_maths/carres_gloutons.html"].thumbnail, "assets/img/thumbnails/jeux/carres-gloutons.svg?v=2");
+  const duelCoffres = catalogue.resourceClassifications["outils/club_maths/coffres_magiques.html"];
+  assert.equal(duelCoffres.thumbnail, "assets/img/thumbnails/jeux/coffres-magiques.svg?v=2");
+  for (const tag of ["quatre-operations", "somme", "difference", "produit", "quotient"]) {
+    assert.ok(duelCoffres.tags.includes(tag), tag);
+  }
 });
 
 test("Calcul mental expose exactement les quatre ressources autonomes validées", () => {
@@ -172,6 +180,7 @@ test("la politique de confidentialité explique les meilleurs scores locaux des 
 
 test("le hub Club Math relie Coffres magiques et garde une grille équilibrée", () => {
   assert.match(clubHub, /href="coffres_magiques\.html" class="card coffres"/);
+  assert.match(clubHub, /la somme, la différence, le produit ou le quotient demandé/);
   assert.match(clubHub, /@media \(min-width: 1100px\)[\s\S]*repeat\(3, minmax\(0, 1fr\)\)/);
 });
 
@@ -186,5 +195,9 @@ test("les cinq miniatures sont des SVG 720 × 320", async () => {
   for (const path of thumbnails) {
     const svg = await readFile(new URL(`../${path}`, import.meta.url), "utf8");
     assert.match(svg, /<svg[^>]+width="720"[^>]+height="320"[^>]+viewBox="0 0 720 320"/, path);
+    if (path.endsWith("coffres-magiques.svg")) {
+      assert.match(svg, /quatre opérations/);
+      assert.match(svg, /un quotient de 4/);
+    }
   }
 });

@@ -241,9 +241,9 @@ window.MATHSGO_CATALOGUE = {
       "primaryNotion": "strategie",
       "primaryGroup": "jeux",
       "collections": [],
-      "tags": ["jeu", "calcul-mental", "duel", "somme", "produit", "chronometre"],
-      "thumbnail": "assets/img/thumbnails/jeux/coffres-magiques.svg?v=1",
-      "cardDescription": "À deux, trouver en 20 secondes deux nombres voisins qui donnent la cible et gagner cinq clés avant son adversaire."
+      "tags": ["jeu", "calcul-mental", "duel", "quatre-operations", "somme", "difference", "produit", "quotient", "chronometre"],
+      "thumbnail": "assets/img/thumbnails/jeux/coffres-magiques.svg?v=2",
+      "cardDescription": "À deux, trouver en 20 secondes deux nombres voisins qui réalisent la somme, la différence, le produit ou le quotient demandé."
     },
     "outils/club_maths/tables_modulaires.html": {
       "primaryNotion": "explorations",
@@ -6018,7 +6018,7 @@ window.MATHSGO_CATALOGUE = {
     {
       "id": "outils-club-maths-coffres-magiques-html",
       "title": "Coffres magiques — à deux",
-      "description": "Un duel de calcul mental : trouver en 20 secondes deux nombres voisins dont la somme ou le produit donne la cible et remporter cinq clés.",
+      "description": "Un duel de calcul mental sur les quatre opérations : trouver en 20 secondes deux nombres voisins et remporter cinq clés.",
       "path": "outils/club_maths/coffres_magiques.html",
       "domains": [
         "jeux-recherches"
@@ -6035,7 +6035,8 @@ window.MATHSGO_CATALOGUE = {
       "filters": [],
       "keywords": [
         "calcul mental à deux",
-        "somme ou produit",
+        "quatre opérations",
+        "somme différence produit quotient",
         "jeu des clés"
       ],
       "kind": "tool",
