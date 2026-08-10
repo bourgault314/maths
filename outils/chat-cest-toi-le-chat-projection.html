@@ -107,9 +107,16 @@
       grid-template-rows:repeat(2,var(--zone)); gap:clamp(10px,1.5vw,22px); padding:12px; }
     .zone { position:relative; display:grid; place-items:center; width:var(--zone); height:var(--zone);
       border:clamp(6px,.65vw,10px) solid var(--teal-art); border-radius:50%; background:#fff; }
+    button.zone { appearance:none; padding:0; color:inherit; font:inherit; }
     .zone.empty { background:var(--cream); }
     .player-cat { display:block; width:64%; height:72%; overflow:visible; }
     .player-cat text { font-weight:800; }
+    .placement-grid.interactive .zone:not(:disabled) { cursor:pointer; transition:.16s ease; }
+    .placement-grid.interactive .zone:not(:disabled):hover { border-color:var(--orange-art); transform:scale(1.025); }
+    .placement-grid.interactive .zone:disabled { cursor:default; opacity:.7; }
+    .zone.selected { border-color:var(--orange-art); outline:5px solid rgba(242,140,40,.28); outline-offset:3px;
+      transform:scale(1.035); }
+    .zone.target { outline:4px dashed rgba(31,58,104,.42); outline-offset:3px; }
     .zone.moved { animation:pulse-zone 1.2s ease 2; border-color:var(--orange-art); }
     .zone.departed::after { content:"départ"; position:absolute; padding:4px 8px; border-radius:999px;
       color:#98530f; background:#fff0dc; font-size:11px; font-weight:900; }
@@ -168,9 +175,11 @@
       border-radius:14px; display:flex; align-items:center; gap:10px; box-shadow:none; }
     .verdict.good { color:#155f42; background:#e8f8ef; border:2px solid #7ac6a2; }
     .verdict.bad { color:#872235; background:#fff0f2; border:2px solid #e18b97; }
+    .verdict.editing { color:var(--navy); background:#eef7f7; border:2px solid #83c9c2; }
     .verdict-icon { font-size:24px; }
     .verdict-copy { flex:1; font-size:13px; line-height:1.25; }
     .verdict-copy strong { display:block; font-size:15px; }
+    .verdict-actions { display:flex; align-items:center; gap:6px; flex:none; }
     .challenge-nav { width:min(1500px,100%); margin:10px auto 0; display:flex; align-items:center; justify-content:space-between; gap:10px; }
     .nav-button { min-width:140px; padding:10px 16px; color:var(--navy); background:white; box-shadow:0 5px 16px rgba(18,49,78,.1); }
     .nav-button:hover:not(:disabled) { color:white; background:var(--navy-2); }
@@ -226,6 +235,7 @@
       .nav-center { display:none; }
       .verdict { align-items:flex-start; flex-wrap:wrap; }
       .verdict-copy { min-width:calc(100% - 50px); }
+      .verdict-actions { display:grid; grid-template-columns:1fr 1fr; width:100%; }
       .verdict .primary-button, .verdict .secondary-button { width:100%; }
     }
     @media (min-width:950px) and (max-height:900px) {
@@ -358,8 +368,8 @@
             <div class="front-arrow"><span class="arrow-up" aria-hidden="true">↑</span><span>DEVANT</span></div>
             <div class="placement-caption" id="placement-title">Placement proposé</div>
             <div class="placement-grid" id="placement-grid" aria-label="Placement proposé dans les six zones"></div>
-            <p class="question">Ce placement est-il correct&nbsp;?</p>
-            <p class="question-hint">Réfléchissez d'abord chacun depuis votre place, puis mettez vos idées en commun.</p>
+            <p class="question" id="placement-question">Ce placement est-il correct&nbsp;?</p>
+            <p class="question-hint" id="placement-hint">Réfléchissez d'abord chacun depuis votre place, puis mettez vos idées en commun.</p>
           </section>
 
           <section class="panel cards-panel" aria-labelledby="cards-title">
@@ -385,7 +395,7 @@
     </main>
   </div>
 
-  <script id="projection-data" type="application/json">{"version":1,"cases":[{"id":"defi-01","number":1,"difficulty":1,"cards":{"1":{"back":"P","right":"P"},"2":{"left":"P"},"3":{"right":"P"},"4":{"front":"P","left":"P"}},"proposed":[[1,2,0],[3,4,0]],"correction":null,"valid":true,"errors":{"1":[],"2":[],"3":[],"4":[]},"movedPlayers":[],"correctionCount":0},{"id":"defi-02","number":2,"difficulty":1,"cards":{"1":{"left":"P"},"2":{"back":"X","right":"P"},"3":{"front":"P","left":"P"},"4":{"back":"P"}},"proposed":[[1,4,0],[2,3,0]],"correction":[[0,4,1],[2,3,0]],"valid":false,"errors":{"1":[{"direction":"left","wanted":"P","neighbor":null,"inside":false,"message":"À gauche : un chat est attendu, mais il n'y a pas de cercle."}],"2":[],"3":[],"4":[]},"movedPlayers":[1],"correctionCount":2},{"id":"defi-03","number":3,"difficulty":1,"cards":{"1":{"right":"P"},"2":{"front":"P","left":"P"},"3":{"left":"P"},"4":{"back":"P","right":"X"}},"proposed":[[0,4,3],[1,2,0]],"correction":[[0,4,0],[1,2,3]],"valid":false,"errors":{"1":[],"2":[],"3":[],"4":[{"direction":"right","wanted":"X","neighbor":3,"inside":true,"message":"À droite : aucun chat ne doit être là, mais le chat 3 s'y trouve."}]},"movedPlayers":[3],"correctionCount":1},{"id":"defi-04","number":4,"difficulty":1,"cards":{"1":{"left":"X","right":"P"},"2":{"right":"P"},"3":{"left":"P"},"4":{"front":"P"}},"proposed":[[1,2,3],[0,4,0]],"correction":null,"valid":true,"errors":{"1":[],"2":[],"3":[],"4":[]},"movedPlayers":[],"correctionCount":0},{"id":"defi-05","number":5,"difficulty":2,"cards":{"1":{"back":"X","front":"X","left":"X"},"2":{"back":"X","front":"X"},"3":{"back":"P","front":"X","right":"X"},"4":{"back":"X","right":"X"}},"proposed":[[0,2,3],[0,1,4]],"correction":[[1,2,3],[0,0,4]],"valid":false,"errors":{"1":[{"direction":"front","wanted":"X","neighbor":2,"inside":true,"message":"Devant : aucun chat ne doit être là, mais le chat 2 s'y trouve."}],"2":[{"direction":"back","wanted":"X","neighbor":1,"inside":true,"message":"Derrière : aucun chat ne doit être là, mais le chat 1 s'y trouve."}],"3":[],"4":[]},"movedPlayers":[1],"correctionCount":3},{"id":"defi-06","number":6,"difficulty":2,"cards":{"1":{"back":"P","left":"X"},"2":{"back":"X","right":"P"},"3":{"left":"P","right":"X"},"4":{"back":"X","left":"X"}},"proposed":[[1,2,3],[4,0,0]],"correction":null,"valid":true,"errors":{"1":[],"2":[],"3":[],"4":[]},"movedPlayers":[],"correctionCount":0},{"id":"defi-07","number":7,"difficulty":2,"cards":{"1":{"back":"X","front":"X","right":"P"},"2":{"back":"P","left":"P"},"3":{"back":"X","front":"P","left":"X"},"4":{"front":"X","left":"P"}},"proposed":[[1,2,0],[0,3,4]],"correction":null,"valid":true,"errors":{"1":[],"2":[],"3":[],"4":[]},"movedPlayers":[],"correctionCount":0},{"id":"defi-08","number":8,"difficulty":2,"cards":{"1":{"back":"P","front":"X"},"2":{"left":"P","right":"X"},"3":{"back":"X","right":"P"},"4":{"back":"X","left":"P","right":"X"}},"proposed":[[0,1,2],[0,4,3]],"correction":[[0,1,2],[3,4,0]],"valid":false,"errors":{"1":[],"2":[],"3":[{"direction":"right","wanted":"P","neighbor":null,"inside":false,"message":"À droite : un chat est attendu, mais il n'y a pas de cercle."}],"4":[{"direction":"left","wanted":"P","neighbor":null,"inside":true,"message":"À gauche : un chat est attendu, mais le cercle est vide."},{"direction":"right","wanted":"X","neighbor":3,"inside":true,"message":"À droite : aucun chat ne doit être là, mais le chat 3 s'y trouve."}]},"movedPlayers":[3],"correctionCount":1},{"id":"defi-09","number":9,"difficulty":3,"cards":{"1":{"back":"P","left":"X"},"2":{"back":"X","front":"X"},"3":{"left":"P","right":"P"},"4":{"front":"X","right":"X"}},"proposed":[[0,1,2],[0,3,4]],"correction":[[0,1,0],[2,3,4]],"valid":false,"errors":{"1":[],"2":[{"direction":"back","wanted":"X","neighbor":4,"inside":true,"message":"Derrière : aucun chat ne doit être là, mais le chat 4 s'y trouve."}],"3":[{"direction":"left","wanted":"P","neighbor":null,"inside":true,"message":"À gauche : un chat est attendu, mais le cercle est vide."}],"4":[{"direction":"front","wanted":"X","neighbor":2,"inside":true,"message":"Devant : aucun chat ne doit être là, mais le chat 2 s'y trouve."}]},"movedPlayers":[2],"correctionCount":1},{"id":"defi-10","number":10,"difficulty":3,"cards":{"1":{"left":"X","right":"X"},"2":{"back":"X","right":"X"},"3":{"front":"P"},"4":{"left":"P"}},"proposed":[[1,0,2],[3,4,0]],"correction":null,"valid":true,"errors":{"1":[],"2":[],"3":[],"4":[]},"movedPlayers":[],"correctionCount":0},{"id":"defi-11","number":11,"difficulty":3,"cards":{"1":{"front":"X","right":"X"},"2":{"right":"X"},"3":{"front":"X","left":"X"},"4":{"back":"P","left":"X"}},"proposed":[[0,1,4],[0,3,2]],"correction":[[1,0,4],[0,3,2]],"valid":false,"errors":{"1":[{"direction":"right","wanted":"X","neighbor":4,"inside":true,"message":"À droite : aucun chat ne doit être là, mais le chat 4 s'y trouve."}],"2":[],"3":[{"direction":"front","wanted":"X","neighbor":1,"inside":true,"message":"Devant : aucun chat ne doit être là, mais le chat 1 s'y trouve."}],"4":[{"direction":"left","wanted":"X","neighbor":1,"inside":true,"message":"À gauche : aucun chat ne doit être là, mais le chat 1 s'y trouve."}]},"movedPlayers":[1],"correctionCount":1},{"id":"defi-12","number":12,"difficulty":3,"cards":{"1":{"back":"P","left":"P"},"2":{"right":"P"},"3":{"front":"X","left":"X"},"4":{"front":"X","left":"P"}},"proposed":[[3,1,0],[0,2,4]],"correction":null,"valid":true,"errors":{"1":[],"2":[],"3":[],"4":[]},"movedPlayers":[],"correctionCount":0}],"guided":{"cards":{"1":{"left":"P"},"2":{"front":"P","left":"P","right":"X","back":"X"},"3":{"front":"P"},"4":{"right":"P","back":"P"}},"proposed":[[4,1,0],[3,0,2]],"correction":[[4,1,0],[3,2,0]],"valid":false,"errors":{"1":[],"2":[{"direction":"front","wanted":"P","neighbor":null,"inside":true,"message":"Devant : un chat est attendu, mais le cercle est vide."},{"direction":"left","wanted":"P","neighbor":null,"inside":true,"message":"À gauche : un chat est attendu, mais le cercle est vide."}],"3":[],"4":[]},"movedPlayers":[2]}}</script>
+  <script id="projection-data" type="application/json">{"version":1,"cases":[{"id":"defi-01","number":1,"difficulty":1,"cards":{"1":{"back":"P","right":"P"},"2":{"left":"P"},"3":{"right":"P"},"4":{"front":"P","left":"P"}},"proposed":[[1,2,0],[3,4,0]],"correction":null,"valid":true,"errors":{"1":[],"2":[],"3":[],"4":[]},"movedPlayers":[],"correctionCount":0,"moveCorrectionCount":0,"exchangeCorrectionCount":0},{"id":"defi-02","number":2,"difficulty":1,"cards":{"1":{"left":"P"},"2":{"back":"X","right":"P"},"3":{"front":"P","left":"P"},"4":{"back":"P"}},"proposed":[[1,4,0],[2,3,0]],"correction":[[0,4,1],[2,3,0]],"valid":false,"errors":{"1":[{"direction":"left","wanted":"P","neighbor":null,"inside":false,"message":"À gauche : un chat est attendu, mais il n'y a pas de cercle."}],"2":[],"3":[],"4":[]},"movedPlayers":[1],"correctionCount":3,"moveCorrectionCount":2,"exchangeCorrectionCount":1},{"id":"defi-03","number":3,"difficulty":1,"cards":{"1":{"right":"P"},"2":{"front":"P","left":"P"},"3":{"left":"P"},"4":{"back":"P","right":"X"}},"proposed":[[0,4,3],[1,2,0]],"correction":[[0,4,0],[1,2,3]],"valid":false,"errors":{"1":[],"2":[],"3":[],"4":[{"direction":"right","wanted":"X","neighbor":3,"inside":true,"message":"À droite : aucun chat ne doit être là, mais le chat 3 s'y trouve."}]},"movedPlayers":[3],"correctionCount":1,"moveCorrectionCount":1,"exchangeCorrectionCount":0},{"id":"defi-04","number":4,"difficulty":1,"cards":{"1":{"left":"X","right":"P"},"2":{"right":"P"},"3":{"left":"P"},"4":{"front":"P"}},"proposed":[[1,2,3],[0,4,0]],"correction":null,"valid":true,"errors":{"1":[],"2":[],"3":[],"4":[]},"movedPlayers":[],"correctionCount":0,"moveCorrectionCount":0,"exchangeCorrectionCount":0},{"id":"defi-05","number":5,"difficulty":2,"cards":{"1":{"back":"X","front":"X","left":"X"},"2":{"back":"X","front":"X"},"3":{"back":"P","front":"X","right":"X"},"4":{"back":"X","right":"X"}},"proposed":[[0,2,3],[0,1,4]],"correction":[[1,2,3],[0,0,4]],"valid":false,"errors":{"1":[{"direction":"front","wanted":"X","neighbor":2,"inside":true,"message":"Devant : aucun chat ne doit être là, mais le chat 2 s'y trouve."}],"2":[{"direction":"back","wanted":"X","neighbor":1,"inside":true,"message":"Derrière : aucun chat ne doit être là, mais le chat 1 s'y trouve."}],"3":[],"4":[]},"movedPlayers":[1],"correctionCount":3,"moveCorrectionCount":3,"exchangeCorrectionCount":0},{"id":"defi-06","number":6,"difficulty":2,"cards":{"1":{"back":"P","left":"X"},"2":{"back":"X","right":"P"},"3":{"left":"P","right":"X"},"4":{"back":"X","left":"X"}},"proposed":[[1,2,3],[4,0,0]],"correction":null,"valid":true,"errors":{"1":[],"2":[],"3":[],"4":[]},"movedPlayers":[],"correctionCount":0,"moveCorrectionCount":0,"exchangeCorrectionCount":0},{"id":"defi-07","number":7,"difficulty":2,"cards":{"1":{"back":"X","front":"X","right":"P"},"2":{"back":"P","left":"P"},"3":{"back":"X","front":"P","left":"X"},"4":{"front":"X","left":"P"}},"proposed":[[1,2,0],[0,3,4]],"correction":null,"valid":true,"errors":{"1":[],"2":[],"3":[],"4":[]},"movedPlayers":[],"correctionCount":0,"moveCorrectionCount":0,"exchangeCorrectionCount":0},{"id":"defi-08","number":8,"difficulty":2,"cards":{"1":{"back":"P","front":"X"},"2":{"left":"P","right":"X"},"3":{"back":"X","right":"P"},"4":{"back":"X","left":"P","right":"X"}},"proposed":[[0,1,2],[0,4,3]],"correction":[[0,1,2],[3,4,0]],"valid":false,"errors":{"1":[],"2":[],"3":[{"direction":"right","wanted":"P","neighbor":null,"inside":false,"message":"À droite : un chat est attendu, mais il n'y a pas de cercle."}],"4":[{"direction":"left","wanted":"P","neighbor":null,"inside":true,"message":"À gauche : un chat est attendu, mais le cercle est vide."},{"direction":"right","wanted":"X","neighbor":3,"inside":true,"message":"À droite : aucun chat ne doit être là, mais le chat 3 s'y trouve."}]},"movedPlayers":[3],"correctionCount":2,"moveCorrectionCount":1,"exchangeCorrectionCount":1},{"id":"defi-09","number":9,"difficulty":3,"cards":{"1":{"back":"P","left":"X"},"2":{"back":"X","front":"X"},"3":{"left":"P","right":"P"},"4":{"front":"X","right":"X"}},"proposed":[[0,1,2],[0,3,4]],"correction":[[0,1,0],[2,3,4]],"valid":false,"errors":{"1":[],"2":[{"direction":"back","wanted":"X","neighbor":4,"inside":true,"message":"Derrière : aucun chat ne doit être là, mais le chat 4 s'y trouve."}],"3":[{"direction":"left","wanted":"P","neighbor":null,"inside":true,"message":"À gauche : un chat est attendu, mais le cercle est vide."}],"4":[{"direction":"front","wanted":"X","neighbor":2,"inside":true,"message":"Devant : aucun chat ne doit être là, mais le chat 2 s'y trouve."}]},"movedPlayers":[2],"correctionCount":1,"moveCorrectionCount":1,"exchangeCorrectionCount":0},{"id":"defi-10","number":10,"difficulty":3,"cards":{"1":{"left":"X","right":"X"},"2":{"back":"X","right":"X"},"3":{"front":"P"},"4":{"left":"P"}},"proposed":[[1,0,2],[3,4,0]],"correction":null,"valid":true,"errors":{"1":[],"2":[],"3":[],"4":[]},"movedPlayers":[],"correctionCount":0,"moveCorrectionCount":0,"exchangeCorrectionCount":0},{"id":"defi-11","number":11,"difficulty":3,"cards":{"1":{"front":"X","right":"X"},"2":{"right":"X"},"3":{"front":"X","left":"X"},"4":{"back":"P","left":"X"}},"proposed":[[0,1,4],[0,3,2]],"correction":[[1,0,4],[0,3,2]],"valid":false,"errors":{"1":[{"direction":"right","wanted":"X","neighbor":4,"inside":true,"message":"À droite : aucun chat ne doit être là, mais le chat 4 s'y trouve."}],"2":[],"3":[{"direction":"front","wanted":"X","neighbor":1,"inside":true,"message":"Devant : aucun chat ne doit être là, mais le chat 1 s'y trouve."}],"4":[{"direction":"left","wanted":"X","neighbor":1,"inside":true,"message":"À gauche : aucun chat ne doit être là, mais le chat 1 s'y trouve."}]},"movedPlayers":[1],"correctionCount":1,"moveCorrectionCount":1,"exchangeCorrectionCount":0},{"id":"defi-12","number":12,"difficulty":3,"cards":{"1":{"back":"P","left":"P"},"2":{"right":"P"},"3":{"front":"X","left":"X"},"4":{"front":"X","left":"P"}},"proposed":[[3,1,0],[0,2,4]],"correction":null,"valid":true,"errors":{"1":[],"2":[],"3":[],"4":[]},"movedPlayers":[],"correctionCount":0,"moveCorrectionCount":0,"exchangeCorrectionCount":0}],"guided":{"cards":{"1":{"left":"P"},"2":{"front":"P","left":"P","right":"X","back":"X"},"3":{"front":"P"},"4":{"right":"P","back":"P"}},"proposed":[[4,1,0],[3,0,2]],"correction":[[4,1,0],[3,2,0]],"valid":false,"errors":{"1":[],"2":[{"direction":"front","wanted":"P","neighbor":null,"inside":true,"message":"Devant : un chat est attendu, mais le cercle est vide."},{"direction":"left","wanted":"P","neighbor":null,"inside":true,"message":"À gauche : un chat est attendu, mais le cercle est vide."}],"3":[],"4":[]},"movedPlayers":[2]}}</script>
   <script>
     (() => {
       'use strict';
@@ -399,7 +409,14 @@
       const revealButton = $('#reveal-button');
       const revealRow = $('#reveal-row');
       const verdict = $('#verdict');
-      const state = { index: 0, revealed: 0, showingCorrection: false };
+      const state = {
+        index: 0,
+        revealed: 0,
+        mode: 'proposed',
+        grid: null,
+        selectedCell: null,
+        lastAction: null
+      };
       const directionClass = { front:'front', back:'back', left:'left', right:'right' };
       const directionLabel = { front:'devant', back:'derrière', left:'à gauche', right:'à droite' };
       const directionTitle = { front:'Devant', back:'Derrière', left:'À gauche', right:'À droite' };
@@ -446,15 +463,27 @@
         </article>`;
       }
 
-      function gridHTML(grid, mini = false, moved = [], before = null) {
+      function gridHTML(grid, mini = false, moved = [], before = null, interactive = false, selectedCell = null) {
         const beforePositions = {};
         if (before) before.flat().forEach((player, cell) => { if (player) beforePositions[player] = cell; });
+        const flatGrid = grid.flat();
+        const selectedPlayer = selectedCell === null ? null : flatGrid[selectedCell];
         return grid.flat().map((player, cell) => {
           const zoneLabel = player ? `Zone occupée par le chat ${player}` : 'Zone vide';
           if (mini) return `<div class="mini-zone${player ? ' filled' : ''}" aria-label="${zoneLabel}">${player ? catSVG(player, false, 'player-cat') : ''}</div>`;
           const isMoved = player && moved.includes(player);
           const departed = !player && moved.some(item => beforePositions[item] === cell);
-          return `<div class="zone${player ? '' : ' empty'}${isMoved ? ' moved' : ''}${departed ? ' departed' : ''}" aria-label="${zoneLabel}">${player ? catSVG(player, false, 'player-cat') : ''}</div>`;
+          if (!interactive) {
+            return `<div class="zone${player ? '' : ' empty'}${isMoved ? ' moved' : ''}${departed ? ' departed' : ''}" aria-label="${zoneLabel}">${player ? catSVG(player, false, 'player-cat') : ''}</div>`;
+          }
+          const selected = cell === selectedCell;
+          const target = selectedPlayer !== null && !selected;
+          const disabled = selectedPlayer === null && !player;
+          let actionLabel = player ? `Sélectionner le chat ${player}` : 'Cercle vide : choisissez d’abord un chat';
+          if (selected) actionLabel = `Chat ${player} sélectionné : cliquer à nouveau pour annuler`;
+          else if (selectedPlayer !== null && player) actionLabel = `Échanger les places des chats ${selectedPlayer} et ${player}`;
+          else if (selectedPlayer !== null) actionLabel = `Déplacer le chat ${selectedPlayer} dans ce cercle vide`;
+          return `<button class="zone${player ? '' : ' empty'}${selected ? ' selected' : ''}${target ? ' target' : ''}" type="button" data-cell="${cell}" aria-label="${actionLabel}" aria-pressed="${selected ? 'true' : 'false'}"${disabled ? ' disabled' : ''}>${player ? catSVG(player, false, 'player-cat') : ''}</button>`;
         }).join('');
       }
 
@@ -473,11 +502,22 @@
 
       function currentCase() { return DATA.cases[state.index]; }
 
-      function constraintFeedback(item, player, grid) {
+      function activeGrid(item = currentCase()) {
+        if (state.mode === 'attempt') return state.grid;
+        if (state.mode === 'suggested') return item.correction;
+        return item.proposed;
+      }
+
+      function gridPositions(grid) {
         const positions = {};
         grid.forEach((row, rowIndex) => row.forEach((occupant, columnIndex) => {
           if (occupant) positions[occupant] = [rowIndex, columnIndex];
         }));
+        return positions;
+      }
+
+      function constraintChecks(item, player, grid) {
+        const positions = gridPositions(grid);
         const [row, column] = positions[player];
         return directionOrder
           .filter(direction => Object.hasOwn(item.cards[String(player)], direction))
@@ -499,8 +539,21 @@
                 ? 'il n’y a bien aucun chat.'
                 : 'il ne devrait y avoir aucun chat, mais le cercle est occupé.';
             }
-            return `<li class="${respected ? 'ok' : 'bad'}"><b>${directionTitle[direction]}</b> : ${message}</li>`;
-          })
+            return { direction, respected, message };
+          });
+      }
+
+      function cardIsTrue(item, player, grid) {
+        return constraintChecks(item, player, grid).every(check => check.respected);
+      }
+
+      function placementIsTrue(item, grid) {
+        return [1,2,3,4].every(player => cardIsTrue(item, player, grid));
+      }
+
+      function constraintFeedback(item, player, grid) {
+        return constraintChecks(item, player, grid)
+          .map(check => `<li class="${check.respected ? 'ok' : 'bad'}"><b>${directionTitle[check.direction]}</b> : ${check.message}</li>`)
           .join('');
       }
 
@@ -516,7 +569,10 @@
       function openChallenge(index, updateHash = true) {
         state.index = Math.max(0, Math.min(DATA.cases.length - 1, index));
         state.revealed = 0;
-        state.showingCorrection = false;
+        state.mode = 'proposed';
+        state.grid = null;
+        state.selectedCell = null;
+        state.lastAction = null;
         homeScreen.hidden = true;
         challengeScreen.hidden = false;
         catalogButton.hidden = true;
@@ -526,8 +582,6 @@
         $('#challenge-title').focus({ preventScroll:true });
         window.scrollTo(0, 0);
       }
-
-      function playerErrors(item, player) { return item.errors[String(player)] || []; }
 
       function alternativeCorrectionMessage(item) {
         const alternatives = item.correctionCount - 1;
@@ -540,49 +594,90 @@
 
       function renderChallenge() {
         const item = currentCase();
-        const displayGrid = state.showingCorrection ? item.correction : item.proposed;
+        const displayGrid = activeGrid(item);
         const correctionLabel = item.correctionCount > 1
           ? `Une correction parmi ${item.correctionCount}`
           : 'Une correction possible';
-        const placementLabel = state.showingCorrection ? correctionLabel : 'Placement proposé';
+        const placementLabel = state.mode === 'suggested'
+          ? correctionLabel
+          : state.mode === 'editing'
+            ? 'Construisez une correction'
+            : state.mode === 'attempt'
+              ? 'Votre correction'
+              : 'Placement proposé';
+        const highlightedPlayers = state.mode === 'suggested'
+          ? item.movedPlayers
+          : state.mode === 'attempt' && state.lastAction
+            ? state.lastAction.players
+            : [];
+        const beforeGrid = state.mode === 'suggested' || state.mode === 'attempt'
+          ? item.proposed
+          : null;
         $('#difficulty-label').textContent = `Étape ${item.difficulty}`;
         $('#challenge-title').textContent = `Défi ${item.number}`;
         $('#counter').textContent = `${item.number} / ${DATA.cases.length}`;
         $('#placement-title').textContent = placementLabel;
+        $('#placement-grid').classList.toggle('interactive', state.mode === 'editing');
         $('#placement-grid').innerHTML = gridHTML(
           displayGrid,
           false,
-          state.showingCorrection ? item.movedPlayers : [],
-          state.showingCorrection ? item.proposed : null
+          highlightedPlayers,
+          beforeGrid,
+          state.mode === 'editing',
+          state.selectedCell
         );
-        $('#placement-grid').setAttribute('aria-label', state.showingCorrection ? correctionLabel : 'Placement proposé dans les six zones');
+        $('#placement-grid').setAttribute('aria-label', `${placementLabel} dans les six zones`);
+
+        if (state.mode === 'editing') {
+          const selectedPlayer = state.selectedCell === null ? null : displayGrid.flat()[state.selectedCell];
+          $('#placement-question').textContent = selectedPlayer === null
+            ? 'Quel chat faut-il déplacer ou échanger ?'
+            : `Où placer le chat ${selectedPlayer} ?`;
+          $('#placement-hint').textContent = selectedPlayer === null
+            ? 'Cliquez d’abord sur le chat à déplacer ou à échanger.'
+            : 'Cliquez sur un cercle vide pour le déplacer, ou sur un autre chat pour échanger leurs places.';
+        } else if (state.mode === 'attempt') {
+          $('#placement-question').textContent = 'Votre correction est-elle valide ?';
+          $('#placement-hint').textContent = 'Vérifiez à nouveau les quatre cartes avec la classe.';
+        } else if (state.mode === 'suggested') {
+          $('#placement-question').textContent = 'Cette correction est-elle valide ?';
+          $('#placement-hint').textContent = 'Relisez les quatre cartes pour la justifier.';
+        } else {
+          $('#placement-question').textContent = 'Ce placement est-il correct ?';
+          $('#placement-hint').textContent = 'Réfléchissez d’abord chacun depuis votre place, puis mettez vos idées en commun.';
+        }
 
         $('#cards-grid').innerHTML = [1,2,3,4].map(player => {
           const revealed = state.revealed >= player;
-          const result = revealed
-            ? (state.showingCorrection || playerErrors(item, player).length === 0)
-            : null;
+          const result = revealed ? cardIsTrue(item, player, displayGrid) : null;
           return cardHTML(player, item.cards[String(player)], result);
         }).join('');
 
         const nextPlayer = state.revealed + 1;
-        if (state.revealed === 0) {
-          $('#card-feedback').innerHTML = state.showingCorrection
+        if (state.mode === 'editing') {
+          const selectedPlayer = state.selectedCell === null ? null : displayGrid.flat()[state.selectedCell];
+          $('#card-feedback').innerHTML = selectedPlayer === null
+            ? '<strong>Construisez votre correction.</strong> Sélectionnez un chat dans le placement.'
+            : `<strong>Chat ${selectedPlayer} sélectionné.</strong> Choisissez un cercle vide pour le déplacer, ou un autre chat pour échanger leurs places.`;
+        } else if (state.revealed === 0) {
+          $('#card-feedback').innerHTML = state.mode === 'suggested'
             ? `<strong>Une correction possible est affichée.</strong> Vérifiez-la à nouveau, carte par carte, avec la classe.${alternativeCorrectionMessage(item)}`
-            : '<strong>À vous de jouer.</strong> Quand la classe a choisi, commencez par la carte 1.';
+            : state.mode === 'attempt'
+              ? '<strong>Votre correction est en place.</strong> Vérifiez-la maintenant, carte par carte.'
+              : '<strong>À vous de jouer.</strong> Quand la classe a choisi, commencez par la carte 1.';
         } else {
-          const issues = state.showingCorrection ? [] : playerErrors(item, state.revealed);
+          const cardValid = cardIsTrue(item, state.revealed, displayGrid);
           const details = constraintFeedback(item, state.revealed, displayGrid);
           const clauseCount = Object.keys(item.cards[String(state.revealed)]).length;
-          $('#card-feedback').innerHTML = `${issues.length
-            ? `<strong>✕ La carte ${state.revealed} est fausse.</strong>`
-            : `<strong>✓ La carte ${state.revealed} est vraie.</strong>`}<ul class="${clauseCount === 3 ? 'three-clauses' : ''}">${details}</ul>`;
+          $('#card-feedback').innerHTML = `${cardValid
+            ? `<strong>✓ La carte ${state.revealed} est vraie.</strong>`
+            : `<strong>✕ La carte ${state.revealed} est fausse.</strong>`}<ul class="${clauseCount === 3 ? 'three-clauses' : ''}">${details}</ul>`;
         }
-        revealButton.hidden = state.revealed >= 4;
+        revealButton.hidden = state.mode === 'editing' || state.revealed >= 4;
         revealRow.hidden = revealButton.hidden;
         if (!revealButton.hidden) revealButton.textContent = `Vérifier la carte ${nextPlayer}`;
-        verdict.hidden = state.revealed < 4;
-        if (state.revealed >= 4) renderVerdict();
+        verdict.hidden = state.mode !== 'editing' && state.revealed < 4;
+        if (state.mode === 'editing' || state.revealed >= 4) renderVerdict();
         $('#previous-button').disabled = state.index === 0;
         $('#next-button').disabled = state.index === DATA.cases.length - 1;
       }
@@ -598,31 +693,145 @@
 
       function renderVerdict() {
         const item = currentCase();
+        const displayGrid = activeGrid(item);
         verdict.hidden = false;
-        if (item.valid) {
+        if (state.mode === 'editing') {
+          verdict.className = 'verdict editing';
+          verdict.innerHTML = '<span class="verdict-icon" aria-hidden="true">↔</span><div class="verdict-copy"><strong>À la classe de corriger.</strong>Choisissez un chat, puis sa nouvelle place.</div><button class="secondary-button" id="cancel-correction" type="button">Annuler</button>';
+          $('#cancel-correction').addEventListener('click', cancelCorrectionAttempt);
+          return;
+        }
+        const valid = placementIsTrue(item, displayGrid);
+        if (valid && state.mode === 'proposed') {
           verdict.className = 'verdict good';
           verdict.innerHTML = '<span class="verdict-icon" aria-hidden="true">✓</span><div class="verdict-copy"><strong>Oui, ce placement est correct.</strong>Les quatre cartes sont vraies.</div>';
           return;
         }
-        const falseCards = [1,2,3,4].filter(player => playerErrors(item, player).length);
-        const cardWord = falseCards.length === 1 ? 'carte est fausse' : 'cartes sont fausses';
-        if (state.showingCorrection) {
+        if (valid && state.mode === 'attempt') {
+          const action = state.lastAction.type === 'exchange'
+            ? `Les chats ${state.lastAction.players[0]} et ${state.lastAction.players[1]} échangent leurs places.`
+            : `Le chat ${state.lastAction.players[0]} change de cercle.`;
+          verdict.className = 'verdict good';
+          verdict.innerHTML = `<span class="verdict-icon" aria-hidden="true">✓</span><div class="verdict-copy"><strong>Votre correction est valide.</strong>${action} Les quatre cartes sont vraies.</div><button class="secondary-button" id="reset-proposed" type="button">Revoir le départ</button>`;
+          $('#reset-proposed').addEventListener('click', resetToProposed);
+          return;
+        }
+        if (valid && state.mode === 'suggested') {
           const moved = item.movedPlayers[0];
           verdict.className = 'verdict good';
-          verdict.innerHTML = `<span class="verdict-icon" aria-hidden="true">✓</span><div class="verdict-copy"><strong>Correction validée.</strong>Le chat ${moved} change de cercle. Les quatre cartes sont vraies.</div><button class="secondary-button" id="toggle-correction" type="button">Revoir le placement proposé</button>`;
-        } else {
-          verdict.className = 'verdict bad';
-          verdict.innerHTML = `<span class="verdict-icon" aria-hidden="true">✕</span><div class="verdict-copy"><strong>Non : ${falseCards.length} ${cardWord}.</strong>Demandez d'abord à la classe quel chat devrait changer de cercle, et pourquoi.</div><button class="primary-button" id="toggle-correction" type="button">Voir une correction possible</button>`;
+          verdict.innerHTML = `<span class="verdict-icon" aria-hidden="true">✓</span><div class="verdict-copy"><strong>Correction validée.</strong>Le chat ${moved} change de cercle. Les quatre cartes sont vraies.</div><button class="secondary-button" id="reset-proposed" type="button">Revoir le départ</button>`;
+          $('#reset-proposed').addEventListener('click', resetToProposed);
+          return;
         }
-        $('#toggle-correction').addEventListener('click', toggleCorrection);
+        const falseCards = [1,2,3,4].filter(player => !cardIsTrue(item, player, displayGrid));
+        const cardWord = falseCards.length === 1 ? 'carte est fausse' : 'cartes sont fausses';
+        verdict.className = 'verdict bad';
+        if (state.mode === 'attempt') {
+          verdict.innerHTML = `<span class="verdict-icon" aria-hidden="true">✕</span><div class="verdict-copy"><strong>Cette correction ne suffit pas.</strong>${falseCards.length} ${cardWord} encore.</div><div class="verdict-actions"><button class="primary-button" id="retry-correction" type="button">Réessayer</button><button class="secondary-button" id="show-suggested" type="button">Voir la solution</button></div>`;
+          $('#retry-correction').addEventListener('click', startCorrectionAttempt);
+          $('#show-suggested').addEventListener('click', showSuggestedCorrection);
+        } else {
+          verdict.innerHTML = `<span class="verdict-icon" aria-hidden="true">✕</span><div class="verdict-copy"><strong>Non : ${falseCards.length} ${cardWord}.</strong>À la classe de proposer un déplacement ou un échange.</div><button class="primary-button" id="start-correction" type="button">Proposer une correction</button>`;
+          $('#start-correction').addEventListener('click', startCorrectionAttempt);
+        }
       }
 
-      function toggleCorrection() {
+      function startCorrectionAttempt() {
         const item = currentCase();
         if (!item.correction || state.revealed < 4) return;
-        state.showingCorrection = !state.showingCorrection;
-        state.revealed = state.showingCorrection ? 0 : 4;
+        state.mode = 'editing';
+        state.grid = null;
+        state.selectedCell = null;
+        state.lastAction = null;
         renderChallenge();
+        const firstChat = $('#placement-grid .zone:not(:disabled)');
+        if (firstChat) firstChat.focus({ preventScroll:true });
+      }
+
+      function cancelCorrectionAttempt() {
+        state.mode = 'proposed';
+        state.grid = null;
+        state.selectedCell = null;
+        state.lastAction = null;
+        state.revealed = 4;
+        renderChallenge();
+        const button = $('#start-correction');
+        if (button) button.focus({ preventScroll:true });
+      }
+
+      function resetToProposed() {
+        state.mode = 'proposed';
+        state.grid = null;
+        state.selectedCell = null;
+        state.lastAction = null;
+        state.revealed = 4;
+        renderChallenge();
+      }
+
+      function showSuggestedCorrection() {
+        const item = currentCase();
+        if (!item.correction) return;
+        state.mode = 'suggested';
+        state.grid = null;
+        state.selectedCell = null;
+        state.lastAction = null;
+        state.revealed = 0;
+        renderChallenge();
+        revealButton.focus({ preventScroll:true });
+      }
+
+      function applyPlacementAction(grid, sourceCell, targetCell) {
+        const flatGrid = grid.flat();
+        const sourcePlayer = flatGrid[sourceCell];
+        const targetPlayer = flatGrid[targetCell];
+        if (!sourcePlayer || sourceCell === targetCell || targetPlayer === undefined) return null;
+        const candidate = grid.map(row => [...row]);
+        const sourceRow = Math.floor(sourceCell / 3);
+        const sourceColumn = sourceCell % 3;
+        const targetRow = Math.floor(targetCell / 3);
+        const targetColumn = targetCell % 3;
+        candidate[sourceRow][sourceColumn] = targetPlayer;
+        candidate[targetRow][targetColumn] = sourcePlayer;
+        return { grid:candidate, sourcePlayer, targetPlayer };
+      }
+
+      function handlePlacementClick(event) {
+        if (state.mode !== 'editing') return;
+        const zone = event.target.closest('[data-cell]');
+        if (!zone || zone.disabled) return;
+        const cell = Number(zone.dataset.cell);
+        const proposedGrid = currentCase().proposed;
+        const flatGrid = proposedGrid.flat();
+        if (state.selectedCell === null) {
+          if (!flatGrid[cell]) return;
+          state.selectedCell = cell;
+          renderChallenge();
+          const selected = $(`#placement-grid [data-cell="${cell}"]`);
+          if (selected) selected.focus({ preventScroll:true });
+          return;
+        }
+        if (cell === state.selectedCell) {
+          state.selectedCell = null;
+          renderChallenge();
+          const sameChat = $(`#placement-grid [data-cell="${cell}"]`);
+          if (sameChat) sameChat.focus({ preventScroll:true });
+          return;
+        }
+        const sourceCell = state.selectedCell;
+        const action = applyPlacementAction(proposedGrid, sourceCell, cell);
+        if (!action) return;
+        state.grid = action.grid;
+        state.mode = 'attempt';
+        state.revealed = 0;
+        state.selectedCell = null;
+        state.lastAction = {
+          type: action.targetPlayer ? 'exchange' : 'move',
+          players: action.targetPlayer
+            ? [action.sourcePlayer, action.targetPlayer]
+            : [action.sourcePlayer]
+        };
+        renderChallenge();
+        revealButton.focus({ preventScroll:true });
       }
 
       async function toggleFullscreen() {
@@ -645,6 +854,7 @@
       fullscreenButton.addEventListener('click', toggleFullscreen);
       document.addEventListener('fullscreenchange', syncFullscreenLabel);
       revealButton.addEventListener('click', revealNextCard);
+      $('#placement-grid').addEventListener('click', handlePlacementClick);
       $('#previous-button').addEventListener('click', () => openChallenge(state.index - 1));
       $('#next-button').addEventListener('click', () => openChallenge(state.index + 1));
       window.addEventListener('popstate', () => routeFromHash(false));
@@ -657,6 +867,18 @@
       }
 
       document.addEventListener('keydown', event => {
+        if (event.key === 'Escape' && state.mode === 'editing') {
+          event.preventDefault();
+          if (state.selectedCell === null) cancelCorrectionAttempt();
+          else {
+            const previousCell = state.selectedCell;
+            state.selectedCell = null;
+            renderChallenge();
+            const previousChat = $(`#placement-grid [data-cell="${previousCell}"]`);
+            if (previousChat) previousChat.focus({ preventScroll:true });
+          }
+          return;
+        }
         if (event.target.closest('button, a, input, select, textarea')) return;
         const key = event.key.toLowerCase();
         if (key === 'f') { event.preventDefault(); toggleFullscreen(); return; }
@@ -668,7 +890,11 @@
         if (event.key === 'ArrowLeft' && state.index > 0) { event.preventDefault(); openChallenge(state.index - 1); }
         if (event.key === 'ArrowRight' && state.index < DATA.cases.length - 1) { event.preventDefault(); openChallenge(state.index + 1); }
         if ((event.key === 'Enter' || event.key === ' ') && state.revealed < 4) { event.preventDefault(); revealNextCard(); }
-        if (key === 'c' && state.revealed >= 4 && currentCase().correction) { event.preventDefault(); toggleCorrection(); }
+        if (key === 'c' && state.revealed >= 4 && currentCase().correction) {
+          event.preventDefault();
+          if (state.mode === 'suggested') resetToProposed();
+          else startCorrectionAttempt();
+        }
       });
 
       renderHome();
