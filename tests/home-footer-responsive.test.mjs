@@ -61,3 +61,14 @@ test("le pied compact affiche les trois groupes sans séparateur orphelin", () =
   assert.match(compact, /\.footer-section-separator\s*\{\s*display:\s*none;/);
   assert.match(mobile, /font-size:\s*clamp\(0\.73rem, 3\.45vw, 0\.84rem\)/);
 });
+
+test("les liens administratifs restent plus discrets que les accès utiles", () => {
+  assert.match(
+    css,
+    /\.footer-row-legal \.footer-link\s*\{[\s\S]*?color:\s*#526d8d;[\s\S]*?font-weight:\s*500;/
+  );
+  assert.match(
+    css,
+    /\.contact-btn,\s*\.footer-link\s*\{[\s\S]*?color:\s*rgba\(6, 63, 134, 0\.72\);[\s\S]*?font-weight:\s*750;/
+  );
+});
