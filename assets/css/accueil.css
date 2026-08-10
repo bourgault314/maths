@@ -205,13 +205,14 @@ h1 {
 
 .btn-start svg { width: 20px; height: 20px; }
 
-footer {
+.home-footer {
   width: 100%;
   min-height: 24px;
   display: flex;
-  flex-wrap: wrap;
+  flex-wrap: nowrap;
+  align-items: baseline;
   justify-content: center;
-  gap: 4px 8px;
+  gap: 4px 6px;
   color: rgba(16, 41, 74, 0.52);
   font-size: 0.84rem;
   text-align: center;
@@ -231,7 +232,7 @@ footer {
     padding-bottom: 24px;
   }
 
-  .hero-card > footer {
+  .hero-card > .home-footer {
     margin-top: auto;
   }
 }
@@ -248,7 +249,7 @@ footer {
     justify-content: space-between;
   }
 
-  .hero-card > footer {
+  .hero-card > .home-footer {
     margin-top: 18px;
   }
 }
@@ -270,13 +271,23 @@ footer {
     justify-content: flex-start;
     padding-top: var(--mathsgo-entry-top);
   }
+
+  .home-footer {
+    flex-direction: column;
+    align-items: center;
+    gap: 5px;
+  }
+
+  .footer-section-separator { display: none; }
 }
 
-.footer-line {
+.footer-row {
   display: inline-flex;
+  flex: 0 0 auto;
   align-items: baseline;
   justify-content: center;
-  gap: 8px;
+  gap: 6px;
+  white-space: nowrap;
 }
 
 .contact-btn,
@@ -390,13 +401,14 @@ footer {
     transform: scale(0.92);
   }
   .scene-plate { transform: scale(1.08); transform-origin: center; }
-  footer {
-    flex-direction: column;
-    gap: 5px;
+  .home-footer {
     margin-top: 12px;
     padding-bottom: max(2px, env(safe-area-inset-bottom));
+    font-size: clamp(0.73rem, 3.45vw, 0.84rem);
   }
-  .footer-divider { display: none; }
+  .footer-row {
+    gap: clamp(4px, 1.8vw, 6px);
+  }
   .modal-content { padding: 2rem 1.35rem 1.5rem; }
 }
 

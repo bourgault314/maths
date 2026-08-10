@@ -13,7 +13,7 @@ const catalogueJs = fs.readFileSync(path.join(root, "assets/js/catalogue-refonte
 test("les crédits de l'accueil sont placés dans la carte", () => {
   assert.match(
     homeHtml,
-    /<section class="hero-card"[\s\S]*<footer>[\s\S]*<\/footer>\s*<\/section>/
+    /<section class="hero-card"[\s\S]*<footer class="home-footer">[\s\S]*<\/footer>\s*<\/section>/
   );
 });
 
@@ -56,7 +56,7 @@ test("l'alignement ne redimensionne ni le logo, ni la scène, ni le bouton", () 
 test("la redistribution remonte le contenu et descend les crédits", () => {
   assert.match(homeCss, /padding-top:\s*38px/);
   assert.match(homeCss, /padding-bottom:\s*24px/);
-  assert.match(homeCss, /\.hero-card > footer\s*\{\s*margin-top:\s*auto/);
+  assert.match(homeCss, /\.hero-card > \.home-footer\s*\{\s*margin-top:\s*auto/);
   assert.match(
     homeCss,
     /@media \(min-width: 921px\) and \(max-height: 820px\) \{[\s\S]*?padding-top:\s*20px;[\s\S]*?padding-bottom:\s*18px/

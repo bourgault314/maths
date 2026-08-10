@@ -311,6 +311,7 @@
     notion: new URLSearchParams(window.location.search).get("notion") || "",
     collection: new URLSearchParams(window.location.search).get("collection") || ""
   };
+  let pendingBreadcrumbFocusLevel = "";
 
   const domainGrid = document.getElementById("domain-grid");
   const notionGrid = document.getElementById("notion-grid");
@@ -446,6 +447,12 @@
   function moveToTopAndFocus() {
     window.scrollTo({ top: 0, behavior: "auto" });
     window.requestAnimationFrame(() => pageTitle.focus({ preventScroll: true }));
+  }
+
+  function focusBreadcrumbDestination(level) {
+    if (!level || level !== viewLevel()) return;
+    title.tabIndex = -1;
+    title.focus({ preventScroll: true });
   }
 
   function renderBreadcrumb(level, selectedDomain, selectedNotion, selectedCollection) {
@@ -1199,6 +1206,7 @@
 
     if (target === "domain") {
       if ((state.notion || state.collection) && history.state?.fromLevel === "domain") {
+        pendingBreadcrumbFocusLevel = "domain";
         history.back();
         return;
       }
@@ -1214,6 +1222,7 @@
     if (target === "entry") {
       const entryHistoryOffset = history.state?.entryHistoryOffset || 0;
       if (entryHistoryOffset > 0) {
+        pendingBreadcrumbFocusLevel = "entry";
         history.go(-entryHistoryOffset);
         return;
       }
@@ -1229,6 +1238,8 @@
   });
 
   window.addEventListener("popstate", (event) => {
+    const breadcrumbFocusLevel = pendingBreadcrumbFocusLevel;
+    pendingBreadcrumbFocusLevel = "";
     const urlWasSanitised = stateFromUrl();
     if (urlWasSanitised) writeHistory("replace", event.state?.fromLevel || null);
     searchInput.value = "";
@@ -1236,6 +1247,7 @@
     const scrollY = Number.isFinite(event.state?.scrollY) ? event.state.scrollY : 0;
     window.requestAnimationFrame(() => window.requestAnimationFrame(() => {
       window.scrollTo({ top: scrollY, behavior: "auto" });
+      focusBreadcrumbDestination(breadcrumbFocusLevel);
     }));
   });
 
