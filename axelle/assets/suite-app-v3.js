@@ -1,6 +1,8 @@
 (function () {
   const sessions = window.AXELLE_SESSIONS;
   if (!sessions) return;
+  const pageParams = new URLSearchParams(location.search);
+  const previewSplat = pageParams.get("apercu") === "splat";
 
   const elements = {
     desk: document.getElementById("desk-screen"),
@@ -592,7 +594,7 @@
           ? "Mission accomplie. Les indices et les corrections t’ont déjà fait apprendre de nouvelles choses."
           : "Tu es allée jusqu’au bout : c’est exactement comme cela qu’on apprend. Tu peux rejouer quand tu veux.";
     elements.finishMessage.textContent = `${session.name} : ${messages}`;
-    localStorage.setItem(`axelle-completed-${subjectKey}`, "1");
+    if (!previewSplat) localStorage.setItem(`axelle-completed-${subjectKey}`, "1");
     showScreen(elements.finish);
   }
 
@@ -619,6 +621,16 @@
   document.addEventListener("keydown", event => { if (event.key === "Escape" && !elements.hintOverlay.hidden) closeHint(); });
 
   refreshDeskProgress();
-  const requested = new URLSearchParams(location.search).get("mission");
-  if (requested && sessions[requested]) startSubject(requested);
+  const requested = pageParams.get("mission");
+  if (previewSplat && sessions.maths) {
+    subjectKey = "maths";
+    session = sessions.maths;
+    document.documentElement.style.setProperty("--subject-color", session.color);
+    questionIndex = session.questions.findIndex(question => question.type === "splat-table");
+    score = 0;
+    if (questionIndex >= 0) {
+      renderQuestion();
+      showScreen(elements.quiz);
+    }
+  } else if (requested && sessions[requested]) startSubject(requested);
 })();

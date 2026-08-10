@@ -131,10 +131,8 @@
     },
     "calcul-mental": {
       description: "S’entraîner, automatiser et projeter en classe.",
-      keywords: "automatismes dnb calcul mental cahier",
-      icon: "automatismes",
-      hub: "../auto/",
-      hiddenFromBrowse: true
+      keywords: "automatismes dnb calcul mental cahier tables défis coffres opérations",
+      icon: "automatismes"
     },
     proportionnalite: {
       description: "Ratios, grandeurs et situations proportionnelles.",

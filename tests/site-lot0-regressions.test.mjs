@@ -25,7 +25,11 @@ const returnPages = Object.fromEntries(await Promise.all([
   "outils/fractions/disque_maker.html",
   "outils/fabrication_materiel/cartes_premiers_1_100.html",
   "outils/club_maths/carres_gloutons.html",
+  "outils/club_maths/coffres_magiques.html",
   "outils/club_maths/jeu_du_chaos.html",
+  "outils/calcul_mental/coffres_magiques_solo.html",
+  "outils/calcul_mental/defi_tables.html",
+  "outils/calcul_mental/defi_calcul.html",
   "outils/labo-des-regularites.html",
 ].map(async (path) => [path, await readFile(new URL(`../${path}`, import.meta.url), "utf8")])));
 
@@ -99,7 +103,11 @@ test("les retours explicites pointent vers le parent réel du catalogue", () => 
     ["outils/fractions/disque_maker.html", "../index.html?domain=nombres-calculs&amp;notion=fractions"],
     ["outils/fabrication_materiel/cartes_premiers_1_100.html", "../index.html?domain=nombres-calculs&amp;notion=divisibilite"],
     ["outils/club_maths/carres_gloutons.html", "../index.html?domain=jeux-recherches&amp;notion=strategie"],
+    ["outils/club_maths/coffres_magiques.html", "../index.html?domain=jeux-recherches&amp;notion=strategie"],
     ["outils/club_maths/jeu_du_chaos.html", "../index.html?domain=jeux-recherches&amp;notion=explorations"],
+    ["outils/calcul_mental/coffres_magiques_solo.html", "../index.html?domain=nombres-calculs&amp;notion=calcul-mental"],
+    ["outils/calcul_mental/defi_tables.html", "../index.html?domain=nombres-calculs&amp;notion=calcul-mental"],
+    ["outils/calcul_mental/defi_calcul.html", "../index.html?domain=nombres-calculs&amp;notion=calcul-mental"],
   ]);
 
   for (const [path, parent] of expectedParents) {

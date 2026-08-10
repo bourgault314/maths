@@ -8,6 +8,8 @@
     quiz: $("quiz-screen"), done: $("done-screen"), game: $("game-screen")
   };
   const STORAGE = `axelle-j3-v${data.version}`;
+  const pageParams = new URLSearchParams(location.search);
+  const previewDodo = pageParams.get("apercu") === "dodo";
   let currentVersion = 0;
   let currentSubject = "math";
   let questionIndex = 0;
@@ -317,9 +319,9 @@
   }
 
   function startLevel(index) {
-    if (!isVersionComplete(index)) return;
+    if (!previewDodo && !isVersionComplete(index)) return;
     levelIndex = index;
-    write("last-level", index);
+    if (!previewDodo) write("last-level", index);
     const level = data.gameLevels[index];
     levelPosition = level.start.slice();
     levelFruits = level.fruits.map(pair=>pair.join(","));
@@ -341,7 +343,7 @@
     levelPosition=next;
     const key=next.join(",");
     levelFruits=levelFruits.filter(item=>item!==key);
-    if(!levelFruits.length){write(`game-complete-${levelIndex}`,true);$("game-info").textContent=levelIndex===0&&isVersionComplete(1)?"Bravo ! Le niveau 2 est prêt.":levelIndex===1?"Les deux chemins sont réussis. Le dodo peut se reposer ! 🌙":"Bravo ! Les trois fruits sont trouvés.";}
+    if(!levelFruits.length){if(!previewDodo)write(`game-complete-${levelIndex}`,true);$("game-info").textContent=levelIndex===0&&isVersionComplete(1)?"Bravo ! Le niveau 2 est prêt.":levelIndex===1?"Les deux chemins sont réussis. Le dodo peut se reposer ! 🌙":"Bravo ! Les trois fruits sont trouvés.";}
     else $("game-info").textContent=`${data.gameLevels[levelIndex].name} · encore ${levelFruits.length} fruit${levelFruits.length>1?"s":""}`;
     drawBoard();
   }
@@ -358,6 +360,10 @@
   $("restart-level").addEventListener("click",()=>startLevel(levelIndex));
 
   refreshHome();
-  const requested = Number(new URLSearchParams(location.search).get("defi"));
-  if(requested===1||requested===2)openVersion(requested-1);else show("home");
+  const requested = Number(pageParams.get("defi"));
+  if(previewDodo){
+    show("game");
+    document.querySelectorAll("[data-level]").forEach(button=>{button.disabled=false;});
+    startLevel(pageParams.get("niveau")==="2"?1:0);
+  }else if(requested===1||requested===2)openVersion(requested-1);else show("home");
 })();

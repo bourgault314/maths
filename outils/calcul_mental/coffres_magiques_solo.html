@@ -1,0 +1,613 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>Coffres magiques — solo | maths&amp;go</title>
+  <meta name="description" content="Dix coffres de calcul mental à ouvrir en retrouvant deux nombres liés par une somme, une différence, un produit ou un quotient.">
+  <link rel="canonical" href="https://mathsgo.re/outils/calcul_mental/coffres_magiques_solo.html">
+  <meta name="robots" content="index, follow, max-image-preview:large">
+  <link rel="icon" href="/favicon.ico" sizes="48x48">
+  <link rel="icon" type="image/svg+xml" href="/favicon.svg">
+  <link rel="icon" type="image/png" sizes="32x32" href="/assets/img/favicon-32.png">
+  <link rel="icon" type="image/png" sizes="192x192" href="/assets/img/favicon-192.png">
+  <link rel="apple-touch-icon" href="/assets/img/apple-touch-icon.png">
+  <style>
+    :root {
+      --ink: #153451;
+      --muted: #557083;
+      --line: #d8e6ef;
+      --blue: #0755b8;
+      --teal: #078a82;
+      --gold: #f8b526;
+      color: var(--ink);
+      font-family: Inter, ui-rounded, "Arial Rounded MT Bold", "Segoe UI", sans-serif;
+    }
+
+    * { box-sizing: border-box; }
+    [hidden] { display: none !important; }
+
+    html {
+      min-height: 100%;
+      -webkit-text-size-adjust: 100%;
+    }
+
+    body {
+      min-height: 100vh;
+      min-height: 100svh;
+      margin: 0;
+      overflow-x: hidden;
+      background:
+        radial-gradient(circle at 8% 2%, #dff7f4 0 12%, transparent 32%),
+        radial-gradient(circle at 92% 8%, #fff0d8 0 11%, transparent 30%),
+        linear-gradient(145deg, #f7fbff, #fffdf7);
+    }
+
+    button,
+    a {
+      font: inherit;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    button { cursor: pointer; }
+
+    :focus-visible {
+      outline: 3px solid rgba(7, 85, 184, .3);
+      outline-offset: 3px;
+    }
+
+    .topbar {
+      width: min(100%, 960px);
+      min-height: 52px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      margin: 0 auto;
+      padding: 6px 12px;
+    }
+
+    .brand img {
+      display: block;
+      width: 112px;
+      height: auto;
+    }
+
+    .back-link {
+      min-height: 40px;
+      display: inline-flex;
+      align-items: center;
+      padding: 7px 12px;
+      border: 1px solid #c8d9e5;
+      border-radius: 999px;
+      color: #34546c;
+      background: rgba(255, 255, 255, .92);
+      font-size: .8rem;
+      font-weight: 900;
+      text-decoration: none;
+    }
+
+    .solo-page {
+      width: min(760px, calc(100% - 16px));
+      min-height: calc(100svh - 64px);
+      margin: 0 auto 12px;
+      padding: 18px 16px 24px;
+      overflow-anchor: none;
+      border: 1px solid rgba(203, 220, 232, .95);
+      border-radius: 26px;
+      background: rgba(255, 255, 255, .97);
+      box-shadow: 0 16px 45px rgba(28, 69, 101, .12);
+    }
+
+    .solo-heading {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      max-width: 600px;
+      margin: 0 auto;
+    }
+
+    .eyebrow {
+      margin: 0 0 3px;
+      color: var(--teal);
+      font-size: .72rem;
+      font-weight: 950;
+      letter-spacing: .1em;
+      text-transform: uppercase;
+    }
+
+    .solo-heading h1 {
+      margin: 0;
+      color: #143e62;
+      font-size: clamp(1.65rem, 6vw, 2.55rem);
+      line-height: 1;
+      letter-spacing: -.035em;
+    }
+
+    .solo-heading p:last-child {
+      margin: 6px 0 0;
+      color: #526b7b;
+      font-size: .9rem;
+      font-weight: 750;
+    }
+
+    .solo-stats {
+      padding: 9px 13px;
+      border-radius: 999px;
+      color: var(--blue);
+      background: #e9f4ff;
+      font-size: 1.05rem;
+      font-weight: 950;
+      white-space: nowrap;
+    }
+
+    .status-line {
+      width: min(100%, 560px);
+      min-height: 46px;
+      display: grid;
+      place-items: center;
+      margin: 14px auto 8px;
+      padding: 6px 12px;
+      border-radius: 12px;
+      color: #31546e;
+      background: #f0f6fa;
+      font-size: .86rem;
+      font-weight: 900;
+      line-height: 1.28;
+      text-align: center;
+    }
+
+    .status-line.good { color: #07644f; background: #e3f8ef; }
+    .status-line.wrong { color: #97382f; background: #fff0ed; }
+
+    .challenge {
+      width: min(100%, 450px);
+      min-height: 72px;
+      display: grid;
+      place-items: center;
+      margin: 10px auto;
+      padding: 8px 14px;
+      border: 2px solid #e9c65e;
+      border-radius: 18px;
+      color: #76550c;
+      background: linear-gradient(145deg, #fff9dc, #fff0ae);
+      box-shadow: 0 5px 0 rgba(196, 144, 19, .15);
+      font-size: 1.05rem;
+      font-weight: 750;
+      text-align: center;
+    }
+
+    .challenge b { color: #9a5308; }
+    .challenge strong { color: #143451; font-size: 1.55rem; }
+
+    .rune-board {
+      width: min(86vw, 390px);
+      aspect-ratio: 1;
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 8px;
+      margin: 0 auto;
+      padding: 10px;
+      border: 3px solid #8b6b4d;
+      border-radius: 22px;
+      background: linear-gradient(145deg, #a77b50, #6d4b32);
+      box-shadow: inset 0 3px 10px rgba(49, 28, 14, .4), 0 5px 13px rgba(50, 42, 34, .13);
+      touch-action: manipulation;
+    }
+
+    .rune {
+      min-width: 0;
+      min-height: 44px;
+      display: grid;
+      place-items: center;
+      padding: 0;
+      border: 2px solid #bfd4de;
+      border-radius: 16px;
+      color: #17405e;
+      background: radial-gradient(circle at 36% 28%, #fff 0 12%, #ddf3f4 52%, #a9d6d7 100%);
+      box-shadow: inset -3px -4px 7px rgba(12, 80, 87, .16), 0 3px 5px rgba(0, 0, 0, .2);
+      font-size: clamp(1.4rem, 8vw, 2.2rem);
+      font-weight: 950;
+    }
+
+    .rune:hover,
+    .rune:focus-visible { outline: 4px solid var(--gold); outline-offset: -3px; }
+    .rune.selected { border-color: #f0a800; background: #ffdd72; transform: scale(.94); }
+    .rune.success { border-color: #087a55; background: #bff0d8; }
+    .rune.failure { border-color: #b83a3a; background: #ffd4cf; }
+
+    .solo-toolbar {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 8px;
+      margin-top: 12px;
+    }
+
+    .rules-button,
+    .reset-button,
+    .secondary-button {
+      min-height: 42px;
+      padding: 7px 14px;
+      border: 1px solid #cbdbe6;
+      border-radius: 12px;
+      color: #31546e;
+      background: #fff;
+      font-weight: 900;
+    }
+
+    .secondary-button {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      text-decoration: none;
+    }
+
+    .overlay {
+      position: fixed;
+      z-index: 30;
+      inset: 0;
+      display: grid;
+      place-items: center;
+      padding: 15px;
+      background: rgba(11, 35, 54, .68);
+      backdrop-filter: blur(5px);
+    }
+
+    .dialog-card {
+      width: min(100%, 470px);
+      max-height: calc(100svh - 30px);
+      overflow: auto;
+      padding: 24px;
+      border-radius: 24px;
+      background: #fff;
+      box-shadow: 0 24px 70px rgba(0, 0, 0, .28);
+      text-align: center;
+    }
+
+    .learn-card { width: min(680px, 100%); }
+    .dialog-icon { font-size: 2.6rem; }
+    .learn-card .dialog-icon { font-size: 1.55rem; font-weight: 900; letter-spacing: .12em; }
+    .dialog-card h2 { margin: 5px 0 10px; color: #143e62; font-size: 1.65rem; }
+    .dialog-card > p { margin: 8px 0; color: #49677b; line-height: 1.42; }
+
+    .operation-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 9px;
+      margin: 14px 0;
+    }
+
+    .operation-grid article {
+      padding: 12px;
+      border: 2px solid #d7e4ec;
+      border-radius: 14px;
+      background: #f8fcff;
+      text-align: left;
+    }
+
+    .operation-grid h3 { margin: 0 0 4px; color: var(--blue); }
+    .operation-grid p { margin: 0; color: #49677b; line-height: 1.4; }
+    .operation-grid strong { display: block; margin-top: 6px; font-size: 1.18rem; }
+
+    .lesson-actions,
+    .result-actions {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 8px;
+    }
+
+    .primary-button {
+      min-height: 50px;
+      flex: 1 1 210px;
+      padding: 8px 16px;
+      border: 0;
+      border-radius: 15px;
+      color: #fff;
+      background: linear-gradient(145deg, #087c75, #0755b8);
+      box-shadow: 0 8px 18px rgba(7, 85, 184, .2);
+      font-weight: 950;
+    }
+
+    .result-score { color: #143e62 !important; font-size: 1.2rem; font-weight: 950; }
+
+    @media (max-width: 520px) {
+      .topbar { min-height: 46px; padding-block: 4px; }
+      .brand img { width: 98px; }
+      .back-link { min-height: 36px; padding: 6px 10px; font-size: .73rem; }
+      .solo-page { width: 100%; min-height: calc(100svh - 50px); padding: 14px 8px 20px; border-inline: 0; border-radius: 20px; }
+      .solo-heading h1 { font-size: 1.45rem; }
+      .solo-heading p:last-child { font-size: .8rem; }
+      .solo-stats { padding: 8px 10px; font-size: .92rem; }
+      .status-line { min-height: 42px; margin-top: 10px; font-size: .78rem; }
+      .challenge { min-height: 62px; }
+      .rune-board { gap: 6px; padding: 8px; }
+      .operation-grid { grid-template-columns: 1fr; }
+      .dialog-card { padding: 21px 17px; }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      *,
+      *::before,
+      *::after {
+        animation: none !important;
+        scroll-behavior: auto !important;
+        transition: none !important;
+      }
+    }
+  </style>
+</head>
+<body>
+  <header class="topbar">
+    <a class="brand" href="/" aria-label="Accueil maths&go"><img src="/assets/img/mathsgo-logo.png" alt="maths&go" width="1338" height="622"></a>
+    <a class="back-link" href="../index.html?domain=nombres-calculs&amp;notion=calcul-mental">← Calcul mental</a>
+  </header>
+
+  <main class="solo-page">
+    <section class="solo-heading">
+      <div>
+        <p class="eyebrow">Calcul mental</p>
+        <h1>Coffres magiques</h1>
+        <p>Un joueur · trouve 10 clés</p>
+      </div>
+      <strong id="key-count" class="solo-stats">0 / 10 clés</strong>
+    </section>
+
+    <div id="status" class="status-line" aria-live="polite">Lis d’abord le petit mémo.</div>
+    <div class="challenge">Ouvre le coffre avec <span id="challenge-text">deux cases voisines</span></div>
+    <div id="board" class="rune-board" role="grid" aria-label="Seize cases numérotées"></div>
+    <div class="solo-toolbar">
+      <button id="show-lesson" class="rules-button" type="button">Mémo</button>
+      <button id="reset-button" class="reset-button" type="button">Nouvelle partie</button>
+    </div>
+  </main>
+
+  <section id="lesson" class="overlay" role="dialog" aria-modal="true" aria-labelledby="lesson-title">
+    <div class="dialog-card learn-card">
+      <div class="dialog-icon" aria-hidden="true">+ − × ÷</div>
+      <h2 id="lesson-title">Quatre mots à connaître</h2>
+      <p>À chaque coffre, choisis deux cases qui se touchent par un côté.</p>
+      <div class="operation-grid">
+        <article><h3>Somme</h3><p>Le résultat d’une addition.</p><strong>8 + 5 = 13</strong></article>
+        <article><h3>Différence</h3><p>Le résultat du plus grand moins le petit.</p><strong>13 − 5 = 8</strong></article>
+        <article><h3>Produit</h3><p>Le résultat d’une multiplication.</p><strong>4 × 6 = 24</strong></article>
+        <article><h3>Quotient</h3><p>Le résultat du plus grand divisé par le petit.</p><strong>24 ÷ 6 = 4</strong></article>
+      </div>
+      <div class="lesson-actions">
+        <button id="start-game" class="primary-button" type="button">J’ai compris, jouer</button>
+        <button id="close-lesson" class="reset-button" type="button">Voir le plateau</button>
+      </div>
+    </div>
+  </section>
+
+  <section id="result" class="overlay" hidden role="dialog" aria-modal="true" aria-labelledby="result-title">
+    <div class="dialog-card">
+      <div class="dialog-icon" aria-hidden="true">★</div>
+      <h2 id="result-title">Trésor ouvert !</h2>
+      <p>Tu as utilisé les quatre opérations.</p>
+      <p id="result-score" class="result-score"></p>
+      <div class="result-actions">
+        <button id="play-again" class="primary-button" type="button">Rejouer avec de nouveaux coffres</button>
+        <a class="secondary-button" href="../index.html?domain=nombres-calculs&amp;notion=calcul-mental">Retour au calcul mental</a>
+      </div>
+    </div>
+  </section>
+
+  <script>
+    (() => {
+      "use strict";
+
+      const SIZE = 4;
+      const GOAL = 10;
+      const operationLabels = { sum: "somme", difference: "différence", product: "produit", quotient: "quotient" };
+      const symbols = { sum: "+", difference: "−", product: "×", quotient: "÷" };
+      const board = document.querySelector("#board");
+      const status = document.querySelector("#status");
+      const challenge = document.querySelector("#challenge-text");
+      const counter = document.querySelector("#key-count");
+      const lesson = document.querySelector("#lesson");
+      const result = document.querySelector("#result");
+      let values = [];
+      let modes = [];
+      let mode = "sum";
+      let target = 0;
+      let keys = 0;
+      let firstSelection = null;
+      let locked = false;
+      let pendingTimer = null;
+
+      function row(position) { return Math.floor(position / SIZE); }
+      function column(position) { return position % SIZE; }
+      function adjacent(first, second) { return Math.abs(row(first) - row(second)) + Math.abs(column(first) - column(second)) === 1; }
+
+      function calculate(nextMode, first, second) {
+        const high = Math.max(first, second);
+        const low = Math.min(first, second);
+        if (nextMode === "sum") return first + second;
+        if (nextMode === "difference") return high - low;
+        if (nextMode === "product") return first * second;
+        return high / low;
+      }
+
+      function expression(nextMode, first, second) {
+        const high = Math.max(first, second);
+        const low = Math.min(first, second);
+        const left = nextMode === "difference" || nextMode === "quotient" ? high : first;
+        const right = nextMode === "difference" || nextMode === "quotient" ? low : second;
+        if (nextMode === "quotient" && high % low !== 0) return `${high} n’est pas divisible par ${low}`;
+        return `${left} ${symbols[nextMode]} ${right} = ${calculate(nextMode, first, second)}`;
+      }
+
+      function randomInteger(minimum, maximum) {
+        return minimum + Math.floor(Math.random() * (maximum - minimum + 1));
+      }
+
+      function shuffle(items) {
+        const copy = items.slice();
+        for (let index = copy.length - 1; index > 0; index -= 1) {
+          const swap = randomInteger(0, index);
+          [copy[index], copy[swap]] = [copy[swap], copy[index]];
+        }
+        return copy;
+      }
+
+      function neighborPairs() {
+        const pairs = [];
+        for (let position = 0; position < SIZE * SIZE; position += 1) {
+          if (column(position) < SIZE - 1) pairs.push([position, position + 1]);
+          if (row(position) < SIZE - 1) pairs.push([position, position + SIZE]);
+        }
+        return pairs;
+      }
+
+      function pairFor(nextMode) {
+        if (nextMode === "sum" || nextMode === "product") return [randomInteger(2, 9), randomInteger(2, 9)];
+        if (nextMode === "difference") {
+          const difference = randomInteger(2, 8);
+          const low = randomInteger(1, 12 - difference);
+          return [low + difference, low];
+        }
+        const divisor = randomInteger(2, 6);
+        const quotient = randomInteger(2, 6);
+        return [divisor * quotient, divisor];
+      }
+
+      function renderBoard() {
+        board.replaceChildren();
+        values.forEach((value, position) => {
+          const button = document.createElement("button");
+          button.type = "button";
+          button.className = "rune";
+          button.dataset.index = String(position);
+          button.textContent = String(value);
+          button.setAttribute("role", "gridcell");
+          button.setAttribute("aria-label", `Case ${value}, ligne ${row(position) + 1}, colonne ${column(position) + 1}`);
+          board.append(button);
+        });
+      }
+
+      function updateCounter() {
+        counter.textContent = `${keys} / ${GOAL} clés`;
+      }
+
+      function makeChallenge() {
+        mode = modes[keys];
+        values = Array.from({ length: SIZE * SIZE }, () => randomInteger(1, 12));
+        const pairs = neighborPairs();
+        const pair = pairs[randomInteger(0, pairs.length - 1)];
+        const solution = pairFor(mode);
+        values[pair[0]] = solution[0];
+        values[pair[1]] = solution[1];
+        target = calculate(mode, solution[0], solution[1]);
+        firstSelection = null;
+        locked = false;
+        challenge.innerHTML = `une <b>${operationLabels[mode]}</b> de <strong>${target}</strong>`;
+        status.className = "status-line";
+        status.textContent = "Choisis deux cases qui se touchent par un côté.";
+        renderBoard();
+      }
+
+      function clearSelection() {
+        board.querySelectorAll(".selected,.success,.failure").forEach(node => node.classList.remove("selected", "success", "failure"));
+        firstSelection = null;
+      }
+
+      function complete() {
+        locked = true;
+        document.querySelector("#result-score").textContent = `${GOAL} clés trouvées`;
+        result.hidden = false;
+      }
+
+      function resolve(secondPosition) {
+        const firstButton = board.querySelector(`[data-index="${firstSelection}"]`);
+        const secondButton = board.querySelector(`[data-index="${secondPosition}"]`);
+        const firstValue = values[firstSelection];
+        const secondValue = values[secondPosition];
+        const high = Math.max(firstValue, secondValue);
+        const low = Math.min(firstValue, secondValue);
+        const exactQuotient = mode !== "quotient" || high % low === 0;
+        const correct = exactQuotient && calculate(mode, firstValue, secondValue) === target;
+        locked = true;
+        firstButton.classList.add(correct ? "success" : "failure");
+        secondButton.classList.add(correct ? "success" : "failure");
+        status.textContent = correct
+          ? `${expression(mode, firstValue, secondValue)} : une clé gagnée !`
+          : `${expression(mode, firstValue, secondValue)} : essaie une autre paire.`;
+        status.className = `status-line ${correct ? "good" : "wrong"}`;
+
+        if (correct) {
+          keys += 1;
+          updateCounter();
+          pendingTimer = window.setTimeout(() => keys === GOAL ? complete() : makeChallenge(), 750);
+        } else {
+          pendingTimer = window.setTimeout(() => {
+            clearSelection();
+            locked = false;
+            status.className = "status-line";
+            status.textContent = "Cherche une autre paire de cases voisines.";
+          }, 750);
+        }
+      }
+
+      function select(position) {
+        if (locked) return;
+
+        if (firstSelection === position) {
+          clearSelection();
+          status.className = "status-line";
+          status.textContent = "Choisis deux cases qui se touchent par un côté.";
+          return;
+        }
+
+        if (firstSelection === null) {
+          firstSelection = position;
+          board.querySelector(`[data-index="${position}"]`).classList.add("selected");
+          status.textContent = "Choisis maintenant une case voisine.";
+          return;
+        }
+
+        if (!adjacent(firstSelection, position)) {
+          clearSelection();
+          firstSelection = position;
+          board.querySelector(`[data-index="${position}"]`).classList.add("selected");
+          status.className = "status-line wrong";
+          status.textContent = "Les cases doivent se toucher par un côté. Cette case devient la première.";
+          return;
+        }
+
+        resolve(position);
+      }
+
+      function start() {
+        if (pendingTimer) window.clearTimeout(pendingTimer);
+        modes = shuffle(["sum", "sum", "sum", "difference", "difference", "product", "product", "product", "quotient", "quotient"]);
+        keys = 0;
+        locked = false;
+        result.hidden = true;
+        lesson.hidden = true;
+        updateCounter();
+        makeChallenge();
+      }
+
+      board.addEventListener("click", event => {
+        const button = event.target.closest(".rune");
+        if (button) select(Number(button.dataset.index));
+      });
+      document.querySelector("#start-game").addEventListener("click", start);
+      document.querySelector("#show-lesson").addEventListener("click", () => { lesson.hidden = false; });
+      document.querySelector("#close-lesson").addEventListener("click", () => {
+        if (!values.length) start();
+        else lesson.hidden = true;
+      });
+      document.querySelector("#reset-button").addEventListener("click", start);
+      document.querySelector("#play-again").addEventListener("click", start);
+
+      window.MATHSGO_COFFRES_SOLO = { adjacent, calculate, expression, start };
+      lesson.hidden = false;
+      updateCounter();
+    })();
+  </script>
+</body>
+</html>

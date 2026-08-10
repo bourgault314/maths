@@ -87,7 +87,7 @@ window.MATHSGO_CATALOGUE = {
       "id": "bouliers",
       "title": "Bouliers et abaques",
       "domain": "nombres-calculs",
-      "notions": ["numeration"],
+      "notions": ["numeration", "calcul-mental"],
       "hub": "bouliers/index.html",
       "hiddenFromBrowse": true,
       "collapseInNotion": true
@@ -237,6 +237,14 @@ window.MATHSGO_CATALOGUE = {
       "thumbnail": "assets/img/thumbnails/jeux/carres-gloutons.svg?v=1",
       "cardDescription": "Fermer plus de carrés que Gloubi, anticiper les chaînes et éviter de lui offrir les derniers traits."
     },
+    "outils/club_maths/coffres_magiques.html": {
+      "primaryNotion": "strategie",
+      "primaryGroup": "jeux",
+      "collections": [],
+      "tags": ["jeu", "calcul-mental", "duel", "somme", "produit", "anticipation"],
+      "thumbnail": "assets/img/thumbnails/jeux/coffres-magiques.svg?v=1",
+      "cardDescription": "Jouer à deux, repérer deux nombres voisins qui donnent la cible et gagner cinq clés avant son adversaire."
+    },
     "outils/club_maths/tables_modulaires.html": {
       "primaryNotion": "explorations",
       "primaryGroup": "jeux",
@@ -340,6 +348,30 @@ window.MATHSGO_CATALOGUE = {
       "tags": ["automatismes", "cycle-4", "dnb", "entrainement", "diaporama", "interactif"],
       "thumbnail": "assets/img/thumbnails/automatismes/entrainement-cycle4.svg?v=1",
       "cardDescription": "Choisir le niveau, les domaines et le mode pour lancer une séance interactive ou un diaporama."
+    },
+    "outils/calcul_mental/coffres_magiques_solo.html": {
+      "primaryNotion": "calcul-mental",
+      "primaryGroup": "entrainer",
+      "collections": [],
+      "tags": ["calcul-mental", "quatre-operations", "coffres", "cles", "entrainement"],
+      "thumbnail": "assets/img/thumbnails/calcul-mental/coffres-magiques-solo.svg?v=1",
+      "cardDescription": "Ouvrir dix coffres en choisissant les deux nombres qui réalisent la somme, la différence, le produit ou le quotient demandé."
+    },
+    "outils/calcul_mental/defi_tables.html": {
+      "primaryNotion": "calcul-mental",
+      "primaryGroup": "entrainer",
+      "collections": [],
+      "tags": ["calcul-mental", "tables", "multiplication", "facteur-manquant", "chronometre"],
+      "thumbnail": "assets/img/thumbnails/calcul-mental/defi-tables.svg?v=1",
+      "cardDescription": "Résoudre 25 égalités en une minute, avec des produits directs et des facteurs manquants."
+    },
+    "outils/calcul_mental/defi_calcul.html": {
+      "primaryNotion": "calcul-mental",
+      "primaryGroup": "entrainer",
+      "collections": [],
+      "tags": ["calcul-mental", "additions", "soustractions", "complements", "chronometre"],
+      "thumbnail": "assets/img/thumbnails/calcul-mental/defi-calcul.svg?v=1",
+      "cardDescription": "Enchaîner 30 calculs en trois minutes : sommes, différences, compléments et multiplications par 10 ou 100."
     },
     "outils/automatismes/CM_Livret_A5.html": {
       "primaryNotion": "calcul-mental",
@@ -6008,6 +6040,120 @@ window.MATHSGO_CATALOGUE = {
         "jeu des points et carrés",
         "ordinateur",
         "anticipation"
+      ],
+      "kind": "tool",
+      "status": "published",
+      "featured": false,
+      "recent": true
+    },
+    {
+      "id": "outils-club-maths-coffres-magiques-html",
+      "title": "Coffres magiques — à deux",
+      "description": "Un duel de calcul mental : choisir deux nombres voisins dont la somme ou le produit donne la cible et remporter cinq clés.",
+      "path": "outils/club_maths/coffres_magiques.html",
+      "domains": [
+        "jeux-recherches"
+      ],
+      "notions": [
+        "strategie"
+      ],
+      "uses": [
+        "manipuler"
+      ],
+      "types": [
+        "plateau"
+      ],
+      "filters": [],
+      "keywords": [
+        "calcul mental à deux",
+        "somme ou produit",
+        "jeu des clés"
+      ],
+      "kind": "tool",
+      "status": "published",
+      "featured": false,
+      "recent": true
+    },
+    {
+      "id": "outils-calcul-mental-coffres-magiques-solo-html",
+      "title": "Coffres magiques — solo",
+      "description": "Dix coffres de calcul mental à ouvrir en retrouvant deux nombres liés par une somme, une différence, un produit ou un quotient.",
+      "path": "outils/calcul_mental/coffres_magiques_solo.html",
+      "domains": [
+        "nombres-calculs"
+      ],
+      "notions": [
+        "calcul-mental"
+      ],
+      "uses": [
+        "entrainer"
+      ],
+      "types": [
+        "exerciseur"
+      ],
+      "filters": [],
+      "keywords": [
+        "quatre opérations",
+        "calcul mental solo",
+        "dix clés"
+      ],
+      "kind": "tool",
+      "status": "published",
+      "featured": false,
+      "recent": true
+    },
+    {
+      "id": "outils-calcul-mental-defi-tables-html",
+      "title": "Défi tables",
+      "description": "Un défi chronométré de 25 égalités sur les tables de multiplication, en calcul direct ou à facteur manquant.",
+      "path": "outils/calcul_mental/defi_tables.html",
+      "domains": [
+        "nombres-calculs"
+      ],
+      "notions": [
+        "calcul-mental"
+      ],
+      "uses": [
+        "entrainer",
+        "projeter"
+      ],
+      "types": [
+        "exerciseur"
+      ],
+      "filters": [],
+      "keywords": [
+        "tables de multiplication",
+        "facteur manquant",
+        "25 questions en une minute"
+      ],
+      "kind": "tool",
+      "status": "published",
+      "featured": false,
+      "recent": true
+    },
+    {
+      "id": "outils-calcul-mental-defi-calcul-html",
+      "title": "Défi calcul",
+      "description": "Un entraînement chronométré de 30 calculs variés en trois minutes pour automatiser les stratégies de calcul mental.",
+      "path": "outils/calcul_mental/defi_calcul.html",
+      "domains": [
+        "nombres-calculs"
+      ],
+      "notions": [
+        "calcul-mental"
+      ],
+      "uses": [
+        "entrainer",
+        "projeter"
+      ],
+      "types": [
+        "exerciseur"
+      ],
+      "filters": [],
+      "keywords": [
+        "additions et soustractions",
+        "compléments",
+        "30 calculs en trois minutes"
       ],
       "kind": "tool",
       "status": "published",
