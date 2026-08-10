@@ -1053,6 +1053,7 @@
       const SIZE = 4;
       const GOAL = 10;
       const operationLabels = { sum: "somme", difference: "différence", product: "produit", quotient: "quotient" };
+      const operationArticles = { sum: "une", difference: "une", product: "un", quotient: "un" };
       const symbols = { sum: "+", difference: "−", product: "×", quotient: "÷" };
       const board = document.querySelector("#board");
       const status = document.querySelector("#status");
@@ -1521,7 +1522,7 @@
         boardId += 1;
         firstSelection = null;
         locked = false;
-        challenge.innerHTML = `une <b>${operationLabels[mode]}</b> de <strong>${target}</strong>`;
+        challenge.innerHTML = `${operationArticles[mode]} <b>${operationLabels[mode]}</b> de <strong>${target}</strong>`;
         status.className = "status-line";
         status.textContent = "Choisis deux cases qui se touchent par un côté.";
         renderBoard();

@@ -164,3 +164,9 @@ test("la série garde exactement dix clés et la distribution validée", () => {
   assert.match(html, /shuffle\(\["sum", "sum", "sum", "difference", "difference", "product", "product", "product", "quotient", "quotient"\]\)/);
   assert.doesNotMatch(html, /id="(?:timer|chronometer|countdown)"/i);
 });
+
+test("le défi accorde correctement le genre des quatre opérations", () => {
+  assert.match(html, /operationArticles\s*=\s*\{\s*sum:\s*"une",\s*difference:\s*"une",\s*product:\s*"un",\s*quotient:\s*"un"\s*\}/);
+  assert.match(html, /`\$\{operationArticles\[mode\]\} <b>\$\{operationLabels\[mode\]\}<\/b>/);
+  assert.doesNotMatch(html, /`une <b>\$\{operationLabels\[mode\]\}/);
+});
