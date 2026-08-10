@@ -130,10 +130,32 @@ h3 { margin: 30px 0 12px; font-size: 1.16rem; }
 footer {
   display: flex;
   justify-content: center;
+  flex-wrap: wrap;
   gap: 10px;
   padding: 28px 16px;
   border-top: 1px solid var(--line);
   background: var(--paper);
+  color: var(--muted);
+  text-align: center;
+}
+
+footer a,
+footer button {
+  color: #075caa;
+  font: inherit;
+}
+
+footer button {
+  padding: 0;
+  border: 0;
+  background: none;
+  text-decoration: underline;
+  cursor: pointer;
+}
+
+footer button:focus-visible {
+  outline: 3px solid var(--focus);
+  outline-offset: 3px;
 }
 
 @media (max-width: 620px) {

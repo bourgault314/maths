@@ -59,6 +59,41 @@ test("l’annuaire contient un lien HTML direct vers chaque ressource publiée",
   }
 });
 
+test("l’annuaire généré expose le socle légal et le gestionnaire de consentement", () => {
+  const html = buildDirectoryHtml(catalogue);
+  assert.match(html, /href="\.\.\/assets\/css\/consentement\.css"/);
+  assert.match(html, /src="\.\.\/assets\/js\/consentement\.js"/);
+  assert.match(html, /href="mailto:gwenael@mathsgo\.re\?subject=Contact%20depuis%20mathsgo\.re"/);
+  assert.match(html, /href="\/mentions-legales\.html"/);
+  assert.match(html, /href="\/confidentialite\.html"/);
+  assert.match(html, /data-mathsgo-consent-open[^>]*>Gérer mes cookies<\/button>/);
+});
+
+test("l’annuaire range les bouliers en Numération et réserve Calcul mental aux quatre ressources validées", () => {
+  const html = buildDirectoryHtml(catalogue);
+  const section = (notionId) => {
+    const start = html.indexOf(`<section class="notion" aria-labelledby="notion-${notionId}">`);
+    assert.notEqual(start, -1, notionId);
+    return html.slice(start, html.indexOf("</section>", start));
+  };
+  const calculMental = section("calcul-mental");
+  const numeration = section("numeration");
+  const others = section("autres");
+  const expected = [
+    "outils/automatismes/CM_Livret_A5.html",
+    "outils/calcul_mental/coffres_magiques_solo.html",
+    "outils/calcul_mental/defi_calcul.html",
+    "outils/calcul_mental/defi_tables.html"
+  ];
+
+  assert.equal((calculMental.match(/<li>/g) || []).length, expected.length);
+  for (const resourcePath of expected) assert.ok(calculMental.includes(publicUrlForPath(resourcePath)), resourcePath);
+  assert.doesNotMatch(calculMental, /\/outils\/bouliers\//);
+  assert.doesNotMatch(calculMental, /href="https:\/\/mathsgo\.re\/auto\/"/);
+  assert.match(numeration, /\/outils\/bouliers\//);
+  assert.match(others, /href="https:\/\/mathsgo\.re\/auto\/"/);
+});
+
 test("le hub Rekenrek suit exactement les ressources publiées de sa collection", () => {
   const resources = publishedCollectionResources(catalogue, "rekenrek");
   const sections = buildCollectionResourceSections(catalogue, "rekenrek");

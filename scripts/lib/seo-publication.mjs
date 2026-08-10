@@ -377,8 +377,15 @@ function resourceGroups(catalogue) {
   const classifications = catalogue.resourceClassifications || {};
   const groups = new Map(catalogue.domains.map((domain) => [domain.id, new Map()]));
 
+  function directoryNotionId(resource) {
+    const classification = classifications[resource.path] || {};
+    const primaryNotionId = classification.primaryNotion || resource.notions?.[0];
+    if ((classification.hiddenFromNotions || []).includes(primaryNotionId)) return "autres";
+    return primaryNotionId;
+  }
+
   for (const resource of catalogue.resources.filter(({ status }) => status === "published")) {
-    const primaryNotionId = classifications[resource.path]?.primaryNotion || resource.notions?.[0];
+    const primaryNotionId = directoryNotionId(resource);
     const notion = notionById.get(primaryNotionId);
     const domainId = notion?.domain || resource.domains?.[0];
     if (!groups.has(domainId)) groups.set(domainId, new Map());
@@ -432,7 +439,9 @@ export function buildDirectoryHtml(catalogue) {
   <meta name="robots" content="index, follow, max-image-preview:large">
   <link rel="icon" href="/favicon.ico" sizes="48x48">
   <link rel="icon" type="image/svg+xml" href="/favicon.svg">
-  <link rel="stylesheet" href="../assets/css/annuaire-ressources.css?v=20260808-1">
+  <link rel="stylesheet" href="../assets/css/annuaire-ressources.css?v=20260810-1">
+  <link rel="stylesheet" href="../assets/css/consentement.css">
+  <script defer src="../assets/js/consentement.js"></script>
 </head>
 <body>
   <a class="skip-link" href="#ressources">Aller aux ressources</a>
@@ -457,7 +466,14 @@ ${collectionCards}
     </section>
 ${domainSections}
   </main>
-  <footer><a href="/">Accueil</a><span aria-hidden="true">·</span><a href="/outils/">Catalogue</a><span aria-hidden="true">·</span><a href="/mentions-legales.html">Mentions légales</a></footer>
+  <footer>
+    <span>Gwenaël Bourgault</span><span aria-hidden="true">·</span>
+    <a href="mailto:gwenael@mathsgo.re?subject=Contact%20depuis%20mathsgo.re">Me contacter</a><span aria-hidden="true">·</span>
+    <a href="/outils/">Catalogue</a><span aria-hidden="true">·</span>
+    <a href="/mentions-legales.html">Mentions légales</a><span aria-hidden="true">·</span>
+    <a href="/confidentialite.html">Confidentialité</a><span aria-hidden="true">·</span>
+    <button type="button" data-mathsgo-consent-open onclick="window.mathsgoConsentement &amp;&amp; window.mathsgoConsentement.ouvrir()">Gérer mes cookies</button>
+  </footer>
 </body>
 </html>
 `;
