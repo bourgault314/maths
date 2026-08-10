@@ -252,7 +252,7 @@
     },
     strategie: {
       description: "Anticiper, raisonner et élaborer une stratégie.",
-      keywords: "jeu nim yavalath stratégie plateau",
+      keywords: "jeu nim yavalath carrés gloutons points carrés stratégie plateau",
       icon: "strategy",
       hub: "club_maths/index.html"
     },
