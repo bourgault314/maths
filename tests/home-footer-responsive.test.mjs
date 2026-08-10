@@ -9,28 +9,30 @@ const root = path.resolve(testDir, "..");
 const html = readFileSync(path.join(root, "index.html"), "utf8");
 const css = readFileSync(path.join(root, "assets/css/accueil.css"), "utf8");
 
-test("le pied d’accueil conserve trois groupes logiques indépendants", () => {
+test("le pied d’accueil sépare la signature, les actions et les liens légaux", () => {
   const footer = html.match(/<footer class="home-footer">([\s\S]*?)<\/footer>/)?.[1];
   assert.ok(footer, "le pied d’accueil doit être identifiable explicitement");
 
-  assert.match(
-    footer,
-    /footer-row footer-row-identity[\s\S]*Gwenaël Bourgault[\s\S]*Me contacter/
-  );
-  assert.match(
-    footer,
-    /footer-row footer-row-resources[\s\S]*href="outils\/toutes-les-ressources\.html">Toutes les ressources<\/a>[\s\S]*<\/span>/
-  );
+  const identityRow = footer.match(
+    /<span class="footer-row footer-row-identity">([\s\S]*?)<\/span>\s*<span class="footer-section-separator"/
+  )?.[1];
+  assert.ok(identityRow);
+  assert.match(identityRow, /Gwenaël Bourgault/);
+  assert.doesNotMatch(identityRow, /Me contacter|Toutes les ressources|aria-hidden="true">·/);
+
+  const actionsRow = footer.match(
+    /<span class="footer-row footer-row-actions">([\s\S]*?)<\/span>\s*<span class="footer-section-separator"/
+  )?.[1];
+  assert.ok(actionsRow);
+  assert.match(actionsRow, /Me contacter/);
+  assert.match(actionsRow, /aria-hidden="true">·/);
+  assert.match(actionsRow, /href="outils\/toutes-les-ressources\.html">Toutes les ressources<\/a>/);
+  assert.doesNotMatch(actionsRow, /Mentions légales|Confidentialité|Cookies/);
+
   assert.match(
     footer,
     /footer-row footer-row-legal[\s\S]*Mentions légales[\s\S]*Confidentialité[\s\S]*Cookies/
   );
-
-  const resourcesRow = footer.match(
-    /<span class="footer-row footer-row-resources">([\s\S]*?)<\/span>/
-  )?.[1];
-  assert.ok(resourcesRow);
-  assert.doesNotMatch(resourcesRow, /Mentions légales|Confidentialité|Cookies|aria-hidden="true">·/);
 });
 
 test("le pied reste sur une ligne continue sur ordinateur", () => {
