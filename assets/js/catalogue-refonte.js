@@ -592,6 +592,11 @@
     return `--accent:${escapeHtml(domain.color)};--soft:${escapeHtml(domain.soft)}`;
   }
 
+  function resourceDisplayDomain(resource) {
+    if (state.domain && resource.domains.includes(state.domain)) return state.domain;
+    return resource.domains[0] || "nombres-calculs";
+  }
+
   function notionHaystack(notion) {
     const design = notionDesign[notion.id] || {};
     return [notion.title, design.description, design.keywords].join(" ");
@@ -976,7 +981,7 @@
   }
 
   function resourceCard(resource) {
-    const domainId = resource.domains[0] || "nombres-calculs";
+    const domainId = resourceDisplayDomain(resource);
     const classification = resourceClassification(resource);
     const thumbnail = classification.thumbnail || resource.thumbnail;
     const description = classification.cardDescription || resource.description;
@@ -1000,7 +1005,7 @@
 
   function resourceFamilyCard(family, variants) {
     const representative = variants[0];
-    const domainId = representative?.domains?.[0] || "nombres-calculs";
+    const domainId = resourceDisplayDomain(representative);
     const versionLabel = `${variants.length} version${variants.length > 1 ? "s" : ""}`;
     const thumbnail = family.thumbnail;
     const description = family.cardDescription || family.description || "Choisir une version.";

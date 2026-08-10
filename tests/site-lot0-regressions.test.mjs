@@ -74,6 +74,15 @@ test("la recherche utilise uniquement son bouton d'effacement intégré", () => 
   assert.doesNotMatch(catalogueScript, /data-breadcrumb-target="search"/);
 });
 
+test("une ressource transversale prend la couleur du domaine parcouru", () => {
+  assert.match(
+    catalogueScript,
+    /function resourceDisplayDomain\(resource\) \{\s*if \(state\.domain && resource\.domains\.includes\(state\.domain\)\) return state\.domain;\s*return resource\.domains\[0\]/s,
+  );
+  assert.match(catalogueScript, /function resourceCard\(resource\) \{\s*const domainId = resourceDisplayDomain\(resource\);/s);
+  assert.match(catalogueScript, /function resourceFamilyCard\(family, variants\) \{[\s\S]*?const domainId = resourceDisplayDomain\(representative\);/);
+});
+
 test("les portes sans ressource restent visibles mais ne sont pas des destinations", () => {
   assert.doesNotMatch(
     homePage,

@@ -467,7 +467,6 @@ window.MATHSGO_CATALOGUE = {
       "cardDescription": "Résoudre et inventer des problèmes de fractions d’une quantité à partir de schémas en barres."
     },
     "outils/chat-cest-toi-le-chat.pdf": {
-      "primaryNotion": "reperage",
       "primaryGroup": "jeux",
       "collections": [],
       "tags": ["reperage-spatial", "cycle-1", "cycle-2", "cycle-3", "cycle-4", "maternelle", "ecole-elementaire", "college", "moyenne-section", "grande-section", "cp", "communication", "cooperation", "devant-derriere", "gauche-droite", "jeu-collectif", "imprimable", "cartes-grand-format", "decouper"],
@@ -475,7 +474,6 @@ window.MATHSGO_CATALOGUE = {
       "cardDescription": "Les 80 cartes du jeu coopératif de repérage spatial, de la maternelle au collège, en grand format : quatre cartes à découper par page."
     },
     "outils/chat-cest-toi-le-chat-guide.pdf": {
-      "primaryNotion": "reperage",
       "primaryGroup": "jeux",
       "collections": [],
       "tags": ["reperage-spatial", "cycle-1", "cycle-2", "cycle-3", "cycle-4", "maternelle", "ecole-elementaire", "college", "moyenne-section", "grande-section", "cp", "communication", "cooperation", "devant-derriere", "gauche-droite", "jeu-collectif", "cerceaux", "cercles-au-sol", "imprimable", "guide-pedagogique", "regles", "solutions"],
@@ -483,7 +481,6 @@ window.MATHSGO_CATALOGUE = {
       "cardDescription": "Le guide pédagogique du jeu coopératif de repérage spatial, de la maternelle au collège : règles, exemple guidé et solutions des vingt séries."
     },
     "outils/chat-cest-toi-le-chat-cartes-compactes.pdf": {
-      "primaryNotion": "reperage",
       "primaryGroup": "jeux",
       "collections": [],
       "tags": ["reperage-spatial", "cycle-1", "cycle-2", "cycle-3", "cycle-4", "maternelle", "ecole-elementaire", "college", "communication", "cooperation", "devant-derriere", "gauche-droite", "jeu-collectif", "imprimable", "cartes-compactes", "decouper"],
@@ -491,7 +488,6 @@ window.MATHSGO_CATALOGUE = {
       "cardDescription": "Le jeu coopératif de repérage spatial, de la maternelle au collège, en format compact : huit cartes en portrait par feuille A4 paysage."
     },
     "outils/chat-cest-toi-le-chat-projection.html": {
-      "primaryNotion": "reperage",
       "primaryGroup": "jeux",
       "collections": [],
       "tags": ["reperage-spatial", "cycle-1", "cycle-2", "cycle-3", "cycle-4", "maternelle", "ecole-elementaire", "college", "moyenne-section", "grande-section", "cp", "communication", "cooperation", "devant-derriere", "gauche-droite", "jeu-collectif", "projection", "vrai-faux", "placement"],
@@ -2762,10 +2758,12 @@ window.MATHSGO_CATALOGUE = {
       "description": "Le guide pédagogique du jeu coopératif de repérage spatial, de la maternelle au collège : règles, exemple guidé et solutions des vingt séries progressives.",
       "path": "outils/chat-cest-toi-le-chat-guide.pdf",
       "domains": [
-        "geometrie"
+        "geometrie",
+        "jeux-recherches"
       ],
       "notions": [
-        "reperage"
+        "reperage",
+        "strategie"
       ],
       "uses": [
         "manipuler",
@@ -2811,10 +2809,12 @@ window.MATHSGO_CATALOGUE = {
       "description": "Les 80 cartes du jeu coopératif de repérage spatial, de la maternelle au collège, en grand format : les vingt séries sont réparties à raison de quatre cartes à découper par page.",
       "path": "outils/chat-cest-toi-le-chat.pdf",
       "domains": [
-        "geometrie"
+        "geometrie",
+        "jeux-recherches"
       ],
       "notions": [
-        "reperage"
+        "reperage",
+        "strategie"
       ],
       "uses": [
         "manipuler",
@@ -2857,10 +2857,12 @@ window.MATHSGO_CATALOGUE = {
       "description": "Le jeu coopératif de repérage spatial, de la maternelle au collège, en format compact : les 80 cartes des vingt séries sont réparties à raison de huit cartes en portrait par feuille A4 paysage.",
       "path": "outils/chat-cest-toi-le-chat-cartes-compactes.pdf",
       "domains": [
-        "geometrie"
+        "geometrie",
+        "jeux-recherches"
       ],
       "notions": [
-        "reperage"
+        "reperage",
+        "strategie"
       ],
       "uses": [
         "manipuler",
@@ -2904,10 +2906,12 @@ window.MATHSGO_CATALOGUE = {
       "description": "Une activité collective de repérage spatial à projeter, de la maternelle au collège : toute la classe observe un placement, argumente puis vérifie les quatre cartes pas à pas.",
       "path": "outils/chat-cest-toi-le-chat-projection.html",
       "domains": [
-        "geometrie"
+        "geometrie",
+        "jeux-recherches"
       ],
       "notions": [
-        "reperage"
+        "reperage",
+        "strategie"
       ],
       "uses": [
         "projeter"

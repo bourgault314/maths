@@ -196,7 +196,7 @@ test("les arbitrages pédagogiques clés restent explicites", () => {
   ]);
 });
 
-test("les ressources Chat restent regroupées par usage sans multiplier les miniatures", () => {
+test("les ressources Chat restent regroupées et sont accessibles en repérage comme en stratégie", () => {
   const guide = publishedByPath.get("outils/chat-cest-toi-le-chat-guide.pdf");
   const printable = publishedByPath.get("outils/chat-cest-toi-le-chat.pdf");
   const compact = publishedByPath.get("outils/chat-cest-toi-le-chat-cartes-compactes.pdf");
@@ -228,6 +228,22 @@ test("les ressources Chat restent regroupées par usage sans multiplier les mini
 
   for (const resource of chatResources) {
     const classification = classifications[resource.path];
+    assert.deepEqual(
+      Array.from(resource.domains || []),
+      ["geometrie", "jeux-recherches"],
+      `${resource.path} doit rester en géométrie et apparaître aussi dans les jeux.`
+    );
+    assert.deepEqual(
+      Array.from(resource.notions || []),
+      ["reperage", "strategie"],
+      `${resource.path} doit être accessible depuis Repérage et Jeux de stratégie.`
+    );
+    assert.equal(
+      classification.primaryNotion,
+      undefined,
+      `${resource.path} ne doit pas limiter l’affichage à une seule de ses deux notions.`
+    );
+    assert.equal(classification.primaryGroup, "jeux");
     const publicDescriptions = [resource.description, classification.cardDescription];
     for (const description of publicDescriptions) {
       assert.match(description, /de la maternelle au collège/i);
