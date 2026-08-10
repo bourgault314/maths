@@ -309,7 +309,7 @@ HTML_TEMPLATE = r'''<!doctype html>
     .home-inner { width:min(1320px,100%); margin:0 auto; }
     .hero { display:grid; grid-template-columns:minmax(0,1.04fr) minmax(400px,.96fr); gap:22px; align-items:stretch; }
     .hero-copy, .guided { background:white; border-radius:var(--radius); box-shadow:var(--shadow); }
-    .hero-copy { padding:clamp(24px,3.2vw,40px); display:flex; flex-direction:column; justify-content:flex-start; align-self:start; }
+    .hero-copy { padding:clamp(24px,3.2vw,40px); display:flex; flex-direction:column; justify-content:flex-start; align-self:stretch; }
     .eyebrow { color:var(--orange); font-weight:900; text-transform:uppercase; letter-spacing:.1em; font-size:13px; }
     h1 { margin:8px 0 12px; color:var(--navy); font-size:clamp(32px,4.3vw,54px); line-height:1.02; letter-spacing:-.035em; }
     .lead { margin:0; font-size:clamp(17px,2vw,23px); line-height:1.45; color:#405a73; }
@@ -343,7 +343,8 @@ HTML_TEMPLATE = r'''<!doctype html>
     .picker-button:hover small { color:#dceaf4; }
 
     /* Défi */
-    .challenge { display:flex; flex-direction:column; min-height:calc(100dvh - 64px); padding:14px 18px 12px; overflow:auto; }
+    .challenge { display:flex; flex-direction:column; height:calc(100dvh - 64px); min-height:0;
+      padding:14px 18px 12px; overflow:hidden; }
     .challenge-head { display:flex; align-items:center; gap:12px; width:min(1500px,100%); margin:0 auto 10px; }
     .challenge-head h1 { margin:0; font-size:clamp(24px,3vw,38px); }
     .difficulty { padding:6px 11px; border-radius:999px; color:#9a510e; background:#fff0dc; font-size:12px; font-weight:900; text-transform:uppercase; }
@@ -370,7 +371,7 @@ HTML_TEMPLATE = r'''<!doctype html>
     .question { margin:6px 0 0; text-align:center; color:var(--navy); font-size:clamp(20px,2.6vw,34px); font-weight:950; }
     .question-hint { margin:5px 0 0; text-align:center; color:var(--muted); font-weight:650; }
 
-    .cards-panel { display:flex; flex-direction:column; }
+    .cards-panel { --feedback-height:86px; --decision-height:76px; display:flex; flex-direction:column; }
     .cards-title { display:flex; align-items:center; justify-content:space-between; gap:12px; margin-bottom:9px; }
     .cards-title h2 { margin:0; color:var(--navy); font-size:clamp(18px,2vw,26px); }
     .cards-title small { color:var(--muted); font-weight:700; }
@@ -400,7 +401,8 @@ HTML_TEMPLATE = r'''<!doctype html>
     .card-self-cat, .cat-mark { position:relative; z-index:1; overflow:visible; }
     .card-self-cat, .cat-mark svg { display:block; width:66%; height:auto; overflow:visible; }
     .cat-mark { width:100%; height:100%; display:grid; place-items:center; }
-    .feedback { flex:0 0 auto; min-height:54px; margin-top:9px; padding:9px 12px; border-radius:14px;
+    .feedback { flex:0 0 var(--feedback-height); height:var(--feedback-height); min-height:var(--feedback-height);
+      max-height:var(--feedback-height); margin-top:9px; padding:9px 12px; overflow:auto; border-radius:14px;
       color:#405a73; background:#f0f4f7; line-height:1.4; }
     .feedback strong { color:var(--navy); }
     .feedback ul { margin:6px 0 0; padding:0; list-style:none; display:grid;
@@ -409,16 +411,18 @@ HTML_TEMPLATE = r'''<!doctype html>
     .feedback li::before { position:absolute; left:0; font-weight:900; }
     .feedback li.ok::before { content:"✓"; color:var(--green); }
     .feedback li.bad::before { content:"✕"; color:var(--red); }
-    .reveal-row { display:flex; align-items:center; gap:10px; margin-top:9px; }
+    .decision-slot { flex:0 0 var(--decision-height); min-height:var(--decision-height); display:grid;
+      margin-top:9px; }
+    .reveal-row { grid-area:1/1; display:flex; align-items:center; gap:10px; min-height:var(--decision-height); }
     .reveal-row .primary-button { flex:1; }
     .key-hint { color:var(--muted); font-size:11px; white-space:nowrap; }
-    .verdict { width:min(1500px,100%); margin:10px auto 0; padding:12px 15px; border-radius:16px;
-      display:flex; align-items:center; gap:14px; box-shadow:var(--shadow); }
+    .verdict { grid-area:1/1; width:100%; min-height:var(--decision-height); margin:0; padding:8px 10px;
+      border-radius:14px; display:flex; align-items:center; gap:10px; box-shadow:none; }
     .verdict.good { color:#155f42; background:#e8f8ef; border:2px solid #7ac6a2; }
     .verdict.bad { color:#872235; background:#fff0f2; border:2px solid #e18b97; }
-    .verdict-icon { font-size:30px; }
-    .verdict-copy { flex:1; line-height:1.4; }
-    .verdict-copy strong { display:block; font-size:17px; }
+    .verdict-icon { font-size:24px; }
+    .verdict-copy { flex:1; font-size:13px; line-height:1.25; }
+    .verdict-copy strong { display:block; font-size:15px; }
     .challenge-nav { width:min(1500px,100%); margin:10px auto 0; display:flex; align-items:center; justify-content:space-between; gap:10px; }
     .nav-button { min-width:140px; padding:10px 16px; color:var(--navy); background:white; box-shadow:0 5px 16px rgba(18,49,78,.1); }
     .nav-button:hover:not(:disabled) { color:white; background:var(--navy-2); }
@@ -441,8 +445,12 @@ HTML_TEMPLATE = r'''<!doctype html>
     }
     @media (max-width:949px) {
       .workspace { grid-template-columns:1fr; }
-      .challenge { overflow:auto; }
+      .challenge { height:auto; min-height:calc(100dvh - 64px); overflow:auto; }
       .placement-grid { --zone:clamp(78px,24vw,150px); }
+      .cards-panel { --feedback-height:auto; --decision-height:auto; }
+      .feedback { flex-basis:auto; height:auto; min-height:54px; max-height:none; }
+      .decision-slot { flex-basis:auto; min-height:0; }
+      .reveal-row, .verdict { min-height:0; }
     }
     @media (max-width:640px) {
       .topbar { min-height:62px; padding:8px 10px; }
@@ -472,7 +480,7 @@ HTML_TEMPLATE = r'''<!doctype html>
       .verdict-copy { min-width:calc(100% - 50px); }
       .verdict .primary-button, .verdict .secondary-button { width:100%; }
     }
-    @media (min-width:950px) and (max-height:790px) {
+    @media (min-width:950px) and (max-height:900px) {
       .home { padding:10px 18px; }
       .hero { gap:14px; }
       .hero-copy { padding:18px 24px; }
@@ -505,9 +513,10 @@ HTML_TEMPLATE = r'''<!doctype html>
       .question-hint { margin-top:2px; font-size:14px; }
       .card-map { width:min(100%,180px); aspect-ratio:1.1; }
       .logic-card { padding:5px 7px; }
-      .feedback { min-height:52px; margin-top:6px; padding:6px 10px; font-size:13px; }
-      .reveal-row { margin-top:6px; }
-      .verdict { margin-top:3px; padding:6px 10px; }
+      .cards-panel { --feedback-height:76px; --decision-height:68px; }
+      .feedback { margin-top:6px; padding:6px 10px; font-size:13px; }
+      .decision-slot { margin-top:6px; }
+      .verdict { padding:6px 10px; }
       .verdict-icon { font-size:24px; }
       .verdict-copy { line-height:1.25; }
       .verdict-copy strong { font-size:15px; }
@@ -533,8 +542,8 @@ HTML_TEMPLATE = r'''<!doctype html>
         <a class="icon-button" id="catalog-button" href="index.html" aria-label="Retourner au catalogue des outils">
           <span class="icon" aria-hidden="true"><svg viewBox="0 0 24 24" width="22" height="22"><path d="M3 11.5 12 4l9 7.5M5.5 10v10h13V10M9.5 20v-6h5v6" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg></span><span class="button-label">Outils</span>
         </a>
-        <button class="icon-button" id="home-button" type="button" aria-label="Accueil" hidden>
-          <span class="icon" aria-hidden="true"><svg viewBox="0 0 24 24" width="22" height="22"><path d="M3 11.5 12 4l9 7.5M5.5 10v10h13V10M9.5 20v-6h5v6" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg></span><span class="button-label">Accueil</span>
+        <button class="icon-button" id="home-button" type="button" aria-label="Retourner au menu des défis" hidden>
+          <span class="icon" aria-hidden="true"><svg viewBox="0 0 24 24" width="22" height="22"><path d="M19 12H5M11 6l-6 6 6 6" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg></span><span class="button-label">Menu</span>
         </button>
         <button class="icon-button" id="fullscreen-button" type="button" aria-label="Afficher en plein écran">
           <span class="icon" aria-hidden="true"><svg viewBox="0 0 24 24" width="22" height="22"><path d="M9 4H4v5M15 4h5v5M9 20H4v-5M15 20h5v-5" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round"/></svg></span><span class="button-label">Plein écran</span>
@@ -601,18 +610,19 @@ HTML_TEMPLATE = r'''<!doctype html>
             <div class="cards-title"><h2 id="cards-title">Les quatre cartes</h2><small>Le haut de la carte = devant</small></div>
             <div class="cards-grid" id="cards-grid"></div>
             <div class="feedback" id="card-feedback" aria-live="polite"><strong>À vous de jouer.</strong> Quand la classe a choisi, commencez par la carte 1.</div>
-            <div class="reveal-row" id="reveal-row">
-              <button class="primary-button" id="reveal-button" type="button">Vérifier la carte 1</button>
-              <span class="key-hint">Espace : vérifier</span>
+            <div class="decision-slot">
+              <div class="reveal-row" id="reveal-row">
+                <button class="primary-button" id="reveal-button" type="button">Vérifier la carte 1</button>
+                <span class="key-hint">Espace : vérifier</span>
+              </div>
+              <div class="verdict" id="verdict" aria-live="polite" hidden></div>
             </div>
           </section>
         </div>
 
-        <div class="verdict" id="verdict" aria-live="polite" hidden></div>
-
         <nav class="challenge-nav" aria-label="Navigation entre les défis">
           <button class="nav-button" id="previous-button" type="button">← Précédent</button>
-          <div class="nav-center">Touches ← → : naviguer · F : plein écran · H : accueil</div>
+          <div class="nav-center">Touches ← → : naviguer · F : plein écran · H : menu</div>
           <button class="nav-button" id="next-button" type="button">Suivant →</button>
         </nav>
       </section>

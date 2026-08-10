@@ -174,10 +174,20 @@ test("le HTML publié est autonome, synchronisé et adapté à une réflexion co
   assert.match(html, /alt="maths&amp;go"/, "La barre doit employer le logo horizontal maths&go.");
   assert.match(html, /class="brand" href="index\.html"/, "Le logo doit revenir au catalogue des outils.");
   assert.match(html, /id="catalog-button" href="index\.html"/, "L’accueil du module doit proposer un retour visible au catalogue.");
+  assert.match(html, /id="home-button"[^>]+aria-label="Retourner au menu des défis"[\s\S]*?<span class="button-label">Menu<\/span>/,
+    "Un défi doit proposer un retour explicite au menu du module, distinct du catalogue.");
+  assert.match(html, /\.hero-copy \{[^}]*align-self:stretch/s,
+    "Les deux panneaux de l’accueil doivent avoir la même hauteur.");
   assert.match(html, /\.picker-grid \{[^}]*grid-template-columns:repeat\(6,minmax\(58px,1fr\)\)/s,
     "Les douze défis doivent tenir sur deux rangées de six.");
-  assert.match(html, /@media \(min-width:950px\) and \(max-height:790px\) \{[\s\S]*?\.home \{ padding:10px 18px; \}[\s\S]*?\.picker-button \{ min-height:38px; padding:4px; \}/,
-    "L’accueil doit compacter ses deux rangées de défis sur les vidéoprojecteurs peu hauts.");
+  assert.match(html, /@media \(min-width:950px\) and \(max-height:900px\) \{[\s\S]*?\.home \{ padding:10px 18px; \}[\s\S]*?\.picker-button \{ min-height:38px; padding:4px; \}/,
+    "L’accueil et la projection doivent se compacter dès que la fenêtre est moins haute qu’un plein écran courant.");
+  assert.match(html, /\.cards-panel \{[^}]*--feedback-height:86px; --decision-height:76px/s,
+    "Le panneau doit réserver dès le départ la place maximale des explications et du verdict.");
+  assert.match(html, /\.feedback \{[^}]*flex:0 0 var\(--feedback-height\);[^}]*height:var\(--feedback-height\)[^}]*max-height:var\(--feedback-height\)/s,
+    "Les explications ne doivent plus redimensionner les cartes pendant la vérification.");
+  assert.match(html, /<div class="decision-slot">[\s\S]*?<div class="reveal-row" id="reveal-row">[\s\S]*?<div class="verdict" id="verdict"/,
+    "Le bouton et le verdict doivent partager une zone réservée de hauteur stable.");
   assert.match(html, /M78 88 C 96 82, 98 60, 88 52/, "La projection doit reprendre le chat du PDF.");
   assert.doesNotMatch(html, /M26 32 19 8l23 13/, "L’ancienne silhouette de face ne doit plus être utilisée.");
   assert.match(
