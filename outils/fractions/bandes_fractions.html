@@ -399,6 +399,16 @@
       box-shadow: 0 1px 2px rgba(0,0,0,0.2);
     }
 
+    /* Sur un écran d'ordinateur standard, les actions contextuelles passent en
+       icônes compactes. Le libellé complet reste disponible au survol et pour
+       les lecteurs d'écran grâce au title et à l'aria-label du bouton. */
+    @media (min-width: 641px) and (max-width: 1500px){
+      #header-left{ gap:4px !important; }
+      #selection-actions{ gap:4px !important; }
+      #selection-actions button{ padding:8px !important; }
+      #selection-actions button > span{ display:none; }
+    }
+
     @media (max-width: 640px){
       :root{ --stripH: 52; }
 
@@ -474,8 +484,8 @@
 
 <body class="h-screen w-screen flex flex-col">
 
-  <header class="bg-blue-50 p-2 shadow-md z-30 flex items-center gap-2 shrink-0">
-    <div id="header-left" class="flex items-center gap-2 flex-1 min-w-0 overflow-x-auto">
+  <header class="bg-blue-50 p-2 shadow-md z-30 flex items-center gap-2 shrink-0 no-scrollbar">
+    <div id="header-left" class="flex items-center gap-2 flex-1 min-w-0 overflow-x-auto no-scrollbar">
     <div class="flex items-center gap-2">
       <button id="btn-undo" class="bg-blue-100 text-blue-700 hover:bg-blue-200 p-2 rounded-lg font-bold border border-blue-200 shadow-sm active:scale-95 transition" title="Annuler">
         <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -540,7 +550,7 @@
     </div>
 
     <div id="selection-actions" class="flex items-center gap-2">
-      <button id="btn-hide" disabled class="bg-slate-500 hover:bg-slate-600 disabled:bg-slate-200 text-white px-2 py-1 rounded-lg shadow-sm border border-slate-200 disabled:opacity-40 disabled:cursor-not-allowed active:scale-95 transition flex flex-col items-center gap-0.5" title="Masquer / Afficher le contenu de cette pièce">
+      <button id="btn-hide" disabled class="bg-slate-500 hover:bg-slate-600 disabled:bg-slate-200 text-white px-2 py-1 rounded-lg shadow-sm border border-slate-200 disabled:opacity-40 disabled:cursor-not-allowed active:scale-95 transition flex flex-col items-center gap-0.5" title="Masquer / Afficher le contenu de cette pièce" aria-label="Masquer ou afficher le contenu">
         <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
           <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"></path>
           <line x1="1" y1="1" x2="23" y2="23"></line>
@@ -548,7 +558,7 @@
         <span class="text-[10px] font-extrabold leading-none">Masquer</span>
       </button>
 
-      <button id="btn-flip" disabled class="bg-amber-500 hover:bg-amber-600 disabled:bg-amber-200 text-white px-2 py-1 rounded-lg shadow-sm border border-amber-200 disabled:opacity-40 disabled:cursor-not-allowed active:scale-95 transition flex flex-col items-center gap-0.5" title="Retourner (double-clic aussi)">
+      <button id="btn-flip" disabled class="bg-amber-500 hover:bg-amber-600 disabled:bg-amber-200 text-white px-2 py-1 rounded-lg shadow-sm border border-amber-200 disabled:opacity-40 disabled:cursor-not-allowed active:scale-95 transition flex flex-col items-center gap-0.5" title="Retourner (double-clic aussi)" aria-label="Retourner">
         <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
           <path d="M4 7h13"/>
           <path d="m14 4 3 3-3 3"/>
@@ -558,7 +568,7 @@
         <span class="text-[10px] font-extrabold leading-none">Retourner</span>
       </button>
 
-      <button id="btn-separate" disabled class="bg-blue-600 hover:bg-blue-700 disabled:bg-blue-200 text-white px-2 py-1 rounded-lg shadow-sm border border-blue-200 disabled:opacity-40 disabled:cursor-not-allowed active:scale-95 transition flex flex-col items-center gap-0.5" title="Séparer la bande en pièces">
+      <button id="btn-separate" disabled class="bg-blue-600 hover:bg-blue-700 disabled:bg-blue-200 text-white px-2 py-1 rounded-lg shadow-sm border border-blue-200 disabled:opacity-40 disabled:cursor-not-allowed active:scale-95 transition flex flex-col items-center gap-0.5" title="Séparer la bande en pièces" aria-label="Séparer la bande en pièces">
         <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
           <path d="M4 4l16 16"/>
           <path d="M4 20L20 4"/>
@@ -566,7 +576,7 @@
         <span class="text-[10px] font-extrabold leading-none">Séparer</span>
       </button>
 
-      <button id="btn-cut" disabled class="bg-slate-700 hover:bg-slate-800 disabled:bg-slate-200 text-white px-2 py-1 rounded-lg shadow-sm border border-slate-200 disabled:opacity-40 disabled:cursor-not-allowed active:scale-95 transition flex flex-col items-center gap-0.5" title="Couper en 2 (si le double existe)">
+      <button id="btn-cut" disabled class="bg-slate-700 hover:bg-slate-800 disabled:bg-slate-200 text-white px-2 py-1 rounded-lg shadow-sm border border-slate-200 disabled:opacity-40 disabled:cursor-not-allowed active:scale-95 transition flex flex-col items-center gap-0.5" title="Couper en 2 (si le double existe)" aria-label="Couper en deux">
         <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
           <circle cx="6" cy="6" r="2"/>
           <circle cx="6" cy="18" r="2"/>
@@ -577,7 +587,7 @@
         <span class="text-[10px] font-extrabold leading-none">Couper</span>
       </button>
 
-      <button id="btn-fuse" disabled class="bg-violet-600 hover:bg-violet-700 disabled:bg-violet-200 text-white px-2 py-1 rounded-lg shadow-sm border border-violet-200 disabled:opacity-40 disabled:cursor-not-allowed active:scale-95 transition flex flex-col items-center gap-0.5" title="Fusionner des pièces alignées en une bande">
+      <button id="btn-fuse" disabled class="bg-violet-600 hover:bg-violet-700 disabled:bg-violet-200 text-white px-2 py-1 rounded-lg shadow-sm border border-violet-200 disabled:opacity-40 disabled:cursor-not-allowed active:scale-95 transition flex flex-col items-center gap-0.5" title="Fusionner des pièces alignées en une bande" aria-label="Fusionner les pièces alignées">
         <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
           <path d="M10 13a5 5 0 0 1 0-7l1-1a5 5 0 0 1 7 7l-1 1"/>
           <path d="M14 11a5 5 0 0 1 0 7l-1 1a5 5 0 0 1-7-7l1-1"/>
@@ -585,7 +595,7 @@
         <span class="text-[10px] font-extrabold leading-none">Fusionner</span>
       </button>
 
-      <button id="btn-duplicate" disabled class="bg-emerald-600 hover:bg-emerald-700 disabled:bg-emerald-200 text-white px-2 py-1 rounded-lg shadow-sm border border-emerald-200 disabled:opacity-40 disabled:cursor-not-allowed active:scale-95 transition flex flex-col items-center gap-0.5" title="Dupliquer">
+      <button id="btn-duplicate" disabled class="bg-emerald-600 hover:bg-emerald-700 disabled:bg-emerald-200 text-white px-2 py-1 rounded-lg shadow-sm border border-emerald-200 disabled:opacity-40 disabled:cursor-not-allowed active:scale-95 transition flex flex-col items-center gap-0.5" title="Dupliquer" aria-label="Dupliquer">
         <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
           <rect x="9" y="9" width="13" height="13" rx="2"/>
           <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/>
@@ -593,7 +603,7 @@
         <span class="text-[10px] font-extrabold leading-none">Dupliquer</span>
       </button>
 
-      <button id="btn-delete" disabled class="bg-rose-600 hover:bg-rose-700 disabled:bg-rose-200 text-white px-2 py-1 rounded-lg shadow-sm border border-rose-200 disabled:opacity-40 disabled:cursor-not-allowed active:scale-95 transition flex flex-col items-center gap-0.5" title="Supprimer">
+      <button id="btn-delete" disabled class="bg-rose-600 hover:bg-rose-700 disabled:bg-rose-200 text-white px-2 py-1 rounded-lg shadow-sm border border-rose-200 disabled:opacity-40 disabled:cursor-not-allowed active:scale-95 transition flex flex-col items-center gap-0.5" title="Supprimer" aria-label="Supprimer">
         <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
         </svg>
@@ -1454,7 +1464,9 @@ palette.querySelectorAll('.palette-item').forEach(item=>{
         gradDenom: first?.gradDenom || 0,
         defaultGap: Number(this.numberLine.defaultGap || 104),
         rows,
-        selectedRowId: this.numberLine.selectedRowId ?? first?.id ?? null,
+        selectedRowId: rows.some(row => row.id === this.numberLine.selectedRowId)
+          ? this.numberLine.selectedRowId
+          : null,
         nextRowId: Number(this.numberLine.nextRowId || (Math.max(0, ...rows.map(r=>r.id)) + 1))
       };
     }
@@ -1482,10 +1494,11 @@ palette.querySelectorAll('.palette-item').forEach(item=>{
       }
 
       const maxId = Math.max(0, ...rows.map(row => row.id));
+      const hasStoredSelection = Object.prototype.hasOwnProperty.call(source, 'selectedRowId');
       const selectedCandidate = Number(source.selectedRowId);
       const selectedRowId = rows.some(row => row.id === selectedCandidate)
         ? selectedCandidate
-        : (rows[0]?.id ?? null);
+        : (hasStoredSelection ? null : (rows[0]?.id ?? null));
       return {
         active: !!source.active && rows.length > 0,
         initialized: rows.length > 0,
@@ -1503,7 +1516,7 @@ palette.querySelectorAll('.palette-item').forEach(item=>{
 
     getSelectedNumberLineRow(){
       const rows = this.numberLine?.rows || [];
-      return rows.find(row => row.id === this.numberLine.selectedRowId) || rows[0] || null;
+      return rows.find(row => row.id === this.numberLine.selectedRowId) || null;
     }
 
     saveState(){
@@ -1658,6 +1671,32 @@ palette.querySelectorAll('.palette-item').forEach(item=>{
       return 18;
     }
 
+    menuLabelFontSize(denom, requestedMode = this.labelMode){
+      const mode = normalizeLabelMode(requestedMode, this.labelMode);
+      if(mode === 'empty') return 0;
+      if(mode === 'numeric'){
+        if(denom >= 12) return 8;
+        if(denom >= 10) return 9;
+        if(denom >= 8) return 10;
+        if(denom >= 6) return 11;
+        return 12;
+      }
+      if(mode === 'text'){
+        if(denom <= 1) return 14;
+        if(denom === 2) return 12;
+        if(denom === 3) return 9;
+        if(denom === 4) return 8;
+        return 6;
+      }
+      if(denom <= 1) return 14;
+      if(denom === 2) return 12;
+      if(denom === 3) return 8;
+      if(denom === 4) return 9;
+      if(denom === 5) return 8;
+      if(denom === 6) return 7;
+      return 6;
+    }
+
     buildPalette(){
       this.palette.innerHTML = '';
       FRACTIONS.forEach(f => {
@@ -1704,9 +1743,17 @@ palette.querySelectorAll('.palette-item').forEach(item=>{
         seg.className = 'spawn-seg';
         seg.style.color = cfg.text;
         
-        const fsMenu = (denom >= 12) ? 8 : (denom >= 10) ? 9 : (denom >= 8) ? 10 : (denom >= 6) ? 11 : 12;
+        const fsMenu = this.menuLabelFontSize(denom, this.labelMode);
         seg.style.fontSize = fsMenu + 'px';
         seg.innerHTML = this.getLabelHTML(denom, false, this.labelMode);
+        if(this.labelMode !== 'numeric'){
+          const label = seg.querySelector('.text-label, .back-one');
+          if(label){
+            label.style.fontSize = `${fsMenu}px`;
+            const compactVertical = denom >= 6 && (this.labelMode === 'percent' || this.labelMode === 'decimal');
+            if(compactVertical) label.classList.add('text-rotated');
+          }
+        }
         tile.appendChild(seg);
       }
       const start = (e) => this.startSpawnDrag(e, denom, kind);
@@ -1914,9 +1961,8 @@ palette.querySelectorAll('.palette-item').forEach(item=>{
       if(index < 0) return;
       this.saveState();
       this.numberLine.rows.splice(index, 1);
-      const next = this.numberLine.rows[Math.min(index, this.numberLine.rows.length - 1)] || null;
-      this.numberLine.selectedRowId = next?.id ?? null;
-      if(!next){
+      this.numberLine.selectedRowId = null;
+      if(!this.numberLine.rows.length){
         this.numberLine.active = false;
         this.numberLine.initialized = false;
       }
@@ -1928,6 +1974,12 @@ palette.querySelectorAll('.palette-item').forEach(item=>{
       if(!this.numberLine?.rows.some(row => row.id === rowId)) return;
       this.numberLine.selectedRowId = rowId;
       this.selectToken(null);
+      this.updateNumberLineEl();
+    }
+
+    deselectNumberLine(){
+      if(!this.numberLine || this.numberLine.selectedRowId == null) return;
+      this.numberLine.selectedRowId = null;
       this.updateNumberLineEl();
     }
 
@@ -2289,7 +2341,10 @@ palette.querySelectorAll('.palette-item').forEach(item=>{
           return;
         }
 
-        if(e.key === 'Escape') this.selectToken(null);
+        if(e.key === 'Escape'){
+          this.selectToken(null);
+          this.deselectNumberLine();
+        }
 
         if((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'z') {
           e.preventDefault();
@@ -2536,7 +2591,10 @@ endMarquee(){
         // AJOUT : Curseur global pour le panning aussi
         document.body.classList.add('is-dragging-global');
 
-        if(!isPen) this.selectToken(null);
+        if(!isPen){
+          this.selectToken(null);
+          this.deselectNumberLine();
+        }
       });
 
 this.boardContainer.addEventListener('mousedown', (e) => {
@@ -2556,6 +2614,7 @@ this.boardContainer.addEventListener('mousedown', (e) => {
           this.boardContainer.classList.add('panning');
           document.body.classList.add('is-dragging-global');
           this.selectToken(null);
+          this.deselectNumberLine();
           try{ this.boardContainer.setPointerCapture(e.pointerId); }catch(_){}
           return;
         }
@@ -2812,6 +2871,12 @@ window.addEventListener('resize', () => {
       }
 
       if(!this.selectedIds) this.selectedIds = new Set();
+
+      // Une bande et une droite ne restent jamais sélectionnées en même temps.
+      if(this.numberLine?.selectedRowId != null){
+        this.numberLine.selectedRowId = null;
+        this.updateNumberLineEl();
+      }
 
       if(additive){
         if(this.selectedIds.has(id)){

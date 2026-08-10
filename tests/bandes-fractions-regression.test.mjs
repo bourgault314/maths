@@ -92,6 +92,35 @@ test('les styles Tailwind sont précompilés localement', () => {
   }
 });
 
+test('la barre d’outils reste défilable sans afficher d’ascenseur horizontal', () => {
+  assert.match(
+    html,
+    /<header class="[^"]*\bno-scrollbar\b[^"]*">/,
+    'l’en-tête doit masquer visuellement sa barre de défilement',
+  );
+  assert.match(
+    html,
+    /<div id="header-left" class="[^"]*\boverflow-x-auto\b[^"]*\bno-scrollbar\b[^"]*">/,
+    'la zone principale doit rester défilable tout en masquant son ascenseur',
+  );
+  assert.match(html, /@media \(min-width: 641px\) and \(max-width: 1500px\)/);
+  assert.match(html, /#selection-actions button > span\{ display:none; \}/);
+  for(const id of ['btn-hide', 'btn-flip', 'btn-separate', 'btn-cut', 'btn-fuse', 'btn-duplicate', 'btn-delete']){
+    assert.match(html, new RegExp(`id="${id}"[^>]+aria-label="[^"]+"`));
+  }
+});
+
+test('les écritures compactes de la palette restent dans les petites parts', () => {
+  const prototype = appPrototype();
+  assert.equal(prototype.menuLabelFontSize.call({labelMode:'text'}, 2, 'text'), 12);
+  assert.equal(prototype.menuLabelFontSize.call({labelMode:'text'}, 3, 'text'), 9);
+  assert.equal(prototype.menuLabelFontSize.call({labelMode:'text'}, 12, 'text'), 6);
+  assert.equal(prototype.menuLabelFontSize.call({labelMode:'percent'}, 3, 'percent'), 8);
+  assert.equal(prototype.menuLabelFontSize.call({labelMode:'percent'}, 12, 'percent'), 6);
+  assert.match(html, /compactVertical = denom >= 6/);
+  assert.match(html, /label\.classList\.add\('text-rotated'\)/);
+});
+
 test('une ancienne droite unique migre en première droite alignée', () => {
   const prototype = appPrototype();
   const migrated = prototype.normalizeNumberLineState.call({}, {
@@ -104,6 +133,7 @@ test('une ancienne droite unique migre en première droite alignée', () => {
   });
   assert.equal(migrated.x, 40);
   assert.equal(migrated.len, 800);
+  assert.equal(migrated.selectedRowId, 1);
   assert.equal(migrated.rows.length, 1);
   assert.deepEqual(JSON.parse(JSON.stringify(migrated.rows[0])), {
     id:1,
@@ -111,6 +141,17 @@ test('une ancienne droite unique migre en première droite alignée', () => {
     gradDenom:3,
     displayMode:'numeric'
   });
+
+  const deselected = prototype.normalizeNumberLineState.call({}, {
+    active:true,
+    rows:[{id:4, y:80, gradDenom:2, displayMode:'decimal'}],
+    selectedRowId:null
+  });
+  assert.equal(deselected.selectedRowId, null);
+  assert.equal(prototype.getSelectedNumberLineRow.call({numberLine:deselected}), null);
+  assert.equal(prototype.serializeNumberLine.call({numberLine:deselected}).selectedRowId, null);
+  assert.match(html, /deselectNumberLine\(\)/);
+  assert.match(html, /this\.selectToken\(null\);\s*this\.deselectNumberLine\(\);/);
 });
 
 test('le crayon conserve aussi un point seul et le redessine', () => {
