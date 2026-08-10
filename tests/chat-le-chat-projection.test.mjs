@@ -176,6 +176,8 @@ test("le HTML publié est autonome, synchronisé et adapté à une réflexion co
   assert.match(html, /id="catalog-button" href="index\.html"/, "L’accueil du module doit proposer un retour visible au catalogue.");
   assert.match(html, /\.picker-grid \{[^}]*grid-template-columns:repeat\(6,minmax\(58px,1fr\)\)/s,
     "Les douze défis doivent tenir sur deux rangées de six.");
+  assert.match(html, /@media \(min-width:950px\) and \(max-height:790px\) \{[\s\S]*?\.home \{ padding:10px 18px; \}[\s\S]*?\.picker-button \{ min-height:38px; padding:4px; \}/,
+    "L’accueil doit compacter ses deux rangées de défis sur les vidéoprojecteurs peu hauts.");
   assert.match(html, /M78 88 C 96 82, 98 60, 88 52/, "La projection doit reprendre le chat du PDF.");
   assert.doesNotMatch(html, /M26 32 19 8l23 13/, "L’ancienne silhouette de face ne doit plus être utilisée.");
   assert.match(
