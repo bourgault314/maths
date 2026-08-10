@@ -2,6 +2,7 @@ import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import { spawnSync } from "node:child_process";
 import test from "node:test";
+import { runInNewContext, Script } from "node:vm";
 
 const sourceUrl = new URL("../_sources/chat-le-chat/projection_cases.json", import.meta.url);
 const seriesUrl = new URL("../_sources/chat-le-chat/series20.json", import.meta.url);
@@ -69,6 +70,35 @@ function countOneMoveCorrections(cards, grid) {
     }
   }
   return count;
+}
+
+function countExchangeCorrections(cards, grid) {
+  const playerPositions = [...positions(grid)];
+  let count = 0;
+  for (let first = 0; first < playerPositions.length; first += 1) {
+    for (let second = first + 1; second < playerPositions.length; second += 1) {
+      const [firstPlayer, [firstRow, firstColumn]] = playerPositions[first];
+      const [secondPlayer, [secondRow, secondColumn]] = playerPositions[second];
+      const candidate = grid.map(row => [...row]);
+      candidate[firstRow][firstColumn] = secondPlayer;
+      candidate[secondRow][secondColumn] = firstPlayer;
+      if (isValid(evaluate(cards, candidate))) count += 1;
+    }
+  }
+  return count;
+}
+
+function extractGeneratedFunction(name) {
+  const start = html.indexOf(`function ${name}(`);
+  assert.notEqual(start, -1, `La fonction ${name} doit être présente dans le HTML généré.`);
+  const bodyStart = html.indexOf("{", start);
+  let depth = 0;
+  for (let index = bodyStart; index < html.length; index += 1) {
+    if (html[index] === "{") depth += 1;
+    if (html[index] === "}") depth -= 1;
+    if (depth === 0) return html.slice(start, index + 1);
+  }
+  throw new Error(`La fonction ${name} est incomplète.`);
 }
 
 function assertGrid(grid, label) {
@@ -147,16 +177,58 @@ test("les douze défis sont progressifs, équilibrés et corrigibles par un seul
   assert.equal(verdicts.filter(Boolean).length, 6);
 });
 
-test("le nombre de corrections en un déplacement est calculé sans cas particulier", () => {
-  const expectedCounts = [0, 2, 1, 0, 3, 0, 0, 1, 1, 0, 1, 0];
+test("les corrections par déplacement ou échange sont toutes comptées", () => {
+  const expectedMoveCounts = [0, 2, 1, 0, 3, 0, 0, 1, 1, 0, 1, 0];
+  const expectedExchangeCounts = [0, 1, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0];
+  const expectedCounts = [0, 3, 1, 0, 3, 0, 0, 2, 1, 0, 1, 0];
   assert.deepEqual(
     data.cases.map(item => item.correction ? countOneMoveCorrections(item.cards, item.proposed) : 0),
-    expectedCounts
+    expectedMoveCounts
+  );
+  assert.deepEqual(
+    data.cases.map(item => item.correction ? countExchangeCorrections(item.cards, item.proposed) : 0),
+    expectedExchangeCounts
   );
   const payloadMatch = html.match(/<script id="projection-data" type="application\/json">(.*?)<\/script>/s);
   assert.ok(payloadMatch);
   const payload = JSON.parse(payloadMatch[1]);
   assert.deepEqual(payload.cases.map(item => item.correctionCount), expectedCounts);
+  assert.deepEqual(payload.cases.map(item => item.moveCorrectionCount), expectedMoveCounts);
+  assert.deepEqual(payload.cases.map(item => item.exchangeCorrectionCount), expectedExchangeCounts);
+});
+
+test("une action manipulée déplace vers un vide ou échange deux chats", () => {
+  const applyPlacementAction = runInNewContext(`(${extractGeneratedFunction("applyPlacementAction")})`);
+  const plain = value => JSON.parse(JSON.stringify(value));
+  const challenge2 = data.cases[1];
+  const moved = applyPlacementAction(challenge2.proposed, 0, 2);
+  assert.deepEqual(plain(moved.grid), [[0,4,1],[2,3,0]]);
+  assert.equal(moved.sourcePlayer, 1);
+  assert.equal(moved.targetPlayer, 0);
+  assert.equal(isValid(evaluate(challenge2.cards, moved.grid)), true);
+
+  const exchanged = applyPlacementAction(challenge2.proposed, 0, 1);
+  assert.deepEqual(plain(exchanged.grid), [[4,1,0],[2,3,0]]);
+  assert.equal(exchanged.sourcePlayer, 1);
+  assert.equal(exchanged.targetPlayer, 4);
+  assert.equal(isValid(evaluate(challenge2.cards, exchanged.grid)), true);
+  assert.equal(applyPlacementAction(challenge2.proposed, 0, 0), null);
+  assert.equal(applyPlacementAction(challenge2.proposed, 2, 0), null);
+
+  const challenge8 = data.cases[7];
+  const secondExchange = applyPlacementAction(challenge8.proposed, 4, 5);
+  assert.deepEqual(plain(secondExchange.grid), [[0,1,2],[0,3,4]]);
+  assert.equal(isValid(evaluate(challenge8.cards, secondExchange.grid)), true);
+
+  const challenge3 = data.cases[2];
+  const temptingButWrong = applyPlacementAction(challenge3.proposed, 1, 0);
+  assert.deepEqual(plain(temptingButWrong.grid), [[4,0,3],[1,2,0]]);
+  assert.deepEqual(evaluate(challenge3.cards, temptingButWrong.grid), {
+    1: true,
+    2: false,
+    3: false,
+    4: true
+  });
 });
 
 test("les défis projetés ne dupliquent ni les séries imprimées ni un autre défi par symétrie", () => {
@@ -176,11 +248,16 @@ test("le HTML publié est autonome, synchronisé et adapté à une réflexion co
   assert.equal(payload.cases.length, 12);
   assert.deepEqual(payload.cases.map(item => item.cards), data.cases.map(item => item.cards));
   assert.deepEqual(payload.guided.cards, data.guided.cards);
+  const appScript = [...html.matchAll(/<script(?: [^>]*)?>([\s\S]*?)<\/script>/g)]
+    .map(match => match[1])
+    .find(source => source.includes("const state ="));
+  assert.ok(appScript, "Le script de l’outil doit être présent.");
+  assert.doesNotThrow(() => new Script(appScript), "Le script de l’outil doit avoir une syntaxe JavaScript valide.");
 
   for (const id of [
     "home-screen", "challenge-screen", "placement-grid", "cards-grid",
     "catalog-button", "home-button", "reveal-button", "fullscreen-button",
-    "previous-button", "next-button"
+    "previous-button", "next-button", "placement-question", "placement-hint"
   ]) assert.match(html, new RegExp(`id="${id}"`));
   assert.equal(
     (html.match(/revealButton\.addEventListener\('click', revealNextCard\)/g) || []).length,
@@ -235,10 +312,26 @@ test("le HTML publié est autonome, synchronisé et adapté à une réflexion co
   assert.doesNotMatch(html, /Tous ses indices correspondent au placement/i);
   assert.match(html, /function constraintFeedback\(item, player, grid\)/,
     "La correction doit expliciter chaque direction de la carte.");
-  assert.match(html, /state\.revealed = state\.showingCorrection \? 0 : 4/,
-    "L'affichage d'une correction doit remettre les quatre cartes en attente.");
-  assert.match(html, /state\.showingCorrection \|\| playerErrors\(item, player\)\.length === 0/,
-    "Les cartes corrigées ne doivent devenir vraies qu'après leur nouvelle vérification.");
+  assert.match(html, /function cardIsTrue\(item, player, grid\)[\s\S]*?constraintChecks\(item, player, grid\)\.every/,
+    "Chaque proposition doit être évaluée à partir de sa grille réelle.");
+  assert.match(html, /const result = revealed \? cardIsTrue\(item, player, displayGrid\) : null/,
+    "Les cartes ne doivent devenir vraies ou fausses qu'après leur vérification.");
+  assert.match(html, /state\.mode = 'attempt';[\s\S]*?state\.revealed = 0;/,
+    "Un déplacement ou un échange doit remettre les quatre cartes en attente.");
+  assert.match(html, /<button class="zone[\s\S]*?data-cell="\$\{cell\}"[\s\S]*?aria-pressed="\$\{selected \? 'true' : 'false'\}"/,
+    "Les six zones manipulables doivent être de vrais boutons accessibles.");
+  assert.match(html, /\$\('#placement-grid'\)\.addEventListener\('click', handlePlacementClick\)/,
+    "Un seul gestionnaire doit traiter la sélection, le déplacement ou l'échange.");
+  assert.match(html, /type: action\.targetPlayer \? 'exchange' : 'move'/,
+    "Une destination occupée doit échanger les deux chats.");
+  assert.match(html, /Proposer une correction/,
+    "Le verdict faux doit inviter la classe à construire sa correction.");
+  assert.match(html, /Cette correction ne suffit pas[\s\S]*?Réessayer[\s\S]*?Voir la solution/,
+    "Une tentative fausse doit pouvoir être recommencée ou remplacée par la solution préparée.");
+  assert.match(html, /\.zone\.selected \{[^}]*border-color:var\(--orange-art\)/s,
+    "Le chat sélectionné doit être signalé autrement que par le texte seul.");
+  assert.match(html, /\.zone\.target \{[^}]*outline:4px dashed/s,
+    "Les destinations doivent rester repérables au vidéoprojecteur.");
   assert.match(html, /Une autre correction existe : la classe peut la chercher/,
     "Les défis qui admettent plusieurs corrections doivent le signaler.");
   assert.match(html, /Deux autres corrections existent : la classe peut les chercher/,
