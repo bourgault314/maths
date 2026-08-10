@@ -433,6 +433,14 @@ window.MATHSGO_CATALOGUE = {
       "thumbnail": "assets/img/thumbnails/reperage/chat-cest-toi-le-chat.png?v=1",
       "cardDescription": "Un jeu coopératif de repérage spatial, de la maternelle au collège : quatre élèves communiquent pour se placer dans six zones au sol, matérialisées par des cerceaux ou des cercles tracés."
     },
+    "outils/chat-cest-toi-le-chat-cartes-compactes.pdf": {
+      "primaryNotion": "reperage",
+      "primaryGroup": "jeux",
+      "collections": [],
+      "tags": ["reperage-spatial", "cycle-1", "cycle-2", "cycle-3", "cycle-4", "maternelle", "ecole-elementaire", "college", "communication", "cooperation", "devant-derriere", "gauche-droite", "jeu-collectif", "imprimable", "cartes-compactes", "decouper"],
+      "thumbnail": "assets/img/thumbnails/reperage/chat-cest-toi-le-chat.png?v=1",
+      "cardDescription": "Le jeu coopératif de repérage spatial, de la maternelle au collège, en format compact : huit cartes en portrait par feuille A4 paysage."
+    },
     "outils/chat-cest-toi-le-chat-projection.html": {
       "primaryNotion": "reperage",
       "primaryGroup": "jeux",
@@ -1140,6 +1148,22 @@ window.MATHSGO_CATALOGUE = {
     }
   },
   "resourceFamilies": [
+    {
+      "id": "chat-cest-toi-le-chat-imprimer",
+      "title": "Chat, c’est toi le chat ! — À imprimer",
+      "description": "Choisir le format d’impression des cartes.",
+      "cardDescription": "Un jeu coopératif de repérage spatial, de la maternelle au collège, proposé en grand format ou en cartes compactes.",
+      "thumbnail": "assets/img/thumbnails/reperage/chat-cest-toi-le-chat.png?v=1",
+      "group": "jeux",
+      "labels": {
+        "outils/chat-cest-toi-le-chat.pdf": "Livret complet — 4 grandes cartes par page",
+        "outils/chat-cest-toi-le-chat-cartes-compactes.pdf": "Cartes compactes — 8 cartes par feuille"
+      },
+      "paths": [
+        "outils/chat-cest-toi-le-chat.pdf",
+        "outils/chat-cest-toi-le-chat-cartes-compactes.pdf"
+      ]
+    },
     {
       "id": "cours-tuiles-algebriques",
       "title": "Parcours de calcul littéral avec les tuiles",
@@ -2712,6 +2736,53 @@ window.MATHSGO_CATALOGUE = {
         "droite",
         "cerceaux",
         "cercles tracés au sol",
+        "20 séries",
+        "4 niveaux"
+      ],
+      "kind": "document",
+      "status": "published",
+      "featured": false,
+      "recent": true
+    },
+    {
+      "id": "outils-chat-cest-toi-le-chat-cartes-compactes-pdf",
+      "title": "Chat, c’est toi le chat ! — Cartes compactes",
+      "description": "Le jeu coopératif de repérage spatial, de la maternelle au collège, en format compact : les 80 cartes des vingt séries sont réparties à raison de huit cartes en portrait par feuille A4 paysage.",
+      "path": "outils/chat-cest-toi-le-chat-cartes-compactes.pdf",
+      "domains": [
+        "geometrie"
+      ],
+      "notions": [
+        "reperage"
+      ],
+      "uses": [
+        "manipuler",
+        "imprimer"
+      ],
+      "types": [
+        "imprimable"
+      ],
+      "filters": [
+        "materiel-imprimer"
+      ],
+      "keywords": [
+        "cycle 1",
+        "cycle 2",
+        "cycle 3",
+        "cycle 4",
+        "maternelle",
+        "école élémentaire",
+        "collège",
+        "repérage spatial",
+        "positionnement dans l’espace",
+        "communication",
+        "coopération",
+        "devant",
+        "derrière",
+        "gauche",
+        "droite",
+        "cartes compactes",
+        "huit cartes par feuille",
         "20 séries",
         "4 niveaux"
       ],

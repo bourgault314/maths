@@ -39,7 +39,7 @@ const expectedGroupCounts = {
   imprimer: 14,
   activites: 10,
   cours: 11,
-  jeux: 6
+  jeux: 7
 };
 
 const expectedVisibleCardCounts = {
@@ -64,10 +64,10 @@ function assertPathsInGroup(group, paths) {
   }
 }
 
-test("le catalogue conserve 146 entrées dont 130 publiées", () => {
+test("le catalogue conserve 147 entrées dont 131 publiées", () => {
   assert.equal(catalogue.schemaVersion, 5);
-  assert.equal(resources.length, 146);
-  assert.equal(published.length, 130);
+  assert.equal(resources.length, 147);
+  assert.equal(published.length, 131);
   assert.equal(new Set(resources.map((resource) => resource.path)).size, resources.length, "Chaque chemin doit être unique.");
 });
 
@@ -112,7 +112,7 @@ test("aucune carte publiée ne conserve la description générique", () => {
   assert.deepEqual(offenders, []);
 });
 
-test("la répartition arbitrée des 130 ressources reste stable", () => {
+test("la répartition arbitrée des 131 ressources reste stable", () => {
   const actual = Object.fromEntries([...allowedGroups].map((group) => [group, 0]));
   for (const resource of published) actual[resolvedPrimaryGroup(resource)] += 1;
   assert.deepEqual(actual, expectedGroupCounts);
@@ -183,18 +183,28 @@ test("les arbitrages pédagogiques clés restent explicites", () => {
   assertPathsInGroup("jeux", [
     "outils/club_maths/tables_modulaires.html",
     "outils/chat-cest-toi-le-chat.pdf",
+    "outils/chat-cest-toi-le-chat-cartes-compactes.pdf",
     "outils/chat-cest-toi-le-chat-projection.html"
   ]);
 });
 
-test("les deux ressources Chat restent autonomes et adaptées à leur usage", () => {
+test("les ressources Chat restent regroupées par usage sans multiplier les miniatures", () => {
   const printable = publishedByPath.get("outils/chat-cest-toi-le-chat.pdf");
+  const compact = publishedByPath.get("outils/chat-cest-toi-le-chat-cartes-compactes.pdf");
   const projected = publishedByPath.get("outils/chat-cest-toi-le-chat-projection.html");
-  const chatResources = [printable, projected];
+  const chatResources = [printable, compact, projected];
+  const printFamily = families.find((family) => family.id === "chat-cest-toi-le-chat-imprimer");
 
   assert.equal(printable?.title, "Chat, c’est toi le chat ! — À imprimer");
   assert.deepEqual(Array.from(printable?.uses || []), ["manipuler", "imprimer"]);
   assert.equal(printable?.kind, "document");
+
+  assert.equal(compact?.title, "Chat, c’est toi le chat ! — Cartes compactes");
+  assert.deepEqual(Array.from(compact?.uses || []), ["manipuler", "imprimer"]);
+  assert.equal(compact?.kind, "document");
+  assert.deepEqual(Array.from(printFamily?.paths || []), [printable.path, compact.path]);
+  assert.equal(printFamily?.labels?.[printable.path], "Livret complet — 4 grandes cartes par page");
+  assert.equal(printFamily?.labels?.[compact.path], "Cartes compactes — 8 cartes par feuille");
 
   assert.equal(projected?.title, "Chat, c’est toi le chat ! — À projeter");
   assert.deepEqual(Array.from(projected?.uses || []), ["projeter"]);
@@ -257,6 +267,6 @@ test("les familles regroupent toutes leurs variantes sans perte ni chevauchement
   for (const family of families) visibleCardsByGroup[family.group] += 1;
 
   assert.equal(representedResourceCount, published.length, "Aucune variante publiée ne doit disparaître du catalogue.");
-  assert.equal(visibleCardCount, 116, "Les 130 ressources doivent être représentées par 116 cartes après regroupement.");
+  assert.equal(visibleCardCount, 116, "Les 131 ressources doivent être représentées par 116 cartes après regroupement.");
   assert.deepEqual(visibleCardsByGroup, expectedVisibleCardCounts);
 });
