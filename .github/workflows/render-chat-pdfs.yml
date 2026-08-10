@@ -1,0 +1,41 @@
+name: Render Chat PDFs
+
+on:
+  push:
+    branches:
+      - agent/separer-guide-cartes-chat
+
+permissions:
+  contents: write
+
+jobs:
+  render:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: agent/separer-guide-cartes-chat
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Installer les outils PDF
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y poppler-utils
+      - name: Générer et valider les documents
+        run: |
+          python3 _sources/chat-le-chat/gen.py
+          python3 _sources/chat-le-chat/verify.py
+          CHROME_BIN="$(command -v google-chrome || command -v chromium)" python3 _sources/chat-le-chat/render_pdfs.py --publish
+          npm run seo:verifier
+          node --test tests/catalogue-taxonomie.test.mjs
+      - name: Enregistrer les PDF générés
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git rm .github/workflows/render-chat-pdfs.yml
+          git add outils/chat-cest-toi-le-chat-guide.pdf
+          git add outils/chat-cest-toi-le-chat.pdf
+          git add outils/chat-cest-toi-le-chat-cartes-compactes.pdf
+          git commit -m "Générer les trois PDF Chat"
+          git push origin HEAD:agent/separer-guide-cartes-chat

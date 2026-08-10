@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Rend les deux PDF avec Chromium et refuse un moteur d'impression différent."""
+"""Rend les trois PDF avec Chromium et refuse un moteur d'impression différent."""
 
 from __future__ import annotations
 
@@ -84,16 +84,22 @@ def main() -> None:
 
     subprocess.run([sys.executable, str(HERE / "gen.py")], check=True)
     chromium = chromium_path()
-    booklet = render(chromium, "livret.html", "livret.pdf")
+    guide = render(chromium, "guide.html", "guide.pdf")
+    large_cards = render(chromium, "cartes-grand-format.html", "cartes-grand-format.pdf")
     compact = render(chromium, "cartes-compactes.html", "cartes-compactes.pdf")
-    validate_pdf(booklet, 24)
+    validate_pdf(guide, 4)
+    validate_pdf(large_cards, 20)
     validate_pdf(compact, 10)
 
     if args.publish:
-        shutil.copy2(booklet, SITE_ROOT / "outils" / "chat-cest-toi-le-chat.pdf")
+        shutil.copy2(guide, SITE_ROOT / "outils" / "chat-cest-toi-le-chat-guide.pdf")
+        shutil.copy2(large_cards, SITE_ROOT / "outils" / "chat-cest-toi-le-chat.pdf")
         shutil.copy2(compact, SITE_ROOT / "outils" / "chat-cest-toi-le-chat-cartes-compactes.pdf")
 
-    print(f"PDF Chromium valides: {booklet} (24 pages), {compact} (10 pages)")
+    print(
+        "PDF Chromium valides: "
+        f"{guide} (4 pages), {large_cards} (20 pages), {compact} (10 pages)"
+    )
 
 
 if __name__ == "__main__":

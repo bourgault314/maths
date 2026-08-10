@@ -11,13 +11,17 @@ Emprin-Charotte, CRDP Champagne-Ardenne). Version modernisée pour maths&go :
 - `game.py` — modèle du jeu, solveur et transcription des cartes disponibles ;
 - `gen_series.py` — fabrique les 20 séries et écrit `series20.json` ;
 - `series20.json` — données publiables et provenance éditoriale de chaque série ;
-- `gen.py` — génère `out/livret.html` (règle, exemple guidé, cartes et solutions)
-  ainsi que `out/cartes-compactes.html` (huit cartes par feuille) ;
+- `gen.py` — génère `out/guide.html` (règle, exemple guidé et solutions),
+  `out/cartes-grand-format.html` (quatre cartes par page) et
+  `out/cartes-compactes.html` (huit cartes par feuille) ;
 - `verify.py` — vérifie les données, les niveaux et le HTML généré ;
 - `projection_cases.json` — exemple guidé et 12 défis inédits à projeter ;
 - `gen_projection.py` — valide ces défis et génère la page projetable autonome ;
-- `out/livret.pdf` — livret final de 24 pages (non versionné ici ; la copie
-  publique est `../../outils/chat-cest-toi-le-chat.pdf`).
+- `out/guide.pdf` — guide pédagogique de 4 pages (copie publique :
+  `../../outils/chat-cest-toi-le-chat-guide.pdf`) ;
+- `out/cartes-grand-format.pdf` — vingt feuilles A4 portrait contenant chacune
+  une série de quatre grandes cartes (copie publique :
+  `../../outils/chat-cest-toi-le-chat.pdf`) ;
 - `out/cartes-compactes.pdf` — dix feuilles A4 paysage contenant chacune deux
   séries de quatre cartes en portrait (copie publique :
   `../../outils/chat-cest-toi-le-chat-cartes-compactes.pdf`).
