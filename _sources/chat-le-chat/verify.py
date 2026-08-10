@@ -143,22 +143,63 @@ for internal_note in ("inventée par toi", "d'origine", "reconstituée"):
 if "autre(s)" in html or "placement(s)" in html or "juste(s)" in html:
     err("singulier/pluriel non résolu dans les solutions")
 for required_text in (
-    "GS-CP, adaptable en MS avec accompagnement",
+    "de la maternelle au collège",
+    "Un rallye mathématique à l'école maternelle&nbsp;? Oui, c'est possible&nbsp;!",
     "cerceaux ou cercles tracés au sol",
     "cercle vide, ou pas de cercle",
     "une seule solution suffit",
     "chacun lit sa carte à voix haute",
-    "ce même numéro indique la place de l'enfant qui tient cette carte",
+    "Tous les joueurs",
+    "Chaque joueur reçoit une carte",
+    "les 4 joueurs cherchent un placement",
+    "désignent les joueurs qui ont les cartes 1 à 4",
+    "ce même numéro indique la place du joueur qui tient cette carte",
     "Une carte par joueur.",
+    "faire créer de nouvelles cartes par les élèves.",
 ):
     if required_text not in html:
         err(f"consigne absente du livret : {required_text}")
-for forbidden_text in ("Compétences", "Sac à maths", "Une carte par enfant."):
+for forbidden_text in (
+    "Compétences",
+    "Sac à maths",
+    "Une carte par enfant.",
+    "enfant",
+    "GS-CP",
+    "adaptable en MS",
+):
     if forbidden_text.casefold() in html.casefold():
         err(f"mention éditoriale non souhaitée dans le livret : {forbidden_text}")
 pages = re.findall(r'<section class="page(?: [^"]*)?">(.*?)</section>', html, re.S)
 if len(pages) != 24:
     err(f"{len(pages)} pages au lieu de 24")
+rule_page_html = pages[0] if pages else ""
+for required_rule_text in (
+    "Avant de jouer",
+    "Lire une carte",
+    "Comment jouer",
+    "Distribuer",
+    "Échanger et se placer",
+    "Vérifier",
+    "20 séries progressives",
+    "Variantes",
+):
+    if required_rule_text not in rule_page_html:
+        err(f"page de règle : bloc ou étape absent : {required_rule_text}")
+for class_name, expected_count in (
+    ("rules-panel", 2),
+    ("play-step", 3),
+    ("rules-level", 4),
+    ("rules-variants", 1),
+):
+    count = len(re.findall(rf'class="[^"]*\b{class_name}\b[^"]*"', rule_page_html))
+    if count != expected_count:
+        err(f"page de règle : {count} bloc(s) {class_name} au lieu de {expected_count}")
+rule_order = ("rules-hero", "rules-basics", "rules-play", "rules-levels", "rules-variants")
+rule_positions = [rule_page_html.find(f'class="{class_name}') for class_name in rule_order]
+if any(position < 0 for position in rule_positions) or rule_positions != sorted(rule_positions):
+    err("page de règle : ordre éditorial en-tête → préparation → jeu → niveaux → variantes non respecté")
+if "grid-template-columns:1fr 1fr; grid-template-rows:1fr 1fr;" not in html:
+    err("page de règle : les quatre niveaux ne sont pas disposés en grille 2 × 2")
 if len(pages) >= 2 and "Exemple guidé" not in pages[1]:
     err("la page 2 n'est pas l'exemple guidé")
 POS2DIR = {"top": "front", "bottom": "back", "left": "left", "right": "right"}

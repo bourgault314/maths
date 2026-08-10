@@ -190,6 +190,7 @@ test("les arbitrages pédagogiques clés restent explicites", () => {
 test("les deux ressources Chat restent autonomes et adaptées à leur usage", () => {
   const printable = publishedByPath.get("outils/chat-cest-toi-le-chat.pdf");
   const projected = publishedByPath.get("outils/chat-cest-toi-le-chat-projection.html");
+  const chatResources = [printable, projected];
 
   assert.equal(printable?.title, "Chat, c’est toi le chat ! — À imprimer");
   assert.deepEqual(Array.from(printable?.uses || []), ["manipuler", "imprimer"]);
@@ -200,6 +201,21 @@ test("les deux ressources Chat restent autonomes et adaptées à leur usage", ()
   assert.deepEqual(Array.from(projected?.types || []), ["exerciseur"]);
   assert.equal(projected?.kind, "tool");
   assert.equal(families.some((family) => (family.paths || []).includes(projected.path)), false);
+
+  for (const resource of chatResources) {
+    const classification = classifications[resource.path];
+    const publicDescriptions = [resource.description, classification.cardDescription];
+    for (const description of publicDescriptions) {
+      assert.match(description, /de la maternelle au collège/i);
+      assert.doesNotMatch(description, /\bGS\s*[-–—]\s*CP\b/i);
+    }
+    for (const keyword of ["cycle 3", "cycle 4", "école élémentaire", "collège"]) {
+      assert.ok(Array.from(resource.keywords || []).includes(keyword), `${resource.path} doit conserver le mot-clé « ${keyword} ».`);
+    }
+    for (const tag of ["cycle-3", "cycle-4", "ecole-elementaire", "college"]) {
+      assert.ok(Array.from(classification.tags || []).includes(tag), `${resource.path} doit conserver le tag « ${tag} ».`);
+    }
+  }
 });
 
 test("aucun titre publié n’expose un marqueur technique ou de version", () => {

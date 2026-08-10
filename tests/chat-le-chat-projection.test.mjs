@@ -164,6 +164,9 @@ test("le HTML publié est autonome, synchronisé et adapté à une réflexion co
 
   assert.match(html, /observe le placement projeté depuis sa place/i);
   assert.match(html, /Variante au sol/i);
+  assert.match(html, /12 défis inédits · École et collège/i);
+  assert.match(html, /de la maternelle au collège/i);
+  assert.doesNotMatch(html, /12 défis inédits · GS-CP/i);
   assert.match(html, /vérifiez les cartes à voix haute/i);
   assert.match(html, /un chat barré signifie « personne dans ce cercle, ou aucun cercle dans cette direction »/i);
   assert.match(html, /alt="maths&amp;go"/, "La barre doit employer le logo horizontal maths&go.");

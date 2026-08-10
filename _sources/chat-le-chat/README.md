@@ -1,7 +1,7 @@
 # Chat, c'est toi le chat !
 
-Jeu de positionnement dans l'espace pour GS-CP, adaptable en MS avec
-accompagnement, d'après une situation de *Un rallye mathématique à l'école
+Jeu de positionnement dans l'espace de la maternelle au collège, d'après une
+situation de *Un rallye mathématique à l'école
 maternelle ? Oui, c'est possible !* (Fabien Emprin et Fabienne
 Emprin-Charotte, CRDP Champagne-Ardenne). Version modernisée pour maths&go :
 20 séries en 4 niveaux.
@@ -21,7 +21,7 @@ Emprin-Charotte, CRDP Champagne-Ardenne). Version modernisée pour maths&go :
 La page projetable publique est
 `../../outils/chat-cest-toi-le-chat-projection.html`. Toute la classe peut
 chercher depuis sa place, puis vérifier les cartes à voix haute lors de la mise
-en commun. Reproduire le placement au sol avec quatre enfants reste une variante
+en commun. Reproduire le placement au sol avec quatre joueurs reste une variante
 possible, mais n'est pas nécessaire pour utiliser la projection.
 
 Les notes de provenance restent dans `series20.json` pour permettre les futures

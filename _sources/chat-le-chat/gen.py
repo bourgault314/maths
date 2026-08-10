@@ -121,63 +121,90 @@ def rule_page():
     cats_at = {(0, 0), (0, 1), (1, 1), (1, 2)}
     for r in range(2):
         for c in range(3):
-            cat = f'<div class="dcat">{cat_svg(34)}</div>' if (r, c) in cats_at else ""
-            hoops += f'<div class="dhoop" style="left:{30+c*74}px;top:{40+r*74}px">{cat}</div>'
-    diagram = f'''<div class="diagram">
-      <div class="arrow">DEVANT ⟶ tout le monde regarde par ici</div>
-      <div class="dzone">{hoops}</div></div>'''
+            cat = f'<div class="setup-cat">{cat_svg(25)}</div>' if (r, c) in cats_at else ""
+            hoops += f'<div class="setup-hoop">{cat}</div>'
+    diagram = f'''<div class="setup-diagram">
+      <div class="setup-front">DEVANT ↑</div>
+      <div class="setup-hoops">{hoops}</div>
+      <div class="setup-caption">2 lignes de 3 zones</div>
+    </div>'''
     ex_card = card_html(
         "EX", {"front": "P", "right": "X"}, player_number=2,
-        cat_px=52, extra_class="excard",
+        cat_px=39, extra_class="excard",
     )
     niveaux = "".join(
-        f'<li><b style="color:{c}">Niveau {l} · {n}</b> - {d}</li>'
+        f'''<article class="rules-level" style="--level-color:{c}">
+          <div class="level-head"><span class="level-number">{l}</span><b>{n}</b></div>
+          <p>{d}</p>
+        </article>'''
         for l, (n, c, d) in LEVELS.items())
-    return f'''<section class="page">
-  <div class="titleband">
-    <img class="logo" src="data:image/png;base64,{LOGO}">
-    <h1>Chat, c'est toi le chat&nbsp;!</h1>
-    <p class="subtitle">Un jeu de positionnement dans l'espace et de communication · GS-CP, adaptable en MS avec accompagnement
-    <br>d'après une situation de « Un rallye mathématique à l'école maternelle&nbsp;? Oui, c'est possible&nbsp;! »
-    (Fabien&nbsp;Emprin et Fabienne&nbsp;Emprin-Charotte, CRDP Champagne-Ardenne)</p>
-  </div>
-  <div class="rulecols">
-    <div>
-      <h3>Matériel</h3>
-      <p>6 zones circulaires - cerceaux ou cercles tracés au sol - en deux lignes de trois · une série de 4 cartes · 4 joueurs · un adulte (ou un meneur) pour valider.</p>
-      <h3>Mise en place</h3>
-      {diagram}
-      <p class="small">Marquer le « devant » (un plot, le tableau…). Tous les enfants
-      restent tournés dans ce sens pendant toute la partie.</p>
-      <h3>20 séries, 4 niveaux</h3>
-      <ul class="lvllist">{niveaux}</ul>
+    return f'''<section class="page rules-page">
+  <header class="rules-hero">
+    <img class="rules-logo" src="data:image/png;base64,{LOGO}">
+    <div class="rules-hero-copy">
+      <div class="rules-kicker"><span>Jeu de positionnement et de communication</span>
+        <span class="audience-pill">de la maternelle au collège</span></div>
+      <h1>Chat, c'est toi le chat&nbsp;!</h1>
+      <p class="rules-source">D'après une situation de « Un rallye mathématique à l'école maternelle&nbsp;? Oui, c'est possible&nbsp;! »
+      · Fabien&nbsp;Emprin et Fabienne&nbsp;Emprin-Charotte, CRDP Champagne-Ardenne</p>
     </div>
-    <div>
-      <h3>Lire sa carte</h3>
-      <div class="excard-row">{ex_card}
-        <ul class="legend">
+  </header>
+
+  <div class="rules-basics">
+    <div class="rules-panel prep-panel">
+      <h2 class="rules-section-title">Avant de jouer</h2>
+      <div class="materials-line"><span>Matériel</span>
+        <p>6 zones circulaires - cerceaux ou cercles tracés au sol - en deux lignes de trois · une série de 4 cartes · 4 joueurs · un adulte (ou un meneur) pour valider.</p>
+      </div>
+      <div class="setup-layout">
+        {diagram}
+        <div class="setup-copy">
+          <h3>Mise en place</h3>
+          <p><b>1.</b> Marquer le « devant » (un plot, le tableau…).</p>
+          <p><b>2.</b> Tous les joueurs restent tournés dans ce sens pendant toute la partie.</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="rules-panel read-panel">
+      <h2 class="rules-section-title">Lire une carte</h2>
+      <div class="read-layout">{ex_card}
+        <ul class="rules-legend">
           <li><span class="chip" style="border:3px solid {TEAL}"></span> le chat encadré, c'est <b>toi</b> ; son numéro (1 à 4) est celui de ta carte</li>
           <li>🐱 un chat = <b>quelqu'un</b> est à cette place</li>
           <li><span style="color:{RED};font-weight:800">✕</span> un chat barré = <b>personne</b> juste à côté dans cette direction (cercle vide, ou pas de cercle)</li>
           <li>rien de dessiné = on ne sait pas</li>
           <li>le haut de la carte = <b>devant</b></li>
-        </ul></div>
-      <p class="numberkey">Dans les solutions, ce même numéro indique la place de l'enfant qui tient cette carte.</p>
-      <h3>Déroulement</h3>
-      <p>Chaque enfant reçoit une carte de la même série. <b>Règle d'or : on ne montre
-      jamais sa carte aux autres</b> - on la garde pour soi et on parle.
-      En échangeant (« j'ai quelqu'un devant moi », « personne à ma droite »…),
-      les 4 enfants cherchent un placement qui rende les quatre cartes vraies -
-      une seule solution suffit. Deux zones resteront vides.</p>
-      <h3>Validation</h3>
-      <p>Quand le groupe pense avoir réussi, chacun lit sa carte à voix haute :
-      le groupe gagne si les quatre cartes sont vraies. Une série peut avoir
-      plusieurs placements corrects - ils sont tous dans les pages solutions.</p>
-      <h3>Variantes</h3>
-      <p class="small">Se placer sans parler · dessiner d'abord la solution sur papier ·
-      chronométrer · faire créer de nouvelles cartes par les élèves.</p>
+        </ul>
+      </div>
+      <p class="rules-numberkey">Dans les solutions, ce même numéro indique la place du joueur qui tient cette carte.</p>
     </div>
   </div>
+
+  <div class="rules-play">
+    <div class="rules-heading-row"><h2 class="rules-section-title">Comment jouer</h2><span>3 étapes</span></div>
+    <div class="play-steps">
+      <article class="play-step">
+        <span class="step-number">1</span><div><h3>Distribuer</h3>
+        <p>Chaque joueur reçoit une carte de la même série. <b>Règle d'or : on ne montre jamais sa carte aux autres.</b></p></div>
+      </article>
+      <article class="play-step">
+        <span class="step-number">2</span><div><h3>Échanger et se placer</h3>
+        <p>En parlant (« quelqu'un devant moi », « personne à ma droite »…), les 4 joueurs cherchent un placement qui rende les quatre cartes vraies. Deux zones restent vides.</p></div>
+      </article>
+      <article class="play-step">
+        <span class="step-number">3</span><div><h3>Vérifier</h3>
+        <p>Quand le groupe pense avoir réussi, chacun lit sa carte à voix haute. Les quatre doivent être vraies. Plusieurs placements peuvent convenir : une seule solution suffit et tous sont dans les pages solutions.</p></div>
+      </article>
+    </div>
+  </div>
+
+  <div class="rules-levels">
+    <div class="rules-heading-row"><h2 class="rules-section-title">20 séries progressives</h2><span>4 niveaux</span></div>
+    <div class="levels-grid">{niveaux}</div>
+  </div>
+
+  <aside class="rules-variants"><b>Variantes</b><span>Se placer sans parler · dessiner d'abord la solution sur papier · chronométrer · faire créer de nouvelles cartes par les élèves.</span></aside>
   {FOOTER}
 </section>'''
 
@@ -216,7 +243,7 @@ def guided_page():
     )
     return f'''<section class="page guided-page">
   <div class="pagehead"><h2>Exemple guidé : ce placement est-il correct&nbsp;?</h2></div>
-  <p class="guide-intro">Les numéros 1 à 4 désignent les enfants qui ont les cartes 1 à 4.
+  <p class="guide-intro">Les numéros 1 à 4 désignent les joueurs qui ont les cartes 1 à 4.
   Tous regardent vers le « devant ».</p>
   <div class="guide-layout">
     <div class="guide-cards-panel">
@@ -271,7 +298,7 @@ def solutions_pages(series):
                 <div class="solwrap">{items}</div>'''
         pages.append(f'''<section class="page">
   <div class="pagehead"><h2>Solutions (pour l'adulte)</h2></div>
-  <p class="small">Dans les grilles, les numéros 1 à 4 désignent les enfants qui ont
+  <p class="small">Dans les grilles, les numéros 1 à 4 désignent les joueurs qui ont
   les cartes 1 à 4. Le numéro de chaque carte est écrit sur le chat encadré.
   Le haut des grilles = « devant ». Certaines séries admettent plusieurs
   placements corrects (groupe décalé d'une colonne, échanges symétriques…) : ils sont
@@ -299,23 +326,87 @@ h3 {{ font-size:14px; margin:12px 0 4px; color:{TEAL}; text-transform:uppercase;
 h4 {{ margin:0 0 4px; font-size:12px; }}
 p {{ font-size:12.5px; line-height:1.45; margin:4px 0; }}
 .small {{ font-size:10.5px; color:#6d6558; line-height:1.4; }}
-.titleband {{ text-align:center; margin-bottom:4mm; }}
-.logo {{ width:140px; }}
-.subtitle {{ font-size:11px; color:#6d6558; }}
-.rulecols {{ display:grid; grid-template-columns:1fr 1fr; gap:8mm; }}
-.diagram {{ background:{CREAM}; border-radius:12px; padding:8px; }}
-.arrow {{ text-align:center; font-size:10px; font-weight:700; color:{ORANGE}; margin-bottom:2px;}}
-.dzone {{ position:relative; height:185px; }}
-.dhoop {{ position:absolute; width:60px; height:60px; border:5px solid {TEAL};
-          border-radius:50%; display:flex; align-items:center; justify-content:center; }}
-.dcat {{ transform:translateY(-2px); }}
-ul.lvllist {{ font-size:10.5px; line-height:1.55; padding-left:15px; margin:2px 0; }}
-.excard-row {{ display:flex; gap:10px; align-items:flex-start; }}
-.card.excard {{ width:190px; height:188px; flex:none; }}
-ul.legend {{ font-size:10.5px; line-height:1.52; padding-left:16px; margin:0; }}
-.chip {{ display:inline-block; width:14px; height:14px; border-radius:4px; vertical-align:-2px;}}
-.numberkey {{ margin:5px 0 8px; padding:6px 8px; border-left:4px solid {TEAL};
-              border-radius:5px; background:{CREAM}; font-size:10.5px; line-height:1.35; }}
+.rules-page {{ padding:10mm 11mm; }}
+.rules-hero {{ min-height:37mm; display:grid; grid-template-columns:31mm 1fr; gap:5mm;
+               align-items:center; padding:4mm 5mm; border:1.5px solid #cce7e3;
+               border-radius:16px; background:linear-gradient(135deg,#edf9f7 0%,{CREAM} 100%);
+               position:relative; overflow:hidden; }}
+.rules-hero::after {{ content:""; position:absolute; width:38mm; height:38mm; right:-16mm;
+                      bottom:-24mm; border:5mm solid rgba(42,167,155,.08); border-radius:50%; }}
+.rules-logo {{ width:30mm; position:relative; z-index:1; }}
+.rules-hero-copy {{ min-width:0; position:relative; z-index:1; }}
+.rules-kicker {{ display:flex; align-items:center; justify-content:space-between; gap:3mm;
+                 color:{TEAL}; font-size:12px; font-weight:800; letter-spacing:.25px; }}
+.audience-pill {{ flex:none; padding:1.2mm 3mm; border-radius:20px; color:white;
+                  background:{TEAL}; font-size:12px; letter-spacing:0; }}
+.rules-hero h1 {{ font-size:29px; line-height:1; margin:2mm 0 1.2mm; color:{NAVY}; }}
+.rules-source {{ margin:0; color:#6d6558; font-size:12px; line-height:1.3; }}
+.rules-basics {{ display:grid; grid-template-columns:43fr 57fr; gap:4mm; height:89mm;
+                 margin-top:4mm; }}
+.rules-panel {{ min-width:0; border:1.3px solid #ded7ca; border-radius:13px; background:white;
+                padding:3.5mm; box-shadow:0 2px 0 rgba(31,58,104,.04); overflow:hidden; }}
+.rules-section-title {{ margin:0; color:{NAVY}; font-size:18px; line-height:1.1;
+                        letter-spacing:0; text-transform:none; }}
+.materials-line {{ display:grid; grid-template-columns:18mm 1fr; gap:2.5mm; align-items:start;
+                   margin-top:2.5mm; padding-bottom:2.5mm; border-bottom:1px solid #e7e0d5; }}
+.materials-line > span {{ border-radius:14px; padding:1.2mm 2mm; background:#e5f5f2;
+                          color:#16756d; font-size:12px; font-weight:800; text-align:center; }}
+.materials-line p {{ margin:0; font-size:12px; line-height:1.35; }}
+.setup-layout {{ display:grid; grid-template-columns:36mm 1fr; gap:3mm; align-items:center;
+                 margin-top:2.5mm; }}
+.setup-diagram {{ height:46mm; border-radius:10px; background:{CREAM}; padding:2mm 1mm;
+                  display:flex; flex-direction:column; justify-content:center; }}
+.setup-front {{ color:{ORANGE}; font-size:12px; font-weight:900; text-align:center;
+                margin-bottom:1.5mm; }}
+.setup-hoops {{ display:grid; grid-template-columns:repeat(3,10.5mm); gap:1.4mm;
+                justify-content:center; }}
+.setup-hoop {{ width:10.5mm; height:10.5mm; border:3px solid {TEAL}; border-radius:50%;
+               display:flex; align-items:center; justify-content:center; background:white; }}
+.setup-cat {{ transform:translateY(-1px); }}
+.setup-caption {{ color:#82786a; font-size:12px; text-align:center; margin-top:1.5mm; }}
+.setup-copy h3 {{ margin:0 0 1.5mm; color:{TEAL}; font-size:14px; }}
+.setup-copy p {{ margin:1.6mm 0; font-size:12px; line-height:1.3; }}
+.read-layout {{ display:grid; grid-template-columns:42mm 1fr; gap:3mm; align-items:start;
+                margin-top:2.5mm; }}
+.rules-page .card.excard {{ width:42mm; height:46mm; min-width:42mm; }}
+.rules-page .card.excard .cardnum {{ font-size:12px; }}
+.rules-legend {{ font-size:12px; line-height:1.27; padding-left:4.5mm; margin:0; }}
+.rules-legend li {{ margin:0 0 .9mm; }}
+.chip {{ display:inline-block; width:3.5mm; height:3.5mm; border-radius:4px; vertical-align:-2px;}}
+.rules-numberkey {{ margin:1.8mm 0 0; padding:1.7mm 2.5mm; border-left:4px solid {TEAL};
+                    border-radius:6px; background:{CREAM}; font-size:12px; line-height:1.3; }}
+.rules-play, .rules-levels {{ margin-top:4mm; }}
+.rules-heading-row {{ display:flex; align-items:center; justify-content:space-between;
+                      margin-bottom:2.2mm; }}
+.rules-heading-row > span {{ padding:1mm 2.5mm; border-radius:14px; color:#6d6558;
+                             background:{CREAM}; font-size:12px; font-weight:800; }}
+.play-steps {{ display:grid; grid-template-columns:repeat(3,1fr); gap:3mm; min-height:45mm; }}
+.play-step {{ display:grid; grid-template-columns:9mm 1fr; gap:2.5mm; align-items:start;
+              border-radius:12px; padding:3mm; background:{CREAM}; border-top:4px solid {TEAL}; }}
+.play-step:nth-child(2) {{ border-top-color:{ORANGE}; background:#fff8ed; }}
+.play-step:nth-child(3) {{ border-top-color:{NAVY}; background:#f1f5fb; }}
+.step-number {{ width:8mm; height:8mm; border-radius:50%; background:{TEAL}; color:white;
+                display:flex; align-items:center; justify-content:center; font-size:15px; font-weight:900; }}
+.play-step:nth-child(2) .step-number {{ background:{ORANGE}; }}
+.play-step:nth-child(3) .step-number {{ background:{NAVY}; }}
+.play-step h3 {{ margin:0 0 1.5mm; color:{NAVY}; font-size:14px; line-height:1.15;
+                 letter-spacing:0; text-transform:none; }}
+.play-step p {{ margin:0; font-size:12px; line-height:1.36; }}
+.levels-grid {{ display:grid; grid-template-columns:1fr 1fr; grid-template-rows:1fr 1fr;
+                gap:2.5mm; height:47mm; }}
+.rules-level {{ min-width:0; display:grid; grid-template-columns:39mm 1fr; gap:2.5mm;
+                align-items:center; padding:2.2mm 3mm; border-radius:10px; background:{CREAM};
+                border-left:5px solid var(--level-color); }}
+.level-head {{ display:flex; align-items:center; gap:2mm; min-width:0; }}
+.level-number {{ width:7mm; height:7mm; flex:none; display:flex; align-items:center;
+                 justify-content:center; border-radius:50%; background:var(--level-color);
+                 color:white; font-size:13px; font-weight:900; }}
+.level-head b {{ color:var(--level-color); font-size:13px; line-height:1.15; }}
+.rules-level p {{ margin:0; color:{NAVY}; font-size:12px; line-height:1.28; }}
+.rules-variants {{ min-height:13mm; margin-top:2.5mm; display:grid; grid-template-columns:22mm 1fr;
+                   gap:3mm; align-items:center; padding:2.5mm 4mm; border-radius:10px;
+                   background:#f2eee7; color:#6d6558; font-size:12px; line-height:1.3; }}
+.rules-variants b {{ color:{ORANGE}; font-size:13px; text-transform:uppercase; letter-spacing:.5px; }}
 .pagehead {{ display:flex; align-items:center; justify-content:space-between;
              border-bottom:3px solid {TEAL}; padding-bottom:5px; margin-bottom:2mm; }}
 .lvlbadge {{ color:white; font-size:12px; font-weight:700; padding:4px 12px; border-radius:20px; }}
