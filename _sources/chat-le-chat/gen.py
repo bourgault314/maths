@@ -204,7 +204,7 @@ def rule_page():
     <div class="levels-grid">{niveaux}</div>
   </div>
 
-  <aside class="rules-variants"><b>Variantes</b><span>Se placer sans parler · dessiner d'abord la solution sur papier · chronométrer · faire créer de nouvelles cartes par les élèves.</span></aside>
+  <aside class="rules-variants"><b>Variantes</b><span>Donner les quatre cartes à un élève : il dessine seul un placement qui les rend toutes vraies · chronométrer · faire créer de nouvelles cartes par les élèves.</span></aside>
   {FOOTER}
 </section>'''
 

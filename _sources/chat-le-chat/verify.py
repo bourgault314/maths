@@ -155,6 +155,7 @@ for required_text in (
     "désignent les joueurs qui ont les cartes 1 à 4",
     "ce même numéro indique la place du joueur qui tient cette carte",
     "Une carte par joueur.",
+    "Donner les quatre cartes à un élève : il dessine seul un placement qui les rend toutes vraies",
     "faire créer de nouvelles cartes par les élèves.",
 ):
     if required_text not in html:
@@ -166,6 +167,7 @@ for forbidden_text in (
     "enfant",
     "GS-CP",
     "adaptable en MS",
+    "Se placer sans parler",
 ):
     if forbidden_text.casefold() in html.casefold():
         err(f"mention éditoriale non souhaitée dans le livret : {forbidden_text}")
