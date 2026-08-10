@@ -31,6 +31,17 @@
 
     * { box-sizing: border-box; }
     [hidden] { display: none !important; }
+    .sr-only {
+      position: absolute !important;
+      width: 1px !important;
+      height: 1px !important;
+      padding: 0 !important;
+      margin: -1px !important;
+      overflow: hidden !important;
+      clip: rect(0, 0, 0, 0) !important;
+      white-space: nowrap !important;
+      border: 0 !important;
+    }
     html { min-height: 100%; background: #edf5fb; -webkit-text-size-adjust: 100%; }
     body {
       min-height: 100vh;
@@ -118,6 +129,7 @@
 
     .intro,
     .result { max-width: 650px; margin: 40px auto; text-align: center; }
+    .intro { max-width: 720px; }
     .hero-icon { display: block; font-size: 4.2rem; }
     .eyebrow {
       margin: 8px 0;
@@ -137,6 +149,123 @@
       border-radius: 13px;
       color: #735d00 !important;
       background: #fff6ca !important;
+      font-weight: 900;
+    }
+
+    .mode-choice {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 12px;
+      margin: 20px 0 14px;
+      text-align: left;
+    }
+
+    .mode-card {
+      position: relative;
+      min-height: 116px;
+      display: grid;
+      grid-template-columns: auto minmax(0, 1fr);
+      align-items: center;
+      gap: 12px;
+      padding: 16px 42px 16px 16px;
+      border: 2px solid #c9dce8;
+      border-radius: 18px;
+      color: var(--ink);
+      background: #fff;
+      box-shadow: 0 4px 0 rgba(113, 155, 181, .16);
+      text-align: left;
+      cursor: pointer;
+    }
+
+    .mode-card-icon { font-size: 2rem; line-height: 1; }
+    .mode-card strong { display: block; color: var(--blue); font-size: 1.03rem; line-height: 1.2; }
+    .mode-card small { display: block; margin-top: 5px; color: var(--muted); font-size: .82rem; line-height: 1.35; }
+    .mode-card.is-selected {
+      border-color: var(--blue);
+      background: #eef6ff;
+      box-shadow: 0 0 0 3px rgba(7, 85, 184, .1), 0 4px 0 rgba(7, 85, 184, .18);
+    }
+
+    .mode-card.is-selected::after {
+      content: "✓";
+      position: absolute;
+      top: 10px;
+      right: 11px;
+      width: 25px;
+      height: 25px;
+      display: grid;
+      place-items: center;
+      border-radius: 50%;
+      color: #fff;
+      background: var(--blue);
+      font-weight: 950;
+    }
+
+    .custom-settings {
+      margin: 14px 0;
+      padding: 16px;
+      border: 2px solid #cfe2ed;
+      border-radius: 18px;
+      background: #f8fcff;
+      text-align: left;
+    }
+
+    .setting-group { margin: 0; padding: 0; border: 0; }
+    .setting-group + .setting-group { margin-top: 17px; padding-top: 16px; border-top: 1px solid #d8e7f0; }
+    .setting-title { padding: 0; color: var(--ink); font-size: 1rem; font-weight: 950; }
+    .setting-help { margin: 4px 0 10px; color: var(--muted); font-size: .82rem; line-height: 1.35; }
+    .table-options { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 7px; }
+    .all-tables { grid-column: 1 / -1; }
+
+    .selection-button {
+      position: relative;
+      min-height: 46px;
+      padding: 8px 7px;
+      border: 2px solid #bed3e0;
+      border-radius: 11px;
+      color: #274962;
+      background: #fff;
+      font-weight: 900;
+      cursor: pointer;
+    }
+
+    .selection-button.is-selected {
+      border-color: var(--teal);
+      color: #075b55;
+      background: #e7f8f5;
+      box-shadow: inset 0 0 0 1px var(--teal);
+    }
+
+    .selection-button.is-selected::before { content: "✓ "; }
+    .type-options { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; }
+    .type-button {
+      min-height: 70px;
+      padding: 10px;
+      border: 2px solid #bed3e0;
+      border-radius: 12px;
+      color: var(--ink);
+      background: #fff;
+      text-align: left;
+      cursor: pointer;
+    }
+
+    .type-button strong { display: block; font-size: .9rem; line-height: 1.2; }
+    .type-button small { display: block; margin-top: 5px; color: var(--muted); font-size: .78rem; line-height: 1.25; }
+    .type-button.is-selected {
+      border-color: var(--teal);
+      background: #e7f8f5;
+      box-shadow: inset 0 0 0 1px var(--teal);
+    }
+
+    .type-button.is-selected strong::before { content: "✓ "; color: var(--teal); }
+    .config-summary,
+    .result-config {
+      margin: 13px 0;
+      padding: 9px 12px;
+      border-radius: 12px;
+      color: #31566c !important;
+      background: #eef8ff;
+      font-size: .9rem;
       font-weight: 900;
     }
 
@@ -172,6 +301,7 @@
     .question {
       min-height: 480px;
       padding: clamp(19px, 5vw, 34px);
+      overflow-anchor: none;
       border: 2px solid var(--line);
       border-radius: 23px;
       background: #fff;
@@ -204,6 +334,8 @@
     }
 
     .answer.invalid { border-color: var(--red); background: var(--red-soft); }
+    .answer-error { min-height: 1.35em; margin: 6px 0 0; color: var(--red); font-size: .88rem; font-weight: 900; visibility: hidden; }
+    .answer-error.is-visible { visibility: visible; }
     .keypad { max-width: 390px; display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin: 12px auto; }
     .keypad button {
       min-height: 49px;
@@ -228,7 +360,7 @@
     .correction-list span { padding: 6px 9px; border-radius: 9px; font-weight: 850; }
     .given-answer { color: var(--red); background: var(--red-soft); }
     .expected-answer { color: var(--green); background: var(--green-soft); }
-    .result-actions { display: flex; justify-content: center; gap: 10px; margin-top: 16px; }
+    .result-actions { display: flex; flex-wrap: wrap; justify-content: center; gap: 10px; margin-top: 16px; }
     .site-footer {
       width: min(100%, 960px);
       display: flex;
@@ -293,6 +425,16 @@
       .panel { min-height: calc(100vh - 96px); padding: 18px 12px 27px; border-right: 0; border-left: 0; border-radius: 20px; }
       .intro,
       .result { margin: 25px auto; }
+      .intro .hero-icon { font-size: 3.4rem; }
+      .mode-choice { grid-template-columns: 1fr; gap: 8px; margin-top: 15px; }
+      .mode-card { min-height: 82px; padding: 12px 40px 12px 13px; }
+      .mode-card-icon { font-size: 1.7rem; }
+      .custom-settings { margin: 10px 0; padding: 13px 10px; }
+      .table-options { gap: 5px; }
+      .selection-button { min-height: 44px; padding: 7px 4px; }
+      .type-options { grid-template-columns: 1fr; gap: 6px; }
+      .type-button { min-height: 56px; display: grid; grid-template-columns: 1fr auto; align-items: center; gap: 9px; }
+      .type-button small { margin: 0; text-align: right; }
       .question { min-height: 560px; padding: 19px 10px; }
       .expression { min-height: 135px; }
       .keypad button { min-height: 47px; }
@@ -307,14 +449,14 @@
       .challenge-playing .status { min-height: 34px; }
       .challenge-playing .status strong { min-width: 78px; padding: 4px 10px; font-size: 1.05rem; }
       .challenge-playing .progress-track { height: 6px; margin: 4px 0 6px; }
-      .challenge-playing .question { flex: 1; min-height: 0; display: flex; flex-direction: column; justify-content: center; padding: 6px 10px 8px; overflow: hidden; }
-      .challenge-playing .question > .eyebrow { margin: 0 0 3px; }
+      .challenge-playing .question { flex: 1; min-height: 0; display: flex; flex-direction: column; justify-content: flex-start; padding: 6px 10px 8px; overflow-y: auto; overscroll-behavior: contain; }
+      .challenge-playing .question > .eyebrow { margin: auto 0 3px; }
       .challenge-playing .expression { min-height: clamp(68px, 12dvh, 92px); margin: 3px 0 6px; padding: 7px; font-size: clamp(2rem, 9vw, 3.2rem); }
       .challenge-playing .question label { font-size: .94rem; line-height: 1.2; }
       .challenge-playing .answer { min-height: 48px; height: 48px; padding: 5px 10px; font-size: 1.5rem; }
       .challenge-playing .keypad { width: min(100%, 330px); gap: 5px; margin: 6px auto; }
       .challenge-playing .keypad button { min-height: 44px; height: 44px; }
-      .challenge-playing .actions { margin-top: 5px; }
+      .challenge-playing .actions { margin: 5px 0 auto; }
       .challenge-playing .actions .primary,
       .challenge-playing .actions .secondary { min-height: 44px; padding: 7px 15px; }
       .challenge-playing footer { display: none; }
@@ -327,13 +469,13 @@
       .challenge-playing #play { height: 100%; display: flex; flex-direction: column; }
       .challenge-playing .status { min-height: 38px; }
       .challenge-playing .progress-track { height: 7px; margin: 5px 0 9px; }
-      .challenge-playing .question { flex: 1; min-height: 0; display: flex; flex-direction: column; justify-content: center; padding: 10px 28px 12px; overflow: hidden; }
-      .challenge-playing .question > .eyebrow { margin: 0 0 3px; }
+      .challenge-playing .question { flex: 1; min-height: 0; display: flex; flex-direction: column; justify-content: flex-start; padding: 10px 28px 12px; overflow-y: auto; overscroll-behavior: contain; }
+      .challenge-playing .question > .eyebrow { margin: auto 0 3px; }
       .challenge-playing .expression { min-height: 100px; margin: 4px 0 8px; padding: 10px; font-size: clamp(2.2rem, 7vw, 3.5rem); }
       .challenge-playing .answer { min-height: 52px; height: 52px; padding: 6px 12px; }
       .challenge-playing .keypad { gap: 6px; margin: 8px auto; }
       .challenge-playing .keypad button { min-height: 44px; height: 44px; }
-      .challenge-playing .actions { margin-top: 6px; }
+      .challenge-playing .actions { margin: 6px 0 auto; }
       .challenge-playing .actions .primary,
       .challenge-playing .actions .secondary { min-height: 44px; padding: 7px 15px; }
     }
@@ -365,23 +507,64 @@
       <div id="intro" class="intro">
         <span class="hero-icon" aria-hidden="true">✖️</span>
         <p class="eyebrow">Calcul mental · tables de multiplication</p>
-        <h1>25 égalités en 1 minute</h1>
-        <p>Produits et facteurs manquants dans les tables de 1 à 10. Une série différente est créée à chaque essai.</p>
+        <h1 id="intro-title" tabindex="-1">Choisis ton défi</h1>
+        <p>Dans tous les cas : 25 égalités en 1 minute et une nouvelle série à chaque essai.</p>
+        <div class="mode-choice" role="group" aria-label="Choisis ton entraînement">
+          <button class="mode-card is-selected" type="button" data-mode="evaluation" aria-pressed="true">
+            <span class="mode-card-icon" aria-hidden="true">🎯</span>
+            <span><strong>Comme l’évaluation CM1</strong><small>Un mélange automatique fidèle au format national.</small></span>
+          </button>
+          <button class="mode-card" type="button" data-mode="custom" aria-pressed="false" aria-controls="custom-settings">
+            <span class="mode-card-icon" aria-hidden="true">✏️</span>
+            <span><strong>Je choisis mon entraînement</strong><small>Une ou plusieurs tables et le type de questions.</small></span>
+          </button>
+        </div>
+        <section id="custom-settings" class="custom-settings" aria-label="Réglages de l’entraînement" hidden>
+          <fieldset class="setting-group">
+            <legend class="setting-title">Quelles tables&nbsp;?</legend>
+            <p class="setting-help">Choisis une table ou touches-en plusieurs pour les mélanger.</p>
+            <div class="table-options">
+              <button class="selection-button all-tables is-selected" type="button" data-all-tables aria-pressed="true">Toutes les tables</button>
+              <button class="selection-button" type="button" data-table="1" aria-pressed="false">× 1</button>
+              <button class="selection-button" type="button" data-table="2" aria-pressed="false">× 2</button>
+              <button class="selection-button" type="button" data-table="3" aria-pressed="false">× 3</button>
+              <button class="selection-button" type="button" data-table="4" aria-pressed="false">× 4</button>
+              <button class="selection-button" type="button" data-table="5" aria-pressed="false">× 5</button>
+              <button class="selection-button" type="button" data-table="6" aria-pressed="false">× 6</button>
+              <button class="selection-button" type="button" data-table="7" aria-pressed="false">× 7</button>
+              <button class="selection-button" type="button" data-table="8" aria-pressed="false">× 8</button>
+              <button class="selection-button" type="button" data-table="9" aria-pressed="false">× 9</button>
+              <button class="selection-button" type="button" data-table="10" aria-pressed="false">× 10</button>
+            </div>
+          </fieldset>
+          <fieldset class="setting-group">
+            <legend class="setting-title">Quels types de questions&nbsp;?</legend>
+            <p class="setting-help">Le ? change de place : avant ou après le signe =, de façon équilibrée.</p>
+            <div class="type-options">
+              <button class="type-button is-selected" type="button" data-question-type="mixed" aria-pressed="true"><strong>Tout mélanger</strong><small>Les deux types</small></button>
+              <button class="type-button" type="button" data-question-type="direct" aria-pressed="false"><strong>Trouver le résultat</strong><small>7 × 8 = ?</small></button>
+              <button class="type-button" type="button" data-question-type="missing" aria-pressed="false"><strong>Trouver le nombre manquant</strong><small>? × 8 = 56</small></button>
+            </div>
+          </fieldset>
+        </section>
+        <p id="config-summary" class="config-summary" aria-live="polite">Comme l’évaluation CM1 · 25 égalités · 1 minute</p>
         <p id="best-intro" class="best"></p>
-        <button id="start" class="primary" type="button">Lancer le défi</button>
+        <button id="start" class="primary" type="button">Commencer</button>
       </div>
 
       <div id="play" hidden>
         <div class="status">
           <span id="question-count">1 / 25</span>
-          <strong id="time" aria-live="polite">1:00</strong>
+          <strong id="time" role="timer" aria-label="Temps restant">1:00</strong>
+          <span id="timer-alert" class="sr-only" aria-live="assertive"></span>
         </div>
         <div class="progress-track" aria-hidden="true"><b id="progress"></b></div>
-        <article class="question">
+        <article id="question-card" class="question">
           <p id="question-kind" class="eyebrow">Produit</p>
-          <div id="expression" class="expression"></div>
+          <div id="expression" class="expression" tabindex="-1" role="status" aria-live="polite" aria-atomic="true"></div>
           <label for="answer">Ta réponse</label>
-          <input id="answer" class="answer" type="text" inputmode="none" readonly aria-readonly="true">
+          <input id="answer" class="answer" type="text" inputmode="none" readonly aria-readonly="true" aria-describedby="answer-error" aria-invalid="false">
+          <p id="answer-error" class="answer-error" role="alert" aria-hidden="true">Saisis une réponse ou choisis « Passer ».</p>
           <div class="keypad" role="group" aria-label="Clavier numérique">
             <button type="button" data-key="1">1</button><button type="button" data-key="2">2</button><button type="button" data-key="3">3</button>
             <button type="button" data-key="4">4</button><button type="button" data-key="5">5</button><button type="button" data-key="6">6</button>
@@ -398,13 +581,15 @@
       <div id="result" class="result" hidden>
         <span class="hero-icon" aria-hidden="true">✓</span>
         <p class="eyebrow">Défi terminé</p>
-        <h1 id="result-title">Résultat</h1>
+        <h1 id="result-title" tabindex="-1">Résultat</h1>
+        <p id="result-config" class="result-config"></p>
         <p id="result-detail"></p>
         <p id="result-message" class="result-message"></p>
         <p id="result-best" class="best"></p>
         <section id="corrections" class="corrections" aria-live="polite"></section>
         <div class="result-actions">
-          <button id="retry" class="primary" type="button">Nouvelle série</button>
+          <button id="retry" class="primary" type="button">Rejouer pareil</button>
+          <button id="change-settings" class="secondary" type="button">Changer d’entraînement</button>
           <a class="secondary" href="../index.html?domain=nombres-calculs&amp;notion=calcul-mental">Retour au calcul mental</a>
         </div>
       </div>
@@ -424,9 +609,14 @@
 
       const TOTAL = 25;
       const DURATION = 60;
-      const STORAGE_KEY = "mathsgo-defi-tables-best-v1";
+      const LEGACY_STORAGE_KEY = "mathsgo-defi-tables-best-v1";
+      const STORAGE_PREFIX = "mathsgo-defi-tables-best-v2";
+      const ALL_TABLES = Array.from({length: 10}, (_, index) => index + 1);
+      const CORE_TABLES = Array.from({length: 8}, (_, index) => index + 2);
+      const MISSING_FORMS = ["right", "left", "reverse-right", "reverse-left"];
       const $ = id => document.getElementById(id);
-      const state = {questions: [], responses: [], index: 0, correct: 0, answered: 0, running: false, timer: null, endAt: 0, signature: ""};
+      const configuration = {mode: "evaluation", tables: new Set(ALL_TABLES), questionType: "mixed"};
+      const state = {questions: [], responses: [], index: 0, correct: 0, answered: 0, running: false, timer: null, endAt: 0, signature: "", configuration: null, tenSecondAlert: false};
 
       function setupFullscreen() {
         const button = document.querySelector("[data-fullscreen-toggle]");
@@ -492,35 +682,159 @@
         return copy;
       }
 
+      function integer(random, minimum, maximum) {
+        return minimum + Math.floor(random() * (maximum - minimum + 1));
+      }
+
+      function balancedSequence(values, length, random = Math.random) {
+        const sequence = [];
+        while (sequence.length < length) sequence.push(...shuffle(values, random));
+        return sequence.slice(0, length);
+      }
+
       function tableQuestion(type, first, second) {
         const product = first * second;
-        if (type === "direct") return {type, kind: "Produit", prompt: `${first} × ${second} = ?`, answer: product};
-        if (type === "right") return {type, kind: "Facteur manquant", prompt: `${first} × ? = ${product}`, answer: second};
-        if (type === "left") return {type, kind: "Facteur manquant", prompt: `? × ${second} = ${product}`, answer: first};
-        return {type, kind: "Égalité à compléter", prompt: `${product} = ${first} × ?`, answer: second};
+        if (type === "direct") return {type, kind: "Trouver le résultat", prompt: `${first} × ${second} = ?`, answer: product};
+        if (type === "right") return {type, kind: "Trouver le nombre manquant", prompt: `${first} × ? = ${product}`, answer: second};
+        if (type === "left") return {type, kind: "Trouver le nombre manquant", prompt: `? × ${second} = ${product}`, answer: first};
+        if (type === "reverse-right") return {type, kind: "Trouver le nombre manquant", prompt: `${product} = ${first} × ?`, answer: second};
+        return {type, kind: "Trouver le nombre manquant", prompt: `${product} = ? × ${second}`, answer: first};
       }
 
-      function generateQuestions() {
-        const pairs = [];
-        for (let first = 1; first <= 10; first += 1) {
-          for (let second = 1; second <= 10; second += 1) pairs.push([first, second]);
+      function buildEvaluationPairs(random = Math.random) {
+        const selected = [];
+        const seen = new Set();
+        const add = (first, second, forcedDirect = false) => {
+          const key = `${first}-${second}`;
+          if (seen.has(key) || selected.length >= TOTAL) return false;
+          seen.add(key);
+          selected.push({first, second, forcedDirect});
+          return true;
+        };
+
+        add(1, integer(random, 2, 9), true);
+        shuffle(CORE_TABLES, random).slice(0, 2).forEach(table => {
+          if (random() < .5) add(table, 10, true);
+          else add(10, table, true);
+        });
+        shuffle(CORE_TABLES.filter(table => table >= 3), random).slice(0, 3).forEach(table => add(table, table));
+        shuffle(CORE_TABLES.filter(table => table !== 5), random).slice(0, 3).forEach(table => {
+          if (random() < .5) add(5, table);
+          else add(table, 5);
+        });
+        shuffle([[6, 7], [7, 6], [6, 8], [8, 6], [7, 8], [8, 7], [7, 9], [9, 7], [8, 9], [9, 8]], random)
+          .slice(0, 5)
+          .forEach(pair => add(pair[0], pair[1]));
+
+        shuffle(CORE_TABLES, random).forEach(table => {
+          if (selected.some(pair => pair.first === table || pair.second === table)) return;
+          const multipliers = shuffle(CORE_TABLES.filter(value => value !== table), random);
+          for (const multiplier of multipliers) {
+            if (add(table, multiplier)) break;
+          }
+        });
+
+        const deck = [];
+        for (const first of CORE_TABLES) {
+          for (const second of ALL_TABLES) deck.push([first, second]);
         }
-        const plan = shuffle([
-          ...Array(13).fill("direct"),
-          ...Array(4).fill("right"),
-          ...Array(4).fill("left"),
-          ...Array(4).fill("reverse")
-        ]);
-        const selectedPairs = shuffle(pairs).slice(0, plan.length);
-        return plan.map((type, index) => tableQuestion(type, selectedPairs[index][0], selectedPairs[index][1]));
+        shuffle(deck, random).forEach(pair => add(pair[0], pair[1]));
+        return selected.slice(0, TOTAL);
       }
 
-      function best() {
-        try { return Number(localStorage.getItem(STORAGE_KEY)) || 0; } catch (_) { return 0; }
+      function generateEvaluationQuestions(random = Math.random) {
+        const pairs = buildEvaluationPairs(random);
+        const eligible = pairs.map((pair, index) => pair.forcedDirect ? -1 : index).filter(index => index >= 0);
+        const missing = shuffle(eligible, random).slice(0, 6);
+        const types = new Map(missing.map((pairIndex, index) => [pairIndex, index < 4 ? "right" : "left"]));
+        return shuffle(pairs.map((pair, index) => tableQuestion(types.get(index) || "direct", pair.first, pair.second)), random);
       }
 
-      function saveBest(value) {
-        try { localStorage.setItem(STORAGE_KEY, String(value)); } catch (_) { /* Stockage facultatif. */ }
+      function generateCustomQuestions(config, random = Math.random) {
+        const tables = config.tables.length ? config.tables : ALL_TABLES;
+        const tablePlan = balancedSequence(tables, TOTAL, random);
+        const multiplierPlan = balancedSequence(ALL_TABLES, TOTAL, random);
+        const directSides = balancedSequence(["focus-first", "focus-second"], TOTAL, random);
+        let typePlan;
+        if (config.questionType === "direct") typePlan = Array(TOTAL).fill("direct");
+        else if (config.questionType === "missing") typePlan = balancedSequence(MISSING_FORMS, TOTAL, random);
+        else {
+          typePlan = shuffle([
+            ...Array(13).fill("direct"),
+            ...Array(3).fill("right"),
+            ...Array(3).fill("left"),
+            ...Array(3).fill("reverse-right"),
+            ...Array(3).fill("reverse-left")
+          ], random);
+        }
+
+        return tablePlan.map((focusTable, index) => {
+          const multiplier = multiplierPlan[index];
+          const type = typePlan[index];
+          let first = focusTable;
+          let second = multiplier;
+          if (type === "direct" && directSides[index] === "focus-second") [first, second] = [multiplier, focusTable];
+          if (type === "left" || type === "reverse-left") [first, second] = [multiplier, focusTable];
+          return {...tableQuestion(type, first, second), focusTable};
+        });
+      }
+
+      function captureConfiguration() {
+        return {
+          mode: configuration.mode,
+          tables: [...configuration.tables].sort((first, second) => first - second),
+          questionType: configuration.questionType
+        };
+      }
+
+      function generateQuestions(config, random = Math.random) {
+        return config.mode === "evaluation" ? generateEvaluationQuestions(random) : generateCustomQuestions(config, random);
+      }
+
+      function joinFrench(values) {
+        if (values.length < 2) return String(values[0] ?? "");
+        if (values.length === 2) return `${values[0]} et ${values[1]}`;
+        return `${values.slice(0, -1).join(", ")} et ${values.at(-1)}`;
+      }
+
+      function configurationLabel(config) {
+        if (config.mode === "evaluation") return "Comme l’évaluation CM1";
+        const tables = config.tables.length === ALL_TABLES.length
+          ? "Tables de 1 à 10"
+          : config.tables.length === 1
+            ? `Table de ${config.tables[0]}`
+            : `Tables de ${joinFrench(config.tables)}`;
+        const questions = config.questionType === "direct"
+          ? "résultats"
+          : config.questionType === "missing"
+            ? "nombres manquants"
+            : "tous les types";
+        return `${tables} · ${questions}`;
+      }
+
+      function configurationKey(config) {
+        if (config.mode === "evaluation") return "evaluation";
+        return `custom-${config.tables.join("-")}-${config.questionType}`;
+      }
+
+      function readBest(config) {
+        try {
+          const stored = localStorage.getItem(`${STORAGE_PREFIX}:${configurationKey(config)}`);
+          if (stored !== null) return Number(stored) || 0;
+          if (config.mode === "evaluation") {
+            const legacy = localStorage.getItem(LEGACY_STORAGE_KEY);
+            if (legacy !== null) return Number(legacy) || 0;
+          }
+          return null;
+        } catch (_) { return null; }
+      }
+
+      function best(config) {
+        return readBest(config) ?? 0;
+      }
+
+      function saveBest(config, value) {
+        try { localStorage.setItem(`${STORAGE_PREFIX}:${configurationKey(config)}`, String(value)); } catch (_) { /* Stockage facultatif. */ }
       }
 
       function formatTime(seconds) {
@@ -530,12 +844,44 @@
       function show(name) {
         ["intro", "play", "result"].forEach(id => { $(id).hidden = id !== name; });
         document.body.classList.toggle("challenge-playing", name === "play");
+        if (name === "intro") syncControls();
         window.scrollTo({top: 0, behavior: "auto"});
+        if (name === "intro") $("intro-title").focus?.({preventScroll: true});
+        if (name === "result") $("result-title").focus?.({preventScroll: true});
       }
 
       function updateBestCopy() {
-        const score = best();
-        $("best-intro").textContent = score ? `Meilleur score : ${score} / ${TOTAL}` : "Ton premier score apparaîtra ici.";
+        const config = captureConfiguration();
+        const score = readBest(config);
+        $("best-intro").textContent = score !== null ? `Meilleur score avec ce réglage : ${score} / ${TOTAL}` : "Ton premier score avec ce réglage apparaîtra ici.";
+      }
+
+      function syncControls() {
+        document.querySelectorAll("[data-mode]").forEach(button => {
+          const selected = button.dataset.mode === configuration.mode;
+          button.classList.toggle("is-selected", selected);
+          button.setAttribute("aria-pressed", String(selected));
+        });
+        $("custom-settings").hidden = configuration.mode !== "custom";
+
+        const allSelected = configuration.tables.size === ALL_TABLES.length;
+        const allButton = document.querySelector("[data-all-tables]");
+        allButton.classList.toggle("is-selected", allSelected);
+        allButton.setAttribute("aria-pressed", String(allSelected));
+        document.querySelectorAll("[data-table]").forEach(button => {
+          const selected = !allSelected && configuration.tables.has(Number(button.dataset.table));
+          button.classList.toggle("is-selected", selected);
+          button.setAttribute("aria-pressed", String(selected));
+        });
+
+        document.querySelectorAll("[data-question-type]").forEach(button => {
+          const selected = button.dataset.questionType === configuration.questionType;
+          button.classList.toggle("is-selected", selected);
+          button.setAttribute("aria-pressed", String(selected));
+        });
+
+        $("config-summary").textContent = `${configurationLabel(captureConfiguration())} · ${TOTAL} égalités · 1 minute`;
+        updateBestCopy();
       }
 
       function renderQuestion() {
@@ -545,7 +891,25 @@
         $("question-kind").textContent = question.kind;
         $("expression").textContent = question.prompt;
         $("answer").value = "";
+        clearAnswerError();
+        $("question-card").scrollTop = 0;
+        $("expression").focus?.({preventScroll: true});
+      }
+
+      function clearAnswerError() {
         $("answer").classList.remove("invalid");
+        $("answer").setAttribute("aria-invalid", "false");
+        $("answer-error").classList.remove("is-visible");
+        $("answer-error").setAttribute("aria-hidden", "true");
+      }
+
+      function showAnswerError() {
+        $("answer").classList.add("invalid");
+        $("answer").setAttribute("aria-invalid", "true");
+        $("answer-error").classList.add("is-visible");
+        $("answer-error").setAttribute("aria-hidden", "false");
+        $("answer").scrollIntoView?.({block: "nearest", inline: "nearest", behavior: "auto"});
+        $("answer").focus?.({preventScroll: true});
       }
 
       function stopTimer() {
@@ -600,26 +964,32 @@
         zone.append(intro, list);
       }
 
-      function scoreMessage(score) {
-        if (score >= 12) return "Les faits de tables sont déjà bien disponibles. Continue pour gagner encore en rapidité.";
-        if (score >= 8) return "Tu connais plusieurs tables. Quelques essais réguliers vont rendre les réponses plus rapides.";
-        return "Prends le temps de revoir une ou deux tables, puis retente une nouvelle série sans te juger.";
+      function scoreMessage(score, config) {
+        if (config.mode === "evaluation") {
+          if (score >= 12) return "Les faits de tables sont déjà bien disponibles. Continue pour gagner encore en rapidité.";
+          if (score >= 8) return "Tu connais plusieurs tables. Quelques essais réguliers vont rendre les réponses plus rapides.";
+          return "Prends le temps de revoir une ou deux tables, puis retente une nouvelle série sans te juger.";
+        }
+        if (score >= 20) return "Très belle série ! Rejoue avec le même réglage pour rendre tes réponses encore plus rapides.";
+        if (score >= 12) return "Bonne série. Quelques essais réguliers vont rendre ces réponses plus rapides.";
+        return "Continue avec le même réglage : les résultats vont devenir de plus en plus faciles à retrouver.";
       }
 
       function finish() {
         if (!state.running) return;
         state.running = false;
         stopTimer();
-        const oldBest = best();
+        const oldBest = best(state.configuration);
         const newBest = Math.max(oldBest, state.correct);
-        saveBest(newBest);
+        saveBest(state.configuration, newBest);
         $("result-title").textContent = `${state.correct} bonne${state.correct > 1 ? "s" : ""} réponse${state.correct > 1 ? "s" : ""} sur ${TOTAL}`;
+        $("result-config").textContent = configurationLabel(state.configuration);
         const remaining = TOTAL - state.index;
         $("result-detail").textContent = remaining
           ? `Le temps est écoulé. ${state.answered} réponse${state.answered > 1 ? "s" : ""} saisie${state.answered > 1 ? "s" : ""}, et ${remaining} calcul${remaining > 1 ? "s" : ""} non parcouru${remaining > 1 ? "s" : ""}.`
           : "Toute la série a été parcourue avant la fin du temps.";
-        $("result-message").textContent = scoreMessage(state.correct);
-        $("result-best").textContent = state.correct > oldBest ? `Nouveau meilleur score : ${newBest} / ${TOTAL} !` : `Meilleur score : ${newBest} / ${TOTAL}.`;
+        $("result-message").textContent = scoreMessage(state.correct, state.configuration);
+        $("result-best").textContent = state.correct > oldBest ? `Nouveau meilleur score avec ce réglage : ${newBest} / ${TOTAL} !` : `Meilleur score avec ce réglage : ${newBest} / ${TOTAL}.`;
         renderCorrections();
         show("result");
       }
@@ -629,27 +999,35 @@
         const remaining = Math.max(0, Math.ceil((state.endAt - Date.now()) / 1000));
         $("time").textContent = formatTime(remaining);
         $("time").classList.toggle("urgent", remaining <= 10);
+        if (remaining > 0 && remaining <= 10 && !state.tenSecondAlert) {
+          state.tenSecondAlert = true;
+          $("timer-alert").textContent = `Plus que ${remaining} secondes.`;
+        }
         if (!remaining) finish();
       }
 
       function start() {
         stopTimer();
-        let questions = generateQuestions();
-        let signature = questions.map(question => question.prompt).join("|");
+        const config = captureConfiguration();
+        let questions = generateQuestions(config);
+        let signature = `${configurationKey(config)}|${questions.map(question => question.prompt).join("|")}`;
         for (let attempt = 0; signature === state.signature && attempt < 5; attempt += 1) {
-          questions = generateQuestions();
-          signature = questions.map(question => question.prompt).join("|");
+          questions = generateQuestions(config);
+          signature = `${configurationKey(config)}|${questions.map(question => question.prompt).join("|")}`;
         }
         state.questions = questions;
         state.responses = [];
         state.signature = signature;
+        state.configuration = config;
         state.index = 0;
         state.correct = 0;
         state.answered = 0;
         state.running = true;
+        state.tenSecondAlert = false;
         state.endAt = Date.now() + DURATION * 1000;
         $("time").textContent = formatTime(DURATION);
         $("time").classList.remove("urgent");
+        $("timer-alert").textContent = "";
         show("play");
         renderQuestion();
         state.timer = window.setInterval(updateTimer, 200);
@@ -659,7 +1037,7 @@
         if (!state.running) return;
         const value = $("answer").value;
         if (!skip && !/^\d+$/.test(value)) {
-          $("answer").classList.add("invalid");
+          showAnswerError();
           return;
         }
         if (!skip) {
@@ -678,33 +1056,71 @@
       function enterDigit(digit) {
         if (!state.running || $("answer").value.length >= 6) return;
         $("answer").value += digit;
-        $("answer").classList.remove("invalid");
+        clearAnswerError();
       }
+
+      document.querySelectorAll("[data-mode]").forEach(button => button.addEventListener("click", () => {
+        configuration.mode = button.dataset.mode;
+        syncControls();
+      }));
+      document.querySelector("[data-all-tables]").addEventListener("click", () => {
+        configuration.tables = new Set(ALL_TABLES);
+        syncControls();
+      });
+      document.querySelectorAll("[data-table]").forEach(button => button.addEventListener("click", () => {
+        const table = Number(button.dataset.table);
+        if (configuration.tables.size === ALL_TABLES.length) configuration.tables = new Set([table]);
+        else if (configuration.tables.has(table) && configuration.tables.size > 1) configuration.tables.delete(table);
+        else configuration.tables.add(table);
+        if (configuration.tables.size === ALL_TABLES.length) configuration.tables = new Set(ALL_TABLES);
+        syncControls();
+      }));
+      document.querySelectorAll("[data-question-type]").forEach(button => button.addEventListener("click", () => {
+        configuration.questionType = button.dataset.questionType;
+        syncControls();
+      }));
 
       document.querySelectorAll("[data-key]").forEach(button => button.addEventListener("click", () => {
         const key = button.dataset.key;
         if (key === "clear") $("answer").value = "";
         else if (key === "backspace") $("answer").value = $("answer").value.slice(0, -1);
         else enterDigit(key);
-        $("answer").classList.remove("invalid");
+        clearAnswerError();
       }));
       $("validate").addEventListener("click", () => next(false));
       $("skip").addEventListener("click", () => next(true));
       $("start").addEventListener("click", start);
       $("retry").addEventListener("click", start);
+      $("change-settings").addEventListener("click", () => show("intro"));
       setupFullscreen();
       document.addEventListener("keydown", event => {
         if (!state.running) return;
         if (/^\d$/.test(event.key)) enterDigit(event.key);
-        else if (event.key === "Backspace") $("answer").value = $("answer").value.slice(0, -1);
-        else if (event.key === "Delete" || event.key === "Escape") $("answer").value = "";
+        else if (event.key === "Backspace") {
+          $("answer").value = $("answer").value.slice(0, -1);
+          clearAnswerError();
+        } else if (event.key === "Delete" || event.key === "Escape") {
+          $("answer").value = "";
+          clearAnswerError();
+        }
         else if (event.key === "Enter") next(false);
         else return;
         event.preventDefault();
       });
       document.addEventListener("visibilitychange", updateTimer);
       window.addEventListener("pagehide", stopTimer);
-      updateBestCopy();
+      window.addEventListener("pageshow", () => {
+        if (!state.running) return;
+        updateTimer();
+        if (state.running && state.timer === null) state.timer = window.setInterval(updateTimer, 200);
+      });
+      if (new URLSearchParams(window.location.search).has("test")) {
+        Object.defineProperty(window, "__MATHSGO_DEFI_TABLES_TEST__", {
+          configurable: true,
+          value: Object.freeze({generateEvaluationQuestions, generateCustomQuestions, configurationLabel})
+        });
+      }
+      syncControls();
     })();
   </script>
 </body>
