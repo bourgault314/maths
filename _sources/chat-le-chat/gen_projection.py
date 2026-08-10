@@ -937,19 +937,19 @@ HTML_TEMPLATE = r'''<!doctype html>
         if (state.mode === 'editing') {
           const selectedPlayer = state.selectedCell === null ? null : displayGrid.flat()[state.selectedCell];
           $('#placement-question').textContent = selectedPlayer === null
-            ? 'Quel chat faut-il déplacer ou échanger ?'
-            : `Où placer le chat ${selectedPlayer} ?`;
+            ? 'Quel chat faut-il déplacer ou échanger\u00a0?'
+            : `Où placer le chat ${selectedPlayer}\u00a0?`;
           $('#placement-hint').textContent = selectedPlayer === null
             ? 'Cliquez d’abord sur le chat à déplacer ou à échanger.'
             : 'Cliquez sur un cercle vide pour le déplacer, ou sur un autre chat pour échanger leurs places.';
         } else if (state.mode === 'attempt') {
-          $('#placement-question').textContent = 'Votre correction est-elle valide ?';
+          $('#placement-question').textContent = 'Votre correction est-elle valide\u00a0?';
           $('#placement-hint').textContent = 'Vérifiez à nouveau les quatre cartes avec la classe.';
         } else if (state.mode === 'suggested') {
-          $('#placement-question').textContent = 'Cette correction est-elle valide ?';
+          $('#placement-question').textContent = 'Cette correction est-elle valide\u00a0?';
           $('#placement-hint').textContent = 'Relisez les quatre cartes pour la justifier.';
         } else {
-          $('#placement-question').textContent = 'Ce placement est-il correct ?';
+          $('#placement-question').textContent = 'Ce placement est-il correct\u00a0?';
           $('#placement-hint').textContent = 'Réfléchissez d’abord chacun depuis votre place, puis mettez vos idées en commun.';
         }
 
@@ -1030,10 +1030,12 @@ HTML_TEMPLATE = r'''<!doctype html>
           return;
         }
         const falseCards = [1,2,3,4].filter(player => !cardIsTrue(item, player, displayGrid));
-        const cardWord = falseCards.length === 1 ? 'carte est fausse' : 'cartes sont fausses';
+        const remainingFalseMessage = falseCards.length === 1
+          ? 'Une carte reste fausse.'
+          : `${falseCards.length} cartes restent fausses.`;
         verdict.className = 'verdict bad';
         if (state.mode === 'attempt') {
-          verdict.innerHTML = `<span class="verdict-icon" aria-hidden="true">✕</span><div class="verdict-copy"><strong>Cette correction ne suffit pas.</strong>${falseCards.length} ${cardWord} encore.</div><div class="verdict-actions"><button class="primary-button" id="retry-correction" type="button">Réessayer</button><button class="secondary-button" id="show-suggested" type="button">Voir la solution</button></div>`;
+          verdict.innerHTML = `<span class="verdict-icon" aria-hidden="true">✕</span><div class="verdict-copy"><strong>Cette correction ne suffit pas.</strong>${remainingFalseMessage}</div><div class="verdict-actions"><button class="primary-button" id="retry-correction" type="button">Réessayer</button><button class="secondary-button" id="show-suggested" type="button">Voir la solution</button></div>`;
           $('#retry-correction').addEventListener('click', startCorrectionAttempt);
           $('#show-suggested').addEventListener('click', showSuggestedCorrection);
         } else {
