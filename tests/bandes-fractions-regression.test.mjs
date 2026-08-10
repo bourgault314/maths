@@ -113,12 +113,15 @@ test('la barre d’outils reste défilable sans afficher d’ascenseur horizonta
 test('la palette est escamotable et le son a entièrement disparu', () => {
   assert.match(
     html,
-    /id="btn-palette-toggle"[^>]+aria-controls="projection-palette-bar"[^>]+aria-expanded="true"/,
+    /id="btn-palette-toggle"[^>]+aria-controls="projection-palette-bar"[^>]+aria-expanded="true"[^>]+aria-label="Masquer les bandes"/,
   );
+  assert.match(html, /id="utility-actions"[\s\S]*id="btn-help"[\s\S]*id="btn-palette-toggle"[\s\S]*id="btn-fullscreen"/);
   assert.match(html, /function setPaletteCollapsed\(collapsed\)/);
   assert.match(html, /classList\.toggle\('palette-collapsed', isCollapsed\)/);
+  assert.match(html, /button\.setAttribute\('aria-label', actionLabel\)/);
   assert.match(html, /setPaletteCollapsed\(false\);\s*applyFixedLayout\(\);/);
   assert.match(html, /body\.palette-collapsed #projection-palette-bar\{ display:none !important; \}/);
+  assert.doesNotMatch(html, /id="projection-palette-area"|#btn-palette-toggle\{\s*position:absolute/);
   assert.doesNotMatch(html, /id="btn-sound"/);
   assert.doesNotMatch(html, /AudioContext|SOUND_ENABLED|playSound\(/);
 });

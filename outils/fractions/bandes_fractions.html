@@ -453,59 +453,14 @@
     /* Projection : masque la palette pour maximiser le plateau (idéal vidéoprojecteur) */
     body.projection-mode aside { display: none !important; }
 
-    /* Palette escamotable : le bouton reste accessible sans encombrer la barre d’outils. */
-    #projection-palette-area{
-      position:relative;
-      flex:0 0 auto;
-      z-index:25;
-    }
-    #btn-palette-toggle{
-      position:absolute;
-      left:50%;
-      bottom:-15px;
-      transform:translateX(-50%);
-      min-height:30px;
-      padding:4px 13px;
-      border:1px solid #bfdbfe;
-      border-radius:0 0 11px 11px;
-      background:#eff6ff;
-      color:#1e3a8a;
-      box-shadow:0 3px 8px rgba(15,23,42,0.16);
-      display:flex;
-      align-items:center;
-      gap:6px;
-      font-family:'Fredoka', sans-serif;
-      font-size:12px;
-      font-weight:800;
-      line-height:1;
-      cursor:pointer;
-      touch-action:manipulation;
-      white-space:nowrap;
-    }
-    #btn-palette-toggle:hover{ background:#dbeafe; }
-    #btn-palette-toggle:focus-visible{
-      outline:3px solid rgba(37,99,235,0.35);
-      outline-offset:2px;
-    }
-    #palette-toggle-chevron{
-      display:inline-block;
-      font-size:15px;
-      transition:transform 0.15s ease;
-    }
-    body.palette-collapsed #projection-palette-area{ height:30px; }
+    /* Palette escamotable : sa commande reste dans la barre d’outils. */
     body.palette-collapsed #projection-palette-bar{ display:none !important; }
-    body.palette-collapsed #btn-palette-toggle{
-      top:0;
-      bottom:auto;
+    #palette-toggle-chevron{
+      transition:transform 0.15s ease;
+      transform-box:fill-box;
+      transform-origin:center;
     }
     body.palette-collapsed #palette-toggle-chevron{ transform:rotate(180deg); }
-    @media (max-width: 640px){
-      #btn-palette-toggle{
-        min-height:40px;
-        padding-inline:16px;
-      }
-      body.palette-collapsed #projection-palette-area{ height:40px; }
-    }
 
     /* Sélecteur compact de graduation de la demi-droite */
     .nl-grad-select{
@@ -710,6 +665,14 @@
         <span class="text-[10px] font-extrabold leading-none">Aide</span>
       </button>
 
+      <button type="button" id="btn-palette-toggle" class="p-2 rounded bg-white shadow text-gray-700 hover:bg-slate-50 active:scale-95 transition flex flex-col items-center gap-0.5" aria-controls="projection-palette-bar" aria-expanded="true" aria-label="Masquer les bandes" title="Masquer les bandes">
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <rect x="3" y="4" width="18" height="9" rx="2"/>
+          <path id="palette-toggle-chevron" d="m8 18 4-3 4 3"/>
+        </svg>
+        <span id="palette-toggle-label" class="text-[10px] font-extrabold leading-none">Bandes</span>
+      </button>
+
       <button id="btn-fullscreen" class="p-2 rounded bg-white shadow text-gray-700 hover:bg-slate-50 active:scale-95 transition flex flex-col items-center gap-0.5" title="Plein écran">
         <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
           <path d="M8 3H5a2 2 0 0 0-2 2v3"/>
@@ -723,14 +686,8 @@
 
   </header>
 
-  <div id="projection-palette-area">
-    <div id="projection-palette-bar" class="bg-blue-50 border-b border-blue-200 px-2 py-2 flex justify-center overflow-x-auto no-scrollbar">
-      <!-- Palette déplacée ici en mode projection -->
-    </div>
-    <button type="button" id="btn-palette-toggle" aria-controls="projection-palette-bar" aria-expanded="true" title="Masquer les bandes">
-      <span id="palette-toggle-label">Masquer</span>
-      <span id="palette-toggle-chevron" aria-hidden="true">⌃</span>
-    </button>
+  <div id="projection-palette-bar" class="bg-blue-50 border-b border-blue-200 px-2 py-2 flex justify-center overflow-x-auto no-scrollbar">
+    <!-- Palette déplacée ici en mode projection -->
   </div>
 
   <div class="flex flex-1 overflow-hidden relative">
@@ -1090,9 +1047,11 @@ palette.querySelectorAll('.palette-item').forEach(item=>{
     document.body.classList.toggle('palette-collapsed', isCollapsed);
     if(button){
       button.setAttribute('aria-expanded', String(!isCollapsed));
-      button.title = isCollapsed ? 'Afficher les bandes' : 'Masquer les bandes';
+      const actionLabel = isCollapsed ? 'Afficher les bandes' : 'Masquer les bandes';
+      button.setAttribute('aria-label', actionLabel);
+      button.title = actionLabel;
     }
-    if(label) label.textContent = isCollapsed ? 'Bandes' : 'Masquer';
+    if(label) label.textContent = 'Bandes';
 
     requestAnimationFrame(()=>{
       if(window.app){
