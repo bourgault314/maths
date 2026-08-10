@@ -1,6 +1,6 @@
 window.MATHSGO_CATALOGUE = {
   "schemaVersion": 5,
-  "generatedAt": "2026-08-08T00:00:00.000Z",
+  "generatedAt": "2026-08-10T00:00:00.000Z",
   "description": "Catalogue des ressources maths&go : domaines, notions, collections et facettes cumulables.",
   "uses": [
     {
@@ -228,6 +228,14 @@ window.MATHSGO_CATALOGUE = {
       "tags": ["jeu", "strategie", "alignement", "hexagones"],
       "thumbnail": "assets/img/thumbnails/jeux/yavalath.svg?v=2",
       "cardDescription": "Aligner quatre pions sur le plateau hexagonal sans perdre en formant d’abord une ligne de trois."
+    },
+    "outils/club_maths/carres_gloutons.html": {
+      "primaryNotion": "strategie",
+      "primaryGroup": "jeux",
+      "collections": [],
+      "tags": ["jeu", "strategie", "anticipation", "points-et-carres", "ordinateur"],
+      "thumbnail": "assets/img/thumbnails/jeux/carres-gloutons.svg?v=1",
+      "cardDescription": "Fermer plus de carrés que Gloubi, anticiper les chaînes et éviter de lui offrir les derniers traits."
     },
     "outils/club_maths/tables_modulaires.html": {
       "primaryNotion": "explorations",
@@ -5977,6 +5985,34 @@ window.MATHSGO_CATALOGUE = {
       "status": "published",
       "featured": false,
       "recent": false
+    },
+    {
+      "id": "outils-club-maths-carres-gloutons-html",
+      "title": "Les Carrés gloutons",
+      "description": "Un jeu de stratégie contre l’ordinateur où chaque trait peut fermer un carré ou préparer une chaîne pour l’adversaire.",
+      "path": "outils/club_maths/carres_gloutons.html",
+      "domains": [
+        "jeux-recherches"
+      ],
+      "notions": [
+        "strategie"
+      ],
+      "uses": [
+        "manipuler"
+      ],
+      "types": [
+        "plateau"
+      ],
+      "filters": [],
+      "keywords": [
+        "jeu des points et carrés",
+        "ordinateur",
+        "anticipation"
+      ],
+      "kind": "tool",
+      "status": "published",
+      "featured": false,
+      "recent": true
     },
     {
       "id": "cps-bilan-s1-html",

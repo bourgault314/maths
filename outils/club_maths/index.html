@@ -26,6 +26,8 @@
             --nim-c1: #11998e; --nim-c2: #38ef7d;
             /* Couleurs Yavalath (bois / stratégie) */
             --yavalath-c1: #f0c36a; --yavalath-c2: #2f2a24;
+            /* Couleurs Carrés gloutons (joueur / Gloubi) */
+            --gloutons-c1: #0f6cf9; --gloutons-c2: #f97316;
         }
 
         body {
@@ -231,6 +233,20 @@
             background-origin: border-box;
         }
 
+        /* Carrés gloutons (bleu / orange) */
+        .gloutons .card-header { background: linear-gradient(90deg, var(--gloutons-c1), var(--gloutons-c2)); }
+        .gloutons .btn {
+            color: #a64606;
+            border-color: var(--gloutons-c2);
+            background: transparent;
+        }
+        .gloutons:hover .btn {
+            background: linear-gradient(90deg, var(--gloutons-c1), var(--gloutons-c2));
+            color: white;
+            border-color: transparent;
+            background-origin: border-box;
+        }
+
         .yavalath-icon {
             display: grid;
             place-items: center;
@@ -265,7 +281,7 @@
         }
 
         @media (min-width: 1100px) {
-            .container { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+            .container { grid-template-columns: repeat(5, minmax(0, 1fr)); }
         }
     </style>
 <link rel="stylesheet" href="../../assets/css/consentement.css">
@@ -342,6 +358,16 @@
                     </svg></div>
                 <h2>Yavalath</h2>
                 <p>Un jeu d’alignement malin : il faut réussir à faire 4 pions, mais attention, aligner 3 pions fait perdre.</p>
+                <span class="btn">Lancer le jeu</span>
+            </div>
+        </a>
+
+        <a href="carres_gloutons.html" class="card gloutons">
+            <div class="card-header"></div>
+            <div class="card-content">
+                <div class="card-icon" aria-hidden="true">⭐😋</div>
+                <h2>Les Carrés gloutons</h2>
+                <p>Fermez plus de carrés que Gloubi sans lui offrir une chaîne de cases à dévorer.</p>
                 <span class="btn">Lancer le jeu</span>
             </div>
         </a>

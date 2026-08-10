@@ -1,0 +1,933 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>Les Carrés gloutons | maths&amp;go</title>
+  <meta name="description" content="Un jeu de stratégie contre l’ordinateur où chaque trait peut fermer un carré ou préparer une chaîne pour l’adversaire.">
+  <link rel="canonical" href="https://mathsgo.re/outils/club_maths/carres_gloutons.html">
+  <meta name="robots" content="index, follow, max-image-preview:large">
+  <link rel="icon" href="/favicon.ico" sizes="48x48">
+  <link rel="icon" type="image/svg+xml" href="/favicon.svg">
+  <link rel="icon" type="image/png" sizes="32x32" href="/assets/img/favicon-32.png">
+  <link rel="icon" type="image/png" sizes="192x192" href="/assets/img/favicon-192.png">
+  <link rel="apple-touch-icon" href="/assets/img/apple-touch-icon.png">
+  <style>
+    :root {
+      color: #10294a;
+      background: #eef5fb;
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    }
+
+    * { box-sizing: border-box; }
+    *[hidden] { display: none !important; }
+
+    body {
+      min-height: 100vh;
+      margin: 0;
+      background:
+        radial-gradient(circle at 50% 0, #fff8e8, transparent 33rem),
+        linear-gradient(180deg, #f8fbff, #eef5fb);
+    }
+
+    button,
+    a { font: inherit; }
+
+    .shell {
+      width: min(900px, calc(100% - 24px));
+      margin: 0 auto;
+      padding: 10px 0 32px;
+    }
+
+    .site-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      min-height: 59px;
+      gap: 12px;
+    }
+
+    .logo {
+      display: block;
+      width: 106px;
+      height: auto;
+    }
+
+    .catalogue-link {
+      display: inline-flex;
+      align-items: center;
+      min-height: 39px;
+      padding: 0 13px;
+      border: 1px solid #d5e1ec;
+      border-radius: 999px;
+      color: #24415f;
+      background: #fff;
+      font-size: .8rem;
+      font-weight: 850;
+      text-decoration: none;
+    }
+
+    .catalogue-link:hover,
+    .catalogue-link:focus-visible,
+    button:focus-visible,
+    .edge:focus-visible {
+      outline: 3px solid rgba(15, 108, 249, .3);
+      outline-offset: 3px;
+    }
+
+    .game {
+      padding: 20px clamp(13px, 3vw, 28px) 25px;
+      overflow-anchor: none;
+      border: 1px solid #d3e0eb;
+      border-radius: 25px;
+      background: rgba(255, 255, 255, .96);
+      box-shadow: 0 20px 58px rgba(23, 58, 94, .12);
+    }
+
+    .title-row {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 15px;
+    }
+
+    .eyebrow {
+      margin: 0 0 5px;
+      color: #b45309;
+      font-size: .72rem;
+      font-weight: 900;
+      letter-spacing: .13em;
+      text-transform: uppercase;
+    }
+
+    h1 {
+      margin: 0;
+      font-size: clamp(2rem, 5vw, 3.2rem);
+      line-height: 1;
+      letter-spacing: -.045em;
+    }
+
+    .subtitle {
+      margin: 8px 0 0;
+      color: #5b6879;
+      line-height: 1.45;
+    }
+
+    .rules-button {
+      flex: 0 0 auto;
+      min-height: 40px;
+      padding: 0 13px;
+      border: 2px solid #f1c67c;
+      border-radius: 11px;
+      color: #8a4a05;
+      background: #fff9e9;
+      cursor: pointer;
+      font-weight: 850;
+    }
+
+    .dashboard {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 9px;
+      margin: 17px 0 11px;
+    }
+
+    .dashboard > div {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 3px;
+      padding: 10px;
+      border-radius: 12px;
+      background: #f3f7fb;
+    }
+
+    .dashboard span {
+      color: #718096;
+      font-size: .7rem;
+      font-weight: 800;
+      letter-spacing: .07em;
+      text-transform: uppercase;
+    }
+
+    .dashboard strong { font-size: 1rem; }
+
+    .status {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 9px;
+      height: 64px;
+      padding: 7px 12px;
+      overflow-anchor: none;
+      border: 1px solid #bdd8f4;
+      border-radius: 12px;
+      color: #0755b8;
+      background: #eff7ff;
+      font-size: .94rem;
+      font-weight: 850;
+      line-height: 1.3;
+      text-align: center;
+    }
+
+    .status.ai {
+      border-color: #f0c78e;
+      color: #a34907;
+      background: #fff7ea;
+    }
+
+    .turn-dot {
+      width: 12px;
+      height: 12px;
+      flex: 0 0 12px;
+      border-radius: 50%;
+      background: currentColor;
+      box-shadow: 0 0 0 4px color-mix(in srgb, currentColor, transparent 82%);
+    }
+
+    .board-wrap {
+      position: relative;
+      width: min(100%, 560px);
+      margin: 10px auto 0;
+      overflow-anchor: none;
+    }
+
+    #board {
+      display: block;
+      width: 100%;
+      max-height: 61vh;
+      touch-action: manipulation;
+    }
+
+    .box {
+      opacity: 0;
+      transform-box: fill-box;
+      transform-origin: center;
+    }
+
+    .box.claimed {
+      opacity: 1;
+      animation: munch .35s ease-out;
+    }
+
+    .box.player {
+      fill: #d7ebff;
+      stroke: #0755b8;
+      stroke-width: 3;
+    }
+
+    .box.ai {
+      fill: #ffe1bd;
+      stroke: #d95f02;
+      stroke-width: 3;
+    }
+
+    .box-face {
+      pointer-events: none;
+      font-family: Arial, "Apple Color Emoji", "Segoe UI Emoji", sans-serif;
+      font-size: 28px;
+      font-weight: 900;
+      text-anchor: middle;
+      dominant-baseline: middle;
+      animation: pop .35s ease-out;
+    }
+
+    .edge-visible {
+      stroke: #cbd5e1;
+      stroke-width: 9;
+      stroke-linecap: round;
+      transition: stroke .16s ease, stroke-width .16s ease;
+    }
+
+    .edge.player .edge-visible {
+      stroke: #0f6cf9;
+      stroke-width: 11;
+    }
+
+    .edge.ai .edge-visible {
+      stroke: #f97316;
+      stroke-width: 11;
+    }
+
+    .edge-hit {
+      stroke: transparent;
+      stroke-width: 34;
+      stroke-linecap: round;
+      cursor: pointer;
+    }
+
+    .edge:not(.taken):hover .edge-visible,
+    .edge:not(.taken):focus-visible .edge-visible {
+      stroke: #8dbce9;
+      stroke-width: 12;
+    }
+
+    .edge.taken .edge-hit { cursor: default; }
+
+    .dot {
+      fill: #173a5e;
+      stroke: #fff;
+      stroke-width: 4;
+      pointer-events: none;
+    }
+
+    .thinking-bubble {
+      position: absolute;
+      top: 14%;
+      right: 2%;
+      padding: 7px 10px;
+      border: 2px solid #f3c37b;
+      border-radius: 13px 13px 3px 13px;
+      color: #9a4b09;
+      background: #fff;
+      font-size: .75rem;
+      font-weight: 900;
+      box-shadow: 0 6px 17px rgba(154, 75, 9, .12);
+      animation: bob 1s ease-in-out infinite;
+    }
+
+    .result {
+      margin-top: 12px;
+      padding: 16px;
+      border: 2px solid #b8dfc8;
+      border-radius: 15px;
+      background: #f0fbf5;
+      text-align: center;
+    }
+
+    .result.lose {
+      border-color: #f1c59a;
+      background: #fff7ed;
+    }
+
+    .result h2 {
+      margin: 0 0 6px;
+      font-size: 1.45rem;
+    }
+
+    .result p {
+      margin: 0 0 12px;
+      color: #52667d;
+      line-height: 1.45;
+    }
+
+    .primary,
+    .secondary {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 47px;
+      padding: 0 20px;
+      border-radius: 12px;
+      cursor: pointer;
+      font-weight: 900;
+    }
+
+    .primary {
+      border: 0;
+      color: #fff;
+      background: #0755b8;
+    }
+
+    .secondary {
+      border: 2px solid #d4e0eb;
+      color: #24415f;
+      background: #fff;
+      text-decoration: none;
+    }
+
+    .result-actions {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 8px;
+    }
+
+    .overlay {
+      position: fixed;
+      z-index: 100;
+      inset: 0;
+      display: grid;
+      place-items: center;
+      padding: 16px;
+      background: rgba(13, 31, 52, .54);
+      backdrop-filter: blur(4px);
+    }
+
+    .intro {
+      width: min(560px, 100%);
+      max-height: 92vh;
+      overflow: auto;
+      padding: 24px;
+      border-radius: 22px;
+      background: #fff;
+      box-shadow: 0 25px 70px rgba(0, 0, 0, .24);
+    }
+
+    .intro h2 {
+      margin: 0;
+      font-size: clamp(2rem, 8vw, 3rem);
+      letter-spacing: -.04em;
+    }
+
+    .intro-lead {
+      margin: 9px 0 17px;
+      color: #52667d;
+      line-height: 1.5;
+    }
+
+    .rules {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 10px;
+    }
+
+    .rule {
+      padding: 15px;
+      border-radius: 14px;
+      background: #f4f8fb;
+    }
+
+    .rule svg {
+      display: block;
+      width: 90px;
+      height: 75px;
+      margin: 0 auto 6px;
+    }
+
+    .rule strong {
+      display: block;
+      margin-bottom: 4px;
+      color: #0755b8;
+    }
+
+    .rule:nth-child(2) strong { color: #d95f02; }
+
+    .rule span {
+      color: #52667d;
+      font-size: .84rem;
+      line-height: 1.4;
+    }
+
+    .intro .primary {
+      width: 100%;
+      margin-top: 17px;
+    }
+
+    .two-games {
+      margin: 10px 0 0;
+      color: #718096;
+      font-size: .78rem;
+      text-align: center;
+    }
+
+    @keyframes munch {
+      from { opacity: 0; transform: scale(.25) rotate(-8deg); }
+      70% { transform: scale(1.08) rotate(2deg); }
+      to { opacity: 1; transform: scale(1); }
+    }
+
+    @keyframes pop {
+      from { opacity: 0; transform: scale(.2); }
+      to { opacity: 1; transform: scale(1); }
+    }
+
+    @keyframes bob {
+      50% { transform: translateY(-5px); }
+    }
+
+    @media (max-width: 560px) {
+      .shell {
+        width: 100%;
+        padding-top: 0;
+      }
+
+      .site-header {
+        min-height: 53px;
+        padding: 4px 11px;
+      }
+
+      .logo { width: 86px; }
+
+      .catalogue-link {
+        min-height: 35px;
+        padding: 0 10px;
+        font-size: .72rem;
+      }
+
+      .game {
+        padding: 16px 10px 20px;
+        border-right: 0;
+        border-left: 0;
+        border-radius: 19px;
+      }
+
+      .title-row { align-items: center; }
+      .subtitle { font-size: .86rem; }
+
+      .rules-button {
+        min-height: 37px;
+        font-size: .75rem;
+      }
+
+      .dashboard { margin-top: 12px; }
+      .dashboard > div { padding: 8px 4px; }
+      #board { max-height: 58vh; }
+      .rules { grid-template-columns: 1fr; }
+
+      .rule {
+        display: grid;
+        grid-template-columns: 78px 1fr;
+        align-items: center;
+      }
+
+      .rule svg {
+        grid-row: span 2;
+        width: 68px;
+        height: 60px;
+        margin: 0;
+      }
+
+      .intro { padding: 19px; }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      *,
+      *::before,
+      *::after {
+        animation: none !important;
+        scroll-behavior: auto !important;
+        transition: none !important;
+      }
+    }
+  </style>
+</head>
+<body>
+  <main class="shell">
+    <header class="site-header">
+      <a href="/" aria-label="Accueil maths&go">
+        <img class="logo" src="/assets/img/mathsgo-logo.png" alt="maths&go" width="1338" height="622">
+      </a>
+      <a class="catalogue-link" href="../index.html?domain=jeux-recherches&amp;notion=strategie">← Jeux de stratégie</a>
+    </header>
+
+    <section class="game" aria-labelledby="game-title">
+      <div class="title-row">
+        <div>
+          <p class="eyebrow">Jeu de stratégie</p>
+          <h1 id="game-title">Les Carrés gloutons</h1>
+          <p class="subtitle">Ferme plus de carrés que Gloubi. Un carré fermé te donne le droit de rejouer.</p>
+        </div>
+        <button id="rules-button" class="rules-button" type="button">La règle</button>
+      </div>
+
+      <div class="dashboard">
+        <div><span>Manche</span><strong id="round-label">1 sur 2</strong></div>
+        <div><span>Les carrés</span><strong id="square-score">0 – 0</strong></div>
+        <div><span>Les victoires</span><strong id="match-score">0 – 0</strong></div>
+      </div>
+
+      <div id="status" class="status" aria-live="polite">
+        <i class="turn-dot" aria-hidden="true"></i>
+        <span id="status-text">À toi : choisis un trait.</span>
+      </div>
+
+      <div class="board-wrap">
+        <svg id="board" viewBox="0 0 372 372" role="img" aria-label="Plateau de neuf carrés à compléter">
+          <g id="boxes"></g>
+          <g id="edges"></g>
+          <g id="dots"></g>
+          <g id="faces"></g>
+        </svg>
+        <span id="thinking" class="thinking-bubble" hidden>Gloubi réfléchit…</span>
+      </div>
+
+      <section id="result" class="result" hidden aria-live="assertive">
+        <h2 id="result-title"></h2>
+        <p id="result-text"></p>
+        <div class="result-actions">
+          <button id="next-round" class="primary" type="button">Deuxième manche</button>
+          <a class="secondary" href="../index.html?domain=jeux-recherches&amp;notion=strategie">Retour aux jeux</a>
+        </div>
+      </section>
+    </section>
+  </main>
+
+  <div id="intro-overlay" class="overlay" role="dialog" aria-modal="true" aria-labelledby="intro-title">
+    <section class="intro">
+      <p class="eyebrow">La règle en vingt secondes</p>
+      <h2 id="intro-title">Nourris tes carrés</h2>
+      <p class="intro-lead">Tu joues en bleu contre Gloubi, qui joue en orange. À tour de rôle, chacun choisit un trait entre deux points.</p>
+      <div class="rules">
+        <article class="rule">
+          <svg viewBox="0 0 90 75" aria-hidden="true">
+            <g stroke="#173a5e" stroke-width="7" stroke-linecap="round">
+              <path d="M15 13h60M15 62h60M15 13v49"/>
+            </g>
+            <path d="M75 13v49" stroke="#0f6cf9" stroke-width="10" stroke-linecap="round"/>
+            <g fill="#173a5e">
+              <circle cx="15" cy="13" r="6"/>
+              <circle cx="75" cy="13" r="6"/>
+              <circle cx="15" cy="62" r="6"/>
+              <circle cx="75" cy="62" r="6"/>
+            </g>
+          </svg>
+          <strong>Ferme un carré</strong>
+          <span>Le quatrième trait te donne le carré et un point.</span>
+        </article>
+        <article class="rule">
+          <svg viewBox="0 0 90 75" aria-hidden="true">
+            <rect x="16" y="11" width="58" height="53" rx="9" fill="#ffe1bd" stroke="#f97316" stroke-width="5"/>
+            <text x="45" y="47" text-anchor="middle" font-size="27">😋</text>
+          </svg>
+          <strong>Et rejoue aussitôt</strong>
+          <span>Une bonne fermeture peut déclencher toute une chaîne.</span>
+        </article>
+      </div>
+      <button id="start-game" class="primary" type="button">J’ai compris, je joue !</button>
+      <p class="two-games">Deux manches · tu commences la première, Gloubi la seconde.</p>
+    </section>
+  </div>
+
+  <script>
+    (() => {
+      "use strict";
+
+      const SVG_NS = "http://www.w3.org/2000/svg";
+      const SIZE = 4;
+      const CELL = 96;
+      const PAD = 42;
+      const PLAYER = "player";
+      const AI = "ai";
+      const CATALOGUE_URL = "../index.html?domain=jeux-recherches&notion=strategie";
+      const edges = new Map();
+      const boxes = new Map();
+      let current = PLAYER;
+      let round = 1;
+      let gameOver = false;
+      let thinking = false;
+      let playerWins = 0;
+      let aiWins = 0;
+      let draws = 0;
+      let started = false;
+
+      const board = document.getElementById("board");
+      const boxesGroup = document.getElementById("boxes");
+      const edgesGroup = document.getElementById("edges");
+      const dotsGroup = document.getElementById("dots");
+      const facesGroup = document.getElementById("faces");
+      const status = document.getElementById("status");
+      const statusText = document.getElementById("status-text");
+      const thinkingBubble = document.getElementById("thinking");
+      const roundLabel = document.getElementById("round-label");
+      const squareScore = document.getElementById("square-score");
+      const matchScore = document.getElementById("match-score");
+      const result = document.getElementById("result");
+      const resultTitle = document.getElementById("result-title");
+      const resultText = document.getElementById("result-text");
+      const nextRound = document.getElementById("next-round");
+      const overlay = document.getElementById("intro-overlay");
+      const startGame = document.getElementById("start-game");
+      const rulesButton = document.getElementById("rules-button");
+
+      const hKey = (row, col) => `h-${row}-${col}`;
+      const vKey = (row, col) => `v-${row}-${col}`;
+      const bKey = (row, col) => `b-${row}-${col}`;
+      const emptyEdgeKeys = () => Array.from(edges.keys()).filter(key => !edges.get(key));
+
+      function makeSvg(tag, attributes = {}) {
+        const node = document.createElementNS(SVG_NS, tag);
+        Object.entries(attributes).forEach(([name, value]) => node.setAttribute(name, value));
+        return node;
+      }
+
+      function buildBoard() {
+        for (let row = 0; row < SIZE - 1; row += 1) {
+          for (let col = 0; col < SIZE - 1; col += 1) {
+            const key = bKey(row, col);
+            boxes.set(key, null);
+            boxesGroup.appendChild(makeSvg("rect", {
+              x: PAD + col * CELL + 10,
+              y: PAD + row * CELL + 10,
+              width: CELL - 20,
+              height: CELL - 20,
+              rx: 13,
+              class: "box",
+              "data-box": key
+            }));
+          }
+        }
+
+        for (let row = 0; row < SIZE; row += 1) {
+          for (let col = 0; col < SIZE - 1; col += 1) {
+            createEdge(hKey(row, col), PAD + col * CELL, PAD + row * CELL, PAD + (col + 1) * CELL, PAD + row * CELL);
+          }
+        }
+
+        for (let row = 0; row < SIZE - 1; row += 1) {
+          for (let col = 0; col < SIZE; col += 1) {
+            createEdge(vKey(row, col), PAD + col * CELL, PAD + row * CELL, PAD + col * CELL, PAD + (row + 1) * CELL);
+          }
+        }
+
+        for (let row = 0; row < SIZE; row += 1) {
+          for (let col = 0; col < SIZE; col += 1) {
+            dotsGroup.appendChild(makeSvg("circle", {
+              cx: PAD + col * CELL,
+              cy: PAD + row * CELL,
+              r: 10,
+              class: "dot"
+            }));
+          }
+        }
+      }
+
+      function createEdge(key, x1, y1, x2, y2) {
+        edges.set(key, null);
+        const group = makeSvg("g", {
+          class: "edge",
+          "data-edge": key,
+          role: "button",
+          tabindex: "0",
+          "aria-label": "Choisir ce trait"
+        });
+        group.appendChild(makeSvg("line", { x1, y1, x2, y2, class: "edge-visible" }));
+        group.appendChild(makeSvg("line", { x1, y1, x2, y2, class: "edge-hit" }));
+        group.addEventListener("click", () => playerMove(key));
+        group.addEventListener("keydown", event => {
+          if (event.key === "Enter" || event.key === " ") {
+            event.preventDefault();
+            playerMove(key);
+          }
+        });
+        edgesGroup.appendChild(group);
+      }
+
+      function boxEdges(row, col) {
+        return [hKey(row, col), hKey(row + 1, col), vKey(row, col), vKey(row, col + 1)];
+      }
+
+      function adjacentBoxes(edgeKey) {
+        const [type, rowText, colText] = edgeKey.split("-");
+        const row = Number(rowText);
+        const col = Number(colText);
+        const resultKeys = [];
+        if (type === "h") {
+          if (row > 0) resultKeys.push(bKey(row - 1, col));
+          if (row < SIZE - 1) resultKeys.push(bKey(row, col));
+        } else {
+          if (col > 0) resultKeys.push(bKey(row, col - 1));
+          if (col < SIZE - 1) resultKeys.push(bKey(row, col));
+        }
+        return resultKeys.filter(key => boxes.has(key));
+      }
+
+      function parseBox(key) {
+        const [, row, col] = key.split("-");
+        return [Number(row), Number(col)];
+      }
+
+      function completedBoxesAfter(edgeKey, boardEdges = edges, boardBoxes = boxes) {
+        const completed = [];
+        adjacentBoxes(edgeKey).forEach(key => {
+          if (boardBoxes.get(key)) return;
+          const [row, col] = parseBox(key);
+          if (boxEdges(row, col).every(edge => boardEdges.get(edge))) completed.push(key);
+        });
+        return completed;
+      }
+
+      function playerMove(key) {
+        if (!started || gameOver || thinking || current !== PLAYER || edges.get(key)) return;
+        makeMove(key, PLAYER);
+      }
+
+      function makeMove(key, color) {
+        edges.set(key, color);
+        const completed = completedBoxesAfter(key);
+        completed.forEach(box => boxes.set(box, color));
+        render();
+
+        if (emptyEdgeKeys().length === 0) {
+          finishRound();
+          return;
+        }
+
+        if (completed.length > 0) {
+          statusText.textContent = color === PLAYER
+            ? `Miam ! ${completed.length} carré${completed.length > 1 ? "s" : ""} pour toi : rejoue.`
+            : `Gloubi dévore ${completed.length} carré${completed.length > 1 ? "s" : ""} et rejoue.`;
+          if (color === AI) scheduleAi();
+          return;
+        }
+
+        current = color === PLAYER ? AI : PLAYER;
+        renderStatus();
+        if (current === AI) scheduleAi();
+      }
+
+      function scheduleAi() {
+        thinking = true;
+        renderStatus();
+        window.setTimeout(() => {
+          if (gameOver) return;
+          const move = chooseAiMove();
+          thinking = false;
+          if (move) makeMove(move, AI);
+        }, 520);
+      }
+
+      function previewMove(key) {
+        edges.set(key, "preview");
+        const gains = completedBoxesAfter(key).length;
+        let gifts = 0;
+        adjacentBoxes(key).forEach(boxKey => {
+          if (boxes.get(boxKey)) return;
+          const [row, col] = parseBox(boxKey);
+          const count = boxEdges(row, col).filter(edge => edges.get(edge)).length;
+          if (count === 3 && !completedBoxesAfter(key).includes(boxKey)) gifts += 1;
+        });
+        edges.set(key, null);
+        return { gains, gifts };
+      }
+
+      function chooseAiMove() {
+        const ranked = emptyEdgeKeys().map(key => ({ key, ...previewMove(key), random: Math.random() }));
+        const scoring = ranked
+          .filter(move => move.gains > 0)
+          .sort((first, second) => second.gains - first.gains || second.random - first.random);
+        if (scoring.length) return scoring[0].key;
+
+        const safe = ranked.filter(move => move.gifts === 0);
+        if (safe.length) {
+          safe.forEach(move => {
+            const [, rowText, colText] = move.key.split("-");
+            const row = Number(rowText);
+            const col = Number(colText);
+            move.center = -Math.abs(row - 1.5) - Math.abs(col - 1.5) + Math.random() * 1.7;
+          });
+          safe.sort((first, second) => second.center - first.center);
+          const shortlist = safe.slice(0, Math.min(4, safe.length));
+          return shortlist[Math.floor(Math.random() * shortlist.length)].key;
+        }
+
+        ranked.sort((first, second) => first.gifts - second.gifts || second.random - first.random);
+        return ranked[0]?.key || null;
+      }
+
+      function render() {
+        edgesGroup.querySelectorAll(".edge").forEach(group => {
+          const color = edges.get(group.dataset.edge);
+          group.setAttribute("class", `edge${color ? ` taken ${color}` : ""}`);
+          group.setAttribute("aria-disabled", color ? "true" : "false");
+          group.setAttribute("tabindex", color ? "-1" : "0");
+        });
+
+        boxesGroup.querySelectorAll(".box").forEach(rect => {
+          const color = boxes.get(rect.dataset.box);
+          rect.setAttribute("class", `box${color ? ` claimed ${color}` : ""}`);
+        });
+
+        facesGroup.replaceChildren();
+        boxes.forEach((color, key) => {
+          if (!color) return;
+          const [row, col] = parseBox(key);
+          const face = makeSvg("text", {
+            x: PAD + col * CELL + CELL / 2,
+            y: PAD + row * CELL + CELL / 2 + 2,
+            class: "box-face"
+          });
+          face.textContent = color === PLAYER ? "★" : "😋";
+          face.setAttribute("fill", color === PLAYER ? "#0755b8" : "#d95f02");
+          facesGroup.appendChild(face);
+        });
+
+        const playerSquares = Array.from(boxes.values()).filter(value => value === PLAYER).length;
+        const aiSquares = Array.from(boxes.values()).filter(value => value === AI).length;
+        squareScore.textContent = `${playerSquares} – ${aiSquares}`;
+        matchScore.textContent = `${playerWins} – ${aiWins}`;
+        roundLabel.textContent = `${round} sur 2`;
+        renderStatus();
+      }
+
+      function renderStatus() {
+        status.classList.toggle("ai", thinking || current === AI);
+        thinkingBubble.hidden = !thinking;
+        if (gameOver) return;
+        if (thinking) statusText.textContent = "Gloubi cherche le trait le plus savoureux…";
+        else if (current === AI) statusText.textContent = "C’est au tour de Gloubi.";
+        else statusText.textContent = "À toi : choisis un trait bleu.";
+      }
+
+      function finishRound() {
+        gameOver = true;
+        thinking = false;
+        thinkingBubble.hidden = true;
+        const playerSquares = Array.from(boxes.values()).filter(value => value === PLAYER).length;
+        const aiSquares = Array.from(boxes.values()).filter(value => value === AI).length;
+        const playerWon = playerSquares > aiSquares;
+        const aiWon = aiSquares > playerSquares;
+
+        if (playerWon) playerWins += 1;
+        else if (aiWon) aiWins += 1;
+        else draws += 1;
+
+        matchScore.textContent = `${playerWins} – ${aiWins}`;
+        result.className = `result${aiWon ? " lose" : ""}`;
+        resultTitle.textContent = playerWon ? "Tu gagnes cette manche !" : aiWon ? "Gloubi gagne cette fois." : "Égalité parfaite !";
+        resultText.textContent = `${playerSquares} carré${playerSquares > 1 ? "s" : ""} pour toi, ${aiSquares} pour Gloubi. ${round === 1 ? "La deuxième manche change le premier joueur." : finalMessage()}`;
+        nextRound.textContent = round === 1 ? "Deuxième manche" : "Retour aux jeux de stratégie";
+        result.hidden = false;
+        result.scrollIntoView({ behavior: "smooth", block: "nearest" });
+      }
+
+      function finalMessage() {
+        if (playerWins > aiWins) return "Tu remportes le duel des deux manches !";
+        if (aiWins > playerWins) return "Gloubi remporte le duel, mais il accepte toujours une revanche.";
+        return draws > 0
+          ? "Le duel se termine à égalité : vos appétits sont parfaitement équilibrés."
+          : "Le duel se termine à égalité.";
+      }
+
+      function resetBoard() {
+        edges.forEach((_, key) => edges.set(key, null));
+        boxes.forEach((_, key) => boxes.set(key, null));
+        current = round === 1 ? PLAYER : AI;
+        gameOver = false;
+        thinking = false;
+        result.hidden = true;
+        render();
+        if (current === AI) scheduleAi();
+      }
+
+      nextRound.addEventListener("click", () => {
+        if (round === 2) {
+          window.location.href = CATALOGUE_URL;
+          return;
+        }
+        round = 2;
+        resetBoard();
+        window.scrollTo({ top: 0, behavior: "smooth" });
+      });
+
+      startGame.addEventListener("click", () => {
+        started = true;
+        overlay.hidden = true;
+        startGame.textContent = "Reprendre la partie";
+        render();
+      });
+
+      rulesButton.addEventListener("click", () => {
+        overlay.hidden = false;
+      });
+
+      overlay.addEventListener("click", event => {
+        if (event.target === overlay && started) overlay.hidden = true;
+      });
+
+      buildBoard();
+      render();
+    })();
+  </script>
+</body>
+</html>

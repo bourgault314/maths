@@ -24,6 +24,7 @@ const returnPages = Object.fromEntries(await Promise.all([
   "outils/fractions/bandes_maker_v2.html",
   "outils/fractions/disque_maker.html",
   "outils/fabrication_materiel/cartes_premiers_1_100.html",
+  "outils/club_maths/carres_gloutons.html",
   "outils/club_maths/jeu_du_chaos.html",
   "outils/labo-des-regularites.html",
 ].map(async (path) => [path, await readFile(new URL(`../${path}`, import.meta.url), "utf8")])));
@@ -97,6 +98,7 @@ test("les retours explicites pointent vers le parent réel du catalogue", () => 
     ["outils/fractions/bandes_maker_v2.html", "../index.html?domain=nombres-calculs&amp;notion=fractions"],
     ["outils/fractions/disque_maker.html", "../index.html?domain=nombres-calculs&amp;notion=fractions"],
     ["outils/fabrication_materiel/cartes_premiers_1_100.html", "../index.html?domain=nombres-calculs&amp;notion=divisibilite"],
+    ["outils/club_maths/carres_gloutons.html", "../index.html?domain=jeux-recherches&amp;notion=strategie"],
     ["outils/club_maths/jeu_du_chaos.html", "../index.html?domain=jeux-recherches&amp;notion=explorations"],
   ]);
 
