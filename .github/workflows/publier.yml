@@ -30,7 +30,9 @@ permissions:
 
 concurrency:
   group: pages
-  cancel-in-progress: false
+  # Seul l'état le plus récent de main doit être publié. Cela évite qu'un
+  # déploiement obsolète bloque la correction suivante dans la file Pages.
+  cancel-in-progress: true
 
 jobs:
   construire:
@@ -74,7 +76,9 @@ jobs:
 
   publier:
     needs: construire
-    runs-on: ubuntu-latest
+    # Un libellé explicite permet de changer de pool si ubuntu-latest reste
+    # exceptionnellement sans exécuteur, sans modifier l'étape de construction.
+    runs-on: ubuntu-22.04
     environment:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
