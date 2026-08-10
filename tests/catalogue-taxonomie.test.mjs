@@ -46,7 +46,7 @@ const expectedVisibleCardCounts = {
   manipuler: 32,
   entrainer: 21,
   generer: 32,
-  imprimer: 12,
+  imprimer: 11,
   activites: 8,
   cours: 5,
   jeux: 6
@@ -235,6 +235,18 @@ test("les ressources Chat restent regroupées par usage sans multiplier les mini
   }
 });
 
+test("les tableaux de proportionnalité partagent une carte avec deux choix explicites", () => {
+  const withCoefficientPath = "outils/gabarits_proportionnalite_tableaux.pdf";
+  const withoutCoefficientPath = "outils/gabarit_proportionnalite_tableau_sans_coefficient.pdf";
+  const family = families.find(({ id }) => id === "gabarits-proportionnalite-tableaux");
+
+  assert.equal(family?.title, "Tableaux de proportionnalité");
+  assert.equal(family?.group, "imprimer");
+  assert.deepEqual(Array.from(family?.paths || []), [withCoefficientPath, withoutCoefficientPath]);
+  assert.equal(family?.labels?.[withCoefficientPath], "Avec coefficient");
+  assert.equal(family?.labels?.[withoutCoefficientPath], "Sans coefficient");
+});
+
 test("aucun titre publié n’expose un marqueur technique ou de version", () => {
   const technicalMarker = /\b(?:finale?|layout|pro|stable|undo|version|v\d+|xl)\b|zoom étendu|barre haute|millim[eé]tr[eé]/i;
   const offenders = published
@@ -274,6 +286,6 @@ test("les familles regroupent toutes leurs variantes sans perte ni chevauchement
   for (const family of families) visibleCardsByGroup[family.group] += 1;
 
   assert.equal(representedResourceCount, published.length, "Aucune variante publiée ne doit disparaître du catalogue.");
-  assert.equal(visibleCardCount, 116, "Les 132 ressources doivent être représentées par 116 cartes après regroupement.");
+  assert.equal(visibleCardCount, 115, "Les 132 ressources doivent être représentées par 115 cartes après regroupement.");
   assert.deepEqual(visibleCardsByGroup, expectedVisibleCardCounts);
 });

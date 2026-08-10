@@ -614,7 +614,7 @@ window.MATHSGO_CATALOGUE = {
       "primaryGroup": "activites",
       "collections": [],
       "tags": ["proportionnalite", "agrandissement", "reduction", "puzzle", "brousseau"],
-      "thumbnail": "assets/img/thumbnails/proportionnalite/puzzle-brousseau.png?v=1",
+      "thumbnail": "assets/img/thumbnails/proportionnalite/puzzle-brousseau.png?v=2",
       "cardDescription": "Étudier agrandissement et réduction à partir des six pièces du puzzle de Brousseau."
     },
     "outils/gabarits_pourcentages.pdf": {
@@ -805,7 +805,7 @@ window.MATHSGO_CATALOGUE = {
       "primaryGroup": "imprimer",
       "collections": [],
       "tags": ["proportionnalite", "double-ligne-graduee", "gabarit", "imprimable"],
-      "thumbnail": "assets/img/thumbnails/proportionnalite/double-ligne-graduee.png?v=1"
+      "thumbnail": "assets/img/thumbnails/proportionnalite/double-ligne-graduee.png?v=2"
     },
     "outils/gabarit_proportionnalite_tableau_sans_coefficient.pdf": {
       "primaryNotion": "proportionnalite",
@@ -1156,6 +1156,22 @@ window.MATHSGO_CATALOGUE = {
     }
   },
   "resourceFamilies": [
+    {
+      "id": "gabarits-proportionnalite-tableaux",
+      "title": "Tableaux de proportionnalité",
+      "description": "Choisir un tableau avec ou sans affichage du coefficient de proportionnalité.",
+      "cardDescription": "Deux versions à imprimer selon que le coefficient de proportionnalité doit apparaître ou non.",
+      "thumbnail": "assets/img/thumbnails/proportionnalite/gabarits-tableaux.png?v=1",
+      "group": "imprimer",
+      "labels": {
+        "outils/gabarits_proportionnalite_tableaux.pdf": "Avec coefficient",
+        "outils/gabarit_proportionnalite_tableau_sans_coefficient.pdf": "Sans coefficient"
+      },
+      "paths": [
+        "outils/gabarits_proportionnalite_tableaux.pdf",
+        "outils/gabarit_proportionnalite_tableau_sans_coefficient.pdf"
+      ]
+    },
     {
       "id": "chat-cest-toi-le-chat-imprimer",
       "title": "Chat, c’est toi le chat ! — À imprimer",
