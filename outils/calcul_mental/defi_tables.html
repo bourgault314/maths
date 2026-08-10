@@ -55,7 +55,7 @@
 
     button,
     a,
-    input { font: inherit; -webkit-tap-highlight-color: transparent; }
+    input { font: inherit; touch-action: manipulation; -webkit-tap-highlight-color: transparent; }
 
     button:focus-visible,
     a:focus-visible {
@@ -284,7 +284,25 @@
 
     .primary { color: #fff; border: 0; background: var(--blue); box-shadow: 0 5px 0 #043f8c; }
     .secondary { color: var(--blue); border: 1px solid #c5d9e6; background: #fff; }
+    #play,
+    body.challenge-playing,
+    body.challenge-playing .question { touch-action: manipulation; }
     .status { display: flex; align-items: center; justify-content: space-between; gap: 12px; font-weight: 950; }
+    .status-left { display: flex; align-items: center; gap: 10px; }
+    .game-menu {
+      min-height: 44px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      padding: 6px 11px;
+      border: 1px solid #b9d0df;
+      border-radius: 999px;
+      color: #17405e;
+      background: #f4f9fc;
+      font-size: .82rem;
+      font-weight: 950;
+      cursor: pointer;
+    }
     .status strong {
       min-width: 92px;
       padding: 7px 13px;
@@ -554,7 +572,10 @@
 
       <div id="play" hidden>
         <div class="status">
-          <span id="question-count">1 / 25</span>
+          <div class="status-left">
+            <button id="game-menu" class="game-menu" type="button" aria-label="Arrêter le défi et revenir au choix de l’entraînement">← Menu</button>
+            <span id="question-count">1 / 25</span>
+          </div>
           <strong id="time" role="timer" aria-label="Temps restant">1:00</strong>
           <span id="timer-alert" class="sr-only" aria-live="assertive"></span>
         </div>
@@ -908,7 +929,6 @@
         $("answer").setAttribute("aria-invalid", "true");
         $("answer-error").classList.add("is-visible");
         $("answer-error").setAttribute("aria-hidden", "false");
-        $("answer").scrollIntoView?.({block: "nearest", inline: "nearest", behavior: "auto"});
         $("answer").focus?.({preventScroll: true});
       }
 
@@ -1033,6 +1053,13 @@
         state.timer = window.setInterval(updateTimer, 200);
       }
 
+      function returnToMenu() {
+        if (!state.running) return;
+        state.running = false;
+        stopTimer();
+        show("intro");
+      }
+
       function next(skip) {
         if (!state.running) return;
         const value = $("answer").value;
@@ -1091,6 +1118,7 @@
       $("skip").addEventListener("click", () => next(true));
       $("start").addEventListener("click", start);
       $("retry").addEventListener("click", start);
+      $("game-menu").addEventListener("click", returnToMenu);
       $("change-settings").addEventListener("click", () => show("intro"));
       setupFullscreen();
       document.addEventListener("keydown", event => {
