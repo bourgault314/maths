@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Génère le livret et les cartes compactes « Chat, c'est toi le chat ! »."""
+"""Génère le guide et les deux formats de cartes « Chat, c'est toi le chat ! »."""
 import base64
 import json
 import re
@@ -543,16 +543,27 @@ html, body {{ margin:0; padding:0; font-family:'Segoe UI',system-ui,sans-serif; 
 
 def main():
     series = json.loads(SERIES_FILE.read_text(encoding="utf-8"))
-    pages = [rule_page(), guided_page()] + [serie_page(s) for s in series] + solutions_pages(series)
-    html = (
+    guide_pages = [rule_page(), guided_page()] + solutions_pages(series)
+    guide_html = (
         '<!DOCTYPE html><html lang="fr"><head><meta charset="utf-8">'
         '<link rel="icon" href="/favicon.svg" type="image/svg+xml">'
-        '<title>Chat, c\'est toi le chat ! - maths&amp;go</title>'
-        f'<style>{CSS}</style></head><body>{"".join(pages)}</body></html>'
+        '<title>Chat, c\'est toi le chat ! - guide pédagogique - maths&amp;go</title>'
+        f'<style>{CSS}</style></head><body>{"".join(guide_pages)}</body></html>'
     )
     OUT_DIR.mkdir(parents=True, exist_ok=True)
-    output = OUT_DIR / "livret.html"
-    output.write_text(html, encoding="utf-8")
+    guide_output = OUT_DIR / "guide.html"
+    guide_output.write_text(guide_html, encoding="utf-8")
+
+    large_card_pages = [serie_page(s) for s in series]
+    large_cards_html = (
+        '<!DOCTYPE html><html lang="fr"><head><meta charset="utf-8">'
+        '<link rel="icon" href="/favicon.svg" type="image/svg+xml">'
+        '<title>Chat, c\'est toi le chat ! - cartes grand format - maths&amp;go</title>'
+        f'<style>{CSS}</style></head><body>{"".join(large_card_pages)}</body></html>'
+    )
+    large_cards_output = OUT_DIR / "cartes-grand-format.html"
+    large_cards_output.write_text(large_cards_html, encoding="utf-8")
+
     compact = compact_pages(series)
     compact_html = (
         '<!DOCTYPE html><html lang="fr"><head><meta charset="utf-8">'
@@ -562,7 +573,8 @@ def main():
     )
     compact_output = OUT_DIR / "cartes-compactes.html"
     compact_output.write_text(compact_html, encoding="utf-8")
-    print(f"HTML ok, {len(pages)} pages → {output}")
+    print(f"HTML guide ok, {len(guide_pages)} pages → {guide_output}")
+    print(f"HTML cartes grand format ok, {len(large_card_pages)} pages → {large_cards_output}")
     print(f"HTML compact ok, {len(compact)} pages → {compact_output}")
 
 if __name__ == "__main__":

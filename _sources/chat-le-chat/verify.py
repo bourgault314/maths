@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Vérification exhaustive du livret : données, promesses de niveaux, HTML généré."""
+"""Vérification exhaustive du guide et des cartes : données, niveaux et HTML."""
 import json
 import re
 import sys
@@ -132,12 +132,16 @@ if by_num[6]["sol"] != SERIES[3]["sol"]:
     err("série 6 : solution ≠ feuille manuscrite (ancienne 3)")
 
 # ---------------------------------------------------------------- 5. HTML généré conforme
-html = (HERE / "out" / "livret.html").read_text(encoding="utf-8")
+guide_html = (HERE / "out" / "guide.html").read_text(encoding="utf-8")
+large_cards_html = (HERE / "out" / "cartes-grand-format.html").read_text(encoding="utf-8")
 compact_html = (HERE / "out" / "cartes-compactes.html").read_text(encoding="utf-8")
-if "<title>Chat, c'est toi le chat ! - maths&amp;go</title>" not in html:
-    err("titre HTML absent ou incorrect")
+html = guide_html + large_cards_html
+if "<title>Chat, c'est toi le chat ! - guide pédagogique - maths&amp;go</title>" not in guide_html:
+    err("titre HTML du guide absent ou incorrect")
+if "<title>Chat, c'est toi le chat ! - cartes grand format - maths&amp;go</title>" not in large_cards_html:
+    err("titre HTML des cartes grand format absent ou incorrect")
 if '<div class="origin">' in html:
-    err("bloc de provenance interne visible dans le livret")
+    err("bloc de provenance interne visible dans les documents")
 for internal_note in ("inventée par toi", "d'origine", "reconstituée"):
     if internal_note in html:
         err(f"note interne visible dans le livret : {internal_note}")
@@ -172,10 +176,13 @@ for forbidden_text in (
 ):
     if forbidden_text.casefold() in html.casefold():
         err(f"mention éditoriale non souhaitée dans le livret : {forbidden_text}")
-pages = re.findall(r'<section class="page(?: [^"]*)?">(.*?)</section>', html, re.S)
-if len(pages) != 24:
-    err(f"{len(pages)} pages au lieu de 24")
-rule_page_html = pages[0] if pages else ""
+guide_pages = re.findall(r'<section class="page(?: [^"]*)?">(.*?)</section>', guide_html, re.S)
+large_card_pages = re.findall(r'<section class="page(?: [^"]*)?">(.*?)</section>', large_cards_html, re.S)
+if len(guide_pages) != 4:
+    err(f"guide : {len(guide_pages)} pages au lieu de 4")
+if len(large_card_pages) != 20:
+    err(f"cartes grand format : {len(large_card_pages)} pages au lieu de 20")
+rule_page_html = guide_pages[0] if guide_pages else ""
 for required_rule_text in (
     "Avant de jouer",
     "Lire une carte",
@@ -209,10 +216,10 @@ if "white-space:nowrap" not in html or "white-space:nowrap" not in compact_html:
     err("les badges de série doivent rester sur une seule ligne dans les deux PDF")
 if "flex:0 0 var(--solution-cell)" not in html or "aspect-ratio:1/1" not in html:
     err("solutions : les six zones de chaque grille doivent rester circulaires")
-if len(pages) >= 2 and "Exemple guidé" not in pages[1]:
+if len(guide_pages) >= 2 and "Exemple guidé" not in guide_pages[1]:
     err("la page 2 n'est pas l'exemple guidé")
 POS2DIR = {"top": "front", "bottom": "back", "left": "left", "right": "right"}
-serie_pages = [p for p in pages if re.search(r"<h2>Série (\d+)</h2>", p)]
+serie_pages = [p for p in large_card_pages if re.search(r"<h2>Série (\d+)</h2>", p)]
 if len(serie_pages) != 20:
     err(f"{len(serie_pages)} pages de séries au lieu de 20")
 for page in serie_pages:
@@ -255,7 +262,7 @@ if not all(correct_status.values()):
     err(f"exemple guidé corrigé : statuts {correct_status}")
 if html.count('data-guide-state="wrong"') != 1 or html.count('data-guide-state="correct"') != 1:
     err("les deux placements de l'exemple guidé ne sont pas rendus une fois chacun")
-guided_page_html = pages[1] if len(pages) >= 2 else ""
+guided_page_html = guide_pages[1] if len(guide_pages) >= 2 else ""
 guided_steps = (
     "Carte 1</b> : il y a bien un chat à gauche.",
     "Carte 2</b> : un chat est attendu devant et à gauche, mais les deux places sont vides ; aucun chat à droite ni derrière.",
