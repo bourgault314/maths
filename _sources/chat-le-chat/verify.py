@@ -203,6 +203,12 @@ if any(position < 0 for position in rule_positions) or rule_positions != sorted(
     err("page de règle : ordre éditorial en-tête → préparation → jeu → niveaux → variantes non respecté")
 if "grid-template-columns:1fr 1fr; grid-template-rows:1fr 1fr;" not in html:
     err("page de règle : les quatre niveaux ne sont pas disposés en grille 2 × 2")
+if ".rules-hero { height:37mm; min-height:37mm;" not in html:
+    err("page de règle : la hauteur de la couverture doit rester fixe")
+if "white-space:nowrap" not in html or "white-space:nowrap" not in compact_html:
+    err("les badges de série doivent rester sur une seule ligne dans les deux PDF")
+if "flex:0 0 var(--solution-cell)" not in html or "aspect-ratio:1/1" not in html:
+    err("solutions : les six zones de chaque grille doivent rester circulaires")
 if len(pages) >= 2 and "Exemple guidé" not in pages[1]:
     err("la page 2 n'est pas l'exemple guidé")
 POS2DIR = {"top": "front", "bottom": "back", "left": "left", "right": "right"}

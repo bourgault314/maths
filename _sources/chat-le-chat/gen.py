@@ -96,7 +96,10 @@ def sol_grid(grid, cell=31, series=None):
         tds = []
         for c in range(COLS):
             v = grid[r][c]
-            tds.append(f'<div class="hoop" style="width:{cell}px;height:{cell}px">{v if v else ""}</div>')
+            tds.append(
+                f'<div class="hoop" style="--solution-cell:{cell}px;width:{cell}px;height:{cell}px">'
+                f'{v if v else ""}</div>'
+            )
         rows.append(f'<div class="hooprow">{"".join(tds)}</div>')
     encoded = "/".join("".join(str(value) for value in row) for row in grid)
     series_attr = f' data-series="{series}"' if series is not None else ""
@@ -353,7 +356,7 @@ h4 {{ margin:0 0 4px; font-size:12px; }}
 p {{ font-size:12.5px; line-height:1.45; margin:4px 0; }}
 .small {{ font-size:10.5px; color:#6d6558; line-height:1.4; }}
 .rules-page {{ padding:10mm 11mm; }}
-.rules-hero {{ min-height:37mm; display:grid; grid-template-columns:31mm 1fr; gap:5mm;
+.rules-hero {{ height:37mm; min-height:37mm; display:grid; grid-template-columns:31mm 1fr; gap:5mm;
                align-items:center; padding:4mm 5mm; border:1.5px solid #cce7e3;
                border-radius:16px; background:linear-gradient(135deg,#edf9f7 0%,{CREAM} 100%);
                position:relative; overflow:hidden; }}
@@ -450,7 +453,8 @@ p {{ font-size:12.5px; line-height:1.45; margin:4px 0; }}
 .slot.bottom {{ left:33.5%; top:67%; }}
 .you {{ border:4px solid {TEAL}; border-radius:12px; }}
 .cutnote {{ font-size:10px; color:#9a8f7d; margin-top:3mm; }}
-.cardnum {{ display:flex; align-items:center; gap:5px; }}
+.cardnum {{ display:flex; flex-wrap:nowrap; align-items:center; gap:5px; width:max-content;
+            max-width:calc(100% - 16px); white-space:nowrap; }}
 .mbadge {{ width:13px; height:13px; border-radius:3px; }}
 .cardurl {{ position:absolute; bottom:5px; left:0; right:0; text-align:center;
             font-size:8px; color:#c4bbac; letter-spacing:.8px; }}
@@ -458,12 +462,16 @@ p {{ font-size:12.5px; line-height:1.45; margin:4px 0; }}
 .solblock {{ background:{CREAM}; border-radius:10px; padding:7px 8px; }}
 .nsols {{ font-weight:400; font-size:9px; color:#6d6558; }}
 .gridrow {{ display:flex; flex-wrap:wrap; gap:2px 10px; align-items:flex-start; }}
-.solgrid {{ flex:none; }}
+.solgrid {{ flex:none; display:inline-block; }}
 .solblock.span2 {{ grid-column:span 2; }}
 .solblock.span4 {{ grid-column:span 4; }}
-.hooprow {{ display:flex; gap:4px; margin:2px 0; }}
-.hoop {{ border:3.5px solid {TEAL}; border-radius:50%; display:flex; align-items:center;
-         justify-content:center; font-weight:800; font-size:13px; color:{NAVY}; background:white;}}
+.hooprow {{ display:flex; align-items:flex-start; gap:4px; margin:2px 0; }}
+.hoop {{ flex:0 0 var(--solution-cell); width:var(--solution-cell) !important;
+         min-width:var(--solution-cell); max-width:var(--solution-cell);
+         height:var(--solution-cell) !important; min-height:var(--solution-cell);
+         max-height:var(--solution-cell); aspect-ratio:1/1; border:3.5px solid {TEAL};
+         border-radius:50%; display:flex; align-items:center; justify-content:center;
+         font-weight:800; font-size:13px; color:{NAVY}; background:white;}}
 .guide-intro {{ margin:3mm 0 4mm; font-size:12px; }}
 .guide-layout {{ display:grid; grid-template-columns:1fr 1fr; gap:7mm; height:212mm; }}
 .guide-cards-panel, .guide-steps {{ min-width:0; }}
@@ -525,8 +533,9 @@ html, body {{ margin:0; padding:0; font-family:'Segoe UI',system-ui,sans-serif; 
 .slot.bottom {{ left:33.5%; top:66%; }}
 .you {{ border:3px solid {TEAL}; border-radius:9px; }}
 .cardnum {{ position:absolute; z-index:2; top:4px; right:5px; display:flex; align-items:center;
-            gap:4px; padding:1px 5px; border-radius:6px; color:#817664; background:{CREAM};
-            font-size:10px; line-height:1.2; font-weight:800; }}
+            flex-wrap:nowrap; gap:4px; width:max-content; max-width:calc(100% - 10px);
+            padding:1px 5px; border-radius:6px; color:#817664; background:{CREAM};
+            white-space:nowrap; font-size:10px; line-height:1.2; font-weight:800; }}
 .mbadge {{ width:10px; height:10px; border-radius:2px; }}
 .cardurl {{ position:absolute; bottom:3px; left:0; right:0; text-align:center;
             color:#b8ad9d; font-size:7px; letter-spacing:.7px; }}

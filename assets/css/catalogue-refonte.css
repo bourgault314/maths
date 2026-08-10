@@ -1163,7 +1163,7 @@ select { cursor: pointer; }
   position: relative;
   z-index: 1;
   display: grid;
-  gap: 1px;
+  gap: 5px;
   padding: 0 12px 12px;
 }
 
@@ -1174,9 +1174,11 @@ select { cursor: pointer; }
   justify-content: space-between;
   gap: 12px;
   padding: 10px 12px;
+  border: 1px solid #dbe4eb;
   border-radius: 9px;
   color: #27425f;
-  background: color-mix(in srgb, var(--soft, #eef5fb) 72%, #fff);
+  background: #ffffff;
+  box-shadow: 0 1px 3px rgba(25, 55, 83, .06);
   font-size: .86rem;
   font-weight: 750;
   line-height: 1.25;
@@ -1186,7 +1188,8 @@ select { cursor: pointer; }
 .resource-variants a:hover,
 .resource-variants a:focus-visible {
   color: var(--accent, var(--blue));
-  background: var(--soft, #eef5fb);
+  border-color: color-mix(in srgb, var(--accent, var(--blue)) 28%, #dbe4eb);
+  background: #f4f7fa;
 }
 
 .resource-type-icon {

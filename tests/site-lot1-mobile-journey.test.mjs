@@ -41,6 +41,12 @@ test("le fil d'Ariane mobile garde un seul retour contextuel", () => {
   assert.match(catalogueStyles, /\.catalogue-breadcrumb button\s*\{[^}]*min-height:\s*44px/s);
 });
 
+test("les variantes d'une même ressource restent distinctes du décor de leur carte", () => {
+  assert.match(catalogueStyles, /\.resource-variants\s*\{[^}]*gap:\s*5px/s);
+  assert.match(catalogueStyles, /\.resource-variants a\s*\{[^}]*border:\s*1px solid #dbe4eb;[^}]*background:\s*#ffffff/s);
+  assert.match(catalogueStyles, /\.resource-variants a:hover,[\s\S]*?background:\s*#f4f7fa/s);
+});
+
 test("la couche compacte Rekenrek couvre les tablettes et conserve les gestes du plateau", () => {
   assert.match(rekenrekStyles, /@media\s*\(max-width:\s*1100px\)/);
   assert.match(rekenrekStyles, /body\s*\{[^}]*touch-action:\s*pan-y pinch-zoom/s);

@@ -66,28 +66,20 @@ python3 /chemin/vers/le-depot/_sources/chat-le-chat/gen_projection.py --check
 Le vérificateur du livret doit afficher `0 erreur(s)` et le contrôle de la page
 projetable doit confirmer 12 défis inédits, 6 vrais et 6 faux.
 
-Pour produire le PDF avec Chrome ou Chromium :
+Pour produire et valider les PDF avec Chrome ou Chromium :
 
 ```sh
-src=/chemin/vers/le-depot/_sources/chat-le-chat
-chromium --headless --no-sandbox --disable-gpu \
-  --no-pdf-header-footer \
-  --print-to-pdf="$src/out/livret.pdf" \
-  "file://$src/out/livret.html"
-chromium --headless --no-sandbox --disable-gpu \
-  --no-pdf-header-footer \
-  --print-to-pdf="$src/out/cartes-compactes.pdf" \
-  "file://$src/out/cartes-compactes.html"
+python3 /chemin/vers/le-depot/_sources/chat-le-chat/render_pdfs.py
 ```
 
-Selon l'installation, la commande du navigateur peut s'appeler
-`chromium-browser`, `google-chrome` ou `google-chrome-stable`. Après contrôle du
-PDF, mettre à jour la copie publique :
+Le script refuse tout moteur autre que Chromium/Skia : WeasyPrint ne doit pas
+être utilisé pour ces documents, car il déforme les grilles de solutions et la
+couverture. Selon l'installation, définir `CHROME_BIN` si Chromium n'est pas
+détecté automatiquement. Après contrôle visuel, mettre à jour les copies
+publiques avec :
 
 ```sh
-cp "$src/out/livret.pdf" /chemin/vers/le-depot/outils/chat-cest-toi-le-chat.pdf
-cp "$src/out/cartes-compactes.pdf" \
-  /chemin/vers/le-depot/outils/chat-cest-toi-le-chat-cartes-compactes.pdf
+python3 /chemin/vers/le-depot/_sources/chat-le-chat/render_pdfs.py --publish
 ```
 
 Le générateur attend le logo `assets/img/mathsgo-logo-780.png` et le fichier
