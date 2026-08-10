@@ -397,7 +397,7 @@ HTML_TEMPLATE = r'''<!doctype html>
       border-radius:9px; background:white; }
     .card-cell.right { grid-column:3; grid-row:2; }
     .card-cell.back { grid-column:2; grid-row:3; }
-    .card-self-cat, .cat-mark { position:relative; z-index:1; width:86%; height:96%; overflow:visible; }
+    .card-self-cat, .cat-mark { position:relative; z-index:1; width:74%; height:78%; overflow:visible; }
     .card-self-cat { display:block; }
     .cat-mark { display:grid; place-items:center; }
     .cat-mark svg { display:block; width:100%; height:100%; overflow:visible; }
@@ -435,7 +435,6 @@ HTML_TEMPLATE = r'''<!doctype html>
     .guided-cards .logic-card { padding:5px; border-width:2px; }
     .guided-cards .card-head { font-size:11px; margin:0; }
     .guided-cards .card-map { width:min(100%,145px); }
-    .guided-cards .card-self-cat, .guided-cards .cat-mark { width:84%; height:94%; }
 
     @media (max-width:1050px) {
       .hero { grid-template-columns:1fr; }
