@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <title>Coffres magiques — à deux | maths&amp;go</title>
-  <meta name="description" content="Un duel de calcul mental : choisir deux nombres voisins dont la somme ou le produit donne la cible et remporter cinq clés.">
+  <meta name="description" content="Un duel de calcul mental : trouver en 20 secondes deux nombres voisins dont la somme ou le produit donne la cible et remporter cinq clés.">
   <link rel="canonical" href="https://mathsgo.re/outils/club_maths/coffres_magiques.html">
   <meta name="robots" content="index, follow, max-image-preview:large">
   <link rel="icon" href="/favicon.ico" sizes="48x48">
@@ -12,6 +12,8 @@
   <link rel="icon" type="image/png" sizes="32x32" href="/assets/img/favicon-32.png">
   <link rel="icon" type="image/png" sizes="192x192" href="/assets/img/favicon-192.png">
   <link rel="apple-touch-icon" href="/assets/img/apple-touch-icon.png">
+  <link rel="stylesheet" href="../../assets/css/consentement.css">
+  <script defer src="../../assets/js/consentement.js"></script>
   <style>
     :root {
       --ink: #153451;
@@ -90,6 +92,48 @@
       text-decoration: none;
     }
 
+    .topbar-actions {
+      display: flex;
+      align-items: center;
+      justify-content: flex-end;
+      gap: 7px;
+    }
+
+    .fullscreen-toggle {
+      min-height: 40px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      padding: 7px 11px;
+      border: 1px solid #b9d0df;
+      border-radius: 999px;
+      color: #17405e;
+      background: rgba(255, 255, 255, .96);
+      font-size: .78rem;
+      font-weight: 950;
+      white-space: nowrap;
+    }
+
+    .fullscreen-toggle-icon {
+      display: grid;
+      place-items: center;
+    }
+
+    .fullscreen-toggle-icon svg {
+      width: 18px;
+      height: 18px;
+      fill: none;
+      stroke: currentColor;
+      stroke-width: 2;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+    }
+
+    .fullscreen-collapse { display: none; }
+    body.fullscreen-active .fullscreen-expand { display: none; }
+    body.fullscreen-active .fullscreen-collapse { display: block; }
+
     .duel-page {
       width: min(100% - 12px, 620px);
       min-height: calc(100svh - 58px);
@@ -114,7 +158,6 @@
       transition: background .18s ease, opacity .18s ease;
     }
 
-    .player-strip.top { transform: rotate(180deg); }
     .player-strip.blue { color: #063f86; background: var(--blue-soft); }
     .player-strip.coral { color: #9f2f21; background: var(--coral-soft); }
     .player-strip:not(.active) { opacity: .58; background: #f4f7f9; }
@@ -200,6 +243,95 @@
     .status-line.good { color: #07644f; background: #e3f8ef; }
     .status-line.wrong { color: #97382f; background: #fff0ed; }
 
+    .turn-state {
+      width: min(100%, 500px);
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) auto;
+      align-items: stretch;
+      gap: 7px;
+      margin: 2px auto 6px;
+    }
+
+    .turn-state .status-line {
+      width: 100%;
+      margin: 0;
+    }
+
+    .turn-timer {
+      min-width: 82px;
+      display: grid;
+      place-items: center;
+      padding: 4px 8px;
+      border: 2px solid #abc9dc;
+      border-radius: 12px;
+      color: #164f76;
+      background: #eaf6fc;
+      box-shadow: inset 0 -2px 0 rgba(21, 52, 81, .08);
+      font-variant-numeric: tabular-nums;
+      transition: color .18s ease, background .18s ease, border-color .18s ease, transform .18s ease;
+    }
+
+    .turn-timer-face {
+      display: grid;
+      grid-template-columns: auto auto;
+      align-items: baseline;
+      justify-content: center;
+      column-gap: 3px;
+      transition: transform .22s ease;
+    }
+
+    .turn-timer-label {
+      grid-column: 1 / -1;
+      color: currentColor;
+      font-size: .62rem;
+      font-weight: 950;
+      letter-spacing: .06em;
+      line-height: 1;
+      text-align: center;
+      text-transform: uppercase;
+    }
+
+    .turn-timer strong {
+      min-width: 2ch;
+      font-size: 1.28rem;
+      font-weight: 950;
+      line-height: 1;
+      text-align: right;
+    }
+
+    .turn-timer-unit { font-size: .72rem; font-weight: 950; }
+
+    .turn-timer.urgent {
+      border-color: #d74432;
+      color: #9d291d;
+      background: #fff0dc;
+      animation: timer-warning .72s ease-in-out infinite alternate;
+    }
+
+    .turn-timer.paused {
+      border-color: #aab7c0;
+      color: #536b7a;
+      background: #f1f4f6;
+      animation: none;
+    }
+
+    @keyframes timer-warning {
+      from { transform: scale(1); box-shadow: inset 0 -2px 0 rgba(157, 41, 29, .08); }
+      to { transform: scale(1.035); box-shadow: 0 0 0 4px rgba(215, 68, 50, .13); }
+    }
+
+    .sr-only {
+      position: absolute !important;
+      width: 1px !important;
+      height: 1px !important;
+      padding: 0 !important;
+      margin: -1px !important;
+      overflow: hidden !important;
+      clip: rect(0, 0, 0, 0) !important;
+      white-space: nowrap !important;
+      border: 0 !important;
+    }
+
     .challenge {
       width: min(100%, 430px);
       min-height: 66px;
@@ -220,8 +352,6 @@
       transition: transform .22s ease;
     }
 
-    .game-core.facing-top .challenge-face,
-    .game-core.facing-top .rune span { transform: rotate(180deg); }
     .lock-icon {
       position: relative;
       display: inline-block;
@@ -338,6 +468,111 @@
     .dialog-card h2 { margin: 5px 0 10px; color: #143e62; font-size: 1.65rem; }
     .dialog-card p { margin: 8px 0; color: #49677b; line-height: 1.42; }
 
+    #rules .dialog-card {
+      width: min(100%, 650px);
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+
+    .rules-scroll {
+      min-height: 0;
+      overflow: auto;
+      scrollbar-gutter: stable;
+    }
+
+    .operation-visuals {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 10px;
+      margin: 14px 0;
+    }
+
+    .operation-visual-card {
+      display: grid;
+      align-content: start;
+      gap: 7px;
+      padding: 12px;
+      border: 2px solid #d7e4ec;
+      border-radius: 16px;
+      background: #f8fcff;
+      text-align: left;
+    }
+
+    .operation-visual-card h3 {
+      margin: 0;
+      color: var(--blue);
+      font-size: 1.05rem;
+    }
+
+    .operation-visual-card p {
+      margin: 0;
+      font-size: .86rem;
+    }
+
+    .operation-equation {
+      color: #143451;
+      font-size: 1rem;
+      font-weight: 950;
+      text-align: center;
+    }
+
+    .dots-equation {
+      min-height: 72px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 7px;
+      padding: 8px;
+      border-radius: 12px;
+      background: #fff;
+    }
+
+    .dots-sign {
+      color: #607a8d;
+      font-size: 1.2rem;
+      font-weight: 950;
+    }
+
+    .dot-set,
+    .dot-array {
+      --dot-color: #0b73c8;
+      display: grid;
+      grid-template-columns: repeat(var(--dot-columns), 11px);
+      gap: 5px;
+      align-content: center;
+      justify-content: center;
+    }
+
+    .dot-set.coral-dots { --dot-color: #ef5b45; }
+    .dot-set.joined-dots { --dot-color: #087a71; --dot-columns: 5; }
+    .dot-set i,
+    .dot-array i {
+      width: 11px;
+      height: 11px;
+      border-radius: 50%;
+      background: var(--dot-color);
+      box-shadow: inset 0 -1px 0 rgba(0, 0, 0, .18);
+    }
+
+    .product-picture {
+      min-height: 72px;
+      display: grid;
+      place-items: center;
+      padding: 8px;
+      border-radius: 12px;
+      background: #fff;
+    }
+
+    .dot-array {
+      --dot-color: #6d3ac7;
+      --dot-columns: 4;
+      padding: 7px 10px;
+      border: 2px solid #d8c7f2;
+      border-radius: 10px;
+      background: #f8f2ff;
+    }
+
     .rule-steps {
       display: grid;
       gap: 8px;
@@ -354,6 +589,14 @@
       background: #f2f7fa;
       font-weight: 750;
       line-height: 1.35;
+    }
+
+    .timer-rule-note {
+      padding: 9px 11px;
+      border-radius: 12px;
+      color: #31546e !important;
+      background: #eaf6fc;
+      font-size: .88rem;
     }
 
     .primary-button {
@@ -380,10 +623,72 @@
 
     .result-score { color: #143e62 !important; font-size: 1.2rem; font-weight: 950; }
 
+    .site-footer {
+      width: min(100%, 960px);
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: center;
+      gap: 5px 9px;
+      margin: 0 auto;
+      padding: 13px 12px calc(13px + env(safe-area-inset-bottom));
+      color: #5b7283;
+      font-size: .78rem;
+      text-align: center;
+    }
+
+    .site-footer a,
+    .site-footer button {
+      padding: 2px;
+      border: 0;
+      color: #315d7a;
+      background: none;
+      font: inherit;
+      font-weight: 850;
+      text-decoration: underline;
+      text-underline-offset: 2px;
+    }
+
+    html.fullscreen-fallback {
+      width: 100%;
+      height: 100%;
+      overflow: hidden;
+    }
+
+    html.fullscreen-fallback body {
+      position: fixed;
+      inset: 0;
+      width: 100%;
+      height: 100vh;
+      height: 100dvh;
+      min-height: 100dvh;
+      overflow: auto;
+      overscroll-behavior: none;
+    }
+
+    body.fullscreen-active .site-footer { display: none; }
+
+    body.fullscreen-active .fullscreen-toggle {
+      position: fixed;
+      z-index: 60;
+      top: max(7px, env(safe-area-inset-top));
+      right: max(8px, env(safe-area-inset-right));
+      border-color: #7899ae;
+      background: #fff;
+      box-shadow: 0 5px 18px rgba(21, 52, 81, .2);
+    }
+
+    body.fullscreen-active .duel-page {
+      min-height: calc(100dvh - 58px);
+      margin-bottom: 0;
+    }
+
     @media (max-width: 520px) {
       .topbar { min-height: 46px; padding-block: 4px; }
-      .brand img { width: 98px; }
+      .brand img { width: 84px; }
+      .topbar-actions { gap: 4px; }
       .back-link { min-height: 36px; padding: 6px 10px; font-size: .73rem; }
+      .fullscreen-toggle { min-height: 36px; padding: 6px 8px; font-size: .72rem; }
       .duel-page { min-height: calc(100svh - 50px); border-radius: 21px; }
       .player-strip { min-height: 50px; padding: 6px 12px; }
       .player-token { width: 28px; height: 28px; }
@@ -391,15 +696,26 @@
       .game-core { padding: 6px 8px 4px; }
       .game-heading p { font-size: .7rem; }
       .rules-button { min-height: 36px; padding: 5px 9px; font-size: .78rem; }
-      .status-line { min-height: 36px; margin-bottom: 4px; padding-block: 3px; font-size: .76rem; }
+      .turn-state { margin-bottom: 4px; gap: 5px; }
+      .status-line { min-height: 36px; padding-block: 3px; font-size: .76rem; }
+      .turn-timer { min-width: 72px; padding-inline: 6px; }
       .toolbar { min-height: 44px; padding-block: 4px; }
       .reset-button { min-height: 37px; }
       .dialog-card { padding: 21px 17px; }
+      .operation-visuals { grid-template-columns: 1fr; }
     }
 
     @media (max-width: 400px) {
+      .back-link-copy { display: none; }
       .rune-board { width: min(84vw, 330px); gap: 6px; }
       .challenge { min-height: 59px; }
+    }
+
+    @media (max-width: 600px) and (orientation: portrait) {
+      .player-strip.top { transform: rotate(180deg); }
+      .game-core.facing-top .challenge-face,
+      .game-core.facing-top .rune span,
+      .game-core.facing-top .turn-timer-face { transform: rotate(180deg); }
     }
 
     @media (max-height: 720px) and (orientation: portrait) {
@@ -408,6 +724,7 @@
       .player-strip { min-height: 44px; }
       .game-heading p { display: none; }
       .status-line { min-height: 32px; }
+      .turn-timer { min-height: 32px; }
       .challenge { min-height: 52px; margin-bottom: 4px; }
       .challenge-copy strong { font-size: 1.2rem; }
       .rune-board { width: min(70vw, 292px); gap: 6px; }
@@ -428,7 +745,10 @@
 <body>
   <header class="topbar">
     <a class="brand" href="/" aria-label="Accueil maths&go"><img src="/assets/img/mathsgo-logo.png" alt="maths&go" width="1338" height="622"></a>
-    <a class="back-link" href="../index.html?domain=jeux-recherches&amp;notion=strategie">← Jeux de stratégie</a>
+    <div class="topbar-actions">
+      <a class="back-link" href="../index.html?domain=jeux-recherches&amp;notion=strategie" aria-label="Retour aux jeux de stratégie"><span aria-hidden="true">←</span> <span class="back-link-copy">Jeux de stratégie</span></a>
+      <button class="fullscreen-toggle" type="button" data-fullscreen-toggle aria-pressed="false" aria-label="Passer en plein écran"><span class="fullscreen-toggle-icon" data-fullscreen-icon aria-hidden="true"><svg viewBox="0 0 24 24" focusable="false"><path class="fullscreen-expand" d="M8 3H3v5M16 3h5v5M8 21H3v-5M16 21h5v-5"/><path class="fullscreen-collapse" d="M3 8h5V3M21 8h-5V3M3 16h5v5M21 16h-5v5"/></svg></span><span data-fullscreen-label>Plein écran</span></button>
+    </div>
   </header>
 
   <main class="duel-page">
@@ -440,10 +760,19 @@
 
     <section id="game-core" class="game-core">
       <header class="game-heading">
-        <div><h1>Coffres magiques</h1><p>Une bonne paire de runes gagne une clé.</p></div>
+        <div><h1>Coffres magiques</h1><p>20 secondes pour trouver la bonne paire.</p></div>
         <button id="rules-button" class="rules-button" type="button">Règle</button>
       </header>
-      <div id="status" class="status-line" aria-live="polite">Au joueur bleu : choisis deux runes voisines.</div>
+      <div class="turn-state">
+        <div id="status" class="status-line" aria-live="polite">Au joueur bleu : choisis deux runes voisines.</div>
+        <div id="turn-timer" class="turn-timer" role="timer" aria-label="Temps restant : 20 secondes">
+          <span class="turn-timer-face">
+            <span id="turn-timer-label" class="turn-timer-label">Temps</span>
+            <strong id="turn-seconds">20</strong><span class="turn-timer-unit" aria-hidden="true">s</span>
+          </span>
+        </div>
+      </div>
+      <p id="timer-announcement" class="sr-only" aria-live="polite"></p>
       <div class="challenge" aria-label="Défi du coffre">
         <div class="challenge-face">
           <span class="lock-icon" aria-hidden="true"></span>
@@ -464,14 +793,40 @@
 
   <section id="rules" class="overlay" hidden role="dialog" aria-modal="true" aria-labelledby="rules-title">
     <div class="dialog-card">
-      <div class="dialog-icon" aria-hidden="true">★</div>
-      <h2 id="rules-title">Gagne cinq clés</h2>
-      <ol class="rule-steps">
-        <li>Le coffre demande une <strong>somme</strong> ou un <strong>produit</strong>.</li>
-        <li>Choisis deux runes qui se touchent par un côté.</li>
-        <li>Si elles ouvrent le coffre, tu gagnes une clé. Puis c’est au tour de l’autre joueur.</li>
-      </ol>
-      <p>Les runes et le défi se retournent automatiquement vers le joueur qui doit jouer.</p>
+      <div class="rules-scroll">
+        <div class="dialog-icon" aria-hidden="true">★</div>
+        <h2 id="rules-title" tabindex="-1">Gagne cinq clés</h2>
+        <div class="operation-visuals">
+          <article class="operation-visual-card">
+            <h3>Somme : on réunit</h3>
+            <div class="dots-equation" role="img" aria-label="Trois points et deux points sont réunis : on compte cinq points en tout">
+              <span class="dot-set" style="--dot-columns:3" aria-hidden="true"><i></i><i></i><i></i></span>
+              <span class="dots-sign" aria-hidden="true">+</span>
+              <span class="dot-set coral-dots" style="--dot-columns:2" aria-hidden="true"><i></i><i></i></span>
+              <span class="dots-sign" aria-hidden="true">→</span>
+              <span class="dot-set joined-dots" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i></span>
+            </div>
+            <div class="operation-equation">3 + 2 = 5</div>
+            <p>Avec les deux runes voisines, on réunit les deux quantités et on compte tout.</p>
+          </article>
+          <article class="operation-visual-card">
+            <h3>Produit : des rangées égales</h3>
+            <div class="product-picture" role="img" aria-label="Trois rangées de quatre points font douze points">
+              <span class="dot-array" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></span>
+            </div>
+            <div class="operation-equation">3 rangées de 4 : 3 × 4 = 12</div>
+            <p>Les deux runes donnent le nombre de rangées et le nombre de points dans chaque rangée.</p>
+          </article>
+        </div>
+        <ol class="rule-steps">
+          <li>Le coffre demande une <strong>somme</strong> ou un <strong>produit</strong>.</li>
+          <li>Choisis deux runes qui se touchent par un côté.</li>
+          <li>Tu as <strong>20 secondes</strong>. Si le temps est écoulé, tu ne gagnes pas de clé et le tour passe.</li>
+          <li>Bonne réponse : tu gagnes une clé, puis le tour passe. Réponse fausse : aucune clé et le tour passe aussi.</li>
+        </ol>
+        <p class="timer-rule-note"><strong>Le chrono est en pause pendant que cette règle est ouverte.</strong></p>
+        <p>Sur un téléphone tenu verticalement, les runes et le défi se retournent vers le joueur qui doit jouer. Sur grand écran, tout reste à l’endroit.</p>
+      </div>
       <button class="primary-button close-rules" type="button">C’est parti</button>
     </div>
   </section>
@@ -479,7 +834,7 @@
   <section id="result" class="overlay" hidden role="dialog" aria-modal="true" aria-labelledby="result-title">
     <div class="dialog-card">
       <div class="dialog-icon" aria-hidden="true">★</div>
-      <h2 id="result-title">Trésor ouvert !</h2>
+      <h2 id="result-title" tabindex="-1">Trésor ouvert !</h2>
       <p id="result-text"></p>
       <p id="result-score" class="result-score"></p>
       <button id="play-again" class="primary-button" type="button">Rejouer</button>
@@ -487,17 +842,31 @@
     </div>
   </section>
 
+  <footer class="site-footer">
+    <span>Gwenaël Bourgault</span><span aria-hidden="true">·</span>
+    <a href="mailto:gwenael@mathsgo.re?subject=Contact%20depuis%20mathsgo.re">Me contacter</a><span aria-hidden="true">·</span>
+    <a href="../../mentions-legales.html">Mentions légales</a><span aria-hidden="true">·</span>
+    <a href="../../confidentialite.html">Confidentialité</a><span aria-hidden="true">·</span>
+    <button type="button" data-mathsgo-consent-open onclick="window.mathsgoConsentement &amp;&amp; window.mathsgoConsentement.ouvrir()">Gérer mes cookies</button>
+  </footer>
+
   <script>
     (() => {
       "use strict";
 
       const SIZE = 4;
       const KEYS_TO_WIN = 5;
+      const TURN_DURATION_MS = 20_000;
+      const TIMER_WARNING_SECONDS = 5;
       const players = ["blue", "coral"];
       const labels = { blue: "bleu", coral: "corail" };
       const boardNode = document.querySelector("#board");
       const gameCore = document.querySelector("#game-core");
       const statusNode = document.querySelector("#status");
+      const turnTimerNode = document.querySelector("#turn-timer");
+      const turnSecondsNode = document.querySelector("#turn-seconds");
+      const turnTimerLabelNode = document.querySelector("#turn-timer-label");
+      const timerAnnouncementNode = document.querySelector("#timer-announcement");
       const challengeNode = document.querySelector("#challenge-text");
       const topPlayer = document.querySelector("#top-player");
       const bottomPlayer = document.querySelector("#bottom-player");
@@ -513,6 +882,249 @@
       let locked = false;
       let finished = false;
       let pendingTimer = null;
+      let turnClockHandle = null;
+      let turnClockDeadline = 0;
+      let turnClockRemainingMs = TURN_DURATION_MS;
+      let turnClockActive = false;
+      let timerWarningAnnounced = false;
+      let rulesMandatory = false;
+      const turnClockPauseReasons = new Set();
+
+      function createModalController() {
+        const focusableSelector = [
+          "a[href]",
+          "button:not([disabled])",
+          "input:not([disabled])",
+          "select:not([disabled])",
+          "textarea:not([disabled])",
+          "[tabindex]:not([tabindex=\"-1\"])"
+        ].join(",");
+        let activeDialog = null;
+        let activeTrigger = null;
+        let activeEscapeAction = null;
+
+        const focusableNodes = dialog => [...dialog.querySelectorAll(focusableSelector)]
+          .filter(node => !node.hidden && node.getClientRects().length && getComputedStyle(node).visibility !== "hidden");
+
+        const resolveNode = (dialog, target) => {
+          if (typeof target === "function") return target();
+          if (typeof target === "string") return dialog.querySelector(target);
+          return target;
+        };
+
+        const focusNode = (node, preventScroll = false) => {
+          if (node instanceof HTMLElement && node.isConnected && !node.closest("[hidden]")) node.focus({ preventScroll });
+        };
+
+        const close = (dialog, { restoreFocus = true } = {}) => {
+          if (activeDialog !== dialog) {
+            dialog.hidden = true;
+            return null;
+          }
+          const trigger = activeTrigger;
+          dialog.hidden = true;
+          activeDialog = null;
+          activeTrigger = null;
+          activeEscapeAction = null;
+          if (restoreFocus) window.requestAnimationFrame(() => focusNode(trigger, true));
+          return trigger;
+        };
+
+        const open = (dialog, { trigger = document.activeElement, initialFocus, onEscape = null } = {}) => {
+          if (activeDialog && activeDialog !== dialog) close(activeDialog, { restoreFocus: false });
+          activeDialog = dialog;
+          activeTrigger = trigger instanceof HTMLElement && trigger !== document.body && !dialog.contains(trigger) ? trigger : null;
+          activeEscapeAction = onEscape;
+          dialog.hidden = false;
+          window.requestAnimationFrame(() => {
+            if (activeDialog !== dialog) return;
+            const target = resolveNode(dialog, initialFocus) || focusableNodes(dialog)[0] || dialog;
+            if (target === dialog && !dialog.hasAttribute("tabindex")) dialog.tabIndex = -1;
+            focusNode(target);
+          });
+        };
+
+        document.addEventListener("keydown", event => {
+          if (!activeDialog || activeDialog.hidden) return;
+          if (event.key === "Escape") {
+            event.preventDefault();
+            event.stopImmediatePropagation();
+            if (typeof activeEscapeAction === "function") activeEscapeAction();
+            return;
+          }
+          if (event.key !== "Tab") return;
+          const nodes = focusableNodes(activeDialog);
+          if (!nodes.length) {
+            event.preventDefault();
+            focusNode(activeDialog);
+            return;
+          }
+          const first = nodes[0];
+          const last = nodes[nodes.length - 1];
+          const current = document.activeElement;
+          const outsideCycle = !nodes.includes(current);
+          if (event.shiftKey && (current === first || outsideCycle)) {
+            event.preventDefault();
+            focusNode(last);
+          } else if (!event.shiftKey && (current === last || outsideCycle)) {
+            event.preventDefault();
+            focusNode(first);
+          }
+        }, true);
+
+        return { open, close, trigger: dialog => activeDialog === dialog ? activeTrigger : null };
+      }
+
+      const dialogs = createModalController();
+
+      function setupFullscreen() {
+        const button = document.querySelector("[data-fullscreen-toggle]");
+        const root = document.documentElement;
+        const label = button?.querySelector("[data-fullscreen-label]");
+        const icon = button?.querySelector("[data-fullscreen-icon]");
+        if (!button || !label || !icon) return;
+
+        const nativeFullscreenElement = () => document.fullscreenElement || document.webkitFullscreenElement;
+        const syncFullscreenControl = () => {
+          const active = Boolean(nativeFullscreenElement()) || root.classList.contains("fullscreen-fallback");
+          document.body.classList.toggle("fullscreen-active", active);
+          button.setAttribute("aria-pressed", String(active));
+          button.setAttribute("aria-label", active ? "Quitter le plein écran" : "Passer en plein écran");
+          label.textContent = active ? "Quitter le plein écran" : "Plein écran";
+        };
+
+        const leaveFullscreen = async () => {
+          root.classList.remove("fullscreen-fallback");
+          const exit = document.exitFullscreen || document.webkitExitFullscreen;
+          if (nativeFullscreenElement() && exit) {
+            try { await exit.call(document); } catch (_) { /* Le repli CSS est déjà quitté. */ }
+          }
+          syncFullscreenControl();
+        };
+
+        const enterFullscreen = async () => {
+          const request = root.requestFullscreen || root.webkitRequestFullscreen;
+          if (request) {
+            try {
+              await request.call(root);
+              syncFullscreenControl();
+              return;
+            } catch (_) { /* iPhone et WebViews passent au repli CSS. */ }
+          }
+          root.classList.add("fullscreen-fallback");
+          window.scrollTo({ top: 0, behavior: "auto" });
+          syncFullscreenControl();
+        };
+
+        button.addEventListener("click", () => {
+          const active = Boolean(nativeFullscreenElement()) || root.classList.contains("fullscreen-fallback");
+          if (active) leaveFullscreen();
+          else enterFullscreen();
+        });
+        document.addEventListener("fullscreenchange", syncFullscreenControl);
+        document.addEventListener("webkitfullscreenchange", syncFullscreenControl);
+        document.addEventListener("keydown", event => {
+          if (event.key === "Escape" && root.classList.contains("fullscreen-fallback")) leaveFullscreen();
+        });
+        syncFullscreenControl();
+      }
+
+      function nextPlayerLabel() {
+        return labels[players[1 - turn]];
+      }
+
+      function renderTurnClock() {
+        const seconds = Math.max(0, Math.ceil(turnClockRemainingMs / 1000));
+        const paused = turnClockActive && turnClockPauseReasons.size > 0;
+        const urgent = turnClockActive && seconds > 0 && seconds <= TIMER_WARNING_SECONDS;
+        turnSecondsNode.textContent = String(seconds);
+        turnTimerNode.classList.toggle("urgent", urgent);
+        turnTimerNode.classList.toggle("paused", paused);
+        turnTimerLabelNode.textContent = paused ? "Pause" : urgent ? "Vite !" : turnClockActive ? "Temps" : finished ? "Fini" : "Tour fini";
+        turnTimerNode.setAttribute(
+          "aria-label",
+          `Temps restant : ${seconds} seconde${seconds > 1 ? "s" : ""}${paused ? ", en pause" : ""}`
+        );
+        if (urgent && !timerWarningAnnounced) {
+          timerWarningAnnounced = true;
+          timerAnnouncementNode.textContent = `Attention, plus que ${seconds} secondes pour jouer.`;
+        }
+      }
+
+      function clearTurnClock({ captureRemaining = true } = {}) {
+        if (captureRemaining && turnClockActive && turnClockDeadline) {
+          turnClockRemainingMs = Math.max(0, turnClockDeadline - performance.now());
+        }
+        if (turnClockHandle !== null) window.clearTimeout(turnClockHandle);
+        turnClockHandle = null;
+        turnClockDeadline = 0;
+      }
+
+      function expireTurn() {
+        if (!turnClockActive || locked || finished) return;
+        clearTurnClock({ captureRemaining: false });
+        turnClockRemainingMs = 0;
+        turnClockActive = false;
+        locked = true;
+        firstSelection = null;
+        boardNode.querySelector(".selected")?.classList.remove("selected");
+        renderTurnClock();
+        updateTurn(`Temps écoulé : aucune clé. Le tour passe au joueur ${nextPlayerLabel()}.`);
+        statusNode.className = "status-line wrong";
+        timerAnnouncementNode.textContent = `Temps écoulé. Le tour passe au joueur ${nextPlayerLabel()}.`;
+        pendingTimer = window.setTimeout(nextTurn, 850);
+      }
+
+      function tickTurnClock() {
+        turnClockHandle = null;
+        if (!turnClockActive || turnClockPauseReasons.size || locked || finished || !turnClockDeadline) return;
+        turnClockRemainingMs = Math.max(0, turnClockDeadline - performance.now());
+        renderTurnClock();
+        if (turnClockRemainingMs <= 0) {
+          turnClockDeadline = 0;
+          expireTurn();
+          return;
+        }
+        turnClockHandle = window.setTimeout(tickTurnClock, Math.min(100, turnClockRemainingMs));
+      }
+
+      function armTurnClock() {
+        if (!turnClockActive || turnClockPauseReasons.size || locked || finished) {
+          renderTurnClock();
+          return;
+        }
+        clearTurnClock({ captureRemaining: false });
+        turnClockDeadline = performance.now() + turnClockRemainingMs;
+        tickTurnClock();
+      }
+
+      function beginTurnClock() {
+        clearTurnClock({ captureRemaining: false });
+        turnClockRemainingMs = TURN_DURATION_MS;
+        turnClockActive = true;
+        timerWarningAnnounced = false;
+        timerAnnouncementNode.textContent = "";
+        armTurnClock();
+      }
+
+      function endTurnClock() {
+        clearTurnClock();
+        turnClockActive = false;
+        renderTurnClock();
+      }
+
+      function pauseTurnClock(reason) {
+        if (turnClockPauseReasons.has(reason)) return;
+        if (turnClockActive && turnClockPauseReasons.size === 0) clearTurnClock();
+        turnClockPauseReasons.add(reason);
+        renderTurnClock();
+      }
+
+      function resumeTurnClock(reason) {
+        turnClockPauseReasons.delete(reason);
+        if (turnClockActive && turnClockPauseReasons.size === 0) armTurnClock();
+        else renderTurnClock();
+      }
 
       function randomInteger(minimum, maximum) {
         return minimum + Math.floor(Math.random() * (maximum - minimum + 1));
@@ -581,19 +1193,31 @@
       function finish() {
         finished = true;
         locked = true;
+        endTurnClock();
         const player = labels[players[turn]];
         statusNode.className = "status-line good";
         statusNode.textContent = `Le joueur ${player} a gagné les cinq clés !`;
         document.querySelector("#result-title").textContent = `Trésor du joueur ${player} !`;
         document.querySelector("#result-text").textContent = "Les cinq serrures sont ouvertes.";
         document.querySelector("#result-score").textContent = `${scores[0]} clé${scores[0] > 1 ? "s" : ""} à ${scores[1]}`;
-        pendingTimer = window.setTimeout(() => { result.hidden = false; }, 450);
+        pendingTimer = window.setTimeout(() => {
+          closeRules({ restoreFocus: false });
+          dialogs.open(result, { initialFocus: "#play-again" });
+        }, 450);
       }
 
       function nextTurn() {
+        const focusedRune = document.activeElement?.classList.contains("rune") && document.activeElement.matches(":focus-visible")
+          ? document.activeElement.dataset.index
+          : null;
+        pendingTimer = null;
         turn = 1 - turn;
         makeChallenge();
         updateTurn();
+        beginTurnClock();
+        if (focusedRune !== null) {
+          window.requestAnimationFrame(() => boardNode.querySelector(`[data-index="${focusedRune}"]`)?.focus({ preventScroll: true }));
+        }
       }
 
       function resolve(secondPosition) {
@@ -602,20 +1226,21 @@
         const firstValue = values[firstSelection];
         const secondValue = values[secondPosition];
         const correct = operation(firstValue, secondValue) === target;
+        endTurnClock();
         locked = true;
         firstButton.classList.add(correct ? "success" : "failure");
         secondButton.classList.add(correct ? "success" : "failure");
 
         if (correct) {
           scores[turn] += 1;
-          updateTurn(`${expression(firstValue, secondValue)} : une clé gagnée !`);
+          updateTurn(`${expression(firstValue, secondValue)} : une clé gagnée ! Le tour passe au joueur ${nextPlayerLabel()}.`);
           statusNode.className = "status-line good";
           if (scores[turn] === KEYS_TO_WIN) {
             finish();
             return;
           }
         } else {
-          updateTurn(`${expression(firstValue, secondValue)} : le coffre reste fermé.`);
+          updateTurn(`${expression(firstValue, secondValue)} : réponse fausse, aucune clé. Le tour passe au joueur ${nextPlayerLabel()}.`);
           statusNode.className = "status-line wrong";
         }
         pendingTimer = window.setTimeout(nextTurn, 850);
@@ -652,37 +1277,112 @@
         resolve(position);
       }
 
-      function start() {
+      function focusAfterReset(trigger) {
+        window.requestAnimationFrame(() => {
+          let target = trigger;
+          if (trigger?.classList.contains("rune")) target = boardNode.querySelector(`[data-index="${trigger.dataset.index}"]`);
+          if (!(target instanceof HTMLElement) || !target.isConnected) target = boardNode.querySelector(".rune");
+          target?.focus({ preventScroll: true });
+        });
+      }
+
+      function openRules({ mandatory = false } = {}) {
+        rulesMandatory = mandatory;
+        pauseTurnClock("rules");
+        dialogs.open(rules, {
+          initialFocus: mandatory ? ".close-rules" : "#rules-title",
+          onEscape: () => {
+            if (!rulesMandatory) closeRules();
+          }
+        });
+      }
+
+      function closeRules({ force = false, ...dialogOptions } = {}) {
+        if (rulesMandatory && !force) return;
+        rulesMandatory = false;
+        dialogs.close(rules, dialogOptions);
+        resumeTurnClock("rules");
+      }
+
+      function confirmRules() {
+        const startingGame = rulesMandatory;
+        rulesMandatory = false;
+        closeRules({ restoreFocus: !startingGame });
+        if (startingGame) {
+          window.requestAnimationFrame(() => boardNode.querySelector(".rune")?.focus({ preventScroll: true }));
+        }
+      }
+
+      function start({ moveFocus = false, focusTarget = null, showRules = false } = {}) {
+        endTurnClock();
         if (pendingTimer) window.clearTimeout(pendingTimer);
+        pendingTimer = null;
+        closeRules({ force: true, restoreFocus: false });
+        dialogs.close(result, { restoreFocus: false });
+        if (document.hidden) turnClockPauseReasons.add("visibility");
+        else turnClockPauseReasons.delete("visibility");
         turn = 0;
         scores = [0, 0];
         challengeNumber = 0;
         firstSelection = null;
         locked = false;
         finished = false;
-        result.hidden = true;
         makeChallenge();
         updateTurn();
+        if (showRules) openRules({ mandatory: true });
+        beginTurnClock();
+        if (moveFocus) focusAfterReset(focusTarget);
       }
 
       boardNode.addEventListener("click", event => {
         const button = event.target.closest(".rune");
         if (button) select(Number(button.dataset.index));
       });
-      document.querySelector("#rules-button").addEventListener("click", () => { rules.hidden = false; });
-      document.querySelector(".close-rules").addEventListener("click", () => { rules.hidden = true; });
-      document.querySelector("#reset-button").addEventListener("click", start);
-      document.querySelector("#play-again").addEventListener("click", start);
-      rules.addEventListener("click", event => { if (event.target === rules) rules.hidden = true; });
+      document.querySelector("#rules-button").addEventListener("click", () => openRules());
+      document.querySelector(".close-rules").addEventListener("click", confirmRules);
+      document.querySelector("#reset-button").addEventListener("click", () => start());
+      document.querySelector("#play-again").addEventListener("click", () => {
+        const trigger = dialogs.trigger(result);
+        start({ moveFocus: true, focusTarget: trigger });
+      });
+      rules.addEventListener("click", event => {
+        if (event.target !== rules) return;
+        if (rulesMandatory) document.querySelector(".close-rules")?.focus({ preventScroll: true });
+        else closeRules();
+      });
+      document.addEventListener("visibilitychange", () => {
+        if (document.hidden) pauseTurnClock("visibility");
+        else resumeTurnClock("visibility");
+      });
+
+      function currentTurnClockRemainingMs() {
+        if (turnClockActive && turnClockDeadline && turnClockPauseReasons.size === 0) {
+          return Math.max(0, turnClockDeadline - performance.now());
+        }
+        return turnClockRemainingMs;
+      }
 
       window.MATHSGO_COFFRES_DUEL = {
         adjacent,
         operation,
         start,
-        getState: () => ({ values: [...values], mode, target, turn, scores: [...scores] })
+        getState: () => ({
+          values: [...values],
+          mode,
+          target,
+          turn,
+          scores: [...scores],
+          challengeNumber,
+          locked,
+          timerActive: turnClockActive,
+          timerPaused: turnClockPauseReasons.size > 0,
+          timerRemainingMs: currentTurnClockRemainingMs(),
+          rulesMandatory
+        })
       };
 
-      start();
+      setupFullscreen();
+      start({ showRules: true });
     })();
   </script>
 </body>

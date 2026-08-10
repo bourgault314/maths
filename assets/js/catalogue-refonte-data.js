@@ -87,7 +87,7 @@ window.MATHSGO_CATALOGUE = {
       "id": "bouliers",
       "title": "Bouliers et abaques",
       "domain": "nombres-calculs",
-      "notions": ["numeration", "calcul-mental"],
+      "notions": ["numeration"],
       "hub": "bouliers/index.html",
       "hiddenFromBrowse": true,
       "collapseInNotion": true
@@ -96,7 +96,7 @@ window.MATHSGO_CATALOGUE = {
       "id": "rekenrek",
       "title": "Rekenrek",
       "domain": "nombres-calculs",
-      "notions": ["numeration", "calcul-mental"],
+      "notions": ["numeration"],
       "hub": "bouliers/rekenrek/index.html",
       "role": "progression",
       "parent": "bouliers",
@@ -115,7 +115,7 @@ window.MATHSGO_CATALOGUE = {
       "id": "soroban",
       "title": "Soroban",
       "domain": "nombres-calculs",
-      "notions": ["numeration", "calcul-mental"],
+      "notions": ["numeration"],
       "hub": "bouliers/soroban/index.html",
       "parent": "bouliers",
       "navigation": "hub"
@@ -234,16 +234,16 @@ window.MATHSGO_CATALOGUE = {
       "primaryGroup": "jeux",
       "collections": [],
       "tags": ["jeu", "strategie", "anticipation", "points-et-carres", "ordinateur"],
-      "thumbnail": "assets/img/thumbnails/jeux/carres-gloutons.svg?v=1",
-      "cardDescription": "Fermer plus de carrés que Gloubi, anticiper les chaînes et éviter de lui offrir les derniers traits."
+      "thumbnail": "assets/img/thumbnails/jeux/carres-gloutons.svg?v=2",
+      "cardDescription": "Fermer plus de carrés que Gloubi, anticiper les chaînes et éviter de lui offrir les derniers segments."
     },
     "outils/club_maths/coffres_magiques.html": {
       "primaryNotion": "strategie",
       "primaryGroup": "jeux",
       "collections": [],
-      "tags": ["jeu", "calcul-mental", "duel", "somme", "produit", "anticipation"],
+      "tags": ["jeu", "calcul-mental", "duel", "somme", "produit", "chronometre"],
       "thumbnail": "assets/img/thumbnails/jeux/coffres-magiques.svg?v=1",
-      "cardDescription": "Jouer à deux, repérer deux nombres voisins qui donnent la cible et gagner cinq clés avant son adversaire."
+      "cardDescription": "À deux, trouver en 20 secondes deux nombres voisins qui donnent la cible et gagner cinq clés avant son adversaire."
     },
     "outils/club_maths/tables_modulaires.html": {
       "primaryNotion": "explorations",
@@ -345,6 +345,7 @@ window.MATHSGO_CATALOGUE = {
       "primaryNotion": "calcul-mental",
       "primaryGroup": "entrainer",
       "collections": [],
+      "hiddenFromNotions": ["calcul-mental"],
       "tags": ["automatismes", "cycle-4", "dnb", "entrainement", "diaporama", "interactif"],
       "thumbnail": "assets/img/thumbnails/automatismes/entrainement-cycle4.svg?v=1",
       "cardDescription": "Choisir le niveau, les domaines et le mode pour lancer une séance interactive ou un diaporama."
@@ -353,9 +354,9 @@ window.MATHSGO_CATALOGUE = {
       "primaryNotion": "calcul-mental",
       "primaryGroup": "entrainer",
       "collections": [],
-      "tags": ["calcul-mental", "quatre-operations", "coffres", "cles", "entrainement"],
+      "tags": ["calcul-mental", "quatre-operations", "coffres", "aide", "correction-visuelle", "entrainement"],
       "thumbnail": "assets/img/thumbnails/calcul-mental/coffres-magiques-solo.svg?v=1",
-      "cardDescription": "Ouvrir dix coffres en choisissant les deux nombres qui réalisent la somme, la différence, le produit ou le quotient demandé."
+      "cardDescription": "Ouvrir dix coffres sur les quatre opérations, avec une aide et des corrections visuelles pour comprendre chaque calcul."
     },
     "outils/calcul_mental/defi_tables.html": {
       "primaryNotion": "calcul-mental",
@@ -856,32 +857,32 @@ window.MATHSGO_CATALOGUE = {
     },
     "outils/angles/fiche_angles_triangles.pdf": { "primaryNotion": "angles", "primaryGroup": "imprimer", "collections": [], "tags": ["angles", "triangles", "imprimable"] },
     "outils/bouliers/abaque_de_gerbert/abaque_gerbert_addition.html": {
-      "primaryNotion": "calcul-mental",
+      "primaryNotion": "numeration",
       "primaryGroup": "entrainer",
       "collections": ["gerbert"],
       "tags": ["abaque", "addition", "echange", "entrainement"],
       "cardDescription": "S’entraîner aux additions sur l’abaque de Gerbert avec échanges, validation et nouveau calcul."
     },
     "outils/bouliers/abaque_de_gerbert/abaque_gerbert_multiplication_V1.html": {
-      "primaryNotion": "calcul-mental",
+      "primaryNotion": "numeration",
       "primaryGroup": "entrainer",
       "collections": ["gerbert"],
       "tags": ["abaque", "multiplication", "entrainement"]
     },
     "outils/bouliers/abaque_de_gerbert/abaque_gerbert_multiplication_V2.html": {
-      "primaryNotion": "calcul-mental",
+      "primaryNotion": "numeration",
       "primaryGroup": "entrainer",
       "collections": ["gerbert"],
       "tags": ["abaque", "multiplication", "entrainement"]
     },
     "outils/bouliers/abaque_de_gerbert/abaque_gerbert_multiplication_V3.html": {
-      "primaryNotion": "calcul-mental",
+      "primaryNotion": "numeration",
       "primaryGroup": "entrainer",
       "collections": ["gerbert"],
       "tags": ["abaque", "multiplication", "entrainement"]
     },
     "outils/bouliers/abaque_de_gerbert/abaque_gerbert_soustraction.html": {
-      "primaryNotion": "calcul-mental",
+      "primaryNotion": "numeration",
       "primaryGroup": "entrainer",
       "collections": ["gerbert"],
       "tags": ["abaque", "soustraction", "echange", "entrainement"],
@@ -895,7 +896,7 @@ window.MATHSGO_CATALOGUE = {
       "cardDescription": "Poser et déplacer les apices pour représenter des nombres et effectuer des échanges sur l’abaque."
     },
     "outils/bouliers/rekenrek/ajouter9_ajouter8.html": {
-      "primaryNotion": "calcul-mental",
+      "primaryNotion": "numeration",
       "primaryGroup": "entrainer",
       "collections": ["rekenrek"],
       "tags": ["rekenrek", "addition", "ajouter-8", "ajouter-9", "entrainement"],
@@ -920,14 +921,14 @@ window.MATHSGO_CATALOGUE = {
       "tags": ["espace", "solides", "patron", "manipulation"]
     },
     "outils/bouliers/rekenrek/rekenrek_FD.html": {
-      "primaryNotion": "fractions",
+      "primaryNotion": "numeration",
       "primaryGroup": "manipuler",
       "collections": ["rekenrek"],
       "tags": ["rekenrek", "centiemes", "fractions", "decimaux", "manipulation"],
       "cardDescription": "Représenter des centièmes et passer entre écriture décimale, fractionnaire et monétaire sur un rekenrek."
     },
     "outils/bouliers/boulier_montessori/boulier-cycle3-petit-additions-soustractions.html": {
-      "primaryNotion": "calcul-mental",
+      "primaryNotion": "numeration",
       "primaryGroup": "entrainer",
       "collections": ["montessori"],
       "tags": ["boulier-montessori", "addition", "soustraction", "entrainement"],
@@ -968,21 +969,21 @@ window.MATHSGO_CATALOGUE = {
       "tags": ["proportionnalite", "engrenages", "ratio", "manipulation"]
     },
     "outils/bouliers/rekenrek/enlever9_enlever8.html": {
-      "primaryNotion": "calcul-mental",
+      "primaryNotion": "numeration",
       "primaryGroup": "entrainer",
       "collections": ["rekenrek"],
       "tags": ["rekenrek", "soustraction", "enlever-8", "enlever-9", "entrainement"],
       "cardDescription": "S’entraîner à enlever 8 ou 9 avec trois niveaux, une aide rekenrek et un score."
     },
     "outils/bouliers/rekenrek/force_5.html": {
-      "primaryNotion": "calcul-mental",
+      "primaryNotion": "numeration",
       "primaryGroup": "entrainer",
       "collections": ["rekenrek"],
       "tags": ["rekenrek", "addition", "structure-du-5", "entrainement"],
       "cardDescription": "S’entraîner aux additions en utilisant la structure du 5 sur le rekenrek."
     },
     "outils/bouliers/rekenrek/force_5_soustraction.html": {
-      "primaryNotion": "calcul-mental",
+      "primaryNotion": "numeration",
       "primaryGroup": "entrainer",
       "collections": ["rekenrek"],
       "tags": ["rekenrek", "soustraction", "structure-du-5", "entrainement"],
@@ -1045,20 +1046,20 @@ window.MATHSGO_CATALOGUE = {
       "cardDescription": "Suivre une progression sur l’addition et la soustraction des nombres relatifs avec des jetons rouges et verts à contour noir."
     },
     "outils/bouliers/rekenrek/boss_final.html": {
-      "primaryNotion": "calcul-mental",
+      "primaryNotion": "numeration",
       "primaryGroup": "entrainer",
       "collections": ["rekenrek"],
       "tags": ["rekenrek", "calcul-mental", "defi", "entrainement"]
     },
     "outils/bouliers/rekenrek/grignoteur.html": {
-      "primaryNotion": "calcul-mental",
+      "primaryNotion": "numeration",
       "primaryGroup": "entrainer",
       "collections": ["rekenrek"],
       "tags": ["rekenrek", "calcul-mental", "entrainement"],
       "cardDescription": "Répondre à une série de calculs, suivre son score et révéler le rekenrek en cas de besoin."
     },
     "outils/bouliers/rekenrek/pont_dizaine.html": {
-      "primaryNotion": "calcul-mental",
+      "primaryNotion": "numeration",
       "primaryGroup": "entrainer",
       "collections": ["rekenrek"],
       "tags": ["rekenrek", "passage-dizaine", "addition", "entrainement"],
@@ -1071,7 +1072,7 @@ window.MATHSGO_CATALOGUE = {
       "tags": ["espace", "prisme", "patron", "manipulation"]
     },
     "outils/bouliers/rekenrek/jeu_des_doubles.html": {
-      "primaryNotion": "calcul-mental",
+      "primaryNotion": "numeration",
       "primaryGroup": "entrainer",
       "collections": ["rekenrek"],
       "tags": ["rekenrek", "doubles", "calcul-mental", "entrainement"],
@@ -1085,68 +1086,68 @@ window.MATHSGO_CATALOGUE = {
       "cardDescription": "Trouver le nombre précédent ou suivant, puis vérifier la réponse avec l’appui du rekenrek."
     },
     "outils/bouliers/rekenrek/presque_doubles.html": {
-      "primaryNotion": "calcul-mental",
+      "primaryNotion": "numeration",
       "primaryGroup": "entrainer",
       "collections": ["rekenrek"],
       "tags": ["rekenrek", "presque-doubles", "calcul-mental", "entrainement"],
       "cardDescription": "S’entraîner aux presque-doubles en mode visuel, libre ou mental avec aide révélable."
     },
     "outils/bouliers/rekenrek/double_niv1.html": {
-      "primaryNotion": "calcul-mental",
+      "primaryNotion": "numeration",
       "primaryGroup": "generer",
       "collections": ["rekenrek"],
       "tags": ["rekenrek", "doubles", "generateur", "imprimer"],
       "cardDescription": "Générer des grilles imprimables sur les doubles de niveau 1 avec pièges et correction."
     },
     "outils/bouliers/rekenrek/double_niv2.html": {
-      "primaryNotion": "calcul-mental",
+      "primaryNotion": "numeration",
       "primaryGroup": "generer",
       "collections": ["rekenrek"],
       "tags": ["rekenrek", "doubles", "generateur", "imprimer"],
       "cardDescription": "Générer des grilles imprimables sur les doubles de niveau 2, avec ou sans correction."
     },
     "outils/bouliers/rekenrek/rekenrek_sheet_generator_2_difference.html": {
-      "primaryNotion": "calcul-mental",
+      "primaryNotion": "numeration",
       "primaryGroup": "generer",
       "collections": ["rekenrek"],
       "tags": ["rekenrek", "difference", "generateur", "imprimer"]
     },
     "outils/bouliers/rekenrek/rekenrek_sheet_generator_somme.html": {
-      "primaryNotion": "calcul-mental",
+      "primaryNotion": "numeration",
       "primaryGroup": "generer",
       "collections": ["rekenrek"],
       "tags": ["rekenrek", "somme", "generateur", "imprimer"]
     },
     "outils/bouliers/rekenrek/cache cache.html": {
-      "primaryNotion": "calcul-mental",
+      "primaryNotion": "numeration",
       "primaryGroup": "generer",
       "collections": ["rekenrek"],
       "tags": ["rekenrek", "complements", "generateur", "imprimer"],
       "cardDescription": "Générer des planches de compléments à 10, 20 ou 100 sur rekenrek, avec correction."
     },
     "outils/bouliers/rekenrek/presque double.html": {
-      "primaryNotion": "calcul-mental",
+      "primaryNotion": "numeration",
       "primaryGroup": "generer",
       "collections": ["rekenrek"],
       "tags": ["rekenrek", "presque-doubles", "generateur", "imprimer"],
       "cardDescription": "Générer des grilles imprimables sur les presque-doubles avec choix des pièges et de l’affichage."
     },
     "outils/bouliers/rekenrek/cache cache barre.html": {
-      "primaryNotion": "calcul-mental",
+      "primaryNotion": "numeration",
       "primaryGroup": "generer",
       "collections": ["rekenrek"],
       "tags": ["rekenrek", "complements", "schema-barres", "generateur", "imprimer"],
       "cardDescription": "Générer des fiches de compléments sur rekenrek accompagnées de schémas en barres."
     },
     "outils/bouliers/rekenrek/tables_generateur.html": {
-      "primaryNotion": "calcul-mental",
+      "primaryNotion": "numeration",
       "primaryGroup": "generer",
       "collections": ["rekenrek"],
       "tags": ["rekenrek", "tables", "multiplication", "division", "generateur", "imprimer"],
       "cardDescription": "Générer des fiches de tables de multiplication et de division avec affichage rekenrek et correction."
     },
     "outils/bouliers/rekenrek/cache-cache.html": {
-      "primaryNotion": "calcul-mental",
+      "primaryNotion": "numeration",
       "primaryGroup": "entrainer",
       "collections": ["rekenrek"],
       "tags": ["rekenrek", "complements", "rideau", "entrainement"],
@@ -1188,7 +1189,7 @@ window.MATHSGO_CATALOGUE = {
       "cardDescription": "Manipuler librement un soroban, adapter le nombre de colonnes et exporter la représentation."
     },
     "outils/bouliers/rekenrek/tables.html": {
-      "primaryNotion": "calcul-mental",
+      "primaryNotion": "numeration",
       "primaryGroup": "entrainer",
       "collections": ["rekenrek"],
       "tags": ["rekenrek", "tables", "multiplication", "entrainement"],
@@ -1420,7 +1421,7 @@ window.MATHSGO_CATALOGUE = {
     },
     {
       "id": "calcul-mental",
-      "title": "Calcul mental et automatismes",
+      "title": "Calcul mental",
       "domain": "nombres-calculs"
     },
     {
@@ -1554,8 +1555,7 @@ window.MATHSGO_CATALOGUE = {
         "nombres-calculs"
       ],
       "notions": [
-        "numeration",
-        "calcul-mental"
+        "numeration"
       ],
       "uses": [
         "manipuler",
@@ -1691,8 +1691,7 @@ window.MATHSGO_CATALOGUE = {
         "nombres-calculs"
       ],
       "notions": [
-        "numeration",
-        "calcul-mental"
+        "numeration"
       ],
       "uses": [
         "manipuler",
@@ -1784,8 +1783,7 @@ window.MATHSGO_CATALOGUE = {
         "nombres-calculs"
       ],
       "notions": [
-        "numeration",
-        "calcul-mental"
+        "numeration"
       ],
       "uses": [
         "manipuler",
@@ -2067,8 +2065,7 @@ window.MATHSGO_CATALOGUE = {
         "nombres-calculs"
       ],
       "notions": [
-        "numeration",
-        "calcul-mental"
+        "numeration"
       ],
       "uses": [
         "manipuler",
@@ -2168,8 +2165,7 @@ window.MATHSGO_CATALOGUE = {
         "nombres-calculs"
       ],
       "notions": [
-        "numeration",
-        "calcul-mental"
+        "numeration"
       ],
       "uses": [
         "manipuler",
@@ -2201,8 +2197,7 @@ window.MATHSGO_CATALOGUE = {
         "nombres-calculs"
       ],
       "notions": [
-        "numeration",
-        "calcul-mental"
+        "numeration"
       ],
       "uses": [
         "manipuler",
@@ -2528,8 +2523,7 @@ window.MATHSGO_CATALOGUE = {
         "nombres-calculs"
       ],
       "notions": [
-        "numeration",
-        "calcul-mental"
+        "numeration"
       ],
       "uses": [
         "manipuler",
@@ -2648,8 +2642,7 @@ window.MATHSGO_CATALOGUE = {
         "nombres-calculs"
       ],
       "notions": [
-        "numeration",
-        "calcul-mental"
+        "numeration"
       ],
       "uses": [
         "manipuler",
@@ -2682,8 +2675,7 @@ window.MATHSGO_CATALOGUE = {
         "nombres-calculs"
       ],
       "notions": [
-        "numeration",
-        "calcul-mental"
+        "numeration"
       ],
       "uses": [
         "manipuler",
@@ -3252,8 +3244,7 @@ window.MATHSGO_CATALOGUE = {
         "nombres-calculs"
       ],
       "notions": [
-        "numeration",
-        "calcul-mental"
+        "numeration"
       ],
       "uses": [
         "imprimer"
@@ -3492,8 +3483,7 @@ window.MATHSGO_CATALOGUE = {
         "nombres-calculs"
       ],
       "notions": [
-        "numeration",
-        "calcul-mental"
+        "numeration"
       ],
       "uses": [
         "imprimer"
@@ -3527,8 +3517,7 @@ window.MATHSGO_CATALOGUE = {
         "nombres-calculs"
       ],
       "notions": [
-        "numeration",
-        "calcul-mental"
+        "numeration"
       ],
       "uses": [
         "imprimer"
@@ -3562,8 +3551,7 @@ window.MATHSGO_CATALOGUE = {
         "nombres-calculs"
       ],
       "notions": [
-        "numeration",
-        "calcul-mental"
+        "numeration"
       ],
       "uses": [
         "imprimer"
@@ -3869,8 +3857,7 @@ window.MATHSGO_CATALOGUE = {
         "nombres-calculs"
       ],
       "notions": [
-        "numeration",
-        "calcul-mental"
+        "numeration"
       ],
       "uses": [
         "manipuler",
@@ -3929,8 +3916,7 @@ window.MATHSGO_CATALOGUE = {
         "nombres-calculs"
       ],
       "notions": [
-        "numeration",
-        "calcul-mental"
+        "numeration"
       ],
       "uses": [
         "manipuler",
@@ -3963,8 +3949,7 @@ window.MATHSGO_CATALOGUE = {
         "nombres-calculs"
       ],
       "notions": [
-        "numeration",
-        "calcul-mental"
+        "numeration"
       ],
       "uses": [
         "manipuler",
@@ -5005,8 +4990,7 @@ window.MATHSGO_CATALOGUE = {
         "nombres-calculs"
       ],
       "notions": [
-        "numeration",
-        "calcul-mental"
+        "numeration"
       ],
       "uses": [
         "manipuler",
@@ -5039,8 +5023,7 @@ window.MATHSGO_CATALOGUE = {
         "nombres-calculs"
       ],
       "notions": [
-        "numeration",
-        "calcul-mental"
+        "numeration"
       ],
       "uses": [
         "manipuler",
@@ -5073,8 +5056,7 @@ window.MATHSGO_CATALOGUE = {
         "nombres-calculs"
       ],
       "notions": [
-        "numeration",
-        "calcul-mental"
+        "numeration"
       ],
       "uses": [
         "manipuler",
@@ -5107,8 +5089,7 @@ window.MATHSGO_CATALOGUE = {
         "nombres-calculs"
       ],
       "notions": [
-        "numeration",
-        "calcul-mental"
+        "numeration"
       ],
       "uses": [
         "imprimer"
@@ -5142,8 +5123,7 @@ window.MATHSGO_CATALOGUE = {
         "nombres-calculs"
       ],
       "notions": [
-        "numeration",
-        "calcul-mental"
+        "numeration"
       ],
       "uses": [
         "imprimer"
@@ -5177,8 +5157,7 @@ window.MATHSGO_CATALOGUE = {
         "nombres-calculs"
       ],
       "notions": [
-        "numeration",
-        "calcul-mental"
+        "numeration"
       ],
       "uses": [
         "manipuler",
@@ -5214,8 +5193,7 @@ window.MATHSGO_CATALOGUE = {
         "nombres-calculs"
       ],
       "notions": [
-        "numeration",
-        "calcul-mental"
+        "numeration"
       ],
       "uses": [
         "manipuler",
@@ -5251,8 +5229,7 @@ window.MATHSGO_CATALOGUE = {
         "nombres-calculs"
       ],
       "notions": [
-        "numeration",
-        "calcul-mental"
+        "numeration"
       ],
       "uses": [
         "imprimer"
@@ -5286,8 +5263,7 @@ window.MATHSGO_CATALOGUE = {
         "nombres-calculs"
       ],
       "notions": [
-        "numeration",
-        "calcul-mental"
+        "numeration"
       ],
       "uses": [
         "imprimer"
@@ -5321,8 +5297,7 @@ window.MATHSGO_CATALOGUE = {
         "nombres-calculs"
       ],
       "notions": [
-        "numeration",
-        "calcul-mental"
+        "numeration"
       ],
       "uses": [
         "imprimer"
@@ -5356,8 +5331,7 @@ window.MATHSGO_CATALOGUE = {
         "nombres-calculs"
       ],
       "notions": [
-        "numeration",
-        "calcul-mental"
+        "numeration"
       ],
       "uses": [
         "imprimer"
@@ -5391,8 +5365,7 @@ window.MATHSGO_CATALOGUE = {
         "nombres-calculs"
       ],
       "notions": [
-        "numeration",
-        "calcul-mental"
+        "numeration"
       ],
       "uses": [
         "manipuler",
@@ -5425,8 +5398,7 @@ window.MATHSGO_CATALOGUE = {
         "nombres-calculs"
       ],
       "notions": [
-        "numeration",
-        "calcul-mental"
+        "numeration"
       ],
       "uses": [
         "manipuler",
@@ -5459,8 +5431,7 @@ window.MATHSGO_CATALOGUE = {
         "nombres-calculs"
       ],
       "notions": [
-        "numeration",
-        "calcul-mental"
+        "numeration"
       ],
       "uses": [
         "manipuler",
@@ -5493,8 +5464,7 @@ window.MATHSGO_CATALOGUE = {
         "nombres-calculs"
       ],
       "notions": [
-        "numeration",
-        "calcul-mental"
+        "numeration"
       ],
       "uses": [
         "manipuler",
@@ -5724,8 +5694,7 @@ window.MATHSGO_CATALOGUE = {
         "nombres-calculs"
       ],
       "notions": [
-        "numeration",
-        "calcul-mental"
+        "numeration"
       ],
       "uses": [
         "manipuler",
@@ -6021,7 +5990,7 @@ window.MATHSGO_CATALOGUE = {
     {
       "id": "outils-club-maths-carres-gloutons-html",
       "title": "Les Carrés gloutons",
-      "description": "Un jeu de stratégie contre l’ordinateur où chaque trait peut fermer un carré ou préparer une chaîne pour l’adversaire.",
+      "description": "Un jeu de stratégie contre l’ordinateur où chaque segment peut fermer un carré ou préparer une chaîne pour l’adversaire.",
       "path": "outils/club_maths/carres_gloutons.html",
       "domains": [
         "jeux-recherches"
@@ -6049,7 +6018,7 @@ window.MATHSGO_CATALOGUE = {
     {
       "id": "outils-club-maths-coffres-magiques-html",
       "title": "Coffres magiques — à deux",
-      "description": "Un duel de calcul mental : choisir deux nombres voisins dont la somme ou le produit donne la cible et remporter cinq clés.",
+      "description": "Un duel de calcul mental : trouver en 20 secondes deux nombres voisins dont la somme ou le produit donne la cible et remporter cinq clés.",
       "path": "outils/club_maths/coffres_magiques.html",
       "domains": [
         "jeux-recherches"
@@ -6077,7 +6046,7 @@ window.MATHSGO_CATALOGUE = {
     {
       "id": "outils-calcul-mental-coffres-magiques-solo-html",
       "title": "Coffres magiques — solo",
-      "description": "Dix coffres de calcul mental à ouvrir en retrouvant deux nombres liés par une somme, une différence, un produit ou un quotient.",
+      "description": "Dix coffres sur les quatre opérations, avec aide et corrections visuelles pour comprendre la somme, la différence, le produit et le quotient.",
       "path": "outils/calcul_mental/coffres_magiques_solo.html",
       "domains": [
         "nombres-calculs"

@@ -1,10 +1,10 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="fr">
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <title>Les Carrés gloutons | maths&amp;go</title>
-  <meta name="description" content="Un jeu de stratégie contre l’ordinateur où chaque trait peut fermer un carré ou préparer une chaîne pour l’adversaire.">
+  <meta name="description" content="Un jeu de stratégie contre l’ordinateur où chaque segment peut fermer un carré ou préparer une chaîne pour l’adversaire.">
   <link rel="canonical" href="https://mathsgo.re/outils/club_maths/carres_gloutons.html">
   <meta name="robots" content="index, follow, max-image-preview:large">
   <link rel="icon" href="/favicon.ico" sizes="48x48">
@@ -12,6 +12,8 @@
   <link rel="icon" type="image/png" sizes="32x32" href="/assets/img/favicon-32.png">
   <link rel="icon" type="image/png" sizes="192x192" href="/assets/img/favicon-192.png">
   <link rel="apple-touch-icon" href="/assets/img/apple-touch-icon.png">
+  <link rel="stylesheet" href="../../assets/css/consentement.css">
+  <script defer src="../../assets/js/consentement.js"></script>
   <style>
     :root {
       color: #10294a;
@@ -34,9 +36,9 @@
     a { font: inherit; }
 
     .shell {
-      width: min(900px, calc(100% - 24px));
+      width: min(1120px, calc(100% - 24px));
       margin: 0 auto;
-      padding: 10px 0 32px;
+      padding: 10px 0 16px;
     }
 
     .site-header {
@@ -113,7 +115,15 @@
       line-height: 1.45;
     }
 
-    .rules-button {
+    .title-actions {
+      flex: 0 0 auto;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .rules-button,
+    .fullscreen-button {
       flex: 0 0 auto;
       min-height: 40px;
       padding: 0 13px;
@@ -125,9 +135,30 @@
       font-weight: 850;
     }
 
+    .fullscreen-button {
+      display: inline-flex;
+      align-items: center;
+      gap: 7px;
+      border-color: #b8d4ea;
+      color: #0755b8;
+      background: #f5faff;
+    }
+
+    .fullscreen-button svg {
+      width: 19px;
+      height: 19px;
+      fill: none;
+      stroke: currentColor;
+      stroke-width: 2;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+    }
+
+    .fullscreen-collapse { display: none; }
+
     .dashboard {
       display: grid;
-      grid-template-columns: repeat(3, 1fr);
+      grid-template-columns: 1.2fr 1fr 1fr;
       gap: 9px;
       margin: 17px 0 11px;
     }
@@ -151,6 +182,12 @@
     }
 
     .dashboard strong { font-size: 1rem; }
+
+    #round-label {
+      font-size: .84rem;
+      letter-spacing: -.025em;
+      white-space: nowrap;
+    }
 
     .status {
       display: flex;
@@ -222,14 +259,39 @@
       stroke-width: 3;
     }
 
-    .box-face {
+    .box-marker {
       pointer-events: none;
-      font-family: Arial, "Apple Color Emoji", "Segoe UI Emoji", sans-serif;
-      font-size: 28px;
-      font-weight: 900;
-      text-anchor: middle;
-      dominant-baseline: middle;
+      transform-box: fill-box;
+      transform-origin: center;
       animation: pop .35s ease-out;
+    }
+
+    .player-marker-disc {
+      fill: #fff;
+      stroke: #0755b8;
+      stroke-width: 3;
+    }
+
+    .player-marker-star { fill: #0755b8; }
+    .ai-marker-disc {
+      fill: #fff8eb;
+      stroke: #d95f02;
+      stroke-width: 3;
+    }
+
+    .ai-marker-eye { fill: #9a3f00; }
+    .ai-marker-mouth {
+      fill: none;
+      stroke: #9a3f00;
+      stroke-width: 3.5;
+      stroke-linecap: round;
+    }
+
+    .ai-marker-tongue {
+      fill: #ef6a69;
+      stroke: #9a3f00;
+      stroke-width: 1.5;
+      stroke-linejoin: round;
     }
 
     .edge-visible {
@@ -263,6 +325,7 @@
     }
 
     .edge.taken .edge-hit { cursor: default; }
+    .edge.taken:focus { outline: none; }
 
     .dot {
       fill: #173a5e;
@@ -341,6 +404,29 @@
       flex-wrap: wrap;
       justify-content: center;
       gap: 8px;
+    }
+
+    .site-footer {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: center;
+      gap: 5px 8px;
+      padding: 13px 8px 0;
+      color: #66778b;
+      font-size: .76rem;
+      text-align: center;
+    }
+
+    .site-footer a,
+    .site-footer button {
+      padding: 0;
+      border: 0;
+      color: #36516e;
+      background: none;
+      cursor: pointer;
+      text-decoration: underline;
+      text-underline-offset: 2px;
     }
 
     .overlay {
@@ -436,10 +522,117 @@
       50% { transform: translateY(-5px); }
     }
 
+    @media (min-width: 900px) {
+      .shell { padding: 8px 0 20px; }
+
+      .game {
+        min-height: min(720px, calc(100dvh - 114px));
+        display: grid;
+        grid-template-columns: minmax(360px, .82fr) minmax(500px, 1.18fr);
+        grid-template-areas:
+          "title board"
+          "dashboard board"
+          "status board"
+          "result board";
+        grid-template-rows: auto auto auto 1fr;
+        column-gap: clamp(28px, 4vw, 54px);
+        align-items: start;
+        padding: clamp(24px, 3vw, 38px);
+      }
+
+      .title-row { grid-area: title; }
+      .dashboard { grid-area: dashboard; }
+      .status { grid-area: status; }
+      .result { grid-area: result; max-height: 270px; overflow: auto; }
+      .board-wrap {
+        grid-area: board;
+        align-self: center;
+        width: min(100%, 72vh, 590px);
+        margin: 0 auto;
+      }
+
+      #board {
+        width: 100%;
+        aspect-ratio: 1;
+        height: auto;
+        max-height: none;
+      }
+
+      h1 { font-size: clamp(2.5rem, 3.8vw, 3.55rem); }
+      .dashboard { margin-top: 22px; }
+      .status { margin-top: 2px; }
+    }
+
+    .game:fullscreen,
+    .game:-webkit-full-screen,
+    .game.is-fullscreen {
+      width: 100vw;
+      height: 100dvh;
+      min-height: 0;
+      margin: 0;
+      padding: clamp(18px, 3vw, 36px);
+      overflow: auto;
+      border: 0;
+      border-radius: 0;
+      background: #fff;
+      box-shadow: none;
+    }
+
+    .game:fullscreen .fullscreen-expand,
+    .game:-webkit-full-screen .fullscreen-expand,
+    .game.is-fullscreen .fullscreen-expand { display: none; }
+
+    .game:fullscreen .fullscreen-collapse,
+    .game:-webkit-full-screen .fullscreen-collapse,
+    .game.is-fullscreen .fullscreen-collapse { display: block; }
+
+    html.fullscreen-fallback {
+      width: 100%;
+      height: 100%;
+      overflow: hidden;
+    }
+
+    html.fullscreen-fallback body {
+      position: fixed;
+      inset: 0;
+      width: 100%;
+      height: 100vh;
+      height: 100dvh;
+      min-height: 100dvh;
+      overflow: hidden;
+      overscroll-behavior: none;
+    }
+
+    html.fullscreen-fallback .shell {
+      width: 100%;
+      height: 100dvh;
+      padding: 0;
+    }
+
+    html.fullscreen-fallback #game {
+      position: fixed;
+      z-index: 50;
+      inset: 0;
+    }
+
+    body.game-fullscreen .site-header,
+    body.game-fullscreen .site-footer { display: none; }
+
+    body.game-fullscreen .fullscreen-button {
+      position: fixed;
+      z-index: 120;
+      top: max(8px, env(safe-area-inset-top));
+      right: max(8px, env(safe-area-inset-right));
+      border-color: #7899ae;
+      background: #fff;
+      box-shadow: 0 5px 18px rgba(21, 52, 81, .2);
+    }
+
     @media (max-width: 560px) {
       .shell {
         width: 100%;
         padding-top: 0;
+        padding-bottom: 0;
       }
 
       .site-header {
@@ -456,7 +649,7 @@
       }
 
       .game {
-        padding: 16px 10px 20px;
+        padding: 16px 10px 19px;
         border-right: 0;
         border-left: 0;
         border-radius: 19px;
@@ -465,10 +658,14 @@
       .title-row { align-items: center; }
       .subtitle { font-size: .86rem; }
 
-      .rules-button {
+      .rules-button,
+      .fullscreen-button {
         min-height: 37px;
+        padding: 0 10px;
         font-size: .75rem;
       }
+
+      .fullscreen-label { display: none; }
 
       .dashboard { margin-top: 12px; }
       .dashboard > div { padding: 8px 4px; }
@@ -489,6 +686,12 @@
       }
 
       .intro { padding: 19px; }
+
+      .game:fullscreen,
+      .game:-webkit-full-screen,
+      .game.is-fullscreen {
+        padding: max(12px, env(safe-area-inset-top)) 10px max(12px, env(safe-area-inset-bottom));
+      }
     }
 
     @media (prefers-reduced-motion: reduce) {
@@ -505,31 +708,40 @@
 <body>
   <main class="shell">
     <header class="site-header">
-      <a href="/" aria-label="Accueil maths&go">
-        <img class="logo" src="/assets/img/mathsgo-logo.png" alt="maths&go" width="1338" height="622">
+      <a href="/" aria-label="Accueil maths&amp;go">
+        <img class="logo" src="/assets/img/mathsgo-logo.png" alt="maths&amp;go" width="1338" height="622">
       </a>
       <a class="catalogue-link" href="../index.html?domain=jeux-recherches&amp;notion=strategie">← Jeux de stratégie</a>
     </header>
 
-    <section class="game" aria-labelledby="game-title">
+    <section id="game" class="game" aria-labelledby="game-title">
       <div class="title-row">
         <div>
           <p class="eyebrow">Jeu de stratégie</p>
           <h1 id="game-title">Les Carrés gloutons</h1>
-          <p class="subtitle">Ferme plus de carrés que Gloubi. Un carré fermé te donne le droit de rejouer.</p>
+          <p class="subtitle">Ferme plus de carrés que Gloubi. Trace un segment entre deux points voisins ; si tu fermes un carré, tu rejoues.</p>
         </div>
-        <button id="rules-button" class="rules-button" type="button">La règle</button>
+        <div class="title-actions">
+          <button id="rules-button" class="rules-button" type="button">La règle</button>
+          <button id="fullscreen-button" class="fullscreen-button" type="button" aria-label="Passer en plein écran" aria-pressed="false">
+            <svg viewBox="0 0 24 24" aria-hidden="true">
+              <path class="fullscreen-expand" d="M8 3H3v5M16 3h5v5M8 21H3v-5M16 21h5v-5"/>
+              <path class="fullscreen-collapse" d="M3 8h5V3M21 8h-5V3M3 16h5v5M21 16h-5v5"/>
+            </svg>
+            <span class="fullscreen-label">Plein écran</span>
+          </button>
+        </div>
       </div>
 
       <div class="dashboard">
-        <div><span>Manche</span><strong id="round-label">1 sur 2</strong></div>
+        <div><span>Manche</span><strong id="round-label">1 · premier à 2</strong></div>
         <div><span>Les carrés</span><strong id="square-score">0 – 0</strong></div>
         <div><span>Les victoires</span><strong id="match-score">0 – 0</strong></div>
       </div>
 
       <div id="status" class="status" aria-live="polite">
         <i class="turn-dot" aria-hidden="true"></i>
-        <span id="status-text">À toi : choisis un trait.</span>
+        <span id="status-text">À toi : trace un segment bleu entre deux points.</span>
       </div>
 
       <div class="board-wrap">
@@ -543,21 +755,29 @@
       </div>
 
       <section id="result" class="result" hidden aria-live="assertive">
-        <h2 id="result-title"></h2>
-        <p id="result-text"></p>
+        <h2 id="result-title">Résultat de la manche</h2>
+        <p id="result-text">Le score apparaîtra ici.</p>
         <div class="result-actions">
-          <button id="next-round" class="primary" type="button">Deuxième manche</button>
+          <button id="next-round" class="primary" type="button">Jouer la manche 2</button>
           <a class="secondary" href="../index.html?domain=jeux-recherches&amp;notion=strategie">Retour aux jeux</a>
         </div>
       </section>
     </section>
+
+    <footer class="site-footer">
+      <span>Gwenaël Bourgault</span><span aria-hidden="true">·</span>
+      <a href="mailto:gwenael@mathsgo.re?subject=Contact%20depuis%20mathsgo.re">Me contacter</a><span aria-hidden="true">·</span>
+      <a href="../../mentions-legales.html">Mentions légales</a><span aria-hidden="true">·</span>
+      <a href="../../confidentialite.html">Confidentialité</a><span aria-hidden="true">·</span>
+      <button type="button" data-mathsgo-consent-open onclick="window.mathsgoConsentement &amp;&amp; window.mathsgoConsentement.ouvrir()">Gérer mes cookies</button>
+    </footer>
   </main>
 
   <div id="intro-overlay" class="overlay" role="dialog" aria-modal="true" aria-labelledby="intro-title">
     <section class="intro">
       <p class="eyebrow">La règle en vingt secondes</p>
       <h2 id="intro-title">Nourris tes carrés</h2>
-      <p class="intro-lead">Tu joues en bleu contre Gloubi, qui joue en orange. À tour de rôle, chacun choisit un trait entre deux points.</p>
+      <p class="intro-lead">Tu joues en bleu contre Gloubi, qui joue en orange. À tour de rôle, chacun trace un segment entre deux points voisins.</p>
       <div class="rules">
         <article class="rule">
           <svg viewBox="0 0 90 75" aria-hidden="true">
@@ -573,19 +793,23 @@
             </g>
           </svg>
           <strong>Ferme un carré</strong>
-          <span>Le quatrième trait te donne le carré et un point.</span>
+          <span>Le quatrième segment ferme le carré et te donne un point.</span>
         </article>
         <article class="rule">
           <svg viewBox="0 0 90 75" aria-hidden="true">
             <rect x="16" y="11" width="58" height="53" rx="9" fill="#ffe1bd" stroke="#f97316" stroke-width="5"/>
-            <text x="45" y="47" text-anchor="middle" font-size="27">😋</text>
+            <circle cx="45" cy="37.5" r="20" fill="#fff8eb" stroke="#d95f02" stroke-width="2.5"/>
+            <circle cx="38" cy="33" r="2.4" fill="#9a3f00"/>
+            <circle cx="52" cy="33" r="2.4" fill="#9a3f00"/>
+            <path d="M35 41.5Q45 50 55 41.5" fill="none" stroke="#9a3f00" stroke-width="3" stroke-linecap="round"/>
+            <path d="M45 46.5l5 1.5-2 8-5-2z" fill="#ef6a69" stroke="#9a3f00" stroke-width="1"/>
           </svg>
           <strong>Et rejoue aussitôt</strong>
           <span>Une bonne fermeture peut déclencher toute une chaîne.</span>
         </article>
       </div>
       <button id="start-game" class="primary" type="button">J’ai compris, je joue !</button>
-      <p class="two-games">Deux manches · tu commences la première, Gloubi la seconde.</p>
+      <p class="two-games">Premier à 2 victoires · le premier joueur alterne à chaque manche.</p>
     </section>
   </div>
 
@@ -599,7 +823,7 @@
       const PAD = 42;
       const PLAYER = "player";
       const AI = "ai";
-      const CATALOGUE_URL = "../index.html?domain=jeux-recherches&notion=strategie";
+      const WINS_TO_TAKE_MATCH = 2;
       const edges = new Map();
       const boxes = new Map();
       let current = PLAYER;
@@ -608,9 +832,10 @@
       let thinking = false;
       let playerWins = 0;
       let aiWins = 0;
-      let draws = 0;
+      let matchOver = false;
       let started = false;
 
+      const game = document.getElementById("game");
       const board = document.getElementById("board");
       const boxesGroup = document.getElementById("boxes");
       const edgesGroup = document.getElementById("edges");
@@ -629,6 +854,10 @@
       const overlay = document.getElementById("intro-overlay");
       const startGame = document.getElementById("start-game");
       const rulesButton = document.getElementById("rules-button");
+      const fullscreenButton = document.getElementById("fullscreen-button");
+      const fullscreenLabel = fullscreenButton.querySelector(".fullscreen-label");
+      const root = document.documentElement;
+      let fallbackScrollY = 0;
 
       const hKey = (row, col) => `h-${row}-${col}`;
       const vKey = (row, col) => `v-${row}-${col}`;
@@ -689,11 +918,15 @@
           "data-edge": key,
           role: "button",
           tabindex: "0",
-          "aria-label": "Choisir ce trait"
+          "aria-label": "Tracer ce segment entre deux points voisins"
         });
         group.appendChild(makeSvg("line", { x1, y1, x2, y2, class: "edge-visible" }));
         group.appendChild(makeSvg("line", { x1, y1, x2, y2, class: "edge-hit" }));
-        group.addEventListener("click", () => playerMove(key));
+        group.addEventListener("click", event => {
+          if (event.detail > 0 && document.activeElement === group) group.blur();
+          const moved = playerMove(key);
+          if (moved && event.detail > 0 && document.activeElement === group) group.blur();
+        });
         group.addEventListener("keydown", event => {
           if (event.key === "Enter" || event.key === " ") {
             event.preventDefault();
@@ -701,6 +934,22 @@
           }
         });
         edgesGroup.appendChild(group);
+      }
+
+      function restoreFocusAfterTakenEdge(currentKey) {
+        const available = Array.from(edgesGroup.querySelectorAll(".edge:not(.taken)"));
+        if (available.length) {
+          const edgeOrder = Array.from(edges.keys());
+          const currentIndex = edgeOrder.indexOf(currentKey);
+          const next = available.find(edge => edgeOrder.indexOf(edge.dataset.edge) > currentIndex) || available[0];
+          next.focus({ preventScroll: true });
+          return;
+        }
+
+        window.queueMicrotask(() => {
+          const action = result.hidden ? rulesButton : nextRound;
+          action.focus({ preventScroll: true });
+        });
       }
 
       function boxEdges(row, col) {
@@ -738,8 +987,9 @@
       }
 
       function playerMove(key) {
-        if (!started || gameOver || thinking || current !== PLAYER || edges.get(key)) return;
+        if (!started || gameOver || thinking || current !== PLAYER || edges.get(key)) return false;
         makeMove(key, PLAYER);
+        return true;
       }
 
       function makeMove(key, color) {
@@ -815,7 +1065,45 @@
         return ranked[0]?.key || null;
       }
 
+      function starPoints(cx, cy, outerRadius = 22, innerRadius = 10) {
+        return Array.from({ length: 10 }, (_, index) => {
+          const angle = -Math.PI / 2 + index * Math.PI / 5;
+          const radius = index % 2 === 0 ? outerRadius : innerRadius;
+          return `${cx + Math.cos(angle) * radius},${cy + Math.sin(angle) * radius}`;
+        }).join(" ");
+      }
+
+      function markerFor(color, cx, cy) {
+        const marker = makeSvg("g", {
+          class: `box-marker ${color}-marker`,
+          "aria-hidden": "true"
+        });
+
+        if (color === PLAYER) {
+          marker.appendChild(makeSvg("circle", { cx, cy, r: 27, class: "player-marker-disc" }));
+          marker.appendChild(makeSvg("polygon", {
+            points: starPoints(cx, cy),
+            class: "player-marker-star"
+          }));
+          return marker;
+        }
+
+        marker.appendChild(makeSvg("circle", { cx, cy, r: 27, class: "ai-marker-disc" }));
+        marker.appendChild(makeSvg("circle", { cx: cx - 9, cy: cy - 7, r: 3.2, class: "ai-marker-eye" }));
+        marker.appendChild(makeSvg("circle", { cx: cx + 9, cy: cy - 7, r: 3.2, class: "ai-marker-eye" }));
+        marker.appendChild(makeSvg("path", {
+          d: `M${cx - 13} ${cy + 4}Q${cx} ${cy + 17} ${cx + 13} ${cy + 4}`,
+          class: "ai-marker-mouth"
+        }));
+        marker.appendChild(makeSvg("path", {
+          d: `M${cx + 1} ${cy + 13}Q${cx + 10} ${cy + 13} ${cx + 7} ${cy + 24}L${cx - 1} ${cy + 21}Z`,
+          class: "ai-marker-tongue"
+        }));
+        return marker;
+      }
+
       function render() {
+        const focusedEdge = document.activeElement?.classList?.contains("edge") ? document.activeElement : null;
         edgesGroup.querySelectorAll(".edge").forEach(group => {
           const color = edges.get(group.dataset.edge);
           group.setAttribute("class", `edge${color ? ` taken ${color}` : ""}`);
@@ -832,31 +1120,27 @@
         boxes.forEach((color, key) => {
           if (!color) return;
           const [row, col] = parseBox(key);
-          const face = makeSvg("text", {
-            x: PAD + col * CELL + CELL / 2,
-            y: PAD + row * CELL + CELL / 2 + 2,
-            class: "box-face"
-          });
-          face.textContent = color === PLAYER ? "★" : "😋";
-          face.setAttribute("fill", color === PLAYER ? "#0755b8" : "#d95f02");
-          facesGroup.appendChild(face);
+          const cx = PAD + col * CELL + CELL / 2;
+          const cy = PAD + row * CELL + CELL / 2;
+          facesGroup.appendChild(markerFor(color, cx, cy));
         });
 
         const playerSquares = Array.from(boxes.values()).filter(value => value === PLAYER).length;
         const aiSquares = Array.from(boxes.values()).filter(value => value === AI).length;
         squareScore.textContent = `${playerSquares} – ${aiSquares}`;
         matchScore.textContent = `${playerWins} – ${aiWins}`;
-        roundLabel.textContent = `${round} sur 2`;
+        roundLabel.textContent = `${round} · premier à ${WINS_TO_TAKE_MATCH}`;
         renderStatus();
+        if (focusedEdge?.classList.contains("taken")) restoreFocusAfterTakenEdge(focusedEdge.dataset.edge);
       }
 
       function renderStatus() {
         status.classList.toggle("ai", thinking || current === AI);
         thinkingBubble.hidden = !thinking;
         if (gameOver) return;
-        if (thinking) statusText.textContent = "Gloubi cherche le trait le plus savoureux…";
+        if (thinking) statusText.textContent = "Gloubi cherche le segment le plus savoureux…";
         else if (current === AI) statusText.textContent = "C’est au tour de Gloubi.";
-        else statusText.textContent = "À toi : choisis un trait bleu.";
+        else statusText.textContent = "À toi : trace un segment bleu entre deux points.";
       }
 
       function finishRound() {
@@ -870,29 +1154,36 @@
 
         if (playerWon) playerWins += 1;
         else if (aiWon) aiWins += 1;
-        else draws += 1;
+
+        matchOver = playerWins >= WINS_TO_TAKE_MATCH || aiWins >= WINS_TO_TAKE_MATCH;
 
         matchScore.textContent = `${playerWins} – ${aiWins}`;
         result.className = `result${aiWon ? " lose" : ""}`;
-        resultTitle.textContent = playerWon ? "Tu gagnes cette manche !" : aiWon ? "Gloubi gagne cette fois." : "Égalité parfaite !";
-        resultText.textContent = `${playerSquares} carré${playerSquares > 1 ? "s" : ""} pour toi, ${aiSquares} pour Gloubi. ${round === 1 ? "La deuxième manche change le premier joueur." : finalMessage()}`;
-        nextRound.textContent = round === 1 ? "Deuxième manche" : "Retour aux jeux de stratégie";
+        resultTitle.textContent = matchOver
+          ? playerWins >= WINS_TO_TAKE_MATCH ? "Tu remportes le match !" : "Gloubi remporte le match."
+          : playerWon ? "Tu gagnes cette manche !" : aiWon ? "Gloubi gagne cette manche." : "Manche nulle !";
+
+        const roundSummary = `${playerSquares} carré${playerSquares > 1 ? "s" : ""} pour toi, ${aiSquares} pour Gloubi.`;
+        const winSummary = ` Score des victoires : ${playerWins} à ${aiWins}.`;
+        const nextSummary = playerWon || aiWon
+          ? ` La manche ${round + 1} change le premier joueur.`
+          : ` Aucune victoire attribuée : la manche ${round + 1} change le premier joueur.`;
+        const matchSummary = playerWins >= WINS_TO_TAKE_MATCH
+          ? " Tu es le premier à gagner deux manches."
+          : " Gloubi est le premier à gagner deux manches ; il accepte déjà une revanche.";
+        resultText.textContent = roundSummary + winSummary + (matchOver ? matchSummary : nextSummary);
+        statusText.textContent = matchOver
+          ? playerWins >= WINS_TO_TAKE_MATCH ? "Match gagné : bravo !" : "Match terminé : revanche ?"
+          : `Manche ${round} terminée. Score des victoires : ${playerWins} à ${aiWins}.`;
+        nextRound.textContent = matchOver ? "Rejouer le match" : `Jouer la manche ${round + 1}`;
         result.hidden = false;
         result.scrollIntoView({ behavior: "smooth", block: "nearest" });
-      }
-
-      function finalMessage() {
-        if (playerWins > aiWins) return "Tu remportes le duel des deux manches !";
-        if (aiWins > playerWins) return "Gloubi remporte le duel, mais il accepte toujours une revanche.";
-        return draws > 0
-          ? "Le duel se termine à égalité : vos appétits sont parfaitement équilibrés."
-          : "Le duel se termine à égalité.";
       }
 
       function resetBoard() {
         edges.forEach((_, key) => edges.set(key, null));
         boxes.forEach((_, key) => boxes.set(key, null));
-        current = round === 1 ? PLAYER : AI;
+        current = round % 2 === 1 ? PLAYER : AI;
         gameOver = false;
         thinking = false;
         result.hidden = true;
@@ -901,14 +1192,66 @@
       }
 
       nextRound.addEventListener("click", () => {
-        if (round === 2) {
-          window.location.href = CATALOGUE_URL;
-          return;
+        if (matchOver) {
+          round = 1;
+          playerWins = 0;
+          aiWins = 0;
+          matchOver = false;
+        } else {
+          round += 1;
         }
-        round = 2;
         resetBoard();
-        window.scrollTo({ top: 0, behavior: "smooth" });
+        game.scrollIntoView({ behavior: "smooth", block: "start" });
       });
+
+      function fullscreenElement() {
+        return document.fullscreenElement || document.webkitFullscreenElement || null;
+      }
+
+      function gameFullscreenActive() {
+        return fullscreenElement() === game || root.classList.contains("fullscreen-fallback");
+      }
+
+      function syncFullscreenState() {
+        const active = gameFullscreenActive();
+        game.classList.toggle("is-fullscreen", active);
+        document.body.classList.toggle("game-fullscreen", active);
+        fullscreenButton.setAttribute("aria-pressed", String(active));
+        fullscreenButton.setAttribute("aria-label", active ? "Quitter le plein écran" : "Passer en plein écran");
+        fullscreenLabel.textContent = active ? "Quitter" : "Plein écran";
+      }
+
+      async function leaveFullscreen() {
+        const usedFallback = root.classList.contains("fullscreen-fallback");
+        root.classList.remove("fullscreen-fallback");
+        const exit = document.exitFullscreen || document.webkitExitFullscreen;
+        if (fullscreenElement() === game && exit) {
+          try { await exit.call(document); } catch (_) { /* Le repli CSS est déjà quitté. */ }
+        }
+        syncFullscreenState();
+        if (usedFallback) window.scrollTo({ top: fallbackScrollY, behavior: "auto" });
+      }
+
+      async function enterFullscreen() {
+        const request = game.requestFullscreen || game.webkitRequestFullscreen;
+        if (request) {
+          try {
+            await request.call(game);
+            syncFullscreenState();
+            return;
+          } catch (_) { /* iPhone et certaines WebViews passent au repli CSS. */ }
+        }
+
+        fallbackScrollY = window.scrollY;
+        root.classList.add("fullscreen-fallback");
+        window.scrollTo({ top: 0, behavior: "auto" });
+        syncFullscreenState();
+      }
+
+      function toggleFullscreen() {
+        if (gameFullscreenActive()) leaveFullscreen();
+        else enterFullscreen();
+      }
 
       startGame.addEventListener("click", () => {
         started = true;
@@ -921,12 +1264,23 @@
         overlay.hidden = false;
       });
 
+      fullscreenButton.addEventListener("click", toggleFullscreen);
+      document.addEventListener("fullscreenchange", syncFullscreenState);
+      document.addEventListener("webkitfullscreenchange", syncFullscreenState);
+      document.addEventListener("keydown", event => {
+        if (event.key !== "Escape" || !root.classList.contains("fullscreen-fallback")) return;
+        event.preventDefault();
+        event.stopImmediatePropagation();
+        leaveFullscreen();
+      }, true);
+
       overlay.addEventListener("click", event => {
         if (event.target === overlay && started) overlay.hidden = true;
       });
 
       buildBoard();
       render();
+      syncFullscreenState();
     })();
   </script>
 </body>

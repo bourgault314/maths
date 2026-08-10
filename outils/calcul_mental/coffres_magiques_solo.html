@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <title>Coffres magiques — solo | maths&amp;go</title>
-  <meta name="description" content="Dix coffres de calcul mental à ouvrir en retrouvant deux nombres liés par une somme, une différence, un produit ou un quotient.">
+  <meta name="description" content="Dix coffres sur les quatre opérations, avec aide et corrections visuelles pour comprendre la somme, la différence, le produit et le quotient.">
   <link rel="canonical" href="https://mathsgo.re/outils/calcul_mental/coffres_magiques_solo.html">
   <meta name="robots" content="index, follow, max-image-preview:large">
   <link rel="icon" href="/favicon.ico" sizes="48x48">
@@ -12,6 +12,8 @@
   <link rel="icon" type="image/png" sizes="32x32" href="/assets/img/favicon-32.png">
   <link rel="icon" type="image/png" sizes="192x192" href="/assets/img/favicon-192.png">
   <link rel="apple-touch-icon" href="/assets/img/apple-touch-icon.png">
+  <link rel="stylesheet" href="../../assets/css/consentement.css">
+  <script defer src="../../assets/js/consentement.js"></script>
   <style>
     :root {
       --ink: #153451;
@@ -86,6 +88,35 @@
       font-weight: 900;
       text-decoration: none;
     }
+
+    .topbar-actions {
+      display: flex;
+      align-items: center;
+      justify-content: flex-end;
+      gap: 7px;
+    }
+
+    .fullscreen-toggle {
+      min-height: 40px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      padding: 7px 11px;
+      border: 1px solid #b9d0df;
+      border-radius: 999px;
+      color: #17405e;
+      background: rgba(255, 255, 255, .96);
+      font-size: .78rem;
+      font-weight: 950;
+      white-space: nowrap;
+    }
+
+    .fullscreen-toggle-icon { display: grid; place-items: center; }
+    .fullscreen-toggle-icon svg { width: 18px; height: 18px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+    .fullscreen-collapse { display: none; }
+    body.fullscreen-active .fullscreen-expand { display: none; }
+    body.fullscreen-active .fullscreen-collapse { display: block; }
 
     .solo-page {
       width: min(760px, calc(100% - 16px));
@@ -226,6 +257,7 @@
     }
 
     .rules-button,
+    .help-button,
     .reset-button,
     .secondary-button {
       min-height: 42px;
@@ -266,20 +298,31 @@
       text-align: center;
     }
 
-    .learn-card { width: min(680px, 100%); }
+    .learn-card {
+      width: min(840px, 100%);
+      display: grid;
+      grid-template-rows: auto auto auto minmax(0, 1fr) auto;
+      overflow: hidden;
+    }
     .dialog-icon { font-size: 2.6rem; }
     .learn-card .dialog-icon { font-size: 1.55rem; font-weight: 900; letter-spacing: .12em; }
     .dialog-card h2 { margin: 5px 0 10px; color: #143e62; font-size: 1.65rem; }
     .dialog-card > p { margin: 8px 0; color: #49677b; line-height: 1.42; }
 
     .operation-grid {
+      min-height: 0;
       display: grid;
       grid-template-columns: 1fr 1fr;
       gap: 9px;
       margin: 14px 0;
+      overflow-y: auto;
+      overscroll-behavior: contain;
     }
 
     .operation-grid article {
+      display: grid;
+      align-content: start;
+      gap: 7px;
       padding: 12px;
       border: 2px solid #d7e4ec;
       border-radius: 14px;
@@ -287,9 +330,241 @@
       text-align: left;
     }
 
-    .operation-grid h3 { margin: 0 0 4px; color: var(--blue); }
+    .operation-grid h3 { margin: 0; color: var(--blue); }
     .operation-grid p { margin: 0; color: #49677b; line-height: 1.4; }
-    .operation-grid strong { display: block; margin-top: 6px; font-size: 1.18rem; }
+    .operation-grid strong { display: block; font-size: 1.08rem; text-align: center; }
+
+    .operation-picture {
+      min-height: 82px;
+      display: grid;
+      place-items: center;
+      gap: 5px;
+      padding: 9px;
+      border-radius: 12px;
+      background: #fff;
+    }
+
+    .visual-equation {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 7px;
+    }
+
+    .visual-sign {
+      color: #607a8d;
+      font-size: 1.15rem;
+      font-weight: 950;
+    }
+
+    .dot-row,
+    .dot-array {
+      --dot-color: #0b73c8;
+      display: grid;
+      grid-template-columns: repeat(var(--dot-columns), 11px);
+      gap: 5px;
+      justify-content: center;
+    }
+
+    .dot-row.coral-dots { --dot-color: #ef5b45; }
+    .dot-row.joined-dots { --dot-color: #087a71; }
+    .dot-row i,
+    .dot-array i,
+    .quotient-pair i {
+      width: 11px;
+      height: 11px;
+      border-radius: 50%;
+      background: var(--dot-color);
+      box-shadow: inset 0 -1px 0 rgba(0, 0, 0, .18);
+    }
+
+    .difference-picture { align-content: center; }
+    .difference-lines {
+      display: grid;
+      gap: 8px;
+      padding: 7px 10px;
+      border-left: 2px solid #9bb5c6;
+    }
+    .difference-lines .dot-row { --dot-columns: 5; justify-content: start; }
+    .difference-lines .unmatched { --dot-color: #e29b0b; background: var(--dot-color); }
+    .difference-caption { color: #8a5b00; font-size: .72rem; font-weight: 900; }
+
+    .dot-array {
+      --dot-color: #6d3ac7;
+      --dot-columns: 4;
+      padding: 7px 10px;
+      border: 2px solid #d8c7f2;
+      border-radius: 10px;
+      background: #f8f2ff;
+    }
+
+    .product-note { color: #69419b; font-size: .73rem; font-weight: 900; text-align: center; }
+
+    .dual-learning-views,
+    .quotient-interpretations {
+      width: 100%;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 7px;
+    }
+
+    .mini-learning-view {
+      min-width: 0;
+      display: grid;
+      align-content: center;
+      justify-items: center;
+      gap: 5px;
+      padding: 7px 5px;
+      border: 1px solid #d8e5ed;
+      border-radius: 10px;
+      background: #fbfdff;
+      color: #48677b;
+      font-size: .68rem;
+      font-weight: 900;
+      line-height: 1.25;
+      text-align: center;
+    }
+
+    .quotient-groups {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 5px;
+    }
+
+    .quotient-pair {
+      --dot-color: #087a71;
+      display: flex;
+      gap: 4px;
+      padding: 6px;
+      border: 2px solid #a9ddd5;
+      border-radius: 999px;
+      background: #ebfaf7;
+    }
+
+    .quotient-pair.four-points { border-radius: 12px; }
+
+    .help-card,
+    .correction-card { width: min(620px, 100%); }
+
+    .learning-panel {
+      display: grid;
+      gap: 10px;
+      margin: 14px 0;
+      padding: 13px;
+      border: 2px solid #cfe1ec;
+      border-radius: 16px;
+      background: #f8fcff;
+    }
+
+    .learning-panel h3,
+    .learning-panel p { margin: 0; }
+
+    .learning-panel h3 { color: #0755b8; font-size: 1.08rem; }
+    .learning-copy { color: #405f74; font-weight: 750; line-height: 1.4; }
+
+    .learning-demo {
+      --demo-dot: 10px;
+      display: grid;
+      place-items: center;
+      gap: 9px;
+      min-height: 94px;
+      padding: 11px;
+      border-radius: 13px;
+      background: #fff;
+    }
+
+    .demo-equation,
+    .demo-dot-row,
+    .demo-groups {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-wrap: wrap;
+      gap: 5px;
+    }
+
+    .demo-dot-row,
+    .demo-dot-grid { --demo-color: #0b73c8; }
+    .demo-dot-row.coral { --demo-color: #ef5b45; }
+    .demo-dot-row.joined { --demo-color: #087a71; }
+    .demo-dot-row .demo-dot.unmatched { --demo-color: #e29b0b; }
+
+    .demo-dot,
+    .demo-dot-grid .demo-dot,
+    .demo-group .demo-dot {
+      width: var(--demo-dot);
+      height: var(--demo-dot);
+      flex: 0 0 var(--demo-dot);
+      border-radius: 50%;
+      background: var(--demo-color, #087a71);
+      box-shadow: inset 0 -1px 0 rgba(0, 0, 0, .18);
+    }
+
+    .demo-dot-grid {
+      display: grid;
+      grid-template-columns: repeat(var(--demo-columns), var(--demo-dot));
+      gap: 4px;
+      padding: 8px;
+      border: 2px solid #d8c7f2;
+      border-radius: 10px;
+      background: #f8f2ff;
+    }
+
+    .demo-comparison {
+      display: grid;
+      justify-items: start;
+      gap: 7px;
+      padding-left: 8px;
+      border-left: 2px solid #9bb5c6;
+    }
+
+    .demo-group {
+      --demo-color: #087a71;
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 3px;
+      max-width: 90px;
+      padding: 6px;
+      border: 2px solid #a9ddd5;
+      border-radius: 12px;
+      background: #ebfaf7;
+    }
+
+    .demo-interpretations {
+      width: 100%;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+    }
+
+    .demo-interpretation {
+      min-width: 0;
+      display: grid;
+      align-content: start;
+      gap: 7px;
+      padding: 8px;
+      border: 1px solid #d2e2eb;
+      border-radius: 11px;
+      color: #405f74;
+      font-size: .75rem;
+      font-weight: 850;
+      line-height: 1.3;
+    }
+
+    .demo-caption { color: #405f74; font-size: .8rem; font-weight: 900; line-height: 1.35; }
+    .correction-choice { color: #7b3e17 !important; font-size: 1.02rem; font-weight: 900; }
+    .correction-solution { color: #075f52 !important; font-size: 1.08rem; font-weight: 950; }
+
+    .dialog-actions {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 8px;
+    }
+
+    .dialog-actions .primary-button { flex-grow: 1; }
 
     .lesson-actions,
     .result-actions {
@@ -313,10 +588,72 @@
 
     .result-score { color: #143e62 !important; font-size: 1.2rem; font-weight: 950; }
 
+    .site-footer {
+      width: min(100%, 960px);
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: center;
+      gap: 5px 9px;
+      margin: 0 auto;
+      padding: 13px 12px calc(13px + env(safe-area-inset-bottom));
+      color: #5b7283;
+      font-size: .78rem;
+      text-align: center;
+    }
+
+    .site-footer a,
+    .site-footer button {
+      padding: 2px;
+      border: 0;
+      color: #315d7a;
+      background: none;
+      font: inherit;
+      font-weight: 850;
+      text-decoration: underline;
+      text-underline-offset: 2px;
+    }
+
+    html.fullscreen-fallback {
+      width: 100%;
+      height: 100%;
+      overflow: hidden;
+    }
+
+    html.fullscreen-fallback body {
+      position: fixed;
+      inset: 0;
+      width: 100%;
+      height: 100vh;
+      height: 100dvh;
+      min-height: 100dvh;
+      overflow: auto;
+      overscroll-behavior: none;
+    }
+
+    body.fullscreen-active .site-footer { display: none; }
+
+    body.fullscreen-active .fullscreen-toggle {
+      position: fixed;
+      z-index: 60;
+      top: max(7px, env(safe-area-inset-top));
+      right: max(8px, env(safe-area-inset-right));
+      border-color: #7899ae;
+      background: #fff;
+      box-shadow: 0 5px 18px rgba(21, 52, 81, .2);
+    }
+
+    body.fullscreen-active .solo-page {
+      min-height: calc(100dvh - 58px);
+      margin-bottom: 0;
+    }
+
     @media (max-width: 520px) {
       .topbar { min-height: 46px; padding-block: 4px; }
-      .brand img { width: 98px; }
+      .brand img { width: 84px; }
+      .topbar-actions { gap: 4px; }
       .back-link { min-height: 36px; padding: 6px 10px; font-size: .73rem; }
+      .fullscreen-toggle { min-height: 36px; padding: 6px 8px; font-size: .72rem; }
       .solo-page { width: 100%; min-height: calc(100svh - 50px); padding: 14px 8px 20px; border-inline: 0; border-radius: 20px; }
       .solo-heading h1 { font-size: 1.45rem; }
       .solo-heading p:last-child { font-size: .8rem; }
@@ -326,6 +663,18 @@
       .rune-board { gap: 6px; padding: 8px; }
       .operation-grid { grid-template-columns: 1fr; }
       .dialog-card { padding: 21px 17px; }
+      .learning-demo { --demo-dot: 9px; padding-inline: 7px; }
+    }
+
+    @media (max-width: 400px) {
+      .back-link-copy { display: none; }
+    }
+
+    @media (max-width: 350px) {
+      .dual-learning-views,
+      .quotient-interpretations,
+      .demo-interpretations { grid-template-columns: 1fr; }
+      .learning-demo { --demo-dot: 8px; }
     }
 
     @media (prefers-reduced-motion: reduce) {
@@ -342,7 +691,10 @@
 <body>
   <header class="topbar">
     <a class="brand" href="/" aria-label="Accueil maths&go"><img src="/assets/img/mathsgo-logo.png" alt="maths&go" width="1338" height="622"></a>
-    <a class="back-link" href="../index.html?domain=nombres-calculs&amp;notion=calcul-mental">← Calcul mental</a>
+    <div class="topbar-actions">
+      <a class="back-link" href="../index.html?domain=nombres-calculs&amp;notion=calcul-mental" aria-label="Retour au calcul mental"><span aria-hidden="true">←</span> <span class="back-link-copy">Calcul mental</span></a>
+      <button class="fullscreen-toggle" type="button" data-fullscreen-toggle aria-pressed="false" aria-label="Passer en plein écran"><span class="fullscreen-toggle-icon" data-fullscreen-icon aria-hidden="true"><svg viewBox="0 0 24 24" focusable="false"><path class="fullscreen-expand" d="M8 3H3v5M16 3h5v5M8 21H3v-5M16 21h5v-5"/><path class="fullscreen-collapse" d="M3 8h5V3M21 8h-5V3M3 16h5v5M21 16h-5v5"/></svg></span><span data-fullscreen-label>Plein écran</span></button>
+    </div>
   </header>
 
   <main class="solo-page">
@@ -359,6 +711,7 @@
     <div class="challenge">Ouvre le coffre avec <span id="challenge-text">deux cases voisines</span></div>
     <div id="board" class="rune-board" role="grid" aria-label="Seize cases numérotées"></div>
     <div class="solo-toolbar">
+      <button id="help-button" class="help-button" type="button">Aide</button>
       <button id="show-lesson" class="rules-button" type="button">Mémo</button>
       <button id="reset-button" class="reset-button" type="button">Nouvelle partie</button>
     </div>
@@ -367,13 +720,72 @@
   <section id="lesson" class="overlay" role="dialog" aria-modal="true" aria-labelledby="lesson-title">
     <div class="dialog-card learn-card">
       <div class="dialog-icon" aria-hidden="true">+ − × ÷</div>
-      <h2 id="lesson-title">Quatre mots à connaître</h2>
+      <h2 id="lesson-title" tabindex="-1">Quatre mots à connaître</h2>
       <p>À chaque coffre, choisis deux cases qui se touchent par un côté.</p>
       <div class="operation-grid">
-        <article><h3>Somme</h3><p>Le résultat d’une addition.</p><strong>8 + 5 = 13</strong></article>
-        <article><h3>Différence</h3><p>Le résultat du plus grand moins le petit.</p><strong>13 − 5 = 8</strong></article>
-        <article><h3>Produit</h3><p>Le résultat d’une multiplication.</p><strong>4 × 6 = 24</strong></article>
-        <article><h3>Quotient</h3><p>Le résultat du plus grand divisé par le petit.</p><strong>24 ÷ 6 = 4</strong></article>
+        <article>
+          <h3>Somme : on réunit</h3>
+          <div class="operation-picture" role="img" aria-label="Trois points et deux points sont réunis : cinq points en tout">
+            <div class="visual-equation" aria-hidden="true">
+              <span class="dot-row" style="--dot-columns:3"><i></i><i></i><i></i></span><span class="visual-sign">+</span>
+              <span class="dot-row coral-dots" style="--dot-columns:2"><i></i><i></i></span><span class="visual-sign">→</span>
+              <span class="dot-row joined-dots" style="--dot-columns:5"><i></i><i></i><i></i><i></i><i></i></span>
+            </div>
+          </div>
+          <p>La somme est le résultat d’une addition : on réunit les valeurs des deux cases voisines et on compte tout.</p>
+          <strong>3 + 2 = 5</strong>
+        </article>
+        <article>
+          <h3>Différence : on compare</h3>
+          <div class="operation-picture difference-picture" role="img" aria-label="Cinq points sont alignés avec deux points : trois points restent sans paire, l’écart vaut trois">
+            <div class="difference-lines" aria-hidden="true">
+              <span class="dot-row"><i></i><i></i><i class="unmatched"></i><i class="unmatched"></i><i class="unmatched"></i></span>
+              <span class="dot-row coral-dots"><i></i><i></i></span>
+            </div>
+            <span class="difference-caption">3 points sans paire : c’est l’écart.</span>
+          </div>
+          <p>La différence est le résultat d’une soustraction. Dans ce jeu, on retire le plus petit nombre du plus grand : l’ordre de sélection des cases ne change pas l’écart.</p>
+          <strong>5 − 2 = 3</strong>
+        </article>
+        <article>
+          <h3>Produit : des rangées égales</h3>
+          <div class="operation-picture" role="group" aria-label="Deux rectangles orientés montrent que trois fois quatre et quatre fois trois donnent tous les deux douze">
+            <div class="dual-learning-views">
+              <div class="mini-learning-view" role="img" aria-label="Trois rangées de quatre points font douze points">
+                <span class="dot-array" style="--dot-columns:4" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></span>
+                <span>3 rangées de 4</span>
+              </div>
+              <div class="mini-learning-view" role="img" aria-label="Quatre rangées de trois points font douze points">
+                <span class="dot-array" style="--dot-columns:3" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></span>
+                <span>4 rangées de 3</span>
+              </div>
+            </div>
+          </div>
+          <p>Le produit est le résultat d’une multiplication. Les deux nombres donnent les dimensions d’un rectangle de points. En tournant le rectangle, le total ne change pas.</p>
+          <strong>3 × 4 = 12 ; 4 × 3 = 12 aussi</strong>
+        </article>
+        <article>
+          <h3>Quotient : grouper ou partager</h3>
+          <div class="operation-picture" role="group" aria-label="Deux façons de comprendre huit divisé par deux">
+            <div class="quotient-interpretations">
+              <div class="mini-learning-view" role="img" aria-label="Huit points forment quatre groupes de deux points">
+                <div class="quotient-groups" aria-hidden="true">
+                  <span class="quotient-pair"><i></i><i></i></span><span class="quotient-pair"><i></i><i></i></span><span class="quotient-pair"><i></i><i></i></span><span class="quotient-pair"><i></i><i></i></span>
+                </div>
+                <span>4 groupes de 2</span>
+              </div>
+              <div class="mini-learning-view" role="img" aria-label="Huit points sont partagés en deux groupes de quatre points">
+                <div class="quotient-groups" aria-hidden="true">
+                  <span class="quotient-pair four-points"><i></i><i></i><i></i><i></i></span><span class="quotient-pair four-points"><i></i><i></i><i></i><i></i></span>
+                </div>
+                <span>2 groupes de 4</span>
+              </div>
+            </div>
+          </div>
+          <p>Le quotient est le résultat d’une division. Dans ce jeu, la division doit tomber juste et on divise le plus grand nombre par le plus petit. La division peut chercher combien de groupes on peut faire, ou combien il y aura dans chaque groupe.</p>
+          <strong>8 ÷ 2 : combien de groupes de 2 dans 8 ? 4</strong>
+          <strong>8 ÷ 2 : partager 8 en 2 groupes : 4 dans chaque groupe</strong>
+        </article>
       </div>
       <div class="lesson-actions">
         <button id="start-game" class="primary-button" type="button">J’ai compris, jouer</button>
@@ -382,10 +794,38 @@
     </div>
   </section>
 
+  <section id="help-dialog" class="overlay" hidden role="dialog" aria-modal="true" aria-labelledby="help-title">
+    <div class="dialog-card help-card">
+      <div class="dialog-icon" aria-hidden="true">?</div>
+      <h2 id="help-title" tabindex="-1">Un indice sur l’opération</h2>
+      <p id="help-copy" class="learning-copy"></p>
+      <div id="help-visual" class="learning-panel"></div>
+      <p>Observe le sens de l’opération, puis cherche encore parmi les cases voisines.</p>
+      <div class="dialog-actions">
+        <button id="close-help" class="reset-button" type="button">Retour au plateau</button>
+        <button id="show-solution" class="primary-button" type="button">Montrer une solution</button>
+      </div>
+    </div>
+  </section>
+
+  <section id="correction-dialog" class="overlay" hidden role="dialog" aria-modal="true" aria-labelledby="correction-title">
+    <div class="dialog-card correction-card">
+      <div class="dialog-icon" aria-hidden="true">✓</div>
+      <h2 id="correction-title" tabindex="-1">Regardons une solution</h2>
+      <p id="correction-choice" class="correction-choice"></p>
+      <p id="correction-solution" class="correction-solution"></p>
+      <div id="correction-visual" class="learning-panel"></div>
+      <p id="correction-copy" class="learning-copy"></p>
+      <div class="dialog-actions">
+        <button id="close-correction" class="primary-button" type="button">Réessayer sur un nouveau plateau</button>
+      </div>
+    </div>
+  </section>
+
   <section id="result" class="overlay" hidden role="dialog" aria-modal="true" aria-labelledby="result-title">
     <div class="dialog-card">
       <div class="dialog-icon" aria-hidden="true">★</div>
-      <h2 id="result-title">Trésor ouvert !</h2>
+      <h2 id="result-title" tabindex="-1">Trésor ouvert !</h2>
       <p>Tu as utilisé les quatre opérations.</p>
       <p id="result-score" class="result-score"></p>
       <div class="result-actions">
@@ -394,6 +834,14 @@
       </div>
     </div>
   </section>
+
+  <footer class="site-footer">
+    <span>Gwenaël Bourgault</span><span aria-hidden="true">·</span>
+    <a href="mailto:gwenael@mathsgo.re?subject=Contact%20depuis%20mathsgo.re">Me contacter</a><span aria-hidden="true">·</span>
+    <a href="../../mentions-legales.html">Mentions légales</a><span aria-hidden="true">·</span>
+    <a href="../../confidentialite.html">Confidentialité</a><span aria-hidden="true">·</span>
+    <button type="button" data-mathsgo-consent-open onclick="window.mathsgoConsentement &amp;&amp; window.mathsgoConsentement.ouvrir()">Gérer mes cookies</button>
+  </footer>
 
   <script>
     (() => {
@@ -408,6 +856,15 @@
       const challenge = document.querySelector("#challenge-text");
       const counter = document.querySelector("#key-count");
       const lesson = document.querySelector("#lesson");
+      const helpDialog = document.querySelector("#help-dialog");
+      const correctionDialog = document.querySelector("#correction-dialog");
+      const helpButton = document.querySelector("#help-button");
+      const helpCopy = document.querySelector("#help-copy");
+      const helpVisual = document.querySelector("#help-visual");
+      const correctionChoice = document.querySelector("#correction-choice");
+      const correctionSolution = document.querySelector("#correction-solution");
+      const correctionVisual = document.querySelector("#correction-visual");
+      const correctionCopy = document.querySelector("#correction-copy");
       const result = document.querySelector("#result");
       let values = [];
       let modes = [];
@@ -417,6 +874,146 @@
       let firstSelection = null;
       let locked = false;
       let pendingTimer = null;
+      let boardId = 0;
+
+      function createModalController() {
+        const focusableSelector = [
+          "a[href]",
+          "button:not([disabled])",
+          "input:not([disabled])",
+          "select:not([disabled])",
+          "textarea:not([disabled])",
+          "[tabindex]:not([tabindex=\"-1\"])"
+        ].join(",");
+        let activeDialog = null;
+        let activeTrigger = null;
+        let activeEscapeAction = null;
+
+        const focusableNodes = dialog => [...dialog.querySelectorAll(focusableSelector)]
+          .filter(node => !node.hidden && node.getClientRects().length && getComputedStyle(node).visibility !== "hidden");
+
+        const resolveNode = (dialog, target) => {
+          if (typeof target === "function") return target();
+          if (typeof target === "string") return dialog.querySelector(target);
+          return target;
+        };
+
+        const focusNode = (node, preventScroll = false) => {
+          if (node instanceof HTMLElement && node.isConnected && !node.closest("[hidden]")) node.focus({ preventScroll });
+        };
+
+        const close = (dialog, { restoreFocus = true } = {}) => {
+          if (activeDialog !== dialog) {
+            dialog.hidden = true;
+            return null;
+          }
+          const trigger = activeTrigger;
+          dialog.hidden = true;
+          activeDialog = null;
+          activeTrigger = null;
+          activeEscapeAction = null;
+          if (restoreFocus) window.requestAnimationFrame(() => focusNode(trigger, true));
+          return trigger;
+        };
+
+        const open = (dialog, { trigger = document.activeElement, initialFocus, onEscape = null } = {}) => {
+          if (activeDialog && activeDialog !== dialog) close(activeDialog, { restoreFocus: false });
+          activeDialog = dialog;
+          activeTrigger = trigger instanceof HTMLElement && trigger !== document.body && !dialog.contains(trigger) ? trigger : null;
+          activeEscapeAction = onEscape;
+          dialog.hidden = false;
+          window.requestAnimationFrame(() => {
+            if (activeDialog !== dialog) return;
+            const target = resolveNode(dialog, initialFocus) || focusableNodes(dialog)[0] || dialog;
+            if (target === dialog && !dialog.hasAttribute("tabindex")) dialog.tabIndex = -1;
+            focusNode(target);
+          });
+        };
+
+        document.addEventListener("keydown", event => {
+          if (!activeDialog || activeDialog.hidden) return;
+          if (event.key === "Escape") {
+            event.preventDefault();
+            event.stopImmediatePropagation();
+            if (typeof activeEscapeAction === "function") activeEscapeAction();
+            return;
+          }
+          if (event.key !== "Tab") return;
+          const nodes = focusableNodes(activeDialog);
+          if (!nodes.length) {
+            event.preventDefault();
+            focusNode(activeDialog);
+            return;
+          }
+          const first = nodes[0];
+          const last = nodes[nodes.length - 1];
+          const current = document.activeElement;
+          const outsideCycle = !nodes.includes(current);
+          if (event.shiftKey && (current === first || outsideCycle)) {
+            event.preventDefault();
+            focusNode(last);
+          } else if (!event.shiftKey && (current === last || outsideCycle)) {
+            event.preventDefault();
+            focusNode(first);
+          }
+        }, true);
+
+        return { open, close, trigger: dialog => activeDialog === dialog ? activeTrigger : null };
+      }
+
+      const dialogs = createModalController();
+
+      function setupFullscreen() {
+        const button = document.querySelector("[data-fullscreen-toggle]");
+        const root = document.documentElement;
+        const label = button?.querySelector("[data-fullscreen-label]");
+        const icon = button?.querySelector("[data-fullscreen-icon]");
+        if (!button || !label || !icon) return;
+
+        const nativeFullscreenElement = () => document.fullscreenElement || document.webkitFullscreenElement;
+        const syncFullscreenControl = () => {
+          const active = Boolean(nativeFullscreenElement()) || root.classList.contains("fullscreen-fallback");
+          document.body.classList.toggle("fullscreen-active", active);
+          button.setAttribute("aria-pressed", String(active));
+          button.setAttribute("aria-label", active ? "Quitter le plein écran" : "Passer en plein écran");
+          label.textContent = active ? "Quitter le plein écran" : "Plein écran";
+        };
+
+        const leaveFullscreen = async () => {
+          root.classList.remove("fullscreen-fallback");
+          const exit = document.exitFullscreen || document.webkitExitFullscreen;
+          if (nativeFullscreenElement() && exit) {
+            try { await exit.call(document); } catch (_) { /* Le repli CSS est déjà quitté. */ }
+          }
+          syncFullscreenControl();
+        };
+
+        const enterFullscreen = async () => {
+          const request = root.requestFullscreen || root.webkitRequestFullscreen;
+          if (request) {
+            try {
+              await request.call(root);
+              syncFullscreenControl();
+              return;
+            } catch (_) { /* iPhone et WebViews passent au repli CSS. */ }
+          }
+          root.classList.add("fullscreen-fallback");
+          window.scrollTo({ top: 0, behavior: "auto" });
+          syncFullscreenControl();
+        };
+
+        button.addEventListener("click", () => {
+          const active = Boolean(nativeFullscreenElement()) || root.classList.contains("fullscreen-fallback");
+          if (active) leaveFullscreen();
+          else enterFullscreen();
+        });
+        document.addEventListener("fullscreenchange", syncFullscreenControl);
+        document.addEventListener("webkitfullscreenchange", syncFullscreenControl);
+        document.addEventListener("keydown", event => {
+          if (event.key === "Escape" && root.classList.contains("fullscreen-fallback")) leaveFullscreen();
+        });
+        syncFullscreenControl();
+      }
 
       function row(position) { return Math.floor(position / SIZE); }
       function column(position) { return position % SIZE; }
@@ -438,6 +1035,21 @@
         const right = nextMode === "difference" || nextMode === "quotient" ? low : second;
         if (nextMode === "quotient" && high % low !== 0) return `${high} n’est pas divisible par ${low}`;
         return `${left} ${symbols[nextMode]} ${right} = ${calculate(nextMode, first, second)}`;
+      }
+
+      function operationModel(nextMode, first, second) {
+        const high = Math.max(first, second);
+        const low = Math.min(first, second);
+        if (nextMode === "sum") return { first, second, total: first + second };
+        if (nextMode === "difference") return { high, low, difference: high - low };
+        if (nextMode === "product") return { rows: first, columns: second, total: first * second };
+        return {
+          total: high,
+          groupSize: low,
+          groupCount: high / low,
+          shareGroups: low,
+          each: high / low
+        };
       }
 
       function randomInteger(minimum, maximum) {
@@ -462,6 +1074,20 @@
         return pairs;
       }
 
+      function findSolutionPair(nextMode, nextTarget, nextValues = values) {
+        for (const positions of neighborPairs()) {
+          const first = nextValues[positions[0]];
+          const second = nextValues[positions[1]];
+          const high = Math.max(first, second);
+          const low = Math.min(first, second);
+          const exact = nextMode !== "quotient" || high % low === 0;
+          if (exact && calculate(nextMode, first, second) === nextTarget) {
+            return { positions, pair: [first, second] };
+          }
+        }
+        return null;
+      }
+
       function pairFor(nextMode) {
         if (nextMode === "sum" || nextMode === "product") return [randomInteger(2, 9), randomInteger(2, 9)];
         if (nextMode === "difference") {
@@ -472,6 +1098,123 @@
         const divisor = randomInteger(2, 6);
         const quotient = randomInteger(2, 6);
         return [divisor * quotient, divisor];
+      }
+
+      const learningNotes = {
+        sum: {
+          title: "La somme réunit deux quantités",
+          help: "Imagine les points des deux cases réunis dans une seule collection.",
+          correction: "La somme est le résultat d’une addition : on réunit les deux quantités et on compte tout.",
+          example: [3, 2]
+        },
+        difference: {
+          title: "La différence mesure un écart",
+          help: "Aligne les deux quantités : les points qui restent sans paire donnent l’écart.",
+          correction: "La différence est le résultat d’une soustraction. Dans ce jeu, on retire le plus petit nombre du plus grand.",
+          example: [5, 2]
+        },
+        product: {
+          title: "Le produit forme un rectangle",
+          help: "Utilise un nombre pour les rangées et l’autre pour les points de chaque rangée.",
+          correction: "Le produit est le résultat d’une multiplication : les deux nombres donnent les dimensions du réseau de points.",
+          example: [3, 4]
+        },
+        quotient: {
+          title: "Le quotient sert à grouper ou à partager",
+          help: "Tu peux chercher combien de groupes égaux on forme, ou combien il y a dans chaque groupe.",
+          correction: "Le quotient est le résultat d’une division. Dans ce jeu, la division doit tomber juste et on divise le plus grand nombre par le plus petit.",
+          example: [8, 2]
+        }
+      };
+
+      function makeElement(tagName, className = "", text = "") {
+        const node = document.createElement(tagName);
+        if (className) node.className = className;
+        if (text) node.textContent = text;
+        return node;
+      }
+
+      function makeDots(count, className = "demo-dot-row", unmatchedFrom = Number.POSITIVE_INFINITY) {
+        const rowNode = makeElement("span", className);
+        for (let index = 0; index < count; index += 1) {
+          const dot = makeElement("i", `demo-dot${index >= unmatchedFrom ? " unmatched" : ""}`);
+          dot.setAttribute("aria-hidden", "true");
+          rowNode.append(dot);
+        }
+        return rowNode;
+      }
+
+      function makeGroups(groupCount, groupSize) {
+        const groups = makeElement("div", "demo-groups");
+        for (let groupIndex = 0; groupIndex < groupCount; groupIndex += 1) {
+          const group = makeElement("span", "demo-group");
+          for (let dotIndex = 0; dotIndex < groupSize; dotIndex += 1) {
+            const dot = makeElement("i", "demo-dot");
+            dot.setAttribute("aria-hidden", "true");
+            group.append(dot);
+          }
+          groups.append(group);
+        }
+        return groups;
+      }
+
+      function makeInterpretation(label, groups) {
+        const view = makeElement("div", "demo-interpretation");
+        view.append(makeElement("span", "demo-caption", label), groups);
+        return view;
+      }
+
+      function createOperationVisual(nextMode, first, second) {
+        const model = operationModel(nextMode, first, second);
+        const demo = makeElement("div", "learning-demo");
+        demo.setAttribute("role", "img");
+
+        if (nextMode === "sum") {
+          demo.setAttribute("aria-label", `${model.first} points et ${model.second} points sont réunis : ${model.total} points en tout.`);
+          const equation = makeElement("div", "demo-equation");
+          equation.append(
+            makeDots(model.first),
+            makeElement("span", "visual-sign", "+"),
+            makeDots(model.second, "demo-dot-row coral"),
+            makeElement("span", "visual-sign", "→"),
+            makeDots(model.total, "demo-dot-row joined")
+          );
+          demo.append(equation, makeElement("span", "demo-caption", `${model.first} + ${model.second} = ${model.total} : on réunit et on compte tout.`));
+        } else if (nextMode === "difference") {
+          demo.setAttribute("aria-label", `${model.high} points sont alignés avec ${model.low} points. ${model.difference} points restent sans paire : l’écart vaut ${model.difference}.`);
+          const comparison = makeElement("div", "demo-comparison");
+          comparison.append(
+            makeDots(model.high, "demo-dot-row", model.low),
+            makeDots(model.low, "demo-dot-row coral")
+          );
+          demo.append(comparison, makeElement("span", "demo-caption", `${model.high} − ${model.low} = ${model.difference} : ${model.difference} point${model.difference > 1 ? "s" : ""} sans paire.`));
+        } else if (nextMode === "product") {
+          demo.setAttribute("aria-label", `${model.rows} rangées de ${model.columns} points font ${model.total} points.`);
+          const grid = makeElement("div", "demo-dot-grid");
+          grid.style.setProperty("--demo-columns", String(model.columns));
+          for (let index = 0; index < model.total; index += 1) {
+            const dot = makeElement("i", "demo-dot");
+            dot.setAttribute("aria-hidden", "true");
+            grid.append(dot);
+          }
+          demo.append(grid, makeElement("span", "demo-caption", `${model.rows} rangées de ${model.columns} : ${model.rows} × ${model.columns} = ${model.total}.`));
+        } else {
+          demo.setAttribute("aria-label", `${model.total} divisé par ${model.groupSize} vaut ${model.groupCount}. On peut former ${model.groupCount} groupes de ${model.groupSize}, ou partager en ${model.shareGroups} groupes avec ${model.each} dans chacun.`);
+          const views = makeElement("div", "demo-interpretations");
+          views.append(
+            makeInterpretation(`Combien de groupes de ${model.groupSize} dans ${model.total} ? ${model.groupCount}.`, makeGroups(model.groupCount, model.groupSize)),
+            makeInterpretation(`Partager ${model.total} en ${model.shareGroups} groupes : ${model.each} dans chacun.`, makeGroups(model.shareGroups, model.each))
+          );
+          demo.append(views, makeElement("span", "demo-caption", `${model.total} ÷ ${model.groupSize} = ${model.groupCount}.`));
+        }
+        return demo;
+      }
+
+      function renderLearningPanel(panel, nextMode, first, second) {
+        panel.replaceChildren(
+          makeElement("h3", "", learningNotes[nextMode].title),
+          createOperationVisual(nextMode, first, second)
+        );
       }
 
       function renderBoard() {
@@ -492,8 +1235,8 @@
         counter.textContent = `${keys} / ${GOAL} clés`;
       }
 
-      function makeChallenge() {
-        mode = modes[keys];
+      function makeChallenge(nextMode = modes[keys]) {
+        mode = nextMode;
         values = Array.from({ length: SIZE * SIZE }, () => randomInteger(1, 12));
         const pairs = neighborPairs();
         const pair = pairs[randomInteger(0, pairs.length - 1)];
@@ -501,6 +1244,7 @@
         values[pair[0]] = solution[0];
         values[pair[1]] = solution[1];
         target = calculate(mode, solution[0], solution[1]);
+        boardId += 1;
         firstSelection = null;
         locked = false;
         challenge.innerHTML = `une <b>${operationLabels[mode]}</b> de <strong>${target}</strong>`;
@@ -514,10 +1258,67 @@
         firstSelection = null;
       }
 
+      function closeHelp() {
+        dialogs.close(helpDialog);
+        locked = false;
+        status.className = "status-line";
+        status.textContent = "Choisis deux cases qui se touchent par un côté.";
+      }
+
+      function openHelp() {
+        if (locked || !values.length) return;
+        clearSelection();
+        locked = true;
+        const example = learningNotes[mode].example;
+        helpCopy.textContent = learningNotes[mode].help;
+        renderLearningPanel(helpVisual, mode, example[0], example[1]);
+        dialogs.open(helpDialog, {
+          trigger: document.activeElement,
+          initialFocus: "#help-title",
+          onEscape: closeHelp
+        });
+      }
+
+      function retryAfterLearning() {
+        const retryMode = mode;
+        const trigger = dialogs.trigger(correctionDialog);
+        dialogs.close(correctionDialog, { restoreFocus: false });
+        makeChallenge(retryMode);
+        focusAfterReset(trigger);
+      }
+
+      function openCorrection({ chosenPair = null, trigger = document.activeElement } = {}) {
+        const found = findSolutionPair(mode, target);
+        if (!found) {
+          makeChallenge(mode);
+          focusAfterReset(trigger);
+          return;
+        }
+        const [solutionFirst, solutionSecond] = found.pair;
+        correctionChoice.textContent = chosenPair
+          ? `Ton choix : ${expression(mode, chosenPair[0], chosenPair[1])}. Ce calcul ne donne pas ${target}.`
+          : "Tu as demandé à voir une solution : observons une vraie paire voisine du plateau.";
+        correctionSolution.textContent = `Une paire voisine qui ouvre ce coffre est ${solutionFirst} et ${solutionSecond}, car ${expression(mode, solutionFirst, solutionSecond)}.`;
+        correctionCopy.textContent = `${learningNotes[mode].correction} Tu vas maintenant essayer la même opération sur un nouveau plateau, sans recevoir de clé.`;
+        renderLearningPanel(correctionVisual, mode, solutionFirst, solutionSecond);
+        locked = true;
+        dialogs.open(correctionDialog, {
+          trigger,
+          initialFocus: "#correction-title",
+          onEscape: retryAfterLearning
+        });
+      }
+
+      function showSolution() {
+        const trigger = dialogs.trigger(helpDialog) || helpButton;
+        dialogs.close(helpDialog, { restoreFocus: false });
+        openCorrection({ trigger });
+      }
+
       function complete() {
         locked = true;
         document.querySelector("#result-score").textContent = `${GOAL} clés trouvées`;
-        result.hidden = false;
+        dialogs.open(result, { initialFocus: "#play-again" });
       }
 
       function resolve(secondPosition) {
@@ -542,12 +1343,7 @@
           updateCounter();
           pendingTimer = window.setTimeout(() => keys === GOAL ? complete() : makeChallenge(), 750);
         } else {
-          pendingTimer = window.setTimeout(() => {
-            clearSelection();
-            locked = false;
-            status.className = "status-line";
-            status.textContent = "Cherche une autre paire de cases voisines.";
-          }, 750);
+          openCorrection({ chosenPair: [firstValue, secondValue], trigger: secondButton });
         }
       }
 
@@ -580,32 +1376,74 @@
         resolve(position);
       }
 
-      function start() {
+      function focusAfterReset(trigger) {
+        window.requestAnimationFrame(() => {
+          let target = trigger;
+          if (trigger?.classList.contains("rune")) target = board.querySelector(`[data-index="${trigger.dataset.index}"]`);
+          if (!(target instanceof HTMLElement) || !target.isConnected) target = board.querySelector(".rune");
+          target?.focus({ preventScroll: true });
+        });
+      }
+
+      function start({ moveFocus = false, focusTarget = null } = {}) {
         if (pendingTimer) window.clearTimeout(pendingTimer);
+        pendingTimer = null;
+        dialogs.close(result, { restoreFocus: false });
+        dialogs.close(lesson, { restoreFocus: false });
+        dialogs.close(helpDialog, { restoreFocus: false });
+        dialogs.close(correctionDialog, { restoreFocus: false });
         modes = shuffle(["sum", "sum", "sum", "difference", "difference", "product", "product", "product", "quotient", "quotient"]);
         keys = 0;
         locked = false;
-        result.hidden = true;
-        lesson.hidden = true;
         updateCounter();
         makeChallenge();
+        if (moveFocus) focusAfterReset(focusTarget);
+      }
+
+      function openLesson({ mandatory = false } = {}) {
+        dialogs.open(lesson, {
+          trigger: mandatory ? null : document.activeElement,
+          initialFocus: mandatory ? "#start-game" : "#lesson-title",
+          onEscape: () => {
+            if (values.length) dialogs.close(lesson);
+          }
+        });
       }
 
       board.addEventListener("click", event => {
         const button = event.target.closest(".rune");
         if (button) select(Number(button.dataset.index));
       });
-      document.querySelector("#start-game").addEventListener("click", start);
-      document.querySelector("#show-lesson").addEventListener("click", () => { lesson.hidden = false; });
-      document.querySelector("#close-lesson").addEventListener("click", () => {
-        if (!values.length) start();
-        else lesson.hidden = true;
+      document.querySelector("#start-game").addEventListener("click", () => {
+        const trigger = dialogs.trigger(lesson);
+        start({ moveFocus: true, focusTarget: trigger });
       });
-      document.querySelector("#reset-button").addEventListener("click", start);
-      document.querySelector("#play-again").addEventListener("click", start);
+      document.querySelector("#show-lesson").addEventListener("click", () => openLesson());
+      helpButton.addEventListener("click", openHelp);
+      document.querySelector("#close-help").addEventListener("click", closeHelp);
+      document.querySelector("#show-solution").addEventListener("click", showSolution);
+      document.querySelector("#close-correction").addEventListener("click", retryAfterLearning);
+      document.querySelector("#close-lesson").addEventListener("click", () => {
+        if (!values.length) start({ moveFocus: true });
+        else dialogs.close(lesson);
+      });
+      document.querySelector("#reset-button").addEventListener("click", () => start());
+      document.querySelector("#play-again").addEventListener("click", () => {
+        const trigger = dialogs.trigger(result);
+        start({ moveFocus: true, focusTarget: trigger });
+      });
 
-      window.MATHSGO_COFFRES_SOLO = { adjacent, calculate, expression, start };
-      lesson.hidden = false;
+      window.MATHSGO_COFFRES_SOLO = {
+        adjacent,
+        calculate,
+        expression,
+        operationModel,
+        findSolutionPair,
+        start,
+        getState: () => ({ values: values.slice(), modes: modes.slice(), mode, target, keys, locked, boardId })
+      };
+      setupFullscreen();
+      openLesson({ mandatory: true });
       updateCounter();
     })();
   </script>

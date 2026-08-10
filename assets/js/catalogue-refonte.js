@@ -606,7 +606,9 @@
   }
 
   function resourceBelongsToNotion(resource, notionId) {
-    const primaryNotion = resourceClassification(resource).primaryNotion;
+    const classification = resourceClassification(resource);
+    if ((classification.hiddenFromNotions || []).includes(notionId)) return false;
+    const primaryNotion = classification.primaryNotion;
     return primaryNotion ? primaryNotion === notionId : resource.notions.includes(notionId);
   }
 
@@ -622,6 +624,10 @@
     if (resource.path.startsWith("outils/bouliers/soroban/")) collections.add("soroban");
     if (resource.path.startsWith("outils/bouliers/abaque_de_gerbert/")) collections.add("gerbert");
     return [...collections];
+  }
+
+  function resourceBelongsToCollapsedCollection(resource) {
+    return resourceCollections(resource).some((id) => collectionMap.get(id)?.collapseInNotion);
   }
 
   function resourceTags(resource) {
@@ -652,10 +658,12 @@
   }
 
   function notionResourceCount(notionId, domainId = "") {
-    return resourceDisplayCount(published.filter((resource) => (
+    const resources = published.filter((resource) => (
       (!domainId || resource.domains.includes(domainId)) &&
-      resourceBelongsToNotion(resource, notionId)
-    )));
+      resourceBelongsToNotion(resource, notionId) &&
+      !resourceBelongsToCollapsedCollection(resource)
+    ));
+    return resourceDisplayCount(resources) + matchingNotionCollections(notionId).length;
   }
 
   function collectionResourceCount(collectionId) {
@@ -821,7 +829,7 @@
     return published.filter((resource) => {
       if (state.domain && !resource.domains.includes(state.domain)) return false;
       if (state.notion && !resourceBelongsToNotion(resource, state.notion)) return false;
-      if (state.notion && resourceCollections(resource).some((id) => collectionMap.get(id)?.collapseInNotion)) return false;
+      if (state.notion && resourceBelongsToCollapsedCollection(resource)) return false;
       if (state.collection && !resourceCollections(resource).includes(state.collection)) return false;
       if (collectionTitleMatches.size && resourceCollections(resource).some((id) => collectionTitleMatches.has(collectionRootId(id)))) return false;
       if (state.query && !allWordsMatch(resourceHaystack(resource), state.query)) return false;

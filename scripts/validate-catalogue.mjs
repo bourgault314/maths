@@ -53,6 +53,12 @@ for (const [resourcePath, classification] of Object.entries(classifications)) {
   if (classification.primaryGroup && !validGroups.has(classification.primaryGroup)) {
     fail(`${resourcePath}: groupe principal inconnu « ${classification.primaryGroup} »`);
   }
+  if (classification.hiddenFromNotions && !Array.isArray(classification.hiddenFromNotions)) {
+    fail(`${resourcePath}: hiddenFromNotions doit être une liste`);
+  }
+  for (const notionId of classification.hiddenFromNotions || []) {
+    if (!notionById.has(notionId)) fail(`${resourcePath}: notion masquée inconnue « ${notionId} »`);
+  }
 }
 
 for (const resource of catalogue.resources) {

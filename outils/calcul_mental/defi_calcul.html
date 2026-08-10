@@ -12,6 +12,8 @@
   <link rel="icon" type="image/png" sizes="32x32" href="/assets/img/favicon-32.png">
   <link rel="icon" type="image/png" sizes="192x192" href="/assets/img/favicon-192.png">
   <link rel="apple-touch-icon" href="/assets/img/apple-touch-icon.png">
+  <link rel="stylesheet" href="../../assets/css/consentement.css">
+  <script defer src="../../assets/js/consentement.js"></script>
   <style>
     :root{--ink:#143451;--muted:#506b7d;--line:#d4e3ed;--blue:#0755b8;--teal:#087a71;--green:#147447;--green-soft:#e5f7eb;--red:#a93030;--red-soft:#ffebeb;color-scheme:light;font-family:Inter,ui-rounded,"Arial Rounded MT Bold","Segoe UI",sans-serif}
     *{box-sizing:border-box}[hidden]{display:none!important}html{min-height:100%;background:#edf5fb;-webkit-text-size-adjust:100%}body{min-height:100vh;margin:0;color:var(--ink);background:radial-gradient(circle at 8% 5%,rgba(8,168,159,.14),transparent 26rem),radial-gradient(circle at 92% 7%,rgba(250,204,21,.18),transparent 24rem),linear-gradient(#fbfdff,#edf5fb)}button,a,input{font:inherit;-webkit-tap-highlight-color:transparent}button:focus-visible,a:focus-visible{outline:3px solid rgba(15,108,249,.3);outline-offset:3px}
@@ -19,8 +21,11 @@
     .intro,.result{max-width:650px;margin:40px auto;text-align:center}.hero-icon{display:block;font-size:4.2rem}.eyebrow{margin:8px 0;color:var(--teal);font-size:.8rem;font-weight:950;letter-spacing:.1em;text-transform:uppercase}h1{margin:0;font-size:clamp(2rem,6vw,3.35rem);line-height:1.03}p{line-height:1.5}.intro>p:not(.eyebrow),.result>p:not(.eyebrow){color:var(--muted)}.best{padding:11px 14px;border-radius:13px;color:#735d00!important;background:#fff6ca!important;font-weight:900}
     .primary,.secondary{min-height:48px;display:inline-flex;align-items:center;justify-content:center;padding:10px 17px;border-radius:13px;font-weight:950;text-decoration:none;cursor:pointer}.primary{color:#fff;border:0;background:var(--blue);box-shadow:0 5px 0 #043f8c}.secondary{color:var(--blue);border:1px solid #c5d9e6;background:#fff}.status{display:flex;align-items:center;justify-content:space-between;gap:12px;font-weight:950}.status strong{min-width:92px;padding:7px 13px;border-radius:999px;color:var(--green);background:var(--green-soft);font-size:1.25rem;text-align:center}.status strong.urgent{color:var(--red);background:var(--red-soft)}
     .progress-track{height:10px;margin:12px 0 18px;overflow:hidden;border-radius:99px;background:#dfebf3}.progress-track b{display:block;width:0;height:100%;background:linear-gradient(90deg,var(--teal),var(--blue));transition:width .2s}.question{min-height:480px;padding:clamp(19px,5vw,34px);border:2px solid var(--line);border-radius:23px;background:#fff;text-align:center}.expression{min-height:155px;display:grid;place-items:center;margin:10px 0 16px;padding:15px;border-radius:18px;background:#f3f8fb;font-size:clamp(2.2rem,9vw,4.2rem);font-weight:950}.answer{width:100%;min-height:62px;padding:10px 14px;border:3px solid #aac9dc;border-radius:14px;color:var(--ink);background:#fff;font-size:1.7rem;font-weight:950;text-align:center}.answer.invalid{border-color:var(--red);background:var(--red-soft)}
-    .keypad{max-width:390px;display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin:12px auto}.keypad button{min-height:49px;border:1px solid #a9c8da;border-radius:10px;color:var(--ink);background:#f8fcff;box-shadow:0 2px 0 #c3d8e5;font-weight:950;cursor:pointer}.actions{display:flex;justify-content:center;gap:9px;margin-top:13px}.result-message{padding:12px 15px;border-radius:14px;color:#31566c!important;background:#eef8ff;font-weight:850}.corrections{margin:20px 0;padding:16px;border:2px solid #efc9c9;border-radius:18px;background:#fffafa;text-align:left}.corrections h2{margin:0;font-size:1.3rem}.corrections>p{margin:6px 0 0;color:var(--muted)}.correction-list{display:grid;gap:9px;margin:14px 0 0;padding:0;list-style:none}.correction-list li{padding:12px;border:1px solid #efd5d5;border-radius:13px;background:#fff}.correction-list li>strong{display:block;margin-bottom:8px;font-size:1.12rem}.correction-list li>div{display:flex;flex-wrap:wrap;gap:7px}.correction-list span{padding:6px 9px;border-radius:9px;font-weight:850}.given-answer{color:var(--red);background:var(--red-soft)}.expected-answer{color:var(--green);background:var(--green-soft)}.result-actions{display:flex;justify-content:center;gap:10px;margin-top:16px}footer{padding:17px;color:#5b7283;font-size:.84rem;text-align:center}
-    @media(max-width:620px){.shell{width:100%}.topbar{min-height:58px;padding:5px 10px}.brand img{width:82px}.catalogue-link{min-height:36px;padding:0 10px;font-size:.73rem}.panel{min-height:calc(100vh - 96px);padding:18px 12px 27px;border-right:0;border-left:0;border-radius:20px}.intro,.result{margin:25px auto}.question{min-height:560px;padding:19px 10px}.expression{min-height:135px}.keypad button{min-height:47px}.result-actions{flex-direction:column}.challenge-playing{height:100dvh;overflow:hidden}.challenge-playing .shell{height:100dvh;display:grid;grid-template-rows:auto minmax(0,1fr);padding:0}.challenge-playing .topbar{min-height:48px;padding:max(3px,env(safe-area-inset-top)) 10px 3px}.challenge-playing .brand img{width:74px}.challenge-playing .panel{min-height:0;height:auto;padding:6px 10px max(7px,env(safe-area-inset-bottom));overflow:hidden;border-radius:16px 16px 0 0}.challenge-playing #play{height:100%;display:flex;flex-direction:column}.challenge-playing .status{min-height:34px}.challenge-playing .status strong{min-width:78px;padding:4px 10px;font-size:1.05rem}.challenge-playing .progress-track{height:6px;margin:4px 0 6px}.challenge-playing .question{flex:1;min-height:0;display:flex;flex-direction:column;justify-content:center;padding:6px 10px 8px;overflow:hidden}.challenge-playing .question>.eyebrow{margin:0 0 3px}.challenge-playing .expression{min-height:clamp(68px,12dvh,92px);margin:3px 0 6px;padding:7px;font-size:clamp(2rem,9vw,3.2rem)}.challenge-playing .question label{font-size:.94rem;line-height:1.2}.challenge-playing .answer{min-height:48px;height:48px;padding:5px 10px;font-size:1.5rem}.challenge-playing .keypad{width:min(100%,330px);gap:5px;margin:6px auto}.challenge-playing .keypad button{min-height:44px;height:44px}.challenge-playing .actions{margin-top:5px}.challenge-playing .actions .primary,.challenge-playing .actions .secondary{min-height:44px;padding:7px 15px}.challenge-playing footer{display:none}}
+    .keypad{max-width:390px;display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin:12px auto}.keypad button{min-height:49px;border:1px solid #a9c8da;border-radius:10px;color:var(--ink);background:#f8fcff;box-shadow:0 2px 0 #c3d8e5;font-weight:950;cursor:pointer}.actions{display:flex;justify-content:center;gap:9px;margin-top:13px}.result-message{padding:12px 15px;border-radius:14px;color:#31566c!important;background:#eef8ff;font-weight:850}.corrections{margin:20px 0;padding:16px;border:2px solid #efc9c9;border-radius:18px;background:#fffafa;text-align:left}.corrections h2{margin:0;font-size:1.3rem}.corrections>p{margin:6px 0 0;color:var(--muted)}.correction-list{display:grid;gap:9px;margin:14px 0 0;padding:0;list-style:none}.correction-list li{padding:12px;border:1px solid #efd5d5;border-radius:13px;background:#fff}.correction-list li>strong{display:block;margin-bottom:8px;font-size:1.12rem}.correction-list li>div{display:flex;flex-wrap:wrap;gap:7px}.correction-list span{padding:6px 9px;border-radius:9px;font-weight:850}.given-answer{color:var(--red);background:var(--red-soft)}.expected-answer{color:var(--green);background:var(--green-soft)}.result-actions{display:flex;justify-content:center;gap:10px;margin-top:16px}
+    .topbar-actions{display:flex;align-items:center;justify-content:flex-end;gap:7px}.fullscreen-toggle{min-height:39px;display:inline-flex;align-items:center;justify-content:center;gap:6px;padding:7px 11px;border:1px solid #b9d0df;border-radius:999px;color:#17405e;background:rgba(255,255,255,.96);font-size:.78rem;font-weight:950;white-space:nowrap;cursor:pointer}.fullscreen-toggle-icon{display:grid;place-items:center}.fullscreen-toggle-icon svg{width:18px;height:18px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}.fullscreen-collapse{display:none}body.fullscreen-active .fullscreen-expand{display:none}body.fullscreen-active .fullscreen-collapse{display:block}.site-footer{width:min(100%,960px);display:flex;flex-wrap:wrap;align-items:center;justify-content:center;gap:5px 9px;margin:0 auto;padding:13px 12px calc(13px + env(safe-area-inset-bottom));color:#5b7283;font-size:.78rem;text-align:center}.site-footer a,.site-footer button{padding:2px;border:0;color:#315d7a;background:none;font:inherit;font-weight:850;text-decoration:underline;text-underline-offset:2px}.site-footer button{cursor:pointer}html.fullscreen-fallback{width:100%;height:100%;overflow:hidden}html.fullscreen-fallback body{position:fixed;inset:0;width:100%;height:100vh;height:100dvh;min-height:100dvh;overflow:auto;overscroll-behavior:none}body.challenge-playing .site-footer,body.fullscreen-active .site-footer{display:none}body.fullscreen-active .fullscreen-toggle{position:fixed;z-index:60;top:max(7px,env(safe-area-inset-top));right:max(8px,env(safe-area-inset-right));border-color:#7899ae;background:#fff;box-shadow:0 5px 18px rgba(21,52,81,.2)}body.fullscreen-active .shell{min-height:100dvh;padding-bottom:0}
+    @media(max-width:620px){.shell{width:100%}.topbar{min-height:58px;padding:5px 10px}.brand img{width:82px}.topbar-actions{gap:4px}.catalogue-link{min-height:36px;padding:0 10px;font-size:.73rem}.fullscreen-toggle{min-height:36px;padding:6px 8px;font-size:.72rem}.panel{min-height:calc(100vh - 96px);padding:18px 12px 27px;border-right:0;border-left:0;border-radius:20px}.intro,.result{margin:25px auto}.question{min-height:560px;padding:19px 10px}.expression{min-height:135px}.keypad button{min-height:47px}.result-actions{flex-direction:column}.challenge-playing{height:100dvh;overflow:hidden}.challenge-playing .shell{height:100dvh;display:grid;grid-template-rows:auto minmax(0,1fr);padding:0}.challenge-playing .topbar{min-height:48px;padding:max(3px,env(safe-area-inset-top)) 10px 3px}.challenge-playing .brand img{width:74px}.challenge-playing .panel{min-height:0;height:auto;padding:6px 10px max(7px,env(safe-area-inset-bottom));overflow:hidden;border-radius:16px 16px 0 0}.challenge-playing #play{height:100%;display:flex;flex-direction:column}.challenge-playing .status{min-height:34px}.challenge-playing .status strong{min-width:78px;padding:4px 10px;font-size:1.05rem}.challenge-playing .progress-track{height:6px;margin:4px 0 6px}.challenge-playing .question{flex:1;min-height:0;display:flex;flex-direction:column;justify-content:center;padding:6px 10px 8px;overflow:hidden}.challenge-playing .question>.eyebrow{margin:0 0 3px}.challenge-playing .expression{min-height:clamp(68px,12dvh,92px);margin:3px 0 6px;padding:7px;font-size:clamp(2rem,9vw,3.2rem)}.challenge-playing .question label{font-size:.94rem;line-height:1.2}.challenge-playing .answer{min-height:48px;height:48px;padding:5px 10px;font-size:1.5rem}.challenge-playing .keypad{width:min(100%,330px);gap:5px;margin:6px auto}.challenge-playing .keypad button{min-height:44px;height:44px}.challenge-playing .actions{margin-top:5px}.challenge-playing .actions .primary,.challenge-playing .actions .secondary{min-height:44px;padding:7px 15px}.challenge-playing footer{display:none}}
+    @media(min-width:621px) and (max-height:900px){.challenge-playing{height:100dvh;overflow:hidden}.challenge-playing .shell{height:100dvh;display:grid;grid-template-rows:auto minmax(0,1fr);padding:0}.challenge-playing .panel{min-height:0;height:auto;padding:12px 36px;overflow:hidden}.challenge-playing #play{height:100%;display:flex;flex-direction:column}.challenge-playing .status{min-height:38px}.challenge-playing .progress-track{height:7px;margin:5px 0 9px}.challenge-playing .question{flex:1;min-height:0;display:flex;flex-direction:column;justify-content:center;padding:10px 28px 12px;overflow:hidden}.challenge-playing .question>.eyebrow{margin:0 0 3px}.challenge-playing .expression{min-height:100px;margin:4px 0 8px;padding:10px;font-size:clamp(2.2rem,7vw,3.5rem)}.challenge-playing .answer{min-height:52px;height:52px;padding:6px 12px}.challenge-playing .keypad{gap:6px;margin:8px auto}.challenge-playing .keypad button{min-height:44px;height:44px}.challenge-playing .actions{margin-top:6px}.challenge-playing .actions .primary,.challenge-playing .actions .secondary{min-height:44px;padding:7px 15px}}
+    @media(max-width:400px){.catalogue-link-label{display:none}}
     @media(prefers-reduced-motion:reduce){*,*::before,*::after{transition:none!important}}
   </style>
 </head>
@@ -28,13 +33,16 @@
   <main class="shell">
     <header class="topbar">
       <a class="brand" href="/" aria-label="Accueil maths&amp;go"><img src="/assets/img/mathsgo-logo.png" alt="maths&amp;go" width="1338" height="622"></a>
-      <a class="catalogue-link" href="../index.html?domain=nombres-calculs&amp;notion=calcul-mental">← Calcul mental</a>
+      <div class="topbar-actions">
+        <a class="catalogue-link" href="../index.html?domain=nombres-calculs&amp;notion=calcul-mental" aria-label="Retour au calcul mental">← <span class="catalogue-link-label">Calcul mental</span></a>
+        <button class="fullscreen-toggle" type="button" data-fullscreen-toggle aria-pressed="false" aria-label="Passer en plein écran"><span class="fullscreen-toggle-icon" data-fullscreen-icon aria-hidden="true"><svg viewBox="0 0 24 24" focusable="false"><path class="fullscreen-expand" d="M8 3H3v5M16 3h5v5M8 21H3v-5M16 21h5v-5"/><path class="fullscreen-collapse" d="M3 8h5V3M21 8h-5V3M3 16h5v5M21 16h-5v5"/></svg></span><span data-fullscreen-label>Plein écran</span></button>
+      </div>
     </header>
 
     <section class="panel">
       <div id="intro" class="intro">
         <span class="hero-icon" aria-hidden="true">⚡</span>
-        <p class="eyebrow">Calcul mental · automatismes</p>
+        <p class="eyebrow">Calcul mental</p>
         <h1>30 calculs en 3 minutes</h1>
         <p>Additions, soustractions, compléments et multiplications par 10 ou 100. Chaque essai crée une nouvelle série.</p>
         <p id="best-intro" class="best"></p>
@@ -71,7 +79,13 @@
       </div>
     </section>
   </main>
-  <footer>Le meilleur score reste enregistré uniquement sur cet appareil.</footer>
+  <footer class="site-footer">
+    <span>Gwenaël Bourgault</span><span aria-hidden="true">·</span>
+    <a href="mailto:gwenael@mathsgo.re?subject=Contact%20depuis%20mathsgo.re">Me contacter</a><span aria-hidden="true">·</span>
+    <a href="../../mentions-legales.html">Mentions légales</a><span aria-hidden="true">·</span>
+    <a href="../../confidentialite.html">Confidentialité</a><span aria-hidden="true">·</span>
+    <button type="button" data-mathsgo-consent-open onclick="window.mathsgoConsentement &amp;&amp; window.mathsgoConsentement.ouvrir()">Gérer mes cookies</button>
+  </footer>
 
   <script>
     (() => {
@@ -82,6 +96,61 @@
       const STORAGE_KEY = "mathsgo-defi-calcul-best-v1";
       const $ = id => document.getElementById(id);
       const state = {questions: [], responses: [], index: 0, correct: 0, answered: 0, running: false, timer: null, endAt: 0, signature: ""};
+
+      function setupFullscreen() {
+        const button = document.querySelector("[data-fullscreen-toggle]");
+        const root = document.documentElement;
+        const label = button?.querySelector("[data-fullscreen-label]");
+        const icon = button?.querySelector("[data-fullscreen-icon]");
+        if (!button || !label || !icon) return;
+
+        const nativeFullscreenElement = () => document.fullscreenElement || document.webkitFullscreenElement;
+        const syncFullscreenControl = () => {
+          const active = Boolean(nativeFullscreenElement()) || root.classList.contains("fullscreen-fallback");
+          document.body.classList.toggle("fullscreen-active", active);
+          button.setAttribute("aria-pressed", String(active));
+          button.setAttribute("aria-label", active ? "Quitter le plein écran" : "Passer en plein écran");
+          label.textContent = active ? "Quitter le plein écran" : "Plein écran";
+        };
+
+        const leaveFullscreen = async () => {
+          root.classList.remove("fullscreen-fallback");
+          const exit = document.exitFullscreen || document.webkitExitFullscreen;
+          if (nativeFullscreenElement() && exit) {
+            try { await exit.call(document); } catch (_) { /* Le repli CSS est déjà quitté. */ }
+          }
+          syncFullscreenControl();
+        };
+
+        const enterFullscreen = async () => {
+          const request = root.requestFullscreen || root.webkitRequestFullscreen;
+          if (request) {
+            try {
+              await request.call(root);
+              syncFullscreenControl();
+              return;
+            } catch (_) { /* iPhone et WebViews passent au repli CSS. */ }
+          }
+          root.classList.add("fullscreen-fallback");
+          window.scrollTo({ top: 0, behavior: "auto" });
+          syncFullscreenControl();
+        };
+
+        button.addEventListener("click", () => {
+          const active = Boolean(nativeFullscreenElement()) || root.classList.contains("fullscreen-fallback");
+          if (active) leaveFullscreen();
+          else enterFullscreen();
+        });
+        document.addEventListener("fullscreenchange", syncFullscreenControl);
+        document.addEventListener("webkitfullscreenchange", syncFullscreenControl);
+        document.addEventListener("keydown", event => {
+          if (event.key !== "Escape" || !root.classList.contains("fullscreen-fallback")) return;
+          event.preventDefault();
+          event.stopImmediatePropagation();
+          leaveFullscreen();
+        });
+        syncFullscreenControl();
+      }
 
       function shuffle(items, random = Math.random) {
         const copy = items.slice();
@@ -324,6 +393,7 @@
       $("skip").addEventListener("click", () => next(true));
       $("start").addEventListener("click", start);
       $("retry").addEventListener("click", start);
+      setupFullscreen();
       document.addEventListener("keydown", event => {
         if (!state.running) return;
         if (/^\d$/.test(event.key)) enterDigit(event.key);
