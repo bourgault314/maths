@@ -42,6 +42,7 @@ EXPECTED_PATTERN = (
     False, True, True, False,
     False, True, False, True,
 )
+EXPECTED_MIN_ACTIONS = (0, 1, 1, 0, 1, 0, 0, 1, 1, 0, 2, 0)
 
 def validate_grid(grid: object, context: str) -> list[list[int]]:
     if not isinstance(grid, list) or len(grid) != ROWS:
@@ -180,6 +181,77 @@ def swap_corrections(
     return corrections
 
 
+def grid_key(grid: list[list[int]]) -> tuple[int, ...]:
+    return tuple(value for row in grid for value in row)
+
+
+def grid_from_key(key: tuple[int, ...]) -> list[list[int]]:
+    return [list(key[:COLS]), list(key[COLS:])]
+
+
+def placement_actions(
+    grid: list[list[int]],
+) -> list[tuple[list[list[int]], dict[str, object]]]:
+    """Énumère chaque déplacement vers un vide et chaque échange entre chats."""
+    flat = list(grid_key(grid))
+    actions = []
+    for first in range(len(flat)):
+        for second in range(first + 1, len(flat)):
+            first_player, second_player = flat[first], flat[second]
+            if not first_player and not second_player:
+                continue
+            candidate = flat[:]
+            candidate[first], candidate[second] = candidate[second], candidate[first]
+            players = [player for player in (first_player, second_player) if player]
+            actions.append(
+                (
+                    grid_from_key(tuple(candidate)),
+                    {
+                        "type": "exchange" if len(players) == 2 else "move",
+                        "players": players,
+                    },
+                )
+            )
+    return actions
+
+
+def action_between(
+    before: list[list[int]], after: list[list[int]]
+) -> dict[str, object] | None:
+    target = grid_key(after)
+    for candidate, action in placement_actions(before):
+        if grid_key(candidate) == target:
+            return action
+    return None
+
+
+def shortest_corrections(
+    cards: dict[str, dict[str, str]], grid: list[list[int]]
+) -> tuple[int, list[list[list[int]]]]:
+    """Cherche les placements vrais les plus proches et compte les buts distincts."""
+    start = grid_key(grid)
+    if evaluate(cards, grid)[0]:
+        return 0, [grid]
+    visited = {start}
+    frontier = {start}
+    for depth in range(1, 7):
+        next_frontier: set[tuple[int, ...]] = set()
+        valid_targets: set[tuple[int, ...]] = set()
+        for current in frontier:
+            for candidate, _ in placement_actions(grid_from_key(current)):
+                candidate_key = grid_key(candidate)
+                if candidate_key in visited:
+                    continue
+                next_frontier.add(candidate_key)
+                if evaluate(cards, candidate)[0]:
+                    valid_targets.add(candidate_key)
+        if valid_targets:
+            return depth, [grid_from_key(key) for key in sorted(valid_targets)]
+        visited.update(next_frontier)
+        frontier = next_frontier
+    raise ValueError("aucune correction accessible n'a été trouvée")
+
+
 def prepare_payload(raw_data: dict, printed_series: list[dict]) -> dict:
     if raw_data.get("version") != 1:
         raise ValueError("projection_cases.json: version attendue = 1")
@@ -211,6 +283,11 @@ def prepare_payload(raw_data: dict, printed_series: list[dict]) -> dict:
         correction = raw_case.get("correction")
         if correction is not None:
             correction = validate_grid(correction, f"{context}, correction")
+        correction_intermediate = raw_case.get("correctionIntermediate")
+        if correction_intermediate is not None:
+            correction_intermediate = validate_grid(
+                correction_intermediate, f"{context}, correction intermédiaire"
+            )
 
         equivalent = canonical_cards(cards)
         if equivalent in printed_canon:
@@ -226,27 +303,59 @@ def prepare_payload(raw_data: dict, printed_series: list[dict]) -> dict:
             raise ValueError(
                 f"{context}: verdict {valid}, contraire au motif vrai/faux attendu"
             )
-        if valid and correction is not None:
+        if valid and (correction is not None or correction_intermediate is not None):
             raise ValueError(f"{context}: un placement vrai ne doit pas avoir de correction")
         if not valid and correction is None:
             raise ValueError(f"{context}: correction absente pour un placement faux")
 
         moved: list[int] = []
+        solution_actions: list[dict[str, object]] = []
+        correction_action_count, minimal_corrections = shortest_corrections(cards, proposed)
+        if correction_action_count != EXPECTED_MIN_ACTIONS[index - 1]:
+            raise ValueError(
+                f"{context}: correction minimale en {correction_action_count} action(s), "
+                f"{EXPECTED_MIN_ACTIONS[index - 1]} attendue(s)"
+            )
         move_corrections = one_move_corrections(cards, proposed) if not valid else []
         exchange_corrections = swap_corrections(cards, proposed) if not valid else []
         if correction is not None:
             correction_valid, correction_errors = evaluate(cards, correction)
             if not correction_valid:
                 raise ValueError(f"{context}: la correction reste fausse ({correction_errors})")
+            correction_path = [proposed]
+            if correction_intermediate is not None:
+                intermediate_valid, _ = evaluate(cards, correction_intermediate)
+                if intermediate_valid:
+                    raise ValueError(
+                        f"{context}: la correction intermédiaire ne doit pas déjà être vraie"
+                    )
+                correction_path.append(correction_intermediate)
+            correction_path.append(correction)
+            for before, after in zip(correction_path, correction_path[1:]):
+                action = action_between(before, after)
+                if action is None:
+                    raise ValueError(
+                        f"{context}: une étape de correction n'est ni un déplacement ni un échange"
+                    )
+                solution_actions.append(action)
+            if len(solution_actions) != correction_action_count:
+                raise ValueError(
+                    f"{context}: le chemin officiel utilise {len(solution_actions)} action(s), "
+                    f"mais le minimum est {correction_action_count}"
+                )
+            if grid_key(correction) not in {grid_key(item) for item in minimal_corrections}:
+                raise ValueError(
+                    f"{context}: la correction officielle n'est pas un but minimal"
+                )
             moved = moved_players(proposed, correction)
-            if len(moved) != 1:
-                raise ValueError(
-                    f"{context}: la correction doit déplacer un seul enfant, pas {moved}"
-                )
-            if correction not in move_corrections:
-                raise ValueError(
-                    f"{context}: la correction n'appartient pas aux corrections en un déplacement"
-                )
+        if index == 8 and (move_corrections or len(exchange_corrections) != 1):
+            raise ValueError(
+                "défi 8: l'unique correction en une action doit être un échange"
+            )
+        if index == 11 and [action["type"] for action in solution_actions] != ["move", "move"]:
+            raise ValueError(
+                "défi 11: la correction officielle doit comporter deux déplacements"
+            )
 
         prepared.append(
             {
@@ -256,10 +365,13 @@ def prepare_payload(raw_data: dict, printed_series: list[dict]) -> dict:
                 "cards": cards,
                 "proposed": proposed,
                 "correction": correction,
+                "correctionIntermediate": correction_intermediate,
                 "valid": valid,
                 "errors": errors,
                 "movedPlayers": moved,
-                "correctionCount": len(move_corrections) + len(exchange_corrections),
+                "correctionActionCount": correction_action_count,
+                "solutionActions": solution_actions,
+                "correctionCount": len(minimal_corrections) if not valid else 0,
                 "moveCorrectionCount": len(move_corrections),
                 "exchangeCorrectionCount": len(exchange_corrections),
             }
@@ -721,7 +833,7 @@ HTML_TEMPLATE = r'''<!doctype html>
         mode: 'proposed',
         grid: null,
         selectedCell: null,
-        lastAction: null
+        actionHistory: []
       };
       const directionClass = { front:'front', back:'back', left:'left', right:'right' };
       const directionLabel = { front:'devant', back:'derrière', left:'à gauche', right:'à droite' };
@@ -809,7 +921,7 @@ HTML_TEMPLATE = r'''<!doctype html>
       function currentCase() { return DATA.cases[state.index]; }
 
       function activeGrid(item = currentCase()) {
-        if (state.mode === 'attempt') return state.grid;
+        if ((state.mode === 'editing' || state.mode === 'attempt') && state.grid) return state.grid;
         if (state.mode === 'suggested') return item.correction;
         return item.proposed;
       }
@@ -878,7 +990,7 @@ HTML_TEMPLATE = r'''<!doctype html>
         state.mode = 'proposed';
         state.grid = null;
         state.selectedCell = null;
-        state.lastAction = null;
+        state.actionHistory = [];
         homeScreen.hidden = true;
         challengeScreen.hidden = false;
         catalogButton.hidden = true;
@@ -907,14 +1019,18 @@ HTML_TEMPLATE = r'''<!doctype html>
         const placementLabel = state.mode === 'suggested'
           ? correctionLabel
           : state.mode === 'editing'
-            ? 'Construisez une correction'
+            ? state.actionHistory.length
+              ? 'Continuez la correction'
+              : 'Construisez une correction'
             : state.mode === 'attempt'
-              ? 'Votre correction'
+              ? item.correctionActionCount > 1
+                ? `Votre correction · ${state.actionHistory.length}/${item.correctionActionCount}`
+                : 'Votre correction'
               : 'Placement proposé';
         const highlightedPlayers = state.mode === 'suggested'
           ? item.movedPlayers
-          : state.mode === 'attempt' && state.lastAction
-            ? state.lastAction.players
+          : state.mode === 'attempt'
+            ? [...new Set(state.actionHistory.flatMap(action => action.players))]
             : [];
         const beforeGrid = state.mode === 'suggested' || state.mode === 'attempt'
           ? item.proposed
@@ -937,10 +1053,14 @@ HTML_TEMPLATE = r'''<!doctype html>
         if (state.mode === 'editing') {
           const selectedPlayer = state.selectedCell === null ? null : displayGrid.flat()[state.selectedCell];
           $('#placement-question').textContent = selectedPlayer === null
-            ? 'Quel chat faut-il déplacer ou échanger\u00a0?'
+            ? state.actionHistory.length
+              ? 'Quelle seconde modification faut-il faire\u00a0?'
+              : 'Quel chat faut-il déplacer ou échanger\u00a0?'
             : `Où placer le chat ${selectedPlayer}\u00a0?`;
           $('#placement-hint').textContent = selectedPlayer === null
-            ? 'Cliquez d’abord sur le chat à déplacer ou à échanger.'
+            ? state.actionHistory.length
+              ? 'La première modification est conservée. Choisissez le prochain chat.'
+              : 'Cliquez d’abord sur le chat à déplacer ou à échanger.'
             : 'Cliquez sur un cercle vide pour le déplacer, ou sur un autre chat pour échanger leurs places.';
         } else if (state.mode === 'attempt') {
           $('#placement-question').textContent = 'Votre correction est-elle valide\u00a0?';
@@ -963,13 +1083,17 @@ HTML_TEMPLATE = r'''<!doctype html>
         if (state.mode === 'editing') {
           const selectedPlayer = state.selectedCell === null ? null : displayGrid.flat()[state.selectedCell];
           $('#card-feedback').innerHTML = selectedPlayer === null
-            ? '<strong>Construisez votre correction.</strong> Sélectionnez un chat dans le placement.'
+            ? state.actionHistory.length
+              ? '<strong>Continuez votre correction.</strong> La première modification reste en place.'
+              : '<strong>Construisez votre correction.</strong> Sélectionnez un chat dans le placement.'
             : `<strong>Chat ${selectedPlayer} sélectionné.</strong> Choisissez un cercle vide pour le déplacer, ou un autre chat pour échanger leurs places.`;
         } else if (state.revealed === 0) {
           $('#card-feedback').innerHTML = state.mode === 'suggested'
             ? `<strong>Une correction possible est affichée.</strong> Vérifiez-la à nouveau, carte par carte, avec la classe.${alternativeCorrectionMessage(item)}`
             : state.mode === 'attempt'
-              ? '<strong>Votre correction est en place.</strong> Vérifiez-la maintenant, carte par carte.'
+              ? state.actionHistory.length < item.correctionActionCount
+                ? '<strong>Première modification en place.</strong> Vérifiez ce nouveau placement, carte par carte.'
+                : '<strong>Votre correction est en place.</strong> Vérifiez-la maintenant, carte par carte.'
               : '<strong>À vous de jouer.</strong> Quand la classe a choisi, commencez par la carte 1.';
         } else {
           const cardValid = cardIsTrue(item, state.revealed, displayGrid);
@@ -997,14 +1121,31 @@ HTML_TEMPLATE = r'''<!doctype html>
         if (card) card.classList.add('current');
       }
 
+      function correctionActionSentence(actions) {
+        if (actions.length === 1 && actions[0].type === 'exchange') {
+          return `Les chats ${actions[0].players[0]} et ${actions[0].players[1]} échangent leurs places.`;
+        }
+        if (actions.length === 1) return `Le chat ${actions[0].players[0]} change de cercle.`;
+        const players = [...new Set(actions.flatMap(action => action.players))];
+        return `Les chats ${players.join(' et ')} changent de cercle en deux déplacements.`;
+      }
+
       function renderVerdict() {
         const item = currentCase();
         const displayGrid = activeGrid(item);
         verdict.hidden = false;
         if (state.mode === 'editing') {
           verdict.className = 'verdict editing';
-          verdict.innerHTML = '<span class="verdict-icon" aria-hidden="true">↔</span><div class="verdict-copy"><strong>À la classe de corriger.</strong>Choisissez un chat, puis sa nouvelle place.</div><button class="secondary-button" id="cancel-correction" type="button">Annuler</button>';
-          $('#cancel-correction').addEventListener('click', cancelCorrectionAttempt);
+          if (state.actionHistory.length) {
+            verdict.innerHTML = '<span class="verdict-icon" aria-hidden="true">↔</span><div class="verdict-copy"><strong>Première modification conservée.</strong>Choisissez maintenant la seconde.</div><button class="secondary-button" id="restart-correction" type="button">Recommencer</button>';
+            $('#restart-correction').addEventListener('click', restartCorrectionAttempt);
+          } else {
+            const instruction = item.correctionActionCount > 1
+              ? 'Deux modifications sont nécessaires. Choisissez le premier chat.'
+              : 'Choisissez un chat, puis sa nouvelle place.';
+            verdict.innerHTML = `<span class="verdict-icon" aria-hidden="true">↔</span><div class="verdict-copy"><strong>À la classe de corriger.</strong>${instruction}</div><button class="secondary-button" id="cancel-correction" type="button">Annuler</button>`;
+            $('#cancel-correction').addEventListener('click', cancelCorrectionAttempt);
+          }
           return;
         }
         const valid = placementIsTrue(item, displayGrid);
@@ -1014,18 +1155,16 @@ HTML_TEMPLATE = r'''<!doctype html>
           return;
         }
         if (valid && state.mode === 'attempt') {
-          const action = state.lastAction.type === 'exchange'
-            ? `Les chats ${state.lastAction.players[0]} et ${state.lastAction.players[1]} échangent leurs places.`
-            : `Le chat ${state.lastAction.players[0]} change de cercle.`;
+          const action = correctionActionSentence(state.actionHistory);
           verdict.className = 'verdict good';
           verdict.innerHTML = `<span class="verdict-icon" aria-hidden="true">✓</span><div class="verdict-copy"><strong>Votre correction est valide.</strong>${action} Les quatre cartes sont vraies.</div><button class="secondary-button" id="reset-proposed" type="button">Revoir le départ</button>`;
           $('#reset-proposed').addEventListener('click', resetToProposed);
           return;
         }
         if (valid && state.mode === 'suggested') {
-          const moved = item.movedPlayers[0];
+          const action = correctionActionSentence(item.solutionActions);
           verdict.className = 'verdict good';
-          verdict.innerHTML = `<span class="verdict-icon" aria-hidden="true">✓</span><div class="verdict-copy"><strong>Correction validée.</strong>Le chat ${moved} change de cercle. Les quatre cartes sont vraies.</div><button class="secondary-button" id="reset-proposed" type="button">Revoir le départ</button>`;
+          verdict.innerHTML = `<span class="verdict-icon" aria-hidden="true">✓</span><div class="verdict-copy"><strong>Correction validée.</strong>${action} Les quatre cartes sont vraies.</div><button class="secondary-button" id="reset-proposed" type="button">Revoir le départ</button>`;
           $('#reset-proposed').addEventListener('click', resetToProposed);
           return;
         }
@@ -1036,32 +1175,55 @@ HTML_TEMPLATE = r'''<!doctype html>
           : `${falseCards.length} cartes restent fausses.`;
         verdict.className = 'verdict bad';
         if (state.mode === 'attempt') {
-          verdict.innerHTML = `<span class="verdict-icon" aria-hidden="true">✕</span><div class="verdict-copy"><strong>Cette correction ne suffit pas.</strong>${remainingFalseMessage}</div><div class="verdict-actions"><button class="primary-button" id="retry-correction" type="button">Réessayer</button><button class="secondary-button" id="show-suggested" type="button">Voir la solution</button></div>`;
-          $('#retry-correction').addEventListener('click', startCorrectionAttempt);
-          $('#show-suggested').addEventListener('click', showSuggestedCorrection);
+          if (state.actionHistory.length < item.correctionActionCount) {
+            verdict.innerHTML = `<span class="verdict-icon" aria-hidden="true">✕</span><div class="verdict-copy"><strong>Cette première modification ne suffit pas.</strong>${remainingFalseMessage}</div><button class="primary-button" id="continue-correction" type="button">Continuer</button>`;
+            $('#continue-correction').addEventListener('click', continueCorrectionAttempt);
+          } else {
+            verdict.innerHTML = `<span class="verdict-icon" aria-hidden="true">✕</span><div class="verdict-copy"><strong>Cette correction ne suffit pas.</strong>${remainingFalseMessage}</div><div class="verdict-actions"><button class="primary-button" id="retry-correction" type="button">Réessayer</button><button class="secondary-button" id="show-suggested" type="button">Voir la solution</button></div>`;
+            $('#retry-correction').addEventListener('click', restartCorrectionAttempt);
+            $('#show-suggested').addEventListener('click', showSuggestedCorrection);
+          }
         } else {
-          verdict.innerHTML = `<span class="verdict-icon" aria-hidden="true">✕</span><div class="verdict-copy"><strong>Non : ${falseCards.length} ${cardWord}.</strong>À la classe de proposer un déplacement ou un échange.</div><button class="primary-button" id="start-correction" type="button">Proposer une correction</button>`;
-          $('#start-correction').addEventListener('click', startCorrectionAttempt);
+          const instruction = item.correctionActionCount > 1
+            ? 'À la classe de construire une correction en deux actions.'
+            : 'À la classe de proposer un déplacement ou un échange.';
+          verdict.innerHTML = `<span class="verdict-icon" aria-hidden="true">✕</span><div class="verdict-copy"><strong>Non : ${falseCards.length} ${cardWord}.</strong>${instruction}</div><button class="primary-button" id="start-correction" type="button">Proposer une correction</button>`;
+          $('#start-correction').addEventListener('click', beginCorrectionAttempt);
         }
       }
 
-      function startCorrectionAttempt() {
+      function beginCorrectionAttempt() {
         const item = currentCase();
         if (!item.correction || state.revealed < 4) return;
         state.mode = 'editing';
-        state.grid = null;
+        state.grid = item.proposed.map(row => [...row]);
         state.selectedCell = null;
-        state.lastAction = null;
+        state.actionHistory = [];
         renderChallenge();
         const firstChat = $('#placement-grid .zone:not(:disabled)');
         if (firstChat) firstChat.focus({ preventScroll:true });
+      }
+
+      function continueCorrectionAttempt() {
+        const item = currentCase();
+        if (state.mode !== 'attempt' || state.actionHistory.length >= item.correctionActionCount) return;
+        state.mode = 'editing';
+        state.selectedCell = null;
+        renderChallenge();
+        const firstChat = $('#placement-grid .zone:not(:disabled)');
+        if (firstChat) firstChat.focus({ preventScroll:true });
+      }
+
+      function restartCorrectionAttempt() {
+        state.revealed = 4;
+        beginCorrectionAttempt();
       }
 
       function cancelCorrectionAttempt() {
         state.mode = 'proposed';
         state.grid = null;
         state.selectedCell = null;
-        state.lastAction = null;
+        state.actionHistory = [];
         state.revealed = 4;
         renderChallenge();
         const button = $('#start-correction');
@@ -1072,7 +1234,7 @@ HTML_TEMPLATE = r'''<!doctype html>
         state.mode = 'proposed';
         state.grid = null;
         state.selectedCell = null;
-        state.lastAction = null;
+        state.actionHistory = [];
         state.revealed = 4;
         renderChallenge();
       }
@@ -1083,7 +1245,7 @@ HTML_TEMPLATE = r'''<!doctype html>
         state.mode = 'suggested';
         state.grid = null;
         state.selectedCell = null;
-        state.lastAction = null;
+        state.actionHistory = [];
         state.revealed = 0;
         renderChallenge();
         revealButton.focus({ preventScroll:true });
@@ -1109,8 +1271,8 @@ HTML_TEMPLATE = r'''<!doctype html>
         const zone = event.target.closest('[data-cell]');
         if (!zone || zone.disabled) return;
         const cell = Number(zone.dataset.cell);
-        const proposedGrid = currentCase().proposed;
-        const flatGrid = proposedGrid.flat();
+        const workingGrid = activeGrid();
+        const flatGrid = workingGrid.flat();
         if (state.selectedCell === null) {
           if (!flatGrid[cell]) return;
           state.selectedCell = cell;
@@ -1127,18 +1289,18 @@ HTML_TEMPLATE = r'''<!doctype html>
           return;
         }
         const sourceCell = state.selectedCell;
-        const action = applyPlacementAction(proposedGrid, sourceCell, cell);
+        const action = applyPlacementAction(workingGrid, sourceCell, cell);
         if (!action) return;
         state.grid = action.grid;
         state.mode = 'attempt';
         state.revealed = 0;
         state.selectedCell = null;
-        state.lastAction = {
+        state.actionHistory.push({
           type: action.targetPlayer ? 'exchange' : 'move',
           players: action.targetPlayer
             ? [action.sourcePlayer, action.targetPlayer]
             : [action.sourcePlayer]
-        };
+        });
         renderChallenge();
         revealButton.focus({ preventScroll:true });
       }
@@ -1201,8 +1363,14 @@ HTML_TEMPLATE = r'''<!doctype html>
         if ((event.key === 'Enter' || event.key === ' ') && state.revealed < 4) { event.preventDefault(); revealNextCard(); }
         if (key === 'c' && state.revealed >= 4 && currentCase().correction) {
           event.preventDefault();
+          if (state.mode === 'editing') return;
           if (state.mode === 'suggested') resetToProposed();
-          else startCorrectionAttempt();
+          else if (
+            state.mode === 'attempt'
+            && state.actionHistory.length < currentCase().correctionActionCount
+            && !placementIsTrue(currentCase(), activeGrid())
+          ) continueCorrectionAttempt();
+          else beginCorrectionAttempt();
         }
       });
 

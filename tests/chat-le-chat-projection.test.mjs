@@ -1,4 +1,5 @@
 import assert from "node:assert/strict";
+import { createHash } from "node:crypto";
 import { readFileSync } from "node:fs";
 import { spawnSync } from "node:child_process";
 import test from "node:test";
@@ -25,6 +26,7 @@ const transforms = [
   { front: "back", back: "front", left: "right", right: "left" }
 ];
 const expectedPattern = [true, false, false, true, false, true, true, false, false, true, false, true];
+const expectedMinActions = [0, 1, 1, 0, 1, 0, 0, 1, 1, 0, 2, 0];
 
 function positions(grid) {
   const result = new Map();
@@ -86,6 +88,57 @@ function countExchangeCorrections(cards, grid) {
     }
   }
   return count;
+}
+
+function gridKey(grid) {
+  return grid.flat().join("");
+}
+
+function placementActions(grid) {
+  const flat = grid.flat();
+  const actions = [];
+  for (let first = 0; first < flat.length; first += 1) {
+    for (let second = first + 1; second < flat.length; second += 1) {
+      const firstPlayer = flat[first];
+      const secondPlayer = flat[second];
+      if (!firstPlayer && !secondPlayer) continue;
+      const candidate = [...flat];
+      [candidate[first], candidate[second]] = [candidate[second], candidate[first]];
+      const players = [firstPlayer, secondPlayer].filter(Boolean);
+      actions.push({
+        grid: [candidate.slice(0, 3), candidate.slice(3)],
+        type: players.length === 2 ? "exchange" : "move",
+        players
+      });
+    }
+  }
+  return actions;
+}
+
+function actionBetween(before, after) {
+  return placementActions(before).find(action => gridKey(action.grid) === gridKey(after)) ?? null;
+}
+
+function shortestCorrections(cards, grid) {
+  if (isValid(evaluate(cards, grid))) return { depth: 0, grids: [grid] };
+  const seen = new Set([gridKey(grid)]);
+  let frontier = new Map([[gridKey(grid), grid]]);
+  for (let depth = 1; depth <= 6; depth += 1) {
+    const next = new Map();
+    const valid = new Map();
+    for (const current of frontier.values()) {
+      for (const action of placementActions(current)) {
+        const key = gridKey(action.grid);
+        if (seen.has(key)) continue;
+        next.set(key, action.grid);
+        if (isValid(evaluate(cards, action.grid))) valid.set(key, action.grid);
+      }
+    }
+    if (valid.size) return { depth, grids: [...valid.values()] };
+    for (const key of next.keys()) seen.add(key);
+    frontier = next;
+  }
+  throw new Error("Aucune correction accessible.");
 }
 
 function extractGeneratedFunction(name) {
@@ -152,7 +205,7 @@ test("l’exemple guidé isole la carte 2 puis déplace uniquement l’enfant 2"
   assert.deepEqual([1, 2, 3, 4].filter(player => before.get(player).join() !== after.get(player).join()), [2]);
 });
 
-test("les douze défis sont progressifs, équilibrés et corrigibles par un seul déplacement", () => {
+test("les douze défis progressent du déplacement simple à la correction en deux actions", () => {
   assert.equal(data.version, 1);
   assert.equal(data.cases.length, 12);
   const verdicts = data.cases.map((item, index) => {
@@ -163,24 +216,52 @@ test("les douze défis sont progressifs, équilibrés et corrigibles par un seul
     const valid = isValid(evaluate(item.cards, item.proposed));
     if (valid) {
       assert.equal(item.correction, null, `${item.id} est déjà juste.`);
+      assert.equal(item.correctionIntermediate, undefined, `${item.id} ne doit pas avoir d'étape de correction.`);
     } else {
       assertGrid(item.correction, `${item.id}, correction`);
       assert.equal(isValid(evaluate(item.cards, item.correction)), true, `${item.id} doit avoir une correction juste.`);
-      const before = positions(item.proposed);
-      const after = positions(item.correction);
-      const moved = [1, 2, 3, 4].filter(player => before.get(player).join() !== after.get(player).join());
-      assert.equal(moved.length, 1, `${item.id} doit se corriger en déplaçant un seul enfant.`);
+      const shortest = shortestCorrections(item.cards, item.proposed);
+      assert.equal(shortest.depth, expectedMinActions[index], `${item.id} doit avoir la profondeur prévue.`);
+      assert.ok(shortest.grids.some(grid => gridKey(grid) === gridKey(item.correction)),
+        `${item.id} doit afficher une correction minimale.`);
+      const path = [item.proposed];
+      if (item.correctionIntermediate) {
+        assertGrid(item.correctionIntermediate, `${item.id}, correction intermédiaire`);
+        assert.equal(isValid(evaluate(item.cards, item.correctionIntermediate)), false,
+          `${item.id}, l'étape intermédiaire doit encore demander une correction.`);
+        path.push(item.correctionIntermediate);
+      }
+      path.push(item.correction);
+      assert.equal(path.length - 1, shortest.depth, `${item.id} doit montrer le bon nombre d'actions.`);
+      for (let step = 1; step < path.length; step += 1) {
+        assert.ok(actionBetween(path[step - 1], path[step]),
+          `${item.id}, l'étape ${step} doit être un déplacement ou un échange autorisé.`);
+      }
     }
     return valid;
   });
   assert.deepEqual(verdicts, expectedPattern);
   assert.equal(verdicts.filter(Boolean).length, 6);
+  assert.equal(
+    createHash("sha256").update(JSON.stringify(data.cases.map(item => item.cards))).digest("hex"),
+    "6dab5c9b29968aef38ff10de61454653b54575616b7f71dc425c7714acfa058a",
+    "Les douze jeux de cartes validés doivent rester strictement inchangés."
+  );
+  assert.deepEqual(evaluate(data.cases[7].cards, data.cases[7].proposed), {
+    1: true, 2: true, 3: true, 4: false
+  }, "Le défi 8 doit masquer la nécessité d'échanger derrière une seule carte fausse.");
+  assert.deepEqual(evaluate(data.cases[10].cards, data.cases[10].proposed), {
+    1: true, 2: false, 3: true, 4: false
+  }, "Le défi 11 doit commencer avec exactement deux cartes fausses.");
+  assert.deepEqual(evaluate(data.cases[10].cards, data.cases[10].correctionIntermediate), {
+    1: true, 2: false, 3: true, 4: true
+  }, "Après le premier bon déplacement du défi 11, une seule carte doit rester fausse.");
 });
 
 test("les corrections par déplacement ou échange sont toutes comptées", () => {
-  const expectedMoveCounts = [0, 2, 1, 0, 3, 0, 0, 1, 1, 0, 1, 0];
+  const expectedMoveCounts = [0, 2, 1, 0, 3, 0, 0, 0, 1, 0, 0, 0];
   const expectedExchangeCounts = [0, 1, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0];
-  const expectedCounts = [0, 3, 1, 0, 3, 0, 0, 2, 1, 0, 1, 0];
+  const expectedCounts = [0, 3, 1, 0, 3, 0, 0, 1, 1, 0, 1, 0];
   assert.deepEqual(
     data.cases.map(item => item.correction ? countOneMoveCorrections(item.cards, item.proposed) : 0),
     expectedMoveCounts
@@ -195,6 +276,12 @@ test("les corrections par déplacement ou échange sont toutes comptées", () =>
   assert.deepEqual(payload.cases.map(item => item.correctionCount), expectedCounts);
   assert.deepEqual(payload.cases.map(item => item.moveCorrectionCount), expectedMoveCounts);
   assert.deepEqual(payload.cases.map(item => item.exchangeCorrectionCount), expectedExchangeCounts);
+  assert.deepEqual(payload.cases.map(item => item.correctionActionCount), expectedMinActions);
+  assert.deepEqual(payload.cases[7].solutionActions, [{ type: "exchange", players: [4, 2] }]);
+  assert.deepEqual(payload.cases[10].solutionActions, [
+    { type: "move", players: [3] },
+    { type: "move", players: [1] }
+  ]);
 });
 
 test("une action manipulée déplace vers un vide ou échange deux chats", () => {
@@ -216,9 +303,34 @@ test("une action manipulée déplace vers un vide ou échange deux chats", () =>
   assert.equal(applyPlacementAction(challenge2.proposed, 2, 0), null);
 
   const challenge8 = data.cases[7];
-  const secondExchange = applyPlacementAction(challenge8.proposed, 4, 5);
-  assert.deepEqual(plain(secondExchange.grid), [[0,1,2],[0,3,4]]);
+  const secondExchange = applyPlacementAction(challenge8.proposed, 1, 4);
+  assert.deepEqual(plain(secondExchange.grid), [[1,2,0],[3,4,0]]);
   assert.equal(isValid(evaluate(challenge8.cards, secondExchange.grid)), true);
+  assert.equal(countOneMoveCorrections(challenge8.cards, challenge8.proposed), 0,
+    "Le défi 8 ne doit accepter aucun simple déplacement vers un vide.");
+
+  const challenge11 = data.cases[10];
+  const firstMove = applyPlacementAction(challenge11.proposed, 0, 3);
+  assert.deepEqual(plain(firstMove.grid), challenge11.correctionIntermediate);
+  assert.equal(isValid(evaluate(challenge11.cards, firstMove.grid)), false);
+  const secondMove = applyPlacementAction(firstMove.grid, 5, 2);
+  assert.deepEqual(plain(secondMove.grid), challenge11.correction);
+  assert.equal(isValid(evaluate(challenge11.cards, secondMove.grid)), true);
+  const reverseFirstMove = applyPlacementAction(challenge11.proposed, 5, 2);
+  assert.equal(isValid(evaluate(challenge11.cards, reverseFirstMove.grid)), false);
+  const reverseSecondMove = applyPlacementAction(reverseFirstMove.grid, 0, 3);
+  assert.deepEqual(plain(reverseSecondMove.grid), challenge11.correction,
+    "Les deux déplacements du défi 11 doivent pouvoir être effectués dans l'ordre inverse.");
+  const minimalPaths = placementActions(challenge11.proposed).flatMap(first =>
+    placementActions(first.grid)
+      .filter(second => isValid(evaluate(challenge11.cards, second.grid)))
+      .map(second => second.grid)
+  );
+  assert.equal(minimalPaths.length, 2, "Le défi 11 doit avoir exactement deux chemins minimaux.");
+  assert.ok(minimalPaths.every(grid => gridKey(grid) === gridKey(challenge11.correction)),
+    "Les deux ordres minimaux du défi 11 doivent mener à la même correction.");
+  assert.equal(countOneMoveCorrections(challenge11.cards, challenge11.proposed), 0);
+  assert.equal(countExchangeCorrections(challenge11.cards, challenge11.proposed), 0);
 
   const challenge3 = data.cases[2];
   const temptingButWrong = applyPlacementAction(challenge3.proposed, 1, 0);
@@ -318,6 +430,14 @@ test("le HTML publié est autonome, synchronisé et adapté à une réflexion co
     "Les cartes ne doivent devenir vraies ou fausses qu'après leur vérification.");
   assert.match(html, /state\.mode = 'attempt';[\s\S]*?state\.revealed = 0;/,
     "Un déplacement ou un échange doit remettre les quatre cartes en attente.");
+  assert.match(html, /state\.mode === 'editing' \|\| state\.mode === 'attempt'[\s\S]*?state\.grid/,
+    "L'édition d'une seconde action doit repartir de la grille déjà modifiée.");
+  assert.match(html, /const workingGrid = activeGrid\(\)[\s\S]*?applyPlacementAction\(workingGrid, sourceCell, cell\)/,
+    "La deuxième action ne doit jamais repartir silencieusement du placement proposé.");
+  assert.match(html, /state\.actionHistory\.push\(\{[\s\S]*?type: action\.targetPlayer \? 'exchange' : 'move'/,
+    "Chaque déplacement ou échange doit être conservé dans l'historique de la correction.");
+  assert.match(html, /key === 'c'[\s\S]*?if \(state\.mode === 'editing'\) return;/,
+    "Le raccourci C ne doit jamais effacer une correction pendant sa construction.");
   assert.match(html, /<button class="zone[\s\S]*?data-cell="\$\{cell\}"[\s\S]*?aria-pressed="\$\{selected \? 'true' : 'false'\}"/,
     "Les six zones manipulables doivent être de vrais boutons accessibles.");
   assert.match(html, /\$\('#placement-grid'\)\.addEventListener\('click', handlePlacementClick\)/,
@@ -328,6 +448,12 @@ test("le HTML publié est autonome, synchronisé et adapté à une réflexion co
     "Le verdict faux doit inviter la classe à construire sa correction.");
   assert.match(html, /Cette correction ne suffit pas[\s\S]*?Réessayer[\s\S]*?Voir la solution/,
     "Une tentative fausse doit pouvoir être recommencée ou remplacée par la solution préparée.");
+  assert.match(html, /Cette première modification ne suffit pas[\s\S]*?id="continue-correction"[^>]*>Continuer<\/button>/,
+    "Le défi à deux actions doit conserver la première modification avec un verdict compact.");
+  assert.match(html, /Deux modifications sont nécessaires\. Choisissez le premier chat/,
+    "Le défi avancé doit annoncer clairement sa règle sans ajouter de nouvelle zone.");
+  assert.match(html, /correctionActionSentence\(item\.solutionActions\)/,
+    "La solution préparée doit nommer correctement un échange ou deux déplacements.");
   assert.match(html, /const remainingFalseMessage = falseCards\.length === 1[\s\S]*?cartes restent fausses/,
     "Le verdict d’une tentative doit rester naturel au singulier comme au pluriel.");
   assert.match(html, /const cardWord = falseCards\.length === 1[\s\S]*?Non : \$\{falseCards\.length\} \$\{cardWord\}/,
