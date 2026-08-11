@@ -333,6 +333,42 @@
     .operation-grid h3 { margin: 0; color: var(--blue); }
     .operation-grid p { margin: 0; color: #49677b; line-height: 1.4; }
     .operation-grid strong { display: block; font-size: 1.08rem; text-align: center; }
+    .operation-grid .operation-example {
+      color: #143451;
+      font-size: .96rem;
+      font-weight: 900;
+      line-height: 1.3;
+    }
+    .operation-grid .operation-definition { font-size: .86rem; }
+
+    .operation-conventions {
+      grid-column: 1 / -1;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 7px;
+      padding: 9px;
+      border: 2px solid #d7e4ec;
+      border-radius: 14px;
+      background: #f0f6fa;
+    }
+
+    .operation-conventions p {
+      padding: 7px 9px;
+      border-radius: 10px;
+      color: #31546e;
+      background: #fff;
+      font-size: .82rem;
+      font-weight: 800;
+      line-height: 1.3;
+    }
+
+    .operation-conventions strong {
+      display: block;
+      margin-bottom: 2px;
+      color: #143451;
+      font-size: .9rem;
+      text-align: center;
+    }
 
     .operation-picture {
       min-height: 82px;
@@ -515,6 +551,7 @@
     }
 
     .difference-marker-label.compact { font-size: .6rem; }
+    .difference-marker-label.near { top: 17px; }
 
     .difference-marker::before,
     .difference-marker::after {
@@ -864,6 +901,7 @@
       .challenge { min-height: 62px; }
       .rune-board { gap: 6px; padding: 8px; }
       .operation-grid { grid-template-columns: 1fr; }
+      .operation-conventions { grid-template-columns: 1fr; }
       .dialog-card { padding: 21px 17px; }
       .help-card,
       .correction-card { padding: 16px 14px; }
@@ -953,6 +991,7 @@
       <div class="operation-grid">
         <article data-operation="sum">
           <h3>Somme : réunir deux quantités</h3>
+          <p class="operation-example">La somme de 3 et de 2 est 5.</p>
           <div class="operation-picture" role="img" aria-label="Un repère aligné au-dessus de toute la largeur indique : somme égale 5. Le rectangle du haut contient 5 points. Juste en dessous, deux rectangles jointifs contiennent 3 points puis 2 points. Les deux lignes ont exactement la même longueur. 3 plus 2 égale 5.">
             <div class="quantity-model" aria-hidden="true">
               <div class="sum-marker-row"><span class="sum-marker"><span>somme = 5</span></span></div>
@@ -965,11 +1004,12 @@
               </div>
             </div>
           </div>
-          <p>La somme est le résultat d’une addition. Ici, 3 points et 2 points réunis donnent 5 points.</p>
           <strong>3 + 2 = 5</strong>
+          <p class="operation-definition">La somme est le résultat d’une addition.</p>
         </article>
         <article data-operation="difference">
           <h3>Différence : l’écart entre deux quantités</h3>
+          <p class="operation-example">La différence entre 5 et 2 est 3.</p>
           <div class="operation-picture" role="img" aria-label="La différence est l’écart entre les deux quantités. Dans l’espace vide de la ligne inférieure, un repère orienté vers le haut est placé exactement sous les 3 points non appariés et indique : différence égale 3. Le rectangle du haut contient 5 points alignés. Le rectangle du bas, collé dessous et aligné à gauche, contient 2 points sous les deux premiers. Les 3 points restants du haut sont mis en évidence et n’ont pas de point apparié dessous. 5 moins 2 égale 3.">
             <div class="comparison-model" style="--unit-count:5" aria-hidden="true">
               <div class="comparison-upper">
@@ -978,15 +1018,16 @@
               <div class="comparison-lower" style="--difference-center:70%">
                 <span class="compare-known" style="--known-count:2;grid-column:1 / span 2"><span class="comparison-unit"><i class="quantity-dot"></i></span><span class="comparison-unit"><i class="quantity-dot"></i></span></span>
                 <span class="difference-marker" style="grid-column:3 / -1"></span>
-                <span class="difference-marker-label">différence = 3</span>
+                <span class="difference-marker-label near">différence = 3</span>
               </div>
             </div>
           </div>
-          <p>La différence est le résultat d’une soustraction. Elle mesure l’écart entre deux quantités. Dans ce jeu, on soustrait toujours le plus petit nombre du plus grand.</p>
           <strong>5 − 2 = 3</strong>
+          <p class="operation-definition">La différence est le résultat d’une soustraction.</p>
         </article>
         <article>
           <h3>Produit : former des rangées égales</h3>
+          <p class="operation-example">Le produit de 3 par 4 est 12.</p>
           <div class="operation-picture" role="group" aria-label="Deux rectangles orientés montrent que trois fois quatre et quatre fois trois donnent tous les deux douze">
             <div class="dual-learning-views">
               <div class="mini-learning-view" role="img" aria-label="Un réseau de 3 rangées et 4 colonnes contient 12 points. Le repère supérieur indique 4 colonnes et le repère latéral indique 3 rangées.">
@@ -999,31 +1040,35 @@
               </div>
             </div>
           </div>
-          <p>Le produit est le résultat d’une multiplication. Ici, 3 rangées de 4 points, ou 4 rangées de 3 points, donnent 12 points.</p>
           <strong>3 × 4 = 12 ; 4 × 3 = 12 aussi</strong>
+          <p class="operation-definition">Le produit est le résultat d’une multiplication.</p>
         </article>
         <article data-operation="quotient">
           <h3>Quotient : grouper ou partager</h3>
+          <p class="operation-example">Le quotient de 8 par 2 est 4.</p>
           <div class="operation-picture" role="group" aria-label="Deux barres rectangulaires montrent deux façons de comprendre huit divisé par deux">
             <div class="quotient-interpretations">
               <div class="mini-learning-view" role="img" aria-label="Une barre rectangulaire de 8 unités est divisée en 4 paquets de 2 unités. Combien de paquets de 2 dans 8 ? 4.">
                 <div class="quotient-bar" data-group-count="4" data-group-size="2" data-total-units="8" aria-hidden="true">
                   <span class="quotient-bar-group" style="--group-size:2"><i class="quotient-bar-unit"></i><i class="quotient-bar-unit"></i></span><span class="quotient-bar-group" style="--group-size:2"><i class="quotient-bar-unit"></i><i class="quotient-bar-unit"></i></span><span class="quotient-bar-group" style="--group-size:2"><i class="quotient-bar-unit"></i><i class="quotient-bar-unit"></i></span><span class="quotient-bar-group" style="--group-size:2"><i class="quotient-bar-unit"></i><i class="quotient-bar-unit"></i></span>
                 </div>
-                <span>Combien de paquets de 2 dans 8 ? 4</span>
+                <span>Grouper : 4 paquets de 2</span>
               </div>
               <div class="mini-learning-view" role="img" aria-label="Une barre rectangulaire de 8 unités est divisée en 2 paquets de 4 unités. Partager 8 en 2 paquets : 4 dans chacun.">
                 <div class="quotient-bar" data-group-count="2" data-group-size="4" data-total-units="8" aria-hidden="true">
                   <span class="quotient-bar-group" style="--group-size:4"><i class="quotient-bar-unit"></i><i class="quotient-bar-unit"></i><i class="quotient-bar-unit"></i><i class="quotient-bar-unit"></i></span><span class="quotient-bar-group" style="--group-size:4"><i class="quotient-bar-unit"></i><i class="quotient-bar-unit"></i><i class="quotient-bar-unit"></i><i class="quotient-bar-unit"></i></span>
                 </div>
-                <span>Partager 8 en 2 paquets : 4 dans chacun</span>
+                <span>Partager : 2 paquets de 4</span>
               </div>
             </div>
           </div>
-          <p>Le quotient est le résultat d’une division. Il indique combien de paquets égaux on peut former, ou combien il y a dans chaque paquet. Dans ce jeu, on divise le plus grand nombre par le plus petit et on ne garde que les divisions qui tombent juste.</p>
-          <strong>8 ÷ 2 : combien de paquets de 2 dans 8 ? 4</strong>
-          <strong>8 ÷ 2 : partager 8 en 2 paquets : 4 dans chacun</strong>
+          <strong>8 ÷ 2 = 4</strong>
+          <p class="operation-definition">Le quotient est le résultat d’une division.</p>
         </article>
+        <aside class="operation-conventions" aria-label="Deux conventions du jeu">
+          <p><strong>Différence :</strong> le plus grand nombre − le plus petit. L’ordre des clics ne change rien.</p>
+          <p><strong>Quotient :</strong> le plus grand nombre ÷ le plus petit, seulement si la division tombe juste.</p>
+        </aside>
       </div>
       <div class="lesson-actions">
         <button id="start-game" class="primary-button" type="button">J’ai compris, jouer</button>
@@ -1344,7 +1389,7 @@
         },
         difference: {
           title: "La différence",
-          help: "Compare les deux quantités : leur écart est la différence.",
+          help: "La différence entre 5 et 2 est 3.",
           example: [5, 2]
         },
         product: {
@@ -1435,6 +1480,7 @@
         const marker = makeElement("span", "difference-marker");
         marker.style.gridColumn = `${model.low + 1} / -1`;
         const markerLabel = makeElement("span", "difference-marker-label", `différence = ${model.difference}`);
+        if (model.difference / model.high >= .36) markerLabel.classList.add("near");
         if (model.difference / model.high < .2) markerLabel.classList.add("compact");
         lower.append(marker, markerLabel);
         diagram.append(upper, lower);
@@ -1507,8 +1553,8 @@
           demo.setAttribute("aria-label", `${model.total} divisé par ${model.groupSize} vaut ${model.groupCount}. Une première barre rectangulaire de ${model.total} unités est divisée en ${model.groupCount} paquets de ${model.groupSize} unités. Combien de paquets de ${model.groupSize} dans ${model.total} ? ${model.groupCount}. Une seconde barre rectangulaire de ${model.total} unités est divisée en ${model.shareGroups} paquets de ${model.each} unités. Partager ${model.total} en ${model.shareGroups} paquets : ${model.each} dans chacun.`);
           const views = makeElement("div", "demo-interpretations");
           views.append(
-            makeInterpretation(`Combien de paquets de ${model.groupSize} dans ${model.total} ? ${model.groupCount}`, makeQuotientBar(model.groupCount, model.groupSize)),
-            makeInterpretation(`Partager ${model.total} en ${model.shareGroups} paquets : ${model.each} dans chacun`, makeQuotientBar(model.shareGroups, model.each))
+            makeInterpretation(`Grouper : ${model.groupCount} paquets de ${model.groupSize}`, makeQuotientBar(model.groupCount, model.groupSize)),
+            makeInterpretation(`Partager : ${model.shareGroups} paquets de ${model.each}`, makeQuotientBar(model.shareGroups, model.each))
           );
           demo.append(views, makeElement("span", "demo-caption", `${model.total} ÷ ${model.groupSize} = ${model.groupCount}.`));
         }
