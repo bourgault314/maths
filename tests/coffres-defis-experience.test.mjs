@@ -91,6 +91,22 @@ test("Coffres solo illustre précisément les quatre opérations", () => {
   assert.match(html, /8 ÷ 2 : partager 8 en 2 paquets : 4 dans chacun/);
 });
 
+test("les repères du produit restent droits et épousent le réseau", () => {
+  const duel = pages["outils/club_maths/coffres_magiques.html"];
+  const solo = pages["outils/calcul_mental/coffres_magiques_solo.html"];
+
+  assert.match(solo, /\.dimension-rows\s*\{[^}]*align-self:\s*stretch[^}]*justify-self:\s*stretch[^}]*display:\s*grid[^}]*writing-mode:\s*horizontal-tb/);
+  assert.match(solo, /\.dimension-rows span\s*\{[^}]*transform:\s*none[^}]*writing-mode:\s*horizontal-tb/);
+  assert.match(solo, /\.dimension-rows::before\s*\{[^}]*inset:\s*0 0 0 auto[^}]*border-top:\s*2px solid #6d3ac7[^}]*border-bottom:\s*2px solid #6d3ac7[^}]*border-left:\s*2px solid #6d3ac7/);
+  assert.doesNotMatch(solo, /\.dimension-rows(?:\s+span)?\s*\{[^}]*(?:writing-mode:\s*vertical|rotate\()/);
+
+  assert.match(duel, /\.array-dimension-top\s*\{[^}]*justify-self:\s*stretch[^}]*border-bottom:\s*2px solid #6d3ac7[^}]*writing-mode:\s*horizontal-tb[^}]*transform:\s*none/);
+  assert.match(duel, /\.array-dimension-top::before,\s*\.array-dimension-top::after\s*\{[^}]*bottom:\s*-6px[^}]*width:\s*2px[^}]*height:\s*6px[^}]*background:\s*#6d3ac7/);
+  assert.match(duel, /\.array-dimension-side\s*\{[^}]*align-self:\s*stretch[^}]*justify-self:\s*stretch[^}]*display:\s*grid[^}]*writing-mode:\s*horizontal-tb[^}]*transform:\s*none/);
+  assert.match(duel, /\.array-dimension-side::before\s*\{[^}]*inset:\s*0 0 0 auto[^}]*border-top:\s*2px solid #6d3ac7[^}]*border-bottom:\s*2px solid #6d3ac7[^}]*border-left:\s*2px solid #6d3ac7/);
+  assert.doesNotMatch(duel, /\.array-dimension-side\s*\{[^}]*(?:writing-mode:\s*vertical|rotate\()/);
+});
+
 test("les dialogues Coffres prennent, piègent et restaurent le focus", () => {
   const duel = pages["outils/club_maths/coffres_magiques.html"];
   const solo = pages["outils/calcul_mental/coffres_magiques_solo.html"];
