@@ -4,7 +4,7 @@ import {
   COMPARAISON_VALEURS_EXACTES,
   SCHEMA_QUESTION_INSTANCE_V2,
   TYPE_REPONSE_DEUX_ENTIERS,
-} from "../../../../contrats/src/question-v2.js?v=24";
+} from "../../../../contrats/src/question-v2.js?v=25";
 import {
   BASES_CARRES_ENTIERS,
   blocPuissance,
@@ -15,11 +15,11 @@ import {
   exigerParametresCarres,
   reponseEntier,
   valeurParametreOuTirage,
-} from "./commun.js?v=24";
+} from "./commun.js?v=25";
 
 export const NOM_GENERATEUR_RETROUVER_ENTIER_CARRE =
   "nombres-et-calculs.carres-entiers-1-a-12.retrouver-entier";
-export const VERSION_GENERATEUR_RETROUVER_ENTIER_CARRE = 1;
+export const VERSION_GENERATEUR_RETROUVER_ENTIER_CARRE = 2;
 
 export const FORMES_RETROUVER_ENTIER = Object.freeze([
   "question-verbale",
@@ -44,7 +44,7 @@ function construireEnonce(carre, forme) {
       {
         id: "consigne-question-verbale",
         type: "texte",
-        contenu: "Quel entier compris entre 0 et 12 a pour carré",
+        contenu: "Quel entier naturel a pour carré",
       },
       { id: "carre-cible", type: "entier", valeur: carre },
       { id: "ponctuation-question-verbale", type: "texte", contenu: "?" },
@@ -55,7 +55,7 @@ function construireEnonce(carre, forme) {
       {
         id: "consigne-egalite-carre",
         type: "texte",
-        contenu: "Complète l'égalité avec un entier de 0 à 12.",
+        contenu: "Complète l'égalité avec un entier naturel.",
       },
       { id: "egalite-carre-cible", type: "entier", valeur: carre },
     ];
@@ -163,7 +163,7 @@ export function genererQuestionRetrouverEntierCarre({ aleatoire, parametres }) {
       {
         id: "correction-conclusion",
         type: "texte",
-        contenu: `L'entier recherché entre 0 et 12 est ${base}.`,
+        contenu: `L'entier naturel recherché est ${base}.`,
       },
     ],
   };

@@ -3,6 +3,7 @@ import assert from "node:assert/strict";
 
 import {
   TYPE_REPONSE_DEUX_ENTIERS,
+  TYPE_REPONSE_CHOIX_UNIQUE,
   TYPE_REPONSE_ENTIER_NATUREL,
   TYPE_REPONSE_FRACTION_EQUIVALENTE,
   TYPE_REPONSE_NOMBRE_DECIMAL,
@@ -12,6 +13,7 @@ import {
   REFERENTIEL_COMPETENCES,
   SCHEMA_TRACE_REPONSE,
   SCHEMA_TRACE_REPONSE_V1,
+  SCHEMA_TRACE_REPONSE_V2,
   validerTraceReponse,
 } from "./trace-reponse.js";
 
@@ -44,6 +46,7 @@ const traceValide = () => ({
   validation: 1,
   reponse: {
     type: TYPE_REPONSE_SELECTION_MULTIPLE,
+    statut: "fournie",
     choix: ["2", "3", "5", "10"],
   },
   juste: true,
@@ -55,12 +58,20 @@ describe("validerTraceReponse", () => {
     const trace = traceValide();
     trace.schema = SCHEMA_TRACE_REPONSE_V1;
     trace.microNotion = "nc-03";
+    delete trace.reponse.statut;
     delete trace.classement;
     delete trace.contenu;
     assert.deepEqual(validerTraceReponse(trace), {
       valide: true,
       erreurs: [],
     });
+  });
+
+  it("continue de lire une trace version 2 sans statut", () => {
+    const trace = traceValide();
+    trace.schema = SCHEMA_TRACE_REPONSE_V2;
+    delete trace.reponse.statut;
+    assert.deepEqual(validerTraceReponse(trace), { valide: true, erreurs: [] });
   });
 
   it("accepte la première validation d'une sélection multiple", () => {
@@ -79,7 +90,7 @@ describe("validerTraceReponse", () => {
 
   it("accepte une réponse entière naturelle", () => {
     const trace = traceValide();
-    trace.reponse = { type: TYPE_REPONSE_ENTIER_NATUREL, valeur: 4 };
+    trace.reponse = { type: TYPE_REPONSE_ENTIER_NATUREL, statut: "fournie", valeur: 4 };
     assert.equal(validerTraceReponse(trace).valide, true);
   });
 
@@ -87,6 +98,7 @@ describe("validerTraceReponse", () => {
     const trace = traceValide();
     trace.reponse = {
       type: TYPE_REPONSE_DEUX_ENTIERS,
+      statut: "fournie",
       valeurs: [7, 7],
     };
     assert.equal(validerTraceReponse(trace).valide, true);
@@ -97,6 +109,7 @@ describe("validerTraceReponse", () => {
     trace.classement.microNotion = "fraction-vers-decimal";
     trace.reponse = {
       type: TYPE_REPONSE_NOMBRE_DECIMAL,
+      statut: "fournie",
       saisie: " 0,500 ",
       valeur: { numerateur: 1, denominateur: 2 },
     };
@@ -108,6 +121,7 @@ describe("validerTraceReponse", () => {
     trace.classement.microNotion = "fraction-vers-decimal";
     trace.reponse = {
       type: TYPE_REPONSE_NOMBRE_DECIMAL,
+      statut: "fournie",
       saisie: "0,5",
       valeur: { numerateur: 1, denominateur: 3 },
     };
@@ -122,6 +136,7 @@ describe("validerTraceReponse", () => {
     trace.classement.microNotion = "decimal-vers-fraction";
     trace.reponse = {
       type: TYPE_REPONSE_FRACTION_EQUIVALENTE,
+      statut: "fournie",
       valeurs: [30, 20],
     };
     assert.equal(validerTraceReponse(trace).valide, true);
@@ -138,6 +153,7 @@ describe("validerTraceReponse", () => {
       const trace = traceValide();
       trace.reponse = {
         type: TYPE_REPONSE_NOMBRE_DECIMAL,
+        statut: "fournie",
         saisie,
         valeur: { numerateur: 1, denominateur: 2 },
       };
@@ -152,6 +168,7 @@ describe("validerTraceReponse", () => {
     const incomplet = traceValide();
     incomplet.reponse = {
       type: TYPE_REPONSE_DEUX_ENTIERS,
+      statut: "fournie",
       valeurs: [7],
     };
     assert.match(
@@ -162,6 +179,7 @@ describe("validerTraceReponse", () => {
     const converti = traceValide();
     converti.reponse = {
       type: TYPE_REPONSE_DEUX_ENTIERS,
+      statut: "fournie",
       valeurs: ["7", "7"],
     };
     assert.match(
@@ -172,6 +190,7 @@ describe("validerTraceReponse", () => {
     const enrichi = traceValide();
     enrichi.reponse = {
       type: TYPE_REPONSE_DEUX_ENTIERS,
+      statut: "fournie",
       valeurs: [7, 7],
       champActif: 1,
     };
@@ -195,6 +214,38 @@ describe("validerTraceReponse", () => {
     assert.match(validerTraceReponse(type).erreurs.join("\n"), /selection-multiple/);
   });
 
+  it("accepte une omission explicite pour chaque type de réponse", () => {
+    const types = [
+      TYPE_REPONSE_ENTIER_NATUREL,
+      TYPE_REPONSE_DEUX_ENTIERS,
+      TYPE_REPONSE_NOMBRE_DECIMAL,
+      TYPE_REPONSE_FRACTION_EQUIVALENTE,
+      TYPE_REPONSE_CHOIX_UNIQUE,
+      TYPE_REPONSE_SELECTION_MULTIPLE,
+    ];
+    for (const type of types) {
+      const trace = traceValide();
+      trace.reponse = { type, statut: "omise" };
+      trace.juste = false;
+      assert.deepEqual(validerTraceReponse(trace), { valide: true, erreurs: [] }, type);
+    }
+  });
+
+  it("refuse de qualifier une omission de juste ou de lui ajouter un payload", () => {
+    const juste = traceValide();
+    juste.reponse = { type: TYPE_REPONSE_ENTIER_NATUREL, statut: "omise" };
+    assert.match(validerTraceReponse(juste).erreurs.join("\n"), /ne peut pas être juste/);
+
+    const enrichie = traceValide();
+    enrichie.reponse = {
+      type: TYPE_REPONSE_ENTIER_NATUREL,
+      statut: "omise",
+      valeur: 0,
+    };
+    enrichie.juste = false;
+    assert.match(validerTraceReponse(enrichie).erreurs.join("\n"), /propriété inconnue/);
+  });
+
   it("refuse durée, identité et données de serveur", () => {
     for (const [cle, valeur] of [
       ["duree", 12],
@@ -211,7 +262,7 @@ describe("validerTraceReponse", () => {
     }
   });
 
-  it("exige le classement canonique et les versions du contenu en version 2", () => {
+  it("exige le classement canonique et les versions du contenu en versions 2 et 3", () => {
     const sansClassement = traceValide();
     delete sansClassement.classement;
     assert.match(

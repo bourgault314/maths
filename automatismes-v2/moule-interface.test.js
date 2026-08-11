@@ -46,6 +46,39 @@ describe("moule responsive commun", () => {
     const corps = blocCss(".corps-panneau");
     assert.match(corps, /min-height:\s*0/);
     assert.match(corps, /overflow-y:\s*auto/);
+    assert.match(app, /class="zone-corps-panneau"[\s\S]*class="corps-panneau"/);
+    assert.match(app, /data-indicateur-defilement[\s\S]*Fais défiler/);
+    assert.match(app, /scrollHeight > corps\.clientHeight \+ 2/);
+    assert.match(app, /corps\.scrollTop > 2/);
+    const indicateur = blocCss(".indicateur-defilement-panneau");
+    assert.match(indicateur, /position:\s*absolute/);
+    assert.match(indicateur, /pointer-events:\s*none/);
+  });
+
+  it("emploie une seule police mathématique et une grille commune pour les égalités", () => {
+    assert.match(app, /--mg-mathematiques", TYPOGRAPHIE\.mathematiques/);
+    assert.match(blocCss(".mathsgo-expression"), /font-family:\s*var\(--mg-mathematiques\)/);
+    assert.match(blocCss(".mathsgo-egalites-alignees"), /grid-template-columns:/);
+    assert.match(app, /function rendreEgaliteCarre\(/);
+    assert.doesNotMatch(app, /<p class="chaine-carre">\$\{rendrePuissance/);
+    assert.doesNotMatch(
+      app,
+      /<p>\$\{rendrePuissance\(base\)\} <span>=<\/span> <span>\$\{base\} ×/,
+    );
+    assert.doesNotMatch(css, /Cambria Math|STIX Two Math/);
+  });
+
+  it("colore aussi le contenu complet des réponses en fraction", () => {
+    assert.match(css, /\.rappel-reponse-eleve > span\s*\{/);
+    assert.doesNotMatch(css, /\.rappel-reponse-eleve span\s*\{/);
+    assert.match(
+      css,
+      /\.rappel-reponse-eleve\.reponse-juste \.fraction-empilee\s*\{[^}]*color:\s*color-mix\(in srgb, var\(--mg-reussite\) 60%, var\(--mg-encre\)\)/s,
+    );
+    assert.match(
+      css,
+      /\.rappel-reponse-eleve\.reponse-fausse \.fraction-empilee\s*\{[^}]*color:\s*color-mix\(in srgb, var\(--mg-erreur\) 60%, var\(--mg-encre\)\)/s,
+    );
   });
 
   it("conserve des touches tactiles compactes mais suffisamment grandes", () => {

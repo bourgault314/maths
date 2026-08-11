@@ -5,6 +5,7 @@ import { validerSeance } from "../../packages/contrats/src/seance.js";
 import { validerTraceReponse } from "../../packages/contrats/src/trace-reponse.js";
 import {
   COMPARAISON_VALEUR_RATIONNELLE_EXACTE,
+  TYPE_REPONSE_CHOIX_UNIQUE,
   TYPE_REPONSE_DEUX_ENTIERS,
   TYPE_REPONSE_ENTIER_NATUREL,
   TYPE_REPONSE_FRACTION_EQUIVALENTE,
@@ -367,11 +368,31 @@ describe("réponse interactive", () => {
     assert.deepEqual(etat.selection, ["3"]);
   });
 
-  it("refuse une validation vide", () => {
+  it("compte une sélection vide comme une omission fausse et idempotente", () => {
     const etat = etatDemarre();
     validerSelection(etat);
-    assert.match(etat.erreurValidation, /au moins une réponse/);
-    assert.equal(etat.traces.length, 0);
+    assert.equal(etat.erreurValidation, "");
+    assert.deepEqual(etat.validation, { juste: false, omise: true });
+    assert.equal(etat.correctionOuverte, true);
+    assert.deepEqual(etat.traces[0].reponse, {
+      type: questionCourante(etat).reponse.type,
+      statut: "omise",
+    });
+    assert.equal(nombreReussites(etat), 0);
+    validerSelection(etat);
+    assert.equal(etat.traces.length, 1);
+  });
+
+  it("compte aussi un choix unique vide comme une omission", () => {
+    const etat = etatDemarre({
+      notions: [NOTION_SOLIDES_USUELS],
+      nombreQuestions: 2,
+    });
+    validerSelection(etat);
+    assert.deepEqual(etat.traces[0].reponse, {
+      type: TYPE_REPONSE_CHOIX_UNIQUE,
+      statut: "omise",
+    });
   });
 
   it("crée une trace conforme sans révéler les bonnes réponses", () => {
@@ -491,6 +512,7 @@ describe("réponse interactive", () => {
     assert.deepEqual(etat.validation, { juste: true });
     assert.deepEqual(etat.traces[0].reponse, {
       type: TYPE_REPONSE_ENTIER_NATUREL,
+      statut: "fournie",
       valeur: attendu,
     });
     assert.deepEqual(validerTraceReponse(etat.traces[0]), { valide: true, erreurs: [] });
@@ -510,7 +532,18 @@ describe("réponse interactive", () => {
     assert.deepEqual(etat.validation, { juste: true });
     assert.deepEqual(etat.traces[0].reponse, {
       type: TYPE_REPONSE_ENTIER_NATUREL,
+      statut: "fournie",
       valeur: 0,
+    });
+  });
+
+  it("distingue une saisie entière vide de la vraie réponse zéro", () => {
+    const etat = etatSurQuestionNumerique();
+    validerSelection(etat);
+    assert.deepEqual(etat.validation, { juste: false, omise: true });
+    assert.deepEqual(etat.traces[0].reponse, {
+      type: TYPE_REPONSE_ENTIER_NATUREL,
+      statut: "omise",
     });
   });
 });
@@ -534,6 +567,7 @@ describe("réponse décimale positive", () => {
     assert.deepEqual(etat.validation, { juste: true });
     assert.deepEqual(etat.traces[0].reponse, {
       type: TYPE_REPONSE_NOMBRE_DECIMAL,
+      statut: "fournie",
       saisie: "0,50",
       valeur: { numerateur: 1, denominateur: 2 },
     });
@@ -600,23 +634,16 @@ describe("réponse décimale positive", () => {
     assert.match(etat.erreurValidation, /écriture décimale valide/);
   });
 
-  it("refuse une validation vide et compare sans flottants", () => {
+  it("compte une saisie décimale vide comme omise", () => {
     const etat = etatSurQuestionRationnelle(
       TYPE_REPONSE_NOMBRE_DECIMAL,
       { numerateur: 51, denominateur: 100 },
     );
     validerSelection(etat);
-    assert.equal(etat.erreurValidation, "Entre une réponse.");
-    assert.equal(etat.traces.length, 0);
-
-    for (const caractere of ["0", ",", "5", "1"]) {
-      saisirCaractere(etat, caractere);
-    }
-    validerSelection(etat);
-    assert.deepEqual(etat.validation, { juste: true });
-    assert.deepEqual(etat.traces[0].reponse.valeur, {
-      numerateur: 51,
-      denominateur: 100,
+    assert.deepEqual(etat.validation, { juste: false, omise: true });
+    assert.deepEqual(etat.traces[0].reponse, {
+      type: TYPE_REPONSE_NOMBRE_DECIMAL,
+      statut: "omise",
     });
   });
 });
@@ -657,16 +684,21 @@ describe("réponse avec deux champs entiers", () => {
     assert.deepEqual(etat.saisies, ["", "1"]);
   });
 
-  it("refuse une validation vide ou partielle", () => {
+  it("compte deux champs vides comme omis mais garde un champ partiel réparable", () => {
     const etat = etatSurQuestionDeuxEntiers();
     validerSelection(etat);
-    assert.equal(etat.erreurValidation, "Complète les deux cases.");
-    assert.equal(etat.traces.length, 0);
+    assert.deepEqual(etat.validation, { juste: false, omise: true });
+    assert.deepEqual(etat.traces[0].reponse, {
+      type: TYPE_REPONSE_DEUX_ENTIERS,
+      statut: "omise",
+    });
 
-    saisirChiffre(etat, 3);
-    validerSelection(etat);
-    assert.equal(etat.erreurValidation, "Complète les deux cases.");
-    assert.equal(etat.traces.length, 0);
+    const partiel = etatSurQuestionDeuxEntiers();
+    saisirChiffre(partiel, 3);
+    validerSelection(partiel);
+    assert.equal(partiel.erreurValidation, "Complète les deux cases.");
+    assert.equal(partiel.traces.length, 0);
+    assert.equal(partiel.validation, null);
   });
 
   it("compare les deux valeurs, crée la trace exacte et fige la saisie", () => {
@@ -679,6 +711,7 @@ describe("réponse avec deux champs entiers", () => {
     assert.deepEqual(etat.validation, { juste: true });
     assert.deepEqual(etat.traces[0].reponse, {
       type: TYPE_REPONSE_DEUX_ENTIERS,
+      statut: "fournie",
       valeurs: [3, 4],
     });
     assert.deepEqual(validerTraceReponse(etat.traces[0]), {
@@ -703,6 +736,7 @@ describe("réponse avec deux champs entiers", () => {
     assert.deepEqual(etat.validation, { juste: true });
     assert.deepEqual(etat.traces[0].reponse, {
       type: TYPE_REPONSE_DEUX_ENTIERS,
+      statut: "fournie",
       valeurs: [0, 0],
     });
   });
@@ -721,6 +755,19 @@ describe("réponse avec deux champs entiers", () => {
 });
 
 describe("réponse par fraction équivalente", () => {
+  it("compte une fraction entièrement vide comme omise", () => {
+    const etat = etatSurQuestionRationnelle(
+      TYPE_REPONSE_FRACTION_EQUIVALENTE,
+      { numerateur: 3, denominateur: 2 },
+    );
+    validerSelection(etat);
+    assert.deepEqual(etat.validation, { juste: false, omise: true });
+    assert.deepEqual(etat.traces[0].reponse, {
+      type: TYPE_REPONSE_FRACTION_EQUIVALENTE,
+      statut: "omise",
+    });
+  });
+
   it("compare les deux champs par produit en croix et trace la fraction saisie", () => {
     const etat = etatSurQuestionRationnelle(
       TYPE_REPONSE_FRACTION_EQUIVALENTE,
@@ -736,6 +783,7 @@ describe("réponse par fraction équivalente", () => {
     assert.deepEqual(etat.validation, { juste: true });
     assert.deepEqual(etat.traces[0].reponse, {
       type: TYPE_REPONSE_FRACTION_EQUIVALENTE,
+      statut: "fournie",
       valeurs: [15, 10],
     });
     assert.deepEqual(validerTraceReponse(etat.traces[0]), {
@@ -780,10 +828,13 @@ describe("réponse par fraction équivalente", () => {
 });
 
 describe("enchaînement de la séance", () => {
-  it("exige une validation avant de passer à la suite en entraînement", () => {
+  it("clôt une omission au premier Suivant puis avance au second", () => {
     const etat = etatDemarre();
     passerQuestionSuivante(etat);
     assert.equal(etat.seance.etat.indexQuestion, 0);
+    assert.deepEqual(etat.validation, { juste: false, omise: true });
+    passerQuestionSuivante(etat);
+    assert.equal(etat.seance.etat.indexQuestion, 1);
   });
 
   it("termine après la dernière réponse et calcule le score depuis les traces", () => {
@@ -830,6 +881,17 @@ describe("contexte Au tableau", () => {
     assert.equal(etat.correctionOuverte, true);
     passerQuestionSuivante(etat);
     assert.equal(etat.seance.etat.indexQuestion, 1);
+    assert.equal(etat.traces.length, 0);
+  });
+
+  it("ne transforme jamais une absence de choix en trace", () => {
+    const etat = etatDemarre({
+      mode: "tableau",
+      notions: [NOTION_SOLIDES_USUELS],
+      nombreQuestions: 2,
+    });
+    validerSelection(etat);
+    assert.equal(etat.validation, null);
     assert.equal(etat.traces.length, 0);
   });
 });

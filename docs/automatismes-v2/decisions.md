@@ -738,3 +738,57 @@ objets, contenants, valeurs, diviseurs, quotas et tirages seedés ne changent pa
 
 Le graphe public V2 est invalidé d'un seul tenant en `v24`. Aucun chemin sous
 `/auto/` n'appartient à ce lot.
+
+### D-045 — Le rendu mathématique et la validation sans réponse deviennent communs
+
+Gwenaël valide le 11 août 2026 les dernières corrections de `NC-02` et demande
+leur publication après une nouvelle recette complète. Cette décision remplace
+dans D-040 le maintien de la borne visible « compris entre 0 et 12 » et
+l'alternance entre « nombres carrés » et « carrés parfaits ». Elle étend aussi
+au lecteur commun le comportement d'une réponse entièrement omise ; les
+familles, leurs quotas et leurs tirages seedés ne changent pas.
+
+Tous les calculs linéaires de NC-02 emploient le rendu HTML sémantique commun
+et sa même pile typographique, y compris les nombres, les opérateurs et les
+véritables éléments `sup`. Les égalités successives passent
+par le composant commun d'alignement afin que leurs signes `=` partagent une
+même colonne. Le brouillon SVG de rédaction algébrique n'est donc pas utilisé
+pour ces expressions : les SVG restent dans les composants graphiques validés,
+notamment le carré quadrillé, et ne composent jamais une puissance. Des tests
+du composant et de ses usages empêchent le retour d'un assemblage typographique
+local.
+
+Tous les panneaux de cours, d'aide et de correction reçoivent le même repère
+« Fais défiler ↓ ». Il n'est visible que si le contenu dépasse réellement la
+zone centrale et que celle-ci se trouve encore en haut ; il disparaît dès que
+l'utilisateur commence à faire défiler. Il ne dépend d'aucune notion ni d'une
+hauteur d'écran codée en dur.
+
+Dans `NC-02/F2`, la formulation verbale devient « Quel entier naturel a pour
+carré 144 ? ». La forme symbolique peut demander « Complète l'égalité avec un
+entier naturel. » ; la borne technique de génération n'est plus énoncée. Dans
+`NC-02/F4`, les deux formulations deviennent « Sélectionne tous les carrés
+parfaits. » et « Parmi ces nombres, lesquels sont des carrés parfaits ? ».
+
+Les corrections de F1, F2, F3 et F5 réemploient le carré quadrillé commun en
+mode de sens lorsqu'une base au moins égale à 2 est connue après validation.
+Le même dessin relie alors côtés égaux, produit et total ; aucune grille n'est
+ajoutée pour la base 0 ou 1, pour la sélection F4 ou pour le calcul court F6.
+
+Dans « S'entraîner », une réponse correcte rappelée dans la correction est
+verte, une réponse fournie et fausse est rouge, et une réponse omise reste
+neutre avec une valeur visuellement vide. Si l'élève tente de valider ou
+d'avancer sans avoir commencé sa réponse, cette omission compte comme une
+réponse fausse, produit une seule trace et ouvre directement la correction.
+Une réponse partiellement remplie ou syntaxiquement invalide reste au contraire
+modifiable et ne produit pas encore de trace. « Au tableau » ne change pas :
+il ne crée ni réponse élève, ni trace, ni score.
+
+Le schéma courant devient `mathsgo.trace-reponse/3`. Chaque réponse porte le
+statut `fournie` avec sa valeur ou le statut `omise` sans valeur ; une omission
+est nécessairement fausse. Les traces versions 1 et 2 restent acceptées en
+lecture sans migration destructive. Le graphe public est invalidé d'un seul
+tenant en `v25`. La recette couvre les réponses justes, fausses, omises et
+partielles, les panneaux avec et sans débordement, ainsi que les formats
+`320 × 568`, `390 × 844`, `1 280 × 720`, `1 920 × 1 080` et le zoom à 200 %.
+`/auto/` reste strictement hors du lot.

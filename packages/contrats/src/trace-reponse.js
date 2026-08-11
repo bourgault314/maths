@@ -1,10 +1,11 @@
-// Contrat de trace de réponse — versions 1 et 2.
+// Contrat de trace de réponse — versions 1, 2 et 3.
 //
 // La trace enregistre ce que l'élève a validé, pas la bonne réponse. Elle ne
 // contient aucune identité, durée, donnée d'écran ou information de serveur.
 // La version 2 ajoute le classement canonique et les versions du contenu afin
 // qu'un futur export reste interprétable sans la question complète. La version
 // 1 reste lisible telle qu'elle a été publiée ; elle n'est jamais réécrite.
+// La version 3 distingue une réponse fournie d'une omission volontaire.
 
 import { estDonneePure, estIdentifiantValide } from "./gabarit.js";
 import {
@@ -14,10 +15,11 @@ import {
   TYPE_REPONSE_FRACTION_EQUIVALENTE,
   TYPE_REPONSE_NOMBRE_DECIMAL,
   TYPE_REPONSE_SELECTION_MULTIPLE,
-} from "./question-v2.js?v=24";
+} from "./question-v2.js?v=25";
 
 export const SCHEMA_TRACE_REPONSE_V1 = "mathsgo.trace-reponse/1";
-export const SCHEMA_TRACE_REPONSE = "mathsgo.trace-reponse/2";
+export const SCHEMA_TRACE_REPONSE_V2 = "mathsgo.trace-reponse/2";
+export const SCHEMA_TRACE_REPONSE = "mathsgo.trace-reponse/3";
 export const REFERENTIEL_COMPETENCES = "mathsgo.taxonomie-competences/1";
 
 const FORMAT_ID_INSTANCE = /^[a-z0-9][a-z0-9._:@-]{0,199}$/;
@@ -169,7 +171,8 @@ export function validerTraceReponse(trace) {
   }
   const t = /** @type {Record<string, any>} */ (trace);
   const version1 = t.schema === SCHEMA_TRACE_REPONSE_V1;
-  const version2 = t.schema === SCHEMA_TRACE_REPONSE;
+  const version2 = t.schema === SCHEMA_TRACE_REPONSE_V2;
+  const version3 = t.schema === SCHEMA_TRACE_REPONSE;
   validerClesConnues(
     t,
     version1
@@ -202,9 +205,9 @@ export function validerTraceReponse(trace) {
     erreurs,
   );
 
-  if (!version1 && !version2) {
+  if (!version1 && !version2 && !version3) {
     erreurs.push(
-      `schema : « ${SCHEMA_TRACE_REPONSE_V1} » ou « ${SCHEMA_TRACE_REPONSE} » attendu`,
+      `schema : « ${SCHEMA_TRACE_REPONSE_V1} », « ${SCHEMA_TRACE_REPONSE_V2} » ou « ${SCHEMA_TRACE_REPONSE} » attendu`,
     );
   }
   for (const champ of ["id", "seance", "question"]) {
@@ -216,7 +219,7 @@ export function validerTraceReponse(trace) {
     if (t.microNotion !== undefined && !estIdentifiantValide(t.microNotion)) {
       erreurs.push("microNotion : identifiant en minuscules requis");
     }
-  } else if (version2) {
+  } else if (version2 || version3) {
     validerClassementV2(t.classement, erreurs);
     validerContenuV2(t.contenu, erreurs);
   }
@@ -244,15 +247,22 @@ export function validerTraceReponse(trace) {
     const typeDecimal = t.reponse.type === TYPE_REPONSE_NOMBRE_DECIMAL;
     const typeFraction =
       t.reponse.type === TYPE_REPONSE_FRACTION_EQUIVALENTE;
+    const statutFourni = !version3 || t.reponse.statut === "fournie";
+    const statutOmis = version3 && t.reponse.statut === "omise";
+    if (version3 && !statutFourni && !statutOmis) {
+      erreurs.push("reponse.statut : « fournie » ou « omise » attendu");
+    }
     validerClesConnues(
       t.reponse,
-      typeEntier
-        ? ["type", "valeur"]
-        : typeDeuxEntiers || typeFraction
-          ? ["type", "valeurs"]
-          : typeDecimal
-            ? ["type", "saisie", "valeur"]
-          : ["type", "choix"],
+      statutOmis
+        ? ["type", "statut"]
+        : typeEntier
+          ? ["type", ...(version3 ? ["statut"] : []), "valeur"]
+          : typeDeuxEntiers || typeFraction
+            ? ["type", ...(version3 ? ["statut"] : []), "valeurs"]
+            : typeDecimal
+              ? ["type", ...(version3 ? ["statut"] : []), "saisie", "valeur"]
+            : ["type", ...(version3 ? ["statut"] : []), "choix"],
       "reponse",
       erreurs,
     );
@@ -267,7 +277,11 @@ export function validerTraceReponse(trace) {
         `reponse.type : « ${TYPE_REPONSE_SELECTION_MULTIPLE} », « ${TYPE_REPONSE_CHOIX_UNIQUE} », « ${TYPE_REPONSE_ENTIER_NATUREL} », « ${TYPE_REPONSE_DEUX_ENTIERS} », « ${TYPE_REPONSE_NOMBRE_DECIMAL} » ou « ${TYPE_REPONSE_FRACTION_EQUIVALENTE} » attendu`,
       );
     }
-    if (typeEntier) {
+    if (statutOmis) {
+      if (t.juste !== false) {
+        erreurs.push("juste : une réponse omise ne peut pas être juste");
+      }
+    } else if (typeEntier) {
       if (!Number.isSafeInteger(t.reponse.valeur) || t.reponse.valeur < 0) {
         erreurs.push("reponse.valeur : entier naturel requis");
       }

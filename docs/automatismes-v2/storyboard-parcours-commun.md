@@ -2,7 +2,7 @@
 
 ## Statut
 
-**Architecture fonctionnelle version 1, validée par Gwenaël le 19 juillet 2026.**
+**Architecture fonctionnelle version 1, validée par Gwenaël le 19 juillet 2026 ; comportement commun des réponses omises précisé par D-045 le 11 août 2026.**
 
 Ce document décrit l’enveloppe commune du diaporama et du mode interactif. Il ne redessine pas la page d’accueil et ne contient aucun code.
 
@@ -107,10 +107,20 @@ Ces trois informations ne sont jamais confondues.
 
 - chaque question interactive compte au maximum une réussite ;
 - le compteur est mis à jour après la validation de la réponse ;
+- une réponse entièrement vide au moment de valider ou d'avancer compte comme
+  une réponse fausse et ouvre directement la correction ;
+- une réponse partielle ou syntaxiquement invalide reste modifiable et ne
+  compte pas encore ;
 - le résultat de la première validation reste la trace de référence si une possibilité de nouvel essai est ajoutée plus tard ;
 - l’en-tête montre un compteur compact, par exemple `✓ 2` ;
 - le bilan final écrit la formulation complète, par exemple « 7 réponses justes sur 10 » ;
 - le diaporama ne possède pas de score, faute de réponses enregistrées.
+
+Après validation, le rappel de la réponse est vert si elle est juste, rouge si
+elle est fournie et fausse, ou neutre avec une valeur visuellement vide si elle
+est omise. Le libellé textuel reste explicite dans les trois cas. Le mode « Au
+tableau » ne change pas : révéler ou avancer n'y crée ni réponse élève, ni
+trace, ni score.
 
 ### Temps futur
 
@@ -128,6 +138,15 @@ L’aide quitte la zone du clavier et rejoint l’en-tête, toujours au même em
 - l’ouverture de l’aide conserve la réponse commencée ;
 - la fermeture rend le focus au bouton « Aide » ;
 - lorsque la séance interdit l’aide, notamment dans un futur mode examen, la commande n’est pas présentée.
+
+## Défilement commun des panneaux
+
+Les panneaux de cours, d'aide et de correction utilisent le même repère « Fais
+défiler ↓ ». Il apparaît seulement lorsque leur contenu dépasse réellement la
+zone centrale et que celle-ci est encore en haut. Il disparaît au premier
+défilement et ne réserve pas d'espace lorsque tout le contenu tient. Cette
+règle est commune au téléphone, à l'ordinateur, au TNI et au zoom ; elle ne
+dépend pas de la notion affichée.
 
 Le clavier peut donc apparaître, disparaître ou changer de disposition sans déplacer l’aide.
 
@@ -153,6 +172,8 @@ Règles communes :
 - le signe moins n’apparaît que si une réponse négative est possible ;
 - la virgule n’apparaît que si une réponse décimale est possible et ne peut être saisie qu’une fois ;
 - effacer et valider restent toujours disponibles ;
+- une validation entièrement vide suit la règle d'omission commune ; un champ
+  commencé mais incomplet reste réparable ;
 - le clavier physique ou Bluetooth reste accepté ;
 - chaque touche est un vrai bouton nommé, atteignable au clavier et d’au moins 44 px ;
 - le clavier réserve sa hauteur et ne masque ni la réponse ni les éléments ayant le focus.

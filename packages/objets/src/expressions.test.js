@@ -2,12 +2,18 @@ import { describe, it } from "node:test";
 import assert from "node:assert/strict";
 
 import {
+  caseVide,
   egalite,
+  groupe,
+  inferieurStrict,
   nombre,
+  produit,
   puissance,
+  somme,
   texteCourt,
   variable,
   versHtmlSemantique,
+  versHtmlEgalitesAlignees,
 } from "./expressions.js";
 
 describe("versHtmlSemantique", () => {
@@ -38,6 +44,23 @@ describe("versHtmlSemantique", () => {
     );
   });
 
+  it("rend les cases vides et les encadrements avec une verbalisation accessible", () => {
+    const cases = versHtmlSemantique(egalite(
+      nombre(49),
+      produit(caseVide(), caseVide()),
+    ));
+    assert.match(cases, /aria-label="49 égale case vide fois case vide"/);
+    assert.equal((cases.match(/class="case-vide-aide"/g) ?? []).length, 2);
+
+    const encadrement = versHtmlSemantique(inferieurStrict(
+      produit(nombre(6), nombre(6)),
+      nombre(40),
+      produit(nombre(7), nombre(7)),
+    ));
+    assert.match(encadrement, /aria-label="6 fois 6 est inférieur à 40 est inférieur à 7 fois 7"/);
+    assert.match(encadrement, />6 × 6 &lt; 40 &lt; 7 × 7<\/span>$/);
+  });
+
   it("échappe le contenu visible et la valeur de aria-label", () => {
     const expression = egalite(
       variable('<x onmouseover="alerte">'),
@@ -57,5 +80,30 @@ describe("versHtmlSemantique", () => {
       () => versHtmlSemantique({ type: "inconnu" }),
       /nœud inconnu/,
     );
+  });
+});
+
+describe("versHtmlEgalitesAlignees", () => {
+  it("place tous les signes égale dans une seule grille et conserve les exposants", () => {
+    const html = versHtmlEgalitesAlignees(egalite(
+      somme(puissance(nombre(7), 2), nombre(1)),
+      somme(nombre(49), nombre(1)),
+      nombre(50),
+    ));
+    assert.match(html, /mathsgo-expression mathsgo-egalites-alignees/);
+    assert.equal((html.match(/mathsgo-egalite-signe/g) ?? []).length, 2);
+    assert.equal((html.match(/<sup>2<\/sup>/g) ?? []).length, 1);
+    assert.match(html, /aria-label="7 au carré plus 1 égale 49 plus 1 égale 50"/);
+  });
+
+  it("rend les parenthèses comme partie de l'expression structurée", () => {
+    assert.match(
+      versHtmlSemantique(produit(nombre(11), groupe(somme(nombre(10), nombre(1))))),
+      />11 × \(10 \+ 1\)<\/span>$/,
+    );
+  });
+
+  it("refuse une relation qui n'est pas une suite d'égalités", () => {
+    assert.throws(() => versHtmlEgalitesAlignees(nombre(2)), /suite alignée/);
   });
 });

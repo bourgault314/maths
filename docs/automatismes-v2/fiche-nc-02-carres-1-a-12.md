@@ -3,8 +3,8 @@
 ## Statut
 
 **Notion validée par Gwenaël et publiée après recette technique. Le périmètre
-visible est étendu de 0 à 12 ; les finitions issues de l'audit ont été validées
-le 8 août 2026.**
+visible est étendu de 0 à 12 ; les finitions issues de l'audit du 11 août 2026
+sont intégrées au parcours commun.**
 
 Cette fiche remplace la proposition de conception préparée avant la publication
 de NC-01. Elle intègre les retours donnés après cette première proposition :
@@ -43,7 +43,7 @@ général sur les puissances.
 2. expliquer qu'elle signifie `n × n`, et non `n × 2` ;
 3. rappeler les treize associations entre les entiers de 0 à 12 et leurs
    carrés ;
-4. retrouver l'entier compris entre 0 et 12 à partir de son carré ;
+4. retrouver l'entier naturel à partir de son carré ;
 5. reconnaître un carré parmi des entiers voisins ;
 6. relier un carré de `n` rangées et `n` colonnes au produit `n × n` ;
 7. effectuer un calcul très court dans lequel le carré est calculé avant une
@@ -135,7 +135,7 @@ Les associations utilisent toute la page et montrent chaque écriture complète 
 
 Elles sont réparties en trois groupes `0–4`, `5–8`, puis `9–12`. Chaque
 puissance passe par le composant mathématique commun. Le cours précise que ces
-résultats sont des **nombres carrés**, aussi appelés **carrés parfaits**. Le
+résultats sont des **carrés parfaits**, c'est-à-dire des carrés d'entiers. Le
 fait `0` au carré reste une égalité numérique : aucun carré quadrillé `0 × 0`
 n'est dessiné.
 
@@ -186,6 +186,8 @@ Une soustraction est rédigée de la même façon en parallèle. Les étapes
 numérotées qui fragmentaient le calcul disparaissent du cours et des
 corrections : l'élève voit une égalité complète qu'il peut imiter. Il n'est
 jamais demandé d'appliquer une règle générale de priorités non expliquée.
+Toutes les lignes utilisent le même rendu HTML mathématique et les signes `=`
+sont placés par le composant commun dans une colonne unique.
 
 ## Six familles de questions
 
@@ -215,8 +217,9 @@ Exemples : « Quel est le carré de 4 ? » et « Quel encadrement est correct po
 
 Trois formes alternent :
 
-- « Quel entier compris entre 0 et 12 a pour carré 81 ? » ;
-- `[case]` au carré `= 121` ;
+- « Quel entier naturel a pour carré 81 ? » ;
+- « Complète l'égalité avec un entier naturel. » puis
+  `[case]` au carré `= 121` ;
 - `49 = [case] × [case]`.
 
 Dans la troisième forme, les deux cases sont indépendantes. L'élève clique
@@ -226,8 +229,8 @@ deux valeurs sont exactes ; aucun demi-point ni remplissage automatique.
 Dans la deuxième forme, le contour du champ entoure seulement la base saisie.
 Le véritable exposant HTML reste bleu foncé et placé hors de ce contour.
 
-La formulation mentionne l'intervalle 0 à 12 afin de ne pas introduire les
-solutions négatives d'une équation.
+La formulation « entier naturel » fixe le type de réponse utile sans exposer
+la borne technique du générateur.
 
 ### F3 — Comprendre la notation
 
@@ -242,10 +245,10 @@ solutions négatives d'une équation.
 Cette famille diagnostique le sens de la notation, pas la connaissance du
 résultat numérique.
 
-### F4 — Reconnaître les nombres carrés
+### F4 — Reconnaître les carrés parfaits
 
-- Questions alternées : « Sélectionne tous les nombres carrés » et « Parmi ces
-  nombres, lesquels sont des carrés parfaits ? ».
+- Questions alternées : « Sélectionne tous les carrés parfaits. » et « Parmi
+  ces nombres, lesquels sont des carrés parfaits ? ».
 - Réponse : sélection multiple exacte.
 - Une ou deux réponses correctes ; valeurs distinctes ; aucun distracteur
   carré ; pas de choix « Aucun » dans cette première tranche.
@@ -308,8 +311,8 @@ elles n'ajoutent donc ni question, ni famille, ni durée supplémentaire.
 - au moins une forme à deux facteurs dans F2 pour les séries d'au moins dix
   questions ;
 - distracteurs F3 et F4 uniques, exacts et non ambigus ;
-- les deux formulations « nombre carré » et « carré parfait » sont vues dans
-  une série de 20 ;
+- les deux formulations validées avec « carrés parfaits » sont vues dans une
+  série de 20 ;
 - les deux côtés utilisés par F5 sont distincts dans une série de 20 ;
 - F6 équilibre l'addition et la soustraction sur les séries longues ;
 - aucune chaîne visible avec un accent circonflexe et aucun caractère exposant
@@ -342,8 +345,7 @@ la réponse. Ils peuvent être mentionnés après validation dans une correction
 
 ### F4
 
-1. Un nombre carré, aussi appelé carré parfait, s'écrit `a × a` avec `a`
-   entier de 0 à 12.
+1. Un carré parfait s'écrit `a × a` avec `a` entier de 0 à 12.
 2. Vérifie les quatre cartes et sélectionne toutes les réponses qui conviennent.
 
 ### F5
@@ -372,6 +374,11 @@ La correction reste complète, même après une réponse juste.
 - **F6 :** une égalité correctement rédigée remplace d'abord le carré par sa
   valeur, puis effectue la seconde opération sur la ligne suivante.
 
+Lorsque la base connue après validation est au moins égale à 2, F1, F2, F3 et
+F5 réemploient dans la correction le carré quadrillé commun en mode de sens :
+les deux côtés égaux et le total relient le dessin au produit. Ce renfort n'est
+pas ajouté pour 0 ou 1, pour la sélection F4 ni pour le calcul court F6.
+
 Les corrections traitent notamment : carré confondu avec double ou addition de
 2, copie de la base, copie du résultat dans une question inverse, facteurs
 inégaux, erreur sur 11 ou 12, comptage de cellules, et addition ou soustraction
@@ -390,6 +397,10 @@ de l'élève.
 - pavé maths&go au toucher, clavier physique à la souris ;
 - validation séparée ;
 - réponse conservée après validation ;
+- réponse rappelée en vert si elle est juste, en rouge si elle est fournie et
+  fausse, ou de façon neutre et visuellement vide si elle est omise ;
+- réponse entièrement omise comptée fausse avec ouverture immédiate de la
+  correction ; réponse partielle ou invalide encore modifiable sans trace ;
 - correction immédiate complète.
 
 ### Au tableau
@@ -399,16 +410,30 @@ de l'élève.
 - taille et contraste adaptés à la distance ;
 - commandes tactiles d'au moins 44 pixels.
 
-Le changement de contexte ne doit jamais modifier la graine ni la réponse.
+Le changement de contexte ne doit jamais modifier la graine ni la réponse. Le
+comportement d'omission ne s'applique pas à « Au tableau », qui ne produit ni
+réponse élève, ni trace, ni score.
 
-## Contrat commun des puissances
+## Contrat commun des traces de réponse
+
+La trace courante `mathsgo.trace-reponse/3` distingue une réponse `fournie`,
+qui conserve sa valeur structurée, d'une réponse `omise`, qui n'en fabrique
+aucune et est nécessairement fausse. Une omission complète produit une seule
+trace. Les versions 1 et 2 restent lisibles sans réécriture.
+
+## Contrat commun du rendu mathématique
 
 Toute puissance arrive comme une donnée structurée `base + exposant`. Le
 composant commun produit un véritable élément HTML `sup`, un groupe insécable
-et un libellé accessible comme « sept au carré ».
+et un libellé accessible comme « sept au carré ». Nombres, opérateurs et
+exposants héritent de la même pile typographique mathématique.
 
 Ce composant est obligatoire dans les questions, le cours, l'aide, la
-correction et les choix. Sont interdits :
+correction et les choix. Les égalités successives passent par son rendu aligné
+afin que chaque signe `=` occupe la même colonne. Les SVG restent dans les
+composants graphiques validés, comme le carré quadrillé, et ne servent jamais à
+composer localement une puissance.
+Sont interdits :
 
 - une chaîne visible du type `7^2` ;
 - un caractère Unicode exposant fabriqué localement ;
@@ -447,6 +472,8 @@ SVG, énoncé, paramètre ni distracteur de la banque historique n'est repris.
 - même coque : en-tête, zone centrale défilable, dock fixe ;
 - même ordre : question → réponse → validation ;
 - mêmes panneaux de cours, aide et correction ;
+- même indicateur « Fais défiler ↓ », visible seulement lorsqu'un panneau
+  déborde réellement et se trouve encore en haut, puis masqué au défilement ;
 - même emplacement des commandes ;
 - mêmes profils de clavier, mêmes douze touches et mêmes cibles d'au moins
   44 pixels ;
@@ -478,7 +505,15 @@ le dock, ni le profil de clavier partagé.
 - téléphone `320 × 568` et `390 × 844` ;
 - ordinateur `1 280 × 720` ;
 - TNI 16:9 et zoom équivalent à 200 % ;
-- contrôle de l'alignement des bases 0, 1, 9, 10, 11 et 12 avec leur exposant ;
+- contrôle explicite à `1 920 × 1 080` et au zoom à 200 % ;
+- contrôle de la typographie commune, de l'alignement des bases 0, 1, 9, 10,
+  11 et 12 avec leur exposant et de la colonne des signes `=` ;
+- panneaux trop courts et assez hauts : présence conditionnelle de « Fais
+  défiler ↓ », puis disparition au premier défilement ;
+- validation d'une réponse juste, fausse, entièrement omise, partielle et
+  invalide pour chaque forme de réponse concernée ;
+- contrôle du carré quadrillé dans les corrections F1, F2, F3 et F5 pour une
+  base au moins égale à 2, et de son absence dans les cas exclus ;
 - absence de débordement, chevauchement ou saut des commandes, y compris à
   l'intérieur des SVG ;
 - inventaire visuel complet des cinq pages de cours, de toutes les

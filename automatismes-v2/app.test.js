@@ -5,7 +5,7 @@ function installerFauxNavigateur(recherche) {
   const gestionnaires = new Map();
   const focusRecus = [];
   const optionsFocus = [];
-  const corpsPanneau = { scrollTop: 0 };
+  const corpsPanneau = { scrollTop: 0, dataset: {} };
   const zoneQuestion = { scrollTop: 0, dataset: { questionIndex: "" } };
   const panneau = {
     id: "",
@@ -19,6 +19,7 @@ function installerFauxNavigateur(recherche) {
     set innerHTML(valeur) {
       html = valeur;
       corpsPanneau.scrollTop = 0;
+      corpsPanneau.dataset = {};
       zoneQuestion.scrollTop = 0;
     },
     addEventListener(type, gestionnaire) {
@@ -154,6 +155,13 @@ it("rend NC-01 depuis le registre et conserve son aide et sa correction", async 
     /data-action="chiffre-aide" data-index="(\d+)"[^>]*>(\d)<\/button>/g,
   )].map((correspondance) => ({ index: correspondance[1], chiffre: Number(correspondance[2]) }));
   assert.ok(chiffresAide.length > 0);
+  corpsPanneau.scrollTop = 0;
+  corpsPanneau.dataset.defilementCommence = "true";
+  cliquer(gestionnaires, "chiffre-aide", undefined, undefined, chiffresAide[0].index);
+  assert.equal(corpsPanneau.dataset.defilementCommence, "true");
+  cliquer(gestionnaires, "chiffre-aide", undefined, undefined, chiffresAide[0].index);
+  assert.equal(corpsPanneau.dataset.defilementCommence, "true");
+  corpsPanneau.scrollTop = 180;
   for (const { index } of chiffresAide) {
     cliquer(gestionnaires, "chiffre-aide", undefined, undefined, index);
   }
@@ -184,8 +192,12 @@ it("rend le cours en cinq pages et les six familles de NC-02", async () => {
   assert.match(application.innerHTML, /Les carrés de 0 à 12/);
   assert.match(application.innerHTML, /2 \/ 5/);
   assert.match(application.innerHTML, /carrés parfaits/);
-  assert.match(application.innerHTML, /<span>0 × 0<\/span> <span>=<\/span> <strong>0<\/strong>/);
-  assert.match(application.innerHTML, /<span>12 × 12<\/span> <span>=<\/span> <strong>144<\/strong>/);
+  assert.match(application.innerHTML, /aria-label="0 au carré égale 0 fois 0 égale 0"/);
+  assert.match(application.innerHTML, /aria-label="12 au carré égale 12 fois 12 égale 144"/);
+  assert.equal(
+    (application.innerHTML.match(/class="mathsgo-expression" role="math" aria-label="\d+ au carré égale/g) ?? []).length,
+    13,
+  );
   assert.match(application.innerHTML, /144/);
   cliquer(gestionnaires, "cours-suivant");
   assert.match(application.innerHTML, /Retrouver les carrés de 11 et de 12/);
@@ -211,9 +223,10 @@ it("rend le cours en cinq pages et les six familles de NC-02", async () => {
   let questionCoteF5Vue = false;
   let qcmDirectVu = false;
   let encadrementVu = false;
-  let nombresCarresVus = false;
+  let selectionCarresParfaitsVue = false;
   let carresParfaitsVus = false;
   let puissanceSaisieVue = false;
+  const famillesAvecCarreEnCorrection = new Set();
   for (let index = 0; index < 20; index += 1) {
     const famille = application.innerHTML.match(/famille-([a-z-]+)"/)?.[1];
     assert.ok(famille, `famille NC-02 absente à la question ${index + 1}`);
@@ -236,8 +249,8 @@ it("rend le cours en cinq pages et les six familles de NC-02", async () => {
     if (application.innerHTML.includes("Quel encadrement est correct ?")) {
       encadrementVu = true;
     }
-    if (application.innerHTML.includes("Sélectionne tous les nombres carrés.")) {
-      nombresCarresVus = true;
+    if (application.innerHTML.includes("Sélectionne tous les carrés parfaits.")) {
+      selectionCarresParfaitsVue = true;
     }
     if (application.innerHTML.includes("Parmi ces nombres, lesquels sont des carrés parfaits ?")) {
       carresParfaitsVus = true;
@@ -251,6 +264,12 @@ it("rend le cours en cinq pages et les six familles de NC-02", async () => {
     }
     if (famille === "sens-notation") {
       assert.match(application.innerHTML, /Quelle écriture correspond/);
+      assert.match(
+        application.innerHTML,
+        /data-id="produit-facteurs-egaux"[\s\S]*?class="mathsgo-expression" role="math"/,
+      );
+      assert.match(application.innerHTML, /aria-label="\d+ fois \d+"/);
+      assert.match(application.innerHTML, /aria-label="\d+ plus 2"/);
     }
 
     cliquer(gestionnaires, "aide");
@@ -293,9 +312,28 @@ it("rend le cours en cinq pages et les six familles de NC-02", async () => {
     cliquer(gestionnaires, "correction");
     assert.match(application.innerHTML, /Correction expliquée/);
     assert.match(application.innerHTML, /Réponse correcte/);
+    if (["calcul-direct", "retrouver-entier", "sens-notation", "carre-quadrille"].includes(famille)) {
+      if (application.innerHTML.includes("visuel-correction-carres")) {
+        famillesAvecCarreEnCorrection.add(famille);
+        assert.match(application.innerHTML, /visuel-correction-carres[\s\S]*visuel-carre-quadrille/);
+      }
+    } else {
+      assert.doesNotMatch(application.innerHTML, /visuel-correction-carres/);
+    }
     if (famille === "sens-notation") {
       assert.match(application.innerHTML, /Écarter l&#039;ajout de 2/);
       assert.doesNotMatch(application.innerHTML, /correction-conclusion/);
+      assert.match(
+        application.innerHTML,
+        /rappel-reponse-eleve [^" ]+"[\s\S]*?reponse-mathematique[\s\S]*?mathsgo-expression/,
+      );
+      assert.match(
+        application.innerHTML,
+        /reponses-correction" aria-label="Réponse correcte">[\s\S]*?reponse-mathematique[\s\S]*?mathsgo-expression/,
+      );
+    }
+    if (["calcul-direct", "carre-quadrille"].includes(famille)) {
+      assert.match(application.innerHTML, /aria-label="\d+ fois \d+ égale \d+"/);
     }
     if (famille === "calcul-court") {
       assert.match(application.innerHTML, /correction-calcul-aligne/);
@@ -309,9 +347,15 @@ it("rend le cours en cinq pages et les six familles de NC-02", async () => {
   assert.equal(questionCoteF5Vue, true);
   assert.equal(qcmDirectVu, true);
   assert.equal(encadrementVu, true);
-  assert.equal(nombresCarresVus, true);
+  assert.equal(selectionCarresParfaitsVue, true);
   assert.equal(carresParfaitsVus, true);
   assert.equal(puissanceSaisieVue, true);
+  assert.deepEqual([...famillesAvecCarreEnCorrection].sort(), [
+    "calcul-direct",
+    "carre-quadrille",
+    "retrouver-entier",
+    "sens-notation",
+  ]);
   assert.deepEqual([...familles].sort(), [
     "calcul-court",
     "calcul-direct",
@@ -321,6 +365,69 @@ it("rend le cours en cinq pages et les six familles de NC-02", async () => {
     "sens-notation",
   ]);
   assert.match(application.innerHTML, /Ton bilan/);
+});
+
+it("traite pareil une omission validée au clic ou avec Entrée", async () => {
+  async function rendreOmission(methode, suffixe) {
+    const { application, gestionnaires } = installerFauxNavigateur(
+      "?notion=carres-entiers-1-a-12&questions=20&graine=fumee-nc02-six-familles",
+    );
+    await import(`./app.js?fumee=omission-${suffixe}-${Date.now()}`);
+    cliquer(gestionnaires, "demarrer");
+    if (methode === "clic") cliquer(gestionnaires, "valider");
+    else assert.equal(appuyer(gestionnaires, "Enter"), 1);
+    assert.match(application.innerHTML, /Correction expliquée/);
+    assert.match(application.innerHTML, /Tu n’as pas donné de réponse/);
+    assert.match(application.innerHTML, /rappel-reponse-eleve reponse-omise/);
+    assert.match(application.innerHTML, /class="reponse-vide" aria-label="Aucune réponse"><\/strong>/);
+    assert.match(application.innerHTML, /Réponse correcte/);
+    assert.doesNotMatch(application.innerHTML, /Ta réponse reste affichée/);
+    return application.innerHTML;
+  }
+
+  assert.equal(
+    await rendreOmission("clic", "clic"),
+    await rendreOmission("entree", "entree"),
+  );
+});
+
+it("affiche en succès une sélection multiple entièrement correcte", async () => {
+  const { application, gestionnaires } = installerFauxNavigateur(
+    "?notion=carres-entiers-1-a-12&questions=20&graine=couleur-reponse-correcte",
+  );
+  await import(`./app.js?fumee=couleur-correcte-${Date.now()}`);
+  cliquer(gestionnaires, "demarrer");
+
+  for (let index = 0; index < 20; index += 1) {
+    const famille = application.innerHTML.match(/famille-([a-z-]+)"/)?.[1];
+    if (famille === "reconnaitre-carres") break;
+    const champs = [...application.innerHTML.matchAll(
+      /data-action="champ-reponse" data-index="(\d+)"/g,
+    )].map((correspondance) => correspondance[1]);
+    if (champs.length > 0) {
+      for (const champ of champs) {
+        cliquer(gestionnaires, "champ-reponse", undefined, undefined, champ);
+        cliquer(gestionnaires, "chiffre", undefined, "1");
+      }
+    } else {
+      const choix = application.innerHTML.match(/data-action="choix" data-id="([^"]+)"/)?.[1];
+      assert.ok(choix);
+      cliquer(gestionnaires, "choix", choix);
+    }
+    cliquer(gestionnaires, "valider");
+    cliquer(gestionnaires, "suivant");
+  }
+
+  assert.match(application.innerHTML, /famille-reconnaitre-carres/);
+  const valeurs = [...application.innerHTML.matchAll(/data-action="choix" data-id="nombre-(\d+)"/g)]
+    .map((correspondance) => Number(correspondance[1]));
+  const carres = valeurs.filter((valeur) => Number.isInteger(Math.sqrt(valeur)));
+  assert.ok(carres.length >= 1);
+  for (const valeur of carres) cliquer(gestionnaires, "choix", `nombre-${valeur}`);
+  cliquer(gestionnaires, "valider");
+  cliquer(gestionnaires, "correction");
+  assert.match(application.innerHTML, /rappel-reponse-eleve reponse-juste/);
+  assert.doesNotMatch(application.innerHTML, /rappel-reponse-eleve reponse-fausse/);
 });
 
 it("rend NC-03 et NC-04 dans une seule notion avec le même repère en aide et correction", async () => {

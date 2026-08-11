@@ -21,7 +21,7 @@ Règles du package :
 | `src/question-v2.js` | `mathsgo.question-instance/2` | Question interactive V2 : blocs texte, entier, rationnel, puissance ou solide ; choix, entier, décimal exact et fraction équivalente. |
 | `src/gabarit.js` | `mathsgo.gabarit-question/1` | Une famille de questions à valeurs variables : référence un générateur du moteur par nom et version, avec des paramètres en données pures. |
 | `src/seance.js` | `mathsgo.seance/1` | La sélection et l'état d'une séance, sans score recopié, identité, durée ni donnée d'écran. |
-| `src/trace-reponse.js` | `mathsgo.trace-reponse/1` et `/2` | La première validation interactive. La version 2 ajoute le classement canonique et les versions du contenu pour rendre un futur export interprétable sans la question complète ; la version 1 reste lisible. |
+| `src/trace-reponse.js` | `mathsgo.trace-reponse/3` | La première validation interactive, fournie ou omise. La version 3 porte ce statut ; les versions 1 et 2 restent lisibles pour la rétrocompatibilité. |
 
 Les tests utilisent uniquement des fixtures techniques neutres. Un nouveau
 contrat n'est ajouté que lorsqu'un consommateur réel et validé en a besoin.

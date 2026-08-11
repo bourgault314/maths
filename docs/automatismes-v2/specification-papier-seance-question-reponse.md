@@ -2,7 +2,7 @@
 
 ## Statut
 
-**Architecture de données fonctionnelle version 1, validée par Gwenaël le 19 juillet 2026 ; nomenclature et trace autonome version 2 précisées par D-043 le 9 août 2026.**
+**Architecture de données fonctionnelle version 1, validée par Gwenaël le 19 juillet 2026 ; nomenclature et trace autonome version 2 précisées par D-043 le 9 août 2026 ; statut de réponse et omission de la trace version 3 précisés par D-045 le 11 août 2026.**
 
 Ce document fixe les responsabilités fonctionnelles pour éviter que le
 menu, le lecteur, les questions et le futur serveur se mélangent. Les noms de
@@ -76,6 +76,12 @@ La progression visible est toujours calculée avec la position courante et le to
 
 En diaporama, le lecteur conserve la position et les états de révélation, mais ne produit ni réponse élève ni score.
 
+Dans « S'entraîner », une réponse entièrement vide au moment où l'élève valide
+ou tente d'avancer est une omission : elle compte faux, crée une seule trace et
+ouvre la correction. Une réponse commencée mais incomplète, ou une valeur
+syntaxiquement invalide, reste réparable et ne crée pas encore de trace. Ce
+comportement ne s'applique pas à « Au tableau ».
+
 ## 3. Question instanciée
 
 Une question instanciée est entièrement prête à afficher : les valeurs sont tirées, la réponse est connue et la correction correspond exactement à cette instance.
@@ -143,6 +149,10 @@ La correction contient :
 - les mêmes représentations que la question ou l’aide lorsque cela est utile ;
 - les conclusions textuelles qui doublent les couleurs.
 
+Le rappel de la réponse ne dépend jamais de la seule couleur : une réponse
+juste est accompagnée d'un état vert, une réponse fournie et fausse d'un état
+rouge, et une omission d'un état neutre dont la valeur reste visuellement vide.
+
 ### Ce qu’une question ne contient jamais
 
 - son numéro dans la séance ;
@@ -163,7 +173,8 @@ Elle doit pouvoir dire :
 - plusieurs choix autorisés ;
 - « Aucun » exclusif des cinq nombres ;
 - ensemble exact attendu ;
-- validation impossible sans choix ;
+- absence totale de choix enregistrée comme omission fausse si l'élève valide
+  ou tente d'avancer ;
 - aucune importance accordée à l’ordre des sélections.
 
 Exemple pour 330 :
@@ -185,7 +196,7 @@ Le contrat technique actuel `texte-exact` ne suffit pas. La future version devra
 | référence de séance | regrouper les réponses d’un même entraînement |
 | identifiant de la question | relier la réponse à l’instance exacte |
 | position dans la séance | reconstituer l’ordre vécu |
-| réponse validée | savoir ce que l’élève a réellement choisi ou saisi |
+| statut et réponse validée | distinguer une réponse fournie de l'absence de réponse, puis conserver ce que l'élève a réellement choisi ou saisi |
 | résultat juste ou faux | calculer le nombre de réussites |
 | aide consultée ou non | comprendre plus tard le degré d’autonomie |
 | numéro de validation | préserver la première réponse si un nouvel essai existe un jour |
@@ -223,6 +234,20 @@ identifiants descriptifs. Les traces version 1 restent lisibles grâce à leur
 identifiant de question et aux alias : aucune migration destructive n'est
 requise.
 
+### Trace version 3 : réponse fournie ou omise
+
+La version 3 conserve l'identité autonome de la version 2 et ajoute un statut
+à chaque réponse :
+
+- `fournie` accompagne la valeur structurée attendue pour le type de réponse ;
+- `omise` ne porte aucune valeur et implique toujours un résultat faux.
+
+Le statut évite de fabriquer une chaîne vide, une fraction vide ou une liste
+vide présentée comme une réponse fournie. Une omission complète produit une
+seule trace, comme toute autre première validation. Les traces versions 1 et 2
+restent acceptées en lecture ; elles ne sont ni réécrites ni enrichies a
+posteriori.
+
 Cette préparation ne décide ni de l'identité de l'élève, ni d'un serveur, ni du
 transport, ni du format du futur tableau d'export. Ces sujets restent hors du
 chantier actuel et demanderont une décision séparée avant toute collecte.
@@ -245,7 +270,9 @@ Comportement prévu :
 - le clavier écrit uniquement dans la case active ;
 - chaque case possède sa propre nature numérique ; le signe moins n’apparaît que si la notion l’autorise ;
 - la barre de fraction est construite automatiquement par le lecteur ;
-- `OK` valide la fraction entière seulement lorsque les deux cases sont remplies ;
+- `OK` conserve une fraction partiellement remplie comme réponse réparable ;
+  deux cases entièrement vides deviennent une omission si l'élève valide ou
+  tente d'avancer ;
 - un dénominateur nul est refusé avec un message compréhensible ;
 - au clavier physique, la touche Tab permet de passer d’une case à l’autre ;
 - la réponse et la correction conservent une vraie écriture fractionnaire.
@@ -273,22 +300,26 @@ Cette liste guide l’architecture, mais n’autorise pas leur programmation ant
 2. L’écran « Prêt à commencer » résume cette préparation.
 3. « Commencer » crée la séance ordonnée.
 4. Le lecteur reçoit une première question instanciée de la famille F2.
-5. L’élève sélectionne ses diviseurs puis valide.
-6. Le lecteur compare l’ensemble sélectionné à l’ensemble attendu.
-7. Une trace est créée et le compteur de réussites est recalculé.
-8. L’aide ou la correction s’affiche sans modifier la trace.
+5. L’élève sélectionne ses diviseurs puis valide, ou tente d'avancer sans
+   sélection s'il ne souhaite pas répondre.
+6. Le lecteur compare l’ensemble sélectionné à l’ensemble attendu ; une
+   absence totale de sélection devient une omission fausse.
+7. Une trace version 3 est créée et le compteur de réussites est recalculé.
+8. La correction s'ouvre immédiatement après une omission ; l'aide ou la
+   correction affichée ne modifie jamais la trace.
 9. « Suivant » fait avancer la séance et la barre de progression.
 10. Le bilan est calculé à partir de toutes les traces.
 
 ## 9. Étape de données ultérieure
 
 La taxonomie canonique et les contrats de séance, de question et de trace
-version 2 sont construits. Le prochain chantier de données, distinct de la
+version 3 sont construits. Le prochain chantier de données, distinct de la
 fabrication des modules pédagogiques, consistera à :
 
 1. maintenir la correspondance entre la taxonomie, les identités du code et les
    traces par des tests de cohérence ;
-2. conserver la lecture des traces version 1 par la table d'alias ;
+2. conserver la lecture des traces versions 1 et 2 par la table d'alias et les
+   validateurs de compatibilité ;
 3. décider séparément de l'identité, du serveur, du transport et des exports
    avec Gwenaël avant toute collecte réelle.
 
