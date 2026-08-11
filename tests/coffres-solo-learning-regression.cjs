@@ -126,6 +126,7 @@ async function assertPointVisual(page, selector, mode, label) {
         },
         markerLabel: {
           ...box(markerLabel),
+          near: markerLabel.classList.contains("near"),
           whiteSpace: getComputedStyle(markerLabel).whiteSpace,
           lineHeight: Number.parseFloat(getComputedStyle(markerLabel).lineHeight),
           scrollWidth: markerLabel.scrollWidth
@@ -148,7 +149,13 @@ async function assertPointVisual(page, selector, mode, label) {
     assert(data.marker.borderTop === "2px" && data.marker.borderBottom === "0px" && data.marker.hookTop === "-7px" && data.marker.hookHeight === "7px", `${label} : le crochet de différence n’est pas orienté vers le haut.`);
     assert(data.markerLabel.text === `différence = ${data.unmatched}`, `${label} : le libellé de différence est inexact.`);
     assert(data.markerLabel.whiteSpace === "nowrap" && data.markerLabel.height <= data.markerLabel.lineHeight + 1, `${label} : le libellé de différence passe sur plusieurs lignes.`);
-    assert(data.markerLabel.top >= data.known.bottom && data.markerLabel.left >= -1 && data.markerLabel.right <= data.viewportWidth + 1, `${label} : le libellé de différence chevauche le schéma ou sort de l’écran.`);
+    if (data.markerLabel.near) {
+      assert(data.markerLabel.top >= data.marker.bottom + 2 && data.markerLabel.left >= data.known.right - 1, `${label} : le libellé rapproché de différence chevauche le crochet ou la quantité connue.`);
+    } else {
+      assert(data.markerLabel.top >= data.known.bottom, `${label} : le libellé étroit de différence chevauche le schéma.`);
+    }
+    assert(data.markerLabel.left >= -1 && data.markerLabel.right <= data.viewportWidth + 1, `${label} : le libellé de différence sort de l’écran.`);
+    assert(data.markerLabel.near === (data.unmatched / data.high >= .36), `${label} : le placement rapproché du libellé ne correspond pas à la largeur disponible.`);
     const markerCenter = (data.marker.left + data.marker.right) / 2;
     const labelCenter = (data.markerLabel.left + data.markerLabel.right) / 2;
     assert(Math.abs(labelCenter - markerCenter) <= 1.5 && data.markerLabel.scrollWidth <= data.viewportWidth + 1, `${label} : le libellé de différence n’est pas centré sous son repère.`);
@@ -252,14 +259,15 @@ async function assertPointVisual(page, selector, mode, label) {
     const labels = data.views.map(view => view.label);
     assert(labels.length === 2, `${label} : les deux interprétations du quotient manquent.`);
     assert(data.layoutColumns === (data.viewportWidth <= 520 ? 1 : 2), `${label} : les interprétations du quotient n’ont pas la disposition attendue à ${data.viewportWidth} px.`);
-    const grouping = labels[0].match(/^Combien de paquets de (\d+) dans (\d+) \? (\d+)$/);
-    const sharing = labels[1].match(/^Partager (\d+) en (\d+) paquets : (\d+) dans chacun$/);
-    assert(grouping, `${label} : la recherche du nombre de paquets n’est pas interrogative.`);
+    const grouping = labels[0].match(/^Grouper : (\d+) paquets de (\d+)$/);
+    const sharing = labels[1].match(/^Partager : (\d+) paquets de (\d+)$/);
+    assert(grouping, `${label} : le groupement en paquets n’est pas explicite.`);
     assert(sharing, `${label} : le partage en paquets n’est pas explicite.`);
     const expected = [
-      { total: Number(grouping[2]), groupCount: Number(grouping[3]), groupSize: Number(grouping[1]) },
-      { total: Number(sharing[1]), groupCount: Number(sharing[2]), groupSize: Number(sharing[3]) }
+      { total: Number(grouping[1]) * Number(grouping[2]), groupCount: Number(grouping[1]), groupSize: Number(grouping[2]) },
+      { total: Number(sharing[1]) * Number(sharing[2]), groupCount: Number(sharing[1]), groupSize: Number(sharing[2]) }
     ];
+    assert(expected[0].total === expected[1].total, `${label} : les deux interprétations ne représentent pas le même total.`);
     data.views.forEach((view, index) => {
       const wanted = expected[index];
       assert(view.bar.radius === "0px", `${label} : la barre ${index + 1} n’a pas des angles droits.`);
@@ -272,7 +280,7 @@ async function assertPointVisual(page, selector, mode, label) {
         assert(Math.abs(view.groups[groupIndex - 1].right - view.groups[groupIndex].left) <= 1, `${label} : les paquets de la barre ${index + 1} ne sont pas jointifs.`);
       }
     });
-    assert(data.aria.includes(labels[0]) && data.aria.includes(labels[1]), `${label} : les deux questions du quotient manquent dans l’alternative accessible.`);
+    assert(data.aria.includes(`Combien de paquets de ${expected[0].groupSize} dans ${expected[0].total} ? ${expected[0].groupCount}.`) && data.aria.includes(`Partager ${expected[1].total} en ${expected[1].groupCount} paquets : ${expected[1].groupSize} dans chacun.`), `${label} : les deux sens du quotient manquent dans l’alternative accessible.`);
     assert(/première barre rectangulaire/i.test(data.aria) && /seconde barre rectangulaire/i.test(data.aria), `${label} : les deux barres ne sont pas décrites dans l’alternative accessible.`);
   }
 }
@@ -415,6 +423,71 @@ async function auditProductMemo(browser, base, {
   }
 }
 
+async function auditDuoBarModels(browser, base, width, errors) {
+  const page = await browser.newPage({ viewport: { width, height: width <= 390 ? 844 : 900 } });
+  page.on("pageerror", error => errors.push(`bordures duo à ${width}px : ${error.message}`));
+  try {
+    await page.goto(`${base}/outils/club_maths/coffres_magiques.html`, { waitUntil: "load" });
+    await page.locator("#rules").waitFor({ state: "visible" });
+    const data = await page.evaluate(() => {
+      const box = element => {
+        const rect = element.getBoundingClientRect();
+        const style = getComputedStyle(element);
+        return {
+          left: rect.left, right: rect.right, top: rect.top, bottom: rect.bottom,
+          borderTop: style.borderTopWidth, borderRight: style.borderRightWidth,
+          borderBottom: style.borderBottomWidth, borderLeft: style.borderLeftWidth,
+          boxShadow: style.boxShadow
+        };
+      };
+      const sumRows = [...document.querySelectorAll(".sum-bar-model .bar-row")];
+      const differenceUpper = document.querySelector(".difference-bar-model .bar-row");
+      const differenceKnown = document.querySelector(".difference-known");
+      const differenceMarker = document.querySelector(".difference-marker");
+      const sumMarker = document.querySelector(".sum-marker");
+      const divider = document.querySelector(".sum-bar-model .bar-row:last-child .bar-segment:first-child");
+      const conventions = document.querySelector("#rules .operation-conventions");
+      const pseudo = (element, selector) => {
+        const style = getComputedStyle(element, selector);
+        return {
+          top: style.top, right: style.right, bottom: style.bottom, left: style.left,
+          borderTop: style.borderTopWidth, borderRight: style.borderRightWidth,
+          borderBottom: style.borderBottomWidth, borderLeft: style.borderLeftWidth
+        };
+      };
+      return {
+        sumRows: sumRows.map(box),
+        sumMarker: { ...box(sumMarker), hook: pseudo(sumMarker, "::before") },
+        differenceUpper: box(differenceUpper),
+        differenceKnown: box(differenceKnown),
+        differenceMarker: { ...box(differenceMarker), hook: pseudo(differenceMarker, "::before") },
+        divider: box(divider),
+        conventions: conventions.innerText.trim()
+      };
+    });
+
+    assert(data.sumRows.length === 2, `duo à ${width}px : les deux rectangles de somme manquent.`);
+    assert(data.sumRows[0].borderTop === "2px" && data.sumRows[0].borderRight === "2px" && data.sumRows[0].borderBottom === "2px" && data.sumRows[0].borderLeft === "2px", `duo à ${width}px : le rectangle total de la somme n’a pas un contour complet.`);
+    assert(data.sumRows[1].borderTop === "0px" && data.sumRows[1].borderRight === "2px" && data.sumRows[1].borderBottom === "2px" && data.sumRows[1].borderLeft === "2px", `duo à ${width}px : la ligne des deux parties n’a pas le contour jointif attendu.`);
+    assert(Math.abs(data.sumRows[0].bottom - data.sumRows[1].top) <= 1, `duo à ${width}px : les deux lignes de somme ne sont pas collées.`);
+    assert(data.divider.borderRight === "2px", `duo à ${width}px : la séparation entre 3 et 2 est absente.`);
+    assert(Math.abs(data.sumMarker.left - data.sumRows[0].left) <= 1 && Math.abs(data.sumMarker.right - data.sumRows[0].right) <= 1 && Math.abs(data.sumMarker.bottom - data.sumRows[0].top) <= 1, `duo à ${width}px : le crochet de somme ne couvre pas exactement la barre.`);
+    assert(data.sumMarker.hook.bottom === "0px" && data.sumMarker.hook.borderTop === "2px" && data.sumMarker.hook.borderRight === "2px" && data.sumMarker.hook.borderBottom === "0px" && data.sumMarker.hook.borderLeft === "2px", `duo à ${width}px : le crochet de somme n’est pas orienté vers la barre.`);
+    assert(data.differenceUpper.borderTop === "2px" && data.differenceUpper.borderRight === "2px" && data.differenceUpper.borderBottom === "2px" && data.differenceUpper.borderLeft === "2px", `duo à ${width}px : la quantité supérieure de différence n’a pas un contour complet.`);
+    assert(data.differenceKnown.borderTop === "0px" && data.differenceKnown.borderRight === "2px" && data.differenceKnown.borderBottom === "2px" && data.differenceKnown.borderLeft === "2px", `duo à ${width}px : la quantité inférieure de différence n’a pas le contour jointif attendu.`);
+    assert(Math.abs(data.differenceUpper.bottom - data.differenceKnown.top) <= 1, `duo à ${width}px : les deux quantités de différence ne sont pas collées.`);
+    assert(Math.abs(data.differenceMarker.left - data.differenceKnown.right) <= 1 && Math.abs(data.differenceMarker.right - data.differenceUpper.right) <= 1 && Math.abs(data.differenceMarker.top - data.differenceUpper.bottom) <= 1, `duo à ${width}px : le crochet de différence n’est pas aligné sur les points sans correspondant.`);
+    assert(data.differenceMarker.hook.top === "0px" && data.differenceMarker.hook.borderTop === "0px" && data.differenceMarker.hook.borderRight === "2px" && data.differenceMarker.hook.borderBottom === "2px" && data.differenceMarker.hook.borderLeft === "2px", `duo à ${width}px : le crochet de différence n’est pas orienté vers les points.`);
+    assert([...data.sumRows, data.differenceUpper, data.differenceKnown].every(item => item.boxShadow === "none"), `duo à ${width}px : une fausse bordure en ombre interne subsiste.`);
+    assert(data.conventions.includes("L’ordre des clics ne change rien") && data.conventions.includes("seulement si la division tombe juste"), `duo à ${width}px : les deux conventions compactes manquent.`);
+    await assertNoHorizontalOverflow(page, `bordures duo à ${width}px`);
+    await page.locator("#rules .operation-visual-card:nth-child(1)").screenshot({ path: path.join(CAPTURES, `bordure-somme-duo-${width}.png`) });
+    await page.locator("#rules .operation-visual-card:nth-child(2)").screenshot({ path: path.join(CAPTURES, `bordure-difference-duo-${width}.png`) });
+  } finally {
+    await page.close();
+  }
+}
+
 (async () => {
   fs.mkdirSync(CAPTURES, { recursive: true });
   const server = await startServer();
@@ -523,6 +596,8 @@ async function auditProductMemo(browser, base, {
     await auditPointJourney(browser, base, .1, "quotient", errors);
     await auditExtremeVisual(browser, base, { mode: "difference", first: 12, second: 10, width: 320, capture: "difference-12-10-320.png" }, errors);
     await auditExtremeVisual(browser, base, { mode: "difference", first: 12, second: 11, width: 320, capture: "difference-12-11-320.png" }, errors);
+    await auditExtremeVisual(browser, base, { mode: "difference", first: 12, second: 9, width: 320, capture: "difference-12-9-320.png" }, errors);
+    await auditExtremeVisual(browser, base, { mode: "difference", first: 12, second: 8, width: 320, capture: "difference-12-8-320.png" }, errors);
     for (const width of [320, 390, 520, 1366]) {
       await auditExtremeVisual(browser, base, { mode: "quotient", first: 36, second: 6, width, capture: `quotient-36-6-${width}.png` }, errors);
     }
@@ -530,6 +605,7 @@ async function auditProductMemo(browser, base, {
       await auditExtremeVisual(browser, base, { mode: "product", first: 3, second: 4, width, capture: `produit-dynamique-3-4-${width}.png` }, errors);
     }
     for (const width of [320, 390, 1366]) {
+      await auditDuoBarModels(browser, base, width, errors);
       await auditProductMemo(browser, base, {
         route: "/outils/calcul_mental/coffres_magiques_solo.html",
         wrapperSelector: ".dual-learning-views .array-dimension-model",
@@ -559,7 +635,7 @@ async function auditProductMemo(browser, base, {
     console.log(JSON.stringify({
       ok: true,
       captures: CAPTURES,
-      checks: ["repère somme pleine largeur", "différence 12−10 et 12−11 : crochet exact, libellé centré et sur une ligne", "produit solo/duo : nombres droits, crochet supérieur pleine largeur et crochet latéral pleine hauteur à 320/390/1366 px", "quotient 36÷6 : barres empilées jusqu’à 520 px", "rectangles à angles droits", "lignes collées", "aria avec équations parlées", "aide sans révélation", "solution demandée", "correction après erreur", "même opération", "aucune clé offerte", "focus/Tab/Échap", "320/390/520/1366"]
+      checks: ["bordures réelles somme/différence duo à 320/390/1366 px", "repère somme pleine largeur", "différence 12−10 et 12−11 : crochet exact, libellé centré et sur une ligne", "produit solo/duo : nombres droits, crochet supérieur pleine largeur et crochet latéral pleine hauteur à 320/390/1366 px", "quotient 36÷6 : barres empilées jusqu’à 520 px", "rectangles à angles droits", "lignes collées", "aria avec équations parlées", "aide sans révélation", "solution demandée", "correction après erreur", "même opération", "aucune clé offerte", "focus/Tab/Échap", "320/390/520/1366"]
     }, null, 2));
   } finally {
     await page.close();
