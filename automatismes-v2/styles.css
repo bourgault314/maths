@@ -705,6 +705,37 @@ button.choix:active:not(:disabled) {
   line-height: 1.55;
 }
 
+.explication-criteres-correction {
+  margin-top: 2px;
+}
+
+.explication-criteres-correction .amorce-criteres-correction {
+  margin: 0;
+  color: var(--mg-encre);
+  font-weight: 750;
+}
+
+.explication-criteres-correction ul {
+  margin: 9px 0 0;
+  padding: 0;
+  display: grid;
+  gap: 8px;
+  list-style: none;
+}
+
+.explication-criteres-correction li {
+  min-width: 0;
+  margin: 0;
+  padding-left: 10px;
+  border-left: 3px solid var(--mg-ligne);
+  line-height: 1.45;
+  overflow-wrap: break-word;
+}
+
+.explication-criteres-correction li strong {
+  color: var(--mg-bleu);
+}
+
 .correction-unites {
   border-color: color-mix(in srgb, var(--mg-orange) 44%, var(--mg-ligne));
 }

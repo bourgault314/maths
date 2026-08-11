@@ -34,14 +34,14 @@ import {
   saisirChiffre,
   tournerSolide,
   validerReponse,
-} from "./src/etat-lecteur.js?v=23";
+} from "./src/etat-lecteur.js?v=24";
 import {
   TYPE_REPONSE_DEUX_ENTIERS,
   TYPE_REPONSE_ENTIER_NATUREL,
   TYPE_REPONSE_FRACTION_EQUIVALENTE,
   TYPE_REPONSE_NOMBRE_DECIMAL,
   TYPE_REPONSE_CHOIX_UNIQUE,
-} from "../packages/contrats/src/question-v2.js?v=23";
+} from "../packages/contrats/src/question-v2.js?v=24";
 import {
   connaitNotionLecteur,
   obtenirNotionLecteur,
@@ -51,13 +51,13 @@ import {
   RENDU_SOLIDE,
   RENDU_VOLUME,
   NOTION_FRACTIONS_SIMPLES_DECIMAUX,
-} from "./src/registre-lecteur.js?v=23";
+} from "./src/registre-lecteur.js?v=24";
 import {
   DOMAINES_AUTOMATISMES,
   MICRO_NOTIONS_AUTOMATISMES,
   normaliserIdentifiantMicroNotion,
-} from "../packages/automatismes/src/identifiants.js?v=23";
-import { COURS_SOLIDES_USUELS } from "../packages/automatismes/src/espace-et-geometrie/solides-usuels/reconnaissance.js?v=23";
+} from "../packages/automatismes/src/identifiants.js?v=24";
+import { COURS_SOLIDES_USUELS } from "../packages/automatismes/src/espace-et-geometrie/solides-usuels/reconnaissance.js?v=24";
 import {
   creerCone,
   creerCube,
@@ -72,29 +72,29 @@ import {
   ACTION_TOUCHE_SAISIR,
   ACTION_TOUCHE_VALIDER,
   obtenirDispositionClavier,
-} from "../packages/objets/src/clavier.js?v=23";
-import { formulationCritereDivisibilite } from "../packages/automatismes/src/nombres-et-calculs/criteres-divisibilite/critere-precis.js?v=23";
+} from "../packages/objets/src/clavier.js?v=24";
+import { formulationCritereDivisibilite } from "../packages/automatismes/src/nombres-et-calculs/criteres-divisibilite/critere-precis.js?v=24";
 import {
   nombre,
   puissance,
   variable,
   versHtmlSemantique,
-} from "../packages/objets/src/expressions.js?v=23";
+} from "../packages/objets/src/expressions.js?v=24";
 import {
   dessinerCarreQuadrille,
-} from "../packages/objets/src/carre-quadrille.js?v=23";
-import { dessinerGrilleFraction } from "../packages/objets/src/fractions.js?v=23";
-import { dessinerDoubleDroiteGraduee } from "../packages/objets/src/droite-graduee.js?v=23";
+} from "../packages/objets/src/carre-quadrille.js?v=24";
+import { dessinerGrilleFraction } from "../packages/objets/src/fractions.js?v=24";
+import { dessinerDoubleDroiteGraduee } from "../packages/objets/src/droite-graduee.js?v=24";
 import {
   construireGroupementFraction,
   construireDonneesTableauDepuisFraction,
   formaterFractionEnDecimal,
-} from "../packages/objets/src/fractions-decimaux.js?v=23";
+} from "../packages/objets/src/fractions-decimaux.js?v=24";
 import {
   diagnostiquerDecimalVersNumerateur,
   diagnostiquerFractionLibre,
   diagnostiquerFractionVersDecimal,
-} from "./src/diagnostic-fractions-decimaux.js?v=23";
+} from "./src/diagnostic-fractions-decimaux.js?v=24";
 
 const MICRO_NOTION_FRACTION_VERS_DECIMAL =
   MICRO_NOTIONS_AUTOMATISMES.FRACTION_VERS_DECIMAL;
@@ -1237,13 +1237,13 @@ function rendreCorrectionDivisibilite(question) {
           <strong class="chiffre-unite-encadre">${nombre.at(-1)}</strong>
         </div>
         ${rendreVerdicts(question, [2, 5, 10])}
-        <p>${echapper(question.correction[0]?.contenu ?? "")}</p>
+        ${rendreExplicationParCriteres(question.correction[0]?.contenu)}
     </section>
     <section class="etape-correction correction-somme">
         ${rendreEtape(2, "Additionner tous les chiffres", "repere-somme")}
         <p class="calcul-correction">${echapper(chiffres.join(" + "))} <span>=</span> <strong>${somme}</strong></p>
         ${rendreVerdicts(question, [3, 9])}
-        <p>${echapper(question.correction[1]?.contenu ?? "")}</p>
+        ${rendreExplicationParCriteres(question.correction[1]?.contenu)}
     </section>
     <section class="etape-correction correction-conclusion">
         ${rendreEtape(3, "Conclure", "repere-conclusion")}
@@ -1260,6 +1260,21 @@ function rendreCorrectionDivisibilite(question) {
   });
 }
 
+function rendreExplicationParCriteres(texte) {
+  const [amorce = "", ...lignes] = String(texte ?? "")
+    .split("\n")
+    .map((ligne) => ligne.trim())
+    .filter(Boolean);
+  return `<div class="explication-criteres-correction">
+    <p class="amorce-criteres-correction">${echapper(amorce)}</p>
+    <ul>${lignes.map((ligne) => {
+      const correspondance = ligne.match(/^(Par \d+)\s*:\s*(.*)$/u);
+      if (!correspondance) return `<li>${echapper(ligne)}</li>`;
+      return `<li><strong>${echapper(correspondance[1])} :</strong> ${echapper(correspondance[2])}</li>`;
+    }).join("")}</ul>
+  </div>`;
+}
+
 function rendreCarteCoursDivisibilite(index) {
   if (index === 0) {
     return `<article class="carte-cours-divisibilite">
@@ -1268,13 +1283,15 @@ function rendreCarteCoursDivisibilite(index) {
       <p class="definition-cours">Un nombre est divisible par un autre lorsque le reste de la division est nul, c’est-à-dire égal à 0.</p>
       <p class="modelage-cours">On peut alors partager en parts égales sans qu’il reste d’objet.</p>
       <div class="comparaison-partages">
-        <section class="exemple-partage-cours">
+        <section class="exemple-partage-cours cas-divisible-cours">
+          <h4>Cas divisible par 3</h4>
           <div class="barre-partage partage-exact" aria-label="12 partagé en 3 parts égales de 4, reste zéro">
             <strong>12</strong><div><span>4</span><span>4</span><span>4</span></div><small>reste 0</small>
           </div>
           <p><strong>12 = 3 × 4 + 0</strong><span>Le reste est égal à 0 : 12 est divisible par 3.</span></p>
         </section>
-        <section class="exemple-partage-cours">
+        <section class="exemple-partage-cours cas-non-divisible-cours">
+          <h4>Cas non divisible par 3</h4>
           <div class="barre-partage partage-avec-reste" aria-label="13 partagé en 3 parts égales de 4, reste un">
             <strong>13</strong><div><span>4</span><span>4</span><span>4</span><i>1</i></div><small>reste 1</small>
           </div>
@@ -1309,17 +1326,16 @@ function rendreCarteCoursDivisibilite(index) {
   return `<article class="carte-cours-divisibilite">
     <span class="numero-cours">3</span>
     <h3>Pour 3 et 9, j’additionne tous les chiffres</h3>
-    <p class="borne-sommes-cours">Dans ces exercices, les nombres ont au plus quatre chiffres : la somme de leurs chiffres ne dépasse pas 36.</p>
     <div class="reperes-multiples-cours">
       <section>
         <h4>Pour être divisible par 3</h4>
-        <p>La somme doit être l’un de ces multiples de 3 :</p>
-        <strong>3, 6, 9, 12, 15, 18, 21, 24, 27, 30, 33, 36</strong>
+        <p>La somme des chiffres doit être un multiple de 3 :</p>
+        <strong>3, 6, 9, 12, 15, 18, 21, 24, 27, 30, 33, 36, …</strong>
       </section>
       <section>
         <h4>Pour être divisible par 9</h4>
-        <p>La somme doit être l’un de ces multiples de 9 :</p>
-        <strong>9, 18, 27, 36</strong>
+        <p>La somme des chiffres doit être un multiple de 9 :</p>
+        <strong>9, 18, 27, 36, 45, 54, 63, 72, 81, 90, …</strong>
       </section>
     </div>
     <div class="exemples-sommes-cours">

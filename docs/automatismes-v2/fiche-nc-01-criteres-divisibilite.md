@@ -2,7 +2,7 @@
 
 ## Statut
 
-**Contenu validé et fabrication technique autorisée par Gwenaël le 19 juillet 2026, simplifié avec lui le 6 août puis enrichi dans le lot de republication demandé le 9 août 2026.**
+**Contenu validé et fabrication technique autorisée par Gwenaël le 19 juillet 2026, simplifié avec lui le 6 août, enrichi le 9 août puis finalisé avec ses retours le 11 août 2026.**
 
 Cette fiche fixe le contenu avant toute programmation. La validation pédagogique et l'autorisation d'ouvrir la fabrication technique sont deux décisions distinctes ; elles sont désormais toutes les deux acquises.
 
@@ -129,7 +129,7 @@ La sélection de tous les nombres de groupes possibles est retirée : elle
 mélangeait la recherche de diviseurs et la représentation du partage dans une
 même question. Le nombre de groupes est désormais toujours donné.
 
-> On a 418 bonbons. Peut-on les répartir équitablement dans 3 sachets ? Si non, combien faut-il en retirer au minimum ?
+> On a 418 bonbons à répartir équitablement dans 3 sachets identiques. Quel est le plus petit nombre de bonbons à retirer pour qu’il n’en reste pas une fois la répartition effectuée ?
 
 Réponse : il faut retirer 1 bonbon. Le total 417 montré dans l’image de
 référence est déjà divisible par 3, puisque `4 + 1 + 7 = 12` ; il convient donc
@@ -177,12 +177,14 @@ Le mini-cours commun à `NC-01` comporte trois pages :
 Sans ajouter de quatrième page, il relie les trois formulations « divise »,
 « est divisible par » et « est un multiple de », puis explicite les liens
 `10 ⇔ 2 et 5` et `9 ⇒ 3`. La troisième page sépare les multiples de 3 et de 9
-possibles pour une somme bornée à 36. Les contre-exemples `43` et `49` montrent
-concrètement que le dernier chiffre ne permet pas de conclure pour 3 ou 9.
+dans deux listes ouvertes par des points de suspension. Le rappel des multiples
+de 9 se prolonge jusqu'à 90 ; aucune borne technique propre au générateur n'est
+annoncée à l'élève. Les contre-exemples `43` et `49` montrent concrètement que
+le dernier chiffre ne permet pas de conclure pour 3 ou 9.
 
 Le cours peut montrer complètement la méthode. Les aides, elles, se contentent de guider. Le même langage visuel est repris dans le cours, l’aide et la correction : chiffre des unités encadré, chiffres sélectionnables et zone somme.
 
-La première carte utilise un schéma en barres piloté par des données : une barre entière de 12 puis la même longueur découpée en trois parts de 4, avec `12 = 3 × 4` et un reste nul. La famille des situations concrètes utilise, elle, un plateau de partage égal avec des sachets ou des parts. Même pour un cours fixe, aucun de ces visuels n’est dessiné manuellement ou stocké comme une image figée.
+La première carte utilise un schéma en barres piloté par des données : une barre entière de 12 puis la même longueur découpée en trois parts de 4, avec `12 = 3 × 4` et un reste nul. Le cas divisible et le cas non divisible forment deux sous-cartes titrées ; chaque schéma reste ainsi regroupé avec son calcul et sa conclusion. La famille des situations concrètes utilise, elle, un plateau de partage égal avec des sachets ou des parts. Même pour un cours fixe, aucun de ces visuels n’est dessiné manuellement ou stocké comme une image figée.
 
 Les couleurs ont un rôle pédagogique : bleu foncé pour la structure, turquoise pour l’élément observé ou les parts égales, orange pour le reste ou l’attention, vert pour une conclusion valide et rouge pour une erreur. La couleur est toujours doublée par une forme, un contour ou un texte.
 
@@ -231,6 +233,8 @@ La correction ne se limite jamais à « juste » ou « faux ».
 
 - pour 2, 5 et 10, elle montre le chiffre des unités et rappelle le critère concerné ;
 - pour 3 et 9, elle calcule une seule fois la somme de tous les chiffres puis la compare aux multiples utiles ;
+- chaque critère apparaît sur une ligne distincte, introduite par « Par 2 : »,
+  « Par 5 : », « Par 10 : », « Par 3 : » ou « Par 9 : » ;
 - pour une sélection multiple, elle explique chaque choix séparément ;
 - pour un chiffre manquant, elle montre toutes les solutions demandées par la consigne ;
 - pour une situation de partage, elle relie la conclusion à « sans reste ».

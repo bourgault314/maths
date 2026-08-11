@@ -62,7 +62,7 @@ describe("NC-01/F2 — question instanciée", () => {
       erreurs: [],
     });
     assert.equal(question.origine.generateur, GABARIT_SELECTION_DIVISEURS.generateur.nom);
-    assert.equal(question.origine.versionGenerateur, 2);
+    assert.equal(question.origine.versionGenerateur, 3);
     assert.deepEqual(question.classement, {
       domaine: "nombres-et-calculs",
       notion: "criteres-divisibilite",
@@ -97,7 +97,7 @@ describe("NC-01/F2 — question instanciée", () => {
     assert.deepEqual(a, b);
   });
 
-  it("refuse tout paramètre pédagogique non prévu en version 2", () => {
+  it("refuse tout paramètre pédagogique non prévu en version 3", () => {
     const aleatoire = creerGenerateur("nc01-f2-parametres");
     assert.throws(
       () =>
@@ -135,6 +135,14 @@ describe("NC-01/F2 — exactitude et correction", () => {
       for (const diviseur of DIVISEURS) {
         assert.match(correction, new RegExp(`divisible par ${diviseur}\\.`));
       }
+      assert.deepEqual(
+        question.correction[0].contenu.split("\n").map((ligne) => ligne.match(/^Par (\d+) :/)?.[1]).filter(Boolean),
+        ["2", "5", "10"],
+      );
+      assert.deepEqual(
+        question.correction[1].contenu.split("\n").map((ligne) => ligne.match(/^Par (\d+) :/)?.[1]).filter(Boolean),
+        ["3", "9"],
+      );
     }
   });
 

@@ -2,9 +2,10 @@ import assert from "node:assert/strict";
 import { readFile } from "node:fs/promises";
 import { it } from "node:test";
 
-const [app, interfaceCss, indexV2, sitemap, accueil] = await Promise.all([
+const [app, interfaceCss, stylesCss, indexV2, sitemap, accueil] = await Promise.all([
   readFile(new URL("./app.js", import.meta.url), "utf8"),
   readFile(new URL("./interface.css", import.meta.url), "utf8"),
+  readFile(new URL("./styles.css", import.meta.url), "utf8"),
   readFile(new URL("./index.html", import.meta.url), "utf8"),
   readFile(new URL("../sitemap.xml", import.meta.url), "utf8"),
   readFile(new URL("../index.html", import.meta.url), "utf8"),
@@ -29,6 +30,32 @@ it("étire le turquoise jusqu'aux bords des parts du cours sur téléphone", () 
   assert.match(
     interfaceCss,
     /@container \(max-width: 559px\)[\s\S]*?\.equivalence-cours p\s*\{[^}]*flex-direction:\s*column/s,
+  );
+});
+
+it("rattache chaque calcul de partage à un cas visuellement distinct", () => {
+  assert.match(app, /cas-divisible-cours[\s\S]*Cas divisible par 3/);
+  assert.match(app, /cas-non-divisible-cours[\s\S]*Cas non divisible par 3/);
+  assert.match(
+    interfaceCss,
+    /\.exemple-partage-cours\s*\{[^}]*padding:[^}]*border:\s*2px solid[^}]*border-radius:/s,
+  );
+  assert.match(
+    interfaceCss,
+    /@media \(max-width: 430px\)[\s\S]*?\.comparaison-partages\s*\{[^}]*grid-template-columns:\s*minmax\(0, 1fr\)/s,
+  );
+});
+
+it("présente les explications de divisibilité une ligne par critère", () => {
+  assert.match(app, /class="explication-criteres-correction"/);
+  assert.match(app, /<ul>\$\{lignes\.map/);
+  assert.match(
+    stylesCss,
+    /\.explication-criteres-correction ul\s*\{[^}]*display:\s*grid[^}]*list-style:\s*none/s,
+  );
+  assert.match(
+    stylesCss,
+    /\.explication-criteres-correction li\s*\{[^}]*overflow-wrap:\s*break-word/s,
   );
 });
 

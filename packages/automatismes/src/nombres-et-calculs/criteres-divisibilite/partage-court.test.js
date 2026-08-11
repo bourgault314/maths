@@ -107,6 +107,19 @@ describe("NC-01/F6 — contrat, données de partage et déterminisme", () => {
     assert.equal(total.type, "entier");
     assert.equal(diviseur.type, "entier");
   });
+
+  it("précise à quel moment aucun objet ne doit rester", () => {
+    const question = instancier("nc01-f6-formulation-retrait", {
+      sousForme: SOUS_FORME_RETRAIT_MINIMAL,
+      diviseur: 10,
+    });
+    const enonce = texteDes(question.enonce);
+    assert.match(
+      enonce,
+      /pour qu'il n'en reste pas une fois la répartition effectuée \?/,
+    );
+    assert.doesNotMatch(enonce, /pour qu'il ne reste rien/);
+  });
 });
 
 describe("NC-01/F6 — paramètres du plan de série", () => {

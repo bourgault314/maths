@@ -1,6 +1,29 @@
 # État du chantier Automatismes V2
 
-**Dernière mise à jour : 9 août 2026.**
+**Dernière mise à jour : 11 août 2026.**
+
+## Clôture de NC-01 du 11 août
+
+- Le lot part de `1aa6c15`, état de `main` après la publication du jeu de
+  fractions Solèy, et reste isolé sur la branche
+  `agent/nc01-finitions-cloture`.
+- La première page du cours regroupe désormais chacun des deux schémas de
+  partage avec son égalité et sa conclusion, dans des sous-cartes titrées
+  « Cas divisible par 3 » et « Cas non divisible par 3 ».
+- La troisième page ne montre plus la borne technique des nombres générés. Les
+  multiples de 3 et de 9 restent séparés, utilisent des listes ouvertes et le
+  rappel des multiples de 9 va jusqu'à 90.
+- La correction de la sélection de diviseurs affiche une ligne autonome pour
+  chacun des cinq critères. Le générateur correspondant passe en version 3.
+- La sous-forme F6 de retrait minimal conserve exactement sa tâche et sa
+  distribution seedée. Seule sa formulation précise qu'aucun objet ne doit
+  rester une fois la répartition effectuée ; son générateur passe en version 5.
+- L'aide pas à pas, les cinq familles, leurs quotas, les distracteurs et le
+  reste du lecteur ne changent pas. Le graphe public est invalidé ensemble en
+  `v24` et `/auto/` demeure hors du lot.
+- `npm run verifier` réussit **1 374 tests sur 1 374**, ainsi que les
+  validateurs du catalogue, du référencement, des routes, de la provenance et
+  d'Automatismes V2.
 
 ## Nomenclature stable et traces autonomes du 9 août
 
