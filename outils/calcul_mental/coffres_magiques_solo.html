@@ -319,6 +319,12 @@
       overscroll-behavior: contain;
     }
 
+    .operation-grid.help-operation-grid {
+      grid-template-columns: 1fr;
+      margin-block: 10px;
+      overflow-y: auto;
+    }
+
     .operation-grid article {
       display: grid;
       align-content: start;
@@ -368,6 +374,26 @@
       color: #143451;
       font-size: .9rem;
       text-align: center;
+    }
+
+    .operation-conventions .operation-order {
+      grid-column: 1 / -1;
+      text-align: center;
+    }
+
+    .help-card {
+      display: grid;
+      grid-template-rows: auto auto minmax(0, 1fr) auto;
+      overflow: hidden;
+    }
+
+    .help-card > .dialog-icon { grid-row: 1; }
+    .help-card > h2 { grid-row: 2; }
+    .help-card > .help-operation-grid { grid-row: 3; }
+    .help-card > .dialog-actions { grid-row: 4; }
+
+    .help-operation-grid .operation-conventions {
+      grid-template-columns: 1fr;
     }
 
     .operation-picture {
@@ -938,6 +964,9 @@
       .correction-card .learning-panel { margin-block: 8px; padding: 8px; }
       .dual-learning-views,
       .quotient-interpretations { grid-template-columns: 1fr; }
+      .help-operation-grid article[data-operation="product"] .dual-learning-views {
+        grid-template-columns: 1fr 1fr;
+      }
       .learning-demo { --demo-dot: 8px; }
       .quantity-dot { width: 8px; height: 8px; }
       .difference-marker-label { font-size: .64rem; }
@@ -978,7 +1007,6 @@
     <div id="board" class="rune-board" role="grid" aria-label="Seize cases numérotées"></div>
     <div class="solo-toolbar">
       <button id="help-button" class="help-button" type="button">Aide</button>
-      <button id="show-lesson" class="rules-button" type="button">Mémo</button>
       <button id="reset-button" class="reset-button" type="button">Nouvelle partie</button>
     </div>
   </main>
@@ -1025,7 +1053,7 @@
           <strong>5 − 2 = 3</strong>
           <p class="operation-definition">La différence est le résultat d’une soustraction.</p>
         </article>
-        <article>
+        <article data-operation="product">
           <h3>Produit : former des rangées égales</h3>
           <p class="operation-example">Le produit de 3 par 4 est 12.</p>
           <div class="operation-picture" role="group" aria-label="Deux rectangles orientés montrent que trois fois quatre et quatre fois trois donnent tous les deux douze">
@@ -1065,14 +1093,14 @@
           <strong>8 ÷ 2 = 4</strong>
           <p class="operation-definition">Le quotient est le résultat d’une division.</p>
         </article>
-        <aside class="operation-conventions" aria-label="Deux conventions du jeu">
-          <p><strong>Différence :</strong> le plus grand nombre − le plus petit. L’ordre des clics ne change rien.</p>
-          <p><strong>Quotient :</strong> le plus grand nombre ÷ le plus petit, seulement si la division tombe juste.</p>
+        <aside class="operation-conventions" aria-label="Ordre des nombres dans le jeu">
+          <p class="operation-order">Tu peux choisir les deux cases dans n’importe quel ordre.</p>
+          <p data-operation="difference"><strong>Différence :</strong> le jeu calcule le plus grand nombre − le plus petit.</p>
+          <p data-operation="quotient"><strong>Quotient :</strong> le jeu calcule le plus grand nombre ÷ le plus petit, seulement si la division tombe juste.</p>
         </aside>
       </div>
       <div class="lesson-actions">
         <button id="start-game" class="primary-button" type="button">J’ai compris, jouer</button>
-        <button id="close-lesson" class="reset-button" type="button">Voir le plateau</button>
       </div>
     </div>
   </section>
@@ -1080,9 +1108,8 @@
   <section id="help-dialog" class="overlay" hidden role="dialog" aria-modal="true" aria-labelledby="help-title">
     <div class="dialog-card help-card">
       <div class="dialog-icon" aria-hidden="true">?</div>
-      <h2 id="help-title" tabindex="-1">Un indice sur l’opération</h2>
-      <p id="help-copy" class="learning-copy"></p>
-      <div id="help-visual" class="learning-panel"></div>
+      <h2 id="help-title" tabindex="-1">Rappel du cours</h2>
+      <div id="help-visual" class="operation-grid help-operation-grid" role="region" aria-label="Cours de l’opération en cours" tabindex="0"></div>
       <div class="dialog-actions">
         <button id="close-help" class="reset-button" type="button">Retour au plateau</button>
         <button id="show-solution" class="primary-button" type="button">Montrer une solution</button>
@@ -1141,7 +1168,6 @@
       const helpDialog = document.querySelector("#help-dialog");
       const correctionDialog = document.querySelector("#correction-dialog");
       const helpButton = document.querySelector("#help-button");
-      const helpCopy = document.querySelector("#help-copy");
       const helpVisual = document.querySelector("#help-visual");
       const correctionChoice = document.querySelector("#correction-choice");
       const correctionSolution = document.querySelector("#correction-solution");
@@ -1183,6 +1209,13 @@
           if (node instanceof HTMLElement && node.isConnected && !node.closest("[hidden]")) node.focus({ preventScroll });
         };
 
+        const resetScroll = dialog => {
+          [dialog, ...dialog.querySelectorAll(".dialog-card,.operation-grid")].forEach(node => {
+            node.scrollTop = 0;
+            node.scrollLeft = 0;
+          });
+        };
+
         const close = (dialog, { restoreFocus = true } = {}) => {
           if (activeDialog !== dialog) {
             dialog.hidden = true;
@@ -1203,11 +1236,13 @@
           activeTrigger = trigger instanceof HTMLElement && trigger !== document.body && !dialog.contains(trigger) ? trigger : null;
           activeEscapeAction = onEscape;
           dialog.hidden = false;
+          resetScroll(dialog);
           window.requestAnimationFrame(() => {
             if (activeDialog !== dialog) return;
+            resetScroll(dialog);
             const target = resolveNode(dialog, initialFocus) || focusableNodes(dialog)[0] || dialog;
             if (target === dialog && !dialog.hasAttribute("tabindex")) dialog.tabIndex = -1;
-            focusNode(target);
+            focusNode(target, true);
           });
         };
 
@@ -1381,28 +1416,7 @@
         return [divisor * quotient, divisor];
       }
 
-      const learningNotes = {
-        sum: {
-          title: "La somme",
-          help: "Réunis les deux quantités : tu obtiens la somme.",
-          example: [3, 2]
-        },
-        difference: {
-          title: "La différence",
-          help: "La différence entre 5 et 2 est 3.",
-          example: [5, 2]
-        },
-        product: {
-          title: "Le produit",
-          help: "Un nombre indique les rangées ; l’autre, les points par rangée.",
-          example: [3, 4]
-        },
-        quotient: {
-          title: "Le quotient",
-          help: "Cherche le nombre de paquets égaux, ou la quantité dans chaque paquet.",
-          example: [8, 2]
-        }
-      };
+      const operationTitles = { sum: "La somme", difference: "La différence", product: "Le produit", quotient: "Le quotient" };
 
       function makeElement(tagName, className = "", text = "") {
         const node = document.createElement(tagName);
@@ -1563,9 +1577,25 @@
 
       function renderLearningPanel(panel, nextMode, first, second) {
         panel.replaceChildren(
-          makeElement("h3", "", learningNotes[nextMode].title),
+          makeElement("h3", "", operationTitles[nextMode]),
           createOperationVisual(nextMode, first, second)
         );
+      }
+
+      function renderHelpCard(nextMode) {
+        const sourceCard = lesson.querySelector(`article[data-operation="${nextMode}"]`);
+        if (!sourceCard) return;
+        const content = [sourceCard.cloneNode(true)];
+        if (nextMode === "difference" || nextMode === "quotient") {
+          const conventions = makeElement("aside", "operation-conventions");
+          conventions.setAttribute("aria-label", "Ordre des nombres dans le jeu");
+          const order = lesson.querySelector(".operation-conventions .operation-order");
+          const rule = lesson.querySelector(`.operation-conventions [data-operation="${nextMode}"]`);
+          if (order) conventions.append(order.cloneNode(true));
+          if (rule) conventions.append(rule.cloneNode(true));
+          content.push(conventions);
+        }
+        helpVisual.replaceChildren(...content);
       }
 
       function renderBoard() {
@@ -1620,9 +1650,7 @@
         if (locked || !values.length) return;
         clearSelection();
         locked = true;
-        const example = learningNotes[mode].example;
-        helpCopy.textContent = learningNotes[mode].help;
-        renderLearningPanel(helpVisual, mode, example[0], example[1]);
+        renderHelpCard(mode);
         dialogs.open(helpDialog, {
           trigger: document.activeElement,
           initialFocus: "#help-title",
@@ -1750,13 +1778,10 @@
         if (moveFocus) focusAfterReset(focusTarget);
       }
 
-      function openLesson({ mandatory = false } = {}) {
+      function openLesson() {
         dialogs.open(lesson, {
-          trigger: mandatory ? null : document.activeElement,
-          initialFocus: mandatory ? "#start-game" : "#lesson-title",
-          onEscape: () => {
-            if (values.length) dialogs.close(lesson);
-          }
+          trigger: null,
+          initialFocus: "#start-game"
         });
       }
 
@@ -1768,15 +1793,10 @@
         const trigger = dialogs.trigger(lesson);
         start({ moveFocus: true, focusTarget: trigger });
       });
-      document.querySelector("#show-lesson").addEventListener("click", () => openLesson());
       helpButton.addEventListener("click", openHelp);
       document.querySelector("#close-help").addEventListener("click", closeHelp);
       document.querySelector("#show-solution").addEventListener("click", showSolution);
       document.querySelector("#close-correction").addEventListener("click", retryAfterLearning);
-      document.querySelector("#close-lesson").addEventListener("click", () => {
-        if (!values.length) start({ moveFocus: true });
-        else dialogs.close(lesson);
-      });
       document.querySelector("#reset-button").addEventListener("click", () => start());
       document.querySelector("#play-again").addEventListener("click", () => {
         const trigger = dialogs.trigger(result);
@@ -1794,7 +1814,7 @@
         getState: () => ({ values: values.slice(), modes: modes.slice(), mode, target, keys, locked, boardId })
       };
       setupFullscreen();
-      openLesson({ mandatory: true });
+      openLesson();
       updateCounter();
     })();
   </script>
