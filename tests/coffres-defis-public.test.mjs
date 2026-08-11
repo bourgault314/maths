@@ -94,7 +94,7 @@ test("le catalogue publie les cinq cartes dans les groupes validés", () => {
     assert.equal(classification?.primaryGroup, group, path);
     assert.ok(classification?.thumbnail, path);
   }
-  assert.equal(catalogue.resourceClassifications["outils/club_maths/carres_gloutons.html"].thumbnail, "assets/img/thumbnails/jeux/carres-gloutons.svg?v=3");
+  assert.equal(catalogue.resourceClassifications["outils/club_maths/carres_gloutons.html"].thumbnail, "assets/img/thumbnails/jeux/carres-gloutons.svg?v=4");
   const duelCoffres = catalogue.resourceClassifications["outils/club_maths/coffres_magiques.html"];
   assert.equal(duelCoffres.thumbnail, "assets/img/thumbnails/jeux/coffres-magiques.svg?v=2");
   for (const tag of ["quatre-operations", "somme", "difference", "produit", "quotient"]) {
