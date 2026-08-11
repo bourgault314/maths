@@ -20,13 +20,6 @@
     <filter id="line-shadow" x="-30%" y="-30%" width="160%" height="160%">
       <feDropShadow dx="0" dy="2" stdDeviation="2" flood-color="#173a5e" flood-opacity=".2"/>
     </filter>
-    <g id="gloubi-face">
-      <circle r="27" fill="#fff8eb" stroke="#d95f02" stroke-width="3"/>
-      <circle cx="-9" cy="-7" r="3.2" fill="#9a3f00"/>
-      <circle cx="9" cy="-7" r="3.2" fill="#9a3f00"/>
-      <path d="M6 7C13 7 16 11 15 16C14 20 10 22 6 20L2 17L3 11Z" fill="#ef6a69" stroke="#9a3f00" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
-      <path d="M-13 4Q-1 16 9 8Q11 6 13 4" fill="none" stroke="#9a3f00" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"/>
-    </g>
   </defs>
 
   <rect width="720" height="320" fill="url(#background)"/>
@@ -90,8 +83,10 @@
           <circle r="24" fill="#fff" stroke="#0755b8" stroke-width="2.5"/>
           <polygon points="0,-19 4.5,-6.2 18.1,-5.9 7.3,2.4 11.2,15.4 0,7.8 -11.2,15.4 -7.3,2.4 -18.1,-5.9 -4.5,-6.2" fill="#0755b8"/>
         </g>
-        <use href="#gloubi-face" transform="translate(120 40) scale(.8889)"/>
-        <use href="#gloubi-face" transform="translate(200 120) scale(.8889)"/>
+        <g font-family="Apple Color Emoji, Segoe UI Emoji, Noto Color Emoji, sans-serif" font-size="46" font-weight="400" text-anchor="middle" dominant-baseline="central">
+          <text x="120" y="40">😋</text>
+          <text x="200" y="120">😋</text>
+        </g>
       </g>
     </g>
   </g>

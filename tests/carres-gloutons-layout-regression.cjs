@@ -89,16 +89,22 @@ async function captureGloubiOnIphone(page) {
   await page.goto(`${page.serverUrl}/outils/club_maths/carres_gloutons.html`, { waitUntil: "networkidle" });
 
   const ruleCard = page.locator(".rule").nth(1);
+  await page.waitForFunction(() => document.querySelector(".gloubi-rule-emoji")?.dataset.centered === "true");
   const ruleGeometry = await ruleCard.evaluate(node => {
-    const disc = node.querySelector(".ai-marker-disc").getBBox();
-    const tongue = node.querySelector(".ai-marker-tongue").getBBox();
+    const frame = node.querySelector("rect").getBoundingClientRect();
+    const emoji = node.querySelector(".gloubi-rule-emoji");
+    const emojiBounds = emoji.getBoundingClientRect();
     return {
-      discCenter: disc.x + disc.width / 2,
-      tongueCenter: tongue.x + tongue.width / 2
+      text: emoji.textContent,
+      frameCenter: { x: frame.x + frame.width / 2, y: frame.y + frame.height / 2 },
+      emojiCenter: { x: emojiBounds.x + emojiBounds.width / 2, y: emojiBounds.y + emojiBounds.height / 2 }
     };
   });
-  assert.ok(ruleGeometry.tongueCenter >= ruleGeometry.discCenter + 6,
-    `règle iPhone : la langue doit sortir du coin droit (${JSON.stringify(ruleGeometry)})`);
+  assert.equal(ruleGeometry.text, "😋", "la règle doit afficher le vrai emoji");
+  assert.ok(Math.abs(ruleGeometry.emojiCenter.x - ruleGeometry.frameCenter.x) <= 1,
+    `règle iPhone : l’emoji doit être centré horizontalement (${JSON.stringify(ruleGeometry)})`);
+  assert.ok(Math.abs(ruleGeometry.emojiCenter.y - ruleGeometry.frameCenter.y) <= 1,
+    `règle iPhone : l’emoji doit être centré verticalement (${JSON.stringify(ruleGeometry)})`);
   await page.screenshot({ path: path.join(OUTPUT, "regles-iphone-402x874-3x.png"), fullPage: false });
   await ruleCard.screenshot({ path: path.join(OUTPUT, "gloubi-regle-iphone-3x.png") });
 
@@ -115,31 +121,29 @@ async function captureGloubiOnIphone(page) {
   const marker = page.locator(".ai-marker").first();
   await marker.waitFor({ state: "attached" });
   await page.waitForFunction(() => !document.querySelector("#status").classList.contains("ai"), null, { timeout: 8000 });
+  await page.waitForFunction(() => document.querySelector(".ai-marker .gloubi-emoji")?.dataset.centered === "true");
   await page.waitForTimeout(400);
 
   const geometry = await marker.evaluate(node => {
-    const box = selector => {
-      const bounds = node.querySelector(selector).getBBox();
-      return { x: bounds.x, y: bounds.y, width: bounds.width, height: bounds.height, right: bounds.x + bounds.width, bottom: bounds.y + bounds.height };
-    };
-    const children = Array.from(node.children);
-    const tongue = node.querySelector(".ai-marker-tongue");
-    const mouth = node.querySelector(".ai-marker-mouth");
+    const emoji = node.querySelector(".gloubi-emoji");
+    const bounds = emoji.getBoundingClientRect();
+    const target = node.ownerSVGElement.createSVGPoint();
+    target.x = Number(emoji.dataset.centerX);
+    target.y = Number(emoji.dataset.centerY);
+    const screenTarget = target.matrixTransform(node.ownerSVGElement.getScreenCTM());
     return {
-      disc: box(".ai-marker-disc"),
-      tongue: box(".ai-marker-tongue"),
-      mouth: box(".ai-marker-mouth"),
-      tongueBeforeMouth: children.indexOf(tongue) < children.indexOf(mouth)
+      text: emoji.textContent,
+      targetCenter: { x: screenTarget.x, y: screenTarget.y },
+      emojiCenter: { x: bounds.x + bounds.width / 2, y: bounds.y + bounds.height / 2 },
+      emojiSize: { width: bounds.width, height: bounds.height }
     };
   });
 
-  assert.equal(geometry.tongueBeforeMouth, true, "iPhone : la bouche doit masquer la jonction haute de la langue");
-  assert.ok(geometry.tongue.y < geometry.mouth.bottom && geometry.tongue.bottom > geometry.mouth.bottom,
-    `iPhone : la langue doit chevaucher la courbe de bouche (${JSON.stringify(geometry)})`);
-  assert.ok(geometry.tongue.bottom <= geometry.disc.bottom - 5,
-    `iPhone : la langue doit garder de l’air avant le bord du visage (${JSON.stringify(geometry)})`);
-  assert.ok(geometry.tongue.x + geometry.tongue.width / 2 >= geometry.disc.x + geometry.disc.width / 2 + 6,
-    `iPhone : la langue doit être franchement décalée vers le coin droit (${JSON.stringify(geometry)})`);
+  assert.equal(geometry.text, "😋", "le plateau doit afficher le vrai emoji");
+  assert.ok(Math.abs(geometry.emojiCenter.x - geometry.targetCenter.x) <= 1,
+    `iPhone : l’emoji doit être centré horizontalement dans sa case (${JSON.stringify(geometry)})`);
+  assert.ok(Math.abs(geometry.emojiCenter.y - geometry.targetCenter.y) <= 1,
+    `iPhone : l’emoji doit être centré verticalement dans sa case (${JSON.stringify(geometry)})`);
 
   await page.screenshot({ path: path.join(OUTPUT, "gloubi-iphone-402x874-3x.png"), fullPage: true });
   await marker.screenshot({ path: path.join(OUTPUT, "gloubi-visage-iphone-3x.png") });

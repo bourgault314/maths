@@ -274,26 +274,18 @@
     }
 
     .player-marker-star { fill: #0755b8; }
-    .ai-marker-disc {
-      fill: #fff8eb;
-      stroke: #d95f02;
-      stroke-width: 3;
+    .gloubi-emoji {
+      font-family: "Apple Color Emoji", "Segoe UI Emoji", "Noto Color Emoji", sans-serif;
+      font-size: 54px;
+      font-style: normal;
+      font-weight: 400;
+      text-anchor: middle;
+      dominant-baseline: middle;
+      white-space: pre;
     }
 
-    .ai-marker-eye { fill: #9a3f00; }
-    .ai-marker-mouth {
-      fill: none;
-      stroke: #9a3f00;
-      stroke-width: 3.5;
-      stroke-linecap: round;
-    }
-
-    .ai-marker-tongue {
-      fill: #ef6a69;
-      stroke: #9a3f00;
-      stroke-width: 1.5;
-      stroke-linecap: round;
-      stroke-linejoin: round;
+    .gloubi-rule-emoji {
+      font-size: 41px;
     }
 
     .edge-visible {
@@ -853,13 +845,7 @@
         <article class="rule">
           <svg viewBox="0 0 90 75" aria-hidden="true">
             <rect x="16" y="11" width="58" height="53" rx="9" fill="#ffe1bd" stroke="#f97316" stroke-width="5"/>
-            <g transform="translate(45 37.5) scale(.74)">
-              <circle r="27" class="ai-marker-disc"/>
-              <circle cx="-9" cy="-7" r="3.2" class="ai-marker-eye"/>
-              <circle cx="9" cy="-7" r="3.2" class="ai-marker-eye"/>
-              <path d="M6 7C13 7 16 11 15 16C14 20 10 22 6 20L2 17L3 11Z" class="ai-marker-tongue"/>
-              <path d="M-13 4Q-1 16 9 8Q11 6 13 4" class="ai-marker-mouth"/>
-            </g>
+            <text x="45" y="37.5" class="gloubi-emoji gloubi-rule-emoji" data-center-x="45" data-center-y="37.5">😋</text>
           </svg>
           <strong>Et rejoue aussitôt</strong>
           <span>Une bonne fermeture peut déclencher toute une chaîne.</span>
@@ -1141,6 +1127,29 @@
         }).join(" ");
       }
 
+      function centerGloubiEmoji(emoji) {
+        if (!emoji?.isConnected) return;
+        const centerX = Number(emoji.dataset.centerX);
+        const centerY = Number(emoji.dataset.centerY);
+        if (!Number.isFinite(centerX) || !Number.isFinite(centerY)) return;
+
+        emoji.removeAttribute("transform");
+        const bounds = emoji.getBBox();
+        if (!bounds.width || !bounds.height) return;
+        const shiftX = centerX - (bounds.x + bounds.width / 2);
+        const shiftY = centerY - (bounds.y + bounds.height / 2);
+        emoji.setAttribute("transform", `translate(${shiftX} ${shiftY})`);
+        emoji.dataset.centered = "true";
+      }
+
+      function scheduleGloubiEmojiCentering() {
+        const centerAll = () => document.querySelectorAll(".gloubi-emoji").forEach(centerGloubiEmoji);
+        requestAnimationFrame(centerAll);
+        if (document.fonts?.status !== "loaded") {
+          document.fonts?.ready.then(() => requestAnimationFrame(centerAll));
+        }
+      }
+
       function markerFor(color, cx, cy) {
         const marker = makeSvg("g", {
           class: `box-marker ${color}-marker`,
@@ -1156,17 +1165,15 @@
           return marker;
         }
 
-        marker.appendChild(makeSvg("circle", { cx, cy, r: 27, class: "ai-marker-disc" }));
-        marker.appendChild(makeSvg("circle", { cx: cx - 9, cy: cy - 7, r: 3.2, class: "ai-marker-eye" }));
-        marker.appendChild(makeSvg("circle", { cx: cx + 9, cy: cy - 7, r: 3.2, class: "ai-marker-eye" }));
-        marker.appendChild(makeSvg("path", {
-          d: `M${cx + 6} ${cy + 7}C${cx + 13} ${cy + 7} ${cx + 16} ${cy + 11} ${cx + 15} ${cy + 16}C${cx + 14} ${cy + 20} ${cx + 10} ${cy + 22} ${cx + 6} ${cy + 20}L${cx + 2} ${cy + 17}L${cx + 3} ${cy + 11}Z`,
-          class: "ai-marker-tongue"
-        }));
-        marker.appendChild(makeSvg("path", {
-          d: `M${cx - 13} ${cy + 4}Q${cx - 1} ${cy + 16} ${cx + 9} ${cy + 8}Q${cx + 11} ${cy + 6} ${cx + 13} ${cy + 4}`,
-          class: "ai-marker-mouth"
-        }));
+        const emoji = makeSvg("text", {
+          x: cx,
+          y: cy,
+          class: "gloubi-emoji",
+          "data-center-x": cx,
+          "data-center-y": cy
+        });
+        emoji.textContent = "😋";
+        marker.appendChild(emoji);
         return marker;
       }
 
@@ -1192,6 +1199,7 @@
           const cy = PAD + row * CELL + CELL / 2;
           facesGroup.appendChild(markerFor(color, cx, cy));
         });
+        scheduleGloubiEmojiCentering();
 
         const playerSquares = Array.from(boxes.values()).filter(value => value === PLAYER).length;
         const aiSquares = Array.from(boxes.values()).filter(value => value === AI).length;
