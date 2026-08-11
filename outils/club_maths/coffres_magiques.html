@@ -510,6 +510,43 @@
       font-size: .86rem;
     }
 
+    .operation-visual-card .operation-example {
+      color: #143451;
+      font-size: .9rem;
+      font-weight: 900;
+      line-height: 1.3;
+    }
+
+    .operation-conventions {
+      grid-column: 1 / -1;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 7px;
+      padding: 9px;
+      border: 2px solid #d7e4ec;
+      border-radius: 14px;
+      background: #f0f6fa;
+    }
+
+    .operation-conventions p {
+      margin: 0;
+      padding: 7px 9px;
+      border-radius: 10px;
+      color: #31546e;
+      background: #fff;
+      font-size: .8rem;
+      font-weight: 800;
+      line-height: 1.3;
+    }
+
+    .operation-conventions strong {
+      display: block;
+      margin-bottom: 2px;
+      color: #143451;
+      font-size: .9rem;
+      text-align: center;
+    }
+
     .operation-equation {
       color: #143451;
       font-size: 1rem;
@@ -547,15 +584,12 @@
       display: grid;
       grid-template-columns: repeat(5, minmax(0, 1fr));
       overflow: hidden;
-      border: 0;
+      border: 2px solid #54758a;
       border-radius: 0;
       background: #fff;
-      box-shadow: inset 2px 0 0 #7898ac, inset -2px 0 0 #7898ac, inset 0 2px 0 #7898ac, inset 0 -2px 0 #7898ac;
     }
 
-    .bar-row + .bar-row {
-      box-shadow: inset 2px 0 0 #7898ac, inset -2px 0 0 #7898ac, inset 0 -2px 0 #7898ac;
-    }
+    .bar-row + .bar-row { border-top: 0; }
 
     .bar-segment {
       display: grid;
@@ -564,7 +598,7 @@
       padding: 4px 0;
     }
 
-    .bar-segment:not(:last-child) { box-shadow: inset -2px 0 0 #7898ac; }
+    .bar-segment:not(:last-child) { border-right: 2px solid #54758a; }
     .bar-segment.units-2 { grid-column: span 2; }
     .bar-segment.units-3 { grid-column: span 3; }
     .bar-segment.units-5 { grid-column: span 5; }
@@ -647,8 +681,9 @@
       place-items: center;
       min-width: 0;
       padding: 4px 0;
+      border: 2px solid #54758a;
+      border-top: 0;
       background: #d7e8ff;
-      box-shadow: inset 2px 0 0 #7898ac, inset -2px 0 0 #7898ac, inset 0 -2px 0 #7898ac;
     }
 
     .difference-marker {
@@ -992,6 +1027,7 @@
       .reset-button { min-height: 37px; }
       .dialog-card { padding: 21px 17px; }
       .operation-visuals { grid-template-columns: 1fr; }
+      .operation-conventions { grid-template-columns: 1fr; }
     }
 
     @media (max-width: 400px) {
@@ -1092,6 +1128,7 @@
         <div class="operation-visuals">
           <article class="operation-visual-card">
             <h3>Somme : réunir deux quantités</h3>
+            <p class="operation-example">La somme de 3 et de 2 est 5.</p>
             <div class="bar-model sum-bar-model" role="img" aria-label="Un crochet placé au-dessus des cinq colonnes indique somme égale cinq. Cinq points dans la barre du haut sont alignés avec trois points et deux points dans deux rectangles jointifs en dessous. Les groupes de trois et de deux réunis forment cinq. Trois plus deux égale cinq.">
               <div class="bar-diagram" aria-hidden="true">
                 <div class="measure-marker-row">
@@ -1113,10 +1150,11 @@
               </div>
             </div>
             <div class="operation-equation">3 + 2 = 5</div>
-            <p>La somme est le résultat d’une addition. Ici, 3 points et 2 points réunis donnent 5 points.</p>
+            <p>La somme est le résultat d’une addition.</p>
           </article>
           <article class="operation-visual-card">
             <h3>Différence : l’écart entre deux quantités</h3>
+            <p class="operation-example">La différence entre 5 et 2 est 3.</p>
             <div class="bar-model difference-bar-model" role="img" aria-label="La différence est l’écart entre les deux quantités. Cinq points sont alignés au-dessus de deux points. Les deux premiers sont appariés. Les trois autres, surlignés, ne sont pas appariés. Sous ces trois derniers points, dans l’espace vide de la ligne inférieure, un crochet tourné vers eux indique différence égale trois. Cinq moins deux égale trois.">
               <div class="bar-diagram" aria-hidden="true">
                 <div class="bar-row">
@@ -1133,10 +1171,11 @@
               </div>
             </div>
             <div class="operation-equation">5 − 2 = 3</div>
-            <p>La différence est le résultat d’une soustraction. Elle mesure l’écart entre deux quantités. Dans ce jeu, on soustrait toujours le plus petit nombre du plus grand.</p>
+            <p>La différence est le résultat d’une soustraction.</p>
           </article>
           <article class="operation-visual-card">
             <h3>Produit : former des rangées égales</h3>
+            <p class="operation-example">Le produit de 3 par 4 est 12.</p>
             <div class="operation-picture" role="group" aria-label="Deux rectangles orientés montrent que trois fois quatre et quatre fois trois donnent tous les deux douze">
               <div class="dual-operation-views">
                 <div class="mini-operation-view" role="img" aria-label="Un rectangle de douze points a quatre colonnes, nombre quatre indiqué au-dessus, et trois rangées, nombre trois indiqué sur le côté">
@@ -1158,29 +1197,34 @@
               </div>
             </div>
             <div class="operation-equation">3 × 4 = 12 ; 4 × 3 = 12 aussi</div>
-            <p>Le produit est le résultat d’une multiplication. Ici, 3 rangées de 4 points, ou 4 rangées de 3 points, donnent 12 points.</p>
+            <p>Le produit est le résultat d’une multiplication.</p>
           </article>
           <article class="operation-visual-card">
             <h3>Quotient : grouper ou partager</h3>
+            <p class="operation-example">Le quotient de 8 par 2 est 4.</p>
             <div class="operation-picture" role="group" aria-label="Deux façons de comprendre huit divisé par deux">
               <div class="dual-operation-views">
                 <div class="mini-operation-view" role="img" aria-label="Une barre de huit unités est groupée en quatre paquets rectangulaires de deux. Combien de paquets de deux dans huit ? Quatre.">
                   <div class="quotient-bar groups-of-two" aria-hidden="true">
                     <span class="quotient-package" style="--package-size:2"><i></i><i></i></span><span class="quotient-package" style="--package-size:2"><i></i><i></i></span><span class="quotient-package" style="--package-size:2"><i></i><i></i></span><span class="quotient-package" style="--package-size:2"><i></i><i></i></span>
                   </div>
-                  <span class="quotient-question">combien de paquets de 2 dans 8 ? <strong>4</strong></span>
+                  <span class="quotient-question">Grouper : <strong>4 paquets de 2</strong></span>
                 </div>
                 <div class="mini-operation-view" role="img" aria-label="Une barre de huit unités est partagée en deux paquets rectangulaires de quatre. Partager huit en deux paquets : quatre dans chacun.">
                   <div class="quotient-bar groups-of-four" aria-hidden="true">
                     <span class="quotient-package" style="--package-size:4"><i></i><i></i><i></i><i></i></span><span class="quotient-package" style="--package-size:4"><i></i><i></i><i></i><i></i></span>
                   </div>
-                  <span class="quotient-question">partager 8 en 2 paquets : <strong>4 dans chacun</strong></span>
+                  <span class="quotient-question">Partager : <strong>2 paquets de 4</strong></span>
                 </div>
               </div>
             </div>
             <div class="operation-equation">8 ÷ 2 = 4</div>
-            <p>Le quotient est le résultat d’une division. Il indique combien de paquets égaux on peut former, ou combien il y a dans chaque paquet. Dans ce jeu, on divise le plus grand nombre par le plus petit et on ne garde que les divisions qui tombent juste.</p>
+            <p>Le quotient est le résultat d’une division.</p>
           </article>
+          <aside class="operation-conventions" aria-label="Deux conventions du jeu">
+            <p><strong>Différence :</strong> le plus grand nombre − le plus petit. L’ordre des clics ne change rien.</p>
+            <p><strong>Quotient :</strong> le plus grand nombre ÷ le plus petit, seulement si la division tombe juste.</p>
+          </aside>
         </div>
         <ol class="rule-steps">
           <li>Le coffre demande une <strong>somme</strong>, une <strong>différence</strong>, un <strong>produit</strong> ou un <strong>quotient</strong>.</li>
