@@ -98,6 +98,45 @@ test("les 51 solutions de référence gagnent et ramassent les 107 fruits", () =
   assert.deepEqual([...summary.failures], []);
 });
 
+test("les rayons de victoire forment un graphe de propagation valide", () => {
+  const context = createGameContext();
+  const graph = vm.runInContext(`(() => {
+    const failures = [];
+    let mergeOutputs = 0;
+    let branchedOutputs = 0;
+    LV.forEach((level, index) => {
+      cur = index;
+      state.placed = {};
+      level.sol.forEach(([toolIndex, x, y]) => {
+        state.placed[x + "," + y] = { def: level.tools[toolIndex], ti: toolIndex };
+      });
+      const result = simulate();
+      result.segs.forEach(segment => {
+        if (segment.id < 0 || segment.parents.some(parent => parent >= segment.id)) {
+          failures.push(level.name + ": dépendance non topologique");
+        }
+        if (!segment.viaType && segment.parents.length !== 0) {
+          failures.push(level.name + ": un soleil possède un parent");
+        }
+        if (segment.viaType === "m") {
+          mergeOutputs++;
+          if (segment.parents.length !== 2) failures.push(level.name + ": addition sans deux entrées");
+        } else if (segment.viaType && segment.parents.length !== 1) {
+          failures.push(level.name + ": pièce simple sans parent unique");
+        }
+        if ((segment.viaType === "s2" || segment.viaType === "s3") && segment.parents.length === 1) {
+          branchedOutputs++;
+        }
+      });
+    });
+    return { failures, mergeOutputs, branchedOutputs };
+  })()`, context);
+
+  assert.deepEqual([...graph.failures], []);
+  assert.ok(graph.mergeOutputs > 0);
+  assert.ok(graph.branchedOutputs > 0);
+});
+
 test("l’accueil masque réellement le plateau et reprend la charte du site", () => {
   assert.match(html, /#play\.screen\{display:none;\}/);
   assert.match(html, /#play\.screen\.active\{display:flex;\}/);
@@ -134,22 +173,33 @@ test("le paysage mobile et le plein écran utilisent réellement tout le viewpor
   assert.match(html, /matchMedia\('\(orientation:landscape\)'\)/);
   assert.match(html, /height:100dvh/);
   assert.match(html, /env\(safe-area-inset-left\)/);
+  assert.match(html, /--board-ratio/);
+  assert.match(html, /aspect-ratio:var\(--board-ratio/);
   assert.match(html, /fsbtn\.addEventListener\('click',async/);
+  assert.match(html, /requestFS\.call\(target\)/);
+  assert.match(html, /if\(isiPhone&&!standalone\)\{showIPhoneHelp\(\);return;\}/);
+  assert.match(html, /Masquer la barre d’outils/);
   assert.match(html, /window\.visualViewport/);
+  assert.doesNotMatch(html, /navigationUI:'hide'/);
   assert.doesNotMatch(html, /orientation:landscape\) and \(min-width:640px\)/);
 });
 
-test("la victoire arrête puis relance la lumière avant les confettis", () => {
-  assert.match(html, /@keyframes drawseg\{from\{stroke-dashoffset:var\(--beam-length\)/);
-  assert.match(html, /const pause=0\.4,drawStart=0\.1/);
-  assert.match(html, /ln\.style\.strokeDasharray='none'/);
-  assert.match(html, /ln\.style\.animation=`drawseg \$\{dur\}/);
+test("la victoire propage chaque rayon jusqu’aux maisons avant les confettis", () => {
+  assert.match(html, /\.beam\.win-draw,\.beampath\.win-draw/);
+  assert.match(html, /@keyframes win-draw\{from\{stroke-dashoffset:var\(--win-length\)/);
+  assert.match(html, /const pause=\.4,drawStart=\.1,SPEED=620/);
+  assert.match(html, /const arrival=sg\.parents\.length\?Math\.max/);
+  assert.match(html, /d\.ins\.map\(dir=>merges\[pk\]\[dir\]\.segId\)/);
+  assert.match(html, /path\.getTotalLength\(\)/);
+  assert.match(html, /p\.sg\.targetIndex>=0/);
+  assert.doesNotMatch(html, /drawStart\+i\*0\.2/);
   assert.doesNotMatch(html, /@keyframes retractseg/);
-  assert.doesNotMatch(html, /\.beam\.drawin\{stroke-dasharray:none/);
 });
 
 test("le logo maths&go garde ses couleurs traditionnelles", () => {
   assert.match(html, /<img src="\/assets\/img\/mathsgo-logo\.png" alt="maths&go"/);
+  assert.match(html, /background:linear-gradient\(145deg,#fffdf8,#fff1d2\)/);
+  assert.match(html, /filter:none/);
   assert.doesNotMatch(html, /filter:grayscale\(1\)/);
 });
 
