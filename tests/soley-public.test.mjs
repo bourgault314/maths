@@ -6,6 +6,7 @@ import vm from "node:vm";
 const root = new URL("../", import.meta.url);
 const gamePath = new URL("outils/club_maths/soley.html", root);
 const thumbnailPath = new URL("assets/img/thumbnails/jeux/soley.svg", root);
+const logoPath = new URL("assets/img/mathsgo-logo-soley.png", root);
 const cataloguePath = new URL("assets/js/catalogue-refonte-data.js", root);
 
 const html = fs.readFileSync(gamePath, "utf8");
@@ -141,7 +142,7 @@ test("l’accueil masque réellement le plateau et reprend la charte du site", (
   assert.match(html, /#play\.screen\{display:none;\}/);
   assert.match(html, /#play\.screen\.active\{display:flex;\}/);
   assert.match(html, /class="brandmark" href="\/"/);
-  assert.match(html, /assets\/img\/mathsgo-logo\.png/);
+  assert.match(html, /assets\/img\/mathsgo-logo-soley\.png/);
   assert.match(html, /assets\/js\/consentement\.js/);
   assert.match(html, /Gérer mes cookies/);
   assert.match(html, /aria-label="Recommencer le niveau"/);
@@ -182,11 +183,18 @@ test("le paysage mobile et le plein écran utilisent réellement tout le viewpor
   assert.match(html, /#topbar,#introline,#toolbox,#status\{flex-shrink:0;\}/);
   assert.match(html, /fsbtn\.addEventListener\('click',async/);
   assert.match(html, /requestFS\.call\(target\)/);
-  assert.match(html, /if\(isiPhone&&!standalone\)\{showIPhoneHelp\(\);return;\}/);
+  assert.match(html, /const nativeFullscreen=typeof requestFS==='function'&&typeof exitFS==='function'/);
+  assert.match(html, /const portrait=window\.matchMedia\('\(orientation:portrait\)'\)/);
+  assert.match(html, /const hide=standalone\|\|\(!nativeFullscreen&&mobileDevice&&portrait\.matches\)/);
+  assert.match(html, /fsbtn\.hidden=hide/);
+  assert.match(html, /portrait\.addEventListener\('change',syncAvailability\)/);
+  assert.match(html, /id="fsbtn"[^>]*hidden/);
+  assert.match(html, /#fsbtn\[hidden\]\{display:none !important;\}/);
   assert.match(html, /Masquer la barre d’outils/);
   assert.match(html, /window\.visualViewport/);
   assert.doesNotMatch(html, /navigationUI:'hide'/);
   assert.doesNotMatch(html, /orientation:landscape\) and \(min-width:640px\)/);
+  assert.doesNotMatch(html, /function fallback\(/);
 });
 
 test("la victoire propage chaque rayon jusqu’aux maisons avant les confettis", () => {
@@ -201,10 +209,15 @@ test("la victoire propage chaque rayon jusqu’aux maisons avant les confettis",
   assert.doesNotMatch(html, /@keyframes retractseg/);
 });
 
-test("le logo maths&go garde ses couleurs traditionnelles", () => {
-  assert.match(html, /<img src="\/assets\/img\/mathsgo-logo\.png" alt="maths&go"/);
-  assert.match(html, /background:linear-gradient\(145deg,#fffdf8,#fff1d2\)/);
+test("le logo maths&go s’intègre au soleil sans plaque blanche", () => {
+  assert.ok(fs.existsSync(logoPath));
+  assert.match(html, /<img src="\/assets\/img\/mathsgo-logo-soley\.png" alt="maths&go"/);
+  assert.match(html, /\.brandmark\{[\s\S]*?border:0;background:transparent/);
+  assert.match(html, /html\{background:#241b4d;\}/);
+  assert.match(html, /meta name="robots" content="index, follow, max-image-preview:large"/);
   assert.match(html, /filter:none/);
+  assert.doesNotMatch(html, /#fffdf8/);
+  assert.doesNotMatch(html, /#FFEEDA/);
   assert.doesNotMatch(html, /filter:grayscale\(1\)/);
 });
 
