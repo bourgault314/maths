@@ -46,6 +46,26 @@
   global.MATHSGO_DIE_EXPERIMENT = Object.freeze({ simulateDieThrows, renderDieChart });
 })(typeof window !== "undefined" ? window : globalThis);
 
+(function registerCatalogueThumbnailHelpers(global) {
+  "use strict";
+
+  function webpVariant(path) {
+    return String(path || "").replace(/\.png(?=\?|$)/i, ".webp");
+  }
+
+  function intersectsViewport(rect, viewportWidth, viewportHeight) {
+    return rect.bottom > 0 &&
+      rect.right > 0 &&
+      rect.top < viewportHeight &&
+      rect.left < viewportWidth;
+  }
+
+  global.MATHSGO_CATALOGUE_THUMBNAILS = Object.freeze({
+    webpVariant,
+    intersectsViewport
+  });
+})(typeof window !== "undefined" ? window : globalThis);
+
 (() => {
   "use strict";
 
@@ -61,6 +81,7 @@
   const useMap = new Map((catalogue.uses || []).map((use) => [use.id, use]));
   const resourceClassifications = catalogue.resourceClassifications || {};
   const resourceFamilies = catalogue.resourceFamilies || [];
+  const thumbnailHelpers = window.MATHSGO_CATALOGUE_THUMBNAILS;
   const dataDieFaces = Object.freeze({
     1: [[17, 30]],
     2: [[10, 23], [24, 37]],
@@ -343,6 +364,63 @@
       .trim();
   }
 
+  function thumbnailMarkup(thumbnail) {
+    const source = rootPrefix + thumbnail;
+    const image = `<img data-thumbnail-src="${escapeHtml(source)}" alt="" loading="lazy" decoding="async" data-catalogue-thumbnail>`;
+    if (!/\.png(?:\?|$)/i.test(thumbnail)) return image;
+
+    const webpSource = rootPrefix + thumbnailHelpers.webpVariant(thumbnail);
+    return `<picture class="catalogue-thumbnail-picture"><source data-thumbnail-srcset="${escapeHtml(webpSource)}" type="image/webp">${image}</picture>`;
+  }
+
+  let thumbnailPriorityRefreshQueued = false;
+
+  function refreshThumbnailPriorities() {
+    const images = [
+      ...notionGrid.querySelectorAll("img[data-catalogue-thumbnail]"),
+      ...resourceGrid.querySelectorAll("img[data-catalogue-thumbnail]")
+    ];
+    const viewportWidth = window.innerWidth || document.documentElement.clientWidth;
+    const viewportHeight = window.innerHeight || document.documentElement.clientHeight;
+    const visibleImages = images.filter((image) => {
+      image.removeAttribute("fetchpriority");
+      return thumbnailHelpers.intersectsViewport(
+        image.getBoundingClientRect(),
+        viewportWidth,
+        viewportHeight
+      );
+    });
+
+    const priorityImage = visibleImages.find((image) => !image.complete) || visibleImages[0];
+    if (priorityImage) priorityImage.setAttribute("fetchpriority", "high");
+
+    const visibleSet = new Set(visibleImages);
+    images.forEach((image) => {
+      image.setAttribute("loading", visibleSet.has(image) ? "eager" : "lazy");
+    });
+
+    images.forEach((image) => {
+      const pictureSource = image.parentElement?.querySelector("source[data-thumbnail-srcset]");
+      if (pictureSource) {
+        pictureSource.srcset = pictureSource.dataset.thumbnailSrcset;
+        pictureSource.removeAttribute("data-thumbnail-srcset");
+      }
+      if (image.dataset.thumbnailSrc) {
+        image.src = image.dataset.thumbnailSrc;
+        image.removeAttribute("data-thumbnail-src");
+      }
+    });
+  }
+
+  function scheduleThumbnailPriorityRefresh() {
+    if (thumbnailPriorityRefreshQueued) return;
+    thumbnailPriorityRefreshQueued = true;
+    queueMicrotask(() => {
+      thumbnailPriorityRefreshQueued = false;
+      refreshThumbnailPriorities();
+    });
+  }
+
   function words(value) {
     return normalise(value).split(" ").filter(Boolean);
   }
@@ -452,6 +530,7 @@
     document.documentElement.style.scrollBehavior = "auto";
     window.scrollTo({ top, behavior: "auto" });
     document.documentElement.style.scrollBehavior = previousScrollBehavior;
+    scheduleThumbnailPriorityRefresh();
   }
 
   function moveToTopAndFocus() {
@@ -564,7 +643,7 @@
   function collectionVisual(collection) {
     const design = collectionDesign[collection.id] || {};
     if (design.thumbnail) {
-      return `<span class="notion-icon collection-thumbnail"><img src="${escapeHtml(rootPrefix + design.thumbnail)}" alt="" loading="lazy"></span>`;
+      return `<span class="notion-icon collection-thumbnail">${thumbnailMarkup(design.thumbnail)}</span>`;
     }
     return `<span class="notion-icon">${icon(design.icon)}</span>`;
   }
@@ -877,7 +956,7 @@
       const count = collectionResourceCount(collection.id);
       const hasThumbnail = Boolean(design.thumbnail);
       return `<a class="notion-card collection-card${hasThumbnail ? " collection-card-visual" : ""}" data-collection-card="${escapeHtml(collection.id)}" href="${escapeHtml(collectionHref(collection))}" style="${domainStyle(collection.domain)}">
-        ${hasThumbnail ? `<span class="resource-thumbnail collection-card-thumbnail"><img src="${escapeHtml(rootPrefix + design.thumbnail)}" alt="" loading="lazy"></span>` : ""}
+        ${hasThumbnail ? `<span class="resource-thumbnail collection-card-thumbnail">${thumbnailMarkup(design.thumbnail)}</span>` : ""}
         <span class="collection-label">Collection</span>
         <span class="notion-top">
           ${hasThumbnail ? "" : collectionVisual(collection)}
@@ -888,6 +967,7 @@
       </a>`;
     });
     notionGrid.innerHTML = [...notionCards, ...collectionCards].join("") || `<p class="empty-state">Aucun thème ne correspond à cette recherche.</p>`;
+    scheduleThumbnailPriorityRefresh();
   }
 
   function resourceMeta(resource) {
@@ -989,7 +1069,7 @@
     const usages = resourceUsageMeta(resource, group);
     return `<a class="resource-card${thumbnail ? " resource-card-visual" : ""}" href="${escapeHtml(rootPrefix + resource.path)}" style="${domainStyle(domainId)}">
       ${thumbnail
-        ? `<span class="resource-thumbnail"><img src="${escapeHtml(rootPrefix + thumbnail)}" alt="" loading="lazy"></span>`
+        ? `<span class="resource-thumbnail">${thumbnailMarkup(thumbnail)}</span>`
         : `<span class="resource-type-icon">${typeIcon(resource, group)}</span>`}
       <span class="resource-copy"><h3>${escapeHtml(resource.title)}</h3>${thumbnail ? `<span class="resource-description">${escapeHtml(description)}</span>` : `<span class="resource-meta">${escapeHtml(resourceMeta(resource))}</span>`}${usages ? `<span class="resource-meta resource-uses">${escapeHtml(usages)}</span>` : ""}</span>
       <span class="resource-arrow" aria-hidden="true">→</span>
@@ -1013,7 +1093,7 @@
     return `<details class="resource-family-card${thumbnail ? " resource-family-card-visual" : ""}" style="${domainStyle(domainId)}">
       <summary class="resource-family-summary">
         ${thumbnail
-          ? `<span class="resource-thumbnail"><img src="${escapeHtml(rootPrefix + thumbnail)}" alt="" loading="lazy"></span>`
+          ? `<span class="resource-thumbnail">${thumbnailMarkup(thumbnail)}</span>`
           : `<span class="resource-type-icon">${typeIcon(representative, family.group)}</span>`}
         <span class="resource-copy"><h3>${escapeHtml(family.title)}</h3>${thumbnail ? `<span class="resource-description">${escapeHtml(`${versionLabel} · ${description}`)}</span>` : `<span class="resource-meta">${escapeHtml(`${versionLabel} · ${description}`)}</span>`}${usages ? `<span class="resource-meta resource-uses">${escapeHtml(usages)}</span>` : ""}</span>
         <span class="resource-family-toggle" aria-hidden="true">⌄</span>
@@ -1089,6 +1169,7 @@
       </section>`;
     }).join("");
     resourceGrid.innerHTML = directAccess + groupedResources;
+    scheduleThumbnailPriorityRefresh();
   }
 
   function render() {
