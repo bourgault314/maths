@@ -547,6 +547,11 @@
       text-align: center;
     }
 
+    .operation-conventions .operation-order {
+      grid-column: 1 / -1;
+      text-align: center;
+    }
+
     .operation-equation {
       color: #143451;
       font-size: 1rem;
@@ -1221,9 +1226,10 @@
             <div class="operation-equation">8 ÷ 2 = 4</div>
             <p>Le quotient est le résultat d’une division.</p>
           </article>
-          <aside class="operation-conventions" aria-label="Deux conventions du jeu">
-            <p><strong>Différence :</strong> le plus grand nombre − le plus petit. L’ordre des clics ne change rien.</p>
-            <p><strong>Quotient :</strong> le plus grand nombre ÷ le plus petit, seulement si la division tombe juste.</p>
+          <aside class="operation-conventions" aria-label="Ordre des nombres dans le jeu">
+            <p class="operation-order">Tu peux choisir les deux cases dans n’importe quel ordre.</p>
+            <p data-operation="difference"><strong>Différence :</strong> le jeu calcule le plus grand nombre − le plus petit.</p>
+            <p data-operation="quotient"><strong>Quotient :</strong> le jeu calcule le plus grand nombre ÷ le plus petit, seulement si la division tombe juste.</p>
           </aside>
         </div>
         <ol class="rule-steps">
