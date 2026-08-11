@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Solèy — partage les rayons du soleil | maths&amp;go</title>
-  <meta name="description" content="Un jeu de réflexion en 51 niveaux pour partager, additionner, multiplier et comparer des fractions dans sept mondes inspirés de La Réunion.">
+  <meta name="description" content="Un jeu de réflexion en 60 niveaux pour partager, additionner, multiplier et comparer des fractions dans huit mondes inspirés de La Réunion.">
   <link rel="canonical" href="https://mathsgo.re/outils/club_maths/soley.html">
   <meta name="robots" content="index, follow, max-image-preview:large">
 <meta name="theme-color" content="#241b4d">
@@ -359,13 +359,15 @@ const WORLDS=[
  {id:'pitons',label:'Les pitons',pal:'5e-4e',blurb:'Équivalences et comparaisons : les passes étroites ne laissent passer que les rayons assez fins.'},
  {id:'soleils',label:'Les soleils',pal:'4e',blurb:'Soleils multiples, soleils fractions, soleil géant : il faut composer avec ce que le ciel te donne.'},
  {id:'marche',label:'Le marché',pal:'5e-3e',blurb:'0,5 ; 25 % ; 3/4… toutes les écritures d’une même part.'},
+ {id:'tunnels',label:'Les tunnels',pal:'6e-4e',blurb:'Des galeries étroites creusées dans la roche : ici, le chemin et les pièces scellées font le casse-tête.'},
  {id:'mafate',label:'Mafate',pal:'Expert',blurb:'Le cirque final. Tout ce que tu as appris — et de vrais casse-têtes.'}
 ];
-const FRW={lagon:'letchi',foret:'ananas',volcan:'mangue',pitons:'ananas',soleils:'letchi',marche:'mangue',mafate:'ananas'};
+const FRW={lagon:'letchi',foret:'ananas',volcan:'mangue',pitons:'ananas',soleils:'letchi',marche:'mangue',tunnels:'letchi',mafate:'ananas'};
 const FRNAME={letchi:'Letchis',mangue:'Mangues',ananas:'Ananas'};
 
 /* ===== Niveaux =====
-   suns:[{x,y,dir,val?}] — targets:[{x,y,need,disp?}] — gates:[{x,y,max}] */
+   suns:[{x,y,dir,val?}] — targets:[{x,y,need,disp?}] — gates:[{x,y,max}]
+   fixed:[[piece,x,y]] : pièces scellées, actives mais impossibles à déplacer. */
 const LV=[
  /* ---------- Le lagon (6e) ---------- */
  {w:'lagon',name:"Premier rayon",
@@ -772,6 +774,136 @@ const LV=[
   tools:[s2(1,0,2),s2(1,1,2),s2(2,1,3),b(0,1)],
   sol:[[0,2,3],[1,5,1],[2,5,4],[3,2,1]]},
 
+ /* ---------- Les tunnels (galeries et pièces scellées) ---------- */
+ {w:'tunnels',name:"Le serpent",
+  sub:"Le tunnel serpente sous la roche. Guide le rayon entier jusqu'au bout : il n'y a qu'un seul chemin !",
+  hint:"Quatre virages. Suis la galerie, elle ne ment pas.",
+  cols:12,rows:8,suns:[{x:0,y:1,dir:1}],
+  targets:[{x:11,y:5,need:[1,1]}],
+  rocks:[[0,0],[1,0],[2,0],[3,0],[4,0],[5,0],[6,0],[7,0],[8,0],[9,0],[10,0],[11,0],
+    [10,1],[11,1],
+    [0,2],[1,2],[2,2],[3,2],[4,2],[5,2],[6,2],[7,2],[8,2],[10,2],[11,2],
+    [0,3],[1,3],[10,3],[11,3],
+    [0,4],[1,4],[3,4],[4,4],[5,4],[6,4],[7,4],[8,4],[9,4],[10,4],[11,4],
+    [0,5],[1,5],
+    [0,6],[1,6],[3,6],[5,6],[7,6],[9,6],[11,6],
+    [0,7],[2,7],[4,7],[6,7],[8,7],[10,7]],
+  fruits:[[5,1],[5,3],[6,5]],
+  tools:[b(1,2),b(2,3),b(3,2),b(2,1),b(0,1),b(1,0)],
+  sol:[[0,9,1],[1,9,3],[2,2,3],[3,2,5]]},
+
+ {w:'tunnels',name:"La fourche",
+  sub:"Deux galeries, deux maisons. Coupe le rayon, puis faufile chaque moitié dans son boyau.",
+  hint:"Une moitié monte, l'autre descend : chacune a son propre tunnel.",
+  cols:12,rows:8,suns:[{x:0,y:4,dir:1}],
+  targets:[{x:6,y:0,need:[1,2]},{x:9,y:4,need:[1,2]}],
+  rocks:[[1,0],[2,0],[3,0],[4,0],[5,0],[7,0],[8,0],[9,0],[10,0],[11,0],
+    [1,1],[2,1],[3,1],[4,1],[5,1],[7,1],[8,1],[9,1],[10,1],[11,1],
+    [1,2],[7,2],[8,2],[9,2],[10,2],[11,2],
+    [1,3],[3,3],[4,3],[5,3],[6,3],[7,3],[8,3],[9,3],[10,3],[11,3],
+    [3,4],[4,4],[5,4],[6,4],[7,4],[8,4],[10,4],[11,4],
+    [1,5],[3,5],[4,5],[5,5],[6,5],[7,5],[8,5],[10,5],[11,5],
+    [1,6],[10,6],[11,6],
+    [2,7],[4,7],[6,7],[8,7],[10,7]],
+  fruits:[[4,2],[5,6],[9,5]],
+  tools:[s2(1,0,2),b(0,1),b(1,0),b(2,1),b(1,0),b(1,2)],
+  sol:[[0,2,4],[1,2,2],[2,6,2],[3,2,6],[4,9,6]]},
+
+ {w:'tunnels',name:"Le tourbillon",
+  sub:"Le rayon s'enroule jusqu'au cœur du tunnel. Six miroirs, une spirale, un seul chemin.",
+  hint:"Suis la spirale depuis le soleil : chaque virage réclame son miroir.",
+  cols:12,rows:8,suns:[{x:0,y:0,dir:1}],
+  targets:[{x:3,y:4,need:[1,1]}],
+  rocks:[[11,0],
+    [0,1],[1,1],[2,1],[3,1],[4,1],[5,1],[6,1],[7,1],[8,1],[9,1],[11,1],
+    [0,2],[9,2],[11,2],
+    [0,3],[2,3],[3,3],[4,3],[5,3],[6,3],[7,3],[9,3],[11,3],
+    [0,4],[2,4],[9,4],[11,4],
+    [0,5],[2,5],[3,5],[4,5],[5,5],[6,5],[7,5],[8,5],[9,5],[11,5],
+    [0,6],[11,6],
+    [0,7],[1,7],[3,7],[5,7],[7,7],[9,7],[10,7],[11,7]],
+  fruits:[[5,0],[10,3],[5,6],[1,4]],
+  tools:[b(1,2),b(2,3),b(3,0),b(0,1),b(1,2),b(2,3),b(0,3),b(1,0)],
+  sol:[[0,10,0],[1,10,6],[2,1,6],[3,1,2],[4,8,2],[5,8,4]]},
+
+ {w:'tunnels',name:"Le prisme scellé",
+  sub:"Une pièce entourée de roche est scellée : tu ne peux ni la déplacer ni la reprendre. Elle agit toute seule lorsque le rayon entre par sa flèche grise.",
+  hint:"Le prisme scellé coupe déjà pour toi. Ton travail : conduire chaque moitié chez elle.",
+  cols:9,rows:7,suns:[{x:0,y:3,dir:1}],
+  targets:[{x:8,y:1,need:[1,2]},{x:8,y:5,need:[1,2]}],
+  fixed:[[s2(1,0,2),4,3]],
+  rocks:[[2,2],[6,3],[2,5],[7,0],[1,1],[6,4]],
+  fruits:[[6,1],[4,4]],
+  tools:[b(0,1),b(2,1),b(1,0)],
+  sol:[[0,4,1],[1,4,5]]},
+
+ {w:'tunnels',name:"La galerie scellée",
+  sub:"Des pièces scellées dans la galerie décident d'une partie du chemin. Observe leurs flèches, puis termine le travail.",
+  hint:"Le miroir scellé dirige le rayon vers le prisme scellé. Que deviennent ensuite les deux moitiés ?",
+  cols:12,rows:8,suns:[{x:0,y:1,dir:1}],
+  targets:[{x:11,y:4,need:[1,2]},{x:10,y:6,need:[1,2]}],
+  fixed:[[b(1,2),7,1],[s2(2,1,3),7,4]],
+  rocks:[[1,0],[2,0],[3,0],[4,0],[5,0],[6,0],[7,0],[8,0],[9,0],[10,0],[11,0],
+    [8,1],[9,1],[10,1],[11,1],
+    [1,2],[2,2],[3,2],[4,2],[5,2],[6,2],[8,2],[9,2],[10,2],[11,2],
+    [1,3],[2,3],[3,3],[4,3],[5,3],[6,3],[8,3],[9,3],[10,3],[11,3],
+    [0,3],[0,5],
+    [2,5],[3,5],[4,5],[5,5],[6,5],[7,5],[8,5],[9,5],[10,5],[11,5],
+    [11,6],
+    [1,7],[3,7],[5,7],[7,7],[9,7],[11,7]],
+  fruits:[[4,1],[3,4],[5,6]],
+  tools:[b(3,2),b(2,1),b(1,0),b(0,1)],
+  sol:[[0,1,4],[1,1,6]]},
+
+ {w:'tunnels',name:"Les demi-tunnels",
+  sub:"Deux boyaux étroits, deux passes qui ne laissent passer que des demi-rayons, une lentille au carrefour — et une maison qui veut un rayon entier.",
+  hint:"Le rayon entier ne passe pas. Coupe-le en deux : chaque moitié traverse sa passe, puis les deux se retrouvent devant la lentille.",
+  cols:12,rows:8,suns:[{x:0,y:4,dir:1}],
+  targets:[{x:11,y:4,need:[1,1]}],
+  gates:[{x:4,y:1,max:[1,2]},{x:4,y:6,max:[1,2]}],
+  rocks:[[0,0],[1,0],[2,0],[3,0],[4,0],[5,0],[6,0],[7,0],[8,0],[9,0],[10,0],[11,0],
+    [1,1],[9,1],[10,1],[11,1],
+    [0,2],[1,2],[3,2],[4,2],[5,2],[6,2],[7,2],[9,2],[10,2],[11,2],
+    [1,3],[3,3],[4,3],[5,3],[6,3],[7,3],[9,3],[10,3],[11,3],
+    [3,4],[4,4],[5,4],[6,4],[7,4],
+    [1,5],[3,5],[4,5],[5,5],[6,5],[7,5],[9,5],[10,5],[11,5],
+    [0,6],[1,6],[9,6],[10,6],[11,6],
+    [1,7],[3,7],[5,7],[7,7],[9,7],[11,7]],
+  fruits:[[5,1],[5,6],[8,3]],
+  tools:[s2(1,0,2),b(0,1),b(1,2),b(2,1),b(1,0),mg(2,0,1),b(3,2),b(0,3)],
+  sol:[[0,2,4],[1,2,1],[2,8,1],[3,2,6],[4,8,6],[5,8,4]]},
+
+ {w:'tunnels',name:"L'impasse aux letchis",
+  sub:"La maison de la galerie veut 3/4, celle au fond de l'impasse veut 1/4. Coupe une moitié encore une fois, puis recolle ce qu'il faut.",
+  hint:"Fabrique deux quarts avec une moitié. Envoie l'un dans l'impasse et recolle l'autre avec le demi resté dans la galerie.",
+  cols:12,rows:8,suns:[{x:0,y:3,dir:1}],
+  targets:[{x:11,y:3,need:[3,4]},{x:3,y:7,need:[1,4]}],
+  rocks:[[1,0],[5,0],[7,0],[9,0],[1,1],[10,1],
+    [1,2],[2,2],[3,2],[4,2],[5,2],[6,2],[7,2],[8,2],[9,2],[10,2],[11,2],
+    [1,4],[2,4],[4,4],[5,4],[6,4],[7,4],[8,4],[10,4],[11,4],
+    [2,5],[10,5],
+    [2,6],[4,6],[7,6],[9,6],[11,6],
+    [2,7],[4,7],[6,7]],
+  fruits:[[6,3],[6,5],[3,6]],
+  tools:[s2(1,1,2),s2(2,1,2),b(1,0),mg(1,0,1),b(1,2),b(2,1)],
+  sol:[[0,3,3],[1,3,5],[2,9,5],[3,9,3]]},
+
+ {w:'tunnels',name:"Le grand réseau",
+  sub:"Quatre maisons cachées dans les galeries : partage en tiers, puis fabrique des sixièmes sans perdre une miette de soleil.",
+  hint:"Commence par fabriquer trois tiers. L'un d'eux doit encore être partagé en deux pour obtenir les deux sixièmes.",
+  cols:12,rows:8,suns:[{x:0,y:3,dir:1}],
+  targets:[{x:10,y:2,need:[1,3]},{x:11,y:3,need:[1,6]},{x:9,y:7,need:[1,6]},{x:8,y:6,need:[1,3]}],
+  rocks:[[1,0],[2,0],[3,0],[4,0],[5,0],[6,0],[7,0],[8,0],[9,0],[10,0],[11,0],
+    [1,1],[11,1],
+    [1,2],[3,2],[4,2],[5,2],[6,2],[7,2],[8,2],[9,2],[11,2],
+    [1,4],[3,4],[4,4],[6,4],[7,4],[8,4],[9,4],[10,4],[11,4],
+    [1,5],[3,5],[4,5],[10,5],[11,5],
+    [1,6],[10,6],[11,6],
+    [0,0],[0,5],[0,7],[1,7],[2,7],[3,7],[5,7],[7,7],[8,7],[10,7],[11,7]],
+  fruits:[[6,1],[7,3],[7,5],[4,6]],
+  tools:[s3(1,0,1,2),s2(1,1,2),b(0,1),b(1,2),b(2,1),b(1,2),b(2,1),b(1,0),b(0,3)],
+  sol:[[0,2,3],[1,5,3],[2,2,1],[3,10,1],[4,5,5],[5,9,5],[6,2,6]]},
+
  /* ---------- Mafate (expert) ---------- */
  {w:'mafate',name:"L'entrée du cirque",
   sub:"Bienvenue à Mafate. Quatre cases perchées, un seul soleil, et des sentiers qui grimpent.",
@@ -823,6 +955,24 @@ const LV=[
   fruits:[[5,1],[7,6],[2,2],[10,2]],
   tools:[s2(1,0,2),s2(1,0,2),s2(1,0,2),b(0,1),b(2,1),b(1,2),b(1,0),b(0,3)],
   sol:[[0,2,4],[1,10,1],[2,9,6],[3,2,1],[4,2,6]]},
+
+ {w:'mafate',name:"Les verrous du cirque",
+  sub:"Deux pièces scellées verrouillent le passage : le prisme partage le rayon et la lentille le recompose. Trace les deux chemins entre elles.",
+  hint:"Le prisme scellé fabrique deux moitiés. Elles doivent toutes les deux atteindre la lentille scellée pour reformer 1.",
+  cols:12,rows:8,suns:[{x:0,y:2,dir:1}],
+  targets:[{x:11,y:4,need:[1,1]}],
+  fixed:[[s2(1,1,2),3,2],[mg(1,0,1),8,4]],
+  rocks:[[1,0],[3,0],[5,0],[7,0],[9,0],[11,0],
+    [1,1],[2,1],[4,1],[5,1],[6,1],[7,1],[8,1],[9,1],[10,1],
+    [7,2],[8,2],[9,2],[10,2],[11,2],
+    [1,3],[2,3],[4,3],[5,3],[7,3],[8,3],[9,3],[10,3],[11,3],
+    [1,4],[2,4],[4,4],[5,4],
+    [1,5],[2,5],[4,5],[5,5],[6,5],[7,5],[9,5],[10,5],[11,5],
+    [1,6],[2,6],[9,6],[10,6],[11,6],
+    [2,7],[4,7],[6,7],[8,7],[10,7]],
+  fruits:[[5,2],[5,6],[3,4]],
+  tools:[b(1,2),b(2,1),b(2,1),b(1,0),b(0,1),b(3,0)],
+  sol:[[0,6,2],[1,6,4],[2,3,6],[3,8,6]]},
 
  {w:'mafate',name:"Le sommet",
   sub:"Le sommet de Mafate. Deux soleils, deux passes, une case qui réclame 5/6… Tout ce que tu as appris sert ici.",
@@ -881,7 +1031,14 @@ const CALC={
  "Deux soleils sur les îlets":["1/2 + 1/4 = 3/4"],
  "La passe de la Rivière":["1/2 ÷ 3 = 1/6","1/6 + 1/6 = 1/3"],
  "Les trois cheminées":["1/4 × 3 = 3/4","1/4 × 2 = 1/2"],
- "Le sommet":["1/6 × 2 = 1/3","1/2 + 1/3 = 3/6 + 2/6 = 5/6"]
+ "Le sommet":["1/6 × 2 = 1/3","1/2 + 1/3 = 3/6 + 2/6 = 5/6"],
+ "La fourche":["1 ÷ 2 = 1/2"],
+ "L'impasse aux letchis":["1/2 ÷ 2 = 1/4","1/2 + 1/4 = 2/4 + 1/4 = 3/4"],
+ "Les demi-tunnels":["1 ÷ 2 = 1/2","1/2 + 1/2 = 1"],
+ "Le grand réseau":["1 ÷ 3 = 1/3","1/3 ÷ 2 = 1/6"],
+ "Le prisme scellé":["1 ÷ 2 = 1/2"],
+ "La galerie scellée":["1 ÷ 2 = 1/2"],
+ "Les verrous du cirque":["1 ÷ 2 = 1/2","1/2 + 1/2 = 1"]
 };
 function fracHTML(t){
   const m=t.match(/^(\d+)\/(\d+)$/);
@@ -1053,9 +1210,10 @@ function simulate(){
       }
       const ti=L.targets.findIndex(t=>t.x===nx&&t.y===ny);
       if(ti>=0){out.tHits[ti].push(bm.val);targetIndex=ti;ex=nx;ey=ny;break;}
+      const fx=(L.fixed||[]).find(f=>f[1]===nx&&f[2]===ny);
       const pc=state.placed[nx+','+ny];
-      if(pc){
-        const d=pc.def, pk=nx+','+ny;let acc=false;
+      if(pc||fx){
+        const d=pc?pc.def:fx[0], pk=nx+','+ny;let acc=false;
         const emit=(dir,val,parents=[segId])=>{
           q.push({x:nx,y:ny,dir,val,fromPiece:true,parents,viaPiece:pk,viaType:d.t});
           flow(pk).outs.push({dir,val});
@@ -1162,6 +1320,18 @@ function pieceFlow(def,fl){
   if(lab)s+=`<circle cx="${c}" cy="${c}" r="21" fill="#101a33" stroke="#ffffff2c" stroke-width="2"/>`+
     `<text x="${c}" y="${c+(def.t==='m'?8:7)}" text-anchor="middle" font-size="${def.t==='m'?27:20}" font-weight="800" fill="#fff">${lab}</text>`;
   return s;
+}
+function fixedFrame(){
+  return `<g class="fixedmark" aria-hidden="true">
+    <rect x="5" y="5" width="90" height="90" rx="18" fill="none" stroke="#5a4a52" stroke-width="8"/>
+    <rect x="8" y="8" width="84" height="84" rx="15" fill="none" stroke="#7a6a72" stroke-width="2.5"/>
+    <circle cx="15" cy="15" r="4" fill="#c9a227" stroke="#3b2a17" stroke-width="1.5"/>
+    <circle cx="85" cy="15" r="4" fill="#c9a227" stroke="#3b2a17" stroke-width="1.5"/>
+    <circle cx="15" cy="85" r="4" fill="#c9a227" stroke="#3b2a17" stroke-width="1.5"/>
+    <path d="M70 73v-5a8 8 0 0 1 16 0v5" fill="none" stroke="#fff3c4" stroke-width="4" stroke-linecap="round"/>
+    <rect x="66" y="72" width="24" height="19" rx="4" fill="#ffc94d" stroke="#3b2a17" stroke-width="2"/>
+    <circle cx="78" cy="80" r="2.5" fill="#3b2a17"/><path d="M78 82v4" stroke="#3b2a17" stroke-width="2" stroke-linecap="round"/>
+  </g>`;
 }
 function rockSVG(x,y,i){
   const px=x*CS,py=y*CS,v=(x*7+y*13+i)%3;
@@ -1270,6 +1440,10 @@ function redraw(){
     if(Math.abs(x1-x2)<1&&Math.abs(y1-y2)<1)return;
     const w=fwidth(sg.val),c=fcol(sg.val);
     s+=`<line class="beam" data-seg="${sg.id}" x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}" stroke="${c}" stroke-width="${w}" style="filter:drop-shadow(0 0 5px ${c})"/>`;
+  });
+  (L.fixed||[]).forEach(([def,x,y])=>{
+    const k=x+','+y,fl=sim.flows[k];
+    s+=`<g class="placed fixed-piece" data-cell="${k}" transform="translate(${x*CS},${y*CS})"><title>Pièce scellée : elle ne peut pas être déplacée</title>${fl?pieceFlow(def,fl):pieceStatic(def)}${fixedFrame()}</g>`;
   });
   Object.entries(state.placed).forEach(([k,pc])=>{
     const[x,y]=k.split(',').map(Number);
@@ -1468,6 +1642,10 @@ function renderHome(){
     pitons:`<polygon points="12,42 20,10 28,42" fill="#7a6a72"/><polygon points="26,42 34,18 42,42" fill="#5a4a52"/>`,
     soleils:`<circle cx="16" cy="18" r="10" fill="#ffc94d"/><circle cx="34" cy="30" r="7" fill="#ffdf8e"/>`,
     marche:`<rect x="6" y="18" width="34" height="22" rx="3" fill="#f0e3cd"/><polygon points="4,20 23,6 42,20" fill="#e0324b"/>`,
+    tunnels:`<path d="M4 42V25C4 12 12 4 23 4s19 8 19 21v17Z" fill="#7a6a72"/>
+      <path d="M11 42V27c0-9 5-15 12-15s12 6 12 15v15Z" fill="#16223f"/>
+      <path d="M9 18l4 2-3 4M34 14l-4 3 3 3" fill="none" stroke="#5a4a52" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
+      <path d="M13 34h5v-6h6v-7h7v8h3" fill="none" stroke="#ffc94d" stroke-width="4.2" stroke-linecap="round" stroke-linejoin="round"/>`,
     mafate:`<polygon points="8,42 16,12 24,42" fill="#5a4a52"/><polygon points="20,42 30,6 40,42" fill="#443640"/><circle cx="30" cy="10" r="4" fill="#ffc94d"/>`
   };
   document.getElementById('wlist').innerHTML=WORLDS.map(w=>{
@@ -1551,7 +1729,7 @@ function boardClick(ev){
   if(state.sel===null)return;
   const occ=L.suns.some(su=>su.x===x&&su.y===y)||L.rocks.some(r2=>r2[0]===x&&r2[1]===y)||
     L.targets.some(t=>t.x===x&&t.y===y)||L.fruits.some(f=>f[0]===x&&f[1]===y)||
-    (L.gates||[]).some(g=>g.x===x&&g.y===y);
+    (L.gates||[]).some(g=>g.x===x&&g.y===y)||(L.fixed||[]).some(f=>f[1]===x&&f[2]===y);
   if(occ){document.getElementById('boardbox').classList.remove('shake');
     void document.getElementById('boardbox').offsetWidth;
     document.getElementById('boardbox').classList.add('shake');return;}

@@ -224,9 +224,9 @@ window.MATHSGO_CATALOGUE = {
     "outils/club_maths/soley.html": {
       "primaryGroup": "jeux",
       "collections": [],
-      "tags": ["jeu", "strategie", "casse-tete", "fractions", "partage", "quotient", "equivalences", "addition-fractions", "multiplication-fractions", "comparaison-fractions", "decimaux", "pourcentages", "cycle-3", "cycle-4", "la-reunion"],
-      "thumbnail": "assets/img/thumbnails/jeux/soley.svg?v=1",
-      "cardDescription": "Guider les rayons, partager et recomposer des fractions dans 51 casse-têtes progressifs aux couleurs de La Réunion."
+      "tags": ["jeu", "strategie", "casse-tete", "fractions", "partage", "quotient", "equivalences", "addition-fractions", "multiplication-fractions", "comparaison-fractions", "decimaux", "pourcentages", "labyrinthe", "tunnels", "pieces-scellees", "cycle-3", "cycle-4", "la-reunion"],
+      "thumbnail": "assets/img/thumbnails/jeux/soley.svg?v=2",
+      "cardDescription": "Guider les rayons, partager et recomposer des fractions dans 60 casse-têtes progressifs aux couleurs de La Réunion."
     },
     "outils/club_maths/yavalath.html": {
       "primaryNotion": "strategie",
@@ -3837,7 +3837,7 @@ window.MATHSGO_CATALOGUE = {
     {
       "id": "outils-club-maths-soley-html",
       "title": "Solèy — partage les rayons du soleil",
-      "description": "Un jeu de réflexion en 51 niveaux pour partager, additionner, multiplier et comparer des fractions dans sept mondes inspirés de La Réunion.",
+      "description": "Un jeu de réflexion en 60 niveaux pour partager, additionner, multiplier et comparer des fractions dans huit mondes inspirés de La Réunion.",
       "path": "outils/club_maths/soley.html",
       "domains": [
         "jeux-recherches",
@@ -3867,6 +3867,9 @@ window.MATHSGO_CATALOGUE = {
         "comparaison de fractions",
         "nombres décimaux",
         "pourcentages",
+        "labyrinthes",
+        "tunnels",
+        "pièces scellées",
         "La Réunion",
         "cycle 3",
         "cycle 4",

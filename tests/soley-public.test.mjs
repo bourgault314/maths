@@ -50,10 +50,13 @@ test("Solèy est publié une seule fois, dans Jeux et Fractions", () => {
   assert.equal(resource.recent, true);
   assert.equal(classification.primaryGroup, "jeux");
   assert.equal("primaryNotion" in classification, false);
-  assert.equal(classification.thumbnail, "assets/img/thumbnails/jeux/soley.svg?v=1");
+  assert.equal(classification.thumbnail, "assets/img/thumbnails/jeux/soley.svg?v=2");
+  assert.match(resource.description, /60 niveaux/);
+  assert.match(resource.description, /huit mondes/);
+  assert.match(classification.cardDescription, /60 casse-têtes/);
 });
 
-test("les 51 solutions de référence gagnent et ramassent les 107 fruits", () => {
+test("les 60 solutions de référence gagnent et ramassent les 135 fruits", () => {
   const context = createGameContext();
   const worldCounts = vm.runInContext(
     "Object.fromEntries(WORLDS.map(({id})=>[id,LV.filter(level=>level.w===id).length]))",
@@ -61,12 +64,34 @@ test("les 51 solutions de référence gagnent et ramassent les 107 fruits", () =
   );
   assert.deepEqual(
     { ...worldCounts },
-    { lagon: 8, foret: 9, volcan: 7, pitons: 7, soleils: 8, marche: 6, mafate: 6 }
+    { lagon: 8, foret: 9, volcan: 7, pitons: 7, soleils: 8, marche: 6, tunnels: 8, mafate: 7 }
   );
 
+  const structure = vm.runInContext(`(() => ({
+    worlds: WORLDS.map(world => world.id),
+    runs: LV.map(level => level.w).filter((world,index,all) => index === 0 || world !== all[index-1]),
+    saveKeys: new Set(LV.map(level => level.w + ':' + level.name)).size,
+    tunnels: LV.filter(level => level.w === 'tunnels').map(level => level.name)
+  }))()`, context);
+  assert.deepEqual(
+    [...structure.worlds],
+    ["lagon", "foret", "volcan", "pitons", "soleils", "marche", "tunnels", "mafate"]
+  );
+  assert.deepEqual([...structure.runs], [...structure.worlds]);
+  assert.equal(structure.saveKeys, 60);
+  assert.deepEqual([...structure.tunnels], [
+    "Le serpent", "La fourche", "Le tourbillon", "Le prisme scellé",
+    "La galerie scellée", "Les demi-tunnels", "L'impasse aux letchis", "Le grand réseau"
+  ]);
+
   const summary = vm.runInContext(`(() => {
-    let fruits = 0;
+    let fruits = 0, declaredFruits = 0;
     const failures = [];
+    const additions = new Set([
+      "Le serpent", "L'impasse aux letchis", "La fourche", "Le tourbillon",
+      "Le prisme scellé", "La galerie scellée", "Les demi-tunnels",
+      "Le grand réseau", "Les verrous du cirque"
+    ]);
     LV.forEach((level, index) => {
       cur = index;
       state.placed = {};
@@ -75,14 +100,20 @@ test("les 51 solutions de référence gagnent et ramassent les 107 fruits", () =
         ...level.rocks.map(([x,y]) => x + "," + y),
         ...level.targets.map(({x,y}) => x + "," + y),
         ...level.fruits.map(([x,y]) => x + "," + y),
-        ...(level.gates || []).map(({x,y}) => x + "," + y)
+        ...(level.gates || []).map(({x,y}) => x + "," + y),
+        ...(level.fixed || []).map(([,x,y]) => x + "," + y)
       ]);
+      const usedTools = new Set();
+      const solutionCells = new Set();
       for (const [toolIndex, x, y] of level.sol) {
-        if (!level.tools[toolIndex] || occupied.has(x + "," + y)) {
+        const cell = x + "," + y;
+        if (!level.tools[toolIndex] || occupied.has(cell) || usedTools.has(toolIndex) || solutionCells.has(cell)) {
           failures.push(level.name + ": placement de solution invalide");
           continue;
         }
-        state.placed[x + "," + y] = { def: level.tools[toolIndex], ti: toolIndex };
+        usedTools.add(toolIndex);
+        solutionCells.add(cell);
+        state.placed[cell] = { def: level.tools[toolIndex], ti: toolIndex };
       }
       const result = simulate();
       if (!result.win) failures.push(level.name + ": solution non gagnante");
@@ -90,13 +121,102 @@ test("les 51 solutions de référence gagnent et ramassent les 107 fruits", () =
         failures.push(level.name + ": fruit manquant");
       }
       fruits += result.fruits.size;
+      declaredFruits += level.fruits.length;
+
+      if (additions.has(level.name)) {
+        level.sol.forEach((_, omitted) => {
+          state.placed = {};
+          level.sol.forEach(([toolIndex,x,y], placement) => {
+            if (placement !== omitted) state.placed[x + "," + y] = { def: level.tools[toolIndex], ti: toolIndex };
+          });
+          if (simulate().win) failures.push(level.name + ": placement déclaré non indispensable");
+        });
+      }
     });
-    return { levels: LV.length, fruits, failures };
+    return { levels: LV.length, fruits, declaredFruits, failures };
   })()`, context);
 
-  assert.equal(summary.levels, 51);
-  assert.equal(summary.fruits, 107);
+  assert.equal(summary.levels, 60);
+  assert.equal(summary.fruits, 135);
+  assert.equal(summary.declaredFruits, 135);
   assert.deepEqual([...summary.failures], []);
+});
+
+test("les pièces scellées sont valides, bloquées et intégrées à la célébration", () => {
+  const context = createGameContext();
+  const fixed = vm.runInContext(`(() => {
+    const failures = [];
+    const byLevel = {};
+    LV.filter(level => level.fixed?.length).forEach(level => {
+      const seen = new Set();
+      byLevel[level.name] = level.fixed.map(([def,x,y]) => {
+        const cell = x + ',' + y;
+        if (x < 0 || y < 0 || x >= level.cols || y >= level.rows || seen.has(cell)) {
+          failures.push(level.name + ': pièce scellée invalide');
+        }
+        seen.add(cell);
+        const occupied = [
+          ...level.suns.map(s => s.x + ',' + s.y),
+          ...level.targets.map(t => t.x + ',' + t.y),
+          ...level.rocks.map(r => r[0] + ',' + r[1]),
+          ...level.fruits.map(f => f[0] + ',' + f[1]),
+          ...(level.gates || []).map(g => g.x + ',' + g.y)
+        ];
+        if (occupied.includes(cell) || level.sol.some(([,sx,sy]) => sx === x && sy === y)) {
+          failures.push(level.name + ': collision avec une pièce scellée');
+        }
+        return def.t + '@' + cell;
+      });
+    });
+    return { byLevel, failures };
+  })()`, context);
+
+  assert.deepEqual(
+    Object.fromEntries(Object.entries(fixed.byLevel).map(([name,values]) => [name,[...values]])),
+    {
+      "Le prisme scellé": ["s2@4,3"],
+      "La galerie scellée": ["b@7,1", "s2@7,4"],
+      "Les verrous du cirque": ["s2@3,2", "m@8,4"]
+    }
+  );
+  assert.deepEqual([...fixed.failures], []);
+  assert.match(html, /\(L\.fixed\|\|\[\]\)\.some\(f=>f\[1\]===x&&f\[2\]===y\)/);
+  assert.match(html, /class="placed fixed-piece" data-cell=/);
+  assert.match(html, /Pièce scellée : elle ne peut pas être déplacée/);
+  assert.match(html, /\.placed\[data-cell="\$\{cell\}"\] \.beampath/);
+});
+
+test("les demi-tunnels ne se contournent plus avec un rayon entier", () => {
+  const context = createGameContext();
+  const shortcut = vm.runInContext(`(() => {
+    cur = LV.findIndex(level => level.name === 'Les demi-tunnels');
+    const level = LV[cur];
+    state.placed = {
+      '2,4': { def: level.tools[2], ti: 2 },
+      '2,6': { def: level.tools[3], ti: 3 },
+      '8,6': { def: level.tools[4], ti: 4 },
+      '8,4': { def: level.tools[1], ti: 1 }
+    };
+    const bypass = simulate();
+    state.placed = {};
+    level.sol.forEach(([toolIndex,x,y]) => {
+      state.placed[x + ',' + y] = { def: level.tools[toolIndex], ti: toolIndex };
+    });
+    const intended = simulate();
+    return {
+      bypassWins: bypass.win,
+      intendedWins: intended.win,
+      intendedFruits: intended.fruits.size,
+      hasSplit: intended.segs.some(segment => segment.viaType === 's2'),
+      hasMerge: intended.segs.some(segment => segment.viaType === 'm' && segment.parents.length === 2 && segment.targetIndex >= 0)
+    };
+  })()`, context);
+
+  assert.equal(shortcut.bypassWins, false);
+  assert.equal(shortcut.intendedWins, true);
+  assert.equal(shortcut.intendedFruits, 3);
+  assert.equal(shortcut.hasSplit, true);
+  assert.equal(shortcut.hasMerge, true);
 });
 
 test("les rayons de victoire forment un graphe de propagation valide", () => {
@@ -147,9 +267,11 @@ test("l’accueil masque réellement le plateau et reprend la charte du site", (
   assert.match(html, /Gérer mes cookies/);
   assert.match(html, /aria-label="Recommencer le niveau"/);
   assert.match(html, /class="chip[^"]*"[^>]*aria-pressed=/);
+  assert.match(html, /meta name="description" content="Un jeu de réflexion en 60 niveaux/);
+  assert.match(html, /tunnels:`<path d="M4 42V25/);
 });
 
-test("le nouveau cours illustré conserve ses 44 fiches et ses fractions composées", () => {
+test("le cours illustré couvre les nouveaux partages et les pièces scellées", () => {
   const context = createGameContext();
   const course = vm.runInContext(`(() => {
     const lines = Object.values(CALC).flat();
@@ -163,8 +285,24 @@ test("le nouveau cours illustré conserve ses 44 fiches et ses fractions compos�
 
   assert.deepEqual(
     { ...course, missingLevels: [...course.missingLevels] },
-    { cards: 44, lines: 60, missingLevels: [], rendered: true }
+    { cards: 51, lines: 71, missingLevels: [], rendered: true }
   );
+  const additions = vm.runInContext(`({
+    fourche: CALC["La fourche"],
+    impasse: CALC["L'impasse aux letchis"],
+    demi: CALC["Les demi-tunnels"],
+    reseau: CALC["Le grand réseau"],
+    prisme: CALC["Le prisme scellé"],
+    galerie: CALC["La galerie scellée"],
+    verrous: CALC["Les verrous du cirque"]
+  })`, context);
+  assert.deepEqual([...additions.fourche], ["1 ÷ 2 = 1/2"]);
+  assert.deepEqual([...additions.impasse], ["1/2 ÷ 2 = 1/4", "1/2 + 1/4 = 2/4 + 1/4 = 3/4"]);
+  assert.deepEqual([...additions.demi], ["1 ÷ 2 = 1/2", "1/2 + 1/2 = 1"]);
+  assert.deepEqual([...additions.reseau], ["1 ÷ 3 = 1/3", "1/3 ÷ 2 = 1/6"]);
+  assert.deepEqual([...additions.prisme], ["1 ÷ 2 = 1/2"]);
+  assert.deepEqual([...additions.galerie], ["1 ÷ 2 = 1/2"]);
+  assert.deepEqual([...additions.verrous], ["1 ÷ 2 = 1/2", "1/2 + 1/2 = 1"]);
   assert.match(html, /id="hintov" role="dialog" aria-modal="true"/);
   assert.match(html, /class="frac"/);
 });
@@ -199,12 +337,15 @@ test("le paysage mobile et le plein écran utilisent réellement tout le viewpor
 
 test("la victoire propage chaque rayon jusqu’aux maisons avant les confettis", () => {
   assert.match(html, /\.beam\.win-draw,\.beampath\.win-draw/);
+  assert.match(html, /animation:win-draw[^;]*both/);
   assert.match(html, /@keyframes win-draw\{from\{stroke-dashoffset:var\(--win-length\)/);
   assert.match(html, /const pause=\.4,drawStart=\.1,SPEED=620/);
   assert.match(html, /const arrival=sg\.parents\.length\?Math\.max/);
   assert.match(html, /d\.ins\.map\(dir=>merges\[pk\]\[dir\]\.segId\)/);
   assert.match(html, /path\.getTotalLength\(\)/);
   assert.match(html, /p\.sg\.targetIndex>=0/);
+  assert.match(html, /const T=\(pause\+lastArrival\+\.3\)\*1000/);
+  assert.match(html, /class="placed fixed-piece" data-cell=/);
   assert.doesNotMatch(html, /drawStart\+i\*0\.2/);
   assert.doesNotMatch(html, /@keyframes retractseg/);
 });
@@ -224,5 +365,5 @@ test("le logo maths&go s’intègre au soleil sans plaque blanche", () => {
 test("la miniature Solèy respecte le format du catalogue", () => {
   assert.match(thumbnail, /<svg[^>]*width="720"[^>]*height="320"[^>]*viewBox="0 0 720 320"/);
   assert.match(thumbnail, /Solèy — jeu de fractions/);
-  assert.match(thumbnail, />51 NIVEAUX</);
+  assert.match(thumbnail, />60 NIVEAUX</);
 });
