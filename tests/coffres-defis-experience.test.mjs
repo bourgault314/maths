@@ -35,26 +35,30 @@ test("Coffres à deux explique visuellement les quatre opérations réellement j
   assert.match(html, /sum-bar-model[^>]+Cinq points dans la barre du haut[^>]+trois points et deux points dans deux rectangles jointifs/i);
   assert.match(html, /class="measure-marker sum-marker">somme = 5[\s\S]*class="bar-segment units-5 whole-part"/);
   assert.match(html, /class="bar-segment units-5 whole-part">[\s\S]*?--points:5[\s\S]*?class="bar-segment units-3 blue-part">[\s\S]*?--points:3[\s\S]*?class="bar-segment units-2 coral-part">[\s\S]*?--points:2/);
-  assert.match(html, /Somme : réunir deux quantités[\s\S]*La somme est le résultat d’une addition\. Ici, 3 points et 2 points réunis donnent 5 points/);
+  assert.match(html, /Somme : réunir deux quantités[\s\S]*La somme de 3 et de 2 est 5\.[\s\S]*3 \+ 2 = 5[\s\S]*La somme est le résultat d’une addition\./);
   assert.match(html, /3 \+ 2 = 5/);
   assert.match(html, /difference-bar-model[^>]+Cinq points sont alignés au-dessus de deux points[^>]+trois autres, surlignés[^>]+Sous ces trois derniers points[^>]+crochet tourné vers eux/i);
   assert.match(html, /bar-dot unmatched[\s\S]*class="difference-known"[\s\S]*class="difference-marker">différence = 3/);
   assert.match(html, /\.difference-marker::before\s*\{[^}]*top:\s*0[^}]*border-bottom:\s*2px solid #bd7900/);
   assert.match(html, /bar-dot matched[\s\S]*bar-dot matched[\s\S]*bar-dot unmatched[\s\S]*bar-dot unmatched[\s\S]*bar-dot unmatched/);
   assert.match(html, /class="difference-known">[\s\S]*?--points:2/);
-  assert.match(html, /Différence : l’écart entre deux quantités[\s\S]*La différence est le résultat d’une soustraction\. Elle mesure l’écart entre deux quantités/);
+  assert.match(html, /Différence : l’écart entre deux quantités[\s\S]*La différence entre 5 et 2 est 3\.[\s\S]*5 − 2 = 3[\s\S]*La différence est le résultat d’une soustraction\./);
   assert.match(html, /5 − 2 = 3/);
   assert.match(html, /\.bar-diagram\s*\{[^}]*gap:\s*0/);
-  assert.match(html, /\.bar-row\s*\{[^}]*border-radius:\s*0/);
+  assert.match(html, /\.bar-row\s*\{[^}]*border:\s*2px solid #54758a[^}]*border-radius:\s*0/);
+  assert.match(html, /\.bar-row \+ \.bar-row\s*\{\s*border-top:\s*0/);
+  assert.match(html, /\.bar-segment:not\(:last-child\)\s*\{\s*border-right:\s*2px solid #54758a/);
+  assert.match(html, /\.difference-known\s*\{[^}]*border:\s*2px solid #54758a[^}]*border-top:\s*0/);
+  assert.doesNotMatch(html, /box-shadow:\s*inset 2px 0 0 #7898ac/);
   assert.doesNotMatch(html, /dots-equation|difference-lines|dot-set|missing-part/);
   assert.match(html, /array-dimension array-dimension-top">4[\s\S]*array-dimension array-dimension-side">3[\s\S]*--dot-columns:4/);
   assert.match(html, /array-dimension array-dimension-top">3[\s\S]*array-dimension array-dimension-side">4[\s\S]*--dot-columns:3/);
   assert.match(html, /<span>3 rangées de 4<\/span>[\s\S]*?<span>4 rangées de 3<\/span>/);
   assert.match(html, /\.dot-array\s*\{[\s\S]*?border-radius:\s*0/);
   assert.match(html, /3 × 4 = 12 ; 4 × 3 = 12 aussi/);
-  assert.match(html, /Produit : former des rangées égales[\s\S]*Le produit est le résultat d’une multiplication/);
-  assert.match(html, /combien de paquets de 2 dans 8 \? <strong>4<\/strong>/);
-  assert.match(html, /partager 8 en 2 paquets : <strong>4 dans chacun<\/strong>/);
+  assert.match(html, /Produit : former des rangées égales[\s\S]*Le produit de 3 par 4 est 12\.[\s\S]*Le produit est le résultat d’une multiplication/);
+  assert.match(html, /Grouper : <strong>4 paquets de 2<\/strong>/);
+  assert.match(html, /Partager : <strong>2 paquets de 4<\/strong>/);
   const quotientMemo = html.match(/<article class="operation-visual-card">\s*<h3>Quotient[\s\S]*?<\/article>/)?.[0] || "";
   assert.equal([...quotientMemo.matchAll(/--package-size:2/g)].length, 4);
   assert.equal([...quotientMemo.matchAll(/--package-size:4/g)].length, 2);
@@ -62,7 +66,8 @@ test("Coffres à deux explique visuellement les quatre opérations réellement j
   assert.match(html, /\.quotient-bar\s*\{[\s\S]*?border-radius:\s*0/);
   assert.doesNotMatch(html, /quotient-pair|quotient-groups/);
   assert.match(html, /8 ÷ 2 = 4/);
-  assert.match(html, /Le quotient est le résultat d’une division\. Il indique combien de paquets égaux on peut former/);
+  assert.match(html, /Le quotient de 8 par 2 est 4\.[\s\S]*8 ÷ 2 = 4[\s\S]*Le quotient est le résultat d’une division\./);
+  assert.match(html, /aria-label="Deux conventions du jeu"[\s\S]*Différence :<\/strong> le plus grand nombre − le plus petit\. L’ordre des clics ne change rien\.[\s\S]*Quotient :<\/strong> le plus grand nombre ÷ le plus petit, seulement si la division tombe juste\./);
   assert.match(html, /runes voisines/);
 });
 
@@ -74,7 +79,7 @@ test("Coffres solo illustre précisément les quatre opérations", () => {
   assert.match(html, /3 \+ 2 = 5/);
   assert.match(html, /Le rectangle du haut contient 5 points alignés[^<]+Les 3 points restants du haut sont mis en évidence[^<]+5 moins 2 égale 3/);
   assert.match(html, /comparison-unit unmatched[\s\S]*?comparison-unit unmatched[\s\S]*?comparison-unit unmatched/);
-  assert.match(html, /comparison-upper[\s\S]*?comparison-lower" style="--difference-center:70%">[\s\S]*?difference-marker" style="grid-column:3 \/ -1"><\/span>[\s\S]*?difference-marker-label">différence = 3<\/span>/);
+  assert.match(html, /comparison-upper[\s\S]*?comparison-lower" style="--difference-center:70%">[\s\S]*?difference-marker" style="grid-column:3 \/ -1"><\/span>[\s\S]*?difference-marker-label near">différence = 3<\/span>/);
   assert.match(html, /5 − 2 = 3/);
   assert.doesNotMatch(html, /bar-model-label|bar-missing|>\s*(?:Tout|Parties?)\s*</);
   assert.match(html, /Un réseau de 3 rangées et 4 colonnes contient 12 points/);
@@ -83,14 +88,14 @@ test("Coffres solo illustre précisément les quatre opérations", () => {
   assert.match(html, /dimension-columns"><span>3<\/span>[\s\S]*?dimension-rows"><span>4<\/span>[\s\S]*?--dot-columns:3/);
   assert.match(html, /<span>3 rangées de 4<\/span>[\s\S]*?<span>4 rangées de 3<\/span>/);
   assert.match(html, /3 × 4 = 12 ; 4 × 3 = 12 aussi/);
-  assert.match(html, /Combien de paquets de 2 dans 8 \? 4/);
-  assert.match(html, /Partager 8 en 2 paquets : 4 dans chacun/);
+  assert.match(html, /Grouper : 4 paquets de 2/);
+  assert.match(html, /Partager : 2 paquets de 4/);
   assert.match(html, /data-group-count="4" data-group-size="2" data-total-units="8"/);
   assert.match(html, /data-group-count="2" data-group-size="4" data-total-units="8"/);
   assert.match(html, /\.quotient-bar\s*\{[\s\S]*?border-radius:\s*0/);
   assert.doesNotMatch(html, /quotient-pair|quotient-groups|demo-group/);
-  assert.match(html, /8 ÷ 2 : combien de paquets de 2 dans 8 \? 4/);
-  assert.match(html, /8 ÷ 2 : partager 8 en 2 paquets : 4 dans chacun/);
+  assert.match(html, /Le quotient de 8 par 2 est 4\.[\s\S]*8 ÷ 2 = 4/);
+  assert.match(html, /aria-label="Deux conventions du jeu"[\s\S]*Différence :<\/strong> le plus grand nombre − le plus petit\. L’ordre des clics ne change rien\.[\s\S]*Quotient :<\/strong> le plus grand nombre ÷ le plus petit, seulement si la division tombe juste\./);
 });
 
 test("les repères du produit restent droits et épousent le réseau", () => {
