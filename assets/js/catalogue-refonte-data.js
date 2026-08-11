@@ -221,6 +221,13 @@ window.MATHSGO_CATALOGUE = {
       "thumbnail": "assets/img/thumbnails/jeux/jeu-nim.svg?v=1",
       "cardDescription": "Chercher une stratégie gagnante en retirant 1, 2 ou 3 bâtons sans prendre le bâton rouge."
     },
+    "outils/club_maths/soley.html": {
+      "primaryGroup": "jeux",
+      "collections": [],
+      "tags": ["jeu", "strategie", "casse-tete", "fractions", "partage", "quotient", "equivalences", "addition-fractions", "multiplication-fractions", "comparaison-fractions", "decimaux", "pourcentages", "cycle-3", "cycle-4", "la-reunion"],
+      "thumbnail": "assets/img/thumbnails/jeux/soley.svg?v=1",
+      "cardDescription": "Guider les rayons, partager et recomposer des fractions dans 51 casse-têtes progressifs aux couleurs de La Réunion."
+    },
     "outils/club_maths/yavalath.html": {
       "primaryNotion": "strategie",
       "primaryGroup": "jeux",
@@ -3826,6 +3833,52 @@ window.MATHSGO_CATALOGUE = {
       "status": "published",
       "featured": false,
       "recent": false
+    },
+    {
+      "id": "outils-club-maths-soley-html",
+      "title": "Solèy — partage les rayons du soleil",
+      "description": "Un jeu de réflexion en 51 niveaux pour partager, additionner, multiplier et comparer des fractions dans sept mondes inspirés de La Réunion.",
+      "path": "outils/club_maths/soley.html",
+      "domains": [
+        "jeux-recherches",
+        "nombres-calculs"
+      ],
+      "notions": [
+        "strategie",
+        "fractions"
+      ],
+      "uses": [
+        "manipuler",
+        "entrainer"
+      ],
+      "types": [
+        "plateau",
+        "exerciseur"
+      ],
+      "filters": [],
+      "keywords": [
+        "fractions",
+        "jeu de réflexion",
+        "partage",
+        "quotient",
+        "fractions équivalentes",
+        "addition de fractions",
+        "multiplication de fractions",
+        "comparaison de fractions",
+        "nombres décimaux",
+        "pourcentages",
+        "La Réunion",
+        "cycle 3",
+        "cycle 4",
+        "6e",
+        "5e",
+        "4e",
+        "3e"
+      ],
+      "kind": "tool",
+      "status": "published",
+      "featured": false,
+      "recent": true
     },
     {
       "id": "outils-plateaux-manipulation-ratio-html",
