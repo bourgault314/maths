@@ -76,9 +76,9 @@ jobs:
 
   publier:
     needs: construire
-    # Un libellé explicite permet de changer de pool si ubuntu-latest reste
-    # exceptionnellement sans exécuteur, sans modifier l'étape de construction.
-    runs-on: ubuntu-22.04
+    # Utiliser le pool standard, comme la construction, évite qu'une image
+    # particulière sans exécuteur disponible bloque la mise en ligne.
+    runs-on: ubuntu-latest
     environment:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
