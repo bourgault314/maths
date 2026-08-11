@@ -14,7 +14,7 @@ import {
   TYPE_REPONSE_FRACTION_EQUIVALENTE,
   TYPE_REPONSE_NOMBRE_DECIMAL,
   TYPE_REPONSE_SELECTION_MULTIPLE,
-} from "./question-v2.js?v=23";
+} from "./question-v2.js?v=24";
 
 export const SCHEMA_TRACE_REPONSE_V1 = "mathsgo.trace-reponse/1";
 export const SCHEMA_TRACE_REPONSE = "mathsgo.trace-reponse/2";

@@ -101,6 +101,8 @@ it("rend NC-01 depuis le registre et conserve son aide et sa correction", async 
   assert.match(application.innerHTML, /class="pied-panneau"/);
   assert.match(application.innerHTML, /reste de la division est nul/);
   assert.match(application.innerHTML, /12 = 3 × 4 \+ 0/);
+  assert.match(application.innerHTML, /cas-divisible-cours[\s\S]*Cas divisible par 3[\s\S]*12 = 3 × 4 \+ 0/);
+  assert.match(application.innerHTML, /cas-non-divisible-cours[\s\S]*Cas non divisible par 3[\s\S]*13 = 3 × 4 \+ 1/);
   assert.match(application.innerHTML, /3 divise 12/);
   assert.match(application.innerHTML, /12 est divisible par 3/);
   assert.match(application.innerHTML, /12 est un multiple de 3/);
@@ -118,9 +120,9 @@ it("rend NC-01 depuis le registre et conserve son aide et sa correction", async 
   assert.match(application.innerHTML, /Critères pour 3 et 9/);
   assert.match(application.innerHTML, /372/);
   assert.match(application.innerHTML, /729/);
-  assert.match(application.innerHTML, /somme de leurs chiffres ne dépasse pas 36/);
-  assert.match(application.innerHTML, /3, 6, 9, 12, 15, 18, 21, 24, 27, 30, 33, 36/);
-  assert.match(application.innerHTML, /9, 18, 27, 36/);
+  assert.doesNotMatch(application.innerHTML, /au plus quatre chiffres|ne dépasse pas 36/);
+  assert.match(application.innerHTML, /3, 6, 9, 12, 15, 18, 21, 24, 27, 30, 33, 36, …/);
+  assert.match(application.innerHTML, /9, 18, 27, 36, 45, 54, 63, 72, 81, 90, …/);
   assert.match(application.innerHTML, /43[\s\S]*4 \+ 3 = 7[\s\S]*pas divisible par 3/);
   assert.match(application.innerHTML, /49[\s\S]*4 \+ 9 = 13[\s\S]*pas divisible par 9/);
   assert.match(application.innerHTML, /tout nombre divisible par 9 est aussi divisible par 3/);
@@ -707,6 +709,15 @@ it("parcourt les cinq familles NC-01, leur aide, leur réponse et leur correctio
     cliquer(gestionnaires, "valider");
     cliquer(gestionnaires, "correction");
     assert.match(application.innerHTML, /Correction expliquée/);
+    if (famille === "selection-diviseurs") {
+      assert.equal(
+        [...application.innerHTML.matchAll(/class="explication-criteres-correction"/g)].length,
+        2,
+      );
+      for (const critere of [2, 3, 5, 9, 10]) {
+        assert.match(application.innerHTML, new RegExp(`<strong>Par ${critere} :<\\/strong>`));
+      }
+    }
     cliquer(gestionnaires, "fermer-correction");
     cliquer(gestionnaires, "suivant");
   }

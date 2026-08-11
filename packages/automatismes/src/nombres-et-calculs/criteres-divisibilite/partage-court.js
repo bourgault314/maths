@@ -14,16 +14,16 @@ import {
   SCHEMA_QUESTION_INSTANCE_V2,
   TYPE_REPONSE_CHOIX_UNIQUE,
   TYPE_REPONSE_ENTIER_NATUREL,
-} from "../../../../contrats/src/question-v2.js?v=23";
+} from "../../../../contrats/src/question-v2.js?v=24";
 import {
   IDENTITES_AUTOMATISMES,
   creerClassementAutomatisme,
-} from "../../identifiants.js?v=23";
-import { formulationCritereDivisibilite } from "./critere-precis.js?v=23";
+} from "../../identifiants.js?v=24";
+import { formulationCritereDivisibilite } from "./critere-precis.js?v=24";
 
 export const NOM_GENERATEUR_PARTAGE_COURT =
   "nombres-et-calculs.criteres-divisibilite.partage-court";
-export const VERSION_GENERATEUR_PARTAGE_COURT = 4;
+export const VERSION_GENERATEUR_PARTAGE_COURT = 5;
 
 export const SOUS_FORME_OUI_NON = "oui-non";
 export const SOUS_FORME_RETRAIT_MINIMAL = "retrait-minimal";
@@ -50,7 +50,7 @@ const CHOIX_OUI_NON = Object.freeze([
 export const GABARIT_PARTAGE_COURT = Object.freeze({
   schema: SCHEMA_GABARIT_QUESTION,
   id: NOM_GENERATEUR_PARTAGE_COURT,
-  version: 4,
+  version: 5,
   titre: "Critères de divisibilité — situation de partage",
   generateur: Object.freeze({
     nom: NOM_GENERATEUR_PARTAGE_COURT,
@@ -220,7 +220,7 @@ function classement(diviseur) {
 function blocsEnonce({ sousForme, total, diviseur, contexte }) {
   const fin = sousForme === SOUS_FORME_OUI_NON
     ? `${contexte.contenants} identiques, sans reste. Est-ce possible ?`
-    : `${contexte.contenants} identiques. Quel est le plus petit nombre de ${contexte.objets} à retirer pour qu'il ne reste rien ?`;
+    : `${contexte.contenants} identiques. Quel est le plus petit nombre de ${contexte.objets} à retirer pour qu'il n'en reste pas une fois la répartition effectuée ?`;
   return [
     { id: "debut-situation", type: "texte", contenu: "On a" },
     { id: "total", type: "entier", valeur: total },

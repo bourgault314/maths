@@ -702,3 +702,39 @@ moyen des alias et des identifiants de question ; aucune donnée existante n'est
 invalidée. L'identité de l'élève, le serveur, la transmission et le format
 concret d'export restent hors du présent chantier et feront l'objet de décisions
 ultérieures.
+
+## 11 août 2026
+
+### D-044 — La clôture de NC-01 clarifie les associations visuelles et les corrections
+
+Gwenaël valide les dernières finitions de `NC-01` et autorise leur publication.
+Cette décision complète D-042 sans modifier les cinq familles, leurs quotas,
+l'aide pas à pas, les distracteurs ni les règles mathématiques déjà validées.
+
+Sur la première page du cours, le cas divisible et le cas non divisible sont
+deux sous-cartes explicitement titrées. Chacune regroupe son schéma, son calcul
+et sa conclusion afin que l'égalité d'un cas ne puisse plus être associée au
+schéma suivant, notamment lorsque les deux exemples sont empilés sur téléphone.
+
+Sur la troisième page, la phrase technique annonçant des nombres d'au plus
+quatre chiffres et une somme limitée à 36 disparaît. Les multiples de 3 et de
+9 restent dans deux encadrés séparés, mais leurs listes sont ouvertes par une
+ellipse. Le rappel de la table de 9 se prolonge jusqu'à 90 ; la formulation
+« doit être un multiple de » ne présente donc plus ces listes comme
+exhaustives.
+
+La correction de la sélection de diviseurs conserve ses trois temps et son
+contenu mathématique. Dans les deux premiers temps, chaque critère reçoit une
+ligne autonome introduite par « Par 2 : », « Par 5 : », « Par 10 : »,
+« Par 3 : » ou « Par 9 : ». Le générateur
+`selection-diviseurs` passe en version 3 afin que cette structure soit tracée
+dans les questions instanciées.
+
+La situation de retrait minimal de F6 existe déjà et ne devient pas une
+troisième sous-forme. Sa phrase finale est clarifiée partout : l'élève cherche
+le plus petit nombre d'objets à retirer « pour qu'il n'en reste pas une fois la
+répartition effectuée ». Le générateur `partage-court` passe en version 5 ; les
+objets, contenants, valeurs, diviseurs, quotas et tirages seedés ne changent pas.
+
+Le graphe public V2 est invalidé d'un seul tenant en `v24`. Aucun chemin sous
+`/auto/` n'appartient à ce lot.

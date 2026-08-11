@@ -2,7 +2,7 @@
 
 ## Statut
 
-**Contenu validé par Gwenaël le 19 juillet 2026, simplifié avec lui le 6 août puis enrichi de repères ciblés le 9 août 2026.**
+**Contenu validé par Gwenaël le 19 juillet 2026, simplifié avec lui le 6 août, enrichi le 9 août puis finalisé avec ses retours le 11 août 2026.**
 
 Ce document ne contient ni JSON, ni générateur, ni code d’interface. Il fixe les formulations, les réponses, les aides, les corrections et les états d’écran qui serviront ensuite de références reproductibles. La représentation du cours est arrêtée ci-dessous à partir de la validation et des indications visuelles de Gwenaël.
 
@@ -32,6 +32,11 @@ Le cours est court. Il ne crée ni niveau ni palier. Il sert de référence comm
 - conclusion écrite : « 12 est divisible par 3. »
 
 Ce schéma montre le tout, les trois parts égales et l’absence de reste dans un seul objet compact, lisible sur téléphone comme en projection.
+
+Le cas divisible et le cas non divisible sont placés dans deux sous-cartes
+distinctes, titrées « Cas divisible par 3 » et « Cas non divisible par 3 ».
+Chaque sous-carte regroupe son schéma, son égalité et sa conclusion afin
+qu'aucun calcul ne puisse sembler se rapporter au schéma suivant.
 
 Le vocabulaire est relié explicitement sous les deux partages :
 
@@ -74,14 +79,13 @@ La conséquence suivante est formulée sans créer une nouvelle page de cours :
 - divisible par 3 : la somme de tous les chiffres est un multiple de 3 ;
 - divisible par 9 : la somme de tous les chiffres est un multiple de 9.
 
-Dans NC-01, les nombres ont au plus quatre chiffres : la somme de leurs chiffres
-ne dépasse donc pas 36. Deux repères restent visuellement séparés :
+Deux repères restent visuellement séparés et sont présentés comme des listes
+ouvertes :
 
-- multiples de 3 possibles pour la somme : `3, 6, 9, 12, 15, 18, 21, 24, 27, 30, 33, 36` ;
-- multiples de 9 possibles pour la somme : `9, 18, 27, 36`.
+- multiples de 3 : `3, 6, 9, 12, 15, 18, 21, 24, 27, 30, 33, 36, …` ;
+- multiples de 9 : `9, 18, 27, 36, 45, 54, 63, 72, 81, 90, …`.
 
-Ces listes sont bornées aux sommes possibles dans le module ; elles ne sont
-pas présentées comme des tables complètes à apprendre.
+Le cours ne mentionne pas la borne technique de longueur des nombres générés.
 
 **Premier exemple :**
 
@@ -197,8 +201,10 @@ Ces phrases sont des rappels généraux. Elles ne sont pas activées seulement q
 
 La correction s’affiche en trois temps :
 
-1. **Chiffre des unités** : affichage du dernier chiffre, puis verdict séparé pour 2, 5 et 10.
-2. **Somme des chiffres** : affichage du calcul complet, puis verdict séparé pour 3 et 9.
+1. **Chiffre des unités** : affichage du dernier chiffre, puis une ligne
+   distincte « Par 2 : », « Par 5 : » et « Par 10 : ».
+2. **Somme des chiffres** : affichage du calcul complet, puis une ligne
+   distincte « Par 3 : » et « Par 9 : ».
 3. **Conclusion** : affichage de l’ensemble exact des diviseurs proposés, ou de « Aucun ».
 
 La correction n’emploie aucune division posée.

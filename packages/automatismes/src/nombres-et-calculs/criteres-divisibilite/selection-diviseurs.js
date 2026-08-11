@@ -10,16 +10,16 @@ import {
   COMPARAISON_ENSEMBLE_EXACT,
   SCHEMA_QUESTION_INSTANCE_V2,
   TYPE_REPONSE_SELECTION_MULTIPLE,
-} from "../../../../contrats/src/question-v2.js?v=23";
+} from "../../../../contrats/src/question-v2.js?v=24";
 import {
   IDENTITES_AUTOMATISMES,
   creerClassementAutomatisme,
-} from "../../identifiants.js?v=23";
-import { formulationCritereDivisibilite } from "./critere-precis.js?v=23";
+} from "../../identifiants.js?v=24";
+import { formulationCritereDivisibilite } from "./critere-precis.js?v=24";
 
 export const NOM_GENERATEUR_SELECTION_DIVISEURS =
   "nombres-et-calculs.criteres-divisibilite.selection-diviseurs";
-export const VERSION_GENERATEUR_SELECTION_DIVISEURS = 2;
+export const VERSION_GENERATEUR_SELECTION_DIVISEURS = 3;
 
 const DIVISEURS_PROPOSES = Object.freeze([2, 3, 5, 9, 10]);
 
@@ -48,7 +48,7 @@ const CHOIX_REPONSE = Object.freeze([
 export const GABARIT_SELECTION_DIVISEURS = Object.freeze({
   schema: SCHEMA_GABARIT_QUESTION,
   id: NOM_GENERATEUR_SELECTION_DIVISEURS,
-  version: 2,
+  version: 3,
   titre: "Critères de divisibilité — tous les diviseurs proposés",
   generateur: Object.freeze({
     nom: NOM_GENERATEUR_SELECTION_DIVISEURS,
@@ -75,7 +75,7 @@ function exigerContexte(aleatoire, parametres) {
     Object.keys(parametres).length !== 0
   ) {
     throw new TypeError(
-      "selection-diviseurs : aucun paramètre de contenu n'est autorisé en version 2",
+      "selection-diviseurs : aucun paramètre de contenu n'est autorisé en version 3",
     );
   }
 }
@@ -144,25 +144,42 @@ function phraseDivisibilite(nombre, diviseur, divisible) {
 
 function correctionUnites(nombre) {
   const unite = nombre % 10;
+  const regles = [
+    {
+      diviseur: 2,
+      description: "les chiffres possibles sont 0, 2, 4, 6 ou 8",
+    },
+    {
+      diviseur: 5,
+      description: "les chiffres possibles sont 0 ou 5",
+    },
+    {
+      diviseur: 10,
+      description: "le chiffre attendu est 0",
+    },
+  ];
   return [
     `Le chiffre des unités est ${unite}.`,
-    `Pour 2, il doit être 0, 2, 4, 6 ou 8 : ${phraseDivisibilite(nombre, 2, nombre % 2 === 0)}`,
-    `Pour 5, il doit être 0 ou 5 : ${phraseDivisibilite(nombre, 5, nombre % 5 === 0)}`,
-    `Pour 10, il doit être 0 : ${phraseDivisibilite(nombre, 10, nombre % 10 === 0)}`,
-  ].join(" ");
+    ...regles.map(({ diviseur, description }) => {
+      const divisible = nombre % diviseur === 0;
+      return `Par ${diviseur} : ${unite} ${divisible ? "convient" : "ne convient pas"} ; ${description}. Donc ${phraseDivisibilite(nombre, diviseur, divisible)}`;
+    }),
+  ].join("\n");
 }
 
 function correctionSomme(nombre) {
   const chiffres = chiffresDe(nombre);
   const somme = chiffres.reduce((total, chiffre) => total + chiffre, 0);
   const calcul = chiffres.join(" + ");
-  const verdict3 = somme % 3 === 0
-    ? `${somme} est un multiple de 3 : ${nombre} est divisible par 3.`
-    : `${somme} n'est pas un multiple de 3 : ${nombre} n'est pas divisible par 3.`;
-  const verdict9 = somme % 9 === 0
-    ? `${somme} est un multiple de 9 : ${nombre} est divisible par 9.`
-    : `${somme} n'est pas un multiple de 9 : ${nombre} n'est pas divisible par 9.`;
-  return `La somme de tous les chiffres est ${calcul} = ${somme}. ${verdict3} ${verdict9}`;
+  const lignePour = (diviseur) => {
+    const divisible = somme % diviseur === 0;
+    return `Par ${diviseur} : ${somme} ${divisible ? "est" : "n'est pas"} un multiple de ${diviseur}. Donc ${phraseDivisibilite(nombre, diviseur, divisible)}`;
+  };
+  return [
+    `La somme de tous les chiffres est ${calcul} = ${somme}.`,
+    lignePour(3),
+    lignePour(9),
+  ].join("\n");
 }
 
 function enumerationFrancaise(elements) {

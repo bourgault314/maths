@@ -2283,11 +2283,40 @@ body {
 .comparaison-partages {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 10px;
+  gap: 14px;
 }
 
 .exemple-partage-cours {
   min-width: 0;
+  padding: 10px;
+  border: 2px solid var(--mg-ligne);
+  border-radius: 14px;
+  background: var(--mg-papier);
+}
+
+.exemple-partage-cours.cas-divisible-cours {
+  border-color: color-mix(in srgb, var(--mg-reussite) 48%, var(--mg-ligne));
+  background: color-mix(in srgb, var(--mg-reussite) 5%, var(--mg-papier));
+}
+
+.exemple-partage-cours.cas-non-divisible-cours {
+  border-color: color-mix(in srgb, var(--mg-orange) 52%, var(--mg-ligne));
+  background: color-mix(in srgb, var(--mg-orange) 5%, var(--mg-papier));
+}
+
+.exemple-partage-cours > h4 {
+  margin: 0 0 8px;
+  color: var(--mg-bleu);
+  font-size: 14px;
+  line-height: 1.3;
+}
+
+.cas-divisible-cours > h4 {
+  color: color-mix(in srgb, var(--mg-reussite) 68%, var(--mg-encre));
+}
+
+.cas-non-divisible-cours > h4 {
+  color: color-mix(in srgb, var(--mg-orange) 72%, var(--mg-encre));
 }
 
 .exemple-partage-cours > p {
@@ -2523,14 +2552,6 @@ body {
 
 .consequence-cours strong {
   color: var(--mg-bleu);
-}
-
-.borne-sommes-cours {
-  margin: 0 0 10px;
-  color: var(--mg-texteAttenue);
-  font-size: 13px;
-  font-weight: 700;
-  line-height: 1.4;
 }
 
 .reperes-multiples-cours {
