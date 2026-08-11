@@ -35,14 +35,14 @@ test("Coffres à deux explique visuellement les quatre opérations réellement j
   assert.match(html, /sum-bar-model[^>]+Cinq points dans la barre du haut[^>]+trois points et deux points dans deux rectangles jointifs/i);
   assert.match(html, /class="measure-marker sum-marker">somme = 5[\s\S]*class="bar-segment units-5 whole-part"/);
   assert.match(html, /class="bar-segment units-5 whole-part">[\s\S]*?--points:5[\s\S]*?class="bar-segment units-3 blue-part">[\s\S]*?--points:3[\s\S]*?class="bar-segment units-2 coral-part">[\s\S]*?--points:2/);
-  assert.match(html, /Somme : on réunit[\s\S]*On réunit les 3 points et les 2 points ; la ligne complète en contient 5/);
+  assert.match(html, /Somme : réunir deux quantités[\s\S]*La somme est le résultat d’une addition\. Ici, 3 points et 2 points réunis donnent 5 points/);
   assert.match(html, /3 \+ 2 = 5/);
   assert.match(html, /difference-bar-model[^>]+Cinq points sont alignés au-dessus de deux points[^>]+trois autres, surlignés[^>]+Sous ces trois derniers points[^>]+crochet tourné vers eux/i);
   assert.match(html, /bar-dot unmatched[\s\S]*class="difference-known"[\s\S]*class="difference-marker">différence = 3/);
   assert.match(html, /\.difference-marker::before\s*\{[^}]*top:\s*0[^}]*border-bottom:\s*2px solid #bd7900/);
   assert.match(html, /bar-dot matched[\s\S]*bar-dot matched[\s\S]*bar-dot unmatched[\s\S]*bar-dot unmatched[\s\S]*bar-dot unmatched/);
   assert.match(html, /class="difference-known">[\s\S]*?--points:2/);
-  assert.match(html, /Différence : les points non appariés[\s\S]*On aligne 5 points au-dessus de 2 points[^<]+3 points non appariés donnent la différence/);
+  assert.match(html, /Différence : l’écart entre deux quantités[\s\S]*La différence est le résultat d’une soustraction\. Elle mesure l’écart entre deux quantités/);
   assert.match(html, /5 − 2 = 3/);
   assert.match(html, /\.bar-diagram\s*\{[^}]*gap:\s*0/);
   assert.match(html, /\.bar-row\s*\{[^}]*border-radius:\s*0/);
@@ -52,6 +52,7 @@ test("Coffres à deux explique visuellement les quatre opérations réellement j
   assert.match(html, /<span>3 rangées de 4<\/span>[\s\S]*?<span>4 rangées de 3<\/span>/);
   assert.match(html, /\.dot-array\s*\{[\s\S]*?border-radius:\s*0/);
   assert.match(html, /3 × 4 = 12 ; 4 × 3 = 12 aussi/);
+  assert.match(html, /Produit : former des rangées égales[\s\S]*Le produit est le résultat d’une multiplication/);
   assert.match(html, /combien de paquets de 2 dans 8 \? <strong>4<\/strong>/);
   assert.match(html, /partager 8 en 2 paquets : <strong>4 dans chacun<\/strong>/);
   const quotientMemo = html.match(/<article class="operation-visual-card">\s*<h3>Quotient[\s\S]*?<\/article>/)?.[0] || "";
@@ -61,6 +62,7 @@ test("Coffres à deux explique visuellement les quatre opérations réellement j
   assert.match(html, /\.quotient-bar\s*\{[\s\S]*?border-radius:\s*0/);
   assert.doesNotMatch(html, /quotient-pair|quotient-groups/);
   assert.match(html, /8 ÷ 2 = 4/);
+  assert.match(html, /Le quotient est le résultat d’une division\. Il indique combien de paquets égaux on peut former/);
   assert.match(html, /runes voisines/);
 });
 
