@@ -158,15 +158,46 @@ async function assertPointVisual(page, selector, mode, label) {
     const data = await visual.evaluate(node => {
       const grid = node.querySelector(".demo-dot-grid");
       const columnsMarker = node.querySelector(".dimension-columns");
+      const columnsNumber = columnsMarker.querySelector("span");
       const rowsMarker = node.querySelector(".dimension-rows");
+      const rowsNumber = rowsMarker.querySelector("span");
       const box = element => {
         const rect = element.getBoundingClientRect();
         return { left: rect.left, right: rect.right, top: rect.top, bottom: rect.bottom, width: rect.width, height: rect.height };
       };
+      const columnsStyle = getComputedStyle(columnsMarker);
+      const columnsNumberStyle = getComputedStyle(columnsNumber);
+      const columnsStartStyle = getComputedStyle(columnsMarker, "::before");
+      const columnsEndStyle = getComputedStyle(columnsMarker, "::after");
+      const rowsStyle = getComputedStyle(rowsMarker);
+      const numberStyle = getComputedStyle(rowsNumber);
+      const bracketStyle = getComputedStyle(rowsMarker, "::before");
       return {
         aria: node.getAttribute("aria-label"),
-        grid: box(grid), columnsMarker: { ...box(columnsMarker), text: columnsMarker.textContent.trim() },
-        rowsMarker: { ...box(rowsMarker), text: rowsMarker.textContent.trim() },
+        grid: box(grid),
+        columnsMarker: {
+          ...box(columnsMarker), text: columnsMarker.textContent.trim(),
+          writingMode: columnsStyle.writingMode, transform: columnsStyle.transform,
+          borderTop: columnsStyle.borderTopWidth, borderBottom: columnsStyle.borderBottomWidth
+        },
+        columnsNumber: { writingMode: columnsNumberStyle.writingMode, transform: columnsNumberStyle.transform },
+        columnsCaps: {
+          startBottom: columnsStartStyle.bottom, startLeft: columnsStartStyle.left,
+          startWidth: columnsStartStyle.width, startHeight: columnsStartStyle.height,
+          endBottom: columnsEndStyle.bottom, endRight: columnsEndStyle.right,
+          endWidth: columnsEndStyle.width, endHeight: columnsEndStyle.height
+        },
+        rowsMarker: {
+          ...box(rowsMarker), text: rowsMarker.textContent.trim(),
+          writingMode: rowsStyle.writingMode, transform: rowsStyle.transform
+        },
+        rowsNumber: { writingMode: numberStyle.writingMode, transform: numberStyle.transform },
+        bracket: {
+          top: bracketStyle.top, right: bracketStyle.right, bottom: bracketStyle.bottom,
+          width: bracketStyle.width,
+          borderTop: bracketStyle.borderTopWidth, borderRight: bracketStyle.borderRightWidth,
+          borderBottom: bracketStyle.borderBottomWidth, borderLeft: bracketStyle.borderLeftWidth
+        },
         dots: grid.querySelectorAll(".demo-dot").length,
         columns: Number(getComputedStyle(grid).getPropertyValue("--demo-columns"))
       };
@@ -177,7 +208,12 @@ async function assertPointVisual(page, selector, mode, label) {
     assert(data.rowsMarker.text === String(rows), `${label} : le nombre de rangées est incorrect.`);
     assert(Math.abs(data.columnsMarker.left - data.grid.left) <= 1 && Math.abs(data.columnsMarker.width - data.grid.width) <= 1, `${label} : le repère des colonnes n’est pas aligné au-dessus du réseau.`);
     assert(data.columnsMarker.bottom <= data.grid.top, `${label} : le repère des colonnes n’est pas extérieur au réseau.`);
+    assert(data.columnsMarker.writingMode === "horizontal-tb" && data.columnsMarker.transform === "none" && data.columnsNumber.writingMode === "horizontal-tb" && data.columnsNumber.transform === "none", `${label} : le nombre supérieur est tourné.`);
+    assert(data.columnsMarker.borderTop === "0px" && data.columnsMarker.borderBottom === "2px" && data.columnsCaps.startBottom === "-6px" && data.columnsCaps.startLeft === "0px" && data.columnsCaps.startWidth === "2px" && data.columnsCaps.startHeight === "6px" && data.columnsCaps.endBottom === "-6px" && data.columnsCaps.endRight === "0px" && data.columnsCaps.endWidth === "2px" && data.columnsCaps.endHeight === "6px", `${label} : les extrémités du crochet supérieur ne sont pas dirigées vers le réseau.`);
     assert(data.rowsMarker.right <= data.grid.left && Math.abs(data.rowsMarker.top - data.grid.top) <= 1 && Math.abs(data.rowsMarker.height - data.grid.height) <= 1, `${label} : le repère des rangées n’est pas aligné sur le côté.`);
+    assert(data.rowsMarker.writingMode === "horizontal-tb" && data.rowsMarker.transform === "none" && data.rowsNumber.writingMode === "horizontal-tb" && data.rowsNumber.transform === "none", `${label} : le nombre latéral est tourné.`);
+    assert(data.bracket.top === "0px" && data.bracket.right === "0px" && data.bracket.bottom === "0px" && data.bracket.width === "7px", `${label} : le crochet latéral ne couvre pas exactement la hauteur du réseau.`);
+    assert(data.bracket.borderTop === "2px" && data.bracket.borderRight === "0px" && data.bracket.borderBottom === "2px" && data.bracket.borderLeft === "2px", `${label} : les extrémités du crochet latéral ne sont pas dirigées vers le réseau.`);
     assert(!/(?:longueur|largeur)/i.test(`${data.columnsMarker.text} ${data.rowsMarker.text}`), `${label} : un mot interdit est écrit dans le repère.`);
     assert(new RegExp(`${rows} fois ${data.columns} égale ${data.dots}\\.$`).test(data.aria), `${label} : l’équation parlée du produit manque.`);
   } else {
@@ -302,6 +338,78 @@ async function auditExtremeVisual(browser, base, { mode, first, second, width, h
   }
 }
 
+async function auditProductMemo(browser, base, {
+  route, wrapperSelector, gridSelector, markerSelector, numberSelector,
+  topMarkerSelector, topNumberSelector, captureSelector, pageName, width
+}, errors) {
+  const page = await browser.newPage({ viewport: { width, height: width <= 390 ? 844 : 900 } });
+  page.on("pageerror", error => errors.push(`${pageName} à ${width}px : ${error.message}`));
+  try {
+    await page.goto(`${base}${route}`, { waitUntil: "load" });
+    await page.locator(wrapperSelector).first().waitFor({ state: "visible" });
+    const markers = await page.locator(wrapperSelector).evaluateAll((nodes, selectors) => nodes.map(node => {
+      const grid = node.querySelector(selectors.gridSelector);
+      const marker = node.querySelector(selectors.markerSelector);
+      const number = selectors.numberSelector ? marker.querySelector(selectors.numberSelector) : marker;
+      const topMarker = node.querySelector(selectors.topMarkerSelector);
+      const topNumber = selectors.topNumberSelector ? topMarker.querySelector(selectors.topNumberSelector) : topMarker;
+      const box = element => {
+        const rect = element.getBoundingClientRect();
+        return { left: rect.left, right: rect.right, top: rect.top, bottom: rect.bottom, width: rect.width, height: rect.height };
+      };
+      const markerStyle = getComputedStyle(marker);
+      const numberStyle = getComputedStyle(number);
+      const bracketStyle = getComputedStyle(marker, "::before");
+      const topMarkerStyle = getComputedStyle(topMarker);
+      const topNumberStyle = getComputedStyle(topNumber);
+      const topStartStyle = getComputedStyle(topMarker, "::before");
+      const topEndStyle = getComputedStyle(topMarker, "::after");
+      return {
+        grid: box(grid),
+        topMarker: {
+          ...box(topMarker), text: topMarker.textContent.trim(),
+          writingMode: topMarkerStyle.writingMode, transform: topMarkerStyle.transform,
+          borderTop: topMarkerStyle.borderTopWidth, borderBottom: topMarkerStyle.borderBottomWidth
+        },
+        topNumber: { writingMode: topNumberStyle.writingMode, transform: topNumberStyle.transform },
+        topCaps: {
+          startBottom: topStartStyle.bottom, startLeft: topStartStyle.left,
+          startWidth: topStartStyle.width, startHeight: topStartStyle.height,
+          endBottom: topEndStyle.bottom, endRight: topEndStyle.right,
+          endWidth: topEndStyle.width, endHeight: topEndStyle.height
+        },
+        marker: {
+          ...box(marker), text: marker.textContent.trim(),
+          writingMode: markerStyle.writingMode, transform: markerStyle.transform
+        },
+        number: { writingMode: numberStyle.writingMode, transform: numberStyle.transform },
+        bracket: {
+          top: bracketStyle.top, right: bracketStyle.right, bottom: bracketStyle.bottom,
+          width: bracketStyle.width,
+          borderTop: bracketStyle.borderTopWidth, borderRight: bracketStyle.borderRightWidth,
+          borderBottom: bracketStyle.borderBottomWidth, borderLeft: bracketStyle.borderLeftWidth
+        }
+      };
+    }), { gridSelector, markerSelector, numberSelector, topMarkerSelector, topNumberSelector });
+
+    assert(markers.length === 2, `${pageName} à ${width}px : les deux repères latéraux du produit sont absents.`);
+    for (const [index, data] of markers.entries()) {
+      const label = `${pageName}, produit ${index + 1} à ${width}px`;
+      assert(Math.abs(data.topMarker.left - data.grid.left) <= 1 && Math.abs(data.topMarker.width - data.grid.width) <= 1 && data.topMarker.bottom <= data.grid.top, `${label} : le crochet supérieur n’est pas aligné sur toute la largeur du réseau.`);
+      assert(data.topMarker.writingMode === "horizontal-tb" && data.topMarker.transform === "none" && data.topNumber.writingMode === "horizontal-tb" && data.topNumber.transform === "none", `${label} : le nombre ${data.topMarker.text} du haut est tourné.`);
+      assert(data.topMarker.borderTop === "0px" && data.topMarker.borderBottom === "2px" && data.topCaps.startBottom === "-6px" && data.topCaps.startLeft === "0px" && data.topCaps.startWidth === "2px" && data.topCaps.startHeight === "6px" && data.topCaps.endBottom === "-6px" && data.topCaps.endRight === "0px" && data.topCaps.endWidth === "2px" && data.topCaps.endHeight === "6px", `${label} : les extrémités du crochet supérieur ne pointent pas vers le réseau.`);
+      assert(data.marker.right <= data.grid.left && Math.abs(data.marker.top - data.grid.top) <= 1 && Math.abs(data.marker.height - data.grid.height) <= 1, `${label} : le crochet latéral ne couvre pas exactement la hauteur du réseau.`);
+      assert(data.marker.writingMode === "horizontal-tb" && data.marker.transform === "none" && data.number.writingMode === "horizontal-tb" && data.number.transform === "none", `${label} : le nombre ${data.marker.text} est tourné.`);
+      assert(data.bracket.top === "0px" && data.bracket.right === "0px" && data.bracket.bottom === "0px" && data.bracket.width === "7px", `${label} : le tracé du crochet n’occupe pas toute la hauteur.`);
+      assert(data.bracket.borderTop === "2px" && data.bracket.borderRight === "0px" && data.bracket.borderBottom === "2px" && data.bracket.borderLeft === "2px", `${label} : les deux petits traits ne pointent pas vers le réseau.`);
+    }
+    await assertNoHorizontalOverflow(page, `${pageName} à ${width}px`);
+    await page.locator(captureSelector).screenshot({ path: path.join(CAPTURES, `produit-${pageName}-${width}.png`) });
+  } finally {
+    await page.close();
+  }
+}
+
 (async () => {
   fs.mkdirSync(CAPTURES, { recursive: true });
   const server = await startServer();
@@ -413,11 +521,40 @@ async function auditExtremeVisual(browser, base, { mode, first, second, width, h
     for (const width of [320, 390, 520, 1366]) {
       await auditExtremeVisual(browser, base, { mode: "quotient", first: 36, second: 6, width, capture: `quotient-36-6-${width}.png` }, errors);
     }
+    for (const width of [320, 390, 1366]) {
+      await auditExtremeVisual(browser, base, { mode: "product", first: 3, second: 4, width, capture: `produit-dynamique-3-4-${width}.png` }, errors);
+    }
+    for (const width of [320, 390, 1366]) {
+      await auditProductMemo(browser, base, {
+        route: "/outils/calcul_mental/coffres_magiques_solo.html",
+        wrapperSelector: ".dual-learning-views .array-dimension-model",
+        gridSelector: ".dot-array",
+        markerSelector: ".dimension-rows",
+        numberSelector: "span",
+        topMarkerSelector: ".dimension-columns",
+        topNumberSelector: "span",
+        captureSelector: "#lesson article:has(.dual-learning-views)",
+        pageName: "solo",
+        width
+      }, errors);
+      await auditProductMemo(browser, base, {
+        route: "/outils/club_maths/coffres_magiques.html",
+        wrapperSelector: ".dual-operation-views .dimensioned-array",
+        gridSelector: ".dot-array",
+        markerSelector: ".array-dimension-side",
+        numberSelector: null,
+        topMarkerSelector: ".array-dimension-top",
+        topNumberSelector: null,
+        captureSelector: "#rules .operation-visual-card:nth-child(3)",
+        pageName: "duo",
+        width
+      }, errors);
+    }
     assert(errors.length === 0, `Erreurs JavaScript : ${errors.join(" | ")}`);
     console.log(JSON.stringify({
       ok: true,
       captures: CAPTURES,
-      checks: ["repère somme pleine largeur", "différence 12−10 et 12−11 : crochet exact, libellé centré et sur une ligne", "produit : nombres seuls autour du réseau et légende complète dessous", "quotient 36÷6 : barres empilées jusqu’à 520 px", "rectangles à angles droits", "lignes collées", "aria avec équations parlées", "aide sans révélation", "solution demandée", "correction après erreur", "même opération", "aucune clé offerte", "focus/Tab/Échap", "320/390/520/1366"]
+      checks: ["repère somme pleine largeur", "différence 12−10 et 12−11 : crochet exact, libellé centré et sur une ligne", "produit solo/duo : nombres droits, crochet supérieur pleine largeur et crochet latéral pleine hauteur à 320/390/1366 px", "quotient 36÷6 : barres empilées jusqu’à 520 px", "rectangles à angles droits", "lignes collées", "aria avec équations parlées", "aide sans révélation", "solution demandée", "correction après erreur", "même opération", "aucune clé offerte", "focus/Tab/Échap", "320/390/520/1366"]
     }, null, 2));
   } finally {
     await page.close();

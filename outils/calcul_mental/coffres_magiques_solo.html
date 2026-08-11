@@ -578,30 +578,37 @@
       position: relative;
       grid-column: 1;
       grid-row: 2;
-      padding-right: 4px;
-      border-right: 2px solid #6d3ac7;
+      align-self: stretch;
+      justify-self: stretch;
+      min-width: 22px;
+      padding-right: 10px;
+      box-sizing: border-box;
+      display: grid;
+      place-items: center;
       color: #69419b;
       font-size: .64rem;
       font-weight: 950;
       line-height: 1.1;
-      writing-mode: vertical-rl;
+      writing-mode: horizontal-tb;
       text-align: center;
     }
 
-    .dimension-rows span { display: block; transform: rotate(180deg); }
-
-    .dimension-rows::before,
-    .dimension-rows::after {
-      content: "";
-      position: absolute;
-      right: -6px;
-      width: 6px;
-      height: 2px;
-      background: #6d3ac7;
+    .dimension-rows span {
+      display: block;
+      transform: none;
+      writing-mode: horizontal-tb;
     }
 
-    .dimension-rows::before { top: 0; }
-    .dimension-rows::after { bottom: 0; }
+    .dimension-rows::before {
+      content: "";
+      position: absolute;
+      inset: 0 0 0 auto;
+      width: 7px;
+      box-sizing: border-box;
+      border-top: 2px solid #6d3ac7;
+      border-bottom: 2px solid #6d3ac7;
+      border-left: 2px solid #6d3ac7;
+    }
 
     .array-dimension-model .dot-array,
     .array-dimension-model .demo-dot-grid {
