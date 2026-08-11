@@ -47,9 +47,10 @@ const { operationModel, findSolutionPair } = context.learningCore;
 
 test("le mémo distingue réellement les deux orientations du produit", () => {
   assert.match(html, /aria-label="Un réseau de 3 rangées et 4 colonnes contient 12 points[^\"]+4 colonnes[^\"]+3 rangées/);
-  assert.match(html, /dimension-columns"><span>4 colonnes<\/span>[\s\S]*?dimension-rows"><span>3 rangées<\/span>[\s\S]*?--dot-columns:4/);
+  assert.match(html, /dimension-columns"><span>4<\/span>[\s\S]*?dimension-rows"><span>3<\/span>[\s\S]*?--dot-columns:4/);
   assert.match(html, /aria-label="Un réseau de 4 rangées et 3 colonnes contient 12 points[^\"]+3 colonnes[^\"]+4 rangées/);
-  assert.match(html, /dimension-columns"><span>3 colonnes<\/span>[\s\S]*?dimension-rows"><span>4 rangées<\/span>[\s\S]*?--dot-columns:3/);
+  assert.match(html, /dimension-columns"><span>3<\/span>[\s\S]*?dimension-rows"><span>4<\/span>[\s\S]*?--dot-columns:3/);
+  assert.match(html, /<span>3 rangées de 4<\/span>[\s\S]*?<span>4 rangées de 3<\/span>/);
   assert.doesNotMatch(html, /(?:dimension-columns|dimension-rows)[^>]*>[^<]*(?:longueur|largeur)/i);
   assert.deepEqual({ ...operationModel("product", 3, 4) }, { rows: 3, columns: 4, total: 12 });
   assert.deepEqual({ ...operationModel("product", 4, 3) }, { rows: 4, columns: 3, total: 12 });
@@ -104,20 +105,21 @@ test("le mémo représente la différence par des points alignés et non appari�
   assert.match(differenceMemo, /5 moins 2 égale 3\./);
   assert.equal((differenceMemo.match(/class="comparison-unit unmatched"/g) || []).length, 3);
   assert.equal((differenceMemo.match(/class="quantity-dot"/g) || []).length, 7);
-  assert.match(differenceMemo, /comparison-upper[\s\S]*?comparison-lower">[\s\S]*?compare-known[\s\S]*?difference-marker" style="grid-column:3 \/ -1"><\/span>[\s\S]*?difference-marker-label">différence = 3<\/span>/);
+  assert.match(differenceMemo, /comparison-upper[\s\S]*?comparison-lower" style="--difference-center:70%">[\s\S]*?compare-known[\s\S]*?difference-marker" style="grid-column:3 \/ -1"><\/span>[\s\S]*?difference-marker-label">différence = 3<\/span>/);
   assert.doesNotMatch(differenceMemo, /difference-marker-row/);
   assert.doesNotMatch(differenceMemo, /\?|>\s*(?:Tout|Parties?|partie)\s*</i);
   assert.match(html, /\.comparison-upper\s*\{[\s\S]*?border-radius:\s*0/);
   assert.match(html, /\.compare-known\s*\{[\s\S]*?border-top:\s*0[\s\S]*?border-radius:\s*0/);
   assert.match(html, /\.difference-marker\s*\{[\s\S]*?margin-top:\s*7px[\s\S]*?border-top:\s*2px solid/);
   assert.match(html, /\.difference-marker::before,[\s\S]*?top:\s*-7px/);
-  assert.match(html, /\.difference-marker-label\s*\{[\s\S]*?grid-column:\s*1 \/ -1[\s\S]*?justify-self:\s*end[\s\S]*?white-space:\s*nowrap/);
+  assert.match(html, /\.difference-marker-label\s*\{[\s\S]*?left:\s*var\(--difference-center\)[\s\S]*?transform:\s*translateX\(-50%\)[\s\S]*?text-align:\s*center[\s\S]*?white-space:\s*nowrap/);
+  assert.match(html, /model\.difference \/ model\.high < \.2[\s\S]*?markerLabel\.classList\.add\("compact"\)/);
 });
 
 test("l’aide et les deux corrections réutilisent les schémas de points", () => {
   assert.match(html, /function createSumQuantityModel\(model\)[\s\S]*?makeQuantitySegment\(model\.total\)[\s\S]*?makeQuantitySegment\(model\.first, "quantity-first"\)[\s\S]*?makeQuantitySegment\(model\.second, "quantity-second"\)/);
-  assert.match(html, /function createDifferenceComparison\(model\)[\s\S]*?index >= model\.low \? " unmatched"[\s\S]*?known\.style\.gridColumn = `1 \/ span \$\{model\.low\}`[\s\S]*?difference-marker-label", `différence = \$\{model\.difference\}`[\s\S]*?lower\.append\(marker, markerLabel\)[\s\S]*?diagram\.append\(upper, lower\)/);
-  assert.match(html, /function createProductArray\(model\)[\s\S]*?`\$\{model\.columns\} colonnes`[\s\S]*?`\$\{model\.rows\} rangées`[\s\S]*?--demo-columns/);
+  assert.match(html, /function createDifferenceComparison\(model\)[\s\S]*?index >= model\.low \? " unmatched"[\s\S]*?--difference-center[\s\S]*?known\.style\.gridColumn = `1 \/ span \$\{model\.low\}`[\s\S]*?difference-marker-label", `différence = \$\{model\.difference\}`[\s\S]*?lower\.append\(marker, markerLabel\)[\s\S]*?diagram\.append\(upper, lower\)/);
+  assert.match(html, /function createProductArray\(model\)[\s\S]*?String\(model\.columns\)[\s\S]*?String\(model\.rows\)[\s\S]*?--demo-columns/);
   assert.match(html, /function makeQuotientBar\(groupCount, groupSize\)[\s\S]*?bar\.dataset\.groupCount[\s\S]*?bar\.dataset\.groupSize[\s\S]*?quotient-bar-group[\s\S]*?quotient-bar-unit/);
   assert.match(html, /if \(nextMode === "sum"\)[\s\S]*?createSumQuantityModel\(model\)/);
   assert.match(html, /else if \(nextMode === "difference"\)[\s\S]*?createDifferenceComparison\(model\)/);

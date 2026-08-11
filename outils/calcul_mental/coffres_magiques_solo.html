@@ -470,6 +470,8 @@
     }
 
     .comparison-lower {
+      --difference-center: 50%;
+      position: relative;
       min-height: 54px;
       display: grid;
       grid-template-columns: repeat(var(--unit-count), minmax(0, 1fr));
@@ -498,18 +500,21 @@
     }
 
     .difference-marker-label {
-      grid-column: 1 / -1;
-      grid-row: 2;
-      justify-self: end;
-      max-width: 100%;
-      margin-top: 2px;
+      position: absolute;
+      top: 39px;
+      left: var(--difference-center);
+      width: max-content;
+      max-width: calc(100% - 4px);
+      transform: translateX(-50%);
       color: #765000;
       font-size: .7rem;
       font-weight: 950;
       line-height: 1.05;
-      text-align: right;
+      text-align: center;
       white-space: nowrap;
     }
+
+    .difference-marker-label.compact { font-size: .6rem; }
 
     .difference-marker::before,
     .difference-marker::after {
@@ -940,7 +945,7 @@
               <div class="comparison-upper">
                 <span class="comparison-unit"><i class="quantity-dot"></i></span><span class="comparison-unit"><i class="quantity-dot"></i></span><span class="comparison-unit unmatched"><i class="quantity-dot"></i></span><span class="comparison-unit unmatched"><i class="quantity-dot"></i></span><span class="comparison-unit unmatched"><i class="quantity-dot"></i></span>
               </div>
-              <div class="comparison-lower">
+              <div class="comparison-lower" style="--difference-center:70%">
                 <span class="compare-known" style="--known-count:2;grid-column:1 / span 2"><span class="comparison-unit"><i class="quantity-dot"></i></span><span class="comparison-unit"><i class="quantity-dot"></i></span></span>
                 <span class="difference-marker" style="grid-column:3 / -1"></span>
                 <span class="difference-marker-label">différence = 3</span>
@@ -955,11 +960,11 @@
           <div class="operation-picture" role="group" aria-label="Deux rectangles orientés montrent que trois fois quatre et quatre fois trois donnent tous les deux douze">
             <div class="dual-learning-views">
               <div class="mini-learning-view" role="img" aria-label="Un réseau de 3 rangées et 4 colonnes contient 12 points. Le repère supérieur indique 4 colonnes et le repère latéral indique 3 rangées.">
-                <span class="array-dimension-model" aria-hidden="true"><span class="dimension-columns"><span>4 colonnes</span></span><span class="dimension-rows"><span>3 rangées</span></span><span class="dot-array" style="--dot-columns:4"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></span></span>
+                <span class="array-dimension-model" aria-hidden="true"><span class="dimension-columns"><span>4</span></span><span class="dimension-rows"><span>3</span></span><span class="dot-array" style="--dot-columns:4"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></span></span>
                 <span>3 rangées de 4</span>
               </div>
               <div class="mini-learning-view" role="img" aria-label="Un réseau de 4 rangées et 3 colonnes contient 12 points. Le repère supérieur indique 3 colonnes et le repère latéral indique 4 rangées.">
-                <span class="array-dimension-model" aria-hidden="true"><span class="dimension-columns"><span>3 colonnes</span></span><span class="dimension-rows"><span>4 rangées</span></span><span class="dot-array" style="--dot-columns:3"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></span></span>
+                <span class="array-dimension-model" aria-hidden="true"><span class="dimension-columns"><span>3</span></span><span class="dimension-rows"><span>4</span></span><span class="dot-array" style="--dot-columns:3"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></span></span>
                 <span>4 rangées de 3</span>
               </div>
             </div>
@@ -1393,6 +1398,7 @@
         }
 
         const lower = makeElement("div", "comparison-lower");
+        lower.style.setProperty("--difference-center", `${((model.low + model.difference / 2) / model.high) * 100}%`);
         const known = makeElement("span", "compare-known");
         known.style.setProperty("--known-count", String(model.low));
         known.style.gridColumn = `1 / span ${model.low}`;
@@ -1406,6 +1412,7 @@
         const marker = makeElement("span", "difference-marker");
         marker.style.gridColumn = `${model.low + 1} / -1`;
         const markerLabel = makeElement("span", "difference-marker-label", `différence = ${model.difference}`);
+        if (model.difference / model.high < .2) markerLabel.classList.add("compact");
         lower.append(marker, markerLabel);
         diagram.append(upper, lower);
         return diagram;
@@ -1416,8 +1423,8 @@
         wrapper.setAttribute("aria-hidden", "true");
         const columnsMarker = makeElement("span", "dimension-columns");
         const rowsMarker = makeElement("span", "dimension-rows");
-        columnsMarker.append(makeElement("span", "", `${model.columns} colonnes`));
-        rowsMarker.append(makeElement("span", "", `${model.rows} rangées`));
+        columnsMarker.append(makeElement("span", "", String(model.columns)));
+        rowsMarker.append(makeElement("span", "", String(model.rows)));
         const grid = makeElement("div", "demo-dot-grid");
         grid.style.setProperty("--demo-columns", String(model.columns));
         for (let index = 0; index < model.total; index += 1) {
