@@ -41,14 +41,19 @@
   #home{max-width:560px;margin:0 auto;padding:18px 14px 40px;}
   #home header{position:relative;text-align:center;padding:8px 0 4px;}
   .brandmark{
-    position:absolute;left:0;top:5px;width:86px;padding:7px 8px;
-    border:1px solid #ffffff24;border-radius:11px;background:#00000024;
-    transition:background .15s ease,transform .15s ease;
+    position:absolute;left:0;top:5px;width:122px;padding:7px 9px;
+    border:1px solid #ffc94daa;border-radius:14px;
+    background:linear-gradient(145deg,#fffdf8,#fff1d2);
+    box-shadow:0 7px 22px #160e3638,inset 0 1px 0 #fff;
+    transition:transform .15s ease,border-color .15s ease,box-shadow .15s ease;
   }
-  .brandmark:hover{background:#ffffff16;transform:translateY(-1px);}
+  .brandmark:hover{
+    background:linear-gradient(145deg,#fffdf8,#fff1d2);border-color:#ffc94d;
+    box-shadow:0 9px 26px #160e3648,inset 0 1px 0 #fff;transform:translateY(-1px);
+  }
   .brandmark:focus-visible{outline:3px solid var(--gold);outline-offset:3px;}
   .brandmark img{
-    display:block;width:100%;height:auto;opacity:.92;
+    display:block;width:100%;height:auto;opacity:1;filter:none;
   }
   #home h1{font-size:44px;margin:6px 0 0;letter-spacing:2px;text-shadow:0 3px 20px #ffc94d66;}
   #home .tagline{font-size:14px;color:#ffe9c4;margin:2px 0 10px;}
@@ -131,30 +136,35 @@
   #status{font-size:12.5px;line-height:1.5;color:#ffd9c2;min-height:18px;padding:0 3px;}
   #status .ok{color:var(--green);font-weight:700;}
   #status .bad{color:#ff9c8a;}
-  /* paysage : plateau seul à gauche pleine hauteur, tout le reste dans la colonne de droite */
+  /* paysage : plateau à son vrai ratio, commandes lisibles dans la colonne de droite */
   @media (orientation:landscape){
-    #play{--side:clamp(196px,27vw,252px);flex-direction:row;max-width:none;width:100%;height:100vh;height:100dvh;min-height:0;
-      overflow:hidden;align-items:stretch;padding:max(4px,env(safe-area-inset-top)) max(4px,env(safe-area-inset-right)) max(4px,env(safe-area-inset-bottom)) max(4px,env(safe-area-inset-left));}
-    #playleft{flex:1;min-width:0;min-height:0;display:flex;align-items:center;justify-content:center;}
+    #play{--sidebar-min:clamp(220px,30vw,320px);flex-direction:row;max-width:none;width:100%;height:100vh;height:100dvh;min-height:0;
+      overflow:hidden;align-items:stretch;justify-content:center;padding:max(4px,env(safe-area-inset-top)) max(4px,env(safe-area-inset-right)) max(4px,env(safe-area-inset-bottom)) max(4px,env(safe-area-inset-left));}
+    #playleft{flex:0 1 auto;height:100%;width:auto;min-width:0;min-height:0;
+      max-width:calc(100% - var(--sidebar-min) - 5px);aspect-ratio:var(--board-ratio,3 / 2);
+      display:flex;align-items:center;justify-content:center;}
     #playleft #boardbox{flex:1;width:100%;height:100%;max-width:none;max-height:none;display:flex;}
     #board{width:100%;height:100%;max-width:100%;max-height:100%;}
-    #playright{width:var(--side);flex:0 0 var(--side);overflow-y:auto;padding-right:2px;}
+    #playright{width:auto;min-width:0;max-width:420px;flex:1 1 var(--sidebar-min);overflow-y:auto;padding-right:2px;}
     #rotatehint{display:none !important;}
     body.immersive{overflow:hidden;}
-    body.immersive #play{--side:clamp(180px,23vw,220px);height:100vh;height:100dvh;min-height:0;gap:5px;
+    body.immersive #play{height:100vh;height:100dvh;min-height:0;gap:5px;
       padding:max(4px,env(safe-area-inset-top)) max(4px,env(safe-area-inset-right)) max(4px,env(safe-area-inset-bottom)) max(4px,env(safe-area-inset-left));}
     body.immersive #introline{display:none;}
   }
+  #play:fullscreen,#play:-webkit-full-screen,:fullscreen #play,:-webkit-full-screen #play{
+    max-width:none;width:100%;height:100vh;height:100dvh;margin:0;
+    background:linear-gradient(180deg,#241b4d 0%,#4a2560 34%,#a34a66 62%,#e0785a 82%,#f2a95c 100%);
+  }
+  #play::backdrop{background:#241b4d;}
   @media (orientation:landscape) and (max-height:520px){
     #playright{gap:5px;}
     #topbar{gap:5px;}
-    #topbar .name{font-size:12px;min-width:88px;}
-    #topbar .name small{font-size:10px;}
-    .iconbtn,.backbtn{padding:6px 8px;}
+    #topbar .name{font-size:14px;min-width:96px;}
+    #topbar .name small{display:none;}
+    .iconbtn,.backbtn{min-width:44px;min-height:44px;padding:7px 9px;}
     #introline{font-size:11.5px;padding:6px 8px;}
-    #toolbox{gap:5px;padding:6px;min-height:0;}
-    .chip{width:50px;height:58px;}
-    .chip svg{width:38px;height:38px;}
+    #toolbox{gap:6px;padding:7px;min-height:0;}
   }
   @media (orientation:portrait){body.immersive #play{padding:4px;gap:5px;}}
   body.immersive #topbar .name small{display:none;}
@@ -190,9 +200,13 @@
   }
   .beam,.beampath{stroke-linecap:round;opacity:.94;stroke-dasharray:16 12;animation:flow .7s linear infinite;fill:none;}
   @keyframes flow{to{stroke-dashoffset:-28;}}
-  .beam.drawin{animation:none;}
-  @keyframes drawseg{from{stroke-dashoffset:var(--beam-length);}to{stroke-dashoffset:0;}}
-  @keyframes fadein{from{opacity:0;}to{opacity:.94;}}
+  .beam.win-draw,.beampath.win-draw{
+    stroke-dasharray:var(--win-length) var(--win-length);
+    animation:win-draw var(--win-duration) linear var(--win-delay) both;
+  }
+  @keyframes win-draw{from{stroke-dashoffset:var(--win-length);}to{stroke-dashoffset:0;}}
+  .beamlbl.win-label{animation:win-label .14s ease var(--win-label-delay) both;}
+  @keyframes win-label{from{opacity:0;}to{opacity:1;}}
   .beamlbl{font-size:25px;font-weight:800;stroke:#101a33;stroke-width:6;paint-order:stroke;text-anchor:middle;}
   .tile{fill:#223a63;stroke:#7fb0ff3d;stroke-width:2;}
   .gridline{stroke:#ffffff10;stroke-width:1.5;}
@@ -206,8 +220,11 @@
   .site-footer a,.site-footer button{color:#ffe3bd;font:inherit;}
   .site-footer a{text-underline-offset:2px;}
   .site-footer button{border:0;padding:0;background:none;text-decoration:underline;cursor:pointer;text-underline-offset:2px;}
-  @media (max-width:380px){
-    .brandmark{width:72px;padding:6px;}
+  @media (max-width:420px){
+    .brandmark{width:106px;padding:6px 8px;}
+  }
+  @media (max-width:350px){
+    .brandmark{width:94px;}
   }
   @media (prefers-reduced-motion:reduce){
     *,*::before,*::after{animation-duration:.01ms !important;animation-iteration-count:1 !important;transition-duration:.01ms !important;}
@@ -273,7 +290,7 @@
       <button class="iconbtn" id="fsbtn" type="button" aria-label="Activer le plein écran" title="Plein écran">⛶</button>
       <button class="iconbtn" id="resetbtn" type="button" aria-label="Recommencer le niveau" title="Recommencer">↺</button>
     </div>
-    <div id="rotatehint">Astuce : tourne ton téléphone, le plateau sera plus grand.</div>
+    <div id="rotatehint">Tourne ton téléphone, puis masque la barre d’outils Safari pour agrandir le plateau.</div>
     <div id="introline"></div>
     <div id="boardbox">
       <svg id="board" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Plateau du niveau"></svg>
@@ -290,15 +307,13 @@
     <div id="toolbox"></div>
     <div id="status" aria-live="polite"></div>
   </div>
-</div>
-
-<div id="fstoast" role="status">Sur iPhone ou iPad, le bouton active le mode jeu. Pour masquer aussi les barres de Safari : <b>Partager</b> → <b>« Sur l’écran d’accueil »</b>.</div>
-
-<div id="hintov" role="dialog" aria-modal="true" aria-labelledby="hinttitle">
-  <div id="hintcard" tabindex="-1">
-    <div id="hinttitle">Coup de pouce</div>
-    <div id="hintbody"></div>
-    <button id="hintclose" type="button">J’ai compris !</button>
+  <div id="fstoast" role="status">Safari sur iPhone ne permet pas au jeu de masquer ses barres. Pour gagner de la hauteur maintenant : <b>menu de la page</b> → <b>…</b> → <b>Masquer la barre d’outils</b>. Pour jouer sans barres à l’avenir : <b>Partager</b> → <b>Sur l’écran d’accueil</b>.</div>
+  <div id="hintov" role="dialog" aria-modal="true" aria-labelledby="hinttitle">
+    <div id="hintcard" tabindex="-1">
+      <div id="hinttitle">Coup de pouce</div>
+      <div id="hintbody"></div>
+      <button id="hintclose" type="button">J’ai compris !</button>
+    </div>
   </div>
 </div>
 
@@ -1007,16 +1022,17 @@ function simulate(){
   const L=LV[cur];
   const out={segs:[],fruits:new Set(),tHits:L.targets.map(()=>[]),win:false,stats:[],flows:{}};
   const emitted=new Set(); const merges={}; let guard=0;
-  const q=L.suns.map(s=>({x:s.x,y:s.y,dir:s.dir,val:s.val||[1,1],fromPiece:false}));
+  const q=L.suns.map(s=>({x:s.x,y:s.y,dir:s.dir,val:s.val||[1,1],fromPiece:false,parents:[],viaPiece:null,viaType:null}));
   const isSun=(x,y)=>L.suns.some(s=>s.x===x&&s.y===y);
   const flow=(k)=>out.flows[k]=out.flows[k]||{ins:[],outs:[]};
   while(q.length&&guard++<500){
     const bm=q.shift();
     const key=[bm.x,bm.y,bm.dir,bm.val[0],bm.val[1]].join(',');
     if(emitted.has(key))continue; emitted.add(key);
+    const segId=out.segs.length;
     const sx=bm.fromPiece?bm.x+DX[bm.dir]*EDGE:bm.x;
     const sy=bm.fromPiece?bm.y+DY[bm.dir]*EDGE:bm.y;
-    let cx=bm.x,cy=bm.y,ex,ey;
+    let cx=bm.x,cy=bm.y,ex,ey,targetIndex=-1;
     for(;;){
       const nx=cx+DX[bm.dir],ny=cy+DY[bm.dir];
       if(nx<0||ny<0||nx>=L.cols||ny>=L.rows){ex=cx+DX[bm.dir]*0.62;ey=cy+DY[bm.dir]*0.62;break;}
@@ -1028,11 +1044,14 @@ function simulate(){
         ex=cx+DX[bm.dir]*0.5;ey=cy+DY[bm.dir]*0.5;break;
       }
       const ti=L.targets.findIndex(t=>t.x===nx&&t.y===ny);
-      if(ti>=0){out.tHits[ti].push(bm.val);ex=nx;ey=ny;break;}
+      if(ti>=0){out.tHits[ti].push(bm.val);targetIndex=ti;ex=nx;ey=ny;break;}
       const pc=state.placed[nx+','+ny];
       if(pc){
         const d=pc.def, pk=nx+','+ny;let acc=false;
-        const emit=(dir,val)=>{q.push({x:nx,y:ny,dir,val,fromPiece:true});flow(pk).outs.push({dir,val});};
+        const emit=(dir,val,parents=[segId])=>{
+          q.push({x:nx,y:ny,dir,val,fromPiece:true,parents,viaPiece:pk,viaType:d.t});
+          flow(pk).outs.push({dir,val});
+        };
         if(d.t==='b'&&d.in===bm.dir){acc=true;emit(d.out,bm.val);}
         else if(d.t==='s2'&&d.in===bm.dir){acc=true;d.outs.forEach(o=>emit(o,fdiv(bm.val,2)));}
         else if(d.t==='s3'&&d.in===bm.dir){acc=true;d.outs.forEach(o=>emit(o,fdiv(bm.val,3)));}
@@ -1040,10 +1059,14 @@ function simulate(){
         else if(d.t==='x3'&&d.in===bm.dir){acc=true;emit(d.out,fmul(bm.val,3));}
         else if(d.t==='m'&&d.ins.includes(bm.dir)){
           acc=true;merges[pk]=merges[pk]||{};
-          if(!(bm.dir in merges[pk]))merges[pk][bm.dir]=bm.val;
+          if(!(bm.dir in merges[pk]))merges[pk][bm.dir]={val:bm.val,segId};
           if((d.ins[0] in merges[pk])&&(d.ins[1] in merges[pk])&&!merges[pk].fired){
             merges[pk].fired=true;
-            emit(d.out,fadd(merges[pk][d.ins[0]],merges[pk][d.ins[1]]));
+            emit(
+              d.out,
+              fadd(merges[pk][d.ins[0]].val,merges[pk][d.ins[1]].val),
+              d.ins.map(dir=>merges[pk][dir].segId)
+            );
           }
         }
         if(acc){flow(pk).ins.push({dir:bm.dir,val:bm.val});ex=nx-DX[bm.dir]*EDGE;ey=ny-DY[bm.dir]*EDGE;}
@@ -1053,7 +1076,10 @@ function simulate(){
       if(L.fruits.some(f=>f[0]===nx&&f[1]===ny))out.fruits.add(nx+','+ny);
       cx=nx;cy=ny;
     }
-    out.segs.push({x1:sx,y1:sy,x2:ex,y2:ey,val:bm.val});
+    out.segs.push({
+      id:segId,x1:sx,y1:sy,x2:ex,y2:ey,val:bm.val,
+      parents:bm.parents||[],viaPiece:bm.viaPiece||null,viaType:bm.viaType||null,targetIndex
+    });
   }
   let ok=true;
   L.targets.forEach((t,i)=>{
@@ -1113,15 +1139,15 @@ function pieceFlow(def,fl){
   if(def.t==='b'&&fl.ins.length&&fl.outs.length){
     const inn=fl.ins[0],o=fl.outs[0];
     const[ix,iy]=ent(inn.dir),[ox,oy]=ext(o.dir);
-    s+=`<path class="beampath" d="M ${ix} ${iy} Q ${c} ${c} ${ox} ${oy}" stroke="${fcol(inn.val)}" stroke-width="${fwidth(inn.val)}" style="filter:drop-shadow(0 0 5px ${fcol(inn.val)})"/>`;
+    s+=`<path class="beampath" data-part="through" d="M ${ix} ${iy} Q ${c} ${c} ${ox} ${oy}" stroke="${fcol(inn.val)}" stroke-width="${fwidth(inn.val)}" style="filter:drop-shadow(0 0 5px ${fcol(inn.val)})"/>`;
   }else{
     fl.ins.forEach(inn=>{
       const[ix,iy]=ent(inn.dir);
-      s+=`<line class="beampath" x1="${ix}" y1="${iy}" x2="${c}" y2="${c}" stroke="${fcol(inn.val)}" stroke-width="${fwidth(inn.val)}" style="filter:drop-shadow(0 0 5px ${fcol(inn.val)})"/>`;
+      s+=`<line class="beampath" data-part="in" x1="${ix}" y1="${iy}" x2="${c}" y2="${c}" stroke="${fcol(inn.val)}" stroke-width="${fwidth(inn.val)}" style="filter:drop-shadow(0 0 5px ${fcol(inn.val)})"/>`;
     });
     fl.outs.forEach(o=>{
       const[ox,oy]=ext(o.dir);
-      s+=`<line class="beampath" x1="${c}" y1="${c}" x2="${ox}" y2="${oy}" stroke="${fcol(o.val)}" stroke-width="${fwidth(o.val)}" style="filter:drop-shadow(0 0 5px ${fcol(o.val)})"/>`;
+      s+=`<line class="beampath" data-part="out" x1="${c}" y1="${c}" x2="${ox}" y2="${oy}" stroke="${fcol(o.val)}" stroke-width="${fwidth(o.val)}" style="filter:drop-shadow(0 0 5px ${fcol(o.val)})"/>`;
     });
   }
   const lab={s2:'÷2',s3:'÷3',x2:'×2',x3:'×3',m:'+',b:''}[def.t];
@@ -1180,14 +1206,14 @@ const FRUITS={
 function fruitSVG(type,x,y,hit){
   return `<g transform="translate(${x*CS+50},${y*CS+50})">${(FRUITS[type]||FRUITS.letchi)(hit)}</g>`;
 }
-function targetSVG(t,stat,label=''){
+function targetSVG(t,stat,label='',index=''){
   const px=t.x*CS,py=t.y*CS;
   const lit=stat&&stat.st==='ok', bad=stat&&(stat.st==='wrong'||stat.st==='multi');
   const txt=t.disp||fstr(t.need);
   const fs=txt.length>=5?18:(txt.length>=4?21:29);
   let lamb='';
   for(let i=0;i<6;i++)lamb+=`<circle cx="${19+i*12.5}" cy="45" r="4.4" fill="#fdf6ec"/>`;
-  return `<g transform="translate(${px},${py})" class="${lit?'tlit':''}">
+  return `<g transform="translate(${px},${py})" class="${lit?'tlit':''}" data-target="${index}">
     ${lit?`<circle class="glowring" cx="50" cy="55" r="46" fill="none" stroke="#39d98a" stroke-width="5" opacity=".8"/>`:''}
     <polygon points="10,42 50,10 90,42" fill="${lit?'#e8574a':'#c94f43'}" stroke="#8a2f27" stroke-width="3"/>
     <rect x="13" y="40" width="74" height="4" fill="#fdf6ec"/>${lamb}
@@ -1235,22 +1261,22 @@ function redraw(){
     const x1=(sg.x1+0.5)*CS,y1=(sg.y1+0.5)*CS,x2=(sg.x2+0.5)*CS,y2=(sg.y2+0.5)*CS;
     if(Math.abs(x1-x2)<1&&Math.abs(y1-y2)<1)return;
     const w=fwidth(sg.val),c=fcol(sg.val);
-    s+=`<line class="beam" x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}" stroke="${c}" stroke-width="${w}" style="filter:drop-shadow(0 0 5px ${c})"/>`;
+    s+=`<line class="beam" data-seg="${sg.id}" x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}" stroke="${c}" stroke-width="${w}" style="filter:drop-shadow(0 0 5px ${c})"/>`;
   });
   Object.entries(state.placed).forEach(([k,pc])=>{
     const[x,y]=k.split(',').map(Number);
     const fl=sim.flows[k];
-    s+=`<g class="placed" transform="translate(${x*CS},${y*CS})">${fl?pieceFlow(pc.def,fl):pieceStatic(pc.def)}</g>`;
+    s+=`<g class="placed" data-cell="${k}" transform="translate(${x*CS},${y*CS})">${fl?pieceFlow(pc.def,fl):pieceStatic(pc.def)}</g>`;
   });
   sim.segs.forEach(sg=>{
     const x1=(sg.x1+0.5)*CS,y1=(sg.y1+0.5)*CS,x2=(sg.x2+0.5)*CS,y2=(sg.y2+0.5)*CS;
     const len=Math.hypot(x2-x1,y2-y1); if(len<80)return;
     const k=Math.min(0.5,60/len);
     const lx=x1+(x2-x1)*k,ly=y1+(y2-y1)*k-12-fwidth(sg.val)/2;
-    s+=`<text class="beamlbl" x="${lx}" y="${ly}" fill="${fcol(sg.val)}">${fstr(sg.val)}</text>`;
+    s+=`<text class="beamlbl" data-seg="${sg.id}" x="${lx}" y="${ly}" fill="${fcol(sg.val)}">${fstr(sg.val)}</text>`;
   });
   L.suns.forEach(sun=>{s+=sunSVG(sun);});
-  L.targets.forEach((t,i)=>{s+=targetSVG(t,sim.stats.find(st=>st.i===i),L.targets.length>1?'ABCDEF'[i]:'');});
+  L.targets.forEach((t,i)=>{s+=targetSVG(t,sim.stats.find(st=>st.i===i),L.targets.length>1?'ABCDEF'[i]:'',i);});
   bd.innerHTML=s;
 
   /* HUD */
@@ -1288,44 +1314,91 @@ function clearCeleb(){
 function startCelebration(sim){
   celebrating=true;overlayShown=true;
   const bd=document.getElementById('board');
-  const lines=[...bd.querySelectorAll('.beam')];
-  const beams=lines.map(ln=>{
+  const pause=.4,drawStart=.1,SPEED=620;
+  const NODE={b:.16,s2:.22,s3:.25,x2:.20,x3:.22,m:.26};
+  const plan=[];
+
+  /* Chaque tronçon attend réellement ses parents. Un miroir attend son entrée,
+     un séparateur lance ses branches ensemble et une addition attend ses deux rayons. */
+  sim.segs.forEach(sg=>{
+    const ln=bd.querySelector(`.beam[data-seg="${sg.id}"]`);
+    if(!ln)return;
     const x1=+ln.getAttribute('x1'),y1=+ln.getAttribute('y1'),x2=+ln.getAttribute('x2'),y2=+ln.getAttribute('y2');
     const len=Math.hypot(x2-x1,y2-y1);
-    return {ln,len};
+    const arrival=sg.parents.length?Math.max(...sg.parents.map(id=>plan[id]?.end||drawStart)):drawStart;
+    const nodeTime=sg.viaType?(NODE[sg.viaType]||.18):0;
+    const start=arrival+nodeTime;
+    const dur=Math.max(.18,Math.min(1.05,len/SPEED));
+    plan[sg.id]={sg,ln,len,arrival,nodeTime,start,dur,end:start+dur};
   });
-  /* Le flux s’immobilise un instant. Il s’efface ensuite et repart vraiment
-     des soleils vers les maisons, dans l’ordre produit par la simulation. */
-  const pause=0.4,drawStart=0.1;
-  let totalT=pause+drawStart;
-  beams.forEach(({ln,len},i)=>{
-    ln.classList.add('drawin');
+
+  /* D’abord, la solution complète s’immobilise : c’est le petit temps de respiration
+     demandé avant que la lumière ne reparte des soleils. */
+  plan.forEach(({ln})=>{
     ln.style.strokeDasharray='none';
     ln.style.strokeDashoffset='0';
     ln.style.animation='none';
   });
   const paths=[...bd.querySelectorAll('.beampath')];
   paths.forEach(p=>{p.style.animation='none';p.style.opacity='.94';});
+  const labels=[...bd.querySelectorAll('.beamlbl')];
+  labels.forEach(label=>{label.style.animation='none';label.style.opacity='1';});
+
   celebTimers.push(setTimeout(()=>{
-    beams.forEach(({ln,len},i)=>{
-      const delay=drawStart+i*0.2;
-      const dur=Math.min(0.55,len/900+0.12);
-      ln.style.setProperty('--beam-length',`${len}px`);
-      ln.style.strokeDasharray=`${len} ${len}`;
-      ln.style.strokeDashoffset=String(len);
-      ln.style.animation=`drawseg ${dur}s linear ${delay}s forwards`;
+    plan.forEach(({sg,ln,len,start,dur})=>{
+      ln.style.setProperty('--win-length',`${len}px`);
+      ln.style.setProperty('--win-duration',`${dur}s`);
+      ln.style.setProperty('--win-delay',`${start}s`);
+      ln.style.removeProperty('stroke-dasharray');
+      ln.style.removeProperty('stroke-dashoffset');
+      ln.style.removeProperty('animation');
+      ln.classList.add('win-draw');
+
+      const label=bd.querySelector(`.beamlbl[data-seg="${sg.id}"]`);
+      if(label){
+        label.style.setProperty('--win-label-delay',`${start+dur*.55}s`);
+        label.style.removeProperty('animation');
+        label.style.removeProperty('opacity');
+        label.classList.add('win-label');
+      }
     });
-    paths.forEach(p=>{
-      p.style.opacity='0';
-      p.style.animation=`fadein .4s ease ${drawStart+0.25}s forwards`;
+
+    const pieces=new Map();
+    plan.forEach(p=>{
+      if(p.sg.viaPiece&&!pieces.has(p.sg.viaPiece)){
+        pieces.set(p.sg.viaPiece,{start:p.arrival,dur:p.nodeTime});
+      }
+    });
+    pieces.forEach(({start,dur},cell)=>{
+      bd.querySelectorAll(`.placed[data-cell="${cell}"] .beampath`).forEach(path=>{
+        const part=path.dataset.part;
+        const delay=part==='out'?start+dur*.42:start;
+        const pathDur=part==='in'?dur*.52:(part==='out'?dur*.58:dur);
+        const len=Math.max(1,path.getTotalLength());
+        path.style.setProperty('--win-length',`${len}px`);
+        path.style.setProperty('--win-duration',`${Math.max(.08,pathDur)}s`);
+        path.style.setProperty('--win-delay',`${delay}s`);
+        path.style.removeProperty('animation');
+        path.style.removeProperty('opacity');
+        path.classList.add('win-draw');
+      });
+    });
+
+    bd.querySelectorAll('[data-target]').forEach(t=>{
+      t.classList.remove('tlit');
+      t.querySelector('.glowring')?.style.setProperty('opacity','0');
+    });
+    plan.filter(p=>p.sg.targetIndex>=0).forEach(p=>{
+      celebTimers.push(setTimeout(()=>{
+        const target=bd.querySelector(`[data-target="${p.sg.targetIndex}"]`);
+        target?.classList.add('tlit');
+        target?.querySelector('.glowring')?.style.removeProperty('opacity');
+      },p.end*1000));
     });
   },pause*1000));
-  beams.forEach(({len},i)=>{
-    const delay=drawStart+i*0.2;
-    const dur=Math.min(0.55,len/900+0.12);
-    totalT=Math.max(totalT,pause+delay+dur);
-  });
-  const T=totalT*1000+150;
+
+  const lastArrival=Math.max(drawStart,...plan.filter(Boolean).map(p=>p.end));
+  const T=(pause+lastArrival+.3)*1000;
   celebTimers.push(setTimeout(()=>{
     document.getElementById('splash').classList.add('show');
     confetti();
@@ -1432,6 +1505,7 @@ function openLevel(i){
   document.getElementById('hintbtn').style.display=(LV[i].hint||CALC[LV[i].name])?'':'none';
   const w=WORLDS.find(x=>x.id===LV[i].w);
   const local=LV.map((l,j)=>j).filter(j=>LV[j].w===LV[i].w).indexOf(i)+1;
+  document.getElementById('play').style.setProperty('--board-ratio',`${LV[i].cols} / ${LV[i].rows}`);
   document.getElementById('pname').innerHTML=`${LV[i].name}<small>${w.label} · niveau ${local}</small>`;
   document.getElementById('introline').textContent=LV[i].sub;
   document.getElementById('rotatehint').style.display=
@@ -1507,34 +1581,43 @@ document.addEventListener('keydown',ev=>{
 /* Plein écran natif quand le navigateur le permet, mode jeu sinon (notamment iOS Safari). */
 (function(){
   const fsbtn=document.getElementById('fsbtn');
-  const root=document.documentElement;
-  const requestFS=root.requestFullscreen||root.webkitRequestFullscreen;
+  const target=document.getElementById('play');
+  const requestFS=target.requestFullscreen||target.webkitRequestFullscreen;
   const exitFS=document.exitFullscreen||document.webkitExitFullscreen;
   const standalone=window.matchMedia('(display-mode: standalone)').matches||window.navigator.standalone===true;
+  const isiPhone=/iPhone|iPod/.test(navigator.userAgent);
+  let toastTimer=0;
+  if(isiPhone&&!standalone){
+    fsbtn.setAttribute('aria-label','Comment agrandir le jeu');
+    fsbtn.title='Comment agrandir le jeu';
+  }
   function fullscreenElement(){return document.fullscreenElement||document.webkitFullscreenElement;}
-  function setImmersive(on){
+  function setImmersive(on,native=false){
     document.body.classList.toggle('immersive',on);
-    fsbtn.textContent=on?'✕':'⛶';
-    fsbtn.setAttribute('aria-label',on?'Quitter le plein écran':'Activer le plein écran');
-    fsbtn.title=on?'Quitter le plein écran':'Plein écran';
+    fsbtn.textContent=on?(native?'✕':'▣'):'⛶';
+    fsbtn.setAttribute('aria-label',on?(native?'Quitter le plein écran':'Quitter le mode jeu'):'Agrandir le jeu');
+    fsbtn.title=on?(native?'Quitter le plein écran':'Quitter le mode jeu'):'Agrandir le jeu';
     relayout();
+  }
+  function showIPhoneHelp(){
+    const toast=document.getElementById('fstoast');
+    toast.classList.add('show');
+    clearTimeout(toastTimer);
+    toastTimer=setTimeout(()=>toast.classList.remove('show'),12000);
   }
   function fallback(){
     const on=!document.body.classList.contains('immersive');
-    setImmersive(on);
-    if(on&&!standalone&&!save.fsTip){
-      save.fsTip=1;persist();
-      const toast=document.getElementById('fstoast');
-      toast.classList.add('show');
-      setTimeout(()=>toast.classList.remove('show'),8000);
-    }
+    setImmersive(on,false);
   }
   fsbtn.addEventListener('click',async()=>{
+    /* Safari iPhone ne propose pas le plein écran pour un élément HTML : ne pas
+       simuler une réussite, mais donner les deux solutions réellement efficaces. */
+    if(isiPhone&&!standalone){showIPhoneHelp();return;}
     if(requestFS&&!standalone){
       try{
         if(fullscreenElement())await exitFS.call(document);
         else{
-          await requestFS.call(root,{navigationUI:'hide'});
+          await requestFS.call(target);
           if(!fullscreenElement()){fallback();return;}
         }
         return;
@@ -1542,7 +1625,7 @@ document.addEventListener('keydown',ev=>{
     }
     fallback();
   });
-  ['fullscreenchange','webkitfullscreenchange'].forEach(name=>document.addEventListener(name,()=>setImmersive(!!fullscreenElement())));
+  ['fullscreenchange','webkitfullscreenchange'].forEach(name=>document.addEventListener(name,()=>setImmersive(!!fullscreenElement(),true)));
   document.getElementById('fstoast').addEventListener('click',()=>document.getElementById('fstoast').classList.remove('show'));
 })();
 document.getElementById('nextbtn').addEventListener('click',()=>{
