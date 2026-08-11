@@ -20,6 +20,13 @@
     <filter id="line-shadow" x="-30%" y="-30%" width="160%" height="160%">
       <feDropShadow dx="0" dy="2" stdDeviation="2" flood-color="#173a5e" flood-opacity=".2"/>
     </filter>
+    <g id="gloubi-face">
+      <circle r="27" fill="#fff8eb" stroke="#d95f02" stroke-width="3"/>
+      <circle cx="-9" cy="-7" r="3.2" fill="#9a3f00"/>
+      <circle cx="9" cy="-7" r="3.2" fill="#9a3f00"/>
+      <path d="M6 7C13 7 16 11 15 16C14 20 10 22 6 20L2 17L3 11Z" fill="#ef6a69" stroke="#9a3f00" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+      <path d="M-13 4Q-1 16 9 8Q11 6 13 4" fill="none" stroke="#9a3f00" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"/>
+    </g>
   </defs>
 
   <rect width="720" height="320" fill="url(#background)"/>
@@ -83,20 +90,8 @@
           <circle r="24" fill="#fff" stroke="#0755b8" stroke-width="2.5"/>
           <polygon points="0,-19 4.5,-6.2 18.1,-5.9 7.3,2.4 11.2,15.4 0,7.8 -11.2,15.4 -7.3,2.4 -18.1,-5.9 -4.5,-6.2" fill="#0755b8"/>
         </g>
-        <g transform="translate(120 40)">
-          <circle r="24" fill="#fff8eb" stroke="#d95f02" stroke-width="2.5"/>
-          <circle cx="-8" cy="-6" r="2.7" fill="#9a3f00"/>
-          <circle cx="8" cy="-6" r="2.7" fill="#9a3f00"/>
-          <path d="M1 8q9 1 6 13l-9-3z" fill="#ef6a69" stroke="#9a3f00" stroke-width="1.2" stroke-linejoin="round"/>
-          <path d="M-12 4Q0 16 12 4" fill="none" stroke="#9a3f00" stroke-width="3" stroke-linecap="round"/>
-        </g>
-        <g transform="translate(200 120)">
-          <circle r="24" fill="#fff8eb" stroke="#d95f02" stroke-width="2.5"/>
-          <circle cx="-8" cy="-6" r="2.7" fill="#9a3f00"/>
-          <circle cx="8" cy="-6" r="2.7" fill="#9a3f00"/>
-          <path d="M1 8q9 1 6 13l-9-3z" fill="#ef6a69" stroke="#9a3f00" stroke-width="1.2" stroke-linejoin="round"/>
-          <path d="M-12 4Q0 16 12 4" fill="none" stroke="#9a3f00" stroke-width="3" stroke-linecap="round"/>
-        </g>
+        <use href="#gloubi-face" transform="translate(120 40) scale(.8889)"/>
+        <use href="#gloubi-face" transform="translate(200 120) scale(.8889)"/>
       </g>
     </g>
   </g>
