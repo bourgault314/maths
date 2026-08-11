@@ -87,15 +87,15 @@
           <circle r="24" fill="#fff8eb" stroke="#d95f02" stroke-width="2.5"/>
           <circle cx="-8" cy="-6" r="2.7" fill="#9a3f00"/>
           <circle cx="8" cy="-6" r="2.7" fill="#9a3f00"/>
+          <path d="M1 8q9 1 6 13l-9-3z" fill="#ef6a69" stroke="#9a3f00" stroke-width="1.2" stroke-linejoin="round"/>
           <path d="M-12 4Q0 16 12 4" fill="none" stroke="#9a3f00" stroke-width="3" stroke-linecap="round"/>
-          <path d="M1 13q9 0 6 10l-8-3z" fill="#ef6a69" stroke="#9a3f00" stroke-width="1.2"/>
         </g>
         <g transform="translate(200 120)">
           <circle r="24" fill="#fff8eb" stroke="#d95f02" stroke-width="2.5"/>
           <circle cx="-8" cy="-6" r="2.7" fill="#9a3f00"/>
           <circle cx="8" cy="-6" r="2.7" fill="#9a3f00"/>
+          <path d="M1 8q9 1 6 13l-9-3z" fill="#ef6a69" stroke="#9a3f00" stroke-width="1.2" stroke-linejoin="round"/>
           <path d="M-12 4Q0 16 12 4" fill="none" stroke="#9a3f00" stroke-width="3" stroke-linecap="round"/>
-          <path d="M1 13q9 0 6 10l-8-3z" fill="#ef6a69" stroke="#9a3f00" stroke-width="1.2"/>
         </g>
       </g>
     </g>
