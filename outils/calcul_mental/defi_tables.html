@@ -144,13 +144,7 @@
     p { line-height: 1.5; }
     .intro > p:not(.eyebrow),
     .result > p:not(.eyebrow) { color: var(--muted); }
-    .best {
-      padding: 11px 14px;
-      border-radius: 13px;
-      color: #735d00 !important;
-      background: #fff6ca !important;
-      font-weight: 900;
-    }
+    .previous-score { margin: 11px 0; color: #31566c !important; font-size: .92rem; font-weight: 850; }
 
     .mode-choice {
       display: grid;
@@ -566,7 +560,6 @@
           </fieldset>
         </section>
         <p id="config-summary" class="config-summary" aria-live="polite">Comme l’évaluation CM1 · 25 égalités · 1 minute</p>
-        <p id="best-intro" class="best"></p>
         <button id="start" class="primary" type="button">Commencer</button>
       </div>
 
@@ -606,7 +599,7 @@
         <p id="result-config" class="result-config"></p>
         <p id="result-detail"></p>
         <p id="result-message" class="result-message"></p>
-        <p id="result-best" class="best"></p>
+        <p id="result-previous" class="previous-score" hidden></p>
         <section id="corrections" class="corrections" aria-live="polite"></section>
         <div class="result-actions">
           <button id="retry" class="primary" type="button">Rejouer pareil</button>
@@ -630,13 +623,12 @@
 
       const TOTAL = 25;
       const DURATION = 60;
-      const LEGACY_STORAGE_KEY = "mathsgo-defi-tables-best-v1";
-      const STORAGE_PREFIX = "mathsgo-defi-tables-best-v2";
       const ALL_TABLES = Array.from({length: 10}, (_, index) => index + 1);
       const CORE_TABLES = Array.from({length: 8}, (_, index) => index + 2);
       const MISSING_FORMS = ["right", "left", "reverse-right", "reverse-left"];
       const $ = id => document.getElementById(id);
       const configuration = {mode: "evaluation", tables: new Set(ALL_TABLES), questionType: "mixed"};
+      const sessionScores = new Map();
       const state = {questions: [], responses: [], index: 0, correct: 0, answered: 0, running: false, timer: null, endAt: 0, signature: "", configuration: null, tenSecondAlert: false};
 
       function setupFullscreen() {
@@ -838,26 +830,6 @@
         return `custom-${config.tables.join("-")}-${config.questionType}`;
       }
 
-      function readBest(config) {
-        try {
-          const stored = localStorage.getItem(`${STORAGE_PREFIX}:${configurationKey(config)}`);
-          if (stored !== null) return Number(stored) || 0;
-          if (config.mode === "evaluation") {
-            const legacy = localStorage.getItem(LEGACY_STORAGE_KEY);
-            if (legacy !== null) return Number(legacy) || 0;
-          }
-          return null;
-        } catch (_) { return null; }
-      }
-
-      function best(config) {
-        return readBest(config) ?? 0;
-      }
-
-      function saveBest(config, value) {
-        try { localStorage.setItem(`${STORAGE_PREFIX}:${configurationKey(config)}`, String(value)); } catch (_) { /* Stockage facultatif. */ }
-      }
-
       function formatTime(seconds) {
         return `${Math.floor(seconds / 60)}:${String(seconds % 60).padStart(2, "0")}`;
       }
@@ -869,12 +841,6 @@
         window.scrollTo({top: 0, behavior: "auto"});
         if (name === "intro") $("intro-title").focus?.({preventScroll: true});
         if (name === "result") $("result-title").focus?.({preventScroll: true});
-      }
-
-      function updateBestCopy() {
-        const config = captureConfiguration();
-        const score = readBest(config);
-        $("best-intro").textContent = score !== null ? `Meilleur score avec ce réglage : ${score} / ${TOTAL}` : "Ton premier score avec ce réglage apparaîtra ici.";
       }
 
       function syncControls() {
@@ -902,7 +868,6 @@
         });
 
         $("config-summary").textContent = `${configurationLabel(captureConfiguration())} · ${TOTAL} égalités · 1 minute`;
-        updateBestCopy();
       }
 
       function renderQuestion() {
@@ -999,9 +964,9 @@
         if (!state.running) return;
         state.running = false;
         stopTimer();
-        const oldBest = best(state.configuration);
-        const newBest = Math.max(oldBest, state.correct);
-        saveBest(state.configuration, newBest);
+        const scoreKey = configurationKey(state.configuration);
+        const previousScore = sessionScores.get(scoreKey);
+        sessionScores.set(scoreKey, state.correct);
         $("result-title").textContent = `${state.correct} bonne${state.correct > 1 ? "s" : ""} réponse${state.correct > 1 ? "s" : ""} sur ${TOTAL}`;
         $("result-config").textContent = configurationLabel(state.configuration);
         const remaining = TOTAL - state.index;
@@ -1009,7 +974,8 @@
           ? `Le temps est écoulé. ${state.answered} réponse${state.answered > 1 ? "s" : ""} saisie${state.answered > 1 ? "s" : ""}, et ${remaining} calcul${remaining > 1 ? "s" : ""} non parcouru${remaining > 1 ? "s" : ""}.`
           : "Toute la série a été parcourue avant la fin du temps.";
         $("result-message").textContent = scoreMessage(state.correct, state.configuration);
-        $("result-best").textContent = state.correct > oldBest ? `Nouveau meilleur score avec ce réglage : ${newBest} / ${TOTAL} !` : `Meilleur score avec ce réglage : ${newBest} / ${TOTAL}.`;
+        $("result-previous").hidden = previousScore === undefined;
+        $("result-previous").textContent = previousScore === undefined ? "" : `Série précédente : ${previousScore} / ${TOTAL}.`;
         renderCorrections();
         show("result");
       }
