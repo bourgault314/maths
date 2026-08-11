@@ -179,6 +179,7 @@ test("le paysage mobile et le plein écran utilisent réellement tout le viewpor
   assert.match(html, /pl\.style\.flexBasis=`\$\{boardW\}px`/);
   assert.match(html, /pl\.style\.height=`\$\{boardH\}px`/);
   assert.match(html, /min-width:44px;min-height:44px/);
+  assert.match(html, /#topbar,#introline,#toolbox,#status\{flex-shrink:0;\}/);
   assert.match(html, /fsbtn\.addEventListener\('click',async/);
   assert.match(html, /requestFS\.call\(target\)/);
   assert.match(html, /if\(isiPhone&&!standalone\)\{showIPhoneHelp\(\);return;\}/);
