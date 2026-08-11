@@ -57,11 +57,10 @@ test("le mémo distingue réellement les deux orientations du produit", () => {
 });
 
 test("le quotient 8 divisé par 2 porte les deux interprétations", () => {
-  assert.match(html, /Combien de paquets de 2 dans 8 \? 4/);
-  assert.match(html, /Partager 8 en 2 paquets : 4 dans chacun/);
-  assert.match(html, /8 ÷ 2 : combien de paquets de 2 dans 8 \? 4/);
-  assert.match(html, /8 ÷ 2 : partager 8 en 2 paquets : 4 dans chacun/);
-  assert.match(html, /Le quotient est le résultat d’une division\. Il indique combien de paquets égaux on peut former, ou combien il y a dans chaque paquet\./);
+  assert.match(html, /Le quotient de 8 par 2 est 4\./);
+  assert.match(html, /Grouper : 4 paquets de 2/);
+  assert.match(html, /Partager : 2 paquets de 4/);
+  assert.match(html, /Le quotient est le résultat d’une division\./);
   const quotientMemo = html.match(/<article data-operation="quotient">([\s\S]*?)<\/article>/)?.[1] || "";
   assert.match(quotientMemo, /Une barre rectangulaire de 8 unités est divisée en 4 paquets de 2 unités/);
   assert.match(quotientMemo, /Une barre rectangulaire de 8 unités est divisée en 2 paquets de 4 unités/);
@@ -69,6 +68,8 @@ test("le quotient 8 divisé par 2 porte les deux interprétations", () => {
   assert.equal((quotientMemo.match(/data-group-count="4" data-group-size="2" data-total-units="8"/g) || []).length, 1);
   assert.equal((quotientMemo.match(/data-group-count="2" data-group-size="4" data-total-units="8"/g) || []).length, 1);
   assert.equal((quotientMemo.match(/class="quotient-bar-unit"/g) || []).length, 16);
+  assert.equal((quotientMemo.match(/8 ÷ 2 = 4/g) || []).length, 1);
+  assert.doesNotMatch(quotientMemo, /8 ÷ 2 :|Il indique combien de paquets/);
   assert.match(html, /\.quotient-bar\s*\{[\s\S]*?border-radius:\s*0/);
   assert.doesNotMatch(quotientMemo, /quotient-(?:pair|groups)/);
   assert.deepEqual(
@@ -105,7 +106,7 @@ test("le mémo représente la différence par des points alignés et non appari�
   assert.match(differenceMemo, /5 moins 2 égale 3\./);
   assert.equal((differenceMemo.match(/class="comparison-unit unmatched"/g) || []).length, 3);
   assert.equal((differenceMemo.match(/class="quantity-dot"/g) || []).length, 7);
-  assert.match(differenceMemo, /comparison-upper[\s\S]*?comparison-lower" style="--difference-center:70%">[\s\S]*?compare-known[\s\S]*?difference-marker" style="grid-column:3 \/ -1"><\/span>[\s\S]*?difference-marker-label">différence = 3<\/span>/);
+  assert.match(differenceMemo, /comparison-upper[\s\S]*?comparison-lower" style="--difference-center:70%">[\s\S]*?compare-known[\s\S]*?difference-marker" style="grid-column:3 \/ -1"><\/span>[\s\S]*?difference-marker-label near">différence = 3<\/span>/);
   assert.doesNotMatch(differenceMemo, /difference-marker-row/);
   assert.doesNotMatch(differenceMemo, /\?|>\s*(?:Tout|Parties?|partie)\s*</i);
   assert.match(html, /\.comparison-upper\s*\{[\s\S]*?border-radius:\s*0/);
@@ -113,6 +114,8 @@ test("le mémo représente la différence par des points alignés et non appari�
   assert.match(html, /\.difference-marker\s*\{[\s\S]*?margin-top:\s*7px[\s\S]*?border-top:\s*2px solid/);
   assert.match(html, /\.difference-marker::before,[\s\S]*?top:\s*-7px/);
   assert.match(html, /\.difference-marker-label\s*\{[\s\S]*?left:\s*var\(--difference-center\)[\s\S]*?transform:\s*translateX\(-50%\)[\s\S]*?text-align:\s*center[\s\S]*?white-space:\s*nowrap/);
+  assert.match(html, /\.difference-marker-label\.near\s*\{\s*top:\s*17px/);
+  assert.match(html, /model\.difference \/ model\.high >= \.36[\s\S]*?markerLabel\.classList\.add\("near"\)/);
   assert.match(html, /model\.difference \/ model\.high < \.2[\s\S]*?markerLabel\.classList\.add\("compact"\)/);
 });
 
@@ -124,8 +127,8 @@ test("l’aide et les deux corrections réutilisent les schémas de points", () 
   assert.match(html, /if \(nextMode === "sum"\)[\s\S]*?createSumQuantityModel\(model\)/);
   assert.match(html, /else if \(nextMode === "difference"\)[\s\S]*?createDifferenceComparison\(model\)/);
   assert.match(html, /else if \(nextMode === "product"\)[\s\S]*?createProductArray\(model\)/);
-  assert.match(html, /Combien de paquets de \$\{model\.groupSize\} dans \$\{model\.total\} \? \$\{model\.groupCount\}/);
-  assert.match(html, /Partager \$\{model\.total\} en \$\{model\.shareGroups\} paquets : \$\{model\.each\} dans chacun/);
+  assert.match(html, /Grouper : \$\{model\.groupCount\} paquets de \$\{model\.groupSize\}/);
+  assert.match(html, /Partager : \$\{model\.shareGroups\} paquets de \$\{model\.each\}/);
   assert.match(html, /makeQuotientBar\(model\.groupCount, model\.groupSize\)/);
   assert.match(html, /makeQuotientBar\(model\.shareGroups, model\.each\)/);
   assert.match(html, /@media \(max-width: 520px\)[\s\S]*?\.demo-interpretations\s*\{\s*grid-template-columns:\s*1fr/);
@@ -158,7 +161,7 @@ test("l’aide sépare l’indice de la révélation et la correction impose un 
   assert.match(html, /openCorrection\(\{ chosenPair: \[firstValue, secondValue\], trigger: secondButton \}\)/);
   assert.match(html, /const retryMode = mode;[\s\S]*makeChallenge\(retryMode\)/);
   assert.match(html, /title: "La somme",\s*help: "Réunis les deux quantités : tu obtiens la somme\."/);
-  assert.match(html, /title: "La différence",\s*help: "Compare les deux quantités : leur écart est la différence\."/);
+  assert.match(html, /title: "La différence",\s*help: "La différence entre 5 et 2 est 3\."/);
   assert.match(html, /title: "Le produit",\s*help: "Un nombre indique les rangées ; l’autre, les points par rangée\."/);
   assert.match(html, /title: "Le quotient",\s*help: "Cherche le nombre de paquets égaux, ou la quantité dans chaque paquet\."/);
   assert.doesNotMatch(html, /id="correction-copy"|learningNotes\[mode\]\.correction/);
@@ -169,10 +172,14 @@ test("l’aide sépare l’indice de la révélation et la correction impose un 
 });
 
 test("le cours garde la définition mathématique de chaque résultat sans long paragraphe", () => {
-  assert.match(html, /La somme est le résultat d’une addition\. Ici, 3 points et 2 points réunis donnent 5 points\./);
-  assert.match(html, /La différence est le résultat d’une soustraction\. Elle mesure l’écart entre deux quantités\./);
-  assert.match(html, /Le produit est le résultat d’une multiplication\. Ici, 3 rangées de 4 points, ou 4 rangées de 3 points, donnent 12 points\./);
-  assert.match(html, /Le quotient est le résultat d’une division\. Il indique combien de paquets égaux on peut former, ou combien il y a dans chaque paquet\./);
+  assert.match(html, /La somme de 3 et de 2 est 5\.[\s\S]*3 \+ 2 = 5[\s\S]*La somme est le résultat d’une addition\./);
+  assert.match(html, /La différence entre 5 et 2 est 3\.[\s\S]*5 − 2 = 3[\s\S]*La différence est le résultat d’une soustraction\./);
+  assert.match(html, /Le produit de 3 par 4 est 12\.[\s\S]*3 × 4 = 12 ; 4 × 3 = 12 aussi[\s\S]*Le produit est le résultat d’une multiplication\./);
+  assert.match(html, /Le quotient de 8 par 2 est 4\.[\s\S]*8 ÷ 2 = 4[\s\S]*Le quotient est le résultat d’une division\./);
+  assert.doesNotMatch(html, /Ici, 3 points|Elle mesure l’écart|Il indique combien de paquets égaux/);
+  assert.match(html, /aria-label="Deux conventions du jeu"[\s\S]*Différence :<\/strong> le plus grand nombre − le plus petit\. L’ordre des clics ne change rien\.[\s\S]*Quotient :<\/strong> le plus grand nombre ÷ le plus petit, seulement si la division tombe juste\./);
+  assert.match(html, /\.operation-conventions\s*\{[^}]*grid-column:\s*1 \/ -1[^}]*grid-template-columns:\s*1fr 1fr/);
+  assert.match(html, /@media \(max-width: 520px\)[\s\S]*?\.operation-conventions\s*\{\s*grid-template-columns:\s*1fr/);
 });
 
 test("la série garde exactement dix clés et la distribution validée", () => {
