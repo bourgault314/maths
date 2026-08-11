@@ -175,6 +175,10 @@ test("le paysage mobile et le plein écran utilisent réellement tout le viewpor
   assert.match(html, /env\(safe-area-inset-left\)/);
   assert.match(html, /--board-ratio/);
   assert.match(html, /aspect-ratio:var\(--board-ratio/);
+  assert.match(html, /const boardW=Math\.max\(120,Math\.min\(availH\*ratio,availW-sidebarMin-gap\)\)/);
+  assert.match(html, /pl\.style\.flexBasis=`\$\{boardW\}px`/);
+  assert.match(html, /pl\.style\.height=`\$\{boardH\}px`/);
+  assert.match(html, /min-width:44px;min-height:44px/);
   assert.match(html, /fsbtn\.addEventListener\('click',async/);
   assert.match(html, /requestFS\.call\(target\)/);
   assert.match(html, /if\(isiPhone&&!standalone\)\{showIPhoneHelp\(\);return;\}/);
