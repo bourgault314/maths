@@ -66,37 +66,47 @@ test("le chemin WebP conserve les versions de cache et ignore les SVG", () => {
   );
 });
 
-test("la visibilité est calculée sur les deux axes du viewport", () => {
-  const viewport = [390, 844];
-  assert.equal(thumbnailHelpers.intersectsViewport({ top: 800, right: 300, bottom: 900, left: 20 }, ...viewport), true);
-  assert.equal(thumbnailHelpers.intersectsViewport({ top: -80, right: 300, bottom: 1, left: 20 }, ...viewport), true);
-  assert.equal(thumbnailHelpers.intersectsViewport({ top: 844, right: 300, bottom: 900, left: 20 }, ...viewport), false);
-  assert.equal(thumbnailHelpers.intersectsViewport({ top: 20, right: 0, bottom: 120, left: -100 }, ...viewport), false);
-  assert.equal(thumbnailHelpers.intersectsViewport({ top: 20, right: 500, bottom: 120, left: 390 }, ...viewport), false);
+test("le premier rang est eager selon le nombre de colonnes", () => {
+  const cases = [
+    { width: 390, eager: 1 },
+    { width: 768, eager: 2 },
+    { width: 1366, eager: 3 },
+  ];
+
+  for (const { width, eager } of cases) {
+    const priorities = Array.from({ length: 6 }, (_, index) => (
+      thumbnailHelpers.thumbnailPriority(index, width)
+    ));
+    assert.equal(thumbnailHelpers.eagerThumbnailCount(width), eager);
+    assert.deepEqual(
+      priorities.map((priority) => priority.loading),
+      Array.from({ length: 6 }, (_, index) => index < eager ? "eager" : "lazy"),
+    );
+    assert.deepEqual(
+      priorities.map((priority) => priority.fetchPriority),
+      ["high", "", "", "", "", ""],
+    );
+  }
 });
 
 test("les quatre rendus d’image passent par le même chargement progressif", () => {
   assert.equal((catalogueScript.match(/thumbnailMarkup\(/g) || []).length, 5);
-  assert.equal((catalogueScript.match(/loading="lazy"/g) || []).length, 1);
-  assert.match(catalogueScript, /<picture class="catalogue-thumbnail-picture"><source data-thumbnail-srcset=/);
-  assert.match(catalogueScript, /data-thumbnail-src="[^\n]+alt="" loading="lazy" decoding="async" data-catalogue-thumbnail/);
+  assert.match(catalogueScript, /<picture class="catalogue-thumbnail-picture"><source srcset=/);
+  assert.match(catalogueScript, /const image = `<img\$\{priorityAttribute\} src="\$\{escapeHtml\(source\)\}" alt="" loading="\$\{priority\.loading\}" data-catalogue-thumbnail>`/);
+  assert.doesNotMatch(catalogueScript, /data-thumbnail-src/);
+  assert.doesNotMatch(catalogueScript, /decoding="async"/);
   assert.match(catalogueStyles, /\.catalogue-thumbnail-picture\s*\{[^}]*display:\s*block;[^}]*width:\s*100%;[^}]*height:\s*100%;/s);
   assert.match(catalogueStyles, /\.collection-thumbnail img\s*\{[^}]*width:\s*100%;[^}]*height:\s*100%;[^}]*object-fit:\s*contain;/s);
 });
 
-test("seules les miniatures visibles sont prioritaires", () => {
-  assert.match(catalogueScript, /const priorityImage = visibleImages\.find\(\(image\) => !image\.complete\) \|\| visibleImages\[0\];/);
-  assert.match(
-    catalogueScript,
-    /priorityImage\.setAttribute\("fetchpriority", "high"\);[\s\S]*?image\.setAttribute\("loading", visibleSet\.has\(image\) \? "eager" : "lazy"\);[\s\S]*?image\.src = image\.dataset\.thumbnailSrc;/,
-    "la priorité et le mode de chargement doivent être fixés avant de fournir l’URL au navigateur",
-  );
-  assert.match(catalogueScript, /function scrollInstantlyTo\(top\)[\s\S]*?scheduleThumbnailPriorityRefresh\(\);\s*\}/);
-  assert.match(catalogueScript, /notionGrid\.innerHTML[\s\S]*?scheduleThumbnailPriorityRefresh\(\);/);
-  assert.match(catalogueScript, /resourceGrid\.innerHTML = directAccess \+ groupedResources;\s*scheduleThumbnailPriorityRefresh\(\);/);
+test("les URL partent immédiatement sans ordonnanceur de mise en page", () => {
+  assert.doesNotMatch(catalogueScript, /refreshThumbnailPriorities|scheduleThumbnailPriorityRefresh|queueMicrotask/);
+  assert.equal((catalogueScript.match(/beginThumbnailRender\(\)/g) || []).length, 2);
+  assert.match(catalogueScript, /function render\(\) \{\s*beginThumbnailRender\(\);/);
+  assert.doesNotMatch(catalogueScript, /image\.src\s*=|pictureSource\.srcset\s*=/);
 });
 
 test("les versions de cache publient ensemble le JavaScript et le CSS", () => {
-  assert.match(catalogueHtml, /catalogue-refonte\.css\?v=miniatures-20260811-1/);
-  assert.match(catalogueHtml, /catalogue-refonte\.js\?v=miniatures-20260811-1/);
+  assert.match(catalogueHtml, /catalogue-refonte\.css\?v=miniatures-20260811-2/);
+  assert.match(catalogueHtml, /catalogue-refonte\.js\?v=miniatures-20260811-2/);
 });

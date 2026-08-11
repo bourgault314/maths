@@ -53,16 +53,24 @@
     return String(path || "").replace(/\.png(?=\?|$)/i, ".webp");
   }
 
-  function intersectsViewport(rect, viewportWidth, viewportHeight) {
-    return rect.bottom > 0 &&
-      rect.right > 0 &&
-      rect.top < viewportHeight &&
-      rect.left < viewportWidth;
+  function eagerThumbnailCount(viewportWidth) {
+    const width = Number(viewportWidth) || 0;
+    if (width <= 680) return 1;
+    if (width <= 920) return 2;
+    return 3;
+  }
+
+  function thumbnailPriority(index, viewportWidth) {
+    return Object.freeze({
+      loading: index < eagerThumbnailCount(viewportWidth) ? "eager" : "lazy",
+      fetchPriority: index === 0 ? "high" : ""
+    });
   }
 
   global.MATHSGO_CATALOGUE_THUMBNAILS = Object.freeze({
     webpVariant,
-    intersectsViewport
+    eagerThumbnailCount,
+    thumbnailPriority
   });
 })(typeof window !== "undefined" ? window : globalThis);
 
@@ -364,61 +372,24 @@
       .trim();
   }
 
+  let thumbnailRenderIndex = 0;
+  let thumbnailViewportWidth = 0;
+
+  function beginThumbnailRender() {
+    thumbnailRenderIndex = 0;
+    thumbnailViewportWidth = window.innerWidth || document.documentElement.clientWidth;
+  }
+
   function thumbnailMarkup(thumbnail) {
     const source = rootPrefix + thumbnail;
-    const image = `<img data-thumbnail-src="${escapeHtml(source)}" alt="" loading="lazy" decoding="async" data-catalogue-thumbnail>`;
+    const priority = thumbnailHelpers.thumbnailPriority(thumbnailRenderIndex, thumbnailViewportWidth);
+    thumbnailRenderIndex += 1;
+    const priorityAttribute = priority.fetchPriority ? ` fetchpriority="${priority.fetchPriority}"` : "";
+    const image = `<img${priorityAttribute} src="${escapeHtml(source)}" alt="" loading="${priority.loading}" data-catalogue-thumbnail>`;
     if (!/\.png(?:\?|$)/i.test(thumbnail)) return image;
 
     const webpSource = rootPrefix + thumbnailHelpers.webpVariant(thumbnail);
-    return `<picture class="catalogue-thumbnail-picture"><source data-thumbnail-srcset="${escapeHtml(webpSource)}" type="image/webp">${image}</picture>`;
-  }
-
-  let thumbnailPriorityRefreshQueued = false;
-
-  function refreshThumbnailPriorities() {
-    const images = [
-      ...notionGrid.querySelectorAll("img[data-catalogue-thumbnail]"),
-      ...resourceGrid.querySelectorAll("img[data-catalogue-thumbnail]")
-    ];
-    const viewportWidth = window.innerWidth || document.documentElement.clientWidth;
-    const viewportHeight = window.innerHeight || document.documentElement.clientHeight;
-    const visibleImages = images.filter((image) => {
-      image.removeAttribute("fetchpriority");
-      return thumbnailHelpers.intersectsViewport(
-        image.getBoundingClientRect(),
-        viewportWidth,
-        viewportHeight
-      );
-    });
-
-    const priorityImage = visibleImages.find((image) => !image.complete) || visibleImages[0];
-    if (priorityImage) priorityImage.setAttribute("fetchpriority", "high");
-
-    const visibleSet = new Set(visibleImages);
-    images.forEach((image) => {
-      image.setAttribute("loading", visibleSet.has(image) ? "eager" : "lazy");
-    });
-
-    images.forEach((image) => {
-      const pictureSource = image.parentElement?.querySelector("source[data-thumbnail-srcset]");
-      if (pictureSource) {
-        pictureSource.srcset = pictureSource.dataset.thumbnailSrcset;
-        pictureSource.removeAttribute("data-thumbnail-srcset");
-      }
-      if (image.dataset.thumbnailSrc) {
-        image.src = image.dataset.thumbnailSrc;
-        image.removeAttribute("data-thumbnail-src");
-      }
-    });
-  }
-
-  function scheduleThumbnailPriorityRefresh() {
-    if (thumbnailPriorityRefreshQueued) return;
-    thumbnailPriorityRefreshQueued = true;
-    queueMicrotask(() => {
-      thumbnailPriorityRefreshQueued = false;
-      refreshThumbnailPriorities();
-    });
+    return `<picture class="catalogue-thumbnail-picture"><source srcset="${escapeHtml(webpSource)}" type="image/webp">${image}</picture>`;
   }
 
   function words(value) {
@@ -530,7 +501,6 @@
     document.documentElement.style.scrollBehavior = "auto";
     window.scrollTo({ top, behavior: "auto" });
     document.documentElement.style.scrollBehavior = previousScrollBehavior;
-    scheduleThumbnailPriorityRefresh();
   }
 
   function moveToTopAndFocus() {
@@ -967,7 +937,6 @@
       </a>`;
     });
     notionGrid.innerHTML = [...notionCards, ...collectionCards].join("") || `<p class="empty-state">Aucun thème ne correspond à cette recherche.</p>`;
-    scheduleThumbnailPriorityRefresh();
   }
 
   function resourceMeta(resource) {
@@ -1169,10 +1138,10 @@
       </section>`;
     }).join("");
     resourceGrid.innerHTML = directAccess + groupedResources;
-    scheduleThumbnailPriorityRefresh();
   }
 
   function render() {
+    beginThumbnailRender();
     clearButton.hidden = !state.query;
 
     const selectedNotion = notionMap.get(state.notion);
