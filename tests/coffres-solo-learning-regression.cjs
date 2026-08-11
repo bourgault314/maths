@@ -285,6 +285,39 @@ async function assertPointVisual(page, selector, mode, label) {
   }
 }
 
+async function assertHelpCourseCard(page, mode, label) {
+  const data = await page.evaluate(expectedMode => {
+    const source = document.querySelector(`#lesson article[data-operation="${expectedMode}"]`);
+    const clone = document.querySelector(`#help-visual > article[data-operation="${expectedMode}"]`);
+    const cards = [...document.querySelectorAll("#help-visual > article[data-operation]")];
+    const convention = document.querySelector(`#help-visual .operation-conventions [data-operation="${expectedMode}"]`);
+    return {
+      count: cards.length,
+      modes: cards.map(card => card.dataset.operation),
+      sourceHtml: source?.innerHTML || "",
+      cloneHtml: clone?.innerHTML || "",
+      cloneText: clone?.innerText || "",
+      convention: convention?.textContent.trim() || "",
+      order: document.querySelector("#help-visual .operation-order")?.textContent.trim() || ""
+    };
+  }, mode);
+  assert(data.count === 1 && data.modes[0] === mode, `${label} : l’aide n’affiche pas uniquement la carte ${mode}.`);
+  assert(data.sourceHtml && data.cloneHtml === data.sourceHtml, `${label} : la carte d’aide diffère de celle du mémo.`);
+  const courseSentences = {
+    sum: "La somme de 3 et de 2 est 5.",
+    difference: "La différence entre 5 et 2 est 3.",
+    product: "Le produit de 3 par 4 est 12.",
+    quotient: "Le quotient de 8 par 2 est 4."
+  };
+  assert(data.cloneText.includes(courseSentences[mode]), `${label} : la phrase du cours manque dans l’aide.`);
+  if (mode === "difference" || mode === "quotient") {
+    assert(data.order === "Tu peux choisir les deux cases dans n’importe quel ordre.", `${label} : la liberté de l’ordre des clics manque.`);
+    assert(data.convention.includes("le jeu calcule le plus grand nombre"), `${label} : la convention de calcul manque.`);
+  } else {
+    assert(!data.order && !data.convention, `${label} : une convention étrangère à ${mode} est affichée.`);
+  }
+}
+
 async function auditPointJourney(browser, base, randomValue, expectedMode, errors) {
   const page = await browser.newPage({ viewport: { width: 320, height: 568 } });
   page.on("pageerror", error => errors.push(`${expectedMode} : ${error.message}`));
@@ -297,17 +330,67 @@ async function auditPointJourney(browser, base, randomValue, expectedMode, error
 
     await page.locator("#help-button").click();
     await page.waitForFunction(() => document.activeElement.id === "help-title");
-    await assertPointVisual(page, "#help-visual .learning-demo", expectedMode, `Aide ${expectedMode}`);
+    await assertHelpCourseCard(page, expectedMode, `Aide ${expectedMode}`);
     await assertNoHorizontalOverflow(page, `Aide ${expectedMode} à 320 px`);
     const helpMetrics = await page.locator("#help-dialog .help-card").evaluate(card => {
       const actions = card.querySelector(".dialog-actions").getBoundingClientRect();
-      return { scrollHeight: card.scrollHeight, clientHeight: card.clientHeight, actionsBottom: actions.bottom, viewportHeight: window.innerHeight };
+      const actionButtons = [...card.querySelectorAll(".dialog-actions button")].map(button => {
+        const rect = button.getBoundingClientRect();
+        return { top: rect.top, bottom: rect.bottom, height: rect.height };
+      });
+      const content = card.querySelector(".help-operation-grid");
+      const title = card.querySelector("#help-title").getBoundingClientRect();
+      const cardBox = card.getBoundingClientRect();
+      return {
+        cardOverflow: getComputedStyle(card).overflowY,
+        contentOverflow: getComputedStyle(content).overflowY,
+        contentScrollTop: content.scrollTop,
+        contentScrollHeight: content.scrollHeight,
+        contentClientHeight: content.clientHeight,
+        actionsTop: actions.top,
+        actionsBottom: actions.bottom,
+        actionsHeight: actions.height,
+        actionButtons,
+        titleTop: title.top,
+        titleBottom: title.bottom,
+        cardTop: cardBox.top,
+        cardBottom: cardBox.bottom,
+        cardScrollTop: card.scrollTop,
+        viewportHeight: window.innerHeight
+      };
     });
-    assert(helpMetrics.scrollHeight <= helpMetrics.clientHeight + 1 && helpMetrics.actionsBottom <= helpMetrics.viewportHeight + 1, `Aide ${expectedMode} : le contenu ou les deux actions ne tiennent pas à 320 × 568 (${JSON.stringify(helpMetrics)}).`);
+    assert(helpMetrics.cardOverflow === "hidden" && helpMetrics.contentOverflow === "auto", `Aide ${expectedMode} : seul le cours ciblé doit défiler (${JSON.stringify(helpMetrics)}).`);
+    assert(helpMetrics.contentScrollTop === 0, `Aide ${expectedMode} : la carte ne commence pas en haut.`);
+    assert(helpMetrics.cardScrollTop === 0 && helpMetrics.titleTop >= helpMetrics.cardTop && helpMetrics.titleBottom <= helpMetrics.cardBottom, `Aide ${expectedMode} : le titre du dialogue n’est pas visible (${JSON.stringify(helpMetrics)}).`);
+    assert(helpMetrics.actionsHeight > 0 && helpMetrics.actionsTop >= 0 && helpMetrics.actionsBottom <= helpMetrics.viewportHeight + 1 && helpMetrics.actionButtons.every(button => button.height >= 40 && button.top >= 0 && button.bottom <= helpMetrics.viewportHeight + 1), `Aide ${expectedMode} : les deux actions ne restent pas entièrement visibles à 320 × 568 (${JSON.stringify(helpMetrics)}).`);
+    if (expectedMode === "product") {
+      assert(helpMetrics.contentScrollHeight <= helpMetrics.contentClientHeight + 1, `Aide produit : le cours complet devrait tenir sans défilement à 320 × 568 (${JSON.stringify(helpMetrics)}).`);
+    }
     await page.screenshot({ path: path.join(CAPTURES, `aide-${expectedMode}-320.png`) });
+    if (helpMetrics.contentScrollHeight > helpMetrics.contentClientHeight + 1) {
+      await page.locator("#help-visual").focus();
+      await page.keyboard.press("PageDown");
+      await page.waitForFunction(() => document.querySelector("#help-visual").scrollTop > 0);
+      assert(await page.evaluate(() => document.activeElement.id === "help-visual"), `Aide ${expectedMode} : le cours défilable n’est pas accessible au clavier.`);
+      const scrolled = await page.locator("#help-visual").evaluate(content => {
+        content.scrollTop = content.scrollHeight;
+        return content.scrollTop;
+      });
+      assert(scrolled > 0, `Aide ${expectedMode} : la carte longue ne peut pas défiler.`);
+      assert(await page.locator("#show-solution").isVisible(), `Aide ${expectedMode} : Montrer une solution disparaît après défilement.`);
+      await page.screenshot({ path: path.join(CAPTURES, `aide-${expectedMode}-320-bas.png`) });
+    }
 
+    const boardBeforeSolution = await state(page);
+    const expectedSolution = await page.evaluate(({ mode, target, values }) => window.MATHSGO_COFFRES_SOLO.findSolutionPair(mode, target, values), boardBeforeSolution);
+    assert(expectedSolution, `Solution demandée ${expectedMode} : aucune paire du plateau courant n’est trouvée.`);
+    assert(neighborPairs().some(([first, second]) => first === expectedSolution.positions[0] && second === expectedSolution.positions[1]), `Solution demandée ${expectedMode} : la paire proposée n’est pas voisine sur le plateau courant.`);
     await page.locator("#show-solution").click();
     await page.waitForFunction(() => document.activeElement.id === "correction-title");
+    const boardDuringSolution = await state(page);
+    assert(boardDuringSolution.boardId === boardBeforeSolution.boardId && boardDuringSolution.target === boardBeforeSolution.target && JSON.stringify(boardDuringSolution.values) === JSON.stringify(boardBeforeSolution.values), `Solution demandée ${expectedMode} : le plateau a changé avant l’affichage de la paire.`);
+    const correctionSentence = await page.locator("#correction-solution").innerText();
+    assert(correctionSentence.includes(`${expectedSolution.pair[0]} et ${expectedSolution.pair[1]} conviennent`), `Solution demandée ${expectedMode} : la correction ne reprend pas une paire réelle du plateau courant.`);
     await assertPointVisual(page, "#correction-visual .learning-demo", expectedMode, `Solution demandée ${expectedMode}`);
     await page.locator("#close-correction").click();
     await page.locator("#correction-dialog").waitFor({ state: "hidden" });
@@ -479,10 +562,37 @@ async function auditDuoBarModels(browser, base, width, errors) {
     assert(Math.abs(data.differenceMarker.left - data.differenceKnown.right) <= 1 && Math.abs(data.differenceMarker.right - data.differenceUpper.right) <= 1 && Math.abs(data.differenceMarker.top - data.differenceUpper.bottom) <= 1, `duo à ${width}px : le crochet de différence n’est pas aligné sur les points sans correspondant.`);
     assert(data.differenceMarker.hook.top === "0px" && data.differenceMarker.hook.borderTop === "0px" && data.differenceMarker.hook.borderRight === "2px" && data.differenceMarker.hook.borderBottom === "2px" && data.differenceMarker.hook.borderLeft === "2px", `duo à ${width}px : le crochet de différence n’est pas orienté vers les points.`);
     assert([...data.sumRows, data.differenceUpper, data.differenceKnown].every(item => item.boxShadow === "none"), `duo à ${width}px : une fausse bordure en ombre interne subsiste.`);
-    assert(data.conventions.includes("L’ordre des clics ne change rien") && data.conventions.includes("seulement si la division tombe juste"), `duo à ${width}px : les deux conventions compactes manquent.`);
+    assert(data.conventions.includes("Tu peux choisir les deux cases dans n’importe quel ordre") && data.conventions.includes("le jeu calcule le plus grand nombre ÷ le plus petit"), `duo à ${width}px : les règles d’ordre compactes manquent.`);
     await assertNoHorizontalOverflow(page, `bordures duo à ${width}px`);
     await page.locator("#rules .operation-visual-card:nth-child(1)").screenshot({ path: path.join(CAPTURES, `bordure-somme-duo-${width}.png`) });
     await page.locator("#rules .operation-visual-card:nth-child(2)").screenshot({ path: path.join(CAPTURES, `bordure-difference-duo-${width}.png`) });
+  } finally {
+    await page.close();
+  }
+}
+
+async function auditIntroMemo(browser, base, width, errors) {
+  const page = await browser.newPage({ viewport: { width, height: width === 320 ? 568 : width === 390 ? 844 : 768 } });
+  page.on("pageerror", error => errors.push(`mémo solo à ${width}px : ${error.message}`));
+  try {
+    await page.goto(`${base}/outils/calcul_mental/coffres_magiques_solo.html`, { waitUntil: "load" });
+    await page.waitForFunction(() => document.activeElement.id === "start-game");
+    assert(await page.locator("#lesson .operation-grid").evaluate(grid => grid.scrollTop === 0), `mémo solo à ${width}px : l’introduction ne commence pas en haut.`);
+    assert(await page.locator("#lesson .lesson-actions button").count() === 1, `mémo solo à ${width}px : l’introduction propose plusieurs actions équivalentes.`);
+    assert(await page.locator("#show-lesson").count() === 0, `mémo solo à ${width}px : le cours complet peut encore être rouvert.`);
+    await assertNoHorizontalOverflow(page, `mémo solo initial à ${width}px`);
+    await page.screenshot({ path: path.join(CAPTURES, `memo-initial-${width}.png`) });
+    const scroll = await page.locator("#lesson .operation-grid").evaluate(grid => {
+      const canScroll = grid.scrollHeight > grid.clientHeight + 1;
+      grid.scrollTop = grid.scrollHeight;
+      return { canScroll, top: grid.scrollTop };
+    });
+    if (scroll.canScroll) assert(scroll.top > 0, `mémo solo à ${width}px : le contenu long ne défile pas.`);
+    assert(await page.locator("#start-game").isVisible(), `mémo solo à ${width}px : J’ai compris, jouer disparaît en bas du cours.`);
+    await page.screenshot({ path: path.join(CAPTURES, `memo-bas-${width}.png`) });
+    await page.locator("#start-game").click();
+    await page.locator("#lesson").waitFor({ state: "hidden" });
+    assert((await state(page)).boardId === 1, `mémo solo à ${width}px : le démarrage ne crée pas exactement le premier plateau.`);
   } finally {
     await page.close();
   }
@@ -528,15 +638,18 @@ async function auditDuoBarModels(browser, base, width, errors) {
     await page.locator("#help-button").click();
     await page.waitForFunction(() => document.activeElement.id === "help-title");
     assert(await page.locator("#help-dialog").isVisible(), "L’aide ne s’ouvre pas.");
+    await assertHelpCourseCard(page, beforeHelp.mode, "Aide mobile");
     assert(!(await page.locator("#help-dialog").innerText()).includes("Une paire voisine qui ouvre"), "L’indice révèle déjà la paire solution.");
     assert((await state(page)).boardId === beforeHelp.boardId, "L’ouverture de l’aide change le plateau.");
     assert((await state(page)).keys === beforeHelp.keys, "L’aide offre une clé.");
     await page.keyboard.press("Tab");
-    assert(await page.evaluate(() => document.activeElement.id === "close-help"), "Tab ne rejoint pas le premier bouton de l’aide.");
+    assert(await page.evaluate(() => document.activeElement.id === "help-visual"), "Tab ne rejoint pas la zone de cours de l’aide.");
+    await page.keyboard.press("Tab");
+    assert(await page.evaluate(() => document.activeElement.id === "close-help"), "Tab ne rejoint pas Retour au plateau.");
     await page.keyboard.press("Tab");
     assert(await page.evaluate(() => document.activeElement.id === "show-solution"), "Tab ne rejoint pas Montrer une solution.");
     await page.keyboard.press("Tab");
-    assert(await page.evaluate(() => document.activeElement.id === "close-help"), "Tab ne reboucle pas dans l’aide.");
+    assert(await page.evaluate(() => document.activeElement.id === "help-visual"), "Tab ne reboucle pas sur la zone de cours.");
 
     await page.setViewportSize({ width: 320, height: 700 });
     await assertNoHorizontalOverflow(page, "Aide 320 px");
@@ -594,6 +707,7 @@ async function auditDuoBarModels(browser, base, width, errors) {
     await auditPointJourney(browser, base, .2, "difference", errors);
     await auditPointJourney(browser, base, .13, "product", errors);
     await auditPointJourney(browser, base, .1, "quotient", errors);
+    for (const width of [320, 390, 1366]) await auditIntroMemo(browser, base, width, errors);
     await auditExtremeVisual(browser, base, { mode: "difference", first: 12, second: 10, width: 320, capture: "difference-12-10-320.png" }, errors);
     await auditExtremeVisual(browser, base, { mode: "difference", first: 12, second: 11, width: 320, capture: "difference-12-11-320.png" }, errors);
     await auditExtremeVisual(browser, base, { mode: "difference", first: 12, second: 9, width: 320, capture: "difference-12-9-320.png" }, errors);

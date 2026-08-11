@@ -119,7 +119,7 @@ test("le mémo représente la différence par des points alignés et non appari�
   assert.match(html, /model\.difference \/ model\.high < \.2[\s\S]*?markerLabel\.classList\.add\("compact"\)/);
 });
 
-test("l’aide et les deux corrections réutilisent les schémas de points", () => {
+test("l’aide reprend exactement la carte du cours et les corrections restent personnalisées", () => {
   assert.match(html, /function createSumQuantityModel\(model\)[\s\S]*?makeQuantitySegment\(model\.total\)[\s\S]*?makeQuantitySegment\(model\.first, "quantity-first"\)[\s\S]*?makeQuantitySegment\(model\.second, "quantity-second"\)/);
   assert.match(html, /function createDifferenceComparison\(model\)[\s\S]*?index >= model\.low \? " unmatched"[\s\S]*?--difference-center[\s\S]*?known\.style\.gridColumn = `1 \/ span \$\{model\.low\}`[\s\S]*?difference-marker-label", `différence = \$\{model\.difference\}`[\s\S]*?lower\.append\(marker, markerLabel\)[\s\S]*?diagram\.append\(upper, lower\)/);
   assert.match(html, /function createProductArray\(model\)[\s\S]*?String\(model\.columns\)[\s\S]*?String\(model\.rows\)[\s\S]*?--demo-columns/);
@@ -135,7 +135,12 @@ test("l’aide et les deux corrections réutilisent les schémas de points", () 
   assert.doesNotMatch(html, /function makeGroups|demo-group|quotient-pair|quotient-groups/);
   assert.doesNotMatch(html, /function makeBar|bar-model-label|bar-missing/);
 
-  assert.match(html, /function openHelp\(\)[\s\S]*?renderLearningPanel\(helpVisual, mode, example\[0\], example\[1\]\)/);
+  for (const mode of ["sum", "difference", "product", "quotient"]) {
+    assert.equal((html.match(new RegExp(`<article data-operation="${mode}"`, "g")) || []).length, 1, `Carte ${mode}`);
+  }
+  assert.match(html, /function renderHelpCard\(nextMode\)[\s\S]*?lesson\.querySelector\(`article\[data-operation="\$\{nextMode\}"\]`\)[\s\S]*?sourceCard\.cloneNode\(true\)[\s\S]*?helpVisual\.replaceChildren\(\.\.\.content\)/);
+  assert.match(html, /function openHelp\(\)[\s\S]*?renderHelpCard\(mode\)[\s\S]*?dialogs\.open\(helpDialog/);
+  assert.doesNotMatch(html, /renderLearningPanel\(helpVisual|learningNotes\[mode\]\.help|learningNotes\[mode\]\.example/);
   assert.match(html, /function openCorrection\([\s\S]*?renderLearningPanel\(correctionVisual, mode, solutionFirst, solutionSecond\)/);
   assert.match(html, /function showSolution\(\)[\s\S]*?openCorrection\(\{ trigger \}\)/);
   assert.match(html, /openCorrection\(\{ chosenPair: \[firstValue, secondValue\], trigger: secondButton \}\)/);
@@ -157,13 +162,13 @@ test("l’aide sépare l’indice de la révélation et la correction impose un 
   assert.match(html, /id="help-button"[^>]*>Aide<\/button>/);
   assert.match(html, /id="show-solution"[^>]*>Montrer une solution<\/button>/);
   assert.match(html, /id="help-dialog"[^>]*role="dialog"[^>]*aria-modal="true"/);
+  assert.match(html, /id="help-title"[^>]*>Rappel du cours<\/h2>/);
+  assert.match(html, /id="help-visual" class="operation-grid help-operation-grid" role="region" aria-label="Cours de l’opération en cours" tabindex="0"/);
+  assert.doesNotMatch(html, /id="help-copy"/);
   assert.match(html, /id="correction-dialog"[^>]*role="dialog"[^>]*aria-modal="true"/);
   assert.match(html, /openCorrection\(\{ chosenPair: \[firstValue, secondValue\], trigger: secondButton \}\)/);
   assert.match(html, /const retryMode = mode;[\s\S]*makeChallenge\(retryMode\)/);
-  assert.match(html, /title: "La somme",\s*help: "Réunis les deux quantités : tu obtiens la somme\."/);
-  assert.match(html, /title: "La différence",\s*help: "La différence entre 5 et 2 est 3\."/);
-  assert.match(html, /title: "Le produit",\s*help: "Un nombre indique les rangées ; l’autre, les points par rangée\."/);
-  assert.match(html, /title: "Le quotient",\s*help: "Cherche le nombre de paquets égaux, ou la quantité dans chaque paquet\."/);
+  assert.match(html, /const operationTitles = \{ sum: "La somme", difference: "La différence", product: "Le produit", quotient: "Le quotient" \}/);
   assert.doesNotMatch(html, /id="correction-copy"|learningNotes\[mode\]\.correction/);
   assert.match(html, /Ton calcul : \$\{expression\(mode, chosenPair\[0\], chosenPair\[1\]\)\}\. Il fallait obtenir \$\{target\}\./);
   assert.match(html, /Voici une paire voisine du plateau\./);
@@ -177,9 +182,20 @@ test("le cours garde la définition mathématique de chaque résultat sans long 
   assert.match(html, /Le produit de 3 par 4 est 12\.[\s\S]*3 × 4 = 12 ; 4 × 3 = 12 aussi[\s\S]*Le produit est le résultat d’une multiplication\./);
   assert.match(html, /Le quotient de 8 par 2 est 4\.[\s\S]*8 ÷ 2 = 4[\s\S]*Le quotient est le résultat d’une division\./);
   assert.doesNotMatch(html, /Ici, 3 points|Elle mesure l’écart|Il indique combien de paquets égaux/);
-  assert.match(html, /aria-label="Deux conventions du jeu"[\s\S]*Différence :<\/strong> le plus grand nombre − le plus petit\. L’ordre des clics ne change rien\.[\s\S]*Quotient :<\/strong> le plus grand nombre ÷ le plus petit, seulement si la division tombe juste\./);
+  assert.match(html, /aria-label="Ordre des nombres dans le jeu"[\s\S]*Tu peux choisir les deux cases dans n’importe quel ordre\.[\s\S]*Différence :<\/strong> le jeu calcule le plus grand nombre − le plus petit\.[\s\S]*Quotient :<\/strong> le jeu calcule le plus grand nombre ÷ le plus petit, seulement si la division tombe juste\./);
   assert.match(html, /\.operation-conventions\s*\{[^}]*grid-column:\s*1 \/ -1[^}]*grid-template-columns:\s*1fr 1fr/);
   assert.match(html, /@media \(max-width: 520px\)[\s\S]*?\.operation-conventions\s*\{\s*grid-template-columns:\s*1fr/);
+});
+
+test("le cours complet n’apparaît qu’au lancement et chaque dialogue repart en haut", () => {
+  const actions = html.match(/<div class="lesson-actions">([\s\S]*?)<\/div>/)?.[1] || "";
+  assert.equal((actions.match(/<button/g) || []).length, 1);
+  assert.match(actions, /id="start-game"[^>]*>J’ai compris, jouer<\/button>/);
+  assert.doesNotMatch(html, /id="close-lesson"|id="show-lesson"|Voir le plateau|>Mémo<\/button>/);
+  assert.match(html, /const resetScroll = dialog => \{[\s\S]*?node\.scrollTop = 0[\s\S]*?node\.scrollLeft = 0/);
+  assert.match(html, /dialog\.hidden = false;\s*resetScroll\(dialog\)[\s\S]*?focusNode\(target, true\)/);
+  assert.match(html, /function openLesson\(\) \{[\s\S]*?trigger: null,[\s\S]*?initialFocus: "#start-game"/);
+  assert.match(html, /document\.querySelector\("#start-game"\)\.addEventListener[\s\S]*?start\(\{ moveFocus: true, focusTarget: trigger \}\)/);
 });
 
 test("la série garde exactement dix clés et la distribution validée", () => {

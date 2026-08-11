@@ -62,6 +62,21 @@ test("les marqueurs sont vectoriels, centrés et indépendants des polices emoji
   assert.doesNotMatch(thumbnail, /★|😋|dominant-baseline|Apple Color Emoji|Segoe UI Emoji/);
 });
 
+test("la langue de Gloubi rejoint la bouche sans dépasser du visage", () => {
+  const markerHelper = script.match(/function markerFor\(color, cx, cy\)[\s\S]*?(?=\n\s*function render)/)?.[0] || "";
+  const tongueIndex = markerHelper.indexOf('class: "ai-marker-tongue"');
+  const mouthIndex = markerHelper.indexOf('class: "ai-marker-mouth"');
+
+  assert.ok(tongueIndex >= 0 && mouthIndex >= 0, "le visage doit conserver une bouche et une langue vectorielles");
+  assert.ok(tongueIndex < mouthIndex, "la bouche doit recouvrir le point d’attache de la langue");
+  assert.match(markerHelper, /M\$\{cx \+ 1\} \$\{cy \+ 8\}Q\$\{cx \+ 10\} \$\{cy \+ 9\} \$\{cx \+ 7\} \$\{cy \+ 21\}L\$\{cx - 2\} \$\{cy \+ 18\}Z/);
+  assert.doesNotMatch(markerHelper, /\$\{cy \+ 24\}/, "la langue ne doit plus descendre jusqu’au bord du visage");
+
+  const thumbnailTongue = thumbnail.indexOf('d="M1 8q9 1 6 13l-9-3z"');
+  const thumbnailMouth = thumbnail.indexOf('d="M-12 4Q0 16 12 4"');
+  assert.ok(thumbnailTongue >= 0 && thumbnailTongue < thumbnailMouth, "la miniature reprend le même point d’attache naturel");
+});
+
 test("le plein écran et le socle public restent disponibles", () => {
   assert.match(page, /id="fullscreen-button"/);
   assert.match(script, /game\.requestFullscreen \|\| game\.webkitRequestFullscreen/);

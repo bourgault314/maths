@@ -234,7 +234,7 @@ window.MATHSGO_CATALOGUE = {
       "primaryGroup": "jeux",
       "collections": [],
       "tags": ["jeu", "strategie", "anticipation", "points-et-carres", "ordinateur"],
-      "thumbnail": "assets/img/thumbnails/jeux/carres-gloutons.svg?v=2",
+      "thumbnail": "assets/img/thumbnails/jeux/carres-gloutons.svg?v=3",
       "cardDescription": "Fermer plus de carrés que Gloubi, anticiper les chaînes et éviter de lui offrir les derniers segments."
     },
     "outils/club_maths/coffres_magiques.html": {

@@ -855,8 +855,8 @@
             <circle cx="45" cy="37.5" r="20" fill="#fff8eb" stroke="#d95f02" stroke-width="2.5"/>
             <circle cx="38" cy="33" r="2.4" fill="#9a3f00"/>
             <circle cx="52" cy="33" r="2.4" fill="#9a3f00"/>
+            <path d="M46 44.5Q53 45 50 54L44 51Z" fill="#ef6a69" stroke="#9a3f00" stroke-width="1" stroke-linejoin="round"/>
             <path d="M35 41.5Q45 50 55 41.5" fill="none" stroke="#9a3f00" stroke-width="3" stroke-linecap="round"/>
-            <path d="M45 46.5l5 1.5-2 8-5-2z" fill="#ef6a69" stroke="#9a3f00" stroke-width="1"/>
           </svg>
           <strong>Et rejoue aussitôt</strong>
           <span>Une bonne fermeture peut déclencher toute une chaîne.</span>
@@ -1157,12 +1157,12 @@
         marker.appendChild(makeSvg("circle", { cx: cx - 9, cy: cy - 7, r: 3.2, class: "ai-marker-eye" }));
         marker.appendChild(makeSvg("circle", { cx: cx + 9, cy: cy - 7, r: 3.2, class: "ai-marker-eye" }));
         marker.appendChild(makeSvg("path", {
-          d: `M${cx - 13} ${cy + 4}Q${cx} ${cy + 17} ${cx + 13} ${cy + 4}`,
-          class: "ai-marker-mouth"
+          d: `M${cx + 1} ${cy + 8}Q${cx + 10} ${cy + 9} ${cx + 7} ${cy + 21}L${cx - 2} ${cy + 18}Z`,
+          class: "ai-marker-tongue"
         }));
         marker.appendChild(makeSvg("path", {
-          d: `M${cx + 1} ${cy + 13}Q${cx + 10} ${cy + 13} ${cx + 7} ${cy + 24}L${cx - 1} ${cy + 21}Z`,
-          class: "ai-marker-tongue"
+          d: `M${cx - 13} ${cy + 4}Q${cx} ${cy + 17} ${cx + 13} ${cy + 4}`,
+          class: "ai-marker-mouth"
         }));
         return marker;
       }

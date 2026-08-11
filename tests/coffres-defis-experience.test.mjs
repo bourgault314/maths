@@ -67,7 +67,7 @@ test("Coffres à deux explique visuellement les quatre opérations réellement j
   assert.doesNotMatch(html, /quotient-pair|quotient-groups/);
   assert.match(html, /8 ÷ 2 = 4/);
   assert.match(html, /Le quotient de 8 par 2 est 4\.[\s\S]*8 ÷ 2 = 4[\s\S]*Le quotient est le résultat d’une division\./);
-  assert.match(html, /aria-label="Deux conventions du jeu"[\s\S]*Différence :<\/strong> le plus grand nombre − le plus petit\. L’ordre des clics ne change rien\.[\s\S]*Quotient :<\/strong> le plus grand nombre ÷ le plus petit, seulement si la division tombe juste\./);
+  assert.match(html, /aria-label="Ordre des nombres dans le jeu"[\s\S]*Tu peux choisir les deux cases dans n’importe quel ordre\.[\s\S]*Différence :<\/strong> le jeu calcule le plus grand nombre − le plus petit\.[\s\S]*Quotient :<\/strong> le jeu calcule le plus grand nombre ÷ le plus petit, seulement si la division tombe juste\./);
   assert.match(html, /runes voisines/);
 });
 
@@ -95,7 +95,7 @@ test("Coffres solo illustre précisément les quatre opérations", () => {
   assert.match(html, /\.quotient-bar\s*\{[\s\S]*?border-radius:\s*0/);
   assert.doesNotMatch(html, /quotient-pair|quotient-groups|demo-group/);
   assert.match(html, /Le quotient de 8 par 2 est 4\.[\s\S]*8 ÷ 2 = 4/);
-  assert.match(html, /aria-label="Deux conventions du jeu"[\s\S]*Différence :<\/strong> le plus grand nombre − le plus petit\. L’ordre des clics ne change rien\.[\s\S]*Quotient :<\/strong> le plus grand nombre ÷ le plus petit, seulement si la division tombe juste\./);
+  assert.match(html, /aria-label="Ordre des nombres dans le jeu"[\s\S]*Tu peux choisir les deux cases dans n’importe quel ordre\.[\s\S]*Différence :<\/strong> le jeu calcule le plus grand nombre − le plus petit\.[\s\S]*Quotient :<\/strong> le jeu calcule le plus grand nombre ÷ le plus petit, seulement si la division tombe juste\./);
 });
 
 test("les repères du produit restent droits et épousent le réseau", () => {
@@ -129,8 +129,11 @@ test("les dialogues Coffres prennent, piègent et restaurent le focus", () => {
   assert.match(duel, /id="rules-title" tabindex="-1"/);
   assert.match(duel, /dialogs\.open\(rules,[\s\S]*initialFocus: mandatory \? "\.close-rules" : "#rules-title"[\s\S]*onEscape: \(\) => \{[\s\S]*if \(!rulesMandatory\) closeRules\(\)/);
   assert.match(solo, /id="lesson-title" tabindex="-1"/);
-  assert.match(solo, /initialFocus: mandatory \? "#start-game" : "#lesson-title"/);
-  assert.match(solo, /onEscape: \(\) => \{[\s\S]*if \(values\.length\) dialogs\.close\(lesson\)/);
+  assert.match(solo, /function openLesson\(\) \{[\s\S]*trigger: null,[\s\S]*initialFocus: "#start-game"/);
+  const lessonActions = solo.match(/<div class="lesson-actions">([\s\S]*?)<\/div>/)?.[1] || "";
+  assert.equal((lessonActions.match(/<button/g) || []).length, 1);
+  assert.doesNotMatch(solo, /id="close-lesson"|id="show-lesson"|Voir le plateau|>Mémo<\/button>/);
+  assert.match(solo, /const resetScroll = dialog => \{[\s\S]*node\.scrollTop = 0[\s\S]*node\.scrollLeft = 0/);
 });
 
 test("le pied public disparaît pendant chaque défi chronométré", () => {

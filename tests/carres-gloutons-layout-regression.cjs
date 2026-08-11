@@ -83,6 +83,52 @@ async function inspect(page, viewport) {
   return metrics;
 }
 
+async function captureGloubiOnIphone(page) {
+  await page.setViewportSize({ width: 402, height: 874 });
+  await page.addInitScript(() => { Math.random = () => 0.25; });
+  await page.goto(`${page.serverUrl}/outils/club_maths/carres_gloutons.html`, { waitUntil: "networkidle" });
+  await page.locator("#start-game").click();
+
+  for (let attempt = 0; attempt < 16 && await page.locator(".ai-marker").count() === 0; attempt += 1) {
+    await page.waitForFunction(() => !document.querySelector("#status").classList.contains("ai"), null, { timeout: 8000 });
+    await page.evaluate(() => {
+      document.querySelector(".edge:not(.taken)")?.dispatchEvent(new MouseEvent("click", { bubbles: true, detail: 1 }));
+    });
+    await page.waitForTimeout(620);
+  }
+
+  const marker = page.locator(".ai-marker").first();
+  await marker.waitFor({ state: "attached" });
+  await page.waitForFunction(() => !document.querySelector("#status").classList.contains("ai"), null, { timeout: 8000 });
+  await page.waitForTimeout(400);
+
+  const geometry = await marker.evaluate(node => {
+    const box = selector => {
+      const bounds = node.querySelector(selector).getBBox();
+      return { x: bounds.x, y: bounds.y, width: bounds.width, height: bounds.height, right: bounds.x + bounds.width, bottom: bounds.y + bounds.height };
+    };
+    const children = Array.from(node.children);
+    const tongue = node.querySelector(".ai-marker-tongue");
+    const mouth = node.querySelector(".ai-marker-mouth");
+    return {
+      disc: box(".ai-marker-disc"),
+      tongue: box(".ai-marker-tongue"),
+      mouth: box(".ai-marker-mouth"),
+      tongueBeforeMouth: children.indexOf(tongue) < children.indexOf(mouth)
+    };
+  });
+
+  assert.equal(geometry.tongueBeforeMouth, true, "iPhone : la bouche doit masquer la jonction haute de la langue");
+  assert.ok(geometry.tongue.y < geometry.mouth.bottom && geometry.tongue.bottom > geometry.mouth.bottom,
+    `iPhone : la langue doit chevaucher la courbe de bouche (${JSON.stringify(geometry)})`);
+  assert.ok(geometry.tongue.bottom <= geometry.disc.bottom - 5,
+    `iPhone : la langue doit garder de l’air avant le bord du visage (${JSON.stringify(geometry)})`);
+
+  await page.screenshot({ path: path.join(OUTPUT, "gloubi-iphone-402x874-3x.png"), fullPage: true });
+  await marker.screenshot({ path: path.join(OUTPUT, "gloubi-visage-iphone-3x.png") });
+  return geometry;
+}
+
 async function main() {
   fs.mkdirSync(OUTPUT, { recursive: true });
   const server = await startServer();
@@ -99,6 +145,16 @@ async function main() {
 
     for (const viewport of VIEWPORTS) reports.push({ name: viewport.name, ...(await inspect(page, viewport)) });
 
+    const iphonePage = await browser.newPage({
+      viewport: { width: 402, height: 874 },
+      deviceScaleFactor: 3,
+      isMobile: true,
+      hasTouch: true
+    });
+    iphonePage.serverUrl = page.serverUrl;
+    const iphoneGloubi = await captureGloubiOnIphone(iphonePage);
+    await iphonePage.close();
+
     await page.setViewportSize({ width: 1366, height: 768 });
     await page.goto(`${page.serverUrl}/outils/club_maths/carres_gloutons.html`, { waitUntil: "networkidle" });
     await page.locator("#start-game").click();
@@ -113,7 +169,7 @@ async function main() {
     assert.ok(fullscreenBoard && Math.abs(fullscreenBoard.width - fullscreenBoard.height) <= 1, `plein écran : le plateau reste carré (${JSON.stringify(fullscreenBoard)})`);
     assert.ok(fullscreenBoard.y + fullscreenBoard.height <= 768 + 1, `plein écran : le plateau reste visible (${JSON.stringify(fullscreenBoard)})`);
 
-    console.log(JSON.stringify({ ok: true, output: OUTPUT, reports }, null, 2));
+    console.log(JSON.stringify({ ok: true, output: OUTPUT, reports, iphoneGloubi }, null, 2));
   } finally {
     await browser.close();
     await new Promise(resolve => server.close(resolve));
