@@ -182,7 +182,7 @@ test("les workflows bloquent le SEO désynchronisé et excluent le gabarit Axell
   assert.match(publishWorkflow, /node scripts\/generate-seo\.mjs --check/);
   assert.match(publishWorkflow, /--exclude 'axelle\/daily\/template-index\.html'/);
   assert.match(publishWorkflow, /concurrency:[\s\S]*group: pages[\s\S]*cancel-in-progress: true/);
-  assert.match(publishWorkflow, /publier:[\s\S]*runs-on: ubuntu-22\.04[\s\S]*actions\/deploy-pages@v4/);
+  assert.match(publishWorkflow, /publier:[\s\S]*runs-on: ubuntu-latest[\s\S]*actions\/deploy-pages@v4/);
 });
 
 test("les sorties générées présentes dans le dépôt sont synchronisées", () => {
