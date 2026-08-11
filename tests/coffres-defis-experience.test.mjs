@@ -49,6 +49,7 @@ test("Coffres à deux explique visuellement les quatre opérations réellement j
   assert.doesNotMatch(html, /dots-equation|difference-lines|dot-set|missing-part/);
   assert.match(html, /array-dimension array-dimension-top">4[\s\S]*array-dimension array-dimension-side">3[\s\S]*--dot-columns:4/);
   assert.match(html, /array-dimension array-dimension-top">3[\s\S]*array-dimension array-dimension-side">4[\s\S]*--dot-columns:3/);
+  assert.match(html, /<span>3 rangées de 4<\/span>[\s\S]*?<span>4 rangées de 3<\/span>/);
   assert.match(html, /\.dot-array\s*\{[\s\S]*?border-radius:\s*0/);
   assert.match(html, /3 × 4 = 12 ; 4 × 3 = 12 aussi/);
   assert.match(html, /combien de paquets de 2 dans 8 \? <strong>4<\/strong>/);
@@ -71,13 +72,14 @@ test("Coffres solo illustre précisément les quatre opérations", () => {
   assert.match(html, /3 \+ 2 = 5/);
   assert.match(html, /Le rectangle du haut contient 5 points alignés[^<]+Les 3 points restants du haut sont mis en évidence[^<]+5 moins 2 égale 3/);
   assert.match(html, /comparison-unit unmatched[\s\S]*?comparison-unit unmatched[\s\S]*?comparison-unit unmatched/);
-  assert.match(html, /comparison-upper[\s\S]*?comparison-lower">[\s\S]*?difference-marker" style="grid-column:3 \/ -1"><\/span>[\s\S]*?difference-marker-label">différence = 3<\/span>/);
+  assert.match(html, /comparison-upper[\s\S]*?comparison-lower" style="--difference-center:70%">[\s\S]*?difference-marker" style="grid-column:3 \/ -1"><\/span>[\s\S]*?difference-marker-label">différence = 3<\/span>/);
   assert.match(html, /5 − 2 = 3/);
   assert.doesNotMatch(html, /bar-model-label|bar-missing|>\s*(?:Tout|Parties?)\s*</);
   assert.match(html, /Un réseau de 3 rangées et 4 colonnes contient 12 points/);
-  assert.match(html, /4 colonnes[\s\S]*?3 rangées[\s\S]*?--dot-columns:4/);
+  assert.match(html, /dimension-columns"><span>4<\/span>[\s\S]*?dimension-rows"><span>3<\/span>[\s\S]*?--dot-columns:4/);
   assert.match(html, /Un réseau de 4 rangées et 3 colonnes contient 12 points/);
-  assert.match(html, /3 colonnes[\s\S]*?4 rangées[\s\S]*?--dot-columns:3/);
+  assert.match(html, /dimension-columns"><span>3<\/span>[\s\S]*?dimension-rows"><span>4<\/span>[\s\S]*?--dot-columns:3/);
+  assert.match(html, /<span>3 rangées de 4<\/span>[\s\S]*?<span>4 rangées de 3<\/span>/);
   assert.match(html, /3 × 4 = 12 ; 4 × 3 = 12 aussi/);
   assert.match(html, /Combien de paquets de 2 dans 8 \? 4/);
   assert.match(html, /Partager 8 en 2 paquets : 4 dans chacun/);

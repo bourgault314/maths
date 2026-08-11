@@ -112,6 +112,7 @@ async function assertPointVisual(page, selector, mode, label) {
       };
       return {
         aria: node.getAttribute("aria-label"),
+        viewportWidth: innerWidth,
         diagram: box(node.querySelector(".comparison-model")),
         upper: box(upper),
         known: box(known),
@@ -147,8 +148,10 @@ async function assertPointVisual(page, selector, mode, label) {
     assert(data.marker.borderTop === "2px" && data.marker.borderBottom === "0px" && data.marker.hookTop === "-7px" && data.marker.hookHeight === "7px", `${label} : le crochet de différence n’est pas orienté vers le haut.`);
     assert(data.markerLabel.text === `différence = ${data.unmatched}`, `${label} : le libellé de différence est inexact.`);
     assert(data.markerLabel.whiteSpace === "nowrap" && data.markerLabel.height <= data.markerLabel.lineHeight + 1, `${label} : le libellé de différence passe sur plusieurs lignes.`);
-    assert(data.markerLabel.top >= data.known.bottom && data.markerLabel.left >= data.diagram.left - 1 && data.markerLabel.right <= data.diagram.right + 1, `${label} : le libellé de différence chevauche le schéma ou en déborde.`);
-    assert(Math.abs(data.markerLabel.right - data.diagram.right) <= 1 && data.markerLabel.scrollWidth <= data.diagram.width + 1, `${label} : le libellé de différence n’est pas ancré à droite dans la largeur globale.`);
+    assert(data.markerLabel.top >= data.known.bottom && data.markerLabel.left >= -1 && data.markerLabel.right <= data.viewportWidth + 1, `${label} : le libellé de différence chevauche le schéma ou sort de l’écran.`);
+    const markerCenter = (data.marker.left + data.marker.right) / 2;
+    const labelCenter = (data.markerLabel.left + data.markerLabel.right) / 2;
+    assert(Math.abs(labelCenter - markerCenter) <= 1.5 && data.markerLabel.scrollWidth <= data.viewportWidth + 1, `${label} : le libellé de différence n’est pas centré sous son repère.`);
     assert(data.aria.includes("Dans l’espace vide de la ligne inférieure") && data.aria.includes("repère orienté vers le haut"), `${label} : la position du repère manque dans l’alternative accessible.`);
     assert(new RegExp(`${data.high} moins ${data.low} égale ${data.unmatched}\\.$`).test(data.aria), `${label} : l’équation parlée de la différence manque.`);
   } else if (mode === "product") {
@@ -170,8 +173,8 @@ async function assertPointVisual(page, selector, mode, label) {
     });
     const rows = data.dots / data.columns;
     assert(Number.isInteger(rows), `${label} : le réseau ne contient pas un nombre entier de rangées.`);
-    assert(data.columnsMarker.text === `${data.columns} colonnes`, `${label} : le nombre de colonnes est incorrect.`);
-    assert(data.rowsMarker.text === `${rows} rangées`, `${label} : le nombre de rangées est incorrect.`);
+    assert(data.columnsMarker.text === String(data.columns), `${label} : le nombre de colonnes est incorrect.`);
+    assert(data.rowsMarker.text === String(rows), `${label} : le nombre de rangées est incorrect.`);
     assert(Math.abs(data.columnsMarker.left - data.grid.left) <= 1 && Math.abs(data.columnsMarker.width - data.grid.width) <= 1, `${label} : le repère des colonnes n’est pas aligné au-dessus du réseau.`);
     assert(data.columnsMarker.bottom <= data.grid.top, `${label} : le repère des colonnes n’est pas extérieur au réseau.`);
     assert(data.rowsMarker.right <= data.grid.left && Math.abs(data.rowsMarker.top - data.grid.top) <= 1 && Math.abs(data.rowsMarker.height - data.grid.height) <= 1, `${label} : le repère des rangées n’est pas aligné sur le côté.`);
@@ -414,7 +417,7 @@ async function auditExtremeVisual(browser, base, { mode, first, second, width, h
     console.log(JSON.stringify({
       ok: true,
       captures: CAPTURES,
-      checks: ["repère somme pleine largeur", "différence 12−10 et 12−11 : crochet exact, libellé global sur une ligne", "produit : colonnes au-dessus et rangées sur le côté", "quotient 36÷6 : barres empilées jusqu’à 520 px", "rectangles à angles droits", "lignes collées", "aria avec équations parlées", "aide sans révélation", "solution demandée", "correction après erreur", "même opération", "aucune clé offerte", "focus/Tab/Échap", "320/390/520/1366"]
+      checks: ["repère somme pleine largeur", "différence 12−10 et 12−11 : crochet exact, libellé centré et sur une ligne", "produit : nombres seuls autour du réseau et légende complète dessous", "quotient 36÷6 : barres empilées jusqu’à 520 px", "rectangles à angles droits", "lignes collées", "aria avec équations parlées", "aide sans révélation", "solution demandée", "correction après erreur", "même opération", "aucune clé offerte", "focus/Tab/Échap", "320/390/520/1366"]
     }, null, 2));
   } finally {
     await page.close();
