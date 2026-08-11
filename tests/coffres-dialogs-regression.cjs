@@ -180,23 +180,18 @@ async function auditSolo(browser, base, errors) {
 
   await page.waitForFunction(() => document.activeElement.id === "start-game");
   assert((await activeElement(page)).insideModal, "L’introduction solo ne focalise pas son bouton principal.");
+  assert(await page.locator("#lesson .operation-grid").evaluate(grid => grid.scrollTop === 0), "Le mémo initial ne commence pas par la somme.");
   await page.keyboard.press("Shift+Tab");
-  assert((await activeElement(page)).id === "close-lesson", "Maj+Tab ne boucle pas dans l’introduction solo.");
+  assert((await activeElement(page)).id === "start-game", "Maj+Tab ne reboucle pas sur l’unique action de l’introduction solo.");
   await page.keyboard.press("Tab");
-  assert((await activeElement(page)).id === "start-game", "Tab ne revient pas au bouton principal de l’introduction solo.");
+  assert((await activeElement(page)).id === "start-game", "Tab ne reboucle pas sur l’unique action de l’introduction solo.");
   await page.keyboard.press("Escape");
   assert(await page.locator("#lesson").isVisible(), "Échap contourne l’introduction solo obligatoire.");
   await page.locator("#start-game").click();
   await page.locator("#lesson").waitFor({ state: "hidden" });
   await page.waitForFunction(() => document.activeElement.classList.contains("rune"));
-
-  await page.locator("#show-lesson").click();
-  await page.waitForFunction(() => document.activeElement.id === "lesson-title");
-  await page.keyboard.press("Tab");
-  assert((await activeElement(page)).id === "start-game", "Tab ne part pas du titre vers les actions du mémo.");
-  await page.keyboard.press("Escape");
-  await page.locator("#lesson").waitFor({ state: "hidden" });
-  await page.waitForFunction(() => document.activeElement.id === "show-lesson");
+  assert(await page.locator("#show-lesson").count() === 0, "Le cours complet peut encore être rouvert depuis le plateau.");
+  assert(await page.locator(".solo-toolbar button").count() === 2, "La barre solo ne contient pas seulement Aide et Nouvelle partie.");
 
   const lastSecond = await solveSolo(page);
   await page.waitForFunction(() => document.activeElement.id === "play-again");
