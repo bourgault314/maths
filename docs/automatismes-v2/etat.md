@@ -2,6 +2,34 @@
 
 **Dernière mise à jour : 11 août 2026.**
 
+## Clôture de NC-02 du 11 août
+
+- Le lot part de `15c260f`, état de `main` après la publication du monde
+  Tunnels de Solèy, et reste isolé sur la branche
+  `agent/nc02-finitions-cloture`.
+- D-045 fixe le rendu HTML mathématique commun : une seule typographie pour
+  les calculs et un composant testé pour aligner les signes des égalités
+  successives. Aucun SVG ne compose localement une puissance.
+- Les libellés F2 et F4 sont resserrés, et les corrections F1, F2, F3 et F5
+  réemploient le carré quadrillé de sens lorsque la base vaut au moins 2.
+- Le moule commun affiche « Fais défiler ↓ » uniquement au sommet d'un
+  panneau qui déborde réellement. La réponse rappelée doit être verte si elle
+  est juste, rouge si elle est fournie et fausse, neutre et vide si elle est
+  omise.
+- Dans « S'entraîner », une réponse entièrement omise compte faux et
+  ouvre la correction ; une saisie partielle ou invalide reste réparable.
+  « Au tableau » reste inchangé. La trace courante passe en version 3 avec le
+  statut `fournie` ou `omise`, tout en conservant la lecture des versions 1 et
+  2.
+- Le graphe public est invalidé d'un seul tenant en `v25`. `npm run verifier`
+  réussit **1 397 tests sur 1 397** ainsi que tous les validateurs de
+  publication. La recette Chromium couvre `320 × 568`, `390 × 844`,
+  `1 280 × 720`, `1 920 × 1 080` et le reflow `640 × 360` : les signes
+  `=` ont un écart horizontal mesuré de `0 px`, la police calculée est commune,
+  le repère de défilement suit exactement le débordement et disparaît après
+  défilement. Le diff sous `/auto/` reste vide et Gwenaël a explicitement
+  autorisé la publication.
+
 ## Clôture de NC-01 du 11 août
 
 - Le lot part de `1aa6c15`, état de `main` après la publication du jeu de

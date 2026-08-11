@@ -44,4 +44,19 @@ describe("contrastes locaux du lecteur V2", () => {
     const fond = melangerHex(COULEURS.reussite, COULEURS.papier, 0.07);
     assert.ok(contraste(texte, fond) >= 4.5);
   });
+
+  it("garde les réponses justes et fausses lisibles sur le papier", () => {
+    assert.match(
+      interfaceCss,
+      /\.rappel-reponse-eleve\.reponse-juste strong,[\s\S]*?color:\s*color-mix\(in srgb, var\(--mg-reussite\) 60%, var\(--mg-encre\)\)/,
+    );
+    assert.match(
+      interfaceCss,
+      /\.rappel-reponse-eleve\.reponse-fausse strong,[\s\S]*?color:\s*color-mix\(in srgb, var\(--mg-erreur\) 60%, var\(--mg-encre\)\)/,
+    );
+    const juste = melangerHex(COULEURS.reussite, COULEURS.encre, 0.6);
+    const fausse = melangerHex(COULEURS.erreur, COULEURS.encre, 0.6);
+    assert.ok(contraste(juste, COULEURS.papier) >= 4.5);
+    assert.ok(contraste(fausse, COULEURS.papier) >= 4.5);
+  });
 });

@@ -195,6 +195,14 @@ describe("NC-02/F2 — sens inverse", () => {
           `f2-${base}-${forme}`,
         );
         assert.ok(question.classement.complements.includes(`forme-${forme}`));
+        const consigne = question.enonce.find((bloc) => bloc.type === "texte")?.contenu;
+        if (forme === "question-verbale") {
+          assert.equal(consigne, "Quel entier naturel a pour carré");
+        }
+        if (forme === "egalite-carre") {
+          assert.equal(consigne, "Complète l'égalité avec un entier naturel.");
+        }
+        assert.doesNotMatch(consigne, /compris entre 0 et 12|entier de 0 à 12/);
         if (forme === "produit-facteurs-egaux") {
           assert.equal(question.reponse.type, TYPE_REPONSE_DEUX_ENTIERS);
           assert.deepEqual(question.reponse.attendus, [base, base]);
@@ -271,7 +279,7 @@ describe("NC-02/F4 — reconnaissance", () => {
     );
   });
 
-  it("emploie les deux formulations validées pour les nombres carrés", () => {
+  it("emploie les deux formulations validées pour les carrés parfaits", () => {
     assert.deepEqual(FORMULATIONS_RECONNAITRE_CARRES, [
       "nombres-carres",
       "carres-parfaits",
@@ -283,7 +291,7 @@ describe("NC-02/F4 — reconnaissance", () => {
         `f4-${formulation}`,
       ).enonce[0].contenu);
     assert.deepEqual(consignes, [
-      "Sélectionne tous les nombres carrés.",
+      "Sélectionne tous les carrés parfaits.",
       "Parmi ces nombres, lesquels sont des carrés parfaits ?",
     ]);
   });

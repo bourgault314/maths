@@ -13,7 +13,7 @@ body,
 .mathsgo-expression {
   display: inline-block;
   white-space: nowrap;
-  font-family: "Cambria Math", "STIX Two Math", "Times New Roman", serif;
+  font-family: var(--mg-mathematiques);
   font-variant-numeric: lining-nums tabular-nums;
   line-height: 1.16;
 }
@@ -39,6 +39,7 @@ body,
 .egalite-carres,
 .modele-produit-carre,
 .chaine-carre {
+  font-family: var(--mg-mathematiques);
   font-size: clamp(1.55rem, 5vw, 2.5rem);
   font-weight: 700;
   color: var(--mg-encre);
@@ -178,6 +179,7 @@ button.case-reponse-carres {
 .grille-carres-qcm .choix,
 .grille-carres-multiples .choix {
   min-height: 58px;
+  font-family: var(--mg-mathematiques);
   font-size: clamp(1.1rem, 3vw, 1.45rem);
 }
 
@@ -321,28 +323,29 @@ button.case-reponse-carres {
   width: fit-content;
   max-width: 100%;
   margin-inline: auto;
-  font-family: "Cambria Math", "STIX Two Math", "Times New Roman", serif;
+  font-family: var(--mg-mathematiques);
   font-size: clamp(1rem, 2.4vw, 1.25rem);
   font-variant-numeric: lining-nums tabular-nums;
 }
 
-.calcul-decomposition p,
-.calcul-aligne p {
+.mathsgo-egalites-alignees {
   display: grid;
   grid-template-columns: minmax(30px, auto) 18px minmax(0, auto);
   gap: 5px;
   align-items: baseline;
-  margin: 0;
 }
 
-.calcul-decomposition p > :nth-child(2),
-.calcul-aligne p > :nth-child(2) {
+.mathsgo-egalite-signe {
   text-align: center;
 }
 
-.calcul-decomposition strong,
-.calcul-aligne strong {
+.mathsgo-egalites-alignees > :last-child {
   color: var(--mg-bleuFonce);
+}
+
+.visuel-correction-carres {
+  width: min(100%, 300px);
+  margin: 0 auto 14px;
 }
 
 @media (min-width: 900px) and (max-height: 760px) {
@@ -1836,7 +1839,15 @@ body {
   border-bottom: 1px solid var(--mg-ligne);
 }
 
+.zone-corps-panneau {
+  position: relative;
+  min-width: 0;
+  min-height: 0;
+  overflow: hidden;
+}
+
 .corps-panneau {
+  height: 100%;
   min-width: 0;
   min-height: 0;
   container-type: inline-size;
@@ -1844,6 +1855,28 @@ body {
   overflow-x: hidden;
   overflow-y: auto;
   overscroll-behavior: contain;
+}
+
+.indicateur-defilement-panneau {
+  position: absolute;
+  z-index: 2;
+  left: 50%;
+  bottom: 8px;
+  margin: 0;
+  padding: 5px 11px;
+  border: 1px solid color-mix(in srgb, var(--mg-bleu) 22%, var(--mg-ligne));
+  border-radius: 999px;
+  color: var(--mg-bleuFonce);
+  background: color-mix(in srgb, var(--mg-papier) 94%, var(--mg-turquoise));
+  box-shadow: 0 3px 12px color-mix(in srgb, var(--mg-bleuFonce) 16%, transparent);
+  font-size: 12px;
+  font-weight: 800;
+  pointer-events: none;
+  transform: translateX(-50%);
+}
+
+.indicateur-defilement-panneau[hidden] {
+  display: none;
 }
 
 .panneau-avec-pied .corps-panneau {
@@ -1944,16 +1977,46 @@ body {
   display: flex;
   justify-content: space-between;
   gap: 12px;
-  border: 2px solid color-mix(in srgb, var(--mg-erreur) 30%, var(--mg-ligne));
+  border: 2px solid var(--mg-ligne);
   border-radius: var(--mg-rayon-moyen);
 }
 
-.rappel-reponse-eleve span {
+.rappel-reponse-eleve > span {
   color: var(--mg-texteAttenue);
 }
 
-.rappel-reponse-eleve strong {
-  color: var(--mg-erreur);
+.rappel-reponse-eleve.reponse-juste {
+  border-color: color-mix(in srgb, var(--mg-reussite) 40%, var(--mg-ligne));
+}
+
+.rappel-reponse-eleve.reponse-juste strong,
+.rappel-reponse-eleve.reponse-juste .fraction-empilee {
+  color: color-mix(in srgb, var(--mg-reussite) 60%, var(--mg-encre));
+}
+
+.rappel-reponse-eleve.reponse-fausse {
+  border-color: color-mix(in srgb, var(--mg-erreur) 30%, var(--mg-ligne));
+}
+
+.rappel-reponse-eleve.reponse-fausse strong,
+.rappel-reponse-eleve.reponse-fausse .fraction-empilee {
+  color: color-mix(in srgb, var(--mg-erreur) 60%, var(--mg-encre));
+}
+
+.panneau-carres .rappel-reponse-eleve strong,
+.panneau-carres .reponses-correction strong {
+  font-family: var(--mg-mathematiques);
+  font-variant-numeric: lining-nums tabular-nums;
+}
+
+.rappel-reponse-eleve.reponse-omise {
+  border-style: dashed;
+  color: var(--mg-texteAttenue);
+}
+
+.rappel-reponse-eleve .reponse-vide {
+  min-width: 3.5rem;
+  min-height: 1.2em;
 }
 
 .outil-aide,

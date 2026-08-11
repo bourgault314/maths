@@ -34,14 +34,14 @@ import {
   saisirChiffre,
   tournerSolide,
   validerReponse,
-} from "./src/etat-lecteur.js?v=24";
+} from "./src/etat-lecteur.js?v=25";
 import {
   TYPE_REPONSE_DEUX_ENTIERS,
   TYPE_REPONSE_ENTIER_NATUREL,
   TYPE_REPONSE_FRACTION_EQUIVALENTE,
   TYPE_REPONSE_NOMBRE_DECIMAL,
   TYPE_REPONSE_CHOIX_UNIQUE,
-} from "../packages/contrats/src/question-v2.js?v=24";
+} from "../packages/contrats/src/question-v2.js?v=25";
 import {
   connaitNotionLecteur,
   obtenirNotionLecteur,
@@ -51,13 +51,13 @@ import {
   RENDU_SOLIDE,
   RENDU_VOLUME,
   NOTION_FRACTIONS_SIMPLES_DECIMAUX,
-} from "./src/registre-lecteur.js?v=24";
+} from "./src/registre-lecteur.js?v=25";
 import {
   DOMAINES_AUTOMATISMES,
   MICRO_NOTIONS_AUTOMATISMES,
   normaliserIdentifiantMicroNotion,
-} from "../packages/automatismes/src/identifiants.js?v=24";
-import { COURS_SOLIDES_USUELS } from "../packages/automatismes/src/espace-et-geometrie/solides-usuels/reconnaissance.js?v=24";
+} from "../packages/automatismes/src/identifiants.js?v=25";
+import { COURS_SOLIDES_USUELS } from "../packages/automatismes/src/espace-et-geometrie/solides-usuels/reconnaissance.js?v=25";
 import {
   creerCone,
   creerCube,
@@ -72,29 +72,37 @@ import {
   ACTION_TOUCHE_SAISIR,
   ACTION_TOUCHE_VALIDER,
   obtenirDispositionClavier,
-} from "../packages/objets/src/clavier.js?v=24";
-import { formulationCritereDivisibilite } from "../packages/automatismes/src/nombres-et-calculs/criteres-divisibilite/critere-precis.js?v=24";
+} from "../packages/objets/src/clavier.js?v=25";
+import { formulationCritereDivisibilite } from "../packages/automatismes/src/nombres-et-calculs/criteres-divisibilite/critere-precis.js?v=25";
 import {
+  caseVide,
+  difference,
+  egalite,
+  groupe,
+  inferieurStrict,
   nombre,
+  produit,
   puissance,
+  somme,
   variable,
+  versHtmlEgalitesAlignees,
   versHtmlSemantique,
-} from "../packages/objets/src/expressions.js?v=24";
+} from "../packages/objets/src/expressions.js?v=25";
 import {
   dessinerCarreQuadrille,
-} from "../packages/objets/src/carre-quadrille.js?v=24";
-import { dessinerGrilleFraction } from "../packages/objets/src/fractions.js?v=24";
-import { dessinerDoubleDroiteGraduee } from "../packages/objets/src/droite-graduee.js?v=24";
+} from "../packages/objets/src/carre-quadrille.js?v=25";
+import { dessinerGrilleFraction } from "../packages/objets/src/fractions.js?v=25";
+import { dessinerDoubleDroiteGraduee } from "../packages/objets/src/droite-graduee.js?v=25";
 import {
   construireGroupementFraction,
   construireDonneesTableauDepuisFraction,
   formaterFractionEnDecimal,
-} from "../packages/objets/src/fractions-decimaux.js?v=24";
+} from "../packages/objets/src/fractions-decimaux.js?v=25";
 import {
   diagnostiquerDecimalVersNumerateur,
   diagnostiquerFractionLibre,
   diagnostiquerFractionVersDecimal,
-} from "./src/diagnostic-fractions-decimaux.js?v=24";
+} from "./src/diagnostic-fractions-decimaux.js?v=25";
 
 const MICRO_NOTION_FRACTION_VERS_DECIMAL =
   MICRO_NOTIONS_AUTOMATISMES.FRACTION_VERS_DECIMAL;
@@ -216,6 +224,40 @@ function rendrePuissance(base, exposant = 2) {
   return versHtmlSemantique(puissance(nombre(base), exposant));
 }
 
+function noeudProduitCarre(base) {
+  return produit(nombre(base), nombre(base));
+}
+
+function rendreProduitCarre(base) {
+  return versHtmlSemantique(noeudProduitCarre(base));
+}
+
+function rendreEgaliteCarre(base, { avecResultat = true } = {}) {
+  const membres = [puissance(nombre(base), 2), noeudProduitCarre(base)];
+  if (avecResultat) membres.push(nombre(base * base));
+  return versHtmlSemantique(egalite(...membres));
+}
+
+function noeudChoixSensNotation(base, id) {
+  if (id === "produit-facteurs-egaux") return noeudProduitCarre(base);
+  if (id === "produit-par-deux") return produit(nombre(base), nombre(2));
+  if (id === "somme-double") return somme(nombre(base), nombre(base));
+  if (id === "somme-plus-deux") return somme(nombre(base), nombre(2));
+  return null;
+}
+
+function rendreLibelleChoixCarres(question, choix) {
+  if (familleQuestion(question) !== "sens-notation") return echapper(choix.libelle);
+  const expression = noeudChoixSensNotation(baseQuestionCarres(question), choix.id);
+  return expression ? versHtmlSemantique(expression) : echapper(choix.libelle);
+}
+
+function rendreTexteAvecExpression(texte, fragment, expression) {
+  const position = texte.indexOf(fragment);
+  if (position < 0) return echapper(texte);
+  return `${echapper(texte.slice(0, position))}${versHtmlSemantique(expression)}${echapper(texte.slice(position + fragment.length))}`;
+}
+
 function nombrePagesCours() {
   return definitionNotion().pagesCours;
 }
@@ -272,6 +314,7 @@ for (const [nom, valeur] of Object.entries(nomsCouleurs)) {
 }
 document.documentElement.style.setProperty("--mg-titres", TYPOGRAPHIE.titres);
 document.documentElement.style.setProperty("--mg-texte", TYPOGRAPHIE.texte);
+document.documentElement.style.setProperty("--mg-mathematiques", TYPOGRAPHIE.mathematiques);
 document.documentElement.style.setProperty("--mg-rayon-petit", `${RAYONS.petit}px`);
 document.documentElement.style.setProperty("--mg-rayon-moyen", `${RAYONS.moyen}px`);
 document.documentElement.style.setProperty("--mg-rayon-grand", `${RAYONS.grand}px`);
@@ -563,7 +606,7 @@ function rendreChoix(question, rendreLibelle = (choix) => echapper(choix.libelle
 
 function diagnosticErreurFractions() {
   const question = questionCourante(etat);
-  if (!question || etat.validation?.juste !== false) return null;
+  if (!question || etat.validation?.juste !== false || etat.validation.omise) return null;
   const source = blocRationnelQuestion(question);
   if (!source) return null;
   if (question.reponse.type === TYPE_REPONSE_NOMBRE_DECIMAL) {
@@ -601,6 +644,9 @@ function rendreRetourValidation() {
   if (etat.validation === null) return "";
   if (etat.validation.juste) {
     return '<p class="message message-reussite" role="status"><strong>Bien joué !</strong> Ta réponse est correcte.</p>';
+  }
+  if (etat.validation.omise) {
+    return '<p class="message message-erreur" role="status"><strong>À revoir.</strong> Tu n’as pas donné de réponse.</p>';
   }
   const diagnostic = diagnosticErreurFractions();
   return `<p class="message message-erreur" role="status"><strong>À revoir.</strong> ${diagnostic
@@ -721,13 +767,28 @@ function rendreCadrePanneau({
         <button class="fermer" data-action="${configuration.actionFermer}"
           aria-label="${configuration.ariaFermer}">Retour</button>
       </div>
-      <div class="corps-panneau">${contenu}</div>
+      <div class="zone-corps-panneau">
+        <div class="corps-panneau">${contenu}</div>
+        <p class="indicateur-defilement-panneau" data-indicateur-defilement hidden aria-hidden="true">
+          Fais défiler <span aria-hidden="true">↓</span>
+        </p>
+      </div>
       ${pied ? `<div class="pied-panneau">${pied}</div>` : ""}
     </aside>`;
 }
 
+function classeVerdictReponseEleve() {
+  if (etat.validation?.omise) return "reponse-omise";
+  return etat.validation?.juste ? "reponse-juste" : "reponse-fausse";
+}
+
+function rendreReponseEleveOmise({ balise = "p" } = {}) {
+  return `<${balise} class="rappel-reponse-eleve reponse-omise"><span>Ta réponse</span><strong class="reponse-vide" aria-label="Aucune réponse"></strong></${balise}>`;
+}
+
 function rendreReponseEleve(question) {
   if (!estEntrainement() || etat.validation === null) return "";
+  if (etat.validation.omise) return rendreReponseEleveOmise();
   const reponse = question.reponse.type === TYPE_REPONSE_ENTIER_NATUREL
     ? etat.saisie
     : [TYPE_REPONSE_DEUX_ENTIERS, TYPE_REPONSE_FRACTION_EQUIVALENTE]
@@ -741,7 +802,7 @@ function rendreReponseEleve(question) {
       .filter((choix) => etat.selection.includes(choix.id))
       .map((choix) => choix.libelle)
       .join(", ");
-  return `<p class="rappel-reponse-eleve"><span>Ta réponse</span><strong>${echapper(reponse)}</strong></p>`;
+  return `<p class="rappel-reponse-eleve ${classeVerdictReponseEleve()}"><span>Ta réponse</span><strong>${echapper(reponse)}</strong></p>`;
 }
 
 function rendreMenuSession() {
@@ -924,11 +985,13 @@ function rendreEtape(numero, titre, classe = "") {
   </div>`;
 }
 
-function rendreEtapeCarres(numero, titre, classe = "") {
-  const contenu = echapper(titre).replaceAll(
-    "□",
-    '<span class="case-vide-aide" aria-label="case vide"></span>',
-  );
+function rendreEtapeCarres(numero, titre, classe = "", { html = false } = {}) {
+  const contenu = html
+    ? titre
+    : echapper(titre).replaceAll(
+      "□",
+      '<span class="case-vide-aide" aria-label="case vide"></span>',
+    );
   return `<div class="repere-etape ${classe}">
     <span aria-hidden="true">${numero}</span>
     <h3>${contenu}</h3>
@@ -1612,7 +1675,7 @@ function rendreCaseReponseCarres(question, index = 0, { puissance = false } = {}
     valeur ? "remplie" : "",
     active && modifiable ? "active" : "",
     etat.validation?.juste ? "juste" : "",
-    etat.validation && !etat.validation.juste ? "fausse" : "",
+    etat.validation && !etat.validation.juste && !etat.validation.omise ? "fausse" : "",
     puissance ? "case-puissance" : "",
   ].filter(Boolean).join(" ");
   const contenu = puissance
@@ -1639,27 +1702,32 @@ function rendreCarreQuadrilleDansLecteur(options) {
 
 function rendreCalculAligne(base, signe, terme, resultat) {
   const carre = base * base;
-  return `<div class="calcul-aligne" aria-label="${base} au carré ${signe} ${terme} égale ${resultat}">
-    <p><span>${rendrePuissance(base)} ${echapper(signe)} ${terme}</span><span>=</span><span>${carre} ${echapper(signe)} ${terme}</span></p>
-    <p><span aria-hidden="true"></span><span>=</span><strong>${resultat}</strong></p>
-  </div>`;
+  const operation = (gauche, droite) => signe === "+"
+    ? somme(gauche, droite)
+    : difference(gauche, droite);
+  return `<div class="calcul-aligne">${versHtmlEgalitesAlignees(egalite(
+    operation(puissance(nombre(base), 2), nombre(terme)),
+    operation(nombre(carre), nombre(terme)),
+    nombre(resultat),
+  ))}</div>`;
 }
 
 function rendreDecompositionCarre(base) {
   const reste = base - 10;
   const resultat = base * base;
   return `<section class="decomposition-carre">
-    <h4>${rendrePuissance(base)} : partager ${base} en 10 + ${reste}</h4>
+    <h4>${rendrePuissance(base)} : partager ${base} en ${versHtmlSemantique(somme(nombre(10), nombre(reste)))}</h4>
     ${rendreCarreQuadrilleDansLecteur({
       cote: base,
       mode: "decomposition",
     })}
-    <div class="calcul-decomposition" aria-label="Calcul détaillé de ${base} au carré">
-      <p><span>${rendrePuissance(base)}</span><span>=</span><span>${base} × (10 + ${reste})</span></p>
-      <p><span></span><span>=</span><span>${base} × 10 + ${base} × ${reste}</span></p>
-      <p><span></span><span>=</span><span>${base * 10} + ${base * reste}</span></p>
-      <p><span></span><span>=</span><strong>${resultat}</strong></p>
-    </div>
+    <div class="calcul-decomposition">${versHtmlEgalitesAlignees(egalite(
+      puissance(nombre(base), 2),
+      produit(nombre(base), groupe(somme(nombre(10), nombre(reste)))),
+      somme(produit(nombre(base), nombre(10)), produit(nombre(base), nombre(reste))),
+      somme(nombre(base * 10), nombre(base * reste)),
+      nombre(resultat),
+    ))}</div>
   </section>`;
 }
 
@@ -1675,10 +1743,10 @@ function rendreCarteCoursCarres(index) {
           texteAlternatif: "Carré de quatre rangées et quatre colonnes",
         })}
         <div>
-          <p>4 rangées de 4 carreaux donnent <strong>4 × 4 = 16</strong>.</p>
-          <p class="chaine-carre">${rendrePuissance(4)} <span>=</span> <strong>4 × 4</strong> <span>=</span> <strong>16</strong></p>
+          <p>4 rangées de 4 carreaux donnent <strong>${versHtmlSemantique(egalite(noeudProduitCarre(4), nombre(16)))}</strong>.</p>
+          <p class="chaine-carre">${rendreEgaliteCarre(4)}</p>
           <p><strong>Le carré d'un nombre</strong> est le produit de ce nombre par lui-même.</p>
-          <p class="alerte-carre">${rendrePuissance(4)} signifie 4 × 4, <strong>pas 4 × 2</strong>.</p>
+          <p class="alerte-carre">${rendrePuissance(4)} signifie ${rendreProduitCarre(4)}, <strong>pas ${versHtmlSemantique(produit(nombre(4), nombre(2)))}</strong>.</p>
         </div>
       </div>
     </article>`;
@@ -1690,10 +1758,10 @@ function rendreCarteCoursCarres(index) {
       <h3>Les carrés de 0 à 12</h3>
       <div class="table-carres-cours">
         ${bases.map((base) =>
-          `<p>${rendrePuissance(base)} <span>=</span> <span>${base} × ${base}</span> <span>=</span> <strong>${base * base}</strong></p>`,
+          `<p>${rendreEgaliteCarre(base)}</p>`,
         ).join("")}
       </div>
-      <p class="definition-cours">Ces résultats sont des <strong>nombres carrés</strong>, aussi appelés <strong>carrés parfaits</strong>.</p>
+      <p class="definition-cours">Ces résultats sont appelés des <strong>carrés parfaits</strong> : ce sont les carrés d’entiers.</p>
     </article>`;
   }
   if (index === 2) {
@@ -1714,7 +1782,7 @@ function rendreCarteCoursCarres(index) {
       <div class="cours-deux-sens-carres">
         <section>
           <h4>Je calcule le carré</h4>
-          <p class="chaine-carre">${rendrePuissance(8)} <span>=</span> 8 × 8 <span>=</span> <strong>64</strong></p>
+          <p class="chaine-carre">${rendreEgaliteCarre(8)}</p>
           <p>Le carré de 8 est 64.</p>
         </section>
         <section>
@@ -1724,7 +1792,7 @@ function rendreCarteCoursCarres(index) {
             mode: "cote-inconnu",
             texteAlternatif: "Carré contenant 64 carreaux dont les côtés égaux sont à retrouver",
           })}
-          <p>64 = 8 × 8, donc l'entier recherché est <strong>8</strong>.</p>
+          <p>${versHtmlSemantique(egalite(nombre(64), noeudProduitCarre(8)))}, donc l'entier recherché est <strong>8</strong>.</p>
         </section>
       </div>
     </article>`;
@@ -1766,6 +1834,103 @@ function rendreCoursCarres() {
   });
 }
 
+function rendreBlocAideCarres(question, bloc) {
+  const base = baseQuestionCarres(question) ?? 4;
+  if (bloc.type === "puissance") {
+    return rendrePuissance(bloc.base, bloc.exposant);
+  }
+  if (bloc.type !== "texte") return rendreBlocMathematique(bloc);
+  if (["aide-produit", "aide-produit-zero"].includes(bloc.id)) {
+    return rendreTexteAvecExpression(
+      bloc.contenu,
+      `${base} × ${base}`,
+      noeudProduitCarre(base),
+    );
+  }
+  if (bloc.id === "aide-egalite-a-preparer") {
+    const cible = cibleQuestionCarres(question);
+    return rendreTexteAvecExpression(
+      bloc.contenu,
+      `${cible} = □ × □`,
+      egalite(nombre(cible), produit(caseVide(), caseVide())),
+    );
+  }
+  if (bloc.id === "aide-seconde-operation") {
+    const signe = texteBloc(question, "operation");
+    const terme = blocQuestion(question, "terme")?.valeur;
+    return `Effectue seulement ensuite ${signe === "+" ? "l’addition" : "la soustraction"} de ${echapper(terme)}.`;
+  }
+  return echapper(bloc.contenu);
+}
+
+function rendreReponseEleveCarres(question) {
+  if (familleQuestion(question) !== "sens-notation") return rendreReponseEleve(question);
+  if (!estEntrainement() || etat.validation === null) return "";
+  if (etat.validation.omise) return rendreReponseEleveOmise();
+  const choix = question.reponse.choix.find(({ id }) => etat.selection.includes(id));
+  const contenu = choix ? rendreLibelleChoixCarres(question, choix) : "";
+  return `<p class="rappel-reponse-eleve ${classeVerdictReponseEleve()}"><span>Ta réponse</span><strong class="reponse-mathematique">${contenu}</strong></p>`;
+}
+
+function rendreReponseCorrecteCarres(question) {
+  if (familleQuestion(question) !== "sens-notation") return rendreReponseCorrecte(question);
+  const contenus = question.reponse.choix
+    .filter(({ id }) => question.reponse.attendus.includes(id))
+    .map((choix) => `<strong class="reponse-mathematique">${rendreLibelleChoixCarres(question, choix)}</strong>`)
+    .join("");
+  return `<div class="reponses-correction" aria-label="Réponse correcte">${contenus}</div>`;
+}
+
+function rendreBlocCorrectionCarres(question, bloc) {
+  const famille = familleQuestion(question);
+  const base = baseQuestionCarres(question);
+  if (bloc.type === "puissance") {
+    return rendreEgaliteCarre(bloc.base, { avecResultat: false });
+  }
+  if (bloc.type !== "texte") return rendreBlocMathematique(bloc);
+
+  if (
+    ["calcul-direct", "carre-quadrille"].includes(famille)
+    && bloc.id === "correction-produit"
+  ) {
+    return `${versHtmlSemantique(egalite(noeudProduitCarre(base), nombre(base * base)))}.`;
+  }
+  if (famille === "retrouver-entier" && bloc.id === "correction-facteur-repete") {
+    return `Le facteur ${base} est répété : ${versHtmlSemantique(egalite(nombre(base * base), noeudProduitCarre(base)))}.`;
+  }
+  if (famille === "sens-notation") {
+    if (bloc.id === "correction-bonne-traduction") {
+      return `La bonne traduction est ${rendreProduitCarre(base)} : le facteur ${base} apparaît deux fois.`;
+    }
+    if (bloc.id === "correction-produit-deux") {
+      return `${versHtmlSemantique(produit(nombre(base), nombre(2)))} signifie « multiplier ${base} par 2 », pas « multiplier ${base} par lui-même ».`;
+    }
+    if (bloc.id === "correction-somme-double") {
+      return `${versHtmlSemantique(somme(nombre(base), nombre(base)))} est une addition, pas un produit.`;
+    }
+    if (bloc.id === "correction-somme-plus-deux") {
+      return `${versHtmlSemantique(somme(nombre(base), nombre(2)))} ajoute 2 au nombre ; cela ne donne pas son carré.`;
+    }
+  }
+  if (famille === "reconnaitre-carres") {
+    const valeur = Number(bloc.id.match(/^correction-nombre-(\d+)$/)?.[1]);
+    if (Number.isSafeInteger(valeur)) {
+      const racine = Math.sqrt(valeur);
+      if (Number.isInteger(racine)) {
+        return `${valeur} est un carré : ${versHtmlSemantique(egalite(nombre(valeur), noeudProduitCarre(racine)))}.`;
+      }
+      const inferieur = Math.floor(racine);
+      const superieur = inferieur + 1;
+      return `${valeur} n'est pas un carré : ${versHtmlSemantique(inferieurStrict(
+        noeudProduitCarre(inferieur),
+        nombre(valeur),
+        noeudProduitCarre(superieur),
+      ))}.`;
+    }
+  }
+  return rendreBlocMathematique(bloc);
+}
+
 function rendreAideCarres(question) {
   if (!etat.aideOuverte) return "";
   const famille = familleQuestion(question);
@@ -1797,7 +1962,12 @@ function rendreAideCarres(question) {
     ${visuel}
     <div class="etapes-aide-carres">
       ${aides.map((aide, index) => `<section class="outil-aide">
-        ${rendreEtapeCarres(index + 1, aide.contenu, index === 0 ? "repere-observation" : "")}
+        ${rendreEtapeCarres(
+          index + 1,
+          rendreBlocAideCarres(question, aide),
+          index === 0 ? "repere-observation" : "",
+          { html: true },
+        )}
       </section>`).join("")}
     </div>`;
   return rendreCadrePanneau({
@@ -1824,6 +1994,19 @@ function rendreCorrectionCarres(question) {
     "calcul-court": ["Calculer le carré", "Effectuer la seconde opération", "Conclure"],
   }[famille] ?? [];
   const blocs = question.correction ?? [];
+  const famillesAvecCarre = new Set([
+    "calcul-direct",
+    "retrouver-entier",
+    "sens-notation",
+    "carre-quadrille",
+  ]);
+  const visuelCorrection = famillesAvecCarre.has(famille) && base >= 2
+    ? `<div class="visuel-correction-carres">${rendreCarreQuadrilleDansLecteur({
+        cote: base,
+        mode: "sens",
+        texteAlternatif: `Carré de ${base} carreaux sur chaque côté, soit ${base * base} carreaux en tout`,
+      })}</div>`
+    : "";
   const correctionCalculCourt = famille === "calcul-court"
     ? (() => {
         const signe = texteBloc(question, "operation");
@@ -1835,21 +2018,20 @@ function rendreCorrectionCarres(question) {
       })()
     : "";
   const contenu = `${rendreRappelQuestion(question)}
-    ${rendreReponseEleve(question)}
-    ${erreurDouble ? `<p class="diagnostic-erreur-carre">Tu as calculé ${base} × 2. Le petit 2 demande deux facteurs égaux à ${base}.</p>` : ""}
+    ${rendreReponseEleveCarres(question)}
+    ${visuelCorrection}
+    ${erreurDouble ? `<p class="diagnostic-erreur-carre">Tu as calculé ${versHtmlSemantique(produit(nombre(base), nombre(2)))}. Le petit 2 demande deux facteurs égaux à ${base}.</p>` : ""}
     ${correctionCalculCourt || `<div class="etapes-correction-carres">
       ${blocs.map((bloc, index) => {
         const estConclusion = index === blocs.length - 1
           && !["sens-notation", "reconnaitre-carres"].includes(famille);
         return `<section class="etape-correction ${estConclusion ? "correction-conclusion" : "correction-observation"}">
         ${rendreEtape(index + 1, titres[index] ?? `Étape ${index + 1}`, estConclusion ? "repere-conclusion" : "repere-observation")}
-        <p class="ligne-correction-carres">${bloc.type === "puissance"
-          ? `${rendrePuissance(bloc.base, bloc.exposant)} <span>=</span> <strong>${bloc.base} × ${bloc.base}</strong>`
-          : rendreBlocMathematique(bloc)}</p>
+        <p class="ligne-correction-carres">${rendreBlocCorrectionCarres(question, bloc)}</p>
       </section>`;
       }).join("")}
     </div>`}
-    ${rendreReponseCorrecte(question)}`;
+    ${rendreReponseCorrecteCarres(question)}`;
   return rendreCadrePanneau({
     type: "correction",
     surtitre: "Après la réponse",
@@ -2165,7 +2347,10 @@ function rendreZoneReponseCarres(question) {
   const famille = familleQuestion(question);
   return `<div class="grille-choix ${famille === "reconnaitre-carres" ? "grille-carres-multiples" : "grille-carres-qcm"} ${estEntrainement() ? "" : "grille-projection"}"
     role="${question.reponse.type === "choix-unique" && estEntrainement() ? "radiogroup" : "group"}"
-    aria-label="Réponses proposées">${rendreChoix(question)}</div>`;
+    aria-label="Réponses proposées">${rendreChoix(
+      question,
+      (choix) => rendreLibelleChoixCarres(question, choix),
+    )}</div>`;
 }
 
 function rendreQuestionCarres() {
@@ -2392,7 +2577,7 @@ function classesCaseRationnelle(active = false) {
     "case-reponse-rationnelle",
     active ? "active" : "",
     etat.validation?.juste ? "juste" : "",
-    etat.validation && !etat.validation.juste ? "fausse" : "",
+    etat.validation && !etat.validation.juste && !etat.validation.omise ? "fausse" : "",
   ].filter(Boolean).join(" ");
 }
 
@@ -2732,11 +2917,12 @@ function rendreAideFractionsDecimaux(question) {
 
 function rendreReponseEleveFractions(question, source) {
   if (!estEntrainement() || etat.validation === null) return "";
+  if (etat.validation.omise) return rendreReponseEleveOmise({ balise: "div" });
   if (question.reponse.type === TYPE_REPONSE_CHOIX_UNIQUE) {
     return rendreReponseEleve(question);
   }
   if (question.reponse.type === TYPE_REPONSE_NOMBRE_DECIMAL) {
-    return `<p class="rappel-reponse-eleve"><span>Ta réponse</span><strong>${echapper(etat.saisie)}</strong></p>`;
+    return `<p class="rappel-reponse-eleve ${classeVerdictReponseEleve()}"><span>Ta réponse</span><strong>${echapper(etat.saisie)}</strong></p>`;
   }
   const numerateur = question.reponse.type === TYPE_REPONSE_FRACTION_EQUIVALENTE
     ? etat.saisies[0]
@@ -2744,7 +2930,7 @@ function rendreReponseEleveFractions(question, source) {
   const denominateur = question.reponse.type === TYPE_REPONSE_FRACTION_EQUIVALENTE
     ? etat.saisies[1]
     : source.denominateur;
-  return `<div class="rappel-reponse-eleve rappel-fraction-eleve"><span>Ta réponse</span>${rendreFractionEmpilee(numerateur, denominateur)}</div>`;
+  return `<div class="rappel-reponse-eleve rappel-fraction-eleve ${classeVerdictReponseEleve()}"><span>Ta réponse</span>${rendreFractionEmpilee(numerateur, denominateur)}</div>`;
 }
 
 function rendreReponseCorrecteFractions(question, source) {
@@ -3211,6 +3397,34 @@ function rendreBilan() {
     </main>`;
 }
 
+function installerIndicateurDefilementPanneau(panneau) {
+  const corps = panneau?.querySelector?.(".corps-panneau");
+  const indicateur = panneau?.querySelector?.("[data-indicateur-defilement]");
+  if (!corps || !indicateur) return;
+  const actualiser = () => {
+    const deborde = corps.scrollHeight > corps.clientHeight + 2;
+    const estEnHaut = corps.scrollTop <= 2;
+    indicateur.hidden = !(
+      deborde
+      && estEnHaut
+      && corps.dataset?.defilementCommence !== "true"
+    );
+  };
+  if (corps.dataset?.indicateurInstalle !== "true") {
+    if (corps.dataset) corps.dataset.indicateurInstalle = "true";
+    corps.addEventListener?.("scroll", () => {
+      if (corps.scrollTop > 2 && corps.dataset) {
+        corps.dataset.defilementCommence = "true";
+      }
+      actualiser();
+    }, { passive: true });
+  }
+  globalThis.requestAnimationFrame?.(actualiser);
+  document.fonts?.ready?.then?.(() => {
+    if (corps.isConnected !== false) actualiser();
+  });
+}
+
 function rendre({
   focusPanneau = false,
   focusSelector = "",
@@ -3218,7 +3432,10 @@ function rendre({
 } = {}) {
   const panneauAvant = application.querySelector?.(".panneau");
   const idPanneauAvant = panneauAvant?.id ?? "";
-  const positionPanneau = panneauAvant?.querySelector?.(".corps-panneau")?.scrollTop ?? 0;
+  const corpsPanneauAvant = panneauAvant?.querySelector?.(".corps-panneau");
+  const positionPanneau = corpsPanneauAvant?.scrollTop ?? 0;
+  const defilementPanneauCommence =
+    corpsPanneauAvant?.dataset?.defilementCommence === "true";
   const zoneQuestionAvant = application.querySelector?.(".zone-question-scroll");
   const indexQuestionAvant = zoneQuestionAvant?.dataset?.questionIndex ?? "";
   const positionQuestion = zoneQuestionAvant?.scrollTop ?? 0;
@@ -3240,9 +3457,12 @@ function rendre({
   const zoneQuestion = application.querySelector?.(".zone-question-scroll");
   const doitRestaurerQuestion = zoneQuestion?.dataset?.questionIndex === indexQuestionAvant
     && positionQuestion > 0;
-  const doitRestaurerDefilement = !reinitialiserDefilementPanneau
-    && panneau?.id === idPanneauAvant
-    && positionPanneau > 0;
+  const memePanneau = !reinitialiserDefilementPanneau
+    && panneau?.id === idPanneauAvant;
+  const doitRestaurerDefilement = memePanneau && positionPanneau > 0;
+  if (memePanneau && defilementPanneauCommence && corpsPanneau?.dataset) {
+    corpsPanneau.dataset.defilementCommence = "true";
+  }
   if (doitRestaurerDefilement && corpsPanneau) corpsPanneau.scrollTop = positionPanneau;
   if (doitRestaurerQuestion && zoneQuestion) zoneQuestion.scrollTop = positionQuestion;
   const cibleFocus = focusPanneau
@@ -3269,7 +3489,12 @@ function rendre({
       zoneQuestion.scrollTop = positionQuestion;
     });
   }
+  installerIndicateurDefilementPanneau(panneau);
 }
+
+window.addEventListener("resize", () => {
+  installerIndicateurDefilementPanneau(application.querySelector?.(".panneau"));
+});
 
 application.addEventListener("click", (evenement) => {
   const cible = evenement.target.closest("[data-action]");
@@ -3360,7 +3585,12 @@ application.addEventListener("click", (evenement) => {
   }
   if (action === "valider") {
     validerReponse(etat);
-    if (etat.validation !== null) focusSelector = '[data-action="correction"]';
+    if (etat.correctionOuverte) {
+      focusPanneau = true;
+      reinitialiserDefilementPanneau = true;
+    } else if (etat.validation !== null) {
+      focusSelector = '[data-action="correction"]';
+    }
   }
   if (action === "aide") {
     menuSessionOuvert = false;
@@ -3457,7 +3687,14 @@ application.addEventListener("click", (evenement) => {
     tournerSolide(etat, 22);
     focusSelector = '[data-action="tourner-droite"]';
   }
-  if (action === "suivant") passerQuestionSuivante(etat);
+  if (action === "suivant") {
+    const sansValidationAvant = estEntrainement() && etat.validation === null;
+    passerQuestionSuivante(etat);
+    if (sansValidationAvant && etat.correctionOuverte) {
+      focusPanneau = true;
+      reinitialiserDefilementPanneau = true;
+    }
+  }
   if (action === "recommencer") etat = recommencer(etat);
   if (action === "nouvelle-serie") {
     etat = creerEtatLecteur({
@@ -3579,7 +3816,10 @@ window.addEventListener?.("keydown", (evenement) => {
   } else if (evenement.key === "Enter") {
     evenement.preventDefault?.();
     validerReponse(etat);
-    rendre();
+    rendre({
+      focusPanneau: etat.correctionOuverte,
+      reinitialiserDefilementPanneau: etat.correctionOuverte,
+    });
   }
 });
 

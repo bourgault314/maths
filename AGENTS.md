@@ -49,6 +49,9 @@ Automatismes V2, lire dans cet ordre :
   micro-notion à l'intérieur du module lorsque son découpage l'exige.
 - Réutiliser les fondations indépendantes validées ; ne pas refaire les objets
   visuels acquis sans raison établie.
+- Tout calcul linéaire, notamment avec une puissance, passe par le rendu HTML
+  commun ; les égalités successives utilisent son alignement testé et aucun
+  SVG ne compose localement une puissance.
 - Ne pas reconduire automatiquement l'interface, les couleurs ou l'organisation
   de la bêta.
 - Ne pas introduire GeoGebra sans demande explicite.

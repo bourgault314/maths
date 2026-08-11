@@ -1,12 +1,12 @@
 import {
   SCHEMA_SEANCE,
   validerSeance,
-} from "../../packages/contrats/src/seance.js?v=24";
+} from "../../packages/contrats/src/seance.js?v=25";
 import {
   REFERENTIEL_COMPETENCES,
   SCHEMA_TRACE_REPONSE,
   validerTraceReponse,
-} from "../../packages/contrats/src/trace-reponse.js?v=24";
+} from "../../packages/contrats/src/trace-reponse.js?v=25";
 import {
   TYPE_REPONSE_ENTIER_NATUREL,
   TYPE_REPONSE_DEUX_ENTIERS,
@@ -16,16 +16,16 @@ import {
   estDeuxEntiersExacts,
   estEntierExact,
   estSelectionExacte,
-} from "../../packages/contrats/src/question-v2.js?v=24";
+} from "../../packages/contrats/src/question-v2.js?v=25";
 import {
   analyserEcritureDecimalePositive,
   fractionsEgales,
-} from "../../packages/objets/src/fractions-decimaux.js?v=24";
+} from "../../packages/objets/src/fractions-decimaux.js?v=25";
 import { graineDepuisTexte } from "../../packages/moteur-exercices/src/aleatoire.js";
-import { creerRegistreAutomatismes } from "../../packages/automatismes/src/registre.js?v=24";
+import { creerRegistreAutomatismes } from "../../packages/automatismes/src/registre.js?v=25";
 import {
   normaliserIdentifiantModule,
-} from "../../packages/automatismes/src/identifiants.js?v=24";
+} from "../../packages/automatismes/src/identifiants.js?v=25";
 import {
   connaitNotionLecteur,
   listerNotionsLecteur,
@@ -37,8 +37,8 @@ import {
   NOTION_VOLUME_CYLINDRE,
   NOTION_VOLUME_PRISME,
   obtenirNotionLecteur,
-} from "./registre-lecteur.js?v=24";
-import { genererSerieMultinotions } from "./serie-multinotions.js?v=24";
+} from "./registre-lecteur.js?v=25";
+import { genererSerieMultinotions } from "./serie-multinotions.js?v=25";
 
 export {
   NOTION_FRACTIONS_SIMPLES_DECIMAUX,
@@ -467,17 +467,17 @@ export function validerReponse(etat) {
   const reponseFraction = question.reponse.type === TYPE_REPONSE_FRACTION_EQUIVALENTE;
   const reponseSimple = reponseEntiere || reponseDecimale;
   const reponseDouble = reponseDeuxEntiers || reponseFraction;
-  const reponseNumerique = reponseSimple || reponseDouble;
-  if (reponseSimple && etat.saisie === "") {
-    etat.erreurValidation = "Entre une réponse.";
-    return etat;
-  }
-  if (reponseDouble && etat.saisies.some((saisie) => saisie === "")) {
+  const reponseOmise = reponseSimple
+    ? etat.saisie === ""
+    : reponseDouble
+      ? etat.saisies.every((saisie) => saisie === "")
+      : etat.selection.length === 0;
+  if (
+    reponseDouble
+    && !reponseOmise
+    && etat.saisies.some((saisie) => saisie === "")
+  ) {
     etat.erreurValidation = "Complète les deux cases.";
-    return etat;
-  }
-  if (!reponseNumerique && etat.selection.length === 0) {
-    etat.erreurValidation = "Sélectionne au moins une réponse.";
     return etat;
   }
 
@@ -488,33 +488,35 @@ export function validerReponse(etat) {
   const analyseDecimale = reponseDecimale
     ? analyserDecimalSansErreur(etat.saisie)
     : null;
-  if (reponseDecimale && !analyseDecimale) {
+  if (!reponseOmise && reponseDecimale && !analyseDecimale) {
     etat.erreurValidation = "Entre une écriture décimale valide.";
     return etat;
   }
-  if (reponseFraction && valeursSaisies[1] === 0) {
+  if (!reponseOmise && reponseFraction && valeursSaisies[1] === 0) {
     etat.erreurValidation = "Le dénominateur doit être différent de 0.";
     return etat;
   }
-  const juste = reponseEntiere
-    ? estEntierExact(question.reponse.attendu, valeurSaisie)
-    : reponseDeuxEntiers
-      ? estDeuxEntiersExacts(question.reponse.attendus, valeursSaisies)
-      : reponseDecimale
-        ? fractionsEgales(
-          analyseDecimale.fractionReduite.numerateur,
-          analyseDecimale.fractionReduite.denominateur,
-          question.reponse.attendu.numerateur,
-          question.reponse.attendu.denominateur,
-        )
-        : reponseFraction
+  const juste = reponseOmise
+    ? false
+    : reponseEntiere
+      ? estEntierExact(question.reponse.attendu, valeurSaisie)
+      : reponseDeuxEntiers
+        ? estDeuxEntiersExacts(question.reponse.attendus, valeursSaisies)
+        : reponseDecimale
           ? fractionsEgales(
-            valeursSaisies[0],
-            valeursSaisies[1],
+            analyseDecimale.fractionReduite.numerateur,
+            analyseDecimale.fractionReduite.denominateur,
             question.reponse.attendu.numerateur,
             question.reponse.attendu.denominateur,
           )
-          : estSelectionExacte(question.reponse.attendus, etat.selection);
+          : reponseFraction
+            ? fractionsEgales(
+              valeursSaisies[0],
+              valeursSaisies[1],
+              question.reponse.attendu.numerateur,
+              question.reponse.attendu.denominateur,
+            )
+            : estSelectionExacte(question.reponse.attendus, etat.selection);
   const indexQuestion = etat.seance.etat.indexQuestion;
   const trace = {
     schema: SCHEMA_TRACE_REPONSE,
@@ -548,29 +550,33 @@ export function validerReponse(etat) {
     validation: 1,
     reponse: {
       type: question.reponse.type,
-      ...(reponseEntiere
-        ? { valeur: valeurSaisie }
-        : reponseDeuxEntiers
-          ? { valeurs: valeursSaisies }
-          : reponseDecimale
-            ? {
-              saisie: etat.saisie,
-              valeur: {
-                numerateur: analyseDecimale.fractionReduite.numerateur,
-                denominateur: analyseDecimale.fractionReduite.denominateur,
-              },
-            }
-            : reponseFraction
-              ? { valeurs: valeursSaisies }
-          : { choix: [...etat.selection] }),
+      statut: reponseOmise ? "omise" : "fournie",
+      ...(reponseOmise
+        ? {}
+        : reponseEntiere
+          ? { valeur: valeurSaisie }
+          : reponseDeuxEntiers
+            ? { valeurs: valeursSaisies }
+            : reponseDecimale
+              ? {
+                saisie: etat.saisie,
+                valeur: {
+                  numerateur: analyseDecimale.fractionReduite.numerateur,
+                  denominateur: analyseDecimale.fractionReduite.denominateur,
+                },
+              }
+              : reponseFraction
+                ? { valeurs: valeursSaisies }
+                : { choix: [...etat.selection] }),
     },
     juste,
     aideConsultee: etat.aideConsultee,
   };
   exigerConformite("trace", validerTraceReponse(trace));
   etat.traces.push(trace);
-  etat.validation = { juste };
+  etat.validation = { juste, ...(reponseOmise ? { omise: true } : {}) };
   etat.erreurValidation = "";
+  if (reponseOmise) ouvrirCorrection(etat);
   return etat;
 }
 
@@ -764,6 +770,7 @@ export function fermerCorrection(etat) {
 export function passerQuestionSuivante(etat) {
   if (etat.seance.etat.phase !== "en-cours") return etat;
   if (etat.configuration.mode === "entrainement" && etat.validation === null) {
+    validerReponse(etat);
     return etat;
   }
   const prochainIndex = etat.seance.etat.indexQuestion + 1;

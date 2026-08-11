@@ -1,4 +1,4 @@
-// Écriture mathématique structurée maths&go — version 3.
+// Écriture mathématique structurée maths&go — version 5.
 // Le rendu HTML sémantique des puissances est stabilisé pour NC-02 ; les
 // autres rendus historiques conservent leur statut de fondation évolutive.
 //
@@ -21,9 +21,9 @@
 // un `role` sémantique (« hypotenuse », « inconnue »…) que le rendu
 // habillera — jamais l'inverse.
 
-import { TYPOGRAPHIE } from "../../charte/src/charte.js?v=24";
+import { TYPOGRAPHIE } from "../../charte/src/charte.js?v=25";
 
-export const VERSION_EXPRESSIONS = 3;
+export const VERSION_EXPRESSIONS = 5;
 
 const CHAPEAU = "̂"; // accent circonflexe combinant
 
@@ -33,6 +33,8 @@ const CHAPEAU = "̂"; // accent circonflexe combinant
 
 /** Nombre (affiché avec la virgule française). */
 export const nombre = (valeur, options = {}) => ({ type: "nombre", valeur, ...options });
+/** Emplacement à compléter dans une expression interactive ou une aide. */
+export const caseVide = () => ({ type: "caseVide" });
 /** Variable ou lettre inconnue (« x »). */
 export const variable = (lettre, options = {}) => ({ type: "variable", lettre, ...options });
 /** Longueur d'un segment, désignée par ses extrémités (« BC »). */
@@ -47,6 +49,8 @@ export const produit = (...facteurs) => ({ type: "produit", facteurs });
 export const quotient = (numerateur, denominateur) => ({ type: "quotient", numerateur, denominateur });
 export const puissance = (base, exposant) => ({ type: "puissance", base, exposant });
 export const racine = (contenu) => ({ type: "racine", contenu });
+/** Parenthèses explicites autour d'une expression. */
+export const groupe = (contenu) => ({ type: "groupe", contenu });
 /** cos / sin / tan d'un angle. */
 export const trig = (fonction, angleNoeud) => ({ type: "trig", fonction, angle: angleNoeud });
 /** arccos / arcsin / arctan. */
@@ -54,6 +58,7 @@ export const reciproqueTrig = (fonction, contenu) => ({ type: "reciproqueTrig", 
 export const egalite = (...membres) => ({ type: "relation", signe: "=", membres });
 export const approximation = (...membres) => ({ type: "relation", signe: "≈", membres });
 export const different = (...membres) => ({ type: "relation", signe: "≠", membres });
+export const inferieurStrict = (...membres) => ({ type: "relation", signe: "<", membres });
 /** Petit texte inséré dans une rédaction (jamais du HTML). */
 export const texteCourt = (texte) => ({ type: "texte", texte });
 
@@ -86,6 +91,8 @@ export function versUnicode(noeud) {
   switch (noeud.type) {
     case "nombre":
       return nombreFrancais(noeud.valeur, noeud.decimales);
+    case "caseVide":
+      return "□";
     case "variable":
       return noeud.lettre;
     case "segment":
@@ -111,6 +118,8 @@ export function versUnicode(noeud) {
     }
     case "racine":
       return `√${versUnicode(noeud.contenu)}`;
+    case "groupe":
+      return `(${versUnicode(noeud.contenu)})`;
     case "trig":
       return `${noeud.fonction}(${versUnicode(noeud.angle)})`;
     case "reciproqueTrig":
@@ -137,6 +146,8 @@ export function versTex(noeud) {
   switch (noeud.type) {
     case "nombre":
       return texNombre(noeud.valeur, noeud.decimales);
+    case "caseVide":
+      return "\\square";
     case "variable":
       return noeud.lettre;
     case "segment":
@@ -160,12 +171,14 @@ export function versTex(noeud) {
       return `${versTex(noeud.base)}^{${noeud.exposant}}`;
     case "racine":
       return `\\sqrt{${versTex(noeud.contenu)}}`;
+    case "groupe":
+      return `\\left(${versTex(noeud.contenu)}\\right)`;
     case "trig":
       return `\\${noeud.fonction}\\left(${versTex(noeud.angle)}\\right)`;
     case "reciproqueTrig":
       return `\\operatorname{${noeud.fonction}}\\left(${versTex(noeud.contenu)}\\right)`;
     case "relation": {
-      const signes = { "=": "=", "≈": "\\approx ", "≠": "\\neq " };
+      const signes = { "=": "=", "≈": "\\approx ", "≠": "\\neq ", "<": "<" };
       return noeud.membres.map(versTex).join(signes[noeud.signe]);
     }
     case "texte":
@@ -184,6 +197,8 @@ export function versTexte(noeud) {
   switch (noeud.type) {
     case "nombre":
       return nombreFrancais(noeud.valeur, noeud.decimales);
+    case "caseVide":
+      return "case vide";
     case "variable":
       return noeud.lettre;
     case "segment":
@@ -209,6 +224,8 @@ export function versTexte(noeud) {
         : `${versTexte(noeud.base)} puissance ${noeud.exposant}`;
     case "racine":
       return `racine carrée de ${versTexte(noeud.contenu)}`;
+    case "groupe":
+      return `parenthèse ${versTexte(noeud.contenu)} fin de parenthèse`;
     case "trig": {
       const noms = { cos: "cosinus", sin: "sinus", tan: "tangente" };
       return `${noms[noeud.fonction]} de ${versTexte(noeud.angle)}`;
@@ -218,7 +235,12 @@ export function versTexte(noeud) {
       return `${noms[noeud.fonction]} de ${versTexte(noeud.contenu)}`;
     }
     case "relation": {
-      const signes = { "=": " égale ", "≈": " vaut environ ", "≠": " est différent de " };
+      const signes = {
+        "=": " égale ",
+        "≈": " vaut environ ",
+        "≠": " est différent de ",
+        "<": " est inférieur à ",
+      };
       return noeud.membres.map(versTexte).join(signes[noeud.signe]);
     }
     case "texte":
@@ -421,6 +443,8 @@ function contenuHtml(noeud) {
   switch (noeud.type) {
     case "nombre":
       return echapperHtml(nombreFrancais(noeud.valeur, noeud.decimales));
+    case "caseVide":
+      return '<span class="case-vide-aide" aria-hidden="true"></span>';
     case "variable":
       return echapperHtml(noeud.lettre);
     case "segment":
@@ -453,6 +477,8 @@ function contenuHtml(noeud) {
       );
     case "racine":
       return `√${contenuHtml(noeud.contenu)}`;
+    case "groupe":
+      return `(${contenuHtml(noeud.contenu)})`;
     case "trig":
       return `${echapperHtml(noeud.fonction)}(${contenuHtml(noeud.angle)})`;
     case "reciproqueTrig":
@@ -476,4 +502,30 @@ function contenuHtml(noeud) {
 export function versHtmlSemantique(noeud) {
   const verbalisation = echapperAttributHtml(versTexte(noeud));
   return `<span class="mathsgo-expression" role="math" aria-label="${verbalisation}">${contenuHtml(noeud)}</span>`;
+}
+
+/**
+ * Rend une suite d'égalités dans une grille HTML unique. Tous les signes
+ * « = » partagent ainsi la même colonne, quelle que soit la largeur des membres.
+ */
+export function versHtmlEgalitesAlignees(noeud) {
+  if (
+    noeud?.type !== "relation"
+    || noeud.signe !== "="
+    || !Array.isArray(noeud.membres)
+    || noeud.membres.length < 2
+  ) {
+    throw new TypeError("suite alignée : une égalité d'au moins deux membres est requise");
+  }
+  const verbalisation = echapperAttributHtml(versTexte(noeud));
+  const derniersIndex = noeud.membres.length - 2;
+  const lignes = noeud.membres.slice(1).map((membre, index) => {
+    const contenu = contenuHtml(membre);
+    return (
+      `<span class="mathsgo-egalite-gauche">${index === 0 ? contenuHtml(noeud.membres[0]) : ""}</span>`
+      + '<span class="mathsgo-egalite-signe">=</span>'
+      + `<span class="mathsgo-egalite-droite">${index === derniersIndex ? `<strong>${contenu}</strong>` : contenu}</span>`
+    );
+  }).join("");
+  return `<div class="mathsgo-expression mathsgo-egalites-alignees" role="math" aria-label="${verbalisation}">${lignes}</div>`;
 }
