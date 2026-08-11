@@ -61,7 +61,7 @@ test("le quotient 8 divisé par 2 porte les deux interprétations", () => {
   assert.match(html, /Partager 8 en 2 paquets : 4 dans chacun/);
   assert.match(html, /8 ÷ 2 : combien de paquets de 2 dans 8 \? 4/);
   assert.match(html, /8 ÷ 2 : partager 8 en 2 paquets : 4 dans chacun/);
-  assert.match(html, /Le quotient est le résultat d’une division\. Dans ce jeu, la division doit tomber juste et on divise le plus grand nombre par le plus petit\./);
+  assert.match(html, /Le quotient est le résultat d’une division\. Il indique combien de paquets égaux on peut former, ou combien il y a dans chaque paquet\./);
   const quotientMemo = html.match(/<article data-operation="quotient">([\s\S]*?)<\/article>/)?.[1] || "";
   assert.match(quotientMemo, /Une barre rectangulaire de 8 unités est divisée en 4 paquets de 2 unités/);
   assert.match(quotientMemo, /Une barre rectangulaire de 8 unités est divisée en 2 paquets de 4 unités/);
@@ -157,8 +157,22 @@ test("l’aide sépare l’indice de la révélation et la correction impose un 
   assert.match(html, /id="correction-dialog"[^>]*role="dialog"[^>]*aria-modal="true"/);
   assert.match(html, /openCorrection\(\{ chosenPair: \[firstValue, secondValue\], trigger: secondButton \}\)/);
   assert.match(html, /const retryMode = mode;[\s\S]*makeChallenge\(retryMode\)/);
-  assert.match(html, /Tu vas maintenant essayer la même opération sur un nouveau plateau, sans recevoir de clé/);
+  assert.match(html, /title: "La somme",\s*help: "Réunis les deux quantités : tu obtiens la somme\."/);
+  assert.match(html, /title: "La différence",\s*help: "Compare les deux quantités : leur écart est la différence\."/);
+  assert.match(html, /title: "Le produit",\s*help: "Un nombre indique les rangées ; l’autre, les points par rangée\."/);
+  assert.match(html, /title: "Le quotient",\s*help: "Cherche le nombre de paquets égaux, ou la quantité dans chaque paquet\."/);
+  assert.doesNotMatch(html, /id="correction-copy"|learningNotes\[mode\]\.correction/);
+  assert.match(html, /Ton calcul : \$\{expression\(mode, chosenPair\[0\], chosenPair\[1\]\)\}\. Il fallait obtenir \$\{target\}\./);
+  assert.match(html, /Voici une paire voisine du plateau\./);
+  assert.match(html, /\$\{solutionFirst\} et \$\{solutionSecond\} conviennent : \$\{expression\(mode, solutionFirst, solutionSecond\)\}\./);
   assert.match(html, /onEscape: retryAfterLearning/);
+});
+
+test("le cours garde la définition mathématique de chaque résultat sans long paragraphe", () => {
+  assert.match(html, /La somme est le résultat d’une addition\. Ici, 3 points et 2 points réunis donnent 5 points\./);
+  assert.match(html, /La différence est le résultat d’une soustraction\. Elle mesure l’écart entre deux quantités\./);
+  assert.match(html, /Le produit est le résultat d’une multiplication\. Ici, 3 rangées de 4 points, ou 4 rangées de 3 points, donnent 12 points\./);
+  assert.match(html, /Le quotient est le résultat d’une division\. Il indique combien de paquets égaux on peut former, ou combien il y a dans chaque paquet\./);
 });
 
 test("la série garde exactement dix clés et la distribution validée", () => {

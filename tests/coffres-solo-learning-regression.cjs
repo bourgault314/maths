@@ -291,6 +291,11 @@ async function auditPointJourney(browser, base, randomValue, expectedMode, error
     await page.waitForFunction(() => document.activeElement.id === "help-title");
     await assertPointVisual(page, "#help-visual .learning-demo", expectedMode, `Aide ${expectedMode}`);
     await assertNoHorizontalOverflow(page, `Aide ${expectedMode} à 320 px`);
+    const helpMetrics = await page.locator("#help-dialog .help-card").evaluate(card => {
+      const actions = card.querySelector(".dialog-actions").getBoundingClientRect();
+      return { scrollHeight: card.scrollHeight, clientHeight: card.clientHeight, actionsBottom: actions.bottom, viewportHeight: window.innerHeight };
+    });
+    assert(helpMetrics.scrollHeight <= helpMetrics.clientHeight + 1 && helpMetrics.actionsBottom <= helpMetrics.viewportHeight + 1, `Aide ${expectedMode} : le contenu ou les deux actions ne tiennent pas à 320 × 568 (${JSON.stringify(helpMetrics)}).`);
     await page.screenshot({ path: path.join(CAPTURES, `aide-${expectedMode}-320.png`) });
 
     await page.locator("#show-solution").click();
@@ -305,7 +310,7 @@ async function auditPointJourney(browser, base, randomValue, expectedMode, error
     await page.locator(`.rune[data-index="${wrongFirst}"]`).click();
     await page.locator(`.rune[data-index="${wrongSecond}"]`).click();
     await page.waitForFunction(() => document.activeElement.id === "correction-title");
-    assert((await page.locator("#correction-choice").innerText()).startsWith("Ton choix"), `La correction d’erreur ${expectedMode} n’annonce pas le choix.`);
+    assert((await page.locator("#correction-choice").innerText()).startsWith("Ton calcul"), `La correction d’erreur ${expectedMode} n’annonce pas le calcul.`);
     await assertPointVisual(page, "#correction-visual .learning-demo", expectedMode, `Correction après erreur ${expectedMode}`);
     await assertNoHorizontalOverflow(page, `Correction ${expectedMode} à 320 px`);
     await page.screenshot({ path: path.join(CAPTURES, `correction-${expectedMode}-320.png`) });
@@ -476,7 +481,7 @@ async function auditProductMemo(browser, base, {
     assert(duringReveal.mode === beforeHelp.mode, "La révélation change d’opération avant l’explication.");
     assert(duringReveal.boardId === beforeHelp.boardId, "La révélation change le plateau avant de montrer sa solution.");
     assert(duringReveal.keys === beforeHelp.keys, "La révélation offre une clé.");
-    assert((await page.locator("#correction-solution").innerText()).includes("paire voisine"), "La solution ne désigne pas une paire voisine.");
+    assert((await page.locator("#correction-choice").innerText()).includes("paire voisine"), "La solution ne désigne pas une paire voisine.");
     assert(await page.locator("#correction-visual .learning-demo[role=img]").isVisible(), "La correction visuelle est absente.");
     await page.keyboard.press("Tab");
     assert(await page.evaluate(() => document.activeElement.id === "close-correction"), "Tab ne rejoint pas l’action de la correction.");
@@ -495,7 +500,7 @@ async function auditProductMemo(browser, base, {
     await page.locator(`.rune[data-index="${wrongFirst}"]`).click();
     await page.locator(`.rune[data-index="${wrongSecond}"]`).click();
     await page.waitForFunction(() => document.activeElement.id === "correction-title");
-    assert((await page.locator("#correction-choice").innerText()).startsWith("Ton choix"), "Le calcul choisi n’est pas annoncé.");
+    assert((await page.locator("#correction-choice").innerText()).startsWith("Ton calcul"), "Le calcul choisi n’est pas annoncé.");
     assert((await state(page)).keys === beforeMistake.keys, "Une paire fausse offre une clé.");
     await page.screenshot({ path: path.join(CAPTURES, "correction-erreur-mobile-390.png") });
     await page.keyboard.press("Escape");

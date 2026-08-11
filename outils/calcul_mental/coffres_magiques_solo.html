@@ -865,6 +865,23 @@
       .rune-board { gap: 6px; padding: 8px; }
       .operation-grid { grid-template-columns: 1fr; }
       .dialog-card { padding: 21px 17px; }
+      .help-card,
+      .correction-card { padding: 16px 14px; }
+      .help-card .dialog-icon,
+      .correction-card .dialog-icon { font-size: 2rem; line-height: 1; }
+      .help-card h2,
+      .correction-card h2 { margin-block: 2px 7px; font-size: 1.5rem; }
+      .help-card .learning-panel,
+      .correction-card .learning-panel { margin-block: 10px; padding: 10px; }
+      .dialog-actions { flex-wrap: nowrap; }
+      .dialog-actions .primary-button,
+      .dialog-actions .reset-button {
+        min-width: 0;
+        flex: 1 1 0;
+        padding-inline: 8px;
+        font-size: .88rem;
+        line-height: 1.15;
+      }
       .learning-demo { --demo-dot: 9px; padding-inline: 7px; }
       .quantity-dot { width: 9px; height: 9px; }
       .demo-interpretations { grid-template-columns: 1fr; }
@@ -875,6 +892,12 @@
     }
 
     @media (max-width: 350px) {
+      .help-card,
+      .correction-card { padding-block: 12px; }
+      .help-card .dialog-icon,
+      .correction-card .dialog-icon { display: none; }
+      .help-card .learning-panel,
+      .correction-card .learning-panel { margin-block: 8px; padding: 8px; }
       .dual-learning-views,
       .quotient-interpretations { grid-template-columns: 1fr; }
       .learning-demo { --demo-dot: 8px; }
@@ -929,7 +952,7 @@
       <p>À chaque coffre, choisis deux cases qui se touchent par un côté.</p>
       <div class="operation-grid">
         <article data-operation="sum">
-          <h3>Somme : deux quantités réunies</h3>
+          <h3>Somme : réunir deux quantités</h3>
           <div class="operation-picture" role="img" aria-label="Un repère aligné au-dessus de toute la largeur indique : somme égale 5. Le rectangle du haut contient 5 points. Juste en dessous, deux rectangles jointifs contiennent 3 points puis 2 points. Les deux lignes ont exactement la même longueur. 3 plus 2 égale 5.">
             <div class="quantity-model" aria-hidden="true">
               <div class="sum-marker-row"><span class="sum-marker"><span>somme = 5</span></span></div>
@@ -942,12 +965,12 @@
               </div>
             </div>
           </div>
-          <p>La somme est le résultat d’une addition. Les 3 points et les 2 points sont réunis dans deux rectangles accolés. La ligne complète correspond aux 5 points du rectangle du haut.</p>
+          <p>La somme est le résultat d’une addition. Ici, 3 points et 2 points réunis donnent 5 points.</p>
           <strong>3 + 2 = 5</strong>
         </article>
         <article data-operation="difference">
-          <h3>Différence : les points non appariés</h3>
-          <div class="operation-picture" role="img" aria-label="Dans l’espace vide de la ligne inférieure, un repère orienté vers le haut est placé exactement sous les 3 points non appariés et indique : différence égale 3. Le rectangle du haut contient 5 points alignés. Le rectangle du bas, collé dessous et aligné à gauche, contient 2 points sous les deux premiers. Les 3 points restants du haut sont mis en évidence et n’ont pas de point apparié dessous. 5 moins 2 égale 3.">
+          <h3>Différence : l’écart entre deux quantités</h3>
+          <div class="operation-picture" role="img" aria-label="La différence est l’écart entre les deux quantités. Dans l’espace vide de la ligne inférieure, un repère orienté vers le haut est placé exactement sous les 3 points non appariés et indique : différence égale 3. Le rectangle du haut contient 5 points alignés. Le rectangle du bas, collé dessous et aligné à gauche, contient 2 points sous les deux premiers. Les 3 points restants du haut sont mis en évidence et n’ont pas de point apparié dessous. 5 moins 2 égale 3.">
             <div class="comparison-model" style="--unit-count:5" aria-hidden="true">
               <div class="comparison-upper">
                 <span class="comparison-unit"><i class="quantity-dot"></i></span><span class="comparison-unit"><i class="quantity-dot"></i></span><span class="comparison-unit unmatched"><i class="quantity-dot"></i></span><span class="comparison-unit unmatched"><i class="quantity-dot"></i></span><span class="comparison-unit unmatched"><i class="quantity-dot"></i></span>
@@ -959,11 +982,11 @@
               </div>
             </div>
           </div>
-          <p>La différence est le résultat d’une soustraction. On aligne les 2 points sous les 2 premiers des 5 points. Les 3 points du haut qui n’ont rien en dessous donnent la différence. L’ordre de sélection ne change pas le résultat.</p>
+          <p>La différence est le résultat d’une soustraction. Elle mesure l’écart entre deux quantités. Dans ce jeu, on soustrait toujours le plus petit nombre du plus grand.</p>
           <strong>5 − 2 = 3</strong>
         </article>
         <article>
-          <h3>Produit : des rangées égales</h3>
+          <h3>Produit : former des rangées égales</h3>
           <div class="operation-picture" role="group" aria-label="Deux rectangles orientés montrent que trois fois quatre et quatre fois trois donnent tous les deux douze">
             <div class="dual-learning-views">
               <div class="mini-learning-view" role="img" aria-label="Un réseau de 3 rangées et 4 colonnes contient 12 points. Le repère supérieur indique 4 colonnes et le repère latéral indique 3 rangées.">
@@ -976,7 +999,7 @@
               </div>
             </div>
           </div>
-          <p>Le produit est le résultat d’une multiplication. Les deux nombres donnent les dimensions d’un rectangle de points. En tournant le rectangle, le total ne change pas.</p>
+          <p>Le produit est le résultat d’une multiplication. Ici, 3 rangées de 4 points, ou 4 rangées de 3 points, donnent 12 points.</p>
           <strong>3 × 4 = 12 ; 4 × 3 = 12 aussi</strong>
         </article>
         <article data-operation="quotient">
@@ -997,7 +1020,7 @@
               </div>
             </div>
           </div>
-          <p>Le quotient est le résultat d’une division. Dans ce jeu, la division doit tomber juste et on divise le plus grand nombre par le plus petit. La division peut chercher combien de paquets on peut faire, ou combien il y aura dans chaque paquet.</p>
+          <p>Le quotient est le résultat d’une division. Il indique combien de paquets égaux on peut former, ou combien il y a dans chaque paquet. Dans ce jeu, on divise le plus grand nombre par le plus petit et on ne garde que les divisions qui tombent juste.</p>
           <strong>8 ÷ 2 : combien de paquets de 2 dans 8 ? 4</strong>
           <strong>8 ÷ 2 : partager 8 en 2 paquets : 4 dans chacun</strong>
         </article>
@@ -1015,7 +1038,6 @@
       <h2 id="help-title" tabindex="-1">Un indice sur l’opération</h2>
       <p id="help-copy" class="learning-copy"></p>
       <div id="help-visual" class="learning-panel"></div>
-      <p>Observe le sens de l’opération, puis cherche encore parmi les cases voisines.</p>
       <div class="dialog-actions">
         <button id="close-help" class="reset-button" type="button">Retour au plateau</button>
         <button id="show-solution" class="primary-button" type="button">Montrer une solution</button>
@@ -1030,7 +1052,6 @@
       <p id="correction-choice" class="correction-choice"></p>
       <p id="correction-solution" class="correction-solution"></p>
       <div id="correction-visual" class="learning-panel"></div>
-      <p id="correction-copy" class="learning-copy"></p>
       <div class="dialog-actions">
         <button id="close-correction" class="primary-button" type="button">Réessayer sur un nouveau plateau</button>
       </div>
@@ -1080,7 +1101,6 @@
       const correctionChoice = document.querySelector("#correction-choice");
       const correctionSolution = document.querySelector("#correction-solution");
       const correctionVisual = document.querySelector("#correction-visual");
-      const correctionCopy = document.querySelector("#correction-copy");
       const result = document.querySelector("#result");
       let values = [];
       let modes = [];
@@ -1318,27 +1338,23 @@
 
       const learningNotes = {
         sum: {
-          title: "La somme : deux quantités réunies",
-          help: "Observe les deux rectangles accolés du bas : chacun contient les points d’un nombre. En les réunissant, on obtient exactement les points du rectangle du haut.",
-          correction: "La somme est le résultat d’une addition. Les deux rectangles de points du bas sont jointifs ; ensemble, ils ont la même longueur et le même nombre de points que le rectangle du haut.",
+          title: "La somme",
+          help: "Réunis les deux quantités : tu obtiens la somme.",
           example: [3, 2]
         },
         difference: {
-          title: "La différence : les points non appariés",
-          help: "Aligne les points du plus petit nombre sous ceux du plus grand. Les points du haut qui n’ont aucun point en dessous donnent la différence.",
-          correction: "La différence est le résultat d’une soustraction. On aligne les points du plus petit nombre sous ceux du plus grand ; les points non appariés, mis en évidence, donnent la différence.",
+          title: "La différence",
+          help: "Compare les deux quantités : leur écart est la différence.",
           example: [5, 2]
         },
         product: {
-          title: "Le produit forme un rectangle",
-          help: "Utilise un nombre pour les rangées et l’autre pour les points de chaque rangée.",
-          correction: "Le produit est le résultat d’une multiplication : les deux nombres donnent les dimensions du réseau de points.",
+          title: "Le produit",
+          help: "Un nombre indique les rangées ; l’autre, les points par rangée.",
           example: [3, 4]
         },
         quotient: {
-          title: "Le quotient sert à grouper ou à partager",
-          help: "Observe les unités de la barre : tu peux chercher combien de paquets égaux on forme, ou combien d’unités il y a dans chacun des paquets.",
-          correction: "Le quotient est le résultat d’une division. Dans ce jeu, la division doit tomber juste et on divise le plus grand nombre par le plus petit.",
+          title: "Le quotient",
+          help: "Cherche le nombre de paquets égaux, ou la quantité dans chaque paquet.",
           example: [8, 2]
         }
       };
@@ -1479,7 +1495,7 @@
           );
         } else if (nextMode === "difference") {
           const alignment = model.low === 1 ? "sous le premier" : `sous les ${model.low} premiers`;
-          demo.setAttribute("aria-label", `Dans l’espace vide de la ligne inférieure, un repère orienté vers le haut est placé exactement sous les ${pointLabel(model.difference)} non appariés et indique : différence égale ${model.difference}. Le rectangle du haut contient ${pointLabel(model.high)} alignés. Le rectangle du bas, collé dessous et aligné à gauche, contient ${pointLabel(model.low)} ${alignment}. Les ${pointLabel(model.difference)} restants du haut sont mis en évidence et n’ont pas de point apparié dessous. ${model.high} moins ${model.low} égale ${model.difference}.`);
+          demo.setAttribute("aria-label", `La différence est l’écart entre les deux quantités. Dans l’espace vide de la ligne inférieure, un repère orienté vers le haut est placé exactement sous les ${pointLabel(model.difference)} non appariés et indique : différence égale ${model.difference}. Le rectangle du haut contient ${pointLabel(model.high)} alignés. Le rectangle du bas, collé dessous et aligné à gauche, contient ${pointLabel(model.low)} ${alignment}. Les ${pointLabel(model.difference)} restants du haut sont mis en évidence et n’ont pas de point apparié dessous. ${model.high} moins ${model.low} égale ${model.difference}.`);
           demo.append(
             createDifferenceComparison(model),
             makeElement("span", "demo-caption", `${model.high} − ${model.low} = ${model.difference}.`)
@@ -1585,10 +1601,9 @@
         }
         const [solutionFirst, solutionSecond] = found.pair;
         correctionChoice.textContent = chosenPair
-          ? `Ton choix : ${expression(mode, chosenPair[0], chosenPair[1])}. Ce calcul ne donne pas ${target}.`
-          : "Tu as demandé à voir une solution : observons une vraie paire voisine du plateau.";
-        correctionSolution.textContent = `Une paire voisine qui ouvre ce coffre est ${solutionFirst} et ${solutionSecond}, car ${expression(mode, solutionFirst, solutionSecond)}.`;
-        correctionCopy.textContent = `${learningNotes[mode].correction} Tu vas maintenant essayer la même opération sur un nouveau plateau, sans recevoir de clé.`;
+          ? `Ton calcul : ${expression(mode, chosenPair[0], chosenPair[1])}. Il fallait obtenir ${target}.`
+          : "Voici une paire voisine du plateau.";
+        correctionSolution.textContent = `${solutionFirst} et ${solutionSecond} conviennent : ${expression(mode, solutionFirst, solutionSecond)}.`;
         renderLearningPanel(correctionVisual, mode, solutionFirst, solutionSecond);
         locked = true;
         dialogs.open(correctionDialog, {
