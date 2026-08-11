@@ -25,6 +25,7 @@
     --ink:#eaf2ff; --dim:#9fb7d8;
   }
   *{box-sizing:border-box; -webkit-tap-highlight-color:transparent;}
+  html{background:#241b4d;}
   html,body{margin:0;padding:0;}
   body{
     font-family:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
@@ -41,15 +42,12 @@
   #home{max-width:560px;margin:0 auto;padding:18px 14px 40px;}
   #home header{position:relative;text-align:center;padding:8px 0 4px;}
   .brandmark{
-    position:absolute;left:0;top:5px;width:122px;padding:7px 9px;
-    border:1px solid #ffc94daa;border-radius:14px;
-    background:linear-gradient(145deg,#fffdf8,#fff1d2);
-    box-shadow:0 7px 22px #160e3638,inset 0 1px 0 #fff;
-    transition:transform .15s ease,border-color .15s ease,box-shadow .15s ease;
+    position:absolute;left:0;top:8px;width:118px;padding:0;
+    border:0;background:transparent;
+    transition:transform .15s ease,opacity .15s ease;
   }
   .brandmark:hover{
-    background:linear-gradient(145deg,#fffdf8,#fff1d2);border-color:#ffc94d;
-    box-shadow:0 9px 26px #160e3648,inset 0 1px 0 #fff;transform:translateY(-1px);
+    background:transparent;opacity:.94;transform:translateY(-1px);
   }
   .brandmark:focus-visible{outline:3px solid var(--gold);outline-offset:3px;}
   .brandmark img{
@@ -170,11 +168,16 @@
   @media (orientation:portrait){body.immersive #play{padding:4px;gap:5px;}}
   body.immersive #topbar .name small{display:none;}
   #fstoast{position:fixed;left:50%;bottom:max(18px,env(safe-area-inset-bottom));transform:translateX(-50%);
-    background:#1c2848;border:2px solid #ffc94d66;border-radius:14px;padding:11px 16px;font-size:13px;
-    line-height:1.45;color:#ffeeda;max-width:360px;width:calc(100vw - 32px);z-index:80;
+    background:#1c2848;border:2px solid #ffc94d66;border-radius:16px;padding:15px 16px;font-size:13px;
+    line-height:1.5;color:#ffeeda;max-width:380px;width:calc(100vw - 32px);z-index:80;
     box-shadow:0 10px 40px #00000088;display:none;}
   #fstoast.show{display:block;}
+  #fstitle{font-size:16px;font-weight:900;color:var(--gold);margin-bottom:6px;}
   #fstoast b{color:var(--gold);}
+  #fsclose{display:block;margin:12px auto 0;background:var(--gold);color:#4a2b10;border:0;border-radius:10px;
+    min-height:44px;padding:8px 18px;font:inherit;font-weight:800;cursor:pointer;}
+  #fsbtn.help-only{font-size:11.5px;padding-inline:10px;}
+  #fsbtn[hidden]{display:none !important;}
   #playleft{display:flex;flex-direction:column;gap:8px;}
   #playright{display:flex;flex-direction:column;gap:8px;}
   /* victoire */
@@ -222,7 +225,7 @@
   .site-footer a{text-underline-offset:2px;}
   .site-footer button{border:0;padding:0;background:none;text-decoration:underline;cursor:pointer;text-underline-offset:2px;}
   @media (max-width:420px){
-    .brandmark{width:106px;padding:6px 8px;}
+    .brandmark{width:104px;}
   }
   @media (max-width:350px){
     .brandmark{width:94px;}
@@ -238,7 +241,7 @@
 <div id="home" class="screen active">
   <header>
     <a class="brandmark" href="/" aria-label="Retour à l’accueil maths&go">
-      <img src="/assets/img/mathsgo-logo.png" alt="maths&go" width="1338" height="622">
+      <img src="/assets/img/mathsgo-logo-soley.png" alt="maths&go" width="1338" height="622">
     </a>
     <svg width="74" height="74" viewBox="0 0 100 100" aria-hidden="true">
       <defs><radialGradient id="hsun" cx="50%" cy="45%"><stop offset="0%" stop-color="#fff3c4"/><stop offset="60%" stop-color="#ffc94d"/><stop offset="100%" stop-color="#ff9d3c"/></radialGradient></defs>
@@ -288,7 +291,7 @@
       <div class="name" id="pname"></div>
       <div id="fruitctr"></div>
       <button class="iconbtn" id="hintbtn" type="button">Indice</button>
-      <button class="iconbtn" id="fsbtn" type="button" aria-label="Activer le plein écran" title="Plein écran">⛶</button>
+      <button class="iconbtn" id="fsbtn" type="button" aria-label="Activer le plein écran" title="Plein écran" hidden>⛶</button>
       <button class="iconbtn" id="resetbtn" type="button" aria-label="Recommencer le niveau" title="Recommencer">↺</button>
     </div>
     <div id="rotatehint">Tourne ton téléphone, puis masque la barre d’outils Safari pour agrandir le plateau.</div>
@@ -308,7 +311,11 @@
     <div id="toolbox"></div>
     <div id="status" aria-live="polite"></div>
   </div>
-  <div id="fstoast" role="status">Safari sur iPhone ne permet pas au jeu de masquer ses barres. Pour gagner de la hauteur maintenant : <b>menu de la page</b> → <b>…</b> → <b>Masquer la barre d’outils</b>. Pour jouer sans barres à l’avenir : <b>Partager</b> → <b>Sur l’écran d’accueil</b>.</div>
+  <div id="fstoast" role="dialog" aria-modal="true" aria-labelledby="fstitle" aria-describedby="fshelptext">
+    <div id="fstitle">Agrandir le jeu</div>
+    <div id="fshelptext"></div>
+    <button id="fsclose" type="button">J’ai compris</button>
+  </div>
   <div id="hintov" role="dialog" aria-modal="true" aria-labelledby="hinttitle">
     <div id="hintcard" tabindex="-1">
       <div id="hinttitle">Coup de pouce</div>
@@ -1580,55 +1587,85 @@ document.addEventListener('keydown',ev=>{
   if(ev.key==='Escape'&&document.getElementById('hintov').classList.contains('show'))document.getElementById('hintclose').click();
 });
 
-/* Plein écran natif quand le navigateur le permet, mode jeu sinon (notamment iOS Safari). */
+/* Plein écran natif quand le navigateur le permet, aide honnête dans les autres cas. */
 (function(){
   const fsbtn=document.getElementById('fsbtn');
   const target=document.getElementById('play');
   const requestFS=target.requestFullscreen||target.webkitRequestFullscreen;
   const exitFS=document.exitFullscreen||document.webkitExitFullscreen;
   const standalone=window.matchMedia('(display-mode: standalone)').matches||window.navigator.standalone===true;
-  const isiPhone=/iPhone|iPod/.test(navigator.userAgent);
-  let toastTimer=0;
-  if(isiPhone&&!standalone){
+  const ua=navigator.userAgent;
+  const safariIPhone=/iPhone|iPod/.test(ua)&&/Safari/.test(ua)&&!/(CriOS|FxiOS|EdgiOS|OPiOS)/.test(ua);
+  const mobileDevice=/Android|iPhone|iPad|iPod|Mobile/.test(ua)||navigator.maxTouchPoints>1;
+  const nativeFullscreen=typeof requestFS==='function'&&typeof exitFS==='function'&&
+    document.fullscreenEnabled!==false&&document.webkitFullscreenEnabled!==false&&!safariIPhone;
+  const portrait=window.matchMedia('(orientation:portrait)');
+  if(!nativeFullscreen){
+    fsbtn.textContent='↗ Agrandir';
+    fsbtn.classList.add('help-only');
     fsbtn.setAttribute('aria-label','Comment agrandir le jeu');
     fsbtn.title='Comment agrandir le jeu';
+    fsbtn.setAttribute('aria-haspopup','dialog');
+    fsbtn.setAttribute('aria-controls','fstoast');
+    fsbtn.setAttribute('aria-expanded','false');
+  }else{
+    fsbtn.setAttribute('aria-pressed','false');
   }
   function fullscreenElement(){return document.fullscreenElement||document.webkitFullscreenElement;}
-  function setImmersive(on,native=false){
+  function setFullscreenUI(on){
     document.body.classList.toggle('immersive',on);
-    fsbtn.textContent=on?(native?'✕':'▣'):'⛶';
-    fsbtn.setAttribute('aria-label',on?(native?'Quitter le plein écran':'Quitter le mode jeu'):'Agrandir le jeu');
-    fsbtn.title=on?(native?'Quitter le plein écran':'Quitter le mode jeu'):'Agrandir le jeu';
+    fsbtn.textContent=on?'✕':'⛶';
+    fsbtn.setAttribute('aria-label',on?'Quitter le plein écran':'Activer le plein écran');
+    fsbtn.title=on?'Quitter le plein écran':'Plein écran';
+    fsbtn.setAttribute('aria-pressed',String(on));
     relayout();
   }
-  function showIPhoneHelp(){
+  function closeHelp(restoreFocus=true){
     const toast=document.getElementById('fstoast');
-    toast.classList.add('show');
-    clearTimeout(toastTimer);
-    toastTimer=setTimeout(()=>toast.classList.remove('show'),12000);
+    const wasOpen=toast.classList.contains('show');
+    toast.classList.remove('show');
+    fsbtn.setAttribute('aria-expanded','false');
+    if(wasOpen){
+      const focusTarget=restoreFocus&&!fsbtn.hidden?fsbtn:document.getElementById('resetbtn');
+      focusTarget.focus();
+    }
   }
-  function fallback(){
-    const on=!document.body.classList.contains('immersive');
-    setImmersive(on,false);
+  function syncAvailability(){
+    const hide=standalone||(!nativeFullscreen&&mobileDevice&&portrait.matches);
+    fsbtn.hidden=hide;
+    if(hide)closeHelp(false);
+  }
+  function showHelp(){
+    const toast=document.getElementById('fstoast');
+    document.getElementById('fshelptext').innerHTML=safariIPhone
+      ?'Sur iPhone, Safari ne laisse pas le jeu masquer lui-même ses barres.<br><br>Pour gagner de la hauteur maintenant : <b>menu de la page</b> → <b>…</b> → <b>Masquer la barre d’outils</b>.<br><br>Pour conserver cet affichage : <b>Partager</b> → <b>Sur l’écran d’accueil</b>.'
+      :'Ce navigateur ne permet pas au jeu de commander directement le plein écran. Utilise son menu d’affichage pour masquer les barres lorsque cette option est proposée.';
+    toast.classList.add('show');
+    fsbtn.setAttribute('aria-expanded','true');
+    document.getElementById('fsclose').focus({preventScroll:true});
   }
   fsbtn.addEventListener('click',async()=>{
-    /* Safari iPhone ne propose pas le plein écran pour un élément HTML : ne pas
-       simuler une réussite, mais donner les deux solutions réellement efficaces. */
-    if(isiPhone&&!standalone){showIPhoneHelp();return;}
-    if(requestFS&&!standalone){
-      try{
-        if(fullscreenElement())await exitFS.call(document);
-        else{
-          await requestFS.call(target);
-          if(!fullscreenElement()){fallback();return;}
-        }
-        return;
-      }catch(e){fallback();return;}
+    if(!nativeFullscreen){showHelp();return;}
+    try{
+      if(fullscreenElement())await exitFS.call(document);
+      else{
+        await requestFS.call(target);
+      }
+    }catch(e){
+      showHelp();
     }
-    fallback();
   });
-  ['fullscreenchange','webkitfullscreenchange'].forEach(name=>document.addEventListener(name,()=>setImmersive(!!fullscreenElement(),true)));
-  document.getElementById('fstoast').addEventListener('click',()=>document.getElementById('fstoast').classList.remove('show'));
+  ['fullscreenchange','webkitfullscreenchange'].forEach(name=>document.addEventListener(name,()=>setFullscreenUI(!!fullscreenElement())));
+  ['fullscreenerror','webkitfullscreenerror'].forEach(name=>document.addEventListener(name,showHelp));
+  document.getElementById('fsclose').addEventListener('click',()=>closeHelp());
+  document.addEventListener('keydown',ev=>{
+    if(ev.key==='Escape'&&document.getElementById('fstoast').classList.contains('show'))closeHelp();
+  });
+  if(portrait.addEventListener)portrait.addEventListener('change',syncAvailability);
+  else portrait.addListener(syncAvailability);
+  window.addEventListener('orientationchange',syncAvailability);
+  window.addEventListener('pageshow',syncAvailability);
+  syncAvailability();
 })();
 document.getElementById('nextbtn').addEventListener('click',()=>{
   const L=LV[cur];
