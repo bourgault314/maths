@@ -87,6 +87,21 @@ async function captureGloubiOnIphone(page) {
   await page.setViewportSize({ width: 402, height: 874 });
   await page.addInitScript(() => { Math.random = () => 0.25; });
   await page.goto(`${page.serverUrl}/outils/club_maths/carres_gloutons.html`, { waitUntil: "networkidle" });
+
+  const ruleCard = page.locator(".rule").nth(1);
+  const ruleGeometry = await ruleCard.evaluate(node => {
+    const disc = node.querySelector(".ai-marker-disc").getBBox();
+    const tongue = node.querySelector(".ai-marker-tongue").getBBox();
+    return {
+      discCenter: disc.x + disc.width / 2,
+      tongueCenter: tongue.x + tongue.width / 2
+    };
+  });
+  assert.ok(ruleGeometry.tongueCenter >= ruleGeometry.discCenter + 6,
+    `règle iPhone : la langue doit sortir du coin droit (${JSON.stringify(ruleGeometry)})`);
+  await page.screenshot({ path: path.join(OUTPUT, "regles-iphone-402x874-3x.png"), fullPage: false });
+  await ruleCard.screenshot({ path: path.join(OUTPUT, "gloubi-regle-iphone-3x.png") });
+
   await page.locator("#start-game").click();
 
   for (let attempt = 0; attempt < 16 && await page.locator(".ai-marker").count() === 0; attempt += 1) {
@@ -123,10 +138,12 @@ async function captureGloubiOnIphone(page) {
     `iPhone : la langue doit chevaucher la courbe de bouche (${JSON.stringify(geometry)})`);
   assert.ok(geometry.tongue.bottom <= geometry.disc.bottom - 5,
     `iPhone : la langue doit garder de l’air avant le bord du visage (${JSON.stringify(geometry)})`);
+  assert.ok(geometry.tongue.x + geometry.tongue.width / 2 >= geometry.disc.x + geometry.disc.width / 2 + 6,
+    `iPhone : la langue doit être franchement décalée vers le coin droit (${JSON.stringify(geometry)})`);
 
   await page.screenshot({ path: path.join(OUTPUT, "gloubi-iphone-402x874-3x.png"), fullPage: true });
   await marker.screenshot({ path: path.join(OUTPUT, "gloubi-visage-iphone-3x.png") });
-  return geometry;
+  return { marker: geometry, rule: ruleGeometry };
 }
 
 async function main() {
