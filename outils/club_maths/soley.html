@@ -8,6 +8,10 @@
   <link rel="canonical" href="https://mathsgo.re/outils/club_maths/soley.html">
   <meta name="robots" content="index, follow, max-image-preview:large">
 <meta name="theme-color" content="#241b4d">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Solèy">
 <link rel="icon" href="/favicon.ico" sizes="48x48">
 <link rel="icon" type="image/svg+xml" href="/favicon.svg">
 <link rel="icon" type="image/png" sizes="32x32" href="/assets/img/favicon-32.png">
@@ -32,6 +36,7 @@
   }
   .screen{display:none;}
   .screen.active{display:block;}
+  .screen:not(.active){display:none !important;}
   /* ============ ACCUEIL ============ */
   #home{max-width:560px;margin:0 auto;padding:18px 14px 40px;}
   #home header{position:relative;text-align:center;padding:8px 0 4px;}
@@ -44,7 +49,6 @@
   .brandmark:focus-visible{outline:3px solid var(--gold);outline-offset:3px;}
   .brandmark img{
     display:block;width:100%;height:auto;opacity:.92;
-    filter:grayscale(1) brightness(0) invert(89%) sepia(58%) saturate(738%) hue-rotate(330deg) brightness(105%) contrast(102%);
   }
   #home h1{font-size:44px;margin:6px 0 0;letter-spacing:2px;text-shadow:0 3px 20px #ffc94d66;}
   #home .tagline{font-size:14px;color:#ffe9c4;margin:2px 0 10px;}
@@ -92,7 +96,26 @@
     padding:8px 11px;font-size:13px;font-weight:800;cursor:pointer;white-space:nowrap;}
   #rotatehint{font-size:12px;color:#ffe9c4;background:#00000042;border-radius:10px;padding:6px 10px;display:none;}
   #introline{font-size:13px;line-height:1.4;background:#00000042;border-radius:10px;padding:8px 11px;color:#ffeeda;}
-  #hintline{font-size:13px;line-height:1.4;background:#2c4a7a66;border-radius:10px;padding:8px 11px;color:#cfe4ff;display:none;}
+  /* Coup de pouce : explication textuelle, rayons et fractions bien composées. */
+  #hintov{position:fixed;inset:0;background:#10182eb8;display:none;align-items:center;justify-content:center;z-index:60;padding:16px;}
+  #hintov.show{display:flex;}
+  #hintcard{background:#1c2848;border:2px solid #ffc94d55;border-radius:18px;padding:18px 16px 14px;
+    max-width:410px;width:100%;max-height:min(85vh,720px);overflow-y:auto;box-shadow:0 16px 60px #00000088;}
+  #hinttitle{font-size:17px;font-weight:900;color:var(--gold);margin-bottom:6px;}
+  #hinttext{font-size:14px;line-height:1.5;color:#ffeeda;margin-bottom:4px;}
+  .hline{background:#ffffff0e;border-radius:12px;padding:10px 8px 11px;margin:10px 0;}
+  .hsvg{width:100%;display:block;margin-bottom:6px;}
+  .slbl{font-size:17px;font-weight:800;text-anchor:middle;paint-order:stroke;stroke:#101a33;stroke-width:4px;}
+  .sref{font-size:13px;font-weight:700;fill:#d8c6ae;}
+  .href{background:#ffffff08;border-radius:12px;padding:5px 8px 2px;margin:8px 0 2px;}
+  .href svg{width:100%;display:block;}
+  .heq{display:flex;align-items:center;justify-content:center;flex-wrap:wrap;color:#fff;font-size:18px;font-weight:800;row-gap:5px;}
+  .heq .op{margin:0 7px;}
+  .frac{display:inline-flex;flex-direction:column;text-align:center;margin:0 4px;line-height:1.1;}
+  .frac .fn{border-bottom:2.5px solid #fff;padding:0 6px 2px;}
+  .frac .fd{padding:2px 6px 0;}
+  #hintclose{display:block;margin:12px auto 0;background:var(--gold);color:#4a2b10;border:none;border-radius:11px;
+    padding:10px 20px;font-weight:800;font-size:14px;cursor:pointer;}
   #boardbox{position:relative;border-radius:14px;overflow:hidden;box-shadow:0 10px 40px #00000055;}
   #board{display:block;width:100%;height:auto;background:#16223f;}
   #toolbox{display:flex;gap:8px;flex-wrap:wrap;padding:9px;background:#00000042;border-radius:14px;min-height:60px;align-items:center;}
@@ -109,14 +132,38 @@
   #status .ok{color:var(--green);font-weight:700;}
   #status .bad{color:#ff9c8a;}
   /* paysage : plateau seul à gauche pleine hauteur, tout le reste dans la colonne de droite */
-  @media (orientation:landscape) and (min-width:640px){
-    #play{flex-direction:row;max-width:none;height:100vh;overflow:hidden;align-items:stretch;}
-    #playleft{flex:1;min-width:0;display:flex;align-items:center;justify-content:center;}
-    #playleft #boardbox{max-width:100%;max-height:100%;display:flex;}
-    #board{height:calc(100vh - 16px);width:auto;max-width:calc(100vw - 284px);}
-    #playright{width:252px;flex:0 0 252px;overflow-y:auto;padding-right:2px;}
+  @media (orientation:landscape){
+    #play{--side:clamp(196px,27vw,252px);flex-direction:row;max-width:none;width:100%;height:100vh;height:100dvh;min-height:0;
+      overflow:hidden;align-items:stretch;padding:max(4px,env(safe-area-inset-top)) max(4px,env(safe-area-inset-right)) max(4px,env(safe-area-inset-bottom)) max(4px,env(safe-area-inset-left));}
+    #playleft{flex:1;min-width:0;min-height:0;display:flex;align-items:center;justify-content:center;}
+    #playleft #boardbox{flex:1;width:100%;height:100%;max-width:none;max-height:none;display:flex;}
+    #board{width:100%;height:100%;max-width:100%;max-height:100%;}
+    #playright{width:var(--side);flex:0 0 var(--side);overflow-y:auto;padding-right:2px;}
     #rotatehint{display:none !important;}
+    body.immersive{overflow:hidden;}
+    body.immersive #play{--side:clamp(180px,23vw,220px);height:100vh;height:100dvh;min-height:0;gap:5px;
+      padding:max(4px,env(safe-area-inset-top)) max(4px,env(safe-area-inset-right)) max(4px,env(safe-area-inset-bottom)) max(4px,env(safe-area-inset-left));}
+    body.immersive #introline{display:none;}
   }
+  @media (orientation:landscape) and (max-height:520px){
+    #playright{gap:5px;}
+    #topbar{gap:5px;}
+    #topbar .name{font-size:12px;min-width:88px;}
+    #topbar .name small{font-size:10px;}
+    .iconbtn,.backbtn{padding:6px 8px;}
+    #introline{font-size:11.5px;padding:6px 8px;}
+    #toolbox{gap:5px;padding:6px;min-height:0;}
+    .chip{width:50px;height:58px;}
+    .chip svg{width:38px;height:38px;}
+  }
+  @media (orientation:portrait){body.immersive #play{padding:4px;gap:5px;}}
+  body.immersive #topbar .name small{display:none;}
+  #fstoast{position:fixed;left:50%;bottom:max(18px,env(safe-area-inset-bottom));transform:translateX(-50%);
+    background:#1c2848;border:2px solid #ffc94d66;border-radius:14px;padding:11px 16px;font-size:13px;
+    line-height:1.45;color:#ffeeda;max-width:360px;width:calc(100vw - 32px);z-index:80;
+    box-shadow:0 10px 40px #00000088;display:none;}
+  #fstoast.show{display:block;}
+  #fstoast b{color:var(--gold);}
   #playleft{display:flex;flex-direction:column;gap:8px;}
   #playright{display:flex;flex-direction:column;gap:8px;}
   /* victoire */
@@ -143,9 +190,9 @@
   }
   .beam,.beampath{stroke-linecap:round;opacity:.94;stroke-dasharray:16 12;animation:flow .7s linear infinite;fill:none;}
   @keyframes flow{to{stroke-dashoffset:-28;}}
-  .beam.drawin{stroke-dasharray:none;animation:none;}
-  @keyframes drawseg{to{stroke-dashoffset:0;}}
-  @keyframes fadein{to{opacity:.94;}}
+  .beam.drawin{animation:none;}
+  @keyframes drawseg{from{stroke-dashoffset:var(--beam-length);}to{stroke-dashoffset:0;}}
+  @keyframes fadein{from{opacity:0;}to{opacity:.94;}}
   .beamlbl{font-size:25px;font-weight:800;stroke:#101a33;stroke-width:6;paint-order:stroke;text-anchor:middle;}
   .tile{fill:#223a63;stroke:#7fb0ff3d;stroke-width:2;}
   .gridline{stroke:#ffffff10;stroke-width:1.5;}
@@ -223,11 +270,11 @@
       <div class="name" id="pname"></div>
       <div id="fruitctr"></div>
       <button class="iconbtn" id="hintbtn" type="button">Indice</button>
+      <button class="iconbtn" id="fsbtn" type="button" aria-label="Activer le plein écran" title="Plein écran">⛶</button>
       <button class="iconbtn" id="resetbtn" type="button" aria-label="Recommencer le niveau" title="Recommencer">↺</button>
     </div>
     <div id="rotatehint">Astuce : tourne ton téléphone, le plateau sera plus grand.</div>
     <div id="introline"></div>
-    <div id="hintline"></div>
     <div id="boardbox">
       <svg id="board" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Plateau du niveau"></svg>
       <div id="splash" aria-hidden="true"><div>Lévé&nbsp;!</div></div>
@@ -242,6 +289,16 @@
   <div id="playright">
     <div id="toolbox"></div>
     <div id="status" aria-live="polite"></div>
+  </div>
+</div>
+
+<div id="fstoast" role="status">Sur iPhone ou iPad, le bouton active le mode jeu. Pour masquer aussi les barres de Safari : <b>Partager</b> → <b>« Sur l’écran d’accueil »</b>.</div>
+
+<div id="hintov" role="dialog" aria-modal="true" aria-labelledby="hinttitle">
+  <div id="hintcard" tabindex="-1">
+    <div id="hinttitle">Coup de pouce</div>
+    <div id="hintbody"></div>
+    <button id="hintclose" type="button">J’ai compris !</button>
   </div>
 </div>
 
@@ -289,14 +346,14 @@ const FRNAME={letchi:'Letchis',mangue:'Mangues',ananas:'Ananas'};
 const LV=[
  /* ---------- Le lagon (6e) ---------- */
  {w:'lagon',name:"Premier rayon",
-  sub:"Touche le miroir, puis une case de la grille pour le poser. Les pièces ont déjà le bon sens ; retouche une pièce posée pour la reprendre.",
+  sub:"Touche le miroir, puis une case de la grille pour le poser. Amène le rayon entier (1) jusqu’à la case créole. Les pièces ont déjà le bon sens ; retouche une pièce posée pour la reprendre.",
   cols:7,rows:5,suns:[{x:0,y:2,dir:1}],
   targets:[{x:4,y:0,need:[1,1]}],
   rocks:[[5,3],[1,4]],fruits:[],
   tools:[b(1,0)],sol:[[0,4,2]]},
 
  {w:'lagon',name:"Zigzag dans les roches",
-  sub:"Les roches volcaniques bloquent la lumière. Les fruits péi sont des bonus facultatifs : fais passer un rayon dessus pour les ramasser !",
+  sub:"Les roches volcaniques bloquent la lumière : trouve le chemin ! Les fruits péi sont des bonus facultatifs ; fais passer un rayon dessus pour les ramasser.",
   cols:8,rows:6,suns:[{x:0,y:1,dir:1}],
   targets:[{x:7,y:4,need:[1,1]}],
   rocks:[[5,0],[5,1],[5,2],[5,3],[1,3],[6,2]],fruits:[[3,3]],
@@ -756,6 +813,175 @@ const LV=[
   sol:[[0,2,2],[1,2,5],[2,2,4],[3,11,4],[4,3,5],[5,3,3],[6,3,1],[7,5,1],[8,5,2]]}
 ];
 
+/* ===== Calculs des coups de pouce (écriture mathématique propre + version en rayons) ===== */
+const CALC={
+ "Moitié-moitié":["1 ÷ 2 = 1/2"],
+ "Partage en tiers":["1 ÷ 3 = 1/3"],
+ "La moitié de la moitié":["1/2 ÷ 2 = 1/4"],
+ "Quarts en croix":["1/2 ÷ 2 = 1/4"],
+ "Recoller les morceaux":["1/2 + 1/2 = 1"],
+ "Trois quarts":["1/2 + 1/4 = 2/4 + 1/4 = 3/4"],
+ "Deux tiers":["1/3 + 1/3 = 2/3"],
+ "Les sixièmes":["1/3 ÷ 2 = 1/6"],
+ "Les huitièmes":["1/2 ÷ 2 ÷ 2 = 1/8"],
+ "Cinq sixièmes":["1/6 + 1/6 = 1/3","1/2 + 1/3 = 3/6 + 2/6 = 5/6"],
+ "Les douzièmes":["1/6 + 1/12 = 2/12 + 1/12 = 3/12 = 1/4"],
+ "La clairière":["1/3 + 1/3 = 2/3"],
+ "La loupe":["1/3 × 2 = 2/3"],
+ "Trois demis":["1/2 × 3 = 3/2"],
+ "Bouquet de neuvièmes":["1/3 ÷ 3 = 1/9","1/3 + 1/3 = 2/3"],
+ "Deux neuvièmes":["1/9 × 2 = 2/9","1/3 × 3 = 1"],
+ "L'éruption":["1/6 × 2 = 1/3","1/3 × 3 = 1"],
+ "Défi du volcan":["1/2 + 1/4 = 3/4","1/4 × 2 = 1/2"],
+ "C'est pareil !":["2/4 = 1/2"],
+ "Trois écritures":["2/8 = 1/4","3/6 = 1/2"],
+ "La passe étroite":["1/2 + 1/2 = 1"],
+ "Quel rayon passe ?":["1/3 < 1/2"],
+ "Le tamis":["1/4 + 1/4 = 1/2"],
+ "Égal ou pas ?":["2/6 = 1/3","2/12 = 1/6"],
+ "Le col des comparaisons":["1/4 < 1/2"],
+ "Un soleil qui vaut 2":["2 ÷ 2 = 1"],
+ "Deux tiers d'un coup":["2 ÷ 3 = 2/3"],
+ "Deux soleils":["1/2 + 1/2 = 1"],
+ "Un et demi":["1 + 1/2 = 3/2"],
+ "Trois petits soleils":["1/3 + 1/6 = 2/6 + 1/6 = 1/2","1/2 + 1/2 = 1"],
+ "Quatre tiers":["2/3 + 2/3 = 4/3"],
+ "Les soleils jumeaux":["1 + 1/2 = 3/2"],
+ "La passe des soleils":["2 ÷ 2 = 1"],
+ "Écritures décimales":["1/2 = 0,5","1/4 = 0,25"],
+ "Les pourcentages":["1/2 = 50%","1/4 = 25%"],
+ "L'étiquette 0,75":["1/2 + 1/4 = 3/4","3/4 = 0,75"],
+ "Remise de 25 %":["1/2 + 1/4 = 3/4"],
+ "L'addition du marché":["1/3 × 2 = 2/3","2/3 + 1/3 = 1"],
+ "Le grand marché":["2 ÷ 2 = 1","1/2 ÷ 2 = 1/4"],
+ "L'entrée du cirque":["1/3 ÷ 2 = 1/6"],
+ "Deux soleils sur les îlets":["1/2 + 1/4 = 3/4"],
+ "La passe de la Rivière":["1/2 ÷ 3 = 1/6","1/6 + 1/6 = 1/3"],
+ "Les trois cheminées":["1/4 × 3 = 3/4","1/4 × 2 = 1/2"],
+ "Le sommet":["1/6 × 2 = 1/3","1/2 + 1/3 = 3/6 + 2/6 = 5/6"]
+};
+function fracHTML(t){
+  const m=t.match(/^(\d+)\/(\d+)$/);
+  if(m)return `<span class="frac"><span class="fn">${m[1]}</span><span class="fd">${m[2]}</span></span>`;
+  return `<span class="op">${t}</span>`;
+}
+/* Scènes en rayons : le calcul dessiné avec les pièces du jeu */
+const HW=f=>Math.max(3.5,Math.min(34,20*f[0]/f[1]));
+const pf=t=>{const m=t.match(/^(\d+)\/(\d+)$/);return m?[+m[1],+m[2]]:(/^\d+$/.test(t)?[+t,1]:null);};
+function sBeam(x1,y1,x2,y2,f,op){
+  const c=fcol(f);
+  return `<line x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}" stroke="${c}" stroke-width="${HW(f)}" stroke-linecap="round" opacity="${op||1}" style="filter:drop-shadow(0 0 4px ${c})"/>`;
+}
+function sLbl(x,y,txt,col,fs){return `<text x="${x}" y="${y}" class="slbl" style="font-size:${fs||17}px" fill="${col||'#ffdf8e'}">${txt}</text>`;}
+function sTile(x,y,lab){
+  return `<rect x="${x-19}" y="${y-19}" width="38" height="38" rx="9" fill="#223a63" stroke="#7fb0ff55" stroke-width="2"/>`+
+    `<circle cx="${x}" cy="${y}" r="14" fill="#101a33"/>`+
+    `<text x="${x}" y="${y+5}" text-anchor="middle" font-size="14" font-weight="800" fill="#fff">${lab}</text>`;
+}
+function sSun(x,y,v){
+  let s='';
+  for(let a=0;a<8;a++){const th=a*Math.PI/4;
+    s+=`<line x1="${x+Math.cos(th)*13}" y1="${y+Math.sin(th)*13}" x2="${x+Math.cos(th)*18}" y2="${y+Math.sin(th)*18}" stroke="#ffc94d" stroke-width="3" stroke-linecap="round"/>`;}
+  s+=`<circle cx="${x}" cy="${y}" r="11" fill="#ffc94d"/>`;
+  if(v&&v[0]>1)s+=`<circle cx="${x+10}" cy="${y-10}" r="8" fill="#fff3c4" stroke="#d99a2b" stroke-width="2"/>`+
+    `<text x="${x+10}" y="${y-6}" text-anchor="middle" font-size="11" font-weight="900" fill="#7a4a12">${v[0]}</text>`;
+  return s;
+}
+function sceneMerge(a,b,res){
+  const H=112, cy=40, px=176;
+  let s='';
+  s+=sBeam(16,cy,px-21,cy,a);
+  s+=sLbl(90,cy-HW(a)/2-8,fstr(a),fcol(a));
+  s+=sBeam(px,H-6,px,cy+21,b);
+  s+=sLbl(px+32,H-14,fstr(b),fcol(b));
+  s+=sBeam(px+21,cy,330,cy,res);
+  s+=sLbl(266,cy-HW(res)/2-8,fstr(res),fcol(res));
+  s+=sTile(px,cy,'+');
+  return {h:H,svg:s};
+}
+/* Division en arbre : on voit le rayon se séparer réellement en n rayons complets,
+   et si on redivise, chaque branche se sépare à son tour (2 → 4 rayons). */
+function sceneDivTree(a,ns){
+  const f1=fdiv(a,ns[0]);
+  let H,cy,ys1;
+  if(ns.length===1){
+    if(ns[0]===2){H=112;cy=56;ys1=[32,80];}
+    else{H=140;cy=70;ys1=[26,70,114];}
+  }else{
+    H=136;cy=68;
+    ys1=ns[0]===2?[36,100]:[26,68,110];
+  }
+  let s='',x0=16;
+  if(a[1]===1){s+=sSun(26,cy,a);x0=40;}
+  const p1=100;
+  s+=sBeam(x0,cy,p1-17,cy,a);
+  s+=sLbl((x0+p1-17)/2,cy-HW(a)/2-9,fstr(a),fcol(a));
+  if(ns.length===1){
+    ys1.forEach(y=>{s+=sBeam(p1+15,cy,294,y,f1);});
+    ys1.forEach(y=>{s+=sLbl(316,y+6,fstr(f1),fcol(f1),16);});
+  }else{
+    const f2=fdiv(f1,ns[1]),p2=222;
+    ys1.forEach(y1=>{
+      s+=sBeam(p1+15,cy,p2-17,y1,f1);
+      s+=sLbl(164,y1<cy?y1-6:y1+22,fstr(f1),fcol(f1),15);
+    });
+    const off=ns[1]===2?[-15,15]:[-22,0,22];
+    ys1.forEach(y1=>{
+      off.forEach(o=>{s+=sBeam(p2+15,y1,294,y1+o,f2);});
+    });
+    ys1.forEach(y1=>{
+      off.forEach(o=>{s+=sLbl(316,y1+o+5,fstr(f2),fcol(f2),15);});
+      s+=sTile(p2,y1,'÷'+ns[1]);
+    });
+  }
+  s+=sTile(p1,cy,'÷'+ns[0]);
+  return {h:H,svg:s};
+}
+function sceneMul(a,n){
+  const H=96,cy=48,px=150,res=fmul(a,n);
+  let s='',x0=16;
+  if(a[1]===1){s+=sSun(26,cy,a);x0=40;}
+  s+=sBeam(x0,cy,px-19,cy,a);
+  s+=sLbl((x0+px-19)/2,cy-HW(a)/2-9,fstr(a),fcol(a));
+  s+=sBeam(px+19,cy,330,cy,res);
+  s+=sLbl(258,cy-HW(res)/2-9,fstr(res),fcol(res));
+  s+=sTile(px,cy,'×'+n);
+  return {h:H,svg:s};
+}
+function sceneEq(a,btxt,bf,cmp){
+  const H=88, y1=24, y2=62, f2=bf||a;
+  let s='';
+  s+=sLbl(38,y1+6,fstr(a),fcol(a));
+  s+=sBeam(76,y1,324,y1,a);
+  s+=sLbl(38,y2+6,btxt,fcol(f2));
+  s+=sBeam(76,y2,324,y2,f2);
+  s+=`<text x="12" y="${(y1+y2)/2+6}" class="slbl" fill="#ffeeda" text-anchor="start">${cmp}</text>`;
+  return {h:H,svg:s};
+}
+function sceneFor(line){
+  if(!line.includes(' = ')&&line.includes(' < ')){
+    const [l,r]=line.split(' < ').map(t=>t.trim());
+    return sceneEq(pf(l),r,pf(r),'<');
+  }
+  const parts=line.split(' = ');
+  const lhs=parts[0].split(' ').filter(Boolean);
+  const last=parts[parts.length-1].trim();
+  const res=pf(last)||pf(lhs[0]);
+  if(lhs.length===1)return sceneEq(pf(lhs[0]),last,pf(last),'=');
+  if(lhs[1]==='+')return sceneMerge(pf(lhs[0]),pf(lhs[2]),res);
+  const ops=[];
+  for(let i=1;i<lhs.length;i+=2)ops.push({op:lhs[i],n:+lhs[i+1]});
+  if(ops.every(o=>o.op==='÷'))return sceneDivTree(pf(lhs[0]),ops.map(o=>o.n));
+  return sceneMul(pf(lhs[0]),ops[0].n);
+}
+function calcLineHTML(line){
+  const sc=sceneFor(line);
+  let eq='';
+  line.split(' ').filter(Boolean).forEach(t=>{eq+=fracHTML(t);});
+  return `<div class="hline"><svg class="hsvg" viewBox="0 0 340 ${sc.h}">${sc.svg}</svg><div class="heq">${eq}</div></div>`;
+}
+
+
 /* ===== Sauvegarde ===== */
 let memStore={done:{},fruits:{}};
 const lvId=i=>LV[i].w+':'+LV[i].name; /* clé stable : survit à l'ajout de niveaux */
@@ -862,19 +1088,19 @@ function pieceStatic(def){
     const[ix,iy]=ent(def.in);
     s+=arrow(ix,iy,c,c,'#9fb7d8',7);
     def.outs.forEach(o=>{const[ox,oy]=ext(o);s+=arrow(c,c,ox,oy,'#ffc94d99',7);});
-    s+=`<circle cx="${c}" cy="${c}" r="16" fill="#101a33"/>`+
-       `<text x="${c}" y="${c+5}" text-anchor="middle" font-size="16" font-weight="800" fill="#fff">÷${def.t==='s2'?2:3}</text>`;
+    s+=`<circle cx="${c}" cy="${c}" r="21" fill="#101a33"/>`+
+       `<text x="${c}" y="${c+7}" text-anchor="middle" font-size="21" font-weight="800" fill="#fff">÷${def.t==='s2'?2:3}</text>`;
   }else if(def.t==='x2'||def.t==='x3'){
     const[ix,iy]=ent(def.in),[ox,oy]=ext(def.out);
     s+=arrow(ix,iy,c,c,'#9fb7d8',6);
     s+=arrow(c,c,ox,oy,'#ffc94d99',11);
-    s+=`<circle cx="${c}" cy="${c}" r="17" fill="#101a33" stroke="#8fd0ff" stroke-width="3"/>`+
-       `<text x="${c}" y="${c+5}" text-anchor="middle" font-size="15" font-weight="800" fill="#fff">×${def.t==='x2'?2:3}</text>`;
+    s+=`<circle cx="${c}" cy="${c}" r="21" fill="#101a33" stroke="#8fd0ff" stroke-width="3"/>`+
+       `<text x="${c}" y="${c+7}" text-anchor="middle" font-size="20" font-weight="800" fill="#fff">×${def.t==='x2'?2:3}</text>`;
   }else{
     def.ins.forEach(i=>{const[ix,iy]=ent(i);s+=arrow(ix,iy,c,c,'#9fb7d8',7);});
     const[ox,oy]=ext(def.out);s+=arrow(c,c,ox,oy,'#ffc94d99',7);
-    s+=`<circle cx="${c}" cy="${c}" r="16" fill="#101a33"/>`+
-       `<text x="${c}" y="${c+6}" text-anchor="middle" font-size="21" font-weight="800" fill="#fff">+</text>`;
+    s+=`<circle cx="${c}" cy="${c}" r="21" fill="#101a33"/>`+
+       `<text x="${c}" y="${c+8}" text-anchor="middle" font-size="27" font-weight="800" fill="#fff">+</text>`;
   }
   return s;
 }
@@ -899,8 +1125,8 @@ function pieceFlow(def,fl){
     });
   }
   const lab={s2:'÷2',s3:'÷3',x2:'×2',x3:'×3',m:'+',b:''}[def.t];
-  if(lab)s+=`<circle cx="${c}" cy="${c}" r="16" fill="#101a33" stroke="#ffffff2c" stroke-width="2"/>`+
-    `<text x="${c}" y="${c+(def.t==='m'?6:5)}" text-anchor="middle" font-size="${def.t==='m'?21:15}" font-weight="800" fill="#fff">${lab}</text>`;
+  if(lab)s+=`<circle cx="${c}" cy="${c}" r="21" fill="#101a33" stroke="#ffffff2c" stroke-width="2"/>`+
+    `<text x="${c}" y="${c+(def.t==='m'?8:7)}" text-anchor="middle" font-size="${def.t==='m'?27:20}" font-weight="800" fill="#fff">${lab}</text>`;
   return s;
 }
 function rockSVG(x,y,i){
@@ -1062,20 +1288,42 @@ function clearCeleb(){
 function startCelebration(sim){
   celebrating=true;overlayShown=true;
   const bd=document.getElementById('board');
-  let totalT=0.3;
-  bd.querySelectorAll('.beam').forEach((ln,i)=>{
+  const lines=[...bd.querySelectorAll('.beam')];
+  const beams=lines.map(ln=>{
     const x1=+ln.getAttribute('x1'),y1=+ln.getAttribute('y1'),x2=+ln.getAttribute('x2'),y2=+ln.getAttribute('y2');
     const len=Math.hypot(x2-x1,y2-y1);
-    const dur=Math.min(0.55,len/900+0.12), delay=0.1+i*0.2;
-    totalT=Math.max(totalT,delay+dur);
-    ln.classList.add('drawin');
-    ln.setAttribute('stroke-dasharray',len);
-    ln.setAttribute('stroke-dashoffset',len);
-    ln.style.animation=`drawseg ${dur}s linear ${delay}s forwards`;
+    return {ln,len};
   });
-  bd.querySelectorAll('.beampath').forEach(p=>{
-    p.style.opacity='0';
-    p.style.animation=`fadein .4s ease ${totalT*0.55}s forwards`;
+  /* Le flux s’immobilise un instant. Il s’efface ensuite et repart vraiment
+     des soleils vers les maisons, dans l’ordre produit par la simulation. */
+  const pause=0.4,drawStart=0.1;
+  let totalT=pause+drawStart;
+  beams.forEach(({ln,len},i)=>{
+    ln.classList.add('drawin');
+    ln.style.strokeDasharray='none';
+    ln.style.strokeDashoffset='0';
+    ln.style.animation='none';
+  });
+  const paths=[...bd.querySelectorAll('.beampath')];
+  paths.forEach(p=>{p.style.animation='none';p.style.opacity='.94';});
+  celebTimers.push(setTimeout(()=>{
+    beams.forEach(({ln,len},i)=>{
+      const delay=drawStart+i*0.2;
+      const dur=Math.min(0.55,len/900+0.12);
+      ln.style.setProperty('--beam-length',`${len}px`);
+      ln.style.strokeDasharray=`${len} ${len}`;
+      ln.style.strokeDashoffset=String(len);
+      ln.style.animation=`drawseg ${dur}s linear ${delay}s forwards`;
+    });
+    paths.forEach(p=>{
+      p.style.opacity='0';
+      p.style.animation=`fadein .4s ease ${drawStart+0.25}s forwards`;
+    });
+  },pause*1000));
+  beams.forEach(({len},i)=>{
+    const delay=drawStart+i*0.2;
+    const dur=Math.min(0.55,len/900+0.12);
+    totalT=Math.max(totalT,pause+delay+dur);
   });
   const T=totalT*1000+150;
   celebTimers.push(setTimeout(()=>{
@@ -1180,8 +1428,8 @@ function openLevel(i){
   clearCeleb();
   cur=i;state.placed={};state.sel=null;overlayShown=false;hintShown=false;
   document.getElementById('winov').classList.remove('show');
-  document.getElementById('hintline').style.display='none';
-  document.getElementById('hintbtn').style.display=LV[i].hint?'':'none';
+  document.getElementById('hintov').classList.remove('show');
+  document.getElementById('hintbtn').style.display=(LV[i].hint||CALC[LV[i].name])?'':'none';
   const w=WORLDS.find(x=>x.id===LV[i].w);
   const local=LV.map((l,j)=>j).filter(j=>LV[j].w===LV[i].w).indexOf(i)+1;
   document.getElementById('pname').innerHTML=`${LV[i].name}<small>${w.label} · niveau ${local}</small>`;
@@ -1232,10 +1480,71 @@ document.getElementById('resetbtn').addEventListener('click',()=>{
   clearCeleb();state.placed={};state.sel=null;overlayShown=false;
   document.getElementById('winov').classList.remove('show');redraw();});
 document.getElementById('hintbtn').addEventListener('click',()=>{
-  const h=document.getElementById('hintline');
-  h.textContent='Indice : '+(LV[cur].hint||'');
-  h.style.display=h.style.display==='block'?'none':'block';
+  const L=LV[cur];
+  let html=L.hint?`<div id="hinttext">${L.hint}</div>`:'';
+  const lines=CALC[L.name]||[];
+  if(lines.length){
+    html+=`<div class="href"><svg viewBox="0 0 340 52" aria-label="Le rayon entier vaut 1">${sSun(24,31,[1,1])}${sBeam(40,31,206,31,[1,1])}${sLbl(122,14,'1',fcol([1,1]))}<text x="216" y="36" class="sref">le rayon entier</text></svg></div>`;
+    lines.forEach(line=>{html+=calcLineHTML(line);});
+  }
+  document.getElementById('hintbody').innerHTML=html;
+  document.getElementById('hintov').classList.add('show');
+  const card=document.getElementById('hintcard');
+  card.scrollTop=0;
+  card.focus({preventScroll:true});
 });
+document.getElementById('hintclose').addEventListener('click',()=>{
+  document.getElementById('hintov').classList.remove('show');
+  document.getElementById('hintbtn').focus();
+});
+document.getElementById('hintov').addEventListener('click',ev=>{
+  if(ev.target.id==='hintov')document.getElementById('hintclose').click();
+});
+document.addEventListener('keydown',ev=>{
+  if(ev.key==='Escape'&&document.getElementById('hintov').classList.contains('show'))document.getElementById('hintclose').click();
+});
+
+/* Plein écran natif quand le navigateur le permet, mode jeu sinon (notamment iOS Safari). */
+(function(){
+  const fsbtn=document.getElementById('fsbtn');
+  const root=document.documentElement;
+  const requestFS=root.requestFullscreen||root.webkitRequestFullscreen;
+  const exitFS=document.exitFullscreen||document.webkitExitFullscreen;
+  const standalone=window.matchMedia('(display-mode: standalone)').matches||window.navigator.standalone===true;
+  function fullscreenElement(){return document.fullscreenElement||document.webkitFullscreenElement;}
+  function setImmersive(on){
+    document.body.classList.toggle('immersive',on);
+    fsbtn.textContent=on?'✕':'⛶';
+    fsbtn.setAttribute('aria-label',on?'Quitter le plein écran':'Activer le plein écran');
+    fsbtn.title=on?'Quitter le plein écran':'Plein écran';
+    relayout();
+  }
+  function fallback(){
+    const on=!document.body.classList.contains('immersive');
+    setImmersive(on);
+    if(on&&!standalone&&!save.fsTip){
+      save.fsTip=1;persist();
+      const toast=document.getElementById('fstoast');
+      toast.classList.add('show');
+      setTimeout(()=>toast.classList.remove('show'),8000);
+    }
+  }
+  fsbtn.addEventListener('click',async()=>{
+    if(requestFS&&!standalone){
+      try{
+        if(fullscreenElement())await exitFS.call(document);
+        else{
+          await requestFS.call(root,{navigationUI:'hide'});
+          if(!fullscreenElement()){fallback();return;}
+        }
+        return;
+      }catch(e){fallback();return;}
+    }
+    fallback();
+  });
+  ['fullscreenchange','webkitfullscreenchange'].forEach(name=>document.addEventListener(name,()=>setImmersive(!!fullscreenElement())));
+  document.getElementById('fstoast').addEventListener('click',()=>document.getElementById('fstoast').classList.remove('show'));
+})();
 document.getElementById('nextbtn').addEventListener('click',()=>{
   const L=LV[cur];
   const wIdx=LV.map((l,i)=>i).filter(i=>LV[i].w===L.w);
@@ -1250,15 +1559,14 @@ document.getElementById('backhome').addEventListener('click',()=>{renderHome();s
 document.getElementById('backlv').addEventListener('click',()=>{clearCeleb();openWorld(LV[cur].w);});
 /* en paysage, la barre du haut et la consigne rejoignent la colonne de droite */
 function relayout(){
-  const land=window.matchMedia('(orientation:landscape) and (min-width:640px)').matches;
+  const land=window.matchMedia('(orientation:landscape)').matches;
   const pr=document.getElementById('playright'), pl=document.getElementById('playleft');
-  const tb=document.getElementById('topbar'), il=document.getElementById('introline'),
-        hl=document.getElementById('hintline'), tbox=document.getElementById('toolbox');
+  const tb=document.getElementById('topbar'), il=document.getElementById('introline'),tbox=document.getElementById('toolbox');
   if(land){
-    pr.insertBefore(tb,tbox);pr.insertBefore(il,tbox);pr.insertBefore(hl,tbox);
+    pr.insertBefore(tb,tbox);pr.insertBefore(il,tbox);
   }else{
     const bb=document.getElementById('boardbox');
-    pl.insertBefore(hl,bb);pl.insertBefore(il,hl);
+    pl.insertBefore(il,bb);
     pl.insertBefore(tb,document.getElementById('rotatehint'));
   }
 }
@@ -1269,6 +1577,9 @@ window.addEventListener('resize',()=>{
       (LV[cur].cols>=10&&window.innerHeight>window.innerWidth)?'block':'none';
   }
 });
+window.addEventListener('orientationchange',relayout);
+if(window.visualViewport)window.visualViewport.addEventListener('resize',relayout);
+if(window.screen.orientation)window.screen.orientation.addEventListener('change',relayout);
 relayout();
 
 /* ===== API de test ===== */

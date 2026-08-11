@@ -109,6 +109,50 @@ test("l’accueil masque réellement le plateau et reprend la charte du site", (
   assert.match(html, /class="chip[^"]*"[^>]*aria-pressed=/);
 });
 
+test("le nouveau cours illustré conserve ses 44 fiches et ses fractions composées", () => {
+  const context = createGameContext();
+  const course = vm.runInContext(`(() => {
+    const lines = Object.values(CALC).flat();
+    return {
+      cards: Object.keys(CALC).length,
+      lines: lines.length,
+      missingLevels: Object.keys(CALC).filter(name => !LV.some(level => level.name === name)),
+      rendered: lines.every(line => calcLineHTML(line).includes('class="heq"'))
+    };
+  })()`, context);
+
+  assert.deepEqual(
+    { ...course, missingLevels: [...course.missingLevels] },
+    { cards: 44, lines: 60, missingLevels: [], rendered: true }
+  );
+  assert.match(html, /id="hintov" role="dialog" aria-modal="true"/);
+  assert.match(html, /class="frac"/);
+});
+
+test("le paysage mobile et le plein écran utilisent réellement tout le viewport", () => {
+  assert.match(html, /@media \(orientation:landscape\)\{/);
+  assert.match(html, /matchMedia\('\(orientation:landscape\)'\)/);
+  assert.match(html, /height:100dvh/);
+  assert.match(html, /env\(safe-area-inset-left\)/);
+  assert.match(html, /fsbtn\.addEventListener\('click',async/);
+  assert.match(html, /window\.visualViewport/);
+  assert.doesNotMatch(html, /orientation:landscape\) and \(min-width:640px\)/);
+});
+
+test("la victoire arrête puis relance la lumière avant les confettis", () => {
+  assert.match(html, /@keyframes drawseg\{from\{stroke-dashoffset:var\(--beam-length\)/);
+  assert.match(html, /const pause=0\.4,drawStart=0\.1/);
+  assert.match(html, /ln\.style\.strokeDasharray='none'/);
+  assert.match(html, /ln\.style\.animation=`drawseg \$\{dur\}/);
+  assert.doesNotMatch(html, /@keyframes retractseg/);
+  assert.doesNotMatch(html, /\.beam\.drawin\{stroke-dasharray:none/);
+});
+
+test("le logo maths&go garde ses couleurs traditionnelles", () => {
+  assert.match(html, /<img src="\/assets\/img\/mathsgo-logo\.png" alt="maths&go"/);
+  assert.doesNotMatch(html, /filter:grayscale\(1\)/);
+});
+
 test("la miniature Solèy respecte le format du catalogue", () => {
   assert.match(thumbnail, /<svg[^>]*width="720"[^>]*height="320"[^>]*viewBox="0 0 720 320"/);
   assert.match(thumbnail, /Solèy — jeu de fractions/);
