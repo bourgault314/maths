@@ -51,35 +51,34 @@ test("le match aller-retour donne exactement un départ à chacun et tranche au 
   assert.equal(context.result.tie, "tie");
 });
 
-test("les marqueurs sont vectoriels, centrés et indépendants des polices emoji", () => {
+test("Gloubi retrouve le vrai emoji tandis que l’étoile reste vectorielle", () => {
   assert.match(thumbnail, /<svg[^>]*width="720"[^>]*height="320"[^>]*viewBox="0 0 720 320"/);
   assert.match(script, /function markerFor\(color, cx, cy\)/);
   assert.match(page, /class: "player-marker-star"/);
-  assert.match(page, /class: "ai-marker-mouth"/);
-  assert.doesNotMatch(page, /★|😋|box-face/);
+  assert.match(page, /class="gloubi-emoji gloubi-rule-emoji"[^>]*>😋<\/text>/);
+  assert.match(script, /emoji\.textContent = "😋"/);
+  assert.match(page, /Apple Color Emoji/);
+  assert.doesNotMatch(page, /ai-marker-(?:disc|eye|mouth|tongue)/);
   assert.match(thumbnail, /<polygon points="0,-19/);
-  assert.match(thumbnail, /<path d="M-13 4Q-1 16 9 8Q11 6 13 4"/);
-  assert.doesNotMatch(thumbnail, /★|😋|dominant-baseline|Apple Color Emoji|Segoe UI Emoji/);
+  assert.equal((thumbnail.match(/>😋<\/text>/g) || []).length, 2);
+  assert.match(thumbnail, /Apple Color Emoji, Segoe UI Emoji, Noto Color Emoji/);
+  assert.doesNotMatch(thumbnail, /gloubi-face|M6 7C13|M-13 4Q-1/);
 });
 
-test("la langue de Gloubi sort clairement du coin droit de la bouche", () => {
+test("le vrai emoji est recentré d’après les métriques de la police réellement chargée", () => {
   const markerHelper = script.match(/function markerFor\(color, cx, cy\)[\s\S]*?(?=\n\s*function render)/)?.[0] || "";
-  const tongueIndex = markerHelper.indexOf('class: "ai-marker-tongue"');
-  const mouthIndex = markerHelper.indexOf('class: "ai-marker-mouth"');
-
-  assert.ok(tongueIndex >= 0 && mouthIndex >= 0, "le visage doit conserver une bouche et une langue vectorielles");
-  assert.ok(tongueIndex < mouthIndex, "la bouche doit recouvrir le point d’attache de la langue");
-  assert.match(markerHelper, /M\$\{cx \+ 6\} \$\{cy \+ 7\}C\$\{cx \+ 13\} \$\{cy \+ 7\}[\s\S]*?L\$\{cx \+ 2\} \$\{cy \+ 17\}L\$\{cx \+ 3\} \$\{cy \+ 11\}Z/);
-  assert.match(markerHelper, /M\$\{cx - 13\} \$\{cy \+ 4\}Q\$\{cx - 1\} \$\{cy \+ 16\} \$\{cx \+ 9\} \$\{cy \+ 8\}Q\$\{cx \+ 11\} \$\{cy \+ 6\} \$\{cx \+ 13\} \$\{cy \+ 4\}/);
-  assert.doesNotMatch(markerHelper, /M\$\{cx \+ 1\} \$\{cy \+ 8\}/, "l’ancienne langue centrale en forme de cravate doit avoir disparu");
-  assert.doesNotMatch(markerHelper, /\$\{cy \+ 24\}/, "la langue ne doit plus descendre jusqu’au bord du visage");
-  assert.match(page, /<path d="M6 7C13 7 16 11 15 16C14 20 10 22 6 20L2 17L3 11Z" class="ai-marker-tongue"\/>/);
-  assert.match(page, /<path d="M-13 4Q-1 16 9 8Q11 6 13 4" class="ai-marker-mouth"\/>/);
-
-  const thumbnailTongue = thumbnail.indexOf('d="M6 7C13 7 16 11 15 16C14 20 10 22 6 20L2 17L3 11Z"');
-  const thumbnailMouth = thumbnail.indexOf('d="M-13 4Q-1 16 9 8Q11 6 13 4"');
-  assert.ok(thumbnailTongue >= 0 && thumbnailTongue < thumbnailMouth, "la miniature reprend la même langue latérale");
-  assert.equal((thumbnail.match(/href="#gloubi-face"/g) || []).length, 2, "les deux visages de la miniature utilisent le même modèle");
+  assert.match(markerHelper, /class: "gloubi-emoji"/);
+  assert.match(markerHelper, /"data-center-x": cx/);
+  assert.match(markerHelper, /"data-center-y": cy/);
+  assert.match(script, /function centerGloubiEmoji\(emoji\)/);
+  assert.match(script, /const bounds = emoji\.getBBox\(\)/);
+  assert.match(script, /centerX - \(bounds\.x \+ bounds\.width \/ 2\)/);
+  assert.match(script, /centerY - \(bounds\.y \+ bounds\.height \/ 2\)/);
+  assert.match(script, /document\.fonts\?\.ready\.then/);
+  assert.match(page, /data-center-x="45" data-center-y="37\.5">😋<\/text>/);
+  assert.match(thumbnail, /font-size="46"[^>]*text-anchor="middle" dominant-baseline="central"/);
+  assert.match(thumbnail, /<text x="120" y="40">😋<\/text>/);
+  assert.match(thumbnail, /<text x="200" y="120">😋<\/text>/);
 });
 
 test("le plein écran et le socle public restent disponibles", () => {
