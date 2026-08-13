@@ -335,13 +335,97 @@ def principal():
             fin = False
         section("T6 victoire réelle au clic : cinématique puis fenêtre de fin", fin, "")
 
-        # Bonus — sauvegarde locale par clé stable monde:nom
+        # Bonus — sauvegarde locale par clé stable monde:nom + étoiles de la victoire
         sauv = page.evaluate("""() => {
           try { return JSON.parse(localStorage.getItem('soley-save-v5')); } catch (e) { return null; }
         }""")
         section("Bonus sauvegarde : clé « lagon:Premier rayon » enregistrée",
                 bool(sauv and sauv.get("done", {}).get("lagon:Premier rayon")), "")
+        et = page.evaluate("() => ({ e: window.SOLEY.etoiles(0), stars: document.getElementById('winstars').textContent })")
+        pieces = (sauv or {}).get("pieces", {}).get("lagon:Premier rayon")
+        section("Bonus étoiles : victoire à 1 pièce = ★★★ (pièces enregistrées)",
+                pieces == 1 and et["e"] == 3 and et["stars"] == "★★★",
+                f"pieces={pieces}, etoiles={et['e']}, affiché={et['stars']}")
         ctx2.close()
+
+        # ============ passe 3 : progression verrouillée — T8 (portrait téléphone) ============
+        ctx3, page = nouvelle_page(390, 844)
+        page.goto(url, wait_until="load")
+        page.wait_for_function("() => window.SOLEY && window.SOLEY.LV")
+
+        # T8a — seuils de déblocage : ⌈5/8 des niveaux du monde précédent⌉
+        seuils = page.evaluate("() => window.SOLEY.LV.length === 60 && [0,1,2,3,4,5,6,7].map(i => window.SOLEY.seuilMonde(i))")
+        section("T8 seuils de déblocage ⌈5/8⌉ par monde", seuils == [0, 5, 6, 5, 5, 5, 4, 5],
+                f"{seuils}")
+
+        # T8b — sauvegarde vierge : seul Le lagon est ouvert
+        verrous = page.evaluate("""() => [...document.querySelectorAll('.wrow')]
+          .map(b => b.dataset.w + (b.classList.contains('locked') ? ':fermé' : ':ouvert'))""")
+        section("T8 accueil neuf : lagon ouvert, les 7 autres mondes fermés",
+                verrous == ["lagon:ouvert", "foret:fermé", "volcan:fermé", "pitons:fermé",
+                            "soleils:fermé", "marche:fermé", "tunnels:fermé", "mafate:fermé"],
+                ", ".join(verrous))
+
+        # T8c — cliquer un monde fermé ne quitte pas l'accueil, la condition est lisible
+        # (force : aria-disabled rend le bouton « non actionnable » pour Playwright,
+        #  mais un vrai doigt peut le toucher — c'est ce geste qu'on teste)
+        page.click(".wrow[data-w='foret']", force=True)
+        aff = page.evaluate(JS_ECRANS)
+        cond = page.evaluate("() => document.querySelector(\".wrow[data-w='foret'] .wcond\")?.textContent || ''")
+        section("T8 monde fermé : clic sans effet + condition affichée",
+                aff["home"] != "none" and aff["lvscreen"] == "none" and "Réussis 5 niveaux" in cond,
+                cond.strip())
+
+        # T8d — zéro défilement horizontal sur l'accueil téléphone
+        defil = page.evaluate("() => ({ sw: document.documentElement.scrollWidth, cw: document.documentElement.clientWidth })")
+        section("T8 accueil téléphone : zéro défilement horizontal",
+                defil["sw"] <= defil["cw"] + 1, f"{defil['sw']} dans {defil['cw']}")
+        ctx3.close()
+
+        # ============ passe 4 : sauvegarde amorcée + mode classe ============
+        GRAINE = ("try{localStorage.setItem('soley-save-v5',JSON.stringify({"
+                  "done:{'lagon:Premier rayon':true,'lagon:Zigzag dans les roches':true,"
+                  "'lagon:Moitié-moitié':true,'lagon:La part perdue':true,'lagon:Partage en tiers':true},"
+                  "fruits:{'lagon:Zigzag dans les roches':1},"
+                  "pieces:{'lagon:Zigzag dans les roches':2}}));}catch(e){}")
+        ctx4 = navig.new_context(viewport={"width": 390, "height": 844}, locale="fr-FR")
+        ctx4.add_init_script(INIT_CONSENTEMENT)
+        ctx4.add_init_script(GRAINE)
+        pg4 = ctx4.new_page()
+        pg4.on("pageerror", lambda e: erreurs_js.append(str(e)))
+        pg4.on("console", lambda m: erreurs_console.append(m.text) if m.type == "error" else None)
+        pg4.set_default_timeout(15000)
+        pg4.goto(url, wait_until="load")
+        pg4.wait_for_function("() => window.SOLEY && window.SOLEY.LV")
+        etat = pg4.evaluate("""() => ({
+          foret: !document.querySelector(".wrow[data-w='foret']").classList.contains('locked'),
+          volcan: document.querySelector(".wrow[data-w='volcan']").classList.contains('locked'),
+        })""")
+        section("T8 après 5 réussites au lagon : forêt ouverte, volcan encore fermé",
+                etat["foret"] and etat["volcan"], "")
+        pg4.click(".wrow[data-w='lagon']")
+        cartes = pg4.evaluate("""() => ({
+          zigzag: document.querySelector(".lvcard[data-i='1'] .st").textContent,
+          premier: document.querySelector(".lvcard[data-i='0'] .st").textContent,
+        })""")
+        section("T8 étoiles sur les cartes : ★★★ (fruits + maîtrise) et ★★☆ (sans défi)",
+                cartes["zigzag"].startswith("★★★") and cartes["premier"].startswith("★★☆"),
+                f"zigzag={cartes['zigzag']!r}, premier={cartes['premier']!r}")
+        ctx4.close()
+
+        # T8e — mode classe : tout est ouvert, badge visible
+        sep = "&" if "?" in url else "?"
+        ctx5, page = nouvelle_page(390, 844)
+        page.goto(url + sep + "classe", wait_until="load")
+        page.wait_for_function("() => window.SOLEY && window.SOLEY.LV")
+        classe = page.evaluate("""() => ({
+          verrouilles: document.querySelectorAll('.wrow.locked').length,
+          badge: !!document.querySelector('.classebadge'),
+          mafate: !!document.querySelector(".wrow[data-w='mafate']"),
+        })""")
+        section("T8 mode classe (?classe) : tous les mondes ouverts + badge",
+                classe["verrouilles"] == 0 and classe["badge"] and classe["mafate"], "")
+        ctx5.close()
         navig.close()
 
     if httpd:

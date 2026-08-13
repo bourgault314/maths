@@ -241,6 +241,49 @@ test("les demi-tunnels ne se contournent plus avec un rayon entier", () => {
   assert.equal(shortcut.hasMerge, true);
 });
 
+test("la progression verrouillée et les étoiles se calculent juste", () => {
+  const context = createGameContext();
+  const r = vm.runInContext(`(() => {
+    const seuils = WORLDS.map((w, i) => seuilMonde(i));
+    const parOk = LV.every((l, i) => parNiveau(i) === l.sol.length && l.sol.length >= 1);
+    const avant = WORLDS.map(w => mondeDeverrouille(w.id));
+    const lagon = LV.map((l, i) => i).filter(i => LV[i].w === 'lagon');
+    lagon.slice(0, 4).forEach(i => save.done[LV[i].w + ':' + LV[i].name] = true);
+    const foretA4 = mondeDeverrouille('foret');
+    save.done[LV[lagon[4]].w + ':' + LV[lagon[4]].name] = true;
+    const foretA5 = mondeDeverrouille('foret');
+    const volcanFerme = !mondeDeverrouille('volcan');
+    const zi = LV.findIndex(l => l.name === 'Zigzag dans les roches');
+    const k = 'lagon:Zigzag dans les roches';
+    const fruitManquant = etoiles(zi);
+    save.fruits[k] = 1; const fruitsComplets = etoiles(zi);
+    save.pieces[k] = 2; const maitrise = etoiles(zi);
+    save.pieces[k] = 3; const tropDePieces = etoiles(zi);
+    const sansFruits = etoiles(0);
+    return { seuils, parOk, avant, foretA4, foretA5, volcanFerme,
+      fruitManquant, fruitsComplets, maitrise, tropDePieces, sansFruits };
+  })()`, context);
+
+  assert.deepEqual([...r.seuils], [0, 5, 6, 5, 5, 5, 4, 5]);
+  assert.equal(r.parOk, true);
+  assert.deepEqual([...r.avant], [true, false, false, false, false, false, false, false]);
+  assert.equal(r.foretA4, false);
+  assert.equal(r.foretA5, true);
+  assert.equal(r.volcanFerme, true);
+  assert.equal(r.fruitManquant, 1);
+  assert.equal(r.fruitsComplets, 2);
+  assert.equal(r.maitrise, 3);
+  assert.equal(r.tropDePieces, 2);
+  assert.equal(r.sansFruits, 2);
+  assert.match(js.engine, /save\.pieces\[lvId\(cur\)\]=Math\.min/);
+  assert.match(js.ui, /classList\.contains\('locked'\)/);
+  assert.match(js.ui, /etoiles,parNiveau,seuilMonde,mondeDeverrouille/);
+  assert.match(html, /id="winstars"/);
+  assert.match(html, /id="defiline"/);
+  assert.match(css, /\.wrow\.locked\{/);
+  assert.match(css, /\.classebadge\{/);
+});
+
 test("les rayons de victoire forment un graphe de propagation valide", () => {
   const context = createGameContext();
   const graph = vm.runInContext(`(() => {
@@ -381,7 +424,8 @@ test("le logo maths&go s’intègre au soleil sans plaque blanche", () => {
   assert.match(css, /filter:none/);
   assert.doesNotMatch(tout, /#fffdf8/);
   assert.doesNotMatch(tout, /#FFEEDA/);
-  assert.doesNotMatch(tout, /filter:grayscale\(1\)/);
+  /* le logo lui-même ne doit jamais être re-filtré (le gris des mondes verrouillés, lui, est voulu) */
+  assert.doesNotMatch(css, /\.brandmark[^{]*\{[^}]*grayscale/);
 });
 
 test("la miniature Solèy respecte le format du catalogue", () => {
