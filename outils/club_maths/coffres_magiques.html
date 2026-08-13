@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <title>Coffres magiques — à deux | maths&amp;go</title>
-  <meta name="description" content="Un duel de calcul mental sur les quatre opérations : trouver en 20 secondes deux nombres voisins et remporter cinq clés.">
+  <meta name="description" content="Un jeu de calcul mental en duo — 20 secondes par tour, premier à cinq clés — avec aussi un mode solo guidé sur les quatre opérations.">
   <link rel="canonical" href="https://mathsgo.re/outils/club_maths/coffres_magiques.html">
   <meta name="robots" content="index, follow, max-image-preview:large">
   <link rel="icon" href="/favicon.ico" sizes="48x48">
@@ -204,11 +204,30 @@
       line-height: 1.05;
     }
 
-    .game-heading p {
+    .game-subline {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 2px 8px;
       margin: 3px 0 0;
       color: var(--muted);
       font-size: .78rem;
       font-weight: 750;
+    }
+
+    .mode-switch-button {
+      min-height: 40px;
+      display: inline-flex;
+      align-items: center;
+      padding: 1px 3px;
+      border: 0;
+      color: #41677f;
+      background: none;
+      font-size: .74rem;
+      font-weight: 900;
+      text-decoration: underline;
+      text-decoration-thickness: 1px;
+      text-underline-offset: 3px;
     }
 
     .rules-button,
@@ -423,11 +442,14 @@
     }
 
     .rune span { transition: transform .22s ease; }
-    .rune:hover,
-    .rune:focus-visible { outline: 4px solid var(--gold); outline-offset: -3px; }
+    .rune:focus-visible { outline: 4px solid var(--blue); outline-offset: -3px; }
     .rune.selected { border-color: #f0a800; background: radial-gradient(circle at 36% 28%, #fffbe5, #ffd863 56%, #eca900 100%); transform: scale(.94); }
     .rune.success { border-color: #087a55; background: #bff0d8; }
     .rune.failure { border-color: #b83a3a; background: #ffd4cf; }
+
+    @media (hover: hover) and (pointer: fine) {
+      .rune:hover { outline: 4px solid var(--gold); outline-offset: -3px; }
+    }
 
     .toolbar {
       min-height: 48px;
@@ -467,6 +489,72 @@
     .dialog-icon { font-size: 2.6rem; }
     .dialog-card h2 { margin: 5px 0 10px; color: #143e62; font-size: 1.65rem; }
     .dialog-card p { margin: 8px 0; color: #49677b; line-height: 1.42; }
+
+    .mode-dialog-card { width: min(100%, 510px); }
+
+    .mode-dialog-card > p {
+      max-width: 390px;
+      margin-inline: auto;
+    }
+
+    .mode-options {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 10px;
+      margin-top: 17px;
+    }
+
+    .mode-choice {
+      min-height: 94px;
+      display: grid;
+      grid-template-columns: 46px minmax(0, 1fr);
+      align-items: center;
+      gap: 11px;
+      padding: 12px 14px;
+      border: 2px solid #cadde8;
+      border-radius: 17px;
+      color: #173f5e;
+      background: #f8fcff;
+      box-shadow: 0 5px 13px rgba(28, 69, 101, .08);
+      text-align: left;
+    }
+
+    .mode-choice-solo { border-color: #75bdb2; background: #effbf8; }
+    .mode-choice-duo { border-color: #e8ad4a; background: #fff8e7; }
+
+    .mode-choice-icon {
+      width: 44px;
+      height: 44px;
+      display: grid;
+      place-items: center;
+      border-radius: 50%;
+      color: #fff;
+      background: #087c75;
+      font-size: 1.25rem;
+      font-weight: 950;
+    }
+
+    .mode-choice-duo .mode-choice-icon { background: #e78b18; }
+    .mode-choice strong { display: block; font-size: 1.02rem; line-height: 1.15; }
+    .mode-choice small { display: block; margin-top: 4px; color: #4f6b7d; font-size: .76rem; font-weight: 800; line-height: 1.3; }
+
+    .mode-continue {
+      min-height: 38px;
+      margin-top: 12px;
+      padding: 5px 10px;
+      border: 0;
+      color: #48697e;
+      background: none;
+      font-size: .8rem;
+      font-weight: 900;
+      text-decoration: underline;
+      text-underline-offset: 3px;
+    }
+
+    @media (min-width: 520px) {
+      .mode-options { grid-template-columns: 1fr 1fr; }
+      .mode-choice { grid-template-columns: 1fr; justify-items: center; text-align: center; }
+    }
 
     #rules .dialog-card {
       width: min(100%, 650px);
@@ -1023,7 +1111,8 @@
       .player-token { width: 28px; height: 28px; }
       .player-score { font-size: 1rem; }
       .game-core { padding: 6px 8px 4px; }
-      .game-heading p { font-size: .7rem; }
+      .game-subline { font-size: .7rem; }
+      .mode-switch-button { font-size: .69rem; }
       .rules-button { min-height: 36px; padding: 5px 9px; font-size: .78rem; }
       .turn-state { margin-bottom: 4px; gap: 5px; }
       .status-line { min-height: 36px; padding-block: 3px; font-size: .76rem; }
@@ -1056,7 +1145,7 @@
       .topbar { min-height: 42px; }
       .duel-page { min-height: calc(100svh - 46px); }
       .player-strip { min-height: 44px; }
-      .game-heading p { display: none; }
+      .game-subline > span { display: none; }
       .status-line { min-height: 32px; }
       .turn-timer { min-height: 32px; }
       .challenge { min-height: 52px; margin-bottom: 4px; }
@@ -1080,7 +1169,7 @@
   <header class="topbar">
     <a class="brand" href="/" aria-label="Accueil maths&go"><img src="/assets/img/mathsgo-logo.png" alt="maths&go" width="1338" height="622"></a>
     <div class="topbar-actions">
-      <a class="back-link" href="../index.html?domain=jeux-recherches&amp;notion=strategie" aria-label="Retour aux jeux de stratégie"><span aria-hidden="true">←</span> <span class="back-link-copy">Jeux de stratégie</span></a>
+      <a class="back-link" data-origin-link href="../index.html?domain=jeux-recherches&amp;notion=strategie" aria-label="Retour aux jeux de stratégie"><span aria-hidden="true">←</span> <span class="back-link-copy" data-origin-copy>Jeux de stratégie</span></a>
       <button class="fullscreen-toggle" type="button" data-fullscreen-toggle aria-pressed="false" aria-label="Passer en plein écran"><span class="fullscreen-toggle-icon" data-fullscreen-icon aria-hidden="true"><svg viewBox="0 0 24 24" focusable="false"><path class="fullscreen-expand" d="M8 3H3v5M16 3h5v5M8 21H3v-5M16 21h5v-5"/><path class="fullscreen-collapse" d="M3 8h5V3M21 8h-5V3M3 16h5v5M21 16h-5v5"/></svg></span><span data-fullscreen-label>Plein écran</span></button>
     </div>
   </header>
@@ -1094,7 +1183,10 @@
 
     <section id="game-core" class="game-core">
       <header class="game-heading">
-        <div><h1>Coffres magiques</h1><p>20 secondes pour trouver la bonne paire.</p></div>
+        <div>
+          <h1>Coffres magiques</h1>
+          <p class="game-subline"><span>Duo · 20 secondes par tour</span><button class="mode-switch-button" type="button" data-change-mode>Changer de mode</button></p>
+        </div>
         <button id="rules-button" class="rules-button" type="button">Règle</button>
       </header>
       <div class="turn-state">
@@ -1124,6 +1216,25 @@
 
     <div class="toolbar"><button id="reset-button" class="reset-button" type="button">Nouvelle partie</button></div>
   </main>
+
+  <section id="mode-dialog" class="overlay" hidden role="dialog" aria-modal="true" aria-labelledby="mode-title">
+    <div class="dialog-card mode-dialog-card">
+      <div class="dialog-icon" aria-hidden="true">🔐</div>
+      <h2 id="mode-title" tabindex="-1">Choisis ton mode</h2>
+      <p>Les mêmes coffres, selon que tu veux t’entraîner ou défier quelqu’un.</p>
+      <div class="mode-options">
+        <button id="choose-solo" class="mode-choice mode-choice-solo" type="button">
+          <span class="mode-choice-icon" aria-hidden="true">1</span>
+          <span><strong>Solo — S’entraîner</strong><small>1 joueur · 10 clés · sans chrono · aides et corrections</small></span>
+        </button>
+        <button id="choose-duo" class="mode-choice mode-choice-duo" type="button">
+          <span class="mode-choice-icon" aria-hidden="true">2</span>
+          <span><strong>Duo — Se défier</strong><small>2 joueurs · 20 s par tour · premier à 5 clés</small></span>
+        </button>
+      </div>
+      <button id="continue-current-mode" class="mode-continue" type="button" hidden>Continuer la partie</button>
+    </div>
+  </section>
 
   <section id="rules" class="overlay" hidden role="dialog" aria-modal="true" aria-labelledby="rules-title">
     <div class="dialog-card">
@@ -1248,11 +1359,11 @@
   <section id="result" class="overlay" hidden role="dialog" aria-modal="true" aria-labelledby="result-title">
     <div class="dialog-card">
       <div class="dialog-icon" aria-hidden="true">★</div>
-      <h2 id="result-title" tabindex="-1">Trésor ouvert !</h2>
+      <h2 id="result-title" tabindex="-1">Un joueur a gagné !</h2>
       <p id="result-text"></p>
       <p id="result-score" class="result-score"></p>
       <button id="play-again" class="primary-button" type="button">Rejouer</button>
-      <a class="secondary-button" href="../index.html?domain=jeux-recherches&amp;notion=strategie">Retour aux jeux de stratégie</a>
+      <a class="secondary-button" data-origin-link href="../index.html?domain=jeux-recherches&amp;notion=strategie"><span data-origin-return-copy>Retour aux jeux de stratégie</span></a>
     </div>
   </section>
 
@@ -1275,6 +1386,20 @@
       const players = ["blue", "coral"];
       const labels = { blue: "bleu", coral: "corail" };
       const OPERATION_MODES = ["sum", "difference", "product", "quotient"];
+      const CURRENT_MODE = "duo";
+      const DEFAULT_ORIGIN = "strategie";
+      const ORIGINS = {
+        "calcul-mental": {
+          href: "../index.html?domain=nombres-calculs&notion=calcul-mental",
+          shortLabel: "Calcul mental",
+          returnLabel: "Retour au calcul mental"
+        },
+        strategie: {
+          href: "../index.html?domain=jeux-recherches&notion=strategie",
+          shortLabel: "Jeux de stratégie",
+          returnLabel: "Retour aux jeux de stratégie"
+        }
+      };
       const challengeLabels = {
         sum: "une somme",
         difference: "une différence",
@@ -1292,8 +1417,11 @@
       const challengeNode = document.querySelector("#challenge-text");
       const topPlayer = document.querySelector("#top-player");
       const bottomPlayer = document.querySelector("#bottom-player");
+      const modeDialog = document.querySelector("#mode-dialog");
       const rules = document.querySelector("#rules");
       const result = document.querySelector("#result");
+      const requestedMode = new URLSearchParams(window.location.search).get("mode");
+      const origin = resolveOrigin();
       let values = [];
       let mode = "sum";
       let target = 0;
@@ -1311,6 +1439,9 @@
       let turnClockActive = false;
       let timerWarningAnnounced = false;
       let rulesMandatory = false;
+      let modeDialogMandatory = false;
+      let gameStarted = false;
+      let lastInteractionWasKeyboard = false;
       const turnClockPauseReasons = new Set();
 
       function createModalController() {
@@ -1399,6 +1530,61 @@
       }
 
       const dialogs = createModalController();
+
+      function resolveOrigin() {
+        const candidate = new URLSearchParams(window.location.search).get("from");
+        return Object.prototype.hasOwnProperty.call(ORIGINS, candidate) ? candidate : DEFAULT_ORIGIN;
+      }
+
+      function syncOriginLinks() {
+        const config = ORIGINS[origin];
+        document.querySelectorAll("[data-origin-link]").forEach(link => {
+          link.href = config.href;
+          link.setAttribute("aria-label", config.returnLabel);
+          const shortCopy = link.querySelector("[data-origin-copy]");
+          const returnCopy = link.querySelector("[data-origin-return-copy]");
+          if (shortCopy) shortCopy.textContent = config.shortLabel;
+          if (returnCopy) returnCopy.textContent = config.returnLabel;
+        });
+      }
+
+      function modeUrl(nextMode) {
+        const path = nextMode === "solo"
+          ? "../calcul_mental/coffres_magiques_solo.html"
+          : "../club_maths/coffres_magiques.html";
+        return `${path}?mode=${nextMode}&from=${origin}`;
+      }
+
+      function openModeDialog({ mandatory = false } = {}) {
+        if (!mandatory && (locked || finished)) return;
+        modeDialogMandatory = mandatory;
+        document.querySelector("#continue-current-mode").hidden = mandatory;
+        if (gameStarted) pauseTurnClock("mode");
+        dialogs.open(modeDialog, {
+          trigger: mandatory ? null : document.activeElement,
+          initialFocus: `#choose-${CURRENT_MODE}`,
+          onEscape: () => {
+            if (!modeDialogMandatory) closeModeDialog();
+          }
+        });
+      }
+
+      function closeModeDialog({ force = false, ...dialogOptions } = {}) {
+        if (modeDialogMandatory && !force) return;
+        modeDialogMandatory = false;
+        dialogs.close(modeDialog, dialogOptions);
+        if (gameStarted) resumeTurnClock("mode");
+      }
+
+      function chooseMode(nextMode) {
+        if (nextMode !== CURRENT_MODE) {
+          window.location.replace(modeUrl(nextMode));
+          return;
+        }
+        const mustStart = !gameStarted;
+        closeModeDialog({ force: true, restoreFocus: !mustStart });
+        if (mustStart) start({ showRules: true });
+      }
 
       function setupFullscreen() {
         const button = document.querySelector("[data-fullscreen-toggle]");
@@ -1618,7 +1804,15 @@
         return operationCycle[Math.floor(positionInBlock / 2)];
       }
 
+      function clearRuneStates() {
+        boardNode.querySelectorAll(".selected,.success,.failure").forEach(node => {
+          node.classList.remove("selected", "success", "failure");
+        });
+        firstSelection = null;
+      }
+
       function makeChallenge() {
+        clearRuneStates();
         challengeNumber += 1;
         mode = nextBalancedMode();
         values = Array.from({ length: SIZE * SIZE }, () => randomInteger(1, 12));
@@ -1628,7 +1822,6 @@
         values[firstPosition] = firstValue;
         values[secondPosition] = secondValue;
         target = calculate(mode, firstValue, secondValue);
-        firstSelection = null;
         locked = false;
         challengeNode.textContent = `${challengeLabels[mode]} de ${target}`;
         renderBoard();
@@ -1669,9 +1862,9 @@
         const player = labels[players[turn]];
         statusNode.className = "status-line good";
         statusNode.textContent = `Le joueur ${player} a gagné les cinq clés !`;
-        document.querySelector("#result-title").textContent = `Trésor du joueur ${player} !`;
-        document.querySelector("#result-text").textContent = "Les cinq serrures sont ouvertes.";
-        document.querySelector("#result-score").textContent = `${scores[0]} clé${scores[0] > 1 ? "s" : ""} à ${scores[1]}`;
+        document.querySelector("#result-title").textContent = `Le joueur ${player} a gagné !`;
+        document.querySelector("#result-text").textContent = `Le joueur ${player} a ouvert les cinq serrures du coffre.`;
+        document.querySelector("#result-score").textContent = `Joueur bleu : ${scores[0]} clé${scores[0] === 1 ? "" : "s"} · Joueur corail : ${scores[1]} clé${scores[1] === 1 ? "" : "s"}`;
         pendingTimer = window.setTimeout(() => {
           closeRules({ restoreFocus: false });
           dialogs.open(result, { initialFocus: "#play-again" });
@@ -1679,7 +1872,7 @@
       }
 
       function nextTurn() {
-        const focusedRune = document.activeElement?.classList.contains("rune") && document.activeElement.matches(":focus-visible")
+        const focusedRune = lastInteractionWasKeyboard && document.activeElement?.classList.contains("rune") && document.activeElement.matches(":focus-visible")
           ? document.activeElement.dataset.index
           : null;
         pendingTimer = null;
@@ -1786,7 +1979,9 @@
       }
 
       function start({ moveFocus = false, focusTarget = null, showRules = false } = {}) {
+        gameStarted = true;
         endTurnClock();
+        turnClockPauseReasons.delete("mode");
         if (pendingTimer) window.clearTimeout(pendingTimer);
         pendingTimer = null;
         closeRules({ force: true, restoreFocus: false });
@@ -1810,6 +2005,18 @@
       boardNode.addEventListener("click", event => {
         const button = event.target.closest(".rune");
         if (button) select(Number(button.dataset.index));
+      });
+      document.addEventListener("keydown", event => {
+        if (["Tab", "Enter", " ", "ArrowUp", "ArrowDown", "ArrowLeft", "ArrowRight"].includes(event.key)) {
+          lastInteractionWasKeyboard = true;
+        }
+      }, true);
+      document.addEventListener("pointerdown", () => { lastInteractionWasKeyboard = false; }, true);
+      document.querySelector("#choose-solo").addEventListener("click", () => chooseMode("solo"));
+      document.querySelector("#choose-duo").addEventListener("click", () => chooseMode("duo"));
+      document.querySelector("#continue-current-mode").addEventListener("click", () => closeModeDialog());
+      document.querySelectorAll("[data-change-mode]").forEach(button => {
+        button.addEventListener("click", () => openModeDialog());
       });
       document.querySelector("#rules-button").addEventListener("click", () => openRules());
       document.querySelector(".close-rules").addEventListener("click", confirmRules);
@@ -1857,7 +2064,15 @@
       };
 
       setupFullscreen();
-      start({ showRules: true });
+      syncOriginLinks();
+      if (requestedMode === CURRENT_MODE) {
+        start({ showRules: true });
+      } else if (requestedMode === "solo") {
+        window.location.replace(modeUrl("solo"));
+      } else {
+        renderTurnClock();
+        openModeDialog({ mandatory: true });
+      }
     })();
   </script>
 </body>

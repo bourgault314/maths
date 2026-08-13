@@ -250,7 +250,7 @@ window.MATHSGO_CATALOGUE = {
       "collections": [],
       "tags": ["jeu", "calcul-mental", "duel", "quatre-operations", "somme", "difference", "produit", "quotient", "chronometre"],
       "thumbnail": "assets/img/thumbnails/jeux/coffres-magiques.svg?v=2",
-      "cardDescription": "À deux, trouver en 20 secondes deux nombres voisins qui réalisent la somme, la différence, le produit ou le quotient demandé."
+      "cardDescription": "Choisir le duel à deux (20 s par tour) ou l’entraînement solo guidé sur les quatre opérations."
     },
     "outils/club_maths/tables_modulaires.html": {
       "primaryNotion": "explorations",
@@ -363,7 +363,7 @@ window.MATHSGO_CATALOGUE = {
       "collections": [],
       "tags": ["calcul-mental", "quatre-operations", "coffres", "aide", "correction-visuelle", "entrainement"],
       "thumbnail": "assets/img/thumbnails/calcul-mental/coffres-magiques-solo.svg?v=1",
-      "cardDescription": "Ouvrir dix coffres sur les quatre opérations, avec une aide et des corrections visuelles pour comprendre chaque calcul."
+      "cardDescription": "Choisir l’entraînement solo guidé (10 coffres) ou le duel à deux de 20 secondes par tour."
     },
     "outils/calcul_mental/defi_tables.html": {
       "primaryNotion": "calcul-mental",
@@ -6078,7 +6078,7 @@ window.MATHSGO_CATALOGUE = {
     {
       "id": "outils-club-maths-coffres-magiques-html",
       "title": "Coffres magiques — à deux",
-      "description": "Un duel de calcul mental sur les quatre opérations : trouver en 20 secondes deux nombres voisins et remporter cinq clés.",
+      "description": "Un jeu de calcul mental en duo — 20 secondes par tour, premier à cinq clés — avec aussi un mode solo guidé sur les quatre opérations.",
       "path": "outils/club_maths/coffres_magiques.html",
       "domains": [
         "jeux-recherches"
@@ -6107,7 +6107,7 @@ window.MATHSGO_CATALOGUE = {
     {
       "id": "outils-calcul-mental-coffres-magiques-solo-html",
       "title": "Coffres magiques — solo",
-      "description": "Dix coffres sur les quatre opérations, avec aide et corrections visuelles pour comprendre la somme, la différence, le produit et le quotient.",
+      "description": "Un entraînement guidé de dix coffres sur les quatre opérations, avec la possibilité de passer au duel à deux de 20 secondes par tour.",
       "path": "outils/calcul_mental/coffres_magiques_solo.html",
       "domains": [
         "nombres-calculs"

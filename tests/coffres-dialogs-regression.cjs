@@ -103,6 +103,90 @@ async function solveSolo(page) {
   return lastSecond;
 }
 
+async function assertOriginLinks(page, expected) {
+  const links = await page.locator("[data-origin-link]").evaluateAll(nodes => nodes.map(node => ({
+    href: node.getAttribute("href"),
+    shortCopy: node.querySelector("[data-origin-copy]")?.textContent.trim() || "",
+    returnCopy: node.querySelector("[data-origin-return-copy]")?.textContent.trim() || ""
+  })));
+  assert(links.length === 2, `${expected.label} : les deux liens de retour ne sont pas présents.`);
+  for (const link of links) {
+    const url = new URL(link.href, page.url());
+    assert(url.pathname === "/outils/index.html", `${expected.label} : le retour ne vise pas le catalogue (${url.pathname}).`);
+    assert(url.searchParams.get("domain") === expected.domain, `${expected.label} : le domaine de retour est ${url.searchParams.get("domain")}.`);
+    assert(url.searchParams.get("notion") === expected.notion, `${expected.label} : la notion de retour est ${url.searchParams.get("notion")}.`);
+  }
+  assert(links.some(link => link.shortCopy === expected.shortCopy), `${expected.label} : le libellé court de retour est faux.`);
+  assert(links.some(link => link.returnCopy === expected.returnCopy), `${expected.label} : le libellé complet de retour est faux.`);
+}
+
+async function auditModeSelector(browser, base, errors, scenario) {
+  const page = await browser.newPage({ viewport: { width: 390, height: 844 } });
+  page.on("pageerror", error => errors.push(`${scenario.label} : ${error.message}`));
+  try {
+    await page.goto(`${base}${scenario.entryPath}`, { waitUntil: "networkidle" });
+    await page.locator("#mode-dialog:not([hidden])").waitFor();
+    await page.waitForFunction(mode => document.activeElement.id === `choose-${mode}`, scenario.currentMode);
+    assert(await page.locator("#choose-solo").isVisible(), `${scenario.label} : le choix Solo n’est pas visible.`);
+    assert(await page.locator("#choose-duo").isVisible(), `${scenario.label} : le choix Duo n’est pas visible.`);
+    assert((await activeElement(page)).insideModal, `${scenario.label} : le focus initial n’est pas dans le sélecteur.`);
+    await assertOriginLinks(page, scenario.origin);
+
+    await page.keyboard.press("Escape");
+    assert(await page.locator("#mode-dialog").isVisible(), `${scenario.label} : Échap contourne le choix de mode initial.`);
+    await page.locator(`#choose-${scenario.targetMode}`).click();
+    await page.waitForURL(url => (
+      url.pathname === scenario.targetPath
+      && url.searchParams.get("mode") === scenario.targetMode
+      && url.searchParams.get("from") === scenario.origin.key
+    ));
+    await page.locator(`${scenario.targetIntro}:not([hidden])`).waitFor();
+    await assertOriginLinks(page, scenario.origin);
+  } finally {
+    await page.close();
+  }
+}
+
+async function auditTouchTurn(browser, base, errors) {
+  const page = await browser.newPage({ viewport: { width: 390, height: 844 }, hasTouch: true, isMobile: true });
+  page.on("pageerror", error => errors.push(`Coffres tactile : ${error.message}`));
+  await page.addInitScript(() => {
+    const nativeTimeout = window.setTimeout.bind(window);
+    window.setTimeout = (callback, delay, ...args) => nativeTimeout(callback, Math.min(delay, 20), ...args);
+  });
+  try {
+    await page.goto(`${base}/outils/club_maths/coffres_magiques.html?mode=duo&from=strategie`, { waitUntil: "networkidle" });
+    await page.locator("#rules:not([hidden])").waitFor();
+    await page.locator(".close-rules").tap();
+    await page.locator("#rules").waitFor({ state: "hidden" });
+    const before = await page.evaluate(() => window.MATHSGO_COFFRES_DUEL.getState());
+    await page.locator('.rune[data-index="0"]').tap();
+    await page.locator('.rune[data-index="1"]').tap();
+    await page.waitForFunction(previousTurn => {
+      const state = window.MATHSGO_COFFRES_DUEL.getState();
+      return state.turn !== previousTurn && !state.locked;
+    }, before.turn);
+
+    const visualState = await page.evaluate(() => ({
+      touchMedia: !matchMedia("(hover: hover) and (pointer: fine)").matches,
+      transientClasses: document.querySelectorAll(".rune.selected,.rune.success,.rune.failure").length,
+      activeRune: document.activeElement?.classList.contains("rune") || false,
+      focusVisibleRunes: document.querySelectorAll(".rune:focus-visible").length,
+      outlinedRunes: [...document.querySelectorAll(".rune")].filter(node => {
+        const style = getComputedStyle(node);
+        return style.outlineStyle !== "none" && Number.parseFloat(style.outlineWidth) > 0;
+      }).length
+    }));
+    assert(visualState.touchMedia, "Le scénario tactile émule encore un pointeur fin avec survol.");
+    assert(visualState.transientClasses === 0, "Le nouveau tour conserve une sélection ou une correction colorée.");
+    assert(!visualState.activeRune, "Une rune touchée conserve le focus après le passage de tour.");
+    assert(visualState.focusVisibleRunes === 0, "Une rune touchée conserve un focus visible après le passage de tour.");
+    assert(visualState.outlinedRunes === 0, "Une rune conserve un contour, notamment le faux contour or, après le passage de tour.");
+  } finally {
+    await page.close();
+  }
+}
+
 async function auditDuel(browser, base, errors) {
   const page = await browser.newPage({ viewport: { width: 390, height: 844 } });
   page.on("pageerror", error => errors.push(`Coffres à deux : ${error.message}`));
@@ -110,7 +194,7 @@ async function auditDuel(browser, base, errors) {
     const nativeTimeout = window.setTimeout.bind(window);
     window.setTimeout = (callback, delay, ...args) => nativeTimeout(callback, Math.min(delay, 20), ...args);
   });
-  await page.goto(`${base}/outils/club_maths/coffres_magiques.html`, { waitUntil: "networkidle" });
+  await page.goto(`${base}/outils/club_maths/coffres_magiques.html?mode=duo`, { waitUntil: "networkidle" });
 
   await page.locator("#rules:not([hidden])").waitFor();
   await page.waitForFunction(() => document.activeElement.classList.contains("close-rules"));
@@ -156,6 +240,17 @@ async function auditDuel(browser, base, errors) {
   assert(await page.evaluate(() => !document.documentElement.classList.contains("fullscreen-fallback")), "Le second Échap ne quitte pas le plein écran.");
 
   const lastSecond = await solveDuel(page);
+  const finalState = await page.evaluate(() => window.MATHSGO_COFFRES_DUEL.getState());
+  const winnerIndex = finalState.scores.findIndex(score => score === 5);
+  assert(winnerIndex !== -1, `Aucun joueur n’atteint cinq clés : ${finalState.scores.join(" à ")}.`);
+  assert(finalState.scores.filter(score => score === 5).length === 1, `La victoire n’est pas unique : ${finalState.scores.join(" à ")}.`);
+  const winner = winnerIndex === 0 ? "bleu" : "corail";
+  const expectedScore = `Joueur bleu : ${finalState.scores[0]} clé${finalState.scores[0] === 1 ? "" : "s"} · Joueur corail : ${finalState.scores[1]} clé${finalState.scores[1] === 1 ? "" : "s"}`;
+  assert((await page.locator("#result-title").innerText()).trim() === `Le joueur ${winner} a gagné !`, "Le dialogue de fin ne nomme pas explicitement le gagnant.");
+  assert((await page.locator("#result-text").innerText()).includes(`Le joueur ${winner} a ouvert les cinq serrures`), "Le résumé de victoire ne confirme pas le gagnant.");
+  assert((await page.locator("#result-score").innerText()).trim() === expectedScore, `Le score final affiché est incohérent avec ${finalState.scores.join(" à ")}.`);
+  assert((await page.locator("#blue-score").innerText()).trim() === `${finalState.scores[0]} / 5 clés`, "Le score bleu du plateau n’est pas finalisé.");
+  assert((await page.locator("#coral-score").innerText()).trim() === `${finalState.scores[1]} / 5 clés`, "Le score corail du plateau n’est pas finalisé.");
   await page.waitForFunction(() => document.activeElement.id === "play-again");
   await page.keyboard.press("Escape");
   assert(await page.locator("#result").isVisible(), "Échap contourne le dialogue de victoire à deux.");
@@ -176,7 +271,7 @@ async function auditSolo(browser, base, errors) {
     const nativeTimeout = window.setTimeout.bind(window);
     window.setTimeout = (callback, delay, ...args) => nativeTimeout(callback, Math.min(delay, 20), ...args);
   });
-  await page.goto(`${base}/outils/calcul_mental/coffres_magiques_solo.html`, { waitUntil: "networkidle" });
+  await page.goto(`${base}/outils/calcul_mental/coffres_magiques_solo.html?mode=solo`, { waitUntil: "networkidle" });
 
   await page.waitForFunction(() => document.activeElement.id === "start-game");
   assert((await activeElement(page)).insideModal, "L’introduction solo ne focalise pas son bouton principal.");
@@ -219,10 +314,43 @@ async function auditSolo(browser, base, errors) {
   });
   const errors = [];
   try {
+    await auditModeSelector(browser, base, errors, {
+      label: "Entrée Jeux de stratégie",
+      entryPath: "/outils/club_maths/coffres_magiques.html",
+      currentMode: "duo",
+      targetMode: "solo",
+      targetPath: "/outils/calcul_mental/coffres_magiques_solo.html",
+      targetIntro: "#lesson",
+      origin: {
+        key: "strategie",
+        label: "origine Jeux de stratégie",
+        domain: "jeux-recherches",
+        notion: "strategie",
+        shortCopy: "Jeux de stratégie",
+        returnCopy: "Retour aux jeux de stratégie"
+      }
+    });
+    await auditModeSelector(browser, base, errors, {
+      label: "Entrée Calcul mental",
+      entryPath: "/outils/calcul_mental/coffres_magiques_solo.html",
+      currentMode: "solo",
+      targetMode: "duo",
+      targetPath: "/outils/club_maths/coffres_magiques.html",
+      targetIntro: "#rules",
+      origin: {
+        key: "calcul-mental",
+        label: "origine Calcul mental",
+        domain: "nombres-calculs",
+        notion: "calcul-mental",
+        shortCopy: "Calcul mental",
+        returnCopy: "Retour au calcul mental"
+      }
+    });
+    await auditTouchTurn(browser, base, errors);
     await auditDuel(browser, base, errors);
     await auditSolo(browser, base, errors);
     assert(errors.length === 0, `Erreurs JavaScript :\n${errors.join("\n")}`);
-    console.log(JSON.stringify({ ok: true, pages: ["coffres_magiques", "coffres_magiques_solo"], checks: ["focus initial", "Tab", "Maj+Tab", "Échap", "restauration", "résultats"] }, null, 2));
+    console.log(JSON.stringify({ ok: true, pages: ["coffres_magiques", "coffres_magiques_solo"], checks: ["sélecteur solo/duo", "origine conservée", "tactile sans contour résiduel", "focus initial", "Tab", "Maj+Tab", "Échap", "restauration", "gagnant et scores"] }, null, 2));
   } finally {
     await browser.close();
     await new Promise(resolve => server.close(resolve));

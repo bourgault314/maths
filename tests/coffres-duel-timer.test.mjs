@@ -44,8 +44,11 @@ test("l'orientation face-à-face reste limitée aux téléphones en portrait", (
 });
 
 test("le focus clavier est remappé après réponse ou expiration sans suivre la souris", () => {
+  assert.match(html, /lastInteractionWasKeyboard && document\.activeElement\?\.classList\.contains\("rune"\)/);
   assert.match(html, /document\.activeElement\.matches\(":focus-visible"\)/);
   assert.match(html, /data-index="\$\{focusedRune\}"[\s\S]*focus\(\{ preventScroll: true \}\)/);
+  assert.match(html, /document\.addEventListener\("keydown"[\s\S]*lastInteractionWasKeyboard = true/);
+  assert.match(html, /document\.addEventListener\("pointerdown", \(\) => \{ lastInteractionWasKeyboard = false; \}, true\)/);
 });
 
 test("les quatre opérations sont servies équitablement aux deux joueurs", () => {

@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <title>Coffres magiques — solo | maths&amp;go</title>
-  <meta name="description" content="Dix coffres sur les quatre opérations, avec aide et corrections visuelles pour comprendre la somme, la différence, le produit et le quotient.">
+  <meta name="description" content="Un entraînement guidé de dix coffres sur les quatre opérations, avec la possibilité de passer au duel à deux de 20 secondes par tour.">
   <link rel="canonical" href="https://mathsgo.re/outils/calcul_mental/coffres_magiques_solo.html">
   <meta name="robots" content="index, follow, max-image-preview:large">
   <link rel="icon" href="/favicon.ico" sizes="48x48">
@@ -163,6 +163,28 @@
       font-weight: 750;
     }
 
+    .solo-subline {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 2px 8px;
+    }
+
+    .mode-switch-button {
+      min-height: 40px;
+      display: inline-flex;
+      align-items: center;
+      padding: 1px 3px;
+      border: 0;
+      color: #41677f;
+      background: none;
+      font-size: .74rem;
+      font-weight: 900;
+      text-decoration: underline;
+      text-decoration-thickness: 1px;
+      text-underline-offset: 3px;
+    }
+
     .solo-stats {
       padding: 9px 13px;
       border-radius: 999px;
@@ -242,11 +264,14 @@
       font-weight: 950;
     }
 
-    .rune:hover,
-    .rune:focus-visible { outline: 4px solid var(--gold); outline-offset: -3px; }
+    .rune:focus-visible { outline: 4px solid var(--blue); outline-offset: -3px; }
     .rune.selected { border-color: #f0a800; background: #ffdd72; transform: scale(.94); }
     .rune.success { border-color: #087a55; background: #bff0d8; }
     .rune.failure { border-color: #b83a3a; background: #ffd4cf; }
+
+    @media (hover: hover) and (pointer: fine) {
+      .rune:hover { outline: 4px solid var(--gold); outline-offset: -3px; }
+    }
 
     .solo-toolbar {
       display: flex;
@@ -308,6 +333,72 @@
     .learn-card .dialog-icon { font-size: 1.55rem; font-weight: 900; letter-spacing: .12em; }
     .dialog-card h2 { margin: 5px 0 10px; color: #143e62; font-size: 1.65rem; }
     .dialog-card > p { margin: 8px 0; color: #49677b; line-height: 1.42; }
+
+    .mode-dialog-card { width: min(100%, 510px); }
+
+    .mode-dialog-card > p {
+      max-width: 390px;
+      margin-inline: auto;
+    }
+
+    .mode-options {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 10px;
+      margin-top: 17px;
+    }
+
+    .mode-choice {
+      min-height: 94px;
+      display: grid;
+      grid-template-columns: 46px minmax(0, 1fr);
+      align-items: center;
+      gap: 11px;
+      padding: 12px 14px;
+      border: 2px solid #cadde8;
+      border-radius: 17px;
+      color: #173f5e;
+      background: #f8fcff;
+      box-shadow: 0 5px 13px rgba(28, 69, 101, .08);
+      text-align: left;
+    }
+
+    .mode-choice-solo { border-color: #75bdb2; background: #effbf8; }
+    .mode-choice-duo { border-color: #e8ad4a; background: #fff8e7; }
+
+    .mode-choice-icon {
+      width: 44px;
+      height: 44px;
+      display: grid;
+      place-items: center;
+      border-radius: 50%;
+      color: #fff;
+      background: #087c75;
+      font-size: 1.25rem;
+      font-weight: 950;
+    }
+
+    .mode-choice-duo .mode-choice-icon { background: #e78b18; }
+    .mode-choice strong { display: block; font-size: 1.02rem; line-height: 1.15; }
+    .mode-choice small { display: block; margin-top: 4px; color: #4f6b7d; font-size: .76rem; font-weight: 800; line-height: 1.3; }
+
+    .mode-continue {
+      min-height: 38px;
+      margin-top: 12px;
+      padding: 5px 10px;
+      border: 0;
+      color: #48697e;
+      background: none;
+      font-size: .8rem;
+      font-weight: 900;
+      text-decoration: underline;
+      text-underline-offset: 3px;
+    }
+
+    @media (min-width: 520px) {
+      .mode-options { grid-template-columns: 1fr 1fr; }
+      .mode-choice { grid-template-columns: 1fr; justify-items: center; text-align: center; }
+    }
 
     .operation-grid {
       min-height: 0;
@@ -922,6 +1013,7 @@
       .solo-page { width: 100%; min-height: calc(100svh - 50px); padding: 14px 8px 20px; border-inline: 0; border-radius: 20px; }
       .solo-heading h1 { font-size: 1.45rem; }
       .solo-heading p:last-child { font-size: .8rem; }
+      .mode-switch-button { font-size: .69rem; }
       .solo-stats { padding: 8px 10px; font-size: .92rem; }
       .status-line { min-height: 42px; margin-top: 10px; font-size: .78rem; }
       .challenge { min-height: 62px; }
@@ -987,7 +1079,7 @@
   <header class="topbar">
     <a class="brand" href="/" aria-label="Accueil maths&go"><img src="/assets/img/mathsgo-logo.png" alt="maths&go" width="1338" height="622"></a>
     <div class="topbar-actions">
-      <a class="back-link" href="../index.html?domain=nombres-calculs&amp;notion=calcul-mental" aria-label="Retour au calcul mental"><span aria-hidden="true">←</span> <span class="back-link-copy">Calcul mental</span></a>
+      <a class="back-link" data-origin-link href="../index.html?domain=nombres-calculs&amp;notion=calcul-mental" aria-label="Retour au calcul mental"><span aria-hidden="true">←</span> <span class="back-link-copy" data-origin-copy>Calcul mental</span></a>
       <button class="fullscreen-toggle" type="button" data-fullscreen-toggle aria-pressed="false" aria-label="Passer en plein écran"><span class="fullscreen-toggle-icon" data-fullscreen-icon aria-hidden="true"><svg viewBox="0 0 24 24" focusable="false"><path class="fullscreen-expand" d="M8 3H3v5M16 3h5v5M8 21H3v-5M16 21h5v-5"/><path class="fullscreen-collapse" d="M3 8h5V3M21 8h-5V3M3 16h5v5M21 16h-5v5"/></svg></span><span data-fullscreen-label>Plein écran</span></button>
     </div>
   </header>
@@ -997,7 +1089,7 @@
       <div>
         <p class="eyebrow">Calcul mental</p>
         <h1>Coffres magiques</h1>
-        <p>Un joueur · trouve 10 clés</p>
+        <p class="solo-subline"><span>Solo · trouve 10 clés</span><button class="mode-switch-button" type="button" data-change-mode>Changer de mode</button></p>
       </div>
       <strong id="key-count" class="solo-stats">0 / 10 clés</strong>
     </section>
@@ -1011,7 +1103,26 @@
     </div>
   </main>
 
-  <section id="lesson" class="overlay" role="dialog" aria-modal="true" aria-labelledby="lesson-title">
+  <section id="mode-dialog" class="overlay" hidden role="dialog" aria-modal="true" aria-labelledby="mode-title">
+    <div class="dialog-card mode-dialog-card">
+      <div class="dialog-icon" aria-hidden="true">🔐</div>
+      <h2 id="mode-title" tabindex="-1">Choisis ton mode</h2>
+      <p>Les mêmes coffres, selon que tu veux t’entraîner ou défier quelqu’un.</p>
+      <div class="mode-options">
+        <button id="choose-solo" class="mode-choice mode-choice-solo" type="button">
+          <span class="mode-choice-icon" aria-hidden="true">1</span>
+          <span><strong>Solo — S’entraîner</strong><small>1 joueur · 10 clés · sans chrono · aides et corrections</small></span>
+        </button>
+        <button id="choose-duo" class="mode-choice mode-choice-duo" type="button">
+          <span class="mode-choice-icon" aria-hidden="true">2</span>
+          <span><strong>Duo — Se défier</strong><small>2 joueurs · 20 s par tour · premier à 5 clés</small></span>
+        </button>
+      </div>
+      <button id="continue-current-mode" class="mode-continue" type="button" hidden>Continuer la partie</button>
+    </div>
+  </section>
+
+  <section id="lesson" class="overlay" hidden role="dialog" aria-modal="true" aria-labelledby="lesson-title">
     <div class="dialog-card learn-card">
       <div class="dialog-icon" aria-hidden="true">+ − × ÷</div>
       <h2 id="lesson-title" tabindex="-1">Quatre mots à connaître</h2>
@@ -1138,7 +1249,7 @@
       <p id="result-score" class="result-score"></p>
       <div class="result-actions">
         <button id="play-again" class="primary-button" type="button">Rejouer avec de nouveaux coffres</button>
-        <a class="secondary-button" href="../index.html?domain=nombres-calculs&amp;notion=calcul-mental">Retour au calcul mental</a>
+        <a class="secondary-button" data-origin-link href="../index.html?domain=nombres-calculs&amp;notion=calcul-mental"><span data-origin-return-copy>Retour au calcul mental</span></a>
       </div>
     </div>
   </section>
@@ -1157,6 +1268,20 @@
 
       const SIZE = 4;
       const GOAL = 10;
+      const CURRENT_MODE = "solo";
+      const DEFAULT_ORIGIN = "calcul-mental";
+      const ORIGINS = {
+        "calcul-mental": {
+          href: "../index.html?domain=nombres-calculs&notion=calcul-mental",
+          shortLabel: "Calcul mental",
+          returnLabel: "Retour au calcul mental"
+        },
+        strategie: {
+          href: "../index.html?domain=jeux-recherches&notion=strategie",
+          shortLabel: "Jeux de stratégie",
+          returnLabel: "Retour aux jeux de stratégie"
+        }
+      };
       const operationLabels = { sum: "somme", difference: "différence", product: "produit", quotient: "quotient" };
       const operationArticles = { sum: "une", difference: "une", product: "un", quotient: "un" };
       const symbols = { sum: "+", difference: "−", product: "×", quotient: "÷" };
@@ -1164,6 +1289,7 @@
       const status = document.querySelector("#status");
       const challenge = document.querySelector("#challenge-text");
       const counter = document.querySelector("#key-count");
+      const modeDialog = document.querySelector("#mode-dialog");
       const lesson = document.querySelector("#lesson");
       const helpDialog = document.querySelector("#help-dialog");
       const correctionDialog = document.querySelector("#correction-dialog");
@@ -1173,6 +1299,8 @@
       const correctionSolution = document.querySelector("#correction-solution");
       const correctionVisual = document.querySelector("#correction-visual");
       const result = document.querySelector("#result");
+      const requestedMode = new URLSearchParams(window.location.search).get("mode");
+      const origin = resolveOrigin();
       let values = [];
       let modes = [];
       let mode = "sum";
@@ -1182,6 +1310,8 @@
       let locked = false;
       let pendingTimer = null;
       let boardId = 0;
+      let modeDialogMandatory = false;
+      let gameStarted = false;
 
       function createModalController() {
         const focusableSelector = [
@@ -1278,6 +1408,58 @@
       }
 
       const dialogs = createModalController();
+
+      function resolveOrigin() {
+        const candidate = new URLSearchParams(window.location.search).get("from");
+        return Object.prototype.hasOwnProperty.call(ORIGINS, candidate) ? candidate : DEFAULT_ORIGIN;
+      }
+
+      function syncOriginLinks() {
+        const config = ORIGINS[origin];
+        document.querySelectorAll("[data-origin-link]").forEach(link => {
+          link.href = config.href;
+          link.setAttribute("aria-label", config.returnLabel);
+          const shortCopy = link.querySelector("[data-origin-copy]");
+          const returnCopy = link.querySelector("[data-origin-return-copy]");
+          if (shortCopy) shortCopy.textContent = config.shortLabel;
+          if (returnCopy) returnCopy.textContent = config.returnLabel;
+        });
+      }
+
+      function modeUrl(nextMode) {
+        const path = nextMode === "solo"
+          ? "../calcul_mental/coffres_magiques_solo.html"
+          : "../club_maths/coffres_magiques.html";
+        return `${path}?mode=${nextMode}&from=${origin}`;
+      }
+
+      function openModeDialog({ mandatory = false } = {}) {
+        modeDialogMandatory = mandatory;
+        document.querySelector("#continue-current-mode").hidden = mandatory;
+        dialogs.open(modeDialog, {
+          trigger: mandatory ? null : document.activeElement,
+          initialFocus: `#choose-${CURRENT_MODE}`,
+          onEscape: () => {
+            if (!modeDialogMandatory) closeModeDialog();
+          }
+        });
+      }
+
+      function closeModeDialog({ force = false, ...dialogOptions } = {}) {
+        if (modeDialogMandatory && !force) return;
+        modeDialogMandatory = false;
+        dialogs.close(modeDialog, dialogOptions);
+      }
+
+      function chooseMode(nextMode) {
+        if (nextMode !== CURRENT_MODE) {
+          window.location.replace(modeUrl(nextMode));
+          return;
+        }
+        const mustIntroduce = !gameStarted && values.length === 0;
+        closeModeDialog({ force: true, restoreFocus: !mustIntroduce });
+        if (mustIntroduce) openLesson();
+      }
 
       function setupFullscreen() {
         const button = document.querySelector("[data-fullscreen-toggle]");
@@ -1617,6 +1799,7 @@
       }
 
       function makeChallenge(nextMode = modes[keys]) {
+        clearSelection();
         mode = nextMode;
         values = Array.from({ length: SIZE * SIZE }, () => randomInteger(1, 12));
         const pairs = neighborPairs();
@@ -1626,7 +1809,6 @@
         values[pair[1]] = solution[1];
         target = calculate(mode, solution[0], solution[1]);
         boardId += 1;
-        firstSelection = null;
         locked = false;
         challenge.innerHTML = `${operationArticles[mode]} <b>${operationLabels[mode]}</b> de <strong>${target}</strong>`;
         status.className = "status-line";
@@ -1764,6 +1946,7 @@
       }
 
       function start({ moveFocus = false, focusTarget = null } = {}) {
+        gameStarted = true;
         if (pendingTimer) window.clearTimeout(pendingTimer);
         pendingTimer = null;
         dialogs.close(result, { restoreFocus: false });
@@ -1788,6 +1971,12 @@
       board.addEventListener("click", event => {
         const button = event.target.closest(".rune");
         if (button) select(Number(button.dataset.index));
+      });
+      document.querySelector("#choose-solo").addEventListener("click", () => chooseMode("solo"));
+      document.querySelector("#choose-duo").addEventListener("click", () => chooseMode("duo"));
+      document.querySelector("#continue-current-mode").addEventListener("click", () => closeModeDialog());
+      document.querySelectorAll("[data-change-mode]").forEach(button => {
+        button.addEventListener("click", () => openModeDialog());
       });
       document.querySelector("#start-game").addEventListener("click", () => {
         const trigger = dialogs.trigger(lesson);
@@ -1814,8 +2003,15 @@
         getState: () => ({ values: values.slice(), modes: modes.slice(), mode, target, keys, locked, boardId })
       };
       setupFullscreen();
-      openLesson();
+      syncOriginLinks();
       updateCounter();
+      if (requestedMode === CURRENT_MODE) {
+        openLesson();
+      } else if (requestedMode === "duo") {
+        window.location.replace(modeUrl("duo"));
+      } else {
+        openModeDialog({ mandatory: true });
+      }
     })();
   </script>
 </body>
