@@ -43,12 +43,12 @@ fichiers modifiés → tests → reste à vérifier.
 | Monde | Palier | Contenu | Niveaux |
 |---|---|---|---|
 | Le lagon | 6e | découverte, partage égal | 8 |
-| La forêt | 5e | additions (lentille), équiv., 1/8, 1/12 | 10 (dont « Le prisme scellé ») |
+| La forêt | 5e | additions (lentille), équiv., 1/8, 1/12 | 9 |
 | Le volcan | 4e | loupes ×, fractions > 1, 1/9 | 7 |
 | Les pitons | 5e-4e | équivalences, comparaisons (passes) | 7 |
 | Les soleils | 4e | soleils multiples / fractionnaires / valeur 2 | 8 |
 | Le marché | 5e-3e | 0,5 ; 25 % ; 100 % (écritures) | 6 |
-| Les tunnels | 6e-4e | labyrinthes denses (41-64 % de roches), esprit de l'original | 7 (dont « La galerie scellée ») |
+| Les tunnels | 6e-4e | labyrinthes denses (41-64 % de roches), esprit de l'original | 8 (dont « Le prisme scellé » et « La galerie scellée ») |
 | Mafate | Expert | tout combiné, 2 soleils, grands plateaux | 7 (dont « Les verrous du cirque ») |
 
 Total : 60 niveaux, chacun avec une solution de référence `sol` vérifiée automatiquement.
@@ -98,25 +98,35 @@ Batterie (script Playwright Python, à conserver dans `tests/`) :
   Original rejouable : flashmuseum.net/game/refraction-5nm (émulation, parfois capricieuse)
   ou app de bureau Flashpoint Archive ; vidéos walkthrough sur YouTube pour captures.
 
-## 7. Chantier en cours : passage au « vrai jeu »
+## 7. Architecture (découpage d'août 2026, statique, sans build, GitHub Pages)
 
-Découpage proposé (statique, sans build, compatible GitHub Pages) :
+Décision validée : `outils/club_maths/soley.html` RESTE la page publique (URL, sitemap,
+catalogue et SEO inchangés) ; elle charge ses modules depuis le sous-dossier `soley/`.
+Scripts classiques en fin de body, ordre de chargement OBLIGATOIRE :
 ```
-soley/
-  index.html      (coquille + écrans)
-  css/soley.css
-  js/engine.js    (fractions, simulation, victoire)
-  js/levels.js    (MONDES, NIVEAUX, CALC — données pures)
-  js/render.js    (SVG : plateau, pièces, fruits, scènes du Coup de pouce)
-  js/ui.js        (écrans, toolbox, plein écran, sauvegarde)
-  assets/         (icônes, sons à venir)
-tests/soley/      (scripts Playwright + ce fichier de procédure)
+outils/club_maths/
+  soley.html            (coquille : head, écrans, <link> css, 4 <script src>)
+  soley/css/soley.css   (tout le style)
+  soley/js/levels.js    (fractions + constructeurs de pièces, WORLDS, LV, CALC)
+  soley/js/engine.js    (scènes du Coup de pouce, sauvegarde, état, simulate, victoire)
+  soley/js/render.js    (SVG : pièces, roches, passes, fruits, cases, soleils, redraw)
+  soley/js/ui.js        (écrans, toolbox, boardClick, plein écran, relayout, API SOLEY)
+tests/soley/            (batterie Playwright + procédure + verifier-decoupage.mjs)
 ```
-Étape 1 du découpage : à comportement STRICTEMENT identique (les tests le prouvent).
+Étape 1 faite aux CISEAUX : tranches contiguës du fichier d'origine, seul le bloc
+« Victoire » (déclarations pures) a été déplacé en fin d'engine.js ; la preuve
+octet par octet est rejouable (`node tests/soley/verifier-decoupage.mjs`).
+Écarts assumés vs l'idéal thématique, à résorber SEULEMENT à une éventuelle étape
+modules ES : fractions/constructeurs vivent dans levels.js (LV en a besoin à
+l'évaluation) ; scènes du Coup de pouce et sauvegarde vivent dans engine.js.
+Règle : les 4 fichiers restent des scripts classiques (pas de type=module), chacun
+commence par "use strict"; et le partage se fait par la portée globale.
 
 ## 8. Feuille de route (idées validées ou proposées, à prioriser avec Gwenael)
 
 - [ ] Écran de démarrage / splash (image d'accueil du jeu).
+- [ ] Rétablir l'installation en app (manifest + icônes, en vrais fichiers dans assets/),
+      supprimée lors de la mise en ligne.
 - [ ] Revoir l'entrée en matière : aides/tutoriel d'abord, puis jouer — on guide peut-être
       trop pendant les niveaux (idée Gwenael à creuser).
 - [ ] Musique et sons (discrets, désactivables — WebAudio ou petits fichiers).
@@ -146,4 +156,14 @@ tests/soley/      (scripts Playwright + ce fichier de procédure)
   créée dans tests/soley/ (Playwright Python) et exécutée sur la version déployée ET la
   copie locale : TOUT VERT (T1→T7 + sauvegarde). Découpage §7 : plan proposé, en attente
   de validation.
+- 2026-08-13 (session 2) : découpage en modules, comportement STRICTEMENT identique.
+  Plan validé par Gwenaël (option A : soley.html reste la page publique ; scripts
+  classiques ; ciseaux seulement). soley.html (1911 lignes) → coquille de 119 lignes
+  + soley/css/soley.css + soley/js/{levels,engine,render,ui}.js. Double preuve :
+  (1) verifier-decoupage.mjs reconstruit l'original octet par octet (sha256 bfd02ad877b0…,
+  seule liberté : bloc Victoire déplacé tel quel en fin d'engine.js, déclarations pures) ;
+  (2) batterie §5 complète verte sur la version découpée. tests/soley-public.test.mjs
+  adapté (il lisait le script inline par regex) + nouveau test de coquille : 12/12.
+  Tableau §3 aligné sur le déployé (forêt 9, tunnels 8 dont le prisme scellé) ;
+  feuille de route §8 : ajout « rétablir l'installation en app » (demande Gwenaël).
 - (à compléter à chaque session)
