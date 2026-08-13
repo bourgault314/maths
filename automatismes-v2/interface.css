@@ -25,6 +25,22 @@ body,
   vertical-align: 0.8em;
 }
 
+.mathsgo-role-unites {
+  color: #b91c1c;
+}
+
+.mathsgo-role-dixiemes {
+  color: #166534;
+}
+
+.mathsgo-role-centiemes {
+  color: #854d0e;
+}
+
+.mathsgo-role-milliemes {
+  color: #6d28d9;
+}
+
 .carte-question-carres {
   gap: clamp(10px, 2.2vh, 22px);
 }
@@ -567,33 +583,7 @@ button.case-reponse-carres {
   text-align: center;
 }
 
-.niveaux-aide-fractions {
-  width: 100%;
-  display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 7px;
-}
-
-.niveaux-aide-fractions button {
-  min-width: 0;
-  min-height: 48px;
-  padding: 7px 5px;
-  border: 2px solid var(--mg-ligne);
-  border-radius: var(--mg-rayon-moyen);
-  color: var(--mg-bleu);
-  background: var(--mg-papier);
-  font-weight: 800;
-  line-height: 1.15;
-}
-
-.niveaux-aide-fractions button.selectionne,
-.niveaux-aide-fractions button[aria-current="step"] {
-  border-color: var(--mg-bleu);
-  color: var(--mg-papier);
-  background: var(--mg-bleu);
-}
-
-.contenu-niveau-aide-fractions {
+.contenu-atelier-aide-fractions {
   min-width: 0;
 }
 
@@ -1121,6 +1111,164 @@ button.case-reponse-carres {
   font-size: clamp(1rem, 3.6vw, 1.45rem);
 }
 
+.calcul-aligne-fractions {
+  padding: 9px 11px;
+  border-radius: var(--mg-rayon-moyen);
+  background: var(--mg-fondDoux);
+  font-size: clamp(.95rem, 3.6vw, 1.35rem);
+}
+
+.calcul-aligne-fractions .mathsgo-egalites-alignees,
+.decomposition-guidee-fraction .mathsgo-egalites-alignees,
+.decomposition-fraction-superieure .mathsgo-egalites-alignees {
+  grid-template-columns: minmax(56px, auto) 20px minmax(0, auto);
+  column-gap: 8px;
+  row-gap: 5px;
+}
+
+.decomposition-guidee-fraction {
+  width: fit-content;
+  max-width: 100%;
+  margin-inline: auto;
+  font-family: var(--mg-mathematiques);
+  font-size: clamp(.9rem, 3.5vw, 1.2rem);
+}
+
+.figure-correspondance-decimale {
+  width: min(100%, 560px);
+}
+
+.unites-entieres-correspondance {
+  display: grid;
+  gap: 8px;
+}
+
+.unites-entieres-correspondance > p {
+  margin: 0;
+  color: var(--mg-texteAttenue);
+  font-size: 13px;
+  line-height: 1.4;
+  text-align: center;
+}
+
+.figure-unites-correspondance {
+  width: min(100%, 560px);
+}
+
+.etape-manipulation,
+.etape-abstraite-cours {
+  margin: 0;
+  color: var(--mg-encre);
+  font-size: 13px;
+  line-height: 1.45;
+}
+
+.exemple-cours-superieur {
+  padding: 12px;
+  display: grid;
+  gap: 10px;
+  border: 2px solid var(--mg-ligne);
+  border-radius: var(--mg-rayon-moyen);
+  background: var(--mg-fondDoux);
+}
+
+.exemple-cours-superieur h4,
+.exemple-cours-superieur p {
+  margin: 0;
+}
+
+.exemple-cours-superieur h4 {
+  color: var(--mg-bleu);
+  font-size: 19px;
+}
+
+.exemple-cours-superieur > p {
+  color: var(--mg-texteAttenue);
+  font-size: 13px;
+  line-height: 1.45;
+}
+
+.transformation-bandes-cours {
+  display: grid;
+  gap: 7px;
+  justify-items: center;
+}
+
+.transformation-bandes-cours > section {
+  width: 100%;
+  min-width: 0;
+  display: grid;
+  gap: 5px;
+}
+
+.transformation-bandes-cours > section > strong {
+  color: var(--mg-texteAttenue);
+  font-size: 12px;
+  text-align: center;
+}
+
+.fleche-transformation-cours {
+  color: var(--mg-orange);
+  font-size: 26px;
+  font-weight: 900;
+  line-height: 1;
+}
+
+.titre-reperes-visuels {
+  margin: 4px 0 0;
+  color: var(--mg-bleu);
+  font-size: 16px;
+  text-align: center;
+}
+
+.reperes-visuels-cours {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
+  gap: 9px;
+}
+
+.repere-visuel-cours {
+  min-width: 0;
+  padding: 8px;
+  display: grid;
+  align-content: center;
+  gap: 8px;
+  border: 2px solid var(--mg-ligne);
+  border-radius: var(--mg-rayon-moyen);
+  background: var(--mg-papier);
+}
+
+.repere-visuel-cours .figure-bandes-rail {
+  width: min(100%, 340px);
+}
+
+.repere-visuel-cours .calcul-aligne-fractions {
+  width: fit-content;
+}
+
+.repere-cent-centiemes .figure-grille-repere {
+  width: min(100%, 150px);
+}
+
+.repere-sept-unites .tuiles-unites {
+  grid-template-columns: repeat(4, minmax(44px, 1fr));
+}
+
+.reperes-rangs-cours {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: 8px;
+}
+
+.reperes-rangs-cours .calcul-aligne-fractions {
+  width: 100%;
+}
+
+.definition-cours-quotient {
+  margin-top: 4px;
+  border-left-color: var(--mg-orange) !important;
+}
+
 .figure-materiel-cours,
 .figure-materiel-aide {
   max-height: 440px;
@@ -1294,13 +1442,11 @@ button.case-reponse-carres {
     grid-template-columns: minmax(0, 1fr);
   }
 
-  .niveaux-aide-fractions {
-    gap: 4px;
-  }
-
-  .niveaux-aide-fractions button {
-    padding-inline: 2px;
-    font-size: 11px;
+  .calcul-aligne-fractions .mathsgo-egalites-alignees,
+  .decomposition-guidee-fraction .mathsgo-egalites-alignees,
+  .decomposition-fraction-superieure .mathsgo-egalites-alignees {
+    grid-template-columns: minmax(42px, auto) 16px minmax(0, auto);
+    column-gap: 4px;
   }
 }
 
@@ -1919,6 +2065,25 @@ body {
   padding: 8px 10px;
   font-size: 13px;
   text-align: center;
+}
+
+.reponse-attendue-omission {
+  margin-top: 6px;
+  display: grid;
+  gap: 5px;
+  justify-items: center;
+}
+
+.reponse-attendue-omission > span {
+  color: var(--mg-texteAttenue);
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: .04em;
+  text-transform: uppercase;
+}
+
+.reponse-attendue-omission .reponses-correction {
+  margin: 0;
 }
 
 .barre-eleve,
@@ -3293,6 +3458,8 @@ body {
 
 .case-reponse-rationnelle.fausse {
   border-color: var(--mg-erreur);
+  color: var(--mg-erreur);
+  background: color-mix(in srgb, var(--mg-erreur) 6%, var(--mg-papier));
 }
 
 .case-decimale {
@@ -3516,6 +3683,18 @@ body {
 .rappel-fraction-eleve .fraction-empilee,
 .reponses-correction .fraction-empilee {
   font-size: 1.55rem;
+}
+
+.reponses-correction-fractions .fraction-empilee {
+  min-width: 64px;
+  padding: 7px 15px;
+  border-radius: 9999px;
+  color: var(--mg-papier);
+  background: var(--mg-reussite);
+}
+
+.reponses-correction-fractions .fraction-empilee .barre-fraction {
+  background: currentColor;
 }
 
 .titre-reponse-correcte {

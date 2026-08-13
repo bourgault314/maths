@@ -53,7 +53,7 @@ describe("registre du lecteur", () => {
     assert.equal(obtenirNotionLecteur(NOTION_NC02).pagesCours, 5);
     assert.equal(obtenirNotionLecteur(NOTION_NC02).nombreQuestionsMaximum, 20);
     assert.equal(obtenirNotionLecteur(NOTION_NC02).nom, "Carrés des entiers de 0 à 12");
-    assert.equal(obtenirNotionLecteur(NOTION_FRACTIONS_SIMPLES_DECIMAUX).pagesCours, 7);
+    assert.equal(obtenirNotionLecteur(NOTION_FRACTIONS_SIMPLES_DECIMAUX).pagesCours, 6);
     assert.equal(
       obtenirNotionLecteur(NOTION_FRACTIONS_SIMPLES_DECIMAUX).nombreQuestionsMaximum,
       20,

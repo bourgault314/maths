@@ -1,12 +1,12 @@
 import {
   SCHEMA_SEANCE,
   validerSeance,
-} from "../../packages/contrats/src/seance.js?v=26";
+} from "../../packages/contrats/src/seance.js?v=27";
 import {
   REFERENTIEL_COMPETENCES,
   SCHEMA_TRACE_REPONSE,
   validerTraceReponse,
-} from "../../packages/contrats/src/trace-reponse.js?v=26";
+} from "../../packages/contrats/src/trace-reponse.js?v=27";
 import {
   TYPE_REPONSE_ENTIER_NATUREL,
   TYPE_REPONSE_DEUX_ENTIERS,
@@ -16,16 +16,16 @@ import {
   estDeuxEntiersExacts,
   estEntierExact,
   estSelectionExacte,
-} from "../../packages/contrats/src/question-v2.js?v=26";
+} from "../../packages/contrats/src/question-v2.js?v=27";
 import {
   analyserEcritureDecimalePositive,
   fractionsEgales,
-} from "../../packages/objets/src/fractions-decimaux.js?v=26";
+} from "../../packages/objets/src/fractions-decimaux.js?v=27";
 import { graineDepuisTexte } from "../../packages/moteur-exercices/src/aleatoire.js";
-import { creerRegistreAutomatismes } from "../../packages/automatismes/src/registre.js?v=26";
+import { creerRegistreAutomatismes } from "../../packages/automatismes/src/registre.js?v=27";
 import {
   normaliserIdentifiantModule,
-} from "../../packages/automatismes/src/identifiants.js?v=26";
+} from "../../packages/automatismes/src/identifiants.js?v=27";
 import {
   connaitNotionLecteur,
   listerNotionsLecteur,
@@ -37,8 +37,8 @@ import {
   NOTION_VOLUME_CYLINDRE,
   NOTION_VOLUME_PRISME,
   obtenirNotionLecteur,
-} from "./registre-lecteur.js?v=26";
-import { genererSerieMultinotions } from "./serie-multinotions.js?v=26";
+} from "./registre-lecteur.js?v=27";
+import { genererSerieMultinotions } from "./serie-multinotions.js?v=27";
 
 export {
   NOTION_FRACTIONS_SIMPLES_DECIMAUX,
@@ -158,7 +158,7 @@ function creerEtatQuestion(etat) {
   etat.pasFractionAide = 0;
   etat.groupesFractionAide = 0;
   etat.rangFractionAide = null;
-  etat.niveauAideFraction = 0;
+  etat.etapeCorrespondanceAide = 0;
   etat.correctionOuverte = false;
   etat.coursOuvert = false;
   etat.notionCoursOuverte = null;
@@ -187,7 +187,7 @@ export function creerEtatLecteur(configuration = {}) {
     pasFractionAide: 0,
     groupesFractionAide: 0,
     rangFractionAide: null,
-    niveauAideFraction: 0,
+    etapeCorrespondanceAide: 0,
     correctionOuverte: false,
     coursOuvert: false,
     notionCoursOuverte: null,
@@ -578,7 +578,6 @@ export function validerReponse(etat) {
   etat.traces.push(trace);
   etat.validation = { juste, ...(reponseOmise ? { omise: true } : {}) };
   etat.erreurValidation = "";
-  if (reponseOmise) ouvrirCorrection(etat);
   return etat;
 }
 
@@ -664,13 +663,34 @@ export function grouperUniteFractionAide(etat, delta = 1) {
   ) {
     return etat;
   }
-  // Deux gestes réellement visibles : assembler les pièces, puis retourner
-  // chaque groupe complet en unité. Le nombre d'unités n'ajoute pas de clics
-  // répétitifs qui montreraient la même image.
-  const maximum = 2;
+  // Deux gestes sont communs : assembler les pièces, puis retourner chaque
+  // groupe complet en unité. Quand il reste exactement deux quarts, un
+  // troisième geste les fusionne en un demi. Les autres restes n'ajoutent pas
+  // de clic répétitif sans transformation mathématique nouvelle.
+  const maximum = rationnel.denominateur === 4
+    && rationnel.numerateur % rationnel.denominateur === 2
+    ? 3
+    : 2;
   etat.groupesFractionAide = Math.max(
     0,
     Math.min(maximum, etat.groupesFractionAide + delta),
+  );
+  return etat;
+}
+
+export function avancerCorrespondanceAide(etat, delta, maximum = 2) {
+  if (
+    !etat.aideOuverte
+    || !Number.isInteger(delta)
+    || !Number.isInteger(maximum)
+    || maximum < 1
+    || maximum > 3
+  ) {
+    return etat;
+  }
+  etat.etapeCorrespondanceAide = Math.max(
+    0,
+    Math.min(maximum, etat.etapeCorrespondanceAide + delta),
   );
   return etat;
 }
@@ -688,20 +708,6 @@ export function choisirRangFractionAide(etat, rang) {
     return etat;
   }
   etat.rangFractionAide = rang;
-  return etat;
-}
-
-export function choisirNiveauAideFraction(etat, niveau) {
-  if (
-    !etat.aideOuverte
-    || !questionCourante(etat)
-    || !Number.isInteger(niveau)
-    || niveau < 0
-    || niveau > 2
-  ) {
-    return etat;
-  }
-  etat.niveauAideFraction = niveau;
   return etat;
 }
 

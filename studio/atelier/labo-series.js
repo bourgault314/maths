@@ -64,6 +64,10 @@ import {
   dessinerTableauNumerationDecimale,
 } from "../../packages/objets/src/numeration-decimale.js";
 import {
+  dessinerDemiAvecDixiemes,
+  dessinerReorganisationCentiemes,
+} from "../../packages/objets/src/correspondances-decimales.js";
+import {
   PREREGLAGES_DROITE_GRADUEE,
   dessinerPrereglageDroiteGraduee,
 } from "../../packages/objets/src/droite-graduee.js";
@@ -483,6 +487,7 @@ const entreeBandesFractionsRail = {
         ["pieces", "Pièces"],
         ["groupes", "Groupes"],
         ["unites", "Unités formées"],
+        ["reste", "Reste simplifié"],
         ["lecture", "Lecture sur le rail"],
       ],
       defaut: "unites",
@@ -520,6 +525,12 @@ const entreeBandesFractionsRail = {
       legende: "5/2 — deux unités formées et un demi",
       dessiner: () => svgBandesRail({
         numerateur: 5, denominateur: 2, profil: "solution", etape: "unites", largeur: 340,
+      }),
+    },
+    {
+      legende: "6/4 — une unité puis 2/4 regroupés en 1/2",
+      dessiner: () => svgBandesRail({
+        numerateur: 6, denominateur: 4, profil: "aide-nc03", etape: "reste", largeur: 340,
       }),
     },
     {
@@ -651,6 +662,95 @@ const entreeTableauNumerationDecimale = {
     },
   ],
   vignette: () => svgTableauDecimal("0,725", 280, false),
+};
+
+const entreeCorrespondanceDemiDixiemes = {
+  titre: "Correspondance — cinq dixièmes et un demi",
+  parametres: [
+    { cle: "largeur", libelle: "Largeur", min: 240, max: 720, pas: 20, defaut: 320 },
+  ],
+  groupes: [{
+    cle: "etape",
+    options: [
+      ["dixiemes", "Cinq dixièmes"],
+      ["demi", "Bande d’un demi"],
+      ["comparaison", "Comparaison"],
+    ],
+    defaut: "comparaison",
+  }],
+  toggles: [{ cle: "ecritures", libelle: "écritures", defaut: true }],
+  dessiner(v, actifs) {
+    return dessinerDemiAvecDixiemes({
+      etape: v.etape,
+      largeur: Number(v.largeur),
+      afficherEcritures: actifs.has("ecritures"),
+    }).svg;
+  },
+  planche: () => ["dixiemes", "demi", "comparaison"].map((etape) => ({
+    legende: etape === "dixiemes"
+      ? "Cinq dixièmes"
+      : etape === "demi"
+        ? "Une bande d’un demi"
+        : "Même quantité, deux matériels",
+    dessiner: () => dessinerDemiAvecDixiemes({
+      etape,
+      largeur: 320,
+      afficherEcritures: etape === "comparaison",
+    }).svg,
+  })),
+  vignette: () => dessinerDemiAvecDixiemes({
+    etape: "comparaison",
+    largeur: 280,
+    afficherEcritures: false,
+  }).svg,
+};
+
+const entreeReorganisationCentiemes = {
+  titre: "Correspondance — centièmes et quarts",
+  parametres: [
+    { cle: "largeur", libelle: "Largeur", min: 240, max: 720, pas: 20, defaut: 320 },
+  ],
+  groupes: [
+    {
+      cle: "centiemes",
+      options: [[25, "25 centièmes"], [75, "75 centièmes"]],
+      defaut: 25,
+    },
+    {
+      cle: "etape",
+      options: [
+        ["lignes", "Rangées"],
+        ["quadrants", "Blocs de 25"],
+        ["comparaison", "Comparaison"],
+      ],
+      defaut: "comparaison",
+    },
+  ],
+  toggles: [{ cle: "ecritures", libelle: "écritures", defaut: true }],
+  dessiner(v, actifs) {
+    return dessinerReorganisationCentiemes({
+      centiemes: Number(v.centiemes),
+      etape: v.etape,
+      largeur: Number(v.largeur),
+      afficherEcritures: actifs.has("ecritures"),
+    }).svg;
+  },
+  planche: () => [25, 75].flatMap((centiemes) =>
+    ["lignes", "quadrants", "comparaison"].map((etape) => ({
+      legende: `${centiemes}/100 · ${etape}`,
+      dessiner: () => dessinerReorganisationCentiemes({
+        centiemes,
+        etape,
+        largeur: 320,
+        afficherEcritures: etape === "comparaison",
+      }).svg,
+    }))),
+  vignette: () => dessinerReorganisationCentiemes({
+    centiemes: 75,
+    etape: "comparaison",
+    largeur: 280,
+    afficherEcritures: false,
+  }).svg,
 };
 
 // ---------------------------------------------------------------------------
@@ -1169,6 +1269,8 @@ export const SERIES = [
     objets: {
       materielNumerationDecimale: entreeMaterielNumerationDecimale,
       tableauNumerationDecimale: entreeTableauNumerationDecimale,
+      correspondanceDemiDixiemes: entreeCorrespondanceDemiDixiemes,
+      reorganisationCentiemes: entreeReorganisationCentiemes,
     },
   },
   {

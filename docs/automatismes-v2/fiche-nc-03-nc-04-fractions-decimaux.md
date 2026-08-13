@@ -1,12 +1,12 @@
 # Fiche NC-03 / NC-04 — Fractions simples et décimaux
 
-> **Candidat intégré du 13 août 2026.** Cette fiche décrit le module révisé,
+> **Candidat intégré, révision D-049 du 13 août 2026.** Cette fiche décrit le module révisé,
 > et non plus le pilote du 8 août. Les questions ont été recomposées ; le cours,
 > « Me guider » et les corrections utilisent maintenant les briques communes
-> comparées dans le Labo. La recette finale est achevée ; le statut reste
-> `construit` en attente des retours de Gwenaël et de Claire. Gwenaël a
-> autorisé le 13 août sa publication de test, sans référencement ni passage à
-> `valide`.
+> comparées dans le Labo. L'intégration est achevée, mais la révision D-049
+> attend encore sa recette finale ; le statut reste `construit` en attente des
+> retours de Gwenaël et de Claire. Gwenaël a autorisé le 13 août sa publication
+> de test, sans référencement ni passage à `valide`.
 
 ## 1. Identité et statut
 
@@ -145,49 +145,56 @@ représentent exactement `20 %` des questions aux quatre jalons et sont réparti
 au plus équitablement entre NC-03 et NC-04. Les fractions libres remplacent
 une répétition de famille : elles n'effacent donc pas la couverture de base.
 
-## 7. Cours explicite en sept pages
+## 7. Cours explicite en six pages
 
-Le cours suit une progression concret — imagé — abstrait sans présenter trois
+Le cours suit une progression concret — imagé — abstrait sans présenter des
 recettes concurrentes :
 
-1. **Un même nombre, plusieurs écritures** : même quantité, même point sur une
-   double droite et sens quotient de la barre de fraction.
-2. **Du matériel aux symboles** : pièce de quart, grille de 100 puis
-   `1/4 = 25/100 = 0,25`, avec les repères `1/2` et `3/4` et leur extension.
-3. **Dixièmes, centièmes et millièmes** : matériel rouge, vert et jaune,
-   repères `1/10`, `1/100`, `1/1000` et tableau de `725/1000`.
-4. **Fraction décimale vers décimal** :
+1. **Construire un demi** : deux pièces `1/2` reforment l'unité ; cinq bandes
+   `1/10` occupent la même moitié, d'où `1/2 = 5/10 = 0,5`.
+2. **Construire des quarts** : quatre pièces `1/4` reforment l'unité ; les
+   mêmes 25 centièmes sont réorganisés en un bloc de `5 × 5`, d'où
+   `1/4 = 25/100 = 0,25`, puis `3/4 = 75/100 = 0,75`.
+3. **Nommer les rangs décimaux** : matériel rouge, vert et jaune de
+   `147/100`, repères `1/10`, `1/100`, `1/1000`, puis tableau de
+   `725/1000 = 0,725`. Le millième reste dans le tableau, sans matériel
+   miniaturisé.
+4. **Fraction décimale vers décimal** : matériel, tableau puis décomposition
    `147/100 = 100/100 + 40/100 + 7/100 = 1 + 4/10 + 7/100 = 1,47`.
-5. **Décimal vers fraction** : dernier rang écrit, dénominateur imposé,
-   fraction libre et équivalences `0,75 = 75/100 = 3/4`.
-6. **Dépasser l'unité** : unités complètes avec
-   `5/2 = 4/2 + 1/2 = 2 + 1/2 = 2,5`, puis `7/4`, les entiers cachés et `/1`.
-7. **Choisir une stratégie et vérifier** : ordre de grandeur, fractions
-   équivalentes et division seulement comme méthode générale tardive lorsqu'un
-   repère ne suffit pas.
+5. **Décimal vers fraction** : dernier rang écrit et équivalences
+   `0,5 = 5/10 = 1/2` et `0,75 = 75/100 = 3/4`. En fraction libre, une forme
+   équivalente non réduite reste correcte.
+6. **Former les unités, puis traiter le reste** : `7/2 = 3,5` après formation
+   de trois unités et conservation d'un demi ; `6/4 = 1,5` après fusion des
+   deux quarts restants en un demi ; repères `3/2`, `4/2`, `5/2`, `100/100`
+   et `7/1`. La barre est enfin nommée comme division, méthode générale
+   tardive et non technique première du module.
 
-## 8. « Me guider » : trois niveaux sans révélation
+## 8. « Me guider » : un atelier progressif unique sans révélation
 
-La question reste visible et la saisie déjà commencée est conservée. L'aide
-s'ouvre au niveau le moins intrusif et propose une progression de soutien :
+La question reste visible et la saisie déjà commencée est conservée. Une seule
+entrée « Me guider » ouvre l'atelier adapté à la famille ; l'élève n'a pas à
+choisir entre trois onglets ou trois méthodes concurrentes. Selon la famille,
+le même atelier enchaîne les fonctions pédagogiques suivantes :
 
 1. **Un indice** : rappel verbal ou stratégique, sans calcul de la réponse.
 2. **Voir** : représentation de la quantité ou du rang pertinent.
 3. **Construire** : action guidée pour poser des pièces, former des unités ou
    choisir le dernier rang.
 
-Ce ne sont pas trois méthodes placées en concurrence. L'élève avance du verbal
-vers la représentation puis l'action seulement s'il en a besoin. Dans tous
-les niveaux, le dernier terme reste `?` avant validation, y compris dans les
-libellés accessibles, textes alternatifs, attributs ARIA et bornes des
-contrôles.
+Ces trois intitulés décrivent le modèle pédagogique, pas des libellés, des
+écrans ni des commandes visibles. L'interface ouvre directement l'atelier
+unique adapté ; le lecteur ne mémorise aucun niveau. L'élève avance du verbal
+vers la représentation puis l'action au fil de ses gestes. À chaque étape, le
+dernier terme reste `?` avant validation, y compris dans les libellés
+accessibles, textes alternatifs, attributs ARIA et bornes des contrôles.
 
 L'affectation des représentations est la suivante :
 
 | Famille | Voir / construire |
 |---|---|
 | Demis et quarts jusqu'à 1 | bandes historiques posées une à une sur le rail ; la cible reste `?` |
-| Demis et quarts au-delà de 1 | pièces puis groupes puis unités complètes, avec une transformation visuelle à chaque étape |
+| Demis et quarts au-delà de 1 | pièces puis groupes puis unités complètes, avec une transformation visuelle à chaque étape ; si le reste vaut `2/4`, les deux quarts se fusionnent enfin en `1/2` |
 | Dixièmes et centièmes | matériel de numération rouge/vert/jaune puis tableau de numération |
 | Millièmes | tableau de numération seulement ; aucun matériel miniaturisé illisible |
 | Dénominateur 1 | tuiles d'unités non numérotées à compter |
@@ -199,8 +206,13 @@ textuels concurrents, seulement les diagnostics propres aux distracteurs QCM.
 
 ## 9. Correction et réponses équivalentes
 
-La correction révèle la solution complète seulement après validation ou en
-mode « Au tableau ». Elle reprend la représentation mathématique pertinente :
+Le panneau de correction révèle la solution complète seulement après validation
+et ouverture volontaire de « Voir l'explication », ou en mode « Au tableau ».
+Une saisie omise reste sur la question avec le libellé « Pas de réponse » :
+elle ne déplie pas automatiquement la correction, mais la solution correcte
+est affichée séparément en vert. Pour un QCM omis, la proposition correcte est
+verte directement dans la liste. La correction détaillée reprend ensuite la
+représentation mathématique pertinente :
 grille de 100 pour les demis/quarts jusqu'à 1, bandes et unités au-delà de 1,
 tableau pour les fractions décimales et tuiles pour `/1`.
 
@@ -215,7 +227,12 @@ Pour une fraction libre, elle repart du dernier rang écrit et porte le titre
 En entraînement, le pavé interne affiche chiffres et virgule pour un décimal,
 chiffres seuls pour une fraction. Le clavier physique accepte aussi le point ;
 `Tab` change de champ dans la fraction libre. La saisie est figée après
-validation.
+validation, le pavé disparaît et la barre propose « Voir l'explication » puis
+« Question suivante » ou « Voir le bilan ». Dans un QCM, la bonne proposition
+est alors verte ; une proposition fausse sélectionnée reste rouge. Pour une
+saisie fournie et fausse, la réponse attendue n'apparaît que dans la correction.
+Pour une omission, elle est au contraire donnée immédiatement en vert, à côté
+du retour « Pas de réponse », sans ouvrir l'explication.
 
 Au tableau, la question et les données sont identiques, mais aucune saisie,
 trace ni score n'est créé. Les commandes communes révèlent la réponse, la
@@ -225,21 +242,21 @@ zone centrale défilable, les panneaux et le dock communs.
 ## 11. Validation
 
 Les contrats, normalisations rationnelles, produits en croix, diagnostics,
-générateurs, quotas, déterminisme, valeurs distinctes, menu unique, sept pages
-de cours, trois niveaux d'aide, absence de fuite de réponse et deux contextes
-sont couverts par des tests automatisés dédiés.
+générateurs, quotas, déterminisme, valeurs distinctes, menu unique, six pages
+de cours, atelier d'aide unique, absence de fuite de réponse et deux contextes
+doivent être couverts par des tests automatisés dédiés. La recette vérifie en
+plus les réponses justes, fausses, omises et partielles : une omission ne doit
+ouvrir aucun panneau, sa solution verte doit être visible, le pavé doit
+disparaître et les deux actions de suite doivent rester disponibles.
 
-`npm run verifier` réussit **1 458 tests sur 1 458** et tous les validateurs du
-dépôt. La recette Chromium finale couvre cinq fenêtres (`320 × 568`,
-`390 × 844`, reflow `640 × 360`, `1 280 × 720` et TNI `1 920 × 1 080`), les
-sept pages de cours et douze profils d'aide dans leurs trois niveaux et états
-construits. Ses **270 états et 439 captures** ne relèvent aucune erreur de
-page, de console, de requête ou HTTP, aucun débordement local ou global et
-aucun élément hors fenêtre. Les contrôles automatisés vérifient également le
-masquage visible et accessible des réponses, l'indépendance de l'aide libre à
-la fraction canonique cachée et l'absence de cinquièmes ou huitièmes dans les
-corrections. Le graphe public est cohérent en `v26`.
+La recette de D-047 — **1 458 tests**, **270 états** et **439 captures** sur
+cinq fenêtres — constitue le point de comparaison antérieur. La révision
+d'interaction D-049 invalide ces totaux comme preuve du nouvel état : avant une
+nouvelle publication, `npm run verifier` et la campagne Chromium doivent être
+rejoués à `320 × 568`, `390 × 844`, reflow `640 × 360`, `1 280 × 720` et TNI
+`1 920 × 1 080`, avec contrôle visible et accessible des masques, du retour
+« Pas de réponse », de l'atelier unique et des actions après validation.
 
-Ces résultats rendent le candidat présentable pour l'arbitrage pédagogique.
-Sa publication de test autorisée le 13 août ne change pas son statut
-`construit` et ne l'expose ni dans le menu public ni dans le sitemap.
+Le candidat reste `construit`. Sa publication de test autorisée le 13 août ne
+l'expose ni dans le menu public ni dans le sitemap ; D-049 devra être recettée
+avant toute nouvelle livraison.

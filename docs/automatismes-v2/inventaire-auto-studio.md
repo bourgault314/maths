@@ -99,28 +99,40 @@ candidat.
 
 ### Cas audité : NC-03 / NC-04, fractions et écritures décimales
 
-La reprise du 13 août distingue trois niveaux qui étaient faciles à
-confondre et les branche désormais explicitement dans le candidat :
+La reprise du 13 août distingue quatre couches techniques de représentation
+qui étaient faciles à confondre. Ces couches ne sont pas les anciens niveaux
+sélectionnables de « Me guider » : D-049 ouvre un seul atelier progressif.
 
-| Niveau | Source | Usage retenu |
+| Couche | Source | Usage retenu |
 |---|---|---|
 | Schéma dans une unité | `packages/objets/src/fractions.js` | Bande ou grille statique pour une fraction inférieure ou égale à 1 ; jaune générique, sans prétendre reproduire le matériel de classe |
 | Manipulation libre historique | `outils/fractions/bandes_fractions.html` | Plateau complet avec pièces, fusion, retournement, droites, zoom et scènes ; il reste une activité autonome |
 | Manipulation guidée | `packages/objets/src/bandes-fractions-rail.js` | SVG commun effectivement utilisé par le lecteur pour les demis et quarts, y compris au-delà de 1, avec profils d'aide non révélateurs |
+| Correspondance exacte entre matériels | `packages/objets/src/correspondances-decimales.js` | Deux SVG CPA relient cinq dixièmes à un demi et 25 ou 75 centièmes à un ou trois quarts, sans changer d'échelle ni révéler l'écriture attendue en aide |
 
-Le Labo conserve ces trois familles de comparaison utiles : bandes et grilles
-existantes, composant guidé sur rail, droites simples et doubles. Le lecteur
-V2 importe les briques communes retenues ; le Labo reste leur banc de contrôle
-et non une dépendance d'exécution. Il enregistre aussi :
+Le Labo conserve les bandes et grilles existantes, le composant guidé sur rail
+et les correspondances exactes comme familles de comparaison utiles. Le
+lecteur V2 importe les briques communes retenues ; le Labo reste leur banc de
+contrôle et non une dépendance d'exécution. Il enregistre notamment :
 
 - `packages/objets/src/numeration-decimale.js`, extrait du plateau de
   numération, avec unité rouge `10 × 10`, dixième vert horizontal `10 × 1` ou
   vertical `1 × 10`, et centième jaune `1 × 1` ;
 - le tableau de numération unités, dixièmes, centièmes, millièmes, dont la
   lecture finale peut rester masquée dans l'aide ;
+- deux entrées pilotables issues de
+  `packages/objets/src/correspondances-decimales.js` : « Correspondance — cinq
+  dixièmes et un demi » déroule dixièmes, demi puis comparaison ;
+  « Correspondance — centièmes et quarts » déroule rangées, blocs de 25 puis
+  comparaison pour 25 ou 75 centièmes. Chacune propose la largeur, l'étape et
+  l'affichage ou le masquage des écritures, ainsi qu'une planche et une
+  vignette mobile ;
 - le préréglage `fractions-decimaux-reperes` de
   `packages/objets/src/droite-graduee.js`, qui aligne les trois repères usuels
-  dans les deux écritures.
+  dans les deux écritures. Cette double droite reste un outil partagé et un
+  témoin historique dans le Labo : elle ne figure ni dans les questions
+  actuelles de NC-03 / NC-04 ni dans leur cours en six pages, et ne remplace
+  pas les correspondances concrètes ci-dessus.
 
 Le dixième horizontal reste le défaut : c'est l'orientation du plateau et du
 matériel imprimable existants, et elle utilise moins de hauteur sur téléphone.
@@ -129,13 +141,16 @@ réversible. Aucun matériel en millièmes n'est extrait : à cette échelle, le
 tableau de numération est la représentation lisible retenue.
 
 L'intégration n'est plus future : `automatismes-v2/app.js` compose maintenant
-les bandes sur rail pour les pièces, groupes et unités, le matériel décimal
-pour les dixièmes et centièmes, le tableau jusqu'aux millièmes et les droites
-graduées lorsque le cours ou l'aide en ont besoin. Les questions elles-mêmes
-restent abstraites ou en QCM et n'importent aucune représentation dans leur
-énoncé. Les profils d'aide maintiennent le dernier terme à `?`, y compris dans
-les alternatives accessibles ; les profils de solution sont réservés au cours
-et à la correction.
+les bandes sur rail pour les pièces, groupes et unités, les deux
+correspondances exactes pour construire `0,5 ↔ 1/2` et
+`0,25 / 0,75 ↔ 1/4 / 3/4`, le matériel décimal pour les autres dixièmes et
+centièmes, et le tableau jusqu'aux millièmes. La droite graduée demeure une
+brique commune et un point de comparaison du Labo, mais n'est plus une forme
+de question de cette recette. Les questions restent abstraites ou en QCM et
+n'importent aucune représentation dans leur énoncé. L'atelier unique de
+« Me guider » maintient le dernier terme à `?`, y compris dans les alternatives
+accessibles ; les profils de solution sont réservés au cours et à la
+correction.
 
 La fraction libre est également branchée sans dépendre de sa cible canonique :
 le lecteur part du dernier rang écrit du décimal, propose une fraction

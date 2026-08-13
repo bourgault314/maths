@@ -37,7 +37,7 @@ describe("bandes fractionnaires sur rail — cas d'or", () => {
       etape: "lecture",
     });
 
-    assert.equal(VERSION_BANDES_FRACTIONS_RAIL, 1);
+    assert.equal(VERSION_BANDES_FRACTIONS_RAIL, 2);
     assert.equal(rendu.erreur, null);
     assert.deepEqual(
       {
@@ -98,6 +98,56 @@ describe("bandes fractionnaires sur rail — cas d'or", () => {
     assert.ok(!rendu.svg.includes("2,5"));
     assert.ok(!rendu.texteAlternatif.includes("2,5"));
     assert.match(rendu.svg, /class="etiquette-cible cible-decimale-masquee"[^>]*>\?<\/text>/);
+  });
+
+  it("fusionne exactement les deux quarts restants en une demi-bande historique", () => {
+    const rendu = dessinerBandesFractionnairesSurRailDecimal({
+      numerateur: 6,
+      denominateur: 4,
+      profil: "aide-nc03",
+      etape: "reste",
+    });
+
+    assert.equal(rendu.erreur, null);
+    assert.deepEqual(
+      {
+        unites: rendu.donnees.unites,
+        reste: rendu.donnees.reste,
+        resteFusionneEnDemi: rendu.donnees.resteFusionneEnDemi,
+      },
+      { unites: 1, reste: 2, resteFusionneEnDemi: true },
+    );
+    assert.equal(occurrences(rendu.svg, /class="unite-retournee"/g), 1);
+    assert.equal(occurrences(rendu.svg, /class="reste-fusionne-en-demi"/g), 1);
+    assert.equal(occurrences(rendu.svg, /class="ecriture-reste-demi"/g), 1);
+    assert.equal(occurrences(rendu.svg, /class="ecriture-part"/g), 0);
+    assert.match(
+      rendu.svg,
+      new RegExp(`class="demi-historique"[^>]*fill="${COULEURS_BANDES_FRACTIONS.d2}"`),
+    );
+    assert.equal(
+      attributPremier(rendu.svg, "demi-historique", "width"),
+      2 * rendu.donnees.largeurPartie,
+    );
+    assert.match(rendu.svg, /aria-label="Deux quarts regroupés forment un demi\."/);
+    assert.match(rendu.texteAlternatif, /deux quarts restants sont regroupés en une demi-bande/i);
+    assert.ok(!rendu.svg.includes("1,5"));
+    assert.ok(!rendu.texteAlternatif.includes("1,5"));
+  });
+
+  it("garde l'étape reste valide sans fusion quand le reste n'est pas deux quarts", () => {
+    const rendu = dessinerBandesFractionnairesSurRailDecimal({
+      numerateur: 7,
+      denominateur: 4,
+      profil: "aide-nc03",
+      etape: "reste",
+    });
+
+    assert.equal(rendu.erreur, null);
+    assert.equal(rendu.donnees.reste, 3);
+    assert.equal(rendu.donnees.resteFusionneEnDemi, false);
+    assert.equal(occurrences(rendu.svg, /class="ecriture-part"/g), 3);
+    assert.equal(occurrences(rendu.svg, /class="reste-fusionne-en-demi"/g), 0);
   });
 
   it("groupe sept quarts face visible, mais masque le numérateur en aide NC04", () => {

@@ -78,9 +78,12 @@ En diaporama, le lecteur conserve la position et les états de révélation, mai
 
 Dans « S'entraîner », une réponse entièrement vide au moment où l'élève valide
 ou tente d'avancer est une omission : elle compte faux, crée une seule trace et
-ouvre la correction. Une réponse commencée mais incomplète, ou une valeur
-syntaxiquement invalide, reste réparable et ne crée pas encore de trace. Ce
-comportement ne s'applique pas à « Au tableau ».
+fige la question sans ouvrir la correction. Le lecteur annonce « Pas de
+réponse » ; une saisie omise affiche la solution séparément en vert, tandis
+qu'un QCM omis met en évidence la proposition correcte. L'élève choisit ensuite
+« Voir l'explication » ou « Question suivante ». Une réponse commencée mais
+incomplète, ou une valeur syntaxiquement invalide, reste réparable et ne crée
+pas encore de trace. Ce comportement ne s'applique pas à « Au tableau ».
 
 ## 3. Question instanciée
 
@@ -305,8 +308,9 @@ Cette liste guide l’architecture, mais n’autorise pas leur programmation ant
 6. Le lecteur compare l’ensemble sélectionné à l’ensemble attendu ; une
    absence totale de sélection devient une omission fausse.
 7. Une trace version 3 est créée et le compteur de réussites est recalculé.
-8. La correction s'ouvre immédiatement après une omission ; l'aide ou la
-   correction affichée ne modifie jamais la trace.
+8. Après une omission, la correction reste repliée ; le retour immédiat et la
+   solution verte ne modifient jamais la trace. L'aide ou l'explication
+   éventuellement ouverte ensuite ne la modifie pas davantage.
 9. « Suivant » fait avancer la séance et la barre de progression.
 10. Le bilan est calculé à partir de toutes les traces.
 

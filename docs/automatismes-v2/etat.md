@@ -26,25 +26,33 @@
   concurrents. Ils fournissent la question et, pour un QCM, les diagnostics de
   distracteurs ; le lecteur est l'unique source du pas-à-pas et de la
   correction.
-- « Me guider » suit désormais trois degrés explicites : « Un indice »,
-  « Voir », puis « Construire ». L'élève progresse du verbal vers l'image puis
-  l'action ; l'égalité finale et les alternatives accessibles conservent `?`
-  jusqu'à la validation. `/1` se compte avec des tuiles non numérotées, les
-  demis et quarts emploient les bandes sur rail et les groupements, `/10` et
-  `/100` le matériel décimal puis le tableau, `/1000` le tableau seul.
-- Le cours compte sept pages : même nombre et sens quotient ; matériel vers
-  symboles ; rangs décimaux ; `147/100 → 1,47` ; sens inverse et fraction
-  libre ; dépassement de l'unité avec `5/2` et `7/4` ; stratégie finale. La
-  division n'apparaît qu'en dernière méthode générale et n'est pas exercée.
+- « Me guider » rassemble indice, représentation et construction dans un seul
+  atelier progressif, sans trois onglets concurrents. L'élève progresse du
+  verbal vers l'image puis l'action ; l'égalité finale et les alternatives
+  accessibles conservent `?` jusqu'à la validation. `/1` se compte avec des
+  tuiles non numérotées, les demis et quarts emploient les bandes sur rail et
+  les groupements, `/10` et `/100` le matériel décimal puis le tableau,
+  `/1000` le tableau seul.
+- Le cours compte six pages : construire un demi ; construire des quarts ;
+  nommer les rangs décimaux ; convertir `147/100` en `1,47` ; convertir dans
+  le sens inverse en acceptant les fractions équivalentes ; former les unités
+  et traiter le reste avec `7/2` et `6/4`. Les repères officiels et le sens
+  quotient sont regroupés sur cette dernière page ; la division n'apparaît
+  qu'en méthode générale tardive et n'est pas exercée.
+- Une omission ne déplie plus la correction. Après une saisie omise, le
+  lecteur affiche « Pas de réponse » puis la solution en vert hors du panneau ;
+  après un QCM omis, la proposition correcte passe en vert. Une saisie fournie
+  et fausse reste rouge et ne révèle la solution que dans l'explication ; un
+  QCM faux conserve le choix erroné en rouge et montre immédiatement le bon
+  choix en vert. Le pavé et le clavier sont figés après validation.
 - Le Labo conserve les vues comparatives, tandis que le lecteur utilise
   désormais les composants communs `bandes-fractions-rail.js`,
   `numeration-decimale.js`, `droite-graduee.js` et les schémas de
-  `fractions.js`. Le graphe public est invalidé d'un seul tenant en `v26`.
-  `npm run verifier` réussit **1 458 tests sur 1 458** ainsi que tous les
-  validateurs. La recette Chromium finale couvre `320 × 568`, `390 × 844`,
-  le reflow `640 × 360`, `1 280 × 720` et le TNI `1 920 × 1 080` : **270
-  états et 439 captures**, sans erreur de page, de console, de requête ou
-  HTTP, sans débordement local ou global et sans élément hors fenêtre.
+  `fractions.js`. Le graphe public est invalidé d'un seul tenant en `v27`.
+  La recette de D-047 — **1 458 tests**, **270 états** et **439 captures** —
+  constitue le point de comparaison antérieur. Le nouvel atelier unique, les
+  six pages et le retour après omission de D-049 doivent faire l'objet d'une
+  nouvelle recette complète avant livraison.
 
 ## Clôture de NC-02 du 11 août
 
@@ -60,11 +68,12 @@
   panneau qui déborde réellement. La réponse rappelée doit être verte si elle
   est juste, rouge si elle est fournie et fausse, neutre et vide si elle est
   omise.
-- Dans « S'entraîner », une réponse entièrement omise compte faux et
-  ouvre la correction ; une saisie partielle ou invalide reste réparable.
-  « Au tableau » reste inchangé. La trace courante passe en version 3 avec le
-  statut `fournie` ou `omise`, tout en conservant la lecture des versions 1 et
-  2.
+- À cette date, dans « S'entraîner », une réponse entièrement omise comptait
+  faux et ouvrait la correction ; D-049 remplace depuis cette ouverture
+  automatique par le retour décrit dans l'état courant ci-dessus. Une saisie
+  partielle ou invalide reste réparable et « Au tableau » reste inchangé. La
+  trace courante passe en version 3 avec le statut `fournie` ou `omise`, tout
+  en conservant la lecture des versions 1 et 2.
 - Le graphe public est invalidé d'un seul tenant en `v25`. `npm run verifier`
   réussit **1 397 tests sur 1 397** ainsi que tous les validateurs de
   publication. La recette Chromium couvre `320 × 568`, `390 × 844`,

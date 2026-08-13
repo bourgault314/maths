@@ -261,7 +261,7 @@ test("le regroupement réserve toujours une unité complète à la même échell
   assert.equal(formaterFractionEnDecimal(quarts.reste, quarts.denominateur), "0,75");
 });
 
-test("le cours conserve son ordre et réutilise les bandes guidées", async () => {
+test("le cours et l’aide conservent l’ordre CPA et les nouveaux invariants", async () => {
   const [application, styles, bandes, etatLecteur] = await Promise.all([
     readFile(new URL("./app.js", import.meta.url), "utf8"),
     readFile(new URL("./interface.css", import.meta.url), "utf8"),
@@ -272,13 +272,12 @@ test("le cours conserve son ordre et réutilise les bandes guidées", async () =
     readFile(new URL("./src/etat-lecteur.js", import.meta.url), "utf8"),
   ]);
   const titres = [
-    "Même nombre, même position",
-    "Du matériel aux symboles",
-    "Les rangs décimaux",
+    "Construire un demi",
+    "Construire des quarts",
+    "Nommer les rangs décimaux",
     "Fraction décimale vers décimal",
     "Décimal vers fraction",
     "Dépasser l’unité",
-    "Choisir la bonne stratégie",
   ];
   let position = -1;
   for (const titre of titres) {
@@ -287,11 +286,25 @@ test("le cours conserve son ordre et réutilise les bandes guidées", async () =
     position = suivante;
   }
   assert.match(application, /dessinerBandesFractionnairesSurRailDecimal/);
+  assert.match(application, /dessinerDemiAvecDixiemes/);
+  assert.match(application, /dessinerReorganisationCentiemes/);
+  assert.match(application, /rendreRepereVisuelCours\(3, 2\)/);
+  assert.match(application, /rendreRepereVisuelCours\(4, 2\)/);
+  assert.match(application, /rendreRepereVisuelCours\(5, 2\)/);
+  assert.match(application, /rendreRepereCentCentiemesCours\(\)/);
+  assert.match(application, /rendreRepereSeptUnitesCours\(\)/);
   assert.match(application, /function rendreAidePoseBandesRiche/);
   assert.match(application, /classes: "figure-bandes-rail-aide"/);
-  assert.match(application, /groupes === 0 \? "pieces" : groupes === 1 \? "groupes" : "unites"/);
-  assert.match(etatLecteur, /const maximum = 2/);
+  assert.match(application, /\["dixiemes", "demi", "comparaison"\]\[etape\]/);
+  assert.match(application, /\["lignes", "quadrants", "comparaison"\]\[etape\]/);
+  assert.match(application, /afficherEcritures: false/);
+  assert.match(application, /: "reste"/);
+  assert.match(etatLecteur, /rationnel\.denominateur === 4/);
+  assert.match(etatLecteur, /rationnel\.numerateur % rationnel\.denominateur === 2/);
+  assert.match(etatLecteur, /\? 3\s*: 2/);
   assert.match(bandes, /etape === "groupes"/);
+  assert.match(bandes, /etape === "reste"/);
+  assert.match(bandes, /reste-fusionne-en-demi/);
   assert.match(bandes, /separation-interne/);
   assert.match(bandes, /frontiere-unite/);
   assert.match(styles, /\.figure-bandes-rail/);
