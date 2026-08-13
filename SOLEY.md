@@ -3,6 +3,8 @@
 > Jeu de fractions à rayons de soleil, thème Réunion, pour maths&go (mathsgo.re).
 > Ce fichier est la mémoire du projet : toute session (Claude Code, Cowork, autre)
 > doit le lire AVANT de toucher au code, et le mettre à jour APRÈS chaque évolution validée.
+> La vision du vrai jeu est dans DESIGN-SOLEY.md ; le réservoir d'idées de niveaux
+> (analyse des captures de l'original) dans BIBLIOTHEQUE-IDEES.md — tous deux à la racine.
 
 ## 1. Règle d'or
 
@@ -166,4 +168,15 @@ commence par "use strict"; et le partage se fait par la portée globale.
   adapté (il lisait le script inline par regex) + nouveau test de coquille : 12/12.
   Tableau §3 aligné sur le déployé (forêt 9, tunnels 8 dont le prisme scellé) ;
   feuille de route §8 : ajout « rétablir l'installation en app » (demande Gwenaël).
+  Fusion et déploiement vérifiés le jour même : 6/6 fichiers servis identiques aux
+  octets committés, batterie complète verte sur mathsgo.re.
+- 2026-08-13 (session 3) : rangement des documents du projet — DESIGN-SOLEY.md (cahier
+  de conception du vrai jeu) et BIBLIOTHEQUE-IDEES.md (analyse des captures de
+  l'original, paquets 1-4) ajoutés à la racine, renvoi en tête de ce fichier.
+  Version-témoin « musée » publiée : https://mathsgo.re/outils/club_maths/soley-v1.html
+  = le dernier mono-fichier d'avant découpage (sha256 bfd02ad877b0…), à l'identique à
+  UNE ligne près : meta robots passé à « noindex, follow » (imposé par le générateur
+  SEO du dépôt pour toute page hors catalogue — c'est l'esprit demandé : lien direct
+  seulement, ni sitemap ni catalogue). Batterie verte sur le musée et sur la version
+  actuelle.
 - (à compléter à chaque session)
