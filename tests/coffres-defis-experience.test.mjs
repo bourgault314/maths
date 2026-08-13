@@ -128,9 +128,10 @@ test("les dialogues Coffres prennent, piègent et restaurent le focus", () => {
 
   assert.match(duel, /id="rules-title" tabindex="-1"/);
   assert.match(duel, /dialogs\.open\(rules,[\s\S]*initialFocus: mandatory \? "\.close-rules" : "#rules-title"[\s\S]*onEscape: \(\) => \{[\s\S]*if \(!rulesMandatory\) closeRules\(\)/);
-  assert.match(solo, /<section id="lesson" class="overlay" hidden aria-hidden="true">/);
-  assert.doesNotMatch(solo, /id="start-game"|function openLesson\(|openLesson\(\)/);
-  assert.match(solo, /if \(requestedMode === CURRENT_MODE\) \{\s*start\(\{ moveFocus: true \}\)/);
+  assert.match(solo, /id="lesson-title" tabindex="-1"/);
+  assert.match(solo, /function openLesson\(\) \{[\s\S]*trigger: null,[\s\S]*initialFocus: "#start-game"/);
+  const lessonActions = solo.match(/<div class="lesson-actions">([\s\S]*?)<\/div>/)?.[1] || "";
+  assert.equal((lessonActions.match(/<button/g) || []).length, 1);
   assert.doesNotMatch(solo, /id="close-lesson"|id="show-lesson"|Voir le plateau|>Mémo<\/button>/);
   assert.match(solo, /const resetScroll = dialog => \{[\s\S]*node\.scrollTop = 0[\s\S]*node\.scrollLeft = 0/);
 });

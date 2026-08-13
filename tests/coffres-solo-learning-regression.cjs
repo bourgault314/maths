@@ -322,9 +322,10 @@ async function auditPointJourney(browser, base, randomValue, expectedMode, error
   const page = await browser.newPage({ viewport: { width: 320, height: 568 } });
   page.on("pageerror", error => errors.push(`${expectedMode} : ${error.message}`));
   try {
-    await page.addInitScript(value => { Math.random = () => value; }, randomValue);
     await page.goto(`${base}/outils/calcul_mental/coffres_magiques_solo.html?mode=solo`, { waitUntil: "load" });
-    await page.waitForFunction(() => document.activeElement.classList.contains("rune"));
+    await page.evaluate(value => { Math.random = () => value; }, randomValue);
+    await page.locator("#start-game").click();
+    await page.locator("#lesson").waitFor({ state: "hidden" });
     assert((await state(page)).mode === expectedMode, `Le scénario déterministe attendu en ${expectedMode} n’est pas obtenu.`);
 
     await page.locator("#help-button").click();
@@ -440,12 +441,7 @@ async function auditProductMemo(browser, base, {
   const page = await browser.newPage({ viewport: { width, height: width <= 390 ? 844 : 900 } });
   page.on("pageerror", error => errors.push(`${pageName} à ${width}px : ${error.message}`));
   try {
-    if (pageName === "solo") await page.addInitScript(() => { Math.random = () => .13; });
     await page.goto(`${base}${route}`, { waitUntil: "load" });
-    if (pageName === "solo") {
-      await page.locator("#help-button").click();
-      await page.locator("#help-dialog").waitFor({ state: "visible" });
-    }
     await page.locator(wrapperSelector).first().waitFor({ state: "visible" });
     const markers = await page.locator(wrapperSelector).evaluateAll((nodes, selectors) => nodes.map(node => {
       const grid = node.querySelector(selectors.gridSelector);
@@ -575,19 +571,28 @@ async function auditDuoBarModels(browser, base, width, errors) {
   }
 }
 
-async function auditDirectStart(browser, base, width, errors) {
+async function auditIntroMemo(browser, base, width, errors) {
   const page = await browser.newPage({ viewport: { width, height: width === 320 ? 568 : width === 390 ? 844 : 768 } });
-  page.on("pageerror", error => errors.push(`démarrage solo à ${width}px : ${error.message}`));
+  page.on("pageerror", error => errors.push(`mémo solo à ${width}px : ${error.message}`));
   try {
     await page.goto(`${base}/outils/calcul_mental/coffres_magiques_solo.html?mode=solo`, { waitUntil: "load" });
-    await page.waitForFunction(() => document.activeElement.classList.contains("rune"));
-    assert(!await page.locator("#lesson").isVisible(), `démarrage solo à ${width}px : le cours complet est encore affiché.`);
-    assert(await page.locator("#start-game,#show-lesson").count() === 0, `démarrage solo à ${width}px : une action de cours complet subsiste.`);
-    const initial = await state(page);
-    assert(initial.boardId === 1 && initial.values.length === 16, `démarrage solo à ${width}px : le premier plateau n’est pas créé directement.`);
-    assert(await page.locator("#help-button").isVisible(), `démarrage solo à ${width}px : l’aide contextuelle n’est pas disponible.`);
-    await assertNoHorizontalOverflow(page, `démarrage solo à ${width}px`);
-    await page.screenshot({ path: path.join(CAPTURES, `demarrage-solo-${width}.png`) });
+    await page.waitForFunction(() => document.activeElement.id === "start-game");
+    assert(await page.locator("#lesson .operation-grid").evaluate(grid => grid.scrollTop === 0), `mémo solo à ${width}px : l’introduction ne commence pas en haut.`);
+    assert(await page.locator("#lesson .lesson-actions button").count() === 1, `mémo solo à ${width}px : l’introduction propose plusieurs actions équivalentes.`);
+    assert(await page.locator("#show-lesson").count() === 0, `mémo solo à ${width}px : le cours complet peut encore être rouvert.`);
+    await assertNoHorizontalOverflow(page, `mémo solo initial à ${width}px`);
+    await page.screenshot({ path: path.join(CAPTURES, `memo-initial-${width}.png`) });
+    const scroll = await page.locator("#lesson .operation-grid").evaluate(grid => {
+      const canScroll = grid.scrollHeight > grid.clientHeight + 1;
+      grid.scrollTop = grid.scrollHeight;
+      return { canScroll, top: grid.scrollTop };
+    });
+    if (scroll.canScroll) assert(scroll.top > 0, `mémo solo à ${width}px : le contenu long ne défile pas.`);
+    assert(await page.locator("#start-game").isVisible(), `mémo solo à ${width}px : J’ai compris, jouer disparaît en bas du cours.`);
+    await page.screenshot({ path: path.join(CAPTURES, `memo-bas-${width}.png`) });
+    await page.locator("#start-game").click();
+    await page.locator("#lesson").waitFor({ state: "hidden" });
+    assert((await state(page)).boardId === 1, `mémo solo à ${width}px : le démarrage ne crée pas exactement le premier plateau.`);
   } finally {
     await page.close();
   }
@@ -611,13 +616,23 @@ async function auditDirectStart(browser, base, width, errors) {
 
   try {
     await page.goto(`${base}/outils/calcul_mental/coffres_magiques_solo.html?mode=solo`, { waitUntil: "load" });
-    await page.waitForFunction(() => document.activeElement.classList.contains("rune"));
-    assert(!await page.locator("#lesson").isVisible(), "Le cours complet s’affiche encore au démarrage du solo.");
-    await assertNoHorizontalOverflow(page, "Démarrage solo desktop");
-    await page.screenshot({ path: path.join(CAPTURES, "demarrage-solo-desktop-1366.png") });
+    await page.waitForFunction(() => document.activeElement.id === "start-game");
+    await assertNoHorizontalOverflow(page, "Mémo desktop");
+    await page.screenshot({ path: path.join(CAPTURES, "memo-desktop-1366.png") });
+
+    const orientation = await page.locator(".dual-learning-views .dot-array").evaluateAll(nodes => nodes.map(node => {
+      const box = node.getBoundingClientRect();
+      return { width: box.width, height: box.height };
+    }));
+    assert(orientation.length === 2, "Les deux réseaux du produit ne sont pas rendus.");
+    assert(orientation[0].width > orientation[0].height, "Le réseau 3 × 4 n’est pas orienté sur quatre colonnes.");
+    assert(orientation[1].height > orientation[1].width, "Le réseau 4 × 3 n’est pas orienté sur trois colonnes.");
+
     await page.setViewportSize({ width: 390, height: 844 });
-    await assertNoHorizontalOverflow(page, "Démarrage solo 390 px");
-    await page.screenshot({ path: path.join(CAPTURES, "demarrage-solo-mobile-390.png") });
+    await assertNoHorizontalOverflow(page, "Mémo 390 px");
+    await page.screenshot({ path: path.join(CAPTURES, "memo-mobile-390.png") });
+    await page.locator("#start-game").click();
+    await page.locator("#lesson").waitFor({ state: "hidden" });
 
     const beforeHelp = await state(page);
     await page.locator("#help-button").click();
@@ -692,7 +707,7 @@ async function auditDirectStart(browser, base, width, errors) {
     await auditPointJourney(browser, base, .2, "difference", errors);
     await auditPointJourney(browser, base, .13, "product", errors);
     await auditPointJourney(browser, base, .1, "quotient", errors);
-    for (const width of [320, 390, 1366]) await auditDirectStart(browser, base, width, errors);
+    for (const width of [320, 390, 1366]) await auditIntroMemo(browser, base, width, errors);
     await auditExtremeVisual(browser, base, { mode: "difference", first: 12, second: 10, width: 320, capture: "difference-12-10-320.png" }, errors);
     await auditExtremeVisual(browser, base, { mode: "difference", first: 12, second: 11, width: 320, capture: "difference-12-11-320.png" }, errors);
     await auditExtremeVisual(browser, base, { mode: "difference", first: 12, second: 9, width: 320, capture: "difference-12-9-320.png" }, errors);
@@ -707,13 +722,13 @@ async function auditDirectStart(browser, base, width, errors) {
       await auditDuoBarModels(browser, base, width, errors);
       await auditProductMemo(browser, base, {
         route: "/outils/calcul_mental/coffres_magiques_solo.html?mode=solo",
-        wrapperSelector: "#help-visual .dual-learning-views .array-dimension-model",
+        wrapperSelector: ".dual-learning-views .array-dimension-model",
         gridSelector: ".dot-array",
         markerSelector: ".dimension-rows",
         numberSelector: "span",
         topMarkerSelector: ".dimension-columns",
         topNumberSelector: "span",
-        captureSelector: "#help-visual article:has(.dual-learning-views)",
+        captureSelector: "#lesson article:has(.dual-learning-views)",
         pageName: "solo",
         width
       }, errors);

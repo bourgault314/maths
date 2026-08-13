@@ -922,6 +922,7 @@
 
     .dialog-actions .primary-button { flex-grow: 1; }
 
+    .lesson-actions,
     .result-actions {
       display: flex;
       flex-wrap: wrap;
@@ -1093,7 +1094,7 @@
       <strong id="key-count" class="solo-stats">0 / 10 clés</strong>
     </section>
 
-    <div id="status" class="status-line" aria-live="polite">Choisis deux cases qui se touchent par un côté.</div>
+    <div id="status" class="status-line" aria-live="polite">Lis d’abord le petit mémo.</div>
     <div class="challenge">Ouvre le coffre avec <span id="challenge-text">deux cases voisines</span></div>
     <div id="board" class="rune-board" role="grid" aria-label="Seize cases numérotées"></div>
     <div class="solo-toolbar">
@@ -1121,12 +1122,12 @@
     </div>
   </section>
 
-  <section id="lesson" class="overlay" hidden aria-hidden="true">
+  <section id="lesson" class="overlay" hidden role="dialog" aria-modal="true" aria-labelledby="lesson-title">
     <div class="dialog-card learn-card">
       <div class="dialog-icon" aria-hidden="true">+ − × ÷</div>
       <h2 id="lesson-title" tabindex="-1">Quatre mots à connaître</h2>
       <p>À chaque coffre, choisis deux cases qui se touchent par un côté.</p>
-      <div class="operation-grid">
+      <div id="lesson-course" class="operation-grid" role="region" aria-label="Cours complet sur les quatre opérations" tabindex="0">
         <article data-operation="sum">
           <h3>Somme : réunir deux quantités</h3>
           <p class="operation-example">La somme de 3 et de 2 est 5.</p>
@@ -1208,6 +1209,9 @@
           <p data-operation="difference"><strong>Différence :</strong> le jeu calcule le plus grand nombre − le plus petit.</p>
           <p data-operation="quotient"><strong>Quotient :</strong> le jeu calcule le plus grand nombre ÷ le plus petit, seulement si la division tombe juste.</p>
         </aside>
+      </div>
+      <div class="lesson-actions">
+        <button id="start-game" class="primary-button" type="button">J’ai compris, jouer</button>
       </div>
     </div>
   </section>
@@ -1452,9 +1456,9 @@
           window.location.replace(modeUrl(nextMode));
           return;
         }
-        const mustStart = !gameStarted && values.length === 0;
-        closeModeDialog({ force: true, restoreFocus: !mustStart });
-        if (mustStart) start({ moveFocus: true });
+        const mustIntroduce = !gameStarted && values.length === 0;
+        closeModeDialog({ force: true, restoreFocus: !mustIntroduce });
+        if (mustIntroduce) openLesson();
       }
 
       function setupFullscreen() {
@@ -1946,6 +1950,7 @@
         if (pendingTimer) window.clearTimeout(pendingTimer);
         pendingTimer = null;
         dialogs.close(result, { restoreFocus: false });
+        dialogs.close(lesson, { restoreFocus: false });
         dialogs.close(helpDialog, { restoreFocus: false });
         dialogs.close(correctionDialog, { restoreFocus: false });
         modes = shuffle(["sum", "sum", "sum", "difference", "difference", "product", "product", "product", "quotient", "quotient"]);
@@ -1954,6 +1959,13 @@
         updateCounter();
         makeChallenge();
         if (moveFocus) focusAfterReset(focusTarget);
+      }
+
+      function openLesson() {
+        dialogs.open(lesson, {
+          trigger: null,
+          initialFocus: "#start-game"
+        });
       }
 
       board.addEventListener("click", event => {
@@ -1965,6 +1977,10 @@
       document.querySelector("#continue-current-mode").addEventListener("click", () => closeModeDialog());
       document.querySelectorAll("[data-change-mode]").forEach(button => {
         button.addEventListener("click", () => openModeDialog());
+      });
+      document.querySelector("#start-game").addEventListener("click", () => {
+        const trigger = dialogs.trigger(lesson);
+        start({ moveFocus: true, focusTarget: trigger });
       });
       helpButton.addEventListener("click", openHelp);
       document.querySelector("#close-help").addEventListener("click", closeHelp);
@@ -1990,7 +2006,7 @@
       syncOriginLinks();
       updateCounter();
       if (requestedMode === CURRENT_MODE) {
-        start({ moveFocus: true });
+        openLesson();
       } else if (requestedMode === "duo") {
         window.location.replace(modeUrl("duo"));
       } else {

@@ -97,9 +97,11 @@ test("les deux portes Coffres donnent accès aux modes solo et duo", () => {
     const resource = catalogue.resources.find(item => item.path === path);
     const classification = catalogue.resourceClassifications[path];
     const catalogueCopy = `${resource?.description || ""} ${classification?.cardDescription || ""}`;
+    assert.equal(classification?.cardTitle, "Coffres magiques — solo ou duo", `${path} : le titre sous la miniature sépare encore les deux modes`);
     assert.match(catalogueCopy, /solo/i, `${path} : le catalogue n’annonce pas le solo`);
     assert.match(catalogueCopy, /duo|à deux/i, `${path} : le catalogue n’annonce pas le duo`);
   }
+  assert.match(catalogueUi, /const title = classification\.cardTitle \|\| resource\.title;[\s\S]*<h3>\$\{escapeHtml\(title\)\}<\/h3>/);
 });
 
 test("le catalogue publie les cinq cartes dans les groupes validés", () => {
