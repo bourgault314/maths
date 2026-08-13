@@ -137,7 +137,7 @@ if(!save.fruits)save.fruits={};
 if(!save.pieces)save.pieces={}; /* meilleur nombre de pièces par niveau (champ additif, anciennes sauvegardes intactes) */
 
 /* ===== Progression : mondes verrouillés, étoiles, mode classe =====
-   ★ niveau réussi · ★★ + tous les fruits · ★★★ + défi de maîtrise (au plus
+   1 petit soleil = niveau réussi · 2 = + tous les fruits · 3 = + défi de maîtrise (au plus
    autant de pièces que la solution de référence). Étoiles calculées sur les
    MEILLEURS scores enregistrés, pas sur une seule partie.
    Un monde s'ouvre quand on a réussi ⌈5/8 des niveaux du monde précédent⌉
@@ -355,7 +355,7 @@ function startCelebration(sim){
     const isLastOfWorld=wIdx[wIdx.length-1]===cur;
     document.getElementById('splash').classList.remove('show');
     const e=etoiles(cur), par=parNiveau(cur);
-    document.getElementById('winstars').textContent='★'.repeat(e)+'☆'.repeat(3-e);
+    document.getElementById('winstars').innerHTML=soleilRang(e,3,26);
     document.getElementById('winmsg').textContent=
       (L.fruits.length?`Fruits ramassés : ${sim.fruits.size}/${L.fruits.length} — `:'')+
       `la lumière est bien partagée. `+

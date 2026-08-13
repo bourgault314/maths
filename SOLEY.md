@@ -39,10 +39,12 @@ fichiers modifiés → tests → reste à vérifier.
   Champs : `done` (réussi), `fruits` (meilleur ramassage), `pieces` (meilleur nombre de pièces).
 - Progression (chantier 1 du vrai jeu, 13/08) : les mondes se MÉRITENT — un monde s'ouvre
   quand on a réussi ⌈5/8 des niveaux du monde précédent⌉ (jamais 100 %) ; condition affichée
-  sur la carte du monde fermé, avec cadenas. Étoiles par niveau : ★ réussi · ★★ + tous les
-  fruits (acquise d'office si le niveau n'en a pas) · ★★★ + défi de maîtrise = réussir avec
-  au plus autant de pièces que la solution de référence (annoncé après la première réussite,
-  rappelé en rejouant). Mode classe pour le professeur : `soley.html?classe` déverrouille
+  sur la carte du monde fermé, avec cadenas. Récompenses par niveau : les PETITS SOLEILS
+  (pictogramme doré à rayons dessiné maison — jamais le caractère ★) : 1 = réussi ·
+  2 = + tous les fruits (acquis d'office si le niveau n'en a pas) · 3 = + défi de maîtrise
+  = réussir avec au plus autant de pièces que la solution de référence (annoncé après la
+  première réussite, rappelé en rejouant). Mini-légende des trois soleils sur l'écran des
+  niveaux d'un monde. Mode classe pour le professeur : `soley.html?classe` déverrouille
   tout (badge visible, rien n'est modifié dans la sauvegarde).
 - Plein écran : bouton ⛶ (API fullscreen quand dispo ; sinon mode focus + astuce
   « Ajouter à l'écran d'accueil » sur iOS). Installable (manifest inline + icônes data-URI).
@@ -119,7 +121,12 @@ Batterie (script Playwright Python, à conserver dans `tests/`) :
 - Défi de maîtrise (★★★) : « au plus autant de pièces que la solution de référence » —
   le par d'un niveau = la taille de son `sol`. Sans fruits dans un niveau, ★★ vient avec ★.
 - Mode classe : paramètre d'URL `?classe`, non persistant (le lien suffit au professeur).
-- Anciennes sauvegardes : champ `pieces` additif, rien à migrer ; ★★★ apparaît en rejouant.
+- Anciennes sauvegardes : champ `pieces` additif, rien à migrer ; le 3e soleil apparaît en rejouant.
+- Les récompenses s'appellent et se dessinent « petits soleils » (13/08 au soir) — pictogramme
+  maison soleilIco/soleilRang dans render.js ; le code garde `etoiles()` en interne (API stable).
+- Lambrequins v2 (13/08 au soir) : dentelle à festons et perles qui pend DEVANT la façade
+  (ordre de peinture SVG : corps de maison d'abord, dentelle ensuite).
+- Seuil ⌈5/8⌉ VALIDÉ définitivement par Gwenaël après essai (13/08 au soir).
 
 ## 7. Architecture (découpage d'août 2026, statique, sans build, GitHub Pages)
 
@@ -216,4 +223,13 @@ commence par "use strict"; et le partage se fait par la portée globale.
   déjà écrits » = le Coup de pouce actuel (LA base du pilier 1, rien d'autre à
   chercher) ; retouche décidée EN TÊTE de la prochaine passe : les étoiles deviennent
   des petits soleils (cartes, victoire, compteur d'accueil).
+- 2026-08-13 (session 5) : passe de retouches visuelles du chantier 1, validée par les
+  retours de Gwenaël. Petits soleils partout (soleilIco/soleilRang dans render.js :
+  disque doré à rayons plein/vide — cartes, « Lévé ! », compteur « petits soleils »,
+  textes, plus aucun caractère ★ dans le code) ; mini-légende des trois soleils sur
+  l'écran des niveaux (#stlegende) ; lambrequins v2 à festons et perles pendant devant
+  la façade. Décisions du soir au cahier : seuil 5/8 validé définitivement, « maisons
+  à porte orientée » = levier de difficulté (pilier Chercher, principe 7), carnet péi
+  confirmé chantier 3. levels.js STRICTEMENT intact. Batterie complète verte (dont
+  légende et comptages de soleils), node 13/13.
 - (à compléter à chaque session)

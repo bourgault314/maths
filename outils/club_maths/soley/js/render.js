@@ -124,18 +124,39 @@ const FRUITS={
 function fruitSVG(type,x,y,hit){
   return `<g transform="translate(${x*CS+50},${y*CS+50})">${(FRUITS[type]||FRUITS.letchi)(hit)}</g>`;
 }
+/* Petit soleil de score (« étoile » du jeu) : disque doré à rayons, comme les soleils du plateau. */
+function soleilIco(plein,taille=13){
+  let rayons='';
+  for(let a=0;a<8;a++){const th=a*Math.PI/4;
+    rayons+=`<line x1="${12+Math.cos(th)*8.4}" y1="${12+Math.sin(th)*8.4}" x2="${12+Math.cos(th)*11}" y2="${12+Math.sin(th)*11}"/>`;}
+  return plein
+    ?`<svg class="sunico plein" width="${taille}" height="${taille}" viewBox="0 0 24 24" aria-hidden="true"><g stroke="#ffc94d" stroke-width="2.4" stroke-linecap="round">${rayons}</g><circle cx="12" cy="12" r="5.8" fill="#ffc94d"/></svg>`
+    :`<svg class="sunico vide" width="${taille}" height="${taille}" viewBox="0 0 24 24" aria-hidden="true"><g stroke="#ffffff59" stroke-width="2" stroke-linecap="round">${rayons}</g><circle cx="12" cy="12" r="5.8" fill="none" stroke="#ffffff59" stroke-width="2"/></svg>`;
+}
+function soleilRang(pleins,total=3,taille=13){
+  let s='';
+  for(let i=0;i<total;i++)s+=soleilIco(i<pleins,taille);
+  return s;
+}
 function targetSVG(t,stat,label='',index=''){
   const px=t.x*CS,py=t.y*CS;
   const lit=stat&&stat.st==='ok', bad=stat&&(stat.st==='wrong'||stat.st==='multi');
   const txt=t.disp||fstr(t.need);
   const fs=txt.length>=5?18:(txt.length>=4?21:29);
-  let lamb='';
-  for(let i=0;i<6;i++)lamb+=`<circle cx="${19+i*12.5}" cy="45" r="4.4" fill="#fdf6ec"/>`;
+  /* Lambrequins v2 : vraie dentelle créole en bordure de toit — festons suspendus
+     terminés par une perle, silhouette franche sans surcharger la petite maison. */
+  let lamb=`<rect x="12" y="40" width="76" height="3.6" rx="1.4" fill="#fdf6ec"/>`;
+  const nF=7,lF=74/nF;
+  for(let i=0;i<nF;i++){
+    const x0=13+i*lF;
+    lamb+=`<path d="M ${x0} 43.2 h ${lF} a ${lF/2} 6.4 0 0 1 ${-lF} 0 Z" fill="#fdf6ec" stroke="#8a6b4a66" stroke-width="1"/>`;
+    lamb+=`<circle cx="${x0+lF/2}" cy="50.6" r="1.5" fill="#fdf6ec" stroke="#8a6b4a66" stroke-width="0.8"/>`;
+  }
   return `<g transform="translate(${px},${py})" class="${lit?'tlit':''}" data-target="${index}">
     ${lit?`<circle class="glowring" cx="50" cy="55" r="46" fill="none" stroke="#39d98a" stroke-width="5" opacity=".8"/>`:''}
     <polygon points="10,42 50,10 90,42" fill="${lit?'#e8574a':'#c94f43'}" stroke="#8a2f27" stroke-width="3"/>
-    <rect x="13" y="40" width="74" height="4" fill="#fdf6ec"/>${lamb}
     <rect x="16" y="47" width="68" height="41" rx="5" fill="${lit?'#fff4dd':'#f0e3cd'}" stroke="${bad?'#ff5d4a':'#8a6b4a'}" stroke-width="${bad?5:3}"/>
+    ${lamb}
     <rect x="23" y="61" width="12" height="27" rx="2" fill="${lit?'#ffc94d':'#7a5230'}"/>
     <rect x="70" y="53" width="11" height="10" rx="1.5" fill="${lit?'#ffc94d':'#b09b7d'}"/>
     <text class="tneed" x="55" y="79" font-size="${fs}">${txt}</text>

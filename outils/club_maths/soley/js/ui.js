@@ -15,7 +15,7 @@ function renderHome(){
   const nd=LV.map((l,i)=>i).filter(i=>save.done[lvId(i)]).length;
   const totE=LV.reduce((a,l,i)=>a+etoiles(i),0);
   document.getElementById('hometot').innerHTML=
-    `<span>✔ ${nd}/${LV.length} niveaux</span><span>★ ${totE}/${LV.length*3} étoiles</span><span>${fruitMini('letchi')} ${gotF}/${totF} fruits péi</span>`;
+    `<span>✔ ${nd}/${LV.length} niveaux</span><span>${soleilIco(true,15)} ${totE}/${LV.length*3} petits soleils</span><span>${fruitMini('letchi')} ${gotF}/${totF} fruits péi</span>`;
   const icons={
     lagon:`<circle cx="23" cy="23" r="20" fill="#5fd3c8"/><path d="M 6 30 Q 23 20 40 30 L 40 43 L 6 43 Z" fill="#2b9d92"/>`,
     foret:`<polygon points="23,4 38,32 8,32" fill="#3d8f3d"/><polygon points="23,16 40,42 6,42" fill="#4faf4f"/>`,
@@ -62,6 +62,8 @@ function openWorld(wid){
   const w=WORLDS.find(x=>x.id===wid);
   document.getElementById('lvwname').textContent=`${w.label} · ${w.pal}`;
   document.getElementById('lvwblurb').textContent=w.blurb;
+  document.getElementById('stlegende').innerHTML=
+    `<span>${soleilRang(1,1,11)} réussi</span><span>${soleilRang(2,2,11)} tous les fruits</span><span>${soleilRang(3,3,11)} nombre de pièces minimal</span>`;
   const idxs=LV.map((l,i)=>i).filter(i=>LV[i].w===wid);
   const ftype=FRW[wid];
   document.getElementById('lvgrid').innerHTML=idxs.map((gi,li)=>{
@@ -70,7 +72,7 @@ function openWorld(wid){
     const nf=LV[gi].fruits.length, gf=save.fruits[lvId(gi)]||0;
     return `<button class="lvcard ${done?'done':''}" data-i="${gi}">
       <div class="num">${li+1}</div>
-      <div class="st">${'★'.repeat(e)}${'☆'.repeat(3-e)}${nf?` · ${fruitMini(ftype)}${gf}/${nf}`:''}</div>
+      <div class="st">${soleilRang(e)}${nf?`<span class="stf">${fruitMini(ftype)}${gf}/${nf}</span>`:''}</div>
     </button>`;
   }).join('');
   document.querySelectorAll('.lvcard').forEach(bt=>bt.addEventListener('click',()=>openLevel(+bt.dataset.i)));
