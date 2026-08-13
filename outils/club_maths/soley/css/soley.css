@@ -63,14 +63,20 @@
   .backbtn{border:none;background:#ffffff22;color:var(--ink);border-radius:10px;
     min-width:44px;min-height:44px;padding:8px 13px;font-size:15px;font-weight:800;cursor:pointer;}
   #lvwname{font-size:22px;font-weight:900;}
-  #lvwblurb{font-size:13px;color:#ffe4c9;margin:4px 2px 14px;line-height:1.45;}
+  #lvwblurb{font-size:13px;color:#ffe4c9;margin:4px 2px 10px;line-height:1.45;}
+  /* légende des petits soleils : discrète, lue avant de choisir un niveau */
+  #stlegende{display:flex;flex-wrap:wrap;gap:4px 14px;font-size:11px;font-weight:700;
+    color:#ffe4c9cc;background:#00000030;border-radius:10px;padding:6px 10px;margin:0 0 12px;}
+  #stlegende span{display:inline-flex;align-items:center;gap:4px;}
+  #stlegende .sunico{flex:0 0 auto;}
   #lvgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(72px,1fr));gap:10px;}
   .lvcard{
     border:2px solid #ffffff30;background:#00000038;border-radius:14px;
     padding:10px 4px 8px;text-align:center;cursor:pointer;color:var(--ink);
   }
   .lvcard .num{font-size:20px;font-weight:900;}
-  .lvcard .st{font-size:13px;margin-top:2px;color:#ffffff55;}
+  .lvcard .st{font-size:12px;margin-top:3px;color:#ffffff55;display:flex;align-items:center;justify-content:center;gap:1px;flex-wrap:wrap;}
+  .lvcard .st .stf{display:inline-flex;align-items:center;gap:2px;margin-left:4px;}
   .lvcard.done{border-color:var(--gold);background:#ffc94d24;}
   .lvcard.done .st{color:var(--gold);}
   /* ============ JEU ============ */
@@ -175,7 +181,8 @@
   }
   #winov.show{display:flex;}
   #winov h2{font-size:34px;margin:0;color:var(--gold);text-shadow:0 2px 18px #ffc94d88;}
-  #winstars{font-size:27px;letter-spacing:7px;color:var(--gold);text-shadow:0 2px 14px #ffc94d99;margin-right:-7px;}
+  #winstars{display:flex;justify-content:center;gap:9px;filter:drop-shadow(0 2px 10px #ffc94d88);}
+  .sunico{vertical-align:-2px;}
   #winov p{margin:2px 0 10px;font-size:15px;}
   #winov button{background:var(--gold);color:#4a2b10;border:none;border-radius:12px;padding:12px 22px;font-size:16px;font-weight:800;cursor:pointer;}
   #winov .stay{background:transparent;color:#c9d8f2;font-size:13px;font-weight:600;padding:6px;}

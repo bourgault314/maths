@@ -60,6 +60,7 @@ Fini le tout-accessible : l'élève valide petit à petit.
 ## Pilier 3 — S'attacher : le carnet péi (collection et île)
 
 Reprendre l'idée de collection de l'original, en mieux et en créole.
+(État confirmé le 13/08 : rien n'est encore construit — ce pilier est le chantier 3.)
 
 - Tout fruit ramassé rejoint le **carnet péi** : une page par fruit (letchi, mangue,
   ananas Victoria — puis goyavier, combava, vanille, chouchou…), avec une jolie
@@ -108,6 +109,11 @@ seule décomposition évidente. Principes pour de vrais casse-têtes :
    faciles en début de monde, et on crée la couche « défis ».
 6. **Les captures de l'original** (Gwenael joue, capture, envoie) alimentent une
    bibliothèque d'idées de niveaux à transposer — sans copier les plateaux.
+7. **Maisons à porte orientée** (décision du 13/08) : aujourd'hui les maisons
+   acceptent le rayon de TOUTES les directions — douceur voulue, à conserver dans
+   les premiers mondes. La « porte orientée » (varangue d'un seul côté : le rayon
+   doit entrer par la façade) devient un levier de difficulté réservé aux mondes
+   avancés et aux niveaux défis — à concevoir dans ce chantier.
 
 ## Pilier 5 — Habiller : l'écrin
 
@@ -148,12 +154,18 @@ seule décomposition évidente. Principes pour de vrais casse-têtes :
 Chaque chantier = un chapitre de discussion ici (Cowork) pour fixer les détails,
 puis une ou plusieurs sessions Code pour fabriquer, tester, publier après accord.
 
-## Retouches décidées, à faire EN TÊTE de la prochaine passe
+## Retouches du chantier 1 (passe du 13/08 au soir — FAITES)
 
-1. **Les étoiles deviennent des petits soleils** (cartes de niveaux, fenêtre de
-   victoire, compteur d'accueil) — décision de Gwenael consignée le 13/08, après la
-   livraison du chantier 1. Un pictogramme soleil maison (cohérent avec les soleils
-   du plateau), pas le caractère ★.
+1. [x] **Les étoiles deviennent des petits soleils** (cartes de niveaux, fenêtre de
+   victoire, compteur d'accueil, textes) — pictogramme soleil maison (disque doré à
+   rayons, cohérent avec les soleils du plateau), pas le caractère ★. Le code garde
+   `etoiles()` comme nom interne (API et tests stables).
+2. [x] **Mini-légende des trois soleils** sur l'écran des niveaux d'un monde :
+   « réussi · tous les fruits · nombre de pièces minimal » — discrète, lue avant de
+   choisir un niveau (demande de Gwenael : élèves et professeur ne devinaient pas).
+3. [x] **Lambrequins v2** : vraie dentelle créole en bordure de toit — festons
+   suspendus terminés par une perle, silhouette franche qui pend DEVANT la façade,
+   sans surcharger la petite maison.
 
 ## Décisions actées le 13/08
 
@@ -161,8 +173,13 @@ puis une ou plusieurs sessions Code pour fabriquer, tester, publier après accor
       d'entraînement (version Gwenael, remplace les « ateliers » séparés).
 - [x] Mode classe qui déverrouille tout pour le professeur : oui — fait (`soley.html?classe`).
 - [x] L'ordre des cinq chantiers : progression d'abord (chantier 1 lancé et livré le 13/08).
-- [x] Le seuil de déblocage des mondes : ⌈5/8 des niveaux du monde précédent⌉, jamais 100 % ;
-      les niveaux-découverte s'y ajouteront quand le pilier 1 existera.
+- [x] Le seuil de déblocage des mondes : ⌈5/8 des niveaux du monde précédent⌉, jamais
+      100 % (pour ne bloquer personne sur un niveau récalcitrant) ; VALIDÉ
+      définitivement par Gwenael après essai (13/08 au soir) ; les niveaux-découverte
+      s'y ajouteront quand le pilier 1 existera.
+- [x] Maisons multidirectionnelles conservées dans les premiers mondes (douceur
+      voulue) ; la « porte orientée » devient un levier de difficulté — voir le
+      principe 7 du pilier Chercher (13/08 au soir).
 
 ## Décisions en attente (à valider par Gwenael)
 

@@ -277,6 +277,15 @@ test("la progression verrouillée et les étoiles se calculent juste", () => {
   assert.equal(r.sansFruits, 2);
   assert.match(js.engine, /save\.pieces\[lvId\(cur\)\]=Math\.min/);
   assert.match(js.ui, /classList\.contains\('locked'\)/);
+  /* retouches du 13/08 : les étoiles sont dessinées en petits soleils, partout */
+  assert.match(js.render, /function soleilIco/);
+  assert.match(js.render, /function soleilRang/);
+  assert.match(js.engine, /soleilRang\(e,3,26\)/);
+  assert.match(js.ui, /petits soleils/);
+  assert.match(js.ui, /stlegende/);
+  assert.match(html, /id="stlegende"/);
+  assert.doesNotMatch(js.ui + js.engine, /[★☆]/);
+  assert.match(js.render, /Lambrequins v2/);
   assert.match(js.ui, /etoiles,parNiveau,seuilMonde,mondeDeverrouille/);
   assert.match(html, /id="winstars"/);
   assert.match(html, /id="defiline"/);

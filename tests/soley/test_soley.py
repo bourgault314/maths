@@ -341,11 +341,13 @@ def principal():
         }""")
         section("Bonus sauvegarde : clé « lagon:Premier rayon » enregistrée",
                 bool(sauv and sauv.get("done", {}).get("lagon:Premier rayon")), "")
-        et = page.evaluate("() => ({ e: window.SOLEY.etoiles(0), stars: document.getElementById('winstars').textContent })")
+        et = page.evaluate("""() => ({ e: window.SOLEY.etoiles(0),
+          pleins: document.querySelectorAll('#winstars .sunico.plein').length,
+          vides: document.querySelectorAll('#winstars .sunico.vide').length })""")
         pieces = (sauv or {}).get("pieces", {}).get("lagon:Premier rayon")
-        section("Bonus étoiles : victoire à 1 pièce = ★★★ (pièces enregistrées)",
-                pieces == 1 and et["e"] == 3 and et["stars"] == "★★★",
-                f"pieces={pieces}, etoiles={et['e']}, affiché={et['stars']}")
+        section("Bonus soleils : victoire à 1 pièce = 3 petits soleils (pièces enregistrées)",
+                pieces == 1 and et["e"] == 3 and et["pleins"] == 3 and et["vides"] == 0,
+                f"pieces={pieces}, etoiles={et['e']}, pleins={et['pleins']}, vides={et['vides']}")
         ctx2.close()
 
         # ============ passe 3 : progression verrouillée — T8 (portrait téléphone) ============
@@ -405,12 +407,26 @@ def principal():
                 etat["foret"] and etat["volcan"], "")
         pg4.click(".wrow[data-w='lagon']")
         cartes = pg4.evaluate("""() => ({
-          zigzag: document.querySelector(".lvcard[data-i='1'] .st").textContent,
-          premier: document.querySelector(".lvcard[data-i='0'] .st").textContent,
+          zigzagPleins: document.querySelectorAll(".lvcard[data-i='1'] .sunico.plein").length,
+          zigzagVides: document.querySelectorAll(".lvcard[data-i='1'] .sunico.vide").length,
+          premierPleins: document.querySelectorAll(".lvcard[data-i='0'] .sunico.plein").length,
+          premierVides: document.querySelectorAll(".lvcard[data-i='0'] .sunico.vide").length,
         })""")
-        section("T8 étoiles sur les cartes : ★★★ (fruits + maîtrise) et ★★☆ (sans défi)",
-                cartes["zigzag"].startswith("★★★") and cartes["premier"].startswith("★★☆"),
-                f"zigzag={cartes['zigzag']!r}, premier={cartes['premier']!r}")
+        section("T8 soleils sur les cartes : 3 pleins (fruits + maîtrise) et 2 pleins + 1 vide",
+                cartes["zigzagPleins"] == 3 and cartes["zigzagVides"] == 0
+                and cartes["premierPleins"] == 2 and cartes["premierVides"] == 1,
+                f"zigzag={cartes['zigzagPleins']}p/{cartes['zigzagVides']}v, "
+                f"premier={cartes['premierPleins']}p/{cartes['premierVides']}v")
+        legende = pg4.evaluate("""() => ({
+          texte: document.getElementById('stlegende').textContent,
+          soleils: document.querySelectorAll('#stlegende .sunico.plein').length,
+          compteur: document.getElementById('hometot').textContent,
+        })""")
+        section("T8 légende des trois soleils + compteur « petits soleils »",
+                "réussi" in legende["texte"] and "tous les fruits" in legende["texte"]
+                and "pièces" in legende["texte"] and legende["soleils"] == 6
+                and "petits soleils" in legende["compteur"],
+                legende["texte"].strip())
         ctx4.close()
 
         # T8e — mode classe : tout est ouvert, badge visible
