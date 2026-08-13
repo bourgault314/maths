@@ -5,6 +5,7 @@ import {
   COULEURS_BARRES,
   COULEURS_BANDES_FRACTIONS,
   COULEURS_NUMERATION_DECIMALE,
+  COULEURS_RANGS_NUMERATION_DECIMALE,
   COULEURS_POURCENTAGES,
   COULEURS_PYTHAGORE,
   couleurFamillePourcentage,
@@ -51,6 +52,15 @@ describe("charte — intégrité des données", () => {
     })) {
       assert.match(valeur, /^#[0-9a-f]{6}$/, `couleur invalide pour ${role} : ${valeur}`);
     }
+    for (const [rang, palette] of Object.entries(COULEURS_RANGS_NUMERATION_DECIMALE)) {
+      for (const [role, valeur] of Object.entries(palette)) {
+        assert.match(
+          valeur,
+          /^#[0-9a-f]{6}$/,
+          `couleur invalide pour ${rang}.${role} : ${valeur}`,
+        );
+      }
+    }
   });
 
   it("la palette de Pythagore est celle du composant d'origine, au hexadécimal près", () => {
@@ -70,6 +80,11 @@ describe("charte — intégrité des données", () => {
     assert.equal(COULEURS_NUMERATION_DECIMALE.unite, "#ef4444");
     assert.equal(COULEURS_NUMERATION_DECIMALE.dixieme, "#22c55e");
     assert.equal(COULEURS_NUMERATION_DECIMALE.centieme, "#facc15");
+    assert.equal(COULEURS_NUMERATION_DECIMALE.millieme, "#7c3aed");
+    assert.ok(Object.isFrozen(COULEURS_RANGS_NUMERATION_DECIMALE));
+    for (const [rang, palette] of Object.entries(COULEURS_RANGS_NUMERATION_DECIMALE)) {
+      assert.ok(Object.isFrozen(palette), `palette ${rang} non gelée`);
+    }
   });
 
   it("retrouve la couleur historique d'un dénominateur", () => {
@@ -130,6 +145,23 @@ describe("charte — lisibilité (WCAG)", () => {
     for (const role of ["bleu", "jetonPositif", "jetonNegatif", "erreur"]) {
       const rapport = contraste("#ffffff", COULEURS[role]);
       assert.ok(rapport >= 3, `blanc sur ${role} : ${rapport.toFixed(2)} (< 3)`);
+    }
+  });
+
+  it("les rangs décimaux gardent un texte AA sur leurs fonds", () => {
+    for (const [rang, palette] of Object.entries(COULEURS_RANGS_NUMERATION_DECIMALE)) {
+      assert.ok(
+        contraste(palette.texte, "#ffffff") >= 4.5,
+        `texte ${rang} insuffisant sur blanc`,
+      );
+      assert.ok(
+        contraste(palette.texte, palette.fond) >= 4.5,
+        `texte ${rang} insuffisant sur son fond`,
+      );
+      assert.ok(
+        contraste(palette.encreEntete, palette.principale) >= 4.5,
+        `entête ${rang} insuffisante`,
+      );
     }
   });
 });

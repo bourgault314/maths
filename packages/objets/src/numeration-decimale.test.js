@@ -2,7 +2,10 @@ import assert from "node:assert/strict";
 import { describe, it } from "node:test";
 import { readFileSync } from "node:fs";
 
-import { COULEURS_NUMERATION_DECIMALE } from "../../charte/src/charte.js";
+import {
+  COULEURS_NUMERATION_DECIMALE,
+  COULEURS_RANGS_NUMERATION_DECIMALE,
+} from "../../charte/src/charte.js";
 import {
   ORIENTATIONS_MATERIEL_NUMERATION_DECIMALE,
   VERSION_NUMERATION_DECIMALE,
@@ -96,14 +99,14 @@ describe("matériel de numération décimale", () => {
     assert.ok(Object.isFrozen(rendu));
   });
 
-  it("rend visible le regroupement 5 + 1 des six dixièmes", () => {
+  it("espace uniformément les dixièmes sans rupture arbitraire après cinq", () => {
     const rendu = dessinerMaterielNumerationDecimale({ dixiemes: 6 });
     const positions = positionsPieces(rendu.svg, "nd-dixieme");
     assert.equal(positions.length, 6);
-    const pasOrdinaire = positions[4].y - positions[3].y;
-    const pasApresCinq = positions[5].y - positions[4].y;
-    assert.ok(pasOrdinaire - rendu.tailleCellule >= 3);
-    assert.ok(pasApresCinq > pasOrdinaire);
+    const pas = positions.slice(1).map((piece, index) =>
+      arrondi2(piece.y - positions[index].y));
+    assert.ok(pas[0] - rendu.tailleCellule >= 3);
+    assert.deepEqual(new Set(pas).size, 1);
     assert.equal(compter(rendu.svg, /class="nd-separation-cinq"/g), 6);
   });
 
@@ -124,7 +127,10 @@ describe("matériel de numération décimale", () => {
 
     const centiemes = positionsPieces(rendu.svg, "nd-centieme");
     assert.ok(centiemes[1].x - centiemes[0].x - rendu.tailleCellule >= 3);
-    assert.ok(centiemes[5].x - centiemes[4].x > centiemes[4].x - centiemes[3].x);
+    assert.equal(
+      arrondi2(centiemes[5].x - centiemes[4].x),
+      arrondi2(centiemes[4].x - centiemes[3].x),
+    );
 
     for (const classe of ["nd-unite", "nd-dixieme", "nd-centieme"]) {
       const [piece] = positionsPieces(rendu.svg, classe);
@@ -149,7 +155,10 @@ describe("matériel de numération décimale", () => {
       [dixiemes[0].largeurCellules, dixiemes[0].hauteurCellules],
       [1, 10],
     );
-    assert.ok(dixiemes[5].x - dixiemes[4].x > dixiemes[4].x - dixiemes[3].x);
+    assert.equal(
+      arrondi2(dixiemes[5].x - dixiemes[4].x),
+      arrondi2(dixiemes[4].x - dixiemes[3].x),
+    );
     assert.match(rendu.texteAlternatif, /orientés verticalement/);
     assert.match(rendu.svg, /data-orientation="verticale"/);
   });
@@ -247,6 +256,17 @@ describe("tableau de numération décimale", () => {
     assert.match(rendu.svg, />0,725 : 725 millièmes<\/text>/);
     assert.match(rendu.texteAlternatif, /Cette écriture se lit 725 millièmes/);
     assert.match(rendu.texteAlternatif, /colonne des millièmes est mise en évidence/);
+    for (const [rang, palette] of Object.entries(COULEURS_RANGS_NUMERATION_DECIMALE)) {
+      const bloc = new RegExp(
+        `data-rang="${rang}"[\\s\\S]*?class="nd-entete"[^>]*fill="${palette.principale}"` +
+          `[\\s\\S]*?class="nd-cellule"[^>]*fill="${palette.fond}"` +
+          `[\\s\\S]*?class="nd-nom-rang"[^>]*fill="${palette.encreEntete}"` +
+          `[\\s\\S]*?class="nd-chiffre"[^>]*fill="${palette.texte}"`,
+      );
+      assert.match(rendu.svg, bloc, `couleurs absentes pour ${rang}`);
+    }
+    assert.match(rendu.svg, /class="nd-marque-rang-actif"/);
+    assert.match(rendu.svg, /data-rang-actif="true"/);
   });
 
   it("peut laisser la lecture finale à l'élève sans la révéler à l'écran ni dans l'alternative", () => {

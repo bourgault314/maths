@@ -8,9 +8,10 @@
 import {
   COULEURS,
   COULEURS_NUMERATION_DECIMALE,
+  COULEURS_RANGS_NUMERATION_DECIMALE,
   TYPOGRAPHIE,
-} from "../../charte/src/charte.js?v=26";
-import { construireDonneesTableauNumeration } from "./fractions-decimaux.js?v=26";
+} from "../../charte/src/charte.js?v=27";
+import { construireDonneesTableauNumeration } from "./fractions-decimaux.js?v=27";
 
 export const VERSION_NUMERATION_DECIMALE = 1;
 
@@ -205,7 +206,6 @@ function disposerDixiemes(nombre, cellule, orientation, yDepart) {
   // Les pièces doivent rester visuellement dénombrables : un filet blanc trop
   // fin les faisait lire comme une seule grille continue sur téléphone.
   const espace = Math.max(3, cellule * 0.22);
-  const espaceGroupe = Math.max(6, cellule * 0.6);
   const morceaux = [libelleSection(yDepart + 15, "Dixièmes")];
   const yPieces = yDepart + 24;
 
@@ -213,7 +213,6 @@ function disposerDixiemes(nombre, cellule, orientation, yDepart) {
     let y = yPieces;
     for (let index = 0; index < nombre; index += 1) {
       if (index > 0) y += espace;
-      if (index > 0 && index % 5 === 0) y += espaceGroupe;
       morceaux.push(dessinerDixieme(MARGE, y, cellule, orientation, index + 1));
       y += cellule;
     }
@@ -225,7 +224,7 @@ function disposerDixiemes(nombre, cellule, orientation, yDepart) {
   for (let index = 0; index < nombre; index += 1) {
     const colonne = index % parLigne;
     const ligne = Math.floor(index / parLigne);
-    const x = MARGE + colonne * (cellule + espace) + (colonne >= 5 ? espaceGroupe : 0);
+    const x = MARGE + colonne * (cellule + espace);
     const y = yPieces + ligne * (10 * cellule + Math.max(8, cellule * 0.75));
     morceaux.push(dessinerDixieme(x, y, cellule, orientation, index + 1));
     bas = Math.max(bas, y + 10 * cellule);
@@ -235,14 +234,13 @@ function disposerDixiemes(nombre, cellule, orientation, yDepart) {
 
 function disposerCentiemes(nombre, cellule, yDepart) {
   const espace = Math.max(3, cellule * 0.22);
-  const espaceGroupe = Math.max(6, cellule * 0.6);
   const morceaux = [libelleSection(yDepart + 15, "Centièmes")];
   const yPieces = yDepart + 24;
   let bas = yPieces;
   for (let index = 0; index < nombre; index += 1) {
     const colonne = index % 10;
     const ligne = Math.floor(index / 10);
-    const x = MARGE + colonne * (cellule + espace) + (colonne >= 5 ? espaceGroupe : 0);
+    const x = MARGE + colonne * (cellule + espace);
     const y = yPieces + ligne * (cellule + espace);
     morceaux.push(dessinerCentieme(x, y, cellule, index + 1));
     bas = Math.max(bas, y + cellule);
@@ -438,27 +436,33 @@ export function dessinerTableauNumerationDecimale({
     const x = MARGE + index * largeurColonne;
     const active = colonne.id === evidence;
     const classe = `nd-tableau-colonne${active ? " nd-rang-actif" : ""}`;
-    const fond = COULEURS.papier;
-    const trait = active ? COULEURS.orange : COULEURS.texteAttenue;
+    const couleursRang = COULEURS_RANGS_NUMERATION_DECIMALE[colonne.id];
+    const trait = active ? COULEURS.bleu : couleursRang.texte;
     const chiffre = colonne.chiffre ?? "—";
     return (
       `<g class="${classe}" data-rang="${colonne.id}" ` +
-      `data-chiffre="${colonne.chiffre ?? ""}">` +
+      `data-chiffre="${colonne.chiffre ?? ""}" ` +
+      `data-rang-actif="${active}">` +
       `<rect class="nd-entete" x="${nombreSvg(x)}" y="${yEntete}" ` +
       `width="${nombreSvg(largeurColonne)}" height="${hauteurEntete}" ` +
-      `fill="${active ? COULEURS.fondDoux : COULEURS.ligne}" ` +
+      `fill="${couleursRang.principale}" ` +
       `stroke="${trait}" stroke-width="${active ? 2 : 1}"/>` +
       `<rect class="nd-cellule" x="${nombreSvg(x)}" y="${yValeur}" ` +
       `width="${nombreSvg(largeurColonne)}" height="${hauteurValeur}" ` +
-      `fill="${fond}" stroke="${trait}" stroke-width="${active ? 2 : 1}"/>` +
+      `fill="${couleursRang.fond}" stroke="${trait}" stroke-width="${active ? 2 : 1}"/>` +
+      (active
+        ? `<path class="nd-marque-rang-actif" d="M ${nombreSvg(x + 7)} ${nombreSvg(yEntete + 6)} ` +
+          `H ${nombreSvg(x + largeurColonne - 7)}" fill="none" stroke="${couleursRang.encreEntete}" ` +
+          `stroke-width="3" stroke-linecap="round"/>`
+        : "") +
       `<text class="nd-nom-rang" x="${nombreSvg(x + largeurColonne / 2)}" ` +
       `y="${nombreSvg(yEntete + hauteurEntete / 2)}" text-anchor="middle" dominant-baseline="middle" ` +
       `font-family="${POLICE}" font-size="${nombreSvg(tailleEntete)}" font-weight="700" ` +
-      `fill="${COULEURS_NUMERATION_DECIMALE.encre}">${echapper(colonne.libelle)}</text>` +
+      `fill="${couleursRang.encreEntete}">${echapper(colonne.libelle)}</text>` +
       `<text class="nd-chiffre" x="${nombreSvg(x + largeurColonne / 2)}" ` +
       `y="${nombreSvg(yValeur + hauteurValeur / 2)}" text-anchor="middle" dominant-baseline="middle" ` +
       `font-family="${POLICE}" font-size="${nombreSvg(tailleChiffre(chiffre, largeurColonne))}" ` +
-      `font-weight="750" fill="${COULEURS_NUMERATION_DECIMALE.encre}">${echapper(chiffre)}</text>` +
+      `font-weight="800" fill="${couleursRang.texte}">${echapper(chiffre)}</text>` +
       `</g>`
     );
   });

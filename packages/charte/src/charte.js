@@ -147,8 +147,43 @@ export const COULEURS_NUMERATION_DECIMALE = Object.freeze({
   unite: "#ef4444",
   dixieme: "#22c55e",
   centieme: "#facc15",
+  // Le plateau historique s'arrête aux centièmes. Le violet prolonge la
+  // convention sans fabriquer une pièce de mille cases illisible : il sert
+  // au rang des millièmes dans le tableau et dans les écritures.
+  millieme: "#7c3aed",
   encre: "#111827",
   trait: "#000000",
+});
+
+// Les teintes franches ci-dessus identifient le matériel. Dans un tableau ou
+// une égalité, une variante plus sombre est nécessaire sur fond clair pour
+// garder un contraste AA. Le libellé du rang et son contour restent toujours
+// présents : la couleur n'est jamais le seul canal d'information.
+export const COULEURS_RANGS_NUMERATION_DECIMALE = Object.freeze({
+  unites: Object.freeze({
+    principale: COULEURS_NUMERATION_DECIMALE.unite,
+    fond: "#fee2e2",
+    texte: "#b91c1c",
+    encreEntete: COULEURS_NUMERATION_DECIMALE.encre,
+  }),
+  dixiemes: Object.freeze({
+    principale: COULEURS_NUMERATION_DECIMALE.dixieme,
+    fond: "#dcfce7",
+    texte: "#166534",
+    encreEntete: COULEURS_NUMERATION_DECIMALE.encre,
+  }),
+  centiemes: Object.freeze({
+    principale: COULEURS_NUMERATION_DECIMALE.centieme,
+    fond: "#fef9c3",
+    texte: "#854d0e",
+    encreEntete: COULEURS_NUMERATION_DECIMALE.encre,
+  }),
+  milliemes: Object.freeze({
+    principale: COULEURS_NUMERATION_DECIMALE.millieme,
+    fond: "#ede9fe",
+    texte: "#6d28d9",
+    encreEntete: "#ffffff",
+  }),
 });
 
 /** La couleur de famille d'un découpage en `parts` parts égales. */

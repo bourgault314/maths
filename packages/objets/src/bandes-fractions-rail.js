@@ -14,13 +14,13 @@ import {
   construireGroupementFraction,
   formaterFractionEnDecimal,
   obtenirDonneesDroiteFractionnaire,
-} from "./fractions-decimaux.js?v=26";
+} from "./fractions-decimaux.js?v=27";
 import {
   COULEURS_BANDES_FRACTIONS,
   couleurBandeFraction,
-} from "../../charte/src/charte.js?v=26";
+} from "../../charte/src/charte.js?v=27";
 
-export const VERSION_BANDES_FRACTIONS_RAIL = 1;
+export const VERSION_BANDES_FRACTIONS_RAIL = 2;
 
 const PROFILS = Object.freeze([
   "aide-nc03",
@@ -33,6 +33,7 @@ const ETAPES = Object.freeze([
   "pieces",
   "groupes",
   "unites",
+  "reste",
   "lecture",
 ]);
 
@@ -185,7 +186,7 @@ function messageValidation(reglages, largeur) {
     return `Le nombre de parties posées doit être un entier compris entre 0 et ${numerateur}.`;
   }
   if (etape !== "pieces" && partiesPosees !== numerateur) {
-    return "Les étapes groupes, unités et lecture demandent que toutes les parties soient posées.";
+    return "Les étapes groupes, unités, reste et lecture demandent que toutes les parties soient posées.";
   }
   return null;
 }
@@ -311,6 +312,10 @@ function bandes({
 
   const largeurPosee = partiesPosees * largeurPartie;
   const couleur = couleurPour(denominateur);
+  const unitesCompletes = Math.floor(partiesPosees / denominateur);
+  const premierePartieRestante = unitesCompletes * denominateur;
+  const reste = partiesPosees - premierePartieRestante;
+  const fusionnerDeuxQuarts = etape === "reste" && denominateur === 4 && reste === 2;
   const elements = [
     `<g class="rangee-bandes etape-${etape}">`,
     `<rect class="fond-bandes" x="${attributNombre(origineX)}" y="${attributNombre(y)}" ` +
@@ -358,8 +363,6 @@ function bandes({
       ));
     }
   } else {
-    const unitesCompletes = Math.floor(partiesPosees / denominateur);
-    const premierePartieRestante = unitesCompletes * denominateur;
     for (let unite = 1; unite <= unitesCompletes; unite += 1) {
       if (unite * denominateur < partiesPosees) {
         const x = origineX + unite * denominateur * largeurPartie;
@@ -379,20 +382,39 @@ function bandes({
         },
       ));
     }
-    for (let index = premierePartieRestante + 1; index < partiesPosees; index += 1) {
-      const x = origineX + index * largeurPartie;
-      elements.push(ligne(x, y, x, y + hauteur, {
-        classe: "joint-piece",
-        couleur: COULEURS_BANDES_FRACTIONS.trait,
-      }));
-    }
-    for (let index = premierePartieRestante; index < partiesPosees; index += 1) {
-      elements.push(etiquettePartie(
-        origineX + (index + 0.5) * largeurPartie,
-        y,
-        denominateur,
-        hauteur,
-      ));
+    if (fusionnerDeuxQuarts) {
+      const xReste = origineX + premierePartieRestante * largeurPartie;
+      const largeurDemi = 2 * largeurPartie;
+      elements.push(
+        '<g class="reste-fusionne-en-demi" role="group" aria-label="Deux quarts regroupés forment un demi.">',
+        `<rect class="demi-historique" x="${attributNombre(xReste)}" y="${attributNombre(y)}" ` +
+          `width="${attributNombre(largeurDemi)}" height="${attributNombre(hauteur)}" ` +
+          `fill="${couleurPour(2)}"/>`,
+        etiquettePartie(
+          xReste + largeurDemi / 2,
+          y,
+          2,
+          hauteur,
+          "ecriture-reste-demi",
+        ),
+        "</g>",
+      );
+    } else {
+      for (let index = premierePartieRestante + 1; index < partiesPosees; index += 1) {
+        const x = origineX + index * largeurPartie;
+        elements.push(ligne(x, y, x, y + hauteur, {
+          classe: "joint-piece",
+          couleur: COULEURS_BANDES_FRACTIONS.trait,
+        }));
+      }
+      for (let index = premierePartieRestante; index < partiesPosees; index += 1) {
+        elements.push(etiquettePartie(
+          origineX + (index + 0.5) * largeurPartie,
+          y,
+          denominateur,
+          hauteur,
+        ));
+      }
     }
   }
 
@@ -497,10 +519,14 @@ function rail({
 
 function texteAlternatifPour({ numerateur, denominateur, decimal, profil, etape }) {
   const nomPartie = denominateur === 2 ? "demi" : "quart";
+  const reste = numerateur % denominateur;
+  const explicationReste = etape === "reste" && denominateur === 4 && reste === 2
+    ? " Les deux quarts restants sont regroupés en une demi-bande."
+    : "";
   if (profil === "aide-nc03") {
     return (
       `La fraction de numérateur ${numerateur} et de dénominateur ${denominateur} est représentée ` +
-      `avec des ${nomPartie}s sur un rail décimal. La valeur décimale cible reste masquée.`
+      `avec des ${nomPartie}s sur un rail décimal.${explicationReste} La valeur décimale cible reste masquée.`
     );
   }
   if (profil.startsWith("aide-nc04")) {
@@ -509,7 +535,7 @@ function texteAlternatifPour({ numerateur, denominateur, decimal, profil, etape 
       : "Le numérateur et le dénominateur demandés restent masqués.";
     return (
       `Le nombre décimal ${decimal} est placé sur un rail. Des pièces représentant chacune un ${nomPartie} ` +
-      `peuvent être alignées jusqu'à ce point. ${cible}`
+      `peuvent être alignées jusqu'à ce point.${explicationReste} ${cible}`
     );
   }
   return (
@@ -522,7 +548,9 @@ function texteAlternatifPour({ numerateur, denominateur, decimal, profil, etape 
  * Dessine des bandes fractionnaires multi-unités alignées sur un rail.
  *
  * Profils : `aide-nc03`, `aide-nc04-imposee`, `aide-nc04-libre`, `solution`.
- * Étapes : `pieces`, `groupes`, `unites`, `lecture`.
+ * Étapes : `pieces`, `groupes`, `unites`, `reste`, `lecture`.
+ * Pour un reste de deux quarts, `reste` remplace ces deux pièces par la
+ * demi-bande historique, de largeur strictement identique.
  *
  * Le profil est obligatoire : une omission ne doit jamais faire apparaître
  * accidentellement la réponse. En NC04, l'étape `pieces` commence par défaut
@@ -602,6 +630,7 @@ export function dessinerBandesFractionnairesSurRailDecimal(reglages = {}) {
       positionCible: arrondi2(positionCible),
       distanceCible: arrondi2(numerateur * largeurPartie),
       partiesPosees,
+      resteFusionneEnDemi: etape === "reste" && denominateur === 4 && groupement.reste === 2,
     }),
   });
 }

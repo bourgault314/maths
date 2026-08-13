@@ -910,3 +910,46 @@ pédagogique. Les micro-notions `fraction-vers-decimal` et
 `/automatismes-v2/` conserve son `noindex`, reste hors sitemap et le module
 n'est pas ajouté à une navigation destinée aux élèves. Le passage à `valide`
 interviendra seulement après les essais et l'accord explicite de Gwenaël.
+
+### D-049 — Une omission reste dans la question et l'aide devient atomique
+
+Gwenaël demande le 13 août 2026 d'aligner le retour après validation sur une
+question encore lisible. Cette décision remplace la règle d'ouverture
+automatique de D-045, les trois degrés sélectionnables et l'organisation du
+cours en sept pages de D-047.
+Une réponse entièrement vide reste une omission fausse, produit une seule trace
+et fige la réponse, mais elle n'ouvre plus la correction. Le retour visible est
+« Pas de réponse ». Pour une saisie omise, la solution correcte apparaît
+séparément en vert ; pour un QCM omis, c'est la proposition correcte qui passe
+en vert. Le pavé disparaît et la barre propose « Voir l'explication » puis
+« Question suivante » ou « Voir le bilan ». La correction ne s'ouvre plus que
+sur une action explicite.
+
+Après validation d'un QCM, la proposition correcte est immédiatement mise en
+évidence en vert et une proposition fausse sélectionnée reste rouge. Pour une
+saisie, la réponse fournie et fausse reste rouge mais la valeur attendue n'est
+révélée que dans la correction. Une omission conserve une présentation neutre
+et accessible pour le rappel de la réponse élève, à côté de la solution verte.
+Une réponse partielle ou syntaxiquement invalide reste réparable et ne produit
+toujours aucune trace.
+
+« Me guider » conserve l'indice, la représentation et la construction comme
+progression pédagogique, mais les rassemble dans un atelier unique. Le lecteur
+ne mémorise plus un niveau choisi et l'interface ne présente plus trois onglets
+concurrents. Les états mathématiques nécessaires à l'atelier restent conservés :
+pièces posées, unités formées, rang décimal choisi et étape courante d'une
+correspondance. Les masques visibles et accessibles de D-047 restent
+obligatoires jusqu'à la validation de la réponse.
+
+Dans le groupement des quarts impropres, un reste de deux quarts ajoute une
+dernière transformation : les deux pièces `1/4` se fusionnent en une pièce
+`1/2`. Les autres restes conservent les deux gestes « assembler » puis
+« retourner les unités », sans clic supplémentaire répétitif.
+
+Le cours est regroupé en six pages cohérentes avec cet atelier unique :
+construire un demi ; construire des quarts ; nommer dixièmes, centièmes et
+millièmes ; convertir `147/100` en `1,47` ; convertir un décimal en fraction en
+acceptant les écritures équivalentes ; enfin former les unités et traiter le
+reste. Cette dernière page réunit notamment `7/2`, `6/4`, les repères
+`3/2`, `4/2`, `5/2`, `100/100` et `7/1`, puis nomme la division comme méthode
+générale tardive.

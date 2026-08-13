@@ -13,17 +13,17 @@ import {
   COMPARAISON_ENSEMBLE_EXACT,
   SCHEMA_QUESTION_INSTANCE_V2,
   TYPE_REPONSE_SELECTION_MULTIPLE,
-} from "../../../../contrats/src/question-v2.js?v=26";
+} from "../../../../contrats/src/question-v2.js?v=27";
 import {
   IDENTITES_AUTOMATISMES,
   creerClassementAutomatisme,
-} from "../../identifiants.js?v=26";
+} from "../../identifiants.js?v=27";
 import {
   DIVISEURS_CRITERES_NC01,
   construireCorrectionCritere,
   formulationCritereDivisibilite,
   tirerNombreSelonDivisibilite,
-} from "./critere-precis.js?v=26";
+} from "./critere-precis.js?v=27";
 
 export const NOM_GENERATEUR_SELECTION_NOMBRES =
   "nombres-et-calculs.criteres-divisibilite.selection-nombres";

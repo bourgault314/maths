@@ -12,6 +12,7 @@ import {
   TYPE_REPONSE_NOMBRE_DECIMAL,
 } from "../../packages/contrats/src/question-v2.js";
 import {
+  avancerCorrespondanceAide,
   basculerChiffreAide,
   basculerChoix,
   basculerUniteAide,
@@ -19,6 +20,7 @@ import {
   demarrer,
   effacerSaisie,
   fermerAide,
+  grouperUniteFractionAide,
   lireConfiguration,
   nombreReussites,
   NOMBRE_QUESTIONS_MAXIMUM,
@@ -38,7 +40,6 @@ import {
   revelerReponse,
   selectionnerChampSaisie,
   selectionnerRepereAide,
-  choisirNiveauAideFraction,
   saisirCaractere,
   saisirChiffre,
   tournerSolide,
@@ -117,6 +118,23 @@ function etatSurQuestionRationnelle(type, attendu, microNotion = undefined) {
       attendu,
     },
   };
+  return etat;
+}
+
+function etatSurAtelierFraction(numerateur, denominateur) {
+  const etat = etatDemarre({
+    notion: NOTION_FRACTIONS_SIMPLES_DECIMAUX,
+    nombreQuestions: 5,
+    graine: `fixture-atelier-${numerateur}-${denominateur}`,
+  });
+  const question = questionCourante(etat);
+  etat.questions[0] = {
+    ...question,
+    enonce: question.enonce.map((bloc) => bloc.type === "rationnel"
+      ? { ...bloc, numerateur, denominateur }
+      : bloc),
+  };
+  ouvrirAide(etat);
   return etat;
 }
 
@@ -374,7 +392,8 @@ describe("réponse interactive", () => {
     validerSelection(etat);
     assert.equal(etat.erreurValidation, "");
     assert.deepEqual(etat.validation, { juste: false, omise: true });
-    assert.equal(etat.correctionOuverte, true);
+    assert.equal(etat.correctionOuverte, false);
+    assert.equal(etat.reponseRevelee, false);
     assert.deepEqual(etat.traces[0].reponse, {
       type: questionCourante(etat).reponse.type,
       statut: "omise",
@@ -382,6 +401,14 @@ describe("réponse interactive", () => {
     assert.equal(nombreReussites(etat), 0);
     validerSelection(etat);
     assert.equal(etat.traces.length, 1);
+  });
+
+  it("laisse l'explication repliée après une omission puis permet de l'ouvrir", () => {
+    const etat = etatDemarre();
+    validerSelection(etat);
+    assert.equal(etat.correctionOuverte, false);
+    ouvrirCorrection(etat);
+    assert.equal(etat.correctionOuverte, true);
   });
 
   it("compte aussi un choix unique vide comme une omission", () => {
@@ -394,6 +421,7 @@ describe("réponse interactive", () => {
       type: TYPE_REPONSE_CHOIX_UNIQUE,
       statut: "omise",
     });
+    assert.equal(etat.correctionOuverte, false);
   });
 
   it("crée une trace conforme sans révéler les bonnes réponses", () => {
@@ -474,23 +502,58 @@ describe("réponse interactive", () => {
     assert.equal(etat.repereAide, null);
   });
 
-  it("fait progresser l'aide fractions du simple indice vers la construction", () => {
-    const etat = etatDemarre({
-      notion: NOTION_FRACTIONS_SIMPLES_DECIMAUX,
-      nombreQuestions: 10,
-      graine: "fixture-niveaux-aide-fractions",
-    });
-    ouvrirAide(etat);
-    assert.equal(etat.niveauAideFraction, 0);
-    choisirNiveauAideFraction(etat, 1);
-    assert.equal(etat.niveauAideFraction, 1);
-    choisirNiveauAideFraction(etat, 2);
-    assert.equal(etat.niveauAideFraction, 2);
-    choisirNiveauAideFraction(etat, 3);
-    assert.equal(etat.niveauAideFraction, 2);
+  it("ajoute une phase pour fusionner deux quarts restants en un demi", () => {
+    const deuxQuartsRestants = etatSurAtelierFraction(6, 4);
+    for (const attendu of [1, 2, 3, 3]) {
+      grouperUniteFractionAide(deuxQuartsRestants, 1);
+      assert.equal(deuxQuartsRestants.groupesFractionAide, attendu);
+    }
+    for (const attendu of [2, 1, 0, 0]) {
+      grouperUniteFractionAide(deuxQuartsRestants, -1);
+      assert.equal(deuxQuartsRestants.groupesFractionAide, attendu);
+    }
+
+    for (const [numerateur, denominateur] of [[7, 4], [5, 4], [5, 2]]) {
+      const autreReste = etatSurAtelierFraction(numerateur, denominateur);
+      grouperUniteFractionAide(autreReste, 1);
+      grouperUniteFractionAide(autreReste, 1);
+      grouperUniteFractionAide(autreReste, 1);
+      assert.equal(autreReste.groupesFractionAide, 2);
+    }
+  });
+
+  it("borne et réinitialise les étapes de correspondance de l'atelier", () => {
+    const etat = etatSurAtelierFraction(3, 4);
     fermerAide(etat);
-    choisirNiveauAideFraction(etat, 0);
-    assert.equal(etat.niveauAideFraction, 2);
+    avancerCorrespondanceAide(etat, 1, 3);
+    assert.equal(etat.etapeCorrespondanceAide, 0);
+
+    ouvrirAide(etat);
+    avancerCorrespondanceAide(etat, 0.5, 3);
+    avancerCorrespondanceAide(etat, 1, 4);
+    assert.equal(etat.etapeCorrespondanceAide, 0);
+    avancerCorrespondanceAide(etat, 1, 1);
+    avancerCorrespondanceAide(etat, 1, 1);
+    assert.equal(etat.etapeCorrespondanceAide, 1);
+    avancerCorrespondanceAide(etat, -1, 1);
+    assert.equal(etat.etapeCorrespondanceAide, 0);
+
+    for (const attendu of [1, 2, 3, 3]) {
+      avancerCorrespondanceAide(etat, 1, 3);
+      assert.equal(etat.etapeCorrespondanceAide, attendu);
+    }
+    for (const attendu of [2, 1, 0, 0]) {
+      avancerCorrespondanceAide(etat, -1, 3);
+      assert.equal(etat.etapeCorrespondanceAide, attendu);
+    }
+
+    avancerCorrespondanceAide(etat, 1);
+    avancerCorrespondanceAide(etat, 1);
+    assert.equal(etat.etapeCorrespondanceAide, 2);
+    fermerAide(etat);
+    validerSelection(etat);
+    passerQuestionSuivante(etat);
+    assert.equal(etat.etapeCorrespondanceAide, 0);
   });
 
   it("utilise aussi le total du partage comme source de l'outil d'aide F6", () => {
@@ -565,6 +628,9 @@ describe("réponse interactive", () => {
       type: TYPE_REPONSE_ENTIER_NATUREL,
       statut: "omise",
     });
+    assert.equal(etat.correctionOuverte, false);
+    saisirChiffre(etat, 0);
+    assert.equal(etat.saisie, "");
   });
 });
 
@@ -665,6 +731,9 @@ describe("réponse décimale positive", () => {
       type: TYPE_REPONSE_NOMBRE_DECIMAL,
       statut: "omise",
     });
+    assert.equal(etat.correctionOuverte, false);
+    saisirCaractere(etat, "5");
+    assert.equal(etat.saisie, "");
   });
 });
 
@@ -712,6 +781,7 @@ describe("réponse avec deux champs entiers", () => {
       type: TYPE_REPONSE_DEUX_ENTIERS,
       statut: "omise",
     });
+    assert.equal(etat.correctionOuverte, false);
 
     const partiel = etatSurQuestionDeuxEntiers();
     saisirChiffre(partiel, 3);
@@ -786,6 +856,9 @@ describe("réponse par fraction équivalente", () => {
       type: TYPE_REPONSE_FRACTION_EQUIVALENTE,
       statut: "omise",
     });
+    assert.equal(etat.correctionOuverte, false);
+    saisirChiffre(etat, 3);
+    assert.deepEqual(etat.saisies, ["", ""]);
   });
 
   it("compare les deux champs par produit en croix et trace la fraction saisie", () => {
@@ -853,6 +926,7 @@ describe("enchaînement de la séance", () => {
     passerQuestionSuivante(etat);
     assert.equal(etat.seance.etat.indexQuestion, 0);
     assert.deepEqual(etat.validation, { juste: false, omise: true });
+    assert.equal(etat.correctionOuverte, false);
     passerQuestionSuivante(etat);
     assert.equal(etat.seance.etat.indexQuestion, 1);
   });

@@ -118,6 +118,12 @@ export const PROVENANCE_OBJETS = {
     note: "La géométrie 10 × 10, 10 × 1 et 1 × 1 et la palette sont portées dans un SVG statique réutilisable. La variante verticale sert à la comparaison dans le Labo ; le tableau propose un mode non révélateur pour l'aide.",
   },
 
+  "correspondances-decimales.js": {
+    statut: "original_mathsgo",
+    source: "matériel historique de numération décimale et bandes de fractions de Gwenaël — scénarios CPA NC-03/NC-04 validés le 13 août 2026",
+    note: "Le composant conserve exactement les 25 ou 75 cellules lors du passage lignes→quadrants et met cinq dixièmes à l'échelle d'une unité en regard d'une vraie pièce historique de demi. Les états de comparaison et le masquage des écritures sont nouveaux.",
+  },
+
   "droite-graduee.js": {
     statut: "reconstruit",
     source: "PR #8 — pack de représentations, réécrit pour la fondation V2",

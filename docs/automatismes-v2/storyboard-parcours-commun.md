@@ -2,7 +2,7 @@
 
 ## Statut
 
-**Architecture fonctionnelle version 1, validée par Gwenaël le 19 juillet 2026 ; comportement commun des réponses omises précisé par D-045 le 11 août 2026.**
+**Architecture fonctionnelle version 1, validée par Gwenaël le 19 juillet 2026 ; comportement commun des réponses omises révisé par D-049 le 13 août 2026.**
 
 Ce document décrit l’enveloppe commune du diaporama et du mode interactif. Il ne redessine pas la page d’accueil et ne contient aucun code.
 
@@ -108,7 +108,7 @@ Ces trois informations ne sont jamais confondues.
 - chaque question interactive compte au maximum une réussite ;
 - le compteur est mis à jour après la validation de la réponse ;
 - une réponse entièrement vide au moment de valider ou d'avancer compte comme
-  une réponse fausse et ouvre directement la correction ;
+  une réponse fausse, mais laisse l'explication repliée ;
 - une réponse partielle ou syntaxiquement invalide reste modifiable et ne
   compte pas encore ;
 - le résultat de la première validation reste la trace de référence si une possibilité de nouvel essai est ajoutée plus tard ;
@@ -118,9 +118,16 @@ Ces trois informations ne sont jamais confondues.
 
 Après validation, le rappel de la réponse est vert si elle est juste, rouge si
 elle est fournie et fausse, ou neutre avec une valeur visuellement vide si elle
-est omise. Le libellé textuel reste explicite dans les trois cas. Le mode « Au
-tableau » ne change pas : révéler ou avancer n'y crée ni réponse élève, ni
-trace, ni score.
+est omise. Le libellé textuel reste explicite dans les trois cas. Une omission
+est annoncée par « Pas de réponse » sans ouvrir son explication. Pour une saisie
+omise, la solution correcte est affichée séparément en vert ; pour un QCM omis,
+la proposition correcte passe en vert dans la liste. Dans tout QCM validé, une
+proposition fausse sélectionnée reste rouge et la proposition correcte est
+verte. Pour une saisie fournie et fausse, la réponse attendue n'est révélée que
+dans la correction volontairement ouverte. La saisie et son clavier sont figés
+après validation ; la barre propose alors « Voir l'explication » et « Question
+suivante » ou « Voir le bilan ». Le mode « Au tableau » ne change pas : révéler
+ou avancer n'y crée ni réponse élève, ni trace, ni score.
 
 ### Temps futur
 
@@ -137,6 +144,10 @@ L’aide quitte la zone du clavier et rejoint l’en-tête, toujours au même em
 - TNI et projection : commande d’aide dans la zone stable des commandes enseignant ;
 - l’ouverture de l’aide conserve la réponse commencée ;
 - la fermeture rend le focus au bouton « Aide » ;
+- une notion peut dérouler indice, représentation et construction dans un seul
+  atelier progressif ; ces temps ne deviennent pas des onglets concurrents ;
+- avant validation, cet atelier masque aussi bien visuellement que dans ses
+  libellés accessibles le terme que l'élève doit encore produire ;
 - lorsque la séance interdit l’aide, notamment dans un futur mode examen, la commande n’est pas présentée.
 
 ## Défilement commun des panneaux
@@ -171,9 +182,11 @@ Règles communes :
 - les emplacements des touches facultatives sont prévus sans réorganiser les chiffres ;
 - le signe moins n’apparaît que si une réponse négative est possible ;
 - la virgule n’apparaît que si une réponse décimale est possible et ne peut être saisie qu’une fois ;
-- effacer et valider restent toujours disponibles ;
+- avant validation, effacer et valider restent toujours disponibles ;
 - une validation entièrement vide suit la règle d'omission commune ; un champ
   commencé mais incomplet reste réparable ;
+- après validation, le pavé disparaît et les saisies tactiles, physiques ou
+  Bluetooth ne peuvent plus modifier la réponse ;
 - le clavier physique ou Bluetooth reste accepté ;
 - chaque touche est un vrai bouton nommé, atteignable au clavier et d’au moins 44 px ;
 - le clavier réserve sa hauteur et ne masque ni la réponse ni les éléments ayant le focus.

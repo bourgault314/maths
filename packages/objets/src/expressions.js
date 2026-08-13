@@ -21,7 +21,7 @@
 // un `role` sémantique (« hypotenuse », « inconnue »…) que le rendu
 // habillera — jamais l'inverse.
 
-import { TYPOGRAPHIE } from "../../charte/src/charte.js?v=26";
+import { TYPOGRAPHIE } from "../../charte/src/charte.js?v=27";
 
 export const VERSION_EXPRESSIONS = 5;
 
@@ -46,7 +46,12 @@ export const mesure = (valeur, unite, options = {}) => ({ type: "mesure", valeur
 export const somme = (...termes) => ({ type: "somme", termes });
 export const difference = (gauche, droite) => ({ type: "difference", gauche, droite });
 export const produit = (...facteurs) => ({ type: "produit", facteurs });
-export const quotient = (numerateur, denominateur) => ({ type: "quotient", numerateur, denominateur });
+export const quotient = (numerateur, denominateur, options = {}) => ({
+  type: "quotient",
+  numerateur,
+  denominateur,
+  ...options,
+});
 export const puissance = (base, exposant) => ({ type: "puissance", base, exposant });
 export const racine = (contenu) => ({ type: "racine", contenu });
 /** Parenthèses explicites autour d'une expression. */
@@ -439,10 +444,36 @@ export function rendreFractionHtml(numerateur, denominateur, options = {}) {
   );
 }
 
+function envelopperRoleHtml(noeud, contenu) {
+  if (typeof noeud.role !== "string" || !/^[a-z][a-z0-9-]*$/.test(noeud.role)) {
+    return contenu;
+  }
+  return `<span class="mathsgo-role mathsgo-role-${noeud.role}">${contenu}</span>`;
+}
+
+function nombreAvecRangsHtml(noeud) {
+  const ecriture = nombreFrancais(noeud.valeur, noeud.decimales);
+  const [entier, decimales = ""] = ecriture.split(",");
+  const roles = ["dixiemes", "centiemes", "milliemes"];
+  const partieEntiere = `<span class="mathsgo-role mathsgo-role-unites">${echapperHtml(entier)}</span>`;
+  if (decimales === "") return partieEntiere;
+  const partieDecimale = [...decimales].map((chiffre, index) => {
+    const role = roles[index];
+    return role
+      ? `<span class="mathsgo-role mathsgo-role-${role}">${echapperHtml(chiffre)}</span>`
+      : echapperHtml(chiffre);
+  }).join("");
+  return `${partieEntiere},${partieDecimale}`;
+}
+
 function contenuHtml(noeud) {
   switch (noeud.type) {
     case "nombre":
-      return echapperHtml(nombreFrancais(noeud.valeur, noeud.decimales));
+      if (noeud.rangsDecimaux === true) return nombreAvecRangsHtml(noeud);
+      return envelopperRoleHtml(
+        noeud,
+        echapperHtml(nombreFrancais(noeud.valeur, noeud.decimales)),
+      );
     case "caseVide":
       return '<span class="case-vide-aide" aria-hidden="true"></span>';
     case "variable":
@@ -465,10 +496,13 @@ function contenuHtml(noeud) {
     case "produit":
       return noeud.facteurs.map(contenuHtml).join(" × ");
     case "quotient":
-      return rendreFractionHtml(
-        versUnicode(noeud.numerateur),
-        versUnicode(noeud.denominateur),
-        { libelleAccessible: null },
+      return envelopperRoleHtml(
+        noeud,
+        rendreFractionHtml(
+          versUnicode(noeud.numerateur),
+          versUnicode(noeud.denominateur),
+          { libelleAccessible: null },
+        ),
       );
     case "puissance":
       return (
