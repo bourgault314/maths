@@ -48,6 +48,25 @@ import {
   PREREGLAGES_BARRE_POURCENTAGE,
   dessinerBarrePourcentage,
 } from "../../packages/objets/src/barre-pourcentage.js";
+import {
+  COTES_GRILLE_MAX,
+  DENOMINATEUR_MAX,
+  PREREGLAGES_FRACTIONS,
+  dessinerBandeFraction,
+  dessinerGrilleFraction,
+  dessinerPrereglageFraction,
+} from "../../packages/objets/src/fractions.js";
+import {
+  dessinerBandesFractionnairesSurRailDecimal,
+} from "../../packages/objets/src/bandes-fractions-rail.js";
+import {
+  dessinerMaterielNumerationDecimale,
+  dessinerTableauNumerationDecimale,
+} from "../../packages/objets/src/numeration-decimale.js";
+import {
+  PREREGLAGES_DROITE_GRADUEE,
+  dessinerPrereglageDroiteGraduee,
+} from "../../packages/objets/src/droite-graduee.js";
 import { VARIATIONS_THALES, creerThales, dessinerThales } from "../../packages/objets/src/thales.js";
 import { creerGenerateur } from "../../packages/moteur-exercices/src/aleatoire.js";
 
@@ -357,6 +376,326 @@ const entreePlateaux = {
     })),
   vignette: () => svgPlateaux("3x = 12", 130),
 };
+
+// ---------------------------------------------------------------------------
+// Fractions : objets officiels actuels, montrés sans masquer leurs limites
+// ---------------------------------------------------------------------------
+
+const PREREGLAGES_BANDES_FRACTIONS = PREREGLAGES_FRACTIONS.filter(
+  (prereglage) => prereglage.genre === "bande",
+);
+const PREREGLAGES_GRILLES_FRACTIONS = PREREGLAGES_FRACTIONS.filter(
+  (prereglage) => prereglage.genre === "grille",
+);
+
+const svgPrereglageFraction = (prereglage) => dessinerPrereglageFraction(prereglage).svg;
+
+const entreeBandeFraction = {
+  titre: "Schéma existant — fraction dans une unité",
+  parametres: [
+    { cle: "numerateur", libelle: "Numérateur", min: 0, max: DENOMINATEUR_MAX, pas: 1, defaut: 3 },
+    { cle: "denominateur", libelle: "Dénominateur", min: 2, max: DENOMINATEUR_MAX, pas: 1, defaut: 4 },
+    { cle: "largeur", libelle: "Largeur", min: 240, max: 1200, pas: 20, defaut: 340 },
+    { cle: "hauteurBande", libelle: "Hauteur", min: 16, max: 120, pas: 2, defaut: 42 },
+  ],
+  toggles: [
+    { cle: "repere", libelle: "repère 1", defaut: true },
+    { cle: "ecriture", libelle: "écriture fractionnaire", defaut: true },
+  ],
+  dessiner(v, actifs) {
+    return dessinerBandeFraction({
+      numerateur: Number(v.numerateur),
+      denominateur: Number(v.denominateur),
+      largeur: Number(v.largeur),
+      hauteurBande: Number(v.hauteurBande),
+      repere: actifs.has("repere"),
+      ecriture: actifs.has("ecriture"),
+    }).svg;
+  },
+  planche: () => PREREGLAGES_BANDES_FRACTIONS.map((prereglage) => ({
+    legende: prereglage.titre,
+    dessiner: () => svgPrereglageFraction(prereglage),
+  })),
+  vignette: () => svgPrereglageFraction(
+    PREREGLAGES_BANDES_FRACTIONS.find((prereglage) => prereglage.id === "bande-trois-quarts"),
+  ),
+};
+
+const entreeGrilleFraction = {
+  titre: "Schéma existant — grille dans une unité",
+  parametres: [
+    { cle: "colonnes", libelle: "Colonnes", min: 1, max: COTES_GRILLE_MAX, pas: 1, defaut: 10 },
+    { cle: "lignes", libelle: "Lignes", min: 1, max: COTES_GRILLE_MAX, pas: 1, defaut: 10 },
+    { cle: "coloriees", libelle: "Cases coloriées", min: 0, max: COTES_GRILLE_MAX ** 2, pas: 1, defaut: 37 },
+    { cle: "cote", libelle: "Côté", min: 120, max: 900, pas: 10, defaut: 260 },
+  ],
+  toggles: [{ cle: "ecriture", libelle: "écriture fractionnaire", defaut: true }],
+  dessiner(v, actifs) {
+    return dessinerGrilleFraction({
+      colonnes: Number(v.colonnes),
+      lignes: Number(v.lignes),
+      coloriees: Number(v.coloriees),
+      cote: Number(v.cote),
+      ecriture: actifs.has("ecriture"),
+    }).svg;
+  },
+  planche: () => PREREGLAGES_GRILLES_FRACTIONS.map((prereglage) => ({
+    legende: prereglage.titre,
+    dessiner: () => svgPrereglageFraction(prereglage),
+  })),
+  vignette: () => svgPrereglageFraction(
+    PREREGLAGES_GRILLES_FRACTIONS.find((prereglage) => prereglage.id === "grille-centiemes"),
+  ),
+};
+
+// ---------------------------------------------------------------------------
+// Fractions décimales : prototype contraint fidèle au plateau historique
+// ---------------------------------------------------------------------------
+
+const svgBandesRail = (options) =>
+  dessinerBandesFractionnairesSurRailDecimal(options).svg;
+
+const entreeBandesFractionsRail = {
+  titre: "Prototype guidé — bandes du plateau + rail décimal",
+  parametres: [
+    { cle: "numerateur", libelle: "Numérateur", min: 0, max: 8, pas: 1, defaut: 5 },
+    { cle: "largeur", libelle: "Largeur", min: 320, max: 1200, pas: 20, defaut: 340 },
+  ],
+  groupes: [
+    {
+      cle: "denominateur",
+      options: [[2, "Demis"], [4, "Quarts"]],
+      defaut: 2,
+    },
+    {
+      cle: "profil",
+      options: [
+        ["solution", "Cours / correction"],
+        ["aide-nc03", "Aide NC-03 : décimal ?"],
+        ["aide-nc04-imposee", "Aide NC-04 : ? / d"],
+        ["aide-nc04-libre", "Aide NC-04 : ? / ?"],
+      ],
+      defaut: "solution",
+    },
+    {
+      cle: "etape",
+      options: [
+        ["pieces", "Pièces"],
+        ["groupes", "Groupes"],
+        ["unites", "Unités formées"],
+        ["lecture", "Lecture sur le rail"],
+      ],
+      defaut: "unites",
+    },
+  ],
+  dessiner(v) {
+    return svgBandesRail({
+      numerateur: Number(v.numerateur),
+      denominateur: Number(v.denominateur),
+      profil: v.profil,
+      etape: v.etape,
+      largeur: Number(v.largeur),
+    });
+  },
+  planche: () => [
+    {
+      legende: "1/2 — pièce historique alignée sur 0,5",
+      dessiner: () => svgBandesRail({
+        numerateur: 1, denominateur: 2, profil: "solution", etape: "lecture", largeur: 340,
+      }),
+    },
+    {
+      legende: "3/4 — trois pièces historiques alignées sur 0,75",
+      dessiner: () => svgBandesRail({
+        numerateur: 3, denominateur: 4, profil: "solution", etape: "lecture", largeur: 340,
+      }),
+    },
+    {
+      legende: "5/2 — cinq pièces séparées",
+      dessiner: () => svgBandesRail({
+        numerateur: 5, denominateur: 2, profil: "solution", etape: "pieces", largeur: 340,
+      }),
+    },
+    {
+      legende: "5/2 — deux unités formées et un demi",
+      dessiner: () => svgBandesRail({
+        numerateur: 5, denominateur: 2, profil: "solution", etape: "unites", largeur: 340,
+      }),
+    },
+    {
+      legende: "Aide NC-03 — la valeur décimale reste masquée",
+      dessiner: () => svgBandesRail({
+        numerateur: 5, denominateur: 2, profil: "aide-nc03", etape: "lecture", largeur: 340,
+      }),
+    },
+    {
+      legende: "Aide NC-04 — le numérateur reste masqué",
+      dessiner: () => svgBandesRail({
+        numerateur: 7, denominateur: 4, profil: "aide-nc04-imposee", etape: "groupes", largeur: 340,
+      }),
+    },
+  ],
+  vignette: () => svgBandesRail({
+    numerateur: 5,
+    denominateur: 2,
+    profil: "solution",
+    etape: "unites",
+    largeur: 340,
+  }),
+};
+
+// ---------------------------------------------------------------------------
+// Numération décimale : matériel historique extrait + tableau commun
+// ---------------------------------------------------------------------------
+
+const svgMaterielDecimal = (options) =>
+  dessinerMaterielNumerationDecimale(options).svg;
+
+const entreeMaterielNumerationDecimale = {
+  titre: "Matériel extrait — unité, dixième, centième",
+  parametres: [
+    { cle: "unites", libelle: "Unités", min: 0, max: 3, pas: 1, defaut: 1 },
+    { cle: "dixiemes", libelle: "Dixièmes", min: 0, max: 9, pas: 1, defaut: 4 },
+    { cle: "centiemes", libelle: "Centièmes", min: 0, max: 9, pas: 1, defaut: 7 },
+    { cle: "largeur", libelle: "Largeur", min: 240, max: 720, pas: 20, defaut: 320 },
+  ],
+  groupes: [{
+    cle: "orientation",
+    options: [["horizontale", "Dixièmes horizontaux"], ["verticale", "Dixièmes verticaux"]],
+    defaut: "horizontale",
+  }],
+  dessiner(v) {
+    return svgMaterielDecimal({
+      unites: Number(v.unites),
+      dixiemes: Number(v.dixiemes),
+      centiemes: Number(v.centiemes),
+      orientation: v.orientation,
+      largeur: Number(v.largeur),
+    });
+  },
+  planche: () => [
+    ...["horizontale", "verticale"].map((orientation) => ({
+      legende: `3,6 — dixièmes ${orientation === "horizontale" ? "horizontaux" : "verticaux"}`,
+      dessiner: () => svgMaterielDecimal({
+        unites: 3, dixiemes: 6, orientation, largeur: 320,
+      }),
+    })),
+    ...["horizontale", "verticale"].map((orientation) => ({
+      legende: `1,47 — dixièmes ${orientation === "horizontale" ? "horizontaux" : "verticaux"}`,
+      dessiner: () => svgMaterielDecimal({
+        unites: 1, dixiemes: 4, centiemes: 7, orientation, largeur: 320,
+      }),
+    })),
+  ],
+  vignette: () => svgMaterielDecimal({
+    unites: 1, dixiemes: 4, centiemes: 7, orientation: "horizontale", largeur: 240,
+  }),
+};
+
+const RANG_EXEMPLE_TABLEAU = Object.freeze({
+  "0,5": "dixiemes",
+  "0,25": "centiemes",
+  "1,47": "centiemes",
+  "0,07": "centiemes",
+  "0,725": "milliemes",
+});
+
+const svgTableauDecimal = (ecritureDecimale, largeur, afficherLecture) =>
+  dessinerTableauNumerationDecimale({
+    ecritureDecimale,
+    largeur,
+    rangMisEnEvidence: RANG_EXEMPLE_TABLEAU[ecritureDecimale],
+    afficherLecture,
+  }).svg;
+
+const entreeTableauNumerationDecimale = {
+  titre: "Tableau de numération — jusqu’aux millièmes",
+  parametres: [
+    { cle: "largeur", libelle: "Largeur", min: 240, max: 720, pas: 20, defaut: 320 },
+  ],
+  groupes: [
+    {
+      cle: "ecritureDecimale",
+      options: Object.keys(RANG_EXEMPLE_TABLEAU).map((valeur) => [valeur, valeur]),
+      defaut: "1,47",
+    },
+    {
+      cle: "afficherLecture",
+      options: [[false, "Aide : dernière lecture masquée"], [true, "Cours / correction : lecture affichée"]],
+      defaut: false,
+    },
+  ],
+  dessiner(v) {
+    return svgTableauDecimal(
+      v.ecritureDecimale,
+      Number(v.largeur),
+      v.afficherLecture,
+    );
+  },
+  planche: () => [
+    {
+      legende: "1,47 — aide : lire le tableau reste à faire",
+      dessiner: () => svgTableauDecimal("1,47", 320, false),
+    },
+    {
+      legende: "1,47 — cours / correction : 147 centièmes",
+      dessiner: () => svgTableauDecimal("1,47", 320, true),
+    },
+    {
+      legende: "0,07 — le zéro intercalé reste visible",
+      dessiner: () => svgTableauDecimal("0,07", 320, false),
+    },
+    {
+      legende: "0,725 — les millièmes passent par le tableau",
+      dessiner: () => svgTableauDecimal("0,725", 320, true),
+    },
+  ],
+  vignette: () => svgTableauDecimal("0,725", 280, false),
+};
+
+// ---------------------------------------------------------------------------
+// Droites graduées : un objet par genre, réglages complets dans le package
+// ---------------------------------------------------------------------------
+
+function entreeDroiteParGenre({ titre, genre, defaut }) {
+  const prereglages = PREREGLAGES_DROITE_GRADUEE.filter(
+    (prereglage) => prereglage.genre === genre,
+  );
+  const rendre = (id, supplement = {}) => dessinerPrereglageDroiteGraduee(id, supplement).svg;
+  return {
+    titre,
+    parametres: [
+      { cle: "largeur", libelle: "Largeur", min: 240, max: 1200, pas: 20, defaut: 340 },
+    ],
+    groupes: [{
+      cle: "prereglage",
+      options: prereglages.map((prereglage) => [prereglage.id, prereglage.titre]),
+      defaut,
+    }],
+    dessiner: (v) => rendre(v.prereglage, { largeur: Number(v.largeur) }),
+    planche: () => prereglages.map((prereglage) => ({
+      legende: prereglage.titre,
+      dessiner: () => rendre(prereglage.id, { largeur: 430, titre: undefined }),
+    })),
+    vignette: () => rendre(defaut, { largeur: 320, titre: undefined }),
+  };
+}
+
+const entreeDroiteGraduee = entreeDroiteParGenre({
+  titre: "Droite graduée",
+  genre: "simple",
+  defaut: "decimaux",
+});
+const entreeDoubleDroiteGraduee = entreeDroiteParGenre({
+  titre: "Double droite graduée",
+  genre: "double",
+  defaut: "fractions-decimaux-reperes",
+});
+const entreeDoubleDroitePourcentage = entreeDroiteParGenre({
+  titre: "Double droite de pourcentages",
+  genre: "pourcentage",
+  defaut: "pourcentage-quarts",
+});
 
 // ---------------------------------------------------------------------------
 // Pourcentages : l'objet barre-pourcentage (préréglages + gabarits)
@@ -817,6 +1156,29 @@ export const SERIES = [
   },
   { nom: "Splat", objets: { tache: entreeTache } },
   { nom: "ÉquaSplat", objets: { plateaux: entreePlateaux } },
+  {
+    nom: "Fractions",
+    objets: {
+      bandeFraction: entreeBandeFraction,
+      bandesFractionsRail: entreeBandesFractionsRail,
+      grilleFraction: entreeGrilleFraction,
+    },
+  },
+  {
+    nom: "Numération décimale",
+    objets: {
+      materielNumerationDecimale: entreeMaterielNumerationDecimale,
+      tableauNumerationDecimale: entreeTableauNumerationDecimale,
+    },
+  },
+  {
+    nom: "Droites graduées",
+    objets: {
+      droiteGraduee: entreeDroiteGraduee,
+      doubleDroiteGraduee: entreeDoubleDroiteGraduee,
+      doubleDroitePourcentage: entreeDoubleDroitePourcentage,
+    },
+  },
   {
     nom: "Pourcentages",
     objets: Object.fromEntries(

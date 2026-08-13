@@ -108,6 +108,49 @@ export const COULEURS_POURCENTAGES = {
   hachureTrait: "#ff4d6d", // part retirée : trait des hachures
 };
 
+// Palette historique du plateau de bandes de fractions de Gwenaël
+// (`outils/fractions/bandes_fractions.html`). Elle ne remplace pas la
+// couleur générique de `fractions.js` : les deux objets n'ont pas le même
+// rôle. Ici, une couleur stable désigne le DÉNOMINATEUR du matériel que
+// l'élève assemble ; dans `fractions.js`, le jaune désigne seulement les
+// parts sélectionnées dans un tout déjà encadré.
+//
+// Le plateau possède également des couleurs `border` par dénominateur, mais
+// elles ne dessinent pas les pièces visibles : leur contour réel est noir.
+// Les composants réutilisables doivent donc consommer `trait`, pas recopier
+// ces anciennes valeurs de configuration inutilisées.
+export const COULEURS_BANDES_FRACTIONS = Object.freeze({
+  unite: "#fff7e6",
+  d2: "#facc15",
+  d3: "#e9d5ff",
+  d4: "#84cc16",
+  d5: "#0ea5e9",
+  d6: "#f97316",
+  d8: "#f472b6",
+  d10: "#b91c1c",
+  d12: "#7dd3fc",
+  encre: "#111827",
+  trait: "#000000",
+  guide: "#063f86",
+});
+
+/** Couleur historique d'une pièce `1 / denominateur`. */
+export function couleurBandeFraction(denominateur) {
+  return COULEURS_BANDES_FRACTIONS[`d${denominateur}`] ?? null;
+}
+
+// Palette et géométrie sémantique du plateau de numération décimale
+// (`outils/plateaux_manipulation/numeration_decimale.html`). Le composant
+// visuel garde les proportions 10 × 10, 10 × 1 et 1 × 1 ; ces couleurs font
+// le lien avec le matériel physique et les captures de Claire.
+export const COULEURS_NUMERATION_DECIMALE = Object.freeze({
+  unite: "#ef4444",
+  dixieme: "#22c55e",
+  centieme: "#facc15",
+  encre: "#111827",
+  trait: "#000000",
+});
+
 /** La couleur de famille d'un découpage en `parts` parts égales. */
 export function couleurFamillePourcentage(parts) {
   const familles = {

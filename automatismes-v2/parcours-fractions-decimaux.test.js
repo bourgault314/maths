@@ -43,9 +43,9 @@ function saisirTexte(etat, texte) {
 }
 
 test("les versions de provenance reflètent le moteur hybride", () => {
-  assert.equal(VERSION_GENERATEUR_FRACTION_VERS_DECIMAL, 2);
-  assert.equal(VERSION_GENERATEUR_DECIMAL_VERS_FRACTION, 2);
-  assert.equal(VERSION_PLAN_SERIE_FRACTIONS_DECIMAUX, 2);
+  assert.equal(VERSION_GENERATEUR_FRACTION_VERS_DECIMAL, 3);
+  assert.equal(VERSION_GENERATEUR_DECIMAL_VERS_FRACTION, 3);
+  assert.equal(VERSION_PLAN_SERIE_FRACTIONS_DECIMAUX, 3);
 });
 
 test("une série longue équilibre les deux sens et leurs représentations", () => {
@@ -57,18 +57,22 @@ test("une série longue équilibre les deux sens et leurs représentations", () 
     assert.equal(plan.length, 20);
     assert.equal(new Set(plan.map(cleRationnelle)).size, 20);
     assert.equal(plan.filter(({ denominateur }) => denominateur === 1000).length, 1);
-    assert.equal(plan.filter(({ forme }) => forme === "fraction-libre").length, 1);
+    assert.equal(plan.filter(({ forme }) => forme === "fraction-libre").length, 2);
+    assert.equal(
+      plan.filter(({ presentation }) => presentation === "double-droite").length,
+      0,
+    );
+    assert.equal(
+      plan.filter(({ presentation }) => presentation === "qcm-diagnostique").length,
+      4,
+    );
 
     for (const microNotion of ["fraction-vers-decimal", "decimal-vers-fraction"]) {
       const questions = plan.filter((element) => element.microNotion === microNotion);
       assert.equal(questions.length, 10);
       assert.equal(
         questions.filter(({ presentation }) => presentation === "double-droite").length,
-        1,
-      );
-      assert.equal(
-        questions.filter(({ presentation }) => presentation === "qcm-diagnostique").length,
-        2,
+        0,
       );
       assert.ok(questions.some((element) =>
         [2, 4].includes(element.denominateur)
@@ -80,7 +84,7 @@ test("une série longue équilibre les deux sens et leurs représentations", () 
     }
     assert.ok(plan.some((element) =>
       element.microNotion === "decimal-vers-fraction"
-      && [2, 4].includes(element.denominateur)
+      && element.denominateur !== 1
       && element.numerateur % element.denominateur === 0));
     assert.equal(
       plan.some((question, position) => position >= 2
@@ -169,7 +173,7 @@ test("les questions instanciées demandent réellement le sens annoncé", () => 
   }
 });
 
-test("les combinaisons de présentation incohérentes sont refusées", () => {
+test("la double droite est exclue des questions et la fraction libre des QCM", () => {
   assert.throws(() => genererQuestionFractionVersDecimal({
     aleatoire: creerGenerateur("double-droite-dixiemes"),
     parametres: {
@@ -177,7 +181,7 @@ test("les combinaisons de présentation incohérentes sont refusées", () => {
       denominateur: 10,
       presentation: "double-droite",
     },
-  }), /réservée aux demis et aux quarts/);
+  }), /valeur invalide pour « presentation »/);
   assert.throws(() => genererQuestionDecimalVersFraction({
     aleatoire: creerGenerateur("libre-qcm"),
     parametres: {
@@ -257,15 +261,21 @@ test("le regroupement réserve toujours une unité complète à la même échell
   assert.equal(formaterFractionEnDecimal(quarts.reste, quarts.denominateur), "0,75");
 });
 
-test("le cours conserve son ordre et les groupes utilisent des colonnes fixes", async () => {
-  const [application, styles] = await Promise.all([
+test("le cours conserve son ordre et réutilise les bandes guidées", async () => {
+  const [application, styles, bandes, etatLecteur] = await Promise.all([
     readFile(new URL("./app.js", import.meta.url), "utf8"),
     readFile(new URL("./interface.css", import.meta.url), "utf8"),
+    readFile(
+      new URL("../packages/objets/src/bandes-fractions-rail.js", import.meta.url),
+      "utf8",
+    ),
+    readFile(new URL("./src/etat-lecteur.js", import.meta.url), "utf8"),
   ]);
   const titres = [
     "Même nombre, même position",
-    "Les repères indispensables",
-    "Fraction vers décimal",
+    "Du matériel aux symboles",
+    "Les rangs décimaux",
+    "Fraction décimale vers décimal",
     "Décimal vers fraction",
     "Dépasser l’unité",
     "Choisir la bonne stratégie",
@@ -276,7 +286,14 @@ test("le cours conserve son ordre et les groupes utilisent des colonnes fixes", 
     assert.ok(suivante > position, `titre de cours absent ou mal ordonné : ${titre}`);
     position = suivante;
   }
-  assert.match(application, /part-unitaire part-vide/);
-  assert.match(styles, /repeat\(var\(--parts-par-unite\), minmax\(0, 1fr\)\)/);
-  assert.doesNotMatch(styles, /\.groupe-parts\s*>\s*\.barre-parts[^}]*auto-fit/s);
+  assert.match(application, /dessinerBandesFractionnairesSurRailDecimal/);
+  assert.match(application, /function rendreAidePoseBandesRiche/);
+  assert.match(application, /classes: "figure-bandes-rail-aide"/);
+  assert.match(application, /groupes === 0 \? "pieces" : groupes === 1 \? "groupes" : "unites"/);
+  assert.match(etatLecteur, /const maximum = 2/);
+  assert.match(bandes, /etape === "groupes"/);
+  assert.match(bandes, /separation-interne/);
+  assert.match(bandes, /frontiere-unite/);
+  assert.match(styles, /\.figure-bandes-rail/);
+  assert.doesNotMatch(application, /part-unitaire part-vide/);
 });

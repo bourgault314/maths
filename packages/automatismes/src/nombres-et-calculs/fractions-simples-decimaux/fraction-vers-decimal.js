@@ -2,7 +2,7 @@
 
 import {
   SCHEMA_QUESTION_INSTANCE_V2,
-} from "../../../../contrats/src/question-v2.js?v=25";
+} from "../../../../contrats/src/question-v2.js?v=26";
 import {
   MICRO_NOTION_NC03,
   PRESENTATIONS_FRACTIONS_DECIMAUX,
@@ -15,17 +15,18 @@ import {
   exigerAleatoireFractions,
   exigerParametresFractions,
   familleSelonDenominateur,
-  nomDuRang,
   reponseChoixUnique,
   reponseNombreDecimal,
-} from "./commun.js?v=25";
+} from "./commun.js?v=26";
 import {
+  analyserEcritureDecimalePositive,
   formaterFractionEnDecimal,
-} from "../../../../objets/src/fractions-decimaux.js?v=25";
+  fractionsEgales,
+} from "../../../../objets/src/fractions-decimaux.js?v=26";
 
 export const NOM_GENERATEUR_FRACTION_VERS_DECIMAL =
   "nombres-et-calculs.fractions-simples-decimaux.fraction-vers-decimal";
-export const VERSION_GENERATEUR_FRACTION_VERS_DECIMAL = 2;
+export const VERSION_GENERATEUR_FRACTION_VERS_DECIMAL = 3;
 
 export const GABARIT_FRACTION_VERS_DECIMAL = creerGabaritFractions({
   id: NOM_GENERATEUR_FRACTION_VERS_DECIMAL,
@@ -40,7 +41,7 @@ export const NUMERATEURS_CENTIEMES = Object.freeze(
   Array.from({ length: 250 }, (_, index) => index + 1),
 );
 export const NUMERATEURS_MILLIEMES = Object.freeze(
-  Array.from({ length: 99 }, (_, index) => index + 1)
+  Array.from({ length: 999 }, (_, index) => index + 1)
     .filter((numerateur) => numerateur % 10 !== 0),
 );
 export const NUMERATEURS_DENOMINATEUR_UN = Object.freeze(
@@ -66,10 +67,19 @@ const REGLES_PARAMETRES = Object.freeze({
 function construireQcm(aleatoire, numerateur, denominateur) {
   const correct = formaterFractionEnDecimal(numerateur, denominateur);
   const formaterApproximation = (valeur) =>
-    String(Number(valeur.toFixed(4))).replace(".", ",");
+    String(Number(valeur.toFixed(3))).replace(".", ",");
   const candidats = [];
   const ajouter = (id, libelle, diagnostic) => {
-    if (libelle === correct || candidats.some((candidat) => candidat.libelle === libelle)) return;
+    const analyse = analyserEcritureDecimalePositive(libelle);
+    if (
+      fractionsEgales(
+        analyse.fractionReduite.numerateur,
+        analyse.fractionReduite.denominateur,
+        numerateur,
+        denominateur,
+      )
+      || candidats.some((candidat) => candidat.libelle === libelle)
+    ) return;
     candidats.push({ id, libelle, diagnostic });
   };
   ajouter(
@@ -132,84 +142,6 @@ function construireQcm(aleatoire, numerateur, denominateur) {
   };
 }
 
-function construireAide(denominateur) {
-  if (denominateur === 1) {
-    return [
-      {
-        id: "aide-denominateur-un",
-        type: "texte",
-        contenu: "Un nombre divisé par 1 ne change pas.",
-      },
-    ];
-  }
-  if (denominateur === 2) {
-    return [
-      {
-        id: "aide-droite-demis",
-        type: "texte",
-        contenu:
-          "Repère la fraction sur la droite des demis. Deux demis font une unité.",
-      },
-    ];
-  }
-  if (denominateur === 4) {
-    return [
-      {
-        id: "aide-droite-quarts",
-        type: "texte",
-        contenu:
-          "Repère la fraction sur la droite des quarts. Quatre quarts font une unité.",
-      },
-    ];
-  }
-  const rang = nomDuRang(denominateur);
-  return [
-    {
-      id: "aide-tableau-rang",
-      type: "texte",
-      contenu:
-        `Dans le tableau de numération, pose le dernier chiffre du numérateur au rang des ${rang}.`,
-    },
-    {
-      id: "aide-tableau-zeros",
-      type: "texte",
-      contenu: "Complète les colonnes vides avec des zéros, puis lis le nombre.",
-    },
-  ];
-}
-
-function construireCorrection(numerateur, denominateur) {
-  let explication;
-  if (denominateur === 1) {
-    explication = "Diviser par 1 conserve le nombre.";
-  } else if (denominateur === 2) {
-    explication =
-      "Sur la droite des demis, les deux écritures repèrent le même point.";
-  } else if (denominateur === 4) {
-    explication =
-      "Sur la droite des quarts, les deux écritures repèrent le même point.";
-  } else {
-    explication =
-      `Le dernier chiffre du numérateur se place au rang des ${nomDuRang(denominateur)}.`;
-  }
-  return [
-    { id: "correction-methode", type: "texte", contenu: explication },
-    blocRationnel(
-      "correction-fraction",
-      numerateur,
-      denominateur,
-      "fraction",
-    ),
-    { id: "correction-egalite", type: "texte", contenu: "est égal à" },
-    blocRationnel(
-      "correction-decimal",
-      numerateur,
-      denominateur,
-      "decimal",
-    ),
-  ];
-}
-
 export function genererQuestionFractionVersDecimal({ aleatoire, parametres }) {
   exigerAleatoireFractions(aleatoire, "fraction-vers-decimal");
   exigerParametresFractions(
@@ -232,14 +164,6 @@ export function genererQuestionFractionVersDecimal({ aleatoire, parametres }) {
     denominateur,
   );
   const presentation = parametres.presentation ?? "abstraite";
-  if (
-    presentation === "double-droite"
-    && ![2, 4].includes(denominateur)
-  ) {
-    throw new RangeError(
-      "fraction-vers-decimal : la double droite est réservée aux demis et aux quarts",
-    );
-  }
   const qcm = presentation === "qcm-diagnostique"
     ? construireQcm(aleatoire, numerateur, denominateur)
     : null;
@@ -251,23 +175,16 @@ export function genererQuestionFractionVersDecimal({ aleatoire, parametres }) {
       {
         id: "consigne",
         type: "texte",
-        contenu: presentation === "double-droite"
-          ? "Complète l’écriture décimale manquante sur la double droite."
-          : presentation === "qcm-diagnostique"
+        contenu: presentation === "qcm-diagnostique"
             ? "Quelle est l’écriture décimale de cette fraction ?"
             : "Écris cette fraction en écriture décimale.",
       },
       blocRationnel("fraction", numerateur, denominateur, "fraction"),
     ],
     reponse: qcm?.reponse ?? reponseNombreDecimal(numerateur, denominateur),
-    aide: {
-      blocs: construireAide(denominateur),
-      outils: [],
-    },
-    correction: [
-      ...construireCorrection(numerateur, denominateur),
-      ...(qcm?.diagnostics ?? []),
-    ],
+    // Le lecteur construit l'aide et la correction à partir des mêmes objets
+    // visuels. Le générateur ne conserve que les diagnostics propres au QCM.
+    ...(qcm ? { correction: qcm.diagnostics } : {}),
   };
 }
 

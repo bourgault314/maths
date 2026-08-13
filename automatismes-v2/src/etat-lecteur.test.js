@@ -38,6 +38,7 @@ import {
   revelerReponse,
   selectionnerChampSaisie,
   selectionnerRepereAide,
+  choisirNiveauAideFraction,
   saisirCaractere,
   saisirChiffre,
   tournerSolide,
@@ -471,6 +472,25 @@ describe("réponse interactive", () => {
     validerSelection(etat);
     passerQuestionSuivante(etat);
     assert.equal(etat.repereAide, null);
+  });
+
+  it("fait progresser l'aide fractions du simple indice vers la construction", () => {
+    const etat = etatDemarre({
+      notion: NOTION_FRACTIONS_SIMPLES_DECIMAUX,
+      nombreQuestions: 10,
+      graine: "fixture-niveaux-aide-fractions",
+    });
+    ouvrirAide(etat);
+    assert.equal(etat.niveauAideFraction, 0);
+    choisirNiveauAideFraction(etat, 1);
+    assert.equal(etat.niveauAideFraction, 1);
+    choisirNiveauAideFraction(etat, 2);
+    assert.equal(etat.niveauAideFraction, 2);
+    choisirNiveauAideFraction(etat, 3);
+    assert.equal(etat.niveauAideFraction, 2);
+    fermerAide(etat);
+    choisirNiveauAideFraction(etat, 0);
+    assert.equal(etat.niveauAideFraction, 2);
   });
 
   it("utilise aussi le total du partage comme source de l'outil d'aide F6", () => {

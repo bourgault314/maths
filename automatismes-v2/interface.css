@@ -485,6 +485,25 @@ button.case-reponse-carres {
   overflow: visible;
 }
 
+.figure-bandes-rail {
+  width: min(100%, 720px);
+}
+
+.figure-materiel-decimal {
+  width: min(100%, 560px);
+}
+
+.figure-tableau-numeration-svg {
+  padding: 0;
+  border: 0;
+  background: transparent;
+}
+
+.tuiles-unites-sans-nombres > span::after {
+  content: "1 unité";
+  font-size: 12px;
+}
+
 .figure-fraction figcaption {
   max-width: 560px;
   color: var(--mg-texteAttenue);
@@ -540,6 +559,65 @@ button.case-reponse-carres {
   margin: 12px 0 0;
 }
 
+.introduction-progression-aide {
+  margin: 0;
+  color: var(--mg-texteAttenue);
+  font-size: 13px;
+  line-height: 1.4;
+  text-align: center;
+}
+
+.niveaux-aide-fractions {
+  width: 100%;
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 7px;
+}
+
+.niveaux-aide-fractions button {
+  min-width: 0;
+  min-height: 48px;
+  padding: 7px 5px;
+  border: 2px solid var(--mg-ligne);
+  border-radius: var(--mg-rayon-moyen);
+  color: var(--mg-bleu);
+  background: var(--mg-papier);
+  font-weight: 800;
+  line-height: 1.15;
+}
+
+.niveaux-aide-fractions button.selectionne,
+.niveaux-aide-fractions button[aria-current="step"] {
+  border-color: var(--mg-bleu);
+  color: var(--mg-papier);
+  background: var(--mg-bleu);
+}
+
+.contenu-niveau-aide-fractions {
+  min-width: 0;
+}
+
+.surtitre-niveau-aide {
+  margin: 0;
+  color: var(--mg-texteAttenue);
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: .05em;
+  text-transform: uppercase;
+}
+
+.indice-strategique-fractions {
+  margin: 0;
+  padding: 12px;
+  border-left: 5px solid var(--mg-turquoise);
+  border-radius: var(--mg-rayon-moyen);
+  color: var(--mg-encre);
+  background: var(--mg-papier);
+  font-size: 15px;
+  font-weight: 700;
+  line-height: 1.5;
+}
+
 .atelier-fraction {
   width: 100%;
   min-width: 0;
@@ -577,10 +655,7 @@ button.case-reponse-carres {
   width: min(100%, 680px);
   display: block;
   padding: 2px 0 6px;
-  overflow-x: auto;
-  overscroll-behavior-inline: contain;
-  scrollbar-color: var(--mg-turquoise) var(--mg-fondDoux);
-  scrollbar-width: thin;
+  overflow-x: clip;
 }
 
 .figure-double-droite-cours {
@@ -595,6 +670,12 @@ button.case-reponse-carres {
 
 .figure-double-droite-mobile {
   display: none;
+}
+
+.figure-double-droite-mobile svg {
+  width: 100%;
+  min-width: 0;
+  max-width: 100%;
 }
 
 .controle-curseur-fraction {
@@ -1014,6 +1095,54 @@ button.case-reponse-carres {
   color: var(--mg-bleu);
 }
 
+.reperes-compacts-cours {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(116px, 1fr));
+  gap: 8px;
+}
+
+.repere-symbolique-cours {
+  min-height: 58px;
+  margin: 0;
+  padding: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  border: 2px solid var(--mg-ligne);
+  border-radius: var(--mg-rayon-moyen);
+  background: var(--mg-fondDoux);
+  font-family: var(--mg-titres);
+  font-size: 18px;
+  font-weight: 800;
+}
+
+.chaine-fraction-longue {
+  font-size: clamp(1rem, 3.6vw, 1.45rem);
+}
+
+.figure-materiel-cours,
+.figure-materiel-aide {
+  max-height: 440px;
+  overflow: auto;
+}
+
+.reponse-possible-fraction {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: center;
+  justify-content: center;
+}
+
+.reponse-possible-fraction > span {
+  flex-basis: 100%;
+  color: var(--mg-texteAttenue);
+  font-size: 12px;
+  font-weight: 800;
+  text-align: center;
+}
+
 .lecture-rang-cours {
   margin: 0;
   padding: 9px 11px;
@@ -1134,6 +1263,14 @@ button.case-reponse-carres {
     grid-template-columns: minmax(88px, 108px) minmax(0, 1fr);
     align-items: center;
   }
+
+  .double-droite-responsive .figure-double-droite-large {
+    display: none;
+  }
+
+  .double-droite-responsive .figure-double-droite-mobile {
+    display: block;
+  }
 }
 
 @media (max-width: 600px) {
@@ -1146,7 +1283,7 @@ button.case-reponse-carres {
   }
 
   .double-droite-responsive .figure-double-droite-mobile svg {
-    min-width: 320px;
+    min-width: 0;
   }
 
   .grille-qcm-fractions {
@@ -1155,6 +1292,15 @@ button.case-reponse-carres {
 
   .commandes-progression-fraction {
     grid-template-columns: minmax(0, 1fr);
+  }
+
+  .niveaux-aide-fractions {
+    gap: 4px;
+  }
+
+  .niveaux-aide-fractions button {
+    padding-inline: 2px;
+    font-size: 11px;
   }
 }
 

@@ -1,195 +1,245 @@
 # Fiche NC-03 / NC-04 — Fractions simples et décimaux
 
+> **Candidat intégré du 13 août 2026.** Cette fiche décrit le module révisé,
+> et non plus le pilote du 8 août. Les questions ont été recomposées ; le cours,
+> « Me guider » et les corrections utilisent maintenant les briques communes
+> comparées dans le Labo. La recette finale est achevée ; le statut reste
+> `construit` en attente des retours de Gwenaël et de Claire. Gwenaël a
+> autorisé le 13 août sa publication de test, sans référencement ni passage à
+> `valide`.
+
 ## 1. Identité et statut
 
 - **Module visible canonique** : `fractions-simples-decimaux` — « Fractions
   simples et décimaux ».
 - **Micro-notions canoniques** : `fraction-vers-decimal` et
   `decimal-vers-fraction`.
-- **Alias humains de pilotage** : `NC-03` et `NC-04` respectivement ; les traces
-  version 1 qui les utilisent restent lisibles.
+- **Alias humains de pilotage** : `NC-03` et `NC-04` respectivement ; les
+  traces antérieures qui emploient ces codes restent lisibles.
 - **Domaine canonique** : `nombres-et-calculs`.
-- **Cible** : `DNB26-01`, référence machine `dnb-2026-01`, « Fraction
-  simple vers décimal et retour ».
-- **Statut** : `construit`, publié sur la route pilote non référencée pour les
-  essais de Gwenaël et de Claire. Le passage à `valide` attend leur retour
-  pédagogique final.
-- **Provenance** : conception pédagogique et bornes validées par Gwenaël le
-  7 août 2026 ; code, énoncés, calculs, diagnostics et représentations écrits
-  à neuf pour maths&go.
+- **Cible** : `DNB26-01`, référence machine `dnb-2026-01`, « Fraction simple
+  vers décimal et retour ».
+- **Statut** : `construit`. Le module conserve une seule entrée visible et
+  distingue les deux sens dans le classement, les traces et le bilan.
+- **Provenance** : conception et arbitrages pédagogiques de Gwenaël, retours
+  de Claire, corpus officiel et international audité ; code, valeurs,
+  distracteurs et représentations écrits à neuf pour maths&go.
 
 ## 2. Savoir-faire visé
 
-Reconnaître qu'une fraction simple ou décimale et une écriture à virgule
-peuvent désigner exactement le même nombre, puis passer de l'une à l'autre
-mentalement. L'élève travaille dans les deux sens, y compris au-delà de 1,
-sans calculatrice et sans obligation de réduire une fraction correcte.
+Reconnaître qu'une fraction et une écriture à virgule peuvent désigner
+exactement le même nombre, puis passer de l'une à l'autre mentalement. Le
+travail est réversible, porte aussi sur les fractions supérieures à 1 et ne
+réduit pas l'apprentissage à la récitation de quelques couples.
+
+La barre de fraction est nommée comme le signe d'une division exacte. La
+division posée n'est cependant ni la méthode première ni une technique
+exercée dans cette tranche : les élèves construisent d'abord le lien par les
+repères, les fractions décimales, la valeur de position et les unités
+complètes.
 
 ## 3. Prérequis, inclusions et limites
 
 Le module suppose la lecture d'un nombre décimal positif, le rôle du
-numérateur et du dénominateur, et la numération de position.
+numérateur et du dénominateur et la numération de position.
 
 Sont inclus :
 
-- les dénominateurs `1`, `2`, `4`, `10`, `100` et, à très faible dose,
-  `1 000` ;
-- les demis de `1/2` à `7/2` dans les deux sens ;
-- les quarts de `1/4` à `8/4`, y compris `2/4`, `4/4`, `6/4`, `8/4` et les
-  résultats entiers ;
-- les nombres inférieurs, égaux ou supérieurs à 1 et les zéros intercalés ;
+- les dénominateurs `1`, `2`, `4`, `10`, `100` et, à faible dose, `1 000` ;
+- les demis de `1/2` à `7/2` et les quarts de `1/4` à `8/4`, y compris les
+  écritures réductibles et les résultats entiers ;
+- les dixièmes de `1/10` à `49/10`, les centièmes de `1/100` à `250/100` et
+  les millièmes de `1/1000` à `999/1000`, hors multiples de 10 ;
+- le cas `/1`, de `2/1` à `12/1`, côté NC-03 ;
+- les nombres inférieurs, égaux ou supérieurs à 1, les entiers cachés et les
+  zéros de position ;
 - le point ou la virgule, le zéro initial facultatif et les zéros finaux dans
   une réponse décimale ;
-- toute fraction équivalente, réduite ou non, dans la question libre.
+- toute fraction équivalente, réduite ou non, dans une production libre.
+
+Les repères officiels `1/2`, `1/4`, `3/4`, `3/2`, `4/2`, `5/2`, `1/10`,
+`1/100`, `1/1000`, `100/100` et `7/1` sont tous présents dans les banques et
+favorisés sans être rejoués à une place fixe. Une série de 20 en contient au
+moins deux, choisis et placés par la graine. Le cours les rend tous visibles et
+les relie à des procédures qui s'étendent à `n/2` et `n/4`.
 
 Sont exclus de cette tranche : nombres négatifs, tiers, cinquièmes, huitièmes,
-fractions non décimales, simplification comme objectif, glisser-déposer,
-notation scientifique et calcul avec des fractions. Le cas `/1` emploie les
-entiers de 2 à 12 ; `1/1`, trop trivial, n'est pas généré.
+fractions non décimales générales, pourcentages, simplification comme objectif,
+calcul avec des fractions et division posée comme exercice. `1/1`, trop
+trivial, n'est pas généré. Les cinquièmes pourront former un pont ultérieur
+avec NC-05 ; les huitièmes ne sont pas ajoutés à ce module.
 
 ## 4. Erreurs d'élèves à travailler
 
-Un diagnostic n'est affiché que si une réponse correspond à un mécanisme
-unique. Sinon le retour reste générique.
+Les QCM ont quatre choix : une réponse juste et trois distracteurs construits
+à partir de mécanismes plausibles. Un diagnostic n'est affiché que si la
+réponse sélectionnée correspond à un mécanisme identifié ; les saisies libres
+conservent les diagnostics sobres du lecteur.
 
 | Code | Mécanisme témoin |
 |---|---|
-| E1 | Recopier numérateur et dénominateur autour de la virgule : `3/2 → 3,2`. |
-| E2 | Ne compter qu'une part : `3/2 → 0,5`. |
-| E3 | Déplacer la virgule d'un rang de trop : `21/10 → 0,21`. |
+| E1 | Lire la barre comme une virgule : `3/2 → 3,2`. |
+| E2 | Ne convertir qu'une part ou oublier les unités complètes : `3/2 → 0,5`. |
+| E3 | Déplacer le dernier chiffre d'un rang : `21/10 → 0,21`. |
 | E4 | Oublier un zéro de position : `7/100 → 0,7`. |
-| E5 | Recopier les chiffres du décimal comme numérateur : `0,75 = □/4`, réponse `75`. |
-| E6 | Retourner une fraction libre : `1,5 → 2/3`. |
+| E5 | Recopier tous les chiffres du décimal comme numérateur malgré un dénominateur imposé : `0,75 = □/4`, réponse `75`. |
+| E6 | Inverser numérateur et dénominateur dans une fraction libre : `1,5 → 2/3`. |
 | E8 | Traiter `/1` comme un chiffre décimal : `7/1 → 7,1`. |
 
 Une écriture équivalente correcte, un point décimal ou des zéros finaux ne
-déclenchent jamais un diagnostic. `0,51 = 51/100` n'est notamment pas une
-erreur de copie. Une inversion n'est jamais annoncée lorsque seul le
-numérateur d'une fraction à dénominateur imprimé est saisi.
+déclenchent jamais un diagnostic. Une fraction n'est exigée irréductible que
+si une autre compétence et une autre consigne le demandent explicitement.
 
-## 5. Familles de questions
+## 5. Formes de questions
+
+Toutes les questions sont soit abstraites à saisie directe, soit des QCM
+diagnostiques. Aucune double droite, grille, bande ni table de numération
+n'apparaît dans l'énoncé : les représentations sont réservées au cours, à
+« Me guider » et à la correction.
 
 ### NC-03 — fraction vers décimal
 
-- **Consigne** : « Écris cette fraction en écriture décimale. »
-- **Réponse** : un nombre décimal positif, comparé comme rationnel exact.
-- **Familles** : dénominateur 1, demis, quarts, dixièmes, centièmes,
-  millièmes.
-- **Énoncé** : fraction empilée seule, sans droite ni tableau.
-- **Aide/correction** : droite des demis ou des quarts ; tableau de numération
-  pour 10, 100 et 1 000 ; règle directe pour `/1`.
+- **Consigne de production** : « Écris cette fraction en écriture décimale. »
+- **Consigne QCM** : « Quelle est l'écriture décimale de cette fraction ? »
+- **Réponse directe** : nombre décimal positif comparé comme rationnel exact.
+- **Familles** : `/1`, demis, quarts, dixièmes, centièmes et millièmes.
 
-### NC-04 — décimal vers fraction à dénominateur fixé
+### NC-04 — décimal vers fraction à dénominateur imposé
 
-- **Consigne** : « Complète l'égalité. »
-- **Réponse** : numérateur entier ; le dénominateur reste imprimé et
+- **Consigne de production** : « Complète l'égalité. »
+- **Consigne QCM** : « Quelle fraction correspond à ce nombre ? »
+- **Réponse directe** : numérateur entier ; le dénominateur reste imprimé et
   non modifiable.
-- **Familles** : demis, quarts, dixièmes, centièmes, millièmes.
-- **Énoncé** : nombre décimal et fraction empilée à une seule case.
-- **Aide/correction** : exactement la même représentation que pour NC-03.
+- **Familles** : demis, quarts, dixièmes, centièmes et millièmes.
 
 ### NC-04 — fraction libre
 
 - **Consigne** : « Écris ce nombre sous forme de fraction. Toutes les
   fractions égales sont acceptées. »
-- **Réponse** : deux champs entiers comparés par produit en croix ;
-  dénominateur nul interdit.
-- **Couverture** : exactement une question dans une série de 20.
+- **Réponse** : deux champs entiers comparés par produit en croix ; un
+  dénominateur nul est interdit.
+- **Cibles** : une catégorie demis/quarts et une catégorie dixièmes/centièmes.
+  Lorsqu'il n'y a qu'une production libre, sa catégorie varie avec la graine.
+- **Présentation** : toujours une saisie directe, jamais un QCM.
 
-Pour 20 questions, la série contient exactement 10 NC-03 et 10 NC-04. Pour
-une longueur impaire, le bonus est attribué par la graine et l'écart reste
-d'une question. Les deux sens sont intercalés sans jamais former trois
-questions consécutives dans le même sens. Une série de 20 contient exactement
-un millième ; son sens varie avec la graine.
+## 6. Composition des séries
 
-| Longueur | Répartition NC-03 / NC-04 | Couverture du préfixe pédagogique |
-|---:|---:|---|
-| 5 | `3 / 2` ou `2 / 3`, selon la graine | demis, dixièmes et quarts dans les deux sens réunis |
-| 10 | `5 / 5` | demis, quarts, dixièmes et centièmes dans chaque sens |
-| 15 | `8 / 7` ou `7 / 8`, selon la graine | couverture précédente, dénominateur 1 côté NC-03 et répétitions variées |
-| 20 | `10 / 10` | couverture complète, une fraction libre et un millième |
+Les deux sens sont équilibrés à `50 / 50` pour une longueur paire. Pour une
+longueur impaire, le bonus est attribué par la graine et l'écart reste d'une
+question. L'ordre n'enchaîne jamais trois questions du même sens.
 
-Chaque longueur est un préfixe cohérent de la recette de sa micro-notion : une
-série courte ne prétend donc pas montrer toutes les familles, tandis que les
-familles rares n'évincent jamais le rappel demis, quarts, dixièmes et
-centièmes.
+| Longueur | NC-03 / NC-04 | QCM | Fractions libres | Millièmes | Couverture structurante |
+|---:|---:|---:|---:|---:|---|
+| 5 | `3 / 2` ou `2 / 3` | 1 | 1 | 0 | demis, quarts et dixièmes dans les deux sens réunis ; une fraction propre et une impropre |
+| 10 | `5 / 5` | 2 | 1 | 0 | ajout des centièmes dans chaque sens ; propre et impropre par sens ; au moins un entier caché dans la série |
+| 15 | `8 / 7` ou `7 / 8` | 3 | 2 | 1 | ajout de `/1` côté NC-03 ; une libre demis/quarts et une libre décimale |
+| 20 | `10 / 10` | 4 | 2 | 1 | couverture complète ; entier caché côté NC-04 et cas `/1` côté NC-03 |
 
-## 6. Progression pédagogique commune
+Le millième apparaît donc dès 15 questions, dans l'un ou l'autre sens selon la
+graine. Sa banque contient des numérateurs à un, deux et trois chiffres afin de
+travailler aussi des écritures comme `725/1000 = 0,725` ; elle exclut les
+multiples de 10 qui dupliqueraient un centième.
 
-### Je montre
+Dans chaque série, les valeurs rationnelles sont toutes distinctes. Les QCM
+représentent exactement `20 %` des questions aux quatre jalons et sont répartis
+au plus équitablement entre NC-03 et NC-04. Les fractions libres remplacent
+une répétition de famille : elles n'effacent donc pas la couverture de base.
 
-Le cours suit six cartes : même nombre et même position ; les repères
-indispensables ; fraction vers décimal ; décimal vers fraction ; dépasser
-l'unité ; choisir la bonne stratégie. Il conserve la double droite, la grille
-de 100, le tableau de numération et les groupements en unités complètes.
+## 7. Cours explicite en sept pages
 
-### Nous faisons
+Le cours suit une progression concret — imagé — abstrait sans présenter trois
+recettes concurrentes :
 
-Selon la question, l'élève avance sur une double droite, colore des parts dans
-une grille de 100, forme les unités complètes ou choisit le rang du tableau de
-numération. Chaque action transforme réellement la représentation et fait
-apparaître progressivement l'égalité travaillée.
+1. **Un même nombre, plusieurs écritures** : même quantité, même point sur une
+   double droite et sens quotient de la barre de fraction.
+2. **Du matériel aux symboles** : pièce de quart, grille de 100 puis
+   `1/4 = 25/100 = 0,25`, avec les repères `1/2` et `3/4` et leur extension.
+3. **Dixièmes, centièmes et millièmes** : matériel rouge, vert et jaune,
+   repères `1/10`, `1/100`, `1/1000` et tableau de `725/1000`.
+4. **Fraction décimale vers décimal** :
+   `147/100 = 100/100 + 40/100 + 7/100 = 1 + 4/10 + 7/100 = 1,47`.
+5. **Décimal vers fraction** : dernier rang écrit, dénominateur imposé,
+   fraction libre et équivalences `0,75 = 75/100 = 3/4`.
+6. **Dépasser l'unité** : unités complètes avec
+   `5/2 = 4/2 + 1/2 = 2 + 1/2 = 2,5`, puis `7/4`, les entiers cachés et `/1`.
+7. **Choisir une stratégie et vérifier** : ordre de grandeur, fractions
+   équivalentes et division seulement comme méthode générale tardive lorsqu'un
+   repère ne suffit pas.
 
-### Tu fais accompagné
+## 8. « Me guider » : trois niveaux sans révélation
 
-« Me guider » conserve la réponse déjà saisie et montre un seul moteur adapté
-à la question. Un choix faux apporte une indication de position, sans compter
-les parts à la place de l'élève.
+La question reste visible et la saisie déjà commencée est conservée. L'aide
+s'ouvre au niveau le moins intrusif et propose une progression de soutien :
 
-### Tu fais seul
+1. **Un indice** : rappel verbal ou stratégique, sans calcul de la réponse.
+2. **Voir** : représentation de la quantité ou du rang pertinent.
+3. **Construire** : action guidée pour poser des pièces, former des unités ou
+   choisir le dernier rang.
 
-L'énoncé reste nu. L'élève saisit le décimal, le numérateur ou les deux champs
-de la fraction sans représentation visible.
+Ce ne sont pas trois méthodes placées en concurrence. L'élève avance du verbal
+vers la représentation puis l'action seulement s'il en a besoin. Dans tous
+les niveaux, le dernier terme reste `?` avant validation, y compris dans les
+libellés accessibles, textes alternatifs, attributs ARIA et bornes des
+contrôles.
 
-### Correction et réactivation
+L'affectation des représentations est la suivante :
 
-La correction reprend le même moteur et la même égalité que l'aide. Le bilan
-local sépare NC-03, NC-04 et l'usage de l'aide. Une nouvelle série seedée
-réactive les mêmes savoir-faire avec d'autres valeurs.
+| Famille | Voir / construire |
+|---|---|
+| Demis et quarts jusqu'à 1 | bandes historiques posées une à une sur le rail ; la cible reste `?` |
+| Demis et quarts au-delà de 1 | pièces puis groupes puis unités complètes, avec une transformation visuelle à chaque étape |
+| Dixièmes et centièmes | matériel de numération rouge/vert/jaune puis tableau de numération |
+| Millièmes | tableau de numération seulement ; aucun matériel miniaturisé illisible |
+| Dénominateur 1 | tuiles d'unités non numérotées à compter |
+| Fraction libre | dernier rang du seul décimal, puis fraction décimale `?/10` ou `?/100` ; aucun dénominateur canonique caché n'est utilisé |
 
-## 7. Manipulation et représentation
+L'usage de l'aide reste tracé au bilan. Le lecteur constitue l'unique source
+du pas-à-pas et des corrections ; les générateurs ne portent plus de blocs
+textuels concurrents, seulement les diagnostics propres aux distracteurs QCM.
 
-La double droite rend perceptible que deux écritures occupent le même point.
-La grille de 100 relie demis et quarts aux centièmes. Le tableau rend visible
-le rang du dernier chiffre et la fonction des zéros intercalés. Au-delà de 1,
-les groupements conservent une échelle fixe : chaque unité garde deux cases
-pour les demis ou quatre cases pour les quarts, y compris dans le reste. Il
-n'existe aucun glisser-déposer ni appui sans effet mathématique.
+## 9. Correction et réponses équivalentes
 
-## 8. Cohérence cours — aide — correction
+La correction révèle la solution complète seulement après validation ou en
+mode « Au tableau ». Elle reprend la représentation mathématique pertinente :
+grille de 100 pour les demis/quarts jusqu'à 1, bandes et unités au-delà de 1,
+tableau pour les fractions décimales et tuiles pour `/1`.
 
-Les trois contextes utilisent les mêmes briques : fraction empilée, double
-droite, grille, groupements et tableau à quatre colonnes. Le cours montre la
-méthode complète, l'aide la fait construire et la correction explique
-l'instance avec la représentation pertinente.
+Pour une fraction libre, elle repart du dernier rang écrit et porte le titre
+« Une réponse possible ». Par exemple, elle peut montrer
+`0,25 = 25/100 = 1/4`, en précisant que `25/100`, `1/4` et toute fraction
+équivalente sont justes. La forme familière réduite n'est affichée que comme
+équivalence éventuelle, jamais comme obligation implicite.
 
-## 9. Présentation dans les deux contextes
+## 10. Présentation dans les deux contextes
 
 En entraînement, le pavé interne affiche chiffres et virgule pour un décimal,
 chiffres seuls pour une fraction. Le clavier physique accepte aussi le point ;
 `Tab` change de champ dans la fraction libre. La saisie est figée après
 validation.
 
-Au tableau, la question et les données sont identiques, mais aucune saisie ni
-trace n'est créée. Les commandes communes révèlent la réponse, la correction
-et le cours. Téléphone, ordinateur et TNI conservent l'en-tête, la zone
-centrale défilable, les panneaux et le dock communs.
+Au tableau, la question et les données sont identiques, mais aucune saisie,
+trace ni score n'est créé. Les commandes communes révèlent la réponse, la
+correction et le cours. Téléphone, ordinateur et TNI conservent l'en-tête, la
+zone centrale défilable, les panneaux et le dock communs.
 
-## 10. Validation
+## 11. Validation
 
-Les contrats, normalisations, produits en croix, diagnostics, générateurs,
-quotas, déterminisme, menu unique, six pages de cours, deux contextes et
-réutilisation des représentations sont couverts par des tests automatisés.
+Les contrats, normalisations rationnelles, produits en croix, diagnostics,
+générateurs, quotas, déterminisme, valeurs distinctes, menu unique, sept pages
+de cours, trois niveaux d'aide, absence de fuite de réponse et deux contextes
+sont couverts par des tests automatisés dédiés.
 
-La recette visuelle Chromium post-correctif est archivée à `320 × 568`,
-`402 × 874`, sur TNI à `1 920 × 1 080` et en reflow équivalent au zoom 200 %
-à `640 × 360`. Les en-têtes ont aussi été vérifiés à 320, 340, 360, 375, 390
-et 402 px sans recouvrement. La page 4 du cours ne déborde ni sur mobile ni
-sur ordinateur ; l'aide et la correction restent propres. Aucun overflow,
-élément hors écran, cible inférieure à 44 px, collision ou erreur JavaScript
-n'a été relevé.
+`npm run verifier` réussit **1 458 tests sur 1 458** et tous les validateurs du
+dépôt. La recette Chromium finale couvre cinq fenêtres (`320 × 568`,
+`390 × 844`, reflow `640 × 360`, `1 280 × 720` et TNI `1 920 × 1 080`), les
+sept pages de cours et douze profils d'aide dans leurs trois niveaux et états
+construits. Ses **270 états et 439 captures** ne relèvent aucune erreur de
+page, de console, de requête ou HTTP, aucun débordement local ou global et
+aucun élément hors fenêtre. Les contrôles automatisés vérifient également le
+masquage visible et accessible des réponses, l'indépendance de l'aide libre à
+la fraction canonique cachée et l'absence de cinquièmes ou huitièmes dans les
+corrections. Le graphe public est cohérent en `v26`.
 
-Le statut reste `construit` pendant le pilote public non référencé. Gwenaël a
-autorisé cette mise à disposition le 8 août 2026 afin que Claire puisse aussi
-l'essayer ; leurs retours peuvent encore entraîner des corrections avant le
-passage à `valide`.
+Ces résultats rendent le candidat présentable pour l'arbitrage pédagogique.
+Sa publication de test autorisée le 13 août ne change pas son statut
+`construit` et ne l'expose ni dans le menu public ni dans le sitemap.

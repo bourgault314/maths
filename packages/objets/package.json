@@ -24,6 +24,8 @@
     "./thales": "./src/thales.js",
     "./fractions": "./src/fractions.js",
     "./fractions-decimaux": "./src/fractions-decimaux.js",
+    "./bandes-fractions-rail": "./src/bandes-fractions-rail.js",
+    "./numeration-decimale": "./src/numeration-decimale.js",
     "./droite-graduee": "./src/droite-graduee.js"
   }
 }

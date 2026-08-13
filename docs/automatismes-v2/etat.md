@@ -1,6 +1,50 @@
 # État du chantier Automatismes V2
 
-**Dernière mise à jour : 11 août 2026.**
+**Dernière mise à jour : 13 août 2026.**
+
+## Candidat intégré NC-03 / NC-04 du 13 août
+
+- Le lot part de `32b0664`, état de `main` publié. Gwenaël a autorisé le
+  13 août sa publication de test sur la route pilote. Le module demeure
+  `construit`, non référencé et hors sitemap en attente de l'arbitrage
+  pédagogique final de Gwenaël et de Claire.
+- Le module visible unique conserve les deux micro-notions internes à parts
+  égales. Aux longueurs `5 / 10 / 15 / 20`, les séries comportent exactement
+  `1 / 2 / 3 / 4` QCM diagnostiques, `1 / 1 / 2 / 2` productions de fraction
+  libre et `0 / 0 / 1 / 1` millième. Les questions ne portent plus aucune
+  double droite : elles sont abstraites ou en QCM, les représentations étant
+  réservées au cours, à l'aide et à la correction.
+- Les repères officiels ne deviennent pas une liste récitée : ils restent
+  mélangés aux valeurs variées de chaque famille, mais une série de 20 en
+  garantit au moins deux, choisis et placés par la graine.
+- Les fractions libres commencent dès cinq questions. À partir de 15, l'une
+  cible les demis/quarts et l'autre les dixièmes/centièmes. Toutes les
+  fractions équivalentes, réduites ou non, restent acceptées par produit en
+  croix. Le millième apparaît dès 15, peut employer trois chiffres et passe
+  uniquement par le tableau de numération.
+- Les deux générateurs ne portent plus de textes d'aide ou de correction
+  concurrents. Ils fournissent la question et, pour un QCM, les diagnostics de
+  distracteurs ; le lecteur est l'unique source du pas-à-pas et de la
+  correction.
+- « Me guider » suit désormais trois degrés explicites : « Un indice »,
+  « Voir », puis « Construire ». L'élève progresse du verbal vers l'image puis
+  l'action ; l'égalité finale et les alternatives accessibles conservent `?`
+  jusqu'à la validation. `/1` se compte avec des tuiles non numérotées, les
+  demis et quarts emploient les bandes sur rail et les groupements, `/10` et
+  `/100` le matériel décimal puis le tableau, `/1000` le tableau seul.
+- Le cours compte sept pages : même nombre et sens quotient ; matériel vers
+  symboles ; rangs décimaux ; `147/100 → 1,47` ; sens inverse et fraction
+  libre ; dépassement de l'unité avec `5/2` et `7/4` ; stratégie finale. La
+  division n'apparaît qu'en dernière méthode générale et n'est pas exercée.
+- Le Labo conserve les vues comparatives, tandis que le lecteur utilise
+  désormais les composants communs `bandes-fractions-rail.js`,
+  `numeration-decimale.js`, `droite-graduee.js` et les schémas de
+  `fractions.js`. Le graphe public est invalidé d'un seul tenant en `v26`.
+  `npm run verifier` réussit **1 458 tests sur 1 458** ainsi que tous les
+  validateurs. La recette Chromium finale couvre `320 × 568`, `390 × 844`,
+  le reflow `640 × 360`, `1 280 × 720` et le TNI `1 920 × 1 080` : **270
+  états et 439 captures**, sans erreur de page, de console, de requête ou
+  HTTP, sans débordement local ou global et sans élément hors fenêtre.
 
 ## Clôture de NC-02 du 11 août
 

@@ -52,7 +52,7 @@ import {
   mesurerEcritureFractionSvg,
   rendreFractionSvg,
   verbaliserFraction,
-} from "./expressions.js?v=25";
+} from "./expressions.js?v=26";
 
 export const VERSION_DROITE_GRADUEE = 1;
 
@@ -962,6 +962,40 @@ export const PREREGLAGES_DROITE_GRADUEE = Object.freeze(
       options: {
         haut: { min: 0, max: 5, pas: 1, nom: "Litres", points: [{ valeur: 3, etiquette: "3 L" }] },
         bas: { min: 0, max: 8.5, pas: 1.7, nom: "Prix (€)" },
+      },
+    },
+    {
+      id: "fractions-decimaux-reperes",
+      titre: "Repères : fractions et décimaux",
+      genre: "double",
+      options: {
+        description: "Double droite graduée : un quart, un demi et trois quarts sont alignés avec 0,25, 0,5 et 0,75.",
+        haut: {
+          min: 0,
+          max: 1,
+          graduations: [0, 0.25, 0.5, 0.75, 1],
+          etiquettes: { "0.25": "", "0.5": "", "0.75": "" },
+          nom: "Fractions",
+          tailleEtiquette: 18,
+          points: [
+            { valeur: 0.25, etiquette: { type: "fraction", numerateur: 1, denominateur: 4 }, couleur: COULEURS.orange, position: "dessus" },
+            { valeur: 0.5, etiquette: { type: "fraction", numerateur: 1, denominateur: 2 }, couleur: COULEURS.bleu, position: "dessus" },
+            { valeur: 0.75, etiquette: { type: "fraction", numerateur: 3, denominateur: 4 }, couleur: COULEURS.turquoise, position: "dessus" },
+          ],
+        },
+        bas: {
+          min: 0,
+          max: 1,
+          graduations: [0, 0.25, 0.5, 0.75, 1],
+          etiquettes: { "0.25": "", "0.5": "", "0.75": "" },
+          nom: "Décimaux",
+          tailleEtiquette: 18,
+          points: [
+            { valeur: 0.25, etiquette: "0,25", couleur: COULEURS.orange, position: "dessous" },
+            { valeur: 0.5, etiquette: "0,5", couleur: COULEURS.bleu, position: "dessous" },
+            { valeur: 0.75, etiquette: "0,75", couleur: COULEURS.turquoise, position: "dessous" },
+          ],
+        },
       },
     },
     {

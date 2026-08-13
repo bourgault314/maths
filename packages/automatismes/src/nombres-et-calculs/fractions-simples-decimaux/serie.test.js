@@ -14,6 +14,7 @@ import {
   estFractionDuDomaine,
 } from "./commun.js";
 import {
+  QUOTAS_SERIES_FRACTIONS_DECIMAUX,
   genererSerieFractionsDecimaux,
   planifierSerieFractionsDecimaux,
   repartirMicroNotionsFractionsDecimaux,
@@ -21,6 +22,13 @@ import {
 } from "./serie.js";
 
 const LONGUEURS_JALONS = Object.freeze([5, 10, 15, 20]);
+
+function cleRationnelle({ numerateur, denominateur }) {
+  let a = Math.abs(numerateur);
+  let b = Math.abs(denominateur);
+  while (b !== 0) [a, b] = [b, a % b];
+  return `${numerateur / a}/${denominateur / a}`;
+}
 
 function compterMicroNotions(elements) {
   return elements.reduce((comptes, element) => {
@@ -63,15 +71,43 @@ describe("NC-03/NC-04 — plan de série commun", () => {
     );
   });
 
-  it("respecte les quotas des jalons 5, 10, 15 et 20", () => {
+  it("respecte sur mille graines les quotas de QCM, productions libres et millièmes", () => {
     for (const nombreQuestions of LONGUEURS_JALONS) {
-      for (let graine = 0; graine < 200; graine += 1) {
+      const quotas = QUOTAS_SERIES_FRACTIONS_DECIMAUX[nombreQuestions];
+      for (let graine = 0; graine < 1000; graine += 1) {
         const plan = planifierSerieFractionsDecimaux({
           graine: `quota-${nombreQuestions}-${graine}`,
           nombreQuestions,
         });
         const comptes = compterMicroNotions(plan);
         assert.equal(plan.length, nombreQuestions);
+        assert.equal(
+          plan.filter(({ presentation }) => presentation === "qcm-diagnostique").length,
+          quotas.qcm,
+        );
+        assert.equal(
+          plan.filter(({ presentation }) => presentation === "abstraite").length,
+          nombreQuestions - quotas.qcm,
+        );
+        assert.equal(
+          plan.filter(({ presentation }) => presentation === "double-droite").length,
+          0,
+        );
+        assert.equal(
+          plan.filter(({ forme }) => forme === "fraction-libre").length,
+          quotas.productionsLibres,
+        );
+        assert.equal(
+          plan.filter(({ denominateur }) => denominateur === 1000).length,
+          quotas.milliemes,
+        );
+        assert.equal(new Set(plan.map(cleRationnelle)).size, nombreQuestions);
+        if (nombreQuestions === 5) {
+          for (const denominateur of [2, 4, 10]) {
+            assert.ok(plan.some((element) =>
+              element.denominateur === denominateur));
+          }
+        }
         if (nombreQuestions % 2 === 0) {
           assert.deepEqual(comptes, {
             [MICRO_NOTION_NC03]: nombreQuestions / 2,
@@ -105,41 +141,57 @@ describe("NC-03/NC-04 — plan de série commun", () => {
     }
   });
 
-  it("réserve à vingt exactement une production libre", () => {
-    for (let graine = 0; graine < 500; graine += 1) {
-      const plan = planifierSerieFractionsDecimaux({
-        graine: `libre-${graine}`,
-        nombreQuestions: 20,
-      });
-      const libres = plan.filter(({ forme }) => forme === "fraction-libre");
-      assert.equal(libres.length, 1);
-      assert.equal(libres[0].microNotion, MICRO_NOTION_NC04);
+  it("place les fractions libres dès cinq et couvre leurs deux catégories", () => {
+    for (const nombreQuestions of [5, 10]) {
+      const categoriesVues = new Set();
+      for (let graine = 0; graine < 1000; graine += 1) {
+        const libres = planifierSerieFractionsDecimaux({
+          graine: `libre-${nombreQuestions}-${graine}`,
+          nombreQuestions,
+        }).filter(({ forme }) => forme === "fraction-libre");
+        assert.equal(libres.length, 1);
+        assert.equal(libres[0].microNotion, MICRO_NOTION_NC04);
+        categoriesVues.add([2, 4].includes(libres[0].denominateur)
+          ? "demis-quarts"
+          : "decimales");
+      }
+      assert.deepEqual([...categoriesVues].sort(), ["decimales", "demis-quarts"]);
     }
-    for (let nombreQuestions = 1; nombreQuestions < 20; nombreQuestions += 1) {
-      assert.equal(
-        planifierSerieFractionsDecimaux({ graine: "sans-libre", nombreQuestions })
-          .filter(({ forme }) => forme === "fraction-libre").length,
-        0,
-      );
+    for (const nombreQuestions of [15, 20]) {
+      for (let graine = 0; graine < 1000; graine += 1) {
+        const libres = planifierSerieFractionsDecimaux({
+          graine: `libres-deux-${nombreQuestions}-${graine}`,
+          nombreQuestions,
+        }).filter(({ forme }) => forme === "fraction-libre");
+        assert.equal(libres.length, 2);
+        assert.equal(libres.filter(({ denominateur }) => [2, 4].includes(denominateur)).length, 1);
+        assert.equal(libres.filter(({ denominateur }) => [10, 100].includes(denominateur)).length, 1);
+      }
     }
   });
 
-  it("place au plus un millième et alterne son sens selon la graine", () => {
+  it("place un millième à 15 et 20, dans les deux sens et avec trois chiffres", () => {
     const directions = new Set();
-    for (let graine = 0; graine < 500; graine += 1) {
-      const plan = planifierSerieFractionsDecimaux({
-        graine: `millieme-${graine}`,
-        nombreQuestions: 20,
-      });
-      const milliemes = plan.filter(({ denominateur }) => denominateur === 1000);
-      assert.equal(milliemes.length, 1);
-      directions.add(milliemes[0].microNotion);
+    let troisChiffresVu = false;
+    for (const nombreQuestions of [15, 20]) {
+      for (let graine = 0; graine < 1000; graine += 1) {
+        const plan = planifierSerieFractionsDecimaux({
+          graine: `millieme-${nombreQuestions}-${graine}`,
+          nombreQuestions,
+        });
+        const milliemes = plan.filter(({ denominateur }) => denominateur === 1000);
+        assert.equal(milliemes.length, 1);
+        assert.notEqual(milliemes[0].numerateur % 10, 0);
+        directions.add(milliemes[0].microNotion);
+        troisChiffresVu ||= milliemes[0].numerateur >= 100;
+      }
     }
     assert.deepEqual(
       [...directions].sort(),
       [MICRO_NOTION_NC03, MICRO_NOTION_NC04].sort(),
     );
-    for (let nombreQuestions = 1; nombreQuestions < 20; nombreQuestions += 1) {
+    assert.equal(troisChiffresVu, true);
+    for (let nombreQuestions = 1; nombreQuestions < 15; nombreQuestions += 1) {
       const plan = planifierSerieFractionsDecimaux({
         graine: "sans-millieme",
         nombreQuestions,
@@ -151,8 +203,44 @@ describe("NC-03/NC-04 — plan de série commun", () => {
     }
   });
 
+  it("garantit les classes structurelles sans épuiser les valeurs distinctes", () => {
+    const propre = ({ numerateur, denominateur }) =>
+      [2, 4].includes(denominateur) && numerateur < denominateur;
+    const impropre = ({ numerateur, denominateur }) =>
+      [2, 4].includes(denominateur)
+      && numerateur > denominateur
+      && numerateur % denominateur !== 0;
+    const entierCache = ({ numerateur, denominateur }) =>
+      denominateur !== 1 && numerateur % denominateur === 0;
+    for (const nombreQuestions of LONGUEURS_JALONS) {
+      for (let graine = 0; graine < 1000; graine += 1) {
+        const plan = planifierSerieFractionsDecimaux({
+          graine: `structures-${nombreQuestions}-${graine}`,
+          nombreQuestions,
+        });
+        assert.ok(plan.some(propre));
+        assert.ok(plan.some(impropre));
+        if (nombreQuestions >= 10) {
+          for (const microNotion of [MICRO_NOTION_NC03, MICRO_NOTION_NC04]) {
+            const sens = plan.filter((element) => element.microNotion === microNotion);
+            assert.ok(sens.some(propre));
+            assert.ok(sens.some(impropre));
+          }
+          assert.ok(plan.some(entierCache));
+        }
+        if (nombreQuestions === 20) {
+          assert.ok(plan.filter((element) =>
+            element.microNotion === MICRO_NOTION_NC04).some(entierCache));
+          assert.ok(plan.some((element) =>
+            element.microNotion === MICRO_NOTION_NC03
+            && element.denominateur === 1));
+        }
+      }
+    }
+  });
+
   it("reste strictement dans le domaine convenu, sans jamais produire 5/8", () => {
-    for (let graine = 0; graine < 500; graine += 1) {
+    for (let graine = 0; graine < 1000; graine += 1) {
       const plan = planifierSerieFractionsDecimaux({
         graine: `domaine-${graine}`,
         nombreQuestions: 20,
@@ -162,6 +250,40 @@ describe("NC-03/NC-04 — plan de série commun", () => {
         assert.ok(estFractionDuDomaine(numerateur, denominateur));
         assert.notDeepEqual([numerateur, denominateur], [5, 8]);
       }
+    }
+  });
+
+  it("emploie tous les repères officiels comme ancrages variables du pool", () => {
+    const reperes = [
+      "1/2",
+      "1/4",
+      "3/4",
+      "3/2",
+      "4/2",
+      "5/2",
+      "1/10",
+      "1/100",
+      "1/1000",
+      "100/100",
+      "7/1",
+    ];
+    const positions = new Map(reperes.map((repere) => [repere, new Set()]));
+    for (let graine = 0; graine < 500; graine += 1) {
+      const plan = planifierSerieFractionsDecimaux({
+        graine: `reperes-${graine}`,
+        nombreQuestions: 20,
+      });
+      assert.ok(
+        plan.filter(({ numerateur, denominateur }) =>
+          positions.has(`${numerateur}/${denominateur}`)).length >= 2,
+        "une série de 20 doit contenir au moins deux repères officiels exacts",
+      );
+      plan.forEach(({ numerateur, denominateur }, position) => {
+        positions.get(`${numerateur}/${denominateur}`)?.add(position);
+      });
+    }
+    for (const repere of reperes) {
+      assert.ok(positions.get(repere).size > 1, `${repere} doit apparaître sans position fixe`);
     }
   });
 
@@ -228,17 +350,24 @@ describe("NC-03/NC-04 — génération de la série", () => {
     }
   });
 
-  it("produit exactement une réponse fraction libre dans la série de vingt", () => {
-    const questions = genererSerieFractionsDecimaux({
-      registre: creerRegistreAutomatismes(),
-      graine: "serie-libre",
-      nombreQuestions: 20,
-    });
-    const libres = questions.filter(
-      ({ reponse }) => reponse.type === TYPE_REPONSE_FRACTION_EQUIVALENTE,
-    );
-    assert.equal(libres.length, 1);
-    assert.equal(libres[0].classement.microNotion, MICRO_NOTION_NC04);
+  it("instancie les quotas de réponses fraction libre aux quatre jalons", () => {
+    for (const nombreQuestions of LONGUEURS_JALONS) {
+      const questions = genererSerieFractionsDecimaux({
+        registre: creerRegistreAutomatismes(),
+        graine: `serie-libre-${nombreQuestions}`,
+        nombreQuestions,
+      });
+      const libres = questions.filter(
+        ({ reponse }) => reponse.type === TYPE_REPONSE_FRACTION_EQUIVALENTE,
+      );
+      assert.equal(
+        libres.length,
+        QUOTAS_SERIES_FRACTIONS_DECIMAUX[nombreQuestions].productionsLibres,
+      );
+      assert.ok(libres.every(
+        ({ classement }) => classement.microNotion === MICRO_NOTION_NC04,
+      ));
+    }
   });
 
   it("rejoue les mêmes instances et varie avec une autre graine", () => {

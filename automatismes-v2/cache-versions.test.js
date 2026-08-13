@@ -2,7 +2,7 @@ import assert from "node:assert/strict";
 import { readFile } from "node:fs/promises";
 import { it } from "node:test";
 
-const VERSION = "25";
+const VERSION = "26";
 
 const RESSOURCES_VERSIONNEES = new Map([
   ["automatismes-v2/index.html", ["styles.css", "interface.css", "menu.css", "app.js"]],
@@ -18,6 +18,8 @@ const RESSOURCES_VERSIONNEES = new Map([
     "carre-quadrille.js",
     "fractions.js",
     "droite-graduee.js",
+    "bandes-fractions-rail.js",
+    "numeration-decimale.js",
     "fractions-decimaux.js",
     "diagnostic-fractions-decimaux.js",
   ]],
@@ -116,6 +118,15 @@ const RESSOURCES_VERSIONNEES = new Map([
   ["packages/contrats/src/trace-reponse.js", ["question-v2.js"]],
   ["packages/objets/src/droite-graduee.js", ["expressions.js"]],
   ["packages/objets/src/expressions.js", ["charte.js"]],
+  ["packages/objets/src/fractions.js", ["charte.js"]],
+  ["packages/objets/src/bandes-fractions-rail.js", [
+    "fractions-decimaux.js",
+    "charte.js",
+  ]],
+  ["packages/objets/src/numeration-decimale.js", [
+    "fractions-decimaux.js",
+    "charte.js",
+  ]],
 ]);
 
 it("charge une version cohérente de tous les modules modifiés d'Automatismes V2", async () => {

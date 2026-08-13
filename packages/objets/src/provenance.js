@@ -106,6 +106,18 @@ export const PROVENANCE_OBJETS = {
     note: "La brique partage uniquement des données mathématiques et des normalisations exactes. Aucun code, énoncé ou visuel de l'application historique n'est repris.",
   },
 
+  "bandes-fractions-rail.js": {
+    statut: "original_mathsgo",
+    source: "outils/fractions/bandes_fractions.html — géométrie, pièces, palette et geste de regroupement du matériel de Gwenaël ; scénario guidé NC-03/NC-04 écrit pour maths&go",
+    note: "Le composant SVG pur conserve l'échelle du plateau historique, mais son rail décimal, ses profils de masquage et sa progression en quatre états sont nouveaux. Le plateau libre complet n'est ni importé ni embarqué.",
+  },
+
+  "numeration-decimale.js": {
+    statut: "original_mathsgo",
+    source: "outils/plateaux_manipulation/numeration_decimale.html — matériel unité/dixième/centième de Gwenaël ; tableau alimenté par fractions-decimaux.js",
+    note: "La géométrie 10 × 10, 10 × 1 et 1 × 1 et la palette sont portées dans un SVG statique réutilisable. La variante verticale sert à la comparaison dans le Labo ; le tableau propose un mode non révélateur pour l'aide.",
+  },
+
   "droite-graduee.js": {
     statut: "reconstruit",
     source: "PR #8 — pack de représentations, réécrit pour la fondation V2",
