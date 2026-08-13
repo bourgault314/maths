@@ -136,6 +136,47 @@ test("les dialogues Coffres prennent, piègent et restaurent le focus", () => {
   assert.match(solo, /const resetScroll = dialog => \{[\s\S]*node\.scrollTop = 0[\s\S]*node\.scrollLeft = 0/);
 });
 
+test("les deux Coffres proposent Solo ou Duo sans surcharger la barre de navigation", () => {
+  const duel = pages["outils/club_maths/coffres_magiques.html"];
+  const solo = pages["outils/calcul_mental/coffres_magiques_solo.html"];
+
+  for (const [path, html] of [["duo", duel], ["solo", solo]]) {
+    assert.match(html, /id="mode-dialog"[^>]*role="dialog"[^>]*aria-modal="true"[^>]*aria-labelledby="mode-title"/, path);
+    assert.match(html, /id="choose-solo"[\s\S]*Solo — S’entraîner[\s\S]*10 clés[\s\S]*sans chrono/, path);
+    assert.match(html, /id="choose-duo"[\s\S]*Duo — Se défier[\s\S]*20 s par tour[\s\S]*premier à 5 clés/, path);
+    assert.match(html, /window\.location\.replace\(modeUrl\(nextMode\)\)/, path);
+    assert.match(html, /<button class="mode-switch-button"[^>]*data-change-mode>Changer de mode<\/button>/, path);
+    assert.match(html, /\.mode-switch-button\s*\{[^}]*min-height:\s*40px/, path);
+    const topbar = html.match(/<header class="topbar">[\s\S]*?<\/header>/)?.[0] || "";
+    assert.doesNotMatch(topbar, /Changer de mode|data-change-mode/, path);
+  }
+});
+
+test("l’état tactile des runes ne ressemble plus à une sélection persistante", () => {
+  const duel = pages["outils/club_maths/coffres_magiques.html"];
+  const solo = pages["outils/calcul_mental/coffres_magiques_solo.html"];
+
+  for (const [path, html] of [["duo", duel], ["solo", solo]]) {
+    assert.match(html, /\.rune:focus-visible\s*\{[^}]*outline:\s*4px solid var\(--blue\)/, path);
+    assert.match(html, /@media \(hover: hover\) and \(pointer: fine\)\s*\{\s*\.rune:hover\s*\{[^}]*outline:\s*4px solid var\(--gold\)/, path);
+    const beforeFinePointerHover = html.split("@media (hover: hover) and (pointer: fine)")[0];
+    assert.doesNotMatch(beforeFinePointerHover, /\.rune:hover/, path);
+    assert.match(html, /querySelectorAll\("\.selected,\.success,\.failure"\)/, path);
+  }
+
+  assert.match(duel, /lastInteractionWasKeyboard && document\.activeElement\?\.classList\.contains\("rune"\)/);
+  assert.match(duel, /document\.addEventListener\("pointerdown", \(\) => \{ lastInteractionWasKeyboard = false; \}, true\)/);
+  assert.match(duel, /@media \(max-height: 720px\) and \(orientation: portrait\)[\s\S]*\.game-subline > span \{ display: none; \}/);
+  assert.doesNotMatch(duel, /@media \(max-height: 720px\) and \(orientation: portrait\)[\s\S]*?\.game-heading p \{ display: none; \}/);
+});
+
+test("la victoire du duo nomme clairement le gagnant et les deux scores", () => {
+  const duel = pages["outils/club_maths/coffres_magiques.html"];
+  assert.match(duel, /result-title"\)\.textContent = `Le joueur \$\{player\} a gagné !`/);
+  assert.match(duel, /result-text"\)\.textContent = `Le joueur \$\{player\} a ouvert les cinq serrures du coffre\.`/);
+  assert.match(duel, /Joueur bleu : \$\{scores\[0\]\}[\s\S]*Joueur corail : \$\{scores\[1\]\}/);
+});
+
 test("le pied public disparaît pendant chaque défi chronométré", () => {
   for (const path of [
     "outils/calcul_mental/defi_tables.html",

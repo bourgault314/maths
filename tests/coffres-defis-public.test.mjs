@@ -76,6 +76,32 @@ test("les règles et durées approuvées restent explicites", () => {
   assert.match(pages["outils/calcul_mental/defi_calcul.html"], /const TOTAL = 30;[\s\S]*const DURATION = 180;/);
 });
 
+test("les deux portes Coffres donnent accès aux modes solo et duo", () => {
+  const coffresPaths = [
+    "outils/club_maths/coffres_magiques.html",
+    "outils/calcul_mental/coffres_magiques_solo.html"
+  ];
+
+  for (const path of coffresPaths) {
+    const html = pages[path];
+    assert.match(html, /id="mode-dialog"[^>]*role="dialog"[^>]*aria-modal="true"[^>]*aria-labelledby="mode-title"/, path);
+    assert.match(html, /id="choose-solo"[\s\S]*Solo — S’entraîner/, path);
+    assert.match(html, /id="choose-duo"[\s\S]*Duo — Se défier/, path);
+    assert.match(html, /data-change-mode>Changer de mode/, path);
+    assert.match(html, /function modeUrl\(nextMode\)[\s\S]*coffres_magiques_solo\.html[\s\S]*coffres_magiques\.html[\s\S]*\?mode=\$\{nextMode\}&from=\$\{origin\}/, path);
+    assert.match(html, /#choose-solo"\)\.addEventListener\("click", \(\) => chooseMode\("solo"\)\)/, path);
+    assert.match(html, /#choose-duo"\)\.addEventListener\("click", \(\) => chooseMode\("duo"\)\)/, path);
+  }
+
+  for (const path of coffresPaths) {
+    const resource = catalogue.resources.find(item => item.path === path);
+    const classification = catalogue.resourceClassifications[path];
+    const catalogueCopy = `${resource?.description || ""} ${classification?.cardDescription || ""}`;
+    assert.match(catalogueCopy, /solo/i, `${path} : le catalogue n’annonce pas le solo`);
+    assert.match(catalogueCopy, /duo|à deux/i, `${path} : le catalogue n’annonce pas le duo`);
+  }
+});
+
 test("le catalogue publie les cinq cartes dans les groupes validés", () => {
   const expected = new Map([
     ["outils/club_maths/carres_gloutons.html", ["jeux-recherches", "strategie", "jeux"]],
@@ -180,7 +206,8 @@ test("la politique de confidentialité explique les meilleurs scores locaux des 
 
 test("le hub Club Math relie Coffres magiques et garde une grille équilibrée", () => {
   assert.match(clubHub, /href="coffres_magiques\.html" class="card coffres"/);
-  assert.match(clubHub, /la somme, la différence, le produit ou le quotient demandé/);
+  assert.match(clubHub, /Choisissez le duel à deux[\s\S]*l’entraînement solo guidé sur les quatre opérations/);
+  assert.match(clubHub, />Choisir solo ou duo</);
   assert.match(clubHub, /@media \(min-width: 1100px\)[\s\S]*repeat\(3, minmax\(0, 1fr\)\)/);
 });
 

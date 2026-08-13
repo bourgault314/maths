@@ -322,7 +322,7 @@ async function auditPointJourney(browser, base, randomValue, expectedMode, error
   const page = await browser.newPage({ viewport: { width: 320, height: 568 } });
   page.on("pageerror", error => errors.push(`${expectedMode} : ${error.message}`));
   try {
-    await page.goto(`${base}/outils/calcul_mental/coffres_magiques_solo.html`, { waitUntil: "load" });
+    await page.goto(`${base}/outils/calcul_mental/coffres_magiques_solo.html?mode=solo`, { waitUntil: "load" });
     await page.evaluate(value => { Math.random = () => value; }, randomValue);
     await page.locator("#start-game").click();
     await page.locator("#lesson").waitFor({ state: "hidden" });
@@ -414,7 +414,7 @@ async function auditExtremeVisual(browser, base, { mode, first, second, width, h
   const page = await browser.newPage({ viewport: { width, height } });
   page.on("pageerror", error => errors.push(`${mode} ${first}/${second} à ${width}px : ${error.message}`));
   try {
-    await page.goto(`${base}/outils/calcul_mental/coffres_magiques_solo.html`, { waitUntil: "load" });
+    await page.goto(`${base}/outils/calcul_mental/coffres_magiques_solo.html?mode=solo`, { waitUntil: "load" });
     await page.evaluate(({ nextMode, firstValue, secondValue }) => {
       const stage = document.createElement("main");
       stage.style.cssText = "width:100%;min-height:100vh;padding:8px;";
@@ -510,7 +510,7 @@ async function auditDuoBarModels(browser, base, width, errors) {
   const page = await browser.newPage({ viewport: { width, height: width <= 390 ? 844 : 900 } });
   page.on("pageerror", error => errors.push(`bordures duo à ${width}px : ${error.message}`));
   try {
-    await page.goto(`${base}/outils/club_maths/coffres_magiques.html`, { waitUntil: "load" });
+    await page.goto(`${base}/outils/club_maths/coffres_magiques.html?mode=duo`, { waitUntil: "load" });
     await page.locator("#rules").waitFor({ state: "visible" });
     const data = await page.evaluate(() => {
       const box = element => {
@@ -575,7 +575,7 @@ async function auditIntroMemo(browser, base, width, errors) {
   const page = await browser.newPage({ viewport: { width, height: width === 320 ? 568 : width === 390 ? 844 : 768 } });
   page.on("pageerror", error => errors.push(`mémo solo à ${width}px : ${error.message}`));
   try {
-    await page.goto(`${base}/outils/calcul_mental/coffres_magiques_solo.html`, { waitUntil: "load" });
+    await page.goto(`${base}/outils/calcul_mental/coffres_magiques_solo.html?mode=solo`, { waitUntil: "load" });
     await page.waitForFunction(() => document.activeElement.id === "start-game");
     assert(await page.locator("#lesson .operation-grid").evaluate(grid => grid.scrollTop === 0), `mémo solo à ${width}px : l’introduction ne commence pas en haut.`);
     assert(await page.locator("#lesson .lesson-actions button").count() === 1, `mémo solo à ${width}px : l’introduction propose plusieurs actions équivalentes.`);
@@ -615,7 +615,7 @@ async function auditIntroMemo(browser, base, width, errors) {
   });
 
   try {
-    await page.goto(`${base}/outils/calcul_mental/coffres_magiques_solo.html`, { waitUntil: "load" });
+    await page.goto(`${base}/outils/calcul_mental/coffres_magiques_solo.html?mode=solo`, { waitUntil: "load" });
     await page.waitForFunction(() => document.activeElement.id === "start-game");
     await assertNoHorizontalOverflow(page, "Mémo desktop");
     await page.screenshot({ path: path.join(CAPTURES, "memo-desktop-1366.png") });
@@ -721,7 +721,7 @@ async function auditIntroMemo(browser, base, width, errors) {
     for (const width of [320, 390, 1366]) {
       await auditDuoBarModels(browser, base, width, errors);
       await auditProductMemo(browser, base, {
-        route: "/outils/calcul_mental/coffres_magiques_solo.html",
+        route: "/outils/calcul_mental/coffres_magiques_solo.html?mode=solo",
         wrapperSelector: ".dual-learning-views .array-dimension-model",
         gridSelector: ".dot-array",
         markerSelector: ".dimension-rows",
@@ -733,7 +733,7 @@ async function auditIntroMemo(browser, base, width, errors) {
         width
       }, errors);
       await auditProductMemo(browser, base, {
-        route: "/outils/club_maths/coffres_magiques.html",
+        route: "/outils/club_maths/coffres_magiques.html?mode=duo",
         wrapperSelector: ".dual-operation-views .dimensioned-array",
         gridSelector: ".dot-array",
         markerSelector: ".array-dimension-side",
