@@ -9,7 +9,19 @@ const thumbnailPath = new URL("assets/img/thumbnails/jeux/soley.svg", root);
 const logoPath = new URL("assets/img/mathsgo-logo-soley.png", root);
 const cataloguePath = new URL("assets/js/catalogue-refonte-data.js", root);
 
-const html = fs.readFileSync(gamePath, "utf8");
+// Depuis le découpage d'août 2026, la page est une coquille : le style vit dans
+// soley/css/soley.css et le code dans soley/js/{levels,engine,render,ui}.js.
+// Lecture normalisée en LF : un poste Windows peut avoir des copies de travail en CRLF.
+const lire = (chemin) => fs.readFileSync(new URL(chemin, root), "utf8").replace(/\r\n/g, "\n");
+const html = lire("outils/club_maths/soley.html");
+const css = lire("outils/club_maths/soley/css/soley.css");
+const js = {
+  levels: lire("outils/club_maths/soley/js/levels.js"),
+  engine: lire("outils/club_maths/soley/js/engine.js"),
+  render: lire("outils/club_maths/soley/js/render.js"),
+  ui: lire("outils/club_maths/soley/js/ui.js"),
+};
+const tout = html + css + js.levels + js.engine + js.render + js.ui;
 const thumbnail = fs.readFileSync(thumbnailPath, "utf8");
 
 function loadCatalogue() {
@@ -20,19 +32,29 @@ function loadCatalogue() {
 }
 
 function createGameContext() {
-  const inlineScript = html.match(/<script>\s*("use strict";[\s\S]*?)<\/script>/)?.[1];
-  assert.ok(inlineScript, "le script principal de Solèy doit rester incorporé à la page");
-  const core = inlineScript.slice(0, inlineScript.indexOf("/* ===== Dessin ===== */"));
-  assert.ok(core.length > 0, "la logique testable doit précéder le rendu");
+  // La logique testable sans navigateur = données (levels.js) + moteur (engine.js).
+  // engine.js ne touche au DOM qu'à l'intérieur de fonctions jamais appelées ici.
   const context = vm.createContext({
     localStorage: {
       getItem() { return null; },
       setItem() {}
     }
   });
-  vm.runInContext(core, context);
+  vm.runInContext(js.levels, context);
+  vm.runInContext(js.engine, context);
   return context;
 }
+
+test("la coquille charge les modules découpés, dans l'ordre, sans script incorporé", () => {
+  assert.match(html, /<link rel="stylesheet" href="soley\/css\/soley\.css">/);
+  const ordre = [...html.matchAll(/<script src="soley\/js\/(\w+)\.js"><\/script>/g)].map(m => m[1]);
+  assert.deepEqual(ordre, ["levels", "engine", "render", "ui"]);
+  assert.doesNotMatch(html, /<script>/);
+  assert.doesNotMatch(html, /<style>/);
+  for (const [nom, texte] of Object.entries(js)) {
+    assert.ok(texte.startsWith('"use strict";\n'), `${nom}.js doit rester en mode strict`);
+  }
+});
 
 test("Solèy est publié une seule fois, dans Jeux et Fractions", () => {
   const catalogue = loadCatalogue();
@@ -180,10 +202,10 @@ test("les pièces scellées sont valides, bloquées et intégrées à la céléb
     }
   );
   assert.deepEqual([...fixed.failures], []);
-  assert.match(html, /\(L\.fixed\|\|\[\]\)\.some\(f=>f\[1\]===x&&f\[2\]===y\)/);
-  assert.match(html, /class="placed fixed-piece" data-cell=/);
-  assert.match(html, /Pièce scellée : elle ne peut pas être déplacée/);
-  assert.match(html, /\.placed\[data-cell="\$\{cell\}"\] \.beampath/);
+  assert.match(js.ui, /\(L\.fixed\|\|\[\]\)\.some\(f=>f\[1\]===x&&f\[2\]===y\)/);
+  assert.match(js.render, /class="placed fixed-piece" data-cell=/);
+  assert.match(js.render, /Pièce scellée : elle ne peut pas être déplacée/);
+  assert.match(js.engine, /\.placed\[data-cell="\$\{cell\}"\] \.beampath/);
 });
 
 test("les demi-tunnels ne se contournent plus avec un rayon entier", () => {
@@ -259,16 +281,16 @@ test("les rayons de victoire forment un graphe de propagation valide", () => {
 });
 
 test("l’accueil masque réellement le plateau et reprend la charte du site", () => {
-  assert.match(html, /#play\.screen\{display:none;\}/);
-  assert.match(html, /#play\.screen\.active\{display:flex;\}/);
+  assert.match(css, /#play\.screen\{display:none;\}/);
+  assert.match(css, /#play\.screen\.active\{display:flex;\}/);
   assert.match(html, /class="brandmark" href="\/"/);
   assert.match(html, /assets\/img\/mathsgo-logo-soley\.png/);
   assert.match(html, /assets\/js\/consentement\.js/);
   assert.match(html, /Gérer mes cookies/);
   assert.match(html, /aria-label="Recommencer le niveau"/);
-  assert.match(html, /class="chip[^"]*"[^>]*aria-pressed=/);
+  assert.match(js.ui, /class="chip[^"]*"[^>]*aria-pressed=/);
   assert.match(html, /meta name="description" content="Un jeu de réflexion en 60 niveaux/);
-  assert.match(html, /tunnels:`<path d="M4 42V25/);
+  assert.match(js.ui, /tunnels:`<path d="M4 42V25/);
 });
 
 test("le cours illustré couvre les nouveaux partages et les pièces scellées", () => {
@@ -304,62 +326,62 @@ test("le cours illustré couvre les nouveaux partages et les pièces scellées",
   assert.deepEqual([...additions.galerie], ["1 ÷ 2 = 1/2"]);
   assert.deepEqual([...additions.verrous], ["1 ÷ 2 = 1/2", "1/2 + 1/2 = 1"]);
   assert.match(html, /id="hintov" role="dialog" aria-modal="true"/);
-  assert.match(html, /class="frac"/);
+  assert.match(js.engine, /class="frac"/);
 });
 
 test("le paysage mobile et le plein écran utilisent réellement tout le viewport", () => {
-  assert.match(html, /@media \(orientation:landscape\)\{/);
-  assert.match(html, /matchMedia\('\(orientation:landscape\)'\)/);
-  assert.match(html, /height:100dvh/);
-  assert.match(html, /env\(safe-area-inset-left\)/);
-  assert.match(html, /--board-ratio/);
-  assert.match(html, /aspect-ratio:var\(--board-ratio/);
-  assert.match(html, /const boardW=Math\.max\(120,Math\.min\(availH\*ratio,availW-sidebarMin-gap\)\)/);
-  assert.match(html, /pl\.style\.flexBasis=`\$\{boardW\}px`/);
-  assert.match(html, /pl\.style\.height=`\$\{boardH\}px`/);
-  assert.match(html, /min-width:44px;min-height:44px/);
-  assert.match(html, /#topbar,#introline,#toolbox,#status\{flex-shrink:0;\}/);
-  assert.match(html, /fsbtn\.addEventListener\('click',async/);
-  assert.match(html, /requestFS\.call\(target\)/);
-  assert.match(html, /const nativeFullscreen=typeof requestFS==='function'&&typeof exitFS==='function'/);
-  assert.match(html, /const portrait=window\.matchMedia\('\(orientation:portrait\)'\)/);
-  assert.match(html, /const hide=standalone\|\|\(!nativeFullscreen&&mobileDevice&&portrait\.matches\)/);
-  assert.match(html, /fsbtn\.hidden=hide/);
-  assert.match(html, /portrait\.addEventListener\('change',syncAvailability\)/);
+  assert.match(css, /@media \(orientation:landscape\)\{/);
+  assert.match(js.ui, /matchMedia\('\(orientation:landscape\)'\)/);
+  assert.match(css, /height:100dvh/);
+  assert.match(css, /env\(safe-area-inset-left\)/);
+  assert.match(js.ui, /--board-ratio/);
+  assert.match(css, /aspect-ratio:var\(--board-ratio/);
+  assert.match(js.ui, /const boardW=Math\.max\(120,Math\.min\(availH\*ratio,availW-sidebarMin-gap\)\)/);
+  assert.match(js.ui, /pl\.style\.flexBasis=`\$\{boardW\}px`/);
+  assert.match(js.ui, /pl\.style\.height=`\$\{boardH\}px`/);
+  assert.match(css, /min-width:44px;min-height:44px/);
+  assert.match(css, /#topbar,#introline,#toolbox,#status\{flex-shrink:0;\}/);
+  assert.match(js.ui, /fsbtn\.addEventListener\('click',async/);
+  assert.match(js.ui, /requestFS\.call\(target\)/);
+  assert.match(js.ui, /const nativeFullscreen=typeof requestFS==='function'&&typeof exitFS==='function'/);
+  assert.match(js.ui, /const portrait=window\.matchMedia\('\(orientation:portrait\)'\)/);
+  assert.match(js.ui, /const hide=standalone\|\|\(!nativeFullscreen&&mobileDevice&&portrait\.matches\)/);
+  assert.match(js.ui, /fsbtn\.hidden=hide/);
+  assert.match(js.ui, /portrait\.addEventListener\('change',syncAvailability\)/);
   assert.match(html, /id="fsbtn"[^>]*hidden/);
-  assert.match(html, /#fsbtn\[hidden\]\{display:none !important;\}/);
-  assert.match(html, /Masquer la barre d’outils/);
-  assert.match(html, /window\.visualViewport/);
-  assert.doesNotMatch(html, /navigationUI:'hide'/);
-  assert.doesNotMatch(html, /orientation:landscape\) and \(min-width:640px\)/);
-  assert.doesNotMatch(html, /function fallback\(/);
+  assert.match(css, /#fsbtn\[hidden\]\{display:none !important;\}/);
+  assert.match(js.ui, /Masquer la barre d’outils/);
+  assert.match(js.ui, /window\.visualViewport/);
+  assert.doesNotMatch(tout, /navigationUI:'hide'/);
+  assert.doesNotMatch(tout, /orientation:landscape\) and \(min-width:640px\)/);
+  assert.doesNotMatch(tout, /function fallback\(/);
 });
 
 test("la victoire propage chaque rayon jusqu’aux maisons avant les confettis", () => {
-  assert.match(html, /\.beam\.win-draw,\.beampath\.win-draw/);
-  assert.match(html, /animation:win-draw[^;]*both/);
-  assert.match(html, /@keyframes win-draw\{from\{stroke-dashoffset:var\(--win-length\)/);
-  assert.match(html, /const pause=\.4,drawStart=\.1,SPEED=620/);
-  assert.match(html, /const arrival=sg\.parents\.length\?Math\.max/);
-  assert.match(html, /d\.ins\.map\(dir=>merges\[pk\]\[dir\]\.segId\)/);
-  assert.match(html, /path\.getTotalLength\(\)/);
-  assert.match(html, /p\.sg\.targetIndex>=0/);
-  assert.match(html, /const T=\(pause\+lastArrival\+\.3\)\*1000/);
-  assert.match(html, /class="placed fixed-piece" data-cell=/);
-  assert.doesNotMatch(html, /drawStart\+i\*0\.2/);
-  assert.doesNotMatch(html, /@keyframes retractseg/);
+  assert.match(css, /\.beam\.win-draw,\.beampath\.win-draw/);
+  assert.match(css, /animation:win-draw[^;]*both/);
+  assert.match(css, /@keyframes win-draw\{from\{stroke-dashoffset:var\(--win-length\)/);
+  assert.match(js.engine, /const pause=\.4,drawStart=\.1,SPEED=620/);
+  assert.match(js.engine, /const arrival=sg\.parents\.length\?Math\.max/);
+  assert.match(js.engine, /d\.ins\.map\(dir=>merges\[pk\]\[dir\]\.segId\)/);
+  assert.match(js.engine, /path\.getTotalLength\(\)/);
+  assert.match(js.engine, /p\.sg\.targetIndex>=0/);
+  assert.match(js.engine, /const T=\(pause\+lastArrival\+\.3\)\*1000/);
+  assert.match(js.render, /class="placed fixed-piece" data-cell=/);
+  assert.doesNotMatch(tout, /drawStart\+i\*0\.2/);
+  assert.doesNotMatch(tout, /@keyframes retractseg/);
 });
 
 test("le logo maths&go s’intègre au soleil sans plaque blanche", () => {
   assert.ok(fs.existsSync(logoPath));
   assert.match(html, /<img src="\/assets\/img\/mathsgo-logo-soley\.png" alt="maths&go"/);
-  assert.match(html, /\.brandmark\{[\s\S]*?border:0;background:transparent/);
-  assert.match(html, /html\{background:#241b4d;\}/);
+  assert.match(css, /\.brandmark\{[\s\S]*?border:0;background:transparent/);
+  assert.match(css, /html\{background:#241b4d;\}/);
   assert.match(html, /meta name="robots" content="index, follow, max-image-preview:large"/);
-  assert.match(html, /filter:none/);
-  assert.doesNotMatch(html, /#fffdf8/);
-  assert.doesNotMatch(html, /#FFEEDA/);
-  assert.doesNotMatch(html, /filter:grayscale\(1\)/);
+  assert.match(css, /filter:none/);
+  assert.doesNotMatch(tout, /#fffdf8/);
+  assert.doesNotMatch(tout, /#FFEEDA/);
+  assert.doesNotMatch(tout, /filter:grayscale\(1\)/);
 });
 
 test("la miniature Solèy respecte le format du catalogue", () => {
