@@ -62,9 +62,9 @@ function installerFauxNavigateur(recherche) {
   return { application, gestionnaires, focusRecus, optionsFocus, panneau, corpsPanneau, zoneQuestion };
 }
 
-function cliquer(gestionnaires, action, id, value, index, notion) {
+function cliquer(gestionnaires, action, id, value, index, notion, niveau) {
   const cible = {
-    dataset: { action, id, value, index, notion },
+    dataset: { action, id, value, index, notion, niveau },
     closest(selecteur) { return selecteur === "[data-action]" ? this : null; },
   };
   gestionnaires.get("click")[0]({ target: cible });
@@ -430,7 +430,7 @@ it("affiche en succès une sélection multiple entièrement correcte", async () 
   assert.doesNotMatch(application.innerHTML, /rappel-reponse-eleve reponse-fausse/);
 });
 
-it("rend NC-03 et NC-04 dans une seule notion avec le même repère en aide et correction", async () => {
+it("rend NC-03 et NC-04 dans une seule notion avec des repères cohérents en aide et correction", async () => {
   const { application, gestionnaires } = installerFauxNavigateur(
     "?notion=fractions-simples-decimaux&mode=tableau&questions=20&graine=fumee-fractions",
   );
@@ -440,16 +440,17 @@ it("rend NC-03 et NC-04 dans une seule notion avec le même repère en aide et c
   cliquer(gestionnaires, "cours");
   for (const [index, titre] of [
     [1, /Même nombre, même position/],
-    [2, /Les repères indispensables/],
-    [3, /Fraction vers décimal/],
-    [4, /Décimal vers fraction/],
-    [5, /Dépasser l’unité/],
-    [6, /Choisir la bonne stratégie/],
+    [2, /Du matériel aux symboles/],
+    [3, /Les rangs décimaux/],
+    [4, /Fraction décimale vers décimal/],
+    [5, /Décimal vers fraction/],
+    [6, /Dépasser l’unité/],
+    [7, /Choisir la bonne stratégie/],
   ]) {
-    assert.match(application.innerHTML, new RegExp(`${index} \\/ 6`));
+    assert.match(application.innerHTML, new RegExp(`${index} \\/ 7`));
     assert.match(application.innerHTML, titre);
     assert.match(application.innerHTML, /fraction-empilee|ecriture-fraction/);
-    if (index < 6) cliquer(gestionnaires, "cours-suivant");
+    if (index < 7) cliquer(gestionnaires, "cours-suivant");
   }
   cliquer(gestionnaires, "fermer-cours");
   cliquer(gestionnaires, "demarrer");
@@ -476,19 +477,30 @@ it("rend NC-03 et NC-04 dans une seule notion avec le même repère en aide et c
 
     cliquer(gestionnaires, "aide");
     assert.match(application.innerHTML, /panneau-fractions/);
-    const aideDroite = /figure-double-droite-fraction/.test(application.innerHTML);
+    assert.match(application.innerHTML, /1 · Un indice/);
+    assert.match(application.innerHTML, /2 · Voir/);
+    assert.match(application.innerHTML, /3 · Construire/);
+    cliquer(gestionnaires, "niveau-aide-fraction", undefined, undefined, undefined, undefined, "1");
+    const aideDroite = /figure-double-droite-fraction|figure-bandes-rail/.test(application.innerHTML);
     const aideTableau = /figure-tableau-numeration/.test(application.innerHTML);
     droiteVue ||= aideDroite;
     tableauVu ||= aideTableau;
     assert.match(
       application.innerHTML,
-      /figure-double-droite-fraction|figure-grille-centiemes|groupes-parts|figure-tableau-numeration|tuiles-unites/,
+      /figure-bandes-rail|figure-tableau-numeration|tuiles-unites/,
     );
     cliquer(gestionnaires, "fermer-aide");
 
     cliquer(gestionnaires, "correction");
-    if (aideDroite) assert.match(application.innerHTML, /figure-double-droite-fraction/);
-    if (aideTableau) assert.match(application.innerHTML, /figure-tableau-numeration/);
+    if (aideDroite) {
+      assert.match(
+        application.innerHTML,
+        /figure-double-droite-fraction|figure-bandes-rail|figure-grille-repere/,
+      );
+    }
+    if (aideTableau && !/Toutes les fractions égales sont acceptées/.test(application.innerHTML)) {
+      assert.match(application.innerHTML, /figure-tableau-numeration/);
+    }
     cliquer(gestionnaires, "fermer-correction");
     cliquer(gestionnaires, "reponse");
     assert.match(application.innerHTML, /Réponse affichée/);
@@ -581,6 +593,45 @@ it("termine une série fractions avec un bilan local NC-03, NC-04 et aides", asy
   assert.match(application.innerHTML, /Décimal → fraction/);
   assert.match(application.innerHTML, /Aides ouvertes/);
   assert.match(application.innerHTML, /1 \/ 20/);
+});
+
+it("ne révèle jamais la réponse dans les trois niveaux de Me guider", async () => {
+  const { application, gestionnaires } = installerFauxNavigateur(
+    "?notion=fractions-simples-decimaux&mode=tableau&questions=20&graine=fumee-masques-fractions",
+  );
+  await import(`./app.js?fumee=masques-fractions-${Date.now()}`);
+  cliquer(gestionnaires, "demarrer");
+
+  let libreVerifiee = false;
+  let inverseVerifiee = false;
+  for (let index = 0; index < 20; index += 1) {
+    const libre = /Toutes les fractions égales sont acceptées/.test(application.innerHTML);
+    const inverse = /famille-decimal-vers-fraction/.test(application.innerHTML);
+    if (libre || (inverse && !inverseVerifiee)) {
+      const decimal = application.innerHTML.match(/class="decimal-question">([^<]+)</)?.[1];
+      assert.ok(decimal);
+      cliquer(gestionnaires, "aide");
+      for (const niveau of [0, 1, 2]) {
+        cliquer(gestionnaires, "niveau-aide-fraction", undefined, undefined, undefined, undefined, String(niveau));
+        const aide = application.innerHTML.match(/<aside class="panneau panneau-aide[\s\S]*?<\/aside>/)?.[0] ?? "";
+        assert.match(aide, /<strong>\?<\/strong>|>\?<\/text>|à la place de « \? »|terme demandé reste « \? »|fraction-empilee/);
+        if (libre) {
+          assert.match(aide, /dernier rang écrit|fraction décimale|dernier rang/);
+          assert.doesNotMatch(aide, /figure-bandes-rail|aide-nc04-libre/);
+        }
+        if (inverse) {
+          assert.doesNotMatch(aide, /type="range"[^>]*max="/);
+        }
+      }
+      cliquer(gestionnaires, "fermer-aide");
+      libreVerifiee ||= libre;
+      inverseVerifiee ||= inverse;
+    }
+    cliquer(gestionnaires, "reponse");
+    cliquer(gestionnaires, "suivant");
+  }
+  assert.equal(libreVerifiee, true);
+  assert.equal(inverseVerifiee, true);
 });
 
 it("propose le parcours DNB puis lance Au tableau sans saisie ni score", async () => {

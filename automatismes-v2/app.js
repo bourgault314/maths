@@ -28,20 +28,21 @@ import {
   selectionnerChampSaisie,
   selectionnerRepereAide,
   choisirRangFractionAide,
+  choisirNiveauAideFraction,
   grouperUniteFractionAide,
   positionnerFractionAide,
   saisirCaractere,
   saisirChiffre,
   tournerSolide,
   validerReponse,
-} from "./src/etat-lecteur.js?v=25";
+} from "./src/etat-lecteur.js?v=26";
 import {
   TYPE_REPONSE_DEUX_ENTIERS,
   TYPE_REPONSE_ENTIER_NATUREL,
   TYPE_REPONSE_FRACTION_EQUIVALENTE,
   TYPE_REPONSE_NOMBRE_DECIMAL,
   TYPE_REPONSE_CHOIX_UNIQUE,
-} from "../packages/contrats/src/question-v2.js?v=25";
+} from "../packages/contrats/src/question-v2.js?v=26";
 import {
   connaitNotionLecteur,
   obtenirNotionLecteur,
@@ -51,13 +52,13 @@ import {
   RENDU_SOLIDE,
   RENDU_VOLUME,
   NOTION_FRACTIONS_SIMPLES_DECIMAUX,
-} from "./src/registre-lecteur.js?v=25";
+} from "./src/registre-lecteur.js?v=26";
 import {
   DOMAINES_AUTOMATISMES,
   MICRO_NOTIONS_AUTOMATISMES,
   normaliserIdentifiantMicroNotion,
-} from "../packages/automatismes/src/identifiants.js?v=25";
-import { COURS_SOLIDES_USUELS } from "../packages/automatismes/src/espace-et-geometrie/solides-usuels/reconnaissance.js?v=25";
+} from "../packages/automatismes/src/identifiants.js?v=26";
+import { COURS_SOLIDES_USUELS } from "../packages/automatismes/src/espace-et-geometrie/solides-usuels/reconnaissance.js?v=26";
 import {
   creerCone,
   creerCube,
@@ -72,8 +73,8 @@ import {
   ACTION_TOUCHE_SAISIR,
   ACTION_TOUCHE_VALIDER,
   obtenirDispositionClavier,
-} from "../packages/objets/src/clavier.js?v=25";
-import { formulationCritereDivisibilite } from "../packages/automatismes/src/nombres-et-calculs/criteres-divisibilite/critere-precis.js?v=25";
+} from "../packages/objets/src/clavier.js?v=26";
+import { formulationCritereDivisibilite } from "../packages/automatismes/src/nombres-et-calculs/criteres-divisibilite/critere-precis.js?v=26";
 import {
   caseVide,
   difference,
@@ -87,22 +88,27 @@ import {
   variable,
   versHtmlEgalitesAlignees,
   versHtmlSemantique,
-} from "../packages/objets/src/expressions.js?v=25";
+} from "../packages/objets/src/expressions.js?v=26";
 import {
   dessinerCarreQuadrille,
-} from "../packages/objets/src/carre-quadrille.js?v=25";
-import { dessinerGrilleFraction } from "../packages/objets/src/fractions.js?v=25";
-import { dessinerDoubleDroiteGraduee } from "../packages/objets/src/droite-graduee.js?v=25";
+} from "../packages/objets/src/carre-quadrille.js?v=26";
+import { dessinerGrilleFraction } from "../packages/objets/src/fractions.js?v=26";
+import { dessinerDoubleDroiteGraduee } from "../packages/objets/src/droite-graduee.js?v=26";
+import { dessinerBandesFractionnairesSurRailDecimal } from "../packages/objets/src/bandes-fractions-rail.js?v=26";
 import {
-  construireGroupementFraction,
+  dessinerMaterielNumerationDecimale,
+  dessinerTableauNumerationDecimale,
+} from "../packages/objets/src/numeration-decimale.js?v=26";
+import {
   construireDonneesTableauDepuisFraction,
   formaterFractionEnDecimal,
-} from "../packages/objets/src/fractions-decimaux.js?v=25";
+  reduireFraction,
+} from "../packages/objets/src/fractions-decimaux.js?v=26";
 import {
   diagnostiquerDecimalVersNumerateur,
   diagnostiquerFractionLibre,
   diagnostiquerFractionVersDecimal,
-} from "./src/diagnostic-fractions-decimaux.js?v=25";
+} from "./src/diagnostic-fractions-decimaux.js?v=26";
 
 const MICRO_NOTION_FRACTION_VERS_DECIMAL =
   MICRO_NOTIONS_AUTOMATISMES.FRACTION_VERS_DECIMAL;
@@ -115,7 +121,6 @@ let etat = creerEtatLecteur(lireConfiguration(rechercheInitiale));
 let menuAccueilOuvert = rechercheInitiale.length === 0;
 let menuSessionOuvert = false;
 let pageCoursCourante = 0;
-let denominateurCoursFraction = 100;
 let compteurSeries = 0;
 const VOLUMES_MENU = Object.freeze([5, 10, 15, 20]);
 let configurationMenu = {
@@ -2432,11 +2437,29 @@ function donneesTableauAvecRang(numerateur, denominateur) {
 function rendreTableauNumeration(
   numerateur,
   denominateur,
-  { afficherChiffres = true, colonneMiseEnEvidence = null } = {},
+  {
+    afficherChiffres = true,
+    colonneMiseEnEvidence = null,
+    afficherLecture = afficherChiffres,
+    annoncerEcriture = true,
+  } = {},
 ) {
   const donnees = donneesTableauAvecRang(numerateur, denominateur);
+  if (afficherChiffres) {
+    const dessin = dessinerTableauNumerationDecimale({
+      ecritureDecimale: donnees.ecritureDecimale,
+      largeur: 560,
+      rangMisEnEvidence: colonneMiseEnEvidence,
+      afficherLecture,
+      annoncerEcriture,
+    });
+    return rendreFigureFraction(dessin, "figure-tableau-numeration figure-tableau-numeration-svg");
+  }
+  const alternative = annoncerEcriture
+    ? `Tableau de numération de ${donnees.ecritureDecimale}`
+    : "Tableau de numération à compléter : lis les colonnes sans que le résultat soit annoncé";
   return `<figure class="figure-tableau-numeration">
-    <table aria-label="Tableau de numération de ${echapper(donnees.ecritureDecimale)}">
+    <table aria-label="${echapper(alternative)}">
       <thead><tr>${donnees.colonnes.map((colonne) =>
       `<th class="${colonne.id === colonneMiseEnEvidence ? "rang-cible" : ""}"><span class="libelle-rang-complet">${echapper(colonne.libelle)}</span><abbr class="libelle-rang-court" title="${echapper(colonne.libelle)}" aria-label="${echapper(colonne.libelle)}">${echapper(ABREVIATIONS_RANGS_DECIMAUX[colonne.id])}</abbr></th>`,
       ).join("")}</tr></thead>
@@ -2463,6 +2486,47 @@ function rendreFigureFraction(dessin, classes = "", legende = "") {
     ${dessin.svg}
     ${legende ? `<figcaption>${echapper(legende)}</figcaption>` : ""}
   </figure>`;
+}
+
+function rendreMaterielDecimalDepuisFraction(numerateur, denominateur, classes = "") {
+  const centiemes = numerateur * (100 / denominateur);
+  return rendreFigureFraction(
+    dessinerMaterielNumerationDecimale({
+      unites: Math.floor(centiemes / 100),
+      dixiemes: Math.floor((centiemes % 100) / 10),
+      centiemes: centiemes % 10,
+      orientation: "horizontale",
+      largeur: 560,
+    }),
+    `figure-materiel-decimal ${classes}`,
+  );
+}
+
+function rendreBandesRailFractions(question, source, {
+  solution = false,
+  etape = "pieces",
+  partiesPosees = undefined,
+  classes = "",
+} = {}) {
+  const direct = question.classement.microNotion === MICRO_NOTION_FRACTION_VERS_DECIMAL;
+  const profil = solution
+    ? "solution"
+    : direct
+      ? "aide-nc03"
+      : question.reponse.type === TYPE_REPONSE_FRACTION_EQUIVALENTE
+        ? "aide-nc04-libre"
+        : "aide-nc04-imposee";
+  return rendreFigureFraction(
+    dessinerBandesFractionnairesSurRailDecimal({
+      numerateur: source.numerateur,
+      denominateur: source.denominateur,
+      profil,
+      etape,
+      ...(partiesPosees === undefined ? {} : { partiesPosees }),
+      largeur: 720,
+    }),
+    `figure-bandes-rail ${classes}`,
+  );
 }
 
 function nomPartFraction(denominateur, quantite = 1) {
@@ -2509,22 +2573,21 @@ function rendreDoubleDroiteRiche(
   const progressionValide = Number.isInteger(progression)
     && progression >= 0
     && progression <= numerateur;
-  const terminee = progressionValide && progression === numerateur;
   const fractionCible = { type: "fraction", numerateur, denominateur };
   const decimalCible = formaterFractionEnDecimal(numerateur, denominateur);
   const pointsHaut = [{
     valeur,
-    etiquette: sens === MICRO_NOTION_DECIMAL_VERS_FRACTION && !reveler && !terminee ? "?" : fractionCible,
+    etiquette: sens === MICRO_NOTION_DECIMAL_VERS_FRACTION && !reveler ? "?" : fractionCible,
     couleur: COULEURS.bleu,
     position: "dessus",
   }];
   const pointsBas = [{
     valeur,
-    etiquette: sens === MICRO_NOTION_FRACTION_VERS_DECIMAL && !reveler && !terminee ? "?" : decimalCible,
+    etiquette: sens === MICRO_NOTION_FRACTION_VERS_DECIMAL && !reveler ? "?" : decimalCible,
     couleur: COULEURS.bleu,
     position: "dessous",
   }];
-  if (progressionValide && progression > 0 && !terminee) {
+  if (progressionValide && progression > 0 && progression !== numerateur) {
     const valeurConstruite = progression / denominateur;
     pointsHaut.push({
       valeur: valeurConstruite,
@@ -2700,137 +2763,58 @@ function rendreCommandesProgressionFraction(source, { retour, suite } = {}) {
   </div>`;
 }
 
-function rendreAideDoubleDroiteRiche(question, source) {
+function rendreAidePoseBandesRiche(question, source) {
   const pas = etat.pasFractionAide;
   const terminee = pas === source.numerateur;
-  const decimalCourant = formaterFractionEnDecimal(pas, source.denominateur);
-  return `<section class="atelier-fraction atelier-double-droite">
-    <p class="consigne-atelier"><strong>Fais avancer les deux écritures ensemble.</strong>
-      Chaque déplacement vaut un ${nomPartFraction(source.denominateur)} ; les deux points restent alignés.</p>
-    ${rendreDoubleDroiteRiche(source.numerateur, source.denominateur, {
-      sens: question.classement.microNotion,
-      progression: pas,
+  const direct = question.classement.microNotion === MICRO_NOTION_FRACTION_VERS_DECIMAL;
+  return `<section class="atelier-fraction atelier-pose-bandes">
+    <p class="consigne-atelier"><strong>Pose les pièces sur le rail.</strong>
+      Chaque pièce vaut un ${nomPartFraction(source.denominateur)} et garde exactement la même largeur.</p>
+    ${rendreBandesRailFractions(question, source, {
+      etape: "pieces",
+      partiesPosees: pas,
+      classes: "figure-bandes-rail-aide",
     })}
-    <label class="controle-curseur-fraction" for="curseur-fraction-aide">
-      <span>Position construite : ${rendreFractionEmpilee(pas, source.denominateur)} = <strong>${echapper(decimalCourant)}</strong></span>
+    ${direct ? `<label class="controle-curseur-fraction" for="curseur-fraction-aide">
+      <span>${direct
+        ? `${pas} ${nomPartFraction(source.denominateur, pas)} placé${pas > 1 ? "s" : ""} ; lis maintenant le point décimal.`
+        : `${pas} pièce${pas > 1 ? "s" : ""} posée${pas > 1 ? "s" : ""} jusqu’au point donné.`}</span>
       <input id="curseur-fraction-aide" class="curseur-fraction" type="range"
         min="0" max="${source.numerateur}" step="1" value="${pas}"
-        data-action="position-fraction" aria-label="Construire la correspondance une part à la fois">
-    </label>
+        data-action="position-fraction" aria-label="Poser les pièces une à une sur le rail">
+    </label>` : `<p class="controle-curseur-fraction">${pas} pièce${pas > 1 ? "s" : ""} posée${pas > 1 ? "s" : ""}. Ajoute ou retire une pièce ; le point cible indique où t’arrêter.</p>`}
     ${rendreCommandesProgressionFraction(source, {
       retour: `Reculer d’un ${nomPartFraction(source.denominateur)}`,
       suite: `Avancer d’un ${nomPartFraction(source.denominateur)}`,
     })}
     <p class="conclusion-atelier ${terminee ? "visible" : ""}" aria-live="polite">${terminee
-      ? `Les deux points sont alignés : ${rendreFractionEmpilee(source.numerateur, source.denominateur)} = <strong>${echapper(decimalCourant)}</strong>.`
-      : "Avance jusqu’au point demandé pour révéler l’autre écriture."}</p>
+      ? "Tu es arrivé au point demandé. L’autre écriture reste à trouver : complète le « ? » dans ta réponse."
+      : "Avance jusqu’au point demandé ; le dernier terme restera masqué."}</p>
   </section>`;
-}
-
-function rendreAideCentiemesRiche(question, source) {
-  const pas = etat.pasFractionAide;
-  const casesParPart = 100 / source.denominateur;
-  const coloriees = pas * casesParPart;
-  const terminee = pas === source.numerateur;
-  const decimal = formaterFractionEnDecimal(source.numerateur, source.denominateur);
-  const chaine = question.classement.microNotion === MICRO_NOTION_DECIMAL_VERS_FRACTION
-    ? `<strong>${echapper(decimal)}</strong> = ${rendreFractionEmpilee(source.numerateur * casesParPart, 100)} = ${rendreFractionEmpilee(source.numerateur, source.denominateur)}`
-    : `${rendreFractionEmpilee(source.numerateur, source.denominateur)} = ${rendreFractionEmpilee(source.numerateur * casesParPart, 100)} = <strong>${echapper(decimal)}</strong>`;
-  return `<section class="atelier-fraction atelier-centiemes">
-    <p class="consigne-atelier"><strong>Construis le nombre dans une unité de 100 cases.</strong>
-      Un ${nomPartFraction(source.denominateur)} occupe ${casesParPart} cases.</p>
-    ${rendreFigureFraction(
-      dessinerGrilleFraction({
-        colonnes: 10,
-        lignes: 10,
-        coloriees,
-        cote: 220,
-        ecriture: false,
-      }),
-      "figure-grille-centiemes figure-grille-manipulation",
-    )}
-    <p class="equivalence-en-construction">
-      ${rendreFractionEmpilee(pas, source.denominateur)} = ${rendreFractionEmpilee(coloriees, 100)}
-      <span>${coloriees} case${coloriees > 1 ? "s" : ""} sur 100</span>
-    </p>
-    <input class="curseur-fraction" type="range" min="0" max="${source.numerateur}"
-      step="1" value="${pas}" data-action="position-fraction"
-      aria-label="Colorier la grille une part à la fois">
-    ${rendreCommandesProgressionFraction(source, {
-      retour: `Retirer un ${nomPartFraction(source.denominateur)}`,
-      suite: `Colorier un ${nomPartFraction(source.denominateur)}`,
-    })}
-    <p class="conclusion-atelier ${terminee ? "visible" : ""}" aria-live="polite">${terminee
-      ? `${chaine}.`
-      : "Ajoute les parts demandées ; l’écriture équivalente se construit en même temps."}</p>
-  </section>`;
-}
-
-function rendreGroupesPartsRiche(source, groupesFormes) {
-  const groupement = construireGroupementFraction(
-    source.numerateur,
-    source.denominateur,
-  );
-  const rendreBarre = (remplissage) => `<div class="barre-parts" aria-hidden="true">
-    ${Array.from({ length: source.denominateur }, (_, index) => index < remplissage
-      ? `<i class="part-unitaire">${rendreFractionEmpilee(1, source.denominateur)}</i>`
-      : '<i class="part-unitaire part-vide"></i>').join("")}
-  </div>`;
-  const groupes = groupement.groupes.map((groupe) => {
-    if (groupe.type === "reste") {
-      return `<article class="groupe-parts groupe-reste"
-        aria-label="Reste : ${groupe.remplissage} ${nomPartFraction(source.denominateur, groupe.remplissage)}">
-        <span>Reste : ${groupe.remplissage} ${nomPartFraction(source.denominateur, groupe.remplissage)}</span>
-        ${rendreBarre(groupe.remplissage)}
-      </article>`;
-    }
-    const formee = groupe.index <= groupesFormes;
-    const libelleComplet = `Unité ${groupe.index} : ${source.denominateur} ${nomPartFraction(source.denominateur, source.denominateur)} = 1`;
-    return `<article class="groupe-parts ${formee ? "unite-formee" : "unite-a-former"}"
-      aria-label="${echapper(libelleComplet)}">
-      <span>${formee
-        ? echapper(libelleComplet)
-        : `${source.denominateur} ${nomPartFraction(source.denominateur, source.denominateur)} à grouper`}</span>
-      ${rendreBarre(groupe.remplissage)}
-    </article>`;
-  }).join("");
-  return `<div class="groupes-parts" style="--parts-par-unite:${source.denominateur}"
-    aria-label="${groupement.unites} unité${groupement.unites > 1 ? "s" : ""} complète${groupement.unites > 1 ? "s" : ""} et ${groupement.reste} ${nomPartFraction(source.denominateur, groupement.reste)} restant${groupement.reste > 1 ? "s" : ""}">${groupes}</div>`;
 }
 
 function rendreAideGroupementRiche(question, source) {
   const unites = Math.floor(source.numerateur / source.denominateur);
   const reste = source.numerateur % source.denominateur;
   const groupes = etat.groupesFractionAide;
-  const terminee = groupes === unites;
-  const decimal = formaterFractionEnDecimal(source.numerateur, source.denominateur);
-  const resteDecimal = formaterFractionEnDecimal(reste, source.denominateur);
-  const fraction = rendreFractionEmpilee(
-    source.numerateur,
-    source.denominateur,
-  );
-  const fractionReste = rendreFractionEmpilee(reste, source.denominateur);
-  const direct = question.classement.microNotion === MICRO_NOTION_FRACTION_VERS_DECIMAL;
-  const conclusion = reste === 0
-    ? direct
-      ? `${fraction} = <strong>${unites}</strong>`
-      : `<strong>${echapper(decimal)}</strong> = ${fraction}`
-    : direct
-      ? `${fraction} = ${unites} + ${fractionReste} = ${unites} + ${echapper(resteDecimal)} = <strong>${echapper(decimal)}</strong>`
-      : `<strong>${echapper(decimal)}</strong> = ${unites} + ${echapper(resteDecimal)} = ${unites} + ${fractionReste} = ${fraction}`;
+  const terminee = groupes === 2;
+  const etape = groupes === 0 ? "pieces" : groupes === 1 ? "groupes" : "unites";
   return `<section class="atelier-fraction atelier-groupement">
-    <p class="consigne-atelier"><strong>Forme les unités une par une.</strong>
+    <p class="consigne-atelier"><strong>Assemble, puis retourne les unités.</strong>
       Il faut ${source.denominateur} ${nomPartFraction(source.denominateur, source.denominateur)} pour faire 1 unité.</p>
-    ${rendreGroupesPartsRiche(source, groupes)}
-    <p class="compteur-groupes"><strong>${groupes}</strong> unité${groupes > 1 ? "s" : ""} formée${groupes > 1 ? "s" : ""} sur ${unites}</p>
+    ${rendreBandesRailFractions(question, source, {
+      etape,
+      partiesPosees: source.numerateur,
+    })}
+    <p class="compteur-groupes">${groupes === 0 ? "Les pièces sont encore séparées." : groupes === 1 ? "Les contours des unités apparaissent." : "Les unités complètes sont retournées."}</p>
     <div class="commandes-progression-fraction">
       <button class="bouton-secondaire" type="button" data-action="groupe-unite-precedent"
-        ${groupes === 0 ? "disabled" : ""}>← Défaire une unité</button>
+        ${groupes === 0 ? "disabled" : ""}>← Étape précédente</button>
       <button class="bouton-principal" type="button" data-action="groupe-unite-suivant"
-        ${terminee ? "disabled" : ""}>Former une unité →</button>
+        ${terminee ? "disabled" : ""}>${groupes === 0 ? "Assembler les pièces" : "Retourner les unités"} →</button>
     </div>
     <p class="conclusion-atelier ${terminee ? "visible" : ""}" aria-live="polite">${terminee
-      ? `${conclusion}.`
+      ? `${unites} unité${unites > 1 ? "s" : ""} complète${unites > 1 ? "s" : ""}${reste ? ` et ${reste} ${nomPartFraction(source.denominateur, reste)}` : ", sans reste"}. À toi d’écrire le nombre correspondant au « ? ».`
       : "Groupe toutes les unités complètes avant de traiter ce qui reste."}</p>
   </section>`;
 }
@@ -2839,10 +2823,7 @@ function rendreAideTableauRiche(question, source) {
   const cible = RANGS_DECIMAUX.find((rang) => rang.denominateur === source.denominateur);
   const selection = etat.rangFractionAide;
   const juste = selection === cible.id;
-  const decimal = formaterFractionEnDecimal(source.numerateur, source.denominateur);
-  const chaine = question.classement.microNotion === MICRO_NOTION_DECIMAL_VERS_FRACTION
-    ? `<strong>${echapper(decimal)}</strong> = ${rendreFractionEmpilee(source.numerateur, source.denominateur)}`
-    : `${rendreFractionEmpilee(source.numerateur, source.denominateur)} = <strong>${echapper(decimal)}</strong>`;
+  const direct = question.classement.microNotion === MICRO_NOTION_FRACTION_VERS_DECIMAL;
   return `<section class="atelier-fraction atelier-tableau-decimal">
     <p class="consigne-atelier"><strong>Que nomme le dénominateur ${source.denominateur} ?</strong>
       Choisis le rang du dernier chiffre. Le tableau reste visible et se remplit après ce choix.</p>
@@ -2854,11 +2835,13 @@ function rendreAideTableauRiche(question, source) {
     ${rendreTableauNumeration(source.numerateur, source.denominateur, {
       afficherChiffres: juste,
       colonneMiseEnEvidence: selection,
+      afficherLecture: false,
+      annoncerEcriture: !direct,
     })}
     <p class="conclusion-atelier ${juste ? "visible" : ""}" aria-live="polite">${selection === null
       ? "Lis le dénominateur, puis choisis la colonne correspondante."
       : juste
-        ? `Oui : ${chaine}.`
+        ? "Oui. Les chiffres sont placés : lis le tableau dans le sens demandé, puis complète le « ? »."
         : `Ce n’est pas le rang nommé par ${source.denominateur}. Essaie une autre colonne.`}</p>
   </section>`;
 }
@@ -2867,10 +2850,10 @@ function rendreAideUnitesRiche(source) {
   return `<section class="atelier-fraction atelier-unites">
     <p class="consigne-atelier"><strong>Regarde le dénominateur.</strong>
       Avec un dénominateur égal à 1, chaque part est déjà une unité entière.</p>
-    <div class="tuiles-unites" aria-label="${source.numerateur} unités">
-      ${Array.from({ length: source.numerateur }, (_, index) => `<span>${index + 1}</span>`).join("")}
+    <div class="tuiles-unites tuiles-unites-sans-nombres" aria-label="Des tuiles d’unités à compter">
+      ${Array.from({ length: source.numerateur }, () => '<span aria-hidden="true"></span>').join("")}
     </div>
-    <p class="conclusion-atelier visible">${rendreFractionEmpilee(source.numerateur, 1)} = <strong>${source.numerateur}</strong>.</p>
+    <p class="conclusion-atelier visible">Compte les tuiles : le nombre d’unités que tu obtiens est le terme à écrire à la place de « ? ».</p>
   </section>`;
 }
 
@@ -2892,24 +2875,198 @@ function rendreRappelQuestionFractions(question) {
   </section>`;
 }
 
+const NIVEAUX_AIDE_FRACTIONS = Object.freeze([
+  Object.freeze({ id: 0, libelle: "1 · Un indice" }),
+  Object.freeze({ id: 1, libelle: "2 · Voir" }),
+  Object.freeze({ id: 2, libelle: "3 · Construire" }),
+]);
+
+function rendreNavigationNiveauxAideFractions() {
+  return `<nav class="niveaux-aide-fractions" aria-label="Progression du soutien">
+    ${NIVEAUX_AIDE_FRACTIONS.map(({ id, libelle }) => `<button type="button"
+      data-action="niveau-aide-fraction" data-niveau="${id}"
+      class="${etat.niveauAideFraction === id ? "selectionne" : ""}"
+      aria-current="${etat.niveauAideFraction === id ? "step" : "false"}">${libelle}</button>`).join("")}
+  </nav>`;
+}
+
+function texteIndiceFractions(question, source) {
+  const direct = question.classement.microNotion === MICRO_NOTION_FRACTION_VERS_DECIMAL;
+  const libre = question.reponse.type === TYPE_REPONSE_FRACTION_EQUIVALENTE;
+  if (libre) {
+    return "Lis uniquement le nombre décimal jusqu’à son dernier rang écrit. Ce rang donne 10, 100 ou 1 000 comme dénominateur d’une fraction décimale correcte ; inutile de réduire.";
+  }
+  if (source.denominateur === 1) {
+    return "Le dénominateur 1 signifie qu’une part est une unité entière. Compte donc les unités.";
+  }
+  if ([10, 100, 1000].includes(source.denominateur)) {
+    const rang = RANGS_DECIMAUX.find(({ denominateur }) => denominateur === source.denominateur);
+    return direct
+      ? `Le dénominateur ${source.denominateur} nomme les ${rang.libelle}. Place le dernier chiffre du numérateur dans cette colonne.`
+      : `Le dénominateur demandé est ${source.denominateur} : lis le nombre en ${rang.libelle} pour trouver seulement le numérateur.`;
+  }
+  if ([2, 4].includes(source.denominateur)) {
+    const part = nomPartFraction(source.denominateur);
+    if (source.numerateur > source.denominateur) {
+      return direct
+        ? `Il faut ${source.denominateur} ${nomPartFraction(source.denominateur, source.denominateur)} pour former 1. Forme d’abord toutes les unités, puis traite le reste.`
+        : `Repère d’abord les unités entières, puis compte les ${nomPartFraction(source.denominateur, source.numerateur % source.denominateur)} restantes.`;
+    }
+    return direct
+      ? `Pars du repère 1 ${part} puis adapte-le au numérateur. Le résultat doit rester ${source.numerateur < source.denominateur ? "entre 0 et 1" : "égal à 1"}.`
+      : `Un ${part} est une des ${source.denominateur} parts égales de l’unité. Compte combien de ces parts atteignent le nombre donné.`;
+  }
+  return "Observe l’écriture donnée, puis cherche ce que représente chaque part de l’unité.";
+}
+
+function rendreNiveauIndiceFractions(question, source) {
+  return `<section class="atelier-fraction niveau-indice-fractions">
+    <p class="surtitre-niveau-aide">Commence par cette idée</p>
+    <p class="indice-strategique-fractions">${echapper(texteIndiceFractions(question, source))}</p>
+    <p class="conclusion-atelier">Essaie maintenant de compléter le « ? ». Si tu bloques encore, passe à « Voir ».</p>
+  </section>`;
+}
+
+function rendreNiveauImageFractions(question, source) {
+  const direct = question.classement.microNotion === MICRO_NOTION_FRACTION_VERS_DECIMAL;
+  const libre = question.reponse.type === TYPE_REPONSE_FRACTION_EQUIVALENTE;
+  if (libre) {
+    const decimal = formaterFractionEnDecimal(source.numerateur, source.denominateur);
+    const denominateurDecimal = 10 ** (decimal.split(",")[1]?.length ?? 0);
+    const rang = RANGS_DECIMAUX.find(({ denominateur }) => denominateur === denominateurDecimal);
+    const materiel = denominateurDecimal === 1000
+      ? ""
+      : rendreMaterielDecimalDepuisFraction(
+          Number(decimal.replace(",", "")),
+          denominateurDecimal,
+          "figure-materiel-aide",
+        );
+    return `<section class="atelier-fraction niveau-image-fractions">
+      <p class="consigne-atelier"><strong>Regarde seulement le décimal.</strong>Son dernier rang écrit construit une fraction décimale ; aucune réduction n’est exigée.</p>
+      ${materiel}
+      ${rendreTableauNumeration(Number(decimal.replace(",", "")), denominateurDecimal, {
+        afficherChiffres: true,
+        afficherLecture: false,
+        annoncerEcriture: true,
+        colonneMiseEnEvidence: rang?.id ?? null,
+      })}
+      <p class="chaine-fraction"><strong>${echapper(decimal)}</strong><span>=</span>${rendreFractionEmpilee("?", denominateurDecimal)}</p>
+      <p class="conclusion-atelier">Lis le numérateur dans le tableau. Une fraction équivalente différente sera aussi acceptée.</p>
+    </section>`;
+  }
+  if ([2, 4].includes(source.denominateur)) {
+    return `<section class="atelier-fraction niveau-image-fractions">
+      <p class="consigne-atelier"><strong>Vois la même quantité.</strong>Les bandes et le rail ont la même échelle ; le terme demandé reste « ? ».</p>
+      ${rendreBandesRailFractions(question, source, {
+        etape: direct && source.numerateur > source.denominateur ? "unites" : "pieces",
+        partiesPosees: direct ? source.numerateur : 0,
+      })}
+      <p class="conclusion-atelier">Lis l’alignement sans changer la quantité. Si cela ne suffit pas, passe à « Construire ».</p>
+    </section>`;
+  }
+  if ([10, 100, 1000].includes(source.denominateur)) {
+    const rang = RANGS_DECIMAUX.find(({ denominateur }) => denominateur === source.denominateur);
+    const materiel = source.denominateur === 1000
+      ? ""
+      : rendreMaterielDecimalDepuisFraction(source.numerateur, source.denominateur, "figure-materiel-aide");
+    return `<section class="atelier-fraction niveau-image-fractions">
+      <p class="consigne-atelier"><strong>Regarde le rang.</strong>Le tableau place les chiffres sans écrire l’égalité finale.</p>
+      ${materiel}
+      ${rendreTableauNumeration(source.numerateur, source.denominateur, {
+        afficherChiffres: true,
+        afficherLecture: false,
+        annoncerEcriture: !direct,
+        colonneMiseEnEvidence: rang.id,
+      })}
+      <p class="conclusion-atelier">Lis les colonnes dans le sens de la question ; le dernier terme est toujours « ? ».</p>
+    </section>`;
+  }
+  return `<section class="atelier-fraction niveau-image-fractions">
+    <p class="consigne-atelier"><strong>Vois les unités.</strong>Chaque tuile représente exactement une unité.</p>
+    <div class="tuiles-unites tuiles-unites-sans-nombres" aria-label="Des tuiles d’unités à compter">
+      ${Array.from({ length: source.numerateur }, () => '<span aria-hidden="true"></span>').join("")}
+    </div>
+    <p class="conclusion-atelier">Compte-les toi-même, puis remplace le « ? ».</p>
+  </section>`;
+}
+
+function rendreAideFractionLibreRiche(source) {
+  const decimal = formaterFractionEnDecimal(source.numerateur, source.denominateur);
+  const denominateurDecimal = 10 ** (decimal.split(",")[1]?.length ?? 0);
+  const numerateurDecimal = Number(decimal.replace(",", ""));
+  const cible = RANGS_DECIMAUX.find(
+    ({ denominateur }) => denominateur === denominateurDecimal,
+  );
+  const selection = etat.rangFractionAide;
+  const juste = selection === cible?.id;
+  const materiel = juste && denominateurDecimal !== 1000
+    ? rendreMaterielDecimalDepuisFraction(
+        numerateurDecimal,
+        denominateurDecimal,
+        "figure-materiel-aide",
+      )
+    : "";
+  return `<section class="atelier-fraction atelier-tableau-decimal atelier-fraction-libre">
+    <p class="consigne-atelier"><strong>Quel est le dernier rang écrit ?</strong>
+      Choisis-le à partir du seul nombre décimal. Il donnera le dénominateur d’une fraction décimale possible.</p>
+    <div class="choix-rang-fraction" role="radiogroup" aria-label="Choisir le dernier rang écrit">
+      ${RANGS_DECIMAUX.map((rang) => `<button type="button" class="${selection === rang.id ? "selectionne" : ""}"
+        data-action="rang-fraction" data-rang="${rang.id}" role="radio"
+        aria-checked="${selection === rang.id}">${rang.libelle}</button>`).join("")}
+    </div>
+    ${materiel}
+    ${rendreTableauNumeration(numerateurDecimal, denominateurDecimal, {
+      afficherChiffres: juste,
+      colonneMiseEnEvidence: selection,
+      afficherLecture: false,
+      annoncerEcriture: true,
+    })}
+    <p class="chaine-fraction"><strong>${echapper(decimal)}</strong><span>=</span>${rendreFractionEmpilee("?", juste ? denominateurDecimal : "?")}</p>
+    <p class="conclusion-atelier ${juste ? "visible" : ""}" aria-live="polite">${selection === null
+      ? "Repère le dernier chiffre après la virgule, puis choisis son rang."
+      : juste
+        ? "Oui. Le tableau est rempli : lis maintenant le numérateur. Une fraction équivalente sera aussi acceptée."
+        : "Ce rang ne correspond pas au dernier chiffre écrit. Essaie une autre colonne."}</p>
+  </section>`;
+}
+
+function rendreNiveauConstructionFractions(question, source) {
+  if (question.reponse.type === TYPE_REPONSE_FRACTION_EQUIVALENTE) {
+    return rendreAideFractionLibreRiche(source);
+  }
+  if ([2, 4].includes(source.denominateur)) {
+    if (
+      source.numerateur > source.denominateur
+      && question.classement.microNotion === MICRO_NOTION_FRACTION_VERS_DECIMAL
+    ) {
+      return rendreAideGroupementRiche(question, source);
+    }
+      return rendreAidePoseBandesRiche(question, source);
+  }
+  if ([10, 100, 1000].includes(source.denominateur)) {
+    return rendreAideTableauRiche(question, source);
+  }
+  return rendreAideUnitesRiche(source);
+}
+
 function rendreAideFractionsDecimaux(question) {
   if (!etat.aideOuverte) return "";
   const source = blocRationnelQuestion(question);
-  const presentation = presentationQuestionFractions(question);
-  const atelier = presentation === "double-droite"
-    ? rendreAideDoubleDroiteRiche(question, source)
-    : [2, 4].includes(source.denominateur) && source.numerateur <= source.denominateur
-      ? rendreAideCentiemesRiche(question, source)
-      : [2, 4].includes(source.denominateur)
-        ? rendreAideGroupementRiche(question, source)
-        : [10, 100, 1000].includes(source.denominateur)
-          ? rendreAideTableauRiche(question, source)
-          : rendreAideUnitesRiche(source);
-  const contenu = `${rendreRappelQuestionFractions(question)}${atelier}${rendreAccesCoursDepuisAide()}`;
+  const niveaux = [
+    rendreNiveauIndiceFractions,
+    rendreNiveauImageFractions,
+    rendreNiveauConstructionFractions,
+  ];
+  const atelier = niveaux[etat.niveauAideFraction](question, source);
+  const contenu = `${rendreRappelQuestionFractions(question)}
+    <p class="introduction-progression-aide">Va du plus léger au plus guidé : commence par l’indice, puis ouvre seulement l’aide dont tu as besoin.</p>
+    ${rendreNavigationNiveauxAideFractions()}
+    <div class="contenu-niveau-aide-fractions" aria-live="polite">${atelier}</div>
+    ${rendreAccesCoursDepuisAide()}`;
   return rendreCadrePanneau({
     type: "aide",
     surtitre: "Pendant la question",
-    titre: "Me guider pas à pas",
+    titre: "Me guider",
     contenu,
     classes: "panneau-aide-fractions panneau-fractions",
   });
@@ -2945,6 +3102,12 @@ function rendreReponseCorrecteFractions(question, source) {
   if (question.reponse.type === TYPE_REPONSE_NOMBRE_DECIMAL) {
     return `<div class="reponses-correction"><strong>${echapper(formaterFractionEnDecimal(source.numerateur, source.denominateur))}</strong></div>`;
   }
+  if (question.reponse.type === TYPE_REPONSE_FRACTION_EQUIVALENTE) {
+    const decimal = formaterFractionEnDecimal(source.numerateur, source.denominateur);
+    const denominateurDecimal = 10 ** (decimal.split(",")[1]?.length ?? 0);
+    const numerateurDecimal = Number(decimal.replace(",", ""));
+    return `<div class="reponses-correction reponse-possible-fraction">${rendreFractionEmpilee(numerateurDecimal, denominateurDecimal)}</div>`;
+  }
   return `<div class="reponses-correction">${rendreFractionEmpilee(source.numerateur, source.denominateur)}</div>`;
 }
 
@@ -2969,11 +3132,17 @@ function chaineCorrectionFractions(question, source) {
     return `${fraction}<span>=</span><strong>${echapper(decimal)}</strong>`;
   }
   if (question.reponse.type === TYPE_REPONSE_FRACTION_EQUIVALENTE) {
-    const numerateurDecimal = source.denominateur === 2
-      ? source.numerateur * 5
-      : source.numerateur * 25;
-    const denominateurDecimal = source.denominateur === 2 ? 10 : 100;
-    return `<strong>${echapper(decimal)}</strong><span>=</span>${rendreFractionEmpilee(numerateurDecimal, denominateurDecimal)}<span>=</span>${fraction}`;
+    const nombreDecimales = Math.max(0, decimal.split(",")[1]?.length ?? 0);
+    const denominateurDecimal = 10 ** nombreDecimales;
+    const numerateurDecimal = Number(decimal.replace(",", ""));
+    const fractionDecimale = rendreFractionEmpilee(numerateurDecimal, denominateurDecimal);
+    const reduite = reduireFraction(numerateurDecimal, denominateurDecimal);
+    const equivalenteFamiliere = [1, 2, 4].includes(reduite.denominateur)
+      && (reduite.numerateur !== numerateurDecimal
+        || reduite.denominateur !== denominateurDecimal);
+    return !equivalenteFamiliere
+      ? `<strong>${echapper(decimal)}</strong><span>=</span>${fractionDecimale}`
+      : `<strong>${echapper(decimal)}</strong><span>=</span>${fractionDecimale}<span>=</span>${rendreFractionEmpilee(reduite.numerateur, reduite.denominateur)}`;
   }
   return `<strong>${echapper(decimal)}</strong><span>=</span>${fraction}`;
 }
@@ -2994,23 +3163,26 @@ function rendreVisuelCorrectionFractions(question, source) {
       colonneMiseEnEvidence: rang.id,
     });
   }
-  if ([2, 4].includes(source.denominateur) && source.numerateur <= source.denominateur) {
-    return rendreFigureFraction(
-      dessinerGrilleFraction({
-        colonnes: 10,
-        lignes: 10,
-        coloriees: source.numerateur * (100 / source.denominateur),
-        cote: 190,
-        ecriture: false,
-      }),
-      "figure-grille-centiemes figure-correction-fraction",
-    );
-  }
   if ([2, 4].includes(source.denominateur)) {
-    return rendreGroupesPartsRiche(
-      source,
-      Math.floor(source.numerateur / source.denominateur),
-    );
+    if (source.numerateur <= source.denominateur) {
+      const centiemes = source.numerateur * (100 / source.denominateur);
+      return rendreFigureFraction(
+        dessinerGrilleFraction({
+          colonnes: 10,
+          lignes: 10,
+          coloriees: centiemes,
+          cote: 180,
+          ecriture: false,
+        }),
+        "figure-grille-repere figure-correction-fraction",
+      );
+    }
+    return rendreBandesRailFractions(question, source, {
+      solution: true,
+      etape: "lecture",
+      partiesPosees: source.numerateur,
+      classes: "figure-correction-fraction",
+    });
   }
   return `<div class="tuiles-unites correction-unites" aria-label="${source.numerateur} unités">
     ${Array.from({ length: source.numerateur }, (_, index) => `<span>${index + 1}</span>`).join("")}
@@ -3021,6 +3193,31 @@ function rendreExplicationCorrectionFractions(question, source) {
   const direct = question.classement.microNotion === MICRO_NOTION_FRACTION_VERS_DECIMAL;
   const decimal = formaterFractionEnDecimal(source.numerateur, source.denominateur);
   const chaine = chaineCorrectionFractions(question, source);
+  if (question.reponse.type === TYPE_REPONSE_FRACTION_EQUIVALENTE) {
+    const nombreDecimales = Math.max(0, decimal.split(",")[1]?.length ?? 0);
+    const denominateurDecimal = 10 ** nombreDecimales;
+    const numerateurDecimal = Number(decimal.replace(",", ""));
+    const rangDecimal = RANGS_DECIMAUX.find(
+      (element) => element.denominateur === denominateurDecimal,
+    );
+    const nomRang = rangDecimal?.libelle ?? "unités";
+    return `<section class="etape-correction correction-observation">
+      ${rendreEtape(1, "Lire le dernier rang écrit", "repere-observation")}
+      <p><strong>${echapper(decimal)}</strong> s’arrête au rang des ${nomRang} :
+        une fraction décimale peut donc avoir ${denominateurDecimal} au dénominateur.</p>
+      ${rendreTableauNumeration(numerateurDecimal, denominateurDecimal, {
+        afficherChiffres: true,
+        afficherLecture: true,
+        annoncerEcriture: true,
+        colonneMiseEnEvidence: rangDecimal?.id ?? null,
+      })}
+    </section>
+    <section class="etape-correction correction-conclusion">
+      ${rendreEtape(2, "Écrire une réponse possible", "repere-conclusion")}
+      <p>Lis le numérateur dans le tableau. Une fraction équivalente, réduite ou non, est tout aussi juste.</p>
+      <p class="chaine-fraction">${chaine}</p>
+    </section>`;
+  }
   const rang = RANGS_DECIMAUX.find(
     (element) => element.denominateur === source.denominateur,
   );
@@ -3041,6 +3238,9 @@ function rendreExplicationCorrectionFractions(question, source) {
   }
   if ([2, 4].includes(source.denominateur) && source.numerateur <= source.denominateur) {
     const centiemes = source.numerateur * (100 / source.denominateur);
+    const chaineRepere = direct
+      ? `${rendreFractionEmpilee(source.numerateur, source.denominateur)}<span>=</span>${rendreFractionEmpilee(centiemes, 100)}<span>=</span><strong>${echapper(decimal)}</strong>`
+      : `<strong>${echapper(decimal)}</strong><span>=</span>${rendreFractionEmpilee(centiemes, 100)}<span>=</span>${rendreFractionEmpilee(source.numerateur, source.denominateur)}`;
     return `<section class="etape-correction correction-observation">
       ${rendreEtape(1, direct
         ? "Transformer le repère en centièmes"
@@ -3051,7 +3251,7 @@ function rendreExplicationCorrectionFractions(question, source) {
     </section>
     <section class="etape-correction correction-conclusion">
       ${rendreEtape(2, direct ? "Écrire les centièmes avec une virgule" : "Lire la fraction correspondante", "repere-conclusion")}
-      <p class="chaine-fraction">${chaine}</p>
+      <p class="chaine-fraction">${chaineRepere}</p>
     </section>`;
   }
   if ([2, 4].includes(source.denominateur)) {
@@ -3087,7 +3287,7 @@ function rendreCorrectionFractionsDecimaux(question) {
     <div class="etapes-correction-fractions">
       ${rendreExplicationCorrectionFractions(question, source)}
     </div>
-    <p class="titre-reponse-correcte">Réponse correcte</p>
+    <p class="titre-reponse-correcte">${question.reponse.type === TYPE_REPONSE_FRACTION_EQUIVALENTE ? "Une réponse possible" : "Réponse correcte"}</p>
     ${rendreReponseCorrecteFractions(question, source)}`;
   return rendreCadrePanneau({
     type: "correction",
@@ -3151,98 +3351,86 @@ function rendreDoubleDroiteCoursReperes() {
   </div>`;
 }
 
-function rendreCarteRepereCours(numerateur, denominateur) {
-  const centiemes = numerateur * (100 / denominateur);
-  return `<article class="carte-repere-fraction">
-    ${rendreFigureFraction(
-      dessinerGrilleFraction({
-        colonnes: 10,
-        lignes: 10,
-        coloriees: centiemes,
-        cote: 132,
-        ecriture: false,
-      }),
-      "figure-grille-repere",
-    )}
-    <p>${rendreFractionEmpilee(numerateur, denominateur)} <span>=</span>
-      ${rendreFractionEmpilee(centiemes, 100)} <span>=</span>
-      <strong>${echapper(formaterFractionEnDecimal(numerateur, denominateur))}</strong></p>
-  </article>`;
+function rendreBandesRailCours(numerateur, denominateur, etape = "lecture") {
+  return rendreFigureFraction(
+    dessinerBandesFractionnairesSurRailDecimal({
+      numerateur,
+      denominateur,
+      profil: "solution",
+      etape,
+      partiesPosees: numerateur,
+      largeur: 720,
+    }),
+    "figure-bandes-rail figure-bandes-rail-cours",
+  );
 }
 
-function rendreCoursRangFractions(sens) {
-  const exemples = {
-    10: { numerateur: 7, denominateur: 10 },
-    100: { numerateur: 51, denominateur: 100 },
-    1000: { numerateur: 725, denominateur: 1000 },
-  };
-  const exemple = exemples[denominateurCoursFraction];
-  const rang = RANGS_DECIMAUX.find(
-    (element) => element.denominateur === exemple.denominateur,
-  );
-  const decimal = formaterFractionEnDecimal(exemple.numerateur, exemple.denominateur);
-  const direct = sens === MICRO_NOTION_FRACTION_VERS_DECIMAL;
-  return `<article class="carte-cours-fractions carte-cours-rangs">
-    <span class="numero-cours">${direct ? 3 : 4}</span>
-    <h3>${direct ? "Du dénominateur vers la virgule" : "De la virgule vers la fraction"}</h3>
-    <div class="onglets-rangs-cours" role="radiogroup" aria-label="Choisir un rang">
-      ${RANGS_DECIMAUX.map((element) => `<button type="button" data-action="cours-rang-fraction"
-        data-denominateur="${element.denominateur}" role="radio"
-        aria-checked="${denominateurCoursFraction === element.denominateur}"
-        class="${denominateurCoursFraction === element.denominateur ? "selectionne" : ""}">${element.libelle}</button>`).join("")}
-    </div>
-    <p class="lecture-rang-cours">${direct
-      ? `${rendreFractionEmpilee(exemple.numerateur, exemple.denominateur)} se lit « ${exemple.numerateur} ${rang.libelle} » : le dernier chiffre va dans cette colonne.`
-      : `<strong>${echapper(decimal)}</strong> se lit « ${exemple.numerateur} ${rang.libelle} » : ${exemple.numerateur} devient le numérateur et ${exemple.denominateur} le dénominateur.`}</p>
-    ${rendreTableauNumeration(exemple.numerateur, exemple.denominateur, {
-      afficherChiffres: true,
-      colonneMiseEnEvidence: rang.id,
-    })}
-    <p class="chaine-fraction">${direct
-      ? `${rendreFractionEmpilee(exemple.numerateur, exemple.denominateur)} <span>=</span> <strong>${echapper(decimal)}</strong>`
-      : `<strong>${echapper(decimal)}</strong> <span>=</span> ${rendreFractionEmpilee(exemple.numerateur, exemple.denominateur)}`}</p>
-  </article>`;
+function rendreRepereSymboliqueCours(numerateur, denominateur) {
+  return `<p class="repere-symbolique-cours">${rendreFractionEmpilee(numerateur, denominateur)}<span>=</span><strong>${echapper(formaterFractionEnDecimal(numerateur, denominateur))}</strong></p>`;
 }
 
 function rendreCarteCoursFractions(index) {
   if (index === 0) {
     return `<article class="carte-cours-fractions carte-cours-correspondance">
-      <span class="numero-cours">1</span><h3>Un même nombre peut avoir deux écritures</h3>
-      <p class="introduction-cours">Les points placés l’un sous l’autre représentent exactement la même quantité.</p>
+      <span class="numero-cours">1</span><h3>Un même nombre, plusieurs écritures</h3>
+      <p class="introduction-cours">Une fraction et un décimal peuvent nommer exactement le même point et la même quantité.</p>
       ${rendreDoubleDroiteCoursReperes()}
-      <p class="definition-cours">La fraction est sur la ligne du haut ; son écriture décimale est juste en dessous. Changer d’écriture ne déplace pas le nombre.</p>
+      <p class="definition-cours"><strong>La barre de fraction signifie une division :</strong> ${rendreFractionEmpilee(3, 4)}, c’est le résultat exact de 3 ÷ 4. Ici, on construit d’abord ce résultat avec les repères, le matériel et la numération.</p>
     </article>`;
   }
   if (index === 1) {
-    return `<article class="carte-cours-fractions">
-      <span class="numero-cours">2</span><h3>Trois repères indispensables</h3>
-      <div class="cartes-reperes-fractions-refonte">
-        ${rendreCarteRepereCours(1, 2)}
-        ${rendreCarteRepereCours(1, 4)}
-        ${rendreCarteRepereCours(3, 4)}
-      </div>
-      <p class="definition-cours">Chaque dessin garde la même unité de 100 cases : on lit directement 50, 25 ou 75 centièmes.</p>
+    return `<article class="carte-cours-fractions carte-cours-cpa">
+      <span class="numero-cours">2</span><h3>Du matériel aux symboles</h3>
+      <p class="introduction-cours">On comprend avec une pièce, on le voit dans une unité de 100 cases, puis on l’écrit.</p>
+      ${rendreBandesRailCours(1, 4, "pieces")}
+      ${rendreFigureFraction(dessinerGrilleFraction({ colonnes: 10, lignes: 10, coloriees: 25, cote: 150, ecriture: false }), "figure-grille-repere")}
+      <p class="chaine-fraction">${rendreFractionEmpilee(1, 4)}<span>=</span>${rendreFractionEmpilee(25, 100)}<span>=</span><strong>0,25</strong></p>
+      <div class="reperes-compacts-cours">${rendreRepereSymboliqueCours(1, 2)}${rendreRepereSymboliqueCours(3, 4)}</div>
+      <p class="definition-cours">Ces repères servent à raisonner : 3 demis, c’est 2 demis puis encore 1 demi ; 5 quarts, c’est 4 quarts puis encore 1 quart.</p>
     </article>`;
   }
-  if (index === 2) return rendreCoursRangFractions(MICRO_NOTION_FRACTION_VERS_DECIMAL);
-  if (index === 3) return rendreCoursRangFractions(MICRO_NOTION_DECIMAL_VERS_FRACTION);
+  if (index === 2) {
+    return `<article class="carte-cours-fractions carte-cours-rangs">
+      <span class="numero-cours">3</span><h3>Dixièmes, centièmes et millièmes</h3>
+      <p class="introduction-cours">Les pièces gardent la même échelle : une unité vaut 100 centièmes, un dixième en vaut 10 et un centième en vaut 1.</p>
+      ${rendreMaterielDecimalDepuisFraction(147, 100, "figure-materiel-cours")}
+      <div class="reperes-compacts-cours">${rendreRepereSymboliqueCours(1, 10)}${rendreRepereSymboliqueCours(1, 100)}${rendreRepereSymboliqueCours(1, 1000)}</div>
+      ${rendreTableauNumeration(725, 1000, { afficherChiffres: true, afficherLecture: true, colonneMiseEnEvidence: "milliemes" })}
+      <p class="definition-cours">Pour les millièmes, le tableau reste lisible ; fabriquer mille petites cases sur un téléphone ne l’est pas.</p>
+    </article>`;
+  }
+  if (index === 3) {
+    return `<article class="carte-cours-fractions carte-cours-conversion-directe">
+      <span class="numero-cours">4</span><h3>Fraction décimale vers décimal</h3>
+      <p class="introduction-cours">On décompose le numérateur en unités complètes, dixièmes et centièmes.</p>
+      ${rendreMaterielDecimalDepuisFraction(147, 100, "figure-materiel-cours")}
+      <p class="chaine-fraction chaine-fraction-longue">${rendreFractionEmpilee(147, 100)}<span>=</span>${rendreFractionEmpilee(100, 100)}<span>+</span>${rendreFractionEmpilee(40, 100)}<span>+</span>${rendreFractionEmpilee(7, 100)}</p>
+      <p class="chaine-fraction chaine-fraction-longue"><span>=</span>1<span>+</span>${rendreFractionEmpilee(4, 10)}<span>+</span>${rendreFractionEmpilee(7, 100)}<span>=</span><strong>1,47</strong></p>
+      <p class="definition-cours">Le dénominateur 100 place le dernier chiffre du numérateur dans les centièmes. Les zéros de position doivent être conservés.</p>
+    </article>`;
+  }
   if (index === 4) {
+    return `<article class="carte-cours-fractions carte-cours-conversion-inverse">
+      <span class="numero-cours">5</span><h3>Décimal vers fraction</h3>
+      <p class="introduction-cours">Lis le nombre jusqu’au dernier rang écrit : le nombre lu devient le numérateur et le rang donne 10, 100 ou 1 000.</p>
+      ${rendreTableauNumeration(75, 100, { afficherChiffres: true, afficherLecture: true, colonneMiseEnEvidence: "centiemes" })}
+      <p class="chaine-fraction"><strong>0,75</strong><span>=</span>${rendreFractionEmpilee(75, 100)}<span>=</span>${rendreFractionEmpilee(3, 4)}</p>
+      <div class="encadres-equivalences"><section><h4>Dénominateur imposé</h4><p>Pour compléter 0,75 = ?/4, on cherche combien de quarts atteignent 0,75 : 3.</p></section><section><h4>Fraction libre</h4><p>${rendreFractionEmpilee(75, 100)} et ${rendreFractionEmpilee(3, 4)} sont toutes les deux exactes. On ne réduit que si la consigne le demande.</p></section></div>
+    </article>`;
+  }
+  if (index === 5) {
     return `<article class="carte-cours-fractions carte-cours-unites">
-      <span class="numero-cours">5</span><h3>Quand la fraction dépasse 1</h3>
-      <p class="introduction-cours">On forme d’abord toutes les unités complètes, puis on convertit seulement les parts restantes.</p>
-      <p class="definition-cours">Chaque cadre garde la même taille : un demi occupe toujours la moitié d’une unité et un quart toujours le quart. Les cases pointillées montrent ce qui manque pour reformer une unité.</p>
-      <div class="exemples-groupement-cours">
-        <section><h4>${rendreFractionEmpilee(5, 2)}</h4>
-          ${rendreGroupesPartsRiche({ numerateur: 5, denominateur: 2 }, 2)}
-          <p>${rendreFractionEmpilee(5, 2)} = 2 + ${rendreFractionEmpilee(1, 2)} = <strong>2,5</strong></p></section>
-        <section><h4>${rendreFractionEmpilee(7, 4)}</h4>
-          ${rendreGroupesPartsRiche({ numerateur: 7, denominateur: 4 }, 1)}
-          <p>${rendreFractionEmpilee(7, 4)} = 1 + ${rendreFractionEmpilee(3, 4)} = <strong>1,75</strong></p></section>
-      </div>
+      <span class="numero-cours">6</span><h3>Dépasser l’unité</h3>
+      <p class="introduction-cours">On forme toutes les unités complètes, puis on convertit seulement les parts restantes.</p>
+      ${rendreBandesRailCours(5, 2)}
+      <p class="chaine-fraction chaine-fraction-longue">${rendreFractionEmpilee(5, 2)}<span>=</span>${rendreFractionEmpilee(4, 2)}<span>+</span>${rendreFractionEmpilee(1, 2)}<span>=</span>2<span>+</span>${rendreFractionEmpilee(1, 2)}<span>=</span><strong>2,5</strong></p>
+      ${rendreBandesRailCours(7, 4)}
+      <p class="chaine-fraction chaine-fraction-longue">${rendreFractionEmpilee(7, 4)}<span>=</span>1<span>+</span>${rendreFractionEmpilee(3, 4)}<span>=</span><strong>1,75</strong></p>
+      <div class="reperes-compacts-cours">${rendreRepereSymboliqueCours(3, 2)}${rendreRepereSymboliqueCours(4, 2)}${rendreRepereSymboliqueCours(5, 2)}${rendreRepereSymboliqueCours(100, 100)}${rendreRepereSymboliqueCours(7, 1)}</div>
     </article>`;
   }
   return `<article class="carte-cours-fractions carte-cours-strategie">
-    <span class="numero-cours">6</span><h3>Entiers cachés, équivalences et stratégie</h3>
+    <span class="numero-cours">7</span><h3>Choisir une stratégie et vérifier</h3>
     <div class="encadres-equivalences">
       <section><h4>Le dénominateur 1</h4>${rendreEgaliteRationnelle(7, 1)}<p>Sept unités entières restent 7.</p></section>
       <section><h4>Plusieurs fractions possibles</h4><p class="chaine-equivalences"><strong>1,5</strong><span>=</span>${rendreFractionEmpilee(3, 2)}<span>=</span>${rendreFractionEmpilee(6, 4)}<span>=</span>${rendreFractionEmpilee(15, 10)}</p><p>Elles repèrent le même nombre : une fraction équivalente est correcte, même si elle n’est pas irréductible.</p></section>
@@ -3251,8 +3439,9 @@ function rendreCarteCoursFractions(index) {
       <li><strong>10, 100 ou 1 000</strong><span>J’utilise le tableau de numération, dans le sens demandé.</span></li>
       <li><strong>Demi ou quart inférieur à 1</strong><span>Je pense aux repères 0,5 ; 0,25 ; 0,75.</span></li>
       <li><strong>Fraction supérieure à 1</strong><span>Je forme les unités, puis je traite le reste.</span></li>
+      <li><strong>Aucun repère ne convient</strong><span>La division du numérateur par le dénominateur est la méthode générale ; elle vient après les méthodes de sens travaillées ici.</span></li>
     </ol>
-    <div class="verification-grandeur-fraction"><strong>Contrôle rapide</strong><p>Numérateur plus petit que le dénominateur : résultat entre 0 et 1. Numérateur plus grand : résultat supérieur à 1.</p></div>
+    <div class="verification-grandeur-fraction"><strong>Contrôle rapide</strong><p>Numérateur plus petit que le dénominateur : résultat entre 0 et 1. Numérateur égal au dénominateur : résultat égal à 1. Numérateur plus grand : résultat supérieur à 1.</p></div>
   </article>`;
 }
 
@@ -3261,8 +3450,9 @@ function rendreCoursFractionsDecimaux() {
   const total = nombrePagesCours();
   const titres = [
     "Même nombre, même position",
-    "Les repères indispensables",
-    "Fraction vers décimal",
+    "Du matériel aux symboles",
+    "Les rangs décimaux",
+    "Fraction décimale vers décimal",
     "Décimal vers fraction",
     "Dépasser l’unité",
     "Choisir la bonne stratégie",
@@ -3631,6 +3821,12 @@ application.addEventListener("click", (evenement) => {
     choisirRangFractionAide(etat, cible.dataset.rang);
     focusSelector = `[data-action="rang-fraction"][data-rang="${cible.dataset.rang}"]`;
   }
+  if (action === "niveau-aide-fraction") {
+    const niveau = Number(cible.dataset.niveau);
+    choisirNiveauAideFraction(etat, niveau);
+    reinitialiserDefilementPanneau = true;
+    focusSelector = `[data-action="niveau-aide-fraction"][data-niveau="${etat.niveauAideFraction}"]`;
+  }
   if (action === "reponse") revelerReponse(etat);
   if (action === "correction") {
     menuSessionOuvert = false;
@@ -3665,13 +3861,6 @@ application.addEventListener("click", (evenement) => {
     focusSelector = pageCoursCourante === dernierePage
       ? '[data-action="fermer-cours"].bouton-principal'
       : '[data-action="cours-suivant"]';
-  }
-  if (action === "cours-rang-fraction") {
-    const denominateur = Number(cible.dataset.denominateur);
-    if ([10, 100, 1000].includes(denominateur)) {
-      denominateurCoursFraction = denominateur;
-    }
-    focusSelector = `[data-action="cours-rang-fraction"][data-denominateur="${denominateurCoursFraction}"]`;
   }
   if (action === "fermer-cours") {
     fermerCours(etat);

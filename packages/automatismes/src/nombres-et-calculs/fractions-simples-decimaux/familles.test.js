@@ -9,7 +9,10 @@ import {
   TYPE_REPONSE_NOMBRE_DECIMAL,
   validerQuestionInstanceV2,
 } from "../../../../contrats/src/question-v2.js";
-import { fractionsEgales } from "../../../../objets/src/fractions-decimaux.js";
+import {
+  analyserEcritureDecimalePositive,
+  fractionsEgales,
+} from "../../../../objets/src/fractions-decimaux.js";
 import { creerRegistreAutomatismes } from "../../registre.js";
 import {
   DENOMINATEURS_AUTORISES,
@@ -21,6 +24,8 @@ import {
   estFractionDuDomaine,
 } from "./commun.js";
 import {
+  CIBLES_FRACTION_LIBRE_DECIMALES,
+  CIBLES_FRACTION_LIBRE_DEMIS_QUARTS,
   GABARIT_DECIMAL_VERS_FRACTION,
 } from "./decimal-vers-fraction.js";
 import {
@@ -83,6 +88,29 @@ describe("NC-03/NC-04 — contrats communs", () => {
     verifierClassement(inverse, MICRO_NOTION_NC04);
   });
 
+  it("ne maintient plus de seconde source d'aide ou de correction textuelle", () => {
+    for (const question of [
+      instancier(
+        GABARIT_FRACTION_VERS_DECIMAL,
+        { numerateur: 5, denominateur: 2 },
+      ),
+      instancier(
+        GABARIT_DECIMAL_VERS_FRACTION,
+        { numerateur: 25, denominateur: 100, forme: "fraction-libre" },
+      ),
+    ]) {
+      assert.equal(question.aide, undefined);
+      assert.equal(question.correction, undefined);
+    }
+    const qcm = instancier(
+      GABARIT_FRACTION_VERS_DECIMAL,
+      { numerateur: 5, denominateur: 2, presentation: "qcm-diagnostique" },
+    );
+    assert.equal(qcm.aide, undefined);
+    assert.equal(qcm.correction.length, 3);
+    assert.ok(qcm.correction.every(({ id }) => id.startsWith("diagnostic-")));
+  });
+
   it("déclare strictement les six dénominateurs du périmètre", () => {
     assert.deepEqual(DENOMINATEURS_AUTORISES, [1, 2, 4, 10, 100, 1000]);
     assert.deepEqual(NUMERATEURS_DEMIS, [1, 2, 3, 4, 5, 6, 7]);
@@ -91,6 +119,9 @@ describe("NC-03/NC-04 — contrats communs", () => {
     assert.equal(estFractionDuDomaine(1, 3), false);
     assert.equal(estFractionDuDomaine(10, 1000), false);
     assert.equal(estFractionDuDomaine(11, 1000), true);
+    assert.equal(estFractionDuDomaine(725, 1000), true);
+    assert.equal(estFractionDuDomaine(999, 1000), true);
+    assert.equal(estFractionDuDomaine(1000, 1000), false);
   });
 });
 
@@ -237,6 +268,40 @@ describe("NC-04 — écriture décimale vers fraction", () => {
     }
   });
 
+  it("accepte les centièmes comme leurs quarts équivalents, sans exiger de réduire", () => {
+    for (const [numerateur, equivalent] of [
+      [25, [1, 4]],
+      [75, [3, 4]],
+    ]) {
+      const question = instancier(
+        GABARIT_DECIMAL_VERS_FRACTION,
+        { numerateur, denominateur: 100, forme: "fraction-libre" },
+        `nc04-libre-centiemes-${numerateur}`,
+      );
+      assert.deepEqual(question.reponse.attendu, {
+        numerateur,
+        denominateur: 100,
+      });
+      assert.equal(fractionsEgales(numerateur, 100, numerateur, 100), true);
+      assert.equal(
+        fractionsEgales(numerateur, 100, equivalent[0], equivalent[1]),
+        true,
+      );
+    }
+  });
+
+  it("dispose de cibles libres variées dans les deux catégories", () => {
+    assert.ok(CIBLES_FRACTION_LIBRE_DEMIS_QUARTS.some(
+      ({ numerateur, denominateur }) => numerateur === 3 && denominateur === 4,
+    ));
+    assert.ok(CIBLES_FRACTION_LIBRE_DECIMALES.some(
+      ({ numerateur, denominateur }) => numerateur === 7 && denominateur === 10,
+    ));
+    assert.ok(CIBLES_FRACTION_LIBRE_DECIMALES.some(
+      ({ numerateur, denominateur }) => numerateur === 75 && denominateur === 100,
+    ));
+  });
+
   it("complète de manière compatible les paramètres partiels de chaque forme", () => {
     for (let index = 0; index < 50; index += 1) {
       const imposee = instancier(
@@ -252,7 +317,9 @@ describe("NC-04 — écriture décimale vers fraction", () => {
         `nc04-libre-partielle-${index}`,
       );
       assert.equal(bloc(libre, "nombre-decimal").numerateur, 7);
-      assert.ok([2, 4].includes(bloc(libre, "nombre-decimal").denominateur));
+      assert.ok([2, 4, 10, 100].includes(
+        bloc(libre, "nombre-decimal").denominateur,
+      ));
     }
   });
 
@@ -262,5 +329,51 @@ describe("NC-04 — écriture décimale vers fraction", () => {
     const b = instancier(GABARIT_DECIMAL_VERS_FRACTION, {}, "autre-graine");
     assert.deepEqual(a, encoreA);
     assert.notDeepEqual(a, b);
+  });
+});
+
+describe("NC-03/NC-04 — QCM diagnostiques sans ambiguïté", () => {
+  it("ne propose qu'un seul décimal égal à la fraction cible", () => {
+    for (let index = 0; index < 500; index += 1) {
+      const question = instancier(
+        GABARIT_FRACTION_VERS_DECIMAL,
+        { presentation: "qcm-diagnostique" },
+        `nc03-qcm-exact-${index}`,
+      );
+      const cible = bloc(question, "fraction");
+      const choixEgaux = question.reponse.choix.filter(({ libelle }) => {
+        const analyse = analyserEcritureDecimalePositive(libelle);
+        return fractionsEgales(
+          analyse.fractionReduite.numerateur,
+          analyse.fractionReduite.denominateur,
+          cible.numerateur,
+          cible.denominateur,
+        );
+      });
+      assert.equal(choixEgaux.length, 1);
+      assert.ok(question.reponse.attendus.includes(choixEgaux[0].id));
+    }
+  });
+
+  it("ne propose qu'une seule fraction égale au nombre cible", () => {
+    for (let index = 0; index < 500; index += 1) {
+      const question = instancier(
+        GABARIT_DECIMAL_VERS_FRACTION,
+        { forme: "denominateur-impose", presentation: "qcm-diagnostique" },
+        `nc04-qcm-exact-${index}`,
+      );
+      const cible = bloc(question, "nombre-decimal");
+      const choixEgaux = question.reponse.choix.filter(({ libelle }) => {
+        const [, n, d] = libelle.match(/^(\d+)\/(\d+)$/) ?? [];
+        return n !== undefined && fractionsEgales(
+          cible.numerateur,
+          cible.denominateur,
+          Number(n),
+          Number(d),
+        );
+      });
+      assert.equal(choixEgaux.length, 1);
+      assert.ok(question.reponse.attendus.includes(choixEgaux[0].id));
+    }
   });
 });

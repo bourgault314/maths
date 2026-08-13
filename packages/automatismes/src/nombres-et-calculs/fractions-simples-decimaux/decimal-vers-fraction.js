@@ -1,11 +1,11 @@
 // NC-04 — passer d'une écriture décimale à une fraction simple. La plupart
-// des questions imposent le dénominateur ; une seule question libre est
-// réservée à la série longue et accepte toute fraction équivalente.
+// des questions imposent le dénominateur ; les productions libres acceptent
+// toute fraction équivalente, réduite ou non.
 
 import {
   SCHEMA_QUESTION_INSTANCE_V2,
-} from "../../../../contrats/src/question-v2.js?v=25";
-import { reduireFraction } from "../../../../objets/src/fractions-decimaux.js?v=25";
+} from "../../../../contrats/src/question-v2.js?v=26";
+import { fractionsEgales } from "../../../../objets/src/fractions-decimaux.js?v=26";
 import {
   MICRO_NOTION_NC04,
   NUMERATEURS_DEMIS,
@@ -18,21 +18,19 @@ import {
   exigerAleatoireFractions,
   exigerParametresFractions,
   familleSelonDenominateur,
-  nomDuRang,
-  rationnel,
   reponseChoixUnique,
   reponseFractionEquivalente,
   reponseNumerateurImpose,
-} from "./commun.js?v=25";
+} from "./commun.js?v=26";
 import {
   NUMERATEURS_CENTIEMES,
   NUMERATEURS_DIXIEMES,
   NUMERATEURS_MILLIEMES,
-} from "./fraction-vers-decimal.js?v=25";
+} from "./fraction-vers-decimal.js?v=26";
 
 export const NOM_GENERATEUR_DECIMAL_VERS_FRACTION =
   "nombres-et-calculs.fractions-simples-decimaux.decimal-vers-fraction";
-export const VERSION_GENERATEUR_DECIMAL_VERS_FRACTION = 2;
+export const VERSION_GENERATEUR_DECIMAL_VERS_FRACTION = 3;
 
 export const GABARIT_DECIMAL_VERS_FRACTION = creerGabaritFractions({
   id: NOM_GENERATEUR_DECIMAL_VERS_FRACTION,
@@ -45,7 +43,7 @@ export const FORMES_DECIMAL_VERS_FRACTION = Object.freeze([
   "fraction-libre",
 ]);
 
-export const CIBLES_FRACTION_LIBRE = Object.freeze([
+export const CIBLES_FRACTION_LIBRE_DEMIS_QUARTS = Object.freeze([
   Object.freeze({ numerateur: 1, denominateur: 4 }),
   Object.freeze({ numerateur: 1, denominateur: 2 }),
   Object.freeze({ numerateur: 3, denominateur: 4 }),
@@ -54,6 +52,19 @@ export const CIBLES_FRACTION_LIBRE = Object.freeze([
   Object.freeze({ numerateur: 7, denominateur: 4 }),
   Object.freeze({ numerateur: 5, denominateur: 2 }),
   Object.freeze({ numerateur: 7, denominateur: 2 }),
+]);
+
+export const CIBLES_FRACTION_LIBRE_DECIMALES = Object.freeze([
+  ...[1, 3, 7, 9, 12, 15, 21, 25, 32, 39, 42].map((numerateur) =>
+    Object.freeze({ numerateur, denominateur: 10 })),
+  ...[1, 3, 7, 12, 25, 47, 75, 103, 125, 147, 205, 225, 247].map(
+    (numerateur) => Object.freeze({ numerateur, denominateur: 100 }),
+  ),
+]);
+
+export const CIBLES_FRACTION_LIBRE = Object.freeze([
+  ...CIBLES_FRACTION_LIBRE_DEMIS_QUARTS,
+  ...CIBLES_FRACTION_LIBRE_DECIMALES,
 ]);
 
 const NUMERATEURS_PAR_DENOMINATEUR = Object.freeze({
@@ -78,7 +89,10 @@ function construireQcm(aleatoire, numerateur, denominateur) {
   const ajouter = (id, n, d, diagnostic) => {
     if (!Number.isSafeInteger(n) || n < 0 || !Number.isSafeInteger(d) || d <= 0) return;
     const libelle = `${n}/${d}`;
-    if (libelle === correct || candidats.some((candidat) => candidat.libelle === libelle)) return;
+    if (
+      fractionsEgales(n, d, numerateur, denominateur)
+      || candidats.some((candidat) => candidat.libelle === libelle)
+    ) return;
     candidats.push({ id, libelle, diagnostic });
   };
   ajouter(
@@ -122,132 +136,6 @@ function construireQcm(aleatoire, numerateur, denominateur) {
   };
 }
 
-function construireAide(denominateur, forme) {
-  if (forme === "fraction-libre") {
-    return [
-      {
-        id: "aide-lire-rang-libre",
-        type: "texte",
-        contenu:
-          "Regarde le dernier rang occupé et lis tout le nombre dans ce rang.",
-      },
-      {
-        id: "aide-equivalences-libres",
-        type: "texte",
-        contenu:
-          "Tu peux écrire cette fraction décimale ou une autre fraction qui repère le même nombre.",
-      },
-    ];
-  }
-  if (denominateur === 2) {
-    return [
-      {
-        id: "aide-droite-demis",
-        type: "texte",
-        contenu:
-          "Repère le nombre sur la droite des demis, puis compte les demis depuis zéro.",
-      },
-    ];
-  }
-  if (denominateur === 4) {
-    return [
-      {
-        id: "aide-droite-quarts",
-        type: "texte",
-        contenu:
-          "Repère le nombre sur la droite des quarts, puis compte les quarts depuis zéro.",
-      },
-    ];
-  }
-  const rang = nomDuRang(denominateur);
-  return [
-    {
-      id: "aide-lire-rang",
-      type: "texte",
-      contenu: `Lis tout le nombre en ${rang}.`,
-    },
-    {
-      id: "aide-echange-unites",
-      type: "texte",
-      contenu:
-        `Dans le tableau, transforme si nécessaire les unités en ${rang}, puis compte-les toutes.`,
-    },
-  ];
-}
-
-function fractionReduite(numerateur, denominateur) {
-  return reduireFraction(numerateur, denominateur);
-}
-
-function fractionDecimale(numerateur, denominateur) {
-  if (denominateur === 2) return rationnel(numerateur * 5, 10);
-  if (denominateur === 4) return rationnel(numerateur * 25, 100);
-  return rationnel(numerateur, denominateur);
-}
-
-function construireCorrection(numerateur, denominateur, forme) {
-  if (forme === "fraction-libre") {
-    const decimale = fractionDecimale(numerateur, denominateur);
-    const reduite = fractionReduite(numerateur, denominateur);
-    const blocs = [
-      {
-        id: "correction-meme-nombre",
-        type: "texte",
-        contenu:
-          "Ces écritures repèrent le même nombre : toutes les fractions équivalentes sont justes.",
-      },
-      blocRationnel(
-        "correction-decimal",
-        numerateur,
-        denominateur,
-        "decimal",
-      ),
-      blocRationnel(
-        "correction-fraction-decimale",
-        decimale.numerateur,
-        decimale.denominateur,
-        "fraction",
-      ),
-    ];
-    if (
-      reduite.numerateur !== decimale.numerateur ||
-      reduite.denominateur !== decimale.denominateur
-    ) {
-      blocs.push(
-        blocRationnel(
-          "correction-fraction-reduite",
-          reduite.numerateur,
-          reduite.denominateur,
-          "fraction",
-        ),
-      );
-    }
-    return blocs;
-  }
-
-  const methode = denominateur === 2
-    ? "Sur la droite des demis, compte le nombre de demis depuis zéro."
-    : denominateur === 4
-      ? "Sur la droite des quarts, compte le nombre de quarts depuis zéro."
-      : `Lis tout le nombre en ${nomDuRang(denominateur)}.`;
-  return [
-    { id: "correction-methode", type: "texte", contenu: methode },
-    blocRationnel(
-      "correction-decimal",
-      numerateur,
-      denominateur,
-      "decimal",
-    ),
-    { id: "correction-egalite", type: "texte", contenu: "est égal à" },
-    blocRationnel(
-      "correction-fraction",
-      numerateur,
-      denominateur,
-      "fraction",
-    ),
-  ];
-}
-
 export function genererQuestionDecimalVersFraction({ aleatoire, parametres }) {
   exigerAleatoireFractions(aleatoire, "decimal-vers-fraction");
   exigerParametresFractions(
@@ -270,23 +158,15 @@ export function genererQuestionDecimalVersFraction({ aleatoire, parametres }) {
     aleatoire,
     parametres,
     denominateurs: forme === "fraction-libre"
-      ? [2, 4]
+      ? [2, 4, 10, 100]
       : Object.keys(NUMERATEURS_PAR_DENOMINATEUR).map(Number),
     denominateursParDefaut: forme === "fraction-libre"
-      ? [2, 4]
+      ? [2, 4, 10, 100]
       : DENOMINATEURS_ORDINAIRES,
     numerateursParDenominateur: NUMERATEURS_PAR_DENOMINATEUR,
     nom: "decimal-vers-fraction",
   });
   const { numerateur, denominateur } = fraction;
-  if (
-    presentation === "double-droite"
-    && ![2, 4].includes(denominateur)
-  ) {
-    throw new RangeError(
-      "decimal-vers-fraction : la double droite est réservée aux demis et aux quarts",
-    );
-  }
   if (forme === "fraction-libre" && presentation === "qcm-diagnostique") {
     throw new RangeError(
       "decimal-vers-fraction : une fraction libre ne peut pas être présentée en QCM",
@@ -305,9 +185,7 @@ export function genererQuestionDecimalVersFraction({ aleatoire, parametres }) {
       type: "texte",
       contenu: forme === "fraction-libre"
         ? "Écris ce nombre sous forme de fraction. Toutes les fractions égales sont acceptées."
-        : presentation === "double-droite"
-          ? "Complète la fraction manquante sur la double droite."
-          : presentation === "qcm-diagnostique"
+        : presentation === "qcm-diagnostique"
             ? "Quelle fraction correspond à ce nombre ?"
             : "Complète l'égalité.",
     },
@@ -330,14 +208,9 @@ export function genererQuestionDecimalVersFraction({ aleatoire, parametres }) {
     reponse: qcm?.reponse ?? (forme === "fraction-libre"
       ? reponseFractionEquivalente(numerateur, denominateur)
       : reponseNumerateurImpose(numerateur)),
-    aide: {
-      blocs: construireAide(denominateur, forme),
-      outils: [],
-    },
-    correction: [
-      ...construireCorrection(numerateur, denominateur, forme),
-      ...(qcm?.diagnostics ?? []),
-    ],
+    // Le lecteur est l'unique source du pas-à-pas et de la correction. Les
+    // diagnostics propres à chaque distracteur restent attachés au QCM.
+    ...(qcm ? { correction: qcm.diagnostics } : {}),
   };
 }
 

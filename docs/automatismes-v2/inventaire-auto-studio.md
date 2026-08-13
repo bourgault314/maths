@@ -1,6 +1,6 @@
 # Inventaire technique de `auto` et `studio` pour Automatismes V2
 
-**Inventaire vérifié le 6 août 2026.**
+**Inventaire vérifié le 13 août 2026.**
 
 Ce document empêche de refaire inutilement le travail déjà acquis. Il ne change
 pas la règle de provenance : l'ancien contenu pédagogique reste une archive
@@ -96,6 +96,52 @@ n'importent ni le mini-parseur, ni le SVG, ni les valeurs, formulations ou
 distracteurs historiques. Le travail ancien fixe l'intention et les points de
 comparaison ; le composant V2 constitue désormais la source commune du
 candidat.
+
+### Cas audité : NC-03 / NC-04, fractions et écritures décimales
+
+La reprise du 13 août distingue trois niveaux qui étaient faciles à
+confondre et les branche désormais explicitement dans le candidat :
+
+| Niveau | Source | Usage retenu |
+|---|---|---|
+| Schéma dans une unité | `packages/objets/src/fractions.js` | Bande ou grille statique pour une fraction inférieure ou égale à 1 ; jaune générique, sans prétendre reproduire le matériel de classe |
+| Manipulation libre historique | `outils/fractions/bandes_fractions.html` | Plateau complet avec pièces, fusion, retournement, droites, zoom et scènes ; il reste une activité autonome |
+| Manipulation guidée | `packages/objets/src/bandes-fractions-rail.js` | SVG commun effectivement utilisé par le lecteur pour les demis et quarts, y compris au-delà de 1, avec profils d'aide non révélateurs |
+
+Le Labo conserve ces trois familles de comparaison utiles : bandes et grilles
+existantes, composant guidé sur rail, droites simples et doubles. Le lecteur
+V2 importe les briques communes retenues ; le Labo reste leur banc de contrôle
+et non une dépendance d'exécution. Il enregistre aussi :
+
+- `packages/objets/src/numeration-decimale.js`, extrait du plateau de
+  numération, avec unité rouge `10 × 10`, dixième vert horizontal `10 × 1` ou
+  vertical `1 × 10`, et centième jaune `1 × 1` ;
+- le tableau de numération unités, dixièmes, centièmes, millièmes, dont la
+  lecture finale peut rester masquée dans l'aide ;
+- le préréglage `fractions-decimaux-reperes` de
+  `packages/objets/src/droite-graduee.js`, qui aligne les trois repères usuels
+  dans les deux écritures.
+
+Le dixième horizontal reste le défaut : c'est l'orientation du plateau et du
+matériel imprimable existants, et elle utilise moins de hauteur sur téléphone.
+La variante verticale reste visible dans le Labo afin que ce choix demeure
+réversible. Aucun matériel en millièmes n'est extrait : à cette échelle, le
+tableau de numération est la représentation lisible retenue.
+
+L'intégration n'est plus future : `automatismes-v2/app.js` compose maintenant
+les bandes sur rail pour les pièces, groupes et unités, le matériel décimal
+pour les dixièmes et centièmes, le tableau jusqu'aux millièmes et les droites
+graduées lorsque le cours ou l'aide en ont besoin. Les questions elles-mêmes
+restent abstraites ou en QCM et n'importent aucune représentation dans leur
+énoncé. Les profils d'aide maintiennent le dernier terme à `?`, y compris dans
+les alternatives accessibles ; les profils de solution sont réservés au cours
+et à la correction.
+
+La fraction libre est également branchée sans dépendre de sa cible canonique :
+le lecteur part du dernier rang écrit du décimal, propose une fraction
+décimale et accepte toute équivalente par produit en croix. Le matériel rouge,
+vert et jaune accompagne `/10` et `/100` ; `/1000` emploie uniquement le
+tableau. La recette finale de ces usages dans le lecteur est en cours.
 
 ## Réservoirs techniques à examiner au besoin
 

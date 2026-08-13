@@ -792,3 +792,121 @@ tenant en `v25`. La recette couvre les réponses justes, fausses, omises et
 partielles, les panneaux avec et sans débordement, ainsi que les formats
 `320 × 568`, `390 × 844`, `1 280 × 720`, `1 920 × 1 080` et le zoom à 200 %.
 `/auto/` reste strictement hors du lot.
+
+## 13 août 2026
+
+### D-046 — La reprise de NC-03 / NC-04 commence par une fondation visuelle vérifiable
+
+Gwenaël demande de reprendre le pilote `NC-03 / NC-04`, de retrouver le
+matériel déjà réalisé, de rendre les objets visibles dans le Labo et de ne
+modifier les questions, l'aide et le cours qu'après comparaison. Le module
+reste donc `construit` et ses quotas ne changent pas dans ce lot.
+
+Trois représentations sont désormais distinguées au lieu d'être confondues.
+Le schéma de `fractions.js` reste un objet générique pour une fraction contenue
+dans une seule unité. Le plateau libre
+`outils/fractions/bandes_fractions.html` reste l'activité complète de classe.
+Entre les deux, un nouveau SVG guidé reprend seulement sa géométrie utile à
+NC-03 / NC-04 : demis jaunes, quarts verts, pièces de largeur `1/d`, unités
+formées et rail décimal à la même échelle. Il traite notamment `5/2` et `7/4`
+sans embarquer palette, zoom, pan, stylo ou gestion de scènes.
+
+Le composant guidé sépare explicitement ses profils d'aide et de solution.
+Une aide peut montrer les pièces, les groupements et le point cible, mais ne
+doit révéler ni la dernière écriture ni l'égalité finale, y compris dans
+`aria-label`, `title`, `desc` ou le texte alternatif. La solution complète
+reste réservée au cours et à la correction. Cette règle prépare la future
+révision de « Me guider » sans modifier encore le lecteur élève.
+
+Le matériel de numération décimale extrait conserve l'invariant historique :
+une unité rouge vaut `10 × 10` cellules, un dixième vert vaut `10 × 1` cellules
+et un centième jaune vaut `1 × 1` cellule. L'orientation horizontale des
+dixièmes devient le défaut de NC-03 / NC-04 : elle correspond au plateau et
+aux supports de classe, et son rendu est plus compact sur téléphone. La
+variante verticale demeure dans le Labo comme comparaison. Les millièmes ne
+sont pas représentés par des pièces trop petites ; le tableau de numération à
+quatre colonnes constitue leur représentation commune.
+
+Le Labo enregistre ces candidats, les bandes et grilles existantes et les
+droites simples ou doubles. Le nouveau préréglage de double droite aligne
+`1/4`, `1/2`, `3/4` avec `0,25`, `0,5`, `0,75`. Ce travail reste local à la
+branche `agent/nc03-studio-visuels`, au-dessus de `32b0664` : aucune
+publication n'est autorisée par la présente décision.
+
+### D-047 — NC-03 / NC-04 intègre les représentations sans les placer dans les questions
+
+La fondation visuelle de D-046 est conservée comme historique de la reprise et
+devient la base effective du candidat. Le module visible reste unique, avec
+les deux micro-notions internes `fraction-vers-decimal` et
+`decimal-vers-fraction` équilibrées à une question près. Les questions sont
+désormais uniquement des productions abstraites ou des QCM diagnostiques :
+aucune double droite, grille, bande ni table de numération ne figure dans leur
+énoncé. Ces représentations appartiennent au cours, à « Me guider » et à la
+correction.
+
+Aux longueurs `5 / 10 / 15 / 20`, les quotas deviennent respectivement
+`1 / 2 / 3 / 4` QCM et `1 / 1 / 2 / 2` productions de fraction libre. Une
+fraction libre est donc présente dès cinq questions et n'est jamais convertie
+en QCM. Lorsqu'il y en a deux, l'une vient des demis ou quarts et l'autre des
+dixièmes ou centièmes. Toute fraction équivalente reste correcte, qu'elle soit
+réduite ou non. Le produit en croix demeure la règle de validation ; une
+consigne de simplification relèverait d'une autre compétence.
+
+Le millième apparaît une fois à partir de 15 questions, dans l'un ou l'autre
+sens selon la graine. Sa banque s'étend aux numérateurs de trois chiffres hors
+multiples de 10, ce qui rend notamment `725/1000` possible sans dupliquer les
+centièmes. Aucun matériel composé de mille petites pièces n'est créé : le
+tableau de numération est sa seule représentation d'aide. Les dénominateurs du
+module restent `1`, `2`, `4`, `10`, `100` et `1 000` ; les cinquièmes et les
+huitièmes ne sont pas ajoutés.
+
+Les repères nommés par les textes officiels restent des ancrages du pool et
+non une banque fermée à réciter. Le choix et la position varient avec la
+graine ; une série de 20 en garantit toutefois au moins deux exactement, sans
+réduire les autres valeurs à ces seuls couples.
+
+« Me guider » devient une progression de soutien en trois degrés :
+« 1 · Un indice », « 2 · Voir », « 3 · Construire ». Le premier reste verbal,
+le deuxième donne une représentation et le troisième guide une action. Le
+dernier terme de l'égalité reste `?` avant validation dans le texte visible,
+les alternatives, les attributs ARIA et les contrôles. Une aide inverse ne
+doit donc jamais borner une commande par le numérateur caché. `/1` emploie des
+tuiles non numérotées ; `/10` et `/100` utilisent le matériel décimal puis le
+tableau ; `/1000` utilise le tableau seul. Une fraction libre part uniquement
+du dernier rang écrit du décimal et conduit à une fraction décimale possible,
+jamais au dénominateur canonique caché.
+
+Le cours passe à sept pages : même nombre et sens quotient ; matériel vers
+image puis symboles ; dixièmes, centièmes et millièmes ; conversion de
+`147/100` en `1,47` ; conversion inverse et fraction libre ; dépassement de
+l'unité avec `5/2` et `7/4` ; équivalences, ordre de grandeur et stratégie
+finale. La division du numérateur par le dénominateur y est nommée comme sens
+et comme méthode générale tardive, sans devenir une technique exercée dans les
+séries.
+
+Le lecteur devient l'unique source de l'aide et de la correction ; les
+générateurs ne conservent que la question et les diagnostics propres aux
+distracteurs QCM. Une correction de fraction libre porte « Une réponse
+possible », repart du dernier rang écrit et peut montrer, par exemple,
+`0,25 = 25/100 = 1/4`, sans transformer `1/4` en réponse obligatoire. Le module
+reste `construit` et aucune publication n'est autorisée par D-047. La recette
+automatisée, visuelle et accessible finale est achevée : `npm run verifier`
+réussit 1 458 tests sur 1 458 et la campagne Chromium compte 270 états et 439
+captures sur cinq fenêtres, sans erreur, débordement ni élément hors fenêtre.
+Le passage à `valide` relève désormais d'un nouvel arbitrage de Gwenaël, et
+non d'une validation technique implicite.
+
+### D-048 — Le candidat NC-03 / NC-04 peut être publié pour être essayé
+
+Le 13 août 2026, après la recette technique, visuelle et accessible de D-047,
+Gwenaël autorise le téléversement, la pull request, sa fusion dans `main` et le
+redéploiement du candidat afin de l'essayer directement sur téléphone et en
+classe. Cette autorisation porte sur l'arbre exact vérifié du chantier ;
+`/auto/` reste strictement inchangé.
+
+Cette publication est une publication de test, pas une validation
+pédagogique. Les micro-notions `fraction-vers-decimal` et
+`decimal-vers-fraction` restent `construit`. La route
+`/automatismes-v2/` conserve son `noindex`, reste hors sitemap et le module
+n'est pas ajouté à une navigation destinée aux élèves. Le passage à `valide`
+interviendra seulement après les essais et l'accord explicite de Gwenaël.

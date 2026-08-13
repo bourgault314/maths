@@ -1,31 +1,41 @@
 // Plan de série commun à la catégorie visible « Fractions simples et
 // décimaux ». NC-03 et NC-04 restent deux files internes, équilibrées puis
-// intercalées. Une série de vingt comporte exactement dix questions dans
-// chaque sens, une production libre et au plus un item de millièmes.
+// intercalées. Les représentations restent dans le cours, l'aide et la
+// correction : les questions sont uniquement des productions ou des QCM
+// diagnostiques. Les productions libres commencent dès une série de cinq.
 
 import {
   creerGenerateur,
   validerGraine,
-} from "../../../../moteur-exercices/src/aleatoire.js?v=25";
+} from "../../../../moteur-exercices/src/aleatoire.js?v=26";
 import {
   GABARIT_DECIMAL_VERS_FRACTION,
   CIBLES_FRACTION_LIBRE,
-} from "./decimal-vers-fraction.js?v=25";
+  CIBLES_FRACTION_LIBRE_DECIMALES,
+  CIBLES_FRACTION_LIBRE_DEMIS_QUARTS,
+} from "./decimal-vers-fraction.js?v=26";
 import {
   GABARIT_FRACTION_VERS_DECIMAL,
   NUMERATEURS_CENTIEMES,
   NUMERATEURS_DENOMINATEUR_UN,
   NUMERATEURS_DIXIEMES,
   NUMERATEURS_MILLIEMES,
-} from "./fraction-vers-decimal.js?v=25";
+} from "./fraction-vers-decimal.js?v=26";
 import {
   MICRO_NOTION_NC03,
   MICRO_NOTION_NC04,
   NUMERATEURS_DEMIS,
   NUMERATEURS_QUARTS,
-} from "./commun.js?v=25";
+} from "./commun.js?v=26";
 
-export const VERSION_PLAN_SERIE_FRACTIONS_DECIMAUX = 2;
+export const VERSION_PLAN_SERIE_FRACTIONS_DECIMAUX = 3;
+
+export const QUOTAS_SERIES_FRACTIONS_DECIMAUX = Object.freeze({
+  5: Object.freeze({ qcm: 1, productionsLibres: 1, milliemes: 0 }),
+  10: Object.freeze({ qcm: 2, productionsLibres: 1, milliemes: 0 }),
+  15: Object.freeze({ qcm: 3, productionsLibres: 2, milliemes: 1 }),
+  20: Object.freeze({ qcm: 4, productionsLibres: 2, milliemes: 1 }),
+});
 
 const RECETTE_NC03 = Object.freeze([
   2,
@@ -60,6 +70,17 @@ const NUMERATEURS_PAR_DENOMINATEUR = Object.freeze({
   10: NUMERATEURS_DIXIEMES,
   100: NUMERATEURS_CENTIEMES,
   1000: NUMERATEURS_MILLIEMES,
+});
+
+// Les repères prescrits sont présents et légèrement favorisés dans les pools,
+// sans imposer une valeur fixe à une position de la série.
+const NUMERATEURS_REPERES_OFFICIELS = Object.freeze({
+  1: Object.freeze([7]),
+  2: Object.freeze([1, 3, 4, 5]),
+  4: Object.freeze([1, 3]),
+  10: Object.freeze([1]),
+  100: Object.freeze([1, 100]),
+  1000: Object.freeze([1]),
 });
 
 function exigerConfiguration(graine, nombreQuestions) {
@@ -119,53 +140,63 @@ function creerFile(microNotion, nombre) {
   }));
 }
 
-function marquerCasStructurels(files, aleatoire, nombreQuestions) {
-  // À partir de dix questions, chaque sens rencontre au moins une fraction
-  // simple propre et une fraction impropre non entière. NC-04 comporte aussi
-  // un entier caché. Les positions et les valeurs restent seedées et variées.
-  if (nombreQuestions < 10) return;
-  for (const microNotion of [MICRO_NOTION_NC03, MICRO_NOTION_NC04]) {
-    const simples = aleatoire.melange(
-      files.get(microNotion).filter((element) =>
-        element.forme !== "fraction-libre"
-        && [2, 4].includes(element.denominateur)),
-    );
-    const quarts = aleatoire.melange(
-      simples.filter((element) => element.denominateur === 4),
-    );
-    if (simples.length < 2 || quarts.length < 1) {
-      throw new Error(
-        `serie fractions-decimaux : cas simples insuffisants pour ${microNotion}`,
-      );
-    }
-    const propre = quarts[0];
-    propre.classeValeur = "inferieur-un";
-    const restants = aleatoire.melange(
-      simples.filter((element) => element !== propre),
-    );
-    restants[0].classeValeur = "superieur-un-non-entier";
-    if (microNotion === MICRO_NOTION_NC04) {
-      if (restants.length < 2) {
-        throw new Error(
-          "serie fractions-decimaux : entier caché NC-04 impossible",
-        );
-      }
-      restants[1].classeValeur = "entier";
-    }
-  }
+function quotaProductionsLibres(nombreQuestions) {
+  if (nombreQuestions >= 15) return 2;
+  return nombreQuestions >= 5 ? 1 : 0;
 }
 
-function reserverCasLongs(files, graine, nombreQuestions) {
-  if (nombreQuestions !== 20) return;
+function reserverProductionsLibres(files, aleatoire, nombreQuestions) {
+  const quota = quotaProductionsLibres(nombreQuestions);
+  if (quota === 0) return;
   const fileNC04 = files.get(MICRO_NOTION_NC04);
-  fileNC04[fileNC04.length - 1] = {
-    microNotion: MICRO_NOTION_NC04,
-    forme: "fraction-libre",
-  };
+  if (fileNC04.length < quota) {
+    throw new Error(
+      "serie fractions-decimaux : places insuffisantes pour les fractions libres",
+    );
+  }
+  const categories = quota === 2
+    ? ["demis-quarts", "decimales"]
+    : [aleatoire.choix(["demis-quarts", "decimales"])];
+  const tous = [...files.values()].flat();
+  const compter = (elements) => elements.reduce((comptes, element) => {
+    comptes.set(element.denominateur, (comptes.get(element.denominateur) ?? 0) + 1);
+    return comptes;
+  }, new Map());
+  const comptesGlobaux = compter(tous);
+  const comptesNC04 = compter(fileNC04);
+  categories.forEach((categorieLibre) => {
+    const positions = fileNC04.map((element, position) => ({ element, position }));
+    const doublonsNC04 = aleatoire.melange(positions.filter(({ element }) =>
+      element.forme !== "fraction-libre"
+      && (comptesNC04.get(element.denominateur) ?? 0) > 1));
+    const doublonsGlobaux = aleatoire.melange(positions.filter(({ element }) =>
+      element.forme !== "fraction-libre"
+      && (comptesGlobaux.get(element.denominateur) ?? 0) > 1));
+    const choisi = doublonsNC04[0] ?? doublonsGlobaux[0];
+    if (!choisi) {
+      throw new Error(
+        "serie fractions-decimaux : aucune famille répétée à remplacer par une fraction libre",
+      );
+    }
+    const { element, position } = choisi;
+    comptesGlobaux.set(
+      element.denominateur,
+      comptesGlobaux.get(element.denominateur) - 1,
+    );
+    comptesNC04.set(
+      element.denominateur,
+      comptesNC04.get(element.denominateur) - 1,
+    );
+    fileNC04[position] = {
+      microNotion: MICRO_NOTION_NC04,
+      forme: "fraction-libre",
+      categorieLibre,
+    };
+  });
+}
 
-  const aleatoire = creerGenerateur(
-    `fractions-decimaux-millieme-v${VERSION_PLAN_SERIE_FRACTIONS_DECIMAUX}:${graine}`,
-  );
+function reserverMillieme(files, aleatoire, nombreQuestions) {
+  if (nombreQuestions < 15) return;
   const microMillieme = aleatoire.choix([
     MICRO_NOTION_NC03,
     MICRO_NOTION_NC04,
@@ -181,46 +212,174 @@ function reserverCasLongs(files, graine, nombreQuestions) {
   file[index] = { ...file[index], denominateur: 1000 };
 }
 
+function marquerClasse(elements, aleatoire, classeValeur, contexte) {
+  const predicat = classeValeur === "entier"
+    ? (element) => element.forme !== "fraction-libre"
+      && element.denominateur !== 1
+      && [2, 4, 10, 100].includes(element.denominateur)
+    : (element) => element.forme !== "fraction-libre"
+      && [2, 4].includes(element.denominateur);
+  const candidats = aleatoire.melange(
+    elements.filter((element) => element.classeValeur === undefined && predicat(element)),
+  );
+  if (candidats.length === 0) {
+    throw new Error(
+      `serie fractions-decimaux : cas ${classeValeur} impossible ${contexte}`,
+    );
+  }
+  candidats[0].classeValeur = classeValeur;
+}
+
+function marquerPropreEtImpropre(elements, aleatoire, contexte) {
+  const quarts = aleatoire.melange(
+    elements.filter((element) =>
+      element.classeValeur === undefined
+      && element.forme !== "fraction-libre"
+      && element.denominateur === 4),
+  );
+  if (quarts.length > 0) {
+    quarts[0].classeValeur = "inferieur-un";
+  } else {
+    marquerClasse(elements, aleatoire, "inferieur-un", contexte);
+  }
+  marquerClasse(elements, aleatoire, "superieur-un-non-entier", contexte);
+}
+
+function marquerCasStructurels(files, aleatoire, nombreQuestions) {
+  if (nombreQuestions < 5) return;
+  if (nombreQuestions < 10) {
+    marquerPropreEtImpropre(
+      [...files.values()].flat(),
+      aleatoire,
+      "dans la série courte",
+    );
+    return;
+  }
+  for (const microNotion of [MICRO_NOTION_NC03, MICRO_NOTION_NC04]) {
+    marquerPropreEtImpropre(
+      files.get(microNotion),
+      aleatoire,
+      `pour ${microNotion}`,
+    );
+  }
+  if (nombreQuestions >= 20) {
+    // NC-03 possède déjà un cas /1 dans cette longueur. Le forcer en plus à
+    // cacher un entier dans /2, /4, /10 ou /100 rendrait certaines banques de
+    // vingt incompatibles avec l'invariant des vingt valeurs distinctes.
+    marquerClasse(
+      files.get(MICRO_NOTION_NC04),
+      aleatoire,
+      "entier",
+      `pour ${MICRO_NOTION_NC04}`,
+    );
+  } else {
+    marquerClasse(
+      [...files.values()].flat(),
+      aleatoire,
+      "entier",
+      "dans la série",
+    );
+  }
+}
+
+function estRepereOfficiel({ numerateur, denominateur }) {
+  return NUMERATEURS_REPERES_OFFICIELS[denominateur]?.includes(numerateur)
+    ?? false;
+}
+
+function respecterClasseValeur(candidat, classeValeur) {
+  if (classeValeur === "inferieur-un") {
+    return candidat.numerateur < candidat.denominateur;
+  }
+  if (classeValeur === "superieur-un-non-entier") {
+    return candidat.numerateur > candidat.denominateur
+      && candidat.numerateur % candidat.denominateur !== 0;
+  }
+  if (classeValeur === "entier") {
+    return candidat.numerateur % candidat.denominateur === 0;
+  }
+  return true;
+}
+
+function candidatsPourElement(element, aleatoire) {
+  const cibles = element.forme === "fraction-libre"
+    ? element.categorieLibre === "demis-quarts"
+      ? CIBLES_FRACTION_LIBRE_DEMIS_QUARTS
+      : element.categorieLibre === "decimales"
+        ? CIBLES_FRACTION_LIBRE_DECIMALES
+        : CIBLES_FRACTION_LIBRE
+    : NUMERATEURS_PAR_DENOMINATEUR[element.denominateur].map(
+      (numerateur) => ({ numerateur, denominateur: element.denominateur }),
+    );
+  const compatibles = cibles.filter((candidat) =>
+    respecterClasseValeur(candidat, element.classeValeur));
+  const reperes = aleatoire.melange(compatibles.filter(estRepereOfficiel));
+  const autres = aleatoire.melange(compatibles.filter((candidat) =>
+    !estRepereOfficiel(candidat)));
+  // Environ une fois sur huit, un repère devient le premier candidat. Les
+  // autres tirages mélangent tout le pool et conservent donc sa diversité.
+  return reperes.length > 0 && aleatoire.choix([
+    true,
+    false,
+    false,
+    false,
+    false,
+    false,
+    false,
+    false,
+  ])
+    ? [...reperes, ...autres]
+    : aleatoire.melange([...reperes, ...autres]);
+}
+
 function parametrerNumerateurs(files, aleatoire) {
   const utilises = new Set();
   const aAffecter = aleatoire.melange([...files.values()].flat())
     .map((element) => ({
       element,
-      candidats: element.forme === "fraction-libre"
-        ? aleatoire.melange(CIBLES_FRACTION_LIBRE)
-        : aleatoire.melange(
-          NUMERATEURS_PAR_DENOMINATEUR[element.denominateur].map(
-            (numerateur) => ({ numerateur, denominateur: element.denominateur }),
-          ).filter((candidat) => {
-            if (element.classeValeur === "inferieur-un") {
-              return candidat.numerateur < candidat.denominateur;
-            }
-            if (element.classeValeur === "superieur-un-non-entier") {
-              return candidat.numerateur > candidat.denominateur
-                && candidat.numerateur % candidat.denominateur !== 0;
-            }
-            if (element.classeValeur === "entier") {
-              return candidat.numerateur % candidat.denominateur === 0;
-            }
-            return true;
-          }),
-        ),
+      candidats: candidatsPourElement(element, aleatoire),
     }))
     .sort((a, b) => a.candidats.length - b.candidats.length);
+  const minimumReperesOfficiels = aAffecter.length >= 20 ? 2 : 0;
+  const peutEncoreAtteindreMinimum = (index, nombreReperes) => {
+    if (nombreReperes >= minimumReperesOfficiels) return true;
+    let possibilites = 0;
+    for (let position = index; position < aAffecter.length; position += 1) {
+      if (aAffecter[position].candidats.some((candidat) =>
+        estRepereOfficiel(candidat)
+        && !utilises.has(cleValeur(candidat.numerateur, candidat.denominateur)))) {
+        possibilites += 1;
+      }
+    }
+    return nombreReperes + possibilites >= minimumReperesOfficiels;
+  };
+  const denominateursInitiaux = new Map(
+    aAffecter.map(({ element }) => [element, element.denominateur]),
+  );
 
-  function affecter(index) {
-    if (index === aAffecter.length) return true;
+  function affecter(index, nombreReperes = 0) {
+    if (index === aAffecter.length) {
+      return nombreReperes >= minimumReperesOfficiels;
+    }
     const { element, candidats } = aAffecter[index];
     for (const candidat of candidats) {
       const cle = cleValeur(candidat.numerateur, candidat.denominateur);
       if (utilises.has(cle)) continue;
+      const prochainNombreReperes = nombreReperes + Number(estRepereOfficiel(candidat));
       utilises.add(cle);
       element.numerateur = candidat.numerateur;
       element.denominateur = candidat.denominateur;
-      if (affecter(index + 1)) return true;
+      if (
+        peutEncoreAtteindreMinimum(index + 1, prochainNombreReperes)
+        && affecter(index + 1, prochainNombreReperes)
+      ) return true;
       utilises.delete(cle);
       delete element.numerateur;
-      if (element.forme === "fraction-libre") delete element.denominateur;
+      if (element.forme === "fraction-libre") {
+        delete element.denominateur;
+      } else {
+        element.denominateur = denominateursInitiaux.get(element);
+      }
     }
     return false;
   }
@@ -263,12 +422,12 @@ function ordonnerMicroNotions(aleatoire, repartition) {
 }
 
 function repartitionPresentations(nombreQuestions) {
-  const qcm = Math.max(nombreQuestions >= 5 ? 1 : 0, Math.round(nombreQuestions * 0.2));
-  const doubles = Math.max(nombreQuestions >= 8 ? 1 : 0, Math.round(nombreQuestions * 0.1));
+  const qcm = nombreQuestions >= 5
+    ? Math.max(1, Math.round(nombreQuestions * 0.2))
+    : 0;
   return {
     "qcm-diagnostique": qcm,
-    "double-droite": doubles,
-    abstraite: nombreQuestions - qcm - doubles,
+    abstraite: nombreQuestions - qcm,
   };
 }
 
@@ -313,15 +472,6 @@ function attribuerPresentations(files, aleatoire, nombreQuestions) {
   const quotas = repartitionPresentations(nombreQuestions);
   elements.forEach((element) => { element.presentation = "abstraite"; });
 
-  const eligiblesDouble = elements.filter((element) =>
-    element.forme !== "fraction-libre"
-    && [2, 4].includes(element.denominateur));
-  selectionnerEquilibreParMicroNotion(
-    eligiblesDouble,
-    quotas["double-droite"],
-    aleatoire,
-  ).forEach((element) => { element.presentation = "double-droite"; });
-
   const eligiblesQcm = elements.filter((element) =>
     element.forme !== "fraction-libre"
     && element.presentation === "abstraite");
@@ -357,11 +507,12 @@ export function planifierSerieFractionsDecimaux({
     [MICRO_NOTION_NC03, creerFile(MICRO_NOTION_NC03, repartition[MICRO_NOTION_NC03])],
     [MICRO_NOTION_NC04, creerFile(MICRO_NOTION_NC04, repartition[MICRO_NOTION_NC04])],
   ]);
-  reserverCasLongs(files, graine, nombreQuestions);
 
   const aleatoire = creerGenerateur(
     `fractions-decimaux-plan-v${VERSION_PLAN_SERIE_FRACTIONS_DECIMAUX}:${graine}:${nombreQuestions}`,
   );
+  reserverProductionsLibres(files, aleatoire, nombreQuestions);
+  reserverMillieme(files, aleatoire, nombreQuestions);
   marquerCasStructurels(files, aleatoire, nombreQuestions);
   parametrerNumerateurs(files, aleatoire);
   melangerFiles(files, aleatoire);

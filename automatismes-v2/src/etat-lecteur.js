@@ -1,12 +1,12 @@
 import {
   SCHEMA_SEANCE,
   validerSeance,
-} from "../../packages/contrats/src/seance.js?v=25";
+} from "../../packages/contrats/src/seance.js?v=26";
 import {
   REFERENTIEL_COMPETENCES,
   SCHEMA_TRACE_REPONSE,
   validerTraceReponse,
-} from "../../packages/contrats/src/trace-reponse.js?v=25";
+} from "../../packages/contrats/src/trace-reponse.js?v=26";
 import {
   TYPE_REPONSE_ENTIER_NATUREL,
   TYPE_REPONSE_DEUX_ENTIERS,
@@ -16,16 +16,16 @@ import {
   estDeuxEntiersExacts,
   estEntierExact,
   estSelectionExacte,
-} from "../../packages/contrats/src/question-v2.js?v=25";
+} from "../../packages/contrats/src/question-v2.js?v=26";
 import {
   analyserEcritureDecimalePositive,
   fractionsEgales,
-} from "../../packages/objets/src/fractions-decimaux.js?v=25";
+} from "../../packages/objets/src/fractions-decimaux.js?v=26";
 import { graineDepuisTexte } from "../../packages/moteur-exercices/src/aleatoire.js";
-import { creerRegistreAutomatismes } from "../../packages/automatismes/src/registre.js?v=25";
+import { creerRegistreAutomatismes } from "../../packages/automatismes/src/registre.js?v=26";
 import {
   normaliserIdentifiantModule,
-} from "../../packages/automatismes/src/identifiants.js?v=25";
+} from "../../packages/automatismes/src/identifiants.js?v=26";
 import {
   connaitNotionLecteur,
   listerNotionsLecteur,
@@ -37,8 +37,8 @@ import {
   NOTION_VOLUME_CYLINDRE,
   NOTION_VOLUME_PRISME,
   obtenirNotionLecteur,
-} from "./registre-lecteur.js?v=25";
-import { genererSerieMultinotions } from "./serie-multinotions.js?v=25";
+} from "./registre-lecteur.js?v=26";
+import { genererSerieMultinotions } from "./serie-multinotions.js?v=26";
 
 export {
   NOTION_FRACTIONS_SIMPLES_DECIMAUX,
@@ -158,6 +158,7 @@ function creerEtatQuestion(etat) {
   etat.pasFractionAide = 0;
   etat.groupesFractionAide = 0;
   etat.rangFractionAide = null;
+  etat.niveauAideFraction = 0;
   etat.correctionOuverte = false;
   etat.coursOuvert = false;
   etat.notionCoursOuverte = null;
@@ -186,6 +187,7 @@ export function creerEtatLecteur(configuration = {}) {
     pasFractionAide: 0,
     groupesFractionAide: 0,
     rangFractionAide: null,
+    niveauAideFraction: 0,
     correctionOuverte: false,
     coursOuvert: false,
     notionCoursOuverte: null,
@@ -662,7 +664,10 @@ export function grouperUniteFractionAide(etat, delta = 1) {
   ) {
     return etat;
   }
-  const maximum = Math.floor(rationnel.numerateur / rationnel.denominateur);
+  // Deux gestes réellement visibles : assembler les pièces, puis retourner
+  // chaque groupe complet en unité. Le nombre d'unités n'ajoute pas de clics
+  // répétitifs qui montreraient la même image.
+  const maximum = 2;
   etat.groupesFractionAide = Math.max(
     0,
     Math.min(maximum, etat.groupesFractionAide + delta),
@@ -672,15 +677,31 @@ export function grouperUniteFractionAide(etat, delta = 1) {
 
 export function choisirRangFractionAide(etat, rang) {
   const rationnel = rationnelCourant(etat);
+  const question = questionCourante(etat);
+  const fractionLibre = question?.reponse.type === TYPE_REPONSE_FRACTION_EQUIVALENTE;
   if (
     !etat.aideOuverte
     || !rationnel
-    || ![10, 100, 1000].includes(rationnel.denominateur)
+    || (!fractionLibre && ![10, 100, 1000].includes(rationnel.denominateur))
     || !["dixiemes", "centiemes", "milliemes"].includes(rang)
   ) {
     return etat;
   }
   etat.rangFractionAide = rang;
+  return etat;
+}
+
+export function choisirNiveauAideFraction(etat, niveau) {
+  if (
+    !etat.aideOuverte
+    || !questionCourante(etat)
+    || !Number.isInteger(niveau)
+    || niveau < 0
+    || niveau > 2
+  ) {
+    return etat;
+  }
+  etat.niveauAideFraction = niveau;
   return etat;
 }
 

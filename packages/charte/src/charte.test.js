@@ -3,9 +3,12 @@ import assert from "node:assert/strict";
 import {
   COULEURS,
   COULEURS_BARRES,
+  COULEURS_BANDES_FRACTIONS,
+  COULEURS_NUMERATION_DECIMALE,
   COULEURS_POURCENTAGES,
   COULEURS_PYTHAGORE,
   couleurFamillePourcentage,
+  couleurBandeFraction,
   ESPACEMENTS,
   RAYONS,
   STATUT_CHARTE,
@@ -41,6 +44,8 @@ describe("charte — intégrité des données", () => {
     for (const [role, valeur] of Object.entries({
       ...COULEURS,
       ...COULEURS_BARRES,
+      ...COULEURS_BANDES_FRACTIONS,
+      ...COULEURS_NUMERATION_DECIMALE,
       ...COULEURS_POURCENTAGES,
       ...COULEURS_PYTHAGORE,
     })) {
@@ -54,6 +59,23 @@ describe("charte — intégrité des données", () => {
 
   it("la palette de Pythagore reste gelée", () => {
     assert.ok(Object.isFrozen(COULEURS_PYTHAGORE));
+  });
+
+  it("les palettes des matériels historiques restent gelées et exactes", () => {
+    assert.ok(Object.isFrozen(COULEURS_BANDES_FRACTIONS));
+    assert.ok(Object.isFrozen(COULEURS_NUMERATION_DECIMALE));
+    assert.equal(COULEURS_BANDES_FRACTIONS.d2, "#facc15");
+    assert.equal(COULEURS_BANDES_FRACTIONS.d4, "#84cc16");
+    assert.equal(COULEURS_BANDES_FRACTIONS.trait, "#000000");
+    assert.equal(COULEURS_NUMERATION_DECIMALE.unite, "#ef4444");
+    assert.equal(COULEURS_NUMERATION_DECIMALE.dixieme, "#22c55e");
+    assert.equal(COULEURS_NUMERATION_DECIMALE.centieme, "#facc15");
+  });
+
+  it("retrouve la couleur historique d'un dénominateur", () => {
+    assert.equal(couleurBandeFraction(2), COULEURS_BANDES_FRACTIONS.d2);
+    assert.equal(couleurBandeFraction(4), COULEURS_BANDES_FRACTIONS.d4);
+    assert.equal(couleurBandeFraction(7), null);
   });
 
   it("chaque découpage de pourcentage a sa couleur de famille", () => {
