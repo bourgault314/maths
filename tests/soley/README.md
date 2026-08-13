@@ -1,0 +1,44 @@
+# Batterie de tests Solèy (SOLEY.md §5)
+
+Cette batterie est OBLIGATOIRE avant tout push touchant `outils/club_maths/soley.html`.
+Elle pilote un vrai navigateur (Chromium via Playwright) et s'appuie sur l'API de test
+exposée par le jeu : `window.SOLEY = {openLevel, simulate, state, LV, solve(i)}`.
+
+## Lancer
+
+```bash
+# 1. Une seule fois : installer Playwright
+pip install playwright
+python -m playwright install chromium
+
+# 2. Tester la version déployée (mathsgo.re)
+python tests/soley/test_soley.py
+
+# 3. Tester la copie locale AVANT un push (serveur intégré, chemins /assets/ résolus)
+python tests/soley/test_soley.py --root .
+```
+
+Code retour 0 = tout est vert. `--headed` ouvre le navigateur pour observer.
+
+## Ce que la batterie vérifie (numérotation de SOLEY.md §5)
+
+| # | Contrôle | Méthode |
+|---|---|---|
+| T1 | Cohérence des données de chaque niveau : bornes, chevauchements (soleils, cases, roches, fruits, passes, pièces scellées), outils valides, `sol` posable (outils existants, cases libres, pas de doublon), clés de sauvegarde uniques | lecture de `SOLEY.LV` dans la page |
+| T2 | `solve(i)` gagne pour TOUS les niveaux | `SOLEY.solve(i).win` sur les 60 niveaux |
+| T3 | Tous les fruits sont ramassés par la solution de référence | `simulate().fruits` après chaque `solve` |
+| T4 | Test négatif : une passe étroite bloque un rayon trop épais (contournement du niveau « Les demi-tunnels » perdant, rayon 1/1 tronqué une demi-case avant la passe) + contrôle positif (les 1/2 traversent) | montage manuel de `state.placed` |
+| T5 | Écrans réellement masqués : `getComputedStyle` sur `#home`, `#lvscreen`, `#play` au chargement puis en naviguant AU CLIC (piège de spécificité #id vs .classe) | clics réels sur `.wrow` et `.lvcard` |
+| T6 | Paysage (viewport 844×390) : zéro défilement de page, plateau à gauche de la colonne, clic précis sur une case avec letterbox pris en compte (même règle de correspondance que `boardClick`), victoire de bout en bout (cinématique puis fenêtre de fin), sauvegarde locale écrite | clics réels + `mouse.click` aux coordonnées calculées |
+| T7 | Zéro erreur JavaScript (exceptions non rattrapées ET `console.error`) sur l'ensemble des deux passes | écouteurs `pageerror` / `console` |
+
+## Détails qui comptent
+
+- Le choix de cookies « refusé » est posé dans `localStorage` AVANT le chargement :
+  aucune bannière n'intercepte les clics, aucune mesure d'audience n'est déclenchée.
+- La passe paysage utilise un contexte NEUF (sauvegarde vierge) : le test « Bonus
+  sauvegarde » prouve que la victoire écrit bien la clé stable `monde:nom`.
+- `solve(i)` déclenche la cinématique ; la batterie purge les minuteries en rouvrant
+  un niveau (`openLevel`) après la série.
+- Si le jeu évolue (nouvelle pièce, nouveau champ de niveau), compléter T1
+  (types d'outils, champs) et relancer la batterie AVANT le push.
