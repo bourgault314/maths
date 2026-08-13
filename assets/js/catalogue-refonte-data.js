@@ -250,6 +250,7 @@ window.MATHSGO_CATALOGUE = {
       "collections": [],
       "tags": ["jeu", "calcul-mental", "duel", "quatre-operations", "somme", "difference", "produit", "quotient", "chronometre"],
       "thumbnail": "assets/img/thumbnails/jeux/coffres-magiques.svg?v=2",
+      "cardTitle": "Coffres magiques — solo ou duo",
       "cardDescription": "Choisir le duel à deux (20 s par tour) ou l’entraînement solo guidé sur les quatre opérations."
     },
     "outils/club_maths/tables_modulaires.html": {
@@ -363,6 +364,7 @@ window.MATHSGO_CATALOGUE = {
       "collections": [],
       "tags": ["calcul-mental", "quatre-operations", "coffres", "aide", "correction-visuelle", "entrainement"],
       "thumbnail": "assets/img/thumbnails/calcul-mental/coffres-magiques-solo.svg?v=1",
+      "cardTitle": "Coffres magiques — solo ou duo",
       "cardDescription": "Choisir l’entraînement solo guidé (10 coffres) ou le duel à deux de 20 secondes par tour."
     },
     "outils/calcul_mental/defi_tables.html": {

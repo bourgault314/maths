@@ -1033,6 +1033,7 @@
     const domainId = resourceDisplayDomain(resource);
     const classification = resourceClassification(resource);
     const thumbnail = classification.thumbnail || resource.thumbnail;
+    const title = classification.cardTitle || resource.title;
     const description = classification.cardDescription || resource.description;
     const group = primaryResourceGroup(resource);
     const usages = resourceUsageMeta(resource, group);
@@ -1040,7 +1041,7 @@
       ${thumbnail
         ? `<span class="resource-thumbnail">${thumbnailMarkup(thumbnail)}</span>`
         : `<span class="resource-type-icon">${typeIcon(resource, group)}</span>`}
-      <span class="resource-copy"><h3>${escapeHtml(resource.title)}</h3>${thumbnail ? `<span class="resource-description">${escapeHtml(description)}</span>` : `<span class="resource-meta">${escapeHtml(resourceMeta(resource))}</span>`}${usages ? `<span class="resource-meta resource-uses">${escapeHtml(usages)}</span>` : ""}</span>
+      <span class="resource-copy"><h3>${escapeHtml(title)}</h3>${thumbnail ? `<span class="resource-description">${escapeHtml(description)}</span>` : `<span class="resource-meta">${escapeHtml(resourceMeta(resource))}</span>`}${usages ? `<span class="resource-meta resource-uses">${escapeHtml(usages)}</span>` : ""}</span>
       <span class="resource-arrow" aria-hidden="true">→</span>
     </a>`;
   }

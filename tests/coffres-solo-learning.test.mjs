@@ -187,15 +187,16 @@ test("le cours garde la définition mathématique de chaque résultat sans long 
   assert.match(html, /@media \(max-width: 520px\)[\s\S]*?\.operation-conventions\s*\{\s*grid-template-columns:\s*1fr/);
 });
 
-test("le cours complet reste une source cachée pour l’aide et le solo démarre directement", () => {
-  assert.match(html, /<section id="lesson" class="overlay" hidden aria-hidden="true">/);
-  assert.doesNotMatch(html, /id="start-game"|function openLesson\(|openLesson\(\)/);
+test("le cours complet n’apparaît qu’au lancement et chaque dialogue repart en haut", () => {
+  const actions = html.match(/<div class="lesson-actions">([\s\S]*?)<\/div>/)?.[1] || "";
+  assert.equal((actions.match(/<button/g) || []).length, 1);
+  assert.match(actions, /id="start-game"[^>]*>J’ai compris, jouer<\/button>/);
+  assert.match(html, /id="lesson-course" class="operation-grid" role="region" aria-label="Cours complet sur les quatre opérations" tabindex="0"/);
   assert.doesNotMatch(html, /id="close-lesson"|id="show-lesson"|Voir le plateau|>Mémo<\/button>/);
   assert.match(html, /const resetScroll = dialog => \{[\s\S]*?node\.scrollTop = 0[\s\S]*?node\.scrollLeft = 0/);
   assert.match(html, /dialog\.hidden = false;\s*resetScroll\(dialog\)[\s\S]*?focusNode\(target, true\)/);
-  assert.match(html, /if \(requestedMode === CURRENT_MODE\) \{\s*start\(\{ moveFocus: true \}\)/);
-  assert.match(html, /const mustStart = !gameStarted && values\.length === 0;[\s\S]*if \(mustStart\) start\(\{ moveFocus: true \}\)/);
-  assert.match(html, /function renderHelpCard\(nextMode\)[\s\S]*lesson\.querySelector[\s\S]*sourceCard\.cloneNode\(true\)/);
+  assert.match(html, /function openLesson\(\) \{[\s\S]*?trigger: null,[\s\S]*?initialFocus: "#start-game"/);
+  assert.match(html, /document\.querySelector\("#start-game"\)\.addEventListener[\s\S]*?start\(\{ moveFocus: true, focusTarget: trigger \}\)/);
 });
 
 test("la série garde exactement dix clés et la distribution validée", () => {

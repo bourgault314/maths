@@ -140,11 +140,7 @@ async function auditModeSelector(browser, base, errors, scenario) {
       && url.searchParams.get("mode") === scenario.targetMode
       && url.searchParams.get("from") === scenario.origin.key
     ));
-    await page.locator(scenario.targetReady).waitFor({ state: "visible" });
-    if (scenario.targetMode === "solo") {
-      assert(await page.locator("#lesson").isVisible() === false, `${scenario.label} : le cours complet s’affiche encore avant le plateau solo.`);
-      await page.waitForFunction(() => document.activeElement.classList.contains("rune"));
-    }
+    await page.locator(`${scenario.targetIntro}:not([hidden])`).waitFor();
     await assertOriginLinks(page, scenario.origin);
   } finally {
     await page.close();
@@ -277,18 +273,28 @@ async function auditSolo(browser, base, errors) {
   });
   await page.goto(`${base}/outils/calcul_mental/coffres_magiques_solo.html?mode=solo`, { waitUntil: "networkidle" });
 
+  await page.waitForFunction(() => document.activeElement.id === "start-game");
+  assert((await activeElement(page)).insideModal, "L’introduction solo ne focalise pas son bouton principal.");
+  assert(await page.locator("#lesson .operation-grid").evaluate(grid => grid.scrollTop === 0), "Le mémo initial ne commence pas par la somme.");
+  await page.keyboard.press("Shift+Tab");
+  assert((await activeElement(page)).id === "lesson-course", "Maj+Tab ne rejoint pas la zone défilable du cours.");
+  await page.keyboard.press("Tab");
+  assert((await activeElement(page)).id === "start-game", "Tab ne revient pas au bouton de départ depuis le cours.");
+  await page.keyboard.press("Tab");
+  assert((await activeElement(page)).id === "lesson-course", "Tab ne reboucle pas sur la zone de cours.");
+  await page.keyboard.press("Shift+Tab");
+  assert((await activeElement(page)).id === "start-game", "Maj+Tab ne reboucle pas sur le bouton de départ.");
+  await page.keyboard.press("Escape");
+  assert(await page.locator("#lesson").isVisible(), "Échap contourne l’introduction solo obligatoire.");
+  await page.locator("#start-game").click();
+  await page.locator("#lesson").waitFor({ state: "hidden" });
   await page.waitForFunction(() => document.activeElement.classList.contains("rune"));
-  assert(!await page.locator("#lesson").isVisible(), "Le cours complet s’affiche encore au démarrage du solo.");
-  assert(await page.locator("#start-game,#show-lesson").count() === 0, "Une action permet encore d’afficher le cours complet.");
-  const initialState = await page.evaluate(() => window.MATHSGO_COFFRES_SOLO.getState());
-  assert(initialState.boardId === 1 && initialState.values.length === 16, "Le premier plateau solo n’est pas créé directement.");
+  assert(await page.locator("#show-lesson").count() === 0, "Le cours complet peut encore être rouvert depuis le plateau.");
   assert(await page.locator(".solo-toolbar button").count() === 2, "La barre solo ne contient pas seulement Aide et Nouvelle partie.");
-
-  await page.locator("#help-button").click();
-  await page.waitForFunction(() => document.activeElement.id === "help-title");
-  assert(await page.locator("#help-visual > article[data-operation]").count() === 1, "L’aide n’affiche pas une seule partie de cours ciblée.");
-  await page.locator("#close-help").click();
-  await page.locator("#help-dialog").waitFor({ state: "hidden" });
+  const boardBeforeReset = await page.evaluate(() => window.MATHSGO_COFFRES_SOLO.getState().boardId);
+  await page.locator("#reset-button").click();
+  assert(!await page.locator("#lesson").isVisible(), "Nouvelle partie réaffiche inutilement le cours complet.");
+  assert((await page.evaluate(() => window.MATHSGO_COFFRES_SOLO.getState().boardId)) === boardBeforeReset + 1, "Nouvelle partie ne crée pas un nouveau plateau.");
 
   const lastSecond = await solveSolo(page);
   await page.waitForFunction(() => document.activeElement.id === "play-again");
@@ -303,6 +309,7 @@ async function auditSolo(browser, base, errors) {
   await page.keyboard.press("Tab");
   await page.locator("#play-again").click();
   await page.locator("#result").waitFor({ state: "hidden" });
+  assert(!await page.locator("#lesson").isVisible(), "Rejouer réaffiche inutilement le cours complet.");
   await page.waitForFunction(index => document.activeElement.dataset.index === String(index), lastSecond);
   await page.close();
 }
@@ -322,7 +329,7 @@ async function auditSolo(browser, base, errors) {
       currentMode: "duo",
       targetMode: "solo",
       targetPath: "/outils/calcul_mental/coffres_magiques_solo.html",
-      targetReady: "#board .rune",
+      targetIntro: "#lesson",
       origin: {
         key: "strategie",
         label: "origine Jeux de stratégie",
@@ -338,7 +345,7 @@ async function auditSolo(browser, base, errors) {
       currentMode: "solo",
       targetMode: "duo",
       targetPath: "/outils/club_maths/coffres_magiques.html",
-      targetReady: "#rules",
+      targetIntro: "#rules",
       origin: {
         key: "calcul-mental",
         label: "origine Calcul mental",
