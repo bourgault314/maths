@@ -36,6 +36,14 @@ fichiers modifiés → tests → reste à vérifier.
   + le calcul typographié en fractions empilées (avec mise au même dénominateur).
 - Sauvegarde locale par clé stable `monde:nom-du-niveau` (survit aux ajouts de niveaux).
   Repli silencieux en mémoire si localStorage indisponible.
+  Champs : `done` (réussi), `fruits` (meilleur ramassage), `pieces` (meilleur nombre de pièces).
+- Progression (chantier 1 du vrai jeu, 13/08) : les mondes se MÉRITENT — un monde s'ouvre
+  quand on a réussi ⌈5/8 des niveaux du monde précédent⌉ (jamais 100 %) ; condition affichée
+  sur la carte du monde fermé, avec cadenas. Étoiles par niveau : ★ réussi · ★★ + tous les
+  fruits (acquise d'office si le niveau n'en a pas) · ★★★ + défi de maîtrise = réussir avec
+  au plus autant de pièces que la solution de référence (annoncé après la première réussite,
+  rappelé en rejouant). Mode classe pour le professeur : `soley.html?classe` déverrouille
+  tout (badge visible, rien n'est modifié dans la sauvegarde).
 - Plein écran : bouton ⛶ (API fullscreen quand dispo ; sinon mode focus + astuce
   « Ajouter à l'écran d'accueil » sur iOS). Installable (manifest inline + icônes data-URI).
 - Paysage : plateau pleine hauteur à gauche, barre/consigne/outils dans colonne droite.
@@ -76,7 +84,9 @@ Calculs du Coup de pouce : table `CALC` par nom de niveau, lignes du type
 
 ## 5. Qualité : la procédure de test est OBLIGATOIRE avant tout push
 
-API de test exposée : `window.SOLEY = {openLevel, simulate, state, LV, solve(i)}`.
+API de test exposée : `window.SOLEY = {openLevel, simulate, state, LV, solve(i),
+etoiles(i), parNiveau(i), seuilMonde(wi), mondeDeverrouille(wid), reussisMonde(wid), renderHome}`.
+`openLevel`/`solve` IGNORENT les verrous (c'est voulu : la batterie joue tout).
 Batterie (script Playwright Python, à conserver dans `tests/`) :
 1. Cohérence des données de chaque niveau (bornes, chevauchements, outils valides).
 2. `solve(i)` gagne pour TOUS les niveaux (solutions de référence).
@@ -86,6 +96,9 @@ Batterie (script Playwright Python, à conserver dans `tests/`) :
    attention au piège de spécificité #id vs .classe, déjà corrigé une fois).
 6. Paysage : zéro défilement de page, clic précis (letterbox pris en compte).
 7. Zéro erreur JavaScript.
+8. Progression : seuils ⌈5/8⌉ exacts, accueil neuf tout fermé sauf lagon, clic sur monde
+   fermé sans effet (condition lisible), déblocage après 5 réussites, étoiles sur les
+   cartes, mode classe, zéro défilement horizontal téléphone.
 
 ## 6. Historique des décisions (ne pas re-débattre sans raison)
 
@@ -99,6 +112,14 @@ Batterie (script Playwright Python, à conserver dans `tests/`) :
   librement reprises (non protégées) ; nom, graphismes, code, niveaux = originaux.
   Original rejouable : flashmuseum.net/game/refraction-5nm (émulation, parfois capricieuse)
   ou app de bureau Flashpoint Archive ; vidéos walkthrough sur YouTube pour captures.
+- Progression (13/08, Gwenaël) : seuil de déblocage = ⌈5/8 des niveaux du monde précédent⌉,
+  jamais 100 % ; à terme s'y ajouteront les niveaux-découverte (DESIGN-SOLEY.md pilier 1).
+- Étoiles calculées sur les MEILLEURS scores enregistrés (fruits maxi, pièces mini), pas sur
+  une seule partie parfaite — choix assumé, plus doux pour les élèves.
+- Défi de maîtrise (★★★) : « au plus autant de pièces que la solution de référence » —
+  le par d'un niveau = la taille de son `sol`. Sans fruits dans un niveau, ★★ vient avec ★.
+- Mode classe : paramètre d'URL `?classe`, non persistant (le lien suffit au professeur).
+- Anciennes sauvegardes : champ `pieces` additif, rien à migrer ; ★★★ apparaît en rejouant.
 
 ## 7. Architecture (découpage d'août 2026, statique, sans build, GitHub Pages)
 
@@ -179,4 +200,15 @@ commence par "use strict"; et le partage se fait par la portée globale.
   SEO du dépôt pour toute page hors catalogue — c'est l'esprit demandé : lien direct
   seulement, ni sitemap ni catalogue). Batterie verte sur le musée et sur la version
   actuelle.
+- 2026-08-13 (session 4) : CHANTIER 1 DU VRAI JEU — progression verrouillée + étoiles
+  (DESIGN-SOLEY.md pilier 2, ordre et seuil validés par Gwenaël). Mondes verrouillés au
+  seuil ⌈5/8 du monde précédent⌉ (5,6,5,5,5,4,5), condition + cadenas sur la carte, clic
+  fermé = secousse ; étoiles ★/★★/★★★ sur les cartes et à la victoire (winstars), défi de
+  maîtrise = taille de `sol`, rappel en rejouant (defiline) ; compteur d'étoiles à
+  l'accueil ; mode classe `?classe` avec badge ; sauvegarde enrichie du champ `pieces`
+  (additif). API SOLEY étendue (etoiles, parNiveau, seuilMonde, mondeDeverrouille,
+  reussisMonde, renderHome) ; batterie §5 enrichie du point 8 (7 contrôles T8) ; test node
+  « progression » ajouté (13/13). Vérifié au navigateur en 375 px (arbre d'accessibilité,
+  zéro erreur console) — captures d'écran du panneau indisponibles sur ce poste, rendu à
+  juger par Gwenaël sur téléphone après fusion.
 - (à compléter à chaque session)

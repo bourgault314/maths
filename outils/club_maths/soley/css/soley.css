@@ -33,7 +33,7 @@
   }
   #home h1{font-size:44px;margin:6px 0 0;letter-spacing:2px;text-shadow:0 3px 20px #ffc94d66;}
   #home .tagline{font-size:14px;color:#ffe9c4;margin:2px 0 10px;}
-  #hometot{display:flex;justify-content:center;gap:18px;font-size:14px;font-weight:800;color:#ffd5dc;margin-bottom:14px;}
+  #hometot{display:flex;flex-wrap:wrap;justify-content:center;gap:6px 18px;font-size:14px;font-weight:800;color:#ffd5dc;margin-bottom:14px;}
   #hometot span{display:flex;align-items:center;gap:6px;}
   .wrow{
     width:100%;display:flex;align-items:center;gap:12px;text-align:left;
@@ -49,6 +49,14 @@
   .wbar{height:6px;border-radius:3px;background:#ffffff1e;margin-top:7px;overflow:hidden;}
   .wbar div{height:100%;background:var(--gold);border-radius:3px;}
   .wcount{font-size:11px;font-weight:800;color:var(--gold2);white-space:nowrap;}
+  /* mondes verrouillés */
+  .wrow.locked{opacity:.6;cursor:default;}
+  .wrow.locked .wico{filter:grayscale(1) brightness(.9);}
+  .wrow.locked .wbar div{background:#ffffff40;}
+  .wcond{display:flex;align-items:center;gap:5px;font-size:11px;font-weight:800;color:#ffd5a1;margin-top:4px;}
+  .wcond svg{flex:0 0 auto;}
+  .classebadge{background:#39d98a1f;border:1.5px solid #39d98a77;color:#b8ffdc;border-radius:12px;
+    padding:8px 12px;font-size:12.5px;font-weight:800;text-align:center;margin:2px 0 10px;}
   /* ============ NIVEAUX ============ */
   #lvscreen{max-width:560px;margin:0 auto;padding:14px 14px 40px;}
   .topnav{display:flex;align-items:center;gap:10px;margin-bottom:6px;}
@@ -77,6 +85,8 @@
     min-width:44px;min-height:44px;padding:8px 11px;font-size:13px;font-weight:800;cursor:pointer;white-space:nowrap;}
   #rotatehint{font-size:12px;color:#ffe9c4;background:#00000042;border-radius:10px;padding:6px 10px;display:none;}
   #introline{font-size:13px;line-height:1.4;background:#00000042;border-radius:10px;padding:8px 11px;color:#ffeeda;}
+  #defiline{display:none;font-size:12px;font-weight:700;line-height:1.4;color:#ffe9c4;
+    background:#ffc94d1a;border:1px solid #ffc94d44;border-radius:10px;padding:6px 10px;}
   /* Coup de pouce : explication textuelle, rayons et fractions bien composées. */
   #hintov{position:fixed;inset:0;background:#10182eb8;display:none;align-items:center;justify-content:center;z-index:60;padding:16px;}
   #hintov.show{display:flex;}
@@ -165,6 +175,7 @@
   }
   #winov.show{display:flex;}
   #winov h2{font-size:34px;margin:0;color:var(--gold);text-shadow:0 2px 18px #ffc94d88;}
+  #winstars{font-size:27px;letter-spacing:7px;color:var(--gold);text-shadow:0 2px 14px #ffc94d99;margin-right:-7px;}
   #winov p{margin:2px 0 10px;font-size:15px;}
   #winov button{background:var(--gold);color:#4a2b10;border:none;border-radius:12px;padding:12px 22px;font-size:16px;font-weight:800;cursor:pointer;}
   #winov .stay{background:transparent;color:#c9d8f2;font-size:13px;font-weight:600;padding:6px;}

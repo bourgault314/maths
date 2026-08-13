@@ -151,11 +151,12 @@ puis une ou plusieurs sessions Code pour fabriquer, tester, publier après accor
 
 - [x] Mécanique d'apprentissage : niveau-découverte simple → point de cours → niveaux
       d'entraînement (version Gwenael, remplace les « ateliers » séparés).
-- [x] Mode classe qui déverrouille tout pour le professeur : oui.
+- [x] Mode classe qui déverrouille tout pour le professeur : oui — fait (`soley.html?classe`).
+- [x] L'ordre des cinq chantiers : progression d'abord (chantier 1 lancé et livré le 13/08).
+- [x] Le seuil de déblocage des mondes : ⌈5/8 des niveaux du monde précédent⌉, jamais 100 % ;
+      les niveaux-découverte s'y ajouteront quand le pilier 1 existera.
 
 ## Décisions en attente (à valider par Gwenael)
 
-- [ ] L'ordre des cinq chantiers.
-- [ ] Le seuil de déblocage des mondes (proposition : niveaux-découverte + 5 sur 8).
 - [ ] Où sont les cours déjà ajoutés par Gwenael, pour les reprendre.
 - [ ] Les premiers contenus du carnet : quels fruits, quels textes sur l'île.

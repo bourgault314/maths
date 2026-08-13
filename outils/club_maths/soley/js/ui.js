@@ -13,8 +13,9 @@ function renderHome(){
   const totF=LV.reduce((a,l)=>a+l.fruits.length,0);
   const gotF=LV.reduce((a,l,i)=>a+(save.fruits[lvId(i)]||0),0);
   const nd=LV.map((l,i)=>i).filter(i=>save.done[lvId(i)]).length;
+  const totE=LV.reduce((a,l,i)=>a+etoiles(i),0);
   document.getElementById('hometot').innerHTML=
-    `<span>★ ${nd}/${LV.length} niveaux</span><span>${fruitMini('letchi')} ${gotF}/${totF} fruits péi</span>`;
+    `<span>✔ ${nd}/${LV.length} niveaux</span><span>★ ${totE}/${LV.length*3} étoiles</span><span>${fruitMini('letchi')} ${gotF}/${totF} fruits péi</span>`;
   const icons={
     lagon:`<circle cx="23" cy="23" r="20" fill="#5fd3c8"/><path d="M 6 30 Q 23 20 40 30 L 40 43 L 6 43 Z" fill="#2b9d92"/>`,
     foret:`<polygon points="23,4 38,32 8,32" fill="#3d8f3d"/><polygon points="23,16 40,42 6,42" fill="#4faf4f"/>`,
@@ -28,24 +29,35 @@ function renderHome(){
       <path d="M13 34h5v-6h6v-7h7v8h3" fill="none" stroke="#ffc94d" stroke-width="4.2" stroke-linecap="round" stroke-linejoin="round"/>`,
     mafate:`<polygon points="8,42 16,12 24,42" fill="#5a4a52"/><polygon points="20,42 30,6 40,42" fill="#443640"/><circle cx="30" cy="10" r="4" fill="#ffc94d"/>`
   };
-  document.getElementById('wlist').innerHTML=WORLDS.map(w=>{
+  const cadenas=`<svg width="12" height="12" viewBox="0 0 24 24" aria-hidden="true"><path d="M7 11V8a5 5 0 0 1 10 0v3" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"/><rect x="4.5" y="11" width="15" height="10" rx="2.6" fill="currentColor"/></svg>`;
+  document.getElementById('wlist').innerHTML=
+    (modeClasse?'<div class="classebadge">Mode classe : tous les mondes sont ouverts.</div>':'')+
+    WORLDS.map((w,wi)=>{
     const idxs=LV.map((l,i)=>i).filter(i=>LV[i].w===w.id);
     const nd2=idxs.filter(i=>save.done[lvId(i)]).length;
     const pct=Math.round(100*nd2/idxs.length);
-    return `<button class="wrow" data-w="${w.id}">
+    const ouvert=mondeDeverrouille(w.id);
+    const cond=ouvert?'':`<span class="wcond">${cadenas} Réussis ${seuilMonde(wi)} niveaux de « ${WORLDS[wi-1].label} » (${reussisMonde(WORLDS[wi-1].id)}/${seuilMonde(wi)})</span>`;
+    return `<button class="wrow ${ouvert?'':'locked'}" data-w="${w.id}" ${ouvert?'':'aria-disabled="true"'}>
       <svg class="wico" width="46" height="46" viewBox="0 0 46 46">${icons[w.id]||''}</svg>
       <span class="winfo">
         <span class="wname">${w.label}</span>
-        <span class="wsub">${w.blurb}</span>
+        <span class="wsub">${w.blurb}</span>${cond}
         <span class="pal">${w.pal}</span>
         <span class="wbar"><div style="width:${pct}%"></div></span>
       </span>
-      <span class="wcount">${nd2}/${idxs.length}</span>
+      <span class="wcount">${ouvert?`${nd2}/${idxs.length}`:cadenas}</span>
     </button>`;
   }).join('');
-  document.querySelectorAll('.wrow').forEach(bt=>bt.addEventListener('click',()=>openWorld(bt.dataset.w)));
+  document.querySelectorAll('.wrow').forEach(bt=>bt.addEventListener('click',()=>{
+    if(bt.classList.contains('locked')){
+      bt.classList.remove('shake');void bt.offsetWidth;bt.classList.add('shake');return;
+    }
+    openWorld(bt.dataset.w);
+  }));
 }
 function openWorld(wid){
+  if(!mondeDeverrouille(wid)){renderHome();show('home');return;}
   curWorld=wid;
   const w=WORLDS.find(x=>x.id===wid);
   document.getElementById('lvwname').textContent=`${w.label} · ${w.pal}`;
@@ -54,10 +66,11 @@ function openWorld(wid){
   const ftype=FRW[wid];
   document.getElementById('lvgrid').innerHTML=idxs.map((gi,li)=>{
     const done=save.done[lvId(gi)];
+    const e=etoiles(gi);
     const nf=LV[gi].fruits.length, gf=save.fruits[lvId(gi)]||0;
     return `<button class="lvcard ${done?'done':''}" data-i="${gi}">
       <div class="num">${li+1}</div>
-      <div class="st">${done?'★':'☆'}${nf?` · ${fruitMini(ftype)}${gf}/${nf}`:''}</div>
+      <div class="st">${'★'.repeat(e)}${'☆'.repeat(3-e)}${nf?` · ${fruitMini(ftype)}${gf}/${nf}`:''}</div>
     </button>`;
   }).join('');
   document.querySelectorAll('.lvcard').forEach(bt=>bt.addEventListener('click',()=>openLevel(+bt.dataset.i)));
@@ -74,6 +87,12 @@ function openLevel(i){
   document.getElementById('play').style.setProperty('--board-ratio',`${LV[i].cols} / ${LV[i].rows}`);
   document.getElementById('pname').innerHTML=`${LV[i].name}<small>${w.label} · niveau ${local}</small>`;
   document.getElementById('introline').textContent=LV[i].sub;
+  const dl=document.getElementById('defiline');
+  if(save.done[lvId(i)]){
+    const par=parNiveau(i);
+    dl.textContent=`Défi de maîtrise : réussis avec au plus ${par} pièce${par>1?'s':''}.`;
+    dl.style.display='block';
+  }else dl.style.display='none';
   document.getElementById('rotatehint').style.display=
     (LV[i].cols>=10&&window.innerHeight>window.innerWidth)?'block':'none';
   show('play');
@@ -229,7 +248,8 @@ document.getElementById('nextbtn').addEventListener('click',()=>{
   const L=LV[cur];
   const wIdx=LV.map((l,i)=>i).filter(i=>LV[i].w===L.w);
   if(wIdx[wIdx.length-1]===cur){
-    if(cur<LV.length-1)openWorld(LV[cur+1].w);
+    if(cur<LV.length-1&&mondeDeverrouille(LV[cur+1].w))openWorld(LV[cur+1].w);
+    else if(cur<LV.length-1)openWorld(L.w); /* monde suivant verrouillé : retour à la liste, la condition y est visible */
     else{renderHome();show('home');}
   }
   else openLevel(cur+1);
@@ -243,8 +263,9 @@ function relayout(){
   const play=document.getElementById('play');
   const pr=document.getElementById('playright'), pl=document.getElementById('playleft');
   const tb=document.getElementById('topbar'), il=document.getElementById('introline'),tbox=document.getElementById('toolbox');
+  const dl=document.getElementById('defiline');
   if(land){
-    pr.insertBefore(tb,tbox);pr.insertBefore(il,tbox);
+    pr.insertBefore(tb,tbox);pr.insertBefore(il,tbox);pr.insertBefore(dl,tbox);
     /* Le cadre suit exactement le ratio du niveau : aucun faux espace autour de la grille. */
     const css=getComputedStyle(play),px=v=>Number.parseFloat(v)||0;
     const availW=play.clientWidth-px(css.paddingLeft)-px(css.paddingRight);
@@ -262,6 +283,7 @@ function relayout(){
     ['flex-basis','width','height','align-self'].forEach(p=>pl.style.removeProperty(p));
     const bb=document.getElementById('boardbox');
     pl.insertBefore(il,bb);
+    pl.insertBefore(dl,bb);
     pl.insertBefore(tb,document.getElementById('rotatehint'));
   }
 }
@@ -280,6 +302,7 @@ relayout();
 /* ===== API de test ===== */
 window.SOLEY={
   openLevel,simulate,state,LV,
+  etoiles,parNiveau,seuilMonde,mondeDeverrouille,reussisMonde,renderHome,
   solve(i){openLevel(i);LV[i].sol.forEach(([ti,x,y])=>{state.placed[x+','+y]={def:LV[i].tools[ti],ti};});
     const sim=simulate();redraw();return{win:sim.win,stats:sim.stats};}
 };

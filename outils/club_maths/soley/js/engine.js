@@ -122,7 +122,7 @@ function calcLineHTML(line){
 
 
 /* ===== Sauvegarde ===== */
-let memStore={done:{},fruits:{}};
+let memStore={done:{},fruits:{},pieces:{}};
 const lvId=i=>LV[i].w+':'+LV[i].name; /* clé stable : survit à l'ajout de niveaux */
 function loadSave(){
   try{const raw=localStorage.getItem('soley-save-v5');if(raw)return JSON.parse(raw);}catch(e){}
@@ -134,6 +134,33 @@ function persist(){
 let save=loadSave();
 if(!save.done)save.done={};
 if(!save.fruits)save.fruits={};
+if(!save.pieces)save.pieces={}; /* meilleur nombre de pièces par niveau (champ additif, anciennes sauvegardes intactes) */
+
+/* ===== Progression : mondes verrouillés, étoiles, mode classe =====
+   ★ niveau réussi · ★★ + tous les fruits · ★★★ + défi de maîtrise (au plus
+   autant de pièces que la solution de référence). Étoiles calculées sur les
+   MEILLEURS scores enregistrés, pas sur une seule partie.
+   Un monde s'ouvre quand on a réussi ⌈5/8 des niveaux du monde précédent⌉
+   (jamais 100 %). Le crochet « niveaux-découverte » (DESIGN-SOLEY.md pilier 1)
+   s'ajoutera ici quand ces niveaux existeront.
+   Mode classe : soley.html?classe — tout est ouvert, rien n'est enregistré de plus. */
+const modeClasse=(()=>{try{return typeof location!=='undefined'&&new URLSearchParams(location.search).has('classe');}catch(e){return false;}})();
+const idxMonde=wid=>LV.map((l,i)=>i).filter(i=>LV[i].w===wid);
+const reussisMonde=wid=>idxMonde(wid).filter(i=>save.done[lvId(i)]).length;
+const parNiveau=i=>LV[i].sol.length;
+const seuilMonde=wi=>wi<=0?0:Math.ceil(5*idxMonde(WORLDS[wi-1].id).length/8);
+function mondeDeverrouille(wid){
+  if(modeClasse)return true;
+  const wi=WORLDS.findIndex(w=>w.id===wid);
+  if(wi<=0)return true;
+  return reussisMonde(WORLDS[wi-1].id)>=seuilMonde(wi);
+}
+function etoiles(i){
+  const k=lvId(i);
+  if(!save.done[k])return 0;
+  if(LV[i].fruits.length&&(save.fruits[k]||0)<LV[i].fruits.length)return 1;
+  return (save.pieces[k]||Infinity)<=parNiveau(i)?3:2;
+}
 
 /* ===== État ===== */
 const CS=100;
@@ -227,6 +254,7 @@ function clearCeleb(){
 }
 function startCelebration(sim){
   celebrating=true;overlayShown=true;
+  const nbPieces=Object.keys(state.placed).length; /* figé maintenant : l'état ne bouge plus pendant la célébration */
   const bd=document.getElementById('board');
   const pause=.4,drawStart=.1,SPEED=620;
   const NODE={b:.16,s2:.22,s3:.25,x2:.20,x3:.22,m:.26};
@@ -320,16 +348,21 @@ function startCelebration(sim){
   celebTimers.push(setTimeout(()=>{
     save.done[lvId(cur)]=true;
     save.fruits[lvId(cur)]=Math.max(save.fruits[lvId(cur)]||0,sim.fruits.size);
+    save.pieces[lvId(cur)]=Math.min(save.pieces[lvId(cur)]||Infinity,nbPieces);
     persist();
     const L=LV[cur];
     const wIdx=LV.map((l,i)=>i).filter(i=>LV[i].w===L.w);
     const isLastOfWorld=wIdx[wIdx.length-1]===cur;
     document.getElementById('splash').classList.remove('show');
+    const e=etoiles(cur), par=parNiveau(cur);
+    document.getElementById('winstars').textContent='★'.repeat(e)+'☆'.repeat(3-e);
     document.getElementById('winmsg').textContent=
       (L.fruits.length?`Fruits ramassés : ${sim.fruits.size}/${L.fruits.length} — `:'')+
-      `la lumière est bien partagée.`;
+      `la lumière est bien partagée. `+
+      (e>=3?'Défi de maîtrise réussi !':`Défi de maîtrise : réussis avec au plus ${par} pièce${par>1?'s':''}.`);
+    const nextLocked=isLastOfWorld&&cur<LV.length-1&&!mondeDeverrouille(LV[cur+1].w);
     document.getElementById('nextbtn').textContent=
-      isLastOfWorld?(cur<LV.length-1?'Monde suivant':'Tu as fini Solèy ! Retour'):'Niveau suivant';
+      isLastOfWorld?(cur<LV.length-1?(nextLocked?'Retour aux niveaux':'Monde suivant'):'Tu as fini Solèy ! Retour'):'Niveau suivant';
     document.getElementById('winov').classList.add('show');
     celebrating=false;
   },T+2100));

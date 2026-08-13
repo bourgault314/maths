@@ -30,7 +30,8 @@ Code retour 0 = tout est vert. `--headed` ouvre le navigateur pour observer.
 | T4 | Test négatif : une passe étroite bloque un rayon trop épais (contournement du niveau « Les demi-tunnels » perdant, rayon 1/1 tronqué une demi-case avant la passe) + contrôle positif (les 1/2 traversent) | montage manuel de `state.placed` |
 | T5 | Écrans réellement masqués : `getComputedStyle` sur `#home`, `#lvscreen`, `#play` au chargement puis en naviguant AU CLIC (piège de spécificité #id vs .classe) | clics réels sur `.wrow` et `.lvcard` |
 | T6 | Paysage (viewport 844×390) : zéro défilement de page, plateau à gauche de la colonne, clic précis sur une case avec letterbox pris en compte (même règle de correspondance que `boardClick`), victoire de bout en bout (cinématique puis fenêtre de fin), sauvegarde locale écrite | clics réels + `mouse.click` aux coordonnées calculées |
-| T7 | Zéro erreur JavaScript (exceptions non rattrapées ET `console.error`) sur l'ensemble des deux passes | écouteurs `pageerror` / `console` |
+| T7 | Zéro erreur JavaScript (exceptions non rattrapées ET `console.error`) sur l'ensemble des passes | écouteurs `pageerror` / `console` |
+| T8 | Progression verrouillée (chantier 1) : seuils ⌈5/8⌉ exacts par monde, accueil neuf tout fermé sauf le lagon, clic sur monde fermé sans effet + condition lisible, déblocage après 5 réussites semées, étoiles ★★★/★★☆ sur les cartes, mode classe `?classe` (tout ouvert + badge), zéro défilement horizontal téléphone | API SOLEY + `localStorage` semé avant chargement + clics réels |
 
 ## Détails qui comptent
 
