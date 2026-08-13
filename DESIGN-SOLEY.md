@@ -37,9 +37,10 @@ Séquence type pour chaque notion nouvelle :
 - Les points de cours sont relisibles à tout moment (menu « Comprendre » / carnet).
 - Chaque point de cours vu ajoute une **carte de savoir** au carnet (voir Pilier 3) :
   la trace écrite en une phrase + le schéma en rayons.
-- NOTE : Gwenael dit avoir déjà ajouté « plein de cours dedans » — à localiser
-  (dans le jeu en ligne ? sur le site ?) pour les reprendre, les améliorer et les
-  intégrer à cette mécanique au lieu de repartir de zéro.
+- RÉSOLU (réponse de Gwenael, 13/08) : les « cours déjà ajoutés » sont **le Coup de
+  pouce actuel** (scènes en rayons + écritures fractionnaires, table CALC, 51 cartes).
+  C'est LA base à enrichir pour ce pilier — rien d'autre à chercher. Les points de
+  cours réutiliseront ce moteur (sSun/sBeam/sceneFor/calcLineHTML dans engine.js).
 
 ## Pilier 2 — Progresser : le jeu se mérite
 
@@ -147,6 +148,13 @@ seule décomposition évidente. Principes pour de vrais casse-têtes :
 Chaque chantier = un chapitre de discussion ici (Cowork) pour fixer les détails,
 puis une ou plusieurs sessions Code pour fabriquer, tester, publier après accord.
 
+## Retouches décidées, à faire EN TÊTE de la prochaine passe
+
+1. **Les étoiles deviennent des petits soleils** (cartes de niveaux, fenêtre de
+   victoire, compteur d'accueil) — décision de Gwenael consignée le 13/08, après la
+   livraison du chantier 1. Un pictogramme soleil maison (cohérent avec les soleils
+   du plateau), pas le caractère ★.
+
 ## Décisions actées le 13/08
 
 - [x] Mécanique d'apprentissage : niveau-découverte simple → point de cours → niveaux
@@ -158,5 +166,6 @@ puis une ou plusieurs sessions Code pour fabriquer, tester, publier après accor
 
 ## Décisions en attente (à valider par Gwenael)
 
-- [ ] Où sont les cours déjà ajoutés par Gwenael, pour les reprendre.
+- [x] Où sont les cours déjà ajoutés : le Coup de pouce actuel (réponse du 13/08,
+      voir le RÉSOLU du pilier 1).
 - [ ] Les premiers contenus du carnet : quels fruits, quels textes sur l'île.

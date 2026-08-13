@@ -211,4 +211,9 @@ commence par "use strict"; et le partage se fait par la portée globale.
   « progression » ajouté (13/13). Vérifié au navigateur en 375 px (arbre d'accessibilité,
   zéro erreur console) — captures d'écran du panneau indisponibles sur ce poste, rendu à
   juger par Gwenaël sur téléphone après fusion.
+- 2026-08-13 (session 4 bis) : chantier 1 fusionné et vérifié en ligne (7/7 fichiers,
+  batterie 21/21). Réponses de Gwenaël consignées dans DESIGN-SOLEY.md : les « cours
+  déjà écrits » = le Coup de pouce actuel (LA base du pilier 1, rien d'autre à
+  chercher) ; retouche décidée EN TÊTE de la prochaine passe : les étoiles deviennent
+  des petits soleils (cartes, victoire, compteur d'accueil).
 - (à compléter à chaque session)
