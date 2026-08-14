@@ -1,3 +1,5 @@
+// ARCHIVE DATÉE — ne correspond plus à l'état du dépôt ; conservé comme
+// preuve du découpage d'août 2026, ne pas réparer.
 // Preuve du découpage de Solèy (août 2026) : les fichiers découpés se réassemblent
 // EXACTEMENT, octet par octet, en le fichier unique d'avant découpage.
 //

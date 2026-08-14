@@ -1,3 +1,6 @@
+// ARCHIVE DATÉE — mort le 14/08/2026 avec l'insertion du monde de la canne
+// (comparaison par index) ; conservé comme preuve de son lot, ne pas réparer.
+// Contrôle vivant : verifier-lot-canne.mjs.
 // Preuve du lot 1 « Comprendre » (août 2026) : les 60 niveaux historiques sont
 // INTACTS — seuls les champs autorisés par SPEC-COMPRENDRE-LOT1.md §8 diffèrent :
 //   - ajout du niveau « Les quatre quarts » (6e du lagon) ;
