@@ -66,10 +66,10 @@ Fini le tout-accessible : l'élève valide petit à petit.
   maîtrise (nombre minimum de pièces, affiché après la première réussite).
 - **Niveaux défis** (« les cailloux durs ») : une poignée par monde, cachés,
   débloqués en dépensant des fruits — les vrais casse-têtes de 10-20 minutes.
-- **Aide pendant les défis : question RÉ-OUVERTE (14/08)** — elle était tranchée
-  « sans aide », Gwenael n'en est plus sûr ; à décider au chantier 4.
-  Recommandation de Claude, à éprouver en classe : défis sans aide gratuite,
-  mais un indice PAYANT en fruits péi si des blocages décourageants apparaissent.
+- **Aide pendant les défis : TRANCHÉ définitivement (14/08 au soir)** — les défis
+  se jouent SANS AUCUNE AIDE, et ils ne doivent jamais être bloquants (l'esprit
+  « jamais 100 % » les couvre : on peut toujours avancer ailleurs). Contrainte de
+  conception à respecter au chantier 4.
 - Le professeur garde un **mode classe** (code ou réglage) qui déverrouille tout,
   pour la vidéoprojection et l'AP.
 

@@ -148,7 +148,6 @@
   #courssur{font-size:11px;font-weight:800;letter-spacing:1.5px;text-transform:uppercase;color:#ffd5a1;}
   #courstitre{font-size:22px;font-weight:900;color:var(--gold);margin:1px 0 8px;}
   #coursbody .cscene{background:#101a33;border-radius:12px;padding:8px 6px;}
-  #coursbody .cscene+.cscene{margin-top:2px;}
   #coursbody .cfade{opacity:0;animation:win-label .35s ease var(--win-delay) both;}
   /* la phrase-pont entre les deux registres (v8) : discrète, une respiration */
   .cpontphrase{font-size:12.5px;font-weight:700;line-height:1.45;color:#ffd5a1;

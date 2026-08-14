@@ -450,12 +450,26 @@ gâteau). **FEU VERT DONNÉ : cette spécification est bonne pour la session Cod
 >   Étages collés et couleurs du jeu : confirmés. En réserve pour le cours de
 >   la lentille : l'addition en bandes (deux dispositions fournies par Gwenael
 >   — bout à bout / en L), forme académique à trancher à ce lot-là.
+> - **v9 — la cascade verticale : le mur est un ZOOM sur les rayons**
+>   (RETOUCHE-ZOOM-v9.md, entré au dépôt ; idée de Gwenael, amende l'orientation
+>   de la zone rayons et la phrase-pont, tout le reste de la v8 conservé).
+>   Soleil en haut au centre, le rayon descend, les prismes aux étages, et
+>   chaque rayon terminal arrive JUSTE AU-DESSUS de SA case de la dernière
+>   rangée : largeur des rayons et longueur des cases vivent sur le même axe
+>   horizontal — la division d'épaisseur (le jeu) et la division de longueur
+>   (l'école) deviennent le même geste, vu deux fois. Fins traits pointillés
+>   « de zoom » des bords du rayon aux bords de sa case (option, à juger sur
+>   capture). Nouvelle phrase-pont : « Le mur, c'est un zoom sur tes rayons :
+>   chaque part de lumière devient un morceau de la bande. » Un contrôle
+>   d'alignement automatique garantit que chaque rayon tombe dans l'intervalle
+>   de sa case.
 > - **Mention de Refraction** (textes de Gwenael au caractère près) : courte au
 >   pied de la page du jeu, complète dans le panneau « D'où vient Solèy ? »
 >   (le jeu n'a pas de panneau de règles : ce panneau, ouvert depuis le pied de
 >   l'accueil, en tient lieu). Consignée dans SOLEY.md §6.
-> - Rappel réaffirmé : pas d'aide sur les niveaux les plus durs / défis à venir
->   (chantier 4, déjà consigné au §11).
+> - Défis : question FERMÉE définitivement (14/08 au soir) — les défis se jouent
+>   SANS AUCUNE AIDE, et ils ne doivent jamais être bloquants. Remplace la
+>   ré-ouverture du §11 ; contrainte de conception pour le chantier 4.
 
 Ajouts didactiques de Claude (v4, sur mandat de Gwenael « tu es aussi l'aide
 didactique — s'il y a mieux à faire, on fait ») :

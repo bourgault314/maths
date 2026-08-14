@@ -168,43 +168,69 @@ function bandeLbl(cx,y,f){
     `<text x="${cx}" y="${y+37}" text-anchor="middle" font-size="15" font-weight="900" fill="#101a33">${f[1]}</text>`;
 }
 function sceneCours(sc,tE){
-  /* zone haute — le vécu : la cascade du jeu, qui POUSSE d'une étape à chaque
-     étape du texte (jamais de rayon entier seul : dès la première image, le
-     prisme et ses branches sont là) */
+  /* v9 (RETOUCHE-ZOOM-v9) : cascade VERTICALE — soleil en haut, le rayon descend,
+     et chaque rayon terminal arrive juste au-dessus de SA case de la dernière
+     rangée : largeur des rayons et longueur des cases vivent sur le MÊME axe,
+     le mur se lit comme un ZOOM sur les rayons. Une seule image, deux registres. */
+  const X0=20, W=300, hB=44, cxS=170;
   const divs=sc.divs, deux=divs.length===2, n1=divs[0];
-  const cy=deux?95:(n1===3?70:55);
-  const hRayons=deux?190:(n1===3?140:110);
-  const ys1=n1===2?(deux?[50,140]:[30,80]):[26,70,114];
-  const p1=100, f1=fdiv([1,1],n1), x1=deux?201:294;
-  let g1='';
-  g1+=sSun(26,cy,[1,1]);
-  g1+=sBeam(40,cy,p1-17,cy,[1,1]);
-  g1+=sLbl((40+p1-17)/2,cy-HW([1,1])/2-8,'1',fcol([1,1]));
-  g1+=sTile(p1,cy,'÷'+n1);
-  ys1.forEach(y=>{
-    g1+=deux?sBeam(p1+15,cy,x1,y,f1):`<g data-rayon="terminal">${sBeam(p1+15,cy,x1,y,f1)}</g>`;
-  });
-  ys1.forEach(y=>{g1+=deux?cEtiq(158,y<cy?y-12:y+20,f1,15):cEtiq(316,y+3,f1,15);});
-  let rayons=cFade(tE(0),g1);
-  if(deux){
-    const p2=218, f2=fdiv(f1,divs[1]), off=[-22,22];
-    let g2='';
-    ys1.forEach(y=>{g2+=sTile(p2,y,'÷'+divs[1]);});
-    ys1.forEach(y=>{off.forEach(o=>{g2+=`<g data-rayon="terminal">${sBeam(p2+15,y,296,y+o,f2)}</g>`;});});
-    ys1.forEach(y=>{off.forEach(o=>{g2+=cEtiq(316,y+o+3,f2,14);});});
-    rayons+=cFade(tE(1),g2);
-  }
-  /* zone basse — la forme de l'école : le mur de bandes collées ; chaque étage
-     apparaît EN MÊME TEMPS que l'étape de la cascade qui lui correspond
-     (la bande de l'entier avec la première) */
-  const X0=20, W=300, hB=44;
   const etages=[[1,1]];
   let d=1;
   sc.divs.forEach(n=>{d*=n;etages.push([1,d]);});
-  const hMur=etages.length*hB+18;
+  const nT=d, wT=W/nT;
+  const cx=i=>X0+i*wT+wT/2; /* centre de la case i de la dernière rangée */
+  const yTerm=deux?190:150, murTop=yTerm+12;
+  const H=murTop+etages.length*hB+8;
+  const f1=fdiv([1,1],n1), fT=fdiv([1,1],nT);
+  /* traits de zoom (option v9, à juger sur capture) : des bords de chaque rayon
+     terminal aux bords de sa case — l'agrandissement se voit */
+  const hw=HW(fT)/2;
+  let zoom='';
+  for(let i=0;i<nT;i++){
+    const c=cx(i), xg=(X0+i*wT+1.5).toFixed(1), xd=(X0+(i+1)*wT-1.5).toFixed(1);
+    zoom+=`<line x1="${(c-hw).toFixed(1)}" y1="${yTerm+3}" x2="${xg}" y2="${murTop+1}" stroke="#9fb7d8" stroke-width="1" stroke-dasharray="2 4" opacity=".4"/>`+
+      `<line x1="${(c+hw).toFixed(1)}" y1="${yTerm+3}" x2="${xd}" y2="${murTop+1}" stroke="#9fb7d8" stroke-width="1" stroke-dasharray="2 4" opacity=".4"/>`;
+  }
+  let g1='';
+  g1+=sSun(cxS,24,[1,1]);
+  g1+=sBeam(cxS,40,cxS,deux?57:63,[1,1]);
+  g1+=sLbl(cxS+26,56,'1',fcol([1,1]));
+  let rayons='';
+  if(!deux){
+    for(let i=0;i<n1;i++){
+      g1+=`<g data-rayon="terminal">${sBeam(cxS,80,cx(i),yTerm,f1)}</g>`;
+    }
+    g1+=sTile(cxS,80,'÷'+n1);
+    for(let i=0;i<n1;i++)g1+=cEtiq(cx(i),136,f1,15);
+    g1+=zoom;
+    rayons=cFade(tE(0),g1);
+  }else{
+    const n2=divs[1], f2=fdiv(f1,n2);
+    const gx=[];
+    for(let j=0;j<n1;j++){
+      let sx=0;
+      for(let i=0;i<n2;i++)sx+=cx(j*n2+i);
+      gx.push(sx/n2);
+    }
+    gx.forEach(x=>{g1+=sBeam(cxS,74,x,128,f1);});
+    g1+=sTile(cxS,74,'÷'+n1);
+    gx.forEach(x=>{g1+=cEtiq(Math.round((cxS+x)/2+(x<cxS?-16:16)),98,f1,15);});
+    let g2='';
+    gx.forEach((x,j)=>{
+      for(let i=0;i<n2;i++){
+        g2+=`<g data-rayon="terminal">${sBeam(x,128,cx(j*n2+i),yTerm,f2)}</g>`;
+      }
+    });
+    gx.forEach(x=>{g2+=sTile(x,128,'÷'+n2);});
+    for(let i=0;i<nT;i++)g2+=cEtiq(cx(i),172,f2,14);
+    g2+=zoom;
+    rayons=cFade(tE(0),g1)+cFade(tE(1),g2);
+  }
+  /* le mur de bandes collées, juste sous les rayons terminaux ; chaque étage
+     apparaît EN MÊME TEMPS que l'étape de la cascade qui lui correspond */
   let mur='';
   etages.forEach((f,k)=>{
-    const y=10+k*hB, n=f[1], w=W/n, dernier=k===etages.length-1;
+    const y=murTop+k*hB, n=f[1], w=W/n, dernier=k===etages.length-1;
     let e='';
     for(let i=0;i<n;i++){
       e+=`<rect x="${(X0+i*w).toFixed(1)}" y="${y}" width="${w.toFixed(1)}" height="${hB}" fill="${fcol(f)}"${dernier&&f[1]>1?' data-terminal="1"':''}/>`;
@@ -218,7 +244,7 @@ function sceneCours(sc,tE){
     e+=`<rect x="${X0}" y="${y}" width="${W}" height="${hB}" fill="none" stroke="#101a33" stroke-width="2.5"/>`;
     mur+=cFade(tE(Math.max(0,k-1)),e);
   });
-  return {rayons,hRayons,mur,hMur};
+  return {svg:rayons+mur,h:H};
 }
 let coursId=null, coursApresVictoire=false, coursRetour=null;
 function construireCours(id){
@@ -227,10 +253,9 @@ function construireCours(id){
   const tE=i=>.4+i*1.05; /* l'instant de l'étape i — texte, cascade et mur (v8 : tout synchronisé) */
   const sc=sceneCours(c.scene,tE);
   const fin=tE(c.etapes.length-1)+.6;
-  let h=`<div class="cscene"><svg class="hsvg" viewBox="0 0 340 ${sc.hRayons}" role="img" aria-label="Le vécu du jeu : la cascade de rayons">${sc.rayons}</svg></div>`;
-  /* la phrase-pont nomme la différence d'axe entre les deux registres (v8) */
-  h+=`<p class="cpontphrase cligne" style="--win-delay:${tE(0).toFixed(2)}s">Dans le jeu, ta part est un rayon plus FIN. Sur la bande, c'est un morceau plus COURT. Même partage, même fraction.</p>`;
-  h+=`<div class="cscene"><svg class="hsvg" viewBox="0 0 340 ${sc.hMur}" role="img" aria-label="La forme de l'école : les bandes de fractions">${sc.mur}</svg></div>`;
+  let h=`<div class="cscene"><svg class="hsvg" viewBox="0 0 340 ${sc.h}" role="img" aria-label="La cascade de rayons du jeu et, juste dessous, son zoom : le mur de bandes">${sc.svg}</svg></div>`;
+  /* la phrase-pont nomme le lien entre les deux registres (v9 : le zoom) */
+  h+=`<p class="cpontphrase cligne" style="--win-delay:${tE(0).toFixed(2)}s">Le mur, c'est un zoom sur tes rayons : chaque part de lumière devient un morceau de la bande.</p>`;
   /* déroulé en étapes : l'explication courte au-dessus, l'écriture étagée dessous
      (règle R5), au même instant que les deux zones de la scène */
   c.etapes.forEach((e,i)=>{
