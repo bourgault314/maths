@@ -60,7 +60,7 @@ JS_COHERENCE = """
   const dirOk = d => Number.isInteger(d) && d >= 0 && d <= 3;
   const frOk = f => Array.isArray(f) && f.length === 2 &&
     Number.isInteger(f[0]) && Number.isInteger(f[1]) && f[0] >= 0 && f[1] >= 1;
-  if (LV.length !== 61) fails.push(`LV.length=${LV.length} au lieu de 61`);
+  if (LV.length !== 69) fails.push(`LV.length=${LV.length} au lieu de 69`);
   const cles = new Set();
   LV.forEach((L, i) => {
     const nom = `${i}:${L.name}`;
@@ -117,7 +117,7 @@ JS_COHERENCE = """
 """
 
 # ---------------------------------------------------------------------------
-# T2 + T3 — les 61 solutions de référence gagnent et ramassent tous les fruits
+# T2 + T3 — les 69 solutions de référence gagnent et ramassent tous les fruits
 # ---------------------------------------------------------------------------
 JS_SOLUTIONS = """
 () => {
@@ -262,10 +262,10 @@ def principal():
                 aff["play"] == "flex" and aff["home"] == "none" and aff["lvscreen"] == "none",
                 f"home={aff['home']}, lvscreen={aff['lvscreen']}, play={aff['play']}")
 
-        # T2 + T3 — les 60 solutions gagnent, tous les fruits sont ramassés
+        # T2 + T3 — les 69 solutions gagnent, tous les fruits sont ramassés
         res = page.evaluate(JS_SOLUTIONS)
         perdants = [r["nom"] for r in res if not r["gagne"]]
-        section("T2 solve(i) gagne pour les 61 niveaux", not perdants,
+        section("T2 solve(i) gagne pour les 69 niveaux", not perdants,
                 f"{len(res)} solutions jouées" if not perdants else "perdants : " + ", ".join(perdants))
         sans_fruit = [r["nom"] for r in res if r["fruitsPris"] != r["fruitsTotal"]]
         total_fruits = sum(r["fruitsTotal"] for r in res)
@@ -370,25 +370,25 @@ def principal():
         page.goto(url, wait_until="load")
         page.wait_for_function("() => window.SOLEY && window.SOLEY.LV")
 
-        # T8a — seuils de déblocage : ⌈5/8 des niveaux du monde précédent⌉ (lagon à 9 → forêt à 6)
-        seuils = page.evaluate("() => window.SOLEY.LV.length === 61 && [0,1,2,3,4,5,6,7].map(i => window.SOLEY.seuilMonde(i))")
-        section("T8 seuils de déblocage ⌈5/8⌉ par monde", seuils == [0, 6, 6, 5, 5, 5, 4, 5],
+        # T8a — seuils de déblocage : ⌈5/8 des niveaux du monde précédent⌉ (lagon à 9 → canne à 6, canne à 8 → forêt à 5)
+        seuils = page.evaluate("() => window.SOLEY.LV.length === 69 && [0,1,2,3,4,5,6,7,8].map(i => window.SOLEY.seuilMonde(i))")
+        section("T8 seuils de déblocage ⌈5/8⌉ par monde", seuils == [0, 6, 5, 6, 5, 5, 5, 4, 5],
                 f"{seuils}")
 
         # T8b — sauvegarde vierge : seul Le lagon est ouvert
         verrous = page.evaluate("""() => [...document.querySelectorAll('.wrow')]
           .map(b => b.dataset.w + (b.classList.contains('locked') ? ':fermé' : ':ouvert'))""")
-        section("T8 accueil neuf : lagon ouvert, les 7 autres mondes fermés",
-                verrous == ["lagon:ouvert", "foret:fermé", "volcan:fermé", "pitons:fermé",
+        section("T8 accueil neuf : lagon ouvert, les 8 autres mondes fermés",
+                verrous == ["lagon:ouvert", "canne:fermé", "foret:fermé", "volcan:fermé", "pitons:fermé",
                             "soleils:fermé", "marche:fermé", "tunnels:fermé", "mafate:fermé"],
                 ", ".join(verrous))
 
         # T8c — cliquer un monde fermé ne quitte pas l'accueil, la condition est lisible
         # (force : aria-disabled rend le bouton « non actionnable » pour Playwright,
         #  mais un vrai doigt peut le toucher — c'est ce geste qu'on teste)
-        page.click(".wrow[data-w='foret']", force=True)
+        page.click(".wrow[data-w='canne']", force=True)
         aff = page.evaluate(JS_ECRANS)
-        cond = page.evaluate("() => document.querySelector(\".wrow[data-w='foret'] .wcond\")?.textContent || ''")
+        cond = page.evaluate("() => document.querySelector(\".wrow[data-w='canne'] .wcond\")?.textContent || ''")
         section("T8 monde fermé : clic sans effet + condition affichée (seuil + découvertes)",
                 aff["home"] != "none" and aff["lvscreen"] == "none" and "Réussis 6 niveaux" in cond
                 and "dont ses 3 découvertes (0/3)" in cond,
@@ -430,11 +430,11 @@ def principal():
         pg4.goto(url, wait_until="load")
         pg4.wait_for_function("() => window.SOLEY && window.SOLEY.LV")
         etat = pg4.evaluate("""() => ({
-          foret: !document.querySelector(".wrow[data-w='foret']").classList.contains('locked'),
-          volcan: document.querySelector(".wrow[data-w='volcan']").classList.contains('locked'),
+          canne: !document.querySelector(".wrow[data-w='canne']").classList.contains('locked'),
+          foret: document.querySelector(".wrow[data-w='foret']").classList.contains('locked'),
         })""")
-        section("T8 après 6 réussites au lagon (dont les 3 découvertes) : forêt ouverte, volcan fermé",
-                etat["foret"] and etat["volcan"], "")
+        section("T8 après 6 réussites au lagon (dont les 3 découvertes) : canne ouverte, forêt fermée",
+                etat["canne"] and etat["foret"], "")
         pg4.click(".wrow[data-w='lagon']")
         cartes = pg4.evaluate("""() => ({
           zigzagPleins: document.querySelectorAll(".lvcard[data-i='1'] .sunico.plein").length,
@@ -465,7 +465,7 @@ def principal():
           return { sansCours: !('cours' in brut), niveaux: window.SOLEY.LV.length };
         }""")
         section("T9 vieille sauvegarde (sans champ cours) chargée sans erreur ni migration",
-                vieux["sansCours"] and vieux["niveaux"] == 61, "")
+                vieux["sansCours"] and vieux["niveaux"] == 69, "")
         ctx4.close()
 
         # T8e — mode classe : tout est ouvert, badge visible
@@ -613,7 +613,7 @@ def principal():
         # T9.5 — condition de déblocage : le seuil 6 ET les découvertes, lisible sur la carte
         page.click("#backlv")
         page.click("#backhome")
-        cond9 = page.evaluate("() => document.querySelector(\".wrow[data-w='foret'] .wcond\")?.textContent || ''")
+        cond9 = page.evaluate("() => document.querySelector(\".wrow[data-w='canne'] .wcond\")?.textContent || ''")
         section("T9 condition de déblocage : seuil 6 + « dont ses 3 découvertes »",
                 "Réussis 6 niveaux" in cond9 and "dont ses 3 découvertes (1/3)" in cond9,
                 cond9.strip())

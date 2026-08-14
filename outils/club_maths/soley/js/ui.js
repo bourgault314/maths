@@ -18,6 +18,11 @@ function renderHome(){
     `<span>✔ ${nd}/${LV.length} niveaux</span><span>${soleilIco(true,15)} ${totE}/${LV.length*3} petits soleils</span><span>${fruitMini('letchi')} ${gotF}/${totF} fruits péi</span>`;
   const icons={
     lagon:`<circle cx="23" cy="23" r="20" fill="#5fd3c8"/><path d="M 6 30 Q 23 20 40 30 L 40 43 L 6 43 Z" fill="#2b9d92"/>`,
+    canne:`<line x1="13" y1="43" x2="16" y2="9" stroke="#c9a83a" stroke-width="5" stroke-linecap="round"/>
+      <line x1="24" y1="43" x2="24" y2="6" stroke="#7fb648" stroke-width="5" stroke-linecap="round"/>
+      <line x1="35" y1="43" x2="32" y2="9" stroke="#8fbf4d" stroke-width="5" stroke-linecap="round"/>
+      <path d="M16 9 Q8 4 3 8 M16 9 Q22 2 28 4 M24 6 Q30 0 37 2 M32 9 Q39 3 44 7" fill="none" stroke="#4e8a34" stroke-width="3" stroke-linecap="round"/>
+      <path d="M14 33 h5 M24 29 h5 M33 31 h5 M15 21 h4 M24 17 h5 M33 19 h4" stroke="#5d4326" stroke-width="2.4"/>`,
     foret:`<polygon points="23,4 38,32 8,32" fill="#3d8f3d"/><polygon points="23,16 40,42 6,42" fill="#4faf4f"/>`,
     volcan:`<polygon points="23,6 42,42 4,42" fill="#5a4a52"/><polygon points="23,6 30,20 16,20" fill="#ff6b3d"/>`,
     pitons:`<polygon points="12,42 20,10 28,42" fill="#7a6a72"/><polygon points="26,42 34,18 42,42" fill="#5a4a52"/>`,

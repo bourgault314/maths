@@ -115,6 +115,26 @@ function fixedFrame(){
     <circle cx="78" cy="80" r="2.5" fill="#3b2a17"/><path d="M78 82v4" stroke="#3b2a17" stroke-width="2" stroke-linecap="round"/>
   </g>`;
 }
+function canneSVG(x,y,i){
+  /* Dans les champs de canne, les obstacles SONT des cannes (remarque de
+     Gwenael : « les cannes bloquent les rayons du soleil ») — touffe de tiges
+     vertes et or, nœuds sombres, feuilles en panache. Variantes par case. */
+  const px=x*CS,py=y*CS,v=(x*5+y*11+i)%3;
+  const tiges=[
+    [[22,-4],[38,2],[54,-6],[70,3],[84,-2]],
+    [[18,3],[34,-5],[50,2],[66,-3],[82,4]],
+    [[26,-2],[42,4],[58,-4],[74,1],[86,-5]]][v];
+  let s=`<g transform="translate(${px},${py})">`;
+  tiges.forEach(([tx,lean],k)=>{
+    const col=k%2?'#7fb648':'#b89a4a', fonce=k%2?'#4e8a34':'#8a6b2e';
+    s+=`<line x1="${tx}" y1="96" x2="${tx+lean}" y2="14" stroke="${fonce}" stroke-width="9" stroke-linecap="round"/>`;
+    s+=`<line x1="${tx}" y1="96" x2="${tx+lean}" y2="14" stroke="${col}" stroke-width="5.5" stroke-linecap="round"/>`;
+    for(let n=1;n<4;n++){const yy=96-n*22,xx=tx+lean*(96-yy)/82;
+      s+=`<line x1="${xx-4}" y1="${yy}" x2="${xx+4}" y2="${yy}" stroke="#5d4326" stroke-width="3"/>`;}
+    s+=`<path d="M${tx+lean} 14 q-10 -8 -18 -6 M${tx+lean} 14 q8 -10 17 -8" fill="none" stroke="#4e8a34" stroke-width="3.4" stroke-linecap="round"/>`;
+  });
+  return s+`</g>`;
+}
 function rockSVG(x,y,i){
   const px=x*CS,py=y*CS,v=(x*7+y*13+i)%3;
   const shapes=[
@@ -163,8 +183,18 @@ const FRUITS={
     <path d="M -11 -6 L 12 12 M -13 2 L 9 18 M -8 -11 L 13 4" stroke="#c98a2b" stroke-width="1.7"/>
     <path d="M 11 -6 L -12 12 M 13 2 L -9 18 M 8 -11 L -13 4" stroke="#c98a2b" stroke-width="1.7"/>`
 };
-function fruitSVG(type,x,y,hit){
-  return `<g transform="translate(${x*CS+50},${y*CS+50})">${(FRUITS[type]||FRUITS.letchi)(hit)}</g>`;
+function fruitSVG(type,x,y,hit,val){
+  /* Fruit à valeur (monde de la canne) : badge doré avec la fraction étagée —
+     seul un rayon de CETTE valeur le cueille (même patron que le badge du soleil). */
+  let badge='';
+  if(val){
+    badge=`<g transform="translate(21,-21)">`+
+      `<circle r="19" fill="#fff3c4" stroke="#d99a2b" stroke-width="3.2"/>`+
+      `<text y="-3.5" text-anchor="middle" font-size="15" font-weight="900" fill="#7a4a12">${val[0]}</text>`+
+      `<line x1="-8" y1="0.5" x2="8" y2="0.5" stroke="#7a4a12" stroke-width="2.4"/>`+
+      `<text y="14.5" text-anchor="middle" font-size="15" font-weight="900" fill="#7a4a12">${val[1]}</text></g>`;
+  }
+  return `<g transform="translate(${x*CS+50},${y*CS+50})">${(FRUITS[type]||FRUITS.letchi)(hit)}${badge}</g>`;
 }
 /* Petit soleil de score (« étoile » du jeu) : disque doré à rayons, comme les soleils du plateau. */
 function soleilIco(plein,taille=13){
@@ -231,8 +261,37 @@ function targetSVG(t,stat,label='',index=''){
     lamb+=`<path d="M ${x0} 43.2 h ${lF} a ${lF/2} 6.4 0 0 1 ${-lF} 0 Z" fill="#fdf6ec" stroke="#8a6b4a66" stroke-width="1"/>`;
     lamb+=`<circle cx="${x0+lF/2}" cy="50.6" r="1.5" fill="#fdf6ec" stroke="#8a6b4a66" stroke-width="0.8"/>`;
   }
+  /* Porte orientée : la case est CLÔTURÉE sur trois côtés (palissade bois,
+     lisible : « on ne rentre pas par là ») et ouverte sur le côté `porte`
+     (0 nord, 1 est, 2 sud, 3 ouest), marqué par la flèche d'entrée dorée.
+     Les côtés clos bloquent comme une roche (engine.js, simulate). */
+  let porte='';
+  if(t.porte!==undefined){
+    const cloture=(cote)=>{
+      const B={0:[3,-2,94,9],1:[93,3,9,94],2:[3,93,94,9],3:[-2,3,9,94]}[cote];
+      const horiz=cote===0||cote===2;
+      let piquets='';
+      for(let k=0;k<5;k++){
+        if(horiz){const xx=B[0]+9+k*19;
+          piquets+=`<line x1="${xx}" y1="${B[1]+1.5}" x2="${xx}" y2="${B[1]+B[3]-1.5}" stroke="#5d4326" stroke-width="3"/>`;}
+        else{const yy=B[1]+9+k*19;
+          piquets+=`<line x1="${B[0]+1.5}" y1="${yy}" x2="${B[0]+B[2]-1.5}" y2="${yy}" stroke="#5d4326" stroke-width="3"/>`;}
+      }
+      return `<rect x="${B[0]}" y="${B[1]}" width="${B[2]}" height="${B[3]}" rx="4.5" fill="#8a6b4a" stroke="#3b2a17" stroke-width="2.5"/>`+piquets;
+    };
+    const A={0:{l:[50,-14,50,10],h:'43,2 57,2 50,15'},
+             1:{l:[114,66,90,66],h:'98,59 98,73 85,66'},
+             2:{l:[50,114,50,92],h:'43,98 57,98 50,85'},
+             3:{l:[-14,66,10,66],h:'2,59 2,73 15,66'}}[t.porte];
+    porte=`<g class="tporte">`+
+      [0,1,2,3].filter(c=>c!==t.porte).map(cloture).join('')+
+      `<line x1="${A.l[0]}" y1="${A.l[1]}" x2="${A.l[2]}" y2="${A.l[3]}" stroke="#3b2a17" stroke-width="10" stroke-linecap="round"/>`+
+      `<line x1="${A.l[0]}" y1="${A.l[1]}" x2="${A.l[2]}" y2="${A.l[3]}" stroke="#ffc94d" stroke-width="6" stroke-linecap="round"/>`+
+      `<polygon points="${A.h}" fill="#ffc94d" stroke="#3b2a17" stroke-width="2.4"/></g>`;
+  }
   return `<g transform="translate(${px},${py})" class="${lit?'tlit':''}" data-target="${index}">
     ${lit?`<circle class="glowring" cx="50" cy="55" r="46" fill="none" stroke="#39d98a" stroke-width="5" opacity=".8"/>`:''}
+    ${porte}
     <polygon points="10,42 50,10 90,42" fill="${lit?'#e8574a':'#c94f43'}" stroke="#8a2f27" stroke-width="3"/>
     <rect x="16" y="47" width="68" height="41" rx="5" fill="${lit?'#fff4dd':'#f0e3cd'}" stroke="${bad?'#ff5d4a':'#8a6b4a'}" stroke-width="${bad?5:3}"/>
     ${lamb}
@@ -272,8 +331,8 @@ function redraw(){
   for(let i=1;i<L.cols;i++)s+=`<line class="gridline" x1="${i*CS}" y1="0" x2="${i*CS}" y2="${H}"/>`;
   for(let j=1;j<L.rows;j++)s+=`<line class="gridline" x1="0" y1="${j*CS}" x2="${W}" y2="${j*CS}"/>`;
   const ftype=FRW[L.w]||'letchi';
-  L.fruits.forEach(f=>{s+=fruitSVG(ftype,f[0],f[1],sim.fruits.has(f[0]+','+f[1]));});
-  L.rocks.forEach((r,i)=>{s+=rockSVG(r[0],r[1],i);});
+  L.fruits.forEach(f=>{s+=fruitSVG(ftype,f[0],f[1],sim.fruits.has(f[0]+','+f[1]),f[2]);});
+  L.rocks.forEach((r,i)=>{s+=(L.w==='canne'?canneSVG:rockSVG)(r[0],r[1],i);});
   (L.gates||[]).forEach(g=>{s+=gateSVG(g);});
   sim.segs.forEach(sg=>{
     const x1=(sg.x1+0.5)*CS,y1=(sg.y1+0.5)*CS,x2=(sg.x2+0.5)*CS,y2=(sg.y2+0.5)*CS;
