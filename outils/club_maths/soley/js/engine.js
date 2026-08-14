@@ -127,8 +127,14 @@ function eqHTML(line){
 }
 /* Règle R5 (14/08) : les fractions citées dans une phrase s'écrivent empilées,
    en petit, dans le texte — jamais en slash dans un cours. */
+/* Typographie française : espace fine insécable autour des guillemets et avant
+   les ponctuations doubles — plus de « » orphelin en début de ligne (14/08). */
+function typo(t){
+  return t.replace(/«\s/g,'«\u202F').replace(/\s»/g,'\u202F»')
+    .replace(/\s([;:!?])/g,'\u202F$1');
+}
 function texteMath(t){
-  return t.replace(/(\d+)\/(\d+)/g,
+  return typo(t).replace(/(\d+)\/(\d+)/g,
     '<span class="frac fracin"><span class="fn">$1</span><span class="fd">$2</span></span>');
 }
 function calcLineHTML(line){
@@ -184,13 +190,8 @@ function sceneCours(sc,tE){
   const f1=fdiv([1,1],n1), fT=fdiv([1,1],nT);
   /* traits de zoom (option v9, à juger sur capture) : des bords de chaque rayon
      terminal aux bords de sa case — l'agrandissement se voit */
-  const hw=HW(fT)/2;
+  /* pointillés de zoom retirés (accord Gwenael, 14/08) */
   let zoom='';
-  for(let i=0;i<nT;i++){
-    const c=cx(i), xg=(X0+i*wT+1.5).toFixed(1), xd=(X0+(i+1)*wT-1.5).toFixed(1);
-    zoom+=`<line x1="${(c-hw).toFixed(1)}" y1="${yTerm+3}" x2="${xg}" y2="${murTop+1}" stroke="#9fb7d8" stroke-width="1" stroke-dasharray="2 4" opacity=".4"/>`+
-      `<line x1="${(c+hw).toFixed(1)}" y1="${yTerm+3}" x2="${xd}" y2="${murTop+1}" stroke="#9fb7d8" stroke-width="1" stroke-dasharray="2 4" opacity=".4"/>`;
-  }
   let g1='';
   g1+=sSun(cxS,24,[1,1]);
   g1+=sBeam(cxS,40,cxS,deux?57:63,[1,1]);
@@ -201,7 +202,8 @@ function sceneCours(sc,tE){
       g1+=`<g data-rayon="terminal">${sBeam(cxS,80,cx(i),yTerm,f1)}</g>`;
     }
     g1+=sTile(cxS,80,'÷'+n1);
-    for(let i=0;i<n1;i++)g1+=cEtiq(cx(i),136,f1,15);
+    /* l'étiquette se pose À CÔTÉ du rayon, jamais dessus */
+    for(let i=0;i<n1;i++)g1+=cEtiq(cx(i)+(cx(i)<cxS?-15:15),136,f1,15);
     g1+=zoom;
     rayons=cFade(tE(0),g1);
   }else{
@@ -222,7 +224,8 @@ function sceneCours(sc,tE){
       }
     });
     gx.forEach(x=>{g2+=sTile(x,128,'÷'+n2);});
-    for(let i=0;i<nT;i++)g2+=cEtiq(cx(i),172,f2,14);
+    for(let i=0;i<nT;i++){const sx=gx[Math.floor(i/n2)];
+      g2+=cEtiq(cx(i)+(cx(i)<sx?-15:15),172,f2,14);}
     g2+=zoom;
     rayons=cFade(tE(0),g1)+cFade(tE(1),g2);
   }
@@ -250,9 +253,9 @@ let coursId=null, coursApresVictoire=false, coursRetour=null;
 function construireCours(id){
   const c=COURS[id];
   if(!c)return '';
-  const tE=i=>.4+i*1.05; /* l'instant de l'étape i — texte, cascade et mur (v8 : tout synchronisé) */
+  const tE=()=>0; /* v10 : le cours s'affiche d'un coup — un cours de cahier ne se déroule pas au chronomètre */
+  /* aucun `--win-delay` n'est posé : tout apparaît ensemble, y compris la carte de savoir */
   const sc=sceneCours(c.scene,tE);
-  const fin=tE(c.etapes.length-1)+.6;
   /* v9.1 : la scène seule porte le lien entre les deux registres — pas de
      phrase-pont (décision de Gwenael sur rendu) */
   let h=`<div class="cscene"><svg class="hsvg" viewBox="0 0 340 ${sc.h}" role="img" aria-label="La cascade de rayons du jeu et, juste dessous, son zoom : le mur de bandes">${sc.svg}</svg></div>`;
@@ -260,17 +263,39 @@ function construireCours(id){
      (règle R5), au même instant que les deux zones de la scène */
   c.etapes.forEach((e,i)=>{
     const t0=tE(i);
-    if(e.t)h+=`<p class="cligne" style="--win-delay:${t0.toFixed(2)}s">${texteMath(e.t)}</p>`;
-    if(e.eq)h+=`<div class="heq ceq cligne" style="--win-delay:${(t0+.15).toFixed(2)}s">${eqHTML(e.eq)}</div>`;
+    if(e.t)h+=`<p class="cligne">${texteMath(e.t)}</p>`;
+    if(e.eq)h+=`<div class="heq ceq cligne">${eqHTML(e.eq)}</div>`;
   });
   if(c.predire){
     /* règle R3 : la question s'affiche SANS sa réponse — la réponse n'entre dans
        la page qu'au toucher de « À ton avis… » (brancherPredire). */
-    h+=`<div class="cpredire cligne" style="--win-delay:${(fin+.3).toFixed(2)}s"><p>${texteMath(c.predire.question)}</p><button type="button" id="cpredirebtn">À ton avis…</button></div>`;
+    /* Sans `reponse`, la question reste ouverte : c'est le niveau suivant qui répond
+       (règle : on révèle un NOM, jamais une stratégie que le niveau suivant demande). */
+    h+=`<div class="cpredire cligne"><p>${texteMath(c.predire.question)}</p>`+
+      (c.predire.reponse?`<button type="button" id="cpredirebtn">À ton avis…</button>`:'')+
+      `</div>`;
   }
   /* règle R4 : la phrase-carte est une vraie petite carte — la trace écrite */
-  h+=`<div class="csavoir cligne" style="--win-delay:${(fin+(c.predire?.9:.3)).toFixed(2)}s"><div class="csavoirtitre">Carte de savoir</div><p>${texteMath(c.carte.t)}</p>${c.carte.eq?`<div class="heq ceq">${eqHTML(c.carte.eq)}</div>`:''}</div>`;
+  h+=`<div class="csavoir cligne"><div class="csavoirtitre">Carte de savoir</div><p>${texteMath(c.carte.t)}</p>${c.carte.eq?`<div class="heq ceq">${eqHTML(c.carte.eq)}</div>`:''}</div>`;
   return h;
+}
+/* La flèche n'apparaît que s'il y a vraiment du contenu sous le bord, et
+   s'efface dès qu'on est arrivé en bas. Les boutons, eux, sont toujours là. */
+function brancherFleche(card){
+  const test=()=>{
+    const deborde=card.scrollHeight>card.clientHeight+8;
+    card.classList.toggle('deborde',deborde);
+    card.classList.toggle('enbas',card.scrollTop+card.clientHeight>=card.scrollHeight-24);
+  };
+  if(!card.dataset.flechebranchee){
+    document.getElementById('coursfleche').addEventListener('click',()=>{
+      card.scrollBy({top:card.clientHeight*.8,behavior:'smooth'});
+    });
+    card.addEventListener('scroll',test);
+    addEventListener('resize',test);
+    card.dataset.flechebranchee='1';
+  }
+  requestAnimationFrame(test);requestAnimationFrame(()=>requestAnimationFrame(test));
 }
 function brancherPredire(id){
   const bt=document.getElementById('cpredirebtn');
@@ -293,13 +318,8 @@ function montrerCours(id,apresVictoire){
   document.getElementById('coursov').classList.add('show');
   const card=document.getElementById('courscard');
   card.scrollTop=0;
+  brancherFleche(card);
   card.focus({preventScroll:true});
-}
-function revoirCours(){
-  if(!coursId)return;
-  document.getElementById('coursbody').innerHTML=construireCours(coursId);
-  brancherPredire(coursId);
-  document.getElementById('courscard').scrollTop=0;
 }
 function fermerCours(){
   document.getElementById('coursov').classList.remove('show');

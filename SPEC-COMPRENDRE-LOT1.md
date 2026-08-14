@@ -508,3 +508,59 @@ Ré-ouvert (hors lot, pour mémoire) :
   projet, cours et Coup de pouce, contenus futurs compris. Le POURQUOI du n/n
   sera l'objet du cours de la lentille (forêt, lot suivant).
 - Si la session 6 (miroirs 45°) est fusionnée entre-temps : consigner aussi son verdict.
+
+---
+
+## 13. Addendum du 14/08 — audit à froid et retouches (état RÉELLEMENT construit)
+
+Après la mise en ligne du lot 1, Claude a joué les neuf niveaux du lagon hors
+production et capturé les trois cours étape par étape. Ce document décrivait le
+lot tel qu'il devait être construit ; voici ce qui diffère désormais, pour que la
+spec cesse d'être en avance sur le dépôt.
+
+**Textes des cours — remplacent le §5 pour les ouvertures :**
+
+- C1 « Le demi », étape 1 : « Tu as coupé le rayon en 2 parts égales : chaque part
+  est une moitié. On écrit 1/2, on lit « un demi ». »
+- C1, étape 3 : « Le nombre du bas — le dénominateur — dit en combien de parts
+  égales on a coupé. »
+- C2 « Le tiers », étape 1 : « Tu as coupé le rayon en 3 parts égales : chaque part
+  est un tiers. On écrit 1/3, on lit « un tiers ». » — eq `1 ÷ 3 = 1/3`
+- C2 : le bloc `predire` est SUPPRIMÉ (voir SOLEY.md §6, décision 7).
+- C2, carte : « Partager 1 en 3 parts égales : chaque part vaut 1/3. » (la phrase de
+  comparaison est partie au futur cours des pitons).
+- C3 « Le quart », étape 1 : « Tu as coupé le rayon en 2 parts égales : chaque part
+  est un demi. » — eq `1 ÷ 2 = 1/2`
+- C3, étape 2 : « Puis tu as coupé chaque demi en 2 parts égales : la moitié de la
+  moitié, c'est le quart. » — eq `1/2 ÷ 2 = 1/4`
+- C3 garde son `predire` (il nomme le 1/8) et son titre « Le quart ».
+- Les totaux `2/2 = 1`, `3/3 = 1`, `4/4 = 1` (règle R1) sont inchangés.
+
+**Consignes (§4) :**
+
+- « La part perdue » : « Une seule maison, et elle veut un demi. Mais le prisme,
+  lui, coupe toujours en deux : que devient la part que personne n'attend ? »
+- « La moitié de la moitié » : « Une maison veut un demi, deux autres veulent un
+  quart — et tu n'as que deux prismes ÷2. Lequel des deux rayons faut-il
+  recouper ? »
+- Toutes les consignes passent par `texteMath` : fractions étagées + espace fine
+  insécable autour des guillemets et avant `; : ! ?`.
+
+**Panneau et scène (§5, §8) :**
+
+- Plus d'affichage progressif : aucun `--win-delay` n'est posé, tout arrive
+  ensemble. Les règles R2 (scène complète) et R3 (prédire à révélation) restent ;
+  la synchronisation temporelle de la v8 est remplacée par la correspondance
+  spatiale déjà en place (chaque étage du mur sous son étape).
+- `#coursbtns` est épinglé en bas du panneau ; `#coursrevoir` n'existe plus ;
+  `#coursfleche` apparaît quand `#courscard` déborde et disparaît en bas.
+- `sceneCours` ne trace plus les pointillés de zoom ; les étiquettes des rayons
+  terminaux sont décalées de ±15 hors du trait.
+- `construireCours(id)` ne construit le bouton « À ton avis… » que si le `predire`
+  possède une `reponse`.
+
+**Tests (§9) :** trois contrôles T10 ajoutés à `tests/soley/test_soley.py` (panneau
+posé d'un coup et sans bouton « Revoir » ; sortie toujours dans l'écran ; flèche
+présente quand ça déborde et effacée en bas), contrôle « sans pointillés » ajouté à
+la section C3, et `verifier-lot1-comprendre.mjs` étendu aux deux consignes
+réécrites pour continuer de prouver que les 60 niveaux historiques sont intacts.

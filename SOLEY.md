@@ -203,6 +203,69 @@ Batterie (script Playwright Python, à conserver dans `tests/`) :
   soleils spéciaux. Les écritures non fractionnaires (1, 2, 0,5, 25 %…) ne changent
   pas. Toutes les cases d'un monde gardent la même taille (pied « Revoir le cours »
   réservé sur toute la grille).
+- AUDIT À FROID DU LAGON (14/08 — Claude joue les 9 niveaux hors production) et
+  retouches qui en découlent. Décisions à ne pas re-débattre :
+  1. **Le point de cours ne se déroule plus au chronomètre.** Il s'affiche ENTIER
+     dès l'ouverture. Raison de Gwenael : « quand je lis un cours dans un cahier,
+     le cours ne s'affiche pas petit à petit » ; une minuterie confisque le rythme
+     au lecteur (trente élèves lisent à trente vitesses) et se répète à chaque
+     relecture. L'ancien déroulé synchronisé était le pansement d'un défaut réglé
+     depuis autrement (scène à deux registres) : la règle « à chaque instant
+     l'image montre ce que la phrase dit » est désormais tenue par l'ESPACE —
+     chaque étage du mur sous son étape — et non par le temps.
+     Corollaire gravé : **on anime ce qui bouge dans le jeu** (propagation des
+     rayons, cinématique de victoire), **jamais du texte de cours**.
+  2. **Le bouton « Revoir » du panneau disparaît** (sans animation il ne fait plus
+     rien) ; la relecture passe par « Revoir le cours » sur la carte du niveau.
+  3. **La sortie du cours est toujours atteignable.** Défaut mesuré avant
+     correction : à l'ouverture, « J'ai compris ! » était 216 px SOUS le bas de
+     l'écran sur les trois largeurs testées, et le fond ne ferme pas — l'élève
+     n'avait aucune sortie visible. Barre de boutons désormais épinglée au bas du
+     panneau, boutons TOUJOURS accessibles : pas de garde-fou obligeant à défiler
+     (« si l'élève a envie de lire il lit, sinon il ne lira pas dans tous les cas »).
+  4. **Flèche de défilement** (idée de Gwenael) : une pastille-flèche pulse au bas
+     du panneau UNIQUEMENT s'il reste du contenu sous le bord, et s'efface dès
+     qu'on arrive en bas ; on peut appuyer dessus pour descendre d'un écran.
+  5. **Pointillés de zoom retirés** des scènes de cours : huit traits qui se
+     croisaient en frange floue, alors que l'alignement de chaque rayon terminal
+     au-dessus de sa case dit déjà le zoom (même raisonnement que le retrait de la
+     phrase-pont en v9.1).
+  6. **Étiquettes des rayons terminaux décalées hors du rayon** : elles étaient
+     traversées par leur propre trait.
+  7. **Un « prédire » révèle un NOM, jamais une STRATÉGIE que le niveau suivant
+     demande de trouver** — et on ne pose pas dans un cours une question que la
+     consigne du niveau suivant pose déjà. Application : le prédire du tiers est
+     retiré (« comment faire des quarts sans prisme ÷4 ? » est la consigne même de
+     « Les quatre quarts ») ; celui du quart reste, il nomme le 1/8. En code : le
+     bouton « À ton avis… » n'existe que si une `reponse` existe.
+  8. **Une carte de savoir ne dit que ce que SON cours démontre.** La carte du
+     tiers portait « Plus il y a de parts, plus chaque part est petite » — orpheline
+     de l'étape C2-2 (comparaison) retirée à la réduction des cours. Retirée ; la
+     phrase attend le futur cours de comparaison (pitons).
+  9. **Les trois cours ouvrent de la même façon et disent toujours « parts
+     égales »** : « Tu as coupé le rayon en N parts égales : chaque part est … ».
+     C'est l'élève qui a coupé, pas le prisme (pilier 1 : il a vécu le geste, le
+     cours le nomme). Le cours du quart précise « chaque demi », parce que dans
+     « Les quatre quarts » la coupe se fait des deux côtés.
+  10. **Titres des cours = la série du vocabulaire** : Le demi, Le tiers, Le quart.
+      « La moitié de la moitié » décrit exactement le niveau 7 (un seul demi
+      recoupé) et pas le niveau 6 (les deux) : la phrase reste le nom de ce niveau
+      et l'énoncé de la carte de savoir, elle ne monte pas en titre.
+  11. **Consignes** : écriture étagée comme partout ailleurs (c'est la première
+      fraction que l'élève lit) ; typographie française avec espace fine insécable
+      autour des guillemets et avant `; : ! ?`. « La part perdue » et « La moitié
+      de la moitié » redeviennent des questions — la première donnait son idée, la
+      seconde redemandait ce que la carte du niveau précédent venait de dire.
+  12. **Fraction des maisons** : la barre touchait le dénominateur (les deux se
+      fondaient en une tache à taille réelle). Numérateur et barre remontés, barre
+      affinée, dénominateur descendu — TAILLE DES CHIFFRES INCHANGÉE : dans une
+      maison, sur un téléphone de 375 px, un chiffre fait déjà ~6 px de haut.
+      Question ouverte pour l'habillage : faut-il de plus grosses fractions sur les
+      maisons, quitte à simplifier porte et fenêtre ?
+  13. **Flèches d'orientation des pièces** : elles partaient du centre et le rond
+      ÷n cachait tout leur fût (3 unités de trait visibles sur 15) ; la flèche
+      d'entrée n'avait même pas de pointe. Elles démarrent maintenant à côté du
+      rond, vont plus loin (36→41), pointe raccourcie (12→9), trait épaissi.
 
 ## 7. Architecture (découpage d'août 2026, statique, sans build, GitHub Pages)
 

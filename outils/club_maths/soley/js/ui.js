@@ -102,7 +102,9 @@ function openLevel(i){
   const local=LV.map((l,j)=>j).filter(j=>LV[j].w===LV[i].w).indexOf(i)+1;
   document.getElementById('play').style.setProperty('--board-ratio',`${LV[i].cols} / ${LV[i].rows}`);
   document.getElementById('pname').innerHTML=`${LV[i].name}<small>${w.label} · niveau ${local}</small>`;
-  document.getElementById('introline').textContent=LV[i].sub;
+  /* la consigne est la PREMIÈRE fraction que l'élève lit : même écriture étagée
+     que les maisons, les rayons et les cours (14/08) */
+  document.getElementById('introline').innerHTML=texteMath(LV[i].sub);
   const dl=document.getElementById('defiline');
   if(save.done[lvId(i)]){
     const par=parNiveau(i);
@@ -183,7 +185,6 @@ document.addEventListener('keydown',ev=>{
    après une victoire), « Revoir » rejoue l'animation. Pas de fermeture au clic sur
    le fond : on ne quitte pas un cours par mégarde. */
 document.getElementById('coursok').addEventListener('click',fermerCours);
-document.getElementById('coursrevoir').addEventListener('click',revoirCours);
 document.addEventListener('keydown',ev=>{
   if(ev.key==='Escape'&&document.getElementById('coursov').classList.contains('show'))fermerCours();
 });

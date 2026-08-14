@@ -64,7 +64,7 @@ const LV=[
   tools:[s2(1,0,2)],sol:[[0,3,2]]},
 
  {w:'lagon',name:"La part perdue",
-  sub:"Une seule case à servir… une part de rayon peut se perdre dans le ciel, ce n'est pas grave !",
+  sub:"Une seule maison, et elle veut un demi. Mais le prisme, lui, coupe toujours en deux : que devient la part que personne n'attend ?",
   cols:8,rows:6,suns:[{x:0,y:2,dir:1}],
   targets:[{x:7,y:5,need:[1,2]}],
   rocks:[[5,2],[6,0]],fruits:[[3,4]],
@@ -89,7 +89,7 @@ const LV=[
   sol:[[0,4,3],[1,4,1],[2,4,5]]},
 
  {w:'lagon',name:"La moitié de la moitié",
-  sub:"La moitié de la moitié… quelle fraction ça fait ? Observe l'épaisseur des rayons.",
+  sub:"Une maison veut un demi, deux autres veulent un quart — et tu n'as que deux prismes ÷2. Lequel des deux rayons faut-il recouper ?",
   hint:"Coupe en deux, puis coupe encore une moitié en deux : 1/2 ÷ 2 = 1/4.",
   cols:9,rows:7,suns:[{x:0,y:3,dir:1}],
   targets:[{x:4,y:6,need:[1,2]},{x:8,y:1,need:[1,4]},{x:0,y:1,need:[1,4]}],
@@ -736,9 +736,9 @@ const COURS={
   titre:"Le demi",
   scene:{divs:[2]},
   etapes:[
-   {t:"Deux rayons sont sortis du prisme, exactement égaux : chacun est une moitié. On écrit 1/2, on lit « un demi »."},
+   {t:"Tu as coupé le rayon en 2 parts égales : chaque part est une moitié. On écrit 1/2, on lit « un demi »."},
    {t:"Partager, c'est diviser :",eq:"1 ÷ 2 = 1/2"},
-   {t:"Le nombre du bas — le dénominateur — raconte le partage : coupé en 2 parts égales."},
+   {t:"Le nombre du bas — le dénominateur — dit en combien de parts égales on a coupé."},
    {t:"Remets les deux moitiés ensemble : rien ne s'est perdu.",eq:"1/2 + 1/2 = 2/2 = 1"}
   ],
   carte:{t:"Partager 1 en 2 parts égales : chaque part vaut 1/2."}
@@ -747,21 +747,17 @@ const COURS={
   titre:"Le tiers",
   scene:{divs:[3]},
   etapes:[
-   {t:"Trois maisons, trois parts égales : le prisme a partagé le rayon en tiers. On écrit 1/3, on lit « un tiers ».",eq:"1 ÷ 3 = 1/3"},
+   {t:"Tu as coupé le rayon en 3 parts égales : chaque part est un tiers. On écrit 1/3, on lit « un tiers ».",eq:"1 ÷ 3 = 1/3"},
    {t:"Vérifie : les trois tiers réunis refont le rayon entier.",eq:"1/3 + 1/3 + 1/3 = 3/3 = 1"}
   ],
-  predire:{
-   question:"Un prisme ÷4 fabriquerait des quarts, encore plus fins. Mais ce prisme n'existe pas dans le lagon… Comment faire des quarts sans lui ?",
-   reponse:"La réponse t'attend au prochain niveau."
-  },
-  carte:{t:"Partager 1 en 3 parts égales : chaque part vaut 1/3. Plus il y a de parts, plus chaque part est petite."}
+  carte:{t:"Partager 1 en 3 parts égales : chaque part vaut 1/3."}
  },
  quart:{
   titre:"Le quart",
   scene:{divs:[2,2]},
   etapes:[
-   {t:"La moitié d'un rayon, c'est un demi-rayon.",eq:"1 ÷ 2 = 1/2"},
-   {t:"La moitié d'un demi-rayon, c'est un quart de rayon.",eq:"1/2 ÷ 2 = 1/4"},
+   {t:"Tu as coupé le rayon en 2 parts égales : chaque part est un demi.",eq:"1 ÷ 2 = 1/2"},
+   {t:"Puis tu as coupé chaque demi en 2 parts égales : la moitié de la moitié, c'est le quart.",eq:"1/2 ÷ 2 = 1/4"},
    {t:"Compte tes rayons : les quatre quarts refont le rayon entier.",eq:"1/4 + 1/4 + 1/4 + 1/4 = 4/4 = 1"}
   ],
   predire:{

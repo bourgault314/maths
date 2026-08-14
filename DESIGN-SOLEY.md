@@ -187,6 +187,27 @@ puis une ou plusieurs sessions Code pour fabriquer, tester, publier après accor
    suspendus terminés par une perle, silhouette franche qui pend DEVANT la façade,
    sans surcharger la petite maison.
 
+## Retouches du chantier 2 (audit à froid du lagon, 14/08 — FAITES)
+
+Claude a joué les neuf niveaux du lagon hors production et capturé les trois cours
+étape par étape. Ce qui tenait : déclenchement du cours, synchronisation des deux
+registres, alignement du zoom, totaux R1, chaînage tiers → « Les quatre quarts ».
+Ce qui a été corrigé (raisons détaillées dans SOLEY.md §6) :
+
+1. [x] Le point de cours s'affiche d'un coup — plus de déroulé au chronomètre,
+       plus de bouton « Revoir » dans le panneau.
+2. [x] Barre de boutons épinglée : la sortie était 216 px sous le bas de l'écran.
+3. [x] Pastille-flèche de défilement, présente seulement quand ça déborde.
+4. [x] Pointillés de zoom retirés ; étiquettes des rayons dégagées de leur trait.
+5. [x] Prédire du tiers retiré ; carte de savoir du tiers resserrée.
+6. [x] Les trois cours ouvrent pareil et disent « parts égales ».
+7. [x] Consignes étagées, typographie française, deux consignes redevenues des
+       questions.
+8. [x] Fraction des maisons dégagée ; flèches des pièces enfin visibles.
+
+Question laissée ouverte pour le pilier 5 : les fractions des maisons font ~6 px
+sur un téléphone de 375 px — faut-il les agrandir en simplifiant la maison autour ?
+
 ## Décisions actées le 13/08
 
 - [x] Mécanique d'apprentissage : niveau-découverte simple → point de cours → niveaux
