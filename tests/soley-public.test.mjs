@@ -208,6 +208,45 @@ test("les pièces scellées sont valides, bloquées et intégrées à la céléb
   assert.match(js.engine, /\.placed\[data-cell="\$\{cell\}"\] \.beampath/);
 });
 
+test("le miroir réfléchit net, à angle droit, avec sa barre à 45°", () => {
+  /* retouche du 13/08 (proposition de la collègue) : plus aucune courbe de rayon */
+  assert.match(js.render, /function mirrorBar/);
+  assert.match(js.render, /class="mirbar"/);
+  assert.doesNotMatch(js.render, /data-part="through"/);
+  assert.doesNotMatch(js.render, /Q \$\{c\} \$\{c\}/);
+  assert.doesNotMatch(js.engine, /through/);
+
+  const context = createGameContext();
+  vm.runInContext(js.render, context); /* déclarations pures, sans DOM au chargement */
+  const geom = vm.runInContext(`(() => {
+    const premiereLigne = s => {
+      const m = s.match(/x1="([-\\d.]+)" y1="([-\\d.]+)" x2="([-\\d.]+)" y2="([-\\d.]+)"/);
+      return { x1:+m[1], y1:+m[2], x2:+m[3], y2:+m[4] };
+    };
+    const monte = premiereLigne(mirrorBar(1,0));   // rayon vers la droite réfléchi vers le haut : « / »
+    const descend = premiereLigne(mirrorBar(1,2)); // réfléchi vers le bas : « \\ »
+    const flux = pieceFlow({t:'b',in:1,out:0}, {ins:[{dir:1,val:[1,2]}], outs:[{dir:0,val:[1,2]}]});
+    return {
+      penteMonte:(monte.y2-monte.y1)/(monte.x2-monte.x1),
+      penteDescend:(descend.y2-descend.y1)/(descend.x2-descend.x1),
+      segments:(flux.match(/class="beampath"/g)||[]).length,
+      barre:flux.includes('class="mirbar"'),
+      epaisseurConservee:flux.split('data-part').length === 3 && flux.includes('stroke-width="12"'),
+      ecretage:flux.includes('<clipPath'),
+      auCentre:/data-part="in"[^>]*x2="50" y2="50"/.test(flux),
+      peintureOrdonnee:flux.indexOf('#101a33')<flux.indexOf('data-part')&&flux.indexOf('data-part')<flux.lastIndexOf('#cfe4ff'),
+    };
+  })()`, context);
+  assert.ok(Math.abs(geom.penteMonte + 1) < 1e-9, "barre « / » attendue (pente -1 en repère écran)");
+  assert.ok(Math.abs(geom.penteDescend - 1) < 1e-9, "barre « \\ » attendue (pente +1)");
+  assert.equal(geom.segments, 2);
+  assert.equal(geom.barre, true);
+  assert.equal(geom.epaisseurConservee, true, "un demi garde son épaisseur fwidth([1,2])=12");
+  assert.equal(geom.ecretage, true, "le rayon est écrêté le long de la ligne du miroir");
+  assert.equal(geom.auCentre, true, "le segment d'entrée va jusqu'au centre (pleine largeur sur la face)");
+  assert.equal(geom.peintureOrdonnee, true, "ordre : dos sombre, puis rayon, puis face claire");
+});
+
 test("les demi-tunnels ne se contournent plus avec un rayon entier", () => {
   const context = createGameContext();
   const shortcut = vm.runInContext(`(() => {

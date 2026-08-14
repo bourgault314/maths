@@ -6,6 +6,25 @@ function arrow(x1,y1,x2,y2,color,w){
   return `<line x1="${x1}" y1="${y1}" x2="${hx}" y2="${hy}" stroke="${color}" stroke-width="${w}" stroke-linecap="round"/>`+
     `<polygon points="${x2},${y2} ${hx+px*8},${hy+py*8} ${hx-px*8},${hy-py*8}" fill="${color}"/>`;
 }
+/* Barre-miroir à 45° (proposition de la collègue, 13/08) : la barre suit la
+   diagonale entrée+sortie, le rayon s'y réfléchit net, à angle droit.
+   in = direction de déplacement du rayon qui arrive, out = direction de sortie. */
+function axeMiroir(inDir,outDir){
+  let ux=DX[inDir]+DX[outDir], uy=DY[inDir]+DY[outDir];
+  if(!ux&&!uy){ux=-DY[inDir];uy=DX[inDir];} /* rétro-réflecteur théorique : barre face au rayon */
+  const n=Math.hypot(ux,uy);
+  return [ux/n,uy/n];
+}
+/* partie : 'fond' = dos sombre seul (peint SOUS le rayon), 'face' = trait clair + reflet
+   (peint SUR le rayon) ; sans partie, la barre complète (pictogramme de la boîte). */
+function mirrorBar(inDir,outDir,partie){
+  const c=50,L=27,[ux,uy]=axeMiroir(inDir,outDir);
+  const fond=`<line x1="${c-ux*L}" y1="${c-uy*L}" x2="${c+ux*L}" y2="${c+uy*L}" stroke="#101a33" stroke-width="11" stroke-linecap="round"/>`;
+  const face=`<line x1="${c-ux*L}" y1="${c-uy*L}" x2="${c+ux*L}" y2="${c+uy*L}" stroke="#cfe4ff" stroke-width="5.5" stroke-linecap="round"/>
+    <line x1="${c-ux*L*0.55}" y1="${c-uy*L*0.55}" x2="${c-ux*L*0.15}" y2="${c-uy*L*0.15}" stroke="#ffffff" stroke-width="2" stroke-linecap="round" opacity=".85"/>`;
+  return `<g class="mirbar" aria-hidden="true">${partie==='fond'?fond:partie==='face'?face:fond+face}</g>`;
+}
+let MIRSEQ=0; /* identifiants uniques des zones d'écrêtage des miroirs */
 /* pièce sans flux : silhouette + flèches indicatives */
 function pieceStatic(def){
   const c=50,R=36;
@@ -13,9 +32,11 @@ function pieceStatic(def){
   const ent=d=>[c-DX[d]*R,c-DY[d]*R];
   const ext=d=>[c+DX[d]*R,c+DY[d]*R];
   if(def.t==='b'){
+    /* les flèches s'arrêtent à la face du miroir, elles ne la traversent pas */
     const[ix,iy]=ent(def.in),[ox,oy]=ext(def.out);
-    s+=`<path d="M ${ix} ${iy} Q ${c} ${c} ${ox} ${oy}" fill="none" stroke="#ffc94d99" stroke-width="10" stroke-linecap="round"/>`;
-    s+=`<polygon points="${ox+DX[def.out]*7},${oy+DY[def.out]*7} ${ox-DY[def.out]*8},${oy+DX[def.out]*8} ${ox+DY[def.out]*8},${oy-DX[def.out]*8}" fill="#ffc94d99"/>`;
+    s+=arrow(ix,iy,c-DX[def.in]*11,c-DY[def.in]*11,'#9fb7d8',7);
+    s+=arrow(c+DX[def.out]*11,c+DY[def.out]*11,ox,oy,'#ffc94d99',7);
+    s+=mirrorBar(def.in,def.out);
   }else if(def.t==='s2'||def.t==='s3'){
     const[ix,iy]=ent(def.in);
     s+=arrow(ix,iy,c,c,'#9fb7d8',7);
@@ -43,9 +64,24 @@ function pieceFlow(def,fl){
   const ent=d=>[c-DX[d]*R,c-DY[d]*R];
   const ext=d=>[c+DX[d]*R,c+DY[d]*R];
   if(def.t==='b'&&fl.ins.length&&fl.outs.length){
+    /* réflexion NETTE : les deux segments vont jusqu'au centre, et un écrêtage le long
+       de la ligne du miroir coupe tout ce qui dépasserait derrière — le rayon vient
+       mourir sur la face du miroir, pleine largeur, sans zone sombre au coude.
+       Peinture : dos sombre de la barre → rayon écrêté → face claire. */
     const inn=fl.ins[0],o=fl.outs[0];
     const[ix,iy]=ent(inn.dir),[ox,oy]=ext(o.dir);
-    s+=`<path class="beampath" data-part="through" d="M ${ix} ${iy} Q ${c} ${c} ${ox} ${oy}" stroke="${fcol(inn.val)}" stroke-width="${fwidth(inn.val)}" style="filter:drop-shadow(0 0 5px ${fcol(inn.val)})"/>`;
+    const[tx,ty]=axeMiroir(inn.dir,o.dir);
+    let nx=-ty,ny=tx; /* normale orientée vers le côté d'où vient la lumière */
+    if((-DX[inn.dir])*nx+(-DY[inn.dir])*ny<0){nx=-nx;ny=-ny;}
+    const G=140,cid='mirclip'+(MIRSEQ++);
+    const p=(x,y)=>`${x},${y}`;
+    s+=`<clipPath id="${cid}"><polygon points="${p(c-tx*G,c-ty*G)} ${p(c+tx*G,c+ty*G)} ${p(c+tx*G+nx*G,c+ty*G+ny*G)} ${p(c-tx*G+nx*G,c-ty*G+ny*G)}"/></clipPath>`;
+    s+=mirrorBar(inn.dir,o.dir,'fond');
+    s+=`<g clip-path="url(#${cid})">`+
+      `<line class="beampath" data-part="in" x1="${ix}" y1="${iy}" x2="${c}" y2="${c}" stroke="${fcol(inn.val)}" stroke-width="${fwidth(inn.val)}" style="filter:drop-shadow(0 0 5px ${fcol(inn.val)})"/>`+
+      `<line class="beampath" data-part="out" x1="${c}" y1="${c}" x2="${ox}" y2="${oy}" stroke="${fcol(o.val)}" stroke-width="${fwidth(o.val)}" style="filter:drop-shadow(0 0 5px ${fcol(o.val)})"/>`+
+      `</g>`;
+    s+=mirrorBar(inn.dir,o.dir,'face');
   }else{
     fl.ins.forEach(inn=>{
       const[ix,iy]=ent(inn.dir);
