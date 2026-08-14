@@ -182,8 +182,9 @@ document.addEventListener('keydown',ev=>{
   if(ev.key==='Escape'&&document.getElementById('hintov').classList.contains('show'))document.getElementById('hintclose').click();
 });
 /* Point de cours : « J'ai compris ! » ferme (et enchaîne sur la fenêtre des soleils
-   après une victoire), « Revoir » rejoue l'animation. Pas de fermeture au clic sur
-   le fond : on ne quitte pas un cours par mégarde. */
+   après une victoire). Pas de fermeture au clic sur le fond : on ne quitte pas un
+   cours par mégarde. La relecture passe par « Revoir le cours » sur la carte du
+   niveau — le bouton « Revoir » du panneau a disparu avec l'animation (14/08). */
 document.getElementById('coursok').addEventListener('click',fermerCours);
 document.addEventListener('keydown',ev=>{
   if(ev.key==='Escape'&&document.getElementById('coursov').classList.contains('show'))fermerCours();
