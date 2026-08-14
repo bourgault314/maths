@@ -57,6 +57,7 @@ fichiers modifiés → tests → reste à vérifier.
 | Monde | Palier | Contenu | Niveaux |
 |---|---|---|---|
 | Le lagon | 6e | découverte, partage égal — dont 3 niveaux-découverte (demi, tiers, quart) | 9 |
+| Les champs de canne | 6e | partage JOUÉ à fond, notion constante : surplus, pièges, fruits à valeur, portes orientées (refonte 08/2026) | 8 |
 | La forêt | 5e | additions (lentille), équiv., 1/8, 1/12 | 9 |
 | Le volcan | 4e | loupes ×, fractions > 1, 1/9 | 7 |
 | Les pitons | 5e-4e | équivalences, comparaisons (passes) | 7 |
@@ -65,7 +66,13 @@ fichiers modifiés → tests → reste à vérifier.
 | Les tunnels | 6e-4e | labyrinthes denses (41-64 % de roches), esprit de l'original | 8 (dont « Le prisme scellé » et « La galerie scellée ») |
 | Mafate | Expert | tout combiné, 2 soleils, grands plateaux | 7 (dont « Les verrous du cirque ») |
 
-Total : 61 niveaux, chacun avec une solution de référence `sol` vérifiée automatiquement.
+Total : 69 niveaux, chacun avec une solution de référence `sol` vérifiée automatiquement.
+Depuis la refonte (08/2026), les niveaux retouchés ou nouveaux portent AUSSI un champ
+`solMin` : un plan gagnant qui ne ramasse PAS tous les fruits — la batterie prouve
+ainsi que le fruit se mérite (règle d'or, idée 11 de la bibliothèque). Deux mécaniques
+sont réservées à la canne puis aux mondes avancés : le fruit à valeur `[x,y,[n,d]]`
+(cueilli seulement par un rayon valant n/d) et la porte orientée `{porte:côté}` sur
+les cibles (0 N, 1 E, 2 S, 3 O — les autres côtés bloquent comme une roche).
 Depuis le lot 1 du chantier « Comprendre » (14/08), les niveaux-découverte portent un
 champ `dec` qui les relie à leur point de cours (table `COURS` de levels.js).
 
@@ -117,6 +124,10 @@ Batterie (script Playwright Python, à conserver dans `tests/`) :
    dans le corps —, sortie « J'ai compris ! » toujours dans l'écran à l'ouverture
    comme en bas, flèche de défilement présente tant que le panneau déborde et
    effacée une fois en bas.
+11. Refonte (depuis le 14/08 au soir) : chaque niveau à `solMin` gagne SANS tous
+   ses fruits (le fruit se mérite — exceptions documentées dans le test), les
+   portes orientées acceptent le bon côté et bloquent l'autre, un fruit à valeur
+   ignore les rayons d'une autre valeur (contrôle « refonte » de la batterie node).
 
 ## 6. Historique des décisions (ne pas re-débattre sans raison)
 
@@ -273,6 +284,43 @@ Batterie (script Playwright Python, à conserver dans `tests/`) :
       ÷n cachait tout leur fût (3 unités de trait visibles sur 15) ; la flèche
       d'entrée n'avait même pas de pointe. Elles démarrent maintenant à côté du
       rond, vont plus loin (36→41), pointe raccourcie (12→9), trait épaissi.
+
+- REFONTE DES NIVEAUX (14/08 au soir — critique fondatrice de Gwenael). Constat :
+  les 33 idées de la bibliothèque n'avaient JAMAIS touché un niveau (les 60 niveaux
+  datent du 11/08, l'étude de l'original est postérieure) ; diagnostic chiffré dans
+  DIAGNOSTIC-REFONTE-NIVEAUX.md (31/61 niveaux à boîte exacte, 135/135 fruits
+  ramassés par les solutions de référence : le fruit ne demandait jamais un autre
+  plan, la couche ☀☀/☀☀☀ tournait à vide) ; destination de chaque idée dans
+  AUDIT-33-IDEES.md. Décisions à ne pas re-débattre :
+  1. **Les mécaniques de l'original s'intègrent, pas son rythme.** La somme de
+     fractions reste tôt (« on n'est pas obligé d'être pareil » — Gwenael) ; ce
+     qu'on prend : surplus, pièges numériques, fruits en bifurcation, difficulté
+     par l'espace à notion constante.
+  2. **Un monde intercalé entre lagon et forêt : « Les champs de canne »** (la
+     coupe = la récolte péi ET le geste du prisme). 8 niveaux, dénominateurs
+     2-3-4 + le sixième par composition au sommet, AUCUNE notion nouvelle, aucun
+     cours. Spec : SPEC-MONDE-CANNE.md.
+  3. **Les cibles restent des cases, partout.** Objection de Gwenael sur les
+     charrettes : « pourquoi on verrait les rayons de soleil sur des
+     charrettes ? » — la métaphore du jeu est « la lumière nourrit les cases ».
+     Dans la canne : les boucans des coupeurs. (Re-peau des cibles par monde au
+     chantier Habiller — au lagon, des maisons dans l'eau clochent un peu.)
+  4. **Fruits à valeur** (idée 12) : mécanique introduite en douceur par « Le
+     letchi difficile » (C2, boîte exacte assumée — c'est une découverte de jeu,
+     pas de maths, donc sans cours).
+  5. **Portes orientées** (décision du tour du propriétaire, 13/08, qui trouve
+     ici sa place) : premières portes à « Le tour du champ » (C5), la porte
+     impose le tour sans une ligne de texte ; disponibles ensuite pour les mondes
+     avancés et les défis.
+  6. **Retouche LÉGÈRE du lagon** (5 niveaux d'entraînement ; le tutoriel
+     « Premier rayon » et les 3 découvertes ne bougent pas) : surplus, fruits
+     déplacés en bifurcation, pièges s3 — gagner reste facile, la couche
+     ☀☀/☀☀☀ gagne des dents. Les noms, grilles, cibles et consignes ne changent
+     pas (clés de sauvegarde intactes, preuve : verifier-lot-canne.mjs).
+  7. **Le contrôle P2 entre dans la batterie** : tout niveau retouché ou nouveau
+     porte un `solMin` gagnant qui ne ramasse pas tout. Exceptions documentées :
+     « La chambre close » (la porte force le tour, les fruits sont dessus) et
+     « Le tour du lagon » (le tour est sa propre récompense).
 
 ## 7. Architecture (découpage d'août 2026, statique, sans build, GitHub Pages)
 
@@ -464,4 +512,17 @@ commence par "use strict"; et le partage se fait par la portée globale.
   à la batterie ; c'est l'un d'eux qui a débusqué un reste de minuterie (la carte de
   savoir arrivait encore 1,5 s après le reste). Cahiers à jour : §5 point 10, §6,
   DESIGN-SOLEY.md « Retouches du chantier 2 », SPEC §13.
+- 2026-08-14 (soir) : REFONTE DES NIVEAUX, lot 1 — le monde des champs de canne.
+  Point de départ : critique de Gwenael (« les idées de la bibliothèque, tu ne les
+  as jamais intégrées — il faut que mes élèves cherchent »). Diagnostic chiffré au
+  moteur (DIAGNOSTIC-REFONTE-NIVEAUX.md), audit des 33 idées (AUDIT-33-IDEES.md),
+  spec (SPEC-MONDE-CANNE.md), puis construction prouvée : 2 ajouts moteur
+  rétrocompatibles (fruits à valeur, portes orientées — testés dans les deux sens),
+  8 niveaux de la canne gagnants avec fruits méritès (solMin au contraire ne
+  ramasse pas tout), 5 niveaux du lagon retouchés à l'identique de nom et de
+  grille, bibliothèque complétée des idées 21-33, compteurs publics 60→69.
+  Batterie node 16/16 (nouveau contrôle « refonte » : P2 + portes + valeurs),
+  verifier-lot-canne.mjs vert (61 niveaux en ligne intacts hors champs autorisés),
+  0 erreur console, captures 375 px faites. Les textes des niveaux (sub) de la
+  canne restent à polir avec Gwenael sur captures.
 - (à compléter à chaque session)

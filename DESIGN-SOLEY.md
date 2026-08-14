@@ -209,6 +209,21 @@ Ce qui a été corrigé (raisons détaillées dans SOLEY.md §6) :
 Question laissée ouverte pour le pilier 5 : les fractions des maisons font ~6 px
 sur un téléphone de 375 px — faut-il les agrandir en simplifiant la maison autour ?
 
+## Refonte des niveaux (chantier ouvert le 14/08 au soir — lot 1 FAIT)
+
+Critique fondatrice de Gwenael : les 33 idées de la bibliothèque n'avaient jamais
+touché un niveau ; « il faut que mes élèves cherchent ». Le diagnostic chiffré
+(DIAGNOSTIC-REFONTE-NIVEAUX.md) a montré le défaut de structure : nos niveaux
+n'avaient qu'UNE couche (notion + boîte exacte + chemin unique qui ramasse tout),
+l'original en a deux (gagner accessible / tout ramasser dur). Les 5 principes
+(P1 surplus, P2 fruit mérité, P3 difficulté dans ☀☀/☀☀☀, P4 mécaniques sans
+copier le rythme, P5 décor cohérent) et la destination de chaque idée sont dans
+AUDIT-33-IDEES.md ; le monde des champs de canne (SPEC-MONDE-CANNE.md) est le
+pilote construit. Restent pour les lots suivants : retouche des mondes soleils
+(idées 23, 26), défis « rayon sacrifié » (27), étincelle d'impact (7), loupe
+d'inspection (16), re-peau des cibles par monde (P5, avec la remarque « pas de
+maisons dans un lagon »), habillage canne (champ vert/or, cases-boucans).
+
 ## Décisions actées le 13/08
 
 - [x] Mécanique d'apprentissage : niveau-découverte simple → point de cours → niveaux

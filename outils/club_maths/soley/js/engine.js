@@ -408,7 +408,13 @@ function simulate(){
         ex=cx+DX[bm.dir]*0.5;ey=cy+DY[bm.dir]*0.5;break;
       }
       const ti=L.targets.findIndex(t=>t.x===nx&&t.y===ny);
-      if(ti>=0){out.tHits[ti].push(bm.val);targetIndex=ti;ex=nx;ey=ny;break;}
+      if(ti>=0){
+        /* porte orientée (monde de la canne) : la case n'accepte le rayon que
+           par le côté `porte` (0 N, 1 E, 2 S, 3 O) ; sinon elle bloque comme
+           une roche — même règle que les vaisseaux de l'original. */
+        const tp=L.targets[ti].porte;
+        if(tp!==undefined&&((bm.dir+2)%4)!==tp){ex=cx+DX[bm.dir]*0.5;ey=cy+DY[bm.dir]*0.5;break;}
+        out.tHits[ti].push(bm.val);targetIndex=ti;ex=nx;ey=ny;break;}
       const fx=(L.fixed||[]).find(f=>f[1]===nx&&f[2]===ny);
       const pc=state.placed[nx+','+ny];
       if(pc||fx){
@@ -438,7 +444,9 @@ function simulate(){
         else{ex=cx+DX[bm.dir]*0.5;ey=cy+DY[bm.dir]*0.5;}
         break;
       }
-      if(L.fruits.some(f=>f[0]===nx&&f[1]===ny))out.fruits.add(nx+','+ny);
+      /* fruit à valeur (monde de la canne) : [x,y,[n,d]] ne se ramasse que
+         traversé par un rayon valant exactement n/d ; [x,y] reste inchangé. */
+      if(L.fruits.some(f=>f[0]===nx&&f[1]===ny&&(!f[2]||feq(bm.val,f[2]))))out.fruits.add(nx+','+ny);
       cx=nx;cy=ny;
     }
     out.segs.push({

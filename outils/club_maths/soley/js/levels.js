@@ -26,6 +26,7 @@ const PNAME={b:'Miroir',s2:'Prisme ÷2',s3:'Prisme ÷3',m:'Lentille +',x2:'Loupe
 /* ===== Mondes ===== */
 const WORLDS=[
  {id:'lagon',label:'Le lagon',pal:'6e',blurb:'Découvrir les fractions : partager un rayon en parts égales, et guider la lumière jusqu’aux cases créoles.'},
+ {id:'canne',label:'Les champs de canne',pal:'6e',blurb:'La coupe ! Rien de neuf à apprendre, tout à chercher : le surplus de pièces, les portes des cases et les fruits marqués font le casse-tête.'},
  {id:'foret',label:'La forêt',pal:'5e',blurb:'Additionner des fractions avec la lentille — et chercher, parfois longtemps, comment fabriquer la bonne part.'},
  {id:'volcan',label:'Le volcan',pal:'4e',blurb:'Multiplier avec les loupes, dépasser 1, reconstruire des rayons entiers.'},
  {id:'pitons',label:'Les pitons',pal:'5e-4e',blurb:'Équivalences et comparaisons : les passes étroites ne laissent passer que les rayons assez fins.'},
@@ -34,7 +35,7 @@ const WORLDS=[
  {id:'tunnels',label:'Les tunnels',pal:'6e-4e',blurb:'Des galeries étroites creusées dans la roche : ici, le chemin et les pièces scellées font le casse-tête.'},
  {id:'mafate',label:'Mafate',pal:'Expert',blurb:'Le cirque final. Tout ce que tu as appris — et de vrais casse-têtes.'}
 ];
-const FRW={lagon:'letchi',foret:'ananas',volcan:'mangue',pitons:'ananas',soleils:'letchi',marche:'mangue',tunnels:'letchi',mafate:'ananas'};
+const FRW={lagon:'letchi',canne:'letchi',foret:'ananas',volcan:'mangue',pitons:'ananas',soleils:'letchi',marche:'mangue',tunnels:'letchi',mafate:'ananas'};
 const FRNAME={letchi:'Letchis',mangue:'Mangues',ananas:'Ananas'};
 
 /* ===== Niveaux =====
@@ -53,8 +54,9 @@ const LV=[
   sub:"Les roches volcaniques bloquent la lumière : trouve le chemin ! Les fruits péi sont des bonus facultatifs ; fais passer un rayon dessus pour les ramasser.",
   cols:8,rows:6,suns:[{x:0,y:1,dir:1}],
   targets:[{x:7,y:4,need:[1,1]}],
-  rocks:[[5,0],[5,1],[5,2],[5,3],[1,3],[6,2]],fruits:[[3,3]],
-  tools:[b(1,2),b(2,1)],sol:[[0,3,1],[1,3,4]]},
+  rocks:[[5,0],[5,1],[5,2],[5,3],[1,3],[6,2]],fruits:[[5,5]],
+  tools:[b(1,2),b(2,1),b(1,0)],
+  sol:[[0,3,1],[1,3,5],[2,7,5]],solMin:[[0,3,1],[1,3,4]]},
 
  {w:'lagon',name:"Moitié-moitié",dec:'demi',
   sub:"Deux maisons attendent chacune la même part… et la boîte ne contient qu'un prisme ÷2. Que va-t-il faire du rayon ? Observe l'épaisseur !",
@@ -67,8 +69,9 @@ const LV=[
   sub:"Une seule maison, et elle veut un demi. Mais le prisme, lui, coupe toujours en deux : que devient la part que personne n'attend ?",
   cols:8,rows:6,suns:[{x:0,y:2,dir:1}],
   targets:[{x:7,y:5,need:[1,2]}],
-  rocks:[[5,2],[6,0]],fruits:[[3,4]],
-  tools:[s2(1,0,2),b(2,1)],sol:[[0,3,2],[1,3,5]]},
+  rocks:[[5,2],[6,0]],fruits:[[6,1]],
+  tools:[s2(1,0,2),b(2,1),b(0,1)],
+  sol:[[0,3,2],[1,3,5],[2,3,1]],solMin:[[0,3,2],[1,3,5]]},
 
  {w:'lagon',name:"Partage en tiers",dec:'tiers',
   sub:"Trois maisons, un seul prisme ÷3. En combien de parts va-t-il couper le rayon ? Regarde la nouvelle couleur !",
@@ -93,17 +96,18 @@ const LV=[
   hint:"Coupe en deux, puis coupe encore une moitié en deux : 1/2 ÷ 2 = 1/4.",
   cols:9,rows:7,suns:[{x:0,y:3,dir:1}],
   targets:[{x:4,y:6,need:[1,2]},{x:8,y:1,need:[1,4]},{x:0,y:1,need:[1,4]}],
-  rocks:[[6,3],[2,5]],fruits:[[4,2]],
-  tools:[s2(1,0,2),s2(0,1,3)],sol:[[0,4,3],[1,4,1]]},
+  rocks:[[6,3],[2,5]],fruits:[[5,5]],
+  tools:[s2(1,0,2),s2(0,1,3),s3(1,0,1,2),b(2,1),b(1,2),b(2,3)],
+  sol:[[0,4,3],[1,4,1],[3,4,5],[4,6,5],[5,6,6]],solMin:[[0,4,3],[1,4,1]]},
 
  {w:'lagon',name:"Quarts en croix",
   sub:"Un demi en haut, deux quarts en bas — et des roches en travers du chemin !",
   hint:"Le demi doit contourner la roche : deux miroirs l'attendent.",
   cols:9,rows:7,suns:[{x:0,y:3,dir:1}],
   targets:[{x:6,y:0,need:[1,2]},{x:8,y:4,need:[1,4]},{x:0,y:4,need:[1,4]}],
-  rocks:[[3,1],[5,3],[2,1],[7,5]],fruits:[[5,2],[1,4]],
-  tools:[s2(1,0,2),s2(2,1,3),b(0,1),b(1,0)],
-  sol:[[0,3,3],[1,3,4],[2,3,2],[3,6,2]]},
+  rocks:[[3,1],[5,3],[2,1],[7,5]],fruits:[[7,0],[1,4]],
+  tools:[s2(1,0,2),s2(2,1,3),b(0,1),b(1,0),b(0,3)],
+  sol:[[0,3,3],[1,3,4],[2,3,2],[3,8,2],[4,8,0]],solMin:[[0,3,3],[1,3,4],[2,3,2],[3,6,2]]},
 
  {w:'lagon',name:"Le tour du lagon",
   sub:"Deux cases, un seul soleil… et le lagon est plein de patates de corail !",
@@ -112,8 +116,83 @@ const LV=[
   targets:[{x:9,y:0,need:[1,2]},{x:9,y:6,need:[1,2]}],
   rocks:[[4,3],[6,2],[5,4],[3,6],[6,6],[1,1],[5,0],[7,4]],
   fruits:[[5,1],[4,5]],
-  tools:[s2(1,0,2),b(0,1),b(1,0),b(2,1),b(1,2),b(2,1),b(3,0)],
-  sol:[[0,2,3],[1,2,1],[2,9,1],[3,2,5],[4,8,5],[5,8,6]]},
+  tools:[s2(1,0,2),b(0,1),b(1,0),b(2,1),b(1,2),b(2,1),b(3,0),s3(1,0,1,2)],
+  sol:[[0,2,3],[1,2,1],[2,9,1],[3,2,5],[4,8,5],[5,8,6]],
+  solMin:[[0,2,3],[1,2,1],[2,9,1],[3,2,5],[4,8,5],[5,8,6]]},
+
+ /* ---------- Les champs de canne (6e) — refonte 08/2026 ----------
+    Le monde qui applique les mécaniques de l'original (AUDIT-33-IDEES.md) :
+    surplus systématique (sauf découverte C2), fruit hors du plan gagnant
+    minimal (solMin le prouve), fruits à valeur [x,y,[n,d]], portes orientées
+    {porte:côté 0N 1E 2S 3O}. Aucune notion nouvelle : on JOUE le partage. */
+ {w:'canne',name:"Premier coup de sabre",
+  sub:"Le soleil tire vers la gauche, pour une fois ! Deux cases attendent la même part. Combien vaut chaque part ?",
+  cols:8,rows:6,suns:[{x:7,y:2,dir:3}],
+  targets:[{x:4,y:0,need:[1,2]},{x:1,y:4,need:[1,2]}],
+  rocks:[[5,4],[6,1],[2,0],[0,2]],fruits:[[2,3]],
+  tools:[s2(3,0,2),b(2,3),b(3,2)],
+  sol:[[0,4,2],[1,4,3],[2,1,3]],solMin:[[0,4,2],[1,4,4]]},
+
+ {w:'canne',name:"Le letchi difficile",
+  sub:"Ce letchi est marqué ½ : seul un rayon valant un demi peut le cueillir. Facultatif… mais malin. Par où faire passer tes demis ?",
+  cols:7,rows:5,suns:[{x:0,y:2,dir:1}],
+  targets:[{x:3,y:0,need:[1,2]},{x:6,y:4,need:[1,2]}],
+  rocks:[[5,1],[1,0],[0,4]],fruits:[[4,3,[1,2]]],
+  tools:[s2(1,0,2),b(2,1),b(1,2)],
+  sol:[[0,3,2],[1,3,3],[2,6,3]],solMin:[[0,3,2],[1,3,4]]},
+
+ {w:'canne',name:"La part perdue devient le trésor",
+  sub:"Trois parts sortent du prisme… mais il n'y a que deux cases. Que faire de la part perdue ?",
+  cols:8,rows:5,suns:[{x:0,y:2,dir:1}],
+  targets:[{x:2,y:0,need:[1,3]},{x:6,y:2,need:[1,3]}],
+  rocks:[[4,0],[6,1],[1,4]],fruits:[[5,4,[1,3]]],
+  tools:[s3(1,0,1,2),b(2,1),s2(1,0,2)],
+  sol:[[0,2,2],[1,2,4]],solMin:[[0,2,2]]},
+
+ {w:'canne',name:"La croisée des rayons",
+  sub:"Deux soleils, deux chemins… qui se croisent. Les rayons peuvent se croiser sans se gêner — mais chaque case ne veut qu'UN rayon.",
+  cols:9,rows:6,suns:[{x:0,y:1,dir:1},{x:6,y:5,dir:0}],
+  targets:[{x:2,y:0,need:[1,2]},{x:8,y:4,need:[1,2]},{x:6,y:0,need:[1,1]}],
+  rocks:[[2,5],[8,0],[0,4]],fruits:[[4,2,[1,2]]],
+  tools:[s2(1,0,2),b(2,1),b(2,1),b(1,2),s3(1,0,1,2)],
+  sol:[[0,2,1],[1,2,2],[3,7,2],[2,7,4]],solMin:[[0,2,1],[1,2,4]]},
+
+ {w:'canne',name:"Le tour du champ",
+  sub:"Le cœur du champ est plein de cannes, et la porte de la case tourne le dos au soleil. Il va falloir faire le tour — et couper au bon endroit.",
+  cols:10,rows:6,suns:[{x:0,y:2,dir:1}],
+  targets:[{x:5,y:4,need:[1,4],porte:1}],
+  rocks:[[2,1],[4,1],[4,2],[4,3],[4,4],[5,1],[5,2],[5,3],[6,1],[6,2],[6,3],[7,1],[7,2],[7,3],[3,4],[2,2],[2,3]],
+  fruits:[[3,2,[1,4]]],
+  tools:[b(1,0),b(0,1),s2(1,1,2),s2(1,1,2),b(1,2),b(2,3),b(3,2)],
+  sol:[[0,1,2],[1,1,0],[2,2,0],[3,3,0],[4,8,0],[5,8,4]],
+  solMin:[[0,1,2],[1,1,0],[2,3,0],[3,6,0],[4,8,0],[5,8,4]]},
+
+ {w:'canne',name:"Le grand tri",
+  sub:"Un soleil entier, et seulement deux petites cases. Tout n'est pas bon à garder : trie, coupe, et laisse filer le reste.",
+  cols:9,rows:6,suns:[{x:4,y:0,dir:2}],
+  targets:[{x:3,y:0,need:[1,4],porte:2},{x:3,y:4,need:[1,4]}],
+  rocks:[[8,2],[0,1],[7,5]],fruits:[[6,4,[1,2]]],
+  tools:[s2(2,1,3),s2(3,0,2),b(1,2),b(0,1),s3(2,1,2,3),x2(1,1),b(3,0)],
+  sol:[[0,4,2],[1,3,2],[2,6,2]],solMin:[[0,4,2],[1,3,2]]},
+
+ {w:'canne',name:"La chambre close",
+  sub:"Une chambre fermée au cœur du champ, une seule entrée — et la porte de la case est du mauvais côté. Dedans, chaque virage compte.",
+  cols:9,rows:7,suns:[{x:0,y:3,dir:1}],
+  targets:[{x:8,y:0,need:[1,3]},{x:5,y:3,need:[1,3],porte:3}],
+  rocks:[[3,1],[4,1],[5,1],[6,1],[7,1],[3,2],[7,2],[3,3],[3,4],[7,4],[3,5],[4,5],[5,5],[6,5],[7,5]],
+  fruits:[[5,4,[1,3]],[4,6,[1,3]]],
+  tools:[s3(1,0,1,2),b(0,1),b(2,1),b(1,0),b(0,3),b(3,2),b(2,3),b(3,0),b(0,1)],
+  sol:[[0,1,3],[1,1,0],[2,1,6],[3,8,6],[4,8,3],[5,6,3],[6,6,4],[7,4,4],[8,4,3]],
+  solMin:[[0,1,3],[1,1,0],[2,1,6],[3,8,6],[4,8,3],[5,6,3],[6,6,4],[7,4,4],[8,4,3]]},
+
+ {w:'canne',name:"Les deux chemins du sixième",
+  sub:"Une seule case, qui veut un sixième. Couper en deux puis en trois… ou en trois puis en deux ? Les deux chemins existent. Trouve le tien.",
+  cols:9,rows:6,suns:[{x:0,y:2,dir:1}],
+  targets:[{x:8,y:3,need:[1,6],porte:3}],
+  rocks:[[1,4],[7,0],[0,0]],fruits:[[5,0,[1,2]],[2,5,[1,6]]],
+  tools:[s2(1,0,2),s3(2,1,2,3),b(0,1),s3(1,1,0,2),b(2,1),b(1,0)],
+  sol:[[0,2,2],[1,2,3],[2,2,0]],solMin:[[0,2,2],[1,2,3]],
+  solB:[[3,2,2],[0,5,2],[4,5,3]]},
 
  /* ---------- La forêt (5e) ---------- */
  {w:'foret',name:"Recoller les morceaux",

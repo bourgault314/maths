@@ -138,5 +138,57 @@
     (orange = ÷2, rouge = ÷3) — lisibilité de la boîte à outils.
 
 ---
+## Paquet 5 — mondes 3:3 « Cross Iyes », 3:4 « Multi-Laser » et monde 3 — reçu le 14/08
+
+### Idées à retenir (et transposition Solèy)
+21. **La part perdue devient le trésor** : la cible ne veut que 2 tiers — le tiers
+    en trop route vers le collectible. Rien ne se perd, le surplus se récompense.
+    → Niveau type du monde de la canne (« La part perdue devient le trésor »).
+22. **Deux routes vers 1/6** : 1/2÷3 et 1/3÷2 mènent au même sixième — niveau à
+    double architecture, les deux écritures côte à côte. → Sommet du monde de la
+    canne (« Les deux chemins du sixième »).
+23. **L'affectation des sources comme puzzle** (multi-soleils) : quel soleil sert
+    quelle cible, C'EST le casse-tête. → Retouche du monde des soleils.
+24. **Le croisement des rayons comme thème** : gratuit dans notre moteur aussi —
+    deux plans qui se croisent sans se gêner. → « La croisée des rayons » (canne).
+25. **Tour de plateau + coupe tardive combinés** : encercler le plateau et ne
+    couper qu'à l'arrivée. → « Le tour du champ » (canne).
+26. **Sources en bord de cadre et fractionnaires** : le ciel donne ce qu'il veut,
+    d'où il veut. → Retouche du monde des soleils.
+
+## Paquet 6 — 3:5 « Double Cross » — reçu le 14/08
+
+27. **Le rayon sacrifié** : la collecte n'exige que la traversée de la pièce AU
+    MOMENT de la victoire — le rayon peut mourir juste après, même sur le canon
+    d'une source. Piège psychologique du chemin « sans avenir ». Notre moteur a
+    la même règle : exploitable tel quel. → Défis.
+28. **L'aide qui relance** : un bon Coup de pouce fait dire « j'ai trouvé », pas
+    « j'ai appliqué » (vécu par Gwenael sur 3:5 : indice gradué, solution à LUI).
+    → Étalon de l'aide graduée (chantier lot 2).
+
+## Paquet 7 — 3:6 « The Big E » — reçu le 14/08
+
+29. **Chaque fraction composée a son niveau d'introduction simple PAR
+    CONCEPTION**, même en plein monde 3 (les douzièmes arrivent en douceur après
+    le très dur 3:5). → Principe de rythme de la refonte (P4).
+30. **Le grand gaspillage assumé** : la moitié du soleil jetée d'entrée, ~4/5
+    perdus — viser les bonnes fractions, pas tout utiliser. → « Le grand tri »
+    (canne), l'anti-réflexe « pose tout ».
+31. **Le titre-forme** : la solution dessine un E, le titre le dit. → Sel de
+    conception (on a déjà « Quarts en croix »).
+
+## Paquet 8 — 3:7 « Branch Off » et bilan de difficulté — reçu le 14/08
+
+32. **La difficulté vit dans la couche optionnelle** (précision de Gwenael après
+    3:5, niveau du MILIEU de monde) : gagner reste accessible partout, c'est TOUT
+    RAMASSER qui peut flamber n'importe où. → Principe P3 de la refonte : le
+    piquant va dans ☀☀/☀☀☀ (fruits en bifurcation, pars serrés), pas dans le
+    durcissement des niveaux.
+33. **Chambre close et cadre-éteignoir** : obstacles disposés en cadre — routage
+    intérieur, et les sorties perdues meurent proprement sur le bord. → « La
+    chambre close » (canne) et défis.
+
+---
 
 *(paquets suivants à ajouter ici)*
+

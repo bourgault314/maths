@@ -73,12 +73,12 @@ test("Solèy est publié une seule fois, dans Jeux et Fractions", () => {
   assert.equal(classification.primaryGroup, "jeux");
   assert.equal("primaryNotion" in classification, false);
   assert.equal(classification.thumbnail, "assets/img/thumbnails/jeux/soley.svg?v=2");
-  assert.match(resource.description, /60 niveaux/);
-  assert.match(resource.description, /huit mondes/);
-  assert.match(classification.cardDescription, /60 casse-têtes/);
+  assert.match(resource.description, /69 niveaux/);
+  assert.match(resource.description, /neuf mondes/);
+  assert.match(classification.cardDescription, /69 casse-têtes/);
 });
 
-test("les 61 solutions de référence gagnent et ramassent les 135 fruits", () => {
+test("les 69 solutions de référence gagnent et ramassent les 145 fruits", () => {
   const context = createGameContext();
   const worldCounts = vm.runInContext(
     "Object.fromEntries(WORLDS.map(({id})=>[id,LV.filter(level=>level.w===id).length]))",
@@ -86,7 +86,7 @@ test("les 61 solutions de référence gagnent et ramassent les 135 fruits", () =
   );
   assert.deepEqual(
     { ...worldCounts },
-    { lagon: 9, foret: 9, volcan: 7, pitons: 7, soleils: 8, marche: 6, tunnels: 8, mafate: 7 }
+    { lagon: 9, canne: 8, foret: 9, volcan: 7, pitons: 7, soleils: 8, marche: 6, tunnels: 8, mafate: 7 }
   );
 
   const structure = vm.runInContext(`(() => ({
@@ -97,10 +97,10 @@ test("les 61 solutions de référence gagnent et ramassent les 135 fruits", () =
   }))()`, context);
   assert.deepEqual(
     [...structure.worlds],
-    ["lagon", "foret", "volcan", "pitons", "soleils", "marche", "tunnels", "mafate"]
+    ["lagon", "canne", "foret", "volcan", "pitons", "soleils", "marche", "tunnels", "mafate"]
   );
   assert.deepEqual([...structure.runs], [...structure.worlds]);
-  assert.equal(structure.saveKeys, 61);
+  assert.equal(structure.saveKeys, 69);
   assert.deepEqual([...structure.tunnels], [
     "Le serpent", "La fourche", "Le tourbillon", "Le prisme scellé",
     "La galerie scellée", "Les demi-tunnels", "L'impasse aux letchis", "Le grand réseau"
@@ -158,9 +158,9 @@ test("les 61 solutions de référence gagnent et ramassent les 135 fruits", () =
     return { levels: LV.length, fruits, declaredFruits, failures };
   })()`, context);
 
-  assert.equal(summary.levels, 61);
-  assert.equal(summary.fruits, 135);
-  assert.equal(summary.declaredFruits, 135);
+  assert.equal(summary.levels, 69);
+  assert.equal(summary.fruits, 145);
+  assert.equal(summary.declaredFruits, 145);
   assert.deepEqual([...summary.failures], []);
 });
 
@@ -289,29 +289,35 @@ test("la progression verrouillée et les étoiles se calculent juste", () => {
     const lagon = LV.map((l, i) => i).filter(i => LV[i].w === 'lagon');
     /* chantier « Comprendre » : le seuil ⌈5/8⌉ ET les 3 découvertes du monde précédent */
     lagon.slice(0, 5).forEach(i => save.done[LV[i].w + ':' + LV[i].name] = true);
-    const foretA5 = mondeDeverrouille('foret'); /* 5 réussites < seuil 6 */
+    const canneA5 = mondeDeverrouille('canne'); /* 5 réussites < seuil 6 */
     save.done['lagon:La moitié de la moitié'] = true;
-    const foretSansDec = mondeDeverrouille('foret'); /* 6 réussites mais 2 découvertes sur 3 */
+    const canneSansDec = mondeDeverrouille('canne'); /* 6 réussites mais 2 découvertes sur 3 */
     save.done['lagon:Les quatre quarts'] = true;
-    const foretComplete = mondeDeverrouille('foret'); /* 7 réussites dont les 3 découvertes */
+    const canneComplete = mondeDeverrouille('canne'); /* 7 réussites dont les 3 découvertes */
+    const foretFermee = !mondeDeverrouille('foret'); /* la canne n'a encore rien */
+    const canne = LV.map((l, i) => i).filter(i => LV[i].w === 'canne');
+    canne.slice(0, 5).forEach(i => save.done[LV[i].w + ':' + LV[i].name] = true);
+    const foretOuverte = mondeDeverrouille('foret'); /* ⌈5×8/8⌉ = 5, aucune découverte dans la canne */
     const volcanFerme = !mondeDeverrouille('volcan');
     const zi = LV.findIndex(l => l.name === 'Zigzag dans les roches');
     const k = 'lagon:Zigzag dans les roches';
     const fruitManquant = etoiles(zi);
     save.fruits[k] = 1; const fruitsComplets = etoiles(zi);
-    save.pieces[k] = 2; const maitrise = etoiles(zi);
-    save.pieces[k] = 3; const tropDePieces = etoiles(zi);
+    save.pieces[k] = 3; const maitrise = etoiles(zi); /* sol de référence à 3 pièces depuis la refonte */
+    save.pieces[k] = 4; const tropDePieces = etoiles(zi);
     const sansFruits = etoiles(0);
-    return { seuils, parOk, avant, foretA5, foretSansDec, foretComplete, volcanFerme,
+    return { seuils, parOk, avant, canneA5, canneSansDec, canneComplete, foretFermee, foretOuverte, volcanFerme,
       fruitManquant, fruitsComplets, maitrise, tropDePieces, sansFruits };
   })()`, context);
 
-  assert.deepEqual([...r.seuils], [0, 6, 6, 5, 5, 5, 4, 5]);
+  assert.deepEqual([...r.seuils], [0, 6, 5, 6, 5, 5, 5, 4, 5]);
   assert.equal(r.parOk, true);
-  assert.deepEqual([...r.avant], [true, false, false, false, false, false, false, false]);
-  assert.equal(r.foretA5, false);
-  assert.equal(r.foretSansDec, false, "6 réussites sans les 3 découvertes : la forêt reste fermée");
-  assert.equal(r.foretComplete, true);
+  assert.deepEqual([...r.avant], [true, false, false, false, false, false, false, false, false]);
+  assert.equal(r.canneA5, false);
+  assert.equal(r.canneSansDec, false, "6 réussites sans les 3 découvertes : la canne reste fermée");
+  assert.equal(r.canneComplete, true);
+  assert.equal(r.foretFermee, true);
+  assert.equal(r.foretOuverte, true, "⌈5/8⌉ de la canne ouvre la forêt");
   assert.equal(r.volcanFerme, true);
   assert.equal(r.fruitManquant, 1);
   assert.equal(r.fruitsComplets, 2);
@@ -385,7 +391,7 @@ test("l’accueil masque réellement le plateau et reprend la charte du site", (
   assert.match(html, /Gérer mes cookies/);
   assert.match(html, /aria-label="Recommencer le niveau"/);
   assert.match(js.ui, /class="chip[^"]*"[^>]*aria-pressed=/);
-  assert.match(html, /meta name="description" content="Un jeu de réflexion en 60 niveaux/);
+  assert.match(html, /meta name="description" content="Un jeu de réflexion en 69 niveaux/);
   assert.match(js.ui, /tunnels:`<path d="M4 42V25/);
 });
 
@@ -623,5 +629,55 @@ test("le logo maths&go s’intègre au soleil sans plaque blanche", () => {
 test("la miniature Solèy respecte le format du catalogue", () => {
   assert.match(thumbnail, /<svg[^>]*width="720"[^>]*height="320"[^>]*viewBox="0 0 720 320"/);
   assert.match(thumbnail, /Solèy — jeu de fractions/);
-  assert.match(thumbnail, />60 NIVEAUX</);
+  assert.match(thumbnail, />69 NIVEAUX</);
+});
+
+test("refonte : le fruit se mérite, les portes orientent, les fruits à valeur trient", () => {
+  const context = createGameContext();
+  const r = vm.runInContext(`(() => {
+    const joue = (i, plan) => {
+      cur = i; state.placed = {};
+      for (const [ti,x,y] of plan) state.placed[x+","+y] = { def: LV[i].tools[ti], ti };
+      return simulate();
+    };
+    /* P2 (AUDIT-33-IDEES.md, idée 11) : chaque niveau retouché ou nouveau porte un
+       solMin — un plan gagnant qui ne ramasse PAS tous les fruits. Exceptions
+       documentées : « La chambre close » (la porte force le tour, les fruits sont
+       dessus) et « Le tour du lagon » (le tour est sa propre récompense). */
+    const EXCEPTIONS = new Set(["La chambre close", "Le tour du lagon"]);
+    const failures = [];
+    let couverts = 0;
+    LV.forEach((l, i) => {
+      if (!l.solMin) return;
+      couverts++;
+      const min = joue(i, l.solMin);
+      if (!min.win) failures.push(l.name + " : solMin ne gagne pas");
+      if (!EXCEPTIONS.has(l.name) && l.fruits.length && min.fruits.size >= l.fruits.length)
+        failures.push(l.name + " : solMin ramasse tout, le fruit ne se mérite pas");
+      if (l.solB) {
+        const b = joue(i, l.solB);
+        if (!b.win) failures.push(l.name + " : la deuxième architecture (solB) ne gagne pas");
+      }
+    });
+    /* Portes orientées : bon côté accepte, mauvais côté bloque, sans porte inchangé. */
+    const mk = p => ({w:'test',name:'t-porte',sub:'',cols:5,rows:3,
+      suns:[{x:0,y:1,dir:1}],targets:[{x:3,y:1,need:[1,1],porte:p}],
+      rocks:[],fruits:[],tools:[],sol:[]});
+    const portes = [3,1,undefined].map(p => {
+      LV.push(mk(p)); cur = LV.length-1; state.placed = {};
+      const w = simulate().win; LV.pop(); return w;
+    });
+    /* Fruit à valeur : un rayon entier ne cueille pas un fruit marqué 1/2. */
+    LV.push({w:'test',name:'t-val',sub:'',cols:5,rows:3,
+      suns:[{x:0,y:1,dir:1}],targets:[{x:4,y:1,need:[1,1]}],
+      rocks:[],fruits:[[2,1,[1,2]]],tools:[],sol:[]});
+    cur = LV.length-1; state.placed = {};
+    const val = simulate(); LV.pop();
+    return { failures, couverts, portes, valWin: val.win, valFruits: val.fruits.size };
+  })()`, context);
+  assert.deepEqual([...r.failures], []);
+  assert.equal(r.couverts, 13, "5 niveaux du lagon retouchés + 8 niveaux de la canne");
+  assert.deepEqual([...r.portes], [true, false, true]);
+  assert.equal(r.valWin, true);
+  assert.equal(r.valFruits, 0, "le rayon entier ne cueille pas le fruit marqué 1/2");
 });
