@@ -516,15 +516,23 @@ def principal():
           titre: document.getElementById('courstitre').textContent,
           terminaux: document.querySelectorAll('#coursbody [data-terminal]').length,
           rayons: document.querySelectorAll("#coursbody [data-rayon='terminal']").length,
+          alignes: (() => {
+            const rayons = [...document.querySelectorAll("#coursbody [data-rayon='terminal'] line")]
+              .map(l => +l.getAttribute('x2'));
+            const cases = [...document.querySelectorAll('#coursbody rect[data-terminal]')]
+              .map(r => [+r.getAttribute('x'), +r.getAttribute('x') + +r.getAttribute('width')]);
+            return rayons.length === cases.length
+              && rayons.every((x, i) => x >= cases[i][0] && x <= cases[i][1]);
+          })(),
           pont: !!document.querySelector('#coursbody .cpontphrase'),
           reponseAvant: document.getElementById('coursbody').innerHTML.includes('la moitié du quart'),
           carte: document.getElementById('coursbody').innerHTML.includes('Carte de savoir'),
           winCache: !document.getElementById('winov').classList.contains('show'),
         })""")
-        section("T9 panneau C3 : QUATRE cases du mur + QUATRE rayons + phrase-pont + carte",
+        section("T9 panneau C3 : QUATRE cases + QUATRE rayons ALIGNÉS (zoom v9) + phrase-pont + carte",
                 etat9["titre"] == "Le quart" and etat9["terminaux"] == 4 and etat9["rayons"] == 4
-                and etat9["pont"] and etat9["carte"] and etat9["winCache"],
-                f"cases={etat9['terminaux']}, rayons={etat9['rayons']}")
+                and etat9["alignes"] and etat9["pont"] and etat9["carte"] and etat9["winCache"],
+                f"cases={etat9['terminaux']}, rayons={etat9['rayons']}, alignés={etat9['alignes']}")
         section("T9 prédire (R3) : la réponse est absente du panneau avant le toucher",
                 not etat9["reponseAvant"], "")
         page.click("#cpredirebtn")

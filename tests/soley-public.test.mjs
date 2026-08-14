@@ -455,11 +455,21 @@ test("le chantier « Comprendre » : découvertes, points de cours et règle R1"
         textes('quart').includes('1/4 + 1/4 + 1/4 + 1/4 = 4/4 = 1')],
       /* R2 (v8) : les DEUX registres se construisent — cases du mur ET rayons terminaux */
       terminaux: ['demi', 'tiers', 'quart'].map(id => {
-        const sc = sceneCours(COURS[id].scene, () => 0);
+        const svg = sceneCours(COURS[id].scene, () => 0).svg;
         return {
-          cases: (sc.mur.match(/data-terminal/g) || []).length,
-          rayons: (sc.rayons.match(/data-rayon="terminal"/g) || []).length,
+          cases: (svg.match(/data-terminal/g) || []).length,
+          rayons: (svg.match(/data-rayon="terminal"/g) || []).length,
         };
+      }),
+      /* v9 : le mur est un ZOOM — chaque rayon terminal tombe dans l'intervalle
+         horizontal de SA case de la dernière rangée */
+      alignes: ['demi', 'tiers', 'quart'].every(id => {
+        const svg = sceneCours(COURS[id].scene, () => 0).svg;
+        const rayons = [...svg.matchAll(/<g data-rayon="terminal"><line [^>]*x2="([\\d.]+)"/g)].map(m => +m[1]);
+        const cases = [...svg.matchAll(/<rect x="([\\d.]+)" y="[\\d.]+" width="([\\d.]+)"[^>]*data-terminal/g)]
+          .map(m => [+m[1], +m[1] + +m[2]]);
+        return rayons.length > 0 && rayons.length === cases.length
+          && rayons.every((x, i) => x >= cases[i][0] && x <= cases[i][1]);
       }),
       /* R3 dans le panneau : la réponse du prédire est ABSENTE du HTML construit */
       panneau: ['demi', 'tiers', 'quart'].map(id => {
@@ -470,7 +480,7 @@ test("le chantier « Comprendre » : découvertes, points de cours et règle R1"
           bouton: h.includes('cpredirebtn'),
           reponseCachee: !h.includes(COURS[id].predire ? COURS[id].predire.reponse : '@jamais@'),
           scene: h.includes('class="cscene"') && h.includes('class="cfade"'),
-          pont: h.includes('Même partage, même fraction.'),
+          pont: h.includes('un zoom sur tes rayons'),
         };
       }),
     };
@@ -490,12 +500,13 @@ test("le chantier « Comprendre » : découvertes, points de cours et règle R1"
   assert.deepEqual([...r.totaux], [true, true, true], "R1 : les 2/2, 3/3 et 4/4 sont écrits");
   assert.deepEqual([...r.terminaux].map(t => t.cases), [2, 3, 4], "R2 : la scène C3 montre bien QUATRE cases 1/4");
   assert.deepEqual([...r.terminaux].map(t => t.rayons), [2, 3, 4], "R2 (v8) : et QUATRE rayons 1/4 dans la cascade");
+  assert.equal(r.alignes, true, "v9 : chaque rayon terminal tombe au-dessus de SA case (le zoom)");
   for (const p of r.panneau) {
     assert.equal(p.carteSavoir, true, `${p.id} : la phrase-carte est habillée en carte de savoir (R4)`);
     assert.equal(p.bouton, p.id !== "demi", `${p.id} : bouton « À ton avis… »`);
     assert.equal(p.reponseCachee, true, `${p.id} : la réponse du prédire n'est pas dans la page avant le toucher (R3)`);
     assert.equal(p.scene, true, `${p.id} : scène à deux registres présente`);
-    assert.equal(p.pont, true, `${p.id} : la phrase-pont relie les deux registres (v8)`);
+    assert.equal(p.pont, true, `${p.id} : la phrase-pont du zoom relie les deux registres (v9)`);
   }
   /* le câblage : overlay dans la coquille, séquence de victoire, sauvegarde, écran des niveaux */
   assert.match(html, /id="coursov" role="dialog" aria-modal="true" aria-labelledby="courstitre"/);

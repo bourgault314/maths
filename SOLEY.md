@@ -165,6 +165,15 @@ Batterie (script Playwright Python, à conserver dans `tests/`) :
   empilées dessous ; fraction citée dans une phrase = empilée en petit) ; les chaînes
   d'égalités se coupent avant un « = », jamais au milieu d'une somme (Coup de pouce
   compris). Les cours sont courts : la phrase-bilan ne vit que dans la carte de savoir.
+- Défis (14/08 au soir, décision DÉFINITIVE — ferme la question ré-ouverte le matin) :
+  les défis se jouent sans aucune aide, et ils ne doivent jamais être bloquants.
+  Contrainte de conception du chantier 4.
+- Scène des cours v9 (14/08, idée de Gwenael — RETOUCHE-ZOOM-v9.md à la racine) : la
+  cascade devient VERTICALE, chaque rayon terminal arrive juste au-dessus de SA case
+  de la dernière rangée — le mur se lit comme un ZOOM sur les rayons (même axe pour la
+  largeur des rayons et la longueur des cases). Phrase-pont : « Le mur, c'est un zoom
+  sur tes rayons : chaque part de lumière devient un morceau de la bande. » Traits
+  pointillés de zoom en option (à juger sur capture) ; alignement garanti par test.
 - Mention de Refraction (14/08, textes de Gwenael au caractère près) : mention COURTE au
   pied de la page du jeu (« Solèy est librement adapté de Refraction (Center for Game
   Science, université de Washington, 2010). ») ; mention COMPLÈTE dans le panneau
@@ -350,5 +359,14 @@ commence par "use strict"; et le partage se fait par la portée globale.
   haut (sceneCours, étiquettes étagées cEtiq, quatre rayons terminaux re-comptés),
   mur de bandes en bas, phrase-pont fixe entre les deux, TOUT synchronisé étape par
   étape avec le texte (tE(i), jamais de rayon entier seul à l'écran). Batterie et
-  node re-verts.
+  node re-verts. PR #357 fusionnée (squash 58054d3e) PENDANT le push de cette passe →
+  commit v8 reporté proprement (branche fraîche + cherry-pick) en PR #358, fusionnée
+  à son tour ; les deux fusions vérifiées en ligne (7/7 fichiers aux octets, batterie
+  complète verte sur mathsgo.re).
+- 2026-08-14 : PASSE 7 (v9, RETOUCHE-ZOOM-v9.md entré au dépôt) : cascade VERTICALE —
+  soleil en haut, rayons terminaux alignés chacun au-dessus de SA case (une seule
+  image : le mur est le zoom des rayons), traits pointillés de zoom en option,
+  nouvelle phrase-pont, contrôle d'alignement automatique (node + batterie).
+  Décision « défis sans aucune aide, jamais bloquants » gravée (DESIGN pilier 2,
+  §6, addendum spec).
 - (à compléter à chaque session)
