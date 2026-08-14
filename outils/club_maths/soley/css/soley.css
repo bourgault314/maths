@@ -69,7 +69,8 @@
     color:#ffe4c9cc;background:#00000030;border-radius:10px;padding:6px 10px;margin:0 0 12px;}
   #stlegende span{display:inline-flex;align-items:center;gap:4px;}
   #stlegende .sunico{flex:0 0 auto;}
-  #lvgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(72px,1fr));gap:10px;}
+  /* rangées égales : toutes les cases d'un monde gardent exactement la même taille */
+  #lvgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(72px,1fr));gap:10px;grid-auto-rows:1fr;}
   .lvcard{
     border:2px solid #ffffff30;background:#00000038;border-radius:14px;
     padding:10px 4px 8px;text-align:center;cursor:pointer;color:var(--ink);
@@ -80,12 +81,14 @@
   .lvcard.done{border-color:var(--gold);background:#ffc94d24;}
   .lvcard.done .st{color:var(--gold);}
   /* niveaux-découverte (chantier « Comprendre ») : badge sur la carte,
-     « Revoir le cours » sous la carte une fois le niveau réussi */
+     « Revoir le cours » sous la carte une fois le niveau réussi ; le pied est
+     réservé sur toute la grille pour que les cases restent identiques */
   .lvcell{display:flex;flex-direction:column;gap:5px;min-width:0;}
-  .lvcell .lvcard{position:relative;width:100%;}
+  .lvcell .lvcard{position:relative;width:100%;flex:1;}
   .lvdec{position:absolute;top:4px;right:4px;line-height:0;}
-  .lvcours{border:1.5px solid #ffc94d66;background:#ffc94d14;color:var(--gold2);border-radius:9px;
-    padding:4px 5px;font-size:10.5px;font-weight:800;cursor:pointer;min-height:26px;line-height:1.2;}
+  .lvpied{flex:0 0 38px;height:38px;display:flex;align-items:stretch;}
+  .lvcours{flex:1;border:1.5px solid #ffc94d66;background:#ffc94d14;color:var(--gold2);border-radius:9px;
+    padding:2px 4px;font-size:10.5px;font-weight:800;cursor:pointer;line-height:1.2;}
   /* ============ JEU ============ */
   #play{min-height:100vh;flex-direction:column;padding:8px;gap:8px;max-width:640px;margin:0 auto;}
   #play.screen{display:none;}
@@ -115,9 +118,15 @@
   .href svg{width:100%;display:block;}
   .heq{display:flex;align-items:center;justify-content:center;flex-wrap:wrap;color:#fff;font-size:18px;font-weight:800;row-gap:5px;}
   .heq .op{margin:0 7px;}
+  /* un membre d'égalité ne se coupe jamais : le retour à la ligne tombe avant un = */
+  .heqseg{display:inline-flex;align-items:center;white-space:nowrap;}
   .frac{display:inline-flex;flex-direction:column;text-align:center;margin:0 4px;line-height:1.1;}
   .frac .fn{border-bottom:2.5px solid #fff;padding:0 6px 2px;}
   .frac .fd{padding:2px 6px 0;}
+  /* fraction empilée citée DANS une phrase (règle R5) : petite, calée au milieu */
+  .fracin{font-size:.72em;font-weight:800;vertical-align:middle;margin:0 3px;line-height:1.05;}
+  .fracin .fn{border-bottom-width:1.5px;padding:0 3px 1px;}
+  .fracin .fd{padding:1px 3px 0;}
   #hintclose{display:block;margin:12px auto 0;background:var(--gold);color:#4a2b10;border:none;border-radius:11px;
     padding:10px 20px;font-weight:800;font-size:14px;cursor:pointer;}
   /* Point de cours (chantier « Comprendre », lot 1) : panneau plein écran sur le

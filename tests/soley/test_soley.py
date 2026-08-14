@@ -575,14 +575,23 @@ def principal():
         classe9 = page.evaluate("""() => {
           const bts = [...document.querySelectorAll('.lvcours')].map(b => b.dataset.cours);
           const badges = document.querySelectorAll('.lvcard .lvdec').length;
+          const hCartes = new Set([...document.querySelectorAll('#lvgrid .lvcard')]
+            .map(c => Math.round(c.getBoundingClientRect().height))).size;
+          const hCellules = new Set([...document.querySelectorAll('#lvgrid .lvcell')]
+            .map(c => Math.round(c.getBoundingClientRect().height))).size;
+          const pieds = document.querySelectorAll('#lvgrid .lvpied').length;
           const bt = document.querySelector(".lvcours[data-cours='demi']");
           if (bt) bt.click();
-          return { bts, badges, ouvert: document.getElementById('coursov').classList.contains('show'),
+          return { bts, badges, hCartes, hCellules, pieds,
+            ouvert: document.getElementById('coursov').classList.contains('show'),
             titre: document.getElementById('courstitre').textContent };
         }""")
         section("T9 mode classe : badges découverte + « Revoir le cours » sans réussite",
                 classe9["bts"] == ["demi", "tiers", "quart"] and classe9["badges"] == 3
                 and classe9["ouvert"] and classe9["titre"] == "Le demi", "")
+        section("T9 cartes uniformes : toutes les cases du lagon ont la même taille (pied réservé)",
+                classe9["hCartes"] == 1 and classe9["hCellules"] == 1 and classe9["pieds"] == 9,
+                f"hauteurs cartes={classe9['hCartes']}, cellules={classe9['hCellules']}, pieds={classe9['pieds']}")
         ctx7.close()
 
         # T9.9 + T9.11 — stabilité 320 px et 402 px : accueil, panneau du cours,

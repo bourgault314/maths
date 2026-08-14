@@ -113,11 +113,27 @@ function sceneFor(line){
   if(ops.every(o=>o.op==='÷'))return sceneDivTree(pf(lhs[0]),ops.map(o=>o.n));
   return sceneMul(pf(lhs[0]),ops[0].n);
 }
+/* Une chaîne d'égalités se coupe proprement AVANT un « = » (retour de Gwenael,
+   14/08) : chaque membre est un segment insécable, jamais de saut de ligne au
+   milieu d'une somme. */
+function eqHTML(line){
+  let h='';
+  line.split(' = ').forEach((expr,k)=>{
+    let seg=k?fracHTML('='):'';
+    expr.split(' ').filter(Boolean).forEach(t=>{seg+=fracHTML(t);});
+    h+=`<span class="heqseg">${seg}</span>`;
+  });
+  return h;
+}
+/* Règle R5 (14/08) : les fractions citées dans une phrase s'écrivent empilées,
+   en petit, dans le texte — jamais en slash dans un cours. */
+function texteMath(t){
+  return t.replace(/(\d+)\/(\d+)/g,
+    '<span class="frac fracin"><span class="fn">$1</span><span class="fd">$2</span></span>');
+}
 function calcLineHTML(line){
   const sc=sceneFor(line);
-  let eq='';
-  line.split(' ').filter(Boolean).forEach(t=>{eq+=fracHTML(t);});
-  return `<div class="hline"><svg class="hsvg" viewBox="0 0 340 ${sc.h}">${sc.svg}</svg><div class="heq">${eq}</div></div>`;
+  return `<div class="hline"><svg class="hsvg" viewBox="0 0 340 ${sc.h}">${sc.svg}</svg><div class="heq">${eqHTML(line)}</div></div>`;
 }
 
 /* ===== Points de cours (chantier « Comprendre », lot 1) =====
@@ -171,26 +187,26 @@ function sceneCascade(sc){
   return {h:H,svg:s,stageFin,fin};
 }
 let coursId=null, coursApresVictoire=false, coursRetour=null;
-function eqCoursHTML(line,t0){
-  let eq='';
-  line.split(' ').filter(Boolean).forEach(t=>{eq+=fracHTML(t);});
-  return `<div class="heq ceq cligne" style="--win-delay:${t0}s">${eq}</div>`;
-}
 function construireCours(id){
   const c=COURS[id];
   if(!c)return '';
   const sc=sceneCascade(c.scene);
   let h=`<div class="cscene"><svg class="hsvg" viewBox="0 0 340 ${sc.h}" role="img" aria-label="La cascade de partage, dessinée avec les rayons du jeu">${sc.svg}</svg></div>`;
-  c.calc.forEach((l,k)=>{h+=eqCoursHTML(l,sc.stageFin[Math.min(k,sc.stageFin.length-1)]);});
-  const pas=Math.max(.5,sc.fin/c.lignes.length);
-  c.lignes.forEach((t,i)=>{h+=`<p class="cligne" style="--win-delay:${(.4+i*pas).toFixed(2)}s">${t}</p>`;});
+  /* déroulé en étapes : l'explication courte au-dessus, l'écriture étagée dessous
+     (règle R5), au rythme du dessin de la cascade */
+  const pas=Math.max(.7,sc.fin/Math.max(1,c.etapes.length));
+  c.etapes.forEach((e,i)=>{
+    const t0=.5+i*pas;
+    if(e.t)h+=`<p class="cligne" style="--win-delay:${t0.toFixed(2)}s">${texteMath(e.t)}</p>`;
+    if(e.eq)h+=`<div class="heq ceq cligne" style="--win-delay:${(t0+.15).toFixed(2)}s">${eqHTML(e.eq)}</div>`;
+  });
   if(c.predire){
     /* règle R3 : la question s'affiche SANS sa réponse — la réponse n'entre dans
        la page qu'au toucher de « À ton avis… » (brancherPredire). */
-    h+=`<div class="cpredire cligne" style="--win-delay:${(sc.fin+.5).toFixed(2)}s"><p>${c.predire.question}</p><button type="button" id="cpredirebtn">À ton avis…</button></div>`;
+    h+=`<div class="cpredire cligne" style="--win-delay:${(sc.fin+.5).toFixed(2)}s"><p>${texteMath(c.predire.question)}</p><button type="button" id="cpredirebtn">À ton avis…</button></div>`;
   }
   /* règle R4 : la phrase-carte est une vraie petite carte — la trace écrite */
-  h+=`<div class="csavoir cligne" style="--win-delay:${(sc.fin+(c.predire?1.1:.6)).toFixed(2)}s"><div class="csavoirtitre">Carte de savoir</div><p>${c.carte}</p></div>`;
+  h+=`<div class="csavoir cligne" style="--win-delay:${(sc.fin+(c.predire?1.1:.6)).toFixed(2)}s"><div class="csavoirtitre">Carte de savoir</div><p>${texteMath(c.carte.t)}</p>${c.carte.eq?`<div class="heq ceq">${eqHTML(c.carte.eq)}</div>`:''}</div>`;
   return h;
 }
 function brancherPredire(id){
@@ -199,7 +215,7 @@ function brancherPredire(id){
   bt.addEventListener('click',()=>{
     const p=document.createElement('p');
     p.className='creponse';
-    p.textContent=COURS[id].predire.reponse;
+    p.innerHTML=texteMath(COURS[id].predire.reponse);
     bt.replaceWith(p);
   },{once:true});
 }

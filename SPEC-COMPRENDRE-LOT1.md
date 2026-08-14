@@ -404,6 +404,31 @@ Validés par Gwenael (« d'accord avec tout le reste ») :
 Restant : rien — **A4 validé le 14/08** (textes du §5, ajustés par la règle du
 gâteau). **FEU VERT DONNÉ : cette spécification est bonne pour la session Code.**
 
+> **Addendum v7 (14/08, retours de Gwenael sur les captures de la session Code —
+> PR #357).** Ces retours, donnés en direct, amendent le §5 et le §6 :
+>
+> - **R5 — L'écriture mathématique est toujours étagée et séparée du texte.**
+>   Dans les points de cours, plus aucune fraction « en slash » : chaque égalité
+>   vit sur sa propre ligne, en fractions empilées, avec son explication courte
+>   au-dessus ; une fraction citée dans une phrase s'écrit empilée, en petit,
+>   dans le texte. Une chaîne d'égalités se coupe AVANT un « = » (Coup de pouce
+>   compris), jamais au milieu d'une somme.
+> - **Les cours s'allègent** : le schéma et les écritures portent le cours, la
+>   narration et les redites disparaissent ; la phrase-bilan ne vit QUE dans la
+>   carte de savoir. Textes v7 dans la table COURS de levels.js — à valider par
+>   Gwenael sur captures.
+> - **C2-2 (comparaison des épaisseurs demi/tiers) est retirée du cours du
+>   tiers** : l'idée resservira là où elle s'utilise (les passes étroites —
+>   futur cours de la comparaison, monde des pitons, table §10).
+> - **Écran des niveaux : toutes les cases d'un monde gardent la même taille** —
+>   l'espace du bouton « Revoir le cours » est réservé sous toute la grille dès
+>   qu'un cours y est disponible.
+> - Question OUVERTE (posée par Gwenael) : l'écriture étagée rentrerait-elle
+>   aussi SUR LE PLATEAU (maisons, étiquettes de rayons, scènes) ? Maquette
+>   comparative fournie ; décision à prendre, hors lot 1.
+> - Rappel réaffirmé : pas d'aide sur les niveaux les plus durs / défis à venir
+>   (chantier 4, déjà consigné au §11).
+
 Ajouts didactiques de Claude (v4, sur mandat de Gwenael « tu es aussi l'aide
 didactique — s'il y a mieux à faire, on fait ») :
 - cascade animée au rythme du texte (revivre le partage au ralenti) ; prédire à

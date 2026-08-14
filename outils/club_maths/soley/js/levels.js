@@ -725,54 +725,49 @@ const CALC={
  "Les verrous du cirque":["1 ÷ 2 = 1/2","1/2 + 1/2 = 2/2 = 1"]
 };
 
-/* ===== Points de cours (chantier « Comprendre », lot 1 — SPEC-COMPRENDRE-LOT1.md §5) =====
-   Textes validés par Gwenael, au caractère près — ne rien « corriger » ici.
+/* ===== Points de cours (chantier « Comprendre », lot 1 — SPEC-COMPRENDRE-LOT1.md §5,
+   textes v7 des retours de Gwenael sur captures du 14/08 : cours allégés, règle R5) =====
    scene = la cascade de partage (règle R2) : divs = les étages de prismes,
-   comp = rayons posés côte à côte pour comparer les épaisseurs à l'œil (C2-2). */
+   comp = rayons côte à côte pour comparer les épaisseurs (réservé aux futurs cours).
+   etapes = le déroulé : t = l'explication (courte), eq = l'écriture mathématique qui
+   vit SÉPARÉE du texte, en fractions empilées (règle R5 — jamais de slash au cours). */
 const COURS={
  demi:{
   titre:"Le demi",
   scene:{divs:[2]},
-  calc:["1 ÷ 2 = 1/2"],
-  lignes:[
-   "Regarde ce que tu viens de faire : un rayon entier est entré dans le prisme, deux rayons plus fins en sont sortis.",
-   "Les deux parts sont exactement égales : chacune est une moitié. On écrit 1/2, on lit « un demi ».",
-   "Partager, c'est diviser : 1 ÷ 2 = 1/2.",
-   "Le nombre du bas — le dénominateur — raconte le partage : coupé en 2 parts égales.",
-   "La preuve que chaque part vaut un demi ? Remets les deux ensemble : 1/2 + 1/2 = 2/2 = 1. Rien ne s'est perdu."
+  etapes:[
+   {t:"Deux rayons sont sortis du prisme, exactement égaux : chacun est une moitié. On écrit 1/2, on lit « un demi »."},
+   {t:"Partager, c'est diviser :",eq:"1 ÷ 2 = 1/2"},
+   {t:"Le nombre du bas — le dénominateur — raconte le partage : coupé en 2 parts égales."},
+   {t:"Remets les deux moitiés ensemble : rien ne s'est perdu.",eq:"1/2 + 1/2 = 2/2 = 1"}
   ],
-  carte:"Partager 1 en 2 parts égales : chaque part vaut 1/2."
+  carte:{t:"Partager 1 en 2 parts égales : chaque part vaut 1/2."}
  },
  tiers:{
   titre:"Le tiers",
-  scene:{divs:[3],comp:[[1,2],[1,3]]},
-  calc:["1 ÷ 3 = 1/3"],
-  lignes:[
-   "Trois maisons, trois parts égales : le prisme a partagé le rayon en tiers. On écrit 1/3, on lit « un tiers ». 1 ÷ 3 = 1/3.",
-   "Compare les épaisseurs : 1/3 est PLUS FIN que 1/2. Surprenant ? 3 est plus grand que 2… mais partager entre 3, c'est donner moins à chacun.",
-   "Vérifie : les trois tiers réunis refont le rayon entier. 1/3 + 1/3 + 1/3 = 3/3 = 1."
+  scene:{divs:[3]},
+  etapes:[
+   {t:"Trois maisons, trois parts égales : le prisme a partagé le rayon en tiers. On écrit 1/3, on lit « un tiers ».",eq:"1 ÷ 3 = 1/3"},
+   {t:"Vérifie : les trois tiers réunis refont le rayon entier.",eq:"1/3 + 1/3 + 1/3 = 3/3 = 1"}
   ],
   predire:{
    question:"Un prisme ÷4 fabriquerait des quarts, encore plus fins. Mais ce prisme n'existe pas dans le lagon… Comment faire des quarts sans lui ?",
    reponse:"La réponse t'attend au prochain niveau."
   },
-  carte:"Partager 1 en 3 parts égales : chaque part vaut 1/3. Plus il y a de parts, plus chaque part est petite."
+  carte:{t:"Partager 1 en 3 parts égales : chaque part vaut 1/3. Plus il y a de parts, plus chaque part est petite."}
  },
  quart:{
   titre:"Le quart",
   scene:{divs:[2,2]},
-  calc:["1 ÷ 2 = 1/2","1/2 ÷ 2 = 1/4"],
-  lignes:[
-   "Quatre maisons à 1/4, et seulement des prismes ÷2 dans la boîte… et tu as trouvé : couper, puis couper encore.",
-   "Premier prisme : le rayon entier devient deux moitiés. 1 ÷ 2 = 1/2.",
-   "Deuxième coupe : chaque moitié, partagée en 2, donne deux quarts. 1/2 ÷ 2 = 1/4.",
-   "La moitié de la moitié, c'est le quart.",
-   "Compte tes rayons : quatre quarts, et 1/4 + 1/4 + 1/4 + 1/4 = 4/4 = 1. Le rayon entier est bien là, partagé en quatre."
+  etapes:[
+   {t:"La moitié d'un rayon, c'est un demi-rayon.",eq:"1 ÷ 2 = 1/2"},
+   {t:"La moitié d'un demi-rayon, c'est un quart de rayon.",eq:"1/2 ÷ 2 = 1/4"},
+   {t:"Compte tes rayons : les quatre quarts refont le rayon entier.",eq:"1/4 + 1/4 + 1/4 + 1/4 = 4/4 = 1"}
   ],
   predire:{
    question:"Et si tu recoupais un quart en 2 ?",
    reponse:"1/8 : la moitié du quart. Ce petit rayon-là t'attend dans la forêt…"
   },
-  carte:"La moitié de la moitié, c'est le quart : 1/2 ÷ 2 = 1/4."
+  carte:{t:"La moitié de la moitié, c'est le quart.",eq:"1/2 ÷ 2 = 1/4"}
  }
 };

@@ -67,6 +67,10 @@ function openWorld(wid){
     `<span>${soleilRang(1,1,11)} réussi</span><span>${soleilRang(2,2,11)} tous les fruits</span><span>${soleilRang(3,3,11)} nombre de pièces minimal</span>`;
   const idxs=LV.map((l,i)=>i).filter(i=>LV[i].w===wid);
   const ftype=FRW[wid];
+  /* Dès qu'un « Revoir le cours » existe dans le monde, l'espace du bouton est
+     réservé sous TOUTES les cartes : toutes les cases gardent la même taille
+     (retour de Gwenael, 14/08). */
+  const piedCours=idxs.some(i=>LV[i].dec&&(save.done[lvId(i)]||modeClasse));
   document.getElementById('lvgrid').innerHTML=idxs.map((gi,li)=>{
     const done=save.done[lvId(gi)];
     const e=etoiles(gi);
@@ -80,7 +84,7 @@ function openWorld(wid){
         <div class="num">${li+1}</div>
         <div class="st">${soleilRang(e)}${nf?`<span class="stf">${fruitMini(ftype)}${gf}/${nf}</span>`:''}</div>
       </button>
-      ${dec&&(done||modeClasse)?`<button class="lvcours" data-cours="${dec}" type="button">Revoir le cours</button>`:''}
+      ${piedCours?`<div class="lvpied">${dec&&(done||modeClasse)?`<button class="lvcours" data-cours="${dec}" type="button">Revoir le cours</button>`:''}</div>`:''}
     </div>`;
   }).join('');
   document.querySelectorAll('.lvcard').forEach(bt=>bt.addEventListener('click',()=>openLevel(+bt.dataset.i)));
@@ -153,7 +157,7 @@ document.getElementById('resetbtn').addEventListener('click',()=>{
   document.getElementById('winov').classList.remove('show');redraw();});
 document.getElementById('hintbtn').addEventListener('click',()=>{
   const L=LV[cur];
-  let html=L.hint?`<div id="hinttext">${L.hint}</div>`:'';
+  let html=L.hint?`<div id="hinttext">${texteMath(L.hint)}</div>`:'';
   const lines=CALC[L.name]||[];
   if(lines.length){
     html+=`<div class="href"><svg viewBox="0 0 340 52" aria-label="Le rayon entier vaut 1">${sSun(24,31,[1,1])}${sBeam(40,31,206,31,[1,1])}${sLbl(122,14,'1',fcol([1,1]))}<text x="216" y="36" class="sref">le rayon entier</text></svg></div>`;

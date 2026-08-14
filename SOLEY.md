@@ -160,6 +160,14 @@ Batterie (script Playwright Python, à conserver dans `tests/`) :
   affichée « …, dont ses 3 découvertes (0/3) ». Badge découverte sur les cartes —
   picto « rayon qui se partage », jamais une étoile. `?classe` déverrouille tout,
   cours compris.
+- R5 (14/08, retours de Gwenael sur captures) : dans les cours, l'écriture mathématique
+  est ÉTAGÉE et SÉPARÉE du texte (explication courte au-dessus, égalité en fractions
+  empilées dessous ; fraction citée dans une phrase = empilée en petit) ; les chaînes
+  d'égalités se coupent avant un « = », jamais au milieu d'une somme (Coup de pouce
+  compris). Les cours sont courts : la phrase-bilan ne vit que dans la carte de savoir.
+  Le slash reste sur le plateau en attendant la décision « étagé dans les maisons et
+  sur les rayons ? » (maquette fournie). Toutes les cases d'un monde gardent la même
+  taille (pied « Revoir le cours » réservé sur toute la grille).
 
 ## 7. Architecture (découpage d'août 2026, statique, sans build, GitHub Pages)
 
@@ -291,4 +299,10 @@ commence par "use strict"; et le partage se fait par la portée globale.
   T1→T9 complète verte en local (39 contrôles), node 15/15. DESIGN-SOLEY.md :
   chantier lancé au pilier 1 (guidage dégressif), « passe grand écran » retirée
   (→ pilier 4 principe 8), aide des défis ré-ouverte.
+  PASSE 2 (même jour, retours de Gwenael sur les captures — addendum v7 de la spec) :
+  règle R5 (écritures étagées séparées du texte, fractions empilées inline dans les
+  phrases, chaînes coupées avant les =), cours allégés (textes v7, bilan seulement
+  dans la carte), C2-2 réservée au futur cours des passes, cases de niveaux uniformes
+  (pied « Revoir le cours » réservé). Maquette « étagé sur le plateau ? » fournie à
+  Gwenael (décision ouverte). Batterie re-verte (40 contrôles), node 15/15.
 - (à compléter à chaque session)

@@ -434,7 +434,7 @@ test("le chantier « Comprendre » : découvertes, points de cours et règle R1"
     const lagon = LV.filter(l => l.w === 'lagon').map(l => l.name);
     const decs = LV.filter(l => l.dec).map(l => l.name + ':' + l.dec);
     const q = LV.find(l => l.name === 'Les quatre quarts');
-    const textes = id => COURS[id].lignes.join(' ');
+    const textes = id => COURS[id].etapes.map(e => (e.t || '') + ' ' + (e.eq || '')).join(' ');
     return {
       lagon, decs,
       coursIds: Object.keys(COURS),
@@ -442,7 +442,10 @@ test("le chantier « Comprendre » : découvertes, points de cours et règle R1"
       grille: q.cols + 'x' + q.rows,
       pur: q.rocks.length === 0 && q.fruits.length === 0 && !q.gates && !q.fixed,
       outils: q.tools.map(t => t.t + ':' + t.in).join(','),
-      cartes: Object.values(COURS).every(c => typeof c.carte === 'string' && c.carte.length > 20),
+      cartes: Object.values(COURS).every(c => c.carte && typeof c.carte.t === 'string' && c.carte.t.length > 20),
+      /* R5 : l'écriture mathématique vit SÉPARÉE du texte — jamais d'égalité dans une phrase */
+      separation: Object.values(COURS).every(c =>
+        c.etapes.every(e => !(e.t && e.t.includes(' = '))) && !c.carte.t.includes(' = ')),
       /* R3 : le prédire existe pour tiers et quart, pas pour demi */
       predire: ['tiers', 'quart'].every(id => COURS[id].predire
         && COURS[id].predire.question && COURS[id].predire.reponse) && !COURS.demi.predire,
@@ -476,6 +479,7 @@ test("le chantier « Comprendre » : découvertes, points de cours et règle R1"
   assert.equal(r.pur, true, "une découverte est pure : sans roche, fruit, passe ni pièce scellée");
   assert.equal(r.outils, "s2:1,s2:0,s2:2", "trois prismes ÷2, orientations de la spec §4.3");
   assert.equal(r.cartes, true);
+  assert.equal(r.separation, true, "R5 : les égalités vivent dans eq, jamais dans une phrase");
   assert.equal(r.predire, true);
   assert.deepEqual([...r.totaux], [true, true, true], "R1 : les 2/2, 3/3 et 4/4 sont écrits");
   assert.deepEqual([...r.terminaux], [2, 3, 4], "R2 : la scène C3 montre bien QUATRE rayons 1/4");
