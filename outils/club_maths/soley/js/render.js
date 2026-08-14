@@ -27,9 +27,10 @@ function pieceStatic(def){
   const ent=d=>[c-DX[d]*R,c-DY[d]*R];
   const ext=d=>[c+DX[d]*R,c+DY[d]*R];
   if(def.t==='b'){
+    /* les flèches s'arrêtent à la face du miroir, elles ne la traversent pas */
     const[ix,iy]=ent(def.in),[ox,oy]=ext(def.out);
-    s+=arrow(ix,iy,c,c,'#9fb7d8',7);
-    s+=arrow(c,c,ox,oy,'#ffc94d99',7);
+    s+=arrow(ix,iy,c-DX[def.in]*11,c-DY[def.in]*11,'#9fb7d8',7);
+    s+=arrow(c+DX[def.out]*11,c+DY[def.out]*11,ox,oy,'#ffc94d99',7);
     s+=mirrorBar(def.in,def.out);
   }else if(def.t==='s2'||def.t==='s3'){
     const[ix,iy]=ent(def.in);
@@ -58,11 +59,14 @@ function pieceFlow(def,fl){
   const ent=d=>[c-DX[d]*R,c-DY[d]*R];
   const ext=d=>[c+DX[d]*R,c+DY[d]*R];
   if(def.t==='b'&&fl.ins.length&&fl.outs.length){
-    /* réflexion NETTE : deux segments à angle droit, même épaisseur, même couleur */
+    /* réflexion NETTE : deux segments à angle droit, même épaisseur, même couleur.
+       Chaque segment recule de 0,75 × l'épaisseur : l'embout arrondi (rayon = moitié
+       de l'épaisseur) vient AFFLEURER la face du miroir sans jamais la traverser. */
     const inn=fl.ins[0],o=fl.outs[0];
     const[ix,iy]=ent(inn.dir),[ox,oy]=ext(o.dir);
-    s+=`<line class="beampath" data-part="in" x1="${ix}" y1="${iy}" x2="${c}" y2="${c}" stroke="${fcol(inn.val)}" stroke-width="${fwidth(inn.val)}" style="filter:drop-shadow(0 0 5px ${fcol(inn.val)})"/>`;
-    s+=`<line class="beampath" data-part="out" x1="${c}" y1="${c}" x2="${ox}" y2="${oy}" stroke="${fcol(o.val)}" stroke-width="${fwidth(o.val)}" style="filter:drop-shadow(0 0 5px ${fcol(o.val)})"/>`;
+    const rIn=fwidth(inn.val)*0.75, rOut=fwidth(o.val)*0.75;
+    s+=`<line class="beampath" data-part="in" x1="${ix}" y1="${iy}" x2="${c-DX[inn.dir]*rIn}" y2="${c-DY[inn.dir]*rIn}" stroke="${fcol(inn.val)}" stroke-width="${fwidth(inn.val)}" style="filter:drop-shadow(0 0 5px ${fcol(inn.val)})"/>`;
+    s+=`<line class="beampath" data-part="out" x1="${c+DX[o.dir]*rOut}" y1="${c+DY[o.dir]*rOut}" x2="${ox}" y2="${oy}" stroke="${fcol(o.val)}" stroke-width="${fwidth(o.val)}" style="filter:drop-shadow(0 0 5px ${fcol(o.val)})"/>`;
     s+=mirrorBar(inn.dir,o.dir);
   }else{
     fl.ins.forEach(inn=>{
