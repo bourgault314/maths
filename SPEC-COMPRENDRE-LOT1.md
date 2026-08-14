@@ -423,9 +423,10 @@ gâteau). **FEU VERT DONNÉ : cette spécification est bonne pour la session Cod
 > - **Écran des niveaux : toutes les cases d'un monde gardent la même taille** —
 >   l'espace du bouton « Revoir le cours » est réservé sous toute la grille dès
 >   qu'un cours y est disponible.
-> - Question OUVERTE (posée par Gwenael) : l'écriture étagée rentrerait-elle
->   aussi SUR LE PLATEAU (maisons, étiquettes de rayons, scènes) ? Maquette
->   comparative fournie ; décision à prendre, hors lot 1.
+> - TRANCHÉ sur maquette (14/08) : l'écriture étagée passe AUSSI sur le plateau —
+>   maisons et étiquettes de rayons (chiffres un peu grossis), et les étiquettes
+>   des scènes en cascade des cours. Restent en slash, à juger sur téléphone :
+>   les passes étroites (≤1/2) et les badges des soleils spéciaux (très petits).
 > - Rappel réaffirmé : pas d'aide sur les niveaux les plus durs / défis à venir
 >   (chantier 4, déjà consigné au §11).
 

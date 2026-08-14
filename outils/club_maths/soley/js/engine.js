@@ -147,6 +147,20 @@ function cDraw(x1,y1,x2,y2,f,t0,dur,term){
   return `<g class="cdraw"${term?' data-terminal="1"':''} style="--win-length:${len}px;--win-duration:${dur}s;--win-delay:${t0}s">${sBeam(x1,y1,x2,y2,f)}</g>`;
 }
 const cFade=(t0,inner)=>`<g class="cfade" style="--win-delay:${t0}s">${inner}</g>`;
+/* Étiquette de fraction ÉTAGÉE dans les scènes des cours (décision de Gwenael,
+   14/08) : numérateur / barre / dénominateur autour de l'ancienne ligne de base. */
+function cLblFrac(x,y,f,fs){
+  if(f[1]===1)return sLbl(x,y,fstr(f),fcol(f),fs);
+  const c=fcol(f), k=fs||16, fpx=Math.round(k*.88);
+  const demi=(String(f[0]).length>1||String(f[1]).length>1)?11:7;
+  const yb=(y-k*.25).toFixed(1);
+  return `<g>`+
+    sLbl(x,y-Math.round(k*.45),String(f[0]),c,fpx)+
+    `<line x1="${x-demi}" y1="${yb}" x2="${x+demi}" y2="${yb}" stroke="#101a33" stroke-width="4.5"/>`+
+    `<line x1="${x-demi+1}" y1="${yb}" x2="${x+demi-1}" y2="${yb}" stroke="${c}" stroke-width="2"/>`+
+    sLbl(x,y+Math.round(k*.75),String(f[1]),c,fpx)+
+  `</g>`;
+}
 function sceneCascade(sc){
   const divs=sc.divs, deux=divs.length===2, n1=divs[0];
   const cy=deux?100:(n1===3?75:60);
@@ -164,21 +178,21 @@ function sceneCascade(sc){
   ys1.forEach((y,i)=>{s+=cDraw(p1+15,cy,x1,y,f1,t1+i*.05,.8,!deux);});
   let stageFin,fin;
   if(!deux){
-    ys1.forEach(y=>{s+=cFade(fin1,sLbl(318,y+6,fstr(f1),fcol(f1),16));});
+    ys1.forEach(y=>{s+=cFade(fin1,cLblFrac(318,y+4,f1,16));});
     stageFin=[fin1];fin=2.1;
   }else{
     const p2=218, f2=fdiv(f1,divs[1]), t2=2.25, fin2=3.05, off=[-24,24];
-    ys1.forEach(y=>{s+=cFade(fin1,sLbl((p1+15+x1)/2,y<cy?y-10:y+22,fstr(f1),fcol(f1),15));});
+    ys1.forEach(y=>{s+=cFade(fin1,cLblFrac((p1+15+x1)/2,y<cy?y-12:y+20,f1,15));});
     ys1.forEach(y=>{s+=cFade(2.0,sTile(p2,y,'÷'+divs[1]));});
     ys1.forEach((y,i)=>{off.forEach((o,j)=>{s+=cDraw(p2+15,y,xFin,y+o,f2,t2+(i*2+j)*.05,.8,true);});});
-    ys1.forEach(y=>{off.forEach(o=>{s+=cFade(fin2,sLbl(318,y+o+5,fstr(f2),fcol(f2),15));});});
+    ys1.forEach(y=>{off.forEach(o=>{s+=cFade(fin2,cLblFrac(318,y+o+3,f2,15));});});
     stageFin=[fin1,fin2];fin=3.2;
   }
   if(sc.comp){
-    /* comparaison à l'œil (support de C2-2) : les rayons côte à côte, vraies épaisseurs */
+    /* comparaison à l'œil (réservé aux futurs cours) : rayons côte à côte, vraies épaisseurs */
     sc.comp.forEach((f,i)=>{
       const y=H+22+i*30;
-      s+=cFade(fin+.15+i*.3,sLbl(34,y+6,fstr(f),fcol(f),15));
+      s+=cFade(fin+.15+i*.3,cLblFrac(34,y+4,f,15));
       s+=cDraw(64,y,xFin,y,f,fin+.2+i*.3,.5);
     });
     H+=22+sc.comp.length*30+4;

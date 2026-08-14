@@ -165,9 +165,14 @@ Batterie (script Playwright Python, à conserver dans `tests/`) :
   empilées dessous ; fraction citée dans une phrase = empilée en petit) ; les chaînes
   d'égalités se coupent avant un « = », jamais au milieu d'une somme (Coup de pouce
   compris). Les cours sont courts : la phrase-bilan ne vit que dans la carte de savoir.
-  Le slash reste sur le plateau en attendant la décision « étagé dans les maisons et
-  sur les rayons ? » (maquette fournie). Toutes les cases d'un monde gardent la même
-  taille (pied « Revoir le cours » réservé sur toute la grille).
+  DÉCISION SUR MAQUETTE (14/08) : l'écriture étagée passe AUSSI sur le plateau —
+  maisons (numérateur/barre/dénominateur dans la façade) et étiquettes de rayons
+  (chiffres 20 px, un peu plus gros que la maquette, à la demande de Gwenael), ainsi
+  que les étiquettes des scènes en cascade des cours. Restent en slash pour l'instant
+  (très petits, à juger sur téléphone) : les passes étroites (≤1/2) et les badges des
+  soleils spéciaux. Les écritures non fractionnaires (1, 2, 0,5, 25 %…) ne changent
+  pas. Toutes les cases d'un monde gardent la même taille (pied « Revoir le cours »
+  réservé sur toute la grille).
 
 ## 7. Architecture (découpage d'août 2026, statique, sans build, GitHub Pages)
 
@@ -305,4 +310,9 @@ commence par "use strict"; et le partage se fait par la portée globale.
   dans la carte), C2-2 réservée au futur cours des passes, cases de niveaux uniformes
   (pied « Revoir le cours » réservé). Maquette « étagé sur le plateau ? » fournie à
   Gwenael (décision ouverte). Batterie re-verte (40 contrôles), node 15/15.
+  PASSE 3 (même jour) : Gwenael valide la maquette — écriture étagée SUR LE PLATEAU
+  (maisonTxtSVG et beamLblSVG dans render.js, cLblFrac pour les cascades des cours ;
+  chiffres des rayons à 20 px « un peu plus gros ») ; slash conservé sur les passes
+  étroites et les badges de soleils (à juger sur téléphone). Captures au format
+  téléphone (390×844, échelle 3) fournies pour prévisualiser la taille réelle.
 - (à compléter à chaque session)

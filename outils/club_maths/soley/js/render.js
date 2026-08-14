@@ -184,11 +184,35 @@ function decouverteIco(taille=15){
     <line x1="11" y1="12" x2="18.4" y2="16.4" stroke="#ffb347" stroke-width="2" stroke-linecap="round"/>
   </svg>`;
 }
+/* Écriture étagée sur le plateau (décision de Gwenael, 14/08, sur maquette) :
+   les fractions des maisons et des rayons se dessinent numérateur / barre /
+   dénominateur ; les autres écritures (1, 2, 0,5, 25 %…) restent telles quelles. */
+function maisonTxtSVG(txt){
+  const m=txt.match(/^(\d+)\/(\d+)$/);
+  if(!m){
+    const fs=txt.length>=5?18:(txt.length>=4?21:29);
+    return `<text class="tneed" x="55" y="79" font-size="${fs}">${txt}</text>`;
+  }
+  const large=m[1].length>1||m[2].length>1;
+  const fs=large?13:16, demi=large?13:9;
+  return `<g class="tneed">`+
+    `<text x="55" y="70" font-size="${fs}">${m[1]}</text>`+
+    `<line x1="${55-demi}" y1="74.5" x2="${55+demi}" y2="74.5" stroke="#3b2a17" stroke-width="2.5"/>`+
+    `<text x="55" y="87.5" font-size="${fs}">${m[2]}</text></g>`;
+}
+function beamLblSVG(id,x,y,val){
+  if(val[1]===1)return `<text class="beamlbl" data-seg="${id}" x="${x}" y="${y}" fill="${fcol(val)}">${fstr(val)}</text>`;
+  const c=fcol(val), demi=(String(val[0]).length>1||String(val[1]).length>1)?15:11;
+  return `<g class="beamlbl" data-seg="${id}" fill="${c}">`+
+    `<text x="${x}" y="${y-13}" style="font-size:20px">${val[0]}</text>`+
+    `<line x1="${x-demi}" y1="${y-8.5}" x2="${x+demi}" y2="${y-8.5}" stroke="#101a33" stroke-width="5.5"/>`+
+    `<line x1="${x-demi+1}" y1="${y-8.5}" x2="${x+demi-1}" y2="${y-8.5}" stroke="${c}" stroke-width="2.5"/>`+
+    `<text x="${x}" y="${y+9}" style="font-size:20px">${val[1]}</text></g>`;
+}
 function targetSVG(t,stat,label='',index=''){
   const px=t.x*CS,py=t.y*CS;
   const lit=stat&&stat.st==='ok', bad=stat&&(stat.st==='wrong'||stat.st==='multi');
   const txt=t.disp||fstr(t.need);
-  const fs=txt.length>=5?18:(txt.length>=4?21:29);
   /* Lambrequins v2 : vraie dentelle créole en bordure de toit — festons suspendus
      terminés par une perle, silhouette franche sans surcharger la petite maison. */
   let lamb=`<rect x="12" y="40" width="76" height="3.6" rx="1.4" fill="#fdf6ec"/>`;
@@ -205,7 +229,7 @@ function targetSVG(t,stat,label='',index=''){
     ${lamb}
     <rect x="23" y="61" width="12" height="27" rx="2" fill="${lit?'#ffc94d':'#7a5230'}"/>
     <rect x="70" y="53" width="11" height="10" rx="1.5" fill="${lit?'#ffc94d':'#b09b7d'}"/>
-    <text class="tneed" x="55" y="79" font-size="${fs}">${txt}</text>
+    ${maisonTxtSVG(txt)}
     ${label?`<circle cx="84" cy="17" r="11" fill="#101a33" stroke="#ffc94d" stroke-width="2"/><text x="84" y="22" text-anchor="middle" font-size="14" font-weight="900" fill="#fff3c4">${label}</text>`:''}
   </g>`;
 }
@@ -262,7 +286,7 @@ function redraw(){
     const len=Math.hypot(x2-x1,y2-y1); if(len<80)return;
     const k=Math.min(0.5,60/len);
     const lx=x1+(x2-x1)*k,ly=y1+(y2-y1)*k-12-fwidth(sg.val)/2;
-    s+=`<text class="beamlbl" data-seg="${sg.id}" x="${lx}" y="${ly}" fill="${fcol(sg.val)}">${fstr(sg.val)}</text>`;
+    s+=beamLblSVG(sg.id,lx,ly,sg.val);
   });
   L.suns.forEach(sun=>{s+=sunSVG(sun);});
   L.targets.forEach((t,i)=>{s+=targetSVG(t,sim.stats.find(st=>st.i===i),L.targets.length>1?'ABCDEF'[i]:'',i);});

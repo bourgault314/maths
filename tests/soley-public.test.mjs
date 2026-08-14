@@ -503,6 +503,27 @@ test("le chantier « Comprendre » : découvertes, points de cours et règle R1"
   assert.match(css, /#coursov\.show\{display:flex;\}/);
   assert.match(css, /\.csavoir\{/);
   assert.match(css, /\.lvcours\{/);
+  /* écriture étagée SUR LE PLATEAU (décision du 14/08 sur maquette) : maisons et
+     rayons en fractions empilées, les autres écritures inchangées */
+  vm.runInContext(js.render, context);
+  const plateau = vm.runInContext(`(() => ({
+    maison: targetSVG({x:0, y:0, need:[1,4]}, null, '', ''),
+    disp: targetSVG({x:0, y:0, need:[1,2], disp:"0,5"}, null, '', ''),
+    douze: targetSVG({x:0, y:0, need:[1,12]}, null, '', ''),
+    rayon: beamLblSVG(7, 100, 50, [3,4]),
+    rayonEntier: beamLblSVG(8, 100, 50, [2,1]),
+  }))()`, context);
+  assert.ok(plateau.maison.includes('<g class="tneed">') && plateau.maison.includes('y1="74.5"'),
+    "la maison 1/4 s'écrit en fraction empilée");
+  assert.match(plateau.disp, /<text class="tneed"[^>]*>0,5<\/text>/,
+    "les écritures décimales et pourcentages restent telles quelles");
+  assert.ok(plateau.douze.includes('x1="42"'), "barre élargie pour les douzièmes");
+  assert.match(plateau.rayon, /^<g class="beamlbl" data-seg="7"/);
+  assert.ok(plateau.rayon.includes("font-size:20px") && (plateau.rayon.match(/<text/g) || []).length === 2,
+    "l'étiquette de rayon 3/4 est empilée, chiffres à 20 px");
+  assert.match(plateau.rayonEntier, /<text class="beamlbl"[^>]*>2<\/text>/,
+    "un rayon entier garde son étiquette simple");
+  assert.match(js.engine, /function cLblFrac/);
 });
 
 test("le paysage mobile et le plein écran utilisent réellement tout le viewport", () => {
