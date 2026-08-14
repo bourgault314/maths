@@ -69,7 +69,8 @@
     color:#ffe4c9cc;background:#00000030;border-radius:10px;padding:6px 10px;margin:0 0 12px;}
   #stlegende span{display:inline-flex;align-items:center;gap:4px;}
   #stlegende .sunico{flex:0 0 auto;}
-  #lvgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(72px,1fr));gap:10px;}
+  /* rangées égales : toutes les cases d'un monde gardent exactement la même taille */
+  #lvgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(72px,1fr));gap:10px;grid-auto-rows:1fr;}
   .lvcard{
     border:2px solid #ffffff30;background:#00000038;border-radius:14px;
     padding:10px 4px 8px;text-align:center;cursor:pointer;color:var(--ink);
@@ -79,6 +80,15 @@
   .lvcard .st .stf{display:inline-flex;align-items:center;gap:2px;margin-left:4px;}
   .lvcard.done{border-color:var(--gold);background:#ffc94d24;}
   .lvcard.done .st{color:var(--gold);}
+  /* niveaux-découverte (chantier « Comprendre ») : badge sur la carte,
+     « Revoir le cours » sous la carte une fois le niveau réussi ; le pied est
+     réservé sur toute la grille pour que les cases restent identiques */
+  .lvcell{display:flex;flex-direction:column;gap:5px;min-width:0;}
+  .lvcell .lvcard{position:relative;width:100%;flex:1;}
+  .lvdec{position:absolute;top:4px;right:4px;line-height:0;}
+  .lvpied{flex:0 0 38px;height:38px;display:flex;align-items:stretch;}
+  .lvcours{flex:1;border:1.5px solid #ffc94d66;background:#ffc94d14;color:var(--gold2);border-radius:9px;
+    padding:2px 4px;font-size:10.5px;font-weight:800;cursor:pointer;line-height:1.2;}
   /* ============ JEU ============ */
   #play{min-height:100vh;flex-direction:column;padding:8px;gap:8px;max-width:640px;margin:0 auto;}
   #play.screen{display:none;}
@@ -108,11 +118,62 @@
   .href svg{width:100%;display:block;}
   .heq{display:flex;align-items:center;justify-content:center;flex-wrap:wrap;color:#fff;font-size:18px;font-weight:800;row-gap:5px;}
   .heq .op{margin:0 7px;}
+  /* un membre d'égalité ne se coupe jamais : le retour à la ligne tombe avant un = */
+  .heqseg{display:inline-flex;align-items:center;white-space:nowrap;}
   .frac{display:inline-flex;flex-direction:column;text-align:center;margin:0 4px;line-height:1.1;}
   .frac .fn{border-bottom:2.5px solid #fff;padding:0 6px 2px;}
   .frac .fd{padding:2px 6px 0;}
+  /* fraction empilée citée DANS une phrase (règle R5) : petite, calée au milieu */
+  .fracin{font-size:.72em;font-weight:800;vertical-align:middle;margin:0 3px;line-height:1.05;}
+  .fracin .fn{border-bottom-width:1.5px;padding:0 3px 1px;}
+  .fracin .fd{padding:1px 3px 0;}
   #hintclose{display:block;margin:12px auto 0;background:var(--gold);color:#4a2b10;border:none;border-radius:11px;
     padding:10px 20px;font-weight:800;font-size:14px;cursor:pointer;}
+  /* « D'où vient Solèy ? » : la mention complète de Refraction (patron du Coup de pouce) */
+  #aproposov{position:fixed;inset:0;background:#10182eb8;display:none;align-items:center;justify-content:center;z-index:75;padding:16px;}
+  #aproposov.show{display:flex;}
+  #aproposcard{background:#1c2848;border:2px solid #ffc94d55;border-radius:18px;padding:18px 16px 14px;
+    max-width:430px;width:100%;max-height:min(85vh,620px);overflow-y:auto;box-shadow:0 16px 60px #00000088;}
+  #aproposti{font-size:17px;font-weight:900;color:var(--gold);margin-bottom:6px;}
+  #aproposte{font-size:14px;line-height:1.6;color:#ffeeda;margin:0;}
+  #aproposok{display:block;margin:14px auto 0;background:var(--gold);color:#4a2b10;border:none;border-radius:11px;
+    min-height:44px;padding:10px 20px;font:inherit;font-weight:800;font-size:14px;cursor:pointer;}
+  /* Point de cours (chantier « Comprendre », lot 1) : panneau plein écran sur le
+     patron du Coup de pouce ; la cascade se dessine et le texte suit son rythme
+     (délais CSS --win-*, mêmes keyframes que la cinématique de victoire). */
+  #coursov{position:fixed;inset:0;background:#10182ecc;display:none;align-items:center;justify-content:center;z-index:70;padding:10px;}
+  #coursov.show{display:flex;}
+  #courscard{background:#1c2848;border:2px solid #ffc94d55;border-radius:18px;padding:16px 16px 12px;
+    max-width:480px;width:100%;max-height:min(94vh,860px);overflow-y:auto;box-shadow:0 16px 60px #00000088;}
+  #courssur{font-size:11px;font-weight:800;letter-spacing:1.5px;text-transform:uppercase;color:#ffd5a1;}
+  #courstitre{font-size:22px;font-weight:900;color:var(--gold);margin:1px 0 8px;}
+  #coursbody .cscene{background:#101a33;border-radius:12px;padding:8px 6px;}
+  #coursbody .cfade{opacity:0;animation:win-label .35s ease var(--win-delay) both;}
+  /* le pont rayon → bande : le rayon du jeu apparaît puis s'efface pendant que
+     la bande de l'entier se lève depuis son épaisseur */
+  #coursbody .cpont{opacity:0;animation:win-label .4s ease var(--win-delay) both,
+    cours-fondu .45s ease var(--fondu-delay) forwards;}
+  @keyframes cours-fondu{from{opacity:1}to{opacity:0}}
+  #coursbody .cleve{opacity:0;transform-box:fill-box;transform-origin:center;
+    animation:bande-leve .55s ease var(--win-delay) both;}
+  @keyframes bande-leve{from{opacity:0;transform:scaleY(.45)}to{opacity:1;transform:scaleY(1)}}
+  #coursbody .cligne{opacity:0;animation:win-label .5s ease var(--win-delay,0s) both;}
+  #coursbody p.cligne{font-size:14px;line-height:1.5;color:#ffeeda;margin:9px 2px;}
+  #coursbody .ceq{margin:10px 0 2px;}
+  .cpredire{background:#8fd0ff14;border:1.5px solid #8fd0ff55;border-radius:12px;padding:10px 12px 12px;margin:12px 0;}
+  .cpredire p{margin:0 0 10px;font-size:14px;line-height:1.5;color:#dceaff;}
+  #cpredirebtn{display:block;margin:0 auto;background:#2c3f6e;color:#dceaff;border:1.5px solid #8fd0ff88;border-radius:11px;
+    min-height:44px;padding:9px 18px;font:inherit;font-weight:800;cursor:pointer;}
+  .creponse{margin:0;font-size:14.5px;font-weight:800;color:#bfe2ff;text-align:center;animation:win-label .45s ease both;}
+  .csavoir{background:linear-gradient(160deg,#ffc94d22,#ffc94d0d);border:2px solid var(--gold);border-radius:14px;
+    padding:10px 12px 12px;margin:14px 0 4px;box-shadow:0 4px 18px #ffc94d22;}
+  .csavoirtitre{font-size:11px;font-weight:900;letter-spacing:1.5px;text-transform:uppercase;color:var(--gold);}
+  .csavoir p{margin:6px 0 0;font-size:14.5px;font-weight:700;line-height:1.5;color:#fff3c4;}
+  #coursbtns{display:flex;gap:10px;justify-content:center;margin-top:12px;}
+  #coursok{background:var(--gold);color:#4a2b10;border:none;border-radius:11px;min-height:44px;
+    padding:10px 20px;font:inherit;font-weight:800;font-size:14px;cursor:pointer;}
+  #coursrevoir{background:transparent;color:#c9d8f2;border:1.5px solid #ffffff44;border-radius:11px;min-height:44px;
+    padding:10px 16px;font:inherit;font-weight:700;font-size:13px;cursor:pointer;}
   #boardbox{position:relative;border-radius:14px;overflow:hidden;box-shadow:0 10px 40px #00000055;}
   #board{display:block;width:100%;height:auto;background:#16223f;}
   #toolbox{display:flex;gap:8px;flex-wrap:wrap;padding:9px;background:#00000042;border-radius:14px;min-height:60px;align-items:center;}

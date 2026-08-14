@@ -60,7 +60,7 @@ JS_COHERENCE = """
   const dirOk = d => Number.isInteger(d) && d >= 0 && d <= 3;
   const frOk = f => Array.isArray(f) && f.length === 2 &&
     Number.isInteger(f[0]) && Number.isInteger(f[1]) && f[0] >= 0 && f[1] >= 1;
-  if (LV.length !== 60) fails.push(`LV.length=${LV.length} au lieu de 60`);
+  if (LV.length !== 61) fails.push(`LV.length=${LV.length} au lieu de 61`);
   const cles = new Set();
   LV.forEach((L, i) => {
     const nom = `${i}:${L.name}`;
@@ -117,7 +117,7 @@ JS_COHERENCE = """
 """
 
 # ---------------------------------------------------------------------------
-# T2 + T3 — les 60 solutions de référence gagnent et ramassent tous les fruits
+# T2 + T3 — les 61 solutions de référence gagnent et ramassent tous les fruits
 # ---------------------------------------------------------------------------
 JS_SOLUTIONS = """
 () => {
@@ -265,7 +265,7 @@ def principal():
         # T2 + T3 — les 60 solutions gagnent, tous les fruits sont ramassés
         res = page.evaluate(JS_SOLUTIONS)
         perdants = [r["nom"] for r in res if not r["gagne"]]
-        section("T2 solve(i) gagne pour les 60 niveaux", not perdants,
+        section("T2 solve(i) gagne pour les 61 niveaux", not perdants,
                 f"{len(res)} solutions jouées" if not perdants else "perdants : " + ", ".join(perdants))
         sans_fruit = [r["nom"] for r in res if r["fruitsPris"] != r["fruitsTotal"]]
         total_fruits = sum(r["fruitsTotal"] for r in res)
@@ -370,9 +370,9 @@ def principal():
         page.goto(url, wait_until="load")
         page.wait_for_function("() => window.SOLEY && window.SOLEY.LV")
 
-        # T8a — seuils de déblocage : ⌈5/8 des niveaux du monde précédent⌉
-        seuils = page.evaluate("() => window.SOLEY.LV.length === 60 && [0,1,2,3,4,5,6,7].map(i => window.SOLEY.seuilMonde(i))")
-        section("T8 seuils de déblocage ⌈5/8⌉ par monde", seuils == [0, 5, 6, 5, 5, 5, 4, 5],
+        # T8a — seuils de déblocage : ⌈5/8 des niveaux du monde précédent⌉ (lagon à 9 → forêt à 6)
+        seuils = page.evaluate("() => window.SOLEY.LV.length === 61 && [0,1,2,3,4,5,6,7].map(i => window.SOLEY.seuilMonde(i))")
+        section("T8 seuils de déblocage ⌈5/8⌉ par monde", seuils == [0, 6, 6, 5, 5, 5, 4, 5],
                 f"{seuils}")
 
         # T8b — sauvegarde vierge : seul Le lagon est ouvert
@@ -389,20 +389,35 @@ def principal():
         page.click(".wrow[data-w='foret']", force=True)
         aff = page.evaluate(JS_ECRANS)
         cond = page.evaluate("() => document.querySelector(\".wrow[data-w='foret'] .wcond\")?.textContent || ''")
-        section("T8 monde fermé : clic sans effet + condition affichée",
-                aff["home"] != "none" and aff["lvscreen"] == "none" and "Réussis 5 niveaux" in cond,
+        section("T8 monde fermé : clic sans effet + condition affichée (seuil + découvertes)",
+                aff["home"] != "none" and aff["lvscreen"] == "none" and "Réussis 6 niveaux" in cond
+                and "dont ses 3 découvertes (0/3)" in cond,
                 cond.strip())
 
         # T8d — zéro défilement horizontal sur l'accueil téléphone
         defil = page.evaluate("() => ({ sw: document.documentElement.scrollWidth, cw: document.documentElement.clientWidth })")
         section("T8 accueil téléphone : zéro défilement horizontal",
                 defil["sw"] <= defil["cw"] + 1, f"{defil['sw']} dans {defil['cw']}")
+
+        # T9 — mention Refraction : pied de page + panneau « D'où vient Solèy ? »
+        apropos = page.evaluate("""() => {
+          document.getElementById('aproposbtn').click();
+          const ouvert = getComputedStyle(document.getElementById('aproposov')).display === 'flex';
+          const texte = document.getElementById('aproposte').textContent;
+          document.getElementById('aproposok').click();
+          const ferme = getComputedStyle(document.getElementById('aproposov')).display === 'none';
+          return { ouvert, ferme, complet: texte.includes('Merci aux créateurs de Refraction.'),
+            court: document.querySelector('.site-footer').textContent.includes('librement adapté de Refraction') };
+        }""")
+        section("T9 mention Refraction : pied de page + panneau « D'où vient Solèy ? »",
+                apropos["ouvert"] and apropos["ferme"] and apropos["complet"] and apropos["court"], "")
         ctx3.close()
 
         # ============ passe 4 : sauvegarde amorcée + mode classe ============
         GRAINE = ("try{localStorage.setItem('soley-save-v5',JSON.stringify({"
                   "done:{'lagon:Premier rayon':true,'lagon:Zigzag dans les roches':true,"
-                  "'lagon:Moitié-moitié':true,'lagon:La part perdue':true,'lagon:Partage en tiers':true},"
+                  "'lagon:Moitié-moitié':true,'lagon:La part perdue':true,'lagon:Partage en tiers':true,"
+                  "'lagon:Les quatre quarts':true},"
                   "fruits:{'lagon:Zigzag dans les roches':1},"
                   "pieces:{'lagon:Zigzag dans les roches':2}}));}catch(e){}")
         ctx4 = navig.new_context(viewport={"width": 390, "height": 844}, locale="fr-FR")
@@ -418,7 +433,7 @@ def principal():
           foret: !document.querySelector(".wrow[data-w='foret']").classList.contains('locked'),
           volcan: document.querySelector(".wrow[data-w='volcan']").classList.contains('locked'),
         })""")
-        section("T8 après 5 réussites au lagon : forêt ouverte, volcan encore fermé",
+        section("T8 après 6 réussites au lagon (dont les 3 découvertes) : forêt ouverte, volcan fermé",
                 etat["foret"] and etat["volcan"], "")
         pg4.click(".wrow[data-w='lagon']")
         cartes = pg4.evaluate("""() => ({
@@ -442,6 +457,15 @@ def principal():
                 and "pièces" in legende["texte"] and legende["soleils"] == 6
                 and "petits soleils" in legende["compteur"],
                 legende["texte"].strip())
+
+        # T9.7 — cette graine est une VIEILLE sauvegarde (sans champ cours) : chargée
+        # sans erreur, sans migration silencieuse, et le jeu tourne.
+        vieux = pg4.evaluate("""() => {
+          const brut = JSON.parse(localStorage.getItem('soley-save-v5'));
+          return { sansCours: !('cours' in brut), niveaux: window.SOLEY.LV.length };
+        }""")
+        section("T9 vieille sauvegarde (sans champ cours) chargée sans erreur ni migration",
+                vieux["sansCours"] and vieux["niveaux"] == 61, "")
         ctx4.close()
 
         # T8e — mode classe : tout est ouvert, badge visible
@@ -457,6 +481,170 @@ def principal():
         section("T8 mode classe (?classe) : tous les mondes ouverts + badge",
                 classe["verrouilles"] == 0 and classe["badge"] and classe["mafate"], "")
         ctx5.close()
+
+        # ============ passe 5 : chantier « Comprendre » — T9 (spec §9) ============
+        ctx6, page = nouvelle_page(1280, 800)
+        page.goto(url, wait_until="load")
+        page.wait_for_function("() => window.SOLEY && window.SOLEY.LV")
+
+        # T9.1 — « Les quatre quarts » gagne par sa sol, chaque maison reçoit exactement 1/4
+        quarts = page.evaluate("""() => {
+          const S = window.SOLEY;
+          const i = S.LV.findIndex(l => l.name === 'Les quatre quarts');
+          const L = S.LV[i];
+          S.openLevel(i);
+          L.sol.forEach(([ti, x, y]) => { S.state.placed[x + ',' + y] = { def: L.tools[ti], ti }; });
+          const sim = S.simulate();
+          S.state.placed = {};
+          return { i, win: sim.win, cibles: sim.tHits.length,
+            quarts: sim.tHits.every(h => h.length === 1 && h[0][0] === 1 && h[0][1] === 4) };
+        }""")
+        section("T9 « Les quatre quarts » : victoire par sa solution, 1/4 exact partout",
+                quarts["win"] and quarts["cibles"] == 4 and quarts["quarts"], "")
+
+        # T9.2 + T9.10 + T9.12 — victoire d'une découverte : le point de cours s'affiche,
+        # cascade C3 à QUATRE rayons terminaux, prédire à révélation, « Revoir » rejoue
+        page.evaluate(f"() => window.SOLEY.solve({quarts['i']})")
+        try:
+            page.wait_for_selector("#coursov.show", timeout=18000)
+            cours_vu = True
+        except Exception:
+            cours_vu = False
+        section("T9 victoire d'une découverte : le point de cours s'affiche après « Lévé ! »",
+                cours_vu, "")
+        etat9 = page.evaluate("""() => ({
+          titre: document.getElementById('courstitre').textContent,
+          terminaux: document.querySelectorAll('#coursbody [data-terminal]').length,
+          reponseAvant: document.getElementById('coursbody').innerHTML.includes('la moitié du quart'),
+          carte: document.getElementById('coursbody').innerHTML.includes('Carte de savoir'),
+          winCache: !document.getElementById('winov').classList.contains('show'),
+        })""")
+        section("T9 panneau C3 : « Le quart », QUATRE rayons terminaux, carte de savoir",
+                etat9["titre"] == "Le quart" and etat9["terminaux"] == 4 and etat9["carte"]
+                and etat9["winCache"], f"terminaux={etat9['terminaux']}")
+        section("T9 prédire (R3) : la réponse est absente du panneau avant le toucher",
+                not etat9["reponseAvant"], "")
+        page.click("#cpredirebtn")
+        reponse = page.evaluate("() => document.getElementById('coursbody').innerHTML.includes('la moitié du quart')")
+        section("T9 prédire (R3) : la réponse se révèle au toucher de « À ton avis… »",
+                bool(reponse), "")
+        page.click("#coursrevoir")
+        revoir = page.evaluate("""() => ({
+          reponse: document.getElementById('coursbody').innerHTML.includes('la moitié du quart'),
+          scene: !!document.querySelector('#coursbody [data-terminal]'),
+          ouvert: document.getElementById('coursov').classList.contains('show'),
+        })""")
+        section("T9 « Revoir » rejoue l'animation (prédire re-masqué, panneau ouvert)",
+                revoir["scene"] and revoir["ouvert"] and not revoir["reponse"], "")
+
+        # T9.3 — « J'ai compris ! » mène à la fenêtre des petits soleils
+        page.click("#coursok")
+        apres_ok = page.evaluate("""() => ({
+          cours: document.getElementById('coursov').classList.contains('show'),
+          win: document.getElementById('winov').classList.contains('show'),
+        })""")
+        section("T9 « J'ai compris ! » mène à la fenêtre de victoire normale",
+                apres_ok["win"] and not apres_ok["cours"], "")
+
+        # T9.4 — pas de réaffichage automatique au rejeu + bouton « Revoir le cours »
+        page.evaluate(f"() => window.SOLEY.solve({quarts['i']})")
+        page.wait_for_selector("#winov.show", timeout=18000)
+        pas_de_cours = page.evaluate("() => !document.getElementById('coursov').classList.contains('show')")
+        section("T9 rejeu d'une découverte réussie : le cours ne se réaffiche pas tout seul",
+                pas_de_cours, "")
+        page.click("#backlv")
+        bouton = page.evaluate("""() => {
+          const bt = document.querySelector(".lvcours[data-cours='quart']");
+          if (!bt) return { present: false };
+          bt.click();
+          return { present: true, ouvert: document.getElementById('coursov').classList.contains('show'),
+            titre: document.getElementById('courstitre').textContent };
+        }""")
+        section("T9 carte d'une découverte réussie : « Revoir le cours » fonctionne",
+                bool(bouton.get("present")) and bool(bouton.get("ouvert"))
+                and bouton.get("titre") == "Le quart", "")
+        page.keyboard.press("Escape")
+
+        # T9.2 (contrôle négatif) — un niveau ordinaire n'affiche PAS de point de cours
+        page.evaluate("() => window.SOLEY.solve(0)")
+        page.wait_for_selector("#winov.show", timeout=18000)
+        ordinaire = page.evaluate("() => !document.getElementById('coursov').classList.contains('show')")
+        section("T9 niveau ordinaire : victoire sans point de cours", ordinaire, "")
+
+        # T9.5 — condition de déblocage : le seuil 6 ET les découvertes, lisible sur la carte
+        page.click("#backlv")
+        page.click("#backhome")
+        cond9 = page.evaluate("() => document.querySelector(\".wrow[data-w='foret'] .wcond\")?.textContent || ''")
+        section("T9 condition de déblocage : seuil 6 + « dont ses 3 découvertes »",
+                "Réussis 6 niveaux" in cond9 and "dont ses 3 découvertes (1/3)" in cond9,
+                cond9.strip())
+        ctx6.close()
+
+        # T9.6 — mode classe : badges découverte + cours ouverts sans aucune réussite
+        ctx7, page = nouvelle_page(390, 844)
+        page.goto(url + sep + "classe", wait_until="load")
+        page.wait_for_function("() => window.SOLEY && window.SOLEY.LV")
+        page.click(".wrow[data-w='lagon']")
+        classe9 = page.evaluate("""() => {
+          const bts = [...document.querySelectorAll('.lvcours')].map(b => b.dataset.cours);
+          const badges = document.querySelectorAll('.lvcard .lvdec').length;
+          const hCartes = new Set([...document.querySelectorAll('#lvgrid .lvcard')]
+            .map(c => Math.round(c.getBoundingClientRect().height))).size;
+          const hCellules = new Set([...document.querySelectorAll('#lvgrid .lvcell')]
+            .map(c => Math.round(c.getBoundingClientRect().height))).size;
+          const pieds = document.querySelectorAll('#lvgrid .lvpied').length;
+          const bt = document.querySelector(".lvcours[data-cours='demi']");
+          if (bt) bt.click();
+          return { bts, badges, hCartes, hCellules, pieds,
+            ouvert: document.getElementById('coursov').classList.contains('show'),
+            titre: document.getElementById('courstitre').textContent };
+        }""")
+        section("T9 mode classe : badges découverte + « Revoir le cours » sans réussite",
+                classe9["bts"] == ["demi", "tiers", "quart"] and classe9["badges"] == 3
+                and classe9["ouvert"] and classe9["titre"] == "Le demi", "")
+        section("T9 cartes uniformes : toutes les cases du lagon ont la même taille (pied réservé)",
+                classe9["hCartes"] == 1 and classe9["hCellules"] == 1 and classe9["pieds"] == 9,
+                f"hauteurs cartes={classe9['hCartes']}, cellules={classe9['hCellules']}, pieds={classe9['pieds']}")
+        ctx7.close()
+
+        # T9.9 + T9.11 — stabilité 320 px et 402 px : accueil, panneau du cours,
+        # chaînes CALC corrigées (règle R1) rendues sans débordement
+        for largeur, hauteur in ((320, 700), (402, 874)):
+            ctxp, page = nouvelle_page(largeur, hauteur)
+            page.goto(url, wait_until="load")
+            page.wait_for_function("() => window.SOLEY && window.SOLEY.LV")
+            stab = page.evaluate("""() => {
+              const d = document.documentElement;
+              const accueil = d.scrollWidth <= d.clientWidth + 1;
+              window.SOLEY.montrerCours('quart');
+              const carte = document.getElementById('courscard').getBoundingClientRect();
+              const coursOK = document.getElementById('coursov').classList.contains('show')
+                && carte.width <= d.clientWidth && d.scrollWidth <= d.clientWidth + 1;
+              window.SOLEY.fermerCours();
+              const corrigees = [
+                "1/2 + 1/2 = 2/2 = 1", "1/6 + 1/6 = 2/6 = 1/3", "1/3 × 3 = 3/3 = 1",
+                "1/6 × 2 = 2/6 = 1/3", "1/2 + 1/4 = 2/4 + 1/4 = 3/4", "1/4 × 2 = 2/4 = 1/2",
+                "1/4 + 1/4 = 2/4 = 1/2", "1 + 1/2 = 2/2 + 1/2 = 3/2",
+                "1/3 + 1/6 = 2/6 + 1/6 = 3/6 = 1/2", "2/3 + 1/3 = 3/3 = 1"
+              ];
+              const rendues = corrigees.every(l => calcLineHTML(l).includes('class="heq"'));
+              return { accueil, coursOK, rendues };
+            }""")
+            hint = page.evaluate("""() => {
+              const S = window.SOLEY;
+              S.openLevel(S.LV.findIndex(l => l.name === 'Trois petits soleils'));
+              document.getElementById('hintbtn').click();
+              const d = document.documentElement;
+              const carte = document.getElementById('hintcard').getBoundingClientRect();
+              const ok = document.getElementById('hintov').classList.contains('show')
+                && d.scrollWidth <= d.clientWidth + 1 && carte.width <= d.clientWidth
+                && document.querySelectorAll('#hintbody .heq').length >= 2;
+              document.getElementById('hintclose').click();
+              return ok;
+            }""")
+            section(f"T9 stabilité {largeur} px : accueil, panneau du cours, chaînes CALC corrigées",
+                    stab["accueil"] and stab["coursOK"] and stab["rendues"] and bool(hint), "")
+            ctxp.close()
         navig.close()
 
     if httpd:

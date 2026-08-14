@@ -174,11 +174,45 @@ function soleilRang(pleins,total=3,taille=13){
   for(let i=0;i<total;i++)s+=soleilIco(i<pleins,taille);
   return s;
 }
+/* Badge « découverte » (chantier « Comprendre ») : un rayon qui se partage — le geste
+   fondateur du jeu — dans une pastille sobre. Jamais une étoile. */
+function decouverteIco(taille=15){
+  return `<svg class="decico" width="${taille}" height="${taille}" viewBox="0 0 24 24" aria-hidden="true">
+    <circle cx="12" cy="12" r="10.4" fill="#101a33" stroke="#ffc94d" stroke-width="1.7"/>
+    <line x1="4.6" y1="12" x2="11" y2="12" stroke="#ffc94d" stroke-width="3.1" stroke-linecap="round"/>
+    <line x1="11" y1="12" x2="18.4" y2="7.6" stroke="#ffb347" stroke-width="2" stroke-linecap="round"/>
+    <line x1="11" y1="12" x2="18.4" y2="16.4" stroke="#ffb347" stroke-width="2" stroke-linecap="round"/>
+  </svg>`;
+}
+/* Écriture étagée sur le plateau (décision de Gwenael, 14/08, sur maquette) :
+   les fractions des maisons et des rayons se dessinent numérateur / barre /
+   dénominateur ; les autres écritures (1, 2, 0,5, 25 %…) restent telles quelles. */
+function maisonTxtSVG(txt){
+  const m=txt.match(/^(\d+)\/(\d+)$/);
+  if(!m){
+    const fs=txt.length>=5?18:(txt.length>=4?21:29);
+    return `<text class="tneed" x="55" y="79" font-size="${fs}">${txt}</text>`;
+  }
+  const large=m[1].length>1||m[2].length>1;
+  const fs=large?15:19, demi=large?15:11;
+  return `<g class="tneed">`+
+    `<text x="55" y="68.5" font-size="${fs}">${m[1]}</text>`+
+    `<line x1="${55-demi}" y1="73" x2="${55+demi}" y2="73" stroke="#3b2a17" stroke-width="2.8"/>`+
+    `<text x="55" y="86.5" font-size="${fs}">${m[2]}</text></g>`;
+}
+function beamLblSVG(id,x,y,val){
+  if(val[1]===1)return `<text class="beamlbl" data-seg="${id}" x="${x}" y="${y}" fill="${fcol(val)}">${fstr(val)}</text>`;
+  const c=fcol(val), demi=(String(val[0]).length>1||String(val[1]).length>1)?18:13;
+  return `<g class="beamlbl" data-seg="${id}" fill="${c}">`+
+    `<text x="${x}" y="${y-15}" style="font-size:23px">${val[0]}</text>`+
+    `<line x1="${x-demi}" y1="${y-9.5}" x2="${x+demi}" y2="${y-9.5}" stroke="#101a33" stroke-width="6"/>`+
+    `<line x1="${x-demi+1}" y1="${y-9.5}" x2="${x+demi-1}" y2="${y-9.5}" stroke="${c}" stroke-width="2.8"/>`+
+    `<text x="${x}" y="${y+10}" style="font-size:23px">${val[1]}</text></g>`;
+}
 function targetSVG(t,stat,label='',index=''){
   const px=t.x*CS,py=t.y*CS;
   const lit=stat&&stat.st==='ok', bad=stat&&(stat.st==='wrong'||stat.st==='multi');
   const txt=t.disp||fstr(t.need);
-  const fs=txt.length>=5?18:(txt.length>=4?21:29);
   /* Lambrequins v2 : vraie dentelle créole en bordure de toit — festons suspendus
      terminés par une perle, silhouette franche sans surcharger la petite maison. */
   let lamb=`<rect x="12" y="40" width="76" height="3.6" rx="1.4" fill="#fdf6ec"/>`;
@@ -195,7 +229,7 @@ function targetSVG(t,stat,label='',index=''){
     ${lamb}
     <rect x="23" y="61" width="12" height="27" rx="2" fill="${lit?'#ffc94d':'#7a5230'}"/>
     <rect x="70" y="53" width="11" height="10" rx="1.5" fill="${lit?'#ffc94d':'#b09b7d'}"/>
-    <text class="tneed" x="55" y="79" font-size="${fs}">${txt}</text>
+    ${maisonTxtSVG(txt)}
     ${label?`<circle cx="84" cy="17" r="11" fill="#101a33" stroke="#ffc94d" stroke-width="2"/><text x="84" y="22" text-anchor="middle" font-size="14" font-weight="900" fill="#fff3c4">${label}</text>`:''}
   </g>`;
 }
@@ -252,7 +286,7 @@ function redraw(){
     const len=Math.hypot(x2-x1,y2-y1); if(len<80)return;
     const k=Math.min(0.5,60/len);
     const lx=x1+(x2-x1)*k,ly=y1+(y2-y1)*k-12-fwidth(sg.val)/2;
-    s+=`<text class="beamlbl" data-seg="${sg.id}" x="${lx}" y="${ly}" fill="${fcol(sg.val)}">${fstr(sg.val)}</text>`;
+    s+=beamLblSVG(sg.id,lx,ly,sg.val);
   });
   L.suns.forEach(sun=>{s+=sunSVG(sun);});
   L.targets.forEach((t,i)=>{s+=targetSVG(t,sim.stats.find(st=>st.i===i),L.targets.length>1?'ABCDEF'[i]:'',i);});

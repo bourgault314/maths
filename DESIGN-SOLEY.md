@@ -41,6 +41,18 @@ Séquence type pour chaque notion nouvelle :
   pouce actuel** (scènes en rayons + écritures fractionnaires, table CALC, 51 cartes).
   C'est LA base à enrichir pour ce pilier — rien d'autre à chercher. Les points de
   cours réutiliseront ce moteur (sSun/sBeam/sceneFor/calcLineHTML dans engine.js).
+- **CHANTIER LANCÉ (14/08) — lot 1 = le lagon.** Cahier des charges validé ligne par
+  ligne : **SPEC-COMPRENDRE-LOT1.md** (racine du dépôt). Contenu : 2 niveaux promus
+  découvertes, « Les quatre quarts » créé, cours C1-C2-C3 mot pour mot, règles
+  R1 (toutes les étapes écrites, totaux n/n compris) / R2 (scènes complètes,
+  tous les rayons terminaux visibles) / R3 (prédire à révélation) / R4 (phrase-carte
+  en carte de savoir), déblocage seuil + découvertes, `save.cours`.
+- **Guidage dégressif (décision du 14/08) : pas de système de flèches au lot 1**
+  (idée 2 de la bibliothèque, écartée pour l'instant). Les toutes premières
+  découvertes s'appuient sur la consigne-question, un plateau sans piège et le
+  Coup de pouce ; les découvertes des mondes suivants (sixièmes, loupes…)
+  laisseront l'élève se débrouiller davantage — on a expliqué le quart, on
+  n'explique pas le sixième pareil. À réévaluer après les tests en classe.
 
 ## Pilier 2 — Progresser : le jeu se mérite
 
@@ -54,6 +66,10 @@ Fini le tout-accessible : l'élève valide petit à petit.
   maîtrise (nombre minimum de pièces, affiché après la première réussite).
 - **Niveaux défis** (« les cailloux durs ») : une poignée par monde, cachés,
   débloqués en dépensant des fruits — les vrais casse-têtes de 10-20 minutes.
+- **Aide pendant les défis : question RÉ-OUVERTE (14/08)** — elle était tranchée
+  « sans aide », Gwenael n'en est plus sûr ; à décider au chantier 4.
+  Recommandation de Claude, à éprouver en classe : défis sans aide gratuite,
+  mais un indice PAYANT en fruits péi si des blocages décourageants apparaissent.
 - Le professeur garde un **mode classe** (code ou réglage) qui déverrouille tout,
   pour la vidéoprojection et l'AP.
 
@@ -114,6 +130,9 @@ seule décomposition évidente. Principes pour de vrais casse-têtes :
    les premiers mondes. La « porte orientée » (varangue d'un seul côté : le rayon
    doit entrer par la façade) devient un levier de difficulté réservé aux mondes
    avancés et aux niveaux défis — à concevoir dans ce chantier.
+8. **Contrainte de conception des niveaux** (14/08, remplace la « passe grand
+   écran » annulée) : le jeu se veut téléphone d'abord — la vraie limite est le
+   NOMBRE DE CASES d'un plateau, borné par l'écran du téléphone.
 
 ## Pilier 5 — Habiller : l'écrin
 
@@ -124,10 +143,10 @@ seule décomposition évidente. Principes pour de vrais casse-têtes :
 - **Dessins** : passe graphique sur les pièces, maisons, fruits, roches ; animations
   de ramassage (le fruit vole vers le carnet).
 - **Mécanique à revoir au besoin** : tout ce que le test en classe révélera.
-- **Passe grand écran** : le jeu est trop petit sur ordinateur (conçu téléphone
-  d'abord). Le plateau doit occuper l'espace sur grand écran — ordinateur ET
-  vidéoprojection/TBI, usage central pour le professeur. Diagnostic avec captures
-  d'écran de Gwenael.
+  (La « passe grand écran » a été RETIRÉE d'ici le 14/08 — annulée par Gwenael le
+  13/08 au soir, le jeu se veut téléphone d'abord ; l'ancien prompt « session 7
+  grand écran » est caduc. Ce qu'il en reste vit au pilier 4, principe 8 :
+  le nombre de cases est borné par l'écran du téléphone.)
 - **Le miroir de la collègue** — RÉALISÉ (13/08 nuit) : barre-miroir à 45° orientée
   entrée/sortie (double trait sombre/clair + reflet), réflexion NETTE à angle droit,
   trajets internes de toutes les pièces en lignes brisées — plus aucune courbe de

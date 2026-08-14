@@ -56,7 +56,7 @@ fichiers modifiés → tests → reste à vérifier.
 
 | Monde | Palier | Contenu | Niveaux |
 |---|---|---|---|
-| Le lagon | 6e | découverte, partage égal | 8 |
+| Le lagon | 6e | découverte, partage égal — dont 3 niveaux-découverte (demi, tiers, quart) | 9 |
 | La forêt | 5e | additions (lentille), équiv., 1/8, 1/12 | 9 |
 | Le volcan | 4e | loupes ×, fractions > 1, 1/9 | 7 |
 | Les pitons | 5e-4e | équivalences, comparaisons (passes) | 7 |
@@ -65,7 +65,9 @@ fichiers modifiés → tests → reste à vérifier.
 | Les tunnels | 6e-4e | labyrinthes denses (41-64 % de roches), esprit de l'original | 8 (dont « Le prisme scellé » et « La galerie scellée ») |
 | Mafate | Expert | tout combiné, 2 soleils, grands plateaux | 7 (dont « Les verrous du cirque ») |
 
-Total : 60 niveaux, chacun avec une solution de référence `sol` vérifiée automatiquement.
+Total : 61 niveaux, chacun avec une solution de référence `sol` vérifiée automatiquement.
+Depuis le lot 1 du chantier « Comprendre » (14/08), les niveaux-découverte portent un
+champ `dec` qui les relie à leur point de cours (table `COURS` de levels.js).
 
 ## 4. Format d'un niveau (données)
 
@@ -83,8 +85,11 @@ Total : 60 niveaux, chacun avec une solution de référence `sol` vérifiée aut
   tools:[b(in,out), s2(in,o1,o2), s3(in,o1,o2,o3), mg(in1,in2,out), x2(in,out), x3(in,out)],
   sol:[[toolIndex,x,y],…] }           // solution de référence — OBLIGATOIRE
 ```
-Calculs du Coup de pouce : table `CALC` par nom de niveau, lignes du type
-`"1/2 + 1/4 = 2/4 + 1/4 = 3/4"` (rendues en scène de rayons + fractions empilées).
+Champ `dec:'<id>'` (facultatif) : niveau-découverte, relié à son point de cours dans
+la table `COURS` (titre, scène en cascade, textes mot pour mot de la spec, prédire,
+phrase-carte). Calculs du Coup de pouce : table `CALC` par nom de niveau, lignes du
+type `"1/2 + 1/4 = 2/4 + 1/4 = 3/4"` (rendues en scène de rayons + fractions
+empilées) — règle R1 : aucune étape sautée, totaux n/n toujours écrits.
 
 ## 5. Qualité : la procédure de test est OBLIGATOIRE avant tout push
 
@@ -101,8 +106,12 @@ Batterie (script Playwright Python, à conserver dans `tests/`) :
 6. Paysage : zéro défilement de page, clic précis (letterbox pris en compte).
 7. Zéro erreur JavaScript.
 8. Progression : seuils ⌈5/8⌉ exacts, accueil neuf tout fermé sauf lagon, clic sur monde
-   fermé sans effet (condition lisible), déblocage après 5 réussites, étoiles sur les
-   cartes, mode classe, zéro défilement horizontal téléphone.
+   fermé sans effet (condition lisible), déblocage après 6 réussites dont les 3
+   découvertes, étoiles sur les cartes, mode classe, zéro défilement horizontal téléphone.
+9. Chantier « Comprendre » (lot 1) : « Les quatre quarts » gagne par sa `sol` (1/4 exact
+   partout), point de cours affiché après victoire d'une découverte seulement (jamais au
+   rejeu), cascade C3 à quatre rayons terminaux, prédire à révélation, « Revoir » et
+   « Revoir le cours », vieille sauvegarde sans `cours` intacte, stabilité 320/402 px.
 
 ## 6. Historique des décisions (ne pas re-débattre sans raison)
 
@@ -133,6 +142,52 @@ Batterie (script Playwright Python, à conserver dans `tests/`) :
   orientée entrée+sortie (diagonale de la somme des directions), réflexion à angle droit,
   plus AUCUNE courbe de rayon (les segments internes portent data-part in/out, l'attribut
   through a disparu). Tout est dans render.js : un revert du commit suffit à revenir.
+- Chantier « Comprendre », lot 1 (14/08) : niveau-découverte → point de cours →
+  entraînement, appliqué au lagon (cahier des charges : SPEC-COMPRENDRE-LOT1.md, racine
+  du dépôt, validé ligne par ligne). Le point de cours s'affiche entre « Lévé ! » et la
+  fenêtre des soleils, à la première victoire seulement ; relecture par « Revoir le
+  cours » sur la carte du niveau. Sauvegarde : champ additif `save.cours`.
+- **R1 — aucune étape sautée, nulle part** (14/08, décision finale de Gwenael) : mise au
+  même dénominateur, nombres mixtes, simplifications ET totaux n/n toujours écrits
+  (1/2 + 1/2 = 2/2 = 1 ; 1/3 × 3 = 3/3 = 1 ; les partages du type 2 ÷ 2 = 1 restent
+  tels quels). Une seule forme d'écriture pour tout le projet — cours et Coup de pouce,
+  contenus futurs compris. Le POURQUOI du n/n sera l'objet du cours de la lentille
+  (forêt, lot suivant). Règles sœurs gravées pour tous les cours : R2 scènes complètes
+  (tous les rayons terminaux visibles), R3 prédire à révélation, R4 phrase-carte
+  habillée en carte de savoir.
+- Déblocage enrichi (14/08) : seuil ⌈5/8⌉ + les niveaux-découverte du monde précédent
+  réussis (la forêt est passée d'elle-même à 6 avec le lagon à 9 niveaux) ; condition
+  affichée « …, dont ses 3 découvertes (0/3) ». Badge découverte sur les cartes —
+  picto « rayon qui se partage », jamais une étoile. `?classe` déverrouille tout,
+  cours compris.
+- R5 (14/08, retours de Gwenael sur captures) : dans les cours, l'écriture mathématique
+  est ÉTAGÉE et SÉPARÉE du texte (explication courte au-dessus, égalité en fractions
+  empilées dessous ; fraction citée dans une phrase = empilée en petit) ; les chaînes
+  d'égalités se coupent avant un « = », jamais au milieu d'une somme (Coup de pouce
+  compris). Les cours sont courts : la phrase-bilan ne vit que dans la carte de savoir.
+- Mention de Refraction (14/08, textes de Gwenael au caractère près) : mention COURTE au
+  pied de la page du jeu (« Solèy est librement adapté de Refraction (Center for Game
+  Science, université de Washington, 2010). ») ; mention COMPLÈTE dans le panneau
+  « D'où vient Solèy ? » ouvert depuis le pied de l'accueil — le jeu n'ayant pas de
+  panneau de règles, ce lien en tient lieu. Elle remplace l'ancienne ligne « jeu
+  original librement inspiré… ».
+- Bandes des cours, suite (14/08) : étages COLLÉS (aucun espace entre les bandes) ;
+  le PONT entre les deux mondes ouvre chaque scène — le soleil et son rayon doré
+  étiqueté 1 apparaissent, puis le rayon se couche et devient la bande 1 (son
+  épaisseur est déjà une bande dressée) ; ensuite tout le cours reste en bandes.
+  Couleurs des cases = celles du JEU par dénominateur (arbitrage laissé à Claude et
+  assumé : le pont impose la continuité rayon→bande ; les bandes jaune/vert des
+  gabarits maths&go restent la référence hors Solèy). EN RÉSERVE pour le cours de la
+  lentille (forêt, lot suivant) : l'addition en bandes — Gwenael a fourni deux
+  dispositions (bout à bout sur une ligne / en L), forme académique à trancher alors.
+- DÉCISION SUR MAQUETTE (14/08) : l'écriture étagée passe AUSSI sur le plateau —
+  maisons (numérateur/barre/dénominateur dans la façade) et étiquettes de rayons
+  (chiffres 20 px, un peu plus gros que la maquette, à la demande de Gwenael), ainsi
+  que les étiquettes des scènes en cascade des cours. Restent en slash pour l'instant
+  (très petits, à juger sur téléphone) : les passes étroites (≤1/2) et les badges des
+  soleils spéciaux. Les écritures non fractionnaires (1, 2, 0,5, 25 %…) ne changent
+  pas. Toutes les cases d'un monde gardent la même taille (pied « Revoir le cours »
+  réservé sur toute la grille).
 
 ## 7. Architecture (découpage d'août 2026, statique, sans build, GitHub Pages)
 
@@ -246,4 +301,42 @@ commence par "use strict"; et le partage se fait par la portée globale.
   (garde-fou au test node, géométrie des barres testée pentes ±1). CHANGEMENT ISOLÉ dans
   render.js seul (levels.js/engine.js/ui.js/css/html intacts) : un simple revert ramène
   les tubes courbes si le rendu déplaît au matin. Comparatif avant/après envoyé à Gwenaël.
+  Verdict : PR #356 fusionnée et vérifiée en ligne (7/7 fichiers aux octets committés,
+  batterie complète verte sur mathsgo.re) ; le rendu net est resté en place.
+- 2026-08-14 : CHANTIER 2 « Comprendre », lot 1 (session Code ; cahier des charges
+  SPEC-COMPRENDRE-LOT1.md validé ligne par ligne, entré au dépôt). Le lagon passe à
+  9 niveaux (61 au total) : « Moitié-moitié » et « Partage en tiers » promus
+  niveaux-découverte (consignes-questions de la spec), « Les quatre quarts » créé
+  (4 maisons 1/4, prismes ÷2 seulement — sol vérifiée par simulate). Table COURS
+  (C1 demi, C2 tiers, C3 quart) ; panneau « point de cours » inséré entre « Lévé ! »
+  et la fenêtre des soleils, première victoire seulement : cascade de partage ANIMÉE
+  (délais CSS sur les keyframes de la victoire — zéro minuterie à nettoyer, « Revoir »
+  reconstruit le panneau), textes au rythme du dessin, prédire à révélation, phrase-carte
+  en carte de savoir. Badge découverte + « Revoir le cours » sur les cartes ;
+  save.cours additif ; déblocage = seuil + découvertes, condition affichée. Balayage R1
+  de la table CALC : 23 lignes corrigées dans 21 entrées (liste exhaustive et preuve
+  « 60 niveaux intacts » : node tests/soley/verifier-lot1-comprendre.mjs). Batterie
+  T1→T9 complète verte en local (39 contrôles), node 15/15. DESIGN-SOLEY.md :
+  chantier lancé au pilier 1 (guidage dégressif), « passe grand écran » retirée
+  (→ pilier 4 principe 8), aide des défis ré-ouverte.
+  PASSE 2 (même jour, retours de Gwenael sur les captures — addendum v7 de la spec) :
+  règle R5 (écritures étagées séparées du texte, fractions empilées inline dans les
+  phrases, chaînes coupées avant les =), cours allégés (textes v7, bilan seulement
+  dans la carte), C2-2 réservée au futur cours des passes, cases de niveaux uniformes
+  (pied « Revoir le cours » réservé). Maquette « étagé sur le plateau ? » fournie à
+  Gwenael (décision ouverte). Batterie re-verte (40 contrôles), node 15/15.
+  PASSE 3 (même jour) : Gwenael valide la maquette — écriture étagée SUR LE PLATEAU
+  (maisonTxtSVG et beamLblSVG dans render.js) ; slash conservé sur les passes
+  étroites et les badges de soleils (à juger sur téléphone). Captures au format
+  téléphone (390×844, échelle 3) fournies pour prévisualiser la taille réelle.
+  PASSE 4 (même jour) : la scène des cours passe des rayons aux BANDES DE FRACTIONS
+  (proposition d'une collègue validée par Gwenael — sceneBandes/bandeLbl dans
+  engine.js : mur proportionnel, séparations pointillées, fractions étagées noires,
+  couleurs par dénominateur, étages animés) ; fractions des maisons grossies à 19 px
+  et des rayons à 23 px (tailles à confirmer sur téléphone). Batterie 40/40.
+  PASSE 5 (même jour) : bandes COLLÉES + PONT rayon→bande en tête de scène (le soleil
+  et son rayon étiqueté 1 se fondent dans la bande qui se lève — keyframes cours-fondu
+  et bande-leve) ; mention Refraction ajoutée (courte au pied de page, complète dans le
+  panneau « D'où vient Solèy ? », textes exacts) ; réserve « addition en bandes » pour
+  le cours de la lentille. Batterie 41 contrôles, node 15/15.
 - (à compléter à chaque session)

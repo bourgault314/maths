@@ -113,13 +113,149 @@ function sceneFor(line){
   if(ops.every(o=>o.op==='÷'))return sceneDivTree(pf(lhs[0]),ops.map(o=>o.n));
   return sceneMul(pf(lhs[0]),ops[0].n);
 }
+/* Une chaîne d'égalités se coupe proprement AVANT un « = » (retour de Gwenael,
+   14/08) : chaque membre est un segment insécable, jamais de saut de ligne au
+   milieu d'une somme. */
+function eqHTML(line){
+  let h='';
+  line.split(' = ').forEach((expr,k)=>{
+    let seg=k?fracHTML('='):'';
+    expr.split(' ').filter(Boolean).forEach(t=>{seg+=fracHTML(t);});
+    h+=`<span class="heqseg">${seg}</span>`;
+  });
+  return h;
+}
+/* Règle R5 (14/08) : les fractions citées dans une phrase s'écrivent empilées,
+   en petit, dans le texte — jamais en slash dans un cours. */
+function texteMath(t){
+  return t.replace(/(\d+)\/(\d+)/g,
+    '<span class="frac fracin"><span class="fn">$1</span><span class="fd">$2</span></span>');
+}
 function calcLineHTML(line){
   const sc=sceneFor(line);
-  let eq='';
-  line.split(' ').filter(Boolean).forEach(t=>{eq+=fracHTML(t);});
-  return `<div class="hline"><svg class="hsvg" viewBox="0 0 340 ${sc.h}">${sc.svg}</svg><div class="heq">${eq}</div></div>`;
+  return `<div class="hline"><svg class="hsvg" viewBox="0 0 340 ${sc.h}">${sc.svg}</svg><div class="heq">${eqHTML(line)}</div></div>`;
 }
 
+/* ===== Points de cours (chantier « Comprendre », lot 1) =====
+   Scène « cascade de partage » (règle R2) : l'arbre COMPLET du partage — soleil,
+   rayon entier, chaque étage de prismes, TOUS les rayons terminaux — bâti sur les
+   primitives existantes (sSun/sBeam/sLbl/sTile), épaisseurs et couleurs réelles.
+   L'animation est entièrement portée par des délais CSS (--win-*) : aucune
+   minuterie à nettoyer, « Revoir » reconstruit simplement le panneau. */
+const cFade=(t0,inner)=>`<g class="cfade" style="--win-delay:${t0}s">${inner}</g>`;
+/* Scène des cours en BANDES DE FRACTIONS (proposition de la collègue, validée par
+   Gwenael le 14/08) : le mur de bandes — l'entier, puis chaque étage de parts
+   égales, largeurs proportionnelles, séparations pointillées, fractions étagées
+   noires. Adapté à Solèy : couleur de case = dénominateur, comme les rayons du
+   jeu. Les étages apparaissent l'un après l'autre (délais CSS, zéro minuterie). */
+function bandeLbl(cx,y,f){
+  if(f[1]===1)return `<text x="${cx}" y="${y+29}" text-anchor="middle" font-size="21" font-weight="900" fill="#101a33">1</text>`;
+  return `<text x="${cx}" y="${y+19}" text-anchor="middle" font-size="15" font-weight="900" fill="#101a33">${f[0]}</text>`+
+    `<line x1="${cx-8}" y1="${y+23}" x2="${cx+8}" y2="${y+23}" stroke="#101a33" stroke-width="2"/>`+
+    `<text x="${cx}" y="${y+37}" text-anchor="middle" font-size="15" font-weight="900" fill="#101a33">${f[1]}</text>`;
+}
+function sceneBandes(sc){
+  const X0=20, W=300, hB=44;
+  const etages=[[1,1]];
+  let d=1;
+  sc.divs.forEach(n=>{d*=n;etages.push([1,d]);});
+  const H=etages.length*hB+18;
+  const y0=10, cyR=y0+hB/2;
+  let s='', fin=0;
+  /* Le PONT entre les deux mondes (Gwenael, 14/08) : le rayon du jeu — soleil,
+     trait doré, étiquette 1 — se couche et devient la bande (son épaisseur est
+     déjà une bande dressée). Fait une fois, tout le cours reste en bandes. */
+  s+=`<g class="cpont" style="--win-delay:.15s;--fondu-delay:1.15s">`+
+    sSun(36,cyR,[1,1])+
+    sBeam(54,cyR,X0+W-6,cyR,[1,1])+
+    sLbl(170,cyR-HW([1,1])/2-7,'1',fcol([1,1]))+
+    `</g>`;
+  etages.forEach((f,k)=>{
+    const y=y0+k*hB, n=f[1], w=W/n, t0=1.35+k*.85, dernier=k===etages.length-1;
+    let e='';
+    for(let i=0;i<n;i++){
+      e+=`<rect x="${(X0+i*w).toFixed(1)}" y="${y}" width="${w.toFixed(1)}" height="${hB}" fill="${fcol(f)}"${dernier&&f[1]>1?' data-terminal="1"':''}/>`;
+    }
+    for(let i=1;i<n;i++){
+      e+=`<line x1="${(X0+i*w).toFixed(1)}" y1="${y}" x2="${(X0+i*w).toFixed(1)}" y2="${y+hB}" stroke="#10182e" stroke-width="1.6" stroke-dasharray="4 5" opacity=".55"/>`;
+    }
+    for(let i=0;i<n;i++){
+      e+=bandeLbl(X0+i*w+w/2,y,f);
+    }
+    e+=`<rect x="${X0}" y="${y}" width="${W}" height="${hB}" fill="none" stroke="#101a33" stroke-width="2.5"/>`;
+    /* la bande de l'entier SE LÈVE depuis l'épaisseur du rayon ; les étages
+       suivants apparaissent collés, l'un après l'autre */
+    s+=k===0
+      ?`<g class="cleve" style="--win-delay:${t0}s">${e}</g>`
+      :cFade(t0,e);
+    fin=t0+.45;
+  });
+  return {h:H,svg:s,fin};
+}
+let coursId=null, coursApresVictoire=false, coursRetour=null;
+function construireCours(id){
+  const c=COURS[id];
+  if(!c)return '';
+  const sc=sceneBandes(c.scene);
+  let h=`<div class="cscene"><svg class="hsvg" viewBox="0 0 340 ${sc.h}" role="img" aria-label="Les bandes de fractions : l'entier et ses parts égales">${sc.svg}</svg></div>`;
+  /* déroulé en étapes : l'explication courte au-dessus, l'écriture étagée dessous
+     (règle R5), au rythme de l'apparition des bandes */
+  const pas=Math.max(.7,sc.fin/Math.max(1,c.etapes.length));
+  c.etapes.forEach((e,i)=>{
+    const t0=.5+i*pas;
+    if(e.t)h+=`<p class="cligne" style="--win-delay:${t0.toFixed(2)}s">${texteMath(e.t)}</p>`;
+    if(e.eq)h+=`<div class="heq ceq cligne" style="--win-delay:${(t0+.15).toFixed(2)}s">${eqHTML(e.eq)}</div>`;
+  });
+  if(c.predire){
+    /* règle R3 : la question s'affiche SANS sa réponse — la réponse n'entre dans
+       la page qu'au toucher de « À ton avis… » (brancherPredire). */
+    h+=`<div class="cpredire cligne" style="--win-delay:${(sc.fin+.5).toFixed(2)}s"><p>${texteMath(c.predire.question)}</p><button type="button" id="cpredirebtn">À ton avis…</button></div>`;
+  }
+  /* règle R4 : la phrase-carte est une vraie petite carte — la trace écrite */
+  h+=`<div class="csavoir cligne" style="--win-delay:${(sc.fin+(c.predire?1.1:.6)).toFixed(2)}s"><div class="csavoirtitre">Carte de savoir</div><p>${texteMath(c.carte.t)}</p>${c.carte.eq?`<div class="heq ceq">${eqHTML(c.carte.eq)}</div>`:''}</div>`;
+  return h;
+}
+function brancherPredire(id){
+  const bt=document.getElementById('cpredirebtn');
+  if(!bt)return;
+  bt.addEventListener('click',()=>{
+    const p=document.createElement('p');
+    p.className='creponse';
+    p.innerHTML=texteMath(COURS[id].predire.reponse);
+    bt.replaceWith(p);
+  },{once:true});
+}
+function montrerCours(id,apresVictoire){
+  if(!COURS[id])return;
+  coursId=id;
+  coursApresVictoire=!!apresVictoire;
+  coursRetour=apresVictoire?null:document.activeElement;
+  document.getElementById('courstitre').textContent=COURS[id].titre;
+  document.getElementById('coursbody').innerHTML=construireCours(id);
+  brancherPredire(id);
+  document.getElementById('coursov').classList.add('show');
+  const card=document.getElementById('courscard');
+  card.scrollTop=0;
+  card.focus({preventScroll:true});
+}
+function revoirCours(){
+  if(!coursId)return;
+  document.getElementById('coursbody').innerHTML=construireCours(coursId);
+  brancherPredire(coursId);
+  document.getElementById('courscard').scrollTop=0;
+}
+function fermerCours(){
+  document.getElementById('coursov').classList.remove('show');
+  document.getElementById('coursbody').innerHTML='';
+  if(coursApresVictoire){
+    coursApresVictoire=false;
+    document.getElementById('winov').classList.add('show');
+    document.getElementById('nextbtn').focus({preventScroll:true});
+  }else if(coursRetour&&coursRetour.focus){
+    coursRetour.focus();
+  }
+  coursRetour=null;
+}
 
 /* ===== Sauvegarde ===== */
 let memStore={done:{},fruits:{},pieces:{}};
@@ -135,25 +271,29 @@ let save=loadSave();
 if(!save.done)save.done={};
 if(!save.fruits)save.fruits={};
 if(!save.pieces)save.pieces={}; /* meilleur nombre de pièces par niveau (champ additif, anciennes sauvegardes intactes) */
+if(!save.cours)save.cours={}; /* points de cours vus (chantier « Comprendre ») — champ additif, même patron : anciennes sauvegardes intactes */
 
 /* ===== Progression : mondes verrouillés, étoiles, mode classe =====
    1 petit soleil = niveau réussi · 2 = + tous les fruits · 3 = + défi de maîtrise (au plus
    autant de pièces que la solution de référence). Étoiles calculées sur les
    MEILLEURS scores enregistrés, pas sur une seule partie.
    Un monde s'ouvre quand on a réussi ⌈5/8 des niveaux du monde précédent⌉
-   (jamais 100 %). Le crochet « niveaux-découverte » (DESIGN-SOLEY.md pilier 1)
-   s'ajoutera ici quand ces niveaux existeront.
+   (jamais 100 %) ET ses niveaux-découverte (champ dec — chantier « Comprendre »,
+   lot 1) : ils comptent aussi dans le seuil, et ils sont conçus triviaux.
    Mode classe : soley.html?classe — tout est ouvert, rien n'est enregistré de plus. */
 const modeClasse=(()=>{try{return typeof location!=='undefined'&&new URLSearchParams(location.search).has('classe');}catch(e){return false;}})();
 const idxMonde=wid=>LV.map((l,i)=>i).filter(i=>LV[i].w===wid);
 const reussisMonde=wid=>idxMonde(wid).filter(i=>save.done[lvId(i)]).length;
 const parNiveau=i=>LV[i].sol.length;
 const seuilMonde=wi=>wi<=0?0:Math.ceil(5*idxMonde(WORLDS[wi-1].id).length/8);
+const decouvertesMonde=wid=>idxMonde(wid).filter(i=>LV[i].dec);
+const decouvertesReussies=wid=>decouvertesMonde(wid).filter(i=>save.done[lvId(i)]).length;
 function mondeDeverrouille(wid){
   if(modeClasse)return true;
   const wi=WORLDS.findIndex(w=>w.id===wid);
   if(wi<=0)return true;
-  return reussisMonde(WORLDS[wi-1].id)>=seuilMonde(wi);
+  const prev=WORLDS[wi-1].id;
+  return reussisMonde(prev)>=seuilMonde(wi)&&decouvertesReussies(prev)>=decouvertesMonde(prev).length;
 }
 function etoiles(i){
   const k=lvId(i);
@@ -349,8 +489,13 @@ function startCelebration(sim){
     save.done[lvId(cur)]=true;
     save.fruits[lvId(cur)]=Math.max(save.fruits[lvId(cur)]||0,sim.fruits.size);
     save.pieces[lvId(cur)]=Math.min(save.pieces[lvId(cur)]||Infinity,nbPieces);
-    persist();
     const L=LV[cur];
+    /* Point de cours (chantier « Comprendre ») : à la PREMIÈRE victoire d'une
+       découverte, le panneau s'insère entre « Lévé ! » et la fenêtre des soleils.
+       Au rejeu il ne se réaffiche pas — bouton « Revoir le cours » sur sa carte. */
+    const coursANouveau=!!(L.dec&&COURS[L.dec]&&!save.cours[L.dec]);
+    if(coursANouveau)save.cours[L.dec]=true;
+    persist();
     const wIdx=LV.map((l,i)=>i).filter(i=>LV[i].w===L.w);
     const isLastOfWorld=wIdx[wIdx.length-1]===cur;
     document.getElementById('splash').classList.remove('show');
@@ -363,7 +508,8 @@ function startCelebration(sim){
     const nextLocked=isLastOfWorld&&cur<LV.length-1&&!mondeDeverrouille(LV[cur+1].w);
     document.getElementById('nextbtn').textContent=
       isLastOfWorld?(cur<LV.length-1?(nextLocked?'Retour aux niveaux':'Monde suivant'):'Tu as fini Solèy ! Retour'):'Niveau suivant';
-    document.getElementById('winov').classList.add('show');
+    if(coursANouveau)montrerCours(L.dec,true);
+    else document.getElementById('winov').classList.add('show');
     celebrating=false;
   },T+2100));
 }
