@@ -253,9 +253,9 @@ function construireCours(id){
   const tE=i=>.4+i*1.05; /* l'instant de l'étape i — texte, cascade et mur (v8 : tout synchronisé) */
   const sc=sceneCours(c.scene,tE);
   const fin=tE(c.etapes.length-1)+.6;
+  /* v9.1 : la scène seule porte le lien entre les deux registres — pas de
+     phrase-pont (décision de Gwenael sur rendu) */
   let h=`<div class="cscene"><svg class="hsvg" viewBox="0 0 340 ${sc.h}" role="img" aria-label="La cascade de rayons du jeu et, juste dessous, son zoom : le mur de bandes">${sc.svg}</svg></div>`;
-  /* la phrase-pont nomme le lien entre les deux registres (v9 : le zoom) */
-  h+=`<p class="cpontphrase cligne" style="--win-delay:${tE(0).toFixed(2)}s">Le mur, c'est un zoom sur tes rayons : chaque part de lumière devient un morceau de la bande.</p>`;
   /* déroulé en étapes : l'explication courte au-dessus, l'écriture étagée dessous
      (règle R5), au même instant que les deux zones de la scène */
   c.etapes.forEach((e,i)=>{

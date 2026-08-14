@@ -480,7 +480,8 @@ test("le chantier « Comprendre » : découvertes, points de cours et règle R1"
           bouton: h.includes('cpredirebtn'),
           reponseCachee: !h.includes(COURS[id].predire ? COURS[id].predire.reponse : '@jamais@'),
           scene: h.includes('class="cscene"') && h.includes('class="cfade"'),
-          pont: h.includes('un zoom sur tes rayons'),
+          /* v9.1 : la scène seule porte le lien — plus de phrase-pont */
+          sansPont: !h.includes('cpontphrase') && !h.includes('un zoom sur tes rayons'),
         };
       }),
     };
@@ -506,7 +507,7 @@ test("le chantier « Comprendre » : découvertes, points de cours et règle R1"
     assert.equal(p.bouton, p.id !== "demi", `${p.id} : bouton « À ton avis… »`);
     assert.equal(p.reponseCachee, true, `${p.id} : la réponse du prédire n'est pas dans la page avant le toucher (R3)`);
     assert.equal(p.scene, true, `${p.id} : scène à deux registres présente`);
-    assert.equal(p.pont, true, `${p.id} : la phrase-pont du zoom relie les deux registres (v9)`);
+    assert.equal(p.sansPont, true, `${p.id} : plus de phrase-pont, la scène seule porte le lien (v9.1)`);
   }
   /* le câblage : overlay dans la coquille, séquence de victoire, sauvegarde, écran des niveaux */
   assert.match(html, /id="coursov" role="dialog" aria-modal="true" aria-labelledby="courstitre"/);
