@@ -128,6 +128,10 @@ Batterie (script Playwright Python, à conserver dans `tests/`) :
    ses fruits (le fruit se mérite — exceptions documentées dans le test), les
    portes orientées acceptent le bon côté et bloquent l'autre, un fruit à valeur
    ignore les rayons d'une autre valeur (contrôle « refonte » de la batterie node).
+12. Pages générées : toute modification de `catalogue-refonte-data.js`
+   (descriptions, classement) exige de régénérer les sorties dérivées — au
+   moins `outils/toutes-les-ressources.html` (c'est le test seo-publication
+   qui le garde). Oubli réel du lot canne, attrapé par la CI.
 
 ## 6. Historique des décisions (ne pas re-débattre sans raison)
 
@@ -321,6 +325,21 @@ Batterie (script Playwright Python, à conserver dans `tests/`) :
      porte un `solMin` gagnant qui ne ramasse pas tout. Exceptions documentées :
      « La chambre close » (la porte force le tour, les fruits sont dessus) et
      « Le tour du lagon » (le tour est sa propre récompense).
+  8. **Sauvegardes face aux retouches : pas de renommage.** Les niveaux
+     retouchés gardent leur nom (donc un élève qui les avait réussis les garde) ;
+     Gwenael dira aux joueurs de supprimer leurs données de site s'ils veulent
+     revivre le monde. Rappel technique : la sauvegarde est le localStorage
+     `soley-save-v5`, clé par niveau `monde:nom` ; les petits soleils sont
+     recalculés à la volée contre la définition courante (un fruit ajouté ou une
+     solution raccourcie peut en retirer un sans rejeu) ; les vrais leviers de
+     remise à zéro sont le renommage (nouvelle clé — mais le nom est aussi la
+     clé de CALC) ou le passage à `soley-save-v6` (remise à zéro générale).
+  9. **Outils de migration morts = archives datées, en place.**
+     verifier-lot1-comprendre.mjs (mort avec l'insertion de la canne :
+     comparaison par index) et verifier-decoupage.mjs (mort avant) restent dans
+     tests/soley/ comme preuves datées de leur lot — ni retirés, ni réparés,
+     jamais en CI. Chaque nouveau lot apporte SON vérificateur (modèle :
+     verifier-lot-canne.mjs).
 
 ## 7. Architecture (découpage d'août 2026, statique, sans build, GitHub Pages)
 
@@ -518,11 +537,19 @@ commence par "use strict"; et le partage se fait par la portée globale.
   moteur (DIAGNOSTIC-REFONTE-NIVEAUX.md), audit des 33 idées (AUDIT-33-IDEES.md),
   spec (SPEC-MONDE-CANNE.md), puis construction prouvée : 2 ajouts moteur
   rétrocompatibles (fruits à valeur, portes orientées — testés dans les deux sens),
-  8 niveaux de la canne gagnants avec fruits méritès (solMin au contraire ne
+  8 niveaux de la canne gagnants avec fruits mérités (solMin au contraire ne
   ramasse pas tout), 5 niveaux du lagon retouchés à l'identique de nom et de
   grille, bibliothèque complétée des idées 21-33, compteurs publics 60→69.
   Batterie node 16/16 (nouveau contrôle « refonte » : P2 + portes + valeurs),
   verifier-lot-canne.mjs vert (61 niveaux en ligne intacts hors champs autorisés),
-  0 erreur console, captures 375 px faites. Les textes des niveaux (sub) de la
-  canne restent à polir avec Gwenael sur captures.
+  0 erreur console, captures 375 px faites. Retours visuels de Gwenael intégrés
+  avant l'envoi (v2) : icône du monde, obstacles dessinés en vraies cannes, badge
+  des fruits à valeur agrandi, cases à porte clôturées sur trois côtés. Fusionné
+  en PR #363 (squash 97923b14) après audit croisé — la session Code a trouvé LE
+  manque du patch (l'annuaire généré toutes-les-ressources.html disait encore
+  60 niveaux, corrigé en commit séparé d'une ligne) et vérifié levels.js par un
+  diff sémantique indépendant, par nom. Rituel post-fusion : 9/9 fichiers servis
+  aux octets (musée témoin non modifié), batterie complète verte sur le déployé
+  (69 niveaux, 145 fruits, seuils [0,6,5,6,5,5,5,4,5]). Les textes des niveaux
+  (sub) de la canne restent à polir avec Gwenael.
 - (à compléter à chaque session)
