@@ -110,8 +110,13 @@ Batterie (script Playwright Python, à conserver dans `tests/`) :
    découvertes, étoiles sur les cartes, mode classe, zéro défilement horizontal téléphone.
 9. Chantier « Comprendre » (lot 1) : « Les quatre quarts » gagne par sa `sol` (1/4 exact
    partout), point de cours affiché après victoire d'une découverte seulement (jamais au
-   rejeu), cascade C3 à quatre rayons terminaux, prédire à révélation, « Revoir » et
-   « Revoir le cours », vieille sauvegarde sans `cours` intacte, stabilité 320/402 px.
+   rejeu), cascade C3 à quatre rayons terminaux, prédire à révélation, « Revoir le
+   cours » sur la carte du niveau, vieille sauvegarde sans `cours` intacte, stabilité
+   320/402 px. (Le bouton « Revoir » DU PANNEAU n'existe plus depuis le 14/08.)
+10. Panneau de cours (T10, depuis le 14/08) : posé d'un coup — aucun `--win-delay`
+   dans le corps —, sortie « J'ai compris ! » toujours dans l'écran à l'ouverture
+   comme en bas, flèche de défilement présente tant que le panneau déborde et
+   effacée une fois en bas.
 
 ## 6. Historique des décisions (ne pas re-débattre sans raison)
 
@@ -218,9 +223,11 @@ Batterie (script Playwright Python, à conserver dans `tests/`) :
   2. **Le bouton « Revoir » du panneau disparaît** (sans animation il ne fait plus
      rien) ; la relecture passe par « Revoir le cours » sur la carte du niveau.
   3. **La sortie du cours est toujours atteignable.** Défaut mesuré avant
-     correction : à l'ouverture, « J'ai compris ! » était 216 px SOUS le bas de
-     l'écran sur les trois largeurs testées, et le fond ne ferme pas — l'élève
-     n'avait aucune sortie visible. Barre de boutons désormais épinglée au bas du
+     correction : à l'ouverture, « J'ai compris ! » tombait SOUS le bas de l'écran,
+     et le fond ne ferme pas — l'élève n'avait aucune sortie visible. Relevé complet
+     (3 cours × 3 largeurs, mesuré par la session Code à l'application du correctif) :
+     de 0 px (le demi sur 402 px) à 384 px (le quart sur 320 px), 221 px pour le
+     quart sur 375 px. Après correction : 0 px dans les neuf cas. Barre de boutons désormais épinglée au bas du
      panneau, boutons TOUJOURS accessibles : pas de garde-fou obligeant à défiler
      (« si l'élève a envie de lire il lit, sinon il ne lira pas dans tous les cas »).
   4. **Flèche de défilement** (idée de Gwenael) : une pastille-flèche pulse au bas
@@ -435,4 +442,26 @@ commence par "use strict"; et le partage se fait par la portée globale.
 - 2026-08-14 : v9.1 — la phrase-pont est retirée des trois points de cours (décision
   de Gwenael sur rendu : la scène seule porte le lien) ; tests de présence inversés,
   CSS nettoyée. Tout le reste des cours validé tel quel.
+- 2026-08-14 (audit à froid + retouches du lagon, PR #361, fusionnée en d428f5dd) :
+  le lot 1 étant en ligne, le lagon a été joué de bout en bout hors production
+  (9 niveaux résolus, 3 cours capturés étape par étape, 375/320/430 px). Ce qui
+  tenait : déclenchement du cours, synchronisation des deux registres, alignement
+  du zoom v9, totaux R1, chaînage tiers → « Les quatre quarts ». Treize décisions
+  en sont sorties (détail et raisons : §6, bloc « AUDIT À FROID DU LAGON ») —
+  la principale : le point de cours ne se déroule plus au chronomètre, il s'affiche
+  entier, et sa sortie est enfin atteignable (elle tombait jusqu'à 384 px sous le bas
+  de l'écran). Aussi : bouton « Revoir » du panneau supprimé, pastille-flèche de
+  défilement, pointillés de zoom retirés, étiquettes des rayons dégagées de leur
+  trait, prédire du tiers supprimé, carte du tiers resserrée, les trois cours ouverts
+  de la même façon avec « parts égales », consignes étagées + typographie française,
+  deux consignes redevenues des questions, barre de fraction dégagée dans les maisons,
+  flèches d'orientation des pièces enfin visibles. `levels.js` : 61 niveaux, mêmes
+  noms dans le même ordre, les 61 `sol` intacts, `CALC`/`WORLDS`/`FRW` inchangés —
+  seuls 2 `sub`, 5 textes de cours, le `predire` et la carte du tiers diffèrent
+  (preuve : verifier-lot1-comprendre.mjs, étendu aux 2 consignes, 38/38).
+  Batterie 43/43 en local ET sur le déployé, node 15/15, 7/7 fichiers servis aux
+  octets committés (musée compris), zéro erreur console. Trois contrôles T10 ajoutés
+  à la batterie ; c'est l'un d'eux qui a débusqué un reste de minuterie (la carte de
+  savoir arrivait encore 1,5 s après le reste). Cahiers à jour : §5 point 10, §6,
+  DESIGN-SOLEY.md « Retouches du chantier 2 », SPEC §13.
 - (à compléter à chaque session)

@@ -187,11 +187,9 @@ function sceneCours(sc,tE){
   const cx=i=>X0+i*wT+wT/2; /* centre de la case i de la dernière rangée */
   const yTerm=deux?190:150, murTop=yTerm+12;
   const H=murTop+etages.length*hB+8;
-  const f1=fdiv([1,1],n1), fT=fdiv([1,1],nT);
-  /* traits de zoom (option v9, à juger sur capture) : des bords de chaque rayon
-     terminal aux bords de sa case — l'agrandissement se voit */
-  /* pointillés de zoom retirés (accord Gwenael, 14/08) */
-  let zoom='';
+  const f1=fdiv([1,1],n1);
+  /* Les pointillés de zoom ont été retirés le 14/08 : l'alignement de chaque rayon
+     terminal au-dessus de SA case dit déjà l'agrandissement (SOLEY.md §6). */
   let g1='';
   g1+=sSun(cxS,24,[1,1]);
   g1+=sBeam(cxS,40,cxS,deux?57:63,[1,1]);
@@ -204,7 +202,6 @@ function sceneCours(sc,tE){
     g1+=sTile(cxS,80,'÷'+n1);
     /* l'étiquette se pose À CÔTÉ du rayon, jamais dessus */
     for(let i=0;i<n1;i++)g1+=cEtiq(cx(i)+(cx(i)<cxS?-15:15),136,f1,15);
-    g1+=zoom;
     rayons=cFade(tE(0),g1);
   }else{
     const n2=divs[1], f2=fdiv(f1,n2);
@@ -226,7 +223,6 @@ function sceneCours(sc,tE){
     gx.forEach(x=>{g2+=sTile(x,128,'÷'+n2);});
     for(let i=0;i<nT;i++){const sx=gx[Math.floor(i/n2)];
       g2+=cEtiq(cx(i)+(cx(i)<sx?-15:15),172,f2,14);}
-    g2+=zoom;
     rayons=cFade(tE(0),g1)+cFade(tE(1),g2);
   }
   /* le mur de bandes collées, juste sous les rayons terminaux ; chaque étage
