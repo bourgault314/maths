@@ -518,7 +518,7 @@ def principal():
         page.click("#coursrevoir")
         revoir = page.evaluate("""() => ({
           reponse: document.getElementById('coursbody').innerHTML.includes('la moitié du quart'),
-          scene: !!document.querySelector('#coursbody .cdraw'),
+          scene: !!document.querySelector('#coursbody [data-terminal]'),
           ouvert: document.getElementById('coursov').classList.contains('show'),
         })""")
         section("T9 « Revoir » rejoue l'animation (prédire re-masqué, panneau ouvert)",

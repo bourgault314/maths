@@ -194,20 +194,20 @@ function maisonTxtSVG(txt){
     return `<text class="tneed" x="55" y="79" font-size="${fs}">${txt}</text>`;
   }
   const large=m[1].length>1||m[2].length>1;
-  const fs=large?13:16, demi=large?13:9;
+  const fs=large?15:19, demi=large?15:11;
   return `<g class="tneed">`+
-    `<text x="55" y="70" font-size="${fs}">${m[1]}</text>`+
-    `<line x1="${55-demi}" y1="74.5" x2="${55+demi}" y2="74.5" stroke="#3b2a17" stroke-width="2.5"/>`+
-    `<text x="55" y="87.5" font-size="${fs}">${m[2]}</text></g>`;
+    `<text x="55" y="68.5" font-size="${fs}">${m[1]}</text>`+
+    `<line x1="${55-demi}" y1="73" x2="${55+demi}" y2="73" stroke="#3b2a17" stroke-width="2.8"/>`+
+    `<text x="55" y="86.5" font-size="${fs}">${m[2]}</text></g>`;
 }
 function beamLblSVG(id,x,y,val){
   if(val[1]===1)return `<text class="beamlbl" data-seg="${id}" x="${x}" y="${y}" fill="${fcol(val)}">${fstr(val)}</text>`;
-  const c=fcol(val), demi=(String(val[0]).length>1||String(val[1]).length>1)?15:11;
+  const c=fcol(val), demi=(String(val[0]).length>1||String(val[1]).length>1)?18:13;
   return `<g class="beamlbl" data-seg="${id}" fill="${c}">`+
-    `<text x="${x}" y="${y-13}" style="font-size:20px">${val[0]}</text>`+
-    `<line x1="${x-demi}" y1="${y-8.5}" x2="${x+demi}" y2="${y-8.5}" stroke="#101a33" stroke-width="5.5"/>`+
-    `<line x1="${x-demi+1}" y1="${y-8.5}" x2="${x+demi-1}" y2="${y-8.5}" stroke="${c}" stroke-width="2.5"/>`+
-    `<text x="${x}" y="${y+9}" style="font-size:20px">${val[1]}</text></g>`;
+    `<text x="${x}" y="${y-15}" style="font-size:23px">${val[0]}</text>`+
+    `<line x1="${x-demi}" y1="${y-9.5}" x2="${x+demi}" y2="${y-9.5}" stroke="#101a33" stroke-width="6"/>`+
+    `<line x1="${x-demi+1}" y1="${y-9.5}" x2="${x+demi-1}" y2="${y-9.5}" stroke="${c}" stroke-width="2.8"/>`+
+    `<text x="${x}" y="${y+10}" style="font-size:23px">${val[1]}</text></g>`;
 }
 function targetSVG(t,stat,label='',index=''){
   const px=t.x*CS,py=t.y*CS;

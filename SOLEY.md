@@ -311,8 +311,12 @@ commence par "use strict"; et le partage se fait par la portée globale.
   (pied « Revoir le cours » réservé). Maquette « étagé sur le plateau ? » fournie à
   Gwenael (décision ouverte). Batterie re-verte (40 contrôles), node 15/15.
   PASSE 3 (même jour) : Gwenael valide la maquette — écriture étagée SUR LE PLATEAU
-  (maisonTxtSVG et beamLblSVG dans render.js, cLblFrac pour les cascades des cours ;
-  chiffres des rayons à 20 px « un peu plus gros ») ; slash conservé sur les passes
+  (maisonTxtSVG et beamLblSVG dans render.js) ; slash conservé sur les passes
   étroites et les badges de soleils (à juger sur téléphone). Captures au format
   téléphone (390×844, échelle 3) fournies pour prévisualiser la taille réelle.
+  PASSE 4 (même jour) : la scène des cours passe des rayons aux BANDES DE FRACTIONS
+  (proposition d'une collègue validée par Gwenael — sceneBandes/bandeLbl dans
+  engine.js : mur proportionnel, séparations pointillées, fractions étagées noires,
+  couleurs par dénominateur, étages animés) ; fractions des maisons grossies à 19 px
+  et des rayons à 23 px (tailles à confirmer sur téléphone). Batterie 40/40.
 - (à compléter à chaque session)

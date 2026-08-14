@@ -453,9 +453,9 @@ test("le chantier « Comprendre » : découvertes, points de cours et règle R1"
       totaux: [textes('demi').includes('1/2 + 1/2 = 2/2 = 1'),
         textes('tiers').includes('1/3 + 1/3 + 1/3 = 3/3 = 1'),
         textes('quart').includes('1/4 + 1/4 + 1/4 + 1/4 = 4/4 = 1')],
-      /* R2 : les scènes se construisent, tous les rayons terminaux visibles */
+      /* R2 : les scènes en bandes de fractions se construisent, toutes les parts visibles */
       terminaux: ['demi', 'tiers', 'quart'].map(id =>
-        (sceneCascade(COURS[id].scene).svg.match(/data-terminal/g) || []).length),
+        (sceneBandes(COURS[id].scene).svg.match(/data-terminal/g) || []).length),
       /* R3 dans le panneau : la réponse du prédire est ABSENTE du HTML construit */
       panneau: ['demi', 'tiers', 'quart'].map(id => {
         const h = construireCours(id);
@@ -464,7 +464,7 @@ test("le chantier « Comprendre » : découvertes, points de cours et règle R1"
           carteSavoir: h.includes('Carte de savoir'),
           bouton: h.includes('cpredirebtn'),
           reponseCachee: !h.includes(COURS[id].predire ? COURS[id].predire.reponse : '@jamais@'),
-          scene: h.includes('class="cscene"') && h.includes('class="cdraw"'),
+          scene: h.includes('class="cscene"') && h.includes('class="cfade"'),
         };
       }),
     };
@@ -482,7 +482,7 @@ test("le chantier « Comprendre » : découvertes, points de cours et règle R1"
   assert.equal(r.separation, true, "R5 : les égalités vivent dans eq, jamais dans une phrase");
   assert.equal(r.predire, true);
   assert.deepEqual([...r.totaux], [true, true, true], "R1 : les 2/2, 3/3 et 4/4 sont écrits");
-  assert.deepEqual([...r.terminaux], [2, 3, 4], "R2 : la scène C3 montre bien QUATRE rayons 1/4");
+  assert.deepEqual([...r.terminaux], [2, 3, 4], "R2 : la scène C3 montre bien QUATRE cases 1/4");
   for (const p of r.panneau) {
     assert.equal(p.carteSavoir, true, `${p.id} : la phrase-carte est habillée en carte de savoir (R4)`);
     assert.equal(p.bouton, p.id !== "demi", `${p.id} : bouton « À ton avis… »`);
@@ -513,17 +513,18 @@ test("le chantier « Comprendre » : découvertes, points de cours et règle R1"
     rayon: beamLblSVG(7, 100, 50, [3,4]),
     rayonEntier: beamLblSVG(8, 100, 50, [2,1]),
   }))()`, context);
-  assert.ok(plateau.maison.includes('<g class="tneed">') && plateau.maison.includes('y1="74.5"'),
+  assert.ok(plateau.maison.includes('<g class="tneed">') && plateau.maison.includes('y1="73"'),
     "la maison 1/4 s'écrit en fraction empilée");
   assert.match(plateau.disp, /<text class="tneed"[^>]*>0,5<\/text>/,
     "les écritures décimales et pourcentages restent telles quelles");
-  assert.ok(plateau.douze.includes('x1="42"'), "barre élargie pour les douzièmes");
+  assert.ok(plateau.douze.includes('x1="40"'), "barre élargie pour les douzièmes");
   assert.match(plateau.rayon, /^<g class="beamlbl" data-seg="7"/);
-  assert.ok(plateau.rayon.includes("font-size:20px") && (plateau.rayon.match(/<text/g) || []).length === 2,
-    "l'étiquette de rayon 3/4 est empilée, chiffres à 20 px");
+  assert.ok(plateau.rayon.includes("font-size:23px") && (plateau.rayon.match(/<text/g) || []).length === 2,
+    "l'étiquette de rayon 3/4 est empilée, chiffres à 23 px");
   assert.match(plateau.rayonEntier, /<text class="beamlbl"[^>]*>2<\/text>/,
     "un rayon entier garde son étiquette simple");
-  assert.match(js.engine, /function cLblFrac/);
+  assert.match(js.engine, /function sceneBandes/);
+  assert.match(js.engine, /function bandeLbl/);
 });
 
 test("le paysage mobile et le plein écran utilisent réellement tout le viewport", () => {

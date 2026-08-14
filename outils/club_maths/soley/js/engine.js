@@ -142,72 +142,51 @@ function calcLineHTML(line){
    primitives existantes (sSun/sBeam/sLbl/sTile), épaisseurs et couleurs réelles.
    L'animation est entièrement portée par des délais CSS (--win-*) : aucune
    minuterie à nettoyer, « Revoir » reconstruit simplement le panneau. */
-function cDraw(x1,y1,x2,y2,f,t0,dur,term){
-  const len=Math.hypot(x2-x1,y2-y1).toFixed(1);
-  return `<g class="cdraw"${term?' data-terminal="1"':''} style="--win-length:${len}px;--win-duration:${dur}s;--win-delay:${t0}s">${sBeam(x1,y1,x2,y2,f)}</g>`;
-}
 const cFade=(t0,inner)=>`<g class="cfade" style="--win-delay:${t0}s">${inner}</g>`;
-/* Étiquette de fraction ÉTAGÉE dans les scènes des cours (décision de Gwenael,
-   14/08) : numérateur / barre / dénominateur autour de l'ancienne ligne de base. */
-function cLblFrac(x,y,f,fs){
-  if(f[1]===1)return sLbl(x,y,fstr(f),fcol(f),fs);
-  const c=fcol(f), k=fs||16, fpx=Math.round(k*.88);
-  const demi=(String(f[0]).length>1||String(f[1]).length>1)?11:7;
-  const yb=(y-k*.25).toFixed(1);
-  return `<g>`+
-    sLbl(x,y-Math.round(k*.45),String(f[0]),c,fpx)+
-    `<line x1="${x-demi}" y1="${yb}" x2="${x+demi}" y2="${yb}" stroke="#101a33" stroke-width="4.5"/>`+
-    `<line x1="${x-demi+1}" y1="${yb}" x2="${x+demi-1}" y2="${yb}" stroke="${c}" stroke-width="2"/>`+
-    sLbl(x,y+Math.round(k*.75),String(f[1]),c,fpx)+
-  `</g>`;
+/* Scène des cours en BANDES DE FRACTIONS (proposition de la collègue, validée par
+   Gwenael le 14/08) : le mur de bandes — l'entier, puis chaque étage de parts
+   égales, largeurs proportionnelles, séparations pointillées, fractions étagées
+   noires. Adapté à Solèy : couleur de case = dénominateur, comme les rayons du
+   jeu. Les étages apparaissent l'un après l'autre (délais CSS, zéro minuterie). */
+function bandeLbl(cx,y,f){
+  if(f[1]===1)return `<text x="${cx}" y="${y+29}" text-anchor="middle" font-size="21" font-weight="900" fill="#101a33">1</text>`;
+  return `<text x="${cx}" y="${y+19}" text-anchor="middle" font-size="15" font-weight="900" fill="#101a33">${f[0]}</text>`+
+    `<line x1="${cx-8}" y1="${y+23}" x2="${cx+8}" y2="${y+23}" stroke="#101a33" stroke-width="2"/>`+
+    `<text x="${cx}" y="${y+37}" text-anchor="middle" font-size="15" font-weight="900" fill="#101a33">${f[1]}</text>`;
 }
-function sceneCascade(sc){
-  const divs=sc.divs, deux=divs.length===2, n1=divs[0];
-  const cy=deux?100:(n1===3?75:60);
-  let H=deux?200:(n1===3?150:120);
-  const ys1=n1===2?(deux?[52,148]:[30,90]):[28,75,122];
-  const p1=104, xFin=298;
-  const f1=fdiv([1,1],n1);
-  const t1=1.15, fin1=1.95;
-  let s='';
-  s+=cFade(0,sSun(26,cy,[1,1]));
-  s+=cDraw(40,cy,p1-17,cy,[1,1],.2,.7);
-  s+=cFade(.9,sLbl((40+p1-17)/2,cy-HW([1,1])/2-9,'1',fcol([1,1])));
-  s+=cFade(.95,sTile(p1,cy,'÷'+n1));
-  const x1=deux?218-17:xFin;
-  ys1.forEach((y,i)=>{s+=cDraw(p1+15,cy,x1,y,f1,t1+i*.05,.8,!deux);});
-  let stageFin,fin;
-  if(!deux){
-    ys1.forEach(y=>{s+=cFade(fin1,cLblFrac(318,y+4,f1,16));});
-    stageFin=[fin1];fin=2.1;
-  }else{
-    const p2=218, f2=fdiv(f1,divs[1]), t2=2.25, fin2=3.05, off=[-24,24];
-    ys1.forEach(y=>{s+=cFade(fin1,cLblFrac((p1+15+x1)/2,y<cy?y-12:y+20,f1,15));});
-    ys1.forEach(y=>{s+=cFade(2.0,sTile(p2,y,'÷'+divs[1]));});
-    ys1.forEach((y,i)=>{off.forEach((o,j)=>{s+=cDraw(p2+15,y,xFin,y+o,f2,t2+(i*2+j)*.05,.8,true);});});
-    ys1.forEach(y=>{off.forEach(o=>{s+=cFade(fin2,cLblFrac(318,y+o+3,f2,15));});});
-    stageFin=[fin1,fin2];fin=3.2;
-  }
-  if(sc.comp){
-    /* comparaison à l'œil (réservé aux futurs cours) : rayons côte à côte, vraies épaisseurs */
-    sc.comp.forEach((f,i)=>{
-      const y=H+22+i*30;
-      s+=cFade(fin+.15+i*.3,cLblFrac(34,y+4,f,15));
-      s+=cDraw(64,y,xFin,y,f,fin+.2+i*.3,.5);
-    });
-    H+=22+sc.comp.length*30+4;
-    fin+=.2+sc.comp.length*.3+.5;
-  }
-  return {h:H,svg:s,stageFin,fin};
+function sceneBandes(sc){
+  const X0=20, W=300, hB=44, ecart=10;
+  const etages=[[1,1]];
+  let d=1;
+  sc.divs.forEach(n=>{d*=n;etages.push([1,d]);});
+  const H=etages.length*(hB+ecart)+6;
+  let s='', fin=0;
+  etages.forEach((f,k)=>{
+    const y=8+k*(hB+ecart), n=f[1], w=W/n, t0=.35+k*.85, dernier=k===etages.length-1;
+    let e='';
+    for(let i=0;i<n;i++){
+      e+=`<rect x="${(X0+i*w).toFixed(1)}" y="${y}" width="${w.toFixed(1)}" height="${hB}" fill="${fcol(f)}"${dernier&&f[1]>1?' data-terminal="1"':''}/>`;
+    }
+    for(let i=1;i<n;i++){
+      e+=`<line x1="${(X0+i*w).toFixed(1)}" y1="${y}" x2="${(X0+i*w).toFixed(1)}" y2="${y+hB}" stroke="#10182e" stroke-width="1.6" stroke-dasharray="4 5" opacity=".55"/>`;
+    }
+    for(let i=0;i<n;i++){
+      e+=bandeLbl(X0+i*w+w/2,y,f);
+    }
+    e+=`<rect x="${X0}" y="${y}" width="${W}" height="${hB}" fill="none" stroke="#101a33" stroke-width="2.5"/>`;
+    s+=cFade(t0,e);
+    fin=t0+.4;
+  });
+  return {h:H,svg:s,fin};
 }
 let coursId=null, coursApresVictoire=false, coursRetour=null;
 function construireCours(id){
   const c=COURS[id];
   if(!c)return '';
-  const sc=sceneCascade(c.scene);
-  let h=`<div class="cscene"><svg class="hsvg" viewBox="0 0 340 ${sc.h}" role="img" aria-label="La cascade de partage, dessinée avec les rayons du jeu">${sc.svg}</svg></div>`;
+  const sc=sceneBandes(c.scene);
+  let h=`<div class="cscene"><svg class="hsvg" viewBox="0 0 340 ${sc.h}" role="img" aria-label="Les bandes de fractions : l'entier et ses parts égales">${sc.svg}</svg></div>`;
   /* déroulé en étapes : l'explication courte au-dessus, l'écriture étagée dessous
-     (règle R5), au rythme du dessin de la cascade */
+     (règle R5), au rythme de l'apparition des bandes */
   const pas=Math.max(.7,sc.fin/Math.max(1,c.etapes.length));
   c.etapes.forEach((e,i)=>{
     const t0=.5+i*pas;

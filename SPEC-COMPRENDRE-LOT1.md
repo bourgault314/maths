@@ -425,8 +425,16 @@ gâteau). **FEU VERT DONNÉ : cette spécification est bonne pour la session Cod
 >   qu'un cours y est disponible.
 > - TRANCHÉ sur maquette (14/08) : l'écriture étagée passe AUSSI sur le plateau —
 >   maisons et étiquettes de rayons (chiffres un peu grossis), et les étiquettes
->   des scènes en cascade des cours. Restent en slash, à juger sur téléphone :
+>   des scènes des cours. Restent en slash, à juger sur téléphone :
 >   les passes étroites (≤1/2) et les badges des soleils spéciaux (très petits).
+> - **La scène des cours passe des rayons aux BANDES DE FRACTIONS** (proposition
+>   d'une collègue, validée par Gwenael sur image de référence : mur 1 / demis /
+>   quarts) : bandes proportionnelles, séparations pointillées, fractions étagées
+>   noires au centre des cases ; adaptation Solèy = couleur de case par
+>   dénominateur (entier doré, demis orangés, tiers bleus, quarts roses), les
+>   étages apparaissent l'un après l'autre. La somme (C3-3) se LIT sur la bande.
+>   Les fractions des maisons (19 px) et des rayons (23 px) sont grossies à sa
+>   demande — tailles à confirmer sur téléphone, réglables en un nombre.
 > - Rappel réaffirmé : pas d'aide sur les niveaux les plus durs / défis à venir
 >   (chantier 4, déjà consigné au §11).
 
