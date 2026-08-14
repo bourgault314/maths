@@ -128,10 +128,11 @@ seule décomposition évidente. Principes pour de vrais casse-têtes :
   d'abord). Le plateau doit occuper l'espace sur grand écran — ordinateur ET
   vidéoprojection/TBI, usage central pour le professeur. Diagnostic avec captures
   d'écran de Gwenael.
-- **Le miroir de la collègue** (proposition à valider) : un miroir réfléchit à la
-  perpendiculaire, d'un coup — pas en arrondi. Dessiner le miroir comme une barre
-  inclinée à 45° dans sa case et faire tourner le rayon net, à angle droit.
-  Plus juste physiquement, plus lisible.
+- **Le miroir de la collègue** — RÉALISÉ (13/08 nuit) : barre-miroir à 45° orientée
+  entrée/sortie (double trait sombre/clair + reflet), réflexion NETTE à angle droit,
+  trajets internes de toutes les pièces en lignes brisées — plus aucune courbe de
+  rayon dans le jeu. Isolé dans render.js seul (revert facile si le réveil en décide
+  autrement). Rendu à juger par Gwenael au matin.
 - **Interaction hybride** (proposition à valider) : téléphone/tablette = toucher
   l'outil puis toucher la case (l'actuel, le doigt ne cache pas le plateau) ;
   ordinateur = glisser-déposer à la souris EN PLUS du clic-clic, y compris pour

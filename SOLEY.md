@@ -25,7 +25,9 @@ fichiers modifiés → tests → reste à vérifier.
 - Cases créoles (cibles) : exigent une fraction EXACTE, un seul rayon par case.
 - Épaisseur du rayon proportionnelle à sa valeur ; couleur selon le dénominateur réduit
   (demis orangés, tiers bleus, quarts roses, sixièmes verts, huitièmes lilas, neuvièmes cyan, douzièmes pervenche).
-- Le rayon reste continu à travers les pièces (même épaisseur/couleur, virages courbes).
+- Le rayon reste continu à travers les pièces (même épaisseur/couleur) et tourne NET,
+  à angle droit ; le miroir est une barre à 45° orientée par son entrée/sortie
+  (réflexion sèche — proposition de la collègue réalisée le 13/08, fini les tubes courbes).
 - Obstacles : roches (bloquent), passes étroites `≤ f` (ne laissent passer que les rayons
   assez fins — comparaison visuelle), pièces scellées (pré-posées, indéplaçables, rivets dorés).
 - Fruits péi (letchis, mangues, ananas) à ramasser en les traversant. Décoratifs pour l'instant.
@@ -127,6 +129,10 @@ Batterie (script Playwright Python, à conserver dans `tests/`) :
 - Lambrequins v2 (13/08 au soir) : dentelle à festons et perles qui pend DEVANT la façade
   (ordre de peinture SVG : corps de maison d'abord, dentelle ensuite).
 - Seuil ⌈5/8⌉ VALIDÉ définitivement par Gwenaël après essai (13/08 au soir).
+- Miroirs à 45° et rayons nets (13/08 nuit, proposition de la collègue) : barre-miroir
+  orientée entrée+sortie (diagonale de la somme des directions), réflexion à angle droit,
+  plus AUCUNE courbe de rayon (les segments internes portent data-part in/out, l'attribut
+  through a disparu). Tout est dans render.js : un revert du commit suffit à revenir.
 
 ## 7. Architecture (découpage d'août 2026, statique, sans build, GitHub Pages)
 
@@ -232,4 +238,12 @@ commence par "use strict"; et le partage se fait par la portée globale.
   à porte orientée » = levier de difficulté (pilier Chercher, principe 7), carnet péi
   confirmé chantier 3. levels.js STRICTEMENT intact. Batterie complète verte (dont
   légende et comptages de soleils), node 13/13.
+- 2026-08-13 (session 6, nuit) : miroirs à 45° et rayons nets — le miroir affiche sa
+  barre-miroir inclinée (double trait + reflet) orientée par son entrée/sortie, le rayon
+  s'y réfléchit net à angle droit ; les trajets internes de toutes les pièces sont des
+  lignes brisées (les prismes/lentille/loupes l'étaient déjà, les scènes du Coup de pouce
+  aussi — seul le miroir avait une courbe). Plus aucune courbe de rayon dans le code
+  (garde-fou au test node, géométrie des barres testée pentes ±1). CHANGEMENT ISOLÉ dans
+  render.js seul (levels.js/engine.js/ui.js/css/html intacts) : un simple revert ramène
+  les tubes courbes si le rendu déplaît au matin. Comparatif avant/après envoyé à Gwenaël.
 - (à compléter à chaque session)

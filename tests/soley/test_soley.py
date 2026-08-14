@@ -327,6 +327,21 @@ def principal():
         section("T6 paysage : le clic pose la pièce dans la bonne case", pose == 0,
                 f"case ({cible['x']},{cible['y']})")
 
+        # T6c bis — le miroir posé montre sa barre à 45° et une réflexion NETTE
+        miroir = page.evaluate(f"""() => {{
+          const g = document.querySelector('.placed[data-cell="{cible['x']},{cible['y']}"]');
+          if (!g) return null;
+          return {{
+            barre: !!g.querySelector('.mirbar'),
+            entree: !!g.querySelector('.beampath[data-part="in"]'),
+            sortie: !!g.querySelector('.beampath[data-part="out"]'),
+            courbes: g.querySelectorAll('path.beampath').length,
+          }};
+        }}""")
+        section("T6 miroir : barre à 45° + réflexion nette (2 segments, zéro courbe)",
+                bool(miroir) and miroir["barre"] and miroir["entree"] and miroir["sortie"]
+                and miroir["courbes"] == 0, "")
+
         # T6d — la victoire de bout en bout : cinématique puis fenêtre « Lévé ! »
         try:
             page.wait_for_selector("#winov.show", timeout=12000)
