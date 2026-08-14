@@ -155,14 +155,23 @@ function bandeLbl(cx,y,f){
     `<text x="${cx}" y="${y+37}" text-anchor="middle" font-size="15" font-weight="900" fill="#101a33">${f[1]}</text>`;
 }
 function sceneBandes(sc){
-  const X0=20, W=300, hB=44, ecart=10;
+  const X0=20, W=300, hB=44;
   const etages=[[1,1]];
   let d=1;
   sc.divs.forEach(n=>{d*=n;etages.push([1,d]);});
-  const H=etages.length*(hB+ecart)+6;
+  const H=etages.length*hB+18;
+  const y0=10, cyR=y0+hB/2;
   let s='', fin=0;
+  /* Le PONT entre les deux mondes (Gwenael, 14/08) : le rayon du jeu — soleil,
+     trait doré, étiquette 1 — se couche et devient la bande (son épaisseur est
+     déjà une bande dressée). Fait une fois, tout le cours reste en bandes. */
+  s+=`<g class="cpont" style="--win-delay:.15s;--fondu-delay:1.15s">`+
+    sSun(36,cyR,[1,1])+
+    sBeam(54,cyR,X0+W-6,cyR,[1,1])+
+    sLbl(170,cyR-HW([1,1])/2-7,'1',fcol([1,1]))+
+    `</g>`;
   etages.forEach((f,k)=>{
-    const y=8+k*(hB+ecart), n=f[1], w=W/n, t0=.35+k*.85, dernier=k===etages.length-1;
+    const y=y0+k*hB, n=f[1], w=W/n, t0=1.35+k*.85, dernier=k===etages.length-1;
     let e='';
     for(let i=0;i<n;i++){
       e+=`<rect x="${(X0+i*w).toFixed(1)}" y="${y}" width="${w.toFixed(1)}" height="${hB}" fill="${fcol(f)}"${dernier&&f[1]>1?' data-terminal="1"':''}/>`;
@@ -174,8 +183,12 @@ function sceneBandes(sc){
       e+=bandeLbl(X0+i*w+w/2,y,f);
     }
     e+=`<rect x="${X0}" y="${y}" width="${W}" height="${hB}" fill="none" stroke="#101a33" stroke-width="2.5"/>`;
-    s+=cFade(t0,e);
-    fin=t0+.4;
+    /* la bande de l'entier SE LÈVE depuis l'épaisseur du rayon ; les étages
+       suivants apparaissent collés, l'un après l'autre */
+    s+=k===0
+      ?`<g class="cleve" style="--win-delay:${t0}s">${e}</g>`
+      :cFade(t0,e);
+    fin=t0+.45;
   });
   return {h:H,svg:s,fin};
 }

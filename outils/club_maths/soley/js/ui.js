@@ -323,6 +323,24 @@ if(window.visualViewport)window.visualViewport.addEventListener('resize',relayou
 if(window.screen.orientation)window.screen.orientation.addEventListener('change',relayout);
 relayout();
 
+/* « D'où vient Solèy ? » : la mention complète de Refraction (décision du 14/08) */
+document.getElementById('aproposbtn').addEventListener('click',()=>{
+  document.getElementById('aproposov').classList.add('show');
+  const c=document.getElementById('aproposcard');
+  c.scrollTop=0;
+  c.focus({preventScroll:true});
+});
+document.getElementById('aproposok').addEventListener('click',()=>{
+  document.getElementById('aproposov').classList.remove('show');
+  document.getElementById('aproposbtn').focus();
+});
+document.getElementById('aproposov').addEventListener('click',ev=>{
+  if(ev.target.id==='aproposov')document.getElementById('aproposok').click();
+});
+document.addEventListener('keydown',ev=>{
+  if(ev.key==='Escape'&&document.getElementById('aproposov').classList.contains('show'))document.getElementById('aproposok').click();
+});
+
 /* ===== API de test ===== */
 window.SOLEY={
   openLevel,simulate,state,LV,

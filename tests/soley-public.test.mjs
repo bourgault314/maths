@@ -465,6 +465,7 @@ test("le chantier « Comprendre » : découvertes, points de cours et règle R1"
           bouton: h.includes('cpredirebtn'),
           reponseCachee: !h.includes(COURS[id].predire ? COURS[id].predire.reponse : '@jamais@'),
           scene: h.includes('class="cscene"') && h.includes('class="cfade"'),
+          pont: h.includes('class="cpont"') && h.includes('class="cleve"'),
         };
       }),
     };
@@ -487,7 +488,8 @@ test("le chantier « Comprendre » : découvertes, points de cours et règle R1"
     assert.equal(p.carteSavoir, true, `${p.id} : la phrase-carte est habillée en carte de savoir (R4)`);
     assert.equal(p.bouton, p.id !== "demi", `${p.id} : bouton « À ton avis… »`);
     assert.equal(p.reponseCachee, true, `${p.id} : la réponse du prédire n'est pas dans la page avant le toucher (R3)`);
-    assert.equal(p.scene, true, `${p.id} : scène en cascade animée présente`);
+    assert.equal(p.scene, true, `${p.id} : scène en bandes animée présente`);
+    assert.equal(p.pont, true, `${p.id} : le pont rayon → bande ouvre la scène`);
   }
   /* le câblage : overlay dans la coquille, séquence de victoire, sauvegarde, écran des niveaux */
   assert.match(html, /id="coursov" role="dialog" aria-modal="true" aria-labelledby="courstitre"/);
@@ -525,6 +527,13 @@ test("le chantier « Comprendre » : découvertes, points de cours et règle R1"
     "un rayon entier garde son étiquette simple");
   assert.match(js.engine, /function sceneBandes/);
   assert.match(js.engine, /function bandeLbl/);
+  /* mention Refraction (14/08, textes exacts de Gwenael) : courte au pied de la
+     page, complète dans le panneau « D'où vient Solèy ? » */
+  assert.match(html, /Solèy est librement adapté de Refraction \(Center for Game Science, université de Washington, 2010\)\./);
+  assert.match(html, /id="aproposov" role="dialog" aria-modal="true"/);
+  assert.match(html, /L'idée de Solèy vient de Refraction/);
+  assert.match(html, /Merci aux créateurs de Refraction\./);
+  assert.match(js.ui, /aproposbtn/);
 });
 
 test("le paysage mobile et le plein écran utilisent réellement tout le viewport", () => {

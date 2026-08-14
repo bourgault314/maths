@@ -435,6 +435,16 @@ gâteau). **FEU VERT DONNÉ : cette spécification est bonne pour la session Cod
 >   étages apparaissent l'un après l'autre. La somme (C3-3) se LIT sur la bande.
 >   Les fractions des maisons (19 px) et des rayons (23 px) sont grossies à sa
 >   demande — tailles à confirmer sur téléphone, réglables en un nombre.
+> - **Le pont entre les deux mondes** (Gwenael, 14/08) : chaque scène de cours
+>   s'ouvre sur le soleil et son rayon doré étiqueté 1, qui se couche et devient
+>   la bande de l'entier (son épaisseur est déjà une bande dressée) — le vécu du
+>   jeu, puis la forme de l'école. Les étages du mur sont COLLÉS. En réserve pour
+>   le cours de la lentille : l'addition en bandes (deux dispositions fournies
+>   par Gwenael — bout à bout / en L), forme académique à trancher à ce lot-là.
+> - **Mention de Refraction** (textes de Gwenael au caractère près) : courte au
+>   pied de la page du jeu, complète dans le panneau « D'où vient Solèy ? »
+>   (le jeu n'a pas de panneau de règles : ce panneau, ouvert depuis le pied de
+>   l'accueil, en tient lieu). Consignée dans SOLEY.md §6.
 > - Rappel réaffirmé : pas d'aide sur les niveaux les plus durs / défis à venir
 >   (chantier 4, déjà consigné au §11).
 

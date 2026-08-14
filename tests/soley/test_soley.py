@@ -398,6 +398,19 @@ def principal():
         defil = page.evaluate("() => ({ sw: document.documentElement.scrollWidth, cw: document.documentElement.clientWidth })")
         section("T8 accueil téléphone : zéro défilement horizontal",
                 defil["sw"] <= defil["cw"] + 1, f"{defil['sw']} dans {defil['cw']}")
+
+        # T9 — mention Refraction : pied de page + panneau « D'où vient Solèy ? »
+        apropos = page.evaluate("""() => {
+          document.getElementById('aproposbtn').click();
+          const ouvert = getComputedStyle(document.getElementById('aproposov')).display === 'flex';
+          const texte = document.getElementById('aproposte').textContent;
+          document.getElementById('aproposok').click();
+          const ferme = getComputedStyle(document.getElementById('aproposov')).display === 'none';
+          return { ouvert, ferme, complet: texte.includes('Merci aux créateurs de Refraction.'),
+            court: document.querySelector('.site-footer').textContent.includes('librement adapté de Refraction') };
+        }""")
+        section("T9 mention Refraction : pied de page + panneau « D'où vient Solèy ? »",
+                apropos["ouvert"] and apropos["ferme"] and apropos["complet"] and apropos["court"], "")
         ctx3.close()
 
         # ============ passe 4 : sauvegarde amorcée + mode classe ============

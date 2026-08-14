@@ -165,7 +165,22 @@ Batterie (script Playwright Python, à conserver dans `tests/`) :
   empilées dessous ; fraction citée dans une phrase = empilée en petit) ; les chaînes
   d'égalités se coupent avant un « = », jamais au milieu d'une somme (Coup de pouce
   compris). Les cours sont courts : la phrase-bilan ne vit que dans la carte de savoir.
-  DÉCISION SUR MAQUETTE (14/08) : l'écriture étagée passe AUSSI sur le plateau —
+- Mention de Refraction (14/08, textes de Gwenael au caractère près) : mention COURTE au
+  pied de la page du jeu (« Solèy est librement adapté de Refraction (Center for Game
+  Science, université de Washington, 2010). ») ; mention COMPLÈTE dans le panneau
+  « D'où vient Solèy ? » ouvert depuis le pied de l'accueil — le jeu n'ayant pas de
+  panneau de règles, ce lien en tient lieu. Elle remplace l'ancienne ligne « jeu
+  original librement inspiré… ».
+- Bandes des cours, suite (14/08) : étages COLLÉS (aucun espace entre les bandes) ;
+  le PONT entre les deux mondes ouvre chaque scène — le soleil et son rayon doré
+  étiqueté 1 apparaissent, puis le rayon se couche et devient la bande 1 (son
+  épaisseur est déjà une bande dressée) ; ensuite tout le cours reste en bandes.
+  Couleurs des cases = celles du JEU par dénominateur (arbitrage laissé à Claude et
+  assumé : le pont impose la continuité rayon→bande ; les bandes jaune/vert des
+  gabarits maths&go restent la référence hors Solèy). EN RÉSERVE pour le cours de la
+  lentille (forêt, lot suivant) : l'addition en bandes — Gwenael a fourni deux
+  dispositions (bout à bout sur une ligne / en L), forme académique à trancher alors.
+- DÉCISION SUR MAQUETTE (14/08) : l'écriture étagée passe AUSSI sur le plateau —
   maisons (numérateur/barre/dénominateur dans la façade) et étiquettes de rayons
   (chiffres 20 px, un peu plus gros que la maquette, à la demande de Gwenael), ainsi
   que les étiquettes des scènes en cascade des cours. Restent en slash pour l'instant
@@ -319,4 +334,9 @@ commence par "use strict"; et le partage se fait par la portée globale.
   engine.js : mur proportionnel, séparations pointillées, fractions étagées noires,
   couleurs par dénominateur, étages animés) ; fractions des maisons grossies à 19 px
   et des rayons à 23 px (tailles à confirmer sur téléphone). Batterie 40/40.
+  PASSE 5 (même jour) : bandes COLLÉES + PONT rayon→bande en tête de scène (le soleil
+  et son rayon étiqueté 1 se fondent dans la bande qui se lève — keyframes cours-fondu
+  et bande-leve) ; mention Refraction ajoutée (courte au pied de page, complète dans le
+  panneau « D'où vient Solèy ? », textes exacts) ; réserve « addition en bandes » pour
+  le cours de la lentille. Batterie 41 contrôles, node 15/15.
 - (à compléter à chaque session)

@@ -129,6 +129,15 @@
   .fracin .fd{padding:1px 3px 0;}
   #hintclose{display:block;margin:12px auto 0;background:var(--gold);color:#4a2b10;border:none;border-radius:11px;
     padding:10px 20px;font-weight:800;font-size:14px;cursor:pointer;}
+  /* « D'où vient Solèy ? » : la mention complète de Refraction (patron du Coup de pouce) */
+  #aproposov{position:fixed;inset:0;background:#10182eb8;display:none;align-items:center;justify-content:center;z-index:75;padding:16px;}
+  #aproposov.show{display:flex;}
+  #aproposcard{background:#1c2848;border:2px solid #ffc94d55;border-radius:18px;padding:18px 16px 14px;
+    max-width:430px;width:100%;max-height:min(85vh,620px);overflow-y:auto;box-shadow:0 16px 60px #00000088;}
+  #aproposti{font-size:17px;font-weight:900;color:var(--gold);margin-bottom:6px;}
+  #aproposte{font-size:14px;line-height:1.6;color:#ffeeda;margin:0;}
+  #aproposok{display:block;margin:14px auto 0;background:var(--gold);color:#4a2b10;border:none;border-radius:11px;
+    min-height:44px;padding:10px 20px;font:inherit;font-weight:800;font-size:14px;cursor:pointer;}
   /* Point de cours (chantier « Comprendre », lot 1) : panneau plein écran sur le
      patron du Coup de pouce ; la cascade se dessine et le texte suit son rythme
      (délais CSS --win-*, mêmes keyframes que la cinématique de victoire). */
@@ -140,6 +149,14 @@
   #courstitre{font-size:22px;font-weight:900;color:var(--gold);margin:1px 0 8px;}
   #coursbody .cscene{background:#101a33;border-radius:12px;padding:8px 6px;}
   #coursbody .cfade{opacity:0;animation:win-label .35s ease var(--win-delay) both;}
+  /* le pont rayon → bande : le rayon du jeu apparaît puis s'efface pendant que
+     la bande de l'entier se lève depuis son épaisseur */
+  #coursbody .cpont{opacity:0;animation:win-label .4s ease var(--win-delay) both,
+    cours-fondu .45s ease var(--fondu-delay) forwards;}
+  @keyframes cours-fondu{from{opacity:1}to{opacity:0}}
+  #coursbody .cleve{opacity:0;transform-box:fill-box;transform-origin:center;
+    animation:bande-leve .55s ease var(--win-delay) both;}
+  @keyframes bande-leve{from{opacity:0;transform:scaleY(.45)}to{opacity:1;transform:scaleY(1)}}
   #coursbody .cligne{opacity:0;animation:win-label .5s ease var(--win-delay,0s) both;}
   #coursbody p.cligne{font-size:14px;line-height:1.5;color:#ffeeda;margin:9px 2px;}
   #coursbody .ceq{margin:10px 0 2px;}
