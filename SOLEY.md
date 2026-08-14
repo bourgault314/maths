@@ -171,15 +171,21 @@ Batterie (script Playwright Python, à conserver dans `tests/`) :
   « D'où vient Solèy ? » ouvert depuis le pied de l'accueil — le jeu n'ayant pas de
   panneau de règles, ce lien en tient lieu. Elle remplace l'ancienne ligne « jeu
   original librement inspiré… ».
-- Bandes des cours, suite (14/08) : étages COLLÉS (aucun espace entre les bandes) ;
-  le PONT entre les deux mondes ouvre chaque scène — le soleil et son rayon doré
-  étiqueté 1 apparaissent, puis le rayon se couche et devient la bande 1 (son
-  épaisseur est déjà une bande dressée) ; ensuite tout le cours reste en bandes.
-  Couleurs des cases = celles du JEU par dénominateur (arbitrage laissé à Claude et
-  assumé : le pont impose la continuité rayon→bande ; les bandes jaune/vert des
-  gabarits maths&go restent la référence hors Solèy). EN RÉSERVE pour le cours de la
-  lentille (forêt, lot suivant) : l'addition en bandes — Gwenael a fourni deux
-  dispositions (bout à bout sur une ligne / en L), forme académique à trancher alors.
+- Bandes des cours, suite (14/08) : étages COLLÉS (aucun espace entre les bandes).
+  PONT v8 (RETOUCHE-PONT-v8.md, racine du dépôt — remplace le morphing v7, qui
+  identifiait les deux représentations sur le MAUVAIS axe : dans le jeu, c'est
+  l'ÉPAISSEUR du rayon qui se partage, jamais sa longueur) : la scène a DEUX zones
+  synchronisées — en haut le vécu (cascade de rayons avec prismes), en bas la forme
+  de l'école (mur de bandes) — reliées par la phrase-pont fixe « Dans le jeu, ta
+  part est un rayon plus FIN. Sur la bande, c'est un morceau plus COURT. Même
+  partage, même fraction. » Les deux zones grandissent ensemble, au rythme du
+  texte : à chaque instant, l'image montre ce que la phrase dit ; jamais de rayon
+  entier seul à l'écran. Couleurs des cases = celles du JEU par dénominateur
+  (confirmé v8 : la couleur relie les deux zones, la matière les distingue ; les
+  bandes jaune/vert des gabarits maths&go restent la référence hors Solèy).
+  EN RÉSERVE pour le cours de la lentille (forêt, lot suivant) : l'addition en
+  bandes — Gwenael a fourni deux dispositions (bout à bout sur une ligne / en L),
+  forme académique à trancher alors.
 - DÉCISION SUR MAQUETTE (14/08) : l'écriture étagée passe AUSSI sur le plateau —
   maisons (numérateur/barre/dénominateur dans la façade) et étiquettes de rayons
   (chiffres 20 px, un peu plus gros que la maquette, à la demande de Gwenael), ainsi
@@ -339,4 +345,10 @@ commence par "use strict"; et le partage se fait par la portée globale.
   et bande-leve) ; mention Refraction ajoutée (courte au pied de page, complète dans le
   panneau « D'où vient Solèy ? », textes exacts) ; réserve « addition en bandes » pour
   le cours de la lentille. Batterie 41 contrôles, node 15/15.
+  PASSE 6 (même jour, RETOUCHE-PONT-v8.md entré au dépôt) : le morphing rayon→bande
+  est remplacé par la MISE EN CORRESPONDANCE à deux registres — cascade de rayons en
+  haut (sceneCours, étiquettes étagées cEtiq, quatre rayons terminaux re-comptés),
+  mur de bandes en bas, phrase-pont fixe entre les deux, TOUT synchronisé étape par
+  étape avec le texte (tE(i), jamais de rayon entier seul à l'écran). Batterie et
+  node re-verts.
 - (à compléter à chaque session)

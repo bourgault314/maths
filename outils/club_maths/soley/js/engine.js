@@ -143,35 +143,68 @@ function calcLineHTML(line){
    L'animation est entièrement portée par des délais CSS (--win-*) : aucune
    minuterie à nettoyer, « Revoir » reconstruit simplement le panneau. */
 const cFade=(t0,inner)=>`<g class="cfade" style="--win-delay:${t0}s">${inner}</g>`;
-/* Scène des cours en BANDES DE FRACTIONS (proposition de la collègue, validée par
-   Gwenael le 14/08) : le mur de bandes — l'entier, puis chaque étage de parts
-   égales, largeurs proportionnelles, séparations pointillées, fractions étagées
-   noires. Adapté à Solèy : couleur de case = dénominateur, comme les rayons du
-   jeu. Les étages apparaissent l'un après l'autre (délais CSS, zéro minuterie). */
+/* Scène des cours à DEUX REGISTRES synchronisés (RETOUCHE-PONT-v8, 14/08) :
+   zone haute = le vécu du jeu (cascade de rayons, vraies épaisseurs et couleurs),
+   zone basse = la forme de l'école (mur de bandes collées) ; la phrase-pont nomme
+   la différence d'axe (rayon plus FIN / morceau plus COURT). Les deux zones
+   grandissent ENSEMBLE, étape par étape, au rythme du texte — à chaque instant,
+   l'image montre ce que la phrase dit. Aucun morphing, aucun fondu. */
+function cEtiq(x,y,f,fs){
+  if(f[1]===1)return sLbl(x,y,fstr(f),fcol(f),fs);
+  const c=fcol(f), k=fs||15, fpx=Math.round(k*.9);
+  const demi=(String(f[0]).length>1||String(f[1]).length>1)?11:7;
+  const yb=(y-k*.25).toFixed(1);
+  return `<g>`+
+    sLbl(x,y-Math.round(k*.5),String(f[0]),c,fpx)+
+    `<line x1="${x-demi}" y1="${yb}" x2="${x+demi}" y2="${yb}" stroke="#101a33" stroke-width="4.5"/>`+
+    `<line x1="${x-demi+1}" y1="${yb}" x2="${x+demi-1}" y2="${yb}" stroke="${c}" stroke-width="2"/>`+
+    sLbl(x,y+Math.round(k*.72),String(f[1]),c,fpx)+
+  `</g>`;
+}
 function bandeLbl(cx,y,f){
   if(f[1]===1)return `<text x="${cx}" y="${y+29}" text-anchor="middle" font-size="21" font-weight="900" fill="#101a33">1</text>`;
   return `<text x="${cx}" y="${y+19}" text-anchor="middle" font-size="15" font-weight="900" fill="#101a33">${f[0]}</text>`+
     `<line x1="${cx-8}" y1="${y+23}" x2="${cx+8}" y2="${y+23}" stroke="#101a33" stroke-width="2"/>`+
     `<text x="${cx}" y="${y+37}" text-anchor="middle" font-size="15" font-weight="900" fill="#101a33">${f[1]}</text>`;
 }
-function sceneBandes(sc){
+function sceneCours(sc,tE){
+  /* zone haute — le vécu : la cascade du jeu, qui POUSSE d'une étape à chaque
+     étape du texte (jamais de rayon entier seul : dès la première image, le
+     prisme et ses branches sont là) */
+  const divs=sc.divs, deux=divs.length===2, n1=divs[0];
+  const cy=deux?95:(n1===3?70:55);
+  const hRayons=deux?190:(n1===3?140:110);
+  const ys1=n1===2?(deux?[50,140]:[30,80]):[26,70,114];
+  const p1=100, f1=fdiv([1,1],n1), x1=deux?201:294;
+  let g1='';
+  g1+=sSun(26,cy,[1,1]);
+  g1+=sBeam(40,cy,p1-17,cy,[1,1]);
+  g1+=sLbl((40+p1-17)/2,cy-HW([1,1])/2-8,'1',fcol([1,1]));
+  g1+=sTile(p1,cy,'÷'+n1);
+  ys1.forEach(y=>{
+    g1+=deux?sBeam(p1+15,cy,x1,y,f1):`<g data-rayon="terminal">${sBeam(p1+15,cy,x1,y,f1)}</g>`;
+  });
+  ys1.forEach(y=>{g1+=deux?cEtiq(158,y<cy?y-12:y+20,f1,15):cEtiq(316,y+3,f1,15);});
+  let rayons=cFade(tE(0),g1);
+  if(deux){
+    const p2=218, f2=fdiv(f1,divs[1]), off=[-22,22];
+    let g2='';
+    ys1.forEach(y=>{g2+=sTile(p2,y,'÷'+divs[1]);});
+    ys1.forEach(y=>{off.forEach(o=>{g2+=`<g data-rayon="terminal">${sBeam(p2+15,y,296,y+o,f2)}</g>`;});});
+    ys1.forEach(y=>{off.forEach(o=>{g2+=cEtiq(316,y+o+3,f2,14);});});
+    rayons+=cFade(tE(1),g2);
+  }
+  /* zone basse — la forme de l'école : le mur de bandes collées ; chaque étage
+     apparaît EN MÊME TEMPS que l'étape de la cascade qui lui correspond
+     (la bande de l'entier avec la première) */
   const X0=20, W=300, hB=44;
   const etages=[[1,1]];
   let d=1;
   sc.divs.forEach(n=>{d*=n;etages.push([1,d]);});
-  const H=etages.length*hB+18;
-  const y0=10, cyR=y0+hB/2;
-  let s='', fin=0;
-  /* Le PONT entre les deux mondes (Gwenael, 14/08) : le rayon du jeu — soleil,
-     trait doré, étiquette 1 — se couche et devient la bande (son épaisseur est
-     déjà une bande dressée). Fait une fois, tout le cours reste en bandes. */
-  s+=`<g class="cpont" style="--win-delay:.15s;--fondu-delay:1.15s">`+
-    sSun(36,cyR,[1,1])+
-    sBeam(54,cyR,X0+W-6,cyR,[1,1])+
-    sLbl(170,cyR-HW([1,1])/2-7,'1',fcol([1,1]))+
-    `</g>`;
+  const hMur=etages.length*hB+18;
+  let mur='';
   etages.forEach((f,k)=>{
-    const y=y0+k*hB, n=f[1], w=W/n, t0=1.35+k*.85, dernier=k===etages.length-1;
+    const y=10+k*hB, n=f[1], w=W/n, dernier=k===etages.length-1;
     let e='';
     for(let i=0;i<n;i++){
       e+=`<rect x="${(X0+i*w).toFixed(1)}" y="${y}" width="${w.toFixed(1)}" height="${hB}" fill="${fcol(f)}"${dernier&&f[1]>1?' data-terminal="1"':''}/>`;
@@ -183,36 +216,35 @@ function sceneBandes(sc){
       e+=bandeLbl(X0+i*w+w/2,y,f);
     }
     e+=`<rect x="${X0}" y="${y}" width="${W}" height="${hB}" fill="none" stroke="#101a33" stroke-width="2.5"/>`;
-    /* la bande de l'entier SE LÈVE depuis l'épaisseur du rayon ; les étages
-       suivants apparaissent collés, l'un après l'autre */
-    s+=k===0
-      ?`<g class="cleve" style="--win-delay:${t0}s">${e}</g>`
-      :cFade(t0,e);
-    fin=t0+.45;
+    mur+=cFade(tE(Math.max(0,k-1)),e);
   });
-  return {h:H,svg:s,fin};
+  return {rayons,hRayons,mur,hMur};
 }
 let coursId=null, coursApresVictoire=false, coursRetour=null;
 function construireCours(id){
   const c=COURS[id];
   if(!c)return '';
-  const sc=sceneBandes(c.scene);
-  let h=`<div class="cscene"><svg class="hsvg" viewBox="0 0 340 ${sc.h}" role="img" aria-label="Les bandes de fractions : l'entier et ses parts égales">${sc.svg}</svg></div>`;
+  const tE=i=>.4+i*1.05; /* l'instant de l'étape i — texte, cascade et mur (v8 : tout synchronisé) */
+  const sc=sceneCours(c.scene,tE);
+  const fin=tE(c.etapes.length-1)+.6;
+  let h=`<div class="cscene"><svg class="hsvg" viewBox="0 0 340 ${sc.hRayons}" role="img" aria-label="Le vécu du jeu : la cascade de rayons">${sc.rayons}</svg></div>`;
+  /* la phrase-pont nomme la différence d'axe entre les deux registres (v8) */
+  h+=`<p class="cpontphrase cligne" style="--win-delay:${tE(0).toFixed(2)}s">Dans le jeu, ta part est un rayon plus FIN. Sur la bande, c'est un morceau plus COURT. Même partage, même fraction.</p>`;
+  h+=`<div class="cscene"><svg class="hsvg" viewBox="0 0 340 ${sc.hMur}" role="img" aria-label="La forme de l'école : les bandes de fractions">${sc.mur}</svg></div>`;
   /* déroulé en étapes : l'explication courte au-dessus, l'écriture étagée dessous
-     (règle R5), au rythme de l'apparition des bandes */
-  const pas=Math.max(.7,sc.fin/Math.max(1,c.etapes.length));
+     (règle R5), au même instant que les deux zones de la scène */
   c.etapes.forEach((e,i)=>{
-    const t0=.5+i*pas;
+    const t0=tE(i);
     if(e.t)h+=`<p class="cligne" style="--win-delay:${t0.toFixed(2)}s">${texteMath(e.t)}</p>`;
     if(e.eq)h+=`<div class="heq ceq cligne" style="--win-delay:${(t0+.15).toFixed(2)}s">${eqHTML(e.eq)}</div>`;
   });
   if(c.predire){
     /* règle R3 : la question s'affiche SANS sa réponse — la réponse n'entre dans
        la page qu'au toucher de « À ton avis… » (brancherPredire). */
-    h+=`<div class="cpredire cligne" style="--win-delay:${(sc.fin+.5).toFixed(2)}s"><p>${texteMath(c.predire.question)}</p><button type="button" id="cpredirebtn">À ton avis…</button></div>`;
+    h+=`<div class="cpredire cligne" style="--win-delay:${(fin+.3).toFixed(2)}s"><p>${texteMath(c.predire.question)}</p><button type="button" id="cpredirebtn">À ton avis…</button></div>`;
   }
   /* règle R4 : la phrase-carte est une vraie petite carte — la trace écrite */
-  h+=`<div class="csavoir cligne" style="--win-delay:${(sc.fin+(c.predire?1.1:.6)).toFixed(2)}s"><div class="csavoirtitre">Carte de savoir</div><p>${texteMath(c.carte.t)}</p>${c.carte.eq?`<div class="heq ceq">${eqHTML(c.carte.eq)}</div>`:''}</div>`;
+  h+=`<div class="csavoir cligne" style="--win-delay:${(fin+(c.predire?.9:.3)).toFixed(2)}s"><div class="csavoirtitre">Carte de savoir</div><p>${texteMath(c.carte.t)}</p>${c.carte.eq?`<div class="heq ceq">${eqHTML(c.carte.eq)}</div>`:''}</div>`;
   return h;
 }
 function brancherPredire(id){
