@@ -148,7 +148,7 @@
   #courssur{font-size:11px;font-weight:800;letter-spacing:1.5px;text-transform:uppercase;color:#ffd5a1;}
   #courstitre{font-size:22px;font-weight:900;color:var(--gold);margin:1px 0 8px;}
   #coursbody .cscene{background:#101a33;border-radius:12px;padding:8px 6px;}
-  #coursbody .cfade{opacity:0;animation:win-label .35s ease var(--win-delay) both;}
+  #coursbody .cfade{opacity:0;animation:win-label .35s ease var(--win-delay,0s) both;}
   #coursbody .cligne{opacity:0;animation:win-label .5s ease var(--win-delay,0s) both;}
   #coursbody p.cligne{font-size:14px;line-height:1.5;color:#ffeeda;margin:9px 2px;}
   #coursbody .ceq{margin:10px 0 2px;}
@@ -161,11 +161,22 @@
     padding:10px 12px 12px;margin:14px 0 4px;box-shadow:0 4px 18px #ffc94d22;}
   .csavoirtitre{font-size:11px;font-weight:900;letter-spacing:1.5px;text-transform:uppercase;color:var(--gold);}
   .csavoir p{margin:6px 0 0;font-size:14.5px;font-weight:700;line-height:1.5;color:#fff3c4;}
-  #coursbtns{display:flex;gap:10px;justify-content:center;margin-top:12px;}
+  /* Barre épinglée au bas du panneau : les boutons sont TOUJOURS accessibles. */
+  #coursbtns{display:flex;gap:10px;justify-content:center;align-items:center;margin-top:12px;
+    position:sticky;bottom:-12px;z-index:3;padding:10px 0 14px;
+    background:linear-gradient(to top,#1c2848 62%,#1c2848e0 82%,#1c284800);}
+  /* pastille-flèche : elle flotte au-dessus de la barre, jamais posée sur le texte,
+     et on peut appuyer dessus pour descendre d'un écran */
+  #coursfleche{position:absolute;left:50%;top:-30px;width:34px;height:34px;padding:0;
+    display:flex;align-items:center;justify-content:center;
+    background:#243358;color:var(--gold);border:1.5px solid #ffc94d66;border-radius:50%;
+    font:inherit;font-size:22px;line-height:1;font-weight:900;cursor:pointer;
+    box-shadow:0 4px 14px #0b122899;animation:cfleche 1.3s ease-in-out infinite;}
+  @keyframes cfleche{0%,100%{transform:translate(-50%,-2px);}50%{transform:translate(-50%,4px);}}
+  #courscard:not(.deborde) #coursfleche,#courscard.enbas #coursfleche{display:none;}
+  #coursbody{padding-bottom:30px;}
   #coursok{background:var(--gold);color:#4a2b10;border:none;border-radius:11px;min-height:44px;
     padding:10px 20px;font:inherit;font-weight:800;font-size:14px;cursor:pointer;}
-  #coursrevoir{background:transparent;color:#c9d8f2;border:1.5px solid #ffffff44;border-radius:11px;min-height:44px;
-    padding:10px 16px;font:inherit;font-weight:700;font-size:13px;cursor:pointer;}
   #boardbox{position:relative;border-radius:14px;overflow:hidden;box-shadow:0 10px 40px #00000055;}
   #board{display:block;width:100%;height:auto;background:#16223f;}
   #toolbox{display:flex;gap:8px;flex-wrap:wrap;padding:9px;background:#00000042;border-radius:14px;min-height:60px;align-items:center;}

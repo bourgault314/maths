@@ -1,10 +1,16 @@
 "use strict";
 /* ===== Dessin ===== */
+/* Flèches d'orientation des pièces — revues le 14/08 (œil de Gwenael : « on ne
+   voit que la pointe, pas le corps »). Avant, la flèche partait du centre et le
+   rond ÷n en cachait tout le fût : il ne restait que 3 unités de trait visibles.
+   Maintenant elle démarre JUSTE À CÔTÉ du rond (E) et va plus loin (R), avec une
+   pointe plus courte : le corps de la flèche se voit enfin. */
 function arrow(x1,y1,x2,y2,color,w){
   const dx=x2-x1,dy=y2-y1,len=Math.hypot(dx,dy)||1,ux=dx/len,uy=dy/len;
-  const hx=x2-ux*12,hy=y2-uy*12,px=-uy,py=ux;
+  const T=9,DT=7;
+  const hx=x2-ux*T,hy=y2-uy*T,px=-uy,py=ux;
   return `<line x1="${x1}" y1="${y1}" x2="${hx}" y2="${hy}" stroke="${color}" stroke-width="${w}" stroke-linecap="round"/>`+
-    `<polygon points="${x2},${y2} ${hx+px*8},${hy+py*8} ${hx-px*8},${hy-py*8}" fill="${color}"/>`;
+    `<polygon points="${x2},${y2} ${hx+px*DT},${hy+py*DT} ${hx-px*DT},${hy-py*DT}" fill="${color}"/>`;
 }
 /* Barre-miroir à 45° (proposition de la collègue, 13/08) : la barre suit la
    diagonale entrée+sortie, le rayon s'y réfléchit net, à angle droit.
@@ -27,7 +33,7 @@ function mirrorBar(inDir,outDir,partie){
 let MIRSEQ=0; /* identifiants uniques des zones d'écrêtage des miroirs */
 /* pièce sans flux : silhouette + flèches indicatives */
 function pieceStatic(def){
-  const c=50,R=36;
+  const c=50,R=41,E=21,RD=19; /* portée, écart au rond, rayon du rond */
   let s=`<rect x="6" y="6" width="88" height="88" rx="16" class="tile"/>`;
   const ent=d=>[c-DX[d]*R,c-DY[d]*R];
   const ext=d=>[c+DX[d]*R,c+DY[d]*R];
@@ -39,20 +45,20 @@ function pieceStatic(def){
     s+=mirrorBar(def.in,def.out);
   }else if(def.t==='s2'||def.t==='s3'){
     const[ix,iy]=ent(def.in);
-    s+=arrow(ix,iy,c,c,'#9fb7d8',7);
-    def.outs.forEach(o=>{const[ox,oy]=ext(o);s+=arrow(c,c,ox,oy,'#ffc94d99',7);});
-    s+=`<circle cx="${c}" cy="${c}" r="21" fill="#101a33"/>`+
+    s+=arrow(ix,iy,c-DX[def.in]*E,c-DY[def.in]*E,'#9fb7d8',9);
+    def.outs.forEach(o=>{const[ox,oy]=ext(o);s+=arrow(c+DX[o]*E,c+DY[o]*E,ox,oy,'#ffc94d99',9);});
+    s+=`<circle cx="${c}" cy="${c}" r="${RD}" fill="#101a33"/>`+
        `<text x="${c}" y="${c+7}" text-anchor="middle" font-size="21" font-weight="800" fill="#fff">÷${def.t==='s2'?2:3}</text>`;
   }else if(def.t==='x2'||def.t==='x3'){
     const[ix,iy]=ent(def.in),[ox,oy]=ext(def.out);
-    s+=arrow(ix,iy,c,c,'#9fb7d8',6);
-    s+=arrow(c,c,ox,oy,'#ffc94d99',11);
-    s+=`<circle cx="${c}" cy="${c}" r="21" fill="#101a33" stroke="#8fd0ff" stroke-width="3"/>`+
+    s+=arrow(ix,iy,c-DX[def.in]*E,c-DY[def.in]*E,'#9fb7d8',8);
+    s+=arrow(c+DX[def.out]*E,c+DY[def.out]*E,ox,oy,'#ffc94d99',12);
+    s+=`<circle cx="${c}" cy="${c}" r="${RD}" fill="#101a33" stroke="#8fd0ff" stroke-width="3"/>`+
        `<text x="${c}" y="${c+7}" text-anchor="middle" font-size="20" font-weight="800" fill="#fff">×${def.t==='x2'?2:3}</text>`;
   }else{
-    def.ins.forEach(i=>{const[ix,iy]=ent(i);s+=arrow(ix,iy,c,c,'#9fb7d8',7);});
-    const[ox,oy]=ext(def.out);s+=arrow(c,c,ox,oy,'#ffc94d99',7);
-    s+=`<circle cx="${c}" cy="${c}" r="21" fill="#101a33"/>`+
+    def.ins.forEach(i=>{const[ix,iy]=ent(i);s+=arrow(ix,iy,c-DX[i]*E,c-DY[i]*E,'#9fb7d8',9);});
+    const[ox,oy]=ext(def.out);s+=arrow(c+DX[def.out]*E,c+DY[def.out]*E,ox,oy,'#ffc94d99',9);
+    s+=`<circle cx="${c}" cy="${c}" r="${RD}" fill="#101a33"/>`+
        `<text x="${c}" y="${c+8}" text-anchor="middle" font-size="27" font-weight="800" fill="#fff">+</text>`;
   }
   return s;
@@ -184,7 +190,10 @@ function decouverteIco(taille=15){
     <line x1="11" y1="12" x2="18.4" y2="16.4" stroke="#ffb347" stroke-width="2" stroke-linecap="round"/>
   </svg>`;
 }
-/* Écriture étagée sur le plateau (décision de Gwenael, 14/08, sur maquette) :
+/* Espacement revu le 14/08 (œil de Gwenael) : la barre touchait le dénominateur —
+   numérateur remonté, barre remontée et affinée, dénominateur descendu, sans
+   toucher à la taille des chiffres (déjà petits sur téléphone).
+   Écriture étagée sur le plateau (décision de Gwenael, 14/08, sur maquette) :
    les fractions des maisons et des rayons se dessinent numérateur / barre /
    dénominateur ; les autres écritures (1, 2, 0,5, 25 %…) restent telles quelles. */
 function maisonTxtSVG(txt){
@@ -196,9 +205,9 @@ function maisonTxtSVG(txt){
   const large=m[1].length>1||m[2].length>1;
   const fs=large?15:19, demi=large?15:11;
   return `<g class="tneed">`+
-    `<text x="55" y="68.5" font-size="${fs}">${m[1]}</text>`+
-    `<line x1="${55-demi}" y1="73" x2="${55+demi}" y2="73" stroke="#3b2a17" stroke-width="2.8"/>`+
-    `<text x="55" y="86.5" font-size="${fs}">${m[2]}</text></g>`;
+    `<text x="55" y="66.5" font-size="${fs}">${m[1]}</text>`+
+    `<line x1="${55-demi}" y1="71" x2="${55+demi}" y2="71" stroke="#3b2a17" stroke-width="2.4"/>`+
+    `<text x="55" y="87" font-size="${fs}">${m[2]}</text></g>`;
 }
 function beamLblSVG(id,x,y,val){
   if(val[1]===1)return `<text class="beamlbl" data-seg="${id}" x="${x}" y="${y}" fill="${fcol(val)}">${fstr(val)}</text>`;

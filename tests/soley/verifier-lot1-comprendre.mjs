@@ -52,6 +52,14 @@ const PROMUS = {
   "Moitié-moitié": "demi",
   "Partage en tiers": "tiers",
 };
+/* Retouches du 14/08 (audit à froid du lagon) : deux consignes redeviennent des
+   questions — « La part perdue » ne donne plus son idée, et « La moitié de la
+   moitié » ne redemande plus ce que la carte de savoir du niveau précédent vient
+   de dire. Rien d'autre ne bouge dans ces niveaux. */
+const RETOUCHES = {
+  "La part perdue": "Une seule maison, et elle veut un demi. Mais le prisme, lui, coupe toujours en deux : que devient la part que personne n'attend ?",
+  "La moitié de la moitié": "Une maison veut un demi, deux autres veulent un quart — et tu n'as que deux prismes ÷2. Lequel des deux rayons faut-il recouper ?",
+};
 const CONSIGNES = {
   "Moitié-moitié": "Deux maisons attendent chacune la même part… et la boîte ne contient qu'un prisme ÷2. Que va-t-il faire du rayon ? Observe l'épaisseur !",
   "Partage en tiers": "Trois maisons, un seul prisme ÷3. En combien de parts va-t-il couper le rayon ? Regarde la nouvelle couleur !",
@@ -64,6 +72,11 @@ avant.LV.forEach((vieux, k) => {
       `${vieux.name} : promu découverte, tout le reste intact (dont sol)`);
     verif(neuf.dec === PROMUS[vieux.name], `${vieux.name} : dec = '${PROMUS[vieux.name]}'`);
     verif(neuf.sub === CONSIGNES[vieux.name], `${vieux.name} : consigne validée, au caractère près`);
+  } else if (vieux.name in RETOUCHES) {
+    const sans = (l) => { const c = { ...l }; delete c.sub; return c; };
+    verif(j(sans(vieux)) === j(sans(neuf)),
+      `${vieux.name} : consigne réécrite, tout le reste intact (dont sol)`);
+    verif(neuf.sub === RETOUCHES[vieux.name], `${vieux.name} : nouvelle consigne au caractère près`);
   } else if (j(vieux) !== j(neuf)) {
     verif(false, `${vieux.name} : niveau historique MODIFIÉ`);
   }

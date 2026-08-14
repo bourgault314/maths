@@ -503,7 +503,8 @@ def principal():
                 quarts["win"] and quarts["cibles"] == 4 and quarts["quarts"], "")
 
         # T9.2 + T9.10 + T9.12 — victoire d'une découverte : le point de cours s'affiche,
-        # cascade C3 à QUATRE rayons terminaux, prédire à révélation, « Revoir » rejoue
+        # cascade C3 à QUATRE rayons terminaux, prédire à révélation, et (retouches du
+        # 14/08) panneau posé D'UN COUP, sortie toujours atteignable, flèche de défilement
         page.evaluate(f"() => window.SOLEY.solve({quarts['i']})")
         try:
             page.wait_for_selector("#coursov.show", timeout=18000)
@@ -525,13 +526,15 @@ def principal():
               && rayons.every((x, i) => x >= cases[i][0] && x <= cases[i][1]);
           })(),
           sansPont: !document.querySelector('#coursbody .cpontphrase'),
+          sansPointilles: !document.querySelector("#coursbody line[stroke-dasharray='2 4']"),
           reponseAvant: document.getElementById('coursbody').innerHTML.includes('la moitié du quart'),
           carte: document.getElementById('coursbody').innerHTML.includes('Carte de savoir'),
           winCache: !document.getElementById('winov').classList.contains('show'),
         })""")
         section("T9 panneau C3 : QUATRE cases + QUATRE rayons ALIGNÉS (zoom v9), sans phrase-pont (v9.1)",
                 etat9["titre"] == "Le quart" and etat9["terminaux"] == 4 and etat9["rayons"] == 4
-                and etat9["alignes"] and etat9["sansPont"] and etat9["carte"] and etat9["winCache"],
+                and etat9["alignes"] and etat9["sansPont"] and etat9["sansPointilles"]
+                and etat9["carte"] and etat9["winCache"],
                 f"cases={etat9['terminaux']}, rayons={etat9['rayons']}, alignés={etat9['alignes']}")
         section("T9 prédire (R3) : la réponse est absente du panneau avant le toucher",
                 not etat9["reponseAvant"], "")
@@ -539,14 +542,39 @@ def principal():
         reponse = page.evaluate("() => document.getElementById('coursbody').innerHTML.includes('la moitié du quart')")
         section("T9 prédire (R3) : la réponse se révèle au toucher de « À ton avis… »",
                 bool(reponse), "")
-        page.click("#coursrevoir")
-        revoir = page.evaluate("""() => ({
-          reponse: document.getElementById('coursbody').innerHTML.includes('la moitié du quart'),
-          scene: !!document.querySelector('#coursbody [data-terminal]'),
-          ouvert: document.getElementById('coursov').classList.contains('show'),
-        })""")
-        section("T9 « Revoir » rejoue l'animation (prédire re-masqué, panneau ouvert)",
-                revoir["scene"] and revoir["ouvert"] and not revoir["reponse"], "")
+        # T10 (14/08) — le cours ne se déroule plus au chronomètre : tout le contenu est
+        # posé dès l'ouverture, la barre de boutons est atteignable sans chercher, et la
+        # flèche n'existe que s'il reste vraiment quelque chose sous le bord.
+        page.evaluate("() => { document.getElementById('courscard').scrollTop = 0; }")
+        page.wait_for_timeout(250)
+        panneau = page.evaluate("""() => {
+          const c = document.getElementById('courscard'), ok = document.getElementById('coursok');
+          const f = document.getElementById('coursfleche');
+          const retards = [...document.querySelectorAll('#coursbody .cligne, #coursbody .cfade')]
+            .map(e => e.style.getPropertyValue('--win-delay'))
+            .filter(v => v && parseFloat(v) > 0);
+          const r = ok.getBoundingClientRect();
+          const dansEcran = r.top >= 0 && r.bottom <= innerHeight;
+          const deborde = c.scrollHeight > c.clientHeight + 8;
+          const flecheVisible = !!f && f.offsetParent !== null;
+          c.scrollTop = c.scrollHeight;
+          return { retards: retards.length, dansEcran, deborde, flecheVisible,
+            sansRevoir: !document.getElementById('coursrevoir') };
+        }""")
+        page.wait_for_timeout(350)
+        enBas = page.evaluate("""() => {
+          const f = document.getElementById('coursfleche');
+          const r = document.getElementById('coursok').getBoundingClientRect();
+          return { fleche: !!f && f.offsetParent !== null, bouton: r.top >= 0 && r.bottom <= innerHeight };
+        }""")
+        section("T10 panneau posé d'un coup : aucun retard d'affichage, plus de bouton « Revoir »",
+                panneau["retards"] == 0 and panneau["sansRevoir"],
+                f"retards={panneau['retards']}, sansRevoir={panneau['sansRevoir']}")
+        section("T10 sortie du cours toujours dans l'écran (défaut n°1 de l'audit du 14/08)",
+                panneau["dansEcran"] and enBas["bouton"], "")
+        section("T10 flèche de défilement : présente tant que ça déborde, effacée en bas",
+                (panneau["flecheVisible"] == panneau["deborde"]) and not enBas["fleche"],
+                f"déborde={panneau['deborde']}, flèche={panneau['flecheVisible']}, en bas={enBas['fleche']}")
 
         # T9.3 — « J'ai compris ! » mène à la fenêtre des petits soleils
         page.click("#coursok")

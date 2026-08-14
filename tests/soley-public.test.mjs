@@ -446,9 +446,13 @@ test("le chantier « Comprendre » : découvertes, points de cours et règle R1"
       /* R5 : l'écriture mathématique vit SÉPARÉE du texte — jamais d'égalité dans une phrase */
       separation: Object.values(COURS).every(c =>
         c.etapes.every(e => !(e.t && e.t.includes(' = '))) && !c.carte.t.includes(' = ')),
-      /* R3 : le prédire existe pour tiers et quart, pas pour demi */
-      predire: ['tiers', 'quart'].every(id => COURS[id].predire
-        && COURS[id].predire.question && COURS[id].predire.reponse) && !COURS.demi.predire,
+      /* R3 + règle du 14/08 : un prédire révèle un NOM, jamais une STRATÉGIE que le
+         niveau suivant demande de trouver — et on ne pose pas dans un cours une
+         question que la consigne du niveau suivant pose déjà. Seul le quart en garde
+         un : il nomme le 1/8, que rien d'autre n'annonce. */
+      predire: !COURS.demi.predire && !COURS.tiers.predire
+        && !!(COURS.quart.predire && COURS.quart.predire.question
+              && COURS.quart.predire.reponse),
       /* R1 : aucun total non écrit dans les textes des cours */
       totaux: [textes('demi').includes('1/2 + 1/2 = 2/2 = 1'),
         textes('tiers').includes('1/3 + 1/3 + 1/3 = 3/3 = 1'),
@@ -478,7 +482,8 @@ test("le chantier « Comprendre » : découvertes, points de cours et règle R1"
           id,
           carteSavoir: h.includes('Carte de savoir'),
           bouton: h.includes('cpredirebtn'),
-          reponseCachee: !h.includes(COURS[id].predire ? COURS[id].predire.reponse : '@jamais@'),
+          reponseCachee: !h.includes(COURS[id].predire && COURS[id].predire.reponse
+            ? COURS[id].predire.reponse : '@jamais@'),
           scene: h.includes('class="cscene"') && h.includes('class="cfade"'),
           /* v9.1 : la scène seule porte le lien — plus de phrase-pont */
           sansPont: !h.includes('cpontphrase') && !h.includes('un zoom sur tes rayons'),
@@ -504,15 +509,19 @@ test("le chantier « Comprendre » : découvertes, points de cours et règle R1"
   assert.equal(r.alignes, true, "v9 : chaque rayon terminal tombe au-dessus de SA case (le zoom)");
   for (const p of r.panneau) {
     assert.equal(p.carteSavoir, true, `${p.id} : la phrase-carte est habillée en carte de savoir (R4)`);
-    assert.equal(p.bouton, p.id !== "demi", `${p.id} : bouton « À ton avis… »`);
+    assert.equal(p.bouton, p.id === "quart",
+      `${p.id} : bouton « À ton avis… » seulement là où une réponse existe`);
     assert.equal(p.reponseCachee, true, `${p.id} : la réponse du prédire n'est pas dans la page avant le toucher (R3)`);
     assert.equal(p.scene, true, `${p.id} : scène à deux registres présente`);
     assert.equal(p.sansPont, true, `${p.id} : plus de phrase-pont, la scène seule porte le lien (v9.1)`);
   }
   /* le câblage : overlay dans la coquille, séquence de victoire, sauvegarde, écran des niveaux */
   assert.match(html, /id="coursov" role="dialog" aria-modal="true" aria-labelledby="courstitre"/);
-  assert.match(html, /id="coursrevoir"/);
+  assert.match(html, /id="coursfleche"/);
   assert.match(html, /id="coursok"/);
+  /* le cours ne se déroule plus au chronomètre : plus de bouton « Revoir » dans le panneau
+     (la relecture passe par « Revoir le cours » sur la carte du niveau) */
+  assert.ok(!/id="coursrevoir"/.test(html));
   assert.match(js.engine, /if\(!save\.cours\)save\.cours=\{\};/);
   assert.match(js.engine, /const coursANouveau=!!\(L\.dec&&COURS\[L\.dec\]&&!save\.cours\[L\.dec\]\);/);
   assert.match(js.engine, /decouvertesReussies\(prev\)>=decouvertesMonde\(prev\)\.length/);
@@ -533,8 +542,8 @@ test("le chantier « Comprendre » : découvertes, points de cours et règle R1"
     rayon: beamLblSVG(7, 100, 50, [3,4]),
     rayonEntier: beamLblSVG(8, 100, 50, [2,1]),
   }))()`, context);
-  assert.ok(plateau.maison.includes('<g class="tneed">') && plateau.maison.includes('y1="73"'),
-    "la maison 1/4 s'écrit en fraction empilée");
+  assert.ok(plateau.maison.includes('<g class="tneed">') && plateau.maison.includes('y1="71"'),
+    "la maison 1/4 s'écrit en fraction empilée, barre dégagée du dénominateur (14/08)");
   assert.match(plateau.disp, /<text class="tneed"[^>]*>0,5<\/text>/,
     "les écritures décimales et pourcentages restent telles quelles");
   assert.ok(plateau.douze.includes('x1="40"'), "barre élargie pour les douzièmes");
