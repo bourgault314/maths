@@ -171,9 +171,9 @@ Batterie (script Playwright Python, à conserver dans `tests/`) :
 - Scène des cours v9 (14/08, idée de Gwenael — RETOUCHE-ZOOM-v9.md à la racine) : la
   cascade devient VERTICALE, chaque rayon terminal arrive juste au-dessus de SA case
   de la dernière rangée — le mur se lit comme un ZOOM sur les rayons (même axe pour la
-  largeur des rayons et la longueur des cases). Phrase-pont : « Le mur, c'est un zoom
-  sur tes rayons : chaque part de lumière devient un morceau de la bande. » Traits
-  pointillés de zoom en option (à juger sur capture) ; alignement garanti par test.
+  largeur des rayons et la longueur des cases). Traits pointillés de zoom en option
+  (à juger sur capture) ; alignement garanti par test. v9.1 (décision sur rendu) :
+  PAS de phrase-pont — la scène seule porte le lien entre les deux registres.
 - Mention de Refraction (14/08, textes de Gwenael au caractère près) : mention COURTE au
   pied de la page du jeu (« Solèy est librement adapté de Refraction (Center for Game
   Science, université de Washington, 2010). ») ; mention COMPLÈTE dans le panneau
@@ -369,4 +369,7 @@ commence par "use strict"; et le partage se fait par la portée globale.
   nouvelle phrase-pont, contrôle d'alignement automatique (node + batterie).
   Décision « défis sans aucune aide, jamais bloquants » gravée (DESIGN pilier 2,
   §6, addendum spec).
+- 2026-08-14 : v9.1 — la phrase-pont est retirée des trois points de cours (décision
+  de Gwenael sur rendu : la scène seule porte le lien) ; tests de présence inversés,
+  CSS nettoyée. Tout le reste des cours validé tel quel.
 - (à compléter à chaque session)

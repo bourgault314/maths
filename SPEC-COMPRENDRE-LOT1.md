@@ -462,7 +462,9 @@ gâteau). **FEU VERT DONNÉ : cette spécification est bonne pour la session Cod
 >   capture). Nouvelle phrase-pont : « Le mur, c'est un zoom sur tes rayons :
 >   chaque part de lumière devient un morceau de la bande. » Un contrôle
 >   d'alignement automatique garantit que chaque rayon tombe dans l'intervalle
->   de sa case.
+>   de sa case. **v9.1 (décision de Gwenael sur rendu) : la phrase-pont est
+>   RETIRÉE des trois cours — la scène seule porte le lien. Tout le reste des
+>   cours est validé tel quel.**
 > - **Mention de Refraction** (textes de Gwenael au caractère près) : courte au
 >   pied de la page du jeu, complète dans le panneau « D'où vient Solèy ? »
 >   (le jeu n'a pas de panneau de règles : ce panneau, ouvert depuis le pied de
