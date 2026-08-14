@@ -120,6 +120,120 @@ function calcLineHTML(line){
   return `<div class="hline"><svg class="hsvg" viewBox="0 0 340 ${sc.h}">${sc.svg}</svg><div class="heq">${eq}</div></div>`;
 }
 
+/* ===== Points de cours (chantier « Comprendre », lot 1) =====
+   Scène « cascade de partage » (règle R2) : l'arbre COMPLET du partage — soleil,
+   rayon entier, chaque étage de prismes, TOUS les rayons terminaux — bâti sur les
+   primitives existantes (sSun/sBeam/sLbl/sTile), épaisseurs et couleurs réelles.
+   L'animation est entièrement portée par des délais CSS (--win-*) : aucune
+   minuterie à nettoyer, « Revoir » reconstruit simplement le panneau. */
+function cDraw(x1,y1,x2,y2,f,t0,dur,term){
+  const len=Math.hypot(x2-x1,y2-y1).toFixed(1);
+  return `<g class="cdraw"${term?' data-terminal="1"':''} style="--win-length:${len}px;--win-duration:${dur}s;--win-delay:${t0}s">${sBeam(x1,y1,x2,y2,f)}</g>`;
+}
+const cFade=(t0,inner)=>`<g class="cfade" style="--win-delay:${t0}s">${inner}</g>`;
+function sceneCascade(sc){
+  const divs=sc.divs, deux=divs.length===2, n1=divs[0];
+  const cy=deux?100:(n1===3?75:60);
+  let H=deux?200:(n1===3?150:120);
+  const ys1=n1===2?(deux?[52,148]:[30,90]):[28,75,122];
+  const p1=104, xFin=298;
+  const f1=fdiv([1,1],n1);
+  const t1=1.15, fin1=1.95;
+  let s='';
+  s+=cFade(0,sSun(26,cy,[1,1]));
+  s+=cDraw(40,cy,p1-17,cy,[1,1],.2,.7);
+  s+=cFade(.9,sLbl((40+p1-17)/2,cy-HW([1,1])/2-9,'1',fcol([1,1])));
+  s+=cFade(.95,sTile(p1,cy,'÷'+n1));
+  const x1=deux?218-17:xFin;
+  ys1.forEach((y,i)=>{s+=cDraw(p1+15,cy,x1,y,f1,t1+i*.05,.8,!deux);});
+  let stageFin,fin;
+  if(!deux){
+    ys1.forEach(y=>{s+=cFade(fin1,sLbl(318,y+6,fstr(f1),fcol(f1),16));});
+    stageFin=[fin1];fin=2.1;
+  }else{
+    const p2=218, f2=fdiv(f1,divs[1]), t2=2.25, fin2=3.05, off=[-24,24];
+    ys1.forEach(y=>{s+=cFade(fin1,sLbl((p1+15+x1)/2,y<cy?y-10:y+22,fstr(f1),fcol(f1),15));});
+    ys1.forEach(y=>{s+=cFade(2.0,sTile(p2,y,'÷'+divs[1]));});
+    ys1.forEach((y,i)=>{off.forEach((o,j)=>{s+=cDraw(p2+15,y,xFin,y+o,f2,t2+(i*2+j)*.05,.8,true);});});
+    ys1.forEach(y=>{off.forEach(o=>{s+=cFade(fin2,sLbl(318,y+o+5,fstr(f2),fcol(f2),15));});});
+    stageFin=[fin1,fin2];fin=3.2;
+  }
+  if(sc.comp){
+    /* comparaison à l'œil (support de C2-2) : les rayons côte à côte, vraies épaisseurs */
+    sc.comp.forEach((f,i)=>{
+      const y=H+22+i*30;
+      s+=cFade(fin+.15+i*.3,sLbl(34,y+6,fstr(f),fcol(f),15));
+      s+=cDraw(64,y,xFin,y,f,fin+.2+i*.3,.5);
+    });
+    H+=22+sc.comp.length*30+4;
+    fin+=.2+sc.comp.length*.3+.5;
+  }
+  return {h:H,svg:s,stageFin,fin};
+}
+let coursId=null, coursApresVictoire=false, coursRetour=null;
+function eqCoursHTML(line,t0){
+  let eq='';
+  line.split(' ').filter(Boolean).forEach(t=>{eq+=fracHTML(t);});
+  return `<div class="heq ceq cligne" style="--win-delay:${t0}s">${eq}</div>`;
+}
+function construireCours(id){
+  const c=COURS[id];
+  if(!c)return '';
+  const sc=sceneCascade(c.scene);
+  let h=`<div class="cscene"><svg class="hsvg" viewBox="0 0 340 ${sc.h}" role="img" aria-label="La cascade de partage, dessinée avec les rayons du jeu">${sc.svg}</svg></div>`;
+  c.calc.forEach((l,k)=>{h+=eqCoursHTML(l,sc.stageFin[Math.min(k,sc.stageFin.length-1)]);});
+  const pas=Math.max(.5,sc.fin/c.lignes.length);
+  c.lignes.forEach((t,i)=>{h+=`<p class="cligne" style="--win-delay:${(.4+i*pas).toFixed(2)}s">${t}</p>`;});
+  if(c.predire){
+    /* règle R3 : la question s'affiche SANS sa réponse — la réponse n'entre dans
+       la page qu'au toucher de « À ton avis… » (brancherPredire). */
+    h+=`<div class="cpredire cligne" style="--win-delay:${(sc.fin+.5).toFixed(2)}s"><p>${c.predire.question}</p><button type="button" id="cpredirebtn">À ton avis…</button></div>`;
+  }
+  /* règle R4 : la phrase-carte est une vraie petite carte — la trace écrite */
+  h+=`<div class="csavoir cligne" style="--win-delay:${(sc.fin+(c.predire?1.1:.6)).toFixed(2)}s"><div class="csavoirtitre">Carte de savoir</div><p>${c.carte}</p></div>`;
+  return h;
+}
+function brancherPredire(id){
+  const bt=document.getElementById('cpredirebtn');
+  if(!bt)return;
+  bt.addEventListener('click',()=>{
+    const p=document.createElement('p');
+    p.className='creponse';
+    p.textContent=COURS[id].predire.reponse;
+    bt.replaceWith(p);
+  },{once:true});
+}
+function montrerCours(id,apresVictoire){
+  if(!COURS[id])return;
+  coursId=id;
+  coursApresVictoire=!!apresVictoire;
+  coursRetour=apresVictoire?null:document.activeElement;
+  document.getElementById('courstitre').textContent=COURS[id].titre;
+  document.getElementById('coursbody').innerHTML=construireCours(id);
+  brancherPredire(id);
+  document.getElementById('coursov').classList.add('show');
+  const card=document.getElementById('courscard');
+  card.scrollTop=0;
+  card.focus({preventScroll:true});
+}
+function revoirCours(){
+  if(!coursId)return;
+  document.getElementById('coursbody').innerHTML=construireCours(coursId);
+  brancherPredire(coursId);
+  document.getElementById('courscard').scrollTop=0;
+}
+function fermerCours(){
+  document.getElementById('coursov').classList.remove('show');
+  document.getElementById('coursbody').innerHTML='';
+  if(coursApresVictoire){
+    coursApresVictoire=false;
+    document.getElementById('winov').classList.add('show');
+    document.getElementById('nextbtn').focus({preventScroll:true});
+  }else if(coursRetour&&coursRetour.focus){
+    coursRetour.focus();
+  }
+  coursRetour=null;
+}
 
 /* ===== Sauvegarde ===== */
 let memStore={done:{},fruits:{},pieces:{}};
@@ -135,25 +249,29 @@ let save=loadSave();
 if(!save.done)save.done={};
 if(!save.fruits)save.fruits={};
 if(!save.pieces)save.pieces={}; /* meilleur nombre de pièces par niveau (champ additif, anciennes sauvegardes intactes) */
+if(!save.cours)save.cours={}; /* points de cours vus (chantier « Comprendre ») — champ additif, même patron : anciennes sauvegardes intactes */
 
 /* ===== Progression : mondes verrouillés, étoiles, mode classe =====
    1 petit soleil = niveau réussi · 2 = + tous les fruits · 3 = + défi de maîtrise (au plus
    autant de pièces que la solution de référence). Étoiles calculées sur les
    MEILLEURS scores enregistrés, pas sur une seule partie.
    Un monde s'ouvre quand on a réussi ⌈5/8 des niveaux du monde précédent⌉
-   (jamais 100 %). Le crochet « niveaux-découverte » (DESIGN-SOLEY.md pilier 1)
-   s'ajoutera ici quand ces niveaux existeront.
+   (jamais 100 %) ET ses niveaux-découverte (champ dec — chantier « Comprendre »,
+   lot 1) : ils comptent aussi dans le seuil, et ils sont conçus triviaux.
    Mode classe : soley.html?classe — tout est ouvert, rien n'est enregistré de plus. */
 const modeClasse=(()=>{try{return typeof location!=='undefined'&&new URLSearchParams(location.search).has('classe');}catch(e){return false;}})();
 const idxMonde=wid=>LV.map((l,i)=>i).filter(i=>LV[i].w===wid);
 const reussisMonde=wid=>idxMonde(wid).filter(i=>save.done[lvId(i)]).length;
 const parNiveau=i=>LV[i].sol.length;
 const seuilMonde=wi=>wi<=0?0:Math.ceil(5*idxMonde(WORLDS[wi-1].id).length/8);
+const decouvertesMonde=wid=>idxMonde(wid).filter(i=>LV[i].dec);
+const decouvertesReussies=wid=>decouvertesMonde(wid).filter(i=>save.done[lvId(i)]).length;
 function mondeDeverrouille(wid){
   if(modeClasse)return true;
   const wi=WORLDS.findIndex(w=>w.id===wid);
   if(wi<=0)return true;
-  return reussisMonde(WORLDS[wi-1].id)>=seuilMonde(wi);
+  const prev=WORLDS[wi-1].id;
+  return reussisMonde(prev)>=seuilMonde(wi)&&decouvertesReussies(prev)>=decouvertesMonde(prev).length;
 }
 function etoiles(i){
   const k=lvId(i);
@@ -349,8 +467,13 @@ function startCelebration(sim){
     save.done[lvId(cur)]=true;
     save.fruits[lvId(cur)]=Math.max(save.fruits[lvId(cur)]||0,sim.fruits.size);
     save.pieces[lvId(cur)]=Math.min(save.pieces[lvId(cur)]||Infinity,nbPieces);
-    persist();
     const L=LV[cur];
+    /* Point de cours (chantier « Comprendre ») : à la PREMIÈRE victoire d'une
+       découverte, le panneau s'insère entre « Lévé ! » et la fenêtre des soleils.
+       Au rejeu il ne se réaffiche pas — bouton « Revoir le cours » sur sa carte. */
+    const coursANouveau=!!(L.dec&&COURS[L.dec]&&!save.cours[L.dec]);
+    if(coursANouveau)save.cours[L.dec]=true;
+    persist();
     const wIdx=LV.map((l,i)=>i).filter(i=>LV[i].w===L.w);
     const isLastOfWorld=wIdx[wIdx.length-1]===cur;
     document.getElementById('splash').classList.remove('show');
@@ -363,7 +486,8 @@ function startCelebration(sim){
     const nextLocked=isLastOfWorld&&cur<LV.length-1&&!mondeDeverrouille(LV[cur+1].w);
     document.getElementById('nextbtn').textContent=
       isLastOfWorld?(cur<LV.length-1?(nextLocked?'Retour aux niveaux':'Monde suivant'):'Tu as fini Solèy ! Retour'):'Niveau suivant';
-    document.getElementById('winov').classList.add('show');
+    if(coursANouveau)montrerCours(L.dec,true);
+    else document.getElementById('winov').classList.add('show');
     celebrating=false;
   },T+2100));
 }

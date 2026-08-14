@@ -174,6 +174,16 @@ function soleilRang(pleins,total=3,taille=13){
   for(let i=0;i<total;i++)s+=soleilIco(i<pleins,taille);
   return s;
 }
+/* Badge « découverte » (chantier « Comprendre ») : un rayon qui se partage — le geste
+   fondateur du jeu — dans une pastille sobre. Jamais une étoile. */
+function decouverteIco(taille=15){
+  return `<svg class="decico" width="${taille}" height="${taille}" viewBox="0 0 24 24" aria-hidden="true">
+    <circle cx="12" cy="12" r="10.4" fill="#101a33" stroke="#ffc94d" stroke-width="1.7"/>
+    <line x1="4.6" y1="12" x2="11" y2="12" stroke="#ffc94d" stroke-width="3.1" stroke-linecap="round"/>
+    <line x1="11" y1="12" x2="18.4" y2="7.6" stroke="#ffb347" stroke-width="2" stroke-linecap="round"/>
+    <line x1="11" y1="12" x2="18.4" y2="16.4" stroke="#ffb347" stroke-width="2" stroke-linecap="round"/>
+  </svg>`;
+}
 function targetSVG(t,stat,label='',index=''){
   const px=t.x*CS,py=t.y*CS;
   const lit=stat&&stat.st==='ok', bad=stat&&(stat.st==='wrong'||stat.st==='multi');

@@ -78,7 +78,7 @@ test("Solèy est publié une seule fois, dans Jeux et Fractions", () => {
   assert.match(classification.cardDescription, /60 casse-têtes/);
 });
 
-test("les 60 solutions de référence gagnent et ramassent les 135 fruits", () => {
+test("les 61 solutions de référence gagnent et ramassent les 135 fruits", () => {
   const context = createGameContext();
   const worldCounts = vm.runInContext(
     "Object.fromEntries(WORLDS.map(({id})=>[id,LV.filter(level=>level.w===id).length]))",
@@ -86,7 +86,7 @@ test("les 60 solutions de référence gagnent et ramassent les 135 fruits", () =
   );
   assert.deepEqual(
     { ...worldCounts },
-    { lagon: 8, foret: 9, volcan: 7, pitons: 7, soleils: 8, marche: 6, tunnels: 8, mafate: 7 }
+    { lagon: 9, foret: 9, volcan: 7, pitons: 7, soleils: 8, marche: 6, tunnels: 8, mafate: 7 }
   );
 
   const structure = vm.runInContext(`(() => ({
@@ -100,7 +100,7 @@ test("les 60 solutions de référence gagnent et ramassent les 135 fruits", () =
     ["lagon", "foret", "volcan", "pitons", "soleils", "marche", "tunnels", "mafate"]
   );
   assert.deepEqual([...structure.runs], [...structure.worlds]);
-  assert.equal(structure.saveKeys, 60);
+  assert.equal(structure.saveKeys, 61);
   assert.deepEqual([...structure.tunnels], [
     "Le serpent", "La fourche", "Le tourbillon", "Le prisme scellé",
     "La galerie scellée", "Les demi-tunnels", "L'impasse aux letchis", "Le grand réseau"
@@ -158,7 +158,7 @@ test("les 60 solutions de référence gagnent et ramassent les 135 fruits", () =
     return { levels: LV.length, fruits, declaredFruits, failures };
   })()`, context);
 
-  assert.equal(summary.levels, 60);
+  assert.equal(summary.levels, 61);
   assert.equal(summary.fruits, 135);
   assert.equal(summary.declaredFruits, 135);
   assert.deepEqual([...summary.failures], []);
@@ -287,10 +287,13 @@ test("la progression verrouillée et les étoiles se calculent juste", () => {
     const parOk = LV.every((l, i) => parNiveau(i) === l.sol.length && l.sol.length >= 1);
     const avant = WORLDS.map(w => mondeDeverrouille(w.id));
     const lagon = LV.map((l, i) => i).filter(i => LV[i].w === 'lagon');
-    lagon.slice(0, 4).forEach(i => save.done[LV[i].w + ':' + LV[i].name] = true);
-    const foretA4 = mondeDeverrouille('foret');
-    save.done[LV[lagon[4]].w + ':' + LV[lagon[4]].name] = true;
-    const foretA5 = mondeDeverrouille('foret');
+    /* chantier « Comprendre » : le seuil ⌈5/8⌉ ET les 3 découvertes du monde précédent */
+    lagon.slice(0, 5).forEach(i => save.done[LV[i].w + ':' + LV[i].name] = true);
+    const foretA5 = mondeDeverrouille('foret'); /* 5 réussites < seuil 6 */
+    save.done['lagon:La moitié de la moitié'] = true;
+    const foretSansDec = mondeDeverrouille('foret'); /* 6 réussites mais 2 découvertes sur 3 */
+    save.done['lagon:Les quatre quarts'] = true;
+    const foretComplete = mondeDeverrouille('foret'); /* 7 réussites dont les 3 découvertes */
     const volcanFerme = !mondeDeverrouille('volcan');
     const zi = LV.findIndex(l => l.name === 'Zigzag dans les roches');
     const k = 'lagon:Zigzag dans les roches';
@@ -299,15 +302,16 @@ test("la progression verrouillée et les étoiles se calculent juste", () => {
     save.pieces[k] = 2; const maitrise = etoiles(zi);
     save.pieces[k] = 3; const tropDePieces = etoiles(zi);
     const sansFruits = etoiles(0);
-    return { seuils, parOk, avant, foretA4, foretA5, volcanFerme,
+    return { seuils, parOk, avant, foretA5, foretSansDec, foretComplete, volcanFerme,
       fruitManquant, fruitsComplets, maitrise, tropDePieces, sansFruits };
   })()`, context);
 
-  assert.deepEqual([...r.seuils], [0, 5, 6, 5, 5, 5, 4, 5]);
+  assert.deepEqual([...r.seuils], [0, 6, 6, 5, 5, 5, 4, 5]);
   assert.equal(r.parOk, true);
   assert.deepEqual([...r.avant], [true, false, false, false, false, false, false, false]);
-  assert.equal(r.foretA4, false);
-  assert.equal(r.foretA5, true);
+  assert.equal(r.foretA5, false);
+  assert.equal(r.foretSansDec, false, "6 réussites sans les 3 découvertes : la forêt reste fermée");
+  assert.equal(r.foretComplete, true);
   assert.equal(r.volcanFerme, true);
   assert.equal(r.fruitManquant, 1);
   assert.equal(r.fruitsComplets, 2);
@@ -323,7 +327,8 @@ test("la progression verrouillée et les étoiles se calculent juste", () => {
   assert.match(js.ui, /petits soleils/);
   assert.match(js.ui, /stlegende/);
   assert.match(html, /id="stlegende"/);
-  assert.doesNotMatch(js.ui + js.engine, /[★☆]/);
+  /* garde-fou étendu au lot 1 : zéro ★ où que ce soit (html, css, les 4 js) */
+  assert.doesNotMatch(tout, /[★☆]/);
   assert.match(js.render, /Lambrequins v2/);
   assert.match(js.ui, /etoiles,parNiveau,seuilMonde,mondeDeverrouille/);
   assert.match(html, /id="winstars"/);
@@ -398,7 +403,7 @@ test("le cours illustré couvre les nouveaux partages et les pièces scellées",
 
   assert.deepEqual(
     { ...course, missingLevels: [...course.missingLevels] },
-    { cards: 51, lines: 71, missingLevels: [], rendered: true }
+    { cards: 52, lines: 73, missingLevels: [], rendered: true }
   );
   const additions = vm.runInContext(`({
     fourche: CALC["La fourche"],
@@ -407,17 +412,93 @@ test("le cours illustré couvre les nouveaux partages et les pièces scellées",
     reseau: CALC["Le grand réseau"],
     prisme: CALC["Le prisme scellé"],
     galerie: CALC["La galerie scellée"],
-    verrous: CALC["Les verrous du cirque"]
+    verrous: CALC["Les verrous du cirque"],
+    quatre: CALC["Les quatre quarts"]
   })`, context);
   assert.deepEqual([...additions.fourche], ["1 ÷ 2 = 1/2"]);
   assert.deepEqual([...additions.impasse], ["1/2 ÷ 2 = 1/4", "1/2 + 1/4 = 2/4 + 1/4 = 3/4"]);
-  assert.deepEqual([...additions.demi], ["1 ÷ 2 = 1/2", "1/2 + 1/2 = 1"]);
+  /* règle R1 (lot 1 « Comprendre ») : les totaux n/n s'écrivent partout */
+  assert.deepEqual([...additions.demi], ["1 ÷ 2 = 1/2", "1/2 + 1/2 = 2/2 = 1"]);
   assert.deepEqual([...additions.reseau], ["1 ÷ 3 = 1/3", "1/3 ÷ 2 = 1/6"]);
   assert.deepEqual([...additions.prisme], ["1 ÷ 2 = 1/2"]);
   assert.deepEqual([...additions.galerie], ["1 ÷ 2 = 1/2"]);
-  assert.deepEqual([...additions.verrous], ["1 ÷ 2 = 1/2", "1/2 + 1/2 = 1"]);
+  assert.deepEqual([...additions.verrous], ["1 ÷ 2 = 1/2", "1/2 + 1/2 = 2/2 = 1"]);
+  assert.deepEqual([...additions.quatre], ["1 ÷ 2 = 1/2", "1/2 ÷ 2 = 1/4"]);
   assert.match(html, /id="hintov" role="dialog" aria-modal="true"/);
   assert.match(js.engine, /class="frac"/);
+});
+
+test("le chantier « Comprendre » : découvertes, points de cours et règle R1", () => {
+  const context = createGameContext();
+  const r = vm.runInContext(`(() => {
+    const lagon = LV.filter(l => l.w === 'lagon').map(l => l.name);
+    const decs = LV.filter(l => l.dec).map(l => l.name + ':' + l.dec);
+    const q = LV.find(l => l.name === 'Les quatre quarts');
+    const textes = id => COURS[id].lignes.join(' ');
+    return {
+      lagon, decs,
+      coursIds: Object.keys(COURS),
+      titres: Object.values(COURS).map(c => c.titre),
+      grille: q.cols + 'x' + q.rows,
+      pur: q.rocks.length === 0 && q.fruits.length === 0 && !q.gates && !q.fixed,
+      outils: q.tools.map(t => t.t + ':' + t.in).join(','),
+      cartes: Object.values(COURS).every(c => typeof c.carte === 'string' && c.carte.length > 20),
+      /* R3 : le prédire existe pour tiers et quart, pas pour demi */
+      predire: ['tiers', 'quart'].every(id => COURS[id].predire
+        && COURS[id].predire.question && COURS[id].predire.reponse) && !COURS.demi.predire,
+      /* R1 : aucun total non écrit dans les textes des cours */
+      totaux: [textes('demi').includes('1/2 + 1/2 = 2/2 = 1'),
+        textes('tiers').includes('1/3 + 1/3 + 1/3 = 3/3 = 1'),
+        textes('quart').includes('1/4 + 1/4 + 1/4 + 1/4 = 4/4 = 1')],
+      /* R2 : les scènes se construisent, tous les rayons terminaux visibles */
+      terminaux: ['demi', 'tiers', 'quart'].map(id =>
+        (sceneCascade(COURS[id].scene).svg.match(/data-terminal/g) || []).length),
+      /* R3 dans le panneau : la réponse du prédire est ABSENTE du HTML construit */
+      panneau: ['demi', 'tiers', 'quart'].map(id => {
+        const h = construireCours(id);
+        return {
+          id,
+          carteSavoir: h.includes('Carte de savoir'),
+          bouton: h.includes('cpredirebtn'),
+          reponseCachee: !h.includes(COURS[id].predire ? COURS[id].predire.reponse : '@jamais@'),
+          scene: h.includes('class="cscene"') && h.includes('class="cdraw"'),
+        };
+      }),
+    };
+  })()`, context);
+  assert.deepEqual([...r.lagon], ["Premier rayon", "Zigzag dans les roches", "Moitié-moitié",
+    "La part perdue", "Partage en tiers", "Les quatre quarts", "La moitié de la moitié",
+    "Quarts en croix", "Le tour du lagon"]);
+  assert.deepEqual([...r.decs], ["Moitié-moitié:demi", "Partage en tiers:tiers", "Les quatre quarts:quart"]);
+  assert.deepEqual([...r.coursIds], ["demi", "tiers", "quart"]);
+  assert.deepEqual([...r.titres], ["Le demi", "Le tiers", "Le quart"]);
+  assert.equal(r.grille, "9x7");
+  assert.equal(r.pur, true, "une découverte est pure : sans roche, fruit, passe ni pièce scellée");
+  assert.equal(r.outils, "s2:1,s2:0,s2:2", "trois prismes ÷2, orientations de la spec §4.3");
+  assert.equal(r.cartes, true);
+  assert.equal(r.predire, true);
+  assert.deepEqual([...r.totaux], [true, true, true], "R1 : les 2/2, 3/3 et 4/4 sont écrits");
+  assert.deepEqual([...r.terminaux], [2, 3, 4], "R2 : la scène C3 montre bien QUATRE rayons 1/4");
+  for (const p of r.panneau) {
+    assert.equal(p.carteSavoir, true, `${p.id} : la phrase-carte est habillée en carte de savoir (R4)`);
+    assert.equal(p.bouton, p.id !== "demi", `${p.id} : bouton « À ton avis… »`);
+    assert.equal(p.reponseCachee, true, `${p.id} : la réponse du prédire n'est pas dans la page avant le toucher (R3)`);
+    assert.equal(p.scene, true, `${p.id} : scène en cascade animée présente`);
+  }
+  /* le câblage : overlay dans la coquille, séquence de victoire, sauvegarde, écran des niveaux */
+  assert.match(html, /id="coursov" role="dialog" aria-modal="true" aria-labelledby="courstitre"/);
+  assert.match(html, /id="coursrevoir"/);
+  assert.match(html, /id="coursok"/);
+  assert.match(js.engine, /if\(!save\.cours\)save\.cours=\{\};/);
+  assert.match(js.engine, /const coursANouveau=!!\(L\.dec&&COURS\[L\.dec\]&&!save\.cours\[L\.dec\]\);/);
+  assert.match(js.engine, /decouvertesReussies\(prev\)>=decouvertesMonde\(prev\)\.length/);
+  assert.match(js.ui, /dont ses \$\{nbDec\} découvertes/);
+  assert.match(js.ui, /Revoir le cours/);
+  assert.match(js.render, /function decouverteIco/);
+  assert.match(js.ui, /cours:construireCours,montrerCours,fermerCours/);
+  assert.match(css, /#coursov\.show\{display:flex;\}/);
+  assert.match(css, /\.csavoir\{/);
+  assert.match(css, /\.lvcours\{/);
 });
 
 test("le paysage mobile et le plein écran utilisent réellement tout le viewport", () => {

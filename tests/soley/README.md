@@ -31,7 +31,13 @@ Code retour 0 = tout est vert. `--headed` ouvre le navigateur pour observer.
 | T5 | Écrans réellement masqués : `getComputedStyle` sur `#home`, `#lvscreen`, `#play` au chargement puis en naviguant AU CLIC (piège de spécificité #id vs .classe) | clics réels sur `.wrow` et `.lvcard` |
 | T6 | Paysage (viewport 844×390) : zéro défilement de page, plateau à gauche de la colonne, clic précis sur une case avec letterbox pris en compte (même règle de correspondance que `boardClick`), victoire de bout en bout (cinématique puis fenêtre de fin), sauvegarde locale écrite | clics réels + `mouse.click` aux coordonnées calculées |
 | T7 | Zéro erreur JavaScript (exceptions non rattrapées ET `console.error`) sur l'ensemble des passes | écouteurs `pageerror` / `console` |
-| T8 | Progression verrouillée (chantier 1) : seuils ⌈5/8⌉ exacts par monde, accueil neuf tout fermé sauf le lagon, clic sur monde fermé sans effet + condition lisible, déblocage après 5 réussites semées, étoiles ★★★/★★☆ sur les cartes, mode classe `?classe` (tout ouvert + badge), zéro défilement horizontal téléphone | API SOLEY + `localStorage` semé avant chargement + clics réels |
+| T8 | Progression verrouillée (chantier 1) : seuils ⌈5/8⌉ exacts par monde (lagon à 9 niveaux → forêt à 6), accueil neuf tout fermé sauf le lagon, clic sur monde fermé sans effet + condition lisible (seuil + découvertes), déblocage après 6 réussites semées dont les 3 découvertes, étoiles sur les cartes, mode classe `?classe` (tout ouvert + badge), zéro défilement horizontal téléphone | API SOLEY + `localStorage` semé avant chargement + clics réels |
+| T9 | Chantier « Comprendre » (lot 1) : « Les quatre quarts » gagne par sa `sol` (1/4 exact dans chaque maison), le point de cours s'affiche après la victoire d'une découverte (pas d'un niveau ordinaire), panneau C3 avec QUATRE rayons terminaux + carte de savoir, prédire à révélation (réponse absente avant le toucher), « Revoir » rejoue, « J'ai compris ! » mène à la fenêtre de victoire, pas de réaffichage au rejeu + « Revoir le cours » sur la carte, condition « dont ses 3 découvertes », mode classe cours compris, vieille sauvegarde sans champ `cours` chargée telle quelle, stabilité 320 px et 402 px (cours + chaînes CALC corrigées R1) | victoires réelles via `solve`, clics réels, `SOLEY.montrerCours` |
+
+La preuve structurelle du lot 1 (les 60 niveaux historiques intacts à l'octet, hors
+champs autorisés par SPEC-COMPRENDRE-LOT1.md §8) se rejoue avec :
+`node tests/soley/verifier-lot1-comprendre.mjs` (référence git figée, comme
+`verifier-decoupage.mjs`).
 
 ## Détails qui comptent
 

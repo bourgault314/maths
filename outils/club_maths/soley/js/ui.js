@@ -37,7 +37,8 @@ function renderHome(){
     const nd2=idxs.filter(i=>save.done[lvId(i)]).length;
     const pct=Math.round(100*nd2/idxs.length);
     const ouvert=mondeDeverrouille(w.id);
-    const cond=ouvert?'':`<span class="wcond">${cadenas} Réussis ${seuilMonde(wi)} niveaux de « ${WORLDS[wi-1].label} » (${reussisMonde(WORLDS[wi-1].id)}/${seuilMonde(wi)})</span>`;
+    const nbDec=ouvert?0:decouvertesMonde(WORLDS[wi-1].id).length;
+    const cond=ouvert?'':`<span class="wcond">${cadenas} Réussis ${seuilMonde(wi)} niveaux de « ${WORLDS[wi-1].label} » (${reussisMonde(WORLDS[wi-1].id)}/${seuilMonde(wi)})${nbDec?`, dont ses ${nbDec} découvertes (${decouvertesReussies(WORLDS[wi-1].id)}/${nbDec})`:''}</span>`;
     return `<button class="wrow ${ouvert?'':'locked'}" data-w="${w.id}" ${ouvert?'':'aria-disabled="true"'}>
       <svg class="wico" width="46" height="46" viewBox="0 0 46 46">${icons[w.id]||''}</svg>
       <span class="winfo">
@@ -70,12 +71,20 @@ function openWorld(wid){
     const done=save.done[lvId(gi)];
     const e=etoiles(gi);
     const nf=LV[gi].fruits.length, gf=save.fruits[lvId(gi)]||0;
-    return `<button class="lvcard ${done?'done':''}" data-i="${gi}">
-      <div class="num">${li+1}</div>
-      <div class="st">${soleilRang(e)}${nf?`<span class="stf">${fruitMini(ftype)}${gf}/${nf}</span>`:''}</div>
-    </button>`;
+    const dec=LV[gi].dec;
+    /* niveau-découverte : badge sur la carte, et « Revoir le cours » une fois le
+       niveau réussi (le mode classe ouvre aussi les cours — chantier « Comprendre ») */
+    return `<div class="lvcell">
+      <button class="lvcard ${done?'done':''}" data-i="${gi}">
+        ${dec?`<span class="lvdec" title="Niveau-découverte">${decouverteIco(15)}</span>`:''}
+        <div class="num">${li+1}</div>
+        <div class="st">${soleilRang(e)}${nf?`<span class="stf">${fruitMini(ftype)}${gf}/${nf}</span>`:''}</div>
+      </button>
+      ${dec&&(done||modeClasse)?`<button class="lvcours" data-cours="${dec}" type="button">Revoir le cours</button>`:''}
+    </div>`;
   }).join('');
   document.querySelectorAll('.lvcard').forEach(bt=>bt.addEventListener('click',()=>openLevel(+bt.dataset.i)));
+  document.querySelectorAll('.lvcours').forEach(bt=>bt.addEventListener('click',()=>montrerCours(bt.dataset.cours,false)));
   show('lvscreen');
 }
 function openLevel(i){
@@ -83,6 +92,7 @@ function openLevel(i){
   cur=i;state.placed={};state.sel=null;overlayShown=false;hintShown=false;
   document.getElementById('winov').classList.remove('show');
   document.getElementById('hintov').classList.remove('show');
+  document.getElementById('coursov').classList.remove('show');
   document.getElementById('hintbtn').style.display=(LV[i].hint||CALC[LV[i].name])?'':'none';
   const w=WORLDS.find(x=>x.id===LV[i].w);
   const local=LV.map((l,j)=>j).filter(j=>LV[j].w===LV[i].w).indexOf(i)+1;
@@ -164,6 +174,14 @@ document.getElementById('hintov').addEventListener('click',ev=>{
 });
 document.addEventListener('keydown',ev=>{
   if(ev.key==='Escape'&&document.getElementById('hintov').classList.contains('show'))document.getElementById('hintclose').click();
+});
+/* Point de cours : « J'ai compris ! » ferme (et enchaîne sur la fenêtre des soleils
+   après une victoire), « Revoir » rejoue l'animation. Pas de fermeture au clic sur
+   le fond : on ne quitte pas un cours par mégarde. */
+document.getElementById('coursok').addEventListener('click',fermerCours);
+document.getElementById('coursrevoir').addEventListener('click',revoirCours);
+document.addEventListener('keydown',ev=>{
+  if(ev.key==='Escape'&&document.getElementById('coursov').classList.contains('show'))fermerCours();
 });
 
 /* Plein écran natif quand le navigateur le permet, aide honnête dans les autres cas. */
@@ -305,6 +323,7 @@ relayout();
 window.SOLEY={
   openLevel,simulate,state,LV,
   etoiles,parNiveau,seuilMonde,mondeDeverrouille,reussisMonde,renderHome,
+  cours:construireCours,montrerCours,fermerCours,decouvertesMonde,decouvertesReussies,
   solve(i){openLevel(i);LV[i].sol.forEach(([ti,x,y])=>{state.placed[x+','+y]={def:LV[i].tools[ti],ti};});
     const sim=simulate();redraw();return{win:sim.win,stats:sim.stats};}
 };

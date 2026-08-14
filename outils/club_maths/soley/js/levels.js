@@ -56,8 +56,8 @@ const LV=[
   rocks:[[5,0],[5,1],[5,2],[5,3],[1,3],[6,2]],fruits:[[3,3]],
   tools:[b(1,2),b(2,1)],sol:[[0,3,1],[1,3,4]]},
 
- {w:'lagon',name:"Moitié-moitié",
-  sub:"Le prisme ÷2 coupe le rayon en deux parts égales : chaque part vaut 1/2. Regarde l'épaisseur des rayons !",
+ {w:'lagon',name:"Moitié-moitié",dec:'demi',
+  sub:"Deux maisons attendent chacune la même part… et la boîte ne contient qu'un prisme ÷2. Que va-t-il faire du rayon ? Observe l'épaisseur !",
   cols:8,rows:6,suns:[{x:0,y:2,dir:1}],
   targets:[{x:3,y:0,need:[1,2]},{x:3,y:5,need:[1,2]}],
   rocks:[[6,1],[6,4]],fruits:[],
@@ -70,12 +70,23 @@ const LV=[
   rocks:[[5,2],[6,0]],fruits:[[3,4]],
   tools:[s2(1,0,2),b(2,1)],sol:[[0,3,2],[1,3,5]]},
 
- {w:'lagon',name:"Partage en tiers",
-  sub:"Le prisme ÷3 partage le rayon en trois parts égales : des tiers. Nouvelle couleur : les tiers sont bleus !",
+ {w:'lagon',name:"Partage en tiers",dec:'tiers',
+  sub:"Trois maisons, un seul prisme ÷3. En combien de parts va-t-il couper le rayon ? Regarde la nouvelle couleur !",
   cols:9,rows:6,suns:[{x:0,y:2,dir:1}],
   targets:[{x:4,y:0,need:[1,3]},{x:8,y:2,need:[1,3]},{x:4,y:5,need:[1,3]}],
   rocks:[[2,4],[6,1]],fruits:[],
   tools:[s3(1,0,1,2)],sol:[[0,4,2]]},
+
+ /* Niveau fondateur du chantier « Comprendre » (SPEC-COMPRENDRE-LOT1.md §4.3) :
+    une découverte est pure — sans roche, sans fruit, sans surplus d'outils. */
+ {w:'lagon',name:"Les quatre quarts",dec:'quart',
+  sub:"Quatre maisons veulent chacune 1/4… mais la boîte n'a que des prismes ÷2 ! Comment fabriquer des quarts avec des moitiés ?",
+  hint:"Coupe le rayon en deux… puis coupe encore chaque moitié.",
+  cols:9,rows:7,suns:[{x:0,y:3,dir:1}],
+  targets:[{x:1,y:1,need:[1,4]},{x:7,y:1,need:[1,4]},{x:1,y:5,need:[1,4]},{x:7,y:5,need:[1,4]}],
+  rocks:[],fruits:[],
+  tools:[s2(1,0,2),s2(0,3,1),s2(2,3,1)],
+  sol:[[0,4,3],[1,4,1],[2,4,5]]},
 
  {w:'lagon',name:"La moitié de la moitié",
   sub:"La moitié de la moitié… quelle fraction ça fait ? Observe l'épaisseur des rayons.",
@@ -662,53 +673,106 @@ const LV=[
 const CALC={
  "Moitié-moitié":["1 ÷ 2 = 1/2"],
  "Partage en tiers":["1 ÷ 3 = 1/3"],
+ "Les quatre quarts":["1 ÷ 2 = 1/2","1/2 ÷ 2 = 1/4"],
  "La moitié de la moitié":["1/2 ÷ 2 = 1/4"],
  "Quarts en croix":["1/2 ÷ 2 = 1/4"],
- "Recoller les morceaux":["1/2 + 1/2 = 1"],
+ "Recoller les morceaux":["1/2 + 1/2 = 2/2 = 1"],
  "Trois quarts":["1/2 + 1/4 = 2/4 + 1/4 = 3/4"],
  "Deux tiers":["1/3 + 1/3 = 2/3"],
  "Les sixièmes":["1/3 ÷ 2 = 1/6"],
  "Les huitièmes":["1/2 ÷ 2 ÷ 2 = 1/8"],
- "Cinq sixièmes":["1/6 + 1/6 = 1/3","1/2 + 1/3 = 3/6 + 2/6 = 5/6"],
+ "Cinq sixièmes":["1/6 + 1/6 = 2/6 = 1/3","1/2 + 1/3 = 3/6 + 2/6 = 5/6"],
  "Les douzièmes":["1/6 + 1/12 = 2/12 + 1/12 = 3/12 = 1/4"],
  "La clairière":["1/3 + 1/3 = 2/3"],
  "La loupe":["1/3 × 2 = 2/3"],
  "Trois demis":["1/2 × 3 = 3/2"],
  "Bouquet de neuvièmes":["1/3 ÷ 3 = 1/9","1/3 + 1/3 = 2/3"],
- "Deux neuvièmes":["1/9 × 2 = 2/9","1/3 × 3 = 1"],
- "L'éruption":["1/6 × 2 = 1/3","1/3 × 3 = 1"],
- "Défi du volcan":["1/2 + 1/4 = 3/4","1/4 × 2 = 1/2"],
+ "Deux neuvièmes":["1/9 × 2 = 2/9","1/3 × 3 = 3/3 = 1"],
+ "L'éruption":["1/6 × 2 = 2/6 = 1/3","1/3 × 3 = 3/3 = 1"],
+ "Défi du volcan":["1/2 + 1/4 = 2/4 + 1/4 = 3/4","1/4 × 2 = 2/4 = 1/2"],
  "C'est pareil !":["2/4 = 1/2"],
  "Trois écritures":["2/8 = 1/4","3/6 = 1/2"],
- "La passe étroite":["1/2 + 1/2 = 1"],
+ "La passe étroite":["1/2 + 1/2 = 2/2 = 1"],
  "Quel rayon passe ?":["1/3 < 1/2"],
- "Le tamis":["1/4 + 1/4 = 1/2"],
+ "Le tamis":["1/4 + 1/4 = 2/4 = 1/2"],
  "Égal ou pas ?":["2/6 = 1/3","2/12 = 1/6"],
  "Le col des comparaisons":["1/4 < 1/2"],
  "Un soleil qui vaut 2":["2 ÷ 2 = 1"],
  "Deux tiers d'un coup":["2 ÷ 3 = 2/3"],
- "Deux soleils":["1/2 + 1/2 = 1"],
- "Un et demi":["1 + 1/2 = 3/2"],
- "Trois petits soleils":["1/3 + 1/6 = 2/6 + 1/6 = 1/2","1/2 + 1/2 = 1"],
+ "Deux soleils":["1/2 + 1/2 = 2/2 = 1"],
+ "Un et demi":["1 + 1/2 = 2/2 + 1/2 = 3/2"],
+ "Trois petits soleils":["1/3 + 1/6 = 2/6 + 1/6 = 3/6 = 1/2","1/2 + 1/2 = 2/2 = 1"],
  "Quatre tiers":["2/3 + 2/3 = 4/3"],
- "Les soleils jumeaux":["1 + 1/2 = 3/2"],
+ "Les soleils jumeaux":["1 + 1/2 = 2/2 + 1/2 = 3/2"],
  "La passe des soleils":["2 ÷ 2 = 1"],
  "Écritures décimales":["1/2 = 0,5","1/4 = 0,25"],
  "Les pourcentages":["1/2 = 50%","1/4 = 25%"],
- "L'étiquette 0,75":["1/2 + 1/4 = 3/4","3/4 = 0,75"],
- "Remise de 25 %":["1/2 + 1/4 = 3/4"],
- "L'addition du marché":["1/3 × 2 = 2/3","2/3 + 1/3 = 1"],
+ "L'étiquette 0,75":["1/2 + 1/4 = 2/4 + 1/4 = 3/4","3/4 = 0,75"],
+ "Remise de 25 %":["1/2 + 1/4 = 2/4 + 1/4 = 3/4"],
+ "L'addition du marché":["1/3 × 2 = 2/3","2/3 + 1/3 = 3/3 = 1"],
  "Le grand marché":["2 ÷ 2 = 1","1/2 ÷ 2 = 1/4"],
  "L'entrée du cirque":["1/3 ÷ 2 = 1/6"],
- "Deux soleils sur les îlets":["1/2 + 1/4 = 3/4"],
- "La passe de la Rivière":["1/2 ÷ 3 = 1/6","1/6 + 1/6 = 1/3"],
- "Les trois cheminées":["1/4 × 3 = 3/4","1/4 × 2 = 1/2"],
- "Le sommet":["1/6 × 2 = 1/3","1/2 + 1/3 = 3/6 + 2/6 = 5/6"],
+ "Deux soleils sur les îlets":["1/2 + 1/4 = 2/4 + 1/4 = 3/4"],
+ "La passe de la Rivière":["1/2 ÷ 3 = 1/6","1/6 + 1/6 = 2/6 = 1/3"],
+ "Les trois cheminées":["1/4 × 3 = 3/4","1/4 × 2 = 2/4 = 1/2"],
+ "Le sommet":["1/6 × 2 = 2/6 = 1/3","1/2 + 1/3 = 3/6 + 2/6 = 5/6"],
  "La fourche":["1 ÷ 2 = 1/2"],
  "L'impasse aux letchis":["1/2 ÷ 2 = 1/4","1/2 + 1/4 = 2/4 + 1/4 = 3/4"],
- "Les demi-tunnels":["1 ÷ 2 = 1/2","1/2 + 1/2 = 1"],
+ "Les demi-tunnels":["1 ÷ 2 = 1/2","1/2 + 1/2 = 2/2 = 1"],
  "Le grand réseau":["1 ÷ 3 = 1/3","1/3 ÷ 2 = 1/6"],
  "Le prisme scellé":["1 ÷ 2 = 1/2"],
  "La galerie scellée":["1 ÷ 2 = 1/2"],
- "Les verrous du cirque":["1 ÷ 2 = 1/2","1/2 + 1/2 = 1"]
+ "Les verrous du cirque":["1 ÷ 2 = 1/2","1/2 + 1/2 = 2/2 = 1"]
+};
+
+/* ===== Points de cours (chantier « Comprendre », lot 1 — SPEC-COMPRENDRE-LOT1.md §5) =====
+   Textes validés par Gwenael, au caractère près — ne rien « corriger » ici.
+   scene = la cascade de partage (règle R2) : divs = les étages de prismes,
+   comp = rayons posés côte à côte pour comparer les épaisseurs à l'œil (C2-2). */
+const COURS={
+ demi:{
+  titre:"Le demi",
+  scene:{divs:[2]},
+  calc:["1 ÷ 2 = 1/2"],
+  lignes:[
+   "Regarde ce que tu viens de faire : un rayon entier est entré dans le prisme, deux rayons plus fins en sont sortis.",
+   "Les deux parts sont exactement égales : chacune est une moitié. On écrit 1/2, on lit « un demi ».",
+   "Partager, c'est diviser : 1 ÷ 2 = 1/2.",
+   "Le nombre du bas — le dénominateur — raconte le partage : coupé en 2 parts égales.",
+   "La preuve que chaque part vaut un demi ? Remets les deux ensemble : 1/2 + 1/2 = 2/2 = 1. Rien ne s'est perdu."
+  ],
+  carte:"Partager 1 en 2 parts égales : chaque part vaut 1/2."
+ },
+ tiers:{
+  titre:"Le tiers",
+  scene:{divs:[3],comp:[[1,2],[1,3]]},
+  calc:["1 ÷ 3 = 1/3"],
+  lignes:[
+   "Trois maisons, trois parts égales : le prisme a partagé le rayon en tiers. On écrit 1/3, on lit « un tiers ». 1 ÷ 3 = 1/3.",
+   "Compare les épaisseurs : 1/3 est PLUS FIN que 1/2. Surprenant ? 3 est plus grand que 2… mais partager entre 3, c'est donner moins à chacun.",
+   "Vérifie : les trois tiers réunis refont le rayon entier. 1/3 + 1/3 + 1/3 = 3/3 = 1."
+  ],
+  predire:{
+   question:"Un prisme ÷4 fabriquerait des quarts, encore plus fins. Mais ce prisme n'existe pas dans le lagon… Comment faire des quarts sans lui ?",
+   reponse:"La réponse t'attend au prochain niveau."
+  },
+  carte:"Partager 1 en 3 parts égales : chaque part vaut 1/3. Plus il y a de parts, plus chaque part est petite."
+ },
+ quart:{
+  titre:"Le quart",
+  scene:{divs:[2,2]},
+  calc:["1 ÷ 2 = 1/2","1/2 ÷ 2 = 1/4"],
+  lignes:[
+   "Quatre maisons à 1/4, et seulement des prismes ÷2 dans la boîte… et tu as trouvé : couper, puis couper encore.",
+   "Premier prisme : le rayon entier devient deux moitiés. 1 ÷ 2 = 1/2.",
+   "Deuxième coupe : chaque moitié, partagée en 2, donne deux quarts. 1/2 ÷ 2 = 1/4.",
+   "La moitié de la moitié, c'est le quart.",
+   "Compte tes rayons : quatre quarts, et 1/4 + 1/4 + 1/4 + 1/4 = 4/4 = 1. Le rayon entier est bien là, partagé en quatre."
+  ],
+  predire:{
+   question:"Et si tu recoupais un quart en 2 ?",
+   reponse:"1/8 : la moitié du quart. Ce petit rayon-là t'attend dans la forêt…"
+  },
+  carte:"La moitié de la moitié, c'est le quart : 1/2 ÷ 2 = 1/4."
+ }
 };
