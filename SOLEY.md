@@ -956,4 +956,13 @@ Trois choses à savoir avant d'y toucher :
   650). La règle des ⌈5/8⌉ laisse donc toujours contourner les monstres — un élève
   ne peut pas rester bloqué, et l'idée de « mondes-école toujours ouverts » perd
   sa justification d'accès.
+- **15/08 (nuit) — la lentille à moitié servie redit où l'on va.** Troisième défaut
+  vu par Gwenael en jouant : dès qu'un rayon entre dans la lentille, son « + »
+  s'allume et **les deux autres flèches disparaissent** — on ne sait plus par où le
+  second rayon doit arriver, ni par où la somme sortira. Cause : `pieceFlow` ne
+  dessine que les rayons RÉELS, et la lentille est la seule pièce qui ne produit
+  rien tant qu'elle n'a pas ses deux entrées (les autres rendent toutes leurs
+  sorties dès le premier rayon). Correctif : quand elle est incomplète, on
+  redessine en gris d'attente les flèches des entrées vides et celle de la sortie,
+  exactement celles de la pièce au repos.
 - (à compléter à chaque session)

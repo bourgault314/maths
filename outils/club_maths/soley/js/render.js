@@ -98,6 +98,20 @@ function pieceFlow(def,fl){
       s+=`<line class="beampath" data-part="out" x1="${c}" y1="${c}" x2="${ox}" y2="${oy}" stroke="${fcol(o.val)}" stroke-width="${fwidth(o.val)}" style="filter:drop-shadow(0 0 5px ${fcol(o.val)})"/>`;
     });
   }
+  /* Lentille à moitié servie : elle attend son second rayon, et sans repère on ne
+     sait plus NI par où il doit arriver NI par où la somme sortira (défaut vu par
+     Gwenael le 15/08 : « le plus apparaît et les deux autres flèches
+     disparaissent »). On redessine donc en gris d'attente les flèches des entrées
+     encore vides et celle de la sortie — exactement celles de la pièce au repos.
+     Aucune autre pièce n'a ce besoin : un seul rayon leur suffit pour produire
+     toutes leurs sorties, la lentille est la seule à en réclamer deux. */
+  if(def.t==='m'){
+    const E=21,servies=new Set(fl.ins.map(i=>i.dir));
+    def.ins.forEach(i=>{if(servies.has(i))return;
+      s+=arrow(c-DX[i]*R,c-DY[i]*R,c-DX[i]*E,c-DY[i]*E,'#9fb7d8',9);});
+    if(!fl.outs.length){const o=def.out;
+      s+=arrow(c+DX[o]*E,c+DY[o]*E,c+DX[o]*R,c+DY[o]*R,'#ffc94d99',9);}
+  }
   const lab={s2:'÷2',s3:'÷3',x2:'×2',x3:'×3',m:'+',b:''}[def.t];
   if(lab)s+=`<circle cx="${c}" cy="${c}" r="21" fill="#101a33" stroke="#ffffff2c" stroke-width="2"/>`+
     `<text x="${c}" y="${c+(def.t==='m'?8:7)}" text-anchor="middle" font-size="${def.t==='m'?27:20}" font-weight="800" fill="#fff">${lab}</text>`;
