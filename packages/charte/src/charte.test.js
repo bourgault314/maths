@@ -119,12 +119,17 @@ describe("charte — intégrité des données", () => {
     }
   });
 
+  it("emploie une pile mathématique à chiffres alignés sur Safari/iOS", () => {
+    assert.match(TYPOGRAPHIE.mathematiques, /^'Times New Roman',/);
+    assert.doesNotMatch(TYPOGRAPHIE.mathematiques, /Georgia/i);
+  });
+
   it("les rayons sont positifs et croissants", () => {
     assert.ok(RAYONS.petit < RAYONS.moyen && RAYONS.moyen < RAYONS.grand);
   });
 
   it("version et statut cohérents", () => {
-    assert.equal(VERSION_CHARTE, 1);
+    assert.equal(VERSION_CHARTE, 2);
     assert.ok(["brouillon", "valide"].includes(STATUT_CHARTE));
   });
 });

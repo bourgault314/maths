@@ -2,6 +2,28 @@
 
 **Dernière mise à jour : 15 août 2026.**
 
+## Correctif de la police mathématique sur iPhone du 15 août
+
+- Les captures prises après la publication de `v29` ont révélé la limite du
+  correctif OpenType : Georgia conserve sur Safari/iOS des chiffres anciens,
+  même lorsque `lining-nums` et `lnum` sont déclarés.
+- La charte 2 retire Georgia. La pile mathématique commune devient
+  `'Times New Roman', Times, 'Liberation Serif', serif`, puis se propage aux
+  nombres HTML et SVG par des imports explicitement versionnés.
+- NC-02 utilise une graisse 700 commune pour la question, les QCM, les champs,
+  les rappels, les réponses correctes et le total du carré quadrillé. Les
+  anciennes demandes en 800 sur les choix, les cases et le total central sont
+  supprimées.
+- La reproduction est figée avec la graine `repro-police-132` : le QCM
+  d'opérations apparaît à la question 9 et l'encadrement de `6²` à la question
+  12. La recette vérifie aussi `0`, `60`, `64` et `81` sur un vrai iPhone, car
+  Chromium sous Linux ne charge pas la même fonte système.
+- Le graphe public est invalidé d'un seul tenant en `v30`. `/auto/` reste hors
+  du lot.
+- La validation complète réussit **1 508 tests sur 1 508**, ainsi que les
+  validateurs du catalogue, du référencement, du sitemap, des icônes, de
+  l'ancien outil, de V2 et de Pythagore.
+
 ## Finitions mobiles de NC-02 du 15 août
 
 - Le lot est réintégré sur `24e208c`, état de `main` après les dernières

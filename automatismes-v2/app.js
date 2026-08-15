@@ -2,7 +2,7 @@ import {
   COULEURS,
   RAYONS,
   TYPOGRAPHIE,
-} from "../packages/charte/src/charte.js";
+} from "../packages/charte/src/charte.js?v=30";
 import {
   avancerFractionAide,
   avancerCorrespondanceAide,
@@ -35,14 +35,14 @@ import {
   saisirChiffre,
   tournerSolide,
   validerReponse,
-} from "./src/etat-lecteur.js?v=29";
+} from "./src/etat-lecteur.js?v=30";
 import {
   TYPE_REPONSE_DEUX_ENTIERS,
   TYPE_REPONSE_ENTIER_NATUREL,
   TYPE_REPONSE_FRACTION_EQUIVALENTE,
   TYPE_REPONSE_NOMBRE_DECIMAL,
   TYPE_REPONSE_CHOIX_UNIQUE,
-} from "../packages/contrats/src/question-v2.js?v=29";
+} from "../packages/contrats/src/question-v2.js?v=30";
 import {
   connaitNotionLecteur,
   obtenirNotionLecteur,
@@ -52,13 +52,13 @@ import {
   RENDU_SOLIDE,
   RENDU_VOLUME,
   NOTION_FRACTIONS_SIMPLES_DECIMAUX,
-} from "./src/registre-lecteur.js?v=29";
+} from "./src/registre-lecteur.js?v=30";
 import {
   DOMAINES_AUTOMATISMES,
   MICRO_NOTIONS_AUTOMATISMES,
   normaliserIdentifiantMicroNotion,
-} from "../packages/automatismes/src/identifiants.js?v=29";
-import { COURS_SOLIDES_USUELS } from "../packages/automatismes/src/espace-et-geometrie/solides-usuels/reconnaissance.js?v=29";
+} from "../packages/automatismes/src/identifiants.js?v=30";
+import { COURS_SOLIDES_USUELS } from "../packages/automatismes/src/espace-et-geometrie/solides-usuels/reconnaissance.js?v=30";
 import {
   creerCone,
   creerCube,
@@ -67,14 +67,14 @@ import {
   creerPrisme,
   creerPyramide,
   dessinerSolide,
-} from "../packages/objets/src/solides.js";
+} from "../packages/objets/src/solides.js?v=30";
 import {
   ACTION_TOUCHE_EFFACER,
   ACTION_TOUCHE_SAISIR,
   ACTION_TOUCHE_VALIDER,
   obtenirDispositionClavier,
-} from "../packages/objets/src/clavier.js?v=29";
-import { formulationCritereDivisibilite } from "../packages/automatismes/src/nombres-et-calculs/criteres-divisibilite/critere-precis.js?v=29";
+} from "../packages/objets/src/clavier.js?v=30";
+import { formulationCritereDivisibilite } from "../packages/automatismes/src/nombres-et-calculs/criteres-divisibilite/critere-precis.js?v=30";
 import {
   caseVide,
   difference,
@@ -90,31 +90,31 @@ import {
   variable,
   versHtmlEgalitesAlignees,
   versHtmlSemantique,
-} from "../packages/objets/src/expressions.js?v=29";
+} from "../packages/objets/src/expressions.js?v=30";
 import {
   dessinerCarreQuadrille,
-} from "../packages/objets/src/carre-quadrille.js?v=29";
-import { dessinerGrilleFraction } from "../packages/objets/src/fractions.js?v=29";
-import { dessinerDoubleDroiteGraduee } from "../packages/objets/src/droite-graduee.js?v=29";
-import { dessinerBandesFractionnairesSurRailDecimal } from "../packages/objets/src/bandes-fractions-rail.js?v=29";
+} from "../packages/objets/src/carre-quadrille.js?v=30";
+import { dessinerGrilleFraction } from "../packages/objets/src/fractions.js?v=30";
+import { dessinerDoubleDroiteGraduee } from "../packages/objets/src/droite-graduee.js?v=30";
+import { dessinerBandesFractionnairesSurRailDecimal } from "../packages/objets/src/bandes-fractions-rail.js?v=30";
 import {
   dessinerMaterielNumerationDecimale,
   dessinerTableauNumerationDecimale,
-} from "../packages/objets/src/numeration-decimale.js?v=29";
+} from "../packages/objets/src/numeration-decimale.js?v=30";
 import {
   dessinerDemiAvecDixiemes,
   dessinerReorganisationCentiemes,
-} from "../packages/objets/src/correspondances-decimales.js?v=29";
+} from "../packages/objets/src/correspondances-decimales.js?v=30";
 import {
   construireDonneesTableauDepuisFraction,
   formaterFractionEnDecimal,
   reduireFraction,
-} from "../packages/objets/src/fractions-decimaux.js?v=29";
+} from "../packages/objets/src/fractions-decimaux.js?v=30";
 import {
   diagnostiquerDecimalVersNumerateur,
   diagnostiquerFractionLibre,
   diagnostiquerFractionVersDecimal,
-} from "./src/diagnostic-fractions-decimaux.js?v=29";
+} from "./src/diagnostic-fractions-decimaux.js?v=30";
 
 const MICRO_NOTION_FRACTION_VERS_DECIMAL =
   MICRO_NOTIONS_AUTOMATISMES.FRACTION_VERS_DECIMAL;

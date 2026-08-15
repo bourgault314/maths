@@ -105,7 +105,7 @@ body,
   font: inherit;
   font-variant-numeric: lining-nums tabular-nums;
   font-feature-settings: "lnum" 1, "tnum" 1;
-  font-weight: 800;
+  font-weight: 700;
   line-height: 1;
   box-shadow: 0 3px 0 color-mix(in srgb, var(--mg-turquoise) 30%, transparent);
 }
@@ -204,6 +204,7 @@ button.case-reponse-carres {
   font-variant-numeric: lining-nums tabular-nums;
   font-feature-settings: "lnum" 1, "tnum" 1;
   font-size: clamp(1.1rem, 3vw, 1.45rem);
+  font-weight: 700;
 }
 
 .modele-produit-carre {
@@ -2335,6 +2336,7 @@ body {
   font-family: var(--mg-mathematiques);
   font-variant-numeric: lining-nums tabular-nums;
   font-feature-settings: "lnum" 1, "tnum" 1;
+  font-weight: 700;
 }
 
 .panneau-carres .rappel-question {
@@ -2343,8 +2345,10 @@ body {
 }
 
 .panneau-carres .rappel-question strong {
+  font-family: var(--mg-mathematiques);
   font-variant-numeric: lining-nums tabular-nums;
   font-feature-settings: "lnum" 1, "tnum" 1;
+  font-weight: 700;
 }
 
 .reponses-correction strong {
