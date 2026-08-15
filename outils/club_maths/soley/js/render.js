@@ -183,18 +183,24 @@ const FRUITS={
     <path d="M -11 -6 L 12 12 M -13 2 L 9 18 M -8 -11 L 13 4" stroke="#c98a2b" stroke-width="1.7"/>
     <path d="M 11 -6 L -12 12 M 13 2 L -9 18 M 8 -11 L -13 4" stroke="#c98a2b" stroke-width="1.7"/>`
 };
-function fruitSVG(type,x,y,hit,val){
-  /* Fruit à valeur (monde de la canne) : badge doré avec la fraction étagée —
-     seul un rayon de CETTE valeur le cueille (même patron que le badge du soleil). */
-  let badge='';
-  if(val){
-    badge=`<g transform="translate(21,-21)">`+
-      `<circle r="19" fill="#fff3c4" stroke="#d99a2b" stroke-width="3.2"/>`+
-      `<text y="-3.5" text-anchor="middle" font-size="15" font-weight="900" fill="#7a4a12">${val[0]}</text>`+
-      `<line x1="-8" y1="0.5" x2="8" y2="0.5" stroke="#7a4a12" stroke-width="2.4"/>`+
-      `<text y="14.5" text-anchor="middle" font-size="15" font-weight="900" fill="#7a4a12">${val[1]}</text></g>`;
-  }
-  return `<g transform="translate(${x*CS+50},${y*CS+50})">${(FRUITS[type]||FRUITS.letchi)(hit)}${badge}</g>`;
+function fruitSVG(type,x,y,hit){
+  return `<g transform="translate(${x*CS+50},${y*CS+50})">${(FRUITS[type]||FRUITS.letchi)(hit)}</g>`;
+}
+/* Badge du fruit à valeur (monde de la canne) : la fraction étagée qui dit quel
+   rayon le cueille — seul un rayon de CETTE valeur le prend (même patron que le
+   badge du soleil). Il se peint APRÈS les rayons, dans sa propre passe de redraw :
+   un rayon qui traverse la case recouvre tout ce qui a été posé avant lui, et il
+   mangeait le dénominateur (le douzième des « Deux chemins du sixième », seul fruit
+   à valeur du jeu posé sur un rayon). Le CORPS du fruit, lui, reste sous le rayon
+   comme les 135 fruits sans badge : la lumière passe dessus, c'est ainsi qu'on la
+   voit le cueillir. */
+function fruitValSVG(x,y,val){
+  if(!val)return '';
+  return `<g class="fruitval" transform="translate(${x*CS+50},${y*CS+50})"><g transform="translate(21,-21)">`+
+    `<circle r="19" fill="#fff3c4" stroke="#d99a2b" stroke-width="3.2"/>`+
+    `<text y="-3.5" text-anchor="middle" font-size="15" font-weight="900" fill="#7a4a12">${val[0]}</text>`+
+    `<line x1="-8" y1="0.5" x2="8" y2="0.5" stroke="#7a4a12" stroke-width="2.4"/>`+
+    `<text y="14.5" text-anchor="middle" font-size="15" font-weight="900" fill="#7a4a12">${val[1]}</text></g></g>`;
 }
 /* Petit soleil de score (« étoile » du jeu) : disque doré à rayons, comme les soleils du plateau. */
 function soleilIco(plein,taille=13){
@@ -331,7 +337,7 @@ function redraw(){
   for(let i=1;i<L.cols;i++)s+=`<line class="gridline" x1="${i*CS}" y1="0" x2="${i*CS}" y2="${H}"/>`;
   for(let j=1;j<L.rows;j++)s+=`<line class="gridline" x1="0" y1="${j*CS}" x2="${W}" y2="${j*CS}"/>`;
   const ftype=FRW[L.w]||'letchi';
-  L.fruits.forEach(f=>{s+=fruitSVG(ftype,f[0],f[1],sim.fruits.has(f[0]+','+f[1]),f[2]);});
+  L.fruits.forEach(f=>{s+=fruitSVG(ftype,f[0],f[1],sim.fruits.has(f[0]+','+f[1]));});
   L.rocks.forEach((r,i)=>{s+=(L.w==='canne'?canneSVG:rockSVG)(r[0],r[1],i);});
   (L.gates||[]).forEach(g=>{s+=gateSVG(g);});
   sim.segs.forEach(sg=>{
@@ -340,6 +346,9 @@ function redraw(){
     const w=fwidth(sg.val),c=fcol(sg.val);
     s+=`<line class="beam" data-seg="${sg.id}" x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}" stroke="${c}" stroke-width="${w}" style="filter:drop-shadow(0 0 5px ${c})"/>`;
   });
+  /* Les badges des fruits à valeur passent DEVANT les rayons (voir fruitValSVG) ;
+     une pièce posée sur la case les recouvre toujours, elle occupe la case. */
+  L.fruits.forEach(f=>{s+=fruitValSVG(f[0],f[1],f[2]);});
   (L.fixed||[]).forEach(([def,x,y])=>{
     const k=x+','+y,fl=sim.flows[k];
     s+=`<g class="placed fixed-piece" data-cell="${k}" transform="translate(${x*CS},${y*CS})"><title>Pièce scellée : elle ne peut pas être déplacée</title>${fl?pieceFlow(def,fl):pieceStatic(def)}${fixedFrame()}</g>`;

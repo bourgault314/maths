@@ -502,6 +502,30 @@ def principal():
         section("T9 « Les quatre quarts » : victoire par sa solution, 1/4 exact partout",
                 quarts["win"] and quarts["cibles"] == 4 and quarts["quarts"], "")
 
+        # T11 — le badge d'un fruit à valeur reste LISIBLE quand un rayon traverse sa
+        # case. Les fruits se peignent avant les rayons (la lumière passe dessus : c'est
+        # ainsi qu'on la voit les cueillir), mais la fraction, elle, doit rester devant.
+        # Défaut réel du 15/08 : le douzième des « Deux chemins du sixième » est le
+        # premier fruit à valeur du jeu posé sur un rayon, et le rayon mangeait son
+        # dénominateur. On contrôle l'ORDRE DE PEINTURE dans le SVG, pas des pixels.
+        badge = page.evaluate("""() => {
+          const S = window.SOLEY;
+          const i = S.LV.findIndex(l => l.name === 'Les deux chemins du sixième');
+          S.openLevel(i);
+          const enfants = [...document.getElementById('board').children];
+          const rangs = (sel) => enfants.map((e, k) => e.matches(sel) ? k : -1).filter(k => k >= 0);
+          const rayons = rangs('line.beam'), badges = rangs('g.fruitval');
+          const surRayon = S.LV[i].fruits.filter(f => f[2]).length;
+          return { rayons: rayons.length, badges: badges.length, aValeur: surRayon,
+            devant: badges.length > 0 && rayons.length > 0
+                 && Math.min(...badges) > Math.max(...rayons) };
+        }""")
+        section("T11 fraction d'un fruit à valeur peinte DEVANT les rayons (lisible sur "
+                "un rayon)",
+                badge["devant"] and badge["badges"] == badge["aValeur"],
+                f"badges={badge['badges']}/{badge['aValeur']}, rayons={badge['rayons']}, "
+                f"devant={badge['devant']}")
+
         # T9.2 + T9.10 + T9.12 — victoire d'une découverte : le point de cours s'affiche,
         # cascade C3 à QUATRE rayons terminaux, prédire à révélation, et (retouches du
         # 14/08) panneau posé D'UN COUP, sortie toujours atteignable, flèche de défilement

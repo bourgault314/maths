@@ -160,6 +160,12 @@ Batterie (script Playwright Python, à conserver dans `tests/`) :
    vérificateur de lot** (modèle `verifier-lot-canne.mjs`) : ils mesurent la
    difficulté, ils ne prouvent pas que l'existant est intact. Cette preuve-là,
    c'est `verifier-lot-niveaux-durs.mjs`.
+14. **Lisibilité d'un fruit à valeur (T11, depuis le 15/08).** La fraction d'un
+   fruit à valeur se peint DEVANT les rayons. Le contrôle lit l'ORDRE DE PEINTURE
+   dans le SVG (`g.fruitval` après le dernier `line.beam`), pas des pixels — et il
+   a été vérifié dans les deux sens : rouge sur l'ancien rendu, vert sur le
+   correctif. Voir §6, décision « le corps du fruit sous le rayon, sa fraction
+   devant ».
 
 **Batterie de L'atelier (depuis le 15/08), à lancer en plus dès qu'on touche à
 `soley-atelier.html` ou `atelier.js` :**
@@ -421,6 +427,18 @@ plateau ne répond plus aux clics — défaut trouvé en construisant le lot).
   **profondeur du plan gagnant minimal** (passer de 2 à 4-5 pièces multiplie `R` par
   `λ²` ou `λ³`) ; la densité sert à une seule chose, mais elle est indispensable :
   **tuer les victoires courtes**, empêcher le plan à 2 pièces d'exister.
+- **Le corps du fruit sous le rayon, sa fraction devant** (15/08, demande de Gwenael).
+  Les fruits se peignent AVANT les rayons : la lumière passe dessus, et c'est ainsi
+  qu'on la voit les cueillir — ça vaut pour les 135 fruits sans badge, dont 31 ont un
+  rayon sur leur case. Mais un fruit À VALEUR porte une fraction, et un rayon qui la
+  traverse la mange. Le badge est donc sorti dans sa propre passe de `redraw`, après
+  les rayons (`fruitValSVG`, classe `g.fruitval`) ; une pièce posée sur la case le
+  recouvre toujours, elle occupe la case. **Le défaut dormait depuis la création des
+  fruits à valeur** : il n'était jamais apparu parce qu'aucun des 9 fruits à valeur
+  n'avait jamais été posé sur un rayon. Le lot du 15/08 en a posé un — le douzième des
+  « Deux chemins du sixième » — et l'a révélé. À retenir : **un défaut d'ordre de
+  peinture ne se voit que le jour où les données l'exposent** ; c'est la troisième
+  fois sur ce jeu (lambrequins, coude des miroirs, ce badge). Contrôle T11, §5 pt 14.
 - **On ne dessine plus jamais la solution** (15/08). On fixe l'intention — grille,
   soleils, cases, portes, boîte —, on taille le champ, et c'est le solveur qui trouve
   les plans : `sol` et `solMin` sont des **sorties**, pas des entrées. Preuve à
@@ -790,5 +808,19 @@ Trois choses à savoir avant d'y toucher :
   polir avec Gwenael, deux espaces de recherche restent bornés par le budget de nœuds
   (leurs `R` sont des planchers), et **rien n'a été testé sur des élèves** — toutes
   ces mesures sont des mesures de machine, la seule preuve qui compte reste une classe.
+  **Un défaut de rendu attrapé à la relecture des captures, et corrigé à la demande
+  de Gwenael :** le douzième des « Deux chemins du sixième » est le premier fruit à
+  valeur du jeu posé sur un rayon, et le rayon lui mangeait son dénominateur. Sa
+  question — « comment c'est fait pour les autres ? pourquoi uniquement ici ? » — a
+  été traitée comme un contrôle : sur les 142 fruits, 7 seulement portent un badge et
+  31 ont un rayon sur leur case, mais l'intersection des deux était VIDE jusqu'à ce
+  lot. Le défaut dormait donc depuis la création des fruits à valeur. Correctif : le
+  badge sort dans sa propre passe de `redraw`, après les rayons (décision §6) ;
+  `atelier.js` appelait `fruitSVG` avec l'argument `val` et a été rapproché du jeu au
+  même endroit. Contrôle T11 ajouté et **vérifié dans les deux sens** (rouge sur
+  l'ancien rendu, vert sur le correctif). Note : `verifier-atelier.mjs` échoue
+  désormais légitimement — son invariant est « le jeu ne bouge pas d'un octet depuis
+  b05205ce », et ce lot touche `levels.js` puis `render.js` ; il rejoint les archives
+  datées (§6 pt 9), comme `verifier-lot1-comprendre.mjs` avant lui.
   Rapport complet : `RAPPORT-ESSAI-NIVEAUX-DURS.md`.
 - (à compléter à chaque session)
