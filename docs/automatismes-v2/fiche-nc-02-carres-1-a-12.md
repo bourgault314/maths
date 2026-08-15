@@ -122,6 +122,10 @@ Phrase stable :
 
 > Le carré d'un nombre est le produit de ce nombre par lui-même.
 
+La règle générale est écrite avec le composant mathématique commun :
+
+> `a² = a × a`.
+
 Le cours oppose immédiatement les deux lectures :
 
 > « 4 au carré » signifie `4 × 4`, pas `4 × 2`.
@@ -340,8 +344,16 @@ la réponse. Ils peuvent être mentionnés après validation dans une correction
 
 ### F3
 
-1. « Au carré » signifie « multiplié par lui-même ».
-2. Repère le seul produit qui répète exactement le même facteur.
+1. Observe le carré quadrillé de la base courante, avec son total encore
+   inconnu : il possède autant de rangées que de colonnes. Cherche l'opération
+   qui permet de trouver le nombre total de carreaux.
+2. « Au carré » signifie « multiplié par lui-même » ; la règle générale
+   `a² = a × a` est rappelée avec le composant mathématique commun.
+3. Repère le seul produit qui répète exactement le même facteur.
+
+Le cas `1²` peut employer le carré d'un seul carreau dans cette aide de sens.
+Il reste exclu de F5, où il n'apporterait aucune structure multiplicative
+supplémentaire.
 
 ### F4
 
@@ -428,11 +440,14 @@ composant commun produit un véritable élément HTML `sup`, un groupe insécabl
 et un libellé accessible comme « sept au carré ». Nombres, opérateurs et
 exposants héritent de la même pile typographique mathématique.
 
-Les chiffres visibles emploient les variantes alignées et tabulaires, avec le
-réglage OpenType explicite requis par Safari. Cette règle couvre aussi les
-champs, les rappels de réponse et les réponses correctes. Lorsqu'une valeur
+Les chiffres visibles emploient la pile mathématique commune sans Georgia,
+avec des variantes alignées et tabulaires. Le réglage OpenType reste explicite,
+mais la géométrie ne doit jamais dépendre de son application par Safari : la
+fonte choisie fournit des chiffres alignés par défaut. Cette règle couvre aussi
+les champs, les rappels de réponse et les réponses correctes. Lorsqu'une valeur
 mathématique apparaît dans une phrase ou un titre, elle passe par ce composant
-au lieu d'être interpolée comme un simple caractère de texte.
+au lieu d'être interpolée comme un simple caractère de texte. Toutes ces
+surfaces emploient la même graisse 700.
 
 Ce composant est obligatoire dans les questions, le cours, l'aide, la
 correction et les choix. Les égalités successives passent par son rendu aligné
@@ -458,8 +473,10 @@ Un unique objet du paquet `objets` couvre :
 - le côté inconnu avec deux côtés égaux ;
 - la mise en évidence d'une rangée et d'une colonne.
 
-Il fonctionne de 2 à 12, garde une taille stable, utilise des lignes SVG plutôt
-que 144 objets interactifs et fournit un libellé accessible adapté au contexte.
+Il fonctionne de 1 à 12 pour les illustrations de sens ; les questions F5
+restent limitées de 2 à 12. Il garde une taille stable, utilise des lignes SVG
+plutôt que 144 objets interactifs et fournit un libellé accessible adapté au
+contexte.
 En aide inverse, son libellé ne révèle jamais le côté recherché. Aucun appel ne
 fabrique un carré `0 × 0` ; le zéro reste un fait numérique, pas une grille
 vide.
@@ -468,8 +485,9 @@ Les côtés visibles portent un nombre court. Le total apparaît au centre sur
 deux lignes (`64` puis `carreaux`) avec un fond opaque léger ; ni ce libellé ni
 les lignes du quadrillage ne doivent toucher le contour. Les mots qui donnent
 du sens restent dans la phrase voisine : « n rangées de n carreaux ».
-Les nombres du SVG emploient la police mathématique commune avec des chiffres
-alignés et tabulaires ; le mot « carreaux » conserve la police de texte.
+Les nombres du SVG emploient la police mathématique commune sans Georgia, avec
+des chiffres alignés et tabulaires en graisse 700 ; le mot « carreaux »
+conserve la police de texte.
 Le contour, le fond et le cartouche central ne portent aucun rayon : tous les
 angles visibles dans cet objet restent droits. La rangée et la colonne
 colorées n'apparaissent que dans l'aide F5 qui demande de les observer.
@@ -543,6 +561,10 @@ de la zone centrale lorsque la disposition large est active.
   plus un pixel sur le haut de l'étiquette de notion ;
 - chiffres alignés dans les égalités, les champs et les réponses correctes,
   notamment pour `0`, `60`, `64` et `81` sur Safari ;
+- avec la graine `repro-police-132` sur 20 questions, comparaison visuelle du
+  QCM d'opérations en question 9 et de l'encadrement de `6²` en question 12 ;
+- contrôle sur un vrai Safari/iPhone de la hauteur et de la ligne de base des
+  chiffres : la seule présence de `lnum` et `tnum` dans le CSS ne suffit pas ;
 - absence de tout coin arrondi dans le SVG du carré quadrillé ;
 - inventaire visuel complet des cinq pages de cours, de toutes les
   sous-formes de questions et des panneaux d'aide/correction, en plus des

@@ -2,16 +2,18 @@ import assert from "node:assert/strict";
 import { readFile } from "node:fs/promises";
 import { it } from "node:test";
 
-const VERSION = "29";
+const VERSION = "30";
 
 const RESSOURCES_VERSIONNEES = new Map([
   ["automatismes-v2/index.html", ["styles.css", "interface.css", "menu.css", "app.js"]],
   ["automatismes-v2/app.js", [
+    "charte.js",
     "etat-lecteur.js",
     "question-v2.js",
     "registre-lecteur.js",
     "identifiants.js",
     "reconnaissance.js",
+    "solides.js",
     "clavier.js",
     "critere-precis.js",
     "expressions.js",
@@ -20,6 +22,7 @@ const RESSOURCES_VERSIONNEES = new Map([
     "droite-graduee.js",
     "bandes-fractions-rail.js",
     "numeration-decimale.js",
+    "correspondances-decimales.js",
     "fractions-decimaux.js",
     "diagnostic-fractions-decimaux.js",
   ]],
@@ -116,7 +119,9 @@ const RESSOURCES_VERSIONNEES = new Map([
   ["packages/automatismes/src/espace-et-geometrie/solides-usuels/reconnaissance.js", ["question-v2.js", "identifiants.js"]],
   ["packages/automatismes/src/grandeurs-et-mesures/volumes/calcul-volumes.js", ["question-v2.js", "identifiants.js"]],
   ["packages/contrats/src/trace-reponse.js", ["question-v2.js"]],
-  ["packages/objets/src/droite-graduee.js", ["expressions.js"]],
+  ["packages/objets/src/droite-graduee.js", ["charte.js", "expressions.js"]],
+  ["packages/objets/src/carre-quadrille.js", ["charte.js"]],
+  ["packages/objets/src/correspondances-decimales.js", ["charte.js"]],
   ["packages/objets/src/expressions.js", ["charte.js"]],
   ["packages/objets/src/fractions.js", ["charte.js"]],
   ["packages/objets/src/bandes-fractions-rail.js", [
@@ -127,6 +132,8 @@ const RESSOURCES_VERSIONNEES = new Map([
     "fractions-decimaux.js",
     "charte.js",
   ]],
+  ["packages/objets/src/figure.js", ["charte.js"]],
+  ["packages/objets/src/solides.js", ["charte.js", "figure.js"]],
 ]);
 
 it("charge une version cohérente de tous les modules modifiés d'Automatismes V2", async () => {

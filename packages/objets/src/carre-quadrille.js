@@ -15,7 +15,7 @@
 // viewBox est fixe dans tous les modes : question, aide et correction ne
 // provoquent aucun saut de mise en page.
 
-import { COULEURS, TYPOGRAPHIE } from "../../charte/src/charte.js";
+import { COULEURS, TYPOGRAPHIE } from "../../charte/src/charte.js?v=30";
 
 export const VERSION_CARRE_QUADRILLE = 4;
 
@@ -197,7 +197,7 @@ function texteDeuxLignes(x, y, ligne1, ligne2) {
     `<text class="cq-aire" x="${x}" y="${y}" text-anchor="middle" ` +
     `fill="${COULEURS_CARRE_QUADRILLE.texte}">` +
     `<tspan x="${x}" dy="-0.25em" font-family="${POLICE_MATHEMATIQUES}" font-size="20" ` +
-    `font-weight="800" style="${STYLE_CHIFFRES_ALIGNES}">${echapper(ligne1)}</tspan>` +
+    `font-weight="700" style="${STYLE_CHIFFRES_ALIGNES}">${echapper(ligne1)}</tspan>` +
     `<tspan x="${x}" dy="1.45em" font-family="${POLICE_TEXTE}" font-size="13" ` +
     `font-weight="700">${echapper(ligne2)}</tspan>` +
     `</text>`

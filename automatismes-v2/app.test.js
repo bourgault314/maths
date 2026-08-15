@@ -205,6 +205,7 @@ it("rend le cours en cinq pages et les six familles de NC-02", async () => {
   assert.match(application.innerHTML, /1 \/ 5/);
   assert.match(application.innerHTML, /Carré de quatre rangées et quatre colonnes/);
   assert.match(application.innerHTML, /<sup>2<\/sup>/);
+  assert.match(application.innerHTML, /aria-label="a au carré égale a fois a"/);
   cliquer(gestionnaires, "cours-suivant");
   assert.match(application.innerHTML, /Les carrés de 0 à 12/);
   assert.match(application.innerHTML, /2 \/ 5/);
@@ -326,6 +327,21 @@ it("rend le cours en cinq pages et les six familles de NC-02", async () => {
     cliquer(gestionnaires, "aide");
     assert.match(application.innerHTML, /Me guider/);
     assert.match(application.innerHTML, /Question en cours/);
+    if (famille === "sens-notation") {
+      const aide = application.innerHTML.match(
+        /<aside class="panneau panneau-aide[\s\S]*?<\/aside>/,
+      )?.[0] ?? "";
+      assert.equal([...aide.matchAll(/<section class="outil-aide/g)].length, 3);
+      assert.match(
+        aide,
+        /outil-aide outil-aide-carre-operation[\s\S]*?repere-etape[\s\S]*?visuel-carre-quadrille/,
+      );
+      assert.match(aide, /Quelle opération permet de trouver le nombre total de carreaux/);
+      assert.match(aide, /aria-label="a au carré égale a fois a"/);
+      assert.match(aide, /Repère le seul produit qui répète exactement le même facteur/);
+      assert.match(aide, /class="cq-aire"[\s\S]*?>\?<\/text>/);
+      assert.doesNotMatch(aide, /cq-ligne-active|cq-colonne-active/);
+    }
     if (application.innerHTML.includes("egalite-deux-champs")) {
       assert.equal(
         [...application.innerHTML.matchAll(/class="case-vide-aide"/g)].length,
@@ -434,6 +450,93 @@ it("rend le cours en cinq pages et les six familles de NC-02", async () => {
     "sens-notation",
   ]);
   assert.match(application.innerHTML, /Ton bilan/);
+});
+
+it("fige les deux QCM qui ont révélé les chiffres anciens sur iPhone", async () => {
+  const { application, gestionnaires } = installerFauxNavigateur(
+    "?notion=carres-entiers-0-a-12&questions=20&graine=repro-police-132",
+  );
+  await import(`./app.js?fumee=police-iphone-${Date.now()}`);
+  cliquer(gestionnaires, "demarrer");
+
+  for (let numero = 1; numero <= 12; numero += 1) {
+    const grille = application.innerHTML.match(
+      /<div class="grille-choix grille-carres-qcm[\s\S]*?<\/div>/,
+    )?.[0] ?? "";
+
+    if (numero === 9) {
+      assert.match(application.innerHTML, /famille-sens-notation/);
+      const operations = [...grille.matchAll(
+        /<span class="mathsgo-expression" role="math" aria-label="[^"]+">([^<]+)<\/span>/g,
+      )].map((correspondance) => correspondance[1]).sort();
+      assert.deepEqual(operations, ["4 + 2", "4 + 4", "4 × 2", "4 × 4"]);
+      cliquer(gestionnaires, "aide");
+      const aide = application.innerHTML.match(
+        /<aside class="panneau panneau-aide[\s\S]*?<\/aside>/,
+      )?.[0] ?? "";
+      assert.match(
+        aide,
+        /aria-label="Carré quadrillé de 4 rangées et 4 colonnes\. L&apos;aire est à trouver\."/,
+      );
+      assert.match(aide, /class="cq-aire"[\s\S]*?>\?<\/text>/);
+      assert.doesNotMatch(aide, /16 carreaux|cq-ligne-active|cq-colonne-active/);
+      cliquer(gestionnaires, "fermer-aide");
+    }
+
+    if (numero === 12) {
+      assert.match(application.innerHTML, /Quel encadrement est correct \?/);
+      assert.match(application.innerHTML, /aria-label="6 au carré"/);
+      const encadrements = [...grille.matchAll(
+        /<span>(Entre \d+ et \d+)<\/span>/g,
+      )].map((correspondance) => correspondance[1]);
+      assert.equal(encadrements.length, 4);
+      assert.doesNotMatch(grille, /mathsgo-expression/);
+    }
+
+    const champs = [...application.innerHTML.matchAll(
+      /data-action="champ-reponse" data-index="(\d+)"/g,
+    )].map((correspondance) => correspondance[1]);
+    if (champs.length > 0) {
+      for (const index of champs) {
+        cliquer(gestionnaires, "champ-reponse", undefined, undefined, index);
+        cliquer(gestionnaires, "chiffre", undefined, "1");
+      }
+    } else {
+      const choix = application.innerHTML.match(
+        /data-action="choix" data-id="([^"]+)"/,
+      )?.[1];
+      assert.ok(choix, `réponse absente à la question ${numero}`);
+      cliquer(gestionnaires, "choix", choix);
+    }
+    cliquer(gestionnaires, "valider");
+
+    if (numero === 9 || numero === 12) {
+      cliquer(gestionnaires, "correction");
+      if (numero === 9) {
+        const rappel = application.innerHTML.match(
+          /<p class="rappel-reponse-eleve[\s\S]*?<\/p>/,
+        )?.[0] ?? "";
+        assert.equal((rappel.match(/mathsgo-expression/g) ?? []).length, 1);
+        assert.match(rappel, /<strong class="reponse-mathematique">/);
+        assert.match(
+          application.innerHTML,
+          /reponses-correction" aria-label="Réponse correcte">[\s\S]*?<strong class="reponse-mathematique">[\s\S]*?mathsgo-expression/,
+        );
+      } else {
+        assert.match(
+          application.innerHTML,
+          /rappel-reponse-eleve[\s\S]*?<strong>Entre \d+ et \d+<\/strong>/,
+        );
+        assert.match(
+          application.innerHTML,
+          /reponses-correction\s*" aria-label="Réponse correcte">[\s\S]*?<strong>Entre \d+ et \d+<\/strong>/,
+        );
+      }
+      cliquer(gestionnaires, "fermer-correction");
+    }
+
+    if (numero < 12) cliquer(gestionnaires, "suivant");
+  }
 });
 
 it("traite pareil une omission validée au clic ou avec Entrée", async () => {

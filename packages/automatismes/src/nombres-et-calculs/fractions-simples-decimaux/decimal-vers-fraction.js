@@ -4,8 +4,8 @@
 
 import {
   SCHEMA_QUESTION_INSTANCE_V2,
-} from "../../../../contrats/src/question-v2.js?v=29";
-import { fractionsEgales } from "../../../../objets/src/fractions-decimaux.js?v=29";
+} from "../../../../contrats/src/question-v2.js?v=30";
+import { fractionsEgales } from "../../../../objets/src/fractions-decimaux.js?v=30";
 import {
   MICRO_NOTION_NC04,
   NUMERATEURS_DEMIS,
@@ -21,12 +21,12 @@ import {
   reponseChoixUnique,
   reponseFractionEquivalente,
   reponseNumerateurImpose,
-} from "./commun.js?v=29";
+} from "./commun.js?v=30";
 import {
   NUMERATEURS_CENTIEMES,
   NUMERATEURS_DIXIEMES,
   NUMERATEURS_MILLIEMES,
-} from "./fraction-vers-decimal.js?v=29";
+} from "./fraction-vers-decimal.js?v=30";
 
 export const NOM_GENERATEUR_DECIMAL_VERS_FRACTION =
   "nombres-et-calculs.fractions-simples-decimaux.decimal-vers-fraction";

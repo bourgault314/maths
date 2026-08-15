@@ -1,4 +1,4 @@
-// Charte graphique maths&go — version 1, STATUT BROUILLON.
+// Charte graphique maths&go — version 2, STATUT BROUILLON.
 //
 // Réponse au problème n°1 du site historique : « rien n'est régulier,
 // les espacements sont moches, rien n'est cohérent ». Ici vit LA valeur
@@ -12,7 +12,7 @@
 // retenue et les variantes relevées sont notées en commentaire.
 // Gwenaël tranche : rien n'est définitif avant sa validation.
 
-export const VERSION_CHARTE = 1;
+export const VERSION_CHARTE = 2;
 export const STATUT_CHARTE = "brouillon"; // → "valide" après validation Gwenaël
 
 export const COULEURS = {
@@ -233,7 +233,10 @@ export const TYPOGRAPHIE = {
   titres: '"Fredoka", "Segoe UI", system-ui, sans-serif',
   texte: '"Segoe UI", system-ui, -apple-system, BlinkMacSystemFont, sans-serif',
   manuscrite: '"Caveat", cursive', // annotations « à la main » (2 pages)
-  mathematiques: "Georgia, 'Times New Roman', serif", // rendu LaTeX à part
+  // Times New Roman conserve des chiffres alignés sur Safari/iOS. Georgia
+  // y emploie des chiffres elzéviriens dont la ligne de base varie selon le
+  // glyphe, même lorsque `lining-nums` est demandé par le composant.
+  mathematiques: "'Times New Roman', Times, 'Liberation Serif', serif", // rendu LaTeX à part
 };
 
 // Grille d'espacement : base 4 px, multiples réguliers UNIQUEMENT.

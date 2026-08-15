@@ -11,7 +11,7 @@ import {
   COULEURS_NUMERATION_DECIMALE,
   COULEURS_RANGS_NUMERATION_DECIMALE,
   TYPOGRAPHIE,
-} from "../../charte/src/charte.js?v=29";
+} from "../../charte/src/charte.js?v=30";
 
 export const VERSION_CORRESPONDANCES_DECIMALES = 2;
 

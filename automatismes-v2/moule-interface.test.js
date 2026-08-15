@@ -84,6 +84,22 @@ describe("moule responsive commun", () => {
     assert.doesNotMatch(css, /Cambria Math|STIX Two Math/);
   });
 
+  it("emploie la pile mathématique et la graisse 700 communes dans NC-02", () => {
+    assert.match(
+      css,
+      /\.grille-carres-qcm \.choix,\s*\.grille-carres-multiples \.choix\s*\{[^}]*font-family:\s*var\(--mg-mathematiques\)[^}]*font-weight:\s*700/s,
+    );
+    assert.match(blocCss(".case-reponse-carres"), /font-weight:\s*700/);
+    const rappels = blocCss(
+      ".panneau-carres .rappel-reponse-eleve strong,\n.panneau-carres .reponses-correction strong",
+    );
+    assert.match(rappels, /font-family:\s*var\(--mg-mathematiques\)/);
+    assert.match(rappels, /font-weight:\s*700/);
+    const questionRappelee = blocCss(".panneau-carres .rappel-question strong");
+    assert.match(questionRappelee, /font-family:\s*var\(--mg-mathematiques\)/);
+    assert.match(questionRappelee, /font-weight:\s*700/);
+  });
+
   it("colore aussi le contenu complet des réponses en fraction", () => {
     assert.match(css, /\.rappel-reponse-eleve > span\s*\{/);
     assert.doesNotMatch(css, /\.rappel-reponse-eleve span\s*\{/);

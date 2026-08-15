@@ -1010,3 +1010,52 @@ compris sur une tablette assez large pour activer la disposition ordinateur.
 La disparition du pavé ne peut donc pas recentrer la carte vers le bas. Le
 graphe public V2 est invalidé d'un seul tenant en `v29` et `/auto/` reste hors
 du lot.
+
+### D-052 — La pile mathématique ne dépend plus des chiffres anciens de Georgia
+
+La recette sur iPhone qui suit D-051 montre que les déclarations OpenType ne
+suffisent pas : la version système de Georgia utilisée par Safari conserve des
+chiffres elzéviriens. Dans un même choix, le `4` et le `2` n'ont donc ni la
+même hauteur ni la même ligne de base, alors que le DOM et la famille calculée
+sont uniques. Le problème ne vient pas d'un mélange de composants ; il vient
+des glyphes fournis par la fonte.
+
+La charte passe en version 2 et retire Georgia de la pile mathématique. La pile
+commune devient `'Times New Roman', Times, 'Liberation Serif', serif` : ses
+chiffres sont alignés par défaut sur iOS et elle conserve l'aspect éditorial
+des expressions. Les questions, choix, champs, rappels, corrections et nombres
+du SVG consomment tous cette même valeur. NC-02 emploie partout la graisse 700,
+réellement disponible, au lieu de demander localement une graisse 800 qui
+accentuait les différences de dessin.
+
+La recette de non-régression ajoute une graine fixe : à vingt questions,
+`repro-police-132` montre le QCM d'opérations à la question 9 et l'encadrement
+de `6²` à la question 12. Elle contrôle également `0`, `60`, `64` et `81`, en
+question, dans un champ, dans les rappels et au centre du carré quadrillé. Une
+capture Chromium vérifie la composition, mais la validation finale de cette
+anomalie exige un Safari sur iPhone : un test textuel de `lnum` et `tnum` ne
+prouve pas quels glyphes le système a réellement dessinés.
+
+Le graphe public V2 et les imports de la charte sont invalidés ensemble en
+`v30`. Aucun chemin sous `/auto/` n'appartient à ce lot.
+
+### D-053 — L'aide sur la notation repart du carré concret
+
+Gwenaël demande le 15 août 2026 que l'aide de la question « Quelle écriture
+correspond à ce carré ? » ne commence plus directement par la définition
+verbale. Elle suit désormais trois temps : observer le carré quadrillé de la
+base courante et chercher l'opération qui donne son nombre total de carreaux ;
+rappeler que « au carré » signifie « multiplié par lui-même » avec la règle
+générale `a² = a × a` ; puis repérer le seul produit qui répète exactement le
+même facteur.
+
+Le carré commun est réemployé dans la première carte de l'aide, en mode
+`aire-inconnue`. Le centre contient donc `?`, aucune rangée ni colonne n'est
+colorée et ni le texte visible ni le libellé accessible ne révèlent le total.
+Le cas `1²` peut montrer un unique carreau dans cette aide de sens, sans entrer
+pour autant dans la famille F5 qui reste limitée aux côtés de 2 à 12.
+
+La première page du cours affiche aussi explicitement `a² = a × a`, entre la
+définition verbale et l'exemple qui oppose `4 × 4` à `4 × 2`. Le générateur F3
+passe en version 2. Cette finition entre dans le candidat public `v30` avant sa
+première publication ; elle ne crée donc pas une seconde version de cache.

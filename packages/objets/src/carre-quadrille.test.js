@@ -196,12 +196,18 @@ describe("carré quadrillé", () => {
     const svg = dessinerCarreQuadrille({ cote: 8 }).svg;
     assert.match(
       svg,
-      /<tspan[^>]*font-family="Georgia, 'Times New Roman', serif"[^>]*style="[^"]*lining-nums tabular-nums[^"]*'lnum' 1, 'tnum' 1;"[^>]*>64<\/tspan>/,
+      /<tspan[^>]*font-family="'Times New Roman', Times, 'Liberation Serif', serif"[^>]*font-weight="700"[^>]*style="[^"]*lining-nums tabular-nums[^"]*'lnum' 1, 'tnum' 1;"[^>]*>64<\/tspan>/,
     );
     assert.match(
       svg,
       /<tspan[^>]*font-family="'Segoe UI', system-ui, -apple-system, BlinkMacSystemFont, sans-serif"[^>]*>carreaux<\/tspan>/,
     );
+    const svg81 = dessinerCarreQuadrille({ cote: 9 }).svg;
+    assert.match(
+      svg81,
+      /<tspan[^>]*font-family="'Times New Roman', Times, 'Liberation Serif', serif"[^>]*font-weight="700"[^>]*style="[^"]*lining-nums tabular-nums[^"]*'lnum' 1, 'tnum' 1;"[^>]*>81<\/tspan>/,
+    );
+    assert.equal(compter(svg81, />81<\/tspan>/g), 1);
   });
 
   it("garde des angles droits dans tous les rendus, y compris les cartouches centraux", () => {
