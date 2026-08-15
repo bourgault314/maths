@@ -726,10 +726,10 @@ it("rend NC-03 et NC-04 dans une seule notion avec des repères cohérents en ai
   for (const [index, titre] of [
     [1, /Un demi : plusieurs écritures/],
     [2, /Un quart et trois quarts/],
-    [3, /Lire une fraction décimale/],
-    [4, /Du décimal à la fraction/],
-    [5, /Dépasser l’unité/],
-    [6, /Reconnaître un entier/],
+    [3, /Nommer les rangs décimaux/],
+    [4, /Lire une fraction décimale/],
+    [5, /Écrire un décimal sous forme de fraction/],
+    [6, /Former les unités et reconnaître les entiers/],
   ]) {
     assert.match(application.innerHTML, new RegExp(`${index} \\/ 6`));
     assert.match(application.innerHTML, titre);
@@ -739,20 +739,30 @@ it("rend NC-03 et NC-04 dans une seule notion avec des repères cohérents en ai
       assert.match(application.innerHTML, /figure-bandes-rail-cours-mobile/);
       assert.match(application.innerHTML, /cd-bande-dixieme/);
       assert.match(application.innerHTML, /cd-reste-dixiemes/);
-      assert.match(application.innerHTML, /cd-guide-commun-demi/);
       assert.match(application.innerHTML, /data-afficher-ecritures="true"/);
-      assert.match(application.innerHTML, /class="cd-ecriture-demie"/);
-      assert.doesNotMatch(application.innerHTML, /class="cd-ecriture-demie-masquee"/);
-      assert.match(application.innerHTML, /1 sur 2 égale 5 sur 10 égale 0,5/);
+      assert.doesNotMatch(application.innerHTML, /cd-piece-demi/);
+      assert.match(application.innerHTML, /5 sur 10 égale 1 sur 2/);
+      assert.match(application.innerHTML, /5 sur 10 égale 0,5/);
+      assert.match(application.innerHTML, /figure-tableau-numeration/);
       assert.doesNotMatch(application.innerHTML, /barre de fraction signifie aussi une division/);
     }
     if (index === 2) {
       assert.match(application.innerHTML, /cd-disposition-lignes/);
       assert.match(application.innerHTML, /cd-disposition-quadrants/);
       assert.match(application.innerHTML, /data-afficher-equation="false"/);
-      assert.match(application.innerHTML, /1 sur 4 égale 25 sur 100 égale 0,25/);
+      assert.match(application.innerHTML, /25 sur 100 égale 1 sur 4/);
+      assert.match(application.innerHTML, /25 sur 100 égale 0,25/);
     }
     if (index === 3) {
+      assert.match(application.innerHTML, /Une unité, dix dixièmes/);
+      assert.match(application.innerHTML, /Un dixième, dix centièmes/);
+      assert.match(application.innerHTML, /figure-echange-unite/);
+      assert.match(application.innerHTML, /figure-echange-dixiemes/);
+      assert.match(application.innerHTML, /1 sur 10 égale 10 sur 100/);
+      assert.match(application.innerHTML, /1 sur 1000 égale 0,001/);
+      assert.doesNotMatch(application.innerHTML, /147 sur 100/);
+    }
+    if (index === 4) {
       assert.match(application.innerHTML, /147 sur 100 égale 100 sur 100 plus 40 sur 100 plus 7 sur 100/);
       assert.match(application.innerHTML, /mathsgo-role-dixiemes/);
       assert.match(application.innerHTML, /mathsgo-role-centiemes/);
@@ -761,32 +771,28 @@ it("rend NC-03 et NC-04 dans une seule notion avec des repères cohérents en ai
       assert.match(application.innerHTML, /7 sur 100 égale 0,07/);
       assert.doesNotMatch(application.innerHTML, /Chaque signe égal est aligné/);
     }
-    if (index === 4) {
-      assert.match(application.innerHTML, /mathsgo-egalites-alignees/);
-      assert.match(application.innerHTML, /1,47 égale 1 plus 4 sur 10 plus 7 sur 100/);
-      assert.match(application.innerHTML, /Le dénominateur est déjà imprimé/);
-      assert.match(application.innerHTML, /Pour compléter/);
-      assert.match(application.innerHTML, /data-denominateur="4"/);
-      assert.match(application.innerHTML, /fraction de numérateur 3 et de dénominateur 4 vaut 0,75/);
-      assert.match(application.innerHTML, /Les deux cases sont libres/);
-      assert.match(application.innerHTML, /1,47 égale 147 sur 100/);
-      assert.match(application.innerHTML, /0,75 égale 75 sur 100 égale 3 sur 4/);
-    }
     if (index === 5) {
+      assert.match(application.innerHTML, /mathsgo-egalites-alignees/);
+      assert.match(application.innerHTML, /3,6 égale 3 plus 6 sur 10/);
+      assert.match(application.innerHTML, /30 sur 10 plus 6 sur 10/);
+      assert.match(application.innerHTML, /36 sur 10/);
+      assert.match(application.innerHTML, /Le dénominateur est imprimé/);
+      assert.match(application.innerHTML, /Les deux cases sont libres/);
+      assert.match(application.innerHTML, /3,6 égale 36 sur 10/);
+      assert.match(application.innerHTML, /0,75 égale 75 sur 100 égale 3 sur 4/);
+      assert.doesNotMatch(application.innerHTML, /figure-bandes-rail/);
+    }
+    if (index === 6) {
       assert.match(application.innerHTML, /Le dénominateur donne la taille d’une pièce/);
       assert.match(application.innerHTML, /Au départ : 7 demis/);
       assert.match(application.innerHTML, /Au départ : 6 quarts/);
       assert.match(application.innerHTML, /reste-fusionne-en-demi/);
-    }
-    if (index === 6) {
       assert.match(application.innerHTML, /fraction de numérateur 5 et de dénominateur 1 vaut 5/);
       assert.match(application.innerHTML, /data-denominateur="1"/);
-      assert.match(application.innerHTML, /fraction de numérateur 5 et de dénominateur 2 vaut 2,5/);
       assert.match(application.innerHTML, /3 sur 2 égale 1,5/);
       assert.match(application.innerHTML, /4 sur 2 égale 2/);
       assert.match(application.innerHTML, /5 sur 2 égale 2,5/);
       assert.match(application.innerHTML, /100 sur 100 égale 1/);
-      assert.match(application.innerHTML, /7 sur 1 égale 7/);
       assert.match(application.innerHTML, /barre de fraction se lit aussi « divisé par »/);
       assert.match(application.innerHTML, /b ≠ 0/);
     }

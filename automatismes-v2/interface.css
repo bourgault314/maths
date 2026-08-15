@@ -1160,6 +1160,12 @@ button.case-reponse-carres {
   row-gap: 5px;
 }
 
+.calcul-aligne-fractions .mathsgo-egalite-signe,
+.decomposition-guidee-fraction .mathsgo-egalite-signe,
+.decomposition-fraction-superieure .mathsgo-egalite-signe {
+  transform: translateY(.06em);
+}
+
 .decomposition-guidee-fraction {
   width: fit-content;
   max-width: 100%;
@@ -1255,25 +1261,6 @@ button.case-reponse-carres {
   text-align: center;
 }
 
-.repere-visuel-cours {
-  min-width: 0;
-  padding: 8px;
-  display: grid;
-  align-content: center;
-  gap: 8px;
-  border: 2px solid var(--mg-ligne);
-  border-radius: var(--mg-rayon-moyen);
-  background: var(--mg-papier);
-}
-
-.repere-visuel-cours .calcul-aligne-fractions {
-  width: fit-content;
-}
-
-.repere-cent-centiemes .figure-grille-repere {
-  width: min(100%, 150px);
-}
-
 .reperes-rangs-cours {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
@@ -1284,14 +1271,71 @@ button.case-reponse-carres {
   width: 100%;
 }
 
-.reperes-entiers-cours {
+.echanges-rangs-cours {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
-  gap: 9px;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: 10px;
 }
 
-.reperes-entiers-cours .calcul-aligne-fractions {
+.echanges-rangs-cours > section {
+  min-width: 0;
+  padding: 11px;
+  display: grid;
+  align-content: start;
+  gap: 9px;
+  border: 2px solid var(--mg-ligne);
+  border-radius: var(--mg-rayon-moyen);
+  background: var(--mg-fondDoux);
+}
+
+.echanges-rangs-cours h4 {
+  margin: 0;
+  color: var(--mg-bleu);
+  font-size: 16px;
+  text-align: center;
+}
+
+.echange-materiel-cours {
+  min-width: 0;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 24px minmax(0, 1fr);
+  gap: 5px;
+  align-items: center;
+}
+
+.echange-materiel-cours > span {
+  color: var(--mg-orange);
+  font-size: 24px;
+  font-weight: 900;
+  text-align: center;
+}
+
+.figure-materiel-rang-cours {
   width: 100%;
+  max-height: 230px;
+  overflow: hidden;
+}
+
+.legendes-materiel-147-cours {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  gap: 8px;
+}
+
+.legendes-materiel-147-cours .calcul-aligne-fractions,
+.legendes-materiel-147-cours > .mathsgo-expression {
+  width: 100%;
+  min-height: 62px;
+  padding: 8px;
+  display: grid;
+  place-items: center;
+  border-radius: var(--mg-rayon-moyen);
+  background: var(--mg-fondDoux);
+  text-align: center;
+}
+
+.cas-reponses-fraction-cours-compacts > section {
+  min-height: 100%;
 }
 
 .cas-reponses-fraction-cours {
@@ -1320,10 +1364,6 @@ button.case-reponse-carres {
   width: min(100%, 430px);
 }
 
-.reperes-entiers-cours .repere-cent-centiemes {
-  min-height: 100%;
-}
-
 .repere-cinq-unites-cours {
   padding: 11px;
   display: grid;
@@ -1346,24 +1386,6 @@ button.case-reponse-carres {
 
 .repere-cinq-unites-cours .lecture-rang-cours {
   background: var(--mg-papier);
-}
-
-.repere-demis-commun-cours {
-  padding: 11px;
-  display: grid;
-  gap: 9px;
-  border: 2px solid var(--mg-ligne);
-  border-radius: var(--mg-rayon-moyen);
-  background: var(--mg-papier);
-}
-
-.repere-demis-commun-cours > p {
-  margin: 0;
-  text-align: center;
-}
-
-.repere-demis-commun-cours .figure-bandes-rail {
-  width: min(100%, 720px);
 }
 
 .reperes-demis-equations-cours {

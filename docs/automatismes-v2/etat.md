@@ -106,13 +106,14 @@
   tuiles non numérotées, les demis et quarts emploient les bandes sur rail et
   les groupements, `/10` et `/100` le matériel décimal puis le tableau,
   `/1000` le tableau seul.
-- D-054 fixe le cours en six pages : aligner un demi avec cinq dixièmes ;
-  réorganiser 25 puis 75 centièmes en un puis trois quarts ; réunir les rangs
-  et la conversion directe autour de `147/100`, avec `725/1000` au tableau ;
-  distinguer en sens inverse le dénominateur imprimé de la fraction libre ;
-  former les unités avec `7/2` et `6/4` ; enfin construire `5/1` avec cinq
-  bandes-unités, lire `3/2`, `4/2` et `5/2` sur un rail commun et choisir une
-  stratégie. Le sens quotient n'apparaît qu'à la fin de cette sixième page.
+- D-055 remplace l'organisation D-054 du cours tout en gardant six pages :
+  construire le demi sans second rail sous les dixièmes ; construire les
+  quarts par réorganisation des centièmes ; installer séparément les échanges
+  unité-dixièmes-centièmes et le millième au tableau ; convertir `147/100` en
+  `1,47` ; repartir du matériel de `3,6` pour obtenir `36/10` ; enfin restaurer
+  sur une même page les transformations de `7/2` et `6/4`, les repères en
+  demis, cinq bandes marquées `1` pour `5/1` et la stratégie finale. Le sens
+  quotient reste seulement la dernière note du cours.
 - Une omission ne déplie plus la correction. Après une saisie omise, le
   lecteur affiche « Pas de réponse » puis la solution en vert hors du panneau ;
   après un QCM omis, la proposition correcte passe en vert. Une saisie fournie
@@ -122,15 +123,20 @@
 - Le Labo conserve les vues comparatives, tandis que le lecteur utilise
   désormais les composants communs `bandes-fractions-rail.js`, étendu aux
   unités, `correspondances-decimales.js`, `numeration-decimale.js`,
-  `droite-graduee.js` et les schémas de `fractions.js`. Le graphe public est
-  invalidé d'un seul tenant en `v31`.
-  La recette de D-047 — **1 458 tests**, **270 états** et **439 captures** —
-  constitue le point de comparaison antérieur. Le cours D-054 a depuis passé
-  une recette dédiée : **1 516 tests**, **24 états de page** et **72 captures**
-  sur téléphone, ordinateur et TNI, sans erreur ni débordement réel, avec un
-  écart d'alignement maximal de **1,47 px**. Le nouvel atelier unique et le
-  retour après omission de D-049 doivent encore faire l'objet de la campagne
-  complète du module avant livraison.
+  `droite-graduee.js` et les schémas de `fractions.js`. Les fractions placées
+  dans les bandes, les correspondances et leurs équations passent toutes par
+  `rendreFractionSvg` et sa mesure canonique de `expressions.js`. Les rails
+  conservent un guide à l'origine et à l'arrivée, une graduation finale sans
+  point rond et une flèche décalée après cette graduation ; les pièces `/1`
+  affichent simplement `1`. Le graphe public est invalidé d’un seul tenant en
+  `v32`.
+  Les recettes D-047 et D-054 restent des témoins historiques. La campagne
+  conjointe D-049/D-055 est verte : **1 519 tests** et **220 états navigateur**
+  sur cinq fenêtres, dont 60 états de cours, 120 états d'aide couvrant les
+  12 profils et 35 états de réponse. Elle ne relève aucune erreur, aucun
+  débordement ni aucune fuite de réponse ; la revue dédiée des six pages compte
+  112 captures et mesure au plus **0,72 px** entre une barre de fraction et le
+  signe mathématique voisin.
 
 ## Clôture de NC-02 du 11 août
 

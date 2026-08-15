@@ -26,7 +26,7 @@ function disposition(rendu, nom) {
 
 describe("réorganisation des centièmes", () => {
   it("expose une API versionnée et trois états déterministes", () => {
-    assert.equal(VERSION_CORRESPONDANCES_DECIMALES, 3);
+    assert.equal(VERSION_CORRESPONDANCES_DECIMALES, 4);
     assert.deepEqual(ETAPES_REORGANISATION_CENTIEMES, [
       "lignes",
       "quadrants",
@@ -217,6 +217,13 @@ describe("cinq dixièmes et un demi", () => {
       rendu.svg,
       new RegExp(`class="cd-piece-demi"[^>]*fill="${COULEURS_BANDES_FRACTIONS.d2}"`),
     );
+    assert.equal(compter(rendu.svg, /class="cd-ecriture-demie-numerateur"/g), 1);
+    assert.equal(compter(rendu.svg, /class="cd-ecriture-demie-barre"/g), 1);
+    assert.equal(compter(rendu.svg, /class="cd-ecriture-demie-denominateur"/g), 1);
+    assert.match(
+      rendu.svg,
+      /class="cd-ecriture-demie-numerateur"[^>]*font-family="&#39;/,
+    );
     assert.match(rendu.svg, />0,5 = 5\/10 = 1\/2<\/text>/);
     assert.match(rendu.texteAlternatif, /même repère 0,5/);
   });
@@ -243,6 +250,7 @@ describe("cinq dixièmes et un demi", () => {
       afficherEcritures: false,
     });
     assert.doesNotMatch(rendu.svg, /0,5|5\/10|1\/2/);
+    assert.doesNotMatch(rendu.svg, /class="cd-ecriture-demie-(?:numerateur|barre|denominateur)"/);
     assert.doesNotMatch(rendu.texteAlternatif, /0,5|5\/10|1\/2/);
     assert.match(rendu.svg, /class="cd-ecriture-demie-masquee"/);
     assert.match(rendu.svg, /class="cd-repere-demi-masque"/);

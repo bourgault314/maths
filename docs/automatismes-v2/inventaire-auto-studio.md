@@ -107,8 +107,8 @@ sélectionnables de « Me guider » : D-049 ouvre un seul atelier progressif.
 |---|---|---|
 | Schéma dans une unité | `packages/objets/src/fractions.js` | Bande ou grille statique pour une fraction inférieure ou égale à 1 ; jaune générique, sans prétendre reproduire le matériel de classe |
 | Manipulation libre historique | `outils/fractions/bandes_fractions.html` | Plateau complet avec pièces, fusion, retournement, droites, zoom et scènes ; il reste une activité autonome |
-| Manipulation guidée | `packages/objets/src/bandes-fractions-rail.js` | SVG commun effectivement utilisé par le lecteur pour les unités, demis et quarts, y compris au-delà de 1, avec profils d'aide non révélateurs |
-| Correspondance exacte entre matériels | `packages/objets/src/correspondances-decimales.js` | Deux SVG CPA alignent cinq dixièmes et un demi sur un même repère, puis relient 25 ou 75 centièmes à un ou trois quarts, sans changer d'échelle ni révéler l'écriture attendue en aide |
+| Manipulation guidée | `packages/objets/src/bandes-fractions-rail.js` | SVG commun effectivement utilisé par le lecteur pour les unités, demis et quarts, y compris au-delà de 1, avec profils d'aide non révélateurs et fractions étagées rendues par la primitive canonique |
+| Correspondance exacte entre matériels | `packages/objets/src/correspondances-decimales.js` | Deux SVG CPA comparent cinq dixièmes à un demi, puis relient 25 ou 75 centièmes à un ou trois quarts, sans changer d'échelle ni révéler l'écriture attendue en aide ; le cours peut n'en retenir qu'une étape sans rail supplémentaire |
 
 Le Labo conserve les bandes et grilles existantes, le composant guidé sur rail
 et les correspondances exactes comme familles de comparaison utiles. Le
@@ -140,12 +140,25 @@ La variante verticale reste visible dans le Labo afin que ce choix demeure
 réversible. Aucun matériel en millièmes n'est extrait : à cette échelle, le
 tableau de numération est la représentation lisible retenue.
 
+La fraction étagée possède une source unique dans
+`packages/objets/src/expressions.js` : `mesurerEcritureFractionSvg` calcule la
+largeur nécessaire depuis le membre le plus long et `rendreFractionSvg` rend
+numérateur, barre et dénominateur avec la typographie mathématique commune.
+`bandes-fractions-rail.js` et `correspondances-decimales.js` consomment cette
+primitive ; ils ne dessinent plus localement une fraction avec leurs propres
+espaces. Le rail compose aussi ses équations à partir des largeurs mesurées,
+affiche `1` plutôt que `1/1` dans une pièce-unité, trace des guides pointillés
+à l'origine et à l'arrivée, conserve la graduation finale comme un trait et
+place la flèche après cette graduation, sans point rond concurrent.
+
 L'intégration n'est plus future : `automatismes-v2/app.js` compose maintenant
 les bandes sur rail pour les pièces, groupes et unités, y compris cinq pièces
-`1/1` jusqu'à la graduation 5 et le rail commun des repères en demis, les deux
-correspondances exactes pour construire `0,5 ↔ 1/2` et
-`0,25 / 0,75 ↔ 1/4 / 3/4`, le matériel décimal pour les autres dixièmes et
-centièmes, et le tableau jusqu'aux millièmes. La droite graduée demeure une
+marquées `1` jusqu'à la graduation 5. Le cours construit `0,5 ↔ 1/2` sans
+second rail sous les dixièmes, réorganise les centièmes pour
+`0,25 / 0,75 ↔ 1/4 / 3/4`, puis restaure les transformations complètes de
+`7/2` et `6/4`. Les repères `3/2`, `4/2` et `5/2` sont rappelés sans nouveau
+grand rail. Le matériel décimal traite les autres dixièmes et centièmes et le
+tableau va jusqu'aux millièmes. La droite graduée demeure une
 brique commune et un point de comparaison du Labo, mais n'est plus une forme
 de question de cette recette. Les questions restent abstraites ou en QCM et
 n'importent aucune représentation dans leur énoncé. L'atelier unique de
@@ -157,7 +170,8 @@ La fraction libre est également branchée sans dépendre de sa cible canonique 
 le lecteur part du dernier rang écrit du décimal, propose une fraction
 décimale et accepte toute équivalente par produit en croix. Le matériel rouge,
 vert et jaune accompagne `/10` et `/100` ; `/1000` emploie uniquement le
-tableau. La recette finale de ces usages dans le lecteur est en cours.
+tableau. La nouvelle organisation D-055 doit être recettée avec ces usages
+avant la prochaine livraison.
 
 ## Réservoirs techniques à examiner au besoin
 
