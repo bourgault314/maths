@@ -246,6 +246,21 @@ const FRUITS={
     <ellipse cx="13" cy="-20" rx="12" ry="5" fill="#4f9e46" transform="rotate(-30 13 -20)"/>
     <path d="M -16 0 Q -15 -13 -3 -14 Q 12 -15 15 -2 Q 17 12 4 16 Q -12 19 -16 0 Z" fill="#ffab3d" stroke="#d97b23" stroke-width="2.5"/>
     <path d="M -10 -6 Q -3 -12 6 -11 Q 1 -4 -4 0 Z" fill="#ff7043" opacity=".8"/>`,
+ /* Goyavier de Chine — le fruit de LA FORÊT (choix de Gwenael, 16/08 : « des ananas
+    dans la forêt, ce n'est pas cohérent »). C'est LE fruit qu'on va cueillir dans
+    les bois des Hauts en fin d'été : une petite boule grenat luisante, coiffée de
+    la petite étoile sèche du calice, sur une branche à feuilles opposées. */
+ goyavier:hit=>`
+    ${hit?'<circle r="32" fill="none" stroke="#ffc94d" stroke-width="4" opacity=".85"/>':''}
+    <path d="M -2 -12 Q 0 -22 8 -26" fill="none" stroke="#7a5230" stroke-width="3.5" stroke-linecap="round"/>
+    <ellipse cx="-2" cy="-24" rx="10" ry="4.5" fill="#4f9e46" transform="rotate(-24 -2 -24)"/>
+    <ellipse cx="15" cy="-21" rx="9" ry="4" fill="#3d8f3d" transform="rotate(22 15 -21)"/>
+    <circle cx="0" cy="3" r="16" fill="#9e2540" stroke="#6d152a" stroke-width="2.5"/>
+    <path d="M -7 -8 Q 0 -14 7 -8 Q 4 -2 0 -4 Q -4 -2 -7 -8 Z" fill="#c8506a" opacity=".55"/>
+    <g stroke="#5b1122" stroke-width="1.8" stroke-linecap="round">
+      <line x1="0" y1="-13" x2="0" y2="-9"/><line x1="-4" y1="-12" x2="-2.5" y2="-8.5"/>
+      <line x1="4" y1="-12" x2="2.5" y2="-8.5"/></g>
+    <circle cx="-6" cy="8" r="2.2" fill="#e08aa0" opacity=".55"/>`,
  ananas:hit=>`
     ${hit?'<circle r="34" fill="none" stroke="#ffc94d" stroke-width="4" opacity=".85"/>':''}
     <path d="M 0 -14 L -3 -30 L 2 -16 Z" fill="#3d8f3d"/>

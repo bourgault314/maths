@@ -1023,7 +1023,9 @@ Trois choses à savoir avant d'y toucher :
   buissons ») : il reprenait la silhouette de galet de `ROCHES`, comme le corail du
   lagon. **Leçon : la re-peau à silhouette identique ne marche que si la chose
   ressemble déjà à un galet** — le corail oui, la canne et la fougère non, elles ont
-  leur port propre. Les cases
+  leur port propre. **Et le fruit de la forêt devient le GOYAVIER** — « des ananas dans la forêt, ce
+  n'est pas cohérent » : c'est le goyavier de Chine qu'on va cueillir dans les bois
+  des Hauts. Nouveau type dans `FRUITS`, `FRW.foret` et `FRNAME`. Les cases
   deviennent des kiosques de pique-nique des Hauts : toit à quatre pentes en
   bardeaux, poteaux de bois, pas de murs, pas de lambrequins — mais la MÊME planche
   claire derrière la fraction, donc le même contraste, et la clôture des portes
