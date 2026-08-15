@@ -278,14 +278,16 @@ function targetSVG(t,stat,label='',index=''){
   const px=t.x*CS,py=t.y*CS;
   const lit=stat&&stat.st==='ok', bad=stat&&(stat.st==='wrong'||stat.st==='multi');
   const txt=t.disp||fstr(t.need);
-  /* Lambrequins v2 : vraie dentelle créole en bordure de toit — festons suspendus
-     terminés par une perle, silhouette franche sans surcharger la petite maison. */
+  /* Lambrequins v2 : vraie dentelle créole en bordure de toit — festons suspendus,
+     silhouette franche sans surcharger la petite maison. La PERLE au bout de chaque
+     feston a été retirée le 15/08 (œil de Gwenael : « ça fait un peu bizarre ») —
+     à cette taille le petit rond se lit comme une salissure sous l'arrondi, pas
+     comme une breloque ; l'arrondi seul suffit à dire la dentelle. */
   let lamb=`<rect x="12" y="40" width="76" height="3.6" rx="1.4" fill="#fdf6ec"/>`;
   const nF=7,lF=74/nF;
   for(let i=0;i<nF;i++){
     const x0=13+i*lF;
     lamb+=`<path d="M ${x0} 43.2 h ${lF} a ${lF/2} 6.4 0 0 1 ${-lF} 0 Z" fill="#fdf6ec" stroke="#8a6b4a66" stroke-width="1"/>`;
-    lamb+=`<circle cx="${x0+lF/2}" cy="50.6" r="1.5" fill="#fdf6ec" stroke="#8a6b4a66" stroke-width="0.8"/>`;
   }
   /* Porte orientée : la case est CLÔTURÉE sur trois côtés (palissade bois,
      lisible : « on ne rentre pas par là ») et ouverte sur le côté `porte`
@@ -422,7 +424,20 @@ function redraw(){
 
   renderToolbox();
 
-  if(sim.win&&!overlayShown&&!celebrating){startCelebration(sim);}
+  /* On rejoue la victoire quand le joueur fait MIEUX sans quitter le niveau.
+     Défaut trouvé par Gwenael le 15/08 : on gagne sans le fruit, on reste sur le
+     niveau, on pose les pièces qui le cueillent — et rien n'était recompté, parce
+     que `overlayShown` ne retombait qu'en RETIRANT une pièce (ui.js), jamais en
+     en ajoutant une. Sa règle : « s'il gagne un petit soleil en plus, ça relance
+     tout depuis le début et ça refait Lévé ! ». On ne réarme donc que sur un
+     PROGRÈS réel — plus de fruits, ou moins de pièces — et jamais sur une pose
+     quelconque, sinon la moindre pièce reposée rejouerait la célébration. */
+  const mieuxQuAvant=()=>{
+    const k=lvId(cur);
+    return sim.fruits.size>(save.fruits[k]||0)||
+           Object.keys(state.placed).length<(save.pieces[k]??Infinity);
+  };
+  if(sim.win&&!celebrating&&(!overlayShown||mieuxQuAvant())){startCelebration(sim);}
   return sim;
 }
 
