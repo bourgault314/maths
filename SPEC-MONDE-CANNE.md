@@ -115,8 +115,11 @@ pouce standard. Les niveaux-découverte C2 exceptés, JAMAIS de boîte exacte.
 - Fruits à valeur : petit ajout moteur (champ `val` sur les fruits + test de la
   valeur du rayon traversant) — à spécifier finement à la construction.
 - Portes orientées : deuxième ajout moteur (champ `porte` sur les cibles :
-  seul le rayon arrivant du côté indiqué compte ; rendu = la porte dessinée
-  sur ce côté de la case). Utilisé sur C5-C8 seulement dans ce monde, puis
+  seul le rayon arrivant du côté indiqué compte ; rendu = une clôture en bois
+  sur les TROIS côtés fermés, le quatrième laissé ouvert. La flèche dorée
+  d'entrée a été retirée le 15/08 (décision de Gwenael) : trois côtés clos
+  disent déjà par où l'on entre, et la flèche chargeait la case sans rien
+  apprendre). Utilisé sur C5-C8 seulement dans ce monde, puis
   disponible pour les mondes avancés et les défis (décision du 13/08).
 
 ## 6. Le circuit des prochains jours (réponse à « quand est-ce que je donne à Code ? »)
