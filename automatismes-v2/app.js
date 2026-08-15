@@ -35,14 +35,14 @@ import {
   saisirChiffre,
   tournerSolide,
   validerReponse,
-} from "./src/etat-lecteur.js?v=27";
+} from "./src/etat-lecteur.js?v=29";
 import {
   TYPE_REPONSE_DEUX_ENTIERS,
   TYPE_REPONSE_ENTIER_NATUREL,
   TYPE_REPONSE_FRACTION_EQUIVALENTE,
   TYPE_REPONSE_NOMBRE_DECIMAL,
   TYPE_REPONSE_CHOIX_UNIQUE,
-} from "../packages/contrats/src/question-v2.js?v=27";
+} from "../packages/contrats/src/question-v2.js?v=29";
 import {
   connaitNotionLecteur,
   obtenirNotionLecteur,
@@ -52,13 +52,13 @@ import {
   RENDU_SOLIDE,
   RENDU_VOLUME,
   NOTION_FRACTIONS_SIMPLES_DECIMAUX,
-} from "./src/registre-lecteur.js?v=27";
+} from "./src/registre-lecteur.js?v=29";
 import {
   DOMAINES_AUTOMATISMES,
   MICRO_NOTIONS_AUTOMATISMES,
   normaliserIdentifiantMicroNotion,
-} from "../packages/automatismes/src/identifiants.js?v=27";
-import { COURS_SOLIDES_USUELS } from "../packages/automatismes/src/espace-et-geometrie/solides-usuels/reconnaissance.js?v=27";
+} from "../packages/automatismes/src/identifiants.js?v=29";
+import { COURS_SOLIDES_USUELS } from "../packages/automatismes/src/espace-et-geometrie/solides-usuels/reconnaissance.js?v=29";
 import {
   creerCone,
   creerCube,
@@ -73,8 +73,8 @@ import {
   ACTION_TOUCHE_SAISIR,
   ACTION_TOUCHE_VALIDER,
   obtenirDispositionClavier,
-} from "../packages/objets/src/clavier.js?v=27";
-import { formulationCritereDivisibilite } from "../packages/automatismes/src/nombres-et-calculs/criteres-divisibilite/critere-precis.js?v=27";
+} from "../packages/objets/src/clavier.js?v=29";
+import { formulationCritereDivisibilite } from "../packages/automatismes/src/nombres-et-calculs/criteres-divisibilite/critere-precis.js?v=29";
 import {
   caseVide,
   difference,
@@ -90,31 +90,31 @@ import {
   variable,
   versHtmlEgalitesAlignees,
   versHtmlSemantique,
-} from "../packages/objets/src/expressions.js?v=27";
+} from "../packages/objets/src/expressions.js?v=29";
 import {
   dessinerCarreQuadrille,
-} from "../packages/objets/src/carre-quadrille.js?v=27";
-import { dessinerGrilleFraction } from "../packages/objets/src/fractions.js?v=27";
-import { dessinerDoubleDroiteGraduee } from "../packages/objets/src/droite-graduee.js?v=27";
-import { dessinerBandesFractionnairesSurRailDecimal } from "../packages/objets/src/bandes-fractions-rail.js?v=27";
+} from "../packages/objets/src/carre-quadrille.js?v=29";
+import { dessinerGrilleFraction } from "../packages/objets/src/fractions.js?v=29";
+import { dessinerDoubleDroiteGraduee } from "../packages/objets/src/droite-graduee.js?v=29";
+import { dessinerBandesFractionnairesSurRailDecimal } from "../packages/objets/src/bandes-fractions-rail.js?v=29";
 import {
   dessinerMaterielNumerationDecimale,
   dessinerTableauNumerationDecimale,
-} from "../packages/objets/src/numeration-decimale.js?v=27";
+} from "../packages/objets/src/numeration-decimale.js?v=29";
 import {
   dessinerDemiAvecDixiemes,
   dessinerReorganisationCentiemes,
-} from "../packages/objets/src/correspondances-decimales.js?v=27";
+} from "../packages/objets/src/correspondances-decimales.js?v=29";
 import {
   construireDonneesTableauDepuisFraction,
   formaterFractionEnDecimal,
   reduireFraction,
-} from "../packages/objets/src/fractions-decimaux.js?v=27";
+} from "../packages/objets/src/fractions-decimaux.js?v=29";
 import {
   diagnostiquerDecimalVersNumerateur,
   diagnostiquerFractionLibre,
   diagnostiquerFractionVersDecimal,
-} from "./src/diagnostic-fractions-decimaux.js?v=27";
+} from "./src/diagnostic-fractions-decimaux.js?v=29";
 
 const MICRO_NOTION_FRACTION_VERS_DECIMAL =
   MICRO_NOTIONS_AUTOMATISMES.FRACTION_VERS_DECIMAL;
@@ -233,6 +233,10 @@ function estReponseNumerique(question) {
 
 function rendrePuissance(base, exposant = 2) {
   return versHtmlSemantique(puissance(nombre(base), exposant));
+}
+
+function rendreNombreMathematique(valeur) {
+  return versHtmlSemantique(nombre(valeur));
 }
 
 function noeudProduitCarre(base) {
@@ -655,19 +659,19 @@ function diagnosticErreurFractions() {
 
 function rendreRetourValidation() {
   if (etat.erreurValidation) {
-    return `<p class="message message-erreur" role="alert">${echapper(etat.erreurValidation)}</p>`;
+    return `<p class="message message-erreur" role="alert"><span class="contenu-message">${echapper(etat.erreurValidation)}</span></p>`;
   }
   if (etat.validation === null) return "";
   if (etat.validation.juste) {
-    return '<p class="message message-reussite" role="status"><strong>Bien joué !</strong> Ta réponse est correcte.</p>';
+    return '<p class="message message-reussite" role="status"><span class="contenu-message"><strong>Bien joué !</strong> Ta réponse est correcte.</span></p>';
   }
   if (etat.validation.omise) {
-    return '<p class="message message-erreur" role="status"><strong>Pas de réponse.</strong></p>';
+    return '<p class="message message-erreur" role="status"><span class="contenu-message"><strong>Pas de réponse.</strong></span></p>';
   }
   const diagnostic = diagnosticErreurFractions();
-  return `<p class="message message-erreur" role="status"><strong>À revoir.</strong> ${diagnostic
+  return `<p class="message message-erreur" role="status"><span class="contenu-message"><strong>À revoir.</strong> ${diagnostic
     ? echapper(diagnostic.message)
-    : "Ta réponse reste affichée."}</p>`;
+    : "Ta réponse reste affichée."}</span></p>`;
 }
 
 function rendreZoneRetour() {
@@ -899,7 +903,12 @@ function libellesReponseCorrecte(question) {
 }
 
 function rendreReponseCorrecte(question) {
-  return `<div class="reponses-correction" aria-label="Réponse correcte">
+  const reponseNumerique = [
+    TYPE_REPONSE_ENTIER_NATUREL,
+    TYPE_REPONSE_DEUX_ENTIERS,
+    TYPE_REPONSE_NOMBRE_DECIMAL,
+  ].includes(question.reponse.type);
+  return `<div class="reponses-correction ${reponseNumerique ? "reponses-correction-numerique" : ""}" aria-label="Réponse correcte">
     ${libellesReponseCorrecte(question)
       .map((reponse) => `<strong>${echapper(reponse)}</strong>`)
       .join("")}
@@ -2217,11 +2226,15 @@ function rendreContenuQuestionDivisibilite(question) {
 
 function rendreCoqueLecteur(question, carteQuestion) {
   const entrainement = estEntrainement();
-  const paveActif = entrainement
-    && etat.validation === null
-    && estReponseNumerique(question);
+  const miseEnPageNumerique = entrainement && estReponseNumerique(question);
+  const paveActif = miseEnPageNumerique && etat.validation === null;
+  const classesMiseEnPage = [
+    classesLecteur(),
+    miseEnPageNumerique ? "question-numerique" : "",
+    paveActif ? "avec-pave" : "",
+  ].filter(Boolean).join(" ");
   return `
-    <div class="${classesLecteur()} ${paveActif ? "avec-pave" : ""}">
+    <div class="${classesMiseEnPage}">
       ${rendreEntete()}
       <div class="espace-lecteur">
         <div class="zone-question-scroll" data-question-index="${etat.seance.etat.indexQuestion}">${carteQuestion}</div>
@@ -2307,12 +2320,12 @@ function rendreContenuQuestionCarres(question) {
         ? `<h1>Quel encadrement est correct ?</h1>
           <p class="expression-question-carres">${rendrePuissance(base)}</p>
           <p class="precision">Choisis une seule réponse.</p>`
-        : `<h1>Quel est le carré de ${base} ?</h1>
+        : `<h1>Quel est le carré de ${rendreNombreMathematique(base)} ?</h1>
           <p class="precision">Choisis une seule réponse.</p>`;
     }
     return questionVerbale
-      ? `<h1>${echapper(consigne)} ${base} ?</h1>
-        <p class="egalite-carres phrase-reponse-carres"><span>Le carré de ${base} est</span>${rendreCaseReponseCarres(question)}<span>.</span></p>`
+      ? `<h1>${echapper(consigne)} ${rendreNombreMathematique(base)} ?</h1>
+        <p class="egalite-carres phrase-reponse-carres"><span>Le carré de ${rendreNombreMathematique(base)} est</span>${rendreCaseReponseCarres(question)}<span>.</span></p>`
       : `<h1>${echapper(consigne)}</h1>
         <p class="egalite-carres">${rendrePuissance(base)} <span>=</span> ${rendreCaseReponseCarres(question)}</p>`;
   }
@@ -2320,15 +2333,15 @@ function rendreContenuQuestionCarres(question) {
     const cible = cibleQuestionCarres(question);
     if (blocQuestion(question, "produit-facteurs-egaux-cible")) {
       return `<h1>${echapper(consigne)}</h1>
-        <p class="egalite-carres egalite-deux-champs"><strong>${cible}</strong><span>=</span>
+        <p class="egalite-carres egalite-deux-champs">${rendreNombreMathematique(cible)}<span>=</span>
           ${rendreCaseReponseCarres(question, 0)}<span>×</span>${rendreCaseReponseCarres(question, 1)}</p>
         <p class="precision">Remplis les deux cases.</p>`;
     }
     if (blocQuestion(question, "egalite-carre-cible")) {
       return `<h1>${echapper(consigne)}</h1>
-        <p class="egalite-carres">${rendreCaseReponseCarres(question, 0, { puissance: true })}<span>=</span><strong>${cible}</strong></p>`;
+        <p class="egalite-carres">${rendreCaseReponseCarres(question, 0, { puissance: true })}<span>=</span>${rendreNombreMathematique(cible)}</p>`;
     }
-    return `<h1>${echapper(consigne)} ${cible} ?</h1>
+    return `<h1>${echapper(consigne)} ${rendreNombreMathematique(cible)} ?</h1>
       <p class="egalite-carres phrase-reponse-carres"><span>L'entier recherché est</span>${rendreCaseReponseCarres(question)}<span>.</span></p>`;
   }
   if (famille === "sens-notation") {
@@ -2344,9 +2357,9 @@ function rendreContenuQuestionCarres(question) {
     const trouverCote = Boolean(blocQuestion(question, "carre-quadrille-aire"));
     const motCarreau = base === 1 ? "carreau" : "carreaux";
     const questionComplete = trouverCote
-      ? `${consigne} ${base * base} ${texteBloc(question, "question-trouver-cote")}`
-      : `Ce carré a ${base} ${motCarreau} sur chaque côté. Combien en contient-il en tout ?`;
-    return `<h1>${echapper(questionComplete)}</h1>
+      ? `${echapper(consigne)} ${rendreNombreMathematique(base * base)} ${echapper(texteBloc(question, "question-trouver-cote"))}`
+      : `Ce carré a ${rendreNombreMathematique(base)} ${motCarreau} sur chaque côté. Combien en contient-il en tout ?`;
+    return `<h1>${questionComplete}</h1>
       ${trouverCote
         ? rendreCarreQuadrilleDansLecteur({
             cote: base,
@@ -2365,7 +2378,7 @@ function rendreContenuQuestionCarres(question) {
     const signe = texteBloc(question, "operation");
     const terme = blocQuestion(question, "terme")?.valeur;
     return `<h1>${echapper(consigne)}</h1>
-      <p class="egalite-carres calcul-court-question">${rendrePuissance(base)}<span>${echapper(signe)}</span><strong>${terme}</strong><span>=</span>${rendreCaseReponseCarres(question)}</p>
+      <p class="egalite-carres calcul-court-question">${rendrePuissance(base)}<span>${echapper(signe)}</span>${rendreNombreMathematique(terme)}<span>=</span>${rendreCaseReponseCarres(question)}</p>
       <p class="precision">Calcule d'abord le carré.</p>`;
   }
   return `<h1>${echapper(consigne)}</h1>`;
@@ -3765,27 +3778,26 @@ function rendreBilan() {
     </main>`;
 }
 
+export function doitAfficherIndicateurDefilementPanneau({
+  scrollHeight,
+  clientHeight,
+  scrollTop,
+}) {
+  const deborde = scrollHeight > clientHeight + 2;
+  const estEnHaut = scrollTop <= 8;
+  return deborde && estEnHaut;
+}
+
 function installerIndicateurDefilementPanneau(panneau) {
   const corps = panneau?.querySelector?.(".corps-panneau");
   const indicateur = panneau?.querySelector?.("[data-indicateur-defilement]");
   if (!corps || !indicateur) return;
   const actualiser = () => {
-    const deborde = corps.scrollHeight > corps.clientHeight + 2;
-    const estEnHaut = corps.scrollTop <= 2;
-    indicateur.hidden = !(
-      deborde
-      && estEnHaut
-      && corps.dataset?.defilementCommence !== "true"
-    );
+    indicateur.hidden = !doitAfficherIndicateurDefilementPanneau(corps);
   };
   if (corps.dataset?.indicateurInstalle !== "true") {
     if (corps.dataset) corps.dataset.indicateurInstalle = "true";
-    corps.addEventListener?.("scroll", () => {
-      if (corps.scrollTop > 2 && corps.dataset) {
-        corps.dataset.defilementCommence = "true";
-      }
-      actualiser();
-    }, { passive: true });
+    corps.addEventListener?.("scroll", actualiser, { passive: true });
   }
   globalThis.requestAnimationFrame?.(actualiser);
   document.fonts?.ready?.then?.(() => {
@@ -3802,8 +3814,6 @@ function rendre({
   const idPanneauAvant = panneauAvant?.id ?? "";
   const corpsPanneauAvant = panneauAvant?.querySelector?.(".corps-panneau");
   const positionPanneau = corpsPanneauAvant?.scrollTop ?? 0;
-  const defilementPanneauCommence =
-    corpsPanneauAvant?.dataset?.defilementCommence === "true";
   const zoneQuestionAvant = application.querySelector?.(".zone-question-scroll");
   const indexQuestionAvant = zoneQuestionAvant?.dataset?.questionIndex ?? "";
   const positionQuestion = zoneQuestionAvant?.scrollTop ?? 0;
@@ -3828,9 +3838,6 @@ function rendre({
   const memePanneau = !reinitialiserDefilementPanneau
     && panneau?.id === idPanneauAvant;
   const doitRestaurerDefilement = memePanneau && positionPanneau > 0;
-  if (memePanneau && defilementPanneauCommence && corpsPanneau?.dataset) {
-    corpsPanneau.dataset.defilementCommence = "true";
-  }
   if (doitRestaurerDefilement && corpsPanneau) corpsPanneau.scrollTop = positionPanneau;
   if (doitRestaurerQuestion && zoneQuestion) zoneQuestion.scrollTop = positionQuestion;
   const cibleFocus = focusPanneau

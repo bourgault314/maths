@@ -1,4 +1,4 @@
-// Candidat « carré quadrillé » — version 1, construit pour NC-02.
+// Candidat « carré quadrillé » — version 4, construit pour NC-02.
 //
 // Une seule représentation relie les trois lectures utiles d'un carré :
 //
@@ -17,7 +17,7 @@
 
 import { COULEURS, TYPOGRAPHIE } from "../../charte/src/charte.js";
 
-export const VERSION_CARRE_QUADRILLE = 2;
+export const VERSION_CARRE_QUADRILLE = 4;
 
 export const MODES_CARRE_QUADRILLE = Object.freeze([
   "sens",
@@ -42,7 +42,10 @@ export const HAUTEUR_CARRE_QUADRILLE = 240;
 const X_CARRE = 52;
 const Y_CARRE = 20;
 const TAILLE_CARRE = 168;
-const POLICE = TYPOGRAPHIE.texte.replaceAll('"', "'");
+const POLICE_TEXTE = TYPOGRAPHIE.texte.replaceAll('"', "'");
+const POLICE_MATHEMATIQUES = TYPOGRAPHIE.mathematiques.replaceAll('"', "'");
+const STYLE_CHIFFRES_ALIGNES =
+  "font-variant-numeric: lining-nums tabular-nums; font-feature-settings: 'lnum' 1, 'tnum' 1;";
 
 function echapper(texte) {
   return String(texte).replace(/[&<>"']/g, (c) =>
@@ -181,7 +184,8 @@ function texte(
   const attributClasse = classe ? ` class="${echapper(classe)}"` : "";
   return (
     `<text${attributClasse} x="${x}" y="${y}" text-anchor="middle" dominant-baseline="middle"${transformation} ` +
-    `font-family="${POLICE}" font-size="${taille}" font-weight="${graisse}" ` +
+    `font-family="${POLICE_MATHEMATIQUES}" font-size="${taille}" font-weight="${graisse}" ` +
+    `style="${STYLE_CHIFFRES_ALIGNES}" ` +
     `fill="${COULEURS_CARRE_QUADRILLE.texte}">${echapper(contenu)}</text>`
   );
 }
@@ -189,11 +193,13 @@ function texte(
 function texteDeuxLignes(x, y, ligne1, ligne2) {
   return (
     `<rect class="cq-etiquette-aire" x="${x - 64}" y="${y - 30}" width="128" height="60" ` +
-    `rx="10" fill="${COULEURS_CARRE_QUADRILLE.papier}" fill-opacity="0.94"/>` +
+    `fill="${COULEURS_CARRE_QUADRILLE.papier}" fill-opacity="0.94"/>` +
     `<text class="cq-aire" x="${x}" y="${y}" text-anchor="middle" ` +
-    `font-family="${POLICE}" fill="${COULEURS_CARRE_QUADRILLE.texte}">` +
-    `<tspan x="${x}" dy="-0.25em" font-size="20" font-weight="800">${echapper(ligne1)}</tspan>` +
-    `<tspan x="${x}" dy="1.45em" font-size="13" font-weight="700">${echapper(ligne2)}</tspan>` +
+    `fill="${COULEURS_CARRE_QUADRILLE.texte}">` +
+    `<tspan x="${x}" dy="-0.25em" font-family="${POLICE_MATHEMATIQUES}" font-size="20" ` +
+    `font-weight="800" style="${STYLE_CHIFFRES_ALIGNES}">${echapper(ligne1)}</tspan>` +
+    `<tspan x="${x}" dy="1.45em" font-family="${POLICE_TEXTE}" font-size="13" ` +
+    `font-weight="700">${echapper(ligne2)}</tspan>` +
     `</text>`
   );
 }
@@ -265,7 +271,7 @@ function libelles(cote, mode) {
   const centre = mode === "aire-inconnue"
     ? (
         `<rect class="cq-etiquette-aire" x="${centreX - 36}" y="${centreY - 26}" ` +
-        `width="72" height="52" rx="10" fill="${COULEURS_CARRE_QUADRILLE.papier}" ` +
+        `width="72" height="52" fill="${COULEURS_CARRE_QUADRILLE.papier}" ` +
         `fill-opacity="0.94"/>` +
         texte(centreX, centreY, "?", { taille: 24, classe: "cq-aire" })
       )
@@ -303,7 +309,7 @@ export function dessinerCarreQuadrille({
 
   const corps =
     `<rect class="cq-fond" x="${X_CARRE}" y="${Y_CARRE}" width="${TAILLE_CARRE}" ` +
-    `height="${TAILLE_CARRE}" rx="4" fill="${COULEURS_CARRE_QUADRILLE.fond}"/>` +
+    `height="${TAILLE_CARRE}" fill="${COULEURS_CARRE_QUADRILLE.fond}"/>` +
     (mode === "decomposition" ? fondsDecomposition(cote) : "") +
     rectanglesMiseEnEvidence(cote, evidence) +
     (quadrillage
@@ -312,7 +318,7 @@ export function dessinerCarreQuadrille({
       : "") +
     (mode === "decomposition" ? reperesDecomposition(cote) : "") +
     `<rect class="cq-contour" x="${X_CARRE}" y="${Y_CARRE}" width="${TAILLE_CARRE}" ` +
-    `height="${TAILLE_CARRE}" rx="4" fill="none" ` +
+    `height="${TAILLE_CARRE}" fill="none" ` +
     `stroke="${COULEURS_CARRE_QUADRILLE.contour}" stroke-width="2.5"/>` +
     libelles(cote, mode);
 

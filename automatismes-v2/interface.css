@@ -15,6 +15,7 @@ body,
   white-space: nowrap;
   font-family: var(--mg-mathematiques);
   font-variant-numeric: lining-nums tabular-nums;
+  font-feature-settings: "lnum" 1, "tnum" 1;
   line-height: 1.16;
 }
 
@@ -56,6 +57,8 @@ body,
 .modele-produit-carre,
 .chaine-carre {
   font-family: var(--mg-mathematiques);
+  font-variant-numeric: lining-nums tabular-nums;
+  font-feature-settings: "lnum" 1, "tnum" 1;
   font-size: clamp(1.55rem, 5vw, 2.5rem);
   font-weight: 700;
   color: var(--mg-encre);
@@ -100,6 +103,8 @@ body,
   background: var(--mg-papier);
   color: var(--mg-encre);
   font: inherit;
+  font-variant-numeric: lining-nums tabular-nums;
+  font-feature-settings: "lnum" 1, "tnum" 1;
   font-weight: 800;
   line-height: 1;
   box-shadow: 0 3px 0 color-mix(in srgb, var(--mg-turquoise) 30%, transparent);
@@ -196,6 +201,8 @@ button.case-reponse-carres {
 .grille-carres-multiples .choix {
   min-height: 58px;
   font-family: var(--mg-mathematiques);
+  font-variant-numeric: lining-nums tabular-nums;
+  font-feature-settings: "lnum" 1, "tnum" 1;
   font-size: clamp(1.1rem, 3vw, 1.45rem);
 }
 
@@ -342,6 +349,7 @@ button.case-reponse-carres {
   font-family: var(--mg-mathematiques);
   font-size: clamp(1rem, 2.4vw, 1.25rem);
   font-variant-numeric: lining-nums tabular-nums;
+  font-feature-settings: "lnum" 1, "tnum" 1;
 }
 
 .mathsgo-egalites-alignees {
@@ -2063,8 +2071,15 @@ body {
   min-height: 42px;
   margin: 0;
   padding: 8px 10px;
+  display: grid;
+  place-items: center;
   font-size: 13px;
   text-align: center;
+}
+
+.zone-retour .message > .contenu-message {
+  display: block;
+  max-width: 100%;
 }
 
 .reponse-attendue-omission {
@@ -2286,6 +2301,7 @@ body {
   margin: 0 0 12px;
   padding: 9px 12px;
   display: flex;
+  align-items: center;
   justify-content: space-between;
   gap: 12px;
   border: 2px solid var(--mg-ligne);
@@ -2318,6 +2334,30 @@ body {
 .panneau-carres .reponses-correction strong {
   font-family: var(--mg-mathematiques);
   font-variant-numeric: lining-nums tabular-nums;
+  font-feature-settings: "lnum" 1, "tnum" 1;
+}
+
+.panneau-carres .rappel-question {
+  font-variant-numeric: lining-nums tabular-nums;
+  font-feature-settings: "lnum" 1, "tnum" 1;
+}
+
+.panneau-carres .rappel-question strong {
+  font-variant-numeric: lining-nums tabular-nums;
+  font-feature-settings: "lnum" 1, "tnum" 1;
+}
+
+.reponses-correction strong {
+  min-height: 44px;
+  display: inline-grid;
+  place-items: center;
+  line-height: 1;
+}
+
+.reponses-correction-numerique strong {
+  font-family: var(--mg-mathematiques);
+  font-variant-numeric: lining-nums tabular-nums;
+  font-feature-settings: "lnum" 1, "tnum" 1;
 }
 
 .rappel-reponse-eleve.reponse-omise {
@@ -3811,20 +3851,20 @@ body {
 }
 
 @media (pointer: coarse) and (hover: none) {
-  .mode-entrainement.avec-pave .carte-question-fractions {
+  .mode-entrainement.question-numerique .carte-question-fractions {
     padding-top: clamp(10px, 2.5vh, 20px);
     gap: 6px;
   }
 
-  .mode-entrainement.avec-pave .carte-question-fractions h1 {
+  .mode-entrainement.question-numerique .carte-question-fractions h1 {
     font-size: clamp(19px, 5.7vw, 25px);
   }
 
-  .mode-entrainement.avec-pave .carte-question-fractions .egalite-question-rationnelle {
+  .mode-entrainement.question-numerique .carte-question-fractions .egalite-question-rationnelle {
     margin-block: 0;
   }
 
-  .mode-entrainement.avec-pave .carte-question-fractions .zone-retour:empty {
+  .mode-entrainement.question-numerique .carte-question-fractions .zone-retour:empty {
     display: none;
   }
 }
@@ -4415,51 +4455,59 @@ body {
     display: none;
   }
 
-  .mode-entrainement.avec-pave .carte-question-carres {
+  .mode-entrainement.question-numerique .zone-question-scroll {
+    align-items: flex-start;
+  }
+
+  .mode-entrainement.question-numerique .zone-question-scroll > .carte-question {
+    margin-block: 0;
+  }
+
+  .mode-entrainement.question-numerique .carte-question-carres {
     padding-top: clamp(12px, 3vh, 24px);
     gap: clamp(6px, 1.2vh, 10px);
   }
 
-  .mode-entrainement.avec-pave .carte-question-carres .etiquette-notion {
+  .mode-entrainement.question-numerique .carte-question-carres .etiquette-notion {
     margin-bottom: 2px;
   }
 
-  .mode-entrainement.avec-pave .carte-question-carres .egalite-carres {
+  .mode-entrainement.question-numerique .carte-question-carres .egalite-carres {
     margin-block: 0;
   }
 
-  .mode-entrainement.avec-pave .carte-question-carres .zone-retour:empty {
+  .mode-entrainement.question-numerique .carte-question-carres .zone-retour:empty {
     display: none;
   }
 }
 
 @media (pointer: coarse) and (hover: none) and (max-height: 700px) {
-  .mode-entrainement.avec-pave
+  .mode-entrainement.question-numerique
     .carte-question-carres.famille-carre-quadrille {
     grid-template-columns: minmax(112px, .9fr) minmax(0, 1.1fr);
     column-gap: 6px;
   }
 
-  .mode-entrainement.avec-pave
+  .mode-entrainement.question-numerique
     .carte-question-carres.famille-carre-quadrille
     > .etiquette-notion,
-  .mode-entrainement.avec-pave
+  .mode-entrainement.question-numerique
     .carte-question-carres.famille-carre-quadrille
     > h1,
-  .mode-entrainement.avec-pave
+  .mode-entrainement.question-numerique
     .carte-question-carres.famille-carre-quadrille
     > .zone-retour {
     grid-column: 1 / -1;
   }
 
-  .mode-entrainement.avec-pave
+  .mode-entrainement.question-numerique
     .carte-question-carres.famille-carre-quadrille
     .visuel-carre-quadrille {
     grid-column: 1;
     width: min(100%, clamp(112px, 20dvh, 160px));
   }
 
-  .mode-entrainement.avec-pave
+  .mode-entrainement.question-numerique
     .carte-question-carres.famille-carre-quadrille
     > .phrase-reponse-carres {
     grid-column: 2;

@@ -1,6 +1,40 @@
 # État du chantier Automatismes V2
 
-**Dernière mise à jour : 13 août 2026.**
+**Dernière mise à jour : 15 août 2026.**
+
+## Finitions mobiles de NC-02 du 15 août
+
+- Le lot est réintégré sur `24e208c`, état de `main` après les dernières
+  publications Solèy, et reste isolé sur la branche
+  `agent/nc02-finitions-mobiles`.
+- Le repère « Fais défiler ↓ » n'enregistre plus d'état permanent après un
+  premier mouvement. Il tolère un rebond tactile de huit pixels, disparaît
+  pendant un vrai défilement et revient lorsque le panneau retrouve le sommet.
+- Les nombres du carré quadrillé, notamment le total central `64`, utilisent
+  la police mathématique commune et les variantes OpenType alignées et
+  tabulaires. Le libellé verbal conserve la police de texte.
+- Les mêmes variantes OpenType s'appliquent aux nombres HTML, aux champs, aux
+  rappels et aux réponses correctes. Les valeurs d'un titre passent par le
+  composant mathématique commun ; `0`, `60`, `64` et `81` gardent ainsi une
+  géométrie cohérente sur Safari.
+- Le carré quadrillé ne contient plus aucun rayon : contour, fond et cartouche
+  central ont des angles droits. La rangée et la colonne colorées restent
+  limitées à l'aide F5.
+- Les messages, les rappels de réponse et les réponses correctes sont centrés
+  dans leurs boîtes communes, horizontalement et verticalement.
+- La mise en page compacte dépend de la nature numérique de la question ; la
+  visibilité du pavé est gérée séparément. Après validation, le pavé disparaît
+  conformément à D-049 mais les espacements de la carte restent identiques.
+  L'ancrage supérieur est aussi imposé sur les tablettes tactiles larges.
+- Le graphe public est invalidé d'un seul tenant en `v29`. Le diff sous
+  `/auto/` reste vide et son arbre demeure
+  `6a72d5c5ed4dd47b2e52c3109913c93bd276eb49`.
+- Les tests ciblés couvrent le retour du repère au sommet, la séparation des
+  deux classes de mise en page, la typographie HTML et SVG, les angles droits,
+  le centrage commun et l'ancrage tactile. La validation complète réussit
+  **1 505 tests sur 1 505**, ainsi que les validateurs du catalogue, du
+  référencement, du sitemap, des icônes, de l'ancien outil, de V2 et de
+  Pythagore.
 
 ## Candidat intégré NC-03 / NC-04 du 13 août
 

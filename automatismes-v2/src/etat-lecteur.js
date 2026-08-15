@@ -1,12 +1,12 @@
 import {
   SCHEMA_SEANCE,
   validerSeance,
-} from "../../packages/contrats/src/seance.js?v=27";
+} from "../../packages/contrats/src/seance.js?v=29";
 import {
   REFERENTIEL_COMPETENCES,
   SCHEMA_TRACE_REPONSE,
   validerTraceReponse,
-} from "../../packages/contrats/src/trace-reponse.js?v=27";
+} from "../../packages/contrats/src/trace-reponse.js?v=29";
 import {
   TYPE_REPONSE_ENTIER_NATUREL,
   TYPE_REPONSE_DEUX_ENTIERS,
@@ -16,16 +16,16 @@ import {
   estDeuxEntiersExacts,
   estEntierExact,
   estSelectionExacte,
-} from "../../packages/contrats/src/question-v2.js?v=27";
+} from "../../packages/contrats/src/question-v2.js?v=29";
 import {
   analyserEcritureDecimalePositive,
   fractionsEgales,
-} from "../../packages/objets/src/fractions-decimaux.js?v=27";
+} from "../../packages/objets/src/fractions-decimaux.js?v=29";
 import { graineDepuisTexte } from "../../packages/moteur-exercices/src/aleatoire.js";
-import { creerRegistreAutomatismes } from "../../packages/automatismes/src/registre.js?v=27";
+import { creerRegistreAutomatismes } from "../../packages/automatismes/src/registre.js?v=29";
 import {
   normaliserIdentifiantModule,
-} from "../../packages/automatismes/src/identifiants.js?v=27";
+} from "../../packages/automatismes/src/identifiants.js?v=29";
 import {
   connaitNotionLecteur,
   listerNotionsLecteur,
@@ -37,8 +37,8 @@ import {
   NOTION_VOLUME_CYLINDRE,
   NOTION_VOLUME_PRISME,
   obtenirNotionLecteur,
-} from "./registre-lecteur.js?v=27";
-import { genererSerieMultinotions } from "./serie-multinotions.js?v=27";
+} from "./registre-lecteur.js?v=29";
+import { genererSerieMultinotions } from "./serie-multinotions.js?v=29";
 
 export {
   NOTION_FRACTIONS_SIMPLES_DECIMAUX,
