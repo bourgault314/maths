@@ -46,7 +46,10 @@ Deux familles à ne pas confondre :
 ```bash
 # MESURER — force brute sur l'espace éclairé, rejoue simulate() du vrai moteur.
 # Graines fixes : les chiffres du RAPPORT-ESSAI-NIVEAUX-DURS.md se rejouent.
-node tests/soley/solveur-etalon.mjs --monde canne --sans-libre
+# --budget est le plafond de nœuds : le rapport a mesuré à 1,6 M, le script en
+# prend 400 000 par défaut. Sans lui, les niveaux marqués [BUDGET ATTEINT]
+# rendent un PLANCHER (« Le grand tri » : 15 522 au lieu de 21 249).
+node tests/soley/solveur-etalon.mjs --monde canne --sans-libre --budget 1600000
 
 # PROUVER — le lot ne touche que ce qu'il annonce (appariement par monde:nom).
 node tests/soley/verifier-lot-niveaux-durs.mjs

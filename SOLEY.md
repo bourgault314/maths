@@ -144,9 +144,14 @@ Batterie (script Playwright Python, à conserver dans `tests/`) :
    `simulate()` du vrai moteur — aucune physique réécrite. Graines fixes, donc
    rejouable :
    ```
-   node tests/soley/solveur-etalon.mjs --monde canne --sans-libre
-   node tests/soley/solveur-etalon.mjs --monde lagon --sans-libre
+   node tests/soley/solveur-etalon.mjs --monde canne --sans-libre --budget 1600000
+   node tests/soley/solveur-etalon.mjs --monde lagon --sans-libre --budget 1600000
    ```
+   **Le `--budget` n'est pas décoratif** : c'est le plafond de nœuds explorés, et
+   le rapport a mesuré à 1,6 M là où le script en prend 400 000 par défaut. Sans
+   lui, « Le grand tri » sort à `R` = 15 522 au lieu de 21 249 avec la mention
+   `[BUDGET ATTEINT : E borné, R plancher]` — un plancher, pas un désaccord. Quand
+   cette mention apparaît, la vraie valeur est plus haute, jamais plus basse.
    Ses trois compagnons servent à concevoir, pas à contrôler : `atelier-niveaux.mjs`
    (champ en carte ASCII + plans trouvés), `carte-fruits.mjs` (où poser un fruit
    pour qu'il se mérite), `tailleur-champs.mjs` (recuit local sur un champ jouable).
@@ -755,7 +760,14 @@ Trois choses à savoir avant d'y toucher :
   Zéro écart entre le patch reçu et le diff produit (1197 lignes +/− identiques une
   à une, 8 en-têtes `diff --git` identiques). Preuves : node 16/16, batterie du jeu
   43 contrôles verte, batterie de l'atelier 24 contrôles verte (A10 : les 69 niveaux
-  ressortent encore identiques de l'atelier).
+  ressortent encore identiques de l'atelier). **Et les mesures se rejouent** : le
+  solveur relancé ici retombe sur les chiffres du rapport (La croisée : E = 302 775,
+  G = 39, dont 3 qui ramassent le letchi ½ ; La chambre close : `R` = 1 754,5 pour
+  1 755 annoncé, λ = 12,3 ; Zigzag : 174,6 pour 175). Encore fallait-il qu'il se
+  lance : sa garde de module principal comparait `import.meta.url` à
+  `file://` + `process.argv[1]`, ce qui n'est jamais vrai sur ce poste — la commande
+  documentée sortait EN SILENCE, sans une ligne. Corrigé par `pathToFileURL`, dans un
+  commit à part (seul écart au patch reçu).
   **Quatre écarts relevés au passage, ni cachés ni réparés en douce** (le rapport est
   entré au dépôt tel quel, les corrections vivent dans les cahiers) :
   (1) le champ `solB` de « Les deux chemins du sixième » disparaît — le niveau a
