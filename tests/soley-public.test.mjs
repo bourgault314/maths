@@ -297,11 +297,21 @@ test("la progression verrouillée et les étoiles se calculent juste", () => {
     save.done['lagon:Les quatre quarts'] = true;
     save.done['lagon:Les six sixièmes'] = true;
     const canneComplete = mondeDeverrouille('canne'); /* 10 réussites dont les 4 découvertes */
-    const foretFermee = !mondeDeverrouille('foret'); /* la canne n'a encore rien */
+    /* LE CHEMIN DE L'ÉCOLE (08/2026) : le lagon fini ouvre le champ de canne ET la
+       forêt, sans qu'un seul niveau de la canne soit joué. Un élève peut suivre le
+       fil de l'apprentissage sans être obligé de se battre. */
+    const foretParEcole = mondeDeverrouille('foret');
+    const volcanFerme = !mondeDeverrouille('volcan'); /* la forêt, elle, n'est pas contournable */
+    const portes = { canne: portesDeMonde('canne'), foret: portesDeMonde('foret'),
+      volcan: portesDeMonde('volcan'), mafate: portesDeMonde('mafate') };
+    const ecoles = WORLDS.filter(w => w.ecole).map(w => w.id);
+    /* et l'autre chemin marche toujours : la canne seule ouvre la forêt */
+    const ctx2 = { done: { ...save.done } };
+    save.done = {};
     const canne = LV.map((l, i) => i).filter(i => LV[i].w === 'canne');
     canne.slice(0, 5).forEach(i => save.done[LV[i].w + ':' + LV[i].name] = true);
-    const foretOuverte = mondeDeverrouille('foret'); /* ⌈5×8/8⌉ = 5, aucune découverte dans la canne */
-    const volcanFerme = !mondeDeverrouille('volcan');
+    const foretParChamp = mondeDeverrouille('foret'); /* ⌈5×8/8⌉ = 5, aucune découverte dans la canne */
+    save.done = ctx2.done;
     const zi = LV.findIndex(l => l.name === 'Zigzag dans les roches');
     const k = 'lagon:Zigzag dans les roches';
     const fruitManquant = etoiles(zi);
@@ -309,7 +319,8 @@ test("la progression verrouillée et les étoiles se calculent juste", () => {
     save.pieces[k] = 3; const maitrise = etoiles(zi); /* sol de référence à 3 pièces depuis la refonte */
     save.pieces[k] = 4; const tropDePieces = etoiles(zi);
     const sansFruits = etoiles(0);
-    return { seuils, parOk, avant, canneA5, canneSansDec, canneComplete, foretFermee, foretOuverte, volcanFerme,
+    return { seuils, parOk, avant, canneA5, canneSansDec, canneComplete,
+      foretParEcole, foretParChamp, volcanFerme, portes, ecoles,
       fruitManquant, fruitsComplets, maitrise, tropDePieces, sansFruits };
   })()`, context);
 
@@ -319,9 +330,15 @@ test("la progression verrouillée et les étoiles se calculent juste", () => {
   assert.equal(r.canneA5, false);
   assert.equal(r.canneSansDec, false, "le seuil atteint sans les 4 découvertes : la canne reste fermée");
   assert.equal(r.canneComplete, true);
-  assert.equal(r.foretFermee, true);
-  assert.equal(r.foretOuverte, true, "⌈5/8⌉ de la canne ouvre la forêt");
-  assert.equal(r.volcanFerme, true);
+  /* les deux chemins vers la forêt, et un seul vers le volcan */
+  assert.equal(r.foretParEcole, true, "le chemin de l'école : le lagon fini ouvre la forêt");
+  assert.equal(r.foretParChamp, true, "l'autre chemin marche toujours : ⌈5/8⌉ de la canne ouvre la forêt");
+  assert.equal(r.volcanFerme, true, "la forêt est une école : elle n'a qu'une porte, pas de contournement");
+  assert.deepEqual([...r.ecoles], ["lagon", "foret", "volcan", "pitons", "soleils", "marche"]);
+  assert.deepEqual([...r.portes.canne], ["lagon"]);
+  assert.deepEqual([...r.portes.foret], ["canne", "lagon"], "deux portes : le champ, ou l'école d'avant");
+  assert.deepEqual([...r.portes.volcan], ["foret"], "une seule porte quand le monde d'avant est déjà une école");
+  assert.deepEqual([...r.portes.mafate], ["tunnels", "marche"]);
   assert.equal(r.fruitManquant, 1);
   assert.equal(r.fruitsComplets, 2);
   assert.equal(r.maitrise, 3);
@@ -492,7 +509,7 @@ test("le chantier « Comprendre » : découvertes, points de cours et règle R1"
           && rayons.every((x, i) => x >= cases[i][0] && x <= cases[i][1]);
       }),
       /* R3 dans le panneau : la réponse du prédire est ABSENTE du HTML construit */
-      panneau: ['demi', 'tiers', 'quart', 'sixieme'].map(id => {
+      panneau: ['demi', 'tiers', 'quart', 'sixieme', 'somme', 'denominateur'].map(id => {
         const h = construireCours(id);
         return {
           id,
@@ -505,6 +522,27 @@ test("le chantier « Comprendre » : découvertes, points de cours et règle R1"
           sansPont: !h.includes('cpontphrase') && !h.includes('un zoom sur tes rayons'),
         };
       }),
+      /* La forêt (08/2026) : deux découvertes de plus, et une scène d'un genre
+         NOUVEAU — additionner remonte des morceaux vers leur somme, quand partager
+         descendait de l'entier vers les morceaux. On contrôle les deux registres,
+         et surtout, pour le cours du dénominateur, la ligne intermédiaire qui montre
+         2/4 : c'est elle qui démontre, les rayons ne peuvent pas la donner. */
+      foret: LV.filter(l => l.w === 'foret').map(l => l.name),
+      sommes: ['somme', 'denominateur'].map(id => {
+        const svg = sceneSomme(COURS[id].scene, () => 0).svg;
+        const rects = [...svg.matchAll(/<rect class="bande" x="([\\d.]+)" y="(\\d+)" width="([\\d.]+)"([^>]*)/g)]
+          .map(m => ({ x: +m[1], y: +m[2], w: +m[3], pale: m[4].includes('opacity') }));
+        const lignes = [...new Set(rects.map(r => r.y))].sort((a, b) => a - b);
+        /* longueur PEINTE de chaque ligne (hors cases pâles) : leur ÉGALITÉ est la
+           démonstration. « totaux » compte tout, pâle compris — pas de guillemet
+           oblique ici, on est dans un gabarit de chaîne. */
+        const totaux = lignes.map(y =>
+          Math.round(rects.filter(r => r.y === y).reduce((s, r) => s + r.w, 0)));
+        const peints = lignes.map(y =>
+          Math.round(rects.filter(r => r.y === y && !r.pale).reduce((s, r) => s + r.w, 0)));
+        const cases = lignes.map(y => rects.filter(r => r.y === y).length);
+        return { id, lignes: lignes.length, totaux, peints, cases };
+      }),
     };
   })()`, context);
   /* « Le tour du lagon » est remonté en 4 (15/08 au soir) : il se gagnait en 518 essais
@@ -514,9 +552,32 @@ test("le chantier « Comprendre » : découvertes, points de cours et règle R1"
     "Le tour du lagon", "La part perdue", "Partage en tiers", "Les quatre quarts",
     "La moitié de la moitié", "Les six sixièmes", "Le tiers de la moitié"]);
   assert.deepEqual([...r.decs], ["Moitié-moitié:demi", "Partage en tiers:tiers",
-    "Les quatre quarts:quart", "Les six sixièmes:sixieme"]);
-  assert.deepEqual([...r.coursIds], ["demi", "tiers", "quart", "sixieme"]);
-  assert.deepEqual([...r.titres], ["Le demi", "Le tiers", "Le quart", "Le sixième"]);
+    "Les quatre quarts:quart", "Les six sixièmes:sixieme",
+    "Deux tiers:somme", "Trois quarts:denominateur"]);
+  assert.deepEqual([...r.coursIds],
+    ["demi", "tiers", "quart", "sixieme", "somme", "denominateur"]);
+  assert.deepEqual([...r.titres], ["Le demi", "Le tiers", "Le quart", "Le sixième",
+    "Recoller deux parts", "Le même dénominateur"]);
+  /* la forêt (08/2026) : le cas SIMPLE (même dénominateur) passe devant le cas DUR.
+     « Recoller les morceaux » reste l'accueil du monde mais n'est plus une
+     découverte : sa case demande 1/1, que le rayon du soleil vaut déjà, donc aucun
+     plateau ne pourrait l'obliger à passer par la lentille. */
+  assert.deepEqual([...r.foret], ["Recoller les morceaux", "Deux tiers", "Trois quarts",
+    "Les sixièmes", "Les huitièmes", "Cinq sixièmes", "Les douzièmes",
+    "Le champ de roches", "La clairière"]);
+  const [somme, deno] = [...r.sommes];
+  /* DEUX lignes au plus (retour de Gwenael du 15/08). 1/3 + 1/3 : une seule —
+     les deux tiers, plus le tiers qui manque en pâle ; recouper au dénominateur
+     commun donnerait la copie de cette ligne, on ne l'écrit pas. */
+  assert.equal(somme.lignes, 1, "1/3 + 1/3 : une seule ligne suffit");
+  assert.deepEqual([...somme.cases], [3], "[1/3][1/3] et le tiers manquant en pâle");
+  /* 1/2 + 1/4 : deux lignes, et c'est exactement le dessin de Gwenael — la
+     comparaison des longueurs PEINTES est la démonstration */
+  assert.equal(deno.lignes, 2, "1/2 + 1/4 : les parts, puis la mise au même dénominateur");
+  assert.deepEqual([...deno.cases], [3, 3], "[1/2][1/4] + pâle · [1/4][1/4][1/4]");
+  assert.equal(deno.peints[0], deno.peints[1],
+    "les deux lignes ont la MÊME longueur peinte : 1/2 + 1/4 = 3 quarts");
+  assert.ok(deno.totaux[0] > deno.peints[0], "la part qui manque pour l'entier est là, en pâle");
   assert.equal(r.grille, "9x7");
   assert.equal(r.pur, true, "une découverte est pure : sans roche, fruit, passe ni pièce scellée");
   assert.equal(r.outils, "s2:1,s2:0,s2:2", "trois prismes ÷2, orientations de la spec §4.3");
@@ -548,8 +609,10 @@ test("le chantier « Comprendre » : découvertes, points de cours et règle R1"
   assert.ok(!/id="coursrevoir"/.test(html));
   assert.match(js.engine, /if\(!save\.cours\)save\.cours=\{\};/);
   assert.match(js.engine, /const coursANouveau=!!\(L\.dec&&COURS\[L\.dec\]&&!save\.cours\[L\.dec\]\);/);
-  assert.match(js.engine, /decouvertesReussies\(prev\)>=decouvertesMonde\(prev\)\.length/);
-  assert.match(js.ui, /dont ses \$\{nbDec\} découvertes/);
+  assert.match(js.engine, /decouvertesReussies\(wid\)>=decouvertesMonde\(wid\)\.length/);
+  assert.match(js.ui, /dont ses \$\{nb\} découvertes/);
+  /* les deux portes s'annoncent toutes les deux sur la carte du monde fermé */
+  assert.match(js.ui, /portesDeMonde\(w\.id\)\.map\(porte\)\.join\(' — ou '\)/);
   assert.match(js.ui, /Revoir le cours/);
   assert.match(js.render, /function decouverteIco/);
   assert.match(js.ui, /cours:construireCours,montrerCours,fermerCours/);
