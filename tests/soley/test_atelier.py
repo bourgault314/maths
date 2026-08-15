@@ -161,6 +161,31 @@ def principal():
                 and depart["cases"] == 54 and depart["lv"] == depart["atidx"] + 1,
                 f"LV={depart['lv']}, ATIDX={depart['atidx']}, cases={depart['cases']}")
 
+        # ----------------------------------------------------------------- A1b
+        # Le dégradé du soleil : un seul identifiant `sungrad` peut gagner, et il
+        # ne doit JAMAIS vivre dans un écran masqué — un serveur de peinture en
+        # display:none ne peint plus, et le soleil devient plat (œil de Gwenael).
+        def etat_degrade():
+            return page.evaluate("""() => {
+              const t = [...document.querySelectorAll('[id="sungrad"]')];
+              const cache = e => { while (e && e !== document.body) {
+                  if (e.nodeType === 1 && getComputedStyle(e).display === 'none') return true;
+                  e = e.parentElement; } return false; };
+              return { n: t.length, premierMasque: t.length ? cache(t[0]) : true };
+            }""")
+        deg_atelier = etat_degrade()
+        page.evaluate("(n) => window.ATELIER.charger(n)", NIVEAU_ESSAI)
+        page.click("#atongjouer")
+        deg_jouer = etat_degrade()
+        page.click("#atongatelier")
+        # on rend le plateau vierge : les contrôles suivants posent leurs propres objets
+        page.evaluate("""() => window.ATELIER.charger({w:'lagon',name:'',sub:'',cols:9,rows:6,
+          suns:[],targets:[],rocks:[],fruits:[],gates:[],fixed:[],tools:[]})""")
+        section("A1b le dégradé du soleil est défini une seule fois et jamais dans un écran masqué",
+                deg_atelier["premierMasque"] is False and deg_jouer["premierMasque"] is False,
+                f"écran Atelier : {deg_atelier['n']} définition(s) ; mode Jouer : {deg_jouer['n']} "
+                f"(celle qui gagne est visible dans les deux cas)")
+
         # ------------------------------------------------------------------ A2
         # Poser chaque type d'objet par un vrai clic : palette puis case.
         poses = [("sun", 0, 2), ("target", 7, 2), ("rock", 4, 5), ("fruit", 3, 0), ("gate", 6, 2)]

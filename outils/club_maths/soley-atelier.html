@@ -216,6 +216,32 @@ body.at.at-jouer #atwin{display:block; text-align:left; width:100%; max-width:42
 </head>
 <body class="at">
 
+<!-- ==========================================================================
+     LE DÉGRADÉ DU SOLEIL, DÉFINI UNE SEULE FOIS ET JAMAIS MASQUÉ.
+
+     `sunSVG` (render.js) peint le disque avec `url(#sungrad)`. Le jeu redéfinit
+     ce dégradé dans son propre plateau à chaque `redraw()` ; l'atelier en avait
+     un aussi dans le sien et dans l'icône de sa palette. Trois éléments pour un
+     seul identifiant : le navigateur retient le PREMIER du document — et en mode
+     Jouer ce premier vivait dans l'écran Atelier, alors masqué. Un serveur de
+     peinture dans un sous-arbre `display:none` ne peint plus : le soleil
+     perdait son relief et se confondait avec son rayon (œil de Gwenael, 15/08).
+
+     Il est donc défini ICI, en tête de page, dans un SVG de taille nulle mais
+     JAMAIS en display:none — il gagne par l'ordre du document et vaut pour les
+     deux écrans. Ne pas remettre de <defs id="sungrad"> ailleurs dans la page.
+     ========================================================================== -->
+<svg width="0" height="0" aria-hidden="true" focusable="false"
+     style="position:absolute;width:0;height:0;overflow:hidden">
+  <defs>
+    <radialGradient id="sungrad" cx="50%" cy="42%">
+      <stop offset="0%" stop-color="#fff3c4"/>
+      <stop offset="55%" stop-color="#ffc94d"/>
+      <stop offset="100%" stop-color="#ff9d3c"/>
+    </radialGradient>
+  </defs>
+</svg>
+
 <!-- ================= BASCULE ATELIER / JOUER ================= -->
 <nav id="atonglets" aria-label="Écrans de l'atelier">
   <button type="button" id="atongatelier" aria-pressed="true">Atelier</button>

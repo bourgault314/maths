@@ -51,9 +51,11 @@ const OBJETS = [
   { type: 'gate',   nom: 'Passe étroite' }
 ];
 
-const SUNGRAD = '<defs><radialGradient id="sungrad" cx="50%" cy="42%">' +
-  '<stop offset="0%" stop-color="#fff3c4"/><stop offset="55%" stop-color="#ffc94d"/>' +
-  '<stop offset="100%" stop-color="#ff9d3c"/></radialGradient></defs>';
+/* Le dégradé du soleil est défini UNE SEULE FOIS dans la page (voir le commentaire
+   en tête de soley-atelier.html) : le redéfinir ici en ferait un doublon qui
+   gagnerait par l'ordre du document et cesserait de peindre dès que l'écran
+   Atelier passe en display:none. On ne met donc plus rien. */
+const SUNGRAD = '';
 
 /* ===================== État ===================== */
 
