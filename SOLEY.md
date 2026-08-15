@@ -913,19 +913,21 @@ Trois choses à savoir avant d'y toucher :
   `CALC`. Constat plus grave trouvé au passage : la canne dépense 1/6, 1/8, 1/9, 1/12
   sans cours, et la forêt les « introduit » après. Lot : « Quarts en croix » retiré,
   « Les six sixièmes » (découverte + cours) et « Le tiers de la moitié » (entraînement
-  taillé au solveur) ajoutés ; icône du lagon refaite ; étiquettes des rayons verticaux
-  posées à côté du rayon (bug du « 1 » avalé par le soleil, reproduit sur capture).
+  taillé au solveur) ajoutés ; icône du lagon refaite ; étiquettes des rayons CENTRÉES
+  SUR LEUR RAYON quelle que soit l'orientation, comme dans l'original (§6, décision 8) —
+  le « 1 » avalé par le soleil disparaît du même coup, un garde-fou traitant les 4 cas
+  sur 451 où l'étiquette tomberait encore dans un disque (mesuré sur les 70 solutions).
   Compteurs 69 → 70 partout (meta, catalogue, vignette, annuaire régénéré — leçon du
   lot canne). Preuves : `node --test` 16/16, 9 validateurs CI verts, batterie
   Playwright complète verte (dont T8 seuil 7 et « dont ses 4 découvertes »),
-  `tests/soley/verifier-lot-sixieme.mjs` 31/31. `verifier-lot-niveaux-durs.mjs`
+  `tests/soley/verifier-lot-sixieme.mjs` 37/37. `verifier-lot-niveaux-durs.mjs`
   échoue désormais LÉGITIMEMENT (il gardait « Quarts en croix ») : en-tête d'archive
   datée ajoutée, conformément à la décision 9 du lot canne.
   **Reste à l'œil de Gwenael** : la chaîne des six sixièmes tient sur deux lignes au
   cours (la plus longue du jeu) ; les consignes « Des cases à 1/6 ?! » / « Un
   huitième ?! » de la forêt sont à réécrire — elles sont fausses depuis la refonte
   du 15/08, PAS depuis ce lot. **Ajouts du soir** : patates de corail au lagon, et
-  étiquettes laissées à leur place (seul le cas « avalé par le soleil » corrigé) — : « Le tour du lagon » remonté en 4
-  (contenu intact, seule la position change), après mesure de tout le lagon au
-  solveur — le monde finissait 10 fois plus facile qu'il ne montait.
+  « Le tour du lagon » remonté en 4 (contenu intact, seule la position change), après
+  mesure de tout le lagon au solveur — le monde finissait 10 fois plus facile qu'il
+  ne montait.
 - (à compléter à chaque session)
