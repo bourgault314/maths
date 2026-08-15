@@ -10,6 +10,16 @@
 // il documente CE lot ; une évolution ultérieure du jeu le fera échouer
 // légitimement (d'où : pas *.test.mjs, comme verifier-lot-canne.mjs).
 //
+// MORT LE 15/08/2026, comme prévu (SOLEY.md §6, décision 9 : outils de
+// migration morts = archives datées, en place). La PR #369 « Des niveaux qui
+// résistent » a modifié `levels.js` (11 niveaux redessinés) et `render.js`
+// (badge des fruits peint après les rayons) : les trois contrôles d'octets
+// échouent donc désormais, à juste titre. Les autres restent parlants (48
+// identifiants, noindex, ordre du rideau de sauvegarde, clé du jeu jamais
+// nommée dans atelier.js) et se relancent tels quels.
+// Le garde-fou VIVANT du lot, lui, est ailleurs : la batterie de l'atelier
+// (tests/soley/test_atelier.py) et le diff de chaque PR.
+//
 // Lecture normalisée en LF des deux côtés : un poste Windows a des copies de
 // travail en CRLF, ce qui ferait échouer une comparaison d'octets bruts.
 import { execFileSync } from "node:child_process";
