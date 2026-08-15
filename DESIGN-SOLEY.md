@@ -196,8 +196,9 @@ Ce qui a été corrigé (raisons détaillées dans SOLEY.md §6) :
 
 1. [x] Le point de cours s'affiche d'un coup — plus de déroulé au chronomètre,
        plus de bouton « Revoir » dans le panneau.
-2. [x] Barre de boutons épinglée : la sortie tombait jusqu'à 384 px sous le bas
-       de l'écran (le quart sur 320 px) ; 0 px partout après correction.
+2. [x] « J'ai compris ! » à la fin du cours : il faut être descendu jusqu'en bas
+       pour l'atteindre. Ce qui manquait n'était pas un bouton épinglé mais un
+       signal qu'il y avait une suite — c'est la flèche.
 3. [x] Pastille-flèche de défilement, présente seulement quand ça déborde.
 4. [x] Pointillés de zoom retirés ; étiquettes des rayons dégagées de leur trait.
 5. [x] Prédire du tiers retiré ; carte de savoir du tiers resserrée.
