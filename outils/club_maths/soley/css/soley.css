@@ -166,15 +166,20 @@
      défiler avant de valider). Seule la flèche est épinglée, pour dire le chemin. */
   #coursbtns{display:flex;gap:10px;justify-content:center;align-items:center;margin-top:16px;}
   #coursbas{position:sticky;bottom:0;height:0;z-index:3;}
-  /* léger voile sous la flèche : elle ne se pose jamais à même le texte */
-  #coursbas::before{content:'';position:absolute;left:-4px;right:-4px;bottom:0;height:58px;
-    background:linear-gradient(to top,#1c2848 26%,#1c2848cc 55%,#1c284800);pointer-events:none;}
-  /* pastille-flèche : elle flotte au-dessus de la barre, jamais posée sur le texte,
-     et on peut appuyer dessus pour descendre d'un écran */
-  #coursfleche{position:absolute;left:50%;bottom:12px;width:34px;height:34px;padding:0;
+  /* Voile de bas de panneau : il DOIT descendre jusqu'au bord visible, sinon le texte
+     réapparaît en pleine lumière sous la zone estompée (défaut vu par Gwenael, 15/08).
+     L'ancre collante s'arrête au bord du contenu : les 12 px de remplissage bas et les
+     16 px latéraux se rattrapent en débords négatifs. Le panneau étant à défilement,
+     ses coins arrondis écrêtent proprement ce débord — aucun angle carré. */
+  #coursbas::before{content:'';position:absolute;left:-16px;right:-16px;bottom:-12px;height:70px;
+    background:linear-gradient(to top,#1c2848 34%,#1c2848dd 62%,#1c284800);pointer-events:none;}
+  /* pastille-flèche : chevron DESSINÉ (le caractère « ⌄ » se posait trop haut dans le
+     rond et rendait fin), posée bas dans le voile pour ne pas s'asseoir sur le texte ;
+     on peut appuyer dessus pour descendre d'un écran */
+  #coursfleche{position:absolute;left:50%;bottom:-4px;width:34px;height:34px;padding:0;
     display:flex;align-items:center;justify-content:center;
     background:#243358;color:var(--gold);border:1.5px solid #ffc94d66;border-radius:50%;
-    font:inherit;font-size:22px;line-height:1;font-weight:900;cursor:pointer;
+    font:inherit;line-height:0;cursor:pointer;
     box-shadow:0 4px 14px #0b122899;animation:cfleche 1.3s ease-in-out infinite;}
   @keyframes cfleche{0%,100%{transform:translate(-50%,-2px);}50%{transform:translate(-50%,4px);}}
   #courscard:not(.deborde) #coursbas,#courscard.enbas #coursbas{visibility:hidden;}
