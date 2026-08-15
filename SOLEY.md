@@ -823,4 +823,21 @@ Trois choses à savoir avant d'y toucher :
   b05205ce », et ce lot touche `levels.js` puis `render.js` ; il rejoint les archives
   datées (§6 pt 9), comme `verifier-lot1-comprendre.mjs` avant lui.
   Rapport complet : `RAPPORT-ESSAI-NIVEAUX-DURS.md`.
+  **PR #369, fusionnée par Gwenael (squash `2efd8ad1`) et VÉRIFIÉE EN LIGNE :**
+  Vérifications et Publication vertes, **9/9 fichiers servis identiques aux octets
+  d'`origin/main`** (musée `soley-v1.html` compris, en témoin non modifié), **batterie
+  complète du jeu — 44 contrôles avec le nouveau T11 — verte sur mathsgo.re**, batterie
+  de l'atelier 24 contrôles verte sur mathsgo.re, `verifier-lot-niveaux-durs.mjs`
+  TOUT VERT contre le `main` fusionné, node 16/16. Worktree et branches locale et
+  distante nettoyés. Le jeu en ligne est à 69 niveaux et 9 mondes, inchangé — ce lot
+  ne change aucun compteur public, donc rien à régénérer côté catalogue (vérifié :
+  `catalogue-refonte-data.js` et `toutes-les-ressources.html` ne bougent pas, c'est
+  l'oubli qui avait fait rougir la CI au lot canne).
+  **La branche a dû être REBASÉE en cours de route** (`4e430b1b`) : #368 et #370 ont
+  été fusionnées pendant la session. Heureux hasard — depuis #368 l'atelier dessine
+  les rayons, il souffrait donc exactement du même défaut de badge, corrigé au même
+  endroit. **Réflexe à garder quand une session dure : `git fetch` + `gh pr view
+  --json state,mergeable` régulièrement, Gwenael fusionne en parallèle.** La preuve de
+  zéro écart du premier commit a été REJOUÉE après rebase (`levels.js` est le même
+  blob dans `0c276e3b` et `4e430b1b`).
 - (à compléter à chaque session)
