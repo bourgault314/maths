@@ -17,7 +17,13 @@ function renderHome(){
   document.getElementById('hometot').innerHTML=
     `<span>✔ ${nd}/${LV.length} niveaux</span><span>${soleilIco(true,15)} ${totE}/${LV.length*3} petits soleils</span><span>${fruitMini('letchi')} ${gotF}/${totF} fruits péi</span>`;
   const icons={
-    lagon:`<circle cx="23" cy="23" r="20" fill="#5fd3c8"/><path d="M 6 30 Q 23 20 40 30 L 40 43 L 6 43 Z" fill="#2b9d92"/>`,
+    lagon:`<clipPath id="icolagon"><rect width="46" height="46" rx="7"/></clipPath><g clip-path="url(#icolagon)">
+      <rect width="46" height="46" fill="#1b6ea8"/>
+      <path d="M0 17 q5 -3 9 0 t9 0 t9 0 t9 0 t10 0 v4 H0Z" fill="#eef8fb"/>
+      <rect y="20" width="46" height="16" fill="#5fd3c8"/>
+      <rect y="35" width="46" height="11" fill="#f0dda8"/>
+      <ellipse cx="12" cy="27" rx="5" ry="3.2" fill="#2b9d92"/>
+      <ellipse cx="30" cy="30.5" rx="3.6" ry="2.4" fill="#2b9d92"/></g>`,
     canne:`<line x1="13" y1="43" x2="16" y2="9" stroke="#c9a83a" stroke-width="5" stroke-linecap="round"/>
       <line x1="24" y1="43" x2="24" y2="6" stroke="#7fb648" stroke-width="5" stroke-linecap="round"/>
       <line x1="35" y1="43" x2="32" y2="9" stroke="#8fbf4d" stroke-width="5" stroke-linecap="round"/>

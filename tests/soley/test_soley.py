@@ -60,7 +60,7 @@ JS_COHERENCE = """
   const dirOk = d => Number.isInteger(d) && d >= 0 && d <= 3;
   const frOk = f => Array.isArray(f) && f.length === 2 &&
     Number.isInteger(f[0]) && Number.isInteger(f[1]) && f[0] >= 0 && f[1] >= 1;
-  if (LV.length !== 69) fails.push(`LV.length=${LV.length} au lieu de 69`);
+  if (LV.length !== 70) fails.push(`LV.length=${LV.length} au lieu de 70`);
   const cles = new Set();
   LV.forEach((L, i) => {
     const nom = `${i}:${L.name}`;
@@ -117,7 +117,7 @@ JS_COHERENCE = """
 """
 
 # ---------------------------------------------------------------------------
-# T2 + T3 — les 69 solutions de référence gagnent et ramassent tous les fruits
+# T2 + T3 — les 70 solutions de référence gagnent et ramassent tous les fruits
 # ---------------------------------------------------------------------------
 JS_SOLUTIONS = """
 () => {
@@ -262,10 +262,10 @@ def principal():
                 aff["play"] == "flex" and aff["home"] == "none" and aff["lvscreen"] == "none",
                 f"home={aff['home']}, lvscreen={aff['lvscreen']}, play={aff['play']}")
 
-        # T2 + T3 — les 69 solutions gagnent, tous les fruits sont ramassés
+        # T2 + T3 — les 70 solutions gagnent, tous les fruits sont ramassés
         res = page.evaluate(JS_SOLUTIONS)
         perdants = [r["nom"] for r in res if not r["gagne"]]
-        section("T2 solve(i) gagne pour les 69 niveaux", not perdants,
+        section("T2 solve(i) gagne pour les 70 niveaux", not perdants,
                 f"{len(res)} solutions jouées" if not perdants else "perdants : " + ", ".join(perdants))
         sans_fruit = [r["nom"] for r in res if r["fruitsPris"] != r["fruitsTotal"]]
         total_fruits = sum(r["fruitsTotal"] for r in res)
@@ -371,8 +371,8 @@ def principal():
         page.wait_for_function("() => window.SOLEY && window.SOLEY.LV")
 
         # T8a — seuils de déblocage : ⌈5/8 des niveaux du monde précédent⌉ (lagon à 9 → canne à 6, canne à 8 → forêt à 5)
-        seuils = page.evaluate("() => window.SOLEY.LV.length === 69 && [0,1,2,3,4,5,6,7,8].map(i => window.SOLEY.seuilMonde(i))")
-        section("T8 seuils de déblocage ⌈5/8⌉ par monde", seuils == [0, 6, 5, 6, 5, 5, 5, 4, 5],
+        seuils = page.evaluate("() => window.SOLEY.LV.length === 70 && [0,1,2,3,4,5,6,7,8].map(i => window.SOLEY.seuilMonde(i))")
+        section("T8 seuils de déblocage ⌈5/8⌉ par monde", seuils == [0, 7, 5, 6, 5, 5, 5, 4, 5],
                 f"{seuils}")
 
         # T8b — sauvegarde vierge : seul Le lagon est ouvert
@@ -390,8 +390,8 @@ def principal():
         aff = page.evaluate(JS_ECRANS)
         cond = page.evaluate("() => document.querySelector(\".wrow[data-w='canne'] .wcond\")?.textContent || ''")
         section("T8 monde fermé : clic sans effet + condition affichée (seuil + découvertes)",
-                aff["home"] != "none" and aff["lvscreen"] == "none" and "Réussis 6 niveaux" in cond
-                and "dont ses 3 découvertes (0/3)" in cond,
+                aff["home"] != "none" and aff["lvscreen"] == "none" and "Réussis 7 niveaux" in cond
+                and "dont ses 4 découvertes (0/4)" in cond,
                 cond.strip())
 
         # T8d — zéro défilement horizontal sur l'accueil téléphone
@@ -417,7 +417,8 @@ def principal():
         GRAINE = ("try{localStorage.setItem('soley-save-v5',JSON.stringify({"
                   "done:{'lagon:Premier rayon':true,'lagon:Zigzag dans les roches':true,"
                   "'lagon:Moitié-moitié':true,'lagon:La part perdue':true,'lagon:Partage en tiers':true,"
-                  "'lagon:Les quatre quarts':true},"
+                  "'lagon:Les quatre quarts':true,'lagon:Les six sixièmes':true,"
+                  "'lagon:La moitié de la moitié':true},"
                   "fruits:{'lagon:Zigzag dans les roches':1},"
                   "pieces:{'lagon:Zigzag dans les roches':2}}));}catch(e){}")
         ctx4 = navig.new_context(viewport={"width": 390, "height": 844}, locale="fr-FR")
@@ -433,7 +434,7 @@ def principal():
           canne: !document.querySelector(".wrow[data-w='canne']").classList.contains('locked'),
           foret: document.querySelector(".wrow[data-w='foret']").classList.contains('locked'),
         })""")
-        section("T8 après 6 réussites au lagon (dont les 3 découvertes) : canne ouverte, forêt fermée",
+        section("T8 après 7 réussites au lagon (dont les 4 découvertes) : canne ouverte, forêt fermée",
                 etat["canne"] and etat["foret"], "")
         pg4.click(".wrow[data-w='lagon']")
         cartes = pg4.evaluate("""() => ({
@@ -465,7 +466,7 @@ def principal():
           return { sansCours: !('cours' in brut), niveaux: window.SOLEY.LV.length };
         }""")
         section("T9 vieille sauvegarde (sans champ cours) chargée sans erreur ni migration",
-                vieux["sansCours"] and vieux["niveaux"] == 69, "")
+                vieux["sansCours"] and vieux["niveaux"] == 70, "")
         ctx4.close()
 
         # T8e — mode classe : tout est ouvert, badge visible
@@ -638,12 +639,12 @@ def principal():
         ordinaire = page.evaluate("() => !document.getElementById('coursov').classList.contains('show')")
         section("T9 niveau ordinaire : victoire sans point de cours", ordinaire, "")
 
-        # T9.5 — condition de déblocage : le seuil 6 ET les découvertes, lisible sur la carte
+        # T9.5 — condition de déblocage : le seuil 7 ET les découvertes, lisible sur la carte
         page.click("#backlv")
         page.click("#backhome")
         cond9 = page.evaluate("() => document.querySelector(\".wrow[data-w='canne'] .wcond\")?.textContent || ''")
-        section("T9 condition de déblocage : seuil 6 + « dont ses 3 découvertes »",
-                "Réussis 6 niveaux" in cond9 and "dont ses 3 découvertes (1/3)" in cond9,
+        section("T9 condition de déblocage : seuil 7 + « dont ses 4 découvertes »",
+                "Réussis 7 niveaux" in cond9 and "dont ses 4 découvertes (1/4)" in cond9,
                 cond9.strip())
         ctx6.close()
 
@@ -667,10 +668,10 @@ def principal():
             titre: document.getElementById('courstitre').textContent };
         }""")
         section("T9 mode classe : badges découverte + « Revoir le cours » sans réussite",
-                classe9["bts"] == ["demi", "tiers", "quart"] and classe9["badges"] == 3
+                classe9["bts"] == ["demi", "tiers", "quart", "sixieme"] and classe9["badges"] == 4
                 and classe9["ouvert"] and classe9["titre"] == "Le demi", "")
         section("T9 cartes uniformes : toutes les cases du lagon ont la même taille (pied réservé)",
-                classe9["hCartes"] == 1 and classe9["hCellules"] == 1 and classe9["pieds"] == 9,
+                classe9["hCartes"] == 1 and classe9["hCellules"] == 1 and classe9["pieds"] == 10,
                 f"hauteurs cartes={classe9['hCartes']}, cellules={classe9['hCellules']}, pieds={classe9['pieds']}")
         ctx7.close()
 

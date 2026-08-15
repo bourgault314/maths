@@ -65,6 +65,17 @@ const LV=[
   rocks:[[6,1],[6,4]],fruits:[],
   tools:[s2(1,0,2)],sol:[[0,3,2]]},
 
+ {w:'lagon',name:"Le tour du lagon",
+  sub:"Deux cases, un seul soleil… et le lagon est plein de patates de corail !",
+  hint:"Coupe d'abord, promène ensuite : chaque moitié fait son propre tour.",
+  cols:10,rows:7,suns:[{x:0,y:3,dir:1}],
+  targets:[{x:9,y:0,need:[1,2]},{x:9,y:6,need:[1,2]}],
+  rocks:[[4,3],[6,2],[5,4],[3,6],[6,6],[1,1],[5,0],[7,4]],
+  fruits:[[5,1],[4,5]],
+  tools:[s2(1,0,2),b(0,1),b(1,0),b(2,1),b(1,2),b(2,1),b(3,0),s3(1,0,1,2)],
+  sol:[[0,2,3],[1,2,1],[2,9,1],[3,2,5],[4,8,5],[5,8,6]],
+  solMin:[[0,2,3],[1,2,1],[2,9,1],[3,2,5],[4,8,5],[5,8,6]]},
+
  {w:'lagon',name:"La part perdue",
   sub:"Une seule maison, et elle veut un demi. Mais le prisme, lui, coupe toujours en deux : que devient la part que personne n'attend ?",
   hint:"Le rayon entier ne sert à rien tel quel : il faut d'abord le couper.",
@@ -101,25 +112,36 @@ const LV=[
   tools:[s2(0,1,3),s2(3,0,2),s2(1,0,2),b(0,3),b(3,2),b(3,0),s3(0,1,2,3)],
   sol:[[3,8,3],[1,4,3],[0,4,1]],solMin:[[3,8,5],[1,4,5],[0,4,1]]},
 
- {w:'lagon',name:"Quarts en croix",
-  sub:"Un demi en haut, deux quarts sur les côtés : trois cases, deux parts différentes. Laquelle se fabrique en premier ?",
-  hint:"Le demi doit contourner la roche : 1/2 ÷ 2 = 1/4.",
+ /* Découverte du SIXIÈME (08/2026) : même patron que « Les quatre quarts » —
+    une découverte est pure (sans roche, sans fruit, sans surplus d'outils) et
+    la seule issue est la notion. Le quart était la moitié de la moitié ; le
+    sixième est le TIERS de la moitié : même geste, dénominateur neuf. C'est ce
+    cours qui rend légitimes les 1/6, 1/8, 1/9 et 1/12 des mondes suivants. */
+ {w:'lagon',name:"Les six sixièmes",dec:'sixieme',
+  sub:"Six cases veulent chacune 1/6… et la boîte n'a qu'un prisme ÷2 et deux prismes ÷3. Comment fabriquer des sixièmes ?",
+  hint:"Coupe le rayon en deux… puis coupe chaque moitié en trois.",
   cols:9,rows:7,suns:[{x:0,y:3,dir:1}],
-  targets:[{x:6,y:0,need:[1,2]},{x:0,y:4,need:[1,4]},{x:8,y:4,need:[1,4]}],
-  rocks:[[3,0],[2,1],[5,3],[2,5],[7,5],[4,6]],fruits:[[2,3]],
-  tools:[s2(1,0,2),s2(1,1,2),s2(2,1,3),s2(0,1,3),b(0,1),b(1,0),b(1,2),b(2,3)],
-  sol:[[1,1,3],[2,1,4],[5,4,3],[4,4,0]],solMin:[[0,1,3],[4,1,2],[2,1,4],[5,6,2]]},
+  targets:[{x:4,y:0,need:[1,6]},{x:0,y:1,need:[1,6]},{x:8,y:1,need:[1,6]},
+           {x:0,y:5,need:[1,6]},{x:8,y:5,need:[1,6]},{x:4,y:6,need:[1,6]}],
+  rocks:[],fruits:[],
+  tools:[s2(1,0,2),s3(0,3,0,1),s3(2,3,2,1)],
+  sol:[[0,4,3],[1,4,1],[2,4,5]]},
 
- {w:'lagon',name:"Le tour du lagon",
-  sub:"Deux cases, un seul soleil… et le lagon est plein de patates de corail !",
-  hint:"Coupe d'abord, promène ensuite : chaque moitié fait son propre tour.",
-  cols:10,rows:7,suns:[{x:0,y:3,dir:1}],
-  targets:[{x:9,y:0,need:[1,2]},{x:9,y:6,need:[1,2]}],
-  rocks:[[4,3],[6,2],[5,4],[3,6],[6,6],[1,1],[5,0],[7,4]],
-  fruits:[[5,1],[4,5]],
-  tools:[s2(1,0,2),b(0,1),b(1,0),b(2,1),b(1,2),b(2,1),b(3,0),s3(1,0,1,2)],
-  sol:[[0,2,3],[1,2,1],[2,9,1],[3,2,5],[4,8,5],[5,8,6]],
-  solMin:[[0,2,3],[1,2,1],[2,9,1],[3,2,5],[4,8,5],[5,8,6]]},
+ /* Entraînement au sixième — remplace « Quarts en croix », qui refaisait le
+    calcul de « La moitié de la moitié » (mêmes cibles, même ligne CALC).
+    Champ taillé au solveur (tests/soley/atelier-niveaux.mjs) : gagner demande
+    4 pièces, cueillir le letchi en demande 6 et n'arrive que dans 5 des 35
+    plans gagnants — la difficulté est dans la couche ☀☀, pas dans la victoire. */
+ {w:'lagon',name:"Le tiers de la moitié",
+  sub:"Un demi tout en haut, deux sixièmes plus bas — et le prisme ÷3 fabrique trois parts pour deux cases. Où passe la part que personne n'attend ?",
+  hint:"1/2 ÷ 3 = 1/6. Reste à savoir OÙ couper, et ce que devient le troisième sixième.",
+  cols:9,rows:7,suns:[{x:0,y:1,dir:1}],
+  targets:[{x:8,y:0,need:[1,2]},{x:8,y:5,need:[1,6]},{x:0,y:6,need:[1,6]}],
+  rocks:[[5,1],[1,2],[3,2],[5,2],[6,2],[7,2],[2,3],[5,3],[3,4],[5,4],[2,6]],
+  fruits:[[7,4]],
+  tools:[s2(1,0,2),b(0,1),s3(2,3,2,1),b(3,2),b(2,1),b(1,0),s3(1,0,1,2),b(1,2)],
+  sol:[[0,4,1],[1,4,0],[2,4,5],[3,0,5],[4,4,6],[5,7,6]],
+  solMin:[[0,4,1],[1,4,0],[2,4,5],[3,0,5]]},
 
  /* ---------- Les champs de canne (6e) — refonte 08/2026 ----------
     Le monde qui applique les mécaniques de l'original (AUDIT-33-IDEES.md) :
@@ -757,7 +779,8 @@ const CALC={
  "Partage en tiers":["1 ÷ 3 = 1/3"],
  "Les quatre quarts":["1 ÷ 2 = 1/2","1/2 ÷ 2 = 1/4"],
  "La moitié de la moitié":["1/2 ÷ 2 = 1/4"],
- "Quarts en croix":["1/2 ÷ 2 = 1/4"],
+ "Les six sixièmes":["1 ÷ 2 = 1/2","1/2 ÷ 3 = 1/6"],
+ "Le tiers de la moitié":["1/2 ÷ 3 = 1/6"],
  "Recoller les morceaux":["1/2 + 1/2 = 2/2 = 1"],
  "Trois quarts":["1/2 + 1/4 = 2/4 + 1/4 = 3/4"],
  "Deux tiers":["1/3 + 1/3 = 2/3"],
@@ -844,8 +867,23 @@ const COURS={
   ],
   predire:{
    question:"Et si tu recoupais un quart en 2 ?",
-   reponse:"1/8 : la moitié du quart. Ce petit rayon-là t'attend dans la forêt…"
+   reponse:"1/8 : la moitié du quart. Ce petit rayon-là t'attend plus loin…"
   },
   carte:{t:"La moitié de la moitié, c'est le quart.",eq:"1/2 ÷ 2 = 1/4"}
+ },
+ /* Le sixième ferme la série du lagon : c'est le même GESTE que le quart avec
+    un autre nombre, donc le plus court des quatre cours. Il ne dit PAS la
+    seconde route (1/3 ÷ 2) — c'est ce que « Les deux chemins du sixième »
+    demande de trouver aux champs de canne (règle : un prédire révèle un NOM,
+    jamais une STRATÉGIE que le jeu demande de chercher). */
+ sixieme:{
+  titre:"Le sixième",
+  scene:{divs:[2,3]},
+  etapes:[
+   {t:"Tu as coupé le rayon en 2 parts égales : chaque part est un demi.",eq:"1 ÷ 2 = 1/2"},
+   {t:"Puis tu as coupé chaque demi en 3 parts égales : le tiers de la moitié, c'est le sixième.",eq:"1/2 ÷ 3 = 1/6"},
+   {t:"Compte tes rayons : les six sixièmes refont le rayon entier.",eq:"1/6 + 1/6 + 1/6 + 1/6 + 1/6 + 1/6 = 6/6 = 1"}
+  ],
+  carte:{t:"Le tiers de la moitié, c'est le sixième.",eq:"1/2 ÷ 3 = 1/6"}
  }
 };
