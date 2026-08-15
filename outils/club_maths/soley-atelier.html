@@ -109,6 +109,21 @@ body.at #backlv, body.at #backhome{display:none !important;}
 .attitre{font:800 13px/1.2 inherit; color:var(--at-doux); letter-spacing:.04em;
   text-transform:uppercase; margin:0 0 8px;}
 .atexplic{font:500 13.5px/1.5 inherit; color:#a9bcdb; margin:0 0 10px;}
+/* Le sous-titre dit la règle en trois mots. Sur SA ligne : collé au titre, il
+   se coupait en plein milieu (« …DE L'ÉLÈVE il les pose lui- / même »). */
+.attitre small{display:block; margin:3px 0 0; font:600 12px/1.3 inherit;
+  color:#8ea3c6; text-transform:none; letter-spacing:0;}
+
+/* La boîte de l'élève : ce qu'il VERRA est encadré, le choix des pièces est
+   dehors. La frontière est le sujet — sans elle, deux rangées d'icônes se
+   ressemblent trop. */
+#atboitepanneau{background:#171136; border:2px dashed #4a3f85; border-radius:12px;
+  padding:8px 8px 6px; min-height:56px;}
+#atsurplus{color:var(--at-doux); font-size:12px; margin-top:6px;}
+#atsurplus:empty{display:none;}
+.atsep{display:flex; align-items:center; gap:10px; margin:12px 0 8px;
+  color:#8ea3c6; font:800 11.5px/1 inherit; text-transform:uppercase; letter-spacing:.06em;}
+.atsep::before, .atsep::after{content:""; flex:1 1 auto; height:2px; background:#2f2860; border-radius:2px;}
 .atrang{display:flex; flex-wrap:wrap; gap:8px; align-items:center;}
 .atbtn{min-height:44px; padding:0 14px; border-radius:12px; border:2px solid var(--at-bord);
   background:#2a2159; color:var(--at-encre); font:700 15px/1.1 inherit; cursor:pointer;}
@@ -283,6 +298,13 @@ body.at.at-jouer #atwin{display:block; text-align:left; width:100%; max-width:42
      tient dans les ~442 px utiles de la colonne. À 78 px de large, le cinquième
      retombait seul sur une deuxième ligne. */
   .atcol-outils .atpal button{width:74px;}
+  /* Le choix des pièces est un sélecteur, pas un inventaire : boutons plus
+     compacts que ceux de la boîte, et les SIX tiennent alors sur une ligne
+     (6 × 62 + 5 × 6 = 402 dans les ~442 px utiles). « Loupe ×3 » ne reste plus
+     orpheline sur une deuxième ligne. */
+  .atcol-outils #atajout{gap:6px;}
+  .atcol-outils #atajout button{width:62px; min-height:62px; font-size:10px; padding:4px 2px;}
+  .atcol-outils #atajout button svg{width:30px; height:30px;}
   /* Un peu moins de gras vertical dans la colonne : on gagne une hauteur de
      bloc sans rien rendre illisible (les explications restent en toutes lettres). */
   .atcol-outils .atexplic{font-size:13px; margin-bottom:8px;}
@@ -384,25 +406,27 @@ body.at.at-jouer #atwin{display:block; text-align:left; width:100%; max-width:42
        qui est posé d'avance, et qu'est-ce que l'élève reçoit ? Le titre et la
        phrase d'explication le disent, parce que deux rangées d'icônes de pièces
        sans étiquette, ça ne se devine pas. -->
+  <!-- Deux réserves, dites en trois mots chacune. La distinction reste (c'était
+       la confusion du premier essai), mais elle tient dans le sous-titre : le
+       menu doit être simple et efficace, pas bavard. -->
   <div class="atbloc">
-    <h2 class="attitre">Le décor : ce qui est déjà là</h2>
-    <p class="atexplic">Tu le poses sur le plateau. L'élève le trouve en ouvrant le niveau
-      et ne peut pas y toucher.</p>
+    <h2 class="attitre">Le décor <small>posé d'avance</small></h2>
     <div class="atpal" id="atpalette"></div>
     <div id="atmain" class="atok"></div>
   </div>
 
   <div class="atbloc">
-    <h2 class="attitre">La boîte : ce que l'élève reçoit</h2>
-    <p class="atexplic">Ces pièces-là ne se posent pas sur le plateau : elles attendent
-      à côté, et c'est l'élève qui les place. Tu choisis lesquelles et combien.</p>
-    <div id="atboite" class="atrang"></div>
-    <div id="atboitevide">Vide pour l'instant.</div>
-    <p class="atexplic" style="margin-top:12px">Ajouter une pièce à la boîte :</p>
+    <h2 class="attitre">La boîte de l'élève <small>il les pose lui-même</small></h2>
+    <!-- Ce que l'élève VERRA est encadré ; le choix des pièces est en dessous,
+         nettement séparé. Deux rangées d'icônes sans frontière, on ne savait
+         plus laquelle était laquelle. -->
+    <div id="atboitepanneau">
+      <div id="atboite" class="atrang"></div>
+      <div id="atboitevide">Vide</div>
+      <div id="atsurplus"></div>
+    </div>
+    <div class="atsep"><span>Ajouter</span></div>
     <div class="atpal" id="atajout"></div>
-    <div id="atsurplus">Le surplus fait le casse-tête : dans l'original, 6 à 8 pièces pour 3 ou 4 utiles.</div>
-    <p class="atexplic">Pour qu'une pièce soit posée d'avance et impossible à bouger — comme
-      dans les tunnels — touche-la ci-dessus et choisis « Sceller sur le plateau ».</p>
   </div>
 
   <div class="atbloc">

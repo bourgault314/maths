@@ -332,13 +332,14 @@ function dessinerPalette(){
   }).join('');
   $('atboitevide').hidden = D.tools.length > 0;
 
+  /* Un compte, pas un discours : le nombre de pièces, et combien servent
+     vraiment dès qu'une solution est enregistrée. Que le surplus fasse le
+     casse-tête, c'est le métier de Gwenael — pas une notice à lui relire. */
   const utiles = D.sol.length;
   $('atsurplus').textContent = D.tools.length
-    ? ('Boîte : ' + D.tools.length + ' pièce' + (D.tools.length > 1 ? 's' : '') +
-       (utiles ? ' pour ' + utiles + ' utile' + (utiles > 1 ? 's' : '') +
-                 ' (surplus ' + (D.tools.length - utiles) + ')' : '') +
-       ' — le surplus fait le casse-tête : dans l\u2019original, 6 à 8 pièces pour 3 ou 4 utiles.')
-    : 'Le surplus fait le casse-tête : dans l\u2019original, 6 à 8 pièces pour 3 ou 4 utiles.';
+    ? (D.tools.length + ' pièce' + (D.tools.length > 1 ? 's' : '') +
+       (utiles ? ' · ' + utiles + ' utile' + (utiles > 1 ? 's' : '') : ''))
+    : '';
 
   /* Ce qu'on tient s'affiche dans la barre du haut, pas ici : c'est cet état-là
      qui avalait les clics sans que ça se voie. */
