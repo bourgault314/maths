@@ -7,6 +7,7 @@ import {
   DENOMINATEURS_DECIMAUX_PRIS_EN_CHARGE,
   DONNEES_DROITE_DEMIS,
   DONNEES_DROITE_QUARTS,
+  DONNEES_DROITE_UNITES,
   VERSION_FRACTIONS_DECIMAUX,
   analyserEcritureDecimalePositive,
   construireDonneesTableauDepuisFraction,
@@ -167,7 +168,21 @@ describe("formatage exact des fractions finies", () => {
   });
 });
 
-describe("données des droites des demis et des quarts", () => {
+describe("données des droites des unités, des demis et des quarts", () => {
+  it("couvre les unités de 0/1 à 12/1", () => {
+    assert.equal(DONNEES_DROITE_UNITES.id, "unites");
+    assert.equal(DONNEES_DROITE_UNITES.denominateur, 1);
+    assert.equal(DONNEES_DROITE_UNITES.maximum, 12);
+    assert.equal(DONNEES_DROITE_UNITES.pas, 1);
+    assert.equal(DONNEES_DROITE_UNITES.graduations.length, 13);
+    assert.deepEqual(DONNEES_DROITE_UNITES.graduations.at(-1), {
+      numerateur: 12,
+      denominateur: 1,
+      valeur: 12,
+      ecritureDecimale: "12",
+    });
+  });
+
   it("couvre les demis de 0/2 à 7/2", () => {
     assert.equal(DONNEES_DROITE_DEMIS.denominateur, 2);
     assert.equal(DONNEES_DROITE_DEMIS.maximum, 3.5);
@@ -202,11 +217,12 @@ describe("données des droites des demis et des quarts", () => {
   });
 
   it("rend les constantes canoniques et refuse les autres dénominateurs", () => {
+    assert.equal(obtenirDonneesDroiteFractionnaire(1), DONNEES_DROITE_UNITES);
     assert.equal(obtenirDonneesDroiteFractionnaire(2), DONNEES_DROITE_DEMIS);
     assert.equal(obtenirDonneesDroiteFractionnaire(4), DONNEES_DROITE_QUARTS);
     assert.throws(
       () => obtenirDonneesDroiteFractionnaire(10),
-      /dénominateur 2 ou 4/,
+      /dénominateur 1, 2 ou 4/,
     );
   });
 });
@@ -258,7 +274,7 @@ describe("tableau de numération jusque dans les millièmes", () => {
 });
 
 it("publie la brique dans le paquet @mathsgo/objets", async () => {
-  assert.equal(VERSION_FRACTIONS_DECIMAUX, 2);
+  assert.equal(VERSION_FRACTIONS_DECIMAUX, 3);
   const paquet = JSON.parse(
     await readFile(new URL("../package.json", import.meta.url), "utf8"),
   );

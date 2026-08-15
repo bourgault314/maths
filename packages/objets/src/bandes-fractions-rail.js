@@ -14,13 +14,13 @@ import {
   construireGroupementFraction,
   formaterFractionEnDecimal,
   obtenirDonneesDroiteFractionnaire,
-} from "./fractions-decimaux.js?v=30";
+} from "./fractions-decimaux.js?v=31";
 import {
   COULEURS_BANDES_FRACTIONS,
   couleurBandeFraction,
-} from "../../charte/src/charte.js?v=30";
+} from "../../charte/src/charte.js?v=31";
 
-export const VERSION_BANDES_FRACTIONS_RAIL = 2;
+export const VERSION_BANDES_FRACTIONS_RAIL = 3;
 
 const PROFILS = Object.freeze([
   "aide-nc03",
@@ -38,6 +38,7 @@ const ETAPES = Object.freeze([
 ]);
 
 const LIMITES_NUMERATEURS = Object.freeze({
+  1: 12,
   2: 7,
   4: 8,
 });
@@ -54,7 +55,7 @@ const STYLES_AUXILIAIRES = Object.freeze({
 
 const POLICE = "'Fredoka', 'Segoe UI', sans-serif";
 const LARGEUR_DEFAUT = 720;
-const LARGEUR_MINIMUM = 320;
+const LARGEUR_MINIMUM = 260;
 const LARGEUR_MAXIMUM = 1200;
 const MARGE_GAUCHE = 24;
 const MARGE_DROITE = 24;
@@ -162,7 +163,7 @@ function messageValidation(reglages, largeur) {
 
   const { numerateur, denominateur, profil, etape = "pieces" } = reglages;
   if (!Number.isInteger(denominateur) || !Object.hasOwn(LIMITES_NUMERATEURS, denominateur)) {
-    return "Le dénominateur doit être 2 ou 4.";
+    return "Le dénominateur doit être 1, 2 ou 4.";
   }
   if (
     !Number.isInteger(numerateur) ||
@@ -218,6 +219,7 @@ function renduErreur(message, largeur) {
 }
 
 function couleurPour(denominateur) {
+  if (denominateur === 1) return COULEURS_BANDES_FRACTIONS.unite;
   return couleurBandeFraction(denominateur);
 }
 
@@ -473,7 +475,18 @@ function rail({
     const ecriture = graduation?.ecritureDecimale
       ?? formaterFractionEnDecimal(index, denominateur);
     const estCible = index === numerateur;
-    const montrer = profil === "solution" || (estEntier && !estCible);
+    const solutionCompacte = profil === "solution"
+      && maximumRail > 1
+      && largeurPartie < 40;
+    const repereIntermediaireUtile = (
+      denominateur === 4 && estDemi
+    ) || (
+      denominateur === 2 && index === 3
+    );
+    const montrerSolution = profil === "solution" && (
+      !solutionCompacte || estEntier || estCible || repereIntermediaireUtile
+    );
+    const montrer = montrerSolution || (profil !== "solution" && estEntier && !estCible);
     if (montrer) {
       elements.push(texte(x, y + 28, ecriture, {
         classe: estCible ? "etiquette-rail cible" : "etiquette-rail",
@@ -517,8 +530,27 @@ function rail({
   return elements.join("");
 }
 
+function vocabulairePartie(denominateur) {
+  if (denominateur === 1) {
+    return Object.freeze({
+      article: "une",
+      singulier: "unité",
+      pluriel: "unités",
+    });
+  }
+  const nom = denominateur === 2 ? "demi" : "quart";
+  return Object.freeze({
+    article: "un",
+    singulier: nom,
+    pluriel: `${nom}s`,
+  });
+}
+
 function texteAlternatifPour({ numerateur, denominateur, decimal, profil, etape }) {
-  const nomPartie = denominateur === 2 ? "demi" : "quart";
+  const vocabulaire = vocabulairePartie(denominateur);
+  const materiel = numerateur === 1
+    ? `${vocabulaire.article} ${vocabulaire.singulier}`
+    : `des ${vocabulaire.pluriel}`;
   const reste = numerateur % denominateur;
   const explicationReste = etape === "reste" && denominateur === 4 && reste === 2
     ? " Les deux quarts restants sont regroupés en une demi-bande."
@@ -526,7 +558,7 @@ function texteAlternatifPour({ numerateur, denominateur, decimal, profil, etape 
   if (profil === "aide-nc03") {
     return (
       `La fraction de numérateur ${numerateur} et de dénominateur ${denominateur} est représentée ` +
-      `avec des ${nomPartie}s sur un rail décimal.${explicationReste} La valeur décimale cible reste masquée.`
+      `avec ${materiel} sur un rail décimal.${explicationReste} La valeur décimale cible reste masquée.`
     );
   }
   if (profil.startsWith("aide-nc04")) {
@@ -534,13 +566,15 @@ function texteAlternatifPour({ numerateur, denominateur, decimal, profil, etape 
       ? `Le dénominateur demandé est ${denominateur}.`
       : "Le numérateur et le dénominateur demandés restent masqués.";
     return (
-      `Le nombre décimal ${decimal} est placé sur un rail. Des pièces représentant chacune un ${nomPartie} ` +
+      `Le nombre décimal ${decimal} est placé sur un rail. Des pièces représentant chacune ` +
+      `${vocabulaire.article} ${vocabulaire.singulier} ` +
       `peuvent être alignées jusqu'à ce point.${explicationReste} ${cible}`
     );
   }
   return (
     `Solution : la fraction de numérateur ${numerateur} et de dénominateur ${denominateur} ` +
-    `vaut ${decimal}. Les bandes à l'étape ${etape} sont alignées sur le même rail décimal.`
+    `vaut ${decimal}. La représentation emploie ${materiel} ; les bandes à l'étape ${etape} ` +
+    "sont alignées sur le même rail décimal."
   );
 }
 

@@ -107,8 +107,8 @@ sélectionnables de « Me guider » : D-049 ouvre un seul atelier progressif.
 |---|---|---|
 | Schéma dans une unité | `packages/objets/src/fractions.js` | Bande ou grille statique pour une fraction inférieure ou égale à 1 ; jaune générique, sans prétendre reproduire le matériel de classe |
 | Manipulation libre historique | `outils/fractions/bandes_fractions.html` | Plateau complet avec pièces, fusion, retournement, droites, zoom et scènes ; il reste une activité autonome |
-| Manipulation guidée | `packages/objets/src/bandes-fractions-rail.js` | SVG commun effectivement utilisé par le lecteur pour les demis et quarts, y compris au-delà de 1, avec profils d'aide non révélateurs |
-| Correspondance exacte entre matériels | `packages/objets/src/correspondances-decimales.js` | Deux SVG CPA relient cinq dixièmes à un demi et 25 ou 75 centièmes à un ou trois quarts, sans changer d'échelle ni révéler l'écriture attendue en aide |
+| Manipulation guidée | `packages/objets/src/bandes-fractions-rail.js` | SVG commun effectivement utilisé par le lecteur pour les unités, demis et quarts, y compris au-delà de 1, avec profils d'aide non révélateurs |
+| Correspondance exacte entre matériels | `packages/objets/src/correspondances-decimales.js` | Deux SVG CPA alignent cinq dixièmes et un demi sur un même repère, puis relient 25 ou 75 centièmes à un ou trois quarts, sans changer d'échelle ni révéler l'écriture attendue en aide |
 
 Le Labo conserve les bandes et grilles existantes, le composant guidé sur rail
 et les correspondances exactes comme familles de comparaison utiles. Le
@@ -141,7 +141,8 @@ réversible. Aucun matériel en millièmes n'est extrait : à cette échelle, le
 tableau de numération est la représentation lisible retenue.
 
 L'intégration n'est plus future : `automatismes-v2/app.js` compose maintenant
-les bandes sur rail pour les pièces, groupes et unités, les deux
+les bandes sur rail pour les pièces, groupes et unités, y compris cinq pièces
+`1/1` jusqu'à la graduation 5 et le rail commun des repères en demis, les deux
 correspondances exactes pour construire `0,5 ↔ 1/2` et
 `0,25 / 0,75 ↔ 1/4 / 3/4`, le matériel décimal pour les autres dixièmes et
 centièmes, et le tableau jusqu'aux millièmes. La droite graduée demeure une

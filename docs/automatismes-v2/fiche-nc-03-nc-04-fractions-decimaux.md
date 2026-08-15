@@ -1,10 +1,11 @@
 # Fiche NC-03 / NC-04 — Fractions simples et décimaux
 
-> **Candidat intégré, révision D-049 du 13 août 2026.** Cette fiche décrit le module révisé,
+> **Candidat intégré, révisions D-049 du 13 août et D-054 du 15 août 2026.** Cette fiche décrit le module révisé,
 > et non plus le pilote du 8 août. Les questions ont été recomposées ; le cours,
 > « Me guider » et les corrections utilisent maintenant les briques communes
-> comparées dans le Labo. L'intégration est achevée, mais la révision D-049
-> attend encore sa recette finale ; le statut reste `construit` en attente des
+> comparées dans le Labo. L'intégration est achevée et le cours D-054 a passé
+> sa recette dédiée ; l'interaction complète D-049 attend encore sa recette
+> finale. Le statut reste `construit` en attente des
 > retours de Gwenaël et de Claire. Gwenaël a autorisé le 13 août sa publication
 > de test, sans référencement ni passage à `valide`.
 
@@ -150,25 +151,36 @@ une répétition de famille : elles n'effacent donc pas la couverture de base.
 Le cours suit une progression concret — imagé — abstrait sans présenter des
 recettes concurrentes :
 
-1. **Construire un demi** : deux pièces `1/2` reforment l'unité ; cinq bandes
-   `1/10` occupent la même moitié, d'où `1/2 = 5/10 = 0,5`.
-2. **Construire des quarts** : quatre pièces `1/4` reforment l'unité ; les
-   mêmes 25 centièmes sont réorganisés en un bloc de `5 × 5`, d'où
-   `1/4 = 25/100 = 0,25`, puis `3/4 = 75/100 = 0,75`.
-3. **Nommer les rangs décimaux** : matériel rouge, vert et jaune de
-   `147/100`, repères `1/10`, `1/100`, `1/1000`, puis tableau de
-   `725/1000 = 0,725`. Le millième reste dans le tableau, sans matériel
-   miniaturisé.
-4. **Fraction décimale vers décimal** : matériel, tableau puis décomposition
-   `147/100 = 100/100 + 40/100 + 7/100 = 1 + 4/10 + 7/100 = 1,47`.
-5. **Décimal vers fraction** : dernier rang écrit et équivalences
-   `0,5 = 5/10 = 1/2` et `0,75 = 75/100 = 3/4`. En fraction libre, une forme
-   équivalente non réduite reste correcte.
-6. **Former les unités, puis traiter le reste** : `7/2 = 3,5` après formation
-   de trois unités et conservation d'un demi ; `6/4 = 1,5` après fusion des
-   deux quarts restants en un demi ; repères `3/2`, `4/2`, `5/2`, `100/100`
-   et `7/1`. La barre est enfin nommée comme division, méthode générale
-   tardive et non technique première du module.
+1. **Un demi : plusieurs écritures** : deux pièces `1/2` reforment l'unité.
+   Dans la correspondance suivante, cinq pièces `1/10` et une pièce `1/2`
+   partent de la même origine et atteignent le même repère, d'où
+   `1/2 = 5/10 = 0,5`.
+2. **Un quart et trois quarts** : quatre pièces `1/4` reforment l'unité et
+   `0,25` est à mi-chemin entre `0` et `0,5`. Les mêmes 25 centièmes sont
+   réorganisés en l'une des quatre zones égales du carré, puis trois zones de
+   25 cases donnent `3/4 = 75/100 = 0,75`.
+3. **Lire une fraction décimale** : les anciennes pages sur les rangs et la
+   conversion directe sont réunies autour d'une seule quantité. Le matériel,
+   le tableau et la décomposition relient
+   `147/100 = 100/100 + 40/100 + 7/100 = 1 + 4/10 + 7/100 = 1,47` ; les
+   repères `1/10`, `1/100` et `1/1000` sont rappelés. `725/1000 = 0,725`
+   passe uniquement par le tableau, sans matériel miniaturisé.
+4. **Du décimal à la fraction** : le dernier rang écrit donne une fraction
+   décimale possible. La page distingue ensuite les deux formes réellement
+   demandées : si le dénominateur est imprimé, l'élève le conserve et compte
+   les parts correspondantes, par exemple `0,75 = ?/4 = 3/4` sur le rail ; si
+   les deux cases sont libres, `1,47 = 147/100` convient et toute fraction
+   équivalente est acceptée. Ainsi `75/100` et `3/4` sont toutes deux justes
+   en réponse libre.
+5. **Dépasser l'unité** : `7/2 = 3,5` après formation de trois unités et
+   conservation d'un demi ; `6/4 = 1,5` après formation d'une unité puis
+   remplacement des deux quarts restants par une demi-bande de même longueur.
+6. **Reconnaître un entier et choisir une stratégie** : cinq bandes `1/1`
+   alignées sur le rail installent `5/1 = 5` et la règle `n/1 = n`. Les
+   entiers cachés `4/4` et `100/100` précèdent un rail commun pour `3/2`,
+   `4/2` et `5/2`. La page ordonne enfin les stratégies — repère, tableau de
+   numération, groupement — puis nomme, en toute dernière étape, `a/b` comme
+   quotient exact de `a ÷ b` pour `b ≠ 0`.
 
 ## 8. « Me guider » : un atelier progressif unique sans révélation
 
@@ -250,13 +262,18 @@ ouvrir aucun panneau, sa solution verte doit être visible, le pavé doit
 disparaître et les deux actions de suite doivent rester disponibles.
 
 La recette de D-047 — **1 458 tests**, **270 états** et **439 captures** sur
-cinq fenêtres — constitue le point de comparaison antérieur. La révision
-d'interaction D-049 invalide ces totaux comme preuve du nouvel état : avant une
-nouvelle publication, `npm run verifier` et la campagne Chromium doivent être
+cinq fenêtres — constitue le point de comparaison antérieur. La recette
+dédiée au cours D-054 est verte : **1 516 tests**, **24 états de page** et
+**72 captures** à `320 × 568`, `390 × 844`, `1 280 × 720` et
+`1 920 × 1 080`, sans erreur ni débordement réel ; l'écart maximal mesuré
+entre les barres de fraction et les signes `=` ou `+` est de **1,47 px**.
+La révision d'interaction D-049 invalide néanmoins les anciens totaux comme
+preuve du module entier : avant une nouvelle publication, la campagne doit être
 rejoués à `320 × 568`, `390 × 844`, reflow `640 × 360`, `1 280 × 720` et TNI
 `1 920 × 1 080`, avec contrôle visible et accessible des masques, du retour
 « Pas de réponse », de l'atelier unique et des actions après validation.
 
 Le candidat reste `construit`. Sa publication de test autorisée le 13 août ne
-l'expose ni dans le menu public ni dans le sitemap ; D-049 devra être recettée
-avant toute nouvelle livraison.
+l'expose ni dans le menu public ni dans le sitemap ; D-049 et la révision du
+cours fixée par D-054 doivent toutes deux rester couvertes avant toute nouvelle
+livraison.

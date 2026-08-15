@@ -11,9 +11,9 @@ import {
   COULEURS_NUMERATION_DECIMALE,
   COULEURS_RANGS_NUMERATION_DECIMALE,
   TYPOGRAPHIE,
-} from "../../charte/src/charte.js?v=30";
+} from "../../charte/src/charte.js?v=31";
 
-export const VERSION_CORRESPONDANCES_DECIMALES = 2;
+export const VERSION_CORRESPONDANCES_DECIMALES = 3;
 
 export const ETAPES_REORGANISATION_CENTIEMES = Object.freeze([
   "lignes",
@@ -227,7 +227,12 @@ function ecritureCentiemes(centiemes, etape) {
   return `${centiemes}/100 = ${quarts}/4 = ${decimal}`;
 }
 
-function texteAlternatifCentiemes(centiemes, etape, afficherEcritures) {
+function texteAlternatifCentiemes(
+  centiemes,
+  etape,
+  afficherEcritures,
+  afficherEquation,
+) {
   const quadrants = centiemes / 25;
   if (!afficherEcritures) {
     const comparaison = etape === "comparaison"
@@ -241,7 +246,8 @@ function texteAlternatifCentiemes(centiemes, etape, afficherEcritures) {
   if (etape === "quadrants") {
     return `${centiemes} centièmes jaunes sont réorganisés en ${quadrants} ${quadrants === 1 ? "quadrant de 25 cases" : "quadrants de 25 cases"}.`;
   }
-  return `${centiemes} centièmes jaunes sont d’abord rangés par lignes puis réorganisés, sans changer la quantité, en ${quadrants} ${quadrants === 1 ? "quart" : "quarts"} de l’unité. ${ecritureCentiemes(centiemes, etape)}.`;
+  const synthese = afficherEquation ? ` ${ecritureCentiemes(centiemes, etape)}.` : "";
+  return `${centiemes} centièmes jaunes sont d’abord rangés par lignes puis réorganisés, sans changer la quantité, en ${quadrants} ${quadrants === 1 ? "quart" : "quarts"} de l’unité.${synthese}`;
 }
 
 /**
@@ -253,12 +259,14 @@ function texteAlternatifCentiemes(centiemes, etape, afficherEcritures) {
  * @param {"lignes"|"quadrants"|"comparaison"} [options.etape="comparaison"]
  * @param {number} [options.largeur=560]
  * @param {boolean} [options.afficherEcritures=true]
+ * @param {boolean} [options.afficherEquation=options.afficherEcritures]
  */
 export function dessinerReorganisationCentiemes({
   centiemes,
   etape = "comparaison",
   largeur = LARGEUR_DEFAUT,
   afficherEcritures = true,
+  afficherEquation = afficherEcritures,
 } = {}) {
   const largeurLue = normaliserLargeur(largeur);
   if (largeurLue === null) {
@@ -276,8 +284,12 @@ export function dessinerReorganisationCentiemes({
   if (!verifierBooleen(afficherEcritures)) {
     return renduErreur("afficherEcritures doit être un booléen", largeurLue);
   }
+  if (!verifierBooleen(afficherEquation)) {
+    return renduErreur("afficherEquation doit être un booléen", largeurLue);
+  }
 
   const comparaison = etape === "comparaison";
+  const montrerEquation = afficherEcritures && afficherEquation;
   const ecart = comparaison ? Math.max(42, largeurLue * 0.1) : 0;
   const cote = comparaison
     ? Math.min(190, (largeurLue - 2 * MARGE - ecart) / 2)
@@ -299,11 +311,12 @@ export function dessinerReorganisationCentiemes({
     return Object.freeze({ disposition, x: arrondi2(x), ...grille });
   });
   const yEquation = yGrille + cote + 34;
-  const hauteur = arrondi2(yEquation + (afficherEcritures ? 26 : 10));
+  const hauteur = arrondi2(yEquation + (montrerEquation ? 26 : 10));
   const alternatif = texteAlternatifCentiemes(
     centiemes,
     etape,
     afficherEcritures,
+    montrerEquation,
   );
   const entetes = rendus.map((rendu) => texte(
     rendu.x + cote / 2,
@@ -328,7 +341,7 @@ export function dessinerReorganisationCentiemes({
       `fill="none" stroke="${COULEURS_NUMERATION_DECIMALE.encre}" stroke-width="2"/>` +
       `</g>`
     : "";
-  const equation = afficherEcritures
+  const equation = montrerEquation
     ? texte(largeurLue / 2, yEquation, ecritureCentiemes(centiemes, etape), {
       taille: Math.max(13, Math.min(18, largeurLue / 25)),
       graisse: 800,
@@ -341,12 +354,14 @@ export function dessinerReorganisationCentiemes({
     hauteur,
     alternatif,
     ` data-objet="reorganisation-centiemes" data-centiemes="${centiemes}" ` +
-      `data-etape="${etape}" data-afficher-ecritures="${afficherEcritures}"`,
+      `data-etape="${etape}" data-afficher-ecritures="${afficherEcritures}" ` +
+      `data-afficher-equation="${afficherEquation}"`,
   ) + `<g aria-hidden="true">${entetes}${rendus.map(({ svg: dessin }) => dessin).join("")}${fleche}${equation}</g></svg>`;
   const donnees = Object.freeze({
     centiemes,
     etape,
     afficherEcritures,
+    afficherEquation,
     quadrantsComplets: centiemes / 25,
     coteUnite: arrondi2(cote),
     tailleCellule: arrondi2(cote / 10),
@@ -370,6 +385,9 @@ function dessinerEmpreinteDixiemes(x, y, cote, afficherEcritures) {
     `<rect class="cd-unite-entiere" x="0" y="0" width="${nombreSvg(cote)}" height="${nombreSvg(cote)}" ` +
       `fill="${COULEURS_RANGS_NUMERATION_DECIMALE.unites.fond}" ` +
       `stroke="${COULEURS_RANGS_NUMERATION_DECIMALE.unites.texte}" stroke-width="2.4"/>`,
+    `<rect class="cd-reste-dixiemes" x="${nombreSvg(cote / 2)}" y="0" ` +
+      `width="${nombreSvg(cote / 2)}" height="${nombreSvg(cote)}" ` +
+      `fill="${COULEURS_RANGS_NUMERATION_DECIMALE.dixiemes.fond}"/>`,
   ];
   for (let index = 1; index < 10; index += 1) {
     morceaux.push(
@@ -384,23 +402,24 @@ function dessinerEmpreinteDixiemes(x, y, cote, afficherEcritures) {
   for (let index = 0; index < 5; index += 1) {
     morceaux.push(
       `<g class="cd-bande-dixieme" data-piece-index="${index + 1}">` +
-      `<rect x="0" y="${nombreSvg(index * cellule)}" width="${nombreSvg(cote)}" ` +
-      `height="${nombreSvg(cellule)}" fill="${COULEURS_NUMERATION_DECIMALE.dixieme}" ` +
+      `<rect x="${nombreSvg(index * cellule)}" y="0" width="${nombreSvg(cellule)}" ` +
+      `height="${nombreSvg(cote)}" fill="${COULEURS_NUMERATION_DECIMALE.dixieme}" ` +
       `stroke="${COULEURS_NUMERATION_DECIMALE.trait}" stroke-width="1"/>` +
-      Array.from({ length: 9 }, (_, colonne) =>
-        `<line x1="${nombreSvg((colonne + 1) * cellule)}" y1="${nombreSvg(index * cellule)}" ` +
-        `x2="${nombreSvg((colonne + 1) * cellule)}" y2="${nombreSvg((index + 1) * cellule)}" ` +
+      Array.from({ length: 9 }, (_, ligne) =>
+        `<line x1="${nombreSvg(index * cellule)}" y1="${nombreSvg((ligne + 1) * cellule)}" ` +
+        `x2="${nombreSvg((index + 1) * cellule)}" y2="${nombreSvg((ligne + 1) * cellule)}" ` +
         `stroke="rgba(0,0,0,.48)" stroke-width="0.55"/>`).join("") +
       `</g>`,
     );
   }
   morceaux.push(
-    `<line class="cd-ligne-demie-unite" x1="0" y1="${nombreSvg(cote / 2)}" ` +
-      `x2="${nombreSvg(cote)}" y2="${nombreSvg(cote / 2)}" ` +
+    `<line class="cd-ligne-demie-unite cd-bord-cinq-dixiemes" ` +
+      `x1="${nombreSvg(cote / 2)}" y1="0" ` +
+      `x2="${nombreSvg(cote / 2)}" y2="${nombreSvg(cote)}" ` +
       `stroke="${COULEURS_NUMERATION_DECIMALE.encre}" stroke-width="2.4"/>`,
   );
   if (afficherEcritures) {
-    morceaux.push(texte(cote / 2, cote / 4 + 5, "5 dixièmes", {
+    morceaux.push(texte(cote / 4, cote / 2 + 5, "5 dixièmes", {
       taille: Math.max(11, Math.min(16, cellule * 0.72)),
       couleur: COULEURS_RANGS_NUMERATION_DECIMALE.dixiemes.texte,
       classe: "cd-etiquette-cinq-dixiemes",
@@ -459,7 +478,7 @@ function dessinerPieceDemiSurRail(x, y, largeurUnite, afficherEcritures) {
   };
 }
 
-function texteAlternatifDemi(etape, afficherEcritures) {
+function texteAlternatifDemi(etape, afficherEcritures, afficherEquation) {
   if (!afficherEcritures) {
     if (etape === "dixiemes") {
       return "Des bandes vertes de dixièmes occupent exactement la moitié de l’empreinte rouge d’une unité. Les écritures sont masquées.";
@@ -475,7 +494,10 @@ function texteAlternatifDemi(etape, afficherEcritures) {
   if (etape === "demi") {
     return "Une pièce historique jaune d’un demi s’aligne exactement sur 0,5 entre zéro et un.";
   }
-  return "Cinq dixièmes occupent la moitié d’une unité ; une pièce d’un demi s’aligne sur le même repère 0,5. 0,5 égale 5 sur 10 égale 1 sur 2.";
+  const synthese = afficherEquation
+    ? " 0,5 égale 5 sur 10 égale 1 sur 2."
+    : "";
+  return `Cinq dixièmes occupent la moitié d’une unité ; une pièce d’un demi s’aligne sur le même repère 0,5.${synthese}`;
 }
 
 /**
@@ -529,7 +551,7 @@ export function dessinerDemiAvecDixiemes({
     y += coteUnite + 26;
   }
   if (montrerDixiemes && montrerDemi) {
-    morceaux.push(texte(largeurLue / 2, y - 7, "Même moitié", {
+    morceaux.push(texte(largeurLue / 2 - 58, y - 7, "Même bord", {
       taille: 12,
       couleur: COULEURS_NUMERATION_DECIMALE.encre,
       classe: "cd-lien-meme-moitie",
@@ -547,6 +569,16 @@ export function dessinerDemiAvecDixiemes({
     }
     const rail = dessinerPieceDemiSurRail(x, y, coteUnite, afficherEcritures);
     morceaux.push(rail.svg);
+    if (montrerDixiemes) {
+      const yDepartGuide = 42 + coteUnite;
+      const yFinGuide = y + rail.hauteur - 19;
+      morceaux.push(
+        `<line class="cd-guide-commun-demi" x1="${nombreSvg(x + coteUnite / 2)}" ` +
+        `y1="${nombreSvg(yDepartGuide)}" x2="${nombreSvg(x + coteUnite / 2)}" ` +
+        `y2="${nombreSvg(yFinGuide)}" stroke="${COULEURS_BANDES_FRACTIONS.guide}" ` +
+        `stroke-width="1.8" stroke-dasharray="5 4"/>`,
+      );
+    }
     y += rail.hauteur + 16;
   }
   if (afficherEcritures && afficherEquation) {
@@ -564,7 +596,11 @@ export function dessinerDemiAvecDixiemes({
     y += 24;
   }
   const hauteur = arrondi2(Math.max(148, y + 4));
-  const alternatif = texteAlternatifDemi(etape, afficherEcritures);
+  const alternatif = texteAlternatifDemi(
+    etape,
+    afficherEcritures,
+    afficherEcritures && afficherEquation,
+  );
   const svg = attributsSvg(
     largeurLue,
     hauteur,
@@ -579,7 +615,9 @@ export function dessinerDemiAvecDixiemes({
     dixiemes: 5,
     denominateurFraction: 2,
     coteUnite: arrondi2(coteUnite),
-    hauteurCinqDixiemes: arrondi2(coteUnite / 2),
+    hauteurCinqDixiemes: arrondi2(coteUnite),
+    largeurCinqDixiemes: arrondi2(coteUnite / 2),
+    positionBordDemi: arrondi2(x + coteUnite / 2),
     largeurDemi: arrondi2(coteUnite / 2),
     valeur: Object.freeze({ numerateur: 1, denominateur: 2 }),
   });

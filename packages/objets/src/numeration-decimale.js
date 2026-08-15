@@ -10,10 +10,10 @@ import {
   COULEURS_NUMERATION_DECIMALE,
   COULEURS_RANGS_NUMERATION_DECIMALE,
   TYPOGRAPHIE,
-} from "../../charte/src/charte.js?v=30";
-import { construireDonneesTableauNumeration } from "./fractions-decimaux.js?v=30";
+} from "../../charte/src/charte.js?v=31";
+import { construireDonneesTableauNumeration } from "./fractions-decimaux.js?v=31";
 
-export const VERSION_NUMERATION_DECIMALE = 1;
+export const VERSION_NUMERATION_DECIMALE = 2;
 
 export const ORIENTATIONS_MATERIEL_NUMERATION_DECIMALE = Object.freeze([
   "horizontale",
@@ -450,11 +450,6 @@ export function dessinerTableauNumerationDecimale({
       `<rect class="nd-cellule" x="${nombreSvg(x)}" y="${yValeur}" ` +
       `width="${nombreSvg(largeurColonne)}" height="${hauteurValeur}" ` +
       `fill="${couleursRang.fond}" stroke="${trait}" stroke-width="${active ? 2 : 1}"/>` +
-      (active
-        ? `<path class="nd-marque-rang-actif" d="M ${nombreSvg(x + 7)} ${nombreSvg(yEntete + 6)} ` +
-          `H ${nombreSvg(x + largeurColonne - 7)}" fill="none" stroke="${couleursRang.encreEntete}" ` +
-          `stroke-width="3" stroke-linecap="round"/>`
-        : "") +
       `<text class="nd-nom-rang" x="${nombreSvg(x + largeurColonne / 2)}" ` +
       `y="${nombreSvg(yEntete + hauteurEntete / 2)}" text-anchor="middle" dominant-baseline="middle" ` +
       `font-family="${POLICE}" font-size="${nombreSvg(tailleEntete)}" font-weight="700" ` +

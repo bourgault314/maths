@@ -370,6 +370,14 @@ button.case-reponse-carres {
   text-align: center;
 }
 
+.mathsgo-egalite-gauche {
+  text-align: right;
+}
+
+.mathsgo-egalite-droite {
+  text-align: left;
+}
+
 .mathsgo-egalites-alignees > :last-child {
   color: var(--mg-bleuFonce);
 }
@@ -654,6 +662,17 @@ button.case-reponse-carres {
   min-width: 0;
   display: grid;
   justify-items: center;
+}
+
+.bandes-rail-cours-responsive {
+  width: 100%;
+  min-width: 0;
+  display: grid;
+  justify-items: center;
+}
+
+.figure-bandes-rail-cours-mobile {
+  display: none;
 }
 
 .figure-double-droite-fraction {
@@ -1236,12 +1255,6 @@ button.case-reponse-carres {
   text-align: center;
 }
 
-.reperes-visuels-cours {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
-  gap: 9px;
-}
-
 .repere-visuel-cours {
   min-width: 0;
   padding: 8px;
@@ -1253,20 +1266,12 @@ button.case-reponse-carres {
   background: var(--mg-papier);
 }
 
-.repere-visuel-cours .figure-bandes-rail {
-  width: min(100%, 340px);
-}
-
 .repere-visuel-cours .calcul-aligne-fractions {
   width: fit-content;
 }
 
 .repere-cent-centiemes .figure-grille-repere {
   width: min(100%, 150px);
-}
-
-.repere-sept-unites .tuiles-unites {
-  grid-template-columns: repeat(4, minmax(44px, 1fr));
 }
 
 .reperes-rangs-cours {
@@ -1277,6 +1282,104 @@ button.case-reponse-carres {
 
 .reperes-rangs-cours .calcul-aligne-fractions {
   width: 100%;
+}
+
+.reperes-entiers-cours {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
+  gap: 9px;
+}
+
+.reperes-entiers-cours .calcul-aligne-fractions {
+  width: 100%;
+}
+
+.cas-reponses-fraction-cours {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: 10px;
+}
+
+.cas-reponses-fraction-cours > section {
+  min-width: 0;
+  padding: 11px;
+  display: grid;
+  align-content: start;
+  gap: 8px;
+  border: 2px solid var(--mg-ligne);
+  border-radius: var(--mg-rayon-moyen);
+  background: var(--mg-fondDoux);
+}
+
+.cas-reponses-fraction-cours h4,
+.cas-reponses-fraction-cours p {
+  margin: 0;
+}
+
+.cas-reponses-fraction-cours .figure-bandes-rail {
+  width: min(100%, 430px);
+}
+
+.reperes-entiers-cours .repere-cent-centiemes {
+  min-height: 100%;
+}
+
+.repere-cinq-unites-cours {
+  padding: 11px;
+  display: grid;
+  gap: 8px;
+  border: 2px solid var(--mg-ligne);
+  border-radius: var(--mg-rayon-moyen);
+  background: var(--mg-fondDoux);
+}
+
+.repere-cinq-unites-cours > p {
+  margin: 0;
+  font-size: 13px;
+  line-height: 1.45;
+  text-align: center;
+}
+
+.repere-cinq-unites-cours .figure-bandes-rail {
+  width: min(100%, 720px);
+}
+
+.repere-cinq-unites-cours .lecture-rang-cours {
+  background: var(--mg-papier);
+}
+
+.repere-demis-commun-cours {
+  padding: 11px;
+  display: grid;
+  gap: 9px;
+  border: 2px solid var(--mg-ligne);
+  border-radius: var(--mg-rayon-moyen);
+  background: var(--mg-papier);
+}
+
+.repere-demis-commun-cours > p {
+  margin: 0;
+  text-align: center;
+}
+
+.repere-demis-commun-cours .figure-bandes-rail {
+  width: min(100%, 720px);
+}
+
+.reperes-demis-equations-cours {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.reperes-demis-equations-cours .calcul-aligne-fractions {
+  width: 100%;
+}
+
+@media (max-width: 520px) {
+  .reperes-demis-equations-cours {
+    grid-template-columns: 1fr;
+  }
 }
 
 .definition-cours-quotient {
@@ -1434,6 +1537,14 @@ button.case-reponse-carres {
   .double-droite-responsive .figure-double-droite-mobile {
     display: block;
   }
+
+  .bandes-rail-cours-responsive .figure-bandes-rail-cours-large {
+    display: none;
+  }
+
+  .bandes-rail-cours-responsive .figure-bandes-rail-cours-mobile {
+    display: block;
+  }
 }
 
 @media (max-width: 600px) {
@@ -1447,6 +1558,14 @@ button.case-reponse-carres {
 
   .double-droite-responsive .figure-double-droite-mobile svg {
     min-width: 0;
+  }
+
+  .bandes-rail-cours-responsive .figure-bandes-rail-cours-large {
+    display: none;
+  }
+
+  .bandes-rail-cours-responsive .figure-bandes-rail-cours-mobile {
+    display: block;
   }
 
   .grille-qcm-fractions {

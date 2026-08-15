@@ -57,7 +57,7 @@ function verifierPiecesDansViewBox(rendu) {
 
 describe("matériel de numération décimale", () => {
   it("expose une API versionnée et les deux orientations", () => {
-    assert.equal(VERSION_NUMERATION_DECIMALE, 1);
+    assert.equal(VERSION_NUMERATION_DECIMALE, 2);
     assert.deepEqual(ORIENTATIONS_MATERIEL_NUMERATION_DECIMALE, [
       "horizontale",
       "verticale",
@@ -265,7 +265,7 @@ describe("tableau de numération décimale", () => {
       );
       assert.match(rendu.svg, bloc, `couleurs absentes pour ${rang}`);
     }
-    assert.match(rendu.svg, /class="nd-marque-rang-actif"/);
+    assert.doesNotMatch(rendu.svg, /class="nd-marque-rang-actif"/);
     assert.match(rendu.svg, /data-rang-actif="true"/);
   });
 
