@@ -675,6 +675,40 @@ def principal():
                 f"hauteurs cartes={classe9['hCartes']}, cellules={classe9['hCellules']}, pieds={classe9['pieds']}")
         ctx7.close()
 
+        # T12 — on gagne MIEUX sans quitter le niveau : le progrès est enregistré.
+        # Défaut trouvé par Gwenael en jouant (15/08) : gagné sans le fruit, resté sur le
+        # niveau, posé les pièces qui le cueillent — et le fruit n'était PAS recompté,
+        # parce que la victoire ne se réarmait qu'en RETIRANT une pièce, jamais en en
+        # ajoutant. Sa règle : un progrès relance la victoire depuis le début.
+        # « Le tiers de la moitié » se prête au test : son `solMin` (4 pièces, sans le
+        # letchi) est le préfixe exact de son `sol` (6 pièces, avec le letchi).
+        # Contrôle vérifié DANS LES DEUX SENS : rouge sur l'ancien rendu, vert après.
+        ctx12, page12 = nouvelle_page(390, 844)
+        page12.goto(url, wait_until="load")
+        page12.wait_for_function("() => window.SOLEY && window.SOLEY.LV")
+        LU12 = ("() => { const s = JSON.parse(localStorage.getItem('soley-save-v5') || '{}');"
+                " return (s.fruits || {})['lagon:Le tiers de la moitié'] ?? null; }")
+        POSER12 = """depuis => {
+          const S = window.SOLEY, i = S.LV.findIndex(l => l.name === 'Le tiers de la moitié');
+          const L = S.LV[i];
+          if (depuis === 0) S.openLevel(i);
+          else document.getElementById('winov').classList.remove('show');
+          const plan = depuis === 0 ? L.solMin : L.sol.slice(L.solMin.length);
+          plan.forEach(([t, x, y]) => { S.state.placed[x + ',' + y] = { def: L.tools[t], ti: t }; });
+          redraw();
+        }"""
+        page12.evaluate(POSER12, 0)
+        page12.wait_for_timeout(9000)
+        sans_fruit = page12.evaluate(LU12)
+        page12.evaluate(POSER12, 1)
+        page12.wait_for_timeout(9000)
+        avec_fruit = page12.evaluate(LU12)
+        section("T12 gagner MIEUX sans quitter le niveau : le fruit cueilli après coup "
+                "est recompté",
+                sans_fruit == 0 and avec_fruit == 1,
+                f"sans le letchi={sans_fruit}, après l'avoir cueilli={avec_fruit}")
+        ctx12.close()
+
         # T9.9 + T9.11 — stabilité 320 px et 402 px : accueil, panneau du cours,
         # chaînes CALC corrigées (règle R1) rendues sans débordement
         for largeur, hauteur in ((320, 700), (402, 874)):

@@ -1,3 +1,12 @@
+// ============================ ARCHIVE DATÉE ============================
+// Cet outil a prouvé le lot « le sixième au lagon » (15/08/2026) et il a fait son
+// travail : ses 36 autres contrôles restent verts. Depuis les finitions du 15/08
+// au soir il ÉCHOUE LÉGITIMEMENT sur UN point — celui qui exige que `render.js`
+// ne perde QUE les lignes du lot : la perle des lambrequins a été retirée et la
+// condition de victoire réarmée sur un progrès. On le CONSERVE en place, comme
+// ses aînés : c'est la trace datée de ce qu'un lot a promis (SOLEY.md §6,
+// décision 9 du lot canne). Aucun de ces outils n'est en CI.
+// =======================================================================
 // Preuve du lot « le sixième au lagon » (15/08/2026) : le lot ajoute UNE
 // découverte, remplace UN entraînement, et ne touche à rien d'autre.
 //   - 69 → 70 niveaux ; le lagon passe de 9 à 10, les 8 autres mondes intacts ;

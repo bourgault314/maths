@@ -166,6 +166,12 @@ Batterie (script Playwright Python, à conserver dans `tests/`) :
    a été vérifié dans les deux sens : rouge sur l'ancien rendu, vert sur le
    correctif. Voir §6, décision « le corps du fruit sous le rayon, sa fraction
    devant ».
+15. **Un progrès se réenregistre (T12, depuis le 15/08).** On gagne, on RESTE sur
+   le niveau, on pose les pièces qui cueillent le fruit : le fruit doit être
+   recompté sans qu'on ait à retirer une pièce d'abord. Le contrôle joue
+   « Le tiers de la moitié » (son `solMin` est le préfixe exact de son `sol`) et
+   lit `soley-save-v5` aux deux étapes. Vérifié dans les deux sens : rouge sur
+   l'ancien rendu, vert sur le correctif.
 
 **Batterie de L'atelier (depuis le 15/08), à lancer en plus dès qu'on touche à
 `soley-atelier.html` ou `atelier.js` :**
@@ -930,4 +936,24 @@ Trois choses à savoir avant d'y toucher :
   « Le tour du lagon » remonté en 4 (contenu intact, seule la position change), après
   mesure de tout le lagon au solveur — le monde finissait 10 fois plus facile qu'il
   ne montait.
+- **15/08 (nuit) — deux finitions trouvées EN JOUANT.** (1) La perle au bout de
+  chaque feston des lambrequins est retirée : à la taille d'une maison, le petit
+  rond se lit comme une salissure sous l'arrondi et non comme une breloque
+  (« ça fait un peu bizarre ») — les arrondis seuls disent la dentelle. (2) **Un
+  progrès ne se réenregistrait pas** : Gwenael gagne « sans le fruit », reste sur
+  le niveau, pose les pièces qui le cueillent — et rien n'est recompté. Cause,
+  reproduite avant d'être corrigée : `redraw()` ne relançait la victoire que si
+  `overlayShown` était retombé à `false`, ce qui n'arrivait qu'en RETIRANT une
+  pièce (`ui.js`), à l'ouverture d'un niveau ou à la remise à zéro. **Son
+  hypothèse — « j'aurais dû enlever une pièce et refaire valider » — était
+  exactement la règle du code.** Sa décision sur le remède : un PROGRÈS relance la
+  victoire depuis le début, « Lévé ! » compris ; une pose qui n'améliore rien ne
+  relance rien. La condition compare donc le résultat courant au meilleur
+  enregistré (plus de fruits, ou moins de pièces). Contrôle T12, vérifié dans les
+  deux sens. **Mesure faite au passage, qui ferme un débat : aucun verrou du jeu
+  n'oblige à battre un niveau au-delà de 2 383 essais** (le plus dur imposé est
+  « Trois quarts », pour ouvrir le volcan ; quatre verrous sur huit restent sous
+  650). La règle des ⌈5/8⌉ laisse donc toujours contourner les monstres — un élève
+  ne peut pas rester bloqué, et l'idée de « mondes-école toujours ouverts » perd
+  sa justification d'accès.
 - (à compléter à chaque session)
