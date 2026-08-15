@@ -463,12 +463,12 @@ const entreeBandesFractionsRail = {
   titre: "Prototype guidé — bandes du plateau + rail décimal",
   parametres: [
     { cle: "numerateur", libelle: "Numérateur", min: 0, max: 8, pas: 1, defaut: 5 },
-    { cle: "largeur", libelle: "Largeur", min: 320, max: 1200, pas: 20, defaut: 340 },
+    { cle: "largeur", libelle: "Largeur", min: 260, max: 1200, pas: 20, defaut: 340 },
   ],
   groupes: [
     {
       cle: "denominateur",
-      options: [[2, "Demis"], [4, "Quarts"]],
+      options: [[1, "Unités"], [2, "Demis"], [4, "Quarts"]],
       defaut: 2,
     },
     {
@@ -503,6 +503,12 @@ const entreeBandesFractionsRail = {
     });
   },
   planche: () => [
+    {
+      legende: "5/1 — cinq unités alignées jusqu’à 5",
+      dessiner: () => svgBandesRail({
+        numerateur: 5, denominateur: 1, profil: "solution", etape: "pieces", largeur: 340,
+      }),
+    },
     {
       legende: "1/2 — pièce historique alignée sur 0,5",
       dessiner: () => svgBandesRail({

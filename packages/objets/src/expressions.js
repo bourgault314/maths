@@ -21,9 +21,9 @@
 // un `role` sémantique (« hypotenuse », « inconnue »…) que le rendu
 // habillera — jamais l'inverse.
 
-import { TYPOGRAPHIE } from "../../charte/src/charte.js?v=30";
+import { TYPOGRAPHIE } from "../../charte/src/charte.js?v=31";
 
-export const VERSION_EXPRESSIONS = 5;
+export const VERSION_EXPRESSIONS = 6;
 
 const CHAPEAU = "̂"; // accent circonflexe combinant
 
@@ -436,6 +436,7 @@ export function rendreFractionHtml(numerateur, denominateur, options = {}) {
 
   return (
     `<svg class="mathsgo-fraction mathsgo-fraction-svg"` +
+    ` style="display:inline-block;vertical-align:middle"` +
     ` data-numerateur="${echapperAttributHtml(n)}" data-denominateur="${echapperAttributHtml(d)}"` +
     ` viewBox="${arrondiFractionSvg(-largeurBoite / 2)} ${arrondiFractionSvg(-debordInline)} ` +
     `${arrondiFractionSvg(largeurBoite)} ${arrondiFractionSvg(hauteurBoite)}"` +

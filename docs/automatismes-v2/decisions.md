@@ -1059,3 +1059,57 @@ La première page du cours affiche aussi explicitement `a² = a × a`, entre la
 définition verbale et l'exemple qui oppose `4 × 4` à `4 × 2`. Le générateur F3
 passe en version 2. Cette finition entre dans le candidat public `v30` avant sa
 première publication ; elle ne crée donc pas une seconde version de cache.
+
+### D-054 — Le cours NC-03 / NC-04 suit six pages CPA sans méthode concurrente
+
+Gwenaël arrête le 15 août 2026 une nouvelle organisation du cours de
+`fractions-simples-decimaux`. Cette décision remplace uniquement la description
+des six pages donnée par D-049 ; les règles de questions, d'aide atomique, de
+correction et d'omission restent inchangées.
+
+La première page forme une unité avec deux demis, puis aligne cinq pièces d'un
+dixième et une pièce d'un demi sur un même repère avant d'écrire
+`1/2 = 5/10 = 0,5`. La deuxième forme quatre quarts et réorganise les mêmes 25
+centièmes en l'une des quatre zones égales de l'unité ; trois zones donnent
+ensuite `3/4 = 75/100 = 0,75`. Les changements de disposition ne changent ni
+la quantité ni l'échelle.
+
+La troisième page fusionne les anciennes pages de rangs et de conversion
+directe. Une même quantité passe du matériel rouge, vert et jaune au tableau,
+puis à la décomposition
+`147/100 = 100/100 + 40/100 + 7/100 = 1 + 4/10 + 7/100 = 1,47`. Les zéros
+nécessaires aux rangs vides sont explicités avec `7/100 = 0,07`. Les repères
+`1/10`, `1/100` et `1/1000` restent visibles ; `725/1000 = 0,725` utilise le
+tableau seul, sans fabriquer de matériel en millièmes.
+
+La quatrième page traite le sens inverse en distinguant la forme de réponse.
+Si le dénominateur est imprimé, l'élève le conserve et compte les parts
+correspondantes : trois quarts atteignent `0,75`, donc `0,75 = 3/4`. Si les
+deux cases sont libres, le dernier rang écrit fournit une fraction décimale
+possible, par exemple `1,47 = 147/100`, et toute fraction équivalente reste
+correcte ; `75/100` et `3/4` sont ainsi présentées comme deux réponses libres
+valides.
+
+La cinquième page conserve les deux cas complémentaires demandés par Gwenaël :
+`7/2` forme trois unités et laisse un demi ; `6/4` forme une unité et les deux
+quarts restants sont remplacés par une demi-bande de même longueur. La sixième
+page construit `5/1 = 5` avec cinq bandes-unités alignées sur un rail, rappelle
+les entiers cachés `4/4` et `100/100`, puis place `3/2`, `4/2` et `5/2` sur un
+seul rail commun. Elle ordonne enfin les outils — repère connu, tableau de
+numération, groupement — et réserve sa toute dernière phrase au sens quotient :
+pour `b ≠ 0`, `a/b` est le résultat exact de `a ÷ b`.
+
+Le composant partagé des bandes sur rail prend donc aussi en charge le
+dénominateur 1 et conserve la même géométrie pour les trois repères en demis.
+Cette révision n'ajoute ni cinquièmes, ni huitièmes, ni pourcentages et ne fait
+pas de la division posée une technique exercée dans le module. Elle invalide
+le graphe public d'un seul tenant en `v31`.
+
+La recette dédiée du cours est rejouée après l'invalidation `v31` sur quatre
+fenêtres réelles Chromium : `320 × 568`, `390 × 844`, `1 280 × 720` et
+`1 920 × 1 080`. Elle couvre les six pages en haut, au milieu et en bas, soit
+**24 états** et **72 captures**. Les **1 516 tests** du dépôt passent ; aucune
+erreur JavaScript ni aucun débordement réel n'est relevé. L'écart maximal entre
+le centre d'une barre de fraction et celui du signe `=` ou `+` voisin est de
+**1,47 px**. Cette recette valide le cours D-054, sans remplacer la campagne
+complète de l'atelier et des retours de réponse demandée par D-049.

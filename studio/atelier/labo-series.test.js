@@ -14,11 +14,23 @@ test("chaque série contient au moins un objet", () => {
   }
 });
 
-test("les bandes sur rail exposent l'étape reste et son cas 6/4", () => {
+test("les bandes sur rail exposent les unités, l'étape reste et leurs cas témoins", () => {
   const entree = SERIES
     .find(({ nom }) => nom === "Fractions")
     ?.objets.bandesFractionsRail;
   assert.ok(entree, "entrée bandesFractionsRail absente du Labo");
+
+  const groupeDenominateur = entree.groupes.find(({ cle }) => cle === "denominateur");
+  assert.ok(
+    groupeDenominateur.options.some(([valeur]) => valeur === 1),
+    "les bandes-unités doivent être sélectionnables",
+  );
+  const carteUnites = entree.planche().find(({ legende }) => legende.startsWith("5/1"));
+  assert.ok(carteUnites, "la planche doit montrer cinq unités sur le rail");
+  const svgUnites = carteUnites.dessiner();
+  assert.match(svgUnites, /dénominateur 1/);
+  assert.match(svgUnites, /La représentation emploie des unités/);
+  assert.match(svgUnites, /class="rangee-bandes etape-pieces"/);
 
   const groupeEtape = entree.groupes.find(({ cle }) => cle === "etape");
   assert.ok(groupeEtape, "choix d'étape absent");

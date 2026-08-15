@@ -26,7 +26,7 @@ function disposition(rendu, nom) {
 
 describe("réorganisation des centièmes", () => {
   it("expose une API versionnée et trois états déterministes", () => {
-    assert.equal(VERSION_CORRESPONDANCES_DECIMALES, 2);
+    assert.equal(VERSION_CORRESPONDANCES_DECIMALES, 3);
     assert.deepEqual(ETAPES_REORGANISATION_CENTIEMES, [
       "lignes",
       "quadrants",
@@ -105,6 +105,24 @@ describe("réorganisation des centièmes", () => {
     assert.equal(rendu.donnees.afficherEcritures, false);
   });
 
+  it("peut nommer les deux dispositions sans répéter l’équation de synthèse", () => {
+    const rendu = dessinerReorganisationCentiemes({
+      centiemes: 75,
+      etape: "comparaison",
+      largeur: 320,
+      afficherEcritures: true,
+      afficherEquation: false,
+    });
+    assert.match(rendu.svg, />75 centièmes en lignes<\/text>/);
+    assert.match(rendu.svg, />3 quarts de l’unité<\/text>/);
+    assert.equal(compter(rendu.svg, /class="cd-etiquette-quadrant"/g), 3);
+    assert.doesNotMatch(rendu.svg, /class="cd-ecriture-correspondance"/);
+    assert.equal(rendu.donnees.afficherEcritures, true);
+    assert.equal(rendu.donnees.afficherEquation, false);
+    assert.match(rendu.svg, /data-afficher-equation="false"/);
+    assert.doesNotMatch(rendu.texteAlternatif, /75\/100|3\/4|0,75/);
+  });
+
   it("reste autonome, lisible et contenu dans un viewBox de 320 px", () => {
     for (const centiemes of [25, 75]) {
       for (const etape of ETAPES_REORGANISATION_CENTIEMES) {
@@ -140,6 +158,7 @@ describe("réorganisation des centièmes", () => {
       { centiemes: 25, largeur: 200 },
       { centiemes: 25, largeur: Infinity },
       { centiemes: 25, afficherEcritures: "non" },
+      { centiemes: 25, afficherEquation: "non" },
     ]) {
       const rendu = dessinerReorganisationCentiemes(options);
       assert.ok(rendu.erreur);
@@ -151,7 +170,7 @@ describe("réorganisation des centièmes", () => {
 });
 
 describe("cinq dixièmes et un demi", () => {
-  it("empile exactement cinq bandes vertes dans la moitié d'une unité rouge", () => {
+  it("aligne verticalement cinq bandes vertes dans la moitié gauche de l'unité", () => {
     const rendu = dessinerDemiAvecDixiemes({
       etape: "dixiemes",
       largeur: 320,
@@ -160,8 +179,19 @@ describe("cinq dixièmes et un demi", () => {
     assert.equal(compter(rendu.svg, /class="cd-bande-dixieme"/g), 5);
     assert.equal(
       rendu.donnees.hauteurCinqDixiemes,
+      rendu.donnees.coteUnite,
+    );
+    assert.equal(
+      rendu.donnees.largeurCinqDixiemes,
       rendu.donnees.coteUnite / 2,
     );
+    assert.equal(rendu.donnees.largeurCinqDixiemes, rendu.donnees.largeurDemi);
+    assert.match(rendu.svg, /class="cd-reste-dixiemes"/);
+    assert.match(
+      rendu.svg,
+      new RegExp(`class="cd-reste-dixiemes"[^>]*fill="${COULEURS_RANGS_NUMERATION_DECIMALE.dixiemes.fond}"`),
+    );
+    assert.match(rendu.svg, /class="cd-ligne-demie-unite cd-bord-cinq-dixiemes"/);
     assert.match(
       rendu.svg,
       new RegExp(`fill="${COULEURS_NUMERATION_DECIMALE.dixieme}"`),
@@ -179,7 +209,10 @@ describe("cinq dixièmes et un demi", () => {
       largeur: 320,
     });
     assert.equal(rendu.donnees.largeurDemi, rendu.donnees.coteUnite / 2);
+    assert.equal(rendu.donnees.positionBordDemi, rendu.largeur / 2);
     assert.equal(compter(rendu.svg, /class="cd-piece-demi"/g), 1);
+    assert.equal(compter(rendu.svg, /class="cd-guide-commun-demi"/g), 1);
+    assert.match(rendu.svg, /class="cd-guide-commun-demi"[^>]*stroke-dasharray="5 4"/);
     assert.match(
       rendu.svg,
       new RegExp(`class="cd-piece-demi"[^>]*fill="${COULEURS_BANDES_FRACTIONS.d2}"`),
@@ -200,6 +233,7 @@ describe("cinq dixièmes et un demi", () => {
     assert.match(rendu.svg, />0,5<\/text>/);
     assert.doesNotMatch(rendu.svg, /class="cd-ecriture-correspondance"/);
     assert.equal(rendu.donnees.afficherEquation, false);
+    assert.doesNotMatch(rendu.texteAlternatif, /5 sur 10|1 sur 2/);
   });
 
   it("peut masquer toutes les écritures finales dans un mode d'aide", () => {

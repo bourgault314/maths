@@ -272,12 +272,12 @@ test("le cours et l’aide conservent l’ordre CPA et les nouveaux invariants",
     readFile(new URL("./src/etat-lecteur.js", import.meta.url), "utf8"),
   ]);
   const titres = [
-    "Construire un demi",
-    "Construire des quarts",
-    "Nommer les rangs décimaux",
-    "Fraction décimale vers décimal",
-    "Décimal vers fraction",
+    "Un demi : plusieurs écritures",
+    "Un quart et trois quarts",
+    "Lire une fraction décimale",
+    "Du décimal à la fraction",
     "Dépasser l’unité",
+    "Reconnaître un entier",
   ];
   let position = -1;
   for (const titre of titres) {
@@ -288,11 +288,11 @@ test("le cours et l’aide conservent l’ordre CPA et les nouveaux invariants",
   assert.match(application, /dessinerBandesFractionnairesSurRailDecimal/);
   assert.match(application, /dessinerDemiAvecDixiemes/);
   assert.match(application, /dessinerReorganisationCentiemes/);
-  assert.match(application, /rendreRepereVisuelCours\(3, 2\)/);
-  assert.match(application, /rendreRepereVisuelCours\(4, 2\)/);
-  assert.match(application, /rendreRepereVisuelCours\(5, 2\)/);
+  assert.match(application, /rendreBandesRailCours\(5, 2, "pieces"/);
+  assert.match(application, /reperes-demis-equations-cours/);
   assert.match(application, /rendreRepereCentCentiemesCours\(\)/);
-  assert.match(application, /rendreRepereSeptUnitesCours\(\)/);
+  assert.match(application, /rendreRepereCinqUnitesCours\(\)/);
+  assert.match(application, /rendreBandesRailCours\(5, 1, "pieces"/);
   assert.match(application, /function rendreAidePoseBandesRiche/);
   assert.match(application, /classes: "figure-bandes-rail-aide"/);
   assert.match(application, /\["dixiemes", "demi", "comparaison"\]\[etape\]/);

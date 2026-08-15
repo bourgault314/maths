@@ -3,7 +3,7 @@
 // les générateurs, le lecteur et les objets visuels peuvent donc partager les
 // mêmes calculs exacts et les mêmes données structurées.
 
-export const VERSION_FRACTIONS_DECIMAUX = 2;
+export const VERSION_FRACTIONS_DECIMAUX = 3;
 
 export const DENOMINATEURS_DECIMAUX_PRIS_EN_CHARGE = Object.freeze([
   1,
@@ -280,18 +280,25 @@ export const DONNEES_DROITE_DEMIS = construireDonneesDroite(
   7,
 );
 
+export const DONNEES_DROITE_UNITES = construireDonneesDroite(
+  "unites",
+  1,
+  12,
+);
+
 export const DONNEES_DROITE_QUARTS = construireDonneesDroite(
   "quarts",
   4,
   8,
 );
 
-/** Rend les données de la droite des demis ou des quarts. */
+/** Rend les données de la droite des unités, des demis ou des quarts. */
 export function obtenirDonneesDroiteFractionnaire(denominateur) {
+  if (denominateur === 1) return DONNEES_DROITE_UNITES;
   if (denominateur === 2) return DONNEES_DROITE_DEMIS;
   if (denominateur === 4) return DONNEES_DROITE_QUARTS;
   throw new RangeError(
-    `obtenirDonneesDroiteFractionnaire : dénominateur 2 ou 4 requis (${denominateur})`,
+    `obtenirDonneesDroiteFractionnaire : dénominateur 1, 2 ou 4 requis (${denominateur})`,
   );
 }
 

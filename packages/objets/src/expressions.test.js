@@ -9,6 +9,8 @@ import {
   nombre,
   produit,
   puissance,
+  quotient,
+  rendreFractionHtml,
   somme,
   texteCourt,
   variable,
@@ -17,6 +19,24 @@ import {
 } from "./expressions.js";
 
 describe("versHtmlSemantique", () => {
+  it("centre la barre de toute fraction inline sur les signes mathématiques", () => {
+    for (const [numerateur, denominateur] of [[1, 2], [147, 100]]) {
+      const html = rendreFractionHtml(numerateur, denominateur);
+      assert.match(html, /style="display:inline-block;vertical-align:middle"/);
+      assert.match(html, new RegExp(`data-numerateur="${numerateur}" data-denominateur="${denominateur}"`));
+      assert.match(html, /role="math" aria-label=/);
+    }
+
+    const sommeDeFractions = versHtmlSemantique(somme(
+      quotient(nombre(4), nombre(4)),
+      quotient(nombre(2), nombre(4)),
+    ));
+    assert.equal(
+      (sommeDeFractions.match(/vertical-align:middle/g) ?? []).length,
+      2,
+    );
+  });
+
   it("rend une puissance avec un vrai exposant et sa verbalisation", () => {
     assert.equal(
       versHtmlSemantique(puissance(nombre(7), 2)),
