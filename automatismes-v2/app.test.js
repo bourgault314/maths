@@ -82,6 +82,25 @@ function appuyer(gestionnaires, key, { shiftKey = false } = {}) {
   return preventions;
 }
 
+it("réaffiche le repère d'un panneau débordant lorsqu'il revient en haut", async () => {
+  installerFauxNavigateur(
+    "?notion=carres-entiers-0-a-12&questions=1&graine=repere-defilement",
+  );
+  const { doitAfficherIndicateurDefilementPanneau } = await import(
+    `./app.js?fumee=repere-defilement-${Date.now()}`
+  );
+  const panneau = { scrollHeight: 620, clientHeight: 400, scrollTop: 0 };
+  assert.equal(doitAfficherIndicateurDefilementPanneau(panneau), true);
+  panneau.scrollTop = 8;
+  assert.equal(doitAfficherIndicateurDefilementPanneau(panneau), true);
+  panneau.scrollTop = 48;
+  assert.equal(doitAfficherIndicateurDefilementPanneau(panneau), false);
+  panneau.scrollTop = 0;
+  assert.equal(doitAfficherIndicateurDefilementPanneau(panneau), true);
+  panneau.scrollHeight = 402;
+  assert.equal(doitAfficherIndicateurDefilementPanneau(panneau), false);
+});
+
 it("rend NC-01 depuis le registre et conserve son aide et sa correction", async () => {
   const { application, gestionnaires, focusRecus, optionsFocus, corpsPanneau, zoneQuestion } = installerFauxNavigateur(
     "?notion=criteres-divisibilite&questions=1&graine=fumee-registre",
@@ -156,11 +175,9 @@ it("rend NC-01 depuis le registre et conserve son aide et sa correction", async 
   )].map((correspondance) => ({ index: correspondance[1], chiffre: Number(correspondance[2]) }));
   assert.ok(chiffresAide.length > 0);
   corpsPanneau.scrollTop = 0;
-  corpsPanneau.dataset.defilementCommence = "true";
   cliquer(gestionnaires, "chiffre-aide", undefined, undefined, chiffresAide[0].index);
-  assert.equal(corpsPanneau.dataset.defilementCommence, "true");
   cliquer(gestionnaires, "chiffre-aide", undefined, undefined, chiffresAide[0].index);
-  assert.equal(corpsPanneau.dataset.defilementCommence, "true");
+  assert.equal(corpsPanneau.dataset.defilementCommence, undefined);
   corpsPanneau.scrollTop = 180;
   for (const { index } of chiffresAide) {
     cliquer(gestionnaires, "chiffre-aide", undefined, undefined, index);
@@ -226,6 +243,10 @@ it("rend le cours en cinq pages et les six familles de NC-02", async () => {
   let selectionCarresParfaitsVue = false;
   let carresParfaitsVus = false;
   let puissanceSaisieVue = false;
+  let nombreDansTitreDirectVu = false;
+  let nombreDansTitreInverseVu = false;
+  let nombreDansTitreQuadrilleVu = false;
+  let termeCalculCourtVu = false;
   const famillesAvecCarreEnCorrection = new Set();
   for (let index = 0; index < 20; index += 1) {
     const famille = application.innerHTML.match(/famille-([a-z-]+)"/)?.[1];
@@ -262,6 +283,36 @@ it("rend le cours en cinq pages et les six familles de NC-02", async () => {
         /<span class="mathsgo-puissance-base">□<\/span><sup>2<\/sup>/,
       );
     }
+    if (application.innerHTML.includes("Quel est le carré de")) {
+      nombreDansTitreDirectVu = true;
+      assert.match(
+        application.innerHTML,
+        /Quel est le carré de <span class="mathsgo-expression" role="math" aria-label="(\d+)">\1<\/span> \?/,
+      );
+      assert.doesNotMatch(application.innerHTML, /Quel est le carré de \d+ \?/);
+    }
+    if (application.innerHTML.includes("Quel entier naturel a pour carré")) {
+      nombreDansTitreInverseVu = true;
+      assert.match(
+        application.innerHTML,
+        /Quel entier naturel a pour carré <span class="mathsgo-expression" role="math" aria-label="(\d+)">\1<\/span> \?/,
+      );
+      assert.doesNotMatch(application.innerHTML, /Quel entier naturel a pour carré \d+ \?/);
+    }
+    if (famille === "carre-quadrille") {
+      nombreDansTitreQuadrilleVu = true;
+      assert.match(
+        application.innerHTML,
+        /<h1>Ce carré (?:a|contient) <span class="mathsgo-expression" role="math" aria-label="(\d+)">\1<\/span>/,
+      );
+    }
+    if (famille === "calcul-court") {
+      termeCalculCourtVu = true;
+      assert.match(
+        application.innerHTML,
+        /calcul-court-question[\s\S]*?<span>[+−]<\/span><span class="mathsgo-expression" role="math" aria-label="(\d+)">\1<\/span><span>=<\/span>/,
+      );
+    }
     if (famille === "sens-notation") {
       assert.match(application.innerHTML, /Quelle écriture correspond/);
       assert.match(
@@ -291,8 +342,10 @@ it("rend le cours en cinq pages et les six familles de NC-02", async () => {
     const champs = [...application.innerHTML.matchAll(
       /data-action="champ-reponse" data-index="(\d+)"/g,
     )].map((correspondance) => correspondance[1]);
+    const questionNumerique = champs.length > 0;
     if (champs.length === 2) {
       deuxChampsVus = true;
+      assert.match(application.innerHTML, /question-numerique[^"]*avec-pave/);
       cliquer(gestionnaires, "champ-reponse", undefined, undefined, "0");
       cliquer(gestionnaires, "chiffre", undefined, "1");
       cliquer(gestionnaires, "champ-reponse", undefined, undefined, "1");
@@ -300,7 +353,7 @@ it("rend le cours en cinq pages et les six familles de NC-02", async () => {
       assert.match(application.innerHTML, /Champ 1, valeur 1/);
       assert.match(application.innerHTML, /Champ 2, valeur 1/);
     } else if (champs.length === 1) {
-      assert.match(application.innerHTML, /avec-pave/);
+      assert.match(application.innerHTML, /question-numerique[^"]*avec-pave/);
       cliquer(gestionnaires, "chiffre", undefined, "1");
     } else {
       const choix = application.innerHTML.match(/data-action="choix" data-id="([^"]+)"/)?.[1];
@@ -309,9 +362,21 @@ it("rend le cours en cinq pages et les six familles de NC-02", async () => {
     }
     cliquer(gestionnaires, "valider");
     assert.doesNotMatch(application.innerHTML, /avec-pave/);
+    assert.doesNotMatch(
+      application.innerHTML,
+      /<p class="message [^"]+" role="(?:status|alert)">(?!<span class="contenu-message">)/,
+    );
+    if (questionNumerique) assert.match(application.innerHTML, /question-numerique/);
+    else assert.doesNotMatch(application.innerHTML, /question-numerique/);
     cliquer(gestionnaires, "correction");
     assert.match(application.innerHTML, /Correction expliquée/);
     assert.match(application.innerHTML, /Réponse correcte/);
+    if (questionNumerique) {
+      assert.match(
+        application.innerHTML,
+        /reponses-correction reponses-correction-numerique" aria-label="Réponse correcte"/,
+      );
+    }
     if (["calcul-direct", "retrouver-entier", "sens-notation", "carre-quadrille"].includes(famille)) {
       if (application.innerHTML.includes("visuel-correction-carres")) {
         famillesAvecCarreEnCorrection.add(famille);
@@ -350,6 +415,10 @@ it("rend le cours en cinq pages et les six familles de NC-02", async () => {
   assert.equal(selectionCarresParfaitsVue, true);
   assert.equal(carresParfaitsVus, true);
   assert.equal(puissanceSaisieVue, true);
+  assert.equal(nombreDansTitreDirectVu, true);
+  assert.equal(nombreDansTitreInverseVu, true);
+  assert.equal(nombreDansTitreQuadrilleVu, true);
+  assert.equal(termeCalculCourtVu, true);
   assert.deepEqual([...famillesAvecCarreEnCorrection].sort(), [
     "calcul-direct",
     "carre-quadrille",
@@ -378,8 +447,16 @@ it("traite pareil une omission validée au clic ou avec Entrée", async () => {
     else assert.equal(appuyer(gestionnaires, "Enter"), 1);
     assert.doesNotMatch(application.innerHTML, /Correction expliquée/);
     assert.match(application.innerHTML, /Pas de réponse/);
+    assert.match(
+      application.innerHTML,
+      /<p class="message message-erreur" role="status"><span class="contenu-message"><strong>Pas de réponse\.<\/strong><\/span><\/p>/,
+    );
     assert.match(application.innerHTML, /Voir l'explication/);
     assert.match(application.innerHTML, /Réponse correcte/);
+    assert.match(
+      application.innerHTML,
+      /reponses-correction reponses-correction-numerique" aria-label="Réponse correcte"/,
+    );
     assert.doesNotMatch(application.innerHTML, /Ta réponse reste affichée/);
     return application.innerHTML;
   }
@@ -411,10 +488,19 @@ it("distingue omission, mauvaise saisie et correction pour une fraction libre", 
   cliquer(erreur.gestionnaires, "demarrer");
   cliquer(erreur.gestionnaires, "champ-reponse", undefined, undefined, "0");
   cliquer(erreur.gestionnaires, "chiffre", undefined, "1");
+  cliquer(erreur.gestionnaires, "valider");
+  assert.match(
+    erreur.application.innerHTML,
+    /<p class="message message-erreur" role="alert"><span class="contenu-message">Complète les deux cases\.<\/span><\/p>/,
+  );
   cliquer(erreur.gestionnaires, "champ-reponse", undefined, undefined, "1");
   cliquer(erreur.gestionnaires, "chiffre", undefined, "1");
   cliquer(erreur.gestionnaires, "valider");
   assert.match(erreur.application.innerHTML, /À revoir/);
+  assert.match(
+    erreur.application.innerHTML,
+    /<p class="message message-erreur" role="status"><span class="contenu-message"><strong>À revoir\.<\/strong>[^<]*<\/span><\/p>/,
+  );
   assert.match(erreur.application.innerHTML, /case-reponse-rationnelle fausse/);
   assert.doesNotMatch(erreur.application.innerHTML, /reponse-attendue-omission/);
   assert.doesNotMatch(erreur.application.innerHTML, /reponses-correction-fractions/);
@@ -517,6 +603,10 @@ it("affiche en succès une sélection multiple entièrement correcte", async () 
   assert.ok(carres.length >= 1);
   for (const valeur of carres) cliquer(gestionnaires, "choix", `nombre-${valeur}`);
   cliquer(gestionnaires, "valider");
+  assert.match(
+    application.innerHTML,
+    /<p class="message message-reussite" role="status"><span class="contenu-message"><strong>Bien joué !<\/strong> Ta réponse est correcte\.<\/span><\/p>/,
+  );
   cliquer(gestionnaires, "correction");
   assert.match(application.innerHTML, /rappel-reponse-eleve reponse-juste/);
   assert.doesNotMatch(application.innerHTML, /rappel-reponse-eleve reponse-fausse/);

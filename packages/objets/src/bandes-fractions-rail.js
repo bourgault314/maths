@@ -14,11 +14,11 @@ import {
   construireGroupementFraction,
   formaterFractionEnDecimal,
   obtenirDonneesDroiteFractionnaire,
-} from "./fractions-decimaux.js?v=27";
+} from "./fractions-decimaux.js?v=29";
 import {
   COULEURS_BANDES_FRACTIONS,
   couleurBandeFraction,
-} from "../../charte/src/charte.js?v=27";
+} from "../../charte/src/charte.js?v=29";
 
 export const VERSION_BANDES_FRACTIONS_RAIL = 2;
 

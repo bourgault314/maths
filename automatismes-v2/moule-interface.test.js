@@ -48,8 +48,9 @@ describe("moule responsive commun", () => {
     assert.match(corps, /overflow-y:\s*auto/);
     assert.match(app, /class="zone-corps-panneau"[\s\S]*class="corps-panneau"/);
     assert.match(app, /data-indicateur-defilement[\s\S]*Fais défiler/);
-    assert.match(app, /scrollHeight > corps\.clientHeight \+ 2/);
-    assert.match(app, /corps\.scrollTop > 2/);
+    assert.match(app, /scrollHeight > clientHeight \+ 2/);
+    assert.match(app, /scrollTop <= 8/);
+    assert.doesNotMatch(app, /defilementCommence/);
     const indicateur = blocCss(".indicateur-defilement-panneau");
     assert.match(indicateur, /position:\s*absolute/);
     assert.match(indicateur, /pointer-events:\s*none/);
@@ -57,8 +58,23 @@ describe("moule responsive commun", () => {
 
   it("emploie une seule police mathématique et une grille commune pour les égalités", () => {
     assert.match(app, /--mg-mathematiques", TYPOGRAPHIE\.mathematiques/);
-    assert.match(blocCss(".mathsgo-expression"), /font-family:\s*var\(--mg-mathematiques\)/);
+    const expression = blocCss(".mathsgo-expression");
+    assert.match(expression, /font-family:\s*var\(--mg-mathematiques\)/);
+    assert.match(expression, /font-variant-numeric:\s*lining-nums tabular-nums/);
+    assert.match(expression, /font-feature-settings:\s*"lnum" 1, "tnum" 1/);
     assert.match(blocCss(".mathsgo-egalites-alignees"), /grid-template-columns:/);
+    for (const selecteur of [
+      ".chaine-carre",
+      ".case-reponse-carres",
+      ".grille-carres-multiples .choix",
+      ".calcul-aligne",
+      ".panneau-carres .rappel-question strong",
+      ".panneau-carres .reponses-correction strong",
+    ]) {
+      assert.match(blocCss(selecteur), /font-variant-numeric:\s*lining-nums tabular-nums/);
+      assert.match(blocCss(selecteur), /font-feature-settings:\s*"lnum" 1, "tnum" 1/);
+    }
+    assert.match(blocCss(".case-reponse-carres"), /font:\s*inherit/);
     assert.match(app, /function rendreEgaliteCarre\(/);
     assert.doesNotMatch(app, /<p class="chaine-carre">\$\{rendrePuissance/);
     assert.doesNotMatch(
@@ -79,6 +95,27 @@ describe("moule responsive commun", () => {
       css,
       /\.rappel-reponse-eleve\.reponse-fausse \.fraction-empilee\s*\{[^}]*color:\s*color-mix\(in srgb, var\(--mg-erreur\) 60%, var\(--mg-encre\)\)/s,
     );
+  });
+
+  it("centre les retours et les réponses sans modifier leurs dimensions", () => {
+    const message = blocCss(".zone-retour .message");
+    assert.match(message, /min-height:\s*42px/);
+    assert.match(message, /display:\s*grid/);
+    assert.match(message, /place-items:\s*center/);
+    assert.match(blocCss(".zone-retour .message > .contenu-message"), /display:\s*block/);
+
+    const rappel = blocCss(".rappel-reponse-eleve");
+    assert.match(rappel, /display:\s*flex/);
+    assert.match(rappel, /align-items:\s*center/);
+
+    assert.match(
+      css,
+      /(?:^|\n)\.reponses-correction strong\s*\{[^}]*min-height:\s*44px;[^}]*display:\s*inline-grid;[^}]*place-items:\s*center;[^}]*line-height:\s*1/s,
+    );
+    const reponseNumerique = blocCss(".reponses-correction-numerique strong");
+    assert.match(reponseNumerique, /font-family:\s*var\(--mg-mathematiques\)/);
+    assert.match(reponseNumerique, /font-variant-numeric:\s*lining-nums tabular-nums/);
+    assert.match(reponseNumerique, /font-feature-settings:\s*"lnum" 1, "tnum" 1/);
   });
 
   it("conserve des touches tactiles compactes mais suffisamment grandes", () => {
@@ -103,11 +140,22 @@ describe("moule responsive commun", () => {
     );
   });
 
-  it("compacte uniquement la carte NC-02 quand le pavé tactile est visible", () => {
-    assert.match(css, /@media \(pointer: coarse\) and \(hover: none\)[\s\S]*?\.mode-entrainement\.avec-pave \.carte-question-carres/);
+  it("conserve la compaction d'une question numérique quand le pavé disparaît", () => {
+    assert.match(app, /miseEnPageNumerique \? "question-numerique"/);
+    assert.match(app, /paveActif \? "avec-pave"/);
+    assert.match(css, /@media \(pointer: coarse\) and \(hover: none\)[\s\S]*?\.mode-entrainement\.question-numerique \.carte-question-carres/);
+    assert.match(css, /\.mode-entrainement\.avec-pave \.pave-mathsgo-dock/);
     assert.match(css, /max-height:\s*700px[\s\S]*?\.famille-carre-quadrille[\s\S]*?\.visuel-carre-quadrille/);
     assert.match(css, /\.carte-question-carres\.famille-carre-quadrille\s*\{[^}]*grid-template-columns:/s);
-    assert.doesNotMatch(css, /\.mode-entrainement\.avec-pave \.carte-question-divisibilite/);
+    assert.match(
+      css,
+      /@media \(pointer: coarse\) and \(hover: none\)[\s\S]*?\.mode-entrainement\.question-numerique \.zone-question-scroll\s*\{[^}]*align-items:\s*flex-start/s,
+    );
+    assert.match(
+      css,
+      /\.mode-entrainement\.question-numerique \.zone-question-scroll > \.carte-question\s*\{[^}]*margin-block:\s*0/s,
+    );
+    assert.doesNotMatch(css, /\.mode-entrainement\.question-numerique \.carte-question-divisibilite/);
   });
 
   it("utilise un seul contour persistant pour le champ actif", () => {

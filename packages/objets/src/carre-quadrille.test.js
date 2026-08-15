@@ -43,7 +43,7 @@ describe("carré quadrillé", () => {
   });
 
   it("valide le mode et expose les quatre modes attendus", () => {
-    assert.equal(VERSION_CARRE_QUADRILLE, 2);
+    assert.equal(VERSION_CARRE_QUADRILLE, 4);
     assert.deepEqual(MODES_CARRE_QUADRILLE, [
       "sens",
       "aire-inconnue",
@@ -142,6 +142,18 @@ describe("carré quadrillé", () => {
     }).svg;
     assert.equal(compter(svg, /class="cq-ligne-active"/g), 1);
     assert.equal(compter(svg, /class="cq-colonne-active"/g), 1);
+    assert.match(
+      svg,
+      new RegExp(
+        `class="cq-ligne-active"[^>]*fill="${COULEURS_CARRE_QUADRILLE.ligne}"`,
+      ),
+    );
+    assert.match(
+      svg,
+      new RegExp(
+        `class="cq-colonne-active"[^>]*fill="${COULEURS_CARRE_QUADRILLE.colonne}"`,
+      ),
+    );
     assert.equal(compter(svg, /<rect\b/g), 5);
     assert.ok(svg.length < 4500);
 
@@ -178,6 +190,35 @@ describe("carré quadrillé", () => {
     assert.ok(!rendu.svg.includes("7 rangées"));
     assert.ok(!rendu.svg.includes("7 colonnes"));
     assert.ok(!rendu.svg.includes("cq-grille"));
+  });
+
+  it("aligne les chiffres du total avec la police mathématique commune", () => {
+    const svg = dessinerCarreQuadrille({ cote: 8 }).svg;
+    assert.match(
+      svg,
+      /<tspan[^>]*font-family="Georgia, 'Times New Roman', serif"[^>]*style="[^"]*lining-nums tabular-nums[^"]*'lnum' 1, 'tnum' 1;"[^>]*>64<\/tspan>/,
+    );
+    assert.match(
+      svg,
+      /<tspan[^>]*font-family="'Segoe UI', system-ui, -apple-system, BlinkMacSystemFont, sans-serif"[^>]*>carreaux<\/tspan>/,
+    );
+  });
+
+  it("garde des angles droits dans tous les rendus, y compris les cartouches centraux", () => {
+    const rendus = [
+      dessinerCarreQuadrille({
+        cote: 9,
+        mode: "sens",
+        miseEnEvidence: { ligne: 1, colonne: 1 },
+      }),
+      dessinerCarreQuadrille({ cote: 9, mode: "aire-inconnue" }),
+      dessinerCarreQuadrille({ cote: 9, mode: "cote-inconnu" }),
+      dessinerCarreQuadrille({ cote: 12, mode: "decomposition" }),
+    ];
+
+    for (const rendu of rendus) {
+      assert.doesNotMatch(rendu.svg, /\brx\s*=/);
+    }
   });
 
   it("garde les côtés très courts et réserve les mots au texte accessible", () => {

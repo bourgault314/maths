@@ -953,3 +953,60 @@ acceptant les écritures équivalentes ; enfin former les unités et traiter le
 reste. Cette dernière page réunit notamment `7/2`, `6/4`, les repères
 `3/2`, `4/2`, `5/2`, `100/100` et `7/1`, puis nomme la division comme méthode
 générale tardive.
+
+## 15 août 2026
+
+### D-050 — Les repères mobiles restent stables après interaction
+
+Gwenaël valide trois corrections d'affichage qui complètent D-045 et D-049
+sans modifier le contenu, les familles, les réponses ni les générateurs.
+
+Le repère « Fais défiler ↓ » dépend uniquement du débordement réel et de la
+position courante du panneau. Un mouvement tactile de huit pixels au plus est
+encore considéré comme le sommet ; le repère disparaît pendant un vrai
+défilement et réapparaît si l'utilisateur revient en haut. Aucun état
+« déjà vu » ne peut donc le masquer définitivement après un rebond minime.
+
+Dans le carré quadrillé commun, tous les nombres visibles utilisent la pile
+typographique mathématique et des chiffres alignés et tabulaires, y compris le
+total central comme `64`. Le mot « carreaux » conserve la police de texte. Le
+réglage OpenType est déclaré dans le SVG afin de rester effectif sur Safari.
+
+Sur un appareil tactile, la compaction de la carte dépend désormais du fait
+que la question est numérique, et non de la présence momentanée du pavé. La
+classe du pavé disparaît après validation conformément à D-049, mais la classe
+de mise en page reste jusqu'au changement de question : le haut de la carte ne
+descend donc plus lorsque le clavier se ferme.
+
+Le graphe public V2 est invalidé d'un seul tenant en `v28`. Aucun chemin sous
+`/auto/` n'appartient à ce lot.
+
+### D-051 — Les chiffres visibles et le carré restent géométriquement cohérents
+
+Gwenaël valide le 15 août 2026 la finition commune révélée par la recette sur
+iPhone. Cette correction prolonge D-045 et D-050 sans modifier les contenus,
+les familles, les réponses ni les générateurs.
+
+Tous les nombres HTML de NC-02 utilisent désormais les chiffres alignés et
+tabulaires de la pile mathématique, avec les réglages OpenType explicites
+nécessaires à Safari. Cette règle vaut pour les égalités, les champs de
+réponse, les rappels et les réponses correctes. Les valeurs insérées dans une
+question rédigée passent également par le composant mathématique commun : le
+`0` d'un titre et le `0` saisi ne changent donc plus de police.
+
+Les messages de validation, les rappels de réponse et les pastilles de
+correction sont centrés dans leurs propres boîtes, horizontalement et
+verticalement. Le contenu reste groupé dans un seul conteneur afin que la mise
+en valeur d'une amorce comme « Bien joué ! » ne crée pas deux éléments de
+grille concurrents.
+
+Le carré quadrillé ne contient plus aucun coin arrondi. Son contour, son fond
+et le cartouche central gardent des angles droits ; la rangée orange et la
+colonne turquoise restent réservées à l'aide F5, où elles rendent perceptibles
+les deux facteurs égaux. Elles n'apparaissent pas dans la question ordinaire.
+
+Enfin, une question numérique tactile reste ancrée en haut de sa zone, y
+compris sur une tablette assez large pour activer la disposition ordinateur.
+La disparition du pavé ne peut donc pas recentrer la carte vers le bas. Le
+graphe public V2 est invalidé d'un seul tenant en `v29` et `/auto/` reste hors
+du lot.

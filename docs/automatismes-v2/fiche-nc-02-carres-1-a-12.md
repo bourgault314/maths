@@ -428,6 +428,12 @@ composant commun produit un véritable élément HTML `sup`, un groupe insécabl
 et un libellé accessible comme « sept au carré ». Nombres, opérateurs et
 exposants héritent de la même pile typographique mathématique.
 
+Les chiffres visibles emploient les variantes alignées et tabulaires, avec le
+réglage OpenType explicite requis par Safari. Cette règle couvre aussi les
+champs, les rappels de réponse et les réponses correctes. Lorsqu'une valeur
+mathématique apparaît dans une phrase ou un titre, elle passe par ce composant
+au lieu d'être interpolée comme un simple caractère de texte.
+
 Ce composant est obligatoire dans les questions, le cours, l'aide, la
 correction et les choix. Les égalités successives passent par son rendu aligné
 afin que chaque signe `=` occupe la même colonne. Les SVG restent dans les
@@ -462,6 +468,11 @@ Les côtés visibles portent un nombre court. Le total apparaît au centre sur
 deux lignes (`64` puis `carreaux`) avec un fond opaque léger ; ni ce libellé ni
 les lignes du quadrillage ne doivent toucher le contour. Les mots qui donnent
 du sens restent dans la phrase voisine : « n rangées de n carreaux ».
+Les nombres du SVG emploient la police mathématique commune avec des chiffres
+alignés et tabulaires ; le mot « carreaux » conserve la police de texte.
+Le contour, le fond et le cartouche central ne portent aucun rayon : tous les
+angles visibles dans cet objet restent droits. La rangée et la colonne
+colorées n'apparaissent que dans l'aide F5 qui demande de les observer.
 
 L'ancien `numbers.square-area`, le Labo des régularités et la grille déjà
 testée pour les fractions fixent l'intention et les cas d'usage. Aucun code,
@@ -473,7 +484,8 @@ SVG, énoncé, paramètre ni distracteur de la banque historique n'est repris.
 - même ordre : question → réponse → validation ;
 - mêmes panneaux de cours, aide et correction ;
 - même indicateur « Fais défiler ↓ », visible seulement lorsqu'un panneau
-  déborde réellement et se trouve encore en haut, puis masqué au défilement ;
+  déborde réellement et se trouve encore en haut, masqué au défilement puis
+  réaffiché si l'utilisateur revient au sommet ;
 - même emplacement des commandes ;
 - mêmes profils de clavier, mêmes douze touches et mêmes cibles d'au moins
   44 pixels ;
@@ -486,11 +498,19 @@ SVG, énoncé, paramètre ni distracteur de la banque historique n'est repris.
 Cette règle est un invariant du projet : elle n'a pas à être redemandée à
 chaque micro-notion.
 
+Les messages de validation, la réponse rappelée et la réponse correcte sont
+centrés horizontalement et verticalement dans leurs boîtes communes. La même
+géométrie s'applique à toutes les notions du lecteur.
+
 Le pavé commun n'est ni réduit, ni déplacé, ni réécrit pour NC-02. Sur les
 petites hauteurs, seule la carte d'une question numérique NC-02 peut réduire
 ses marges, ses espacements et, si elle existe, la taille de son carré. La zone
 centrale reste défilable. Cette compaction locale ne modifie donc ni NC-01, ni
-le dock, ni le profil de clavier partagé.
+le dock, ni le profil de clavier partagé. Elle reste active après validation
+quand le pavé disparaît, afin que le haut de la question ne change pas de
+position.
+Sur une tablette tactile, la question numérique reste en outre ancrée en haut
+de la zone centrale lorsque la disposition large est active.
 
 ## Recette obligatoire avant présentation
 
@@ -509,13 +529,21 @@ le dock, ni le profil de clavier partagé.
 - contrôle de la typographie commune, de l'alignement des bases 0, 1, 9, 10,
   11 et 12 avec leur exposant et de la colonne des signes `=` ;
 - panneaux trop courts et assez hauts : présence conditionnelle de « Fais
-  défiler ↓ », puis disparition au premier défilement ;
+  défiler ↓ », disparition pendant le défilement et retour du repère lorsque
+  le panneau revient en haut ;
 - validation d'une réponse juste, fausse, entièrement omise, partielle et
   invalide pour chaque forme de réponse concernée ;
 - contrôle du carré quadrillé dans les corrections F1, F2, F3 et F5 pour une
   base au moins égale à 2, et de son absence dans les cas exclus ;
 - absence de débordement, chevauchement ou saut des commandes, y compris à
   l'intérieur des SVG ;
+- absence de déplacement vertical de la carte lorsque le pavé disparaît après
+  validation d'une réponse numérique ;
+- même contrôle à `1 024 × 768` en environnement tactile, avec un écart d'au
+  plus un pixel sur le haut de l'étiquette de notion ;
+- chiffres alignés dans les égalités, les champs et les réponses correctes,
+  notamment pour `0`, `60`, `64` et `81` sur Safari ;
+- absence de tout coin arrondi dans le SVG du carré quadrillé ;
 - inventaire visuel complet des cinq pages de cours, de toutes les
   sous-formes de questions et des panneaux d'aide/correction, en plus des
   captures de stress téléphone, ordinateur, TNI et zoom ;
