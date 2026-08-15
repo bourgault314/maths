@@ -101,7 +101,10 @@ empilées) — règle R1 : aucune étape sautée, totaux n/n toujours écrits.
 ## 5. Qualité : la procédure de test est OBLIGATOIRE avant tout push
 
 API de test exposée : `window.SOLEY = {openLevel, simulate, state, LV, solve(i),
-etoiles(i), parNiveau(i), seuilMonde(wi), mondeDeverrouille(wid), reussisMonde(wid), renderHome}`.
+etoiles(i), parNiveau(i), seuilMonde(wi), mondeDeverrouille(wid), reussisMonde(wid), renderHome,
+cours(id), montrerCours(id, apresVictoire), fermerCours(), decouvertesMonde(wid),
+decouvertesReussies(wid)}` — les cinq dernières sont arrivées avec le chantier
+« Comprendre » et manquaient à cette liste jusqu'au 15/08.
 `openLevel`/`solve` IGNORENT les verrous (c'est voulu : la batterie joue tout).
 Batterie (script Playwright Python, à conserver dans `tests/`) :
 1. Cohérence des données de chaque niveau (bornes, chevauchements, outils valides).
@@ -132,6 +135,19 @@ Batterie (script Playwright Python, à conserver dans `tests/`) :
    (descriptions, classement) exige de régénérer les sorties dérivées — au
    moins `outils/toutes-les-ressources.html` (c'est le test seo-publication
    qui le garde). Oubli réel du lot canne, attrapé par la CI.
+
+**Batterie de L'atelier (depuis le 15/08), à lancer en plus dès qu'on touche à
+`soley-atelier.html` ou `atelier.js` :**
+```
+python tests/soley/test_atelier.py --root .      # 18 contrôles A1→A13
+node tests/soley/verifier-atelier.mjs            # le jeu n'a pas bougé d'un octet
+node tests/soley/rejouer-bloc.mjs <fichier>      # rejoue un bloc exporté (harnais)
+```
+Le contrôle A8 est le garde-fou du lot : une fausse progression est semée dans
+`soley-save-v5` AVANT le chargement, on gagne réellement dans l'atelier, et la clé
+doit être identique à l'octet après la victoire. A5b vérifie qu'un niveau gagné
+plateau vide est refusé au jeu (sinon la célébration démarre à l'ouverture et le
+plateau ne répond plus aux clics — défaut trouvé en construisant le lot).
 
 ## 6. Historique des décisions (ne pas re-débattre sans raison)
 
@@ -343,6 +359,14 @@ Batterie (script Playwright Python, à conserver dans `tests/`) :
      tests/soley/ comme preuves datées de leur lot — ni retirés, ni réparés,
      jamais en CI. Chaque nouveau lot apporte SON vérificateur (modèle :
      verifier-lot-canne.mjs).
+  10. **L'atelier s'atteint par son URL, et par rien d'autre** (Gwenael, 15/08,
+     choix explicite parmi trois options). `soley-atelier.html` n'a aucun lien
+     entrant depuis le jeu : ni carte, ni bouton, ni mention. À ne pas confondre
+     avec le mode classe `soley.html?classe`, qui ouvre les mondes du JEU —
+     l'atelier est une page à part où tout est disponible par nature. L'activité
+     élèves « concevez votre niveau » marche dès maintenant en donnant l'adresse
+     en classe : le niveau d'un élève ne vit que sur son appareil et la remise
+     passe par le bloc exporté. Une entrée visible serait une décision de v2.
 
 ## 7. Architecture (découpage d'août 2026, statique, sans build, GitHub Pages)
 
@@ -357,6 +381,8 @@ outils/club_maths/
   soley/js/engine.js    (scènes du Coup de pouce, sauvegarde, état, simulate, victoire)
   soley/js/render.js    (SVG : pièces, roches, passes, fruits, cases, soleils, redraw)
   soley/js/ui.js        (écrans, toolbox, boardClick, plein écran, relayout, API SOLEY)
+  soley-atelier.html    (L'ATELIER : page CACHÉE de conception, voir plus bas)
+  soley/js/atelier.js   (le concepteur de niveaux, chargé après les quatre modules)
 tests/soley/            (batterie Playwright + procédure + verifier-decoupage.mjs)
 ```
 Étape 1 faite aux CISEAUX : tranches contiguës du fichier d'origine, seul le bloc
@@ -367,6 +393,27 @@ modules ES : fractions/constructeurs vivent dans levels.js (LV en a besoin à
 l'évaluation) ; scènes du Coup de pouce et sauvegarde vivent dans engine.js.
 Règle : les 4 fichiers restent des scripts classiques (pas de type=module), chacun
 commence par "use strict"; et le partage se fait par la portée globale.
+
+**L'atelier Solèy (15/08/2026) — page cachée de conception.**
+`outils/club_maths/soley-atelier.html` est le concepteur de niveaux de Gwenael :
+grille réglable, palette de tous les objets, boîte à outils, et le VRAI moteur pour
+tester ce qu'on vient de poser. Spec complète : `SPEC-ATELIER-NIVEAUX.md` à la racine.
+Trois choses à savoir avant d'y toucher :
+1. **Statut caché**, comme le musée `soley-v1.html` : `noindex`, hors `sitemap.xml`,
+   hors catalogue, et AUCUN lien depuis le jeu (décision de Gwenael du 15/08 : l'URL
+   se donne à la main). Une entrée visible serait une décision de v2.
+2. **Le lot est purement additif** : les quatre modules, `soley.html` et `soley.css`
+   sont inchangés à l'octet. `atelier.js` est chargé APRÈS eux et se sert de leur
+   portée partagée ; il réserve au brouillon une place à la fin de `LV` et appelle
+   `openLevel` dessus — seul chemin possible, `cur` étant interne aux modules.
+   Preuve rejouable : `node tests/soley/verifier-atelier.mjs`.
+3. **La sauvegarde du jeu n'est jamais touchée.** `engine.js` LIT `soley-save-v5` dès
+   son chargement (`let save=loadSave();`) : il ne suffit donc pas d'éviter de gagner.
+   La page pose, AVANT les quatre `<script>`, un rideau sur `Storage.prototype` —
+   `getItem` de cette seule clé renvoie `null`, `setItem` de cette seule clé lève une
+   erreur, et `persist()` bascule tout seul sur son repli mémoire déjà présent. Les
+   autres clés passent normalement (brouillons de l'atelier, consentement).
+   **Si cet ordre de chargement s'inverse un jour, la progression de Gwenael est lue.**
 
 ## 8. Feuille de route (idées validées ou proposées, à prioriser avec Gwenael)
 
@@ -587,4 +634,24 @@ commence par "use strict"; et le partage se fait par la portée globale.
   Rituel post-fusion : Vérifications et Publication vertes, 7/7 fichiers servis
   identiques aux octets committés (musée soley-v1 compris), batterie complète verte
   sur mathsgo.re.
+- 2026-08-15 (session Code, lot « L'atelier Solèy ») : le concepteur de niveaux
+  entre au dépôt — `outils/club_maths/soley-atelier.html` et
+  `outils/club_maths/soley/js/atelier.js`, DEUX fichiers nouveaux et rien d'autre
+  côté jeu. Page cachée (noindex, hors sitemap, hors catalogue, aucun lien entrant :
+  décision d'accès de Gwenael du 15/08). Deux écrans à bascule : Atelier (grille
+  5-12 × 4-8, palette des cinq objets avec fiches de réglage, boîte à outils avec
+  rotation et pièces scellées, fiche du niveau) et Jouer (le vrai moteur, la vraie
+  célébration). Après victoire, un bandeau d'atelier remplace la fenêtre des petits
+  soleils et enregistre `sol` (exige TOUS les fruits) et `solMin`. Brouillons
+  auto-enregistrés dans `soley-atelier-v1`, export du bloc prêt à coller dans
+  `levels.js` (avec refus si la solution manque et avertissements), import, et
+  chargement de n'importe lequel des 69 niveaux pour les retoucher.
+  **Deux trouvailles de construction, gravées §7 :** `engine.js` lit la sauvegarde
+  au CHARGEMENT du module (d'où le rideau sur `Storage.prototype` posé avant les
+  quatre `<script>`), et `parNiveau` lit `LV[i].sol.length` pendant la victoire —
+  un brouillon doit donc toujours porter un tableau `sol`, jamais `null`.
+  Preuves : batterie de l'atelier 18/18, `verifier-atelier.mjs` 21/21 (les six
+  fichiers du jeu intacts à l'octet), batterie du jeu 43 contrôles verte et node
+  16/16 inchangés, aller-retour « Le tour du champ » à zéro écart sur 15 champs,
+  bloc exporté rejoué dans le vrai moteur. Spec : `SPEC-ATELIER-NIVEAUX.md`.
 - (à compléter à chaque session)

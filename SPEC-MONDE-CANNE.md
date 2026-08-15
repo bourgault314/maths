@@ -159,5 +159,9 @@ Les 8 niveaux sont construits et prouvés dans le moteur (batterie node, contrô
   Quarts en croix (grand tour par l'est), Le tour du lagon (piège s3) — noms,
   grilles, cibles, consignes intacts, preuve verifier-lot-canne.mjs.
 - Textes des consignes (sub) de la canne : premiers jets, à polir avec Gwenael.
-- Habillage canne (champ vert/or, cases-boucans, tas de cannes dessinés) : pilier
-  Habiller, PAS dans ce lot — le monde joue avec l'habillage standard.
+- Habillage canne : les tas de cannes SONT dans ce lot — au monde `canne`, les
+  roches se dessinent en touffes de tiges (`canneSVG` dans `render.js`, appelé par
+  `redraw` dès que `L.w === 'canne'`). Ce qui reste au pilier Habiller, hors de ce
+  lot : le champ vert/or et les cases-boucans ; pour tout le reste du décor, le
+  monde joue avec l'habillage standard. (Correction du 15/08 : la rédaction
+  d'origine annonçait que le dessin des cannes n'était pas fait.)

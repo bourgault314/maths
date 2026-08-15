@@ -1,0 +1,406 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>L'atelier Solèy — concevoir un niveau | maths&amp;go</title>
+  <meta name="description" content="Atelier de conception des niveaux de Solèy : poser les objets, régler la boîte, tester dans le vrai moteur et exporter le niveau.">
+  <link rel="canonical" href="https://mathsgo.re/outils/club_maths/soley-atelier.html">
+  <meta name="robots" content="noindex, follow">
+<meta name="theme-color" content="#241b4d">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Atelier Solèy">
+<link rel="icon" href="/favicon.ico" sizes="48x48">
+<link rel="icon" type="image/svg+xml" href="/favicon.svg">
+<link rel="icon" type="image/png" sizes="32x32" href="/assets/img/favicon-32.png">
+<link rel="icon" type="image/png" sizes="192x192" href="/assets/img/favicon-192.png">
+<link rel="apple-touch-icon" href="/assets/img/apple-touch-icon.png">
+<link rel="stylesheet" href="../../assets/css/consentement.css">
+<script defer src="../../assets/js/consentement.js"></script>
+
+<!-- ==========================================================================
+     GARDE-FOU : la sauvegarde du jeu est sacrée (SPEC-ATELIER-NIVEAUX.md §8.1)
+
+     engine.js LIT « soley-save-v5 » au chargement du module (let save=loadSave())
+     et l'ÉCRIT à chaque victoire (persist()). L'atelier ne doit faire ni l'un ni
+     l'autre — sans modifier un octet du jeu. Ce rideau, posé AVANT les quatre
+     scripts, s'en charge :
+       · getItem sur cette clé renvoie null  → l'atelier ne lit jamais la vraie
+         progression, il démarre toujours sur une sauvegarde vierge ;
+       · setItem sur cette clé LÈVE une erreur → persist() tombe dans son propre
+         repli « try{…}catch(e){memStore=save;} » et écrit dans un objet mémoire
+         jetable, exactement ce que la spec demande.
+     Toutes les autres clés passent normalement : l'atelier a besoin de la sienne
+     (soley-atelier-v1) et le bandeau de consentement de la sienne.
+     ========================================================================== -->
+<script>
+(function(){
+  "use strict";
+  var CLE = "soley-save-v5";
+  if (typeof Storage === "undefined" || !Storage.prototype) return;
+  var lire = Storage.prototype.getItem;
+  var ecrire = Storage.prototype.setItem;
+  var effacer = Storage.prototype.removeItem;
+  Storage.prototype.getItem = function(cle){
+    if (String(cle) === CLE) return null;
+    return lire.call(this, cle);
+  };
+  Storage.prototype.setItem = function(cle, valeur){
+    if (String(cle) === CLE) throw new Error("L'atelier n'écrit pas la sauvegarde du jeu.");
+    return ecrire.call(this, cle, valeur);
+  };
+  Storage.prototype.removeItem = function(cle){
+    if (String(cle) === CLE) return;
+    return effacer.call(this, cle);
+  };
+  window.ATELIER_RIDEAU = CLE;
+})();
+</script>
+
+<link rel="stylesheet" href="soley/css/soley.css">
+<style>
+/* ===== L'atelier : tout ce qui s'ajoute par-dessus le style du jeu ===== */
+:root{
+  --at-fond:#1b1440; --at-carte:#241b4d; --at-bord:#3d3270;
+  --at-encre:#eaf2ff; --at-doux:#9fb7d8; --at-or:#ffc94d;
+}
+body.at{background:var(--at-fond);}
+/* Les écrans du jeu qui n'ont pas cours ici : ils restent dans la page (les
+   modules réclament leurs identifiants) mais ne s'affichent jamais. */
+body.at #home, body.at #lvscreen{display:none !important;}
+body.at #backlv, body.at #backhome{display:none !important;}
+
+#atonglets{
+  position:sticky; top:0; z-index:40; display:flex; gap:8px;
+  padding:8px 10px calc(8px + env(safe-area-inset-bottom,0px)); margin:0;
+  background:linear-gradient(180deg,#1b1440 78%,#1b144000);
+}
+#atonglets button{
+  flex:1 1 0; min-height:44px; border-radius:999px; border:2px solid var(--at-bord);
+  background:#2a2159; color:var(--at-doux); font:800 15px/1.1 inherit; cursor:pointer;
+}
+#atonglets button[aria-pressed="true"]{background:var(--at-or); color:#3a2a05; border-color:var(--at-or);}
+
+#atelier{padding:0 10px 40px;}
+.atbloc{background:var(--at-carte); border:2px solid var(--at-bord); border-radius:14px;
+  padding:10px 12px; margin:0 0 10px;}
+.attitre{font:800 13px/1.2 inherit; color:var(--at-doux); letter-spacing:.04em;
+  text-transform:uppercase; margin:0 0 8px;}
+.atrang{display:flex; flex-wrap:wrap; gap:8px; align-items:center;}
+.atbtn{min-height:44px; padding:0 14px; border-radius:12px; border:2px solid var(--at-bord);
+  background:#2a2159; color:var(--at-encre); font:700 15px/1.1 inherit; cursor:pointer;}
+.atbtn:hover{border-color:var(--at-or);}
+.atbtn.primaire{background:var(--at-or); color:#3a2a05; border-color:var(--at-or);}
+.atbtn.danger{border-color:#ff6b57; color:#ffb3a8;}
+.atbtn[disabled]{opacity:.45; cursor:not-allowed;}
+.atbtn.mini{min-height:36px; padding:0 10px; font-size:13px;}
+
+/* Réglage de la grille */
+.atnb{display:flex; align-items:center; gap:6px;}
+.atnb button{width:44px; height:44px; border-radius:12px; border:2px solid var(--at-bord);
+  background:#2a2159; color:var(--at-encre); font:900 20px/1 inherit; cursor:pointer;}
+.atnb output{min-width:104px; text-align:center; color:var(--at-encre); font:800 15px/1.2 inherit;}
+#atavertgrille{color:#ffd9a1; font-size:13px; margin-top:8px;}
+
+/* Le plateau de l'atelier : mêmes dessins que le jeu, plus une couche de touche */
+#atplateaubox{position:relative; margin:0 auto; max-width:min(100%, 78vh);}
+#atplateau{display:block; width:100%; height:auto; border-radius:12px; background:#16223f;}
+#atplateau .atcase{fill:transparent; stroke:none; cursor:pointer;}
+#atplateau .atcase:hover{fill:#ffc94d22;}
+#atplateau .atcase:focus{outline:none; fill:#ffc94d33;}
+#atplateau .atviseur{fill:none; stroke:#ffc94d; stroke-width:4; stroke-dasharray:10 8; pointer-events:none;}
+
+/* Palette et boîte */
+.atpal{display:flex; flex-wrap:wrap; gap:8px;}
+.atpal button{display:flex; flex-direction:column; align-items:center; gap:3px;
+  width:78px; min-height:74px; padding:5px 2px; border-radius:12px;
+  border:2px solid var(--at-bord); background:#2a2159; color:var(--at-encre);
+  font:700 11px/1.15 inherit; cursor:pointer; text-align:center;}
+.atpal button svg{width:38px; height:38px; display:block;}
+.atpal button[aria-pressed="true"]{border-color:var(--at-or); background:#3a2f6b;}
+#atboite .chip{cursor:pointer;}
+#atboitevide{color:var(--at-doux); font-size:13px;}
+#atsurplus{color:var(--at-doux); font-size:12px; margin-top:8px;}
+
+/* Fiche du niveau */
+.atchamp{display:block; margin:0 0 8px;}
+.atchamp span{display:block; color:var(--at-doux); font:700 12px/1.4 inherit; margin-bottom:3px;}
+.atchamp input, .atchamp select, .atchamp textarea{
+  width:100%; min-height:44px; padding:8px 10px; border-radius:10px;
+  border:2px solid var(--at-bord); background:#171136; color:var(--at-encre);
+  font:500 15px/1.35 inherit; box-sizing:border-box;}
+.atchamp textarea{min-height:74px; resize:vertical;}
+.aterr{color:#ffb3a8; font-size:13px;}
+.atok{color:#8ef0c0; font-size:13px;}
+
+/* Fiche d'un objet : feuille du bas sur téléphone, fenêtre centrée sur écran large */
+#atfiche{position:fixed; inset:0; z-index:60; display:none; background:#0a0820cc;
+  align-items:flex-end; justify-content:center;}
+#atfiche.show{display:flex;}
+#atfichecarte{width:100%; max-width:520px; max-height:86vh; overflow:auto;
+  background:var(--at-carte); border:2px solid var(--at-bord);
+  border-radius:18px 18px 0 0; padding:14px 14px calc(14px + env(safe-area-inset-bottom,0px));}
+@media (min-width:700px){
+  #atfiche{align-items:center;}
+  #atfichecarte{border-radius:18px;}
+}
+#atfichetitre{font:900 18px/1.2 inherit; color:var(--at-encre); margin:0 0 10px;}
+/* 4 boutons (les flèches d'une pièce) ou 5 (une porte, avec « aucune ») :
+   auto-fit les met sur UNE ligne dans les deux cas, même à 390 px. */
+.atdirs{display:grid; grid-template-columns:repeat(auto-fit,minmax(56px,1fr)); gap:6px;}
+.atdirs button{min-height:44px; border-radius:10px; border:2px solid var(--at-bord);
+  background:#2a2159; color:var(--at-encre); font:800 14px/1 inherit; cursor:pointer;}
+.atdirs button[aria-pressed="true"]{background:var(--at-or); color:#3a2a05; border-color:var(--at-or);}
+.atapercu{display:flex; justify-content:center; margin:4px 0 10px;}
+.atapercu svg{width:96px; height:96px; background:#16223f; border-radius:12px;}
+.atfichepied{display:flex; flex-wrap:wrap; gap:8px; margin-top:12px;}
+
+/* Listes (brouillons, niveaux du jeu) */
+.atliste{max-height:46vh; overflow:auto; margin:0; padding:0; list-style:none;}
+.atliste li{display:flex; gap:8px; align-items:center; padding:6px 0;
+  border-bottom:1px solid #ffffff14;}
+.atliste .nom{flex:1 1 auto; color:var(--at-encre); font:700 14px/1.3 inherit; text-align:left;
+  background:none; border:none; padding:8px 0; cursor:pointer;}
+.atliste .nom small{display:block; color:var(--at-doux); font-weight:500;}
+
+/* Zone d'export */
+#attexte{width:100%; min-height:190px; padding:10px; border-radius:10px;
+  border:2px solid var(--at-bord); background:#120e2c; color:#d8e6ff;
+  font:500 12px/1.5 ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
+  box-sizing:border-box; white-space:pre; overflow:auto;}
+#atmsg{margin-top:8px; font-size:13px;}
+#atmsg .ligne{display:block;}
+
+/* Bandeau d'atelier à la victoire : il remplace la fenêtre des petits soleils */
+body.at.at-jouer #winstars, body.at.at-jouer #winmsg,
+body.at.at-jouer #nextbtn, body.at.at-jouer #staybtn{display:none !important;}
+#atwin{display:none;}
+/* Le bandeau d'atelier est plus haut que la fenêtre du jeu (deux boutons de
+   plus) et #winov vit à l'intérieur du cadre du plateau : sur téléphone, le
+   dernier bouton s'y retrouvait coupé. Sur CETTE page seulement, la fenêtre de
+   victoire passe donc en plein écran. Le jeu n'est pas touché. */
+body.at.at-jouer #winov{position:fixed; inset:0; z-index:70; overflow:auto;
+  padding:18px 14px calc(18px + env(safe-area-inset-bottom,0px));
+  background:#0d1428ee; justify-content:center;}
+body.at.at-jouer #atwin{display:block; text-align:left; width:100%; max-width:420px;}
+#atwin .bilan{color:var(--at-doux); font-size:14px; line-height:1.5; margin:0 0 8px;}
+#atwin .bilan b{color:var(--at-encre);}
+#atwin .note{color:#ffd9a1; font-size:12.5px; line-height:1.45; margin:2px 0 10px;}
+/* Ces boutons vivent dans #winov, dont la règle « #winov button » du jeu est
+   plus spécifique qu'une simple classe : on la surclasse sans y toucher. */
+#atwin .atbtn{display:block; width:100%; margin:0 0 8px; padding:11px 14px;
+  min-height:44px; border-radius:12px; border:2px solid var(--at-bord);
+  background:#2a2159; color:var(--at-encre); font:700 15px/1.2 inherit;
+  cursor:pointer; text-align:center;}
+#atwin .atbtn.primaire{background:var(--at-or); color:#3a2a05; border-color:var(--at-or);}
+#atwin .atbtn[disabled]{opacity:.5; cursor:not-allowed;}
+</style>
+</head>
+<body class="at">
+
+<!-- ================= BASCULE ATELIER / JOUER ================= -->
+<nav id="atonglets" aria-label="Écrans de l'atelier">
+  <button type="button" id="atongatelier" aria-pressed="true">Atelier</button>
+  <button type="button" id="atongjouer" aria-pressed="false">Jouer</button>
+</nav>
+
+<!-- ================= ÉCRAN ATELIER ================= -->
+<div id="atelier" class="screen active">
+
+  <div class="atbloc">
+    <h2 class="attitre">La grille</h2>
+    <div class="atrang">
+      <div class="atnb">
+        <button type="button" id="atcolmoins" aria-label="Une colonne de moins">−</button>
+        <output id="atcolval">9 colonnes</output>
+        <button type="button" id="atcolplus" aria-label="Une colonne de plus">+</button>
+      </div>
+      <div class="atnb">
+        <button type="button" id="atrowmoins" aria-label="Une rangée de moins">−</button>
+        <output id="atrowval">6 rangées</output>
+        <button type="button" id="atrowplus" aria-label="Une rangée de plus">+</button>
+      </div>
+    </div>
+    <div id="atavertgrille"></div>
+  </div>
+
+  <div id="atplateaubox">
+    <svg id="atplateau" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Plateau en construction"></svg>
+  </div>
+  <div id="atconseil" class="atbloc" hidden></div>
+
+  <div class="atbloc">
+    <h2 class="attitre">Les objets du plateau</h2>
+    <div class="atpal" id="atpalette"></div>
+    <div id="atmain" class="atok" style="margin-top:8px"></div>
+  </div>
+
+  <div class="atbloc">
+    <h2 class="attitre">La boîte à outils</h2>
+    <div class="atpal" id="atajout"></div>
+    <div id="atboite" class="atrang" style="margin-top:10px"></div>
+    <div id="atboitevide">La boîte est vide : ajoute les pièces que l'élève aura à sa disposition.</div>
+    <div id="atsurplus">Le surplus fait le casse-tête : dans l'original, 6 à 8 pièces pour 3 ou 4 utiles.</div>
+  </div>
+
+  <div class="atbloc">
+    <h2 class="attitre">La fiche du niveau</h2>
+    <label class="atchamp"><span>Monde (il commande le décor et les fruits)</span>
+      <select id="atmonde"></select></label>
+    <label class="atchamp"><span>Nom du niveau</span>
+      <input id="atnom" type="text" autocomplete="off" placeholder="Le tour du champ"></label>
+    <div id="atnomerr" class="aterr"></div>
+    <label class="atchamp"><span>Consigne (une question, jamais la solution)</span>
+      <textarea id="atsub" placeholder="Que faut-il faire ?"></textarea></label>
+    <label class="atchamp"><span>Indice (facultatif)</span>
+      <textarea id="athint" placeholder="Coupe en deux, puis…"></textarea></label>
+    <div id="atsols" class="atok"></div>
+  </div>
+
+  <div class="atbloc">
+    <h2 class="attitre">Brouillons et niveaux</h2>
+    <div class="atrang">
+      <button type="button" class="atbtn" id="atbrouillons">Mes brouillons</button>
+      <button type="button" class="atbtn" id="atnouveau">Nouveau niveau</button>
+      <button type="button" class="atbtn" id="atcharger">Charger un niveau du jeu</button>
+    </div>
+  </div>
+
+  <div class="atbloc">
+    <h2 class="attitre">Exporter / importer</h2>
+    <div class="atrang">
+      <button type="button" class="atbtn primaire" id="atexporter">Exporter le niveau</button>
+      <button type="button" class="atbtn" id="atcopier">Copier</button>
+      <button type="button" class="atbtn" id="atimporter">Importer ce bloc</button>
+    </div>
+    <div id="atmsg"></div>
+    <textarea id="attexte" spellcheck="false" placeholder="Le bloc prêt à coller dans levels.js apparaîtra ici. Tu peux aussi y coller un bloc existant, puis toucher « Importer ce bloc »."></textarea>
+  </div>
+
+</div>
+
+<!-- ================= FICHE D'UN OBJET ================= -->
+<div id="atfiche" role="dialog" aria-modal="true" aria-labelledby="atfichetitre">
+  <div id="atfichecarte" tabindex="-1">
+    <h2 id="atfichetitre"></h2>
+    <div id="atfichecorps"></div>
+    <div class="atfichepied" id="atfichepied"></div>
+  </div>
+</div>
+
+<!-- ================= ACCUEIL (jamais affiché ici, mais les modules le réclament) ================= -->
+<div id="home" class="screen">
+  <header>
+    <a class="brandmark" href="/" aria-label="Retour à l’accueil maths&go">
+      <img src="/assets/img/mathsgo-logo-soley.png" alt="maths&go" width="1338" height="622">
+    </a>
+    <h1>Solèy</h1>
+    <div class="tagline">Partage les rayons du soleil — un jeu sur les fractions</div>
+  </header>
+  <div id="hometot"></div>
+  <div id="wlist"></div>
+  <footer class="site-footer">
+    <div>Solèy est librement adapté de Refraction (Center for Game Science, université de Washington, 2010).</div>
+    <div class="site-footer-links">
+      <span>Gwenaël Bourgault</span><span aria-hidden="true">·</span>
+      <button type="button" id="aproposbtn">D'où vient Solèy ?</button><span aria-hidden="true">·</span>
+      <a href="soley.html">Le jeu</a><span aria-hidden="true">·</span>
+      <button type="button" data-mathsgo-consent-open onclick="window.mathsgoConsentement &amp;&amp; window.mathsgoConsentement.ouvrir()">Gérer mes cookies</button>
+    </div>
+  </footer>
+</div>
+
+<!-- ================= NIVEAUX D'UN MONDE (jamais affiché ici) ================= -->
+<div id="lvscreen" class="screen">
+  <div class="topnav">
+    <button class="backbtn" id="backhome" type="button" aria-label="Retour à l’accueil du jeu">←</button>
+    <div id="lvwname"></div>
+  </div>
+  <div id="lvwblurb"></div>
+  <div id="stlegende"></div>
+  <div id="lvgrid"></div>
+</div>
+
+<!-- ================= JEU (le vrai moteur, le vrai plateau) ================= -->
+<div id="play" class="screen">
+  <div id="playleft">
+    <div id="topbar">
+      <button class="backbtn" id="backlv" type="button" aria-label="Retour à la liste des niveaux">←</button>
+      <div class="name" id="pname"></div>
+      <div id="fruitctr"></div>
+      <button class="iconbtn" id="hintbtn" type="button">Indice</button>
+      <button class="iconbtn" id="fsbtn" type="button" aria-label="Activer le plein écran" title="Plein écran" hidden>⛶</button>
+      <button class="iconbtn" id="resetbtn" type="button" aria-label="Recommencer le niveau" title="Recommencer">↺</button>
+    </div>
+    <div id="rotatehint">Tourne ton téléphone, puis masque la barre d’outils Safari pour agrandir le plateau.</div>
+    <div id="introline"></div>
+    <div id="defiline"></div>
+    <div id="boardbox">
+      <svg id="board" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Plateau du niveau"></svg>
+      <div id="splash" aria-hidden="true"><div>Lévé&nbsp;!</div></div>
+      <div id="winov" role="dialog" aria-modal="true" aria-labelledby="win-title">
+        <h2 id="win-title">Lévé&nbsp;!</h2>
+        <div id="winstars" aria-hidden="true"></div>
+        <p id="winmsg"></p>
+        <div id="atwin">
+          <p class="bilan" id="atwinbilan"></p>
+          <p class="note" id="atwinnote"></p>
+          <button type="button" class="atbtn primaire" id="atwinsol">Garder comme solution de référence</button>
+          <button type="button" class="atbtn" id="atwinsolmin">Garder comme solution minimale</button>
+          <button type="button" class="atbtn" id="atwinrejouer">Essayer une autre solution</button>
+          <button type="button" class="atbtn" id="atwinretour">Retour à l'atelier</button>
+        </div>
+        <button id="nextbtn">Niveau suivant</button>
+        <button class="stay" id="staybtn">Rester sur ce niveau</button>
+      </div>
+    </div>
+  </div>
+  <div id="playright">
+    <div id="toolbox"></div>
+    <div id="status" aria-live="polite"></div>
+  </div>
+  <div id="fstoast" role="dialog" aria-modal="true" aria-labelledby="fstitle" aria-describedby="fshelptext">
+    <div id="fstitle">Agrandir le jeu</div>
+    <div id="fshelptext"></div>
+    <button id="fsclose" type="button">J’ai compris</button>
+  </div>
+  <div id="hintov" role="dialog" aria-modal="true" aria-labelledby="hinttitle">
+    <div id="hintcard" tabindex="-1">
+      <div id="hinttitle">Coup de pouce</div>
+      <div id="hintbody"></div>
+      <button id="hintclose" type="button">J’ai compris !</button>
+    </div>
+  </div>
+</div>
+
+<!-- ================= D'OÙ VIENT SOLÈY ? ================= -->
+<div id="aproposov" role="dialog" aria-modal="true" aria-labelledby="aproposti">
+  <div id="aproposcard" tabindex="-1">
+    <div id="aproposti">D'où vient Solèy ?</div>
+    <p id="aproposte">L'idée de Solèy vient de Refraction, un jeu d'apprentissage des fractions créé en 2010 par le Center for Game Science de l'université de Washington. Ce jeu en Flash n'est plus disponible en ligne, mais son idée — partager des rayons de lumière pour fabriquer des fractions — méritait de continuer à vivre. Solèy en reprend librement les mécaniques ; les graphismes, les niveaux, le code et l'univers réunionnais sont des créations originales de maths&amp;go. Merci aux créateurs de Refraction.</p>
+    <button id="aproposok" type="button">Fermer</button>
+  </div>
+</div>
+
+<!-- ================= POINT DE COURS (jamais ouvert ici) ================= -->
+<div id="coursov" role="dialog" aria-modal="true" aria-labelledby="courstitre">
+  <div id="courscard" tabindex="-1">
+    <div id="courssur">Point de cours</div>
+    <div id="courstitre"></div>
+    <div id="coursbody"></div>
+    <div id="coursbas"><button id="coursfleche" type="button" aria-label="Descendre dans le cours"><svg viewBox="0 0 24 24" width="19" height="19" fill="none" stroke="currentColor" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 9l7 7 7-7"/></svg></button></div>
+    <div id="coursbtns">
+      <button id="coursok" type="button">J'ai compris !</button>
+    </div>
+  </div>
+</div>
+
+<script src="soley/js/levels.js"></script>
+<script src="soley/js/engine.js"></script>
+<script src="soley/js/render.js"></script>
+<script src="soley/js/ui.js"></script>
+<script src="soley/js/atelier.js"></script>
+</body>
+</html>
