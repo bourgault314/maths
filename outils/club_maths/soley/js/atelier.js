@@ -136,10 +136,10 @@ function peindreAlerte(){
   let h = '';
   if (enMain){
     h += enMain.deplace
-      ? '<span class="ligne main">' + NOMOBJ[enMain.type] + ' à déplacer : touche sa nouvelle ' +
+      ? '<span class="ligne main">' + nomObjet(enMain.type) + ' à déplacer : touche sa nouvelle ' +
         'case. (Échap pour annuler et le remettre où il était.)</span>'
       : '<span class="ligne main">' +
-        (enMain.type === 'fixed' ? 'Pièce à sceller' : NOMOBJ[enMain.type]) +
+        (enMain.type === 'fixed' ? 'Pièce à sceller' : nomObjet(enMain.type)) +
         ' en main : touche une case libre du plateau. ' +
         '(Échap, ou retouche la palette, pour le reposer.)</span>';
   }
@@ -222,6 +222,17 @@ function reinserer(type, item, x, y){
 
 const NOMOBJ = { sun: 'Soleil', target: 'Case créole', rock: 'Roche', fruit: 'Fruit',
                  gate: 'Passe étroite', fixed: 'Pièce scellée' };
+
+/* Les objets ne s'appellent pas pareil selon la peau du monde : au lagon on pose
+   des patates de corail, à la canne des touffes, à la forêt des fougères, et la
+   case y est un kiosque. Le nom suit le dessin, sinon l'editeur ment. */
+const NOMOBST = { lagon: 'Patate de corail', canne: 'Touffe de cannes', foret: 'Fougère' };
+const NOMCASE = { foret: 'Kiosque' };
+const nomObjet = function(type){
+  if (type === 'rock')   return NOMOBST[D.w] || 'Roche';
+  if (type === 'target') return NOMCASE[D.w] || 'Case créole';
+  return NOMOBJ[type];
+};
 
 /* ===================== Dessin du plateau ===================== */
 
@@ -310,7 +321,7 @@ function dessinerPlateau(){
   /* Couche de touche, dessinée en dernier pour rester au-dessus. */
   for (let y = 0; y < D.rows; y++) for (let x = 0; x < D.cols; x++){
     const o = objetEn(x, y);
-    const quoi = o ? ('Régler : ' + NOMOBJ[o.type]) : ('Case vide, colonne ' + (x + 1) + ', rangée ' + (y + 1));
+    const quoi = o ? ('Régler : ' + nomObjet(o.type)) : ('Case vide, colonne ' + (x + 1) + ', rangée ' + (y + 1));
     s += '<rect class="atcase" role="button" tabindex="0" data-x="' + x + '" data-y="' + y + '" ' +
          'x="' + (x * CS) + '" y="' + (y * CS) + '" width="' + CS + '" height="' + CS + '">' +
          '<title>' + echapper(quoi) + '</title></rect>';
@@ -353,7 +364,7 @@ function dessinerPalette(){
   $('atpalette').innerHTML = OBJETS.map(function(o){
     const pris = enMain && enMain.type === o.type;
     return '<button type="button" data-obj="' + o.type + '" aria-pressed="' + (pris ? 'true' : 'false') + '">' +
-      iconeObjet(o.type) + '<span>' + o.nom + '</span></button>';
+      iconeObjet(o.type) + '<span>' + nomObjet(o.type) + '</span></button>';
   }).join('');
 
   $('atajout').innerHTML = PIECES.map(function(p, i){
@@ -517,7 +528,7 @@ function ficheObjet(o){
       pied);
   } else if (o.type === 'target'){
     const t = D.targets[o.i];
-    ouvrirFiche('Case créole',
+    ouvrirFiche(nomObjet('target'),
       '<div class="atapercu">' + ico(targetSVG({ x: 0, y: 0, need: t.need, disp: t.disp, porte: t.porte }, null, '', 0, D.w)) + '</div>' +
       champ('Fraction attendue', 'attneed', fracTxt(t.need)) +
       '<label class="atchamp"><span>Porte orientée : le rayon ne peut entrer que par ce côté</span></label>' +
@@ -526,10 +537,11 @@ function ficheObjet(o){
       champ('Écriture affichée (facultatif : « 0,5 », « 25 % », « 2/4 »)', 'attdisp', t.disp || ''),
       pied);
   } else if (o.type === 'rock'){
-    ouvrirFiche('Roche',
+    ouvrirFiche(nomObjet('rock'),
       '<div class="atapercu">' + ico(obstacleSVG(D.w)(0, 0, 0)) + '</div>' +
-      '<p class="atok">Aucun réglage. Au monde des champs de canne, la roche se dessine ' +
-      'toute seule en tas de cannes : le rendu suit le monde choisi, comme dans le jeu.</p>',
+      '<p class="atok">Aucun réglage : le décor prend la peau du monde choisi — patate de '
+      + 'corail au lagon, touffe de cannes à la canne, fougère arborescente à la forêt, '
+      + 'roche de basalte ailleurs — exactement comme dans le jeu.</p>',
       pied);
   } else if (o.type === 'fruit'){
     const f = D.fruits[o.i];

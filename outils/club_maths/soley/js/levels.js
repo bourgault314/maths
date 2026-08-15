@@ -53,7 +53,7 @@ const LV=[
   tools:[b(1,0)],sol:[[0,4,2]]},
 
  {w:'lagon',name:"Zigzag dans les roches",
-  sub:"Les roches volcaniques bloquent la lumière : par où passer ? Les fruits péi sont des bonus facultatifs — facultatifs, mais malins : le chemin qui gagne n'est pas forcément celui qui ramasse.",
+  sub:"Les patates de corail bloquent la lumière : par où passer ? Les fruits péi sont des bonus facultatifs — facultatifs, mais malins : le chemin qui gagne n'est pas forcément celui qui ramasse.",
   cols:8,rows:6,suns:[{x:0,y:5,dir:0}],
   targets:[{x:7,y:5,need:[1,1]}],
   rocks:[[4,0],[2,1],[2,2],[2,3],[4,4],[2,5]],fruits:[[3,2]],
@@ -223,7 +223,7 @@ const LV=[
 
  /* ---------- La forêt (5e) ---------- */
  {w:'foret',name:"Recoller les morceaux",
-  sub:"Les roches bloquent le passage. Coupe, contourne, puis recolle avec la lentille : elle additionne deux rayons.",
+  sub:"Les fougères bloquent le passage. Coupe, contourne, puis recolle avec la lentille : elle additionne deux rayons.",
   cols:9,rows:7,suns:[{x:0,y:3,dir:1}],
   targets:[{x:8,y:3,need:[1,1]}],
   rocks:[[4,2],[4,3],[4,4]],fruits:[[4,1],[4,5]],
@@ -297,7 +297,7 @@ const LV=[
   sol:[[0,2,3],[1,4,1],[2,4,2],[3,7,1],[4,2,1],[5,7,2],[6,4,5]]},
 
  {w:'foret',name:"Le champ de roches",
-  sub:"Traverse le champ de roches et ramasse les fruits au passage. Attention, il y a des pièces en trop !",
+  sub:"Traverse le champ de fougères et ramasse les fruits au passage. Attention, il y a des pièces en trop !",
   cols:10,rows:8,suns:[{x:0,y:4,dir:1}],
   targets:[{x:9,y:1,need:[1,2]},{x:9,y:6,need:[1,2]}],
   rocks:[[4,4],[5,4],[6,4],[5,3],[5,5],[7,3],[3,2],[8,3],[3,0],[7,7]],
@@ -306,7 +306,7 @@ const LV=[
   sol:[[0,2,4],[1,2,1],[2,2,6]]},
 
  {w:'foret',name:"La clairière",
-  sub:"Deux cases dans la clairière : 2/3 et 1/3. Les roches ne te laisseront pas faire simple…",
+  sub:"Deux cases dans la clairière : 2/3 et 1/3. Les fougères ne te laisseront pas faire simple…",
   hint:"2/3, c'est deux tiers recollés. Il faudra les amener au même endroit.",
   cols:10,rows:7,suns:[{x:0,y:3,dir:1}],
   targets:[{x:9,y:2,need:[2,3]},{x:9,y:5,need:[1,3]}],

@@ -1038,4 +1038,18 @@ Trois choses à savoir avant d'y toucher :
   depuis leur création, faute d'avoir été mis à jour en même temps. `targetSVG` prend
   un cinquième argument `monde` ; les quatre appels de `atelier.js` ont été relus un
   par un (leçon du badge de fruit : une fonction partagée se casse en silence).
+- **16/08 — le vocabulaire suit la peau.** Défaut trouvé par Gwenael dès la fusion de
+  la peau : « pour la forêt, ce n'est pas les roches, c'est les fougères ». Relevé
+  systématique des trois mondes re-peaus : **six occurrences**, dont deux dataient du
+  lot corail et n'avaient jamais été vues. Les quatre CONSIGNES sont corrigées (elles
+  n'ont aucun effet sur les sauvegardes) : « roches volcaniques » → patates de corail
+  au lagon, « roches » → fougères dans les trois niveaux de la forêt. **Les deux NOMS
+  de niveaux — « Zigzag dans les roches » (lagon) et « Le champ de roches » (forêt) —
+  sont laissés tels quels : la clé de sauvegarde est `monde:nom`, un renommage rend
+  la progression de l'élève inerte (§6, décision 8). C'est un arbitrage pour Gwenael,
+  pas une correction.** L'atelier suit aussi : les objets s'appellent désormais
+  « Patate de corail », « Touffe de cannes », « Fougère » ou « Roche » selon le monde
+  du brouillon, et la case y devient « Kiosque » à la forêt (`nomObjet`). **RÈGLE À
+  GRAVER : quand on repeint un monde, on relit ses TEXTES dans la foulée — le décor
+  et les mots doivent nommer la même chose, sinon le jeu se contredit tout seul.**
 - (à compléter à chaque session)
