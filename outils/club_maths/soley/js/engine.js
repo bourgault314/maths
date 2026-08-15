@@ -245,16 +245,79 @@ function sceneCours(sc,tE){
   });
   return {svg:rayons+mur,h:H};
 }
+/* Scène « addition » (lot forêt, 08/2026) — le pendant de sceneCours pour les deux
+   cours de la lentille. Même contrat de deux registres : en haut le vécu du jeu
+   (deux rayons entrent dans la lentille, un seul en sort), en bas la forme de
+   l'école (les parts mises bout à bout sur la bande). La lecture MONTE des morceaux
+   vers leur somme, là où la cascade de partage DESCENDAIT de l'entier vers les
+   morceaux — c'est l'opération inverse, elle ne peut pas se lire dans le même sens.
+   `sc.somme` = [f1,f2]. Les lignes du bas se déduisent : les deux parts telles
+   quelles ; puis la MÊME longueur recoupée au dénominateur commun — dessinée
+   seulement si elle diffère, c'est elle qui montre que 1/2 s'écrit 2/4 ; puis
+   l'entier en repère, la part qui manque laissée en pâle. */
+function sceneSomme(sc,tE){
+  const X0=20, W=300, hB=40, ECART=9, yLens=76;
+  const f1=sc.somme[0], f2=sc.somme[1], S=fadd(f1,f2);
+  const ppcm=(a,b)=>a*b/gcd(a,b);
+  const d=ppcm(ppcm(f1[1],f2[1]),S[1]);
+  const part=[1,d], nS=S[0]*d/S[1];
+  /* --- registre du haut : la lentille du jeu, deux entrées, une sortie --- */
+  let g='';
+  g+=sBeam(150,18,150,yLens-19,f1);
+  g+=sBeam(150,134,150,yLens+19,f2);
+  g+=sBeam(150+19,yLens,300,yLens,S);
+  g+=sTile(150,yLens,'+');
+  g+=cEtiq(178,42,f1,15);
+  g+=cEtiq(178,118,f2,15);
+  /* l'étiquette de la somme se pose franchement AU-DESSUS de son rayon : le rayon
+     de sortie est le plus épais des trois, à −14 il mangeait le dénominateur */
+  g+=cEtiq(250,yLens-32,S,15);
+  const rayons=cFade(tE(0),g);
+  /* --- registre du bas : les bandes --- */
+  const lignes=[];
+  lignes.push({cells:[f1,f2],pale:0});
+  const memeTaille=f1[1]===d&&f2[1]===d;
+  if(!memeTaille)lignes.push({cells:Array.from({length:nS},()=>part),pale:0});
+  lignes.push({cells:Array.from({length:d},()=>part),pale:d-nS});
+  const murTop=158;
+  let mur='';
+  lignes.forEach((L,k)=>{
+    const y=murTop+k*(hB+ECART);
+    let x=X0, e='';
+    L.cells.forEach((f,i)=>{
+      const w=W*f[0]/f[1], vide=i>=L.cells.length-L.pale;
+      e+=`<rect class="bande" x="${x.toFixed(1)}" y="${y}" width="${w.toFixed(1)}" height="${hB}" `+
+         `fill="${fcol(f)}"${vide?' opacity=".22"':''}/>`;
+      if(i)e+=`<line x1="${x.toFixed(1)}" y1="${y}" x2="${x.toFixed(1)}" y2="${y+hB}" `+
+             `stroke="#10182e" stroke-width="1.6" stroke-dasharray="4 5" opacity=".55"/>`;
+      if(!vide)e+=bandeLbl(x+w/2,y,f);
+      x+=w;
+    });
+    /* le cadre s'arrête à la longueur RÉELLE de la ligne : c'est la comparaison
+       des longueurs qui démontre, elle doit se voir sans compter les cases */
+    e+=`<rect x="${X0}" y="${y}" width="${(x-X0).toFixed(1)}" height="${hB}" fill="none" `+
+       `stroke="#101a33" stroke-width="2.5"/>`;
+    mur+=cFade(tE(Math.min(k,2)),e);
+  });
+  return {svg:rayons+mur,h:murTop+lignes.length*(hB+ECART)+4};
+}
 let coursId=null, coursApresVictoire=false, coursRetour=null;
 function construireCours(id){
   const c=COURS[id];
   if(!c)return '';
   const tE=()=>0; /* v10 : le cours s'affiche d'un coup — un cours de cahier ne se déroule pas au chronomètre */
   /* aucun `--win-delay` n'est posé : tout apparaît ensemble, y compris la carte de savoir */
-  const sc=sceneCours(c.scene,tE);
+  /* deux familles de scènes : les partages descendent (cascade de prismes), les
+     additions montent (deux rayons dans la lentille) — l'aiguillage se fait sur
+     le champ présent dans `scene`, jamais sur le nom du cours */
+  const somme=!!c.scene.somme;
+  const sc=somme?sceneSomme(c.scene,tE):sceneCours(c.scene,tE);
+  const alt=somme
+    ?"Deux rayons entrent dans la lentille et un seul en sort ; dessous, les mêmes parts mises bout à bout sur la bande"
+    :"La cascade de rayons du jeu et, juste dessous, son zoom : le mur de bandes";
   /* v9.1 : la scène seule porte le lien entre les deux registres — pas de
      phrase-pont (décision de Gwenael sur rendu) */
-  let h=`<div class="cscene"><svg class="hsvg" viewBox="0 0 340 ${sc.h}" role="img" aria-label="La cascade de rayons du jeu et, juste dessous, son zoom : le mur de bandes">${sc.svg}</svg></div>`;
+  let h=`<div class="cscene"><svg class="hsvg" viewBox="0 0 340 ${sc.h}" role="img" aria-label="${alt}">${sc.svg}</svg></div>`;
   /* déroulé en étapes : l'explication courte au-dessus, l'écriture étagée dessous
      (règle R5), au même instant que les deux zones de la scène */
   c.etapes.forEach((e,i)=>{
@@ -361,12 +424,30 @@ const parNiveau=i=>LV[i].sol.length;
 const seuilMonde=wi=>wi<=0?0:Math.ceil(5*idxMonde(WORLDS[wi-1].id).length/8);
 const decouvertesMonde=wid=>idxMonde(wid).filter(i=>LV[i].dec);
 const decouvertesReussies=wid=>decouvertesMonde(wid).filter(i=>save.done[lvId(i)]).length;
+/* LE CHEMIN DE L'ÉCOLE (08/2026, règle de Gwenael) : réussir un monde-école ouvre
+   le champ difficile qui suit ET l'école suivante — pour qu'un élève puisse suivre
+   le fil de l'apprentissage sans jamais être obligé de se battre. Un monde a donc
+   une ou DEUX portes : son prédécesseur immédiat, et — si celui-ci est un champ —
+   la dernière école avant lui. Franchir l'une des deux suffit.
+   Ce n'est pas un déblocage de secours : mesuré le 15/08, aucun verrou du jeu
+   n'oblige à battre un niveau au-delà de 2 383 essais, personne n'est bloqué.
+   C'est un confort de parcours. */
+const seuilDe=wid=>Math.ceil(5*idxMonde(wid).length/8);
+const monteeFaite=wid=>reussisMonde(wid)>=seuilDe(wid)
+  &&decouvertesReussies(wid)>=decouvertesMonde(wid).length;
+function portesDeMonde(wid){
+  const wi=WORLDS.findIndex(w=>w.id===wid);
+  if(wi<=0)return [];
+  const p=[WORLDS[wi-1].id];
+  /* seconde porte SEULEMENT si le prédécesseur immédiat est un champ : sinon les
+     deux chemins seraient le même, et la carte annoncerait deux fois la condition */
+  if(!WORLDS[wi-1].ecole)for(let k=wi-2;k>=0;k--)if(WORLDS[k].ecole){p.push(WORLDS[k].id);break;}
+  return p;
+}
 function mondeDeverrouille(wid){
   if(modeClasse)return true;
-  const wi=WORLDS.findIndex(w=>w.id===wid);
-  if(wi<=0)return true;
-  const prev=WORLDS[wi-1].id;
-  return reussisMonde(prev)>=seuilMonde(wi)&&decouvertesReussies(prev)>=decouvertesMonde(prev).length;
+  const p=portesDeMonde(wid);
+  return p.length===0||p.some(monteeFaite);
 }
 function etoiles(i){
   const k=lvId(i);

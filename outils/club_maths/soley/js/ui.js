@@ -48,8 +48,15 @@ function renderHome(){
     const nd2=idxs.filter(i=>save.done[lvId(i)]).length;
     const pct=Math.round(100*nd2/idxs.length);
     const ouvert=mondeDeverrouille(w.id);
-    const nbDec=ouvert?0:decouvertesMonde(WORLDS[wi-1].id).length;
-    const cond=ouvert?'':`<span class="wcond">${cadenas} Réussis ${seuilMonde(wi)} niveaux de « ${WORLDS[wi-1].label} » (${reussisMonde(WORLDS[wi-1].id)}/${seuilMonde(wi)})${nbDec?`, dont ses ${nbDec} découvertes (${decouvertesReussies(WORLDS[wi-1].id)}/${nbDec})`:''}</span>`;
+    /* un monde peut avoir DEUX portes depuis le chemin de l'école : on les annonce
+       toutes, séparées par « ou » — sinon l'élève qui a suivi les écoles ne
+       comprendrait pas pourquoi la porte s'ouvre */
+    const porte=pid=>{
+      const pw=WORLDS.find(w=>w.id===pid), s=seuilDe(pid), nb=decouvertesMonde(pid).length;
+      return `Réussis ${s} niveaux de « ${pw.label} » (${reussisMonde(pid)}/${s})`+
+        (nb?`, dont ses ${nb} découvertes (${decouvertesReussies(pid)}/${nb})`:'');
+    };
+    const cond=ouvert?'':`<span class="wcond">${cadenas} ${portesDeMonde(w.id).map(porte).join(' — ou ')}</span>`;
     return `<button class="wrow ${ouvert?'':'locked'}" data-w="${w.id}" ${ouvert?'':'aria-disabled="true"'}>
       <svg class="wico" width="46" height="46" viewBox="0 0 46 46">${icons[w.id]||''}</svg>
       <span class="winfo">
@@ -358,6 +365,7 @@ document.addEventListener('keydown',ev=>{
 window.SOLEY={
   openLevel,simulate,state,LV,
   etoiles,parNiveau,seuilMonde,mondeDeverrouille,reussisMonde,renderHome,
+  portesDeMonde,seuilDe,WORLDS,
   cours:construireCours,montrerCours,fermerCours,decouvertesMonde,decouvertesReussies,
   solve(i){openLevel(i);LV[i].sol.forEach(([ti,x,y])=>{state.placed[x+','+y]={def:LV[i].tools[ti],ti};});
     const sim=simulate();redraw();return{win:sim.win,stats:sim.stats};}

@@ -58,7 +58,7 @@ fichiers modifiés → tests → reste à vérifier.
 |---|---|---|---|
 | Le lagon | 6e | découverte, partage égal — dont 4 niveaux-découverte (demi, tiers, quart, **sixième**) | 10 |
 | Les champs de canne | 6e | partage JOUÉ à fond, notion constante : surplus, pièges, fruits à valeur, portes orientées (refonte 08/2026) | 8 |
-| La forêt | 5e | additions (lentille), équivalences | 9 |
+| La forêt | 5e | additions (lentille), équivalences — dont 2 niveaux-découverte (somme, même dénominateur) | 9 |
 | Le volcan | 4e | loupes ×, fractions > 1, 1/9 | 7 |
 | Les pitons | 5e-4e | équivalences, comparaisons (passes) | 7 |
 | Les soleils | 4e | soleils multiples / fractionnaires / valeur 2 | 8 |
@@ -172,6 +172,18 @@ Batterie (script Playwright Python, à conserver dans `tests/`) :
    « Le tiers de la moitié » (son `solMin` est le préfixe exact de son `sol`) et
    lit `soley-save-v5` aux deux étapes. Vérifié dans les deux sens : rouge sur
    l'ancien rendu, vert sur le correctif.
+
+16. **Un niveau qui ENSEIGNE force sa notion (depuis le 15/08).** Si on retire de
+   la boîte toutes les pièces qui portent la notion d'un niveau-découverte, ce
+   niveau doit devenir INGAGNABLE — sinon l'élève le finit sans jamais faire le
+   geste qu'on prétend lui apprendre. Ce n'est pas un avis : c'est
+   `node tests/soley/notion-forcee.mjs <monde> <type>`, à passer sur tout nouveau
+   niveau-découverte. **La règle qui décide, vérifiée sur les neuf niveaux de la
+   forêt : un niveau force l'addition si et seulement si au moins une de ses cibles
+   ne peut PAS être obtenue par un seul rayon** (le soleil suivi d'une suite de
+   coupes et d'agrandissements). Corollaire à ne pas oublier en dessinant : une
+   case qui demande 1/1 quand le soleil vaut 1 ne forcera JAMAIS la lentille, quel
+   que soit le plateau.
 
 **Batterie de L'atelier (depuis le 15/08), à lancer en plus dès qu'on touche à
 `soley-atelier.html` ou `atelier.js` :**
@@ -965,4 +977,42 @@ Trois choses à savoir avant d'y toucher :
   sorties dès le premier rayon). Correctif : quand elle est incomplète, on
   redessine en gris d'attente les flèches des entrées vides et celle de la sortie,
   exactement celles de la pièce au repos.
+- **15/08 (nuit) — la forêt devient un monde-école (lot 1).** Trois défauts, tous
+  trouvés par Gwenael en jouant puis chiffrés. (1) **« Recoller les morceaux », le
+  niveau qui introduit la lentille, se gagnait SANS elle** — 196 façons, en 3 pièces
+  (sa capture : la maison servie par un rayon entier qui contourne les roches, 1
+  fruit sur 2). Rogner la boîte ne pouvait pas le sauver : les 3 miroirs de
+  l'échappatoire sont inclus dans les 6 pièces de la solution. Redessiner le plateau
+  non plus : **sa case demande 1/1, et le soleil vaut 1** — voir la règle du §5
+  point 16. Il reste donc l'accueil du monde, mais **cesse d'être une découverte**.
+  (2) **La forêt donnait le cas DUR avant le cas SIMPLE** : « Trois quarts »
+  (dénominateurs différents) était au niveau 2, « Deux tiers » (même dénominateur)
+  au 3. Les deux sont échangés ; ce sont désormais les deux découvertes du monde,
+  toutes deux FORCÉES (0 victoire sans lentille sur 816 et 12 778 configurations).
+  (3) **La mise au même dénominateur n'était enseignée nulle part**, alors que la
+  forêt l'exigeait dès son deuxième niveau. Deux points de cours nouveaux : `somme`
+  et `denominateur`.
+  **Scène de cours d'un genre NOUVEAU (`sceneSomme`) : partager DESCEND de l'entier
+  vers les morceaux, additionner REMONTE des morceaux vers leur somme — ce n'est pas
+  une répétition du cours du demi, c'est son inverse, et ça ne peut pas se lire dans
+  le même sens (correction de Gwenael).** En bas, les parts bout à bout, puis la même
+  longueur recoupée au dénominateur commun, puis l'entier en repère : c'est
+  l'ÉGALITÉ DES DEUX PREMIÈRES LONGUEURS qui démontre. Disposition choisie par lui
+  sur deux dessins ; celle « en L » a été écartée (l'œil y lit une aire, pas une
+  longueur). **L'écriture 2/4 ne peut PAS se montrer avec des rayons — le moteur
+  réduit tout seul, un rayon « 2/4 » n'existe pas — elle vit donc uniquement sur les
+  bandes.**
+  **Le CHEMIN DE L'ÉCOLE, règle de Gwenael** : réussir un monde-école ouvre le champ
+  qui suit ET l'école suivante. Un monde a une ou deux portes (`portesDeMonde`), la
+  seconde n'existant que si son prédécesseur est un champ ; la carte du monde fermé
+  annonce les deux. Les six écoles sont marquées `ecole:true` dans `WORLDS`.
+  **Ce n'est pas un déblocage de secours** : mesuré le même jour, aucun verrou
+  n'oblige à battre un niveau au-delà de 2 383 essais (le plus dur imposé est
+  « Trois quarts », pour ouvrir le volcan). C'est un confort de parcours.
+  Consigne des « Huitièmes » réécrite (elle s'étonnait d'un 1/8 que la canne sert
+  déjà). Preuves : node 16/16, batterie 46 contrôles (T13 nouveau), `notion-forcee`
+  vert sur les deux découvertes. **Restent dehors, exprès** : « Les sixièmes »
+  (14 essais, jumeau de « Quarts en croix ») à retirer et remplacer, les deux
+  niveaux immesurables, les cours de 1/8, 1/9, 1/12, la peau du monde (kiosques et
+  fougères), et la difficulté des fruits — aucun niveau de la forêt n'a de `solMin`.
 - (à compléter à chaque session)

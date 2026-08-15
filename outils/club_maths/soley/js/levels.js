@@ -25,13 +25,13 @@ const PNAME={b:'Miroir',s2:'Prisme ÷2',s3:'Prisme ÷3',m:'Lentille +',x2:'Loupe
 
 /* ===== Mondes ===== */
 const WORLDS=[
- {id:'lagon',label:'Le lagon',pal:'6e',blurb:'Découvrir les fractions : partager un rayon en parts égales, et guider la lumière jusqu’aux cases créoles.'},
+ {id:'lagon',ecole:true,label:'Le lagon',pal:'6e',blurb:'Découvrir les fractions : partager un rayon en parts égales, et guider la lumière jusqu’aux cases créoles.'},
  {id:'canne',label:'Les champs de canne',pal:'6e',blurb:'La coupe ! Rien de neuf à apprendre, tout à chercher : le surplus de pièces, les portes des cases et les fruits marqués font le casse-tête.'},
- {id:'foret',label:'La forêt',pal:'5e',blurb:'Additionner des fractions avec la lentille — et chercher, parfois longtemps, comment fabriquer la bonne part.'},
- {id:'volcan',label:'Le volcan',pal:'4e',blurb:'Multiplier avec les loupes, dépasser 1, reconstruire des rayons entiers.'},
- {id:'pitons',label:'Les pitons',pal:'5e-4e',blurb:'Équivalences et comparaisons : les passes étroites ne laissent passer que les rayons assez fins.'},
- {id:'soleils',label:'Les soleils',pal:'4e',blurb:'Soleils multiples, soleils fractions, soleil géant : il faut composer avec ce que le ciel te donne.'},
- {id:'marche',label:'Le marché',pal:'5e-3e',blurb:'0,5 ; 25 % ; 3/4… toutes les écritures d’une même part.'},
+ {id:'foret',ecole:true,label:'La forêt',pal:'5e',blurb:'Additionner des fractions avec la lentille — et chercher, parfois longtemps, comment fabriquer la bonne part.'},
+ {id:'volcan',ecole:true,label:'Le volcan',pal:'4e',blurb:'Multiplier avec les loupes, dépasser 1, reconstruire des rayons entiers.'},
+ {id:'pitons',ecole:true,label:'Les pitons',pal:'5e-4e',blurb:'Équivalences et comparaisons : les passes étroites ne laissent passer que les rayons assez fins.'},
+ {id:'soleils',ecole:true,label:'Les soleils',pal:'4e',blurb:'Soleils multiples, soleils fractions, soleil géant : il faut composer avec ce que le ciel te donne.'},
+ {id:'marche',ecole:true,label:'Le marché',pal:'5e-3e',blurb:'0,5 ; 25 % ; 3/4… toutes les écritures d’une même part.'},
  {id:'tunnels',label:'Les tunnels',pal:'6e-4e',blurb:'Des galeries étroites creusées dans la roche : ici, le chemin et les pièces scellées font le casse-tête.'},
  {id:'mafate',label:'Mafate',pal:'Expert',blurb:'Le cirque final. Tout ce que tu as appris — et de vrais casse-têtes.'}
 ];
@@ -228,16 +228,13 @@ const LV=[
   tools:[s2(1,0,2),b(0,1),b(1,2),b(2,1),b(1,0),mg(2,0,1)],
   sol:[[0,2,3],[1,2,1],[2,6,1],[3,2,5],[4,6,5],[5,6,3]]},
 
- {w:'foret',name:"Trois quarts",
-  sub:"Une seule case, et elle veut 3/4. Ton soleil vaut 1… à toi de chercher !",
-  hint:"3/4, c'est un demi plus un quart. Fabrique les deux morceaux, puis recolle-les.",
-  cols:9,rows:7,suns:[{x:0,y:3,dir:1}],
-  targets:[{x:8,y:3,need:[3,4]}],
-  rocks:[[4,3],[7,5],[1,1]],fruits:[[4,1]],
-  tools:[s2(1,0,2),s2(2,1,2),b(0,1),b(1,2),b(1,0),mg(2,0,1)],
-  sol:[[0,2,3],[1,2,4],[2,2,1],[3,6,1],[4,6,4],[5,6,3]]},
-
- {w:'foret',name:"Deux tiers",
+ /* Découverte de la SOMME (08/2026). Elle passe devant « Trois quarts » : la forêt
+    donnait le cas dur (dénominateurs différents) AVANT le cas simple (même
+    dénominateur). Ce niveau force sa notion — sans lentille dans la boîte, le
+    solveur ne trouve aucune victoire, parce que 2/3 ne s'obtient pas d'un seul
+    rayon. C'est la règle du lot : un niveau qui enseigne doit être ingagnable
+    sans la pièce de sa notion. */
+ {w:'foret',name:"Deux tiers",dec:'somme',
   sub:"La case veut 2/3. Et ton prisme ne sait donner que des tiers… (Il y a une pièce en trop.)",
   hint:"2/3 = 1/3 + 1/3. La lentille sait recoller deux tiers.",
   cols:9,rows:7,suns:[{x:0,y:3,dir:1}],
@@ -245,6 +242,18 @@ const LV=[
   rocks:[[3,2],[5,2],[4,4],[7,1],[1,5]],fruits:[[4,1]],
   tools:[s3(1,0,1,2),b(0,1),b(1,2),mg(2,1,1),b(2,1)],
   sol:[[0,2,3],[1,2,1],[2,6,1],[3,6,3]]},
+
+ /* Découverte du MÊME DÉNOMINATEUR (08/2026) — le cas dur, désormais APRÈS le cas
+    simple. Forcé lui aussi : 3/4 ne s'obtient pas d'un seul rayon. Son bloc de
+    données ne change pas d'un octet, seuls sa place et son champ `dec` bougent. */
+ {w:'foret',name:"Trois quarts",dec:'denominateur',
+  sub:"Une seule case, et elle veut 3/4. Ton soleil vaut 1… à toi de chercher !",
+  hint:"3/4, c'est un demi plus un quart. Fabrique les deux morceaux, puis recolle-les.",
+  cols:9,rows:7,suns:[{x:0,y:3,dir:1}],
+  targets:[{x:8,y:3,need:[3,4]}],
+  rocks:[[4,3],[7,5],[1,1]],fruits:[[4,1]],
+  tools:[s2(1,0,2),s2(2,1,2),b(0,1),b(1,2),b(1,0),mg(2,0,1)],
+  sol:[[0,2,3],[1,2,4],[2,2,1],[3,6,1],[4,6,4],[5,6,3]]},
 
  {w:'foret',name:"Les sixièmes",
   sub:"Des cases à 1/6 ?! Aucun outil ne coupe en six d'un coup…",
@@ -255,7 +264,10 @@ const LV=[
   tools:[s3(1,0,1,2),s2(2,1,3)],sol:[[0,3,3],[1,3,5]]},
 
  {w:'foret',name:"Les huitièmes",
-  sub:"Un huitième ?! Personne ne sait couper en huit d'un coup… et pourtant ces cases seront servies — sans rien perdre !",
+  /* consigne réécrite (08/2026) : elle s'étonnait d'un huitième que les champs de
+     canne servent déjà depuis « Le grand tri ». On ne fait plus découvrir ce qui
+     est connu — on pose la vraie question du niveau : combien de coupes ? */
+  sub:"Un huitième par case, et seulement des ÷2 dans la boîte. Combien de coupes faut-il ?",
   hint:"La moitié de la moitié de la moitié : 1/2 ÷ 2 ÷ 2 = 1/8.",
   cols:10,rows:7,suns:[{x:0,y:3,dir:1}],
   targets:[{x:9,y:1,need:[1,2]},{x:9,y:2,need:[1,8]},{x:9,y:4,need:[1,8]},{x:2,y:6,need:[1,4]}],
@@ -885,5 +897,35 @@ const COURS={
    {t:"Compte tes rayons : les six sixièmes refont le rayon entier.",eq:"1/6 + 1/6 + 1/6 + 1/6 + 1/6 + 1/6 = 6/6 = 1"}
   ],
   carte:{t:"Le tiers de la moitié, c'est le sixième.",eq:"1/2 ÷ 3 = 1/6"}
+ },
+ /* Les deux cours de la LENTILLE (forêt, 08/2026). Ils ne se lisent PAS comme les
+    quatre premiers : partager DESCEND de l'entier vers les morceaux, additionner
+    REMONTE des morceaux vers leur somme. D'où une scène à part (`scene.somme`),
+    et non un cinquième étage de cascade. */
+ somme:{
+  titre:"Recoller deux parts",
+  scene:{somme:[[1,3],[1,3]]},
+  etapes:[
+   {t:"Tu as deux tiers, chacun de son côté."},
+   {t:"La lentille les recolle : on les met bout à bout.",eq:"1/3 + 1/3 = 2/3"},
+   {t:"Deux tiers, ce sont deux parts sur les trois de la bande."}
+  ],
+  carte:{t:"Le prisme coupe, la lentille recolle.",eq:"1/3 + 1/3 = 2/3"}
+ },
+ /* Le cours de l'équivalence, qui n'existait nulle part : l'élève en avait besoin
+    dès le deuxième niveau de la forêt. L'écriture 2/4 ne peut PAS se montrer avec
+    des rayons — le moteur réduit tout seul, un rayon « 2/4 » n'existe pas — donc
+    elle vit uniquement sur les bandes, où la comparaison des longueurs la donne
+    à voir. Le registre du haut, lui, montre ce que le niveau fait vraiment. */
+ denominateur:{
+  titre:"Le même dénominateur",
+  scene:{somme:[[1,2],[1,4]]},
+  etapes:[
+   {t:"Ces deux parts n'ont pas la même taille : on ne peut pas les compter ensemble."},
+   {t:"Mais le demi, c'est deux quarts : la même part, écrite autrement.",eq:"1/2 = 2/4"},
+   {t:"Maintenant toutes les parts sont des quarts, on peut les compter.",eq:"2/4 + 1/4 = 3/4"}
+  ],
+  carte:{t:"Pour additionner, on écrit les deux parts avec le même dénominateur.",
+   eq:"1/2 + 1/4 = 2/4 + 1/4 = 3/4"}
  }
 };

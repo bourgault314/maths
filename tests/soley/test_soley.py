@@ -430,12 +430,22 @@ def principal():
         pg4.set_default_timeout(15000)
         pg4.goto(url, wait_until="load")
         pg4.wait_for_function("() => window.SOLEY && window.SOLEY.LV")
-        etat = pg4.evaluate("""() => ({
-          canne: !document.querySelector(".wrow[data-w='canne']").classList.contains('locked'),
-          foret: document.querySelector(".wrow[data-w='foret']").classList.contains('locked'),
-        })""")
-        section("T8 après 7 réussites au lagon (dont les 4 découvertes) : canne ouverte, forêt fermée",
-                etat["canne"] and etat["foret"], "")
+        # T8 + T13 — LE CHEMIN DE L'ÉCOLE (08/2026) : le lagon fini ouvre le champ de
+        # canne ET la forêt, l'école suivante, sans qu'un niveau de la canne soit joué.
+        # Mais le volcan, lui, reste fermé : la forêt est déjà une école, elle n'a
+        # qu'une porte et rien à contourner.
+        etat = pg4.evaluate("""() => {
+          const ouvert = w => !document.querySelector(`.wrow[data-w='${w}']`).classList.contains('locked');
+          const cond = w => (document.querySelector(`.wrow[data-w='${w}'] .wcond`) || {}).textContent || '';
+          return { canne: ouvert('canne'), foret: ouvert('foret'), volcan: ouvert('volcan'),
+                   condVolcan: cond('volcan').replace(/\\s+/g, ' ').trim() };
+        }""")
+        section("T8 après 7 réussites au lagon (dont les 4 découvertes) : canne ouverte",
+                etat["canne"], "")
+        section("T13 chemin de l'école : le lagon fini ouvre AUSSI la forêt, sans "
+                "toucher à la canne",
+                etat["foret"] and not etat["volcan"],
+                f"forêt={etat['foret']}, volcan={etat['volcan']} — {etat['condVolcan']}")
         pg4.click(".wrow[data-w='lagon']")
         cartes = pg4.evaluate("""() => ({
           zigzagPleins: document.querySelectorAll(".lvcard[data-i='1'] .sunico.plein").length,
