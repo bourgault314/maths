@@ -274,11 +274,15 @@ function sceneSomme(sc,tE){
   g+=cEtiq(250,yLens-32,S,15);
   const rayons=cFade(tE(0),g);
   /* --- registre du bas : les bandes --- */
-  const lignes=[];
-  lignes.push({cells:[f1,f2],pale:0});
+  /* DEUX lignes au plus (retour de Gwenael, 15/08 : « tu n'as pas besoin de remettre
+     encore une bande en dessous »). La première porte les deux parts, suivies de ce
+     qui MANQUE pour faire l'entier, en pâle : le repère est là sans coûter une ligne.
+     La seconde ne se dessine que si la mise au même dénominateur change quelque
+     chose — pour 1/3 + 1/3 elle serait la copie de la première, on ne l'écrit pas. */
+  const reste=Array.from({length:d-nS},()=>part);
+  const lignes=[{cells:[f1,f2,...reste],pale:d-nS}];
   const memeTaille=f1[1]===d&&f2[1]===d;
   if(!memeTaille)lignes.push({cells:Array.from({length:nS},()=>part),pale:0});
-  lignes.push({cells:Array.from({length:d},()=>part),pale:d-nS});
   const murTop=158;
   let mur='';
   lignes.forEach((L,k)=>{

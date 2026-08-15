@@ -530,14 +530,18 @@ test("le chantier « Comprendre » : découvertes, points de cours et règle R1"
       foret: LV.filter(l => l.w === 'foret').map(l => l.name),
       sommes: ['somme', 'denominateur'].map(id => {
         const svg = sceneSomme(COURS[id].scene, () => 0).svg;
-        const rects = [...svg.matchAll(/<rect class="bande" x="([\\d.]+)" y="(\\d+)" width="([\\d.]+)"/g)]
-          .map(m => ({ x: +m[1], y: +m[2], w: +m[3] }));
+        const rects = [...svg.matchAll(/<rect class="bande" x="([\\d.]+)" y="(\\d+)" width="([\\d.]+)"([^>]*)/g)]
+          .map(m => ({ x: +m[1], y: +m[2], w: +m[3], pale: m[4].includes('opacity') }));
         const lignes = [...new Set(rects.map(r => r.y))].sort((a, b) => a - b);
-        /* longueur peinte de chaque ligne : leur ÉGALITÉ est la démonstration */
+        /* longueur PEINTE de chaque ligne (hors cases pâles) : leur ÉGALITÉ est la
+           démonstration. « totaux » compte tout, pâle compris — pas de guillemet
+           oblique ici, on est dans un gabarit de chaîne. */
         const totaux = lignes.map(y =>
           Math.round(rects.filter(r => r.y === y).reduce((s, r) => s + r.w, 0)));
+        const peints = lignes.map(y =>
+          Math.round(rects.filter(r => r.y === y && !r.pale).reduce((s, r) => s + r.w, 0)));
         const cases = lignes.map(y => rects.filter(r => r.y === y).length);
-        return { id, lignes: lignes.length, totaux, cases };
+        return { id, lignes: lignes.length, totaux, peints, cases };
       }),
     };
   })()`, context);
@@ -562,17 +566,18 @@ test("le chantier « Comprendre » : découvertes, points de cours et règle R1"
     "Les sixièmes", "Les huitièmes", "Cinq sixièmes", "Les douzièmes",
     "Le champ de roches", "La clairière"]);
   const [somme, deno] = [...r.sommes];
-  /* somme : les parts (2 tiers) et l'entier en repère — la ligne « au même
-     dénominateur » serait identique à la première, elle n'est pas dessinée */
-  assert.equal(somme.lignes, 2, "1/3 + 1/3 : deux lignes suffisent");
-  assert.deepEqual([...somme.cases], [2, 3], "les deux tiers, puis l'entier en trois");
-  /* dénominateur : trois lignes, et les DEUX premières ont la même longueur —
-     c'est exactement le dessin de Gwenael, et c'est la démonstration */
-  assert.equal(deno.lignes, 3, "1/2 + 1/4 : parts, mise au même dénominateur, entier");
-  assert.deepEqual([...deno.cases], [2, 3, 4], "[1/2][1/4] · [1/4][1/4][1/4] · l'entier");
-  assert.equal(deno.totaux[0], deno.totaux[1],
-    "les deux premières lignes ont la MÊME longueur : 1/2 + 1/4 = 3 quarts");
-  assert.ok(deno.totaux[2] > deno.totaux[1], "l'entier est plus long que 3/4");
+  /* DEUX lignes au plus (retour de Gwenael du 15/08). 1/3 + 1/3 : une seule —
+     les deux tiers, plus le tiers qui manque en pâle ; recouper au dénominateur
+     commun donnerait la copie de cette ligne, on ne l'écrit pas. */
+  assert.equal(somme.lignes, 1, "1/3 + 1/3 : une seule ligne suffit");
+  assert.deepEqual([...somme.cases], [3], "[1/3][1/3] et le tiers manquant en pâle");
+  /* 1/2 + 1/4 : deux lignes, et c'est exactement le dessin de Gwenael — la
+     comparaison des longueurs PEINTES est la démonstration */
+  assert.equal(deno.lignes, 2, "1/2 + 1/4 : les parts, puis la mise au même dénominateur");
+  assert.deepEqual([...deno.cases], [3, 3], "[1/2][1/4] + pâle · [1/4][1/4][1/4]");
+  assert.equal(deno.peints[0], deno.peints[1],
+    "les deux lignes ont la MÊME longueur peinte : 1/2 + 1/4 = 3 quarts");
+  assert.ok(deno.totaux[0] > deno.peints[0], "la part qui manque pour l'entier est là, en pâle");
   assert.equal(r.grille, "9x7");
   assert.equal(r.pur, true, "une découverte est pure : sans roche, fruit, passe ni pièce scellée");
   assert.equal(r.outils, "s2:1,s2:0,s2:2", "trois prismes ÷2, orientations de la spec §4.3");
