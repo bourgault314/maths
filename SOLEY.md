@@ -555,4 +555,36 @@ commence par "use strict"; et le partage se fait par la portée globale.
   aux octets (musée témoin non modifié), batterie complète verte sur le déployé
   (69 niveaux, 145 fruits, seuils [0,6,5,6,5,5,5,4,5]). Les textes des niveaux
   (sub) de la canne restent à polir avec Gwenael.
+- 2026-08-15 : LA SORTIE DU POINT DE COURS VIT À LA FIN. Troisième correctif arrivé
+  tout écrit d'ailleurs (prompt et patch dans un seul fichier) ; consigne inchangée :
+  l'appliquer, le re-prouver, ouvrir la PR, ne rien réinventer. « J'ai compris ! »
+  n'est plus épinglé au bas du panneau — pour sortir, l'élève doit être descendu
+  jusqu'en bas, comme un texte qu'on fait défiler avant de pouvoir valider ; si un
+  cours tient dans l'écran, le bouton est là tout de suite, et c'est voulu. Le vrai
+  défaut d'origine n'était pas la position du bouton mais l'absence de tout signal
+  qu'il y avait une suite : c'est la flèche qui le règle, et elle seule reste
+  épinglée (repère `#coursbas` de hauteur nulle, donc hors mise en page ; masqué par
+  `visibility` et NON `display` — sortir la flèche de la mise en page supprimerait le
+  débordement même qui la déclenche). Contrôle T10 retourné : le bouton DOIT être
+  hors écran à l'ouverture tant que le panneau déborde, et atteignable une fois
+  descendu. Appliqué sur 66078241 sans conflit, zéro écart prouvé (somme de contrôle
+  du patch conforme, 58 lignes +/− identiques une à une, mêmes 5 en-têtes
+  `diff --git`). Relevé indépendant en worktree détaché, 12 cas (3 cours ×
+  320/375/402/430 px) : dépassement 0 px partout AVANT (barre épinglée), 0 à 405 px
+  APRÈS selon le débordement, bouton atteignable en bas dans les douze. Cas limite
+  consigné : `deborde` se déclenche au-delà de 8 px quand `enbas` tolère 24 px, donc
+  entre les deux (Le demi en 402 px, 18 px à défiler) le bouton est déjà visible et
+  la flèche absente — l'invariant du T10 n'y vaut pas, mais le test ne l'exerce pas.
+  Retouche de Gwenael sur rendu, en second commit de la même PR : le chevron était le
+  caractère « ⌄ », qu'une police pose où elle veut (fin, pâle, trop haut dans son
+  rond) — il est désormais DESSINÉ ; la pastille descend sous la ligne de calcul ; et
+  surtout le voile de bas de panneau s'arrêtait à 14 px du bord visible, si bien que
+  le texte ressortait en pleine lumière sous la zone estompée. Cause à retenir : une
+  ancre `position:sticky` s'arrête au bord du CONTENU et non du remplissage (12 px de
+  padding bas + 2 px de bordure) ; rattrapé en débords négatifs, les coins arrondis
+  du panneau écrêtant proprement ce débord. Preuves : node 16/16, batterie 43
+  contrôles verts dont les trois T10, zéro erreur console. PR #365 (squash 5ff87749).
+  Rituel post-fusion : Vérifications et Publication vertes, 7/7 fichiers servis
+  identiques aux octets committés (musée soley-v1 compris), batterie complète verte
+  sur mathsgo.re.
 - (à compléter à chaque session)

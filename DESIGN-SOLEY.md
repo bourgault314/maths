@@ -199,7 +199,9 @@ Ce qui a été corrigé (raisons détaillées dans SOLEY.md §6) :
 2. [x] « J'ai compris ! » à la fin du cours : il faut être descendu jusqu'en bas
        pour l'atteindre. Ce qui manquait n'était pas un bouton épinglé mais un
        signal qu'il y avait une suite — c'est la flèche.
-3. [x] Pastille-flèche de défilement, présente seulement quand ça déborde.
+3. [x] Pastille-flèche de défilement, présente seulement quand ça déborde ; chevron
+       dessiné et voile de bas de panneau descendu jusqu'au bord (retouche du 15/08 :
+       le voile s'arrêtait 14 px trop haut, le texte ressortait en dessous).
 4. [x] Pointillés de zoom retirés ; étiquettes des rayons dégagées de leur trait.
 5. [x] Prédire du tiers retiré ; carte de savoir du tiers resserrée.
 6. [x] Les trois cours ouvrent pareil et disent « parts égales ».
