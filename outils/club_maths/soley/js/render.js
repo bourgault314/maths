@@ -182,14 +182,38 @@ function corailSVG(x,y,i){
    la canne : re-peau des obstacles monde par monde (pilier Habiller). */
 function fougereSVG(x,y,i){
   const px=x*CS,py=y*CS,v=(x*7+y*13+i)%3;
-  const d=[0,5,-5][v];
-  const frondes=(c,w,o)=>`<g stroke="${c}" stroke-width="${w}" fill="none" stroke-linecap="round"${o?` opacity="${o}"`:''}>`+
-    `<path d="M50 87 Q30 74 ${18+d} 47"/><path d="M50 87 Q42 66 ${34+d} 33"/>`+
-    `<path d="M50 87 Q52 60 ${53+d} 28"/><path d="M50 87 Q62 68 ${70+d} 37"/>`+
-    `<path d="M50 87 Q72 75 ${84+d} 51"/></g>`;
-  return `<g transform="translate(${px},${py})"><path d="${ROCHES[v]}" fill="#3f7a41" stroke="#1e4a25" stroke-width="3"/>
-    ${frondes('#1e4a25',6)}${frondes('#6fbf63',2.6,'.9')}
-    <circle cx="50" cy="86" r="5" fill="#2b5c30"/></g>`;
+  const cx=50+[0,3,-3][v], cy=52;
+  /* le pied et le TRONC : c'est ce qui fait la fougère ARBORESCENTE et pas un
+     buisson (œil de Gwenael) — un stipe fibreux droit, marqué des cicatrices des
+     frondes tombées, et la couronne posée à son sommet. */
+  let bas=`<ellipse cx="${cx}" cy="94" rx="23" ry="6.5" fill="#1f3d22"/>`+
+    `<path d="M${cx-7.5} 97 L${cx-5} 54 L${cx+5} 54 L${cx+7.5} 97 Z" fill="#5a4327" stroke="#2c1e0d" stroke-width="2.5" stroke-linejoin="round"/>`;
+  for(let k=0;k<5;k++)
+    bas+=`<path d="M${cx-4.4} ${61+k*7.2} q4.4 3.2 8.8 0" fill="none" stroke="#2c1e0d" stroke-width="1.7" opacity=".75"/>`;
+  /* sept frondes en éventail : elles montent, s'ouvrent, et RETOMBENT au bout —
+     d'autant plus qu'elles partent à l'horizontale. Folioles peintes sous la
+     nervure pour que celle-ci reste franche. */
+  const N=9,L=42;
+  let fol='',nerv='';
+  for(let k=0;k<N;k++){
+    const a=Math.PI*(0.04+0.92*k/(N-1)),ux=Math.cos(a),uy=-Math.sin(a);
+    const x2=cx+ux*L, y2=cy+uy*L+14*Math.abs(ux);
+    const x1=cx+ux*L*0.45, y1=cy+uy*L*0.75;
+    const B=t=>[(1-t)*(1-t)*cx+2*(1-t)*t*x1+t*t*x2,(1-t)*(1-t)*cy+2*(1-t)*t*y1+t*t*y2];
+    const D=t=>[2*(1-t)*(x1-cx)+2*t*(x2-x1),2*(1-t)*(y1-cy)+2*t*(y2-y1)];
+    nerv+=`<path d="M${cx} ${cy} Q${x1.toFixed(1)} ${y1.toFixed(1)} ${x2.toFixed(1)} ${y2.toFixed(1)}" fill="none" stroke="#2f6b34" stroke-width="3.2" stroke-linecap="round"/>`;
+    for(const t of [0.26,0.44,0.6,0.75,0.88]){
+      const[bx,by]=B(t),[gx,gy]=D(t),n=Math.hypot(gx,gy)||1;
+      const tx=gx/n,ty=gy/n,l=7.8*(1-t)+2.4;
+      /* les folioles ne sont pas perpendiculaires : elles balaient vers la POINTE,
+         c'est ce qui distingue une fronde d'un peigne */
+      for(const s of [1,-1]){
+        const vx=-ty*s+tx*0.62, vy=tx*s+ty*0.62, m=Math.hypot(vx,vy)||1;
+        fol+=`<line x1="${bx.toFixed(1)}" y1="${by.toFixed(1)}" x2="${(bx+vx/m*l).toFixed(1)}" y2="${(by+vy/m*l).toFixed(1)}" stroke="#4a9c46" stroke-width="2.3" stroke-linecap="round"/>`;
+      }
+    }
+  }
+  return `<g transform="translate(${px},${py})">${bas}${fol}${nerv}</g>`;
 }
 /* UNE SEULE table de peaux d'obstacles, où le jeu ET l'atelier puisent. Sans elle
    l'éditeur dérive en silence : il a dessiné les patates de corail du lagon en
@@ -282,18 +306,21 @@ function decouverteIco(taille=15){
    Écriture étagée sur le plateau (décision de Gwenael, 14/08, sur maquette) :
    les fractions des maisons et des rayons se dessinent numérateur / barre /
    dénominateur ; les autres écritures (1, 2, 0,5, 25 %…) restent telles quelles. */
-function maisonTxtSVG(txt){
+/* `cx` : abscisse du milieu de la fraction. 55 sur la case créole, où la porte et
+   la fenêtre mangent la gauche du mur ; 50 sur le kiosque de la forêt, qui n'a ni
+   l'une ni l'autre et où la fraction doit être VRAIMENT centrée (œil de Gwenael). */
+function maisonTxtSVG(txt,cx=55){
   const m=txt.match(/^(\d+)\/(\d+)$/);
   if(!m){
     const fs=txt.length>=5?18:(txt.length>=4?21:29);
-    return `<text class="tneed" x="55" y="79" font-size="${fs}">${txt}</text>`;
+    return `<text class="tneed" x="${cx}" y="79" font-size="${fs}">${txt}</text>`;
   }
   const large=m[1].length>1||m[2].length>1;
   const fs=large?15:19, demi=large?15:11;
   return `<g class="tneed">`+
-    `<text x="55" y="66.5" font-size="${fs}">${m[1]}</text>`+
-    `<line x1="${55-demi}" y1="71" x2="${55+demi}" y2="71" stroke="#3b2a17" stroke-width="2.4"/>`+
-    `<text x="55" y="87" font-size="${fs}">${m[2]}</text></g>`;
+    `<text x="${cx}" y="66.5" font-size="${fs}">${m[1]}</text>`+
+    `<line x1="${cx-demi}" y1="71" x2="${cx+demi}" y2="71" stroke="#3b2a17" stroke-width="2.4"/>`+
+    `<text x="${cx}" y="87" font-size="${fs}">${m[2]}</text></g>`;
 }
 function beamLblSVG(id,x,y,val){
   if(val[1]===1)return `<text class="beamlbl" data-seg="${id}" x="${x}" y="${y}" fill="${fcol(val)}">${fstr(val)}</text>`;
@@ -355,11 +382,10 @@ function targetSVG(t,stat,label='',index='',monde=''){
       <rect x="18" y="45" width="9" height="45" rx="2" fill="${bois}" stroke="#3b2a17" stroke-width="2"/>
       <rect x="73" y="45" width="9" height="45" rx="2" fill="${bois}" stroke="#3b2a17" stroke-width="2"/>
       <rect x="24" y="50" width="52" height="38" rx="3" fill="${lit?'#fff4dd':'#f0e3cd'}" stroke="${bad?'#ff5d4a':'#8a6b4a'}" stroke-width="${bad?5:3}"/>
-      <line x1="20" y1="91" x2="80" y2="91" stroke="${bois}" stroke-width="4" stroke-linecap="round"/>
       <polygon points="6,44 28,12 72,12 94,44" fill="${toit}" stroke="#3b2a17" stroke-width="3" stroke-linejoin="round"/>
       ${bard}
       <line x1="28" y1="12" x2="72" y2="12" stroke="#4a3220" stroke-width="3" stroke-linecap="round"/>
-      ${maisonTxtSVG(txt)}
+      ${maisonTxtSVG(txt,50)}
       ${label?`<circle cx="84" cy="17" r="11" fill="#101a33" stroke="#ffc94d" stroke-width="2"/><text x="84" y="22" text-anchor="middle" font-size="14" font-weight="900" fill="#fff3c4">${label}</text>`:''}
     </g>`;
   }

@@ -1016,9 +1016,14 @@ Trois choses à savoir avant d'y toucher :
   niveaux immesurables, les cours de 1/8, 1/9, 1/12, la peau du monde (kiosques et
   fougères), et la difficulté des fruits — aucun niveau de la forêt n'a de `solMin`.
 - **16/08 — la forêt prend sa peau : kiosques et fougères.** Troisième re-peau d'un
-  monde, même méthode que les patates de corail : `fougereSVG` réutilise la table
-  `ROCHES` — les MÊMES trois silhouettes de touffe que le basalte, pas une copie —
-  et n'ajoute qu'un vert de sous-bois et cinq frondes en éventail. Les cases
+  monde. **Les obstacles sont de vraies fougères ARBORESCENTES** : un stipe fibreux
+  marqué des cicatrices des frondes tombées, et une couronne de neuf frondes posée à
+  son sommet, dont les folioles balaient vers la pointe — c'est ce qui distingue une
+  fronde d'un peigne. Premier essai rejeté par Gwenael (« ça ressemble à des
+  buissons ») : il reprenait la silhouette de galet de `ROCHES`, comme le corail du
+  lagon. **Leçon : la re-peau à silhouette identique ne marche que si la chose
+  ressemble déjà à un galet** — le corail oui, la canne et la fougère non, elles ont
+  leur port propre. Les cases
   deviennent des kiosques de pique-nique des Hauts : toit à quatre pentes en
   bardeaux, poteaux de bois, pas de murs, pas de lambrequins — mais la MÊME planche
   claire derrière la fraction, donc le même contraste, et la clôture des portes
