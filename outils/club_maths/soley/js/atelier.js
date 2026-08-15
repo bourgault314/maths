@@ -235,7 +235,7 @@ function dessinerPlateau(){
   /* Mêmes dessins que le jeu, dans le même ordre de peinture — y compris les
      rayons, leur épaisseur et leur couleur par dénominateur. */
   D.fruits.forEach(function(f){
-    s += fruitSVG(ftype, f[0], f[1], !!(sim && sim.fruits.has(f[0] + ',' + f[1])), f[2]);
+    s += fruitSVG(ftype, f[0], f[1], !!(sim && sim.fruits.has(f[0] + ',' + f[1])));
   });
   D.rocks.forEach(function(r, i){ s += (D.w === 'canne' ? canneSVG : rockSVG)(r[0], r[1], i); });
   D.gates.forEach(function(g){ s += gateSVG(g); });
@@ -247,6 +247,10 @@ function dessinerPlateau(){
     s += '<line class="beam" x1="' + x1 + '" y1="' + y1 + '" x2="' + x2 + '" y2="' + y2 +
          '" stroke="' + c + '" stroke-width="' + w + '" style="filter:drop-shadow(0 0 5px ' + c + ')"/>';
   });
+  /* La fraction d'un fruit à valeur se peint APRÈS les rayons — sinon le rayon la
+     mange (render.js, 15/08). Depuis que l'atelier montre les rayons pendant qu'on
+     construit, il a exactement le même besoin que le jeu. */
+  D.fruits.forEach(function(f){ s += fruitValSVG(f[0], f[1], f[2]); });
   D.fixed.forEach(function(f){
     const fl = sim && sim.flows[f[1] + ',' + f[2]];
     s += '<g class="placed fixed-piece" transform="translate(' + (f[1] * CS) + ',' + (f[2] * CS) + ')">' +
@@ -488,7 +492,7 @@ function ficheObjet(o){
   } else if (o.type === 'fruit'){
     const f = D.fruits[o.i];
     ouvrirFiche('Fruit',
-      '<div class="atapercu">' + ico(fruitSVG(FRW[D.w] || 'letchi', 0, 0, false, f[2])) + '</div>' +
+      '<div class="atapercu">' + ico(fruitSVG(FRW[D.w] || 'letchi', 0, 0, false) + fruitValSVG(0, 0, f[2])) + '</div>' +
       champ('Valeur du fruit (vide = fruit simple ; « 1/4 » = fruit marqué)', 'atfval', f[2] ? fracTxt(f[2]) : '',
         'Un fruit marqué n\u2019est ramassé que par un rayon de cette valeur exacte.'),
       pied);

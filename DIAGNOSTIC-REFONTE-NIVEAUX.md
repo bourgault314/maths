@@ -64,6 +64,19 @@ P3 — La difficulté vit dans la couche ☀☀/☀☀☀, pas dans la notion (i
 Gagner reste accessible partout ; tout ramasser peut flamber n'importe où
 (3:5 était au MILIEU de son monde).
 
+> **P3 est chiffré depuis le 15/08** (lot « niveaux qui résistent », outil
+> `tests/soley/solveur-etalon.mjs`). Les grandeurs : `E` espace exploré, `G`
+> gagnantes, `R` rang moyen de la 1re victoire en essais aveugles, `prof` plus
+> petit nombre de pièces d'un plan gagnant, `λ` largeur du tâtonnement par pose
+> (`R = λ^prof`). Étalonnage des 8 niveaux de la canne AVANT toute retouche :
+> médiane `R` = 45, sept sur huit gagnés en 1 ou 2 pièces — le diagnostic ci-dessus
+> décrivait juste, il ne mesurait pas. **Le levier est la profondeur du plan gagnant
+> minimal**, pas la notion et pas la densité : passer de 2 à 4-5 pièces multiplie
+> `R` par `λ²` ou `λ³`. Seuil de rejet adopté : un niveau qui se gagne en 2 pièces
+> ou moins ne se montre pas. Et `R` ne se lit JAMAIS seul — l'ancienne « Chambre
+> close » culminait à `R = 15 929` avec `λ = 2,9` : neuf poses dictées, pas de la
+> recherche. Détail dans `RAPPORT-ESSAI-NIVEAUX-DURS.md`.
+
 P4 — Étirer la progression SANS copier le rythme de l'original (décision
 Gwenael : « on n'est pas obligé d'être pareil » — la somme de fractions peut
 arriver tôt, c'est notre invention d'école). Ce qu'on prend, ce sont les
@@ -92,6 +105,15 @@ forêt…), à instruire au pilier Habiller avec l'idée histoire/habitants.
 - Contrainte d'écran : le nombre de cases est borné par le téléphone (décision
   Gwenael : c'est un jeu pour téléphone) — la difficulté spatiale doit venir de
   la densité (satellites, chambres, bords) plus que de la taille.
+  **Corrigé par la mesure le 15/08 : la densité n'est pas le levier, elle en est
+  un effet de bord.** Au-delà d'environ 40 % d'obstacles le champ n'oriente plus,
+  il interdit (60 champs tirés au hasard à 40 % : aucun ne laisse passer une chaîne
+  de trois prismes) ; un champ dense à couloirs, à 54 %, reste jouable mais tombe à
+  `λ = 2,4`, c'est-à-dire qu'il DICTE au lieu de faire choisir. Les niveaux qui
+  résistent le mieux tournent entre **14 et 36 %**, avec des couloirs longs et une
+  boîte riche. La densité garde un rôle, et il est indispensable : **tuer les
+  victoires courtes**, empêcher le plan à 2 pièces d'exister. Preuve d'échec
+  conservée au dépôt : `tests/soley/semeur-champs.mjs`.
 - La batterie évolue avec : P2 en contrôle automatique, invariants habituels
   (61 sol gagnants, seuils, découvertes intactes).
 

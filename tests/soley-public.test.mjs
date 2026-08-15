@@ -78,7 +78,7 @@ test("Solèy est publié une seule fois, dans Jeux et Fractions", () => {
   assert.match(classification.cardDescription, /69 casse-têtes/);
 });
 
-test("les 69 solutions de référence gagnent et ramassent les 145 fruits", () => {
+test("les 69 solutions de référence gagnent et ramassent les 142 fruits", () => {
   const context = createGameContext();
   const worldCounts = vm.runInContext(
     "Object.fromEntries(WORLDS.map(({id})=>[id,LV.filter(level=>level.w===id).length]))",
@@ -159,8 +159,8 @@ test("les 69 solutions de référence gagnent et ramassent les 145 fruits", () =
   })()`, context);
 
   assert.equal(summary.levels, 69);
-  assert.equal(summary.fruits, 145);
-  assert.equal(summary.declaredFruits, 145);
+  assert.equal(summary.fruits, 142);
+  assert.equal(summary.declaredFruits, 142);
   assert.deepEqual([...summary.failures], []);
 });
 
@@ -641,10 +641,13 @@ test("refonte : le fruit se mérite, les portes orientent, les fruits à valeur 
       return simulate();
     };
     /* P2 (AUDIT-33-IDEES.md, idée 11) : chaque niveau retouché ou nouveau porte un
-       solMin — un plan gagnant qui ne ramasse PAS tous les fruits. Exceptions
-       documentées : « La chambre close » (la porte force le tour, les fruits sont
-       dessus) et « Le tour du lagon » (le tour est sa propre récompense). */
-    const EXCEPTIONS = new Set(["La chambre close", "Le tour du lagon"]);
+       solMin — un plan gagnant qui ne ramasse PAS tous les fruits. Depuis l'essai
+       du 15/08, la règle n'a PLUS d'exception : « La chambre close » et « Le tour
+       close » a été redessinée au solveur et son fruit se mérite désormais comme
+       les autres. Il ne reste qu'une exception, « Le tour du lagon » : l'essai du
+       15/08 n'a pas su faire mieux que la version en ligne sur la couche fruits,
+       le niveau est donc resté tel quel (décision de Gwenael). */
+    const EXCEPTIONS = new Set(["Le tour du lagon"]);
     const failures = [];
     let couverts = 0;
     LV.forEach((l, i) => {
