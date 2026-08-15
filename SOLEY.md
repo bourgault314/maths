@@ -131,10 +131,30 @@ Batterie (script Playwright Python, à conserver dans `tests/`) :
    ses fruits (le fruit se mérite — exceptions documentées dans le test), les
    portes orientées acceptent le bon côté et bloquent l'autre, un fruit à valeur
    ignore les rayons d'une autre valeur (contrôle « refonte » de la batterie node).
+   **Depuis le 15/08, il ne reste QU'UNE exception au contrôle P2 : « Le tour du
+   lagon ».** Celle de « La chambre close » est tombée avec la refonte du niveau —
+   son fruit se mérite comme les autres.
 12. Pages générées : toute modification de `catalogue-refonte-data.js`
    (descriptions, classement) exige de régénérer les sorties dérivées — au
    moins `outils/toutes-les-ressources.html` (c'est le test seo-publication
    qui le garde). Oubli réel du lot canne, attrapé par la CI.
+13. **Mesure de la difficulté (depuis le 15/08).** Tout lot qui redessine des
+   niveaux passe par `tests/soley/solveur-etalon.mjs` : force brute sur l'espace
+   ÉCLAIRÉ (les poses où chaque pièce reçoit un rayon qu'elle accepte), rejouant
+   `simulate()` du vrai moteur — aucune physique réécrite. Graines fixes, donc
+   rejouable :
+   ```
+   node tests/soley/solveur-etalon.mjs --monde canne --sans-libre
+   node tests/soley/solveur-etalon.mjs --monde lagon --sans-libre
+   ```
+   Ses trois compagnons servent à concevoir, pas à contrôler : `atelier-niveaux.mjs`
+   (champ en carte ASCII + plans trouvés), `carte-fruits.mjs` (où poser un fruit
+   pour qu'il se mérite), `tailleur-champs.mjs` (recuit local sur un champ jouable).
+   `semeur-champs.mjs` est conservé comme PREUVE D'ÉCHEC : c'est lui qui a établi
+   le résultat sur la densité (§6). **Attention à ne pas les confondre avec un
+   vérificateur de lot** (modèle `verifier-lot-canne.mjs`) : ils mesurent la
+   difficulté, ils ne prouvent pas que l'existant est intact. Cette preuve-là,
+   c'est `verifier-lot-niveaux-durs.mjs`.
 
 **Batterie de L'atelier (depuis le 15/08), à lancer en plus dès qu'on touche à
 `soley-atelier.html` ou `atelier.js` :**
@@ -344,6 +364,8 @@ plateau ne répond plus aux clics — défaut trouvé en construisant le lot).
      porte un `solMin` gagnant qui ne ramasse pas tout. Exceptions documentées :
      « La chambre close » (la porte force le tour, les fruits sont dessus) et
      « Le tour du lagon » (le tour est sa propre récompense).
+     *(15/08 : « La chambre close » a été redessinée, son exception est tombée —
+     il n'en reste qu'une, « Le tour du lagon ». Voir §5 point 11.)*
   8. **Sauvegardes face aux retouches : pas de renommage.** Les niveaux
      retouchés gardent leur nom (donc un élève qui les avait réussis les garde) ;
      Gwenael dira aux joueurs de supprimer leurs données de site s'ils veulent
@@ -367,6 +389,40 @@ plateau ne répond plus aux clics — défaut trouvé en construisant le lot).
      élèves « concevez votre niveau » marche dès maintenant en donnant l'adresse
      en classe : le niveau d'un élève ne vit que sur son appareil et la remise
      passe par le bloc exporté. Une entrée visible serait une décision de v2.
+
+- **La difficulté se MESURE** (15/08, lot « niveaux qui résistent »). Cinq grandeurs,
+  produites par `solveur-etalon.mjs` (§5 point 13) : `E` espace exploré, `G`
+  configurations gagnantes, `R` rang moyen de la première victoire en essais
+  aveugles, `prof` plus petit nombre de pièces d'un plan gagnant, et `λ` défini par
+  `R = λ^prof` — la largeur du tâtonnement à chaque pose. **Un niveau qui se gagne
+  en 2 pièces ou moins est rejeté avant d'être montré** — c'était le défaut mesuré,
+  sept des huit niveaux de la canne étaient dans ce cas. *(Le rapport écrit deux fois
+  « 3 pièces ou moins » ; cinq des onze niveaux qu'il livre sont pourtant à 3, dont
+  « La chambre close ». La règle réellement appliquée est celle-ci, et c'est elle que
+  contrôle `verifier-lot-niveaux-durs.mjs`.)* `R` seul ne suffit jamais :
+  l'ancienne « Chambre close » affichait `R = 15 929` — le chiffre le plus haut du
+  jeu — avec `λ = 2,9`, c'est-à-dire neuf poses dictées l'une après l'autre. Ce
+  n'était pas de la recherche, c'était de la longueur. **Allonger un couloir gonfle
+  `R` sans faire chercher : toujours lire `prof` et `λ` à côté.** Et `R` reste un
+  modèle d'essais aveugles, jamais un chronomètre : il sert à comparer des niveaux
+  mesurés pareil, pas à prédire des secondes.
+- **La densité n'est PAS le levier** (15/08, mesuré — corrige le diagnostic du 14/08,
+  qui visait 40-60 % d'obstacles sur les niveaux tardifs). Un champ tiré au hasard à
+  40 % : 60 champs sur 60 n'ont laissé passer aucune chaîne de trois prismes — à
+  cette densité le plateau n'oriente plus, il interdit. Un champ dessiné dense à
+  couloirs (54 %) reste jouable mais tombe à `λ = 2,4` : il DICTE au lieu de faire
+  choisir. Les niveaux qui résistent le mieux tournent entre **14 et 36 %**
+  d'obstacles, avec des couloirs longs et une boîte riche. Le vrai levier est la
+  **profondeur du plan gagnant minimal** (passer de 2 à 4-5 pièces multiplie `R` par
+  `λ²` ou `λ³`) ; la densité sert à une seule chose, mais elle est indispensable :
+  **tuer les victoires courtes**, empêcher le plan à 2 pièces d'exister.
+- **On ne dessine plus jamais la solution** (15/08). On fixe l'intention — grille,
+  soleils, cases, portes, boîte —, on taille le champ, et c'est le solveur qui trouve
+  les plans : `sol` et `solMin` sont des **sorties**, pas des entrées. Preuve à
+  rebours que l'ancienne méthode coûtait cher : sur deux niveaux d'avant le lot, le
+  solveur a trouvé des victoires PLUS COURTES que le `solMin` qu'on avait dessiné à
+  la main (« Le tour du champ » 5 contre 6 pièces, « Quarts en croix » 3 contre 4) —
+  on annonçait donc une exigence de maîtrise plus dure qu'elle ne l'était.
 
 ## 7. Architecture (découpage d'août 2026, statique, sans build, GitHub Pages)
 
@@ -666,4 +722,61 @@ Trois choses à savoir avant d'y toucher :
   fichiers du jeu intacts à l'octet), batterie du jeu 43 contrôles verte et node
   16/16 inchangés, aller-retour « Le tour du champ » à zéro écart sur 15 champs,
   bloc exporté rejoué dans le vrai moteur. Spec : `SPEC-ATELIER-NIVEAUX.md`.
+- 2026-08-15 (lot « des niveaux qui résistent », essai mené par Fable, appliqué et
+  contre-audité en session Code) : **la difficulté du jeu est mesurée pour la
+  première fois.** Point de départ, le verdict de Gwenael après avoir joué la canne
+  en ligne — « jamais plus de trente secondes pour trouver quoi que ce soit » — et
+  « les retouches du lagon sont peu visibles ». Premier livrable AVANT tout niveau :
+  `tests/soley/solveur-etalon.mjs`, force brute sur l'espace éclairé, rejouant
+  `simulate()` du vrai moteur. L'étalonnage a confirmé le ressenti et l'a chiffré :
+  médiane de `R` = 45 sur les 8 niveaux de la canne, **sept sur huit gagnés en 1 ou
+  2 pièces** ; les deux seuls qui montaient le faisaient par la LONGUEUR (`λ` = 1,8
+  et 2,9), pas par la recherche. **11 niveaux redessinés** — 7 à la canne, 4 au
+  lagon. Médiane des 7 niveaux de canne : `R` 45 → 1 755 (× 39), `Rtout` 424 →
+  18 731 (× 44), profondeur du plan minimal 2 → 4. Dénominateurs nouveaux, tous par
+  COMPOSITION de partages (décision de Gwenael du 15/08) : 1/6, 1/8, 1/9, 1/12 ;
+  aucune lentille, aucune addition, et la loupe ×2 qui traînait dans la boîte du
+  « Grand tri » — une notion du volcan — a été retirée. Trois décisions gravées §6 :
+  la difficulté se mesure, la densité n'est pas le levier, on ne dessine plus jamais
+  la solution. Le contrôle P2 est RESSERRÉ : « La chambre close » perd son exception,
+  il ne reste que « Le tour du lagon ». Fruits 145 → 142 : ils ont été DÉPLACÉS sur
+  des cases exigeantes, pas multipliés — un fruit rare vaut mieux que deux gratuits.
+  Restés intacts sur décision : « Le letchi difficile » (découverte des fruits à
+  valeur, elle doit rester douce), les 3 découvertes du lagon, « Premier rayon », et
+  **« Le tour du lagon »** — l'essai sur ce dernier a été ANNULÉ par Fable lui-même,
+  sa version gagnait en profondeur mais faisait régresser la couche fruits
+  (`Rtout` 21 282 → 1 776 : ses 25 plans gagnants passaient par les mêmes cases,
+  impossible d'y poser un fruit rare).
+  **Contre-audit indépendant (les outils du lot ne jugent pas le lot) :** diff
+  sémantique par clé `monde:nom` et jamais par index — 69 niveaux, mêmes noms dans
+  le même ordre (aucune clé de sauvegarde ne bouge), `CALC`/`COURS`/`WORLDS`/`FRW`
+  strictement intactes, exactement les 11 niveaux annoncés modifiés et rien d'autre,
+  58 `sol` inchangées. Outil versé au dépôt : `verifier-lot-niveaux-durs.mjs`.
+  Zéro écart entre le patch reçu et le diff produit (1197 lignes +/− identiques une
+  à une, 8 en-têtes `diff --git` identiques). Preuves : node 16/16, batterie du jeu
+  43 contrôles verte, batterie de l'atelier 24 contrôles verte (A10 : les 69 niveaux
+  ressortent encore identiques de l'atelier).
+  **Quatre écarts relevés au passage, ni cachés ni réparés en douce** (le rapport est
+  entré au dépôt tel quel, les corrections vivent dans les cahiers) :
+  (1) le champ `solB` de « Les deux chemins du sixième » disparaît — le niveau a
+  changé de nature, une seule des deux routes mène désormais au douzième ; la ligne
+  de `SPEC-MONDE-CANNE.md` qui l'annonçait est corrigée, et le contrôle qui le
+  vérifiait est écrit `if (l.solB)`, donc il se saute sans rien dire.
+  (2) Le rapport donne pour deux niveaux une profondeur « avant » plus courte que le
+  `solMin` du dépôt : le solveur a trouvé mieux que ce qu'on avait dessiné à la main
+  — c'est un argument POUR la décision « on ne dessine plus » (§6), pas contre.
+  (3) Le tableau du rapport donne 14 % d'obstacles à « Les deux chemins du sixième » :
+  c'est son NOMBRE de touffes, pas son pourcentage (14 sur 63 cases = 22 %) ; la
+  fourchette « 14 à 36 % » se lit donc 13 à 36 %.
+  (4) Le rapport écrit deux fois qu'un niveau gagné « en 3 pièces ou moins » est
+  rejeté, alors que cinq des onze niveaux livrés sont à 3 — dont « La chambre close ».
+  La règle réellement appliquée, et la seule cohérente avec le défaut de départ
+  (sept niveaux sur huit gagnés en 1 ou 2 pièces), est **2 pièces ou moins**.
+  **Rappel de méthode confirmé une quatrième fois : un chiffre annoncé dans un
+  document reçu n'est bon qu'en ordre de grandeur — toujours remesurer.**
+  Ce que le lot assume comme ouvert : les consignes (`sub`) sont des premiers jets à
+  polir avec Gwenael, deux espaces de recherche restent bornés par le budget de nœuds
+  (leurs `R` sont des planchers), et **rien n'a été testé sur des élèves** — toutes
+  ces mesures sont des mesures de machine, la seule preuve qui compte reste une classe.
+  Rapport complet : `RAPPORT-ESSAI-NIVEAUX-DURS.md`.
 - (à compléter à chaque session)

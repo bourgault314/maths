@@ -150,9 +150,15 @@ Les 8 niveaux sont construits et prouvés dans le moteur (batterie node, contrô
 - C7 : les deux fruits ⅓ sont SUR le tour forcé — exception documentée au
   contrôle P2 (la difficulté du niveau EST le tour). L'autre exception est
   « Le tour du lagon » (retouche lagon).
+  *(Périmé depuis le 15/08 : C7 a été redessiné, son fruit se mérite et son
+  exception est tombée. Il ne reste qu'une exception au contrôle P2, « Le tour du
+  lagon ». Voir §8.)*
 - C8 : les deux architectures prouvées (`sol` = ÷2 puis ÷3, ramasse tout ;
   `solB` = ÷3 puis ÷2, gagne sans fruit) ; l'affichage des deux écritures à la
   victoire reste une idée d'habillage, non construite.
+  *(Périmé depuis le 15/08 : C8 a été redessiné et n'a plus de champ `solB` — le
+  niveau ne porte plus deux architectures gagnantes mais deux ROUTES vers le
+  sixième, dont une seule laisse de quoi fabriquer le douzième. Voir §8.)*
 - Retouche lagon incluse au même lot (décision de Gwenael : « le lagon, c'était
   vraiment facile tout le long ») : Zigzag, La part perdue (sa part perdue
   devient elle aussi un trésor), La moitié de la moitié (piège s3 + détour bas),
@@ -165,3 +171,59 @@ Les 8 niveaux sont construits et prouvés dans le moteur (batterie node, contrô
   lot : le champ vert/or et les cases-boucans ; pour tout le reste du décor, le
   monde joue avec l'habillage standard. (Correction du 15/08 : la rédaction
   d'origine annonçait que le dessin des cannes n'était pas fait.)
+
+## 8. Addendum du 15/08 — le lot « des niveaux qui résistent »
+
+Sept des huit niveaux du monde ont été REDESSINÉS (seul « Le letchi difficile »
+est intact : c'est la découverte des fruits à valeur, elle doit rester douce).
+Motif : le monde se jouait trop vite — mesuré, médiane `R` = 45, sept niveaux sur
+huit gagnés en 1 ou 2 pièces. Méthode et chiffres complets dans
+`RAPPORT-ESSAI-NIVEAUX-DURS.md` ; les décisions générales sont gravées dans
+`SOLEY.md` §6 (la difficulté se mesure · la densité n'est pas le levier · on ne
+dessine plus jamais la solution).
+
+Noms, ordre et clés de sauvegarde : **inchangés**. Ce qui bouge dans chaque entrée :
+`suns`, `targets`, `rocks`, `fruits`, `tools`, `sol`, `solMin`, `sub`, `hint`, et
+la grille pour quatre d'entre eux.
+
+| Niveau | grille | obstacles | boîte / par | prof |
+|---|---|---:|---:|---:|
+| C1 Premier coup de sabre | 9×6 | 15 % | 6 / 5 | 3 |
+| C2 Le letchi difficile | 7×5 | 9 % | 3 / 3 | 2 *(intact)* |
+| C3 La part perdue devient le trésor | 9×6 | 13 % | 7 / 5 | 3 |
+| C4 La croisée des rayons | 9×6 | 22 % | 8 / 6 | 5 |
+| C5 Le tour du champ | 10×7 | 36 % | 7 / 6 | 4 |
+| C6 Le grand tri | 9×7 | 27 % | 7 / 5 | 4 |
+| C7 La chambre close | 9×7 | 30 % | 7 / 4 | 3 |
+| C8 Les deux chemins du sixième | 9×7 | 22 % | 7 / 7 | 6 |
+
+*(Relevé refait sur les données livrées. Le tableau du rapport donne 14 % pour C8 :
+c'est son NOMBRE de touffes, pas son pourcentage — 14 obstacles sur 63 cases font
+22 %. La fourchette « 14 à 36 % » du §3 du rapport se lit donc 13 à 36 %.)*
+
+**Dénominateurs.** Le monde utilise maintenant 1/6, 1/8, 1/9 et 1/12, tous obtenus
+par COMPOSITION de partages (décision de Gwenael du 15/08 : ça reste du partage).
+Aucune lentille, aucune addition. La loupe ×2 qui traînait dans la boîte du
+« Grand tri » — une notion du volcan offerte à des 6e — a été retirée.
+
+**Deux points de spec périmés par ce lot**, corrigés en place au §7 :
+
+1. **C7 n'est plus une exception au contrôle P2.** Son fruit se mérite comme les
+   autres. Il ne reste qu'une exception dans tout le jeu : « Le tour du lagon ».
+2. **C8 n'a plus de champ `solB`.** Le niveau ne porte plus deux architectures
+   gagnantes (÷2 puis ÷3 / ÷3 puis ÷2) mais deux ROUTES vers le sixième, dont une
+   seule laisse de quoi fabriquer le douzième et franchir la porte. Conséquence à
+   connaître : `solB` n'est plus employé nulle part dans `levels.js`, et le contrôle
+   qui le vérifiait (`tests/soley-public.test.mjs`, « la deuxième architecture
+   gagne ») est écrit `if (l.solB)` — il ne signale rien, il se saute. L'atelier
+   sait toujours conserver le champ (contrôle A10).
+
+**Retouche lagon du même mouvement** : Zigzag dans les roches, La part perdue,
+La moitié de la moitié, Quarts en croix — un cran moins dense que la canne, gagner
+reste à portée d'un 6e qui débute et la résistance part dans la couche fruits.
+« Le tour du lagon » et les 3 découvertes ne bougent pas ; l'essai sur « Le tour du
+lagon » a été annulé par son auteur (sa version gagnait en profondeur mais faisait
+régresser la couche fruits).
+
+**Reste ouvert :** les consignes (`sub`) sont des premiers jets, à polir avec
+Gwenael — comme celles du lot 1, qui attendent toujours ce polissage.

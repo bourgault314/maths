@@ -39,6 +39,25 @@ champs autorisés par SPEC-COMPRENDRE-LOT1.md §8) se rejoue avec :
 `node tests/soley/verifier-lot1-comprendre.mjs` (référence git figée, comme
 `verifier-decoupage.mjs`).
 
+## Mesurer la difficulté (lot du 15/08, SOLEY.md §5 point 13)
+
+Deux familles à ne pas confondre :
+
+```bash
+# MESURER — force brute sur l'espace éclairé, rejoue simulate() du vrai moteur.
+# Graines fixes : les chiffres du RAPPORT-ESSAI-NIVEAUX-DURS.md se rejouent.
+node tests/soley/solveur-etalon.mjs --monde canne --sans-libre
+
+# PROUVER — le lot ne touche que ce qu'il annonce (appariement par monde:nom).
+node tests/soley/verifier-lot-niveaux-durs.mjs
+```
+
+`atelier-niveaux.mjs` (carte ASCII + plans trouvés), `carte-fruits.mjs` (où poser un
+fruit pour qu'il se mérite) et `tailleur-champs.mjs` (recuit local) servent à
+CONCEVOIR, pas à contrôler. `semeur-champs.mjs` est gardé comme preuve d'échec :
+c'est lui qui a établi qu'au-delà d'environ 40 % d'obstacles le champ interdit au
+lieu d'orienter.
+
 ## Détails qui comptent
 
 - Le choix de cookies « refusé » est posé dans `localStorage` AVANT le chargement :
