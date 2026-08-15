@@ -131,7 +131,7 @@ function fixedFrame(){
 }
 function canneSVG(x,y,i){
   /* Dans les champs de canne, les obstacles SONT des cannes (remarque de
-     Gwenael : « les cannes bloquent les rayons du soleil ») — touffe de tiges
+     Gwenael : « les cannes bloquent les rayons du soleil ») — carreau de canne, tiges
      vertes et or, nœuds sombres, feuilles en panache. Variantes par case. */
   const px=x*CS,py=y*CS,v=(x*5+y*11+i)%3;
   const tiges=[
@@ -176,7 +176,7 @@ function corailSVG(x,y,i){
 }
 /* Fougères arborescentes — les obstacles de LA FORÊT (choix de Gwenael, 15/08 :
    « ce qui cache le soleil, ce serait des fougères »). Le fanjan des Hauts. Même
-   silhouette de touffe que la roche, donc la lecture du plateau ne change pas d'un
+   silhouette de galet que la roche, donc la lecture du plateau ne change pas d'un
    pixel : seule la peau change — vert de sous-bois, et cinq frondes qui s'ouvrent
    en éventail depuis le pied. Même principe que corailSVG au lagon et canneSVG à
    la canne : re-peau des obstacles monde par monde (pilier Habiller). */
