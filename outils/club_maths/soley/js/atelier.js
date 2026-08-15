@@ -135,9 +135,13 @@ let dernierMessage = null;
 function peindreAlerte(){
   let h = '';
   if (enMain){
-    const quoi = enMain.type === 'fixed' ? 'Pièce à sceller' : NOMOBJ[enMain.type];
-    h += '<span class="ligne main">' + quoi + ' en main : touche une case libre du plateau. ' +
-         '(Échap, ou retouche la palette, pour le reposer.)</span>';
+    h += enMain.deplace
+      ? '<span class="ligne main">' + NOMOBJ[enMain.type] + ' à déplacer : touche sa nouvelle ' +
+        'case. (Échap pour annuler et le remettre où il était.)</span>'
+      : '<span class="ligne main">' +
+        (enMain.type === 'fixed' ? 'Pièce à sceller' : NOMOBJ[enMain.type]) +
+        ' en main : touche une case libre du plateau. ' +
+        '(Échap, ou retouche la palette, pour le reposer.)</span>';
   }
   if (dernierMessage) h += dernierMessage.lignes.map(function(l){
     return '<span class="ligne ' + dernierMessage.classe + '">' + l + '</span>';
@@ -190,10 +194,30 @@ function poser(type, x, y){
   return true;
 }
 
-function retirer(o){
-  const tab = { sun: D.suns, target: D.targets, rock: D.rocks, fruit: D.fruits,
-                gate: D.gates, fixed: D.fixed }[o.type];
-  if (tab) tab.splice(o.i, 1);
+const TABLEAU = { sun: 'suns', target: 'targets', rock: 'rocks', fruit: 'fruits',
+                  gate: 'gates', fixed: 'fixed' };
+
+/* Retire l'objet ET le RETOURNE, avec tous ses réglages. C'est ce qui permet de
+   déplacer un soleil sans perdre sa direction, ou une case sans perdre sa
+   fraction et sa porte : on ne recrée rien, on repose le même objet ailleurs. */
+function extraire(o){
+  const tab = D[TABLEAU[o.type]];
+  return tab ? tab.splice(o.i, 1)[0] : null;
+}
+function retirer(o){ extraire(o); }
+
+function coordsDe(type, item){
+  if (type === 'rock' || type === 'fruit') return [item[0], item[1]];
+  if (type === 'fixed') return [item[1], item[2]];
+  return [item.x, item.y];
+}
+function reinserer(type, item, x, y){
+  if (!item) return false;
+  if (type === 'rock' || type === 'fruit'){ item[0] = x; item[1] = y; }
+  else if (type === 'fixed'){ item[1] = x; item[2] = y; }
+  else { item.x = x; item.y = y; }
+  D[TABLEAU[type]].push(item);
+  return true;
 }
 
 const NOMOBJ = { sun: 'Soleil', target: 'Case créole', rock: 'Roche', fruit: 'Fruit',
@@ -270,6 +294,19 @@ function dessinerPlateau(){
       D.targets.length > 1 ? 'ABCDEF'[i] : '', i);
   });
 
+  /* Tant qu'il manque un soleil ou une case, la consigne s'écrit SUR le plateau
+     vide — au milieu, là où l'œil est. Sous le plateau elle vivait à 30 px du
+     bord bas de l'écran : présente, et pourtant invisible (retour de Gwenael,
+     15/08). La taille suit la largeur du plateau pour tenir de 5 à 12 colonnes. */
+  if (!D.suns.length || !D.targets.length){
+    const fs = Math.min(46, W / 18);
+    s += '<g pointer-events="none" text-anchor="middle">' +
+      '<text x="' + (W / 2) + '" y="' + (H / 2 - fs * 0.25) + '" font-size="' + fs +
+        '" font-weight="800" fill="#8095bb">Pose un soleil et une case créole</text>' +
+      '<text x="' + (W / 2) + '" y="' + (H / 2 + fs * 1.15) + '" font-size="' + (fs * 0.78) +
+        '" font-weight="600" fill="#63769c">le rayon apparaîtra tout de suite</text></g>';
+  }
+
   /* Couche de touche, dessinée en dernier pour rester au-dessus. */
   for (let y = 0; y < D.rows; y++) for (let x = 0; x < D.cols; x++){
     const o = objetEn(x, y);
@@ -287,8 +324,8 @@ function dessinerPlateau(){
 function majEtat(sim){
   const e = $('atetat');
   if (!D.suns.length || !D.targets.length){
-    e.innerHTML = '<span class="rien">Pose au moins un soleil et une case créole : ' +
-      'le rayon apparaîtra tout de suite.</span>';
+    /* La consigne est écrite sur le plateau lui-même : ne pas la redire ici. */
+    e.innerHTML = '';
     return;
   }
   if (!sim){ e.innerHTML = ''; return; }
@@ -463,7 +500,11 @@ function champ(label, id, valeur, aide){
 
 function ficheObjet(o){
   fichePosee = o;
-  const pied = '<button type="button" class="atbtn danger" id="atficheretirer">Retirer</button>' +
+  /* « Déplacer » est ici, à côté de « Retirer » : c'est dans cette fiche qu'on
+     est déjà quand on veut bouger l'objet, et le geste réutilise la main que
+     l'on connaît — on prend, on touche la case d'arrivée, Échap annule. */
+  const pied = '<button type="button" class="atbtn" id="atfichedeplacer">Déplacer</button>' +
+               '<button type="button" class="atbtn danger" id="atficheretirer">Retirer</button>' +
                '<button type="button" class="atbtn" id="atfichefermer">Fermer</button>';
 
   if (o.type === 'sun'){
@@ -584,6 +625,10 @@ function nouvelId(){
   return 'br' + Date.now().toString(36) + Math.floor(Math.random() * 1e4).toString(36);
 }
 function enregistrerBrouillon(){
+  /* Pendant un déplacement, l'objet est « en main » et donc absent du brouillon.
+     On ne l'enregistre pas dans cet état : si l'onglet se ferme au milieu du
+     geste, on retrouve le niveau tel qu'il était avant, objet compris. */
+  if (enMain && enMain.deplace) return;
   clearTimeout(minuteurDepot);
   minuteurDepot = setTimeout(function(){
     const d = lireDepot();
@@ -878,6 +923,47 @@ function importer(){
 $('atongatelier').addEventListener('click', allerAtelier);
 $('atongjouer').addEventListener('click', allerJouer);
 
+/* ===================== Plein écran (ordinateur) =====================
+   On demande le plein écran sur la PAGE entière, pas sur le plateau : les
+   onglets, la palette et la boîte doivent rester à portée. Le jeu écoute déjà
+   `fullscreenchange` de son côté et pose `body.immersive` — c'est sans effet
+   gênant ici (la classe ne fait que masquer le défilement) et ça lui laisse
+   ajuster son propre écran. Le bouton n'est visible que sur ordinateur. */
+const btnPlein = $('atplein');
+const demanderPlein = document.documentElement.requestFullscreen ||
+  document.documentElement.webkitRequestFullscreen;
+const quitterPlein = document.exitFullscreen || document.webkitExitFullscreen;
+const enPlein = function(){
+  return !!(document.fullscreenElement || document.webkitFullscreenElement);
+};
+function majPlein(){
+  const on = enPlein();
+  btnPlein.setAttribute('aria-pressed', String(on));
+  btnPlein.title = on ? 'Quitter le plein écran' : 'Plein écran';
+  btnPlein.setAttribute('aria-label', btnPlein.title);
+  btnPlein.firstElementChild.textContent = on ? '✕' : '⛶';
+}
+btnPlein.addEventListener('click', function(){
+  if (typeof demanderPlein !== 'function' || typeof quitterPlein !== 'function'){
+    alerte(['Ce navigateur ne laisse pas la page commander le plein écran. ' +
+      'Sa touche F11 fait la même chose.'], 'info');
+    return;
+  }
+  const p = enPlein() ? quitterPlein.call(document) : demanderPlein.call(document.documentElement);
+  if (p && p.catch) p.catch(function(){
+    alerte(['Le plein écran a été refusé par le navigateur. Essaie sa touche F11.'], 'info');
+  });
+});
+['fullscreenchange', 'webkitfullscreenchange'].forEach(function(n){
+  document.addEventListener(n, function(){
+    majPlein();
+    /* Le plateau se redessine à sa nouvelle taille (la consigne du plateau vide
+       est dimensionnée en fonction de la largeur). */
+    if ($('atelier').classList.contains('active')) dessinerPlateau();
+  });
+});
+majPlein();
+
 $('atcolmoins').addEventListener('click', function(){ changerGrille(-1, 0); });
 $('atcolplus').addEventListener('click', function(){ changerGrille(1, 0); });
 $('atrowmoins').addEventListener('click', function(){ changerGrille(0, -1); });
@@ -904,6 +990,13 @@ const REPOSE = {
 };
 function reposerEnMain(){
   if (!enMain) return null;
+  /* Un déplacement annulé remet l'objet EXACTEMENT d'où il vient, réglages
+     compris : on n'a jamais perdu l'objet, on le tenait. */
+  if (enMain.deplace){
+    reinserer(enMain.type, enMain.item, enMain.depuis[0], enMain.depuis[1]);
+    enMain = null;
+    return 'Déplacement annulé';
+  }
   const dit = REPOSE[enMain.type];
   if (enMain.type === 'fixed') D.tools.push(enMain.def);
   enMain = null;
@@ -919,12 +1012,17 @@ function toucherCase(x, y){
          C'est ce refus silencieux qui donnait l'impression que rien n'était
          réglable (premier essai de Gwenael, 15/08). */
       const dit = reposerEnMain();
-      dessinerPalette();
+      tout();
       alerte([dit + ' : cette case était déjà occupée. Voici son réglage.'], 'info');
-      ficheObjet(o);
+      /* Reposer un objet déplacé le remet en FIN de tableau : les indices ont
+         bougé, il faut redemander qui occupe la case. */
+      const ici = objetEn(x, y);
+      if (ici) ficheObjet(ici);
       return;
     }
-    if (enMain.type === 'fixed'){
+    if (enMain.deplace){
+      reinserer(enMain.type, enMain.item, x, y);
+    } else if (enMain.type === 'fixed'){
       D.fixed.push([enMain.def, x, y]);
       const k = D.tools.indexOf(enMain.def);
       if (k >= 0) D.tools.splice(k, 1);
@@ -997,6 +1095,17 @@ $('atfiche').addEventListener('click', function(ev){
 
   if (bt.id === 'atfichefermer'){ fermerFiche(); return; }
 
+  if (bt.id === 'atfichedeplacer'){
+    if (!fichePosee || fichePosee.type === 'outil') return;
+    const type = fichePosee.type;
+    const item = extraire(fichePosee);
+    if (!item) return;
+    enMain = { type: type, deplace: true, item: item, depuis: coordsDe(type, item) };
+    oublierSolutions();
+    fermerFiche();
+    tout();
+    return;
+  }
   if (bt.id === 'atficheretirer'){
     if (fichePosee && fichePosee.type === 'outil') D.tools.splice(fichePosee.i, 1);
     else if (fichePosee) retirer(fichePosee);
@@ -1100,7 +1209,7 @@ document.addEventListener('keydown', function(ev){
   if ($('atfiche').classList.contains('show')){ fermerFiche(); return; }
   if (enMain){
     const dit = reposerEnMain();
-    dessinerPalette();
+    tout();
     alerte([dit + '.'], 'info');
   }
 });

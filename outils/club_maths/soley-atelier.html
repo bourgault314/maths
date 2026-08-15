@@ -82,6 +82,9 @@ body.at #backlv, body.at #backhome{display:none !important;}
   background:#2a2159; color:var(--at-doux); font:800 15px/1.1 inherit; cursor:pointer;
 }
 #atonglets button[aria-pressed="true"]{background:var(--at-or); color:#3a2a05; border-color:var(--at-or);}
+/* Le plein écran n'apparaît que sur ordinateur (voir le commentaire du bouton). */
+#atplein{display:none;}
+#atplein span{font-size:19px; line-height:1;}
 
 /* La barre d'alerte : collée sous les onglets, donc toujours sous les yeux. */
 #atalerte{position:sticky; top:60px; z-index:39; margin:0 10px;}
@@ -259,6 +262,13 @@ body.at.at-jouer #atwin{display:block; text-align:left; width:100%; max-width:42
     padding:0 16px 16px;
     height:calc(100vh - 74px);      /* la place sous les onglets */
   }
+  /* Le plein écran vit à droite des deux onglets et ne prend que sa place.
+     Sélecteur doublé (#atonglets #atplein) : la règle générale « #atonglets
+     button{flex:1 1 0} » est plus spécifique qu'un simple #atplein, et le
+     bouton s'étirait à 415 px comme un troisième onglet. */
+  #atonglets #atplein{display:flex; align-items:center; justify-content:center;
+    flex:0 0 52px; padding:0;}
+
   .atcol{display:flex; flex-direction:column; min-height:0; height:100%;}
   /* La colonne de droite défile toute seule — et ça doit SE VOIR : barre
      toujours réservée, et un voile en bas qui dit qu'il y a une suite. */
@@ -360,6 +370,11 @@ body.at.at-jouer #atwin{display:block; text-align:left; width:100%; max-width:42
 <nav id="atonglets" aria-label="Écrans de l'atelier">
   <button type="button" id="atongatelier" aria-pressed="true">Atelier</button>
   <button type="button" id="atongjouer" aria-pressed="false">Jouer</button>
+  <!-- Plein écran : ORDINATEUR SEULEMENT (décision de Gwenael, 15/08). Sur
+       téléphone le navigateur occupe déjà tout l'écran, le bouton ne servirait
+       à rien — il est masqué hors de la mise en page à deux colonnes. -->
+  <button type="button" id="atplein" aria-pressed="false" title="Plein écran"
+          aria-label="Passer en plein écran"><span aria-hidden="true">⛶</span></button>
 </nav>
 <!-- Tout ce que l'atelier a à dire s'affiche ICI, sous les onglets, toujours
      visible. Avant, les refus partaient dans la zone d'export en bas de page :
@@ -402,6 +417,14 @@ body.at.at-jouer #atwin{display:block; text-align:left; width:100%; max-width:42
 </div><!-- /colonne du plateau -->
 <div class="atcol atcol-outils">
 
+  <!-- Le nom en TÊTE de colonne : c'est la première chose qu'on renseigne, et
+       la seule qui bloque l'export. Il vivait au troisième bloc, sous la boîte. -->
+  <div class="atbloc atbloc-nom">
+    <label class="atchamp"><span>Nom du niveau</span>
+      <input id="atnom" type="text" autocomplete="off" placeholder="Le tour du champ"></label>
+    <div id="atnomerr" class="aterr"></div>
+  </div>
+
   <!-- Les deux blocs qui suivent répondent à LA question de Gwenael : qu'est-ce
        qui est posé d'avance, et qu'est-ce que l'élève reçoit ? Le titre et la
        phrase d'explication le disent, parce que deux rangées d'icônes de pièces
@@ -433,9 +456,6 @@ body.at.at-jouer #atwin{display:block; text-align:left; width:100%; max-width:42
     <h2 class="attitre">La fiche du niveau</h2>
     <label class="atchamp"><span>Monde (il commande le décor et les fruits)</span>
       <select id="atmonde"></select></label>
-    <label class="atchamp"><span>Nom du niveau</span>
-      <input id="atnom" type="text" autocomplete="off" placeholder="Le tour du champ"></label>
-    <div id="atnomerr" class="aterr"></div>
     <label class="atchamp"><span>Consigne (une question, jamais la solution)</span>
       <textarea id="atsub" placeholder="Que faut-il faire ?"></textarea></label>
     <label class="atchamp"><span>Indice (facultatif)</span>
