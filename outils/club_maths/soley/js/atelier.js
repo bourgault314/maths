@@ -116,8 +116,8 @@ function ico(inner, defs){
 function iconeObjet(type){
   const ftype = FRW[D.w] || 'letchi';
   if (type === 'sun')    return ico(sunSVG({ x: 0, y: 0, dir: 1 }), SUNGRAD);
-  if (type === 'target') return ico(targetSVG({ x: 0, y: 0, need: [1, 2] }, null, '', 0));
-  if (type === 'rock')   return ico(D.w === 'canne' ? canneSVG(0, 0, 0) : rockSVG(0, 0, 0));
+  if (type === 'target') return ico(targetSVG({ x: 0, y: 0, need: [1, 2] }, null, '', 0, D.w));
+  if (type === 'rock')   return ico(obstacleSVG(D.w)(0, 0, 0));
   if (type === 'fruit')  return ico(fruitSVG(ftype, 0, 0, false));
   if (type === 'gate')   return ico(gateSVG({ x: 0, y: 0, max: [1, 2] }));
   return '';
@@ -261,7 +261,7 @@ function dessinerPlateau(){
   D.fruits.forEach(function(f){
     s += fruitSVG(ftype, f[0], f[1], !!(sim && sim.fruits.has(f[0] + ',' + f[1])));
   });
-  D.rocks.forEach(function(r, i){ s += (D.w === 'canne' ? canneSVG : rockSVG)(r[0], r[1], i); });
+  D.rocks.forEach(function(r, i){ s += obstacleSVG(D.w)(r[0], r[1], i); });
   D.gates.forEach(function(g){ s += gateSVG(g); });
   if (sim) sim.segs.forEach(function(sg){
     const x1 = (sg.x1 + 0.5) * CS, y1 = (sg.y1 + 0.5) * CS;
@@ -291,7 +291,7 @@ function dessinerPlateau(){
   D.suns.forEach(function(su){ s += sunSVG(su); });
   D.targets.forEach(function(t, i){
     s += targetSVG(t, sim ? sim.stats.find(function(st){ return st.i === i; }) : null,
-      D.targets.length > 1 ? 'ABCDEF'[i] : '', i);
+      D.targets.length > 1 ? 'ABCDEF'[i] : '', i, D.w);
   });
 
   /* Tant qu'il manque un soleil ou une case, la consigne s'écrit SUR le plateau
@@ -518,7 +518,7 @@ function ficheObjet(o){
   } else if (o.type === 'target'){
     const t = D.targets[o.i];
     ouvrirFiche('Case créole',
-      '<div class="atapercu">' + ico(targetSVG({ x: 0, y: 0, need: t.need, disp: t.disp, porte: t.porte }, null, '', 0)) + '</div>' +
+      '<div class="atapercu">' + ico(targetSVG({ x: 0, y: 0, need: t.need, disp: t.disp, porte: t.porte }, null, '', 0, D.w)) + '</div>' +
       champ('Fraction attendue', 'attneed', fracTxt(t.need)) +
       '<label class="atchamp"><span>Porte orientée : le rayon ne peut entrer que par ce côté</span></label>' +
       boutonsDir('tporte', t.porte, true) +
@@ -527,7 +527,7 @@ function ficheObjet(o){
       pied);
   } else if (o.type === 'rock'){
     ouvrirFiche('Roche',
-      '<div class="atapercu">' + ico(D.w === 'canne' ? canneSVG(0, 0, 0) : rockSVG(0, 0, 0)) + '</div>' +
+      '<div class="atapercu">' + ico(obstacleSVG(D.w)(0, 0, 0)) + '</div>' +
       '<p class="atok">Aucun réglage. Au monde des champs de canne, la roche se dessine ' +
       'toute seule en tas de cannes : le rendu suit le monde choisi, comme dans le jeu.</p>',
       pied);

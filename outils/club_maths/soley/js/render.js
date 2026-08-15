@@ -174,6 +174,27 @@ function corailSVG(x,y,i){
       <path d="M30 68 q9 -9 18 0 t${s[2]} -1"/></g>
     <g fill="#ffd9c2" opacity=".55"><circle cx="34" cy="36" r="3"/><circle cx="66" cy="62" r="2.6"/></g></g>`;
 }
+/* Fougères arborescentes — les obstacles de LA FORÊT (choix de Gwenael, 15/08 :
+   « ce qui cache le soleil, ce serait des fougères »). Le fanjan des Hauts. Même
+   silhouette de touffe que la roche, donc la lecture du plateau ne change pas d'un
+   pixel : seule la peau change — vert de sous-bois, et cinq frondes qui s'ouvrent
+   en éventail depuis le pied. Même principe que corailSVG au lagon et canneSVG à
+   la canne : re-peau des obstacles monde par monde (pilier Habiller). */
+function fougereSVG(x,y,i){
+  const px=x*CS,py=y*CS,v=(x*7+y*13+i)%3;
+  const d=[0,5,-5][v];
+  const frondes=(c,w,o)=>`<g stroke="${c}" stroke-width="${w}" fill="none" stroke-linecap="round"${o?` opacity="${o}"`:''}>`+
+    `<path d="M50 87 Q30 74 ${18+d} 47"/><path d="M50 87 Q42 66 ${34+d} 33"/>`+
+    `<path d="M50 87 Q52 60 ${53+d} 28"/><path d="M50 87 Q62 68 ${70+d} 37"/>`+
+    `<path d="M50 87 Q72 75 ${84+d} 51"/></g>`;
+  return `<g transform="translate(${px},${py})"><path d="${ROCHES[v]}" fill="#3f7a41" stroke="#1e4a25" stroke-width="3"/>
+    ${frondes('#1e4a25',6)}${frondes('#6fbf63',2.6,'.9')}
+    <circle cx="50" cy="86" r="5" fill="#2b5c30"/></g>`;
+}
+/* UNE SEULE table de peaux d'obstacles, où le jeu ET l'atelier puisent. Sans elle
+   l'éditeur dérive en silence : il a dessiné les patates de corail du lagon en
+   basalte pendant tout un lot, faute d'avoir été mis à jour en même temps. */
+const obstacleSVG=w=>w==='canne'?canneSVG:w==='lagon'?corailSVG:w==='foret'?fougereSVG:rockSVG;
 function gateSVG(g){
   const px=g.x*CS,py=g.y*CS;
   const gap=fwidth(g.max)+18;
@@ -288,10 +309,60 @@ function beamLblSVG(id,x,y,val){
     `<line x1="${x-demi+1}" y1="${y-9.5}" x2="${x+demi-1}" y2="${y-9.5}" stroke="${c}" stroke-width="2.8"/>`+
     `<text x="${x}" y="${y+12.5}" style="font-size:23px">${val[1]}</text></g>`;
 }
-function targetSVG(t,stat,label='',index=''){
+/* Porte orientée : la case est CLÔTURÉE sur trois côtés (palissade bois, lisible :
+   « on ne rentre pas par là ») et ouverte sur le côté `porte` (0 nord, 1 est,
+   2 sud, 3 ouest). Les côtés clos bloquent comme une roche (engine.js, simulate).
+   La flèche d'entrée dorée a été RETIRÉE le 15/08 (décision de Gwenael) : trois
+   côtés fermés disent déjà par où l'on entre, et la flèche chargeait la case sans
+   rien apprendre. On ne dessine donc que la clôture.
+   Sortie en fonction le 16/08 : la clôture est du LANGAGE, pas de la décoration —
+   elle doit être identique au pixel quelle que soit la peau du monde. */
+function porteSVG(t){
+  if(t.porte===undefined)return '';
+  const cloture=(cote)=>{
+    const B={0:[3,-2,94,9],1:[93,3,9,94],2:[3,93,94,9],3:[-2,3,9,94]}[cote];
+    const horiz=cote===0||cote===2;
+    let piquets='';
+    for(let k=0;k<5;k++){
+      if(horiz){const xx=B[0]+9+k*19;
+        piquets+=`<line x1="${xx}" y1="${B[1]+1.5}" x2="${xx}" y2="${B[1]+B[3]-1.5}" stroke="#5d4326" stroke-width="3"/>`;}
+      else{const yy=B[1]+9+k*19;
+        piquets+=`<line x1="${B[0]+1.5}" y1="${yy}" x2="${B[0]+B[2]-1.5}" y2="${yy}" stroke="#5d4326" stroke-width="3"/>`;}
+    }
+    return `<rect x="${B[0]}" y="${B[1]}" width="${B[2]}" height="${B[3]}" rx="4.5" fill="#8a6b4a" stroke="#3b2a17" stroke-width="2.5"/>`+piquets;
+  };
+  return `<g class="tporte">`+[0,1,2,3].filter(c=>c!==t.porte).map(cloture).join('')+`</g>`;
+}
+function targetSVG(t,stat,label='',index='',monde=''){
   const px=t.x*CS,py=t.y*CS;
   const lit=stat&&stat.st==='ok', bad=stat&&(stat.st==='wrong'||stat.st==='multi');
   const txt=t.disp||fstr(t.need);
+  /* KIOSQUE — la case de LA FORÊT (choix de Gwenael, 15/08). Au fond des bois on
+     n'habite pas une case créole : on s'abrite sous un kiosque de pique-nique des
+     Hauts. Toit à quatre pentes en bardeaux, poteaux de bois apparents, pas de
+     murs, PAS de lambrequins. Tout ce qui se LIT est conservé au pixel près : la
+     même planche claire derrière la fraction (donc même contraste), le même anneau
+     vert de case servie, le même liseré rouge de case mal servie, la même clôture
+     des portes orientées, le même badge de lettre. Seul le vêtement change. */
+  if(monde==='foret'){
+    const bois=lit?'#a3703f':'#7a5230', toit=lit?'#8a5f39':'#6b4a2c';
+    let bard='';
+    for(let k=1;k<=3;k++){const yy=18+k*7.5, dx=(yy-12)*0.9;
+      bard+=`<line x1="${28-dx}" y1="${yy}" x2="${72+dx}" y2="${yy}" stroke="#4a3220" stroke-width="1.6" opacity=".55"/>`;}
+    return `<g transform="translate(${px},${py})" class="${lit?'tlit':''}" data-target="${index}">
+      ${lit?`<circle class="glowring" cx="50" cy="55" r="46" fill="none" stroke="#39d98a" stroke-width="5" opacity=".8"/>`:''}
+      ${porteSVG(t)}
+      <rect x="18" y="45" width="9" height="45" rx="2" fill="${bois}" stroke="#3b2a17" stroke-width="2"/>
+      <rect x="73" y="45" width="9" height="45" rx="2" fill="${bois}" stroke="#3b2a17" stroke-width="2"/>
+      <rect x="24" y="50" width="52" height="38" rx="3" fill="${lit?'#fff4dd':'#f0e3cd'}" stroke="${bad?'#ff5d4a':'#8a6b4a'}" stroke-width="${bad?5:3}"/>
+      <line x1="20" y1="91" x2="80" y2="91" stroke="${bois}" stroke-width="4" stroke-linecap="round"/>
+      <polygon points="6,44 28,12 72,12 94,44" fill="${toit}" stroke="#3b2a17" stroke-width="3" stroke-linejoin="round"/>
+      ${bard}
+      <line x1="28" y1="12" x2="72" y2="12" stroke="#4a3220" stroke-width="3" stroke-linecap="round"/>
+      ${maisonTxtSVG(txt)}
+      ${label?`<circle cx="84" cy="17" r="11" fill="#101a33" stroke="#ffc94d" stroke-width="2"/><text x="84" y="22" text-anchor="middle" font-size="14" font-weight="900" fill="#fff3c4">${label}</text>`:''}
+    </g>`;
+  }
   /* Lambrequins v2 : vraie dentelle créole en bordure de toit — festons suspendus,
      silhouette franche sans surcharger la petite maison. La PERLE au bout de chaque
      feston a été retirée le 15/08 (œil de Gwenael : « ça fait un peu bizarre ») —
@@ -303,34 +374,9 @@ function targetSVG(t,stat,label='',index=''){
     const x0=13+i*lF;
     lamb+=`<path d="M ${x0} 43.2 h ${lF} a ${lF/2} 6.4 0 0 1 ${-lF} 0 Z" fill="#fdf6ec" stroke="#8a6b4a66" stroke-width="1"/>`;
   }
-  /* Porte orientée : la case est CLÔTURÉE sur trois côtés (palissade bois,
-     lisible : « on ne rentre pas par là ») et ouverte sur le côté `porte`
-     (0 nord, 1 est, 2 sud, 3 ouest). Les côtés clos bloquent comme une roche
-     (engine.js, simulate).
-     La flèche d'entrée dorée a été RETIRÉE le 15/08 (décision de Gwenael) :
-     trois côtés fermés disent déjà par où l'on entre, et la flèche chargeait
-     la case sans rien apprendre. On ne dessine donc que la clôture. */
-  let porte='';
-  if(t.porte!==undefined){
-    const cloture=(cote)=>{
-      const B={0:[3,-2,94,9],1:[93,3,9,94],2:[3,93,94,9],3:[-2,3,9,94]}[cote];
-      const horiz=cote===0||cote===2;
-      let piquets='';
-      for(let k=0;k<5;k++){
-        if(horiz){const xx=B[0]+9+k*19;
-          piquets+=`<line x1="${xx}" y1="${B[1]+1.5}" x2="${xx}" y2="${B[1]+B[3]-1.5}" stroke="#5d4326" stroke-width="3"/>`;}
-        else{const yy=B[1]+9+k*19;
-          piquets+=`<line x1="${B[0]+1.5}" y1="${yy}" x2="${B[0]+B[2]-1.5}" y2="${yy}" stroke="#5d4326" stroke-width="3"/>`;}
-      }
-      return `<rect x="${B[0]}" y="${B[1]}" width="${B[2]}" height="${B[3]}" rx="4.5" fill="#8a6b4a" stroke="#3b2a17" stroke-width="2.5"/>`+piquets;
-    };
-    porte=`<g class="tporte">`+
-      [0,1,2,3].filter(c=>c!==t.porte).map(cloture).join('')+
-      `</g>`;
-  }
   return `<g transform="translate(${px},${py})" class="${lit?'tlit':''}" data-target="${index}">
     ${lit?`<circle class="glowring" cx="50" cy="55" r="46" fill="none" stroke="#39d98a" stroke-width="5" opacity=".8"/>`:''}
-    ${porte}
+    ${porteSVG(t)}
     <polygon points="10,42 50,10 90,42" fill="${lit?'#e8574a':'#c94f43'}" stroke="#8a2f27" stroke-width="3"/>
     <rect x="16" y="47" width="68" height="41" rx="5" fill="${lit?'#fff4dd':'#f0e3cd'}" stroke="${bad?'#ff5d4a':'#8a6b4a'}" stroke-width="${bad?5:3}"/>
     ${lamb}
@@ -371,7 +417,7 @@ function redraw(){
   for(let j=1;j<L.rows;j++)s+=`<line class="gridline" x1="0" y1="${j*CS}" x2="${W}" y2="${j*CS}"/>`;
   const ftype=FRW[L.w]||'letchi';
   L.fruits.forEach(f=>{s+=fruitSVG(ftype,f[0],f[1],sim.fruits.has(f[0]+','+f[1]));});
-  const obst=L.w==='canne'?canneSVG:L.w==='lagon'?corailSVG:rockSVG;
+  const obst=obstacleSVG(L.w);
   L.rocks.forEach((r,i)=>{s+=obst(r[0],r[1],i);});
   (L.gates||[]).forEach(g=>{s+=gateSVG(g);});
   sim.segs.forEach(sg=>{
@@ -414,7 +460,7 @@ function redraw(){
     s+=beamLblSVG(sg.id,lx,ly,sg.val);
   });
   L.suns.forEach(sun=>{s+=sunSVG(sun);});
-  L.targets.forEach((t,i)=>{s+=targetSVG(t,sim.stats.find(st=>st.i===i),L.targets.length>1?'ABCDEF'[i]:'',i);});
+  L.targets.forEach((t,i)=>{s+=targetSVG(t,sim.stats.find(st=>st.i===i),L.targets.length>1?'ABCDEF'[i]:'',i,L.w);});
   bd.innerHTML=s;
 
   /* HUD */

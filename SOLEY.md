@@ -1015,4 +1015,20 @@ Trois choses à savoir avant d'y toucher :
   (14 essais, jumeau de « Quarts en croix ») à retirer et remplacer, les deux
   niveaux immesurables, les cours de 1/8, 1/9, 1/12, la peau du monde (kiosques et
   fougères), et la difficulté des fruits — aucun niveau de la forêt n'a de `solMin`.
+- **16/08 — la forêt prend sa peau : kiosques et fougères.** Troisième re-peau d'un
+  monde, même méthode que les patates de corail : `fougereSVG` réutilise la table
+  `ROCHES` — les MÊMES trois silhouettes de touffe que le basalte, pas une copie —
+  et n'ajoute qu'un vert de sous-bois et cinq frondes en éventail. Les cases
+  deviennent des kiosques de pique-nique des Hauts : toit à quatre pentes en
+  bardeaux, poteaux de bois, pas de murs, pas de lambrequins — mais la MÊME planche
+  claire derrière la fraction, donc le même contraste, et la clôture des portes
+  inchangée. La barre de plancher a été descendue sous la planche : à 76 elle
+  coupait le dénominateur (règle : la peau ne touche jamais à ce qui se LIT).
+  **Deux dettes réglées au passage : la clôture des portes sort en `porteSVG`** (elle
+  est du langage, elle doit être identique quelle que soit la peau) **et le choix de
+  la peau des obstacles vit désormais dans UNE table, `obstacleSVG(w)`, où le jeu ET
+  l'atelier puisent** — l'éditeur dessinait les patates de corail du lagon en basalte
+  depuis leur création, faute d'avoir été mis à jour en même temps. `targetSVG` prend
+  un cinquième argument `monde` ; les quatre appels de `atelier.js` ont été relus un
+  par un (leçon du badge de fruit : une fonction partagée se casse en silence).
 - (à compléter à chaque session)
