@@ -50,6 +50,12 @@ describe("bandes fractionnaires sur rail — cas d'or", () => {
       { unites: 5, reste: 0, maximumRail: 5, pas: 1 },
     );
     assert.equal(occurrences(rendu.svg, /class="ecriture-part"/g), 5);
+    assert.equal(occurrences(rendu.svg, /class="ecriture-part-barre"/g), 0);
+    assert.equal(
+      occurrences(rendu.svg, /class="ecriture-part"[^>]*>1<\/text>/g),
+      5,
+    );
+    assert.equal(occurrences(rendu.svg, /class="source-fraction-barre"/g), 1);
     assert.equal(occurrences(rendu.svg, /class="joint-piece"/g), 4);
     assert.equal(occurrences(rendu.svg, /class="graduation graduation-entier"/g), 6);
     assert.match(
@@ -62,6 +68,11 @@ describe("bandes fractionnaires sur rail — cas d'or", () => {
       attributPremier(rendu.svg, "guide-cible", "x1"),
       rendu.donnees.positionCible,
     );
+    assert.equal(
+      attributPremier(rendu.svg, "guide-origine", "x1"),
+      rendu.donnees.origineRail,
+    );
+    assert.doesNotMatch(rendu.svg, /class="point-cible"/);
     assert.equal(rendu.donnees.distanceCible, 5 * rendu.donnees.largeurPartie);
     assert.ok(rendu.donnees.positionCible + 12 <= rendu.largeur);
     assert.equal(
@@ -78,7 +89,7 @@ describe("bandes fractionnaires sur rail — cas d'or", () => {
       etape: "lecture",
     });
 
-    assert.equal(VERSION_BANDES_FRACTIONS_RAIL, 3);
+    assert.equal(VERSION_BANDES_FRACTIONS_RAIL, 4);
     assert.equal(rendu.erreur, null);
     assert.deepEqual(
       {
@@ -251,7 +262,7 @@ describe("bandes fractionnaires sur rail — géométrie historique", () => {
     assert.equal(occurrences(rendu.svg, /class="ecriture-part"/g), 5);
   });
 
-  it("emploie la même abscisse pour le bord des bandes et le point du rail", () => {
+  it("emploie la même abscisse pour le bord des bandes et le guide du rail", () => {
     const rendu = dessinerBandesFractionnairesSurRailDecimal({
       numerateur: 5,
       denominateur: 2,
@@ -265,6 +276,79 @@ describe("bandes fractionnaires sur rail — géométrie historique", () => {
     const cible = attributPremier(rendu.svg, "guide-cible", "x1");
     assert.equal(cible, Number((origine + largeurBandes).toFixed(2)));
     assert.equal(cible, rendu.donnees.positionCible);
+  });
+
+  it("conserve les deux guides, la graduation finale et décale la flèche", () => {
+    const rendu = dessinerBandesFractionnairesSurRailDecimal({
+      numerateur: 7,
+      denominateur: 4,
+      profil: "solution",
+      etape: "lecture",
+      largeur: 260,
+    });
+
+    assert.equal(
+      attributPremier(rendu.svg, "guide-origine", "x1"),
+      rendu.donnees.origineRail,
+    );
+    assert.equal(
+      attributPremier(rendu.svg, "guide-cible", "x1"),
+      rendu.donnees.positionCible,
+    );
+    assert.doesNotMatch(rendu.svg, /class="point-cible"/);
+    assert.match(
+      rendu.svg,
+      new RegExp(
+        `class="graduation graduation-entier" x1="${rendu.donnees.positionFinRail}"`,
+      ),
+    );
+    assert.equal(
+      rendu.donnees.positionDebutFleche - rendu.donnees.positionFinRail,
+      8,
+    );
+    assert.equal(
+      rendu.donnees.positionPointeFleche - rendu.donnees.positionDebutFleche,
+      12,
+    );
+    assert.ok(rendu.donnees.positionPointeFleche <= rendu.largeur);
+  });
+
+  it("compose l'équation avec la fraction canonique et des espacements compacts", () => {
+    const rendu = dessinerBandesFractionnairesSurRailDecimal({
+      numerateur: 7,
+      denominateur: 2,
+      profil: "solution",
+      etape: "pieces",
+      largeur: 260,
+    });
+
+    const x1Barre = attributPremier(rendu.svg, "source-fraction-barre", "x1");
+    const x2Barre = attributPremier(rendu.svg, "source-fraction-barre", "x2");
+    const xEgal = attributPremier(rendu.svg, "signe-egal", "x");
+    const xResultat = attributPremier(rendu.svg, "resultat-decimal", "x");
+    assert.equal(occurrences(rendu.svg, /class="source-fraction-numerateur"/g), 1);
+    assert.equal(occurrences(rendu.svg, /class="source-fraction-denominateur"/g), 1);
+    assert.ok(xEgal - x2Barre <= 24);
+    assert.ok(xResultat - xEgal <= 40);
+    assert.ok(x1Barre >= 0);
+    assert.ok(xResultat <= rendu.largeur);
+  });
+
+  it("réduit les inscriptions canoniques pour quarts étroits sans les déformer", () => {
+    const rendu = dessinerBandesFractionnairesSurRailDecimal({
+      numerateur: 6,
+      denominateur: 4,
+      profil: "solution",
+      etape: "pieces",
+      largeur: 260,
+    });
+
+    const x1Barre = attributPremier(rendu.svg, "ecriture-part-barre", "x1");
+    const x2Barre = attributPremier(rendu.svg, "ecriture-part-barre", "x2");
+    assert.equal(occurrences(rendu.svg, /class="ecriture-part-barre"/g), 6);
+    assert.equal(occurrences(rendu.svg, /class="ecriture-part-numerateur"/g), 6);
+    assert.equal(occurrences(rendu.svg, /class="ecriture-part-denominateur"/g), 6);
+    assert.ok(x2Barre - x1Barre <= rendu.donnees.largeurPartie * 0.75);
   });
 
   it("reste lisible sur 340 px sans changer les proportions", () => {

@@ -10,8 +10,8 @@ import {
   COULEURS_NUMERATION_DECIMALE,
   COULEURS_RANGS_NUMERATION_DECIMALE,
   TYPOGRAPHIE,
-} from "../../charte/src/charte.js?v=31";
-import { construireDonneesTableauNumeration } from "./fractions-decimaux.js?v=31";
+} from "../../charte/src/charte.js?v=32";
+import { construireDonneesTableauNumeration } from "./fractions-decimaux.js?v=32";
 
 export const VERSION_NUMERATION_DECIMALE = 2;
 

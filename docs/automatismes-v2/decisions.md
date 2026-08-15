@@ -1113,3 +1113,63 @@ erreur JavaScript ni aucun débordement réel n'est relevé. L'écart maximal en
 le centre d'une barre de fraction et celui du signe `=` ou `+` voisin est de
 **1,47 px**. Cette recette valide le cours D-054, sans remplacer la campagne
 complète de l'atelier et des retours de réponse demandée par D-049.
+
+### D-055 — Les rangs précèdent de nouveau les conversions et les fractions SVG ont une source unique
+
+Après essai du cours D-054, Gwenaël constate que la fusion des rangs et de la
+conversion directe demande à l'élève d'utiliser le matériel avant d'en avoir
+compris les échanges. Cette décision remplace uniquement l'organisation du
+cours décrite par D-054. Elle ne modifie ni les questions, ni leurs quotas, ni
+l'atelier d'aide, ni les corrections, ni les règles de réponse de D-047 à
+D-049.
+
+Le cours conserve six pages. La première forme l'unité avec deux demis, puis
+montre dans un rectangle-unité, sans second rail, que cinq dixièmes en
+remplissent la moitié : `5/10 = 1/2`, puis le tableau donne `5/10 = 0,5`. La
+deuxième forme quatre quarts et réorganise 25 puis 75 centièmes ; les égalités
+séparent volontairement l'équivalence de fractions de leur lecture décimale.
+
+La troisième page redevient le préalable sur les rangs : une unité rouge
+s'échange contre dix dixièmes verts, puis un dixième vert contre dix centièmes
+jaunes. Elle installe `1/10 = 0,1`, `1/100 = 0,01` et `1/1000 = 0,001` ; le
+millième reste représenté par le tableau seul. La quatrième applique ensuite
+ces échanges à `147/100`. Sous le matériel regroupé, les légendes rendent
+explicites `100/100 = 1`, `40/100 = 4/10` et `7/100`, avant le tableau et la
+décomposition qui aboutit à `1,47`. `7/100 = 0,07` et
+`725/1000 = 0,725` conservent respectivement le zéro de position et la méthode
+par le tableau.
+
+La cinquième page traite le sens inverse avec un nouvel exemple, sans
+reconstruire les trois quarts déjà étudiés : trois unités et six dixièmes
+conduisent à
+`3,6 = 3 + 6/10 = 30/10 + 6/10 = 36/10`. Le dénominateur imprimé et la
+fraction libre restent distingués ; `0,75 = 75/100 = 3/4` n'est plus qu'un
+rappel compact de l'équivalence déjà construite.
+
+La sixième page rassemble les cas au-delà de l'unité sans ajouter de rail
+redondant. Elle restaure les transformations complètes de `7/2`, qui forme
+trois unités et conserve un demi, et de `6/4`, dont les deux quarts restants se
+fusionnent en un demi. Les égalités `3/2 = 1,5`, `4/2 = 2` et `5/2 = 2,5`
+rappellent les repères officiels. Cinq pièces marquées `1`, et non cinq
+écritures `1/1`, atteignent la graduation 5 ; l'abstraction vient ensuite avec
+`5/1 = 5` et `n/1 = n`. La liste finale ordonne les quatre outils — repère,
+tableau, groupement, dénominateur 1 — et le sens quotient reste une dernière
+note, jamais une division posée exercée dans le module.
+
+La géométrie des écritures fractionnaires cesse parallèlement d'être locale
+aux dessins. `mesurerEcritureFractionSvg` et `rendreFractionSvg`, dans
+`packages/objets/src/expressions.js`, deviennent la source obligatoire des
+fractions étagées à l'intérieur des bandes, des correspondances et des
+équations SVG. Le rail compose les membres depuis leurs largeurs mesurées ; il
+trace un guide pointillé à l'origine et à l'arrivée, conserve la graduation
+finale comme un trait, décale la flèche après celle-ci et supprime le point rond
+qui se superposait à la graduation. Le cours et les objets partagés sont
+publiés ensemble par l’invalidation atomique du graphe public en `v32`.
+
+La recette de D-054 reste un témoin historique de l'organisation remplacée.
+La recette conjointe D-049/D-055 est ensuite rejouée en `v32` : **1 519 tests**
+et **220 états navigateur** sur cinq fenêtres, dont 60 états de cours,
+120 états d'aide couvrant les 12 profils et 35 états de réponse. Aucun
+débordement, aucune erreur JavaScript ni aucune fuite n'est relevé. La revue
+visuelle dédiée produit 112 captures des six pages et mesure un écart maximal
+de **0,72 px** entre les barres de fraction et les signes `=` ou `+` voisins.

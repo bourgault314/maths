@@ -11,9 +11,10 @@ import {
   COULEURS_NUMERATION_DECIMALE,
   COULEURS_RANGS_NUMERATION_DECIMALE,
   TYPOGRAPHIE,
-} from "../../charte/src/charte.js?v=31";
+} from "../../charte/src/charte.js?v=32";
+import { rendreFractionSvg } from "./expressions.js?v=32";
 
-export const VERSION_CORRESPONDANCES_DECIMALES = 3;
+export const VERSION_CORRESPONDANCES_DECIMALES = 4;
 
 export const ETAPES_REORGANISATION_CENTIEMES = Object.freeze([
   "lignes",
@@ -437,13 +438,16 @@ function fractionDemiSvg(cx, yBarre, afficherEcritures) {
       classe: "cd-ecriture-demie-masquee",
     });
   }
-  return `<g class="cd-ecriture-demie">` +
-    texte(cx, yBarre - 6, "1", { taille: 14, graisse: 800 }) +
-    `<line x1="${nombreSvg(cx - 10)}" y1="${nombreSvg(yBarre)}" ` +
-      `x2="${nombreSvg(cx + 10)}" y2="${nombreSvg(yBarre)}" ` +
-      `stroke="${COULEURS_NUMERATION_DECIMALE.encre}" stroke-width="1.8"/>` +
-    texte(cx, yBarre + 16, "2", { taille: 14, graisse: 800 }) +
-    `</g>`;
+  return rendreFractionSvg(1, 2, {
+    centreX: cx,
+    yBarre,
+    taille: 14,
+    epaisseur: 1.8,
+    graisse: 800,
+    classe: "cd-ecriture-demie",
+    couleur: COULEURS_NUMERATION_DECIMALE.encre,
+    libelleAccessible: null,
+  });
 }
 
 function dessinerPieceDemiSurRail(x, y, largeurUnite, afficherEcritures) {

@@ -274,10 +274,10 @@ test("le cours et l’aide conservent l’ordre CPA et les nouveaux invariants",
   const titres = [
     "Un demi : plusieurs écritures",
     "Un quart et trois quarts",
+    "Nommer les rangs décimaux",
     "Lire une fraction décimale",
-    "Du décimal à la fraction",
-    "Dépasser l’unité",
-    "Reconnaître un entier",
+    "Écrire un décimal en fraction",
+    "Former les unités",
   ];
   let position = -1;
   for (const titre of titres) {
@@ -288,9 +288,10 @@ test("le cours et l’aide conservent l’ordre CPA et les nouveaux invariants",
   assert.match(application, /dessinerBandesFractionnairesSurRailDecimal/);
   assert.match(application, /dessinerDemiAvecDixiemes/);
   assert.match(application, /dessinerReorganisationCentiemes/);
-  assert.match(application, /rendreBandesRailCours\(5, 2, "pieces"/);
+  assert.match(application, /rendreBandesRailCours\(7, 2, "pieces"/);
   assert.match(application, /reperes-demis-equations-cours/);
-  assert.match(application, /rendreRepereCentCentiemesCours\(\)/);
+  assert.match(application, /rendreEchangesRangsCours\(\)/);
+  assert.match(application, /rendreDecomposition36Cours\(\)/);
   assert.match(application, /rendreRepereCinqUnitesCours\(\)/);
   assert.match(application, /rendreBandesRailCours\(5, 1, "pieces"/);
   assert.match(application, /function rendreAidePoseBandesRiche/);

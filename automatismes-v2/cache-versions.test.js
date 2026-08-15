@@ -2,7 +2,7 @@ import assert from "node:assert/strict";
 import { readFile } from "node:fs/promises";
 import { it } from "node:test";
 
-const VERSION = "31";
+const VERSION = "32";
 
 const RESSOURCES_VERSIONNEES = new Map([
   ["automatismes-v2/index.html", ["styles.css", "interface.css", "menu.css", "app.js"]],
@@ -126,6 +126,7 @@ const RESSOURCES_VERSIONNEES = new Map([
   ["packages/objets/src/fractions.js", ["charte.js"]],
   ["packages/objets/src/bandes-fractions-rail.js", [
     "fractions-decimaux.js",
+    "expressions.js",
     "charte.js",
   ]],
   ["packages/objets/src/numeration-decimale.js", [

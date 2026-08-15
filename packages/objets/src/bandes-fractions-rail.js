@@ -14,13 +14,18 @@ import {
   construireGroupementFraction,
   formaterFractionEnDecimal,
   obtenirDonneesDroiteFractionnaire,
-} from "./fractions-decimaux.js?v=31";
+} from "./fractions-decimaux.js?v=32";
+import {
+  mesurerEcritureFractionSvg,
+  rendreFractionSvg,
+} from "./expressions.js?v=32";
 import {
   COULEURS_BANDES_FRACTIONS,
+  TYPOGRAPHIE,
   couleurBandeFraction,
-} from "../../charte/src/charte.js?v=31";
+} from "../../charte/src/charte.js?v=32";
 
-export const VERSION_BANDES_FRACTIONS_RAIL = 3;
+export const VERSION_BANDES_FRACTIONS_RAIL = 4;
 
 const PROFILS = Object.freeze([
   "aide-nc03",
@@ -54,6 +59,7 @@ const STYLES_AUXILIAIRES = Object.freeze({
 });
 
 const POLICE = "'Fredoka', 'Segoe UI', sans-serif";
+const POLICE_MATHEMATIQUES = TYPOGRAPHIE.mathematiques.replaceAll('"', "'");
 const LARGEUR_DEFAUT = 720;
 const LARGEUR_MINIMUM = 260;
 const LARGEUR_MAXIMUM = 1200;
@@ -90,11 +96,12 @@ function texte(x, y, valeur, {
   graisse = 700,
   ancre = "middle",
   couleur = COULEURS_BANDES_FRACTIONS.encre,
+  police = POLICE,
 } = {}) {
   const attributClasse = classe === "" ? "" : ` class="${echapper(classe)}"`;
   return (
     `<text${attributClasse} x="${attributNombre(x)}" y="${attributNombre(y)}" ` +
-    `text-anchor="${ancre}" font-family="${POLICE}" font-size="${taille}" ` +
+    `text-anchor="${ancre}" font-family="${police}" font-size="${taille}" ` +
     `font-weight="${graisse}" fill="${couleur}">${echapper(valeur)}</text>`
   );
 }
@@ -119,20 +126,75 @@ function ligne(x1, y1, x2, y2, {
 function ecritureFraction(cx, yBarre, numerateur, denominateur, {
   classe = "ecriture-fraction",
   taille = 18,
-  largeurBarre = 30,
 } = {}) {
-  const demiBarre = largeurBarre / 2;
-  return (
-    `<g class="${echapper(classe)}">` +
-    texte(cx, yBarre - 8, numerateur, { taille, graisse: 800 }) +
-    ligne(cx - demiBarre, yBarre, cx + demiBarre, yBarre, {
-      classe: "barre-fraction",
-      couleur: "rgba(0,0,0,.65)",
-      epaisseur: 2,
-    }) +
-    texte(cx, yBarre + 19, denominateur, { taille, graisse: 800 }) +
-    "</g>"
-  );
+  return rendreFractionSvg(numerateur, denominateur, {
+    centreX: cx,
+    yBarre,
+    taille,
+    epaisseur: Math.max(1.5, taille * 0.105),
+    graisse: 800,
+    classe,
+    couleur: COULEURS_BANDES_FRACTIONS.encre,
+    libelleAccessible: null,
+  });
+}
+
+function largeurTexteMathematique(valeur, taille) {
+  let unites = 0;
+  for (const caractere of String(valeur)) {
+    if (/[0-9?]/.test(caractere)) unites += 0.7;
+    else if ([",", "."].includes(caractere)) unites += 0.35;
+    else if (caractere === "=") unites += 0.84;
+    else unites += 0.7;
+  }
+  return unites * taille;
+}
+
+function membreTexteEquation(valeur, {
+  classe,
+  taille,
+  graisse = 800,
+  couleur = COULEURS_BANDES_FRACTIONS.encre,
+}) {
+  return Object.freeze({
+    largeur: largeurTexteMathematique(valeur, taille),
+    rendre: (centreX, yBarre) => texte(centreX, yBarre + 7, valeur, {
+      classe,
+      taille,
+      graisse,
+      couleur,
+      police: POLICE_MATHEMATIQUES,
+    }),
+  });
+}
+
+function membreFractionEquation(numerateur, denominateur, {
+  classe,
+  taille = 19,
+}) {
+  const mesure = mesurerEcritureFractionSvg(numerateur, denominateur, { taille });
+  return Object.freeze({
+    largeur: mesure.largeur,
+    rendre: (centreX, yBarre) => ecritureFraction(
+      centreX,
+      yBarre,
+      numerateur,
+      denominateur,
+      { classe, taille },
+    ),
+  });
+}
+
+function composerEquation(largeur, membres, yBarre = 29) {
+  const ecart = 10;
+  const largeurTotale = membres.reduce((total, membre) => total + membre.largeur, 0)
+    + ecart * (membres.length - 1);
+  let curseur = (largeur - largeurTotale) / 2;
+  return membres.map((membre) => {
+    const centreX = curseur + membre.largeur / 2;
+    curseur += membre.largeur + ecart;
+    return membre.rendre(centreX, yBarre);
+  }).join("");
 }
 
 function racineSvg(largeur, hauteur, corps, texteAlternatif) {
@@ -228,23 +290,26 @@ function hauteurBande(largeur) {
 }
 
 function equation({ largeur, numerateur, denominateur, decimal, profil }) {
-  const centre = largeur / 2;
   const yBarre = 29;
+  const signeEgal = () => membreTexteEquation("=", {
+    classe: "signe-egal",
+    taille: 20,
+  });
   if (profil === "aide-nc03") {
     return (
       '<g class="question question-nc03">' +
-      ecritureFraction(centre - 38, yBarre, numerateur, denominateur, {
-        classe: "source-fraction",
-        taille: 19,
-        largeurBarre: 32,
-      }) +
-      texte(centre + 2, 36, "=", { taille: 20, graisse: 800 }) +
-      texte(centre + 40, 36, "?", {
-        classe: "cible-decimale-masquee",
-        taille: 21,
-        graisse: 800,
-        couleur: COULEURS_BANDES_FRACTIONS.guide,
-      }) +
+      composerEquation(largeur, [
+        membreFractionEquation(numerateur, denominateur, {
+          classe: "source-fraction",
+          taille: 19,
+        }),
+        signeEgal(),
+        membreTexteEquation("?", {
+          classe: "cible-decimale-masquee",
+          taille: 21,
+          couleur: COULEURS_BANDES_FRACTIONS.guide,
+        }),
+      ], yBarre) +
       "</g>"
     );
   }
@@ -253,50 +318,65 @@ function equation({ largeur, numerateur, denominateur, decimal, profil }) {
     const denominateurCible = profil === "aide-nc04-imposee" ? denominateur : "?";
     return (
       '<g class="question question-nc04">' +
-      texte(centre - 45, 36, decimal, {
-        classe: "source-decimale",
-        taille: 19,
-        graisse: 800,
-      }) +
-      texte(centre, 36, "=", { taille: 20, graisse: 800 }) +
-      ecritureFraction(centre + 47, yBarre, "?", denominateurCible, {
-        classe: "cible-fractionnaire-masquee",
-        taille: 19,
-        largeurBarre: 32,
-      }) +
+      composerEquation(largeur, [
+        membreTexteEquation(decimal, {
+          classe: "source-decimale",
+          taille: 19,
+        }),
+        signeEgal(),
+        membreFractionEquation("?", denominateurCible, {
+          classe: "cible-fractionnaire-masquee",
+          taille: 19,
+        }),
+      ], yBarre) +
       "</g>"
     );
   }
 
   return (
     '<g class="solution">' +
-    ecritureFraction(centre - 45, yBarre, numerateur, denominateur, {
-      classe: "source-fraction",
-      taille: 19,
-      largeurBarre: 32,
-    }) +
-    texte(centre, 36, "=", { taille: 20, graisse: 800 }) +
-    texte(centre + 50, 36, decimal, {
-      classe: "resultat-decimal",
-      taille: 19,
-      graisse: 800,
-      couleur: COULEURS_BANDES_FRACTIONS.guide,
-    }) +
+    composerEquation(largeur, [
+      membreFractionEquation(numerateur, denominateur, {
+        classe: "source-fraction",
+        taille: 19,
+      }),
+      signeEgal(),
+      membreTexteEquation(decimal, {
+        classe: "resultat-decimal",
+        taille: 19,
+        couleur: COULEURS_BANDES_FRACTIONS.guide,
+      }),
+    ], yBarre) +
     "</g>"
   );
 }
 
-function etiquettePartie(cx, y, denominateur, hauteur, classe = "ecriture-part") {
+function etiquettePartie(
+  cx,
+  y,
+  denominateur,
+  hauteur,
+  largeurPartie,
+  classe = "ecriture-part",
+) {
+  if (denominateur === 1) {
+    return texte(cx, y + hauteur / 2 + 6, "1", {
+      classe,
+      taille: 20,
+      graisse: 800,
+      police: POLICE_MATHEMATIQUES,
+    });
+  }
   const yBarre = y + hauteur / 2 - 1;
   return ecritureFraction(cx, yBarre, 1, denominateur, {
     classe,
-    taille: largeurDeTextePartie(hauteur),
-    largeurBarre: 22,
+    taille: largeurDeTextePartie(hauteur, largeurPartie),
   });
 }
 
-function largeurDeTextePartie(hauteur) {
-  return hauteur <= 52 ? 15 : 17;
+function largeurDeTextePartie(hauteur, largeurPartie) {
+  const tailleSelonHauteur = hauteur <= 52 ? 15 : 17;
+  return Math.max(10, Math.min(tailleSelonHauteur, largeurPartie * 0.5));
 }
 
 function bandes({
@@ -338,6 +418,7 @@ function bandes({
         y,
         denominateur,
         hauteur,
+        largeurPartie,
       ));
     }
   } else if (etape === "groupes") {
@@ -362,6 +443,7 @@ function bandes({
         y,
         denominateur,
         hauteur,
+        largeurPartie,
       ));
     }
   } else {
@@ -397,6 +479,7 @@ function bandes({
           y,
           2,
           hauteur,
+          largeurDemi,
           "ecriture-reste-demi",
         ),
         "</g>",
@@ -415,6 +498,7 @@ function bandes({
           y,
           denominateur,
           hauteur,
+          largeurPartie,
         ));
       }
     }
@@ -442,6 +526,8 @@ function rail({
   basBande,
 }) {
   const finX = origineX + maximumRail * largeurUnite;
+  const debutFlecheX = finX + 8;
+  const pointeFlecheX = finX + 20;
   const cibleX = origineX + numerateur * largeurPartie;
   const donneesOfficielles = obtenirDonneesDroiteFractionnaire(denominateur);
   const graduationParNumerateur = new Map(
@@ -450,13 +536,14 @@ function rail({
   const nombreGraduations = maximumRail * denominateur;
   const elements = [
     '<g class="rail-decimal">',
-    ligne(origineX, y, finX, y, {
+    ligne(origineX, y, debutFlecheX, y, {
       classe: "axe-rail",
       couleur: STYLES_AUXILIAIRES.rail,
       epaisseur: 1.5,
     }),
-    `<path class="fleche-rail" d="M ${attributNombre(finX)} ${attributNombre(y - 5)} ` +
-      `L ${attributNombre(finX + 12)} ${attributNombre(y)} L ${attributNombre(finX)} ${attributNombre(y + 5)}" ` +
+    `<path class="fleche-rail" d="M ${attributNombre(debutFlecheX)} ${attributNombre(y - 5)} ` +
+      `L ${attributNombre(pointeFlecheX)} ${attributNombre(y)} ` +
+      `L ${attributNombre(debutFlecheX)} ${attributNombre(y + 5)}" ` +
       `fill="none" stroke="${STYLES_AUXILIAIRES.rail}" stroke-width="1.5" stroke-linejoin="round"/>`,
   ];
 
@@ -499,16 +586,20 @@ function rail({
     }
   }
 
-  elements.push(
-    ligne(cibleX, basBande + 8, cibleX, y - 8, {
+  elements.push(ligne(origineX, basBande + 8, origineX, y - 8, {
+    classe: cibleX === origineX ? "guide-origine guide-cible" : "guide-origine",
+    couleur: COULEURS_BANDES_FRACTIONS.guide,
+    epaisseur: 1.5,
+    pointilles: "3 3",
+  }));
+  if (cibleX !== origineX) {
+    elements.push(ligne(cibleX, basBande + 8, cibleX, y - 8, {
       classe: "guide-cible",
       couleur: COULEURS_BANDES_FRACTIONS.guide,
       epaisseur: 1.5,
       pointilles: "3 3",
-    }),
-    `<circle class="point-cible" cx="${attributNombre(cibleX)}" cy="${attributNombre(y)}" ` +
-      `r="4.5" fill="${COULEURS_BANDES_FRACTIONS.guide}" stroke="#ffffff" stroke-width="1.5"/>`,
-  );
+    }));
+  }
 
   if (profil === "aide-nc03") {
     elements.push(texte(cibleX, y + 28, "?", {
@@ -662,6 +753,9 @@ export function dessinerBandesFractionnairesSurRailDecimal(reglages = {}) {
       largeurUnite: arrondi2(largeurUnite),
       largeurPartie: arrondi2(largeurPartie),
       positionCible: arrondi2(positionCible),
+      positionFinRail: arrondi2(MARGE_GAUCHE + maximumRail * largeurUnite),
+      positionDebutFleche: arrondi2(MARGE_GAUCHE + maximumRail * largeurUnite + 8),
+      positionPointeFleche: arrondi2(MARGE_GAUCHE + maximumRail * largeurUnite + 20),
       distanceCible: arrondi2(numerateur * largeurPartie),
       partiesPosees,
       resteFusionneEnDemi: etape === "reste" && denominateur === 4 && groupement.reste === 2,
