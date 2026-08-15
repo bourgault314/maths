@@ -83,6 +83,21 @@ body.at #backlv, body.at #backhome{display:none !important;}
 }
 #atonglets button[aria-pressed="true"]{background:var(--at-or); color:#3a2a05; border-color:var(--at-or);}
 
+/* La barre d'alerte : collée sous les onglets, donc toujours sous les yeux. */
+#atalerte{position:sticky; top:60px; z-index:39; margin:0 10px;}
+#atalerte:empty{display:none;}
+#atalerte .ligne{display:block; padding:9px 12px; border-radius:12px; margin-bottom:6px;
+  font:600 14px/1.4 inherit; border:2px solid;}
+#atalerte .info{background:#22306b; border-color:#3d5bb0; color:#dfe9ff;}
+#atalerte .ok{background:#193f34; border-color:#2f8f6d; color:#b8f5da;}
+#atalerte .aterr{background:#4a1f22; border-color:#c4544a; color:#ffd7d1;}
+#atalerte .main{background:#4a3a12; border-color:var(--at-or); color:#ffe9b8;}
+
+#atetat{margin:8px 10px 10px; font:600 14px/1.5 inherit; color:var(--at-doux); text-align:center;}
+#atetat .ok{color:#8ef0c0;}
+#atetat .bad{color:#ffb3a8;}
+#atetat .rien{color:#8ea3c6; font-weight:500;}
+
 #atelier{padding:0 10px 40px;}
 .atbloc{background:var(--at-carte); border:2px solid var(--at-bord); border-radius:14px;
   padding:10px 12px; margin:0 0 10px;}
@@ -205,6 +220,11 @@ body.at.at-jouer #atwin{display:block; text-align:left; width:100%; max-width:42
   <button type="button" id="atongatelier" aria-pressed="true">Atelier</button>
   <button type="button" id="atongjouer" aria-pressed="false">Jouer</button>
 </nav>
+<!-- Tout ce que l'atelier a à dire s'affiche ICI, sous les onglets, toujours
+     visible. Avant, les refus partaient dans la zone d'export en bas de page :
+     à 1700 px du haut, personne ne les voyait — et « Jouer » avait l'air de ne
+     rien faire alors qu'il refusait poliment. -->
+<div id="atalerte" role="status" aria-live="polite"></div>
 
 <!-- ================= ÉCRAN ATELIER ================= -->
 <div id="atelier" class="screen active">
@@ -229,6 +249,8 @@ body.at.at-jouer #atwin{display:block; text-align:left; width:100%; max-width:42
   <div id="atplateaubox">
     <svg id="atplateau" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Plateau en construction"></svg>
   </div>
+  <!-- Ce que dirait le jeu du niveau tel qu'il est posé, en direct. -->
+  <div id="atetat" aria-live="polite"></div>
   <div id="atconseil" class="atbloc" hidden></div>
 
   <div class="atbloc">
