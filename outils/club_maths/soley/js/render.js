@@ -269,8 +269,11 @@ function targetSVG(t,stat,label='',index=''){
   }
   /* Porte orientée : la case est CLÔTURÉE sur trois côtés (palissade bois,
      lisible : « on ne rentre pas par là ») et ouverte sur le côté `porte`
-     (0 nord, 1 est, 2 sud, 3 ouest), marqué par la flèche d'entrée dorée.
-     Les côtés clos bloquent comme une roche (engine.js, simulate). */
+     (0 nord, 1 est, 2 sud, 3 ouest). Les côtés clos bloquent comme une roche
+     (engine.js, simulate).
+     La flèche d'entrée dorée a été RETIRÉE le 15/08 (décision de Gwenael) :
+     trois côtés fermés disent déjà par où l'on entre, et la flèche chargeait
+     la case sans rien apprendre. On ne dessine donc que la clôture. */
   let porte='';
   if(t.porte!==undefined){
     const cloture=(cote)=>{
@@ -285,15 +288,9 @@ function targetSVG(t,stat,label='',index=''){
       }
       return `<rect x="${B[0]}" y="${B[1]}" width="${B[2]}" height="${B[3]}" rx="4.5" fill="#8a6b4a" stroke="#3b2a17" stroke-width="2.5"/>`+piquets;
     };
-    const A={0:{l:[50,-14,50,10],h:'43,2 57,2 50,15'},
-             1:{l:[114,66,90,66],h:'98,59 98,73 85,66'},
-             2:{l:[50,114,50,92],h:'43,98 57,98 50,85'},
-             3:{l:[-14,66,10,66],h:'2,59 2,73 15,66'}}[t.porte];
     porte=`<g class="tporte">`+
       [0,1,2,3].filter(c=>c!==t.porte).map(cloture).join('')+
-      `<line x1="${A.l[0]}" y1="${A.l[1]}" x2="${A.l[2]}" y2="${A.l[3]}" stroke="#3b2a17" stroke-width="10" stroke-linecap="round"/>`+
-      `<line x1="${A.l[0]}" y1="${A.l[1]}" x2="${A.l[2]}" y2="${A.l[3]}" stroke="#ffc94d" stroke-width="6" stroke-linecap="round"/>`+
-      `<polygon points="${A.h}" fill="#ffc94d" stroke="#3b2a17" stroke-width="2.4"/></g>`;
+      `</g>`;
   }
   return `<g transform="translate(${px},${py})" class="${lit?'tlit':''}" data-target="${index}">
     ${lit?`<circle class="glowring" cx="50" cy="55" r="46" fill="none" stroke="#39d98a" stroke-width="5" opacity=".8"/>`:''}
