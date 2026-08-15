@@ -135,15 +135,30 @@ function canneSVG(x,y,i){
   });
   return s+`</g>`;
 }
+const ROCHES=[
+  `M18 78 Q8 52 26 38 Q34 16 56 22 Q82 18 84 46 Q94 66 76 78 Q50 92 18 78 Z`,
+  `M14 74 Q10 44 34 34 Q44 12 66 24 Q90 28 82 54 Q88 76 62 80 Q34 90 14 74 Z`,
+  `M20 80 Q6 58 22 42 Q28 20 52 20 Q78 14 82 42 Q96 60 78 76 Q52 94 20 80 Z`];
 function rockSVG(x,y,i){
   const px=x*CS,py=y*CS,v=(x*7+y*13+i)%3;
-  const shapes=[
-    `M18 78 Q8 52 26 38 Q34 16 56 22 Q82 18 84 46 Q94 66 76 78 Q50 92 18 78 Z`,
-    `M14 74 Q10 44 34 34 Q44 12 66 24 Q90 28 82 54 Q88 76 62 80 Q34 90 14 74 Z`,
-    `M20 80 Q6 58 22 42 Q28 20 52 20 Q78 14 82 42 Q96 60 78 76 Q52 94 20 80 Z`][v];
-  return `<g transform="translate(${px},${py})"><path d="${shapes}" fill="#3c3a45" stroke="#262430" stroke-width="3"/>
+  return `<g transform="translate(${px},${py})"><path d="${ROCHES[v]}" fill="#3c3a45" stroke="#262430" stroke-width="3"/>
     <path d="M32 44 L44 52 M52 40 L62 50" stroke="#57545f" stroke-width="4" stroke-linecap="round"/>
     <path d="M40 64 L52 68" stroke="#211f2a" stroke-width="4" stroke-linecap="round"/></g>`;
+}
+/* Patates de corail — les obstacles du LAGON (choix de Gwenael, 15/08 : « des
+   roches de basalte dans un lagon, non »). Même silhouette de galet que la roche,
+   donc la lecture du plateau ne change pas d'un pixel : seule la peau change —
+   sillons de corail cerveau et couleur vivante. Même principe que canneSVG pour
+   les champs de canne : re-peau des obstacles monde par monde (pilier Habiller). */
+function corailSVG(x,y,i){
+  const px=x*CS,py=y*CS,v=(x*7+y*13+i)%3;
+  const s=[[26,56,20],[24,44,22],[30,68,18]][v];
+  return `<g transform="translate(${px},${py})"><path d="${ROCHES[v]}" fill="#c98b6e" stroke="#8a5540" stroke-width="3"/>
+    <g stroke="#8a5540" stroke-width="3.4" fill="none" stroke-linecap="round">
+      <path d="M${s[0]} ${s[1]} q10 -10 20 0 t20 0"/>
+      <path d="M24 44 q11 -11 22 0 t22 0"/>
+      <path d="M30 68 q9 -9 18 0 t${s[2]} -1"/></g>
+    <g fill="#ffd9c2" opacity=".55"><circle cx="34" cy="36" r="3"/><circle cx="66" cy="62" r="2.6"/></g></g>`;
 }
 function gateSVG(g){
   const px=g.x*CS,py=g.y*CS;
@@ -248,11 +263,16 @@ function maisonTxtSVG(txt){
 function beamLblSVG(id,x,y,val){
   if(val[1]===1)return `<text class="beamlbl" data-seg="${id}" x="${x}" y="${y}" fill="${fcol(val)}">${fstr(val)}</text>`;
   const c=fcol(val), demi=(String(val[0]).length>1||String(val[1]).length>1)?18:13;
+  /* Espacement de la fraction (15/08, œil de Gwenael — même défaut que sur les
+     maisons le 14/08) : le dénominateur montait à 3 unités sous la barre quand le
+     numérateur en avait 5,5 au-dessus, et le halo sombre de la barre (6 d'épaisseur)
+     mangeait ce qui restait. Le dénominateur descend de 10 à 12,5 : les deux jours
+     de part et d'autre de la barre s'équilibrent, taille des chiffres inchangée. */
   return `<g class="beamlbl" data-seg="${id}" fill="${c}">`+
     `<text x="${x}" y="${y-15}" style="font-size:23px">${val[0]}</text>`+
     `<line x1="${x-demi}" y1="${y-9.5}" x2="${x+demi}" y2="${y-9.5}" stroke="#101a33" stroke-width="6"/>`+
     `<line x1="${x-demi+1}" y1="${y-9.5}" x2="${x+demi-1}" y2="${y-9.5}" stroke="${c}" stroke-width="2.8"/>`+
-    `<text x="${x}" y="${y+10}" style="font-size:23px">${val[1]}</text></g>`;
+    `<text x="${x}" y="${y+12.5}" style="font-size:23px">${val[1]}</text></g>`;
 }
 function targetSVG(t,stat,label='',index=''){
   const px=t.x*CS,py=t.y*CS;
@@ -335,7 +355,8 @@ function redraw(){
   for(let j=1;j<L.rows;j++)s+=`<line class="gridline" x1="0" y1="${j*CS}" x2="${W}" y2="${j*CS}"/>`;
   const ftype=FRW[L.w]||'letchi';
   L.fruits.forEach(f=>{s+=fruitSVG(ftype,f[0],f[1],sim.fruits.has(f[0]+','+f[1]));});
-  L.rocks.forEach((r,i)=>{s+=(L.w==='canne'?canneSVG:rockSVG)(r[0],r[1],i);});
+  const obst=L.w==='canne'?canneSVG:L.w==='lagon'?corailSVG:rockSVG;
+  L.rocks.forEach((r,i)=>{s+=obst(r[0],r[1],i);});
   (L.gates||[]).forEach(g=>{s+=gateSVG(g);});
   sim.segs.forEach(sg=>{
     const x1=(sg.x1+0.5)*CS,y1=(sg.y1+0.5)*CS,x2=(sg.x2+0.5)*CS,y2=(sg.y2+0.5)*CS;
@@ -358,8 +379,22 @@ function redraw(){
   sim.segs.forEach(sg=>{
     const x1=(sg.x1+0.5)*CS,y1=(sg.y1+0.5)*CS,x2=(sg.x2+0.5)*CS,y2=(sg.y2+0.5)*CS;
     const len=Math.hypot(x2-x1,y2-y1); if(len<80)return;
-    const k=Math.min(0.5,60/len);
-    const lx=x1+(x2-x1)*k,ly=y1+(y2-y1)*k-12-fwidth(sg.val)/2;
+    /* L'étiquette est CENTRÉE SUR SON RAYON, quelle que soit l'orientation —
+       comme dans l'original, et comme elle l'était déjà chez nous sur les rayons
+       verticaux (verdict de Gwenael, 15/08 : « c'est toujours centré, je pense
+       qu'il va falloir qu'on fasse ça »). Le liseré sombre du chiffre (.beamlbl,
+       paint-order:stroke) la détache du rayon : c'est lui qui rend la chose
+       lisible, pas la place. Le décalage vers le haut d'avant faisait DEUX règles
+       selon l'orientation, et sur un rayon qui descend d'un soleil il ramenait
+       l'étiquette EN ARRIÈRE, sous le disque peint après elle — le « 1 » avalé.
+       DECALE : de combien descendre l'ancre pour que le dessin soit centré (le
+       chiffre seul monte au-dessus de sa ligne de base, la fraction s'étage). */
+    const DECALE=9;
+    const pose=(d)=>{const t=Math.min(d,len-20)/len;
+      return [x1+(x2-x1)*t,y1+(y2-y1)*t+DECALE];};
+    const avale=(px,py)=>L.suns.some(su=>Math.hypot(px-(su.x*CS+50),py-(su.y*CS+50))<52);
+    let[lx,ly]=pose(Math.min(60,len/2));
+    for(let d=90;d<=len-20&&avale(lx,ly);d+=30)[lx,ly]=pose(d);
     s+=beamLblSVG(sg.id,lx,ly,sg.val);
   });
   L.suns.forEach(sun=>{s+=sunSVG(sun);});

@@ -56,9 +56,9 @@ fichiers modifiés → tests → reste à vérifier.
 
 | Monde | Palier | Contenu | Niveaux |
 |---|---|---|---|
-| Le lagon | 6e | découverte, partage égal — dont 3 niveaux-découverte (demi, tiers, quart) | 9 |
+| Le lagon | 6e | découverte, partage égal — dont 4 niveaux-découverte (demi, tiers, quart, **sixième**) | 10 |
 | Les champs de canne | 6e | partage JOUÉ à fond, notion constante : surplus, pièges, fruits à valeur, portes orientées (refonte 08/2026) | 8 |
-| La forêt | 5e | additions (lentille), équiv., 1/8, 1/12 | 9 |
+| La forêt | 5e | additions (lentille), équivalences | 9 |
 | Le volcan | 4e | loupes ×, fractions > 1, 1/9 | 7 |
 | Les pitons | 5e-4e | équivalences, comparaisons (passes) | 7 |
 | Les soleils | 4e | soleils multiples / fractionnaires / valeur 2 | 8 |
@@ -66,7 +66,7 @@ fichiers modifiés → tests → reste à vérifier.
 | Les tunnels | 6e-4e | labyrinthes denses (41-64 % de roches), esprit de l'original | 8 (dont « Le prisme scellé » et « La galerie scellée ») |
 | Mafate | Expert | tout combiné, 2 soleils, grands plateaux | 7 (dont « Les verrous du cirque ») |
 
-Total : 69 niveaux, chacun avec une solution de référence `sol` vérifiée automatiquement.
+Total : 70 niveaux, chacun avec une solution de référence `sol` vérifiée automatiquement.
 Depuis la refonte (08/2026), les niveaux retouchés ou nouveaux portent AUSSI un champ
 `solMin` : un plan gagnant qui ne ramasse PAS tous les fruits — la batterie prouve
 ainsi que le fruit se mérite (règle d'or, idée 11 de la bibliothèque). Deux mécaniques
@@ -446,6 +446,74 @@ plateau ne répond plus aux clics — défaut trouvé en construisant le lot).
   solveur a trouvé des victoires PLUS COURTES que le `solMin` qu'on avait dessiné à
   la main (« Le tour du champ » 5 contre 6 pièces, « Quarts en croix » 3 contre 4) —
   on annonçait donc une exigence de maîtrise plus dure qu'elle ne l'était.
+
+### Le sixième entre au lagon (15/08/2026)
+
+1. **« Quarts en croix » est retiré.** Ses cibles étaient exactement celles de
+   « La moitié de la moitié » (1/2, 1/4, 1/4) et sa ligne `CALC` était la même au
+   caractère près : sur neuf niveaux, le lagon consacrait trois niveaux au quart.
+   Le vérificateur du lot le PROUVE au lieu de l'affirmer.
+2. **Le trou que ça a révélé** (constat de Gwenael, mesuré ici) : depuis la refonte
+   du 15/08, les champs de canne servent 1/6, 1/8, 1/9 et 1/12 sans qu'aucun cours
+   ne les ait jamais introduits — et la forêt, APRÈS, les « découvre » encore
+   (« Des cases à 1/6 ?! », « Un huitième ?! »). La difficulté avait été mesurée,
+   l'ORDRE DES NOTIONS ne l'avait pas été. Le sixième au lagon rend légitimes les
+   compositions des mondes suivants.
+3. **Deux niveaux, pas un.** Une découverte est PURE (règle du lot 1 « Comprendre ») :
+   la remplacer par une découverte aurait rendu le lagon plus facile, l'inverse du
+   but. Donc « Les six sixièmes » (découverte, boîte exacte, 1 ÷2 et 2 ÷3) PUIS
+   « Le tiers de la moitié » (entraînement taillé au solveur). Le lagon passe à 10
+   niveaux, le seuil de la canne à ⌈5×10/8⌉ = 7 (calculé, pas écrit en dur).
+4. **Le nom dit le geste**, comme « La moitié de la moitié » : le sixième est le
+   TIERS de la moitié. Les deux niveaux se répondent, et la règle générale
+   (recouper une part multiplie le dénominateur) se lit dans la comparaison des
+   deux cartes de savoir, sans être énoncée abstraitement.
+5. **Le cours du sixième ne donne PAS la route `1/3 ÷ 2`** : c'est ce que
+   « Les deux chemins du sixième » demande de trouver aux champs de canne. Un
+   prédire révèle un NOM, jamais une STRATÉGIE que le jeu demande de chercher
+   (règle du 14/08). Il n'a donc pas de prédire du tout : c'est le plus court des
+   quatre cours, l'élève sait déjà couper.
+6. **Le fruit à valeur reste la découverte de la canne** : le letchi du nouvel
+   entraînement est un fruit ordinaire. On ne prend pas à un monde sa seule
+   mécanique neuve.
+7. **La difficulté est MESURÉE, pas estimée** (`tests/soley/atelier-niveaux.mjs`) :
+   « Le tiers de la moitié » demande 4 pièces pour gagner (R = 5 534) et 6 pour
+   cueillir le letchi (Rtout = 37 445, 5 plans gagnants sur 35) — la résistance est
+   dans la couche ☀☀, pas dans la victoire (idée 32). Le champ n'a été dessiné par
+   personne : le solveur a trouvé `sol` et `solMin`.
+8. **Les étiquettes des rayons sont CENTRÉES SUR LEUR RAYON**, quelle que soit
+   l'orientation — comme dans l'original, que Gwenael a rouvert pour comparer
+   (« c'est toujours centré, je pense qu'il va falloir qu'on fasse ça »). Avant, le
+   décalage vers le haut faisait deux règles selon l'orientation : posée sur le
+   rayon quand il était vertical, flottant au-dessus quand il était horizontal. Ce
+   qui rend l'étiquette lisible n'est pas sa place mais son LISERÉ sombre
+   (`paint-order:stroke`) — la preuve était déjà à l'écran sur les rayons verticaux.
+   Effet de bord heureux : le bug du « 1 » avalé par le soleil disparaît de
+   lui-même, puisque le décalage ne ramène plus l'étiquette en arrière vers sa
+   source ; un garde-fou la fait tout de même glisser le long du rayon dans les
+   4 cas (sur 451) où elle tomberait encore dans un soleil.
+   **La couleur est conservée** (l'original écrit en blanc) : chez nous la couleur
+   dit le dénominateur réduit, c'est une règle du jeu — l'étiquette de la même
+   couleur que son rayon renforce le lien, le blanc le casserait.
+   **Écrire la valeur à une taille qui TIENNE dans l'épaisseur a été essayé et
+   écarté** : l'épaisseur EST la valeur (entier 24 unités, demi 12, sixième 4 sur
+   une case de 100), il ne resterait que 17 px pour l'entier et 8 pour le demi.
+   L'étiquette garde donc sa taille pleine et déborde du rayon : c'est ce que fait
+   l'original.
+9. **Espacement de la fraction** (même œil, même jour) : le dénominateur montait à
+   3 unités sous la barre quand le numérateur en avait 5,5 au-dessus, et le halo
+   sombre de la barre mangeait le reste. Le dénominateur descend de 10 à 12,5.
+   Taille des chiffres inchangée — c'est la même correction que sur les maisons le
+   14/08.
+10. **Patates de corail au lagon** : les obstacles du lagon ne sont plus des roches
+   de basalte. `corailSVG` réutilise EXACTEMENT les trois silhouettes de `rockSVG`
+   (la lecture du plateau ne change pas d'un pixel), seule la peau change — sillons
+   de corail cerveau, couleur vivante. Même principe que `canneSVG` pour la canne :
+   re-peau des obstacles monde par monde (pilier Habiller). Les sept autres mondes
+   gardent leur basalte.
+11. **Icône du lagon** refaite (bandes sable / eau turquoise / écume de la barrière /
+   océan, deux patates de corail) : l'ancienne était un rond turquoise qui, à 46 px,
+   ne disait rien. Choix de Gwenael sur planche de quatre pistes.
 
 ## 7. Architecture (découpage d'août 2026, statique, sans build, GitHub Pages)
 
@@ -840,4 +908,24 @@ Trois choses à savoir avant d'y toucher :
   --json state,mergeable` régulièrement, Gwenael fusionne en parallèle.** La preuve de
   zéro écart du premier commit a été REJOUÉE après rebase (`levels.js` est le même
   blob dans `0c276e3b` et `4e430b1b`).
+- **15/08 (soir) — « le sixième au lagon » (conception Cowork).** Constat de Gwenael
+  en jouant : le niveau 8 du lagon ressemble au 7. Vérifié : mêmes cibles, même ligne
+  `CALC`. Constat plus grave trouvé au passage : la canne dépense 1/6, 1/8, 1/9, 1/12
+  sans cours, et la forêt les « introduit » après. Lot : « Quarts en croix » retiré,
+  « Les six sixièmes » (découverte + cours) et « Le tiers de la moitié » (entraînement
+  taillé au solveur) ajoutés ; icône du lagon refaite ; étiquettes des rayons verticaux
+  posées à côté du rayon (bug du « 1 » avalé par le soleil, reproduit sur capture).
+  Compteurs 69 → 70 partout (meta, catalogue, vignette, annuaire régénéré — leçon du
+  lot canne). Preuves : `node --test` 16/16, 9 validateurs CI verts, batterie
+  Playwright complète verte (dont T8 seuil 7 et « dont ses 4 découvertes »),
+  `tests/soley/verifier-lot-sixieme.mjs` 31/31. `verifier-lot-niveaux-durs.mjs`
+  échoue désormais LÉGITIMEMENT (il gardait « Quarts en croix ») : en-tête d'archive
+  datée ajoutée, conformément à la décision 9 du lot canne.
+  **Reste à l'œil de Gwenael** : la chaîne des six sixièmes tient sur deux lignes au
+  cours (la plus longue du jeu) ; les consignes « Des cases à 1/6 ?! » / « Un
+  huitième ?! » de la forêt sont à réécrire — elles sont fausses depuis la refonte
+  du 15/08, PAS depuis ce lot. **Ajouts du soir** : patates de corail au lagon, et
+  étiquettes laissées à leur place (seul le cas « avalé par le soleil » corrigé) — : « Le tour du lagon » remonté en 4
+  (contenu intact, seule la position change), après mesure de tout le lagon au
+  solveur — le monde finissait 10 fois plus facile qu'il ne montait.
 - (à compléter à chaque session)

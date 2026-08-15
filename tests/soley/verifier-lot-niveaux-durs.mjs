@@ -1,3 +1,13 @@
+// ============================ ARCHIVE DATÉE ============================
+// Cet outil a prouvé le lot « des niveaux qui résistent » (15/08/2026) et il a
+// fait son travail. Depuis le lot « le sixième au lagon » (15/08 au soir) il
+// ÉCHOUE LÉGITIMEMENT : « Quarts en croix », qu'il gardait, a été retiré du jeu
+// (il refaisait le calcul de « La moitié de la moitié »), et CALC/COURS ont
+// gagné le sixième. On le CONSERVE en place, comme ses aînés : c'est la trace
+// datée de ce qu'un lot a promis. La preuve du lot suivant vit dans
+// `verifier-lot-sixieme.mjs` — chaque lot apporte SON vérificateur (SOLEY.md §6,
+// décision 9 du lot canne). Aucun de ces outils n'est en CI.
+// =======================================================================
 // Preuve du lot « des niveaux qui résistent » (15/08/2026) : la refonte de
 // difficulté ne touche QUE les 11 niveaux annoncés, et rien de ce qui fait la
 // mémoire des joueurs ne bouge.
