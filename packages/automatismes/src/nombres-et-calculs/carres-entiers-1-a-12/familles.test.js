@@ -41,6 +41,7 @@ import {
 import {
   BASES_SENS_NOTATION,
   GABARIT_SENS_NOTATION_CARRE,
+  VERSION_GENERATEUR_SENS_NOTATION_CARRE,
 } from "./sens-notation.js";
 
 const registre = creerRegistreAutomatismes();
@@ -217,6 +218,28 @@ describe("NC-02/F2 — sens inverse", () => {
 });
 
 describe("NC-02/F3 — sens de la notation", () => {
+  it("guide du carré concret vers la règle générale puis le choix", () => {
+    const question = instancier(
+      GABARIT_SENS_NOTATION_CARRE,
+      { base: 4 },
+      "f3-aide-progressive",
+    );
+    assert.equal(VERSION_GENERATEUR_SENS_NOTATION_CARRE, 2);
+    assert.deepEqual(
+      question.aide.blocs.map(({ id }) => id),
+      ["aide-carre-operation", "aide-definition", "aide-repetition"],
+    );
+    assert.equal(
+      question.aide.blocs[0].contenu,
+      "Observe le carré : il possède autant de rangées que de colonnes. Quelle opération permet de trouver le nombre total de carreaux ?",
+    );
+    assert.match(question.aide.blocs[1].contenu, /a au carré = a × a/);
+    assert.equal(
+      question.aide.blocs[2].contenu,
+      "Repère le seul produit qui répète exactement le même facteur.",
+    );
+  });
+
   it("garde quatre choix distincts, une seule réponse et mélange sa position", () => {
     const positions = new Set();
     const basesVues = new Set();

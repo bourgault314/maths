@@ -64,6 +64,12 @@ body,
   color: var(--mg-encre);
 }
 
+.regle-generale-carre {
+  margin: 8px 0;
+  font-size: clamp(1.35rem, 4vw, 2rem);
+  text-align: center;
+}
+
 .expression-question-carres {
   margin: 4px auto;
   text-align: center;

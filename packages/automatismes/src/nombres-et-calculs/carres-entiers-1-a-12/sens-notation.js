@@ -17,7 +17,7 @@ import {
 
 export const NOM_GENERATEUR_SENS_NOTATION_CARRE =
   "nombres-et-calculs.carres-entiers-1-a-12.sens-notation";
-export const VERSION_GENERATEUR_SENS_NOTATION_CARRE = 1;
+export const VERSION_GENERATEUR_SENS_NOTATION_CARRE = 2;
 
 // Les bases 0 et 2 sont écartées ici parce que certains distracteurs seraient
 // alors visuellement identiques à la bonne réponse n × n.
@@ -77,10 +77,16 @@ export function genererQuestionSensNotationCarre({ aleatoire, parametres }) {
     aide: {
       blocs: [
         {
+          id: "aide-carre-operation",
+          type: "texte",
+          contenu:
+            "Observe le carré : il possède autant de rangées que de colonnes. Quelle opération permet de trouver le nombre total de carreaux ?",
+        },
+        {
           id: "aide-definition",
           type: "texte",
           contenu:
-            "« Au carré » signifie « multiplié par lui-même ».",
+            "« Au carré » signifie « multiplié par lui-même » : a au carré = a × a.",
         },
         {
           id: "aide-repetition",

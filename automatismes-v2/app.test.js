@@ -205,6 +205,7 @@ it("rend le cours en cinq pages et les six familles de NC-02", async () => {
   assert.match(application.innerHTML, /1 \/ 5/);
   assert.match(application.innerHTML, /Carré de quatre rangées et quatre colonnes/);
   assert.match(application.innerHTML, /<sup>2<\/sup>/);
+  assert.match(application.innerHTML, /aria-label="a au carré égale a fois a"/);
   cliquer(gestionnaires, "cours-suivant");
   assert.match(application.innerHTML, /Les carrés de 0 à 12/);
   assert.match(application.innerHTML, /2 \/ 5/);
@@ -326,6 +327,21 @@ it("rend le cours en cinq pages et les six familles de NC-02", async () => {
     cliquer(gestionnaires, "aide");
     assert.match(application.innerHTML, /Me guider/);
     assert.match(application.innerHTML, /Question en cours/);
+    if (famille === "sens-notation") {
+      const aide = application.innerHTML.match(
+        /<aside class="panneau panneau-aide[\s\S]*?<\/aside>/,
+      )?.[0] ?? "";
+      assert.equal([...aide.matchAll(/<section class="outil-aide/g)].length, 3);
+      assert.match(
+        aide,
+        /outil-aide outil-aide-carre-operation[\s\S]*?repere-etape[\s\S]*?visuel-carre-quadrille/,
+      );
+      assert.match(aide, /Quelle opération permet de trouver le nombre total de carreaux/);
+      assert.match(aide, /aria-label="a au carré égale a fois a"/);
+      assert.match(aide, /Repère le seul produit qui répète exactement le même facteur/);
+      assert.match(aide, /class="cq-aire"[\s\S]*?>\?<\/text>/);
+      assert.doesNotMatch(aide, /cq-ligne-active|cq-colonne-active/);
+    }
     if (application.innerHTML.includes("egalite-deux-champs")) {
       assert.equal(
         [...application.innerHTML.matchAll(/class="case-vide-aide"/g)].length,
@@ -454,6 +470,17 @@ it("fige les deux QCM qui ont révélé les chiffres anciens sur iPhone", async 
         /<span class="mathsgo-expression" role="math" aria-label="[^"]+">([^<]+)<\/span>/g,
       )].map((correspondance) => correspondance[1]).sort();
       assert.deepEqual(operations, ["4 + 2", "4 + 4", "4 × 2", "4 × 4"]);
+      cliquer(gestionnaires, "aide");
+      const aide = application.innerHTML.match(
+        /<aside class="panneau panneau-aide[\s\S]*?<\/aside>/,
+      )?.[0] ?? "";
+      assert.match(
+        aide,
+        /aria-label="Carré quadrillé de 4 rangées et 4 colonnes\. L&apos;aire est à trouver\."/,
+      );
+      assert.match(aide, /class="cq-aire"[\s\S]*?>\?<\/text>/);
+      assert.doesNotMatch(aide, /16 carreaux|cq-ligne-active|cq-colonne-active/);
+      cliquer(gestionnaires, "fermer-aide");
     }
 
     if (numero === 12) {

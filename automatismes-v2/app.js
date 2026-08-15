@@ -247,6 +247,17 @@ function rendreProduitCarre(base) {
   return versHtmlSemantique(noeudProduitCarre(base));
 }
 
+function noeudRegleCarre() {
+  return egalite(
+    puissance(variable("a"), 2),
+    produit(variable("a"), variable("a")),
+  );
+}
+
+function rendreRegleCarre() {
+  return versHtmlSemantique(noeudRegleCarre());
+}
+
 function rendreEgaliteCarre(base, { avecResultat = true } = {}) {
   const membres = [puissance(nombre(base), 2), noeudProduitCarre(base)];
   if (avecResultat) membres.push(nombre(base * base));
@@ -1788,6 +1799,7 @@ function rendreCarteCoursCarres(index) {
           <p>4 rangées de 4 carreaux donnent <strong>${versHtmlSemantique(egalite(noeudProduitCarre(4), nombre(16)))}</strong>.</p>
           <p class="chaine-carre">${rendreEgaliteCarre(4)}</p>
           <p><strong>Le carré d'un nombre</strong> est le produit de ce nombre par lui-même.</p>
+          <p class="regle-generale-carre">${rendreRegleCarre()}</p>
           <p class="alerte-carre">${rendrePuissance(4)} signifie ${rendreProduitCarre(4)}, <strong>pas ${versHtmlSemantique(produit(nombre(4), nombre(2)))}</strong>.</p>
         </div>
       </div>
@@ -1897,6 +1909,13 @@ function rendreBlocAideCarres(question, bloc) {
       egalite(nombre(cible), produit(caseVide(), caseVide())),
     );
   }
+  if (bloc.id === "aide-definition") {
+    return rendreTexteAvecExpression(
+      bloc.contenu,
+      "a au carré = a × a",
+      noeudRegleCarre(),
+    );
+  }
   if (bloc.id === "aide-seconde-operation") {
     const signe = texteBloc(question, "operation");
     const terme = blocQuestion(question, "terme")?.valeur;
@@ -1998,18 +2017,25 @@ function rendreAideCarres(question) {
           miseEnEvidence: { ligne: 1, colonne: 1 },
         });
   }
+  const visuelPremiereEtape = famille === "sens-notation"
+    ? rendreCarreQuadrilleDansLecteur({
+        cote: base,
+        mode: "aire-inconnue",
+      })
+    : "";
   const aides = question.aide?.blocs?.filter((bloc) => bloc.type === "texte") ?? [];
   const contenu = `${rendreRappelQuestion(question)}
     ${rendreAccesCoursDepuisAide()}
     ${visuel}
     <div class="etapes-aide-carres">
-      ${aides.map((aide, index) => `<section class="outil-aide">
+      ${aides.map((aide, index) => `<section class="outil-aide${visuelPremiereEtape && index === 0 ? " outil-aide-carre-operation" : ""}">
         ${rendreEtapeCarres(
           index + 1,
           rendreBlocAideCarres(question, aide),
           index === 0 ? "repere-observation" : "",
           { html: true },
         )}
+        ${visuelPremiereEtape && index === 0 ? visuelPremiereEtape : ""}
       </section>`).join("")}
     </div>`;
   return rendreCadrePanneau({

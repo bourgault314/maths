@@ -2,6 +2,23 @@
 
 **Dernière mise à jour : 15 août 2026.**
 
+## Progression concrète de l'aide F3 de NC-02 du 15 août
+
+- L'aide « Quelle écriture correspond à ce carré ? » suit désormais trois
+  temps : observer le carré et chercher l'opération qui compte les carreaux ;
+  lire la règle générale `a² = a × a` ; repérer le seul produit qui répète le
+  même facteur.
+- Le carré commun est placé dans la première carte numérotée, en mode
+  `aire-inconnue`. Il montre les deux côtés égaux et un `?` central, sans
+  rangée ou colonne colorée et sans révéler le total dans le texte alternatif.
+- La première page du cours affiche explicitement `a² = a × a`, en plus de
+  l'exemple complet `4² = 4 × 4 = 16` et de l'opposition avec `4 × 2`.
+- Le générateur F3 passe en version 2. Le cas `1²` peut afficher un seul
+  carreau dans cette aide de sens ; F5 demeure limitée aux côtés de 2 à 12.
+- Cette finition rejoint le candidat `v30` avant sa première publication. La
+  validation complète réussit **1 509 tests sur 1 509**, ainsi que tous les
+  validateurs de publication.
+
 ## Correctif de la police mathématique sur iPhone du 15 août
 
 - Les captures prises après la publication de `v29` ont révélé la limite du

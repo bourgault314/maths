@@ -1038,3 +1038,24 @@ prouve pas quels glyphes le système a réellement dessinés.
 
 Le graphe public V2 et les imports de la charte sont invalidés ensemble en
 `v30`. Aucun chemin sous `/auto/` n'appartient à ce lot.
+
+### D-053 — L'aide sur la notation repart du carré concret
+
+Gwenaël demande le 15 août 2026 que l'aide de la question « Quelle écriture
+correspond à ce carré ? » ne commence plus directement par la définition
+verbale. Elle suit désormais trois temps : observer le carré quadrillé de la
+base courante et chercher l'opération qui donne son nombre total de carreaux ;
+rappeler que « au carré » signifie « multiplié par lui-même » avec la règle
+générale `a² = a × a` ; puis repérer le seul produit qui répète exactement le
+même facteur.
+
+Le carré commun est réemployé dans la première carte de l'aide, en mode
+`aire-inconnue`. Le centre contient donc `?`, aucune rangée ni colonne n'est
+colorée et ni le texte visible ni le libellé accessible ne révèlent le total.
+Le cas `1²` peut montrer un unique carreau dans cette aide de sens, sans entrer
+pour autant dans la famille F5 qui reste limitée aux côtés de 2 à 12.
+
+La première page du cours affiche aussi explicitement `a² = a × a`, entre la
+définition verbale et l'exemple qui oppose `4 × 4` à `4 × 2`. Le générateur F3
+passe en version 2. Cette finition entre dans le candidat public `v30` avant sa
+première publication ; elle ne crée donc pas une seconde version de cache.

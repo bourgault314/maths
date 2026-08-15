@@ -122,6 +122,10 @@ Phrase stable :
 
 > Le carré d'un nombre est le produit de ce nombre par lui-même.
 
+La règle générale est écrite avec le composant mathématique commun :
+
+> `a² = a × a`.
+
 Le cours oppose immédiatement les deux lectures :
 
 > « 4 au carré » signifie `4 × 4`, pas `4 × 2`.
@@ -340,8 +344,16 @@ la réponse. Ils peuvent être mentionnés après validation dans une correction
 
 ### F3
 
-1. « Au carré » signifie « multiplié par lui-même ».
-2. Repère le seul produit qui répète exactement le même facteur.
+1. Observe le carré quadrillé de la base courante, avec son total encore
+   inconnu : il possède autant de rangées que de colonnes. Cherche l'opération
+   qui permet de trouver le nombre total de carreaux.
+2. « Au carré » signifie « multiplié par lui-même » ; la règle générale
+   `a² = a × a` est rappelée avec le composant mathématique commun.
+3. Repère le seul produit qui répète exactement le même facteur.
+
+Le cas `1²` peut employer le carré d'un seul carreau dans cette aide de sens.
+Il reste exclu de F5, où il n'apporterait aucune structure multiplicative
+supplémentaire.
 
 ### F4
 
@@ -461,8 +473,10 @@ Un unique objet du paquet `objets` couvre :
 - le côté inconnu avec deux côtés égaux ;
 - la mise en évidence d'une rangée et d'une colonne.
 
-Il fonctionne de 2 à 12, garde une taille stable, utilise des lignes SVG plutôt
-que 144 objets interactifs et fournit un libellé accessible adapté au contexte.
+Il fonctionne de 1 à 12 pour les illustrations de sens ; les questions F5
+restent limitées de 2 à 12. Il garde une taille stable, utilise des lignes SVG
+plutôt que 144 objets interactifs et fournit un libellé accessible adapté au
+contexte.
 En aide inverse, son libellé ne révèle jamais le côté recherché. Aucun appel ne
 fabrique un carré `0 × 0` ; le zéro reste un fait numérique, pas une grille
 vide.
