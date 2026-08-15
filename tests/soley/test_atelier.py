@@ -315,28 +315,44 @@ def principal():
                 f"{brouillon['n']} brouillon(s), « {brouillon['nom'] }»" if brouillon else "aucun")
 
         # ----------------------------------------------------------------- A10
-        # Aller-retour : charger un niveau du jeu, exporter sans rien toucher.
+        # LE contrôle qui répond à « est-ce que je pourrais refaire tous mes
+        # niveaux avec ça ? » : les 69 niveaux du jeu sont chargés dans
+        # l'atelier, réexportés sans rien toucher, et comparés champ par champ.
+        # Un objet ou un réglage que l'atelier ne saurait pas exprimer ressort
+        # ici comme un écart. (C'est ainsi qu'a été trouvé le champ `solB`.)
         aller = page.evaluate("""() => {
-          const i = window.SOLEY.LV.findIndex(l => l.name === 'Le tour du champ');
-          const original = JSON.parse(JSON.stringify(window.SOLEY.LV[i]));
-          window.ATELIER.chargerDuJeu(i);
-          window.ATELIER.exporter();
-          const bloc = window.ATELIER.bloc();
-          const relu = new Function('b','s2','s3','mg','x2','x3',
-            '"use strict";return (' + bloc.trim().replace(/,$/, '') + ');')(b,s2,s3,mg,x2,x3);
-          const champs = ['w','name','sub','hint','cols','rows','suns','targets','rocks',
-                          'fruits','gates','fixed','tools','sol','solMin'];
-          const ecarts = champs.filter(c =>
-            JSON.stringify(original[c] === undefined ? null : original[c]) !==
-            JSON.stringify(relu[c] === undefined ? null : relu[c]));
-          return { ecarts, bloc, origine: window.ATELIER.origine(),
+          const CHAMPS = ['w','name','sub','hint','dec','cols','rows','suns','targets',
+                          'rocks','fruits','gates','fixed','tools','sol','solMin','solB'];
+          const rates = [];
+          let n = 0;
+          for (let i = 0; i < window.SOLEY.LV.length; i++) {
+            if (i === window.ATELIER.ATIDX) continue;
+            n++;
+            const original = JSON.parse(JSON.stringify(window.SOLEY.LV[i]));
+            window.ATELIER.chargerDuJeu(i);
+            window.ATELIER.exporter();
+            const bloc = window.ATELIER.bloc();
+            let relu = null;
+            try {
+              relu = new Function('b','s2','s3','mg','x2','x3',
+                '"use strict";return (' + bloc.trim().replace(/,$/, '') + ');')(b,s2,s3,mg,x2,x3);
+            } catch (e) { rates.push(original.name + ' : bloc illisible (' + e.message + ')'); continue; }
+            const ecarts = CHAMPS.filter(c =>
+              JSON.stringify(original[c] === undefined ? null : original[c]) !==
+              JSON.stringify(relu[c] === undefined ? null : relu[c]));
+            if (ecarts.length) rates.push(original.name + ' : ' + ecarts.join(', '));
+          }
+          return { n, rates, origine: window.ATELIER.origine(),
                    msg: document.getElementById('atmsg').textContent };
         }""")
-        section("A10 aller-retour « Le tour du champ » : bloc équivalent au niveau du dépôt",
-                aller["ecarts"] == [], "zéro écart sur les 15 champs"
-                if aller["ecarts"] == [] else "écarts : " + ", ".join(aller["ecarts"]))
-        section("A10 un niveau du jeu réexporté est signalé comme une RETOUCHE",
-                aller["origine"] == "Le tour du champ" and "Retouche" in aller["msg"],
+        section(f"A10 les {aller['n']} niveaux du jeu ressortent de l'atelier IDENTIQUES "
+                "(rien de ce qui existe n'est inexprimable)",
+                aller["rates"] == [],
+                f"{aller['n']}/{aller['n']} sans écart sur les 17 champs"
+                if aller["rates"] == [] else " ; ".join(aller["rates"][:3]))
+        section("A10 un niveau du jeu réexporté est signalé comme une RETOUCHE "
+                "(le bloc remplacera l'entrée existante)",
+                bool(aller["origine"]) and "Retouche" in aller["msg"],
                 aller["msg"][:80])
 
         # ----------------------------------------------------------------- A11

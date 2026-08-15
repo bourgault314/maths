@@ -65,15 +65,18 @@ function niveauVide(){
     w: 'lagon', name: '', sub: '', hint: '',
     cols: 9, rows: 6,
     suns: [], targets: [], rocks: [], fruits: [], gates: [], fixed: [], tools: [],
-    sol: [], solMin: null
+    sol: [], solMin: null, solB: null
   };
 }
 
 /* Tout geste qui change le plateau ou la boîte périme les solutions gardées :
-   les indices de `sol` désignent des pièces de la boîte, et les cases changent. */
+   les indices de `sol` désignent des pièces de la boîte, et les cases changent.
+   `solB` (deuxième architecture, un seul niveau du jeu l'utilise) se périme de
+   la même façon : mieux vaut la perdre que la garder fausse. */
 function oublierSolutions(){
   D.sol = [];
   D.solMin = null;
+  D.solB = null;
 }
 
 /* Place réservée du brouillon à la fin de LV : openLevel ne contrôle aucune
@@ -579,6 +582,7 @@ function normaliser(n){
   v.tools = (n.tools || []).slice();
   v.sol = n.sol || [];
   v.solMin = n.solMin || null;
+  v.solB = n.solB || null;
   if (n.dec) v.dec = n.dec;
   return v;
 }
@@ -705,8 +709,12 @@ function blocExport(){
     return '{x:' + g.x + ',y:' + g.y + ',max:' + txtFrac(g.max) + '}';
   }).join(',') + '],');
   L.push('  tools:[' + D.tools.map(ctorPiece).join(',') + '],');
-  L.push('  sol:' + txtSol(D.sol) + (D.solMin ? ',' : '') +
-    (D.solMin ? '\n  solMin:' + txtSol(D.solMin) : '') + '},');
+  /* sol, puis solMin, puis solB (deuxième architecture) — même disposition que
+     les entrées du dépôt : sol et solMin sur la même ligne, solB sur la sienne. */
+  let fin = '  sol:' + txtSol(D.sol);
+  if (D.solMin) fin += ',solMin:' + txtSol(D.solMin);
+  if (D.solB) fin += ',\n  solB:' + txtSol(D.solB);
+  L.push(fin + '},');
   return L.join('\n');
 }
 
