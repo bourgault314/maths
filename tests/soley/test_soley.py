@@ -556,7 +556,7 @@ def principal():
           const r = ok.getBoundingClientRect();
           const dansEcran = r.top >= 0 && r.bottom <= innerHeight;
           const deborde = c.scrollHeight > c.clientHeight + 8;
-          const flecheVisible = !!f && f.offsetParent !== null;
+          const flecheVisible = !!f && getComputedStyle(f).visibility === 'visible';
           c.scrollTop = c.scrollHeight;
           return { retards: retards.length, dansEcran, deborde, flecheVisible,
             sansRevoir: !document.getElementById('coursrevoir') };
@@ -565,13 +565,17 @@ def principal():
         enBas = page.evaluate("""() => {
           const f = document.getElementById('coursfleche');
           const r = document.getElementById('coursok').getBoundingClientRect();
-          return { fleche: !!f && f.offsetParent !== null, bouton: r.top >= 0 && r.bottom <= innerHeight };
+          return { fleche: !!f && getComputedStyle(f).visibility === 'visible',
+            bouton: r.top >= 0 && r.bottom <= innerHeight };
         }""")
         section("T10 panneau posé d'un coup : aucun retard d'affichage, plus de bouton « Revoir »",
                 panneau["retards"] == 0 and panneau["sansRevoir"],
                 f"retards={panneau['retards']}, sansRevoir={panneau['sansRevoir']}")
-        section("T10 sortie du cours toujours dans l'écran (défaut n°1 de l'audit du 14/08)",
-                panneau["dansEcran"] and enBas["bouton"], "")
+        section("T10 sortie du cours EN BAS du cours : hors écran tant qu'on n'a pas "
+                "descendu, atteignable une fois en bas",
+                (not panneau["dansEcran"]) == panneau["deborde"] and enBas["bouton"],
+                f"déborde={panneau['deborde']}, bouton visible à l'ouverture={panneau['dansEcran']}, "
+                f"visible en bas={enBas['bouton']}")
         section("T10 flèche de défilement : présente tant que ça déborde, effacée en bas",
                 (panneau["flecheVisible"] == panneau["deborde"]) and not enBas["fleche"],
                 f"déborde={panneau['deborde']}, flèche={panneau['flecheVisible']}, en bas={enBas['fleche']}")

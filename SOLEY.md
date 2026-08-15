@@ -121,9 +121,9 @@ Batterie (script Playwright Python, à conserver dans `tests/`) :
    cours » sur la carte du niveau, vieille sauvegarde sans `cours` intacte, stabilité
    320/402 px. (Le bouton « Revoir » DU PANNEAU n'existe plus depuis le 14/08.)
 10. Panneau de cours (T10, depuis le 14/08) : posé d'un coup — aucun `--win-delay`
-   dans le corps —, sortie « J'ai compris ! » toujours dans l'écran à l'ouverture
-   comme en bas, flèche de défilement présente tant que le panneau déborde et
-   effacée une fois en bas.
+   dans le corps —, sortie « J'ai compris ! » à la FIN du cours (hors écran tant que
+   le panneau déborde, atteignable une fois descendu), flèche de défilement présente
+   tant que le panneau déborde et effacée une fois en bas.
 11. Refonte (depuis le 14/08 au soir) : chaque niveau à `solMin` gagne SANS tous
    ses fruits (le fruit se mérite — exceptions documentées dans le test), les
    portes orientées acceptent le bon côté et bloquent l'autre, un fruit à valeur
@@ -237,14 +237,17 @@ Batterie (script Playwright Python, à conserver dans `tests/`) :
      rayons, cinématique de victoire), **jamais du texte de cours**.
   2. **Le bouton « Revoir » du panneau disparaît** (sans animation il ne fait plus
      rien) ; la relecture passe par « Revoir le cours » sur la carte du niveau.
-  3. **La sortie du cours est toujours atteignable.** Défaut mesuré avant
-     correction : à l'ouverture, « J'ai compris ! » tombait SOUS le bas de l'écran,
-     et le fond ne ferme pas — l'élève n'avait aucune sortie visible. Relevé complet
-     (3 cours × 3 largeurs, mesuré par la session Code à l'application du correctif) :
+  3. **« J'ai compris ! » vit à la FIN du cours, et nulle part ailleurs.** Pour
+     sortir, l'élève doit être descendu jusqu'en bas — comme un texte qu'on fait
+     défiler avant de pouvoir valider. Le bouton n'est PAS épinglé : le pré-requis
+     du défilement est VOULU (décision de Gwenael, 14/08, après l'avoir vu en
+     ligne). Si un cours tient dans l'écran, le bouton est là tout de suite, et
+     c'est très bien. Le vrai défaut d'origine n'était pas la position du bouton
+     mais l'absence de tout signal qu'il y avait une suite : le fond ne ferme pas,
+     et rien n'indiquait qu'on pouvait faire défiler — c'est la flèche (décision 4)
+     qui le règle. Relevé du dépassement avant correction (3 cours × 3 largeurs) :
      de 0 px (le demi sur 402 px) à 384 px (le quart sur 320 px), 221 px pour le
-     quart sur 375 px. Après correction : 0 px dans les neuf cas. Barre de boutons désormais épinglée au bas du
-     panneau, boutons TOUJOURS accessibles : pas de garde-fou obligeant à défiler
-     (« si l'élève a envie de lire il lit, sinon il ne lira pas dans tous les cas »).
+     quart sur 375 px.
   4. **Flèche de défilement** (idée de Gwenael) : une pastille-flèche pulse au bas
      du panneau UNIQUEMENT s'il reste du contenu sous le bord, et s'efface dès
      qu'on arrive en bas ; on peut appuyer dessus pour descendre d'un écran.
