@@ -270,6 +270,19 @@ function dessinerPlateau(){
       D.targets.length > 1 ? 'ABCDEF'[i] : '', i);
   });
 
+  /* Tant qu'il manque un soleil ou une case, la consigne s'écrit SUR le plateau
+     vide — au milieu, là où l'œil est. Sous le plateau elle vivait à 30 px du
+     bord bas de l'écran : présente, et pourtant invisible (retour de Gwenael,
+     15/08). La taille suit la largeur du plateau pour tenir de 5 à 12 colonnes. */
+  if (!D.suns.length || !D.targets.length){
+    const fs = Math.min(46, W / 18);
+    s += '<g pointer-events="none" text-anchor="middle">' +
+      '<text x="' + (W / 2) + '" y="' + (H / 2 - fs * 0.25) + '" font-size="' + fs +
+        '" font-weight="800" fill="#8095bb">Pose un soleil et une case créole</text>' +
+      '<text x="' + (W / 2) + '" y="' + (H / 2 + fs * 1.15) + '" font-size="' + (fs * 0.78) +
+        '" font-weight="600" fill="#63769c">le rayon apparaîtra tout de suite</text></g>';
+  }
+
   /* Couche de touche, dessinée en dernier pour rester au-dessus. */
   for (let y = 0; y < D.rows; y++) for (let x = 0; x < D.cols; x++){
     const o = objetEn(x, y);
@@ -287,8 +300,8 @@ function dessinerPlateau(){
 function majEtat(sim){
   const e = $('atetat');
   if (!D.suns.length || !D.targets.length){
-    e.innerHTML = '<span class="rien">Pose au moins un soleil et une case créole : ' +
-      'le rayon apparaîtra tout de suite.</span>';
+    /* La consigne est écrite sur le plateau lui-même : ne pas la redire ici. */
+    e.innerHTML = '';
     return;
   }
   if (!sim){ e.innerHTML = ''; return; }
@@ -877,6 +890,47 @@ function importer(){
 
 $('atongatelier').addEventListener('click', allerAtelier);
 $('atongjouer').addEventListener('click', allerJouer);
+
+/* ===================== Plein écran (ordinateur) =====================
+   On demande le plein écran sur la PAGE entière, pas sur le plateau : les
+   onglets, la palette et la boîte doivent rester à portée. Le jeu écoute déjà
+   `fullscreenchange` de son côté et pose `body.immersive` — c'est sans effet
+   gênant ici (la classe ne fait que masquer le défilement) et ça lui laisse
+   ajuster son propre écran. Le bouton n'est visible que sur ordinateur. */
+const btnPlein = $('atplein');
+const demanderPlein = document.documentElement.requestFullscreen ||
+  document.documentElement.webkitRequestFullscreen;
+const quitterPlein = document.exitFullscreen || document.webkitExitFullscreen;
+const enPlein = function(){
+  return !!(document.fullscreenElement || document.webkitFullscreenElement);
+};
+function majPlein(){
+  const on = enPlein();
+  btnPlein.setAttribute('aria-pressed', String(on));
+  btnPlein.title = on ? 'Quitter le plein écran' : 'Plein écran';
+  btnPlein.setAttribute('aria-label', btnPlein.title);
+  btnPlein.firstElementChild.textContent = on ? '✕' : '⛶';
+}
+btnPlein.addEventListener('click', function(){
+  if (typeof demanderPlein !== 'function' || typeof quitterPlein !== 'function'){
+    alerte(['Ce navigateur ne laisse pas la page commander le plein écran. ' +
+      'Sa touche F11 fait la même chose.'], 'info');
+    return;
+  }
+  const p = enPlein() ? quitterPlein.call(document) : demanderPlein.call(document.documentElement);
+  if (p && p.catch) p.catch(function(){
+    alerte(['Le plein écran a été refusé par le navigateur. Essaie sa touche F11.'], 'info');
+  });
+});
+['fullscreenchange', 'webkitfullscreenchange'].forEach(function(n){
+  document.addEventListener(n, function(){
+    majPlein();
+    /* Le plateau se redessine à sa nouvelle taille (la consigne du plateau vide
+       est dimensionnée en fonction de la largeur). */
+    if ($('atelier').classList.contains('active')) dessinerPlateau();
+  });
+});
+majPlein();
 
 $('atcolmoins').addEventListener('click', function(){ changerGrille(-1, 0); });
 $('atcolplus').addEventListener('click', function(){ changerGrille(1, 0); });

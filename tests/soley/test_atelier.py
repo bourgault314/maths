@@ -181,6 +181,16 @@ def principal():
         # on rend le plateau vierge : les contrôles suivants posent leurs propres objets
         page.evaluate("""() => window.ATELIER.charger({w:'lagon',name:'',sub:'',cols:9,rows:6,
           suns:[],targets:[],rocks:[],fruits:[],gates:[],fixed:[],tools:[]})""")
+        # Sur téléphone, le plein écran n'a aucun sens : le bouton doit être absent.
+        pleinTel = page.evaluate("""() => {
+          const b = document.getElementById('atplein');
+          return { affichage: getComputedStyle(b).display,
+                   largeur: Math.round(b.getBoundingClientRect().width) };
+        }""")
+        section("A1c téléphone : pas de bouton plein écran (il n'y servirait à rien)",
+                pleinTel["affichage"] == "none" and pleinTel["largeur"] == 0,
+                f"display={pleinTel['affichage']}")
+
         section("A1b le dégradé du soleil est défini une seule fois et jamais dans un écran masqué",
                 deg_atelier["premierMasque"] is False and deg_jouer["premierMasque"] is False,
                 f"écran Atelier : {deg_atelier['n']} définition(s) ; mode Jouer : {deg_jouer['n']} "
@@ -494,6 +504,25 @@ def principal():
                    fenetre: innerHeight,
                    defilement: document.documentElement.scrollHeight > innerHeight };
         }""")
+        # ----------------------------------------------------------------- A15
+        # La consigne du plateau vide s'écrit SUR le plateau, et le plein écran
+        # n'existe que sur ordinateur.
+        vide = ppc.evaluate("""() => {
+          window.ATELIER.charger({w:'lagon',name:'',sub:'',cols:9,rows:6,suns:[],targets:[],
+            rocks:[],fruits:[],gates:[],fixed:[],tools:[]});
+          const surPlateau = [...document.querySelectorAll('#atplateau text')].map(e => e.textContent);
+          const b = document.getElementById('atplein').getBoundingClientRect();
+          return { surPlateau, sousPlateau: document.getElementById('atetat').textContent.trim(),
+                   pleinLargeur: Math.round(b.width), pleinHauteur: Math.round(b.height) };
+        }""")
+        section("A15 grille vide : la consigne est écrite SUR le plateau, pas en bas de page",
+                any("Pose un soleil" in t for t in vide["surPlateau"]) and vide["sousPlateau"] == "",
+                " / ".join(vide["surPlateau"]))
+        section("A15 ordinateur : le bouton plein écran est là, à sa taille de bouton",
+                40 <= vide["pleinLargeur"] <= 60 and vide["pleinHauteur"] >= 44,
+                f"{vide['pleinLargeur']}×{vide['pleinHauteur']} px")
+        ppc.evaluate("(n) => window.ATELIER.charger(n)", NIVEAU_ESSAI)
+
         section("A14 ordinateur : en mode Jouer, le plateau n'est plus coupé par le bas",
                 (not jeu["coupe"]) and (not jeu["defilement"]),
                 f"bas du plateau à {jeu['bas']} px pour une fenêtre de {jeu['fenetre']} px")
