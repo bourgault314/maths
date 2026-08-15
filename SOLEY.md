@@ -1015,4 +1015,27 @@ Trois choses à savoir avant d'y toucher :
   (14 essais, jumeau de « Quarts en croix ») à retirer et remplacer, les deux
   niveaux immesurables, les cours de 1/8, 1/9, 1/12, la peau du monde (kiosques et
   fougères), et la difficulté des fruits — aucun niveau de la forêt n'a de `solMin`.
+- **16/08 — la forêt prend sa peau : kiosques et fougères.** Troisième re-peau d'un
+  monde. **Les obstacles sont de vraies fougères ARBORESCENTES** : un stipe fibreux
+  marqué des cicatrices des frondes tombées, et une couronne de neuf frondes posée à
+  son sommet, dont les folioles balaient vers la pointe — c'est ce qui distingue une
+  fronde d'un peigne. Premier essai rejeté par Gwenael (« ça ressemble à des
+  buissons ») : il reprenait la silhouette de galet de `ROCHES`, comme le corail du
+  lagon. **Leçon : la re-peau à silhouette identique ne marche que si la chose
+  ressemble déjà à un galet** — le corail oui, la canne et la fougère non, elles ont
+  leur port propre. **Et le fruit de la forêt devient le GOYAVIER** — « des ananas dans la forêt, ce
+  n'est pas cohérent » : c'est le goyavier de Chine qu'on va cueillir dans les bois
+  des Hauts. Nouveau type dans `FRUITS`, `FRW.foret` et `FRNAME`. Les cases
+  deviennent des kiosques de pique-nique des Hauts : toit à quatre pentes en
+  bardeaux, poteaux de bois, pas de murs, pas de lambrequins — mais la MÊME planche
+  claire derrière la fraction, donc le même contraste, et la clôture des portes
+  inchangée. La barre de plancher a été descendue sous la planche : à 76 elle
+  coupait le dénominateur (règle : la peau ne touche jamais à ce qui se LIT).
+  **Deux dettes réglées au passage : la clôture des portes sort en `porteSVG`** (elle
+  est du langage, elle doit être identique quelle que soit la peau) **et le choix de
+  la peau des obstacles vit désormais dans UNE table, `obstacleSVG(w)`, où le jeu ET
+  l'atelier puisent** — l'éditeur dessinait les patates de corail du lagon en basalte
+  depuis leur création, faute d'avoir été mis à jour en même temps. `targetSVG` prend
+  un cinquième argument `monde` ; les quatre appels de `atelier.js` ont été relus un
+  par un (leçon du badge de fruit : une fonction partagée se casse en silence).
 - (à compléter à chaque session)

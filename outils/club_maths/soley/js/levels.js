@@ -35,8 +35,10 @@ const WORLDS=[
  {id:'tunnels',label:'Les tunnels',pal:'6e-4e',blurb:'Des galeries étroites creusées dans la roche : ici, le chemin et les pièces scellées font le casse-tête.'},
  {id:'mafate',label:'Mafate',pal:'Expert',blurb:'Le cirque final. Tout ce que tu as appris — et de vrais casse-têtes.'}
 ];
-const FRW={lagon:'letchi',canne:'letchi',foret:'ananas',volcan:'mangue',pitons:'ananas',soleils:'letchi',marche:'mangue',tunnels:'letchi',mafate:'ananas'};
-const FRNAME={letchi:'Letchis',mangue:'Mangues',ananas:'Ananas'};
+/* le fruit de chaque monde ; la forêt cueille le GOYAVIER depuis le 16/08 —
+   des ananas au fond des bois, ce n'est pas ce qu'on y ramasse */
+const FRW={lagon:'letchi',canne:'letchi',foret:'goyavier',volcan:'mangue',pitons:'ananas',soleils:'letchi',marche:'mangue',tunnels:'letchi',mafate:'ananas'};
+const FRNAME={letchi:'Letchis',mangue:'Mangues',ananas:'Ananas',goyavier:'Goyaviers'};
 
 /* ===== Niveaux =====
    suns:[{x,y,dir,val?}] — targets:[{x,y,need,disp?}] — gates:[{x,y,max}]
