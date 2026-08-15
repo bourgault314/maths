@@ -447,6 +447,58 @@ def principal():
                 and retour["pieces"] == 7 and retour["lentille"],
                 f"« {retour['nom']} », {retour['pieces']} pièces, lentille relue")
 
+        # ----------------------------------------------------------------- A14
+        # La mise en page ORDINATEUR : deux colonnes, le plateau et la palette
+        # côte à côte (on choisit puis on pose sans défiler), et l'écran Jouer
+        # qui rend à la barre d'onglets la hauteur qu'elle prend.
+        pc = navig.new_context(viewport={"width": 1280, "height": 800})
+        pc.add_init_script(INIT_CONSENTEMENT)
+        pc.add_init_script(INIT_SAVE)
+        ppc = pc.new_page()
+        ppc.on("pageerror", lambda e: erreurs_js.append(str(e)))
+        ppc.goto(url, wait_until="networkidle")
+        ppc.evaluate("(n) => window.ATELIER.charger(n)", NIVEAU_ESSAI)
+        ppc.wait_for_timeout(200)
+        mise = ppc.evaluate("""() => {
+          const r = s => { const b = document.querySelector(s).getBoundingClientRect();
+                           return {g:Math.round(b.left), d:Math.round(b.right),
+                                   h:Math.round(b.top), b:Math.round(b.bottom)}; };
+          const plateau = r('#atplateaubox'), palette = r('#atpalette');
+          return {
+            cote_a_cote: palette.g >= plateau.d - 2,
+            palette_visible: palette.h >= 0 && palette.b <= innerHeight,
+            plateau_visible: plateau.h >= 0 && plateau.b <= innerHeight,
+            largeur_plateau: plateau.d - plateau.g,
+            conseil_telephone: getComputedStyle(document.getElementById('atconseil')).display,
+            objets_sur_une_ligne: new Set([...document.querySelectorAll('#atpalette button')]
+              .map(b => Math.round(b.getBoundingClientRect().top))).size,
+            defilement_page: document.documentElement.scrollHeight > innerHeight
+          };
+        }""")
+        section("A14 ordinateur : le plateau et la palette côte à côte, tous deux visibles "
+                "sans défiler",
+                mise["cote_a_cote"] and mise["palette_visible"] and mise["plateau_visible"]
+                and not mise["defilement_page"],
+                f"plateau {mise['largeur_plateau']} px de large, "
+                f"palette à droite, page sans défilement")
+        section("A14 ordinateur : les cinq objets du décor tiennent sur une ligne, "
+                "et le conseil « tourne ton téléphone » disparaît",
+                mise["objets_sur_une_ligne"] == 1 and mise["conseil_telephone"] == "none",
+                f"{mise['objets_sur_une_ligne']} ligne(s) d'objets")
+
+        ppc.evaluate("() => window.ATELIER.jouer()")
+        ppc.wait_for_timeout(300)
+        jeu = ppc.evaluate("""() => {
+          const b = document.getElementById('boardbox').getBoundingClientRect();
+          return { coupe: b.bottom > innerHeight + 1, bas: Math.round(b.bottom),
+                   fenetre: innerHeight,
+                   defilement: document.documentElement.scrollHeight > innerHeight };
+        }""")
+        section("A14 ordinateur : en mode Jouer, le plateau n'est plus coupé par le bas",
+                (not jeu["coupe"]) and (not jeu["defilement"]),
+                f"bas du plateau à {jeu['bas']} px pour une fenêtre de {jeu['fenetre']} px")
+        pc.close()
+
         navig.close()
 
     if httpd:

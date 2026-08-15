@@ -99,6 +99,11 @@ body.at #backlv, body.at #backhome{display:none !important;}
 #atetat .rien{color:#8ea3c6; font-weight:500;}
 
 #atelier{padding:0 10px 40px;}
+/* Téléphone : les enveloppes de colonnes n'existent pas visuellement. */
+.atcol{display:contents;}
+
+/* La mise en page ordinateur est tout en bas de cette feuille : elle doit
+   passer APRÈS les règles du téléphone pour pouvoir les défaire. */
 .atbloc{background:var(--at-carte); border:2px solid var(--at-bord); border-radius:14px;
   padding:10px 12px; margin:0 0 10px;}
 .attitre{font:800 13px/1.2 inherit; color:var(--at-doux); letter-spacing:.04em;
@@ -212,6 +217,93 @@ body.at.at-jouer #atwin{display:block; text-align:left; width:100%; max-width:42
   cursor:pointer; text-align:center;}
 #atwin .atbtn.primaire{background:var(--at-or); color:#3a2a05; border-color:var(--at-or);}
 #atwin .atbtn[disabled]{opacity:.5; cursor:not-allowed;}
+
+/* ===================================================================
+   L'ORDINATEUR : deux colonnes, le plateau d'un côté, tout le reste de
+   l'autre. Ce bloc vient EN DERNIER dans la feuille : il doit pouvoir
+   défaire les règles écrites pour le téléphone (notamment le plafond
+   `max-width:min(100%,78vh)` du plateau, qui sinon bridait la grille à
+   842 px sur un écran de 1080 de haut).
+
+   Seuil volontairement haut — 1080 × 700. En dessous, la colonne unique
+   du téléphone reste plus confortable qu'un plateau rétréci : on ne
+   cherche pas à « tout faire tenir », la colonne de droite défile.
+   =================================================================== */
+@media (min-width:1080px) and (min-height:700px){
+  #atelier{
+    display:grid;
+    /* 460 px : la largeur qui met les CINQ objets du décor sur une seule ligne
+       (5 × 78 + 4 × 8 + 24 de marges = 446) et qui laisse la zone d'export
+       lisible. À 430 px, « Passe étroite » retombait seule sur une deuxième
+       ligne — un défaut d'alignement qui saute aux yeux. */
+    grid-template-columns:minmax(0,1fr) 460px;
+    gap:16px;
+    align-items:start;
+    max-width:1680px;
+    margin:0 auto;
+    padding:0 16px 16px;
+    height:calc(100vh - 74px);      /* la place sous les onglets */
+  }
+  .atcol{display:flex; flex-direction:column; min-height:0; height:100%;}
+  /* La colonne de droite défile toute seule — et ça doit SE VOIR : barre
+     toujours réservée, et un voile en bas qui dit qu'il y a une suite. */
+  .atcol-outils{overflow-y:auto; overflow-x:hidden; padding-right:8px;
+    scrollbar-gutter:stable; position:relative;}
+  .atcol-outils::-webkit-scrollbar{width:10px;}
+  .atcol-outils::-webkit-scrollbar-track{background:#1b1440; border-radius:6px;}
+  .atcol-outils::-webkit-scrollbar-thumb{background:#4a3f85; border-radius:6px;}
+  .atcol-outils::-webkit-scrollbar-thumb:hover{background:var(--at-or);}
+
+  /* Sur un ordinateur, « tourne ton téléphone » n'a aucun sens. */
+  #atconseil{display:none !important;}
+
+  /* Le réglage de la grille tient sur une ligne au-dessus du plateau. */
+  .atbloc-grille{display:flex; align-items:center; gap:14px; flex-wrap:wrap;
+    padding:8px 12px; margin-bottom:10px; flex:0 0 auto;}
+  .atbloc-grille .attitre{margin:0;}
+  #atavertgrille:empty{display:none;}
+
+  /* Le plateau prend toute la place qui reste. Le SVG garde son ratio tout
+     seul (preserveAspectRatio par défaut) et se centre dans son cadre : jamais
+     déformé, jamais coupé ; le cadre a la couleur du plateau, donc la marge
+     autour ne se voit pas.
+     Piège corrigé : `margin:0 auto` hérité du téléphone ANNULE l'étirement en
+     colonne flex — le cadre tombait à 0 px de large, le SVG étant en position
+     absolue et ne donnant donc aucune largeur naturelle. */
+  #atplateaubox{flex:1 1 auto; min-height:0; position:relative;
+    background:#16223f; border-radius:12px;
+    margin:0; width:100%; max-width:none; align-self:stretch;}
+  #atplateau{position:absolute; inset:0; width:100%; height:100%;}
+  #atetat{margin:10px 0 0; flex:0 0 auto;}
+
+  /* La barre d'alerte suit la largeur du contenu, pas celle de la fenêtre. */
+  #atalerte{margin:0 auto; max-width:1680px; padding:0 16px;}
+
+  /* Les cinq objets du décor sur UNE ligne : 5 × 74 + 4 × 8 + 24 = 426, ce qui
+     tient dans les ~442 px utiles de la colonne. À 78 px de large, le cinquième
+     retombait seul sur une deuxième ligne. */
+  .atcol-outils .atpal button{width:74px;}
+  /* Un peu moins de gras vertical dans la colonne : on gagne une hauteur de
+     bloc sans rien rendre illisible (les explications restent en toutes lettres). */
+  .atcol-outils .atexplic{font-size:13px; margin-bottom:8px;}
+  .atcol-outils .atbloc{padding:10px 12px 12px;}
+  #atsurplus{margin-top:6px;}
+
+  #attexte{min-height:150px; font-size:11.5px;}
+}
+
+/* ===================================================================
+   L'écran JOUER doit rendre à la barre d'onglets la hauteur qu'elle
+   prend. En paysage — donc sur tout ordinateur — le jeu se donne
+   `height:100vh` : il croit disposer de la fenêtre entière, alors que
+   nos 60 px d'onglets sont au-dessus. Résultat : le bas du plateau
+   passait sous le bord de l'écran. `relayout()` du jeu lit
+   `play.clientHeight`, il suffit donc de corriger cette hauteur — sans
+   toucher au jeu, qui garde son comportement sur sa propre page.
+   =================================================================== */
+@media (orientation:landscape){
+  body.at #play{height:calc(100vh - 60px); height:calc(100dvh - 60px);}
+}
 </style>
 </head>
 <body class="at">
@@ -256,7 +348,12 @@ body.at.at-jouer #atwin{display:block; text-align:left; width:100%; max-width:42
 <!-- ================= ÉCRAN ATELIER ================= -->
 <div id="atelier" class="screen active">
 
-  <div class="atbloc">
+<!-- Deux colonnes sur ordinateur, une seule sur téléphone. Les enveloppes sont
+     en `display:contents` tant qu'on est en petite largeur : le téléphone garde
+     donc EXACTEMENT la mise en page d'avant, et seul l'ordinateur change. -->
+<div class="atcol atcol-plateau">
+
+  <div class="atbloc atbloc-grille">
     <h2 class="attitre">La grille</h2>
     <div class="atrang">
       <div class="atnb">
@@ -279,6 +376,9 @@ body.at.at-jouer #atwin{display:block; text-align:left; width:100%; max-width:42
   <!-- Ce que dirait le jeu du niveau tel qu'il est posé, en direct. -->
   <div id="atetat" aria-live="polite"></div>
   <div id="atconseil" class="atbloc" hidden></div>
+
+</div><!-- /colonne du plateau -->
+<div class="atcol atcol-outils">
 
   <!-- Les deux blocs qui suivent répondent à LA question de Gwenael : qu'est-ce
        qui est posé d'avance, et qu'est-ce que l'élève reçoit ? Le titre et la
@@ -338,6 +438,8 @@ body.at.at-jouer #atwin{display:block; text-align:left; width:100%; max-width:42
     <div id="atmsg"></div>
     <textarea id="attexte" spellcheck="false" placeholder="Le bloc prêt à coller dans levels.js apparaîtra ici. Tu peux aussi y coller un bloc existant, puis toucher « Importer ce bloc »."></textarea>
   </div>
+
+</div><!-- /colonne des outils -->
 
 </div>
 
