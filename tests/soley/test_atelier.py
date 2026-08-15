@@ -161,6 +161,31 @@ def principal():
                 and depart["cases"] == 54 and depart["lv"] == depart["atidx"] + 1,
                 f"LV={depart['lv']}, ATIDX={depart['atidx']}, cases={depart['cases']}")
 
+        # ----------------------------------------------------------------- A1b
+        # Le dégradé du soleil : un seul identifiant `sungrad` peut gagner, et il
+        # ne doit JAMAIS vivre dans un écran masqué — un serveur de peinture en
+        # display:none ne peint plus, et le soleil devient plat (œil de Gwenael).
+        def etat_degrade():
+            return page.evaluate("""() => {
+              const t = [...document.querySelectorAll('[id="sungrad"]')];
+              const cache = e => { while (e && e !== document.body) {
+                  if (e.nodeType === 1 && getComputedStyle(e).display === 'none') return true;
+                  e = e.parentElement; } return false; };
+              return { n: t.length, premierMasque: t.length ? cache(t[0]) : true };
+            }""")
+        deg_atelier = etat_degrade()
+        page.evaluate("(n) => window.ATELIER.charger(n)", NIVEAU_ESSAI)
+        page.click("#atongjouer")
+        deg_jouer = etat_degrade()
+        page.click("#atongatelier")
+        # on rend le plateau vierge : les contrôles suivants posent leurs propres objets
+        page.evaluate("""() => window.ATELIER.charger({w:'lagon',name:'',sub:'',cols:9,rows:6,
+          suns:[],targets:[],rocks:[],fruits:[],gates:[],fixed:[],tools:[]})""")
+        section("A1b le dégradé du soleil est défini une seule fois et jamais dans un écran masqué",
+                deg_atelier["premierMasque"] is False and deg_jouer["premierMasque"] is False,
+                f"écran Atelier : {deg_atelier['n']} définition(s) ; mode Jouer : {deg_jouer['n']} "
+                f"(celle qui gagne est visible dans les deux cas)")
+
         # ------------------------------------------------------------------ A2
         # Poser chaque type d'objet par un vrai clic : palette puis case.
         poses = [("sun", 0, 2), ("target", 7, 2), ("rock", 4, 5), ("fruit", 3, 0), ("gate", 6, 2)]
@@ -221,6 +246,56 @@ def principal():
                 apres["rows"] == avant and "Impossible" in apres["avert"],
                 apres["avert"][:90])
 
+        # ------------------------------------------------------------------ A4b
+        # LE RAYON PENDANT LA CONSTRUCTION. Sans lui, on règle des fractions à
+        # l'aveugle : c'est le retour de Gwenael après son premier essai.
+        rayons = page.evaluate("""() => {
+          window.ATELIER.charger({w:'lagon',name:'',sub:'',cols:9,rows:6,
+            suns:[{x:0,y:2,dir:1}], targets:[{x:7,y:2,need:[1,1]}],
+            rocks:[], fruits:[[3,2]], gates:[], fixed:[], tools:[]});
+          const sansObstacle = {
+            rayons: document.querySelectorAll('#atplateau .beam').length,
+            etat: document.getElementById('atetat').textContent };
+          // une roche au milieu : le rayon doit s'arrêter dessus
+          window.ATELIER.poser('rock', 4, 2);
+          const avecObstacle = {
+            rayons: document.querySelectorAll('#atplateau .beam').length,
+            etat: document.getElementById('atetat').textContent,
+            // longueur du trait : il ne va plus jusqu'à la case
+            bout: (() => { const l = document.querySelector('#atplateau .beam');
+                           return l ? Math.round(+l.getAttribute('x2')) : -1; })() };
+          return { sansObstacle, avecObstacle };
+        }""")
+        section("A4b le rayon du soleil se dessine PENDANT la construction",
+                rayons["sansObstacle"]["rayons"] >= 1,
+                f"{rayons['sansObstacle']['rayons']} rayon(s), "
+                f"fruit sur le trajet : {'oui' if '1/1' in rayons['sansObstacle']['etat'] else 'non'}")
+        section("A4b une roche posée arrête le rayon, et l'atelier dit ce que la case reçoit",
+                rayons["avecObstacle"]["bout"] < 700
+                and "n’a pas encore de rayon" in rayons["avecObstacle"]["etat"],
+                f"le trait s'arrête à x={rayons['avecObstacle']['bout']} (la case est en x=750)")
+
+        # ------------------------------------------------------------------ A4c
+        # Un objet resté « en main » ne doit plus avaler les clics en silence :
+        # c'est ce qui donnait l'impression que rien n'était réglable.
+        main = page.evaluate("""() => {
+          const clic = el => el.dispatchEvent(new MouseEvent('click', {bubbles:true, cancelable:true}));
+          clic(document.querySelector("#atpalette button[data-obj='rock']"));
+          const annonce = document.getElementById('atalerte').textContent;
+          const r = document.getElementById('atalerte').getBoundingClientRect();
+          clic(document.querySelector("#atplateau .atcase[data-x='7'][data-y='2']"));
+          return { annonce, visible: r.top >= 0 && r.bottom <= innerHeight,
+                   fiche: document.getElementById('atfiche').classList.contains('show'),
+                   titre: document.getElementById('atfichetitre').textContent,
+                   apres: document.getElementById('atalerte').textContent };
+        }""")
+        section("A4c l'objet « en main » s'annonce en haut de l'écran, là où on regarde",
+                "en main" in main["annonce"] and main["visible"], main["annonce"][:70])
+        section("A4c toucher un objet en tenant quelque chose ouvre quand même sa fiche",
+                main["fiche"] and main["titre"] == "Case créole",
+                main["apres"][:70])
+        page.evaluate("() => document.getElementById('atfichefermer').click()")
+
         # ----------------------------------------------------------------- A5b
         # Un niveau gagné plateau vide ne se laisse pas jouer : le jeu lancerait
         # la célébration à l'ouverture et le plateau ne répondrait plus aux clics.
@@ -228,10 +303,14 @@ def principal():
         refus = page.evaluate("""(n) => {
           window.ATELIER.charger(n);
           const ok = window.ATELIER.jouer();
-          return { ok, msg: document.getElementById('atmsg').textContent };
+          const a = document.getElementById('atalerte');
+          const r = a.getBoundingClientRect();
+          return { ok, msg: a.textContent, visible: r.top >= 0 && r.bottom <= innerHeight };
         }""", trivial)
-        section("A5b l'atelier refuse de jouer un niveau déjà gagné sans aucune pièce",
-                refus["ok"] is False and "sans poser aucune pièce" in refus["msg"],
+        section("A5b l'atelier refuse de jouer un niveau déjà gagné sans aucune pièce, "
+                "et le dit LÀ OÙ ON LE VOIT",
+                refus["ok"] is False and "sans poser aucune pièce" in refus["msg"]
+                and refus["visible"],
                 refus["msg"][:95])
 
         # ------------------------------------------------------------------ A5

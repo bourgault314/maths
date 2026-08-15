@@ -407,7 +407,19 @@ Trois choses à savoir avant d'y toucher :
    portée partagée ; il réserve au brouillon une place à la fin de `LV` et appelle
    `openLevel` dessus — seul chemin possible, `cur` étant interne aux modules.
    Preuve rejouable : `node tests/soley/verifier-atelier.mjs`.
-3. **La sauvegarde du jeu n'est jamais touchée.** `engine.js` LIT `soley-save-v5` dès
+3. **Le rayon est visible DÈS l'écran de construction** (décision du 15/08, après
+   le premier usage réel). L'atelier fait tourner `simulate()` sur le brouillon,
+   plateau nu : seuls le soleil, le décor et les pièces SCELLÉES agissent. Ce
+   n'est pas un spoiler — c'est exactement l'image que l'élève voit en ouvrant le
+   niveau, avant d'avoir posé quoi que ce soit. Sans elle on règle des fractions
+   à l'aveugle. L'écran affiche aussi le diagnostic du jeu (ce que chaque case
+   reçoit, les fruits sur le trajet).
+4. **Deux réserves d'objets, à ne pas confondre** — c'est LA confusion du premier
+   essai : le **décor** (soleil, cases, roches, fruits, passes) est posé sur le
+   plateau et l'élève ne peut pas y toucher ; la **boîte** est ce que l'élève
+   reçoit à côté du plateau et place lui-même. Une pièce de la boîte peut être
+   « scellée » sur le plateau : elle passe alors du côté décor (`fixed`).
+5. **La sauvegarde du jeu n'est jamais touchée.** `engine.js` LIT `soley-save-v5` dès
    son chargement (`let save=loadSave();`) : il ne suffit donc pas d'éviter de gagner.
    La page pose, AVANT les quatre `<script>`, un rideau sur `Storage.prototype` —
    `getItem` de cette seule clé renvoie `null`, `setItem` de cette seule clé lève une

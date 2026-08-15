@@ -51,9 +51,11 @@ const OBJETS = [
   { type: 'gate',   nom: 'Passe étroite' }
 ];
 
-const SUNGRAD = '<defs><radialGradient id="sungrad" cx="50%" cy="42%">' +
-  '<stop offset="0%" stop-color="#fff3c4"/><stop offset="55%" stop-color="#ffc94d"/>' +
-  '<stop offset="100%" stop-color="#ff9d3c"/></radialGradient></defs>';
+/* Le dégradé du soleil est défini UNE SEULE FOIS dans la page (voir le commentaire
+   en tête de soley-atelier.html) : le redéfinir ici en ferait un doublon qui
+   gagnerait par l'ordre du document et cesserait de peindre dès que l'écran
+   Atelier passe en display:none. On ne met donc plus rien. */
+const SUNGRAD = '';
 
 /* ===================== État ===================== */
 
@@ -121,12 +123,39 @@ function iconeObjet(type){
   return '';
 }
 
-function message(html, classe){
-  $('atmsg').innerHTML = html ? '<span class="ligne ' + (classe || '') + '">' + html + '</span>' : '';
+/* ===================== Ce que l'atelier dit, et où il le dit =====================
+   Tout passe par la barre collée sous les onglets. Leçon du premier essai de
+   Gwenael : les refus écrits dans la zone d'export vivaient à 1700 px du haut
+   de page — « Jouer » semblait ne rien faire alors qu'il refusait poliment.
+   L'objet « en main » y reste affiché tant qu'on le tient : c'est lui qui
+   avalait les clics et empêchait les fiches de s'ouvrir. */
+
+let dernierMessage = null;
+
+function peindreAlerte(){
+  let h = '';
+  if (enMain){
+    const quoi = enMain.type === 'fixed' ? 'Pièce à sceller' : NOMOBJ[enMain.type];
+    h += '<span class="ligne main">' + quoi + ' en main : touche une case libre du plateau. ' +
+         '(Échap, ou retouche la palette, pour le reposer.)</span>';
+  }
+  if (dernierMessage) h += dernierMessage.lignes.map(function(l){
+    return '<span class="ligne ' + dernierMessage.classe + '">' + l + '</span>';
+  }).join('');
+  $('atalerte').innerHTML = h;
 }
-function messages(lignes, classe){
+function alerte(lignes, classe){
+  const tab = Array.isArray(lignes) ? lignes : (lignes ? [lignes] : []);
+  dernierMessage = tab.length ? { lignes: tab, classe: classe || 'info' } : null;
+  peindreAlerte();
+}
+function message(html, classe){ alerte(html, classe); }
+function messages(lignes, classe){ alerte(lignes, classe); }
+/* L'export parle deux fois : court en haut, complet près de la zone de texte. */
+function messageExport(lignes, classe){
+  alerte(lignes, classe);
   $('atmsg').innerHTML = lignes.map(function(l){
-    return '<span class="ligne ' + (classe || '') + '">' + l + '</span>';
+    return '<span class="ligne">' + l + '</span>';
   }).join('');
 }
 
@@ -172,10 +201,27 @@ const NOMOBJ = { sun: 'Soleil', target: 'Case créole', rock: 'Roche', fruit: 'F
 
 /* ===================== Dessin du plateau ===================== */
 
+/* Le brouillon joué par le VRAI moteur, plateau nu : seuls le soleil, le décor
+   et les pièces SCELLÉES agissent — les pièces de la boîte sont le travail de
+   l'élève. On emprunte `cur` et `state.placed` le temps du calcul, puis on les
+   rend intacts. C'est ce qui permet de voir le rayon pendant qu'on construit. */
+function simulerBrouillon(){
+  const memCur = cur, memPlaced = state.placed;
+  LV[ATIDX] = D;
+  cur = ATIDX;
+  state.placed = {};
+  let sim = null;
+  try { sim = simulate(); } catch (e) { sim = null; }
+  cur = memCur;
+  state.placed = memPlaced;
+  return sim;
+}
+
 function dessinerPlateau(){
   const sv = $('atplateau');
   const W = D.cols * CS, H = D.rows * CS;
   const ftype = FRW[D.w] || 'letchi';
+  const sim = simulerBrouillon();
   sv.setAttribute('viewBox', '0 0 ' + W + ' ' + H);
   sv.style.aspectRatio = W + ' / ' + H;
 
@@ -186,17 +232,38 @@ function dessinerPlateau(){
   for (let j = 1; j < D.rows; j++)
     s += '<line class="gridline" x1="0" y1="' + (j * CS) + '" x2="' + W + '" y2="' + (j * CS) + '"/>';
 
-  /* Mêmes dessins que le jeu, dans le même ordre de peinture. */
-  D.fruits.forEach(function(f){ s += fruitSVG(ftype, f[0], f[1], false, f[2]); });
+  /* Mêmes dessins que le jeu, dans le même ordre de peinture — y compris les
+     rayons, leur épaisseur et leur couleur par dénominateur. */
+  D.fruits.forEach(function(f){
+    s += fruitSVG(ftype, f[0], f[1], !!(sim && sim.fruits.has(f[0] + ',' + f[1])), f[2]);
+  });
   D.rocks.forEach(function(r, i){ s += (D.w === 'canne' ? canneSVG : rockSVG)(r[0], r[1], i); });
   D.gates.forEach(function(g){ s += gateSVG(g); });
+  if (sim) sim.segs.forEach(function(sg){
+    const x1 = (sg.x1 + 0.5) * CS, y1 = (sg.y1 + 0.5) * CS;
+    const x2 = (sg.x2 + 0.5) * CS, y2 = (sg.y2 + 0.5) * CS;
+    if (Math.abs(x1 - x2) < 1 && Math.abs(y1 - y2) < 1) return;
+    const w = fwidth(sg.val), c = fcol(sg.val);
+    s += '<line class="beam" x1="' + x1 + '" y1="' + y1 + '" x2="' + x2 + '" y2="' + y2 +
+         '" stroke="' + c + '" stroke-width="' + w + '" style="filter:drop-shadow(0 0 5px ' + c + ')"/>';
+  });
   D.fixed.forEach(function(f){
+    const fl = sim && sim.flows[f[1] + ',' + f[2]];
     s += '<g class="placed fixed-piece" transform="translate(' + (f[1] * CS) + ',' + (f[2] * CS) + ')">' +
-         pieceStatic(f[0]) + fixedFrame() + '</g>';
+         (fl ? pieceFlow(f[0], fl) : pieceStatic(f[0])) + fixedFrame() + '</g>';
+  });
+  if (sim) sim.segs.forEach(function(sg){
+    const x1 = (sg.x1 + 0.5) * CS, y1 = (sg.y1 + 0.5) * CS;
+    const x2 = (sg.x2 + 0.5) * CS, y2 = (sg.y2 + 0.5) * CS;
+    const len = Math.hypot(x2 - x1, y2 - y1);
+    if (len < 80) return;
+    const k = Math.min(0.5, 60 / len);
+    s += beamLblSVG(sg.id, x1 + (x2 - x1) * k, y1 + (y2 - y1) * k - 12 - fwidth(sg.val) / 2, sg.val);
   });
   D.suns.forEach(function(su){ s += sunSVG(su); });
   D.targets.forEach(function(t, i){
-    s += targetSVG(t, null, D.targets.length > 1 ? 'ABCDEF'[i] : '', i);
+    s += targetSVG(t, sim ? sim.stats.find(function(st){ return st.i === i; }) : null,
+      D.targets.length > 1 ? 'ABCDEF'[i] : '', i);
   });
 
   /* Couche de touche, dessinée en dernier pour rester au-dessus. */
@@ -208,6 +275,35 @@ function dessinerPlateau(){
          '<title>' + echapper(quoi) + '</title></rect>';
   }
   sv.innerHTML = s;
+  majEtat(sim);
+}
+
+/* Le diagnostic du jeu, sous le plateau, pendant la construction : ce que la
+   case reçoit vraiment, et où en sont les fruits. */
+function majEtat(sim){
+  const e = $('atetat');
+  if (!D.suns.length || !D.targets.length){
+    e.innerHTML = '<span class="rien">Pose au moins un soleil et une case créole : ' +
+      'le rayon apparaîtra tout de suite.</span>';
+    return;
+  }
+  if (!sim){ e.innerHTML = ''; return; }
+  const nf = D.fruits.length;
+  const fruits = nf ? '<span class="rien"> · fruits sur le trajet : ' + sim.fruits.size + '/' + nf + '</span>' : '';
+  if (sim.win){
+    e.innerHTML = '<span class="ok">Toutes les cases sont servies — sans poser une seule pièce. ' +
+      'Il faut un obstacle, sinon le niveau n’est pas jouable.</span>' + fruits;
+    return;
+  }
+  const noms = 'ABCDEF';
+  const dits = sim.stats.filter(function(x){ return x.st !== 'ok'; }).map(function(x){
+    const t = D.targets[x.i];
+    const nm = D.targets.length > 1 ? 'Case ' + noms[x.i] : 'La case';
+    if (x.st === 'none') return nm + ' n’a pas encore de rayon.';
+    if (x.st === 'multi') return nm + ' reçoit plusieurs rayons — un seul par case !';
+    return nm + ' reçoit ' + fstr(x.got) + ' au lieu de ' + (t.disp || fstr(t.need)) + '.';
+  });
+  e.innerHTML = '<span class="bad">' + dits.join(' ') + '</span>' + fruits;
 }
 
 /* ===================== Palette et boîte ===================== */
@@ -240,10 +336,10 @@ function dessinerPalette(){
        ' — le surplus fait le casse-tête : dans l\u2019original, 6 à 8 pièces pour 3 ou 4 utiles.')
     : 'Le surplus fait le casse-tête : dans l\u2019original, 6 à 8 pièces pour 3 ou 4 utiles.';
 
-  const m = $('atmain');
-  if (!enMain) m.textContent = '';
-  else if (enMain.type === 'fixed') m.textContent = 'Pièce à sceller en main : touche une case libre du plateau.';
-  else m.textContent = NOMOBJ[enMain.type] + ' en main : touche une case libre du plateau.';
+  /* Ce qu'on tient s'affiche dans la barre du haut, pas ici : c'est cet état-là
+     qui avalait les clics sans que ça se voie. */
+  $('atmain').textContent = '';
+  peindreAlerte();
 }
 
 /* ===================== Fiche du niveau ===================== */
@@ -553,7 +649,7 @@ function chargerNiveauDuJeu(i){
   enMain = null;
   fermerFiche();
   tout();
-  message('« ' + echapper(D.name) + ' » chargé. À l\u2019export, l\u2019atelier signalera qu\u2019il s\u2019agit d\u2019une retouche.', 'atok');
+  message('« ' + echapper(D.name) + ' » chargé. À l\u2019export, l\u2019atelier signalera qu\u2019il s\u2019agit d\u2019une retouche.', 'ok');
 }
 
 function normaliser(n){
@@ -595,15 +691,8 @@ function normaliser(n){
    retrouve devant un niveau qu'il ne peut pas jouer. On simule dans le vrai
    moteur, sur un plateau vide, en remettant ensuite l'état comme on l'a trouvé. */
 function gagneSansPiece(){
-  const memCur = cur, memPlaced = state.placed;
-  LV[ATIDX] = D;
-  cur = ATIDX;
-  state.placed = {};
-  let gagne = false;
-  try { gagne = simulate().win; } catch (e) { gagne = false; }
-  cur = memCur;
-  state.placed = memPlaced;
-  return gagne;
+  const sim = simulerBrouillon();
+  return !!(sim && sim.win);
 }
 
 function obstaclesAuJeu(){
@@ -745,8 +834,8 @@ function exporter(){
   const bloc = blocExport();
   $('attexte').value = bloc;
   const av = avertissements();
-  if (av.length) messages(['Bloc produit. À vérifier :'].concat(av.map(function(x){ return '— ' + x; })), '');
-  else message('Bloc produit, aucun avertissement. Il est prêt à coller dans levels.js.', 'atok');
+  if (av.length) messageExport(['Bloc produit. À vérifier :'].concat(av.map(function(x){ return '— ' + x; })), 'info');
+  else messageExport(['Bloc produit, aucun avertissement. Il est prêt à coller dans levels.js.'], 'ok');
   return bloc;
 }
 
@@ -775,7 +864,7 @@ function importer(){
   brouillonId = null;
   enMain = null;
   tout();
-  message('Bloc importé : « ' + echapper(D.name || 'sans nom') + ' ».', 'atok');
+  message('Bloc importé : « ' + echapper(D.name || 'sans nom') + ' ».', 'ok');
   return true;
 }
 
@@ -801,10 +890,35 @@ $('atplateau').addEventListener('keydown', function(ev){
   toucherCase(+c.dataset.x, +c.dataset.y);
 });
 
+/* Reposer ce qu'on tient. Une pièce à sceller retourne dans la boîte : elle en
+   avait été retirée au moment du « sceller ». */
+const REPOSE = {
+  sun: 'Le soleil est reposé', target: 'La case créole est reposée',
+  rock: 'La roche est reposée', fruit: 'Le fruit est reposé',
+  gate: 'La passe étroite est reposée', fixed: 'La pièce est remise dans la boîte'
+};
+function reposerEnMain(){
+  if (!enMain) return null;
+  const dit = REPOSE[enMain.type];
+  if (enMain.type === 'fixed') D.tools.push(enMain.def);
+  enMain = null;
+  return dit;
+}
+
 function toucherCase(x, y){
   const o = objetEn(x, y);
   if (enMain){
-    if (o){ message('Cette case est déjà occupée.', 'aterr'); return; }
+    if (o){
+      /* Toucher un objet en tenant quelque chose ne doit JAMAIS être un refus
+         muet : on repose ce qu'on tenait et on ouvre la fiche de ce qui est là.
+         C'est ce refus silencieux qui donnait l'impression que rien n'était
+         réglable (premier essai de Gwenael, 15/08). */
+      const dit = reposerEnMain();
+      dessinerPalette();
+      alerte([dit + ' : cette case était déjà occupée. Voici son réglage.'], 'info');
+      ficheObjet(o);
+      return;
+    }
     if (enMain.type === 'fixed'){
       D.fixed.push([enMain.def, x, y]);
       const k = D.tools.indexOf(enMain.def);
@@ -812,11 +926,12 @@ function toucherCase(x, y){
     } else poser(enMain.type, x, y);
     enMain = null;
     oublierSolutions();
-    message('');
+    alerte([]);
     tout();
     return;
   }
   if (o) ficheObjet(o);
+  else alerte(['Case vide. Touche d’abord un objet dans la palette, puis une case.'], 'info');
 }
 
 $('atpalette').addEventListener('click', function(ev){
@@ -853,7 +968,7 @@ $('atnouveau').addEventListener('click', function(){
   LV[ATIDX] = D;
   brouillonId = null; origineNom = null; enMain = null;
   $('attexte').value = '';
-  message('Nouveau niveau vierge.', 'atok');
+  message('Nouveau niveau vierge.', 'ok');
   tout();
 });
 
@@ -866,7 +981,7 @@ $('atcopier').addEventListener('click', function(){
   let ok = false;
   try { ok = document.execCommand('copy'); } catch (e) {}
   if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(z.value);
-  message(ok ? 'Bloc copié.' : 'Sélectionné : fais « copier » pour le mettre dans le presse-papier.', 'atok');
+  message(ok ? 'Bloc copié.' : 'Sélectionné : fais « copier » pour le mettre dans le presse-papier.', 'ok');
 });
 
 /* --- la feuille de réglage : un seul écouteur pour tout son contenu --- */
@@ -889,7 +1004,7 @@ $('atfiche').addEventListener('click', function(ev){
     enMain = { type: 'fixed', def: d };
     oublierSolutions();
     fermerFiche(); tout();
-    message('Touche une case libre pour sceller la pièce sur le plateau.', 'atok');
+    message('Touche une case libre pour sceller la pièce sur le plateau.', 'ok');
     return;
   }
   if (bt.id === 'atficheboite'){
@@ -908,7 +1023,7 @@ $('atfiche').addEventListener('click', function(ev){
   /* Brouillons */
   if (bt.dataset.br){
     const e = lireDepot().liste.find(function(x){ return x.id === bt.dataset.br; });
-    if (e){ chargerBrouillon(e); fermerFiche(); message('Brouillon « ' + echapper(e.nom) + ' » repris.', 'atok'); }
+    if (e){ chargerBrouillon(e); fermerFiche(); message('Brouillon « ' + echapper(e.nom) + ' » repris.', 'ok'); }
     return;
   }
   if (bt.dataset.brdup){
@@ -976,7 +1091,13 @@ $('atfiche').addEventListener('input', function(ev){
 });
 
 document.addEventListener('keydown', function(ev){
-  if (ev.key === 'Escape' && $('atfiche').classList.contains('show')) fermerFiche();
+  if (ev.key !== 'Escape') return;
+  if ($('atfiche').classList.contains('show')){ fermerFiche(); return; }
+  if (enMain){
+    const dit = reposerEnMain();
+    dessinerPalette();
+    alerte([dit + '.'], 'info');
+  }
 });
 
 /* --- le bandeau de victoire --- */
@@ -1023,11 +1144,19 @@ show('atelier');
 ongletActif('atelier');
 tout();
 
+/* Rouvrir sur le dernier brouillon est voulu (rien ne se perd), mais il faut le
+   DIRE : sinon on croit repartir d'une grille vierge et on construit par-dessus
+   son travail de la veille. */
+if (repris){
+  alerte(['Brouillon repris : « ' + echapper(repris.nom || 'sans nom') +
+    ' ». Touche « Nouveau niveau » pour repartir d’une grille vide.'], 'info');
+}
+
 /* ===================== API de test ===================== */
 window.ATELIER = {
   ATIDX: ATIDX,
   niveau: function(){ return D; },
-  charger: function(n){ D = normaliser(n); LV[ATIDX] = D; brouillonId = null; origineNom = null; tout(); },
+  charger: function(n){ D = normaliser(n); LV[ATIDX] = D; brouillonId = null; origineNom = null; enMain = null; tout(); },
   chargerDuJeu: chargerNiveauDuJeu,
   origine: function(){ return origineNom; },
   poser: function(type, x, y){ const r = poser(type, x, y); tout(); return r; },
