@@ -45,6 +45,7 @@
  *   node tests/soley/solveur-etalon.mjs --tous --sans-libre
  */
 import fs from "node:fs";
+import { pathToFileURL } from "node:url";
 import vm from "node:vm";
 
 const root = new URL("../../", import.meta.url);
@@ -340,7 +341,11 @@ export function ligne(m) {
 }
 
 /* ------------------------------ CLI ------------------------------ */
-if (import.meta.url === `file://${process.argv[1]}`) {
+/* `file://${process.argv[1]}` ne tient pas sur ce poste : argv[1] arrive tel quel
+   (chemin relatif, et sous Windows avec lettre de lecteur et antislashs), là où
+   import.meta.url vaut file:///C:/... — la garde n'était donc JAMAIS vraie et le
+   script sortait sans rien afficher. pathToFileURL fait la conversion pour de bon. */
+if (import.meta.url === pathToFileURL(process.argv[1]).href) {
   const args = process.argv.slice(2);
   const flag = (n) => { const i = args.indexOf(n); return i >= 0 ? args[i + 1] : null; };
   const has = (n) => args.includes(n);
