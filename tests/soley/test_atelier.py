@@ -256,6 +256,30 @@ def principal():
                 apres["rows"] == avant and "Impossible" in apres["avert"],
                 apres["avert"][:90])
 
+        # ------------------------------------------------------------------ A3b
+        # DÉPLACER : l'objet garde TOUS ses réglages, et Échap le remet d'où il
+        # vient. C'est le geste le plus répété quand on ajuste un niveau.
+        page.evaluate("""() => window.ATELIER.charger({w:'lagon',name:'',sub:'',cols:9,rows:6,
+          suns:[{x:0,y:2,dir:1,val:[2,1]}],
+          targets:[{x:7,y:2,need:[1,4],porte:3,disp:'25 %'}],
+          rocks:[[4,2]],fruits:[],gates:[],fixed:[],tools:[]})""")
+        page.click("#atplateau .atcase[data-x='7'][data-y='2']")
+        page.click("#atfichedeplacer")
+        enMain = page.evaluate("() => document.getElementById('atalerte').textContent")
+        page.click("#atplateau .atcase[data-x='8'][data-y='4']")
+        deplacee = page.evaluate("() => JSON.stringify(window.ATELIER.niveau().targets[0])")
+        section("A3b déplacer une case créole : elle garde fraction, écriture et porte",
+                json.loads(deplacee) == {"x": 8, "y": 4, "need": [1, 4], "disp": "25 %", "porte": 3},
+                deplacee)
+        section("A3b pendant le déplacement, l'atelier dit ce qu'on tient",
+                "à déplacer" in enMain, enMain.strip()[:70])
+        page.click("#atplateau .atcase[data-x='0'][data-y='2']")
+        page.click("#atfichedeplacer")
+        page.keyboard.press("Escape")
+        annule = page.evaluate("() => JSON.stringify(window.ATELIER.niveau().suns[0])")
+        section("A3b Échap annule le déplacement et remet l'objet exactement d'où il vient",
+                json.loads(annule) == {"x": 0, "y": 2, "dir": 1, "val": [2, 1]}, annule)
+
         # ------------------------------------------------------------------ A4b
         # LE RAYON PENDANT LA CONSTRUCTION. Sans lui, on règle des fractions à
         # l'aveugle : c'est le retour de Gwenael après son premier essai.

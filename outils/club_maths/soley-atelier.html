@@ -417,6 +417,14 @@ body.at.at-jouer #atwin{display:block; text-align:left; width:100%; max-width:42
 </div><!-- /colonne du plateau -->
 <div class="atcol atcol-outils">
 
+  <!-- Le nom en TÊTE de colonne : c'est la première chose qu'on renseigne, et
+       la seule qui bloque l'export. Il vivait au troisième bloc, sous la boîte. -->
+  <div class="atbloc atbloc-nom">
+    <label class="atchamp"><span>Nom du niveau</span>
+      <input id="atnom" type="text" autocomplete="off" placeholder="Le tour du champ"></label>
+    <div id="atnomerr" class="aterr"></div>
+  </div>
+
   <!-- Les deux blocs qui suivent répondent à LA question de Gwenael : qu'est-ce
        qui est posé d'avance, et qu'est-ce que l'élève reçoit ? Le titre et la
        phrase d'explication le disent, parce que deux rangées d'icônes de pièces
@@ -448,9 +456,6 @@ body.at.at-jouer #atwin{display:block; text-align:left; width:100%; max-width:42
     <h2 class="attitre">La fiche du niveau</h2>
     <label class="atchamp"><span>Monde (il commande le décor et les fruits)</span>
       <select id="atmonde"></select></label>
-    <label class="atchamp"><span>Nom du niveau</span>
-      <input id="atnom" type="text" autocomplete="off" placeholder="Le tour du champ"></label>
-    <div id="atnomerr" class="aterr"></div>
     <label class="atchamp"><span>Consigne (une question, jamais la solution)</span>
       <textarea id="atsub" placeholder="Que faut-il faire ?"></textarea></label>
     <label class="atchamp"><span>Indice (facultatif)</span>
