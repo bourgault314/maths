@@ -81,6 +81,11 @@ describe("charte — intégrité des données", () => {
     assert.equal(COULEURS_NUMERATION_DECIMALE.dixieme, "#22c55e");
     assert.equal(COULEURS_NUMERATION_DECIMALE.centieme, "#facc15");
     assert.equal(COULEURS_NUMERATION_DECIMALE.millieme, "#7c3aed");
+    assert.equal(COULEURS_RANGS_NUMERATION_DECIMALE.centiemes.texte, "#6f5b00");
+    assert.equal(
+      COULEURS_RANGS_NUMERATION_DECIMALE.centiemes.textePedagogique,
+      "#846f00",
+    );
     assert.ok(Object.isFrozen(COULEURS_RANGS_NUMERATION_DECIMALE));
     for (const [rang, palette] of Object.entries(COULEURS_RANGS_NUMERATION_DECIMALE)) {
       assert.ok(Object.isFrozen(palette), `palette ${rang} non gelée`);
@@ -95,6 +100,22 @@ describe("charte — intégrité des données", () => {
           `${rang} doit rester lisible sur ${fond}`,
         );
       }
+    }
+  });
+
+  it("garde le jaune moutarde des centièmes au niveau AA sur ses fonds", () => {
+    const centiemes = COULEURS_RANGS_NUMERATION_DECIMALE.centiemes;
+    for (const fond of ["#ffffff", centiemes.fond, "#d9f3f1", "#fdeaea", "#e7f7ee"]) {
+      assert.ok(
+        contraste(centiemes.texte, fond) >= 4.5,
+        `texte des centièmes insuffisant sur ${fond}`,
+      );
+    }
+    for (const fond of ["#ffffff", centiemes.fond]) {
+      assert.ok(
+        contraste(centiemes.textePedagogique, fond) >= 4.5,
+        `texte pédagogique des centièmes insuffisant sur ${fond}`,
+      );
     }
   });
 
@@ -140,7 +161,7 @@ describe("charte — intégrité des données", () => {
   });
 
   it("version et statut cohérents", () => {
-    assert.equal(VERSION_CHARTE, 4);
+    assert.equal(VERSION_CHARTE, 5);
     assert.ok(["brouillon", "valide"].includes(STATUT_CHARTE));
   });
 });

@@ -937,6 +937,8 @@ it("rend NC-03 et NC-04 dans une seule notion avec des repères cohérents en ai
       assert.match(application.innerHTML, /<span>Outil 3<\/span>\s*Tableau de numération/);
       assert.match(application.innerHTML, /figure-bandes-rail-cours-large/);
       assert.match(application.innerHTML, /figure-bandes-rail-cours-mobile/);
+      assert.match(application.innerHTML, /Deux bandes représentant chacune/);
+      assert.match(application.innerHTML, /1 sur 2 égale 0,5/);
       assert.match(application.innerHTML, /cd-bande-dixieme/);
       assert.match(application.innerHTML, /cd-reste-dixiemes/);
       assert.match(application.innerHTML, /data-afficher-ecritures="true"/);
@@ -963,13 +965,16 @@ it("rend NC-03 et NC-04 dans une seule notion avec des repères cohérents en ai
       assert.match(application.innerHTML, /data-afficher-equation="false"/);
       assert.match(application.innerHTML, /0,25 égale 25 sur 100 égale 1 sur 4/);
       assert.match(application.innerHTML, /0,75 égale 75 sur 100 égale 3 sur 4/);
+      assert.match(application.innerHTML, /1 sur 4 égale 0,25/);
+      assert.match(application.innerHTML, /2 sur 4 égale 1 sur 2 égale 0,5/);
+      assert.match(application.innerHTML, /3 sur 4 égale 0,75/);
       assert.doesNotMatch(application.innerHTML, /cd-numero-quadrant/);
       assert.equal((application.innerHTML.match(/figure-tableau-numeration/g) ?? []).length >= 2, true);
     }
     if (index === 3) {
-      assert.match(application.innerHTML, /Une unité, dix dixièmes/);
-      assert.match(application.innerHTML, /Un dixième, dix centièmes/);
-      assert.match(application.innerHTML, /Une unité, cent centièmes/);
+      assert.match(application.innerHTML, /Une unité = dix dixièmes/);
+      assert.match(application.innerHTML, /Un dixième = dix centièmes/);
+      assert.match(application.innerHTML, /Une unité = cent centièmes/);
       assert.match(application.innerHTML, /data-echange="unite-centiemes"/);
       assert.match(application.innerHTML, /figure-echange-rangs-cours/);
       assert.match(application.innerHTML, /nd-echange-empreinte/);
@@ -1039,15 +1044,25 @@ it("rend NC-03 et NC-04 dans une seule notion avec des repères cohérents en ai
         (application.innerHTML.match(/viewBox="0 0 340 232"/g) ?? []).length,
         5,
       );
-      assert.doesNotMatch(application.innerHTML, /viewBox="0 0 260 154"/);
+      assert.equal(
+        (application.innerHTML.match(/viewBox="0 0 260 154"/g) ?? []).length,
+        2,
+      );
       assert.match(application.innerHTML, /figure-bandes-rail-cours-large/);
       assert.match(application.innerHTML, /figure-bandes-rail-cours-mobile/);
       assert.match(application.innerHTML, /reste-fusionne-en-demi/);
+      assert.match(application.innerHTML, /repere-intermediaire-cours/);
+      assert.match(application.innerHTML, /Repères des demis et des quarts/);
+      assert.match(application.innerHTML, /De demi en demi/);
+      assert.match(application.innerHTML, /De quart en quart/);
+      assert.match(
+        application.innerHTML,
+        /repere-intermediaire-cours[^>]*>0,75<\/text>/,
+      );
+      assert.match(application.innerHTML, /fraction de numérateur 5 et de dénominateur 2 vaut 2,5/);
+      assert.match(application.innerHTML, /fraction de numérateur 8 et de dénominateur 4 vaut 2/);
       assert.match(application.innerHTML, /fraction de numérateur 5 et de dénominateur 1 vaut 5/);
       assert.match(application.innerHTML, /data-denominateur="1"/);
-      assert.match(application.innerHTML, /3 sur 2 égale 1,5/);
-      assert.match(application.innerHTML, /4 sur 2 égale 2/);
-      assert.match(application.innerHTML, /5 sur 2 égale 2,5/);
       assert.match(application.innerHTML, /100 sur 100 égale 1/);
       assert.doesNotMatch(application.innerHTML, /Choisir un outil/);
       assert.doesNotMatch(application.innerHTML, /barre de fraction se lit aussi « divisé par »/);

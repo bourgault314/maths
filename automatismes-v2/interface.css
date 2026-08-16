@@ -1293,12 +1293,24 @@ button.case-reponse-carres {
 
 .reperes-rangs-cours {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  grid-template-columns: minmax(0, 1fr);
   gap: 8px;
 }
 
 .reperes-rangs-cours .calcul-aligne-fractions {
   width: 100%;
+}
+
+@container (min-width: 340px) and (max-width: 529px) {
+  .reperes-rangs-cours {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .reperes-rangs-cours > :last-child {
+    width: calc((100% - 8px) / 2);
+    grid-column: 1 / -1;
+    justify-self: center;
+  }
 }
 
 .echanges-rangs-cours {
@@ -1482,6 +1494,16 @@ button.case-reponse-carres {
   text-align: center;
 }
 
+.reperes-quarts-rail-cours {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(155px, 1fr));
+  gap: 8px;
+}
+
+.reperes-quarts-rail-cours .calcul-aligne-fractions {
+  width: 100%;
+}
+
 .transformation-bandes-correction {
   display: grid;
   gap: 7px;
@@ -1615,20 +1637,32 @@ button.case-reponse-carres {
   background: var(--mg-papier);
 }
 
-.reperes-demis-equations-cours {
+.reperes-bandes-synthese-cours {
   display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 8px;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 10px;
 }
 
-.reperes-demis-equations-cours .calcul-aligne-fractions {
+.reperes-bandes-synthese-cours > section {
   width: 100%;
+  min-width: 0;
+  padding: 10px;
+  display: grid;
+  gap: 6px;
+  justify-items: center;
+  border: 2px solid var(--mg-ligne);
+  border-radius: var(--mg-rayon-moyen);
+  background: var(--mg-fondDoux);
 }
 
-@media (max-width: 520px) {
-  .reperes-demis-equations-cours {
-    grid-template-columns: 1fr;
-  }
+.reperes-bandes-synthese-cours > section > strong {
+  color: var(--mg-bleu);
+  font-size: 14px;
+  text-align: center;
+}
+
+.reperes-bandes-synthese-cours .figure-bandes-rail {
+  width: min(100%, 560px);
 }
 
 .definition-cours-quotient {
@@ -1770,6 +1804,26 @@ button.case-reponse-carres {
 
   .exemples-groupement-cours {
     grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+}
+
+@container (min-width: 530px) {
+  .reperes-rangs-cours {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  .reperes-rangs-cours > :last-child {
+    width: auto;
+    grid-column: auto;
+  }
+}
+
+@container (min-width: 560px) {
+  .echanges-rangs-cours > section:last-child {
+    width: min(100%, 520px);
+    grid-column: 1 / -1;
+    justify-self: center;
   }
 }
 
@@ -3933,6 +3987,18 @@ body {
   border-color: var(--mg-erreur);
   color: var(--mg-erreur);
   background: color-mix(in srgb, var(--mg-erreur) 6%, var(--mg-papier));
+}
+
+/*
+ * En projection, l'ombre verticale des champs est agrandie avec le reste du
+ * lecteur et ressemble alors à un second cartouche décalé sous la réponse.
+ * Le contour suffit à matérialiser la case sur le tableau. Cette règle couvre
+ * les deux familles de champs et la base encadrée des puissances.
+ */
+.mode-tableau .case-reponse-carres,
+.mode-tableau .case-reponse-rationnelle,
+.mode-tableau .case-puissance .mathsgo-puissance-base {
+  box-shadow: none;
 }
 
 .case-decimale {

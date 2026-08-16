@@ -293,7 +293,10 @@ test("le cours et l’aide conservent l’ordre CPA et les nouveaux invariants",
   assert.match(application, /dessinerDemiAvecDixiemes/);
   assert.match(application, /dessinerReorganisationCentiemes/);
   assert.match(application, /rendreBandesRailCours\(7, 2, "pieces"/);
-  assert.match(application, /reperes-demis-equations-cours/);
+  assert.match(application, /afficherReperesIntermediairesCours: true/);
+  assert.match(application, /reperes-bandes-synthese-cours/);
+  assert.match(application, /rendreBandesRailCours\(5, 2, "pieces", true/);
+  assert.match(application, /rendreBandesRailCours\(8, 4, "pieces", true/);
   assert.match(application, /rendreEchangesRangsCours\(\)/);
   assert.match(application, /rendreDecomposition354Cours\(\)/);
   assert.match(application, /function rendreConversionRangsCours/);

@@ -1,6 +1,6 @@
 # Fiche NC-03 / NC-04 — Fractions simples et décimaux
 
-> **Candidat intégré, révisions D-049 du 13 août, D-055 du 15 août, puis D-056, D-058, D-059 et D-060 du 16 août 2026.** Cette fiche décrit le module révisé,
+> **Candidat intégré, révisions D-049 du 13 août, D-055 du 15 août, puis D-056, D-058, D-059, D-060 et D-061 du 16 août 2026.** Cette fiche décrit le module révisé,
 > et non plus le pilote du 8 août. Les questions ont été recomposées ; le cours,
 > « Me guider » et les corrections utilisent maintenant les briques communes
 > comparées dans le Labo. L'intégration et la recette conjointe D-049/D-055
@@ -16,6 +16,12 @@
 > l'outil adapté à chaque famille, sans modifier les autres questions. Sa
 > recette automatisée est achevée et sa publication de test est autorisée ; la
 > revue visuelle aux cinq fenêtres doit encore être rejouée sur l'URL publique.
+> D-061 affine enfin les repères de bandes du cours, rend la synthèse des demis
+> et des quarts symétrique, corrige la teinte écrite des centièmes et retire
+> l'ombre décalée du cartouche orange en mode tableau. Sa recette automatisée
+> est achevée. Faute de runtime Chromium local, sa revue visuelle doit être
+> rejouée sur l'URL publique, dont Gwenaël demande la publication afin d'y
+> mener cette dernière revue.
 > Le statut reste `construit` en attente des retours de Gwenaël et de Claire,
 > sans référencement ni passage à `valide`.
 
@@ -178,21 +184,28 @@ numération** et le **tableau de numération**. Les pages 1 et 2 montrent les
 trois afin de les installer ; les pages 4 et 5 retiennent les plaques et le
 tableau pour les conversions par rang.
 
-1. **Un demi : plusieurs écritures** : deux pièces `1/2` reforment l'unité.
+1. **Un demi : plusieurs écritures** : deux bandes représentant chacune
+   `1/2`, placées bout à bout, forment exactement l'unité. Le premier rail
+   écrit aussi `1/2 = 0,5` au repère atteint par une bande.
    Dans un rectangle-unité sans deuxième rail, cinq dixièmes en remplissent
    exactement la moitié. La grande chaîne `0,5 = 5/10 = 1/2` est placée
    immédiatement sous le matériel ; le tableau vient seulement ensuite.
-2. **Un quart et trois quarts** : quatre pièces `1/4` reforment l'unité et
+2. **Un quart et trois quarts** : quatre bandes représentant chacune `1/4`
+   forment exactement l'unité. Le rail rend visibles
+   `1/4 = 0,25`, `2/4 = 1/2 = 0,5` et `3/4 = 0,75`, puis
    les mêmes 25 centièmes sont réorganisés en l'une des quatre zones égales du
    carré. Trois zones de 25 cases donnent ensuite `75/100 = 3/4`. Les grandes
    chaînes `0,25 = 25/100 = 1/4` et `0,75 = 75/100 = 3/4` suivent directement
    leurs dessins.
 3. **Nommer les rangs décimaux** : le matériel conserve la même unité pendant
-   trois échanges explicites à empreinte identique : une unité rouge vaut dix
-   dixièmes verts, un dixième vert vaut dix centièmes jaunes et une unité rouge
-   vaut cent centièmes jaunes. Les repères `1/10 = 0,1`,
+   trois échanges explicites à empreinte identique, intitulés
+   « Une unité = dix dixièmes »,
+   « Un dixième = dix centièmes » et
+   « Une unité = cent centièmes ». Une troisième carte seule sur une nouvelle
+   ligne est centrée. Les repères `1/10 = 0,1`,
    `1/100 = 0,01` et `1/1000 = 0,001` sont installés avant toute procédure de
-   conversion ; le tableau vient après eux et le millième n'emploie aucun
+   conversion ; le troisième se centre également lorsqu'il occupe seul la
+   seconde ligne. Le tableau vient après eux et le millième n'emploie aucun
    matériel miniaturisé.
 4. **Lire une fraction décimale** : « Méthode 1 · Avec les plaques de
    couleurs » fait
@@ -218,12 +231,18 @@ tableau pour les conversions par rang.
    du cours ; l'acceptation des fractions équivalentes reste un contrat du
    moteur de réponse.
 6. **Former les unités et reconnaître les entiers** : les représentations
-   complètes de `7/2 = 3,5` et `6/4 = 1,5` montrent les pièces initiales, les
+   complètes de `7/2 = 3,5` et `6/4 = 1,5` montrent les bandes initiales, les
    unités formées et, pour `6/4`, la fusion des deux quarts restants en un
-   demi. Les repères `3/2`, `4/2` et `5/2` sont rappelés par des égalités sans
-   second rail. Cinq bandes marquées `1` atteignent 5 et installent ensuite
-   `5/1 = 5` puis `n/1 = n`. Sur téléphone, ces rails réemploient le format
-   standard de largeur source `340`, sans variante compacte. La liste
+   demi. Dans l'état de recherche du cours, les graduations décimales
+   intermédiaires restent visibles tandis que l'arrivée demandée demeure `?`.
+   Une synthèse visuelle symétrique emploie ensuite deux rails de bandes : le
+   premier installe les repères successifs des demis et le second ceux des
+   quarts, notamment `3/4 = 0,75`. Cinq bandes marquées `1` atteignent 5 et
+   installent ensuite
+   `5/1 = 5` puis `n/1 = n`. Sur téléphone, les rails des deux exemples
+   détaillés réemploient le format standard de largeur source `340`, tandis
+   que les deux rails de synthèse utilisent la variante `mobile-compact` de
+   largeur source `260`. La liste
    « Choisir un outil » et la note finale sur la division sont supprimées :
    elles répétaient le cours et mélangeaient des cas qui se recouvrent.
 
@@ -250,6 +269,10 @@ générale contrastée demeure celle des verdicts et composants d'interface ; un
 rang ne doit jamais emprunter la couleur d'un autre. Le tableau commun adapte
 en outre la taille de ses en-têtes à la largeur de colonne afin que « Centièmes »
 et « Millièmes » restent entiers sur téléphone.
+
+D-061 fixe la teinte écrite des centièmes sur un moutarde accessible fourni
+par cette charte commune. L'aplat du matériel reste jaune ; aucun cours, aide
+ou correction ne redéfinit localement une variante orange.
 
 Le tableau est lui aussi un SVG unique. Il place une grande virgule sur la
 frontière unités–dixièmes, peut conserver explicitement un rang final et sait
@@ -364,7 +387,10 @@ du retour « Pas de réponse », sans ouvrir l'explication.
 Au tableau, la question et les données sont identiques, mais aucune saisie,
 trace ni score n'est créé. Les commandes communes révèlent la réponse, la
 correction et le cours. Téléphone, ordinateur et TNI conservent l'en-tête, la
-zone centrale défilable, les panneaux et le dock communs.
+zone centrale défilable, les panneaux et le dock communs. Dans ce seul mode,
+le cartouche orange de réponse n'a pas d'ombre : son contour reste unique et
+ne crée plus de bande décalée en projection. Le relief du même composant est
+conservé en entraînement.
 
 ## 11. Validation
 
@@ -410,6 +436,16 @@ contraintes de voisinage ; toutes les combinaisons `9/4` à `12/4`, dans les
 deux sens et en saisie comme en QCM, sont atteintes. Le Labo passe **165 tests
 sur 165** et le graphe de cache commun est cohérent en `v37`. La revue visuelle
 multi-fenêtre doit encore être rejouée sur l'URL publique.
+
+Pour D-061, les tests vérifient les égalités ajoutées aux rails, le centrage
+des cartes isolées, la propagation de la teinte moutarde depuis la charte, la
+cible `?` malgré les repères intermédiaires, la symétrie des deux rails de
+synthèse et le correctif du cartouche. La recette automatisée complète passe
+**1 586 tests sur 1 586**, répartis en **232 suites**, et confirme l'absence de
+changement des générateurs et des réponses ; le graphe commun est cohérent en
+`v38`. Faute de runtime Chromium local, la revue aux cinq fenêtres n'a pas pu
+être rejouée. Elle doit reprendre sur l'URL publique les six pages, les aides
+masquées et le cartouche orange en mode « Au tableau ».
 
 Le candidat reste `construit`. Sa publication de test autorisée le 13 août ne
 l'expose ni dans le menu public ni dans le sitemap ; le passage à `valide`

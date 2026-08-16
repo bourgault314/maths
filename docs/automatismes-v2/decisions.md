@@ -1424,3 +1424,50 @@ relève aucune violation des quotas, de l'unicité rationnelle ni des quatre
 contraintes de voisinage. Le Labo passe **165 tests sur 165**. Gwenaël autorise
 la publication de test ; la revue visuelle aux cinq fenêtres doit être rejouée
 sur l'URL publique avant de considérer D-060 comme validée.
+
+### D-061 — Le cours rend symétriques les repères de demis et de quarts
+
+La dernière relecture du cours conserve son architecture en six pages et ses
+trois outils, mais précise ce que les bandes sur rail doivent faire lire. Le
+vocabulaire parle désormais de **bandes** représentant chacune un demi ou un
+quart, et non de « pièces ». Sur la page 1, le premier rail écrit explicitement
+`1/2 = 0,5` au repère atteint par une bande. Sur la page 2, le rail porte les
+trois relations utiles avant l'unité : `1/4 = 0,25`,
+`2/4 = 1/2 = 0,5` et `3/4 = 0,75`. Les grandes correspondances avec les
+dixièmes ou les centièmes et les tableaux placés ensuite restent inchangés.
+
+La page 3 remplace les titres séparés par une virgule par les égalités
+explicites « Une unité = dix dixièmes »,
+« Un dixième = dix centièmes » et
+« Une unité = cent centièmes ». Lorsque le troisième échange ou le repère du
+millième passe seul sur une nouvelle ligne, il est centré au lieu de rester
+aligné comme s'il manquait une quatrième carte. La teinte de texte canonique
+des centièmes devient un moutarde accessible défini dans la charte ; le
+matériel conserve son aplat jaune. Cette correction se propage à tous les
+objets qui consomment la palette commune, sans teinte locale concurrente.
+
+La page 6 garde les démonstrations détaillées de `7/2 = 3,5` et
+`6/4 = 1,5` : la première montre la formation de trois unités et d'un demi,
+la seconde montre notamment `2/4 = 1/2`. Dans leur état de recherche, les
+repères décimaux intermédiaires du rail sont visibles pour donner l'échelle,
+mais la cible finale reste `?`. Cette option est réservée au cours ; elle ne
+modifie pas les profils anti-fuite de « Me guider ». La synthèse autrefois
+limitée à trois égalités de demis devient symétrique et visuelle : un rail de
+bandes de demis et un rail de bandes de quarts rendent visibles leurs repères
+successifs, notamment `0,75` pour trois quarts. Les exemples détaillés ne sont
+ni remplacés ni simplifiés par cette synthèse. Sur téléphone, leurs deux rails
+gardent le format standard de largeur source `340` ; les deux rails plus courts
+de la synthèse utilisent séparément la variante `mobile-compact` de largeur
+source `260`.
+
+Enfin, la photographie du mode « Au tableau » révèle que l'ombre du cartouche
+orange de réponse se décale sous son contour et ressemble à une seconde zone.
+Le correctif est appliqué au composant commun : l'ombre est supprimée
+uniquement en mode tableau, tandis que l'entraînement conserve son relief et
+que la géométrie du cartouche ne change pas. D-061 ne modifie aucun
+générateur, quota, ordre seedé ni réponse attendue. La recette automatisée
+complète passe **1 586 tests sur 1 586**, répartis en **232 suites**, et le
+graphe de cache est invalidé atomiquement en `v38`. La revue visuelle locale
+aux cinq fenêtres n'a pas pu être rejouée faute de runtime Chromium ; elle doit
+donc être menée sur l'URL publique, en incluant le mode tableau. Gwenaël demande
+la publication de ce candidat afin d'y mener cette dernière revue.

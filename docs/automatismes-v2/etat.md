@@ -2,6 +2,34 @@
 
 **Dernière mise à jour : 16 août 2026.**
 
+## Repères symétriques du cours et cartouche de projection du 16 août
+
+- D-061 conserve les six pages et les trois outils de NC-03 / NC-04. Le cours
+  nomme des bandes représentant un demi ou un quart ; le rail de la page 1
+  écrit `1/2 = 0,5`, puis celui de la page 2 rend visibles
+  `1/4 = 0,25`, `2/4 = 1/2 = 0,5` et `3/4 = 0,75`.
+- La page 3 formule ses trois échanges avec un signe égal et centre les cartes
+  isolées lors d'un retour à la ligne. Le texte des centièmes emploie désormais
+  le moutarde accessible de la charte, tandis que les plaques restent jaunes.
+- La page 6 conserve les explications détaillées de `7/2` et `6/4`. Dans le
+  cours seulement, leurs rails montrent les repères décimaux intermédiaires en
+  gardant la cible finale à `?`. Ces exemples détaillés conservent la largeur
+  source standard `340` sur téléphone. Une synthèse visuelle par bandes
+  présente de façon symétrique les repères successifs des demis et des quarts,
+  dont `3/4 = 0,75` ; ses deux rails utilisent la variante téléphone
+  `mobile-compact` de largeur source `260`. Les aides d'exercice gardent leurs
+  profils anti-fuite.
+- Le cartouche orange commun ne porte plus d'ombre en mode « Au tableau » : le
+  décalage visible sous son contour disparaît, sans changer son rendu en
+  entraînement. Aucun générateur, quota, ordre seedé ni résultat attendu n'est
+  modifié.
+- La recette automatisée complète est verte : **1 586 tests sur 1 586** dans
+  **232 suites** ; le graphe de cache passe atomiquement en `v38`. La revue
+  locale aux cinq fenêtres n'a pas pu être rejouée faute de runtime Chromium.
+  Elle doit être réalisée sur l'URL publique, avec un contrôle explicite du
+  cours, des aides masquées et du cartouche en projection. Gwenaël demande la
+  publication afin d'y mener cette dernière revue. Le module reste `construit`.
+
 ## Variété des séries et outils adaptés de NC-03 / NC-04 du 16 août
 
 - D-060 étend la banque continue des quarts de `1/4` à `12/4` dans les
