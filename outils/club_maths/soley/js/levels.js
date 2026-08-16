@@ -26,7 +26,10 @@ const PNAME={b:'Miroir',s2:'Prisme ÷2',s3:'Prisme ÷3',m:'Lentille +',x2:'Loupe
 /* ===== Mondes ===== */
 const WORLDS=[
  {id:'lagon',ecole:true,label:'Le lagon',pal:'6e',blurb:'Découvrir les fractions : partager un rayon en parts égales, et guider la lumière jusqu’aux cases créoles.'},
- {id:'canne',label:'Les champs de canne',pal:'6e',blurb:'La coupe ! Rien de neuf à apprendre, tout à chercher : le surplus de pièces, les portes des cases et les fruits marqués font le casse-tête.'},
+ /* blurb réécrit au lot B (16/08) : « Rien de neuf à apprendre » devenait faux le jour
+    où deux points de cours sont entrés dans le monde. Le champ garde son identité —
+    on y cherche bien plus qu'on n'y apprend — mais il ne se contredit plus. */
+ {id:'canne',label:'Les champs de canne',pal:'6e',blurb:'La coupe ! Ici on cherche bien plus qu’on n’apprend : le surplus de pièces, les portes des cases et les fruits marqués font le casse-tête — deux parts nouvelles, le neuvième et le douzième, s’expliquent au passage.'},
  {id:'foret',ecole:true,label:'La forêt',pal:'5e',blurb:'Additionner des fractions avec la lentille — et chercher, parfois longtemps, comment fabriquer la bonne part.'},
  {id:'volcan',ecole:true,label:'Le volcan',pal:'4e',blurb:'Multiplier avec les loupes, dépasser 1, reconstruire des rayons entiers.'},
  {id:'pitons',ecole:true,label:'Les pitons',pal:'5e-4e',blurb:'Équivalences et comparaisons : les passes étroites ne laissent passer que les rayons assez fins.'},
@@ -225,7 +228,11 @@ const LV=[
   tools:[s2(1,0,2),s2(0,1,3),s2(2,1,3),s2(1,1,2),b(1,2),b(1,0),s3(1,0,1,2)],
   sol:[[5,5,3],[1,5,1],[3,7,1],[2,7,4],[0,8,1]],solMin:[[3,1,3],[0,7,3],[1,7,2],[2,7,4]]},
 
- {w:'canne',name:"La chambre close",
+ /* Le 1/9 arrive ICI, au 18ᵉ niveau — première apparition dans tout le jeu (mesurée).
+    D'où `cours:'neuvieme'` (lot B) : le panneau explique la part à la première
+    victoire, et rien de plus. `cours` n'entre PAS dans `decouvertesMonde` : ce niveau
+    ne verrouille rien, la canne reste contournable par le chemin de l'école. */
+ {w:'canne',name:"La chambre close",cours:'neuvieme',
   sub:"Une chambre fermée au cœur du champ, une seule entrée — et dedans, une case qui veut un neuvième. Combien de coupes, et de quel côté ?",
   hint:"1/3 ÷ 3 = 1/9.",
   cols:9,rows:7,suns:[{x:0,y:6,dir:1}],
@@ -234,7 +241,10 @@ const LV=[
   tools:[s3(1,0,1,2),s3(0,0,1,3),s3(0,1,2,3),b(1,0),b(1,2),b(0,1),b(2,1)],
   sol:[[0,2,6],[5,2,2],[1,2,3],[3,8,6]],solMin:[[0,2,6],[1,2,2],[3,8,6]]},
 
- {w:'canne',name:"Les deux chemins du sixième",
+ /* Le 1/12 arrive ICI, au 19ᵉ niveau — première apparition dans tout le jeu (mesurée).
+    D'où `cours:'douzieme'` (lot B), au même titre que « La chambre close » : il
+    explique, il ne jalonne pas. */
+ {w:'canne',name:"Les deux chemins du sixième",cours:'douzieme',
   sub:"Un sixième d'un côté, un douzième de l'autre. Couper en deux puis en trois, ou en trois puis en deux ? Les deux chemins existent : lequel sert quelle case ?",
   hint:"1/2 ÷ 3 = 1/6 et 1/3 ÷ 2 = 1/6. Et 1/6 ÷ 2 = 1/12.",
   cols:9,rows:7,suns:[{x:0,y:3,dir:1}],
@@ -922,45 +932,70 @@ const COURS={
   ],
   carte:{t:"Le tiers de la moitié, c'est le sixième.",eq:"1/2 ÷ 3 = 1/6"}
  },
- /* Le BILAN du partage (lot A, 16/08) — le dernier cours du lagon. Il ne montre PAS
-    de rayons : Gwenael a demandé un bilan en BANDES (« les huitièmes tout coupés,
-    les neuvièmes tout coupés, les douzièmes tout coupés »), et c'est aussi la seule
-    forme possible — la cascade de rayons ne sait dessiner que deux étages, jamais
-    trois coupes. D'où la scène `murs`, propre à ce cours.
-    Il dit la règle générale que le lagon montrait déjà deux fois sans jamais
-    l'énoncer (le quart est la moitié de la moitié, le sixième le tiers de la
-    moitié), et c'est elle qui légitime 1/8, 1/9 et 1/12 avant que les champs de
-    canne ne les servent. L'étape 3 (le dénominateur se multiplie) est GARDÉE en
-    connaissance de cause (arbitrage de Gwenael, 16/08) : elle laisse deviner que
-    2 × 3 = 3 × 2, mais la difficulté des « Deux chemins du sixième » est
-    géométrique — R = 18 263, deux prismes à faire tenir dans une boîte serrée —
-    pas conceptuelle. */
+ /* La règle du recoupage (lot A, 16/08 — RESSERRÉ au lot B, 16/08). Il ne montre PAS
+    de rayons : Gwenael a demandé un bilan en BANDES, et c'est aussi la seule forme
+    possible — la cascade de rayons ne sait dessiner que deux étages, jamais trois
+    coupes. D'où la scène `murs`.
+    LOT B — UN COURS, UNE PART, LÀ OÙ ELLE ARRIVE. Le premier jet empilait ici les
+    huitièmes, les neuvièmes ET les douzièmes : trois murs et cinq phrases dans le
+    même panneau, « beaucoup de choses dans le même truc et pas agréable à lire »
+    (Gwenael, sur capture). Or la mesure dit où chaque part arrive vraiment — 1/8 au
+    11ᵉ niveau (ici), 1/9 au 18ᵉ (« La chambre close »), 1/12 au 19ᵉ (« Les deux
+    chemins du sixième »). Ce cours-ci garde donc les huitièmes ET la règle générale
+    qu'ils font découvrir ; les deux autres parts ont leur propre cours, au niveau qui
+    les sert. L'identifiant `recouper` NE CHANGE PAS : `save.cours` est indexé dessus,
+    le renommer rejouerait le panneau à ceux qui l'ont déjà vu.
+    L'étape 3 (le dénominateur se multiplie) est GARDÉE en connaissance de cause
+    (arbitrage de Gwenael, 16/08) : elle laisse deviner que 2 × 3 = 3 × 2, mais la
+    difficulté des « Deux chemins du sixième » est géométrique — deux prismes à faire
+    tenir dans une boîte serrée — pas conceptuelle. */
  recouper:{
   titre:"Recouper une part",
-  /* TROIS murs, deux règles, toutes deux venues des relectures de Gwenael sur captures.
-     1. Chaque mur se lit de haut en bas comme une descente : une ligne naît TOUJOURS
-        de celle qui la surplombe. Un premier jet empilait 1/8, 1/9 et 1/12 dans le
-        même mur, ce qui faisait naître les neuvièmes des huitièmes — or les neuvièmes
-        naissent des TIERS et les douzièmes des QUARTS. D'où un mur chacun.
-     2. Chaque mur est suivi de SES explications (`etapes` = combien d'étapes de la
-        liste le suivent), jamais tous les murs puis tous les textes : sinon l'élève
-        doit remonter chercher de quelle image parle la phrase qu'il lit. */
+  /* Le mur se lit de haut en bas comme une descente : une ligne naît TOUJOURS de celle
+     qui la surplombe, et la descente est CELLE QUE LE NIVEAU FAIT FAIRE (1 → 1/2 →
+     1/4 → 1/8, la boîte n'ayant que des ÷2). `etapes` = combien d'étapes de la liste
+     suivent ce mur : `construireCours` alterne image et phrases. */
   scene:{murs:[
    {bandes:[[1,1],[1,2],[1,4],[1,8]],etapes:3,
-    alt:"La bande entière, coupée en deux, puis en quatre, puis en huit"},
-   {bandes:[[1,3],[1,9]],etapes:1,
-    alt:"La bande coupée en trois, puis chaque tiers recoupé en trois : les neuvièmes"},
-   {bandes:[[1,4],[1,12]],etapes:1,
-    alt:"La bande coupée en quatre, puis chaque quart recoupé en trois : les douzièmes"}
+    alt:"La bande entière, coupée en deux, puis en quatre, puis en huit"}
   ]},
   etapes:[
    {t:"Tu as coupé, puis recoupé : la moitié de la moitié, c'est le quart.",eq:"1/2 ÷ 2 = 1/4"},
    {t:"Recoupe encore chaque quart en 2 : voilà les huitièmes.",eq:"1/4 ÷ 2 = 1/8"},
-   {t:"À chaque coupe, le nombre du bas — le dénominateur — est multiplié.",eq:"2 × 2 × 2 = 8"},
-   {t:"Coupe plutôt en trois : chaque tiers recoupé en trois donne les neuvièmes. Le dénominateur est multiplié par 3.",eq:"1/3 ÷ 3 = 1/9"},
-   {t:"Et chaque quart recoupé en trois donne les douzièmes.",eq:"1/4 ÷ 3 = 1/12"}
+   {t:"À chaque coupe, le nombre du bas — le dénominateur — est multiplié.",eq:"2 × 2 × 2 = 8"}
   ],
   carte:{t:"Recouper une part multiplie le dénominateur.",eq:"1/4 ÷ 2 = 1/8"}
+ },
+ /* Les deux cours des CHAMPS DE CANNE (lot B, 16/08). Ils ne JALONNENT pas : leurs
+    niveaux portent `cours:` et non `dec:`, donc ils n'entrent pas dans
+    `decouvertesMonde` et ne peuvent verrouiller aucun monde. Décision de Gwenael :
+    « des cours qui sont là pour juste expliquer ce qu'ils viennent faire, mais qui ne
+    sont pas obligatoires pour passer à la suite » — la canne reste le monde qu'on peut
+    contourner par le chemin de l'école, et elle le reste même en enseignant.
+    Chaque mur trace la descente que SON niveau fait faire, avec sa boîte à lui. */
+ neuvieme:{
+  titre:"Le neuvième",
+  scene:{murs:[
+   {bandes:[[1,1],[1,3],[1,9]],etapes:2,
+    alt:"La bande entière, coupée en trois, puis chaque tiers recoupé en trois : les neuvièmes"}
+  ]},
+  etapes:[
+   {t:"Coupe en trois, puis recoupe chaque tiers en trois : voilà les neuvièmes.",eq:"1/3 ÷ 3 = 1/9"},
+   {t:"Le nombre du bas — le dénominateur — est multiplié, comme au lagon : par 3 cette fois.",eq:"3 × 3 = 9"}
+  ],
+  carte:{t:"Un tiers recoupé en trois donne le neuvième.",eq:"1/3 ÷ 3 = 1/9"}
+ },
+ douzieme:{
+  titre:"Le douzième",
+  scene:{murs:[
+   {bandes:[[1,1],[1,2],[1,6],[1,12]],etapes:2,
+    alt:"La bande entière, coupée en deux, puis en six, puis en douze"}
+  ]},
+  etapes:[
+   {t:"Coupe en deux, puis en trois : te voilà aux sixièmes. Recoupe chaque sixième en deux.",eq:"1/6 ÷ 2 = 1/12"},
+   {t:"Trois coupes, et le dénominateur les multiplie toutes les trois.",eq:"2 × 3 × 2 = 12"}
+  ],
+  carte:{t:"Un sixième recoupé en deux donne le douzième.",eq:"1/6 ÷ 2 = 1/12"}
  },
  /* Les deux cours de la LENTILLE (forêt, 08/2026). Ils ne se lisent PAS comme les
     quatre premiers : partager DESCEND de l'entier vers les morceaux, additionner
