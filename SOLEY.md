@@ -57,7 +57,7 @@ fichiers modifiés → tests → reste à vérifier.
 | Monde | Palier | Contenu | Niveaux |
 |---|---|---|---|
 | Le lagon | 6e | découverte, partage égal — dont 5 niveaux-découverte (demi, tiers, quart, sixième, **recouper**) | 11 |
-| Les champs de canne | 6e | partage JOUÉ à fond, notion constante : surplus, pièges, fruits à valeur, portes orientées (refonte 08/2026) | 8 |
+| Les champs de canne | 6e | partage JOUÉ à fond : surplus, pièges, fruits à valeur, portes orientées (refonte 08/2026) — **aucune découverte** (le monde reste contournable), mais 2 points de cours `cours` : neuvième, douzième | 8 |
 | La forêt | 5e | additions (lentille), équivalences — dont 2 niveaux-découverte (somme, même dénominateur) | 8 |
 | Le volcan | 4e | loupes ×, fractions > 1, 1/9 | 7 |
 | Les pitons | 5e-4e | équivalences, comparaisons (passes) | 7 |
@@ -208,6 +208,17 @@ plateau ne répond plus aux clics — défaut trouvé en construisant le lot).
 - **Le support d'un point de cours est la bande de fractions ; le rayon reste le support
   du jeu.** Un cours peut donc se passer entièrement de rayons (`scene.murs`, cours
   `recouper`, 16/08) — et il le doit dès que la cascade dépasse deux coupes.
+- **UN COURS, UNE PART, LÀ OÙ ELLE ARRIVE** (16/08). Un panneau qui empile plusieurs
+  notions ne se lit pas : « beaucoup de choses dans le même truc » (Gwenael, sur
+  capture). On coupe donc par notion, et chaque morceau se pose au niveau où sa part
+  apparaît POUR LA PREMIÈRE FOIS — première apparition mesurée sur les cases, jamais
+  supposée. Le corollaire coûte un champ de code : **enseigner et jalonner sont deux
+  métiers.** `dec` fait les deux (il ouvre le cours ET compte dans `decouvertesMonde`) ;
+  `cours` ne fait que le premier. Sans cette séparation, poser un cours dans un CHAMP
+  le rendrait obligatoire — or la canne doit rester contournable par le chemin de
+  l'école, « c'est des cours qui expliquent ce qu'ils viennent faire, pas obligatoires
+  pour passer à la suite ». **Ne jamais renommer l'identifiant d'un cours existant** :
+  `save.cours` est indexé dessus, et le renommer rejoue le panneau à qui l'a déjà vu.
 - Textes des niveaux = questions, jamais la solution ; l'équation vit dans le Coup de pouce.
 - Un seul rayon par case (la lentille sert à additionner, pas la case).
 - Couleur par dénominateur RÉDUIT (3/6 s'affiche orange comme 1/2 : c'est voulu, ça montre l'égalité).
@@ -1086,4 +1097,27 @@ Trois choses à savoir avant d'y toucher :
   reperd.** Le vocabulaire mathématique est dit au passage : « le nombre du bas — le
   dénominateur ». `bandeLbl` prend une taille optionnelle — à douze cases de 25 px,
   « 12 » en 15 px touchait ses voisines.
+- **16/08 — chaque part, son cours, là où elle arrive (lot B).** Le cours `recouper` du
+  lot A tenait trois murs et cinq phrases dans un seul panneau : les huitièmes, les
+  neuvièmes et les douzièmes d'un coup. Verdict de Gwenael sur capture : « ça fait un
+  peu beaucoup de choses dans le même truc et ce n'est pas agréable à lire ». La mesure
+  a dit où couper — première apparition de chaque dénominateur, lue sur les cases :
+  **1/8 au 11ᵉ niveau** (« La moitié du quart », lagon), **1/9 au 18ᵉ** (« La chambre
+  close », canne), **1/12 au 19ᵉ** (« Les deux chemins du sixième », canne). `recouper`
+  garde donc les huitièmes et la règle générale ; `neuvieme` et `douzieme` naissent, un
+  mur et deux phrases chacun, posés sur leur niveau. **Le champ `cours` est né de là** :
+  poser un `dec` sur un niveau de la canne aurait fait de ce monde un passage obligé —
+  exactement ce que le chemin de l'école a été inventé pour éviter. `cours` ouvre le
+  panneau à la première victoire et n'entre PAS dans `decouvertesMonde` ; le badge
+  « niveau-découverte » reste réservé à `dec`, seul le bouton « Revoir le cours » est
+  partagé. Le vérificateur rejoue `decouvertesMonde` des deux côtés pour les 9 mondes et
+  prouve qu'elle est identique : **aucun verrou n'a bougé.** Le blurb de la canne a été
+  réécrit dans la foulée — « Rien de neuf à apprendre » devenait faux le jour où deux
+  cours sont entrés dans le monde (règle du 15/08 : quand le contenu d'un monde change,
+  on relit ses TEXTES). La canne garde ses **0 ligne `CALC`** : le cours explique la
+  part, le niveau continue de faire chercher. **RÈGLE À GRAVER : ne jamais renommer
+  l'identifiant d'un cours** — `save.cours` est indexé dessus. Preuves : node 1554/1554,
+  les 8 validateurs, Playwright tout vert, `verifier-lot-cours-repartis.mjs` 52
+  contrôles verts (68 niveaux intacts à l'octet, les 2 hôtes au champ `cours` près,
+  `CALC` et `FRW` strictement intacts, les deux hôtes mesurés ingagnables sans ÷3).
 - (à compléter à chaque session)

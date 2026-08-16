@@ -556,10 +556,17 @@ test("le chantier « Comprendre » : découvertes, points de cours et règle R1"
   assert.deepEqual([...r.decs], ["Moitié-moitié:demi", "Partage en tiers:tiers",
     "Les quatre quarts:quart", "Les six sixièmes:sixieme", "La moitié du quart:recouper",
     "Deux tiers:somme", "Trois quarts:denominateur"]);
+  /* LOT B (16/08) : « neuvieme » et « douzieme » entrent, portés par deux niveaux des
+     champs de canne via le champ `cours` — qui enseigne SANS jalonner. La liste des
+     découvertes (r.decs) ne bouge pas d'une entrée juste au-dessus : c'est la preuve
+     que ces deux cours ne peuvent verrouiller aucun monde. Ils sont rangés à leur
+     place de JEU : 1/9 arrive au 18ᵉ niveau, 1/12 au 19ᵉ, tous deux avant la forêt. */
   assert.deepEqual([...r.coursIds],
-    ["demi", "tiers", "quart", "sixieme", "recouper", "somme", "denominateur"]);
+    ["demi", "tiers", "quart", "sixieme", "recouper", "neuvieme", "douzieme",
+      "somme", "denominateur"]);
   assert.deepEqual([...r.titres], ["Le demi", "Le tiers", "Le quart", "Le sixième",
-    "Recouper une part", "Recoller deux parts", "Le même dénominateur"]);
+    "Recouper une part", "Le neuvième", "Le douzième",
+    "Recoller deux parts", "Le même dénominateur"]);
   /* la forêt (08/2026) : le cas SIMPLE (même dénominateur) passe devant le cas DUR.
      « Recoller les morceaux » reste l'accueil du monde mais n'est plus une
      découverte : sa case demande 1/1, que le rayon du soleil vaut déjà, donc aucun
@@ -613,7 +620,14 @@ test("le chantier « Comprendre » : découvertes, points de cours et règle R1"
      (la relecture passe par « Revoir le cours » sur la carte du niveau) */
   assert.ok(!/id="coursrevoir"/.test(html));
   assert.match(js.engine, /if\(!save\.cours\)save\.cours=\{\};/);
-  assert.match(js.engine, /const coursANouveau=!!\(L\.dec&&COURS\[L\.dec\]&&!save\.cours\[L\.dec\]\);/);
+  /* LOT B (16/08) : le déclencheur lit `dec` OU `cours`. Les deux lignes qui suivent
+     sont le cœur de la séparation et doivent être lues ensemble — celle du haut
+     ENSEIGNE (elle accepte les deux champs), celle du bas VERROUILLE (elle ne connaît
+     que `decouvertesMonde`, qui ne filtre que sur `dec`). Tant que `cours` n'apparaît
+     pas dans la seconde, un niveau à `cours` ne peut fermer aucun monde. */
+  assert.match(js.engine, /const idCours=L\.dec\|\|L\.cours;/);
+  assert.match(js.engine, /const coursANouveau=!!\(idCours&&COURS\[idCours\]&&!save\.cours\[idCours\]\);/);
+  assert.match(js.engine, /const decouvertesMonde=wid=>idxMonde\(wid\)\.filter\(i=>LV\[i\]\.dec\);/);
   assert.match(js.engine, /decouvertesReussies\(wid\)>=decouvertesMonde\(wid\)\.length/);
   assert.match(js.ui, /dont ses \$\{nb\} découvertes/);
   /* les deux portes s'annoncent toutes les deux sur la carte du monde fermé */

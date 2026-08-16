@@ -98,21 +98,23 @@ function openWorld(wid){
   /* Dès qu'un « Revoir le cours » existe dans le monde, l'espace du bouton est
      réservé sous TOUTES les cartes : toutes les cases gardent la même taille
      (retour de Gwenael, 14/08). */
-  const piedCours=idxs.some(i=>LV[i].dec&&(save.done[lvId(i)]||modeClasse));
+  const piedCours=idxs.some(i=>(LV[i].dec||LV[i].cours)&&(save.done[lvId(i)]||modeClasse));
   document.getElementById('lvgrid').innerHTML=idxs.map((gi,li)=>{
     const done=save.done[lvId(gi)];
     const e=etoiles(gi);
     const nf=LV[gi].fruits.length, gf=save.fruits[lvId(gi)]||0;
-    const dec=LV[gi].dec;
+    const dec=LV[gi].dec, idc=dec||LV[gi].cours;
     /* niveau-découverte : badge sur la carte, et « Revoir le cours » une fois le
-       niveau réussi (le mode classe ouvre aussi les cours — chantier « Comprendre ») */
+       niveau réussi (le mode classe ouvre aussi les cours — chantier « Comprendre »).
+       LOT B : un niveau à `cours` porte le bouton mais PAS le badge — le badge annonce
+       un jalon du monde, et celui-là n'en est pas un. */
     return `<div class="lvcell">
       <button class="lvcard ${done?'done':''}" data-i="${gi}">
         ${dec?`<span class="lvdec" title="Niveau-découverte">${decouverteIco(15)}</span>`:''}
         <div class="num">${li+1}</div>
         <div class="st">${soleilRang(e)}${nf?`<span class="stf">${fruitMini(ftype)}${gf}/${nf}</span>`:''}</div>
       </button>
-      ${piedCours?`<div class="lvpied">${dec&&(done||modeClasse)?`<button class="lvcours" data-cours="${dec}" type="button">Revoir le cours</button>`:''}</div>`:''}
+      ${piedCours?`<div class="lvpied">${idc&&(done||modeClasse)?`<button class="lvcours" data-cours="${idc}" type="button">Revoir le cours</button>`:''}</div>`:''}
     </div>`;
   }).join('');
   document.querySelectorAll('.lvcard').forEach(bt=>bt.addEventListener('click',()=>openLevel(+bt.dataset.i)));

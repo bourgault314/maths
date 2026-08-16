@@ -708,8 +708,14 @@ function startCelebration(sim){
     /* Point de cours (chantier « Comprendre ») : à la PREMIÈRE victoire d'une
        découverte, le panneau s'insère entre « Lévé ! » et la fenêtre des soleils.
        Au rejeu il ne se réaffiche pas — bouton « Revoir le cours » sur sa carte. */
-    const coursANouveau=!!(L.dec&&COURS[L.dec]&&!save.cours[L.dec]);
-    if(coursANouveau)save.cours[L.dec]=true;
+    /* DEUX MÉTIERS SÉPARÉS (lot B, 16/08). `dec` jalonne un monde ET enseigne ;
+       `cours` enseigne SEULEMENT. `decouvertesMonde` ne regarde que `dec`, si bien
+       qu'un niveau à `cours` ne peut verrouiller aucun monde — demande de Gwenael :
+       « des cours qui expliquent ce qu'ils viennent faire, pas obligatoires pour
+       passer à la suite ». C'est ce qui permet d'enseigner dans un CHAMP. */
+    const idCours=L.dec||L.cours;
+    const coursANouveau=!!(idCours&&COURS[idCours]&&!save.cours[idCours]);
+    if(coursANouveau)save.cours[idCours]=true;
     persist();
     const wIdx=LV.map((l,i)=>i).filter(i=>LV[i].w===L.w);
     const isLastOfWorld=wIdx[wIdx.length-1]===cur;
@@ -723,7 +729,7 @@ function startCelebration(sim){
     const nextLocked=isLastOfWorld&&cur<LV.length-1&&!mondeDeverrouille(LV[cur+1].w);
     document.getElementById('nextbtn').textContent=
       isLastOfWorld?(cur<LV.length-1?(nextLocked?'Retour aux niveaux':'Monde suivant'):'Tu as fini Solèy ! Retour'):'Niveau suivant';
-    if(coursANouveau)montrerCours(L.dec,true);
+    if(coursANouveau)montrerCours(idCours,true);
     else document.getElementById('winov').classList.add('show');
     celebrating=false;
   },T+2100));
