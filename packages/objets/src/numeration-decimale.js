@@ -10,14 +10,14 @@ import {
   COULEURS_NUMERATION_DECIMALE,
   COULEURS_RANGS_NUMERATION_DECIMALE,
   TYPOGRAPHIE,
-} from "../../charte/src/charte.js?v=35";
-import { construireDonneesTableauNumeration } from "./fractions-decimaux.js?v=35";
+} from "../../charte/src/charte.js?v=36";
+import { construireDonneesTableauNumeration } from "./fractions-decimaux.js?v=36";
 import {
   mesurerEcritureFractionSvg,
   rendreFractionSvg,
-} from "./expressions.js?v=35";
+} from "./expressions.js?v=36";
 
-export const VERSION_NUMERATION_DECIMALE = 6;
+export const VERSION_NUMERATION_DECIMALE = 7;
 
 export const ORIENTATIONS_MATERIEL_NUMERATION_DECIMALE = Object.freeze([
   "horizontale",
@@ -669,8 +669,22 @@ function texteSpecification(specification) {
     : String(specification.valeur);
 }
 
-function specificationsLegendeConversion(source, cible, sens, profil) {
-  if (texteSpecification(source) === texteSpecification(cible)) {
+function specificationsLegendeConversion(source, cible, sens, profil, etat) {
+  const specificationsIdentiques = texteSpecification(source) === texteSpecification(cible);
+  const etatInitial =
+    (sens === "fraction-vers-decimal" && etat === "converti-rang-final")
+    || (sens === "decimal-vers-fraction" && etat === "decompose");
+  if (etatInitial) {
+    const specificationInitiale = sens === "fraction-vers-decimal" ? cible : source;
+    const unique =
+      profil === "aide-nc04"
+      && specificationsIdentiques
+      && specificationInitiale.type === "fraction"
+        ? Object.freeze({ ...specificationInitiale, numerateur: "?" })
+        : specificationInitiale;
+    return Object.freeze({ unique, texte: texteSpecification(unique) });
+  }
+  if (specificationsIdentiques) {
     const unique = profil === "aide-nc04" && source.type === "fraction"
       ? Object.freeze({ ...source, numerateur: "?" })
       : source;
@@ -799,11 +813,12 @@ function rendreLegendeConversion({
   cible,
   sens,
   profil,
+  etat,
   x,
   largeur,
   yBarre,
 }) {
-  const legende = specificationsLegendeConversion(source, cible, sens, profil);
+  const legende = specificationsLegendeConversion(source, cible, sens, profil, etat);
   if (legende.unique) {
     const taille = Math.max(14, Math.min(18, largeur / 4.8));
     return rendreEcritureRang(legende.unique, x + largeur / 2, yBarre, taille);
@@ -826,7 +841,9 @@ function rendreLegendeConversion({
  * `decompose` conserve le langage rouge / vert / jaune des rangs.
  * `converti-rang-final` recolore les mêmes empreintes avec la couleur du
  * rang cible : une unité devient 10 dixièmes ou 100 centièmes.
- * Le sens ne modifie que l'ordre des deux membres des légendes locales.
+ * Dans l'état de départ du sens choisi, chaque quantité est seulement nommée
+ * dans son rang. Les égalités de conversion n'apparaissent qu'après l'échange.
+ * Le sens fixe alors l'ordre des deux membres des légendes locales.
  *
  * @param {object} options
  * @param {string} options.ecritureDecimale écriture positive finissant aux dixièmes ou centièmes
@@ -943,6 +960,7 @@ export function dessinerConversionRangsNumerationDecimale({
       groupe.cible,
       sensLu,
       profilLu,
+      etatLu,
     );
     const legende = donneesLegende.texte;
     morceaux.push(
@@ -966,6 +984,7 @@ export function dessinerConversionRangsNumerationDecimale({
         cible: groupe.cible,
         sens: sensLu,
         profil: profilLu,
+        etat: etatLu,
         x: xLegendes,
         largeur: largeurLegendes,
         yBarre: y + hauteurLigne / 2,

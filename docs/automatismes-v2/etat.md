@@ -2,6 +2,38 @@
 
 **Dernière mise à jour : 16 août 2026.**
 
+## Deux méthodes alternatives pour les conversions NC-03 / NC-04 du 16 août
+
+- D-059 corrige la mise en récit de la conversion sans modifier les
+  générateurs, les questions, les familles, les quotas ni les réponses
+  attendues. Le module reste `construit`.
+- L'état initial du matériel montre seulement les rangs naturels du nombre :
+  pour `2,27`, `2`, `2/10` et `7/100`. Les égalités
+  `2 = 200/100` et `2/10 = 20/100` n'apparaissent qu'après l'échange de la
+  même quantité en centièmes.
+- Les pages 4 et 5, « Me guider » et la correction des conversions en `/10`
+  et `/100` proposent deux voies parallèles :
+  « Méthode 1 · Avec les plaques de couleurs »
+  et « Méthode 2 · Avec le tableau de numération ». Aucune flèche ne transforme une méthode
+  en l'autre ; une flèche interne au matériel peut en revanche montrer
+  l'échange entre ses deux états.
+- Les conversions en `/1000` restent traitées par le tableau seul. Le cours,
+  l'aide et la correction réemploient toujours les mêmes objets partagés et
+  leurs profils de révélation.
+- Le cours nomme trois outils : bandes de fractions sur demi-droite ou rail,
+  plaques colorées de numération et tableau de numération. Les pages 1 et 2
+  rendent les trois visibles ; les pages 4 et 5 utilisent les plaques et le
+  tableau. Dans un exercice ou une correction, le lecteur choisit le visuel le
+  plus pertinent au lieu de tous les cumuler ; le tableau reste transversal.
+  Pour `2/4 = 0,5`, les bandes sur rail sont préférées à la grille de 100.
+- La recette D-059 est verte : **1 562 tests** passent. La revue couvre
+  **116 captures** sur cinq fenêtres, de `320 × 568` à `1 920 × 1 080`, sans
+  erreur navigateur, débordement local ou global, texte coupé ni élément hors
+  panneau. Elle contrôle les trois outils, `2/4`, `2,27`, les masques dans les
+  deux sens et le tableau seul pour `/1000`.
+- Le graphe public déjà exposé en `v35` est invalidé atomiquement en `v36` afin
+  que cette nouvelle organisation soit chargée sans ancien cache.
+
 ## Révision pédagogique finale de NC-03 / NC-04 du 16 août
 
 - D-058 complète D-056 sans changer les générateurs, les familles, les quotas

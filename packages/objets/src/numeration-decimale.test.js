@@ -62,7 +62,7 @@ function verifierPiecesDansViewBox(rendu) {
 
 describe("matériel de numération décimale", () => {
   it("expose une API versionnée et les deux orientations", () => {
-    assert.equal(VERSION_NUMERATION_DECIMALE, 6);
+    assert.equal(VERSION_NUMERATION_DECIMALE, 7);
     assert.deepEqual(ORIENTATIONS_MATERIEL_NUMERATION_DECIMALE, [
       "horizontale",
       "verticale",
@@ -433,6 +433,74 @@ describe("conversion paramétrique par rang", () => {
     assert.match(converti.texteAlternatif, /Tous les groupes sont convertis en centièmes jaunes/);
   });
 
+  it("ne convertit pas les rangs avant le second état dans le sens décimal vers fraction", () => {
+    const options = {
+      ecritureDecimale: "2,27",
+      sens: "decimal-vers-fraction",
+      largeur: 560,
+    };
+    const decompose = dessinerConversionRangsNumerationDecimale({
+      ...options,
+      etat: "decompose",
+    });
+    const converti = dessinerConversionRangsNumerationDecimale({
+      ...options,
+      etat: "converti-rang-final",
+    });
+
+    assert.deepEqual(
+      decompose.groupes.map(({ rang, legende }) => [rang, legende]),
+      [
+        ["unites", "2"],
+        ["dixiemes", "2/10"],
+        ["centiemes", "7/100"],
+      ],
+    );
+    assert.doesNotMatch(decompose.svg, /200\/100|20\/100/);
+    assert.doesNotMatch(decompose.texteAlternatif, /200\/100|20\/100/);
+    assert.deepEqual(
+      converti.groupes.map(({ rang, legende }) => [rang, legende]),
+      [
+        ["unites", "2=200/100"],
+        ["dixiemes", "2/10=20/100"],
+        ["centiemes", "7/100"],
+      ],
+    );
+  });
+
+  it("part symétriquement des seuls centièmes avant de retrouver les rangs usuels", () => {
+    const options = {
+      ecritureDecimale: "2,27",
+      sens: "fraction-vers-decimal",
+      largeur: 560,
+    };
+    const centiemes = dessinerConversionRangsNumerationDecimale({
+      ...options,
+      etat: "converti-rang-final",
+    });
+    const rangs = dessinerConversionRangsNumerationDecimale({
+      ...options,
+      etat: "decompose",
+    });
+
+    assert.deepEqual(
+      centiemes.groupes.map(({ rang, legende }) => [rang, legende]),
+      [
+        ["unites", "200/100"],
+        ["dixiemes", "20/100"],
+        ["centiemes", "7/100"],
+      ],
+    );
+    assert.deepEqual(
+      rangs.groupes.map(({ rang, legende }) => [rang, legende]),
+      [
+        ["unites", "200/100=2"],
+        ["dixiemes", "20/100=2/10"],
+        ["centiemes", "7/100"],
+      ],
+    );
+  });
+
   it("convertit aussi 3,6 en dixièmes avec les mêmes empreintes", () => {
     const options = {
       ecritureDecimale: "3,6",
@@ -513,13 +581,15 @@ describe("conversion paramétrique par rang", () => {
       profil: "aide-nc04",
     });
     assert.equal(zeroFinalImpose.ecritureDecimale, "0,50");
-    assert.match(zeroFinalImpose.svg, /data-legende="5\/10=\?\/100"/);
+    assert.match(zeroFinalImpose.svg, /data-legende="5\/10"/);
+    assert.doesNotMatch(zeroFinalImpose.svg, /data-legende="5\/10=\?\/100"/);
     assert.doesNotMatch(zeroFinalImpose.svg, /50\/100|data-numerateur-cible|data-denominateur-cible/);
     assert.doesNotMatch(zeroFinalImpose.texteAlternatif, /50\/100/);
 
     const aideNc04CentiemeImpose = dessinerConversionRangsNumerationDecimale({
       ecritureDecimale: "0,5",
       rangFinal: "centiemes",
+      etat: "converti-rang-final",
       sens: "decimal-vers-fraction",
       profil: "aide-nc04",
     });
@@ -554,7 +624,7 @@ describe("conversion paramétrique par rang", () => {
     assert.match(singulier.svg, />1 dixième<\/text>/);
   });
 
-  it("inverse seulement l'ordre des légendes, pas les quantités ni leur géométrie", () => {
+  it("garde les rangs naturels seuls au départ dans le sens inverse", () => {
     const direct = dessinerConversionRangsNumerationDecimale({
       ecritureDecimale: "1,47",
       sens: "fraction-vers-decimal",
@@ -572,7 +642,7 @@ describe("conversion paramétrique par rang", () => {
     );
     assert.deepEqual(
       inverse.groupes.map(({ legende }) => legende),
-      ["1=100/100", "4/10=40/100", "7/100"],
+      ["1", "4/10", "7/100"],
     );
   });
 

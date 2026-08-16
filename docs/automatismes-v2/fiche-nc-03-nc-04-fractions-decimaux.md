@@ -1,6 +1,6 @@
 # Fiche NC-03 / NC-04 — Fractions simples et décimaux
 
-> **Candidat intégré, révisions D-049 du 13 août, D-055 du 15 août, puis D-056 et D-058 du 16 août 2026.** Cette fiche décrit le module révisé,
+> **Candidat intégré, révisions D-049 du 13 août, D-055 du 15 août, puis D-056, D-058 et D-059 du 16 août 2026.** Cette fiche décrit le module révisé,
 > et non plus le pilote du 8 août. Les questions ont été recomposées ; le cours,
 > « Me guider » et les corrections utilisent maintenant les briques communes
 > comparées dans le Labo. L'intégration et la recette conjointe D-049/D-055
@@ -8,7 +8,11 @@
 > conversion dans les deux sens et le tableau masquable. D-058 réordonne le
 > cours autour de la progression matériel — grande égalité — tableau, complète
 > le troisième échange et allège sa dernière page, toujours sans modifier les
-> générateurs. Sa recette automatisée et sa revue visuelle sont achevées. Le statut reste `construit` en attente des
+> générateurs. D-059 sépare enfin la décomposition par rang de l'échange vers
+> un rang commun et présente le matériel et le tableau comme deux méthodes
+> alternatives. Elle fixe aussi la bibliothèque de trois outils et leur usage
+> sélectif. Sa recette automatisée et sa revue visuelle sont achevées.
+> Le statut reste `construit` en attente des
 > retours de Gwenaël et de Claire. Gwenaël a autorisé le 13 août sa publication
 > de test, sans référencement ni passage à `valide`.
 
@@ -151,9 +155,16 @@ une répétition de famille : elles n'effacent donc pas la couverture de base.
 
 ## 7. Cours explicite en six pages
 
-Le cours suit une progression concret — imagé — abstrait sans présenter des
-recettes concurrentes. Dans chaque exemple, l'ordre commun est désormais
-**matériel, grande égalité, puis tableau de numération comme vérification** :
+Le cours suit une progression concret — imagé — abstrait. Les trois premières
+pages construisent le sens à partir du matériel avant de formaliser les
+écritures. Dans les pages 4 et 5, le matériel et le tableau sont explicitement
+deux voies alternatives, et non deux étapes successives :
+
+Le vocabulaire du cours distingue trois outils réutilisables : les **bandes de
+fractions alignées sur une demi-droite ou un rail**, les **plaques colorées de
+numération** et le **tableau de numération**. Les pages 1 et 2 montrent les
+trois afin de les installer ; les pages 4 et 5 retiennent les plaques et le
+tableau pour les conversions par rang.
 
 1. **Un demi : plusieurs écritures** : deux pièces `1/2` reforment l'unité.
    Dans un rectangle-unité sans deuxième rail, cinq dixièmes en remplissent
@@ -171,20 +182,26 @@ recettes concurrentes. Dans chaque exemple, l'ordre commun est désormais
    `1/100 = 0,01` et `1/1000 = 0,001` sont installés avant toute procédure de
    conversion ; le tableau vient après eux et le millième n'emploie aucun
    matériel miniaturisé.
-4. **Lire une fraction décimale** : la même quantité passe de centièmes tous
-   jaunes aux rangs usuels rouge, vert et jaune, sans changement d'empreinte ;
-   la grande décomposition relie ensuite
+4. **Lire une fraction décimale** : « Méthode 1 · Avec les plaques de
+   couleurs » fait
+   passer la même quantité de centièmes tous jaunes aux rangs usuels rouge,
+   vert et jaune, sans changement d'empreinte ; la grande décomposition relie
+   ensuite
    `147/100 = 100/100 + 40/100 + 7/100 = 1 + 4/10 + 7/100 = 1,47` ; les
    légendes sous les pièces montrent `100/100 = 1`, `40/100 = 4/10` et
-   `7/100`. Le tableau vérifie cette lecture après l'égalité. Les notations
+   `7/100`. « Méthode 2 · Avec le tableau de numération » offre une autre voie de lecture,
+   sans flèche depuis le matériel. Les notations
    `7/100 = 0,07` et `7/1000 = 0,007` distinguent explicitement centièmes et
    millièmes ; `725/1000 = 0,725` passe uniquement par le tableau.
-5. **Écrire un décimal sous forme de fraction** : le matériel représente
-   `3,54` par trois unités rouges, cinq dixièmes verts et quatre centièmes
-   jaunes, puis convertit les mêmes empreintes en centièmes. Le tableau et la
-   chaîne alignée, placée avant le tableau, conduit à
+5. **Écrire un décimal sous forme de fraction** : « Méthode 1 · Avec les
+   plaques de couleurs » représente d'abord `3,54` par trois unités rouges,
+   cinq dixièmes verts et quatre centièmes jaunes. Cet état initial est nommé
+   seulement par `3`, `5/10` et `4/100` ; les égalités avec `300/100` et `50/100`
+   apparaissent après l'échange des mêmes empreintes en centièmes. La chaîne
+   alignée conduit à
    `3,54 = 3 + 5/10 + 4/100 = 300/100 + 50/100 + 4/100 = 354/100`.
-   Le tableau vérifie ensuite que `3,54` se lit « 354 centièmes ». Les encadrés
+   « Méthode 2 · Avec le tableau de numération » permet séparément de lire `3,54` comme
+   « 354 centièmes », sans flèche entre les méthodes. Les encadrés
    propres aux champs de réponse et la recette du « dernier rang » disparaissent
    du cours ; l'acceptation des fractions équivalentes reste un contrat du
    moteur de réponse.
@@ -256,16 +273,26 @@ L'affectation des représentations est la suivante :
 |---|---|
 | Demis et quarts jusqu'à 1 | bandes historiques posées une à une sur le rail ; la cible reste `?` |
 | Demis et quarts au-delà de 1 | pièces puis groupes puis unités complètes, avec une transformation visuelle à chaque étape ; si le reste vaut `2/4`, les deux quarts se fusionnent enfin en `1/2` |
-| Dixièmes et centièmes | conversion commune en deux états — rangs usuels puis regroupement dans le rang final, ou l'inverse — puis tableau commun |
+| Dixièmes et centièmes | deux voies alternatives : conversion matérielle commune en deux états, ou tableau commun |
 | Millièmes | tableau de numération seulement ; aucun matériel miniaturisé illisible |
 | Dénominateur 1 | tuiles d'unités non numérotées à compter |
 | Fraction libre | dernier rang du seul décimal, puis fraction décimale `?/10` ou `?/100` ; `0,5`, `0,25` et `0,75` utilisent les correspondances dédiées, les autres valeurs la conversion par rang ; aucun dénominateur canonique caché n'est utilisé |
 
+Cette table est une règle de sélection, pas une consigne d'empilement. Dans un
+exercice, une aide ou une correction, le lecteur retient le visuel le plus
+pertinent ; le tableau demeure l'outil transversal disponible pour lire les
+rangs. En particulier, une équivalence telle que `2/4 = 0,5` se construit avec
+les bandes alignées sur le rail plutôt qu'avec une grille de 100.
+
 Les profils `aide-nc03` et `aide-nc04` sont distincts du profil `solution` et
 compatibles avec un seul sens chacun. Le premier masque l'écriture décimale à
 trouver ; le second masque le numérateur cible. Le masquage vaut dans le dessin,
-les légendes, le texte alternatif et les attributs de données. La correction
-des conversions `/10` et `/100` reprend ce composant avec le profil `solution`.
+les légendes, le texte alternatif et les attributs de données. Pour les
+dixièmes et les centièmes, la conversion matérielle et le tableau sont
+présentés comme « Méthode 1 · Avec les plaques de couleurs » et
+« Méthode 2 · Avec le tableau de numération », deux voies alternatives sans flèche entre
+elles. La correction des conversions `/10` et `/100` reprend les mêmes objets
+avec le profil `solution` et les mêmes intitulés.
 Pour les autres familles, elle choisit dans les mêmes primitives la preuve la
 plus pertinente. Les millièmes ne passent jamais par cette conversion
 matérielle : `/1000` reste exclusivement traité par le tableau.
@@ -283,8 +310,10 @@ elle ne déplie pas automatiquement la correction, mais la solution correcte
 est affichée séparément en vert. Pour un QCM omis, la proposition correcte est
 verte directement dans la liste. La correction détaillée reprend ensuite la
 représentation mathématique pertinente : grille de 100 pour les demis/quarts
-jusqu'à 1, bandes et unités au-delà de 1, conversion par rang puis tableau pour
-`/10` et `/100`, tableau seul pour `/1000`, et tuiles pour `/1`. Le cours,
+quand l'organisation en centièmes porte le sens, bandes sur rail pour une
+équivalence comme `2/4 = 0,5` et pour les fractions au-delà de 1, deux méthodes
+alternatives — plaques de numération ou tableau — pour `/10` et `/100`, tableau
+seul pour `/1000`, et tuiles pour `/1`. Le cours,
 l'aide et la correction puisent dans les mêmes primitives canoniques ; chacun
 choisit la représentation pertinente au contexte, et le profil `solution`
 n'autorise la révélation que dans le cours et la correction.
@@ -334,6 +363,14 @@ aucune erreur JavaScript. Les contrôles ciblés des aides `/10`, `/100` et
 `/1000` confirment les couleurs, la virgule, les masques et les en-têtes
 mobiles ; les tests d'application couvrent aussi les deux sens, les fractions
 libres, les omissions, les erreurs et les QCM.
+
+D-059 est validée par **1 562 tests** et **116 captures** sur `320 × 568`,
+`390 × 844`, `640 × 360`, `1 280 × 720` et `1 920 × 1 080`. La revue ne
+relève aucune erreur navigateur, aucun débordement de document, panneau ou
+conteneur local, aucun texte coupé et aucun élément hors panneau. Elle vérifie
+les trois outils des pages 1 et 2, les méthodes séparées des pages 4 et 5,
+`2/4 = 1/2 = 0,5` sur rail, l'état naturel puis converti de `2,27`, les masques
+NC-03/NC-04 et l'usage exclusif du tableau pour `/1000`.
 
 Le candidat reste `construit`. Sa publication de test autorisée le 13 août ne
 l'expose ni dans le menu public ni dans le sitemap ; le passage à `valide`

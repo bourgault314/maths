@@ -1337,3 +1337,47 @@ compte **1 555 tests** verts. La revue du cours couvre **30 états** et
 sans erreur JavaScript. Les aides sont en outre contrôlées par les tests de
 masque et par les captures ciblées des tableaux mobiles. Comme D-057 a déjà
 publié le graphe V2 en `v34`, ce lot l'invalide atomiquement en `v35`.
+
+### D-059 — La conversion distingue les rangs naturels et deux méthodes alternatives
+
+Après relecture de l'exemple `2,27`, Gwenaël et Claire constatent que le
+premier état du matériel anticipait déjà l'échange en écrivant
+`2 = 200/100` et `2/10 = 20/100`. Cette présentation confondait la
+décomposition naturelle du nombre avec sa conversion dans un rang commun.
+L'état initial nomme désormais seulement les quantités telles qu'elles sont
+représentées : `2`, `2/10` et `7/100`. Les égalités de conversion
+`2 = 200/100`, `2/10 = 20/100` et `7/100` n'apparaissent qu'après l'échange
+vers les centièmes. La même règle s'applique paramétriquement aux dixièmes et
+aux centièmes, dans les deux sens.
+
+Sur les pages 4 et 5 du cours, le matériel et le tableau ne constituent plus
+deux étapes obligatoires d'une même procédure. Ils sont présentés comme deux
+voies alternatives : **« Méthode 1 · Avec les plaques de couleurs »** et
+**« Méthode 2 · Avec le tableau de numération »**. Aucune flèche ne relie les deux méthodes ;
+les flèches internes au matériel restent réservées aux échanges qui conservent
+la même quantité. La même distinction apparaît dans « Me guider » et dans la
+correction des conversions en `/10` et `/100`. Les millièmes en `/1000`
+restent traités par le tableau seul, sans matériel miniaturisé.
+
+Le cours installe explicitement une bibliothèque de trois outils : les bandes
+de fractions alignées sur une demi-droite ou un rail, les plaques colorées de
+numération et le tableau de numération. Les pages 1 et 2 rendent les trois
+outils visibles afin que l'élève les reconnaisse ; les pages 4 et 5 mobilisent
+les plaques et le tableau selon les deux méthodes ci-dessus. Dans les
+exercices, l'aide et les corrections, ces outils ne sont pas empilés
+systématiquement : le lecteur choisit le visuel qui donne le plus directement
+du sens au cas traité. Le tableau demeure la voie transversale. Ainsi,
+`2/4 = 0,5` est d'abord représenté par les bandes sur rail plutôt que par une
+grille de cent centièmes.
+
+Le cours, l'aide et la correction continuent de consommer les mêmes objets
+partagés et leurs profils de révélation respectifs. Cette décision ne modifie
+aucun générateur, aucune question, aucune famille, aucun quota ni aucune forme
+de réponse. La branche ayant déjà exposé le graphe de D-058 en `v35`, D-059
+l'invalide atomiquement en `v36`. La recette finale compte **1 562 tests**
+verts. La revue produit **116 captures** sur `320 × 568`, `390 × 844`,
+`640 × 360`, `1 280 × 720` et `1 920 × 1 080` : aucun débordement local ou
+global, aucun texte coupé, aucun élément hors panneau et aucune erreur
+navigateur. Elle vérifie notamment les trois outils du cours, les deux méthodes
+sans flèche concurrente, la conversion différée de `2,27`, le rail de `2/4`,
+les masques NC-03/NC-04 et le tableau seul pour `/1000`.

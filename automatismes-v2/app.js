@@ -3,7 +3,7 @@ import {
   COULEURS_RANGS_NUMERATION_DECIMALE,
   RAYONS,
   TYPOGRAPHIE,
-} from "../packages/charte/src/charte.js?v=35";
+} from "../packages/charte/src/charte.js?v=36";
 import {
   avancerFractionAide,
   avancerCorrespondanceAide,
@@ -36,14 +36,14 @@ import {
   saisirChiffre,
   tournerSolide,
   validerReponse,
-} from "./src/etat-lecteur.js?v=35";
+} from "./src/etat-lecteur.js?v=36";
 import {
   TYPE_REPONSE_DEUX_ENTIERS,
   TYPE_REPONSE_ENTIER_NATUREL,
   TYPE_REPONSE_FRACTION_EQUIVALENTE,
   TYPE_REPONSE_NOMBRE_DECIMAL,
   TYPE_REPONSE_CHOIX_UNIQUE,
-} from "../packages/contrats/src/question-v2.js?v=35";
+} from "../packages/contrats/src/question-v2.js?v=36";
 import {
   connaitNotionLecteur,
   obtenirNotionLecteur,
@@ -53,13 +53,13 @@ import {
   RENDU_SOLIDE,
   RENDU_VOLUME,
   NOTION_FRACTIONS_SIMPLES_DECIMAUX,
-} from "./src/registre-lecteur.js?v=35";
+} from "./src/registre-lecteur.js?v=36";
 import {
   DOMAINES_AUTOMATISMES,
   MICRO_NOTIONS_AUTOMATISMES,
   normaliserIdentifiantMicroNotion,
-} from "../packages/automatismes/src/identifiants.js?v=35";
-import { COURS_SOLIDES_USUELS } from "../packages/automatismes/src/espace-et-geometrie/solides-usuels/reconnaissance.js?v=35";
+} from "../packages/automatismes/src/identifiants.js?v=36";
+import { COURS_SOLIDES_USUELS } from "../packages/automatismes/src/espace-et-geometrie/solides-usuels/reconnaissance.js?v=36";
 import {
   creerCone,
   creerCube,
@@ -68,14 +68,14 @@ import {
   creerPrisme,
   creerPyramide,
   dessinerSolide,
-} from "../packages/objets/src/solides.js?v=35";
+} from "../packages/objets/src/solides.js?v=36";
 import {
   ACTION_TOUCHE_EFFACER,
   ACTION_TOUCHE_SAISIR,
   ACTION_TOUCHE_VALIDER,
   obtenirDispositionClavier,
-} from "../packages/objets/src/clavier.js?v=35";
-import { formulationCritereDivisibilite } from "../packages/automatismes/src/nombres-et-calculs/criteres-divisibilite/critere-precis.js?v=35";
+} from "../packages/objets/src/clavier.js?v=36";
+import { formulationCritereDivisibilite } from "../packages/automatismes/src/nombres-et-calculs/criteres-divisibilite/critere-precis.js?v=36";
 import {
   caseVide,
   difference,
@@ -92,33 +92,32 @@ import {
   variable,
   versHtmlEgalitesAlignees,
   versHtmlSemantique,
-} from "../packages/objets/src/expressions.js?v=35";
+} from "../packages/objets/src/expressions.js?v=36";
 import {
   dessinerCarreQuadrille,
-} from "../packages/objets/src/carre-quadrille.js?v=35";
-import { dessinerGrilleFraction } from "../packages/objets/src/fractions.js?v=35";
-import { dessinerDoubleDroiteGraduee } from "../packages/objets/src/droite-graduee.js?v=35";
-import { dessinerBandesFractionnairesSurRailDecimal } from "../packages/objets/src/bandes-fractions-rail.js?v=35";
+} from "../packages/objets/src/carre-quadrille.js?v=36";
+import { dessinerDoubleDroiteGraduee } from "../packages/objets/src/droite-graduee.js?v=36";
+import { dessinerBandesFractionnairesSurRailDecimal } from "../packages/objets/src/bandes-fractions-rail.js?v=36";
 import {
   dessinerConversionRangsNumerationDecimale,
   dessinerEchangeRangsNumerationDecimale,
   dessinerMaterielNumerationDecimale,
   dessinerTableauNumerationDecimale,
-} from "../packages/objets/src/numeration-decimale.js?v=35";
+} from "../packages/objets/src/numeration-decimale.js?v=36";
 import {
   dessinerDemiAvecDixiemes,
   dessinerReorganisationCentiemes,
-} from "../packages/objets/src/correspondances-decimales.js?v=35";
+} from "../packages/objets/src/correspondances-decimales.js?v=36";
 import {
   construireDonneesTableauDepuisFraction,
   formaterFractionEnDecimal,
   reduireFraction,
-} from "../packages/objets/src/fractions-decimaux.js?v=35";
+} from "../packages/objets/src/fractions-decimaux.js?v=36";
 import {
   diagnostiquerDecimalVersNumerateur,
   diagnostiquerFractionLibre,
   diagnostiquerFractionVersDecimal,
-} from "./src/diagnostic-fractions-decimaux.js?v=35";
+} from "./src/diagnostic-fractions-decimaux.js?v=36";
 
 const MICRO_NOTION_FRACTION_VERS_DECIMAL =
   MICRO_NOTIONS_AUTOMATISMES.FRACTION_VERS_DECIMAL;
@@ -2653,6 +2652,33 @@ function rendreConversionRangsDepuisFraction(
   );
 }
 
+function rendreMethodeConversionRangs(
+  numero,
+  titre,
+  contenu,
+  classes = "",
+  niveauTitre = 3,
+) {
+  const baliseTitre = niveauTitre === 4 ? "h4" : "h3";
+  return `<section class="methode-conversion-rangs ${classes}">
+    <${baliseTitre} class="titre-methode-conversion-rangs">
+      <span>Méthode ${numero}</span>
+      ${echapper(titre)}
+    </${baliseTitre}>
+    ${contenu}
+  </section>`;
+}
+
+function rendreOutilCours(numero, titre, contenu, classes = "") {
+  return `<section class="outil-representation-cours ${classes}">
+    <h4 class="titre-outil-representation-cours">
+      <span>Outil ${numero}</span>
+      ${echapper(titre)}
+    </h4>
+    ${contenu}
+  </section>`;
+}
+
 function rendreBandesRailFractions(question, source, {
   solution = false,
   etape = "pieces",
@@ -3032,11 +3058,11 @@ function rendreAideTableauRiche(question, source) {
   const profil = direct ? "aide-nc03" : "aide-nc04";
   const etatDepart = direct ? "converti-rang-final" : "decompose";
   const etatArrivee = direct ? "decompose" : "converti-rang-final";
-  const materiel = source.denominateur === 1000
+  const transformationMateriel = source.denominateur === 1000
     ? ""
     : `<div class="transformation-rangs-aide">
         <section>
-          <strong>${direct ? `La fraction en ${cible.libelle}` : "Le nombre donné, décomposé par rang"}</strong>
+          <strong>${direct ? `Au départ : la fraction en ${cible.libelle}` : "Décomposer le nombre donné dans ses rangs"}</strong>
           ${rendreConversionRangsDepuisFraction(source.numerateur, source.denominateur, {
             etat: etatDepart,
             sens: direct ? "fraction-vers-decimal" : "decimal-vers-fraction",
@@ -3046,7 +3072,7 @@ function rendreAideTableauRiche(question, source) {
         </section>
         ${juste ? `<span class="fleche-transformation-cours" aria-hidden="true">↓</span>
           <section>
-            <strong>${direct ? "Les mêmes quantités dans leurs rangs" : `Les mêmes quantités en ${cible.libelle}`}</strong>
+            <strong>${direct ? "Échanger les pièces dans leurs rangs" : `Convertir les pièces en ${cible.libelle}`}</strong>
             ${rendreConversionRangsDepuisFraction(source.numerateur, source.denominateur, {
               etat: etatArrivee,
               sens: direct ? "fraction-vers-decimal" : "decimal-vers-fraction",
@@ -3054,6 +3080,18 @@ function rendreAideTableauRiche(question, source) {
               classes: "figure-conversion-rangs-aide",
             })}
           </section>` : ""}
+      </div>`;
+  const tableau = rendreTableauNumeration(source.numerateur, source.denominateur, {
+    afficherChiffres: juste,
+    colonneMiseEnEvidence: selection,
+    afficherLecture: false,
+    annoncerEcriture: !direct,
+  });
+  const methodes = source.denominateur === 1000
+    ? tableau
+    : `<div class="methodes-conversion-rangs methodes-conversion-rangs-aide">
+        ${rendreMethodeConversionRangs(1, "Avec les plaques de couleurs", transformationMateriel, "methode-conversion-plaques")}
+        ${rendreMethodeConversionRangs(2, "Avec le tableau de numération", tableau, "methode-conversion-tableau")}
       </div>`;
   return `<section class="atelier-fraction atelier-tableau-decimal">
     <p class="consigne-atelier"><strong>Que nomme le dénominateur ${source.denominateur} ?</strong>
@@ -3064,13 +3102,7 @@ function rendreAideTableauRiche(question, source) {
         data-action="rang-fraction" data-rang="${rang.id}" role="radio"
         aria-checked="${selection === rang.id}">${rang.libelle}</button>`).join("")}
     </div>
-    ${materiel}
-    ${rendreTableauNumeration(source.numerateur, source.denominateur, {
-      afficherChiffres: juste,
-      colonneMiseEnEvidence: selection,
-      afficherLecture: false,
-      annoncerEcriture: !direct,
-    })}
+    ${methodes}
     <p class="conclusion-atelier ${juste ? "visible" : ""}" aria-live="polite">${selection === null
       ? "Lis le dénominateur, puis choisis la colonne correspondante."
       : juste
@@ -3119,33 +3151,37 @@ function rendreConstructionCorrespondanceLibre(decimal, numerateurDecimal, denom
   const demi = denominateurDecimal === 10 && dixiemes === "5";
   const quarts = denominateurDecimal === 100 && [25, 75].includes(centiemes);
   if (!demi && !quarts) {
-    return `<div class="transformation-rangs-aide">
-        <section>
-          <strong>Le nombre donné, décomposé par rang</strong>
-          ${rendreConversionRangsDepuisFraction(numerateurDecimal, denominateurDecimal, {
-            etat: "decompose",
-            sens: "decimal-vers-fraction",
-            profil: "aide-nc04",
-            classes: "figure-conversion-rangs-aide",
-          })}
-        </section>
-        <span class="fleche-transformation-cours" aria-hidden="true">↓</span>
-        <section>
-          <strong>Les mêmes quantités dans le dernier rang</strong>
-          ${rendreConversionRangsDepuisFraction(numerateurDecimal, denominateurDecimal, {
-            etat: "converti-rang-final",
-            sens: "decimal-vers-fraction",
-            profil: "aide-nc04",
-            classes: "figure-conversion-rangs-aide",
-          })}
-        </section>
-      </div>
-      ${rendreTableauNumeration(numerateurDecimal, denominateurDecimal, {
+    const materiel = `<div class="transformation-rangs-aide">
+      <section>
+        <strong>Décomposer le nombre donné dans ses rangs</strong>
+        ${rendreConversionRangsDepuisFraction(numerateurDecimal, denominateurDecimal, {
+          etat: "decompose",
+          sens: "decimal-vers-fraction",
+          profil: "aide-nc04",
+          classes: "figure-conversion-rangs-aide",
+        })}
+      </section>
+      <span class="fleche-transformation-cours" aria-hidden="true">↓</span>
+      <section>
+        <strong>Convertir ensuite les pièces dans le dernier rang</strong>
+        ${rendreConversionRangsDepuisFraction(numerateurDecimal, denominateurDecimal, {
+          etat: "converti-rang-final",
+          sens: "decimal-vers-fraction",
+          profil: "aide-nc04",
+          classes: "figure-conversion-rangs-aide",
+        })}
+      </section>
+    </div>`;
+    const tableau = rendreTableauNumeration(numerateurDecimal, denominateurDecimal, {
         afficherChiffres: true,
         colonneMiseEnEvidence: RANGS_DECIMAUX.find(({ denominateur }) => denominateur === denominateurDecimal)?.id,
         afficherLecture: false,
         annoncerEcriture: false,
-      })}`;
+      });
+    return `<div class="methodes-conversion-rangs methodes-conversion-rangs-aide">
+      ${rendreMethodeConversionRangs(1, "Avec les plaques de couleurs", materiel, "methode-conversion-plaques")}
+      ${rendreMethodeConversionRangs(2, "Avec le tableau de numération", tableau, "methode-conversion-tableau")}
+    </div>`;
   }
   const unitesEntieres = entier > 0
     ? `<section class="unites-entieres-correspondance">
@@ -3428,40 +3464,36 @@ function rendreVisuelCorrectionFractions(question, source) {
     const direct = question.classement.microNotion === MICRO_NOTION_FRACTION_VERS_DECIMAL;
     const etatDepart = direct ? "converti-rang-final" : "decompose";
     const etatArrivee = direct ? "decompose" : "converti-rang-final";
-    return `<div class="transformation-rangs-correction">
-        <section>
-          <strong>${direct ? `La fraction en ${rang.libelle}` : "Le nombre décomposé par rang"}</strong>
-          ${rendreConversionRangsDepuisFraction(source.numerateur, source.denominateur, {
-            etat: etatDepart,
-            sens: direct ? "fraction-vers-decimal" : "decimal-vers-fraction",
-            classes: "figure-conversion-rangs-correction",
-          })}
-        </section>
-        <span class="fleche-transformation-cours" aria-hidden="true">↓</span>
-        <section>
-          <strong>${direct ? "Les mêmes quantités dans leurs rangs" : `Les mêmes quantités en ${rang.libelle}`}</strong>
-          ${rendreConversionRangsDepuisFraction(source.numerateur, source.denominateur, {
-            etat: etatArrivee,
-            sens: direct ? "fraction-vers-decimal" : "decimal-vers-fraction",
-            classes: "figure-conversion-rangs-correction",
-          })}
-        </section>
-      </div>${tableau}`;
+    const conclusion = `<p class="chaine-fraction">${chaineCorrectionFractions(question, source)}</p>`;
+    const materiel = `<div class="transformation-rangs-correction">
+      <section>
+        <strong>${direct ? `Au départ : la fraction en ${rang.libelle}` : "Décomposer le nombre dans ses rangs"}</strong>
+        ${rendreConversionRangsDepuisFraction(source.numerateur, source.denominateur, {
+          etat: etatDepart,
+          sens: direct ? "fraction-vers-decimal" : "decimal-vers-fraction",
+          classes: "figure-conversion-rangs-correction",
+        })}
+      </section>
+      <span class="fleche-transformation-cours" aria-hidden="true">↓</span>
+      <section>
+        <strong>${direct ? "Échanger ensuite les pièces dans leurs rangs" : `Convertir ensuite toutes les pièces en ${rang.libelle}`}</strong>
+        ${rendreConversionRangsDepuisFraction(source.numerateur, source.denominateur, {
+          etat: etatArrivee,
+          sens: direct ? "fraction-vers-decimal" : "decimal-vers-fraction",
+          classes: "figure-conversion-rangs-correction",
+        })}
+      </section>
+    </div>${conclusion}`;
+    const methodeTableau = `<p class="introduction-methode-rangs">${direct
+      ? `Place le dernier chiffre du numérateur au rang des ${rang.libelle}.`
+      : `Lis tous les chiffres jusqu’au rang des ${rang.libelle}.`}</p>
+      ${tableau}${conclusion}`;
+    return `<div class="methodes-conversion-rangs methodes-conversion-rangs-correction">
+      ${rendreMethodeConversionRangs(1, "Avec les plaques de couleurs", materiel, "methode-conversion-plaques")}
+      ${rendreMethodeConversionRangs(2, "Avec le tableau de numération", methodeTableau, "methode-conversion-tableau")}
+    </div>`;
   }
   if ([2, 4].includes(source.denominateur)) {
-    if (source.numerateur <= source.denominateur) {
-      const centiemes = source.numerateur * (100 / source.denominateur);
-      return rendreFigureFraction(
-        dessinerGrilleFraction({
-          colonnes: 10,
-          lignes: 10,
-          coloriees: centiemes,
-          cote: 180,
-          ecriture: false,
-        }),
-        "figure-grille-repere figure-correction-fraction",
-      );
-    }
     return rendreBandesRailFractions(question, source, {
       solution: true,
       etape: source.denominateur === 4 && source.numerateur % 4 === 2
@@ -3509,6 +3541,13 @@ function rendreExplicationCorrectionFractions(question, source) {
     (element) => element.denominateur === source.denominateur,
   );
   if (rang) {
+    if (source.denominateur !== 1000) {
+      return `<section class="correction-methodes-rangs">
+        <p class="introduction-methode-rangs"><strong>Deux méthodes sont possibles.</strong>
+          Choisis celle qui t’aide le mieux : elles conduisent au même nombre.</p>
+        ${rendreVisuelCorrectionFractions(question, source)}
+      </section>`;
+    }
     return `<section class="etape-correction correction-observation">
       ${rendreEtape(1, direct
         ? `Lire le dénominateur : ${source.denominateur} nomme les ${rang.libelle}`
@@ -3525,20 +3564,87 @@ function rendreExplicationCorrectionFractions(question, source) {
   }
   if ([2, 4].includes(source.denominateur) && source.numerateur <= source.denominateur) {
     const centiemes = source.numerateur * (100 / source.denominateur);
-    const chaineRepere = direct
-      ? `${rendreFractionEmpilee(source.numerateur, source.denominateur)}<span>=</span>${rendreFractionEmpilee(centiemes, 100)}<span>=</span><strong>${rendreDecimalDepuisFraction(source.numerateur, source.denominateur)}</strong>`
-      : `<strong>${rendreDecimalDepuisFraction(source.numerateur, source.denominateur)}</strong><span>=</span>${rendreFractionEmpilee(centiemes, 100)}<span>=</span>${rendreFractionEmpilee(source.numerateur, source.denominateur)}`;
-    return `<section class="etape-correction correction-observation">
-      ${rendreEtape(1, direct
-        ? "Transformer le repère en centièmes"
-        : "Retrouver le repère dans une unité de 100 cases", "repere-observation")}
-      <p>Un ${nomPartFraction(source.denominateur)} occupe ${100 / source.denominateur} cases sur 100 ;
-        ${source.numerateur} ${nomPartFraction(source.denominateur, source.numerateur)} ${source.numerateur === 1 ? "en occupe" : "en occupent"} <strong>${centiemes}</strong>.</p>
-      ${rendreVisuelCorrectionFractions(question, source)}
-    </section>
-    <section class="etape-correction correction-conclusion">
-      ${rendreEtape(2, direct ? "Écrire les centièmes avec une virgule" : "Lire la fraction correspondante", "repere-conclusion")}
-      <p class="chaine-fraction">${chaineRepere}</p>
+    const decimalHtml = `<strong>${rendreDecimalDepuisFraction(source.numerateur, source.denominateur)}</strong>`;
+    const fractionSource = rendreFractionEmpilee(source.numerateur, source.denominateur);
+    const fractionDemi = rendreFractionEmpilee(1, 2);
+    const fractionDecimale = centiemes === 50
+      ? rendreFractionEmpilee(5, 10)
+      : centiemes === 100
+        ? "<strong>1</strong>"
+        : rendreFractionEmpilee(centiemes, 100);
+    const estDeuxQuarts = source.numerateur === 2 && source.denominateur === 4;
+    const utiliserPlaques = source.denominateur === 4 && [25, 75].includes(centiemes);
+    const membresMateriel = estDeuxQuarts
+      ? [fractionSource, fractionDemi, decimalHtml]
+      : utiliserPlaques
+        ? [fractionSource, rendreFractionEmpilee(centiemes, 100), decimalHtml]
+        : [fractionSource, decimalHtml];
+    const membresTableau = centiemes === 100
+      ? [fractionSource, decimalHtml]
+      : [fractionSource, fractionDecimale, decimalHtml];
+    if (!direct) {
+      membresMateriel.reverse();
+      membresTableau.reverse();
+    }
+    const chaineMateriel = membresMateriel.join("<span>=</span>");
+    const chaineTableau = membresTableau.join("<span>=</span>");
+    const visuelMateriel = utiliserPlaques
+      ? rendreFigureDecimaleResponsive(
+          (largeur) => dessinerReorganisationCentiemes({
+            centiemes,
+            etape: "comparaison",
+            largeur,
+            afficherEcritures: true,
+            afficherEquation: false,
+          }),
+          "figure-correspondance-decimale figure-correction-fraction",
+        )
+      : estDeuxQuarts
+        ? `<div class="transformation-bandes-correction">
+            <section><strong>Deux quarts séparés</strong>${rendreBandesRailFractions(question, source, {
+              solution: true,
+              etape: "pieces",
+              partiesPosees: source.numerateur,
+              classes: "figure-correction-fraction",
+            })}</section>
+            <span class="fleche-transformation-cours" aria-hidden="true">↓</span>
+            <section><strong>Les deux quarts forment un demi</strong>${rendreBandesRailFractions(question, source, {
+              solution: true,
+              etape: "reste",
+              partiesPosees: source.numerateur,
+              classes: "figure-correction-fraction",
+            })}</section>
+          </div>`
+        : rendreBandesRailFractions(question, source, {
+            solution: true,
+            etape: "lecture",
+            partiesPosees: source.numerateur,
+            classes: "figure-correction-fraction",
+          });
+    const decimalTexte = formaterFractionEnDecimal(source.numerateur, source.denominateur);
+    const nombreDecimales = decimalTexte.split(",")[1]?.length ?? 0;
+    const denominateurDecimal = 10 ** nombreDecimales;
+    const numerateurDecimal = Number(decimalTexte.replace(",", ""));
+    const rangDecimal = RANGS_DECIMAUX.find(
+      (element) => element.denominateur === denominateurDecimal,
+    );
+    const tableau = rendreTableauNumeration(numerateurDecimal, denominateurDecimal, {
+      afficherChiffres: true,
+      afficherLecture: false,
+      colonneMiseEnEvidence: rangDecimal?.id ?? "unites",
+    });
+    return `<section class="correction-methodes-rangs">
+      <p class="introduction-methode-rangs"><strong>Deux outils sont possibles.</strong>
+        Choisis celui qui rend l’égalité la plus claire.</p>
+      <div class="methodes-conversion-rangs methodes-conversion-rangs-correction">
+        ${rendreMethodeConversionRangs(1,
+          utiliserPlaques ? "Avec les plaques de couleurs" : "Avec les bandes de fractions",
+          `${visuelMateriel}<p class="chaine-fraction">${chaineMateriel}</p>`,
+          utiliserPlaques ? "methode-conversion-plaques" : "methode-conversion-bandes")}
+        ${rendreMethodeConversionRangs(2, "Avec le tableau de numération",
+          `${tableau}<p class="chaine-fraction">${chaineTableau}</p>`,
+          "methode-conversion-tableau")}
+      </div>
     </section>`;
   }
   if ([2, 4].includes(source.denominateur)) {
@@ -3769,52 +3875,80 @@ function rendreCarteCoursFractions(index) {
   if (index === 0) {
     return `<article class="carte-cours-fractions carte-cours-correspondance carte-cours-demi">
       <span class="numero-cours">1</span><h3>Un demi : plusieurs écritures</h3>
-      <p class="introduction-cours"><strong>1. Former l’unité.</strong> Deux pièces d’un demi reforment exactement une unité.</p>
-      ${rendreBandesRailCours(2, 2, "pieces")}
-      <p class="introduction-cours"><strong>2. Comparer et écrire.</strong> Dix dixièmes forment une unité. Cinq dixièmes en remplissent exactement la moitié.</p>
-      ${rendreFigureDecimaleResponsive(
-        (largeur) => dessinerDemiAvecDixiemes({
-          etape: "dixiemes",
-          largeur,
-          afficherEcritures: true,
-          afficherEquation: false,
-        }),
-        "figure-correspondance-decimale figure-cours-demi",
-      )}
-      ${egalitesCoursPrincipales(
-        decimalCours(0.5, 1),
-        fractionCours(5, 10, ROLES_RANGS_COURS.dixiemes),
-        fractionCours(1, 2),
-      )}
-      <h4 class="titre-reperes-visuels">Dans le tableau de numération</h4>
-      ${rendreTableauNumeration(5, 10, { afficherChiffres: true, afficherLecture: false, colonneMiseEnEvidence: "dixiemes" })}
+      <p class="introduction-cours">Trois outils se complètent. Chacun permet de voir autre chose.</p>
+      <div class="outils-representation-cours">
+        ${rendreOutilCours(1, "Bandes de fractions sur la demi-droite graduée", `
+          <p class="introduction-cours">Deux pièces d’un demi reforment exactement une unité.</p>
+          ${rendreBandesRailCours(2, 2, "pieces")}
+        `, "outil-bandes-cours")}
+        ${rendreOutilCours(2, "Plaques de couleurs", `
+          <p class="introduction-cours">Dix dixièmes forment une unité. Cinq dixièmes en remplissent exactement la moitié.</p>
+          ${rendreFigureDecimaleResponsive(
+            (largeur) => dessinerDemiAvecDixiemes({
+              etape: "dixiemes",
+              largeur,
+              afficherEcritures: true,
+              afficherEquation: false,
+            }),
+            "figure-correspondance-decimale figure-cours-demi",
+          )}
+          ${egalitesCoursPrincipales(
+            decimalCours(0.5, 1),
+            fractionCours(5, 10, ROLES_RANGS_COURS.dixiemes),
+            fractionCours(1, 2),
+          )}
+        `, "outil-plaques-cours")}
+        ${rendreOutilCours(3, "Tableau de numération", `
+          <p class="introduction-cours">Le chiffre 5 est au rang des dixièmes : on lit 0,5.</p>
+          ${rendreTableauNumeration(5, 10, { afficherChiffres: true, afficherLecture: false, colonneMiseEnEvidence: "dixiemes" })}
+        `, "outil-tableau-cours")}
+      </div>
     </article>`;
   }
   if (index === 1) {
     return `<article class="carte-cours-fractions carte-cours-cpa carte-cours-quarts">
       <span class="numero-cours">2</span><h3>Un quart et trois quarts</h3>
-      <p class="introduction-cours"><strong>1. Former l’unité.</strong> Quatre pièces d’un quart reforment exactement une unité.</p>
-      ${rendreBandesRailCours(4, 4, "pieces")}
-      <p class="introduction-cours"><strong>2. Réorganiser.</strong> Sans rien ajouter ni retirer, 25 centièmes remplissent l’une des quatre zones égales du carré.</p>
-      ${rendreFigureDecimaleResponsive(
-        (largeur) => dessinerReorganisationCentiemes({ centiemes: 25, etape: "comparaison", largeur, afficherEcritures: true, afficherEquation: false }),
-        "figure-correspondance-decimale figure-cours-quarts",
-      )}
-      ${egalitesCoursPrincipales(
-        decimalCours(0.25, 2),
-        fractionCours(25, 100, ROLES_RANGS_COURS.centiemes),
-        fractionCours(1, 4),
-      )}
-      <p class="introduction-cours"><strong>3. Réorganiser trois quarts.</strong> 75 centièmes occupent exactement trois quarts de l’unité.</p>
-      ${rendreFigureDecimaleResponsive(
-        (largeur) => dessinerReorganisationCentiemes({ centiemes: 75, etape: "comparaison", largeur, afficherEcritures: true, afficherEquation: false }),
-        "figure-correspondance-decimale figure-cours-trois-quarts",
-      )}
-      ${egalitesCoursPrincipales(
-        decimalCours(0.75, 2),
-        fractionCours(75, 100, ROLES_RANGS_COURS.centiemes),
-        fractionCours(3, 4),
-      )}
+      <p class="introduction-cours">Les mêmes trois outils se complètent pour comprendre les quarts.</p>
+      <div class="outils-representation-cours">
+        ${rendreOutilCours(1, "Bandes de fractions sur la demi-droite graduée", `
+          <p class="introduction-cours">Quatre pièces d’un quart reforment exactement une unité.</p>
+          ${rendreBandesRailCours(4, 4, "pieces")}
+        `, "outil-bandes-cours")}
+        ${rendreOutilCours(2, "Plaques de couleurs", `
+          <p class="introduction-cours">Sans rien ajouter ni retirer, 25 centièmes se réorganisent en un quart de l’unité.</p>
+          ${rendreFigureDecimaleResponsive(
+            (largeur) => dessinerReorganisationCentiemes({ centiemes: 25, etape: "comparaison", largeur, afficherEcritures: true, afficherEquation: false }),
+            "figure-correspondance-decimale figure-cours-quarts",
+          )}
+          ${egalitesCoursPrincipales(
+            decimalCours(0.25, 2),
+            fractionCours(25, 100, ROLES_RANGS_COURS.centiemes),
+            fractionCours(1, 4),
+          )}
+          <p class="introduction-cours">75 centièmes se réorganisent de la même façon en trois quarts de l’unité.</p>
+          ${rendreFigureDecimaleResponsive(
+            (largeur) => dessinerReorganisationCentiemes({ centiemes: 75, etape: "comparaison", largeur, afficherEcritures: true, afficherEquation: false }),
+            "figure-correspondance-decimale figure-cours-trois-quarts",
+          )}
+          ${egalitesCoursPrincipales(
+            decimalCours(0.75, 2),
+            fractionCours(75, 100, ROLES_RANGS_COURS.centiemes),
+            fractionCours(3, 4),
+          )}
+        `, "outil-plaques-cours")}
+        ${rendreOutilCours(3, "Tableau de numération", `
+          <div class="tableaux-quarts-cours">
+            <section>
+              <strong>25 centièmes : 0,25</strong>
+              ${rendreTableauNumeration(25, 100, { afficherChiffres: true, afficherLecture: false, colonneMiseEnEvidence: "centiemes" })}
+            </section>
+            <section>
+              <strong>75 centièmes : 0,75</strong>
+              ${rendreTableauNumeration(75, 100, { afficherChiffres: true, afficherLecture: false, colonneMiseEnEvidence: "centiemes" })}
+            </section>
+          </div>
+        `, "outil-tableau-cours")}
+      </div>
     </article>`;
   }
   if (index === 2) {
@@ -3833,22 +3967,31 @@ function rendreCarteCoursFractions(index) {
     return `<article class="carte-cours-fractions carte-cours-conversion-directe">
       <span class="numero-cours">4</span><h3>Lire une fraction décimale</h3>
       <p class="introduction-cours"><strong>But :</strong> trouver l’écriture décimale de ${versHtmlSemantique(fractionCours(147, 100, ROLES_RANGS_COURS.centiemes))}.</p>
-      <p class="introduction-cours">${versHtmlSemantique(fractionCours(147, 100, ROLES_RANGS_COURS.centiemes))} se lit « 147 centièmes ». Échangeons les pièces sans changer la quantité.</p>
-      <div class="transformation-rangs-cours">
-        <section>
-          <strong>Au départ : 147 centièmes</strong>
-          ${rendreConversionRangsCours({ ecritureDecimale: "1,47", etat: "converti-rang-final", sens: "fraction-vers-decimal" })}
-        </section>
-        <span class="fleche-transformation-cours" aria-hidden="true">↓</span>
-        <section>
-          <strong>Après les échanges : 1 unité, 4 dixièmes et 7 centièmes</strong>
-          ${rendreConversionRangsCours({ ecritureDecimale: "1,47", etat: "decompose", sens: "fraction-vers-decimal" })}
-        </section>
+      <div class="methodes-conversion-rangs methodes-conversion-rangs-cours">
+        ${rendreMethodeConversionRangs(1, "Avec les plaques de couleurs", `
+          <p class="introduction-cours">${versHtmlSemantique(fractionCours(147, 100, ROLES_RANGS_COURS.centiemes))} se lit « 147 centièmes ». Échangeons les pièces sans changer la quantité.</p>
+          <div class="transformation-rangs-cours">
+            <section>
+              <strong>Au départ : 147 centièmes</strong>
+              ${rendreConversionRangsCours({ ecritureDecimale: "1,47", etat: "converti-rang-final", sens: "fraction-vers-decimal" })}
+            </section>
+            <span class="fleche-transformation-cours" aria-hidden="true">↓</span>
+            <section>
+              <strong>Après les échanges : 1 unité, 4 dixièmes et 7 centièmes</strong>
+              ${rendreConversionRangsCours({ ecritureDecimale: "1,47", etat: "decompose", sens: "fraction-vers-decimal" })}
+            </section>
+          </div>
+          ${rendreDecomposition147Cours()}
+        `, "methode-conversion-plaques", 4)}
+        ${rendreMethodeConversionRangs(2, "Avec le tableau de numération", `
+          <p class="introduction-cours">Le dénominateur 100 nomme les centièmes : le dernier chiffre de 147 se place dans la colonne des centièmes.</p>
+          ${rendreTableauNumeration(147, 100, { afficherChiffres: true, afficherLecture: false, colonneMiseEnEvidence: "centiemes" })}
+          ${egalitesCoursPrincipales(
+            fractionCours(147, 100, ROLES_RANGS_COURS.centiemes),
+            decimalCours(1.47, 2),
+          )}
+        `, "methode-conversion-tableau", 4)}
       </div>
-      ${rendreDecomposition147Cours()}
-      <h4 class="titre-reperes-visuels">Vérifier dans le tableau</h4>
-      <p class="introduction-cours">Le dénominateur 100 nomme les centièmes : le dernier chiffre de 147 se place dans la colonne des centièmes.</p>
-      ${rendreTableauNumeration(147, 100, { afficherChiffres: true, afficherLecture: false, colonneMiseEnEvidence: "centiemes" })}
       <div class="definitions-petits-rangs-cours">
         <p>7 centièmes s’écrit ${versHtmlSemantique(egalite(fractionCours(7, 100, ROLES_RANGS_COURS.centiemes), decimalCours(0.07, 2)))}.</p>
         <p>7 millièmes s’écrit ${versHtmlSemantique(egalite(fractionCours(7, 1000, ROLES_RANGS_COURS.milliemes), decimalCours(0.007, 3)))}.</p>
@@ -3865,22 +4008,31 @@ function rendreCarteCoursFractions(index) {
     return `<article class="carte-cours-fractions carte-cours-conversion-inverse">
       <span class="numero-cours">5</span><h3>Écrire un décimal sous forme de fraction</h3>
       <p class="introduction-cours"><strong>But :</strong> chercher une fraction décimale égale à 3,54.</p>
-      <p class="introduction-cours">3,54 représente 3 unités rouges, 5 dixièmes verts et 4 centièmes jaunes.</p>
-      <div class="transformation-rangs-cours">
-        <section>
-          <strong>3 unités, 5 dixièmes et 4 centièmes</strong>
-          ${rendreConversionRangsCours({ ecritureDecimale: "3,54", etat: "decompose", sens: "decimal-vers-fraction" })}
-        </section>
-        <span class="fleche-transformation-cours" aria-hidden="true">↓</span>
-        <section>
-          <strong>La même quantité : 354 centièmes</strong>
-          ${rendreConversionRangsCours({ ecritureDecimale: "3,54", etat: "converti-rang-final", sens: "decimal-vers-fraction" })}
-        </section>
+      <div class="methodes-conversion-rangs methodes-conversion-rangs-cours">
+        ${rendreMethodeConversionRangs(1, "Avec les plaques de couleurs", `
+          <p class="introduction-cours">3,54 représente 3 unités rouges, 5 dixièmes verts et 4 centièmes jaunes.</p>
+          <div class="transformation-rangs-cours">
+            <section>
+              <strong>Décomposer 3,54 par rang</strong>
+              ${rendreConversionRangsCours({ ecritureDecimale: "3,54", etat: "decompose", sens: "decimal-vers-fraction" })}
+            </section>
+            <span class="fleche-transformation-cours" aria-hidden="true">↓</span>
+            <section>
+              <strong>Convertir ensuite toutes les pièces en centièmes</strong>
+              ${rendreConversionRangsCours({ ecritureDecimale: "3,54", etat: "converti-rang-final", sens: "decimal-vers-fraction" })}
+            </section>
+          </div>
+          ${rendreDecomposition354Cours()}
+        `, "methode-conversion-plaques", 4)}
+        ${rendreMethodeConversionRangs(2, "Avec le tableau de numération", `
+          <p class="introduction-cours">Dans le tableau, 3,54 se lit « 354 centièmes ».</p>
+          ${rendreTableauNumeration(354, 100, { afficherChiffres: true, afficherLecture: false, colonneMiseEnEvidence: "centiemes" })}
+          ${egalitesCoursPrincipales(
+            decimalCours(3.54, 2),
+            fractionCours(354, 100, ROLES_RANGS_COURS.centiemes),
+          )}
+        `, "methode-conversion-tableau", 4)}
       </div>
-      ${rendreDecomposition354Cours()}
-      <h4 class="titre-reperes-visuels">Vérifier dans le tableau</h4>
-      <p class="introduction-cours">Dans le tableau, 3,54 se lit « 354 centièmes ».</p>
-      ${rendreTableauNumeration(354, 100, { afficherChiffres: true, afficherLecture: false, colonneMiseEnEvidence: "centiemes" })}
     </article>`;
   }
   return `<article class="carte-cours-fractions carte-cours-unites carte-cours-strategie">

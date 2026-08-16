@@ -1337,6 +1337,171 @@ button.case-reponse-carres {
   justify-items: center;
 }
 
+.methodes-conversion-rangs {
+  width: 100%;
+  display: grid;
+  gap: 12px;
+}
+
+.outils-representation-cours {
+  width: 100%;
+  display: grid;
+  gap: 12px;
+}
+
+.methode-conversion-rangs {
+  width: 100%;
+  min-width: 0;
+  padding: 12px;
+  display: grid;
+  gap: 10px;
+  border: 2px solid var(--mg-ligne);
+  border-radius: var(--mg-rayon-moyen);
+  background: var(--mg-papier);
+}
+
+.outil-representation-cours {
+  width: 100%;
+  min-width: 0;
+  padding: 12px;
+  display: grid;
+  gap: 10px;
+  border: 2px solid var(--mg-ligne);
+  border-radius: var(--mg-rayon-moyen);
+  background: var(--mg-papier);
+}
+
+.outil-bandes-cours {
+  border-color: color-mix(in srgb, var(--mg-orange) 42%, var(--mg-ligne));
+  background: color-mix(in srgb, var(--mg-orange) 4%, var(--mg-papier));
+}
+
+.outil-plaques-cours {
+  border-color: color-mix(in srgb, var(--mg-bleu) 34%, var(--mg-ligne));
+  background: color-mix(in srgb, var(--mg-bleu) 3%, var(--mg-papier));
+}
+
+.outil-tableau-cours {
+  border-color: color-mix(in srgb, var(--mg-turquoise) 42%, var(--mg-ligne));
+  background: color-mix(in srgb, var(--mg-turquoise) 4%, var(--mg-papier));
+}
+
+.methode-conversion-bandes {
+  border-color: color-mix(in srgb, var(--mg-orange) 42%, var(--mg-ligne));
+  background: color-mix(in srgb, var(--mg-orange) 4%, var(--mg-papier));
+}
+
+.methode-conversion-plaques {
+  border-color: color-mix(in srgb, var(--mg-bleu) 34%, var(--mg-ligne));
+  background: color-mix(in srgb, var(--mg-bleu) 3%, var(--mg-papier));
+}
+
+.methode-conversion-tableau {
+  border-color: color-mix(in srgb, var(--mg-turquoise) 42%, var(--mg-ligne));
+  background: color-mix(in srgb, var(--mg-turquoise) 4%, var(--mg-papier));
+}
+
+.titre-methode-conversion-rangs {
+  margin: 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 7px;
+  align-items: center;
+  justify-content: center;
+  color: var(--mg-bleu);
+  font-family: var(--mg-titres);
+  font-size: 18px;
+  text-align: center;
+}
+
+.titre-outil-representation-cours {
+  margin: 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 7px;
+  align-items: center;
+  justify-content: center;
+  color: var(--mg-bleu);
+  font-family: var(--mg-titres);
+  font-size: 18px;
+  text-align: center;
+}
+
+.titre-methode-conversion-rangs > span {
+  padding: 4px 8px;
+  border-radius: 999px;
+  color: var(--mg-bleuFonce);
+  background: color-mix(in srgb, var(--mg-turquoise) 20%, var(--mg-papier));
+  font-size: 13px;
+  font-weight: 900;
+}
+
+.titre-outil-representation-cours > span {
+  padding: 4px 8px;
+  border-radius: 999px;
+  color: var(--mg-bleuFonce);
+  background: color-mix(in srgb, var(--mg-orange) 18%, var(--mg-papier));
+  font-size: 13px;
+  font-weight: 900;
+}
+
+.introduction-methode-rangs {
+  margin: 0;
+  color: var(--mg-texteAttenue);
+  font-size: 14px;
+  font-weight: 700;
+  line-height: 1.45;
+  text-align: center;
+}
+
+.methode-conversion-rangs .introduction-cours,
+.methode-conversion-rangs .chaine-fraction {
+  margin: 0;
+}
+
+.outil-representation-cours .introduction-cours {
+  margin: 0;
+}
+
+.tableaux-quarts-cours {
+  display: grid;
+  gap: 10px;
+  grid-template-columns: repeat(auto-fit, minmax(230px, 1fr));
+}
+
+.tableaux-quarts-cours > section {
+  min-width: 0;
+  display: grid;
+  gap: 7px;
+  justify-items: center;
+}
+
+.tableaux-quarts-cours > section > strong {
+  color: var(--mg-texteAttenue);
+  font-size: 13px;
+  text-align: center;
+}
+
+.transformation-bandes-correction {
+  display: grid;
+  gap: 7px;
+  justify-items: center;
+}
+
+.transformation-bandes-correction > section {
+  width: 100%;
+  min-width: 0;
+  display: grid;
+  gap: 6px;
+  justify-items: center;
+}
+
+.transformation-bandes-correction > section > strong {
+  color: var(--mg-texteAttenue);
+  font-size: 12px;
+  text-align: center;
+}
+
 .transformation-rangs-cours > section,
 .transformation-rangs-aide > section,
 .transformation-rangs-correction > section {
@@ -1684,6 +1849,21 @@ button.case-reponse-carres {
   .decomposition-fraction-superieure .mathsgo-egalites-alignees {
     grid-template-columns: minmax(42px, auto) 16px minmax(0, auto);
     column-gap: 4px;
+  }
+}
+
+@media (max-width: 360px) {
+  .methode-conversion-rangs {
+    padding-inline: 6px;
+  }
+
+  .methode-conversion-rangs .calcul-aligne-fractions-principales {
+    padding-inline: 5px;
+  }
+
+  .methode-conversion-rangs .mathsgo-egalites-alignees {
+    grid-template-columns: minmax(38px, auto) 14px minmax(0, auto);
+    column-gap: 3px;
   }
 }
 

@@ -890,6 +890,9 @@ it("rend NC-03 et NC-04 dans une seule notion avec des repères cohérents en ai
     assert.match(application.innerHTML, /mathsgo-fraction|fraction-empilee|ecriture-fraction/);
     if (index <= 5) verifierFigureDecimaleResponsive(application.innerHTML);
     if (index === 1) {
+      assert.match(application.innerHTML, /<span>Outil 1<\/span>\s*Bandes de fractions sur la demi-droite graduée/);
+      assert.match(application.innerHTML, /<span>Outil 2<\/span>\s*Plaques de couleurs/);
+      assert.match(application.innerHTML, /<span>Outil 3<\/span>\s*Tableau de numération/);
       assert.match(application.innerHTML, /figure-bandes-rail-cours-large/);
       assert.match(application.innerHTML, /figure-bandes-rail-cours-mobile/);
       assert.match(application.innerHTML, /cd-bande-dixieme/);
@@ -904,18 +907,22 @@ it("rend NC-03 et NC-04 dans une seule notion avec des repères cohérents en ai
       verifierOrdre(
         application.innerHTML,
         "0,5 égale 5 sur 10 égale 1 sur 2",
-        "Dans le tableau de numération",
+        "Outil 3",
       );
       assert.match(application.innerHTML, /class="nd-virgule" data-separation="unites-dixiemes"/);
       assert.doesNotMatch(application.innerHTML, /barre de fraction signifie aussi une division/);
     }
     if (index === 2) {
+      assert.match(application.innerHTML, /<span>Outil 1<\/span>\s*Bandes de fractions sur la demi-droite graduée/);
+      assert.match(application.innerHTML, /<span>Outil 2<\/span>\s*Plaques de couleurs/);
+      assert.match(application.innerHTML, /<span>Outil 3<\/span>\s*Tableau de numération/);
       assert.match(application.innerHTML, /cd-disposition-lignes/);
       assert.match(application.innerHTML, /cd-disposition-quadrants/);
       assert.match(application.innerHTML, /data-afficher-equation="false"/);
       assert.match(application.innerHTML, /0,25 égale 25 sur 100 égale 1 sur 4/);
       assert.match(application.innerHTML, /0,75 égale 75 sur 100 égale 3 sur 4/);
       assert.doesNotMatch(application.innerHTML, /cd-numero-quadrant/);
+      assert.equal((application.innerHTML.match(/figure-tableau-numeration/g) ?? []).length >= 2, true);
     }
     if (index === 3) {
       assert.match(application.innerHTML, /Une unité, dix dixièmes/);
@@ -931,6 +938,9 @@ it("rend NC-03 et NC-04 dans une seule notion avec des repères cohérents en ai
       assert.doesNotMatch(application.innerHTML, /147 sur 100/);
     }
     if (index === 4) {
+      assert.match(application.innerHTML, /<h4 class="titre-methode-conversion-rangs">/);
+      assert.match(application.innerHTML, /<span>Méthode 1<\/span>\s*Avec les plaques de couleurs/);
+      assert.match(application.innerHTML, /<span>Méthode 2<\/span>\s*Avec le tableau de numération/);
       assert.match(application.innerHTML, /147 sur 100 égale 100 sur 100 plus 40 sur 100 plus 7 sur 100/);
       assert.match(application.innerHTML, /data-etat="converti-rang-final" data-sens="fraction-vers-decimal"/);
       assert.match(application.innerHTML, /data-etat="decompose" data-sens="fraction-vers-decimal"/);
@@ -944,13 +954,17 @@ it("rend NC-03 et NC-04 dans une seule notion avec des repères cohérents en ai
       assert.match(application.innerHTML, /7 sur 1000 égale 0,007/);
       verifierOrdre(
         application.innerHTML,
-        "147 sur 100 égale 100 sur 100 plus 40 sur 100 plus 7 sur 100",
-        "Vérifier dans le tableau",
+        "Méthode 1",
+        "Méthode 2",
       );
+      assert.doesNotMatch(application.innerHTML, /Vérifier dans le tableau/);
       assert.doesNotMatch(application.innerHTML, /nd-piece nd-millieme/);
       assert.doesNotMatch(application.innerHTML, /Chaque signe égal est aligné/);
     }
     if (index === 5) {
+      assert.match(application.innerHTML, /<h4 class="titre-methode-conversion-rangs">/);
+      assert.match(application.innerHTML, /<span>Méthode 1<\/span>\s*Avec les plaques de couleurs/);
+      assert.match(application.innerHTML, /<span>Méthode 2<\/span>\s*Avec le tableau de numération/);
       assert.match(application.innerHTML, /mathsgo-egalites-alignees/);
       assert.match(application.innerHTML, /3,54 égale 3 plus 5 sur 10 plus 4 sur 100/);
       assert.match(application.innerHTML, /300 sur 100 plus 50 sur 100 plus 4 sur 100/);
@@ -959,15 +973,15 @@ it("rend NC-03 et NC-04 dans une seule notion avec des repères cohérents en ai
       assert.match(application.innerHTML, /data-etat="converti-rang-final" data-sens="decimal-vers-fraction"/);
       assert.match(application.innerHTML, /class="nd-virgule" data-separation="unites-dixiemes"/);
       assert.match(application.innerHTML, /chercher une fraction décimale égale à 3,54/);
-      assert.match(application.innerHTML, /La même quantité : 354 centièmes/);
+      assert.match(application.innerHTML, /Convertir ensuite toutes les pièces en centièmes/);
       verifierOrdre(
         application.innerHTML,
-        "3,54 égale 3 plus 5 sur 10 plus 4 sur 100",
-        "Vérifier dans le tableau",
+        "Méthode 1",
+        "Méthode 2",
       );
+      assert.doesNotMatch(application.innerHTML, /Vérifier dans le tableau/);
       assert.doesNotMatch(application.innerHTML, /Le dénominateur est imprimé/);
       assert.doesNotMatch(application.innerHTML, /Les deux cases sont libres/);
-      assert.match(application.innerHTML, /La même quantité : 354 centièmes/);
       assert.doesNotMatch(application.innerHTML, /0,75 égale 75 sur 100 égale 3 sur 4/);
       assert.doesNotMatch(application.innerHTML, /figure-bandes-rail/);
     }
@@ -1039,7 +1053,7 @@ it("rend NC-03 et NC-04 dans une seule notion avec des repères cohérents en ai
     if (aideDroite) {
       assert.match(
         application.innerHTML,
-        /figure-double-droite-fraction|figure-bandes-rail|figure-grille-repere/,
+        /figure-double-droite-fraction|figure-bandes-rail|figure-grille-repere|figure-correspondance-decimale/,
       );
     }
     if (aideTableau && !/Toutes les fractions égales sont acceptées/.test(application.innerHTML)) {
@@ -1131,6 +1145,8 @@ it("garde les centièmes et millièmes imposés sans révéler le décimal en ai
   cliquer(gestionnaires, "correction");
   verifierFigureDecimaleResponsive(application.innerHTML);
   assert.match(application.innerHTML, /transformation-rangs-correction/);
+  assert.match(application.innerHTML, /<span>Méthode 1<\/span>\s*Avec les plaques de couleurs/);
+  assert.match(application.innerHTML, /<span>Méthode 2<\/span>\s*Avec le tableau de numération/);
   assert.match(application.innerHTML, /data-profil="solution" data-rang-final="centiemes"/);
   assert.match(application.innerHTML, /data-etat="converti-rang-final" data-sens="fraction-vers-decimal"/);
   assert.match(application.innerHTML, /data-etat="decompose" data-sens="fraction-vers-decimal"/);
@@ -1181,8 +1197,12 @@ it("garde les centièmes et millièmes imposés sans révéler le numérateur en
   tableau = extraireTableauNumeration(aide);
   assert.match(aide, /data-ecriture-decimale="0,50"/);
   assert.match(aide, /data-profil="aide-nc04" data-rang-final="centiemes"/);
-  assert.match(aide, /data-legende="5\/10=\?\/100"/);
+  assert.match(aide, /data-legende="5\/10"/);
+  assert.doesNotMatch(aide, /data-legende="5\/10=\?\/100"/);
   assert.doesNotMatch(aide, /50\/100|data-numerateur-cible|data-denominateur-cible/);
+  assert.match(aide, /<span>Méthode 1<\/span>\s*Avec les plaques de couleurs/);
+  assert.match(aide, /<span>Méthode 2<\/span>\s*Avec le tableau de numération/);
+  assert.match(aide, /<h3 class="titre-methode-conversion-rangs">/);
   assert.equal((aide.match(/data-profil="aide-nc04"/g) ?? []).length, 2);
   assert.equal((tableau.match(/class="nd-chiffre"[^>]*>\?<\/text>/g) ?? []).length, 8);
 
@@ -1211,10 +1231,129 @@ it("garde les centièmes et millièmes imposés sans révéler le numérateur en
   cliquer(gestionnaires, "correction");
   verifierFigureDecimaleResponsive(application.innerHTML);
   assert.match(application.innerHTML, /transformation-rangs-correction/);
+  assert.match(application.innerHTML, /Deux méthodes sont possibles/);
+  assert.match(application.innerHTML, /<span>Méthode 1<\/span>\s*Avec les plaques de couleurs/);
+  assert.match(application.innerHTML, /<span>Méthode 2<\/span>\s*Avec le tableau de numération/);
+  assert.match(application.innerHTML, /<h3 class="titre-methode-conversion-rangs">/);
+  assert.doesNotMatch(application.innerHTML, /Lire le tableau rempli dans l’autre sens/);
   assert.match(application.innerHTML, /data-profil="solution" data-rang-final="centiemes"/);
   assert.match(application.innerHTML, /data-etat="decompose" data-sens="decimal-vers-fraction"/);
   assert.match(application.innerHTML, /data-etat="converti-rang-final" data-sens="decimal-vers-fraction"/);
   assert.match(application.innerHTML, /data-numerateur-cible="50" data-denominateur-cible="100"/);
+});
+
+it("corrige deux quarts avec les bandes sur le rail et le tableau, sans grille de 100", async () => {
+  const { application, gestionnaires } = installerFauxNavigateur(
+    "?notion=fractions-simples-decimaux&mode=tableau&questions=20&graine=corr-2sur4-5",
+  );
+  await import(`./app.js?fumee=correction-deux-quarts-${Date.now()}`);
+  cliquer(gestionnaires, "demarrer");
+  avancerAuTableau(gestionnaires, 16);
+
+  assert.match(application.innerHTML, /aria-label="2 sur 4"/);
+  cliquer(gestionnaires, "correction");
+
+  assert.match(application.innerHTML, /Deux outils sont possibles/);
+  assert.match(application.innerHTML, /<span>Méthode 1<\/span>\s*Avec les bandes de fractions/);
+  assert.match(application.innerHTML, /<span>Méthode 2<\/span>\s*Avec le tableau de numération/);
+  assert.match(application.innerHTML, /Deux quarts séparés/);
+  assert.match(application.innerHTML, /Les deux quarts forment un demi/);
+  assert.match(application.innerHTML, /reste-fusionne-en-demi/);
+  assert.match(application.innerHTML, /figure-tableau-numeration/);
+  assert.match(application.innerHTML, /aria-label="1 sur 2"/);
+  assert.match(application.innerHTML, /aria-label="0,5"/);
+  assert.doesNotMatch(application.innerHTML, /figure-grille-repere/);
+  assert.doesNotMatch(application.innerHTML, /Transformer le repère en centièmes/);
+});
+
+it("corrige aussi 0,5 vers deux quarts avec les bandes et le tableau", async () => {
+  const { application, gestionnaires } = installerFauxNavigateur(
+    "?notion=fractions-simples-decimaux&mode=tableau&questions=20&graine=qa-final-0",
+  );
+  await import(`./app.js?fumee=correction-deux-quarts-inverse-${Date.now()}`);
+  cliquer(gestionnaires, "demarrer");
+  avancerAuTableau(gestionnaires, 8);
+
+  assert.match(application.innerHTML, /aria-label="0,5"/);
+  cliquer(gestionnaires, "correction");
+
+  assert.match(application.innerHTML, /<span>Méthode 1<\/span>\s*Avec les bandes de fractions/);
+  assert.match(application.innerHTML, /<span>Méthode 2<\/span>\s*Avec le tableau de numération/);
+  assert.match(application.innerHTML, /reste-fusionne-en-demi/);
+  assert.match(application.innerHTML, /aria-label="1 sur 2"/);
+  assert.match(application.innerHTML, /aria-label="2 sur 4"/);
+  assert.doesNotMatch(application.innerHTML, /figure-grille-repere/);
+});
+
+it("emploie les deux méthodes pour les dixièmes et le tableau seul pour les millièmes", async () => {
+  const dixiemes = installerFauxNavigateur(
+    "?notion=fractions-simples-decimaux&mode=tableau&questions=20&graine=qa-final-0",
+  );
+  await import(`./app.js?fumee=methodes-dixiemes-${Date.now()}`);
+  cliquer(dixiemes.gestionnaires, "demarrer");
+  avancerAuTableau(dixiemes.gestionnaires, 5);
+
+  assert.match(dixiemes.application.innerHTML, /aria-label="1 sur 10"/);
+  cliquer(dixiemes.gestionnaires, "aide");
+  let aide = extrairePanneauAide(dixiemes.application.innerHTML);
+  assert.match(aide, /<h3 class="titre-methode-conversion-rangs">/);
+  assert.match(aide, /<span>Méthode 1<\/span>\s*Avec les plaques de couleurs/);
+  assert.match(aide, /<span>Méthode 2<\/span>\s*Avec le tableau de numération/);
+  assert.match(aide, /data-profil="aide-nc03" data-rang-final="dixiemes"/);
+  assert.doesNotMatch(aide, /data-ecriture-decimale="0,1"|>0,1</);
+  cliquer(dixiemes.gestionnaires, "fermer-aide");
+  cliquer(dixiemes.gestionnaires, "correction");
+  assert.match(dixiemes.application.innerHTML, /data-profil="solution" data-rang-final="dixiemes"/);
+  assert.match(dixiemes.application.innerHTML, /data-ecriture-decimale="0,1"/);
+
+  const milliemes = installerFauxNavigateur(
+    "?notion=fractions-simples-decimaux&mode=tableau&questions=20&graine=qa-final-0",
+  );
+  await import(`./app.js?fumee=correction-milliemes-tableau-${Date.now()}`);
+  cliquer(milliemes.gestionnaires, "demarrer");
+  avancerAuTableau(milliemes.gestionnaires, 7);
+
+  assert.match(milliemes.application.innerHTML, /mathsgo-role-milliemes">9<\/span>/);
+  cliquer(milliemes.gestionnaires, "correction");
+  assert.match(milliemes.application.innerHTML, /figure-tableau-numeration/);
+  assert.doesNotMatch(milliemes.application.innerHTML, /methodes-conversion-rangs-correction/);
+  assert.doesNotMatch(milliemes.application.innerHTML, /figure-conversion-rangs-correction/);
+  assert.doesNotMatch(milliemes.application.innerHTML, /Avec les plaques de couleurs/);
+});
+
+it("décompose 2,27 dans ses rangs avant de convertir les pièces en centièmes", async () => {
+  const { application, gestionnaires } = installerFauxNavigateur(
+    "?notion=fractions-simples-decimaux&mode=tableau&questions=20&graine=methode-227-237",
+  );
+  await import(`./app.js?fumee=correction-227-${Date.now()}`);
+  cliquer(gestionnaires, "demarrer");
+  avancerAuTableau(gestionnaires, 9);
+
+  assert.match(application.innerHTML, /aria-label="2,27"/);
+  cliquer(gestionnaires, "correction");
+  assert.match(application.innerHTML, /<span>Méthode 1<\/span>\s*Avec les plaques de couleurs/);
+  assert.match(application.innerHTML, /<span>Méthode 2<\/span>\s*Avec le tableau de numération/);
+
+  const debutDecomposition = application.innerHTML.indexOf(
+    'data-etat="decompose" data-sens="decimal-vers-fraction"',
+  );
+  assert.notEqual(debutDecomposition, -1);
+  const finDecomposition = application.innerHTML.indexOf("</svg>", debutDecomposition);
+  const decomposition = application.innerHTML.slice(debutDecomposition, finDecomposition);
+  assert.match(decomposition, /data-legende="2"/);
+  assert.match(decomposition, /data-legende="2\/10"/);
+  assert.match(decomposition, /data-legende="7\/100"/);
+  assert.doesNotMatch(decomposition, /200\/100|20\/100/);
+
+  const debutConversion = application.innerHTML.indexOf(
+    'data-etat="converti-rang-final" data-sens="decimal-vers-fraction"',
+  );
+  assert.notEqual(debutConversion, -1);
+  const finConversion = application.innerHTML.indexOf("</svg>", debutConversion);
+  const conversion = application.innerHTML.slice(debutConversion, finConversion);
+  assert.match(conversion, /data-legende="2=200\/100"/);
+  assert.match(conversion, /data-legende="2\/10=20\/100"/);
+  assert.match(conversion, /data-legende="7\/100"/);
 });
 
 it("réemploie la conversion canonique dans l’aide d’une fraction libre générique", async () => {
