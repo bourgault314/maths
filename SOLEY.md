@@ -1048,7 +1048,7 @@ Trois choses à savoir avant d'y toucher :
   sont laissés tels quels : la clé de sauvegarde est `monde:nom`, un renommage rend
   la progression de l'élève inerte (§6, décision 8). C'est un arbitrage pour Gwenael,
   pas une correction.** L'atelier suit aussi : les objets s'appellent désormais
-  « Patate de corail », « Carreau de canne », « Fougère » ou « Roche » selon le monde
+  « Patate de corail », « Carreau de cannes », « Fougère » ou « Roche » selon le monde
   du brouillon, et la case y devient « Kiosque » à la forêt (`nomObjet`). **RÈGLE À
   GRAVER : quand on repeint un monde, on relit ses TEXTES dans la foulée — le décor
   et les mots doivent nommer la même chose, sinon le jeu se contredit tout seul.**

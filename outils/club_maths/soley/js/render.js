@@ -131,7 +131,7 @@ function fixedFrame(){
 }
 function canneSVG(x,y,i){
   /* Dans les champs de canne, les obstacles SONT des cannes (remarque de
-     Gwenael : « les cannes bloquent les rayons du soleil ») — carreau de canne, tiges
+     Gwenael : « les cannes bloquent les rayons du soleil ») — carreau de cannes, tiges
      vertes et or, nœuds sombres, feuilles en panache. Variantes par case. */
   const px=x*CS,py=y*CS,v=(x*5+y*11+i)%3;
   const tiges=[

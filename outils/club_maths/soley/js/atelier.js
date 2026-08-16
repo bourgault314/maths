@@ -224,9 +224,9 @@ const NOMOBJ = { sun: 'Soleil', target: 'Case créole', rock: 'Roche', fruit: 'F
                  gate: 'Passe étroite', fixed: 'Pièce scellée' };
 
 /* Les objets ne s'appellent pas pareil selon la peau du monde : au lagon on pose
-   des patates de corail, à la canne un carreau de canne, à la forêt des fougères, et la
+   des patates de corail, à la canne un carreau de cannes, à la forêt des fougères, et la
    case y est un kiosque. Le nom suit le dessin, sinon l'editeur ment. */
-const NOMOBST = { lagon: 'Patate de corail', canne: 'Carreau de canne', foret: 'Fougère' };
+const NOMOBST = { lagon: 'Patate de corail', canne: 'Carreau de cannes', foret: 'Fougère' };
 const NOMCASE = { foret: 'Kiosque' };
 const nomObjet = function(type){
   if (type === 'rock')   return NOMOBST[D.w] || 'Roche';
@@ -540,7 +540,7 @@ function ficheObjet(o){
     ouvrirFiche(nomObjet('rock'),
       '<div class="atapercu">' + ico(obstacleSVG(D.w)(0, 0, 0)) + '</div>' +
       '<p class="atok">Aucun réglage : le décor prend la peau du monde choisi — patate de '
-      + 'corail au lagon, carreau de canne aux champs de canne, fougère arborescente à '
+      + 'corail au lagon, carreau de cannes aux champs de canne, fougère arborescente à '
       + 'la forêt, '
       + 'roche de basalte ailleurs — exactement comme dans le jeu.</p>',
       pied);
