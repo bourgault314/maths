@@ -29,7 +29,17 @@ function renderHome(){
       <line x1="35" y1="43" x2="32" y2="9" stroke="#8fbf4d" stroke-width="5" stroke-linecap="round"/>
       <path d="M16 9 Q8 4 3 8 M16 9 Q22 2 28 4 M24 6 Q30 0 37 2 M32 9 Q39 3 44 7" fill="none" stroke="#4e8a34" stroke-width="3" stroke-linecap="round"/>
       <path d="M14 33 h5 M24 29 h5 M33 31 h5 M15 21 h4 M24 17 h5 M33 19 h4" stroke="#5d4326" stroke-width="2.4"/>`,
-    foret:`<polygon points="23,4 38,32 8,32" fill="#3d8f3d"/><polygon points="23,16 40,42 6,42" fill="#4faf4f"/>`,
+    /* une FOUGÈRE arborescente, pas un sapin (œil de Gwenael, 16/08) : l'icône doit
+       montrer ce que le monde dessine, comme celle du lagon montre ses bandes d'eau */
+    foret:`<path d="M20 43 L21.4 24 L24.6 24 L26 43 Z" fill="#5a4327"/>
+      <g stroke="#1e4a25" stroke-width="5.5" fill="none" stroke-linecap="round">
+        <path d="M23 24 Q12 21 5 28"/><path d="M23 24 Q15 13 10 12"/>
+        <path d="M23 24 Q23 13 23 6"/><path d="M23 24 Q31 13 36 12"/>
+        <path d="M23 24 Q34 21 41 28"/></g>
+      <g stroke="#4faf4f" stroke-width="2.8" fill="none" stroke-linecap="round">
+        <path d="M23 24 Q12 21 5 28"/><path d="M23 24 Q15 13 10 12"/>
+        <path d="M23 24 Q23 13 23 6"/><path d="M23 24 Q31 13 36 12"/>
+        <path d="M23 24 Q34 21 41 28"/></g>`,
     volcan:`<polygon points="23,6 42,42 4,42" fill="#5a4a52"/><polygon points="23,6 30,20 16,20" fill="#ff6b3d"/>`,
     pitons:`<polygon points="12,42 20,10 28,42" fill="#7a6a72"/><polygon points="26,42 34,18 42,42" fill="#5a4a52"/>`,
     soleils:`<circle cx="16" cy="18" r="10" fill="#ffc94d"/><circle cx="34" cy="30" r="7" fill="#ffdf8e"/>`,
