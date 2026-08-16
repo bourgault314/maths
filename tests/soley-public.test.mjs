@@ -78,7 +78,7 @@ test("Solèy est publié une seule fois, dans Jeux et Fractions", () => {
   assert.match(classification.cardDescription, /70 casse-têtes/);
 });
 
-test("les 70 solutions de référence gagnent et ramassent les 141 fruits", () => {
+test("les 70 solutions de référence gagnent et ramassent les 142 fruits", () => {
   const context = createGameContext();
   const worldCounts = vm.runInContext(
     "Object.fromEntries(WORLDS.map(({id})=>[id,LV.filter(level=>level.w===id).length]))",
@@ -159,8 +159,8 @@ test("les 70 solutions de référence gagnent et ramassent les 141 fruits", () =
   })()`, context);
 
   assert.equal(summary.levels, 70);
-  assert.equal(summary.fruits, 141);
-  assert.equal(summary.declaredFruits, 141);
+  assert.equal(summary.fruits, 142);
+  assert.equal(summary.declaredFruits, 142);
   assert.deepEqual([...summary.failures], []);
 });
 
@@ -779,7 +779,12 @@ test("refonte : le fruit se mérite, les portes orientent, les fruits à valeur 
     return { failures, couverts, portes, valWin: val.win, valFruits: val.fruits.size };
   })()`, context);
   assert.deepEqual([...r.failures], []);
-  assert.equal(r.couverts, 13, "5 niveaux du lagon retouchés + 8 niveaux de la canne");
+  /* 14 depuis le lot C (16/08) : « La moitié du quart » entre dans la couche P2. Une
+     découverte n'avait jamais porté de fruit — « elle se gagne, elle ne se mérite pas ».
+     Elle le peut sans rien casser, car le déverrouillage ne lit que `save.done` : le
+     fruit n'ajoute qu'une couche d'étoiles. `solMin` gagne en 4 pièces sans le letchi,
+     `sol` en prend 5 et ramasse tout — le contrôle ci-dessus le prouve. */
+  assert.equal(r.couverts, 14, "5 niveaux du lagon retouchés + 8 de la canne + « La moitié du quart » (lot C)");
   assert.deepEqual([...r.portes], [true, false, true]);
   assert.equal(r.valWin, true);
   assert.equal(r.valFruits, 0, "le rayon entier ne cueille pas le fruit marqué 1/2");
