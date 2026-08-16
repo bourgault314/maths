@@ -283,6 +283,86 @@ function sceneMur(bandes){
   });
   return {svg:svg,h:y+6};
 }
+/* LA PALISSADE (lot P, 16/08) — UN SEUL DESSIN pour le jeu ET pour le cours.
+   Demande de Gwenael : « autant dessiner celle du jeu, un peu plus jolie, et comme
+   ça elle est mieux dessinée dans le jeu et mieux dessinée aussi dans le cours ».
+   Elle vit ICI, dans engine.js, parce que render.js se charge après : le jeu peut
+   l'appeler, l'inverse serait faux.
+
+   Elle est construite comme une vraie clôture, et c'est ce qui manquait aux trois
+   premiers jets (défauts trouvés par Gwenael en zoomant sur une capture) :
+     · UN POTEAU à chaque angle et à chaque bout — sans lui, le bois tournait tout
+       seul et le premier piquet venait s'écraser dans le coude ;
+     · les piquets ENTRE les poteaux, répartis à égale distance, jamais dessus ;
+     · le fil du bois suit EXACTEMENT le même chemin que la planche (même `path`,
+       trait plus fin) — un premier jet le décalait vers le bas, ce qui était juste
+       sur les côtés horizontaux et faux dès que le bois tournait.
+   Repère : la case de 100 unités du plateau (CS), pour que le jeu l'utilise telle
+   quelle. `porte` = le côté ouvert (0 N, 1 E, 2 S, 3 O). */
+function palissadeSVG(porte){
+  if(porte===undefined)return '';
+  const BOIS='#8a6b4a', SOMBRE='#3b2a17', PIQ='#6b4d2e', CLAIR='#b08a60';
+  const M=45.5, C=50, PAS=24;
+  const coins=[[C-M,C-M],[C+M,C-M],[C+M,C+M],[C-M,C+M]];   /* NO NE SE SO */
+  /* le parcours suit les TROIS côtés fermés d'un bout à l'autre : on part du coin
+     qui suit l'ouverture et on tourne. Côté c = coins[c] → coins[c+1]. */
+  const pts=[coins[(porte+1)%4],coins[(porte+2)%4],coins[(porte+3)%4],coins[porte]];
+  const d='M'+pts.map(q=>q.join(' ')).join(' L');
+  let s='';
+  s+=`<path d="${d}" fill="none" stroke="${SOMBRE}" stroke-width="12" stroke-linejoin="round" stroke-linecap="round"/>`;
+  s+=`<path d="${d}" fill="none" stroke="${BOIS}" stroke-width="9" stroke-linejoin="round" stroke-linecap="round"/>`;
+  s+=`<path d="${d}" fill="none" stroke="${CLAIR}" stroke-width="3" stroke-linejoin="round" stroke-linecap="round" opacity=".45"/>`;
+  for(let k=0;k<pts.length-1;k++){
+    const [x1,y1]=pts[k], [x2,y2]=pts[k+1];
+    const L=Math.hypot(x2-x1,y2-y1), ux=(x2-x1)/L, uy=(y2-y1)/L;
+    const n=Math.max(1,Math.round(L/PAS)-1);
+    for(let i=1;i<=n;i++){
+      const t=L*i/(n+1), px=x1+ux*t, py=y1+uy*t;
+      s+=`<line x1="${(px-uy*6.2).toFixed(2)}" y1="${(py+ux*6.2).toFixed(2)}" x2="${(px+uy*6.2).toFixed(2)}" y2="${(py-ux*6.2).toFixed(2)}" stroke="${PIQ}" stroke-width="3.2" stroke-linecap="round"/>`;
+    }
+  }
+  pts.forEach(([px,py])=>{
+    s+=`<rect x="${px-6.6}" y="${py-6.6}" width="13.2" height="13.2" rx="3.8" fill="${BOIS}" stroke="${SOMBRE}" stroke-width="2.5"/>`+
+       `<circle cx="${px}" cy="${py}" r="2.2" fill="${PIQ}"/>`;
+  });
+  return s;
+}
+/* Scène « plateau » (lot D, 08/2026) — la PREMIÈRE scène de cours qui ne parle pas de
+   fractions. Une porte orientée n'est pas une part : la bande ne sait pas la dessiner,
+   et le rayon non plus tout seul. Il faut montrer le PLATEAU — la case clôturée, le
+   rayon qui tape un côté fermé et meurt, le rayon qui fait le tour et entre.
+   `sc.plateau` = une liste de vignettes {porte, arrivee, ok} : `porte` le côté ouvert
+   (0 N, 1 E, 2 S, 3 O), `arrivee` la direction de MARCHE du rayon, `ok` si elle sert.
+   Le dessin reprend la palissade de render.js — bois à piquets sur les côtés fermés —
+   sans dépendre de lui : un cours doit pouvoir se lire même si la peau change. */
+function scenePlateau(sc,tE){
+  const H=124, CX=170, CY=62, K=0.96;          /* K : la case de 100 unités du jeu */
+  const dx=[0,1,0,-1], dy=[-1,0,1,0], BORD=52*K;
+  let svg='', y0=6;
+  sc.plateau.forEach((v,k)=>{
+    const cy=y0+CY;
+    /* la case et sa palissade sont dessinées DANS LE REPÈRE DU JEU, avec la même
+       fonction que le plateau : ce que l'élève voit ici, il le retrouve là-bas */
+    let g=`<g transform="translate(${(CX-50*K).toFixed(2)} ${(cy-50*K).toFixed(2)}) scale(${K})">`+
+      `<rect x="12" y="12" width="76" height="76" rx="9" fill="#ffe6c2" stroke="#101a33" stroke-width="3"/>`+
+      palissadeSVG(v.porte)+`</g>`;
+    /* le rayon vient de loin dans sa direction de marche, et s'arrête au bois */
+    const d=v.arrivee, sx=CX-dx[d]*150, sy=cy-dy[d]*150;
+    const bord=v.ok?0:BORD, ex=CX-dx[d]*bord, ey=cy-dy[d]*bord;
+    const sux=Math.max(26,Math.min(314,CX-dx[d]*140)), suy=Math.max(26,Math.min(H-20,cy-dy[d]*46));
+    g+=`<g transform="translate(${sux} ${suy}) scale(1.35) translate(${-sux} ${-suy})">${sSun(sux,suy,[1,1])}</g>`;
+    g+=sBeam(sx+dx[d]*22,sy+dy[d]*22,ex,ey,[1,1]);
+    if(v.ok){
+      g+=`<circle cx="${CX}" cy="${cy}" r="${(56*K).toFixed(1)}" fill="none" stroke="#5be08a" stroke-width="4"/>`;
+      g+=`<text x="${CX}" y="${cy+9}" text-anchor="middle" font-size="28" font-weight="900" fill="#1c7a45">✓</text>`;
+    }else{
+      g+=`<text x="${ex-dx[d]*18}" y="${ey-dy[d]*18+9}" text-anchor="middle" font-size="28" font-weight="900" fill="#e05a4a">✗</text>`;
+    }
+    svg+=cFade(tE(Math.min(k,3)),g);
+    y0+=H;
+  });
+  return {svg:svg,h:y0+4};
+}
 /* Scène « addition » (lot forêt, 08/2026) — le pendant de sceneCours pour les deux
    cours de la lentille. Même contrat de deux registres : en haut le vécu du jeu
    (deux rayons entrent dans la lentille, un seul en sort), en bas la forme de
@@ -352,7 +432,7 @@ function construireCours(id){
   /* deux familles de scènes : les partages descendent (cascade de prismes), les
      additions montent (deux rayons dans la lentille) — l'aiguillage se fait sur
      le champ présent dans `scene`, jamais sur le nom du cours */
-  const somme=!!c.scene.somme, murs=!!c.scene.murs;
+  const somme=!!c.scene.somme, murs=!!c.scene.murs, plateau=!!c.scene.plateau;
   /* déroulé d'une étape : l'explication courte, puis l'écriture étagée (règle R5) */
   const etapeHTML=(e)=>(e.t?`<p class="cligne">${texteMath(e.t)}</p>`:'')+
     (e.eq?`<div class="heq ceq cligne">${eqHTML(e.eq)}</div>`:'');
@@ -366,6 +446,14 @@ function construireCours(id){
     c.scene.murs.forEach((m)=>{
       h+=svgHTML(sceneMur(m.bandes),m.alt||'Des bandes de fractions découpées');
       for(let n=0;n<m.etapes&&i<c.etapes.length;n++,i++)h+=etapeHTML(c.etapes[i]);
+    });
+    while(i<c.etapes.length)h+=etapeHTML(c.etapes[i++]);
+  }else if(plateau){
+    /* même alternance que les murs : une vignette, SA phrase, la vignette suivante */
+    let i=0;
+    c.scene.plateau.forEach((v,k)=>{
+      h+=svgHTML(scenePlateau({plateau:[v]},tE),v.alt||'Une case créole et son rayon');
+      for(let n=0;n<(v.etapes||1)&&i<c.etapes.length;n++,i++)h+=etapeHTML(c.etapes[i]);
     });
     while(i<c.etapes.length)h+=etapeHTML(c.etapes[i++]);
   }else{
@@ -419,9 +507,13 @@ function brancherPredire(id){
     bt.replaceWith(p);
   },{once:true});
 }
-function montrerCours(id,apresVictoire){
+function montrerCours(id,apresVictoire,avantDeJouer){
   if(!COURS[id])return;
   coursId=id;
+  /* LOT D : une explication d'entrée n'est pas un point de cours — le bandeau le dit.
+     « Ce ne serait pas vraiment un cours, ce serait une explication au début »
+     (Gwenael, 16/08). Le panneau, lui, est le même : une seule mécanique à tenir. */
+  document.getElementById('courssur').textContent=avantDeJouer?'Avant de jouer':'Point de cours';
   coursApresVictoire=!!apresVictoire;
   coursRetour=apresVictoire?null:document.activeElement;
   document.getElementById('courstitre').textContent=COURS[id].titre;

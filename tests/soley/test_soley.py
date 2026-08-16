@@ -60,7 +60,7 @@ JS_COHERENCE = """
   const dirOk = d => Number.isInteger(d) && d >= 0 && d <= 3;
   const frOk = f => Array.isArray(f) && f.length === 2 &&
     Number.isInteger(f[0]) && Number.isInteger(f[1]) && f[0] >= 0 && f[1] >= 1;
-  if (LV.length !== 70) fails.push(`LV.length=${LV.length} au lieu de 70`);
+  if (LV.length !== 71) fails.push(`LV.length=${LV.length} au lieu de 71`);
   const cles = new Set();
   LV.forEach((L, i) => {
     const nom = `${i}:${L.name}`;
@@ -265,7 +265,7 @@ def principal():
         # T2 + T3 — les 70 solutions gagnent, tous les fruits sont ramassés
         res = page.evaluate(JS_SOLUTIONS)
         perdants = [r["nom"] for r in res if not r["gagne"]]
-        section("T2 solve(i) gagne pour les 70 niveaux", not perdants,
+        section("T2 solve(i) gagne pour les 71 niveaux", not perdants,
                 f"{len(res)} solutions jouées" if not perdants else "perdants : " + ", ".join(perdants))
         sans_fruit = [r["nom"] for r in res if r["fruitsPris"] != r["fruitsTotal"]]
         total_fruits = sum(r["fruitsTotal"] for r in res)
@@ -371,8 +371,8 @@ def principal():
         page.wait_for_function("() => window.SOLEY && window.SOLEY.LV")
 
         # T8a — seuils de déblocage : ⌈5/8 des niveaux du monde précédent⌉ (lagon à 11 → canne à 7, canne à 8 → forêt à 5)
-        seuils = page.evaluate("() => window.SOLEY.LV.length === 70 && [0,1,2,3,4,5,6,7,8].map(i => window.SOLEY.seuilMonde(i))")
-        section("T8 seuils de déblocage ⌈5/8⌉ par monde", seuils == [0, 7, 5, 5, 5, 5, 5, 4, 5],
+        seuils = page.evaluate("() => window.SOLEY.LV.length === 71 && [0,1,2,3,4,5,6,7,8].map(i => window.SOLEY.seuilMonde(i))")
+        section("T8 seuils de déblocage ⌈5/8⌉ par monde", seuils == [0, 7, 6, 5, 5, 5, 5, 4, 5],
                 f"{seuils}")
 
         # T8b — sauvegarde vierge : seul Le lagon est ouvert
@@ -476,7 +476,7 @@ def principal():
           return { sansCours: !('cours' in brut), niveaux: window.SOLEY.LV.length };
         }""")
         section("T9 vieille sauvegarde (sans champ cours) chargée sans erreur ni migration",
-                vieux["sansCours"] and vieux["niveaux"] == 70, "")
+                vieux["sansCours"] and vieux["niveaux"] == 71, "")
         ctx4.close()
 
         # T8e — mode classe : tout est ouvert, badge visible

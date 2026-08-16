@@ -98,12 +98,13 @@ function openWorld(wid){
   /* Dès qu'un « Revoir le cours » existe dans le monde, l'espace du bouton est
      réservé sous TOUTES les cartes : toutes les cases gardent la même taille
      (retour de Gwenael, 14/08). */
-  const piedCours=idxs.some(i=>(LV[i].dec||LV[i].cours)&&(save.done[lvId(i)]||modeClasse));
+  /* LOT D : `intro` compte aussi — une explication d'entrée se relit depuis la carte */
+  const piedCours=idxs.some(i=>(LV[i].dec||LV[i].cours||LV[i].intro)&&(save.done[lvId(i)]||modeClasse));
   document.getElementById('lvgrid').innerHTML=idxs.map((gi,li)=>{
     const done=save.done[lvId(gi)];
     const e=etoiles(gi);
     const nf=LV[gi].fruits.length, gf=save.fruits[lvId(gi)]||0;
-    const dec=LV[gi].dec, idc=dec||LV[gi].cours;
+    const dec=LV[gi].dec, idc=dec||LV[gi].cours||LV[gi].intro;
     /* niveau-découverte : badge sur la carte, et « Revoir le cours » une fois le
        niveau réussi (le mode classe ouvre aussi les cours — chantier « Comprendre »).
        LOT B : un niveau à `cours` porte le bouton mais PAS le badge — le badge annonce
@@ -118,7 +119,8 @@ function openWorld(wid){
     </div>`;
   }).join('');
   document.querySelectorAll('.lvcard').forEach(bt=>bt.addEventListener('click',()=>openLevel(+bt.dataset.i)));
-  document.querySelectorAll('.lvcours').forEach(bt=>bt.addEventListener('click',()=>montrerCours(bt.dataset.cours,false)));
+  document.querySelectorAll('.lvcours').forEach(bt=>bt.addEventListener('click',
+    ()=>montrerCours(bt.dataset.cours,false,LV.some(l=>l.intro===bt.dataset.cours))));
   show('lvscreen');
 }
 function openLevel(i){
@@ -146,6 +148,17 @@ function openLevel(i){
   show('play');
   redraw();
   relayout();
+  /* EXPLICATION D'ENTRÉE (lot D, 16/08). Demande de Gwenael sur les portes orientées :
+     « ce ne serait pas vraiment un cours, ce serait une explication au début ». Un
+     point de cours s'ouvre APRÈS la victoire — trop tard pour une règle de plateau,
+     que l'élève doit connaître avant de poser sa première pièce. `intro:'<id>'`
+     ouvre le même panneau à l'ARRIVÉE sur le niveau, une seule fois par élève.
+     Mémorisé dans `save.cours`, le même registre que les points de cours : celui qui
+     l'a déjà lue ne la revoit pas, et le bouton « Revoir » du monde la retrouve. */
+  const intro=LV[i].intro;
+  if(intro&&COURS[intro]&&!save.cours[intro]){
+    save.cours[intro]=true;persist();montrerCours(intro,false,true);
+  }
 }
 function renderToolbox(){
   const L=LV[cur],tb=document.getElementById('toolbox');

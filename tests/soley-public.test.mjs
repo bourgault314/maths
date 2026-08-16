@@ -73,12 +73,12 @@ test("Solèy est publié une seule fois, dans Jeux et Fractions", () => {
   assert.equal(classification.primaryGroup, "jeux");
   assert.equal("primaryNotion" in classification, false);
   assert.equal(classification.thumbnail, "assets/img/thumbnails/jeux/soley.svg?v=2");
-  assert.match(resource.description, /70 niveaux/);
+  assert.match(resource.description, /71 niveaux/);
   assert.match(resource.description, /neuf mondes/);
   assert.match(classification.cardDescription, /70 casse-têtes/);
 });
 
-test("les 70 solutions de référence gagnent et ramassent les 142 fruits", () => {
+test("les 71 solutions de référence gagnent et ramassent les 142 fruits", () => {
   const context = createGameContext();
   const worldCounts = vm.runInContext(
     "Object.fromEntries(WORLDS.map(({id})=>[id,LV.filter(level=>level.w===id).length]))",
@@ -86,7 +86,7 @@ test("les 70 solutions de référence gagnent et ramassent les 142 fruits", () =
   );
   assert.deepEqual(
     { ...worldCounts },
-    { lagon: 11, canne: 8, foret: 8, volcan: 7, pitons: 7, soleils: 8, marche: 6, tunnels: 8, mafate: 7 }
+    { lagon: 11, canne: 9, foret: 8, volcan: 7, pitons: 7, soleils: 8, marche: 6, tunnels: 8, mafate: 7 }
   );
 
   const structure = vm.runInContext(`(() => ({
@@ -100,7 +100,7 @@ test("les 70 solutions de référence gagnent et ramassent les 142 fruits", () =
     ["lagon", "canne", "foret", "volcan", "pitons", "soleils", "marche", "tunnels", "mafate"]
   );
   assert.deepEqual([...structure.runs], [...structure.worlds]);
-  assert.equal(structure.saveKeys, 70);
+  assert.equal(structure.saveKeys, 71);
   assert.deepEqual([...structure.tunnels], [
     "Le serpent", "La fourche", "Le tourbillon", "Le prisme scellé",
     "La galerie scellée", "Les demi-tunnels", "L'impasse aux letchis", "Le grand réseau"
@@ -158,7 +158,7 @@ test("les 70 solutions de référence gagnent et ramassent les 142 fruits", () =
     return { levels: LV.length, fruits, declaredFruits, failures };
   })()`, context);
 
-  assert.equal(summary.levels, 70);
+  assert.equal(summary.levels, 71);
   assert.equal(summary.fruits, 142);
   assert.equal(summary.declaredFruits, 142);
   assert.deepEqual([...summary.failures], []);
@@ -310,8 +310,9 @@ test("la progression verrouillée et les étoiles se calculent juste", () => {
     const ctx2 = { done: { ...save.done } };
     save.done = {};
     const canne = LV.map((l, i) => i).filter(i => LV[i].w === 'canne');
-    canne.slice(0, 5).forEach(i => save.done[LV[i].w + ':' + LV[i].name] = true);
-    const foretParChamp = mondeDeverrouille('foret'); /* ⌈5×8/8⌉ = 5, aucune découverte dans la canne */
+    /* LOT D : la canne compte 9 niveaux, son seuil passe à ⌈5×9/8⌉ = 6 */
+    canne.slice(0, 6).forEach(i => save.done[LV[i].w + ':' + LV[i].name] = true);
+    const foretParChamp = mondeDeverrouille('foret'); /* aucune découverte dans la canne */
     save.done = ctx2.done;
     const zi = LV.findIndex(l => l.name === 'Zigzag dans les roches');
     const k = 'lagon:Zigzag dans les roches';
@@ -325,7 +326,7 @@ test("la progression verrouillée et les étoiles se calculent juste", () => {
       fruitManquant, fruitsComplets, maitrise, tropDePieces, sansFruits };
   })()`, context);
 
-  assert.deepEqual([...r.seuils], [0, 7, 5, 5, 5, 5, 5, 4, 5]);
+  assert.deepEqual([...r.seuils], [0, 7, 6, 5, 5, 5, 5, 4, 5]);
   assert.equal(r.parOk, true);
   assert.deepEqual([...r.avant], [true, false, false, false, false, false, false, false, false]);
   assert.equal(r.canneA5, false);
@@ -412,7 +413,7 @@ test("l’accueil masque réellement le plateau et reprend la charte du site", (
   assert.match(html, /Gérer mes cookies/);
   assert.match(html, /aria-label="Recommencer le niveau"/);
   assert.match(js.ui, /class="chip[^"]*"[^>]*aria-pressed=/);
-  assert.match(html, /meta name="description" content="Un jeu de réflexion en 70 niveaux/);
+  assert.match(html, /meta name="description" content="Un jeu de réflexion en 71 niveaux/);
   assert.match(js.ui, /tunnels:`<path d="M4 42V25/);
 });
 
@@ -561,11 +562,13 @@ test("le chantier « Comprendre » : découvertes, points de cours et règle R1"
      découvertes (r.decs) ne bouge pas d'une entrée juste au-dessus : c'est la preuve
      que ces deux cours ne peuvent verrouiller aucun monde. Ils sont rangés à leur
      place de JEU : 1/9 arrive au 18ᵉ niveau, 1/12 au 19ᵉ, tous deux avant la forêt. */
+  /* LOT D : `porte` s'ouvre par `intro:` — à l'ARRIVÉE sur le niveau, pas après la
+     victoire — et c'est la première explication du jeu qui ne parle pas de fractions. */
   assert.deepEqual([...r.coursIds],
-    ["demi", "tiers", "quart", "sixieme", "recouper", "neuvieme", "douzieme",
+    ["demi", "tiers", "quart", "sixieme", "recouper", "porte", "neuvieme", "douzieme",
       "somme", "denominateur"]);
   assert.deepEqual([...r.titres], ["Le demi", "Le tiers", "Le quart", "Le sixième",
-    "Recouper une part", "Le neuvième", "Le douzième",
+    "Recouper une part", "Les cases à palissade", "Le neuvième", "Le douzième",
     "Recoller deux parts", "Le même dénominateur"]);
   /* la forêt (08/2026) : le cas SIMPLE (même dénominateur) passe devant le cas DUR.
      « Recoller les morceaux » reste l'accueil du monde mais n'est plus une
