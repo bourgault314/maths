@@ -148,27 +148,54 @@ const LV=[
   sol:[[0,4,1],[1,4,0],[2,4,5],[3,0,5],[4,4,6],[5,7,6]],
   solMin:[[0,4,1],[1,4,0],[2,4,5],[3,0,5]]},
 
- /* Le BILAN du partage (lot A, 08/2026). Il ferme le lagon et légitime 1/8, 1/9 et
-    1/12, que les champs de canne servent dès « Le grand tri » sans qu'aucun cours
-    ne les ait jamais dits (AUDIT-ORGANISATION.md §3). Comme les quatre autres
-    découvertes du lagon : pas de fruit, pas de solMin — une découverte se gagne,
-    elle ne se mérite pas. Champ TAILLÉ puis mesuré au solveur, aucune solution
-    dessinée d'abord : R = 75, profondeur 3, E = 887, G = 10, λ = 4,3 — juste
-    au-dessus des quatre autres (5, 5, 19, 51), la plus exigeante sans cesser
-    d'être facile. La boîte n'a que des ÷2 : le huitième ne s'obtient par aucune
-    coupe unique, il faut en enchaîner trois (règle du lot forêt : un niveau qui
-    enseigne est ingagnable sans la pièce de sa notion). La demi-part non servie se
-    perd en chemin, comme dans « La part perdue » — le cours montre la cascade,
-    restes compris. */
+ /* Le BILAN du partage (lot A, 08/2026 — RETAILLÉ au lot C, 16/08). Il ferme le lagon
+    et légitime 1/8, que les champs de canne servent dès « Le grand tri » sans qu'aucun
+    cours ne l'ait jamais dit (AUDIT-ORGANISATION.md §3).
+
+    POURQUOI IL A ÉTÉ RETAILLÉ. Premier jet : R = 75, profondeur 3 — trois prismes en
+    ligne droite, aucun miroir nécessaire. Verdict de Gwenael : « il est quand même
+    beaucoup trop facile par rapport à tout ce qu'il y a pu avoir avant, c'est vraiment
+    bidon ». La mesure lui donne raison, et durement : le niveau qui le PRÉCÈDE (« Le
+    tiers de la moitié ») demande R = 5 534. Le monde finissait 74 fois plus facilement
+    qu'il ne montait — exactement le défaut qui avait déjà coûté sa place au « Tour du
+    lagon » le 15/08. La spec du lot A s'était comparée aux quatre autres découvertes
+    (5, 5, 19, 51) : mauvaise classe de comparaison, car celles-là sont INTERCALÉES
+    entre des niveaux durs, alors que celui-ci FERME le monde.
+
+    CE QUI A CHANGÉ, ET COMMENT. Champ taillé puis mesuré, aucune solution dessinée
+    d'abord ; le recuit de `tailleur-champs` a été essayé puis ÉCARTÉ (il converge vers
+    prof 6 et R = 58 970 : plus dur que tout le jeu, et son propre garde-fou dit qu'un
+    plan minimal de six pièces est un autre défaut). Le levier retenu est géométrique :
+    les trois prismes sont ENTIÈREMENT consommés par la chaîne 1/4 · 1/8 · 1/8, donc
+    tout virage supplémentaire exige un miroir. Il a suffi de DÉSALIGNER une case —
+    le second huitième n'est plus dans la colonne du dernier prisme.
+      R = 1 383 (74,7 avant) · Rtout = 4 616 (79,5) · prof 4 (3) · profTout 5
+      E = 26 520 · G = 19 · Gtout = 5 · λ = 6,0
+    Gagner reste accessible — c'est une découverte, elle se gagne — mais tout ramasser
+    coûte 3,3 fois plus : le fruit n'est PAS sur le chemin (défaut « Rtout ≤ R » du lot
+    C de la spec, évité ici par construction). Le fruit a été placé par `carte-fruits`,
+    sur une case que 5 plans gagnants sur 19 seulement traversent, et où aucune pièce
+    des plans courts ne se pose.
+
+    LE FRUIT DIT LA MÊME CHOSE QUE LE COURS. La demi-part non servie se perdait en
+    chemin, comme dans « La part perdue » — c'est le tableau du cours, restes compris.
+    Elle est maintenant exactement ce qu'il faut rattraper pour cueillir le letchi :
+    la part perdue n'est perdue que pour qui ne va pas la chercher.
+
+    LA RÈGLE DE LA NOTION TIENT TOUJOURS : la boîte n'a que des ÷2 et des miroirs, le
+    huitième ne s'obtient par aucune coupe unique, et le niveau est mesuré INGAGNABLE
+    sans ÷2 (règle du lot forêt). `solMin` gagne en 4 pièces sans le fruit ; `sol` en
+    prend 5 et ramasse tout. */
  {w:'lagon',name:"La moitié du quart",dec:'recouper',
-  sub:"Un quart d'un côté, deux huitièmes de l'autre. Tu n'as que des prismes ÷2 : jusqu'où faut-il recouper ?",
-  hint:"1/2 ÷ 2 = 1/4, puis 1/4 ÷ 2 = 1/8. Une part se perdra en chemin, c'est normal.",
-  cols:9,rows:6,suns:[{x:0,y:3,dir:1}],
-  targets:[{x:0,y:1,need:[1,4]},{x:8,y:0,need:[1,8]},{x:8,y:5,need:[1,8]}],
-  rocks:[[5,3],[2,5],[7,2],[2,0],[6,4],[3,5],[7,5],[4,0],[1,5]],
-  fruits:[],
-  tools:[s2(1,0,2),s2(0,1,3),s2(1,0,2),b(1,0)],
-  sol:[[0,1,3],[1,1,1],[2,8,1]]},
+  sub:"Un quart d'un côté, deux huitièmes de l'autre — et aucun prisme qui coupe en trois. Jusqu'où faut-il recouper, et par où faire passer ce qu'il reste ?",
+  hint:"1/2 ÷ 2 = 1/4, puis 1/4 ÷ 2 = 1/8. Et la part qui semble perdue ? Elle peut encore servir à quelque chose.",
+  cols:9,rows:7,suns:[{x:0,y:3,dir:1}],
+  targets:[{x:7,y:0,need:[1,8]},{x:0,y:1,need:[1,4]},{x:5,y:6,need:[1,8]}],
+  rocks:[[2,0],[8,0],[7,1],[3,2],[7,2],[3,3],[8,3],[2,4],[6,4],[1,5],[7,5],[3,6]],
+  fruits:[[0,4]],
+  tools:[s2(1,0,2),s2(0,1,3),s2(1,0,2),b(2,3),b(1,0),b(1,2),b(0,1)],
+  sol:[[0,1,3],[1,1,1],[3,1,4],[2,5,1],[6,5,0]],
+  solMin:[[0,1,3],[1,1,1],[2,5,1],[6,5,0]]},
 
  /* ---------- Les champs de canne (6e) — refonte 08/2026 ----------
     Le monde qui applique les mécaniques de l'original (AUDIT-33-IDEES.md) :
