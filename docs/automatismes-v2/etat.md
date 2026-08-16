@@ -2,6 +2,37 @@
 
 **Dernière mise à jour : 16 août 2026.**
 
+## Variété des séries et outils adaptés de NC-03 / NC-04 du 16 août
+
+- D-060 étend la banque continue des quarts de `1/4` à `12/4` dans les
+  questions non libres des deux sens, en saisie directe comme en QCM. Seul
+  `11/4` rejoint en plus la banque libre familière ; aucune question extérieure
+  à ce domaine n'est modifiée.
+- Une série de 5 contient une question de chacune des familles `/2`, `/4`,
+  `/10` et `/100`, ainsi qu'une production libre. Leur ordre reste entièrement
+  déterminé par la graine : aucune question « facile » n'est forcée en tête et
+  une fraction libre n'y est ni imposée ni interdite.
+- L'ordre déterministe évite deux QCM consécutifs, deux productions libres
+  consécutives, trois questions du même sens consécutives et trois
+  dénominateurs identiques consécutifs. Les quotas et questions des autres
+  domaines restent inchangés.
+- `1/4`, `3/4`, `0,25` et `0,75` sont expliqués d'abord par les bandes sur
+  rail, puis par les plaques colorées réorganisées, jamais par le tableau.
+  `2/4` reste sur le rail avec fusion en `1/2`. Les familles `/10` et `/100`
+  conservent les méthodes alternatives plaques et tableau ; `/1000` emploie
+  le tableau seul ; les demis et quarts impropres emploient le rail.
+- Le rail des quarts accepte `9/4` à `12/4` et atteint 3 unités. Dans l'aide du
+  sens inverse au-delà de huit quarts, l'élève peut avancer d'une unité, soit
+  quatre quarts, sans révélation du numérateur attendu.
+- Les égalités de correction des entiers cachés ne répètent plus la fraction
+  ni l'entier. La recette automatisée complète passe **1 579 tests sur
+  1 579**, répartis en **232 suites**. L'audit de **40 000 séries**, soit
+  **500 000 questions**, ne relève aucune violation des quotas, de l'unicité
+  rationnelle ou des quatre contraintes de voisinage. Le Labo passe
+  **165 tests sur 165** et le graphe de cache est invalidé atomiquement en
+  `v37`. Gwenaël autorise la publication de test ; la revue visuelle aux cinq
+  fenêtres doit être rejouée sur l'URL publique. Le module reste `construit`.
+
 ## Deux méthodes alternatives pour les conversions NC-03 / NC-04 du 16 août
 
 - D-059 corrige la mise en récit de la conversion sans modifier les

@@ -89,7 +89,7 @@ describe("bandes fractionnaires sur rail — cas d'or", () => {
       etape: "lecture",
     });
 
-    assert.equal(VERSION_BANDES_FRACTIONS_RAIL, 5);
+    assert.equal(VERSION_BANDES_FRACTIONS_RAIL, 6);
     assert.equal(rendu.erreur, null);
     assert.deepEqual(
       {
@@ -229,6 +229,102 @@ describe("bandes fractionnaires sur rail — cas d'or", () => {
     assert.ok(!rendu.svg.includes(">7</text>"));
     assert.ok(!rendu.texteAlternatif.includes("numérateur 7"));
     assert.ok(!rendu.texteAlternatif.includes("sept quarts"));
+  });
+
+  it("étend les quarts jusqu'à 12/4 sur un rail de trois unités", () => {
+    for (const [numerateur, decimal] of [
+      [9, "2,25"],
+      [10, "2,5"],
+      [11, "2,75"],
+      [12, "3"],
+    ]) {
+      const rendu = dessinerBandesFractionnairesSurRailDecimal({
+        numerateur,
+        denominateur: 4,
+        profil: "solution",
+        etape: "lecture",
+        largeur: 340,
+      });
+
+      assert.equal(rendu.erreur, null);
+      assert.equal(rendu.donnees.maximumRail, 3);
+      assert.equal(rendu.donnees.positionCible <= rendu.donnees.positionFinRail, true);
+      assert.ok(rendu.donnees.positionPointeFleche <= rendu.largeur);
+      assert.match(rendu.svg, new RegExp(`class="resultat-decimal"[^>]*>${decimal}<\\/text>`));
+    }
+  });
+
+  it("déroule 10/4 de dix pièces à deux unités puis un demi", () => {
+    const pieces = dessinerBandesFractionnairesSurRailDecimal({
+      numerateur: 10,
+      denominateur: 4,
+      profil: "solution",
+      etape: "pieces",
+      largeur: 340,
+    });
+    const groupes = dessinerBandesFractionnairesSurRailDecimal({
+      numerateur: 10,
+      denominateur: 4,
+      profil: "solution",
+      etape: "groupes",
+      largeur: 340,
+    });
+    const unites = dessinerBandesFractionnairesSurRailDecimal({
+      numerateur: 10,
+      denominateur: 4,
+      profil: "solution",
+      etape: "unites",
+      largeur: 340,
+    });
+    const reste = dessinerBandesFractionnairesSurRailDecimal({
+      numerateur: 10,
+      denominateur: 4,
+      profil: "solution",
+      etape: "reste",
+      largeur: 340,
+    });
+
+    assert.equal(occurrences(pieces.svg, /class="ecriture-part"/g), 10);
+    assert.equal(occurrences(pieces.svg, /class="joint-piece"/g), 9);
+    assert.equal(occurrences(groupes.svg, /class="separation-interne"/g), 6);
+    assert.equal(occurrences(groupes.svg, /class="frontiere-unite"/g), 2);
+    assert.equal(occurrences(unites.svg, /class="unite-retournee"/g), 2);
+    assert.equal(occurrences(unites.svg, /class="ecriture-part"/g), 2);
+    assert.equal(unites.donnees.resteFusionneEnDemi, false);
+    assert.equal(occurrences(reste.svg, /class="unite-retournee"/g), 2);
+    assert.equal(occurrences(reste.svg, /class="reste-fusionne-en-demi"/g), 1);
+    assert.equal(occurrences(reste.svg, /class="ecriture-reste-demi"/g), 1);
+    assert.equal(occurrences(reste.svg, /class="ecriture-part"/g), 0);
+    assert.equal(reste.donnees.resteFusionneEnDemi, true);
+    assert.equal(
+      attributPremier(reste.svg, "demi-historique", "width"),
+      2 * reste.donnees.largeurPartie,
+    );
+  });
+
+  it("rend 12/4 comme trois unités exactes, sans reste artificiel", () => {
+    const rendu = dessinerBandesFractionnairesSurRailDecimal({
+      numerateur: 12,
+      denominateur: 4,
+      profil: "solution",
+      etape: "reste",
+      largeur: 340,
+    });
+
+    assert.deepEqual(
+      {
+        unites: rendu.donnees.unites,
+        reste: rendu.donnees.reste,
+        maximumRail: rendu.donnees.maximumRail,
+        resteFusionneEnDemi: rendu.donnees.resteFusionneEnDemi,
+      },
+      { unites: 3, reste: 0, maximumRail: 3, resteFusionneEnDemi: false },
+    );
+    assert.equal(occurrences(rendu.svg, /class="unite-retournee"/g), 3);
+    assert.equal(occurrences(rendu.svg, /class="ecriture-part"/g), 0);
+    assert.equal(occurrences(rendu.svg, /class="reste-fusionne-en-demi"/g), 0);
+    assert.equal(rendu.donnees.positionCible, rendu.donnees.positionFinRail);
+    assert.match(rendu.svg, /class="resultat-decimal"[^>]*>3<\/text>/);
   });
 });
 
@@ -483,6 +579,82 @@ describe("bandes fractionnaires sur rail — géométrie historique", () => {
     assert.ok(!demis.svg.includes(">0,5</text>"));
   });
 
+  it("écarte les cibles 9/4 et 11/4 des entiers sur un rail mobile compact", () => {
+    for (const format of [
+      { largeur: 260, format: "mobile-compact" },
+      { largeur: 340, format: "standard" },
+    ]) {
+      const neufQuarts = dessinerBandesFractionnairesSurRailDecimal({
+        numerateur: 9,
+        denominateur: 4,
+        profil: "solution",
+        etape: "lecture",
+        ...format,
+      });
+      const onzeQuarts = dessinerBandesFractionnairesSurRailDecimal({
+        numerateur: 11,
+        denominateur: 4,
+        profil: "solution",
+        etape: "lecture",
+        ...format,
+      });
+
+      for (const rendu of [neufQuarts, onzeQuarts]) {
+        assert.equal(
+          occurrences(rendu.svg, /class="etiquette-rail(?: cible)?"/g),
+          5,
+        );
+        assert.doesNotMatch(rendu.svg, /class="etiquette-rail(?: cible)?"[^>]*>0,5<\/text>/);
+        assert.doesNotMatch(rendu.svg, /class="etiquette-rail(?: cible)?"[^>]*>1,5<\/text>/);
+        assert.doesNotMatch(rendu.svg, /class="etiquette-rail(?: cible)?"[^>]*>2,5<\/text>/);
+      }
+      assert.match(
+        neufQuarts.svg,
+        /class="etiquette-rail"[^>]*text-anchor="end"[^>]*>2<\/text>/,
+      );
+      assert.match(
+        neufQuarts.svg,
+        /class="etiquette-rail cible"[^>]*text-anchor="start"[^>]*>2,25<\/text>/,
+      );
+      assert.match(
+        onzeQuarts.svg,
+        /class="etiquette-rail cible"[^>]*text-anchor="end"[^>]*>2,75<\/text>/,
+      );
+      assert.match(
+        onzeQuarts.svg,
+        /class="etiquette-rail"[^>]*text-anchor="start"[^>]*>3<\/text>/,
+      );
+    }
+  });
+
+  it("applique le même dégagement aux cibles décimales visibles en aide NC04", () => {
+    const neufQuarts = dessinerBandesFractionnairesSurRailDecimal({
+      numerateur: 9,
+      denominateur: 4,
+      profil: "aide-nc04-imposee",
+      etape: "pieces",
+      largeur: 260,
+      format: "mobile-compact",
+    });
+    const onzeQuarts = dessinerBandesFractionnairesSurRailDecimal({
+      numerateur: 11,
+      denominateur: 4,
+      profil: "aide-nc04-imposee",
+      etape: "pieces",
+      largeur: 260,
+      format: "mobile-compact",
+    });
+
+    assert.match(
+      neufQuarts.svg,
+      /class="etiquette-cible source-decimale"[^>]*text-anchor="start"[^>]*>2,25<\/text>/,
+    );
+    assert.match(
+      onzeQuarts.svg,
+      /class="etiquette-cible source-decimale"[^>]*text-anchor="end"[^>]*>2,75<\/text>/,
+    );
+  });
+
   it("conserve le recto coloré quand les unités sont formées", () => {
     const rendu = dessinerBandesFractionnairesSurRailDecimal({
       numerateur: 5,
@@ -584,6 +756,48 @@ describe("bandes fractionnaires sur rail — contrats de masquage", () => {
     assert.match(solution.texteAlternatif, /vaut 2,5/);
   });
 
+  it("conserve les masques des profils d'aide sur les nouveaux quarts", () => {
+    const aideNc03 = dessinerBandesFractionnairesSurRailDecimal({
+      numerateur: 11,
+      denominateur: 4,
+      profil: "aide-nc03",
+      etape: "lecture",
+      largeur: 260,
+      format: "mobile-compact",
+    });
+    const aideNc04Imposee = dessinerBandesFractionnairesSurRailDecimal({
+      numerateur: 9,
+      denominateur: 4,
+      profil: "aide-nc04-imposee",
+      etape: "pieces",
+      largeur: 260,
+      format: "mobile-compact",
+    });
+    const aideNc04Libre = dessinerBandesFractionnairesSurRailDecimal({
+      numerateur: 11,
+      denominateur: 4,
+      profil: "aide-nc04-libre",
+      etape: "pieces",
+      largeur: 260,
+      format: "mobile-compact",
+    });
+
+    assert.ok(!aideNc03.svg.includes("2,75"));
+    assert.ok(!aideNc03.texteAlternatif.includes("2,75"));
+    assert.match(aideNc03.svg, /class="etiquette-cible cible-decimale-masquee"[^>]*>\?<\/text>/);
+
+    for (const [aide, decimal, numerateur] of [
+      [aideNc04Imposee, "2,25", "9"],
+      [aideNc04Libre, "2,75", "11"],
+    ]) {
+      assert.match(aide.svg, new RegExp(`class="source-decimale"[^>]*>${decimal}<\\/text>`));
+      assert.match(aide.svg, /class="cible-fractionnaire-masquee"/);
+      assert.ok(!aide.svg.includes('class="source-fraction"'));
+      assert.ok(!aide.svg.includes(`>${numerateur}</text>`));
+      assert.ok(!aide.texteAlternatif.includes(`numérateur ${numerateur}`));
+    }
+  });
+
   it("ne confond jamais une fraction dessinée avec un texte contenant une barre oblique", () => {
     const rendu = dessinerBandesFractionnairesSurRailDecimal({
       numerateur: 7,
@@ -602,6 +816,36 @@ describe("bandes fractionnaires sur rail — contrats de masquage", () => {
 });
 
 describe("bandes fractionnaires sur rail — validation et stabilité", () => {
+  it("couvre tous les profils et toutes les étapes pour les quarts 9 à 12", () => {
+    for (const numerateur of [9, 10, 11, 12]) {
+      for (const profil of [
+        "aide-nc03",
+        "aide-nc04-imposee",
+        "aide-nc04-libre",
+        "solution",
+      ]) {
+        for (const etape of ["pieces", "groupes", "unites", "reste", "lecture"]) {
+          const rendu = dessinerBandesFractionnairesSurRailDecimal({
+            numerateur,
+            denominateur: 4,
+            profil,
+            etape,
+            largeur: 260,
+            format: "mobile-compact",
+            ...(profil.startsWith("aide-nc04") && etape !== "pieces"
+              ? { partiesPosees: numerateur }
+              : {}),
+          });
+
+          assert.equal(rendu.erreur, null, `${numerateur}/4, ${profil}, ${etape}`);
+          assert.equal(rendu.donnees.maximumRail, 3);
+          assert.ok(!rendu.svg.includes("NaN"));
+          assert.ok(rendu.donnees.positionPointeFleche <= rendu.largeur);
+        }
+      }
+    }
+  });
+
   it("rejette les dénominateurs et numérateurs hors du domaine du pilote", () => {
     const mauvaisDenominateur = dessinerBandesFractionnairesSurRailDecimal({
       numerateur: 3,
@@ -618,6 +862,11 @@ describe("bandes fractionnaires sur rail — validation et stabilité", () => {
       denominateur: 1,
       profil: "solution",
     });
+    const tropDeQuarts = dessinerBandesFractionnairesSurRailDecimal({
+      numerateur: 13,
+      denominateur: 4,
+      profil: "solution",
+    });
     const mauvaisFormat = dessinerBandesFractionnairesSurRailDecimal({
       numerateur: 7,
       denominateur: 2,
@@ -629,6 +878,7 @@ describe("bandes fractionnaires sur rail — validation et stabilité", () => {
     assert.equal(mauvaisDenominateur.donnees, null);
     assert.match(mauvaisNumerateur.erreur, /compris entre 0 et 7/);
     assert.match(tropDUnites.erreur, /compris entre 0 et 12/);
+    assert.match(tropDeQuarts.erreur, /compris entre 0 et 12/);
     assert.match(mauvaisFormat.erreur, /format doit être/);
   });
 

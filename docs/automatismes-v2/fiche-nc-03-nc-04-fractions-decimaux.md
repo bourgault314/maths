@@ -1,6 +1,6 @@
 # Fiche NC-03 / NC-04 — Fractions simples et décimaux
 
-> **Candidat intégré, révisions D-049 du 13 août, D-055 du 15 août, puis D-056, D-058 et D-059 du 16 août 2026.** Cette fiche décrit le module révisé,
+> **Candidat intégré, révisions D-049 du 13 août, D-055 du 15 août, puis D-056, D-058, D-059 et D-060 du 16 août 2026.** Cette fiche décrit le module révisé,
 > et non plus le pilote du 8 août. Les questions ont été recomposées ; le cours,
 > « Me guider » et les corrections utilisent maintenant les briques communes
 > comparées dans le Labo. L'intégration et la recette conjointe D-049/D-055
@@ -11,10 +11,13 @@
 > générateurs. D-059 sépare enfin la décomposition par rang de l'échange vers
 > un rang commun et présente le matériel et le tableau comme deux méthodes
 > alternatives. Elle fixe aussi la bibliothèque de trois outils et leur usage
-> sélectif. Sa recette automatisée et sa revue visuelle sont achevées.
-> Le statut reste `construit` en attente des
-> retours de Gwenaël et de Claire. Gwenaël a autorisé le 13 août sa publication
-> de test, sans référencement ni passage à `valide`.
+> sélectif. La recette automatisée et la revue visuelle de D-059 sont
+> achevées. D-060 étend ensuite les quarts, améliore l'ordre seedé et précise
+> l'outil adapté à chaque famille, sans modifier les autres questions. Sa
+> recette automatisée est achevée et sa publication de test est autorisée ; la
+> revue visuelle aux cinq fenêtres doit encore être rejouée sur l'URL publique.
+> Le statut reste `construit` en attente des retours de Gwenaël et de Claire,
+> sans référencement ni passage à `valide`.
 
 ## 1. Identité et statut
 
@@ -54,7 +57,7 @@ numérateur et du dénominateur et la numération de position.
 Sont inclus :
 
 - les dénominateurs `1`, `2`, `4`, `10`, `100` et, à faible dose, `1 000` ;
-- les demis de `1/2` à `7/2` et les quarts de `1/4` à `8/4`, y compris les
+- les demis de `1/2` à `7/2` et les quarts de `1/4` à `12/4`, y compris les
   écritures réductibles et les résultats entiers ;
 - les dixièmes de `1/10` à `49/10`, les centièmes de `1/100` à `250/100` et
   les millièmes de `1/1000` à `999/1000`, hors multiples de 10 ;
@@ -70,6 +73,9 @@ Les repères officiels `1/2`, `1/4`, `3/4`, `3/2`, `4/2`, `5/2`, `1/10`,
 favorisés sans être rejoués à une place fixe. Une série de 20 en contient au
 moins deux, choisis et placés par la graine. Le cours les rend tous visibles et
 les relie à des procédures qui s'étendent à `n/2` et `n/4`.
+
+Dans la banque de fractions libres familières, D-060 ajoute uniquement
+`11/4`. Les autres cibles de fraction libre restent inchangées.
 
 Sont exclus de cette tranche : nombres négatifs, tiers, cinquièmes, huitièmes,
 fractions non décimales générales, pourcentages, simplification comme objectif,
@@ -134,11 +140,13 @@ n'apparaît dans l'énoncé : les représentations sont réservées au cours, à
 
 Les deux sens sont équilibrés à `50 / 50` pour une longueur paire. Pour une
 longueur impaire, le bonus est attribué par la graine et l'écart reste d'une
-question. L'ordre n'enchaîne jamais trois questions du même sens.
+question. La première question reste entièrement choisie par la graine : elle
+n'est pas forcée comme question « facile » et une production libre n'y est ni
+imposée ni interdite.
 
 | Longueur | NC-03 / NC-04 | QCM | Fractions libres | Millièmes | Couverture structurante |
 |---:|---:|---:|---:|---:|---|
-| 5 | `3 / 2` ou `2 / 3` | 1 | 1 | 0 | demis, quarts et dixièmes dans les deux sens réunis ; une fraction propre et une impropre |
+| 5 | `3 / 2` ou `2 / 3` | 1 | 1 | 0 | une question `/2`, `/4`, `/10` et `/100`, plus une fraction libre, dans un ordre seedé ; une fraction propre et une impropre |
 | 10 | `5 / 5` | 2 | 1 | 0 | ajout des centièmes dans chaque sens ; propre et impropre par sens ; au moins un entier caché dans la série |
 | 15 | `8 / 7` ou `7 / 8` | 3 | 2 | 1 | ajout de `/1` côté NC-03 ; une libre demis/quarts et une libre décimale |
 | 20 | `10 / 10` | 4 | 2 | 1 | couverture complète ; entier caché côté NC-04 et cas `/1` côté NC-03 |
@@ -152,6 +160,10 @@ Dans chaque série, les valeurs rationnelles sont toutes distinctes. Les QCM
 représentent exactement `20 %` des questions aux quatre jalons et sont répartis
 au plus équitablement entre NC-03 et NC-04. Les fractions libres remplacent
 une répétition de famille : elles n'effacent donc pas la couverture de base.
+L'ordonnancement déterministe n'accepte ni deux QCM consécutifs, ni deux
+productions libres consécutives, ni trois questions consécutives du même sens,
+ni trois dénominateurs identiques consécutifs. Ces contraintes valent pour les
+séries de 5, 10, 15 et 20 sans réserver une place particulière à une famille.
 
 ## 7. Cours explicite en six pages
 
@@ -271,18 +283,27 @@ L'affectation des représentations est la suivante :
 
 | Famille | Voir / construire |
 |---|---|
-| Demis et quarts jusqu'à 1 | bandes historiques posées une à une sur le rail ; la cible reste `?` |
-| Demis et quarts au-delà de 1 | pièces puis groupes puis unités complètes, avec une transformation visuelle à chaque étape ; si le reste vaut `2/4`, les deux quarts se fusionnent enfin en `1/2` |
+| `1/4`, `3/4`, `0,25` et `0,75` | méthode 1 avec les bandes sur rail, puis méthode 2 avec les plaques colorées réorganisées ; aucun tableau de numération |
+| `2/4` | bandes sur rail, puis fusion des deux quarts en `1/2` ; aucun tableau de numération |
+| Autres demis et quarts jusqu'à 1 | bandes historiques posées une à une sur le rail ; la cible reste `?` |
+| Demis et quarts au-delà de 1 | pièces puis groupes puis unités complètes sur rail, avec une transformation visuelle à chaque étape ; pour les quarts de `9/4` à `12/4`, le rail atteint 3 unités |
 | Dixièmes et centièmes | deux voies alternatives : conversion matérielle commune en deux états, ou tableau commun |
 | Millièmes | tableau de numération seulement ; aucun matériel miniaturisé illisible |
 | Dénominateur 1 | tuiles d'unités non numérotées à compter |
-| Fraction libre | dernier rang du seul décimal, puis fraction décimale `?/10` ou `?/100` ; `0,5`, `0,25` et `0,75` utilisent les correspondances dédiées, les autres valeurs la conversion par rang ; aucun dénominateur canonique caché n'est utilisé |
+| Fraction libre | dernier rang du seul décimal, puis fraction décimale `?/10` ou `?/100` ; `0,5` utilise les bandes de demis, `0,25` et `0,75` les deux méthodes rail–plaques ci-dessus, les autres valeurs la conversion par rang ; aucun dénominateur canonique caché n'est utilisé |
 
 Cette table est une règle de sélection, pas une consigne d'empilement. Dans un
 exercice, une aide ou une correction, le lecteur retient le visuel le plus
 pertinent ; le tableau demeure l'outil transversal disponible pour lire les
-rangs. En particulier, une équivalence telle que `2/4 = 0,5` se construit avec
-les bandes alignées sur le rail plutôt qu'avec une grille de 100.
+rangs, mais il n'est pas ajouté lorsqu'il n'apporte pas de sens. En particulier,
+`2/4 = 0,5` se construit avec les bandes alignées sur le rail et leur fusion ;
+`1/4`, `3/4`, `0,25` et `0,75` passent des mêmes bandes aux plaques en
+centièmes, jamais au tableau.
+
+Dans l'aide du sens inverse, lorsque la cible dépasse huit quarts, une commande
+permet d'ajouter quatre quarts d'un geste, c'est-à-dire une unité. Elle accélère
+la construction de `9/4` à `12/4` sans inscrire ni exposer le numérateur cible
+dans le dessin, ses alternatives accessibles ou ses attributs.
 
 Les profils `aide-nc03` et `aide-nc04` sont distincts du profil `solution` et
 compatibles avec un seul sens chacun. Le premier masque l'écriture décimale à
@@ -309,20 +330,24 @@ Une saisie omise reste sur la question avec le libellé « Pas de réponse » :
 elle ne déplie pas automatiquement la correction, mais la solution correcte
 est affichée séparément en vert. Pour un QCM omis, la proposition correcte est
 verte directement dans la liste. La correction détaillée reprend ensuite la
-représentation mathématique pertinente : grille de 100 pour les demis/quarts
-quand l'organisation en centièmes porte le sens, bandes sur rail pour une
-équivalence comme `2/4 = 0,5` et pour les fractions au-delà de 1, deux méthodes
-alternatives — plaques de numération ou tableau — pour `/10` et `/100`, tableau
-seul pour `/1000`, et tuiles pour `/1`. Le cours,
-l'aide et la correction puisent dans les mêmes primitives canoniques ; chacun
+représentation mathématique pertinente : bandes sur rail puis plaques
+réorganisées pour `1/4`, `3/4`, `0,25` et `0,75`, sans tableau ; rail avec
+fusion pour `2/4` ; rail pour les demis et quarts au-delà de 1 ; deux méthodes
+alternatives — plaques de numération ou tableau — pour `/10` et `/100` ;
+tableau seul pour `/1000` ; tuiles pour `/1`. Une fraction qui représente
+exactement un entier n'est pas répétée dans sa chaîne d'égalités, pas plus que
+l'entier obtenu. Le cours, l'aide et la correction puisent dans les mêmes
+primitives canoniques ; chacun
 choisit la représentation pertinente au contexte, et le profil `solution`
 n'autorise la révélation que dans le cours et la correction.
 
 Pour une fraction libre, elle repart du dernier rang écrit et porte le titre
 « Une réponse possible ». Par exemple, elle peut montrer
 `0,25 = 25/100 = 1/4`, en précisant que `25/100`, `1/4` et toute fraction
-équivalente sont justes. La forme familière réduite n'est affichée que comme
-équivalence éventuelle, jamais comme obligation implicite.
+équivalente sont justes. Pour `0,25` et `0,75`, cette équivalence est construite
+avec le rail puis les plaques, et non avec le tableau. La forme familière
+réduite n'est affichée que comme équivalence éventuelle, jamais comme
+obligation implicite.
 
 ## 10. Présentation dans les deux contextes
 
@@ -351,6 +376,12 @@ plus les réponses justes, fausses, omises et partielles : une omission ne doit
 ouvrir aucun panneau, sa solution verte doit être visible, le pavé doit
 disparaître et les deux actions de suite doivent rester disponibles.
 
+D-060 ajoute à cette recette les quarts de `1/4` à `12/4`, la présence des
+quatre familles imposées et d'une libre dans une série de 5, la variété de la
+première question selon les graines, les quatre contraintes de voisinage,
+l'accélération masquée des quarts supérieurs à 8, la sélection rail–plaques–
+tableau et l'absence de répétition dans les égalités d'entiers cachés.
+
 La recette de D-047 — **1 458 tests**, **270 états** et **439 captures** —,
 celle de D-054 — **1 516 tests**, **24 états de page** et **72 captures** — et
 la campagne conjointe D-049/D-055 — **1 519 tests**, **220 états navigateur**
@@ -371,6 +402,14 @@ conteneur local, aucun texte coupé et aucun élément hors panneau. Elle vérif
 les trois outils des pages 1 et 2, les méthodes séparées des pages 4 et 5,
 `2/4 = 1/2 = 0,5` sur rail, l'état naturel puis converti de `2,27`, les masques
 NC-03/NC-04 et l'usage exclusif du tableau pour `/1000`.
+
+La recette automatisée D-060 passe **1 579 tests sur 1 579**, répartis en
+**232 suites**. Un audit de **40 000 séries**, soit **500 000 questions**, ne
+relève aucune violation des quotas, de l'unicité rationnelle ni des quatre
+contraintes de voisinage ; toutes les combinaisons `9/4` à `12/4`, dans les
+deux sens et en saisie comme en QCM, sont atteintes. Le Labo passe **165 tests
+sur 165** et le graphe de cache commun est cohérent en `v37`. La revue visuelle
+multi-fenêtre doit encore être rejouée sur l'URL publique.
 
 Le candidat reste `construit`. Sa publication de test autorisée le 13 août ne
 l'expose ni dans le menu public ni dans le sitemap ; le passage à `valide`

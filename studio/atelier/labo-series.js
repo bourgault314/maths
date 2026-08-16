@@ -464,7 +464,7 @@ const svgBandesRail = (options) =>
 const entreeBandesFractionsRail = {
   titre: "Prototype guidé — bandes du plateau + rail décimal",
   parametres: [
-    { cle: "numerateur", libelle: "Numérateur", min: 0, max: 8, pas: 1, defaut: 5 },
+    { cle: "numerateur", libelle: "Numérateur", min: 0, max: 12, pas: 1, defaut: 5 },
     { cle: "largeur", libelle: "Largeur", min: 260, max: 1200, pas: 20, defaut: 340 },
   ],
   groupes: [
@@ -539,6 +539,18 @@ const entreeBandesFractionsRail = {
       legende: "6/4 — une unité puis 2/4 regroupés en 1/2",
       dessiner: () => svgBandesRail({
         numerateur: 6, denominateur: 4, profil: "aide-nc03", etape: "reste", largeur: 340,
+      }),
+    },
+    {
+      legende: "11/4 — deux unités et trois quarts sur le rail",
+      dessiner: () => svgBandesRail({
+        numerateur: 11, denominateur: 4, profil: "solution", etape: "lecture", largeur: 340,
+      }),
+    },
+    {
+      legende: "12/4 — trois unités exactes",
+      dessiner: () => svgBandesRail({
+        numerateur: 12, denominateur: 4, profil: "solution", etape: "unites", largeur: 340,
       }),
     },
     {

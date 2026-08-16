@@ -38,6 +38,37 @@ function compterMicroNotions(elements) {
   }, { [MICRO_NOTION_NC03]: 0, [MICRO_NOTION_NC04]: 0 });
 }
 
+function verifierContraintesOrdre(plan) {
+  for (let index = 1; index < plan.length; index += 1) {
+    assert.equal(
+      plan[index - 1].presentation === "qcm-diagnostique"
+        && plan[index].presentation === "qcm-diagnostique",
+      false,
+      `deux QCM consécutifs aux positions ${index} et ${index + 1}`,
+    );
+    assert.equal(
+      plan[index - 1].forme === "fraction-libre"
+        && plan[index].forme === "fraction-libre",
+      false,
+      `deux fractions libres consécutives aux positions ${index} et ${index + 1}`,
+    );
+  }
+  for (let index = 2; index < plan.length; index += 1) {
+    assert.equal(
+      plan[index - 2].microNotion === plan[index].microNotion
+        && plan[index - 1].microNotion === plan[index].microNotion,
+      false,
+      `trois questions de même sens à la position ${index + 1}`,
+    );
+    assert.equal(
+      plan[index - 2].denominateur === plan[index].denominateur
+        && plan[index - 1].denominateur === plan[index].denominateur,
+      false,
+      `trois dénominateurs identiques à la position ${index + 1}`,
+    );
+  }
+}
+
 describe("NC-03/NC-04 — plan de série commun", () => {
   it("équilibre tous les formats 1 à 20 et donne le bonus impair selon la graine", () => {
     const bonusVus = new Set();
@@ -102,10 +133,12 @@ describe("NC-03/NC-04 — plan de série commun", () => {
           quotas.milliemes,
         );
         assert.equal(new Set(plan.map(cleRationnelle)).size, nombreQuestions);
+        verifierContraintesOrdre(plan);
         if (nombreQuestions === 5) {
-          for (const denominateur of [2, 4, 10]) {
+          for (const denominateur of [2, 4, 10, 100]) {
             assert.ok(plan.some((element) =>
-              element.denominateur === denominateur));
+              element.forme !== "fraction-libre"
+              && element.denominateur === denominateur));
           }
         }
         if (nombreQuestions % 2 === 0) {
@@ -123,21 +156,47 @@ describe("NC-03/NC-04 — plan de série commun", () => {
     }
   });
 
-  it("n'enchaîne jamais trois questions dans le même sens", () => {
+  it("respecte les quatre contraintes d'ordre pour toutes les longueurs", () => {
     for (let nombreQuestions = 1; nombreQuestions <= 20; nombreQuestions += 1) {
       for (let graine = 0; graine < 200; graine += 1) {
         const plan = planifierSerieFractionsDecimaux({
           graine: `ordre-${nombreQuestions}-${graine}`,
           nombreQuestions,
         });
-        plan.slice(2).forEach((element, index) => {
-          assert.equal(
-            element.microNotion === plan[index].microNotion
-              && element.microNotion === plan[index + 1].microNotion,
-            false,
-          );
-        });
+        verifierContraintesOrdre(plan);
       }
+    }
+  });
+
+  it("ne réserve aucune famille facile à la première position", () => {
+    for (const nombreQuestions of LONGUEURS_JALONS) {
+      const premiers = {
+        qcm: false,
+        libre: false,
+        propre: false,
+        impropre: false,
+        microNotions: new Set(),
+        denominateurs: new Set(),
+      };
+      for (let graine = 0; graine < 500; graine += 1) {
+        const premier = planifierSerieFractionsDecimaux({
+          graine: `premiere-${nombreQuestions}-${graine}`,
+          nombreQuestions,
+        })[0];
+        premiers.qcm ||= premier.presentation === "qcm-diagnostique";
+        premiers.libre ||= premier.forme === "fraction-libre";
+        premiers.propre ||= premier.numerateur < premier.denominateur;
+        premiers.impropre ||= premier.numerateur > premier.denominateur
+          && premier.numerateur % premier.denominateur !== 0;
+        premiers.microNotions.add(premier.microNotion);
+        premiers.denominateurs.add(premier.denominateur);
+      }
+      assert.equal(premiers.qcm, true);
+      assert.equal(premiers.libre, true);
+      assert.equal(premiers.propre, true);
+      assert.equal(premiers.impropre, true);
+      assert.equal(premiers.microNotions.size, 2);
+      assert.ok(premiers.denominateurs.size >= 3);
     }
   });
 
@@ -204,14 +263,23 @@ describe("NC-03/NC-04 — plan de série commun", () => {
   });
 
   it("garantit les classes structurelles sans épuiser les valeurs distinctes", () => {
-    const propre = ({ numerateur, denominateur }) =>
-      [2, 4].includes(denominateur) && numerateur < denominateur;
-    const impropre = ({ numerateur, denominateur }) =>
-      [2, 4].includes(denominateur)
+    const propre = ({ numerateur, denominateur, forme }) =>
+      forme !== "fraction-libre"
+      && [2, 4, 10, 100].includes(denominateur)
+      && numerateur < denominateur;
+    const impropre = ({ numerateur, denominateur, forme }) =>
+      forme !== "fraction-libre"
+      && [2, 4, 10, 100].includes(denominateur)
       && numerateur > denominateur
       && numerateur % denominateur !== 0;
-    const entierCache = ({ numerateur, denominateur }) =>
-      denominateur !== 1 && numerateur % denominateur === 0;
+    const propreSimple = (element) =>
+      [2, 4].includes(element.denominateur) && propre(element);
+    const impropreSimple = (element) =>
+      [2, 4].includes(element.denominateur) && impropre(element);
+    const entierCache = ({ numerateur, denominateur, forme }) =>
+      forme !== "fraction-libre"
+      && denominateur !== 1
+      && numerateur % denominateur === 0;
     for (const nombreQuestions of LONGUEURS_JALONS) {
       for (let graine = 0; graine < 1000; graine += 1) {
         const plan = planifierSerieFractionsDecimaux({
@@ -225,6 +293,10 @@ describe("NC-03/NC-04 — plan de série commun", () => {
             const sens = plan.filter((element) => element.microNotion === microNotion);
             assert.ok(sens.some(propre));
             assert.ok(sens.some(impropre));
+            if (nombreQuestions >= 15) {
+              assert.ok(sens.some(propreSimple));
+              assert.ok(sens.some(impropreSimple));
+            }
           }
           assert.ok(plan.some(entierCache));
         }
@@ -235,6 +307,33 @@ describe("NC-03/NC-04 — plan de série commun", () => {
             element.microNotion === MICRO_NOTION_NC03
             && element.denominateur === 1));
         }
+      }
+    }
+  });
+
+  it("rend les quarts 9 à 12 atteignables dans les deux sens dès les séries courtes", () => {
+    for (const nombreQuestions of [5, 10]) {
+      const vus = new Map([
+        [MICRO_NOTION_NC03, new Set()],
+        [MICRO_NOTION_NC04, new Set()],
+      ]);
+      for (let graine = 0; graine < 1000; graine += 1) {
+        const plan = planifierSerieFractionsDecimaux({
+          graine: `nouveaux-quarts-${nombreQuestions}-${graine}`,
+          nombreQuestions,
+        });
+        for (const element of plan) {
+          if (
+            element.forme !== "fraction-libre"
+            && element.denominateur === 4
+            && element.numerateur >= 9
+          ) {
+            vus.get(element.microNotion).add(element.numerateur);
+          }
+        }
+      }
+      for (const valeurs of vus.values()) {
+        assert.deepEqual([...valeurs].sort((a, b) => a - b), [9, 10, 11, 12]);
       }
     }
   });

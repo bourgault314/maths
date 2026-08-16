@@ -11,11 +11,11 @@ import {
 import {
   COMPARAISON_VALEUR_EXACTE,
   TYPE_REPONSE_ENTIER_NATUREL,
-} from "../../../../contrats/src/question-v2.js?v=36";
+} from "../../../../contrats/src/question-v2.js?v=37";
 import {
   IDENTITES_AUTOMATISMES,
   creerClassementAutomatisme,
-} from "../../identifiants.js?v=36";
+} from "../../identifiants.js?v=37";
 
 export const NOTION_CARRES_ENTIERS =
   IDENTITES_AUTOMATISMES.CARRES_ENTIERS.module;

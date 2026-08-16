@@ -46,6 +46,15 @@ test("les bandes sur rail exposent les unités, l'étape reste et leurs cas tém
   assert.match(svg, /class="reste-fusionne-en-demi"/);
   assert.match(svg, /class="ecriture-reste-demi"/);
   assert.doesNotMatch(svg, /class="resultat-decimal"[^>]*>1,5<\/text>/);
+
+  const curseurNumerateur = entree.parametres.find(({ cle }) => cle === "numerateur");
+  assert.equal(curseurNumerateur.max, 12);
+  const carteOnzeQuarts = entree.planche().find(({ legende }) => legende.startsWith("11/4"));
+  const carteDouzeQuarts = entree.planche().find(({ legende }) => legende.startsWith("12/4"));
+  assert.ok(carteOnzeQuarts, "la planche doit montrer 11/4 sur trois unités");
+  assert.ok(carteDouzeQuarts, "la planche doit montrer 12/4 égal à trois unités");
+  assert.match(carteOnzeQuarts.dessiner(), /fraction de numérateur 11 et de dénominateur 4 vaut 2,75/);
+  assert.match(carteDouzeQuarts.dessiner(), /fraction de numérateur 12 et de dénominateur 4 vaut 3/);
 });
 
 for (const serie of SERIES) {

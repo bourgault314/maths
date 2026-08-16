@@ -3,7 +3,7 @@
 // les générateurs, le lecteur et les objets visuels peuvent donc partager les
 // mêmes calculs exacts et les mêmes données structurées.
 
-export const VERSION_FRACTIONS_DECIMAUX = 3;
+export const VERSION_FRACTIONS_DECIMAUX = 4;
 
 export const DENOMINATEURS_DECIMAUX_PRIS_EN_CHARGE = Object.freeze([
   1,
@@ -289,7 +289,7 @@ export const DONNEES_DROITE_UNITES = construireDonneesDroite(
 export const DONNEES_DROITE_QUARTS = construireDonneesDroite(
   "quarts",
   4,
-  8,
+  12,
 );
 
 /** Rend les données de la droite des unités, des demis ou des quarts. */

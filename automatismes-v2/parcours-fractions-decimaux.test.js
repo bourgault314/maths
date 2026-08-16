@@ -43,9 +43,9 @@ function saisirTexte(etat, texte) {
 }
 
 test("les versions de provenance reflètent le moteur hybride", () => {
-  assert.equal(VERSION_GENERATEUR_FRACTION_VERS_DECIMAL, 3);
-  assert.equal(VERSION_GENERATEUR_DECIMAL_VERS_FRACTION, 3);
-  assert.equal(VERSION_PLAN_SERIE_FRACTIONS_DECIMAUX, 3);
+  assert.equal(VERSION_GENERATEUR_FRACTION_VERS_DECIMAL, 4);
+  assert.equal(VERSION_GENERATEUR_DECIMAL_VERS_FRACTION, 4);
+  assert.equal(VERSION_PLAN_SERIE_FRACTIONS_DECIMAUX, 4);
 });
 
 test("une série longue équilibre les deux sens et leurs représentations", () => {

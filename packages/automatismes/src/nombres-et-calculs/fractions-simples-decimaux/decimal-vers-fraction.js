@@ -4,8 +4,8 @@
 
 import {
   SCHEMA_QUESTION_INSTANCE_V2,
-} from "../../../../contrats/src/question-v2.js?v=36";
-import { fractionsEgales } from "../../../../objets/src/fractions-decimaux.js?v=36";
+} from "../../../../contrats/src/question-v2.js?v=37";
+import { fractionsEgales } from "../../../../objets/src/fractions-decimaux.js?v=37";
 import {
   MICRO_NOTION_NC04,
   NUMERATEURS_DEMIS,
@@ -21,16 +21,16 @@ import {
   reponseChoixUnique,
   reponseFractionEquivalente,
   reponseNumerateurImpose,
-} from "./commun.js?v=36";
+} from "./commun.js?v=37";
 import {
   NUMERATEURS_CENTIEMES,
   NUMERATEURS_DIXIEMES,
   NUMERATEURS_MILLIEMES,
-} from "./fraction-vers-decimal.js?v=36";
+} from "./fraction-vers-decimal.js?v=37";
 
 export const NOM_GENERATEUR_DECIMAL_VERS_FRACTION =
   "nombres-et-calculs.fractions-simples-decimaux.decimal-vers-fraction";
-export const VERSION_GENERATEUR_DECIMAL_VERS_FRACTION = 3;
+export const VERSION_GENERATEUR_DECIMAL_VERS_FRACTION = 4;
 
 export const GABARIT_DECIMAL_VERS_FRACTION = creerGabaritFractions({
   id: NOM_GENERATEUR_DECIMAL_VERS_FRACTION,
@@ -52,6 +52,7 @@ export const CIBLES_FRACTION_LIBRE_DEMIS_QUARTS = Object.freeze([
   Object.freeze({ numerateur: 7, denominateur: 4 }),
   Object.freeze({ numerateur: 5, denominateur: 2 }),
   Object.freeze({ numerateur: 7, denominateur: 2 }),
+  Object.freeze({ numerateur: 11, denominateur: 4 }),
 ]);
 
 export const CIBLES_FRACTION_LIBRE_DECIMALES = Object.freeze([
