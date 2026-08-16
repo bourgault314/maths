@@ -14,18 +14,18 @@ import {
   construireGroupementFraction,
   formaterFractionEnDecimal,
   obtenirDonneesDroiteFractionnaire,
-} from "./fractions-decimaux.js?v=37";
+} from "./fractions-decimaux.js?v=38";
 import {
   mesurerEcritureFractionSvg,
   rendreFractionSvg,
-} from "./expressions.js?v=37";
+} from "./expressions.js?v=38";
 import {
   COULEURS_BANDES_FRACTIONS,
   TYPOGRAPHIE,
   couleurBandeFraction,
-} from "../../charte/src/charte.js?v=37";
+} from "../../charte/src/charte.js?v=38";
 
-export const VERSION_BANDES_FRACTIONS_RAIL = 6;
+export const VERSION_BANDES_FRACTIONS_RAIL = 7;
 
 const PROFILS = Object.freeze([
   "aide-nc03",
@@ -243,6 +243,7 @@ function messageValidation(reglages, largeur) {
     profil,
     etape = "pieces",
     format = "standard",
+    afficherReperesIntermediairesCours = false,
   } = reglages;
   if (!Number.isInteger(denominateur) || !Object.hasOwn(LIMITES_NUMERATEURS, denominateur)) {
     return "Le dénominateur doit être 1, 2 ou 4.";
@@ -262,6 +263,22 @@ function messageValidation(reglages, largeur) {
   }
   if (!FORMATS.includes(format)) {
     return `Le format doit être l'un des suivants : ${FORMATS.join(", ")}.`;
+  }
+  if (typeof afficherReperesIntermediairesCours !== "boolean") {
+    return "L’affichage des repères intermédiaires du cours doit être un booléen.";
+  }
+  if (
+    afficherReperesIntermediairesCours
+    && (
+      !["aide-nc03", "solution"].includes(profil)
+      || etape !== "pieces"
+      || ![2, 4].includes(denominateur)
+    )
+  ) {
+    return (
+      "Les repères intermédiaires sont réservés aux bandes non regroupées " +
+      "des demis ou des quarts dans le cours."
+    );
   }
 
   const valeurParDefaut = profil.startsWith("aide-nc04") && etape === "pieces"
@@ -567,6 +584,7 @@ function rail({
   profil,
   decimal,
   basBande,
+  afficherReperesIntermediairesCours,
 }) {
   const finX = origineX + maximumRail * largeurUnite;
   const debutFlecheX = finX + 8;
@@ -620,10 +638,19 @@ function rail({
     const montrerSolution = profil === "solution" && (
       !solutionCompacte || estEntier || estCible || repereIntermediaireUtile
     );
-    const montrer = montrerSolution || (profil !== "solution" && estEntier && !estCible);
+    const repereIntermediaireCours = afficherReperesIntermediairesCours
+      && !estEntier
+      && !estCible;
+    const montrer = montrerSolution
+      || repereIntermediaireCours
+      || (profil !== "solution" && estEntier && !estCible);
     if (montrer) {
       elements.push(texte(x, y + 28, ecriture, {
-        classe: estCible ? "etiquette-rail cible" : "etiquette-rail",
+        classe: estCible
+          ? "etiquette-rail cible"
+          : repereIntermediaireCours
+            ? "etiquette-rail repere-intermediaire-cours"
+            : "etiquette-rail",
         taille: 13,
         graisse: 800,
         ancre: ancreEtiquetteRail({
@@ -702,7 +729,14 @@ function vocabulairePartie(denominateur) {
   });
 }
 
-function texteAlternatifPour({ numerateur, denominateur, decimal, profil, etape }) {
+function texteAlternatifPour({
+  numerateur,
+  denominateur,
+  decimal,
+  profil,
+  etape,
+  afficherReperesIntermediairesCours,
+}) {
   const vocabulaire = vocabulairePartie(denominateur);
   const materiel = numerateur === 1
     ? `${vocabulaire.article} ${vocabulaire.singulier}`
@@ -711,10 +745,20 @@ function texteAlternatifPour({ numerateur, denominateur, decimal, profil, etape 
   const explicationReste = etape === "reste" && denominateur === 4 && reste === 2
     ? " Les deux quarts restants sont regroupés en une demi-bande."
     : "";
+  const maximumIndex = Math.ceil(numerateur / denominateur) * denominateur;
+  const reperesIntermediaires = afficherReperesIntermediairesCours
+    ? Array.from({ length: Math.max(0, maximumIndex - 1) }, (_, position) => position + 1)
+      .filter((index) => index !== numerateur && index % denominateur !== 0)
+      .map((index) => formaterFractionEnDecimal(index, denominateur))
+    : [];
+  const explicationReperes = reperesIntermediaires.length > 0
+    ? ` Les repères décimaux intermédiaires nommés sont ${reperesIntermediaires.join(", ")}.`
+    : "";
   if (profil === "aide-nc03") {
     return (
       `La fraction de numérateur ${numerateur} et de dénominateur ${denominateur} est représentée ` +
-      `avec ${materiel} sur un rail décimal.${explicationReste} La valeur décimale cible reste masquée.`
+      `avec ${materiel} sur un rail décimal.${explicationReste}${explicationReperes} ` +
+      "La valeur décimale cible reste masquée."
     );
   }
   if (profil.startsWith("aide-nc04")) {
@@ -730,7 +774,7 @@ function texteAlternatifPour({ numerateur, denominateur, decimal, profil, etape 
   return (
     `Solution : la fraction de numérateur ${numerateur} et de dénominateur ${denominateur} ` +
     `vaut ${decimal}. La représentation emploie ${materiel} ; les bandes à l'étape ${etape} ` +
-    "sont alignées sur le même rail décimal."
+    `sont alignées sur le même rail décimal.${explicationReperes}`
   );
 }
 
@@ -748,6 +792,12 @@ function texteAlternatifPour({ numerateur, denominateur, decimal, profil, etape 
  * Le format `mobile-compact` conserve la longueur apparente des pièces à
  * faible largeur, mais réduit seulement la hauteur du rail afin de garder les
  * écritures et graduations lisibles sans produire de bandes surdimensionnées.
+ * L’option explicite `afficherReperesIntermediairesCours` est limitée aux
+ * bandes non regroupées (étape `pieces`) des demis et des quarts. Dans la vue
+ * initiale `aide-nc03`, elle nomme les graduations décimales intermédiaires,
+ * mais conserve la cible finale sous la forme `?`. En profil `solution`, elle
+ * empêche la synthèse du cours de supprimer les quarts impairs sur petit écran.
+ * Les profils d’aide ne l’activent jamais par défaut.
  */
 export function dessinerBandesFractionnairesSurRailDecimal(reglages = {}) {
   const largeur = normaliserLargeur(reglages?.largeur);
@@ -760,6 +810,7 @@ export function dessinerBandesFractionnairesSurRailDecimal(reglages = {}) {
     profil,
     etape = "pieces",
     format = "standard",
+    afficherReperesIntermediairesCours = false,
   } = reglages;
   const partiesPoseesParDefaut = profil.startsWith("aide-nc04") && etape === "pieces"
     ? 0
@@ -793,6 +844,7 @@ export function dessinerBandesFractionnairesSurRailDecimal(reglages = {}) {
     decimal,
     profil,
     etape,
+    afficherReperesIntermediairesCours,
   });
 
   const corps =
@@ -817,6 +869,7 @@ export function dessinerBandesFractionnairesSurRailDecimal(reglages = {}) {
       profil,
       decimal,
       basBande: geometrie.yBande + hauteurDeBande,
+      afficherReperesIntermediairesCours,
     });
 
   return Object.freeze({
@@ -843,6 +896,9 @@ export function dessinerBandesFractionnairesSurRailDecimal(reglages = {}) {
       positionPointeFleche: arrondi2(geometrie.margeGauche + maximumRail * largeurUnite + 20),
       distanceCible: arrondi2(numerateur * largeurPartie),
       partiesPosees,
+      ...(afficherReperesIntermediairesCours
+        ? { afficherReperesIntermediairesCours: true }
+        : {}),
       resteFusionneEnDemi: etape === "reste" && denominateur === 4 && groupement.reste === 2,
     }),
   });

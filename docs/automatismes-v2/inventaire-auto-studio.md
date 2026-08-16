@@ -128,6 +128,14 @@ inverse au-delà de huit quarts, une commande ajoute une unité, soit quatre
 quarts, sans exposer le numérateur attendu. Les chaînes de correction des
 entiers cachés éliminent les membres identiques répétés.
 
+D-061 affine le cours sans modifier cette sélection. Le vocabulaire y parle de
+bandes représentant un demi ou un quart. Le premier rail écrit
+`1/2 = 0,5` ; le rail des quarts rend visibles
+`1/4 = 0,25`, `2/4 = 1/2 = 0,5` et `3/4 = 0,75`. La page des rangs emploie
+des titres avec signe égal et centre une troisième carte isolée. Le texte des
+centièmes prend sa teinte moutarde accessible dans la charte commune, tandis
+que l'aplat du matériel demeure jaune.
+
 Le Labo conserve les bandes et grilles existantes, le composant guidé sur rail
 et les correspondances exactes comme familles de comparaison utiles. Le
 lecteur V2 importe les briques communes retenues ; le Labo reste leur banc de
@@ -218,10 +226,16 @@ et le tableau sont deux voies alternatives, intitulées
 emploient les mêmes objets de conversion dans les deux sens pour
 `147/100 ↔ 1,47` et `3,54 ↔ 354/100`. La dernière page
 restaure les transformations complètes de `7/2` et `6/4` avec la variante
-mobile standard de largeur source `340` ; les repères `3/2`, `4/2` et `5/2`
-sont rappelés sans nouveau grand rail. Sa liste stratégique et sa note quotient
-ont été retirées. Le matériel décimal traite les autres dixièmes et centièmes
-et le tableau va jusqu'aux millièmes. La droite graduée demeure une
+mobile standard de largeur source `340`. D-061 laisse visibles, dans le cours
+seulement, leurs repères décimaux intermédiaires tout en conservant la cible
+finale à `?`, puis remplace le rappel textuel des seuls demis par une synthèse
+symétrique sur deux rails de bandes, demis et quarts. Les profils d'aide
+restent masqués. Sur téléphone, les deux exemples détaillés gardent leur
+largeur source standard `340`, tandis que les deux rails de synthèse emploient
+la variante `mobile-compact` de largeur source `260`. Sa liste stratégique et
+sa note quotient ont été retirées.
+Le matériel décimal traite les autres dixièmes et centièmes et le tableau va
+jusqu'aux millièmes. La droite graduée demeure une
 brique commune et un point de comparaison du Labo, mais n'est plus une forme
 de question de cette recette. Les questions restent abstraites ou en QCM et
 n'importent aucune représentation dans leur énoncé. L'atelier unique de
@@ -277,6 +291,15 @@ nouveaux témoins `11/4` et `12/4`. La recette complète du dépôt passe
 Le graphe de cache est cohérent en `v37`. Gwenaël autorise la publication de
 test ; la revue visuelle aux cinq fenêtres doit être rejouée sur l'URL
 publique.
+
+D-061 ajoute aussi un correctif au cartouche de réponse commun : son ombre est
+supprimée uniquement en mode « Au tableau », afin d'éliminer la bande orange
+décalée observée en projection sans changer l'entraînement. La recette
+automatisée complète passe **1 586 tests sur 1 586** dans **232 suites** et le
+graphe de cache est cohérent en `v38`. Faute de runtime Chromium local, la
+revue visuelle aux cinq fenêtres doit être menée sur l'URL publique ; elle
+inclut les six pages, les profils masqués et ce cartouche en mode tableau. La
+publication est demandée afin d'y mener cette dernière revue.
 
 ## Réservoirs techniques à examiner au besoin
 

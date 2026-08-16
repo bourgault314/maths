@@ -154,6 +154,29 @@ describe("moule responsive commun", () => {
       css,
       /@media \(min-width: 681px\)[\s\S]*?\.bandes-rail-cours-responsive-mobile-strict \.figure-bandes-rail-cours-large\s*\{[^}]*display:\s*block;[\s\S]*?\.bandes-rail-cours-responsive-mobile-strict \.figure-bandes-rail-cours-mobile\s*\{[^}]*display:\s*none;/s,
     );
+    assert.match(
+      blocCss(".reperes-bandes-synthese-cours"),
+      /grid-template-columns:\s*minmax\(0, 1fr\)/,
+    );
+  });
+
+  it("centre les derniers repères isolés de la page des rangs", () => {
+    assert.match(
+      css,
+      /@container \(min-width: 560px\)[\s\S]*?\.echanges-rangs-cours > section:last-child\s*\{[^}]*width:\s*min\(100%, 520px\);[^}]*grid-column:\s*1 \/ -1;[^}]*justify-self:\s*center;/s,
+    );
+    assert.match(
+      blocCss(".reperes-rangs-cours"),
+      /grid-template-columns:\s*minmax\(0, 1fr\)/,
+    );
+    assert.match(
+      css,
+      /@container \(min-width: 340px\) and \(max-width: 529px\)[\s\S]*?\.reperes-rangs-cours\s*\{[^}]*grid-template-columns:\s*repeat\(2, minmax\(0, 1fr\)\)[\s\S]*?\.reperes-rangs-cours > :last-child\s*\{[^}]*grid-column:\s*1 \/ -1[^}]*justify-self:\s*center/s,
+    );
+    assert.match(
+      css,
+      /@container \(min-width: 530px\)[\s\S]*?\.reperes-rangs-cours\s*\{[^}]*grid-template-columns:\s*repeat\(3, minmax\(0, 1fr\)\)/s,
+    );
   });
 
   it("fait tenir les grandes égalités dans les cartes méthode à 320 px", () => {
@@ -198,6 +221,16 @@ describe("moule responsive commun", () => {
     assert.doesNotMatch(active, /outline|outline-offset/);
     assert.match(css, /\.mode-entrainement \.case-reponse-carres\s*\{[^}]*width:\s*98px/s);
     assert.match(cssCommun, /button:focus-visible/);
+  });
+
+  it("supprime la semelle des cartouches de réponse uniquement en projection", () => {
+    assert.match(
+      css,
+      /\.mode-tableau \.case-reponse-carres,\s*\.mode-tableau \.case-reponse-rationnelle,\s*\.mode-tableau \.case-puissance \.mathsgo-puissance-base\s*\{[^}]*box-shadow:\s*none/s,
+    );
+    assert.match(blocCss(".case-reponse-carres"), /box-shadow:\s*0 3px 0/);
+    assert.match(blocCss(".case-reponse-rationnelle"), /box-shadow:\s*0 3px 0/);
+    assert.match(blocCss(".case-puissance .mathsgo-puissance-base"), /box-shadow:\s*0 3px 0/);
   });
 
   it("place l'exposant hors du contour du champ inverse", () => {

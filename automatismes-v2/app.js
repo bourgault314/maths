@@ -3,7 +3,7 @@ import {
   COULEURS_RANGS_NUMERATION_DECIMALE,
   RAYONS,
   TYPOGRAPHIE,
-} from "../packages/charte/src/charte.js?v=37";
+} from "../packages/charte/src/charte.js?v=38";
 import {
   avancerFractionAide,
   avancerCorrespondanceAide,
@@ -36,14 +36,14 @@ import {
   saisirChiffre,
   tournerSolide,
   validerReponse,
-} from "./src/etat-lecteur.js?v=37";
+} from "./src/etat-lecteur.js?v=38";
 import {
   TYPE_REPONSE_DEUX_ENTIERS,
   TYPE_REPONSE_ENTIER_NATUREL,
   TYPE_REPONSE_FRACTION_EQUIVALENTE,
   TYPE_REPONSE_NOMBRE_DECIMAL,
   TYPE_REPONSE_CHOIX_UNIQUE,
-} from "../packages/contrats/src/question-v2.js?v=37";
+} from "../packages/contrats/src/question-v2.js?v=38";
 import {
   connaitNotionLecteur,
   obtenirNotionLecteur,
@@ -53,13 +53,13 @@ import {
   RENDU_SOLIDE,
   RENDU_VOLUME,
   NOTION_FRACTIONS_SIMPLES_DECIMAUX,
-} from "./src/registre-lecteur.js?v=37";
+} from "./src/registre-lecteur.js?v=38";
 import {
   DOMAINES_AUTOMATISMES,
   MICRO_NOTIONS_AUTOMATISMES,
   normaliserIdentifiantMicroNotion,
-} from "../packages/automatismes/src/identifiants.js?v=37";
-import { COURS_SOLIDES_USUELS } from "../packages/automatismes/src/espace-et-geometrie/solides-usuels/reconnaissance.js?v=37";
+} from "../packages/automatismes/src/identifiants.js?v=38";
+import { COURS_SOLIDES_USUELS } from "../packages/automatismes/src/espace-et-geometrie/solides-usuels/reconnaissance.js?v=38";
 import {
   creerCone,
   creerCube,
@@ -68,14 +68,14 @@ import {
   creerPrisme,
   creerPyramide,
   dessinerSolide,
-} from "../packages/objets/src/solides.js?v=37";
+} from "../packages/objets/src/solides.js?v=38";
 import {
   ACTION_TOUCHE_EFFACER,
   ACTION_TOUCHE_SAISIR,
   ACTION_TOUCHE_VALIDER,
   obtenirDispositionClavier,
-} from "../packages/objets/src/clavier.js?v=37";
-import { formulationCritereDivisibilite } from "../packages/automatismes/src/nombres-et-calculs/criteres-divisibilite/critere-precis.js?v=37";
+} from "../packages/objets/src/clavier.js?v=38";
+import { formulationCritereDivisibilite } from "../packages/automatismes/src/nombres-et-calculs/criteres-divisibilite/critere-precis.js?v=38";
 import {
   caseVide,
   difference,
@@ -92,32 +92,32 @@ import {
   variable,
   versHtmlEgalitesAlignees,
   versHtmlSemantique,
-} from "../packages/objets/src/expressions.js?v=37";
+} from "../packages/objets/src/expressions.js?v=38";
 import {
   dessinerCarreQuadrille,
-} from "../packages/objets/src/carre-quadrille.js?v=37";
-import { dessinerDoubleDroiteGraduee } from "../packages/objets/src/droite-graduee.js?v=37";
-import { dessinerBandesFractionnairesSurRailDecimal } from "../packages/objets/src/bandes-fractions-rail.js?v=37";
+} from "../packages/objets/src/carre-quadrille.js?v=38";
+import { dessinerDoubleDroiteGraduee } from "../packages/objets/src/droite-graduee.js?v=38";
+import { dessinerBandesFractionnairesSurRailDecimal } from "../packages/objets/src/bandes-fractions-rail.js?v=38";
 import {
   dessinerConversionRangsNumerationDecimale,
   dessinerEchangeRangsNumerationDecimale,
   dessinerMaterielNumerationDecimale,
   dessinerTableauNumerationDecimale,
-} from "../packages/objets/src/numeration-decimale.js?v=37";
+} from "../packages/objets/src/numeration-decimale.js?v=38";
 import {
   dessinerDemiAvecDixiemes,
   dessinerReorganisationCentiemes,
-} from "../packages/objets/src/correspondances-decimales.js?v=37";
+} from "../packages/objets/src/correspondances-decimales.js?v=38";
 import {
   construireDonneesTableauDepuisFraction,
   formaterFractionEnDecimal,
   reduireFraction,
-} from "../packages/objets/src/fractions-decimaux.js?v=37";
+} from "../packages/objets/src/fractions-decimaux.js?v=38";
 import {
   diagnostiquerDecimalVersNumerateur,
   diagnostiquerFractionLibre,
   diagnostiquerFractionVersDecimal,
-} from "./src/diagnostic-fractions-decimaux.js?v=37";
+} from "./src/diagnostic-fractions-decimaux.js?v=38";
 
 const MICRO_NOTION_FRACTION_VERS_DECIMAL =
   MICRO_NOTIONS_AUTOMATISMES.FRACTION_VERS_DECIMAL;
@@ -3769,6 +3769,7 @@ function rendreBandesRailCours(
     largeurMobile = 340,
     formatMobile = "standard",
     mobileViewportSeulement = false,
+    afficherReperesIntermediairesCours = false,
   } = {},
 ) {
   const rendreVariante = (
@@ -3784,6 +3785,7 @@ function rendreBandesRailCours(
       partiesPosees: numerateur,
       largeur: largeurVariante,
       format,
+      afficherReperesIntermediairesCours,
     }),
     `figure-bandes-rail figure-bandes-rail-cours ${classeVariante}`,
   );
@@ -3805,21 +3807,21 @@ function rendreRepereCinqUnitesCours() {
 function rendreEchangesRangsCours() {
   return `<div class="echanges-rangs-cours">
     <section>
-      <h4>Une unité, dix dixièmes</h4>
+      <h4>Une unité = dix dixièmes</h4>
       ${rendreFigureDecimaleResponsive(
         (largeur) => dessinerEchangeRangsNumerationDecimale({ echange: "unite-dixiemes", largeur }),
         "figure-echange-rangs-cours",
       )}
     </section>
     <section>
-      <h4>Un dixième, dix centièmes</h4>
+      <h4>Un dixième = dix centièmes</h4>
       ${rendreFigureDecimaleResponsive(
         (largeur) => dessinerEchangeRangsNumerationDecimale({ echange: "dixieme-centiemes", largeur }),
         "figure-echange-rangs-cours",
       )}
     </section>
     <section>
-      <h4>Une unité, cent centièmes</h4>
+      <h4>Une unité = cent centièmes</h4>
       ${rendreFigureDecimaleResponsive(
         (largeur) => dessinerEchangeRangsNumerationDecimale({ echange: "unite-centiemes", largeur }),
         "figure-echange-rangs-cours",
@@ -3941,8 +3943,13 @@ function rendreCarteCoursFractions(index) {
       <p class="introduction-cours">Trois outils se complètent. Chacun permet de voir autre chose.</p>
       <div class="outils-representation-cours">
         ${rendreOutilCours(1, "Bandes de fractions sur la demi-droite graduée", `
-          <p class="introduction-cours">Deux pièces d’un demi reforment exactement une unité.</p>
+          <p class="introduction-cours">Deux bandes représentant chacune ${versHtmlSemantique(fractionCours(1, 2))}, placées bout à bout, forment exactement une unité.</p>
           ${rendreBandesRailCours(2, 2, "pieces")}
+          <p class="lecture-rang-cours">La première bande atteint 0,5.</p>
+          ${egalitesCoursPrincipales(
+            fractionCours(1, 2),
+            decimalCours(0.5, 1),
+          )}
         `, "outil-bandes-cours")}
         ${rendreOutilCours(2, "Plaques de couleurs", `
           <p class="introduction-cours">Dix dixièmes forment une unité. Cinq dixièmes en remplissent exactement la moitié.</p>
@@ -3974,8 +3981,18 @@ function rendreCarteCoursFractions(index) {
       <p class="introduction-cours">Les mêmes trois outils se complètent pour comprendre les quarts.</p>
       <div class="outils-representation-cours">
         ${rendreOutilCours(1, "Bandes de fractions sur la demi-droite graduée", `
-          <p class="introduction-cours">Quatre pièces d’un quart reforment exactement une unité.</p>
+          <p class="introduction-cours">Quatre bandes représentant chacune ${versHtmlSemantique(fractionCours(1, 4))}, placées bout à bout, forment exactement une unité.</p>
           ${rendreBandesRailCours(4, 4, "pieces")}
+          <p class="lecture-rang-cours">La demi-droite permet de lire les quarts successifs.</p>
+          <div class="reperes-quarts-rail-cours">
+            ${egalitesCours(fractionCours(1, 4), decimalCours(0.25, 2))}
+            ${egalitesCours(
+              fractionCours(2, 4),
+              fractionCours(1, 2),
+              decimalCours(0.5, 1),
+            )}
+            ${egalitesCours(fractionCours(3, 4), decimalCours(0.75, 2))}
+          </div>
         `, "outil-bandes-cours")}
         ${rendreOutilCours(2, "Plaques de couleurs", `
           <p class="introduction-cours">Sans rien ajouter ni retirer, 25 centièmes se réorganisent en un quart de l’unité.</p>
@@ -4103,9 +4120,9 @@ function rendreCarteCoursFractions(index) {
     <p class="definition-cours">Le dénominateur donne la taille d’une pièce ; le numérateur indique combien de pièces on prend.</p>
     <section class="exemple-cours-superieur">
       <h4>Sept demis</h4>
-      <p>${versHtmlSemantique(fractionCours(7, 2))} signifie sept pièces de ${versHtmlSemantique(fractionCours(1, 2))}. Six demis forment 3 unités ; il reste 1 demi.</p>
+      <p>${versHtmlSemantique(fractionCours(7, 2))} signifie sept bandes de longueur ${versHtmlSemantique(fractionCours(1, 2))}. Six demis forment 3 unités ; il reste 1 demi.</p>
       <div class="transformation-bandes-cours">
-        <section><strong>Au départ : 7 demis</strong>${rendreBandesRailCours(7, 2, "pieces", false, 720, { largeurMobile: 340, mobileViewportSeulement: true })}</section>
+        <section><strong>Au départ : 7 demis</strong>${rendreBandesRailCours(7, 2, "pieces", false, 720, { largeurMobile: 340, mobileViewportSeulement: true, afficherReperesIntermediairesCours: true })}</section>
         <span class="fleche-transformation-cours" aria-hidden="true">↓</span>
         <section><strong>Après regroupement</strong>${rendreBandesRailCours(7, 2, "unites", true, 720, { largeurMobile: 340, mobileViewportSeulement: true })}</section>
       </div>
@@ -4113,19 +4130,25 @@ function rendreCarteCoursFractions(index) {
     </section>
     <section class="exemple-cours-superieur">
       <h4>Six quarts</h4>
-      <p>Quatre quarts forment 1 unité. Les deux quarts restants se regroupent en un demi : ${versHtmlSemantique(egalite(fractionCours(2, 4), fractionCours(1, 2)))}.</p>
+      <p>${versHtmlSemantique(fractionCours(6, 4))} signifie six bandes de longueur ${versHtmlSemantique(fractionCours(1, 4))}. Quatre quarts forment 1 unité. Les deux quarts restants se regroupent en un demi : ${versHtmlSemantique(egalite(fractionCours(2, 4), fractionCours(1, 2)))}.</p>
       <div class="transformation-bandes-cours">
-        <section><strong>Au départ : 6 quarts</strong>${rendreBandesRailCours(6, 4, "pieces", false, 720, { largeurMobile: 340, mobileViewportSeulement: true })}</section>
+        <section><strong>Au départ : 6 quarts</strong>${rendreBandesRailCours(6, 4, "pieces", false, 720, { largeurMobile: 340, mobileViewportSeulement: true, afficherReperesIntermediairesCours: true })}</section>
         <span class="fleche-transformation-cours" aria-hidden="true">↓</span>
         <section><strong>Après regroupement</strong>${rendreBandesRailCours(6, 4, "reste", true, 720, { largeurMobile: 340, mobileViewportSeulement: true })}</section>
       </div>
       ${rendreDecompositionFractionSuperieure(6, 4)}
     </section>
-    <h4 class="titre-reperes-visuels">Trois repères de demis</h4>
-    <div class="reperes-demis-equations-cours">
-      ${egalitesCours(fractionCours(3, 2), decimalCours(1.5, 1))}
-      ${egalitesCours(fractionCours(4, 2), nombreCours(2))}
-      ${egalitesCours(fractionCours(5, 2), decimalCours(2.5, 1))}
+    <h4 class="titre-reperes-visuels">Repères des demis et des quarts</h4>
+    <p class="introduction-cours">Les bandes permettent de relire plusieurs repères sans refaire tous les regroupements.</p>
+    <div class="reperes-bandes-synthese-cours">
+      <section>
+        <strong>De demi en demi</strong>
+        ${rendreBandesRailCours(5, 2, "pieces", true, 560, { largeurMobile: 260, formatMobile: "mobile-compact", afficherReperesIntermediairesCours: true })}
+      </section>
+      <section>
+        <strong>De quart en quart</strong>
+        ${rendreBandesRailCours(8, 4, "pieces", true, 560, { largeurMobile: 260, formatMobile: "mobile-compact", afficherReperesIntermediairesCours: true })}
+      </section>
     </div>
     <h4 class="titre-reperes-visuels">Quand le dénominateur vaut 1</h4>
     ${rendreRepereCinqUnitesCours()}

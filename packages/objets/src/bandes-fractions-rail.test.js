@@ -89,7 +89,7 @@ describe("bandes fractionnaires sur rail — cas d'or", () => {
       etape: "lecture",
     });
 
-    assert.equal(VERSION_BANDES_FRACTIONS_RAIL, 6);
+    assert.equal(VERSION_BANDES_FRACTIONS_RAIL, 7);
     assert.equal(rendu.erreur, null);
     assert.deepEqual(
       {
@@ -126,6 +126,84 @@ describe("bandes fractionnaires sur rail — cas d'or", () => {
       rendu.donnees.distanceCible,
       3 * rendu.donnees.largeurPartie,
     );
+  });
+
+  it("nomme les repères intermédiaires du cours sans révéler la cible finale", () => {
+    const cas = [
+      {
+        numerateur: 7,
+        denominateur: 2,
+        cible: "3,5",
+        reperes: ["0,5", "1,5", "2,5"],
+      },
+      {
+        numerateur: 6,
+        denominateur: 4,
+        cible: "1,5",
+        reperes: ["0,25", "0,5", "0,75", "1,25", "1,75"],
+      },
+    ];
+
+    for (const largeur of [320, 340, 720]) {
+      for (const { numerateur, denominateur, cible, reperes } of cas) {
+        const rendu = dessinerBandesFractionnairesSurRailDecimal({
+          numerateur,
+          denominateur,
+          profil: "aide-nc03",
+          etape: "pieces",
+          partiesPosees: numerateur,
+          largeur,
+          afficherReperesIntermediairesCours: true,
+        });
+
+        assert.equal(rendu.erreur, null, `${numerateur}/${denominateur} à ${largeur}px`);
+        assert.equal(rendu.donnees.afficherReperesIntermediairesCours, true);
+        assert.equal(
+          occurrences(rendu.svg, /class="etiquette-rail repere-intermediaire-cours"/g),
+          reperes.length,
+        );
+        for (const repere of reperes) {
+          assert.match(
+            rendu.svg,
+            new RegExp(
+              `class="etiquette-rail repere-intermediaire-cours"[^>]*>${repere.replace(",", "\\,")}<\\/text>`,
+            ),
+          );
+        }
+        assert.match(
+          rendu.svg,
+          /class="etiquette-cible cible-decimale-masquee"[^>]*>\?<\/text>/,
+        );
+        assert.ok(!rendu.svg.includes(`>${cible}</text>`));
+        assert.ok(!rendu.texteAlternatif.includes(cible));
+        for (const repere of reperes) {
+          assert.ok(rendu.texteAlternatif.includes(repere));
+        }
+        assert.match(rendu.texteAlternatif, /valeur décimale cible reste masquée/);
+        assert.ok(rendu.donnees.positionPointeFleche <= largeur);
+      }
+    }
+  });
+
+  it("laisse tous les profils d’aide inchangés tant que l’option du cours est absente", () => {
+    for (const profil of ["aide-nc03", "aide-nc04-imposee", "aide-nc04-libre"]) {
+      const reglages = {
+        numerateur: 7,
+        denominateur: 4,
+        profil,
+        etape: "pieces",
+        largeur: 340,
+      };
+      const sansOption = dessinerBandesFractionnairesSurRailDecimal(reglages);
+      const optionDesactivee = dessinerBandesFractionnairesSurRailDecimal({
+        ...reglages,
+        afficherReperesIntermediairesCours: false,
+      });
+
+      assert.equal(sansOption.svg, optionDesactivee.svg);
+      assert.equal(sansOption.texteAlternatif, optionDesactivee.texteAlternatif);
+      assert.doesNotMatch(sansOption.svg, /repere-intermediaire-cours/);
+    }
   });
 
   it("forme deux unités puis un demi pour cinq demis sans livrer 2,5 en aide NC03", () => {
@@ -880,6 +958,81 @@ describe("bandes fractionnaires sur rail — validation et stabilité", () => {
     assert.match(tropDUnites.erreur, /compris entre 0 et 12/);
     assert.match(tropDeQuarts.erreur, /compris entre 0 et 12/);
     assert.match(mauvaisFormat.erreur, /format doit être/);
+  });
+
+  it("réserve les repères intermédiaires aux bandes non regroupées du cours", () => {
+    const mauvaisType = dessinerBandesFractionnairesSurRailDecimal({
+      numerateur: 7,
+      denominateur: 2,
+      profil: "aide-nc03",
+      etape: "pieces",
+      afficherReperesIntermediairesCours: "oui",
+    });
+    const synthesesQuarts = [
+      { largeur: 340, format: "standard" },
+      { largeur: 260, format: "mobile-compact" },
+    ].map((format) => dessinerBandesFractionnairesSurRailDecimal({
+      numerateur: 8,
+      denominateur: 4,
+      profil: "solution",
+      etape: "pieces",
+      afficherReperesIntermediairesCours: true,
+      ...format,
+    }));
+    const apresRegroupement = dessinerBandesFractionnairesSurRailDecimal({
+      numerateur: 7,
+      denominateur: 2,
+      profil: "aide-nc03",
+      etape: "unites",
+      afficherReperesIntermediairesCours: true,
+    });
+    const unites = dessinerBandesFractionnairesSurRailDecimal({
+      numerateur: 5,
+      denominateur: 1,
+      profil: "aide-nc03",
+      etape: "pieces",
+      afficherReperesIntermediairesCours: true,
+    });
+
+    assert.match(mauvaisType.erreur, /doit être un booléen/);
+    for (const syntheseQuarts of synthesesQuarts) {
+      assert.equal(syntheseQuarts.erreur, null);
+      for (const repere of ["0,25", "0,5", "0,75", "1,25", "1,5", "1,75"]) {
+        assert.match(
+          syntheseQuarts.svg,
+          new RegExp(`class="etiquette-rail repere-intermediaire-cours"[^>]*>${repere}<\\/text>`),
+        );
+      }
+      assert.match(
+        syntheseQuarts.texteAlternatif,
+        /repères décimaux intermédiaires nommés sont 0,25, 0,5, 0,75/,
+      );
+    }
+    for (const rendu of [apresRegroupement, unites]) {
+      assert.match(rendu.erreur, /réservés aux bandes non regroupées/);
+      assert.doesNotMatch(rendu.svg, /repere-intermediaire-cours/);
+    }
+  });
+
+  it("ne livre jamais une cible qui coïncide avec le premier repère du cours", () => {
+    for (const { numerateur, denominateur, cible } of [
+      { numerateur: 1, denominateur: 2, cible: "0,5" },
+      { numerateur: 1, denominateur: 4, cible: "0,25" },
+    ]) {
+      const rendu = dessinerBandesFractionnairesSurRailDecimal({
+        numerateur,
+        denominateur,
+        profil: "aide-nc03",
+        etape: "pieces",
+        partiesPosees: numerateur,
+        afficherReperesIntermediairesCours: true,
+      });
+
+      assert.equal(rendu.erreur, null);
+      assert.ok(!rendu.svg.includes(`>${cible}</text>`));
+      assert.ok(!rendu.texteAlternatif.includes(cible));
+      assert.match(rendu.texteAlternatif, /valeur décimale cible reste masquée/);
+    }
   });
 
   it("exige explicitement le profil afin de ne jamais révéler une réponse par défaut", () => {
