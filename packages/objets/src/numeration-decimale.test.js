@@ -62,7 +62,7 @@ function verifierPiecesDansViewBox(rendu) {
 
 describe("matériel de numération décimale", () => {
   it("expose une API versionnée et les deux orientations", () => {
-    assert.equal(VERSION_NUMERATION_DECIMALE, 4);
+    assert.equal(VERSION_NUMERATION_DECIMALE, 5);
     assert.deepEqual(ORIENTATIONS_MATERIEL_NUMERATION_DECIMALE, [
       "horizontale",
       "verticale",
@@ -260,6 +260,21 @@ describe("échanges exacts entre rangs", () => {
     assert.match(rendu.svg, /nd-echange-fraction-dixiemes-numerateur[^>]*>10<\/text>/);
     assert.match(rendu.svg, /nd-echange-fraction-dixiemes-denominateur[^>]*>10<\/text>/);
     assert.match(rendu.texteAlternatif, /même empreinte/);
+
+    const centreGauche = Number(empreintes[0][1]) + Number(empreintes[0][3]) / 2;
+    const centreDroite = Number(empreintes[1][1]) + Number(empreintes[1][3]) / 2;
+    const xEntier = Number(rendu.svg.match(
+      /class="nd-echange-entier nd-echange-entier-unites" x="([\d.]+)"/,
+    )[1]);
+    const xDixieme = Number(rendu.svg.match(
+      /class="nd-echange-fraction-dixiemes-numerateur" x="([\d.]+)"/,
+    )[1]);
+    const xEgal = Number(rendu.svg.match(
+      /class="nd-echange-egal" x="([\d.]+)"/,
+    )[1]);
+    assert.ok(Math.abs(xEntier - centreGauche) <= 0.02);
+    assert.ok(Math.abs(xDixieme - centreDroite) <= 0.02);
+    assert.ok(Math.abs(xEgal - 160) <= 0.02);
   });
 
   it("garde la même longueur pour un dixième et dix centièmes", () => {
@@ -306,7 +321,7 @@ describe("conversion paramétrique par rang", () => {
 
     assert.deepEqual(ETATS_CONVERSION_RANGS_NUMERATION_DECIMALE, [
       "decompose",
-      "converti-centiemes",
+      "converti-rang-final",
     ]);
     assert.deepEqual(SENS_CONVERSION_RANGS_NUMERATION_DECIMALE, [
       "fraction-vers-decimal",
@@ -363,7 +378,7 @@ describe("conversion paramétrique par rang", () => {
     });
     const converti = dessinerConversionRangsNumerationDecimale({
       ...options,
-      etat: "converti-centiemes",
+      etat: "converti-rang-final",
     });
     const geometrie = (rendu) => rendu.groupes.map(
       ({ rang, quantite, x, y, largeur, hauteur }) =>
@@ -389,8 +404,116 @@ describe("conversion paramétrique par rang", () => {
       converti.svg,
       new RegExp(`class="nd-forme"[^>]*fill="(?:${COULEURS_NUMERATION_DECIMALE.unite}|${COULEURS_NUMERATION_DECIMALE.dixieme})"`),
     );
-    assert.match(converti.svg, /data-etat="converti-centiemes"/);
+    assert.match(converti.svg, /data-etat="converti-rang-final"/);
     assert.match(converti.texteAlternatif, /Tous les groupes sont convertis en centièmes jaunes/);
+  });
+
+  it("convertit aussi 3,6 en dixièmes avec les mêmes empreintes", () => {
+    const options = {
+      ecritureDecimale: "3,6",
+      sens: "decimal-vers-fraction",
+      largeur: 320,
+    };
+    const decompose = dessinerConversionRangsNumerationDecimale({
+      ...options,
+      etat: "decompose",
+    });
+    const converti = dessinerConversionRangsNumerationDecimale({
+      ...options,
+      etat: "converti-rang-final",
+    });
+    const geometrie = (rendu) => rendu.groupes.map(
+      ({ rang, quantite, x, y, largeur, hauteur }) =>
+        [rang, quantite, x, y, largeur, hauteur],
+    );
+
+    assert.equal(converti.rangFinal, "dixiemes");
+    assert.deepEqual(converti.fractionCible, { numerateur: 36, denominateur: 10 });
+    assert.deepEqual(geometrie(converti), geometrie(decompose));
+    assert.deepEqual(
+      converti.groupes.map(({ legende }) => legende),
+      ["3=30/10", "6/10"],
+    );
+    assert.equal(
+      compter(
+        converti.svg,
+        new RegExp(`class="nd-forme"[^>]*fill="${COULEURS_NUMERATION_DECIMALE.dixieme}"`, "g"),
+      ),
+      9,
+    );
+    assert.match(converti.texteAlternatif, /convertis en dixièmes verts/);
+  });
+
+  it("conserve le rang centièmes imposé pour 0,50", () => {
+    const rendu = dessinerConversionRangsNumerationDecimale({
+      ecritureDecimale: "0,5",
+      rangFinal: "centiemes",
+      etat: "converti-rang-final",
+      sens: "decimal-vers-fraction",
+    });
+
+    assert.equal(rendu.ecritureDecimale, "0,50");
+    assert.equal(rendu.rangFinal, "centiemes");
+    assert.deepEqual(rendu.fractionCible, { numerateur: 50, denominateur: 100 });
+    assert.deepEqual(
+      rendu.groupes.map(({ rang, quantite, legende }) => [rang, quantite, legende]),
+      [["dixiemes", 5, "5/10=50/100"]],
+    );
+  });
+
+  it("masque la cible propre à chaque sens dans les profils d’aide", () => {
+    const aideNc03 = dessinerConversionRangsNumerationDecimale({
+      ecritureDecimale: "1,47",
+      etat: "converti-rang-final",
+      sens: "fraction-vers-decimal",
+      profil: "aide-nc03",
+    });
+    const aideNc04 = dessinerConversionRangsNumerationDecimale({
+      ecritureDecimale: "1,47",
+      sens: "decimal-vers-fraction",
+      profil: "aide-nc04",
+    });
+
+    assert.doesNotMatch(aideNc03.svg, /1,47|data-ecriture-decimale/);
+    assert.doesNotMatch(aideNc03.texteAlternatif, /1,47/);
+    assert.match(aideNc03.svg, /147 centièmes regroupés/);
+    assert.doesNotMatch(aideNc04.svg, /data-numerateur-cible|data-denominateur-cible/);
+    assert.match(aideNc04.svg, /data-ecriture-decimale="1,47"/);
+    assert.match(aideNc04.svg, /data-profil="aide-nc04"/);
+
+    const zeroFinalImpose = dessinerConversionRangsNumerationDecimale({
+      ecritureDecimale: "0,5",
+      rangFinal: "centiemes",
+      sens: "decimal-vers-fraction",
+      profil: "aide-nc04",
+    });
+    assert.equal(zeroFinalImpose.ecritureDecimale, "0,50");
+    assert.match(zeroFinalImpose.svg, /data-legende="5\/10=\?\/100"/);
+    assert.doesNotMatch(zeroFinalImpose.svg, /50\/100|data-numerateur-cible|data-denominateur-cible/);
+    assert.doesNotMatch(zeroFinalImpose.texteAlternatif, /50\/100/);
+
+    const aideNc04CentiemeImpose = dessinerConversionRangsNumerationDecimale({
+      ecritureDecimale: "0,5",
+      rangFinal: "centiemes",
+      sens: "decimal-vers-fraction",
+      profil: "aide-nc04",
+    });
+    assert.deepEqual(
+      aideNc04CentiemeImpose.groupes.map(({ legende }) => legende),
+      ["5/10=?/100"],
+    );
+    assert.match(aideNc04CentiemeImpose.svg, /data-legende="5\/10=\?\/100"/);
+    assert.match(aideNc04CentiemeImpose.texteAlternatif, /5\/10=\?\/100/);
+    assert.doesNotMatch(aideNc04CentiemeImpose.svg, /50\/100/);
+    assert.doesNotMatch(aideNc04CentiemeImpose.texteAlternatif, /50\/100/);
+
+    const singulier = dessinerConversionRangsNumerationDecimale({
+      ecritureDecimale: "0,1",
+      etat: "converti-rang-final",
+      sens: "fraction-vers-decimal",
+      profil: "aide-nc03",
+    });
+    assert.match(singulier.svg, />1 dixième regroupé<\/text>/);
   });
 
   it("inverse seulement l'ordre des légendes, pas les quantités ni leur géométrie", () => {
@@ -433,11 +556,14 @@ describe("conversion paramétrique par rang", () => {
   it("refuse les rangs, sens, états et quantités hors de son contrat", () => {
     for (const options of [
       {},
-      { ecritureDecimale: "1,4" },
+      { ecritureDecimale: "1" },
       { ecritureDecimale: "0,725" },
       { ecritureDecimale: "10,47" },
       { ecritureDecimale: "1,47", etat: "final" },
       { ecritureDecimale: "1,47", sens: "gauche-droite" },
+      { ecritureDecimale: "1,47", profil: "indice" },
+      { ecritureDecimale: "1,47", sens: "fraction-vers-decimal", profil: "aide-nc04" },
+      { ecritureDecimale: "1,47", sens: "decimal-vers-fraction", profil: "aide-nc03" },
       { ecritureDecimale: "1,47", largeur: 200 },
     ]) {
       assert.throws(() => dessinerConversionRangsNumerationDecimale(options));
@@ -521,6 +647,31 @@ describe("tableau de numération décimale", () => {
     assert.equal(compter(sansLecture.svg, /class="nd-tableau-colonne/g), 4);
   });
 
+  it("masque réellement les chiffres avant le choix du rang", () => {
+    const masque = dessinerTableauNumerationDecimale({
+      ecritureDecimale: "1,47",
+      rangFinal: "centiemes",
+      afficherChiffres: false,
+      afficherLecture: false,
+      annoncerEcriture: false,
+      rangMisEnEvidence: "dixiemes",
+    });
+
+    assert.equal(masque.afficherChiffres, false);
+    assert.equal(masque.afficherLecture, false);
+    assert.equal(compter(masque.svg, /class="nd-chiffre"/g), 4);
+    assert.equal(compter(masque.svg, />\?<\/text>/g), 4);
+    assert.equal(compter(masque.svg, /data-chiffre=""/g), 4);
+    assert.equal(compter(masque.svg, /class="nd-virgule"/g), 1);
+    assert.doesNotMatch(masque.svg, /1,47|data-numerateur|data-denominateur/);
+    assert.doesNotMatch(masque.texteAlternatif, /unités : 1|dixièmes : 4|centièmes : 7/);
+    assert.match(masque.texteAlternatif, /Tableau de numération à compléter/);
+    assert.equal(
+      compter(masque.texteAlternatif, /case à compléter/g),
+      4,
+    );
+  });
+
   it("préserve un zéro intercalé et laisse vides les rangs suivants", () => {
     const rendu = dessinerTableauNumerationDecimale({ ecritureDecimale: "1,05" });
     assert.deepEqual(
@@ -567,6 +718,29 @@ describe("tableau de numération décimale", () => {
       denominateur: 1000,
     });
     assert.match(milliemes.svg, />0,500 : 500 millièmes<\/text>/);
+  });
+
+  it("conserve 50/100 et 500/1000 tout en masquant leurs chiffres dans l’aide", () => {
+    for (const [rangFinal, ecriture, numerateur, denominateur] of [
+      ["centiemes", "0,50", 50, 100],
+      ["milliemes", "0,500", 500, 1000],
+    ]) {
+      const rendu = dessinerTableauNumerationDecimale({
+        ecritureDecimale: "0,5",
+        rangFinal,
+        afficherChiffres: false,
+        afficherLecture: false,
+        annoncerEcriture: false,
+      });
+
+      assert.equal(rendu.ecritureDecimale, ecriture);
+      assert.deepEqual(rendu.fractionLue, { numerateur, denominateur });
+      assert.equal(compter(rendu.svg, /class="nd-virgule"/g), 1);
+      assert.equal(compter(rendu.svg, /class="nd-chiffre"/g), 4);
+      assert.equal(compter(rendu.svg, />\?<\/text>/g), 4);
+      assert.doesNotMatch(rendu.svg, /data-ecriture-decimale|data-numerateur|data-denominateur|class="nd-lecture"/);
+      assert.doesNotMatch(rendu.texteAlternatif, new RegExp(`${numerateur} \\/ ${denominateur}|${ecriture}`));
+    }
   });
 
   it("reste lisible à la largeur mobile minimale et strictement déterministe", () => {
