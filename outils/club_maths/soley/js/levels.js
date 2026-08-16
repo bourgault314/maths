@@ -465,7 +465,13 @@ const LV=[
   sol:[[0,2,4],[1,2,5],[2,5,2],[3,5,6],[4,2,2],[5,3,3],[6,3,5],[7,5,3],[8,2,6]]},
 
  /* ---------- Les pitons (équivalences & comparaisons) ---------- */
- {w:'pitons',name:"C'est pareil !",
+ /* Les pitons enseignent ENFIN ce qu'ils font (lot E, 16/08). Ce monde s'appelle
+    « Équivalences et comparaisons » depuis le premier jour et n'avait AUCUN point de
+    cours : l'élève voyait 2/4 sur une case sans qu'on lui ait jamais dit pourquoi
+    c'est un demi. `cours:` et non `dec:` — ces deux niveaux ont des roches et des
+    fruits, ils ne sont pas des découvertes « pures », et surtout ils n'ont pas à
+    verrouiller le monde suivant : ils expliquent, ils ne jalonnent pas. */
+ {w:'pitons',name:"C'est pareil !",cours:'equivalence',
   sub:"2/4 et 1/2, c'est la même part ! Regarde l'épaisseur : les deux rayons sont identiques.",
   cols:8,rows:6,suns:[{x:0,y:2,dir:1}],
   targets:[{x:3,y:0,need:[1,2],disp:"2/4"},{x:3,y:5,need:[1,2],disp:"1/2"}],
@@ -489,7 +495,7 @@ const LV=[
   tools:[s2(1,1,2),b(2,1),b(1,0),mg(1,0,1)],
   sol:[[0,2,2],[1,2,3],[2,6,3],[3,6,2]]},
 
- {w:'pitons',name:"Quel rayon passe ?",
+ {w:'pitons',name:"Quel rayon passe ?",cours:'comparaison',
   sub:"1/2 ou 1/3, lequel est le plus gros ? La passe ne laisse passer que 1/3 au maximum… choisis le bon prisme !",
   hint:"1/3 < 1/2 : c'est le plus petit qui passe.",
   cols:9,rows:7,suns:[{x:0,y:3,dir:1}],
@@ -1070,6 +1076,37 @@ const COURS={
    {t:"Trois coupes, et le dénominateur les multiplie toutes les trois.",eq:"2 × 3 × 2 = 12"}
   ],
   carte:{t:"Un sixième recoupé en deux donne le douzième.",eq:"1/6 ÷ 2 = 1/12"}
+ },
+ /* LES DEUX COURS DES PITONS (lot E, 16/08). Ils disent l'inverse l'un de l'autre
+    avec LA MÊME IMAGE — des bandes de même longueur, découpées différemment, dont on
+    peint le début (scène `parts`). C'est le support historique du projet utilisé pour
+    ce qu'il montre le mieux : une comparaison de LONGUEURS.
+      · `equivalence` : 1/2, 2/4 et 3/6 peignent exactement la même longueur ;
+      · `comparaison` : 1/2, 1/3 et 1/4 en peignent de moins en moins.
+    Le second dit la règle qui prend tous les élèves à contre-pied — plus le nombre du
+    bas est grand, plus la part est petite — et une bande le démontre là où une phrase
+    ne fait que l'affirmer. */
+ equivalence:{
+  titre:"La même part, écrite autrement",
+  scene:{parts:[{f:[1,2],n:1},{f:[1,4],n:2},{f:[1,6],n:3}],
+   alt:"Trois bandes de même longueur : la première coupée en deux avec une part peinte, la deuxième en quatre avec deux parts, la troisième en six avec trois parts — les trois longueurs peintes sont identiques"},
+  etapes:[
+   {t:"Les trois bandes ont la même longueur, mais elles ne sont pas coupées pareil."},
+   {t:"Regarde ce qui est peint : c'est toujours la même longueur. Un demi, c'est deux quarts.",eq:"1/2 = 2/4"},
+   {t:"C'est aussi trois sixièmes. La part ne change pas, seule son écriture change.",eq:"1/2 = 3/6"}
+  ],
+  carte:{t:"Une même part peut s'écrire de plusieurs façons.",eq:"1/2 = 2/4 = 3/6"}
+ },
+ comparaison:{
+  titre:"Comparer deux parts",
+  scene:{parts:[{f:[1,2],n:1},{f:[1,3],n:1},{f:[1,4],n:1}],
+   alt:"Trois bandes de même longueur avec une seule part peinte : un demi, puis un tiers, puis un quart — la longueur peinte diminue à chaque fois"},
+  etapes:[
+   {t:"Une seule part est peinte sur chaque bande. Plus on coupe la bande en morceaux, plus chaque morceau est court."},
+   {t:"Le tiers est donc plus petit que le demi, alors que son dénominateur est plus grand.",eq:"1/3 < 1/2"},
+   {t:"Et le quart est plus petit encore.",eq:"1/4 < 1/3"}
+  ],
+  carte:{t:"Plus le dénominateur (le nombre du bas) est grand, plus la part est petite.",eq:"1/4 < 1/3 < 1/2"}
  },
  /* Les deux cours de la LENTILLE (forêt, 08/2026). Ils ne se lisent PAS comme les
     quatre premiers : partager DESCEND de l'entier vers les morceaux, additionner

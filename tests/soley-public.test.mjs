@@ -566,9 +566,13 @@ test("le chantier « Comprendre » : découvertes, points de cours et règle R1"
      victoire — et c'est la première explication du jeu qui ne parle pas de fractions. */
   assert.deepEqual([...r.coursIds],
     ["demi", "tiers", "quart", "sixieme", "recouper", "porte", "neuvieme", "douzieme",
-      "somme", "denominateur"]);
+      "equivalence", "comparaison", "somme", "denominateur"]);
+  /* LOT E : les pitons enseignent enfin ce que leur nom annonce. Les deux cours
+     partagent la scène `parts` et disent l'inverse l'un de l'autre : à longueur
+     peinte égale l'écriture change, à une seule part peinte la longueur diminue. */
   assert.deepEqual([...r.titres], ["Le demi", "Le tiers", "Le quart", "Le sixième",
     "Recouper une part", "Les cases à palissade", "Le neuvième", "Le douzième",
+    "La même part, écrite autrement", "Comparer deux parts",
     "Recoller deux parts", "Le même dénominateur"]);
   /* la forêt (08/2026) : le cas SIMPLE (même dénominateur) passe devant le cas DUR.
      « Recoller les morceaux » reste l'accueil du monde mais n'est plus une

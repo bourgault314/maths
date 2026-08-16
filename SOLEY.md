@@ -60,7 +60,7 @@ fichiers modifiés → tests → reste à vérifier.
 | Les champs de canne | 6e | partage JOUÉ à fond : surplus, pièges, fruits à valeur, portes orientées (refonte 08/2026) — **aucune découverte** (le monde reste contournable), mais 2 points de cours `cours` (neuvième, douzième) et 1 explication d'entrée `intro` (les portes) | 9 |
 | La forêt | 5e | additions (lentille), équivalences — dont 2 niveaux-découverte (somme, même dénominateur) | 8 |
 | Le volcan | 4e | loupes ×, fractions > 1, 1/9 | 7 |
-| Les pitons | 5e-4e | équivalences, comparaisons (passes) | 7 |
+| Les pitons | 5e-4e | équivalences, comparaisons (passes) — 2 points de cours `cours` : équivalence, comparaison | 7 |
 | Les soleils | 4e | soleils multiples / fractionnaires / valeur 2 | 8 |
 | Le marché | 5e-3e | 0,5 ; 25 % ; 100 % (écritures) | 6 |
 | Les tunnels | 6e-4e | labyrinthes denses (41-64 % de roches), esprit de l'original | 8 (dont « Le prisme scellé » et « La galerie scellée ») |
@@ -1198,4 +1198,21 @@ Trois choses à savoir avant d'y toucher :
   jets ont raté parce que je rustinais sans regarder ; le défaut est sorti dès que
   j'ai zoomé ×4 sur un angle. Et il a fallu nommer la STRUCTURE (des poteaux, des
   traverses entre) pour que le dessin tombe juste du premier coup.
+- **16/08 — les pitons enseignent enfin ce qu'ils font (lot E).** Le monde s'appelle
+  « Équivalences et comparaisons » depuis le premier jour et n'avait **aucun point de
+  cours** : l'élève lisait 2/4 sur une case sans qu'on lui ait jamais dit pourquoi
+  c'est un demi, et il choisissait une passe sans qu'on lui ait jamais dit que 1/4 est
+  plus petit que 1/3. Deux cours entrent, **en `cours:` et non en `dec:`** — ces deux
+  niveaux ont des roches et des fruits, ils ne sont pas des découvertes « pures », et
+  ils n'ont pas à verrouiller le monde suivant. **Aucun niveau n'est ajouté, retiré ni
+  déplacé** : les deux blocs touchés ne gagnent qu'un champ. **Scène `parts`** : des
+  bandes de même longueur, découpées différemment, dont on peint le début — le support
+  historique du projet employé pour ce qu'il montre le mieux, une comparaison de
+  LONGUEURS. Les deux cours partagent l'image et disent l'inverse l'un de l'autre :
+  à longueur peinte égale l'écriture change (1/2, 2/4, 3/6), à une seule part peinte
+  la longueur diminue (1/2, 1/3, 1/4). **RÈGLE À GRAVER : quand une image porte une
+  démonstration, le vérificateur doit mesurer L'IMAGE, pas seulement les textes** —
+  ici il calcule les longueurs peintes et exige qu'elles soient égales dans un cas,
+  strictement décroissantes dans l'autre. Une image qui montrerait l'inverse de ce que
+  la phrase dit serait pire que pas d'image du tout.
 - (à compléter à chaque session)
