@@ -363,8 +363,8 @@ function porteSVG(t){
   if(t.porte===undefined)return '';
   /* LOT P (16/08) : le dessin vit dans engine.js (`palissadeSVG`), et le point de
      cours des portes s'en sert aussi. Un seul dessin, deux endroits — demande de
-     Gwenael après avoir zoomé sur une capture et vu que l'ancienne clôture, quatre
-     barres qui se recouvraient, était mal dessinée dans les angles. */
+     Gwenael après avoir zoomé sur une capture et vu que l'ancienne clôture, trois
+     barres qui débordaient et se recouvraient, était mal dessinée dans les angles. */
   return `<g class="tporte">`+palissadeSVG(t.porte)+`</g>`;
 }
 function targetSVG(t,stat,label='',index='',monde=''){
