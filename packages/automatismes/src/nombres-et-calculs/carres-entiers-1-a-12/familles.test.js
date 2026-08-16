@@ -23,6 +23,7 @@ import {
   BASES_CARRE_QUADRILLE,
   FORMES_CARRE_QUADRILLE,
   GABARIT_CARRE_QUADRILLE,
+  VERSION_GENERATEUR_CARRE_QUADRILLE,
 } from "./carre-quadrille.js";
 import {
   BASES_CARRES_ENTIERS,
@@ -37,6 +38,8 @@ import {
 import {
   FORMES_RETROUVER_ENTIER,
   GABARIT_RETROUVER_ENTIER_CARRE,
+  MAXIMUM_SAISIE_RETROUVER_ENTIER_CARRE,
+  VERSION_GENERATEUR_RETROUVER_ENTIER_CARRE,
 } from "./retrouver-entier.js";
 import {
   BASES_SENS_NOTATION,
@@ -188,6 +191,8 @@ describe("NC-02/F1 — calcul direct", () => {
 
 describe("NC-02/F2 — sens inverse", () => {
   it("produit les trois formes et deux champs réellement indépendants", () => {
+    assert.equal(VERSION_GENERATEUR_RETROUVER_ENTIER_CARRE, 3);
+    assert.equal(MAXIMUM_SAISIE_RETROUVER_ENTIER_CARRE, 144);
     for (const base of BASES_CARRES_ENTIERS) {
       for (const forme of FORMES_RETROUVER_ENTIER) {
         const question = instancier(
@@ -212,6 +217,7 @@ describe("NC-02/F2 — sens inverse", () => {
           assert.equal(question.reponse.type, TYPE_REPONSE_ENTIER_NATUREL);
           assert.equal(question.reponse.attendu, base);
         }
+        assert.equal(question.reponse.maximum, 144);
       }
     }
   });
@@ -322,6 +328,7 @@ describe("NC-02/F4 — reconnaissance", () => {
 
 describe("NC-02/F5 — carré quadrillé", () => {
   it("porte des métadonnées structurées distinctes pour le côté et l'aire", () => {
+    assert.equal(VERSION_GENERATEUR_CARRE_QUADRILLE, 2);
     assert.deepEqual(BASES_CARRE_QUADRILLE, [2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12]);
     assert.equal(BASES_CARRE_QUADRILLE.includes(0), false);
     assert.equal(BASES_CARRE_QUADRILLE.includes(1), false);
@@ -349,6 +356,16 @@ describe("NC-02/F5 — carré quadrillé", () => {
             /Combien y en a-t-il sur chaque côté \?/,
           );
           assert.equal(question.reponse.attendu, base);
+        }
+        assert.equal(question.reponse.maximum, 144);
+        assert.equal(question.aide.blocs[0].id, forme === "trouver-aire"
+          ? "aide-rangees"
+          : "aide-cotes-egaux");
+        if (forme === "trouver-aire") {
+          assert.equal(
+            question.aide.blocs[0].contenu,
+            `Repère les ${base} rangées du carré : chacune contient ${base} carreaux.`,
+          );
         }
       }
     }

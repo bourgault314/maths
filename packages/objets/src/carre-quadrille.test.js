@@ -180,6 +180,30 @@ describe("carré quadrillé", () => {
     );
   });
 
+  it("garde le carré d'aire inconnue neutre pour tous les côtés", () => {
+    for (const cote of Array.from({ length: 12 }, (_, index) => index + 1)) {
+      const rendu = dessinerCarreQuadrille({
+        cote,
+        mode: "aire-inconnue",
+      });
+      assert.equal(compter(rendu.svg, /class="cq-grille"/g), cote === 1 ? 0 : 1);
+      assert.doesNotMatch(
+        rendu.svg,
+        /cq-rangees|cq-ligne-active|cq-colonne-active/,
+      );
+      assert.doesNotMatch(rendu.texteAlternatif, /mise en évidence|bande|foncée|claire/i);
+      assert.doesNotMatch(rendu.svg, /\brx\s*=/);
+      assert.ok(rendu.svg.length < 5000);
+    }
+
+    for (const miseEnEvidence of ["colonnes", "rangees"]) {
+      assert.throws(
+        () => dessinerCarreQuadrille({ cote: 9, miseEnEvidence }),
+        /miseEnEvidence/,
+      );
+    }
+  });
+
   it("ne révèle pas le côté recherché dans le SVG du mode inverse", () => {
     const rendu = dessinerCarreQuadrille({ cote: 7, mode: "cote-inconnu" });
     assert.equal(rendu.aire, 49);

@@ -4,7 +4,7 @@ import {
   COMPARAISON_VALEURS_EXACTES,
   SCHEMA_QUESTION_INSTANCE_V2,
   TYPE_REPONSE_DEUX_ENTIERS,
-} from "../../../../contrats/src/question-v2.js?v=33";
+} from "../../../../contrats/src/question-v2.js?v=34";
 import {
   BASES_CARRES_ENTIERS,
   blocPuissance,
@@ -15,11 +15,16 @@ import {
   exigerParametresCarres,
   reponseEntier,
   valeurParametreOuTirage,
-} from "./commun.js?v=33";
+} from "./commun.js?v=34";
 
 export const NOM_GENERATEUR_RETROUVER_ENTIER_CARRE =
   "nombres-et-calculs.carres-entiers-1-a-12.retrouver-entier";
-export const VERSION_GENERATEUR_RETROUVER_ENTIER_CARRE = 2;
+export const VERSION_GENERATEUR_RETROUVER_ENTIER_CARRE = 3;
+
+// La borne du lecteur décrit ici une capacité de saisie, pas l'ensemble des
+// réponses justes. Elle autorise notamment 80 et la recopie erronée du carré
+// affiché (jusqu'à 144), qui doivent être validées puis comptées fausses.
+export const MAXIMUM_SAISIE_RETROUVER_ENTIER_CARRE = 144;
 
 export const FORMES_RETROUVER_ENTIER = Object.freeze([
   "question-verbale",
@@ -72,14 +77,14 @@ function construireEnonce(carre, forme) {
 
 function construireReponse(base, forme) {
   if (forme !== "produit-facteurs-egaux") {
-    return reponseEntier(base, 0, 12);
+    return reponseEntier(base, 0, MAXIMUM_SAISIE_RETROUVER_ENTIER_CARRE);
   }
   return {
     type: TYPE_REPONSE_DEUX_ENTIERS,
     comparaison: COMPARAISON_VALEURS_EXACTES,
     attendus: [base, base],
     minimum: 0,
-    maximum: 12,
+    maximum: MAXIMUM_SAISIE_RETROUVER_ENTIER_CARRE,
   };
 }
 

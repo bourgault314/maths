@@ -305,9 +305,12 @@ it("rend le cours en cinq pages et les six familles de NC-02", async () => {
   let nombreDansTitreInverseVu = false;
   let nombreDansTitreQuadrilleVu = false;
   let termeCalculCourtVu = false;
+  let aideF5AireNeutreVue = false;
   const famillesAvecCarreEnCorrection = new Set();
   for (let index = 0; index < 20; index += 1) {
     const famille = application.innerHTML.match(/famille-([a-z-]+)"/)?.[1];
+    const f5TrouverAire = famille === "carre-quadrille"
+      && application.innerHTML.includes("sur chaque côté. Combien en contient-il en tout ?");
     assert.ok(famille, `famille NC-02 absente à la question ${index + 1}`);
     familles.add(famille);
     assert.match(application.innerHTML, /Carrés des entiers de 0 à 12/);
@@ -359,6 +362,10 @@ it("rend le cours en cinq pages et les six familles de NC-02", async () => {
     }
     if (famille === "carre-quadrille") {
       nombreDansTitreQuadrilleVu = true;
+      assert.doesNotMatch(
+        application.innerHTML,
+        /cq-rangees|cq-ligne-active|cq-colonne-active/,
+      );
       assert.match(
         application.innerHTML,
         /<h1>Ce carré (?:a|contient) <span class="mathsgo-expression" role="math" aria-label="(\d+)">\1<\/span>/,
@@ -398,6 +405,27 @@ it("rend le cours en cinq pages et les six familles de NC-02", async () => {
       assert.match(aide, /Repère le seul produit qui répète exactement le même facteur/);
       assert.match(aide, /class="cq-aire"[\s\S]*?>\?<\/text>/);
       assert.doesNotMatch(aide, /cq-ligne-active|cq-colonne-active/);
+    }
+    if (famille === "carre-quadrille") {
+      const aide = application.innerHTML.match(
+        /<aside class="panneau panneau-aide[\s\S]*?<\/aside>/,
+      )?.[0] ?? "";
+      assert.doesNotMatch(
+        aide,
+        /cq-rangees|cq-ligne-active|cq-colonne-active/,
+      );
+      if (f5TrouverAire) {
+        aideF5AireNeutreVue = true;
+        assert.match(
+          aide,
+          /Repère les (\d+) rangées du carré : chacune contient \1 carreaux\./,
+        );
+        assert.match(
+          aide,
+          /aria-label="Carré quadrillé de (\d+) rangées et \1 colonnes\. L&apos;aire est à trouver\."/,
+        );
+        assert.match(aide, /class="cq-aire"[^>]*>\?<\/text>/);
+      }
     }
     if (application.innerHTML.includes("egalite-deux-champs")) {
       assert.equal(
@@ -458,6 +486,12 @@ it("rend le cours en cinq pages et les six familles de NC-02", async () => {
     } else {
       assert.doesNotMatch(application.innerHTML, /visuel-correction-carres/);
     }
+    if (famille === "carre-quadrille") {
+      assert.doesNotMatch(
+        application.innerHTML,
+        /cq-rangees|cq-ligne-active|cq-colonne-active/,
+      );
+    }
     if (famille === "sens-notation") {
       assert.match(application.innerHTML, /Écarter l&#039;ajout de 2/);
       assert.doesNotMatch(application.innerHTML, /correction-conclusion/);
@@ -492,6 +526,7 @@ it("rend le cours en cinq pages et les six familles de NC-02", async () => {
   assert.equal(nombreDansTitreInverseVu, true);
   assert.equal(nombreDansTitreQuadrilleVu, true);
   assert.equal(termeCalculCourtVu, true);
+  assert.equal(aideF5AireNeutreVue, true);
   assert.deepEqual([...famillesAvecCarreEnCorrection].sort(), [
     "calcul-direct",
     "carre-quadrille",
@@ -594,6 +629,43 @@ it("fige les deux QCM qui ont révélé les chiffres anciens sur iPhone", async 
 
     if (numero < 12) cliquer(gestionnaires, "suivant");
   }
+});
+
+it("accepte 80 comme réponse fournie puis fausse dans les deux formes inverses de NC-02", async () => {
+  const verbal = installerFauxNavigateur(
+    "?notion=carres-entiers-0-a-12&questions=20&graine=saisie-72",
+  );
+  await import(`./app.js?fumee=saisie-inverse-tactile-${Date.now()}`);
+  cliquer(verbal.gestionnaires, "demarrer");
+  assert.match(verbal.application.innerHTML, /famille-retrouver-entier/);
+  assert.match(verbal.application.innerHTML, /Quel entier naturel a pour carré/);
+  cliquer(verbal.gestionnaires, "chiffre", undefined, "8");
+  cliquer(verbal.gestionnaires, "chiffre", undefined, "0");
+  assert.match(verbal.application.innerHTML, /Champ 1, valeur 80/);
+  cliquer(verbal.gestionnaires, "valider");
+  assert.match(verbal.application.innerHTML, /<strong>À revoir\.<\/strong>/);
+  assert.match(
+    verbal.application.innerHTML,
+    /class="case-reponse-carres remplie fausse" aria-label="Champ 1, valeur 80">80<\/output>/,
+  );
+  assert.doesNotMatch(verbal.application.innerHTML, /Entre une|invalide/);
+
+  const produit = installerFauxNavigateur(
+    "?notion=carres-entiers-0-a-12&questions=20&graine=saisie-prod-125",
+  );
+  await import(`./app.js?fumee=saisie-inverse-clavier-${Date.now()}`);
+  cliquer(produit.gestionnaires, "demarrer");
+  assert.match(produit.application.innerHTML, /famille-retrouver-entier/);
+  assert.match(produit.application.innerHTML, /egalite-deux-champs/);
+  assert.equal(appuyer(produit.gestionnaires, "8"), 1);
+  assert.equal(appuyer(produit.gestionnaires, "0"), 1);
+  cliquer(produit.gestionnaires, "champ-reponse", undefined, undefined, "1");
+  assert.equal(appuyer(produit.gestionnaires, "3"), 1);
+  assert.match(produit.application.innerHTML, /Champ 1, valeur 80/);
+  assert.match(produit.application.innerHTML, /Champ 2, valeur 3/);
+  cliquer(produit.gestionnaires, "valider");
+  assert.match(produit.application.innerHTML, /<strong>À revoir\.<\/strong>/);
+  assert.doesNotMatch(produit.application.innerHTML, /Complète les deux cases|invalide/);
 });
 
 it("traite pareil une omission validée au clic ou avec Entrée", async () => {

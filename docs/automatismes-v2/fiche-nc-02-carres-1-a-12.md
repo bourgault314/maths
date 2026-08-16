@@ -234,7 +234,10 @@ Dans la deuxième forme, le contour du champ entoure seulement la base saisie.
 Le véritable exposant HTML reste bleu foncé et placé hors de ce contour.
 
 La formulation « entier naturel » fixe le type de réponse utile sans exposer
-la borne technique du générateur.
+la borne technique du générateur. Cette borne de saisie vaut 144 : elle ne
+décrit pas l'ensemble des réponses justes, mais permet à l'élève de fournir une
+réponse fausse à deux ou trois chiffres, notamment `80` ou la recopie du carré
+affiché. La comparaison reste exacte avec l'entier attendu de 0 à 12.
 
 ### F3 — Comprendre la notation
 
@@ -276,6 +279,11 @@ résultat numérique.
   mais aucune cellule n'est interactive et la consigne n'invite pas au
   comptage un à un.
 - Dans une série de 20, les deux questions F5 utilisent deux côtés différents.
+- Lorsque le côté est connu, l'aide conserve le même carré quadrillé neutre
+  que la question : aucune rangée ni colonne n'est colorée. Le texte fait lire
+  `n` groupes de `n` carreaux, sans suggérer une addition ni révéler le total.
+- Lorsque le côté est à retrouver, la capacité de saisie reste 144 afin qu'une
+  mauvaise réponse comme `80` soit fournie puis comptée fausse, et non bloquée.
 
 ### F6 — Effectuer un calcul court
 
@@ -362,9 +370,11 @@ supplémentaire.
 
 ### F5
 
-1. Observe l'information connue : le côté ou l'aire du carré.
-2. Si le côté est connu, repère les rangées et les colonnes ; si l'aire est
-   connue, cherche deux facteurs égaux.
+1. Si le côté est connu, repère les `n` rangées du quadrillage : chacune
+   contient `n` carreaux. Si l'aire est connue, observe le total et les deux
+   côtés égaux à retrouver.
+2. Relie les rangées au produit `n × n` ; dans le sens inverse, cherche deux
+   facteurs égaux.
 3. Écris ou vérifie `n × n`, sans compter tous les carreaux un par un.
 
 ### F6
@@ -470,8 +480,7 @@ Un unique objet du paquet `objets` couvre :
 
 - le carré quadrillé de sens ;
 - l'aire inconnue ;
-- le côté inconnu avec deux côtés égaux ;
-- la mise en évidence d'une rangée et d'une colonne.
+- le côté inconnu avec deux côtés égaux.
 
 Il fonctionne de 1 à 12 pour les illustrations de sens ; les questions F5
 restent limitées de 2 à 12. Il garde une taille stable, utilise des lignes SVG
@@ -489,8 +498,11 @@ Les nombres du SVG emploient la police mathématique commune sans Georgia, avec
 des chiffres alignés et tabulaires en graisse 700 ; le mot « carreaux »
 conserve la police de texte.
 Le contour, le fond et le cartouche central ne portent aucun rayon : tous les
-angles visibles dans cet objet restent droits. La rangée et la colonne
-colorées n'apparaissent que dans l'aide F5 qui demande de les observer.
+angles visibles dans cet objet restent droits. Dans F5, aucune rangée ni
+colonne n'est colorée : question, aide et correction conservent le même
+quadrillage neutre. La décomposition du cours pour 11 et 12 reste distincte et
+conserve ses deux zones, puisqu'elle rend visible le calcul par `10 + 1` ou
+`10 + 2`.
 
 L'ancien `numbers.square-area`, le Labo des régularités et la grille déjà
 testée pour les fractions fixent l'intention et les cas d'usage. Aucun code,
@@ -537,6 +549,9 @@ de la zone centrale lorsque la disposition large est active.
 - couverture des bases et absence de doublons ;
 - deux champs : clic, changement de champ, pavé, clavier physique, effacement
   et Entrée ;
+- dans les formes inverses F2 à un et deux champs, ainsi que dans F5 côté
+  inconnu, saisie de `80`, validation comme réponse fournie et fausse, puis
+  conservation exacte de cette valeur dans la trace ;
 - cours, aide, correction et révélation au tableau pour les six familles ;
 - parcours seedé de 20 questions permettant d'essayer toutes les sous-formes,
   en entraînement et au tableau ;
@@ -566,6 +581,9 @@ de la zone centrale lorsque la disposition large est active.
 - contrôle sur un vrai Safari/iPhone de la hauteur et de la ligne de base des
   chiffres : la seule présence de `lnum` et `tnum` dans le CSS ne suffit pas ;
 - absence de tout coin arrondi dans le SVG du carré quadrillé ;
+- absence de `cq-ligne-active`, `cq-colonne-active` et `cq-rangees-*` dans
+  l'aide F5 aire inconnue, avec `?` central et libellé accessible sans total
+  révélé ;
 - inventaire visuel complet des cinq pages de cours, de toutes les
   sous-formes de questions et des panneaux d'aide/correction, en plus des
   captures de stress téléphone, ordinateur, TNI et zoom ;

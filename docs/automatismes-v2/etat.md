@@ -39,6 +39,26 @@
   « Conversion par rang — mêmes empreintes » à côté du matériel, du tableau et
   des correspondances déjà comparables.
 
+## Saisie inverse et carré quadrillé neutre de NC-02 du 16 août
+
+- Les trois formes inverses F2 acceptent désormais une saisie jusqu'à `144`.
+  Une erreur comme `80`, ou la recopie de `100`, `121` ou `144`, reste visible,
+  est validée, tracée et comptée fausse au lieu d'être tronquée silencieusement.
+- La même capacité vaut pour F5 lorsque le côté est à retrouver, avec le pavé
+  tactile comme avec le clavier physique. Les réponses justes restent
+  comprises entre `0` et `12`.
+- L'aide F5 où l'aire est à trouver ne colore plus une rangée et une colonne.
+  Elle montre le même quadrillage neutre que la question et la correction ; le
+  texte « Repère les n rangées du carré : chacune contient n carreaux » porte
+  la lecture multiplicative sans révéler le total.
+- Les décompositions colorées `10 + 1` et `10 + 2` du cours pour `11²` et
+  `12²` restent inchangées, car elles expliquent un autre calcul.
+- F2 passe en version 3, F5 en version 2 et l'objet carré commun reste en
+  version 4. Le candidat public invalide tout le graphe V2 en `v34` ; `/auto/`
+  reste hors du lot.
+- La validation complète réussit **1 554 tests sur 1 554**, ainsi que tous les
+  validateurs de publication.
+
 ## Progression concrète de l'aide F3 de NC-02 du 15 août
 
 - L'aide « Quelle écriture correspond à ce carré ? » suit désormais trois
