@@ -1181,4 +1181,18 @@ Trois choses à savoir avant d'y toucher :
   laissait les coins vides (œil de Gwenael sur capture). Le soleil de la vignette est
   agrandi : sans rayon épais pour donner l'échelle, il doit porter seul. La canne passe de 8 à 9 niveaux, son seuil de 5 à 6, et **le jeu de 70 à 71 —
   les compteurs publics et l'annuaire ont été régénérés** (§5 point 12).
+- **16/08 — la palissade redessinée, un seul dessin pour le jeu et pour le cours
+  (lot P).** Le point de cours des portes montre la case EN GRAND ; c'est là que
+  Gwenael a zoomé et vu ce que personne n'avait vu en quarante pixels : la clôture
+  était **quatre barres qui se recouvraient**, avec des coutures dans les angles.
+  **Elle est maintenant construite comme une vraie clôture** — un poteau à chaque
+  angle et à chaque bout, les piquets répartis ENTRE les poteaux, le fil du bois
+  suivant exactement le chemin de la planche. `palissadeSVG(porte)` vit dans
+  `engine.js`, dans le repère de 100 unités du plateau : `render.js` l'appelle pour
+  le jeu, `scenePlateau` pour le cours. **Un seul dessin, deux endroits** — demande
+  de Gwenael : « mieux dessinée dans le jeu et mieux dessinée aussi dans le cours ».
+  **RÈGLE À GRAVER : ce qui est dessiné petit doit être regardé en grand.** Trois
+  jets ont raté parce que je rustinais sans regarder ; le défaut est sorti dès que
+  j'ai zoomé ×4 sur un angle. Et il a fallu nommer la STRUCTURE (des poteaux, des
+  traverses entre) pour que le dessin tombe juste du premier coup.
 - (à compléter à chaque session)

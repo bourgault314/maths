@@ -361,19 +361,11 @@ function beamLblSVG(id,x,y,val){
    elle doit être identique au pixel quelle que soit la peau du monde. */
 function porteSVG(t){
   if(t.porte===undefined)return '';
-  const cloture=(cote)=>{
-    const B={0:[3,-2,94,9],1:[93,3,9,94],2:[3,93,94,9],3:[-2,3,9,94]}[cote];
-    const horiz=cote===0||cote===2;
-    let piquets='';
-    for(let k=0;k<5;k++){
-      if(horiz){const xx=B[0]+9+k*19;
-        piquets+=`<line x1="${xx}" y1="${B[1]+1.5}" x2="${xx}" y2="${B[1]+B[3]-1.5}" stroke="#5d4326" stroke-width="3"/>`;}
-      else{const yy=B[1]+9+k*19;
-        piquets+=`<line x1="${B[0]+1.5}" y1="${yy}" x2="${B[0]+B[2]-1.5}" y2="${yy}" stroke="#5d4326" stroke-width="3"/>`;}
-    }
-    return `<rect x="${B[0]}" y="${B[1]}" width="${B[2]}" height="${B[3]}" rx="4.5" fill="#8a6b4a" stroke="#3b2a17" stroke-width="2.5"/>`+piquets;
-  };
-  return `<g class="tporte">`+[0,1,2,3].filter(c=>c!==t.porte).map(cloture).join('')+`</g>`;
+  /* LOT P (16/08) : le dessin vit dans engine.js (`palissadeSVG`), et le point de
+     cours des portes s'en sert aussi. Un seul dessin, deux endroits — demande de
+     Gwenael après avoir zoomé sur une capture et vu que l'ancienne clôture, quatre
+     barres qui se recouvraient, était mal dessinée dans les angles. */
+  return `<g class="tporte">`+palissadeSVG(t.porte)+`</g>`;
 }
 function targetSVG(t,stat,label='',index='',monde=''){
   const px=t.x*CS,py=t.y*CS;
