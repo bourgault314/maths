@@ -26,7 +26,7 @@ function disposition(rendu, nom) {
 
 describe("réorganisation des centièmes", () => {
   it("expose une API versionnée et trois états déterministes", () => {
-    assert.equal(VERSION_CORRESPONDANCES_DECIMALES, 5);
+    assert.equal(VERSION_CORRESPONDANCES_DECIMALES, 6);
     assert.deepEqual(ETAPES_REORGANISATION_CENTIEMES, [
       "lignes",
       "quadrants",

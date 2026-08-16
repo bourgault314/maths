@@ -2,10 +2,75 @@
 
 **Dernière mise à jour : 16 août 2026.**
 
+## Deux méthodes alternatives pour les conversions NC-03 / NC-04 du 16 août
+
+- D-059 corrige la mise en récit de la conversion sans modifier les
+  générateurs, les questions, les familles, les quotas ni les réponses
+  attendues. Le module reste `construit`.
+- L'état initial du matériel montre seulement les rangs naturels du nombre :
+  pour `2,27`, `2`, `2/10` et `7/100`. Les égalités
+  `2 = 200/100` et `2/10 = 20/100` n'apparaissent qu'après l'échange de la
+  même quantité en centièmes.
+- Les pages 4 et 5, « Me guider » et la correction des conversions en `/10`
+  et `/100` proposent deux voies parallèles :
+  « Méthode 1 · Avec les plaques de couleurs »
+  et « Méthode 2 · Avec le tableau de numération ». Aucune flèche ne transforme une méthode
+  en l'autre ; une flèche interne au matériel peut en revanche montrer
+  l'échange entre ses deux états.
+- Les conversions en `/1000` restent traitées par le tableau seul. Le cours,
+  l'aide et la correction réemploient toujours les mêmes objets partagés et
+  leurs profils de révélation.
+- Le cours nomme trois outils : bandes de fractions sur demi-droite ou rail,
+  plaques colorées de numération et tableau de numération. Les pages 1 et 2
+  rendent les trois visibles ; les pages 4 et 5 utilisent les plaques et le
+  tableau. Dans un exercice ou une correction, le lecteur choisit le visuel le
+  plus pertinent au lieu de tous les cumuler ; le tableau reste transversal.
+  Pour `2/4 = 0,5`, les bandes sur rail sont préférées à la grille de 100.
+- La recette D-059 est verte : **1 562 tests** passent. La revue couvre
+  **116 captures** sur cinq fenêtres, de `320 × 568` à `1 920 × 1 080`, sans
+  erreur navigateur, débordement local ou global, texte coupé ni élément hors
+  panneau. Elle contrôle les trois outils, `2/4`, `2,27`, les masques dans les
+  deux sens et le tableau seul pour `/1000`.
+- Le graphe public déjà exposé en `v35` est invalidé atomiquement en `v36` afin
+  que cette nouvelle organisation soit chargée sans ancien cache.
+
+## Révision pédagogique finale de NC-03 / NC-04 du 16 août
+
+- D-058 complète D-056 sans changer les générateurs, les familles, les quotas
+  ni les réponses attendues. Le cours conserve six pages et suit désormais le
+  même ordre dans chaque exemple : matériel, grande égalité mathématique, puis
+  tableau de numération comme vérification. Le module reste `construit`.
+- La page 1 place `0,5 = 5/10 = 1/2` immédiatement sous les cinq dixièmes ;
+  les deux grandes égalités de la page 2 suivent de même leurs réorganisations
+  en quarts. Les phrases qui répétaient ce que le tableau montrait sont retirées.
+- La page 3 montre trois échanges à empreinte identique :
+  `1 unité = 10 dixièmes`, `1 dixième = 10 centièmes` et
+  `1 unité = 100 centièmes`. Les repères écrits précèdent le tableau.
+- Les pages 4 et 5 sont les deux sens d'un même mouvement : matériel dans le
+  rang final vers rangs usuels pour `147/100 = 1,47`, puis rangs usuels vers
+  centièmes pour `3,54 = 354/100`. Leur égalité vient avant le tableau. La page
+  4 distingue explicitement `7/100 = 0,07` et `7/1000 = 0,007` ; la page 5 ne
+  contient plus de consignes propres aux champs de réponse.
+- La charte expose une teinte pédagogique canonique par rang pour les
+  écritures mathématiques du cours, sans confondre cette teinte avec celle des
+  verdicts d'interface. Le tableau adapte la taille de « Centièmes » et
+  « Millièmes » à la largeur de ses colonnes au lieu de couper les en-têtes.
+- La page 6 restaure les bandes sur rail au format standard de largeur source
+  `340` sur téléphone. Sa liste « Choisir un outil » et sa note finale sur la
+  division sont supprimées ; les constructions validées de `7/2`, `6/4`, des
+  repères de demis et du dénominateur 1 sont conservées.
+- Les recettes antérieures restent des témoins historiques. La recette D-058
+  est verte : **1 555 tests** passent. Les six pages ont été contrôlées dans
+  **30 états** sur cinq fenêtres, de `320 × 568` au TNI `1 920 × 1 080`, avec
+  **90 captures** haut–milieu–bas : aucun débordement de document, panneau,
+  figure ou fraction et aucune erreur JavaScript. Les contrôles ciblés des
+  aides confirment le masque, la virgule et les en-têtes mobiles. Le graphe
+  public passe atomiquement de `v34` à `v35`.
+
 ## Unification des rangs de NC-03 / NC-04 du 16 août
 
-- D-056 termine le lot visuel sans modifier les générateurs, les familles,
-  les quotas, les réponses attendues ni la sixième page du cours. Le module
+- D-056 constitue la fondation visuelle reprise par D-058, sans modifier les
+  générateurs, les familles, les quotas ni les réponses attendues. Le module
   reste `construit`.
 - La charte porte désormais l'unique palette sémantique des rangs : unités
   rouges, dixièmes verts, centièmes jaunes et millièmes violets, avec des
@@ -18,15 +83,15 @@
   chiffres, y compris dans son texte accessible et ses attributs de données.
 - Les échanges `1 unité = 10 dixièmes` et
   `1 dixième = 10 centièmes` conservent une empreinte strictement identique de
-  part et d'autre. Une conversion paramétrique réemploie les mêmes groupes aux
-  dixièmes ou aux centièmes, dans les deux sens, avec les états « par rang » et
-  « tout dans le rang final ».
+  part et d'autre. D-058 leur ajoute `1 unité = 100 centièmes`. Une conversion
+  paramétrique réemploie les mêmes groupes aux dixièmes ou aux centièmes, dans
+  les deux sens, avec les états « par rang » et « tout dans le rang final ».
 - Les pages 1 et 2 gardent les correspondances concrètes
   `0,5 = 5/10 = 1/2`, `0,25 = 25/100 = 1/4` et
   `0,75 = 75/100 = 3/4`. La page 3 utilise les deux échanges exacts. La page 4
   transforme `147/100` en `1,47` ; la page 5 transforme `3,54` en `354/100`.
-  Le tableau accompagne les pages 1, 3, 4 et 5 ; la page 6 reste celle de
-  D-055.
+  D-058 place leurs égalités avant le tableau et allège la page 6 comme décrit
+  en tête de document.
 - `/10` et `/100` utilisent la même conversion puis le même tableau dans le
   cours, « Me guider » et la correction. Les fractions libres `0,5`, `0,25`
   et `0,75` conservent leurs correspondances dédiées ; les autres cibles
@@ -169,11 +234,11 @@
   unité-dixièmes-centièmes et le millième au tableau ; convertir `147/100` en
   `1,47` ; repartir du matériel de `3,6` pour obtenir `36/10` ; enfin restaurer
   sur une même page les transformations de `7/2` et `6/4`, les repères en
-  demis, cinq bandes marquées `1` pour `5/1` et la stratégie finale. Le sens
-  quotient reste seulement la dernière note du cours. Cette photographie de
-  D-055 est historique : D-056 remplace depuis les objets et les exemples des
-  pages 1 à 5 comme décrit en tête de document, sans changer le contenu de la
-  page 6.
+  demis, cinq bandes marquées `1` pour `5/1` et la stratégie finale. Cette
+  photographie de D-055 est historique : D-056 remplace ensuite les objets et
+  les exemples des pages 1 à 5 ; D-058 réordonne ces pages et retire de la
+  page 6 la stratégie répétitive ainsi que la note quotient, comme décrit en
+  tête de document.
 - Une omission ne déplie plus la correction. Après une saisie omise, le
   lecteur affiche « Pas de réponse » puis la solution en vert hors du panneau ;
   après un QCM omis, la proposition correcte passe en vert. Une saisie fournie
@@ -191,12 +256,13 @@
   affichent simplement `1`. Le graphe public est invalidé d’un seul tenant en
   `v32`.
   Les recettes D-047 et D-054 restent des témoins historiques. La campagne
-  conjointe D-049/D-055 est verte : **1 519 tests** et **220 états navigateur**
+  conjointe D-049/D-055 était verte : **1 519 tests** et **220 états navigateur**
   sur cinq fenêtres, dont 60 états de cours, 120 états d'aide couvrant les
   12 profils et 35 états de réponse. Elle ne relève aucune erreur, aucun
   débordement ni aucune fuite de réponse ; la revue dédiée des six pages compte
   112 captures et mesure au plus **0,72 px** entre une barre de fraction et le
-  signe mathématique voisin.
+  signe mathématique voisin. Ces nombres sont historiques ; le résultat
+  courant de D-058 est consigné en tête de document.
 
 ## Clôture de NC-02 du 11 août
 

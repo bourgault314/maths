@@ -11,10 +11,10 @@ import {
   COULEURS_NUMERATION_DECIMALE,
   COULEURS_RANGS_NUMERATION_DECIMALE,
   TYPOGRAPHIE,
-} from "../../charte/src/charte.js?v=34";
-import { rendreFractionSvg } from "./expressions.js?v=34";
+} from "../../charte/src/charte.js?v=36";
+import { rendreFractionSvg } from "./expressions.js?v=36";
 
-export const VERSION_CORRESPONDANCES_DECIMALES = 5;
+export const VERSION_CORRESPONDANCES_DECIMALES = 6;
 
 export const ETAPES_REORGANISATION_CENTIEMES = Object.freeze([
   "lignes",
@@ -190,7 +190,7 @@ function dessinerGrilleCentiemes({
       texte(cote / 4, cote / 4 + 5, "1 quart", {
         taille: Math.max(9, Math.min(14, cellule * 0.82)),
         graisse: 800,
-        couleur: COULEURS_RANGS_NUMERATION_DECIMALE.centiemes.texte,
+        couleur: COULEURS_RANGS_NUMERATION_DECIMALE.centiemes.textePedagogique,
         classe: "cd-etiquette-quadrant",
       }),
     );
@@ -338,8 +338,8 @@ export function dessinerReorganisationCentiemes({
     {
       taille: comparaison ? Math.max(11, Math.min(13, cote / 12)) : 14,
       couleur: rendu.disposition === "lignes"
-        ? COULEURS_RANGS_NUMERATION_DECIMALE.centiemes.texte
-        : COULEURS_RANGS_NUMERATION_DECIMALE.unites.texte,
+        ? COULEURS_RANGS_NUMERATION_DECIMALE.centiemes.textePedagogique
+        : COULEURS_RANGS_NUMERATION_DECIMALE.unites.textePedagogique,
       classe: "cd-titre-disposition",
     },
   )).join("");
@@ -358,7 +358,7 @@ export function dessinerReorganisationCentiemes({
     ? texte(largeurLue / 2, yEquation, ecritureCentiemes(centiemes, etape), {
       taille: Math.max(13, Math.min(18, largeurLue / 25)),
       graisse: 800,
-      couleur: COULEURS_RANGS_NUMERATION_DECIMALE.centiemes.texte,
+      couleur: COULEURS_RANGS_NUMERATION_DECIMALE.centiemes.textePedagogique,
       classe: "cd-ecriture-correspondance",
     })
     : "";
@@ -434,7 +434,7 @@ function dessinerEmpreinteDixiemes(x, y, cote, afficherEcritures) {
   if (afficherEcritures) {
     morceaux.push(texte(cote / 4, cote / 2 + 5, "5 dixièmes", {
       taille: Math.max(11, Math.min(16, cellule * 0.72)),
-      couleur: COULEURS_RANGS_NUMERATION_DECIMALE.dixiemes.texte,
+      couleur: COULEURS_RANGS_NUMERATION_DECIMALE.dixiemes.textePedagogique,
       classe: "cd-etiquette-cinq-dixiemes",
     }));
   }
@@ -560,7 +560,7 @@ export function dessinerDemiAvecDixiemes({
       ? "5 dixièmes dans une unité"
       : "Empile les bandes vertes", {
       taille: 14,
-      couleur: COULEURS_RANGS_NUMERATION_DECIMALE.dixiemes.texte,
+      couleur: COULEURS_RANGS_NUMERATION_DECIMALE.dixiemes.textePedagogique,
       classe: "cd-titre-dixiemes",
     }));
     morceaux.push(dessinerEmpreinteDixiemes(x, y, coteUnite, afficherEcritures));
@@ -579,7 +579,7 @@ export function dessinerDemiAvecDixiemes({
         ? "Une pièce d’un demi sur le rail"
         : "Aligne la pièce jaune", {
         taille: 14,
-        couleur: COULEURS_RANGS_NUMERATION_DECIMALE.centiemes.texte,
+        couleur: COULEURS_RANGS_NUMERATION_DECIMALE.centiemes.textePedagogique,
         classe: "cd-titre-demi",
       }));
     }
@@ -606,7 +606,7 @@ export function dessinerDemiAvecDixiemes({
     morceaux.push(texte(largeurLue / 2, y, ecriture, {
       taille: Math.max(14, Math.min(18, largeurLue / 26)),
       graisse: 800,
-      couleur: COULEURS_RANGS_NUMERATION_DECIMALE.dixiemes.texte,
+      couleur: COULEURS_RANGS_NUMERATION_DECIMALE.dixiemes.textePedagogique,
       classe: "cd-ecriture-correspondance",
     }));
     y += 24;

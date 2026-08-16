@@ -14,12 +14,12 @@ import {
   SCHEMA_QUESTION_INSTANCE_V2,
   TYPE_REPONSE_ENTIER_NATUREL,
   TYPE_REPONSE_SELECTION_MULTIPLE,
-} from "../../../../contrats/src/question-v2.js?v=34";
+} from "../../../../contrats/src/question-v2.js?v=36";
 import {
   IDENTITES_AUTOMATISMES,
   creerClassementAutomatisme,
-} from "../../identifiants.js?v=34";
-import { formulationCritereDivisibilite } from "./critere-precis.js?v=34";
+} from "../../identifiants.js?v=36";
+import { formulationCritereDivisibilite } from "./critere-precis.js?v=36";
 
 export const NOM_GENERATEUR_CHIFFRE_MANQUANT =
   "nombres-et-calculs.criteres-divisibilite.chiffre-manquant";

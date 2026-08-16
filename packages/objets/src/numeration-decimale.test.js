@@ -62,7 +62,7 @@ function verifierPiecesDansViewBox(rendu) {
 
 describe("matériel de numération décimale", () => {
   it("expose une API versionnée et les deux orientations", () => {
-    assert.equal(VERSION_NUMERATION_DECIMALE, 5);
+    assert.equal(VERSION_NUMERATION_DECIMALE, 7);
     assert.deepEqual(ORIENTATIONS_MATERIEL_NUMERATION_DECIMALE, [
       "horizontale",
       "verticale",
@@ -245,6 +245,7 @@ describe("échanges exacts entre rangs", () => {
     assert.deepEqual(ECHANGES_RANGS_NUMERATION_DECIMALE, [
       "unite-dixiemes",
       "dixieme-centiemes",
+      "unite-centiemes",
     ]);
     assert.equal(empreintes.length, 2);
     assert.deepEqual(empreintes[0].slice(2), empreintes[1].slice(2));
@@ -295,6 +296,30 @@ describe("échanges exacts entre rangs", () => {
       assert.match(rendu.svg, /class="nd-echange-fraction-dixiemes"/);
       assert.match(rendu.svg, /class="nd-echange-fraction-centiemes"/);
       assert.doesNotMatch(rendu.svg, /NaN|Infinity/);
+    }
+  });
+
+  it("échange une unité contre cent centièmes dans la même empreinte", () => {
+    for (const largeur of [240, 320, 720]) {
+      const rendu = dessinerEchangeRangsNumerationDecimale({
+        echange: "unite-centiemes",
+        largeur,
+      });
+      const empreintes = [...rendu.svg.matchAll(
+        /class="nd-echange-empreinte [^"]+" x="([\d.]+)" y="([\d.]+)" width="([\d.]+)" height="([\d.]+)"/g,
+      )];
+
+      assert.equal(empreintes.length, 2);
+      assert.deepEqual(empreintes[0].slice(2), empreintes[1].slice(2));
+      assert.equal(compter(rendu.svg, /class="nd-piece nd-unite"/g), 1);
+      assert.equal(compter(rendu.svg, /class="nd-piece nd-centieme"/g), 100);
+      assert.match(rendu.svg, /nd-echange-fraction-centiemes-numerateur[^>]*>100<\/text>/);
+      assert.match(rendu.svg, /nd-echange-fraction-centiemes-denominateur[^>]*>100<\/text>/);
+      assert.match(rendu.texteAlternatif, /cent centièmes jaunes/);
+      assert.deepEqual(rendu.empreinte, {
+        largeur: Number(empreintes[0][3]),
+        hauteur: Number(empreintes[0][4]),
+      });
     }
   });
 
@@ -408,6 +433,74 @@ describe("conversion paramétrique par rang", () => {
     assert.match(converti.texteAlternatif, /Tous les groupes sont convertis en centièmes jaunes/);
   });
 
+  it("ne convertit pas les rangs avant le second état dans le sens décimal vers fraction", () => {
+    const options = {
+      ecritureDecimale: "2,27",
+      sens: "decimal-vers-fraction",
+      largeur: 560,
+    };
+    const decompose = dessinerConversionRangsNumerationDecimale({
+      ...options,
+      etat: "decompose",
+    });
+    const converti = dessinerConversionRangsNumerationDecimale({
+      ...options,
+      etat: "converti-rang-final",
+    });
+
+    assert.deepEqual(
+      decompose.groupes.map(({ rang, legende }) => [rang, legende]),
+      [
+        ["unites", "2"],
+        ["dixiemes", "2/10"],
+        ["centiemes", "7/100"],
+      ],
+    );
+    assert.doesNotMatch(decompose.svg, /200\/100|20\/100/);
+    assert.doesNotMatch(decompose.texteAlternatif, /200\/100|20\/100/);
+    assert.deepEqual(
+      converti.groupes.map(({ rang, legende }) => [rang, legende]),
+      [
+        ["unites", "2=200/100"],
+        ["dixiemes", "2/10=20/100"],
+        ["centiemes", "7/100"],
+      ],
+    );
+  });
+
+  it("part symétriquement des seuls centièmes avant de retrouver les rangs usuels", () => {
+    const options = {
+      ecritureDecimale: "2,27",
+      sens: "fraction-vers-decimal",
+      largeur: 560,
+    };
+    const centiemes = dessinerConversionRangsNumerationDecimale({
+      ...options,
+      etat: "converti-rang-final",
+    });
+    const rangs = dessinerConversionRangsNumerationDecimale({
+      ...options,
+      etat: "decompose",
+    });
+
+    assert.deepEqual(
+      centiemes.groupes.map(({ rang, legende }) => [rang, legende]),
+      [
+        ["unites", "200/100"],
+        ["dixiemes", "20/100"],
+        ["centiemes", "7/100"],
+      ],
+    );
+    assert.deepEqual(
+      rangs.groupes.map(({ rang, legende }) => [rang, legende]),
+      [
+        ["unites", "200/100=2"],
+        ["dixiemes", "20/100=2/10"],
+        ["centiemes", "7/100"],
+      ],
+    );
+  });
+
   it("convertit aussi 3,6 en dixièmes avec les mêmes empreintes", () => {
     const options = {
       ecritureDecimale: "3,6",
@@ -476,7 +569,7 @@ describe("conversion paramétrique par rang", () => {
 
     assert.doesNotMatch(aideNc03.svg, /1,47|data-ecriture-decimale/);
     assert.doesNotMatch(aideNc03.texteAlternatif, /1,47/);
-    assert.match(aideNc03.svg, /147 centièmes regroupés/);
+    assert.match(aideNc03.svg, />147 centièmes<\/text>/);
     assert.doesNotMatch(aideNc04.svg, /data-numerateur-cible|data-denominateur-cible/);
     assert.match(aideNc04.svg, /data-ecriture-decimale="1,47"/);
     assert.match(aideNc04.svg, /data-profil="aide-nc04"/);
@@ -488,13 +581,15 @@ describe("conversion paramétrique par rang", () => {
       profil: "aide-nc04",
     });
     assert.equal(zeroFinalImpose.ecritureDecimale, "0,50");
-    assert.match(zeroFinalImpose.svg, /data-legende="5\/10=\?\/100"/);
+    assert.match(zeroFinalImpose.svg, /data-legende="5\/10"/);
+    assert.doesNotMatch(zeroFinalImpose.svg, /data-legende="5\/10=\?\/100"/);
     assert.doesNotMatch(zeroFinalImpose.svg, /50\/100|data-numerateur-cible|data-denominateur-cible/);
     assert.doesNotMatch(zeroFinalImpose.texteAlternatif, /50\/100/);
 
     const aideNc04CentiemeImpose = dessinerConversionRangsNumerationDecimale({
       ecritureDecimale: "0,5",
       rangFinal: "centiemes",
+      etat: "converti-rang-final",
       sens: "decimal-vers-fraction",
       profil: "aide-nc04",
     });
@@ -526,10 +621,10 @@ describe("conversion paramétrique par rang", () => {
       sens: "fraction-vers-decimal",
       profil: "aide-nc03",
     });
-    assert.match(singulier.svg, />1 dixième regroupé<\/text>/);
+    assert.match(singulier.svg, />1 dixième<\/text>/);
   });
 
-  it("inverse seulement l'ordre des légendes, pas les quantités ni leur géométrie", () => {
+  it("garde les rangs naturels seuls au départ dans le sens inverse", () => {
     const direct = dessinerConversionRangsNumerationDecimale({
       ecritureDecimale: "1,47",
       sens: "fraction-vers-decimal",
@@ -547,7 +642,7 @@ describe("conversion paramétrique par rang", () => {
     );
     assert.deepEqual(
       inverse.groupes.map(({ legende }) => legende),
-      ["1=100/100", "4/10=40/100", "7/100"],
+      ["1", "4/10", "7/100"],
     );
   });
 
@@ -623,7 +718,7 @@ describe("tableau de numération décimale", () => {
         `data-rang="${rang}"[\\s\\S]*?class="nd-entete"[^>]*fill="${palette.principale}"` +
           `[\\s\\S]*?class="nd-cellule"[^>]*fill="${palette.fond}"` +
           `[\\s\\S]*?class="nd-nom-rang"[^>]*fill="${palette.encreEntete}"` +
-          `[\\s\\S]*?class="nd-chiffre"[^>]*fill="${palette.texte}"`,
+          `[\\s\\S]*?class="nd-chiffre"[^>]*fill="${palette.textePedagogique}"`,
       );
       assert.match(rendu.svg, bloc, `couleurs absentes pour ${rang}`);
     }
@@ -774,7 +869,7 @@ describe("tableau de numération décimale", () => {
     assert.match(rendu.svg, /viewBox="0 0 240 132"/);
     assert.match(rendu.svg, /style="max-width:100%;height:auto"/);
     assert.equal(compter(rendu.svg, /class="nd-nom-rang"/g), 4);
-    assert.equal(compter(rendu.svg, /class="nd-nom-rang"[^>]*font-size="11"/g), 4);
+    assert.equal(compter(rendu.svg, /class="nd-nom-rang"[^>]*font-size="9"/g), 4);
     assert.equal(compter(rendu.svg, /class="nd-chiffre"/g), 4);
     assert.doesNotMatch(rendu.svg, /NaN|Infinity|<script|<foreignObject/);
 

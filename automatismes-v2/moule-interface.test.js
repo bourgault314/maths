@@ -156,6 +156,13 @@ describe("moule responsive commun", () => {
     );
   });
 
+  it("fait tenir les grandes égalités dans les cartes méthode à 320 px", () => {
+    assert.match(
+      css,
+      /@media \(max-width: 360px\)[\s\S]*?\.methode-conversion-rangs\s*\{[^}]*padding-inline:\s*6px;[\s\S]*?\.methode-conversion-rangs \.calcul-aligne-fractions-principales\s*\{[^}]*padding-inline:\s*5px;[\s\S]*?\.methode-conversion-rangs \.mathsgo-egalites-alignees\s*\{[^}]*grid-template-columns:\s*minmax\(38px, auto\) 14px minmax\(0, auto\);[^}]*column-gap:\s*3px;/s,
+    );
+  });
+
   it("déclare un état visuel d'appui sans changer le geste de sélection", () => {
     assert.match(
       cssCommun,

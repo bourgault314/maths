@@ -10,14 +10,14 @@ import {
   COULEURS_NUMERATION_DECIMALE,
   COULEURS_RANGS_NUMERATION_DECIMALE,
   TYPOGRAPHIE,
-} from "../../charte/src/charte.js?v=34";
-import { construireDonneesTableauNumeration } from "./fractions-decimaux.js?v=34";
+} from "../../charte/src/charte.js?v=36";
+import { construireDonneesTableauNumeration } from "./fractions-decimaux.js?v=36";
 import {
   mesurerEcritureFractionSvg,
   rendreFractionSvg,
-} from "./expressions.js?v=34";
+} from "./expressions.js?v=36";
 
-export const VERSION_NUMERATION_DECIMALE = 5;
+export const VERSION_NUMERATION_DECIMALE = 7;
 
 export const ORIENTATIONS_MATERIEL_NUMERATION_DECIMALE = Object.freeze([
   "horizontale",
@@ -31,6 +31,7 @@ const MARGE = 12;
 export const ECHANGES_RANGS_NUMERATION_DECIMALE = Object.freeze([
   "unite-dixiemes",
   "dixieme-centiemes",
+  "unite-centiemes",
 ]);
 export const ETATS_CONVERSION_RANGS_NUMERATION_DECIMALE = Object.freeze([
   "decompose",
@@ -416,7 +417,7 @@ function mesurerEcritureRang(specification, taille) {
 }
 
 function rendreEcritureRang(specification, centreX, yBarre, taille) {
-  const couleur = COULEURS_RANGS_NUMERATION_DECIMALE[specification.rang].texte;
+  const couleur = COULEURS_RANGS_NUMERATION_DECIMALE[specification.rang].textePedagogique;
   if (specification.type === "fraction") {
     return rendreFractionSvg(
       specification.numerateur,
@@ -470,11 +471,12 @@ function rendreEgaliteDansZone(
  * Montre un échange de rang sans changer l'empreinte de la quantité.
  *
  * Une unité et ses dix dixièmes occupent exactement le même rectangle ;
- * un dixième et ses dix centièmes aussi. Les séparations sont tracées à
+ * un dixième et ses dix centièmes aussi, comme une unité et ses cent
+ * centièmes. Les séparations sont tracées à
  * l'intérieur de l'empreinte au lieu d'ajouter des espaces entre les pièces.
  *
  * @param {object} [options]
- * @param {"unite-dixiemes"|"dixieme-centiemes"} [options.echange="unite-dixiemes"]
+ * @param {"unite-dixiemes"|"dixieme-centiemes"|"unite-centiemes"} [options.echange="unite-dixiemes"]
  * @param {number} [options.largeur=320] largeur du viewBox, de 240 à 1600
  */
 export function dessinerEchangeRangsNumerationDecimale({
@@ -493,7 +495,7 @@ export function dessinerEchangeRangsNumerationDecimale({
   const xGauche = arrondi2((largeurLue - largeurEnsemble) / 2);
   const xDroite = arrondi2(xGauche + largeurEmpreinte + espaceCentral);
   const yForme = MARGE;
-  const hauteurEmpreinte = type === "unite-dixiemes" ? largeurEmpreinte : cellule;
+  const hauteurEmpreinte = type === "dixieme-centiemes" ? cellule : largeurEmpreinte;
   const yMilieu = arrondi2(yForme + hauteurEmpreinte / 2);
   const tailleFleche = Math.max(22, Math.min(34, espaceCentral * 0.58));
   const tailleEcriture = Math.max(16, Math.min(20, largeurLue / 20));
@@ -530,7 +532,7 @@ export function dessinerEchangeRangsNumerationDecimale({
     gauche = { type: "entier", valeur: 1, rang: "unites" };
     droite = { type: "fraction", numerateur: 10, denominateur: 10, rang: "dixiemes" };
     alternatif = "Une unité rouge et dix dixièmes verts occupent exactement la même empreinte. Une unité égale dix dixièmes.";
-  } else {
+  } else if (type === "dixieme-centiemes") {
     morceaux.push(
       dessinerDixieme(xGauche, yForme, cellule, "horizontale", 1),
     );
@@ -547,6 +549,23 @@ export function dessinerEchangeRangsNumerationDecimale({
     gauche = { type: "fraction", numerateur: 1, denominateur: 10, rang: "dixiemes" };
     droite = { type: "fraction", numerateur: 10, denominateur: 100, rang: "centiemes" };
     alternatif = "Un dixième vert et dix centièmes jaunes occupent exactement la même empreinte. Un dixième égale dix centièmes.";
+  } else {
+    morceaux.push(dessinerUnite(xGauche, yForme, cellule, 1));
+    for (let ligne = 0; ligne < 10; ligne += 1) {
+      for (let colonne = 0; colonne < 10; colonne += 1) {
+        morceaux.push(
+          dessinerCentieme(
+            xDroite + colonne * cellule,
+            yForme + ligne * cellule,
+            cellule,
+            ligne * 10 + colonne + 1,
+          ),
+        );
+      }
+    }
+    gauche = { type: "entier", valeur: 1, rang: "unites" };
+    droite = { type: "fraction", numerateur: 100, denominateur: 100, rang: "centiemes" };
+    alternatif = "Une unité rouge et cent centièmes jaunes occupent exactement la même empreinte. Une unité égale cent centièmes.";
   }
 
   morceaux.push(
@@ -650,8 +669,22 @@ function texteSpecification(specification) {
     : String(specification.valeur);
 }
 
-function specificationsLegendeConversion(source, cible, sens, profil) {
-  if (texteSpecification(source) === texteSpecification(cible)) {
+function specificationsLegendeConversion(source, cible, sens, profil, etat) {
+  const specificationsIdentiques = texteSpecification(source) === texteSpecification(cible);
+  const etatInitial =
+    (sens === "fraction-vers-decimal" && etat === "converti-rang-final")
+    || (sens === "decimal-vers-fraction" && etat === "decompose");
+  if (etatInitial) {
+    const specificationInitiale = sens === "fraction-vers-decimal" ? cible : source;
+    const unique =
+      profil === "aide-nc04"
+      && specificationsIdentiques
+      && specificationInitiale.type === "fraction"
+        ? Object.freeze({ ...specificationInitiale, numerateur: "?" })
+        : specificationInitiale;
+    return Object.freeze({ unique, texte: texteSpecification(unique) });
+  }
+  if (specificationsIdentiques) {
     const unique = profil === "aide-nc04" && source.type === "fraction"
       ? Object.freeze({ ...source, numerateur: "?" })
       : source;
@@ -780,11 +813,12 @@ function rendreLegendeConversion({
   cible,
   sens,
   profil,
+  etat,
   x,
   largeur,
   yBarre,
 }) {
-  const legende = specificationsLegendeConversion(source, cible, sens, profil);
+  const legende = specificationsLegendeConversion(source, cible, sens, profil, etat);
   if (legende.unique) {
     const taille = Math.max(14, Math.min(18, largeur / 4.8));
     return rendreEcritureRang(legende.unique, x + largeur / 2, yBarre, taille);
@@ -807,7 +841,9 @@ function rendreLegendeConversion({
  * `decompose` conserve le langage rouge / vert / jaune des rangs.
  * `converti-rang-final` recolore les mêmes empreintes avec la couleur du
  * rang cible : une unité devient 10 dixièmes ou 100 centièmes.
- * Le sens ne modifie que l'ordre des deux membres des légendes locales.
+ * Dans l'état de départ du sens choisi, chaque quantité est seulement nommée
+ * dans son rang. Les égalités de conversion n'apparaissent qu'après l'échange.
+ * Le sens fixe alors l'ordre des deux membres des légendes locales.
  *
  * @param {object} options
  * @param {string} options.ecritureDecimale écriture positive finissant aux dixièmes ou centièmes
@@ -898,11 +934,11 @@ export function dessinerConversionRangsNumerationDecimale({
     }));
   const titre = sensLu === "fraction-vers-decimal"
     ? etatLu === "decompose"
-      ? "Échanger vers les rangs usuels"
-      : `${donnees.fractionLue.numerateur} ${nomRangFinalCompte} regroupé${donnees.fractionLue.numerateur === 1 ? "" : "s"}`
+      ? "Dans les rangs usuels"
+      : `${donnees.fractionLue.numerateur} ${nomRangFinalCompte}`
     : etatLu === "decompose"
-      ? `Décomposer ${donnees.ecritureDecimale} par rang`
-      : `Tout convertir en ${nomRangFinal}`;
+      ? `${donnees.ecritureDecimale} dans ses rangs`
+      : `Tout dans le rang des ${nomRangFinal}`;
   const morceaux = [
     `<text class="nd-conversion-titre" x="${nombreSvg(largeurLue / 2)}" y="22" ` +
       `text-anchor="middle" font-family="${POLICE}" font-size="14" font-weight="700" ` +
@@ -924,6 +960,7 @@ export function dessinerConversionRangsNumerationDecimale({
       groupe.cible,
       sensLu,
       profilLu,
+      etatLu,
     );
     const legende = donneesLegende.texte;
     morceaux.push(
@@ -947,6 +984,7 @@ export function dessinerConversionRangsNumerationDecimale({
         cible: groupe.cible,
         sens: sensLu,
         profil: profilLu,
+        etat: etatLu,
         x: xLegendes,
         largeur: largeurLegendes,
         yBarre: y + hauteurLigne / 2,
@@ -1160,7 +1198,7 @@ export function dessinerTableauNumerationDecimale({
   const hauteurEntete = 36;
   const yValeur = yEntete + hauteurEntete;
   const hauteurValeur = 52;
-  const tailleEntete = Math.max(11, Math.min(14, largeurColonne / 6.4));
+  const tailleEntete = Math.max(9, Math.min(14, largeurColonne / 6.4));
   const xVirgule = MARGE + largeurColonne;
   const tailleVirgule = Math.max(24, Math.min(32, largeurColonne * 0.48));
   const colonnes = donnees.colonnes.map((colonne, index) => {
@@ -1189,7 +1227,7 @@ export function dessinerTableauNumerationDecimale({
       `<text class="nd-chiffre" x="${nombreSvg(x + largeurColonne / 2)}" ` +
       `y="${nombreSvg(yValeur + hauteurValeur / 2)}" text-anchor="middle" dominant-baseline="middle" ` +
       `font-family="${POLICE}" font-size="${nombreSvg(tailleChiffre(chiffre, largeurColonne))}" ` +
-      `font-weight="800" fill="${couleursRang.texte}">${echapper(chiffre)}</text>` +
+      `font-weight="800" fill="${couleursRang.textePedagogique}">${echapper(chiffre)}</text>` +
       `</g>`
     );
   });
