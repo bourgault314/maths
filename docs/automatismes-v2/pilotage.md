@@ -188,6 +188,12 @@ autres formes prévues par la fiche `NC-01` n'entrent dans les contrats qu'au
 moment de fabriquer leur famille. Aucun contrat générique de manipulation n'est
 construit par anticipation.
 
+La capacité d'un champ ne se déduit jamais du seul ensemble des réponses
+justes. Elle doit aussi permettre de fournir et de conserver les erreurs
+d'élèves que la fiche prétend diagnostiquer. Une valeur fausse mais
+syntaxiquement valide est validée, tracée et comptée fausse ; elle ne doit pas
+être tronquée ou refusée silencieusement par le pavé.
+
 ## Contraintes techniques
 
 - JavaScript moderne, sans dépendance externe ni compilation ;

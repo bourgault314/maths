@@ -1248,3 +1248,30 @@ Le Labo enregistre « Échanges exacts entre rangs » et
 décimale », à côté du matériel, du tableau et des deux correspondances. Il
 reste un banc de contrôle : le lecteur importe directement les objets de
 `packages/objets`, jamais le code du Studio.
+
+### D-057 — Les erreurs plausibles restent saisissables et l'aide F5 conserve un carré neutre
+
+Gwenaël constate le 16 août 2026 que la question inverse « Quel entier naturel
+a pour carré 9 ? » empêche d'écrire `80` : la borne `12`, prévue pour les
+réponses justes, sert aussi de plafond pendant la saisie. Or une erreur
+plausible doit pouvoir être saisie en entier, validée, tracée puis comptée
+fausse. Les trois formes de F2 et la forme F5 où le côté est à retrouver
+acceptent donc désormais des saisies jusqu'à `144`. Les réponses attendues
+restent comprises entre `0` et `12` ; `80`, `100`, `121` ou `144` ne deviennent
+jamais justes pour autant. Le pavé tactile et le clavier physique appliquent la
+même règle. Le générateur F2 passe en version 3 et F5 en version 2.
+
+Le premier essai de l'aide F5 mettait en évidence une rangée orange et une
+colonne turquoise. Cette croix ne rend pas assez clairement la lecture
+« plusieurs rangées de même longueur » et rompt avec les autres vues
+ordinaires du carré. Cette décision remplace donc D-051 pour cette aide : la
+question F5, son aide et sa correction emploient un quadrillage neutre, sans
+rangée ni colonne colorée. Le texte porte explicitement l'étape : « Repère les
+n rangées du carré : chacune contient n carreaux. » Le `?` central reste visible
+et le total n'est pas révélé.
+
+Les bandes de décomposition `10 + 1` et `10 + 2` du cours pour `11²` et `12²`
+restent inchangées : elles expliquent un autre calcul et ne constituent pas
+l'aide F5. Aucune nouvelle variante de dessin n'est ajoutée ; le composant
+« carré quadrillé » reste en version 4. Le graphe public V2 est invalidé d'un
+seul tenant en `v34`. Aucun chemin sous `/auto/` n'appartient à ce lot.

@@ -4,6 +4,7 @@ import { describe, it } from "node:test";
 import { validerSeance } from "../../packages/contrats/src/seance.js";
 import { validerTraceReponse } from "../../packages/contrats/src/trace-reponse.js";
 import {
+  COMPARAISON_VALEUR_EXACTE,
   COMPARAISON_VALEUR_RATIONNELLE_EXACTE,
   TYPE_REPONSE_CHOIX_UNIQUE,
   TYPE_REPONSE_DEUX_ENTIERS,
@@ -605,7 +606,7 @@ describe("réponse interactive", () => {
     const etat = etatSurQuestionNumerique();
     etat.questions[etat.seance.etat.indexQuestion].reponse = {
       type: TYPE_REPONSE_ENTIER_NATUREL,
-      comparaison: "entier-exact",
+      comparaison: COMPARAISON_VALEUR_EXACTE,
       attendu: 0,
       minimum: 0,
       maximum: 144,
@@ -618,6 +619,57 @@ describe("réponse interactive", () => {
       statut: "fournie",
       valeur: 0,
     });
+  });
+
+  it("trace 80 et la recopie 144 comme des réponses entières fournies et fausses", () => {
+    for (const [saisie, valeur] of [["80", 80], ["144", 144]]) {
+      const etat = etatSurQuestionNumerique();
+      etat.questions[etat.seance.etat.indexQuestion].reponse = {
+        type: TYPE_REPONSE_ENTIER_NATUREL,
+        comparaison: COMPARAISON_VALEUR_EXACTE,
+        attendu: 3,
+        minimum: 0,
+        maximum: 144,
+      };
+      for (const caractere of saisie) saisirCaractere(etat, caractere);
+      assert.equal(etat.saisie, saisie);
+      validerSelection(etat);
+      assert.deepEqual(etat.validation, { juste: false });
+      assert.equal(etat.erreurValidation, "");
+      assert.deepEqual(etat.traces[0].reponse, {
+        type: TYPE_REPONSE_ENTIER_NATUREL,
+        statut: "fournie",
+        valeur,
+      });
+      assert.deepEqual(validerTraceReponse(etat.traces[0]), { valide: true, erreurs: [] });
+    }
+  });
+
+  it("conserve aussi 80 comme erreur fournie dans F5 quand le côté est à retrouver", () => {
+    const etat = etatDemarre({
+      notion: NOTION_NC02,
+      graine: "saisie-f5-0",
+      nombreQuestions: 20,
+    });
+    const index = etat.questions.findIndex((question) =>
+      question.classement.famille === "carre-quadrille"
+      && question.classement.complements.includes("trouver-cote"));
+    assert.notEqual(index, -1);
+    etat.seance.etat.indexQuestion = index;
+    assert.equal(questionCourante(etat).reponse.maximum, 144);
+
+    saisirChiffre(etat, 8);
+    saisirChiffre(etat, 0);
+    assert.equal(etat.saisie, "80");
+    validerSelection(etat);
+    assert.deepEqual(etat.validation, { juste: false });
+    assert.equal(etat.erreurValidation, "");
+    assert.deepEqual(etat.traces[0].reponse, {
+      type: TYPE_REPONSE_ENTIER_NATUREL,
+      statut: "fournie",
+      valeur: 80,
+    });
+    assert.deepEqual(validerTraceReponse(etat.traces[0]), { valide: true, erreurs: [] });
   });
 
   it("distingue une saisie entière vide de la vraie réponse zéro", () => {
@@ -771,6 +823,27 @@ describe("réponse avec deux champs entiers", () => {
     selectionnerChampSaisie(etat, 0);
     effacerSaisie(etat);
     assert.deepEqual(etat.saisies, ["", "1"]);
+  });
+
+  it("accepte un facteur erroné à deux chiffres puis le trace comme réponse fausse", () => {
+    const etat = etatSurQuestionDeuxEntiers({
+      attendus: [3, 3],
+      maximum: 144,
+    });
+    saisirChiffre(etat, 8);
+    saisirChiffre(etat, 0);
+    selectionnerChampSaisie(etat, 1);
+    saisirChiffre(etat, 3);
+    assert.deepEqual(etat.saisies, ["80", "3"]);
+    validerSelection(etat);
+    assert.deepEqual(etat.validation, { juste: false });
+    assert.equal(etat.erreurValidation, "");
+    assert.deepEqual(etat.traces[0].reponse, {
+      type: TYPE_REPONSE_DEUX_ENTIERS,
+      statut: "fournie",
+      valeurs: [80, 3],
+    });
+    assert.deepEqual(validerTraceReponse(etat.traces[0]), { valide: true, erreurs: [] });
   });
 
   it("compte deux champs vides comme omis mais garde un champ partiel réparable", () => {

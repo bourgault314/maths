@@ -6,7 +6,7 @@
 
 import {
   SCHEMA_QUESTION_INSTANCE_V2,
-} from "../../../../contrats/src/question-v2.js?v=33";
+} from "../../../../contrats/src/question-v2.js?v=34";
 import {
   BASES_CARRES_ENTIERS,
   blocPuissance,
@@ -17,11 +17,11 @@ import {
   exigerParametresCarres,
   reponseEntier,
   valeurParametreOuTirage,
-} from "./commun.js?v=33";
+} from "./commun.js?v=34";
 
 export const NOM_GENERATEUR_CARRE_QUADRILLE =
   "nombres-et-calculs.carres-entiers-1-a-12.carre-quadrille";
-export const VERSION_GENERATEUR_CARRE_QUADRILLE = 1;
+export const VERSION_GENERATEUR_CARRE_QUADRILLE = 2;
 
 export const FORMES_CARRE_QUADRILLE = Object.freeze([
   "trouver-aire",
@@ -109,9 +109,14 @@ export function genererQuestionCarreQuadrille({ aleatoire, parametres }) {
       forme,
     ]),
     enonce: construireEnonce(base, aire, forme),
-    reponse: forme === "trouver-cote"
-      ? reponseEntier(base, 1, 12)
-      : reponseEntier(aire, 1, 144),
+    // Une mauvaise réponse plausible comme 80, ou la recopie de l'aire
+    // affichée, doit pouvoir être saisie puis comptée fausse dans les deux
+    // sens. La borne 144 est une capacité de saisie, pas un indice.
+    reponse: reponseEntier(
+      forme === "trouver-cote" ? base : aire,
+      1,
+      144,
+    ),
     aide: {
       blocs: forme === "trouver-cote"
         ? [
@@ -136,10 +141,9 @@ export function genererQuestionCarreQuadrille({ aleatoire, parametres }) {
           ]
         : [
             {
-              id: "aide-ligne-colonne",
+              id: "aide-rangees",
               type: "texte",
-              contenu:
-                "Observe la rangée et la colonne mises en évidence : elles contiennent le même nombre de carreaux.",
+              contenu: `Repère les ${base} rangées du carré : chacune contient ${base} carreaux.`,
             },
             {
               id: "aide-produit",
