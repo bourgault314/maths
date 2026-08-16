@@ -283,6 +283,60 @@ function sceneMur(bandes){
   });
   return {svg:svg,h:y+6};
 }
+/* Scène « plateau » (lot D, 08/2026) — la PREMIÈRE scène de cours qui ne parle pas de
+   fractions. Une porte orientée n'est pas une part : la bande ne sait pas la dessiner,
+   et le rayon non plus tout seul. Il faut montrer le PLATEAU — la case clôturée, le
+   rayon qui tape un côté fermé et meurt, le rayon qui fait le tour et entre.
+   `sc.plateau` = une liste de vignettes {porte, arrivee, ok} : `porte` le côté ouvert
+   (0 N, 1 E, 2 S, 3 O), `arrivee` la direction de MARCHE du rayon, `ok` si elle sert.
+   Le dessin reprend la palissade de render.js — bois à piquets sur les côtés fermés —
+   sans dépendre de lui : un cours doit pouvoir se lire même si la peau change. */
+function scenePlateau(sc,tE){
+  const H=124, CX=170, CY=62, R=34, BOIS='#a9713c', BOIS2='#7d4f27';
+  const dx=[0,1,0,-1], dy=[-1,0,1,0];
+  let svg='', y0=6;
+  sc.plateau.forEach((v,k)=>{
+    const cy=y0+CY;
+    let g='';
+    /* la case vue de DESSUS : un carré arrondi clair. Pas de toit — il passerait
+       sous la palissade du nord, et la vignette parle de la clôture, pas du toit. */
+    g+=`<rect x="${CX-R}" y="${cy-R}" width="${2*R}" height="${2*R}" rx="8" fill="#ffe6c2" stroke="#101a33" stroke-width="2.5"/>`;
+    /* La palissade — MÊME DESSIN QUE LE JEU (render.js) : les barres DÉBORDENT de
+       leur côté et se recouvrent aux angles, si bien que la clôture fait un contour
+       continu. Défaut trouvé par Gwenael sur la capture : mes barres s'arrêtaient
+       au ras du carré et les coins restaient vides, « ce n'est pas exactement comme
+       dans le jeu ». Cinq piquets par barre, comme là-bas. */
+    const EP=11, DEB=R+EP, OFF=R+7;
+    for(let c=0;c<4;c++){
+      if(c===v.porte)continue;
+      const mx=CX+dx[c]*OFF, my=cy+dy[c]*OFF, h=(c%2===0);
+      const w=h?2*DEB:EP, hh=h?EP:2*DEB;
+      g+=`<rect x="${mx-w/2}" y="${my-hh/2}" width="${w}" height="${hh}" rx="4.5" fill="${BOIS}" stroke="${BOIS2}" stroke-width="2.5"/>`;
+      for(let k=-2;k<=2;k++){
+        const px=mx+(h?k*19:0), py=my+(h?0:k*19);
+        g+=h?`<line x1="${px}" y1="${py-EP/2+1.5}" x2="${px}" y2="${py+EP/2-1.5}" stroke="${BOIS2}" stroke-width="3"/>`
+            :`<line x1="${px-EP/2+1.5}" y1="${py}" x2="${px+EP/2-1.5}" y2="${py}" stroke="${BOIS2}" stroke-width="3"/>`;
+      }
+    }
+    /* le rayon : il vient de LOIN dans la direction de marche `arrivee` */
+    const d=v.arrivee, sx=CX-dx[d]*150, sy=cy-dy[d]*150;
+    const bord=R+(v.ok?0:20), ex=CX-dx[d]*bord, ey=cy-dy[d]*bord;
+    /* soleil agrandi (retour de Gwenael sur capture) : dans une vignette de plateau
+       il n'y a pas de rayon épais pour donner l'échelle, le soleil doit porter seul */
+    const sux=Math.max(26,Math.min(314,CX-dx[d]*140)), suy=Math.max(26,Math.min(H-20,cy-dy[d]*46));
+    g+=`<g transform="translate(${sux} ${suy}) scale(1.35) translate(${-sux} ${-suy})">${sSun(sux,suy,[1,1])}</g>`;
+    g+=sBeam(sx+dx[d]*22,sy+dy[d]*22,ex,ey,[1,1]);
+    if(v.ok){
+      g+=`<circle cx="${CX}" cy="${cy}" r="${R+13}" fill="none" stroke="#5be08a" stroke-width="4"/>`;
+      g+=`<text x="${CX}" y="${cy+8}" text-anchor="middle" font-size="26" font-weight="900" fill="#1c7a45">✓</text>`;
+    }else{
+      g+=`<text x="${ex-dx[d]*16}" y="${ey-dy[d]*16+8}" text-anchor="middle" font-size="26" font-weight="900" fill="#e05a4a">✗</text>`;
+    }
+    svg+=cFade(tE(Math.min(k,3)),g);
+    y0+=H;
+  });
+  return {svg:svg,h:y0+4};
+}
 /* Scène « addition » (lot forêt, 08/2026) — le pendant de sceneCours pour les deux
    cours de la lentille. Même contrat de deux registres : en haut le vécu du jeu
    (deux rayons entrent dans la lentille, un seul en sort), en bas la forme de
@@ -352,7 +406,7 @@ function construireCours(id){
   /* deux familles de scènes : les partages descendent (cascade de prismes), les
      additions montent (deux rayons dans la lentille) — l'aiguillage se fait sur
      le champ présent dans `scene`, jamais sur le nom du cours */
-  const somme=!!c.scene.somme, murs=!!c.scene.murs;
+  const somme=!!c.scene.somme, murs=!!c.scene.murs, plateau=!!c.scene.plateau;
   /* déroulé d'une étape : l'explication courte, puis l'écriture étagée (règle R5) */
   const etapeHTML=(e)=>(e.t?`<p class="cligne">${texteMath(e.t)}</p>`:'')+
     (e.eq?`<div class="heq ceq cligne">${eqHTML(e.eq)}</div>`:'');
@@ -366,6 +420,14 @@ function construireCours(id){
     c.scene.murs.forEach((m)=>{
       h+=svgHTML(sceneMur(m.bandes),m.alt||'Des bandes de fractions découpées');
       for(let n=0;n<m.etapes&&i<c.etapes.length;n++,i++)h+=etapeHTML(c.etapes[i]);
+    });
+    while(i<c.etapes.length)h+=etapeHTML(c.etapes[i++]);
+  }else if(plateau){
+    /* même alternance que les murs : une vignette, SA phrase, la vignette suivante */
+    let i=0;
+    c.scene.plateau.forEach((v,k)=>{
+      h+=svgHTML(scenePlateau({plateau:[v]},tE),v.alt||'Une case créole et son rayon');
+      for(let n=0;n<(v.etapes||1)&&i<c.etapes.length;n++,i++)h+=etapeHTML(c.etapes[i]);
     });
     while(i<c.etapes.length)h+=etapeHTML(c.etapes[i++]);
   }else{
@@ -419,9 +481,13 @@ function brancherPredire(id){
     bt.replaceWith(p);
   },{once:true});
 }
-function montrerCours(id,apresVictoire){
+function montrerCours(id,apresVictoire,avantDeJouer){
   if(!COURS[id])return;
   coursId=id;
+  /* LOT D : une explication d'entrée n'est pas un point de cours — le bandeau le dit.
+     « Ce ne serait pas vraiment un cours, ce serait une explication au début »
+     (Gwenael, 16/08). Le panneau, lui, est le même : une seule mécanique à tenir. */
+  document.getElementById('courssur').textContent=avantDeJouer?'Avant de jouer':'Point de cours';
   coursApresVictoire=!!apresVictoire;
   coursRetour=apresVictoire?null:document.activeElement;
   document.getElementById('courstitre').textContent=COURS[id].titre;

@@ -3839,7 +3839,7 @@ window.MATHSGO_CATALOGUE = {
     {
       "id": "outils-club-maths-soley-html",
       "title": "Solèy — partage les rayons du soleil",
-      "description": "Un jeu de réflexion en 70 niveaux pour partager, additionner, multiplier et comparer des fractions dans neuf mondes inspirés de La Réunion.",
+      "description": "Un jeu de réflexion en 71 niveaux pour partager, additionner, multiplier et comparer des fractions dans neuf mondes inspirés de La Réunion.",
       "path": "outils/club_maths/soley.html",
       "domains": [
         "jeux-recherches",

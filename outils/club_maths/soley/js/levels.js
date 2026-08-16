@@ -228,6 +228,29 @@ const LV=[
   tools:[s3(1,0,1,2),b(0,1),b(0,3),b(1,0),b(1,2),s2(1,0,2),b(2,3)],
   sol:[[1,0,2],[0,3,2],[2,3,1],[6,3,4],[3,7,2]],solMin:[[1,0,2],[0,1,2],[3,7,2]]},
 
+ /* LE NIVEAU FORMATEUR DES PORTES (lot D, 16/08). Trou constaté à l'audit : la
+    première case clôturée du jeu était « La croisée des rayons », juste après —
+    un casse-tête à 6 841 essais. L'élève SUBISSAIT la règle au lieu de l'apprendre.
+    Ici, une seule idée : la palissade ferme trois côtés, le rayon direct meurt sur
+    le bois, il faut faire le tour. Rien de neuf en maths — la case veut le rayon
+    entier, aucune coupe n'est demandée, aucune ligne CALC n'entre à la canne.
+    `intro:'porte'` et non `dec:` ni `cours:` — demande de Gwenael : « ce ne serait
+    pas vraiment un cours, ce serait une explication au début ». Le panneau s'ouvre
+    À L'ARRIVÉE sur le niveau, une fois par élève : une règle de plateau doit être
+    connue AVANT la première pièce, pas après la victoire.
+    MESURÉ, et c'est le contrôle du §4 du prompt : avec la porte, R = 26 et
+    profondeur 4 (le tour complet, quatre miroirs). Sans le champ `porte`, la
+    profondeur tombe à 0 — le rayon du soleil sert la case tout seul. Le niveau
+    n'enseigne donc rien d'autre que la porte, et il ne se gagne pas sans elle. */
+ {w:'canne',name:"La case qui tourne le dos",intro:'porte',
+  sub:"Une palissade ferme trois côtés de la case. Le rayon arrive tout droit… et se cogne. Par où faut-il entrer ?",
+  hint:"Le rayon doit arriver par l'ouverture, à l'est. Fais-lui faire le tour par le haut.",
+  cols:9,rows:6,suns:[{x:0,y:3,dir:1}],
+  targets:[{x:5,y:3,need:[1,1],porte:1}],
+  rocks:[[5,2],[5,4],[3,1],[8,3],[1,5],[7,5]],fruits:[],
+  tools:[b(1,0),b(0,1),b(1,2),b(2,3)],
+  sol:[[0,1,3],[1,1,0],[2,6,0],[3,6,3]]},
+
  {w:'canne',name:"La croisée des rayons",
   sub:"Deux soleils, deux cases, un seul carrefour au milieu du champ. Une pièce posée là sert un rayon… et arrête l'autre. Alors, où couper ?",
   hint:"Chaque case n'accepte qu'UN rayon, et seulement par sa porte.",
@@ -992,6 +1015,30 @@ const COURS={
    {t:"À chaque coupe, le nombre du bas — le dénominateur — est multiplié.",eq:"2 × 2 × 2 = 8"}
   ],
   carte:{t:"Recouper une part multiplie le dénominateur.",eq:"1/4 ÷ 2 = 1/8"}
+ },
+ /* LA PREMIÈRE EXPLICATION QUI NE PARLE PAS DE FRACTIONS (lot D, 16/08). Les huit
+    cours précédents portent tous sur des parts, et leur support est la bande. Une
+    porte orientée n'est ni une part ni un calcul : ni la bande ni la cascade de
+    rayons ne savent la montrer. D'où la scène `plateau` — la case vue de dessus, sa
+    palissade, et deux vignettes : le rayon qui se cogne, le rayon qui entre.
+    Elle s'ouvre par `intro:` (à l'arrivée sur le niveau) et non par `dec:` ou
+    `cours:` (après la victoire) : une règle de plateau se connaît avant de jouer.
+    Pas de `carte.eq` : il n'y a rien à écrire en fractions, et forcer une égalité
+    ici serait un faux savoir. */
+ porte:{
+  titre:"Les cases à palissade",
+  scene:{plateau:[
+   {porte:1,arrivee:1,ok:false,etapes:1,
+    alt:"Une case entourée d'une palissade sur trois côtés ; le rayon arrive par la gauche, se cogne au bois et s'arrête"},
+   {porte:1,arrivee:3,ok:true,etapes:2,
+    alt:"La même case ; le rayon arrive cette fois par l'ouverture, à droite, et la case est servie"}
+  ]},
+  etapes:[
+   {t:"Trois côtés de cette case sont fermés par une palissade. Le rayon tape le bois et s'arrête : la case n'est pas servie."},
+   {t:"Il reste une ouverture — une seule. Le rayon doit y arriver par là, quitte à faire tout le tour."},
+   {t:"Regarde la palissade AVANT de poser tes miroirs : c'est elle qui dit par où entrer."}
+  ],
+  carte:{t:"Une case à palissade ne s'ouvre que d'un côté : amène le rayon jusqu'à son ouverture."}
  },
  /* Les deux cours des CHAMPS DE CANNE (lot B, 16/08). Ils ne JALONNENT pas : leurs
     niveaux portent `cours:` et non `dec:`, donc ils n'entrent pas dans

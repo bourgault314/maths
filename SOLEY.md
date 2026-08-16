@@ -57,7 +57,7 @@ fichiers modifiés → tests → reste à vérifier.
 | Monde | Palier | Contenu | Niveaux |
 |---|---|---|---|
 | Le lagon | 6e | découverte, partage égal — dont 5 niveaux-découverte (demi, tiers, quart, sixième, **recouper**) | 11 |
-| Les champs de canne | 6e | partage JOUÉ à fond : surplus, pièges, fruits à valeur, portes orientées (refonte 08/2026) — **aucune découverte** (le monde reste contournable), mais 2 points de cours `cours` : neuvième, douzième | 8 |
+| Les champs de canne | 6e | partage JOUÉ à fond : surplus, pièges, fruits à valeur, portes orientées (refonte 08/2026) — **aucune découverte** (le monde reste contournable), mais 2 points de cours `cours` (neuvième, douzième) et 1 explication d'entrée `intro` (les portes) | 9 |
 | La forêt | 5e | additions (lentille), équivalences — dont 2 niveaux-découverte (somme, même dénominateur) | 8 |
 | Le volcan | 4e | loupes ×, fractions > 1, 1/9 | 7 |
 | Les pitons | 5e-4e | équivalences, comparaisons (passes) | 7 |
@@ -66,7 +66,7 @@ fichiers modifiés → tests → reste à vérifier.
 | Les tunnels | 6e-4e | labyrinthes denses (41-64 % de roches), esprit de l'original | 8 (dont « Le prisme scellé » et « La galerie scellée ») |
 | Mafate | Expert | tout combiné, 2 soleils, grands plateaux | 7 (dont « Les verrous du cirque ») |
 
-Total : 70 niveaux, chacun avec une solution de référence `sol` vérifiée automatiquement.
+Total : 71 niveaux, chacun avec une solution de référence `sol` vérifiée automatiquement.
 Depuis la refonte (08/2026), les niveaux retouchés ou nouveaux portent AUSSI un champ
 `solMin` : un plan gagnant qui ne ramasse PAS tous les fruits — la batterie prouve
 ainsi que le fruit se mérite (règle d'or, idée 11 de la bibliothèque). Deux mécaniques
@@ -201,6 +201,14 @@ plateau ne répond plus aux clics — défaut trouvé en construisant le lot).
 ## 6. Historique des décisions (ne pas re-débattre sans raison)
 
 - Nom « Solèy » validé. Pièce « Lentille + » validée (PAS « Recolleur »).
+- **Une règle de PLATEAU s'explique AVANT de jouer, une notion de MATHS s'enseigne
+  après la victoire** (16/08). Trois champs, trois métiers : `dec` enseigne ET jalonne
+  (il verrouille le monde suivant) ; `cours` enseigne seulement, après la victoire ;
+  `intro` explique **à l'arrivée sur le niveau**, avant la première pièce. Demande de
+  Gwenael sur les portes : « ce ne serait pas vraiment un cours, ce serait une
+  explication au début » — et c'est juste : un élève qui découvre une contrainte de
+  plateau APRÈS avoir gagné a passé son temps à ne pas comprendre pourquoi son rayon
+  mourait. Le bandeau du panneau le dit : « Avant de jouer », pas « Point de cours ».
 - **Une notion s'enseigne UNE fois, avant qu'on s'en serve** (16/08). Un monde ne
   redécouvre pas ce qu'un monde précédent a enseigné : c'est ce qui a coûté sa place à
   « Quarts en croix » (15/08) puis à « Les sixièmes » (16/08). Corollaire : une notion
@@ -1154,4 +1162,23 @@ Trois choses à savoir avant d'y toucher :
   1554/1554, les 8 validateurs, Playwright tout vert,
   `verifier-lot-moitie-du-quart.mjs` 28 contrôles verts (69 niveaux intacts à l'octet,
   COURS/CALC/WORLDS/FRW strictement intacts, tout remesuré dans le vrai moteur).
+- **16/08 — la porte s'apprend avant de se subir (lot D).** Trou constaté à l'audit :
+  la première case clôturée du jeu était « La croisée des rayons », **un défi à 6 841
+  essais**. L'élève SUBISSAIT la règle. « La case qui tourne le dos » entre aux champs
+  de canne **juste avant** : une palissade sur trois côtés, le rayon direct meurt sur le
+  bois, il faut faire le tour — quatre miroirs, rien d'autre. **Aucune fraction neuve,
+  aucune ligne CALC : la canne reste le seul monde sans aide au calcul.** Le contrôle du
+  lot n'est pas une pièce mais une contrainte : **avec la porte, profondeur 4 ; sans le
+  champ `porte`, profondeur 0** — le rayon du soleil sert la case tout seul. Le niveau
+  n'enseigne donc QUE la porte, et il ne se gagne pas sans elle. R = 26, un niveau
+  d'école. **Trois nouveautés de moteur** : le champ `intro:`, qui ouvre le panneau à
+  l'ARRIVÉE sur le niveau (voir §6) ; la scène `plateau`, **première scène de cours qui
+  ne parle pas de fractions** — ni la bande ni la cascade de rayons ne savent dessiner
+  une palissade, il fallait montrer le plateau vu de dessus ; et le bandeau « Avant de
+  jouer ». **La palissade de la vignette reprend le dessin du jeu au détail près** —
+  les barres débordent de leur côté et se recouvrent aux angles, si bien que la
+  clôture fait un contour continu ; un premier jet les arrêtait au ras du carré et
+  laissait les coins vides (œil de Gwenael sur capture). Le soleil de la vignette est
+  agrandi : sans rayon épais pour donner l'échelle, il doit porter seul. La canne passe de 8 à 9 niveaux, son seuil de 5 à 6, et **le jeu de 70 à 71 —
+  les compteurs publics et l'annuaire ont été régénérés** (§5 point 12).
 - (à compléter à chaque session)
