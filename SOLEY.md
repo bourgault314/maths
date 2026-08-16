@@ -1184,7 +1184,10 @@ Trois choses à savoir avant d'y toucher :
 - **16/08 — la palissade redessinée, un seul dessin pour le jeu et pour le cours
   (lot P).** Le point de cours des portes montre la case EN GRAND ; c'est là que
   Gwenael a zoomé et vu ce que personne n'avait vu en quarante pixels : la clôture
-  était **quatre barres qui se recouvraient**, avec des coutures dans les angles.
+  était **trois barres qui débordaient et se recouvraient dans les angles** — le
+  côté ouvert n'était pas dessiné, d'où trois et non quatre. Mesuré sur l'ancien
+  code, pour les quatre orientations : 2 couples de barres superposées,
+  32 unités² de bois en double, et le bois sortait de la case.
   **Elle est maintenant construite comme une vraie clôture** — un poteau à chaque
   angle et à chaque bout, les piquets répartis ENTRE les poteaux, le fil du bois
   suivant exactement le chemin de la planche. `palissadeSVG(porte)` vit dans
