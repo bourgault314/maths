@@ -89,7 +89,7 @@ describe("bandes fractionnaires sur rail — cas d'or", () => {
       etape: "lecture",
     });
 
-    assert.equal(VERSION_BANDES_FRACTIONS_RAIL, 4);
+    assert.equal(VERSION_BANDES_FRACTIONS_RAIL, 5);
     assert.equal(rendu.erreur, null);
     assert.deepEqual(
       {
@@ -376,6 +376,69 @@ describe("bandes fractionnaires sur rail — géométrie historique", () => {
     );
   });
 
+  it("garde les pièces de P6 fines tout en rendant leurs textes lisibles sur mobile", () => {
+    const largeurAffichee = 234;
+    const echelleMobile = largeurAffichee / 260;
+    const echelleHistorique = largeurAffichee / 720;
+
+    for (const { numerateur, denominateur, etape } of [
+      { numerateur: 7, denominateur: 2, etape: "pieces" },
+      { numerateur: 6, denominateur: 4, etape: "reste" },
+      { numerateur: 5, denominateur: 1, etape: "pieces" },
+    ]) {
+      const bureau = dessinerBandesFractionnairesSurRailDecimal({
+        numerateur,
+        denominateur,
+        profil: "solution",
+        etape,
+        largeur: 720,
+      });
+      const mobile = dessinerBandesFractionnairesSurRailDecimal({
+        numerateur,
+        denominateur,
+        profil: "solution",
+        etape,
+        largeur: 260,
+        format: "mobile-compact",
+      });
+      const mobileStandard = dessinerBandesFractionnairesSurRailDecimal({
+        numerateur,
+        denominateur,
+        profil: "solution",
+        etape,
+        largeur: 260,
+      });
+
+      assert.equal(mobile.erreur, null);
+      assert.equal(mobile.hauteur, 154);
+      assert.equal(mobile.donnees.format, "mobile-compact");
+      assert.equal(mobile.donnees.hauteurBande, 34);
+      assert.match(mobile.svg, /viewBox="0 0 260 154"/);
+      assert.equal(mobileStandard.hauteur, 232);
+      assert.equal(mobileStandard.donnees.hauteurBande, 52);
+
+      const classePartie = denominateur === 1
+        ? "ecriture-part"
+        : etape === "reste"
+          ? "ecriture-reste-demi-numerateur"
+          : "ecriture-part-numerateur";
+      const taillePartie = attributPremier(mobile.svg, classePartie, "font-size");
+      const tailleRail = attributPremier(mobile.svg, "etiquette-rail", "font-size");
+      assert.ok(taillePartie * echelleMobile >= 11);
+      assert.ok(tailleRail * echelleMobile >= 11);
+      assert.ok(mobile.donnees.hauteurBande * echelleMobile <= 31);
+      assert.ok(mobile.hauteur * echelleMobile < mobileStandard.hauteur * echelleMobile);
+
+      const partieHistoriqueAffichee = bureau.donnees.largeurPartie * echelleHistorique;
+      const partieMobileAffichee = mobile.donnees.largeurPartie * echelleMobile;
+      assert.ok(Math.abs(partieMobileAffichee - partieHistoriqueAffichee) <= 3);
+      assert.equal(
+        bureau.donnees.distanceCible / bureau.donnees.largeurUnite,
+        mobile.donnees.distanceCible / mobile.donnees.largeurUnite,
+      );
+    }
+  });
+
   it("conserve ses proportions dans la variante étroite de 260 px", () => {
     const mobileEtroit = dessinerBandesFractionnairesSurRailDecimal({
       numerateur: 5,
@@ -555,11 +618,18 @@ describe("bandes fractionnaires sur rail — validation et stabilité", () => {
       denominateur: 1,
       profil: "solution",
     });
+    const mauvaisFormat = dessinerBandesFractionnairesSurRailDecimal({
+      numerateur: 7,
+      denominateur: 2,
+      profil: "solution",
+      format: "miniature",
+    });
 
     assert.match(mauvaisDenominateur.erreur, /dénominateur doit être 1, 2 ou 4/);
     assert.equal(mauvaisDenominateur.donnees, null);
     assert.match(mauvaisNumerateur.erreur, /compris entre 0 et 7/);
     assert.match(tropDUnites.erreur, /compris entre 0 et 12/);
+    assert.match(mauvaisFormat.erreur, /format doit être/);
   });
 
   it("exige explicitement le profil afin de ne jamais révéler une réponse par défaut", () => {

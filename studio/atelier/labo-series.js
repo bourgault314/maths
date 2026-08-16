@@ -654,14 +654,14 @@ const entreeConversionRangsNumerationDecimale = {
   groupes: [
     {
       cle: "ecritureDecimale",
-      options: [["1,47", "1,47"], ["3,54", "3,54"]],
+      options: [["3,6", "3,6"], ["1,47", "1,47"], ["3,54", "3,54"]],
       defaut: "1,47",
     },
     {
       cle: "etat",
       options: [
         ["decompose", "Rangs rouge / vert / jaune"],
-        ["converti-centiemes", "Tout en centièmes jaunes"],
+        ["converti-rang-final", "Tout dans le dernier rang"],
       ],
       defaut: "decompose",
     },
@@ -682,9 +682,9 @@ const entreeConversionRangsNumerationDecimale = {
       largeur: Number(v.largeur),
     }).svg;
   },
-  planche: () => ["1,47", "3,54"].flatMap((ecritureDecimale) =>
-    ["decompose", "converti-centiemes"].map((etat) => ({
-      legende: `${ecritureDecimale} · ${etat === "decompose" ? "par rang" : "tout en centièmes"}`,
+  planche: () => ["3,6", "1,47", "3,54"].flatMap((ecritureDecimale) =>
+    ["decompose", "converti-rang-final"].map((etat) => ({
+      legende: `${ecritureDecimale} · ${etat === "decompose" ? "par rang" : "tout dans le dernier rang"}`,
       dessiner: () => dessinerConversionRangsNumerationDecimale({
         ecritureDecimale,
         etat,
@@ -694,7 +694,7 @@ const entreeConversionRangsNumerationDecimale = {
     }))),
   vignette: () => dessinerConversionRangsNumerationDecimale({
     ecritureDecimale: "1,47",
-    etat: "converti-centiemes",
+    etat: "converti-rang-final",
     largeur: 280,
   }).svg,
 };

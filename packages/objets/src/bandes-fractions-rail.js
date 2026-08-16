@@ -14,18 +14,18 @@ import {
   construireGroupementFraction,
   formaterFractionEnDecimal,
   obtenirDonneesDroiteFractionnaire,
-} from "./fractions-decimaux.js?v=32";
+} from "./fractions-decimaux.js?v=33";
 import {
   mesurerEcritureFractionSvg,
   rendreFractionSvg,
-} from "./expressions.js?v=32";
+} from "./expressions.js?v=33";
 import {
   COULEURS_BANDES_FRACTIONS,
   TYPOGRAPHIE,
   couleurBandeFraction,
-} from "../../charte/src/charte.js?v=32";
+} from "../../charte/src/charte.js?v=33";
 
-export const VERSION_BANDES_FRACTIONS_RAIL = 4;
+export const VERSION_BANDES_FRACTIONS_RAIL = 5;
 
 const PROFILS = Object.freeze([
   "aide-nc03",
@@ -40,6 +40,11 @@ const ETAPES = Object.freeze([
   "unites",
   "reste",
   "lecture",
+]);
+
+const FORMATS = Object.freeze([
+  "standard",
+  "mobile-compact",
 ]);
 
 const LIMITES_NUMERATEURS = Object.freeze({
@@ -69,6 +74,15 @@ const RESERVE_FLECHE = 16;
 const Y_BANDE = 76;
 const Y_RAIL = 184;
 const HAUTEUR_SVG = 232;
+const GEOMETRIE_MOBILE_COMPACTE = Object.freeze({
+  margeGauche: 12,
+  margeDroite: 12,
+  reserveFleche: 12,
+  yBande: 58,
+  hauteurBande: 34,
+  yRail: 116,
+  hauteurSvg: 154,
+});
 
 function echapper(texte) {
   return String(texte).replace(/[&<>"']/g, (caractere) =>
@@ -223,7 +237,13 @@ function messageValidation(reglages, largeur) {
     return "La largeur doit être un nombre fini.";
   }
 
-  const { numerateur, denominateur, profil, etape = "pieces" } = reglages;
+  const {
+    numerateur,
+    denominateur,
+    profil,
+    etape = "pieces",
+    format = "standard",
+  } = reglages;
   if (!Number.isInteger(denominateur) || !Object.hasOwn(LIMITES_NUMERATEURS, denominateur)) {
     return "Le dénominateur doit être 1, 2 ou 4.";
   }
@@ -239,6 +259,9 @@ function messageValidation(reglages, largeur) {
   }
   if (!ETAPES.includes(etape)) {
     return `L'étape doit être l'une des suivantes : ${ETAPES.join(", ")}.`;
+  }
+  if (!FORMATS.includes(format)) {
+    return `Le format doit être l'un des suivants : ${FORMATS.join(", ")}.`;
   }
 
   const valeurParDefaut = profil.startsWith("aide-nc04") && etape === "pieces"
@@ -680,6 +703,9 @@ function texteAlternatifPour({ numerateur, denominateur, decimal, profil, etape 
  * Le profil est obligatoire : une omission ne doit jamais faire apparaître
  * accidentellement la réponse. En NC04, l'étape `pieces` commence par défaut
  * sans réserve de pièces ; `partiesPosees` matérialise l'action de l'élève.
+ * Le format `mobile-compact` conserve la longueur apparente des pièces à
+ * faible largeur, mais réduit seulement la hauteur du rail afin de garder les
+ * écritures et graduations lisibles sans produire de bandes surdimensionnées.
  */
 export function dessinerBandesFractionnairesSurRailDecimal(reglages = {}) {
   const largeur = normaliserLargeur(reglages?.largeur);
@@ -691,6 +717,7 @@ export function dessinerBandesFractionnairesSurRailDecimal(reglages = {}) {
     denominateur,
     profil,
     etape = "pieces",
+    format = "standard",
   } = reglages;
   const partiesPoseesParDefaut = profil.startsWith("aide-nc04") && etape === "pieces"
     ? 0
@@ -699,13 +726,25 @@ export function dessinerBandesFractionnairesSurRailDecimal(reglages = {}) {
   const groupement = construireGroupementFraction(numerateur, denominateur);
   const decimal = formaterFractionEnDecimal(numerateur, denominateur);
   const maximumRail = Math.max(1, Math.ceil(numerateur / denominateur));
-  const hauteur = HAUTEUR_SVG;
-  const hauteurDeBande = hauteurBande(largeur);
+  const formatMobileCompact = format === "mobile-compact";
+  const geometrie = formatMobileCompact
+    ? GEOMETRIE_MOBILE_COMPACTE
+    : {
+        margeGauche: MARGE_GAUCHE,
+        margeDroite: MARGE_DROITE,
+        reserveFleche: RESERVE_FLECHE,
+        yBande: Y_BANDE,
+        hauteurBande: hauteurBande(largeur),
+        yRail: Y_RAIL,
+        hauteurSvg: HAUTEUR_SVG,
+      };
+  const hauteur = geometrie.hauteurSvg;
+  const hauteurDeBande = geometrie.hauteurBande;
   const largeurUnite = (
-    largeur - MARGE_GAUCHE - MARGE_DROITE - RESERVE_FLECHE
+    largeur - geometrie.margeGauche - geometrie.margeDroite - geometrie.reserveFleche
   ) / maximumRail;
   const largeurPartie = largeurUnite / denominateur;
-  const positionCible = MARGE_GAUCHE + numerateur * largeurPartie;
+  const positionCible = geometrie.margeGauche + numerateur * largeurPartie;
   const texteAlternatif = texteAlternatifPour({
     numerateur,
     denominateur,
@@ -717,8 +756,8 @@ export function dessinerBandesFractionnairesSurRailDecimal(reglages = {}) {
   const corps =
     equation({ largeur, numerateur, denominateur, decimal, profil }) +
     bandes({
-      origineX: MARGE_GAUCHE,
-      y: Y_BANDE,
+      origineX: geometrie.margeGauche,
+      y: geometrie.yBande,
       hauteur: hauteurDeBande,
       largeurPartie,
       denominateur,
@@ -726,8 +765,8 @@ export function dessinerBandesFractionnairesSurRailDecimal(reglages = {}) {
       etape,
     }) +
     rail({
-      origineX: MARGE_GAUCHE,
-      y: Y_RAIL,
+      origineX: geometrie.margeGauche,
+      y: geometrie.yRail,
       largeurUnite,
       largeurPartie,
       maximumRail,
@@ -735,7 +774,7 @@ export function dessinerBandesFractionnairesSurRailDecimal(reglages = {}) {
       denominateur,
       profil,
       decimal,
-      basBande: Y_BANDE + hauteurDeBande,
+      basBande: geometrie.yBande + hauteurDeBande,
     });
 
   return Object.freeze({
@@ -749,13 +788,17 @@ export function dessinerBandesFractionnairesSurRailDecimal(reglages = {}) {
       reste: groupement.reste,
       maximumRail,
       pas: 1 / denominateur,
-      origineRail: MARGE_GAUCHE,
+      format,
+      origineRail: geometrie.margeGauche,
+      yBande: geometrie.yBande,
+      hauteurBande: hauteurDeBande,
+      yRail: geometrie.yRail,
       largeurUnite: arrondi2(largeurUnite),
       largeurPartie: arrondi2(largeurPartie),
       positionCible: arrondi2(positionCible),
-      positionFinRail: arrondi2(MARGE_GAUCHE + maximumRail * largeurUnite),
-      positionDebutFleche: arrondi2(MARGE_GAUCHE + maximumRail * largeurUnite + 8),
-      positionPointeFleche: arrondi2(MARGE_GAUCHE + maximumRail * largeurUnite + 20),
+      positionFinRail: arrondi2(geometrie.margeGauche + maximumRail * largeurUnite),
+      positionDebutFleche: arrondi2(geometrie.margeGauche + maximumRail * largeurUnite + 8),
+      positionPointeFleche: arrondi2(geometrie.margeGauche + maximumRail * largeurUnite + 20),
       distanceCible: arrondi2(numerateur * largeurPartie),
       partiesPosees,
       resteFusionneEnDemi: etape === "reste" && denominateur === 4 && groupement.reste === 2,

@@ -10,14 +10,14 @@ import {
   COULEURS_NUMERATION_DECIMALE,
   COULEURS_RANGS_NUMERATION_DECIMALE,
   TYPOGRAPHIE,
-} from "../../charte/src/charte.js?v=32";
-import { construireDonneesTableauNumeration } from "./fractions-decimaux.js?v=32";
+} from "../../charte/src/charte.js?v=33";
+import { construireDonneesTableauNumeration } from "./fractions-decimaux.js?v=33";
 import {
   mesurerEcritureFractionSvg,
   rendreFractionSvg,
-} from "./expressions.js?v=32";
+} from "./expressions.js?v=33";
 
-export const VERSION_NUMERATION_DECIMALE = 4;
+export const VERSION_NUMERATION_DECIMALE = 5;
 
 export const ORIENTATIONS_MATERIEL_NUMERATION_DECIMALE = Object.freeze([
   "horizontale",
@@ -34,11 +34,16 @@ export const ECHANGES_RANGS_NUMERATION_DECIMALE = Object.freeze([
 ]);
 export const ETATS_CONVERSION_RANGS_NUMERATION_DECIMALE = Object.freeze([
   "decompose",
-  "converti-centiemes",
+  "converti-rang-final",
 ]);
 export const SENS_CONVERSION_RANGS_NUMERATION_DECIMALE = Object.freeze([
   "fraction-vers-decimal",
   "decimal-vers-fraction",
+]);
+export const PROFILS_CONVERSION_RANGS_NUMERATION_DECIMALE = Object.freeze([
+  "solution",
+  "aide-nc03",
+  "aide-nc04",
 ]);
 const RANGS_TABLEAU = Object.freeze([
   "unites",
@@ -461,10 +466,6 @@ function rendreEgaliteDansZone(
   );
 }
 
-function rendreEgaliteEchange(gauche, droite, largeur, yBarre, taille) {
-  return rendreEgaliteDansZone(gauche, droite, 0, largeur, yBarre, taille);
-}
-
 /**
  * Montre un échange de rang sans changer l'empreinte de la quantité.
  *
@@ -553,7 +554,22 @@ export function dessinerEchangeRangsNumerationDecimale({
       `y="${yMilieu}" text-anchor="middle" dominant-baseline="middle" ` +
       `font-family="${POLICE}" font-size="${nombreSvg(tailleFleche)}" font-weight="800" ` +
       `fill="${COULEURS.bleu}">↔</text>`,
-    rendreEgaliteEchange(gauche, droite, largeurLue, yBarre, tailleEcriture),
+    rendreEcritureRang(
+      gauche,
+      xGauche + largeurEmpreinte / 2,
+      yBarre,
+      tailleEcriture,
+    ),
+    `<text class="nd-echange-egal" x="${nombreSvg(largeurLue / 2)}" ` +
+      `y="${nombreSvg(yBarre)}" text-anchor="middle" dominant-baseline="middle" ` +
+      `font-family="${POLICE}" font-size="${nombreSvg(tailleEcriture)}" font-weight="800" ` +
+      `fill="${COULEURS_NUMERATION_DECIMALE.encre}">=</text>`,
+    rendreEcritureRang(
+      droite,
+      xDroite + largeurEmpreinte / 2,
+      yBarre,
+      tailleEcriture,
+    ),
   );
 
   const svg =
@@ -598,6 +614,15 @@ function verifierSensConversionRangs(sens) {
   return sens;
 }
 
+function verifierProfilConversionRangs(profil) {
+  if (!PROFILS_CONVERSION_RANGS_NUMERATION_DECIMALE.includes(profil)) {
+    throw new RangeError(
+      `dessinerConversionRangsNumerationDecimale : profil invalide « ${profil} »`,
+    );
+  }
+  return profil;
+}
+
 function specificationSourceConversion(rang, quantite) {
   if (rang === "unites") {
     return Object.freeze({ type: "entier", valeur: quantite, rang });
@@ -606,13 +631,16 @@ function specificationSourceConversion(rang, quantite) {
   return Object.freeze({ type: "fraction", numerateur: quantite, denominateur, rang });
 }
 
-function specificationCibleConversion(rang, quantite) {
-  const facteur = rang === "unites" ? 100 : rang === "dixiemes" ? 10 : 1;
+function specificationCibleConversion(rang, quantite, rangFinal) {
+  const indexRang = RANGS_TABLEAU.indexOf(rang);
+  const indexFinal = RANGS_TABLEAU.indexOf(rangFinal);
+  const denominateur = 10 ** indexFinal;
+  const facteur = 10 ** (indexFinal - indexRang);
   return Object.freeze({
     type: "fraction",
     numerateur: quantite * facteur,
-    denominateur: 100,
-    rang: "centiemes",
+    denominateur,
+    rang: rangFinal,
   });
 }
 
@@ -620,6 +648,26 @@ function texteSpecification(specification) {
   return specification.type === "fraction"
     ? `${specification.numerateur}/${specification.denominateur}`
     : String(specification.valeur);
+}
+
+function specificationsLegendeConversion(source, cible, sens, profil) {
+  if (texteSpecification(source) === texteSpecification(cible)) {
+    const unique = profil === "aide-nc04" && source.type === "fraction"
+      ? Object.freeze({ ...source, numerateur: "?" })
+      : source;
+    return Object.freeze({ unique, texte: texteSpecification(unique) });
+  }
+  const cibleVisible = profil === "aide-nc04" && cible.type === "fraction"
+    ? Object.freeze({ ...cible, numerateur: "?" })
+    : cible;
+  const [gauche, droite] = sens === "fraction-vers-decimal"
+    ? [cibleVisible, source]
+    : [source, cibleVisible];
+  return Object.freeze({
+    gauche,
+    droite,
+    texte: `${texteSpecification(gauche)}=${texteSpecification(droite)}`,
+  });
 }
 
 function largeurEgaliteLocale(gauche, droite, taille) {
@@ -731,51 +779,90 @@ function rendreLegendeConversion({
   source,
   cible,
   sens,
+  profil,
   x,
   largeur,
   yBarre,
 }) {
-  if (texteSpecification(source) === texteSpecification(cible)) {
+  const legende = specificationsLegendeConversion(source, cible, sens, profil);
+  if (legende.unique) {
     const taille = Math.max(14, Math.min(18, largeur / 4.8));
-    return rendreEcritureRang(source, x + largeur / 2, yBarre, taille);
+    return rendreEcritureRang(legende.unique, x + largeur / 2, yBarre, taille);
   }
-  const [gauche, droite] = sens === "fraction-vers-decimal"
-    ? [cible, source]
-    : [source, cible];
-  const taille = tailleEgaliteLocale(gauche, droite, largeur);
-  return rendreEgaliteDansZone(gauche, droite, x, largeur, yBarre, taille);
+  const taille = tailleEgaliteLocale(legende.gauche, legende.droite, largeur);
+  return rendreEgaliteDansZone(
+    legende.gauche,
+    legende.droite,
+    x,
+    largeur,
+    yBarre,
+    taille,
+  );
 }
 
 /**
- * Décompose une écriture au centième puis convertit chaque groupe en
- * centièmes sans jamais changer sa géométrie.
+ * Décompose une écriture au dixième ou au centième puis convertit chaque
+ * groupe dans son dernier rang sans jamais changer sa géométrie.
  *
  * `decompose` conserve le langage rouge / vert / jaune des rangs.
- * `converti-centiemes` recolore les mêmes empreintes en jaune : une unité
- * devient alors un bloc de 100 centièmes et un dixième un bloc de 10.
+ * `converti-rang-final` recolore les mêmes empreintes avec la couleur du
+ * rang cible : une unité devient 10 dixièmes ou 100 centièmes.
  * Le sens ne modifie que l'ordre des deux membres des légendes locales.
  *
  * @param {object} options
- * @param {string} options.ecritureDecimale écriture positive finissant au rang des centièmes
- * @param {"decompose"|"converti-centiemes"} [options.etat="decompose"]
+ * @param {string} options.ecritureDecimale écriture positive finissant aux dixièmes ou centièmes
+ * @param {"decompose"|"converti-rang-final"} [options.etat="decompose"]
  * @param {"fraction-vers-decimal"|"decimal-vers-fraction"} [options.sens="fraction-vers-decimal"]
+ * @param {"solution"|"aide-nc03"|"aide-nc04"} [options.profil="solution"]
+ * @param {"dixiemes"|"centiemes"|null} [options.rangFinal=null]
+ *   conserve un zéro final imposé par le dénominateur de la tâche
  * @param {number} [options.largeur=560] largeur du viewBox, de 240 à 1600
  */
 export function dessinerConversionRangsNumerationDecimale({
   ecritureDecimale,
   etat = "decompose",
   sens = "fraction-vers-decimal",
+  profil = "solution",
+  rangFinal: rangFinalDemande = null,
   largeur = 560,
 } = {}) {
   const etatLu = verifierEtatConversionRangs(etat);
   const sensLu = verifierSensConversionRangs(sens);
-  const largeurLue = lireLargeur(largeur, "dessinerConversionRangsNumerationDecimale");
-  const donnees = construireDonneesTableauNumeration(ecritureDecimale);
-  if (donnees.dernierRang !== "centiemes") {
+  const profilLu = verifierProfilConversionRangs(profil);
+  if (
+    (profilLu === "aide-nc03" && sensLu !== "fraction-vers-decimal")
+    || (profilLu === "aide-nc04" && sensLu !== "decimal-vers-fraction")
+  ) {
     throw new RangeError(
-      "dessinerConversionRangsNumerationDecimale : une écriture au rang des centièmes est requise",
+      "dessinerConversionRangsNumerationDecimale : profil d’aide incompatible avec le sens",
     );
   }
+  const largeurLue = lireLargeur(largeur, "dessinerConversionRangsNumerationDecimale");
+  const rangFinalLu = verifierRangFinal(rangFinalDemande);
+  if (rangFinalLu && !["dixiemes", "centiemes"].includes(rangFinalLu)) {
+    throw new RangeError(
+      "dessinerConversionRangsNumerationDecimale : rangFinal limité aux dixièmes ou centièmes",
+    );
+  }
+  const donnees = prolongerDonneesTableauJusquAuRang(
+    construireDonneesTableauNumeration(ecritureDecimale),
+    rangFinalLu,
+  );
+  if (!["dixiemes", "centiemes"].includes(donnees.dernierRang)) {
+    throw new RangeError(
+      "dessinerConversionRangsNumerationDecimale : une écriture au rang des dixièmes ou des centièmes est requise",
+    );
+  }
+  const rangFinal = donnees.dernierRang;
+  const indexFinal = RANGS_TABLEAU.indexOf(rangFinal);
+  const denominateurFinal = 10 ** indexFinal;
+  const nomRangFinal = rangFinal === "dixiemes" ? "dixièmes" : "centièmes";
+  const nomRangFinalCompte = donnees.fractionLue.numerateur === 1
+    ? rangFinal === "dixiemes" ? "dixième" : "centième"
+    : nomRangFinal;
+  const couleurRangFinal = rangFinal === "dixiemes"
+    ? COULEURS_NUMERATION_DECIMALE.dixieme
+    : COULEURS_NUMERATION_DECIMALE.centieme;
   const quantites = Object.fromEntries(
     donnees.colonnes.slice(0, 3).map(({ id, chiffre }) => [id, Number(chiffre)]),
   );
@@ -795,13 +882,13 @@ export function dessinerConversionRangsNumerationDecimale({
     (largeurVisuelle - espaceUnitesEstime) / (10 * colonnesUnites),
   )));
   const xLegendes = MARGE + largeurVisuelle + espaceColonnes;
-  const groupesBruts = ["unites", "dixiemes", "centiemes"]
+  const groupesBruts = RANGS_TABLEAU.slice(0, indexFinal + 1)
     .filter((rang) => quantites[rang] > 0)
     .map((rang) => ({
       rang,
       quantite: quantites[rang],
       source: specificationSourceConversion(rang, quantites[rang]),
-      cible: specificationCibleConversion(rang, quantites[rang]),
+      cible: specificationCibleConversion(rang, quantites[rang], rangFinal),
       geometrie: geometrieGroupeConversion(
         rang,
         quantites[rang],
@@ -809,9 +896,13 @@ export function dessinerConversionRangsNumerationDecimale({
         largeurVisuelle,
       ),
     }));
-  const titre = etatLu === "decompose"
-    ? `Décomposer ${donnees.ecritureDecimale} par rang`
-    : "Tout convertir en centièmes";
+  const titre = sensLu === "fraction-vers-decimal"
+    ? etatLu === "decompose"
+      ? "Échanger vers les rangs usuels"
+      : `${donnees.fractionLue.numerateur} ${nomRangFinalCompte} regroupé${donnees.fractionLue.numerateur === 1 ? "" : "s"}`
+    : etatLu === "decompose"
+      ? `Décomposer ${donnees.ecritureDecimale} par rang`
+      : `Tout convertir en ${nomRangFinal}`;
   const morceaux = [
     `<text class="nd-conversion-titre" x="${nombreSvg(largeurLue / 2)}" y="22" ` +
       `text-anchor="middle" font-family="${POLICE}" font-size="14" font-weight="700" ` +
@@ -823,17 +914,18 @@ export function dessinerConversionRangsNumerationDecimale({
     const hauteurLigne = Math.max(56, groupe.geometrie.hauteur);
     const xGroupe = arrondi2(MARGE + (largeurVisuelle - groupe.geometrie.largeur) / 2);
     const yGroupe = arrondi2(y + (hauteurLigne - groupe.geometrie.hauteur) / 2);
-    const couleur = etatLu === "converti-centiemes"
-      ? COULEURS_NUMERATION_DECIMALE.centieme
+    const couleur = etatLu === "converti-rang-final"
+      ? couleurRangFinal
       : COULEURS_NUMERATION_DECIMALE[
           groupe.rang === "unites" ? "unite" : groupe.rang === "dixiemes" ? "dixieme" : "centieme"
         ];
-    const ordreLegende = sensLu === "fraction-vers-decimal"
-      ? [groupe.cible, groupe.source]
-      : [groupe.source, groupe.cible];
-    const legende = texteSpecification(groupe.source) === texteSpecification(groupe.cible)
-      ? texteSpecification(groupe.source)
-      : `${texteSpecification(ordreLegende[0])}=${texteSpecification(ordreLegende[1])}`;
+    const donneesLegende = specificationsLegendeConversion(
+      groupe.source,
+      groupe.cible,
+      sensLu,
+      profilLu,
+    );
+    const legende = donneesLegende.texte;
     morceaux.push(
       `<g class="nd-conversion-rang nd-conversion-${groupe.rang} ` +
         `nd-conversion-${etatLu}" data-rang="${groupe.rang}" ` +
@@ -854,6 +946,7 @@ export function dessinerConversionRangsNumerationDecimale({
         source: groupe.source,
         cible: groupe.cible,
         sens: sensLu,
+        profil: profilLu,
         x: xLegendes,
         largeur: largeurLegendes,
         yBarre: y + hauteurLigne / 2,
@@ -874,19 +967,28 @@ export function dessinerConversionRangsNumerationDecimale({
   const hauteur = arrondi2(Math.max(110, y - 2));
   const descriptions = groupes.map(({ rang, quantite, legende }) =>
     `${quantite} au rang ${rang}, ${legende}`).join(" ; ");
+  const introductionAlternative = profilLu === "aide-nc03"
+    ? `Conversion de ${donnees.fractionLue.numerateur} ${nomRangFinalCompte}.`
+    : `Conversion par rang de ${donnees.ecritureDecimale}.`;
+  const couleurNommee = rangFinal === "dixiemes" ? "verts" : "jaunes";
   const alternatif =
-    `Conversion par rang de ${donnees.ecritureDecimale}. ` +
-    `${etatLu === "decompose" ? "Les couleurs distinguent les rangs." : "Tous les groupes sont convertis en centièmes jaunes."} ` +
+    `${introductionAlternative} ` +
+    `${etatLu === "decompose" ? "Les couleurs distinguent les rangs." : `Tous les groupes sont convertis en ${nomRangFinal} ${couleurNommee}.`} ` +
     `Les empreintes ne changent pas. ${descriptions}.`;
+  const attributEcriture = profilLu === "aide-nc03"
+    ? ""
+    : ` data-ecriture-decimale="${echapper(donnees.ecritureDecimale)}"`;
+  const attributCible = profilLu === "aide-nc04"
+    ? ""
+    : ` data-numerateur-cible="${donnees.fractionLue.numerateur}" ` +
+      `data-denominateur-cible="${denominateurFinal}"`;
   const svg =
     attributsSvg(
       largeurLue,
       hauteur,
       alternatif,
-      ` data-ecriture-decimale="${echapper(donnees.ecritureDecimale)}" ` +
-        `data-etat="${etatLu}" data-sens="${sensLu}" ` +
-        `data-numerateur-cible="${donnees.fractionLue.numerateur}" ` +
-        `data-denominateur-cible="100"`,
+      `${attributEcriture} data-etat="${etatLu}" data-sens="${sensLu}" ` +
+        `data-profil="${profilLu}" data-rang-final="${rangFinal}"${attributCible}`,
     ) +
     `<g aria-hidden="true">${morceaux.join("")}</g></svg>`;
 
@@ -898,10 +1000,12 @@ export function dessinerConversionRangsNumerationDecimale({
     ecritureDecimale: donnees.ecritureDecimale,
     etat: etatLu,
     sens: sensLu,
+    profil: profilLu,
+    rangFinal,
     tailleCellule: cellule,
     fractionCible: Object.freeze({
       numerateur: donnees.fractionLue.numerateur,
-      denominateur: 100,
+      denominateur: denominateurFinal,
     }),
     groupes: Object.freeze(groupes),
   });
@@ -973,19 +1077,28 @@ function verifierAfficherLecture(afficherLecture) {
   return afficherLecture;
 }
 
+function lectureFractionTableau(donnees) {
+  if (donnees.fractionLue.denominateur === 1) {
+    return `${donnees.fractionLue.numerateur} unité${donnees.fractionLue.numerateur === 1 ? "" : "s"}`;
+  }
+  const colonne = donnees.colonnes
+    .find(({ denominateur }) => denominateur === donnees.fractionLue.denominateur);
+  const nomRang = colonne?.libelle.toLowerCase() ?? "unités";
+  return `${donnees.fractionLue.numerateur} ${donnees.fractionLue.numerateur === 1
+    ? nomRang.replace(/s$/, "")
+    : nomRang}`;
+}
+
 function texteAlternatifTableau(
   donnees,
   rangMisEnEvidence,
+  afficherChiffres,
   afficherLecture,
   annoncerEcriture,
 ) {
   const contenu = donnees.colonnes.map(({ chiffre, libelle }) =>
-    `${libelle.toLowerCase()} : ${chiffre ?? "case vide"}`).join(", ");
-  const lecture = donnees.fractionLue.denominateur === 1
-    ? `${donnees.fractionLue.numerateur} unités`
-    : `${donnees.fractionLue.numerateur} ${donnees.colonnes
-        .find(({ denominateur }) => denominateur === donnees.fractionLue.denominateur)
-        .libelle.toLowerCase()}`;
+    `${libelle.toLowerCase()} : ${afficherChiffres ? chiffre ?? "case vide" : "case à compléter"}`).join(", ");
+  const lecture = lectureFractionTableau(donnees);
   const evidence = rangMisEnEvidence
     ? ` La colonne des ${donnees.colonnes
         .find(({ id }) => id === rangMisEnEvidence).libelle.toLowerCase()} est mise en évidence.`
@@ -993,9 +1106,11 @@ function texteAlternatifTableau(
   const lectureAccessible = afficherLecture
     ? ` Cette écriture se lit ${lecture}.`
     : "";
-  const introduction = annoncerEcriture
+  const introduction = afficherChiffres && annoncerEcriture
     ? `Tableau de numération pour ${donnees.ecritureDecimale}`
-    : "Tableau de numération à lire";
+    : afficherChiffres
+      ? "Tableau de numération à lire"
+      : "Tableau de numération à compléter";
   return `${introduction} : ${contenu}.${lectureAccessible}${evidence}`;
 }
 
@@ -1014,6 +1129,7 @@ function tailleChiffre(chiffre, largeurColonne) {
  * @param {"unites"|"dixiemes"|"centiemes"|"milliemes"|null} [options.rangFinal=null]
  *   conserve explicitement les zéros jusqu'au rang imposé par la tâche
  * @param {"unites"|"dixiemes"|"centiemes"|"milliemes"|null} [options.rangMisEnEvidence=null]
+ * @param {boolean} [options.afficherChiffres=true] masque les chiffres sans les laisser dans le SVG accessible
  * @param {boolean} [options.afficherLecture=true] affiche la lecture finale sous le tableau
  * @param {boolean} [options.annoncerEcriture=true] nomme l'écriture décimale dans le texte accessible
  */
@@ -1022,26 +1138,29 @@ export function dessinerTableauNumerationDecimale({
   largeur = LARGEUR_PAR_DEFAUT,
   rangFinal = null,
   rangMisEnEvidence = null,
+  afficherChiffres = true,
   afficherLecture = true,
   annoncerEcriture = true,
 } = {}) {
   const largeurLue = lireLargeur(largeur, "dessinerTableauNumerationDecimale");
   const rangFinalLu = verifierRangFinal(rangFinal);
   const evidence = verifierRangMisEnEvidence(rangMisEnEvidence);
+  const chiffresVisibles = verifierAfficherLecture(afficherChiffres);
   const lectureVisible = verifierAfficherLecture(afficherLecture);
+  const lectureEffective = lectureVisible && chiffresVisibles;
   const ecritureAnnoncee = verifierAfficherLecture(annoncerEcriture);
   const donnees = prolongerDonneesTableauJusquAuRang(
     construireDonneesTableauNumeration(ecritureDecimale),
     rangFinalLu,
   );
-  const hauteur = lectureVisible ? 132 : 108;
+  const hauteur = lectureEffective ? 132 : 108;
   const largeurTableau = largeurLue - 2 * MARGE;
   const largeurColonne = largeurTableau / donnees.colonnes.length;
   const yEntete = 12;
   const hauteurEntete = 36;
   const yValeur = yEntete + hauteurEntete;
   const hauteurValeur = 52;
-  const tailleEntete = Math.max(9, Math.min(14, largeurColonne / 6.4));
+  const tailleEntete = Math.max(11, Math.min(14, largeurColonne / 6.4));
   const xVirgule = MARGE + largeurColonne;
   const tailleVirgule = Math.max(24, Math.min(32, largeurColonne * 0.48));
   const colonnes = donnees.colonnes.map((colonne, index) => {
@@ -1050,10 +1169,11 @@ export function dessinerTableauNumerationDecimale({
     const classe = `nd-tableau-colonne${active ? " nd-rang-actif" : ""}`;
     const couleursRang = COULEURS_RANGS_NUMERATION_DECIMALE[colonne.id];
     const trait = active ? COULEURS.bleu : couleursRang.texte;
-    const chiffre = colonne.chiffre ?? "—";
+    const chiffre = chiffresVisibles ? colonne.chiffre ?? "—" : "?";
+    const chiffreExpose = chiffresVisibles ? colonne.chiffre ?? "" : "";
     return (
       `<g class="${classe}" data-rang="${colonne.id}" ` +
-      `data-chiffre="${colonne.chiffre ?? ""}" ` +
+      `data-chiffre="${chiffreExpose}" ` +
       `data-rang-actif="${active}">` +
       `<rect class="nd-entete" x="${nombreSvg(x)}" y="${yEntete}" ` +
       `width="${nombreSvg(largeurColonne)}" height="${hauteurEntete}" ` +
@@ -1073,22 +1193,19 @@ export function dessinerTableauNumerationDecimale({
       `</g>`
     );
   });
-  const lecture = donnees.fractionLue.denominateur === 1
-    ? `${donnees.fractionLue.numerateur} unité${donnees.fractionLue.numerateur === 1 ? "" : "s"}`
-    : `${donnees.fractionLue.numerateur} ${donnees.colonnes
-        .find(({ denominateur }) => denominateur === donnees.fractionLue.denominateur)
-        .libelle.toLowerCase()}`;
+  const lecture = lectureFractionTableau(donnees);
   const alternatif = texteAlternatifTableau(
     donnees,
     evidence,
-    lectureVisible,
+    chiffresVisibles,
+    lectureEffective,
     ecritureAnnoncee,
   );
-  const attributsFraction = lectureVisible
+  const attributsFraction = lectureEffective
     ? ` data-numerateur="${donnees.fractionLue.numerateur}" ` +
       `data-denominateur="${donnees.fractionLue.denominateur}"`
     : "";
-  const attributEcriture = ecritureAnnoncee
+  const attributEcriture = chiffresVisibles && ecritureAnnoncee
     ? ` data-ecriture-decimale="${echapper(donnees.ecritureDecimale)}"`
     : "";
   const svg =
@@ -1096,7 +1213,7 @@ export function dessinerTableauNumerationDecimale({
       largeurLue,
       hauteur,
       alternatif,
-      `${attributEcriture} data-afficher-lecture="${lectureVisible}"${attributsFraction}`,
+      `${attributEcriture} data-afficher-lecture="${lectureEffective}"${attributsFraction}`,
     ) +
     `<g aria-hidden="true">${colonnes.join("")}` +
     `<text class="nd-virgule" data-separation="unites-dixiemes" ` +
@@ -1105,7 +1222,7 @@ export function dessinerTableauNumerationDecimale({
       `font-size="${nombreSvg(tailleVirgule)}" font-weight="800" ` +
       `fill="${COULEURS_NUMERATION_DECIMALE.encre}" stroke="${COULEURS.papier}" ` +
       `stroke-width="4" paint-order="stroke fill">,</text>` +
-    (lectureVisible
+    (lectureEffective
       ? `<text class="nd-lecture" x="${largeurLue / 2}" y="120" text-anchor="middle" ` +
         `font-family="${POLICE}" font-size="13" font-weight="650" ` +
         `fill="${COULEURS_NUMERATION_DECIMALE.encre}">${echapper(
@@ -1125,7 +1242,8 @@ export function dessinerTableauNumerationDecimale({
     rangFinal: rangFinalLu,
     fractionLue: donnees.fractionLue,
     rangMisEnEvidence: evidence,
-    afficherLecture: lectureVisible,
+    afficherChiffres: chiffresVisibles,
+    afficherLecture: lectureEffective,
     annoncerEcriture: ecritureAnnoncee,
   });
 }

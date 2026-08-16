@@ -1,10 +1,12 @@
 # Fiche NC-03 / NC-04 — Fractions simples et décimaux
 
-> **Candidat intégré, révisions D-049 du 13 août et D-055 du 15 août 2026.** Cette fiche décrit le module révisé,
+> **Candidat intégré, révisions D-049 du 13 août, D-055 du 15 août et D-056 du 16 août 2026.** Cette fiche décrit le module révisé,
 > et non plus le pilote du 8 août. Les questions ont été recomposées ; le cours,
 > « Me guider » et les corrections utilisent maintenant les briques communes
 > comparées dans le Labo. L'intégration et la recette conjointe D-049/D-055
-> sont achevées. Le statut reste `construit` en attente des
+> sont achevées ; D-056 unifie ensuite la charte des rangs, les échanges, la
+> conversion dans les deux sens et le tableau masquable, sans modifier les
+> générateurs. Le statut reste `construit` en attente des
 > retours de Gwenaël et de Claire. Gwenaël a autorisé le 13 août sa publication
 > de test, sans référencement ni passage à `valide`.
 
@@ -152,8 +154,8 @@ recettes concurrentes :
 
 1. **Un demi : plusieurs écritures** : deux pièces `1/2` reforment l'unité.
    Dans un rectangle-unité sans deuxième rail, cinq dixièmes en remplissent
-   exactement la moitié, d'où `5/10 = 1/2`. Le tableau de numération relie
-   ensuite `5/10` à `0,5`.
+   exactement la moitié. Le tableau de numération installe ensuite la chaîne
+   `0,5 = 5/10 = 1/2`.
 2. **Un quart et trois quarts** : quatre pièces `1/4` reforment l'unité et
    les mêmes 25 centièmes sont réorganisés en l'une des quatre zones égales du
    carré. Trois zones de 25 cases donnent ensuite
@@ -163,17 +165,20 @@ recettes concurrentes :
    un dixième vert vaut dix centièmes jaunes. Les repères `1/10 = 0,1`,
    `1/100 = 0,01` et `1/1000 = 0,001` sont installés avant toute procédure de
    conversion ; le millième utilise uniquement le tableau.
-4. **Lire une fraction décimale** : le matériel regroupé, le tableau et la
-   décomposition relient
+4. **Lire une fraction décimale** : la même quantité passe de centièmes tous
+   jaunes aux rangs usuels rouge, vert et jaune, sans changement d'empreinte ;
+   le tableau et la décomposition relient ensuite
    `147/100 = 100/100 + 40/100 + 7/100 = 1 + 4/10 + 7/100 = 1,47` ; les
    légendes sous les pièces montrent `100/100 = 1`, `40/100 = 4/10` et
    `7/100`. Le cas `7/100 = 0,07` rend les zéros de position explicites et
    `725/1000 = 0,725` passe uniquement par le tableau.
 5. **Écrire un décimal sous forme de fraction** : le matériel représente
-   `3,6` par trois unités rouges et six dixièmes verts, puis le tableau conduit
-   à `3,6 = 3 + 6/10 = 30/10 + 6/10 = 36/10`. La page distingue le
-   dénominateur imprimé de la réponse libre sans redessiner le cas `0,75`, déjà
-   construit avec les quarts ; toute fraction équivalente reste acceptée.
+   `3,54` par trois unités rouges, cinq dixièmes verts et quatre centièmes
+   jaunes, puis convertit les mêmes empreintes en centièmes. Le tableau et la
+   chaîne alignée conduisent à
+   `3,54 = 3 + 5/10 + 4/100 = 300/100 + 50/100 + 4/100 = 354/100`.
+   La page distingue le dénominateur imprimé de la réponse libre ; toute
+   fraction équivalente reste acceptée.
 6. **Former les unités et reconnaître les entiers** : les représentations
    complètes de `7/2 = 3,5` et `6/4 = 1,5` montrent les pièces initiales, les
    unités formées et, pour `6/4`, la fusion des deux quarts restants en un
@@ -189,6 +194,23 @@ mesure aussi la même écriture avant de centrer ses équations. Les pièces de
 dénominateur 1 portent simplement le nombre `1`. Sur les rails, les guides
 pointillés marquent l'origine et l'arrivée, la graduation finale reste un trait
 et la flèche commence après celle-ci, sans point rond concurrent.
+
+D-056 ajoute une seule charte sémantique pour les rangs dans tous ces objets :
+unités rouges, dixièmes verts, centièmes jaunes et millièmes violets, avec des
+teintes de texte plus sombres sur fond clair. Une écriture décimale n'est jamais
+colorée d'un bloc : `nombreDecimalAvecRangs` attribue son rôle à chaque chiffre,
+la virgule restant neutre. Ainsi, dans `1,47`, `1` porte le rôle des unités,
+`4` celui des dixièmes et `7` celui des centièmes, dans le cours comme dans la
+question, son rappel, l'aide et la correction.
+
+Le tableau est lui aussi un SVG unique. Il place une grande virgule sur la
+frontière unités–dixièmes, peut conserver explicitement un rang final et sait
+masquer ses chiffres. Dans ce profil masqué, ni les chiffres, ni l'écriture, ni
+le numérateur attendu ne restent dans le texte alternatif ou les attributs du
+SVG. Les échanges `1 unité = 10 dixièmes` et
+`1 dixième = 10 centièmes` gardent exactement la même empreinte de part et
+d'autre. La conversion paramétrique réemploie ensuite ces empreintes, aux
+dixièmes ou aux centièmes, dans les deux sens.
 
 ## 8. « Me guider » : un atelier progressif unique sans révélation
 
@@ -215,10 +237,19 @@ L'affectation des représentations est la suivante :
 |---|---|
 | Demis et quarts jusqu'à 1 | bandes historiques posées une à une sur le rail ; la cible reste `?` |
 | Demis et quarts au-delà de 1 | pièces puis groupes puis unités complètes, avec une transformation visuelle à chaque étape ; si le reste vaut `2/4`, les deux quarts se fusionnent enfin en `1/2` |
-| Dixièmes et centièmes | matériel de numération rouge/vert/jaune puis tableau de numération |
+| Dixièmes et centièmes | conversion commune en deux états — rangs usuels puis regroupement dans le rang final, ou l'inverse — puis tableau commun |
 | Millièmes | tableau de numération seulement ; aucun matériel miniaturisé illisible |
 | Dénominateur 1 | tuiles d'unités non numérotées à compter |
-| Fraction libre | dernier rang du seul décimal, puis fraction décimale `?/10` ou `?/100` ; aucun dénominateur canonique caché n'est utilisé |
+| Fraction libre | dernier rang du seul décimal, puis fraction décimale `?/10` ou `?/100` ; `0,5`, `0,25` et `0,75` utilisent les correspondances dédiées, les autres valeurs la conversion par rang ; aucun dénominateur canonique caché n'est utilisé |
+
+Les profils `aide-nc03` et `aide-nc04` sont distincts du profil `solution` et
+compatibles avec un seul sens chacun. Le premier masque l'écriture décimale à
+trouver ; le second masque le numérateur cible. Le masquage vaut dans le dessin,
+les légendes, le texte alternatif et les attributs de données. La correction
+des conversions `/10` et `/100` reprend ce composant avec le profil `solution`.
+Pour les autres familles, elle choisit dans les mêmes primitives la preuve la
+plus pertinente. Les millièmes ne passent jamais par cette conversion
+matérielle : `/1000` reste exclusivement traité par le tableau.
 
 L'usage de l'aide reste tracé au bilan. Le lecteur constitue l'unique source
 du pas-à-pas et des corrections ; les générateurs ne portent plus de blocs
@@ -232,9 +263,12 @@ Une saisie omise reste sur la question avec le libellé « Pas de réponse » :
 elle ne déplie pas automatiquement la correction, mais la solution correcte
 est affichée séparément en vert. Pour un QCM omis, la proposition correcte est
 verte directement dans la liste. La correction détaillée reprend ensuite la
-représentation mathématique pertinente :
-grille de 100 pour les demis/quarts jusqu'à 1, bandes et unités au-delà de 1,
-tableau pour les fractions décimales et tuiles pour `/1`.
+représentation mathématique pertinente : grille de 100 pour les demis/quarts
+jusqu'à 1, bandes et unités au-delà de 1, conversion par rang puis tableau pour
+`/10` et `/100`, tableau seul pour `/1000`, et tuiles pour `/1`. Le cours,
+l'aide et la correction puisent dans les mêmes primitives canoniques ; chacun
+choisit la représentation pertinente au contexte, et le profil `solution`
+n'autorise la révélation que dans le cours et la correction.
 
 Pour une fraction libre, elle repart du dernier rang écrit et porte le titre
 « Une réponse possible ». Par exemple, elle peut montrer

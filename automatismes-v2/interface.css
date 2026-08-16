@@ -27,19 +27,19 @@ body,
 }
 
 .mathsgo-role-unites {
-  color: #b91c1c;
+  color: var(--mg-rang-unites);
 }
 
 .mathsgo-role-dixiemes {
-  color: #166534;
+  color: var(--mg-rang-dixiemes);
 }
 
 .mathsgo-role-centiemes {
-  color: #854d0e;
+  color: var(--mg-rang-centiemes);
 }
 
 .mathsgo-role-milliemes {
-  color: #6d28d9;
+  color: var(--mg-rang-milliemes);
 }
 
 .carte-question-carres {
@@ -524,6 +524,19 @@ button.case-reponse-carres {
   overflow: visible;
 }
 
+.figure-deux-sources-responsive {
+  width: 100%;
+}
+
+.figure-deux-sources-variante {
+  width: min(100%, var(--mg-largeur-figure-source));
+  min-width: 0;
+}
+
+.figure-deux-sources-variante-mobile {
+  display: none;
+}
+
 .figure-bandes-rail {
   width: min(100%, 720px);
 }
@@ -956,11 +969,6 @@ button.case-reponse-carres {
   box-shadow: inset 0 0 0 1px var(--mg-papier);
 }
 
-.case-tableau-vide {
-  color: var(--mg-texteAttenue);
-  opacity: .52;
-}
-
 .tuiles-unites {
   width: min(100%, 560px);
   margin-inline: auto;
@@ -1295,47 +1303,62 @@ button.case-reponse-carres {
   text-align: center;
 }
 
-.echange-materiel-cours {
+.figure-echange-rangs-cours {
+  width: 100%;
+}
+
+.transformation-rangs-cours,
+.transformation-rangs-aide,
+.transformation-rangs-correction {
+  display: grid;
+  gap: 7px;
+  justify-items: center;
+}
+
+.transformation-rangs-cours > section,
+.transformation-rangs-aide > section,
+.transformation-rangs-correction > section {
+  width: 100%;
   min-width: 0;
   display: grid;
-  grid-template-columns: minmax(0, 1fr) 24px minmax(0, 1fr);
   gap: 5px;
-  align-items: center;
 }
 
-.echange-materiel-cours > span {
-  color: var(--mg-orange);
-  font-size: 24px;
-  font-weight: 900;
+.transformation-rangs-cours > section > strong,
+.transformation-rangs-aide > section > strong,
+.transformation-rangs-correction > section > strong {
+  color: var(--mg-texteAttenue);
+  font-size: 12px;
   text-align: center;
 }
 
-.figure-materiel-rang-cours {
-  width: 100%;
-  max-height: 230px;
-  overflow: hidden;
-}
-
-.legendes-materiel-147-cours {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
-  gap: 8px;
-}
-
-.legendes-materiel-147-cours .calcul-aligne-fractions,
-.legendes-materiel-147-cours > .mathsgo-expression {
-  width: 100%;
-  min-height: 62px;
-  padding: 8px;
-  display: grid;
-  place-items: center;
-  border-radius: var(--mg-rayon-moyen);
-  background: var(--mg-fondDoux);
-  text-align: center;
+.figure-conversion-rangs-cours,
+.figure-conversion-rangs-aide,
+.figure-conversion-rangs-correction {
+  width: min(100%, 560px);
 }
 
 .cas-reponses-fraction-cours-compacts > section {
   min-height: 100%;
+}
+
+.encadre-milliemes-cours {
+  padding: 11px;
+  display: grid;
+  gap: 9px;
+  border: 2px solid var(--mg-ligne);
+  border-radius: var(--mg-rayon-moyen);
+  background: var(--mg-fondDoux);
+}
+
+.encadre-milliemes-cours h4,
+.encadre-milliemes-cours p {
+  margin: 0;
+}
+
+.encadre-milliemes-cours h4 {
+  color: var(--mg-bleu);
+  text-align: center;
 }
 
 .cas-reponses-fraction-cours {
@@ -1567,6 +1590,17 @@ button.case-reponse-carres {
   .bandes-rail-cours-responsive .figure-bandes-rail-cours-mobile {
     display: block;
   }
+
+}
+
+@container (max-width: 420px) {
+  .figure-deux-sources-responsive .figure-deux-sources-variante-large {
+    display: none;
+  }
+
+  .figure-deux-sources-responsive .figure-deux-sources-variante-mobile {
+    display: block;
+  }
 }
 
 @media (max-width: 600px) {
@@ -1590,6 +1624,14 @@ button.case-reponse-carres {
     display: block;
   }
 
+  .figure-deux-sources-responsive .figure-deux-sources-variante-large {
+    display: none;
+  }
+
+  .figure-deux-sources-responsive .figure-deux-sources-variante-mobile {
+    display: block;
+  }
+
   .grille-qcm-fractions {
     grid-template-columns: minmax(0, 1fr);
   }
@@ -1603,6 +1645,27 @@ button.case-reponse-carres {
   .decomposition-fraction-superieure .mathsgo-egalites-alignees {
     grid-template-columns: minmax(42px, auto) 16px minmax(0, auto);
     column-gap: 4px;
+  }
+}
+
+@media (max-width: 680px) {
+  .bandes-rail-cours-responsive-mobile-strict .figure-bandes-rail-cours-large {
+    display: none;
+  }
+
+  .bandes-rail-cours-responsive-mobile-strict .figure-bandes-rail-cours-mobile {
+    width: min(100%, 306px);
+    display: block;
+  }
+}
+
+@media (min-width: 681px) {
+  .bandes-rail-cours-responsive-mobile-strict .figure-bandes-rail-cours-large {
+    display: block;
+  }
+
+  .bandes-rail-cours-responsive-mobile-strict .figure-bandes-rail-cours-mobile {
+    display: none;
   }
 }
 
@@ -3740,55 +3803,12 @@ body {
   transform: translateX(-50%);
 }
 
-.figure-droite-fractionnaire figcaption,
-.figure-tableau-numeration figcaption {
+.figure-droite-fractionnaire figcaption {
   margin-top: 8px;
 }
 
 .figure-tableau-numeration {
   overflow: hidden;
-}
-
-.figure-tableau-numeration table {
-  width: 100%;
-  table-layout: fixed;
-  border-collapse: separate;
-  border-spacing: 3px;
-}
-
-.figure-tableau-numeration th,
-.figure-tableau-numeration td {
-  min-width: 0;
-  padding: 7px 3px;
-  border: 2px solid var(--mg-ligne);
-  border-radius: 7px;
-  text-align: center;
-}
-
-.figure-tableau-numeration th {
-  color: var(--mg-texteAttenue);
-  background: var(--mg-fondDoux);
-  font-size: clamp(.62rem, 2.8vw, .82rem);
-  line-height: 1.15;
-}
-
-.libelle-rang-court {
-  display: none;
-  color: inherit;
-  text-decoration: none;
-}
-
-.figure-tableau-numeration td {
-  height: 52px;
-  color: var(--mg-bleu);
-  background: var(--mg-papier);
-  font-family: var(--mg-titres);
-  font-size: clamp(1.35rem, 6vw, 2rem);
-}
-
-.figure-tableau-numeration .rang-cible {
-  border-color: var(--mg-orange);
-  background: color-mix(in srgb, var(--mg-orange) 9%, var(--mg-papier));
 }
 
 .guidage-fractions {
@@ -4280,13 +4300,6 @@ body {
     display: inline-grid;
   }
 
-  .figure-tableau-numeration .libelle-rang-complet {
-    display: none;
-  }
-
-  .figure-tableau-numeration .libelle-rang-court {
-    display: inline;
-  }
 }
 
 @media (min-width: 680px) {

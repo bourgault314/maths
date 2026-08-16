@@ -11,8 +11,8 @@ import {
   COULEURS_NUMERATION_DECIMALE,
   COULEURS_RANGS_NUMERATION_DECIMALE,
   TYPOGRAPHIE,
-} from "../../charte/src/charte.js?v=32";
-import { rendreFractionSvg } from "./expressions.js?v=32";
+} from "../../charte/src/charte.js?v=33";
+import { rendreFractionSvg } from "./expressions.js?v=33";
 
 export const VERSION_CORRESPONDANCES_DECIMALES = 5;
 
@@ -180,7 +180,12 @@ function dessinerGrilleCentiemes({
       `fill="none" stroke="${COULEURS_RANGS_NUMERATION_DECIMALE.unites.texte}" ` +
       `stroke-width="${nombreSvg(Math.max(2, cellule * 0.16))}"/>`,
   );
-  if (afficherEcritures && disposition === "quadrants" && centiemes === 25) {
+  if (
+    afficherEcritures
+    && disposition === "quadrants"
+    && centiemes === 25
+    && cote >= 110
+  ) {
     morceaux.push(
       texte(cote / 4, cote / 4 + 5, "1 quart", {
         taille: Math.max(9, Math.min(14, cellule * 0.82)),
@@ -198,13 +203,24 @@ function dessinerGrilleCentiemes({
   });
 }
 
-function libelleDisposition(disposition, centiemes, afficherEcritures) {
+function libelleDisposition(
+  disposition,
+  centiemes,
+  afficherEcritures,
+  compact = false,
+) {
   if (disposition === "lignes") {
+    if (compact) return afficherEcritures ? `${centiemes} centièmes` : "En lignes";
     return afficherEcritures
       ? `${centiemes} centièmes en lignes`
       : "Rangés par lignes";
   }
   const quadrants = centiemes / 25;
+  if (compact) {
+    return afficherEcritures
+      ? `${quadrants} ${quadrants === 1 ? "quart" : "quarts"}`
+      : "En quarts";
+  }
   return afficherEcritures
     ? `${quadrants} ${quadrants === 1 ? "quart" : "quarts"} de l’unité`
     : "Regroupés en quarts";
@@ -288,6 +304,7 @@ export function dessinerReorganisationCentiemes({
   const largeurContenu = comparaison ? 2 * cote + ecart : cote;
   const xDepart = (largeurLue - largeurContenu) / 2;
   const yGrille = 48;
+  const titresCompacts = comparaison && cote < 110;
   const dispositions = comparaison ? ["lignes", "quadrants"] : [etape];
   const rendus = dispositions.map((disposition, index) => {
     const x = xDepart + index * (cote + ecart);
@@ -312,9 +329,14 @@ export function dessinerReorganisationCentiemes({
   const entetes = rendus.map((rendu) => texte(
     rendu.x + cote / 2,
     29,
-    libelleDisposition(rendu.disposition, centiemes, afficherEcritures),
+    libelleDisposition(
+      rendu.disposition,
+      centiemes,
+      afficherEcritures,
+      titresCompacts,
+    ),
     {
-      taille: comparaison ? Math.max(9, Math.min(13, cote / 12)) : 14,
+      taille: comparaison ? Math.max(11, Math.min(13, cote / 12)) : 14,
       couleur: rendu.disposition === "lignes"
         ? COULEURS_RANGS_NUMERATION_DECIMALE.centiemes.texte
         : COULEURS_RANGS_NUMERATION_DECIMALE.unites.texte,

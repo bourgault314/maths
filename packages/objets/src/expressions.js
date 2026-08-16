@@ -1,4 +1,4 @@
-// Écriture mathématique structurée maths&go — version 5.
+// Écriture mathématique structurée maths&go — version 7.
 // Le rendu HTML sémantique des puissances est stabilisé pour NC-02 ; les
 // autres rendus historiques conservent leur statut de fondation évolutive.
 //
@@ -21,7 +21,7 @@
 // un `role` sémantique (« hypotenuse », « inconnue »…) que le rendu
 // habillera — jamais l'inverse.
 
-import { TYPOGRAPHIE } from "../../charte/src/charte.js?v=32";
+import { TYPOGRAPHIE } from "../../charte/src/charte.js?v=33";
 
 export const VERSION_EXPRESSIONS = 7;
 

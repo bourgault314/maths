@@ -507,6 +507,19 @@ describe("conversion paramétrique par rang", () => {
     assert.doesNotMatch(aideNc04CentiemeImpose.svg, /50\/100/);
     assert.doesNotMatch(aideNc04CentiemeImpose.texteAlternatif, /50\/100/);
 
+    const fractionLibreDixieme = dessinerConversionRangsNumerationDecimale({
+      ecritureDecimale: "0,3",
+      sens: "decimal-vers-fraction",
+      profil: "aide-nc04",
+    });
+    assert.deepEqual(
+      fractionLibreDixieme.groupes.map(({ legende }) => legende),
+      ["?/10"],
+    );
+    assert.match(fractionLibreDixieme.svg, /data-legende="\?\/10"/);
+    assert.doesNotMatch(fractionLibreDixieme.svg, /3\/10/);
+    assert.doesNotMatch(fractionLibreDixieme.texteAlternatif, /3\/10/);
+
     const singulier = dessinerConversionRangsNumerationDecimale({
       ecritureDecimale: "0,1",
       etat: "converti-rang-final",
@@ -683,6 +696,17 @@ describe("tableau de numération décimale", () => {
     assert.match(rendu.texteAlternatif, /millièmes : case vide/);
   });
 
+  it("accorde au singulier la lecture d’une seule part décimale", () => {
+    const rendu = dessinerTableauNumerationDecimale({
+      ecritureDecimale: "0,1",
+      afficherLecture: true,
+    });
+
+    assert.match(rendu.svg, />0,1 : 1 dixième<\/text>/);
+    assert.match(rendu.texteAlternatif, /se lit 1 dixième/);
+    assert.doesNotMatch(rendu.svg, /1 dixièmes/);
+  });
+
   it("préserve le zéro final imposé par le dénominateur de la tâche", () => {
     const centiemes = dessinerTableauNumerationDecimale({
       ecritureDecimale: "0,5",
@@ -750,6 +774,7 @@ describe("tableau de numération décimale", () => {
     assert.match(rendu.svg, /viewBox="0 0 240 132"/);
     assert.match(rendu.svg, /style="max-width:100%;height:auto"/);
     assert.equal(compter(rendu.svg, /class="nd-nom-rang"/g), 4);
+    assert.equal(compter(rendu.svg, /class="nd-nom-rang"[^>]*font-size="11"/g), 4);
     assert.equal(compter(rendu.svg, /class="nd-chiffre"/g), 4);
     assert.doesNotMatch(rendu.svg, /NaN|Infinity|<script|<foreignObject/);
 

@@ -1,6 +1,6 @@
 # Inventaire technique de `auto` et `studio` pour Automatismes V2
 
-**Inventaire vérifié le 13 août 2026.**
+**Inventaire vérifié le 16 août 2026.**
 
 Ce document empêche de refaire inutilement le travail déjà acquis. Il ne change
 pas la règle de provenance : l'ancien contenu pédagogique reste une archive
@@ -118,6 +118,10 @@ contrôle et non une dépendance d'exécution. Il enregistre notamment :
 - `packages/objets/src/numeration-decimale.js`, extrait du plateau de
   numération, avec unité rouge `10 × 10`, dixième vert horizontal `10 × 1` ou
   vertical `1 × 10`, et centième jaune `1 × 1` ;
+- « Échanges exacts entre rangs », qui compare
+  `1 unité ↔ 10 dixièmes` et `1 dixième ↔ 10 centièmes` à empreinte identique ;
+- « Conversion par rang — mêmes empreintes », pilotable par écriture, état et
+  sens pour `3,6`, `1,47` et `3,54` ;
 - le tableau de numération unités, dixièmes, centièmes, millièmes, dont la
   lecture finale peut rester masquée dans l'aide ;
 - deux entrées pilotables issues de
@@ -151,6 +155,29 @@ affiche `1` plutôt que `1/1` dans une pièce-unité, trace des guides pointill�
 à l'origine et à l'arrivée, conserve la graduation finale comme un trait et
 place la flèche après cette graduation, sans point rond concurrent.
 
+La numération décimale possède maintenant le même niveau de centralisation :
+
+- `COULEURS_RANGS_NUMERATION_DECIMALE`, dans la charte, est l'unique palette
+  des unités, dixièmes, centièmes et millièmes. Les aplats du matériel restent
+  rouge, vert et jaune ; le violet prolonge la convention pour le millième dans
+  le tableau et les écritures, sans créer de pièce miniature. Les textes
+  utilisent les variantes contrastées de ces quatre couleurs ;
+- `nombreDecimalAvecRangs`, dans `expressions.js`, attribue le rôle de rang à
+  chaque chiffre d'un décimal et laisse sa virgule neutre. Il empêche notamment
+  de colorer tout `0,5` comme un dixième ;
+- `dessinerTableauNumerationDecimale` est l'unique tableau SVG pour les cours,
+  aides et corrections. Il porte la virgule sur la frontière
+  unités–dixièmes, accepte un `rangFinal` et peut masquer tous ses chiffres
+  sans les conserver dans le SVG accessible ;
+- `dessinerEchangeRangsNumerationDecimale` garantit les échanges à empreinte
+  identique ; `dessinerConversionRangsNumerationDecimale` conserve les mêmes
+  groupes entre les états `decompose` et `converti-rang-final`, aux dixièmes
+  ou aux centièmes et dans les deux sens ;
+- les profils `solution`, `aide-nc03` et `aide-nc04` déterminent ce qui peut
+  être révélé. Les deux profils d'aide sont incompatibles avec le mauvais sens
+  et retirent respectivement l'écriture décimale ou le numérateur cible des
+  légendes, textes alternatifs et attributs de données.
+
 L'intégration n'est plus future : `automatismes-v2/app.js` compose maintenant
 les bandes sur rail pour les pièces, groupes et unités, y compris cinq pièces
 marquées `1` jusqu'à la graduation 5. Le cours construit `0,5 ↔ 1/2` sans
@@ -170,8 +197,12 @@ La fraction libre est également branchée sans dépendre de sa cible canonique 
 le lecteur part du dernier rang écrit du décimal, propose une fraction
 décimale et accepte toute équivalente par produit en croix. Le matériel rouge,
 vert et jaune accompagne `/10` et `/100` ; `/1000` emploie uniquement le
-tableau. La nouvelle organisation D-055 doit être recettée avec ces usages
-avant la prochaine livraison.
+tableau. Pour `0,5`, `0,25` et `0,75`, les correspondances dédiées restent les
+objets de sens ; les autres cibles `/10` et `/100` emploient la conversion
+paramétrique. Le cours, la question abstraite, son rappel, « Me guider » et la
+correction consomment désormais les mêmes écritures et objets communs ; seul le
+profil décide si la cible est visible. `/1000` reste limité au tableau. Cette
+organisation est consignée par D-056 ; elle ne change aucun générateur.
 
 ## Réservoirs techniques à examiner au besoin
 
