@@ -17,7 +17,7 @@ import {
   rendreFractionSvg,
 } from "./expressions.js?v=32";
 
-export const VERSION_NUMERATION_DECIMALE = 3;
+export const VERSION_NUMERATION_DECIMALE = 4;
 
 export const ORIENTATIONS_MATERIEL_NUMERATION_DECIMALE = Object.freeze([
   "horizontale",
@@ -31,6 +31,14 @@ const MARGE = 12;
 export const ECHANGES_RANGS_NUMERATION_DECIMALE = Object.freeze([
   "unite-dixiemes",
   "dixieme-centiemes",
+]);
+export const ETATS_CONVERSION_RANGS_NUMERATION_DECIMALE = Object.freeze([
+  "decompose",
+  "converti-centiemes",
+]);
+export const SENS_CONVERSION_RANGS_NUMERATION_DECIMALE = Object.freeze([
+  "fraction-vers-decimal",
+  "decimal-vers-fraction",
 ]);
 const RANGS_TABLEAU = Object.freeze([
   "unites",
@@ -426,13 +434,20 @@ function rendreEcritureRang(specification, centreX, yBarre, taille) {
   );
 }
 
-function rendreEgaliteEchange(gauche, droite, largeur, yBarre, taille) {
+function rendreEgaliteDansZone(
+  gauche,
+  droite,
+  xZone,
+  largeurZone,
+  yBarre,
+  taille,
+) {
   const largeurGauche = mesurerEcritureRang(gauche, taille);
   const largeurDroite = mesurerEcritureRang(droite, taille);
   const largeurSigne = taille * 0.7;
   const espace = taille * 0.62;
   const largeurTotale = largeurGauche + largeurDroite + largeurSigne + 2 * espace;
-  const depart = (largeur - largeurTotale) / 2;
+  const depart = xZone + (largeurZone - largeurTotale) / 2;
   const centreGauche = depart + largeurGauche / 2;
   const centreSigne = depart + largeurGauche + espace + largeurSigne / 2;
   const centreDroite = depart + largeurGauche + 2 * espace + largeurSigne + largeurDroite / 2;
@@ -444,6 +459,10 @@ function rendreEgaliteEchange(gauche, droite, largeur, yBarre, taille) {
     `fill="${COULEURS_NUMERATION_DECIMALE.encre}">=</text>` +
     rendreEcritureRang(droite, centreDroite, yBarre, taille)
   );
+}
+
+function rendreEgaliteEchange(gauche, droite, largeur, yBarre, taille) {
+  return rendreEgaliteDansZone(gauche, droite, 0, largeur, yBarre, taille);
 }
 
 /**
@@ -561,6 +580,333 @@ export function dessinerEchangeRangsNumerationDecimale({
   });
 }
 
+function verifierEtatConversionRangs(etat) {
+  if (!ETATS_CONVERSION_RANGS_NUMERATION_DECIMALE.includes(etat)) {
+    throw new RangeError(
+      `dessinerConversionRangsNumerationDecimale : état invalide « ${etat} »`,
+    );
+  }
+  return etat;
+}
+
+function verifierSensConversionRangs(sens) {
+  if (!SENS_CONVERSION_RANGS_NUMERATION_DECIMALE.includes(sens)) {
+    throw new RangeError(
+      `dessinerConversionRangsNumerationDecimale : sens invalide « ${sens} »`,
+    );
+  }
+  return sens;
+}
+
+function specificationSourceConversion(rang, quantite) {
+  if (rang === "unites") {
+    return Object.freeze({ type: "entier", valeur: quantite, rang });
+  }
+  const denominateur = rang === "dixiemes" ? 10 : 100;
+  return Object.freeze({ type: "fraction", numerateur: quantite, denominateur, rang });
+}
+
+function specificationCibleConversion(rang, quantite) {
+  const facteur = rang === "unites" ? 100 : rang === "dixiemes" ? 10 : 1;
+  return Object.freeze({
+    type: "fraction",
+    numerateur: quantite * facteur,
+    denominateur: 100,
+    rang: "centiemes",
+  });
+}
+
+function texteSpecification(specification) {
+  return specification.type === "fraction"
+    ? `${specification.numerateur}/${specification.denominateur}`
+    : String(specification.valeur);
+}
+
+function largeurEgaliteLocale(gauche, droite, taille) {
+  return (
+    mesurerEcritureRang(gauche, taille)
+    + mesurerEcritureRang(droite, taille)
+    + taille * (0.7 + 2 * 0.62)
+  );
+}
+
+function tailleEgaliteLocale(gauche, droite, largeurDisponible) {
+  for (let taille = 18; taille >= 12; taille -= 0.5) {
+    if (largeurEgaliteLocale(gauche, droite, taille) <= largeurDisponible - 4) {
+      return taille;
+    }
+  }
+  return 12;
+}
+
+function geometrieGroupeConversion(rang, quantite, cellule, largeurVisuelle) {
+  if (rang === "unites") {
+    const colonnes = Math.min(3, quantite);
+    const lignes = Math.ceil(quantite / colonnes);
+    const espace = Math.max(4, cellule * 0.5);
+    return Object.freeze({
+      largeur: arrondi2(colonnes * 10 * cellule + (colonnes - 1) * espace),
+      hauteur: arrondi2(lignes * 10 * cellule + (lignes - 1) * espace),
+      colonnes,
+      espace: arrondi2(espace),
+      largeurVisuelle,
+    });
+  }
+  if (rang === "dixiemes") {
+    return Object.freeze({
+      largeur: arrondi2(10 * cellule),
+      hauteur: arrondi2(quantite * cellule),
+      colonnes: 1,
+      espace: 0,
+      largeurVisuelle,
+    });
+  }
+  return Object.freeze({
+    largeur: arrondi2(quantite * cellule),
+    hauteur: cellule,
+    colonnes: quantite,
+    espace: 0,
+    largeurVisuelle,
+  });
+}
+
+function dessinerGroupeConversion({
+  rang,
+  quantite,
+  x,
+  y,
+  cellule,
+  geometrie,
+  couleur,
+}) {
+  const morceaux = [
+    `<rect class="nd-conversion-empreinte" x="${nombreSvg(x)}" y="${nombreSvg(y)}" ` +
+      `width="${nombreSvg(geometrie.largeur)}" height="${nombreSvg(geometrie.hauteur)}" ` +
+      `fill="none" stroke="none"/>`,
+  ];
+  if (rang === "unites") {
+    for (let index = 0; index < quantite; index += 1) {
+      const colonne = index % geometrie.colonnes;
+      const ligne = Math.floor(index / geometrie.colonnes);
+      morceaux.push(
+        dessinerUnite(
+          x + colonne * (10 * cellule + geometrie.espace),
+          y + ligne * (10 * cellule + geometrie.espace),
+          cellule,
+          index + 1,
+          couleur,
+        ),
+      );
+    }
+  } else if (rang === "dixiemes") {
+    for (let index = 0; index < quantite; index += 1) {
+      morceaux.push(
+        dessinerDixieme(
+          x,
+          y + index * cellule,
+          cellule,
+          "horizontale",
+          index + 1,
+          couleur,
+        ),
+      );
+    }
+  } else {
+    for (let index = 0; index < quantite; index += 1) {
+      morceaux.push(
+        dessinerCentieme(
+          x + index * cellule,
+          y,
+          cellule,
+          index + 1,
+          couleur,
+        ),
+      );
+    }
+  }
+  return morceaux.join("");
+}
+
+function rendreLegendeConversion({
+  source,
+  cible,
+  sens,
+  x,
+  largeur,
+  yBarre,
+}) {
+  if (texteSpecification(source) === texteSpecification(cible)) {
+    const taille = Math.max(14, Math.min(18, largeur / 4.8));
+    return rendreEcritureRang(source, x + largeur / 2, yBarre, taille);
+  }
+  const [gauche, droite] = sens === "fraction-vers-decimal"
+    ? [cible, source]
+    : [source, cible];
+  const taille = tailleEgaliteLocale(gauche, droite, largeur);
+  return rendreEgaliteDansZone(gauche, droite, x, largeur, yBarre, taille);
+}
+
+/**
+ * Décompose une écriture au centième puis convertit chaque groupe en
+ * centièmes sans jamais changer sa géométrie.
+ *
+ * `decompose` conserve le langage rouge / vert / jaune des rangs.
+ * `converti-centiemes` recolore les mêmes empreintes en jaune : une unité
+ * devient alors un bloc de 100 centièmes et un dixième un bloc de 10.
+ * Le sens ne modifie que l'ordre des deux membres des légendes locales.
+ *
+ * @param {object} options
+ * @param {string} options.ecritureDecimale écriture positive finissant au rang des centièmes
+ * @param {"decompose"|"converti-centiemes"} [options.etat="decompose"]
+ * @param {"fraction-vers-decimal"|"decimal-vers-fraction"} [options.sens="fraction-vers-decimal"]
+ * @param {number} [options.largeur=560] largeur du viewBox, de 240 à 1600
+ */
+export function dessinerConversionRangsNumerationDecimale({
+  ecritureDecimale,
+  etat = "decompose",
+  sens = "fraction-vers-decimal",
+  largeur = 560,
+} = {}) {
+  const etatLu = verifierEtatConversionRangs(etat);
+  const sensLu = verifierSensConversionRangs(sens);
+  const largeurLue = lireLargeur(largeur, "dessinerConversionRangsNumerationDecimale");
+  const donnees = construireDonneesTableauNumeration(ecritureDecimale);
+  if (donnees.dernierRang !== "centiemes") {
+    throw new RangeError(
+      "dessinerConversionRangsNumerationDecimale : une écriture au rang des centièmes est requise",
+    );
+  }
+  const quantites = Object.fromEntries(
+    donnees.colonnes.slice(0, 3).map(({ id, chiffre }) => [id, Number(chiffre)]),
+  );
+  if (quantites.unites > 9) {
+    throw new RangeError(
+      "dessinerConversionRangsNumerationDecimale : au plus 9 unités peuvent être représentées",
+    );
+  }
+
+  const largeurLegendes = Math.max(88, Math.min(190, largeurLue * 0.36));
+  const espaceColonnes = Math.max(12, Math.min(20, largeurLue * 0.035));
+  const largeurVisuelle = largeurLue - 2 * MARGE - largeurLegendes - espaceColonnes;
+  const colonnesUnites = Math.max(1, Math.min(3, quantites.unites || 1));
+  const espaceUnitesEstime = 5 * (colonnesUnites - 1);
+  const cellule = arrondi2(Math.max(4, Math.min(
+    12,
+    (largeurVisuelle - espaceUnitesEstime) / (10 * colonnesUnites),
+  )));
+  const xLegendes = MARGE + largeurVisuelle + espaceColonnes;
+  const groupesBruts = ["unites", "dixiemes", "centiemes"]
+    .filter((rang) => quantites[rang] > 0)
+    .map((rang) => ({
+      rang,
+      quantite: quantites[rang],
+      source: specificationSourceConversion(rang, quantites[rang]),
+      cible: specificationCibleConversion(rang, quantites[rang]),
+      geometrie: geometrieGroupeConversion(
+        rang,
+        quantites[rang],
+        cellule,
+        largeurVisuelle,
+      ),
+    }));
+  const titre = etatLu === "decompose"
+    ? `Décomposer ${donnees.ecritureDecimale} par rang`
+    : "Tout convertir en centièmes";
+  const morceaux = [
+    `<text class="nd-conversion-titre" x="${nombreSvg(largeurLue / 2)}" y="22" ` +
+      `text-anchor="middle" font-family="${POLICE}" font-size="14" font-weight="700" ` +
+      `fill="${COULEURS_NUMERATION_DECIMALE.encre}">${echapper(titre)}</text>`,
+  ];
+  const groupes = [];
+  let y = 38;
+  for (const groupe of groupesBruts) {
+    const hauteurLigne = Math.max(56, groupe.geometrie.hauteur);
+    const xGroupe = arrondi2(MARGE + (largeurVisuelle - groupe.geometrie.largeur) / 2);
+    const yGroupe = arrondi2(y + (hauteurLigne - groupe.geometrie.hauteur) / 2);
+    const couleur = etatLu === "converti-centiemes"
+      ? COULEURS_NUMERATION_DECIMALE.centieme
+      : COULEURS_NUMERATION_DECIMALE[
+          groupe.rang === "unites" ? "unite" : groupe.rang === "dixiemes" ? "dixieme" : "centieme"
+        ];
+    const ordreLegende = sensLu === "fraction-vers-decimal"
+      ? [groupe.cible, groupe.source]
+      : [groupe.source, groupe.cible];
+    const legende = texteSpecification(groupe.source) === texteSpecification(groupe.cible)
+      ? texteSpecification(groupe.source)
+      : `${texteSpecification(ordreLegende[0])}=${texteSpecification(ordreLegende[1])}`;
+    morceaux.push(
+      `<g class="nd-conversion-rang nd-conversion-${groupe.rang} ` +
+        `nd-conversion-${etatLu}" data-rang="${groupe.rang}" ` +
+        `data-quantite="${groupe.quantite}" data-legende="${legende}" ` +
+        `data-x="${xGroupe}" data-y="${yGroupe}" ` +
+        `data-largeur="${groupe.geometrie.largeur}" ` +
+        `data-hauteur="${groupe.geometrie.hauteur}">`,
+      dessinerGroupeConversion({
+        rang: groupe.rang,
+        quantite: groupe.quantite,
+        x: xGroupe,
+        y: yGroupe,
+        cellule,
+        geometrie: groupe.geometrie,
+        couleur,
+      }),
+      rendreLegendeConversion({
+        source: groupe.source,
+        cible: groupe.cible,
+        sens: sensLu,
+        x: xLegendes,
+        largeur: largeurLegendes,
+        yBarre: y + hauteurLigne / 2,
+      }),
+      `</g>`,
+    );
+    groupes.push(Object.freeze({
+      rang: groupe.rang,
+      quantite: groupe.quantite,
+      x: xGroupe,
+      y: yGroupe,
+      largeur: groupe.geometrie.largeur,
+      hauteur: groupe.geometrie.hauteur,
+      legende,
+    }));
+    y += hauteurLigne + 14;
+  }
+  const hauteur = arrondi2(Math.max(110, y - 2));
+  const descriptions = groupes.map(({ rang, quantite, legende }) =>
+    `${quantite} au rang ${rang}, ${legende}`).join(" ; ");
+  const alternatif =
+    `Conversion par rang de ${donnees.ecritureDecimale}. ` +
+    `${etatLu === "decompose" ? "Les couleurs distinguent les rangs." : "Tous les groupes sont convertis en centièmes jaunes."} ` +
+    `Les empreintes ne changent pas. ${descriptions}.`;
+  const svg =
+    attributsSvg(
+      largeurLue,
+      hauteur,
+      alternatif,
+      ` data-ecriture-decimale="${echapper(donnees.ecritureDecimale)}" ` +
+        `data-etat="${etatLu}" data-sens="${sensLu}" ` +
+        `data-numerateur-cible="${donnees.fractionLue.numerateur}" ` +
+        `data-denominateur-cible="100"`,
+    ) +
+    `<g aria-hidden="true">${morceaux.join("")}</g></svg>`;
+
+  return Object.freeze({
+    svg,
+    largeur: largeurLue,
+    hauteur,
+    texteAlternatif: alternatif,
+    ecritureDecimale: donnees.ecritureDecimale,
+    etat: etatLu,
+    sens: sensLu,
+    tailleCellule: cellule,
+    fractionCible: Object.freeze({
+      numerateur: donnees.fractionLue.numerateur,
+      denominateur: 100,
+    }),
+    groupes: Object.freeze(groupes),
+  });
+}
+
 function verifierRangMisEnEvidence(rangMisEnEvidence) {
   if (rangMisEnEvidence == null) return null;
   if (!RANGS_TABLEAU.includes(rangMisEnEvidence)) {
@@ -569,6 +915,53 @@ function verifierRangMisEnEvidence(rangMisEnEvidence) {
     );
   }
   return rangMisEnEvidence;
+}
+
+function verifierRangFinal(rangFinal) {
+  if (rangFinal == null) return null;
+  if (!RANGS_TABLEAU.includes(rangFinal)) {
+    throw new RangeError(
+      `dessinerTableauNumerationDecimale : rangFinal invalide « ${rangFinal} »`,
+    );
+  }
+  return rangFinal;
+}
+
+function prolongerDonneesTableauJusquAuRang(donnees, rangFinal) {
+  if (rangFinal == null || rangFinal === donnees.dernierRang) return donnees;
+  const indexActuel = RANGS_TABLEAU.indexOf(donnees.dernierRang);
+  const indexFinal = RANGS_TABLEAU.indexOf(rangFinal);
+  if (indexFinal < indexActuel) {
+    throw new RangeError(
+      "dessinerTableauNumerationDecimale : rangFinal ne peut pas effacer un chiffre significatif",
+    );
+  }
+  const facteur = 10 ** (indexFinal - indexActuel);
+  const numerateur = donnees.fractionLue.numerateur * facteur;
+  if (!Number.isSafeInteger(numerateur)) {
+    throw new RangeError(
+      "dessinerTableauNumerationDecimale : rangFinal produit un numérateur trop grand",
+    );
+  }
+  const colonnes = donnees.colonnes.map((colonne, index) => Object.freeze({
+    ...colonne,
+    chiffre: index <= indexFinal ? (colonne.chiffre ?? "0") : null,
+  }));
+  const ecritureDecimale = indexFinal === 0
+    ? colonnes[0].chiffre
+    : `${colonnes[0].chiffre},${colonnes
+        .slice(1, indexFinal + 1)
+        .map(({ chiffre }) => chiffre)
+        .join("")}`;
+  return Object.freeze({
+    ecritureDecimale,
+    colonnes: Object.freeze(colonnes),
+    dernierRang: rangFinal,
+    fractionLue: Object.freeze({
+      numerateur,
+      denominateur: 10 ** indexFinal,
+    }),
+  });
 }
 
 function verifierAfficherLecture(afficherLecture) {
@@ -618,6 +1011,8 @@ function tailleChiffre(chiffre, largeurColonne) {
  * @param {object} options
  * @param {string} options.ecritureDecimale écriture positive, au plus aux millièmes
  * @param {number} [options.largeur=320] largeur du viewBox, de 240 à 1600
+ * @param {"unites"|"dixiemes"|"centiemes"|"milliemes"|null} [options.rangFinal=null]
+ *   conserve explicitement les zéros jusqu'au rang imposé par la tâche
  * @param {"unites"|"dixiemes"|"centiemes"|"milliemes"|null} [options.rangMisEnEvidence=null]
  * @param {boolean} [options.afficherLecture=true] affiche la lecture finale sous le tableau
  * @param {boolean} [options.annoncerEcriture=true] nomme l'écriture décimale dans le texte accessible
@@ -625,15 +1020,20 @@ function tailleChiffre(chiffre, largeurColonne) {
 export function dessinerTableauNumerationDecimale({
   ecritureDecimale,
   largeur = LARGEUR_PAR_DEFAUT,
+  rangFinal = null,
   rangMisEnEvidence = null,
   afficherLecture = true,
   annoncerEcriture = true,
 } = {}) {
   const largeurLue = lireLargeur(largeur, "dessinerTableauNumerationDecimale");
+  const rangFinalLu = verifierRangFinal(rangFinal);
   const evidence = verifierRangMisEnEvidence(rangMisEnEvidence);
   const lectureVisible = verifierAfficherLecture(afficherLecture);
   const ecritureAnnoncee = verifierAfficherLecture(annoncerEcriture);
-  const donnees = construireDonneesTableauNumeration(ecritureDecimale);
+  const donnees = prolongerDonneesTableauJusquAuRang(
+    construireDonneesTableauNumeration(ecritureDecimale),
+    rangFinalLu,
+  );
   const hauteur = lectureVisible ? 132 : 108;
   const largeurTableau = largeurLue - 2 * MARGE;
   const largeurColonne = largeurTableau / donnees.colonnes.length;
@@ -722,6 +1122,7 @@ export function dessinerTableauNumerationDecimale({
     ecritureDecimale: donnees.ecritureDecimale,
     colonnes: donnees.colonnes,
     dernierRang: donnees.dernierRang,
+    rangFinal: rangFinalLu,
     fractionLue: donnees.fractionLue,
     rangMisEnEvidence: evidence,
     afficherLecture: lectureVisible,

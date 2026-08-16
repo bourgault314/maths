@@ -60,6 +60,7 @@ import {
   dessinerBandesFractionnairesSurRailDecimal,
 } from "../../packages/objets/src/bandes-fractions-rail.js";
 import {
+  dessinerConversionRangsNumerationDecimale,
   dessinerEchangeRangsNumerationDecimale,
   dessinerMaterielNumerationDecimale,
   dessinerTableauNumerationDecimale,
@@ -641,6 +642,59 @@ const entreeEchangesRangsNumerationDecimale = {
   })),
   vignette: () => dessinerEchangeRangsNumerationDecimale({
     echange: "unite-dixiemes",
+    largeur: 280,
+  }).svg,
+};
+
+const entreeConversionRangsNumerationDecimale = {
+  titre: "Conversion par rang — mêmes empreintes",
+  parametres: [
+    { cle: "largeur", libelle: "Largeur", min: 240, max: 720, pas: 20, defaut: 560 },
+  ],
+  groupes: [
+    {
+      cle: "ecritureDecimale",
+      options: [["1,47", "1,47"], ["3,54", "3,54"]],
+      defaut: "1,47",
+    },
+    {
+      cle: "etat",
+      options: [
+        ["decompose", "Rangs rouge / vert / jaune"],
+        ["converti-centiemes", "Tout en centièmes jaunes"],
+      ],
+      defaut: "decompose",
+    },
+    {
+      cle: "sens",
+      options: [
+        ["fraction-vers-decimal", "Fraction → décimal"],
+        ["decimal-vers-fraction", "Décimal → fraction"],
+      ],
+      defaut: "fraction-vers-decimal",
+    },
+  ],
+  dessiner(v) {
+    return dessinerConversionRangsNumerationDecimale({
+      ecritureDecimale: v.ecritureDecimale,
+      etat: v.etat,
+      sens: v.sens,
+      largeur: Number(v.largeur),
+    }).svg;
+  },
+  planche: () => ["1,47", "3,54"].flatMap((ecritureDecimale) =>
+    ["decompose", "converti-centiemes"].map((etat) => ({
+      legende: `${ecritureDecimale} · ${etat === "decompose" ? "par rang" : "tout en centièmes"}`,
+      dessiner: () => dessinerConversionRangsNumerationDecimale({
+        ecritureDecimale,
+        etat,
+        sens: "fraction-vers-decimal",
+        largeur: 560,
+      }).svg,
+    }))),
+  vignette: () => dessinerConversionRangsNumerationDecimale({
+    ecritureDecimale: "1,47",
+    etat: "converti-centiemes",
     largeur: 280,
   }).svg,
 };
@@ -1311,6 +1365,7 @@ export const SERIES = [
     objets: {
       materielNumerationDecimale: entreeMaterielNumerationDecimale,
       echangesRangsNumerationDecimale: entreeEchangesRangsNumerationDecimale,
+      conversionRangsNumerationDecimale: entreeConversionRangsNumerationDecimale,
       tableauNumerationDecimale: entreeTableauNumerationDecimale,
       correspondanceDemiDixiemes: entreeCorrespondanceDemiDixiemes,
       reorganisationCentiemes: entreeReorganisationCentiemes,
