@@ -7,8 +7,10 @@ import {
   COULEURS_RANGS_NUMERATION_DECIMALE,
 } from "../../charte/src/charte.js";
 import {
+  ECHANGES_RANGS_NUMERATION_DECIMALE,
   ORIENTATIONS_MATERIEL_NUMERATION_DECIMALE,
   VERSION_NUMERATION_DECIMALE,
+  dessinerEchangeRangsNumerationDecimale,
   dessinerMaterielNumerationDecimale,
   dessinerTableauNumerationDecimale,
 } from "./numeration-decimale.js";
@@ -57,7 +59,7 @@ function verifierPiecesDansViewBox(rendu) {
 
 describe("matériel de numération décimale", () => {
   it("expose une API versionnée et les deux orientations", () => {
-    assert.equal(VERSION_NUMERATION_DECIMALE, 2);
+    assert.equal(VERSION_NUMERATION_DECIMALE, 3);
     assert.deepEqual(ORIENTATIONS_MATERIEL_NUMERATION_DECIMALE, [
       "horizontale",
       "verticale",
@@ -227,6 +229,69 @@ describe("matériel de numération décimale", () => {
   });
 });
 
+describe("échanges exacts entre rangs", () => {
+  it("superpose une unité et dix dixièmes dans deux empreintes strictement identiques", () => {
+    const rendu = dessinerEchangeRangsNumerationDecimale({
+      echange: "unite-dixiemes",
+      largeur: 320,
+    });
+    const empreintes = [...rendu.svg.matchAll(
+      /class="nd-echange-empreinte [^"]+" x="([\d.]+)" y="([\d.]+)" width="([\d.]+)" height="([\d.]+)"/g,
+    )];
+
+    assert.deepEqual(ECHANGES_RANGS_NUMERATION_DECIMALE, [
+      "unite-dixiemes",
+      "dixieme-centiemes",
+    ]);
+    assert.equal(empreintes.length, 2);
+    assert.deepEqual(empreintes[0].slice(2), empreintes[1].slice(2));
+    assert.deepEqual(rendu.empreinte, {
+      largeur: Number(empreintes[0][3]),
+      hauteur: Number(empreintes[0][4]),
+    });
+    assert.equal(compter(rendu.svg, /class="nd-piece nd-unite"/g), 1);
+    assert.equal(compter(rendu.svg, /class="nd-piece nd-dixieme"/g), 10);
+    assert.match(rendu.svg, /class="nd-echange-fleche"[^>]*>↔<\/text>/);
+    assert.match(rendu.svg, /class="nd-echange-entier nd-echange-entier-unites"/);
+    assert.match(rendu.svg, /class="nd-echange-fraction-dixiemes"/);
+    assert.match(rendu.svg, /nd-echange-fraction-dixiemes-numerateur[^>]*>10<\/text>/);
+    assert.match(rendu.svg, /nd-echange-fraction-dixiemes-denominateur[^>]*>10<\/text>/);
+    assert.match(rendu.texteAlternatif, /même empreinte/);
+  });
+
+  it("garde la même longueur pour un dixième et dix centièmes", () => {
+    for (const largeur of [240, 320, 720]) {
+      const rendu = dessinerEchangeRangsNumerationDecimale({
+        echange: "dixieme-centiemes",
+        largeur,
+      });
+      const [dixieme] = positionsPieces(rendu.svg, "nd-dixieme");
+      const centiemes = positionsPieces(rendu.svg, "nd-centieme");
+      const largeurDixieme = dixieme.largeurCellules * rendu.tailleCellule;
+      const largeurCentiemes = centiemes.at(-1).x - centiemes[0].x + rendu.tailleCellule;
+
+      assert.equal(centiemes.length, 10);
+      assert.ok(Math.abs(largeurDixieme - largeurCentiemes) <= 0.02);
+      assert.equal(rendu.empreinte.largeur, arrondi2(largeurDixieme));
+      assert.equal(rendu.empreinte.hauteur, rendu.tailleCellule);
+      assert.match(rendu.svg, /class="nd-echange-fraction-dixiemes"/);
+      assert.match(rendu.svg, /class="nd-echange-fraction-centiemes"/);
+      assert.doesNotMatch(rendu.svg, /NaN|Infinity/);
+    }
+  });
+
+  it("refuse un échange et une largeur invalides", () => {
+    assert.throws(
+      () => dessinerEchangeRangsNumerationDecimale({ echange: "centieme-millieme" }),
+      /échange invalide/,
+    );
+    assert.throws(
+      () => dessinerEchangeRangsNumerationDecimale({ largeur: 200 }),
+      /largeur comprise/,
+    );
+  });
+});
+
 describe("tableau de numération décimale", () => {
   it("place exactement 725/1000 dans les quatre colonnes", () => {
     const rendu = dessinerTableauNumerationDecimale({
@@ -250,6 +315,11 @@ describe("tableau de numération décimale", () => {
     assert.equal(rendu.rangMisEnEvidence, "milliemes");
     assert.equal(rendu.afficherLecture, true);
     assert.equal(compter(rendu.svg, /class="nd-tableau-colonne/g), 4);
+    assert.equal(compter(rendu.svg, /class="nd-virgule"/g), 1);
+    assert.match(
+      rendu.svg,
+      /class="nd-virgule" data-separation="unites-dixiemes"[^>]*font-size="[\d.]+"[^>]*>,<\/text>/,
+    );
     assert.equal(compter(rendu.svg, /nd-rang-actif/g), 1);
     assert.match(rendu.svg, /data-rang="milliemes" data-chiffre="5"/);
     assert.match(rendu.svg, /data-numerateur="725" data-denominateur="1000"/);

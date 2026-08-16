@@ -14,7 +14,7 @@ import {
 } from "../../charte/src/charte.js?v=32";
 import { rendreFractionSvg } from "./expressions.js?v=32";
 
-export const VERSION_CORRESPONDANCES_DECIMALES = 4;
+export const VERSION_CORRESPONDANCES_DECIMALES = 5;
 
 export const ETAPES_REORGANISATION_CENTIEMES = Object.freeze([
   "lignes",
@@ -180,25 +180,15 @@ function dessinerGrilleCentiemes({
       `fill="none" stroke="${COULEURS_RANGS_NUMERATION_DECIMALE.unites.texte}" ` +
       `stroke-width="${nombreSvg(Math.max(2, cellule * 0.16))}"/>`,
   );
-  if (afficherEcritures && disposition === "quadrants") {
-    const quadrants = centiemes / 25;
-    for (let index = 0; index < quadrants; index += 1) {
-      const colonneQuadrant = index % 2;
-      const ligneQuadrant = Math.floor(index / 2);
-      morceaux.push(
-        texte(
-          (colonneQuadrant + 0.5) * cote / 2,
-          (ligneQuadrant + 0.5) * cote / 2 + 5,
-          centiemes === 25 ? "1 quart" : `${index + 1}`,
-          {
-            taille: Math.max(9, Math.min(14, cellule * 0.82)),
-            graisse: 800,
-            couleur: COULEURS_RANGS_NUMERATION_DECIMALE.centiemes.texte,
-            classe: "cd-etiquette-quadrant",
-          },
-        ),
-      );
-    }
+  if (afficherEcritures && disposition === "quadrants" && centiemes === 25) {
+    morceaux.push(
+      texte(cote / 4, cote / 4 + 5, "1 quart", {
+        taille: Math.max(9, Math.min(14, cellule * 0.82)),
+        graisse: 800,
+        couleur: COULEURS_RANGS_NUMERATION_DECIMALE.centiemes.texte,
+        classe: "cd-etiquette-quadrant",
+      }),
+    );
   }
   morceaux.push("</g>");
   return Object.freeze({

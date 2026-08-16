@@ -60,6 +60,7 @@ import {
   dessinerBandesFractionnairesSurRailDecimal,
 } from "../../packages/objets/src/bandes-fractions-rail.js";
 import {
+  dessinerEchangeRangsNumerationDecimale,
   dessinerMaterielNumerationDecimale,
   dessinerTableauNumerationDecimale,
 } from "../../packages/objets/src/numeration-decimale.js";
@@ -607,6 +608,41 @@ const entreeMaterielNumerationDecimale = {
   vignette: () => svgMaterielDecimal({
     unites: 1, dixiemes: 4, centiemes: 7, orientation: "horizontale", largeur: 240,
   }),
+};
+
+const entreeEchangesRangsNumerationDecimale = {
+  titre: "Échanges exacts entre rangs",
+  parametres: [
+    { cle: "largeur", libelle: "Largeur", min: 240, max: 720, pas: 20, defaut: 320 },
+  ],
+  groupes: [{
+    cle: "echange",
+    options: [
+      ["unite-dixiemes", "1 unité ↔ 10 dixièmes"],
+      ["dixieme-centiemes", "1 dixième ↔ 10 centièmes"],
+    ],
+    defaut: "unite-dixiemes",
+  }],
+  dessiner(v) {
+    return dessinerEchangeRangsNumerationDecimale({
+      echange: v.echange,
+      largeur: Number(v.largeur),
+    }).svg;
+  },
+  planche: () => [
+    ["unite-dixiemes", "Même empreinte : 1 unité = 10 dixièmes"],
+    ["dixieme-centiemes", "Même empreinte : 1 dixième = 10 centièmes"],
+  ].map(([echange, legende]) => ({
+    legende,
+    dessiner: () => dessinerEchangeRangsNumerationDecimale({
+      echange,
+      largeur: 320,
+    }).svg,
+  })),
+  vignette: () => dessinerEchangeRangsNumerationDecimale({
+    echange: "unite-dixiemes",
+    largeur: 280,
+  }).svg,
 };
 
 const RANG_EXEMPLE_TABLEAU = Object.freeze({
@@ -1274,6 +1310,7 @@ export const SERIES = [
     nom: "Numération décimale",
     objets: {
       materielNumerationDecimale: entreeMaterielNumerationDecimale,
+      echangesRangsNumerationDecimale: entreeEchangesRangsNumerationDecimale,
       tableauNumerationDecimale: entreeTableauNumerationDecimale,
       correspondanceDemiDixiemes: entreeCorrespondanceDemiDixiemes,
       reorganisationCentiemes: entreeReorganisationCentiemes,

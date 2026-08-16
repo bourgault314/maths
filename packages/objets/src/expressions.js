@@ -23,7 +23,7 @@
 
 import { TYPOGRAPHIE } from "../../charte/src/charte.js?v=32";
 
-export const VERSION_EXPRESSIONS = 6;
+export const VERSION_EXPRESSIONS = 7;
 
 const CHAPEAU = "̂"; // accent circonflexe combinant
 
@@ -33,6 +33,31 @@ const CHAPEAU = "̂"; // accent circonflexe combinant
 
 /** Nombre (affiché avec la virgule française). */
 export const nombre = (valeur, options = {}) => ({ type: "nombre", valeur, ...options });
+/**
+ * Nombre décimal dont chaque chiffre porte automatiquement le rôle de son
+ * rang : unités, dixièmes, centièmes puis millièmes.
+ *
+ * Ce constructeur est volontairement plus strict que `nombre` : il empêche
+ * un appelant de colorer tout `0,5` en vert avec un rôle global. La virgule
+ * reste neutre ; le `0` appartient aux unités et le `5` aux dixièmes.
+ */
+export function nombreDecimalAvecRangs(valeur, { decimales } = {}) {
+  if (typeof valeur !== "number" || !Number.isFinite(valeur)) {
+    throw new TypeError("nombreDecimalAvecRangs : nombre fini requis");
+  }
+  if (
+    decimales !== undefined
+    && (!Number.isSafeInteger(decimales) || decimales < 0 || decimales > 3)
+  ) {
+    throw new RangeError(
+      "nombreDecimalAvecRangs : nombre de décimales compris entre 0 et 3 requis",
+    );
+  }
+  return nombre(valeur, {
+    ...(decimales === undefined ? {} : { decimales }),
+    rangsDecimaux: true,
+  });
+}
 /** Emplacement à compléter dans une expression interactive ou une aide. */
 export const caseVide = () => ({ type: "caseVide" });
 /** Variable ou lettre inconnue (« x »). */

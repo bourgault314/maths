@@ -12,8 +12,12 @@ import {
   TYPOGRAPHIE,
 } from "../../charte/src/charte.js?v=32";
 import { construireDonneesTableauNumeration } from "./fractions-decimaux.js?v=32";
+import {
+  mesurerEcritureFractionSvg,
+  rendreFractionSvg,
+} from "./expressions.js?v=32";
 
-export const VERSION_NUMERATION_DECIMALE = 2;
+export const VERSION_NUMERATION_DECIMALE = 3;
 
 export const ORIENTATIONS_MATERIEL_NUMERATION_DECIMALE = Object.freeze([
   "horizontale",
@@ -24,6 +28,10 @@ const LARGEUR_PAR_DEFAUT = 320;
 const LARGEUR_MINIMALE = 240;
 const LARGEUR_MAXIMALE = 1600;
 const MARGE = 12;
+export const ECHANGES_RANGS_NUMERATION_DECIMALE = Object.freeze([
+  "unite-dixiemes",
+  "dixieme-centiemes",
+]);
 const RANGS_TABLEAU = Object.freeze([
   "unites",
   "dixiemes",
@@ -115,7 +123,13 @@ function cheminGrilleDixieme(cellule, orientation) {
   return commandes.join(" ");
 }
 
-function dessinerUnite(x, y, cellule, index) {
+function dessinerUnite(
+  x,
+  y,
+  cellule,
+  index,
+  couleur = COULEURS_NUMERATION_DECIMALE.unite,
+) {
   const taille = nombreSvg(10 * cellule);
   const milieu = nombreSvg(5 * cellule);
   return (
@@ -123,7 +137,7 @@ function dessinerUnite(x, y, cellule, index) {
     `data-largeur-cellules="10" data-hauteur-cellules="10" ` +
     `transform="translate(${nombreSvg(x)} ${nombreSvg(y)})">` +
     `<rect class="nd-forme" x="0" y="0" width="${taille}" height="${taille}" ` +
-    `fill="${COULEURS_NUMERATION_DECIMALE.unite}" ` +
+    `fill="${couleur}" ` +
     `stroke="${COULEURS_NUMERATION_DECIMALE.trait}" stroke-width="1.25"/>` +
     `<path class="nd-grille" d="${cheminGrilleUnite(cellule)}" fill="none" ` +
     `stroke="${COULEURS_NUMERATION_DECIMALE.trait}" stroke-width="0.55"/>` +
@@ -133,7 +147,14 @@ function dessinerUnite(x, y, cellule, index) {
   );
 }
 
-function dessinerDixieme(x, y, cellule, orientation, index) {
+function dessinerDixieme(
+  x,
+  y,
+  cellule,
+  orientation,
+  index,
+  couleur = COULEURS_NUMERATION_DECIMALE.dixieme,
+) {
   const largeur = orientation === "horizontale" ? 10 * cellule : cellule;
   const hauteur = orientation === "horizontale" ? cellule : 10 * cellule;
   const milieu = nombreSvg(5 * cellule);
@@ -146,7 +167,7 @@ function dessinerDixieme(x, y, cellule, orientation, index) {
     `data-hauteur-cellules="${orientation === "horizontale" ? 1 : 10}" ` +
     `transform="translate(${nombreSvg(x)} ${nombreSvg(y)})">` +
     `<rect class="nd-forme" x="0" y="0" width="${nombreSvg(largeur)}" ` +
-    `height="${nombreSvg(hauteur)}" fill="${COULEURS_NUMERATION_DECIMALE.dixieme}" ` +
+    `height="${nombreSvg(hauteur)}" fill="${couleur}" ` +
     `stroke="${COULEURS_NUMERATION_DECIMALE.trait}" stroke-width="1.25"/>` +
     `<path class="nd-grille" d="${cheminGrilleDixieme(cellule, orientation)}" fill="none" ` +
     `stroke="${COULEURS_NUMERATION_DECIMALE.trait}" stroke-width="0.55"/>` +
@@ -156,13 +177,19 @@ function dessinerDixieme(x, y, cellule, orientation, index) {
   );
 }
 
-function dessinerCentieme(x, y, cellule, index) {
+function dessinerCentieme(
+  x,
+  y,
+  cellule,
+  index,
+  couleur = COULEURS_NUMERATION_DECIMALE.centieme,
+) {
   return (
     `<g class="nd-piece nd-centieme" data-piece-index="${index}" ` +
     `data-largeur-cellules="1" data-hauteur-cellules="1" ` +
     `transform="translate(${nombreSvg(x)} ${nombreSvg(y)})">` +
     `<rect class="nd-forme" x="0" y="0" width="${nombreSvg(cellule)}" ` +
-    `height="${nombreSvg(cellule)}" fill="${COULEURS_NUMERATION_DECIMALE.centieme}" ` +
+    `height="${nombreSvg(cellule)}" fill="${couleur}" ` +
     `stroke="${COULEURS_NUMERATION_DECIMALE.trait}" stroke-width="1.1"/>` +
     `</g>`
   );
@@ -351,6 +378,189 @@ export function dessinerMaterielNumerationDecimale({
   });
 }
 
+function verifierEchangeRangs(type) {
+  if (!ECHANGES_RANGS_NUMERATION_DECIMALE.includes(type)) {
+    throw new RangeError(
+      `dessinerEchangeRangsNumerationDecimale : échange invalide « ${type} »`,
+    );
+  }
+  return type;
+}
+
+function largeurEntierSvg(valeur, taille) {
+  return Math.max(taille * 0.72, String(valeur).length * taille * 0.62);
+}
+
+function mesurerEcritureRang(specification, taille) {
+  if (specification.type === "fraction") {
+    return mesurerEcritureFractionSvg(
+      specification.numerateur,
+      specification.denominateur,
+      { taille },
+    ).largeur;
+  }
+  return largeurEntierSvg(specification.valeur, taille);
+}
+
+function rendreEcritureRang(specification, centreX, yBarre, taille) {
+  const couleur = COULEURS_RANGS_NUMERATION_DECIMALE[specification.rang].texte;
+  if (specification.type === "fraction") {
+    return rendreFractionSvg(
+      specification.numerateur,
+      specification.denominateur,
+      {
+        centreX,
+        yBarre,
+        taille,
+        couleur,
+        classe: `nd-echange-fraction-${specification.rang}`,
+        libelleAccessible: null,
+      },
+    );
+  }
+  return (
+    `<text class="nd-echange-entier nd-echange-entier-${specification.rang}" ` +
+    `x="${nombreSvg(centreX)}" y="${nombreSvg(yBarre)}" text-anchor="middle" ` +
+    `dominant-baseline="middle" font-family="${POLICE}" font-size="${nombreSvg(taille)}" ` +
+    `font-weight="800" fill="${couleur}">${echapper(specification.valeur)}</text>`
+  );
+}
+
+function rendreEgaliteEchange(gauche, droite, largeur, yBarre, taille) {
+  const largeurGauche = mesurerEcritureRang(gauche, taille);
+  const largeurDroite = mesurerEcritureRang(droite, taille);
+  const largeurSigne = taille * 0.7;
+  const espace = taille * 0.62;
+  const largeurTotale = largeurGauche + largeurDroite + largeurSigne + 2 * espace;
+  const depart = (largeur - largeurTotale) / 2;
+  const centreGauche = depart + largeurGauche / 2;
+  const centreSigne = depart + largeurGauche + espace + largeurSigne / 2;
+  const centreDroite = depart + largeurGauche + 2 * espace + largeurSigne + largeurDroite / 2;
+  return (
+    rendreEcritureRang(gauche, centreGauche, yBarre, taille) +
+    `<text class="nd-echange-egal" x="${nombreSvg(centreSigne)}" ` +
+    `y="${nombreSvg(yBarre)}" text-anchor="middle" dominant-baseline="middle" ` +
+    `font-family="${POLICE}" font-size="${nombreSvg(taille)}" font-weight="800" ` +
+    `fill="${COULEURS_NUMERATION_DECIMALE.encre}">=</text>` +
+    rendreEcritureRang(droite, centreDroite, yBarre, taille)
+  );
+}
+
+/**
+ * Montre un échange de rang sans changer l'empreinte de la quantité.
+ *
+ * Une unité et ses dix dixièmes occupent exactement le même rectangle ;
+ * un dixième et ses dix centièmes aussi. Les séparations sont tracées à
+ * l'intérieur de l'empreinte au lieu d'ajouter des espaces entre les pièces.
+ *
+ * @param {object} [options]
+ * @param {"unite-dixiemes"|"dixieme-centiemes"} [options.echange="unite-dixiemes"]
+ * @param {number} [options.largeur=320] largeur du viewBox, de 240 à 1600
+ */
+export function dessinerEchangeRangsNumerationDecimale({
+  echange = "unite-dixiemes",
+  largeur = LARGEUR_PAR_DEFAUT,
+} = {}) {
+  const type = verifierEchangeRangs(echange);
+  const largeurLue = lireLargeur(largeur, "dessinerEchangeRangsNumerationDecimale");
+  const espaceCentral = Math.max(40, Math.min(72, largeurLue * 0.14));
+  const largeurEmpreinte = arrondi2(Math.min(
+    180,
+    (largeurLue - 2 * MARGE - espaceCentral) / 2,
+  ));
+  const cellule = arrondi2(largeurEmpreinte / 10);
+  const largeurEnsemble = 2 * largeurEmpreinte + espaceCentral;
+  const xGauche = arrondi2((largeurLue - largeurEnsemble) / 2);
+  const xDroite = arrondi2(xGauche + largeurEmpreinte + espaceCentral);
+  const yForme = MARGE;
+  const hauteurEmpreinte = type === "unite-dixiemes" ? largeurEmpreinte : cellule;
+  const yMilieu = arrondi2(yForme + hauteurEmpreinte / 2);
+  const tailleFleche = Math.max(22, Math.min(34, espaceCentral * 0.58));
+  const tailleEcriture = Math.max(16, Math.min(20, largeurLue / 20));
+  const yBarre = arrondi2(yForme + hauteurEmpreinte + tailleEcriture * 1.65);
+  const debordEcriture = mesurerEcritureFractionSvg(10, 100, {
+    taille: tailleEcriture,
+  }).debordBas;
+  const hauteur = arrondi2(yBarre + debordEcriture + MARGE);
+  const morceaux = [
+    `<rect class="nd-echange-empreinte nd-echange-empreinte-gauche" ` +
+      `x="${xGauche}" y="${yForme}" width="${largeurEmpreinte}" ` +
+      `height="${hauteurEmpreinte}" fill="none" stroke="none"/>`,
+    `<rect class="nd-echange-empreinte nd-echange-empreinte-droite" ` +
+      `x="${xDroite}" y="${yForme}" width="${largeurEmpreinte}" ` +
+      `height="${hauteurEmpreinte}" fill="none" stroke="none"/>`,
+  ];
+  let gauche;
+  let droite;
+  let alternatif;
+
+  if (type === "unite-dixiemes") {
+    morceaux.push(dessinerUnite(xGauche, yForme, cellule, 1));
+    for (let index = 0; index < 10; index += 1) {
+      morceaux.push(
+        dessinerDixieme(
+          xDroite,
+          yForme + index * cellule,
+          cellule,
+          "horizontale",
+          index + 1,
+        ),
+      );
+    }
+    gauche = { type: "entier", valeur: 1, rang: "unites" };
+    droite = { type: "fraction", numerateur: 10, denominateur: 10, rang: "dixiemes" };
+    alternatif = "Une unité rouge et dix dixièmes verts occupent exactement la même empreinte. Une unité égale dix dixièmes.";
+  } else {
+    morceaux.push(
+      dessinerDixieme(xGauche, yForme, cellule, "horizontale", 1),
+    );
+    for (let index = 0; index < 10; index += 1) {
+      morceaux.push(
+        dessinerCentieme(
+          xDroite + index * cellule,
+          yForme,
+          cellule,
+          index + 1,
+        ),
+      );
+    }
+    gauche = { type: "fraction", numerateur: 1, denominateur: 10, rang: "dixiemes" };
+    droite = { type: "fraction", numerateur: 10, denominateur: 100, rang: "centiemes" };
+    alternatif = "Un dixième vert et dix centièmes jaunes occupent exactement la même empreinte. Un dixième égale dix centièmes.";
+  }
+
+  morceaux.push(
+    `<text class="nd-echange-fleche" x="${nombreSvg(largeurLue / 2)}" ` +
+      `y="${yMilieu}" text-anchor="middle" dominant-baseline="middle" ` +
+      `font-family="${POLICE}" font-size="${nombreSvg(tailleFleche)}" font-weight="800" ` +
+      `fill="${COULEURS.bleu}">↔</text>`,
+    rendreEgaliteEchange(gauche, droite, largeurLue, yBarre, tailleEcriture),
+  );
+
+  const svg =
+    attributsSvg(
+      largeurLue,
+      hauteur,
+      alternatif,
+      ` data-echange="${type}" data-largeur-empreinte="${largeurEmpreinte}" ` +
+        `data-hauteur-empreinte="${hauteurEmpreinte}"`,
+    ) +
+    `<g aria-hidden="true">${morceaux.join("")}</g></svg>`;
+
+  return Object.freeze({
+    svg,
+    largeur: largeurLue,
+    hauteur,
+    texteAlternatif: alternatif,
+    echange: type,
+    tailleCellule: cellule,
+    empreinte: Object.freeze({
+      largeur: largeurEmpreinte,
+      hauteur: hauteurEmpreinte,
+    }),
+  });
+}
+
 function verifierRangMisEnEvidence(rangMisEnEvidence) {
   if (rangMisEnEvidence == null) return null;
   if (!RANGS_TABLEAU.includes(rangMisEnEvidence)) {
@@ -432,6 +642,8 @@ export function dessinerTableauNumerationDecimale({
   const yValeur = yEntete + hauteurEntete;
   const hauteurValeur = 52;
   const tailleEntete = Math.max(9, Math.min(14, largeurColonne / 6.4));
+  const xVirgule = MARGE + largeurColonne;
+  const tailleVirgule = Math.max(24, Math.min(32, largeurColonne * 0.48));
   const colonnes = donnees.colonnes.map((colonne, index) => {
     const x = MARGE + index * largeurColonne;
     const active = colonne.id === evidence;
@@ -487,6 +699,12 @@ export function dessinerTableauNumerationDecimale({
       `${attributEcriture} data-afficher-lecture="${lectureVisible}"${attributsFraction}`,
     ) +
     `<g aria-hidden="true">${colonnes.join("")}` +
+    `<text class="nd-virgule" data-separation="unites-dixiemes" ` +
+      `x="${nombreSvg(xVirgule)}" y="${nombreSvg(yValeur + hauteurValeur / 2)}" ` +
+      `text-anchor="middle" dominant-baseline="middle" font-family="${POLICE}" ` +
+      `font-size="${nombreSvg(tailleVirgule)}" font-weight="800" ` +
+      `fill="${COULEURS_NUMERATION_DECIMALE.encre}" stroke="${COULEURS.papier}" ` +
+      `stroke-width="4" paint-order="stroke fill">,</text>` +
     (lectureVisible
       ? `<text class="nd-lecture" x="${largeurLue / 2}" y="120" text-anchor="middle" ` +
         `font-family="${POLICE}" font-size="13" font-weight="650" ` +

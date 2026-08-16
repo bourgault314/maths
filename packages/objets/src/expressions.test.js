@@ -7,6 +7,7 @@ import {
   groupe,
   inferieurStrict,
   nombre,
+  nombreDecimalAvecRangs,
   produit,
   puissance,
   quotient,
@@ -65,14 +66,32 @@ describe("versHtmlSemantique", () => {
   });
 
   it("peut colorer chaque chiffre d’un décimal selon son rang sans changer sa lecture", () => {
-    const html = versHtmlSemantique(nombre(1.47, {
-      decimales: 2,
-      rangsDecimaux: true,
-    }));
+    const html = versHtmlSemantique(nombreDecimalAvecRangs(1.47, { decimales: 2 }));
     assert.match(html, /aria-label="1,47"/);
     assert.match(html, /mathsgo-role-unites">1<\/span>,/);
     assert.match(html, /mathsgo-role-dixiemes">4<\/span>/);
     assert.match(html, /mathsgo-role-centiemes">7<\/span>/);
+  });
+
+  it("laisse la virgule neutre et ne colore jamais tout le décimal comme un seul rang", () => {
+    const html = versHtmlSemantique(nombreDecimalAvecRangs(0.5, { decimales: 1 }));
+
+    assert.match(html, /mathsgo-role-unites">0<\/span>,/);
+    assert.match(html, /mathsgo-role-dixiemes">5<\/span>/);
+    assert.doesNotMatch(html, /mathsgo-role-dixiemes"><span/);
+    assert.equal((html.match(/mathsgo-role-/g) ?? []).length, 2);
+  });
+
+  it("refuse les valeurs non finies et les rangs au-delà des millièmes", () => {
+    for (const valeur of [NaN, Infinity, "0,5", null]) {
+      assert.throws(() => nombreDecimalAvecRangs(valeur), /nombre fini requis/);
+    }
+    for (const decimales of [-1, 1.5, 4]) {
+      assert.throws(
+        () => nombreDecimalAvecRangs(0.5, { decimales }),
+        /entre 0 et 3 requis/,
+      );
+    }
   });
 
   it("rend les cases vides et les encadrements avec une verbalisation accessible", () => {
