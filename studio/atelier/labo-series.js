@@ -60,6 +60,8 @@ import {
   dessinerBandesFractionnairesSurRailDecimal,
 } from "../../packages/objets/src/bandes-fractions-rail.js";
 import {
+  dessinerConversionRangsNumerationDecimale,
+  dessinerEchangeRangsNumerationDecimale,
   dessinerMaterielNumerationDecimale,
   dessinerTableauNumerationDecimale,
 } from "../../packages/objets/src/numeration-decimale.js";
@@ -607,6 +609,94 @@ const entreeMaterielNumerationDecimale = {
   vignette: () => svgMaterielDecimal({
     unites: 1, dixiemes: 4, centiemes: 7, orientation: "horizontale", largeur: 240,
   }),
+};
+
+const entreeEchangesRangsNumerationDecimale = {
+  titre: "Échanges exacts entre rangs",
+  parametres: [
+    { cle: "largeur", libelle: "Largeur", min: 240, max: 720, pas: 20, defaut: 320 },
+  ],
+  groupes: [{
+    cle: "echange",
+    options: [
+      ["unite-dixiemes", "1 unité ↔ 10 dixièmes"],
+      ["dixieme-centiemes", "1 dixième ↔ 10 centièmes"],
+    ],
+    defaut: "unite-dixiemes",
+  }],
+  dessiner(v) {
+    return dessinerEchangeRangsNumerationDecimale({
+      echange: v.echange,
+      largeur: Number(v.largeur),
+    }).svg;
+  },
+  planche: () => [
+    ["unite-dixiemes", "Même empreinte : 1 unité = 10 dixièmes"],
+    ["dixieme-centiemes", "Même empreinte : 1 dixième = 10 centièmes"],
+  ].map(([echange, legende]) => ({
+    legende,
+    dessiner: () => dessinerEchangeRangsNumerationDecimale({
+      echange,
+      largeur: 320,
+    }).svg,
+  })),
+  vignette: () => dessinerEchangeRangsNumerationDecimale({
+    echange: "unite-dixiemes",
+    largeur: 280,
+  }).svg,
+};
+
+const entreeConversionRangsNumerationDecimale = {
+  titre: "Conversion par rang — mêmes empreintes",
+  parametres: [
+    { cle: "largeur", libelle: "Largeur", min: 240, max: 720, pas: 20, defaut: 560 },
+  ],
+  groupes: [
+    {
+      cle: "ecritureDecimale",
+      options: [["3,6", "3,6"], ["1,47", "1,47"], ["3,54", "3,54"]],
+      defaut: "1,47",
+    },
+    {
+      cle: "etat",
+      options: [
+        ["decompose", "Rangs rouge / vert / jaune"],
+        ["converti-rang-final", "Tout dans le dernier rang"],
+      ],
+      defaut: "decompose",
+    },
+    {
+      cle: "sens",
+      options: [
+        ["fraction-vers-decimal", "Fraction → décimal"],
+        ["decimal-vers-fraction", "Décimal → fraction"],
+      ],
+      defaut: "fraction-vers-decimal",
+    },
+  ],
+  dessiner(v) {
+    return dessinerConversionRangsNumerationDecimale({
+      ecritureDecimale: v.ecritureDecimale,
+      etat: v.etat,
+      sens: v.sens,
+      largeur: Number(v.largeur),
+    }).svg;
+  },
+  planche: () => ["3,6", "1,47", "3,54"].flatMap((ecritureDecimale) =>
+    ["decompose", "converti-rang-final"].map((etat) => ({
+      legende: `${ecritureDecimale} · ${etat === "decompose" ? "par rang" : "tout dans le dernier rang"}`,
+      dessiner: () => dessinerConversionRangsNumerationDecimale({
+        ecritureDecimale,
+        etat,
+        sens: "fraction-vers-decimal",
+        largeur: 560,
+      }).svg,
+    }))),
+  vignette: () => dessinerConversionRangsNumerationDecimale({
+    ecritureDecimale: "1,47",
+    etat: "converti-rang-final",
+    largeur: 280,
+  }).svg,
 };
 
 const RANG_EXEMPLE_TABLEAU = Object.freeze({
@@ -1274,6 +1364,8 @@ export const SERIES = [
     nom: "Numération décimale",
     objets: {
       materielNumerationDecimale: entreeMaterielNumerationDecimale,
+      echangesRangsNumerationDecimale: entreeEchangesRangsNumerationDecimale,
+      conversionRangsNumerationDecimale: entreeConversionRangsNumerationDecimale,
       tableauNumerationDecimale: entreeTableauNumerationDecimale,
       correspondanceDemiDixiemes: entreeCorrespondanceDemiDixiemes,
       reorganisationCentiemes: entreeReorganisationCentiemes,

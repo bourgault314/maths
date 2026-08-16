@@ -87,6 +87,17 @@ describe("charte — intégrité des données", () => {
     }
   });
 
+  it("garde les textes de rang lisibles jusque sur les fonds de verdict", () => {
+    for (const rang of ["dixiemes", "centiemes"]) {
+      for (const fond of ["#d9f3f1", "#fdeaea", "#e7f7ee"]) {
+        assert.ok(
+          contraste(COULEURS_RANGS_NUMERATION_DECIMALE[rang].texte, fond) >= 4.5,
+          `${rang} doit rester lisible sur ${fond}`,
+        );
+      }
+    }
+  });
+
   it("retrouve la couleur historique d'un dénominateur", () => {
     assert.equal(couleurBandeFraction(2), COULEURS_BANDES_FRACTIONS.d2);
     assert.equal(couleurBandeFraction(4), COULEURS_BANDES_FRACTIONS.d4);
@@ -129,7 +140,7 @@ describe("charte — intégrité des données", () => {
   });
 
   it("version et statut cohérents", () => {
-    assert.equal(VERSION_CHARTE, 2);
+    assert.equal(VERSION_CHARTE, 3);
     assert.ok(["brouillon", "valide"].includes(STATUT_CHARTE));
   });
 });

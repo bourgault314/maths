@@ -26,7 +26,7 @@ function disposition(rendu, nom) {
 
 describe("réorganisation des centièmes", () => {
   it("expose une API versionnée et trois états déterministes", () => {
-    assert.equal(VERSION_CORRESPONDANCES_DECIMALES, 4);
+    assert.equal(VERSION_CORRESPONDANCES_DECIMALES, 5);
     assert.deepEqual(ETAPES_REORGANISATION_CENTIEMES, [
       "lignes",
       "quadrants",
@@ -87,7 +87,8 @@ describe("réorganisation des centièmes", () => {
     const indices = new Set(disposition(rendu, "quadrants").indicesColories);
     for (const index of [0, 44, 5, 49, 50, 94]) assert.ok(indices.has(index));
     for (const index of [55, 59, 95, 99]) assert.ok(!indices.has(index));
-    assert.equal(compter(rendu.svg, /class="cd-etiquette-quadrant"/g), 3);
+    assert.equal(compter(rendu.svg, /class="cd-etiquette-quadrant"/g), 0);
+    assert.doesNotMatch(rendu.svg, />[123]<\/text>/);
     assert.match(rendu.svg, />75\/100 = 3\/4<\/text>/);
   });
 
@@ -115,12 +116,51 @@ describe("réorganisation des centièmes", () => {
     });
     assert.match(rendu.svg, />75 centièmes en lignes<\/text>/);
     assert.match(rendu.svg, />3 quarts de l’unité<\/text>/);
-    assert.equal(compter(rendu.svg, /class="cd-etiquette-quadrant"/g), 3);
+    assert.equal(compter(rendu.svg, /class="cd-etiquette-quadrant"/g), 0);
     assert.doesNotMatch(rendu.svg, /class="cd-ecriture-correspondance"/);
     assert.equal(rendu.donnees.afficherEcritures, true);
     assert.equal(rendu.donnees.afficherEquation, false);
     assert.match(rendu.svg, /data-afficher-equation="false"/);
     assert.doesNotMatch(rendu.texteAlternatif, /75\/100|3\/4|0,75/);
+  });
+
+  it("abrège les deux titres sans les rendre minuscules sur téléphone", () => {
+    const rendu = dessinerReorganisationCentiemes({
+      centiemes: 75,
+      etape: "comparaison",
+      largeur: 240,
+      afficherEcritures: true,
+      afficherEquation: false,
+    });
+    assert.match(rendu.svg, />75 centièmes<\/text>/);
+    assert.match(rendu.svg, />3 quarts<\/text>/);
+    assert.doesNotMatch(rendu.svg, />75 centièmes en lignes<\/text>/);
+    assert.doesNotMatch(rendu.svg, />3 quarts de l’unité<\/text>/);
+    assert.equal(
+      compter(rendu.svg, /class="cd-titre-disposition"[^>]*font-size="11"/g),
+      2,
+    );
+    assert.equal(compter(rendu.svg, /class="cd-etiquette-quadrant"/g), 0);
+  });
+
+  it("retire l’étiquette intérieure redondante d’un quart en format compact", () => {
+    const mobile = dessinerReorganisationCentiemes({
+      centiemes: 25,
+      etape: "comparaison",
+      largeur: 240,
+      afficherEcritures: true,
+      afficherEquation: false,
+    });
+    const large = dessinerReorganisationCentiemes({
+      centiemes: 25,
+      etape: "comparaison",
+      largeur: 560,
+      afficherEcritures: true,
+      afficherEquation: false,
+    });
+    assert.match(mobile.svg, />1 quart<\/text>/);
+    assert.equal(compter(mobile.svg, /class="cd-etiquette-quadrant"/g), 0);
+    assert.equal(compter(large.svg, /class="cd-etiquette-quadrant"/g), 1);
   });
 
   it("reste autonome, lisible et contenu dans un viewBox de 320 px", () => {

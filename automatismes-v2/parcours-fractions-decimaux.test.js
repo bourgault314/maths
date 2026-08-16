@@ -262,11 +262,15 @@ test("le regroupement réserve toujours une unité complète à la même échell
 });
 
 test("le cours et l’aide conservent l’ordre CPA et les nouveaux invariants", async () => {
-  const [application, styles, bandes, etatLecteur] = await Promise.all([
+  const [application, styles, bandes, numerationDecimale, etatLecteur] = await Promise.all([
     readFile(new URL("./app.js", import.meta.url), "utf8"),
     readFile(new URL("./interface.css", import.meta.url), "utf8"),
     readFile(
       new URL("../packages/objets/src/bandes-fractions-rail.js", import.meta.url),
+      "utf8",
+    ),
+    readFile(
+      new URL("../packages/objets/src/numeration-decimale.js", import.meta.url),
       "utf8",
     ),
     readFile(new URL("./src/etat-lecteur.js", import.meta.url), "utf8"),
@@ -291,7 +295,21 @@ test("le cours et l’aide conservent l’ordre CPA et les nouveaux invariants",
   assert.match(application, /rendreBandesRailCours\(7, 2, "pieces"/);
   assert.match(application, /reperes-demis-equations-cours/);
   assert.match(application, /rendreEchangesRangsCours\(\)/);
-  assert.match(application, /rendreDecomposition36Cours\(\)/);
+  assert.match(application, /rendreDecomposition354Cours\(\)/);
+  assert.match(application, /function rendreConversionRangsCours/);
+  assert.match(application, /function rendreConversionRangsDepuisFraction/);
+  assert.match(application, /dessinerConversionRangsNumerationDecimale/);
+  assert.match(application, /etat: "converti-rang-final"/);
+  assert.match(application, /const profil = direct \? "aide-nc03" : "aide-nc04"/);
+  assert.match(application, /rangFinal: cible\.id/);
+  assert.match(application, /afficherChiffres: juste/);
+  assert.match(application, /nombreDecimalAvecRangs/);
+  assert.match(application, /rendreDecimalDepuisFraction/);
+  assert.match(application, /transformation-rangs-aide/);
+  assert.match(application, /transformation-rangs-correction/);
+  assert.match(numerationDecimale, /class="nd-virgule"/);
+  assert.match(numerationDecimale, /profilLu === "aide-nc04"/);
+  assert.match(numerationDecimale, /specificationsLegendeConversion/);
   assert.match(application, /rendreRepereCinqUnitesCours\(\)/);
   assert.match(application, /rendreBandesRailCours\(5, 1, "pieces"/);
   assert.match(application, /function rendreAidePoseBandesRiche/);

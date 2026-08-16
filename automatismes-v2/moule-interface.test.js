@@ -145,6 +145,17 @@ describe("moule responsive commun", () => {
     assert.doesNotMatch(css, /@media \(max-width:\s*679px\)[^{]*\{[^}]*avec-pave/s);
   });
 
+  it("garde les rails du cours lisibles en téléphone et en petit paysage", () => {
+    assert.match(
+      css,
+      /@media \(max-width: 680px\)[\s\S]*?\.bandes-rail-cours-responsive-mobile-strict \.figure-bandes-rail-cours-large\s*\{[^}]*display:\s*none;[\s\S]*?\.bandes-rail-cours-responsive-mobile-strict \.figure-bandes-rail-cours-mobile\s*\{[^}]*width:\s*min\(100%, 306px\);[^}]*display:\s*block;/s,
+    );
+    assert.match(
+      css,
+      /@media \(min-width: 681px\)[\s\S]*?\.bandes-rail-cours-responsive-mobile-strict \.figure-bandes-rail-cours-large\s*\{[^}]*display:\s*block;[\s\S]*?\.bandes-rail-cours-responsive-mobile-strict \.figure-bandes-rail-cours-mobile\s*\{[^}]*display:\s*none;/s,
+    );
+  });
+
   it("déclare un état visuel d'appui sans changer le geste de sélection", () => {
     assert.match(
       cssCommun,

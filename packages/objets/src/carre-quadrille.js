@@ -15,7 +15,7 @@
 // viewBox est fixe dans tous les modes : question, aide et correction ne
 // provoquent aucun saut de mise en page.
 
-import { COULEURS, TYPOGRAPHIE } from "../../charte/src/charte.js?v=32";
+import { COULEURS, TYPOGRAPHIE } from "../../charte/src/charte.js?v=33";
 
 export const VERSION_CARRE_QUADRILLE = 4;
 

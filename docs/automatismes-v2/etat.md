@@ -1,6 +1,43 @@
 # État du chantier Automatismes V2
 
-**Dernière mise à jour : 15 août 2026.**
+**Dernière mise à jour : 16 août 2026.**
+
+## Unification des rangs de NC-03 / NC-04 du 16 août
+
+- D-056 termine le lot visuel sans modifier les générateurs, les familles,
+  les quotas, les réponses attendues ni la sixième page du cours. Le module
+  reste `construit`.
+- La charte porte désormais l'unique palette sémantique des rangs : unités
+  rouges, dixièmes verts, centièmes jaunes et millièmes violets, avec des
+  variantes de texte contrastées. `nombreDecimalAvecRangs` colore chaque
+  chiffre selon sa position et laisse la virgule neutre ; ce même rendu est
+  employé dans le cours, les questions, leurs rappels, l'aide et la correction.
+- Le tableau unités–dixièmes–centièmes–millièmes n'existe plus en deux
+  implémentations HTML et SVG. Le SVG commun place sa virgule à la frontière
+  unités–dixièmes, conserve au besoin le rang final et masque réellement ses
+  chiffres, y compris dans son texte accessible et ses attributs de données.
+- Les échanges `1 unité = 10 dixièmes` et
+  `1 dixième = 10 centièmes` conservent une empreinte strictement identique de
+  part et d'autre. Une conversion paramétrique réemploie les mêmes groupes aux
+  dixièmes ou aux centièmes, dans les deux sens, avec les états « par rang » et
+  « tout dans le rang final ».
+- Les pages 1 et 2 gardent les correspondances concrètes
+  `0,5 = 5/10 = 1/2`, `0,25 = 25/100 = 1/4` et
+  `0,75 = 75/100 = 3/4`. La page 3 utilise les deux échanges exacts. La page 4
+  transforme `147/100` en `1,47` ; la page 5 transforme `3,54` en `354/100`.
+  Le tableau accompagne les pages 1, 3, 4 et 5 ; la page 6 reste celle de
+  D-055.
+- `/10` et `/100` utilisent la même conversion puis le même tableau dans le
+  cours, « Me guider » et la correction. Les fractions libres `0,5`, `0,25`
+  et `0,75` conservent leurs correspondances dédiées ; les autres cibles
+  décimales passent par la conversion générique. `/1000` reste volontairement
+  limité au tableau, sans matériel miniaturisé.
+- Les profils `aide-nc03` et `aide-nc04` sont liés à leur sens et retirent la
+  cible inconnue du dessin, des légendes, du texte alternatif et des attributs.
+  Dans le lecteur, le profil `solution` est réservé au cours et à la correction.
+- Le Labo reçoit les entrées « Échanges exacts entre rangs » et
+  « Conversion par rang — mêmes empreintes » à côté du matériel, du tableau et
+  des correspondances déjà comparables.
 
 ## Progression concrète de l'aide F3 de NC-02 du 15 août
 
@@ -113,7 +150,10 @@
   `1,47` ; repartir du matériel de `3,6` pour obtenir `36/10` ; enfin restaurer
   sur une même page les transformations de `7/2` et `6/4`, les repères en
   demis, cinq bandes marquées `1` pour `5/1` et la stratégie finale. Le sens
-  quotient reste seulement la dernière note du cours.
+  quotient reste seulement la dernière note du cours. Cette photographie de
+  D-055 est historique : D-056 remplace depuis les objets et les exemples des
+  pages 1 à 5 comme décrit en tête de document, sans changer le contenu de la
+  page 6.
 - Une omission ne déplie plus la correction. Après une saisie omise, le
   lecteur affiche « Pas de réponse » puis la solution en vert hors du panneau ;
   après un QCM omis, la proposition correcte passe en vert. Une saisie fournie

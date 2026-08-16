@@ -1,6 +1,8 @@
 import assert from "node:assert/strict";
 import { it } from "node:test";
 
+import { COULEURS_RANGS_NUMERATION_DECIMALE } from "../packages/charte/src/charte.js";
+
 function installerFauxNavigateur(recherche) {
   const gestionnaires = new Map();
   const focusRecus = [];
@@ -80,6 +82,61 @@ function appuyer(gestionnaires, key, { shiftKey = false } = {}) {
     });
   }
   return preventions;
+}
+
+function extrairePanneauAide(html) {
+  return html.match(/<aside class="panneau panneau-aide[\s\S]*?<\/aside>/)?.[0] ?? "";
+}
+
+function extraireTableauNumeration(html) {
+  const figures = [...html.matchAll(
+    /<figure class="figure-fraction figure-tableau-numeration[^\"]*"[^>]*>[\s\S]*?<\/figure>/g,
+  )];
+  return figures.at(-1)?.[0] ?? "";
+}
+
+function verifierFigureDecimaleResponsive(html) {
+  assert.match(html, /figure-decimale-responsive"\s+role="img" aria-label="[^"]+"/);
+  assert.match(
+    html,
+    /class="figure-deux-sources-variante figure-deux-sources-variante-large"[\s\S]*?--mg-largeur-figure-source:560px[\s\S]*?aria-hidden="true"/,
+  );
+  assert.match(
+    html,
+    /class="figure-deux-sources-variante figure-deux-sources-variante-mobile"[\s\S]*?--mg-largeur-figure-source:240px[\s\S]*?aria-hidden="true"/,
+  );
+}
+
+function verifierRailAideResponsive(html) {
+  assert.match(html, /figure-bandes-rail-aide-responsive"\s+role="img" aria-label="[^"]+"/);
+  assert.match(html, /--mg-largeur-figure-source:720px/);
+  assert.match(html, /--mg-largeur-figure-source:340px/);
+  assert.equal(
+    (html.match(/class="figure-deux-sources-variante figure-deux-sources-variante-(?:large|mobile)"/g) ?? []).length >= 2,
+    true,
+  );
+}
+
+function avancerAuTableau(gestionnaires, nombreQuestions) {
+  for (let index = 0; index < nombreQuestions; index += 1) {
+    cliquer(gestionnaires, "reponse");
+    cliquer(gestionnaires, "suivant");
+  }
+}
+
+function verifierPaletteTableauNumeration(html) {
+  for (const [rang, palette] of Object.entries(COULEURS_RANGS_NUMERATION_DECIMALE)) {
+    assert.match(
+      html,
+      new RegExp(
+        `data-rang="${rang}"[\\s\\S]*?class="nd-entete"[^>]*fill="${palette.principale}"`
+        + `[\\s\\S]*?class="nd-cellule"[^>]*fill="${palette.fond}"`
+        + `[\\s\\S]*?class="nd-nom-rang"[^>]*fill="${palette.encreEntete}"`
+        + `[\\s\\S]*?class="nd-chiffre"[^>]*fill="${palette.texte}"`,
+      ),
+      `palette canonique absente pour ${rang}`,
+    );
+  }
 }
 
 it("réaffiche le repère d'un panneau débordant lorsqu'il revient en haut", async () => {
@@ -625,6 +682,7 @@ it("distingue omission et mauvaise saisie dans le champ décimal de NC-03", asyn
   assert.match(omission.application.innerHTML, /reponse-attendue-omission/);
   assert.match(omission.application.innerHTML, /reponses-correction-fractions/);
   assert.match(omission.application.innerHTML, /Réponse correcte[\s\S]*3,5/);
+  assert.match(omission.application.innerHTML, /Réponse correcte[\s\S]*mathsgo-role-unites[\s\S]*mathsgo-role-dixiemes/);
   assert.doesNotMatch(omission.application.innerHTML, /Correction expliquée/);
 
   const erreur = installerFauxNavigateur(
@@ -670,6 +728,21 @@ it("colore immédiatement la mauvaise proposition et la bonne réponse d’un QC
     /class="choix correct" data-action="choix" data-id="fraction-correcte"/,
   );
   assert.doesNotMatch(application.innerHTML, /Correction expliquée/);
+});
+
+it("applique aussi les couleurs de rang aux choix décimaux d’un QCM NC-03", async () => {
+  const { application, gestionnaires } = installerFauxNavigateur(
+    "?notion=fractions-simples-decimaux&questions=20&graine=qcm-nc03-1",
+  );
+  await import(`./app.js?fumee=qcm-rangs-decimaux-${Date.now()}`);
+  cliquer(gestionnaires, "demarrer");
+  assert.match(application.innerHTML, /Quelle est l’écriture décimale de cette fraction/);
+  assert.match(application.innerHTML, /data-id="decimal-correct"[\s\S]*mathsgo-role-unites[\s\S]*mathsgo-role-dixiemes/);
+  const faux = application.innerHTML.match(/data-action="choix" data-id="(?!decimal-correct)([^"]+)"/)?.[1];
+  assert.ok(faux);
+  cliquer(gestionnaires, "choix", faux);
+  cliquer(gestionnaires, "valider");
+  assert.match(application.innerHTML, /class="choix correct"[\s\S]*data-id="decimal-correct"[\s\S]*mathsgo-role-dixiemes/);
 });
 
 it("affiche en succès une sélection multiple entièrement correcte", async () => {
@@ -734,6 +807,7 @@ it("rend NC-03 et NC-04 dans une seule notion avec des repères cohérents en ai
     assert.match(application.innerHTML, new RegExp(`${index} \\/ 6`));
     assert.match(application.innerHTML, titre);
     assert.match(application.innerHTML, /mathsgo-fraction|fraction-empilee|ecriture-fraction/);
+    if (index <= 5) verifierFigureDecimaleResponsive(application.innerHTML);
     if (index === 1) {
       assert.match(application.innerHTML, /figure-bandes-rail-cours-large/);
       assert.match(application.innerHTML, /figure-bandes-rail-cours-mobile/);
@@ -741,51 +815,75 @@ it("rend NC-03 et NC-04 dans une seule notion avec des repères cohérents en ai
       assert.match(application.innerHTML, /cd-reste-dixiemes/);
       assert.match(application.innerHTML, /data-afficher-ecritures="true"/);
       assert.doesNotMatch(application.innerHTML, /cd-piece-demi/);
-      assert.match(application.innerHTML, /5 sur 10 égale 1 sur 2/);
-      assert.match(application.innerHTML, /5 sur 10 égale 0,5/);
+      assert.match(application.innerHTML, /0,5 égale 5 sur 10 égale 1 sur 2/);
+      assert.match(application.innerHTML, /mathsgo-role-unites">0<\/span>,/);
+      assert.match(application.innerHTML, /mathsgo-role-dixiemes">5<\/span>/);
       assert.match(application.innerHTML, /figure-tableau-numeration/);
+      assert.match(application.innerHTML, /class="nd-virgule" data-separation="unites-dixiemes"/);
       assert.doesNotMatch(application.innerHTML, /barre de fraction signifie aussi une division/);
     }
     if (index === 2) {
       assert.match(application.innerHTML, /cd-disposition-lignes/);
       assert.match(application.innerHTML, /cd-disposition-quadrants/);
       assert.match(application.innerHTML, /data-afficher-equation="false"/);
-      assert.match(application.innerHTML, /25 sur 100 égale 1 sur 4/);
-      assert.match(application.innerHTML, /25 sur 100 égale 0,25/);
+      assert.match(application.innerHTML, /0,25 égale 25 sur 100 égale 1 sur 4/);
+      assert.match(application.innerHTML, /0,75 égale 75 sur 100 égale 3 sur 4/);
+      assert.doesNotMatch(application.innerHTML, /cd-numero-quadrant/);
     }
     if (index === 3) {
       assert.match(application.innerHTML, /Une unité, dix dixièmes/);
       assert.match(application.innerHTML, /Un dixième, dix centièmes/);
-      assert.match(application.innerHTML, /figure-echange-unite/);
-      assert.match(application.innerHTML, /figure-echange-dixiemes/);
-      assert.match(application.innerHTML, /1 sur 10 égale 10 sur 100/);
+      assert.match(application.innerHTML, /figure-echange-rangs-cours/);
+      assert.match(application.innerHTML, /nd-echange-empreinte/);
+      assert.match(application.innerHTML, /nd-echange-fraction-dixiemes/);
+      assert.match(application.innerHTML, /nd-echange-fraction-centiemes/);
       assert.match(application.innerHTML, /1 sur 1000 égale 0,001/);
+      assert.match(application.innerHTML, /class="nd-virgule" data-separation="unites-dixiemes"/);
       assert.doesNotMatch(application.innerHTML, /147 sur 100/);
     }
     if (index === 4) {
       assert.match(application.innerHTML, /147 sur 100 égale 100 sur 100 plus 40 sur 100 plus 7 sur 100/);
+      assert.match(application.innerHTML, /data-etat="converti-rang-final" data-sens="fraction-vers-decimal"/);
+      assert.match(application.innerHTML, /data-etat="decompose" data-sens="fraction-vers-decimal"/);
+      assert.match(application.innerHTML, /data-rang-final="centiemes"/);
       assert.match(application.innerHTML, /mathsgo-role-dixiemes/);
       assert.match(application.innerHTML, /mathsgo-role-centiemes/);
       assert.match(application.innerHTML, /mathsgo-role-milliemes/);
+      assert.match(application.innerHTML, /class="nd-virgule" data-separation="unites-dixiemes"/);
       assert.match(application.innerHTML, /725 sur 1000 égale 0,725/);
       assert.match(application.innerHTML, /7 sur 100 égale 0,07/);
+      assert.doesNotMatch(application.innerHTML, /nd-piece nd-millieme/);
       assert.doesNotMatch(application.innerHTML, /Chaque signe égal est aligné/);
     }
     if (index === 5) {
       assert.match(application.innerHTML, /mathsgo-egalites-alignees/);
-      assert.match(application.innerHTML, /3,6 égale 3 plus 6 sur 10/);
-      assert.match(application.innerHTML, /30 sur 10 plus 6 sur 10/);
-      assert.match(application.innerHTML, /36 sur 10/);
+      assert.match(application.innerHTML, /3,54 égale 3 plus 5 sur 10 plus 4 sur 100/);
+      assert.match(application.innerHTML, /300 sur 100 plus 50 sur 100 plus 4 sur 100/);
+      assert.match(application.innerHTML, /354 sur 100/);
+      assert.match(application.innerHTML, /data-etat="decompose" data-sens="decimal-vers-fraction"/);
+      assert.match(application.innerHTML, /data-etat="converti-rang-final" data-sens="decimal-vers-fraction"/);
+      assert.match(application.innerHTML, /class="nd-virgule" data-separation="unites-dixiemes"/);
       assert.match(application.innerHTML, /Le dénominateur est imprimé/);
       assert.match(application.innerHTML, /Les deux cases sont libres/);
-      assert.match(application.innerHTML, /3,6 égale 36 sur 10/);
-      assert.match(application.innerHTML, /0,75 égale 75 sur 100 égale 3 sur 4/);
+      assert.match(application.innerHTML, /3,54 égale 354 sur 100/);
+      assert.doesNotMatch(application.innerHTML, /0,75 égale 75 sur 100 égale 3 sur 4/);
       assert.doesNotMatch(application.innerHTML, /figure-bandes-rail/);
     }
     if (index === 6) {
       assert.match(application.innerHTML, /Le dénominateur donne la taille d’une pièce/);
       assert.match(application.innerHTML, /Au départ : 7 demis/);
       assert.match(application.innerHTML, /Au départ : 6 quarts/);
+      assert.equal(
+        (application.innerHTML.match(/bandes-rail-cours-responsive-mobile-strict/g) ?? []).length,
+        5,
+      );
+      assert.equal(
+        (application.innerHTML.match(/viewBox="0 0 260 154"/g) ?? []).length,
+        5,
+      );
+      assert.doesNotMatch(application.innerHTML, /viewBox="0 0 260 232"/);
+      assert.match(application.innerHTML, /figure-bandes-rail-cours-large/);
+      assert.match(application.innerHTML, /figure-bandes-rail-cours-mobile/);
       assert.match(application.innerHTML, /reste-fusionne-en-demi/);
       assert.match(application.innerHTML, /fraction de numérateur 5 et de dénominateur 1 vaut 5/);
       assert.match(application.innerHTML, /data-denominateur="1"/);
@@ -857,6 +955,205 @@ it("rend NC-03 et NC-04 dans une seule notion avec des repères cohérents en ai
   assert.equal(droiteVue, true);
   assert.equal(tableauVu, true);
   assert.match(application.innerHTML, /Séance terminée/);
+});
+
+it("garde les centièmes et millièmes imposés sans révéler le décimal en aide NC-03", async () => {
+  const { application, gestionnaires } = installerFauxNavigateur(
+    "?notion=fractions-simples-decimaux&mode=tableau&questions=20&graine=rang-final-642",
+  );
+  await import(`./app.js?fumee=rangs-nc03-${Date.now()}`);
+  cliquer(gestionnaires, "demarrer");
+
+  avancerAuTableau(gestionnaires, 7);
+  assert.match(application.innerHTML, /aria-label="429 sur 1000"/);
+  cliquer(gestionnaires, "aide");
+  let aide = extrairePanneauAide(application.innerHTML);
+  verifierFigureDecimaleResponsive(aide);
+  let tableau = extraireTableauNumeration(aide);
+  assert.doesNotMatch(aide, /figure-conversion-rangs-aide/);
+  assert.equal((tableau.match(/class="nd-chiffre"[^>]*>\?<\/text>/g) ?? []).length, 8);
+  assert.equal((tableau.match(/class="nd-virgule"/g) ?? []).length, 2);
+  assert.doesNotMatch(tableau, /0,429|data-ecriture-decimale|class="nd-lecture"/);
+  cliquer(
+    gestionnaires,
+    "rang-fraction",
+    undefined,
+    undefined,
+    undefined,
+    undefined,
+    undefined,
+    "milliemes",
+  );
+  aide = extrairePanneauAide(application.innerHTML);
+  tableau = extraireTableauNumeration(aide);
+  assert.match(tableau, /data-rang="unites" data-chiffre="0"/);
+  assert.match(tableau, /data-rang="dixiemes" data-chiffre="4"/);
+  assert.match(tableau, /data-rang="centiemes" data-chiffre="2"/);
+  assert.match(tableau, /data-rang="milliemes" data-chiffre="9"/);
+  assert.doesNotMatch(tableau, /0,429|data-ecriture-decimale|class="nd-lecture"/);
+  verifierPaletteTableauNumeration(tableau);
+  cliquer(gestionnaires, "fermer-aide");
+
+  avancerAuTableau(gestionnaires, 10);
+  assert.match(application.innerHTML, /aria-label="50 sur 100"/);
+  cliquer(gestionnaires, "aide");
+  aide = extrairePanneauAide(application.innerHTML);
+  tableau = extraireTableauNumeration(aide);
+  assert.match(aide, /data-profil="aide-nc03" data-rang-final="centiemes"/);
+  assert.match(aide, /data-etat="converti-rang-final" data-sens="fraction-vers-decimal"/);
+  assert.equal((aide.match(/data-profil="aide-nc03"/g) ?? []).length, 2);
+  assert.doesNotMatch(aide, /data-ecriture-decimale="0,50"|>0,50<|>0,5</);
+  assert.equal((tableau.match(/class="nd-chiffre"[^>]*>\?<\/text>/g) ?? []).length, 8);
+  assert.equal((tableau.match(/class="nd-virgule"/g) ?? []).length, 2);
+
+  cliquer(
+    gestionnaires,
+    "rang-fraction",
+    undefined,
+    undefined,
+    undefined,
+    undefined,
+    undefined,
+    "centiemes",
+  );
+  aide = extrairePanneauAide(application.innerHTML);
+  tableau = extraireTableauNumeration(aide);
+  assert.equal((aide.match(/data-profil="aide-nc03"/g) ?? []).length, 4);
+  assert.match(aide, /data-etat="decompose" data-sens="fraction-vers-decimal"/);
+  assert.match(tableau, /data-rang="unites" data-chiffre="0"/);
+  assert.match(tableau, /data-rang="dixiemes" data-chiffre="5"/);
+  assert.match(tableau, /data-rang="centiemes" data-chiffre="0"/);
+  assert.doesNotMatch(tableau, /data-ecriture-decimale|class="nd-lecture"/);
+  verifierPaletteTableauNumeration(tableau);
+  cliquer(gestionnaires, "fermer-aide");
+  cliquer(gestionnaires, "correction");
+  verifierFigureDecimaleResponsive(application.innerHTML);
+  assert.match(application.innerHTML, /transformation-rangs-correction/);
+  assert.match(application.innerHTML, /data-profil="solution" data-rang-final="centiemes"/);
+  assert.match(application.innerHTML, /data-etat="converti-rang-final" data-sens="fraction-vers-decimal"/);
+  assert.match(application.innerHTML, /data-etat="decompose" data-sens="fraction-vers-decimal"/);
+  assert.match(application.innerHTML, /data-ecriture-decimale="0,50"/);
+});
+
+it("garde les centièmes et millièmes imposés sans révéler le numérateur en aide NC-04", async () => {
+  const { application, gestionnaires } = installerFauxNavigateur(
+    "?notion=fractions-simples-decimaux&mode=tableau&questions=20&graine=zero-final-decimal-vers-fraction-465",
+  );
+  await import(`./app.js?fumee=rangs-nc04-${Date.now()}`);
+  cliquer(gestionnaires, "demarrer");
+
+  avancerAuTableau(gestionnaires, 2);
+  assert.match(application.innerHTML, /mathsgo-role-milliemes">5<\/span>/);
+  cliquer(gestionnaires, "aide");
+  let aide = extrairePanneauAide(application.innerHTML);
+  verifierFigureDecimaleResponsive(aide);
+  let tableau = extraireTableauNumeration(aide);
+  assert.doesNotMatch(aide, /figure-conversion-rangs-aide/);
+  assert.equal((tableau.match(/class="nd-chiffre"[^>]*>\?<\/text>/g) ?? []).length, 8);
+  assert.equal((tableau.match(/class="nd-virgule"/g) ?? []).length, 2);
+  cliquer(
+    gestionnaires,
+    "rang-fraction",
+    undefined,
+    undefined,
+    undefined,
+    undefined,
+    undefined,
+    "milliemes",
+  );
+  aide = extrairePanneauAide(application.innerHTML);
+  tableau = extraireTableauNumeration(aide);
+  assert.match(tableau, /data-rang="unites" data-chiffre="0"/);
+  assert.match(tableau, /data-rang="dixiemes" data-chiffre="4"/);
+  assert.match(tableau, /data-rang="centiemes" data-chiffre="2"/);
+  assert.match(tableau, /data-rang="milliemes" data-chiffre="5"/);
+  assert.doesNotMatch(tableau, /data-numerateur|data-denominateur|class="nd-lecture"/);
+  verifierPaletteTableauNumeration(tableau);
+  cliquer(gestionnaires, "fermer-aide");
+
+  avancerAuTableau(gestionnaires, 1);
+  assert.match(application.innerHTML, /mathsgo-role-unites">0<\/span>,/);
+  assert.match(application.innerHTML, /mathsgo-role-dixiemes">5<\/span>/);
+  cliquer(gestionnaires, "aide");
+  aide = extrairePanneauAide(application.innerHTML);
+  tableau = extraireTableauNumeration(aide);
+  assert.match(aide, /data-ecriture-decimale="0,50"/);
+  assert.match(aide, /data-profil="aide-nc04" data-rang-final="centiemes"/);
+  assert.match(aide, /data-legende="5\/10=\?\/100"/);
+  assert.doesNotMatch(aide, /50\/100|data-numerateur-cible|data-denominateur-cible/);
+  assert.equal((aide.match(/data-profil="aide-nc04"/g) ?? []).length, 2);
+  assert.equal((tableau.match(/class="nd-chiffre"[^>]*>\?<\/text>/g) ?? []).length, 8);
+
+  cliquer(
+    gestionnaires,
+    "rang-fraction",
+    undefined,
+    undefined,
+    undefined,
+    undefined,
+    undefined,
+    "centiemes",
+  );
+  aide = extrairePanneauAide(application.innerHTML);
+  tableau = extraireTableauNumeration(aide);
+  assert.equal((aide.match(/data-profil="aide-nc04"/g) ?? []).length, 4);
+  assert.match(aide, /data-etat="converti-rang-final" data-sens="decimal-vers-fraction"/);
+  assert.match(aide, /data-legende="5\/10=\?\/100"/);
+  assert.doesNotMatch(aide, /50\/100|data-numerateur-cible|data-denominateur-cible/);
+  assert.match(tableau, /data-rang="unites" data-chiffre="0"/);
+  assert.match(tableau, /data-rang="dixiemes" data-chiffre="5"/);
+  assert.match(tableau, /data-rang="centiemes" data-chiffre="0"/);
+  assert.doesNotMatch(tableau, /data-numerateur|data-denominateur|class="nd-lecture"/);
+  verifierPaletteTableauNumeration(tableau);
+  cliquer(gestionnaires, "fermer-aide");
+  cliquer(gestionnaires, "correction");
+  verifierFigureDecimaleResponsive(application.innerHTML);
+  assert.match(application.innerHTML, /transformation-rangs-correction/);
+  assert.match(application.innerHTML, /data-profil="solution" data-rang-final="centiemes"/);
+  assert.match(application.innerHTML, /data-etat="decompose" data-sens="decimal-vers-fraction"/);
+  assert.match(application.innerHTML, /data-etat="converti-rang-final" data-sens="decimal-vers-fraction"/);
+  assert.match(application.innerHTML, /data-numerateur-cible="50" data-denominateur-cible="100"/);
+});
+
+it("réemploie la conversion canonique dans l’aide d’une fraction libre générique", async () => {
+  const { application, gestionnaires } = installerFauxNavigateur(
+    "?notion=fractions-simples-decimaux&mode=tableau&questions=20&graine=libre-generique-plus-0",
+  );
+  await import(`./app.js?fumee=libre-generique-${Date.now()}`);
+  cliquer(gestionnaires, "demarrer");
+  avancerAuTableau(gestionnaires, 10);
+
+  assert.match(application.innerHTML, /Toutes les fractions égales sont acceptées/);
+  assert.match(application.innerHTML, /mathsgo-role-unites">1<\/span>,/);
+  assert.match(application.innerHTML, /mathsgo-role-centiemes">3<\/span>/);
+  cliquer(gestionnaires, "aide");
+  let aide = extrairePanneauAide(application.innerHTML);
+  assert.doesNotMatch(aide, /figure-conversion-rangs-aide|103\/100/);
+  assert.match(aide, /aria-label="\? sur \?"/);
+
+  cliquer(
+    gestionnaires,
+    "rang-fraction",
+    undefined,
+    undefined,
+    undefined,
+    undefined,
+    undefined,
+    "centiemes",
+  );
+  aide = extrairePanneauAide(application.innerHTML);
+  verifierFigureDecimaleResponsive(aide);
+  const tableau = extraireTableauNumeration(aide);
+  assert.equal((aide.match(/data-profil="aide-nc04"/g) ?? []).length, 4);
+  assert.match(aide, /data-etat="decompose" data-sens="decimal-vers-fraction"/);
+  assert.match(aide, /data-etat="converti-rang-final" data-sens="decimal-vers-fraction"/);
+  assert.match(aide, /data-legende="1=\?\/100"/);
+  assert.doesNotMatch(aide, /103\/100|3\/100|data-numerateur-cible|data-denominateur-cible/);
+  assert.match(tableau, /data-rang="unites" data-chiffre="1"/);
+  assert.match(tableau, /data-rang="dixiemes" data-chiffre="0"/);
+  assert.match(tableau, /data-rang="centiemes" data-chiffre="3"/);
+  assert.doesNotMatch(tableau, /data-numerateur|data-denominateur|class="nd-lecture"/);
+  verifierPaletteTableauNumeration(tableau);
 });
 
 it("termine une série fractions avec un bilan local NC-03, NC-04 et aides", async () => {
@@ -952,12 +1249,12 @@ it("garde l’atelier unique de Me guider masqué avant la construction", async 
     const libre = /Toutes les fractions égales sont acceptées/.test(application.innerHTML);
     const inverse = /famille-decimal-vers-fraction/.test(application.innerHTML);
     if (libre || (inverse && !inverseVerifiee)) {
-      const decimal = application.innerHTML.match(/class="decimal-question">([^<]+)</)?.[1];
-      assert.ok(decimal);
+      assert.match(application.innerHTML, /class="decimal-question">[\s\S]*?mathsgo-role-unites/);
       cliquer(gestionnaires, "aide");
-      const aide = application.innerHTML.match(/<aside class="panneau panneau-aide[\s\S]*?<\/aside>/)?.[0] ?? "";
+      const aide = extrairePanneauAide(application.innerHTML);
       assert.match(aide, /<strong>\?<\/strong>|>\?<\/text>|à la place de « \? »|fraction-empilee/);
       assert.doesNotMatch(aide, /niveau-aide-fraction|1 · Un indice|2 · Voir|3 · Construire/);
+      assert.match(aide, /mathsgo-role-unites/);
       if (libre) {
         assert.match(aide, /dernier rang écrit|fraction décimale|dernier rang/);
       }
@@ -987,6 +1284,7 @@ it("construit six quarts jusqu’à la fusion des deux quarts restants", async (
   }
   assert.match(application.innerHTML, /aria-label="6 sur 4"/);
   cliquer(gestionnaires, "aide");
+  verifierRailAideResponsive(application.innerHTML);
   assert.match(application.innerHTML, /Tu vois d’abord 6 quarts/);
   assert.match(application.innerHTML, /etape-pieces/);
   assert.doesNotMatch(application.innerHTML, /1,5/);
@@ -1164,6 +1462,7 @@ it("fait réorganiser 0,75 des lignes aux quadrants puis à la comparaison sans 
   assert.match(aide, /cd-disposition-lignes/);
   assert.match(aide, /cd-disposition-quadrants/);
   assert.match(aide, /figure-correspondance-libre/);
+  verifierRailAideResponsive(aide);
   assert.match(aide, /data-afficher-ecritures="false"/);
   assert.doesNotMatch(aide, /0,75 égale 75 sur 100|75 sur 100 égale 3 sur 4/);
 });

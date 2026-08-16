@@ -1173,3 +1173,78 @@ et **220 états navigateur** sur cinq fenêtres, dont 60 états de cours,
 débordement, aucune erreur JavaScript ni aucune fuite n'est relevé. La revue
 visuelle dédiée produit 112 captures des six pages et mesure un écart maximal
 de **0,72 px** entre les barres de fraction et les signes `=` ou `+` voisins.
+
+## 16 août 2026
+
+### D-056 — La charte des rangs et les conversions décimales ont une source unique
+
+Après l'essai du cours D-055, Gwenaël demande que les couleurs, la virgule du
+tableau et les transformations entre matériel, fraction décimale et écriture à
+virgule ne soient plus réassemblées localement. Cette décision complète D-055
+sans modifier les générateurs, les familles, les valeurs, les quotas, les
+formes de réponse ni la sixième page du cours. Le module reste `construit`.
+
+La charte porte une palette sémantique unique pour les quatre rangs. Les aplats
+du matériel restent rouge pour les unités, vert pour les dixièmes et jaune pour
+les centièmes. Le violet prolonge cette convention pour les millièmes dans le
+tableau et les écritures, sans créer de pièce miniature ; les textes sur fond
+clair emploient des variantes plus sombres et contrastées. Le constructeur
+`nombreDecimalAvecRangs` attribue automatiquement un rôle à chaque chiffre :
+dans `1,47`, `1` est une unité, `4` un dixième et `7` un centième. La virgule
+reste neutre. Cette écriture est la même dans les pages de cours, les questions
+abstraites, leurs rappels, l'aide et les chaînes de correction.
+
+Le tableau de numération devient un seul SVG paramétrique dans tous les
+contextes. Sa grande virgule est placée exactement sur la séparation entre les
+unités et les dixièmes. `rangFinal` conserve les zéros imposés par la tâche ;
+le mode masqué remplace les chiffres par des points d'interrogation sans
+laisser l'écriture, les chiffres ou le numérateur attendu dans le texte
+accessible ou les attributs de données. Il remplace donc aussi l'ancien tableau
+HTML local de l'aide.
+
+Deux objets complètent cette source commune. Les échanges
+`1 unité = 10 dixièmes` et `1 dixième = 10 centièmes` conservent exactement la
+même empreinte de part et d'autre de la flèche. La conversion par rang accepte
+une écriture finissant aux dixièmes ou aux centièmes, le sens
+`fraction-vers-decimal` ou `decimal-vers-fraction`, puis les états `decompose`
+et `converti-rang-final`. Les groupes gardent leur géométrie pendant le
+changement de couleur et d'écriture ; un rang final explicite conserve
+notamment un zéro significatif demandé par le dénominateur.
+
+Les profils `aide-nc03` et `aide-nc04` ne sont acceptés que dans leur sens.
+Le premier retire l'écriture décimale cherchée ; le second remplace le
+numérateur cible par `?`. Ce contrat vaut pour le dessin, les légendes, le texte
+alternatif et les attributs. Dans le lecteur, le profil `solution` révèle
+l'ensemble seulement dans le cours et la correction. Les millièmes restent
+hors de la conversion matérielle : toute famille `/1000` utilise exclusivement
+le tableau, en cours, en aide et en correction.
+
+Les cinq premières pages du cours sont raccordées à ces objets communs :
+
+1. `0,5 = 5/10 = 1/2` suit deux demis, cinq dixièmes et le tableau ;
+2. `0,25 = 25/100 = 1/4` puis `0,75 = 75/100 = 3/4` réemploient les
+   correspondances exactes en centièmes et en quarts ;
+3. les rangs sont installés par les deux échanges à empreinte identique, les
+   trois repères `1/10`, `1/100`, `1/1000` et le tableau commun ;
+4. `147/100` passe de 147 centièmes aux rangs usuels, puis au tableau et à
+   `1,47` ; `725/1000` reste un cas de tableau seul ;
+5. `3,54` passe des unités, dixièmes et centièmes à 354 centièmes, puis à
+   `354/100`, dans l'autre sens.
+
+Le contenu et l'organisation de la page 6 de D-055 restent inchangés ; ses
+décimaux héritent seulement du rendu de rang commun. Dans les questions, aucune
+représentation n'est ajoutée à l'énoncé et les données générées ne changent
+pas ; seul le rendu décimal commun est utilisé chiffre par chiffre. Dans
+« Me guider » et la correction, `/10` et `/100` réemploient la conversion
+paramétrique puis le même tableau. Les fractions libres `0,5`, `0,25` et
+`0,75` conservent leurs objets
+de correspondance dédiés ; les autres cibles `/10` et `/100` utilisent la
+conversion générique. Les mêmes briques alimentent ainsi cours, question,
+rappel, aide et correction, avec un profil différent plutôt qu'un dessin
+local.
+
+Le Labo enregistre « Échanges exacts entre rangs » et
+« Conversion par rang — mêmes empreintes » dans la série « Numération
+décimale », à côté du matériel, du tableau et des deux correspondances. Il
+reste un banc de contrôle : le lecteur importe directement les objets de
+`packages/objets`, jamais le code du Studio.
