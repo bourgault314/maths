@@ -3,7 +3,7 @@ import {
   COULEURS_RANGS_NUMERATION_DECIMALE,
   RAYONS,
   TYPOGRAPHIE,
-} from "../packages/charte/src/charte.js?v=34";
+} from "../packages/charte/src/charte.js?v=35";
 import {
   avancerFractionAide,
   avancerCorrespondanceAide,
@@ -36,14 +36,14 @@ import {
   saisirChiffre,
   tournerSolide,
   validerReponse,
-} from "./src/etat-lecteur.js?v=34";
+} from "./src/etat-lecteur.js?v=35";
 import {
   TYPE_REPONSE_DEUX_ENTIERS,
   TYPE_REPONSE_ENTIER_NATUREL,
   TYPE_REPONSE_FRACTION_EQUIVALENTE,
   TYPE_REPONSE_NOMBRE_DECIMAL,
   TYPE_REPONSE_CHOIX_UNIQUE,
-} from "../packages/contrats/src/question-v2.js?v=34";
+} from "../packages/contrats/src/question-v2.js?v=35";
 import {
   connaitNotionLecteur,
   obtenirNotionLecteur,
@@ -53,13 +53,13 @@ import {
   RENDU_SOLIDE,
   RENDU_VOLUME,
   NOTION_FRACTIONS_SIMPLES_DECIMAUX,
-} from "./src/registre-lecteur.js?v=34";
+} from "./src/registre-lecteur.js?v=35";
 import {
   DOMAINES_AUTOMATISMES,
   MICRO_NOTIONS_AUTOMATISMES,
   normaliserIdentifiantMicroNotion,
-} from "../packages/automatismes/src/identifiants.js?v=34";
-import { COURS_SOLIDES_USUELS } from "../packages/automatismes/src/espace-et-geometrie/solides-usuels/reconnaissance.js?v=34";
+} from "../packages/automatismes/src/identifiants.js?v=35";
+import { COURS_SOLIDES_USUELS } from "../packages/automatismes/src/espace-et-geometrie/solides-usuels/reconnaissance.js?v=35";
 import {
   creerCone,
   creerCube,
@@ -68,14 +68,14 @@ import {
   creerPrisme,
   creerPyramide,
   dessinerSolide,
-} from "../packages/objets/src/solides.js?v=34";
+} from "../packages/objets/src/solides.js?v=35";
 import {
   ACTION_TOUCHE_EFFACER,
   ACTION_TOUCHE_SAISIR,
   ACTION_TOUCHE_VALIDER,
   obtenirDispositionClavier,
-} from "../packages/objets/src/clavier.js?v=34";
-import { formulationCritereDivisibilite } from "../packages/automatismes/src/nombres-et-calculs/criteres-divisibilite/critere-precis.js?v=34";
+} from "../packages/objets/src/clavier.js?v=35";
+import { formulationCritereDivisibilite } from "../packages/automatismes/src/nombres-et-calculs/criteres-divisibilite/critere-precis.js?v=35";
 import {
   caseVide,
   difference,
@@ -92,33 +92,33 @@ import {
   variable,
   versHtmlEgalitesAlignees,
   versHtmlSemantique,
-} from "../packages/objets/src/expressions.js?v=34";
+} from "../packages/objets/src/expressions.js?v=35";
 import {
   dessinerCarreQuadrille,
-} from "../packages/objets/src/carre-quadrille.js?v=34";
-import { dessinerGrilleFraction } from "../packages/objets/src/fractions.js?v=34";
-import { dessinerDoubleDroiteGraduee } from "../packages/objets/src/droite-graduee.js?v=34";
-import { dessinerBandesFractionnairesSurRailDecimal } from "../packages/objets/src/bandes-fractions-rail.js?v=34";
+} from "../packages/objets/src/carre-quadrille.js?v=35";
+import { dessinerGrilleFraction } from "../packages/objets/src/fractions.js?v=35";
+import { dessinerDoubleDroiteGraduee } from "../packages/objets/src/droite-graduee.js?v=35";
+import { dessinerBandesFractionnairesSurRailDecimal } from "../packages/objets/src/bandes-fractions-rail.js?v=35";
 import {
   dessinerConversionRangsNumerationDecimale,
   dessinerEchangeRangsNumerationDecimale,
   dessinerMaterielNumerationDecimale,
   dessinerTableauNumerationDecimale,
-} from "../packages/objets/src/numeration-decimale.js?v=34";
+} from "../packages/objets/src/numeration-decimale.js?v=35";
 import {
   dessinerDemiAvecDixiemes,
   dessinerReorganisationCentiemes,
-} from "../packages/objets/src/correspondances-decimales.js?v=34";
+} from "../packages/objets/src/correspondances-decimales.js?v=35";
 import {
   construireDonneesTableauDepuisFraction,
   formaterFractionEnDecimal,
   reduireFraction,
-} from "../packages/objets/src/fractions-decimaux.js?v=34";
+} from "../packages/objets/src/fractions-decimaux.js?v=35";
 import {
   diagnostiquerDecimalVersNumerateur,
   diagnostiquerFractionLibre,
   diagnostiquerFractionVersDecimal,
-} from "./src/diagnostic-fractions-decimaux.js?v=34";
+} from "./src/diagnostic-fractions-decimaux.js?v=35";
 
 const MICRO_NOTION_FRACTION_VERS_DECIMAL =
   MICRO_NOTIONS_AUTOMATISMES.FRACTION_VERS_DECIMAL;
@@ -344,6 +344,10 @@ for (const [nom, valeur] of Object.entries(nomsCouleurs)) {
 }
 for (const [rang, palette] of Object.entries(COULEURS_RANGS_NUMERATION_DECIMALE)) {
   document.documentElement.style.setProperty(`--mg-rang-${rang}`, palette.texte);
+  document.documentElement.style.setProperty(
+    `--mg-rang-${rang}-pedagogique`,
+    palette.textePedagogique,
+  );
 }
 document.documentElement.style.setProperty("--mg-titres", TYPOGRAPHIE.titres);
 document.documentElement.style.setProperty("--mg-texte", TYPOGRAPHIE.texte);
@@ -2514,6 +2518,7 @@ function rendreTableauNumeration(
       annoncerEcriture: afficherChiffres && annoncerEcriture,
     }),
     "figure-tableau-numeration figure-tableau-numeration-svg",
+    { largeurMobile: 280 },
   );
 }
 
@@ -3623,7 +3628,7 @@ function rendreBandesRailCours(
 function rendreRepereCinqUnitesCours() {
   return `<section class="repere-cinq-unites-cours">
     <p><strong>Cinq pièces d’une unité</strong> atteignent la graduation 5.</p>
-    ${rendreBandesRailCours(5, 1, "pieces", true, 720, { largeurMobile: 260, formatMobile: "mobile-compact", mobileViewportSeulement: true })}
+    ${rendreBandesRailCours(5, 1, "pieces", true, 720, { largeurMobile: 340, mobileViewportSeulement: true })}
     <p class="lecture-rang-cours">Avec un dénominateur 1, chaque pièce vaut déjà une unité.</p>
   </section>`;
 }
@@ -3641,6 +3646,13 @@ function rendreEchangesRangsCours() {
       <h4>Un dixième, dix centièmes</h4>
       ${rendreFigureDecimaleResponsive(
         (largeur) => dessinerEchangeRangsNumerationDecimale({ echange: "dixieme-centiemes", largeur }),
+        "figure-echange-rangs-cours",
+      )}
+    </section>
+    <section>
+      <h4>Une unité, cent centièmes</h4>
+      ${rendreFigureDecimaleResponsive(
+        (largeur) => dessinerEchangeRangsNumerationDecimale({ echange: "unite-centiemes", largeur }),
         "figure-echange-rangs-cours",
       )}
     </section>
@@ -3689,17 +3701,21 @@ function egalitesCours(...membres) {
   return `<div class="calcul-aligne calcul-aligne-fractions">${versHtmlEgalitesAlignees(egalite(...membres))}</div>`;
 }
 
+function egalitesCoursPrincipales(...membres) {
+  return `<div class="calcul-aligne calcul-aligne-fractions calcul-aligne-fractions-principales">${versHtmlEgalitesAlignees(egalite(...membres))}</div>`;
+}
+
 function rendreReperesRangsCours() {
   return `<div class="reperes-rangs-cours">
-    ${egalitesCours(
+    ${egalitesCoursPrincipales(
       fractionCours(1, 10, ROLES_RANGS_COURS.dixiemes),
       decimalCours(0.1, 1),
     )}
-    ${egalitesCours(
+    ${egalitesCoursPrincipales(
       fractionCours(1, 100, ROLES_RANGS_COURS.centiemes),
       decimalCours(0.01, 2),
     )}
-    ${egalitesCours(
+    ${egalitesCoursPrincipales(
       fractionCours(1, 1000, ROLES_RANGS_COURS.milliemes),
       decimalCours(0.001, 3),
     )}
@@ -3722,18 +3738,18 @@ function rendreDecomposition147Cours({ sensInverse = false } = {}) {
     decimalCours(1.47, 2),
   ];
   if (sensInverse) membres.reverse();
-  return egalitesCours(...membres);
+  return egalitesCoursPrincipales(...membres);
 }
 
 function rendreLecture725Cours() {
-  return egalitesCours(
+  return egalitesCoursPrincipales(
     fractionCours(725, 1000, ROLES_RANGS_COURS.milliemes),
     decimalCours(0.725, 3),
   );
 }
 
 function rendreDecomposition354Cours() {
-  return egalitesCours(
+  return egalitesCoursPrincipales(
     decimalCours(3.54, 2),
     somme(
       nombreCours(3, ROLES_RANGS_COURS.unites),
@@ -3765,13 +3781,13 @@ function rendreCarteCoursFractions(index) {
         }),
         "figure-correspondance-decimale figure-cours-demi",
       )}
-      <p class="etape-abstraite-cours">Dans le tableau, cinq dixièmes s’écrit 0,5.</p>
-      ${rendreTableauNumeration(5, 10, { afficherChiffres: true, afficherLecture: false, colonneMiseEnEvidence: "dixiemes" })}
-      ${egalitesCours(
+      ${egalitesCoursPrincipales(
         decimalCours(0.5, 1),
         fractionCours(5, 10, ROLES_RANGS_COURS.dixiemes),
         fractionCours(1, 2),
       )}
+      <h4 class="titre-reperes-visuels">Dans le tableau de numération</h4>
+      ${rendreTableauNumeration(5, 10, { afficherChiffres: true, afficherLecture: false, colonneMiseEnEvidence: "dixiemes" })}
     </article>`;
   }
   if (index === 1) {
@@ -3784,17 +3800,17 @@ function rendreCarteCoursFractions(index) {
         (largeur) => dessinerReorganisationCentiemes({ centiemes: 25, etape: "comparaison", largeur, afficherEcritures: true, afficherEquation: false }),
         "figure-correspondance-decimale figure-cours-quarts",
       )}
-      ${egalitesCours(
+      ${egalitesCoursPrincipales(
         decimalCours(0.25, 2),
         fractionCours(25, 100, ROLES_RANGS_COURS.centiemes),
         fractionCours(1, 4),
       )}
-      <p class="introduction-cours"><strong>3. Prendre trois fois ce quart.</strong> Trois zones de 25 cases font 75 centièmes.</p>
+      <p class="introduction-cours"><strong>3. Réorganiser trois quarts.</strong> 75 centièmes occupent exactement trois quarts de l’unité.</p>
       ${rendreFigureDecimaleResponsive(
         (largeur) => dessinerReorganisationCentiemes({ centiemes: 75, etape: "comparaison", largeur, afficherEcritures: true, afficherEquation: false }),
         "figure-correspondance-decimale figure-cours-trois-quarts",
       )}
-      ${egalitesCours(
+      ${egalitesCoursPrincipales(
         decimalCours(0.75, 2),
         fractionCours(75, 100, ROLES_RANGS_COURS.centiemes),
         fractionCours(3, 4),
@@ -3804,38 +3820,42 @@ function rendreCarteCoursFractions(index) {
   if (index === 2) {
     return `<article class="carte-cours-fractions carte-cours-rangs">
       <span class="numero-cours">3</span><h3>Nommer les rangs décimaux</h3>
-      <p class="introduction-cours">Le matériel garde toujours la même unité : le carré rouge peut être échangé contre dix dixièmes verts, puis contre cent centièmes jaunes.</p>
+      <p class="introduction-cours">On ne change pas la quantité : on échange seulement les pièces.</p>
       ${rendreEchangesRangsCours()}
-      <p class="definition-cours">En poursuivant les échanges, une unité vaut aussi cent centièmes : ${versHtmlSemantique(egalite(nombreCours(1, ROLES_RANGS_COURS.unites), fractionCours(100, 100, ROLES_RANGS_COURS.centiemes)))}.</p>
       <h4 class="titre-reperes-visuels">Les écritures des trois rangs</h4>
       ${rendreReperesRangsCours()}
-      <p class="introduction-cours"><strong>Le millième.</strong> Il se place dans la colonne qui suit les centièmes.</p>
+      <h4 class="titre-reperes-visuels">Dans le tableau de numération</h4>
+      <p class="introduction-cours">Le millième se place dans la colonne qui suit les centièmes.</p>
       ${rendreTableauNumeration(1, 1000, { afficherChiffres: true, afficherLecture: false, colonneMiseEnEvidence: "milliemes" })}
     </article>`;
   }
   if (index === 3) {
     return `<article class="carte-cours-fractions carte-cours-conversion-directe">
       <span class="numero-cours">4</span><h3>Lire une fraction décimale</h3>
-      <p class="introduction-cours"><strong>1. Regrouper.</strong> ${versHtmlSemantique(fractionCours(147, 100, ROLES_RANGS_COURS.centiemes))} signifie 147 centièmes jaunes. On les regroupe en 100 centièmes, 40 centièmes et 7 centièmes.</p>
+      <p class="introduction-cours"><strong>But :</strong> trouver l’écriture décimale de ${versHtmlSemantique(fractionCours(147, 100, ROLES_RANGS_COURS.centiemes))}.</p>
+      <p class="introduction-cours">${versHtmlSemantique(fractionCours(147, 100, ROLES_RANGS_COURS.centiemes))} se lit « 147 centièmes ». Échangeons les pièces sans changer la quantité.</p>
       <div class="transformation-rangs-cours">
         <section>
-          <strong>147 centièmes regroupés</strong>
+          <strong>Au départ : 147 centièmes</strong>
           ${rendreConversionRangsCours({ ecritureDecimale: "1,47", etat: "converti-rang-final", sens: "fraction-vers-decimal" })}
         </section>
         <span class="fleche-transformation-cours" aria-hidden="true">↓</span>
         <section>
-          <strong>Les mêmes quantités dans leurs rangs</strong>
+          <strong>Après les échanges : 1 unité, 4 dixièmes et 7 centièmes</strong>
           ${rendreConversionRangsCours({ ecritureDecimale: "1,47", etat: "decompose", sens: "fraction-vers-decimal" })}
         </section>
       </div>
-      <p class="introduction-cours"><strong>2. Placer.</strong> Le dénominateur 100 nomme les centièmes : le dernier chiffre de 147 se place dans la colonne des centièmes. La virgule sépare les unités des dixièmes.</p>
-      ${rendreTableauNumeration(147, 100, { afficherChiffres: true, afficherLecture: false, colonneMiseEnEvidence: "centiemes" })}
-      <p class="etape-abstraite-cours"><strong>3. Écrire.</strong> Les échanges ne changent pas la quantité.</p>
       ${rendreDecomposition147Cours()}
-      <p class="definition-cours">Ajoute les zéros nécessaires pour garder les rangs vides : ${versHtmlSemantique(egalite(fractionCours(7, 100, ROLES_RANGS_COURS.centiemes), decimalCours(0.07, 2)))}.</p>
+      <h4 class="titre-reperes-visuels">Vérifier dans le tableau</h4>
+      <p class="introduction-cours">Le dénominateur 100 nomme les centièmes : le dernier chiffre de 147 se place dans la colonne des centièmes.</p>
+      ${rendreTableauNumeration(147, 100, { afficherChiffres: true, afficherLecture: false, colonneMiseEnEvidence: "centiemes" })}
+      <div class="definitions-petits-rangs-cours">
+        <p>7 centièmes s’écrit ${versHtmlSemantique(egalite(fractionCours(7, 100, ROLES_RANGS_COURS.centiemes), decimalCours(0.07, 2)))}.</p>
+        <p>7 millièmes s’écrit ${versHtmlSemantique(egalite(fractionCours(7, 1000, ROLES_RANGS_COURS.milliemes), decimalCours(0.007, 3)))}.</p>
+      </div>
       <section class="encadre-milliemes-cours">
         <h4>Jusqu’aux millièmes</h4>
-        <p>Même méthode : le dernier chiffre se place dans la colonne des millièmes. Le tableau suffit ; on ne fabrique pas mille petites pièces.</p>
+        <p>${versHtmlSemantique(fractionCours(725, 1000, ROLES_RANGS_COURS.milliemes))} se lit « 725 millièmes » et s’écrit 0,725.</p>
         ${rendreTableauNumeration(725, 1000, { afficherChiffres: true, afficherLecture: false, colonneMiseEnEvidence: "milliemes" })}
         ${rendreLecture725Cours()}
       </section>
@@ -3844,32 +3864,23 @@ function rendreCarteCoursFractions(index) {
   if (index === 4) {
     return `<article class="carte-cours-fractions carte-cours-conversion-inverse">
       <span class="numero-cours">5</span><h3>Écrire un décimal sous forme de fraction</h3>
-      <p class="introduction-cours"><strong>1. Décomposer.</strong> 3,54 représente 3 unités rouges, 5 dixièmes verts et 4 centièmes jaunes.</p>
+      <p class="introduction-cours"><strong>But :</strong> chercher une fraction décimale égale à 3,54.</p>
+      <p class="introduction-cours">3,54 représente 3 unités rouges, 5 dixièmes verts et 4 centièmes jaunes.</p>
       <div class="transformation-rangs-cours">
         <section>
-          <strong>3 unités + 5 dixièmes + 4 centièmes</strong>
+          <strong>3 unités, 5 dixièmes et 4 centièmes</strong>
           ${rendreConversionRangsCours({ ecritureDecimale: "3,54", etat: "decompose", sens: "decimal-vers-fraction" })}
         </section>
         <span class="fleche-transformation-cours" aria-hidden="true">↓</span>
         <section>
-          <strong>Tout convertir en centièmes</strong>
+          <strong>La même quantité : 354 centièmes</strong>
           ${rendreConversionRangsCours({ ecritureDecimale: "3,54", etat: "converti-rang-final", sens: "decimal-vers-fraction" })}
         </section>
       </div>
-      <p class="introduction-cours"><strong>2. Placer et lire.</strong> Le dernier chiffre est au rang des centièmes : 3,54 se lit 354 centièmes.</p>
-      ${rendreTableauNumeration(354, 100, { afficherChiffres: true, afficherLecture: false, colonneMiseEnEvidence: "centiemes" })}
       ${rendreDecomposition354Cours()}
-      <div class="cas-reponses-fraction-cours cas-reponses-fraction-cours-compacts">
-        <section>
-          <h4>Le dénominateur est imprimé</h4>
-          <p>Garde-le. Pour ${versHtmlSemantique(egalite(decimalCours(3.54, 2), quotient(variable("?"), nombre(100))))}, le numérateur est 354.</p>
-        </section>
-        <section>
-          <h4>Les deux cases sont libres</h4>
-          <p>Le dernier rang fournit toujours une fraction décimale correcte : ${versHtmlSemantique(egalite(decimalCours(3.54, 2), fractionCours(354, 100, ROLES_RANGS_COURS.centiemes)))}.</p>
-          <p>Toute fraction équivalente convient aussi ; réduire n’est obligatoire que si la consigne le demande.</p>
-        </section>
-      </div>
+      <h4 class="titre-reperes-visuels">Vérifier dans le tableau</h4>
+      <p class="introduction-cours">Dans le tableau, 3,54 se lit « 354 centièmes ».</p>
+      ${rendreTableauNumeration(354, 100, { afficherChiffres: true, afficherLecture: false, colonneMiseEnEvidence: "centiemes" })}
     </article>`;
   }
   return `<article class="carte-cours-fractions carte-cours-unites carte-cours-strategie">
@@ -3879,9 +3890,9 @@ function rendreCarteCoursFractions(index) {
       <h4>Sept demis</h4>
       <p>${versHtmlSemantique(fractionCours(7, 2))} signifie sept pièces de ${versHtmlSemantique(fractionCours(1, 2))}. Six demis forment 3 unités ; il reste 1 demi.</p>
       <div class="transformation-bandes-cours">
-        <section><strong>Au départ : 7 demis</strong>${rendreBandesRailCours(7, 2, "pieces", false, 720, { largeurMobile: 260, formatMobile: "mobile-compact", mobileViewportSeulement: true })}</section>
+        <section><strong>Au départ : 7 demis</strong>${rendreBandesRailCours(7, 2, "pieces", false, 720, { largeurMobile: 340, mobileViewportSeulement: true })}</section>
         <span class="fleche-transformation-cours" aria-hidden="true">↓</span>
-        <section><strong>Après regroupement</strong>${rendreBandesRailCours(7, 2, "unites", true, 720, { largeurMobile: 260, formatMobile: "mobile-compact", mobileViewportSeulement: true })}</section>
+        <section><strong>Après regroupement</strong>${rendreBandesRailCours(7, 2, "unites", true, 720, { largeurMobile: 340, mobileViewportSeulement: true })}</section>
       </div>
       ${rendreDecompositionFractionSuperieure(7, 2)}
     </section>
@@ -3889,9 +3900,9 @@ function rendreCarteCoursFractions(index) {
       <h4>Six quarts</h4>
       <p>Quatre quarts forment 1 unité. Les deux quarts restants se regroupent en un demi : ${versHtmlSemantique(egalite(fractionCours(2, 4), fractionCours(1, 2)))}.</p>
       <div class="transformation-bandes-cours">
-        <section><strong>Au départ : 6 quarts</strong>${rendreBandesRailCours(6, 4, "pieces", false, 720, { largeurMobile: 260, formatMobile: "mobile-compact", mobileViewportSeulement: true })}</section>
+        <section><strong>Au départ : 6 quarts</strong>${rendreBandesRailCours(6, 4, "pieces", false, 720, { largeurMobile: 340, mobileViewportSeulement: true })}</section>
         <span class="fleche-transformation-cours" aria-hidden="true">↓</span>
-        <section><strong>Après regroupement</strong>${rendreBandesRailCours(6, 4, "reste", true, 720, { largeurMobile: 260, formatMobile: "mobile-compact", mobileViewportSeulement: true })}</section>
+        <section><strong>Après regroupement</strong>${rendreBandesRailCours(6, 4, "reste", true, 720, { largeurMobile: 340, mobileViewportSeulement: true })}</section>
       </div>
       ${rendreDecompositionFractionSuperieure(6, 4)}
     </section>
@@ -3904,14 +3915,6 @@ function rendreCarteCoursFractions(index) {
     <h4 class="titre-reperes-visuels">Quand le dénominateur vaut 1</h4>
     ${rendreRepereCinqUnitesCours()}
     <p class="lecture-rang-cours">Ainsi, ${versHtmlSemantique(egalite(fractionCours(5, 1), nombreCours(5)))} et, plus généralement, ${versHtmlSemantique(egalite(quotient(variable("n"), nombre(1)), variable("n")))}. Les écritures ${versHtmlSemantique(egalite(fractionCours(4, 4), nombreCours(1)))} et ${versHtmlSemantique(egalite(fractionCours(100, 100), nombreCours(1)))} cachent aussi un entier.</p>
-    <h4 class="titre-reperes-visuels">Choisir un outil</h4>
-    <ol class="strategies-fractions">
-      <li><strong>Je reconnais un repère.</strong><span>Par exemple un demi, un quart ou trois quarts.</span></li>
-      <li><strong>Le dénominateur est 10, 100 ou 1 000.</strong><span>J’utilise les rangs du tableau de numération.</span></li>
-      <li><strong>La fraction dépasse 1.</strong><span>Je forme toutes les unités, puis je traite le reste.</span></li>
-      <li><strong>Le dénominateur vaut 1.</strong><span>Je compte directement les unités.</span></li>
-    </ol>
-    <p class="definition-cours definition-cours-quotient"><strong>À savoir, en dernier :</strong> la barre de fraction se lit aussi « divisé par ». Pour ${versHtmlSemantique(texteCourt("b ≠ 0"))}, ${versHtmlSemantique(quotient(variable("a"), variable("b")))} est le quotient exact de ${versHtmlSemantique(texteCourt("a ÷ b"))}. Dans ce module, les repères, la numération et les groupements restent les premiers outils.</p>
   </article>`;
 }
 

@@ -103,7 +103,7 @@ function verifierFigureDecimaleResponsive(html) {
   );
   assert.match(
     html,
-    /class="figure-deux-sources-variante figure-deux-sources-variante-mobile"[\s\S]*?--mg-largeur-figure-source:240px[\s\S]*?aria-hidden="true"/,
+    /class="figure-deux-sources-variante figure-deux-sources-variante-mobile"[\s\S]*?--mg-largeur-figure-source:(?:240|280)px[\s\S]*?aria-hidden="true"/,
   );
 }
 
@@ -132,10 +132,19 @@ function verifierPaletteTableauNumeration(html) {
         `data-rang="${rang}"[\\s\\S]*?class="nd-entete"[^>]*fill="${palette.principale}"`
         + `[\\s\\S]*?class="nd-cellule"[^>]*fill="${palette.fond}"`
         + `[\\s\\S]*?class="nd-nom-rang"[^>]*fill="${palette.encreEntete}"`
-        + `[\\s\\S]*?class="nd-chiffre"[^>]*fill="${palette.texte}"`,
+        + `[\\s\\S]*?class="nd-chiffre"[^>]*fill="${palette.textePedagogique}"`,
       ),
       `palette canonique absente pour ${rang}`,
     );
+  }
+}
+
+function verifierOrdre(html, ...fragments) {
+  let positionPrecedente = -1;
+  for (const fragment of fragments) {
+    const position = html.indexOf(fragment, positionPrecedente + 1);
+    assert.ok(position > positionPrecedente, `ordre introuvable pour « ${fragment} »`);
+    positionPrecedente = position;
   }
 }
 
@@ -891,6 +900,12 @@ it("rend NC-03 et NC-04 dans une seule notion avec des repères cohérents en ai
       assert.match(application.innerHTML, /mathsgo-role-unites">0<\/span>,/);
       assert.match(application.innerHTML, /mathsgo-role-dixiemes">5<\/span>/);
       assert.match(application.innerHTML, /figure-tableau-numeration/);
+      assert.match(extraireTableauNumeration(application.innerHTML), /--mg-largeur-figure-source:280px/);
+      verifierOrdre(
+        application.innerHTML,
+        "0,5 égale 5 sur 10 égale 1 sur 2",
+        "Dans le tableau de numération",
+      );
       assert.match(application.innerHTML, /class="nd-virgule" data-separation="unites-dixiemes"/);
       assert.doesNotMatch(application.innerHTML, /barre de fraction signifie aussi une division/);
     }
@@ -905,6 +920,8 @@ it("rend NC-03 et NC-04 dans une seule notion avec des repères cohérents en ai
     if (index === 3) {
       assert.match(application.innerHTML, /Une unité, dix dixièmes/);
       assert.match(application.innerHTML, /Un dixième, dix centièmes/);
+      assert.match(application.innerHTML, /Une unité, cent centièmes/);
+      assert.match(application.innerHTML, /data-echange="unite-centiemes"/);
       assert.match(application.innerHTML, /figure-echange-rangs-cours/);
       assert.match(application.innerHTML, /nd-echange-empreinte/);
       assert.match(application.innerHTML, /nd-echange-fraction-dixiemes/);
@@ -924,6 +941,12 @@ it("rend NC-03 et NC-04 dans une seule notion avec des repères cohérents en ai
       assert.match(application.innerHTML, /class="nd-virgule" data-separation="unites-dixiemes"/);
       assert.match(application.innerHTML, /725 sur 1000 égale 0,725/);
       assert.match(application.innerHTML, /7 sur 100 égale 0,07/);
+      assert.match(application.innerHTML, /7 sur 1000 égale 0,007/);
+      verifierOrdre(
+        application.innerHTML,
+        "147 sur 100 égale 100 sur 100 plus 40 sur 100 plus 7 sur 100",
+        "Vérifier dans le tableau",
+      );
       assert.doesNotMatch(application.innerHTML, /nd-piece nd-millieme/);
       assert.doesNotMatch(application.innerHTML, /Chaque signe égal est aligné/);
     }
@@ -935,9 +958,16 @@ it("rend NC-03 et NC-04 dans une seule notion avec des repères cohérents en ai
       assert.match(application.innerHTML, /data-etat="decompose" data-sens="decimal-vers-fraction"/);
       assert.match(application.innerHTML, /data-etat="converti-rang-final" data-sens="decimal-vers-fraction"/);
       assert.match(application.innerHTML, /class="nd-virgule" data-separation="unites-dixiemes"/);
-      assert.match(application.innerHTML, /Le dénominateur est imprimé/);
-      assert.match(application.innerHTML, /Les deux cases sont libres/);
-      assert.match(application.innerHTML, /3,54 égale 354 sur 100/);
+      assert.match(application.innerHTML, /chercher une fraction décimale égale à 3,54/);
+      assert.match(application.innerHTML, /La même quantité : 354 centièmes/);
+      verifierOrdre(
+        application.innerHTML,
+        "3,54 égale 3 plus 5 sur 10 plus 4 sur 100",
+        "Vérifier dans le tableau",
+      );
+      assert.doesNotMatch(application.innerHTML, /Le dénominateur est imprimé/);
+      assert.doesNotMatch(application.innerHTML, /Les deux cases sont libres/);
+      assert.match(application.innerHTML, /La même quantité : 354 centièmes/);
       assert.doesNotMatch(application.innerHTML, /0,75 égale 75 sur 100 égale 3 sur 4/);
       assert.doesNotMatch(application.innerHTML, /figure-bandes-rail/);
     }
@@ -950,10 +980,10 @@ it("rend NC-03 et NC-04 dans une seule notion avec des repères cohérents en ai
         5,
       );
       assert.equal(
-        (application.innerHTML.match(/viewBox="0 0 260 154"/g) ?? []).length,
+        (application.innerHTML.match(/viewBox="0 0 340 232"/g) ?? []).length,
         5,
       );
-      assert.doesNotMatch(application.innerHTML, /viewBox="0 0 260 232"/);
+      assert.doesNotMatch(application.innerHTML, /viewBox="0 0 260 154"/);
       assert.match(application.innerHTML, /figure-bandes-rail-cours-large/);
       assert.match(application.innerHTML, /figure-bandes-rail-cours-mobile/);
       assert.match(application.innerHTML, /reste-fusionne-en-demi/);
@@ -963,8 +993,8 @@ it("rend NC-03 et NC-04 dans une seule notion avec des repères cohérents en ai
       assert.match(application.innerHTML, /4 sur 2 égale 2/);
       assert.match(application.innerHTML, /5 sur 2 égale 2,5/);
       assert.match(application.innerHTML, /100 sur 100 égale 1/);
-      assert.match(application.innerHTML, /barre de fraction se lit aussi « divisé par »/);
-      assert.match(application.innerHTML, /b ≠ 0/);
+      assert.doesNotMatch(application.innerHTML, /Choisir un outil/);
+      assert.doesNotMatch(application.innerHTML, /barre de fraction se lit aussi « divisé par »/);
     }
     if (index < 6) cliquer(gestionnaires, "cours-suivant");
   }

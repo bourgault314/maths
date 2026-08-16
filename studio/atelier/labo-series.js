@@ -621,6 +621,7 @@ const entreeEchangesRangsNumerationDecimale = {
     options: [
       ["unite-dixiemes", "1 unité ↔ 10 dixièmes"],
       ["dixieme-centiemes", "1 dixième ↔ 10 centièmes"],
+      ["unite-centiemes", "1 unité ↔ 100 centièmes"],
     ],
     defaut: "unite-dixiemes",
   }],
@@ -633,6 +634,7 @@ const entreeEchangesRangsNumerationDecimale = {
   planche: () => [
     ["unite-dixiemes", "Même empreinte : 1 unité = 10 dixièmes"],
     ["dixieme-centiemes", "Même empreinte : 1 dixième = 10 centièmes"],
+    ["unite-centiemes", "Même empreinte : 1 unité = 100 centièmes"],
   ].map(([echange, legende]) => ({
     legende,
     dessiner: () => dessinerEchangeRangsNumerationDecimale({

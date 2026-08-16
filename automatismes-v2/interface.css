@@ -1160,6 +1160,28 @@ button.case-reponse-carres {
   font-size: clamp(.95rem, 3.6vw, 1.35rem);
 }
 
+.calcul-aligne-fractions-principales {
+  padding-block: 12px;
+  background: var(--mg-papier);
+  font-size: clamp(1.22rem, 4.8vw, 1.72rem);
+}
+
+.carte-cours-fractions .mathsgo-role-unites {
+  color: var(--mg-rang-unites-pedagogique);
+}
+
+.carte-cours-fractions .mathsgo-role-dixiemes {
+  color: var(--mg-rang-dixiemes-pedagogique);
+}
+
+.carte-cours-fractions .mathsgo-role-centiemes {
+  color: var(--mg-rang-centiemes-pedagogique);
+}
+
+.carte-cours-fractions .mathsgo-role-milliemes {
+  color: var(--mg-rang-milliemes-pedagogique);
+}
+
 .calcul-aligne-fractions .mathsgo-egalites-alignees,
 .decomposition-guidee-fraction .mathsgo-egalites-alignees,
 .decomposition-fraction-superieure .mathsgo-egalites-alignees {
@@ -1359,6 +1381,23 @@ button.case-reponse-carres {
 .encadre-milliemes-cours h4 {
   color: var(--mg-bleu);
   text-align: center;
+}
+
+.definitions-petits-rangs-cours {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 8px;
+}
+
+.definitions-petits-rangs-cours > p {
+  margin: 0;
+  padding: 10px 12px;
+  border-left: 4px solid var(--mg-turquoise);
+  border-radius: var(--mg-rayon-petit);
+  background: var(--mg-papier);
+  font-size: 14px;
+  font-weight: 700;
+  line-height: 1.45;
 }
 
 .cas-reponses-fraction-cours {

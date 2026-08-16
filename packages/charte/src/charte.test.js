@@ -140,7 +140,7 @@ describe("charte — intégrité des données", () => {
   });
 
   it("version et statut cohérents", () => {
-    assert.equal(VERSION_CHARTE, 3);
+    assert.equal(VERSION_CHARTE, 4);
     assert.ok(["brouillon", "valide"].includes(STATUT_CHARTE));
   });
 });
@@ -177,6 +177,14 @@ describe("charte — lisibilité (WCAG)", () => {
       assert.ok(
         contraste(palette.encreEntete, palette.principale) >= 4.5,
         `entête ${rang} insuffisante`,
+      );
+      assert.ok(
+        contraste(palette.textePedagogique, "#ffffff") >= 4.5,
+        `texte pédagogique ${rang} insuffisant sur blanc`,
+      );
+      assert.ok(
+        contraste(palette.textePedagogique, palette.fond) >= 3,
+        `grand texte pédagogique ${rang} insuffisant sur son fond`,
       );
     }
   });

@@ -1,4 +1,4 @@
-// Charte graphique maths&go — version 3, STATUT BROUILLON.
+// Charte graphique maths&go — version 4, STATUT BROUILLON.
 //
 // Réponse au problème n°1 du site historique : « rien n'est régulier,
 // les espacements sont moches, rien n'est cohérent ». Ici vit LA valeur
@@ -12,7 +12,7 @@
 // retenue et les variantes relevées sont notées en commentaire.
 // Gwenaël tranche : rien n'est définitif avant sa validation.
 
-export const VERSION_CHARTE = 3;
+export const VERSION_CHARTE = 4;
 export const STATUT_CHARTE = "brouillon"; // → "valide" après validation Gwenaël
 
 export const COULEURS = {
@@ -164,24 +164,28 @@ export const COULEURS_RANGS_NUMERATION_DECIMALE = Object.freeze({
     principale: COULEURS_NUMERATION_DECIMALE.unite,
     fond: "#fee2e2",
     texte: "#c81e1e",
+    textePedagogique: "#dc2626",
     encreEntete: COULEURS_NUMERATION_DECIMALE.encre,
   }),
   dixiemes: Object.freeze({
     principale: COULEURS_NUMERATION_DECIMALE.dixieme,
     fond: "#dcfce7",
     texte: "#166534",
+    textePedagogique: "#15803d",
     encreEntete: COULEURS_NUMERATION_DECIMALE.encre,
   }),
   centiemes: Object.freeze({
     principale: COULEURS_NUMERATION_DECIMALE.centieme,
     fond: "#fef9c3",
     texte: "#92400e",
+    textePedagogique: "#a16207",
     encreEntete: COULEURS_NUMERATION_DECIMALE.encre,
   }),
   milliemes: Object.freeze({
     principale: COULEURS_NUMERATION_DECIMALE.millieme,
     fond: "#ede9fe",
     texte: "#6d28d9",
+    textePedagogique: "#6d28d9",
     encreEntete: "#ffffff",
   }),
 });

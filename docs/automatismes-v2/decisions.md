@@ -1275,3 +1275,65 @@ restent inchangées : elles expliquent un autre calcul et ne constituent pas
 l'aide F5. Aucune nouvelle variante de dessin n'est ajoutée ; le composant
 « carré quadrillé » reste en version 4. Le graphe public V2 est invalidé d'un
 seul tenant en `v34`. Aucun chemin sous `/auto/` n'appartient à ce lot.
+
+### D-058 — Le cours place l'égalité avant le tableau et restaure les bandes standard
+
+Après l'essai publié de D-056, Gwenaël valide les objets communs mais demande
+une dernière révision de leur mise en récit. Cette décision ne change ni les
+générateurs, ni les familles, ni les quotas, ni les formes de réponse. Le cours
+conserve six pages et le module reste `construit`.
+
+L'ordre pédagogique canonique devient **matériel, grande égalité, puis tableau
+de numération comme vérification**. Le tableau n'introduit plus l'écriture : il
+la confirme après que le matériel et l'égalité ont construit son sens. Les
+égalités principales disposent donc d'une présentation plus grande que les
+calculs secondaires, sans imposer une taille unique aux longues chaînes. La
+page 1 place `0,5 = 5/10 = 1/2` sous les cinq dixièmes et avant le tableau ; la
+page 2 applique le même ordre à `0,25 = 25/100 = 1/4` et
+`0,75 = 75/100 = 3/4`.
+
+La page 3 montre désormais trois échanges à empreinte identique :
+`1 unité = 10 dixièmes`, `1 dixième = 10 centièmes` et
+`1 unité = 100 centièmes`. Le troisième n'est plus une égalité textuelle sans
+dessin : l'unité rouge et la grille de cent centièmes jaunes occupent le même
+carré. Les écritures `1/10 = 0,1`, `1/100 = 0,01` et `1/1000 = 0,001` viennent
+ensuite, puis seulement le tableau.
+
+La charte complète chaque rang par une `textePedagogique`. Cette teinte est la
+source canonique des écritures mathématiques du cours : elle reste clairement
+dans la famille rouge, verte, jaune ou violette du matériel, tout en demeurant
+lisible sur le papier clair. La teinte générale plus contrastée continue de
+servir les composants d'interface et les verdicts. Le tableau commun adapte la
+taille de ses en-têtes à la largeur de colonne ; « Centièmes » et « Millièmes »
+ne doivent plus être rognés sur téléphone.
+
+Les pages 4 et 5 deviennent les deux sens explicites d'une même transformation.
+La page 4 part de 147 centièmes jaunes, les échange contre une unité rouge,
+quatre dixièmes verts et sept centièmes jaunes, écrit la grande chaîne jusqu'à
+`1,47`, puis la vérifie dans le tableau. Elle distingue sans ambiguïté
+`7/100 = 0,07` de `7/1000 = 0,007`. La page 5 part des rangs de `3,54`, échange
+la même quantité contre 354 centièmes, écrit la chaîne jusqu'à `354/100`, puis
+la vérifie dans le tableau. Les encadrés « Le dénominateur est imprimé » et
+« Les deux cases sont libres », ainsi que la recette du dernier rang, sont
+retirés du cours : ils décrivaient l'interface ou la validation, pas le sens
+mathématique. L'acceptation des fractions équivalentes demeure inchangée dans
+le moteur de réponse et dans les corrections concernées.
+
+La page 6 conserve ses constructions de `7/2`, `6/4`, ses trois repères de
+demis et le cas du dénominateur 1. Sur téléphone, leurs rails reprennent le
+format standard de largeur source `340`, pas la variante `mobile-compact` de
+`260` qui comprimait les fractions dans les pièces. La liste « Choisir un
+outil » est supprimée parce que ses cas se recouvraient et répétaient les six
+pages. La note finale sur la barre lue comme division est également retirée :
+elle n'est ni préparée ni utilisée dans ce module et doit relever d'un
+enseignement ultérieur autonome.
+
+Les mêmes objets restent partagés par le cours, « Me guider » et la correction,
+avec leurs profils de révélation respectifs. D-058 modifie leur ordre et leur
+présentation pédagogique, pas le contrat anti-fuite de D-056. La recette finale
+compte **1 555 tests** verts. La revue du cours couvre **30 états** et
+**90 captures** sur cinq fenêtres, du téléphone `320 × 568` au TNI
+`1 920 × 1 080`, sans débordement de document, panneau, figure ou fraction et
+sans erreur JavaScript. Les aides sont en outre contrôlées par les tests de
+masque et par les captures ciblées des tableaux mobiles. Comme D-057 a déjà
+publié le graphe V2 en `v34`, ce lot l'invalide atomiquement en `v35`.

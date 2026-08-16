@@ -118,8 +118,9 @@ contrôle et non une dépendance d'exécution. Il enregistre notamment :
 - `packages/objets/src/numeration-decimale.js`, extrait du plateau de
   numération, avec unité rouge `10 × 10`, dixième vert horizontal `10 × 1` ou
   vertical `1 × 10`, et centième jaune `1 × 1` ;
-- « Échanges exacts entre rangs », qui compare
-  `1 unité ↔ 10 dixièmes` et `1 dixième ↔ 10 centièmes` à empreinte identique ;
+- « Échanges exacts entre rangs », qui compare à empreinte identique
+  `1 unité ↔ 10 dixièmes`, `1 dixième ↔ 10 centièmes` et, depuis D-058,
+  `1 unité ↔ 100 centièmes` ;
 - « Conversion par rang — mêmes empreintes », pilotable par écriture, état et
   sens pour `3,6`, `1,47` et `3,54` ;
 - le tableau de numération unités, dixièmes, centièmes, millièmes, dont la
@@ -160,15 +161,18 @@ La numération décimale possède maintenant le même niveau de centralisation :
 - `COULEURS_RANGS_NUMERATION_DECIMALE`, dans la charte, est l'unique palette
   des unités, dixièmes, centièmes et millièmes. Les aplats du matériel restent
   rouge, vert et jaune ; le violet prolonge la convention pour le millième dans
-  le tableau et les écritures, sans créer de pièce miniature. Les textes
-  utilisent les variantes contrastées de ces quatre couleurs ;
+  le tableau et les écritures, sans créer de pièce miniature. Chaque rang
+  distingue sa teinte générale contrastée de sa `textePedagogique`, teinte
+  canonique du cours qui reste visuellement liée au matériel sans emprunter la
+  couleur d'un autre rang ;
 - `nombreDecimalAvecRangs`, dans `expressions.js`, attribue le rôle de rang à
   chaque chiffre d'un décimal et laisse sa virgule neutre. Il empêche notamment
   de colorer tout `0,5` comme un dixième ;
 - `dessinerTableauNumerationDecimale` est l'unique tableau SVG pour les cours,
   aides et corrections. Il porte la virgule sur la frontière
-  unités–dixièmes, accepte un `rangFinal` et peut masquer tous ses chiffres
-  sans les conserver dans le SVG accessible ;
+  unités–dixièmes, accepte un `rangFinal`, adapte la taille de ses en-têtes à
+  la largeur disponible et peut masquer tous ses chiffres sans les conserver
+  dans le SVG accessible ;
 - `dessinerEchangeRangsNumerationDecimale` garantit les échanges à empreinte
   identique ; `dessinerConversionRangsNumerationDecimale` conserve les mêmes
   groupes entre les états `decompose` et `converti-rang-final`, aux dixièmes
@@ -182,10 +186,15 @@ L'intégration n'est plus future : `automatismes-v2/app.js` compose maintenant
 les bandes sur rail pour les pièces, groupes et unités, y compris cinq pièces
 marquées `1` jusqu'à la graduation 5. Le cours construit `0,5 ↔ 1/2` sans
 second rail sous les dixièmes, réorganise les centièmes pour
-`0,25 / 0,75 ↔ 1/4 / 3/4`, puis restaure les transformations complètes de
-`7/2` et `6/4`. Les repères `3/2`, `4/2` et `5/2` sont rappelés sans nouveau
-grand rail. Le matériel décimal traite les autres dixièmes et centièmes et le
-tableau va jusqu'aux millièmes. La droite graduée demeure une
+`0,25 / 0,75 ↔ 1/4 / 3/4`, puis installe les trois échanges exacts entre
+rangs. D-058 place dans chaque exemple le matériel avant la grande égalité et
+le tableau de vérification. Les pages 4 et 5 emploient la même conversion dans
+les deux sens pour `147/100 ↔ 1,47` et `3,54 ↔ 354/100`. La dernière page
+restaure les transformations complètes de `7/2` et `6/4` avec la variante
+mobile standard de largeur source `340` ; les repères `3/2`, `4/2` et `5/2`
+sont rappelés sans nouveau grand rail. Sa liste stratégique et sa note quotient
+ont été retirées. Le matériel décimal traite les autres dixièmes et centièmes
+et le tableau va jusqu'aux millièmes. La droite graduée demeure une
 brique commune et un point de comparaison du Labo, mais n'est plus une forme
 de question de cette recette. Les questions restent abstraites ou en QCM et
 n'importent aucune représentation dans leur énoncé. L'atelier unique de
@@ -202,7 +211,16 @@ objets de sens ; les autres cibles `/10` et `/100` emploient la conversion
 paramétrique. Le cours, la question abstraite, son rappel, « Me guider » et la
 correction consomment désormais les mêmes écritures et objets communs ; seul le
 profil décide si la cible est visible. `/1000` reste limité au tableau. Cette
-organisation est consignée par D-056 ; elle ne change aucun générateur.
+organisation commune est consignée par D-056 ; son ordre pédagogique courant
+et les trois échanges sont fixés par D-058. Ces décisions ne changent aucun
+générateur de questions.
+
+Les recettes antérieures restent des témoins des états D-049 à D-056. Pour
+D-058, **1 555 tests** passent ; les six pages ont été contrôlées dans
+**30 états** et **90 captures** sur cinq fenêtres, sans débordement ni erreur
+JavaScript. Les aides et corrections partagées sont verrouillées par les tests
+d'application et par les contrôles ciblés de palette, virgule, masque et
+géométrie mobile.
 
 ## Réservoirs techniques à examiner au besoin
 
