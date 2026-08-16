@@ -56,9 +56,9 @@ fichiers modifiés → tests → reste à vérifier.
 
 | Monde | Palier | Contenu | Niveaux |
 |---|---|---|---|
-| Le lagon | 6e | découverte, partage égal — dont 4 niveaux-découverte (demi, tiers, quart, **sixième**) | 10 |
+| Le lagon | 6e | découverte, partage égal — dont 5 niveaux-découverte (demi, tiers, quart, sixième, **recouper**) | 11 |
 | Les champs de canne | 6e | partage JOUÉ à fond, notion constante : surplus, pièges, fruits à valeur, portes orientées (refonte 08/2026) | 8 |
-| La forêt | 5e | additions (lentille), équivalences — dont 2 niveaux-découverte (somme, même dénominateur) | 9 |
+| La forêt | 5e | additions (lentille), équivalences — dont 2 niveaux-découverte (somme, même dénominateur) | 8 |
 | Le volcan | 4e | loupes ×, fractions > 1, 1/9 | 7 |
 | Les pitons | 5e-4e | équivalences, comparaisons (passes) | 7 |
 | Les soleils | 4e | soleils multiples / fractionnaires / valeur 2 | 8 |
@@ -201,6 +201,13 @@ plateau ne répond plus aux clics — défaut trouvé en construisant le lot).
 ## 6. Historique des décisions (ne pas re-débattre sans raison)
 
 - Nom « Solèy » validé. Pièce « Lentille + » validée (PAS « Recolleur »).
+- **Une notion s'enseigne UNE fois, avant qu'on s'en serve** (16/08). Un monde ne
+  redécouvre pas ce qu'un monde précédent a enseigné : c'est ce qui a coûté sa place à
+  « Quarts en croix » (15/08) puis à « Les sixièmes » (16/08). Corollaire : une notion
+  servie sans cours est une dette, pas un choix — 1/8, 1/9 et 1/12 l'ont été deux jours.
+- **Le support d'un point de cours est la bande de fractions ; le rayon reste le support
+  du jeu.** Un cours peut donc se passer entièrement de rayons (`scene.murs`, cours
+  `recouper`, 16/08) — et il le doit dès que la cascade dépasse deux coupes.
 - Textes des niveaux = questions, jamais la solution ; l'équation vit dans le Coup de pouce.
 - Un seul rayon par case (la lentille sert à additionner, pas la case).
 - Couleur par dénominateur RÉDUIT (3/6 s'affiche orange comme 1/2 : c'est voulu, ça montre l'égalité).
@@ -1052,4 +1059,31 @@ Trois choses à savoir avant d'y toucher :
   du brouillon, et la case y devient « Kiosque » à la forêt (`nomObjet`). **RÈGLE À
   GRAVER : quand on repeint un monde, on relit ses TEXTES dans la foulée — le décor
   et les mots doivent nommer la même chose, sinon le jeu se contredit tout seul.**
+- **16/08 — le partage s'enseigne UNE fois, au lagon (lot A).** L'audit d'organisation
+  (#385) avait montré le désordre : le lagon enseigne le sixième au 9ᵉ niveau, la canne
+  le fait chercher au 18ᵉ, et la forêt le redécouvrait au 22ᵉ — « Des cases à 1/6 ?! » —
+  en deux pièces et une seule pose gagnante. Et pendant ce temps 1/8, 1/9 et 1/12,
+  servis dès le 16ᵉ, n'avaient **aucun cours**. Le lot ferme les deux trous d'un coup :
+  **« Les sixièmes » est retiré** de la forêt (son geste 1/3 ÷ 2 reste joué au « Grand
+  réseau » et à « L'entrée du cirque »), et **« La moitié du quart » ferme le lagon**
+  avec le point de cours **`recouper`**. Le total reste à **70** : aucun compteur public
+  à régénérer. Le niveau a été TAILLÉ puis mesuré, aucune solution dessinée d'abord —
+  R = 75, profondeur 3, ingagnable sans ÷2, pas de fruit ni de `solMin` comme les quatre
+  autres découvertes. **Le cours est en BANDES SEULES, sans rayons** (`scene.murs`,
+  demande de Gwenael) : la cascade de rayons de `sceneCours` ne sait dessiner que deux
+  étages, et surtout le rayon sert à jouer quand la bande sert à comprendre. **TROIS
+  murs**, et dans chacun une ligne naît de celle qui la surplombe : l'entier coupé
+  jusqu'au huitième, puis les neuvièmes sous les tiers, puis les douzièmes sous les
+  quarts. **Deux défauts trouvés par Gwenael sur captures**, tous deux devenus des
+  contrôles du vérificateur. (1) Un premier jet empilait 1/8, 1/9 et 1/12 dans le même
+  mur, ce qui faisait naître les neuvièmes des huitièmes → **dans un mur, une ligne est
+  un découpage de celle du dessus.** (2) Le panneau posait les trois murs d'affilée puis
+  toutes les explications → **chaque mur est suivi de SES phrases**, sans quoi l'élève
+  doit remonter chercher de quelle image parle le texte qu'il lit (`construireCours`
+  alterne image et étapes ; chaque mur porte `etapes`, le nombre d'étapes qui le
+  suivent, et son `alt`). **RÈGLE À GRAVER : une scène de cours porte une grammaire
+  implicite — dès qu'on la découvre, on l'écrit dans le vérificateur, sinon elle se
+  reperd.** Le vocabulaire mathématique est dit au passage : « le nombre du bas — le
+  dénominateur ». `bandeLbl` prend une taille optionnelle — à douze cases de 25 px,
+  « 12 » en 15 px touchait ses voisines.
 - (à compléter à chaque session)

@@ -370,9 +370,9 @@ def principal():
         page.goto(url, wait_until="load")
         page.wait_for_function("() => window.SOLEY && window.SOLEY.LV")
 
-        # T8a — seuils de déblocage : ⌈5/8 des niveaux du monde précédent⌉ (lagon à 9 → canne à 6, canne à 8 → forêt à 5)
+        # T8a — seuils de déblocage : ⌈5/8 des niveaux du monde précédent⌉ (lagon à 11 → canne à 7, canne à 8 → forêt à 5)
         seuils = page.evaluate("() => window.SOLEY.LV.length === 70 && [0,1,2,3,4,5,6,7,8].map(i => window.SOLEY.seuilMonde(i))")
-        section("T8 seuils de déblocage ⌈5/8⌉ par monde", seuils == [0, 7, 5, 6, 5, 5, 5, 4, 5],
+        section("T8 seuils de déblocage ⌈5/8⌉ par monde", seuils == [0, 7, 5, 5, 5, 5, 5, 4, 5],
                 f"{seuils}")
 
         # T8b — sauvegarde vierge : seul Le lagon est ouvert
@@ -391,7 +391,7 @@ def principal():
         cond = page.evaluate("() => document.querySelector(\".wrow[data-w='canne'] .wcond\")?.textContent || ''")
         section("T8 monde fermé : clic sans effet + condition affichée (seuil + découvertes)",
                 aff["home"] != "none" and aff["lvscreen"] == "none" and "Réussis 7 niveaux" in cond
-                and "dont ses 4 découvertes (0/4)" in cond,
+                and "dont ses 5 découvertes (0/5)" in cond,
                 cond.strip())
 
         # T8d — zéro défilement horizontal sur l'accueil téléphone
@@ -418,7 +418,7 @@ def principal():
                   "done:{'lagon:Premier rayon':true,'lagon:Zigzag dans les roches':true,"
                   "'lagon:Moitié-moitié':true,'lagon:La part perdue':true,'lagon:Partage en tiers':true,"
                   "'lagon:Les quatre quarts':true,'lagon:Les six sixièmes':true,"
-                  "'lagon:La moitié de la moitié':true},"
+                  "'lagon:La moitié du quart':true,'lagon:La moitié de la moitié':true},"
                   "fruits:{'lagon:Zigzag dans les roches':1},"
                   "pieces:{'lagon:Zigzag dans les roches':2}}));}catch(e){}")
         ctx4 = navig.new_context(viewport={"width": 390, "height": 844}, locale="fr-FR")
@@ -440,7 +440,7 @@ def principal():
           return { canne: ouvert('canne'), foret: ouvert('foret'), volcan: ouvert('volcan'),
                    condVolcan: cond('volcan').replace(/\\s+/g, ' ').trim() };
         }""")
-        section("T8 après 7 réussites au lagon (dont les 4 découvertes) : canne ouverte",
+        section("T8 après 8 réussites au lagon (dont les 5 découvertes) : canne ouverte",
                 etat["canne"], "")
         section("T13 chemin de l'école : le lagon fini ouvre AUSSI la forêt, sans "
                 "toucher à la canne",
@@ -653,8 +653,8 @@ def principal():
         page.click("#backlv")
         page.click("#backhome")
         cond9 = page.evaluate("() => document.querySelector(\".wrow[data-w='canne'] .wcond\")?.textContent || ''")
-        section("T9 condition de déblocage : seuil 7 + « dont ses 4 découvertes »",
-                "Réussis 7 niveaux" in cond9 and "dont ses 4 découvertes (1/4)" in cond9,
+        section("T9 condition de déblocage : seuil 7 + « dont ses 5 découvertes »",
+                "Réussis 7 niveaux" in cond9 and "dont ses 5 découvertes (1/5)" in cond9,
                 cond9.strip())
         ctx6.close()
 
@@ -678,10 +678,11 @@ def principal():
             titre: document.getElementById('courstitre').textContent };
         }""")
         section("T9 mode classe : badges découverte + « Revoir le cours » sans réussite",
-                classe9["bts"] == ["demi", "tiers", "quart", "sixieme"] and classe9["badges"] == 4
+                classe9["bts"] == ["demi", "tiers", "quart", "sixieme", "recouper"]
+                and classe9["badges"] == 5
                 and classe9["ouvert"] and classe9["titre"] == "Le demi", "")
         section("T9 cartes uniformes : toutes les cases du lagon ont la même taille (pied réservé)",
-                classe9["hCartes"] == 1 and classe9["hCellules"] == 1 and classe9["pieds"] == 10,
+                classe9["hCartes"] == 1 and classe9["hCellules"] == 1 and classe9["pieds"] == 11,
                 f"hauteurs cartes={classe9['hCartes']}, cellules={classe9['hCellules']}, pieds={classe9['pieds']}")
         ctx7.close()
 

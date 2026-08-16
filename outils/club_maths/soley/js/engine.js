@@ -167,11 +167,15 @@ function cEtiq(x,y,f,fs){
     sLbl(x,y+Math.round(k*.72),String(f[1]),c,fpx)+
   `</g>`;
 }
-function bandeLbl(cx,y,f){
+/* `fs` (lot A, 16/08) : les murs du cours « recouper » descendent jusqu'aux
+   douzièmes — douze cases de 25 px, où « 12 » écrit en 15 px touche ses voisines.
+   Sans argument, la taille ne bouge pas : les cours existants sont inchangés. */
+function bandeLbl(cx,y,f,fs){
   if(f[1]===1)return `<text x="${cx}" y="${y+29}" text-anchor="middle" font-size="21" font-weight="900" fill="#101a33">1</text>`;
-  return `<text x="${cx}" y="${y+19}" text-anchor="middle" font-size="15" font-weight="900" fill="#101a33">${f[0]}</text>`+
-    `<line x1="${cx-8}" y1="${y+23}" x2="${cx+8}" y2="${y+23}" stroke="#101a33" stroke-width="2"/>`+
-    `<text x="${cx}" y="${y+37}" text-anchor="middle" font-size="15" font-weight="900" fill="#101a33">${f[1]}</text>`;
+  const k=fs||15, b=Math.round(k*.55);
+  return `<text x="${cx}" y="${y+Math.round(k*1.27)}" text-anchor="middle" font-size="${k}" font-weight="900" fill="#101a33">${f[0]}</text>`+
+    `<line x1="${cx-b}" y1="${y+Math.round(k*1.53)}" x2="${cx+b}" y2="${y+Math.round(k*1.53)}" stroke="#101a33" stroke-width="2"/>`+
+    `<text x="${cx}" y="${y+Math.round(k*2.47)}" text-anchor="middle" font-size="${k}" font-weight="900" fill="#101a33">${f[1]}</text>`;
 }
 function sceneCours(sc,tE){
   /* v9 (RETOUCHE-ZOOM-v9) : cascade VERTICALE — soleil en haut, le rayon descend,
@@ -245,6 +249,40 @@ function sceneCours(sc,tE){
   });
   return {svg:rayons+mur,h:H};
 }
+/* Scène « murs » (lot A, 08/2026) — le BILAN du recoupage, en bandes SEULES.
+   Décision de Gwenael (16/08) : « on monte les huitièmes tout coupés, les neuvièmes
+   tout coupés, les douzièmes tout coupés ». Pas de rayons ici — le rayon sert à
+   jouer, la bande sert à comprendre ; et la cascade de rayons de sceneCours ne sait
+   de toute façon dessiner que deux étages, jamais trois coupes.
+   DEUX RÈGLES, toutes deux nées de ses relectures sur captures :
+   1. dans un mur, une ligne est TOUJOURS un découpage de celle qui la surplombe —
+      sinon l'œil fait naître les neuvièmes des huitièmes ;
+   2. chaque mur est suivi de SES explications, jamais tous les murs puis tous les
+      textes — `construireCours` alterne image et phrases (champ `etapes` du mur :
+      combien d'étapes de la liste le suivent).
+   `sceneMur` dessine UN mur : une liste de bandes, chacune de dénominateur n
+   occupant toute la largeur, coupée en n parts égales. */
+function sceneMur(bandes){
+  const X0=20, W=300, hB=44;
+  let y=6, svg='';
+  bandes.forEach(f=>{
+    const n=f[1], w=W/n;
+    let e='';
+    for(let i=0;i<n;i++){
+      e+=`<rect class="bande" x="${(X0+i*w).toFixed(1)}" y="${y}" width="${w.toFixed(1)}" height="${hB}" fill="${fcol(f)}"/>`;
+    }
+    for(let i=1;i<n;i++){
+      e+=`<line x1="${(X0+i*w).toFixed(1)}" y1="${y}" x2="${(X0+i*w).toFixed(1)}" y2="${y+hB}" stroke="#10182e" stroke-width="1.6" stroke-dasharray="4 5" opacity=".55"/>`;
+    }
+    /* l'étiquette rétrécit avec sa case : à douze parts, « 12 » en 15 px déborde */
+    const fs=n>=10?11:(n>=8?13:15);
+    for(let i=0;i<n;i++)e+=bandeLbl(X0+i*w+w/2,y,f,fs);
+    e+=`<rect x="${X0}" y="${y}" width="${W}" height="${hB}" fill="none" stroke="#101a33" stroke-width="2.5"/>`;
+    svg+=cFade(0,e);
+    y+=hB;
+  });
+  return {svg:svg,h:y+6};
+}
 /* Scène « addition » (lot forêt, 08/2026) — le pendant de sceneCours pour les deux
    cours de la lentille. Même contrat de deux registres : en haut le vécu du jeu
    (deux rayons entrent dans la lentille, un seul en sort), en bas la forme de
@@ -314,21 +352,32 @@ function construireCours(id){
   /* deux familles de scènes : les partages descendent (cascade de prismes), les
      additions montent (deux rayons dans la lentille) — l'aiguillage se fait sur
      le champ présent dans `scene`, jamais sur le nom du cours */
-  const somme=!!c.scene.somme;
-  const sc=somme?sceneSomme(c.scene,tE):sceneCours(c.scene,tE);
-  const alt=somme
-    ?"Deux rayons entrent dans la lentille et un seul en sort ; dessous, les mêmes parts mises bout à bout sur la bande"
-    :"La cascade de rayons du jeu et, juste dessous, son zoom : le mur de bandes";
-  /* v9.1 : la scène seule porte le lien entre les deux registres — pas de
-     phrase-pont (décision de Gwenael sur rendu) */
-  let h=`<div class="cscene"><svg class="hsvg" viewBox="0 0 340 ${sc.h}" role="img" aria-label="${alt}">${sc.svg}</svg></div>`;
-  /* déroulé en étapes : l'explication courte au-dessus, l'écriture étagée dessous
-     (règle R5), au même instant que les deux zones de la scène */
-  c.etapes.forEach((e,i)=>{
-    const t0=tE(i);
-    if(e.t)h+=`<p class="cligne">${texteMath(e.t)}</p>`;
-    if(e.eq)h+=`<div class="heq ceq cligne">${eqHTML(e.eq)}</div>`;
-  });
+  const somme=!!c.scene.somme, murs=!!c.scene.murs;
+  /* déroulé d'une étape : l'explication courte, puis l'écriture étagée (règle R5) */
+  const etapeHTML=(e)=>(e.t?`<p class="cligne">${texteMath(e.t)}</p>`:'')+
+    (e.eq?`<div class="heq ceq cligne">${eqHTML(e.eq)}</div>`:'');
+  const svgHTML=(sc,alt)=>`<div class="cscene"><svg class="hsvg" viewBox="0 0 340 ${sc.h}" role="img" aria-label="${alt}">${sc.svg}</svg></div>`;
+  let h='';
+  if(murs){
+    /* ALTERNANCE image / explication (demande de Gwenael, 16/08) : un mur, puis
+       SES phrases, puis le mur suivant. Tout empiler d'un côté oblige l'élève à
+       remonter chercher de quelle image parle le texte qu'il lit. */
+    let i=0;
+    c.scene.murs.forEach((m)=>{
+      h+=svgHTML(sceneMur(m.bandes),m.alt||'Des bandes de fractions découpées');
+      for(let n=0;n<m.etapes&&i<c.etapes.length;n++,i++)h+=etapeHTML(c.etapes[i]);
+    });
+    while(i<c.etapes.length)h+=etapeHTML(c.etapes[i++]);
+  }else{
+    const sc=somme?sceneSomme(c.scene,tE):sceneCours(c.scene,tE);
+    const alt=somme
+      ?"Deux rayons entrent dans la lentille et un seul en sort ; dessous, les mêmes parts mises bout à bout sur la bande"
+      :"La cascade de rayons du jeu et, juste dessous, son zoom : le mur de bandes";
+    /* v9.1 : la scène seule porte le lien entre les deux registres — pas de
+       phrase-pont (décision de Gwenael sur rendu) */
+    h+=svgHTML(sc,alt);
+    c.etapes.forEach((e)=>{h+=etapeHTML(e);});
+  }
   if(c.predire){
     /* règle R3 : la question s'affiche SANS sa réponse — la réponse n'entre dans
        la page qu'au toucher de « À ton avis… » (brancherPredire). */
