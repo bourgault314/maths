@@ -1120,4 +1120,33 @@ Trois choses à savoir avant d'y toucher :
   les 8 validateurs, Playwright tout vert, `verifier-lot-cours-repartis.mjs` 52
   contrôles verts (68 niveaux intacts à l'octet, les 2 hôtes au champ `cours` près,
   `CALC` et `FRW` strictement intacts, les deux hôtes mesurés ingagnables sans ÷3).
+- **16/08 — le lagon ne finit plus en marche arrière (lot C).** « La moitié du quart »
+  fermait le monde en **R = 75** juste après « Le tiers de la moitié », qui en demande
+  **5 534** : une chute d'un facteur 74 au dernier niveau. Verdict de Gwenael sur
+  capture : « il est quand même beaucoup trop facile par rapport à tout ce qu'il y a pu
+  avoir avant, c'est vraiment bidon ». **Exactement le défaut qui avait déjà coûté sa
+  place au « Tour du lagon » le 15/08** — et le lot A ne l'avait pas vu parce qu'il
+  s'était comparé aux quatre autres découvertes (5, 5, 19, 51) : mauvaise classe de
+  comparaison, celles-là sont INTERCALÉES entre des niveaux durs quand celle-ci FERME
+  le monde. **RÈGLE À GRAVER : un niveau se compare à ses VOISINS DE JEU, pas à ses
+  cousins de catégorie.** Le recuit de `tailleur-champs` a été essayé puis **écarté**
+  (il converge vers prof 6 et R = 58 970 — plus dur que tout le jeu, et son propre
+  garde-fou dit qu'un plan minimal de six pièces est un autre défaut). Le levier retenu
+  est **géométrique** : les trois prismes étant entièrement consommés par la chaîne
+  1/4 · 1/8 · 1/8, tout virage supplémentaire exige un miroir — il a suffi de
+  **désaligner une case**. R = 75 → **1 383**, prof 3 → **4**, boîte 4 → 7, champ
+  9×6 → 9×7. **Et une découverte porte un fruit pour la première fois**, à la demande
+  de Gwenael (« mettre des fruits difficiles à obtenir »). Vérifié avant de le faire :
+  le déverrouillage ne lit que `save.done`, donc un fruit n'ôte rien à « une découverte
+  se gagne, elle ne se mérite pas » — il n'ajoute qu'une couche d'étoiles. Le fruit a
+  été placé par `carte-fruits` sur une case que **5 plans gagnants sur 19** traversent :
+  **Rtout = 4 616, soit 3,3 × R** — le fruit n'est pas sur le chemin, c'est précisément
+  le défaut « Rtout ≤ R » que la spec range au lot C. Cadeau du champ : la demi-part qui
+  « se perdait en chemin », tableau du cours, est exactement celle qu'il faut rattraper
+  pour cueillir le letchi. `verifier-lot-recouper.mjs` **devient une archive** : il
+  affirmait « aucun fruit, aucun solMin » pour ce niveau, que ce lot renverse — c'est le
+  fonctionnement prévu des vérificateurs datés (§6, décision 9). Preuves : node
+  1554/1554, les 8 validateurs, Playwright tout vert,
+  `verifier-lot-moitie-du-quart.mjs` 28 contrôles verts (69 niveaux intacts à l'octet,
+  COURS/CALC/WORLDS/FRW strictement intacts, tout remesuré dans le vrai moteur).
 - (à compléter à chaque session)
