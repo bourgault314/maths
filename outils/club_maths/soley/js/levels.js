@@ -945,7 +945,7 @@ const COURS={
   etapes:[
    {t:"Tu as coupé le rayon en 2 parts égales : chaque part est une moitié. On écrit 1/2, on lit « un demi »."},
    {t:"Partager, c'est diviser :",eq:"1 ÷ 2 = 1/2"},
-   {t:"Le nombre du bas — le dénominateur — dit en combien de parts égales on a coupé."},
+   {t:"Le dénominateur (le nombre du bas) dit en combien de parts égales on a coupé."},
    {t:"Remets les deux moitiés ensemble : rien ne s'est perdu.",eq:"1/2 + 1/2 = 2/2 = 1"}
   ],
   carte:{t:"Partager 1 en 2 parts égales : chaque part vaut 1/2."}
@@ -1018,7 +1018,7 @@ const COURS={
   etapes:[
    {t:"Tu as coupé, puis recoupé : la moitié de la moitié, c'est le quart.",eq:"1/2 ÷ 2 = 1/4"},
    {t:"Recoupe encore chaque quart en 2 : voilà les huitièmes.",eq:"1/4 ÷ 2 = 1/8"},
-   {t:"À chaque coupe, le nombre du bas — le dénominateur — est multiplié.",eq:"2 × 2 × 2 = 8"}
+   {t:"À chaque coupe, le dénominateur (le nombre du bas) est multiplié.",eq:"2 × 2 × 2 = 8"}
   ],
   carte:{t:"Recouper une part multiplie le dénominateur.",eq:"1/4 ÷ 2 = 1/8"}
  },
@@ -1061,7 +1061,7 @@ const COURS={
   ]},
   etapes:[
    {t:"Coupe en trois, puis recoupe chaque tiers en trois : voilà les neuvièmes.",eq:"1/3 ÷ 3 = 1/9"},
-   {t:"Le nombre du bas — le dénominateur — est multiplié, comme au lagon : par 3 cette fois.",eq:"3 × 3 = 9"}
+   {t:"Le dénominateur (le nombre du bas) est multiplié, comme au lagon : par 3 cette fois.",eq:"3 × 3 = 9"}
   ],
   carte:{t:"Un tiers recoupé en trois donne le neuvième.",eq:"1/3 ÷ 3 = 1/9"}
  },
