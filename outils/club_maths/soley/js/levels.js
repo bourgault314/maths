@@ -145,6 +145,28 @@ const LV=[
   sol:[[0,4,1],[1,4,0],[2,4,5],[3,0,5],[4,4,6],[5,7,6]],
   solMin:[[0,4,1],[1,4,0],[2,4,5],[3,0,5]]},
 
+ /* Le BILAN du partage (lot A, 08/2026). Il ferme le lagon et légitime 1/8, 1/9 et
+    1/12, que les champs de canne servent dès « Le grand tri » sans qu'aucun cours
+    ne les ait jamais dits (AUDIT-ORGANISATION.md §3). Comme les quatre autres
+    découvertes du lagon : pas de fruit, pas de solMin — une découverte se gagne,
+    elle ne se mérite pas. Champ TAILLÉ puis mesuré au solveur, aucune solution
+    dessinée d'abord : R = 75, profondeur 3, E = 887, G = 10, λ = 4,3 — juste
+    au-dessus des quatre autres (5, 5, 19, 51), la plus exigeante sans cesser
+    d'être facile. La boîte n'a que des ÷2 : le huitième ne s'obtient par aucune
+    coupe unique, il faut en enchaîner trois (règle du lot forêt : un niveau qui
+    enseigne est ingagnable sans la pièce de sa notion). La demi-part non servie se
+    perd en chemin, comme dans « La part perdue » — le cours montre la cascade,
+    restes compris. */
+ {w:'lagon',name:"La moitié du quart",dec:'recouper',
+  sub:"Un quart d'un côté, deux huitièmes de l'autre. Tu n'as que des prismes ÷2 : jusqu'où faut-il recouper ?",
+  hint:"1/2 ÷ 2 = 1/4, puis 1/4 ÷ 2 = 1/8. Une part se perdra en chemin, c'est normal.",
+  cols:9,rows:6,suns:[{x:0,y:3,dir:1}],
+  targets:[{x:0,y:1,need:[1,4]},{x:8,y:0,need:[1,8]},{x:8,y:5,need:[1,8]}],
+  rocks:[[5,3],[2,5],[7,2],[2,0],[6,4],[3,5],[7,5],[4,0],[1,5]],
+  fruits:[],
+  tools:[s2(1,0,2),s2(0,1,3),s2(1,0,2),b(1,0)],
+  sol:[[0,1,3],[1,1,1],[2,8,1]]},
+
  /* ---------- Les champs de canne (6e) — refonte 08/2026 ----------
     Le monde qui applique les mécaniques de l'original (AUDIT-33-IDEES.md) :
     surplus systématique (sauf découverte C2), fruit hors du plan gagnant
@@ -257,13 +279,13 @@ const LV=[
   tools:[s2(1,0,2),s2(2,1,2),b(0,1),b(1,2),b(1,0),mg(2,0,1)],
   sol:[[0,2,3],[1,2,4],[2,2,1],[3,6,1],[4,6,4],[5,6,3]]},
 
- {w:'foret',name:"Les sixièmes",
-  sub:"Des cases à 1/6 ?! Aucun outil ne coupe en six d'un coup…",
-  hint:"Coupe en trois, puis coupe un tiers en deux : 1/3 ÷ 2 = 1/6.",
-  cols:9,rows:7,suns:[{x:0,y:3,dir:1}],
-  targets:[{x:3,y:0,need:[1,3]},{x:8,y:3,need:[1,3]},{x:8,y:5,need:[1,6]},{x:0,y:5,need:[1,6]}],
-  rocks:[[5,1],[7,2]],fruits:[[5,5]],
-  tools:[s3(1,0,1,2),s2(2,1,3)],sol:[[0,3,3],[1,3,5]]},
+ /* « Les sixièmes » a été RETIRÉ le 16/08 (décision de Gwenael, audit d'organisation
+    §6 Q1). Il s'étonnait — « Des cases à 1/6 ?! » — d'une notion que le lagon
+    enseigne au 9ᵉ niveau et que les champs de canne font chercher au 18ᵉ, et il la
+    servait pour la troisième fois au 22ᵉ, en deux pièces et une seule pose gagnante
+    (R = 14, le 11ᵉ niveau le plus facile du jeu). Même profil que « Quarts en
+    croix », retiré le 15/08. Son geste exact — 1/3 ÷ 2 — reste joué au « Grand
+    réseau » (tunnels) et à « L'entrée du cirque » (Mafate). */
 
  {w:'foret',name:"Les huitièmes",
   /* consigne réécrite (08/2026) : elle s'étonnait d'un huitième que les champs de
@@ -795,10 +817,10 @@ const CALC={
  "La moitié de la moitié":["1/2 ÷ 2 = 1/4"],
  "Les six sixièmes":["1 ÷ 2 = 1/2","1/2 ÷ 3 = 1/6"],
  "Le tiers de la moitié":["1/2 ÷ 3 = 1/6"],
+ "La moitié du quart":["1/2 ÷ 2 = 1/4","1/4 ÷ 2 = 1/8"],
  "Recoller les morceaux":["1/2 + 1/2 = 2/2 = 1"],
  "Trois quarts":["1/2 + 1/4 = 2/4 + 1/4 = 3/4"],
  "Deux tiers":["1/3 + 1/3 = 2/3"],
- "Les sixièmes":["1/3 ÷ 2 = 1/6"],
  "Les huitièmes":["1/2 ÷ 2 ÷ 2 = 1/8"],
  "Cinq sixièmes":["1/6 + 1/6 = 2/6 = 1/3","1/2 + 1/3 = 3/6 + 2/6 = 5/6"],
  "Les douzièmes":["1/6 + 1/12 = 2/12 + 1/12 = 3/12 = 1/4"],
@@ -899,6 +921,46 @@ const COURS={
    {t:"Compte tes rayons : les six sixièmes refont le rayon entier.",eq:"1/6 + 1/6 + 1/6 + 1/6 + 1/6 + 1/6 = 6/6 = 1"}
   ],
   carte:{t:"Le tiers de la moitié, c'est le sixième.",eq:"1/2 ÷ 3 = 1/6"}
+ },
+ /* Le BILAN du partage (lot A, 16/08) — le dernier cours du lagon. Il ne montre PAS
+    de rayons : Gwenael a demandé un bilan en BANDES (« les huitièmes tout coupés,
+    les neuvièmes tout coupés, les douzièmes tout coupés »), et c'est aussi la seule
+    forme possible — la cascade de rayons ne sait dessiner que deux étages, jamais
+    trois coupes. D'où la scène `murs`, propre à ce cours.
+    Il dit la règle générale que le lagon montrait déjà deux fois sans jamais
+    l'énoncer (le quart est la moitié de la moitié, le sixième le tiers de la
+    moitié), et c'est elle qui légitime 1/8, 1/9 et 1/12 avant que les champs de
+    canne ne les servent. L'étape 3 (le dénominateur se multiplie) est GARDÉE en
+    connaissance de cause (arbitrage de Gwenael, 16/08) : elle laisse deviner que
+    2 × 3 = 3 × 2, mais la difficulté des « Deux chemins du sixième » est
+    géométrique — R = 18 263, deux prismes à faire tenir dans une boîte serrée —
+    pas conceptuelle. */
+ recouper:{
+  titre:"Recouper une part",
+  /* TROIS murs, deux règles, toutes deux venues des relectures de Gwenael sur captures.
+     1. Chaque mur se lit de haut en bas comme une descente : une ligne naît TOUJOURS
+        de celle qui la surplombe. Un premier jet empilait 1/8, 1/9 et 1/12 dans le
+        même mur, ce qui faisait naître les neuvièmes des huitièmes — or les neuvièmes
+        naissent des TIERS et les douzièmes des QUARTS. D'où un mur chacun.
+     2. Chaque mur est suivi de SES explications (`etapes` = combien d'étapes de la
+        liste le suivent), jamais tous les murs puis tous les textes : sinon l'élève
+        doit remonter chercher de quelle image parle la phrase qu'il lit. */
+  scene:{murs:[
+   {bandes:[[1,1],[1,2],[1,4],[1,8]],etapes:3,
+    alt:"La bande entière, coupée en deux, puis en quatre, puis en huit"},
+   {bandes:[[1,3],[1,9]],etapes:1,
+    alt:"La bande coupée en trois, puis chaque tiers recoupé en trois : les neuvièmes"},
+   {bandes:[[1,4],[1,12]],etapes:1,
+    alt:"La bande coupée en quatre, puis chaque quart recoupé en trois : les douzièmes"}
+  ]},
+  etapes:[
+   {t:"Tu as coupé, puis recoupé : la moitié de la moitié, c'est le quart.",eq:"1/2 ÷ 2 = 1/4"},
+   {t:"Recoupe encore chaque quart en 2 : voilà les huitièmes.",eq:"1/4 ÷ 2 = 1/8"},
+   {t:"À chaque coupe, le nombre du bas — le dénominateur — est multiplié.",eq:"2 × 2 × 2 = 8"},
+   {t:"Coupe plutôt en trois : chaque tiers recoupé en trois donne les neuvièmes. Le dénominateur est multiplié par 3.",eq:"1/3 ÷ 3 = 1/9"},
+   {t:"Et chaque quart recoupé en trois donne les douzièmes.",eq:"1/4 ÷ 3 = 1/12"}
+  ],
+  carte:{t:"Recouper une part multiplie le dénominateur.",eq:"1/4 ÷ 2 = 1/8"}
  },
  /* Les deux cours de la LENTILLE (forêt, 08/2026). Ils ne se lisent PAS comme les
     quatre premiers : partager DESCEND de l'entier vers les morceaux, additionner

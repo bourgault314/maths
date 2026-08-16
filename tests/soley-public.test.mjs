@@ -78,7 +78,7 @@ test("Solèy est publié une seule fois, dans Jeux et Fractions", () => {
   assert.match(classification.cardDescription, /70 casse-têtes/);
 });
 
-test("les 70 solutions de référence gagnent et ramassent les 142 fruits", () => {
+test("les 70 solutions de référence gagnent et ramassent les 141 fruits", () => {
   const context = createGameContext();
   const worldCounts = vm.runInContext(
     "Object.fromEntries(WORLDS.map(({id})=>[id,LV.filter(level=>level.w===id).length]))",
@@ -86,7 +86,7 @@ test("les 70 solutions de référence gagnent et ramassent les 142 fruits", () =
   );
   assert.deepEqual(
     { ...worldCounts },
-    { lagon: 10, canne: 8, foret: 9, volcan: 7, pitons: 7, soleils: 8, marche: 6, tunnels: 8, mafate: 7 }
+    { lagon: 11, canne: 8, foret: 8, volcan: 7, pitons: 7, soleils: 8, marche: 6, tunnels: 8, mafate: 7 }
   );
 
   const structure = vm.runInContext(`(() => ({
@@ -159,8 +159,8 @@ test("les 70 solutions de référence gagnent et ramassent les 142 fruits", () =
   })()`, context);
 
   assert.equal(summary.levels, 70);
-  assert.equal(summary.fruits, 142);
-  assert.equal(summary.declaredFruits, 142);
+  assert.equal(summary.fruits, 141);
+  assert.equal(summary.declaredFruits, 141);
   assert.deepEqual([...summary.failures], []);
 });
 
@@ -287,16 +287,17 @@ test("la progression verrouillée et les étoiles se calculent juste", () => {
     const parOk = LV.every((l, i) => parNiveau(i) === l.sol.length && l.sol.length >= 1);
     const avant = WORLDS.map(w => mondeDeverrouille(w.id));
     const lagon = LV.map((l, i) => i).filter(i => LV[i].w === 'lagon');
-    /* chantier « Comprendre » : le seuil ⌈5/8⌉ ET les 4 découvertes du monde précédent */
+    /* chantier « Comprendre » : le seuil ⌈5/8⌉ ET les 5 découvertes du monde précédent */
     lagon.slice(0, 5).forEach(i => save.done[LV[i].w + ':' + LV[i].name] = true);
     const canneA5 = mondeDeverrouille('canne'); /* 5 réussites < seuil 7 */
     save.done['lagon:La moitié de la moitié'] = true;
     save.done['lagon:Le tiers de la moitié'] = true;
-    const canneSansDec = mondeDeverrouille('canne'); /* seuil atteint, 2 découvertes sur 4 */
+    const canneSansDec = mondeDeverrouille('canne'); /* seuil atteint, 2 découvertes sur 5 */
     save.done['lagon:Partage en tiers'] = true;
     save.done['lagon:Les quatre quarts'] = true;
     save.done['lagon:Les six sixièmes'] = true;
-    const canneComplete = mondeDeverrouille('canne'); /* 10 réussites dont les 4 découvertes */
+    save.done['lagon:La moitié du quart'] = true;
+    const canneComplete = mondeDeverrouille('canne'); /* 11 réussites dont les 5 découvertes */
     /* LE CHEMIN DE L'ÉCOLE (08/2026) : le lagon fini ouvre le champ de canne ET la
        forêt, sans qu'un seul niveau de la canne soit joué. Un élève peut suivre le
        fil de l'apprentissage sans être obligé de se battre. */
@@ -324,11 +325,11 @@ test("la progression verrouillée et les étoiles se calculent juste", () => {
       fruitManquant, fruitsComplets, maitrise, tropDePieces, sansFruits };
   })()`, context);
 
-  assert.deepEqual([...r.seuils], [0, 7, 5, 6, 5, 5, 5, 4, 5]);
+  assert.deepEqual([...r.seuils], [0, 7, 5, 5, 5, 5, 5, 4, 5]);
   assert.equal(r.parOk, true);
   assert.deepEqual([...r.avant], [true, false, false, false, false, false, false, false, false]);
   assert.equal(r.canneA5, false);
-  assert.equal(r.canneSansDec, false, "le seuil atteint sans les 4 découvertes : la canne reste fermée");
+  assert.equal(r.canneSansDec, false, "le seuil atteint sans les 5 découvertes : la canne reste fermée");
   assert.equal(r.canneComplete, true);
   /* les deux chemins vers la forêt, et un seul vers le volcan */
   assert.equal(r.foretParEcole, true, "le chemin de l'école : le lagon fini ouvre la forêt");
@@ -429,7 +430,7 @@ test("le cours illustré couvre les nouveaux partages et les pièces scellées",
 
   assert.deepEqual(
     { ...course, missingLevels: [...course.missingLevels] },
-    { cards: 53, lines: 75, missingLevels: [], rendered: true }
+    { cards: 53, lines: 76, missingLevels: [], rendered: true }
   );
   const additions = vm.runInContext(`({
     fourche: CALC["La fourche"],
@@ -550,20 +551,24 @@ test("le chantier « Comprendre » : découvertes, points de cours et règle R1"
      arrière. Il ne demande que des demis, sa place est dans le bloc des demis. */
   assert.deepEqual([...r.lagon], ["Premier rayon", "Zigzag dans les roches", "Moitié-moitié",
     "Le tour du lagon", "La part perdue", "Partage en tiers", "Les quatre quarts",
-    "La moitié de la moitié", "Les six sixièmes", "Le tiers de la moitié"]);
+    "La moitié de la moitié", "Les six sixièmes", "Le tiers de la moitié",
+    "La moitié du quart"]);
   assert.deepEqual([...r.decs], ["Moitié-moitié:demi", "Partage en tiers:tiers",
-    "Les quatre quarts:quart", "Les six sixièmes:sixieme",
+    "Les quatre quarts:quart", "Les six sixièmes:sixieme", "La moitié du quart:recouper",
     "Deux tiers:somme", "Trois quarts:denominateur"]);
   assert.deepEqual([...r.coursIds],
-    ["demi", "tiers", "quart", "sixieme", "somme", "denominateur"]);
+    ["demi", "tiers", "quart", "sixieme", "recouper", "somme", "denominateur"]);
   assert.deepEqual([...r.titres], ["Le demi", "Le tiers", "Le quart", "Le sixième",
-    "Recoller deux parts", "Le même dénominateur"]);
+    "Recouper une part", "Recoller deux parts", "Le même dénominateur"]);
   /* la forêt (08/2026) : le cas SIMPLE (même dénominateur) passe devant le cas DUR.
      « Recoller les morceaux » reste l'accueil du monde mais n'est plus une
      découverte : sa case demande 1/1, que le rayon du soleil vaut déjà, donc aucun
      plateau ne pourrait l'obliger à passer par la lentille. */
+  /* « Les sixièmes » est RETIRÉ (lot A, 16/08) : le lagon enseigne le sixième au
+     9ᵉ niveau et la canne le fait chercher au 18ᵉ ; la forêt le servait une
+     troisième fois, en deux pièces et une seule pose gagnante. */
   assert.deepEqual([...r.foret], ["Recoller les morceaux", "Deux tiers", "Trois quarts",
-    "Les sixièmes", "Les huitièmes", "Cinq sixièmes", "Les douzièmes",
+    "Les huitièmes", "Cinq sixièmes", "Les douzièmes",
     "Le champ de roches", "La clairière"]);
   const [somme, deno] = [...r.sommes];
   /* DEUX lignes au plus (retour de Gwenael du 15/08). 1/3 + 1/3 : une seule —
