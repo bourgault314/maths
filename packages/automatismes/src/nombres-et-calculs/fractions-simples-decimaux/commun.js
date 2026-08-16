@@ -5,7 +5,7 @@
 import {
   SCHEMA_GABARIT_QUESTION,
   estDonneePure,
-} from "../../../../contrats/src/gabarit.js?v=36";
+} from "../../../../contrats/src/gabarit.js?v=37";
 import {
   COMPARAISON_CHOIX_EXACT,
   COMPARAISON_VALEUR_EXACTE,
@@ -14,11 +14,11 @@ import {
   TYPE_REPONSE_ENTIER_NATUREL,
   TYPE_REPONSE_FRACTION_EQUIVALENTE,
   TYPE_REPONSE_NOMBRE_DECIMAL,
-} from "../../../../contrats/src/question-v2.js?v=36";
+} from "../../../../contrats/src/question-v2.js?v=37";
 import {
   IDENTITES_AUTOMATISMES,
   creerClassementAutomatisme,
-} from "../../identifiants.js?v=36";
+} from "../../identifiants.js?v=37";
 
 export const NOTION_FRACTIONS_SIMPLES_DECIMAUX =
   IDENTITES_AUTOMATISMES.FRACTION_VERS_DECIMAL.module;
@@ -45,13 +45,13 @@ export const NUMERATEURS_DEMIS = Object.freeze(
   Array.from({ length: 7 }, (_, index) => index + 1),
 );
 export const NUMERATEURS_QUARTS = Object.freeze(
-  Array.from({ length: 8 }, (_, index) => index + 1),
+  Array.from({ length: 12 }, (_, index) => index + 1),
 );
 
 const BORNES_NUMERATEURS = Object.freeze({
   1: Object.freeze([2, 12]),
   2: Object.freeze([1, 7]),
-  4: Object.freeze([1, 8]),
+  4: Object.freeze([1, 12]),
   10: Object.freeze([1, 49]),
   100: Object.freeze([1, 250]),
   1000: Object.freeze([1, 999]),

@@ -2,7 +2,7 @@
 
 import {
   SCHEMA_QUESTION_INSTANCE_V2,
-} from "../../../../contrats/src/question-v2.js?v=36";
+} from "../../../../contrats/src/question-v2.js?v=37";
 import {
   MICRO_NOTION_NC03,
   PRESENTATIONS_FRACTIONS_DECIMAUX,
@@ -17,16 +17,16 @@ import {
   familleSelonDenominateur,
   reponseChoixUnique,
   reponseNombreDecimal,
-} from "./commun.js?v=36";
+} from "./commun.js?v=37";
 import {
   analyserEcritureDecimalePositive,
   formaterFractionEnDecimal,
   fractionsEgales,
-} from "../../../../objets/src/fractions-decimaux.js?v=36";
+} from "../../../../objets/src/fractions-decimaux.js?v=37";
 
 export const NOM_GENERATEUR_FRACTION_VERS_DECIMAL =
   "nombres-et-calculs.fractions-simples-decimaux.fraction-vers-decimal";
-export const VERSION_GENERATEUR_FRACTION_VERS_DECIMAL = 3;
+export const VERSION_GENERATEUR_FRACTION_VERS_DECIMAL = 4;
 
 export const GABARIT_FRACTION_VERS_DECIMAL = creerGabaritFractions({
   id: NOM_GENERATEUR_FRACTION_VERS_DECIMAL,

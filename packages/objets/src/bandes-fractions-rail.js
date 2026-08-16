@@ -14,18 +14,18 @@ import {
   construireGroupementFraction,
   formaterFractionEnDecimal,
   obtenirDonneesDroiteFractionnaire,
-} from "./fractions-decimaux.js?v=36";
+} from "./fractions-decimaux.js?v=37";
 import {
   mesurerEcritureFractionSvg,
   rendreFractionSvg,
-} from "./expressions.js?v=36";
+} from "./expressions.js?v=37";
 import {
   COULEURS_BANDES_FRACTIONS,
   TYPOGRAPHIE,
   couleurBandeFraction,
-} from "../../charte/src/charte.js?v=36";
+} from "../../charte/src/charte.js?v=37";
 
-export const VERSION_BANDES_FRACTIONS_RAIL = 5;
+export const VERSION_BANDES_FRACTIONS_RAIL = 6;
 
 const PROFILS = Object.freeze([
   "aide-nc03",
@@ -50,7 +50,7 @@ const FORMATS = Object.freeze([
 const LIMITES_NUMERATEURS = Object.freeze({
   1: 12,
   2: 7,
-  4: 8,
+  4: 12,
 });
 
 // Palette exacte du plateau historique. Les bordures brunes/vertes de son
@@ -536,6 +536,26 @@ function bandes({
   return elements.join("");
 }
 
+function ancreEtiquetteRail({
+  index,
+  numerateur,
+  denominateur,
+  dispositionCompacte,
+}) {
+  if (!dispositionCompacte || denominateur !== 4) return "middle";
+
+  const resteDansUnite = numerateur % denominateur;
+  if (resteDansUnite === 1) {
+    if (index === numerateur - 1) return "end";
+    if (index === numerateur) return "start";
+  }
+  if (resteDansUnite === 3) {
+    if (index === numerateur) return "end";
+    if (index === numerateur + 1) return "start";
+  }
+  return "middle";
+}
+
 function rail({
   origineX,
   y,
@@ -557,6 +577,7 @@ function rail({
     donneesOfficielles.graduations.map((graduation) => [graduation.numerateur, graduation]),
   );
   const nombreGraduations = maximumRail * denominateur;
+  const dispositionCompacte = maximumRail > 1 && largeurPartie < 40;
   const elements = [
     '<g class="rail-decimal">',
     ligne(origineX, y, debutFlecheX, y, {
@@ -585,11 +606,14 @@ function rail({
     const ecriture = graduation?.ecritureDecimale
       ?? formaterFractionEnDecimal(index, denominateur);
     const estCible = index === numerateur;
-    const solutionCompacte = profil === "solution"
-      && maximumRail > 1
-      && largeurPartie < 40;
+    const solutionCompacte = profil === "solution" && dispositionCompacte;
+    const railTroisUnitesCompact = denominateur === 4
+      && maximumRail >= 3
+      && dispositionCompacte;
     const repereIntermediaireUtile = (
-      denominateur === 4 && estDemi
+      denominateur === 4
+      && estDemi
+      && !railTroisUnitesCompact
     ) || (
       denominateur === 2 && index === 3
     );
@@ -602,6 +626,12 @@ function rail({
         classe: estCible ? "etiquette-rail cible" : "etiquette-rail",
         taille: 13,
         graisse: 800,
+        ancre: ancreEtiquetteRail({
+          index,
+          numerateur,
+          denominateur,
+          dispositionCompacte,
+        }),
         couleur: estCible
           ? COULEURS_BANDES_FRACTIONS.guide
           : COULEURS_BANDES_FRACTIONS.encre,
@@ -629,6 +659,12 @@ function rail({
       classe: "etiquette-cible cible-decimale-masquee",
       taille: 17,
       graisse: 800,
+      ancre: ancreEtiquetteRail({
+        index: numerateur,
+        numerateur,
+        denominateur,
+        dispositionCompacte,
+      }),
       couleur: COULEURS_BANDES_FRACTIONS.guide,
     }));
   } else if (profil.startsWith("aide-nc04")) {
@@ -636,6 +672,12 @@ function rail({
       classe: "etiquette-cible source-decimale",
       taille: 14,
       graisse: 800,
+      ancre: ancreEtiquetteRail({
+        index: numerateur,
+        numerateur,
+        denominateur,
+        dispositionCompacte,
+      }),
       couleur: COULEURS_BANDES_FRACTIONS.guide,
     }));
   }

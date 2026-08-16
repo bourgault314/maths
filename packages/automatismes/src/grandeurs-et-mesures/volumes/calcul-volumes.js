@@ -6,11 +6,11 @@ import {
   COMPARAISON_CHOIX_EXACT,
   SCHEMA_QUESTION_INSTANCE_V2,
   TYPE_REPONSE_CHOIX_UNIQUE,
-} from "../../../../contrats/src/question-v2.js?v=36";
+} from "../../../../contrats/src/question-v2.js?v=37";
 import {
   IDENTITES_AUTOMATISMES,
   creerClassementAutomatisme,
-} from "../../identifiants.js?v=36";
+} from "../../identifiants.js?v=37";
 
 const VERSION = 1;
 const VUES = Object.freeze([

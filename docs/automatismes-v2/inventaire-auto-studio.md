@@ -107,7 +107,7 @@ sélectionnables de « Me guider » : D-049 ouvre un seul atelier progressif.
 |---|---|---|
 | Schéma dans une unité | `packages/objets/src/fractions.js` | Bande ou grille statique pour une fraction inférieure ou égale à 1 ; jaune générique, sans prétendre reproduire le matériel de classe |
 | Manipulation libre historique | `outils/fractions/bandes_fractions.html` | Plateau complet avec pièces, fusion, retournement, droites, zoom et scènes ; il reste une activité autonome |
-| Manipulation guidée | `packages/objets/src/bandes-fractions-rail.js` | SVG commun effectivement utilisé par le lecteur pour les unités, demis et quarts, y compris au-delà de 1, avec profils d'aide non révélateurs et fractions étagées rendues par la primitive canonique |
+| Manipulation guidée | `packages/objets/src/bandes-fractions-rail.js` | SVG commun effectivement utilisé par le lecteur pour les unités, demis et quarts, y compris les quarts de `1/4` à `12/4` sur un rail allant jusqu'à 3 unités, avec profils d'aide non révélateurs et fractions étagées rendues par la primitive canonique |
 | Correspondance exacte entre matériels | `packages/objets/src/correspondances-decimales.js` | Deux SVG CPA comparent cinq dixièmes à un demi, puis relient 25 ou 75 centièmes à un ou trois quarts, sans changer d'échelle ni révéler l'écriture attendue en aide ; le cours peut n'en retenir qu'une étape sans rail supplémentaire |
 
 D-059 regroupe ces briques en trois outils nommés pour l'élève : bandes de
@@ -119,11 +119,23 @@ l'aide et la correction sélectionnent le visuel le plus pertinent, le tableau
 restant la voie transversale. Le cas `2/4 = 0,5` emploie ainsi les bandes sur
 rail plutôt qu'une grille de 100.
 
+D-060 précise cette sélection : `1/4`, `3/4`, `0,25` et `0,75` utilisent
+d'abord le rail, puis les plaques réorganisées, sans tableau ; `2/4` reste sur
+le rail et fusionne en un demi. Les demis et quarts impropres emploient le rail,
+`/10` et `/100` conservent les deux méthodes plaques–tableau et `/1000` reste
+au tableau seul. Le rail couvre `9/4` à `12/4` jusqu'à 3 unités. Dans l'aide
+inverse au-delà de huit quarts, une commande ajoute une unité, soit quatre
+quarts, sans exposer le numérateur attendu. Les chaînes de correction des
+entiers cachés éliminent les membres identiques répétés.
+
 Le Labo conserve les bandes et grilles existantes, le composant guidé sur rail
 et les correspondances exactes comme familles de comparaison utiles. Le
 lecteur V2 importe les briques communes retenues ; le Labo reste leur banc de
 contrôle et non une dépendance d'exécution. Il enregistre notamment :
 
+- l'entrée `bandesFractionsRail`, dont le numérateur maximal pilotable passe à
+  12 ; sa planche de contrôle ajoute les témoins `11/4` et `12/4` afin de
+  vérifier le rail à trois unités ;
 - `packages/objets/src/numeration-decimale.js`, extrait du plateau de
   numération, avec unité rouge `10 × 10`, dixième vert horizontal `10 × 1` ou
   vertical `1 × 10`, et centième jaune `1 × 1` ;
@@ -217,20 +229,33 @@ n'importent aucune représentation dans leur énoncé. L'atelier unique de
 accessibles ; les profils de solution sont réservés au cours et à la
 correction.
 
+D-060 étend la génération non libre des deux sens, en saisie directe et en
+QCM, à tous les quarts de numérateur 1 à 12. Seul `11/4` est ajouté à la
+banque libre familière. Une série de 5 conserve une question `/2`, `/4`, `/10`
+et `/100`, plus une production libre ;
+la graine ordonne les cinq sans forcer une difficulté ni une forme de réponse
+en tête. Le plan déterministe refuse deux QCM consécutifs, deux productions
+libres consécutives, trois sens identiques consécutifs et trois dénominateurs
+identiques consécutifs. Hors de cette extension et de cet ordre, les questions
+ne changent pas.
+
 La fraction libre est également branchée sans dépendre de sa cible canonique :
 le lecteur part du dernier rang écrit du décimal, propose une fraction
 décimale et accepte toute équivalente par produit en croix. Le matériel rouge,
 vert et jaune accompagne `/10` et `/100` ; `/1000` emploie uniquement le
-tableau. Pour `0,5`, `0,25` et `0,75`, les correspondances dédiées restent les
-objets de sens ; les autres cibles `/10` et `/100` emploient la conversion
-paramétrique. Le cours, la question abstraite, son rappel, « Me guider » et la
-correction consomment désormais les mêmes écritures et objets communs ; seul le
-profil décide si la cible est visible. `/1000` reste limité au tableau. Cette
-organisation commune est consignée par D-056 ; son ordre pédagogique courant
+tableau. Pour `0,5`, les bandes de demis restent l'objet de sens. Pour `0,25`
+et `0,75`, D-060 compose le rail puis les plaques réorganisées et écarte le
+tableau ; les autres cibles `/10` et `/100` emploient la conversion
+paramétrique plaques–tableau. Le cours, la question abstraite, son rappel,
+« Me guider » et la correction consomment désormais les mêmes écritures et
+objets communs ; seul le profil décide si la cible est visible. `/1000` reste
+limité au tableau. Cette organisation commune est consignée par D-056 ; son
+ordre pédagogique courant
 et les trois échanges sont fixés par D-058. D-059 applique les deux intitulés
 de méthode au cours, à l'aide et à la correction pour `/10` et `/100`, tout en
-laissant `/1000` au tableau seul. Ces décisions ne changent aucun générateur
-ni aucune question.
+laissant `/1000` au tableau seul. Ces décisions de D-056 à D-059 ne changent
+aucun générateur ni aucune question ; l'extension limitée de D-060 est décrite
+ci-dessus.
 
 Les recettes antérieures restent des témoins des états D-049 à D-056. Pour
 D-058, **1 555 tests** passent ; les six pages ont été contrôlées dans
@@ -244,6 +269,14 @@ du téléphone `320 × 568` au TNI `1 920 × 1 080`. La campagne ne relève aucu
 erreur navigateur, aucun débordement local ou global, aucun texte coupé ni
 élément hors panneau ; elle couvre les trois outils, les méthodes séparées,
 `2/4`, `2,27`, les profils masqués et `/1000` au tableau seul.
+
+Pour D-060, la suite ciblée du Labo passe **165 tests sur 165**, y compris les
+nouveaux témoins `11/4` et `12/4`. La recette complète du dépôt passe
+**1 579 tests sur 1 579**, répartis en **232 suites** ; l'audit de
+**40 000 séries**, soit **500 000 questions**, ne relève aucune violation.
+Le graphe de cache est cohérent en `v37`. Gwenaël autorise la publication de
+test ; la revue visuelle aux cinq fenêtres doit être rejouée sur l'URL
+publique.
 
 ## Réservoirs techniques à examiner au besoin
 

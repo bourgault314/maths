@@ -114,7 +114,12 @@ describe("NC-03/NC-04 — contrats communs", () => {
   it("déclare strictement les six dénominateurs du périmètre", () => {
     assert.deepEqual(DENOMINATEURS_AUTORISES, [1, 2, 4, 10, 100, 1000]);
     assert.deepEqual(NUMERATEURS_DEMIS, [1, 2, 3, 4, 5, 6, 7]);
-    assert.deepEqual(NUMERATEURS_QUARTS, [1, 2, 3, 4, 5, 6, 7, 8]);
+    assert.deepEqual(
+      NUMERATEURS_QUARTS,
+      [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12],
+    );
+    assert.equal(estFractionDuDomaine(12, 4), true);
+    assert.equal(estFractionDuDomaine(13, 4), false);
     assert.equal(estFractionDuDomaine(5, 8), false);
     assert.equal(estFractionDuDomaine(1, 3), false);
     assert.equal(estFractionDuDomaine(10, 1000), false);
@@ -126,7 +131,7 @@ describe("NC-03/NC-04 — contrats communs", () => {
 });
 
 describe("NC-03 — fraction vers écriture décimale", () => {
-  it("couvre tous les demis 1 à 7 et tous les quarts 1 à 8", () => {
+  it("couvre tous les demis 1 à 7 et tous les quarts 1 à 12", () => {
     for (const [denominateur, numerateurs] of [
       [2, NUMERATEURS_DEMIS],
       [4, NUMERATEURS_QUARTS],
@@ -174,7 +179,7 @@ describe("NC-03 — fraction vers écriture décimale", () => {
     for (const parametres of [
       { numerateur: 5, denominateur: 8 },
       { numerateur: 8, denominateur: 2 },
-      { numerateur: 9, denominateur: 4 },
+      { numerateur: 13, denominateur: 4 },
       { numerateur: 10, denominateur: 1000 },
     ]) {
       assert.throws(
@@ -300,6 +305,14 @@ describe("NC-04 — écriture décimale vers fraction", () => {
     assert.ok(CIBLES_FRACTION_LIBRE_DECIMALES.some(
       ({ numerateur, denominateur }) => numerateur === 75 && denominateur === 100,
     ));
+    assert.ok(CIBLES_FRACTION_LIBRE_DEMIS_QUARTS.some(
+      ({ numerateur, denominateur }) => numerateur === 11 && denominateur === 4,
+    ));
+    for (const numerateur of [9, 10, 12]) {
+      assert.equal(CIBLES_FRACTION_LIBRE_DEMIS_QUARTS.some(
+        (cible) => cible.numerateur === numerateur && cible.denominateur === 4,
+      ), false);
+    }
   });
 
   it("complète de manière compatible les paramètres partiels de chaque forme", () => {
@@ -333,6 +346,41 @@ describe("NC-04 — écriture décimale vers fraction", () => {
 });
 
 describe("NC-03/NC-04 — QCM diagnostiques sans ambiguïté", () => {
+  it("accepte les quarts 9 à 12 dans les QCM des deux sens", () => {
+    for (const numerateur of [9, 10, 11, 12]) {
+      const directe = instancier(
+        GABARIT_FRACTION_VERS_DECIMAL,
+        { numerateur, denominateur: 4, presentation: "qcm-diagnostique" },
+        `nc03-qcm-quart-${numerateur}`,
+      );
+      assert.deepEqual(bloc(directe, "fraction"), {
+        id: "fraction",
+        type: "rationnel",
+        numerateur,
+        denominateur: 4,
+        ecriture: "fraction",
+      });
+      assert.equal(directe.reponse.choix.length, 4);
+
+      const inverse = instancier(
+        GABARIT_DECIMAL_VERS_FRACTION,
+        {
+          numerateur,
+          denominateur: 4,
+          forme: "denominateur-impose",
+          presentation: "qcm-diagnostique",
+        },
+        `nc04-qcm-quart-${numerateur}`,
+      );
+      assert.equal(bloc(inverse, "nombre-decimal").numerateur, numerateur);
+      assert.equal(bloc(inverse, "denominateur-impose"), undefined);
+      assert.equal(inverse.reponse.choix.length, 4);
+      assert.ok(inverse.reponse.choix.some(
+        ({ id, libelle }) => id === "fraction-correcte" && libelle === `${numerateur}/4`,
+      ));
+    }
+  });
+
   it("ne propose qu'un seul décimal égal à la fraction cible", () => {
     for (let index = 0; index < 500; index += 1) {
       const question = instancier(

@@ -7,28 +7,28 @@
 import {
   creerGenerateur,
   validerGraine,
-} from "../../../../moteur-exercices/src/aleatoire.js?v=36";
+} from "../../../../moteur-exercices/src/aleatoire.js?v=37";
 import {
   GABARIT_DECIMAL_VERS_FRACTION,
   CIBLES_FRACTION_LIBRE,
   CIBLES_FRACTION_LIBRE_DECIMALES,
   CIBLES_FRACTION_LIBRE_DEMIS_QUARTS,
-} from "./decimal-vers-fraction.js?v=36";
+} from "./decimal-vers-fraction.js?v=37";
 import {
   GABARIT_FRACTION_VERS_DECIMAL,
   NUMERATEURS_CENTIEMES,
   NUMERATEURS_DENOMINATEUR_UN,
   NUMERATEURS_DIXIEMES,
   NUMERATEURS_MILLIEMES,
-} from "./fraction-vers-decimal.js?v=36";
+} from "./fraction-vers-decimal.js?v=37";
 import {
   MICRO_NOTION_NC03,
   MICRO_NOTION_NC04,
   NUMERATEURS_DEMIS,
   NUMERATEURS_QUARTS,
-} from "./commun.js?v=36";
+} from "./commun.js?v=37";
 
-export const VERSION_PLAN_SERIE_FRACTIONS_DECIMAUX = 3;
+export const VERSION_PLAN_SERIE_FRACTIONS_DECIMAUX = 4;
 
 export const QUOTAS_SERIES_FRACTIONS_DECIMAUX = Object.freeze({
   5: Object.freeze({ qcm: 1, productionsLibres: 1, milliemes: 0 }),
@@ -51,10 +51,10 @@ const RECETTE_NC03 = Object.freeze([
 ]);
 
 const RECETTE_NC04 = Object.freeze([
-  2,
-  10,
   4,
   100,
+  2,
+  10,
   2,
   4,
   10,
@@ -212,13 +212,18 @@ function reserverMillieme(files, aleatoire, nombreQuestions) {
   file[index] = { ...file[index], denominateur: 1000 };
 }
 
-function marquerClasse(elements, aleatoire, classeValeur, contexte) {
-  const predicat = classeValeur === "entier"
-    ? (element) => element.forme !== "fraction-libre"
-      && element.denominateur !== 1
-      && [2, 4, 10, 100].includes(element.denominateur)
-    : (element) => element.forme !== "fraction-libre"
-      && [2, 4].includes(element.denominateur);
+function marquerClasse(
+  elements,
+  aleatoire,
+  classeValeur,
+  contexte,
+  denominateurs = [2, 4, 10, 100],
+) {
+  const predicat = (element) => element.forme !== "fraction-libre"
+    && denominateurs.includes(element.denominateur)
+    // Un demi propre ne possède qu'une seule valeur (1/2). En forcer un dans
+    // chaque sens rendrait les deux valeurs rationnelles identiques.
+    && (classeValeur !== "inferieur-un" || element.denominateur !== 2);
   const candidats = aleatoire.melange(
     elements.filter((element) => element.classeValeur === undefined && predicat(element)),
   );
@@ -230,19 +235,24 @@ function marquerClasse(elements, aleatoire, classeValeur, contexte) {
   candidats[0].classeValeur = classeValeur;
 }
 
-function marquerPropreEtImpropre(elements, aleatoire, contexte) {
-  const quarts = aleatoire.melange(
-    elements.filter((element) =>
-      element.classeValeur === undefined
-      && element.forme !== "fraction-libre"
-      && element.denominateur === 4),
+function marquerPropreEtImpropre(
+  elements,
+  aleatoire,
+  contexte,
+  denominateurs,
+) {
+  // Dans une série courte, les fractions décimales peuvent porter ces deux
+  // classes : le seul quart disponible n'est donc plus condamné à rester
+  // inférieur à 1. À partir de 15 questions, l'appelant resserre ces repères
+  // sur les demis et les quarts, dont plusieurs exemplaires sont disponibles.
+  marquerClasse(elements, aleatoire, "inferieur-un", contexte, denominateurs);
+  marquerClasse(
+    elements,
+    aleatoire,
+    "superieur-un-non-entier",
+    contexte,
+    denominateurs,
   );
-  if (quarts.length > 0) {
-    quarts[0].classeValeur = "inferieur-un";
-  } else {
-    marquerClasse(elements, aleatoire, "inferieur-un", contexte);
-  }
-  marquerClasse(elements, aleatoire, "superieur-un-non-entier", contexte);
 }
 
 function marquerCasStructurels(files, aleatoire, nombreQuestions) {
@@ -252,6 +262,7 @@ function marquerCasStructurels(files, aleatoire, nombreQuestions) {
       [...files.values()].flat(),
       aleatoire,
       "dans la série courte",
+      [2, 4, 10, 100],
     );
     return;
   }
@@ -260,6 +271,7 @@ function marquerCasStructurels(files, aleatoire, nombreQuestions) {
       files.get(microNotion),
       aleatoire,
       `pour ${microNotion}`,
+      nombreQuestions < 15 ? [2, 4, 10, 100] : [2, 4],
     );
   }
   if (nombreQuestions >= 20) {
@@ -389,36 +401,117 @@ function parametrerNumerateurs(files, aleatoire) {
   }
 }
 
-function ordonnerMicroNotions(aleatoire, repartition) {
-  const restants = new Map(Object.entries(repartition));
-  const ordre = [];
-  const total = Object.values(repartition).reduce((somme, nombre) => somme + nombre, 0);
+function ordonnerElements(elements, aleatoire) {
+  const priorites = aleatoire.melange(
+    elements.map((_, index) => index),
+  );
+  const utilises = Array(elements.length).fill(false);
+  const ordreIndices = [];
+  const impasses = new Set();
 
-  function placer() {
-    if (ordre.length === total) return true;
-    const candidats = aleatoire.melange(
-      [...restants.entries()]
-        .filter(([, nombre]) => nombre > 0)
-        .map(([microNotion]) => microNotion),
-    );
-    for (const microNotion of candidats) {
-      const deuxDerniersIdentiques = ordre.length >= 2
-        && ordre.at(-1) === microNotion
-        && ordre.at(-2) === microNotion;
-      if (deuxDerniersIdentiques) continue;
-      restants.set(microNotion, restants.get(microNotion) - 1);
-      ordre.push(microNotion);
-      if (placer()) return true;
-      ordre.pop();
-      restants.set(microNotion, restants.get(microNotion) + 1);
+  const estQcm = (element) => element.presentation === "qcm-diagnostique";
+  const estLibre = (element) => element.forme === "fraction-libre";
+
+  function longueurRunTerminal(propriete, valeur) {
+    let longueur = 0;
+    for (let index = ordreIndices.length - 1; index >= 0 && longueur < 2; index -= 1) {
+      if (elements[ordreIndices[index]][propriete] !== valeur) break;
+      longueur += 1;
     }
+    return longueur;
+  }
+
+  function resteFaisable() {
+    const restants = priorites.filter((index) => !utilises[index]);
+    const dernier = ordreIndices.length > 0
+      ? elements[ordreIndices.at(-1)]
+      : null;
+    for (const predicat of [estQcm, estLibre]) {
+      const marques = restants.filter((index) => predicat(elements[index])).length;
+      const nonMarques = restants.length - marques;
+      if (marques > nonMarques + Number(!dernier || !predicat(dernier))) {
+        return false;
+      }
+    }
+
+    for (const propriete of ["microNotion", "denominateur"]) {
+      const valeurs = new Set(restants.map((index) => elements[index][propriete]));
+      for (const valeur of valeurs) {
+        const memes = restants.filter(
+          (index) => elements[index][propriete] === valeur,
+        ).length;
+        const autres = restants.length - memes;
+        const runTerminal = longueurRunTerminal(propriete, valeur);
+        if (memes > 2 * (autres + 1) - runTerminal) return false;
+      }
+    }
+    return true;
+  }
+
+  function estCompatible(index) {
+    const candidat = elements[index];
+    const dernier = ordreIndices.length > 0
+      ? elements[ordreIndices.at(-1)]
+      : null;
+    const avantDernier = ordreIndices.length > 1
+      ? elements[ordreIndices.at(-2)]
+      : null;
+    if (dernier && estQcm(dernier) && estQcm(candidat)) return false;
+    if (dernier && estLibre(dernier) && estLibre(candidat)) return false;
+    if (
+      avantDernier
+      && dernier.microNotion === candidat.microNotion
+      && avantDernier.microNotion === candidat.microNotion
+    ) return false;
+    return !(
+      avantDernier
+      && dernier.denominateur === candidat.denominateur
+      && avantDernier.denominateur === candidat.denominateur
+    );
+  }
+
+  function placer(masque = 0) {
+    if (ordreIndices.length === elements.length) return true;
+    const avantDernier = ordreIndices.at(-2) ?? -1;
+    const dernier = ordreIndices.at(-1) ?? -1;
+    const cleImpasses = `${masque}:${avantDernier}:${dernier}`;
+    if (impasses.has(cleImpasses)) return false;
+
+    const signaturesEssayees = new Set();
+    for (const index of priorites) {
+      if (utilises[index] || !estCompatible(index)) continue;
+      const element = elements[index];
+      const signature = [
+        element.microNotion,
+        estQcm(element),
+        estLibre(element),
+        element.denominateur,
+      ].join(":");
+      if (signaturesEssayees.has(signature)) continue;
+      signaturesEssayees.add(signature);
+
+      utilises[index] = true;
+      ordreIndices.push(index);
+      if (resteFaisable() && placer(masque | (1 << index))) return true;
+      ordreIndices.pop();
+      utilises[index] = false;
+    }
+    impasses.add(cleImpasses);
     return false;
   }
 
   if (!placer()) {
-    throw new Error("serie fractions-decimaux : ordre varié impossible");
+    const signature = elements.map((element) => [
+      element.microNotion,
+      element.presentation,
+      element.forme ?? "denominateur-impose",
+      element.denominateur,
+    ].join(":")).join("|");
+    throw new Error(
+      `serie fractions-decimaux : ordre contraint impossible (${signature})`,
+    );
   }
-  return ordre;
+  return ordreIndices.map((index) => elements[index]);
 }
 
 function repartitionPresentations(nombreQuestions) {
@@ -517,15 +610,12 @@ export function planifierSerieFractionsDecimaux({
   parametrerNumerateurs(files, aleatoire);
   melangerFiles(files, aleatoire);
   attribuerPresentations(files, aleatoire, nombreQuestions);
-  const ordre = ordonnerMicroNotions(aleatoire, repartition);
-  const positions = new Map([
-    [MICRO_NOTION_NC03, 0],
-    [MICRO_NOTION_NC04, 0],
-  ]);
-  return ordre.map((microNotion, position) => {
-    const index = positions.get(microNotion);
-    positions.set(microNotion, index + 1);
-    const element = files.get(microNotion)[index];
+  const aleatoireOrdre = creerGenerateur(
+    `fractions-decimaux-ordre-contraint-v${VERSION_PLAN_SERIE_FRACTIONS_DECIMAUX}:${graine}:${nombreQuestions}`,
+  );
+  const ordre = ordonnerElements([...files.values()].flat(), aleatoireOrdre);
+  return ordre.map((element, position) => {
+    const { microNotion } = element;
     return {
       ...element,
       position,

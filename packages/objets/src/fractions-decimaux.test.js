@@ -196,10 +196,16 @@ describe("données des droites des unités, des demis et des quarts", () => {
     });
   });
 
-  it("conserve les huit quarts, y compris les écritures réductibles", () => {
+  it("couvre les quarts de 0/4 à 12/4, y compris les écritures réductibles", () => {
     assert.equal(DONNEES_DROITE_QUARTS.denominateur, 4);
-    assert.equal(DONNEES_DROITE_QUARTS.maximum, 2);
-    assert.equal(DONNEES_DROITE_QUARTS.graduations.length, 9);
+    assert.equal(DONNEES_DROITE_QUARTS.maximum, 3);
+    assert.equal(DONNEES_DROITE_QUARTS.graduations.length, 13);
+    assert.deepEqual(DONNEES_DROITE_QUARTS.graduations.at(-1), {
+      numerateur: 12,
+      denominateur: 4,
+      valeur: 3,
+      ecritureDecimale: "3",
+    });
     assert.deepEqual(
       DONNEES_DROITE_QUARTS.graduations
         .filter(({ numerateur }) => numerateur > 0 && numerateur % 2 === 0)
@@ -212,6 +218,8 @@ describe("données des droites des unités, des demis et des quarts", () => {
         { numerateur: 4, ecritureDecimale: "1" },
         { numerateur: 6, ecritureDecimale: "1,5" },
         { numerateur: 8, ecritureDecimale: "2" },
+        { numerateur: 10, ecritureDecimale: "2,5" },
+        { numerateur: 12, ecritureDecimale: "3" },
       ],
     );
   });
@@ -274,7 +282,7 @@ describe("tableau de numération jusque dans les millièmes", () => {
 });
 
 it("publie la brique dans le paquet @mathsgo/objets", async () => {
-  assert.equal(VERSION_FRACTIONS_DECIMAUX, 3);
+  assert.equal(VERSION_FRACTIONS_DECIMAUX, 4);
   const paquet = JSON.parse(
     await readFile(new URL("../package.json", import.meta.url), "utf8"),
   );

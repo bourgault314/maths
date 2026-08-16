@@ -1381,3 +1381,46 @@ global, aucun texte coupé, aucun élément hors panneau et aucune erreur
 navigateur. Elle vérifie notamment les trois outils du cours, les deux méthodes
 sans flèche concurrente, la conversion différée de `2,27`, le rail de `2/4`,
 les masques NC-03/NC-04 et le tableau seul pour `/1000`.
+
+### D-060 — Les séries restent seedées et chaque famille choisit son outil de sens
+
+Les quarts des questions NC-03 et NC-04 forment désormais une banque continue
+de `1/4` à `12/4`. Cette extension vaut pour les questions non libres dans les
+deux sens, en saisie directe comme en QCM, et porte donc les rails concernés
+jusqu'à trois unités.
+Dans la banque de fractions libres familières, seul `11/4` est ajouté : les
+autres cibles libres et les questions extérieures à ce domaine ne changent
+pas. Une série de 5 conserve sa structure minimale explicite : une question de
+chacune des familles `/2`, `/4`, `/10` et `/100`, ainsi qu'une production de
+fraction libre, toutes ensuite ordonnées par la graine.
+
+La première question n'est ni choisie comme « facile », ni réservée ou
+interdite à une fraction libre : tout le départ reste réellement déterminé par
+la graine. L'ordonnancement déterministe interdit cependant deux QCM
+consécutifs, deux productions de fraction libre consécutives, trois questions
+consécutives du même sens et trois dénominateurs identiques consécutifs. Ces
+contraintes améliorent la variété pour 5, 10, 15 ou 20 questions sans créer de
+progression artificielle liée à la position dans la série.
+
+Le choix de représentation devient une règle précise, commune au cours, à
+« Me guider » et à la correction. Pour `1/4`, `3/4`, `0,25` et `0,75`, une
+première méthode emploie les bandes sur rail et une seconde les plaques
+colorées réorganisées ; le tableau de numération n'est jamais ajouté à ces
+correspondances. `2/4` utilise le rail et montre la fusion des deux quarts en
+un demi. Les conversions en `/10` et `/100` conservent les deux voies
+alternatives plaques–tableau, tandis que `/1000` reste au tableau seul. Les
+demis et quarts impropres restent construits sur rail. Pour les quarts de
+`9/4` à `12/4`, ce rail va jusqu'à 3 unités ; dans l'aide du sens inverse,
+lorsque la cible dépasse huit quarts, l'élève peut ajouter une unité entière,
+soit quatre quarts, sans que le numérateur cible soit révélé.
+
+Enfin, une correction dont la fraction représente exactement un entier ne
+répète plus deux fois la fraction ou l'entier : elle ne conserve que les
+membres mathématiques utiles. D-060 ne modifie aucune autre famille, consigne
+ou réponse attendue. Le graphe de cache est invalidé atomiquement en `v37`.
+La recette automatisée complète passe **1 579 tests sur 1 579**, répartis en
+**232 suites** ; l'audit de **40 000 séries**, soit **500 000 questions**, ne
+relève aucune violation des quotas, de l'unicité rationnelle ni des quatre
+contraintes de voisinage. Le Labo passe **165 tests sur 165**. Gwenaël autorise
+la publication de test ; la revue visuelle aux cinq fenêtres doit être rejouée
+sur l'URL publique avant de considérer D-060 comme validée.
