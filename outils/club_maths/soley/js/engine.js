@@ -327,6 +327,40 @@ function palissadeSVG(porte){
   });
   return s;
 }
+/* Scène « parts » (lot E, 08/2026) — des bandes de MÊME longueur, découpées
+   différemment, dont on remplit le début. C'est le support historique du projet — la
+   bande de fractions — utilisé pour ce qu'il montre le mieux : la COMPARAISON DE
+   LONGUEURS. Deux cours des pitons s'en servent, et ils disent l'inverse l'un de
+   l'autre avec la même image :
+     · l'équivalence — 1/2, 2/4 et 3/6 remplissent EXACTEMENT la même longueur ;
+     · la comparaison — 1/2, 1/3 et 1/4 en remplissent de moins en moins.
+   `sc.parts` = une liste de lignes {f, n} : la bande est coupée en f[1] parts, les
+   n premières sont peintes, les autres restent en pâle. L'étiquette de droite dit
+   la part obtenue — c'est la seule écriture de la scène, le reste se lit à l'œil. */
+function sceneParts(sc,tE){
+  const X0=20, W=248, hB=44, ECART=10, LBL=X0+W+18;
+  let y=6, svg='';
+  sc.parts.forEach((L,k)=>{
+    const f=L.f, n=f[1], w=W/n, pris=L.n;
+    let e='';
+    for(let i=0;i<n;i++){
+      const plein=i<pris;
+      e+=`<rect class="bande" x="${(X0+i*w).toFixed(1)}" y="${y}" width="${w.toFixed(1)}" height="${hB}" fill="${fcol(f)}"${plein?'':' opacity=".2"'}/>`;
+    }
+    for(let i=1;i<n;i++){
+      e+=`<line x1="${(X0+i*w).toFixed(1)}" y1="${y}" x2="${(X0+i*w).toFixed(1)}" y2="${y+hB}" stroke="#10182e" stroke-width="1.6" stroke-dasharray="4 5" opacity=".55"/>`;
+    }
+    const fs=n>=10?11:(n>=8?13:15);
+    for(let i=0;i<pris;i++)e+=bandeLbl(X0+i*w+w/2,y,f,fs);
+    /* le trait plein s'arrête à la longueur PRISE : c'est elle qu'on compare */
+    e+=`<rect x="${X0}" y="${y}" width="${(w*pris).toFixed(1)}" height="${hB}" fill="none" stroke="#101a33" stroke-width="3"/>`;
+    e+=`<rect x="${X0}" y="${y}" width="${W}" height="${hB}" fill="none" stroke="#101a33" stroke-width="1.4" opacity=".45"/>`;
+    e+=cEtiq(LBL+16,y+hB/2+5,[pris,n],17);
+    svg+=cFade(tE(Math.min(k,3)),e);
+    y+=hB+ECART;
+  });
+  return {svg:svg,h:y+2};
+}
 /* Scène « plateau » (lot D, 08/2026) — la PREMIÈRE scène de cours qui ne parle pas de
    fractions. Une porte orientée n'est pas une part : la bande ne sait pas la dessiner,
    et le rayon non plus tout seul. Il faut montrer le PLATEAU — la case clôturée, le
@@ -432,7 +466,7 @@ function construireCours(id){
   /* deux familles de scènes : les partages descendent (cascade de prismes), les
      additions montent (deux rayons dans la lentille) — l'aiguillage se fait sur
      le champ présent dans `scene`, jamais sur le nom du cours */
-  const somme=!!c.scene.somme, murs=!!c.scene.murs, plateau=!!c.scene.plateau;
+  const somme=!!c.scene.somme, murs=!!c.scene.murs, plateau=!!c.scene.plateau, parts=!!c.scene.parts;
   /* déroulé d'une étape : l'explication courte, puis l'écriture étagée (règle R5) */
   const etapeHTML=(e)=>(e.t?`<p class="cligne">${texteMath(e.t)}</p>`:'')+
     (e.eq?`<div class="heq ceq cligne">${eqHTML(e.eq)}</div>`:'');
@@ -448,6 +482,11 @@ function construireCours(id){
       for(let n=0;n<m.etapes&&i<c.etapes.length;n++,i++)h+=etapeHTML(c.etapes[i]);
     });
     while(i<c.etapes.length)h+=etapeHTML(c.etapes[i++]);
+  }else if(parts){
+    /* même alternance qu'ailleurs : une image, SES phrases, l'image suivante si le
+       cours en a plusieurs — ici une seule suffit, les trois bandes se comparent */
+    h+=svgHTML(sceneParts(c.scene,tE),c.scene.alt||'Des bandes de fractions de même longueur, découpées différemment');
+    c.etapes.forEach((e)=>{h+=etapeHTML(e);});
   }else if(plateau){
     /* même alternance que les murs : une vignette, SA phrase, la vignette suivante */
     let i=0;
