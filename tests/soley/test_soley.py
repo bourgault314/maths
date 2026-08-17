@@ -415,12 +415,12 @@ def principal():
 
         # ============ passe 4 : sauvegarde amorcée + mode classe ============
         GRAINE = ("try{localStorage.setItem('soley-save-v5',JSON.stringify({"
-                  "done:{'lagon:Premier rayon':true,'lagon:Zigzag dans les roches':true,"
+                  "done:{'lagon:Premier rayon':true,'lagon:Zigzag dans le corail':true,"
                   "'lagon:Moitié-moitié':true,'lagon:La part perdue':true,'lagon:Partage en tiers':true,"
                   "'lagon:Les quatre quarts':true,'lagon:Les six sixièmes':true,"
                   "'lagon:La moitié du quart':true,'lagon:La moitié de la moitié':true},"
-                  "fruits:{'lagon:Zigzag dans les roches':1},"
-                  "pieces:{'lagon:Zigzag dans les roches':2}}));}catch(e){}")
+                  "fruits:{'lagon:Zigzag dans le corail':1},"
+                  "pieces:{'lagon:Zigzag dans le corail':2}}));}catch(e){}")
         ctx4 = navig.new_context(viewport={"width": 390, "height": 844}, locale="fr-FR")
         ctx4.add_init_script(INIT_CONSENTEMENT)
         ctx4.add_init_script(GRAINE)

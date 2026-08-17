@@ -49,13 +49,23 @@ const FRNAME={letchi:'Letchis',mangue:'Mangues',ananas:'Ananas',goyavier:'Goyavi
 const LV=[
  /* ---------- Le lagon (6e) ---------- */
  {w:'lagon',name:"Premier rayon",
-  sub:"Touche le miroir, puis une case de la grille pour le poser. Amène le rayon entier (1) jusqu’à la case créole. Les pièces ont déjà le bon sens ; retouche une pièce posée pour la reprendre.",
+  /* Tutoriel de gestes (lot H) : le GLISSER passe devant le toucher-toucher — c'est
+     le geste que les enfants tentent spontanément depuis le lot G ; le toucher-toucher
+     devient le repli. Un seul vocabulaire dans tout le jeu : « touche » / « tire »,
+     jamais « clique » (la cible est le téléphone en portrait). La dernière phrase est
+     la seule du jeu qui dise qu'une pièce POSÉE se déplace (#407). */
+  sub:"Tire le miroir jusqu’à une case de la grille — ou touche-le, puis touche la case. Amène le rayon entier (1) jusqu’à la case créole. Les pièces ont déjà le bon sens ; touche une pièce posée pour la reprendre, tire-la pour la déplacer.",
   cols:7,rows:5,suns:[{x:0,y:2,dir:1}],
   targets:[{x:4,y:0,need:[1,1]}],
   rocks:[[5,3],[1,4]],fruits:[],
   tools:[b(1,0)],sol:[[0,4,2]]},
 
- {w:'lagon',name:"Zigzag dans les roches",
+ /* Renommé au lot H : le lagon est peint en CORAIL (obstacleSVG → corailSVG), le
+    titre montrait des roches que l'écran n'a jamais eues — et sa propre consigne
+    disait déjà « patates de corail ». Coût assumé : la clé de sauvegarde est
+    `monde:nom`, ce niveau perd donc ses petits soleils chez les joueurs actuels
+    (2ᵉ du lagon, rejouable en une minute). Aucune ligne CALC — vérifié. */
+ {w:'lagon',name:"Zigzag dans le corail",
   sub:"Les patates de corail bloquent la lumière : par où passer ? Les fruits péi sont des bonus facultatifs — facultatifs, mais malins : le chemin qui gagne n'est pas forcément celui qui ramasse.",
   cols:8,rows:6,suns:[{x:0,y:5,dir:0}],
   targets:[{x:7,y:5,need:[1,1]}],
@@ -204,7 +214,10 @@ const LV=[
     {porte:côté 0N 1E 2S 3O}. Aucune notion nouvelle : on JOUE le partage. */
  {w:'canne',name:"Premier coup de sabre",
   sub:"Le soleil tire vers la gauche, pour une fois ! Deux cases attendent la même part — et la boîte contient plus de pièces qu'il n'en faut. Lesquelles servent vraiment ?",
-  hint:"Une seule pièce coupe le rayon ; les autres ne font que le faire tourner.",
+  /* La boîte tient DEUX prismes (÷2 et ÷3) : « une seule pièce coupe » était faux,
+     et « les autres ne font que tourner » l'était tout autant. L'indice dit
+     maintenant ce que le surplus a de piégeux — le ÷3 coupe, mais pas en moitiés. */
+  hint:"Deux prismes dans la boîte, un seul sert : les cases veulent des moitiés. Les miroirs, eux, ne font que faire tourner le rayon.",
   cols:9,rows:6,suns:[{x:8,y:2,dir:3}],
   targets:[{x:0,y:0,need:[1,2]},{x:0,y:5,need:[1,2]}],
   rocks:[[2,1],[6,1],[4,2],[2,3],[6,3],[2,4],[4,4],[6,4]],fruits:[[2,2]],
@@ -283,7 +296,7 @@ const LV=[
     victoire, et rien de plus. `cours` n'entre PAS dans `decouvertesMonde` : ce niveau
     ne verrouille rien, la canne reste contournable par le chemin de l'école. */
  {w:'canne',name:"La chambre close",cours:'neuvieme',
-  sub:"Une chambre fermée au cœur du champ, une seule entrée — et dedans, une case qui veut un neuvième. Combien de coupes, et de quel côté ?",
+  sub:"Une chambre fermée au cœur du champ, une seule entrée. Dehors une case veut un tiers, dedans une autre veut un neuvième. Combien de coupes, et de quel côté ?",
   hint:"1/3 ÷ 3 = 1/9.",
   cols:9,rows:7,suns:[{x:0,y:6,dir:1}],
   targets:[{x:8,y:0,need:[1,3],porte:2},{x:6,y:2,need:[1,9],porte:3}],
@@ -350,8 +363,10 @@ const LV=[
  {w:'foret',name:"Les huitièmes",
   /* consigne réécrite (08/2026) : elle s'étonnait d'un huitième que les champs de
      canne servent déjà depuis « Le grand tri ». On ne fait plus découvrir ce qui
-     est connu — on pose la vraie question du niveau : combien de coupes ? */
-  sub:"Un huitième par case, et seulement des ÷2 dans la boîte. Combien de coupes faut-il ?",
+     est connu — on pose la vraie question du niveau : combien de coupes ?
+     Lot H : « un huitième par case » restait faux — les quatre cases valent
+     1/2, 1/8, 1/8 et 1/4. Seul le compte des huitièmes est annoncé désormais. */
+  sub:"Deux cases veulent un huitième, et la boîte ne sait couper qu'en deux. Combien de coupes faut-il ?",
   hint:"La moitié de la moitié de la moitié : 1/2 ÷ 2 ÷ 2 = 1/8.",
   cols:10,rows:7,suns:[{x:0,y:3,dir:1}],
   targets:[{x:9,y:1,need:[1,2]},{x:9,y:2,need:[1,8]},{x:9,y:4,need:[1,8]},{x:2,y:6,need:[1,4]}],
@@ -370,7 +385,9 @@ const LV=[
   sol:[[0,2,3],[1,2,4],[2,5,4],[3,7,3],[4,2,1],[5,7,1],[6,2,5],[7,5,5],[8,7,4]]},
 
  {w:'foret',name:"Les douzièmes",
-  sub:"Des douzièmes ! Et une case 1/4 qui n'a pas l'air d'accord avec les autres…",
+  /* Lot H : le pluriel mentait — il n'y a QU'UN douzième, et la case 1/2 passait
+     sous silence. Les trois cases sont nommées, le désaccord devient à trois. */
+  sub:"Un douzième, un quart, un demi : trois cases qui n'ont pas l'air d'accord entre elles…",
   hint:"1/6 + 1/12 = 2/12 + 1/12 = 3/12. Simplifie !",
   cols:10,rows:7,suns:[{x:0,y:3,dir:1}],
   targets:[{x:9,y:1,need:[1,4]},{x:9,y:5,need:[1,12]},{x:2,y:6,need:[1,2]}],
@@ -378,7 +395,10 @@ const LV=[
   tools:[s2(1,0,2),s3(1,1,2,0),s2(2,1,2),mg(1,0,1),b(0,1),b(1,0),b(2,1),b(1,2)],
   sol:[[0,2,3],[1,4,1],[2,4,2],[3,7,1],[4,2,1],[5,7,2],[6,4,5]]},
 
- {w:'foret',name:"Le champ de roches",
+ /* Renommé au lot H, avec les mots de sa propre consigne (« Traverse le champ de
+    fougères ») : la forêt est peinte en FOUGÈRES, le titre et la consigne cessent
+    de se contredire sans qu'on touche à la consigne. Aucune ligne CALC — vérifié. */
+ {w:'foret',name:"Le champ de fougères",
   sub:"Traverse le champ de fougères et ramasse les fruits au passage. Attention, il y a des pièces en trop !",
   cols:10,rows:8,suns:[{x:0,y:4,dir:1}],
   targets:[{x:9,y:1,need:[1,2]},{x:9,y:6,need:[1,2]}],
@@ -425,7 +445,8 @@ const LV=[
   sol:[[0,2,4],[1,2,5],[2,6,1],[3,2,1],[4,3,4],[5,3,2],[6,6,2]]},
 
  {w:'volcan',name:"Deux neuvièmes",
-  sub:"2/9, 1/9, et un rayon entier à reconstruire. Les loupes vont chauffer.",
+  /* Lot H : la quatrième case, 1/3, n'était jamais nommée. */
+  sub:"2/9, 1/9, un tiers, et un rayon entier à reconstruire. Les loupes vont chauffer.",
   hint:"1/9 × 2 = 2/9. Et 1/3 × 3 = 1 : le rayon entier renaît.",
   cols:10,rows:8,suns:[{x:0,y:4,dir:1}],
   targets:[{x:9,y:1,need:[2,9]},{x:9,y:2,need:[1,9]},{x:9,y:4,need:[1,1]},{x:2,y:7,need:[1,3]}],
@@ -554,7 +575,11 @@ const LV=[
   tools:[s3(1,0,1,2)],sol:[[0,4,2]]},
 
  {w:'soleils',name:"Deux soleils",
-  sub:"Nouveau : DEUX soleils ! Chacun n'apporte qu'un demi… mais la case veut un rayon entier.",
+  /* Lot H : « Nouveau : DEUX soleils » mentait depuis que la canne s'est intercalée —
+     « La croisée des rayons » en montre deux au 16ᵉ niveau. La vraie première fois,
+     ici, c'est un soleil qui vaut MOINS que 1 : « Un soleil qui vaut 2 » (43) en a
+     déjà montré un qui ne vaut pas 1, donc le mot « moins » porte tout le neuf. */
+  sub:"Nouveau : un soleil qui vaut moins que 1 ! Ils sont deux, et chacun n'apporte qu'un demi… mais la case veut un rayon entier.",
   cols:9,rows:6,suns:[{x:0,y:1,dir:1,val:[1,2]},{x:0,y:4,dir:1,val:[1,2]}],
   targets:[{x:8,y:3,need:[1,1]}],
   rocks:[[2,2],[6,1],[2,5],[7,0]],fruits:[[2,1],[6,3]],
@@ -699,7 +724,9 @@ const LV=[
   sol:[[0,2,4],[1,2,2],[2,6,2],[3,2,6],[4,9,6]]},
 
  {w:'tunnels',name:"Le tourbillon",
-  sub:"Le rayon s'enroule jusqu'au cœur du tunnel. Six miroirs, une spirale, un seul chemin.",
+  /* Lot H : « Six miroirs » comptait la SOLUTION, pas la boîte — qui en tient huit.
+     La consigne annonce désormais le surplus, ce qui est la vraie difficulté. */
+  sub:"Le rayon s'enroule jusqu'au cœur du tunnel. Une spirale, un seul chemin — et deux miroirs de trop dans la boîte.",
   hint:"Suis la spirale depuis le soleil : chaque virage réclame son miroir.",
   cols:12,rows:8,suns:[{x:0,y:0,dir:1}],
   targets:[{x:3,y:4,need:[1,1]}],
@@ -745,7 +772,9 @@ const LV=[
   sol:[[0,1,4],[1,1,6]]},
 
  {w:'tunnels',name:"Les demi-tunnels",
-  sub:"Deux boyaux étroits, deux passes qui ne laissent passer que des demi-rayons, une lentille au carrefour — et une maison qui veut un rayon entier.",
+  /* Lot H : dans un monde qui compte trois niveaux à pièces SCELLÉES, « une lentille
+     au carrefour » laissait croire qu'elle était déjà posée ; elle est dans la boîte. */
+  sub:"Deux boyaux étroits, deux passes qui ne laissent passer que des demi-rayons, une lentille à poser au carrefour — et une maison qui veut un rayon entier.",
   hint:"Le rayon entier ne passe pas. Coupe-le en deux : chaque moitié traverse sa passe, puis les deux se retrouvent devant la lentille.",
   cols:12,rows:8,suns:[{x:0,y:4,dir:1}],
   targets:[{x:11,y:4,need:[1,1]}],

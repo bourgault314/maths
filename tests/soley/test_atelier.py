@@ -41,7 +41,7 @@ INIT_CONSENTEMENT = (
 # Fausse progression semée avant le chargement : c'est elle qui doit survivre
 # intacte à une victoire dans l'atelier.
 SAVE_TEMOIN = json.dumps(
-    {"done": {"lagon:Premier rayon": True}, "fruits": {"lagon:Zigzag dans les roches": 1},
+    {"done": {"lagon:Premier rayon": True}, "fruits": {"lagon:Zigzag dans le corail": 1},
      "pieces": {"lagon:Premier rayon": 1}, "cours": {"demi": True}},
     ensure_ascii=False, separators=(",", ":"),
 )

@@ -218,6 +218,24 @@ plateau ne répond plus aux clics — défaut trouvé en construisant le lot).
   Observation d'élèves, la première du projet : les petits cousins de Gwenael, sur
   téléphone, ont tous voulu TIRER la pièce. C'est le MOUVEMENT qui départage les deux
   gestes — sous le seuil, l'ancien parcours est intact à la ligne près.
+- **Une consigne décrit le PLATEAU, pas l'intention** (17/08, lot H). Un texte de
+  niveau n'a le droit d'annoncer que ce qu'un contrôle peut vérifier dans ses données :
+  le compte réel des cases et leurs valeurs, le contenu réel de la boîte (pas celui de
+  la solution), ce qui est **scellé** contre ce qui est **à poser**. Six consignes et
+  un indice s'étaient décalés de leur plateau sans qu'une seule ligne de code change —
+  c'est le niveau qui avait bougé sous le texte. **Corollaire : le mot « Nouveau » est
+  une promesse datée.** Il devient faux dès qu'un monde s'intercale (« Nouveau : DEUX
+  soleils » au 45 a été démenti par la canne, qui en montre deux au 16). Tout lot qui
+  déplace des niveaux doit relire les « Nouveau » qui suivent.
+- **Un vérificateur de lot est une ARCHIVE : on le laisse mourir, on ne le répare
+  pas** (17/08, lot H). Les `tests/soley/verifier-*.mjs` comparent le dépôt à une
+  référence git datée ; ils échouent légitimement dès que la suite avance, et aucun
+  n'est en CI. Les corriger pour qu'ils repassent au vert leur ferait raconter un lot
+  qui n'a pas eu lieu. **On leur ajoute une bannière `ARCHIVE DATÉE` disant depuis
+  quand et pourquoi ils échouent — mesuré, pas supposé.** Ce qui doit rester vrai
+  vit dans un vrai test (`*.test.mjs`, ramassé par `node --test`), pas dans un
+  vérificateur. Même famille que « une bible qui ment est pire qu'une bible
+  incomplète » (#408).
 - **Un geste neuf réutilise le discriminateur qui existe déjà** (17/08). Quand un
   geste nouveau entre en concurrence avec un geste installé sur la même cible, ne pas
   inventer un troisième vocabulaire : chercher ce qui tranche DÉJÀ dans le code. Sur
@@ -1104,7 +1122,8 @@ Trois choses à savoir avant d'y toucher :
   de niveaux — « Zigzag dans les roches » (lagon) et « Le champ de roches » (forêt) —
   sont laissés tels quels : la clé de sauvegarde est `monde:nom`, un renommage rend
   la progression de l'élève inerte (§6, décision 8). C'est un arbitrage pour Gwenael,
-  pas une correction.** L'atelier suit aussi : les objets s'appellent désormais
+  pas une correction.** — *arbitrage rendu au lot H (17/08) : renommés « Zigzag dans
+  le corail » et « Le champ de fougères », voir plus bas.* L'atelier suit aussi : les objets s'appellent désormais
   « Patate de corail », « Carreau de cannes », « Fougère » ou « Roche » selon le monde
   du brouillon, et la case y devient « Kiosque » à la forêt (`nomObjet`). **RÈGLE À
   GRAVER : quand on repeint un monde, on relit ses TEXTES dans la foulée — le décor
@@ -1322,4 +1341,70 @@ Trois choses à savoir avant d'y toucher :
   interaction existante.** Piège rencontré : « Premier rayon » se gagne en UNE pièce,
   donc la poser lance la célébration et `boardClick` refuse alors TOUT clic — un
   premier test entièrement faux en est sorti. Prendre un niveau à plusieurs pièces.
+- **17/08 — lot H : les textes rattrapent les plateaux, et deux niveaux cessent de
+  mentir sur leur décor.** Audit des 71 niveaux, mesuré et non deviné. **Ce qui est
+  sain :** aucun doublon de clé `monde:nom`, aucun doublon de nom toutes mondes
+  confondus (ce qui casserait `CALC`, indexée par le **nom seul** — 53 entrées),
+  aucune clé `CALC` orpheline. **Ce qui ne l'était pas :** neuf textes.
+  - **Le tutoriel du niveau 1** apprenait le mauvais geste d'abord. Depuis le lot G,
+    le glisser est ce que les enfants tentent spontanément ; il passe devant, le
+    toucher-toucher devient le repli. Un seul vocabulaire dans tout le jeu — « touche »
+    et « tire », **jamais « clique »**, la cible est le téléphone en portrait — et la
+    dernière phrase est désormais la seule du jeu qui dise qu'une pièce **posée** se
+    déplace (#407).
+  - **Le « Nouveau » du 45 mentait** depuis que la canne s'est intercalée : « La
+    croisée des rayons » (16) montre déjà deux soleils. Mesure faite avant d'écrire :
+    « un soleil qui ne vaut pas 1 » aurait menti à son tour, car « Un soleil qui vaut
+    2 » (43) en montre un. Le vrai neuf est un soleil qui vaut **moins** que 1 — c'est
+    ce que la consigne dit maintenant. **Ce piège reviendra au déménagement des pitons
+    en position 3 : « Nouveau : la passe ! » (38) est juste aujourd'hui, il faudra le
+    re-vérifier après.**
+  - **Six consignes et un indice décrivaient un autre plateau que le leur** : 24 (les
+    quatre cases valent 1/2, 1/8, 1/8, 1/4 — « un huitième par case » était faux),
+    59 (huit miroirs en boîte, six dans la solution : le titre comptait la solution),
+    32 (quatrième case 1/3 jamais nommée), 26 (un **seul** douzième, et la case 1/2
+    passée sous silence), 19 (deux cases, une seule annoncée — vérifié sur la grille :
+    la 1/3 est dehors, la 1/9 dedans), 62 (la lentille est **dans la boîte**, or trois
+    niveaux du monde ont des pièces scellées — « à poser » lève l'ambiguïté), 12
+    (l'indice disait « une seule pièce coupe » alors que la boîte tient un ÷2 **et**
+    un ÷3 ; la réécriture ne s'arrête pas à moitié, car « les autres ne font que le
+    faire tourner » était faux du même coup).
+  - **Les deux derniers noms qui nommaient un décor absent sont renommés** :
+    « Zigzag dans les roches » → **« Zigzag dans le corail »**, « Le champ de roches »
+    → **« Le champ de fougères »**. `obstacleSVG(w)` (render.js) dessine corail au
+    lagon et fougères en forêt ; le 27 contredisait même sa propre consigne. Arbitrage
+    laissé ouvert par SPEC-ORDRE-DES-NOTIONS.md §6.3 « à trancher dans le lot G » et
+    passé au travers du lot G — tranché ici, en application de la règle du 16/08
+    (« quand on repeint un monde, on relit ses TEXTES dans la foulée »). Coût mesuré :
+    **aucun des deux n'a de ligne `CALC`**, trois batteries vivantes suivies, et deux
+    niveaux perdent leurs petits soleils chez les joueurs actuels (2ᵉ du lagon, 7ᵉ de
+    la forêt, rejouables en une minute). **Le coût ne fera que grossir : aujourd'hui
+    les seules sauvegardes au monde sont celles de Gwenael et de ses cousins.**
+  - **Les deux `verifier-*.mjs` qui citent les anciens noms n'ont PAS été corrigés** —
+    voir la règle §6 : ce sont des archives datées, mesurées mortes **avant** ce lot
+    (`verifier-lot-canne` sort déjà 71 échecs contre un `origin/main` intact,
+    `verifier-lot-niveaux-durs` plante). `verifier-lot-canne` reçoit la bannière
+    `ARCHIVE DATÉE` que son aîné portait déjà. Le musée `soley-v1.html` reste intact.
+  - **Ce qui a été examiné et volontairement laissé** : le 60 (« ni la déplacer ni la
+    reprendre » **dit vrai depuis #407**, et devient un vrai contraste) ; le 68 « Les
+    trois cheminées » pour 2 cases (le nom peut désigner le décor, et **ce niveau a
+    une ligne `CALC`** — le renommer tuerait son coup de pouce en silence) ; le 6
+    (« Regarde la nouvelle couleur ! » alors que le ÷3 traîne déjà dans les boîtes 4
+    et 5 — ça se corrige en retirant le ÷3 de ces boîtes, donc lot de **niveaux**) ;
+    les 21 et 55, où **le texte ne peut rien** : tous deux ont soleil = 1 et case = 1/1,
+    exactement le cas que le §6 interdit d'espérer (« une case qui demande 1/1 quand le
+    soleil vaut 1 ne forcera JAMAIS la lentille ») — ce sont deux **cibles à
+    redessiner**, et le 21 est le niveau qui *introduit* la lentille ; enfin les 36
+    niveaux qui ont des pièces en trop sans le dire (5 seulement l'annoncent : 12, 22,
+    27, 33, 69) — ce n'est pas un mensonge mais une règle du jeu que le texte
+    n'énonce jamais, **à décider une fois pour toutes, pas niveau par niveau**.
+  - **Non vérifié, pour que la prochaine session sache où on n'a pas regardé** : le jeu
+    n'a pas été joué à la main, tout vient des données ; les affirmations du type « un
+    seul chemin » (57) ou « les deux brèches » (indice du 33) demanderaient un solveur ;
+    les 21 et 55 n'ont pas été re-mesurés (chiffres repris : 196 et 275 victoires sans
+    la lentille) ; le 68 n'a pas été regardé à l'écran, d'où le refus de trancher.
+  - Preuves : `node --test` **1588/1588**, **8/8** validateurs, batterie du jeu **TOUT
+    VERT** (T14 et T15 compris), batterie de l'atelier **TOUT VERT**, et diff sémantique
+    champ par champ des 71 niveaux : **seuls 9 textes et 2 noms changent, aucune donnée
+    de jeu, `CALC` identique à l'octet**.
 - (à compléter à chaque session)

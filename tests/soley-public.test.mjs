@@ -314,8 +314,8 @@ test("la progression verrouillée et les étoiles se calculent juste", () => {
     canne.slice(0, 6).forEach(i => save.done[LV[i].w + ':' + LV[i].name] = true);
     const foretParChamp = mondeDeverrouille('foret'); /* aucune découverte dans la canne */
     save.done = ctx2.done;
-    const zi = LV.findIndex(l => l.name === 'Zigzag dans les roches');
-    const k = 'lagon:Zigzag dans les roches';
+    const zi = LV.findIndex(l => l.name === 'Zigzag dans le corail');
+    const k = 'lagon:Zigzag dans le corail';
     const fruitManquant = etoiles(zi);
     save.fruits[k] = 1; const fruitsComplets = etoiles(zi);
     save.pieces[k] = 3; const maitrise = etoiles(zi); /* sol de référence à 3 pièces depuis la refonte */
@@ -550,7 +550,7 @@ test("le chantier « Comprendre » : découvertes, points de cours et règle R1"
   /* « Le tour du lagon » est remonté en 4 (15/08 au soir) : il se gagnait en 518 essais
      là où le niveau qui le précédait en demandait 5 534 — le monde finissait en marche
      arrière. Il ne demande que des demis, sa place est dans le bloc des demis. */
-  assert.deepEqual([...r.lagon], ["Premier rayon", "Zigzag dans les roches", "Moitié-moitié",
+  assert.deepEqual([...r.lagon], ["Premier rayon", "Zigzag dans le corail", "Moitié-moitié",
     "Le tour du lagon", "La part perdue", "Partage en tiers", "Les quatre quarts",
     "La moitié de la moitié", "Les six sixièmes", "Le tiers de la moitié",
     "La moitié du quart"]);
@@ -583,7 +583,7 @@ test("le chantier « Comprendre » : découvertes, points de cours et règle R1"
      troisième fois, en deux pièces et une seule pose gagnante. */
   assert.deepEqual([...r.foret], ["Recoller les morceaux", "Deux tiers", "Trois quarts",
     "Les huitièmes", "Cinq sixièmes", "Les douzièmes",
-    "Le champ de roches", "La clairière"]);
+    "Le champ de fougères", "La clairière"]);
   const [somme, deno] = [...r.sommes];
   /* DEUX lignes au plus (retour de Gwenael du 15/08). 1/3 + 1/3 : une seule —
      les deux tiers, plus le tiers qui manque en pâle ; recouper au dénominateur
