@@ -281,6 +281,14 @@ change leur clé de sauvegarde et touche cinq fichiers de test (`soley-public.te
 `test_soley.py`, `test_atelier.py` et deux vérificateurs de lot). Aucun des deux n'a de
 ligne `CALC` : le coût est plus faible qu'on ne le craignait. À trancher dans le lot G.
 
+> **TRANCHÉ AU LOT H (17/08/2026) : on renomme.** Le lot G est passé sans trancher.
+> « Zigzag dans les roches » → **« Zigzag dans le corail »**, « Le champ de roches » →
+> **« Le champ de fougères »** (les mots de sa propre consigne). Les cinq fichiers de
+> test cités ci-dessus se sont révélés être **trois** batteries vivantes
+> (`soley-public.test.mjs`, `test_soley.py`, `test_atelier.py`), corrigées, et **deux**
+> vérificateurs de lot qui sont des archives datées déjà mortes — laissés tels quels,
+> voir SOLEY.md §6. Journal : SOLEY.md §9, entrée du 17/08.
+
 **6.5 — Les fruits, la règle nouvelle.** On abandonne « un fruit par monde ». Les
 fruits varient à l'intérieur d'un monde, choisis pour leur **silhouette** :
 letchi, goyavier, mangue, ananas — et maintenant chouchou, papaye, banane, combava,
