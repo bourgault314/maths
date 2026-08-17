@@ -1,1 +1,10 @@
+# Fins de ligne : LF partout dans le dépôt, quelle que soit la machine.
+#
+# Sans cette ligne, un poste Windows avec `core.autocrlf=true` extrait TOUT l'arbre
+# en CRLF, et les tests qui comparent un fichier à une expression régulière écrite
+# en \n tombent en faux rouge — ça s'est produit à chaque lot Solèy d'août 2026, sur
+# `tests/soley-public.test.mjs` comme sur `tests/site-lot1-mobile-journey.test.mjs`.
+# La CI, elle, tourne sous Linux et ne voyait rien.
+* text=auto eol=lf
+
 *.pdf binary

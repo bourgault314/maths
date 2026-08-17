@@ -168,34 +168,125 @@ function renderToolbox(){
        <svg viewBox="0 0 100 100" aria-hidden="true">${pieceStatic(d)}</svg><span>${PNAME[d.t]}</span></button>`).join('');
   tb.querySelectorAll('.chip').forEach(ch=>{
     ch.addEventListener('click',()=>{
+      /* un clic qui SUIT un glissement ne doit pas re-basculer la sélection :
+         la pièce vient d'être posée, le geste est fini. */
+      if(apresTirage){apresTirage=false;return;}
       const i=+ch.dataset.i;
       state.sel=state.sel===i?null:i;
       renderToolbox();
     });
+    ch.addEventListener('pointerdown',debutTirage);
   });
 }
-function boardClick(ev){
-  if(celebrating)return;
+
+/* ===== Géométrie du plateau, partagée par le clic ET le glisser ===== */
+function geoPlateau(){
   const bd=document.getElementById('board'),L=LV[cur];
   const r=bd.getBoundingClientRect();
   const W=L.cols*CS,H=L.rows*CS;
   const sc=Math.min(r.width/W,r.height/H);
-  const ox=r.left+(r.width-W*sc)/2, oy=r.top+(r.height-H*sc)/2;
-  const x=Math.floor((ev.clientX-ox)/(sc*CS));
-  const y=Math.floor((ev.clientY-oy)/(sc*CS));
-  if(x<0||y<0||x>=L.cols||y>=L.rows)return;
-  const k=x+','+y;
-  if(state.placed[k]){delete state.placed[k];state.sel=null;overlayShown=false;redraw();return;}
-  if(state.sel===null)return;
-  const occ=L.suns.some(su=>su.x===x&&su.y===y)||L.rocks.some(r2=>r2[0]===x&&r2[1]===y)||
+  /* le SVG est en letterbox dans sa boîte : on retrouve l'origine du dessin */
+  return {r,sc,ox:r.left+(r.width-W*sc)/2,oy:r.top+(r.height-H*sc)/2,L};
+}
+function caseSous(cx,cy){
+  const g=geoPlateau();
+  const x=Math.floor((cx-g.ox)/(g.sc*CS)), y=Math.floor((cy-g.oy)/(g.sc*CS));
+  if(x<0||y<0||x>=g.L.cols||y>=g.L.rows)return null;
+  return {x,y};
+}
+function caseOccupee(x,y){
+  const L=LV[cur];
+  return L.suns.some(su=>su.x===x&&su.y===y)||L.rocks.some(r2=>r2[0]===x&&r2[1]===y)||
     L.targets.some(t=>t.x===x&&t.y===y)||L.fruits.some(f=>f[0]===x&&f[1]===y)||
     (L.gates||[]).some(g=>g.x===x&&g.y===y)||(L.fixed||[]).some(f=>f[1]===x&&f[2]===y);
-  if(occ){document.getElementById('boardbox').classList.remove('shake');
-    void document.getElementById('boardbox').offsetWidth;
-    document.getElementById('boardbox').classList.add('shake');return;}
-  state.placed[k]={def:LV[cur].tools[state.sel],ti:state.sel};
-  state.sel=null;redraw();
 }
+function refuser(){
+  const bb=document.getElementById('boardbox');
+  bb.classList.remove('shake');void bb.offsetWidth;bb.classList.add('shake');
+}
+function poserPiece(x,y,ti){
+  if(caseOccupee(x,y)){refuser();return false;}
+  state.placed[x+','+y]={def:LV[cur].tools[ti],ti};
+  state.sel=null;redraw();
+  return true;
+}
+function boardClick(ev){
+  if(celebrating)return;
+  if(apresTirage){apresTirage=false;return;}
+  const c=caseSous(ev.clientX,ev.clientY);
+  if(!c)return;
+  const k=c.x+','+c.y;
+  if(state.placed[k]){delete state.placed[k];state.sel=null;overlayShown=false;redraw();return;}
+  if(state.sel===null)return;
+  poserPiece(c.x,c.y,state.sel);
+}
+
+/* ===== GLISSER-DÉPOSER (lot G, 16/08) =====
+   Observation d'élèves rapportée par Gwenael : ses petits cousins, sur téléphone, ont
+   tous eu le même réflexe — PRENDRE la pièce et la TIRER sur le plateau — alors que le
+   jeu attendait deux clics. Les deux gestes coexistent maintenant, et c'est le
+   MOUVEMENT qui les départage :
+     · un toucher qui ne bouge pas (moins de SEUIL pixels) → rien de neuf, le `click`
+       fait son travail exactement comme avant, pas une ligne de moins ;
+     · un toucher qui dépasse le seuil → un glissement, et le `click` qui suivrait est
+       étouffé pour que la pièce ne se déselectionne pas dans la foulée.
+   Pointer Events : souris, doigt et stylet passent par le même chemin. L'étouffement
+   se fait par un DRAPEAU consommé par le premier gestionnaire de clic qui le voit —
+   pas par une minuterie, qui avalerait un jour un vrai clic. */
+const SEUIL_TIRAGE=10;
+let tirage=null, apresTirage=false;
+function surlignerCase(c){
+  const el=document.getElementById('cible');
+  if(!el)return;
+  if(!c){el.style.display='none';return;}
+  const g=geoPlateau(), bb=document.getElementById('boardbox').getBoundingClientRect();
+  const t=g.sc*CS;
+  el.style.display='block';
+  el.style.left=(g.ox-bb.left+c.x*t)+'px';
+  el.style.top=(g.oy-bb.top+c.y*t)+'px';
+  el.style.width=el.style.height=t+'px';
+  el.classList.toggle('non',caseOccupee(c.x,c.y));
+}
+function finTirage(){
+  if(tirage&&tirage.fantome)tirage.fantome.remove();
+  surlignerCase(null);
+  document.body.classList.remove('entirage');
+  tirage=null;
+}
+function debutTirage(ev){
+  if(celebrating||ev.button)return;
+  apresTirage=false;                       /* jamais de drapeau qui traîne */
+  tirage={i:+ev.currentTarget.dataset.i,x0:ev.clientX,y0:ev.clientY,actif:false};
+}
+document.addEventListener('pointermove',ev=>{
+  if(!tirage)return;
+  if(!tirage.actif){
+    if(Math.hypot(ev.clientX-tirage.x0,ev.clientY-tirage.y0)<SEUIL_TIRAGE)return;
+    tirage.actif=true;
+    state.sel=tirage.i;renderToolbox();     /* la pièce est prise : la boîte le montre */
+    const f=document.createElement('div');
+    f.className='fantome';
+    f.innerHTML=`<svg viewBox="0 0 100 100" aria-hidden="true">${pieceStatic(LV[cur].tools[tirage.i])}</svg>`;
+    document.body.appendChild(f);
+    tirage.fantome=f;
+    document.body.classList.add('entirage');
+  }
+  tirage.fantome.style.left=ev.clientX+'px';
+  tirage.fantome.style.top=ev.clientY+'px';
+  surlignerCase(caseSous(ev.clientX,ev.clientY));
+});
+document.addEventListener('pointerup',ev=>{
+  if(!tirage)return;
+  const actif=tirage.actif, i=tirage.i;
+  finTirage();
+  if(!actif)return;                        /* simple toucher : on laisse faire le clic */
+  apresTirage=true;
+  const c=caseSous(ev.clientX,ev.clientY);
+  if(c&&state.placed[c.x+','+c.y]){refuser();return;}
+  if(c){poserPiece(c.x,c.y,i);return;}
+  state.sel=null;renderToolbox();           /* lâchée hors du plateau : on la repose */
+});
+document.addEventListener('pointercancel',finTirage);
 document.getElementById('board').addEventListener('click',boardClick);
 document.getElementById('resetbtn').addEventListener('click',()=>{
   clearCeleb();state.placed={};state.sel=null;overlayShown=false;

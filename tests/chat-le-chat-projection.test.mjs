@@ -495,8 +495,21 @@ test("les couleurs principales gardent un contraste lisible sur fond blanc", () 
   }
 });
 
+/* L'interpréteur Python ne s'appelle pas pareil partout : `python3` sous Linux et sur
+   la CI, `python` sous Windows — où `python3` est l'alias du Microsoft Store, qui ne
+   lance RIEN et rend `status: null`. On essaie donc les deux, et on ne conclut à
+   l'échec que si aucun n'a pu démarrer. Faux rouge constaté sur le poste de Gwenael à
+   chaque lot d'août 2026. */
+function lancerPython(args, options) {
+  for (const bin of ["python3", "python"]) {
+    const r = spawnSync(bin, args, options);
+    if (r.status !== null) return r;
+  }
+  return { status: null, stdout: "", stderr: "aucun interpréteur Python trouvé (python3, python)" };
+}
+
 test("le générateur confirme que la page publique est à jour", () => {
-  const result = spawnSync("python3", ["-B", generatorUrl.pathname, "--check"], {
+  const result = lancerPython(["-B", generatorUrl.pathname, "--check"], {
     cwd: new URL("..", import.meta.url).pathname,
     encoding: "utf8"
   });

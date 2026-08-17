@@ -720,6 +720,61 @@ def principal():
                 f"sans le letchi={sans_fruit}, après l'avoir cueilli={avec_fruit}")
         ctx12.close()
 
+        # T14 — LE GLISSER-DÉPOSER (lot G). Observation d'élèves : les petits cousins de
+        # Gwenael, sur téléphone, ont tous voulu TIRER la pièce sur le plateau alors que
+        # le jeu attendait deux clics. Les deux gestes doivent coexister, et c'est ça
+        # qu'on vérifie ici — le neuf ET l'ancien, plus le refus d'une case occupée.
+        ctx14, pg14 = nouvelle_page(390, 844)
+        pg14.goto(url, wait_until="load")
+        pg14.wait_for_function("() => window.SOLEY && window.SOLEY.LV")
+        i14 = pg14.evaluate("() => window.SOLEY.LV.findIndex(l => l.name === 'Premier rayon')")
+        GEO14 = """(cible) => { const S = window.SOLEY;
+          const L = S.LV.find(l => l.name === 'Premier rayon');
+          const r = document.getElementById('board').getBoundingClientRect(), CS = 100;
+          const W = L.cols * CS, H = L.rows * CS, sc = Math.min(r.width / W, r.height / H);
+          const ox = r.left + (r.width - W * sc) / 2, oy = r.top + (r.height - H * sc) / 2;
+          const t = sc * CS;
+          const [cx, cy] = cible === 'roche' ? L.rocks[0] : [4, 2];
+          return { x: ox + cx * t + t / 2, y: oy + cy * t + t / 2 }; }"""
+
+        def glisser(cible):
+            pg14.evaluate(f"() => window.SOLEY.openLevel({i14})")
+            pg14.wait_for_timeout(250)
+            b = pg14.locator(".chip").first.bounding_box()
+            dep = (b["x"] + b["width"] / 2, b["y"] + b["height"] / 2)
+            arr = pg14.evaluate(GEO14, cible)
+            pg14.mouse.move(*dep)
+            pg14.mouse.down()
+            for k in range(1, 9):
+                pg14.mouse.move(dep[0] + (arr["x"] - dep[0]) * k / 8,
+                                dep[1] + (arr["y"] - dep[1]) * k / 8)
+            pg14.mouse.up()
+            pg14.wait_for_timeout(300)
+            return pg14.evaluate("() => Object.keys(window.SOLEY.state.placed)")
+
+        pose_glissee = glisser("libre")
+        gagne_glisse = pg14.evaluate("() => window.SOLEY.simulate().win")
+        section("T14 glisser-déposer : la pièce tirée sur une case libre s'y pose et gagne",
+                pose_glissee == ["4,2"] and gagne_glisse,
+                f"posées={pose_glissee}, gagné={gagne_glisse}")
+        section("T14 glisser-déposer : lâchée sur une case occupée, la pièce n'est PAS posée",
+                glisser("roche") == [], "")
+        # et l'ANCIEN geste, inchangé : un clic sélectionne, un clic pose
+        pg14.evaluate(f"() => window.SOLEY.openLevel({i14})")
+        pg14.wait_for_timeout(250)
+        pg14.locator(".chip").first.click()
+        sel14 = pg14.evaluate("() => window.SOLEY.state.sel")
+        arr14 = pg14.evaluate(GEO14, "libre")
+        pg14.mouse.click(arr14["x"], arr14["y"])
+        pg14.wait_for_timeout(300)
+        section("T14 le clic-clic d'origine marche exactement comme avant",
+                sel14 == 0 and pg14.evaluate("() => Object.keys(window.SOLEY.state.placed)") == ["4,2"]
+                and pg14.evaluate("() => window.SOLEY.simulate().win"), "")
+        section("T14 rien ne traîne après le geste : pas de fantôme, pas de case allumée",
+                pg14.evaluate("() => document.querySelectorAll('.fantome').length") == 0
+                and pg14.evaluate("() => document.getElementById('cible').style.display") != "block", "")
+        ctx14.close()
+
         # T9.9 + T9.11 — stabilité 320 px et 402 px : accueil, panneau du cours,
         # chaînes CALC corrigées (règle R1) rendues sans débordement
         for largeur, hauteur in ((320, 700), (402, 874)):
