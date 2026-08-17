@@ -513,7 +513,10 @@ const LV=[
   rocks:[[6,1],[5,4]],fruits:[[3,1]],
   tools:[s2(1,0,2)],sol:[[0,3,2]]},
 
- {w:'pitons',name:"Trois écritures",
+ /* cours:'ecritures' depuis le lot pitons-1 : ses cases affichent 3/6 et 2/8, les
+    deux écritures que le cours du niveau 1 ne montre plus (règle : un cours ne
+    montre que ce que SON niveau affiche). */
+ {w:'pitons',name:"Trois écritures",cours:'ecritures',
   sub:"1/4, 2/8, 3/6… chaque case affiche son écriture. À toi de voir qui est qui !",
   hint:"Simplifie : 2/8 = 1/4 et 3/6 = 1/2.",
   cols:9,rows:7,suns:[{x:0,y:3,dir:1}],
@@ -540,6 +543,83 @@ const LV=[
   tools:[s3(1,0,1,2),b(0,1),s2(1,1,2)],
   sol:[[0,2,3],[1,2,1]]},
 
+ /* Étoffage des pitons (lot pitons-1, 17/08) — Gwenael : « des niveaux gagnés assez
+    vite sans les fruits, mais avec les fruits ça devient plus piquant. » Deux
+    niveaux neufs, tout mesuré au solveur AVANT d'être posé. Celui-ci enseigne les
+    écritures par les passes : 3/6 et 2/8 sont des déguisements, et la passe du bas
+    REFUSE la moitié qu'un élève a de bonnes raisons d'y envoyer (la règle du
+    16/08 : une passe ne travaille que si elle peut refuser un rayon plausible).
+    La part écartée (le second quart) file vers le fruit — un miroir de plus, le
+    rayon meurt ensuite : c'est voulu, la collecte n'exige que la traversée.
+    R = 289, Rtout = 970, G = 62, Gtout = 17, prof 3, λ = 6,5 — école qui résiste. */
+ {w:'pitons',name:"Le sentier des écritures",
+  sub:"3/6 en haut, 2/8 en bas : derrière leurs déguisements, une moitié et un quart. Chaque passe ne laisse passer que la part à sa taille — et une part écartée peut encore servir…",
+  hint:"Simplifie : 3/6 = 1/2 et 2/8 = 1/4. La passe du bas refuse tout ce qui dépasse un quart.",
+  cols:9,rows:6,suns:[{x:0,y:2,dir:1}],
+  targets:[{x:8,y:1,need:[1,2],disp:"3/6"},{x:8,y:4,need:[1,4],disp:"2/8"}],
+  gates:[{x:5,y:1,max:[1,2]},{x:5,y:4,max:[1,4]}],
+  rocks:[[5,0],[5,2],[5,3],[7,0],[1,4],[3,3],[8,5]],
+  fruits:[[6,5]],
+  tools:[s2(1,0,2),s2(2,1,2),b(0,1),b(2,1),s2(1,1,2),b(1,2)],
+  sol:[[0,2,2],[2,2,1],[1,2,4],[3,2,5]],
+  solMin:[[0,2,2],[2,2,1],[1,2,4]]},
+
+ /* Retouche fruits (lot pitons-1) : les trois ananas étaient posés SUR les chemins
+    gagnants (G = Gtout = 3, cadeau mesuré). Celui du haut part derrière le grand
+    tour nord — quatre miroirs pour le cueillir, la victoire ne bouge pas.
+    R = 368 (avant 161), Rtout = 10 774, Gtout = 3 : la couche ☀☀☀ flambe, la
+    doctrine (idée 32). Les deux autres ananas restent faciles, c'est voulu. */
+ {w:'pitons',name:"Le col des comparaisons",
+  sub:"Deux passes, deux tailles. Chaque rayon doit choisir une passe assez large !",
+  hint:"Compare : 1/2 passe où ? 1/4 passe où ?",
+  cols:10,rows:7,suns:[{x:0,y:3,dir:1}],
+  targets:[{x:9,y:1,need:[1,2]},{x:9,y:4,need:[1,4]},{x:2,y:6,need:[1,4]}],
+  gates:[{x:5,y:1,max:[1,2]},{x:5,y:4,max:[1,4]}],
+  rocks:[[5,0],[5,2],[5,3],[5,5],[5,6],[7,2],[3,5],[1,1]],
+  fruits:[[7,0],[4,4],[2,5]],
+  tools:[s2(1,0,2),s2(2,1,2),b(0,1),b(2,1),b(1,0),b(0,1),b(1,2)],
+  sol:[[0,2,3],[1,2,4],[2,2,1],[4,6,1],[5,6,0],[6,8,0],[3,8,1]],
+  solMin:[[0,2,3],[1,2,4],[2,2,1]]},
+
+ /* Second niveau neuf (lot pitons-1), le casse-tête d'écritures du monde : deux
+    passes qui ne pardonnent pas (2/12 et 3/9 déguisent 1/6 et 1/3), et L'ENDROIT
+    DE LA COUPE décide du fruit — le sixième écarté descend la colonne où l'on a
+    posé le prisme, et seul un des emplacements gagnants croise l'ananas (Gtout 3
+    sur G 60). Sans ÷3 : aucune victoire, espace épuisé — la notion est forcée.
+    R = 513, Rtout = 7 036, ratio 13,7, prof 3, λ = 7,7. */
+ {w:'pitons',name:"La crête des passes",
+  sub:"2/12, 3/9, 2/6… simplifie avant de couper : les passes de la crête ne pardonnent pas. Et l'endroit où tu coupes décide de ce que tu ramasses.",
+  hint:"2/12 = 1/6 et 3/9 = 1/3. Où poser le ÷2 pour que le sixième écarté traverse un ananas ?",
+  cols:10,rows:7,suns:[{x:0,y:3,dir:1}],
+  targets:[{x:9,y:1,need:[1,6],disp:"2/12"},{x:9,y:3,need:[1,3],disp:"3/9"},{x:2,y:6,need:[1,3],disp:"2/6"}],
+  gates:[{x:6,y:1,max:[1,6]},{x:7,y:3,max:[1,3]}],
+  rocks:[[6,0],[6,2],[7,2],[7,4],[1,1],[5,6],[8,6],[3,2],[1,5],[8,5],[2,0],[9,0]],
+  fruits:[[4,5],[3,4]],
+  tools:[s3(1,0,1,2),b(0,1),s2(1,1,2),b(2,1),b(1,2),b(2,3)],
+  sol:[[0,2,3],[1,2,1],[2,4,1],[3,2,4],[4,4,4],[5,4,6]],
+  solMin:[[0,2,3],[1,2,1],[2,4,1]]},
+
+ /* Retouche fruits (lot pitons-1) : les deux ananas étaient sur les chemins
+    gagnants. La roche (7,4) s'ouvre et l'ananas du bas part sur la branche EST,
+    coûteuse : deux miroirs de plus pour le rejoindre sans perdre la case 2/12.
+    R = 3 979 (avant 689) : c'est désormais le sommet du monde, il le ferme.
+    Rtout = 17 291, ratio 4,3. L'ananas du haut reste facile, c'est voulu. */
+ {w:'pitons',name:"Égal ou pas ?",
+  sub:"2/6, 1/3, 2/12… qui est qui ? La passe, elle, ne se laisse pas embrouiller.",
+  hint:"Simplifie chaque écriture avant de choisir son chemin : 2/6 = 1/3, 2/12 = 1/6.",
+  cols:10,rows:7,suns:[{x:0,y:3,dir:1}],
+  targets:[{x:9,y:1,need:[1,3],disp:"2/6"},{x:9,y:3,need:[1,6],disp:"1/6"},{x:9,y:5,need:[1,6],disp:"2/12"},{x:2,y:6,need:[1,3],disp:"1/3"}],
+  gates:[{x:6,y:1,max:[1,3]}],
+  rocks:[[6,2],[4,4],[3,5],[1,1],[8,0]],
+  fruits:[[4,1],[6,4]],
+  tools:[s3(1,0,1,2),s2(1,1,2),b(0,1),b(2,1),s2(2,1,3),b(1,2),b(2,1)],
+  sol:[[0,2,3],[1,5,3],[2,2,1],[3,5,4],[5,8,4],[6,8,5]],
+  solMin:[[0,2,3],[1,5,3],[2,2,1],[3,5,5]]},
+
+ /* Le tamis passe en dernier (position seule, clé de sauvegarde intacte — même
+    geste que « Le tour du lagon » le 15/08) : R = 30 188, c'était l'aîné du monde
+    au milieu de l'escalier. L'ordre des pitons monte désormais par blocs :
+    5 · 10 · 100 · 43 · 289 · 368 · 513 · 3 979 · 30 188. */
  {w:'pitons',name:"Le tamis",
   sub:"Des passes à 1/4 maximum, une case à 1/2. Il va falloir découper… puis recoller.",
   hint:"1/4 + 1/4 = 1/2. Deux petits chemins valent mieux qu'un grand.",
@@ -550,28 +630,6 @@ const LV=[
   fruits:[[5,1],[4,4]],
   tools:[s2(1,0,2),s2(1,1,2),b(0,1),b(1,2),b(2,1),b(1,0),mg(2,0,1)],
   sol:[[0,2,3],[1,4,1],[2,2,1],[3,7,1],[4,4,5],[5,7,5],[6,7,3]]},
-
- {w:'pitons',name:"Égal ou pas ?",
-  sub:"2/6, 1/3, 2/12… qui est qui ? La passe, elle, ne se laisse pas embrouiller.",
-  hint:"Simplifie chaque écriture avant de choisir son chemin : 2/6 = 1/3, 2/12 = 1/6.",
-  cols:10,rows:7,suns:[{x:0,y:3,dir:1}],
-  targets:[{x:9,y:1,need:[1,3],disp:"2/6"},{x:9,y:3,need:[1,6],disp:"1/6"},{x:9,y:5,need:[1,6],disp:"2/12"},{x:2,y:6,need:[1,3],disp:"1/3"}],
-  gates:[{x:6,y:1,max:[1,3]}],
-  rocks:[[6,2],[4,4],[7,4],[3,5],[1,1],[8,0]],
-  fruits:[[4,1],[7,5]],
-  tools:[s3(1,0,1,2),s2(1,1,2),b(0,1),b(2,1),s2(2,1,3)],
-  sol:[[0,2,3],[1,5,3],[2,2,1],[3,5,5]]},
-
- {w:'pitons',name:"Le col des comparaisons",
-  sub:"Deux passes, deux tailles. Chaque rayon doit choisir une passe assez large !",
-  hint:"Compare : 1/2 passe où ? 1/4 passe où ?",
-  cols:10,rows:7,suns:[{x:0,y:3,dir:1}],
-  targets:[{x:9,y:1,need:[1,2]},{x:9,y:4,need:[1,4]},{x:2,y:6,need:[1,4]}],
-  gates:[{x:5,y:1,max:[1,2]},{x:5,y:4,max:[1,4]}],
-  rocks:[[5,0],[5,2],[5,3],[5,5],[5,6],[7,2],[3,5],[1,1]],
-  fruits:[[4,1],[4,4],[2,5]],
-  tools:[s2(1,0,2),s2(2,1,2),b(0,1),b(2,1),b(1,0)],
-  sol:[[0,2,3],[1,2,4],[2,2,1]]},
 
  /* ---------- Les soleils (sources spéciales) ---------- */
  {w:'soleils',name:"Un soleil qui vaut 2",
@@ -957,8 +1015,10 @@ const CALC={
  "Trois écritures":["2/8 = 1/4","3/6 = 1/2"],
  "La passe étroite":["1/2 + 1/2 = 2/2 = 1"],
  "Quel rayon passe ?":["1/3 < 1/2"],
+ "Le sentier des écritures":["3/6 = 1/2","2/8 = 1/4"],
  "Le tamis":["1/4 + 1/4 = 2/4 = 1/2"],
  "Égal ou pas ?":["2/6 = 1/3","2/12 = 1/6"],
+ "La crête des passes":["2/12 = 1/6","3/9 = 1/3","1/3 ÷ 2 = 1/6"],
  "Le col des comparaisons":["1/4 < 1/2"],
  "Un soleil qui vaut 2":["2 ÷ 2 = 1"],
  "Deux tiers d'un coup":["2 ÷ 3 = 2/3"],
@@ -1133,25 +1193,35 @@ const COURS={
   ],
   carte:{t:"Un sixième recoupé en deux donne le douzième.",eq:"1/6 ÷ 2 = 1/12"}
  },
- /* LES DEUX COURS DES PITONS (lot E, 16/08). Ils disent l'inverse l'un de l'autre
-    avec LA MÊME IMAGE — des bandes de même longueur, découpées différemment, dont on
-    peint le début (scène `parts`). C'est le support historique du projet utilisé pour
-    ce qu'il montre le mieux : une comparaison de LONGUEURS.
-      · `equivalence` : 1/2, 2/4 et 3/6 peignent exactement la même longueur ;
-      · `comparaison` : 1/2, 1/3 et 1/4 en peignent de moins en moins.
-    Le second dit la règle qui prend tous les élèves à contre-pied — plus le nombre du
-    bas est grand, plus la part est petite — et une bande le démontre là où une phrase
-    ne fait que l'affirmer. */
+ /* LES COURS DES PITONS (lot E, 16/08 ; retaillés au lot pitons-1, 17/08). Même
+    image partout — des bandes de même longueur, découpées différemment, dont on
+    peint le début (scène `parts`) : une comparaison de LONGUEURS.
+    RÈGLE DE GWENAEL (17/08) : un cours ne montre QUE les écritures que SON niveau
+    affiche. « C'est pareil ! » n'affiche que 2/4 et 1/2 — le 3/6 que le cours
+    glissait en plus arrive au niveau suivant, « Trois écritures », qui l'affiche.
+      · `equivalence` : 1/2 et 2/4 peignent exactement la même longueur ;
+      · `ecritures`  : 3/6 rejoint le demi, 2/8 rejoint le quart — deux paires ;
+      · `comparaison` : 1/2, 1/3 et 1/4 en peignent de moins en moins. */
  equivalence:{
   titre:"La même part, écrite autrement",
-  scene:{parts:[{f:[1,2],n:1},{f:[1,4],n:2},{f:[1,6],n:3}],
-   alt:"Trois bandes de même longueur : la première coupée en deux avec une part peinte, la deuxième en quatre avec deux parts, la troisième en six avec trois parts — les trois longueurs peintes sont identiques"},
+  scene:{parts:[{f:[1,2],n:1},{f:[1,4],n:2}],
+   alt:"Deux bandes de même longueur : la première coupée en deux avec une part peinte, la deuxième en quatre avec deux parts — les deux longueurs peintes sont identiques"},
   etapes:[
-   {t:"Les trois bandes ont la même longueur, mais elles ne sont pas coupées pareil."},
-   {t:"Regarde ce qui est peint : c'est toujours la même longueur. Un demi, c'est deux quarts.",eq:"1/2 = 2/4"},
-   {t:"C'est aussi trois sixièmes. La part ne change pas, seule son écriture change.",eq:"1/2 = 3/6"}
+   {t:"Les deux bandes ont la même longueur, mais elles ne sont pas coupées pareil."},
+   {t:"Regarde ce qui est peint : c'est toujours la même longueur. Un demi, c'est deux quarts. La part ne change pas, seule son écriture change.",eq:"1/2 = 2/4"}
   ],
-  carte:{t:"Une même part peut s'écrire de plusieurs façons.",eq:"1/2 = 2/4 = 3/6"}
+  carte:{t:"Une même part peut s'écrire de plusieurs façons.",eq:"1/2 = 2/4"}
+ },
+ ecritures:{
+  titre:"Qui se cache sous l'écriture ?",
+  scene:{parts:[{f:[1,2],n:1},{f:[1,6],n:3},{f:[1,4],n:1},{f:[1,8],n:2}],
+   alt:"Quatre bandes de même longueur, en deux paires : un demi puis trois sixièmes peignent la même longueur ; un quart puis deux huitièmes aussi"},
+  etapes:[
+   {t:"3/6 a l'air d'une grande écriture… mais regarde la longueur peinte : c'est exactement le demi.",eq:"3/6 = 1/2"},
+   {t:"Et 2/8 peint la même longueur que le quart.",eq:"2/8 = 1/4"},
+   {t:"Pour savoir qui est qui, simplifie l'écriture avant de choisir son chemin."}
+  ],
+  carte:{t:"Sous une grande écriture peut se cacher une petite part : simplifie.",eq:"3/6 = 1/2"}
  },
  comparaison:{
   titre:"Comparer deux parts",
