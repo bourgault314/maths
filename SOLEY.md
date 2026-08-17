@@ -209,6 +209,11 @@ plateau ne répond plus aux clics — défaut trouvé en construisant le lot).
   explication au début » — et c'est juste : un élève qui découvre une contrainte de
   plateau APRÈS avoir gagné a passé son temps à ne pas comprendre pourquoi son rayon
   mourait. Le bandeau du panneau le dit : « Avant de jouer », pas « Point de cours ».
+- **Le mot juste d'abord, la formule d'enfant entre parenthèses** (16/08, règle de
+  Gwenael : « il faut rester propre mathématiquement »). On écrit **le dénominateur
+  (le nombre du bas)**, jamais l'inverse : mettre l'approximation devant reléguerait
+  le mot que l'élève doit finir par employer. Vaut pour tous les cours, présents et à
+  venir.
 - **Une notion s'enseigne UNE fois, avant qu'on s'en serve** (16/08). Un monde ne
   redécouvre pas ce qu'un monde précédent a enseigné : c'est ce qui a coûté sa place à
   « Quarts en croix » (15/08) puis à « Les sixièmes » (16/08). Corollaire : une notion
@@ -1215,4 +1220,13 @@ Trois choses à savoir avant d'y toucher :
   ici il calcule les longueurs peintes et exige qu'elles soient égales dans un cas,
   strictement décroissantes dans l'autre. Une image qui montrerait l'inverse de ce que
   la phrase dit serait pire que pas d'image du tout.
+- **16/08 — le mot juste d'abord (lot F).** Les cours écrits jusque-là disaient
+  « le nombre du bas — le dénominateur — » : l'approximation devant, le mot juste
+  relégué entre tirets. Règle de Gwenael : **« il faut rester propre
+  mathématiquement »**. Les quatre phrases concernées (cours du demi, du recoupage, du
+  neuvième, et la carte de la comparaison) disent maintenant **le dénominateur (le
+  nombre du bas)**. Lot de TEXTE seul : aucune donnée de jeu ne bouge, et le
+  vérificateur le prouve — titres, scènes, écritures `eq` et prédires intacts, seules
+  des chaînes `t` changent. Il vérifie aussi que le compte de ces phrases n'a pas
+  **baissé** : corriger une phrase ne doit pas revenir à la supprimer.
 - (à compléter à chaque session)
