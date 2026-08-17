@@ -80,6 +80,10 @@ const LV=[
   rocks:[[6,1],[6,4]],fruits:[],
   tools:[s2(1,0,2)],sol:[[0,3,2]]},
 
+ /* Le piège de la boîte était un ÷3 — mais sa couleur bleue arrivait AVANT la
+    découverte du tiers, qui promet « Regarde la nouvelle couleur ! » (lot vérité,
+    17/08). Remplacé par un ÷2 d'orientation trompeuse : R mesuré 371 (avant 518),
+    Rtout 14 044 (avant 21 282) — le niveau résiste toujours, sans mentir. */
  {w:'lagon',name:"Le tour du lagon",
   sub:"Deux cases, un seul soleil… et le lagon est plein de patates de corail !",
   hint:"Coupe d'abord, promène ensuite : chaque moitié fait son propre tour.",
@@ -87,7 +91,7 @@ const LV=[
   targets:[{x:9,y:0,need:[1,2]},{x:9,y:6,need:[1,2]}],
   rocks:[[4,3],[6,2],[5,4],[3,6],[6,6],[1,1],[5,0],[7,4]],
   fruits:[[5,1],[4,5]],
-  tools:[s2(1,0,2),b(0,1),b(1,0),b(2,1),b(1,2),b(2,1),b(3,0),s3(1,0,1,2)],
+  tools:[s2(1,0,2),b(0,1),b(1,0),b(2,1),b(1,2),b(2,1),b(3,0),s2(1,1,2)],
   sol:[[0,2,3],[1,2,1],[2,9,1],[3,2,5],[4,8,5],[5,8,6]],
   solMin:[[0,2,3],[1,2,1],[2,9,1],[3,2,5],[4,8,5],[5,8,6]]},
 
@@ -97,7 +101,11 @@ const LV=[
   cols:8,rows:6,suns:[{x:0,y:5,dir:0}],
   targets:[{x:7,y:5,need:[1,2]}],
   rocks:[[2,1],[5,1],[7,1],[4,2],[2,3],[6,3],[1,4],[6,4],[3,5]],fruits:[[7,0]],
-  tools:[s2(1,0,2),s2(1,1,2),b(0,1),b(1,2),b(2,1),b(1,0),s3(1,0,1,2)],
+  /* même ménage que « Le tour du lagon » (lot vérité, 17/08) : le ÷3 piège
+     précédait sa découverte — et contredisait la consigne (« le prisme, lui,
+     coupe toujours en deux »). Un troisième ÷2 le remplace : R mesuré 1 091
+     (avant 1 907), Rtout 2 601 (avant 5 064). */
+  tools:[s2(1,0,2),s2(1,1,2),b(0,1),b(1,2),b(2,1),b(1,0),s2(1,1,2)],
   sol:[[2,0,0],[1,6,0],[4,6,2],[3,7,2]],solMin:[[2,0,0],[0,6,0],[4,6,2],[3,7,2]]},
 
  {w:'lagon',name:"Partage en tiers",dec:'tiers',
@@ -317,8 +325,14 @@ const LV=[
   sol:[[0,1,3],[2,1,1],[3,1,5],[1,3,5],[5,3,3],[4,7,1],[6,7,3]],solMin:[[0,1,3],[2,1,0],[3,1,5],[4,3,0],[6,3,3],[1,3,5]]},
 
  /* ---------- La forêt (5e) ---------- */
+ /* La consigne promettait la lentille pour GAGNER — faux : une case 1/1 sous un
+    soleil 1 ne la force jamais (règle §5.16), 196 victoires en 3 pièces sans elle.
+    Mais mesuré le 17/08 (espace éclairé COMPLET, E = 11 056) : sans lentille,
+    AUCUNE victoire ne ramasse les deux goyaviers — Gtout = 0. La promesse est
+    donc vraie une couche plus haut : elle est déplacée sur les fruits, où le
+    solveur la tient. Rtout/R = 130, le vrai travail du niveau est bien là. */
  {w:'foret',name:"Recoller les morceaux",
-  sub:"Les fougères bloquent le passage. Coupe, contourne, puis recolle avec la lentille : elle additionne deux rayons.",
+  sub:"Pour gagner, contourne les fougères. Mais pour cueillir les deux goyaviers, il faudra couper le rayon, puis le recoller avec la lentille : elle additionne deux rayons.",
   cols:9,rows:7,suns:[{x:0,y:3,dir:1}],
   targets:[{x:8,y:3,need:[1,1]}],
   rocks:[[4,2],[4,3],[4,4]],fruits:[[4,1],[4,5]],
@@ -669,15 +683,28 @@ const LV=[
   tools:[s2(1,0,2),s2(2,1,2),b(0,1),b(1,2),b(1,0),mg(2,0,1)],
   sol:[[0,2,3],[1,2,4],[2,2,1],[3,6,1],[4,6,4],[5,6,3]]},
 
+ /* Cible redessinée (lot vérité, 17/08). L'ancien plateau laissait la rangée du
+    soleil LIBRE jusqu'à la case 100 % : le rayon entier gagnait tout seul, et le
+    ×3 « piège » offrait même 1/3 × 3 = 1 sans lentille — R = 42, l'addition
+    annoncée n'était jamais obligatoire. Désormais un mur coupe le plateau et ses
+    deux passes ne laissent passer que 2/3 au maximum : il FAUT couper en tiers,
+    doubler, franchir, puis recoller. Mesuré au solveur (budgets épuisés, aucun
+    débordement) : sans lentille AUCUNE victoire, sans ×2 aucune, sans ÷3 aucune.
+    R = 4 250 (voisins : 6 647 avant, 225 après), Rtout = 113 886 — les mangues
+    exigent le grand détour sud, la couche ☀☀☀ flambe, comme la doctrine le
+    permet. Le ×3 tricheur sort de la boîte ; solMin gagne en 5 pièces sans tout
+    ramasser. */
  {w:'marche',name:"L'addition du marché",
-  sub:"100 % d'un rayon, ni plus ni moins. Et il te reste un tiers sur les bras…",
+  sub:"100 % d'un rayon, ni plus ni moins — mais les passes du marché sont trop étroites pour un rayon entier. Et il te reste un tiers sur les bras…",
   hint:"1/3 × 2 = 2/3. Et 2/3 + 1/3 = 3/3 = 100 %.",
   cols:10,rows:7,suns:[{x:0,y:3,dir:1}],
   targets:[{x:9,y:3,need:[1,1],disp:"100 %"},{x:2,y:6,need:[1,3],disp:"1/3"}],
-  rocks:[[4,2],[5,4],[3,5],[8,1],[1,1],[6,6]],
-  fruits:[[3,3],[5,1],[2,5]],
-  tools:[s3(1,0,1,2),x2(1,1),b(0,1),b(1,2),mg(2,1,1),x3(1,1)],
-  sol:[[0,2,3],[1,4,1],[2,2,1],[3,7,1],[4,7,3]]},
+  gates:[{x:6,y:1,max:[2,3]},{x:6,y:3,max:[2,3]}],
+  rocks:[[6,0],[6,2],[6,4],[6,5],[6,6],[4,2],[3,5],[8,1],[1,1]],
+  fruits:[[7,2],[4,4],[4,6]],
+  tools:[s3(1,0,1,2),x2(1,1),b(0,1),b(1,2),mg(2,1,1),b(2,1),b(1,2),b(2,3)],
+  sol:[[0,2,3],[2,2,1],[1,4,1],[3,7,1],[4,7,3],[5,2,4],[6,5,4],[7,5,6]],
+  solMin:[[0,2,3],[2,2,1],[1,4,1],[3,7,1],[4,7,3]]},
 
  {w:'marche',name:"Le grand marché",
   sub:"Tout le marché : 100 %, 0,5, 25 %, 1/4… toutes ces écritures sont des fractions !",

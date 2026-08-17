@@ -853,9 +853,38 @@ test("refonte : le fruit se mérite, les portes orientent, les fruits à valeur 
      découverte n'avait jamais porté de fruit — « elle se gagne, elle ne se mérite pas ».
      Elle le peut sans rien casser, car le déverrouillage ne lit que `save.done` : le
      fruit n'ajoute qu'une couche d'étoiles. `solMin` gagne en 4 pièces sans le letchi,
-     `sol` en prend 5 et ramasse tout — le contrôle ci-dessus le prouve. */
-  assert.equal(r.couverts, 14, "5 niveaux du lagon retouchés + 8 de la canne + « La moitié du quart » (lot C)");
+     `sol` en prend 5 et ramasse tout — le contrôle ci-dessus le prouve.
+     15 depuis le lot vérité (17/08) : « L'addition du marché », redessinée pour forcer
+     l'addition qu'elle annonce, entre à son tour dans la couche P2 — premier solMin
+     hors du lagon et de la canne. */
+  assert.equal(r.couverts, 15, "5 niveaux du lagon retouchés + 8 de la canne + « La moitié du quart » (lot C) + « L'addition du marché » (lot vérité)");
   assert.deepEqual([...r.portes], [true, false, true]);
   assert.equal(r.valWin, true);
   assert.equal(r.valFruits, 0, "le rayon entier ne cueille pas le fruit marqué 1/2");
+});
+
+test("la couleur neuve est vraiment neuve : aucun ÷3 en boîte avant sa découverte", () => {
+  /* Lot vérité (17/08) : « Partage en tiers » promet « Regarde la nouvelle
+     couleur ! » — mais deux boîtes du lagon (« Le tour du lagon », « La part
+     perdue ») glissaient un ÷3 piège AVANT cette découverte. La couleur bleue
+     était donc déjà vue, et la consigne de « La part perdue » (« le prisme, lui,
+     coupe toujours en deux ») était contredite par sa propre boîte. Les pièges
+     sont devenus des ÷2 d'orientation trompeuse, mesurés au solveur pour que la
+     résistance survive (R : 518→371 et 1 907→1 091 — même ordre de grandeur).
+     Ce test grave la règle pour tout niveau présent et futur : le ÷3 n'existe
+     dans aucune boîte, ni en pièce scellée, avant le niveau `dec:'tiers'`.
+     (Le ÷2 de « Zigzag dans le corail » précède lui aussi sa découverte — cas
+     connu, décision en attente : sa consigne ne promet aucune couleur neuve.) */
+  const context = createGameContext();
+  const r = vm.runInContext(`(() => {
+    const iTiers = LV.findIndex(l => l.dec === 'tiers');
+    const fautifs = [];
+    LV.slice(0, iTiers).forEach(l => {
+      if (l.tools.some(t => t.t === 's3')) fautifs.push(l.name + ' (boîte)');
+      if ((l.fixed || []).some(([p]) => p.t === 's3')) fautifs.push(l.name + ' (scellée)');
+    });
+    return { iTiers, fautifs };
+  })()`, context);
+  assert.ok(r.iTiers > 0, "la découverte du tiers existe");
+  assert.deepEqual([...r.fautifs], [], "aucun ÷3 avant « Partage en tiers »");
 });

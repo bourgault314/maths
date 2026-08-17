@@ -607,6 +607,20 @@ plateau ne répond plus aux clics — défaut trouvé en construisant le lot).
 11. **Icône du lagon** refaite (bandes sable / eau turquoise / écume de la barrière /
    océan, deux patates de corail) : l'ancienne était un rond turquoise qui, à 46 px,
    ne disait rien. Choix de Gwenael sur planche de quatre pistes.
+12. **Une promesse de consigne se prouve au solveur, à la couche où elle est vraie**
+   (17/08, lot vérité). Trois mensonges mesurés le même soir : « Recoller les
+   morceaux » promettait la lentille pour gagner alors que seule la couche FRUITS la
+   force (sans elle, Gtout = 0 sur l'espace éclairé complet — la consigne déplace la
+   promesse sur les goyaviers au lieu de la supprimer) ; « L'addition du marché » se
+   gagnait sans addition (rangée du soleil libre, et le ×3 « piège » offrait
+   1/3 × 3 = 1) — cible redessinée : mur + passes 2/3, l'addition devient
+   obligatoire, prouvé par espaces épuisés sans lentille/×2/÷3 ; et le ÷3 piège des
+   boîtes 4-5 du lagon montrait la « nouvelle couleur » avant sa découverte —
+   remplacé par des ÷2 d'orientation trompeuse, mesurés pour que la résistance
+   survive (518→371, 1 907→1 091). Corollaire gravé en test permanent : **le ÷3
+   n'apparaît dans aucune boîte avant `dec:'tiers'`**. Cas connu laissé ouvert : le
+   ÷2 de « Zigzag dans le corail » (renommé au lot H) précède aussi sa découverte,
+   mais sa consigne ne promet rien — décision à prendre (le retirer ferait R 175 → 74).
 
 ## 7. Architecture (découpage d'août 2026, statique, sans build, GitHub Pages)
 
@@ -1407,4 +1421,31 @@ Trois choses à savoir avant d'y toucher :
     VERT** (T14 et T15 compris), batterie de l'atelier **TOUT VERT**, et diff sémantique
     champ par champ des 71 niveaux : **seuls 9 textes et 2 noms changent, aucune donnée
     de jeu, `CALC` identique à l'octet**.
+- **17/08 — le lot vérité : quatre niveaux cessent de mentir.** Gwenael a arbitré au
+  vu de l'audit du soir : les cibles se redessinent, les textes ne maquillent pas.
+  **« L'addition du marché »** : l'ancien plateau laissait la rangée du soleil libre
+  jusqu'à la case 100 % (R = 42, prof 2) et le ×3 « piège » offrait 1/3 × 3 = 1 sans
+  lentille. Redessinée au solveur : un mur et deux **passes 2/3** coupent le plateau —
+  couper en tiers, doubler, franchir, recoller. Sans lentille, sans ×2 ou sans ÷3 :
+  aucune victoire (espaces épuisés, zéro débordement). R = 4 250 entre ses voisins
+  6 647 et 225 ; Rtout = 113 886, les mangues exigent le grand détour sud — la couche
+  ☀☀☀ flambe, c'est la doctrine (idée 32). Le ×3 sort de la boîte, la première
+  `solMin` hors lagon/canne entre, la clé de sauvegarde ne bouge pas.
+  **« Recoller les morceaux »** : mesuré dans l'espace éclairé COMPLET (E = 11 056),
+  sans lentille AUCUNE victoire ne ramasse les deux goyaviers — la promesse de la
+  consigne n'était fausse qu'à la mauvaise couche. Une phrase la déplace sur les
+  fruits, le plateau ne bouge pas d'un octet : « Pour gagner, contourne les fougères.
+  Mais pour cueillir les deux goyaviers… ». Rtout/R = 130, le vrai travail était là.
+  **« Le tour du lagon » et « La part perdue »** : leurs ÷3 pièges montraient le bleu
+  du tiers avant « Regarde la nouvelle couleur ! » (et la consigne de « La part
+  perdue » jure que « le prisme coupe toujours en deux »). Deux ÷2 d'orientation
+  trompeuse les remplacent, compensation MESURÉE avant d'être choisie (R 518 → 371 et
+  1 907 → 1 091 ; l'option s2(0,1,3) sur « La part perdue » grimpait à 8 552 —
+  écartée, le 5ᵉ niveau d'une école n'a pas à dépasser le sommet du monde). La règle
+  entre en **test permanent** : « la couleur neuve est vraiment neuve ». Garde-fous
+  mis à jour (15 solMin), `verifier-lot-verite.mjs` 32 contrôles verts. Nuance sur
+  le 21, découverte APRÈS l'audit du lot H (qui le rangeait en « cible à
+  redessiner ») : le texte ne peut rien pour la VICTOIRE, mais la mesure Gtout = 0
+  montre qu'il peut dire vrai sur les FRUITS — c'est l'option retenue, l'autre reste
+  ouverte (une passe le forcerait, possible après le déménagement des pitons).
 - (à compléter à chaque session)
