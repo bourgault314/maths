@@ -14,6 +14,8 @@ Emprin-Charotte, CRDP Champagne-Ardenne). Version modernisée pour maths&go :
 - `gen.py` — génère `out/guide.html` (règle, exemple guidé et solutions),
   `out/cartes-grand-format.html` (quatre cartes par page) et
   `out/cartes-compactes.html` (huit cartes par feuille) ;
+- `build_duplex.py` — intercale les rectos Chromium avec des versos blancs
+  portant le titre du jeu et l’emblème M, puis vérifie leur alignement ;
 - `verify.py` — vérifie les données, les niveaux et le HTML généré ;
 - `projection_cases.json` — exemple guidé et 12 défis inédits à projeter ;
 - `gen_projection.py` — valide ces défis et génère la page projetable autonome ;
@@ -24,7 +26,13 @@ Emprin-Charotte, CRDP Champagne-Ardenne). Version modernisée pour maths&go :
   `../../outils/chat-cest-toi-le-chat.pdf`) ;
 - `out/cartes-compactes.pdf` — dix feuilles A4 paysage contenant chacune deux
   séries de quatre cartes en portrait (copie publique :
-  `../../outils/chat-cest-toi-le-chat-cartes-compactes.pdf`).
+  `../../outils/chat-cest-toi-le-chat-cartes-compactes.pdf`) ;
+- `out/cartes-grand-format-recto-verso.pdf` — vingt paires recto-verso A4
+  portrait, à imprimer à 100 % en retournant sur le bord long (copie publique :
+  `../../outils/chat-cest-toi-le-chat-recto-verso.pdf`) ;
+- `out/cartes-compactes-recto-verso.pdf` — dix paires recto-verso A4 paysage,
+  à imprimer à 100 % en retournant sur le bord court (copie publique :
+  `../../outils/chat-cest-toi-le-chat-cartes-compactes-recto-verso.pdf`).
 
 La page projetable publique est
 `../../outils/chat-cest-toi-le-chat-projection.html`. Toute la classe cherche
@@ -76,15 +84,17 @@ Pour produire et valider les PDF avec Chrome ou Chromium :
 python3 /chemin/vers/le-depot/_sources/chat-le-chat/render_pdfs.py
 ```
 
-Le script refuse tout moteur autre que Chromium/Skia : WeasyPrint ne doit pas
-être utilisé pour ces documents, car il déforme les grilles de solutions et la
-couverture. Selon l'installation, définir `CHROME_BIN` si Chromium n'est pas
-détecté automatiquement. Après contrôle visuel, mettre à jour les copies
-publiques avec :
+Le script refuse tout moteur autre que Chromium/Skia pour les trois documents
+recto : WeasyPrint ne doit pas être utilisé, car il déforme les grilles de
+solutions et la couverture. `build_duplex.py` ajoute ensuite les versos aux
+deux jeux de cartes sans altérer les rectos. Selon l'installation, définir
+`CHROME_BIN` si Chromium n'est pas détecté automatiquement. Après contrôle
+visuel, mettre à jour les cinq copies publiques avec :
 
 ```sh
 python3 /chemin/vers/le-depot/_sources/chat-le-chat/render_pdfs.py --publish
 ```
 
 Le générateur attend le logo `assets/img/mathsgo-logo-780.png` et le fichier
-`favicon.svg` à la racine du dépôt. Il n'utilise aucun autre fichier image.
+`favicon.svg` à la racine du dépôt. Le constructeur de versos isole l’emblème M
+dans `assets/img/mathsgo-logo.png`.

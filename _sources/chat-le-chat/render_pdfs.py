@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Rend les trois PDF avec Chromium et refuse un moteur d'impression différent."""
+"""Rend les cinq PDF, puis publie les copies validées sur demande."""
 
 from __future__ import annotations
 
@@ -11,6 +11,8 @@ import subprocess
 import sys
 import tempfile
 from pathlib import Path
+
+from build_duplex import COMPACT, LARGE, build_duplex_pdf
 
 
 HERE = Path(__file__).resolve().parent
@@ -58,7 +60,7 @@ def render(chromium: Path, html_name: str, pdf_name: str) -> Path:
     return target
 
 
-def validate_pdf(path: Path, expected_pages: int) -> None:
+def validate_pdf(path: Path, expected_pages: int, *, require_skia: bool = True) -> None:
     pdfinfo = shutil.which("pdfinfo")
     if not pdfinfo:
         raise SystemExit("pdfinfo est requis pour valider le moteur et le nombre de pages.")
@@ -67,7 +69,7 @@ def validate_pdf(path: Path, expected_pages: int) -> None:
     ).stdout
     producer = re.search(r"^Producer:\s*(.+)$", info, re.MULTILINE)
     pages = re.search(r"^Pages:\s*(\d+)$", info, re.MULTILINE)
-    if not producer or "Skia/PDF" not in producer.group(1):
+    if require_skia and (not producer or "Skia/PDF" not in producer.group(1)):
         raise SystemExit(f"{path.name}: moteur inattendu ({producer.group(1) if producer else 'inconnu'}).")
     if not pages or int(pages.group(1)) != expected_pages:
         raise SystemExit(f"{path.name}: {pages.group(1) if pages else '?'} pages au lieu de {expected_pages}.")
@@ -91,14 +93,31 @@ def main() -> None:
     validate_pdf(large_cards, 20)
     validate_pdf(compact, 10)
 
+    large_duplex = OUT_DIR / "cartes-grand-format-recto-verso.pdf"
+    compact_duplex = OUT_DIR / "cartes-compactes-recto-verso.pdf"
+    large_error = build_duplex_pdf(large_cards, large_duplex, LARGE)
+    compact_error = build_duplex_pdf(compact, compact_duplex, COMPACT)
+    validate_pdf(large_duplex, 40, require_skia=False)
+    validate_pdf(compact_duplex, 20, require_skia=False)
+
     if args.publish:
         shutil.copy2(guide, SITE_ROOT / "outils" / "chat-cest-toi-le-chat-guide.pdf")
         shutil.copy2(large_cards, SITE_ROOT / "outils" / "chat-cest-toi-le-chat.pdf")
         shutil.copy2(compact, SITE_ROOT / "outils" / "chat-cest-toi-le-chat-cartes-compactes.pdf")
+        shutil.copy2(
+            large_duplex,
+            SITE_ROOT / "outils" / "chat-cest-toi-le-chat-recto-verso.pdf",
+        )
+        shutil.copy2(
+            compact_duplex,
+            SITE_ROOT / "outils" / "chat-cest-toi-le-chat-cartes-compactes-recto-verso.pdf",
+        )
 
     print(
         "PDF Chromium valides: "
-        f"{guide} (4 pages), {large_cards} (20 pages), {compact} (10 pages)"
+        f"{guide} (4 pages), {large_cards} (20 pages), {compact} (10 pages), "
+        f"{large_duplex} (40 pages, alignement {large_error:.3f} mm), "
+        f"{compact_duplex} (20 pages, alignement {compact_error:.3f} mm)"
     )
 
 
