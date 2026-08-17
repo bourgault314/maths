@@ -58,9 +58,9 @@ fichiers modifiés → tests → reste à vérifier.
 |---|---|---|---|
 | Le lagon | 6e | découverte, partage égal — dont 5 niveaux-découverte (demi, tiers, quart, sixième, **recouper**) | 11 |
 | Les champs de canne | 6e | partage JOUÉ à fond : surplus, pièges, fruits à valeur, portes orientées (refonte 08/2026) — **aucune découverte** (le monde reste contournable), mais 2 points de cours `cours` (neuvième, douzième) et 1 explication d'entrée `intro` (les portes) | 9 |
-| La forêt | 5e | additions (lentille), équivalences — dont 2 niveaux-découverte (somme, même dénominateur) | 8 |
+| Les pitons | 6e-5e | équivalences, comparaisons — la 1re passe du jeu s'explique ici (« Quel rayon passe ? ») ; 3 points de cours `cours` : équivalence, écritures, comparaison ; étoffé au lot pitons-1 (« Le sentier des écritures », « La crête des passes », fruits qui se méritent) ; **en monde 3 depuis le lot pitons-2** (17/08) | 7 |
+| La forêt | 5e | additions (lentille), équivalences — dont 2 niveaux-découverte (somme, même dénominateur) ; depuis le lot pitons-2 elle accueille « La passe étroite » (le 1er niveau du jeu où la lentille est OBLIGATOIRE) et finit sur « Le tamis », son plus dur | 10 |
 | Le volcan | 4e | loupes ×, fractions > 1, 1/9 | 7 |
-| Les pitons | 5e-4e | équivalences, comparaisons (passes) — 3 points de cours `cours` : équivalence, écritures, comparaison ; étoffé au lot pitons-1 (17/08) : « Le sentier des écritures », « La crête des passes », fruits qui se méritent | 9 |
 | Les soleils | 4e | soleils multiples / fractionnaires / valeur 2 | 8 |
 | Le marché | 5e-3e | 0,5 ; 25 % ; 100 % (écritures) | 6 |
 | Les tunnels | 6e-4e | labyrinthes denses (41-64 % de roches), esprit de l'original | 8 (dont « Le prisme scellé » et « La galerie scellée ») |
@@ -621,6 +621,24 @@ plateau ne répond plus aux clics — défaut trouvé en construisant le lot).
    n'apparaît dans aucune boîte avant `dec:'tiers'`**. Cas connu laissé ouvert : le
    ÷2 de « Zigzag dans le corail » (renommé au lot H) précède aussi sa découverte,
    mais sa consigne ne promet rien — décision à prendre (le retirer ferait R 175 → 74).
+13. **Les pitons passent devant la forêt, et rendent leurs niveaux à lentille**
+   (17/08, lot pitons-2 — décision de Gwenael du 16/08, « sinon les pitons passent,
+   oui, je suis d'accord » ; « la comparaison en sixième, c'est plus facile que
+   l'addition »). Mesuré avant de bouger : cinq des sept niveaux du monde n'ont
+   jamais eu besoin de la lentille ; les deux autres (« La passe étroite »,
+   « Le tamis ») déménagent en forêt, où la lentille est chez elle. « La passe
+   étroite » devient le premier niveau du jeu où elle est OBLIGATOIRE pour gagner —
+   placée APRÈS « Deux tiers » (doctrine du 18/08 : on ne force jamais une
+   addition avant de l'avoir apprise ; forcer APRÈS, c'est un puzzle).
+   L'équivalence s'enseigne désormais AVANT que la forêt exige les doubles
+   écritures. Le verrou reste doux : la forêt s'ouvre par 5 réussites aux pitons,
+   dont le plus dur exigé est très sous le plafond « personne n'est bloqué ».
+   COÛT ANNONCÉ ET ACCEPTÉ : deux clés de sauvegarde changent (pitons:→foret:),
+   les joueurs actuels y perdent deux petits soleils, rejouables en une minute
+   (« aujourd'hui les seules sauvegardes au monde sont celles de Gwenael et de ses
+   cousins »). Le « Nouveau : la passe ! » suit la première passe du jeu sur
+   « Quel rayon passe ? » — l'avertissement du lot H est réglé le jour même du
+   déménagement, pas oublié.
 
 ## 7. Architecture (découpage d'août 2026, statique, sans build, GitHub Pages)
 
@@ -1473,4 +1491,21 @@ Trois choses à savoir avant d'y toucher :
   niveaux, 145 fruits — compteurs publics et annuaire régénérés (leçon du lot
   canne), seuil des soleils 5 → 6 (⌈5×9/8⌉), garde-fous 19 solMin. Étape 1 du
   chantier : le déménagement en position 3 est le lot suivant.
+- **17/08-18/08 — lot pitons-2 : le monde déménage en position 3.** La décision du
+  16/08 exécutée, mesures à l'appui (décision §6.13). L'ordre du jeu devient lagon ·
+  canne · **pitons** · forêt · volcan · soleils · marché · tunnels · Mafate. « La
+  passe étroite » entre en forêt APRÈS « Deux tiers » — séquence arbitrée par
+  Gwenael (18/08, doctrine des additions) : le 21 fait DÉCOUVRIR la lentille (ses
+  goyaviers la forcent, lot vérité), « Deux tiers » (dec:somme) l'ENSEIGNE, et la
+  passe étroite seulement ensuite l'EXIGE — **on ne force jamais une addition avant
+  de l'avoir apprise ; forcer après, c'est un puzzle, plus une leçon sautée.** « Le
+  tamis » (R = 30 188) ferme la forêt, qui finit enfin sur son plus dur. Le
+  « Nouveau : la passe ! » passe sur « Quel rayon passe ? » (première passe du jeu,
+  monde 3) et la consigne de « La passe étroite » annonce désormais la lentille.
+  Palier des pitons 5e-4e → 6e-5e. Seuils recalculés [0·7·6·5·7·5·5·4·5] ; le
+  chemin de l'école re-testé sur le nouvel ordre (le lagon fini ouvre canne ET
+  pitons ; la forêt attend les pitons, ⌈5×7/8⌉ = 5). DEUX clés de sauvegarde
+  changent — c'est tout le coût, gravé au §6.13. Batteries : node 1 589/1 589,
+  8 validateurs, Playwright jeu + atelier TOUT VERT,
+  `verifier-lot-pitons-demenagement.mjs` 16 contrôles.
 - (à compléter à chaque session)

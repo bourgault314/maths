@@ -88,7 +88,9 @@ test("les 73 solutions de référence gagnent et ramassent les 145 fruits", () =
     { ...worldCounts },
     /* lot pitons-1 (17/08) : le monde s'étoffe — « Le sentier des écritures » et
        « La crête des passes » entrent, mesurés au solveur, avant le déménagement. */
-    { lagon: 11, canne: 9, foret: 8, volcan: 7, pitons: 9, soleils: 8, marche: 6, tunnels: 8, mafate: 7 }
+    /* lot pitons-2 (17/08) : le monde déménage en position 3 et rend ses deux
+       niveaux à lentille à la forêt (« La passe étroite », « Le tamis »). */
+    { lagon: 11, canne: 9, pitons: 7, foret: 10, volcan: 7, soleils: 8, marche: 6, tunnels: 8, mafate: 7 }
   );
 
   const structure = vm.runInContext(`(() => ({
@@ -99,7 +101,7 @@ test("les 73 solutions de référence gagnent et ramassent les 145 fruits", () =
   }))()`, context);
   assert.deepEqual(
     [...structure.worlds],
-    ["lagon", "canne", "foret", "volcan", "pitons", "soleils", "marche", "tunnels", "mafate"]
+    ["lagon", "canne", "pitons", "foret", "volcan", "soleils", "marche", "tunnels", "mafate"]
   );
   assert.deepEqual([...structure.runs], [...structure.worlds]);
   assert.equal(structure.saveKeys, 73);
@@ -300,21 +302,25 @@ test("la progression verrouillée et les étoiles se calculent juste", () => {
     save.done['lagon:Les six sixièmes'] = true;
     save.done['lagon:La moitié du quart'] = true;
     const canneComplete = mondeDeverrouille('canne'); /* 11 réussites dont les 5 découvertes */
-    /* LE CHEMIN DE L'ÉCOLE (08/2026) : le lagon fini ouvre le champ de canne ET la
-       forêt, sans qu'un seul niveau de la canne soit joué. Un élève peut suivre le
-       fil de l'apprentissage sans être obligé de se battre. */
-    const foretParEcole = mondeDeverrouille('foret');
-    const volcanFerme = !mondeDeverrouille('volcan'); /* la forêt, elle, n'est pas contournable */
-    const portes = { canne: portesDeMonde('canne'), foret: portesDeMonde('foret'),
-      volcan: portesDeMonde('volcan'), mafate: portesDeMonde('mafate') };
+    /* LE CHEMIN DE L'ÉCOLE (08/2026, réordonné au lot pitons-2) : le lagon fini
+       ouvre le champ de canne ET les pitons (l'école suivante), sans qu'un seul
+       niveau de la canne soit joué. La forêt, elle, attend désormais les pitons. */
+    const pitonsParEcole = mondeDeverrouille('pitons');
+    const foretFermee = !mondeDeverrouille('foret');
+    const pitons = LV.map((l, i) => i).filter(i => LV[i].w === 'pitons');
+    pitons.slice(0, 5).forEach(i => save.done[LV[i].w + ':' + LV[i].name] = true);
+    const foretParPitons = mondeDeverrouille('foret'); /* ⌈5×7/8⌉ = 5, aucune découverte aux pitons */
+    const volcanFerme = !mondeDeverrouille('volcan'); /* la forêt n'est pas contournable */
+    const portes = { canne: portesDeMonde('canne'), pitons: portesDeMonde('pitons'),
+      foret: portesDeMonde('foret'), volcan: portesDeMonde('volcan'), mafate: portesDeMonde('mafate') };
     const ecoles = WORLDS.filter(w => w.ecole).map(w => w.id);
-    /* et l'autre chemin marche toujours : la canne seule ouvre la forêt */
+    /* et l'autre chemin marche toujours : la canne seule ouvre les pitons */
     const ctx2 = { done: { ...save.done } };
     save.done = {};
     const canne = LV.map((l, i) => i).filter(i => LV[i].w === 'canne');
     /* LOT D : la canne compte 9 niveaux, son seuil passe à ⌈5×9/8⌉ = 6 */
     canne.slice(0, 6).forEach(i => save.done[LV[i].w + ':' + LV[i].name] = true);
-    const foretParChamp = mondeDeverrouille('foret'); /* aucune découverte dans la canne */
+    const pitonsParChamp = mondeDeverrouille('pitons'); /* aucune découverte dans la canne */
     save.done = ctx2.done;
     const zi = LV.findIndex(l => l.name === 'Zigzag dans le corail');
     const k = 'lagon:Zigzag dans le corail';
@@ -324,25 +330,29 @@ test("la progression verrouillée et les étoiles se calculent juste", () => {
     save.pieces[k] = 4; const tropDePieces = etoiles(zi);
     const sansFruits = etoiles(0);
     return { seuils, parOk, avant, canneA5, canneSansDec, canneComplete,
-      foretParEcole, foretParChamp, volcanFerme, portes, ecoles,
+      pitonsParEcole, foretFermee, foretParPitons, pitonsParChamp, volcanFerme, portes, ecoles,
       fruitManquant, fruitsComplets, maitrise, tropDePieces, sansFruits };
   })()`, context);
 
-  /* lot pitons-1 : les pitons passent à 9 niveaux, le seuil des soleils à ⌈5×9/8⌉ = 6 */
-  assert.deepEqual([...r.seuils], [0, 7, 6, 5, 5, 6, 5, 4, 5]);
+  /* lot pitons-2 : l'ordre des mondes devient lagon 11 · canne 9 · pitons 7 ·
+     forêt 10 · volcan 7 · soleils 8 · marché 6 · tunnels 8 · Mafate 7 */
+  assert.deepEqual([...r.seuils], [0, 7, 6, 5, 7, 5, 5, 4, 5]);
   assert.equal(r.parOk, true);
   assert.deepEqual([...r.avant], [true, false, false, false, false, false, false, false, false]);
   assert.equal(r.canneA5, false);
   assert.equal(r.canneSansDec, false, "le seuil atteint sans les 5 découvertes : la canne reste fermée");
   assert.equal(r.canneComplete, true);
-  /* les deux chemins vers la forêt, et un seul vers le volcan */
-  assert.equal(r.foretParEcole, true, "le chemin de l'école : le lagon fini ouvre la forêt");
-  assert.equal(r.foretParChamp, true, "l'autre chemin marche toujours : ⌈5/8⌉ de la canne ouvre la forêt");
+  /* les deux chemins vers les pitons, et un seul vers la forêt puis le volcan */
+  assert.equal(r.pitonsParEcole, true, "le chemin de l'école : le lagon fini ouvre les pitons");
+  assert.equal(r.foretFermee, true, "la forêt attend les pitons, elle ne se contourne pas");
+  assert.equal(r.foretParPitons, true, "5 réussites aux pitons (⌈5×7/8⌉) ouvrent la forêt");
+  assert.equal(r.pitonsParChamp, true, "l'autre chemin marche toujours : ⌈5/8⌉ de la canne ouvre les pitons");
   assert.equal(r.volcanFerme, true, "la forêt est une école : elle n'a qu'une porte, pas de contournement");
-  assert.deepEqual([...r.ecoles], ["lagon", "foret", "volcan", "pitons", "soleils", "marche"]);
+  assert.deepEqual([...r.ecoles], ["lagon", "pitons", "foret", "volcan", "soleils", "marche"]);
   assert.deepEqual([...r.portes.canne], ["lagon"]);
-  assert.deepEqual([...r.portes.foret], ["canne", "lagon"], "deux portes : le champ, ou l'école d'avant");
-  assert.deepEqual([...r.portes.volcan], ["foret"], "une seule porte quand le monde d'avant est déjà une école");
+  assert.deepEqual([...r.portes.pitons], ["canne", "lagon"], "deux portes : le champ, ou l'école d'avant");
+  assert.deepEqual([...r.portes.foret], ["pitons"], "une seule porte quand le monde d'avant est déjà une école");
+  assert.deepEqual([...r.portes.volcan], ["foret"]);
   assert.deepEqual([...r.portes.mafate], ["tunnels", "marche"]);
   assert.equal(r.fruitManquant, 1);
   assert.equal(r.fruitsComplets, 2);
@@ -589,9 +599,16 @@ test("le chantier « Comprendre » : découvertes, points de cours et règle R1"
   /* « Les sixièmes » est RETIRÉ (lot A, 16/08) : le lagon enseigne le sixième au
      9ᵉ niveau et la canne le fait chercher au 18ᵉ ; la forêt le servait une
      troisième fois, en deux pièces et une seule pose gagnante. */
-  assert.deepEqual([...r.foret], ["Recoller les morceaux", "Deux tiers", "Trois quarts",
-    "Les huitièmes", "Cinq sixièmes", "Les douzièmes",
-    "Le champ de fougères", "La clairière"]);
+  /* lot pitons-2 : « La passe étroite » (le premier niveau du jeu où la lentille
+     est obligatoire) entre juste après « Recoller les morceaux », et « Le tamis »
+     ferme le monde — la forêt finit enfin sur son plus dur. */
+  /* Doctrine des additions (Gwenael, 18/08) : on ne force jamais une addition
+     AVANT qu'elle soit apprise. « La passe étroite » (lentille obligatoire) passe
+     donc APRÈS « Deux tiers » (dec:somme) — la contrainte devient un puzzle,
+     plus une leçon sautée. « Le tamis » ferme toujours le monde. */
+  assert.deepEqual([...r.foret], ["Recoller les morceaux", "Deux tiers", "La passe étroite",
+    "Trois quarts", "Les huitièmes", "Cinq sixièmes", "Les douzièmes",
+    "Le champ de fougères", "La clairière", "Le tamis"]);
   const [somme, deno] = [...r.sommes];
   /* DEUX lignes au plus (retour de Gwenael du 15/08). 1/3 + 1/3 : une seule —
      les deux tiers, plus le tiers qui manque en pâle ; recouper au dénominateur
