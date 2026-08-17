@@ -2104,10 +2104,12 @@ it("propose le parcours DNB puis lance Au tableau sans saisie ni score", async (
   assert.match(application.innerHTML, /Critères de divisibilité/);
   assert.match(application.innerHTML, /Carrés des entiers/);
   assert.match(application.innerHTML, /Fractions simples et décimaux/);
-  assert.match(application.innerHTML, /1 \/ 3/);
+  assert.match(application.innerHTML, /0 \/ 3/);
+  assert.match(application.innerHTML, /Choisis au moins un automatisme/);
+  assert.match(application.innerHTML, /data-action="preparer" disabled/);
   assert.equal(
     [...application.innerHTML.matchAll(/class="modrow is-selected"/g)].length,
-    1,
+    0,
   );
   assert.doesNotMatch(application.innerHTML, /Solides usuels|Calculer un volume/);
   assert.doesNotMatch(application.innerHTML, /Avec aide|Sans aide|Diaporama|Crédits et remerciements|Ouvrir une série/);
@@ -2115,6 +2117,13 @@ it("propose le parcours DNB puis lance Au tableau sans saisie ni score", async (
     assert.match(application.innerHTML, new RegExp(`data-value="${volume}"`));
   }
 
+  cliquer(gestionnaires, "choisir-notion", undefined, "criteres-divisibilite");
+  assert.match(application.innerHTML, /1 \/ 3/);
+  assert.doesNotMatch(application.innerHTML, /data-action="preparer" disabled/);
+  assert.equal(
+    [...application.innerHTML.matchAll(/class="modrow is-selected"/g)].length,
+    1,
+  );
   cliquer(gestionnaires, "choisir-mode", undefined, "tableau");
   cliquer(gestionnaires, "choisir-volume", undefined, "15");
   assert.match(application.innerHTML, /15 questions/);
@@ -2142,11 +2151,29 @@ it("propose le parcours DNB puis lance Au tableau sans saisie ni score", async (
   assert.match(application.innerHTML, /Réponse affichée/);
 });
 
+it("conserve la notion demandée par un lien direct", async () => {
+  const { application, gestionnaires } = installerFauxNavigateur(
+    "?notion=carres-entiers-0-a-12&questions=5&graine=lien-direct",
+  );
+  await import(`./app.js?fumee=lien-direct-${Date.now()}`);
+
+  assert.match(application.innerHTML, /Prêt à t'entraîner/);
+  assert.match(application.innerHTML, /Carrés des entiers de 0 à 12/);
+  cliquer(gestionnaires, "retour-menu");
+  assert.match(
+    application.innerHTML,
+    /data-value="carres-entiers-0-a-12"\s+checked/,
+  );
+  assert.equal(
+    [...application.innerHTML.matchAll(/class="modrow is-selected"/g)].length,
+    1,
+  );
+});
+
 it("sélectionne, révise et rejoue plusieurs automatismes dans une même série", async () => {
   const { application, gestionnaires } = installerFauxNavigateur("");
   await import(`./app.js?fumee=multi-${Date.now()}`);
 
-  cliquer(gestionnaires, "choisir-notion", undefined, "criteres-divisibilite");
   assert.match(application.innerHTML, /Choisis au moins un automatisme/);
   assert.match(application.innerHTML, /data-action="preparer" disabled/);
   assert.equal(
