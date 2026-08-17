@@ -1,3 +1,16 @@
+// ============================ ARCHIVE DATÉE ============================
+// Cet outil a prouvé le lot E « les pitons enseignent enfin ce qu'ils font »
+// (16/08/2026) et il a fait son travail : ses 28 contrôles étaient verts AU COMMIT
+// DU LOT E. Depuis le lot F « le mot juste d'abord », qui l'a suivi de quelques
+// minutes, il ÉCHOUE LÉGITIMEMENT sur UN point — celui qui exige que les dix cours
+// d'avant soient intacts à l'octet : le lot F réécrit une phrase dans trois d'entre
+// eux (`demi`, `recouper`, `neuvieme`) pour mettre le mot juste devant. Rien n'est
+// cassé, c'est le lot suivant qui a bougé le décor.
+//   Pour le rejouer VERT, se placer sur le commit du lot E :
+//     git worktree add --detach <dossier> <commit-du-lot-E>
+// On le CONSERVE en place, comme ses aînés : c'est la trace datée de ce qu'un lot
+// a promis (SOLEY.md §6, décision 9 du lot canne). Aucun de ces outils n'est en CI.
+// =======================================================================
 // Preuve du lot E « les pitons enseignent enfin ce qu'ils font » (16/08/2026).
 //
 // Le monde s'appelle « Équivalences et comparaisons » depuis le premier jour et
