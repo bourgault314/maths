@@ -3,7 +3,7 @@ import {
   COULEURS_RANGS_NUMERATION_DECIMALE,
   RAYONS,
   TYPOGRAPHIE,
-} from "../packages/charte/src/charte.js?v=38";
+} from "../packages/charte/src/charte.js?v=39";
 import {
   avancerFractionAide,
   avancerCorrespondanceAide,
@@ -36,14 +36,14 @@ import {
   saisirChiffre,
   tournerSolide,
   validerReponse,
-} from "./src/etat-lecteur.js?v=38";
+} from "./src/etat-lecteur.js?v=39";
 import {
   TYPE_REPONSE_DEUX_ENTIERS,
   TYPE_REPONSE_ENTIER_NATUREL,
   TYPE_REPONSE_FRACTION_EQUIVALENTE,
   TYPE_REPONSE_NOMBRE_DECIMAL,
   TYPE_REPONSE_CHOIX_UNIQUE,
-} from "../packages/contrats/src/question-v2.js?v=38";
+} from "../packages/contrats/src/question-v2.js?v=39";
 import {
   connaitNotionLecteur,
   obtenirNotionLecteur,
@@ -53,13 +53,13 @@ import {
   RENDU_SOLIDE,
   RENDU_VOLUME,
   NOTION_FRACTIONS_SIMPLES_DECIMAUX,
-} from "./src/registre-lecteur.js?v=38";
+} from "./src/registre-lecteur.js?v=39";
 import {
   DOMAINES_AUTOMATISMES,
   MICRO_NOTIONS_AUTOMATISMES,
   normaliserIdentifiantMicroNotion,
-} from "../packages/automatismes/src/identifiants.js?v=38";
-import { COURS_SOLIDES_USUELS } from "../packages/automatismes/src/espace-et-geometrie/solides-usuels/reconnaissance.js?v=38";
+} from "../packages/automatismes/src/identifiants.js?v=39";
+import { COURS_SOLIDES_USUELS } from "../packages/automatismes/src/espace-et-geometrie/solides-usuels/reconnaissance.js?v=39";
 import {
   creerCone,
   creerCube,
@@ -68,14 +68,14 @@ import {
   creerPrisme,
   creerPyramide,
   dessinerSolide,
-} from "../packages/objets/src/solides.js?v=38";
+} from "../packages/objets/src/solides.js?v=39";
 import {
   ACTION_TOUCHE_EFFACER,
   ACTION_TOUCHE_SAISIR,
   ACTION_TOUCHE_VALIDER,
   obtenirDispositionClavier,
-} from "../packages/objets/src/clavier.js?v=38";
-import { formulationCritereDivisibilite } from "../packages/automatismes/src/nombres-et-calculs/criteres-divisibilite/critere-precis.js?v=38";
+} from "../packages/objets/src/clavier.js?v=39";
+import { formulationCritereDivisibilite } from "../packages/automatismes/src/nombres-et-calculs/criteres-divisibilite/critere-precis.js?v=39";
 import {
   caseVide,
   difference,
@@ -92,32 +92,32 @@ import {
   variable,
   versHtmlEgalitesAlignees,
   versHtmlSemantique,
-} from "../packages/objets/src/expressions.js?v=38";
+} from "../packages/objets/src/expressions.js?v=39";
 import {
   dessinerCarreQuadrille,
-} from "../packages/objets/src/carre-quadrille.js?v=38";
-import { dessinerDoubleDroiteGraduee } from "../packages/objets/src/droite-graduee.js?v=38";
-import { dessinerBandesFractionnairesSurRailDecimal } from "../packages/objets/src/bandes-fractions-rail.js?v=38";
+} from "../packages/objets/src/carre-quadrille.js?v=39";
+import { dessinerDoubleDroiteGraduee } from "../packages/objets/src/droite-graduee.js?v=39";
+import { dessinerBandesFractionnairesSurRailDecimal } from "../packages/objets/src/bandes-fractions-rail.js?v=39";
 import {
   dessinerConversionRangsNumerationDecimale,
   dessinerEchangeRangsNumerationDecimale,
   dessinerMaterielNumerationDecimale,
   dessinerTableauNumerationDecimale,
-} from "../packages/objets/src/numeration-decimale.js?v=38";
+} from "../packages/objets/src/numeration-decimale.js?v=39";
 import {
   dessinerDemiAvecDixiemes,
   dessinerReorganisationCentiemes,
-} from "../packages/objets/src/correspondances-decimales.js?v=38";
+} from "../packages/objets/src/correspondances-decimales.js?v=39";
 import {
   construireDonneesTableauDepuisFraction,
   formaterFractionEnDecimal,
   reduireFraction,
-} from "../packages/objets/src/fractions-decimaux.js?v=38";
+} from "../packages/objets/src/fractions-decimaux.js?v=39";
 import {
   diagnostiquerDecimalVersNumerateur,
   diagnostiquerFractionLibre,
   diagnostiquerFractionVersDecimal,
-} from "./src/diagnostic-fractions-decimaux.js?v=38";
+} from "./src/diagnostic-fractions-decimaux.js?v=39";
 
 const MICRO_NOTION_FRACTION_VERS_DECIMAL =
   MICRO_NOTIONS_AUTOMATISMES.FRACTION_VERS_DECIMAL;
@@ -126,8 +126,9 @@ const MICRO_NOTION_DECIMAL_VERS_FRACTION =
 
 const application = document.querySelector("#application");
 const rechercheInitiale = window.location.search;
+const arriveeSansParametre = rechercheInitiale.length === 0;
 let etat = creerEtatLecteur(lireConfiguration(rechercheInitiale));
-let menuAccueilOuvert = rechercheInitiale.length === 0;
+let menuAccueilOuvert = arriveeSansParametre;
 let menuSessionOuvert = false;
 let pageCoursCourante = 0;
 let compteurSeries = 0;
@@ -138,7 +139,7 @@ let configurationMenu = {
   nombreQuestions: VOLUMES_MENU.includes(etat.configuration.nombreQuestions)
     ? etat.configuration.nombreQuestions
     : 10,
-  notions: [...etat.configuration.notions],
+  notions: arriveeSansParametre ? [] : [...etat.configuration.notions],
 };
 
 function creerGraineSerie() {

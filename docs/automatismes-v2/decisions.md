@@ -1471,3 +1471,23 @@ graphe de cache est invalidé atomiquement en `v38`. La revue visuelle locale
 aux cinq fenêtres n'a pas pu être rejouée faute de runtime Chromium ; elle doit
 donc être menée sur l'URL publique, en incluant le mode tableau. Gwenaël demande
 la publication de ce candidat afin d'y mener cette dernière revue.
+
+## 17 août 2026
+
+### D-062 — Le lanceur attend un choix explicite sur une arrivée normale
+
+Gwenaël demande que le menu d'Automatismes V2 n'anticipe plus le choix de
+l'élève ou du professeur. Lorsqu'on ouvre la route
+`/automatismes-v2/` sans aucun paramètre, aucune carte n'est donc sélectionnée :
+le domaine affiche `0 / 3`, le résumé demande de choisir au moins un
+automatisme et le bouton de lancement reste désactivé.
+
+Cette absence de sélection appartient uniquement au brouillon du menu. Le
+contrat d'une séance réelle continue d'exiger au moins une notion et son défaut
+historique interne n'est pas supprimé. Les liens directs valides contenant
+`?notion=...` conservent ainsi leur notion et ouvrent toujours l'écran prêt ;
+si l'utilisateur revient ensuite au menu, cette notion reste cochée.
+
+Les tests du lanceur couvrent l'arrivée vide, l'activation après un premier
+choix, la sélection multiple et la conservation d'un lien direct. Le graphe
+public V2 est invalidé d'un seul tenant en `v39`.

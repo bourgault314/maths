@@ -1,6 +1,17 @@
 # État du chantier Automatismes V2
 
-**Dernière mise à jour : 16 août 2026.**
+**Dernière mise à jour : 17 août 2026.**
+
+## Sélection explicite du lanceur du 17 août
+
+- D-062 réserve l'état vide au menu ouvert sans paramètre : aucun automatisme
+  n'est coché, le compteur affiche `0 / 3`, le résumé invite à choisir et le
+  lancement reste désactivé.
+- Le cœur du lecteur continue d'exiger au moins une notion. Un lien direct
+  `?notion=...` conserve sa sélection et son accès à l'écran prêt ; un retour
+  au menu garde cette notion cochée.
+- Les tests du lanceur couvrent l'arrivée vide, le premier choix, la sélection
+  multiple et le lien direct. Le graphe de cache passe atomiquement en `v39`.
 
 ## Repères symétriques du cours et cartouche de projection du 16 août
 
