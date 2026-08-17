@@ -775,6 +775,90 @@ def principal():
                 and pg14.evaluate("() => document.getElementById('cible').style.display") != "block", "")
         ctx14.close()
 
+        # T15 — DÉPLACER UNE PIÈCE DÉJÀ POSÉE (17/08). Question de Gwenael : sur le
+        # plateau, le clic veut déjà dire « enlève-la » — comment dire « déplace-la »
+        # sans lui prendre sa place ? Réponse : la MÊME règle que le lot G, le
+        # MOUVEMENT tranche. On contrôle donc les DEUX branches, et surtout l'ANCIENNE :
+        # un contrôle qui ne verrait que le geste neuf ne prouverait rien sur le retrait.
+        #
+        # Niveau « Le tour du lagon » (6 pièces) et non un niveau à une pièce : y poser
+        # la première déclencherait la célébration, et `boardClick` refuse alors TOUT
+        # clic (`if(celebrating)return;`) — piège d'origine du jeu, pas du lot.
+        ctx15, pg15 = nouvelle_page(390, 844)
+        pg15.goto(url, wait_until="load")
+        pg15.wait_for_function("() => window.SOLEY && window.SOLEY.LV")
+        i15 = pg15.evaluate(
+            "() => window.SOLEY.LV.findIndex(l => l.name === 'Le tour du lagon')")
+        A15, B15, ROC15 = [0, 0], [1, 0], [4, 3]
+        GEO15 = """([cx, cy]) => { const S = window.SOLEY;
+          const L = S.LV.find(l => l.name === 'Le tour du lagon');
+          const r = document.getElementById('board').getBoundingClientRect(), CS = 100;
+          const W = L.cols*CS, H = L.rows*CS, sc = Math.min(r.width/W, r.height/H);
+          const ox = r.left + (r.width - W*sc)/2, oy = r.top + (r.height - H*sc)/2, t = sc*CS;
+          return { x: ox + cx*t + t/2, y: oy + cy*t + t/2 }; }"""
+
+        def neuf15():
+            pg15.evaluate(f"() => window.SOLEY.openLevel({i15})")
+            pg15.wait_for_timeout(250)
+
+        def posees15():
+            return pg15.evaluate("() => Object.keys(window.SOLEY.state.placed)")
+
+        def poser15(case):
+            # une pièce déjà posée porte `used` : on prend la première encore libre
+            pg15.locator("#toolbox .chip:not(.used)").first.click()
+            pt = pg15.evaluate(GEO15, case)
+            pg15.mouse.click(pt["x"], pt["y"])
+            pg15.wait_for_timeout(200)
+
+        def tirer15(de, vers):
+            a = pg15.evaluate(GEO15, de)
+            z = pg15.evaluate(GEO15, vers) if isinstance(vers, list) else vers
+            pg15.mouse.move(a["x"], a["y"])
+            pg15.mouse.down()
+            for k in range(1, 9):
+                pg15.mouse.move(a["x"] + (z["x"] - a["x"]) * k / 8,
+                                a["y"] + (z["y"] - a["y"]) * k / 8)
+            pg15.mouse.up()
+            pg15.wait_for_timeout(250)
+
+        kA15, kB15 = "0,0", "1,0"
+        # l'ANCIEN geste, celui qu'il craignait de perdre : un clic net enlève
+        neuf15(); poser15(A15)
+        pose_avant15 = posees15()
+        pt15 = pg15.evaluate(GEO15, A15)
+        pg15.mouse.click(pt15["x"], pt15["y"])
+        pg15.wait_for_timeout(200)
+        section("T15 clic net sur une pièce posée : elle s'ENLÈVE, comme avant",
+                pose_avant15 == [kA15] and posees15() == [],
+                f"posée={pose_avant15}, après le clic={posees15()}")
+        # un tremblement sous le seuil reste un clic
+        neuf15(); poser15(A15)
+        a15 = pg15.evaluate(GEO15, A15)
+        pg15.mouse.move(a15["x"], a15["y"]); pg15.mouse.down()
+        pg15.mouse.move(a15["x"] + 4, a15["y"] + 3)      # 5 px, sous le seuil de 10
+        pg15.mouse.up(); pg15.wait_for_timeout(200)
+        section("T15 un doigt qui tremble de 5 px reste un CLIC : elle s'enlève",
+                posees15() == [], f"{posees15()}")
+        # le geste NEUF : tirée, elle change de case
+        neuf15(); poser15(A15); tirer15(A15, B15)
+        bougee15 = posees15()
+        section("T15 tirée, la pièce QUITTE sa case et se pose sur la nouvelle",
+                bougee15 == [kB15] and pg15.evaluate(
+                    "() => window.SOLEY.state.placed['1,0'].ti") == 0,
+                f"{bougee15}")
+        # les refus : une pièce venue du plateau ne se perd JAMAIS
+        neuf15(); poser15(A15); tirer15(A15, ROC15)
+        section("T15 lâchée sur une roche : refusée, et REMISE d'où elle vient",
+                posees15() == [kA15], f"{posees15()}")
+        neuf15(); poser15(A15); tirer15(A15, {"x": 8, "y": 8})
+        section("T15 lâchée hors du plateau : elle rentre chez elle, rien n'est perdu",
+                posees15() == [kA15], f"{posees15()}")
+        neuf15(); poser15(A15); poser15(B15); tirer15(A15, B15)
+        section("T15 lâchée sur une AUTRE pièce : refusée, les deux restent en place",
+                sorted(posees15()) == [kA15, kB15], f"{posees15()}")
+        ctx15.close()
+
         # T9.9 + T9.11 — stabilité 320 px et 402 px : accueil, panneau du cours,
         # chaînes CALC corrigées (règle R1) rendues sans débordement
         for largeur, hauteur in ((320, 700), (402, 874)):
