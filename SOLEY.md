@@ -214,6 +214,10 @@ plateau ne répond plus aux clics — défaut trouvé en construisant le lot).
   (le nombre du bas)**, jamais l'inverse : mettre l'approximation devant reléguerait
   le mot que l'élève doit finir par employer. Vaut pour tous les cours, présents et à
   venir.
+- **Les deux gestes coexistent : un clic sélectionne, un glissement pose** (16/08).
+  Observation d'élèves, la première du projet : les petits cousins de Gwenael, sur
+  téléphone, ont tous voulu TIRER la pièce. C'est le MOUVEMENT qui départage les deux
+  gestes — sous le seuil, l'ancien parcours est intact à la ligne près.
 - **Une notion s'enseigne UNE fois, avant qu'on s'en serve** (16/08). Un monde ne
   redécouvre pas ce qu'un monde précédent a enseigné : c'est ce qui a coûté sa place à
   « Quarts en croix » (15/08) puis à « Les sixièmes » (16/08). Corollaire : une notion
@@ -1229,4 +1233,24 @@ Trois choses à savoir avant d'y toucher :
   vérificateur le prouve — titres, scènes, écritures `eq` et prédires intacts, seules
   des chaînes `t` changent. Il vérifie aussi que le compte de ces phrases n'a pas
   **baissé** : corriger une phrase ne doit pas revenir à la supprimer.
+- **16/08 — la pièce se tire, autant qu'elle se clique (lot G).** Première
+  observation d'ÉLÈVES du projet, rapportée par Gwenael : ses petits cousins, sur
+  téléphone, ont tous eu le même réflexe — prendre la pièce et la **tirer** sur le
+  plateau — alors que le jeu attendait deux clics. Les deux gestes coexistent
+  désormais et c'est le **mouvement** qui les départage : sous 10 px, rien ne change
+  et le `click` d'origine fait son travail ; au-delà, c'est un glissement, et le clic
+  qui suivrait est étouffé par un **drapeau consommé par le premier gestionnaire qui
+  le voit** — pas par une minuterie, qui finirait un jour par avaler un vrai clic.
+  Pointer Events : souris, doigt et stylet passent par le même chemin. Un fantôme suit
+  le doigt, la case visée s'allume en or si la pièce peut s'y poser, en rouge sinon —
+  l'élève sait AVANT de lâcher. `touch-action:none` est posé sur la PIÈCE seulement :
+  le reste de l'écran garde son défilement. La géométrie écran → case est **sortie en
+  fonction** (`caseSous`) et partagée par le clic et le glissement : deux façons
+  d'entrer, une seule vérité sur où l'on pose. **T14** entre à la batterie et contrôle
+  les quatre choses qui comptent : le glissement pose et gagne, une case occupée
+  refuse, **le clic-clic marche exactement comme avant**, et rien ne traîne après le
+  geste. Au passage, les **deux dettes du poste Windows** sont payées : `.gitattributes`
+  impose LF partout, et le test du générateur essaie `python3` puis `python` — sous
+  Windows le premier est un alias du Microsoft Store qui ne lance rien. Ce sont
+  exactement les quatre rouges que la session Code mesurait sur `main` à chaque lot.
 - (à compléter à chaque session)

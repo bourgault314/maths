@@ -3,6 +3,7 @@ import { createHash } from "node:crypto";
 import { readFileSync } from "node:fs";
 import { spawnSync } from "node:child_process";
 import test from "node:test";
+import { fileURLToPath } from "node:url";
 import { runInNewContext, Script } from "node:vm";
 
 const sourceUrl = new URL("../_sources/chat-le-chat/projection_cases.json", import.meta.url);
@@ -495,10 +496,34 @@ test("les couleurs principales gardent un contraste lisible sur fond blanc", () 
   }
 });
 
+/* L'interpréteur Python ne s'appelle pas pareil partout : `python3` sous Linux et sur
+   la CI, parfois `python` seulement sous Windows — où `python3` peut être l'alias du
+   Microsoft Store, qui ne lance RIEN et rend `status: null`. On essaie donc les deux,
+   et on ne conclut à l'échec que si aucun n'a pu démarrer.
+
+   ATTENTION, ce repli n'est PAS ce qui a réparé le faux rouge du poste de Gwenael :
+   mesuré le 17/08, `python3` ET `python` y sont le même Python 3.14.0 et démarrent
+   tous les deux. Le faux rouge venait du `cwd` (voir le test ci-dessous). Le repli
+   reste utile pour une machine où l'alias du Store est réellement en tête du PATH. */
+function lancerPython(args, options) {
+  for (const bin of ["python3", "python"]) {
+    const r = spawnSync(bin, args, options);
+    if (r.status !== null) return r;
+  }
+  return { status: null, stdout: "", stderr: "aucun interpréteur Python trouvé (python3, python)" };
+}
+
 test("le générateur confirme que la page publique est à jour", () => {
-  const result = spawnSync("python3", ["-B", generatorUrl.pathname, "--check"], {
-    cwd: new URL("..", import.meta.url).pathname,
-    encoding: "utf8"
+  /* `.pathname` d'une URL file: rend « /C:/… » sous Windows — une forme POSIX que
+     `spawnSync` refuse (ENOENT, donc `status: null`). `fileURLToPath` rend « C:\… ».
+     C'est la VRAIE cause du faux rouge du poste : les deux interpréteurs démarrent
+     très bien, c'est le dossier de travail qui n'existait pas. */
+  const result = lancerPython(["-B", fileURLToPath(generatorUrl), "--check"], {
+    cwd: fileURLToPath(new URL("..", import.meta.url)),
+    encoding: "utf8",
+    /* sans quoi Python écrit dans la page de code Windows (« d?fis in?dits ») alors
+       qu'on relit en UTF-8 ; sous Linux la variable ne change rien */
+    env: { ...process.env, PYTHONIOENCODING: "utf-8" }
   });
   assert.equal(result.status, 0, `${result.stdout}\n${result.stderr}`);
   assert.match(result.stdout, /12 défis inédits, 6 vrais \/ 6 faux/);
