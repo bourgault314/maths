@@ -733,6 +733,69 @@ test("le logo maths&go s’intègre au soleil sans plaque blanche", () => {
   assert.doesNotMatch(css, /\.brandmark[^{]*\{[^}]*grayscale/);
 });
 
+/* L'IMAGE D'UN COURS DIT-ELLE CE QUE SA PHRASE DIT ? (17/08)
+   Le lot E a gravé la règle : « quand une image porte une démonstration, le
+   vérificateur doit mesurer L'IMAGE, pas seulement les textes ». Son propre outil ne
+   la tenait pas — il calculait `n / dénominateur` sur les DONNÉES de `scene.parts` et
+   n'appelait jamais le dessinateur : un défaut de rendu serait passé au vert. Et il
+   est daté, donc jamais lancé.
+   Ce test-ci APPELLE `construireCours` et relève les rectangles réellement émis. Il
+   tourne à chaque PR, et il vaut pour TOUT cours à scène `parts`, présents et à venir :
+   on ne réécrit rien quand un cours s'ajoute. */
+test("les cours en bandes démontrent vraiment ce qu'ils affirment", () => {
+  const context = createGameContext();
+  const mesures = vm.runInContext(`(() => {
+    const out = {};
+    Object.keys(COURS).filter(id => COURS[id].scene && COURS[id].scene.parts).forEach(id => {
+      const html = construireCours(id);
+      /* les parts pâles (opacity=".2") ne sont pas peintes ; on somme les autres */
+      const rects = [...html.matchAll(/<rect class="bande" x="([\\d.]+)" y="(\\d+)" width="([\\d.]+)"[^>]*?>/g)]
+        .map(m => ({ y: +m[2], w: +m[3], pale: /opacity="\\.2"/.test(m[0]) }));
+      const parY = new Map();
+      rects.forEach(r => { if (!parY.has(r.y)) parY.set(r.y, []); parY.get(r.y).push(r); });
+      const lignes = [...parY.entries()].sort((a, b) => a[0] - b[0]).map(([, v]) => v);
+      out[id] = {
+        bandes: lignes.length,
+        parts: lignes.map(v => v.length),
+        totales: lignes.map(v => v.reduce((s, r) => s + r.w, 0)),
+        peintes: lignes.map(v => v.filter(r => !r.pale).reduce((s, r) => s + r.w, 0)),
+        annonces: COURS[id].scene.parts.map(p => p.f[1])
+      };
+    });
+    return out;
+  })()`, context);
+
+  const ids = Object.keys(mesures);
+  assert.deepEqual(ids, ["equivalence", "comparaison"],
+    "les cours à scène `parts` connus ; en ajouter un ici est volontaire");
+
+  for (const [id, m] of Object.entries(mesures)) {
+    /* le SVG dessine-t-il le découpage que les données annoncent ? */
+    assert.deepEqual([...m.parts], [...m.annonces],
+      `${id} : le nombre de parts dessinées doit valoir le dénominateur annoncé`);
+    /* comparer des longueurs n'a de sens que sur des bandes de même longueur */
+    const [ref] = m.totales;
+    assert.ok(m.totales.every(t => Math.abs(t - ref) < 0.5),
+      `${id} : les bandes doivent avoir la même longueur totale — ${m.totales}`);
+  }
+
+  /* « La même part, écrite autrement » : trois écritures, UNE seule longueur peinte.
+     La tolérance absorbe l'arrondi à la décimale des largeurs (248/6). */
+  const eq = mesures.equivalence;
+  assert.ok(eq.peintes.every(p => Math.abs(p - eq.peintes[0]) < 0.5),
+    `équivalence : les longueurs peintes doivent être ÉGALES — ${eq.peintes}`);
+  assert.equal(new Set(eq.parts).size, eq.parts.length,
+    "équivalence : trois découpages différents, sinon l'image ne montre rien");
+
+  /* « Comparer deux parts » : le dénominateur MONTE pendant que la part RÉTRÉCIT.
+     C'est le contre-sens qui prend tous les élèves — l'image doit le démontrer. */
+  const cp = mesures.comparaison;
+  assert.ok(cp.peintes.every((p, i) => i === 0 || p < cp.peintes[i - 1] - 0.5),
+    `comparaison : les longueurs peintes doivent DÉCROÎTRE strictement — ${cp.peintes}`);
+  assert.ok(cp.parts.every((n, i) => i === 0 || n > cp.parts[i - 1]),
+    `comparaison : le dénominateur doit monter — ${cp.parts}`);
+});
+
 test("la miniature Solèy respecte le format du catalogue", () => {
   assert.match(thumbnail, /<svg[^>]*width="720"[^>]*height="320"[^>]*viewBox="0 0 720 320"/);
   assert.match(thumbnail, /Solèy — jeu de fractions/);

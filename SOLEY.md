@@ -218,6 +218,28 @@ plateau ne répond plus aux clics — défaut trouvé en construisant le lot).
   Observation d'élèves, la première du projet : les petits cousins de Gwenael, sur
   téléphone, ont tous voulu TIRER la pièce. C'est le MOUVEMENT qui départage les deux
   gestes — sous le seuil, l'ancien parcours est intact à la ligne près.
+- **Un geste neuf réutilise le discriminateur qui existe déjà** (17/08). Quand un
+  geste nouveau entre en concurrence avec un geste installé sur la même cible, ne pas
+  inventer un troisième vocabulaire : chercher ce qui tranche DÉJÀ dans le code. Sur
+  le plateau, le clic voulait dire « enlève-la » ; déplacer une pièce posée n'a donc
+  rien inventé, c'est **le même seuil de 10 px** que boîte→plateau. Un seul seuil pour
+  tous les gestes du jeu, donc rien de neuf à apprendre pour l'élève. Corollaire de
+  sûreté : **un glissement raté ne détruit jamais** — la pièce revient d'où elle vient,
+  puisque le retrait a déjà son propre geste.
+- **Un module partagé se vérifie page par page** (17/08). `ui.js`, `engine.js` et
+  `render.js` servent le jeu ET l'atelier. Pour tout ajout, lister les PAGES qui
+  chargent le module, puis se demander **quels ID de la nouveauté manquent à
+  chacune** : le lot G avait posé son `<div id="cible">` dans `soley.html` seulement,
+  et l'atelier a glissé pendant un lot sans jamais allumer sa case — sans erreur, sans
+  test rouge, sans le moindre symptôme. C'est la variante « élément absent » du piège
+  d'ID déjà connu (le dégradé `sungrad` dupliqué).
+- **Une image qui démontre se MESURE, et le contrôle vit en CI** (17/08). La règle du
+  lot E était juste mais son outil ne la tenait pas : il recalculait la formule des
+  données au lieu d'appeler le dessinateur, et il était daté donc jamais lancé. Le
+  test « les cours en bandes démontrent vraiment ce qu'ils affirment »
+  (`tests/soley-public.test.mjs`) appelle `construireCours` et mesure les rectangles
+  émis ; il couvre **tout** cours à scène `parts`, présent et à venir. Vérifié dans
+  les deux sens : fausser une bande le fait échouer.
 - **Une notion s'enseigne UNE fois, avant qu'on s'en serve** (16/08). Un monde ne
   redécouvre pas ce qu'un monde précédent a enseigné : c'est ce qui a coûté sa place à
   « Quarts en croix » (15/08) puis à « Les sixièmes » (16/08). Corollaire : une notion
@@ -1249,8 +1271,55 @@ Trois choses à savoir avant d'y toucher :
   d'entrer, une seule vérité sur où l'on pose. **T14** entre à la batterie et contrôle
   les quatre choses qui comptent : le glissement pose et gagne, une case occupée
   refuse, **le clic-clic marche exactement comme avant**, et rien ne traîne après le
-  geste. Au passage, les **deux dettes du poste Windows** sont payées : `.gitattributes`
-  impose LF partout, et le test du générateur essaie `python3` puis `python` — sous
-  Windows le premier est un alias du Microsoft Store qui ne lance rien. Ce sont
-  exactement les quatre rouges que la session Code mesurait sur `main` à chaque lot.
+  geste. Au passage, les **quatre faux rouges du poste Windows** tombent — mais pas
+  pour la raison que ce lot annonçait, et la correction vaut d'être lue :
+  - la dette du **CRLF est réelle** : `.gitattributes` impose LF partout et retire
+    **trois** des quatre rouges. Attention, il ne réécrit PAS les fichiers déjà
+    sortis : il faut ré-extraire l'arbre (`git rm --cached -r . && git reset --hard`).
+    Effet de bord heureux, `generate-seo --check` devient vert en local — ses « 105
+    fichiers désynchronisés » étaient la même dérive ;
+  - la dette **`python3` reposait sur un diagnostic FAUX**. Le lot croyait à l'alias
+    du Microsoft Store ; mesuré sur le poste le 17/08, `python3` et `python` y sont
+    **le même Python 3.14.0** et démarrent tous les deux. Deux vraies causes,
+    empilées : (1) **`.pathname` d'une URL `file:` rend `/C:/Users/…`**, forme POSIX
+    que `spawnSync` refuse sous Windows — ENOENT, donc `status: null` quel que soit
+    le binaire ; il faut **`fileURLToPath`** ; (2) une fois Python lancé, il écrit
+    dans la page de code Windows (« d?fis in?dits ») alors qu'on relit en UTF-8 ; il
+    faut **`PYTHONIOENCODING: 'utf-8'`** dans l'`env` du spawn. Le repli
+    `python3` puis `python` est conservé — il sert sur une machine où l'alias est
+    vraiment en tête du PATH — mais il n'a jamais rien réparé ici.
+
+  **RÈGLE À GRAVER : `.pathname` d'une URL `file:` est un piège Windows silencieux —
+  dans tout le dépôt, `fileURLToPath` ou rien. Et un « faux rouge » annoncé se
+  REMESURE avant d'être cru : trois couches se cachaient sous une seule explication.**
+- **17/08 — la case s'allume aussi dans l'atelier (#404).** `ui.js` est chargé par
+  **deux** pages, le jeu et l'atelier dont le mode « Jouer » rejoue le vrai moteur ;
+  le lot G n'avait posé son `<div id="cible">` que dans `soley.html`. Dans l'atelier
+  le glissement marchait donc — fantôme, pièce posée, zéro erreur — mais **la case ne
+  s'allumait jamais**, `surlignerCase` sortant sur son `if(!el)return;`. Rien de
+  cassé, aucun test rouge, aucun symptôme : **seule la fonctionnalité manquait, en
+  silence.** Cinq lignes dans une seule page, aucune CSS ni aucun script à toucher.
+  **RÈGLE : pour tout ajout dans un module partagé, lister les PAGES qui chargent le
+  module, puis se demander quels ID de la nouveauté manquent à chacune.** C'est la
+  variante « élément absent » du piège d'ID déjà connu (le dégradé `sungrad` dupliqué).
+- **17/08 — une pièce posée se déplace (#407).** Demande de Gwenael, qui a posé
+  lui-même la vraie difficulté : sur le plateau, le clic veut **déjà** dire « enlève-la ».
+  **Réponse : ne pas inventer un troisième vocabulaire, réutiliser le discriminateur
+  DÉJÀ présent — le mouvement.** Clic net (< 10 px) sur une pièce posée → elle
+  s'enlève comme depuis toujours ; la tirer (> 10 px) → elle se décolle et se repose
+  ailleurs. Un seul seuil pour les deux gestes (boîte→plateau et case→case), donc rien
+  de neuf à apprendre. Elle se **décolle** dès l'activation (sinon un fantôme flotte
+  au-dessus de la pièce restée en place et le rayon la traverse encore), avec
+  `overlayShown=false` pour réarmer la victoire (T12). Et **elle ne se perd jamais** :
+  roche, autre pièce ou hors plateau la remettent d'où elle vient — le retrait a déjà
+  son geste, un glissement raté ne doit pas effacer le travail de l'élève.
+  `touch-action:none` passe sur `#board` : **mesuré avant d'être posé**, la page du
+  jeu ne défile pas d'un pixel en 390×844, 320×700 ni 768×1024, la règle ne retire
+  donc rien. **T15** (6 contrôles) entre à la batterie **et a été VU ÉCHOUER dans le
+  bon sens : sur `main`, ses 2 contrôles du geste neuf sont rouges et les 4 de
+  l'ancien geste verts** — ce qui prouve d'un coup qu'il mesure la nouveauté et que le
+  retrait au clic n'a pas bougé. **Patron à refaire pour toute évolution d'une
+  interaction existante.** Piège rencontré : « Premier rayon » se gagne en UNE pièce,
+  donc la poser lance la célébration et `boardClick` refuse alors TOUT clic — un
+  premier test entièrement faux en est sorti. Prendre un niveau à plusieurs pièces.
 - (à compléter à chaque session)
