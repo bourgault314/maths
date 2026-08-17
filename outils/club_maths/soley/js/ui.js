@@ -258,12 +258,36 @@ function debutTirage(ev){
   apresTirage=false;                       /* jamais de drapeau qui traîne */
   tirage={i:+ev.currentTarget.dataset.i,x0:ev.clientX,y0:ev.clientY,actif:false};
 }
+/* DÉPLACER une pièce DÉJÀ POSÉE (17/08, demande de Gwenael). La difficulté qu'il a
+   pointée : sur le plateau, le clic veut déjà dire « enlève-la ». Comment dire
+   « déplace-la » sans lui prendre sa place ?
+   Réponse : la MÊME règle que le lot G, et c'est ce qui rend le geste apprenable —
+   le MOUVEMENT tranche. Un clic net sur une pièce posée l'enlève, exactement comme
+   depuis toujours ; la TIRER la décolle et la repose ailleurs. Aucun vocabulaire
+   nouveau, et le retrait n'a pas changé d'une ligne. */
+function debutTiragePlateau(ev){
+  if(celebrating||ev.button)return;
+  const c=caseSous(ev.clientX,ev.clientY);
+  if(!c)return;
+  const p=state.placed[c.x+','+c.y];
+  if(!p)return;                            /* case vide : il n'y a rien à prendre */
+  apresTirage=false;
+  tirage={i:p.ti,x0:ev.clientX,y0:ev.clientY,actif:false,depuis:c};
+}
 document.addEventListener('pointermove',ev=>{
   if(!tirage)return;
   if(!tirage.actif){
     if(Math.hypot(ev.clientX-tirage.x0,ev.clientY-tirage.y0)<SEUIL_TIRAGE)return;
     tirage.actif=true;
-    state.sel=tirage.i;renderToolbox();     /* la pièce est prise : la boîte le montre */
+    state.sel=tirage.i;
+    if(tirage.depuis){
+      /* une pièce prise SUR le plateau se DÉCOLLE tout de suite : sans ça on
+         traînerait un fantôme au-dessus de la pièce restée en place, et le rayon
+         continuerait de la traverser */
+      delete state.placed[tirage.depuis.x+','+tirage.depuis.y];
+      overlayShown=false;                   /* la figure change : la victoire se réarme */
+      redraw();                             /* redraw rafraîchit aussi la boîte */
+    }else renderToolbox();                  /* la pièce est prise : la boîte le montre */
     const f=document.createElement('div');
     f.className='fantome';
     f.innerHTML=`<svg viewBox="0 0 100 100" aria-hidden="true">${pieceStatic(LV[cur].tools[tirage.i])}</svg>`;
@@ -277,17 +301,26 @@ document.addEventListener('pointermove',ev=>{
 });
 document.addEventListener('pointerup',ev=>{
   if(!tirage)return;
-  const actif=tirage.actif, i=tirage.i;
+  const actif=tirage.actif, i=tirage.i, depuis=tirage.depuis;
   finTirage();
   if(!actif)return;                        /* simple toucher : on laisse faire le clic */
   apresTirage=true;
   const c=caseSous(ev.clientX,ev.clientY);
-  if(c&&state.placed[c.x+','+c.y]){refuser();return;}
-  if(c){poserPiece(c.x,c.y,i);return;}
-  state.sel=null;renderToolbox();           /* lâchée hors du plateau : on la repose */
+  /* Une pièce venue du PLATEAU ne se perd jamais : tout refus la remet d'où elle
+     vient. L'enlever a déjà son geste à elle — le clic —, donc un glissement raté ne
+     doit surtout pas effacer le travail de l'élève. */
+  const remettre=()=>{
+    if(depuis)state.placed[depuis.x+','+depuis.y]={def:LV[cur].tools[i],ti:i};
+    state.sel=null;redraw();
+  };
+  if(c&&state.placed[c.x+','+c.y]){refuser();remettre();return;}
+  if(c){if(!poserPiece(c.x,c.y,i))remettre();return;}
+  if(depuis){remettre();return;}            /* lâchée hors du plateau : elle rentre chez elle */
+  state.sel=null;renderToolbox();           /* venue de la boîte : on la repose */
 });
 document.addEventListener('pointercancel',finTirage);
 document.getElementById('board').addEventListener('click',boardClick);
+document.getElementById('board').addEventListener('pointerdown',debutTiragePlateau);
 document.getElementById('resetbtn').addEventListener('click',()=>{
   clearCeleb();state.placed={};state.sel=null;overlayShown=false;
   document.getElementById('winov').classList.remove('show');redraw();});
