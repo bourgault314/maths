@@ -1,3 +1,14 @@
+// ============================ ARCHIVE DATÉE ============================
+// Cet outil a prouvé le lot « monde des champs de canne » (14/08/2026) et il a
+// fait son travail. MESURÉ le 17/08 contre `origin/main` INTACT : il sort déjà
+// 71 échecs — les lots qui ont suivi (niveaux durs, sixième, Mafate, lot B…)
+// ont légitimement bougé ce qu'il gardait. Le lot H y ajoute deux renommages :
+// « Zigzag dans les roches » → « Zigzag dans le corail » et « Le champ de
+// roches » → « Le champ de fougères ». On NE corrige PAS les noms ci-dessous :
+// cet outil est la trace de ce que le lot canne a promis à SA date, et le
+// réécrire lui ferait raconter un lot qui n'a pas eu lieu. Même traitement que
+// `verifier-lot-niveaux-durs.mjs`. Aucun de ces outils n'est en CI.
+// =======================================================================
 // Preuve du lot « refonte des niveaux » (août 2026) : les 61 niveaux en ligne
 // restent joués À L'IDENTIQUE, hors retouches autorisées par SPEC-MONDE-CANNE.md :
 //   - 8 niveaux NOUVEAUX (monde « canne » inséré entre lagon et forêt) ;

@@ -60,7 +60,12 @@ const LV=[
   rocks:[[5,3],[1,4]],fruits:[],
   tools:[b(1,0)],sol:[[0,4,2]]},
 
- {w:'lagon',name:"Zigzag dans les roches",
+ /* Renommé au lot H : le lagon est peint en CORAIL (obstacleSVG → corailSVG), le
+    titre montrait des roches que l'écran n'a jamais eues — et sa propre consigne
+    disait déjà « patates de corail ». Coût assumé : la clé de sauvegarde est
+    `monde:nom`, ce niveau perd donc ses petits soleils chez les joueurs actuels
+    (2ᵉ du lagon, rejouable en une minute). Aucune ligne CALC — vérifié. */
+ {w:'lagon',name:"Zigzag dans le corail",
   sub:"Les patates de corail bloquent la lumière : par où passer ? Les fruits péi sont des bonus facultatifs — facultatifs, mais malins : le chemin qui gagne n'est pas forcément celui qui ramasse.",
   cols:8,rows:6,suns:[{x:0,y:5,dir:0}],
   targets:[{x:7,y:5,need:[1,1]}],
@@ -390,7 +395,10 @@ const LV=[
   tools:[s2(1,0,2),s3(1,1,2,0),s2(2,1,2),mg(1,0,1),b(0,1),b(1,0),b(2,1),b(1,2)],
   sol:[[0,2,3],[1,4,1],[2,4,2],[3,7,1],[4,2,1],[5,7,2],[6,4,5]]},
 
- {w:'foret',name:"Le champ de roches",
+ /* Renommé au lot H, avec les mots de sa propre consigne (« Traverse le champ de
+    fougères ») : la forêt est peinte en FOUGÈRES, le titre et la consigne cessent
+    de se contredire sans qu'on touche à la consigne. Aucune ligne CALC — vérifié. */
+ {w:'foret',name:"Le champ de fougères",
   sub:"Traverse le champ de fougères et ramasse les fruits au passage. Attention, il y a des pièces en trop !",
   cols:10,rows:8,suns:[{x:0,y:4,dir:1}],
   targets:[{x:9,y:1,need:[1,2]},{x:9,y:6,need:[1,2]}],
