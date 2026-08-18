@@ -582,16 +582,29 @@ test("le chantier « Comprendre » : découvertes, points de cours et règle R1"
   /* LOT PITONS-1 : `ecritures` entre — le cours du niveau 1 des pitons ne montre
      plus que ce que SON niveau affiche (1/2 et 2/4), et les écritures 3/6 et 2/8
      s'enseignent au niveau qui les affiche, « Trois écritures ». */
+  /* LOT CUEILLETTE (18/08) : `moities` entre — le cours à la cueillette de
+     « Recoller les morceaux », déclenché par une victoire qui ramasse TOUT. */
   assert.deepEqual([...r.coursIds],
     ["demi", "tiers", "quart", "sixieme", "recouper", "porte", "neuvieme", "douzieme",
-      "equivalence", "ecritures", "comparaison", "somme", "denominateur"]);
+      "equivalence", "ecritures", "comparaison", "somme", "denominateur", "moities"]);
   /* LOT E : les pitons enseignent enfin ce que leur nom annonce. Les deux cours
      partagent la scène `parts` et disent l'inverse l'un de l'autre : à longueur
      peinte égale l'écriture change, à une seule part peinte la longueur diminue. */
   assert.deepEqual([...r.titres], ["Le demi", "Le tiers", "Le quart", "Le sixième",
     "Recouper une part", "Les cases à palissade", "Le neuvième", "Le douzième",
     "La même part, écrite autrement", "Qui se cache sous l'écriture ?",
-    "Comparer deux parts", "Recoller deux parts", "Le même dénominateur"]);
+    "Comparer deux parts", "Recoller deux parts", "Le même dénominateur",
+    "Recoller deux moitiés"]);
+  /* Le QUATRIÈME déclencheur (lot cueillette) : `coursFruits` pointe vers un cours
+     existant, sur un niveau à fruits qui n'a ni dec ni cours — et le moteur ne le
+     montre qu'après une victoire qui ramasse TOUT (le test du source garde la
+     condition, la batterie navigateur montre le panneau). */
+  const cueilleurs = js.levels.match(/coursFruits:'(\w+)'/g) || [];
+  assert.deepEqual(cueilleurs, ["coursFruits:'moities'"], "un seul cours à la cueillette pour l'instant");
+  assert.match(js.engine, /L\.coursFruits&&L\.fruits\.length&&sim\.fruits\.size>=L\.fruits\.length/,
+    "le déclencheur exige la cueillette COMPLÈTE");
+  assert.match(js.ui, /coursFruits&&\(save\.cours\[/,
+    "le bouton « Revoir » ne montre le cours qu'une fois mérité");
   /* la forêt (08/2026) : le cas SIMPLE (même dénominateur) passe devant le cas DUR.
      « Recoller les morceaux » reste l'accueil du monde mais n'est plus une
      découverte : sa case demande 1/1, que le rayon du soleil vaut déjà, donc aucun
@@ -657,7 +670,8 @@ test("le chantier « Comprendre » : découvertes, points de cours et règle R1"
      ENSEIGNE (elle accepte les deux champs), celle du bas VERROUILLE (elle ne connaît
      que `decouvertesMonde`, qui ne filtre que sur `dec`). Tant que `cours` n'apparaît
      pas dans la seconde, un niveau à `cours` ne peut fermer aucun monde. */
-  assert.match(js.engine, /const idCours=L\.dec\|\|L\.cours;/);
+  /* lot cueillette (18/08) : le déclencheur `coursFruits` s'ajoute à la chaîne */
+  assert.match(js.engine, /const idCours=L\.dec\|\|L\.cours\n/);
   assert.match(js.engine, /const coursANouveau=!!\(idCours&&COURS\[idCours\]&&!save\.cours\[idCours\]\);/);
   assert.match(js.engine, /const decouvertesMonde=wid=>idxMonde\(wid\)\.filter\(i=>LV\[i\]\.dec\);/);
   assert.match(js.engine, /decouvertesReussies\(wid\)>=decouvertesMonde\(wid\)\.length/);
