@@ -48,6 +48,8 @@ class Layout:
     logo_width_mm: float
     gap_mm: float
     duplex_instruction: str
+    series_size: float
+    series_per_page: int
 
 
 LARGE = Layout(
@@ -61,6 +63,8 @@ LARGE = Layout(
     logo_width_mm=40,
     gap_mm=6,
     duplex_instruction="retourner sur le bord long",
+    series_size=22,
+    series_per_page=1,
 )
 
 COMPACT = Layout(
@@ -74,7 +78,27 @@ COMPACT = Layout(
     logo_width_mm=30,
     gap_mm=5,
     duplex_instruction="retourner sur le bord court",
+    series_size=15,
+    series_per_page=2,
 )
+
+
+def _series_for_boxes(boxes: list[dict], layout: Layout, page_index: int) -> list[int]:
+    """Numéro de série de chaque carte d'une page recto.
+
+    Grand format : une série par feuille (page 1 = série 1, etc.).
+    Compact : deux séries par feuille ; la rangée du haut porte la première
+    (feuille 1 = séries 1 et 2, feuille 2 = séries 3 et 4, etc.), exactement
+    l'ordre de `compact_pages` dans gen.py. Le retournement duplex réfléchit
+    les colonnes mais jamais les rangées, donc l'attribution reste valable
+    au verso.
+    """
+    if layout.series_per_page == 1:
+        return [page_index + 1] * len(boxes)
+    tops = [box["top"] for box in boxes]
+    middle = (min(tops) + max(tops)) / 2
+    first = page_index * layout.series_per_page + 1
+    return [first if box["top"] < middle else first + 1 for box in boxes]
 
 
 def _register_font() -> None:
@@ -118,21 +142,22 @@ def _draw_back_page(
     page_width: float,
     page_height: float,
     front_boxes: list[dict],
+    box_series: list[int],
     layout: Layout,
     logo: ImageReader,
     logo_ratio: float,
 ) -> None:
     pdf.setPageSize((page_width, page_height))
     pdf.setFillColor(NAVY)
-    pdf.setFont(FONT_NAME, layout.title_size)
 
     logo_width = layout.logo_width_mm * POINTS_PER_MM
     logo_height = logo_width / logo_ratio
     text_block_height = layout.title_size * 1.2
+    series_block_height = layout.series_size * 1.2
     gap = layout.gap_mm * POINTS_PER_MM
-    group_height = text_block_height + gap + logo_height
+    group_height = text_block_height + gap + logo_height + gap + series_block_height
 
-    for front in front_boxes:
+    for front, serie in zip(front_boxes, box_series):
         # Une feuille retournée selon le réglage indiqué réfléchit les colonnes
         # autour de l'axe vertical. Cela corrige aussi l'asymétrie de 1,2 mm du
         # PDF compact existant, sans valeur magique liée au CSS.
@@ -142,6 +167,7 @@ def _draw_back_page(
         card_center_x = card_left + card_width / 2
         group_top = front["top"] + (card_height - group_height) / 2
 
+        pdf.setFont(FONT_NAME, layout.title_size)
         text_width = pdfmetrics.stringWidth(TITLE, FONT_NAME, layout.title_size)
         text_x = card_center_x - text_width / 2
         text_baseline = page_height - group_top - layout.title_size
@@ -159,6 +185,15 @@ def _draw_back_page(
             preserveAspectRatio=True,
             mask="auto",
         )
+
+        # La mention de série, bien visible sous le M, sert au tri des cartes
+        # ramassées : peu importe le chat, pourvu qu'on retrouve la série.
+        series_label = f"Série {serie}"
+        pdf.setFont(FONT_NAME, layout.series_size)
+        series_width = pdfmetrics.stringWidth(series_label, FONT_NAME, layout.series_size)
+        series_top = logo_top + logo_height + gap
+        series_baseline = page_height - series_top - layout.series_size
+        pdf.drawString(card_center_x - series_width / 2, series_baseline, series_label)
 
     pdf.showPage()
 
@@ -201,6 +236,54 @@ def _validate_duplex(path: Path, layout: Layout, expected_front_pages: int) -> f
                     f"{path.name}, verso {pair_index + 1} : le titre n'apparaît pas "
                     f"{layout.expected_cards} fois."
                 )
+
+            # Chaque carte du verso doit porter la mention « Série N » attendue,
+            # centrée sur la position réfléchie de la carte recto.
+            box_series = _series_for_boxes(front_boxes, layout, pair_index)
+            words = back_page.extract_words()
+            labels = []
+            for word in words:
+                if word["text"] != "Série":
+                    continue
+                followers = [
+                    other
+                    for other in words
+                    if other is not word
+                    and other["text"].isdigit()
+                    and abs(other["top"] - word["top"]) < 2
+                    and 0 <= other["x0"] - word["x1"] < 20
+                ]
+                if len(followers) != 1:
+                    raise ValueError(
+                        f"{path.name}, verso {pair_index + 1} : mention de série illisible."
+                    )
+                number = followers[0]
+                labels.append(
+                    (
+                        (word["x0"] + number["x1"]) / 2,
+                        (word["top"] + word["bottom"]) / 2,
+                        int(number["text"]),
+                    )
+                )
+            if len(labels) != layout.expected_cards:
+                raise ValueError(
+                    f"{path.name}, verso {pair_index + 1} : {len(labels)} mentions "
+                    f"« Série N » au lieu de {layout.expected_cards}."
+                )
+            for front, serie in zip(front_boxes, box_series):
+                mirrored_center = front_page.width - (front["x0"] + front["x1"]) / 2
+                card_top, card_bottom = front["top"], front["bottom"]
+                matching = [
+                    label
+                    for label in labels
+                    if abs(label[0] - mirrored_center) <= 0.5 * POINTS_PER_MM
+                    and card_top <= label[1] <= card_bottom
+                ]
+                if len(matching) != 1 or matching[0][2] != serie:
+                    raise ValueError(
+                        f"{path.name}, verso {pair_index + 1} : la carte attendue "
+                        f"« Série {serie} » est absente ou mal placée."
+                    )
 
             expected_centers = sorted(
                 (
@@ -246,12 +329,15 @@ def build_duplex_pdf(front_path: Path, output_path: Path, layout: Layout) -> flo
         back_canvas.setSubject(
             f"Versos à imprimer à taille réelle ; {layout.duplex_instruction}."
         )
-        for (page_width, page_height), boxes in zip(page_sizes, detected):
+        for page_index, ((page_width, page_height), boxes) in enumerate(
+            zip(page_sizes, detected)
+        ):
             _draw_back_page(
                 back_canvas,
                 page_width,
                 page_height,
                 boxes,
+                _series_for_boxes(boxes, layout, page_index),
                 layout,
                 logo,
                 logo_ratio,

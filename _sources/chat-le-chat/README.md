@@ -15,7 +15,9 @@ Emprin-Charotte, CRDP Champagne-Ardenne). Version modernisée pour maths&go :
   `out/cartes-grand-format.html` (quatre cartes par page) et
   `out/cartes-compactes.html` (huit cartes par feuille) ;
 - `build_duplex.py` — intercale les rectos Chromium avec des versos blancs
-  portant le titre du jeu et l’emblème M, puis vérifie leur alignement ;
+  portant le titre du jeu, l’emblème M et la mention « Série N » (pour trier
+  les cartes ramassées sans les retourner), puis vérifie leur alignement et
+  la série de chaque verso ;
 - `verify.py` — vérifie les données, les niveaux et le HTML généré ;
 - `projection_cases.json` — exemple guidé et 12 défis inédits à projeter ;
 - `gen_projection.py` — valide ces défis et génère la page projetable autonome ;
