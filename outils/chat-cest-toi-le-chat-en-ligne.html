@@ -117,6 +117,16 @@
     .demo { display:grid; grid-template-columns:auto auto; gap:12px; justify-content:center; align-items:center;
       padding:10px; border:2px solid var(--line); border-radius:16px; background:var(--cream); }
     .demo-card-wrap, .demo-grid-wrap { text-align:center; }
+    #demo-grid { --zone:clamp(38px,4.6vw,58px); gap:6px; padding:4px; touch-action:auto; justify-content:center; }
+    .demo-arrow { justify-content:center; margin-bottom:4px; font-size:13px; }
+    .demo-arrow .arrow-up { font-size:19px; }
+    @media (max-width:560px) {
+      .demo { grid-template-columns:auto; gap:12px; }
+      #demo-card .card-map { width:min(100%,240px); }
+      #demo-grid { --zone:clamp(54px,16vw,70px); gap:9px; }
+      .demo-arrow { font-size:15px; }
+      .demo-arrow .arrow-up { font-size:23px; }
+    }
     .mini-label { display:block; margin-bottom:6px; font-size:12px; font-weight:900; text-transform:uppercase; color:var(--muted); }
     .side-panel .foot-note { margin:12px 0 0; color:#4d6076; font-size:15px; line-height:1.55; }
     .side-panel .foot-note a { color:var(--teal); font-weight:750; }
@@ -310,11 +320,12 @@
               </div>
               <div class="demo-grid-wrap">
                 <span class="mini-label">Un placement qui marche</span>
-                <div class="placement-grid" id="demo-grid" style="--zone:clamp(38px,4.6vw,58px); gap:6px; padding:4px; touch-action:auto;"></div>
+                <div class="front-arrow demo-arrow"><span class="arrow-up" aria-hidden="true">↑</span><span>DEVANT</span></div>
+                <div class="placement-grid" id="demo-grid"></div>
               </div>
             </div>
             <p class="foot-note">La carte du chat 2 dit&nbsp;: «&nbsp;devant moi il y a un chat, derrière moi il n’y a
-              personne&nbsp;». Dans le placement de droite, c’est vrai&nbsp;! Il faut que les <b>quatre</b> cartes
+              personne&nbsp;». Dans le placement montré ici, c’est vrai&nbsp;! Il faut que les <b>quatre</b> cartes
               soient vraies en même temps.</p>
           </aside>
         </div>
@@ -523,7 +534,7 @@
         $('#legend-plain').innerHTML = `${catSVG(null, false)}<span>= quelqu’un dans le cercle voisin</span>`;
         $('#legend-crossed').innerHTML = `${catSVG(null, true)}<span>= personne (ou pas de cercle)</span>`;
         $('#demo-card').innerHTML = cardHTML(2, { front:'P', back:'X' });
-        $('#demo-grid').innerHTML = [[0,2,0],[0,1,0]].flat().map(p =>
+        $('#demo-grid').innerHTML = [[0,1,0],[0,2,0]].flat().map(p =>
           `<div class="zone locked${p ? ' filled' : ''}" style="cursor:default">${p ? catSVG(p, false, 'player-cat') : ''}</div>`
         ).join('');
         $('#levels').innerHTML = [1,2,3,4].map(level => {
