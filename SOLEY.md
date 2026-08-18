@@ -60,13 +60,13 @@ fichiers modifiés → tests → reste à vérifier.
 | Les champs de canne | 6e | partage JOUÉ à fond : surplus, pièges, fruits à valeur, portes orientées (refonte 08/2026) — **aucune découverte** (le monde reste contournable), mais 2 points de cours `cours` (neuvième, douzième) et 1 explication d'entrée `intro` (les portes) | 9 |
 | La forêt | 5e | additions (lentille), équivalences — dont 2 niveaux-découverte (somme, même dénominateur) | 8 |
 | Le volcan | 4e | loupes ×, fractions > 1, 1/9 | 7 |
-| Les pitons | 5e-4e | équivalences, comparaisons (passes) — 2 points de cours `cours` : équivalence, comparaison | 7 |
+| Les pitons | 5e-4e | équivalences, comparaisons (passes) — 3 points de cours `cours` : équivalence, écritures, comparaison ; étoffé au lot pitons-1 (17/08) : « Le sentier des écritures », « La crête des passes », fruits qui se méritent | 9 |
 | Les soleils | 4e | soleils multiples / fractionnaires / valeur 2 | 8 |
 | Le marché | 5e-3e | 0,5 ; 25 % ; 100 % (écritures) | 6 |
 | Les tunnels | 6e-4e | labyrinthes denses (41-64 % de roches), esprit de l'original | 8 (dont « Le prisme scellé » et « La galerie scellée ») |
 | Mafate | Expert | tout combiné, 2 soleils, grands plateaux | 7 (dont « Les verrous du cirque ») |
 
-Total : 71 niveaux, chacun avec une solution de référence `sol` vérifiée automatiquement.
+Total : 73 niveaux, chacun avec une solution de référence `sol` vérifiée automatiquement.
 Depuis la refonte (08/2026), les niveaux retouchés ou nouveaux portent AUSSI un champ
 `solMin` : un plan gagnant qui ne ramasse PAS tous les fruits — la batterie prouve
 ainsi que le fruit se mérite (règle d'or, idée 11 de la bibliothèque). Deux mécaniques
@@ -1448,4 +1448,29 @@ Trois choses à savoir avant d'y toucher :
   redessiner ») : le texte ne peut rien pour la VICTOIRE, mais la mesure Gtout = 0
   montre qu'il peut dire vrai sur les FRUITS — c'est l'option retenue, l'autre reste
   ouverte (une passe le forcerait, possible après le déménagement des pitons).
+- **17/08 — lot pitons-1 : le monde s'étoffe avant de déménager.** Demande de
+  Gwenael : « des niveaux gagnés assez vite sans les fruits, mais avec les fruits ça
+  devient plus piquant » — et le monde était le plus plat du jeu (médiane R = 100,
+  6 fruits cadeaux sur 7 niveaux, mesure du 17/08). **Deux niveaux neufs**, taillés
+  au solveur AVANT d'être posés : « Le sentier des écritures » (3/6 et 2/8 déguisent
+  une moitié et un quart ; la passe du bas REFUSE la moitié plausible — règle du
+  16/08 ; la part écartée file au fruit puis meurt, la collecte n'exige que la
+  traversée ; R = 289, Rtout = 970) et « La crête des passes » (2/12 et 3/9 ; sans ÷3
+  aucune victoire, espace épuisé ; L'ENDROIT DE LA COUPE décide du fruit — Gtout 3
+  sur G 60 ; R = 513, Rtout = 7 036). **Deux retouches fruits** : le col (l'ananas du
+  grand tour nord, 4 miroirs, Rtout = 10 774, ratio 29) et « Égal ou pas ? » (la
+  roche (7,4) s'ouvre, branche est coûteuse, R = 3 979 — nouveau sommet avant « Le
+  tamis »). Un ananas facile est GARDÉ sur chaque niveau retouché, c'est la demande
+  explicite (« il faut des fruits faciles »). « Le tamis » passe en dernier, position
+  seule, clé intacte. L'escalier du monde : 5 · 10 · 100 · 43 · 289 · 368 · 513 ·
+  3 979 · 30 188. **Et une règle de Gwenael, en relisant le lot : un cours ne montre
+  QUE ce que SON niveau affiche.** Le cours `equivalence` (niveau 1) glissait un 3/6
+  que « C'est pareil ! » n'affiche nulle part — il se resserre sur 1/2 = 2/4, et le
+  cours `ecritures` entre sur « Trois écritures », le niveau qui affiche 3/6 et 2/8
+  (deux paires de bandes : 3/6 rejoint le demi, 2/8 rejoint le quart — le test
+  permanent des bandes le mesure, paire par paire). La vignette publique disait
+  encore « 70 NIVEAUX » depuis le lot D — elle passe à 73, cache `?v=3`. Total 73
+  niveaux, 145 fruits — compteurs publics et annuaire régénérés (leçon du lot
+  canne), seuil des soleils 5 → 6 (⌈5×9/8⌉), garde-fous 19 solMin. Étape 1 du
+  chantier : le déménagement en position 3 est le lot suivant.
 - (à compléter à chaque session)

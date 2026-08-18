@@ -72,13 +72,13 @@ test("Solèy est publié une seule fois, dans Jeux et Fractions", () => {
   assert.equal(resource.recent, true);
   assert.equal(classification.primaryGroup, "jeux");
   assert.equal("primaryNotion" in classification, false);
-  assert.equal(classification.thumbnail, "assets/img/thumbnails/jeux/soley.svg?v=2");
-  assert.match(resource.description, /71 niveaux/);
+  assert.equal(classification.thumbnail, "assets/img/thumbnails/jeux/soley.svg?v=3");
+  assert.match(resource.description, /73 niveaux/);
   assert.match(resource.description, /neuf mondes/);
-  assert.match(classification.cardDescription, /70 casse-têtes/);
+  assert.match(classification.cardDescription, /73 casse-têtes/);
 });
 
-test("les 71 solutions de référence gagnent et ramassent les 142 fruits", () => {
+test("les 73 solutions de référence gagnent et ramassent les 145 fruits", () => {
   const context = createGameContext();
   const worldCounts = vm.runInContext(
     "Object.fromEntries(WORLDS.map(({id})=>[id,LV.filter(level=>level.w===id).length]))",
@@ -86,7 +86,9 @@ test("les 71 solutions de référence gagnent et ramassent les 142 fruits", () =
   );
   assert.deepEqual(
     { ...worldCounts },
-    { lagon: 11, canne: 9, foret: 8, volcan: 7, pitons: 7, soleils: 8, marche: 6, tunnels: 8, mafate: 7 }
+    /* lot pitons-1 (17/08) : le monde s'étoffe — « Le sentier des écritures » et
+       « La crête des passes » entrent, mesurés au solveur, avant le déménagement. */
+    { lagon: 11, canne: 9, foret: 8, volcan: 7, pitons: 9, soleils: 8, marche: 6, tunnels: 8, mafate: 7 }
   );
 
   const structure = vm.runInContext(`(() => ({
@@ -100,7 +102,7 @@ test("les 71 solutions de référence gagnent et ramassent les 142 fruits", () =
     ["lagon", "canne", "foret", "volcan", "pitons", "soleils", "marche", "tunnels", "mafate"]
   );
   assert.deepEqual([...structure.runs], [...structure.worlds]);
-  assert.equal(structure.saveKeys, 71);
+  assert.equal(structure.saveKeys, 73);
   assert.deepEqual([...structure.tunnels], [
     "Le serpent", "La fourche", "Le tourbillon", "Le prisme scellé",
     "La galerie scellée", "Les demi-tunnels", "L'impasse aux letchis", "Le grand réseau"
@@ -158,9 +160,9 @@ test("les 71 solutions de référence gagnent et ramassent les 142 fruits", () =
     return { levels: LV.length, fruits, declaredFruits, failures };
   })()`, context);
 
-  assert.equal(summary.levels, 71);
-  assert.equal(summary.fruits, 142);
-  assert.equal(summary.declaredFruits, 142);
+  assert.equal(summary.levels, 73);
+  assert.equal(summary.fruits, 145);
+  assert.equal(summary.declaredFruits, 145);
   assert.deepEqual([...summary.failures], []);
 });
 
@@ -326,7 +328,8 @@ test("la progression verrouillée et les étoiles se calculent juste", () => {
       fruitManquant, fruitsComplets, maitrise, tropDePieces, sansFruits };
   })()`, context);
 
-  assert.deepEqual([...r.seuils], [0, 7, 6, 5, 5, 5, 5, 4, 5]);
+  /* lot pitons-1 : les pitons passent à 9 niveaux, le seuil des soleils à ⌈5×9/8⌉ = 6 */
+  assert.deepEqual([...r.seuils], [0, 7, 6, 5, 5, 6, 5, 4, 5]);
   assert.equal(r.parOk, true);
   assert.deepEqual([...r.avant], [true, false, false, false, false, false, false, false, false]);
   assert.equal(r.canneA5, false);
@@ -413,7 +416,7 @@ test("l’accueil masque réellement le plateau et reprend la charte du site", (
   assert.match(html, /Gérer mes cookies/);
   assert.match(html, /aria-label="Recommencer le niveau"/);
   assert.match(js.ui, /class="chip[^"]*"[^>]*aria-pressed=/);
-  assert.match(html, /meta name="description" content="Un jeu de réflexion en 71 niveaux/);
+  assert.match(html, /meta name="description" content="Un jeu de réflexion en 73 niveaux/);
   assert.match(js.ui, /tunnels:`<path d="M4 42V25/);
 });
 
@@ -431,7 +434,9 @@ test("le cours illustré couvre les nouveaux partages et les pièces scellées",
 
   assert.deepEqual(
     { ...course, missingLevels: [...course.missingLevels] },
-    { cards: 53, lines: 76, missingLevels: [], rendered: true }
+    /* 55 cartes / 81 lignes depuis le lot pitons-1 : « Le sentier des écritures »
+       (2 lignes) et « La crête des passes » (3 lignes) entrent au coup de pouce. */
+    { cards: 55, lines: 81, missingLevels: [], rendered: true }
   );
   const additions = vm.runInContext(`({
     fourche: CALC["La fourche"],
@@ -564,16 +569,19 @@ test("le chantier « Comprendre » : découvertes, points de cours et règle R1"
      place de JEU : 1/9 arrive au 18ᵉ niveau, 1/12 au 19ᵉ, tous deux avant la forêt. */
   /* LOT D : `porte` s'ouvre par `intro:` — à l'ARRIVÉE sur le niveau, pas après la
      victoire — et c'est la première explication du jeu qui ne parle pas de fractions. */
+  /* LOT PITONS-1 : `ecritures` entre — le cours du niveau 1 des pitons ne montre
+     plus que ce que SON niveau affiche (1/2 et 2/4), et les écritures 3/6 et 2/8
+     s'enseignent au niveau qui les affiche, « Trois écritures ». */
   assert.deepEqual([...r.coursIds],
     ["demi", "tiers", "quart", "sixieme", "recouper", "porte", "neuvieme", "douzieme",
-      "equivalence", "comparaison", "somme", "denominateur"]);
+      "equivalence", "ecritures", "comparaison", "somme", "denominateur"]);
   /* LOT E : les pitons enseignent enfin ce que leur nom annonce. Les deux cours
      partagent la scène `parts` et disent l'inverse l'un de l'autre : à longueur
      peinte égale l'écriture change, à une seule part peinte la longueur diminue. */
   assert.deepEqual([...r.titres], ["Le demi", "Le tiers", "Le quart", "Le sixième",
     "Recouper une part", "Les cases à palissade", "Le neuvième", "Le douzième",
-    "La même part, écrite autrement", "Comparer deux parts",
-    "Recoller deux parts", "Le même dénominateur"]);
+    "La même part, écrite autrement", "Qui se cache sous l'écriture ?",
+    "Comparer deux parts", "Recoller deux parts", "Le même dénominateur"]);
   /* la forêt (08/2026) : le cas SIMPLE (même dénominateur) passe devant le cas DUR.
      « Recoller les morceaux » reste l'accueil du monde mais n'est plus une
      découverte : sa case demande 1/1, que le rayon du soleil vaut déjà, donc aucun
@@ -766,7 +774,7 @@ test("les cours en bandes démontrent vraiment ce qu'ils affirment", () => {
   })()`, context);
 
   const ids = Object.keys(mesures);
-  assert.deepEqual(ids, ["equivalence", "comparaison"],
+  assert.deepEqual(ids, ["equivalence", "ecritures", "comparaison"],
     "les cours à scène `parts` connus ; en ajouter un ici est volontaire");
 
   for (const [id, m] of Object.entries(mesures)) {
@@ -785,7 +793,20 @@ test("les cours en bandes démontrent vraiment ce qu'ils affirment", () => {
   assert.ok(eq.peintes.every(p => Math.abs(p - eq.peintes[0]) < 0.5),
     `équivalence : les longueurs peintes doivent être ÉGALES — ${eq.peintes}`);
   assert.equal(new Set(eq.parts).size, eq.parts.length,
-    "équivalence : trois découpages différents, sinon l'image ne montre rien");
+    "équivalence : des découpages tous différents, sinon l'image ne montre rien");
+
+  /* « Qui se cache sous l'écriture ? » (lot pitons-1) : DEUX paires — dans chaque
+     paire la longueur peinte est identique (3/6 rejoint le demi, 2/8 rejoint le
+     quart), et la paire du demi domine celle du quart. Le cours du niveau 1 ne
+     montre plus que ce que SON niveau affiche ; celles-ci vivent au niveau 2. */
+  const ec = mesures.ecritures;
+  assert.equal(ec.bandes, 4, "écritures : deux paires de bandes");
+  assert.ok(Math.abs(ec.peintes[0] - ec.peintes[1]) < 0.5,
+    `écritures : 3/6 peint la longueur du demi — ${ec.peintes}`);
+  assert.ok(Math.abs(ec.peintes[2] - ec.peintes[3]) < 0.5,
+    `écritures : 2/8 peint la longueur du quart — ${ec.peintes}`);
+  assert.ok(ec.peintes[0] > ec.peintes[2] + 0.5,
+    "écritures : la paire du demi domine la paire du quart");
 
   /* « Comparer deux parts » : le dénominateur MONTE pendant que la part RÉTRÉCIT.
      C'est le contre-sens qui prend tous les élèves — l'image doit le démontrer. */
@@ -799,7 +820,7 @@ test("les cours en bandes démontrent vraiment ce qu'ils affirment", () => {
 test("la miniature Solèy respecte le format du catalogue", () => {
   assert.match(thumbnail, /<svg[^>]*width="720"[^>]*height="320"[^>]*viewBox="0 0 720 320"/);
   assert.match(thumbnail, /Solèy — jeu de fractions/);
-  assert.match(thumbnail, />70 NIVEAUX</);
+  assert.match(thumbnail, />73 NIVEAUX</);
 });
 
 test("refonte : le fruit se mérite, les portes orientent, les fruits à valeur trient", () => {
@@ -857,7 +878,10 @@ test("refonte : le fruit se mérite, les portes orientent, les fruits à valeur 
      15 depuis le lot vérité (17/08) : « L'addition du marché », redessinée pour forcer
      l'addition qu'elle annonce, entre à son tour dans la couche P2 — premier solMin
      hors du lagon et de la canne. */
-  assert.equal(r.couverts, 15, "5 niveaux du lagon retouchés + 8 de la canne + « La moitié du quart » (lot C) + « L'addition du marché » (lot vérité)");
+  /* 19 depuis le lot pitons-1 : les deux niveaux neufs entrent avec leur solMin, et
+     les retouches fruits de « Égal ou pas ? » et du « Col des comparaisons » prouvent
+     désormais leur couche ☀☀☀ — premiers solMin des pitons. */
+  assert.equal(r.couverts, 19, "lagon 5 + canne 8 + « La moitié du quart » + « L'addition du marché » + les 4 des pitons (lot pitons-1)");
   assert.deepEqual([...r.portes], [true, false, true]);
   assert.equal(r.valWin, true);
   assert.equal(r.valFruits, 0, "le rayon entier ne cueille pas le fruit marqué 1/2");
