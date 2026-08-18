@@ -99,12 +99,17 @@ function openWorld(wid){
      réservé sous TOUTES les cartes : toutes les cases gardent la même taille
      (retour de Gwenael, 14/08). */
   /* LOT D : `intro` compte aussi — une explication d'entrée se relit depuis la carte */
-  const piedCours=idxs.some(i=>(LV[i].dec||LV[i].cours||LV[i].intro)&&(save.done[lvId(i)]||modeClasse));
+  /* LOT CUEILLETTE (18/08) : `coursFruits` aussi, mais seulement une fois MÉRITÉ
+     (save.cours) — le bouton « Revoir » ne doit pas offrir un cours que les deux
+     goyaviers n'ont pas encore payé. Le mode classe, lui, ouvre tout. */
+  const piedCours=idxs.some(i=>(LV[i].dec||LV[i].cours||LV[i].intro
+    ||(LV[i].coursFruits&&(save.cours[LV[i].coursFruits]||modeClasse)))&&(save.done[lvId(i)]||modeClasse));
   document.getElementById('lvgrid').innerHTML=idxs.map((gi,li)=>{
     const done=save.done[lvId(gi)];
     const e=etoiles(gi);
     const nf=LV[gi].fruits.length, gf=save.fruits[lvId(gi)]||0;
-    const dec=LV[gi].dec, idc=dec||LV[gi].cours||LV[gi].intro;
+    const cueille=LV[gi].coursFruits&&(save.cours[LV[gi].coursFruits]||modeClasse)?LV[gi].coursFruits:null;
+    const dec=LV[gi].dec, idc=dec||LV[gi].cours||LV[gi].intro||cueille;
     /* niveau-découverte : badge sur la carte, et « Revoir le cours » une fois le
        niveau réussi (le mode classe ouvre aussi les cours — chantier « Comprendre »).
        LOT B : un niveau à `cours` porte le bouton mais PAS le badge — le badge annonce

@@ -899,6 +899,30 @@ def principal():
             section(f"T9 stabilité {largeur} px : accueil, panneau du cours, chaînes CALC corrigées",
                     stab["accueil"] and stab["coursOK"] and stab["rendues"] and bool(hint), "")
             ctxp.close()
+
+        # T16 — LE COURS À LA CUEILLETTE (lot cueillette, 18/08). Sur « Recoller les
+        # morceaux » la lentille n'est PAS forcée : le cours « Recoller deux moitiés »
+        # ne s'affiche qu'après une victoire qui ramasse LES DEUX goyaviers (la sol de
+        # référence le fait), une seule fois — puis « Revoir le cours » sur la carte.
+        ctx16, pg16 = nouvelle_page(390, 844)
+        pg16.goto(url, wait_until="load")
+        pg16.wait_for_function("() => window.SOLEY && window.SOLEY.LV")
+        i16 = pg16.evaluate("() => window.SOLEY.LV.findIndex(l => l.name === 'Recoller les morceaux')")
+        pg16.evaluate(f"() => window.SOLEY.solve({i16})")
+        try:
+            pg16.wait_for_selector("#coursov.show", timeout=18000)
+            titre16 = pg16.evaluate("() => document.getElementById('courstitre').textContent")
+        except Exception:
+            titre16 = "(panneau jamais affiché)"
+        section("T16 cueillette complète : le cours « Recoller deux moitiés » s'affiche",
+                titre16 == "Recoller deux moitiés", f"titre = {titre16}")
+        vu16 = pg16.evaluate("""() => {
+          const brut = JSON.parse(localStorage.getItem('soley-save-v5') || '{}');
+          return !!(brut.cours && brut.cours.moities);
+        }""")
+        section("T16 le cours est mémorisé dans save.cours (une seule fois, Revoir sur la carte)",
+                bool(vu16), "")
+        ctx16.close()
         navig.close()
 
     if httpd:

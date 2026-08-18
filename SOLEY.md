@@ -639,6 +639,20 @@ plateau ne répond plus aux clics — défaut trouvé en construisant le lot).
    cousins »). Le « Nouveau : la passe ! » suit la première passe du jeu sur
    « Quel rayon passe ? » — l'avertissement du lot H est réglé le jour même du
    déménagement, pas oublié.
+14. **La doctrine des additions, et le cours à la cueillette** (18/08, décision de
+   Gwenael). Une addition ne se FORCE jamais avant d'avoir été apprise : la
+   découverte la force naturellement par sa cible (« Deux tiers » : 2/3 ne s'obtient
+   pas d'un seul rayon — règle §5.16, inchangée), et un puzzle peut l'exiger APRÈS
+   (« La passe étroite », « Le tamis », « L'addition du marché »). Mais AVANT
+   l'apprentissage, on ne force pas : sur « Recoller les morceaux », gagner reste
+   libre — et quand l'élève cueille les DEUX goyaviers (qui, eux, exigent la
+   lentille, mesuré Gtout = 0 sans elle), il vient de faire sa première addition
+   de lui-même : le cours « Recoller deux moitiés » apparaît à CE moment. C'est le
+   QUATRIÈME déclencheur, `coursFruits:` — après une victoire qui ramasse tout,
+   une seule fois, même registre save.cours ; le bouton « Revoir » de la carte ne
+   l'offre qu'une fois mérité (le mode classe ouvre tout). Quatre métiers
+   désormais : `dec` enseigne et jalonne · `cours` enseigne après la victoire ·
+   `intro` explique avant de jouer · `coursFruits` célèbre le geste accompli.
 
 ## 7. Architecture (découpage d'août 2026, statique, sans build, GitHub Pages)
 
@@ -1508,4 +1522,22 @@ Trois choses à savoir avant d'y toucher :
   changent — c'est tout le coût, gravé au §6.13. Batteries : node 1 589/1 589,
   8 validateurs, Playwright jeu + atelier TOUT VERT,
   `verifier-lot-pitons-demenagement.mjs` 16 contrôles.
+- **18/08 — lot cueillette : le cours qui célèbre le geste accompli.** Décision de
+  Gwenael (§6.14) : ne pas forcer la première addition, l'HONORER. Nouveau
+  déclencheur `coursFruits:` dans engine.js — à une victoire qui ramasse TOUS les
+  fruits, le cours s'affiche, une seule fois (même registre save.cours). Premier
+  porteur : « Recoller les morceaux » → cours `moities` (« Recoller deux
+  moitiés », scène somme 1/2 + 1/2). Le bouton « Revoir » de la carte ne l'offre
+  qu'une fois mérité — un cours-récompense ne se feuillette pas d'avance (le mode
+  classe ouvre tout). Garde-fous : la chaîne des déclencheurs vérifiée au source,
+  un seul `coursFruits` pour l'instant, et **T16** à la batterie navigateur — la
+  sol de référence (qui cueille tout) fait bien apparaître « Recoller deux
+  moitiés », mémorisé dans save.cours. Le panneau du cours existe dans les DEUX
+  pages qui chargent le module (règle du §6 : un module partagé se vérifie page
+  par page — `courssur` est dans soley.html ET soley-atelier.html, vérifié).
+  Retour de Gwenael sur capture, appliqué : **la bande de l'ENTIER se pose
+  AU-DESSUS des deux moitiés** (« ça paraît logique ») — option `unite:true` de
+  sceneSomme, opt-in : `somme` et `denominateur` gardent leurs deux lignes au
+  plus (règle du 15/08), rien ne bouge chez eux. La grammaire des murs s'applique
+  aussi ici : le dessous se lit par rapport au dessus.
 - (à compléter à chaque session)

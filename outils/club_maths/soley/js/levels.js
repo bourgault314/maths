@@ -447,7 +447,7 @@ const LV=[
     AUCUNE victoire ne ramasse les deux goyaviers — Gtout = 0. La promesse est
     donc vraie une couche plus haut : elle est déplacée sur les fruits, où le
     solveur la tient. Rtout/R = 130, le vrai travail du niveau est bien là. */
- {w:'foret',name:"Recoller les morceaux",
+ {w:'foret',name:"Recoller les morceaux",coursFruits:'moities',
   sub:"Pour gagner, contourne les fougères. Mais pour cueillir les deux goyaviers, il faudra couper le rayon, puis le recoller avec la lentille : elle additionne deux rayons.",
   cols:9,rows:7,suns:[{x:0,y:3,dir:1}],
   targets:[{x:8,y:3,need:[1,1]}],
@@ -1280,5 +1280,22 @@ const COURS={
   ],
   carte:{t:"Pour additionner, on écrit les deux parts avec le même dénominateur.",
    eq:"1/2 + 1/4 = 2/4 + 1/4 = 3/4"}
+ },
+ /* Le cours À LA CUEILLETTE (lot cueillette, 18/08) — décision de Gwenael : sur
+    « Recoller les morceaux », on ne force PAS la lentille (« un peu artificiel »,
+    et le niveau deviendrait trop compliqué) — mais quand l'élève décroche les
+    DEUX goyaviers, il vient de faire sa première addition sans qu'on la lui
+    impose. Le cours apparaît À CE MOMENT-LÀ, pour nommer le geste accompli.
+    Déclencheur neuf `coursFruits:` (engine.js) — après une victoire qui ramasse
+    TOUT, une seule fois, même registre save.cours que les autres points de cours. */
+ moities:{
+  titre:"Recoller deux moitiés",
+  scene:{somme:[[1,2],[1,2]],unite:true},
+  etapes:[
+   {t:"Pour cueillir les deux goyaviers, tu as coupé le rayon en deux moitiés."},
+   {t:"Et la lentille les a recollées : les deux moitiés refont l'entier.",eq:"1/2 + 1/2 = 2/2 = 1"},
+   {t:"Tu viens de faire ta première addition de fractions — personne ne t'y obligeait."}
+  ],
+  carte:{t:"Deux moitiés recollées refont l'entier.",eq:"1/2 + 1/2 = 1"}
  }
 };

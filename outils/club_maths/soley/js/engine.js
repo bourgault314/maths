@@ -435,6 +435,12 @@ function sceneSomme(sc,tE){
   const lignes=[{cells:[f1,f2,...reste],pale:d-nS}];
   const memeTaille=f1[1]===d&&f2[1]===d;
   if(!memeTaille)lignes.push({cells:Array.from({length:nS},()=>part),pale:0});
+  /* LOT CUEILLETTE (18/08, retour de Gwenael sur capture) : quand le cours le
+     demande (`unite:true`), la bande de L'ENTIER se pose AU-DESSUS des parts —
+     la grammaire des murs (le dessous se lit par rapport au dessus) : on VOIT que
+     les deux moitiés refont exactement l'unité. Opt-in : `somme` et `denominateur`
+     gardent leurs deux lignes au plus (règle du 15/08), rien ne bouge chez eux. */
+  if(sc.unite)lignes.unshift({cells:[[1,1]],pale:0});
   const murTop=158;
   let mur='';
   lignes.forEach((L,k)=>{
@@ -844,7 +850,15 @@ function startCelebration(sim){
        qu'un niveau à `cours` ne peut verrouiller aucun monde — demande de Gwenael :
        « des cours qui expliquent ce qu'ils viennent faire, pas obligatoires pour
        passer à la suite ». C'est ce qui permet d'enseigner dans un CHAMP. */
-    const idCours=L.dec||L.cours;
+    /* QUATRIÈME MÉTIER : le cours À LA CUEILLETTE (lot cueillette, 18/08).
+       `coursFruits` ne s'affiche qu'après une victoire qui ramasse TOUS les fruits :
+       l'élève vient de faire le geste (sa première addition, sur « Recoller les
+       morceaux ») sans qu'on le lui impose — le cours le nomme à ce moment-là.
+       Décision de Gwenael : « on n'est plus obligé de forcer, on affiche le cours
+       quand il obtient les deux fruits ». Même registre save.cours : une seule fois,
+       et le bouton « Revoir » de la carte le retrouve ensuite. */
+    const idCours=L.dec||L.cours
+      ||((L.coursFruits&&L.fruits.length&&sim.fruits.size>=L.fruits.length)?L.coursFruits:null);
     const coursANouveau=!!(idCours&&COURS[idCours]&&!save.cours[idCours]);
     if(coursANouveau)save.cours[idCours]=true;
     persist();
