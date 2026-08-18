@@ -226,7 +226,7 @@ window.MATHSGO_CATALOGUE = {
       "collections": [],
       "tags": ["jeu", "strategie", "casse-tete", "fractions", "partage", "quotient", "equivalences", "addition-fractions", "multiplication-fractions", "comparaison-fractions", "decimaux", "pourcentages", "labyrinthe", "tunnels", "pieces-scellees", "cycle-3", "cycle-4", "la-reunion"],
       "thumbnail": "assets/img/thumbnails/jeux/soley.svg?v=3",
-      "cardDescription": "Guider les rayons, partager et recomposer des fractions dans 72 casse-têtes progressifs aux couleurs de La Réunion."
+      "cardDescription": "Guider les rayons, partager et recomposer des fractions dans 73 casse-têtes progressifs aux couleurs de La Réunion."
     },
     "outils/club_maths/yavalath.html": {
       "primaryNotion": "strategie",

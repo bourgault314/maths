@@ -75,7 +75,7 @@ test("Solèy est publié une seule fois, dans Jeux et Fractions", () => {
   assert.equal(classification.thumbnail, "assets/img/thumbnails/jeux/soley.svg?v=3");
   assert.match(resource.description, /73 niveaux/);
   assert.match(resource.description, /neuf mondes/);
-  assert.match(classification.cardDescription, /72 casse-têtes/);
+  assert.match(classification.cardDescription, /73 casse-têtes/);
 });
 
 test("les 73 solutions de référence gagnent et ramassent les 145 fruits", () => {
