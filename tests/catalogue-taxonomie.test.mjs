@@ -1,5 +1,5 @@
 import assert from "node:assert/strict";
-import { readFileSync } from "node:fs";
+import { existsSync, readFileSync } from "node:fs";
 import test from "node:test";
 import vm from "node:vm";
 
@@ -39,7 +39,7 @@ const expectedGroupCounts = {
   imprimer: 14,
   activites: 10,
   cours: 11,
-  jeux: 13
+  jeux: 8
 };
 
 const expectedVisibleCardCounts = {
@@ -49,7 +49,7 @@ const expectedVisibleCardCounts = {
   imprimer: 11,
   activites: 8,
   cours: 5,
-  jeux: 9
+  jeux: 8
 };
 
 function resolvedPrimaryGroup(resource) {
@@ -64,10 +64,10 @@ function assertPathsInGroup(group, paths) {
   }
 }
 
-test("le catalogue conserve 156 entrées dont 140 publiées", () => {
+test("le catalogue conserve 151 entrées dont 135 publiées", () => {
   assert.equal(catalogue.schemaVersion, 5);
-  assert.equal(resources.length, 156);
-  assert.equal(published.length, 140);
+  assert.equal(resources.length, 151);
+  assert.equal(published.length, 135);
   assert.equal(new Set(resources.map((resource) => resource.path)).size, resources.length, "Chaque chemin doit être unique.");
 });
 
@@ -112,7 +112,7 @@ test("aucune carte publiée ne conserve la description générique", () => {
   assert.deepEqual(offenders, []);
 });
 
-test("la répartition arbitrée des 140 ressources reste stable", () => {
+test("la répartition arbitrée des 135 ressources reste stable", () => {
   const actual = Object.fromEntries([...allowedGroups].map((group) => [group, 0]));
   for (const resource of published) actual[resolvedPrimaryGroup(resource)] += 1;
   assert.deepEqual(actual, expectedGroupCounts);
@@ -189,94 +189,90 @@ test("les arbitrages pédagogiques clés restent explicites", () => {
     "outils/club_maths/carres_gloutons.html",
     "outils/club_maths/coffres_magiques.html",
     "outils/club_maths/tables_modulaires.html",
+    "outils/chat/index.html"
+  ]);
+});
+
+test("« Chat, c’est toi le chat ! » tient dans une seule carte qui mène à toutes ses formes", () => {
+  const carte = publishedByPath.get("outils/chat/index.html");
+  const classification = classifications["outils/chat/index.html"] || {};
+
+  assert.ok(carte, "La page du jeu doit être la seule entrée du catalogue.");
+  assert.equal(carte.title, "Chat, c’est toi le chat !");
+  assert.equal(carte.kind, "tool");
+  assert.deepEqual(Array.from(carte.uses || []), ["manipuler", "projeter", "imprimer"]);
+  assert.deepEqual(
+    Array.from(carte.domains || []),
+    ["geometrie", "jeux-recherches"],
+    "La carte doit rester en géométrie et apparaître aussi dans les jeux."
+  );
+  assert.deepEqual(
+    Array.from(carte.notions || []),
+    ["reperage", "strategie"],
+    "La carte doit être accessible depuis Repérage et Jeux de stratégie."
+  );
+  assert.equal(classification.primaryGroup, "jeux");
+  assert.equal(
+    classification.primaryNotion,
+    undefined,
+    "La carte ne doit pas limiter l’affichage à une seule de ses deux notions."
+  );
+  assert.equal(
+    classification.thumbnail,
+    "assets/img/thumbnails/reperage/chat-cest-toi-le-chat-monde.png?v=1"
+  );
+  assert.equal(families.some((family) => (family.paths || []).includes(carte.path)), false);
+
+  for (const texte of [carte.description, classification.cardDescription]) {
+    assert.match(texte, /en ligne/i, "La carte doit annoncer le jeu en ligne.");
+    assert.match(texte, /projeter/i, "La carte doit annoncer les défis à projeter.");
+    assert.match(texte, /imprimer/i, "La carte doit annoncer les cartes à imprimer.");
+    assert.doesNotMatch(texte, /\bGS\s*[-–—]\s*CP\b/i);
+  }
+  for (const keyword of ["cycle 3", "cycle 4", "école élémentaire", "collège", "jeu en ligne"]) {
+    assert.ok(
+      Array.from(carte.keywords || []).includes(keyword),
+      `La carte doit conserver le mot-clé « ${keyword} ».`
+    );
+  }
+  for (const tag of ["cycle-3", "cycle-4", "ecole-elementaire", "college", "jeu-en-ligne"]) {
+    assert.ok(
+      Array.from(classification.tags || []).includes(tag),
+      `La carte doit conserver le tag « ${tag} ».`
+    );
+  }
+
+  const pageUrl = new URL("../outils/chat/index.html", import.meta.url);
+  const page = readFileSync(pageUrl, "utf8");
+  assert.match(
+    page,
+    /de la maternelle au collège/i,
+    "La page du jeu porte désormais l’âge du public, que les six anciennes cartes affichaient."
+  );
+
+  const regroupees = [
+    "outils/chat-cest-toi-le-chat-en-ligne.html",
+    "outils/chat-cest-toi-le-chat-projection.html",
     "outils/chat-cest-toi-le-chat-guide.pdf",
     "outils/chat-cest-toi-le-chat.pdf",
     "outils/chat-cest-toi-le-chat-recto-verso.pdf",
     "outils/chat-cest-toi-le-chat-cartes-compactes.pdf",
-    "outils/chat-cest-toi-le-chat-cartes-compactes-recto-verso.pdf",
-    "outils/chat-cest-toi-le-chat-projection.html"
-  ]);
-});
-
-test("les ressources Chat restent regroupées et sont accessibles en repérage comme en stratégie", () => {
-  const guide = publishedByPath.get("outils/chat-cest-toi-le-chat-guide.pdf");
-  const printable = publishedByPath.get("outils/chat-cest-toi-le-chat.pdf");
-  const printableDuplex = publishedByPath.get("outils/chat-cest-toi-le-chat-recto-verso.pdf");
-  const compact = publishedByPath.get("outils/chat-cest-toi-le-chat-cartes-compactes.pdf");
-  const compactDuplex = publishedByPath.get("outils/chat-cest-toi-le-chat-cartes-compactes-recto-verso.pdf");
-  const projected = publishedByPath.get("outils/chat-cest-toi-le-chat-projection.html");
-  const chatResources = [guide, printable, printableDuplex, compact, compactDuplex, projected];
-  const printFamily = families.find((family) => family.id === "chat-cest-toi-le-chat-imprimer");
-
-  assert.equal(guide?.title, "Chat, c’est toi le chat ! — Guide pédagogique");
-  assert.deepEqual(Array.from(guide?.uses || []), ["manipuler", "imprimer"]);
-  assert.equal(guide?.kind, "document");
-
-  assert.equal(printable?.title, "Chat, c’est toi le chat ! — Cartes grand format");
-  assert.deepEqual(Array.from(printable?.uses || []), ["manipuler", "imprimer"]);
-  assert.equal(printable?.kind, "document");
-
-  assert.equal(printableDuplex?.title, "Chat, c’est toi le chat ! — Cartes grand format recto-verso");
-  assert.deepEqual(Array.from(printableDuplex?.uses || []), ["manipuler", "imprimer"]);
-  assert.equal(printableDuplex?.kind, "document");
-  assert.ok((classifications[printableDuplex.path]?.tags || []).includes("recto-verso"));
-  assert.ok((printableDuplex?.keywords || []).includes("retourner sur le bord long"));
-
-  assert.equal(compact?.title, "Chat, c’est toi le chat ! — Cartes compactes");
-  assert.deepEqual(Array.from(compact?.uses || []), ["manipuler", "imprimer"]);
-  assert.equal(compact?.kind, "document");
-
-  assert.equal(compactDuplex?.title, "Chat, c’est toi le chat ! — Cartes compactes recto-verso");
-  assert.deepEqual(Array.from(compactDuplex?.uses || []), ["manipuler", "imprimer"]);
-  assert.equal(compactDuplex?.kind, "document");
-  assert.ok((classifications[compactDuplex.path]?.tags || []).includes("recto-verso"));
-  assert.ok((compactDuplex?.keywords || []).includes("retourner sur le bord court"));
-
-  assert.deepEqual(
-    Array.from(printFamily?.paths || []),
-    [guide.path, printable.path, printableDuplex.path, compact.path, compactDuplex.path]
-  );
-  assert.equal(printFamily?.labels?.[guide.path], "Guide pédagogique — règles, exemple et solutions");
-  assert.equal(printFamily?.labels?.[printable.path], "Grand format — recto seul, 4 cartes par page");
-  assert.equal(printFamily?.labels?.[printableDuplex.path], "Grand format — recto-verso, 4 cartes par page");
-  assert.equal(printFamily?.labels?.[compact.path], "Format compact — recto seul, 8 cartes par feuille");
-  assert.equal(printFamily?.labels?.[compactDuplex.path], "Format compact — recto-verso, 8 cartes par feuille");
-
-  assert.equal(projected?.title, "Chat, c’est toi le chat ! — À projeter");
-  assert.deepEqual(Array.from(projected?.uses || []), ["projeter"]);
-  assert.deepEqual(Array.from(projected?.types || []), ["exerciseur"]);
-  assert.equal(projected?.kind, "tool");
-  assert.equal(families.some((family) => (family.paths || []).includes(projected.path)), false);
-
-  for (const resource of chatResources) {
-    const classification = classifications[resource.path];
-    assert.deepEqual(
-      Array.from(resource.domains || []),
-      ["geometrie", "jeux-recherches"],
-      `${resource.path} doit rester en géométrie et apparaître aussi dans les jeux.`
-    );
-    assert.deepEqual(
-      Array.from(resource.notions || []),
-      ["reperage", "strategie"],
-      `${resource.path} doit être accessible depuis Repérage et Jeux de stratégie.`
-    );
+    "outils/chat-cest-toi-le-chat-cartes-compactes-recto-verso.pdf"
+  ];
+  for (const chemin of regroupees) {
     assert.equal(
-      classification.primaryNotion,
-      undefined,
-      `${resource.path} ne doit pas limiter l’affichage à une seule de ses deux notions.`
+      resourcesByPath.has(chemin),
+      false,
+      `${chemin} ne doit plus occuper sa propre carte du catalogue.`
     );
-    assert.equal(classification.primaryGroup, "jeux");
-    const publicDescriptions = [resource.description, classification.cardDescription];
-    for (const description of publicDescriptions) {
-      assert.match(description, /de la maternelle au collège/i);
-      assert.doesNotMatch(description, /\bGS\s*[-–—]\s*CP\b/i);
-    }
-    for (const keyword of ["cycle 3", "cycle 4", "école élémentaire", "collège"]) {
-      assert.ok(Array.from(resource.keywords || []).includes(keyword), `${resource.path} doit conserver le mot-clé « ${keyword} ».`);
-    }
-    for (const tag of ["cycle-3", "cycle-4", "ecole-elementaire", "college"]) {
-      assert.ok(Array.from(classification.tags || []).includes(tag), `${resource.path} doit conserver le tag « ${tag} ».`);
-    }
+    assert.ok(
+      existsSync(new URL(`../${chemin}`, import.meta.url)),
+      `${chemin} doit rester en ligne.`
+    );
+    assert.ok(
+      page.includes(`href="../${chemin.slice("outils/".length)}"`),
+      `${chemin} doit rester atteignable depuis la page du jeu.`
+    );
   }
 });
 
@@ -331,6 +327,6 @@ test("les familles regroupent toutes leurs variantes sans perte ni chevauchement
   for (const family of families) visibleCardsByGroup[family.group] += 1;
 
   assert.equal(representedResourceCount, published.length, "Aucune variante publiée ne doit disparaître du catalogue.");
-  assert.equal(visibleCardCount, 121, "Les 140 ressources doivent être représentées par 121 cartes après regroupement.");
+  assert.equal(visibleCardCount, 120, "Les 135 ressources doivent être représentées par 120 cartes après regroupement.");
   assert.deepEqual(visibleCardsByGroup, expectedVisibleCardCounts);
 });

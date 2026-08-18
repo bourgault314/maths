@@ -1,0 +1,870 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+  <title>Chat, c’est toi le chat ! — Jouer en ligne | maths&amp;go</title>
+  <meta name="description" content="Le jeu de repérage spatial à jouer en famille : lis les quatre cartes, place les chats dans les cercles, puis vérifie. 48 séries en 4 niveaux, de la maternelle au collège.">
+  <meta name="theme-color" content="#17365d">
+  <meta name="color-scheme" content="light">
+  <meta name="robots" content="index, follow, max-image-preview:large">
+  <link rel="canonical" href="https://mathsgo.re/outils/chat-cest-toi-le-chat-en-ligne.html">
+  <link rel="icon" href="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAxMDAgMTAwIiByb2xlPSJpbWciIGFyaWEtbGFiZWw9Im1hdGhzJmFtcDtnbyI+CiAgPHJlY3QgeD0iMiIgeT0iMiIgd2lkdGg9Ijk2IiBoZWlnaHQ9Ijk2IiByeD0iMjAiIGZpbGw9IiMwMjMwNkQiLz4KICA8ZyBmaWxsPSJub25lIiBzdHJva2UtbGluZWNhcD0icm91bmQiIHN0cm9rZS1saW5lam9pbj0icm91bmQiPgogICAgPHBhdGggZD0iTTE1IDgySDg1IiBzdHJva2U9IiNGQTdEMDUiIHN0cm9rZS13aWR0aD0iMTAiLz4KICAgIDxwYXRoIGQ9Ik0xOCAyNEw1MCA2Nkw4MiAyNCIgc3Ryb2tlPSIjMDBBRkFBIiBzdHJva2Utd2lkdGg9IjE0Ii8+CiAgICA8cGF0aCBkPSJNMTggMThWODIgTTgyIDE4VjgyIiBzdHJva2U9IiNGRkZGRkYiIHN0cm9rZS13aWR0aD0iMTIiLz4KICA8L2c+Cjwvc3ZnPgo=" type="image/svg+xml">
+  <meta property="og:type" content="website">
+  <meta property="og:locale" content="fr_FR">
+  <meta property="og:title" content="Chat, c'est toi le chat ! – Jouer en ligne">
+  <meta property="og:description" content="Lis les quatre cartes, place les chats, vérifie : 48 séries à jouer en famille, de la maternelle au collège.">
+  <meta property="og:url" content="https://mathsgo.re/outils/chat-cest-toi-le-chat-en-ligne.html">
+  <style>
+    :root {
+      --navy:#1f3a68; --navy-2:#294d82; --teal:#0b7d75; --teal-art:#2aa79b; --teal-soft:#e8f7f5;
+      --orange:#a94f00; --orange-art:#f28c28; --red:#d1495b; --green:#25845d; --cream:#faf6ee;
+      --ink:#203752; --muted:#5d6e80; --line:#d8e0e7; --white:#fff;
+      --shadow:0 12px 32px rgba(31,58,104,.11); --radius:20px;
+    }
+    * { box-sizing:border-box; }
+    html, body { min-height:100%; }
+    body { margin:0; font-family:"Avenir Next","Segoe UI",system-ui,sans-serif;
+      color:var(--ink); background:#f1f5f7; -webkit-tap-highlight-color:transparent; }
+    button { font:inherit; }
+    button:focus-visible, a:focus-visible {
+      outline:3px solid white; outline-offset:2px; box-shadow:0 0 0 6px var(--navy);
+    }
+    [hidden] { display:none !important; }
+    .sr-only { position:absolute; width:1px; height:1px; margin:-1px; padding:0; overflow:hidden;
+      clip:rect(0 0 0 0); white-space:nowrap; border:0; }
+    .app { min-height:100dvh; display:flex; flex-direction:column; }
+
+    /* ---------- barre du haut ---------- */
+    .topbar { min-height:56px; display:flex; align-items:center; gap:10px; padding:4px 12px;
+      color:var(--navy); background:white; border-bottom:4px solid var(--teal-art);
+      box-shadow:0 3px 15px rgba(31,58,104,.12); z-index:10; }
+    .brand { display:flex; align-items:center; gap:10px; min-width:0; color:var(--navy); text-decoration:none; }
+    .brand-m { display:block; width:36px; height:36px; flex:none; border-radius:9px; }
+    .brand-copy { min-width:0; }
+    .brand-title { display:block; font-weight:850; font-size:clamp(14px,3.6vw,20px); white-space:nowrap;
+      overflow:hidden; text-overflow:ellipsis; }
+    .brand-sub { display:block; color:var(--teal); font-size:11px; font-weight:800; }
+    .top-actions { margin-left:auto; display:flex; gap:8px; }
+    .icon-button { display:inline-flex; align-items:center; justify-content:center; gap:7px;
+      min-height:44px; padding:0 12px; border:0; border-radius:14px; cursor:pointer;
+      color:var(--navy); background:#edf2f6; font-weight:800; text-decoration:none; transition:.16s ease; }
+    .icon { font-size:20px; line-height:1; display:inline-flex; }
+    @media (max-width:560px) { .icon-button .button-label { display:none; } .icon-button { padding:0 11px; } }
+
+    main { flex:1; min-height:0; display:flex; flex-direction:column; }
+
+    /* ---------- boutons ---------- */
+    .primary-button, .secondary-button, .ghost-button, .level-button, .nav-button {
+      border:0; border-radius:14px; cursor:pointer; min-height:48px; font-weight:800; transition:.16s ease; }
+    .primary-button { padding:12px 22px; color:white; background:var(--teal);
+      box-shadow:0 7px 18px rgba(19,155,145,.24); font-size:17px; }
+    .primary-button:disabled { opacity:.45; cursor:not-allowed; box-shadow:none; }
+    .secondary-button { padding:11px 18px; color:var(--navy); background:#e9eff4; }
+    .ghost-button { padding:10px 14px; color:var(--muted); background:transparent; font-weight:750;
+      text-decoration:underline; text-underline-offset:3px; min-height:44px; }
+    @media (hover:hover) {
+      .icon-button:hover { color:white; background:var(--navy); }
+      .primary-button:hover:not(:disabled) { background:#0d827a; transform:translateY(-1px); }
+      .secondary-button:hover { background:#dce7ef; }
+      .ghost-button:hover { color:var(--navy); }
+    }
+
+    /* ---------- accueil ---------- */
+    .home { overflow:auto; padding:clamp(12px,1.6vw,20px); }
+    .home-inner { width:min(1120px,100%); margin:0 auto; display:grid; gap:13px;
+      grid-template-columns:minmax(0,1.05fr) minmax(0,.95fr);
+      grid-template-areas:"copy demo" "copy levels"; align-items:start; }
+    .hero-copy { grid-area:copy; }
+    .side-panel { grid-area:demo; }
+    .levels-panel { grid-area:levels; background:white; border-radius:var(--radius);
+      box-shadow:var(--shadow); padding:clamp(14px,1.8vw,20px); }
+    @media (max-width:900px) { .home-inner { grid-template-columns:1fr;
+      grid-template-areas:"copy" "levels" "demo"; } }
+    .hero-copy, .side-panel { background:white; border-radius:var(--radius); box-shadow:var(--shadow);
+      padding:clamp(16px,2vw,24px); }
+    .eyebrow { color:var(--orange); font-weight:900; text-transform:uppercase; letter-spacing:.1em; font-size:12px; }
+    h1 { margin:8px 0 10px; color:var(--navy); font-size:clamp(26px,4.6vw,38px); line-height:1.04; letter-spacing:-.03em; }
+    .lead { margin:0 0 14px; font-size:clamp(15px,1.9vw,18px); line-height:1.5; color:#405a73; }
+    .steps { display:grid; gap:9px; margin:0 0 18px; padding:0; list-style:none; }
+    .steps li { display:flex; align-items:center; gap:12px; padding:8px 12px; border-radius:13px;
+      background:#f4f8fa; font-weight:700; line-height:1.35; }
+    .step-num { flex:none; display:grid; place-items:center; width:34px; height:34px; border-radius:50%;
+      color:white; background:var(--orange-art); font-weight:900; font-size:16px; }
+    .legend-note { margin:0; padding:12px 14px; border-left:5px solid var(--teal);
+      border-radius:12px; background:var(--teal-soft); font-weight:700; line-height:1.5; font-size:14px; }
+    .legend-note .legend-cats { display:flex; align-items:center; gap:14px; margin-top:8px; }
+    .legend-item { display:flex; align-items:center; gap:6px; font-size:13px; }
+    .legend-item svg { width:30px; height:34px; overflow:visible; }
+    .levels-title { margin:0 0 8px; color:var(--navy); font-size:19px; }
+    .levels { display:grid; gap:10px; grid-template-columns:repeat(2,minmax(0,1fr)); }
+    @media (max-width:560px) { .levels { grid-template-columns:1fr; } }
+    .levels-sub { margin:0 0 10px; color:var(--muted); font-size:13px; font-weight:650; }
+    .level-button { display:flex; align-items:center; gap:13px; width:100%; padding:12px 15px;
+      text-align:left; color:var(--navy); background:#eef3f7; border:2px solid transparent; }
+    .level-button b { display:block; font-size:16px; }
+    .level-button small { display:block; margin-top:2px; color:var(--muted); font-weight:650; font-size:12px; line-height:1.3; }
+    .level-badge { flex:none; display:grid; place-items:center; width:44px; height:44px; border-radius:13px;
+      color:white; font-weight:900; font-size:20px; }
+    @media (hover:hover) { .level-button:hover { border-color:var(--teal-art); background:white; transform:translateY(-1px); } }
+    .lv1 { background:#2aa79b; } .lv2 { background:#4a7bd0; } .lv3 { background:#f28c28; } .lv4 { background:#d1495b; }
+
+    .side-panel h2 { margin:0 0 8px; color:var(--navy); font-size:18px; }
+    #demo-card .card-map { width:min(100%,128px); }
+    .demo { display:grid; grid-template-columns:auto auto; gap:12px; justify-content:center; align-items:center;
+      padding:10px; border:2px solid var(--line); border-radius:16px; background:var(--cream); }
+    .demo-card-wrap, .demo-grid-wrap { text-align:center; }
+    .mini-label { display:block; margin-bottom:6px; font-size:11px; font-weight:900; text-transform:uppercase; color:var(--muted); }
+    .side-panel .foot-note { margin:8px 0 0; color:var(--muted); font-size:12px; line-height:1.5; }
+    .side-panel .foot-note a { color:var(--teal); font-weight:750; }
+
+    /* ---------- cartes logiques ---------- */
+    .cards-grid { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:8px; }
+    .logic-card { min-width:0; padding:6px 8px 8px; border:2px solid #d8e0e7; border-radius:12px;
+      background:white; box-shadow:0 3px 10px rgba(31,58,104,.07); transition:.2s ease; }
+    .logic-card.true { border-color:#5eb58e; background:#effaf4; }
+    .logic-card.false { border-color:#dc7583; background:#fff3f5; }
+    .card-head { display:flex; align-items:center; justify-content:space-between; gap:8px; min-height:22px;
+      margin-bottom:2px; color:var(--navy); font-size:12px; font-weight:850; }
+    .card-status { min-height:20px; padding:2px 7px; border-radius:999px; font-size:11px; font-weight:850; }
+    .true .card-status { color:#176746; background:#d7f2e4; }
+    .false .card-status { color:#a12437; background:#ffe0e5; }
+    .card-map { display:grid; grid-template-columns:repeat(3,1fr); grid-template-rows:repeat(3,1fr);
+      width:min(100%,190px); aspect-ratio:1.16; margin:auto; }
+    .card-cell { display:grid; place-items:center; min-width:0; min-height:0; border-radius:10px; }
+    .card-cell.front { grid-column:2; grid-row:1; }
+    .card-cell.left { grid-column:1; grid-row:2; }
+    .card-cell.self { position:relative; isolation:isolate; grid-column:2; grid-row:2; }
+    .card-cell.self::before { content:""; position:absolute; z-index:0; inset:-8%; border:3px solid var(--teal-art);
+      border-radius:9px; background:white; }
+    .card-cell.right { grid-column:3; grid-row:2; }
+    .card-cell.back { grid-column:2; grid-row:3; }
+    .card-cell.clause-ok { box-shadow:inset 0 0 0 3px #7ac6a2; background:#e8f8ef; }
+    .card-cell.clause-bad { box-shadow:inset 0 0 0 3px #e18b97; background:#ffeef1; }
+    .card-self-cat, .cat-mark { position:relative; z-index:1; overflow:visible; }
+    .card-self-cat, .cat-mark svg { display:block; width:66%; height:auto; overflow:visible; }
+    .cat-mark { width:100%; height:100%; display:grid; place-items:center; }
+
+    /* ---------- écran de jeu ---------- */
+    .game { flex:1; min-height:0; display:flex; flex-direction:column; padding:10px 12px 12px; overflow:auto; }
+    .game-head { display:flex; align-items:center; gap:9px; width:min(1180px,100%); margin:0 auto 8px; flex-wrap:wrap; }
+    .difficulty { padding:5px 11px; border-radius:999px; font-size:12px; font-weight:900; text-transform:uppercase; color:white; }
+    .game-head h1 { margin:0; font-size:clamp(18px,3vw,26px); }
+    .counter { margin-left:auto; color:var(--muted); font-weight:800; font-size:14px; }
+    .score-chip { padding:5px 11px; border-radius:999px; color:#176746; background:#d7f2e4; font-size:13px; font-weight:850; }
+    .workspace { flex:1; min-height:0; width:min(1180px,100%); margin:0 auto; display:grid;
+      grid-template-columns:minmax(0,.94fr) minmax(0,1.06fr); gap:12px; align-items:stretch; }
+    .panel { min-width:0; padding:13px; border-radius:18px; background:white; box-shadow:var(--shadow); }
+    .cards-panel .cards-title { display:flex; align-items:baseline; justify-content:space-between; gap:10px; margin:0 0 8px; }
+    .cards-panel h2 { margin:0; color:var(--navy); font-size:17px; }
+    .cards-panel small { color:var(--muted); font-weight:700; font-size:12px; }
+
+    .play-panel { display:flex; flex-direction:column; align-items:center; }
+    .front-arrow { display:flex; align-items:center; gap:8px; margin-bottom:2px; color:var(--orange);
+      font-size:clamp(14px,1.7vw,19px); font-weight:950; letter-spacing:.06em; }
+    .front-arrow .arrow-up { font-size:26px; line-height:1; }
+    .placement-grid { --zone:clamp(72px,13vw,120px); display:grid; grid-template-columns:repeat(3,var(--zone));
+      grid-template-rows:repeat(2,var(--zone)); gap:clamp(8px,1.2vw,16px); padding:8px; touch-action:none; }
+    .zone { position:relative; display:grid; place-items:center; width:var(--zone); height:var(--zone);
+      appearance:none; padding:0; font:inherit; color:inherit; cursor:pointer;
+      border:clamp(5px,.6vw,8px) solid var(--teal-art); border-radius:50%; background:var(--cream); transition:.15s ease; }
+    .zone.filled { background:white; }
+    .zone.selected { border-color:var(--orange-art); outline:5px solid rgba(242,140,40,.28); outline-offset:3px; transform:scale(1.04); }
+    .zone.target { outline:4px dashed rgba(31,58,104,.4); outline-offset:3px; }
+    .zone.drop-hover { border-color:var(--orange-art); transform:scale(1.07); background:#fff6ea; }
+    .zone.locked { cursor:default; }
+    @media (hover:hover) { .zone:not(.locked):hover { border-color:var(--orange-art); } }
+    .player-cat { display:block; width:64%; height:72%; overflow:visible; pointer-events:none; }
+
+    .bench { display:flex; align-items:center; gap:clamp(8px,1.4vw,14px); margin-top:8px; padding:9px 14px;
+      border-radius:16px; background:#eef3f7; border:2px dashed #c7d3dd; touch-action:none; min-height:76px; }
+    .bench-label { color:var(--muted); font-size:11px; font-weight:900; text-transform:uppercase; writing-mode:initial; }
+    .bench-slot { position:relative; display:grid; place-items:center; width:clamp(50px,9vw,62px); height:clamp(50px,9vw,62px);
+      appearance:none; padding:0; border:3px dashed #b8c6d2; border-radius:50%; background:transparent; cursor:pointer; transition:.15s ease; }
+    .bench-slot.filled { border-style:solid; border-color:var(--teal-art); background:white; }
+    .bench-slot.selected { border-color:var(--orange-art); outline:4px solid rgba(242,140,40,.28); outline-offset:2px; transform:scale(1.06); }
+    .bench-slot.drop-hover { border-color:var(--orange-art); background:#fff6ea; transform:scale(1.08); }
+    .bench-slot .player-cat { width:78%; height:84%; }
+    .bench.all-placed { opacity:.55; }
+
+    .drag-ghost { position:fixed; z-index:60; width:74px; height:84px; pointer-events:none;
+      filter:drop-shadow(0 8px 14px rgba(31,58,104,.35)); transform:translate(-50%,-60%); }
+    .drag-ghost svg { width:100%; height:100%; overflow:visible; }
+
+    .feedback { width:100%; margin-top:9px; padding:9px 12px; border-radius:13px; min-height:52px;
+      color:#405a73; background:#f0f4f7; line-height:1.4; font-size:14px; }
+    .feedback strong { color:var(--navy); }
+    .feedback.happy { color:#155f42; background:#e8f8ef; }
+    .feedback.warn { color:#872235; background:#fff0f2; }
+
+    .actions { display:flex; align-items:center; gap:9px; width:100%; margin-top:9px; flex-wrap:wrap; }
+    .actions .primary-button { flex:1 1 190px; }
+    .success-pop { animation:pop .5s ease; }
+    @keyframes pop { 0%{transform:scale(.92)} 55%{transform:scale(1.04)} 100%{transform:scale(1)} }
+    .zone.cheer .player-cat { animation:cheer .8s ease 2; transform-origin:50% 90%; }
+    @keyframes cheer { 0%,100%{transform:rotate(0)} 25%{transform:rotate(-8deg) translateY(-4px)} 75%{transform:rotate(8deg) translateY(-4px)} }
+
+    .game-foot { display:flex; align-items:center; justify-content:space-between; gap:10px;
+      width:min(1180px,100%); margin:8px auto 0; }
+
+    /* ---------- écran de fin ---------- */
+    .end { flex:1; display:grid; place-items:center; padding:20px; }
+    .end-card { width:min(560px,100%); padding:clamp(24px,4vw,40px); text-align:center;
+      background:white; border-radius:var(--radius); box-shadow:var(--shadow); }
+    .end-card h1 { font-size:clamp(26px,5vw,38px); }
+    .end-emoji { font-size:52px; line-height:1; }
+    .end-score { margin:10px 0 4px; font-size:19px; font-weight:800; color:var(--navy); }
+    .end-sub { margin:0 0 20px; color:var(--muted); }
+    .end-card .actions { justify-content:center; }
+
+    /* ---------- téléphone portrait ---------- */
+    @media (max-width:760px) {
+      .workspace { grid-template-columns:1fr; }
+      .cards-panel { order:1; } .play-panel { order:2; }
+      .card-map { width:min(100%,150px); }
+      .placement-grid { --zone:min(23vw,96px); }
+      .game { padding:8px 8px 10px; }
+      .panel { padding:10px; }
+      .game-foot { flex-wrap:wrap; justify-content:center; }
+    }
+  </style>
+</head>
+<body>
+  <div class="app">
+    <header class="topbar">
+      <a class="brand" href="index.html" aria-label="Retourner au catalogue des outils maths&amp;go">
+        <svg class="brand-m" viewBox="0 0 100 100" aria-hidden="true"><rect x="2" y="2" width="96" height="96" rx="20" fill="#02306D"/><g fill="none" stroke-linecap="round" stroke-linejoin="round"><path d="M15 82H85" stroke="#FA7D05" stroke-width="10"/><path d="M18 24L50 66L82 24" stroke="#00AFAA" stroke-width="14"/><path d="M18 18V82 M82 18V82" stroke="#FFFFFF" stroke-width="12"/></g></svg>
+        <span class="brand-copy">
+          <span class="brand-title">Chat, c’est toi le chat&nbsp;!</span>
+          <span class="brand-sub">Jouer en ligne</span>
+        </span>
+      </a>
+      <div class="top-actions">
+        <button class="icon-button" id="home-button" type="button" aria-label="Retourner au choix du niveau" hidden>
+          <span class="icon" aria-hidden="true"><svg viewBox="0 0 24 24" width="22" height="22"><path d="M19 12H5M11 6l-6 6 6 6" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg></span><span class="button-label">Niveaux</span>
+        </button>
+        <a class="icon-button" id="catalog-button" href="index.html" aria-label="Retourner au catalogue des outils">
+          <span class="icon" aria-hidden="true"><svg viewBox="0 0 24 24" width="22" height="22"><path d="M3 11.5 12 4l9 7.5M5.5 10v10h13V10M9.5 20v-6h5v6" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg></span><span class="button-label">Outils</span>
+        </a>
+        <button class="icon-button" id="fullscreen-button" type="button" aria-label="Afficher en plein écran">
+          <span class="icon" aria-hidden="true"><svg viewBox="0 0 24 24" width="22" height="22"><path d="M9 4H4v5M15 4h5v5M9 20H4v-5M15 20h5v-5" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round"/></svg></span><span class="button-label">Plein écran</span>
+        </button>
+      </div>
+    </header>
+
+    <main>
+      <!-- ============================== ACCUEIL ============================== -->
+      <section class="home" id="home-screen">
+        <div class="home-inner">
+          <div class="hero-copy">
+            <span class="eyebrow">48 séries · À jouer partout, même sur téléphone</span>
+            <h1>Lis les cartes, place les chats&nbsp;!</h1>
+            <p class="lead">Quatre chats veulent s’installer dans six cercles. Chaque carte dit qui doit se trouver
+              autour d’un chat. À toi de trouver un placement qui rende les quatre cartes vraies.</p>
+            <ol class="steps">
+              <li><span class="step-num">1</span><span>Lis les quatre cartes. Le haut de la carte, c’est <b>devant</b>.</span></li>
+              <li><span class="step-num">2</span><span>Place les quatre chats dans les cercles — deux cercles restent vides.</span></li>
+              <li><span class="step-num">3</span><span>Appuie sur <b>Vérifier</b>. Si une carte est fausse, déplace les chats et réessaie&nbsp;!</span></li>
+            </ol>
+            <div class="legend-note">
+              <div>Sur les cartes&nbsp;:</div>
+              <div class="legend-cats">
+                <span class="legend-item" id="legend-plain"></span>
+                <span class="legend-item" id="legend-crossed"></span>
+              </div>
+            </div>
+          </div>
+
+          <section class="levels-panel" aria-labelledby="levels-title">
+            <h2 class="levels-title" id="levels-title">Choisis ton niveau</h2>
+            <p class="levels-sub">12 séries par niveau, dans un ordre différent à chaque partie.</p>
+            <div class="levels" id="levels" role="list"></div>
+          </section>
+
+          <aside class="side-panel" aria-labelledby="demo-title">
+            <h2 id="demo-title">Un exemple</h2>
+            <div class="demo">
+              <div class="demo-card-wrap">
+                <span class="mini-label">La carte du chat 2</span>
+                <div id="demo-card"></div>
+              </div>
+              <div class="demo-grid-wrap">
+                <span class="mini-label">Un placement qui marche</span>
+                <div class="placement-grid" id="demo-grid" style="--zone:38px; gap:5px; padding:3px; touch-action:auto;"></div>
+              </div>
+            </div>
+            <p class="foot-note">La carte du chat 2 dit&nbsp;: «&nbsp;devant moi il y a un chat, derrière moi il n’y a
+              personne&nbsp;». Dans le placement de droite, c’est vrai&nbsp;! Il faut que les <b>quatre</b> cartes
+              soient vraies en même temps.</p>
+            <p class="foot-note">Envie d’y jouer en vrai, avec des cerceaux ou des cartes plastifiées, ou de le
+              projeter en classe&nbsp;? Tout est réuni sur <a href="chat/index.html">la page du jeu</a>.</p>
+          </aside>
+        </div>
+      </section>
+
+      <!-- ============================== JEU ============================== -->
+      <section class="game" id="game-screen" hidden>
+        <div class="game-head">
+          <span class="difficulty" id="level-chip"></span>
+          <h1 id="serie-title" tabindex="-1">Série 1</h1>
+          <span class="score-chip" id="score-chip">✓ 0</span>
+          <span class="counter" id="counter">1 / 12</span>
+        </div>
+
+        <div class="workspace">
+          <section class="panel cards-panel" aria-labelledby="cards-title">
+            <div class="cards-title"><h2 id="cards-title">Les quatre cartes</h2><small>Haut de la carte = devant</small></div>
+            <div class="cards-grid" id="cards-grid"></div>
+          </section>
+
+          <section class="panel play-panel" aria-labelledby="play-title">
+            <h2 class="sr-only" id="play-title">Place les chats</h2>
+            <div class="front-arrow"><span class="arrow-up" aria-hidden="true">↑</span><span>DEVANT</span></div>
+            <div class="placement-grid" id="placement-grid" aria-label="Les six cercles où placer les chats"></div>
+            <div class="bench" id="bench" aria-label="Chats à placer"></div>
+            <div class="feedback" id="feedback" aria-live="polite"></div>
+            <div class="actions">
+              <button class="primary-button" id="verify-button" type="button">Vérifier</button>
+              <button class="primary-button" id="next-button" type="button" hidden>Série suivante →</button>
+              <button class="ghost-button" id="solution-button" type="button" hidden>Voir une solution</button>
+            </div>
+          </section>
+        </div>
+
+        <div class="game-foot">
+          <button class="ghost-button" id="change-level" type="button">← Changer de niveau</button>
+          <button class="ghost-button" id="skip-button" type="button">Passer cette série</button>
+        </div>
+      </section>
+
+      <!-- ============================== FIN DE NIVEAU ============================== -->
+      <section class="end" id="end-screen" hidden>
+        <div class="end-card">
+          <div class="end-emoji" id="end-emoji">🎉</div>
+          <h1 id="end-title">Niveau terminé&nbsp;!</h1>
+          <p class="end-score" id="end-score"></p>
+          <p class="end-sub" id="end-sub"></p>
+          <div class="actions">
+            <button class="primary-button" id="replay-button" type="button">Rejouer ce niveau</button>
+            <button class="secondary-button" id="other-level-button" type="button">Choisir un autre niveau</button>
+          </div>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <script id="bank-data" type="application/json">[{"num":1,"level":1,"origin":"livret série 1","cards":{"1":{"right":"P","back":"P"},"2":{"front":"P","right":"P"},"3":{"front":"P","left":"P"},"4":{"left":"P","back":"P"}},"sols":[[[1,4,0],[2,3,0]],[[0,1,4],[0,2,3]]],"n_sols":2},{"num":2,"level":1,"origin":"nouvelle série maths&go (jeu en ligne)","cards":{"1":{"right":"P","back":"P"},"2":{"left":"P","back":"P"},"3":{"front":"P"},"4":{"left":"P"}},"sols":[[[1,2,0],[3,4,0]],[[0,1,2],[0,3,4]]],"n_sols":2},{"num":3,"level":1,"origin":"défi projection defi-01","cards":{"1":{"right":"P","back":"P"},"2":{"left":"P"},"3":{"right":"P"},"4":{"front":"P","left":"P"}},"sols":[[[1,2,0],[3,4,0]],[[0,1,2],[3,4,0]],[[0,1,2],[0,3,4]]],"n_sols":3},{"num":4,"level":1,"origin":"défi projection defi-03","cards":{"1":{"right":"P"},"2":{"front":"P","left":"P"},"3":{"left":"P"},"4":{"right":"X","back":"P"}},"sols":[[[0,4,0],[1,2,3]],[[0,0,4],[1,3,2]]],"n_sols":2},{"num":5,"level":1,"origin":"défi projection defi-02","cards":{"1":{"left":"P"},"2":{"right":"P","back":"X"},"3":{"front":"P","left":"P"},"4":{"back":"P"}},"sols":[[[4,1,0],[2,3,0]],[[0,4,1],[2,3,0]],[[0,4,1],[0,2,3]],[[0,0,4],[2,1,3]],[[0,4,0],[2,3,1]]],"n_sols":5},{"num":6,"level":1,"origin":"défi projection defi-04","cards":{"1":{"left":"X","right":"P"},"2":{"right":"P"},"3":{"left":"P"},"4":{"front":"P"}},"sols":[[[1,2,3],[4,0,0]],[[1,2,3],[0,4,0]],[[1,2,3],[0,0,4]],[[1,3,0],[2,4,0]],[[0,1,3],[2,4,0]],[[0,1,3],[0,2,4]],[[2,3,0],[1,4,0]],[[0,2,3],[1,4,0]],[[0,2,3],[0,1,4]]],"n_sols":9},{"num":7,"level":1,"origin":"nouvelle série maths&go (jeu en ligne)","cards":{"1":{"left":"X","back":"X"},"2":{"front":"P","right":"P"},"3":{"left":"P"},"4":{"back":"P"}},"sols":[[[1,4,0],[0,2,3]],[[4,0,1],[2,3,0]],[[0,4,0],[1,2,3]]],"n_sols":3},{"num":8,"level":1,"origin":"nouvelle série maths&go (jeu en ligne)","cards":{"1":{"left":"P","back":"X"},"2":{"front":"P"},"3":{"right":"P","back":"P"},"4":{"left":"X"}},"sols":[[[3,1,0],[2,0,4]],[[4,3,1],[0,2,0]],[[0,3,1],[4,2,0]]],"n_sols":3},{"num":9,"level":1,"origin":"livret série 2","cards":{"1":{"front":"P"},"2":{"back":"P"},"3":{"right":"P","back":"X"},"4":{"left":"P","back":"X"}},"sols":[[[2,3,4],[1,0,0]],[[2,0,0],[1,3,4]],[[3,2,4],[0,1,0]],[[3,2,0],[0,1,4]],[[0,2,4],[3,1,0]],[[0,2,0],[3,1,4]],[[3,4,2],[0,0,1]],[[0,0,2],[3,4,1]]],"n_sols":8},{"num":10,"level":1,"origin":"livret série 3","cards":{"1":{"front":"P","right":"X"},"2":{"right":"P","back":"X"},"3":{"left":"P","back":"X"},"4":{"left":"P"}},"sols":[[[2,4,3],[0,1,0]],[[2,3,4],[0,0,1]]],"n_sols":2},{"num":11,"level":1,"origin":"livret série 4","cards":{"1":{"left":"P","back":"P"},"2":{"right":"P","back":"X"},"3":{"front":"P","right":"X"},"4":{"right":"X","back":"X"}},"sols":[[[2,1,4],[0,3,0]],[[0,2,1],[4,0,3]]],"n_sols":2},{"num":12,"level":1,"origin":"livret série 5","cards":{"1":{"right":"P","back":"X"},"2":{"back":"P"},"3":{"front":"P","left":"X"},"4":{"front":"X","left":"P","back":"X"}},"sols":[[[1,2,4],[0,3,0]],[[1,2,0],[0,3,4]],[[1,4,2],[0,0,3]],[[2,1,4],[3,0,0]],[[2,0,0],[3,1,4]]],"n_sols":5},{"num":13,"level":2,"origin":"livret série 6","cards":{"1":{"front":"X","left":"P","right":"X","back":"X"},"2":{"front":"X","left":"X","right":"X","back":"P"},"3":{"front":"P","left":"X","right":"P","back":"X"},"4":{"front":"X","left":"X","right":"X","back":"X"}},"sols":[[[2,0,4],[3,1,0]]],"n_sols":1},{"num":14,"level":2,"origin":"livret série 7","cards":{"1":{"front":"X","left":"P","right":"P","back":"P"},"2":{"front":"X","left":"P","right":"X","back":"X"},"3":{"front":"P","left":"X","right":"X","back":"X"},"4":{"front":"X","left":"X","right":"P","back":"X"}},"sols":[[[4,1,2],[0,3,0]]],"n_sols":1},{"num":15,"level":2,"origin":"livret série 8","cards":{"1":{"front":"X","left":"X","right":"P","back":"P"},"2":{"front":"X","left":"X","right":"P","back":"X"},"3":{"front":"X","left":"P","right":"X","back":"X"},"4":{"front":"P","left":"P","right":"X","back":"X"}},"sols":[[[0,1,3],[2,4,0]]],"n_sols":1},{"num":16,"level":2,"origin":"livret série 9","cards":{"1":{"front":"P","left":"P","right":"X","back":"X"},"2":{"front":"P","left":"X","right":"P","back":"X"},"3":{"front":"X","left":"P","right":"X","back":"P"},"4":{"front":"X","left":"X","right":"P","back":"P"}},"sols":[[[4,3,0],[2,1,0]],[[0,4,3],[0,2,1]]],"n_sols":2},{"num":17,"level":2,"origin":"livret série 10","cards":{"1":{"front":"P","left":"X","right":"X","back":"X"},"2":{"front":"P","left":"X","right":"X","back":"X"},"3":{"front":"X","left":"X","right":"X","back":"P"},"4":{"front":"X","left":"X","right":"X","back":"P"}},"sols":[[[3,0,4],[1,0,2]],[[4,0,3],[1,0,2]],[[3,0,4],[2,0,1]],[[4,0,3],[2,0,1]]],"n_sols":4},{"num":18,"level":2,"origin":"nouvelle série maths&go (jeu en ligne)","cards":{"1":{"front":"X","left":"X","right":"P","back":"X"},"2":{"front":"X","left":"P","right":"X","back":"P"},"3":{"front":"P","left":"X","right":"P","back":"X"},"4":{"front":"X","left":"P","right":"X"}},"sols":[[[1,2,0],[0,3,4]]],"n_sols":1},{"num":19,"level":2,"origin":"nouvelle série maths&go (jeu en ligne)","cards":{"1":{"front":"X","left":"P","back":"X"},"2":{"front":"P","left":"X","right":"P","back":"X"},"3":{"front":"X","left":"P","right":"X","back":"X"},"4":{"front":"X","left":"X","right":"X","back":"P"}},"sols":[[[4,0,0],[2,1,3]]],"n_sols":1},{"num":20,"level":2,"origin":"nouvelle série maths&go (jeu en ligne)","cards":{"1":{"front":"X","left":"X","back":"X"},"2":{"front":"X","left":"X","right":"X","back":"X"},"3":{"front":"P","left":"X","right":"X","back":"X"},"4":{"front":"X","right":"X","back":"P"}},"sols":[[[0,1,4],[2,0,3]]],"n_sols":1},{"num":21,"level":2,"origin":"nouvelle série maths&go (jeu en ligne)","cards":{"1":{"left":"X","right":"P","back":"P"},"2":{"front":"P","left":"P","back":"X"},"3":{"front":"X","left":"X","right":"P","back":"X"},"4":{"front":"X","left":"P","right":"X","back":"X"}},"sols":[[[0,1,4],[3,2,0]]],"n_sols":1},{"num":22,"level":2,"origin":"nouvelle série maths&go (jeu en ligne)","cards":{"1":{"front":"P","right":"P","back":"X"},"2":{"front":"X","left":"X","right":"X","back":"P"},"3":{"front":"X","left":"P","right":"P","back":"X"},"4":{"left":"P","right":"X","back":"X"}},"sols":[[[2,0,0],[1,3,4]]],"n_sols":1},{"num":23,"level":2,"origin":"nouvelle série maths&go (jeu en ligne)","cards":{"1":{"front":"X","left":"X","right":"P","back":"X"},"2":{"left":"X","right":"X","back":"P"},"3":{"front":"P","left":"P","right":"P","back":"X"},"4":{"left":"P","right":"X","back":"X"}},"sols":[[[0,2,0],[1,3,4]]],"n_sols":1},{"num":24,"level":2,"origin":"nouvelle série maths&go (jeu en ligne)","cards":{"1":{"front":"X","left":"P","right":"X","back":"X"},"2":{"left":"X","right":"X","back":"P"},"3":{"front":"P","left":"P","right":"P","back":"X"},"4":{"front":"X","right":"P","back":"X"}},"sols":[[[0,2,0],[4,3,1]]],"n_sols":1},{"num":25,"level":3,"origin":"défi projection defi-07","cards":{"1":{"front":"X","right":"P","back":"X"},"2":{"left":"P","back":"P"},"3":{"front":"P","left":"X","back":"X"},"4":{"front":"X","left":"P"}},"sols":[[[1,2,4],[0,3,0]],[[1,2,0],[0,3,4]],[[1,4,2],[0,0,3]]],"n_sols":3},{"num":26,"level":3,"origin":"défi projection defi-05","cards":{"1":{"front":"X","left":"X","back":"X"},"2":{"front":"X","back":"X"},"3":{"front":"X","right":"X","back":"P"},"4":{"right":"X","back":"X"}},"sols":[[[1,2,3],[0,0,4]],[[1,0,3],[0,2,4]],[[0,1,3],[2,0,4]],[[0,2,3],[1,0,4]],[[0,0,3],[1,2,4]],[[2,0,3],[0,1,4]]],"n_sols":6},{"num":27,"level":3,"origin":"livret série 11","cards":{"1":{"right":"P","back":"X"},"2":{"back":"P"},"3":{"front":"P","left":"X","right":"P"},"4":{"front":"X","left":"P","back":"X"}},"sols":[[[1,2,0],[0,3,4]],[[2,0,0],[3,1,4]]],"n_sols":2},{"num":28,"level":3,"origin":"défi projection defi-08","cards":{"1":{"front":"X","back":"P"},"2":{"left":"P","right":"X"},"3":{"right":"P","back":"X"},"4":{"left":"P","right":"X","back":"X"}},"sols":[[[1,2,0],[3,4,0]],[[0,1,2],[3,4,0]],[[0,1,2],[0,3,4]],[[0,1,4],[3,2,0]]],"n_sols":4},{"num":29,"level":3,"origin":"livret série 12","cards":{"1":{"front":"P","right":"P"},"2":{"left":"P","back":"X"},"3":{"left":"P","right":"X","back":"X"},"4":{"right":"X"}},"sols":[[[4,0,0],[1,2,3]]],"n_sols":1},{"num":30,"level":3,"origin":"livret série 13","cards":{"1":{"left":"P","right":"X"},"2":{"right":"X","back":"P"},"3":{"left":"P","right":"P"},"4":{"front":"X","right":"P"}},"sols":[[[0,2,0],[4,3,1]],[[0,0,2],[4,3,1]]],"n_sols":2},{"num":31,"level":3,"origin":"livret série 14","cards":{"1":{"left":"X","back":"P"},"2":{"front":"X","left":"X"},"3":{"front":"X","left":"P"},"4":{"front":"P","left":"X"}},"sols":[[[1,0,2],[4,3,0]],[[1,3,0],[4,0,2]]],"n_sols":2},{"num":32,"level":3,"origin":"livret série 15","cards":{"1":{"front":"X","back":"X"},"2":{"front":"P","back":"X"},"3":{"left":"X","back":"X"},"4":{"left":"X","right":"P"}},"sols":[[[4,1,0],[2,0,3]],[[0,4,1],[3,2,0]]],"n_sols":2},{"num":33,"level":3,"origin":"nouvelle série maths&go (jeu en ligne)","cards":{"1":{"left":"P","right":"X"},"2":{"front":"P","left":"P"},"3":{"front":"P","right":"P"},"4":{"left":"X","back":"P"}},"sols":[[[4,1,0],[3,2,0]],[[0,4,1],[0,3,2]]],"n_sols":2},{"num":34,"level":3,"origin":"défi projection defi-06","cards":{"1":{"left":"X","back":"P"},"2":{"right":"P","back":"X"},"3":{"left":"P","right":"X"},"4":{"left":"X","back":"X"}},"sols":[[[1,2,3],[4,0,0]],[[1,0,4],[2,3,0]],[[1,0,0],[4,2,3]],[[0,1,0],[4,2,3]],[[4,0,1],[0,2,3]],[[0,0,1],[4,2,3]]],"n_sols":6},{"num":35,"level":3,"origin":"défi projection defi-11","cards":{"1":{"front":"X","right":"X"},"2":{"right":"X"},"3":{"front":"X","left":"X"},"4":{"left":"X","back":"P"}},"sols":[[[1,0,4],[0,3,2]],[[4,1,0],[2,0,3]],[[0,4,1],[3,2,0]]],"n_sols":3},{"num":36,"level":3,"origin":"défi projection defi-10","cards":{"1":{"left":"X","right":"X"},"2":{"right":"X","back":"X"},"3":{"front":"P"},"4":{"left":"P"}},"sols":[[[1,0,2],[3,4,0]],[[1,0,0],[3,4,2]]],"n_sols":2},{"num":37,"level":4,"origin":"livret série 16","cards":{"1":{"front":"X","left":"X","right":"X","back":"X"},"2":{"back":"P"},"3":{"front":"P","right":"P"},"4":{"right":"X"}},"sols":[[[2,0,1],[3,4,0]]],"n_sols":1},{"num":38,"level":4,"origin":"défi projection defi-09","cards":{"1":{"left":"X","back":"P"},"2":{"front":"X","back":"X"},"3":{"left":"P","right":"P"},"4":{"front":"X","right":"X"}},"sols":[[[0,1,0],[2,3,4]]],"n_sols":1},{"num":39,"level":4,"origin":"défi projection defi-12","cards":{"1":{"left":"P","back":"P"},"2":{"right":"P"},"3":{"front":"X","left":"X"},"4":{"front":"X","left":"P"}},"sols":[[[3,1,0],[0,2,4]]],"n_sols":1},{"num":40,"level":4,"origin":"livret série 17","cards":{"1":{"back":"P"},"2":{"front":"X","left":"X","right":"X"},"3":{"right":"P"},"4":{"front":"X"}},"sols":[[[1,0,2],[3,4,0]]],"n_sols":1},{"num":41,"level":4,"origin":"livret série 18","cards":{"1":{"right":"P","back":"P"},"2":{"front":"X"},"3":{"front":"X","right":"X"},"4":{"left":"P"}},"sols":[[[0,1,3],[2,4,0]]],"n_sols":1},{"num":42,"level":4,"origin":"livret série 19","cards":{"1":{"left":"P","back":"P"},"2":{"right":"P"},"3":{"front":"X","right":"P"},"4":{"front":"X"}},"sols":[[[3,1,0],[0,2,4]]],"n_sols":1},{"num":43,"level":4,"origin":"nouvelle série maths&go (jeu en ligne)","cards":{"1":{"back":"X"},"2":{"right":"X"},"3":{"front":"P","right":"X"},"4":{"left":"P","right":"X"}},"sols":[[[0,1,4],[2,0,3]]],"n_sols":1},{"num":44,"level":4,"origin":"nouvelle série maths&go (jeu en ligne)","cards":{"1":{"right":"P"},"2":{"front":"P","right":"P"},"3":{"left":"P"},"4":{"front":"X","back":"X"}},"sols":[[[1,3,0],[0,2,4]]],"n_sols":1},{"num":45,"level":4,"origin":"nouvelle série maths&go (jeu en ligne)","cards":{"1":{"back":"P"},"2":{"front":"P","right":"X"},"3":{"right":"X"},"4":{"left":"P","right":"X"}},"sols":[[[1,4,0],[2,0,3]]],"n_sols":1},{"num":46,"level":4,"origin":"nouvelle série maths&go (jeu en ligne)","cards":{"1":{"front":"P"},"2":{"left":"P","right":"P"},"3":{"back":"X"},"4":{"left":"P","back":"X"}},"sols":[[[3,2,4],[0,1,0]]],"n_sols":1},{"num":47,"level":4,"origin":"livret série 20","cards":{"1":{"left":"P"},"2":{"front":"P"},"3":{"right":"X"},"4":{"left":"P","right":"P"}},"sols":[[[3,0,0],[2,4,1]]],"n_sols":1},{"num":48,"level":4,"origin":"nouvelle série maths&go (jeu en ligne)","cards":{"1":{"right":"P"},"2":{"left":"X"},"3":{"left":"X","right":"P"},"4":{"front":"P"}},"sols":[[[0,0,2],[3,1,4]]],"n_sols":1}]</script>
+  <script>
+    (() => {
+      'use strict';
+      const BANK = JSON.parse(document.getElementById('bank-data').textContent);
+      const $ = (s) => document.querySelector(s);
+
+      const LEVELS = {
+        1: { name: 'Découverte',        chip: 'lv1', desc: 'Une ou deux infos par carte, surtout des chats.' },
+        2: { name: 'Cartes bavardes',   chip: 'lv2', desc: 'Les cartes disent presque tout — à toi de tout utiliser.' },
+        3: { name: 'Cartes partielles', chip: 'lv3', desc: 'Moins d’infos : il faut croiser les cartes.' },
+        4: { name: 'Expertes',          chip: 'lv4', desc: 'Le strict minimum d’indices, un seul placement possible.' }
+      };
+
+      const directionClass = { front:'front', back:'back', left:'left', right:'right' };
+      const directionLabel = { front:'devant', back:'derrière', left:'à gauche', right:'à droite' };
+      const directionTitle = { front:'Devant', back:'Derrière', left:'À gauche', right:'À droite' };
+      const directionDelta = { front:[-1,0], back:[1,0], left:[0,-1], right:[0,1] };
+      const directionOrder = ['front', 'left', 'right', 'back'];
+      const ROWS = 2, COLS = 3;
+
+      /* ------------------------------------------------- dessins */
+      function catSVG(number = null, crossed = false, className = '') {
+        const badge = number === null ? '' : `<g class="player-badge">
+          <circle cx="50" cy="73" r="13" fill="#1f3a68" stroke="white" stroke-width="3"/>
+          <text x="50" y="79" text-anchor="middle" fill="white" font-family="Segoe UI,Arial,sans-serif" font-size="18" font-weight="800">${number}</text>
+        </g>`;
+        const cross = crossed ? `<line x1="8" y1="16" x2="92" y2="104" stroke="#d1495b" stroke-width="10" stroke-linecap="round"/>
+          <line x1="92" y1="16" x2="8" y2="104" stroke="#d1495b" stroke-width="10" stroke-linecap="round"/>` : '';
+        return `<svg class="${className}" viewBox="0 0 100 112" aria-hidden="true" focusable="false">
+          <path d="M78 88 C 96 82, 98 60, 88 52 C 84 66, 78 70, 74 74 Z" fill="#e0813f"/>
+          <ellipse cx="50" cy="72" rx="30" ry="34" fill="#f09a52"/>
+          <path d="M28 78 q 22 -10 44 0 l -2 8 q -20 -9 -40 0 Z" fill="#d9743a" opacity=".85"/>
+          <path d="M26 62 q 24 -10 48 0 l -2 8 q -22 -9 -44 0 Z" fill="#d9743a" opacity=".85"/>
+          <ellipse cx="34" cy="102" rx="9" ry="7" fill="#f09a52"/>
+          <ellipse cx="66" cy="102" rx="9" ry="7" fill="#f09a52"/>
+          <circle cx="50" cy="30" r="22" fill="#f09a52"/>
+          <path d="M31 18 L 27 2 L 43 9 Z" fill="#f09a52"/>
+          <path d="M69 18 L 73 2 L 57 9 Z" fill="#f09a52"/>
+          <path d="M33 15 L 31 6 L 40 10 Z" fill="#e8b28d"/>
+          <path d="M67 15 L 69 6 L 60 10 Z" fill="#e8b28d"/>
+          <path d="M42 14 q 8 -6 16 0" stroke="#d9743a" stroke-width="3" fill="none" stroke-linecap="round"/>
+          ${badge}${cross}
+        </svg>`;
+      }
+
+      function catMark(wanted) {
+        return `<span class="cat-mark" aria-hidden="true">${catSVG(null, wanted === 'X')}</span>`;
+      }
+
+      function cardHTML(player, constraints, verdicts = null) {
+        let result = null;
+        if (verdicts) result = verdicts.every(v => v.ok);
+        const statusClass = result === true ? 'true' : result === false ? 'false' : 'pending';
+        const statusText = result === true ? '✓ Vraie' : result === false ? '✕ Fausse' : '';
+        const clauseClass = (direction) => {
+          if (!verdicts) return '';
+          const v = verdicts.find(item => item.direction === direction);
+          return v ? (v.ok ? ' clause-ok' : ' clause-bad') : '';
+        };
+        const cells = directionOrder
+          .filter(direction => Object.hasOwn(constraints, direction))
+          .map(direction => {
+            const wanted = constraints[direction];
+            return `<div class="card-cell ${directionClass[direction]}${clauseClass(direction)}" title="${directionLabel[direction]}">${catMark(wanted)}<span class="sr-only">${directionLabel[direction]} : ${wanted === 'P' ? 'un chat' : 'aucun chat'}</span></div>`;
+          }).join('');
+        return `<article class="logic-card ${statusClass}" data-player="${player}">
+          <div class="card-head"><span>Carte ${player}</span><span class="card-status">${statusText}</span></div>
+          <div class="card-map" aria-label="Carte ${player}">${cells}<div class="card-cell self">${catSVG(player, false, 'card-self-cat')}</div></div>
+        </article>`;
+      }
+
+      /* ------------------------------------------------- logique */
+      function positionsOf(grid) {
+        const positions = {};
+        grid.forEach((row, r) => row.forEach((p, c) => { if (p) positions[p] = [r, c]; }));
+        return positions;
+      }
+
+      function checkCard(cards, player, grid) {
+        const positions = positionsOf(grid);
+        const [row, col] = positions[player];
+        return directionOrder
+          .filter(direction => Object.hasOwn(cards[String(player)], direction))
+          .map(direction => {
+            const wanted = cards[String(player)][direction];
+            const [dr, dc] = directionDelta[direction];
+            const nr = row + dr, nc = col + dc;
+            const inside = nr >= 0 && nr < ROWS && nc >= 0 && nc < COLS;
+            const neighbor = inside ? grid[nr][nc] : 0;
+            const ok = wanted === 'P' ? Boolean(neighbor) : !neighbor;
+            let message = '';
+            if (!ok && wanted === 'P') {
+              message = inside
+                ? `${directionTitle[direction]} : il doit y avoir un chat, mais le cercle est vide.`
+                : `${directionTitle[direction]} : il doit y avoir un chat, mais il n’y a pas de cercle.`;
+            } else if (!ok) {
+              message = `${directionTitle[direction]} : il ne doit y avoir personne, mais le chat ${neighbor} est là.`;
+            }
+            return { direction, wanted, ok, neighbor, inside, message };
+          });
+      }
+
+      function shuffled(list) {
+        const copy = list.slice();
+        for (let i = copy.length - 1; i > 0; i -= 1) {
+          const j = Math.floor(Math.random() * (i + 1));
+          [copy[i], copy[j]] = [copy[j], copy[i]];
+        }
+        return copy;
+      }
+
+      /* ------------------------------------------------- état */
+      const state = {
+        level: null, order: [], pos: 0,
+        grid: null, bench: [],           // bench : joueurs encore à placer
+        selected: null,                  // { from:'bench'|'grid', player, cell? }
+        attempts: 0, solvedCount: 0, firstTryCount: 0,
+        phase: 'playing'                 // playing | solved | shown
+      };
+
+      function currentSerie() { return BANK[state.order[state.pos]]; }
+
+      /* ------------------------------------------------- accueil */
+      function renderHome() {
+        $('#legend-plain').innerHTML = `${catSVG(null, false)}<span>= quelqu’un dans le cercle voisin</span>`;
+        $('#legend-crossed').innerHTML = `${catSVG(null, true)}<span>= personne (ou pas de cercle)</span>`;
+        $('#demo-card').innerHTML = cardHTML(2, { front:'P', back:'X' });
+        $('#demo-grid').innerHTML = [[0,2,0],[0,1,0]].flat().map(p =>
+          `<div class="zone locked${p ? ' filled' : ''}" style="cursor:default">${p ? catSVG(p, false, 'player-cat') : ''}</div>`
+        ).join('');
+        $('#levels').innerHTML = [1,2,3,4].map(level => {
+          const info = LEVELS[level];
+          return `<button class="level-button" type="button" role="listitem" data-level="${level}">
+            <span class="level-badge ${info.chip}">${level}</span>
+            <span><b>${info.name}</b><small>${info.desc}</small></span>
+          </button>`;
+        }).join('');
+        $('#levels').addEventListener('click', (event) => {
+          const button = event.target.closest('[data-level]');
+          if (button) startLevel(Number(button.dataset.level));
+        });
+      }
+
+      /* ------------------------------------------------- niveau */
+      function startLevel(level) {
+        state.level = level;
+        state.order = shuffled(BANK.map((s, i) => ({ s, i })).filter(x => x.s.level === level).map(x => x.i));
+        state.pos = 0;
+        state.solvedCount = 0;
+        state.firstTryCount = 0;
+        showScreen('game');
+        loadSerie();
+      }
+
+      function showScreen(name) {
+        $('#home-screen').hidden = name !== 'home';
+        $('#game-screen').hidden = name !== 'game';
+        $('#end-screen').hidden = name !== 'end';
+        $('#home-button').hidden = name === 'home';
+        window.scrollTo(0, 0);
+      }
+
+      function loadSerie() {
+        state.grid = [[0,0,0],[0,0,0]];
+        state.bench = [1,2,3,4];
+        state.selected = null;
+        state.attempts = 0;
+        state.phase = 'playing';
+        const info = LEVELS[state.level];
+        const chip = $('#level-chip');
+        chip.textContent = `Niveau ${state.level} · ${info.name}`;
+        chip.className = `difficulty ${info.chip}`;
+        $('#serie-title').textContent = `Série ${state.pos + 1}`;
+        $('#counter').textContent = `${state.pos + 1} / ${state.order.length}`;
+        $('#score-chip').textContent = `✓ ${state.solvedCount}`;
+        $('#next-button').hidden = true;
+        $('#solution-button').hidden = true;
+        $('#verify-button').hidden = false;
+        setFeedback('neutral', `<strong>À toi de jouer.</strong> Place les quatre chats, puis appuie sur «&nbsp;Vérifier&nbsp;».`);
+        renderCards();
+        renderPlacement();
+        $('#serie-title').focus({ preventScroll: true });
+      }
+
+      function setFeedback(kind, html) {
+        const box = $('#feedback');
+        box.className = 'feedback' + (kind === 'happy' ? ' happy' : kind === 'warn' ? ' warn' : '');
+        box.innerHTML = html;
+      }
+
+      /* ------------------------------------------------- rendu jeu */
+      function renderCards(verdictsByPlayer = null) {
+        const serie = currentSerie();
+        $('#cards-grid').innerHTML = [1,2,3,4].map(player =>
+          cardHTML(player, serie.cards[String(player)], verdictsByPlayer ? verdictsByPlayer[player] : null)
+        ).join('');
+      }
+
+      function renderPlacement() {
+        const locked = state.phase !== 'playing';
+        const selected = state.selected;
+        const grid = $('#placement-grid');
+        grid.innerHTML = state.grid.flat().map((player, cell) => {
+          const classes = ['zone'];
+          if (player) classes.push('filled');
+          if (locked) classes.push('locked');
+          const isSelected = selected && selected.from === 'grid' && selected.cell === cell;
+          if (isSelected) classes.push('selected');
+          if (selected && !isSelected && !locked) classes.push('target');
+          let label = player ? `Cercle ${cell + 1} : chat ${player}` : `Cercle ${cell + 1} : vide`;
+          if (!locked) {
+            if (isSelected) label += ' — sélectionné, touche à nouveau pour annuler';
+            else if (selected && player) label += ` — toucher pour échanger avec le chat ${selected.player}`;
+            else if (selected) label += ` — toucher pour y poser le chat ${selected.player}`;
+            else if (player) label += ' — toucher pour le prendre';
+          }
+          return `<button class="${classes.join(' ')}" type="button" data-cell="${cell}" aria-label="${label}"${locked ? ' disabled' : ''}>${player ? catSVG(player, false, 'player-cat') : ''}</button>`;
+        }).join('');
+
+        const bench = $('#bench');
+        bench.classList.toggle('all-placed', state.bench.length === 0);
+        bench.innerHTML = `<span class="bench-label">Chats à placer</span>` + [1,2,3,4].map(player => {
+          const here = state.bench.includes(player);
+          const isSelected = selected && selected.from === 'bench' && selected.player === player;
+          const classes = ['bench-slot'];
+          if (here) classes.push('filled');
+          if (isSelected) classes.push('selected');
+          let label = here ? `Chat ${player}, à placer` : `Place vide du chat ${player}`;
+          if (isSelected) label = `Chat ${player} sélectionné — touche un cercle pour le poser`;
+          else if (!here && selected) label = `Reposer le chat ${selected.player} ici`;
+          return `<button class="${classes.join(' ')}" type="button" data-bench="${player}" aria-label="${label}"${state.phase !== 'playing' ? ' disabled' : ''}>${here ? catSVG(player, false, 'player-cat') : ''}</button>`;
+        }).join('');
+
+        $('#verify-button').disabled = state.bench.length > 0 || state.phase !== 'playing';
+      }
+
+      /* ------------------------------------------------- interactions tap */
+      function tapZone(cell) {
+        if (state.phase !== 'playing') return;
+        const player = state.grid[Math.floor(cell / COLS)][cell % COLS];
+        const sel = state.selected;
+        if (sel) {
+          if (sel.from === 'grid' && sel.cell === cell) { state.selected = null; }
+          else { movePlayer(sel, { to:'grid', cell }); state.selected = null; }
+        } else if (player) {
+          state.selected = { from:'grid', player, cell };
+        }
+        renderPlacement();
+      }
+
+      function tapBench(player) {
+        if (state.phase !== 'playing') return;
+        const here = state.bench.includes(player);
+        const sel = state.selected;
+        if (sel) {
+          if (sel.from === 'bench' && sel.player === player) { state.selected = null; }
+          else if (sel.from === 'grid') { movePlayer(sel, { to:'bench' }); state.selected = null; }
+          else { state.selected = here ? { from:'bench', player } : null; }
+        } else if (here) {
+          state.selected = { from:'bench', player };
+        }
+        renderPlacement();
+      }
+
+      function movePlayer(from, target) {
+        const grid = state.grid;
+        if (target.to === 'bench') {
+          if (from.from === 'grid') {
+            grid[Math.floor(from.cell / COLS)][from.cell % COLS] = 0;
+            state.bench.push(from.player);
+            state.bench.sort();
+          }
+          return;
+        }
+        const r = Math.floor(target.cell / COLS), c = target.cell % COLS;
+        const occupant = grid[r][c];
+        if (occupant === from.player) return;
+        if (from.from === 'bench') {
+          state.bench = state.bench.filter(p => p !== from.player);
+          if (occupant) { state.bench.push(occupant); state.bench.sort(); }
+          grid[r][c] = from.player;
+        } else {
+          const fr = Math.floor(from.cell / COLS), fc = from.cell % COLS;
+          grid[fr][fc] = occupant;      // échange (ou 0 si cercle vide)
+          grid[r][c] = from.player;
+        }
+        clearVerdicts();
+      }
+
+      function clearVerdicts() {
+        if (state.attempts > 0) renderCards();   // efface les ✓/✕ dès qu'on bouge
+      }
+
+      /* ------------------------------------------------- interactions drag */
+      const drag = { active:false, moved:false, pointerId:null, source:null, ghost:null, startX:0, startY:0 };
+
+      function dragSourceAt(target) {
+        const zone = target.closest('[data-cell]');
+        if (zone) {
+          const cell = Number(zone.dataset.cell);
+          const player = state.grid[Math.floor(cell / COLS)][cell % COLS];
+          if (player) return { from:'grid', player, cell };
+          return null;
+        }
+        const slot = target.closest('[data-bench]');
+        if (slot) {
+          const player = Number(slot.dataset.bench);
+          if (state.bench.includes(player)) return { from:'bench', player };
+        }
+        return null;
+      }
+
+      function onPointerDown(event) {
+        drag.moved = false;               // un nouveau toucher n'est jamais un glissement
+        if (state.phase !== 'playing' || !event.isPrimary) return;
+        const source = dragSourceAt(event.target);
+        if (!source) return;
+        drag.active = true; drag.moved = false;
+        drag.pointerId = event.pointerId;
+        drag.source = source;
+        drag.startX = event.clientX; drag.startY = event.clientY;
+      }
+
+      function onPointerMove(event) {
+        if (!drag.active || event.pointerId !== drag.pointerId) return;
+        const dx = event.clientX - drag.startX, dy = event.clientY - drag.startY;
+        if (!drag.moved && Math.hypot(dx, dy) < 9) return;
+        if (!drag.moved) {
+          drag.moved = true;
+          drag.ghost = document.createElement('div');
+          drag.ghost.className = 'drag-ghost';
+          drag.ghost.innerHTML = catSVG(drag.source.player, false);
+          document.body.appendChild(drag.ghost);
+          if (state.selected) { state.selected = null; renderPlacement(); }
+        }
+        drag.ghost.style.left = `${event.clientX}px`;
+        drag.ghost.style.top = `${event.clientY}px`;
+        highlightDrop(event.clientX, event.clientY);
+        event.preventDefault();
+      }
+
+      function dropTargetAt(x, y) {
+        const el = document.elementFromPoint(x, y);
+        if (!el) return null;
+        const zone = el.closest('#placement-grid [data-cell]');
+        if (zone) return { to:'grid', cell:Number(zone.dataset.cell), el:zone };
+        const benchEl = el.closest('#bench');
+        if (benchEl) {
+          const slot = el.closest('[data-bench]');
+          return { to:'bench', el:slot || benchEl };
+        }
+        return null;
+      }
+
+      function highlightDrop(x, y) {
+        document.querySelectorAll('.drop-hover').forEach(el => el.classList.remove('drop-hover'));
+        const target = dropTargetAt(x, y);
+        if (target && target.el && target.el.classList) target.el.classList.add('drop-hover');
+      }
+
+      function onPointerUp(event) {
+        if (!drag.active || event.pointerId !== drag.pointerId) return;
+        const wasDrag = drag.moved;
+        const source = drag.source;
+        endDrag();
+        if (!wasDrag) return;             // simple toucher : géré par le clic
+        const target = dropTargetAt(event.clientX, event.clientY);
+        if (target) {
+          if (target.to === 'bench' && source.from === 'grid') movePlayer(source, { to:'bench' });
+          else if (target.to === 'grid') movePlayer(source, { to:'grid', cell:target.cell });
+        }
+        state.selected = null;
+        renderPlacement();
+      }
+
+      function endDrag() {
+        drag.active = false;
+        if (drag.ghost) { drag.ghost.remove(); drag.ghost = null; }
+        document.querySelectorAll('.drop-hover').forEach(el => el.classList.remove('drop-hover'));
+      }
+
+      /* ------------------------------------------------- vérification */
+      function verify() {
+        if (state.bench.length > 0 || state.phase !== 'playing') return;
+        state.attempts += 1;
+        const serie = currentSerie();
+        const verdicts = {};
+        let allTrue = true;
+        let firstBad = null;
+        [1,2,3,4].forEach(player => {
+          const checks = checkCard(serie.cards, player, state.grid);
+          verdicts[player] = checks;
+          if (checks.some(c => !c.ok) && !firstBad) firstBad = { player, checks };
+          if (checks.some(c => !c.ok)) allTrue = false;
+        });
+        renderCards(verdicts);
+        if (allTrue) {
+          state.phase = 'solved';
+          state.solvedCount += 1;
+          if (state.attempts === 1) state.firstTryCount += 1;
+          $('#score-chip').textContent = `✓ ${state.solvedCount}`;
+          const star = state.attempts === 1 ? ' ★ Du premier coup !' : '';
+          const several = serie.n_sols > 1
+            ? ` (Il y avait ${serie.n_sols} placements possibles — le tien en fait partie.)` : '';
+          setFeedback('happy', `<strong>Bravo !</strong> Les quatre cartes sont vraies.${star}${several}`);
+          $('#verify-button').hidden = true;
+          $('#solution-button').hidden = true;
+          $('#next-button').hidden = false;
+          $('#next-button').classList.add('success-pop');
+          renderPlacement();
+          document.querySelectorAll('#placement-grid .zone.filled').forEach(z => z.classList.add('cheer'));
+        } else {
+          const bad = firstBad.checks.filter(c => !c.ok);
+          setFeedback('warn', `<strong>Pas encore…</strong> Carte ${firstBad.player} — ${bad[0].message}` +
+            (bad.length > 1 ? ` <em>(et ${bad.length - 1} autre${bad.length > 2 ? 's' : ''} souci sur cette carte)</em>` : '') +
+            ` Déplace les chats et vérifie à nouveau.`);
+          if (state.attempts >= 2) $('#solution-button').hidden = false;
+          renderPlacement();
+        }
+      }
+
+      function showSolution() {
+        if (state.phase !== 'playing') return;
+        const serie = currentSerie();
+        state.grid = serie.sols[0].map(row => row.slice());
+        state.bench = [];
+        state.selected = null;
+        state.phase = 'shown';
+        const serie2 = currentSerie();
+        const verdicts = {};
+        [1,2,3,4].forEach(player => { verdicts[player] = checkCard(serie2.cards, player, state.grid); });
+        renderCards(verdicts);
+        renderPlacement();
+        const several = serie.n_sols > 1 ? ` Il y en avait ${serie.n_sols} en tout.` : ' C’était le seul.';
+        setFeedback('neutral', `<strong>Voici un placement qui marche.</strong>${several} Regarde bien les cartes, puis passe à la suite.`);
+        $('#verify-button').hidden = true;
+        $('#solution-button').hidden = true;
+        $('#next-button').hidden = false;
+      }
+
+      function nextSerie() {
+        if (state.pos + 1 >= state.order.length) { showEnd(); return; }
+        state.pos += 1;
+        loadSerie();
+      }
+
+      function showEnd() {
+        const total = state.order.length;
+        const solved = state.solvedCount;
+        const emoji = solved === total ? '🏆' : solved >= total * 0.6 ? '🎉' : '💪';
+        $('#end-emoji').textContent = emoji;
+        $('#end-title').textContent = solved === total ? 'Niveau réussi en entier !' : 'Niveau terminé !';
+        $('#end-score').textContent = `${solved} série${solved > 1 ? 's' : ''} réussie${solved > 1 ? 's' : ''} sur ${total}`;
+        $('#end-sub').textContent = state.firstTryCount > 0
+          ? `Dont ${state.firstTryCount} du premier coup ★`
+          : 'Rejoue pour battre ton score : les séries changent d’ordre à chaque partie.';
+        showScreen('end');
+      }
+
+      /* ------------------------------------------------- branchements */
+      function bind() {
+        $('#placement-grid').addEventListener('click', (event) => {
+          const zone = event.target.closest('[data-cell]');
+          if (zone && !drag.moved) tapZone(Number(zone.dataset.cell));
+        });
+        $('#bench').addEventListener('click', (event) => {
+          const slot = event.target.closest('[data-bench]');
+          if (slot && !drag.moved) tapBench(Number(slot.dataset.bench));
+          else if (!slot && state.selected && state.selected.from === 'grid' && !drag.moved) {
+            movePlayer(state.selected, { to:'bench' });
+            state.selected = null;
+            renderPlacement();
+          }
+        });
+        ['#placement-grid', '#bench'].forEach(sel => {
+          $(sel).addEventListener('pointerdown', onPointerDown);
+        });
+        window.addEventListener('pointermove', onPointerMove, { passive:false });
+        window.addEventListener('pointerup', onPointerUp);
+        window.addEventListener('pointercancel', endDrag);
+
+        $('#verify-button').addEventListener('click', verify);
+        $('#solution-button').addEventListener('click', showSolution);
+        $('#next-button').addEventListener('click', nextSerie);
+        $('#skip-button').addEventListener('click', nextSerie);
+        $('#change-level').addEventListener('click', () => showScreen('home'));
+        $('#home-button').addEventListener('click', () => showScreen('home'));
+        $('#replay-button').addEventListener('click', () => startLevel(state.level));
+        $('#other-level-button').addEventListener('click', () => showScreen('home'));
+
+        const fullscreenButton = $('#fullscreen-button');
+        fullscreenButton.addEventListener('click', () => {
+          if (document.fullscreenElement) document.exitFullscreen();
+          else document.documentElement.requestFullscreen?.();
+        });
+        document.addEventListener('fullscreenchange', () => {
+          fullscreenButton.querySelector('.button-label').textContent =
+            document.fullscreenElement ? 'Quitter' : 'Plein écran';
+        });
+        document.addEventListener('keydown', (event) => {
+          if (event.key === ' ' && !$('#game-screen').hidden && !$('#verify-button').hidden && !$('#verify-button').disabled) {
+            event.preventDefault(); verify();
+          }
+          if (event.key === 'Enter' && !$('#next-button').hidden && !$('#game-screen').hidden) nextSerie();
+        });
+      }
+
+      renderHome();
+      bind();
+      showScreen('home');
+    })();
+  </script>
+</body>
+</html>

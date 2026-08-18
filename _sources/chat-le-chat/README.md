@@ -32,7 +32,17 @@ Emprin-Charotte, CRDP Champagne-Ardenne). Version modernisée pour maths&go :
   `../../outils/chat-cest-toi-le-chat-recto-verso.pdf`) ;
 - `out/cartes-compactes-recto-verso.pdf` — dix paires recto-verso A4 paysage,
   à imprimer à 100 % en retournant sur le bord court (copie publique :
-  `../../outils/chat-cest-toi-le-chat-cartes-compactes-recto-verso.pdf`).
+  `../../outils/chat-cest-toi-le-chat-cartes-compactes-recto-verso.pdf`) ;
+- `build_bank.py` — fabrique et audite `bank48.json` : 48 séries en 4 niveaux,
+  sans doublon (miroirs, rotation, renumérotation des chats) et toutes
+  revalidées carte par carte par le solveur de `game.py` ;
+- `bank48.json` — la banque des 48 séries, également recopiée dans le
+  `<script id="bank-data">` de la page publique
+  `../../outils/chat-cest-toi-le-chat-en-ligne.html` ;
+- `playwright-jeu-en-ligne.js` — 30 vérifications Playwright de cette page
+  (téléphone et ordinateur). Le fichier ne s'appelle pas `test.js` pour que
+  `node --test` du dépôt ne tente pas de l'exécuter ;
+- `shots.js` — captures d'écran de la page en ligne pour les vignettes.
 
 La page projetable publique est
 `../../outils/chat-cest-toi-le-chat-projection.html`. Toute la classe cherche

@@ -51,6 +51,16 @@ export const CURATED_PAGES = [
     description: "Outils de manipulation, exercices et ressources pour comprendre le calcul littéral, les expressions et les équations."
   },
   {
+    path: "outils/chat-cest-toi-le-chat-en-ligne.html",
+    title: "Chat, c’est toi le chat ! — Jouer en ligne | maths&go",
+    description: "Le jeu de repérage spatial à jouer en famille : lis les quatre cartes, place les chats dans les cercles, puis vérifie. 48 séries en 4 niveaux, de la maternelle au collège."
+  },
+  {
+    path: "outils/chat-cest-toi-le-chat-projection.html",
+    title: "Chat, c’est toi le chat ! — À projeter | maths&go",
+    description: "Une activité collective de repérage spatial à projeter, de la maternelle au collège : toute la classe observe un placement, argumente puis vérifie les quatre cartes pas à pas."
+  },
+  {
     path: "outils/club_maths/index.html",
     title: "Jeux et explorations pour le club maths | maths&go",
     description: "Jeux de stratégie et explorations mathématiques pour chercher, conjecturer et raisonner en club maths ou en classe."
