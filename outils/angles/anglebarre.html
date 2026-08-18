@@ -2199,6 +2199,9 @@
     let html = `<polygon class="triangleShape" points="${points}"/>`;
 
     letters.forEach((letter,i) => {
+      const isRightAngle = model.type === "right" && letter === model.right;
+      if(isRightAngle) return;
+
       const others = letters.filter(l => l !== letter);
       const arc = angleArcPolyline(coords[letter], coords[others[0]], coords[others[1]], 46);
       html += `<polyline class="angleArc" points="${arc}" style="stroke:${angleColors[i].stroke}"/>`;
