@@ -74,32 +74,33 @@
     .home { overflow:auto; padding:clamp(12px,1.6vw,20px); }
     .home-inner { width:min(1120px,100%); margin:0 auto; display:grid; gap:13px;
       grid-template-columns:minmax(0,1.05fr) minmax(0,.95fr);
-      grid-template-areas:"copy demo" "copy levels"; align-items:start; }
+      grid-template-areas:"copy demo" "levels levels"; align-items:stretch; }
     .hero-copy { grid-area:copy; }
     .side-panel { grid-area:demo; }
     .levels-panel { grid-area:levels; background:white; border-radius:var(--radius);
-      box-shadow:var(--shadow); padding:clamp(14px,1.8vw,20px); }
+      box-shadow:var(--shadow); padding:clamp(12px,1.5vw,16px) clamp(14px,1.8vw,20px); }
     @media (max-width:900px) { .home-inner { grid-template-columns:1fr;
       grid-template-areas:"copy" "levels" "demo"; } }
     .hero-copy, .side-panel { background:white; border-radius:var(--radius); box-shadow:var(--shadow);
       padding:clamp(16px,2vw,24px); }
     .eyebrow { color:var(--orange); font-weight:900; text-transform:uppercase; letter-spacing:.1em; font-size:12px; }
-    h1 { margin:8px 0 10px; color:var(--navy); font-size:clamp(26px,4.6vw,38px); line-height:1.04; letter-spacing:-.03em; }
-    .lead { margin:0 0 14px; font-size:clamp(15px,1.9vw,18px); line-height:1.5; color:#405a73; }
-    .steps { display:grid; gap:9px; margin:0 0 18px; padding:0; list-style:none; }
-    .steps li { display:flex; align-items:center; gap:12px; padding:8px 12px; border-radius:13px;
+    h1 { margin:7px 0 9px; color:var(--navy); font-size:clamp(26px,4.2vw,34px); line-height:1.04; letter-spacing:-.03em; }
+    .lead { margin:0 0 11px; font-size:clamp(15px,1.8vw,17px); line-height:1.5; color:#405a73; }
+    .steps { display:grid; gap:8px; margin:0 0 14px; padding:0; list-style:none; }
+    .steps li { display:flex; align-items:center; gap:12px; padding:7px 11px; border-radius:13px;
       background:#f4f8fa; font-weight:700; line-height:1.35; }
     .step-num { flex:none; display:grid; place-items:center; width:34px; height:34px; border-radius:50%;
       color:white; background:var(--orange-art); font-weight:900; font-size:16px; }
-    .legend-note { margin:0; padding:12px 14px; border-left:5px solid var(--teal);
+    .legend-note { margin:0; padding:10px 13px; border-left:5px solid var(--teal);
       border-radius:12px; background:var(--teal-soft); font-weight:700; line-height:1.5; font-size:14px; }
     .legend-note .legend-cats { display:flex; align-items:center; gap:14px; margin-top:8px; }
     .legend-item { display:flex; align-items:center; gap:6px; font-size:13px; }
     .legend-item svg { width:30px; height:34px; overflow:visible; }
     .levels-title { margin:0 0 8px; color:var(--navy); font-size:19px; }
     .levels { display:grid; gap:10px; grid-template-columns:repeat(2,minmax(0,1fr)); }
+    @media (min-width:901px) { .levels { grid-template-columns:repeat(4,minmax(0,1fr)); } }
     @media (max-width:560px) { .levels { grid-template-columns:1fr; } }
-    .levels-sub { margin:0 0 10px; color:var(--muted); font-size:13px; font-weight:650; }
+    .levels-sub { margin:0 0 8px; color:var(--muted); font-size:13px; font-weight:650; }
     .level-button { display:flex; align-items:center; gap:13px; width:100%; padding:12px 15px;
       text-align:left; color:var(--navy); background:#eef3f7; border:2px solid transparent; }
     .level-button b { display:block; font-size:16px; }
@@ -109,13 +110,15 @@
     @media (hover:hover) { .level-button:hover { border-color:var(--teal-art); background:white; transform:translateY(-1px); } }
     .lv1 { background:#2aa79b; } .lv2 { background:#4a7bd0; } .lv3 { background:#f28c28; } .lv4 { background:#d1495b; }
 
-    .side-panel h2 { margin:0 0 8px; color:var(--navy); font-size:18px; }
-    #demo-card .card-map { width:min(100%,128px); }
+    .side-panel { display:flex; flex-direction:column; }
+    .side-panel h2 { margin:0 0 8px; color:var(--navy); font-size:20px; }
+    .side-panel .demo { flex:1; align-content:center; align-items:center; }
+    #demo-card .card-map { width:min(100%,200px); }
     .demo { display:grid; grid-template-columns:auto auto; gap:12px; justify-content:center; align-items:center;
       padding:10px; border:2px solid var(--line); border-radius:16px; background:var(--cream); }
     .demo-card-wrap, .demo-grid-wrap { text-align:center; }
-    .mini-label { display:block; margin-bottom:6px; font-size:11px; font-weight:900; text-transform:uppercase; color:var(--muted); }
-    .side-panel .foot-note { margin:8px 0 0; color:var(--muted); font-size:12px; line-height:1.5; }
+    .mini-label { display:block; margin-bottom:6px; font-size:12px; font-weight:900; text-transform:uppercase; color:var(--muted); }
+    .side-panel .foot-note { margin:12px 0 0; color:#4d6076; font-size:15px; line-height:1.55; }
     .side-panel .foot-note a { color:var(--teal); font-weight:750; }
 
     /* ---------- cartes logiques ---------- */
@@ -187,6 +190,23 @@
     .bench-slot .player-cat { width:78%; height:84%; }
     .bench.all-placed { opacity:.55; }
 
+    .bench-sep { width:2px; align-self:stretch; margin:6px 1px; border-radius:2px; background:#d3dde6; }
+    .token-slot { position:relative; display:grid; place-items:center; width:clamp(40px,7.6vw,54px); height:clamp(40px,7.6vw,54px);
+      appearance:none; padding:0; border:3px dashed #b8c6d2; border-radius:50%; background:transparent; cursor:pointer; transition:.15s ease; }
+    .token-slot.filled { border-style:solid; border-color:#dba7ae; background:white; }
+    .ghost-cat { filter:grayscale(.5); opacity:.92; }
+    .bench { flex-wrap:wrap; justify-content:center; }
+    .bench-group { display:flex; align-items:center; gap:clamp(6px,1.1vw,12px); }
+    .token-slot.selected { border-color:var(--orange-art); outline:4px solid rgba(242,140,40,.28); outline-offset:2px; transform:scale(1.08); }
+    .token-slot svg { width:58%; height:58%; }
+    .zone .token-mark { display:grid; place-items:center; width:52%; height:52%; pointer-events:none; }
+    .zone .token-mark svg { width:100%; height:100%; }
+    @media (max-width:600px) {
+      .bench { gap:clamp(4px,1.2vw,8px); padding:8px 9px; }
+      .bench-label { display:none; }
+      .bench-slot { width:clamp(42px,11vw,54px); height:clamp(42px,11vw,54px); }
+      .token-slot { width:clamp(36px,9.4vw,46px); height:clamp(36px,9.4vw,46px); }
+    }
     .drag-ghost { position:fixed; z-index:60; width:74px; height:84px; pointer-events:none;
       filter:drop-shadow(0 8px 14px rgba(31,58,104,.35)); transform:translate(-50%,-60%); }
     .drag-ghost svg { width:100%; height:100%; overflow:visible; }
@@ -290,14 +310,12 @@
               </div>
               <div class="demo-grid-wrap">
                 <span class="mini-label">Un placement qui marche</span>
-                <div class="placement-grid" id="demo-grid" style="--zone:38px; gap:5px; padding:3px; touch-action:auto;"></div>
+                <div class="placement-grid" id="demo-grid" style="--zone:clamp(38px,4.6vw,58px); gap:6px; padding:4px; touch-action:auto;"></div>
               </div>
             </div>
             <p class="foot-note">La carte du chat 2 dit&nbsp;: «&nbsp;devant moi il y a un chat, derrière moi il n’y a
               personne&nbsp;». Dans le placement de droite, c’est vrai&nbsp;! Il faut que les <b>quatre</b> cartes
               soient vraies en même temps.</p>
-            <p class="foot-note">Envie d’y jouer en vrai, avec des cerceaux ou des cartes plastifiées, ou de le
-              projeter en classe&nbsp;? Tout est réuni sur <a href="chat/index.html">la page du jeu</a>.</p>
           </aside>
         </div>
       </section>
@@ -402,6 +420,30 @@
       function catMark(wanted) {
         return `<span class="cat-mark" aria-hidden="true">${catSVG(null, wanted === 'X')}</span>`;
       }
+
+      function markSVG(type) {
+        if (type === 'x') return `<svg viewBox="0 0 100 100" aria-hidden="true" focusable="false">
+          <line x1="20" y1="20" x2="80" y2="80" stroke="#d1495b" stroke-width="15" stroke-linecap="round"/>
+          <line x1="80" y1="20" x2="20" y2="80" stroke="#d1495b" stroke-width="15" stroke-linecap="round"/></svg>`;
+        return `<svg viewBox="0 0 100 100" aria-hidden="true" focusable="false">
+          <text x="50" y="78" text-anchor="middle" font-family="Avenir Next,Segoe UI,system-ui,sans-serif" font-size="88" font-weight="900" fill="#1f3a68">?</text></svg>`;
+      }
+      function markHTML(type) { return `<span class="token-mark">${markSVG(type)}</span>`; }
+      const TOKEN_NAME = { x: 'croix « personne ici »' };
+      const GHOSTS = [5, 6, 7];                 // chats « ? » : là, mais on ne sait pas qui
+      const isGhost = (p) => p >= 5;
+      const pname = (p) => isGhost(p) ? '« ? »' : p;
+      const catContent = (p, cls = 'player-cat') =>
+        catSVG(isGhost(p) ? '?' : p, false, cls + (isGhost(p) ? ' ghost-cat' : ''));
+      function ghostsOnBoard() { return state.grid.flat().some(isGhost); }
+      function realCatsInBench() { return [1,2,3,4].some(p => state.bench.includes(p)); }
+      const HELP_LEVELS = [1, 2, 3, 4];   // niveaux avec les aides (3 chats « ? » + 2 croix) — modifier ici pour restreindre
+      function crossesLeft() {
+        let placed = 0;
+        state.marks.forEach(row => row.forEach(m => { if (m === 'x') placed += 1; }));
+        return Math.max(0, 2 - placed);
+      }
+
 
       function cardHTML(player, constraints, verdicts = null) {
         let result = null;
@@ -518,7 +560,8 @@
 
       function loadSerie() {
         state.grid = [[0,0,0],[0,0,0]];
-        state.bench = [1,2,3,4];
+        state.marks = [[null,null,null],[null,null,null]];
+        state.bench = HELP_LEVELS.includes(state.level) ? [1,2,3,4, ...GHOSTS] : [1,2,3,4];
         state.selected = null;
         state.attempts = 0;
         state.phase = 'playing';
@@ -532,7 +575,9 @@
         $('#next-button').hidden = true;
         $('#solution-button').hidden = true;
         $('#verify-button').hidden = false;
-        setFeedback('neutral', `<strong>À toi de jouer.</strong> Place les quatre chats, puis appuie sur «&nbsp;Vérifier&nbsp;».`);
+        setFeedback('neutral', HELP_LEVELS.includes(state.level)
+          ? `<strong>À toi de jouer.</strong> Place les quatre chats, puis vérifie. Pour t’aider&nbsp;: un chat <b>?</b> = «&nbsp;quelqu’un ici, je ne sais pas encore qui&nbsp;», une <b style="color:var(--red)">croix</b> = «&nbsp;personne ici&nbsp;». Remplace les <b>?</b> par les vrais chats avant de vérifier.`
+          : `<strong>À toi de jouer.</strong> Place les quatre chats, puis appuie sur «&nbsp;Vérifier&nbsp;».`);
         renderCards();
         renderPlacement();
         $('#serie-title').focus({ preventScroll: true });
@@ -557,49 +602,96 @@
         const selected = state.selected;
         const grid = $('#placement-grid');
         grid.innerHTML = state.grid.flat().map((player, cell) => {
+          const mark = state.marks[Math.floor(cell / COLS)][cell % COLS];
           const classes = ['zone'];
           if (player) classes.push('filled');
           if (locked) classes.push('locked');
           const isSelected = selected && selected.from === 'grid' && selected.cell === cell;
           if (isSelected) classes.push('selected');
           if (selected && !isSelected && !locked) classes.push('target');
-          let label = player ? `Cercle ${cell + 1} : chat ${player}` : `Cercle ${cell + 1} : vide`;
+          let label = player ? `Cercle ${cell + 1} : chat ${pname(player)}`
+            : mark ? `Cercle ${cell + 1} : ${TOKEN_NAME[mark]}` : `Cercle ${cell + 1} : vide`;
           if (!locked) {
             if (isSelected) label += ' — sélectionné, touche à nouveau pour annuler';
-            else if (selected && player) label += ` — toucher pour échanger avec le chat ${selected.player}`;
-            else if (selected) label += ` — toucher pour y poser le chat ${selected.player}`;
+            else if (selected && selected.from === 'supply') label += player ? '' : ` — toucher pour poser une ${TOKEN_NAME[selected.token]}`;
+            else if (selected && player) label += ` — toucher pour échanger avec le chat ${pname(selected.player)}`;
+            else if (selected) label += ` — toucher pour y poser le chat ${pname(selected.player)}`;
             else if (player) label += ' — toucher pour le prendre';
+            else if (mark) label += ' — toucher pour l’enlever';
           }
-          return `<button class="${classes.join(' ')}" type="button" data-cell="${cell}" aria-label="${label}"${locked ? ' disabled' : ''}>${player ? catSVG(player, false, 'player-cat') : ''}</button>`;
+          const content = player ? catContent(player) : mark ? markHTML(mark) : '';
+          return `<button class="${classes.join(' ')}" type="button" data-cell="${cell}" aria-label="${label}"${locked ? ' disabled' : ''}>${content}</button>`;
         }).join('');
 
         const bench = $('#bench');
-        bench.classList.toggle('all-placed', state.bench.length === 0);
-        bench.innerHTML = `<span class="bench-label">Chats à placer</span>` + [1,2,3,4].map(player => {
+        bench.classList.toggle('all-placed', !realCatsInBench());
+        const slotHTML = (player) => {
           const here = state.bench.includes(player);
           const isSelected = selected && selected.from === 'bench' && selected.player === player;
           const classes = ['bench-slot'];
           if (here) classes.push('filled');
           if (isSelected) classes.push('selected');
-          let label = here ? `Chat ${player}, à placer` : `Place vide du chat ${player}`;
-          if (isSelected) label = `Chat ${player} sélectionné — touche un cercle pour le poser`;
-          else if (!here && selected) label = `Reposer le chat ${selected.player} ici`;
-          return `<button class="${classes.join(' ')}" type="button" data-bench="${player}" aria-label="${label}"${state.phase !== 'playing' ? ' disabled' : ''}>${here ? catSVG(player, false, 'player-cat') : ''}</button>`;
-        }).join('');
+          let label = here
+            ? (isGhost(player) ? 'Chat « ? » — pose-le quand tu sais qu’il y a un chat, sans savoir encore lequel' : `Chat ${player}, à placer`)
+            : `Place vide du chat ${pname(player)}`;
+          if (isSelected) label = `Chat ${pname(player)} sélectionné — touche un cercle pour le poser`;
+          else if (!here && selected && selected.from === 'grid') label = `Reposer le chat ${pname(selected.player)} ici`;
+          return `<button class="${classes.join(' ')}" type="button" data-bench="${player}" aria-label="${label}"${state.phase !== 'playing' ? ' disabled' : ''}>${here ? catContent(player) : ''}</button>`;
+        };
+        const helpOn = HELP_LEVELS.includes(state.level);
+        bench.innerHTML = `<span class="bench-label">Chats à placer</span>`
+          + `<span class="bench-group">` + [1,2,3,4].map(slotHTML).join('') + `</span>`
+          + (!helpOn ? '' :
+            `<span class="bench-sep" aria-hidden="true"></span>`
+            + `<span class="bench-group">` + GHOSTS.map(slotHTML).join('') + `</span>`
+            + `<span class="bench-sep" aria-hidden="true"></span>`
+            + `<span class="bench-group">` + (() => {
+              const left = crossesLeft();
+              const supplySelected = selected && selected.from === 'supply';
+              return [0, 1].map(i => {
+                const here = i < left;
+                const isSelected = supplySelected && here && i === left - 1;
+                let label = here ? 'Croix « personne ici » — à poser dans un cercle que tu crois vide'
+                  : 'Croix déjà posée sur le plateau';
+                if (isSelected) label = 'Croix sélectionnée — touche un cercle vide pour la poser, ou ici pour annuler';
+                return `<button class="token-slot${here ? ' filled' : ''}${isSelected ? ' selected' : ''}" type="button" data-token="x" aria-label="${label}" title="croix « personne ici »"${state.phase !== 'playing' || !here ? ' disabled' : ''}>${here ? markSVG('x') : ''}</button>`;
+              }).join('');
+            })() + `</span>`);
 
-        $('#verify-button').disabled = state.bench.length > 0 || state.phase !== 'playing';
+        const ghostsLeft = ghostsOnBoard();
+        $('#verify-button').disabled = realCatsInBench() || ghostsLeft || state.phase !== 'playing';
+        if (state.phase === 'playing' && !realCatsInBench() && state.attempts === 0) {
+          if (ghostsLeft) {
+            setFeedback('neutral', `<strong>Presque&nbsp;!</strong> Il reste des chats «&nbsp;?&nbsp;» sur le plateau — remplace-les par les vrais chats, puis vérifie.`);
+          } else {
+            setFeedback('neutral', `<strong>Tout est prêt.</strong> Appuie sur «&nbsp;Vérifier&nbsp;» — et déplace encore les chats si tu veux.`);
+          }
+        }
       }
 
       /* ------------------------------------------------- interactions tap */
       function tapZone(cell) {
         if (state.phase !== 'playing') return;
-        const player = state.grid[Math.floor(cell / COLS)][cell % COLS];
+        const r = Math.floor(cell / COLS), c = cell % COLS;
+        const player = state.grid[r][c];
+        const mark = state.marks[r][c];
         const sel = state.selected;
         if (sel) {
           if (sel.from === 'grid' && sel.cell === cell) { state.selected = null; }
+          else if (sel.from === 'supply') {
+            if (!player) {
+              if (mark === 'x') state.marks[r][c] = null;             // repose la croix dans le banc
+              else if (crossesLeft() > 0) {
+                state.marks[r][c] = 'x';
+                if (crossesLeft() === 0) state.selected = null;       // plus de croix : on désélectionne
+              }
+            }
+          }
           else { movePlayer(sel, { to:'grid', cell }); state.selected = null; }
         } else if (player) {
           state.selected = { from:'grid', player, cell };
+        } else if (mark) {
+          state.marks[r][c] = null;      // toucher une marque seule l'enlève
         }
         renderPlacement();
       }
@@ -640,6 +732,7 @@
           grid[fr][fc] = occupant;      // échange (ou 0 si cercle vide)
           grid[r][c] = from.player;
         }
+        state.marks[r][c] = null;        // un chat chasse la marque du cercle
         clearVerdicts();
       }
 
@@ -654,10 +747,15 @@
         const zone = target.closest('[data-cell]');
         if (zone) {
           const cell = Number(zone.dataset.cell);
-          const player = state.grid[Math.floor(cell / COLS)][cell % COLS];
+          const r = Math.floor(cell / COLS), c = cell % COLS;
+          const player = state.grid[r][c];
           if (player) return { from:'grid', player, cell };
+          const mark = state.marks[r][c];
+          if (mark) return { from:'mark', token: mark, cell };
           return null;
         }
+        const tokenSlot = target.closest('[data-token]');
+        if (tokenSlot) return crossesLeft() > 0 ? { from:'supply', token:'x' } : null;
         const slot = target.closest('[data-bench]');
         if (slot) {
           const player = Number(slot.dataset.bench);
@@ -685,7 +783,9 @@
           drag.moved = true;
           drag.ghost = document.createElement('div');
           drag.ghost.className = 'drag-ghost';
-          drag.ghost.innerHTML = catSVG(drag.source.player, false);
+          drag.ghost.innerHTML = drag.source.player
+            ? catContent(drag.source.player, '')
+            : markSVG(drag.source.token);
           document.body.appendChild(drag.ghost);
           if (state.selected) { state.selected = null; renderPlacement(); }
         }
@@ -722,7 +822,16 @@
         if (!wasDrag) return;             // simple toucher : géré par le clic
         const target = dropTargetAt(event.clientX, event.clientY);
         if (target) {
-          if (target.to === 'bench' && source.from === 'grid') movePlayer(source, { to:'bench' });
+          const isMarkSource = source.from === 'supply' || source.from === 'mark';
+          if (isMarkSource) {
+            if (source.from === 'mark') state.marks[Math.floor(source.cell / COLS)][source.cell % COLS] = null;
+            if (target.to === 'grid') {
+              const r = Math.floor(target.cell / COLS), c = target.cell % COLS;
+              if (!state.grid[r][c] && (source.from === 'mark' || crossesLeft() > 0)) state.marks[r][c] = source.token;
+            }
+            // déposé sur le banc (ou dans le vide) : la marque disparaît simplement
+          }
+          else if (target.to === 'bench' && source.from === 'grid') movePlayer(source, { to:'bench' });
           else if (target.to === 'grid') movePlayer(source, { to:'grid', cell:target.cell });
         }
         state.selected = null;
@@ -737,7 +846,7 @@
 
       /* ------------------------------------------------- vérification */
       function verify() {
-        if (state.bench.length > 0 || state.phase !== 'playing') return;
+        if (realCatsInBench() || ghostsOnBoard() || state.phase !== 'playing') return;
         state.attempts += 1;
         const serie = currentSerie();
         const verdicts = {};
@@ -763,6 +872,7 @@
           $('#solution-button').hidden = true;
           $('#next-button').hidden = false;
           $('#next-button').classList.add('success-pop');
+          state.marks = [[null,null,null],[null,null,null]];
           renderPlacement();
           document.querySelectorAll('#placement-grid .zone.filled').forEach(z => z.classList.add('cheer'));
         } else {
@@ -779,6 +889,7 @@
         if (state.phase !== 'playing') return;
         const serie = currentSerie();
         state.grid = serie.sols[0].map(row => row.slice());
+        state.marks = [[null,null,null],[null,null,null]];
         state.bench = [];
         state.selected = null;
         state.phase = 'shown';
@@ -820,6 +931,15 @@
           if (zone && !drag.moved) tapZone(Number(zone.dataset.cell));
         });
         $('#bench').addEventListener('click', (event) => {
+          const token = event.target.closest('[data-token]');
+          if (token && !drag.moved) {
+            if (state.phase !== 'playing') return;
+            const sel = state.selected;
+            state.selected = (sel && sel.from === 'supply') ? null
+              : (crossesLeft() > 0 ? { from:'supply', token:'x' } : null);
+            renderPlacement();
+            return;
+          }
           const slot = event.target.closest('[data-bench]');
           if (slot && !drag.moved) tapBench(Number(slot.dataset.bench));
           else if (!slot && state.selected && state.selected.from === 'grid' && !drag.moved) {
