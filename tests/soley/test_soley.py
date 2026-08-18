@@ -370,17 +370,18 @@ def principal():
         page.goto(url, wait_until="load")
         page.wait_for_function("() => window.SOLEY && window.SOLEY.LV")
 
-        # T8a — seuils de déblocage : ⌈5/8 des niveaux du monde précédent⌉ (lagon à 11 → canne à 7, canne à 8 → forêt à 5)
+        # T8a — seuils de déblocage : ⌈5/8 des niveaux du monde précédent⌉
+        # (lagon 11 → canne à 7 ; canne 9 → pitons à 6 ; pitons 7 → forêt à 5 ;
+        #  forêt 10 → volcan à 7 — ordre du lot pitons-2)
         seuils = page.evaluate("() => window.SOLEY.LV.length === 73 && [0,1,2,3,4,5,6,7,8].map(i => window.SOLEY.seuilMonde(i))")
-        # lot pitons-1 : les pitons passent à 9 niveaux, le seuil des soleils à ⌈5×9/8⌉ = 6
-        section("T8 seuils de déblocage ⌈5/8⌉ par monde", seuils == [0, 7, 6, 5, 5, 6, 5, 4, 5],
+        section("T8 seuils de déblocage ⌈5/8⌉ par monde", seuils == [0, 7, 6, 5, 7, 5, 5, 4, 5],
                 f"{seuils}")
 
         # T8b — sauvegarde vierge : seul Le lagon est ouvert
         verrous = page.evaluate("""() => [...document.querySelectorAll('.wrow')]
           .map(b => b.dataset.w + (b.classList.contains('locked') ? ':fermé' : ':ouvert'))""")
         section("T8 accueil neuf : lagon ouvert, les 8 autres mondes fermés",
-                verrous == ["lagon:ouvert", "canne:fermé", "foret:fermé", "volcan:fermé", "pitons:fermé",
+                verrous == ["lagon:ouvert", "canne:fermé", "pitons:fermé", "foret:fermé", "volcan:fermé",
                             "soleils:fermé", "marche:fermé", "tunnels:fermé", "mafate:fermé"],
                 ", ".join(verrous))
 
@@ -431,22 +432,22 @@ def principal():
         pg4.set_default_timeout(15000)
         pg4.goto(url, wait_until="load")
         pg4.wait_for_function("() => window.SOLEY && window.SOLEY.LV")
-        # T8 + T13 — LE CHEMIN DE L'ÉCOLE (08/2026) : le lagon fini ouvre le champ de
-        # canne ET la forêt, l'école suivante, sans qu'un niveau de la canne soit joué.
-        # Mais le volcan, lui, reste fermé : la forêt est déjà une école, elle n'a
-        # qu'une porte et rien à contourner.
+        # T8 + T13 — LE CHEMIN DE L'ÉCOLE (08/2026, réordonné au lot pitons-2) : le
+        # lagon fini ouvre le champ de canne ET les pitons, l'école suivante, sans
+        # qu'un niveau de la canne soit joué. Mais la forêt, elle, attend les pitons :
+        # les pitons sont déjà une école, elle n'a qu'une porte et rien à contourner.
         etat = pg4.evaluate("""() => {
           const ouvert = w => !document.querySelector(`.wrow[data-w='${w}']`).classList.contains('locked');
           const cond = w => (document.querySelector(`.wrow[data-w='${w}'] .wcond`) || {}).textContent || '';
-          return { canne: ouvert('canne'), foret: ouvert('foret'), volcan: ouvert('volcan'),
-                   condVolcan: cond('volcan').replace(/\\s+/g, ' ').trim() };
+          return { canne: ouvert('canne'), pitons: ouvert('pitons'), foret: ouvert('foret'),
+                   condForet: cond('foret').replace(/\\s+/g, ' ').trim() };
         }""")
         section("T8 après 8 réussites au lagon (dont les 5 découvertes) : canne ouverte",
                 etat["canne"], "")
-        section("T13 chemin de l'école : le lagon fini ouvre AUSSI la forêt, sans "
+        section("T13 chemin de l'école : le lagon fini ouvre AUSSI les pitons, sans "
                 "toucher à la canne",
-                etat["foret"] and not etat["volcan"],
-                f"forêt={etat['foret']}, volcan={etat['volcan']} — {etat['condVolcan']}")
+                etat["pitons"] and not etat["foret"],
+                f"pitons={etat['pitons']}, forêt={etat['foret']} — {etat['condForet']}")
         pg4.click(".wrow[data-w='lagon']")
         cartes = pg4.evaluate("""() => ({
           zigzagPleins: document.querySelectorAll(".lvcard[data-i='1'] .sunico.plein").length,

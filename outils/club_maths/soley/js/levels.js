@@ -30,9 +30,13 @@ const WORLDS=[
     où deux points de cours sont entrés dans le monde. Le champ garde son identité —
     on y cherche bien plus qu'on n'y apprend — mais il ne se contredit plus. */
  {id:'canne',label:'Les champs de canne',pal:'6e',blurb:'La coupe ! Ici on cherche bien plus qu’on n’apprend : le surplus de pièces, les portes des cases et les fruits marqués font le casse-tête — deux parts nouvelles, le neuvième et le douzième, s’expliquent au passage.'},
+ /* Les pitons passent en monde 3 (lot pitons-2, 17/08) : l'équivalence et la
+    comparaison s'enseignent AVANT que la forêt exige les doubles écritures — la 1re
+    case à double écriture passe du 35e au ~20e niveau. Décision de Gwenael (16/08,
+    « en sixième, c'est plus facile que l'addition ») : le palier suit, 6e-5e. */
+ {id:'pitons',ecole:true,label:'Les pitons',pal:'6e-5e',blurb:'Équivalences et comparaisons : les passes étroites ne laissent passer que les rayons assez fins.'},
  {id:'foret',ecole:true,label:'La forêt',pal:'5e',blurb:'Additionner des fractions avec la lentille — et chercher, parfois longtemps, comment fabriquer la bonne part.'},
  {id:'volcan',ecole:true,label:'Le volcan',pal:'4e',blurb:'Multiplier avec les loupes, dépasser 1, reconstruire des rayons entiers.'},
- {id:'pitons',ecole:true,label:'Les pitons',pal:'5e-4e',blurb:'Équivalences et comparaisons : les passes étroites ne laissent passer que les rayons assez fins.'},
  {id:'soleils',ecole:true,label:'Les soleils',pal:'4e',blurb:'Soleils multiples, soleils fractions, soleil géant : il faut composer avec ce que le ciel te donne.'},
  {id:'marche',ecole:true,label:'Le marché',pal:'5e-3e',blurb:'0,5 ; 25 % ; 3/4… toutes les écritures d’une même part.'},
  {id:'tunnels',label:'Les tunnels',pal:'6e-4e',blurb:'Des galeries étroites creusées dans la roche : ici, le chemin et les pièces scellées font le casse-tête.'},
@@ -324,182 +328,10 @@ const LV=[
   tools:[s2(1,0,2),s3(1,0,1,2),s3(0,1,2,3),s2(2,1,3),b(1,2),b(0,1),b(2,1)],
   sol:[[0,1,3],[2,1,1],[3,1,5],[1,3,5],[5,3,3],[4,7,1],[6,7,3]],solMin:[[0,1,3],[2,1,0],[3,1,5],[4,3,0],[6,3,3],[1,3,5]]},
 
- /* ---------- La forêt (5e) ---------- */
- /* La consigne promettait la lentille pour GAGNER — faux : une case 1/1 sous un
-    soleil 1 ne la force jamais (règle §5.16), 196 victoires en 3 pièces sans elle.
-    Mais mesuré le 17/08 (espace éclairé COMPLET, E = 11 056) : sans lentille,
-    AUCUNE victoire ne ramasse les deux goyaviers — Gtout = 0. La promesse est
-    donc vraie une couche plus haut : elle est déplacée sur les fruits, où le
-    solveur la tient. Rtout/R = 130, le vrai travail du niveau est bien là. */
- {w:'foret',name:"Recoller les morceaux",
-  sub:"Pour gagner, contourne les fougères. Mais pour cueillir les deux goyaviers, il faudra couper le rayon, puis le recoller avec la lentille : elle additionne deux rayons.",
-  cols:9,rows:7,suns:[{x:0,y:3,dir:1}],
-  targets:[{x:8,y:3,need:[1,1]}],
-  rocks:[[4,2],[4,3],[4,4]],fruits:[[4,1],[4,5]],
-  tools:[s2(1,0,2),b(0,1),b(1,2),b(2,1),b(1,0),mg(2,0,1)],
-  sol:[[0,2,3],[1,2,1],[2,6,1],[3,2,5],[4,6,5],[5,6,3]]},
-
- /* Découverte de la SOMME (08/2026). Elle passe devant « Trois quarts » : la forêt
-    donnait le cas dur (dénominateurs différents) AVANT le cas simple (même
-    dénominateur). Ce niveau force sa notion — sans lentille dans la boîte, le
-    solveur ne trouve aucune victoire, parce que 2/3 ne s'obtient pas d'un seul
-    rayon. C'est la règle du lot : un niveau qui enseigne doit être ingagnable
-    sans la pièce de sa notion. */
- {w:'foret',name:"Deux tiers",dec:'somme',
-  sub:"La case veut 2/3. Et ton prisme ne sait donner que des tiers… (Il y a une pièce en trop.)",
-  hint:"2/3 = 1/3 + 1/3. La lentille sait recoller deux tiers.",
-  cols:9,rows:7,suns:[{x:0,y:3,dir:1}],
-  targets:[{x:8,y:3,need:[2,3]}],
-  rocks:[[3,2],[5,2],[4,4],[7,1],[1,5]],fruits:[[4,1]],
-  tools:[s3(1,0,1,2),b(0,1),b(1,2),mg(2,1,1),b(2,1)],
-  sol:[[0,2,3],[1,2,1],[2,6,1],[3,6,3]]},
-
- /* Découverte du MÊME DÉNOMINATEUR (08/2026) — le cas dur, désormais APRÈS le cas
-    simple. Forcé lui aussi : 3/4 ne s'obtient pas d'un seul rayon. Son bloc de
-    données ne change pas d'un octet, seuls sa place et son champ `dec` bougent. */
- {w:'foret',name:"Trois quarts",dec:'denominateur',
-  sub:"Une seule case, et elle veut 3/4. Ton soleil vaut 1… à toi de chercher !",
-  hint:"3/4, c'est un demi plus un quart. Fabrique les deux morceaux, puis recolle-les.",
-  cols:9,rows:7,suns:[{x:0,y:3,dir:1}],
-  targets:[{x:8,y:3,need:[3,4]}],
-  rocks:[[4,3],[7,5],[1,1]],fruits:[[4,1]],
-  tools:[s2(1,0,2),s2(2,1,2),b(0,1),b(1,2),b(1,0),mg(2,0,1)],
-  sol:[[0,2,3],[1,2,4],[2,2,1],[3,6,1],[4,6,4],[5,6,3]]},
-
- /* « Les sixièmes » a été RETIRÉ le 16/08 (décision de Gwenael, audit d'organisation
-    §6 Q1). Il s'étonnait — « Des cases à 1/6 ?! » — d'une notion que le lagon
-    enseigne au 9ᵉ niveau et que les champs de canne font chercher au 18ᵉ, et il la
-    servait pour la troisième fois au 22ᵉ, en deux pièces et une seule pose gagnante
-    (R = 14, le 11ᵉ niveau le plus facile du jeu). Même profil que « Quarts en
-    croix », retiré le 15/08. Son geste exact — 1/3 ÷ 2 — reste joué au « Grand
-    réseau » (tunnels) et à « L'entrée du cirque » (Mafate). */
-
- {w:'foret',name:"Les huitièmes",
-  /* consigne réécrite (08/2026) : elle s'étonnait d'un huitième que les champs de
-     canne servent déjà depuis « Le grand tri ». On ne fait plus découvrir ce qui
-     est connu — on pose la vraie question du niveau : combien de coupes ?
-     Lot H : « un huitième par case » restait faux — les quatre cases valent
-     1/2, 1/8, 1/8 et 1/4. Seul le compte des huitièmes est annoncé désormais. */
-  sub:"Deux cases veulent un huitième, et la boîte ne sait couper qu'en deux. Combien de coupes faut-il ?",
-  hint:"La moitié de la moitié de la moitié : 1/2 ÷ 2 ÷ 2 = 1/8.",
-  cols:10,rows:7,suns:[{x:0,y:3,dir:1}],
-  targets:[{x:9,y:1,need:[1,2]},{x:9,y:2,need:[1,8]},{x:9,y:4,need:[1,8]},{x:2,y:6,need:[1,4]}],
-  rocks:[[4,2],[7,3],[3,5],[6,6],[8,0],[1,1]],
-  fruits:[[4,1],[3,4],[2,5]],
-  tools:[s2(1,0,2),s2(2,1,2),s2(1,0,1),b(0,1),b(0,1)],
-  sol:[[0,2,3],[1,2,4],[2,5,4],[3,2,1],[4,5,2]]},
-
- {w:'foret',name:"Cinq sixièmes",
-  sub:"5/6. Le plus difficile des partages de la forêt. Cherche bien !",
-  hint:"5/6 = 1/2 + 1/3. Et pour obtenir 1/3 : recolle deux sixièmes.",
-  cols:10,rows:7,suns:[{x:0,y:3,dir:1}],
-  targets:[{x:9,y:3,need:[5,6]}],
-  rocks:[[4,3],[0,6],[9,0],[5,2]],fruits:[[4,1],[3,5]],
-  tools:[s2(1,0,2),s3(2,1,2,3),mg(1,0,1),mg(2,0,1),b(0,1),b(1,2),b(2,1),b(1,0),b(1,0)],
-  sol:[[0,2,3],[1,2,4],[2,5,4],[3,7,3],[4,2,1],[5,7,1],[6,2,5],[7,5,5],[8,7,4]]},
-
- {w:'foret',name:"Les douzièmes",
-  /* Lot H : le pluriel mentait — il n'y a QU'UN douzième, et la case 1/2 passait
-     sous silence. Les trois cases sont nommées, le désaccord devient à trois. */
-  sub:"Un douzième, un quart, un demi : trois cases qui n'ont pas l'air d'accord entre elles…",
-  hint:"1/6 + 1/12 = 2/12 + 1/12 = 3/12. Simplifie !",
-  cols:10,rows:7,suns:[{x:0,y:3,dir:1}],
-  targets:[{x:9,y:1,need:[1,4]},{x:9,y:5,need:[1,12]},{x:2,y:6,need:[1,2]}],
-  rocks:[[6,3],[1,1],[8,4],[3,6],[6,6]],fruits:[[3,1],[6,2],[4,4]],
-  tools:[s2(1,0,2),s3(1,1,2,0),s2(2,1,2),mg(1,0,1),b(0,1),b(1,0),b(2,1),b(1,2)],
-  sol:[[0,2,3],[1,4,1],[2,4,2],[3,7,1],[4,2,1],[5,7,2],[6,4,5]]},
-
- /* Renommé au lot H, avec les mots de sa propre consigne (« Traverse le champ de
-    fougères ») : la forêt est peinte en FOUGÈRES, le titre et la consigne cessent
-    de se contredire sans qu'on touche à la consigne. Aucune ligne CALC — vérifié. */
- {w:'foret',name:"Le champ de fougères",
-  sub:"Traverse le champ de fougères et ramasse les fruits au passage. Attention, il y a des pièces en trop !",
-  cols:10,rows:8,suns:[{x:0,y:4,dir:1}],
-  targets:[{x:9,y:1,need:[1,2]},{x:9,y:6,need:[1,2]}],
-  rocks:[[4,4],[5,4],[6,4],[5,3],[5,5],[7,3],[3,2],[8,3],[3,0],[7,7]],
-  fruits:[[2,3],[5,1],[6,6]],
-  tools:[s2(1,0,2),b(0,1),b(2,1),b(1,0),b(1,2)],
-  sol:[[0,2,4],[1,2,1],[2,2,6]]},
-
- {w:'foret',name:"La clairière",
-  sub:"Deux cases dans la clairière : 2/3 et 1/3. Les fougères ne te laisseront pas faire simple…",
-  hint:"2/3, c'est deux tiers recollés. Il faudra les amener au même endroit.",
-  cols:10,rows:7,suns:[{x:0,y:3,dir:1}],
-  targets:[{x:9,y:2,need:[2,3]},{x:9,y:5,need:[1,3]}],
-  rocks:[[5,3],[6,3],[3,4],[7,1],[8,4],[1,6],[4,0]],
-  fruits:[[4,1],[5,2],[6,5]],
-  tools:[s3(1,0,1,2),b(0,1),b(1,2),b(1,0),b(0,1),mg(2,1,1),b(2,1),b(1,0)],
-  sol:[[0,2,3],[1,2,1],[2,6,1],[3,4,3],[4,4,2],[5,6,2],[6,2,5]]},
-
- /* ---------- Le volcan (4e) ---------- */
- {w:'volcan',name:"La loupe",
-  sub:"Nouvel outil : la loupe ×2 concentre le rayon et le multiplie par 2. Observe l'épaisseur !",
-  cols:9,rows:6,suns:[{x:0,y:2,dir:1}],
-  targets:[{x:3,y:0,need:[1,3]},{x:8,y:2,need:[2,3]},{x:3,y:5,need:[1,3]}],
-  rocks:[[6,4],[1,4],[6,0]],fruits:[[3,4]],
-  tools:[s3(1,0,1,2),x2(1,1)],sol:[[0,3,2],[1,5,2]]},
-
- {w:'volcan',name:"Trois demis",
-  sub:"Une case demande 3/2. Plus grand qu'un rayon entier ?! La loupe ×3 est là…",
-  hint:"Que donne 1/2 × 3 ?",
-  cols:9,rows:6,suns:[{x:0,y:2,dir:1}],
-  targets:[{x:8,y:1,need:[3,2]},{x:8,y:4,need:[1,2]}],
-  rocks:[[4,2],[5,2],[7,3],[1,5]],fruits:[[4,1],[5,4]],
-  tools:[s2(1,0,2),b(0,1),x3(1,1),b(2,1)],
-  sol:[[0,2,2],[1,2,1],[2,5,1],[3,2,4]]},
-
- {w:'volcan',name:"Bouquet de neuvièmes",
-  sub:"Des neuvièmes… des tiers de tiers ! Et une grande case à 2/3.",
-  hint:"1/3 ÷ 3 = 1/9. Et 2/3 = 1/3 + 1/3, la lentille s'en charge.",
-  cols:10,rows:8,suns:[{x:0,y:4,dir:1}],
-  targets:[{x:9,y:1,need:[2,3]},{x:0,y:5,need:[1,9]},{x:9,y:5,need:[1,9]}],
-  rocks:[[5,3],[7,4],[4,6],[8,6],[1,2]],
-  fruits:[[4,1],[3,3],[6,5]],
-  tools:[s3(1,0,1,2),s3(2,1,2,3),mg(1,0,1),b(0,1),b(1,0),b(0,1),b(1,0)],
-  sol:[[0,2,4],[1,2,5],[2,6,1],[3,2,1],[4,3,4],[5,3,2],[6,6,2]]},
-
- {w:'volcan',name:"Deux neuvièmes",
-  /* Lot H : la quatrième case, 1/3, n'était jamais nommée. */
-  sub:"2/9, 1/9, un tiers, et un rayon entier à reconstruire. Les loupes vont chauffer.",
-  hint:"1/9 × 2 = 2/9. Et 1/3 × 3 = 1 : le rayon entier renaît.",
-  cols:10,rows:8,suns:[{x:0,y:4,dir:1}],
-  targets:[{x:9,y:1,need:[2,9]},{x:9,y:2,need:[1,9]},{x:9,y:4,need:[1,1]},{x:2,y:7,need:[1,3]}],
-  rocks:[[5,3],[7,3],[3,6],[6,6],[1,2],[8,5]],
-  fruits:[[3,4],[5,1],[2,6]],
-  tools:[s3(1,0,1,2),s3(1,1,2,0),x2(1,1),x3(1,1),b(0,1),b(2,1)],
-  sol:[[0,2,4],[1,4,1],[2,6,1],[3,6,4],[4,2,1],[5,4,2]]},
-
- {w:'volcan',name:"Le grand labyrinthe",
-  sub:"Un vrai labyrinthe ! Trouve les passages dans la muraille — et il y a des pièces en trop.",
-  hint:"Cherche les deux brèches dans la muraille : une en haut, une en bas.",
-  cols:10,rows:8,suns:[{x:0,y:3,dir:1}],
-  targets:[{x:8,y:0,need:[1,2]},{x:0,y:4,need:[1,4]},{x:9,y:6,need:[1,4]}],
-  rocks:[[3,0],[3,2],[3,3],[3,5],[3,6],[5,0],[7,0],[5,2],[6,2],[6,5],[5,7],[7,7],[1,6],[1,1]],
-  fruits:[[5,1],[3,4],[7,6]],
-  tools:[s2(1,0,2),s2(2,1,3),b(0,1),b(1,0),b(1,2),b(2,1),b(1,2),b(2,3)],
-  sol:[[0,2,3],[1,2,4],[2,2,1],[3,8,1],[4,4,4],[5,4,6]]},
-
- {w:'volcan',name:"L'éruption",
-  sub:"Une case demande un rayon entier — mais tout ce que tu sais découper est bien plus petit…",
-  hint:"Multiplier peut réparer ce qu'on a coupé : un sixième devient un tiers avec ×2, puis un entier avec ×3.",
-  cols:10,rows:7,suns:[{x:0,y:3,dir:1}],
-  targets:[{x:9,y:1,need:[1,2]},{x:0,y:4,need:[1,6]},{x:9,y:4,need:[1,1]}],
-  rocks:[[4,2],[6,2],[5,5],[3,6],[8,2],[6,6],[1,1]],
-  fruits:[[4,1],[3,4],[2,6]],
-  tools:[s2(1,0,2),s3(2,1,2,3),x2(1,1),x3(1,1),b(0,1),x2(1,1)],
-  sol:[[0,2,3],[1,2,4],[2,5,4],[3,7,4],[4,2,1]]},
-
- {w:'volcan',name:"Défi du volcan",
-  sub:"Couper, recoller, multiplier — tout à la fois. Bonne chance !",
-  hint:"3/4 = 1/2 + 1/4. Et un quart passé à la loupe ×2 devient un demi.",
-  cols:10,rows:8,suns:[{x:0,y:4,dir:1}],
-  targets:[{x:9,y:2,need:[3,4]},{x:9,y:6,need:[1,2]}],
-  rocks:[[4,4],[6,4],[7,4],[1,1],[7,0],[0,7],[8,5],[4,5]],
-  fruits:[[4,2],[3,4],[7,6]],
-  tools:[s2(1,0,2),s2(2,1,2),mg(1,0,1),x2(1,1),b(0,1),b(0,1),b(1,0),b(1,0),b(2,1),x3(1,1),b(1,2)],
-  sol:[[0,2,4],[1,2,5],[2,5,2],[3,5,6],[4,2,2],[5,3,3],[6,3,5],[7,5,3],[8,2,6]]},
-
- /* ---------- Les pitons (équivalences & comparaisons) ---------- */
+ /* ---------- Les pitons (équivalences & comparaisons) — monde 3 depuis le lot
+    pitons-2 (17/08) : cinq de ses sept niveaux n'ont jamais eu besoin de la
+    lentille, et l'équivalence s'enseigne désormais AVANT que la forêt l'exige.
+    La première passe du jeu s'explique ici (« Quel rayon passe ? »). ---------- */
  /* Les pitons enseignent ENFIN ce qu'ils font (lot E, 16/08). Ce monde s'appelle
     « Équivalences et comparaisons » depuis le premier jour et n'avait AUCUN point de
     cours : l'élève voyait 2/4 sur une case sans qu'on lui ait jamais dit pourquoi
@@ -524,17 +356,8 @@ const LV=[
   rocks:[[6,3],[2,5]],fruits:[[4,2]],
   tools:[s2(1,0,2),s2(0,1,3)],sol:[[0,4,3],[1,4,1]]},
 
- {w:'pitons',name:"La passe étroite",
-  sub:"Nouveau : la passe ! Elle ne laisse passer que les rayons assez fins (1/2 au maximum). Le rayon entier est trop épais.",
-  cols:9,rows:6,suns:[{x:0,y:2,dir:1}],
-  targets:[{x:8,y:2,need:[1,1]}],
-  gates:[{x:4,y:2,max:[1,2]},{x:4,y:3,max:[1,2]}],
-  rocks:[[4,0],[4,1],[4,4],[4,5],[7,4],[1,0]],fruits:[[5,3]],
-  tools:[s2(1,1,2),b(2,1),b(1,0),mg(1,0,1)],
-  sol:[[0,2,2],[1,2,3],[2,6,3],[3,6,2]]},
-
  {w:'pitons',name:"Quel rayon passe ?",cours:'comparaison',
-  sub:"1/2 ou 1/3, lequel est le plus gros ? La passe ne laisse passer que 1/3 au maximum… choisis le bon prisme !",
+  sub:"Nouveau : la passe ! Elle ne laisse passer que les rayons assez fins. Celle-ci accepte 1/3 au maximum — 1/2 ou 1/3, lequel est le plus gros ? Choisis le bon prisme !",
   hint:"1/3 < 1/2 : c'est le plus petit qui passe.",
   cols:9,rows:7,suns:[{x:0,y:3,dir:1}],
   targets:[{x:8,y:1,need:[1,3]},{x:8,y:3,need:[1,3]},{x:2,y:6,need:[1,3]}],
@@ -616,11 +439,137 @@ const LV=[
   sol:[[0,2,3],[1,5,3],[2,2,1],[3,5,4],[5,8,4],[6,8,5]],
   solMin:[[0,2,3],[1,5,3],[2,2,1],[3,5,5]]},
 
- /* Le tamis passe en dernier (position seule, clé de sauvegarde intacte — même
-    geste que « Le tour du lagon » le 15/08) : R = 30 188, c'était l'aîné du monde
-    au milieu de l'escalier. L'ordre des pitons monte désormais par blocs :
-    5 · 10 · 100 · 43 · 289 · 368 · 513 · 3 979 · 30 188. */
- {w:'pitons',name:"Le tamis",
+
+ /* ---------- La forêt (5e) ---------- */
+ /* La consigne promettait la lentille pour GAGNER — faux : une case 1/1 sous un
+    soleil 1 ne la force jamais (règle §5.16), 196 victoires en 3 pièces sans elle.
+    Mais mesuré le 17/08 (espace éclairé COMPLET, E = 11 056) : sans lentille,
+    AUCUNE victoire ne ramasse les deux goyaviers — Gtout = 0. La promesse est
+    donc vraie une couche plus haut : elle est déplacée sur les fruits, où le
+    solveur la tient. Rtout/R = 130, le vrai travail du niveau est bien là. */
+ {w:'foret',name:"Recoller les morceaux",
+  sub:"Pour gagner, contourne les fougères. Mais pour cueillir les deux goyaviers, il faudra couper le rayon, puis le recoller avec la lentille : elle additionne deux rayons.",
+  cols:9,rows:7,suns:[{x:0,y:3,dir:1}],
+  targets:[{x:8,y:3,need:[1,1]}],
+  rocks:[[4,2],[4,3],[4,4]],fruits:[[4,1],[4,5]],
+  tools:[s2(1,0,2),b(0,1),b(1,2),b(2,1),b(1,0),mg(2,0,1)],
+  sol:[[0,2,3],[1,2,1],[2,6,1],[3,2,5],[4,6,5],[5,6,3]]},
+
+ /* Découverte de la SOMME (08/2026). Elle passe devant « Trois quarts » : la forêt
+    donnait le cas dur (dénominateurs différents) AVANT le cas simple (même
+    dénominateur). Ce niveau force sa notion — sans lentille dans la boîte, le
+    solveur ne trouve aucune victoire, parce que 2/3 ne s'obtient pas d'un seul
+    rayon. C'est la règle du lot : un niveau qui enseigne doit être ingagnable
+    sans la pièce de sa notion. */
+ {w:'foret',name:"Deux tiers",dec:'somme',
+  sub:"La case veut 2/3. Et ton prisme ne sait donner que des tiers… (Il y a une pièce en trop.)",
+  hint:"2/3 = 1/3 + 1/3. La lentille sait recoller deux tiers.",
+  cols:9,rows:7,suns:[{x:0,y:3,dir:1}],
+  targets:[{x:8,y:3,need:[2,3]}],
+  rocks:[[3,2],[5,2],[4,4],[7,1],[1,5]],fruits:[[4,1]],
+  tools:[s3(1,0,1,2),b(0,1),b(1,2),mg(2,1,1),b(2,1)],
+  sol:[[0,2,3],[1,2,1],[2,6,1],[3,6,3]]},
+
+ /* Venue des pitons (lot pitons-2, 17-18/08) : ses passes exigent la lentille,
+    sa place est donc en forêt. DOCTRINE DES ADDITIONS (Gwenael, 18/08) : on ne
+    force jamais une addition AVANT qu'elle soit apprise — d'où sa place APRÈS
+    « Deux tiers » (dec:somme), jamais avant. Ici la contrainte est un puzzle,
+    plus une leçon sautée : c'est le premier niveau du jeu où la lentille est
+    OBLIGATOIRE pour gagner (R = 100), et l'élève sait déjà additionner.
+    Le « Nouveau : la passe ! » est parti avec la première passe du jeu, sur
+    « Quel rayon passe ? » (pitons, monde 3). CLÉ DE SAUVEGARDE CHANGÉE
+    (pitons:→foret:), coût annoncé et accepté. */
+ {w:'foret',name:"La passe étroite",
+  sub:"Les passes ne laissent passer que les rayons assez fins (1/2 au maximum), et la case veut un rayon entier. Coupe, franchis… puis recolle avec la lentille.",
+  cols:9,rows:6,suns:[{x:0,y:2,dir:1}],
+  targets:[{x:8,y:2,need:[1,1]}],
+  gates:[{x:4,y:2,max:[1,2]},{x:4,y:3,max:[1,2]}],
+  rocks:[[4,0],[4,1],[4,4],[4,5],[7,4],[1,0]],fruits:[[5,3]],
+  tools:[s2(1,1,2),b(2,1),b(1,0),mg(1,0,1)],
+  sol:[[0,2,2],[1,2,3],[2,6,3],[3,6,2]]},
+
+ /* Découverte du MÊME DÉNOMINATEUR (08/2026) — le cas dur, désormais APRÈS le cas
+    simple. Forcé lui aussi : 3/4 ne s'obtient pas d'un seul rayon. Son bloc de
+    données ne change pas d'un octet, seuls sa place et son champ `dec` bougent. */
+ {w:'foret',name:"Trois quarts",dec:'denominateur',
+  sub:"Une seule case, et elle veut 3/4. Ton soleil vaut 1… à toi de chercher !",
+  hint:"3/4, c'est un demi plus un quart. Fabrique les deux morceaux, puis recolle-les.",
+  cols:9,rows:7,suns:[{x:0,y:3,dir:1}],
+  targets:[{x:8,y:3,need:[3,4]}],
+  rocks:[[4,3],[7,5],[1,1]],fruits:[[4,1]],
+  tools:[s2(1,0,2),s2(2,1,2),b(0,1),b(1,2),b(1,0),mg(2,0,1)],
+  sol:[[0,2,3],[1,2,4],[2,2,1],[3,6,1],[4,6,4],[5,6,3]]},
+
+ /* « Les sixièmes » a été RETIRÉ le 16/08 (décision de Gwenael, audit d'organisation
+    §6 Q1). Il s'étonnait — « Des cases à 1/6 ?! » — d'une notion que le lagon
+    enseigne au 9ᵉ niveau et que les champs de canne font chercher au 18ᵉ, et il la
+    servait pour la troisième fois au 22ᵉ, en deux pièces et une seule pose gagnante
+    (R = 14, le 11ᵉ niveau le plus facile du jeu). Même profil que « Quarts en
+    croix », retiré le 15/08. Son geste exact — 1/3 ÷ 2 — reste joué au « Grand
+    réseau » (tunnels) et à « L'entrée du cirque » (Mafate). */
+
+ {w:'foret',name:"Les huitièmes",
+  /* consigne réécrite (08/2026) : elle s'étonnait d'un huitième que les champs de
+     canne servent déjà depuis « Le grand tri ». On ne fait plus découvrir ce qui
+     est connu — on pose la vraie question du niveau : combien de coupes ?
+     Lot H : « un huitième par case » restait faux — les quatre cases valent
+     1/2, 1/8, 1/8 et 1/4. Seul le compte des huitièmes est annoncé désormais. */
+  sub:"Deux cases veulent un huitième, et la boîte ne sait couper qu'en deux. Combien de coupes faut-il ?",
+  hint:"La moitié de la moitié de la moitié : 1/2 ÷ 2 ÷ 2 = 1/8.",
+  cols:10,rows:7,suns:[{x:0,y:3,dir:1}],
+  targets:[{x:9,y:1,need:[1,2]},{x:9,y:2,need:[1,8]},{x:9,y:4,need:[1,8]},{x:2,y:6,need:[1,4]}],
+  rocks:[[4,2],[7,3],[3,5],[6,6],[8,0],[1,1]],
+  fruits:[[4,1],[3,4],[2,5]],
+  tools:[s2(1,0,2),s2(2,1,2),s2(1,0,1),b(0,1),b(0,1)],
+  sol:[[0,2,3],[1,2,4],[2,5,4],[3,2,1],[4,5,2]]},
+
+ {w:'foret',name:"Cinq sixièmes",
+  sub:"5/6. Le plus difficile des partages de la forêt. Cherche bien !",
+  hint:"5/6 = 1/2 + 1/3. Et pour obtenir 1/3 : recolle deux sixièmes.",
+  cols:10,rows:7,suns:[{x:0,y:3,dir:1}],
+  targets:[{x:9,y:3,need:[5,6]}],
+  rocks:[[4,3],[0,6],[9,0],[5,2]],fruits:[[4,1],[3,5]],
+  tools:[s2(1,0,2),s3(2,1,2,3),mg(1,0,1),mg(2,0,1),b(0,1),b(1,2),b(2,1),b(1,0),b(1,0)],
+  sol:[[0,2,3],[1,2,4],[2,5,4],[3,7,3],[4,2,1],[5,7,1],[6,2,5],[7,5,5],[8,7,4]]},
+
+ {w:'foret',name:"Les douzièmes",
+  /* Lot H : le pluriel mentait — il n'y a QU'UN douzième, et la case 1/2 passait
+     sous silence. Les trois cases sont nommées, le désaccord devient à trois. */
+  sub:"Un douzième, un quart, un demi : trois cases qui n'ont pas l'air d'accord entre elles…",
+  hint:"1/6 + 1/12 = 2/12 + 1/12 = 3/12. Simplifie !",
+  cols:10,rows:7,suns:[{x:0,y:3,dir:1}],
+  targets:[{x:9,y:1,need:[1,4]},{x:9,y:5,need:[1,12]},{x:2,y:6,need:[1,2]}],
+  rocks:[[6,3],[1,1],[8,4],[3,6],[6,6]],fruits:[[3,1],[6,2],[4,4]],
+  tools:[s2(1,0,2),s3(1,1,2,0),s2(2,1,2),mg(1,0,1),b(0,1),b(1,0),b(2,1),b(1,2)],
+  sol:[[0,2,3],[1,4,1],[2,4,2],[3,7,1],[4,2,1],[5,7,2],[6,4,5]]},
+
+ /* Renommé au lot H, avec les mots de sa propre consigne (« Traverse le champ de
+    fougères ») : la forêt est peinte en FOUGÈRES, le titre et la consigne cessent
+    de se contredire sans qu'on touche à la consigne. Aucune ligne CALC — vérifié. */
+ {w:'foret',name:"Le champ de fougères",
+  sub:"Traverse le champ de fougères et ramasse les fruits au passage. Attention, il y a des pièces en trop !",
+  cols:10,rows:8,suns:[{x:0,y:4,dir:1}],
+  targets:[{x:9,y:1,need:[1,2]},{x:9,y:6,need:[1,2]}],
+  rocks:[[4,4],[5,4],[6,4],[5,3],[5,5],[7,3],[3,2],[8,3],[3,0],[7,7]],
+  fruits:[[2,3],[5,1],[6,6]],
+  tools:[s2(1,0,2),b(0,1),b(2,1),b(1,0),b(1,2)],
+  sol:[[0,2,4],[1,2,1],[2,2,6]]},
+
+ {w:'foret',name:"La clairière",
+  sub:"Deux cases dans la clairière : 2/3 et 1/3. Les fougères ne te laisseront pas faire simple…",
+  hint:"2/3, c'est deux tiers recollés. Il faudra les amener au même endroit.",
+  cols:10,rows:7,suns:[{x:0,y:3,dir:1}],
+  targets:[{x:9,y:2,need:[2,3]},{x:9,y:5,need:[1,3]}],
+  rocks:[[5,3],[6,3],[3,4],[7,1],[8,4],[1,6],[4,0]],
+  fruits:[[4,1],[5,2],[6,5]],
+  tools:[s3(1,0,1,2),b(0,1),b(1,2),b(1,0),b(0,1),mg(2,1,1),b(2,1),b(1,0)],
+  sol:[[0,2,3],[1,2,1],[2,6,1],[3,4,3],[4,4,2],[5,6,2],[6,2,5]]},
+
+ /* Venu des pitons (lot pitons-2, 17/08) : découper aux passes puis recoller à la
+    lentille, c'est le sommet du travail de la forêt — R = 30 188, le monde finit
+    enfin sur son plus dur (avant lui, « La clairière » à 21 807). CLÉ DE
+    SAUVEGARDE CHANGÉE (pitons:→foret:), coût annoncé et accepté. */
+ {w:'foret',name:"Le tamis",
   sub:"Des passes à 1/4 maximum, une case à 1/2. Il va falloir découper… puis recoller.",
   hint:"1/4 + 1/4 = 1/2. Deux petits chemins valent mieux qu'un grand.",
   cols:10,rows:7,suns:[{x:0,y:3,dir:1}],
@@ -630,6 +579,74 @@ const LV=[
   fruits:[[5,1],[4,4]],
   tools:[s2(1,0,2),s2(1,1,2),b(0,1),b(1,2),b(2,1),b(1,0),mg(2,0,1)],
   sol:[[0,2,3],[1,4,1],[2,2,1],[3,7,1],[4,4,5],[5,7,5],[6,7,3]]},
+
+ /* ---------- Le volcan (4e) ---------- */
+ {w:'volcan',name:"La loupe",
+  sub:"Nouvel outil : la loupe ×2 concentre le rayon et le multiplie par 2. Observe l'épaisseur !",
+  cols:9,rows:6,suns:[{x:0,y:2,dir:1}],
+  targets:[{x:3,y:0,need:[1,3]},{x:8,y:2,need:[2,3]},{x:3,y:5,need:[1,3]}],
+  rocks:[[6,4],[1,4],[6,0]],fruits:[[3,4]],
+  tools:[s3(1,0,1,2),x2(1,1)],sol:[[0,3,2],[1,5,2]]},
+
+ {w:'volcan',name:"Trois demis",
+  sub:"Une case demande 3/2. Plus grand qu'un rayon entier ?! La loupe ×3 est là…",
+  hint:"Que donne 1/2 × 3 ?",
+  cols:9,rows:6,suns:[{x:0,y:2,dir:1}],
+  targets:[{x:8,y:1,need:[3,2]},{x:8,y:4,need:[1,2]}],
+  rocks:[[4,2],[5,2],[7,3],[1,5]],fruits:[[4,1],[5,4]],
+  tools:[s2(1,0,2),b(0,1),x3(1,1),b(2,1)],
+  sol:[[0,2,2],[1,2,1],[2,5,1],[3,2,4]]},
+
+ {w:'volcan',name:"Bouquet de neuvièmes",
+  sub:"Des neuvièmes… des tiers de tiers ! Et une grande case à 2/3.",
+  hint:"1/3 ÷ 3 = 1/9. Et 2/3 = 1/3 + 1/3, la lentille s'en charge.",
+  cols:10,rows:8,suns:[{x:0,y:4,dir:1}],
+  targets:[{x:9,y:1,need:[2,3]},{x:0,y:5,need:[1,9]},{x:9,y:5,need:[1,9]}],
+  rocks:[[5,3],[7,4],[4,6],[8,6],[1,2]],
+  fruits:[[4,1],[3,3],[6,5]],
+  tools:[s3(1,0,1,2),s3(2,1,2,3),mg(1,0,1),b(0,1),b(1,0),b(0,1),b(1,0)],
+  sol:[[0,2,4],[1,2,5],[2,6,1],[3,2,1],[4,3,4],[5,3,2],[6,6,2]]},
+
+ {w:'volcan',name:"Deux neuvièmes",
+  /* Lot H : la quatrième case, 1/3, n'était jamais nommée. */
+  sub:"2/9, 1/9, un tiers, et un rayon entier à reconstruire. Les loupes vont chauffer.",
+  hint:"1/9 × 2 = 2/9. Et 1/3 × 3 = 1 : le rayon entier renaît.",
+  cols:10,rows:8,suns:[{x:0,y:4,dir:1}],
+  targets:[{x:9,y:1,need:[2,9]},{x:9,y:2,need:[1,9]},{x:9,y:4,need:[1,1]},{x:2,y:7,need:[1,3]}],
+  rocks:[[5,3],[7,3],[3,6],[6,6],[1,2],[8,5]],
+  fruits:[[3,4],[5,1],[2,6]],
+  tools:[s3(1,0,1,2),s3(1,1,2,0),x2(1,1),x3(1,1),b(0,1),b(2,1)],
+  sol:[[0,2,4],[1,4,1],[2,6,1],[3,6,4],[4,2,1],[5,4,2]]},
+
+ {w:'volcan',name:"Le grand labyrinthe",
+  sub:"Un vrai labyrinthe ! Trouve les passages dans la muraille — et il y a des pièces en trop.",
+  hint:"Cherche les deux brèches dans la muraille : une en haut, une en bas.",
+  cols:10,rows:8,suns:[{x:0,y:3,dir:1}],
+  targets:[{x:8,y:0,need:[1,2]},{x:0,y:4,need:[1,4]},{x:9,y:6,need:[1,4]}],
+  rocks:[[3,0],[3,2],[3,3],[3,5],[3,6],[5,0],[7,0],[5,2],[6,2],[6,5],[5,7],[7,7],[1,6],[1,1]],
+  fruits:[[5,1],[3,4],[7,6]],
+  tools:[s2(1,0,2),s2(2,1,3),b(0,1),b(1,0),b(1,2),b(2,1),b(1,2),b(2,3)],
+  sol:[[0,2,3],[1,2,4],[2,2,1],[3,8,1],[4,4,4],[5,4,6]]},
+
+ {w:'volcan',name:"L'éruption",
+  sub:"Une case demande un rayon entier — mais tout ce que tu sais découper est bien plus petit…",
+  hint:"Multiplier peut réparer ce qu'on a coupé : un sixième devient un tiers avec ×2, puis un entier avec ×3.",
+  cols:10,rows:7,suns:[{x:0,y:3,dir:1}],
+  targets:[{x:9,y:1,need:[1,2]},{x:0,y:4,need:[1,6]},{x:9,y:4,need:[1,1]}],
+  rocks:[[4,2],[6,2],[5,5],[3,6],[8,2],[6,6],[1,1]],
+  fruits:[[4,1],[3,4],[2,6]],
+  tools:[s2(1,0,2),s3(2,1,2,3),x2(1,1),x3(1,1),b(0,1),x2(1,1)],
+  sol:[[0,2,3],[1,2,4],[2,5,4],[3,7,4],[4,2,1]]},
+
+ {w:'volcan',name:"Défi du volcan",
+  sub:"Couper, recoller, multiplier — tout à la fois. Bonne chance !",
+  hint:"3/4 = 1/2 + 1/4. Et un quart passé à la loupe ×2 devient un demi.",
+  cols:10,rows:8,suns:[{x:0,y:4,dir:1}],
+  targets:[{x:9,y:2,need:[3,4]},{x:9,y:6,need:[1,2]}],
+  rocks:[[4,4],[6,4],[7,4],[1,1],[7,0],[0,7],[8,5],[4,5]],
+  fruits:[[4,2],[3,4],[7,6]],
+  tools:[s2(1,0,2),s2(2,1,2),mg(1,0,1),x2(1,1),b(0,1),b(0,1),b(1,0),b(1,0),b(2,1),x3(1,1),b(1,2)],
+  sol:[[0,2,4],[1,2,5],[2,5,2],[3,5,6],[4,2,2],[5,3,3],[6,3,5],[7,5,3],[8,2,6]]},
 
  /* ---------- Les soleils (sources spéciales) ---------- */
  {w:'soleils',name:"Un soleil qui vaut 2",
