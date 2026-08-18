@@ -455,6 +455,35 @@
 
     /* Palette escamotable : sa commande reste dans la barre d’outils. */
     body.palette-collapsed #projection-palette-bar{ display:none !important; }
+
+    /* Bandes sans aplats de couleur : captures et impressions noir et blanc.
+       Le mode reste purement visuel : les objets et les scènes ne sont pas modifiés. */
+    body.strips-monochrome .strip{
+      --fillColor:#ffffff !important;
+    }
+    body.strips-monochrome .face,
+    body.strips-monochrome .strip.ghost,
+    body.strips-monochrome .spawn-tile,
+    body.strips-monochrome .spawn-seg,
+    body.strips-monochrome .seam-cover{
+      background:#ffffff !important;
+    }
+    body.strips-monochrome .seg + .seg,
+    body.strips-monochrome .spawn-seg + .spawn-seg{
+      border-left-color:#000000 !important;
+    }
+    body.strips-monochrome .strip:not(.content-hidden) .frac .bar,
+    body.strips-monochrome .spawn-tile .frac .bar{
+      background:#000000 !important;
+    }
+    body.strips-monochrome .strip.selected .strip-inner{
+      box-shadow:0 0 0 3px rgba(17,24,39,0.85);
+    }
+    #btn-monochrome[aria-pressed="true"]{
+      background:#111827 !important;
+      color:#ffffff !important;
+    }
+
     #palette-toggle-chevron{
       transition:transform 0.15s ease;
       transform-box:fill-box;
@@ -673,6 +702,14 @@
         <span id="palette-toggle-label" class="text-[10px] font-extrabold leading-none">Bandes</span>
       </button>
 
+      <button type="button" id="btn-monochrome" class="p-2 rounded bg-white shadow text-gray-700 hover:bg-slate-50 active:scale-95 transition flex flex-col items-center gap-0.5" aria-pressed="false" aria-label="Afficher les bandes en noir et blanc" title="Afficher les bandes en noir et blanc">
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+          <circle cx="12" cy="12" r="9"/>
+          <path d="M12 3a9 9 0 0 0 0 18Z" fill="currentColor" stroke="none"/>
+        </svg>
+        <span class="text-[10px] font-extrabold leading-none">N&amp;B</span>
+      </button>
+
       <button id="btn-fullscreen" class="p-2 rounded bg-white shadow text-gray-700 hover:bg-slate-50 active:scale-95 transition flex flex-col items-center gap-0.5" title="Plein écran">
         <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
           <path d="M8 3H5a2 2 0 0 0-2 2v3"/>
@@ -800,6 +837,7 @@
             <li><b>Couper</b> : couper en deux quand le double existe, par exemple sixième → douzièmes.</li>
             <li><b>Fusionner</b> : regrouper des pièces compatibles, y compris certaines fusions mixtes.</li>
             <li><b>Dupliquer</b> et <b>Supprimer</b> : copier ou retirer la sélection.</li>
+            <li><b>N&amp;B</b> : retirer les aplats de couleur des bandes et de la palette pour une capture ou une impression en noir et blanc.</li>
           </ul>
         </div>
 
@@ -1061,6 +1099,20 @@ palette.querySelectorAll('.palette-item').forEach(item=>{
     });
   }
 
+  function setMonochromeMode(enabled){
+    const isMonochrome = !!enabled;
+    const button = document.getElementById('btn-monochrome');
+    document.body.classList.toggle('strips-monochrome', isMonochrome);
+    if(button){
+      button.setAttribute('aria-pressed', String(isMonochrome));
+      const actionLabel = isMonochrome
+        ? 'Réafficher les bandes en couleurs'
+        : 'Afficher les bandes en noir et blanc';
+      button.setAttribute('aria-label', actionLabel);
+      button.title = actionLabel;
+    }
+  }
+
   function showToast(msg, ms=1600){
     const t = document.getElementById('toast');
     const inner = document.getElementById('toast-inner');
@@ -1215,6 +1267,11 @@ palette.querySelectorAll('.palette-item').forEach(item=>{
     document.getElementById('btn-palette-toggle')?.addEventListener('click', ()=>{
       setPaletteCollapsed(!document.body.classList.contains('palette-collapsed'));
     });
+    document.getElementById('btn-monochrome')?.addEventListener('click', ()=>{
+      const next = !document.body.classList.contains('strips-monochrome');
+      setMonochromeMode(next);
+      showToast(next ? 'Bandes en noir et blanc' : 'Couleurs rétablies');
+    });
 
     // Session modal actions
     document.getElementById('btn-scene-save')?.addEventListener('click', ()=>{
@@ -1294,6 +1351,7 @@ palette.querySelectorAll('.palette-item').forEach(item=>{
 
     // État initial
     // La palette est toujours visible à l’ouverture, puis reste escamotable à la demande.
+    setMonochromeMode(false);
     setPaletteCollapsed(false);
     applyFixedLayout();
 }
