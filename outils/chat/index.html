@@ -39,6 +39,11 @@
       background: #edf5fc;
     }
     .hero .chat-lead { max-width: 900px; margin: 6px 0 0; color: #5c6f86; font-size: .95rem; line-height: 1.5; }
+    /* « Jouer en vrai » : le guide occupe la colonne de gauche, les quatre
+       PDF de cartes se rangent en 2×2 à sa droite */
+    @media (min-width: 921px) {
+      .chat-vrai-grid > .resource-card-visual { grid-row: 1 / span 2; }
+    }
   </style>
 </head>
 <body class="catalogue-is-deep">
@@ -93,7 +98,7 @@
             <h2 id="resource-group-vrai">Jouer en vrai — cerceaux et cartes plastifiées</h2>
             <span>5 entrées</span>
           </div>
-          <div class="resource-group-grid">
+          <div class="resource-group-grid chat-vrai-grid">
             <a class="resource-card resource-card-visual" href="../chat-cest-toi-le-chat-guide.pdf" style="--accent:#2f6d3f;--soft:#edf8ef">
               <span class="resource-thumbnail"><picture class="catalogue-thumbnail-picture"><source srcset="../../assets/img/thumbnails/reperage/chat-cest-toi-le-chat.webp" type="image/webp"><img src="../../assets/img/thumbnails/reperage/chat-cest-toi-le-chat.png?v=1" alt="" loading="lazy"></picture></span>
               <span class="resource-copy"><h3>Guide pédagogique</h3><span class="resource-description">Les règles, la mise en place, un exemple guidé et les solutions des vingt séries progressives.</span><span class="resource-meta resource-uses">Manipuler · Imprimer</span></span>
