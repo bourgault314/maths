@@ -12,91 +12,125 @@
   <meta name="description" content="Le jeu de repérage spatial « Chat, c’est toi le chat ! » sous toutes ses formes : jouer en ligne, projeter des défis en classe, ou imprimer le guide et les cartes pour jouer avec des cerceaux.">
   <link rel="canonical" href="https://mathsgo.re/outils/chat/">
   <meta name="robots" content="index, follow, max-image-preview:large">
-  <link rel="stylesheet" href="../../assets/css/collection-index.css">
+  <link rel="stylesheet" href="../../assets/css/entry-alignment.css?v=cartes-alignees-20260719-4">
+  <link rel="stylesheet" href="../../assets/css/catalogue-refonte.css?v=miniatures-20260811-2">
   <link rel="stylesheet" href="../../assets/css/consentement.css">
   <script defer src="../../assets/js/consentement.js"></script>
+  <style>
+    /* mêmes pilules que le catalogue, appliquées aux liens (la feuille du
+       catalogue ne les stylait que sur les <button> générés en JS) */
+    .catalogue-breadcrumb a {
+      min-height: 44px;
+      display: inline-flex;
+      align-items: center;
+      padding: 7px 12px;
+      border: 1px solid #d8e4ef;
+      border-radius: 999px;
+      color: var(--blue);
+      background: #f7fafc;
+      font-weight: 760;
+      text-align: left;
+      white-space: normal;
+      text-decoration: none;
+    }
+    .catalogue-breadcrumb a:hover,
+    .catalogue-breadcrumb a:focus-visible {
+      border-color: #a9c9e8;
+      background: #edf5fc;
+    }
+    .hero .chat-lead { max-width: 900px; margin: 6px 0 0; color: #5c6f86; font-size: .95rem; line-height: 1.5; }
+  </style>
 </head>
-<body>
-  <div class="shell">
+<body class="catalogue-is-deep">
+  <div class="site-shell">
     <header class="site-header">
-      <a class="brand" href="../../index.html" aria-label="Accueil maths&go">
+      <a class="brand-link" href="../../index.html" aria-label="Accueil maths&go">
         <img src="../../assets/img/mathsgo-logo.png" alt="maths&go" width="1338" height="622">
       </a>
-      <a class="back" href="../index.html?domain=jeux-recherches">← Jeux et explorations</a>
+      <nav class="catalogue-breadcrumb" aria-label="Fil d’Ariane">
+        <a class="breadcrumb-back" href="../index.html"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M19 12H5m6-6-6 6 6 6"/></svg> Tous les domaines</a>
+        <a class="breadcrumb-parent" href="../index.html?domain=jeux-recherches" title="Revenir à Jeux, recherches et explorations">Jeux, recherches et explorations</a>
+      </nav>
+      <a class="header-home" href="../../index.html">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m4 11 8-7 8 7v9h-5v-6H9v6H4Z" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/></svg>
+        <span>Accueil</span>
+      </a>
     </header>
 
-    <main class="panel">
-      <nav class="breadcrumbs" aria-label="Fil d’Ariane">
-        <a href="../../index.html">Accueil</a><span aria-hidden="true">›</span>
-        <a href="../index.html">Outils</a><span aria-hidden="true">›</span>
-        <span>Chat, c’est toi le chat&nbsp;!</span>
-      </nav>
-
-      <section class="hero">
-        <p class="eyebrow">Jeu de repérage spatial</p>
-        <h1>Chat, c’est toi le chat&nbsp;!</h1>
-        <p class="lead">Quatre chats, six cercles, quatre cartes à rendre vraies en même temps. Un jeu de
-          positionnement dans l’espace et de communication, de la maternelle au collège — d’après une situation de
+    <main class="main-panel catalogue-deep-view">
+      <section class="hero" aria-labelledby="page-title">
+        <h1 id="page-title" tabindex="-1">Chat, c’est toi le chat&nbsp;!</h1>
+        <p class="chat-lead">
+          Quatre chats, six cercles, quatre cartes à rendre vraies en même temps — un jeu de positionnement dans
+          l’espace et de communication, de la maternelle au collège, d’après une situation de
           «&nbsp;Un rallye mathématique à l’école maternelle&nbsp;? Oui, c’est possible&nbsp;!&nbsp;»
-          (F.&nbsp;Emprin et F.&nbsp;Emprin-Charotte, CRDP Champagne-Ardenne).</p>
+          (F.&nbsp;Emprin et F.&nbsp;Emprin-Charotte, CRDP Champagne-Ardenne).
+        </p>
       </section>
 
-      <section class="group" aria-labelledby="ecran-title">
-        <div class="group-heading">
-          <h2 id="ecran-title">Jouer à l’écran</h2>
-          <p>Sur téléphone, tablette ou au tableau — rien à installer.</p>
-        </div>
-        <div class="card-grid">
-          <a class="tool-card" href="../chat-cest-toi-le-chat-en-ligne.html" style="--card-accent:#0b7d75;--card-soft:#e8f7f5">
-            <span class="thumb"><img src="../../assets/img/thumbnails/reperage/chat-cest-toi-le-chat-en-ligne.png?v=1" alt="" loading="eager"></span>
-            <span class="tool-copy"><h3>Jouer en ligne</h3><p>Lire les quatre cartes, placer les chats soi-même et vérifier&nbsp;: 48 séries en 4 niveaux, à jouer seul ou en famille.</p><span class="tags"><span class="tag">Nouveau</span><span class="tag">Téléphone</span><span class="tag">Familles</span></span></span>
-          </a>
-          <a class="tool-card" href="../chat-cest-toi-le-chat-projection.html" style="--card-accent:#1f3a68;--card-soft:#eaf1fb">
-            <span class="thumb"><img src="../../assets/img/thumbnails/reperage/chat-cest-toi-le-chat-projection.png?v=2" alt="" loading="lazy"></span>
-            <span class="tool-copy"><h3>Défis à projeter en classe</h3><p>Douze défis collectifs&nbsp;: chacun observe un placement depuis sa place, la classe argumente puis vérifie les cartes pas à pas.</p><span class="tags"><span class="tag">Projeter</span><span class="tag">Collectif</span></span></span>
-          </a>
-        </div>
-      </section>
+      <div class="resource-grid">
+        <section class="resource-group" aria-labelledby="resource-group-ecran">
+          <div class="resource-group-heading">
+            <h2 id="resource-group-ecran">Jouer à l’écran</h2>
+            <span>2 entrées</span>
+          </div>
+          <div class="resource-group-grid">
+            <a class="resource-card resource-card-visual" href="../chat-cest-toi-le-chat-en-ligne.html" style="--accent:#2f6d3f;--soft:#edf8ef">
+              <span class="resource-thumbnail"><picture class="catalogue-thumbnail-picture"><source srcset="../../assets/img/thumbnails/reperage/chat-cest-toi-le-chat-en-ligne.webp" type="image/webp"><img src="../../assets/img/thumbnails/reperage/chat-cest-toi-le-chat-en-ligne.png?v=1" alt="" loading="eager"></picture></span>
+              <span class="resource-copy"><h3>Jouer en ligne</h3><span class="resource-description">Lire les quatre cartes, placer les chats soi-même et vérifier&nbsp;: 48 séries en 4 niveaux, à jouer seul ou en famille, sur téléphone comme au tableau.</span><span class="resource-meta resource-uses">Manipuler · S’entraîner</span></span>
+              <span class="resource-arrow" aria-hidden="true">→</span>
+            </a>
+            <a class="resource-card resource-card-visual" href="../chat-cest-toi-le-chat-projection.html" style="--accent:#2f6d3f;--soft:#edf8ef">
+              <span class="resource-thumbnail"><picture class="catalogue-thumbnail-picture"><source srcset="../../assets/img/thumbnails/reperage/chat-cest-toi-le-chat-projection.webp" type="image/webp"><img src="../../assets/img/thumbnails/reperage/chat-cest-toi-le-chat-projection.png?v=2" alt="" loading="lazy"></picture></span>
+              <span class="resource-copy"><h3>Défis à projeter en classe</h3><span class="resource-description">Douze défis collectifs&nbsp;: chacun observe un placement depuis sa place, la classe argumente puis vérifie les quatre cartes pas à pas.</span><span class="resource-meta resource-uses">Projeter</span></span>
+              <span class="resource-arrow" aria-hidden="true">→</span>
+            </a>
+          </div>
+        </section>
 
-      <section class="group" aria-labelledby="vrai-title">
-        <div class="group-heading">
-          <h2 id="vrai-title">Jouer en vrai</h2>
-          <p>Avec des cerceaux au sol ou des cercles à la craie, et les cartes plastifiées.</p>
-        </div>
-        <div class="card-grid">
-          <a class="tool-card" href="../chat-cest-toi-le-chat-guide.pdf" style="--card-accent:#f28c28;--card-soft:#fff2e3">
-            <span class="thumb"><img src="../../assets/img/thumbnails/reperage/chat-cest-toi-le-chat.png?v=1" alt="" loading="lazy"></span>
-            <span class="tool-copy"><h3>Guide pédagogique</h3><p>Les règles, la mise en place, un exemple guidé et les solutions des vingt séries progressives.</p><span class="tags"><span class="tag">Imprimer</span><span class="tag">PDF</span></span></span>
-          </a>
-        </div>
-      </section>
-
-      <section class="group" aria-labelledby="cartes-title">
-        <div class="group-heading">
-          <h2 id="cartes-title">Les cartes à imprimer</h2>
-          <p>Vingt séries de quatre cartes, en deux formats — recto seul, ou recto-verso avec le dos décoré.</p>
-        </div>
-        <div class="card-grid">
-          <a class="tool-card" href="../chat-cest-toi-le-chat.pdf" style="--card-accent:#0b7d75;--card-soft:#e8f7f5">
-            <span class="tool-copy"><h3>Grand format — recto seul</h3><p>4 cartes par page A4, une série par feuille.</p><span class="tags"><span class="tag">PDF</span></span></span>
-          </a>
-          <a class="tool-card" href="../chat-cest-toi-le-chat-recto-verso.pdf" style="--card-accent:#0b7d75;--card-soft:#e8f7f5">
-            <span class="tool-copy"><h3>Grand format — recto-verso</h3><p>À imprimer à 100&nbsp;% en retournant sur le bord long.</p><span class="tags"><span class="tag">PDF</span></span></span>
-          </a>
-          <a class="tool-card" href="../chat-cest-toi-le-chat-cartes-compactes.pdf" style="--card-accent:#1f3a68;--card-soft:#eaf1fb">
-            <span class="tool-copy"><h3>Format compact — recto seul</h3><p>8 cartes par feuille A4 paysage, deux séries à la fois.</p><span class="tags"><span class="tag">PDF</span></span></span>
-          </a>
-          <a class="tool-card" href="../chat-cest-toi-le-chat-cartes-compactes-recto-verso.pdf" style="--card-accent:#1f3a68;--card-soft:#eaf1fb">
-            <span class="tool-copy"><h3>Format compact — recto-verso</h3><p>À imprimer à 100&nbsp;% en retournant sur le bord court.</p><span class="tags"><span class="tag">PDF</span></span></span>
-          </a>
-        </div>
-      </section>
+        <section class="resource-group" aria-labelledby="resource-group-vrai">
+          <div class="resource-group-heading">
+            <h2 id="resource-group-vrai">Jouer en vrai — cerceaux et cartes plastifiées</h2>
+            <span>5 entrées</span>
+          </div>
+          <div class="resource-group-grid">
+            <a class="resource-card resource-card-visual" href="../chat-cest-toi-le-chat-guide.pdf" style="--accent:#2f6d3f;--soft:#edf8ef">
+              <span class="resource-thumbnail"><picture class="catalogue-thumbnail-picture"><source srcset="../../assets/img/thumbnails/reperage/chat-cest-toi-le-chat.webp" type="image/webp"><img src="../../assets/img/thumbnails/reperage/chat-cest-toi-le-chat.png?v=1" alt="" loading="lazy"></picture></span>
+              <span class="resource-copy"><h3>Guide pédagogique</h3><span class="resource-description">Les règles, la mise en place, un exemple guidé et les solutions des vingt séries progressives.</span><span class="resource-meta resource-uses">Manipuler · Imprimer</span></span>
+              <span class="resource-arrow" aria-hidden="true">→</span>
+            </a>
+            <a class="resource-card" href="../chat-cest-toi-le-chat.pdf" style="--accent:#2f6d3f;--soft:#edf8ef">
+              <span class="resource-type-icon"><svg viewBox="0 0 32 32" aria-hidden="true"><path d="M7 3h12l6 6v20H7Z" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/><path d="M19 3v7h6M11 16h10M11 21h10" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/></svg></span>
+              <span class="resource-copy"><h3>Cartes grand format — recto seul</h3><span class="resource-meta">PDF · 4 cartes par page, une série par feuille A4</span></span>
+              <span class="resource-arrow" aria-hidden="true">→</span>
+            </a>
+            <a class="resource-card" href="../chat-cest-toi-le-chat-recto-verso.pdf" style="--accent:#2f6d3f;--soft:#edf8ef">
+              <span class="resource-type-icon"><svg viewBox="0 0 32 32" aria-hidden="true"><path d="M7 3h12l6 6v20H7Z" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/><path d="M19 3v7h6M11 16h10M11 21h10" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/></svg></span>
+              <span class="resource-copy"><h3>Cartes grand format — recto-verso</h3><span class="resource-meta">PDF · imprimer à 100&nbsp;% en retournant sur le bord long</span></span>
+              <span class="resource-arrow" aria-hidden="true">→</span>
+            </a>
+            <a class="resource-card" href="../chat-cest-toi-le-chat-cartes-compactes.pdf" style="--accent:#2f6d3f;--soft:#edf8ef">
+              <span class="resource-type-icon"><svg viewBox="0 0 32 32" aria-hidden="true"><path d="M7 3h12l6 6v20H7Z" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/><path d="M19 3v7h6M11 16h10M11 21h10" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/></svg></span>
+              <span class="resource-copy"><h3>Cartes compactes — recto seul</h3><span class="resource-meta">PDF · 8 cartes par feuille A4 paysage, deux séries à la fois</span></span>
+              <span class="resource-arrow" aria-hidden="true">→</span>
+            </a>
+            <a class="resource-card" href="../chat-cest-toi-le-chat-cartes-compactes-recto-verso.pdf" style="--accent:#2f6d3f;--soft:#edf8ef">
+              <span class="resource-type-icon"><svg viewBox="0 0 32 32" aria-hidden="true"><path d="M7 3h12l6 6v20H7Z" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/><path d="M19 3v7h6M11 16h10M11 21h10" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/></svg></span>
+              <span class="resource-copy"><h3>Cartes compactes — recto-verso</h3><span class="resource-meta">PDF · imprimer à 100&nbsp;% en retournant sur le bord court</span></span>
+              <span class="resource-arrow" aria-hidden="true">→</span>
+            </a>
+          </div>
+        </section>
+      </div>
     </main>
 
     <footer class="site-footer">
-      <a href="../../mentions-legales.html">Mentions légales</a>
-      <span aria-hidden="true">·</span>
-      <a href="../../confidentialite.html">Confidentialité</a>
+      <span>Gwenaël Bourgault</span><span aria-hidden="true">·</span>
+      <a href="mailto:gwenael@mathsgo.re?subject=Contact%20depuis%20mathsgo.re">Me contacter</a><span aria-hidden="true">·</span>
+      <a href="../toutes-les-ressources.html">Toutes les ressources</a><span aria-hidden="true">·</span>
+      <a href="../../mentions-legales.html">Mentions légales</a><span aria-hidden="true">·</span>
+      <a href="../../confidentialite.html">Confidentialité</a><span aria-hidden="true">·</span>
+      <button type="button" data-mathsgo-consent-open onclick="window.mathsgoConsentement &amp;&amp; window.mathsgoConsentement.ouvrir()">Gérer mes cookies</button>
     </footer>
   </div>
 </body>
