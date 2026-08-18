@@ -475,47 +475,12 @@ window.MATHSGO_CATALOGUE = {
       "thumbnail": "assets/img/thumbnails/fractions/fractions-multiples-problemes.png?v=2",
       "cardDescription": "Résoudre et inventer des problèmes de fractions d’une quantité à partir de schémas en barres."
     },
-    "outils/chat-cest-toi-le-chat.pdf": {
+    "outils/chat/index.html": {
       "primaryGroup": "jeux",
       "collections": [],
-      "tags": ["reperage-spatial", "cycle-1", "cycle-2", "cycle-3", "cycle-4", "maternelle", "ecole-elementaire", "college", "moyenne-section", "grande-section", "cp", "communication", "cooperation", "devant-derriere", "gauche-droite", "jeu-collectif", "imprimable", "cartes-grand-format", "decouper"],
-      "thumbnail": "assets/img/thumbnails/reperage/chat-cest-toi-le-chat.png?v=1",
-      "cardDescription": "Les 80 cartes du jeu coopératif de repérage spatial, de la maternelle au collège, en grand format : quatre cartes à découper par page."
-    },
-    "outils/chat-cest-toi-le-chat-recto-verso.pdf": {
-      "primaryGroup": "jeux",
-      "collections": [],
-      "tags": ["reperage-spatial", "cycle-1", "cycle-2", "cycle-3", "cycle-4", "maternelle", "ecole-elementaire", "college", "moyenne-section", "grande-section", "cp", "communication", "cooperation", "devant-derriere", "gauche-droite", "jeu-collectif", "imprimable", "cartes-grand-format", "recto-verso", "decouper"],
-      "thumbnail": "assets/img/thumbnails/reperage/chat-cest-toi-le-chat.png?v=1",
-      "cardDescription": "Les 80 cartes grand format du jeu de repérage spatial, de la maternelle au collège, avec leur verso illustré, à imprimer à 100 % en retournant sur le bord long."
-    },
-    "outils/chat-cest-toi-le-chat-guide.pdf": {
-      "primaryGroup": "jeux",
-      "collections": [],
-      "tags": ["reperage-spatial", "cycle-1", "cycle-2", "cycle-3", "cycle-4", "maternelle", "ecole-elementaire", "college", "moyenne-section", "grande-section", "cp", "communication", "cooperation", "devant-derriere", "gauche-droite", "jeu-collectif", "cerceaux", "cercles-au-sol", "imprimable", "guide-pedagogique", "regles", "solutions"],
-      "thumbnail": "assets/img/thumbnails/reperage/chat-cest-toi-le-chat.png?v=1",
-      "cardDescription": "Le guide pédagogique du jeu coopératif de repérage spatial, de la maternelle au collège : règles, exemple guidé et solutions des vingt séries."
-    },
-    "outils/chat-cest-toi-le-chat-cartes-compactes.pdf": {
-      "primaryGroup": "jeux",
-      "collections": [],
-      "tags": ["reperage-spatial", "cycle-1", "cycle-2", "cycle-3", "cycle-4", "maternelle", "ecole-elementaire", "college", "communication", "cooperation", "devant-derriere", "gauche-droite", "jeu-collectif", "imprimable", "cartes-compactes", "decouper"],
-      "thumbnail": "assets/img/thumbnails/reperage/chat-cest-toi-le-chat.png?v=1",
-      "cardDescription": "Le jeu coopératif de repérage spatial, de la maternelle au collège, en format compact : huit cartes en portrait par feuille A4 paysage."
-    },
-    "outils/chat-cest-toi-le-chat-cartes-compactes-recto-verso.pdf": {
-      "primaryGroup": "jeux",
-      "collections": [],
-      "tags": ["reperage-spatial", "cycle-1", "cycle-2", "cycle-3", "cycle-4", "maternelle", "ecole-elementaire", "college", "communication", "cooperation", "devant-derriere", "gauche-droite", "jeu-collectif", "imprimable", "cartes-compactes", "recto-verso", "decouper"],
-      "thumbnail": "assets/img/thumbnails/reperage/chat-cest-toi-le-chat.png?v=1",
-      "cardDescription": "Les 80 cartes compactes du jeu de repérage spatial, de la maternelle au collège, avec leur verso illustré, à imprimer à 100 % en retournant sur le bord court."
-    },
-    "outils/chat-cest-toi-le-chat-projection.html": {
-      "primaryGroup": "jeux",
-      "collections": [],
-      "tags": ["reperage-spatial", "cycle-1", "cycle-2", "cycle-3", "cycle-4", "maternelle", "ecole-elementaire", "college", "moyenne-section", "grande-section", "cp", "communication", "cooperation", "devant-derriere", "gauche-droite", "jeu-collectif", "projection", "vrai-faux", "placement"],
-      "thumbnail": "assets/img/thumbnails/reperage/chat-cest-toi-le-chat-projection.png?v=2",
-      "cardDescription": "Une activité collective de repérage spatial à projeter, de la maternelle au collège : chacun observe un placement depuis sa place, puis la classe vérifie les quatre cartes pas à pas."
+      "tags": ["reperage-spatial", "cycle-1", "cycle-2", "cycle-3", "cycle-4", "maternelle", "ecole-elementaire", "college", "moyenne-section", "grande-section", "cp", "communication", "cooperation", "devant-derriere", "gauche-droite", "jeu-collectif", "jeu-en-ligne", "familles", "projection", "placement", "vrai-faux", "imprimable", "cartes-grand-format", "cartes-compactes", "recto-verso", "decouper", "cerceaux", "cercles-au-sol", "guide-pedagogique", "regles", "solutions"],
+      "thumbnail": "assets/img/thumbnails/reperage/chat-cest-toi-le-chat-monde.png?v=1",
+      "cardDescription": "Quatre chats, six cercles, quatre cartes à rendre vraies : jouer en ligne, projeter les défis en classe ou imprimer les cartes."
     },
     "outils/fractions_multiples_exerciseur.html": {
       "primaryNotion": "fractions",
@@ -1230,28 +1195,6 @@ window.MATHSGO_CATALOGUE = {
       "paths": [
         "outils/gabarits_proportionnalite_tableaux.pdf",
         "outils/gabarit_proportionnalite_tableau_sans_coefficient.pdf"
-      ]
-    },
-    {
-      "id": "chat-cest-toi-le-chat-imprimer",
-      "title": "Chat, c’est toi le chat ! — À imprimer",
-      "description": "Choisir le guide pédagogique ou l’un des deux formats de cartes, avec ou sans verso.",
-      "cardDescription": "Un jeu coopératif de repérage spatial, de la maternelle au collège, avec un guide et deux formats de cartes proposés en recto seul ou recto-verso.",
-      "thumbnail": "assets/img/thumbnails/reperage/chat-cest-toi-le-chat.png?v=1",
-      "group": "jeux",
-      "labels": {
-        "outils/chat-cest-toi-le-chat-guide.pdf": "Guide pédagogique — règles, exemple et solutions",
-        "outils/chat-cest-toi-le-chat.pdf": "Grand format — recto seul, 4 cartes par page",
-        "outils/chat-cest-toi-le-chat-recto-verso.pdf": "Grand format — recto-verso, 4 cartes par page",
-        "outils/chat-cest-toi-le-chat-cartes-compactes.pdf": "Format compact — recto seul, 8 cartes par feuille",
-        "outils/chat-cest-toi-le-chat-cartes-compactes-recto-verso.pdf": "Format compact — recto-verso, 8 cartes par feuille"
-      },
-      "paths": [
-        "outils/chat-cest-toi-le-chat-guide.pdf",
-        "outils/chat-cest-toi-le-chat.pdf",
-        "outils/chat-cest-toi-le-chat-recto-verso.pdf",
-        "outils/chat-cest-toi-le-chat-cartes-compactes.pdf",
-        "outils/chat-cest-toi-le-chat-cartes-compactes-recto-verso.pdf"
       ]
     },
     {
@@ -2780,10 +2723,10 @@ window.MATHSGO_CATALOGUE = {
       "recent": false
     },
     {
-      "id": "outils-chat-cest-toi-le-chat-guide-pdf",
-      "title": "Chat, c’est toi le chat ! — Guide pédagogique",
-      "description": "Le guide pédagogique du jeu coopératif de repérage spatial, de la maternelle au collège : règles, exemple guidé et solutions des vingt séries progressives.",
-      "path": "outils/chat-cest-toi-le-chat-guide.pdf",
+      "id": "outils-chat-index-html",
+      "title": "Chat, c’est toi le chat !",
+      "description": "Le jeu de repérage spatial « Chat, c’est toi le chat ! » sous toutes ses formes : jouer en ligne, projeter des défis en classe, ou imprimer le guide et les cartes pour jouer avec des cerceaux.",
+      "path": "outils/chat/index.html",
       "domains": [
         "geometrie",
         "jeux-recherches"
@@ -2794,263 +2737,16 @@ window.MATHSGO_CATALOGUE = {
       ],
       "uses": [
         "manipuler",
+        "projeter",
         "imprimer"
       ],
       "types": [
+        "exerciseur",
         "imprimable"
       ],
       "filters": [
         "materiel-imprimer"
       ],
-      "keywords": [
-        "cycle 1",
-        "cycle 2",
-        "cycle 3",
-        "cycle 4",
-        "maternelle",
-        "école élémentaire",
-        "collège",
-        "repérage spatial",
-        "positionnement dans l’espace",
-        "communication",
-        "coopération",
-        "devant",
-        "derrière",
-        "gauche",
-        "droite",
-        "guide pédagogique",
-        "règles",
-        "exemple guidé",
-        "solutions",
-        "20 séries",
-        "4 niveaux"
-      ],
-      "kind": "document",
-      "status": "published",
-      "featured": false,
-      "recent": true
-    },
-    {
-      "id": "outils-chat-cest-toi-le-chat-pdf",
-      "title": "Chat, c’est toi le chat ! — Cartes grand format",
-      "description": "Les 80 cartes du jeu coopératif de repérage spatial, de la maternelle au collège, en grand format : les vingt séries sont réparties à raison de quatre cartes à découper par page.",
-      "path": "outils/chat-cest-toi-le-chat.pdf",
-      "domains": [
-        "geometrie",
-        "jeux-recherches"
-      ],
-      "notions": [
-        "reperage",
-        "strategie"
-      ],
-      "uses": [
-        "manipuler",
-        "imprimer"
-      ],
-      "types": [
-        "imprimable"
-      ],
-      "filters": [
-        "materiel-imprimer"
-      ],
-      "keywords": [
-        "cycle 1",
-        "cycle 3",
-        "cycle 4",
-        "maternelle",
-        "école élémentaire",
-        "collège",
-        "repérage spatial",
-        "positionnement dans l’espace",
-        "communication",
-        "coopération",
-        "devant",
-        "derrière",
-        "gauche",
-        "droite",
-        "cartes grand format",
-        "quatre cartes par page",
-        "20 séries",
-        "4 niveaux"
-      ],
-      "kind": "document",
-      "status": "published",
-      "featured": false,
-      "recent": true
-    },
-    {
-      "id": "outils-chat-cest-toi-le-chat-recto-verso-pdf",
-      "title": "Chat, c’est toi le chat ! — Cartes grand format recto-verso",
-      "description": "Les 80 cartes du jeu coopératif de repérage spatial, de la maternelle au collège, en grand format, avec un verso blanc portant le titre et l’emblème maths&go. Imprimer à taille réelle (100 %) en retournant sur le bord long.",
-      "path": "outils/chat-cest-toi-le-chat-recto-verso.pdf",
-      "domains": [
-        "geometrie",
-        "jeux-recherches"
-      ],
-      "notions": [
-        "reperage",
-        "strategie"
-      ],
-      "uses": [
-        "manipuler",
-        "imprimer"
-      ],
-      "types": [
-        "imprimable"
-      ],
-      "filters": [
-        "materiel-imprimer"
-      ],
-      "keywords": [
-        "cycle 1",
-        "cycle 2",
-        "cycle 3",
-        "cycle 4",
-        "maternelle",
-        "école élémentaire",
-        "collège",
-        "repérage spatial",
-        "positionnement dans l’espace",
-        "communication",
-        "coopération",
-        "devant",
-        "derrière",
-        "gauche",
-        "droite",
-        "cartes grand format",
-        "quatre cartes par page",
-        "recto-verso",
-        "impression duplex",
-        "retourner sur le bord long",
-        "20 séries",
-        "4 niveaux"
-      ],
-      "kind": "document",
-      "status": "published",
-      "featured": false,
-      "recent": true
-    },
-    {
-      "id": "outils-chat-cest-toi-le-chat-cartes-compactes-pdf",
-      "title": "Chat, c’est toi le chat ! — Cartes compactes",
-      "description": "Le jeu coopératif de repérage spatial, de la maternelle au collège, en format compact : les 80 cartes des vingt séries sont réparties à raison de huit cartes en portrait par feuille A4 paysage.",
-      "path": "outils/chat-cest-toi-le-chat-cartes-compactes.pdf",
-      "domains": [
-        "geometrie",
-        "jeux-recherches"
-      ],
-      "notions": [
-        "reperage",
-        "strategie"
-      ],
-      "uses": [
-        "manipuler",
-        "imprimer"
-      ],
-      "types": [
-        "imprimable"
-      ],
-      "filters": [
-        "materiel-imprimer"
-      ],
-      "keywords": [
-        "cycle 1",
-        "cycle 2",
-        "cycle 3",
-        "cycle 4",
-        "maternelle",
-        "école élémentaire",
-        "collège",
-        "repérage spatial",
-        "positionnement dans l’espace",
-        "communication",
-        "coopération",
-        "devant",
-        "derrière",
-        "gauche",
-        "droite",
-        "cartes compactes",
-        "huit cartes par feuille",
-        "20 séries",
-        "4 niveaux"
-      ],
-      "kind": "document",
-      "status": "published",
-      "featured": false,
-      "recent": true
-    },
-    {
-      "id": "outils-chat-cest-toi-le-chat-cartes-compactes-recto-verso-pdf",
-      "title": "Chat, c’est toi le chat ! — Cartes compactes recto-verso",
-      "description": "Les 80 cartes du jeu coopératif de repérage spatial, de la maternelle au collège, en format compact, avec un verso blanc portant le titre et l’emblème maths&go. Imprimer à taille réelle (100 %) en retournant sur le bord court.",
-      "path": "outils/chat-cest-toi-le-chat-cartes-compactes-recto-verso.pdf",
-      "domains": [
-        "geometrie",
-        "jeux-recherches"
-      ],
-      "notions": [
-        "reperage",
-        "strategie"
-      ],
-      "uses": [
-        "manipuler",
-        "imprimer"
-      ],
-      "types": [
-        "imprimable"
-      ],
-      "filters": [
-        "materiel-imprimer"
-      ],
-      "keywords": [
-        "cycle 1",
-        "cycle 2",
-        "cycle 3",
-        "cycle 4",
-        "maternelle",
-        "école élémentaire",
-        "collège",
-        "repérage spatial",
-        "positionnement dans l’espace",
-        "communication",
-        "coopération",
-        "devant",
-        "derrière",
-        "gauche",
-        "droite",
-        "cartes compactes",
-        "huit cartes par feuille",
-        "recto-verso",
-        "impression duplex",
-        "retourner sur le bord court",
-        "20 séries",
-        "4 niveaux"
-      ],
-      "kind": "document",
-      "status": "published",
-      "featured": false,
-      "recent": true
-    },
-    {
-      "id": "outils-chat-cest-toi-le-chat-projection-html",
-      "title": "Chat, c’est toi le chat ! — À projeter",
-      "description": "Une activité collective de repérage spatial à projeter, de la maternelle au collège : toute la classe observe un placement, argumente puis vérifie les quatre cartes pas à pas.",
-      "path": "outils/chat-cest-toi-le-chat-projection.html",
-      "domains": [
-        "geometrie",
-        "jeux-recherches"
-      ],
-      "notions": [
-        "reperage",
-        "strategie"
-      ],
-      "uses": [
-        "projeter"
-      ],
-      "types": [
-        "exerciseur"
-      ],
-      "filters": [],
       "keywords": [
         "cycle 1",
         "cycle 2",
@@ -3069,10 +2765,18 @@ window.MATHSGO_CATALOGUE = {
         "derrière",
         "gauche",
         "droite",
+        "chat",
+        "cerceaux",
+        "jeu coopératif",
+        "jeu en ligne",
+        "familles",
         "projection",
-        "placement",
-        "vrai ou faux",
-        "jeu collectif"
+        "jeu collectif",
+        "cartes à imprimer",
+        "guide pédagogique",
+        "solutions",
+        "48 séries",
+        "4 niveaux"
       ],
       "kind": "tool",
       "status": "published",

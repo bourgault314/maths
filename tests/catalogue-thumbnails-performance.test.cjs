@@ -25,7 +25,20 @@ function collectThumbnailReferences(value, references = new Set()) {
 const dataThumbnails = collectThumbnailReferences(dataContext.window.MATHSGO_CATALOGUE);
 const interfaceThumbnails = [...catalogueScript.matchAll(/thumbnail:\s*"([^"]+)"/g)]
   .map((match) => match[1].split("?")[0]);
-const allThumbnails = new Set([...dataThumbnails, ...interfaceThumbnails]);
+/* Les pages de collection (outils/<theme>/index.html) affichent elles aussi des
+   miniatures : depuis que « Chat, c'est toi le chat ! » tient dans une seule carte,
+   c'est la page du jeu — et non plus le catalogue — qui appelle trois de ces PNG. */
+const collectionThumbnails = fs
+  .readdirSync(path.join(root, "outils"), { withFileTypes: true })
+  .filter((entry) => entry.isDirectory())
+  .map((entry) => path.join(root, "outils", entry.name, "index.html"))
+  .filter((pagePath) => fs.existsSync(pagePath))
+  .flatMap((pagePath) =>
+    fs.readFileSync(pagePath, "utf8")
+      .split('"')
+      .filter((morceau) => morceau.includes("assets/img/thumbnails/"))
+      .map((morceau) => morceau.slice(morceau.indexOf("assets/img/thumbnails/")).split("?")[0]));
+const allThumbnails = new Set([...dataThumbnails, ...interfaceThumbnails, ...collectionThumbnails]);
 const pngThumbnails = [...allThumbnails].filter((thumbnail) => /\.png$/i.test(thumbnail));
 
 global.window = {};
@@ -34,8 +47,8 @@ require(catalogueScriptPath);
 const thumbnailHelpers = global.window.MATHSGO_CATALOGUE_THUMBNAILS;
 
 test("toutes les miniatures et tous les replis WebP existent", () => {
-  assert.ok(allThumbnails.size >= 89, "l’inventaire doit couvrir les données et les collections de l’interface");
-  assert.ok(pngThumbnails.length >= 66, "tous les PNG actuels doivent être couverts");
+  assert.ok(allThumbnails.size >= 92, "l’inventaire doit couvrir les données, les collections de l’interface et les pages de collection");
+  assert.ok(pngThumbnails.length >= 68, "tous les PNG actuels doivent être couverts");
 
   for (const thumbnail of allThumbnails) {
     assert.ok(fs.existsSync(path.join(root, thumbnail)), thumbnail);
