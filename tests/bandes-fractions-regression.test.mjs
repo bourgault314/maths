@@ -126,6 +126,22 @@ test('la palette est escamotable et le son a entièrement disparu', () => {
   assert.doesNotMatch(html, /AudioContext|SOUND_ENABLED|playSound\(/);
 });
 
+test('le mode noir et blanc retire seulement les aplats des bandes', () => {
+  assert.match(
+    html,
+    /id="btn-monochrome"[^>]+aria-pressed="false"[^>]+aria-label="Afficher les bandes en noir et blanc"/,
+  );
+  assert.match(html, /body\.strips-monochrome \.strip\{\s*--fillColor:#ffffff !important;/);
+  assert.match(
+    html,
+    /body\.strips-monochrome \.face,[\s\S]*body\.strips-monochrome \.seam-cover\{/,
+  );
+  assert.match(html, /function setMonochromeMode\(enabled\)/);
+  assert.match(html, /classList\.toggle\('strips-monochrome', isMonochrome\)/);
+  assert.match(html, /getElementById\('btn-monochrome'\)\?\.addEventListener\('click'/);
+  assert.match(html, /setMonochromeMode\(false\);\s*setPaletteCollapsed\(false\);/);
+});
+
 test('les écritures compactes de la palette restent dans les petites parts', () => {
   const prototype = appPrototype();
   assert.equal(prototype.menuLabelFontSize.call({labelMode:'text'}, 2, 'text'), 12);
