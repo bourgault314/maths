@@ -190,5 +190,50 @@
 
 ---
 
+## Paquet 9 — fin du monde 3 rejouée, début du monde 4 (3:5, 3:8, 4:1, 4:2) — reçu le 19/08
+
+### Notes
+
+- 3:6 et 3:7, rejoués au passage, avaient déjà donné les idées 29-31 et 33 —
+  rien à re-noter. Et Gwenael, après avoir refait la fin du monde 3 : « à un
+  point on tourne en rond » — depuis 3:5, plus AUCUNE mécanique neuve
+  n'apparaît. Le vocabulaire de difficultés de l'original est capturé : ce
+  paquet grave des PRINCIPES tirés des niveaux, plus des mécaniques.
+- Les additions n'existent pas dans ce jeu-ci : elles seraient dans
+  Refraction 2, que Gwenael cherchera à l'occasion.
+
+### Idées à retenir (et transposition Solèy)
+
+34. **La difficulté par composition** : un niveau dur n'invente rien, il
+    SUPERPOSE. 3:5 « Double Cross » (le niveau qui a le plus résisté) empile
+    sept idées déjà cataloguées — pièce à valeur (12), part perdue-trésor (21),
+    croisements (24), rayon sacrifié (27), grand gaspillage (30), autoroute du
+    bord, difficulté dans la couche optionnelle (32) — et GAGNER y reste
+    simple : c'est la cueillette complète qui superpose tout. → Gabarit des
+    niveaux-sommets de fin de monde et des défis : composer 3+ formes connues
+    du menu, jamais inventer une mécanique pour durcir.
+35. **La source-leurre** (3:8 « Laser Waster ») : deux sources, et la victoire
+    n'en utilise qu'UNE — l'autre traverse le plateau entière et sort, jamais
+    touchée. Le titre le soufflait (titre-indice). Variante extrême de 23
+    (affectation) + 30 (gaspillage) : elle attaque le réflexe « tout doit
+    servir ». → Transposition : le soleil de trop — GAGNER l'ignore, les
+    FRUITS vivent sur son chemin (gagner = comprendre qu'il ne sert à rien ;
+    tout ramasser = quand même l'exploiter). Candidate 9e forme (🅘) du menu
+    de PLAN-FRUITS.md.
+36. **Les dénominateurs premiers entrent par la source, et l'affectation se
+    calcule** (4:1 « Smaller Sources », 4:2 « Mix and Match ») : des sources
+    valant 1/3, 1/5, 1/7 — le cinquième et le septième, infabricables par
+    ÷2/÷3, arrivent PAR LA SOURCE ; puis chaque cible n'a qu'un parent
+    arithmétique possible (1/9 ne peut naître que de 1/3 ÷ 3, avec un seul ÷3
+    en boîte). Raffine 23 + 26 : l'affectation n'est plus géométrique, elle se
+    CALCULE. → Pour Solèy : le jour où le marché voudra CONSTRUIRE ses
+    dixièmes (dette connue : il parle de 0,5 sans savoir le fabriquer), un
+    soleil val 1/5 ou 1/10 est la porte d'entrée sans pièce ÷5 neuve ; et des
+    multi-soleils où le calcul force l'affectation — « Trois petits soleils »
+    (1/2, 1/3, 1/6) en a déjà le germe, à pousser dans les retouches du monde
+    des soleils.
+
+---
+
 *(paquets suivants à ajouter ici)*
 
