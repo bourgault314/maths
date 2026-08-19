@@ -14,7 +14,7 @@
       { "id": "pensee-informatique", "label": "Pensée informatique" },
       { "id": "problemes", "label": "Résolution de problèmes" },
       { "id": "jeux-recherche", "label": "Jeux et recherche" },
-      { "id": "cps", "label": "Outils pour la classe" }
+      { "id": "cps", "label": "Vie de classe" }
     ],
     "uses": [
       { "id": "manipuler", "label": "Manipuler" },

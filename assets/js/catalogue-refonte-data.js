@@ -1357,7 +1357,7 @@ window.MATHSGO_CATALOGUE = {
     },
     {
       "id": "cps",
-      "title": "Outils pour la classe",
+      "title": "Vie de classe",
       "short": "Accueillir les élèves, accompagner le groupe et développer les compétences psychosociales.",
       "color": "#b84f7b",
       "soft": "#fff0f6"
