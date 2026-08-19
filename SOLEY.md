@@ -1606,4 +1606,18 @@ Trois choses à savoir avant d'y toucher :
   disent 73. `main` a bougé deux fois pendant la séance (#418 et #420, jeu du
   chat) : zéro fichier en commun avec les lots, donc aucun rebase — le contrôle se
   fait en comparant les deux `git diff --name-only`.
+- **19/08 — PR de doc : trois chantiers gravés au dépôt (audit du 19/08).**
+  L'audit complet du 19/08 (batteries rejouées sur `49c7b939`, les quatre lots
+  contre-vérifiés à leur commit de fusion, harnais indépendant : 73 sol gagnent,
+  145/145 fruits, 0 orphelin, compteurs publics justes) n'a trouvé AUCUNE
+  casse — mais trois plans récents ne vivaient que dans des fichiers livrés
+  hors dépôt, contre la règle « le dépôt est la mémoire officielle ». Les
+  voici gravés : `PLAN-COURS.md` (les mondes 5-9 n'enseignent rien — 24 niveaux
+  à CALC d'addition pour 3 cours, la loupe jamais enseignée ; 5 cours proposés,
+  premier chantier), `SPEC-MONDE-QUANTITE.md` (v0.2 : le pique-nique de
+  Grand'Anse, position 7 proposée, arc de 8 niveaux esquissé), `PLAN-FRUITS.md`
+  (la grande mesure du 17/08 — 29 niveaux à fruits cadeaux —, le menu 🅐-🅗 des
+  difficultés variées, ~20 retouches en 3 PR, en dernier). Contenu marqué
+  proposé/décidé ligne par ligne ; fusionner ne vaut pas validation (leçon de
+  #390). Aucun code touché.
 - (à compléter à chaque session)
