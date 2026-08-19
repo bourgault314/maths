@@ -29,9 +29,12 @@ SITE_ROOT = HERE.parents[1]
 OUT_DIR = HERE / "out"
 LOGO_PATH = SITE_ROOT / "assets" / "img" / "mathsgo-logo.png"
 FONT_PATH = Path("/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf")
+FONT_REGULAR_PATH = Path("/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf")
 
 TITLE = "Chat, c’est toi le chat !"
+ADDRESS = "mathsgo.re"
 FONT_NAME = "ChatBackDejaVuBold"
+FONT_REGULAR_NAME = "ChatBackDejaVuRegular"
 NAVY = HexColor("#1F3A68")
 POINTS_PER_MM = 72 / 25.4
 
@@ -50,6 +53,9 @@ class Layout:
     duplex_instruction: str
     series_size: float
     series_per_page: int
+    address_size: float
+    address_margin_mm: float
+    address_color: str
 
 
 LARGE = Layout(
@@ -65,6 +71,11 @@ LARGE = Layout(
     duplex_instruction="retourner sur le bord long",
     series_size=22,
     series_per_page=1,
+    # Repris au point près de l'adresse déjà imprimée au recto : même corps,
+    # même gris et même marge basse, pour que les deux faces s'accordent.
+    address_size=6,
+    address_margin_mm=1.62,
+    address_color="#C4BBAC",
 )
 
 COMPACT = Layout(
@@ -80,6 +91,9 @@ COMPACT = Layout(
     duplex_instruction="retourner sur le bord court",
     series_size=15,
     series_per_page=2,
+    address_size=5.25,
+    address_margin_mm=1.15,
+    address_color="#B8AD9D",
 )
 
 
@@ -102,10 +116,12 @@ def _series_for_boxes(boxes: list[dict], layout: Layout, page_index: int) -> lis
 
 
 def _register_font() -> None:
-    if FONT_NAME not in pdfmetrics.getRegisteredFontNames():
-        if not FONT_PATH.is_file():
-            raise SystemExit(f"Police requise introuvable : {FONT_PATH}")
-        pdfmetrics.registerFont(TTFont(FONT_NAME, str(FONT_PATH)))
+    for name, path in ((FONT_NAME, FONT_PATH), (FONT_REGULAR_NAME, FONT_REGULAR_PATH)):
+        if name in pdfmetrics.getRegisteredFontNames():
+            continue
+        if not path.is_file():
+            raise SystemExit(f"Police requise introuvable : {path}")
+        pdfmetrics.registerFont(TTFont(name, str(path)))
 
 
 def _cropped_logo() -> tuple[ImageReader, float]:
@@ -157,7 +173,10 @@ def _draw_back_page(
     gap = layout.gap_mm * POINTS_PER_MM
     group_height = text_block_height + gap + logo_height + gap + series_block_height
 
+    address_margin = layout.address_margin_mm * POINTS_PER_MM
+
     for front, serie in zip(front_boxes, box_series):
+        pdf.setFillColor(NAVY)
         # Une feuille retournée selon le réglage indiqué réfléchit les colonnes
         # autour de l'axe vertical. Cela corrige aussi l'asymétrie de 1,2 mm du
         # PDF compact existant, sans valeur magique liée au CSS.
@@ -194,6 +213,20 @@ def _draw_back_page(
         series_top = logo_top + logo_height + gap
         series_baseline = page_height - series_top - layout.series_size
         pdf.drawString(card_center_x - series_width / 2, series_baseline, series_label)
+
+        # L'adresse du site reste en pied de carte, hors du bloc centré : elle
+        # se lit quand on la cherche sans jamais concurrencer le numéro de
+        # série, qui est l'information utile au rangement.
+        pdf.setFillColor(HexColor(layout.address_color))
+        pdf.setFont(FONT_REGULAR_NAME, layout.address_size)
+        address_width = pdfmetrics.stringWidth(
+            ADDRESS, FONT_REGULAR_NAME, layout.address_size
+        )
+        # La marge se mesure sous le jambage des lettres, comme au recto : il
+        # faut donc remonter la ligne de base de la descente de la police.
+        descent = -pdfmetrics.getDescent(FONT_REGULAR_NAME, layout.address_size)
+        address_baseline = page_height - front["bottom"] + address_margin + descent
+        pdf.drawString(card_center_x - address_width / 2, address_baseline, ADDRESS)
 
     pdf.showPage()
 
@@ -283,6 +316,35 @@ def _validate_duplex(path: Path, layout: Layout, expected_front_pages: int) -> f
                     raise ValueError(
                         f"{path.name}, verso {pair_index + 1} : la carte attendue "
                         f"« Série {serie} » est absente ou mal placée."
+                    )
+
+            # Chaque carte du verso porte aussi l'adresse du site, en pied,
+            # alignée sur la position réfléchie de la carte recto.
+            addresses = [
+                word for word in words if word["text"] == ADDRESS
+            ]
+            if len(addresses) != layout.expected_cards:
+                raise ValueError(
+                    f"{path.name}, verso {pair_index + 1} : {len(addresses)} "
+                    f"mentions « {ADDRESS} » au lieu de {layout.expected_cards}."
+                )
+            for front in front_boxes:
+                mirrored_center = front_page.width - (front["x0"] + front["x1"]) / 2
+                matching = [
+                    word
+                    for word in addresses
+                    if abs((word["x0"] + word["x1"]) / 2 - mirrored_center)
+                    <= 0.5 * POINTS_PER_MM
+                    and abs(
+                        (front["bottom"] - word["bottom"])
+                        - layout.address_margin_mm * POINTS_PER_MM
+                    )
+                    <= 0.5 * POINTS_PER_MM
+                ]
+                if len(matching) != 1:
+                    raise ValueError(
+                        f"{path.name}, verso {pair_index + 1} : adresse du site "
+                        f"absente ou mal placée en pied de carte."
                     )
 
             expected_centers = sorted(
