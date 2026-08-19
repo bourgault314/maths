@@ -61,7 +61,10 @@ toujours les mêmes ». Le menu, nourri des 33 idées de la bibliothèque :
   forme des tunnels, où replacer les fruits ne suffit pas (les couloirs n'ont
   qu'un chemin).
 - 🅗 **Derrière la passe ou la porte** — le fruit gardé par une passe étroite ou
-  une porte orientée (idées 26, 33).
+  une porte orientée (idée 33). La passe étroite et la porte orientée sont des
+  mécaniques PROPRES à Solèy, pas des idées de l'original : aucune des 33 ne les
+  porte (le renvoi « idée 26 » de la v1 visait les sources en bord de cadre —
+  corrigé le 19/08 après relecture de AUDIT-33-IDEES.md).
 
 ## 4. Les décisions de Gwenael qui cadrent le chantier (17/08, validées)
 
@@ -94,6 +97,12 @@ entrée au vérificateur du lot.
 ## 6. Questions ouvertes (à trancher avant de construire)
 
 1. Les fruits à valeur (🅑) sortent-ils de la canne ? (C'était sa signature.)
-2. La règle des pièces en trop : 36 niveaux ont du surplus, 5 le disent.
+2. La règle des pièces en trop : **40 niveaux sur 73** ont plus de pièces en
+   boîte que leur `sol` n'en pose (37 si l'on retire les 3 niveaux à pièces
+   `fixed`) ; **5** le disent — « Deux tiers », « Le champ de fougères », « Le
+   grand labyrinthe », « Le labyrinthe des remparts », « Les verrous du cirque ».
+   *(Le « 36 » de la v1 n'était reproductible à aucune date : 41 au 17/08 avec la
+   même définition. Recalé sur la mesure du 19/08 — un compteur REJOINT la vérité,
+   il ne s'incrémente pas, règle du §6 de SOLEY.md.)*
    Avis Claude : UNE phrase au niveau 1 (« il peut rester des pièces ») et on ne
    le redit plus jamais. À trancher une fois pour toutes.

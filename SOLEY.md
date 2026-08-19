@@ -1619,5 +1619,15 @@ Trois choses à savoir avant d'y toucher :
   (la grande mesure du 17/08 — 29 niveaux à fruits cadeaux —, le menu 🅐-🅗 des
   difficultés variées, ~20 retouches en 3 PR, en dernier). Contenu marqué
   proposé/décidé ligne par ligne ; fusionner ne vaut pas validation (leçon de
-  #390). Aucun code touché.
+  #390). Aucun code touché. **Contre-mesure de la session Code sur les chiffres du
+  paquet (#425) : tout est exact à l'unité — 14 cours tous dans les mondes 1-4,
+  24 niveaux à CALC d'addition, 10 niveaux à loupe (`x2`/`x3`) tous dans des mondes
+  sans cours, 73/145/67/19 — SAUF deux points, corrigés par #427 :** le « 36 niveaux
+  ont du surplus » de PLAN-FRUITS §6 n'était reproductible à aucune date (40
+  aujourd'hui, 41 au 17/08, définition « plus de pièces en boîte que la solution de
+  référence n'en pose »), et la forme 🅗 renvoyait à l'« idée 26 » (sources en bord de cadre) alors
+  qu'aucune des 33 idées ne porte la passe ni la porte — ce sont des mécaniques
+  propres à Solèy. **Rappel de méthode : un chiffre reçu se remesure AVANT d'être
+  gravé ; celui-là est passé parce que la PR était de la doc pure et que la règle du
+  lot interdisait d'y toucher — d'où cette PR de suite, jamais une retouche muette.**
 - (à compléter à chaque session)
