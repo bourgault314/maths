@@ -654,6 +654,37 @@ plateau ne répond plus aux clics — défaut trouvé en construisant le lot).
    désormais : `dec` enseigne et jalonne · `cours` enseigne après la victoire ·
    `intro` explique avant de jouer · `coursFruits` célèbre le geste accompli.
 
+- **Un compteur se recale sur la vérité mesurée, il ne s'incrémente pas** (18/08).
+  Le lot pitons-1 faisait passer la carte du catalogue de « 70 casse-têtes » à
+  « 72 » pendant que la méta, la description, l'annuaire et la vignette passaient
+  à 73 : il avait ajouté +2 au lieu de rejoindre le compte réel, et le compteur
+  mentait déjà d'une unité avant lui (70 pour 71 niveaux). Le test avait été mis à
+  jour au même compte — `tests/soley-public.test.mjs` exigeait « 73 niveaux » et
+  « 72 casse-têtes » dans **deux lignes consécutives, pour la même ressource**.
+  **Un test aligné sur l'erreur la scelle au lieu de la révéler :** l'écart se
+  recopiait de lot en lot, invisible à toute batterie. Les cinq compteurs publics
+  de Solèy se vérifient ENSEMBLE, jamais un par un : méta de `soley.html`,
+  `description` ET `cardDescription` du catalogue, annuaire
+  `toutes-les-ressources.html`, vignette `soley.svg`.
+- **Un vérificateur de lot et une batterie Playwright lisent l'ARBRE DE TRAVAIL,
+  pas le commit qu'on croit tester** (18/08, erreur commise deux fois dans la même
+  session). Lancer `verifier-lot-pitons-demenagement.mjs` depuis la pointe d'une
+  chaîne où le lot suivant est déjà appliqué sort des ÉCHECS qui décrivent
+  exactement le contenu du lot suivant ; lancer `test_soley.py` **sans `--root`**
+  depuis la branche d'un lot non fusionné compare les attentes de ce lot au site
+  qui porte le précédent. Les deux fois, la remesure au bon endroit est sortie
+  TOUT VERT. **Avant toute batterie : quel arbre est sorti, et contre quoi je
+  mesure ? Pour le rituel d'après-fusion, `git checkout origin/main` d'abord.**
+- **Un paquet reçu d'une autre session décrit le monde du jour où il a été écrit**
+  (18/08). Trois commandes avant de croire son mode d'emploi : `git fetch` ;
+  contrôler l'existence dans `main` d'un fichier neuf du lot (le lot 1 des quatre
+  lots y était DÉJÀ) ; comparer les `index <blob>` du patch aux
+  `git rev-parse origin/main:<chemin>` (la base annoncée était périmée de sept
+  commits, deux fichiers du catalogue avaient dérivé). **Quand les récits
+  divergent, GitHub tranche** — et `git am -3` absorbe une dérive sans conflit,
+  mais cela se VÉRIFIE après coup : diffstat conforme à la liste attendue, et le
+  contenu des commits intercalés recompté avant/après.
+
 ## 7. Architecture (découpage d'août 2026, statique, sans build, GitHub Pages)
 
 Décision validée : `outils/club_maths/soley.html` RESTE la page publique (URL, sitemap,
@@ -1540,4 +1571,39 @@ Trois choses à savoir avant d'y toucher :
   sceneSomme, opt-in : `somme` et `denominateur` gardent leurs deux lignes au
   plus (règle du 15/08), rien ne bouge chez eux. La grammaire des murs s'applique
   aussi ici : le dessous se lit par rapport au dessus.
+- **18/08 — les quatre lots posés en quatre PR, et ce que l'exécution a corrigé du
+  paquet.** Séance d'application du zip `soley-4-lots-18-08_1.zip` : #417 (pitons-1,
+  squash `3b3512f0`), #419 (pitons-2, `b02eb7f5`), #421 (cueillette, `b71e907d`) —
+  le lot vérité était **déjà en ligne** à l'ouverture de la séance (#410,
+  `ea2406c8`), constaté par le CONTENU de `main` et non par un statut. Aucune PR
+  empilée, chacune ouverte seulement après vérification que la précédente était
+  entrée. **La base annoncée par le paquet (`02f56216`) était périmée de sept
+  commits** : sur les huit fichiers du lot pitons-1, six intacts à l'octet et deux
+  dérivés (`catalogue-refonte-data.js` et `toutes-les-ressources.html`, retouchés
+  par les PR du jeu du chat) ; `git am -3` a absorbé la dérive **sans conflit sur
+  les trois patchs**, contenu des PR intercalées vérifié survivant par comptage
+  d'occurrences, diffstats conformes aux listes annoncées. Les trois vérificateurs
+  livrés se sont montrés honnêtes : **25, 16 et 13 contrôles, tous vus verts**
+  contre le vrai `main`. **Un seul défaut réel dans le paquet, corrigé en second
+  commit de #417 : le compteur de la carte du catalogue** (règle passée au §6).
+  Rituel fait après CHAQUE fusion : Publication verte, batterie du jeu **TOUT VERT
+  sur mathsgo.re** (dont **T16 en production** : le cours « Recoller deux moitiés »
+  s'affiche vraiment à la cueillette complète), et **10/10 fichiers servis
+  identiques aux octets** d'`origin/main` — les sept de Solèy plus la vignette, le
+  catalogue et l'annuaire, comparés au `git show origin/main:<chemin>` et jamais au
+  disque (dérive CRLF). Branches locales et distantes supprimées, worktree retiré,
+  clone principal jamais touché (il servait une session parallèle).
+  **Deux repères pour la prochaine session.** (1) Le compte de référence de
+  `node --test` est **1 590** depuis #415 (mode noir et blanc des bandes) : les
+  entrées ci-dessus annoncent 1 589, c'est le compte d'avant, pas une régression.
+  (2) `levels.js` commence par `"use strict"`, donc ses `const` (`WORLDS`, `LV`,
+  `COURS`, `CALC`) **ne sont pas des propriétés du contexte vm** — les relire par
+  `vm.runInContext('WORLDS', ctx)`, jamais par `ctx.WORLDS`, qui rend `undefined`.
+  **État du jeu en ligne à la fin du 18/08, mesuré sur le `levels.js` SERVI :**
+  mondes lagon · canne · pitons · forêt · volcan · soleils · marché · tunnels ·
+  Mafate, **73 niveaux, 73 clés de sauvegarde, 145 fruits, 14 points de cours**
+  (`moities` est le dernier), un cours à la cueillette. Les cinq compteurs publics
+  disent 73. `main` a bougé deux fois pendant la séance (#418 et #420, jeu du
+  chat) : zéro fichier en commun avec les lots, donc aucun rebase — le contrôle se
+  fait en comparant les deux `git diff --name-only`.
 - (à compléter à chaque session)
