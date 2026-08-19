@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "updatedAt": "2026-07-15",
+  "updatedAt": "2026-08-19",
   "description": "Catalogue central des points d’entrée publics. Les fichiers restent à leur emplacement actuel ; les placements pilotent leur affichage virtuel futur.",
   "uiConnected": false,
   "vocabularies": {
@@ -14,7 +14,7 @@
       { "id": "pensee-informatique", "label": "Pensée informatique" },
       { "id": "problemes", "label": "Résolution de problèmes" },
       { "id": "jeux-recherche", "label": "Jeux et recherche" },
-      { "id": "cps", "label": "Compétences psychosociales" }
+      { "id": "cps", "label": "Outils pour la classe" }
     ],
     "uses": [
       { "id": "manipuler", "label": "Manipuler" },
@@ -101,6 +101,17 @@
       "themes": ["cps"],
       "uses": ["projeter", "imprimer"],
       "audiences": ["eleve", "enseignant", "classe"]
+    },
+    {
+      "id": "cps-bingos-rentree",
+      "title": "Bingos de rentrée pour le collège",
+      "description": "Trois bingos de rentrée prêts à imprimer pour les niveaux 5e, 4e et 3e afin de faire connaissance et de créer du lien.",
+      "path": "cps/bingos-rentree.html",
+      "kind": "document",
+      "status": "published",
+      "themes": ["cps"],
+      "uses": ["imprimer"],
+      "audiences": ["enseignant", "classe"]
     },
     {
       "id": "conversions",

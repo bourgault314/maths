@@ -1,0 +1,329 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>Bingos de rentrée pour le collège | maths&amp;go</title>
+  <link rel="icon" href="/favicon.ico" sizes="48x48">
+  <link rel="icon" type="image/svg+xml" href="/favicon.svg">
+  <link rel="icon" type="image/png" sizes="32x32" href="/assets/img/favicon-32.png">
+  <link rel="icon" type="image/png" sizes="192x192" href="/assets/img/favicon-192.png">
+  <link rel="apple-touch-icon" href="/assets/img/apple-touch-icon.png">
+  <meta name="description" content="Trois bingos de rentrée prêts à imprimer pour les niveaux 5e, 4e et 3e afin de faire connaissance, créer du lien et mobiliser l'écoute et la prise de parole.">
+  <link rel="canonical" href="https://mathsgo.re/cps/bingos-rentree.html">
+  <meta name="robots" content="index, follow, max-image-preview:large">
+  <meta property="og:type" content="website">
+  <meta property="og:site_name" content="maths&amp;go">
+  <meta property="og:locale" content="fr_FR">
+  <meta property="og:title" content="Bingos de rentrée pour le collège">
+  <meta property="og:description" content="Trois versions génériques, prêtes à imprimer, pour les niveaux cinquième, quatrième et troisième.">
+  <meta property="og:image" content="https://mathsgo.re/cps/assets/bingos-rentree/carte-catalogue.webp">
+  <meta property="og:image:type" content="image/webp">
+  <meta property="og:image:width" content="1200">
+  <meta property="og:image:height" content="675">
+  <meta property="og:image:alt" content="Trois bingos de rentrée pour les classes de cinquième, quatrième et troisième">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="Bingos de rentrée pour le collège">
+  <meta name="twitter:description" content="Trois versions prêtes à imprimer pour faire connaissance et créer du lien en début d’année.">
+  <meta name="twitter:image" content="https://mathsgo.re/cps/assets/bingos-rentree/carte-catalogue.webp">
+  <link rel="stylesheet" href="../assets/css/entry-alignment.css?v=cartes-alignees-20260719-4">
+  <link rel="stylesheet" href="../assets/css/catalogue-refonte.css?v=miniatures-20260811-2">
+  <link rel="stylesheet" href="../assets/css/consentement.css">
+  <script defer src="../assets/js/consentement.js"></script>
+  <style>
+    .catalogue-breadcrumb a {
+      min-height: 44px;
+      display: inline-flex;
+      align-items: center;
+      padding: 7px 12px;
+      border: 1px solid #d8e4ef;
+      border-radius: 999px;
+      color: var(--blue);
+      background: #f7fafc;
+      font-weight: 760;
+      text-align: left;
+      white-space: normal;
+      text-decoration: none;
+    }
+    .catalogue-breadcrumb a:hover,
+    .catalogue-breadcrumb a:focus-visible {
+      border-color: #a9c9e8;
+      background: #edf5fc;
+    }
+    .hero .bingos-lead {
+      max-width: 900px;
+      margin: 6px 0 0;
+      color: #5c6f86;
+      font-size: .95rem;
+      line-height: 1.5;
+    }
+    .pack-card {
+      min-height: 92px;
+      margin-bottom: 14px;
+      border-top-color: #b84f7b;
+      background: linear-gradient(135deg, #fff 0%, #fff6fa 100%);
+    }
+    .pack-card .resource-type-icon {
+      color: #9b3f69;
+      background: #fff0f6;
+    }
+    .pack-card .resource-arrow { color: #9b3f69; }
+    .level-resource {
+      cursor: default;
+    }
+    .level-resource .resource-copy {
+      grid-column: 1 / -1;
+      align-self: stretch;
+      display: flex;
+      flex-direction: column;
+    }
+    .level-heading {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+    }
+    .level-heading h3 { margin: 0; }
+    .level-badge {
+      flex: 0 0 auto;
+      min-width: 42px;
+      padding: 5px 9px;
+      border-radius: 999px;
+      color: #fff;
+      background: var(--accent, var(--blue));
+      text-align: center;
+      font-size: .75rem;
+      font-weight: 900;
+    }
+    .level-actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-top: auto;
+      padding-top: 13px;
+    }
+    .level-action {
+      min-height: 40px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 7px;
+      padding: 8px 12px;
+      border: 1px solid color-mix(in srgb, var(--accent, var(--blue)) 38%, #d7e0e9);
+      border-radius: 10px;
+      color: color-mix(in srgb, var(--accent, var(--blue)) 86%, #16304f);
+      background: color-mix(in srgb, var(--accent, var(--blue)) 7%, #fff);
+      text-decoration: none;
+      font-size: .84rem;
+      font-weight: 850;
+    }
+    .level-action:hover,
+    .level-action:focus-visible {
+      border-color: var(--accent, var(--blue));
+      background: color-mix(in srgb, var(--accent, var(--blue)) 12%, #fff);
+    }
+    .level-action svg { width: 16px; height: 16px; }
+    .use-grid {
+      display: grid;
+      grid-template-columns: minmax(0, 1.2fr) minmax(270px, .8fr);
+      gap: 14px;
+    }
+    .info-card {
+      min-width: 0;
+      padding: 18px;
+      border: 1px solid #d7e0e9;
+      border-top: 5px solid var(--accent, var(--teal));
+      border-radius: 15px;
+      background: #fff;
+      box-shadow: 0 3px 8px rgba(15, 40, 72, .045);
+    }
+    .info-card h3 {
+      margin: 0;
+      color: #16304f;
+      font-size: 1rem;
+      line-height: 1.25;
+    }
+    .info-card p {
+      margin: 8px 0 0;
+      color: #637287;
+      font-size: .88rem;
+      line-height: 1.48;
+    }
+    .steps {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 9px 14px;
+      margin-top: 14px;
+    }
+    .step {
+      display: flex;
+      align-items: flex-start;
+      gap: 8px;
+      color: #586d83;
+      font-size: .83rem;
+      line-height: 1.38;
+    }
+    .step strong {
+      flex: 0 0 auto;
+      width: 24px;
+      height: 24px;
+      display: grid;
+      place-items: center;
+      border-radius: 50%;
+      color: #fff;
+      background: #149b95;
+      font-size: .72rem;
+    }
+    .cps-card {
+      --accent: #f58220;
+      background: linear-gradient(145deg, #fff 0%, #fff9ef 100%);
+    }
+    .credit-note {
+      margin: 18px 0 0;
+      color: #758398;
+      font-size: .72rem;
+      line-height: 1.4;
+      text-align: right;
+    }
+    .credit-note a { color: #526d8d; }
+    @media (max-width: 680px) {
+      .hero .bingos-lead { font-size: .91rem; line-height: 1.46; }
+      .use-grid, .steps { grid-template-columns: 1fr; }
+      .level-actions { flex-wrap: nowrap; }
+      .level-action { min-width: 0; flex: 1 1 0; padding-inline: 8px; }
+      .credit-note { text-align: left; }
+    }
+  </style>
+</head>
+<body class="catalogue-is-deep">
+  <a class="skip-link" href="#contenu">Aller au contenu</a>
+  <div class="site-shell">
+    <header class="site-header">
+      <a class="brand-link" href="../index.html" aria-label="Accueil maths&go">
+        <img src="../assets/img/mathsgo-logo.png" alt="maths&go" width="1338" height="622">
+      </a>
+      <nav class="catalogue-breadcrumb" aria-label="Fil d’Ariane">
+        <a class="breadcrumb-back" href="../outils/index.html?domain=cps" title="Revenir à Outils pour la classe">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M19 12H5m6-6-6 6 6 6"/></svg>
+          Outils pour la classe
+        </a>
+        <a class="breadcrumb-parent" href="../outils/index.html?domain=cps&amp;notion=rentree-cohesion" title="Revenir à Rentrée et cohésion">Rentrée et cohésion</a>
+      </nav>
+      <a class="header-home" href="../index.html">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m4 11 8-7 8 7v9h-5v-6H9v6H4Z" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/></svg>
+        <span>Accueil</span>
+      </a>
+    </header>
+
+    <main class="main-panel catalogue-deep-view" id="contenu">
+      <section class="hero" aria-labelledby="page-title">
+        <h1 id="page-title" tabindex="-1">Bingos de rentrée</h1>
+        <p class="bingos-lead">Trois fiches génériques, prêtes à imprimer, pour faire connaissance, créer du lien et amorcer les échanges dès les premiers jours en cinquième, quatrième et troisième.</p>
+      </section>
+
+      <div class="resource-grid">
+        <section class="resource-group" aria-labelledby="resource-group-bingos">
+          <div class="resource-group-heading">
+            <h2 id="resource-group-bingos">Les trois versions</h2>
+            <span>5e · 4e · 3e</span>
+          </div>
+
+          <a class="resource-card pack-card" href="bingos-rentree/bingos-rentree-college.zip" download style="--accent:#b84f7b;--soft:#fff0f6">
+            <span class="resource-type-icon">
+              <svg viewBox="0 0 32 32" aria-hidden="true"><path d="M8 4h12l5 5v19H8Z M20 4v6h6M16 12v9m-4-4 4 4 4-4" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            </span>
+            <span class="resource-copy">
+              <h3>Télécharger les trois bingos</h3>
+              <span class="resource-meta">ZIP · trois PDF A4 paysage · aucun compte nécessaire</span>
+            </span>
+            <span class="resource-arrow" aria-hidden="true">↓</span>
+          </a>
+
+          <div class="resource-group-grid">
+            <article class="resource-card resource-card-visual level-resource" style="--accent:#2f8b74;--soft:#edf8f4">
+              <span class="resource-thumbnail"><img src="assets/bingos-rentree/apercu-cinquieme.webp" width="1200" height="849" loading="eager" alt="Aperçu du bingo de rentrée pour la cinquième"></span>
+              <div class="resource-copy">
+                <div class="level-heading"><h3>Cinquième</h3><span class="level-badge">5e</span></div>
+                <span class="resource-description">Des questions accessibles sur les vacances, les goûts, les activités et les découvertes.</span>
+                <span class="resource-meta resource-uses">PDF · A4 paysage · prêt à imprimer</span>
+                <div class="level-actions">
+                  <a class="level-action" href="bingos-rentree/bingo-rentree-cinquieme.pdf" target="_blank" rel="noopener">
+                    <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 3h10l4 4v14H5Z M15 3v5h5" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/></svg>
+                    Ouvrir
+                  </a>
+                  <a class="level-action" href="bingos-rentree/bingo-rentree-cinquieme.pdf" download>Télécharger</a>
+                </div>
+              </div>
+            </article>
+
+            <article class="resource-card resource-card-visual level-resource" style="--accent:#654e9d;--soft:#f3effb">
+              <span class="resource-thumbnail"><img src="assets/bingos-rentree/apercu-quatrieme.webp" width="1200" height="849" loading="lazy" alt="Aperçu du bingo de rentrée pour la quatrième"></span>
+              <div class="resource-copy">
+                <div class="level-heading"><h3>Quatrième</h3><span class="level-badge">4e</span></div>
+                <span class="resource-description">Une version tournée vers les goûts, les pratiques culturelles et la rencontre avec le groupe.</span>
+                <span class="resource-meta resource-uses">PDF · A4 paysage · prêt à imprimer</span>
+                <div class="level-actions">
+                  <a class="level-action" href="bingos-rentree/bingo-rentree-quatrieme.pdf" target="_blank" rel="noopener">
+                    <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 3h10l4 4v14H5Z M15 3v5h5" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/></svg>
+                    Ouvrir
+                  </a>
+                  <a class="level-action" href="bingos-rentree/bingo-rentree-quatrieme.pdf" download>Télécharger</a>
+                </div>
+              </div>
+            </article>
+
+            <article class="resource-card resource-card-visual level-resource" style="--accent:#3489c2;--soft:#eef7fd">
+              <span class="resource-thumbnail"><img src="assets/bingos-rentree/apercu-troisieme.webp" width="1200" height="849" loading="lazy" alt="Aperçu du bingo de rentrée pour la troisième"></span>
+              <div class="resource-copy">
+                <div class="level-heading"><h3>Troisième</h3><span class="level-badge">3e</span></div>
+                <span class="resource-description">Une version qui ajoute notamment le stage, le futur métier et les stratégies d’apprentissage.</span>
+                <span class="resource-meta resource-uses">PDF · A4 paysage · prêt à imprimer</span>
+                <div class="level-actions">
+                  <a class="level-action" href="bingos-rentree/bingo-rentree-troisieme.pdf" target="_blank" rel="noopener">
+                    <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 3h10l4 4v14H5Z M15 3v5h5" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/></svg>
+                    Ouvrir
+                  </a>
+                  <a class="level-action" href="bingos-rentree/bingo-rentree-troisieme.pdf" download>Télécharger</a>
+                </div>
+              </div>
+            </article>
+          </div>
+        </section>
+
+        <section class="resource-group" aria-labelledby="resource-group-reperes">
+          <div class="resource-group-heading">
+            <h2 id="resource-group-reperes">Repères pédagogiques</h2>
+            <span>activité de rentrée</span>
+          </div>
+          <div class="use-grid">
+            <article class="info-card" style="--accent:#149b95">
+              <h3>Faire connaissance et créer du lien</h3>
+              <p>Le but est de provoquer des échanges, pas de classer les élèves. Une fiche incomplète reste donc parfaitement acceptable.</p>
+              <div class="steps">
+                <div class="step"><strong>1</strong><span>Distribuer une fiche à chaque élève.</span></div>
+                <div class="step"><strong>2</strong><span>Laisser les élèves circuler et poser leurs questions.</span></div>
+                <div class="step"><strong>3</strong><span>Utiliser un camarade différent pour chaque case.</span></div>
+                <div class="step"><strong>4</strong><span>Partager ensuite quelques découvertes avec le groupe.</span></div>
+              </div>
+            </article>
+            <aside class="info-card cps-card">
+              <h3>Clin d’œil CPS</h3>
+              <p>L’activité mobilise notamment la communication, l’écoute, la prise d’initiative et la curiosité envers les autres. Elle ne constitue ni une évaluation ni un diagnostic.</p>
+            </aside>
+          </div>
+          <p class="credit-note">Pictogramme sport : Font Awesome Free (Fonticons, Inc.) · <a href="https://creativecommons.org/licenses/by/4.0/" target="_blank" rel="license noopener">CC BY 4.0</a></p>
+        </section>
+      </div>
+    </main>
+
+    <footer class="site-footer">
+      <span>Gwenaël Bourgault</span><span aria-hidden="true">·</span>
+      <a href="mailto:gwenael@mathsgo.re?subject=Contact%20depuis%20mathsgo.re">Me contacter</a><span aria-hidden="true">·</span>
+      <a href="../outils/toutes-les-ressources.html">Toutes les ressources</a><span aria-hidden="true">·</span>
+      <a href="../mentions-legales.html">Mentions légales</a><span aria-hidden="true">·</span>
+      <a href="../confidentialite.html">Confidentialité</a><span aria-hidden="true">·</span>
+      <button type="button" data-mathsgo-consent-open onclick="window.mathsgoConsentement &amp;&amp; window.mathsgoConsentement.ouvrir()">Gérer mes cookies</button>
+    </footer>
+  </div>
+</body>
+</html>

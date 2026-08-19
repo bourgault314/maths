@@ -22,12 +22,12 @@ export const CURATED_PAGES = [
   },
   {
     path: "outils/index.html",
-    title: "Outils pédagogiques de mathématiques par thème | maths&go",
-    description: "Explorez les outils maths&go par thème : nombres, calcul, algèbre, géométrie, grandeurs, données, jeux et compétences psychosociales."
+    title: "Outils pédagogiques par thème | maths&go",
+    description: "Explorez les outils maths&go par thème : mathématiques, jeux, ressources de rentrée et compétences psychosociales."
   },
   {
     path: "outils/toutes-les-ressources.html",
-    title: "Toutes les ressources de mathématiques | maths&go",
+    title: "Toutes les ressources pédagogiques | maths&go",
     description: "La liste complète des outils interactifs, générateurs, exercices et documents à imprimer proposés par maths&go."
   },
   {

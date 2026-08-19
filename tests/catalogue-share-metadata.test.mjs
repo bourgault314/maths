@@ -16,7 +16,7 @@ function pngDimensions(buffer) {
 test("le catalogue déclare une carte de partage complète et dédiée", async () => {
   const html = await readFile(cataloguePath, "utf8");
 
-  assert.match(html, /<meta property="og:title" content="Explorer les outils de mathématiques">/);
+  assert.match(html, /<meta property="og:title" content="Explorer les outils pédagogiques">/);
   assert.match(html, /<meta property="og:image" content="https:\/\/mathsgo\.re\/assets\/img\/partage-catalogue\.png">/);
   assert.match(html, /<meta property="og:image:width" content="1200">/);
   assert.match(html, /<meta property="og:image:height" content="630">/);
