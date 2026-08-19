@@ -152,12 +152,21 @@ window.MATHSGO_CATALOGUE = {
   ],
   "resourceClassifications": {
     "cps/bilan-s1.html": {
-      "primaryNotion": "bilans-cps",
+      "primaryNotion": "competences-psychosociales",
       "primaryGroup": "activites",
       "collections": [],
       "tags": ["cps", "bilan", "connaissance-de-soi", "engagement"],
       "thumbnail": "cps/assets/bilan-s1/page-1.png",
       "cardDescription": "Un bilan guidé en quatre pages pour relire son semestre, comprendre son fonctionnement et choisir un petit pas concret."
+    },
+    "cps/bingos-rentree.html": {
+      "primaryNotion": "rentree-cohesion",
+      "primaryGroup": "activites",
+      "collections": [],
+      "tags": ["rentree", "cohesion", "cps", "communication", "ecoute", "faire-connaissance", "college", "imprimer"],
+      "thumbnail": "cps/assets/bingos-rentree/carte-catalogue.webp",
+      "cardTitle": "Bingos de rentrée",
+      "cardDescription": "Trois bingos prêts à imprimer pour faire connaissance, créer du lien et amorcer les échanges en 5e, 4e et 3e."
     },
     "outils/box_barre_final.html": { "primaryNotion": "schemas-barres", "primaryGroup": "activites", "collections": [], "tags": ["boite", "schema-barres"] },
     "outils/box_pasbarre_final.html": { "primaryNotion": "calcul-litteral", "primaryGroup": "activites", "collections": [], "tags": ["boite", "archive"] },
@@ -1348,8 +1357,8 @@ window.MATHSGO_CATALOGUE = {
     },
     {
       "id": "cps",
-      "title": "Compétences psychosociales",
-      "short": "Se connaître, coopérer et avancer avec confiance.",
+      "title": "Vie de classe",
+      "short": "Accueillir les élèves, accompagner le groupe et développer les compétences psychosociales.",
       "color": "#b84f7b",
       "soft": "#fff0f6"
     }
@@ -1504,6 +1513,16 @@ window.MATHSGO_CATALOGUE = {
       "id": "explorations",
       "title": "Explorations mathématiques",
       "domain": "jeux-recherches"
+    },
+    {
+      "id": "rentree-cohesion",
+      "title": "Rentrée et cohésion",
+      "domain": "cps"
+    },
+    {
+      "id": "competences-psychosociales",
+      "title": "Compétences psychosociales",
+      "domain": "cps"
     },
     {
       "id": "bilans-cps",
@@ -6027,6 +6046,7 @@ window.MATHSGO_CATALOGUE = {
         "cps"
       ],
       "notions": [
+        "competences-psychosociales",
         "bilans-cps"
       ],
       "uses": [
@@ -6046,6 +6066,43 @@ window.MATHSGO_CATALOGUE = {
       "kind": "document",
       "status": "published",
       "featured": true,
+      "recent": true
+    },
+    {
+      "id": "cps-bingos-rentree-html",
+      "title": "Bingos de rentrée pour le collège",
+      "description": "Trois bingos de rentrée prêts à imprimer pour les niveaux 5e, 4e et 3e afin de faire connaissance, créer du lien et mobiliser l'écoute et la prise de parole.",
+      "path": "cps/bingos-rentree.html",
+      "domains": [
+        "cps"
+      ],
+      "notions": [
+        "rentree-cohesion"
+      ],
+      "uses": [
+        "imprimer"
+      ],
+      "types": [
+        "imprimable"
+      ],
+      "filters": [
+        "materiel-imprimer"
+      ],
+      "keywords": [
+        "rentrée",
+        "cohésion",
+        "faire connaissance",
+        "CPS",
+        "communication",
+        "écoute",
+        "collège",
+        "cinquième",
+        "quatrième",
+        "troisième"
+      ],
+      "kind": "document",
+      "status": "published",
+      "featured": false,
       "recent": true
     }
   ]

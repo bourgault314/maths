@@ -289,10 +289,21 @@
       icon: "gears",
       hub: "club_maths/index.html"
     },
-    "bilans-cps": {
-      description: "Se connaître, faire le point et choisir un petit pas pour progresser.",
-      keywords: "cps compétences psychosociales bilan élève émotions coopération engagement",
+    "rentree-cohesion": {
+      description: "Faire connaissance, créer du lien et bien démarrer l'année.",
+      keywords: "rentrée accueil cohésion groupe faire connaissance communication écoute",
+      icon: "strategy"
+    },
+    "competences-psychosociales": {
+      description: "Bilans, connaissance de soi, émotions, coopération et engagement.",
+      keywords: "cps compétences psychosociales bilan connaissance de soi émotions coopération engagement",
       icon: "cps"
+    },
+    "bilans-cps": {
+      description: "Ancien accès direct aux bilans et à la connaissance de soi.",
+      keywords: "cps bilan connaissance de soi",
+      icon: "cps",
+      hiddenFromBrowse: true
     }
   };
 
