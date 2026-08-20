@@ -33,14 +33,14 @@
     display:flex; align-items:center; justify-content:center;
   }
   .brain-badge img{width:12.5mm; height:auto}
-  .head-title{flex:1}
+  .head-title{flex:1; min-width:0}
   .head-title .eyebrow{
     margin:0; font-size:7pt; font-weight:700; letter-spacing:.12em;
     text-transform:uppercase; color:var(--violet);
   }
-  .head-title h1{margin:.5mm 0 0; font-size:15pt; color:var(--navy); white-space:nowrap}
+  .head-title h1{margin:.5mm 0 0; font-size:15pt; color:var(--navy); text-wrap:balance}
   .identity{
-    flex:none; width:56mm; text-align:left; font-size:9pt; font-weight:600; color:var(--ink-soft);
+    flex:none; width:53mm; text-align:left; font-size:9pt; font-weight:600; color:var(--ink-soft);
     background:#fff; border:1.5px solid var(--line); border-radius:3mm; padding:2.5mm 3.5mm 3mm;
   }
   .identity .field{display:flex; align-items:baseline; gap:2mm; margin-top:1.5mm}

@@ -117,6 +117,16 @@
     padding:2.6vmin 2.6vmin 2.8vmin; text-align:left;
   }
   .info-card .emo{font-size:5vmin; display:block; margin-bottom:1vmin}
+  /* Le logo CPS prend la place d'un émoji dans la carte. */
+  .info-card .emo-logo{font-size:0; line-height:0; margin-bottom:1.2vmin}
+  .info-card .emo-logo svg{height:6.6vmin; width:auto; display:block}
+  /* Une famille par ligne : le symbole et le mot se lisent du fond de la
+     salle, l'explication reste en petit pour l'adulte qui commente. */
+  .familles{list-style:none; margin:.6vmin 0 1.2vmin; padding:0; display:flex; flex-direction:column; gap:1.1vmin}
+  .familles li{display:grid; grid-template-columns:3.6vmin 1fr; align-items:center; gap:0 1.4vmin}
+  .familles .cps-part{height:3.2vmin; width:3.6vmin; justify-self:center}
+  .familles b{font-size:2.9vmin; color:var(--navy); line-height:1.15}
+  .familles b span{display:block; font-weight:600; font-size:2.2vmin; color:var(--ink-soft); line-height:1.25}
   .info-card h3{margin:0 0 1vmin; font-size:2.9vmin; color:var(--navy)}
   .info-card p{margin:0; font-size:2.5vmin; color:var(--ink-soft); line-height:1.4}
   .info-card p strong{color:var(--ink)}
@@ -150,6 +160,23 @@
     .nav{padding:2.2vmin 3vmin; gap:2.4vmin}
     .nav button{font-size:3.8vmin; padding:0 4vmin; min-height:44px}
     .counter{font-size:3.4vmin}
+  }
+  /* Bouton plein écran : discret pendant la projection, franc au survol.
+     Le raccourci clavier F11 n'est pas connu de tout le monde. */
+  .plein-ecran{
+    position:fixed; top:2vmin; right:2vmin; z-index:5;
+    display:inline-flex; align-items:center; justify-content:center;
+    width:6vmin; height:6vmin; min-width:38px; min-height:38px;
+    border:1px solid var(--line); border-radius:999px; background:#fff;
+    color:var(--navy); cursor:pointer; box-shadow:var(--shadow);
+    opacity:.5; transition:opacity .18s, background .18s, color .18s;
+  }
+  .plein-ecran:hover,.plein-ecran:focus-visible{opacity:1; background:var(--violet-soft); color:var(--violet)}
+  .plein-ecran svg{width:56%; height:56%}
+  /* Cette règle vient APRÈS la règle de base, sinon elle perd à égalité de
+     spécificité et la cible retombe à 38 px sur téléphone. */
+  @media (max-width:768px){
+    .plein-ecran{min-width:44px; min-height:44px; opacity:1}
   }
 </style>
 </head>
@@ -364,11 +391,15 @@
       <strong>motivation</strong> et de l'<strong>apprentissage</strong>.</p>
     </div>
     <div class="info-card">
-      <span class="emo">🌱</span>
+      <span class="emo emo-logo"><svg viewBox="0 0 78 56" role="img" aria-label="Le logo des compétences psychosociales"><circle cx="39" cy="29" r="24.5" fill="none" stroke="#0a9188" stroke-width="4.6"/><path d="M39 18.5c-5.7-3.6-8.3-6.5-7.6-9.8.5-2.6 2.6-4.4 5.2-4.4 1.4 0 2.6.7 3.4 1.8.8-1.1 2-1.8 3.4-1.8 2.6 0 4.7 1.8 5.2 4.4.7 3.3-1.9 6.2-7.6 9.8l-1 1Z" transform="translate(-1 -2.5)" fill="#ff684c" stroke="#c74936" stroke-width="1.15" stroke-linejoin="round"/><path d="M13.5 29c0-2.5 2-4.5 4.5-4.5h13.5c2.5 0 4.5 2 4.5 4.5v6.5c0 2.5-2 4.5-4.5 4.5h-7l-4.8 4 .7-4H18c-2.5 0-4.5-2-4.5-4.5Z" fill="#20aaa4" stroke="#087f78" stroke-width="1.4" stroke-linejoin="round"/><path d="m61.8 37.8 7.6 7.6" fill="none" stroke="#a85b08" stroke-width="6" stroke-linecap="round"/><path d="m61.8 37.8 7.6 7.6" fill="none" stroke="#f9bf3b" stroke-width="4" stroke-linecap="round"/><circle cx="56" cy="32" r="8" fill="#fff" stroke="#a85b08" stroke-width="6"/><circle cx="56" cy="32" r="8" fill="#fff" stroke="#f9bf3b" stroke-width="4.3"/></svg></span>
       <h3>Les CPS, ça s'entraîne</h3>
-      <p>Trois familles : <strong>penser</strong> 🧠 (se connaître, décider), <strong>ressentir</strong> ❤️
-      (gérer stress et émotions), <strong>interagir</strong> 🤝 (communiquer, coopérer).
-      Et comme un muscle, plus on s'entraîne, plus on devient fort.</p>
+      <p>Trois familles — les trois symboles du logo :</p>
+      <ul class="familles">
+        <li><svg class="cps-part" viewBox="44 20 30 30" role="img" aria-label="la loupe"><path d="m61.8 37.8 7.6 7.6" fill="none" stroke="#a85b08" stroke-width="6" stroke-linecap="round"/><path d="m61.8 37.8 7.6 7.6" fill="none" stroke="#f9bf3b" stroke-width="4" stroke-linecap="round"/><circle cx="56" cy="32" r="8" fill="#fff" stroke="#a85b08" stroke-width="6"/><circle cx="56" cy="32" r="8" fill="#fff" stroke="#f9bf3b" stroke-width="4.3"/></svg><b>penser<span>se connaître, décider</span></b></li>
+        <li><svg class="cps-part" viewBox="29 0 18 18" role="img" aria-label="le cœur"><path d="M39 18.5c-5.7-3.6-8.3-6.5-7.6-9.8.5-2.6 2.6-4.4 5.2-4.4 1.4 0 2.6.7 3.4 1.8.8-1.1 2-1.8 3.4-1.8 2.6 0 4.7 1.8 5.2 4.4.7 3.3-1.9 6.2-7.6 9.8l-1 1Z" transform="translate(-1 -2.5)" fill="#ff684c" stroke="#c74936" stroke-width="1.15" stroke-linejoin="round"/></svg><b>ressentir<span>gérer stress et émotions</span></b></li>
+        <li><svg class="cps-part" viewBox="12 23 26 22" role="img" aria-label="la bulle"><path d="M13.5 29c0-2.5 2-4.5 4.5-4.5h13.5c2.5 0 4.5 2 4.5 4.5v6.5c0 2.5-2 4.5-4.5 4.5h-7l-4.8 4 .7-4H18c-2.5 0-4.5-2-4.5-4.5Z" fill="#20aaa4" stroke="#087f78" stroke-width="1.4" stroke-linejoin="round"/></svg><b>interagir<span>communiquer, coopérer</span></b></li>
+      </ul>
+      <p>Et comme un muscle, plus on s'entraîne, plus on devient fort.</p>
     </div>
   </div>
 </section>
@@ -413,6 +444,10 @@
   <h1>Place aux jeux de <span class="dopa">cohésion</span> !</h1>
   <p class="lead">On se lève, on joue, on fait connaissance. 🤝</p>
 </section>
+
+<button class="plein-ecran" id="plein-ecran" type="button" aria-label="Passer en plein écran" title="Plein écran">
+  <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+</button>
 
 <div class="nav">
   <button id="prev" type="button">← Précédent</button>
@@ -491,6 +526,37 @@
     x0=null;
   });
   show(0);
+</script>
+<script>
+(function(){
+  var bouton = document.getElementById('plein-ecran');
+  if (!bouton) return;
+  var trace = bouton.querySelector('path');
+  var OUVRIR = 'M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5';
+  var FERMER = 'M9 4v5H4M15 4v5h5M9 20v-5H4M15 20v-5h5';
+  function actif(){ return document.fullscreenElement || document.webkitFullscreenElement; }
+  function rafraichir(){
+    var e = !!actif();
+    trace.setAttribute('d', e ? FERMER : OUVRIR);
+    bouton.setAttribute('aria-label', e ? 'Quitter le plein écran' : 'Passer en plein écran');
+    bouton.title = e ? 'Quitter le plein écran' : 'Plein écran';
+  }
+  bouton.addEventListener('click', function(){
+    var promesse;
+    if (actif()) {
+      promesse = (document.exitFullscreen || document.webkitExitFullscreen).call(document);
+    } else {
+      var el = document.documentElement;
+      promesse = (el.requestFullscreen || el.webkitRequestFullscreen).call(el);
+    }
+    // Un refus du navigateur (politique, geste non reconnu) ne doit pas
+    // remplir la console : la page reste utilisable en fenêtre.
+    if (promesse && promesse.catch) promesse.catch(function(){});
+  });
+  document.addEventListener('fullscreenchange', rafraichir);
+  document.addEventListener('webkitfullscreenchange', rafraichir);
+  rafraichir();
+})();
 </script>
 </body>
 </html>
