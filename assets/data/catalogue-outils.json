@@ -196,7 +196,7 @@
       "id": "schemas-en-barre",
       "title": "Schémas en barres",
       "description": "Modéliser des problèmes avec des schémas en barres et des supports d’enquête.",
-      "path": "outils/index.html?domain=nombres-calculs&notion=schemas-barres",
+      "path": "outils/index.html?domain=algebre&notion=schemas-barres",
       "kind": "collection",
       "status": "published",
       "themes": ["nombres-calcul", "problemes"],

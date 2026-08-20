@@ -43,7 +43,7 @@ test("les trois miniatures Splat utilisent les nouvelles compositions vectoriell
   assert.match(catalogue, /assets\/img\/thumbnails\/splat\/splat\.svg\?v=3/);
   assert.match(catalogue, /assets\/img\/thumbnails\/splat\/splat-equations\.svg\?v=3/);
   assert.match(catalogue, /assets\/img\/thumbnails\/splat\/petit-splat\.svg\?v=3/);
-  assert.match(cataloguePage, /catalogue-refonte-data\.js\?v=splat-thumbnails-20260820-1/);
+  assert.match(cataloguePage, /catalogue-refonte-data\.js\?v=schemas-barres-algebre-20260820-1/);
   assert.match(classicThumb, /TABLEAU PARTIE–TOUT/);
   assert.match(equationThumb, /16 \+ 2 × \? = 34/);
   assert.doesNotMatch(equationThumb, /TABLEAU PARTIE/);
