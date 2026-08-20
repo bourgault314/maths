@@ -170,6 +170,34 @@
     text-align-last:center;
   }
 
+  /* Choix « Inconnue affichee ». Un menu deroulant natif n'accepte que du texte brut :
+     impossible d'y dessiner le chapeau. Deux boutons radio le permettent. */
+  .segmented{
+    display:grid;
+    grid-template-columns:1fr auto;
+    gap:6px;
+    padding:4px;
+    border:1px solid rgba(15,23,42,.14);
+    border-radius:13px;
+    background:white;
+  }
+  .segmentedItem{margin:0;cursor:pointer}
+  .segmentedItem input{position:absolute;opacity:0;width:1px;height:1px;pointer-events:none}
+  .segmentedItem > span{
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    min-height:32px;
+    padding:2px 14px;
+    border-radius:10px;
+    font-size:15px;
+    font-weight:800;
+    color:#64748b;
+    white-space:nowrap;
+  }
+  .segmentedItem input:checked + span{background:#eff6ff;color:var(--ink)}
+  .segmentedItem input:focus-visible + span{box-shadow:0 0 0 3px rgba(59,130,246,.35)}
+
   input:focus,select:focus{
     border-color:rgba(59,130,246,.55);
     box-shadow:0 0 0 4px rgba(59,130,246,.12);
@@ -350,14 +378,16 @@
   .topbar{
     flex:0 0 auto;
     padding:3px 250px 6px 200px;
-    min-height:110px;
+    min-height:96px;
     display:flex;
     align-items:center;
     justify-content:center;
     overflow:hidden;
   }
 
-  .equationHistory{width:min(980px,100%);max-height:180px;overflow-y:auto;overflow-x:auto;scrollbar-width:thin}
+  /* padding-top : sans lui, le chapeau de la premiere ligne est rogne par le bord
+     haut de la zone de defilement. */
+  .equationHistory{width:min(980px,100%);max-height:206px;padding-top:16px;overflow-y:auto;overflow-x:auto;scrollbar-width:thin}
   .equationTable{border-collapse:collapse;margin:0 auto;font-size:clamp(20px,2.2vw,31px);font-weight:950;line-height:1.18}
   .equationTable td{padding:2px 8px;white-space:nowrap;vertical-align:baseline}
   .equationTable .lhs{text-align:right}
@@ -367,6 +397,25 @@
   .equationTable tr.currentStep{color:#0f172a;opacity:1}
   .equationTable tr.currentStep .eq{color:#3b82f6}
   .equationTable tr.finalConclusion td{color:#dc2626}
+
+  /* Chapeau des noms d'angles. Unicode possede un « A avec circonflexe » et un
+     « C avec circonflexe » tout faits, mais aucun « B avec circonflexe » : la police
+     dessine donc les deux premiers avec son propre accent, a la graisse du texte, et
+     laisse le troisieme a une fonte de secours, plus fine et plus etroite. On dessine
+     donc le meme accent nous-memes pour les trois lettres. */
+  /* La boite du chapeau est figee a une hauteur de caractere : sans cela elle
+     s'etire dans un conteneur flex (32 px au lieu de 15) et l'accent part trop haut. */
+  .angleHat{position:relative;display:inline-block;line-height:1;height:1em;align-self:center}
+  .angleHat::after{
+    content:"ˆ";
+    position:absolute;
+    left:50%;
+    top:-.30em;
+    transform:translateX(-50%);
+    font-weight:inherit;
+    line-height:1;
+    pointer-events:none;
+  }
 
   .propertyCard{
     width:min(920px,100%);
@@ -443,7 +492,7 @@
     flex:0 0 auto;
     margin:0 auto 8px;
     width:min(980px,100%);
-    min-height:54px;
+    min-height:34px;
     display:flex;
     justify-content:center;
     align-items:center;
@@ -454,6 +503,24 @@
     line-height:1.28;
   }
   .instructionZone strong{font-weight:950}
+
+  /* Tout ce qui guide l'eleve se lit au meme endroit : sous le tableau, la consigne
+     puis les propositions. Le bandeau du haut ne garde que l'equation. */
+  .boardBelow{
+    flex:0 0 auto;
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    justify-content:center;
+    gap:4px;
+    width:100%;
+  }
+
+  /* Vides, la consigne et la zone de propositions ne doivent rien reserver : sinon
+     elles volent leur hauteur aux cartes et le triangle se retrouve rogne. */
+  .instructionZone:empty{min-height:0}
+  .barChoiceZone.empty{min-height:0;padding:0}
+  .boardBelow:has(.instructionZone:empty):has(.barChoiceZone.empty){gap:0}
 
   .anglePalette{
     display:none;
@@ -485,7 +552,9 @@
 
   .workArea{
     flex:1 1 auto;
-    min-height:260px;
+    /* Les cartes n'hebergent plus la zone de propositions, descendue sous le tableau :
+       elles n'ont donc plus besoin de reserver sa hauteur. */
+    min-height:196px;
     display:grid;
     grid-template-columns:minmax(320px,.92fr) minmax(430px,1.08fr);
     gap:16px;
@@ -662,7 +731,7 @@
 
   .barChoiceZone{
     flex:0 0 auto;
-    min-height:76px;
+    min-height:54px;
     width:min(900px,96%);
     display:flex;
     align-items:center;
@@ -766,9 +835,9 @@
     .barLine,.barPiece{min-height:76px}
     .solution{flex-basis:48px;min-height:48px;font-size:clamp(28px,3.6vw,48px)}
     .toolBtn{min-height:50px;padding:12px 16px;font-size:15px}
-    .instructionZone{min-height:40px;font-size:clamp(17px,1.7vw,23px)}
-    .topbar{min-height:92px}
-    .equationHistory{max-height:130px}
+    .instructionZone{min-height:26px;font-size:clamp(17px,1.7vw,23px)}
+    .topbar{min-height:84px}
+    .equationHistory{max-height:132px}
     svg.triangleSvg{min-height:300px}
   }
 
@@ -829,7 +898,7 @@
     .quickIcon{width:40px;padding:0;font-size:20px}
 
     .topbar{padding:2px 0 4px;min-height:78px;overflow:visible}
-    .equationHistory{max-height:104px;width:100%;overflow-x:auto}
+    .equationHistory{max-height:122px;width:100%;overflow-x:auto}
     .equationTable{font-size:clamp(19px,5.5vw,25px)}
     .equationTable td{padding:2px 4px}
     .equationTable .eq{padding-left:7px;padding-right:7px}
@@ -842,7 +911,7 @@
       flex-wrap:nowrap;
     }
     .slotBtn{min-width:0;width:100%;min-height:46px;padding:5px 3px;border-radius:10px;font-size:20px}
-    .instructionZone{min-height:50px;margin-bottom:4px;padding:0 4px;font-size:15px;line-height:1.22}
+    .instructionZone{min-height:34px;margin-bottom:4px;padding:0 4px;font-size:15px;line-height:1.22}
     .anglePalette{gap:6px;margin:0 0 6px}
     .angleChoice{min-width:66px;min-height:42px;padding:7px 10px;font-size:18px}
 
@@ -863,7 +932,7 @@
     .barPiece{min-width:0;min-height:68px}
     .barLine.relationDraft .barPiece{min-width:0}
     .pieceMain{font-size:clamp(20px,6vw,28px)}
-    .barChoiceZone{width:100%;min-height:116px;margin-top:6px;gap:6px;align-content:center}
+    .barChoiceZone{width:100%;min-height:92px;margin-top:6px;gap:6px;align-content:center}
     .choiceHint{font-size:12px;margin-bottom:0;padding:0 4px}
     .choiceBtn{min-width:calc(50% - 6px);min-height:42px;padding:7px 8px;border-radius:11px;font-size:18px}
 
@@ -1002,11 +1071,11 @@
           </select>
         </div>
         <div>
-          <label for="unknownDisplayInput">Inconnue affichée</label>
-          <select id="unknownDisplayInput">
-            <option value="angle" selected>Â, B̂, Ĉ</option>
-            <option value="question">?</option>
-          </select>
+          <label id="unknownDisplayLabel">Inconnue affichée</label>
+          <div class="segmented" role="radiogroup" aria-labelledby="unknownDisplayLabel">
+            <label class="segmentedItem"><input type="radio" name="unknownDisplay" value="angle" checked aria-label="Les lettres des angles"><span><span class="angleHat">A</span>,&nbsp;<span class="angleHat">B</span>,&nbsp;<span class="angleHat">C</span></span></label>
+            <label class="segmentedItem"><input type="radio" name="unknownDisplay" value="question" aria-label="Un point d’interrogation"><span>?</span></label>
+          </div>
         </div>
       </div>
 
@@ -1050,9 +1119,6 @@
       <div class="equationHistory" id="equationHistory"></div>
     </div>
 
-    <div class="instructionZone" id="instructionZone"></div>
-    <div class="anglePalette" id="anglePalette"></div>
-
     <div class="workArea" id="workArea">
       <div class="card visualCard" id="visualCard">
         <svg class="triangleSvg" id="triangleSvg" viewBox="-40 -70 740 650" preserveAspectRatio="xMidYMid meet" role="img" aria-label="Triangle et angles"></svg>
@@ -1061,6 +1127,11 @@
       <div class="card barBoard" id="barBoard">
         <div class="barWrap" id="barWrap"></div>
       </div>
+    </div>
+
+    <div class="boardBelow" id="boardBelow">
+      <div class="instructionZone" id="instructionZone"></div>
+      <div class="anglePalette" id="anglePalette"></div>
     </div>
 
     <div class="solution" id="solution"></div>
@@ -1103,7 +1174,11 @@
   const specialVertexLabel = document.getElementById("specialVertexLabel");
   const familyHint = document.getElementById("familyHint");
   const relationModeInput = document.getElementById("relationModeInput");
-  const unknownDisplayInput = document.getElementById("unknownDisplayInput");
+  const unknownDisplayInput = {
+    get value(){
+      return document.querySelector('input[name="unknownDisplay"]:checked')?.value || "angle";
+    }
+  };
   const angleInputs = [document.getElementById("angle0Input"), document.getElementById("angle1Input"), document.getElementById("angle2Input")];
   const angleLabels = [document.getElementById("labelAngle0"), document.getElementById("labelAngle1"), document.getElementById("labelAngle2")];
   const showEquationInput = document.getElementById("showEquationInput");
@@ -1120,6 +1195,7 @@
   const equationHistory = document.getElementById("equationHistory");
   const instructionZone = document.getElementById("instructionZone");
   const anglePalette = document.getElementById("anglePalette");
+  const boardBelow = document.getElementById("boardBelow");
   const workArea = document.getElementById("workArea");
   const triangleSvg = document.getElementById("triangleSvg");
   const barWrap = document.getElementById("barWrap");
@@ -1183,7 +1259,7 @@
 
   function updateAngleLabels(){
     const letters = normalizeName(triangleNameInput.value);
-    letters.forEach((l,i) => angleLabels[i].textContent = `Angle ${angleSymbol(l)}`);
+    letters.forEach((l,i) => angleLabels[i].innerHTML = `Angle ${angleSymbol(l)}`);
     [...rightAngleInput.options].forEach((opt,i) => { opt.textContent = letters[i]; opt.value = letters[i]; });
     if(!letters.includes(rightAngleInput.value)) rightAngleInput.value = letters[0];
     syncRightAngleUi();
@@ -1286,7 +1362,8 @@
     if(Math.abs(n - Math.round(n)) < 1e-10) return String(Math.round(n));
     return String(Math.round(n * 100) / 100).replace(".", ",");
   }
-  function angleSymbol(letter){ return `${letter}̂`; }
+  function angleSymbolText(letter){ return `${letter}̂`; }
+  function angleSymbol(letter){ return `<span class="angleHat">${letter}</span>`; }
   function choiceLabel(value){
     return value === "180" ? "180°" : angleSymbol(value);
   }
@@ -1296,8 +1373,12 @@
   }
   function angleValueLabel(letter){
     const a = model.angles[letter];
-    if(a.unknown) return work?.concluded ? `${fmt(model.solutions?.[letter] ?? work.result)}°` : angleLabel(letter);
-    return `${fmt(a.value)}°`;
+    if(a.unknown){
+      if(work?.concluded) return {text:`${fmt(model.solutions?.[letter] ?? work.result)}°`, hat:false};
+      if(model?.unknownDisplay === "question" && model?.unknowns?.includes(letter)) return {text:"?", hat:false};
+      return {text:letter, hat:true};
+    }
+    return {text:`${fmt(a.value)}°`, hat:false};
   }
   function knownAngleLetters(){
     if(!model) return [];
@@ -1829,6 +1910,7 @@
   }
 
   function renderBars(){
+    boardBelow.querySelectorAll(".barChoiceZone").forEach(el => el.remove());
     if(!display.bars){ barWrap.innerHTML = ""; return; }
     barWrap.innerHTML = barDiagramHtml();
     bindRelationSlotButtons(barWrap);
@@ -1838,6 +1920,12 @@
     barWrap.querySelectorAll("[data-group-choice]").forEach(btn => btn.addEventListener("click", () => applyGroupChoice(btn.dataset.groupChoice)));
     barWrap.querySelectorAll("[data-move-cells]").forEach(btn => btn.addEventListener("click", applyMoveCells));
     barWrap.querySelectorAll("[data-decompose-choice]").forEach(btn => btn.addEventListener("click", () => applyDecomposeChoice(btn.dataset.decomposeChoice)));
+    // Les propositions rejoignent la consigne sous le tableau : un seul endroit ou
+    // regarder, quelle que soit l'etape. Les ecouteurs survivent au deplacement.
+    // Sorties de barWrap, elles ne sont plus effacees par son innerHTML : on s'en
+    // charge en entree de fonction, sinon elles s'empilent a chaque rendu.
+    const choiceZone = barWrap.querySelector(".barChoiceZone");
+    if(choiceZone) boardBelow.appendChild(choiceZone);
   }
 
   function propertyText(){
@@ -1940,18 +2028,18 @@
         const selected = pendingReplace === l ? " selectedChoice" : "";
         return `<button type="button" class="choiceBtn${selected}" data-replace-choice="${l}">${fmt(model.angles[l].value)}°</button>`;
       }).join("");
-      return `<div class="barChoiceZone" aria-label="Remplacer les angles connus"><div class="choiceHint">Clique sur une case puis sur sa mesure, ou l’inverse.</div>${buttons}</div>`;
+      return `<div class="barChoiceZone" aria-label="Remplacer les angles connus">${buttons}</div>`;
     }
     if(work.choiceMode === "group"){
       const n = work.groupSelection?.length || 0;
       if(n < 2){
-        return `<div class="barChoiceZone" aria-label="Sélectionner les angles à regrouper"><div class="choiceHint">Clique sur les deux cases connues à regrouper.</div></div>`;
+        return `<div class="barChoiceZone" aria-label="Sélectionner les angles à regrouper"></div>`;
       }
       if(groupMoveNeeded() && !work.moved){
-        return `<div class="barChoiceZone" aria-label="Déplacer les cases sélectionnées"><div class="choiceHint">Les deux cases connues ne sont pas côte à côte.</div><button type="button" class="choiceBtn" data-move-cells>Déplacer côte à côte</button></div>`;
+        return `<div class="barChoiceZone" aria-label="Déplacer les cases sélectionnées"><button type="button" class="choiceBtn" data-move-cells>Déplacer côte à côte</button></div>`;
       }
       const choices = groupChoices();
-      return `<div class="barChoiceZone" aria-label="Choisir la somme des angles connus"><div class="choiceHint">Choisis la somme des deux cases sélectionnées.</div>${choices.map(v => `<button type="button" class="choiceBtn" data-group-choice="${v}">${fmt(v)}</button>`).join("")}</div>`;
+      return `<div class="barChoiceZone" aria-label="Choisir la somme des angles connus">${choices.map(v => `<button type="button" class="choiceBtn" data-group-choice="${v}">${fmt(v)}</button>`).join("")}</div>`;
     }
     if(work.choiceMode === "decompose"){
       const choices = decomposeChoices();
@@ -2311,8 +2399,10 @@
       const labelPos = {x:p.x + out.x*34, y:p.y + out.y*34};
       const valuePos = angleTextPosition(coords, letter, letters, 78);
       html += `<text class="vertexText" x="${labelPos.x}" y="${labelPos.y}" text-anchor="middle" dominant-baseline="middle">${letter}</text>`;
-      html += `<text class="angleValueText" x="${valuePos.x}" y="${valuePos.y}" text-anchor="middle" dominant-baseline="middle">${angleValueLabel(letter)}</text>`;
-      html += `<circle class="angleHit" cx="${p.x}" cy="${p.y}" r="74" data-angle-hit="${letter}"><title>${angleSymbol(letter)}</title></circle>`;
+      const valueLabel = angleValueLabel(letter);
+      html += `<text class="angleValueText" x="${valuePos.x}" y="${valuePos.y}" text-anchor="middle" dominant-baseline="middle">${valueLabel.text}</text>`;
+      if(valueLabel.hat) html += `<text class="angleValueText" x="${valuePos.x}" y="${valuePos.y - 13}" text-anchor="middle" dominant-baseline="middle">ˆ</text>`;
+      html += `<circle class="angleHit" cx="${p.x}" cy="${p.y}" r="74" data-angle-hit="${letter}"><title>${angleSymbolText(letter)}</title></circle>`;
     });
 
     triangleSvg.innerHTML = html;
