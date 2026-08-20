@@ -141,8 +141,11 @@
   }
   /* Bouton plein écran : discret pendant la projection, franc au survol.
      Le raccourci clavier F11 n'est pas connu de tout le monde. */
-  .plein-ecran{
+  .outils-diapo{
     position:fixed; top:2vmin; right:2vmin; z-index:5;
+    display:flex; align-items:center; gap:1.6vmin;
+  }
+  .plein-ecran{
     display:inline-flex; align-items:center; justify-content:center;
     width:6vmin; height:6vmin; min-width:38px; min-height:38px;
     border:1px solid var(--line); border-radius:999px; background:#fff;
@@ -291,9 +294,11 @@
   et pourquoi cette classe s'appelle <strong>Dopamine</strong>.</div>
 </section>
 
+<div class="outils-diapo">
 <button class="plein-ecran" id="plein-ecran" type="button" aria-label="Passer en plein écran" title="Plein écran">
   <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>
 </button>
+</div>
 
 <div class="nav">
   <button id="prev" type="button">← Précédent</button>
