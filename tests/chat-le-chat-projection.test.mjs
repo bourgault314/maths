@@ -392,7 +392,7 @@ test("le HTML publié est autonome, synchronisé et adapté à une réflexion co
   assert.match(html, /vérifiez les cartes à voix haute/i);
   assert.match(html, /un chat barré signifie « personne dans ce cercle, ou aucun cercle dans cette direction »/i);
   assert.match(html, /alt="maths&amp;go"/, "La barre doit employer le logo horizontal maths&go.");
-  assert.match(html, /class="brand" href="index\.html"/, "Le logo doit revenir au catalogue des outils.");
+  assert.match(html, /class="brand" href="\/"/, "Le logo ramène à l'accueil, comme partout ailleurs sur le site ; le retour au catalogue est le travail du bouton dédié, juste en dessous.");
   assert.match(html, /id="catalog-button" href="index\.html"/, "L’accueil du module doit proposer un retour visible au catalogue.");
   assert.match(html, /id="home-button"[^>]+aria-label="Retourner au menu des défis"[\s\S]*?<span class="button-label">Menu<\/span>/,
     "Un défi doit proposer un retour explicite au menu du module, distinct du catalogue.");

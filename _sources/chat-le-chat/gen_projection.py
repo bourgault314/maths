@@ -715,7 +715,7 @@ HTML_TEMPLATE = r'''<!doctype html>
 <body>
   <div class="app">
     <header class="topbar">
-      <a class="brand" href="index.html" id="brand-home" aria-label="Retourner au catalogue des outils maths&amp;go">
+      <a class="brand" href="/" id="brand-home" aria-label="Accueil maths&amp;go">
         <img class="brand-logo" src="@@LOGO@@" alt="maths&amp;go" width="390" height="181">
         <span class="brand-copy">
           <span class="brand-title">Chat, c'est toi le chat&nbsp;!</span>

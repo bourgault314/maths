@@ -1,5 +1,5 @@
 import assert from "node:assert/strict";
-import { readFile } from "node:fs/promises";
+import { readFile, readdir } from "node:fs/promises";
 import test from "node:test";
 
 const consentScript = await readFile(new URL("../assets/js/consentement.js", import.meta.url), "utf8");
@@ -8,6 +8,7 @@ const catalogueScript = await readFile(new URL("../assets/js/catalogue-refonte.j
 const homePage = await readFile(new URL("../index.html", import.meta.url), "utf8");
 const automatismesPage = await readFile(new URL("../auto/index.html", import.meta.url), "utf8");
 const parentNavigationScript = await readFile(new URL("../assets/js/tool-parent-navigation.js", import.meta.url), "utf8");
+const hubBoulier = await readFile(new URL("../outils/bouliers/abaque_de_gerbert/index.html", import.meta.url), "utf8");
 const restoredPrinterPages = Object.fromEntries(await Promise.all([
   "outils/automatismes/CM_Livret_A5.html",
   "outils/fabrication_materiel/cartes_premiers_1_100.html",
@@ -126,7 +127,9 @@ test("les retours explicites pointent vers le parent réel du catalogue", () => 
 });
 
 test("la couche commune n'épingle rien par-dessus la page et ne fabrique un retour que s'il est déclaré", () => {
-  assert.match(returnPages["outils/plateaux_manipulation/pgcd_sachets.html"], /data-mathsgo-parent-link="\.toolbar &gt; \.brand"/);
+  // Le chemin « retour déclaré » reste exercé par les pages de rubrique boulier,
+  // dont la flèche existe déjà dans le HTML et n'est que recâblée.
+  assert.match(hubBoulier, /data-mathsgo-parent-link="\.back-link"/);
   assert.match(parentNavigationScript, /function installDeclaredNavigation\(\)/);
   assert.match(parentNavigationScript, /if \(!declaredLink\) return;/);
 
@@ -158,4 +161,63 @@ test("le bouton fabriqué n'entre jamais dans le titre de la page", () => {
   // hauteur du titre : on se pose au-dessus.
   assert.match(parentNavigationScript, /\/\^H\[1-6\]\$\/\.test\(host\.tagName\)/);
   assert.match(parentNavigationScript, /host\.parentElement\.insertBefore\(link, host\)/);
+});
+
+test("sur une page d'outil, le logo maths&go ramène toujours à l'accueil", async () => {
+  // Un logo ne vaut que par sa constance : c'est le seul élément dont on attend
+  // qu'il fasse la même chose partout. Ramener à la rubrique, c'est le travail de
+  // la flèche retour, qui dit sa destination en toutes lettres. Les pages de
+  // rubrique (index*.html) sont hors de cette règle, elles remontent d'un cran.
+  const JETONS = new Set(["brand", "brand-logo", "brand-link", "brandLink", "logo-link", "site-logo"]);
+  const balise = /<a\b[^>]{0,500}?>/gis;
+
+  async function pagesDOutil(dossier) {
+    const trouvees = [];
+    for (const entree of await readdir(new URL(`../${dossier}/`, import.meta.url), { withFileTypes: true })) {
+      if (entree.isDirectory()) trouvees.push(...await pagesDOutil(`${dossier}/${entree.name}`));
+      else if (entree.name.endsWith(".html") && !entree.name.startsWith("index")) {
+        trouvees.push(`${dossier}/${entree.name}`);
+      }
+    }
+    return trouvees;
+  }
+
+  let verifiees = 0;
+  for (const chemin of await pagesDOutil("outils")) {
+    const html = await readFile(new URL(`../${chemin}`, import.meta.url), "utf8");
+    for (const [tag] of html.matchAll(balise)) {
+      const classes = tag.match(/class="([^"]*)"/i);
+      if (!classes || !classes[1].split(/\s+/).some((jeton) => JETONS.has(jeton))) continue;
+      const lien = tag.match(/href="([^"]*)"/i);
+      if (!lien) continue;
+      const cible = new URL(lien[1].replace(/&amp;/g, "&"), `https://mathsgo.re/${chemin}`);
+      // « / » et « /index.html » sont la même page : la règle porte sur la
+      // destination, pas sur la façon dont le lien est écrit.
+      const destination = (cible.pathname === "/index.html" ? "/" : cible.pathname) + cible.search;
+      assert.equal(
+        destination,
+        "/",
+        `${chemin} : le logo doit ramener à l'accueil, pas à ${destination}`,
+      );
+      verifiees += 1;
+    }
+  }
+  assert.ok(verifiees >= 16, `trop peu de logos vérifiés (${verifiees}) — le balayage a dû rater des pages`);
+});
+
+test("les trois pages dont le logo était la seule sortie ont gagné une flèche", async () => {
+  // Libérer leur logo leur retirait leur unique chemin de retour : elles déclarent
+  // désormais un parent, que tool-parent-navigation.js transforme en bouton.
+  for (const chemin of [
+    "outils/plateaux_manipulation/pgcd_sachets.html",
+    "outils/tuiles_algebriques/generateur_tuiles.html",
+    "outils/tuiles_algebriques/generateur_exercices_calcul_litteral.html",
+  ]) {
+    const html = await readFile(new URL(`../${chemin}`, import.meta.url), "utf8");
+    assert.match(html, /<body\b[^>]*\sdata-mathsgo-parent-href="[^"]+"/, chemin);
+    assert.match(html, /<body\b[^>]*\sdata-mathsgo-parent-label="[^"]+"/, chemin);
+    assert.match(html, /tool-parent-navigation\.js/, chemin);
+    // le logo ne doit plus être détourné en flèche
+    assert.doesNotMatch(html, /data-mathsgo-parent-link/, chemin);
+  }
 });
