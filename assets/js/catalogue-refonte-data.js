@@ -153,6 +153,7 @@ window.MATHSGO_CATALOGUE = {
       "thumbnail": "assets/img/thumbnails/bouliers/gerbert-video-origine.png?v=1",
       "collections": ["gerbert"],
       "tags": ["abaque", "gerbert", "histoire", "video"],
+      "rang": 1,
       "cardDescription": "D’où vient l’abaque de Gerbert, à quoi il servait, et comment s’en servir en classe."
     },
     "https://iremi.univ-reunion.fr/?p=617": {
@@ -161,6 +162,7 @@ window.MATHSGO_CATALOGUE = {
       "thumbnail": "assets/img/thumbnails/bouliers/reference-busser.png?v=1",
       "collections": ["gerbert"],
       "tags": ["abaque", "jetons", "irem"],
+      "rang": 2,
       "cardDescription": "Article de l’IREM de La Réunion sur l’abaque à jetons, par Alain Busser."
     },
     "https://www.univ-irem.fr/chapitre-2-de-l-abaque-a-jetons-au-calcul-pose": {
@@ -169,6 +171,7 @@ window.MATHSGO_CATALOGUE = {
       "thumbnail": "assets/img/thumbnails/bouliers/reference-daval-tournes.png?v=1",
       "collections": ["gerbert"],
       "tags": ["abaque", "jetons", "calcul-pose", "irem"],
+      "rang": 3,
       "cardDescription": "Du geste sur l’abaque à jetons jusqu’à la technique de calcul posé, par Nathalie Daval et Dominique Tournès."
     },
     "cps/bilan-s1.html": {
@@ -893,6 +896,7 @@ window.MATHSGO_CATALOGUE = {
       "thumbnail": "assets/img/thumbnails/bouliers/abaque-gerbert-addition.png?v=1",
       "collections": ["gerbert"],
       "tags": ["abaque", "addition", "echange", "entrainement"],
+      "rang": 1,
       "cardDescription": "S’entraîner aux additions sur l’abaque de Gerbert avec échanges, validation et nouveau calcul."
     },
     "outils/bouliers/abaque_de_gerbert/abaque_gerbert_multiplication_V1.html": {
@@ -922,6 +926,7 @@ window.MATHSGO_CATALOGUE = {
       "thumbnail": "assets/img/thumbnails/bouliers/abaque-gerbert-soustraction.png?v=1",
       "collections": ["gerbert"],
       "tags": ["abaque", "soustraction", "echange", "entrainement"],
+      "rang": 2,
       "cardDescription": "S’entraîner aux soustractions sur l’abaque de Gerbert avec échanges et vérification."
     },
     "outils/bouliers/abaque_de_gerbert/abaque_gerbert.html": {
@@ -1276,6 +1281,7 @@ window.MATHSGO_CATALOGUE = {
       "cardDescription": "Trois façons de poser une multiplication sur l’abaque : guidée étape par étape, directe, ou directe avec superposition.",
       "thumbnail": "assets/img/thumbnails/bouliers/abaque-gerbert-multiplication-v3.png?v=1",
       "group": "entrainer",
+      "rang": 3,
       "labels": {
         "outils/bouliers/abaque_de_gerbert/abaque_gerbert_multiplication_V1.html": "Guidée, étape par étape",
         "outils/bouliers/abaque_de_gerbert/abaque_gerbert_multiplication_V2.html": "Directe",

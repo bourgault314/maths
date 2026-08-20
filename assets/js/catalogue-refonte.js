@@ -719,6 +719,26 @@
     return items;
   }
 
+  // Ordre des cartes dans une section. Par défaut l'alphabet : une ressource ajoutée
+  // plus tard se range toute seule au bon endroit, sans que personne ait à y penser.
+  // Un « rang » explicite reprend la main là où la progression compte — sur l'abaque de
+  // Gerbert, additions puis soustractions puis multiplications, que l'alphabet inverse.
+  function compareCards(a, b) {
+    const rangA = Number.isFinite(a.rang) ? a.rang : Infinity;
+    const rangB = Number.isFinite(b.rang) ? b.rang : Infinity;
+    if (rangA !== rangB) return rangA - rangB;
+    return String(a.title || "").localeCompare(String(b.title || ""), "fr", { numeric: true });
+  }
+
+  function cardSortKey(item) {
+    if (item.family) return { title: item.family.title, rang: item.family.rang };
+    return { title: item.resource.title, rang: resourceClassification(item.resource).rang };
+  }
+
+  function sortCards(items) {
+    return items.slice().sort((a, b) => compareCards(cardSortKey(a), cardSortKey(b)));
+  }
+
   function resourceDisplayCount(resources) {
     return displayItems(resources).length;
   }
@@ -1159,7 +1179,7 @@
       groupedCollections.get(collectionDesign[collection.id]?.inlineGroup)?.push(collection);
     });
     const groupedResources = resourceGroups.map((group) => {
-      const groupItems = grouped.get(group.id);
+      const groupItems = sortCards(grouped.get(group.id));
       const groupCollections = groupedCollections.get(group.id);
       const groupCount = groupItems.length + groupCollections.length;
       if (!groupCount) return "";
