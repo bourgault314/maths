@@ -329,7 +329,20 @@
   #unitSettings .u-seed input{width:96px;max-width:96px;}
   #unitSettings .unitShareButton{height:34px;padding:5px 8px;font-size:10.5px;flex:0 0 auto;}
   #unitSettings .unitShareFeedback{position:absolute;right:0;top:37px;z-index:3;padding:2px 5px;border-radius:5px;background:var(--panel);}
+  #unitSettings .unitShareFeedback:empty{display:none}
   #unitSettings .u-wide input{ width:100%; }
+
+  .seedShareRow{
+    display:grid;
+    grid-template-columns:auto minmax(76px,96px) auto minmax(0,1fr);
+    gap:7px;
+    align-items:center;
+    margin-top:10px;
+  }
+  .seedShareRow label{margin:0;font-weight:700}
+  .seedShareRow input{height:34px;padding:6px 8px}
+  .seedShareRow .shareLinkBtn{height:34px}
+  .shareFeedback:empty{display:none}
 
   /* PATCH UI — Menu C (Enquête) */
   #investigateSettings{margin-top:6px}
@@ -686,7 +699,7 @@
     .pCard svg{width:100%;height:100%;display:block}
     .pCard.empty{border:none;background:transparent;padding:0;min-height:0}
     .print-page-header{
-      flex:0 0 14mm;
+      flex:0 0 16mm;
       display:flex;
       align-items:center;
       justify-content:space-between;
@@ -700,16 +713,16 @@
       print-color-adjust:exact;
       pointer-events:none;
     }
-    .print-page-title-block{min-width:0;display:flex;align-items:baseline;gap:4mm;line-height:1}
+    .print-page-title-block{min-width:0;display:flex;align-items:center;gap:4mm;line-height:1}
     .print-page-title{font-size:17pt;font-weight:950;color:#063b7a;white-space:nowrap}
     .print-page-subtitle{font-size:11pt;font-weight:850;color:#111827;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
     .print-page-logos{display:flex;align-items:center;justify-content:flex-end;gap:3mm;height:100%;flex:0 0 auto}
     .print-page-logo-irem{
-      height:11mm;
+      height:12mm;
       width:auto;
       display:block;
     }
-    .print-page-logo-maths{height:9.5mm;width:auto;display:block}
+    .print-page-logo-maths{height:10mm;width:auto;display:block}
     .print-page-instruction{
       flex:0 0 auto;
       margin-bottom:2mm;
@@ -771,7 +784,7 @@
       <div class="panelTopActions">
         <a class="home" href="/outils/index.html?domain=algebre&amp;collection=splat" title="Retour aux outils Splat" aria-label="Retour aux outils Splat">
           <svg aria-hidden="true" viewBox="0 0 24 24">
-            <path d="M12 3.2 3 10.6v9.2c0 .9.7 1.6 1.6 1.6H9v-6.4h6v6.4h4.4c.9 0 1.6-.7 1.6-1.6v-9.2L12 3.2Z" fill="currentColor"></path>
+            <path d="M19 12H5M11 18l-6-6 6-6" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"></path>
           </svg>
         </a>
         <button class="helpBtn" id="btnHelp" type="button" title="Aide" aria-label="Afficher l’aide">?</button>
@@ -897,11 +910,11 @@
           </div>
         </div>
         <div id="numVisibleMinWrap" style="flex:1">
-          <label>Jetons visibles (min)</label>
+          <label>Visibles min</label>
           <input id="numVisibleMin" type="number" min="0" max="5" value="2" />
         </div>
         <div id="numVisibleMaxWrap" style="flex:1">
-          <label>Jetons visibles (max)</label>
+          <label>Visibles max</label>
           <input id="numVisibleMax" type="number" min="0" max="5" value="3" />
         </div>
       </div>
@@ -942,10 +955,12 @@
           <label>Total (max)</label>
           <input id="numTotalMax" type="number" min="1" max="1000" value="50" />
         </div>
-        <div style="flex:1">
-          <label>Graine (mode B)</label>
-          <input id="seedN" type="number" placeholder="ex: 2026" />
-        </div>
+      </div>
+      <div class="seedShareRow" id="numberedSeedShareRow">
+        <label for="seedN">Graine</label>
+        <input id="seedN" type="number" placeholder="ex: 2026" />
+        <button class="btn shareLinkBtn" id="btnShareNumbered" type="button">🔗 Copier le lien</button>
+        <span class="shareFeedback" id="shareFeedbackNumbered" role="status" aria-live="polite"></span>
       </div>
     </div>
 
@@ -1825,7 +1840,8 @@ function fallbackCopyText(value){
 function showShareFeedback(message, isError){
   const feedbacks = [
     document.getElementById("shareFeedback"),
-    document.getElementById("shareFeedbackUnit")
+    document.getElementById("shareFeedbackUnit"),
+    document.getElementById("shareFeedbackNumbered")
   ].filter(Boolean);
   if(!feedbacks.length) return;
   feedbacks.forEach(feedback=>{
@@ -2019,7 +2035,7 @@ function syncNumberedEquationUI(){
 function syncSettingsUI(){
   const act = activityEl.value;
   const shareRowEl = document.getElementById("shareRow");
-  if(shareRowEl) shareRowEl.hidden = act === "U" || act === "UPM";
+  if(shareRowEl) shareRowEl.hidden = act === "U" || act === "UPM" || act === "N" || act === "NPM";
   const prevAct = syncSettingsUI._lastAct || "";
   if(prevAct !== act && act === "UPM"){
     if(unitTotalMinEl && unitTotalMaxEl){
@@ -6496,13 +6512,13 @@ function getClassicPrintInstruction(slotCards){
   const hasSeveralTasks = slotCards.some(card => card && classicPrintTaskCount(card) > 1);
   if(act === "U" || act === "N"){
     return {
-      main:"Trouve le nombre de jetons cachés sous chaque tache en modélisant la situation par une équation puis en la résolvant.",
+      main:"Trouve le nombre de jetons cachés sous chaque tache. Tu peux t’aider d’un schéma en barres ou d’une équation.",
       note:hasSeveralTasks ? "Lorsque plusieurs taches apparaissent, elles cachent le même nombre de jetons." : ""
     };
   }
   if(act === "UPM" || act === "NPM"){
     return {
-      main:"Trouve la valeur cachée sous chaque tache en modélisant la situation par une équation puis en la résolvant.",
+      main:"Trouve la valeur cachée sous chaque tache en modélisant la situation par une équation, puis en la résolvant.",
       note:hasSeveralTasks ? "Lorsque plusieurs taches apparaissent, elles cachent la même valeur." : ""
     };
   }
@@ -6825,6 +6841,8 @@ document.getElementById("btnGen").addEventListener("click", generate);
 document.getElementById("btnShare").addEventListener("click", copyShareLink);
 const btnShareUnitEl = document.getElementById("btnShareUnit");
 if(btnShareUnitEl) btnShareUnitEl.addEventListener("click", copyShareLink);
+const btnShareNumberedEl = document.getElementById("btnShareNumbered");
+if(btnShareNumberedEl) btnShareNumberedEl.addEventListener("click", copyShareLink);
 document.getElementById("btnClear").addEventListener("click", ()=>{ cards=[]; idx=0; revealState=0; updateUI(); });
 document.getElementById("btnPrev").addEventListener("click", goPreviousCardOrStep);
 document.getElementById("btnNext").addEventListener("click", goNextCardOrStep);

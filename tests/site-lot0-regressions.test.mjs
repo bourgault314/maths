@@ -158,9 +158,17 @@ test("la couche commune n'épingle rien par-dessus la page et ne fabrique un ret
 test("le bouton fabriqué n'entre jamais dans le titre de la page", () => {
   // Le repli « .wrap > :first-child » tombe sur le <h1> des deux Soroban. Y entrer
   // donnait « SorobanSoroban interactif » à la lecture d'écran et doublait la
-  // hauteur du titre : on se pose au-dessus.
+  // hauteur du titre. On ne rentre donc pas dans le titre : on l'enveloppe, lui et
+  // le bouton, dans une rangée sœur — ce qui évite en plus la ligne vide que le
+  // bouton posé au-dessus ajoutait en haut de chaque générateur.
   assert.match(parentNavigationScript, /\/\^H\[1-6\]\$\/\.test\(host\.tagName\)/);
-  assert.match(parentNavigationScript, /host\.parentElement\.insertBefore\(link, host\)/);
+  assert.match(parentNavigationScript, /poserEnRangee\(link, host\)/);
+  // la rangée est bien créée à côté du titre, et le titre y est déplacé tel quel
+  assert.match(parentNavigationScript, /heading\.parentElement\.insertBefore\(rangee, heading\)/);
+  assert.match(parentNavigationScript, /rangee\.appendChild\(heading\)/);
+  // et jamais l'inverse : le bouton ne devient pas un enfant du titre
+  assert.doesNotMatch(parentNavigationScript, /heading\.appendChild\(link\)/);
+  assert.doesNotMatch(parentNavigationScript, /heading\.insertBefore\(link/);
 });
 
 test("sur une page d'outil, le logo maths&go ramène toujours à l'accueil", async () => {

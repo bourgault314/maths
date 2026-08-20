@@ -23,11 +23,11 @@ test("les titres de bandeau distinguent les deux outils", () => {
 });
 
 test("les consignes de page emploient un vocabulaire adapte aux familles", () => {
-  assert.match(classic, /Trouve le nombre de jetons cachés sous chaque tache en modélisant la situation par une équation puis en la résolvant/);
-  assert.match(classic, /Trouve la valeur cachée sous chaque tache en modélisant la situation par une équation puis en la résolvant/);
+  assert.match(classic, /Trouve le nombre de jetons cachés sous chaque tache\. Tu peux t’aider d’un schéma en barres ou d’une équation/);
+  assert.match(classic, /Trouve la valeur cachée sous chaque tache en modélisant la situation par une équation, puis en la résolvant/);
   assert.match(classic, /Utilise les indices pour déterminer la valeur cachée/);
-  assert.match(equations, /Trouve le nombre de jetons cachés sous chaque tache en modélisant la situation par une équation puis en la résolvant/);
-  assert.match(equations, /Trouve la valeur cachée sous chaque tache en modélisant la situation par une équation puis en la résolvant/);
+  assert.match(equations, /Trouve le nombre de jetons cachés sous chaque tache\. Tu peux t’aider d’un schéma en barres ou d’une équation/);
+  assert.match(equations, /Trouve la valeur cachée sous chaque tache en modélisant la situation par une équation, puis en la résolvant/);
 });
 
 test("les pages de correction ne repetent pas la consigne", () => {
@@ -52,4 +52,20 @@ test("les formats equations ont une hauteur de page explicite en portrait et pay
   assert.match(equations, /height:calc\(297mm - 16mm\)/);
   assert.match(equations, /\.printArea\.print-2up \.sheet\{height:calc\(210mm - 16mm\)/);
   assert.match(equations, /\.pCard svg\{width:100%;height:100%/);
+});
+
+test("Splat equations imprime deux cartes par defaut et agrandit les tableaux", () => {
+  assert.match(equations, /<option value="2" selected>2\/page<\/option>/);
+  assert.match(equations, /const fullW = 1240/);
+  assert.match(equations, /baseW: 1240/);
+  assert.match(equations, /rowH: 112/);
+  assert.match(equations, /fontSize: 98/);
+});
+
+test("les sous-titres et les logos du bandeau imprime sont centres et lisibles", () => {
+  for(const html of [classic, equations]){
+    assert.match(html, /\.print-page-title-block\{min-width:0;display:flex;align-items:center/);
+    assert.match(html, /\.print-page-logo-irem\{[\s\S]{0,80}height:12mm/);
+    assert.match(html, /\.print-page-logo-maths\{height:10mm/);
+  }
 });
