@@ -4857,9 +4857,12 @@ function renderCard(card, revealState){
   const abTrayTranslateY = 100;
   const abLeftCenterX = abTrayTranslateX + abTrayScale * (120 + 1360/2);
   const abTrayTransform = `translate(${abTrayTranslateX} ${abTrayTranslateY}) scale(${abTrayScale})`;
-  const abBarCenterX = 1160;
+  // La colonne de droite profite de la marge libre : le tableau ne doit plus
+  // sembler colle au plateau, et les equations longues (notamment avec ?)
+  // ne doivent jamais revenir au-dessus de la situation Splat.
+  const abBarCenterX = 1240;
   const abBarTopY = 260;
-  const abEquationCenterX = abBarCenterX;
+  const abEquationCenterX = 1300;
   const abEquationStartY = 525;
   // Patch 5 — les modes A± / B± n'ont pas de tableau :
   // on remonte leur équation seule pour l'aligner avec le plateau gauche.
@@ -5208,8 +5211,11 @@ function renderCard(card, revealState){
         const resolutionLineCount =
           (visSum > 0 && tasks > 1 ? 1 : 0) +
           (tasks > 1 || (tasks === 1 && visSum > 0) ? 1 : 0);
-        const calcLines = revealState >= 3 ? (1 + resolutionLineCount) : 1;
-        let calcY = (isABTwoColumnLayout ? abEquationStartY : (bottomAidTyAB + 30)) - ((calcLines - 1) * (calcGap / 2));
+        // On reserve des la premiere equation la hauteur de toutes les lignes
+        // de resolution. Les lignes suivantes s'ajoutent dessous sans faire
+        // remonter la premiere au clic suivant.
+        const finalCalcLines = 1 + resolutionLineCount;
+        let calcY = (isABTwoColumnLayout ? abEquationStartY : (bottomAidTyAB + 30)) - ((finalCalcLines - 1) * (calcGap / 2));
         const centerX = isABTwoColumnLayout ? abEquationCenterX : (800 + 190 + 240);
         const eqGap = 22;
         const unknownTerm = formatCoeffUnknownTerm(tasks, varChar);
@@ -5815,7 +5821,9 @@ function drawNumberedSignedEquationAid(targetGroup, card, revealState, opts = {}
   const equalFontSize = 42;
   const gap = 56;
   const centerY = Number.isFinite(Number(opts.centerY)) ? Number(opts.centerY) : 138;
-  const startY = centerY - ((shownLines.length - 1) * gap / 2);
+  // La premiere ligne garde sa position quand la resolution apparait : on
+  // l'ancre selon la hauteur finale, pas selon le nombre de lignes visibles.
+  const startY = centerY - ((allLines.length - 1) * gap / 2);
   const centerX = Number.isFinite(Number(opts.centerX)) ? Number(opts.centerX) : 1220;
   const eqGap = 22;
   let cy = startY;
@@ -5889,7 +5897,8 @@ function drawUnitSignedEquationAid(targetGroup, card, revealState, opts = {}){
   const equalFontSize = 42;
   const gap = 56;
   const centerY = Number.isFinite(Number(opts.centerY)) ? Number(opts.centerY) : 138;
-  const startY = centerY - ((shownLines.length - 1) * gap / 2);
+  // Meme ancrage stable pour A± : les nouvelles lignes descendent sans saut.
+  const startY = centerY - ((allLines.length - 1) * gap / 2);
   const centerX = Number.isFinite(Number(opts.centerX)) ? Number(opts.centerX) : 1220;
   const eqGap = 22;
   let cy = startY;
