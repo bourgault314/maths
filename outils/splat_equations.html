@@ -408,9 +408,7 @@
       margin-top:2.5mm;
       min-height:10mm;
     }
-    .printArea.print-1up .print-brand-m{width:13mm;height:9.8mm}
-    .printArea.print-1up .print-brand-name{font-size:9.2pt}
-    .printArea.print-1up .print-brand-tagline{font-size:5pt;margin-top:1.25mm}
+    .printArea.print-1up .print-brand-logo{width:21mm}
     .printArea.print-1up .print-page-url{font-size:5.5pt;margin-bottom:.2mm}
 
     /* 2/page : format paysage, deux grandes cartes côte à côte. */
@@ -438,9 +436,7 @@
       margin-top:2.5mm;
       min-height:10mm;
     }
-    .printArea.print-2up .print-brand-m{width:13mm;height:9.8mm}
-    .printArea.print-2up .print-brand-name{font-size:9.2pt}
-    .printArea.print-2up .print-brand-tagline{font-size:5pt;margin-top:1.25mm}
+    .printArea.print-2up .print-brand-logo{width:21mm}
     .printArea.print-2up .print-page-url{font-size:5.5pt;margin-bottom:.2mm}
 
     .print-footer{
@@ -454,43 +450,18 @@
     }
     .print-brand{
       display:inline-flex;
-      align-items:flex-end;
+      align-items:center;
       justify-self:start;
-      gap:0;
       opacity:.86;
       break-inside:avoid;
       page-break-inside:avoid;
       -webkit-print-color-adjust:exact;
       print-color-adjust:exact;
     }
-    .print-brand-m{
-      width:16mm;
-      height:12mm;
-      flex:0 0 auto;
+    .print-brand-logo{
+      width:28mm;
+      height:auto;
       display:block;
-    }
-    .print-brand-copy{
-      display:flex;
-      flex-direction:column;
-      justify-content:flex-end;
-      padding-bottom:.8mm;
-      margin-left:-1.6mm;
-      line-height:1;
-    }
-    .print-brand-name{
-      font-size:11pt;
-      font-weight:900;
-      letter-spacing:.1px;
-      color:#0b3570;
-      font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;
-    }
-    .print-brand-tagline{
-      margin-top:1.9mm;
-      font-size:5.8pt;
-      font-weight:750;
-      letter-spacing:.05px;
-      white-space:nowrap;
-      font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;
     }
     .print-page-url{
       justify-self:center;
@@ -507,9 +478,6 @@
       font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;
     }
     .print-footer-spacer{justify-self:end;}
-    .print-brand-teal{color:#13a8a8}
-    .print-brand-navy{color:#0b3570}
-    .print-brand-orange{color:#f28a17}
   }
 
   /* Plein écran */
@@ -8086,39 +8054,14 @@ function renderCardIntoSvg(targetSvg, card, printMode){
 
 
 
+const MATHSGO_PRINT_LOGO_URL = "/assets/img/logos/mathsgo/logo-print.png";
+
 function createPrintBrandFooter(){
   const footer = document.createElement("div");
   footer.className = "print-footer";
   footer.innerHTML = `
-    <div class="print-brand" aria-label="Maths&amp;Go — Manipuler, comprendre, progresser">
-      <svg class="print-brand-m" viewBox="0 0 130 106" aria-hidden="true" focusable="false">
-        <line x1="15" y1="94" x2="112" y2="94" stroke="#0b3570" stroke-width="4" stroke-linecap="round" opacity=".95"/>
-        <rect x="11" y="20" width="14" height="58" rx="7" fill="#0b3570"/>
-        <rect x="99" y="20" width="14" height="58" rx="7" fill="#0b3570"/>
-        <line x1="32" y1="26" x2="57" y2="48" stroke="#13a8a8" stroke-width="13" stroke-linecap="round"/>
-        <line x1="94" y1="26" x2="68" y2="48" stroke="#13a8a8" stroke-width="13" stroke-linecap="round"/>
-        <circle cx="63" cy="50" r="10" fill="#0b3570" stroke="#ffffff" stroke-width="3"/>
-        <circle cx="27" cy="37" r="8.5" fill="#13a8a8" stroke="#ffffff" stroke-width="3"/>
-        <circle cx="27" cy="56" r="8.5" fill="#0b3570" stroke="#ffffff" stroke-width="3"/>
-        <circle cx="27" cy="74" r="8.5" fill="#f28a17" stroke="#ffffff" stroke-width="3"/>
-        <circle cx="96" cy="37" r="8.5" fill="#13a8a8" stroke="#ffffff" stroke-width="3"/>
-        <circle cx="96" cy="56" r="8.5" fill="#0b3570" stroke="#ffffff" stroke-width="3"/>
-        <circle cx="96" cy="74" r="8.5" fill="#f28a17" stroke="#ffffff" stroke-width="3"/>
-        <rect x="36" y="86" width="14" height="8" rx="3" fill="#13a8a8"/>
-        <rect x="56" y="81" width="15" height="13" rx="3" fill="#0b3570"/>
-        <rect x="76" y="77" width="13" height="17" rx="3" fill="#f28a17"/>
-        <circle cx="83" cy="18" r="3.2" fill="#f28a17"/>
-        <circle cx="93" cy="13" r="3.2" fill="#f28a17"/>
-        <path d="M88 5 L109 2 L100 17 Z" fill="#f28a17"/>
-      </svg>
-      <div class="print-brand-copy">
-        <div class="print-brand-name">aths&amp;go</div>
-        <div class="print-brand-tagline">
-          <span class="print-brand-teal">Manipuler</span>
-          <span class="print-brand-navy"> • Comprendre • </span>
-          <span class="print-brand-orange">Progresser</span>
-        </div>
-      </div>
+    <div class="print-brand">
+      <img class="print-brand-logo" src="${MATHSGO_PRINT_LOGO_URL}" alt="Maths&amp;Go">
     </div>
     <div class="print-page-url"></div>
     <div class="print-footer-spacer" aria-hidden="true"></div>`;
@@ -8218,7 +8161,36 @@ function printSheet(){
       appendSheet(backSlots, printMode);
     }
   }
-  window.print();
+  waitForPrintAssets(printArea).then(()=>{
+    window.print();
+  });
+}
+
+function waitForPrintAssets(root){
+  const imgs = Array.from(root ? root.querySelectorAll("img") : []);
+  const waits = imgs.map(img => {
+    const decodeImg = () => {
+      if(img.decode){
+        return img.decode().catch(()=>{});
+      }
+      return Promise.resolve();
+    };
+
+    if(img.complete && img.naturalWidth > 0){
+      return decodeImg();
+    }
+
+    return new Promise(resolve => {
+      img.onload = () => { decodeImg().then(resolve); };
+      img.onerror = () => resolve();
+    });
+  });
+
+  return Promise.all(waits).then(()=> new Promise(resolve => {
+    requestAnimationFrame(()=>{
+      requestAnimationFrame(resolve);
+    });
+  }));
 }
 
 let cards = [];
