@@ -62,7 +62,10 @@ test("la compatibilité Rekenrek fonctionne aussi sur un aperçu servi dans un s
   assert.match(parentNavigationScript, /new URL\("assets\/css\/rekenrek-mobile-compat\.css\?v=1", siteBaseUrl\)/);
   assert.match(parentNavigationScript, /if \(!\/\^\\\/outils\\\/bouliers\\\/rekenrek\\\//);
   assert.match(parentNavigationScript, /return;\n\s*normaliseViewport\(\);/);
-  assert.doesNotMatch(parentNavigationScript, /document\.createElement\("a"\)/);
+  // Sur téléphone, rien ne se pose par-dessus le plateau : le bouton retour vit
+  // dans le flux de la page. Voir la PR #254 et Nim rendu injouable.
+  assert.doesNotMatch(parentNavigationScript, /position\s*:\s*fixed/);
+  assert.doesNotMatch(parentNavigationScript, /document\.body\.appendChild/);
   assert.match(parentNavigationScript, /window\.self !== window\.top[\s\S]*?link\.target = "_top"/);
 });
 

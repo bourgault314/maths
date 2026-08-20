@@ -125,13 +125,37 @@ test("les retours explicites pointent vers le parent réel du catalogue", () => 
   }
 });
 
-test("la couche commune n'injecte plus de flèche et respecte seulement un retour déclaré", () => {
+test("la couche commune n'épingle rien par-dessus la page et ne fabrique un retour que s'il est déclaré", () => {
   assert.match(returnPages["outils/plateaux_manipulation/pgcd_sachets.html"], /data-mathsgo-parent-link="\.toolbar &gt; \.brand"/);
   assert.match(parentNavigationScript, /function installDeclaredNavigation\(\)/);
-  assert.match(parentNavigationScript, /if \(!declaredHref \|\| !declaredLink\) return;/);
-  assert.doesNotMatch(parentNavigationScript, /document\.createElement\("a"\)/);
+  assert.match(parentNavigationScript, /if \(!declaredLink\) return;/);
+
+  // Ce que la PR #254 a retiré ne doit jamais revenir. Ce n'est pas le fait de
+  // fabriquer un lien qui avait rendu Nim injouable sur téléphone, c'est la flèche
+  // punaisée par-dessus le plateau. C'est donc ça qu'on garde interdit, et rien d'autre.
+  assert.doesNotMatch(parentNavigationScript, /position\s*:\s*fixed/);
+  assert.doesNotMatch(parentNavigationScript, /z-index\s*:\s*\d{6,}/);
+  assert.doesNotMatch(parentNavigationScript, /document\.body\.appendChild/);
+  assert.doesNotMatch(parentNavigationScript, /"floating"/);
   assert.doesNotMatch(parentNavigationScript, /mathsgo-parent-navigation/);
+
+  // Le bouton fabriqué est autorisé, mais sous trois conditions : la page doit le
+  // demander explicitement, il se pose dans le flux, et jamais en double.
+  assert.match(parentNavigationScript, /function installGeneratedNavigation\(\)/);
+  assert.match(parentNavigationScript, /const declaredHref = document\.body\.dataset\.mathsgoParentHref;\s*\n\s*if \(!declaredHref\) return;/);
+  assert.match(parentNavigationScript, /if \(document\.querySelector\("\." \+ BACK_CLASS\)\) return;/);
+  assert.match(parentNavigationScript, /if \(existing\.href === already\) return;/);
+  assert.match(parentNavigationScript, /host\.insertBefore\(link, host\.firstChild\)/);
+
   assert.match(parentNavigationScript, /function makeHistoryAware\(link\)/);
   assert.match(parentNavigationScript, /window\.history\.back\(\)/);
   assert.match(parentNavigationScript, /window\.self !== window\.top[\s\S]*?link\.target = "_top"/);
+});
+
+test("le bouton fabriqué n'entre jamais dans le titre de la page", () => {
+  // Le repli « .wrap > :first-child » tombe sur le <h1> des deux Soroban. Y entrer
+  // donnait « SorobanSoroban interactif » à la lecture d'écran et doublait la
+  // hauteur du titre : on se pose au-dessus.
+  assert.match(parentNavigationScript, /\/\^H\[1-6\]\$\/\.test\(host\.tagName\)/);
+  assert.match(parentNavigationScript, /host\.parentElement\.insertBefore\(link, host\)/);
 });
