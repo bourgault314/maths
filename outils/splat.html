@@ -5948,12 +5948,20 @@ function renderCardIntoSvg(targetSvg, card, printMode){
     const varChar = getNumberedDisplayVarChar(card);
   const isModeC_or_D = (card.family === "C" || card.family === "D");
 
-  const trayY = 270;
-  const trayH = 550;
+  // L'impression doit utiliser le meme plateau que le placement des jetons.
+  // Les modes A, A±, B et B± ont un plateau plus haut depuis le patch 9 ;
+  // garder ici l'ancien cadre h:550 laissait donc certains jetons en dehors.
+  const printTray = getTrayConfig(card.family);
+  const trayY = printTray.y;
+  const trayH = printTray.h;
 
-  targetSvg.appendChild(tEl("rect",{x:120,y:trayY,width:1360,height:trayH,rx:30,fill:"rgba(0,0,0,0.02)",stroke:"rgba(0,0,0,0.15)","stroke-width":"6"}));
+  targetSvg.appendChild(tEl("rect",{
+    x:printTray.x, y:trayY, width:printTray.w, height:trayH,
+    rx:30, fill:"rgba(0,0,0,0.02)", stroke:"rgba(0,0,0,0.15)", "stroke-width":"6"
+  }));
 
-  let tx = 800, ty = 92;
+  const compactPrintTotal = printTray.isHigh;
+  let tx = 800, ty = compactPrintTotal ? 78 : 92;
   let printOffsetY = 0;
 
   let totalColor = "#000";
@@ -5968,18 +5976,21 @@ function renderCardIntoSvg(targetSvg, card, printMode){
   }
 
   const g = tEl("g",{id:"totalGroupPrint"});
-  const lbl = tText(tx, ty, "TOTAL", {"text-anchor":"middle","font-size":"42","fill":totalLabelColor,"font-weight":"900","letter-spacing":"2"});
-  const num = tText(tx, ty+83, String(card.total), {"text-anchor":"middle","font-size":"96","fill":totalColor,"font-weight":"900"});
+  const totalLabelSize = compactPrintTotal ? 38 : 42;
+  const totalNumberSize = compactPrintTotal ? 84 : 96;
+  const totalNumberDy = compactPrintTotal ? 74 : 83;
+  const lbl = tText(tx, ty, "TOTAL", {"text-anchor":"middle","font-size":String(totalLabelSize),"fill":totalLabelColor,"font-weight":"900","letter-spacing":"2"});
+  const num = tText(tx, ty+totalNumberDy, String(card.total), {"text-anchor":"middle","font-size":String(totalNumberSize),"fill":totalColor,"font-weight":"900"});
   g.appendChild(lbl); g.appendChild(num);
   targetSvg.appendChild(g);
 
-  const boxH = 210;
-  const boxY = ty - 70;
-  let boxW = 280;
+  const boxH = compactPrintTotal ? 180 : 210;
+  const boxY = ty - (compactPrintTotal ? 64 : 70);
+  let boxW = compactPrintTotal ? 240 : 280;
   let boxX = tx - boxW/2;
 
   targetSvg.insertBefore(tEl("rect",{
-    x:Math.round(boxX), y:Math.round(boxY), width:Math.round(boxW), height:Math.round(boxH), rx:22,
+    x:Math.round(boxX), y:Math.round(boxY), width:Math.round(boxW), height:Math.round(boxH), rx:compactPrintTotal ? 18 : 22,
     fill:boxFill, stroke:boxStroke, "stroke-width":"4"
   }), g);
 
@@ -6110,7 +6121,7 @@ function renderCardIntoSvg(targetSvg, card, printMode){
       hiddenSums = hiddenSums.map(v => (Number.isFinite(v) ? v : 0));
       
       const gBM = tEl("g",{id:"barModelPrintSteps"});
-      let currentY = 920;
+      let currentY = trayY + trayH + 100;
 
       const fullW = 1000;
       const startX = 800 - fullW / 2;
@@ -6322,7 +6333,7 @@ function renderCardIntoSvg(targetSvg, card, printMode){
       hiddenSums = hiddenSums.map(v => (Number.isFinite(v) ? v : 0));
 
       const gBM = tEl("g",{id:"barModelPrintStepsN"});
-      let currentY = 920;
+      let currentY = trayY + trayH + 100;
       
       const fullW = 1000;
       const startX = 800 - fullW / 2;
