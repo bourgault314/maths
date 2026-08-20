@@ -99,8 +99,7 @@ window.MATHSGO_CATALOGUE = {
       "notions": ["numeration"],
       "hub": "bouliers/rekenrek/index.html",
       "role": "progression",
-      "parent": "bouliers",
-      "navigation": "hub"
+      "parent": "bouliers"
     },
     {
       "id": "montessori",
@@ -125,8 +124,7 @@ window.MATHSGO_CATALOGUE = {
       "notions": ["numeration"],
       "hub": "bouliers/abaque_de_gerbert/index.html",
       "role": "progression-courte",
-      "parent": "bouliers",
-      "navigation": "hub"
+      "parent": "bouliers"
     },
     {
       "id": "tuiles-algebriques",
@@ -149,6 +147,27 @@ window.MATHSGO_CATALOGUE = {
     }
   ],
   "resourceClassifications": {
+    "https://www.youtube.com/watch?v=_ubBAAgLiok": {
+      "primaryNotion": "numeration",
+      "primaryGroup": "cours",
+      "collections": ["gerbert"],
+      "tags": ["abaque", "gerbert", "histoire", "video"],
+      "cardDescription": "D’où vient l’abaque de Gerbert, à quoi il servait, et comment s’en servir en classe."
+    },
+    "https://iremi.univ-reunion.fr/?p=617": {
+      "primaryNotion": "numeration",
+      "primaryGroup": "cours",
+      "collections": ["gerbert"],
+      "tags": ["abaque", "jetons", "irem"],
+      "cardDescription": "Article de l’IREM de La Réunion sur l’abaque à jetons, par Alain Busser."
+    },
+    "https://www.univ-irem.fr/chapitre-2-de-l-abaque-a-jetons-au-calcul-pose": {
+      "primaryNotion": "numeration",
+      "primaryGroup": "cours",
+      "collections": ["gerbert"],
+      "tags": ["abaque", "jetons", "calcul-pose", "irem"],
+      "cardDescription": "Du geste sur l’abaque à jetons jusqu’à la technique de calcul posé, par Nathalie Daval et Dominique Tournès."
+    },
     "cps/bilan-s1.html": {
       "primaryNotion": "competences-psychosociales",
       "primaryGroup": "activites",
@@ -1588,6 +1607,54 @@ window.MATHSGO_CATALOGUE = {
     }
   ],
   "resources": [
+    {
+      "id": "reference-gerbert-video-origine",
+      "title": "L’abaque de Gerbert — origine, histoire, utilisation",
+      "description": "Vidéo de présentation : d’où vient l’abaque de Gerbert, à quoi il servait et comment on s’en sert aujourd’hui.",
+      "path": "https://www.youtube.com/watch?v=_ubBAAgLiok",
+      "domains": ["nombres-calculs"],
+      "notions": ["numeration"],
+      "uses": ["projeter"],
+      "types": [],
+      "filters": [],
+      "keywords": ["abaque", "gerbert", "histoire", "vidéo", "numération"],
+      "kind": "document",
+      "status": "published",
+      "featured": false,
+      "recent": false
+    },
+    {
+      "id": "reference-abaque-busser",
+      "title": "L’abaque de Gerbert, par Alain Busser",
+      "description": "Article de l’IREM de La Réunion sur l’abaque à jetons et son usage en classe.",
+      "path": "https://iremi.univ-reunion.fr/?p=617",
+      "domains": ["nombres-calculs"],
+      "notions": ["numeration"],
+      "uses": ["projeter"],
+      "types": [],
+      "filters": [],
+      "keywords": ["abaque", "jetons", "irem", "réunion", "busser"],
+      "kind": "document",
+      "status": "published",
+      "featured": false,
+      "recent": false
+    },
+    {
+      "id": "reference-abaque-daval-tournes",
+      "title": "De l’abaque à jetons au calcul posé, par Nathalie Daval et Dominique Tournès",
+      "description": "Chapitre de l’IREM retraçant le passage de l’abaque à jetons aux techniques de calcul posé.",
+      "path": "https://www.univ-irem.fr/chapitre-2-de-l-abaque-a-jetons-au-calcul-pose",
+      "domains": ["nombres-calculs"],
+      "notions": ["numeration"],
+      "uses": ["projeter"],
+      "types": [],
+      "filters": [],
+      "keywords": ["abaque", "jetons", "calcul posé", "irem", "histoire"],
+      "kind": "document",
+      "status": "published",
+      "featured": false,
+      "recent": false
+    },
     {
       "id": "outils-bouliers-abaque-de-gerbert-abaque-gerbert-addition-html",
       "title": "Abaque de Gerbert – Additions",

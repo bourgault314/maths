@@ -1040,6 +1040,20 @@
     return "manipuler";
   }
 
+  function isExternalResourcePath(value) {
+    return /^https?:\/\//i.test(String(value || ""));
+  }
+
+  // Une ressource peut pointer vers une page du site (chemin relatif) ou vers une
+  // référence extérieure (vidéo, article) : dans ce cas on n'ajoute pas le préfixe
+  // du site et on ouvre dans un nouvel onglet.
+  function resourceLinkAttributes(resource) {
+    if (isExternalResourcePath(resource.path)) {
+      return `href="${escapeHtml(resource.path)}" target="_blank" rel="noopener noreferrer"`;
+    }
+    return `href="${escapeHtml(rootPrefix + resource.path)}"`;
+  }
+
   function resourceCard(resource) {
     const domainId = resourceDisplayDomain(resource);
     const classification = resourceClassification(resource);
@@ -1048,7 +1062,7 @@
     const description = classification.cardDescription || resource.description;
     const group = primaryResourceGroup(resource);
     const usages = resourceUsageMeta(resource, group);
-    return `<a class="resource-card${thumbnail ? " resource-card-visual" : ""}" href="${escapeHtml(rootPrefix + resource.path)}" style="${domainStyle(domainId)}">
+    return `<a class="resource-card${thumbnail ? " resource-card-visual" : ""}" ${resourceLinkAttributes(resource)} style="${domainStyle(domainId)}">
       ${thumbnail
         ? `<span class="resource-thumbnail">${thumbnailMarkup(thumbnail)}</span>`
         : `<span class="resource-type-icon">${typeIcon(resource, group)}</span>`}
@@ -1080,7 +1094,7 @@
         <span class="resource-family-toggle" aria-hidden="true">⌄</span>
       </summary>
       <div class="resource-variants" aria-label="${escapeHtml(`Versions de ${family.title}`)}">
-        ${variants.map((resource) => `<a href="${escapeHtml(rootPrefix + resource.path)}"><span>${escapeHtml(variantLabel(resource, family))}</span><span aria-hidden="true">→</span></a>`).join("")}
+        ${variants.map((resource) => `<a ${resourceLinkAttributes(resource)}><span>${escapeHtml(variantLabel(resource, family))}</span><span aria-hidden="true">→</span></a>`).join("")}
       </div>
     </details>`;
   }
