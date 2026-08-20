@@ -17,7 +17,10 @@ import { fileURLToPath } from "node:url";
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 
-const DOSSIERS_EXCLUS = ["node_modules", ".git", "fichiers-travailles", "auto/dev"];
+// « _sources » suit la règle de publication : le workflow rsync exclut tout
+// dossier commençant par « _ ». Ces fichiers ne sont jamais servis, donc la
+// question du favori ne se pose pas pour eux.
+const DOSSIERS_EXCLUS = ["node_modules", ".git", "fichiers-travailles", "auto/dev", "_sources"];
 
 // Les cibles du bloc canonique : si l'une disparaît, toutes les pages du site
 // pointent dans le vide d'un coup.

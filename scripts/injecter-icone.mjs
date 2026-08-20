@@ -44,6 +44,9 @@ const DOSSIERS_EXCLUS = [
   ".git",
   "fichiers-travailles",
   "auto/dev",
+  // Jamais publié (le workflow rsync exclut les dossiers « _* ») :
+  // rien à injecter dans les fichiers sources.
+  "_sources",
 ];
 
 export function declareDejaUneIcone(html) {
