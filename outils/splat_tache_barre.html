@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Petit Splat — fiches et schémas en barres | maths&amp;go</title>
+  <title>Petit Splat! — fiches et schémas en barres | maths&amp;go</title>
   <meta name="description" content="Composez une fiche de Petits Splats avec jetons cachés et schémas en barres à compléter.">
   <link rel="canonical" href="https://mathsgo.re/outils/splat_tache_barre.html">
   <meta name="robots" content="index, follow, max-image-preview:large">
@@ -1891,10 +1891,12 @@ function createPageElement(chunk, isCorrectionPage, mirror) {
             </div>`;
         inner.appendChild(header);
 
-        const instruction = document.createElement('div');
-        instruction.className = 'activity-instruction';
-        instruction.innerHTML = getInstructionHtml();
-        inner.appendChild(instruction);
+        if (!isCorrectionPage) {
+            const instruction = document.createElement('div');
+            instruction.className = 'activity-instruction';
+            instruction.innerHTML = getInstructionHtml();
+            inner.appendChild(instruction);
+        }
     }
 
     inner.appendChild(grid);

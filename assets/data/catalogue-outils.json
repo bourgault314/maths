@@ -205,8 +205,8 @@
     },
     {
       "id": "splat",
-      "title": "Splat",
-      "description": "Plateaux Splat, ÉquaSplat et ÉquaBarre autour de l’inconnue.",
+      "title": "Splat!",
+      "description": "Plateaux Splat!, ÉquaSplat et ÉquaBarre autour de l’inconnue.",
       "path": "outils/index.html?domain=algebre&collection=splat",
       "kind": "collection",
       "status": "published",

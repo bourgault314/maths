@@ -1900,3 +1900,84 @@ select { cursor: pointer; }
     min-height: 99px;
   }
 }
+
+/* La collection Splat! conserve la structure du catalogue tout en retrouvant
+   une identité d’univers forte et le crédit visible du concept original. */
+.catalogue-deep-view.catalogue-splat-view .hero {
+  min-height: 154px;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 320px;
+  grid-template-areas:
+    "title mark"
+    "lead mark";
+  align-items: center;
+  gap: 4px 28px;
+  margin-bottom: 24px;
+  padding: 20px 24px;
+  overflow: hidden;
+  border: 1px solid #d9c8ef;
+  border-left: 7px solid #7b42b4;
+  border-radius: 22px;
+  background:
+    radial-gradient(circle at 85% 20%, rgba(245, 158, 11, .18), transparent 28%),
+    linear-gradient(120deg, #fbf8ff 0%, #f5edff 55%, #fff8ed 100%);
+  box-shadow: 0 12px 28px rgba(64, 35, 100, .1);
+}
+
+.catalogue-deep-view.catalogue-splat-view .hero h1 {
+  grid-area: title;
+  max-width: none;
+  font-family: system-ui, -apple-system, "Segoe UI", sans-serif;
+  font-size: clamp(3rem, 6vw, 5rem);
+  font-weight: 950;
+  line-height: .92;
+  letter-spacing: -.055em;
+  color: #3f2165;
+}
+
+.catalogue-deep-view.catalogue-splat-view .hero-lead {
+  grid-area: lead;
+  display: block;
+  max-width: 660px;
+  margin: 10px 0 0;
+  color: #5f4d72;
+  font-size: 1rem;
+  font-weight: 680;
+  line-height: 1.35;
+}
+
+.splat-universe-mark {
+  grid-area: mark;
+  display: grid;
+  grid-template-columns: 126px minmax(0, 1fr);
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+  padding: 8px 12px;
+  border: 1px solid rgba(123, 66, 180, .18);
+  border-radius: 18px;
+  background: rgba(255, 255, 255, .78);
+}
+
+.splat-universe-mark[hidden] { display: none; }
+.splat-universe-mark svg { display: block; width: 126px; height: auto; }
+.splat-universe-mark p { margin: 0; color: #64748b; font-size: .77rem; line-height: 1.35; }
+.splat-universe-mark p span,
+.splat-universe-mark p strong { display: block; }
+.splat-universe-mark p strong { margin-top: 3px; color: #d97706; font-weight: 900; }
+.splat-universe-mark a { color: #5b21b6; font-weight: 850; text-decoration-thickness: 1px; text-underline-offset: 2px; }
+
+@media (max-width: 680px) {
+  .catalogue-deep-view.catalogue-splat-view .hero {
+    min-height: 0;
+    grid-template-columns: 1fr;
+    grid-template-areas: "title" "lead" "mark";
+    gap: 7px;
+    margin-bottom: 22px;
+    padding: 18px 16px;
+  }
+  .catalogue-deep-view.catalogue-splat-view .hero h1 { font-size: clamp(2.8rem, 16vw, 4.2rem); }
+  .catalogue-deep-view.catalogue-splat-view .hero-lead { margin-top: 2px; font-size: .94rem; }
+  .splat-universe-mark { grid-template-columns: 92px minmax(0, 1fr); padding: 6px 10px; }
+  .splat-universe-mark svg { width: 92px; }
+}

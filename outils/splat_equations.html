@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1" />
-<title>Splat — équations | maths&amp;go</title>
+<title>Splat! — équations | maths&amp;go</title>
   <meta name="description" content="Générez des cartes d’équations où les deux côtés contiennent des jetons et des quantités cachées.">
   <link rel="canonical" href="https://mathsgo.re/outils/splat_equations.html">
   <meta name="robots" content="index, follow, max-image-preview:large">
@@ -172,8 +172,12 @@
   }
   .btn:hover{background:var(--btn2)}
   .btn:active{transform:translateY(1px)}
-  .btn.primary{background:rgba(106,167,255,0.18);border-color:rgba(106,167,255,0.35)}
-  .btn.danger{background:rgba(255,106,106,0.14);border-color:rgba(255,106,106,0.35)}
+  .btn.primary{background:#2563eb;border-color:#2563eb;color:#fff;font-weight:750}
+  .btn.primary:hover{background:#1d4ed8}
+  .btn.danger{background:#fff1f2;border-color:#fecdd3;color:#be123c;font-weight:750}
+  .btn.danger:hover{background:#ffe4e6}
+  .btn.printAction{background:#10b981;border-color:#10b981;color:#fff;font-weight:750}
+  .btn.printAction:hover{background:#059669}
   .btn:disabled{opacity:.45;cursor:not-allowed}
   .shareRow{display:flex;align-items:center;justify-content:flex-start;gap:8px;min-height:28px;margin-top:8px}
   .shareLinkBtn{padding:5px 8px;font-size:11px;font-weight:750;color:var(--muted);white-space:nowrap}
@@ -762,7 +766,7 @@
     </div>
 
     <div class="row" style="margin-top:10px; align-items:center; flex-wrap:nowrap; gap:6px;">
-      <button class="btn" id="btnPrint" style="flex:0 0 76px; width:76px; min-width:0; padding:10px 8px;">Imprimer</button>
+      <button class="btn printAction" id="btnPrint" style="flex:0 0 76px; width:76px; min-width:0; padding:10px 8px;">Imprimer</button>
       <select id="printMode" title="Choisir le contenu à imprimer" style="flex:1 1 auto; min-width:88px; max-width:none; height:44px; padding:8px 6px; font-size:12px;">
         <option value="statement">Énoncé seul</option>
         <option value="worksheet">Tableau vide</option>
@@ -8060,11 +8064,9 @@ function getEquationPrintInstruction(slotCards){
   const act = activityEl ? activityEl.value : "EQ";
   const hasSeveralTasks = slotCards.some(card => card && equationPrintTaskCount(card) > 1);
   const isSigned = act === "EQPM" || act === "EQPMSTEP";
-  const main = act === "EQUNITSTEP"
-    ? "Trouve le nombre de jetons cachés sous chaque tache, puis complète l’équation."
-    : (isSigned
-      ? "Détermine la valeur cachée sous chaque tache, puis résous l’équation."
-      : "Détermine la valeur cachée sous chaque tache, puis complète ou résous l’équation.");
+  const main = isSigned
+    ? "Trouve la valeur cachée sous chaque tache en modélisant la situation par une équation puis en la résolvant."
+    : "Trouve le nombre de jetons cachés sous chaque tache en modélisant la situation par une équation puis en la résolvant.";
   const note = hasSeveralTasks
     ? (isSigned
       ? "Lorsque plusieurs taches apparaissent, elles cachent la même valeur."
@@ -8186,7 +8188,7 @@ function printSheet(){
     const sheet = document.createElement("div");
     sheet.className = `sheet sheet-${perSheet}up`;
     sheet.appendChild(createEquationPrintHeader(mode));
-    sheet.appendChild(createEquationPrintInstruction(slotCards));
+    if(mode !== "correction") sheet.appendChild(createEquationPrintInstruction(slotCards));
     const grid = document.createElement("div");
     grid.className = "grid";
 
@@ -8419,13 +8421,8 @@ document.getElementById("btnFullscreen").addEventListener("click", toggleFullscr
 window.addEventListener("keydown",(e)=>{
   const _ae = document.activeElement;
   const _tag = _ae && _ae.tagName ? String(_ae.tagName).toLowerCase() : "";
-  const _navKey = (e.key==="ArrowLeft" || e.key==="ArrowRight" || e.key===" ");
-  if((_tag === "select") && _navKey){
-    e.preventDefault();
-    try{ _ae.blur(); }catch(_e){}
-    const _ms = document.getElementById("mainSvg");
-    if(_ms && typeof _ms.focus==="function"){ _ms.focus(); }
-  }
+  const _isTyping = _tag === "input" || _tag === "textarea" || _tag === "select" || (_ae && _ae.isContentEditable);
+  if(_isTyping) return;
   if(e.key==="ArrowLeft"){
     e.preventDefault();
     goPreviousStepOrCard();
@@ -8433,19 +8430,6 @@ window.addEventListener("keydown",(e)=>{
   if(e.key==="ArrowRight"){
     e.preventDefault();
     goNextStepOrCard();
-  }
-  if(e.key===" "){
-    e.preventDefault();
-    if(cards.length){ 
-        const isProgressive = isProgressiveRevealCard(cards[idx]);
-        const maxState = getMaxRevealState(cards[idx]);
-        if (isProgressive) {
-            revealState = (revealState + 1) % (maxState + 1);
-        } else {
-            revealState = revealState === 0 ? maxState : 0;
-        }
-        updateUI(); 
-    }
   }
   if(e.key==="f" || e.key==="F"){ toggleFullscreen(); }
 });

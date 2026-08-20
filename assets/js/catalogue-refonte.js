@@ -338,7 +338,7 @@
       icon: "tiles"
     },
     splat: {
-      description: "Retrouver Splat, Petit Splat, Splat Équations et ÉquaSplat.",
+      description: "Explorer Splat!, Petit Splat!, Splat! Équations et ÉquaSplat autour de l’inconnue.",
       icon: "splat"
     }
   };
@@ -359,6 +359,7 @@
   const summary = document.getElementById("results-summary");
   const pageTitle = document.getElementById("page-title");
   const heroLead = document.getElementById("hero-lead");
+  const splatUniverseMark = document.getElementById("splat-universe-mark");
   const breadcrumb = document.getElementById("catalogue-breadcrumb");
   const searchInput = document.getElementById("catalogue-search");
   const clearButton = document.getElementById("search-clear");
@@ -1187,6 +1188,9 @@
     }
 
     mainPanel.classList.toggle("catalogue-deep-view", enteringDeepView);
+    const isSplatCollection = selectedCollection?.id === "splat";
+    mainPanel.classList.toggle("catalogue-splat-view", isSplatCollection);
+    if (splatUniverseMark) splatUniverseMark.hidden = !isSplatCollection;
     document.body.classList.toggle("catalogue-is-deep", enteringDeepView);
     document.body.classList.toggle("catalogue-is-search", level === "search");
     mainPanel.dataset.catalogueView = level;
