@@ -172,6 +172,26 @@ test("ÉquaBarre et ÉquaSplat restent publics, leurs récepteurs import restent
   assert.match(redirectPage, /equabarre\.html/);
   assert.match(redirectPage, /location\.search/);
   assert.match(redirectPage, /location\.hash/);
+
+  // Les deux autres émetteurs sont des liens jumeaux du précédent : ils doivent
+  // viser ÉquaBarre par la même adresse et lui envoyer la charge dans l'ancre.
+  // Ces fichiers pèsent plusieurs centaines de kilo-octets : on teste les motifs
+  // à la main pour qu'un échec affiche une phrase et non la page entière.
+  for (const relativePath of ["outils/splat.html", "outils/splat_equations.html"]) {
+    const emitter = fs.readFileSync(path.join(root, relativePath), "utf8");
+    assert.ok(
+      /const EQUABAR_IMPORT_URL = "\.\/equabarre\.html";/.test(emitter),
+      `${relativePath} doit viser ./equabarre.html`
+    );
+    assert.ok(
+      !/equabarre_import_splat\.html/.test(emitter),
+      `${relativePath} ne doit plus mentionner equabarre_import_splat.html`
+    );
+    assert.ok(
+      /\$\{EQUABAR_IMPORT_URL\}#data=\$\{encodeEquabarPayload\(payload\)\}/.test(emitter),
+      `${relativePath} doit transmettre la charge dans l'ancre #data=`
+    );
+  }
 });
 
 test("le hub Gerbert ne relie que ses ressources publiées", () => {
