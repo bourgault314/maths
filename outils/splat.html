@@ -695,7 +695,7 @@
       left:0;
       top:50%;
       transform:translateY(-50%);
-      width:40mm;
+      width:36mm;
       height:auto;
       display:block;
     }
@@ -2285,6 +2285,12 @@ function getTrayConfig(mode){
     return { x:120, y:210, w:1360, h:660, isHigh: true };
   }
   return { x:120, y:270, w:1360, h:550, isHigh: false };
+}
+
+function getPrintTrayConfig(mode){
+  const tray = getTrayConfig(mode);
+  const offsetY = tray.isHigh ? 35 : 0;
+  return {...tray, y:tray.y + offsetY, offsetY};
 }
 
 function getUnitSplats(taskCount){
@@ -5962,10 +5968,9 @@ function renderCardIntoSvg(targetSvg, card, printMode){
     const varChar = getNumberedDisplayVarChar(card);
   const isModeC_or_D = (card.family === "C" || card.family === "D");
 
-  // L'impression doit utiliser le meme plateau que le placement des jetons.
-  // Les modes A, A±, B et B± ont un plateau plus haut depuis le patch 9 ;
-  // garder ici l'ancien cadre h:550 laissait donc certains jetons en dehors.
-  const printTray = getTrayConfig(card.family);
+  // Les modes A, A±, B et B± gardent leur grand plateau, mais toute la scene
+  // est legerement descendue a l'impression pour conserver un TOTAL lisible.
+  const printTray = getPrintTrayConfig(card.family);
   const trayY = printTray.y;
   const trayH = printTray.h;
 
@@ -5974,9 +5979,8 @@ function renderCardIntoSvg(targetSvg, card, printMode){
     rx:30, fill:"rgba(0,0,0,0.02)", stroke:"rgba(0,0,0,0.15)", "stroke-width":"6"
   }));
 
-  const compactPrintTotal = printTray.isHigh;
-  let tx = 800, ty = compactPrintTotal ? 78 : 92;
-  let printOffsetY = 0;
+  let tx = 800, ty = 92;
+  const printOffsetY = printTray.offsetY;
 
   let totalColor = "#000";
   let totalLabelColor = "rgba(0,0,0,0.92)";
@@ -5990,21 +5994,21 @@ function renderCardIntoSvg(targetSvg, card, printMode){
   }
 
   const g = tEl("g",{id:"totalGroupPrint"});
-  const totalLabelSize = compactPrintTotal ? 38 : 42;
-  const totalNumberSize = compactPrintTotal ? 84 : 96;
-  const totalNumberDy = compactPrintTotal ? 74 : 83;
+  const totalLabelSize = 42;
+  const totalNumberSize = 96;
+  const totalNumberDy = 83;
   const lbl = tText(tx, ty, "TOTAL", {"text-anchor":"middle","font-size":String(totalLabelSize),"fill":totalLabelColor,"font-weight":"900","letter-spacing":"2"});
   const num = tText(tx, ty+totalNumberDy, String(card.total), {"text-anchor":"middle","font-size":String(totalNumberSize),"fill":totalColor,"font-weight":"900"});
   g.appendChild(lbl); g.appendChild(num);
   targetSvg.appendChild(g);
 
-  const boxH = compactPrintTotal ? 180 : 210;
-  const boxY = ty - (compactPrintTotal ? 64 : 70);
-  let boxW = compactPrintTotal ? 240 : 280;
+  const boxH = 210;
+  const boxY = ty - 70;
+  let boxW = 280;
   let boxX = tx - boxW/2;
 
   targetSvg.insertBefore(tEl("rect",{
-    x:Math.round(boxX), y:Math.round(boxY), width:Math.round(boxW), height:Math.round(boxH), rx:compactPrintTotal ? 18 : 22,
+    x:Math.round(boxX), y:Math.round(boxY), width:Math.round(boxW), height:Math.round(boxH), rx:22,
     fill:boxFill, stroke:boxStroke, "stroke-width":"4"
   }), g);
 
@@ -6086,6 +6090,7 @@ function renderCardIntoSvg(targetSvg, card, printMode){
     const printSignedColors = (v)=> v >= 0 ? {fill:"rgba(34,197,94,0.30)", stroke:"rgba(22,163,74,0.80)"} : {fill:"rgba(244,63,94,0.30)", stroke:"rgba(225,29,72,0.80)"};
     const drawPrintUnitToken = (cx, cy, value, hidden)=>{
       const strokeWidth = signedUnitPrint ? 3.5 : 3;
+      cy += printOffsetY;
       ({cx, cy} = fitPrintTokenToTray(cx, cy, beadR, printTray, strokeWidth));
       if(signedUnitPrint){
         const c = printSignedColors(value);
@@ -6102,13 +6107,13 @@ function renderCardIntoSvg(targetSvg, card, printMode){
     }
     const splats = card._splats || [{cx:820, cy:610, r:220}];
     for(const s of splats){
-      targetSvg.appendChild(tEl("path",{d: blobPath(s.cx,s.cy,s.r), fill:(revealAnswers?revealCol:cover), stroke:"rgba(0,0,0,0.18)","stroke-width":"5"}));
+      targetSvg.appendChild(tEl("path",{d: blobPath(s.cx,s.cy + printOffsetY,s.r), fill:(revealAnswers?revealCol:cover), stroke:"rgba(0,0,0,0.18)","stroke-width":"5"}));
     }
     if(revealAnswers && card._unit && card._unit.emptyTask){
       const s0 = splats[0] || {cx:820, cy:610, r:220};
       const w = 210, h = 68;
-      targetSvg.appendChild(tEl("rect",{x:s0.cx-w/2, y:s0.cy-h/2, width:w, height:h, rx:24, ry:24, fill:"rgba(255,255,255,0.86)", stroke:"rgba(0,0,0,0.34)","stroke-width":"4"}));
-      targetSvg.appendChild(tText(s0.cx, s0.cy, "0 jeton", {"text-anchor":"middle","dominant-baseline":"middle","font-size":"38","fill":"#000","font-weight":"900"}));
+      targetSvg.appendChild(tEl("rect",{x:s0.cx-w/2, y:s0.cy+printOffsetY-h/2, width:w, height:h, rx:24, ry:24, fill:"rgba(255,255,255,0.86)", stroke:"rgba(0,0,0,0.34)","stroke-width":"4"}));
+      targetSvg.appendChild(tText(s0.cx, s0.cy+printOffsetY, "0 jeton", {"text-anchor":"middle","dominant-baseline":"middle","font-size":"38","fill":"#000","font-weight":"900"}));
     }
     for(let i=0;i<card.visible.length;i++){
       const cx = card._posV?.[i]?.cx ?? (450 + i*40);
@@ -6329,7 +6334,7 @@ function renderCardIntoSvg(targetSvg, card, printMode){
           ? (longest > 42 ? 70 : (longest > 34 ? 76 : 84))
           : (longest > 45 ? 58 : (longest > 38 ? 62 : (longest > 31 ? 68 : 74)));
         const gap = isHelpOnly ? 0 : (fontSize + 22);
-        const centerY = isHelpOnly ? 1240 : 1285;
+        const centerY = (isHelpOnly ? 1240 : 1285) + printOffsetY;
 
         drawPrintEquationLinesLikeProjection(gEqNpm, lines, {
           text:(x,y,t,a)=>tText(x,y,t,a),
