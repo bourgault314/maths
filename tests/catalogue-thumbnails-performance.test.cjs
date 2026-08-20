@@ -120,6 +120,6 @@ test("les URL partent immédiatement sans ordonnanceur de mise en page", () => {
 });
 
 test("les versions de cache publient ensemble le JavaScript et le CSS", () => {
-  assert.match(catalogueHtml, /catalogue-refonte\.css\?v=splat-universe-20260820-1/);
-  assert.match(catalogueHtml, /catalogue-refonte\.js\?v=splat-universe-20260820-1/);
+  assert.match(catalogueHtml, /catalogue-refonte\.css\?v=splat-universe-20260820-2/);
+  assert.match(catalogueHtml, /catalogue-refonte\.js\?v=splat-universe-20260820-2/);
 });

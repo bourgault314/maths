@@ -26,7 +26,7 @@
         <rect x="111" y="7" width="22" height="22" fill="#fff" stroke="#0f172a"/>
         <text x="122" y="23" text-anchor="middle" font-size="12" font-weight="900" fill="#0f172a">18</text>
         <g fill="#2563eb"><circle cx="19" cy="18" r="3"/><circle cx="39" cy="27" r="3"/><circle cx="97" cy="19" r="3"/><circle cx="119" cy="45" r="3"/></g>
-        <path d="M53 25c7-8 13-2 20-8 7-5 16 0 15 9 0 8 9 10 11 17 4 8-2 14-10 17-8 3-8 14-17 18-8 3-14-4-18-10-4-7-14-4-20-10-6-6-1-14 2-20 4-7-1-15 4-19 4-4 8-2 13 0z" fill="#050505"/>
+        <path d="M130,50 Q170,20 200,60 Q230,80 210,130 Q180,170 130,160 Q80,150 70,100 Q80,40 130,50 Z" transform="translate(11 8) scale(.39)" fill="#050505"/>
         <rect x="10" y="62" width="120" height="15" fill="#f8fafc" stroke="#0f172a"/>
         <line x1="42" y1="62" x2="42" y2="77" stroke="#0f172a"/>
       </g>
