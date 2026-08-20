@@ -736,7 +736,7 @@ window.MATHSGO_CATALOGUE = {
       "primaryGroup": "manipuler",
       "collections": [],
       "tags": ["angles", "bandes-magnetiques", "construction", "rapporteur", "manipulation"],
-      "thumbnail": "assets/img/thumbnails/angles/bandes-magnetiques.png?v=1",
+      "thumbnail": "assets/img/thumbnails/angles/bandes-magnetiques.png?v=2",
       "cardDescription": "Construire librement des angles et des figures avec des bandes magnétiques, un rapporteur et une équerre."
     },
     "outils/angles/gabarits_angles.html": {
@@ -752,7 +752,7 @@ window.MATHSGO_CATALOGUE = {
       "primaryGroup": "generer",
       "collections": [],
       "tags": ["angles", "gabarits", "generateur", "imprimer", "materiel"],
-      "thumbnail": "assets/img/thumbnails/angles/generateur-gabarits.png?v=1",
+      "thumbnail": "assets/img/thumbnails/angles/generateur-gabarits.png?v=2",
       "cardDescription": "Composer une planche de gabarits d’angles aux mesures, couleurs et formats choisis."
     },
     "outils/angles/generateur-rapporteurs-calque.html": {
@@ -848,7 +848,7 @@ window.MATHSGO_CATALOGUE = {
       "tags": ["proportionnalite", "tableau", "sans-coefficient", "gabarit", "imprimable"],
       "thumbnail": "assets/img/thumbnails/proportionnalite/tableau-sans-coefficient.png?v=1"
     },
-    "outils/angles/fiche_angles_triangles.pdf": { "primaryNotion": "angles", "primaryGroup": "imprimer", "collections": [], "tags": ["angles", "triangles", "imprimable"] },
+    "outils/angles/fiche_angles_triangles.pdf": { "primaryNotion": "angles", "primaryGroup": "imprimer", "collections": [], "tags": ["angles", "triangles", "imprimable"], "thumbnail": "assets/img/thumbnails/angles/fiche-angles-triangles.png?v=1" },
     "outils/bouliers/abaque_de_gerbert/abaque_gerbert_addition.html": {
       "primaryNotion": "numeration",
       "primaryGroup": "entrainer",
