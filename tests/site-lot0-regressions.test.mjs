@@ -205,6 +205,34 @@ test("sur une page d'outil, le logo maths&go ramène toujours à l'accueil", asy
   assert.ok(verifiees >= 16, `trop peu de logos vérifiés (${verifiees}) — le balayage a dû rater des pages`);
 });
 
+test("aucun lien de navigation n'écrit l'adresse du site en dur", async () => {
+  // Un href="https://mathsgo.re/…" dans un menu marche en ligne et nulle part
+  // ailleurs : en aperçu local, cliquer dessus éjecte vers le site publié, et on
+  // croit avoir vérifié une modification qu'on n'a pas vue.
+  const ANNUAIRE = "outils/toutes-les-ressources.html"; // liste d'adresses à copier : elles doivent être complètes
+  const IGNORES = new Set(["node_modules", ".git", "_sources", "tests"]);
+  const lien = /<a\b[^>]{0,300}?href="(https?:\/\/(?:www\.)?mathsgo\.re[^"]*)"/gis;
+
+  async function toutesLesPages(dossier) {
+    const trouvees = [];
+    for (const entree of await readdir(new URL(`../${dossier}/`, import.meta.url), { withFileTypes: true })) {
+      if (entree.name.startsWith(".") || IGNORES.has(entree.name)) continue;
+      const suite = dossier === "." ? entree.name : `${dossier}/${entree.name}`;
+      if (entree.isDirectory()) trouvees.push(...await toutesLesPages(suite));
+      else if (entree.name.endsWith(".html")) trouvees.push(suite);
+    }
+    return trouvees;
+  }
+
+  const fautifs = [];
+  for (const chemin of await toutesLesPages(".")) {
+    if (chemin === ANNUAIRE) continue;
+    const html = await readFile(new URL(`../${chemin}`, import.meta.url), "utf8");
+    for (const [, cible] of html.matchAll(lien)) fautifs.push(`${chemin} → ${cible}`);
+  }
+  assert.deepEqual(fautifs, [], `écrire ces liens en relatif :\n  ${fautifs.join("\n  ")}`);
+});
+
 test("les trois pages dont le logo était la seule sortie ont gagné une flèche", async () => {
   // Libérer leur logo leur retirait leur unique chemin de retour : elles déclarent
   // désormais un parent, que tool-parent-navigation.js transforme en bouton.
