@@ -28,11 +28,12 @@
   }
   header svg{height:13mm; width:auto; flex:none}
   .brain-badge{
-    flex:none; width:16mm; height:16mm; border-radius:50%;
-    background:var(--coral-soft); border:1.5px solid #f5cdc5;
+    flex:none; width:16mm; height:16mm;
     display:flex; align-items:center; justify-content:center;
   }
-  .brain-badge img{width:12.5mm; height:auto}
+  /* Sans son cercle, le cerveau prend toute la boîte pour garder la même
+     présence à côté du logo. */
+  .brain-badge img{width:16mm; height:auto}
   .head-title{flex:1; min-width:0}
   .head-title .eyebrow{
     margin:0; font-size:7pt; font-weight:700; letter-spacing:.12em;
