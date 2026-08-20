@@ -647,7 +647,7 @@
       page-break-after:auto;
       break-after:auto;
       height:calc(297mm - 16mm);
-      padding:5mm 6mm 3mm;
+      padding:4mm 6mm 2mm;
       box-sizing:border-box;
       display:flex;
       flex-direction:column;
@@ -679,32 +679,47 @@
     }
     .pCard svg{width:100%;height:100%;display:block}
     .pCard.empty{border:none;background:transparent;padding:0;min-height:0}
-    .print-footer {
-      flex:0 0 20mm;
-      position:relative;
-      margin-top:3mm;
-      color:#666;
-      font-size:10pt;
+    .print-page-header{
+      flex:0 0 14mm;
       display:flex;
       align-items:center;
-      justify-content:center;
+      justify-content:space-between;
+      gap:4mm;
+      margin-bottom:2mm;
+      padding:2mm 4mm;
+      box-sizing:border-box;
+      background:linear-gradient(90deg,#ff9815 0%,#ffc46d 58%,#fff4dc 100%);
+      overflow:hidden;
+      -webkit-print-color-adjust:exact;
+      print-color-adjust:exact;
       pointer-events:none;
     }
-    .print-logo{
-      position:absolute;
-      left:0;
-      top:50%;
-      transform:translateY(-50%);
-      width:36mm;
-      height:auto;
+    .print-page-title-block{min-width:0;display:flex;align-items:baseline;gap:4mm;line-height:1}
+    .print-page-title{font-size:17pt;font-weight:950;color:#063b7a;white-space:nowrap}
+    .print-page-subtitle{font-size:11pt;font-weight:850;color:#111827;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+    .print-page-logos{display:flex;align-items:center;justify-content:flex-end;gap:3mm;height:100%;flex:0 0 auto}
+    .print-page-logo-irem{
+      height:11mm;
+      width:auto;
       display:block;
     }
-    .print-url{
-      display:block;
-      text-align:center;
-      line-height:1;
-      letter-spacing:.01em;
+    .print-page-logo-maths{height:9.5mm;width:auto;display:block}
+    .print-page-instruction{
+      flex:0 0 auto;
+      margin-bottom:2mm;
+      padding:1.8mm 3mm;
+      border:1px solid #667085;
+      border-radius:2mm;
+      background:#fff;
+      color:#111827;
+      font-size:9.5pt;
+      line-height:1.16;
+      -webkit-print-color-adjust:exact;
+      print-color-adjust:exact;
     }
+    .print-page-instruction strong{font-weight:900}
+    .print-page-instruction-note{margin-left:2mm;color:#475467;font-size:8.7pt;font-weight:700}
+    .print-page-footer{flex:0 0 3.5mm;margin-top:1.2mm;text-align:center;color:#98a2b3;font-size:6pt;font-weight:650;line-height:1}
   }
 
   /* Plein écran */
@@ -1139,6 +1154,13 @@
       </label>
     </div>
 
+    <div class="row" style="margin-top:10px;">
+      <div style="flex:1">
+        <label for="printActivityTitle">Titre imprimé</label>
+        <input id="printActivityTitle" type="text" maxlength="160" placeholder="ex. Atelier de recherche" />
+      </div>
+    </div>
+
     <div class="row" style="margin-top:10px; align-items:center; flex-wrap:nowrap; gap:10px;">
       <button class="btn" id="btnPrint" style="flex:0 0 auto; min-width:112px; padding:10px 14px;">Imprimer</button>
       <select id="printMode" title="Choisir le contenu à imprimer" style="flex:1 1 auto; min-width:0; max-width:none; height:44px;">
@@ -1179,6 +1201,7 @@
 <script>
 
 const MATHSGO_PRINT_LOGO_URL = "/assets/img/logos/mathsgo/logo-print.png?v=20260820-1";
+const IREM_PRINT_LOGO_URL = "/assets/img/logos/irem/logo-print.png?v=20260820-1";
 
 /* Le véritable X mathématique unicode ! */
 const xChar = "𝑥"; 
@@ -1422,6 +1445,7 @@ const numOpposeModeEl = document.getElementById("numOpposeMode");
 const numColorModeWrapEl = document.getElementById("numColorModeWrap");
 const numColorModeEl = document.getElementById("numColorMode");
 const printModeSelectEl = document.getElementById("printMode");
+const printActivityTitleEl = document.getElementById("printActivityTitle");
 const numberedUnknownChoiceEl = document.getElementById("numberedUnknownChoice");
 const btnNumberedLetterEl = document.getElementById("btnNumberedLetter");
 const btnNumberedQuestionMarkEl = document.getElementById("btnNumberedQuestionMark");
@@ -1712,7 +1736,7 @@ function applyShareControl(params, name, el){
 
 function loadSharedConfiguration(){
   const params = new URLSearchParams(window.location.search);
-  const sharedNames = ["mode", "seed", "cards", "equation", "tasksMin", "tasksMax", "visibleMin", "visibleMax", "hidden", "hiddenMax", "totalMin", "totalMax", "splats", "clues", "structure", "mul", "div", "add", "sub", "deltaMax", "operation", "beadMax", "opposites", "colors", "unknown", "print", "duplex"];
+  const sharedNames = ["mode", "seed", "cards", "equation", "tasksMin", "tasksMax", "visibleMin", "visibleMax", "hidden", "hiddenMax", "totalMin", "totalMax", "splats", "clues", "structure", "mul", "div", "add", "sub", "deltaMax", "operation", "beadMax", "opposites", "colors", "unknown", "print", "duplex", "title"];
   if(!sharedNames.some(name => params.has(name))) return false;
 
   setSelectFromShare(params, "mode", activityEl);
@@ -1728,6 +1752,7 @@ function loadSharedConfiguration(){
   setNumberFromShare(params, "cards", countEl);
   setSelectFromShare(params, "print", printModeSelectEl);
   setCheckboxFromShare(params, "duplex", document.getElementById("printDuplex"));
+  if(printActivityTitleEl && params.has("title")) printActivityTitleEl.value = params.get("title").slice(0, 160);
 
   const seedRaw = params.get("seed");
   const seedNumber = seedRaw === null || String(seedRaw).trim() === "" ? NaN : Number(seedRaw);
@@ -1768,6 +1793,8 @@ function buildShareUrl(){
   }
   addShareControl(params, "print", printModeSelectEl);
   addShareControl(params, "duplex", document.getElementById("printDuplex"));
+  const printTitle = printActivityTitleEl ? printActivityTitleEl.value.trim() : "";
+  if(printTitle) params.set("title", printTitle.slice(0, 160));
 
   url.search = params.toString();
   return url.toString();
@@ -5399,12 +5426,6 @@ function renderCard(card, revealState){
         layer.appendChild(pCov);
       }
     }
-    if(visualRevealState === 2 && card._unit && card._unit.emptyTask){
-      const s0 = splats[0] || {cx:820, cy:610, r:220};
-      const w = 210, h = 68;
-      layer.appendChild(el("rect",{x:s0.cx-w/2, y:s0.cy-h/2, width:w, height:h, rx:24, ry:24, fill:"rgba(255,255,255,0.86)", stroke:"rgba(0,0,0,0.34)", "stroke-width":"4"}));
-      layer.appendChild(text(s0.cx, s0.cy, "0 jeton", {"text-anchor":"middle", "dominant-baseline":"middle", "alignment-baseline":"middle", "dy":"0.04em", "font-size":"38", "fill":"var(--ink)", "font-weight":"900"}));
-    }
     for(let i=0;i<card.visible.length;i++){
       const cx = card._posV?.[i]?.cx ?? (450 + i*40);
       const cy = card._posV?.[i]?.cy ?? 360;
@@ -5434,7 +5455,6 @@ function renderCard(card, revealState){
     }
 
     const splats = card._splats || [{cx:820, cy:610, r:220}];
-    const isEmptyNumberedTask = !!(card._num && card._num.emptyTask);
     const opp = (card.family === "NPM" && card._num && card._num.oppose && Array.isArray(card._num.oppose.flags)) ? card._num.oppose : null;
     
     splats.forEach((s, idx) => {
@@ -5488,12 +5508,6 @@ function renderCard(card, revealState){
         layer.appendChild(pCov);
       }
     });
-    if(visualRevealState === 2 && isEmptyNumberedTask){
-      const s0 = splats[0] || {cx:820, cy:610, r:220};
-      const w = 220, h = 74;
-      layer.appendChild(el("rect",{x:s0.cx-w/2, y:s0.cy-h/2, width:w, height:h, rx:26, ry:26, fill:"rgba(255,255,255,0.86)", stroke:"rgba(0,0,0,0.34)", "stroke-width":"4"}));
-      layer.appendChild(text(s0.cx, s0.cy, "0 jeton", {"text-anchor":"middle", "dominant-baseline":"middle", "alignment-baseline":"middle", "dy":"0.04em", "font-size":"40", "fill":"var(--ink)", "font-weight":"900"}));
-    }
 
     for(let i=0;i<card.visible.length;i++){
       const cx = card._posV?.[i]?.cx ?? (450 + i*250);
@@ -6069,25 +6083,6 @@ function renderCardIntoSvg(targetSvg, card, printMode){
       drawRelationOrderedSchema(targetSvg, card, { solved:true });
     }
   }
-  const taskCount = card._num?.tasks || card._unit?.tasks || (card._splats ? card._splats.length : 1);
-  if (!isModeC_or_D && taskCount > 1) {
-    const isSigned = (card.family === "NPM");
-    const isABFamily = (card.family === "U" || card.family === "N");
-    const showRuleText = !(isABFamily && printMode === "correction");
-    if (showRuleText) {
-      const ruleText = isSigned 
-          ? "Sous chaque tache se cache le même nombre." 
-          : "Sous chaque tache, il y a le même nombre de jetons.";
-      const startY = trayY + trayH + ((isABFamily && printMode === "worksheet") ? 60 : 80);
-      targetSvg.appendChild(tText(800, startY, ruleText, {
-        "text-anchor":"middle",
-        "font-size":"42",
-        "fill":"#000",
-        "font-weight":"700"
-      }));
-    }
-  }
-
   const cover = "rgb(0,0,0)";
   const revealCol = "rgba(210,210,210,0.35)";
   const colorsE = ["rgb(0,0,0)", "#9d4edd", "#f97316"];
@@ -6117,12 +6112,6 @@ function renderCardIntoSvg(targetSvg, card, printMode){
     const splats = card._splats || [{cx:820, cy:610, r:220}];
     for(const s of splats){
       targetSvg.appendChild(tEl("path",{d: blobPath(s.cx,s.cy + printOffsetY,s.r), fill:(revealAnswers?revealCol:cover), stroke:"rgba(0,0,0,0.18)","stroke-width":"5"}));
-    }
-    if(revealAnswers && card._unit && card._unit.emptyTask){
-      const s0 = splats[0] || {cx:820, cy:610, r:220};
-      const w = 210, h = 68;
-      targetSvg.appendChild(tEl("rect",{x:s0.cx-w/2, y:s0.cy+printOffsetY-h/2, width:w, height:h, rx:24, ry:24, fill:"rgba(255,255,255,0.86)", stroke:"rgba(0,0,0,0.34)","stroke-width":"4"}));
-      targetSvg.appendChild(tText(s0.cx, s0.cy+printOffsetY, "0 jeton", {"text-anchor":"middle","dominant-baseline":"middle","font-size":"38","fill":"#000","font-weight":"900"}));
     }
     for(let i=0;i<card.visible.length;i++){
       const cx = card._posV?.[i]?.cx ?? (450 + i*40);
@@ -6304,12 +6293,6 @@ function renderCardIntoSvg(targetSvg, card, printMode){
       }
 
     });
-    if(revealAnswers && card._num && card._num.emptyTask){
-      const s0 = splats[0] || {cx:820, cy:610, r:220};
-      const w = 220, h = 74;
-      targetSvg.appendChild(tEl("rect",{x:s0.cx-w/2, y:s0.cy+printOffsetY-h/2, width:w, height:h, rx:26, ry:26, fill:"rgba(255,255,255,0.86)", stroke:"rgba(0,0,0,0.34)","stroke-width":"4"}));
-      targetSvg.appendChild(tText(s0.cx, s0.cy+printOffsetY, "0 jeton", {"text-anchor":"middle","dominant-baseline":"middle","font-size":"40","fill":"#000","font-weight":"900"}));
-    }
 
     for(let i=0;i<card.visible.length;i++){
       const tokenPos = fitPrintTokenToTray(
@@ -6486,6 +6469,97 @@ function renderCardIntoSvg(targetSvg, card, printMode){
 
 }
 
+function classicPrintTaskCount(card){
+  if(!card) return 0;
+  return Number(card._num?.tasks || card._unit?.tasks || (Array.isArray(card._splats) ? card._splats.length : 1)) || 1;
+}
+
+function getClassicPrintInstruction(slotCards){
+  const act = activityEl ? activityEl.value : "U";
+  const hasSeveralTasks = slotCards.some(card => card && classicPrintTaskCount(card) > 1);
+  if(act === "U" || act === "N"){
+    return {
+      main:"Trouve le nombre de jetons cachés sous chaque tache.",
+      note:hasSeveralTasks ? "Lorsque plusieurs taches apparaissent, elles cachent le même nombre de jetons." : ""
+    };
+  }
+  if(act === "UPM" || act === "NPM"){
+    return {
+      main:"Trouve la valeur cachée sous chaque tache.",
+      note:hasSeveralTasks ? "Lorsque plusieurs taches apparaissent, elles cachent la même valeur." : ""
+    };
+  }
+  if(act === "C" || act === "CD"){
+    return {main:"Utilise les indices pour déterminer la valeur cachée sous chaque tache.", note:""};
+  }
+  if(act === "D"){
+    return {main:"Utilise les sommes indiquées pour déterminer la valeur cachée sous chaque tache.", note:""};
+  }
+  return {main:"Trouve les valeurs cachées et complète les opérations.", note:""};
+}
+
+function createClassicPrintHeader(mode){
+  const header = document.createElement("div");
+  header.className = "print-page-header";
+
+  const titleBlock = document.createElement("div");
+  titleBlock.className = "print-page-title-block";
+  const title = document.createElement("div");
+  title.className = "print-page-title";
+  title.textContent = "Splat!";
+  titleBlock.appendChild(title);
+  const customTitle = printActivityTitleEl ? printActivityTitleEl.value.trim().slice(0, 160) : "";
+  const subtitleText = mode === "correction"
+    ? (customTitle ? `${customTitle} — Correction` : "Correction")
+    : customTitle;
+  if(subtitleText){
+    const subtitle = document.createElement("div");
+    subtitle.className = "print-page-subtitle";
+    subtitle.textContent = subtitleText;
+    titleBlock.appendChild(subtitle);
+  }
+  header.appendChild(titleBlock);
+
+  const logos = document.createElement("div");
+  logos.className = "print-page-logos";
+  const iremLogo = document.createElement("img");
+  iremLogo.className = "print-page-logo-irem";
+  iremLogo.alt = "IREM de La Réunion";
+  iremLogo.src = IREM_PRINT_LOGO_URL;
+  logos.appendChild(iremLogo);
+  const mathsLogo = document.createElement("img");
+  mathsLogo.className = "print-page-logo-maths";
+  mathsLogo.alt = "Maths&Go";
+  mathsLogo.src = MATHSGO_PRINT_LOGO_URL;
+  logos.appendChild(mathsLogo);
+  header.appendChild(logos);
+  return header;
+}
+
+function createClassicPrintInstruction(slotCards){
+  const copy = getClassicPrintInstruction(slotCards);
+  const box = document.createElement("div");
+  box.className = "print-page-instruction";
+  const lead = document.createElement("strong");
+  lead.textContent = "Pour chaque carte : ";
+  box.appendChild(lead);
+  box.appendChild(document.createTextNode(copy.main));
+  if(copy.note){
+    const note = document.createElement("span");
+    note.className = "print-page-instruction-note";
+    note.textContent = copy.note;
+    box.appendChild(note);
+  }
+  return box;
+}
+
+function createClassicPrintFooter(){
+  const footer = document.createElement("div");
+  footer.className = "print-page-footer";
+  footer.textContent = "mathsgo.re/splat/classique";
+  return footer;
+}
+
 function printSheet(){
   if(cards.length===0) return;
   const printModeEl = document.getElementById("printMode");
@@ -6500,6 +6574,8 @@ function printSheet(){
   function appendSheet(slotCards, mode){
     const sheet = document.createElement("div");
     sheet.className = "sheet";
+    sheet.appendChild(createClassicPrintHeader(mode));
+    sheet.appendChild(createClassicPrintInstruction(slotCards));
     const grid = document.createElement("div");
     grid.className = "grid";
 
@@ -6521,21 +6597,7 @@ function printSheet(){
 
     sheet.appendChild(grid);
 
-    const footer = document.createElement("div");
-    footer.className = "print-footer";
-
-    const logo = document.createElement("img");
-    logo.className = "print-logo";
-    logo.alt = "Maths&Go";
-    logo.src = MATHSGO_PRINT_LOGO_URL;
-    footer.appendChild(logo);
-
-    const url = document.createElement("span");
-    url.className = "print-url";
-    url.textContent = "mathsgo.re/splat/classique";
-    footer.appendChild(url);
-
-    sheet.appendChild(footer);
+    sheet.appendChild(createClassicPrintFooter());
 
     printArea.appendChild(sheet);
   }

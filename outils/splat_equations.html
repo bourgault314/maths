@@ -377,107 +377,106 @@
     body{background:#fff;color:#000}
     header,.wrap{display:none !important}
     .printArea{display:block}
-    .sheet{page-break-after:always;padding:6mm}
+    .sheet{
+      page-break-after:always;
+      height:calc(297mm - 16mm);
+      padding:4mm 5mm 2mm;
+      box-sizing:border-box;
+      display:flex;
+      flex-direction:column;
+      overflow:hidden;
+    }
     .sheet:last-child{page-break-after:auto;break-after:auto;}
-    .grid{display:grid;grid-template-columns:repeat(2, 1fr);gap:5mm}
-    .pCard{border:1px solid #ddd;border-radius:6mm;padding:2mm;box-sizing:border-box}
-    .pCard svg{width:100%;height:auto;display:block;margin:0 auto}
+    .grid{flex:1 1 auto;min-height:0;display:grid;grid-template-columns:repeat(2, 1fr);gap:5mm}
+    .pCard{border:1px solid #ddd;border-radius:6mm;padding:2mm;box-sizing:border-box;min-height:0;overflow:hidden}
+    .pCard svg{width:100%;height:100%;display:block;margin:0 auto}
     .pCard.empty{border:none;background:transparent;padding:0;min-height:0}
 
     /* 4/page : format habituel en portrait, 2 x 2. */
-    .printArea.print-4up .sheet{padding:6mm}
-    .printArea.print-4up .grid{grid-template-columns:repeat(2, 1fr);gap:5mm}
+    .printArea.print-4up .grid{grid-template-columns:repeat(2, 1fr);grid-template-rows:repeat(2,minmax(0,1fr));gap:5mm}
 
     /* 1/page : format portrait, une grande carte par page. */
-    .printArea.print-1up .sheet{padding:4mm 5mm 3mm}
-    .printArea.print-1up .grid{grid-template-columns:1fr;gap:0;align-items:start}
+    .printArea.print-1up .grid{grid-template-columns:1fr;grid-template-rows:minmax(0,1fr);gap:0;align-items:stretch}
     .printArea.print-1up .pCard{
       padding:1.6mm;
       border-radius:4mm;
       display:flex;
       justify-content:center;
-      align-items:flex-start;
+      align-items:stretch;
     }
     .printArea.print-1up .pCard svg{
-      width:auto !important;
+      width:100% !important;
       max-width:100%;
-      height:247mm !important;
-      max-height:247mm;
+      height:100% !important;
+      max-height:100%;
     }
-    .printArea.print-1up .print-footer{
-      margin-top:2.5mm;
-      min-height:10mm;
-    }
-    .printArea.print-1up .print-brand-logo{width:21mm}
-    .printArea.print-1up .print-page-url{font-size:5.5pt;margin-bottom:.2mm}
 
     /* 2/page : format paysage, deux grandes cartes côte à côte. */
-    .printArea.print-2up .sheet{padding:3.5mm 4mm 3mm}
+    .printArea.print-2up .sheet{height:calc(210mm - 16mm);padding:3mm 4mm 2mm}
     .printArea.print-2up .grid{
       grid-template-columns:repeat(2, minmax(0, 1fr));
+      grid-template-rows:minmax(0,1fr);
       gap:5mm;
-      align-items:start;
+      align-items:stretch;
     }
     .printArea.print-2up .pCard{
       padding:1.6mm;
       border-radius:4mm;
       display:flex;
       justify-content:center;
-      align-items:flex-start;
+      align-items:stretch;
     }
     .printArea.print-2up .pCard svg{
-      width:auto !important;
+      width:100% !important;
       max-width:100%;
-      height:168mm !important;
-      max-height:168mm;
+      height:100% !important;
+      max-height:100%;
     }
     .printArea.print-2up .pCard.empty{display:block}
-    .printArea.print-2up .print-footer{
-      margin-top:2.5mm;
-      min-height:10mm;
-    }
-    .printArea.print-2up .print-brand-logo{width:21mm}
-    .printArea.print-2up .print-page-url{font-size:5.5pt;margin-bottom:.2mm}
 
-    .print-footer{
-      margin-top:4mm;
-      min-height:13mm;
-      display:grid;
-      grid-template-columns:1fr auto 1fr;
-      align-items:end;
-      column-gap:4mm;
-      color:#0b3570;
-    }
-    .print-brand{
-      display:inline-flex;
+    .print-page-header{
+      flex:0 0 14mm;
+      display:flex;
       align-items:center;
-      justify-self:start;
-      opacity:.86;
-      break-inside:avoid;
-      page-break-inside:avoid;
+      justify-content:space-between;
+      gap:4mm;
+      margin-bottom:2mm;
+      padding:2mm 4mm;
+      box-sizing:border-box;
+      background:linear-gradient(90deg,#ff9815 0%,#ffc46d 58%,#fff4dc 100%);
+      overflow:hidden;
       -webkit-print-color-adjust:exact;
       print-color-adjust:exact;
     }
-    .print-brand-logo{
-      width:28mm;
-      height:auto;
-      display:block;
+    .print-page-title-block{min-width:0;display:flex;align-items:baseline;gap:4mm;line-height:1}
+    .print-page-title{font-size:17pt;font-weight:950;color:#063b7a;white-space:nowrap}
+    .print-page-subtitle{font-size:11pt;font-weight:850;color:#111827;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+    .print-page-logos{display:flex;align-items:center;justify-content:flex-end;gap:3mm;height:100%;flex:0 0 auto}
+    .print-page-logo-irem{height:11mm;width:auto;display:block}
+    .print-page-logo-maths{height:9.5mm;width:auto;display:block}
+    .print-page-instruction{
+      flex:0 0 auto;
+      margin-bottom:2mm;
+      padding:1.8mm 3mm;
+      border:1px solid #667085;
+      border-radius:2mm;
+      background:#fff;
+      color:#111827;
+      font-size:9.5pt;
+      line-height:1.16;
+      -webkit-print-color-adjust:exact;
+      print-color-adjust:exact;
     }
-    .print-page-url{
-      justify-self:center;
-      align-self:end;
-      max-width:92mm;
-      margin-bottom:.6mm;
-      overflow:hidden;
-      text-overflow:ellipsis;
-      white-space:nowrap;
-      font-size:6pt;
-      font-weight:500;
-      letter-spacing:.02px;
-      color:rgba(11,53,112,.55);
-      font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;
-    }
-    .print-footer-spacer{justify-self:end;}
+    .print-page-instruction strong{font-weight:900}
+    .print-page-instruction-note{margin-left:2mm;color:#475467;font-size:8.7pt;font-weight:700}
+    .print-page-footer{flex:0 0 3.5mm;margin-top:1.2mm;text-align:center;color:#98a2b3;font-size:6pt;font-weight:650;line-height:1}
+    .printArea.print-2up .print-page-header{flex-basis:12mm;margin-bottom:1.5mm;padding:1.5mm 3mm}
+    .printArea.print-2up .print-page-title{font-size:15pt}
+    .printArea.print-2up .print-page-subtitle{font-size:9.5pt}
+    .printArea.print-2up .print-page-logo-irem{height:9mm}
+    .printArea.print-2up .print-page-logo-maths{height:8mm}
+    .printArea.print-2up .print-page-instruction{margin-bottom:1.5mm;padding:1.3mm 2.5mm;font-size:8.5pt}
+    .printArea.print-2up .print-page-instruction-note{font-size:7.8pt}
   }
 
   /* Plein écran */
@@ -743,6 +742,13 @@
       </div>
       <button class="btn primary" id="btnGen">Générer</button>
       <button class="btn danger" id="btnClear">Vider</button>
+    </div>
+
+    <div class="row" style="margin-top:10px;">
+      <div style="flex:1">
+        <label for="printActivityTitle">Titre imprimé</label>
+        <input id="printActivityTitle" type="text" maxlength="160" placeholder="ex. Atelier de recherche" />
+      </div>
     </div>
 
     <div class="row" style="margin-top:10px; flex-wrap:nowrap; gap:6px;">
@@ -1087,6 +1093,7 @@ const btnEqStepViewSchemaEl = document.getElementById("btnEqStepViewSchema");
 let equationStepView = "schema"; // "equation" ou "schema" pour E bis — Équation pas à pas
 const printModeSelectEl = document.getElementById("printMode");
 const printCardsPerPageEl = document.getElementById("printCardsPerPage");
+const printActivityTitleEl = document.getElementById("printActivityTitle");
 const btnPrevEl = document.getElementById("btnPrev");
 const btnNextEl = document.getElementById("btnNext");
 const btnQuestionPrevEl = document.getElementById("btnQuestionPrev");
@@ -1280,7 +1287,7 @@ function applyShareControl(params, name, el){
 
 function loadSharedConfiguration(){
   const params = new URLSearchParams(window.location.search);
-  const sharedNames = ["mode", "seed", "cards", "form", "tasksMax", "visibleMin", "visibleMax", "totalMin", "totalMax", "beadMax", "opposites", "colors", "writing", "unknown", "view", "print", "duplex", "layout"];
+  const sharedNames = ["mode", "seed", "cards", "form", "tasksMax", "visibleMin", "visibleMax", "totalMin", "totalMax", "beadMax", "opposites", "colors", "writing", "unknown", "view", "print", "duplex", "layout", "title"];
   if(!sharedNames.some(name => params.has(name))) return false;
 
   setSelectFromShare(params, "mode", activityEl);
@@ -1294,6 +1301,7 @@ function loadSharedConfiguration(){
   setSelectFromShare(params, "print", printModeSelectEl);
   setCheckboxFromShare(params, "duplex", document.getElementById("printDuplex"));
   setSelectFromShare(params, "layout", printCardsPerPageEl);
+  if(printActivityTitleEl && params.has("title")) printActivityTitleEl.value = params.get("title").slice(0, 160);
 
   const seedRaw = params.get("seed");
   const seedNumber = seedRaw === null || String(seedRaw).trim() === "" ? NaN : Number(seedRaw);
@@ -1335,6 +1343,8 @@ function buildShareUrl(){
   addShareControl(params, "print", printModeSelectEl);
   addShareControl(params, "duplex", document.getElementById("printDuplex"));
   addShareControl(params, "layout", printCardsPerPageEl);
+  const printTitle = printActivityTitleEl ? printActivityTitleEl.value.trim() : "";
+  if(printTitle) params.set("title", printTitle.slice(0, 160));
 
   url.search = params.toString();
   return url.toString();
@@ -6609,7 +6619,7 @@ function renderCardEquationStepPrintScene(targetGroup, card, revealState, opts =
     targetGroup.appendChild(text(800, 78, "Même quantité à gauche qu'à droite",{
       "text-anchor":"middle", "font-size":"44", "fill":"rgba(0,0,0,0.92)", "font-weight":"900"
     }));
-    if((eq.left.tasks + eq.right.tasks) > 1){
+    if(opts.showTaskRule !== false && (eq.left.tasks + eq.right.tasks) > 1){
       targetGroup.appendChild(text(800, 130, "Sous chaque tache, il y a le même nombre de jetons.",{
         "text-anchor":"middle", "font-size":"32", "fill":"rgba(0,0,0,0.70)", "font-weight":"700"
       }));
@@ -6988,7 +6998,7 @@ function renderCardEquationSignedStepPrintScene(targetGroup, card, revealState, 
     targetGroup.appendChild(text(800, 78, "Même quantité à gauche qu'à droite",{
       "text-anchor":"middle", "font-size":"44", "fill":"rgba(0,0,0,0.92)", "font-weight":"900"
     }));
-    if((eq.left.tasks + eq.right.tasks) > 1){
+    if(opts.showTaskRule !== false && (eq.left.tasks + eq.right.tasks) > 1){
       targetGroup.appendChild(text(800, 130, "Sous chaque tache, il y a le même nombre.",{
         "text-anchor":"middle", "font-size":"32", "fill":"rgba(0,0,0,0.70)", "font-weight":"700"
       }));
@@ -7387,6 +7397,7 @@ function renderCardEquationSignedStepPrint(targetSvg, card, printMode, tEl, tTex
     const g = tEl("g", {id:"eqSignedStepPrintStatement"});
     renderCardEquationSignedStepPrintScene(g, card, 0, {
       showIntroText:true,
+      showTaskRule:false,
       showAid:false,
       useTokens
     });
@@ -7486,12 +7497,6 @@ function renderCardEquationStepPrint(targetSvg, card, printMode, tEl, tText, use
       g.appendChild(tText(800, 82, "Même quantité en haut et en bas",{
         "text-anchor":"middle", "font-size":"44", "fill":"rgba(0,0,0,0.92)", "font-weight":"900"
       }));
-      if((eq.left.tasks + eq.right.tasks) > 1){
-        g.appendChild(tText(800, 134, "Sous chaque tache, il y a le même nombre de jetons.",{
-          "text-anchor":"middle", "font-size":"32", "fill":"rgba(0,0,0,0.70)", "font-weight":"700"
-        }));
-      }
-
       const gScene = tEl("g", {transform:"translate(0 150)"});
       renderCardEquationStepPrintScene(gScene, card, 0, {
         layoutMode:"schema",
@@ -7504,6 +7509,7 @@ function renderCardEquationStepPrint(targetSvg, card, printMode, tEl, tText, use
       renderCardEquationStepPrintScene(g, card, 0, {
         layoutMode:"equation",
         showIntroText:true,
+        showTaskRule:false,
         showAid:false,
         useTokens
       });
@@ -7572,19 +7578,6 @@ function renderCardEquationPrint(targetSvg, card, printMode, tEl, tText, useToke
   targetSvg.appendChild(tEl("line",{x1:trays.midX, y1:trays.left.y-10, x2:trays.midX, y2:trays.left.y+trays.left.h+10, stroke:"#000","stroke-width":"10","stroke-linecap":"round"}));
 
   targetSvg.appendChild(tText(800, 78, "Même quantité à gauche qu'à droite", {"text-anchor":"middle","font-size":"44","fill":"rgba(0,0,0,0.92)","font-weight":"900"}));
-
-  if ((eq.left.tasks + eq.right.tasks) > 1) {
-    const isSigned = isSignedEquationFamily(card);
-    const ruleText = isSigned
-        ? "Sous chaque tache, il y a le même nombre."
-        : "Sous chaque tache, il y a le même nombre de jetons.";
-    targetSvg.appendChild(tText(800, 130, ruleText, {
-      "text-anchor":"middle",
-      "font-size":"32",
-      "fill":"rgba(0,0,0,0.70)",
-      "font-weight":"700"
-    }));
-  }
 
   function drawSide(side, metaSide){
     const beadR = side.beadR ?? 26;
@@ -8055,18 +8048,89 @@ function renderCardIntoSvg(targetSvg, card, printMode){
 
 
 const MATHSGO_PRINT_LOGO_URL = "/assets/img/logos/mathsgo/logo-print.png?v=20260820-1";
+const IREM_PRINT_LOGO_URL = "/assets/img/logos/irem/logo-print.png?v=20260820-1";
 
-function createPrintBrandFooter(){
+function equationPrintTaskCount(card){
+  const eq = card && card._eq;
+  if(!eq) return 0;
+  return Math.max(0, Number(eq.left?.tasks) || 0) + Math.max(0, Number(eq.right?.tasks) || 0);
+}
+
+function getEquationPrintInstruction(slotCards){
+  const act = activityEl ? activityEl.value : "EQ";
+  const hasSeveralTasks = slotCards.some(card => card && equationPrintTaskCount(card) > 1);
+  const isSigned = act === "EQPM" || act === "EQPMSTEP";
+  const main = act === "EQUNITSTEP"
+    ? "Trouve le nombre de jetons cachés sous chaque tache, puis complète l’équation."
+    : (isSigned
+      ? "Détermine la valeur cachée sous chaque tache, puis résous l’équation."
+      : "Détermine la valeur cachée sous chaque tache, puis complète ou résous l’équation.");
+  const note = hasSeveralTasks
+    ? (isSigned
+      ? "Lorsque plusieurs taches apparaissent, elles cachent la même valeur."
+      : "Lorsque plusieurs taches apparaissent, elles cachent le même nombre de jetons.")
+    : "";
+  return {main, note};
+}
+
+function createEquationPrintHeader(mode){
+  const header = document.createElement("div");
+  header.className = "print-page-header";
+  const titleBlock = document.createElement("div");
+  titleBlock.className = "print-page-title-block";
+  const title = document.createElement("div");
+  title.className = "print-page-title";
+  title.textContent = "Splat! Équations";
+  titleBlock.appendChild(title);
+  const customTitle = printActivityTitleEl ? printActivityTitleEl.value.trim().slice(0, 160) : "";
+  const subtitleText = mode === "correction"
+    ? (customTitle ? `${customTitle} — Correction` : "Correction")
+    : customTitle;
+  if(subtitleText){
+    const subtitle = document.createElement("div");
+    subtitle.className = "print-page-subtitle";
+    subtitle.textContent = subtitleText;
+    titleBlock.appendChild(subtitle);
+  }
+  header.appendChild(titleBlock);
+
+  const logos = document.createElement("div");
+  logos.className = "print-page-logos";
+  const iremLogo = document.createElement("img");
+  iremLogo.className = "print-page-logo-irem";
+  iremLogo.alt = "IREM de La Réunion";
+  iremLogo.src = IREM_PRINT_LOGO_URL;
+  logos.appendChild(iremLogo);
+  const mathsLogo = document.createElement("img");
+  mathsLogo.className = "print-page-logo-maths";
+  mathsLogo.alt = "Maths&Go";
+  mathsLogo.src = MATHSGO_PRINT_LOGO_URL;
+  logos.appendChild(mathsLogo);
+  header.appendChild(logos);
+  return header;
+}
+
+function createEquationPrintInstruction(slotCards){
+  const copy = getEquationPrintInstruction(slotCards);
+  const box = document.createElement("div");
+  box.className = "print-page-instruction";
+  const lead = document.createElement("strong");
+  lead.textContent = "Pour chaque carte : ";
+  box.appendChild(lead);
+  box.appendChild(document.createTextNode(copy.main));
+  if(copy.note){
+    const note = document.createElement("span");
+    note.className = "print-page-instruction-note";
+    note.textContent = copy.note;
+    box.appendChild(note);
+  }
+  return box;
+}
+
+function createEquationPrintFooter(){
   const footer = document.createElement("div");
-  footer.className = "print-footer";
-  footer.innerHTML = `
-    <div class="print-brand">
-      <img class="print-brand-logo" src="${MATHSGO_PRINT_LOGO_URL}" alt="Maths&amp;Go">
-    </div>
-    <div class="print-page-url"></div>
-    <div class="print-footer-spacer" aria-hidden="true"></div>`;
-  const urlEl = footer.querySelector(".print-page-url");
-  if(urlEl) urlEl.textContent = "mathsgo.re/splat/equations";
+  footer.className = "print-page-footer";
+  footer.textContent = "mathsgo.re/splat/equations";
   return footer;
 }
 
@@ -8121,6 +8185,8 @@ function printSheet(){
   function appendSheet(slotCards, mode){
     const sheet = document.createElement("div");
     sheet.className = `sheet sheet-${perSheet}up`;
+    sheet.appendChild(createEquationPrintHeader(mode));
+    sheet.appendChild(createEquationPrintInstruction(slotCards));
     const grid = document.createElement("div");
     grid.className = "grid";
 
@@ -8142,7 +8208,7 @@ function printSheet(){
 
     sheet.appendChild(grid);
 
-    sheet.appendChild(createPrintBrandFooter());
+    sheet.appendChild(createEquationPrintFooter());
 
     printArea.appendChild(sheet);
   }

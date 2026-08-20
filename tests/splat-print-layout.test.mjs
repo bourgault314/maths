@@ -69,16 +69,20 @@ test("le total et les aides restent separes du plateau haut a l'impression", () 
   assert.match(printRenderer, /const centerY = \(isHelpOnly \? 1240 : 1285\) \+ printOffsetY/);
 });
 
-test("les jetons, les taches et les badges suivent le decalage d'impression", () => {
+test("les jetons et les taches suivent le decalage d'impression sans badge zero", () => {
   const printRenderer = functionSource("renderCardIntoSvg", "printSheet");
 
   assert.match(printRenderer, /const printOffsetY = printTray\.offsetY/);
   assert.match(printRenderer, /cy \+= printOffsetY/);
   assert.equal((printRenderer.match(/blobPath\(s\.cx,\s*s\.cy \+ printOffsetY,\s*s\.r\)/g) || []).length, 2);
-  assert.match(printRenderer, /s0\.cy\+printOffsetY-h\/2/);
-  assert.match(printRenderer, /s0\.cy\+printOffsetY, "0 jeton"/);
+  assert.doesNotMatch(printRenderer, /0 jeton/);
+  assert.doesNotMatch(html, /"0 jeton"/);
 });
 
-test("le nouveau logo classique reste discret dans le pied de page", () => {
-  assert.match(html, /\.print-logo\{[\s\S]*?width:36mm;/);
+test("la page classique reserve un bandeau, une consigne et un pied de page compact", () => {
+  assert.match(html, /\.print-page-header\{[\s\S]*?flex:0 0 14mm;/);
+  assert.match(html, /\.print-page-instruction\{/);
+  assert.match(html, /\.print-page-footer\{flex:0 0 3\.5mm/);
+  assert.match(html, /title\.textContent = "Splat!"/);
+  assert.match(html, /mathsgo\.re\/splat\/classique/);
 });
