@@ -56,6 +56,13 @@
     #seedInput.seed-manual { color: #1e40af; font-style: normal; border-color: #93c5fd; background: #eff6ff; }
     .seed-status { margin-top: 3px; font-size: 11px; font-weight: 700; color: #94a3b8; }
     .seed-status.manual { color: #1e40af; }
+    .seed-meta { margin-top: 3px; display: flex; align-items: center; justify-content: space-between; gap: 8px; min-height: 24px; }
+    .seed-meta .seed-status { margin-top: 0; }
+    .share-actions { display: flex; align-items: center; justify-content: flex-end; gap: 6px; }
+    .share-btn { padding: 3px 7px; border: 1px solid #cbd5e1; border-radius: 6px; background: #fff; color: #475569; cursor: pointer; font-size: 10.5px; font-weight: 700; white-space: nowrap; }
+    .share-btn:hover { background: #f8fafc; border-color: #94a3b8; }
+    .share-feedback { color: #059669; font-size: 10.5px; font-weight: 700; white-space: nowrap; }
+    .share-feedback.error { color: #b91c1c; }
     
     .flags { display: flex; gap: 10px; margin-bottom: 10px; }
     .flag-btn { font-size: 12px; font-weight: 800; cursor: pointer; opacity: 0.5; padding: 4px 10px; border-radius: 6px; background:#f1f5f9; border: 1px solid #e2e8f0; }
@@ -481,7 +488,13 @@
         <input type="text" id="seedInput" class="seed-auto" inputmode="text" autocomplete="off" oninput="onSeedInput()" onfocus="this.select()" onkeydown="if(event.key==='Enter') startGen()">
         <button type="button" class="seed-btn" onclick="newAutoSeed()" title="Nouvelle graine" aria-label="Nouvelle graine">🎲</button>
       </div>
-      <div id="seedStatus" class="seed-status" data-i18n="seed_status_auto">graine automatique</div>
+      <div class="seed-meta">
+        <div id="seedStatus" class="seed-status" data-i18n="seed_status_auto">graine automatique</div>
+        <div class="share-actions">
+          <span id="shareFeedback" class="share-feedback" role="status" aria-live="polite"></span>
+          <button type="button" class="share-btn" onclick="copyShareLink()" data-i18n="share_link">🔗 Copier le lien</button>
+        </div>
+      </div>
     </div>
 
     <div class="section print-title-control">
@@ -509,7 +522,7 @@ const i18n = {
         content: "Contenu", target: "Cible max", splat_count: "Taches",
         problem_type: "Type de problème", module_classic: "Petit Splat classique", module_relation2: "Relation entre 2 taches", module_relation3: "Enquête avec 3 taches", module_sums3: "Défi : sommes de taches",
         exercise: "Exercice", mode_hidden: "Compléter le schéma en barres", mode_draw: "Dessiner les jetons", mode_mix: "Mélange",
-        seed_section: "Graine", seed_label: "Graine", seed_status_auto: "graine automatique", seed_status_manual: "graine fixée",
+        seed_section: "Graine", seed_label: "Graine", seed_status_auto: "graine automatique", seed_status_manual: "graine fixée", share_link: "🔗 Copier le lien",
         btn_mix: "GÉNÉRER", btn_print: "IMPRIMER"
     },
     en: {
@@ -519,7 +532,7 @@ const i18n = {
         content: "Content", target: "Max target", splat_count: "Splats",
         problem_type: "Problem type", module_classic: "Classic Petit Splat", module_relation2: "Relation between 2 splats", module_relation3: "Investigation with 3 splats", module_sums3: "Challenge: sum clues",
         exercise: "Exercise", mode_hidden: "Complete the bar model", mode_draw: "Draw Tokens", mode_mix: "Mix",
-        seed_section: "Seed", seed_label: "Seed", seed_status_auto: "automatic seed", seed_status_manual: "fixed seed",
+        seed_section: "Seed", seed_label: "Seed", seed_status_auto: "automatic seed", seed_status_manual: "fixed seed", share_link: "🔗 Copy link",
         btn_mix: "GENERATE", btn_print: "PRINT"
     }
 };
@@ -543,6 +556,7 @@ let isTBI = false;
 let seedMode = 'auto';
 let activeSeed = '';
 let currentRand = Math.random;
+let shareFeedbackTimer = null;
 
 function hashSeed(seed) {
     let h = 2166136261 >>> 0;
@@ -617,6 +631,153 @@ function onSeedInput() {
 function newAutoSeed() {
     seedMode = 'auto';
     startGen();
+}
+
+function setSelectValue(id, value) {
+    if (value === null) return false;
+    const select = document.getElementById(id);
+    if (!select) return false;
+    const option = Array.from(select.options).find(item => item.value === value && !item.disabled);
+    if (!option) return false;
+    select.value = value;
+    return true;
+}
+
+function readBooleanParam(params, name, fallback) {
+    const value = params.get(name);
+    if (value === '1' || value === 'true') return true;
+    if (value === '0' || value === 'false') return false;
+    return fallback;
+}
+
+function loadSharedConfiguration() {
+    const params = new URLSearchParams(window.location.search);
+    const sharedNames = ['seed', 'support', 'grid', 'problem', 'target', 'splats', 'exercise', 'level', 'given', 'correction', 'rv', 'diagram', 'scale', 'title'];
+    if (!sharedNames.some(name => params.has(name))) return false;
+
+    const seed = params.get('seed');
+    if (seed && seed.trim() && seed.trim().length <= 128) {
+        const input = document.getElementById('seedInput');
+        seedMode = 'manual';
+        activeSeed = seed.trim();
+        if (input) input.value = activeSeed;
+    }
+
+    setSelectValue('supportMode', params.get('support'));
+    setSelectValue('problemType', params.get('problem'));
+    updateProblemTypeUI();
+    setSelectValue('gridSize', params.get('grid'));
+    setSelectValue('targetVal', params.get('target'));
+
+    const problemType = getProblemType();
+    if (problemType === 'classic') {
+        setSelectValue('splatMode', params.get('splats'));
+        setSelectValue('gameMode', params.get('exercise'));
+    } else {
+        setSelectValue('relationLevel', params.get('level'));
+        const giveOnePart = document.getElementById('giveOnePart');
+        if (giveOnePart) giveOnePart.checked = readBooleanParam(params, 'given', giveOnePart.checked);
+    }
+
+    if (document.getElementById('supportMode').value === 'print') {
+        const showCorr = document.getElementById('showCorr');
+        const hideDiagram = document.getElementById('hideDiagram');
+        const nonPropDiagram = document.getElementById('nonPropDiagram');
+        const activityLabel = document.getElementById('activityLabel');
+        if (showCorr) showCorr.checked = readBooleanParam(params, 'correction', showCorr.checked);
+        const diagram = params.get('diagram');
+        const scale = params.get('scale');
+        if (hideDiagram && (diagram === 'draw' || diagram === 'complete')) hideDiagram.checked = diagram === 'draw';
+        if (nonPropDiagram && (scale === 'equal' || scale === 'proportional')) nonPropDiagram.checked = scale === 'equal';
+        if (activityLabel && params.has('title')) activityLabel.value = params.get('title').slice(0, 160);
+
+        isRVMode = !!(showCorr && showCorr.checked && readBooleanParam(params, 'rv', false));
+        const rvBtn = document.getElementById('btnRV');
+        if (rvBtn) {
+            rvBtn.classList.toggle('disabled', !(showCorr && showCorr.checked));
+            rvBtn.classList.toggle('active', isRVMode);
+        }
+    }
+
+    updateSeedUI();
+    return true;
+}
+
+function buildShareUrl() {
+    const url = new URL(window.location.href);
+    const params = new URLSearchParams();
+    const problemType = getProblemType();
+    const supportMode = document.getElementById('supportMode').value;
+
+    params.set('seed', activeSeed);
+    params.set('support', supportMode);
+    params.set('grid', document.getElementById('gridSize').value);
+    params.set('problem', problemType);
+    params.set('target', document.getElementById('targetVal').value);
+
+    if (problemType === 'classic') {
+        params.set('splats', document.getElementById('splatMode').value);
+        params.set('exercise', document.getElementById('gameMode').value);
+    } else {
+        params.set('level', document.getElementById('relationLevel').value);
+        params.set('given', document.getElementById('giveOnePart').checked ? '1' : '0');
+    }
+
+    if (supportMode === 'print') {
+        const showCorr = document.getElementById('showCorr').checked;
+        params.set('correction', showCorr ? '1' : '0');
+        if (showCorr) params.set('rv', isRVMode ? '1' : '0');
+        params.set('diagram', document.getElementById('hideDiagram').checked ? 'draw' : 'complete');
+        params.set('scale', document.getElementById('nonPropDiagram').checked ? 'equal' : 'proportional');
+        const title = document.getElementById('activityLabel').value.trim();
+        if (title) params.set('title', title);
+    }
+
+    url.search = params.toString();
+    url.hash = '';
+    return url.toString();
+}
+
+function fallbackCopyText(text) {
+    const textarea = document.createElement('textarea');
+    textarea.value = text;
+    textarea.setAttribute('readonly', '');
+    textarea.style.position = 'fixed';
+    textarea.style.opacity = '0';
+    document.body.appendChild(textarea);
+    textarea.select();
+    let copied = false;
+    try { copied = document.execCommand('copy'); } catch (e) { copied = false; }
+    textarea.remove();
+    return copied;
+}
+
+function showShareFeedback(message, isError) {
+    const feedback = document.getElementById('shareFeedback');
+    if (!feedback) return;
+    feedback.innerText = message;
+    feedback.classList.toggle('error', !!isError);
+    if (shareFeedbackTimer) clearTimeout(shareFeedbackTimer);
+    shareFeedbackTimer = setTimeout(() => {
+        feedback.innerText = '';
+        feedback.classList.remove('error');
+    }, 2200);
+}
+
+async function copyShareLink() {
+    const link = buildShareUrl();
+    let copied = false;
+    try {
+        if (navigator.clipboard && window.isSecureContext) {
+            await navigator.clipboard.writeText(link);
+            copied = true;
+        }
+    } catch (e) { copied = false; }
+    if (!copied) copied = fallbackCopyText(link);
+    const dict = currentLang === 'en'
+        ? { success: 'Link copied!', error: 'Copy failed' }
+        : { success: 'Lien copié !', error: 'Copie impossible' };
+    showShareFeedback(copied ? dict.success : dict.error, !copied);
 }
 
 function setLang(l, el) { 
@@ -1742,7 +1903,7 @@ function createPageElement(chunk, isCorrectionPage, mirror) {
     if (!isTBI) {
         const footer = document.createElement('div');
         footer.className = 'activity-footer';
-        footer.innerText = isCorrectionPage ? (mirror ? "correction · miroir verso" : "correction") : "aca.re/maths/splat";
+        footer.innerText = isCorrectionPage ? (mirror ? "correction · miroir verso" : "correction") : "mathsgo.re/splat";
         inner.appendChild(footer);
     }
     
@@ -1807,7 +1968,17 @@ function getSplatSvg(item, drawDots, hideVisibleDotsUntilReveal = false, forceHi
     return svg;
 }
 
-window.onload = () => { updateUI(); updateProblemTypeUI(); startGen(); toggleMode(); };
+window.onload = () => {
+    updateUI();
+    if (loadSharedConfiguration()) {
+        toggleMode();
+        startGen();
+    } else {
+        updateProblemTypeUI();
+        startGen();
+        toggleMode();
+    }
+};
 </script>
 </body>
 </html>
