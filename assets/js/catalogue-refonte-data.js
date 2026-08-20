@@ -108,8 +108,7 @@ window.MATHSGO_CATALOGUE = {
       "domain": "nombres-calculs",
       "notions": ["numeration"],
       "hub": "bouliers/boulier_montessori/index.html",
-      "parent": "bouliers",
-      "navigation": "hub"
+      "parent": "bouliers"
     },
     {
       "id": "soroban",
@@ -117,8 +116,7 @@ window.MATHSGO_CATALOGUE = {
       "domain": "nombres-calculs",
       "notions": ["numeration"],
       "hub": "bouliers/soroban/index.html",
-      "parent": "bouliers",
-      "navigation": "hub"
+      "parent": "bouliers"
     },
     {
       "id": "gerbert",
@@ -870,6 +868,7 @@ window.MATHSGO_CATALOGUE = {
     "outils/bouliers/abaque_de_gerbert/abaque_gerbert_addition.html": {
       "primaryNotion": "numeration",
       "primaryGroup": "entrainer",
+      "thumbnail": "assets/img/thumbnails/bouliers/abaque-gerbert-addition.png?v=1",
       "collections": ["gerbert"],
       "tags": ["abaque", "addition", "echange", "entrainement"],
       "cardDescription": "S’entraîner aux additions sur l’abaque de Gerbert avec échanges, validation et nouveau calcul."
@@ -877,24 +876,28 @@ window.MATHSGO_CATALOGUE = {
     "outils/bouliers/abaque_de_gerbert/abaque_gerbert_multiplication_V1.html": {
       "primaryNotion": "numeration",
       "primaryGroup": "entrainer",
+      "thumbnail": "assets/img/thumbnails/bouliers/abaque-gerbert-multiplication-v1.png?v=1",
       "collections": ["gerbert"],
       "tags": ["abaque", "multiplication", "entrainement"]
     },
     "outils/bouliers/abaque_de_gerbert/abaque_gerbert_multiplication_V2.html": {
       "primaryNotion": "numeration",
       "primaryGroup": "entrainer",
+      "thumbnail": "assets/img/thumbnails/bouliers/abaque-gerbert-multiplication-v2.png?v=1",
       "collections": ["gerbert"],
       "tags": ["abaque", "multiplication", "entrainement"]
     },
     "outils/bouliers/abaque_de_gerbert/abaque_gerbert_multiplication_V3.html": {
       "primaryNotion": "numeration",
       "primaryGroup": "entrainer",
+      "thumbnail": "assets/img/thumbnails/bouliers/abaque-gerbert-multiplication-v3.png?v=1",
       "collections": ["gerbert"],
       "tags": ["abaque", "multiplication", "entrainement"]
     },
     "outils/bouliers/abaque_de_gerbert/abaque_gerbert_soustraction.html": {
       "primaryNotion": "numeration",
       "primaryGroup": "entrainer",
+      "thumbnail": "assets/img/thumbnails/bouliers/abaque-gerbert-soustraction.png?v=1",
       "collections": ["gerbert"],
       "tags": ["abaque", "soustraction", "echange", "entrainement"],
       "cardDescription": "S’entraîner aux soustractions sur l’abaque de Gerbert avec échanges et vérification."
@@ -902,6 +905,7 @@ window.MATHSGO_CATALOGUE = {
     "outils/bouliers/abaque_de_gerbert/abaque_gerbert.html": {
       "primaryNotion": "numeration",
       "primaryGroup": "manipuler",
+      "thumbnail": "assets/img/thumbnails/bouliers/abaque-gerbert.png?v=1",
       "collections": ["gerbert"],
       "tags": ["abaque", "numeration", "valeur-position", "manipulation"],
       "cardDescription": "Poser et déplacer les apices pour représenter des nombres et effectuer des échanges sur l’abaque."
@@ -909,6 +913,7 @@ window.MATHSGO_CATALOGUE = {
     "outils/bouliers/rekenrek/ajouter9_ajouter8.html": {
       "primaryNotion": "numeration",
       "primaryGroup": "entrainer",
+      "thumbnail": "assets/img/thumbnails/bouliers/ajouter9-ajouter8.png?v=1",
       "collections": ["rekenrek"],
       "tags": ["rekenrek", "addition", "ajouter-8", "ajouter-9", "entrainement"],
       "cardDescription": "S’entraîner à ajouter 8 ou 9 en s’appuyant sur le passage par la dizaine."
@@ -934,6 +939,7 @@ window.MATHSGO_CATALOGUE = {
     "outils/bouliers/rekenrek/rekenrek_FD.html": {
       "primaryNotion": "numeration",
       "primaryGroup": "manipuler",
+      "thumbnail": "assets/img/thumbnails/bouliers/rekenrek-fd.png?v=1",
       "collections": ["rekenrek"],
       "tags": ["rekenrek", "centiemes", "fractions", "decimaux", "manipulation"],
       "cardDescription": "Représenter des centièmes et passer entre écriture décimale, fractionnaire et monétaire sur un rekenrek."
@@ -941,6 +947,7 @@ window.MATHSGO_CATALOGUE = {
     "outils/bouliers/boulier_montessori/boulier-cycle3-petit-additions-soustractions.html": {
       "primaryNotion": "numeration",
       "primaryGroup": "entrainer",
+      "thumbnail": "assets/img/thumbnails/bouliers/boulier-cycle3-petit-additions-soustractions.png?v=1",
       "collections": ["montessori"],
       "tags": ["boulier-montessori", "addition", "soustraction", "entrainement"],
       "cardDescription": "Effectuer des additions et des soustractions sur le boulier Montessori, puis vérifier le résultat."
@@ -948,6 +955,7 @@ window.MATHSGO_CATALOGUE = {
     "outils/bouliers/boulier_montessori/boulier-cycle3-petit-placer-nombres.html": {
       "primaryNotion": "numeration",
       "primaryGroup": "entrainer",
+      "thumbnail": "assets/img/thumbnails/bouliers/boulier-cycle3-petit-placer-nombres.png?v=1",
       "collections": ["montessori"],
       "tags": ["boulier-montessori", "numeration", "valeur-position", "entrainement"],
       "cardDescription": "Composer le nombre demandé sur le boulier Montessori et vérifier chaque réponse."
@@ -955,6 +963,7 @@ window.MATHSGO_CATALOGUE = {
     "outils/bouliers/boulier_montessori/boulier-cycle3-petit.html": {
       "primaryNotion": "numeration",
       "primaryGroup": "manipuler",
+      "thumbnail": "assets/img/thumbnails/bouliers/boulier-cycle3-petit.png?v=1",
       "collections": ["montessori"],
       "tags": ["boulier-montessori", "numeration", "valeur-position", "manipulation"],
       "cardDescription": "Manipuler librement un boulier Montessori et relier les boules à l’écriture du nombre."
@@ -962,6 +971,7 @@ window.MATHSGO_CATALOGUE = {
     "outils/bouliers/boulier_montessori/transition_rekenrek-montessori.html": {
       "primaryNotion": "numeration",
       "primaryGroup": "manipuler",
+      "thumbnail": "assets/img/thumbnails/bouliers/transition-rekenrek-montessori.png?v=1",
       "collections": ["montessori", "rekenrek"],
       "tags": ["rekenrek", "boulier-montessori", "numeration", "manipulation"],
       "cardDescription": "Manipuler un rekenrek libre et faire varier ses couleurs et son organisation jusqu’à 100 billes."
@@ -969,6 +979,7 @@ window.MATHSGO_CATALOGUE = {
     "outils/bouliers/rekenrek/rekenrek.html": {
       "primaryNotion": "numeration",
       "primaryGroup": "manipuler",
+      "thumbnail": "assets/img/thumbnails/bouliers/rekenrek-interactif.png?v=1",
       "collections": ["rekenrek"],
       "tags": ["rekenrek", "numeration", "subitisation", "manipulation"],
       "cardDescription": "Manipuler librement les billes du rekenrek, masquer une partie et annoter la situation projetée."
@@ -982,6 +993,7 @@ window.MATHSGO_CATALOGUE = {
     "outils/bouliers/rekenrek/enlever9_enlever8.html": {
       "primaryNotion": "numeration",
       "primaryGroup": "entrainer",
+      "thumbnail": "assets/img/thumbnails/bouliers/enlever9-enlever8.png?v=1",
       "collections": ["rekenrek"],
       "tags": ["rekenrek", "soustraction", "enlever-8", "enlever-9", "entrainement"],
       "cardDescription": "S’entraîner à enlever 8 ou 9 avec trois niveaux, une aide rekenrek et un score."
@@ -989,6 +1001,7 @@ window.MATHSGO_CATALOGUE = {
     "outils/bouliers/rekenrek/force_5.html": {
       "primaryNotion": "numeration",
       "primaryGroup": "entrainer",
+      "thumbnail": "assets/img/thumbnails/bouliers/force-5.png?v=1",
       "collections": ["rekenrek"],
       "tags": ["rekenrek", "addition", "structure-du-5", "entrainement"],
       "cardDescription": "S’entraîner aux additions en utilisant la structure du 5 sur le rekenrek."
@@ -996,6 +1009,7 @@ window.MATHSGO_CATALOGUE = {
     "outils/bouliers/rekenrek/force_5_soustraction.html": {
       "primaryNotion": "numeration",
       "primaryGroup": "entrainer",
+      "thumbnail": "assets/img/thumbnails/bouliers/force-5-soustraction.png?v=1",
       "collections": ["rekenrek"],
       "tags": ["rekenrek", "soustraction", "structure-du-5", "entrainement"],
       "cardDescription": "S’entraîner aux soustractions avec une aide rekenrek révélable et trois niveaux."
@@ -1003,6 +1017,7 @@ window.MATHSGO_CATALOGUE = {
     "outils/bouliers/rekenrek/generateur_rekenrek_cartes.html": {
       "primaryNotion": "numeration",
       "primaryGroup": "generer",
+      "thumbnail": "assets/img/thumbnails/bouliers/generateur-rekenrek-cartes.png?v=1",
       "collections": ["rekenrek"],
       "tags": ["rekenrek", "cartes", "generateur", "imprimer"],
       "cardDescription": "Créer des cartes rekenrek recto verso en choisissant la plage de nombres, les couleurs et le calibrage."
@@ -1010,6 +1025,7 @@ window.MATHSGO_CATALOGUE = {
     "outils/bouliers/rekenrek/lecture_0_100_generateur2.html": {
       "primaryNotion": "numeration",
       "primaryGroup": "generer",
+      "thumbnail": "assets/img/thumbnails/bouliers/lecture-0-100-generateur2.png?v=1",
       "collections": ["rekenrek"],
       "tags": ["rekenrek", "dizaines", "unites", "generateur", "imprimer"],
       "cardDescription": "Créer des fiches ou flashcards reliant dizaines, unités, écritures chiffrées et mots-nombres."
@@ -1017,6 +1033,7 @@ window.MATHSGO_CATALOGUE = {
     "outils/bouliers/rekenrek/lecture_0_100_generateur.html": {
       "primaryNotion": "numeration",
       "primaryGroup": "generer",
+      "thumbnail": "assets/img/thumbnails/bouliers/lecture-0-100-generateur.png?v=1",
       "collections": ["rekenrek"],
       "tags": ["rekenrek", "lecture", "nombres", "generateur", "imprimer"],
       "cardDescription": "Créer des fiches de lecture de nombres sur rekenrek, avec correction ou cartes recto verso."
@@ -1024,6 +1041,7 @@ window.MATHSGO_CATALOGUE = {
     "outils/bouliers/rekenrek/voisins_generateur_compact.html": {
       "primaryNotion": "numeration",
       "primaryGroup": "generer",
+      "thumbnail": "assets/img/thumbnails/bouliers/voisins-generateur-compact.png?v=1",
       "collections": ["rekenrek"],
       "tags": ["rekenrek", "nombres-voisins", "generateur", "imprimer"],
       "cardDescription": "Composer des fiches sur le nombre précédent, le suivant et les voisins dans une plage choisie."
@@ -1059,12 +1077,14 @@ window.MATHSGO_CATALOGUE = {
     "outils/bouliers/rekenrek/boss_final.html": {
       "primaryNotion": "numeration",
       "primaryGroup": "entrainer",
+      "thumbnail": "assets/img/thumbnails/bouliers/boss-final.png?v=1",
       "collections": ["rekenrek"],
       "tags": ["rekenrek", "calcul-mental", "defi", "entrainement"]
     },
     "outils/bouliers/rekenrek/grignoteur.html": {
       "primaryNotion": "numeration",
       "primaryGroup": "entrainer",
+      "thumbnail": "assets/img/thumbnails/bouliers/grignoteur.png?v=1",
       "collections": ["rekenrek"],
       "tags": ["rekenrek", "calcul-mental", "entrainement"],
       "cardDescription": "Répondre à une série de calculs, suivre son score et révéler le rekenrek en cas de besoin."
@@ -1072,6 +1092,7 @@ window.MATHSGO_CATALOGUE = {
     "outils/bouliers/rekenrek/pont_dizaine.html": {
       "primaryNotion": "numeration",
       "primaryGroup": "entrainer",
+      "thumbnail": "assets/img/thumbnails/bouliers/pont-dizaine.png?v=1",
       "collections": ["rekenrek"],
       "tags": ["rekenrek", "passage-dizaine", "addition", "entrainement"],
       "cardDescription": "S’entraîner aux calculs qui franchissent la dizaine avec vérification et aide visuelle."
@@ -1085,6 +1106,7 @@ window.MATHSGO_CATALOGUE = {
     "outils/bouliers/rekenrek/jeu_des_doubles.html": {
       "primaryNotion": "numeration",
       "primaryGroup": "entrainer",
+      "thumbnail": "assets/img/thumbnails/bouliers/jeu-des-doubles.png?v=1",
       "collections": ["rekenrek"],
       "tags": ["rekenrek", "doubles", "calcul-mental", "entrainement"],
       "cardDescription": "S’entraîner aux doubles par plages et niveaux avec une vérification immédiate."
@@ -1092,6 +1114,7 @@ window.MATHSGO_CATALOGUE = {
     "outils/bouliers/rekenrek/suivant_precedent.html": {
       "primaryNotion": "numeration",
       "primaryGroup": "entrainer",
+      "thumbnail": "assets/img/thumbnails/bouliers/suivant-precedent.png?v=1",
       "collections": ["rekenrek"],
       "tags": ["rekenrek", "precedent", "suivant", "entrainement"],
       "cardDescription": "Trouver le nombre précédent ou suivant, puis vérifier la réponse avec l’appui du rekenrek."
@@ -1099,6 +1122,7 @@ window.MATHSGO_CATALOGUE = {
     "outils/bouliers/rekenrek/presque_doubles.html": {
       "primaryNotion": "numeration",
       "primaryGroup": "entrainer",
+      "thumbnail": "assets/img/thumbnails/bouliers/presque-doubles.png?v=1",
       "collections": ["rekenrek"],
       "tags": ["rekenrek", "presque-doubles", "calcul-mental", "entrainement"],
       "cardDescription": "S’entraîner aux presque-doubles en mode visuel, libre ou mental avec aide révélable."
@@ -1106,6 +1130,7 @@ window.MATHSGO_CATALOGUE = {
     "outils/bouliers/rekenrek/double_niv1.html": {
       "primaryNotion": "numeration",
       "primaryGroup": "generer",
+      "thumbnail": "assets/img/thumbnails/bouliers/doubles-fiches-niv1.png?v=1",
       "collections": ["rekenrek"],
       "tags": ["rekenrek", "doubles", "generateur", "imprimer"],
       "cardDescription": "Générer des grilles imprimables sur les doubles de niveau 1 avec pièges et correction."
@@ -1113,6 +1138,7 @@ window.MATHSGO_CATALOGUE = {
     "outils/bouliers/rekenrek/double_niv2.html": {
       "primaryNotion": "numeration",
       "primaryGroup": "generer",
+      "thumbnail": "assets/img/thumbnails/bouliers/doubles-fiches-niv2.png?v=1",
       "collections": ["rekenrek"],
       "tags": ["rekenrek", "doubles", "generateur", "imprimer"],
       "cardDescription": "Générer des grilles imprimables sur les doubles de niveau 2, avec ou sans correction."
@@ -1120,18 +1146,21 @@ window.MATHSGO_CATALOGUE = {
     "outils/bouliers/rekenrek/rekenrek_sheet_generator_2_difference.html": {
       "primaryNotion": "numeration",
       "primaryGroup": "generer",
+      "thumbnail": "assets/img/thumbnails/bouliers/rekenrek-sheet-generator-2-difference.png?v=1",
       "collections": ["rekenrek"],
       "tags": ["rekenrek", "difference", "generateur", "imprimer"]
     },
     "outils/bouliers/rekenrek/rekenrek_sheet_generator_somme.html": {
       "primaryNotion": "numeration",
       "primaryGroup": "generer",
+      "thumbnail": "assets/img/thumbnails/bouliers/rekenrek-sheet-generator-somme.png?v=1",
       "collections": ["rekenrek"],
       "tags": ["rekenrek", "somme", "generateur", "imprimer"]
     },
     "outils/bouliers/rekenrek/cache cache.html": {
       "primaryNotion": "numeration",
       "primaryGroup": "generer",
+      "thumbnail": "assets/img/thumbnails/bouliers/cache-cache-fiches.png?v=1",
       "collections": ["rekenrek"],
       "tags": ["rekenrek", "complements", "generateur", "imprimer"],
       "cardDescription": "Générer des planches de compléments à 10, 20 ou 100 sur rekenrek, avec correction."
@@ -1139,6 +1168,7 @@ window.MATHSGO_CATALOGUE = {
     "outils/bouliers/rekenrek/presque double.html": {
       "primaryNotion": "numeration",
       "primaryGroup": "generer",
+      "thumbnail": "assets/img/thumbnails/bouliers/presque-doubles-fiches.png?v=1",
       "collections": ["rekenrek"],
       "tags": ["rekenrek", "presque-doubles", "generateur", "imprimer"],
       "cardDescription": "Générer des grilles imprimables sur les presque-doubles avec choix des pièges et de l’affichage."
@@ -1146,6 +1176,7 @@ window.MATHSGO_CATALOGUE = {
     "outils/bouliers/rekenrek/cache cache barre.html": {
       "primaryNotion": "numeration",
       "primaryGroup": "generer",
+      "thumbnail": "assets/img/thumbnails/bouliers/cache-cache-barre-fiches.png?v=1",
       "collections": ["rekenrek"],
       "tags": ["rekenrek", "complements", "schema-barres", "generateur", "imprimer"],
       "cardDescription": "Générer des fiches de compléments sur rekenrek accompagnées de schémas en barres."
@@ -1153,6 +1184,7 @@ window.MATHSGO_CATALOGUE = {
     "outils/bouliers/rekenrek/tables_generateur.html": {
       "primaryNotion": "numeration",
       "primaryGroup": "generer",
+      "thumbnail": "assets/img/thumbnails/bouliers/tables-generateur.png?v=1",
       "collections": ["rekenrek"],
       "tags": ["rekenrek", "tables", "multiplication", "division", "generateur", "imprimer"],
       "cardDescription": "Générer des fiches de tables de multiplication et de division avec affichage rekenrek et correction."
@@ -1160,6 +1192,7 @@ window.MATHSGO_CATALOGUE = {
     "outils/bouliers/rekenrek/cache-cache.html": {
       "primaryNotion": "numeration",
       "primaryGroup": "entrainer",
+      "thumbnail": "assets/img/thumbnails/bouliers/cache-cache.png?v=1",
       "collections": ["rekenrek"],
       "tags": ["rekenrek", "complements", "rideau", "entrainement"],
       "cardDescription": "Déterminer combien de billes sont cachées derrière le rideau, puis vérifier la réponse."
@@ -1167,6 +1200,7 @@ window.MATHSGO_CATALOGUE = {
     "outils/bouliers/rekenrek/comparateur.html": {
       "primaryNotion": "numeration",
       "primaryGroup": "entrainer",
+      "thumbnail": "assets/img/thumbnails/bouliers/comparateur.png?v=1",
       "collections": ["rekenrek"],
       "tags": ["rekenrek", "comparaison", "rangement", "entrainement"],
       "cardDescription": "Comparer et ranger des quantités représentées sur rekenrek à travers cinq niveaux progressifs."
@@ -1174,6 +1208,7 @@ window.MATHSGO_CATALOGUE = {
     "outils/bouliers/rekenrek/pousser_des_nombres.html": {
       "primaryNotion": "numeration",
       "primaryGroup": "entrainer",
+      "thumbnail": "assets/img/thumbnails/bouliers/pousser-des-nombres.png?v=1",
       "collections": ["rekenrek"],
       "tags": ["rekenrek", "composer-un-nombre", "numeration", "entrainement"],
       "cardDescription": "Pousser les billes pour construire le nombre demandé, puis valider la représentation."
@@ -1181,6 +1216,7 @@ window.MATHSGO_CATALOGUE = {
     "outils/bouliers/rekenrek/lecture_de_nombres.html": {
       "primaryNotion": "numeration",
       "primaryGroup": "entrainer",
+      "thumbnail": "assets/img/thumbnails/bouliers/lecture-de-nombres.png?v=1",
       "collections": ["rekenrek"],
       "tags": ["rekenrek", "lecture-flash", "subitisation", "entrainement"],
       "cardDescription": "Lire une configuration affichée brièvement sur le rekenrek puis saisir le nombre observé."
@@ -1188,6 +1224,7 @@ window.MATHSGO_CATALOGUE = {
     "outils/bouliers/soroban/soroban-placement-nombres.html": {
       "primaryNotion": "numeration",
       "primaryGroup": "entrainer",
+      "thumbnail": "assets/img/thumbnails/bouliers/soroban-placement-nombres.png?v=1",
       "collections": ["soroban"],
       "tags": ["soroban", "placer-un-nombre", "numeration", "entrainement"],
       "cardDescription": "Placer le nombre demandé sur le soroban, vérifier automatiquement et suivre son score."
@@ -1195,6 +1232,7 @@ window.MATHSGO_CATALOGUE = {
     "outils/bouliers/soroban/soroban.html": {
       "primaryNotion": "numeration",
       "primaryGroup": "manipuler",
+      "thumbnail": "assets/img/thumbnails/bouliers/soroban-interactif.png?v=1",
       "collections": ["soroban"],
       "tags": ["soroban", "numeration", "valeur-position", "manipulation"],
       "cardDescription": "Manipuler librement un soroban, adapter le nombre de colonnes et exporter la représentation."
@@ -1202,6 +1240,7 @@ window.MATHSGO_CATALOGUE = {
     "outils/bouliers/rekenrek/tables.html": {
       "primaryNotion": "numeration",
       "primaryGroup": "entrainer",
+      "thumbnail": "assets/img/thumbnails/bouliers/tables.png?v=1",
       "collections": ["rekenrek"],
       "tags": ["rekenrek", "tables", "multiplication", "entrainement"],
       "cardDescription": "S’entraîner aux tables de multiplication sur un grand rekenrek avec niveaux et vérification."
