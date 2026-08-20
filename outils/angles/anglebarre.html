@@ -387,7 +387,7 @@
 
   /* padding-top : sans lui, le chapeau de la premiere ligne est rogne par le bord
      haut de la zone de defilement. */
-  .equationHistory{width:min(980px,100%);height:178px;padding-top:16px;overflow-y:auto;overflow-x:auto;scrollbar-width:thin}
+  .equationHistory{width:min(980px,100%);height:150px;padding-top:16px;overflow-y:auto;overflow-x:auto;scrollbar-width:thin}
   .equationTable{border-collapse:collapse;margin:0 auto;font-size:clamp(20px,2.2vw,31px);font-weight:950;line-height:1.18}
   .equationTable td{padding:2px 8px;white-space:nowrap;vertical-align:baseline}
   .equationTable .lhs{text-align:right}
@@ -454,7 +454,7 @@
     border-style:dashed;
   }
   .whiteBoard.compact{
-    min-height:92px;
+    min-height:64px;
     padding:14px 18px;
     margin-bottom:8px;
     font-size:clamp(18px,2vw,27px);
@@ -521,7 +521,7 @@
      la hauteur totale ne change plus d'une etape a l'autre. */
   .boardChoices{
     flex:0 0 auto;
-    height:78px;
+    height:64px;
     width:100%;
     display:flex;
     align-items:center;
@@ -601,7 +601,7 @@
   .angleHit:hover{fill:rgba(59,130,246,.10)}
 
   .barBoard{width:100%;min-height:100%;justify-content:center;gap:12px}
-  .barWrap{width:100%;display:flex;flex-direction:column;gap:8px;align-items:center;justify-content:center}
+  .barWrap{width:100%;flex:1 1 auto;min-height:0;display:flex;flex-direction:column;gap:6px;align-items:center;justify-content:center}
   .barTotal{
     font-size:clamp(28px,3vw,42px);
     font-weight:950;
@@ -747,7 +747,7 @@
     flex-wrap:wrap;
     margin-top:10px;
   }
-  .barChoiceZone.empty{visibility:hidden}
+  .barChoiceZone.empty{display:none}
   .choiceBtn{
     min-width:112px;
     min-height:48px;
@@ -937,7 +937,7 @@
 
     /* Le tableau grandit d'une etape a l'autre ; sur telephone rien ne l'absorbe,
        alors on lui reserve sa hauteur maximale. */
-    .barWrap{gap:5px;justify-content:center;min-height:150px}
+    .barWrap{gap:5px;justify-content:center;min-height:230px}
     .barTable{width:100%;--cell-min:0px}
     .barLine{min-height:68px;width:100%}
     .barPiece{min-width:0;min-height:68px}
