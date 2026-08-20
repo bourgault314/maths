@@ -1632,6 +1632,16 @@
     display:inline-grid;
   }
 
+  /* MODE RÉCEPTION — la page a été ouverte avec une équation dans l'adresse
+     (Splat, Splat Équations, Automatismes). Le tableau appartient alors à
+     celui qui l'a envoyé : on retire les deux boutons qui le remplacent,
+     « Menu » et le dé. Le dé efface aussi l'adresse, donc rien ne ramènerait
+     l'équation reçue. « Recommencer » reste le retour au tableau de départ. */
+  main.importMode .menuQuickBtn,
+  main.importMode .randomQuickBtn{
+    display:none;
+  }
+
 
 
   /* PATCH CONSTRUCTEUR V1.4 — plateau seul + bouton Déplacer. */
@@ -5656,6 +5666,11 @@
     appMain.classList.toggle("activeMode", mode === "active");
   }
 
+  function setReceptionMode(on){
+    if(!appMain) return;
+    appMain.classList.toggle("importMode", !!on);
+  }
+
   function buildPayloadInCurrentPage(payload){
     const ok = createImportedEquationState(payload);
     if(!ok){
@@ -6136,6 +6151,7 @@
     syncEquationToggleButton();
   }else{
     setBuilderLayout("active");
+    setReceptionMode(true);
   }
 })();
 </script>
