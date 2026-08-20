@@ -1539,7 +1539,7 @@ window.MATHSGO_CATALOGUE = {
     {
       "id": "schemas-barres",
       "title": "Schémas en barres",
-      "domain": "nombres-calculs"
+      "domain": "algebre"
     },
     {
       "id": "patterns",
@@ -2355,7 +2355,7 @@ window.MATHSGO_CATALOGUE = {
       "title": "BOX LOGIC — L'INTÉGRALE",
       "description": "Générer et imprimer des séries de « boîtes » : combien de billes sont cachées ? Un entraînement au raisonnement en parties et tout.",
       "path": "outils/box_barre_final.html",
-      "domains": ["nombres-calculs"],
+      "domains": ["algebre", "nombres-calculs"],
       "notions": [
         "schemas-barres"
       ],
@@ -2510,9 +2510,7 @@ window.MATHSGO_CATALOGUE = {
       "title": "Détective des grandeurs — situations additives 1",
       "description": "Une première série d’enquêtes additives pour identifier les grandeurs et leurs relations.",
       "path": "outils/detective_des_grandeurs_additive__1.pdf",
-      "domains": [
-        "nombres-calculs"
-      ],
+      "domains": ["algebre", "nombres-calculs"],
       "notions": [
         "schemas-barres"
       ],
@@ -2537,9 +2535,7 @@ window.MATHSGO_CATALOGUE = {
       "title": "Détective des grandeurs — situations additives 2",
       "description": "Neuf pages d’enquêtes additives progressives, de la combinaison à la comparaison.",
       "path": "outils/detective_des_grandeurs_additive__2.pdf",
-      "domains": [
-        "nombres-calculs"
-      ],
+      "domains": ["algebre", "nombres-calculs"],
       "notions": [
         "schemas-barres"
       ],
@@ -2564,9 +2560,7 @@ window.MATHSGO_CATALOGUE = {
       "title": "Détective des grandeurs — situations multiplicatives",
       "description": "Trois pages d’enquêtes multiplicatives sur les groupes égaux, les comparaisons et les partages.",
       "path": "outils/detective_des_grandeurs_multiplicative__1.pdf",
-      "domains": [
-        "nombres-calculs"
-      ],
+      "domains": ["algebre", "nombres-calculs"],
       "notions": [
         "schemas-barres"
       ],
@@ -2678,9 +2672,7 @@ window.MATHSGO_CATALOGUE = {
       "title": "ÉquaBarre",
       "description": "Représentez une équation par deux schémas en barres et transformez les deux membres pas à pas.",
       "path": "outils/equabarre.html",
-      "domains": [
-        "nombres-calculs"
-      ],
+      "domains": ["algebre", "nombres-calculs"],
       "notions": [
         "equations",
         "schemas-barres"
@@ -3033,9 +3025,7 @@ window.MATHSGO_CATALOGUE = {
       "title": "Gabarits d’enquêtes additives",
       "description": "Deux pages de gabarits guidés pour représenter et résoudre les enquêtes additives.",
       "path": "outils/gabarits_enquetes_additive.pdf",
-      "domains": [
-        "nombres-calculs"
-      ],
+      "domains": ["algebre", "nombres-calculs"],
       "notions": [
         "schemas-barres"
       ],
@@ -3062,9 +3052,7 @@ window.MATHSGO_CATALOGUE = {
       "title": "Gabarits d’enquêtes multiplicatives",
       "description": "Sept pages de gabarits pour représenter les structures multiplicatives et vérifier les calculs.",
       "path": "outils/gabarits_enquetes_multiplicative.pdf",
-      "domains": [
-        "nombres-calculs"
-      ],
+      "domains": ["algebre", "nombres-calculs"],
       "notions": [
         "schemas-barres"
       ],
@@ -3120,9 +3108,7 @@ window.MATHSGO_CATALOGUE = {
       "title": "Gabarits de partage équitable",
       "description": "Des gabarits à imprimer pour partager équitablement une quantité en deux, trois, quatre ou cinq parts.",
       "path": "outils/gabarits_partage_equitable_2_3_4_5.pdf",
-      "domains": [
-        "nombres-calculs"
-      ],
+      "domains": ["algebre", "nombres-calculs"],
       "notions": [
         "schemas-barres"
       ],
@@ -4781,9 +4767,7 @@ window.MATHSGO_CATALOGUE = {
       "title": "Problèmes en barres",
       "description": "Générez et résolvez pas à pas des problèmes avec schéma en barres, équation et fiche imprimable.",
       "path": "outils/problemes_barres.html",
-      "domains": [
-        "nombres-calculs"
-      ],
+      "domains": ["algebre", "nombres-calculs"],
       "notions": [
         "schemas-barres"
       ],
