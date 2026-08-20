@@ -378,7 +378,7 @@
   .topbar{
     flex:0 0 auto;
     padding:3px 250px 6px 200px;
-    min-height:96px;
+    min-height:0;
     display:flex;
     align-items:center;
     justify-content:center;
@@ -387,7 +387,7 @@
 
   /* padding-top : sans lui, le chapeau de la premiere ligne est rogne par le bord
      haut de la zone de defilement. */
-  .equationHistory{width:min(980px,100%);max-height:206px;padding-top:16px;overflow-y:auto;overflow-x:auto;scrollbar-width:thin}
+  .equationHistory{width:min(980px,100%);height:178px;padding-top:16px;overflow-y:auto;overflow-x:auto;scrollbar-width:thin}
   .equationTable{border-collapse:collapse;margin:0 auto;font-size:clamp(20px,2.2vw,31px);font-weight:950;line-height:1.18}
   .equationTable td{padding:2px 8px;white-space:nowrap;vertical-align:baseline}
   .equationTable .lhs{text-align:right}
@@ -492,7 +492,7 @@
     flex:0 0 auto;
     margin:0 auto 8px;
     width:min(980px,100%);
-    min-height:34px;
+    height:54px;
     display:flex;
     justify-content:center;
     align-items:center;
@@ -516,11 +516,18 @@
     width:100%;
   }
 
-  /* Vides, la consigne et la zone de propositions ne doivent rien reserver : sinon
-     elles volent leur hauteur aux cartes et le triangle se retrouve rogne. */
-  .instructionZone:empty{min-height:0}
-  .barChoiceZone.empty{min-height:0;padding:0}
-  .boardBelow:has(.instructionZone:empty):has(.barChoiceZone.empty){gap:0}
+  /* Chaque bande reserve sa hauteur des le depart, meme vide. C'est ce qui empeche
+     le tableau de descendre et le triangle de retrecir quand l'equation s'allonge :
+     la hauteur totale ne change plus d'une etape a l'autre. */
+  .boardChoices{
+    flex:0 0 auto;
+    height:78px;
+    width:100%;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+  }
+  .barChoiceZone{min-height:0}
 
   .anglePalette{
     display:none;
@@ -835,9 +842,10 @@
     .barLine,.barPiece{min-height:76px}
     .solution{flex-basis:48px;min-height:48px;font-size:clamp(28px,3.6vw,48px)}
     .toolBtn{min-height:50px;padding:12px 16px;font-size:15px}
-    .instructionZone{min-height:26px;font-size:clamp(17px,1.7vw,23px)}
-    .topbar{min-height:84px}
-    .equationHistory{max-height:132px}
+    .boardChoices{height:70px}
+    .instructionZone{height:44px;font-size:clamp(17px,1.7vw,23px)}
+    .topbar{min-height:0}
+    .equationHistory{height:140px}
     svg.triangleSvg{min-height:300px}
   }
 
@@ -898,7 +906,7 @@
     .quickIcon{width:40px;padding:0;font-size:20px}
 
     .topbar{padding:2px 0 4px;min-height:78px;overflow:visible}
-    .equationHistory{max-height:122px;width:100%;overflow-x:auto}
+    .equationHistory{height:112px;width:100%;overflow-x:auto}
     .equationTable{font-size:clamp(19px,5.5vw,25px)}
     .equationTable td{padding:2px 4px}
     .equationTable .eq{padding-left:7px;padding-right:7px}
@@ -911,7 +919,8 @@
       flex-wrap:nowrap;
     }
     .slotBtn{min-width:0;width:100%;min-height:46px;padding:5px 3px;border-radius:10px;font-size:20px}
-    .instructionZone{min-height:34px;margin-bottom:4px;padding:0 4px;font-size:15px;line-height:1.22}
+    .boardChoices{height:96px}
+    .instructionZone{height:52px;margin-bottom:4px;padding:0 4px;font-size:15px;line-height:1.22}
     .anglePalette{gap:6px;margin:0 0 6px}
     .angleChoice{min-width:66px;min-height:42px;padding:7px 10px;font-size:18px}
 
@@ -926,19 +935,35 @@
     .whiteBoard{width:100%;min-height:120px;padding:15px;border-radius:14px;font-size:24px}
     .whiteBoard.compact{min-height:70px;margin-bottom:5px;padding:10px;font-size:17px;border-radius:12px}
 
-    .barWrap{gap:5px;justify-content:flex-start}
+    /* Le tableau grandit d'une etape a l'autre ; sur telephone rien ne l'absorbe,
+       alors on lui reserve sa hauteur maximale. */
+    .barWrap{gap:5px;justify-content:center;min-height:150px}
     .barTable{width:100%;--cell-min:0px}
     .barLine{min-height:68px;width:100%}
     .barPiece{min-width:0;min-height:68px}
     .barLine.relationDraft .barPiece{min-width:0}
     .pieceMain{font-size:clamp(20px,6vw,28px)}
-    .barChoiceZone{width:100%;min-height:92px;margin-top:6px;gap:6px;align-content:center}
+    .barChoiceZone{width:100%;min-height:0;margin-top:6px;gap:6px;align-content:center}
     .choiceHint{font-size:12px;margin-bottom:0;padding:0 4px}
     .choiceBtn{min-width:calc(50% - 6px);min-height:42px;padding:7px 8px;border-radius:11px;font-size:18px}
 
     .solution{flex-basis:44px;min-height:44px;margin:2px 0;font-size:30px}
     .toolBar{width:100%;gap:6px;margin-top:2px}
     .toolBarRow{width:100%;display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:6px}
+    /* Les etapes tiennent sur une seule rangee qui defile : sinon la barre passe de
+       une a quatre rangees au fil de l'exercice et pousse tout le reste vers le haut. */
+    #mainActions{
+      display:flex;
+      flex-wrap:nowrap;
+      justify-content:flex-start;
+      align-items:center;
+      height:52px;
+      overflow-x:auto;
+      overscroll-behavior-x:contain;
+      scrollbar-width:none;
+    }
+    #mainActions::-webkit-scrollbar{display:none}
+    #mainActions .toolBtn{flex:0 0 auto;white-space:nowrap}
     .toolBtn{min-height:46px;padding:9px 7px;border-radius:13px;font-size:13px}
     .actionZone{min-height:34px}
     .note{font-size:12px}
@@ -1126,12 +1151,14 @@
 
       <div class="card barBoard" id="barBoard">
         <div class="barWrap" id="barWrap"></div>
+        <div class="boardChoices" id="boardChoices">
+          <div class="anglePalette" id="anglePalette"></div>
+        </div>
       </div>
     </div>
 
     <div class="boardBelow" id="boardBelow">
       <div class="instructionZone" id="instructionZone"></div>
-      <div class="anglePalette" id="anglePalette"></div>
     </div>
 
     <div class="solution" id="solution"></div>
@@ -1196,6 +1223,7 @@
   const instructionZone = document.getElementById("instructionZone");
   const anglePalette = document.getElementById("anglePalette");
   const boardBelow = document.getElementById("boardBelow");
+  const boardChoices = document.getElementById("boardChoices");
   const workArea = document.getElementById("workArea");
   const triangleSvg = document.getElementById("triangleSvg");
   const barWrap = document.getElementById("barWrap");
@@ -1743,6 +1771,7 @@
     renderTriangle();
     renderBars();
     renderActions();
+    ramenerEtapeActive();
     solution.innerHTML = (work.concluded && !display.equation)
       ? (model.family === "general"
         ? `${angleSymbol(model.unknown)} = ${fmt(work.result)}°`
@@ -1751,6 +1780,15 @@
     actionZone.innerHTML = message ? `<div class="note${message.includes("pas") || message.includes("manque") || message.includes("déjà") ? " errorNote" : ""}">${message}</div>` : "";
     fitStage();
     setTimeout(() => equationHistory.scrollTop = equationHistory.scrollHeight, 0);
+  }
+
+  // Sur une rangee qui defile, l'etape en cours doit rester sous les yeux.
+  function ramenerEtapeActive(){
+    const actif = mainActions.querySelector(".toolBtn.active");
+    if(!actif) return;
+    if(mainActions.scrollWidth <= mainActions.clientWidth + 1) return;
+    const cible = actif.offsetLeft - (mainActions.clientWidth - actif.offsetWidth) / 2;
+    mainActions.scrollLeft = Math.max(0, cible);
   }
 
   function fitStage(){
@@ -1910,7 +1948,7 @@
   }
 
   function renderBars(){
-    boardBelow.querySelectorAll(".barChoiceZone").forEach(el => el.remove());
+    boardChoices.querySelectorAll(".barChoiceZone").forEach(el => el.remove());
     if(!display.bars){ barWrap.innerHTML = ""; return; }
     barWrap.innerHTML = barDiagramHtml();
     bindRelationSlotButtons(barWrap);
@@ -1925,7 +1963,7 @@
     // Sorties de barWrap, elles ne sont plus effacees par son innerHTML : on s'en
     // charge en entree de fonction, sinon elles s'empilent a chaque rendu.
     const choiceZone = barWrap.querySelector(".barChoiceZone");
-    if(choiceZone) boardBelow.appendChild(choiceZone);
+    if(choiceZone) boardChoices.appendChild(choiceZone);
   }
 
   function propertyText(){
