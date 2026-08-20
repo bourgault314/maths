@@ -168,6 +168,15 @@ window.MATHSGO_CATALOGUE = {
       "cardTitle": "Bingos de rentrée",
       "cardDescription": "Trois bingos prêts à imprimer pour faire connaissance, créer du lien et amorcer les échanges en 5e, 4e et 3e."
     },
+    "cps/quiz-decouverte.html": {
+      "primaryNotion": "competences-psychosociales",
+      "primaryGroup": "activites",
+      "collections": [],
+      "tags": ["cps", "dopamine", "quiz", "rentree", "connaissance-de-soi", "college"],
+      "thumbnail": "cps/assets/quiz-decouverte/page-1.png",
+      "cardTitle": "Quiz découverte CPS & dopamine",
+      "cardDescription": "Six questions à projeter pour faire un état des lieux en début d'année, avec sa fiche réponse à imprimer."
+    },
     "outils/box_barre_final.html": { "primaryNotion": "schemas-barres", "primaryGroup": "activites", "collections": [], "tags": ["boite", "schema-barres"] },
     "outils/box_pasbarre_final.html": { "primaryNotion": "calcul-litteral", "primaryGroup": "activites", "collections": [], "tags": ["boite", "archive"] },
     "outils/tuiles_algebriques/tuiles_algebriques.html": {
@@ -6099,6 +6108,42 @@ window.MATHSGO_CATALOGUE = {
         "cinquième",
         "quatrième",
         "troisième"
+      ],
+      "kind": "document",
+      "status": "published",
+      "featured": false,
+      "recent": true
+    },
+    {
+      "id": "cps-quiz-decouverte-html",
+      "title": "Quiz découverte CPS & dopamine",
+      "description": "Diaporama de 6 questions pour faire un état des lieux en début d'année (avec fiche réponse imprimable).",
+      "path": "cps/quiz-decouverte.html",
+      "domains": [
+        "cps"
+      ],
+      "notions": [
+        "competences-psychosociales"
+      ],
+      "uses": [
+        "projeter",
+        "imprimer"
+      ],
+      "types": [
+        "imprimable"
+      ],
+      "filters": [
+        "materiel-imprimer"
+      ],
+      "keywords": [
+        "compétences psychosociales",
+        "CPS",
+        "dopamine",
+        "quiz",
+        "rentrée",
+        "état des lieux",
+        "diaporama",
+        "collège"
       ],
       "kind": "document",
       "status": "published",
