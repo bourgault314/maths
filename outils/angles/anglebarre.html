@@ -49,11 +49,13 @@
       var(--bg);
     color:var(--ink);
     font-family:system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Arial,sans-serif;
+    font-feature-settings:"ccmp" 0;
   }
 
   main{
     width:min(680px, calc(100vw - 28px));
-    margin:14px auto 26px;
+    margin:0 auto;
+    padding:10px 0 18px;
     display:grid;
     grid-template-columns:minmax(320px, 640px);
     justify-content:center;
@@ -74,7 +76,7 @@
     backdrop-filter:blur(10px);
   }
 
-  .panel{position:relative;padding:18px 20px 20px}
+  .panel{position:relative;padding:14px 18px 16px}
   .backBtn{
     min-width:44px;
     height:44px;
@@ -88,13 +90,18 @@
     flex:0 0 auto;
   }
   .backBtn:hover{background:#fff}
-  .panelBack{position:absolute;top:14px;left:14px}
+  .panelHeader{display:flex;align-items:center;justify-content:center;gap:14px;margin:2px 0 12px}
+  .panelHeader .appTitle{margin:0}
+  .angleField{position:relative}
+  .angleField .angleUnit{position:absolute;left:calc(50% + 18px);top:50%;transform:translateY(-50%);font-size:17px;font-weight:900;color:#64748b;pointer-events:none}
+  .angleField input{padding-left:26px;padding-right:26px}
+  .triangleOutline{fill:none;stroke:#1d4ed8;stroke-width:5;stroke-linejoin:round;pointer-events:none}
 
   main.activeMode .panel{display:none}
 
   .appTitle{
     text-align:center;
-    font-size:clamp(34px,4.6vw,48px);
+    font-size:clamp(30px,4vw,40px);
     line-height:.95;
     letter-spacing:-.06em;
     font-weight:950;
@@ -108,10 +115,10 @@
     flex:0 0 auto;
   }
   .brandLink img{display:block;width:100%;height:auto}
-  .panelBrand{margin:0 auto 8px}
+  .panelBrand{margin:0;width:86px}
   .stageQuickActions .brandLink{margin-right:auto;width:98px}
   .familyHint{
-    margin:9px 0 0;
+    margin:7px 0 0;
     min-height:20px;
     color:#475569;
     font-size:13px;
@@ -121,7 +128,7 @@
   }
 
   .creatorBlock{
-    padding:16px 18px 18px;
+    padding:14px 16px 14px;
     margin:0 auto;
     max-width:610px;
     border:1px solid rgba(59,130,246,.16);
@@ -131,15 +138,15 @@
 
   .creatorTitle{
     text-align:center;
-    font-size:20px;
+    font-size:19px;
     font-weight:950;
     color:#1d4ed8;
-    margin-bottom:12px;
+    margin-bottom:10px;
   }
 
   label{
     display:block;
-    margin:9px 0 5px;
+    margin:7px 0 4px;
     font-size:11px;
     color:var(--muted);
     font-weight:850;
@@ -152,8 +159,8 @@
     width:100%;
     border:1px solid rgba(15,23,42,.14);
     border-radius:13px;
-    padding:9px 11px;
-    min-height:42px;
+    padding:8px 11px;
+    min-height:40px;
     background:white;
     color:var(--ink);
     font-size:15px;
@@ -196,13 +203,13 @@
   }
 
   .angleBox label{margin-top:0;margin-bottom:8px;color:#334155}
-  .angleBox input{font-size:20px;min-height:48px;font-weight:950}
+  .angleBox input{font-size:20px;min-height:44px;font-weight:950}
 
   .rightBox.hidden{opacity:.42}
 
   .displayBox{
-    margin-top:12px;
-    padding:11px;
+    margin-top:10px;
+    padding:10px;
     background:rgba(255,255,255,.66);
     border:1px solid rgba(15,23,42,.08);
     border-radius:16px;
@@ -242,7 +249,7 @@
 
   .toggleItem input{width:18px;height:18px;accent-color:#3b82f6;cursor:pointer;flex:0 0 18px;margin:0}
 
-  .creatorActions{display:flex;gap:10px;justify-content:center;align-items:stretch;margin-top:13px}
+  .creatorActions{display:flex;gap:10px;justify-content:center;align-items:stretch;margin-top:11px}
 
   button{
     border:none;
@@ -312,6 +319,7 @@
   .stageQuickActions{
     position:absolute;
     top:14px;
+    left:14px;
     right:14px;
     z-index:5;
     display:flex;
@@ -341,16 +349,16 @@
 
   .topbar{
     flex:0 0 auto;
-    padding:3px 190px 6px 40px;
-    min-height:116px;
+    padding:3px 250px 6px 200px;
+    min-height:110px;
     display:flex;
     align-items:center;
     justify-content:center;
     overflow:hidden;
   }
 
-  .equationHistory{width:min(980px,100%);max-height:110px;overflow-y:auto;overflow-x:auto;scrollbar-width:thin}
-  .equationTable{border-collapse:collapse;margin:0 auto;font-size:clamp(24px,2.7vw,38px);font-weight:950;line-height:1.18}
+  .equationHistory{width:min(980px,100%);max-height:180px;overflow-y:auto;overflow-x:auto;scrollbar-width:thin}
+  .equationTable{border-collapse:collapse;margin:0 auto;font-size:clamp(20px,2.2vw,31px);font-weight:950;line-height:1.18}
   .equationTable td{padding:2px 8px;white-space:nowrap;vertical-align:baseline}
   .equationTable .lhs{text-align:right}
   .equationTable .eq{text-align:center;color:#64748b;padding-left:14px;padding-right:14px}
@@ -582,12 +590,6 @@
   }
   .barPiece:last-child{border-right:0}
   .barLine.relationDraft .barPiece{min-width:120px}
-  .barPiece.unknown{
-    background:
-      repeating-linear-gradient(135deg,rgba(59,130,246,.11) 0 8px,rgba(255,255,255,.66) 8px 15px),
-      linear-gradient(180deg,var(--blue-soft),#eff6ff);
-    box-shadow:inset 0 0 0 3px rgba(59,130,246,.18);
-  }
   .barPiece.result{background:linear-gradient(180deg,var(--green-soft),#f0fdf4)}
   .barPiece.knownGroup{background:linear-gradient(180deg,#eef2ff,#ffffff)}
   .barPiece.removed{
@@ -621,9 +623,10 @@
   .barAngleC{background:linear-gradient(180deg,rgba(22,163,74,.17),#f0fdf4)}
   .pieceMain{font-size:clamp(27px,3.3vw,42px);font-weight:950;letter-spacing:-.035em;line-height:1;white-space:nowrap;text-align:center}
 
+  .solution:empty{display:none}
   .solution{
-    flex:0 0 58px;
-    min-height:58px;
+    flex:0 0 auto;
+    min-height:52px;
     margin:5px 0 1px;
     display:flex;
     align-items:center;
@@ -653,7 +656,7 @@
   .undoToolBtn{background:#fff7ed;border-color:rgba(249,115,22,.28);color:#9a3412}
   .restartToolBtn{background:#eef2ff;border-color:rgba(99,102,241,.22);color:#3730a3}
 
-  .actionZone{flex:0 0 auto;min-height:42px;margin-top:0;display:flex;align-items:center;justify-content:center;gap:10px;flex-wrap:wrap}
+  .actionZone{flex:0 0 auto;min-height:24px;margin-top:0;display:flex;align-items:center;justify-content:center;gap:10px;flex-wrap:wrap}
   .note{color:#64748b;font-size:13px;font-weight:750;text-align:center;line-height:1.28;min-height:20px}
   .note.errorNote{color:#b91c1c;font-weight:900}
 
@@ -737,7 +740,7 @@
   @media (max-width:980px){
     main.activeMode .stage{height:auto;min-height:650px;overflow:visible}
     .workArea,.workArea.onlyVisual,.workArea.onlyBars{grid-template-columns:1fr;overflow:visible}
-    .topbar{padding-right:150px;padding-left:20px}
+    .topbar{padding-right:150px;padding-left:150px}
     .settingsGrid,.angleGrid,.toggleGrid{grid-template-columns:1fr}
   }
 
@@ -765,7 +768,7 @@
     .toolBtn{min-height:50px;padding:12px 16px;font-size:15px}
     .instructionZone{min-height:40px;font-size:clamp(17px,1.7vw,23px)}
     .topbar{min-height:92px}
-    .equationHistory{max-height:88px}
+    .equationHistory{max-height:130px}
     svg.triangleSvg{min-height:300px}
   }
 
@@ -784,7 +787,7 @@
     .panel{padding:12px}
     .creatorBlock{padding:13px 10px 14px;border-radius:14px}
     .appTitle{font-size:34px;margin-bottom:10px}
-    .panelBrand{width:92px;margin-bottom:6px}
+    .panelBrand{width:78px}
     .stageQuickActions .brandLink{width:76px}
     .settingsGrid{grid-template-columns:1fr;gap:7px}
     .angleGrid{grid-template-columns:repeat(3,minmax(0,1fr));gap:6px}
@@ -956,11 +959,13 @@
 <body>
 <main id="appMain">
   <section class="panel" id="panel">
-    <a class="backBtn panelBack" href="../index.html?domain=geometrie&amp;notion=angles" aria-label="Retour aux Angles" title="Retour aux Angles"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M19 12H5"/><path d="M11 18l-6-6 6-6"/></svg></a>
-    <a class="brandLink panelBrand" href="../index.html?domain=geometrie&amp;notion=angles" aria-label="Retour aux Angles" title="Retour aux Angles">
-      <img src="../../assets/img/mathsgo-logo.png" alt="maths&amp;go" width="1338" height="622">
-    </a>
-    <h1 class="appTitle">AngleBarre</h1>
+    <div class="panelHeader">
+      <a class="backBtn" href="../index.html?domain=geometrie&amp;notion=angles" aria-label="Retour aux Angles" title="Retour aux Angles"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M19 12H5"/><path d="M11 18l-6-6 6-6"/></svg></a>
+      <a class="brandLink panelBrand" href="../index.html?domain=geometrie&amp;notion=angles" aria-label="Retour aux Angles" title="Retour aux Angles">
+        <img src="../../assets/img/mathsgo-logo.png" alt="maths&amp;go" width="1338" height="622">
+      </a>
+      <h1 class="appTitle">AngleBarre</h1>
+    </div>
     <div class="creatorBlock" aria-label="Créer une situation sur les angles d’un triangle">
       <div class="creatorTitle">Créer une situation</div>
 
@@ -999,16 +1004,16 @@
         <div>
           <label for="unknownDisplayInput">Inconnue affichée</label>
           <select id="unknownDisplayInput">
-            <option value="angle" selected>Â, B̂, Ĉ</option>
+            <option value="angle" selected>Â, B̂, Ĉ</option>
             <option value="question">?</option>
           </select>
         </div>
       </div>
 
       <div class="angleGrid" aria-label="Angles du triangle">
-        <div class="angleBox"><label id="labelAngle0" for="angle0Input">Angle A</label><input id="angle0Input" type="text" autocomplete="off" value="50" /></div>
-        <div class="angleBox"><label id="labelAngle1" for="angle1Input">Angle B</label><input id="angle1Input" type="text" autocomplete="off" value="70" /></div>
-        <div class="angleBox"><label id="labelAngle2" for="angle2Input">Angle C</label><input id="angle2Input" type="text" autocomplete="off" value="?" /></div>
+        <div class="angleBox"><label id="labelAngle0" for="angle0Input">Angle Â</label><div class="angleField"><input id="angle0Input" type="text" autocomplete="off" value="50" /><span class="angleUnit" aria-hidden="true">°</span></div></div>
+        <div class="angleBox"><label id="labelAngle1" for="angle1Input">Angle B̂</label><div class="angleField"><input id="angle1Input" type="text" autocomplete="off" value="70" /><span class="angleUnit" aria-hidden="true">°</span></div></div>
+        <div class="angleBox"><label id="labelAngle2" for="angle2Input">Angle Ĉ</label><div class="angleField"><input id="angle2Input" type="text" autocomplete="off" value="?" /><span class="angleUnit" aria-hidden="true">°</span></div></div>
       </div>
 
       <div class="displayBox">
@@ -1178,7 +1183,7 @@
 
   function updateAngleLabels(){
     const letters = normalizeName(triangleNameInput.value);
-    letters.forEach((l,i) => angleLabels[i].textContent = `Angle ${l}`);
+    letters.forEach((l,i) => angleLabels[i].textContent = `Angle ${angleSymbol(l)}`);
     [...rightAngleInput.options].forEach((opt,i) => { opt.textContent = letters[i]; opt.value = letters[i]; });
     if(!letters.includes(rightAngleInput.value)) rightAngleInput.value = letters[0];
     syncRightAngleUi();
@@ -1194,6 +1199,7 @@
     rightBox.classList.toggle("hidden", !hasSpecialVertex);
     rightAngleInput.disabled = !hasSpecialVertex;
     specialVertexLabel.textContent = isIsosceles ? "Sommet principal" : "Angle droit en";
+    if(typeof updateAngleUnits === "function") updateAngleUnits();
     relationModeInput.disabled = isIsosceles || isEquilateral;
     angleInputs.forEach((input,i) => {
       input.disabled = isEquilateral || (isRight && letters[i] === rightAngleInput.value);
@@ -1474,6 +1480,17 @@
     return entered.length === 3 && new Set(entered).size === 3 ? entered : [...model.letters];
   }
 
+  function effectiveAngleOrder(){
+    const order = relationAngleOrder();
+    if(!work?.moved) return order;
+    const knowns = order.filter(l => !model.angles[l].unknown);
+    return [...knowns, model.unknown];
+  }
+
+  function groupMoveNeeded(){
+    return relationAngleOrder().indexOf(model.unknown) === 1;
+  }
+
   function unknownComesFirstAfterGrouping(){
     return relationAngleOrder().indexOf(model.unknown) === 0;
   }
@@ -1492,6 +1509,7 @@
       relationSlots:auto ? correctSlots() : emptyRelationSlots(),
       replaced:false,
       replacements:{},
+      moved:false,
       grouped:false,
       groupSelection:[],
       decomposed:false,
@@ -1559,6 +1577,9 @@
     if(hasReplacementProgress() || work.replaced){
       rows.push({lhs:order.map(l => model.angles[l].unknown ? angleSymbol(l) : (isReplaced(l) || work.replaced ? `${fmt(model.angles[l].value)}°` : angleSymbol(l))).join(" + "), rhs:"180°"});
     }
+    if(work.moved){
+      rows.push({lhs:effectiveAngleOrder().map(l => model.angles[l].unknown ? angleSymbol(l) : `${fmt(model.angles[l].value)}°`).join(" + "), rhs:"180°"});
+    }
     const unknownFirst = unknownComesFirstAfterGrouping();
     const known = `${fmt(model.knownSum)}°`;
     const unknown = angleSymbol(u);
@@ -1572,7 +1593,7 @@
         rhs:unknownFirst ? `${result} + ${known}` : `${known} + ${result}`
       });
     }
-    if(work.removed){
+    if(work.removed && !work.concluded){
       rows.push({lhs:unknown, rhs:result});
     }
     if(work.concluded){
@@ -1607,7 +1628,7 @@
     if(!work.replaced){
       if(work.choiceMode === "replace"){
         if(selectedReplace) return `Case ${angleSymbol(selectedReplace)} sélectionnée : clique sur sa mesure.`;
-        if(pendingReplace) return `Mesure de ${angleSymbol(pendingReplace)} sélectionnée : clique sur sa case.`;
+        if(pendingReplace) return `Mesure ${fmt(model.angles[pendingReplace].value)}° sélectionnée : clique sur sa case.`;
         return "Remplace les angles connus : clique sur une case puis sur sa mesure.";
       }
       return "Remplace les angles connus par leurs mesures.";
@@ -1615,7 +1636,9 @@
     if(!work.grouped){
       if(work.choiceMode === "group"){
         const n = work.groupSelection?.length || 0;
-        return n < 2 ? "Sélectionne les deux cases connues à regrouper." : "Choisis la somme des deux angles sélectionnés.";
+        if(n < 2) return "Sélectionne les deux cases connues à regrouper.";
+        if(groupMoveNeeded() && !work.moved) return "Déplace les deux cases connues pour les mettre côte à côte.";
+        return "Choisis la somme des deux angles sélectionnés.";
       }
       return "Regroupe les angles connus.";
     }
@@ -1639,14 +1662,35 @@
     renderTriangle();
     renderBars();
     renderActions();
-    solution.innerHTML = work.concluded
+    solution.innerHTML = (work.concluded && !display.equation)
       ? (model.family === "general"
         ? `${angleSymbol(model.unknown)} = ${fmt(work.result)}°`
         : model.unknowns.map(letter => `${angleSymbol(letter)} = ${fmt(model.solutions[letter])}°`).join(" · "))
       : "";
     actionZone.innerHTML = message ? `<div class="note${message.includes("pas") || message.includes("manque") || message.includes("déjà") ? " errorNote" : ""}">${message}</div>` : "";
+    fitStage();
     setTimeout(() => equationHistory.scrollTop = equationHistory.scrollHeight, 0);
   }
+
+  function fitStage(){
+    if(!appMain.classList.contains("activeMode")){
+      stage.style.zoom = "";
+      stage.style.height = "";
+      return;
+    }
+    stage.style.zoom = "";
+    stage.style.height = "";
+    const isFs = document.fullscreenElement === stage;
+    const avail = window.innerHeight - (isFs ? 44 : 36);
+    const needed = stage.scrollHeight;
+    if(needed > avail + 2){
+      const z = Math.max(0.55, avail / needed);
+      stage.style.zoom = z;
+      stage.style.height = Math.round(avail / z) + "px";
+    }
+  }
+  window.addEventListener("resize", () => { if(model && work) fitStage(); });
+  document.addEventListener("fullscreenchange", () => { if(model && work) fitStage(); });
 
   function renderEquations(){
     if(model.family === "general" && work.property && !work.relationComplete){
@@ -1792,6 +1836,7 @@
     barWrap.querySelectorAll("[data-replace-choice]").forEach(btn => btn.addEventListener("click", () => chooseReplaceValue(btn.dataset.replaceChoice)));
     barWrap.querySelectorAll("[data-group-cell]").forEach(el => el.addEventListener("click", () => toggleGroupCell(el.dataset.groupCell)));
     barWrap.querySelectorAll("[data-group-choice]").forEach(btn => btn.addEventListener("click", () => applyGroupChoice(btn.dataset.groupChoice)));
+    barWrap.querySelectorAll("[data-move-cells]").forEach(btn => btn.addEventListener("click", applyMoveCells));
     barWrap.querySelectorAll("[data-decompose-choice]").forEach(btn => btn.addEventListener("click", () => applyDecomposeChoice(btn.dataset.decomposeChoice)));
   }
 
@@ -1823,7 +1868,7 @@
 
     if(work.decomposed || work.removed || work.concluded){
       const isRemoved = work.removed || work.concluded;
-      const unknownPiece = {kind:"unknown", letter:model.unknown, main:angleSymbol(model.unknown), weight:model.result, solved:work.concluded};
+      const unknownPiece = {kind:"unknown", letter:model.unknown, main:angleSymbol(model.unknown), weight:model.result, solved:work.concluded, colorClass:angleColors[model.letters.indexOf(model.unknown)].soft};
       const knownPiece = {kind:isRemoved ? "removed" : "knownGroup", main:fmt(model.knownSum), weight:model.knownSum};
       const resultPiece = {kind:"result", letter:model.unknown, main:fmt(work.result), weight:model.result};
       const bottomKnownPiece = {kind:isRemoved ? "removed" : "knownGroup", main:fmt(model.knownSum), weight:model.knownSum};
@@ -1833,14 +1878,14 @@
     }
 
     if(work.grouped){
-      const unknownPiece = {kind:"unknown", letter:model.unknown, main:angleSymbol(model.unknown), weight:model.result};
+      const unknownPiece = {kind:"unknown", letter:model.unknown, main:angleSymbol(model.unknown), weight:model.result, colorClass:angleColors[model.letters.indexOf(model.unknown)].soft};
       const knownPiece = {kind:"knownGroup", main:fmt(model.knownSum), weight:model.knownSum};
       const top = unknownComesFirstAfterGrouping() ? [unknownPiece, knownPiece] : [knownPiece, unknownPiece];
       const bottom = [{kind:"knownGroup", main:"180", weight:180}];
       return renderBarTable(top, bottom, false);
     }
 
-    const top = relationAngleOrder().map(letter => {
+    const top = effectiveAngleOrder().map(letter => {
       const i = model.letters.indexOf(letter);
       const a = model.angles[letter];
       const isUnknown = a.unknown;
@@ -1889,10 +1934,11 @@
   function choiceZoneHtml(){
     if(!work?.choiceMode) return `<div class="barChoiceZone empty" aria-hidden="true"></div>`;
     if(work.choiceMode === "replace"){
-      const letters = knownAngleLetters().filter(l => !isReplaced(l));
+      const letters = knownAngleLetters().filter(l => !isReplaced(l))
+        .sort((x,y) => model.angles[x].value - model.angles[y].value);
       const buttons = letters.map(l => {
         const selected = pendingReplace === l ? " selectedChoice" : "";
-        return `<button type="button" class="choiceBtn${selected}" data-replace-choice="${l}">${angleSymbol(l)} = ${fmt(model.angles[l].value)}</button>`;
+        return `<button type="button" class="choiceBtn${selected}" data-replace-choice="${l}">${fmt(model.angles[l].value)}°</button>`;
       }).join("");
       return `<div class="barChoiceZone" aria-label="Remplacer les angles connus"><div class="choiceHint">Clique sur une case puis sur sa mesure, ou l’inverse.</div>${buttons}</div>`;
     }
@@ -1900,6 +1946,9 @@
       const n = work.groupSelection?.length || 0;
       if(n < 2){
         return `<div class="barChoiceZone" aria-label="Sélectionner les angles à regrouper"><div class="choiceHint">Clique sur les deux cases connues à regrouper.</div></div>`;
+      }
+      if(groupMoveNeeded() && !work.moved){
+        return `<div class="barChoiceZone" aria-label="Déplacer les cases sélectionnées"><div class="choiceHint">Les deux cases connues ne sont pas côte à côte.</div><button type="button" class="choiceBtn" data-move-cells>Déplacer côte à côte</button></div>`;
       }
       const choices = groupChoices();
       return `<div class="barChoiceZone" aria-label="Choisir la somme des angles connus"><div class="choiceHint">Choisis la somme des deux cases sélectionnées.</div>${choices.map(v => `<button type="button" class="choiceBtn" data-group-choice="${v}">${fmt(v)}</button>`).join("")}</div>`;
@@ -1980,6 +2029,7 @@
         if(p.groupSelectable) classes.push("groupSelectable");
         if(p.groupSelected) classes.push("groupSelected");
         const attrs = [];
+        if(p.letter) attrs.push(`data-cell-letter="${p.letter}"`);
         if(p.replaceable) attrs.push(`data-replace-cell="${p.letter}"`);
         if(p.groupSelectable) attrs.push(`data-group-cell="${p.letter}"`);
         html += `<div class="${classes.join(" ")}" ${attrs.join(" ")}><div class="pieceMain">${p.main}</div></div>`;
@@ -2118,7 +2168,7 @@
       return;
     }
     pendingReplace = pendingReplace === letter ? null : letter;
-    message = pendingReplace ? `Clique sur la case ${angleSymbol(letter)} à remplacer.` : "";
+    message = pendingReplace ? `Clique sur la case à remplacer par ${fmt(model.angles[letter].value)}°.` : "";
     render();
   }
 
@@ -2150,6 +2200,31 @@
         work.groupSelection = [current[1], letter];
       }
       message = "";
+    });
+  }
+
+  function applyMoveCells(){
+    if(work.choiceMode !== "group" || work.moved) return;
+    const zoomFactor = Number(stage.style.zoom) || 1;
+    const before = {};
+    barWrap.querySelectorAll("[data-cell-letter]").forEach(el => { before[el.dataset.cellLetter] = el.getBoundingClientRect(); });
+    mutate(() => { work.moved = true; message = ""; });
+    requestAnimationFrame(() => {
+      barWrap.querySelectorAll("[data-cell-letter]").forEach(el => {
+        const prev = before[el.dataset.cellLetter];
+        if(!prev) return;
+        const now = el.getBoundingClientRect();
+        const dx = (prev.left - now.left) / zoomFactor;
+        const scaleX = now.width > 0 ? prev.width / now.width : 1;
+        if(Math.abs(dx) < 2 && Math.abs(scaleX - 1) < 0.02) return;
+        el.style.transformOrigin = "left center";
+        el.style.transition = "none";
+        el.style.transform = `translateX(${dx}px) scaleX(${scaleX})`;
+        requestAnimationFrame(() => {
+          el.style.transition = "transform .55s cubic-bezier(.22,.9,.28,1)";
+          el.style.transform = "";
+        });
+      });
     });
   }
 
@@ -2223,6 +2298,8 @@
       const arc = angleArcPolyline(coords[letter], coords[others[0]], coords[others[1]], 46);
       html += `<polyline class="angleArc" points="${arc}" style="stroke:${angleColors[i].stroke}"/>`;
     });
+
+    html += `<polygon class="triangleOutline" points="${points}"/>`;
 
     if(model.type === "right" && model.right){
       html += rightAngleMark(coords, model.right, letters);
@@ -2333,6 +2410,9 @@
       ang2 = t;
       diff = normalizeAngle(ang2 - ang1);
     }
+    const trim = Math.min(3.2/radius, diff/4);
+    ang1 += trim;
+    diff -= trim*2;
     const steps = 18;
     const pts = [];
     for(let i=0;i<=steps;i++){
@@ -2379,11 +2459,13 @@
     message = "";
     displaySettingsFromMenu();
     appMain.classList.add("activeMode");
+    window.scrollTo(0, 0);
     render();
   }
 
   function backToMenu(){
     appMain.classList.remove("activeMode");
+    window.scrollTo(0, 0);
     if(document.fullscreenElement) document.exitFullscreen().catch(()=>{});
   }
 
@@ -2406,6 +2488,7 @@
       if(!work.relationComplete){ work.relationSlots = correctSlots(); work.relationComplete = true; }
       work.replaced = true;
       work.replacements = Object.fromEntries(knownAngleLetters().map(l => [l, true]));
+      if(groupMoveNeeded()) work.moved = true;
       work.grouped = true;
       work.decomposed = true;
       work.removed = true;
@@ -2485,7 +2568,25 @@
   triangleNameInput.addEventListener("input", updateAngleLabels);
   triangleTypeInput.addEventListener("change", handleTriangleTypeChange);
   rightAngleInput.addEventListener("change", syncRightAngleUi);
+  const unitMeasureCanvas = document.createElement("canvas");
+  function updateAngleUnits(){
+    angleInputs.forEach(input => {
+      const unit = input.parentElement?.querySelector(".angleUnit");
+      if(!unit) return;
+      const ok = /^\s*\d+(?:[.,]\d+)?\s*$/.test(input.value);
+      unit.style.visibility = ok ? "visible" : "hidden";
+      if(ok){
+        const ctx = unitMeasureCanvas.getContext("2d");
+        const st = getComputedStyle(input);
+        ctx.font = `${st.fontWeight} ${st.fontSize} ${st.fontFamily}`;
+        const w = ctx.measureText(input.value.trim()).width;
+        unit.style.left = `calc(50% + ${Math.round(w/2) + 4}px)`;
+      }
+    });
+  }
   angleInputs.forEach(input => input.addEventListener("focus", syncRightAngleUi));
+  angleInputs.forEach(input => input.addEventListener("input", updateAngleUnits));
+  updateAngleUnits();
 
   showEquationInput.addEventListener("change", () => { display.equation = showEquationInput.checked; if(model) render(); });
   showBarsInput.addEventListener("change", () => { display.bars = showBarsInput.checked; if(model) render(); });
