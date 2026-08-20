@@ -160,8 +160,18 @@ test("ÉquaBarre et ÉquaSplat restent publics, leurs récepteurs import restent
   }
 
   const questionEngine = fs.readFileSync(path.join(root, "auto/scripts/02-question-engine.js"), "utf8");
-  assert.match(questionEngine, /equabarre_import_splat\.html/);
+  // ÉquaBarre reçoit désormais directement les équations : l'ancienne page
+  // equabarre_import_splat.html n'est plus qu'une redirection et plus personne
+  // ne doit pointer vers elle.
+  assert.match(questionEngine, /outils\/equabarre\.html/);
+  assert.doesNotMatch(questionEngine, /equabarre_import_splat\.html/);
   assert.match(questionEngine, /equasplat_import_splat\.html/);
+
+  // La redirection doit conserver les données transmises dans l'adresse.
+  const redirectPage = fs.readFileSync(path.join(root, "outils/equabarre_import_splat.html"), "utf8");
+  assert.match(redirectPage, /equabarre\.html/);
+  assert.match(redirectPage, /location\.search/);
+  assert.match(redirectPage, /location\.hash/);
 });
 
 test("le hub Gerbert ne relie que ses ressources publiées", () => {
