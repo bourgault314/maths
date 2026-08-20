@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1" />
-<title>Splat — relations et inconnues | maths&amp;go</title>
+<title>Splat! — relations et inconnues | maths&amp;go</title>
   <meta name="description" content="Générez des cartes où une tache cache une quantité de jetons et faites raisonner sur l’inconnue.">
   <link rel="canonical" href="https://mathsgo.re/outils/splat.html">
   <meta name="robots" content="index, follow, max-image-preview:large">
@@ -211,8 +211,8 @@
     align-items:center;
     justify-content:space-between;
     gap:10px;
-    margin-bottom:12px;
-    padding-bottom:10px;
+    margin-bottom:8px;
+    padding-bottom:8px;
     border-bottom:1px solid rgba(17,24,39,.10);
   }
   .panelTopTitle{
@@ -261,12 +261,12 @@
     font-weight:800;
     letter-spacing:.08em;
     text-transform:uppercase;
-    margin:8px 0 4px;
+    margin:6px 0 3px;
   }
   #unitSettings .u-grid{
     display:grid;
     grid-template-columns: 78px 1fr;
-    gap:8px 8px;
+    gap:4px 8px;
     align-items: center;
   }
   #unitSettings .u-grid .u-label{
@@ -277,11 +277,11 @@
     line-height:1.2;
     /* Menu A : les libellés de gauche s’alignent visuellement
        sur le centre des champs, pas sur les petits repères min/max/≤. */
-    transform:translateY(8px);
+    transform:translateY(6px);
   }
   #unitSettings .u-controls{
     display:flex;
-    gap:10px;
+    gap:8px;
     flex-wrap:wrap;
     align-items:flex-end;
     min-width:0;
@@ -308,18 +308,14 @@
   #unitSettings .u-seed-inline{
     flex-direction:row;
     align-items:center;
-    gap:8px;
+    gap:7px;
     min-width:0;
+    position:relative;
   }
   #unitSettings .u-seed-inline .u-mini-label{
-    margin:0;
-    width:auto;
-    min-width:86px;
-    text-align:right;
-    font-size:12px;
-    line-height:1;
+    display:none;
   }
-  #unitSettings .u-mini{display:flex;flex-direction:column;gap:4px;min-width:0}
+  #unitSettings .u-mini{display:flex;flex-direction:column;gap:2px;min-width:0}
   #unitSettings .u-mini-label{
     font-size:11px;
     color:var(--muted);
@@ -327,10 +323,12 @@
     margin:0;
     text-align:center;
   }
-  #unitSettings input{padding:8px 10px;}
-  #unitSettings .u-mini input{ width:78px; }
-  #unitSettings .u-seed{min-width:200px;}
-  #unitSettings .u-seed input{width:200px; max-width:100%;}
+  #unitSettings input{height:34px;padding:6px 8px;}
+  #unitSettings .u-mini input{ width:70px; }
+  #unitSettings .u-seed{min-width:0;flex-wrap:nowrap;}
+  #unitSettings .u-seed input{width:96px;max-width:96px;}
+  #unitSettings .unitShareButton{height:34px;padding:5px 8px;font-size:10.5px;flex:0 0 auto;}
+  #unitSettings .unitShareFeedback{position:absolute;right:0;top:37px;z-index:3;padding:2px 5px;border-radius:5px;background:var(--panel);}
   #unitSettings .u-wide input{ width:100%; }
 
   /* PATCH UI — Menu C (Enquête) */
@@ -392,13 +390,21 @@
   }
   .btn:hover{background:var(--btn2)}
   .btn:active{transform:translateY(1px)}
-  .btn.primary{background:rgba(106,167,255,0.18);border-color:rgba(106,167,255,0.35)}
-  .btn.danger{background:rgba(255,106,106,0.14);border-color:rgba(255,106,106,0.35)}
+  .btn.primary{background:#2563eb;border-color:#2563eb;color:#fff;font-weight:750}
+  .btn.primary:hover{background:#1d4ed8}
+  .btn.danger{background:#fff1f2;border-color:#fecdd3;color:#be123c;font-weight:750}
+  .btn.danger:hover{background:#ffe4e6}
+  .btn.printAction{background:#10b981;border-color:#10b981;color:#fff;font-weight:750}
+  .btn.printAction:hover{background:#059669}
   .btn:disabled{opacity:.45;cursor:not-allowed}
   .shareRow{display:flex;align-items:center;justify-content:flex-start;gap:8px;min-height:28px;margin-top:8px}
+  .shareRow[hidden]{display:none}
   .shareLinkBtn{padding:5px 8px;font-size:11px;font-weight:750;color:var(--muted);white-space:nowrap}
   .shareFeedback{font-size:11px;font-weight:750;color:#16a34a;white-space:nowrap}
   .shareFeedback.error{color:#dc2626}
+  .compactActionRow{margin-top:8px !important}
+  .compactTitleRow{margin-top:8px !important}
+  .compactPrintRow{margin-top:8px !important}
 
   .iconbtn{
     display:inline-grid;place-items:center;
@@ -854,6 +860,8 @@
           <div class="u-mini u-seed u-seed-inline">
             <div class="u-mini-label">optionnelle</div>
             <input id="seedU" type="number" placeholder="ex: 2026" />
+            <button class="btn shareLinkBtn unitShareButton" id="btnShareUnit" type="button">🔗 Copier le lien</button>
+            <span class="shareFeedback unitShareFeedback" id="shareFeedbackUnit" role="status" aria-live="polite"></span>
           </div>
         </div>
       </div>
@@ -1121,12 +1129,12 @@
       </div>
     </div>
 
-    <div class="shareRow">
+    <div class="shareRow" id="shareRow">
       <button class="btn shareLinkBtn" id="btnShare" type="button">🔗 Copier le lien</button>
       <span class="shareFeedback" id="shareFeedback" role="status" aria-live="polite"></span>
     </div>
 
-    <div class="row" style="margin-top:10px; align-items:flex-end">
+    <div class="row compactActionRow" style="margin-top:10px; align-items:flex-end">
       <div style="flex:0 0 auto">
         <label>Nombre de cartes</label>
         <input id="count" type="number" min="1" max="300" value="10" style="width:96px" />
@@ -1135,7 +1143,7 @@
       <button class="btn danger" id="btnClear">Vider</button>
     </div>
 
-    <div class="row" style="margin-top:10px; flex-wrap:nowrap;">
+    <div class="row compactActionRow" style="margin-top:10px; flex-wrap:nowrap;">
       <button class="btn" id="btnPrev" style="flex:0 0 auto">◀</button>
       <button class="btn" id="btnNext" style="flex:0 0 auto">▶</button>
       <button class="iconbtn" id="btnFullscreen" title="Plein écran" style="flex:0 0 auto">
@@ -1154,15 +1162,15 @@
       </label>
     </div>
 
-    <div class="row" style="margin-top:10px;">
+    <div class="row compactTitleRow" style="margin-top:10px;">
       <div style="flex:1">
         <label for="printActivityTitle">Titre imprimé</label>
         <input id="printActivityTitle" type="text" maxlength="160" placeholder="ex. Atelier de recherche" />
       </div>
     </div>
 
-    <div class="row" style="margin-top:10px; align-items:center; flex-wrap:nowrap; gap:10px;">
-      <button class="btn" id="btnPrint" style="flex:0 0 auto; min-width:112px; padding:10px 14px;">Imprimer</button>
+    <div class="row compactPrintRow" style="margin-top:10px; align-items:center; flex-wrap:nowrap; gap:10px;">
+      <button class="btn printAction" id="btnPrint" style="flex:0 0 auto; min-width:112px; padding:10px 14px;">Imprimer</button>
       <select id="printMode" title="Choisir le contenu à imprimer" style="flex:1 1 auto; min-width:0; max-width:none; height:44px;">
         <option value="statement">Énoncé seul</option>
         <option value="worksheet">Tableau vide</option>
@@ -1815,14 +1823,21 @@ function fallbackCopyText(value){
 }
 
 function showShareFeedback(message, isError){
-  const feedback = document.getElementById("shareFeedback");
-  if(!feedback) return;
-  feedback.textContent = message;
-  feedback.classList.toggle("error", !!isError);
+  const feedbacks = [
+    document.getElementById("shareFeedback"),
+    document.getElementById("shareFeedbackUnit")
+  ].filter(Boolean);
+  if(!feedbacks.length) return;
+  feedbacks.forEach(feedback=>{
+    feedback.textContent = message;
+    feedback.classList.toggle("error", !!isError);
+  });
   if(shareFeedbackTimer) clearTimeout(shareFeedbackTimer);
   shareFeedbackTimer = setTimeout(()=>{
-    feedback.textContent = "";
-    feedback.classList.remove("error");
+    feedbacks.forEach(feedback=>{
+      feedback.textContent = "";
+      feedback.classList.remove("error");
+    });
   }, 2200);
 }
 
@@ -2003,6 +2018,8 @@ function syncNumberedEquationUI(){
 
 function syncSettingsUI(){
   const act = activityEl.value;
+  const shareRowEl = document.getElementById("shareRow");
+  if(shareRowEl) shareRowEl.hidden = act === "U" || act === "UPM";
   const prevAct = syncSettingsUI._lastAct || "";
   if(prevAct !== act && act === "UPM"){
     if(unitTotalMinEl && unitTotalMaxEl){
@@ -6479,13 +6496,13 @@ function getClassicPrintInstruction(slotCards){
   const hasSeveralTasks = slotCards.some(card => card && classicPrintTaskCount(card) > 1);
   if(act === "U" || act === "N"){
     return {
-      main:"Trouve le nombre de jetons cachés sous chaque tache.",
+      main:"Trouve le nombre de jetons cachés sous chaque tache en modélisant la situation par une équation puis en la résolvant.",
       note:hasSeveralTasks ? "Lorsque plusieurs taches apparaissent, elles cachent le même nombre de jetons." : ""
     };
   }
   if(act === "UPM" || act === "NPM"){
     return {
-      main:"Trouve la valeur cachée sous chaque tache.",
+      main:"Trouve la valeur cachée sous chaque tache en modélisant la situation par une équation puis en la résolvant.",
       note:hasSeveralTasks ? "Lorsque plusieurs taches apparaissent, elles cachent la même valeur." : ""
     };
   }
@@ -6575,7 +6592,7 @@ function printSheet(){
     const sheet = document.createElement("div");
     sheet.className = "sheet";
     sheet.appendChild(createClassicPrintHeader(mode));
-    sheet.appendChild(createClassicPrintInstruction(slotCards));
+    if(mode !== "correction") sheet.appendChild(createClassicPrintInstruction(slotCards));
     const grid = document.createElement("div");
     grid.className = "grid";
 
@@ -6806,6 +6823,8 @@ function goNextCardOrStep(){
 
 document.getElementById("btnGen").addEventListener("click", generate);
 document.getElementById("btnShare").addEventListener("click", copyShareLink);
+const btnShareUnitEl = document.getElementById("btnShareUnit");
+if(btnShareUnitEl) btnShareUnitEl.addEventListener("click", copyShareLink);
 document.getElementById("btnClear").addEventListener("click", ()=>{ cards=[]; idx=0; revealState=0; updateUI(); });
 document.getElementById("btnPrev").addEventListener("click", goPreviousCardOrStep);
 document.getElementById("btnNext").addEventListener("click", goNextCardOrStep);
@@ -6839,29 +6858,16 @@ window.addEventListener("keydown",(e)=>{
     return;
   }
   const _ae = document.activeElement;
-  if((_ae && (_ae.id==="activity" || _ae.id==="unitEquationType" || _ae.id==="numberedEquationType")) && (e.key==="ArrowLeft" || e.key==="ArrowRight")){
-    e.preventDefault();
-    refocusMainSvgFromControl(_ae);
-  }
+  const _tag = _ae && _ae.tagName ? String(_ae.tagName).toLowerCase() : "";
+  const _isTyping = _tag === "input" || _tag === "textarea" || _tag === "select" || (_ae && _ae.isContentEditable);
+  if(_isTyping) return;
   if(e.key==="ArrowLeft"){
+    e.preventDefault();
     goPreviousCardOrStep();
   }
   if(e.key==="ArrowRight"){
-    goNextCardOrStep();
-  }
-  if(e.key===" "){
     e.preventDefault();
-    if(cards.length){ 
-        const card = cards[idx];
-        const isSequence = isRevealSequenceCard(card);
-        if (isSequence) {
-            const maxReveal = getMaxRevealState(card);
-            revealState = (revealState + 1) % (maxReveal + 1);
-        } else {
-            revealState = revealState === 0 ? 2 : 0;
-        }
-        updateUI(); 
-    }
+    goNextCardOrStep();
   }
   if(e.key==="f" || e.key==="F"){ toggleFullscreen(); }
 });

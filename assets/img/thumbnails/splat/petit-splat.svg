@@ -1,0 +1,41 @@
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="720" height="320" viewBox="0 0 720 320" role="img" aria-labelledby="title desc">
+  <title id="title">Fiche Petit Splat</title>
+  <desc id="desc">Une fiche complète Petit Splat avec bandeau, consigne et six cartes.</desc>
+  <defs>
+    <linearGradient id="band" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0" stop-color="#f59e0b"/><stop offset="1" stop-color="#fdba74"/>
+    </linearGradient>
+  </defs>
+  <rect width="720" height="320" fill="#e2e8f0"/>
+  <rect x="130" y="14" width="468" height="302" rx="4" fill="#64748b" opacity=".24"/>
+  <g transform="translate(126 9)">
+    <rect width="468" height="302" rx="4" fill="#fff"/>
+    <rect x="10" y="10" width="448" height="38" rx="6" fill="url(#band)"/>
+    <text x="28" y="36" font-family="system-ui, sans-serif" font-size="21" font-weight="950" fill="#073b7a">Splat!</text>
+    <g transform="translate(379 17)" fill="none" stroke="#073b7a" stroke-width="3">
+      <circle cx="9" cy="9" r="7" fill="#fff"/><circle cx="35" cy="9" r="7" fill="#fff"/>
+      <path d="M16 9h12"/>
+    </g>
+    <rect x="15" y="57" width="438" height="38" rx="5" fill="#fff" stroke="#64748b"/>
+    <text x="27" y="73" font-family="system-ui, sans-serif" font-size="9.5" font-weight="850" fill="#0f172a">POUR CHAQUE CARTE :</text>
+    <text x="27" y="87" font-family="system-ui, sans-serif" font-size="9.5" fill="#334155">complète le schéma en barres et trouve le nombre de jetons cachés.</text>
+
+    <g transform="translate(15 104)" font-family="system-ui, sans-serif">
+      <g id="card">
+        <rect width="140" height="84" rx="4" fill="#fff" stroke="#94a3b8"/>
+        <rect x="111" y="7" width="22" height="22" fill="#fff" stroke="#0f172a"/>
+        <text x="122" y="23" text-anchor="middle" font-size="12" font-weight="900" fill="#0f172a">18</text>
+        <g fill="#2563eb"><circle cx="19" cy="18" r="3"/><circle cx="39" cy="27" r="3"/><circle cx="97" cy="19" r="3"/><circle cx="119" cy="45" r="3"/></g>
+        <path d="M53 25c7-8 13-2 20-8 7-5 16 0 15 9 0 8 9 10 11 17 4 8-2 14-10 17-8 3-8 14-17 18-8 3-14-4-18-10-4-7-14-4-20-10-6-6-1-14 2-20 4-7-1-15 4-19 4-4 8-2 13 0z" fill="#050505"/>
+        <rect x="10" y="62" width="120" height="15" fill="#f8fafc" stroke="#0f172a"/>
+        <line x1="42" y1="62" x2="42" y2="77" stroke="#0f172a"/>
+      </g>
+      <use xlink:href="#card" x="149"/>
+      <use xlink:href="#card" x="298"/>
+      <use xlink:href="#card" y="94"/>
+      <use xlink:href="#card" x="149" y="94"/>
+      <use xlink:href="#card" x="298" y="94"/>
+    </g>
+    <text x="234" y="296" text-anchor="middle" font-family="system-ui, sans-serif" font-size="8" font-weight="700" fill="#94a3b8">mathsgo.re/splat/petit</text>
+  </g>
+</svg>

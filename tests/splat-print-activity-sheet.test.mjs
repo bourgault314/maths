@@ -23,11 +23,17 @@ test("les titres de bandeau distinguent les deux outils", () => {
 });
 
 test("les consignes de page emploient un vocabulaire adapte aux familles", () => {
-  assert.match(classic, /Trouve le nombre de jetons cachés sous chaque tache/);
-  assert.match(classic, /Trouve la valeur cachée sous chaque tache/);
+  assert.match(classic, /Trouve le nombre de jetons cachés sous chaque tache en modélisant la situation par une équation puis en la résolvant/);
+  assert.match(classic, /Trouve la valeur cachée sous chaque tache en modélisant la situation par une équation puis en la résolvant/);
   assert.match(classic, /Utilise les indices pour déterminer la valeur cachée/);
-  assert.match(equations, /puis complète ou résous l’équation/);
-  assert.match(equations, /puis résous l’équation/);
+  assert.match(equations, /Trouve le nombre de jetons cachés sous chaque tache en modélisant la situation par une équation puis en la résolvant/);
+  assert.match(equations, /Trouve la valeur cachée sous chaque tache en modélisant la situation par une équation puis en la résolvant/);
+});
+
+test("les pages de correction ne repetent pas la consigne", () => {
+  assert.match(classic, /if\(mode !== "correction"\) sheet\.appendChild\(createClassicPrintInstruction\(slotCards\)\)/);
+  assert.match(equations, /if\(mode !== "correction"\) sheet\.appendChild\(createEquationPrintInstruction\(slotCards\)\)/);
+  assert.match(petit, /if \(!isCorrectionPage\) \{[\s\S]*instruction\.innerHTML = getInstructionHtml\(\)/);
 });
 
 test("la regle commune est portee par la page et non repetee dans les cartes imprimees", () => {

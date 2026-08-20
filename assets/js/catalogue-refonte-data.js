@@ -137,7 +137,7 @@ window.MATHSGO_CATALOGUE = {
     },
     {
       "id": "splat",
-      "title": "Splat",
+      "title": "Splat!",
       "domain": "algebre",
       "notions": ["calcul-litteral", "equations"],
       "hub": "splat/index.html",
@@ -479,7 +479,7 @@ window.MATHSGO_CATALOGUE = {
       "primaryGroup": "generer",
       "collections": ["splat"],
       "tags": ["splat", "inconnue", "relation", "jetons", "cartes"],
-      "thumbnail": "assets/img/thumbnails/splat/splat.png?v=2",
+      "thumbnail": "assets/img/thumbnails/splat/splat.svg?v=3",
       "cardDescription": "Générer des cartes où une tache cache une quantité de jetons et faire raisonner sur l’inconnue."
     },
     "outils/splat_tache_barre.html": {
@@ -487,7 +487,7 @@ window.MATHSGO_CATALOGUE = {
       "primaryGroup": "generer",
       "collections": ["splat"],
       "tags": ["splat", "inconnue", "schema-barres", "fiche", "imprimer"],
-      "thumbnail": "assets/img/thumbnails/splat/petit-splat.png?v=2",
+      "thumbnail": "assets/img/thumbnails/splat/petit-splat.svg?v=3",
       "cardDescription": "Composer une fiche de Petits Splats avec jetons cachés et schémas en barres à compléter."
     },
     "outils/splat_equations.html": {
@@ -495,7 +495,7 @@ window.MATHSGO_CATALOGUE = {
       "primaryGroup": "generer",
       "collections": ["splat"],
       "tags": ["schema-barres", "equation", "inconnue", "splat", "cartes"],
-      "thumbnail": "assets/img/thumbnails/splat/splat-equations.png?v=2",
+      "thumbnail": "assets/img/thumbnails/splat/splat-equations.svg?v=3",
       "cardDescription": "Générer des cartes d’équations où les deux côtés contiennent des jetons et des quantités cachées."
     },
     "outils/tuiles_algebriques/generateur_exercices_calcul_litteral.html": {
@@ -5604,7 +5604,7 @@ window.MATHSGO_CATALOGUE = {
     },
     {
       "id": "outils-splat-html",
-      "title": "Splat — relations et inconnues",
+      "title": "Splat! — relations et inconnues",
       "description": "Générez des cartes où une tache cache une quantité de jetons et faites raisonner sur l’inconnue.",
       "path": "outils/splat.html",
       "domains": [
@@ -5638,7 +5638,7 @@ window.MATHSGO_CATALOGUE = {
     },
     {
       "id": "outils-splat-tache-barre-html",
-      "title": "Petit Splat — fiches et schémas en barres",
+      "title": "Petit Splat! — fiches et schémas en barres",
       "description": "Composez une fiche de Petits Splats avec jetons cachés et schémas en barres à compléter.",
       "path": "outils/splat_tache_barre.html",
       "domains": [
@@ -5674,7 +5674,7 @@ window.MATHSGO_CATALOGUE = {
     },
     {
       "id": "outils-splat-equations-html",
-      "title": "Splat — équations",
+      "title": "Splat! — équations",
       "description": "Générez des cartes d’équations où les deux côtés contiennent des jetons et des quantités cachées.",
       "path": "outils/splat_equations.html",
       "domains": [
