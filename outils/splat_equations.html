@@ -183,6 +183,17 @@
   .shareLinkBtn{padding:5px 8px;font-size:11px;font-weight:750;color:var(--muted);white-space:nowrap}
   .shareFeedback{font-size:11px;font-weight:750;color:#16a34a;white-space:nowrap}
   .shareFeedback.error{color:#dc2626}
+  .shareFeedback:empty{display:none}
+  .seedShareRow{
+    display:grid;
+    grid-template-columns:auto minmax(76px,96px) auto minmax(0,1fr);
+    gap:7px;
+    align-items:center;
+    margin-top:10px;
+  }
+  .seedShareRow label{margin:0;font-weight:700}
+  .seedShareRow input{height:34px;padding:6px 8px}
+  .seedShareRow .shareLinkBtn{height:34px}
 
   .iconbtn{
     display:inline-grid;place-items:center;
@@ -439,7 +450,7 @@
     .printArea.print-2up .pCard.empty{display:block}
 
     .print-page-header{
-      flex:0 0 14mm;
+      flex:0 0 16mm;
       display:flex;
       align-items:center;
       justify-content:space-between;
@@ -452,12 +463,12 @@
       -webkit-print-color-adjust:exact;
       print-color-adjust:exact;
     }
-    .print-page-title-block{min-width:0;display:flex;align-items:baseline;gap:4mm;line-height:1}
+    .print-page-title-block{min-width:0;display:flex;align-items:center;gap:4mm;line-height:1}
     .print-page-title{font-size:17pt;font-weight:950;color:#063b7a;white-space:nowrap}
     .print-page-subtitle{font-size:11pt;font-weight:850;color:#111827;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
     .print-page-logos{display:flex;align-items:center;justify-content:flex-end;gap:3mm;height:100%;flex:0 0 auto}
-    .print-page-logo-irem{height:11mm;width:auto;display:block}
-    .print-page-logo-maths{height:9.5mm;width:auto;display:block}
+    .print-page-logo-irem{height:12mm;width:auto;display:block}
+    .print-page-logo-maths{height:10mm;width:auto;display:block}
     .print-page-instruction{
       flex:0 0 auto;
       margin-bottom:2mm;
@@ -474,11 +485,11 @@
     .print-page-instruction strong{font-weight:900}
     .print-page-instruction-note{margin-left:2mm;color:#475467;font-size:8.7pt;font-weight:700}
     .print-page-footer{flex:0 0 3.5mm;margin-top:1.2mm;text-align:center;color:#98a2b3;font-size:6pt;font-weight:650;line-height:1}
-    .printArea.print-2up .print-page-header{flex-basis:12mm;margin-bottom:1.5mm;padding:1.5mm 3mm}
+    .printArea.print-2up .print-page-header{flex-basis:14mm;margin-bottom:1.5mm;padding:1.5mm 3mm}
     .printArea.print-2up .print-page-title{font-size:15pt}
     .printArea.print-2up .print-page-subtitle{font-size:9.5pt}
-    .printArea.print-2up .print-page-logo-irem{height:9mm}
-    .printArea.print-2up .print-page-logo-maths{height:8mm}
+    .printArea.print-2up .print-page-logo-irem{height:10.5mm}
+    .printArea.print-2up .print-page-logo-maths{height:9mm}
     .printArea.print-2up .print-page-instruction{margin-bottom:1.5mm;padding:1.3mm 2.5mm;font-size:8.5pt}
     .printArea.print-2up .print-page-instruction-note{font-size:7.8pt}
   }
@@ -591,7 +602,7 @@
       <div class="panelHeaderActions">
         <a class="home" href="/outils/index.html?domain=algebre&amp;collection=splat" title="Retour aux outils Splat" aria-label="Retour aux outils Splat">
           <svg aria-hidden="true" viewBox="0 0 24 24">
-            <path d="M12 3.2 3 10.6v9.2c0 .9.7 1.6 1.6 1.6H9v-6.4h6v6.4h4.4c.9 0 1.6-.7 1.6-1.6v-9.2L12 3.2Z" fill="currentColor"></path>
+            <path d="M19 12H5M11 18l-6-6 6-6" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"></path>
           </svg>
         </a>
         <button class="home helpBtn" id="btnHelp" type="button" title="Aide et raccourcis" aria-label="Aide et raccourcis">?</button>
@@ -609,7 +620,7 @@
 
     <div id="equationTopSettings" class="equationTopSettings">
         <div id="eqUnknownModeWrap" style="flex:1 1 172px; min-width:0; display:none">
-          <label>Forme<br>d’équation</label>
+          <label>Forme d’équation</label>
           <select id="eqUnknownMode" style="width:100%; padding:8px 4px; font-size:12px;">
             <option value="X_PLUS_B_EQ_C" selected>Forme x + b = c</option>
             <option value="AX_EQ_C">Forme ax = c</option>
@@ -654,15 +665,15 @@
           </div>
         </div>
         <div id="numVisibleMinWrap" style="flex:1">
-          <label class="miniCenteredLabel" id="numVisibleMinLabel">Visibles / plateau<br>min</label>
+          <label class="miniCenteredLabel" id="numVisibleMinLabel">Visibles min</label>
           <input id="numVisibleMin" type="number" min="0" max="20" value="2" />
         </div>
         <div id="numVisibleMaxWrap" style="flex:1">
-          <label class="miniCenteredLabel" id="numVisibleMaxLabel">Visibles / plateau<br>max</label>
+          <label class="miniCenteredLabel" id="numVisibleMaxLabel">Visibles max</label>
           <input id="numVisibleMax" type="number" min="0" max="6" value="3" />
         </div>
         <div id="numUnitVisibleMaxWrap" style="flex:1; display:none">
-          <label class="miniCenteredLabel" id="numUnitVisibleMaxLabel">Visibles max<br>/ plateau</label>
+          <label class="miniCenteredLabel" id="numUnitVisibleMaxLabel">Visibles max</label>
           <input id="numUnitVisibleMax" type="number" min="1" max="20" value="10" />
         </div>
       </div>
@@ -698,10 +709,6 @@
           <label>Total (max)</label>
           <input id="numTotalMax" type="number" min="1" max="1000" value="50" />
         </div>
-        <div style="flex:1">
-          <label>Graine (mode B)</label>
-          <input id="seedN" type="number" placeholder="ex: 2026" />
-        </div>
       </div>
     </div>
 
@@ -713,7 +720,9 @@
 
     
 
-    <div class="shareRow">
+    <div class="seedShareRow">
+      <label for="seedN">Graine</label>
+      <input id="seedN" type="number" placeholder="ex: 2026" />
       <button class="btn shareLinkBtn" id="btnShare" type="button">🔗 Copier le lien</button>
       <span class="shareFeedback" id="shareFeedback" role="status" aria-live="polite"></span>
     </div>
@@ -777,8 +786,8 @@
         <span style="font-size:12px; font-weight:700; color:var(--ink);">RV</span>
       </label>
       <select id="printCardsPerPage" title="Disposition d’impression" style="flex:0 0 68px; width:68px; min-width:68px; max-width:68px; height:44px; padding:8px 4px; font-size:12px;">
-        <option value="4" selected>4/page</option>
-        <option value="2">2/page</option>
+        <option value="4">4/page</option>
+        <option value="2" selected>2/page</option>
         <option value="1">1/page</option>
       </select>
     </div>
@@ -1837,8 +1846,8 @@ function syncSettingsUI(){
     }
     if(numVisibleMinEl) numVisibleMinEl.value = "0";
   }else{
-    if(numVisibleMinLabelEl) numVisibleMinLabelEl.innerHTML = "Visibles / plateau<br>min";
-    if(numVisibleMaxLabelEl) numVisibleMaxLabelEl.innerHTML = "Visibles / plateau<br>max";
+    if(numVisibleMinLabelEl) numVisibleMinLabelEl.textContent = "Visibles min";
+    if(numVisibleMaxLabelEl) numVisibleMaxLabelEl.textContent = "Visibles max";
     if(numVisibleMinEl){
       numVisibleMinEl.min = "0";
       numVisibleMinEl.max = "6";
@@ -7671,7 +7680,7 @@ function renderCardEquationPrint(targetSvg, card, printMode, tEl, tText, useToke
   if(!usePrintTables) return;
 
   const gEq = tEl("g", {id:"eqPrintSteps"});
-  let currentY = 920;
+  let currentY = 820;
   const visL = eqVisibleSum(eq.left);
   const visR = eqVisibleSum(eq.right);
   const vl = visL;
@@ -7687,10 +7696,10 @@ function renderCardEquationPrint(targetSvg, card, printMode, tEl, tText, useToke
       rect:(a)=>tEl("rect", a),
       line:(a)=>tEl("line", a),
       text:(x,y,t,a)=>tText(x,y,t,a),
-      baseW: 980,
-      rowH: 100,
-      fontSize: 86,
-      pad: 38,
+      baseW: 1240,
+      rowH: 112,
+      fontSize: 98,
+      pad: 42,
       stroke: "#000",
       strokeWidth: 5,
       hiddenFill: "rgba(0,0,0,0.10)",
@@ -7698,12 +7707,12 @@ function renderCardEquationPrint(targetSvg, card, printMode, tEl, tText, useToke
       textColor: "#000"
     });
   } else {
-    const fullW = 1040;
-    const maxTableW = 1040;
-    const minHiddenPrintW = 76;
-    const minVisiblePrintW = 94;
-    const minHiddenPrintWValue1 = 104;
-    const minVisiblePrintWValue1 = 118;
+    const fullW = 1240;
+    const maxTableW = 1240;
+    const minHiddenPrintW = 92;
+    const minVisiblePrintW = 112;
+    const minHiddenPrintWValue1 = 122;
+    const minVisiblePrintWValue1 = 138;
     const startX = 800 - fullW / 2;
     const unit = fullW / Math.max(1, Number(eq.total) || 1);
 
@@ -7828,9 +7837,9 @@ function renderCardEquationPrint(targetSvg, card, printMode, tEl, tText, useToke
       baseW: fullW,
       maxW: maxTableW,
       disableLabelInflation: true,
-      rowH: 100,
-      fontSize: 86,
-      pad: 34,
+      rowH: 112,
+      fontSize: 98,
+      pad: 40,
       stroke: "#000",
       strokeWidth: 5,
       hiddenFill: "rgba(0,0,0,0.10)",
@@ -7841,7 +7850,7 @@ function renderCardEquationPrint(targetSvg, card, printMode, tEl, tText, useToke
       minHiddenCellWValue1: minHiddenPrintWValue1,
       minVisibleCellWValue1: minVisiblePrintWValue1,
       forceCommonHiddenCellW: true,
-      variableFontSize: 60,
+      variableFontSize: 70,
       fitLabelToCell: true
     });
     states.push({
@@ -7851,7 +7860,7 @@ function renderCardEquationPrint(targetSvg, card, printMode, tEl, tText, useToke
       row1Widths: initialLayout.rows[0].segments.map(seg => Math.max(1, Number(seg.w) || 1)),
       row2Widths: initialLayout.rows[1].segments.map(seg => Math.max(1, Number(seg.w) || 1))
     });
-    currentY += 250;
+    currentY += 260;
 
     const a = Math.max(0, Number(eq.left?.tasks) || 0);
     const b = Math.max(0, Number(eq.right?.tasks) || 0);
@@ -7886,18 +7895,18 @@ function renderCardEquationPrint(targetSvg, card, printMode, tEl, tText, useToke
         rect:(a)=>tEl("rect", a),
         line:(a)=>tEl("line", a),
         text:(x,y,t,a)=>tText(x,y,t,a),
-        rowH: 100,
-        fontSize: 86,
-        pad: 34,
+        rowH: 112,
+        fontSize: 98,
+        pad: 40,
         stroke: "#000",
         strokeWidth: 5,
         hiddenFill: "rgba(0,0,0,0.10)",
         visibleFill: "rgba(255,255,255,0)",
         textColor: "#000",
-        variableFontSize: 60,
+        variableFontSize: 70,
         fitLabelToCell: true
       });
-      currentY += 250;
+      currentY += 260;
     }
 
     if(commonV > 0){
@@ -7936,18 +7945,18 @@ function renderCardEquationPrint(targetSvg, card, printMode, tEl, tText, useToke
         rect:(a)=>tEl("rect", a),
         line:(a)=>tEl("line", a),
         text:(x,y,t,a)=>tText(x,y,t,a),
-        rowH: 100,
-        fontSize: 86,
-        pad: 34,
+        rowH: 112,
+        fontSize: 98,
+        pad: 40,
         stroke: "#000",
         strokeWidth: 5,
         hiddenFill: "rgba(0,0,0,0.10)",
         visibleFill: "rgba(255,255,255,0)",
         textColor: "#000",
-        variableFontSize: 60,
+        variableFontSize: 70,
         fitLabelToCell: true
       });
-      currentY += 250;
+      currentY += 260;
     }
 
     const alreadySolvedUnit = (a2 === 1 && b2 === 0 && vl2 === 0 && vr2 > 0) ||
@@ -7987,18 +7996,18 @@ function renderCardEquationPrint(targetSvg, card, printMode, tEl, tText, useToke
           rect:(a)=>tEl("rect", a),
           line:(a)=>tEl("line", a),
           text:(x,y,t,a)=>tText(x,y,t,a),
-          rowH: 100,
-          fontSize: 86,
-          pad: 34,
+          rowH: 112,
+          fontSize: 98,
+          pad: 40,
           stroke: "#000",
           strokeWidth: 5,
           hiddenFill: "rgba(0,0,0,0.10)",
           visibleFill: "rgba(255,255,255,0)",
           textColor: "#000",
-          variableFontSize: 60,
+          variableFontSize: 70,
           fitLabelToCell: true
         });
-        currentY += 250;
+        currentY += 260;
       }
     }
 
@@ -8065,8 +8074,8 @@ function getEquationPrintInstruction(slotCards){
   const hasSeveralTasks = slotCards.some(card => card && equationPrintTaskCount(card) > 1);
   const isSigned = act === "EQPM" || act === "EQPMSTEP";
   const main = isSigned
-    ? "Trouve la valeur cachée sous chaque tache en modélisant la situation par une équation puis en la résolvant."
-    : "Trouve le nombre de jetons cachés sous chaque tache en modélisant la situation par une équation puis en la résolvant.";
+    ? "Trouve la valeur cachée sous chaque tache en modélisant la situation par une équation, puis en la résolvant."
+    : "Trouve le nombre de jetons cachés sous chaque tache. Tu peux t’aider d’un schéma en barres ou d’une équation.";
   const note = hasSeveralTasks
     ? (isSigned
       ? "Lorsque plusieurs taches apparaissent, elles cachent la même valeur."
@@ -8138,7 +8147,7 @@ function createEquationPrintFooter(){
 
 function getPrintCardsPerPage(){
   const el = document.getElementById("printCardsPerPage");
-  const v = el ? String(el.value || "4") : "4";
+  const v = el ? String(el.value || "2") : "2";
   if(v === "1") return 1;
   if(v === "2") return 2;
   return 4;

@@ -1960,7 +1960,8 @@ select { cursor: pointer; }
 }
 
 .splat-universe-mark[hidden] { display: none; }
-.splat-universe-mark svg { display: block; width: 126px; height: auto; }
+.splat-universe-mark picture { display: block; width: 126px; }
+.splat-universe-mark img { display: block; width: 100%; height: auto; border-radius: 11px; }
 .splat-universe-mark p { margin: 0; color: #64748b; font-size: .77rem; line-height: 1.35; }
 .splat-universe-mark p span,
 .splat-universe-mark p strong { display: block; }
@@ -1979,5 +1980,5 @@ select { cursor: pointer; }
   .catalogue-deep-view.catalogue-splat-view .hero h1 { font-size: clamp(2.8rem, 16vw, 4.2rem); }
   .catalogue-deep-view.catalogue-splat-view .hero-lead { margin-top: 2px; font-size: .94rem; }
   .splat-universe-mark { grid-template-columns: 92px minmax(0, 1fr); padding: 6px 10px; }
-  .splat-universe-mark svg { width: 92px; }
+  .splat-universe-mark picture { width: 92px; }
 }

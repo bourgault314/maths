@@ -892,7 +892,7 @@
         .filter((collection) => allWordsMatch(collection.title, state.query))
         .map((collection) => collectionRootId(collection.id)))
       : new Set();
-    return published.filter((resource) => {
+    const resources = published.filter((resource) => {
       if (state.domain && !resource.domains.includes(state.domain)) return false;
       if (state.notion && !resourceBelongsToNotion(resource, state.notion)) return false;
       if (state.notion && resourceBelongsToCollapsedCollection(resource)) return false;
@@ -901,6 +901,15 @@
       if (state.query && !allWordsMatch(resourceHaystack(resource), state.query)) return false;
       return true;
     });
+    if (state.collection === "splat") {
+      const splatOrder = new Map([
+        ["outils/splat_tache_barre.html", 0],
+        ["outils/splat.html", 1],
+        ["outils/splat_equations.html", 2]
+      ]);
+      resources.sort((a, b) => (splatOrder.get(a.path) ?? 99) - (splatOrder.get(b.path) ?? 99));
+    }
+    return resources;
   }
 
   function notionHref(notion) {

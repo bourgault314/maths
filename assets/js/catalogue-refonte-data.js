@@ -240,7 +240,7 @@ window.MATHSGO_CATALOGUE = {
       "primaryGroup": "manipuler",
       "collections": ["splat"],
       "tags": ["equation", "inconnue", "jetons", "splat"],
-      "thumbnail": "assets/img/thumbnails/splat/equasplat.png?v=2",
+      "thumbnail": "assets/img/thumbnails/splat/equasplat.png?v=5",
       "cardDescription": "Construire une équation avec des taches et des jetons puis agir de la même façon sur les deux membres."
     },
     "outils/gabarits_enquetes_additive.pdf": { "primaryNotion": "schemas-barres", "primaryGroup": "imprimer", "collections": [], "tags": ["schema-barres", "resolution-problemes", "gabarit"] },
@@ -479,7 +479,7 @@ window.MATHSGO_CATALOGUE = {
       "primaryGroup": "generer",
       "collections": ["splat"],
       "tags": ["splat", "inconnue", "relation", "jetons", "cartes"],
-      "thumbnail": "assets/img/thumbnails/splat/splat.svg?v=3",
+      "thumbnail": "assets/img/thumbnails/splat/splat.png?v=6",
       "cardDescription": "Générer des cartes où une tache cache une quantité de jetons et faire raisonner sur l’inconnue."
     },
     "outils/splat_tache_barre.html": {
@@ -487,7 +487,7 @@ window.MATHSGO_CATALOGUE = {
       "primaryGroup": "generer",
       "collections": ["splat"],
       "tags": ["splat", "inconnue", "schema-barres", "fiche", "imprimer"],
-      "thumbnail": "assets/img/thumbnails/splat/petit-splat.svg?v=3",
+      "thumbnail": "assets/img/thumbnails/splat/petit-splat.png?v=5",
       "cardDescription": "Composer une fiche de Petits Splats avec jetons cachés et schémas en barres à compléter."
     },
     "outils/splat_equations.html": {
@@ -495,7 +495,7 @@ window.MATHSGO_CATALOGUE = {
       "primaryGroup": "generer",
       "collections": ["splat"],
       "tags": ["schema-barres", "equation", "inconnue", "splat", "cartes"],
-      "thumbnail": "assets/img/thumbnails/splat/splat-equations.svg?v=3",
+      "thumbnail": "assets/img/thumbnails/splat/splat-equations.png?v=6",
       "cardDescription": "Générer des cartes d’équations où les deux côtés contiennent des jetons et des quantités cachées."
     },
     "outils/tuiles_algebriques/generateur_exercices_calcul_litteral.html": {
