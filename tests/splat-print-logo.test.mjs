@@ -2,14 +2,14 @@ import assert from "node:assert/strict";
 import { readFile } from "node:fs/promises";
 import test from "node:test";
 
-const canonicalLogo = "/assets/img/logos/mathsgo/logo-print.png";
+const canonicalLogo = "/assets/img/logos/mathsgo/logo-print.png?v=20260820-1";
 const pages = {
   classique: await readFile(new URL("../outils/splat.html", import.meta.url), "utf8"),
   equations: await readFile(new URL("../outils/splat_equations.html", import.meta.url), "utf8"),
   petit: await readFile(new URL("../outils/splat_tache_barre.html", import.meta.url), "utf8"),
 };
 
-test("les trois impressions Splat utilisent le logo canonique actuel", () => {
+test("les trois impressions Splat utilisent la version actuelle du logo canonique", () => {
   for(const [name, html] of Object.entries(pages)){
     assert.ok(html.includes(canonicalLogo), `${name} doit utiliser ${canonicalLogo}`);
   }

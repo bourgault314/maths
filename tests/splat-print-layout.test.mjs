@@ -30,6 +30,25 @@ test("l'impression dessine le meme plateau que celui utilise pour placer les jet
   assert.doesNotMatch(printRenderer, /const trayH = 550/);
 });
 
+test("l'impression ramene chaque jeton entierement dans son plateau", () => {
+  const fitToken = functionSource("fitPrintTokenToTray", "renderCardIntoSvg");
+  const fitPrintTokenToTray = Function(`return (${fitToken})`)();
+  const tray = {x:120, y:210, w:1360, h:660};
+
+  assert.deepEqual(
+    fitPrintTokenToTray(120, 210, 32, tray, 5),
+    {cx:156.5, cy:246.5}
+  );
+  assert.deepEqual(
+    fitPrintTokenToTray(1480, 870, 32, tray, 5),
+    {cx:1443.5, cy:833.5}
+  );
+
+  const printRenderer = functionSource("renderCardIntoSvg", "printSheet");
+  assert.match(printRenderer, /fitPrintTokenToTray\(cx, cy, beadR, printTray, strokeWidth\)/);
+  assert.equal((printRenderer.match(/fitPrintTokenToTray\(/g) || []).length, 5);
+});
+
 test("le total et les aides restent separes du plateau haut a l'impression", () => {
   const printRenderer = functionSource("renderCardIntoSvg", "printSheet");
 
