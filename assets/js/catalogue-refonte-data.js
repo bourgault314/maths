@@ -177,6 +177,15 @@ window.MATHSGO_CATALOGUE = {
       "cardTitle": "Quiz découverte CPS & dopamine",
       "cardDescription": "Six questions à projeter pour faire un état des lieux en début d'année, avec sa fiche réponse à imprimer."
     },
+    "cps/bilan-quiz-decouverte.html": {
+      "primaryNotion": "competences-psychosociales",
+      "primaryGroup": "activites",
+      "collections": [],
+      "tags": ["cps", "dopamine", "bilan", "quiz", "rentree", "college"],
+      "thumbnail": "cps/assets/bilan-quiz-decouverte/vue-1.png",
+      "cardTitle": "Bilan du quiz découverte",
+      "cardDescription": "Les réponses de la classe reprises question par question, puis ce que veut dire une classe Dopamine."
+    },
     "outils/box_barre_final.html": { "primaryNotion": "schemas-barres", "primaryGroup": "activites", "collections": [], "tags": ["boite", "schema-barres"] },
     "outils/box_pasbarre_final.html": { "primaryNotion": "calcul-litteral", "primaryGroup": "activites", "collections": [], "tags": ["boite", "archive"] },
     "outils/tuiles_algebriques/tuiles_algebriques.html": {
@@ -6143,6 +6152,37 @@ window.MATHSGO_CATALOGUE = {
         "rentrée",
         "état des lieux",
         "diaporama",
+        "collège"
+      ],
+      "kind": "document",
+      "status": "published",
+      "featured": false,
+      "recent": true
+    },
+    {
+      "id": "cps-bilan-quiz-decouverte-html",
+      "title": "Bilan du quiz découverte",
+      "description": "Diaporama des réponses de la classe, question par question, et introduction du projet Dopamine.",
+      "path": "cps/bilan-quiz-decouverte.html",
+      "domains": [
+        "cps"
+      ],
+      "notions": [
+        "competences-psychosociales"
+      ],
+      "uses": [
+        "projeter"
+      ],
+      "types": [],
+      "filters": [],
+      "keywords": [
+        "compétences psychosociales",
+        "CPS",
+        "dopamine",
+        "bilan",
+        "réponses de la classe",
+        "diaporama",
+        "rentrée",
         "collège"
       ],
       "kind": "document",
