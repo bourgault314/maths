@@ -104,6 +104,10 @@ a.${BACK_CLASS}{
   -webkit-tap-highlight-color:transparent;
 }
 a.${BACK_CLASS}:hover{background:#eaf5ff}
+.${BACK_CLASS}-row{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+a.${BACK_CLASS}.${BACK_CLASS}--compact{padding:0;justify-content:center;min-width:44px}
+a.${BACK_CLASS}.${BACK_CLASS}--compact .${BACK_CLASS}-label{display:none}
+.${BACK_CLASS}-row > :not(a.${BACK_CLASS}){margin-top:0;margin-bottom:0}
 a.${BACK_CLASS}.${BACK_CLASS}--dark{color:#eaf5ff;background:#1d2733;border-color:#3d4b5c}
 a.${BACK_CLASS}.${BACK_CLASS}--dark:hover{background:#2a3644}
 a.${BACK_CLASS}:focus-visible{outline:2px solid #0b67b2;outline-offset:2px}
@@ -157,6 +161,19 @@ a.${BACK_CLASS}[data-mathsgo-place="inflow"]{margin:10px;align-self:flex-start;w
   // que la PR #254 a retiré. Le bouton se pose dans le flux, à l'intérieur d'un
   // conteneur de la page, ou pas du tout. Deux tests montent la garde.
   const TITLE_ROW_SELECTOR = "h1, h2, .app-title, .sb-title, .toolbar-title, .title";
+  const BRAND_SELECTOR = ".brand, .brand-text, .brand-logo, .logo, .logo-link, [class*=\"brand\"]";
+
+  // Le premier titre de la page, en écartant ceux qui vivent dans un bloc de marque :
+  // le bouton s'y retrouvait coincé entre le logo maths&go et le nom de l'appli.
+  function pickHeading() {
+    for (const candidat of document.querySelectorAll(TITLE_ROW_SELECTOR)) {
+      if (candidat.closest(BRAND_SELECTOR)) continue;
+      const boite = candidat.getBoundingClientRect();
+      if (boite.width === 0 && boite.height === 0) continue;
+      return candidat;
+    }
+    return null;
+  }
 
   function pickBackHost(requested) {
     if (requested && requested !== "auto") {
@@ -164,6 +181,44 @@ a.${BACK_CLASS}[data-mathsgo-place="inflow"]{margin:10px;align-self:flex-start;w
       if (forced) return forced;
     }
     return document.querySelector(".toolbar, header, .topbar, .app-header, .wrap > :first-child, .panel") || null;
+  }
+
+  // Le bouton et le titre partagent-ils vraiment la même ligne ?
+  function partagentLaLigne(link, heading) {
+    const bouton = link.getBoundingClientRect();
+    const titre = heading.getBoundingClientRect();
+    if (!bouton.width || !titre.width) return true;
+    return bouton.top < titre.bottom - 2 && titre.top < bouton.bottom - 2;
+  }
+
+  // Dans une colonne étroite, le libellé renvoie le titre à la ligne : on ne garde
+  // alors que la flèche, en 44 x 44. On CONSTATE le renvoi à la ligne au lieu de le
+  // prédire — une comparaison de largeurs faite au premier repaint tombait sur une
+  // rangée encore à zéro et n'agissait jamais. Et si même la flèche seule ne suffit
+  // pas à les réunir, on rend le libellé : le sacrifier n'apporterait rien.
+  function ajusterCompacite(link, heading) {
+    link.classList.remove(BACK_CLASS + "--compact");
+    if (partagentLaLigne(link, heading)) return;
+    link.classList.add(BACK_CLASS + "--compact");
+    if (!partagentLaLigne(link, heading)) link.classList.remove(BACK_CLASS + "--compact");
+  }
+
+  function poserEnRangee(link, heading) {
+    const rangee = document.createElement("div");
+    rangee.className = BACK_CLASS + "-row";
+    heading.parentElement.insertBefore(rangee, heading);
+    rangee.appendChild(link);
+    rangee.appendChild(heading);
+    const ajuster = () => ajusterCompacite(link, heading);
+    // La page n'a pas fini de se mettre en place quand on arrive : on remesure au
+    // premier repaint, une fois tout chargé, puis à chaque changement de largeur.
+    window.requestAnimationFrame(ajuster);
+    window.addEventListener("load", ajuster);
+    let attente = null;
+    window.addEventListener("resize", () => {
+      window.clearTimeout(attente);
+      attente = window.setTimeout(ajuster, 150);
+    });
   }
 
   function installGeneratedNavigation() {
@@ -192,17 +247,18 @@ a.${BACK_CLASS}[data-mathsgo-place="inflow"]{margin:10px;align-self:flex-start;w
       // de l'appli — « SorobanSoroban interactif » à la lecture d'écran — et
       // ferait doubler la hauteur du titre. On se pose juste au-dessus.
       link.dataset.mathsgoPlace = "inflow";
-      host.parentElement.insertBefore(link, host);
+      poserEnRangee(link, host);
     } else if (host && host.parentElement) {
       host.insertBefore(link, host.firstChild);
     } else {
-      // Aucune barre d'outils : on se glisse dans la ligne du premier titre.
-      // Sans cela, sur les générateurs dont le corps est une rangée souple, le
-      // bouton occupe une colonne entière à gauche du panneau de réglages.
-      const heading = document.querySelector(TITLE_ROW_SELECTOR);
+      // Aucune barre d'outils : on partage la ligne du premier titre de la page.
+      // Poser le bouton juste au-dessus du titre marchait, mais ajoutait une ligne
+      // entière — 44 px de vide en haut de chaque générateur. On enveloppe donc le
+      // titre et le bouton dans une rangée, pour qu'ils tiennent côte à côte.
+      const heading = pickHeading();
       link.dataset.mathsgoPlace = "inflow";
       if (heading && heading.parentElement && heading.parentElement !== document.body) {
-        heading.parentElement.insertBefore(link, heading);
+        poserEnRangee(link, heading);
       } else {
         document.body.insertBefore(link, document.body.firstChild);
       }
