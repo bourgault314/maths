@@ -99,7 +99,8 @@ window.MATHSGO_CATALOGUE = {
       "notions": ["numeration"],
       "hub": "bouliers/rekenrek/index.html",
       "role": "progression",
-      "parent": "bouliers"
+      "parent": "bouliers",
+      "rang": 1
     },
     {
       "id": "montessori",
@@ -107,7 +108,8 @@ window.MATHSGO_CATALOGUE = {
       "domain": "nombres-calculs",
       "notions": ["numeration"],
       "hub": "bouliers/boulier_montessori/index.html",
-      "parent": "bouliers"
+      "parent": "bouliers",
+      "rang": 2
     },
     {
       "id": "soroban",
@@ -115,7 +117,8 @@ window.MATHSGO_CATALOGUE = {
       "domain": "nombres-calculs",
       "notions": ["numeration"],
       "hub": "bouliers/soroban/index.html",
-      "parent": "bouliers"
+      "parent": "bouliers",
+      "rang": 4
     },
     {
       "id": "gerbert",
@@ -124,7 +127,8 @@ window.MATHSGO_CATALOGUE = {
       "notions": ["numeration"],
       "hub": "bouliers/abaque_de_gerbert/index.html",
       "role": "progression-courte",
-      "parent": "bouliers"
+      "parent": "bouliers",
+      "rang": 3
     },
     {
       "id": "tuiles-algebriques",
@@ -5224,7 +5228,7 @@ window.MATHSGO_CATALOGUE = {
     },
     {
       "id": "outils-bouliers-rekenrek-rekenrek-sheet-generator-somme-html",
-      "title": "REKENREK — Générateur de fiches",
+      "title": "Générateur Rekenrek — fiches",
       "description": "Composer une fiche à imprimer : doubles, presque doubles, grands doubles ou tables, avec ou sans correction.",
       "path": "outils/bouliers/rekenrek/rekenrek_sheet_generator_somme.html",
       "domains": [

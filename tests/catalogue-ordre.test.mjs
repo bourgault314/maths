@@ -65,6 +65,11 @@ test("le tri est réellement branché sur le rendu des sections", () => {
   );
   assert.match(
     catalogueScript,
+    /collection\.parent === collectionId && collectionResourceCount\(collection\.id\) > 0\s*\)\)\.sort\(compareCards\);/,
+    "les sous-familles d’une collection doivent passer par le même comparateur."
+  );
+  assert.match(
+    catalogueScript,
     /function sortCards\(items\) \{\s*return items\.slice\(\)\.sort\(\(a, b\) => compareCards\(cardSortKey\(a\), cardSortKey\(b\)\)\);\s*\}/,
     "sortCards doit trier une copie, sans réordonner la liste d’origine."
   );
@@ -154,6 +159,42 @@ test("Rekenrek retrouve l’ordre de son ancien index, à la carte près", () =>
     "Rekenrek — perles cachées",
     "Tables de multiplication"
   ]);
+});
+
+test("les quatre familles de bouliers gardent l’ordre voulu par Gwenaël", () => {
+  // Array.from ramène la liste dans ce realm : les tableaux nés dans le contexte vm
+  // ont un autre Array.prototype, et deepStrictEqual compare les prototypes.
+  const familles = Array.from(catalogue.collections || [])
+    .filter((collection) => collection.parent === "bouliers")
+    .sort(compareCards)
+    .map((collection) => collection.title);
+  assert.deepEqual(familles, [
+    "Rekenrek",
+    "Boulier Montessori",
+    "Abaque de Gerbert",
+    "Soroban"
+  ], "L’alphabet mettrait Gerbert en tête ; l’ordre choisi va du plus courant au plus rare.");
+});
+
+test("le générateur de fiches rentre dans le rang avec ses frères", () => {
+  const generateurs = cardsFor("rekenrek", "generer");
+  assert.deepEqual(generateurs, [
+    "Générateur de cartes Rekenrek",
+    "Générateur Rekenrek — compléments cachés",
+    "Générateur Rekenrek — dizaines et unités",
+    "Générateur Rekenrek — doubles, niveau 1",
+    "Générateur Rekenrek — doubles, niveau 2",
+    "Générateur Rekenrek — fiches",
+    "Générateur Rekenrek — lecture de 0 à 100",
+    "Générateur Rekenrek — nombres voisins",
+    "Générateur Rekenrek — presque-doubles",
+    "Générateur Rekenrek — schémas et compléments",
+    "Générateur Rekenrek — tables de multiplication"
+  ]);
+  assert.ok(
+    !generateurs.some((titre) => /^REKENREK/.test(titre)),
+    "Plus aucun générateur ne doit crier son nom en capitales et finir isolé en fin de section."
+  );
 });
 
 // Deux cartes à égalité laisseraient leur ordre à l'ordre du fichier de données,
