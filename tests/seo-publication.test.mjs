@@ -43,6 +43,8 @@ test("le sitemap contient chaque ressource publiée et chaque collection une seu
   const urls = entries.map(({ url }) => url);
   assert.equal(new Set(urls).size, urls.length);
   for (const resource of published) {
+    // Les références extérieures (vidéo, article) n'ont pas d'URL sur le site.
+    if (/^https?:\/\//i.test(resource.path)) continue;
     assert.ok(urls.includes(publicUrlForPath(resource.path)), resource.path);
   }
   for (const collection of catalogue.collections) {

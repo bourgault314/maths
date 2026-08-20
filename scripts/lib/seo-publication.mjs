@@ -197,6 +197,9 @@ export function publicEntries(catalogue) {
     if (collection.hub) add(`outils/${collection.hub}`, "collection");
   }
   for (const resource of catalogue.resources.filter(({ status }) => status === "published")) {
+    // Les références extérieures (vidéo, article) ne sont pas des pages du site :
+    // elles n'ont ni fichier, ni URL publique, ni entrée de sitemap.
+    if (/^https?:\/\//i.test(resource.path)) continue;
     add(resource.path, "resource");
   }
 
