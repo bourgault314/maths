@@ -704,7 +704,7 @@ function loadSharedConfiguration() {
 }
 
 function buildShareUrl() {
-    const url = new URL(window.location.href);
+    const url = new URL('/splat/petit/', window.location.origin);
     const params = new URLSearchParams();
     const problemType = getProblemType();
     const supportMode = document.getElementById('supportMode').value;
@@ -1903,7 +1903,7 @@ function createPageElement(chunk, isCorrectionPage, mirror) {
     if (!isTBI) {
         const footer = document.createElement('div');
         footer.className = 'activity-footer';
-        footer.innerText = isCorrectionPage ? (mirror ? "correction · miroir verso" : "correction") : "mathsgo.re/splat";
+        footer.innerText = isCorrectionPage ? (mirror ? "correction · miroir verso" : "correction") : "mathsgo.re/splat/petit";
         inner.appendChild(footer);
     }
     
