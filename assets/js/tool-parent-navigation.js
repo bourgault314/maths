@@ -156,6 +156,8 @@ a.${BACK_CLASS}[data-mathsgo-place="inflow"]{margin:10px;align-self:flex-start;w
   // par-dessus la page est ce qui avait rendu Nim injouable sur téléphone, et ce
   // que la PR #254 a retiré. Le bouton se pose dans le flux, à l'intérieur d'un
   // conteneur de la page, ou pas du tout. Deux tests montent la garde.
+  const TITLE_ROW_SELECTOR = "h1, h2, .app-title, .sb-title, .toolbar-title, .title";
+
   function pickBackHost(requested) {
     if (requested && requested !== "auto") {
       const forced = document.querySelector(requested);
@@ -194,8 +196,16 @@ a.${BACK_CLASS}[data-mathsgo-place="inflow"]{margin:10px;align-self:flex-start;w
     } else if (host && host.parentElement) {
       host.insertBefore(link, host.firstChild);
     } else {
+      // Aucune barre d'outils : on se glisse dans la ligne du premier titre.
+      // Sans cela, sur les générateurs dont le corps est une rangée souple, le
+      // bouton occupe une colonne entière à gauche du panneau de réglages.
+      const heading = document.querySelector(TITLE_ROW_SELECTOR);
       link.dataset.mathsgoPlace = "inflow";
-      document.body.insertBefore(link, document.body.firstChild);
+      if (heading && heading.parentElement && heading.parentElement !== document.body) {
+        heading.parentElement.insertBefore(link, heading);
+      } else {
+        document.body.insertBefore(link, document.body.firstChild);
+      }
     }
     applyContrast(link);
     makeHistoryAware(link);

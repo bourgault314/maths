@@ -99,11 +99,11 @@ test("l’annuaire range les bouliers en Numération et réserve Calcul mental a
 test("le hub Rekenrek suit exactement les ressources publiées de sa collection", () => {
   const resources = publishedCollectionResources(catalogue, "rekenrek");
   const sections = buildCollectionResourceSections(catalogue, "rekenrek");
-  assert.equal(resources.length, 27);
+  assert.equal(resources.length, 29);
   for (const resource of resources) {
     assert.ok(sections.includes(`href="${relativeHref("outils/bouliers/rekenrek/index.html", resource.path)}"`), resource.path);
   }
-  assert.doesNotMatch(sections, /boss_final\.html|rekenrek_sheet_generator_lecture\.html|rekenrek_sheet_generator_double_niv1\.html/);
+  assert.doesNotMatch(sections, /rekenrek_sheet_generator_lecture\.html|rekenrek_sheet_generator_double_niv1\.html/);
 });
 
 test("les métadonnées sont ajoutées de façon idempotente", () => {

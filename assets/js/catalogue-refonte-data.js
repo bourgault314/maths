@@ -150,6 +150,7 @@ window.MATHSGO_CATALOGUE = {
     "https://www.youtube.com/watch?v=_ubBAAgLiok": {
       "primaryNotion": "numeration",
       "primaryGroup": "cours",
+      "thumbnail": "assets/img/thumbnails/bouliers/gerbert-video-origine.png?v=1",
       "collections": ["gerbert"],
       "tags": ["abaque", "gerbert", "histoire", "video"],
       "cardDescription": "D’où vient l’abaque de Gerbert, à quoi il servait, et comment s’en servir en classe."
@@ -157,6 +158,7 @@ window.MATHSGO_CATALOGUE = {
     "https://iremi.univ-reunion.fr/?p=617": {
       "primaryNotion": "numeration",
       "primaryGroup": "cours",
+      "thumbnail": "assets/img/thumbnails/bouliers/reference-busser.png?v=1",
       "collections": ["gerbert"],
       "tags": ["abaque", "jetons", "irem"],
       "cardDescription": "Article de l’IREM de La Réunion sur l’abaque à jetons, par Alain Busser."
@@ -164,6 +166,7 @@ window.MATHSGO_CATALOGUE = {
     "https://www.univ-irem.fr/chapitre-2-de-l-abaque-a-jetons-au-calcul-pose": {
       "primaryNotion": "numeration",
       "primaryGroup": "cours",
+      "thumbnail": "assets/img/thumbnails/bouliers/reference-daval-tournes.png?v=1",
       "collections": ["gerbert"],
       "tags": ["abaque", "jetons", "calcul-pose", "irem"],
       "cardDescription": "Du geste sur l’abaque à jetons jusqu’à la technique de calcul posé, par Nathalie Daval et Dominique Tournès."
@@ -203,7 +206,7 @@ window.MATHSGO_CATALOGUE = {
       "cardTitle": "Bilan du quiz découverte",
       "cardDescription": "Les réponses de la classe reprises question par question, puis ce que veut dire une classe Dopamine."
     },
-    "outils/box_barre_final.html": { "primaryNotion": "schemas-barres", "primaryGroup": "activites", "collections": [], "tags": ["boite", "schema-barres"] },
+    "outils/box_barre_final.html": { "primaryNotion": "schemas-barres", "primaryGroup": "activites", "thumbnail": "assets/img/thumbnails/schemas-barres/box-logic.png?v=1", "collections": [], "tags": ["boite", "schema-barres"] },
     "outils/box_pasbarre_final.html": { "primaryNotion": "calcul-litteral", "primaryGroup": "activites", "collections": [], "tags": ["boite", "archive"] },
     "outils/tuiles_algebriques/tuiles_algebriques.html": {
       "primaryNotion": "calcul-litteral",
@@ -1267,6 +1270,24 @@ window.MATHSGO_CATALOGUE = {
   },
   "resourceFamilies": [
     {
+      "id": "gerbert-multiplications",
+      "title": "Abaque de Gerbert — Multiplications",
+      "description": "Trois manières de poser une multiplication sur l’abaque de Gerbert.",
+      "cardDescription": "Trois façons de poser une multiplication sur l’abaque : guidée étape par étape, directe, ou directe avec superposition.",
+      "thumbnail": "assets/img/thumbnails/bouliers/abaque-gerbert-multiplication-v3.png?v=1",
+      "group": "entrainer",
+      "labels": {
+        "outils/bouliers/abaque_de_gerbert/abaque_gerbert_multiplication_V1.html": "Guidée, étape par étape",
+        "outils/bouliers/abaque_de_gerbert/abaque_gerbert_multiplication_V2.html": "Directe",
+        "outils/bouliers/abaque_de_gerbert/abaque_gerbert_multiplication_V3.html": "Directe, avec superposition"
+      },
+      "paths": [
+        "outils/bouliers/abaque_de_gerbert/abaque_gerbert_multiplication_V1.html",
+        "outils/bouliers/abaque_de_gerbert/abaque_gerbert_multiplication_V2.html",
+        "outils/bouliers/abaque_de_gerbert/abaque_gerbert_multiplication_V3.html"
+      ]
+    },
+    {
       "id": "gabarits-proportionnalite-tableaux",
       "title": "Tableaux de proportionnalité",
       "description": "Choisir un tableau avec ou sans affichage du coefficient de proportionnalité.",
@@ -1691,8 +1712,8 @@ window.MATHSGO_CATALOGUE = {
     },
     {
       "id": "outils-bouliers-abaque-de-gerbert-abaque-gerbert-multiplication-v1-html",
-      "title": "Abaque de Gerbert – Multiplications",
-      "description": "Une ressource maths&go pour travailler numération.",
+      "title": "Abaque de Gerbert – Multiplication guidée",
+      "description": "Poser une multiplication sur l’abaque de Gerbert, étape par étape, avec un guidage complet.",
       "path": "outils/bouliers/abaque_de_gerbert/abaque_gerbert_multiplication_V1.html",
       "domains": [
         "nombres-calculs"
@@ -1719,14 +1740,14 @@ window.MATHSGO_CATALOGUE = {
         "calcul mental"
       ],
       "kind": "tool",
-      "status": "hidden",
+      "status": "published",
       "featured": false,
       "recent": false
     },
     {
       "id": "outils-bouliers-abaque-de-gerbert-abaque-gerbert-multiplication-v2-html",
-      "title": "Abaque de Gerbert – Multiplications",
-      "description": "Une ressource maths&go pour travailler numération.",
+      "title": "Abaque de Gerbert – Multiplication directe",
+      "description": "Poser une multiplication sur l’abaque de Gerbert par la méthode directe.",
       "path": "outils/bouliers/abaque_de_gerbert/abaque_gerbert_multiplication_V2.html",
       "domains": [
         "nombres-calculs"
@@ -1753,14 +1774,14 @@ window.MATHSGO_CATALOGUE = {
         "calcul mental"
       ],
       "kind": "tool",
-      "status": "hidden",
+      "status": "published",
       "featured": false,
       "recent": false
     },
     {
       "id": "outils-bouliers-abaque-de-gerbert-abaque-gerbert-multiplication-v3-html",
-      "title": "Abaque de Gerbert – Multiplications",
-      "description": "Une ressource maths&go pour travailler numération.",
+      "title": "Abaque de Gerbert – Multiplication avec superposition",
+      "description": "Poser une multiplication sur l’abaque de Gerbert par la méthode directe, avec superposition des produits partiels.",
       "path": "outils/bouliers/abaque_de_gerbert/abaque_gerbert_multiplication_V3.html",
       "domains": [
         "nombres-calculs"
@@ -1787,7 +1808,7 @@ window.MATHSGO_CATALOGUE = {
         "calcul mental"
       ],
       "kind": "tool",
-      "status": "hidden",
+      "status": "published",
       "featured": false,
       "recent": false
     },
@@ -2332,17 +2353,13 @@ window.MATHSGO_CATALOGUE = {
     {
       "id": "outils-box-barre-final-html",
       "title": "BOX LOGIC — L'INTÉGRALE",
-      "description": "Une ressource maths&go pour travailler schémas en barres et problèmes.",
+      "description": "Générer et imprimer des séries de « boîtes » : combien de billes sont cachées ? Un entraînement au raisonnement en parties et tout.",
       "path": "outils/box_barre_final.html",
-      "domains": [
-        "algebre"
-      ],
+      "domains": ["nombres-calculs"],
       "notions": [
         "schemas-barres"
       ],
-      "uses": [
-        "projeter"
-      ],
+      "uses": ["projeter", "imprimer"],
       "types": [],
       "filters": [],
       "keywords": [
@@ -2350,7 +2367,7 @@ window.MATHSGO_CATALOGUE = {
         "modélisation"
       ],
       "kind": "tool",
-      "status": "hidden",
+      "status": "published",
       "featured": false,
       "recent": false
     },
@@ -3881,8 +3898,8 @@ window.MATHSGO_CATALOGUE = {
     },
     {
       "id": "outils-bouliers-rekenrek-boss-final-html",
-      "title": "Le Challenge Calcul - Boss Final V21",
-      "description": "Une ressource maths&go pour travailler numération.",
+      "title": "Le Challenge Calcul",
+      "description": "Un défi chronométré de vingt calculs, avec aide rekenrek, minuteur et score.",
       "path": "outils/bouliers/rekenrek/boss_final.html",
       "domains": [
         "nombres-calculs"
@@ -3908,7 +3925,7 @@ window.MATHSGO_CATALOGUE = {
         "calcul mental"
       ],
       "kind": "tool",
-      "status": "hidden",
+      "status": "published",
       "featured": false,
       "recent": false
     },
@@ -5218,7 +5235,7 @@ window.MATHSGO_CATALOGUE = {
     {
       "id": "outils-bouliers-rekenrek-rekenrek-sheet-generator-somme-html",
       "title": "REKENREK — Générateur de fiches",
-      "description": "Une ressource maths&go pour travailler numération.",
+      "description": "Composer une fiche à imprimer : doubles, presque doubles, grands doubles ou tables, avec ou sans correction.",
       "path": "outils/bouliers/rekenrek/rekenrek_sheet_generator_somme.html",
       "domains": [
         "nombres-calculs"
@@ -5247,7 +5264,7 @@ window.MATHSGO_CATALOGUE = {
         "calcul mental"
       ],
       "kind": "tool",
-      "status": "review",
+      "status": "published",
       "featured": false,
       "recent": false
     },
