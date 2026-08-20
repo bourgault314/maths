@@ -5,8 +5,8 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Outils Splat | maths&amp;go</title>
   <meta name="robots" content="noindex, follow">
-  <meta http-equiv="refresh" content="0; url=/outils/splat/">
-  <link rel="canonical" href="https://mathsgo.re/outils/splat/">
+  <meta http-equiv="refresh" content="0; url=/outils/?domain=algebre&amp;collection=splat">
+  <link rel="canonical" href="https://mathsgo.re/outils/?domain=algebre&amp;collection=splat">
   <link rel="icon" href="/favicon.ico" sizes="48x48">
   <link rel="icon" type="image/svg+xml" href="/favicon.svg">
   <link rel="icon" type="image/png" sizes="32x32" href="/assets/img/favicon-32.png">
@@ -16,13 +16,19 @@
     const params = new URLSearchParams(window.location.search);
     const legacyPetitSplatParams = ['seed', 'support', 'grid', 'problem', 'target', 'splats', 'exercise', 'level', 'given', 'correction', 'rv', 'diagram', 'scale', 'title'];
     const isLegacyPetitSplatLink = legacyPetitSplatParams.some(name => params.has(name));
-    const target = new URL(isLegacyPetitSplatLink ? '/outils/splat_tache_barre.html' : '/outils/splat/', window.location.origin);
-    target.search = window.location.search;
+    const target = new URL(isLegacyPetitSplatLink ? '/outils/splat_tache_barre.html' : '/outils/?domain=algebre&collection=splat', window.location.origin);
+    if (isLegacyPetitSplatLink) {
+      target.search = window.location.search;
+    } else {
+      params.forEach((value, name) => {
+        if (name !== 'domain' && name !== 'collection') target.searchParams.append(name, value);
+      });
+    }
     target.hash = window.location.hash;
     window.location.replace(target.toString());
   </script>
 </head>
 <body>
-  <p><a href="/outils/splat/">Ouvrir les outils Splat</a></p>
+  <p><a href="/outils/?domain=algebre&amp;collection=splat">Ouvrir les outils Splat</a></p>
 </body>
 </html>
