@@ -395,6 +395,10 @@
   .btn.primary{background:rgba(106,167,255,0.18);border-color:rgba(106,167,255,0.35)}
   .btn.danger{background:rgba(255,106,106,0.14);border-color:rgba(255,106,106,0.35)}
   .btn:disabled{opacity:.45;cursor:not-allowed}
+  .shareRow{display:flex;align-items:center;justify-content:flex-end;gap:8px;min-height:28px;margin-top:8px}
+  .shareLinkBtn{padding:5px 8px;font-size:11px;font-weight:750;color:var(--muted);white-space:nowrap}
+  .shareFeedback{font-size:11px;font-weight:750;color:#16a34a;white-space:nowrap}
+  .shareFeedback.error{color:#dc2626}
 
   .iconbtn{
     display:inline-grid;place-items:center;
@@ -541,6 +545,7 @@
     .stageNavBtn{width:44px;height:44px}
     .helpOverlay{padding:8px}
     .helpDialog{width:100%;padding:24px 18px}
+    .shareRow{justify-content:flex-start;flex-wrap:wrap}
   }
   .fsHost:fullscreen .stageNavOverlay{
     top:18px;
@@ -1101,6 +1106,11 @@
       </div>
     </div>
 
+    <div class="shareRow">
+      <span class="shareFeedback" id="shareFeedback" role="status" aria-live="polite"></span>
+      <button class="btn shareLinkBtn" id="btnShare" type="button">🔗 Copier le lien</button>
+    </div>
+
     <div class="row" style="margin-top:10px; align-items:flex-end">
       <div style="flex:0 0 auto">
         <label>Nombre de cartes</label>
@@ -1594,6 +1604,222 @@ function getSeedForCurrentMode(){
   return (seedEl.value||"").trim() ? Number(seedEl.value) : "";
 }
 
+let activeGenerationSeed = "";
+let shareFeedbackTimer = null;
+
+function getSeedElementForCurrentMode(){
+  const act = activityEl.value;
+  if(act === "U" || act === "UPM") return seedUEl;
+  if(act === "N" || act === "NPM") return seedNEl;
+  if(act === "C" || act === "CD") return seedEEl;
+  if(act === "D") return seedSysEl;
+  if(act === "C9") return seedCEl;
+  if(act === "C8") return seedDEl;
+  return seedEl;
+}
+
+function prepareSeedForGeneration(){
+  const requestedSeed = getSeedForCurrentMode();
+  if(requestedSeed !== "" && Number.isFinite(Number(requestedSeed))){
+    activeGenerationSeed = String(Number(requestedSeed));
+  }else{
+    activeGenerationSeed = String(Math.floor(Math.random() * 4294967296));
+  }
+  return activeGenerationSeed;
+}
+
+function setSelectFromShare(params, name, el){
+  if(!el || !params.has(name)) return false;
+  const value = params.get(name);
+  const option = Array.from(el.options || []).find(item => item.value === value && !item.disabled);
+  if(!option) return false;
+  el.value = value;
+  return true;
+}
+
+function setNumberFromShare(params, name, el){
+  if(!el || !params.has(name)) return false;
+  const raw = String(params.get(name) || "").trim();
+  if(!raw) return false;
+  const value = Number(raw);
+  if(!Number.isFinite(value) || !Number.isInteger(value)) return false;
+  const min = String(el.min || "").trim() === "" ? -Infinity : Number(el.min);
+  const max = String(el.max || "").trim() === "" ? Infinity : Number(el.max);
+  if(value < min || value > max) return false;
+  el.value = String(value);
+  return true;
+}
+
+function readBooleanFromShare(params, name){
+  if(!params.has(name)) return null;
+  const value = params.get(name);
+  if(value === "1" || value === "true") return true;
+  if(value === "0" || value === "false") return false;
+  return null;
+}
+
+function setCheckboxFromShare(params, name, el){
+  const value = readBooleanFromShare(params, name);
+  if(!el || value === null) return false;
+  el.checked = value;
+  return true;
+}
+
+function getClassicShareControls(act){
+  if(act === "U" || act === "UPM") return [
+    ["tasksMin", unitTasksMinEl], ["tasksMax", unitTasksEl],
+    ["visibleMax", unitVisibleMaxEl], ["hiddenMax", unitHiddenMaxEl],
+    ["totalMin", unitTotalMinEl], ["totalMax", unitTotalMaxEl]
+  ];
+  if(act === "N") return [
+    ["tasksMin", numTasksMinEl], ["tasksMax", numTasksEl],
+    ["visibleMin", numVisibleMinEl], ["visibleMax", numVisibleMaxEl],
+    ["hidden", numHiddenCountEl], ["totalMin", numTotalMinEl], ["totalMax", numTotalMaxEl]
+  ];
+  if(act === "NPM") return [
+    ["tasksMin", numTasksMinEl], ["tasksMax", numTasksEl],
+    ["visibleMin", numVisibleMinEl], ["visibleMax", numVisibleMaxEl],
+    ["hidden", numHiddenCountEl], ["totalMin", numTotalMinEl], ["totalMax", numTotalMaxEl],
+    ["beadMax", numBeadAbsMaxEl], ["opposites", numOpposeModeEl], ["colors", numColorModeEl]
+  ];
+  if(act === "C" || act === "CD") return [
+    ["splats", invTaskCountEl], ["clues", invClueTypeEl], ["structure", invStructure3El],
+    ["mul", invOpMulEl], ["div", invOpDivEl], ["add", invOpAddEl], ["sub", invOpSubEl],
+    ["deltaMax", invMaxAddEl], ["visibleMin", invVisibleMinEl], ["visibleMax", invVisibleMaxEl],
+    ["totalMin", invTotalMinEl], ["totalMax", invTotalMaxEl]
+  ];
+  if(act === "D") return [
+    ["clues", sysClueTypeEl], ["visibleMin", sysVisibleMinEl], ["visibleMax", sysVisibleMaxEl],
+    ["totalMin", sysTotalMinEl], ["totalMax", sysTotalMaxEl]
+  ];
+  if(act === "C9") return [
+    ["operation", nineOpEl], ["splats", nineTasksEl], ["visibleMax", nineVisibleMaxEl],
+    ["totalMin", nineTotalMinEl], ["totalMax", nineTotalMaxEl]
+  ];
+  if(act === "C8") return [
+    ["operation", eightOpEl], ["splats", eightTasksEl], ["visibleMax", eightVisibleMaxEl],
+    ["totalMin", eightTotalMinEl], ["totalMax", eightTotalMaxEl]
+  ];
+  return [["difficulty", diffEl]];
+}
+
+function applyShareControl(params, name, el){
+  if(!el) return;
+  if(el.type === "checkbox") setCheckboxFromShare(params, name, el);
+  else if(String(el.tagName || "").toLowerCase() === "select") setSelectFromShare(params, name, el);
+  else setNumberFromShare(params, name, el);
+}
+
+function loadSharedConfiguration(){
+  const params = new URLSearchParams(window.location.search);
+  const sharedNames = ["mode", "seed", "cards", "equation", "tasksMin", "tasksMax", "visibleMin", "visibleMax", "hidden", "hiddenMax", "totalMin", "totalMax", "splats", "clues", "structure", "mul", "div", "add", "sub", "deltaMax", "operation", "beadMax", "opposites", "colors", "unknown", "print", "duplex"];
+  if(!sharedNames.some(name => params.has(name))) return false;
+
+  setSelectFromShare(params, "mode", activityEl);
+  applyDefaultUnknownDisplayForActivity();
+  syncSettingsUI();
+
+  const act = activityEl.value;
+  if(act === "U") setSelectFromShare(params, "equation", unitEquationTypeEl);
+  if(act === "N" || act === "NPM") setSelectFromShare(params, "equation", numberedEquationTypeEl);
+  syncSettingsUI();
+
+  getClassicShareControls(act).forEach(([name, el]) => applyShareControl(params, name, el));
+  setNumberFromShare(params, "cards", countEl);
+  setSelectFromShare(params, "print", printModeSelectEl);
+  setCheckboxFromShare(params, "duplex", document.getElementById("printDuplex"));
+
+  const seedRaw = params.get("seed");
+  const seedNumber = seedRaw === null || String(seedRaw).trim() === "" ? NaN : Number(seedRaw);
+  if(Number.isFinite(seedNumber) && Number.isSafeInteger(seedNumber)){
+    const seedControl = getSeedElementForCurrentMode();
+    if(seedControl) seedControl.value = String(seedNumber);
+  }
+
+  const unknown = params.get("unknown");
+  if(unknown === "question") numberedQuestionMarkMode = true;
+  else if(unknown === "letter") numberedQuestionMarkMode = false;
+
+  syncSettingsUI();
+  syncNumberedQuestionMarkButton();
+  return true;
+}
+
+function addShareControl(params, name, el){
+  if(!el) return;
+  if(el.type === "checkbox") params.set(name, el.checked ? "1" : "0");
+  else params.set(name, String(el.value));
+}
+
+function buildShareUrl(){
+  const url = new URL("/splat/classique/", window.location.origin);
+  const params = new URLSearchParams();
+  const act = activityEl.value;
+  params.set("mode", act);
+  params.set("seed", activeGenerationSeed);
+  params.set("cards", String(countEl.value));
+
+  if(act === "U") params.set("equation", String(unitEquationTypeEl.value));
+  if(act === "N" || act === "NPM") params.set("equation", String(numberedEquationTypeEl.value));
+  getClassicShareControls(act).forEach(([name, el]) => addShareControl(params, name, el));
+
+  if(act === "U" || act === "UPM" || act === "N" || act === "C" || act === "CD"){
+    params.set("unknown", numberedQuestionMarkMode ? "question" : "letter");
+  }
+  addShareControl(params, "print", printModeSelectEl);
+  addShareControl(params, "duplex", document.getElementById("printDuplex"));
+
+  url.search = params.toString();
+  return url.toString();
+}
+
+function fallbackCopyText(value){
+  const textarea = document.createElement("textarea");
+  textarea.value = value;
+  textarea.setAttribute("readonly", "");
+  textarea.style.position = "fixed";
+  textarea.style.opacity = "0";
+  document.body.appendChild(textarea);
+  textarea.select();
+  let copied = false;
+  try{ copied = document.execCommand("copy"); }catch(_error){ copied = false; }
+  textarea.remove();
+  return copied;
+}
+
+function showShareFeedback(message, isError){
+  const feedback = document.getElementById("shareFeedback");
+  if(!feedback) return;
+  feedback.textContent = message;
+  feedback.classList.toggle("error", !!isError);
+  if(shareFeedbackTimer) clearTimeout(shareFeedbackTimer);
+  shareFeedbackTimer = setTimeout(()=>{
+    feedback.textContent = "";
+    feedback.classList.remove("error");
+  }, 2200);
+}
+
+async function copyShareLink(){
+  if(autoGenTimer){
+    clearTimeout(autoGenTimer);
+    autoGenTimer = null;
+    generate();
+  }else if(!activeGenerationSeed){
+    generate();
+  }
+
+  const link = buildShareUrl();
+  let copied = false;
+  try{
+    if(typeof navigator !== "undefined" && navigator.clipboard && window.isSecureContext){
+      await navigator.clipboard.writeText(link);
+      copied = true;
+    }
+  }catch(_error){ copied = false; }
+  if(!copied) copied = fallbackCopyText(link);
+  showShareFeedback(copied ? "Lien copié !" : "Copie impossible", !copied);
+}
+
 
 function getUnitEquationType(){
   if(!unitEquationTypeEl) return "ADVANCED";
@@ -1959,6 +2185,7 @@ function sanitizeBeadAbsMaxForBPM(){
 function scheduleAutoGenerate(){
   if(autoGenTimer) clearTimeout(autoGenTimer);
   autoGenTimer = setTimeout(()=>{
+    autoGenTimer = null;
     if(activityEl.value === "U" || activityEl.value === "UPM"){
       syncUnitEquationUI();
       if(activityEl.value === "UPM") syncUnitSignedTotalBounds(); else syncUnitTotalBounds();
@@ -6242,7 +6469,7 @@ function printSheet(){
 
     const url = document.createElement("span");
     url.className = "print-url";
-    url.textContent = "aca.re/maths/splat";
+    url.textContent = "mathsgo.re/splat/classique";
     footer.appendChild(url);
 
     sheet.appendChild(footer);
@@ -6347,7 +6574,7 @@ function generate(){
     syncNumberedEquationUI();
   }
 
-  const seedValue = getSeedForCurrentMode();
+  const seedValue = prepareSeedForGeneration();
   const rng = makeRng(seedValue);
 
   const out = [];
@@ -6453,6 +6680,7 @@ function goNextCardOrStep(){
 }
 
 document.getElementById("btnGen").addEventListener("click", generate);
+document.getElementById("btnShare").addEventListener("click", copyShareLink);
 document.getElementById("btnClear").addEventListener("click", ()=>{ cards=[]; idx=0; revealState=0; updateUI(); });
 document.getElementById("btnPrev").addEventListener("click", goPreviousCardOrStep);
 document.getElementById("btnNext").addEventListener("click", goNextCardOrStep);
@@ -6512,8 +6740,10 @@ window.addEventListener("keydown",(e)=>{
   }
   if(e.key==="f" || e.key==="F"){ toggleFullscreen(); }
 });
-syncSettingsUI();
-syncPrintModeUI();
+if(!loadSharedConfiguration()){
+  syncSettingsUI();
+  syncPrintModeUI();
+}
 generate();
 
 </script>
