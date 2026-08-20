@@ -139,6 +139,23 @@
     .fiche-lien{font-size:3.4vmin; min-height:44px; padding:0 4vmin}
     .fiche-lien svg{width:4.2vmin; height:4.2vmin}
   }
+  /* Bouton plein écran : discret pendant la projection, franc au survol.
+     Le raccourci clavier F11 n'est pas connu de tout le monde. */
+  .plein-ecran{
+    position:fixed; top:2vmin; right:2vmin; z-index:5;
+    display:inline-flex; align-items:center; justify-content:center;
+    width:6vmin; height:6vmin; min-width:38px; min-height:38px;
+    border:1px solid var(--line); border-radius:999px; background:#fff;
+    color:var(--navy); cursor:pointer; box-shadow:var(--shadow);
+    opacity:.5; transition:opacity .18s, background .18s, color .18s;
+  }
+  .plein-ecran:hover,.plein-ecran:focus-visible{opacity:1; background:var(--violet-soft); color:var(--violet)}
+  .plein-ecran svg{width:56%; height:56%}
+  /* Cette règle vient APRÈS la règle de base, sinon elle perd à égalité de
+     spécificité et la cible retombe à 38 px sur téléphone. */
+  @media (max-width:768px){
+    .plein-ecran{min-width:44px; min-height:44px; opacity:1}
+  }
 </style>
 </head>
 <body>
@@ -181,9 +198,9 @@
   </div>
   <div class="consigne">✏️ Réponds sur <strong>ta fiche papier</strong>. Ce n'est pas noté :
   on cherche juste à savoir ce que vous savez déjà… et vous aurez les réponses cet après-midi !</div>
-  <a class="fiche-lien" href="quiz-decouverte-fiche.pdf" download>
+  <a class="fiche-lien" href="quiz-decouverte-fiche.pdf" target="_blank" rel="noopener">
     <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 9V4h10v5M7 17H5a2 2 0 0 1-2-2v-4a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2v4a2 2 0 0 1-2 2h-2M7 14h10v7H7Z" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/></svg>
-    Télécharger la fiche réponse (PDF)
+    Voir la fiche réponse (PDF)
   </a>
 </section>
 
@@ -274,6 +291,10 @@
   et pourquoi cette classe s'appelle <strong>Dopamine</strong>.</div>
 </section>
 
+<button class="plein-ecran" id="plein-ecran" type="button" aria-label="Passer en plein écran" title="Plein écran">
+  <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+</button>
+
 <div class="nav">
   <button id="prev" type="button">← Précédent</button>
   <div style="display:flex;align-items:center;gap:2vmin">
@@ -311,6 +332,37 @@
     x0=null;
   });
   show(0);
+</script>
+<script>
+(function(){
+  var bouton = document.getElementById('plein-ecran');
+  if (!bouton) return;
+  var trace = bouton.querySelector('path');
+  var OUVRIR = 'M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5';
+  var FERMER = 'M9 4v5H4M15 4v5h5M9 20v-5H4M15 20v-5h5';
+  function actif(){ return document.fullscreenElement || document.webkitFullscreenElement; }
+  function rafraichir(){
+    var e = !!actif();
+    trace.setAttribute('d', e ? FERMER : OUVRIR);
+    bouton.setAttribute('aria-label', e ? 'Quitter le plein écran' : 'Passer en plein écran');
+    bouton.title = e ? 'Quitter le plein écran' : 'Plein écran';
+  }
+  bouton.addEventListener('click', function(){
+    var promesse;
+    if (actif()) {
+      promesse = (document.exitFullscreen || document.webkitExitFullscreen).call(document);
+    } else {
+      var el = document.documentElement;
+      promesse = (el.requestFullscreen || el.webkitRequestFullscreen).call(el);
+    }
+    // Un refus du navigateur (politique, geste non reconnu) ne doit pas
+    // remplir la console : la page reste utilisable en fenêtre.
+    if (promesse && promesse.catch) promesse.catch(function(){});
+  });
+  document.addEventListener('fullscreenchange', rafraichir);
+  document.addEventListener('webkitfullscreenchange', rafraichir);
+  rafraichir();
+})();
 </script>
 </body>
 </html>
