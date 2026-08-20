@@ -1178,7 +1178,7 @@
 
 <script>
 
-const MATHSGO_PRINT_LOGO_URL = "/assets/img/logos/mathsgo/logo-print.png";
+const MATHSGO_PRINT_LOGO_URL = "/assets/img/logos/mathsgo/logo-print.png?v=20260820-1";
 
 /* Le véritable X mathématique unicode ! */
 const xChar = "𝑥"; 
@@ -5919,6 +5919,20 @@ function drawUnitSignedEquationAid(targetGroup, card, revealState, opts = {}){
 }
 
 /* Render impression */
+function fitPrintTokenToTray(cx, cy, radius, tray, strokeWidth=5){
+  const edge = Math.max(0, Number(radius) || 0)
+    + Math.max(0, Number(strokeWidth) || 0) / 2
+    + 2;
+  const minX = tray.x + edge;
+  const maxX = tray.x + tray.w - edge;
+  const minY = tray.y + edge;
+  const maxY = tray.y + tray.h - edge;
+  return {
+    cx: Math.min(maxX, Math.max(minX, Number(cx))),
+    cy: Math.min(maxY, Math.max(minY, Number(cy)))
+  };
+}
+
 function renderCardIntoSvg(targetSvg, card, printMode){
   while(targetSvg.firstChild) targetSvg.removeChild(targetSvg.firstChild);
 
@@ -6071,12 +6085,14 @@ function renderCardIntoSvg(targetSvg, card, printMode){
     const signedUnitPrint = card.family === "UPM";
     const printSignedColors = (v)=> v >= 0 ? {fill:"rgba(34,197,94,0.30)", stroke:"rgba(22,163,74,0.80)"} : {fill:"rgba(244,63,94,0.30)", stroke:"rgba(225,29,72,0.80)"};
     const drawPrintUnitToken = (cx, cy, value, hidden)=>{
+      const strokeWidth = signedUnitPrint ? 3.5 : 3;
+      ({cx, cy} = fitPrintTokenToTray(cx, cy, beadR, printTray, strokeWidth));
       if(signedUnitPrint){
         const c = printSignedColors(value);
-        targetSvg.appendChild(tEl("circle",{cx, cy, r:beadR, fill:c.fill, stroke:c.stroke,"stroke-width":"3.5"}));
+        targetSvg.appendChild(tEl("circle",{cx, cy, r:beadR, fill:c.fill, stroke:c.stroke,"stroke-width":String(strokeWidth)}));
         targetSvg.appendChild(tText(cx, cy, value > 0 ? "+1" : "−1", {"text-anchor":"middle","dominant-baseline":"middle","font-size":String(Math.round(beadR*0.86)),"fill":"#000","font-weight":"900"}));
       }else{
-        targetSvg.appendChild(tEl("circle",{cx, cy, r:beadR, fill:hidden ? "rgba(0,0,0,0.05)" : "rgba(106,167,255,0.20)", stroke:hidden ? "rgba(0,0,0,0.18)" : "rgba(106,167,255,0.55)","stroke-width":"3"}));
+        targetSvg.appendChild(tEl("circle",{cx, cy, r:beadR, fill:hidden ? "rgba(0,0,0,0.05)" : "rgba(106,167,255,0.20)", stroke:hidden ? "rgba(0,0,0,0.18)" : "rgba(106,167,255,0.55)","stroke-width":String(strokeWidth)}));
       }
     };
     for(let i=0;i<card.hidden.length;i++){
@@ -6214,8 +6230,14 @@ function renderCardIntoSvg(targetSvg, card, printMode){
     const font = Math.round(beadR * 0.9);
 
     for(let i=0;i<card.hidden.length;i++){
-      const cx = card._posH?.[i]?.cx ?? 820;
-      const cy = (card._posH?.[i]?.cy ?? 610) + printOffsetY;
+      const tokenPos = fitPrintTokenToTray(
+        card._posH?.[i]?.cx ?? 820,
+        (card._posH?.[i]?.cy ?? 610) + printOffsetY,
+        beadR,
+        printTray,
+        5
+      );
+      const {cx, cy} = tokenPos;
       
       let f = "rgba(0,0,0,0.06)";
       let s = "rgba(0,0,0,0.22)";
@@ -6276,8 +6298,14 @@ function renderCardIntoSvg(targetSvg, card, printMode){
     }
 
     for(let i=0;i<card.visible.length;i++){
-      const cx = card._posV?.[i]?.cx ?? (450 + i*250);
-      const cy = (card._posV?.[i]?.cy ?? 380) + printOffsetY;
+      const tokenPos = fitPrintTokenToTray(
+        card._posV?.[i]?.cx ?? (450 + i*250),
+        (card._posV?.[i]?.cy ?? 380) + printOffsetY,
+        beadR,
+        printTray,
+        5
+      );
+      const {cx, cy} = tokenPos;
 
       const colV = beadColorForValue(card.visible[i]);
       targetSvg.appendChild(tEl("circle",{cx, cy, r:beadR, fill:colV.fill, stroke:colV.stroke,"stroke-width":"5"}));
@@ -6417,16 +6445,26 @@ function renderCardIntoSvg(targetSvg, card, printMode){
   }else{
     const beadR=95;
     for(let i=0;i<card.hidden.length;i++){
-      const cx = card._posH?.[i]?.cx ?? 820;
-      const cy = card._posH?.[i]?.cy ?? 610;
+      const {cx, cy} = fitPrintTokenToTray(
+        card._posH?.[i]?.cx ?? 820,
+        card._posH?.[i]?.cy ?? 610,
+        beadR,
+        printTray,
+        5
+      );
       targetSvg.appendChild(tEl("circle",{cx, cy, r:beadR, fill:"rgba(0,0,0,0.04)", stroke:"rgba(0,0,0,0.25)","stroke-width":"5"}));
       targetSvg.appendChild(tText(cx, cy, String(card.hidden[i]), {"text-anchor":"middle","dominant-baseline":"middle","alignment-baseline":"middle","dy":"0.06em","font-size":"64","fill":"#000","font-weight":"900"}));
     }
     const s0 = card._splat || {cx:820, cy:545, r:220}; // recentré pour h:550
     targetSvg.appendChild(tEl("path",{d: blobPath(s0.cx,s0.cy,s0.r), fill:(revealAnswers?revealCol:cover), stroke:"rgba(0,0,0,0.18)","stroke-width":"5"}));
     for(let i=0;i<card.visible.length;i++){
-      const cx = card._posV?.[i]?.cx ?? (450 + i*250);
-      const cy = card._posV?.[i]?.cy ?? 380;
+      const {cx, cy} = fitPrintTokenToTray(
+        card._posV?.[i]?.cx ?? (450 + i*250),
+        card._posV?.[i]?.cy ?? 380,
+        beadR,
+        printTray,
+        5
+      );
       targetSvg.appendChild(tEl("circle",{cx, cy, r:beadR, fill:"rgba(0,0,0,0.04)", stroke:"rgba(0,0,0,0.25)","stroke-width":"5"}));
       targetSvg.appendChild(tText(cx, cy, String(card.visible[i]), {"text-anchor":"middle","dominant-baseline":"middle","alignment-baseline":"middle","dy":"0.06em","font-size":"64","fill":"#000","font-weight":"900"}));
     }
