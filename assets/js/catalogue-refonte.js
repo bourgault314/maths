@@ -888,7 +888,7 @@
   function childCollections(collectionId) {
     return (catalogue.collections || []).filter((collection) => (
       collection.parent === collectionId && collectionResourceCount(collection.id) > 0
-    ));
+    )).sort(compareCards);
   }
 
   function resourceHaystack(resource) {
@@ -1180,7 +1180,7 @@
     });
     const groupedResources = resourceGroups.map((group) => {
       const groupItems = sortCards(grouped.get(group.id));
-      const groupCollections = groupedCollections.get(group.id);
+      const groupCollections = groupedCollections.get(group.id).slice().sort(compareCards);
       const groupCount = groupItems.length + groupCollections.length;
       if (!groupCount) return "";
       return `<section class="resource-group" aria-labelledby="resource-group-${escapeHtml(group.id)}">
