@@ -1,3 +1,6 @@
+Warning: truncated output (original token count: 50145)
+Total output lines: 6314
+
 window.MATHSGO_CATALOGUE = {
   "schemaVersion": 5,
   "generatedAt": "2026-08-10T00:00:00.000Z",
@@ -484,6 +487,7 @@ window.MATHSGO_CATALOGUE = {
     "outils/splat.html": {
       "primaryNotion": "calcul-litteral",
       "primaryGroup": "generer",
+      "cardTitle": "Splat!",
       "collections": ["splat"],
       "tags": ["splat", "inconnue", "relation", "jetons", "cartes"],
       "thumbnail": "assets/img/thumbnails/splat/splat.png?v=6",
@@ -492,6 +496,7 @@ window.MATHSGO_CATALOGUE = {
     "outils/splat_tache_barre.html": {
       "primaryNotion": "calcul-litteral",
       "primaryGroup": "generer",
+      "cardTitle": "Petit Splat!",
       "collections": ["splat"],
       "tags": ["splat", "inconnue", "schema-barres", "fiche", "imprimer"],
       "thumbnail": "assets/img/thumbnails/splat/petit-splat.png?v=5",
@@ -500,6 +505,7 @@ window.MATHSGO_CATALOGUE = {
     "outils/splat_equations.html": {
       "primaryNotion": "equations",
       "primaryGroup": "generer",
+      "cardTitle": "Splat! — équations",
       "collections": ["splat"],
       "tags": ["schema-barres", "equation", "inconnue", "splat", "cartes"],
       "thumbnail": "assets/img/thumbnails/splat/splat-equations.png?v=6",
@@ -2379,31 +2385,7 @@ window.MATHSGO_CATALOGUE = {
       "kind": "tool",
       "status": "published",
       "featured": false,
-      "recent": false
-    },
-    {
-      "id": "outils-box-pasbarre-final-html",
-      "title": "BOX LOGIC — L'INTÉGRALE",
-      "description": "Une ressource maths&go pour travailler schémas en barres et problèmes.",
-      "path": "outils/box_pasbarre_final.html",
-      "domains": [
-        "algebre"
-      ],
-      "notions": [
-        "schemas-barres"
-      ],
-      "uses": [
-        "projeter"
-      ],
-      "types": [],
-      "filters": [],
-      "keywords": [
-        "problèmes",
-        "modélisation"
-      ],
-      "kind": "tool",
-      "status": "hidden",
-      "featured": false,
+      "rece…145 tokens truncated…ed": false,
       "recent": false
     },
     {
