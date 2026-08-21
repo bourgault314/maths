@@ -11,8 +11,7 @@ import {
   nonPublicHtmlPaths,
   publicEntries,
   updateHtmlMetadata,
-  updateHtmlNoindex,
-  updateRekenrekHub
+  updateHtmlNoindex
 } from "./lib/seo-publication.mjs";
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
@@ -42,10 +41,9 @@ for (const page of metadataPages(catalogue)) {
     continue;
   }
   const current = fs.readFileSync(target, "utf8");
-  let expected = updateHtmlMetadata(current, page);
-  if (page.path === "outils/bouliers/rekenrek/index.html") {
-    expected = updateRekenrekHub(expected, catalogue);
-  }
+  // L’ancien index Rekenrek reste une archive de référence : le générateur SEO
+  // entretient ses métadonnées, mais ne réécrit plus son contenu historique.
+  const expected = updateHtmlMetadata(current, page);
   syncFile(page.path, expected);
 }
 
