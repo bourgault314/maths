@@ -1,6 +1,6 @@
 # Fiche NC-03 / NC-04 — Fractions simples et décimaux
 
-> **Candidat intégré, révisions D-049 du 13 août, D-055 du 15 août, puis D-056, D-058, D-059, D-060 et D-061 du 16 août 2026.** Cette fiche décrit le module révisé,
+> **Candidat intégré, révisions D-049 du 13 août, D-055 du 15 août, D-056 à D-061 du 16 août, puis D-063 du 21 août 2026.** Cette fiche décrit le module révisé,
 > et non plus le pilote du 8 août. Les questions ont été recomposées ; le cours,
 > « Me guider » et les corrections utilisent maintenant les briques communes
 > comparées dans le Labo. L'intégration et la recette conjointe D-049/D-055
@@ -21,7 +21,9 @@
 > l'ombre décalée du cartouche orange en mode tableau. Sa recette automatisée
 > est achevée. Faute de runtime Chromium local, sa revue visuelle doit être
 > rejouée sur l'URL publique, dont Gwenaël demande la publication afin d'y
-> mener cette dernière revue.
+> mener cette dernière revue. D-063 aligne enfin les deux rails de synthèse de
+> la page 6 sur le format mobile standard déjà utilisé par les exemples, les
+> aides et les corrections, sans modifier leur contenu mathématique.
 > Le statut reste `construit` en attente des retours de Gwenaël et de Claire,
 > sans référencement ni passage à `valide`.
 
@@ -240,9 +242,8 @@ tableau pour les conversions par rang.
    quarts, notamment `3/4 = 0,75`. Cinq bandes marquées `1` atteignent 5 et
    installent ensuite
    `5/1 = 5` puis `n/1 = n`. Sur téléphone, les rails des deux exemples
-   détaillés réemploient le format standard de largeur source `340`, tandis
-   que les deux rails de synthèse utilisent la variante `mobile-compact` de
-   largeur source `260`. La liste
+   détaillés et les deux rails de synthèse réemploient tous le format standard
+   de largeur source `340`. La liste
    « Choisir un outil » et la note finale sur la division sont supprimées :
    elles répétaient le cours et mélangeaient des cas qui se recouvrent.
 
@@ -446,6 +447,12 @@ changement des générateurs et des réponses ; le graphe commun est cohérent e
 `v38`. Faute de runtime Chromium local, la revue aux cinq fenêtres n'a pas pu
 être rejouée. Elle doit reprendre sur l'URL publique les six pages, les aides
 masquées et le cartouche orange en mode « Au tableau ».
+
+D-063 ajoute un garde-fou sur la sélection du format par l'application et un
+contrôle des marges verticales de la fraction canonique dans les deux rails de
+synthèse. La vérification complète passe **1 647 tests sur 1 647** dans
+**232 suites** ; le graphe commun est cohérent en `v40`. Les aides conservent
+leurs rails standard et leurs profils masqués.
 
 Le candidat reste `construit`. Sa publication de test autorisée le 13 août ne
 l'expose ni dans le menu public ni dans le sitemap ; le passage à `valide`

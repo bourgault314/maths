@@ -17,7 +17,7 @@
 // triangles bleu/orange/vert, angle droit rouge). Chaque élément reste
 // colorable individuellement par-dessus le thème.
 
-import { COULEURS_BARRES } from "../../charte/src/charte.js?v=39";
+import { COULEURS_BARRES } from "../../charte/src/charte.js?v=40";
 import {
   RAD,
   angleInterieurPolygone,

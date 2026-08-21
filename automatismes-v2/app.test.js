@@ -1042,11 +1042,11 @@ it("rend NC-03 et NC-04 dans une seule notion avec des repères cohérents en ai
       );
       assert.equal(
         (application.innerHTML.match(/viewBox="0 0 340 232"/g) ?? []).length,
-        5,
+        7,
       );
       assert.equal(
         (application.innerHTML.match(/viewBox="0 0 260 154"/g) ?? []).length,
-        2,
+        0,
       );
       assert.match(application.innerHTML, /figure-bandes-rail-cours-large/);
       assert.match(application.innerHTML, /figure-bandes-rail-cours-mobile/);
