@@ -16,7 +16,7 @@ function blocCss(selecteur) {
 describe("moule responsive commun", () => {
   it("impose une seule coque aux rendus de questions", () => {
     assert.equal((app.match(/<footer class="dock-question/g) ?? []).length, 1);
-    assert.equal((app.match(/return rendreCoqueLecteur\(question, carteQuestion\);/g) ?? []).length, 5);
+    assert.equal((app.match(/return rendreCoqueLecteur\(question, carteQuestion\);/g) ?? []).length, 6);
     assert.equal((app.match(/<aside class="panneau/g) ?? []).length, 1);
     assert.match(app, /function rendreCadrePanneau\(/);
   });

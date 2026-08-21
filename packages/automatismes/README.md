@@ -20,6 +20,8 @@ modules et micro-notions déjà construits. Les identifiants descriptifs sont
 | `nombres-et-calculs/fractions-simples-decimaux/fraction-vers-decimal` | Micro-notion `fraction-vers-decimal` (alias `NC-03`) : passer d'une fraction simple ou décimale à son écriture décimale exacte. |
 | `nombres-et-calculs/fractions-simples-decimaux/decimal-vers-fraction` | Micro-notion `decimal-vers-fraction` (alias `NC-04`) : compléter une fraction à dénominateur fixé ou saisir une fraction équivalente. |
 | `nombres-et-calculs/fractions-simples-decimaux/serie` | Recette commune intercalée, équilibrée et seedée de la catégorie visible. |
+| `nombres-et-calculs/ecritures-multiples-nombre/questions` | NC-05 : relier pourcentage, décimal et fractions repères sans refaire isolément NC-03/NC-04. |
+| `nombres-et-calculs/ecritures-multiples-nombre/serie` | Recette seedée en six familles, avec valeurs distinctes et sélection multiple réservée aux séries de 20. |
 | `registre` | Registre du moteur contenant les seuls générateurs pédagogiques construits et testés. |
 
 Le lecteur interactif et le mode projection ne font pas partie de ce paquet.

@@ -2,7 +2,7 @@ import assert from "node:assert/strict";
 import { readFile } from "node:fs/promises";
 import { it } from "node:test";
 
-const VERSION = "40";
+const VERSION = "41";
 
 const RESSOURCES_VERSIONNEES = new Map([
   ["automatismes-v2/index.html", ["styles.css", "interface.css", "menu.css", "app.js"]],
@@ -22,6 +22,7 @@ const RESSOURCES_VERSIONNEES = new Map([
     "bandes-fractions-rail.js",
     "numeration-decimale.js",
     "correspondances-decimales.js",
+    "fractions.js",
     "fractions-decimaux.js",
     "diagnostic-fractions-decimaux.js",
   ]],
@@ -44,6 +45,8 @@ const RESSOURCES_VERSIONNEES = new Map([
     "carres-entiers-1-a-12/serie.js",
     "fractions-simples-decimaux/fraction-vers-decimal.js",
     "fractions-simples-decimaux/serie.js",
+    "ecritures-multiples-nombre/questions.js",
+    "ecritures-multiples-nombre/serie.js",
     "identifiants.js",
   ]],
   ["packages/automatismes/src/registre.js", [
@@ -63,6 +66,7 @@ const RESSOURCES_VERSIONNEES = new Map([
     "sens-notation.js",
     "decimal-vers-fraction.js",
     "fraction-vers-decimal.js",
+    "ecritures-multiples-nombre/questions.js",
   ]],
   ["packages/moteur-exercices/src/generation.js", ["question-v2.js"]],
   ["packages/automatismes/src/nombres-et-calculs/criteres-divisibilite/serie.js", [
@@ -114,6 +118,16 @@ const RESSOURCES_VERSIONNEES = new Map([
     "decimal-vers-fraction.js",
     "fraction-vers-decimal.js",
     "commun.js",
+  ]],
+  ["packages/automatismes/src/nombres-et-calculs/ecritures-multiples-nombre/questions.js", [
+    "gabarit.js",
+    "question-v2.js",
+    "fractions-decimaux.js",
+    "identifiants.js",
+  ]],
+  ["packages/automatismes/src/nombres-et-calculs/ecritures-multiples-nombre/serie.js", [
+    "aleatoire.js",
+    "questions.js",
   ]],
   ["packages/automatismes/src/espace-et-geometrie/solides-usuels/reconnaissance.js", ["question-v2.js", "identifiants.js"]],
   ["packages/automatismes/src/grandeurs-et-mesures/volumes/calcul-volumes.js", ["question-v2.js", "identifiants.js"]],

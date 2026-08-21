@@ -161,7 +161,7 @@ export const PROVENANCE_FONDATION_V2 = Object.freeze({
 
   "automatismes-v2/app.js": {
     statut: "original_mathsgo",
-    source: "parcours complets du lecteur V2, incluant NC-01 à NC-04 et les notions GE/PG, décisions de disposition des 3, 6, 7 et 9 août 2026",
+    source: "parcours complets du lecteur V2, incluant NC-01 à NC-05 et les notions GE/GM, décisions de disposition des 3, 6, 7, 9 et 21 août 2026",
   },
   "automatismes-v2/package.json": {
     statut: "original_mathsgo",
@@ -312,6 +312,14 @@ export const PROVENANCE_FONDATION_V2 = Object.freeze({
   "packages/automatismes/src/nombres-et-calculs/fractions-simples-decimaux/serie.js": {
     statut: "original_mathsgo",
     source: "recette déterministe commune NC-03/NC-04, quota 10/10 et item libre validés par Gwenaël le 7 août 2026",
+  },
+  "packages/automatismes/src/nombres-et-calculs/ecritures-multiples-nombre/questions.js": {
+    statut: "original_mathsgo",
+    source: "fiche NC-05 et décision D-064 du 21 août 2026 ; six familles, formulations, valeurs et distracteurs écrits à neuf pour maths&go",
+  },
+  "packages/automatismes/src/nombres-et-calculs/ecritures-multiples-nombre/serie.js": {
+    statut: "original_mathsgo",
+    source: "recette déterministe NC-05, quotas 5/10/15/20 et couverture de 100 % et des valeurs supérieures à 1 décidés avec Gwenaël le 21 août 2026",
   },
   "packages/automatismes/src/espace-et-geometrie/solides-usuels/reconnaissance.js": {
     statut: "original_mathsgo",

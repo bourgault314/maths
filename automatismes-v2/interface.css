@@ -4989,3 +4989,478 @@ body {
     font-size: clamp(18px, 1.05vw, 21px);
   }
 }
++/* NC-05 — Un nombre, plusieurs écritures. */
+.carte-question-ecritures {
+  min-width: 0;
+  gap: clamp(10px, 2.2vh, 22px);
+  text-align: center;
+}
+
+.carte-question-ecritures h1 {
+  max-width: 760px;
+  margin-inline: auto;
+  text-wrap: balance;
+}
+
+.chaine-question-nc05,
+.cible-reconnaissance-nc05,
+.chaine-complete-nc05,
+.chaine-exemple-nc05,
+.carte-repere-nc05 p,
+.carte-grille-pourcentage-nc05 p {
+  min-width: 0;
+  max-width: 100%;
+  margin: 4px auto;
+  display: flex;
+  flex-wrap: wrap;
+  gap: clamp(8px, 2.4vw, 18px);
+  align-items: center;
+  justify-content: center;
+  color: var(--mg-encre);
+  font-family: var(--mg-titres);
+  font-size: clamp(1.7rem, 8.5vw, 3.5rem);
+  font-weight: 800;
+  line-height: 1.15;
+}
+
+.cible-reconnaissance-nc05 {
+  min-height: 64px;
+  color: var(--mg-bleu);
+}
+
+.ecriture-pourcentage,
+.ecriture-mixte,
+.cible-ecriture-nc05 {
+  display: inline-flex;
+  min-width: 0;
+  gap: .18em;
+  align-items: center;
+  justify-content: center;
+  white-space: nowrap;
+}
+
+.ecriture-pourcentage > span,
+.suffixe-cible-nc05 {
+  color: var(--mg-orange);
+  font-size: .66em;
+  font-weight: 900;
+}
+
+.ecriture-decimale-nc05 {
+  color: var(--mg-bleu);
+  font-variant-numeric: tabular-nums;
+}
+
+.signe-egal-nc05 {
+  color: var(--mg-texteAttenue);
+  font-weight: 700;
+}
+
+.case-ecriture-nc05 {
+  min-width: clamp(72px, 24vw, 142px);
+  min-height: 58px;
+  padding: 5px 10px;
+  font-size: clamp(1.45rem, 6.8vw, 2.45rem);
+}
+
+.fraction-reponse-nc05 {
+  min-width: 2.2em;
+  font-size: .78em;
+}
+
+.fraction-reponse-nc05 .case-ecriture-nc05 {
+  min-width: clamp(58px, 19vw, 105px);
+  min-height: 48px;
+  padding-block: 2px;
+}
+
+.grille-choix-ecritures {
+  width: min(100%, 700px);
+  margin-inline: auto;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.grille-choix-ecritures .choix {
+  min-width: 0;
+  min-height: 68px;
+  padding: 9px;
+  font-size: clamp(1.15rem, 4.7vw, 1.65rem);
+}
+
+.grille-choix-ecritures .choix > span:last-child {
+  min-width: 0;
+  display: grid;
+  place-items: center;
+}
+
+.grille-choix-ecritures .fraction-empilee {
+  font-size: 1.25em;
+}
+
+.droite-nc05-responsive,
+.figure-droite-nc05,
+.visuels-aide-nc05 {
+  min-width: 0;
+  max-width: 100%;
+}
+
+.figure-droite-nc05 {
+  width: min(100%, 700px);
+  margin: 8px auto;
+  padding: 10px;
+  border: 2px solid var(--mg-ligne);
+  border-radius: var(--mg-rayon-moyen);
+  background: var(--mg-papier);
+}
+
+.figure-droite-nc05 svg {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+
+.droite-nc05-mobile {
+  display: none;
+}
+
+.rappel-question-nc05 .chaine-question-nc05 {
+  margin-top: 8px;
+  font-size: clamp(1.2rem, 5vw, 1.7rem);
+}
+
+.visuels-aide-nc05 {
+  display: grid;
+  gap: 10px;
+  align-items: center;
+}
+
+.figure-grille-aide-nc05 {
+  width: min(100%, 182px);
+  margin: 8px auto 0;
+}
+
+.figure-grille-aide-nc05 svg,
+.figure-grille-cours-nc05 svg {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+
+.etapes-aide-nc05 {
+  display: grid;
+  gap: 9px;
+  margin-top: 14px;
+}
+
+.etape-aide-nc05 {
+  border: 2px solid var(--mg-ligne);
+  border-radius: var(--mg-rayon-moyen);
+  background: var(--mg-papier);
+  overflow: clip;
+}
+
+.etape-aide-nc05[open] {
+  border-color: var(--mg-turquoise);
+}
+
+.etape-aide-nc05 summary {
+  min-height: 48px;
+  padding: 8px 12px;
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  color: var(--mg-bleu);
+  cursor: pointer;
+  font-weight: 800;
+  list-style: none;
+}
+
+.etape-aide-nc05 summary::-webkit-details-marker {
+  display: none;
+}
+
+.etape-aide-nc05 summary span {
+  width: 30px;
+  height: 30px;
+  display: grid;
+  flex: 0 0 auto;
+  place-items: center;
+  border-radius: 9999px;
+  color: var(--mg-papier);
+  background: var(--mg-bleu);
+}
+
+.etape-aide-nc05 p {
+  margin: 0;
+  padding: 0 14px 13px 54px;
+  line-height: 1.48;
+}
+
+.principe-correction-nc05,
+.controle-grandeur-nc05,
+.diagnostic-nc05,
+.alerte-decimale-nc05 {
+  padding: 12px 14px;
+  border-left: 5px solid var(--mg-orange);
+  border-radius: var(--mg-rayon-petit);
+  background: color-mix(in srgb, var(--mg-orange) 8%, var(--mg-papier));
+  line-height: 1.48;
+}
+
+.diagnostic-nc05 {
+  display: grid;
+  gap: 4px;
+  border: 2px solid var(--mg-orange);
+}
+
+.chaine-complete-nc05 {
+  padding: 13px;
+  border: 2px solid var(--mg-turquoise);
+  border-radius: var(--mg-rayon-moyen);
+  background: var(--mg-fondDoux);
+  font-size: clamp(1.25rem, 5.2vw, 1.9rem);
+}
+
+.controle-grandeur-nc05 {
+  border-left-color: var(--mg-turquoise);
+  background: color-mix(in srgb, var(--mg-turquoise) 8%, var(--mg-papier));
+}
+
+.carte-cours-nc05 {
+  width: min(100%, 800px);
+  margin: 0 auto;
+  padding: 14px;
+  border: 2px solid var(--mg-ligne);
+  border-radius: var(--mg-rayon-moyen);
+  background: var(--mg-papier);
+  text-align: center;
+}
+
+.carte-cours-nc05 h3 {
+  margin-top: 2px;
+  color: var(--mg-bleu);
+  font-size: clamp(1.25rem, 5vw, 1.8rem);
+}
+
+.carte-cours-nc05 > p {
+  line-height: 1.5;
+}
+
+.chaine-exemple-nc05 {
+  font-size: clamp(1.25rem, 5vw, 1.85rem);
+}
+
+.chaine-exemple-longue-nc05 {
+  gap: clamp(6px, 1.6vw, 12px);
+  font-size: clamp(1rem, 3.6vw, 1.45rem);
+}
+
+.comparaison-grilles-nc05,
+.deux-tableaux-nc05,
+.reperes-cours-nc05,
+.raccourcis-nc05 {
+  display: grid;
+  gap: 10px;
+}
+
+.comparaison-grilles-nc05,
+.deux-tableaux-nc05,
+.raccourcis-nc05 {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.reperes-cours-nc05 {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.carte-grille-pourcentage-nc05,
+.deux-tableaux-nc05 section,
+.carte-repere-nc05,
+.raccourcis-nc05 section {
+  min-width: 0;
+  padding: 10px;
+  border: 1px solid var(--mg-ligne);
+  border-radius: var(--mg-rayon-moyen);
+  background: var(--mg-fondDoux);
+}
+
+.figure-grille-cours-nc05 {
+  width: min(100%, 170px);
+  margin: 0 auto;
+}
+
+.carte-grille-pourcentage-nc05 p,
+.carte-repere-nc05 p {
+  gap: 6px;
+  font-size: clamp(.92rem, 3.6vw, 1.22rem);
+}
+
+.deux-tableaux-nc05 h4 {
+  margin: 0 0 8px;
+  color: var(--mg-bleu);
+}
+
+.deux-tableaux-nc05 .figure-tableau-numeration {
+  margin-block: 6px;
+  padding: 8px;
+}
+
+.deux-tableaux-nc05 section > p {
+  margin-bottom: 0;
+  font-size: 1.2rem;
+  font-weight: 800;
+}
+
+.raccourcis-nc05 section {
+  display: grid;
+  gap: 6px;
+}
+
+.raccourcis-nc05 span {
+  color: var(--mg-texteAttenue);
+  font-weight: 700;
+}
+
+.raccourcis-nc05 strong {
+  color: var(--mg-orange);
+  font-family: var(--mg-titres);
+  font-size: clamp(1.5rem, 5vw, 2.2rem);
+}
+
+.raccourcis-nc05 p {
+  margin: 0;
+  font-weight: 800;
+}
+
+.strategies-nc05 {
+  margin: 14px 0 0;
+  padding: 0;
+  display: grid;
+  gap: 8px;
+  list-style: none;
+  text-align: left;
+}
+
+.strategies-nc05 li {
+  padding: 10px 12px;
+  display: grid;
+  gap: 3px;
+  border-left: 4px solid var(--mg-turquoise);
+  background: var(--mg-fondDoux);
+}
+
+.strategies-nc05 span {
+  color: var(--mg-texteAttenue);
+}
+
+@media (max-width: 540px) {
+  .droite-nc05-large {
+    display: none;
+  }
+
+  .droite-nc05-mobile {
+    display: block;
+  }
+
+  .comparaison-grilles-nc05,
+  .deux-tableaux-nc05,
+  .raccourcis-nc05 {
+    grid-template-columns: 1fr;
+  }
+
+  .carte-cours-nc05 {
+    padding-inline: 9px;
+  }
+
+  .reperes-cours-nc05 {
+    gap: 7px;
+  }
+
+  .carte-repere-nc05 {
+    padding-inline: 5px;
+  }
+
+  .chaine-question-nc05 {
+    gap: 7px;
+    font-size: clamp(1.55rem, 8.2vw, 2.25rem);
+  }
+
+  .case-ecriture-nc05 {
+    min-width: 72px;
+  }
+}
+
+@media (max-width: 360px) {
+  .chaine-question-nc05 {
+    font-size: 1.45rem;
+  }
+
+  .case-ecriture-nc05 {
+    min-width: 64px;
+    min-height: 52px;
+    padding-inline: 6px;
+    font-size: 1.35rem;
+  }
+
+  .fraction-reponse-nc05 .case-ecriture-nc05 {
+    min-width: 54px;
+  }
+
+  .reperes-cours-nc05 {
+    grid-template-columns: 1fr;
+  }
+
+  .etape-aide-nc05 p {
+    padding-left: 14px;
+  }
+}
+
+@media (pointer: coarse) and (hover: none) {
+  .mode-entrainement.avec-pave .carte-question-ecritures {
+    padding-top: clamp(9px, 2.2vh, 18px);
+    gap: 6px;
+  }
+
+  .mode-entrainement.avec-pave .carte-question-ecritures h1 {
+    font-size: clamp(19px, 5.7vw, 25px);
+  }
+
+  .mode-entrainement.avec-pave .carte-question-ecritures .chaine-question-nc05 {
+    margin-block: 0;
+  }
+
+  .mode-entrainement.avec-pave .carte-question-ecritures .zone-retour:empty {
+    display: none;
+  }
+}
+
+@media (max-width: 350px) {
+  .grille-choix-ecritures {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (min-width: 900px) {
+  .mode-tableau .carte-question-ecritures .chaine-question-nc05,
+  .mode-tableau .carte-question-ecritures .cible-reconnaissance-nc05 {
+    font-size: clamp(2.8rem, min(5vw, 8vh), 5rem);
+  }
+
+  .mode-tableau .grille-projection.grille-choix-ecritures,
+  .mode-tableau.panneau-ouvert .grille-projection.grille-choix-ecritures {
+    width: min(100%, 1120px);
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  .mode-tableau .grille-projection.grille-choix-ecritures .choix {
+    min-height: clamp(92px, 13vh, 132px);
+    font-size: clamp(1.8rem, min(2.8vw, 4.8vh), 3rem);
+  }
+
+  .mode-tableau .panneau-ecritures-multiples .chaine-complete-nc05,
+  .mode-tableau .panneau-ecritures-multiples .principe-correction-nc05,
+  .mode-tableau .panneau-ecritures-multiples .controle-grandeur-nc05,
+  .mode-tableau .panneau-ecritures-multiples .etape-aide-nc05 {
+    font-size: clamp(18px, 1.15vw, 23px);
+  }
+}

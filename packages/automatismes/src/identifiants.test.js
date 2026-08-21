@@ -12,7 +12,7 @@ import {
 } from "./identifiants.js";
 
 describe("identifiants canoniques d'Automatismes V2", () => {
-  it("fixe sept domaines et huit micro-notions descriptives distinctes", () => {
+  it("fixe sept domaines et neuf micro-notions descriptives distinctes", () => {
     assert.deepEqual(Object.values(DOMAINES_AUTOMATISMES), [
       "nombres-et-calculs",
       "calcul-litteral-et-algebre",
@@ -26,7 +26,7 @@ describe("identifiants canoniques d'Automatismes V2", () => {
       new Set(Object.values(MICRO_NOTIONS_AUTOMATISMES)).size,
       Object.values(MICRO_NOTIONS_AUTOMATISMES).length,
     );
-    assert.equal(Object.values(IDENTITES_AUTOMATISMES).length, 8);
+    assert.equal(Object.values(IDENTITES_AUTOMATISMES).length, 9);
     assert.ok(Object.values(IDENTITES_AUTOMATISMES).every(Object.isFrozen));
   });
 

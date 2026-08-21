@@ -393,3 +393,16 @@ chaque micro-notion.
 
 Ainsi, le travail précédent reste exploitable sans faire de V2 une copie du
 programme historique.
+# Ajout NC-05 — 21 août 2026
+
+NC-05 réemploie uniquement les fondations V2 auditées : contrats de réponse,
+registre seedé, fraction verticale, droite graduée et grille de fractions. Les
+deux nouveaux fichiers de génération sont
+`ecritures-multiples-nombre/questions.js` et `serie.js`. Ils n'importent aucun
+générateur, énoncé ou rendu de l'ancienne banque.
+
+La droite graduée porte le contrôle d'ordre de grandeur ; la grille rend
+ponctuellement visible le sens « sur 100 ». Aucune manipulation libre n'est
+ajoutée. Le module utilise les comparaisons exactes existantes pour l'entier,
+le rationnel, le choix unique et l'ensemble exact. Les nouveaux fichiers sont
+déclarés dans la table de provenance et le graphe de cache V2.
