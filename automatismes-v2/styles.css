@@ -62,6 +62,134 @@ h3,
   border: 0;
 }
 
+/* GE-01 + GE-02 — la même droite dans la question, l’aide et la correction. */
+.carte-question-droite {
+  gap: 18px;
+}
+
+.droite-graduee-interactive {
+  position: relative;
+  width: min(100%, 760px);
+  margin: 12px auto;
+}
+
+.droite-graduee-interactive svg {
+  display: block;
+  width: 100%;
+  height: auto;
+  overflow: visible;
+}
+
+.cible-graduation {
+  position: absolute;
+  width: 44px;
+  height: 52px;
+  min-height: 44px;
+  padding: 0;
+  border: 2px solid transparent;
+  border-radius: 999px;
+  background: transparent;
+  transform: translate(-50%, -50%);
+}
+
+.cible-graduation:hover,
+.cible-graduation:focus-visible {
+  border-color: color-mix(in srgb, var(--mg-turquoise) 55%, transparent);
+  background: color-mix(in srgb, var(--mg-turquoise) 10%, transparent);
+}
+
+.cible-graduation.selectionnee::after {
+  content: "";
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 14px;
+  height: 14px;
+  border: 3px solid white;
+  border-radius: 50%;
+  background: var(--mg-bleu);
+  box-shadow: 0 0 0 2px var(--mg-bleu);
+  transform: translate(-50%, -50%);
+}
+
+.grille-qcm-droite {
+  width: min(100%, 620px);
+  margin-inline: auto;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.etapes-droite {
+  display: grid;
+  gap: 12px;
+  padding: 0;
+  list-style: none;
+}
+
+.etapes-droite li {
+  display: grid;
+  grid-template-columns: 36px 1fr;
+  align-items: center;
+  gap: 12px;
+  padding: 12px;
+  border: 1px solid var(--mg-ligne);
+  border-radius: 14px;
+  background: var(--mg-fond-doux);
+}
+
+.etapes-droite li strong,
+.numero-cours {
+  display: grid;
+  place-items: center;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  color: white;
+  background: var(--mg-bleu);
+}
+
+.methode-droite,
+.carte-cours-droite {
+  display: grid;
+  gap: 14px;
+}
+
+.methode-droite {
+  padding: 16px;
+  border-left: 5px solid var(--mg-turquoise);
+  border-radius: 0 12px 12px 0;
+  background: var(--mg-fond-doux);
+}
+
+.methode-droite p,
+.carte-cours-droite p {
+  margin: 0;
+}
+
+.carte-cours-droite h3 {
+  margin: -44px 0 8px 48px;
+}
+
+.carte-cours-droite ol {
+  margin: 0;
+  padding-left: 24px;
+}
+
+.alerte-droite {
+  padding: 12px 14px;
+  border-radius: 12px;
+  background: color-mix(in srgb, var(--mg-orange) 12%, white);
+}
+
+@media (max-width: 620px) {
+  .grille-qcm-droite {
+    grid-template-columns: 1fr;
+  }
+
+  .cible-graduation {
+    width: 38px;
+  }
+}
+
 .ecran-pret {
   width: min(100% - 32px, 560px);
   min-height: 100vh;

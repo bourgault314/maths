@@ -9,6 +9,7 @@ import {
   NOTION_NC02,
   NOTION_FRACTIONS_SIMPLES_DECIMAUX,
   NOTION_ECRITURES_MULTIPLES_NOMBRE,
+  NOTION_DROITE_GRADUEE,
   NOTION_SOLIDES_USUELS,
   NOTION_VOLUME_CUBE_PAVE,
   NOTION_VOLUME_CYLINDRE,
@@ -18,6 +19,7 @@ import {
   RENDU_CARRES,
   RENDU_FRACTIONS_DECIMAUX,
   RENDU_ECRITURES_MULTIPLES,
+  RENDU_DROITE_GRADUEE,
   RENDU_SOLIDE,
   RENDU_VOLUME,
 } from "./registre-lecteur.js";
@@ -32,6 +34,7 @@ describe("registre du lecteur", () => {
         NOTION_NC02,
         NOTION_FRACTIONS_SIMPLES_DECIMAUX,
         NOTION_ECRITURES_MULTIPLES_NOMBRE,
+        NOTION_DROITE_GRADUEE,
         NOTION_SOLIDES_USUELS,
         NOTION_VOLUME_CUBE_PAVE,
         NOTION_VOLUME_PRISME,
@@ -46,6 +49,7 @@ describe("registre du lecteur", () => {
         RENDU_CARRES,
         RENDU_FRACTIONS_DECIMAUX,
         RENDU_ECRITURES_MULTIPLES,
+        RENDU_DROITE_GRADUEE,
         RENDU_SOLIDE,
         RENDU_VOLUME,
         RENDU_VOLUME,
@@ -63,6 +67,7 @@ describe("registre du lecteur", () => {
       20,
     );
     assert.equal(obtenirNotionLecteur(NOTION_ECRITURES_MULTIPLES_NOMBRE).pagesCours, 6);
+    assert.equal(obtenirNotionLecteur(NOTION_DROITE_GRADUEE).pagesCours, 5);
     assert.equal(
       obtenirNotionLecteur(NOTION_ECRITURES_MULTIPLES_NOMBRE).nombreQuestionsMaximum,
       20,

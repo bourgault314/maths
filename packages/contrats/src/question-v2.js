@@ -1,7 +1,7 @@
 // Contrat « question instanciée » — version 2.
 //
 // Cette version couvre les choix simples ou multiples, les saisies entières,
-// les décimaux positifs et les fractions équivalentes. Les énoncés peuvent
+// les décimaux signés et les fractions équivalentes. Les énoncés peuvent
 // porter des rationnels ou une puissance structurée, sans accepter de HTML
 // produit par les générateurs.
 
@@ -20,13 +20,14 @@ export const COMPARAISON_VALEUR_EXACTE = "valeur-exacte";
 export const COMPARAISON_VALEURS_EXACTES = "valeurs-exactes";
 export const COMPARAISON_VALEUR_RATIONNELLE_EXACTE =
   "valeur-rationnelle-exacte";
-const DENOMINATEURS_DECIMAUX_RENDUS = new Set([1, 2, 4, 10, 100, 1000]);
+const DENOMINATEURS_DECIMAUX_RENDUS = new Set([1, 2, 4, 5, 10, 100, 1000]);
 export const TYPES_BLOC_V2 = Object.freeze([
   "texte",
   "entier",
   "rationnel",
   "puissance",
   "solide",
+  "droite-graduee",
 ]);
 export const TYPES_OUTIL_AIDE_V2 = Object.freeze([
   "observer-unites",
@@ -128,6 +129,8 @@ function validerBlocs(blocs, nom, erreurs, { auMoinsUn = false } = {}) {
         ? ["id", "type", "base", "exposant"]
       : bloc.type === "solide"
         ? ["id", "type", "forme", "variante", "vue", "mesures"]
+      : bloc.type === "droite-graduee"
+        ? ["id", "type", "depart", "pas", "nombreIntervalles", "etiquettes", "point"]
         : ["id", "type", "contenu"];
     validerClesConnues(bloc, cles, chemin, erreurs);
     if (!estIdentifiantValide(bloc.id)) {
@@ -152,8 +155,8 @@ function validerBlocs(blocs, nom, erreurs, { auMoinsUn = false } = {}) {
       erreurs.push(`${chemin}.valeur : entier naturel requis`);
     }
     if (bloc.type === "rationnel") {
-      if (!Number.isSafeInteger(bloc.numerateur) || bloc.numerateur < 0) {
-        erreurs.push(`${chemin}.numerateur : entier naturel requis`);
+      if (!Number.isSafeInteger(bloc.numerateur)) {
+        erreurs.push(`${chemin}.numerateur : entier sûr requis`);
       }
       if (!Number.isSafeInteger(bloc.denominateur) || bloc.denominateur <= 0) {
         erreurs.push(
@@ -170,6 +173,44 @@ function validerBlocs(blocs, nom, erreurs, { auMoinsUn = false } = {}) {
         erreurs.push(
           `${chemin}.denominateur : dénominateur décimal rendu requis`,
         );
+      }
+    }
+    if (bloc.type === "droite-graduee") {
+      const validerRationnel = (valeur, nom, { positif = false } = {}) => {
+        if (typeof valeur !== "object" || valeur === null || Array.isArray(valeur)) {
+          erreurs.push(`${nom} : rationnel attendu`);
+          return;
+        }
+        validerClesConnues(valeur, ["numerateur", "denominateur"], nom, erreurs);
+        if (!Number.isSafeInteger(valeur.numerateur) || (positif && valeur.numerateur <= 0)) {
+          erreurs.push(`${nom}.numerateur : entier${positif ? " strictement positif" : " sûr"} requis`);
+        }
+        if (!Number.isSafeInteger(valeur.denominateur) || valeur.denominateur <= 0) {
+          erreurs.push(`${nom}.denominateur : entier strictement positif requis`);
+        }
+      };
+      validerRationnel(bloc.depart, `${chemin}.depart`);
+      validerRationnel(bloc.pas, `${chemin}.pas`, { positif: true });
+      if (!Number.isInteger(bloc.nombreIntervalles) || bloc.nombreIntervalles < 4 || bloc.nombreIntervalles > 12) {
+        erreurs.push(`${chemin}.nombreIntervalles : entier entre 4 et 12 requis`);
+      }
+      if (!Array.isArray(bloc.etiquettes) || bloc.etiquettes.length < 2) {
+        erreurs.push(`${chemin}.etiquettes : au moins deux indices requis`);
+      } else if (bloc.etiquettes.some((indice) => !Number.isInteger(indice) || indice < 0 || indice > bloc.nombreIntervalles)) {
+        erreurs.push(`${chemin}.etiquettes : indices de graduations valides requis`);
+      }
+      if (bloc.point !== undefined) {
+        if (typeof bloc.point !== "object" || bloc.point === null || Array.isArray(bloc.point)) {
+          erreurs.push(`${chemin}.point : objet attendu`);
+        } else {
+          validerClesConnues(bloc.point, ["nom", "indice"], `${chemin}.point`, erreurs);
+          if (typeof bloc.point.nom !== "string" || !/^[A-Z]$/.test(bloc.point.nom)) {
+            erreurs.push(`${chemin}.point.nom : lettre majuscule requise`);
+          }
+          if (!Number.isInteger(bloc.point.indice) || bloc.point.indice < 0 || bloc.point.indice > bloc.nombreIntervalles) {
+            erreurs.push(`${chemin}.point.indice : graduation visible requise`);
+          }
+        }
       }
     }
     if (bloc.type === "puissance") {
@@ -282,8 +323,8 @@ function validerReponse(reponse, erreurs) {
       "reponse.attendu",
       erreurs,
     );
-    if (!Number.isSafeInteger(attendu.numerateur) || attendu.numerateur < 0) {
-      erreurs.push("reponse.attendu.numerateur : entier naturel requis");
+    if (!Number.isSafeInteger(attendu.numerateur)) {
+      erreurs.push("reponse.attendu.numerateur : entier sûr requis");
     }
     if (!Number.isSafeInteger(attendu.denominateur) || attendu.denominateur <= 0) {
       erreurs.push(

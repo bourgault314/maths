@@ -325,6 +325,14 @@ export const PROVENANCE_FONDATION_V2 = Object.freeze({
     statut: "original_mathsgo",
     source: "fiche GE-12 validée par Gwenaël le 19 juillet 2026",
   },
+  "packages/automatismes/src/espace-et-geometrie/droite-graduee/questions.js": {
+    statut: "original_mathsgo",
+    source: "fiche GE-01/GE-02 et décision D-065 du 21 août 2026 ; questions, aides, corrections et distracteurs écrits à neuf pour maths&go",
+  },
+  "packages/automatismes/src/espace-et-geometrie/droite-graduee/serie.js": {
+    statut: "original_mathsgo",
+    source: "recette déterministe GE-01/GE-02, quotas 5/10/15/20 et variations d’échelles décidés avec Gwenaël le 21 août 2026",
+  },
   "packages/automatismes/src/grandeurs-et-mesures/volumes/calcul-volumes.js": {
     statut: "original_mathsgo",
     source: "fiche GM-13 à GM-15, anciennement PG-22 à PG-24, validée par Gwenaël le 19 juillet 2026",

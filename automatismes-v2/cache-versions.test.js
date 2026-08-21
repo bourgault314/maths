@@ -2,7 +2,7 @@ import assert from "node:assert/strict";
 import { readFile } from "node:fs/promises";
 import { it } from "node:test";
 
-const VERSION = "41";
+const VERSION = "42";
 
 const RESSOURCES_VERSIONNEES = new Map([
   ["automatismes-v2/index.html", ["styles.css", "interface.css", "menu.css", "app.js"]],
@@ -47,6 +47,8 @@ const RESSOURCES_VERSIONNEES = new Map([
     "fractions-simples-decimaux/serie.js",
     "ecritures-multiples-nombre/questions.js",
     "ecritures-multiples-nombre/serie.js",
+    "droite-graduee/questions.js",
+    "droite-graduee/serie.js",
     "identifiants.js",
   ]],
   ["packages/automatismes/src/registre.js", [
@@ -67,6 +69,7 @@ const RESSOURCES_VERSIONNEES = new Map([
     "decimal-vers-fraction.js",
     "fraction-vers-decimal.js",
     "ecritures-multiples-nombre/questions.js",
+    "droite-graduee/questions.js",
   ]],
   ["packages/moteur-exercices/src/generation.js", ["question-v2.js"]],
   ["packages/automatismes/src/nombres-et-calculs/criteres-divisibilite/serie.js", [
@@ -130,6 +133,16 @@ const RESSOURCES_VERSIONNEES = new Map([
     "questions.js",
   ]],
   ["packages/automatismes/src/espace-et-geometrie/solides-usuels/reconnaissance.js", ["question-v2.js", "identifiants.js"]],
+  ["packages/automatismes/src/espace-et-geometrie/droite-graduee/questions.js", [
+    "gabarit.js",
+    "question-v2.js",
+    "fractions-decimaux.js",
+    "identifiants.js",
+  ]],
+  ["packages/automatismes/src/espace-et-geometrie/droite-graduee/serie.js", [
+    "aleatoire.js",
+    "questions.js",
+  ]],
   ["packages/automatismes/src/grandeurs-et-mesures/volumes/calcul-volumes.js", ["question-v2.js", "identifiants.js"]],
   ["packages/contrats/src/trace-reponse.js", ["question-v2.js"]],
   ["packages/objets/src/droite-graduee.js", ["charte.js", "expressions.js"]],

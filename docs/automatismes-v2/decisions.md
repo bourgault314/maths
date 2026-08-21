@@ -1538,3 +1538,38 @@ et écritures périodiques restent hors de cette version. Le cours, l'aide et la
 correction partagent l'invariant « L'écriture change, pas la valeur. » Le
 graphe public V2 est invalidé d'un seul tenant en `v41`. La recette complète
 passe **1 657 tests sur 1 657**, répartis en **233 suites**.
+
+### D-065 — GE-01 et GE-02 forment un seul module dans Espace et géométrie
+
+Gwenaël confirme le 21 août 2026 le classement récent de la taxonomie :
+`lire-abscisse-droite-graduee` (`GE-01`) et
+`placer-point-droite-graduee` (`GE-02`) restent dans
+`espace-et-geometrie`. Leur position voisine dans une autre liste officielle
+ne justifie ni déplacement de domaine ni réouverture du classement maths&go.
+
+Les deux micro-notions formeront une seule entrée visible « Droite graduée ».
+Le parcours associera la lecture et le placement au lieu de fabriquer deux
+questionnaires concurrents. Il devra varier les pas `0,1`, `0,25`, `0,5`, `1`,
+`10` et `50`, les positions de l'origine, l'absence éventuelle du zéro dans la
+fenêtre ou dans les étiquettes, les valeurs positives et négatives et les
+échelles déterminées à partir de deux références connues. Les valeurs simples
+restent majoritaires ; cette variété ne constitue pas des niveaux.
+
+Avant tout contenu réel, l'objet commun `droite-graduee.js` est fiabilisé et
+présenté dans le Labo. La planche de validation doit montrer les graduations,
+la typographie, les étiquettes masquées, le point repéré et les cas limites sur
+des pas décimaux et de grandes échelles. Gwenaël valide cet habillage avant la
+construction des questions, du cours, des aides et des corrections.
+
+Après cette validation, le placement devient une exception interactive dédiée
+à D-006 : l'élève choisit une graduation au toucher ou à la souris, avec un
+équivalent clavier, et le point s'aimante à une graduation régulière. Un
+placement libre au pixel près n'est pas évalué. Le même modèle géométrique
+alimente le SVG statique et l'interaction afin d'éviter deux calculs de
+position concurrents. Le pavé numérique reçoit le signe moins uniquement pour
+les réponses qui acceptent un nombre relatif.
+
+L'ancienne banque reste une archive d'inventaire. Aucun de ses JSON, énoncés,
+valeurs, distracteurs, outils, interactions ou codes n'entre dans ce module.
+Toutes les données et tous les générateurs sont écrits à neuf après validation
+de la fiche pédagogique.

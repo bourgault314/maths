@@ -2,6 +2,34 @@
 
 **Dernière mise à jour : 21 août 2026.**
 
+## Module « Droite graduée » construit le 21 août
+
+- D-065 fixe le classement : `GE-01` et `GE-02` restent dans
+  `espace-et-geometrie` et formeront un seul module visible « Droite
+  graduée ». Le module est désormais construit dans le lecteur V2.
+- Le premier lot local, sur `agent/ge-droite-graduee-studio`, fait passer
+  l'objet commun en version 2. Une nouvelle échelle régulière est définie par
+  une première valeur, un pas et un nombre d'intervalles ; elle ne peut donc
+  pas terminer par un intervalle plus court. La géométrie calculée est exposée
+  pour que le futur placement interactif utilise exactement la même source.
+- Les nombres du SVG emploient la typographie mathématique commune avec des
+  chiffres alignés et tabulaires. Les titres et noms de lignes gardent la
+  typographie de texte.
+- La planche du Labo et les séries couvrent les pas `0,1`, `0,25`, `0,5`, `1`, `10` et `50`,
+  une origine à gauche, centrée, décentrée, non écrite ou hors champ, des
+  valeurs toutes négatives, deux références non nulles et une droite muette
+  destinée au placement.
+- GE-01 et GE-02 possèdent leurs générateurs seedés, leurs quotas aux jalons
+  5/10/15/20, un pavé décimal signé, un placement aimanté au clic ou au
+  clavier, un cours en cinq pages, une aide en trois étapes et une correction
+  qui superpose le point choisi et le point attendu.
+- Les erreurs typiques donnent des retours ciblés : signe oublié, graduation
+  voisine, écart total confondu avec le pas, traits comptés à la place des
+  intervalles et pas supposé égal à 1.
+- La vérification complète du dépôt passe **1 664 tests sur 1 664** dans
+  **234 suites**. Le statut reste `construit` jusqu'à la validation visuelle
+  de Gwenaël dans le lecteur.
+
 ## Fractions canoniques dans la synthèse du cours du 21 août
 
 - D-063 corrige uniquement les deux rails de synthèse de la page 6 de

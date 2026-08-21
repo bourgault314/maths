@@ -148,8 +148,17 @@ describe("validerTraceReponse", () => {
     );
   });
 
-  it("refuse les notations décimales ambiguës ou non décimales", () => {
-    for (const saisie of ["1,2,3", "1e-2", "3/4", "-0,5", "0,5001"]) {
+  it("accepte un décimal négatif et refuse les notations ambiguës", () => {
+    const negative = traceValide();
+    negative.reponse = {
+      type: TYPE_REPONSE_NOMBRE_DECIMAL,
+      statut: "fournie",
+      saisie: "−0,5",
+      valeur: { numerateur: -1, denominateur: 2 },
+    };
+    assert.equal(validerTraceReponse(negative).valide, true);
+
+    for (const saisie of ["1,2,3", "1e-2", "3/4", "0,5001"]) {
       const trace = traceValide();
       trace.reponse = {
         type: TYPE_REPONSE_NOMBRE_DECIMAL,
@@ -159,7 +168,7 @@ describe("validerTraceReponse", () => {
       };
       assert.match(
         validerTraceReponse(trace).erreurs.join("\n"),
-        /nombre décimal positif/,
+        /nombre décimal positif ou négatif/,
       );
     }
   });

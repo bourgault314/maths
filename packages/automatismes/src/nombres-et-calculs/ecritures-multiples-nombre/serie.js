@@ -6,7 +6,7 @@
 import {
   creerGenerateur,
   validerGraine,
-} from "../../../../moteur-exercices/src/aleatoire.js?v=41";
+} from "../../../../moteur-exercices/src/aleatoire.js?v=42";
 import {
   DENOMINATEURS_REPERES_NC05,
   FAMILLE_CHAINE_EGALITES,
@@ -16,7 +16,7 @@ import {
   FAMILLE_RECONNAITRE_EQUIVALENCES,
   FAMILLE_UNITE_DEPASSEMENT,
   GABARIT_ECRITURES_MULTIPLES,
-} from "./questions.js?v=41";
+} from "./questions.js?v=42";
 
 export const VERSION_PLAN_SERIE_ECRITURES_MULTIPLES = 1;
 

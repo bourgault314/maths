@@ -3,7 +3,7 @@ import {
   COULEURS_RANGS_NUMERATION_DECIMALE,
   RAYONS,
   TYPOGRAPHIE,
-} from "../packages/charte/src/charte.js?v=41";
+} from "../packages/charte/src/charte.js?v=42";
 import {
   avancerFractionAide,
   avancerCorrespondanceAide,
@@ -18,6 +18,7 @@ import {
   lireConfiguration,
   nombreReussites,
   NOTION_ECRITURES_MULTIPLES_NOMBRE,
+  NOTION_DROITE_GRADUEE,
   NOTION_NC01,
   NOTION_NC02,
   notionCourante,
@@ -37,7 +38,7 @@ import {
   saisirChiffre,
   tournerSolide,
   validerReponse,
-} from "./src/etat-lecteur.js?v=41";
+} from "./src/etat-lecteur.js?v=42";
 import {
   TYPE_REPONSE_DEUX_ENTIERS,
   TYPE_REPONSE_ENTIER_NATUREL,
@@ -45,24 +46,25 @@ import {
   TYPE_REPONSE_NOMBRE_DECIMAL,
   TYPE_REPONSE_CHOIX_UNIQUE,
   TYPE_REPONSE_SELECTION_MULTIPLE,
-} from "../packages/contrats/src/question-v2.js?v=41";
+} from "../packages/contrats/src/question-v2.js?v=42";
 import {
   connaitNotionLecteur,
   obtenirNotionLecteur,
   RENDU_CARRES,
   RENDU_DIVISIBILITE,
   RENDU_ECRITURES_MULTIPLES,
+  RENDU_DROITE_GRADUEE,
   RENDU_FRACTIONS_DECIMAUX,
   RENDU_SOLIDE,
   RENDU_VOLUME,
   NOTION_FRACTIONS_SIMPLES_DECIMAUX,
-} from "./src/registre-lecteur.js?v=41";
+} from "./src/registre-lecteur.js?v=42";
 import {
   DOMAINES_AUTOMATISMES,
   MICRO_NOTIONS_AUTOMATISMES,
   normaliserIdentifiantMicroNotion,
-} from "../packages/automatismes/src/identifiants.js?v=41";
-import { COURS_SOLIDES_USUELS } from "../packages/automatismes/src/espace-et-geometrie/solides-usuels/reconnaissance.js?v=41";
+} from "../packages/automatismes/src/identifiants.js?v=42";
+import { COURS_SOLIDES_USUELS } from "../packages/automatismes/src/espace-et-geometrie/solides-usuels/reconnaissance.js?v=42";
 import {
   creerCone,
   creerCube,
@@ -71,14 +73,14 @@ import {
   creerPrisme,
   creerPyramide,
   dessinerSolide,
-} from "../packages/objets/src/solides.js?v=41";
+} from "../packages/objets/src/solides.js?v=42";
 import {
   ACTION_TOUCHE_EFFACER,
   ACTION_TOUCHE_SAISIR,
   ACTION_TOUCHE_VALIDER,
   obtenirDispositionClavier,
-} from "../packages/objets/src/clavier.js?v=41";
-import { formulationCritereDivisibilite } from "../packages/automatismes/src/nombres-et-calculs/criteres-divisibilite/critere-precis.js?v=41";
+} from "../packages/objets/src/clavier.js?v=42";
+import { formulationCritereDivisibilite } from "../packages/automatismes/src/nombres-et-calculs/criteres-divisibilite/critere-precis.js?v=42";
 import {
   caseVide,
   difference,
@@ -95,36 +97,37 @@ import {
   variable,
   versHtmlEgalitesAlignees,
   versHtmlSemantique,
-} from "../packages/objets/src/expressions.js?v=41";
+} from "../packages/objets/src/expressions.js?v=42";
 import {
   dessinerCarreQuadrille,
-} from "../packages/objets/src/carre-quadrille.js?v=41";
+} from "../packages/objets/src/carre-quadrille.js?v=42";
 import {
   dessinerDoubleDroiteGraduee,
   dessinerDroiteGraduee,
-} from "../packages/objets/src/droite-graduee.js?v=41";
-import { dessinerGrilleFraction } from "../packages/objets/src/fractions.js?v=41";
-import { dessinerBandesFractionnairesSurRailDecimal } from "../packages/objets/src/bandes-fractions-rail.js?v=41";
+} from "../packages/objets/src/droite-graduee.js?v=42";
+import { dessinerGrilleFraction } from "../packages/objets/src/fractions.js?v=42";
+import { dessinerBandesFractionnairesSurRailDecimal } from "../packages/objets/src/bandes-fractions-rail.js?v=42";
 import {
   dessinerConversionRangsNumerationDecimale,
   dessinerEchangeRangsNumerationDecimale,
   dessinerMaterielNumerationDecimale,
   dessinerTableauNumerationDecimale,
-} from "../packages/objets/src/numeration-decimale.js?v=41";
+} from "../packages/objets/src/numeration-decimale.js?v=42";
 import {
   dessinerDemiAvecDixiemes,
   dessinerReorganisationCentiemes,
-} from "../packages/objets/src/correspondances-decimales.js?v=41";
+} from "../packages/objets/src/correspondances-decimales.js?v=42";
 import {
   construireDonneesTableauDepuisFraction,
   formaterFractionEnDecimal,
+  formaterFractionEnDecimalSignee,
   reduireFraction,
-} from "../packages/objets/src/fractions-decimaux.js?v=41";
+} from "../packages/objets/src/fractions-decimaux.js?v=42";
 import {
   diagnostiquerDecimalVersNumerateur,
   diagnostiquerFractionLibre,
   diagnostiquerFractionVersDecimal,
-} from "./src/diagnostic-fractions-decimaux.js?v=41";
+} from "./src/diagnostic-fractions-decimaux.js?v=42";
 import {
   FAMILLE_CHAINE_EGALITES,
   FAMILLE_FRACTION_REPERE_POURCENTAGE,
@@ -134,7 +137,7 @@ import {
   FAMILLE_UNITE_DEPASSEMENT,
   formaterPourcentageEnDecimal,
   lirePourcentageQuestion,
-} from "../packages/automatismes/src/nombres-et-calculs/ecritures-multiples-nombre/questions.js?v=41";
+} from "../packages/automatismes/src/nombres-et-calculs/ecritures-multiples-nombre/questions.js?v=42";
 
 const MICRO_NOTION_FRACTION_VERS_DECIMAL =
   MICRO_NOTIONS_AUTOMATISMES.FRACTION_VERS_DECIMAL;
@@ -193,7 +196,7 @@ const DOMAINES_MENU = Object.freeze([
   Object.freeze({
     id: DOMAINES_AUTOMATISMES.GE,
     nom: "Espace et géométrie",
-    notions: Object.freeze([]),
+    notions: Object.freeze([NOTION_DROITE_GRADUEE]),
   }),
   Object.freeze({
     id: DOMAINES_AUTOMATISMES.DS,
@@ -223,6 +226,10 @@ const LIBELLES_MODULES_MENU = Object.freeze({
   [NOTION_ECRITURES_MULTIPLES_NOMBRE]: Object.freeze({
     titre: "Un nombre, plusieurs écritures",
     precision: "Décimal, fraction et pourcentage",
+  }),
+  [NOTION_DROITE_GRADUEE]: Object.freeze({
+    titre: "Droite graduée",
+    precision: "Lire une abscisse et placer un point",
   }),
 });
 
@@ -417,6 +424,15 @@ function rendreIconeNombresCalculs() {
   </svg>`;
 }
 
+function rendreIconeGeometrie() {
+  return `<svg viewBox="0 0 36 36" focusable="false">
+    <rect x="3.5" y="3.5" width="29" height="29" rx="4.5" fill="#f5fbff" stroke="#173a5e" stroke-width="1.3"/>
+    <path d="M8 27 18 8l10 19Z" fill="none" stroke="#08aaa5" stroke-width="2" stroke-linejoin="round"/>
+    <path d="M12.2 27v-4.2h4.2" fill="none" stroke="#f58220" stroke-width="1.7"/>
+    <circle cx="18" cy="8" r="2" fill="#0b67b2"/>
+  </svg>`;
+}
+
 function rendreIconeCalculatriceBarree() {
   return `<svg class="dnb-launch-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
     <rect x="6" y="2.8" width="12.4" height="18.4" rx="2.6" fill="none" stroke="currentColor" stroke-width="1.7"/>
@@ -440,9 +456,9 @@ function rendreDomainesMenu() {
       const selectionnee = nombreSelectionne > 0;
       const complete = nombreSelectionne === domaine.notions.length;
       return `<details class="theme-group ${selectionnee ? "has-selection" : ""} ${complete ? "is-complete" : ""}"
-        data-theme="numbers" open>
+        data-theme="${echapper(domaine.id)}" open>
         <summary class="theme-summary">
-          <span class="theme-icon" aria-hidden="true">${rendreIconeNombresCalculs()}</span>
+          <span class="theme-icon" aria-hidden="true">${domaine.id === DOMAINES_AUTOMATISMES.GE ? rendreIconeGeometrie() : rendreIconeNombresCalculs()}</span>
           <span class="theme-name">${echapper(domaine.nom)}</span>
           <span class="theme-count">${nombreSelectionne} / ${domaine.notions.length} <span class="theme-count-label">sélectionné${nombreSelectionne > 1 ? "s" : ""}</span></span>
           <span class="theme-chevron" aria-hidden="true"></span>
@@ -701,6 +717,43 @@ function diagnosticErreurFractions() {
   return null;
 }
 
+function diagnosticErreurDroite() {
+  const question = questionCourante(etat);
+  if (
+    !question
+    || question.classement.notion !== NOTION_DROITE_GRADUEE
+    || etat.validation?.juste !== false
+    || etat.validation.omise
+  ) return null;
+  const bloc = blocDroiteGraduee(question);
+  if (familleQuestion(question) === "placer-point") {
+    const choisi = indiceChoisiDroite();
+    const attendu = Number(question.reponse.attendus[0].slice(2));
+    if (choisi !== null && Math.abs(choisi - attendu) === 1) {
+      return { message: "Tu as choisi la graduation voisine. Vérifie ton point de départ avant de recompter les intervalles." };
+    }
+    return { message: "Retrouve le pas, puis repars de la valeur écrite la plus proche." };
+  }
+  if (question.reponse.type !== TYPE_REPONSE_NOMBRE_DECIMAL || etat.saisie === "") return null;
+  const saisie = Number(etat.saisie.replace("−", "-").replace(",", "."));
+  const attendu = question.reponse.attendu.numerateur / question.reponse.attendu.denominateur;
+  const pas = bloc.pas.numerateur / bloc.pas.denominateur;
+  if (attendu < 0 && Math.abs(saisie + attendu) < 1e-9) {
+    return { message: "La distance est bonne, mais le point est à gauche de 0 : il faut conserver le signe moins." };
+  }
+  if (Math.abs(Math.abs(saisie - attendu) - pas) < 1e-9) {
+    return { message: "Tu es décalé d’une graduation. Compte les intervalles à partir de la valeur connue, sans compter le trait de départ." };
+  }
+  if (familleQuestion(question) === "determiner-pas") {
+    const ecartIndices = bloc.etiquettes[1] - bloc.etiquettes[0];
+    const ecartValeurs = ecartIndices * pas;
+    if (Math.abs(saisie - ecartValeurs) < 1e-9) {
+      return { message: `Tu as trouvé l’écart total. Il faut encore le partager entre les ${ecartIndices} intervalles.` };
+    }
+  }
+  return { message: "Ne suppose pas que le pas vaut 1 : compare les deux valeurs écrites et compte les intervalles qui les séparent." };
+}
+
 function rendreRetourValidation() {
   if (etat.erreurValidation) {
     return `<p class="message message-erreur" role="alert"><span class="contenu-message">${echapper(etat.erreurValidation)}</span></p>`;
@@ -712,7 +765,7 @@ function rendreRetourValidation() {
   if (etat.validation.omise) {
     return '<p class="message message-erreur" role="status"><span class="contenu-message"><strong>Pas de réponse.</strong></span></p>';
   }
-  const diagnostic = diagnosticErreurFractions();
+  const diagnostic = diagnosticErreurFractions() ?? diagnosticErreurDroite();
   return `<p class="message message-erreur" role="status"><span class="contenu-message"><strong>À revoir.</strong> ${diagnostic
     ? echapper(diagnostic.message)
     : "Ta réponse reste affichée."}</span></p>`;
@@ -763,7 +816,7 @@ function rendreBlocMathematique(bloc) {
   if (bloc.type === "rationnel") {
     return bloc.ecriture === "fraction"
       ? rendreFractionEmpilee(bloc.numerateur, bloc.denominateur)
-      : `<strong>${echapper(formaterFractionEnDecimal(bloc.numerateur, bloc.denominateur))}</strong>`;
+      : `<strong>${echapper(formaterFractionEnDecimalSignee(bloc.numerateur, bloc.denominateur))}</strong>`;
   }
   return "";
 }
@@ -933,7 +986,7 @@ function libellesReponseCorrecte(question) {
     return [question.reponse.attendus.join(" × ")];
   }
   if (question.reponse.type === TYPE_REPONSE_NOMBRE_DECIMAL) {
-    return [formaterFractionEnDecimal(
+    return [formaterFractionEnDecimalSignee(
       question.reponse.attendu.numerateur,
       question.reponse.attendu.denominateur,
     )];
@@ -2192,12 +2245,14 @@ function rendrePaveMathsgo(question) {
     || !estReponseNumerique(question)
   ) return "";
   const profil = question.reponse.type === TYPE_REPONSE_NOMBRE_DECIMAL
-    ? "decimal-positif"
+    ? question.classement.notion === NOTION_DROITE_GRADUEE
+      ? "nombre-decimal"
+      : "decimal-positif"
     : "entier-naturel";
   const disposition = obtenirDispositionClavier(profil);
   const touches = disposition.touches.map((touche) => {
     const attributAction = touche.action === ACTION_TOUCHE_SAISIR
-      ? `${touche.valeur === "," ? 'data-action="caractere"' : 'data-action="chiffre"'} data-value="${echapper(touche.valeur)}"`
+      ? `${[",", "−"].includes(touche.valeur) ? 'data-action="caractere"' : 'data-action="chiffre"'} data-value="${echapper(touche.valeur)}"`
       : touche.action === ACTION_TOUCHE_EFFACER
         ? 'data-action="effacer-saisie"'
         : touche.action === ACTION_TOUCHE_VALIDER
@@ -4652,11 +4707,195 @@ function rendreCoursEcrituresMultiples() {
   });
 }
 
+function blocDroiteGraduee(question) {
+  return question.enonce.find((bloc) => bloc.type === "droite-graduee");
+}
+
+function valeurDroite(bloc, indice) {
+  return bloc.depart.numerateur / bloc.depart.denominateur
+    + indice * bloc.pas.numerateur / bloc.pas.denominateur;
+}
+
+function texteValeurDroite(bloc, indice) {
+  const denominateur = bloc.depart.denominateur * bloc.pas.denominateur;
+  const numerateur = bloc.depart.numerateur * bloc.pas.denominateur
+    + indice * bloc.pas.numerateur * bloc.depart.denominateur;
+  return formaterFractionEnDecimalSignee(numerateur, denominateur);
+}
+
+function indiceChoisiDroite() {
+  const correspondance = /^g-(\d+)$/.exec(etat.selection[0] ?? "");
+  return correspondance ? Number(correspondance[1]) : null;
+}
+
+function rendreDroiteQuestion(bloc, {
+  interactive = false,
+  montrerAttendu = false,
+  montrerChoix = false,
+  classe = "",
+} = {}) {
+  const graduations = Array.from(
+    { length: bloc.nombreIntervalles + 1 },
+    (_, indice) => valeurDroite(bloc, indice),
+  );
+  const etiquettes = Object.fromEntries(
+    graduations.map((valeur, indice) => [
+      String(valeur),
+      bloc.etiquettes.includes(indice) ? texteValeurDroite(bloc, indice) : " ",
+    ]),
+  );
+  const question = questionCourante(etat);
+  const attendu = question?.reponse.attendus?.[0]?.startsWith("g-")
+    ? Number(question.reponse.attendus[0].slice(2))
+    : bloc.point?.indice;
+  const choisi = indiceChoisiDroite();
+  const points = bloc.point
+    ? [{ valeur: valeurDroite(bloc, bloc.point.indice), etiquette: bloc.point.nom, position: "dessus" }]
+    : [
+      ...(montrerChoix && choisi !== null && choisi !== attendu
+        ? [{ valeur: valeurDroite(bloc, choisi), etiquette: "Ton point", couleur: COULEURS.erreur, position: "dessus" }]
+        : []),
+      ...(montrerAttendu && attendu !== undefined
+        ? [{ valeur: valeurDroite(bloc, attendu), etiquette: question?.enonce[0].contenu.match(/point ([A-Z])/)?.[1] ?? "Point attendu", couleur: COULEURS.reussite, position: "dessus" }]
+        : montrerChoix && choisi !== null
+          ? [{ valeur: valeurDroite(bloc, choisi), etiquette: "Ton point", position: "dessus" }]
+          : []),
+    ];
+  const dessin = dessinerDroiteGraduee({
+    min: graduations[0],
+    max: graduations.at(-1),
+    graduations,
+    etiquettes,
+    points,
+    largeur: 760,
+    coteNombres: "dessous",
+    description: "Droite graduée avec deux valeurs de référence",
+  });
+  const commandes = interactive
+    ? graduations.map((valeur, indice) => {
+      const selectionne = choisi === indice;
+      const x = 100 * (dessin.geometrie.xGauche
+        + indice * (dessin.geometrie.xDroite - dessin.geometrie.xGauche) / bloc.nombreIntervalles) / dessin.largeur;
+      const y = 100 * dessin.geometrie.yAxe / dessin.hauteur;
+      return `<button class="cible-graduation ${selectionne ? "selectionnee" : ""}" type="button"
+        data-action="choix" data-id="g-${indice}" role="radio" aria-checked="${selectionne}"
+        aria-label="Placer le point sur la graduation ${indice + 1}"
+        style="left:${x}%;top:${y}%"></button>`;
+    }).join("")
+    : "";
+  return `<div class="droite-graduee-interactive ${classe}" role="${interactive ? "radiogroup" : "img"}"
+    aria-label="${interactive ? "Choisis une graduation" : "Droite graduée"}">
+    ${dessin.svg}${commandes}
+  </div>`;
+}
+
+function rendreQuestionDroiteGraduee() {
+  const question = questionCourante(etat);
+  const bloc = blocDroiteGraduee(question);
+  const placement = familleQuestion(question) === "placer-point";
+  const diagnostic = familleQuestion(question) === "diagnostic";
+  const afficherAttendu = !estEntrainement() && etat.reponseRevelee && placement;
+  const valeur = estEntrainement()
+    ? etat.saisie
+    : etat.reponseRevelee && question.reponse.attendu
+      ? formaterFractionEnDecimalSignee(question.reponse.attendu.numerateur, question.reponse.attendu.denominateur)
+      : "";
+  const zone = placement
+    ? `${rendreDroiteQuestion(bloc, { interactive: estEntrainement() && etat.validation === null, montrerAttendu: afficherAttendu, montrerChoix: estEntrainement() && indiceChoisiDroite() !== null })}
+      <p class="precision">${estEntrainement() ? "Touche une graduation : le point s’y aimante." : "Indiquez la graduation choisie."}</p>`
+    : diagnostic
+      ? `${rendreDroiteQuestion(bloc)}<div class="grille-choix grille-qcm-droite" role="radiogroup">${rendreChoix(question)}</div>`
+      : `${rendreDroiteQuestion(bloc)}<section class="saisie-numerique" aria-label="Réponse numérique">
+          <output class="afficheur-reponse ${valeur ? "rempli" : ""}">${echapper(valeur || (estEntrainement() ? "…" : "?"))}</output>
+          ${estEntrainement() && etat.validation === null ? '<p class="indication-clavier-physique">Chiffres · virgule · signe moins si nécessaire · Entrée pour valider</p>' : ""}
+        </section>`;
+  const carteQuestion = `<main class="carte-question carte-question-droite famille-${echapper(familleQuestion(question))}">
+    <p class="etiquette-notion">${echapper(nomNotion())}</p>
+    <h1>${echapper(texteBloc(question, "consigne"))}</h1>
+    ${zone}
+    ${estEntrainement() ? rendreZoneRetour() : '<div class="zone-retour" aria-hidden="true"></div>'}
+  </main>`;
+  return rendreCoqueLecteur(question, carteQuestion);
+}
+
+function rendreAideDroiteGraduee(question) {
+  if (!etat.aideOuverte) return "";
+  const bloc = blocDroiteGraduee(question);
+  const etapes = question.aide.blocs.map((element, index) => `<li><strong>${index + 1}</strong><span>${echapper(element.contenu)}</span></li>`).join("");
+  return rendreCadrePanneau({
+    type: "aide",
+    surtitre: "Un indice à la fois",
+    titre: "Lire l’échelle sans deviner",
+    contenu: `${rendreDroiteQuestion(bloc, { classe: "droite-aide" })}<ol class="etapes-droite">${etapes}</ol>${rendreAccesCoursDepuisAide()}`,
+    classes: "panneau-droite-graduee",
+  });
+}
+
+function rendreCorrectionDroiteGraduee(question) {
+  if (!etat.correctionOuverte) return "";
+  const bloc = blocDroiteGraduee(question);
+  const placement = familleQuestion(question) === "placer-point";
+  const explication = question.correction.map((element) => `<p>${echapper(element.contenu)}</p>`).join("");
+  return rendreCadrePanneau({
+    type: "correction",
+    surtitre: "Après la réponse",
+    titre: "Correction expliquée",
+    contenu: `${rendreReponseEleve(question)}${rendreDroiteQuestion(bloc, {
+      montrerAttendu: placement,
+      montrerChoix: placement,
+      classe: "droite-correction",
+    })}<div class="methode-droite">${explication}</div><p class="titre-reponse-correcte">Réponse correcte</p>${rendreReponseCorrecte(question)}`,
+    classes: "panneau-droite-graduee",
+  });
+}
+
+function exempleDroiteCours({ depart, pas, intervalles, etiquettes, point }) {
+  return rendreDroiteQuestion({
+    depart: { numerateur: depart[0], denominateur: depart[1] },
+    pas: { numerateur: pas[0], denominateur: pas[1] },
+    nombreIntervalles: intervalles,
+    etiquettes,
+    ...(point ? { point } : {}),
+  }, { classe: "droite-cours" });
+}
+
+function carteCoursDroite(index) {
+  if (index === 0) return `<article class="carte-cours-droite"><span class="numero-cours">1</span><h3>Une droite donne une position</h3>
+    ${exempleDroiteCours({ depart: [-3, 1], pas: [1, 1], intervalles: 7, etiquettes: [0, 3], point: { nom: "A", indice: 5 } })}
+    <p><strong>L’origine</strong> est la graduation 0. Les nombres augmentent vers la droite. L’<strong>abscisse</strong> est le nombre qui donne la position du point.</p></article>`;
+  if (index === 1) return `<article class="carte-cours-droite"><span class="numero-cours">2</span><h3>Trouver le pas</h3>
+    ${exempleDroiteCours({ depart: [-20, 1], pas: [10, 1], intervalles: 6, etiquettes: [0, 4] })}
+    <p>De −20 à 20, il y a <strong>4 intervalles</strong>. L’écart vaut 40, donc le pas vaut <strong>40 ÷ 4 = 10</strong>.</p><p class="alerte-droite"><strong>Attention :</strong> on compte les espaces, pas les traits.</p></article>`;
+  if (index === 2) return `<article class="carte-cours-droite"><span class="numero-cours">3</span><h3>Lire l’abscisse d’un point</h3>
+    ${exempleDroiteCours({ depart: [-2, 1], pas: [1, 2], intervalles: 8, etiquettes: [0, 4], point: { nom: "B", indice: 7 } })}
+    <ol><li>Je repère une valeur connue.</li><li>Je trouve le pas : ici 0,5.</li><li>J’avance graduation par graduation jusqu’au point.</li></ol></article>`;
+  if (index === 3) return `<article class="carte-cours-droite"><span class="numero-cours">4</span><h3>Placer un point</h3>
+    ${exempleDroiteCours({ depart: [-1, 1], pas: [1, 4], intervalles: 8, etiquettes: [0, 4], point: { nom: "M", indice: 6 } })}
+    <p>Pour placer M(0,5), je pars de 0 et j’avance de <strong>deux quarts</strong> vers la droite. Puis je contrôle : 0 + 2 × 0,25 = 0,5.</p></article>`;
+  return `<article class="carte-cours-droite"><span class="numero-cours">5</span><h3>L’origine n’est pas toujours visible</h3>
+    ${exempleDroiteCours({ depart: [70, 1], pas: [1, 1], intervalles: 7, etiquettes: [0, 5], point: { nom: "P", indice: 3 } })}
+    <p>La méthode ne change pas : deux valeurs connues suffisent. Le pas peut être 0,1 ; 0,25 ; 0,5 ; 1 ; 10 ou 50.</p><p class="definition-cours">Je vérifie toujours le sens, le pas et le nombre d’intervalles.</p></article>`;
+}
+
+function rendreCoursDroiteGraduee() {
+  if (!etat.coursOuvert) return "";
+  const titres = ["Vocabulaire", "Le pas", "Lire", "Placer", "Changer d’échelle"];
+  const total = nombrePagesCours();
+  const derniere = pageCoursCourante === total - 1;
+  const pied = `<nav class="navigation-cours" aria-label="Navigation dans le cours">
+    <button class="bouton-secondaire" type="button" data-action="cours-precedent" ${pageCoursCourante === 0 ? "disabled" : ""}>Précédent</button>
+    <div class="points-cours" aria-label="Page ${pageCoursCourante + 1} sur ${total}">${Array.from({ length: total }, (_, page) => `<span class="${page === pageCoursCourante ? "actif" : ""}"></span>`).join("")}</div>
+    <button class="bouton-principal" type="button" data-action="${derniere ? "fermer-cours" : "cours-suivant"}">${derniere ? "J’ai compris" : "Suivant"}</button>
+  </nav>`;
+  return rendreCadrePanneau({ type: "cours", surtitre: `Cours · ${pageCoursCourante + 1} / ${total}`, titre: titres[pageCoursCourante], contenu: `<div class="cours-une-carte">${carteCoursDroite(pageCoursCourante)}</div>`, pied, classes: "panneau-droite-graduee" });
+}
+
 const RENDUS_COURS = Object.freeze({
   [RENDU_DIVISIBILITE]: rendreCoursDivisibilite,
   [RENDU_CARRES]: rendreCoursCarres,
   [RENDU_FRACTIONS_DECIMAUX]: rendreCoursFractionsDecimaux,
   [RENDU_ECRITURES_MULTIPLES]: rendreCoursEcrituresMultiples,
+  [RENDU_DROITE_GRADUEE]: rendreCoursDroiteGraduee,
   [RENDU_SOLIDE]: rendreCoursReconnaissance,
   [RENDU_VOLUME]: rendreCoursVolumes,
 });
@@ -4666,6 +4905,7 @@ const RENDUS_AIDE = Object.freeze({
   [RENDU_CARRES]: rendreAideCarres,
   [RENDU_FRACTIONS_DECIMAUX]: rendreAideFractionsDecimaux,
   [RENDU_ECRITURES_MULTIPLES]: rendreAideEcrituresMultiples,
+  [RENDU_DROITE_GRADUEE]: rendreAideDroiteGraduee,
   [RENDU_SOLIDE]: rendreAideSolides,
   [RENDU_VOLUME]: rendreAideVolumes,
 });
@@ -4675,6 +4915,7 @@ const RENDUS_CORRECTION = Object.freeze({
   [RENDU_CARRES]: rendreCorrectionCarres,
   [RENDU_FRACTIONS_DECIMAUX]: rendreCorrectionFractionsDecimaux,
   [RENDU_ECRITURES_MULTIPLES]: rendreCorrectionEcrituresMultiples,
+  [RENDU_DROITE_GRADUEE]: rendreCorrectionDroiteGraduee,
   [RENDU_SOLIDE]: rendreCorrectionSolides,
   [RENDU_VOLUME]: rendreCorrectionVolumes,
 });
@@ -4684,6 +4925,7 @@ const RENDUS_QUESTION = Object.freeze({
   [RENDU_CARRES]: rendreQuestionCarres,
   [RENDU_FRACTIONS_DECIMAUX]: rendreQuestionFractionsDecimaux,
   [RENDU_ECRITURES_MULTIPLES]: rendreQuestionEcrituresMultiples,
+  [RENDU_DROITE_GRADUEE]: rendreQuestionDroiteGraduee,
   [RENDU_SOLIDE]: rendreQuestionSolides,
   [RENDU_VOLUME]: rendreQuestionVolumes,
 });
@@ -5165,6 +5407,24 @@ window.addEventListener?.("keydown", (evenement) => {
   }
   if (menuSessionOuvert || etat.aideOuverte || etat.correctionOuverte || etat.coursOuvert) return;
   const question = questionCourante(etat);
+  if (
+    question
+    && etat.validation === null
+    && question.classement.notion === NOTION_DROITE_GRADUEE
+    && familleQuestion(question) === "placer-point"
+    && ["ArrowLeft", "ArrowRight"].includes(evenement.key)
+  ) {
+    evenement.preventDefault?.();
+    const ids = question.reponse.choix.map((choix) => choix.id);
+    const selection = ids.indexOf(etat.selection[0]);
+    const courant = selection === -1
+      ? evenement.key === "ArrowLeft" ? ids.length : -1
+      : selection;
+    const suivant = Math.max(0, Math.min(ids.length - 1, courant + (evenement.key === "ArrowLeft" ? -1 : 1)));
+    basculerChoix(etat, ids[suivant]);
+    rendre({ focusSelector: `[data-action="choix"][data-id="${ids[suivant]}"]` });
+    return;
+  }
   if (!question || etat.validation !== null || !estReponseNumerique(question)) return;
   if (/^[0-9]$/.test(evenement.key)) {
     evenement.preventDefault?.();
@@ -5177,6 +5437,14 @@ window.addEventListener?.("keydown", (evenement) => {
   } else if (
     question.reponse.type === TYPE_REPONSE_NOMBRE_DECIMAL
     && [".", ","].includes(evenement.key)
+  ) {
+    evenement.preventDefault?.();
+    saisirCaractere(etat, evenement.key);
+    rendre();
+  } else if (
+    question.reponse.type === TYPE_REPONSE_NOMBRE_DECIMAL
+    && question.classement.notion === NOTION_DROITE_GRADUEE
+    && ["-", "−"].includes(evenement.key)
   ) {
     evenement.preventDefault?.();
     saisirCaractere(etat, evenement.key);

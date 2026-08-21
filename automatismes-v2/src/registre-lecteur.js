@@ -1,28 +1,30 @@
-import { GABARIT_RECONNAISSANCE_SOLIDES } from "../../packages/automatismes/src/espace-et-geometrie/solides-usuels/reconnaissance.js?v=41";
+import { GABARIT_RECONNAISSANCE_SOLIDES } from "../../packages/automatismes/src/espace-et-geometrie/solides-usuels/reconnaissance.js?v=42";
+import { GABARIT_DROITE_GRADUEE } from "../../packages/automatismes/src/espace-et-geometrie/droite-graduee/questions.js?v=42";
+import { genererSerieDroiteGraduee } from "../../packages/automatismes/src/espace-et-geometrie/droite-graduee/serie.js?v=42";
 import {
   GABARIT_VOLUME_CUBE_PAVE,
   GABARIT_VOLUME_CYLINDRE,
   GABARIT_VOLUME_PRISME,
-} from "../../packages/automatismes/src/grandeurs-et-mesures/volumes/calcul-volumes.js?v=41";
-import { GABARIT_SELECTION_DIVISEURS } from "../../packages/automatismes/src/nombres-et-calculs/criteres-divisibilite/selection-diviseurs.js?v=41";
-import { genererSerieNC01 } from "../../packages/automatismes/src/nombres-et-calculs/criteres-divisibilite/serie.js?v=41";
-import { GABARIT_CALCUL_DIRECT_CARRE } from "../../packages/automatismes/src/nombres-et-calculs/carres-entiers-1-a-12/calcul-direct.js?v=41";
-import { genererSerieNC02 } from "../../packages/automatismes/src/nombres-et-calculs/carres-entiers-1-a-12/serie.js?v=41";
+} from "../../packages/automatismes/src/grandeurs-et-mesures/volumes/calcul-volumes.js?v=42";
+import { GABARIT_SELECTION_DIVISEURS } from "../../packages/automatismes/src/nombres-et-calculs/criteres-divisibilite/selection-diviseurs.js?v=42";
+import { genererSerieNC01 } from "../../packages/automatismes/src/nombres-et-calculs/criteres-divisibilite/serie.js?v=42";
+import { GABARIT_CALCUL_DIRECT_CARRE } from "../../packages/automatismes/src/nombres-et-calculs/carres-entiers-1-a-12/calcul-direct.js?v=42";
+import { genererSerieNC02 } from "../../packages/automatismes/src/nombres-et-calculs/carres-entiers-1-a-12/serie.js?v=42";
 import {
   GABARIT_FRACTION_VERS_DECIMAL,
-} from "../../packages/automatismes/src/nombres-et-calculs/fractions-simples-decimaux/fraction-vers-decimal.js?v=41";
+} from "../../packages/automatismes/src/nombres-et-calculs/fractions-simples-decimaux/fraction-vers-decimal.js?v=42";
 import {
   genererSerieFractionsDecimaux,
-} from "../../packages/automatismes/src/nombres-et-calculs/fractions-simples-decimaux/serie.js?v=41";
+} from "../../packages/automatismes/src/nombres-et-calculs/fractions-simples-decimaux/serie.js?v=42";
 import {
   GABARIT_ECRITURES_MULTIPLES,
-} from "../../packages/automatismes/src/nombres-et-calculs/ecritures-multiples-nombre/questions.js?v=41";
+} from "../../packages/automatismes/src/nombres-et-calculs/ecritures-multiples-nombre/questions.js?v=42";
 import {
   genererSerieEcrituresMultiples,
-} from "../../packages/automatismes/src/nombres-et-calculs/ecritures-multiples-nombre/serie.js?v=41";
+} from "../../packages/automatismes/src/nombres-et-calculs/ecritures-multiples-nombre/serie.js?v=42";
 import {
   MODULES_AUTOMATISMES,
-} from "../../packages/automatismes/src/identifiants.js?v=41";
+} from "../../packages/automatismes/src/identifiants.js?v=42";
 
 export const NOTION_NC01 = MODULES_AUTOMATISMES.CRITERES_DIVISIBILITE;
 export const NOTION_NC02 = MODULES_AUTOMATISMES.CARRES_ENTIERS;
@@ -31,6 +33,7 @@ export const NOTION_FRACTIONS_SIMPLES_DECIMAUX =
 export const NOTION_ECRITURES_MULTIPLES_NOMBRE =
   MODULES_AUTOMATISMES.ECRITURES_MULTIPLES_NOMBRE;
 export const NOTION_SOLIDES_USUELS = MODULES_AUTOMATISMES.SOLIDES_USUELS;
+export const NOTION_DROITE_GRADUEE = MODULES_AUTOMATISMES.DROITE_GRADUEE;
 export const NOTION_VOLUME_CUBE_PAVE = MODULES_AUTOMATISMES.VOLUME_CUBE_PAVE;
 export const NOTION_VOLUME_PRISME = MODULES_AUTOMATISMES.VOLUME_PRISME;
 export const NOTION_VOLUME_CYLINDRE = MODULES_AUTOMATISMES.VOLUME_CYLINDRE;
@@ -40,6 +43,7 @@ export const RENDU_CARRES = "carres";
 export const RENDU_FRACTIONS_DECIMAUX = "fractions-decimaux";
 export const RENDU_ECRITURES_MULTIPLES = "ecritures-multiples";
 export const RENDU_SOLIDE = "solide";
+export const RENDU_DROITE_GRADUEE = "droite-graduee";
 export const RENDU_VOLUME = "volume";
 
 const RENDUS = new Set([
@@ -48,6 +52,7 @@ const RENDUS = new Set([
   RENDU_FRACTIONS_DECIMAUX,
   RENDU_ECRITURES_MULTIPLES,
   RENDU_SOLIDE,
+  RENDU_DROITE_GRADUEE,
   RENDU_VOLUME,
 ]);
 
@@ -148,6 +153,17 @@ const DEFINITIONS = Object.freeze([
     cours: true,
     pagesCours: 6,
     creerSerie: genererSerieEcrituresMultiples,
+    nombreQuestionsMaximum: 20,
+  }),
+  definirNotion({
+    id: NOTION_DROITE_GRADUEE,
+    nom: "Droite graduée",
+    gabarit: GABARIT_DROITE_GRADUEE,
+    rendu: RENDU_DROITE_GRADUEE,
+    graineApercu: "apercu-ge01-ge02-complet",
+    cours: true,
+    pagesCours: 5,
+    creerSerie: genererSerieDroiteGraduee,
     nombreQuestionsMaximum: 20,
   }),
   definirNotion({

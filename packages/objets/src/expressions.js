@@ -21,7 +21,7 @@
 // un `role` sémantique (« hypotenuse », « inconnue »…) que le rendu
 // habillera — jamais l'inverse.
 
-import { TYPOGRAPHIE } from "../../charte/src/charte.js?v=41";
+import { TYPOGRAPHIE } from "../../charte/src/charte.js?v=42";
 
 export const VERSION_EXPRESSIONS = 7;
 

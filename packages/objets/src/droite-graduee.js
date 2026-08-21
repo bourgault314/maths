@@ -47,14 +47,14 @@
 // Le rendu est une chaîne SVG pure et déterministe : mêmes réglages,
 // même dessin, partout (diaporama, fiche, atelier, labo, exports).
 
-import { COULEURS } from "../../charte/src/charte.js?v=41";
+import { COULEURS, TYPOGRAPHIE } from "../../charte/src/charte.js?v=42";
 import {
   mesurerEcritureFractionSvg,
   rendreFractionSvg,
   verbaliserFraction,
-} from "./expressions.js?v=41";
+} from "./expressions.js?v=42";
 
-export const VERSION_DROITE_GRADUEE = 1;
+export const VERSION_DROITE_GRADUEE = 2;
 
 /** Les deux côtés possibles pour un point repéré. */
 export const POSITIONS_POINT = Object.freeze(["dessus", "dessous"]);
@@ -85,7 +85,8 @@ export const COULEURS_DROITE = Object.freeze({
   correspondance: COULEURS.reussite, // le point correspondant de la ligne du bas
 });
 
-const POLICE = "Arial, Helvetica, sans-serif";
+const POLICE_TEXTE = TYPOGRAPHIE.texte.replaceAll('"', "'");
+const POLICE_MATHEMATIQUES = TYPOGRAPHIE.mathematiques.replaceAll('"', "'");
 
 // Géométrie, en pixels du dessin. Tout est relatif à l'axe de la ligne.
 const TAILLE_TITRE = 15;
@@ -198,10 +199,20 @@ function lireCouleur(couleur, defaut, quoi) {
 // Primitives SVG (toutes les coordonnées passent par arrondi2)
 // ---------------------------------------------------------------------------
 
-function texte(x, y, contenu, taille, graisse, couleur, ancre = "middle") {
+function texte(
+  x,
+  y,
+  contenu,
+  taille,
+  graisse,
+  couleur,
+  ancre = "middle",
+  police = POLICE_MATHEMATIQUES,
+) {
   return (
     `<text x="${arrondi2(x)}" y="${arrondi2(y)}" text-anchor="${ancre}" ` +
-    `font-family="${POLICE}" font-size="${taille}" font-weight="${graisse}" ` +
+    `font-family="${police}" font-size="${taille}" font-weight="${graisse}" ` +
+    `font-variant-numeric="lining-nums tabular-nums" ` +
     `fill="${couleur}">${echapper(contenu)}</text>`
   );
 }
@@ -277,6 +288,69 @@ export function construireGraduations(min, max, pas, quoi = "construireGraduatio
   const derniere = liste[liste.length - 1];
   if (derniere < max - EPSILON) liste.push(arrondi6(max));
   return liste;
+}
+
+/**
+ * Construit une échelle régulière à partir d'un nombre d'intervalles.
+ *
+ * Contrairement à `construireGraduations(min, max, pas)`, cette forme ne
+ * peut pas créer un dernier intervalle plus court pour rejoindre une borne.
+ * C'est le contrat à employer pour une question de lecture ou de placement.
+ *
+ * @param {object} options
+ * @param {number} [options.depart=0] — valeur de la première graduation.
+ * @param {number} [options.pas=1] — valeur d'un intervalle.
+ * @param {number} [options.nombreIntervalles=10] — nombre d'espaces égaux.
+ * @returns {{min:number,max:number,pas:number,nombreIntervalles:number,graduations:number[]}}
+ */
+export function construireEchelleReguliere(options = {}) {
+  const quoi = "construireEchelleReguliere";
+  const depart = nombreFini(options.depart ?? 0, `${quoi} : depart`);
+  const pas = nombreFini(options.pas ?? 1, `${quoi} : pas`);
+  const nombreIntervalles = nombreFini(
+    options.nombreIntervalles ?? 10,
+    `${quoi} : nombreIntervalles`,
+  );
+  if (!(pas > 0)) {
+    throw new RangeError(`${quoi} : le pas doit être strictement positif (reçu ${formaterNombre(pas)}).`);
+  }
+  if (!Number.isSafeInteger(nombreIntervalles) || nombreIntervalles < 1) {
+    throw new RangeError(`${quoi} : nombreIntervalles doit être un entier strictement positif.`);
+  }
+  if (nombreIntervalles > MAX_GRADUATIONS) {
+    throw new RangeError(
+      `${quoi} : ${nombreIntervalles + 1} graduations demandées, c'est trop ` +
+        `(maximum ${MAX_GRADUATIONS + 1}).`,
+    );
+  }
+  const graduations = Array.from(
+    { length: nombreIntervalles + 1 },
+    (_, index) => arrondi6(depart + index * pas),
+  );
+  return Object.freeze({
+    min: graduations[0],
+    max: graduations.at(-1),
+    pas,
+    nombreIntervalles,
+    graduations: Object.freeze(graduations),
+  });
+}
+
+/** Position horizontale normalisée d'une valeur sur une échelle. */
+export function positionRelativeSurDroite(valeur, min, max) {
+  const quoi = "positionRelativeSurDroite";
+  const v = nombreFini(valeur, `${quoi} : valeur`);
+  const borneMin = nombreFini(min, `${quoi} : min`);
+  const borneMax = nombreFini(max, `${quoi} : max`);
+  if (!(borneMax > borneMin)) {
+    throw new RangeError(`${quoi} : max doit être strictement supérieur à min.`);
+  }
+  if (v < borneMin - EPSILON || v > borneMax + EPSILON) {
+    throw new RangeError(
+      `${quoi} : ${formaterNombre(v)} sort de [${formaterNombre(borneMin)} ; ${formaterNombre(borneMax)}].`,
+    );
+  }
+  return (v - borneMin) / (borneMax - borneMin);
 }
 
 function normaliserEtiquettes(etiquettes, quoi) {
@@ -554,7 +628,16 @@ function dessinerNomDeLigne(nom, yAxe, xGauche) {
   // tient sans rien changer : seul un dessin étroit déclenche la réduction.
   const disponible = xGauche - 10 - X_NOM;
   const taille = tailleDuNom(nom, disponible);
-  return texte(X_NOM, yAxe + 4, nom, taille, 700, COULEURS_DROITE.encre, "start");
+  return texte(
+    X_NOM,
+    yAxe + 4,
+    nom,
+    taille,
+    700,
+    COULEURS_DROITE.encre,
+    "start",
+    POLICE_TEXTE,
+  );
 }
 
 // ---------------------------------------------------------------------------
@@ -722,7 +805,18 @@ export function dessinerDroiteGraduee(options = {}) {
   const hauteur = yAxe + bas + MARGE_BASSE;
 
   let corps = "";
-  if (titre) corps += texte(largeur / 2, 22, titre, TAILLE_TITRE, 700, COULEURS_DROITE.encre);
+  if (titre) {
+    corps += texte(
+      largeur / 2,
+      22,
+      titre,
+      TAILLE_TITRE,
+      700,
+      COULEURS_DROITE.encre,
+      "middle",
+      POLICE_TEXTE,
+    );
+  }
   if (ligne.nom) corps += dessinerNomDeLigne(ligne.nom, yAxe, xGauche);
   corps += dessinerLigne(ligne, yAxe, xGauche, xDroite);
 
@@ -730,6 +824,14 @@ export function dessinerDroiteGraduee(options = {}) {
     svg: svgRacine(largeur, hauteur, corps, o.description ?? "Droite graduée"),
     largeur,
     hauteur,
+    geometrie: Object.freeze({
+      min: ligne.min,
+      max: ligne.max,
+      xGauche,
+      xDroite,
+      yAxe,
+      graduations: Object.freeze([...ligne.graduations]),
+    }),
   };
 }
 
@@ -770,7 +872,18 @@ export function dessinerDoubleDroiteGraduee(options = {}) {
   const hauteur = yBas + mesureBas.bas + MARGE_BASSE;
 
   let corps = "";
-  if (titre) corps += texte(largeur / 2, 22, titre, TAILLE_TITRE, 700, COULEURS_DROITE.encre);
+  if (titre) {
+    corps += texte(
+      largeur / 2,
+      22,
+      titre,
+      TAILLE_TITRE,
+      700,
+      COULEURS_DROITE.encre,
+      "middle",
+      POLICE_TEXTE,
+    );
+  }
   if (ligneHaut.nom) corps += dessinerNomDeLigne(ligneHaut.nom, yHaut, xGauche);
   if (ligneBas.nom) corps += dessinerNomDeLigne(ligneBas.nom, yBas, xGauche);
   corps += dessinerLigne(ligneHaut, yHaut, xGauche, xDroite);

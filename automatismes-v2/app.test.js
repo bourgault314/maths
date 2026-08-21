@@ -2198,6 +2198,40 @@ it("rend NC-05 avec son cours, son aide et sa correction exacte", async () => {
   assert.match(application.innerHTML, /panneau-ecritures-multiples/);
 });
 
+it("rend GE-01 et GE-02 avec saisie signée, cours et placement aimanté", async () => {
+  const { application, gestionnaires } = installerFauxNavigateur(
+    "?notion=droite-graduee&questions=10&graine=apercu-ge01-ge02-complet",
+  );
+  await import(`./app.js?fumee=droite-${Date.now()}`);
+
+  assert.match(application.innerHTML, /Droite graduée/);
+  cliquer(gestionnaires, "demarrer");
+  assert.match(application.innerHTML, /carte-question-droite/);
+  assert.match(application.innerHTML, /droite-graduee-interactive/);
+  assert.match(application.innerHTML, /data-profil="nombre-decimal"/);
+  assert.match(application.innerHTML, /data-value="−"/);
+
+  cliquer(gestionnaires, "aide");
+  assert.match(application.innerHTML, /Compte les intervalles entre elles, pas les traits/);
+  cliquer(gestionnaires, "cours");
+  assert.match(application.innerHTML, /Une droite donne une position/);
+  assert.match(application.innerHTML, /Cours · 1 \/ 5/);
+  cliquer(gestionnaires, "fermer-cours");
+  cliquer(gestionnaires, "fermer-aide");
+  cliquer(gestionnaires, "valider");
+  cliquer(gestionnaires, "suivant");
+
+  assert.match(application.innerHTML, /Touche une graduation : le point s’y aimante/);
+  const graduation = application.innerHTML.match(/data-action="choix" data-id="(g-\d+)"/)?.[1];
+  assert.ok(graduation);
+  cliquer(gestionnaires, "choix", graduation);
+  assert.match(application.innerHTML, /cible-graduation selectionnee/);
+  cliquer(gestionnaires, "valider");
+  cliquer(gestionnaires, "correction");
+  assert.match(application.innerHTML, /Correction expliquée/);
+  assert.match(application.innerHTML, /Le point .* se place sur la graduation d’abscisse/);
+});
+
 it("sélectionne, révise et rejoue plusieurs automatismes dans une même série", async () => {
   const { application, gestionnaires } = installerFauxNavigateur("");
   await import(`./app.js?fumee=multi-${Date.now()}`);

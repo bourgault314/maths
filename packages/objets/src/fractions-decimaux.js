@@ -3,12 +3,13 @@
 // les générateurs, le lecteur et les objets visuels peuvent donc partager les
 // mêmes calculs exacts et les mêmes données structurées.
 
-export const VERSION_FRACTIONS_DECIMAUX = 4;
+export const VERSION_FRACTIONS_DECIMAUX = 5;
 
 export const DENOMINATEURS_DECIMAUX_PRIS_EN_CHARGE = Object.freeze([
   1,
   2,
   4,
+  5,
   10,
   100,
   1000,
@@ -169,10 +170,39 @@ export function normaliserEcritureDecimalePositive(saisie) {
   return analyserEcritureDecimalePositive(saisie).normalisee;
 }
 
+/** Analyse une écriture décimale éventuellement précédée de − ou -. */
+export function analyserEcritureDecimaleSignee(saisie) {
+  if (typeof saisie !== "string") {
+    throw new TypeError("analyserEcritureDecimaleSignee : texte requis");
+  }
+  const compacte = saisie.replace(/\s/gu, "");
+  const negative = /^[−-]/u.test(compacte);
+  const sansSigne = negative ? compacte.slice(1) : compacte;
+  const positive = analyserEcritureDecimalePositive(sansSigne);
+  const signe = negative && positive.fractionReduite.numerateur !== 0 ? -1 : 1;
+  return Object.freeze({
+    ...positive,
+    normalisee: signe < 0 ? `−${positive.normalisee}` : positive.normalisee,
+    fractionDecimale: figerFraction(
+      signe * positive.fractionDecimale.numerateur,
+      positive.fractionDecimale.denominateur,
+    ),
+    fractionReduite: figerFraction(
+      signe * positive.fractionReduite.numerateur,
+      positive.fractionReduite.denominateur,
+    ),
+  });
+}
+
+export function normaliserEcritureDecimaleSignee(saisie) {
+  return analyserEcritureDecimaleSignee(saisie).normalisee;
+}
+
 const FORMAT_DENOMINATEUR = Object.freeze({
   1: Object.freeze({ facteur: 1n, decimales: 0 }),
   2: Object.freeze({ facteur: 5n, decimales: 1 }),
   4: Object.freeze({ facteur: 25n, decimales: 2 }),
+  5: Object.freeze({ facteur: 2n, decimales: 1 }),
   10: Object.freeze({ facteur: 1n, decimales: 1 }),
   100: Object.freeze({ facteur: 1n, decimales: 2 }),
   1000: Object.freeze({ facteur: 1n, decimales: 3 }),
@@ -208,6 +238,17 @@ export function formaterFractionEnDecimal(numerateur, denominateur) {
   return chiffres === ""
     ? partieEntiere.toString()
     : `${partieEntiere},${chiffres}`;
+}
+
+/** Formate exactement une fraction décimale signée avec une virgule. */
+export function formaterFractionEnDecimalSignee(numerateur, denominateur) {
+  exigerFraction(numerateur, denominateur, "formaterFractionEnDecimalSignee");
+  const reduite = reduireFraction(numerateur, denominateur);
+  const valeur = formaterFractionEnDecimal(
+    Math.abs(reduite.numerateur),
+    reduite.denominateur,
+  );
+  return reduite.numerateur < 0 ? `−${valeur}` : valeur;
 }
 
 /**

@@ -71,7 +71,10 @@ import {
 } from "../../packages/objets/src/correspondances-decimales.js";
 import {
   PREREGLAGES_DROITE_GRADUEE,
+  construireEchelleReguliere,
+  dessinerDroiteGraduee,
   dessinerPrereglageDroiteGraduee,
+  formaterNombre,
 } from "../../packages/objets/src/droite-graduee.js";
 import { VARIATIONS_THALES, creerThales, dessinerThales } from "../../packages/objets/src/thales.js";
 import { creerGenerateur } from "../../packages/moteur-exercices/src/aleatoire.js";
@@ -892,10 +895,118 @@ function entreeDroiteParGenre({ titre, genre, defaut }) {
 }
 
 const entreeDroiteGraduee = entreeDroiteParGenre({
-  titre: "Droite graduée",
+  titre: "Droite graduée — validation GE-01 / GE-02",
   genre: "simple",
   defaut: "decimaux",
 });
+
+function etiquettesLimitees(graduations, valeursVisibles) {
+  const visibles = new Set(valeursVisibles.map(String));
+  return Object.fromEntries(
+    graduations.map((valeur) => [
+      String(valeur),
+      visibles.has(String(valeur)) ? formaterNombre(valeur) : "",
+    ]),
+  );
+}
+
+function casEchelleReguliere({
+  legende,
+  depart,
+  pas,
+  nombreIntervalles,
+  valeursVisibles,
+  point = null,
+  largeur = 430,
+}) {
+  const echelle = construireEchelleReguliere({ depart, pas, nombreIntervalles });
+  return {
+    legende,
+    dessiner: () => dessinerDroiteGraduee({
+      ...echelle,
+      etiquettes: etiquettesLimitees(echelle.graduations, valeursVisibles),
+      points: point ? [point] : [],
+      largeur,
+      description: legende,
+    }).svg,
+  };
+}
+
+// Cette planche n'est pas une banque de questions. Elle met l'objet commun
+// sous contrainte avec les configurations demandées pour GE-01 / GE-02.
+entreeDroiteGraduee.planche = () => [
+  casEchelleReguliere({
+    legende: "Pas 0,1 · zéro à gauche · point A à 0,7",
+    depart: 0,
+    pas: 0.1,
+    nombreIntervalles: 10,
+    valeursVisibles: [0, 0.5, 1],
+    point: { valeur: 0.7, etiquette: "A", position: "dessus" },
+  }),
+  casEchelleReguliere({
+    legende: "Pas 0,25 · relatifs · zéro centré",
+    depart: -1,
+    pas: 0.25,
+    nombreIntervalles: 8,
+    valeursVisibles: [-1, 0, 1],
+    point: { valeur: -0.25, etiquette: "B", position: "dessus" },
+  }),
+  casEchelleReguliere({
+    legende: "Pas 0,5 · origine non centrée",
+    depart: -1,
+    pas: 0.5,
+    nombreIntervalles: 8,
+    valeursVisibles: [-1, 0, 3],
+    point: { valeur: 2.5, etiquette: "C", position: "dessous" },
+  }),
+  casEchelleReguliere({
+    legende: "Pas 1 · valeurs toutes négatives · zéro à droite",
+    depart: -8,
+    pas: 1,
+    nombreIntervalles: 8,
+    valeursVisibles: [-8, -4, 0],
+    point: { valeur: -3, etiquette: "D", position: "dessus" },
+  }),
+  casEchelleReguliere({
+    legende: "Pas 10 · origine hors champ · seules deux références sont données",
+    depart: 20,
+    pas: 10,
+    nombreIntervalles: 6,
+    valeursVisibles: [20, 60],
+    point: { valeur: 70, etiquette: "E", position: "dessus" },
+  }),
+  casEchelleReguliere({
+    legende: "Pas 10 · −20 et 20 connus · graduation suivante repérée",
+    depart: -20,
+    pas: 10,
+    nombreIntervalles: 6,
+    valeursVisibles: [-20, 20],
+    point: { valeur: 30, etiquette: "F", position: "dessus" },
+  }),
+  casEchelleReguliere({
+    legende: "Pas 50 · grande échelle jusqu'à 150",
+    depart: -100,
+    pas: 50,
+    nombreIntervalles: 5,
+    valeursVisibles: [-100, 0, 100],
+    point: { valeur: 150, etiquette: "G", position: "dessous" },
+  }),
+  casEchelleReguliere({
+    legende: "Zéro présent mais non écrit · deux références non nulles",
+    depart: -3,
+    pas: 1,
+    nombreIntervalles: 8,
+    valeursVisibles: [-1, 3],
+    point: { valeur: 0, etiquette: "H", position: "dessus" },
+  }),
+  casEchelleReguliere({
+    legende: "Placement · droite muette · aucune réponse préaffichée",
+    depart: -2,
+    pas: 0.5,
+    nombreIntervalles: 8,
+    valeursVisibles: [],
+  }),
+];
 const entreeDoubleDroiteGraduee = entreeDroiteParGenre({
   titre: "Double droite graduée",
   genre: "double",

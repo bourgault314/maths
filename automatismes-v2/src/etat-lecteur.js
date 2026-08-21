@@ -1,12 +1,12 @@
 import {
   SCHEMA_SEANCE,
   validerSeance,
-} from "../../packages/contrats/src/seance.js?v=41";
+} from "../../packages/contrats/src/seance.js?v=42";
 import {
   REFERENTIEL_COMPETENCES,
   SCHEMA_TRACE_REPONSE,
   validerTraceReponse,
-} from "../../packages/contrats/src/trace-reponse.js?v=41";
+} from "../../packages/contrats/src/trace-reponse.js?v=42";
 import {
   TYPE_REPONSE_ENTIER_NATUREL,
   TYPE_REPONSE_DEUX_ENTIERS,
@@ -16,20 +16,21 @@ import {
   estDeuxEntiersExacts,
   estEntierExact,
   estSelectionExacte,
-} from "../../packages/contrats/src/question-v2.js?v=41";
+} from "../../packages/contrats/src/question-v2.js?v=42";
 import {
-  analyserEcritureDecimalePositive,
+  analyserEcritureDecimaleSignee,
   fractionsEgales,
-} from "../../packages/objets/src/fractions-decimaux.js?v=41";
+} from "../../packages/objets/src/fractions-decimaux.js?v=42";
 import { graineDepuisTexte } from "../../packages/moteur-exercices/src/aleatoire.js";
-import { creerRegistreAutomatismes } from "../../packages/automatismes/src/registre.js?v=41";
+import { creerRegistreAutomatismes } from "../../packages/automatismes/src/registre.js?v=42";
 import {
   normaliserIdentifiantModule,
-} from "../../packages/automatismes/src/identifiants.js?v=41";
+} from "../../packages/automatismes/src/identifiants.js?v=42";
 import {
   connaitNotionLecteur,
   listerNotionsLecteur,
   NOTION_ECRITURES_MULTIPLES_NOMBRE,
+  NOTION_DROITE_GRADUEE,
   NOTION_FRACTIONS_SIMPLES_DECIMAUX,
   NOTION_NC01,
   NOTION_NC02,
@@ -38,11 +39,12 @@ import {
   NOTION_VOLUME_CYLINDRE,
   NOTION_VOLUME_PRISME,
   obtenirNotionLecteur,
-} from "./registre-lecteur.js?v=41";
-import { genererSerieMultinotions } from "./serie-multinotions.js?v=41";
+} from "./registre-lecteur.js?v=42";
+import { genererSerieMultinotions } from "./serie-multinotions.js?v=42";
 
 export {
   NOTION_ECRITURES_MULTIPLES_NOMBRE,
+  NOTION_DROITE_GRADUEE,
   NOTION_FRACTIONS_SIMPLES_DECIMAUX,
   NOTION_NC01,
   NOTION_NC02,
@@ -338,7 +340,7 @@ export function selectionnerChampSaisie(etat, index) {
 
 function analyserDecimalSansErreur(saisie) {
   try {
-    return analyserEcritureDecimalePositive(saisie);
+    return analyserEcritureDecimaleSignee(saisie);
   } catch {
     return null;
   }
@@ -375,16 +377,26 @@ function saisirEntierSansBorne(etat, chiffre) {
   }
 }
 
-function saisirDecimal(etat, caractere) {
+function saisirDecimal(etat, question, caractere) {
   const estChiffre = /^\d$/.test(caractere);
   const estSeparateur = caractere === "," || caractere === ".";
-  if (!estChiffre && !estSeparateur) return;
+  const estSigne = question.classement.notion === NOTION_DROITE_GRADUEE
+    && (caractere === "−" || caractere === "-");
+  if (!estChiffre && !estSeparateur && !estSigne) return;
 
   let proposition;
-  if (estSeparateur) {
+  if (estSigne) {
+    proposition = /^[−-]/u.test(etat.saisie)
+      ? etat.saisie.slice(1)
+      : `−${etat.saisie}`;
+  } else if (estSeparateur) {
     if (/[.,]/.test(etat.saisie)) return;
     proposition = `${etat.saisie || "0"},`;
-  } else if (etat.saisie === "0") {
+  } else if (etat.saisie === "0" || etat.saisie === "−0") {
+    proposition = etat.saisie.startsWith("−") ? `−${caractere}` : caractere;
+  } else if (etat.saisie === "−") {
+    proposition = `−${caractere}`;
+  } else if (etat.saisie === "") {
     proposition = caractere;
   } else {
     proposition = `${etat.saisie}${caractere}`;
@@ -394,7 +406,7 @@ function saisirDecimal(etat, caractere) {
     return;
   }
   etat.saisie = proposition;
-  etat.erreurValidation = analyserDecimalSansErreur(proposition)
+  etat.erreurValidation = proposition === "−" || analyserDecimalSansErreur(proposition)
     ? ""
     : "Utilise une écriture décimale limitée aux millièmes.";
 }
@@ -421,7 +433,7 @@ export function saisirCaractere(etat, caractere) {
   ) {
     return etat;
   }
-  if (typeDecimal) saisirDecimal(etat, texte);
+  if (typeDecimal) saisirDecimal(etat, question, texte);
   else if (/^\d$/.test(texte)) {
     if (typeFraction) saisirEntierSansBorne(etat, texte);
     else saisirEntierBorne(etat, question, texte, typeDeuxEntiers);
