@@ -47,18 +47,27 @@
         /* Bouton Retour Accueil */
         .home-link {
             position: absolute;
-            left: 20px;
+            left: 12px;
             top: 50%;
             transform: translateY(-50%);
-            color: #888;
+            color: #cfd6dd;
             text-decoration: none;
-            font-size: 0.9rem;
-            display: flex;
+            font-size: 0.95rem;
+            display: inline-flex;
             align-items: center;
-            gap: 5px;
+            justify-content: center;
+            gap: 6px;
+            min-width: 44px;
+            min-height: 44px;
             transition: color 0.2s;
         }
         .home-link:hover { color: white; }
+        /* Sur telephone le titre est centre : on ne garde que la fleche, sinon
+           le libelle vient se poser par-dessus CLUB MATHS. */
+        .home-link svg { width: 24px; height: 24px; flex: 0 0 auto; display: block; }
+        @media (max-width: 700px) {
+            .home-link .home-link-label { display: none; }
+        }
 
         header h1 { margin: 0; font-weight: 300; letter-spacing: 1px; }
         header .subtitle { color: var(--primary); font-weight: bold; margin-top: 5px; display: block;}
@@ -230,7 +239,7 @@
 
     <div class="screen-wrapper">
         <header>
-            <a href="../index.html?domain=jeux-recherches&amp;notion=explorations" class="home-link">← Explorations</a>
+            <a href="../index.html?domain=jeux-recherches&amp;notion=explorations" class="home-link" title="Retour à Explorations" aria-label="Retour à Explorations"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M19 12H5"/><path d="M11 18l-6-6 6-6"/></svg><span class="home-link-label">Explorations</span></a>
             <h1>CLUB MATHS</h1>
             <span class="subtitle">Activité 2 : Le Jeu du Chaos (Fractales)</span>
         </header>

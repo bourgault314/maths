@@ -24,20 +24,30 @@
             color: #333;
         }
         
-        .topbar-nav { 
-            display:flex; align-items:center; gap:12px; 
-            margin-bottom:20px; 
-            max-width: 1250px; 
-            margin-left: auto; margin-right: auto;
+        /* Le retour partage la ligne du titre : il ne prend plus de rangee a lui. */
+        .panel-head {
+            width: 100%;
+            display: flex; align-items: center; gap: 12px;
+            margin: 0 0 15px 0;
+            padding-bottom: 10px;
+            border-bottom: 2px solid #f3f4f6;
         }
-        .topbar-nav .back {
-            display:inline-block; padding:8px 16px; 
-            background:#2563eb; color:#fff; 
+        .panel-head .back {
+            display:inline-flex; align-items:center; justify-content:center; gap:6px;
+            min-width: 44px; min-height: 44px;
+            padding: 0 14px;
+            background:#2563eb; color:#fff;
             border-radius:8px; text-decoration:none; font-weight:600;
-            font-size: 14px;
+            font-size: 14px; flex: 0 0 auto;
             transition: background 0.2s;
         }
-        .topbar-nav .back:hover { background: #1d4ed8; }
+        .panel-head .back:hover { background: #1d4ed8; }
+        .panel-head .back svg { width: 22px; height: 22px; flex: 0 0 auto; display: block; }
+        /* Colonne etroite : la fleche seule, pour que le titre reste sur la ligne. */
+        @media (max-width: 520px) {
+            .panel-head .back { padding: 0; }
+            .panel-head .back .back-label { display: none; }
+        }
 
         /* MENU CONFIGURATION */
         .settings-panel {
@@ -55,10 +65,7 @@
         }
         
         .settings-panel h1 {
-            width: 100%;
-            margin: 0 0 15px 0;
-            padding-bottom: 10px;
-            border-bottom: 2px solid #f3f4f6;
+            margin: 0;
             color: #111827;
             font-size: 20px;
         }
@@ -172,9 +179,9 @@
 
         @media screen and (max-width: 700px) {
             body { padding: 10px; }
-            .topbar-nav { margin-bottom: 10px; }
             .settings-panel { padding: 14px; gap: 16px; margin-bottom: 14px; }
-            .settings-panel h1 { font-size: 18px; margin-bottom: 4px; }
+            .settings-panel h1 { font-size: 18px; }
+            .panel-head { margin-bottom: 4px; }
             .control-group { flex: 1 1 145px; min-width: 0; }
             .row-inputs { flex-wrap: wrap; }
             .action-buttons { width: 100%; margin-left: 0; align-self: stretch; }
@@ -317,7 +324,6 @@
            5. IMPRESSION
            ========================================================= */
         @media print {
-            body > .topbar-nav, 
             body > .settings-panel, 
             body > #print-button { display: none; }
             body { padding: 0; background-color: white; }
@@ -342,12 +348,11 @@
 </head>
 <body>
 
-    <div class="topbar-nav">
-      <a class="back" href="../index.html?domain=nombres-calculs&amp;notion=divisibilite">← Divisibilité</a>
-    </div>
-
     <div class="settings-panel">
-        <h1>Générateur de Cartes</h1>
+        <div class="panel-head">
+          <a class="back" href="../index.html?domain=nombres-calculs&amp;notion=divisibilite" title="Retour à Divisibilité" aria-label="Retour à Divisibilité"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M19 12H5"/><path d="M11 18l-6-6 6-6"/></svg><span class="back-label">Divisibilité</span></a>
+          <h1>Générateur de Cartes</h1>
+        </div>
         
         <div class="control-group">
             <label>Nombres & Disposition</label>
