@@ -126,6 +126,30 @@ test("les retours explicites pointent vers le parent réel du catalogue", () => 
   }
 });
 
+test("les deux retours écrits à la main se prennent au pouce sans manger le titre", () => {
+  // Ces deux pages n'appellent pas la couche commune : leur flèche est écrite dans
+  // le HTML, donc rien ne la surveille. Sans cette garde, un coup de peigne sur la
+  // feuille de style ramènerait « ← Explorations » par-dessus CLUB MATHS, et la
+  // cible retomberait aux 19 px de haut qu'elle avait.
+  const chaos = returnPages["outils/club_maths/jeu_du_chaos.html"];
+  assert.match(chaos, /\.home-link \{[^}]*min-width: 44px;[^}]*min-height: 44px;/s);
+  assert.match(chaos, /<span class="home-link-label">Explorations<\/span>/);
+  assert.match(
+    chaos,
+    /@media \(max-width: \d+px\) \{\s*\.home-link \.home-link-label \{ display: none; \}/,
+    "sur écran étroit, le libellé s'efface et la flèche reste",
+  );
+
+  const cartes = returnPages["outils/fabrication_materiel/cartes_premiers_1_100.html"];
+  assert.match(cartes, /\.panel-head \.back \{[^}]*min-width: 44px; min-height: 44px;/s);
+  assert.match(
+    cartes,
+    /<div class="panel-head">\s*<a class="back"[\s\S]*?<h1>Générateur de Cartes<\/h1>\s*<\/div>/,
+    "le retour et le titre partagent la même rangée",
+  );
+  assert.doesNotMatch(cartes, /topbar-nav/, "la rangée qui ne portait que le retour a disparu");
+});
+
 test("la couche commune n'épingle rien par-dessus la page et ne fabrique un retour que s'il est déclaré", () => {
   // Le chemin « retour déclaré » reste exercé par les pages de rubrique boulier,
   // dont la flèche existe déjà dans le HTML et n'est que recâblée.
