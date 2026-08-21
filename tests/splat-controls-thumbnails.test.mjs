@@ -63,7 +63,9 @@ test("les quatre miniatures utilisent des vues fideles et adaptees aux outils", 
 });
 
 test("la collection Splat suit l'ordre pedagogique valide", () => {
-  assert.match(catalogueScript, /\["outils\/splat_tache_barre\.html", 0\][\s\S]*\["outils\/splat\.html", 1\][\s\S]*\["outils\/splat_equations\.html", 2\]/);
+  assert.match(catalogueScript, /path === "outils\/splat_tache_barre\.html"\) return 0;[\s\S]*path === "outils\/splat\.html"\) return 1;[\s\S]*path === "outils\/splat_equations\.html"\) return 2;/);
+  assert.match(catalogueScript, /collectionCardRank\(state\.collection, item\.resource\.path\)/);
+  assert.match(cataloguePage, /catalogue-refonte\.js\?v=splat-order-20260821-1/);
 });
 
 test("les quatre outils Splat utilisent une fleche de retour vers la collection", () => {

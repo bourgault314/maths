@@ -18,6 +18,14 @@ function loadCompareCards() {
   return sandbox.compareCards;
 }
 
+function loadCollectionCardRank() {
+  const bloc = catalogueScript.match(/function collectionCardRank\(collectionId, path\) \{[\s\S]*?\n {2}\}/);
+  assert.ok(bloc, "collectionCardRank doit rester une fonction isolée de catalogue-refonte.js.");
+  const sandbox = {};
+  vm.runInNewContext(`${bloc[0]}\nthis.collectionCardRank = collectionCardRank;`, sandbox);
+  return sandbox.collectionCardRank;
+}
+
 function loadCatalogue() {
   const context = vm.createContext({ window: {} });
   vm.runInContext(readFileSync(catalogueSourceUrl, "utf8"), context, {
@@ -27,6 +35,7 @@ function loadCatalogue() {
 }
 
 const compareCards = loadCompareCards();
+const collectionCardRank = loadCollectionCardRank();
 const catalogue = loadCatalogue();
 const classifications = catalogue.resourceClassifications || {};
 const families = catalogue.resourceFamilies || [];
@@ -75,6 +84,11 @@ test("le tri est réellement branché sur le rendu des sections", () => {
   );
   assert.match(
     catalogueScript,
+    /const collectionRank = collectionCardRank\(state\.collection, item\.resource\.path\);/,
+    "le rang propre à une collection doit alimenter la clé du tri final."
+  );
+  assert.match(
+    catalogueScript,
     /if \(item\.family\) return \{ title: item\.family\.title, rang: item\.family\.rang \};/,
     "une carte de famille doit tirer son rang de la famille, pas d’une de ses variantes."
   );
@@ -104,6 +118,21 @@ test("un rang explicite passe devant l’alphabet, et les cartes sans rang suive
     "Zzz rang 2",
     "Aaa sans rang"
   ]);
+});
+
+test("Splat affiche Petit Splat, Splat classique, puis Splat équations", () => {
+  const paths = [
+    "outils/splat_equations.html",
+    "outils/splat.html",
+    "outils/splat_tache_barre.html"
+  ];
+  paths.sort((a, b) => collectionCardRank("splat", a) - collectionCardRank("splat", b));
+  assert.deepEqual(paths, [
+    "outils/splat_tache_barre.html",
+    "outils/splat.html",
+    "outils/splat_equations.html"
+  ]);
+  assert.equal(collectionCardRank("", "outils/splat.html"), Infinity, "l’ordre spécial reste limité à la collection Splat.");
 });
 
 test("les niveaux numérotés se rangent dans l’ordre des nombres", () => {
