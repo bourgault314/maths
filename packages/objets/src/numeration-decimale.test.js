@@ -62,7 +62,7 @@ function verifierPiecesDansViewBox(rendu) {
 
 describe("matériel de numération décimale", () => {
   it("expose une API versionnée et les deux orientations", () => {
-    assert.equal(VERSION_NUMERATION_DECIMALE, 7);
+    assert.equal(VERSION_NUMERATION_DECIMALE, 8);
     assert.deepEqual(ORIENTATIONS_MATERIEL_NUMERATION_DECIMALE, [
       "horizontale",
       "verticale",
@@ -112,7 +112,8 @@ describe("matériel de numération décimale", () => {
       arrondi2(piece.y - positions[index].y));
     assert.ok(pas[0] - rendu.tailleCellule >= 3);
     assert.deepEqual(new Set(pas).size, 1);
-    assert.equal(compter(rendu.svg, /class="nd-separation-cinq"/g), 6);
+    assert.equal(compter(rendu.svg, /class="nd-separation-cinq"/g), 0);
+    assert.equal(compter(rendu.svg, /data-subdivision="aucune"/g), 6);
   });
 
   it("dessine le cas d'or 1,47 sans changer d'échelle", () => {
@@ -431,6 +432,37 @@ describe("conversion paramétrique par rang", () => {
     );
     assert.match(converti.svg, /data-etat="converti-rang-final"/);
     assert.match(converti.texteAlternatif, /Tous les groupes sont convertis en centièmes jaunes/);
+  });
+
+  it("ne quadrille un rang naturel qu'au moment où il est converti", () => {
+    const options = {
+      ecritureDecimale: "0,8",
+      rangFinal: "centiemes",
+      sens: "decimal-vers-fraction",
+      largeur: 320,
+    };
+    const naturel = dessinerConversionRangsNumerationDecimale({
+      ...options,
+      etat: "decompose",
+    });
+    const converti = dessinerConversionRangsNumerationDecimale({
+      ...options,
+      etat: "converti-rang-final",
+    });
+
+    assert.equal(compter(naturel.svg, /data-subdivision="aucune"/g), 8);
+    assert.equal(compter(naturel.svg, /class="nd-grille"/g), 0);
+    assert.match(naturel.svg, />0,8 dans ses rangs<\/text>/);
+    assert.doesNotMatch(naturel.svg, />0,80 dans ses rangs<\/text>/);
+    assert.equal(compter(converti.svg, /data-subdivision="centiemes"/g), 8);
+    assert.equal(compter(converti.svg, /class="nd-grille"/g), 8);
+    assert.equal(compter(naturel.svg, /class="nd-cadre-unite-dixiemes"/g), 1);
+    assert.equal(compter(converti.svg, /class="nd-cadre-unite-dixiemes"/g), 1);
+    assert.deepEqual(
+      naturel.groupes.map(({ rang, largeur, hauteur }) => [rang, largeur, hauteur]),
+      converti.groupes.map(({ rang, largeur, hauteur }) => [rang, largeur, hauteur]),
+    );
+    assert.equal(naturel.groupes[0].hauteur, naturel.groupes[0].largeur);
   });
 
   it("ne convertit pas les rangs avant le second état dans le sens décimal vers fraction", () => {

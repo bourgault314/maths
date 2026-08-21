@@ -25,6 +25,8 @@ import {
   lireConfiguration,
   nombreReussites,
   NOMBRE_QUESTIONS_MAXIMUM,
+  NOTION_DECIMAL_VERS_FRACTION,
+  NOTION_FRACTION_VERS_DECIMAL,
   NOTION_FRACTIONS_SIMPLES_DECIMAUX,
   NOTION_NC01,
   NOTION_NC02,
@@ -203,6 +205,14 @@ describe("configuration du lecteur", () => {
     assert.deepEqual(
       lireConfiguration("?notion=solides-usuels&questions=2").notions,
       [NOTION_SOLIDES_USUELS],
+    );
+    assert.deepEqual(
+      lireConfiguration("?notion=fractions-simples-decimaux&questions=10").notions,
+      [NOTION_FRACTIONS_SIMPLES_DECIMAUX],
+    );
+    assert.deepEqual(
+      lireConfiguration("?notion=fraction-vers-decimal&questions=5").notions,
+      [NOTION_FRACTION_VERS_DECIMAL],
     );
   });
 

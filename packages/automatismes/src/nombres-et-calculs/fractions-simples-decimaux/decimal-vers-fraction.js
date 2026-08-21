@@ -21,7 +21,7 @@ import {
   reponseChoixUnique,
   reponseFractionEquivalente,
   reponseNumerateurImpose,
-} from "./commun.js?v=44";
+} from "./commun.js?v=45";
 import {
   NUMERATEURS_CENTIEMES,
   NUMERATEURS_DIXIEMES,
@@ -185,7 +185,7 @@ export function genererQuestionDecimalVersFraction({ aleatoire, parametres }) {
       id: "consigne",
       type: "texte",
       contenu: forme === "fraction-libre"
-        ? "Écris ce nombre sous forme de fraction. Toutes les fractions égales sont acceptées."
+        ? "Écris une fraction égale à ce nombre. Plusieurs réponses sont possibles."
         : presentation === "qcm-diagnostique"
             ? "Quelle fraction correspond à ce nombre ?"
             : "Complète l'égalité.",

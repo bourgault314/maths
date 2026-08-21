@@ -128,7 +128,7 @@ describe("bandes fractionnaires sur rail — cas d'or", () => {
     );
   });
 
-  it("nomme les repères intermédiaires du cours sans révéler la cible finale", () => {
+  it("nomme les repères intermédiaires déjà franchis sans révéler la cible finale", () => {
     const cas = [
       {
         numerateur: 7,
@@ -140,7 +140,7 @@ describe("bandes fractionnaires sur rail — cas d'or", () => {
         numerateur: 6,
         denominateur: 4,
         cible: "1,5",
-        reperes: ["0,25", "0,5", "0,75", "1,25", "1,75"],
+        reperes: ["0,25", "0,5", "0,75", "1,25"],
       },
     ];
 
@@ -307,6 +307,26 @@ describe("bandes fractionnaires sur rail — cas d'or", () => {
     assert.ok(!rendu.svg.includes(">7</text>"));
     assert.ok(!rendu.texteAlternatif.includes("numérateur 7"));
     assert.ok(!rendu.texteAlternatif.includes("sept quarts"));
+  });
+
+  it("guide 3,5 de demi en demi sans révéler le numérateur demandé", () => {
+    const rendu = dessinerBandesFractionnairesSurRailDecimal({
+      numerateur: 7,
+      denominateur: 2,
+      profil: "aide-nc04-imposee",
+      etape: "pieces",
+      partiesPosees: 7,
+      afficherReperesIntermediairesCours: true,
+      largeur: 560,
+    });
+
+    assert.equal(rendu.erreur, null);
+    assert.match(rendu.svg, /class="source-decimale"[^>]*>3,5<\/text>/);
+    for (const repere of ["0,5", "1,5", "2,5"]) {
+      assert.match(rendu.svg, new RegExp(`>${repere}<\\/text>`));
+    }
+    assert.match(rendu.svg, /class="cible-fractionnaire-masquee"/);
+    assert.doesNotMatch(rendu.svg, /cible-fractionnaire-masquee[^>]*>7<\/text>/);
   });
 
   it("étend les quarts jusqu'à 12/4 sur un rail de trois unités", () => {
@@ -985,7 +1005,7 @@ describe("bandes fractionnaires sur rail — validation et stabilité", () => {
     assert.match(mauvaisFormat.erreur, /format doit être/);
   });
 
-  it("réserve les repères intermédiaires aux bandes non regroupées du cours", () => {
+  it("réserve les repères intermédiaires aux rails des demis et des quarts", () => {
     const mauvaisType = dessinerBandesFractionnairesSurRailDecimal({
       numerateur: 7,
       denominateur: 2,
@@ -1018,6 +1038,14 @@ describe("bandes fractionnaires sur rail — validation et stabilité", () => {
       etape: "pieces",
       afficherReperesIntermediairesCours: true,
     });
+    const aideInverse = dessinerBandesFractionnairesSurRailDecimal({
+      numerateur: 5,
+      denominateur: 4,
+      profil: "aide-nc04-imposee",
+      etape: "pieces",
+      partiesPosees: 5,
+      afficherReperesIntermediairesCours: true,
+    });
 
     assert.match(mauvaisType.erreur, /doit être un booléen/);
     for (const syntheseQuarts of synthesesQuarts) {
@@ -1033,10 +1061,15 @@ describe("bandes fractionnaires sur rail — validation et stabilité", () => {
         /repères décimaux intermédiaires nommés sont 0,25, 0,5, 0,75/,
       );
     }
-    for (const rendu of [apresRegroupement, unites]) {
-      assert.match(rendu.erreur, /réservés aux bandes non regroupées/);
-      assert.doesNotMatch(rendu.svg, /repere-intermediaire-cours/);
+    assert.equal(apresRegroupement.erreur, null);
+    assert.match(apresRegroupement.svg, /repere-intermediaire-cours/);
+    assert.match(unites.erreur, /réservés aux rails/);
+    assert.doesNotMatch(unites.svg, /repere-intermediaire-cours/);
+    assert.equal(aideInverse.erreur, null);
+    for (const repere of ["0,25", "0,5", "0,75"]) {
+      assert.match(aideInverse.svg, new RegExp(`>${repere}<\\/text>`));
     }
+    assert.doesNotMatch(aideInverse.svg, />1,5<\/text>|>1,75<\/text>/);
   });
 
   it("ne livre jamais une cible qui coïncide avec le premier repère du cours", () => {

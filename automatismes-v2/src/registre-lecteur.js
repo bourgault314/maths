@@ -12,8 +12,13 @@ import {
   GABARIT_FRACTION_VERS_DECIMAL,
 } from "../../packages/automatismes/src/nombres-et-calculs/fractions-simples-decimaux/fraction-vers-decimal.js?v=44";
 import {
+  GABARIT_DECIMAL_VERS_FRACTION,
+} from "../../packages/automatismes/src/nombres-et-calculs/fractions-simples-decimaux/decimal-vers-fraction.js?v=45";
+import {
+  genererSerieDecimalVersFraction,
+  genererSerieFractionVersDecimal,
   genererSerieFractionsDecimaux,
-} from "../../packages/automatismes/src/nombres-et-calculs/fractions-simples-decimaux/serie.js?v=44";
+} from "../../packages/automatismes/src/nombres-et-calculs/fractions-simples-decimaux/serie.js?v=45";
 import {
   GABARIT_ECRITURES_MULTIPLES,
 } from "../../packages/automatismes/src/nombres-et-calculs/ecritures-multiples-nombre/questions.js?v=44";
@@ -21,11 +26,16 @@ import {
   genererSerieEcrituresMultiples,
 } from "../../packages/automatismes/src/nombres-et-calculs/ecritures-multiples-nombre/serie.js?v=44";
 import {
+  MICRO_NOTIONS_AUTOMATISMES,
   MODULES_AUTOMATISMES,
 } from "../../packages/automatismes/src/identifiants.js?v=44";
 
 export const NOTION_NC01 = MODULES_AUTOMATISMES.CRITERES_DIVISIBILITE;
 export const NOTION_NC02 = MODULES_AUTOMATISMES.CARRES_ENTIERS;
+export const NOTION_FRACTION_VERS_DECIMAL =
+  MICRO_NOTIONS_AUTOMATISMES.FRACTION_VERS_DECIMAL;
+export const NOTION_DECIMAL_VERS_FRACTION =
+  MICRO_NOTIONS_AUTOMATISMES.DECIMAL_VERS_FRACTION;
 export const NOTION_FRACTIONS_SIMPLES_DECIMAUX =
   MODULES_AUTOMATISMES.FRACTIONS_SIMPLES_DECIMAUX;
 export const NOTION_ECRITURES_MULTIPLES_NOMBRE =
@@ -63,6 +73,7 @@ function definirNotion({
   rotationSolide = false,
   creerSerie = null,
   nombreQuestionsMaximum = 100,
+  notionsProduites = [id],
 }) {
   if (typeof id !== "string" || !/^[a-z0-9][a-z0-9-]*$/.test(id)) {
     throw new TypeError(`identifiant de notion invalide : ${id}`);
@@ -92,6 +103,13 @@ function definirNotion({
   ) {
     throw new RangeError(`capacité de série invalide : ${id}`);
   }
+  if (
+    !Array.isArray(notionsProduites)
+    || notionsProduites.length < 1
+    || notionsProduites.some((notion) => typeof notion !== "string")
+  ) {
+    throw new TypeError(`notions produites invalides : ${id}`);
+  }
   return Object.freeze({
     id,
     nom,
@@ -102,6 +120,7 @@ function definirNotion({
     pagesCours,
     creerSerie,
     nombreQuestionsMaximum,
+    notionsProduites: Object.freeze([...notionsProduites]),
   });
 }
 
@@ -129,14 +148,25 @@ const DEFINITIONS = Object.freeze([
     nombreQuestionsMaximum: 20,
   }),
   definirNotion({
-    id: NOTION_FRACTIONS_SIMPLES_DECIMAUX,
-    nom: "Fractions simples et décimaux",
+    id: NOTION_FRACTION_VERS_DECIMAL,
+    nom: "Fraction vers écriture décimale",
     gabarit: GABARIT_FRACTION_VERS_DECIMAL,
     rendu: RENDU_FRACTIONS_DECIMAUX,
-    graineApercu: "apercu-nc03-nc04-complet",
+    graineApercu: "apercu-nc03-complet",
     cours: true,
-    pagesCours: 6,
-    creerSerie: genererSerieFractionsDecimaux,
+    pagesCours: 5,
+    creerSerie: genererSerieFractionVersDecimal,
+    nombreQuestionsMaximum: 20,
+  }),
+  definirNotion({
+    id: NOTION_DECIMAL_VERS_FRACTION,
+    nom: "Écriture décimale vers fraction",
+    gabarit: GABARIT_DECIMAL_VERS_FRACTION,
+    rendu: RENDU_FRACTIONS_DECIMAUX,
+    graineApercu: "apercu-nc04-complet",
+    cours: true,
+    pagesCours: 5,
+    creerSerie: genererSerieDecimalVersFraction,
     nombreQuestionsMaximum: 20,
   }),
   definirNotion({
@@ -184,8 +214,25 @@ const DEFINITIONS = Object.freeze([
   }),
 ]);
 
-const PAR_ID = new Map(DEFINITIONS.map((definition) => [definition.id, definition]));
-if (PAR_ID.size !== DEFINITIONS.length) {
+const DEFINITION_FRACTIONS_SIMPLES_DECIMAUX_LEGACY = definirNotion({
+  id: NOTION_FRACTIONS_SIMPLES_DECIMAUX,
+  nom: "Fractions simples et décimaux",
+  gabarit: GABARIT_FRACTION_VERS_DECIMAL,
+  rendu: RENDU_FRACTIONS_DECIMAUX,
+  graineApercu: "apercu-nc03-nc04-complet",
+  cours: true,
+  pagesCours: 6,
+  creerSerie: genererSerieFractionsDecimaux,
+  nombreQuestionsMaximum: 20,
+  notionsProduites: [NOTION_FRACTION_VERS_DECIMAL, NOTION_DECIMAL_VERS_FRACTION],
+});
+
+const PAR_ID = new Map([
+  ...DEFINITIONS.map((definition) => [definition.id, definition]),
+  [DEFINITION_FRACTIONS_SIMPLES_DECIMAUX_LEGACY.id,
+    DEFINITION_FRACTIONS_SIMPLES_DECIMAUX_LEGACY],
+]);
+if (PAR_ID.size !== DEFINITIONS.length + 1) {
   throw new Error("le registre du lecteur contient un identifiant de notion dupliqué");
 }
 

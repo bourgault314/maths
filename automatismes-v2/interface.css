@@ -3952,8 +3952,42 @@ body {
 }
 
 .decimal-question {
-  color: var(--mg-bleu);
+  color: var(--mg-encre);
   font-size: 1.05em;
+}
+
+/* L'énoncé reste neutre : les couleurs de rang appartiennent à l'aide,
+ * à la correction et au cours, où elles portent réellement du sens. */
+.carte-question-fractions .mathsgo-role-unites,
+.carte-question-fractions .mathsgo-role-dixiemes,
+.carte-question-fractions .mathsgo-role-centiemes,
+.carte-question-fractions .mathsgo-role-milliemes {
+  color: inherit;
+}
+
+.seconde-lecture-aide-fraction {
+  margin-top: 14px;
+  padding: 12px;
+  border: 2px solid color-mix(in srgb, var(--mg-turquoise) 38%, transparent);
+  border-radius: var(--mg-rayon-moyen);
+  background: color-mix(in srgb, var(--mg-turquoise) 5%, var(--mg-papier));
+}
+
+.seconde-lecture-aide-fraction h3,
+.seconde-lecture-aide-fraction p {
+  margin: 0 0 8px;
+}
+
+.lectures-locales-fraction-decimale {
+  margin-top: 14px;
+  padding: 10px 12px;
+  border-radius: var(--mg-rayon-moyen);
+  background: var(--mg-fondDoux);
+}
+
+.lectures-locales-fraction-decimale h3 {
+  margin: 0 0 8px;
+  font-size: 1rem;
 }
 
 .case-reponse-rationnelle {

@@ -729,7 +729,7 @@ it("distingue omission, mauvaise saisie et correction pour une fraction libre", 
   avancerJusquaQuestion(
     omission.application,
     omission.gestionnaires,
-    (html) => /3,5/.test(html) && /Toutes les fractions égales sont acceptées/.test(html),
+    (html) => /3,5/.test(html) && /Plusieurs réponses sont possibles/.test(html),
   );
   assert.match(omission.application.innerHTML, /3,5/);
   cliquer(omission.gestionnaires, "valider");
@@ -747,7 +747,7 @@ it("distingue omission, mauvaise saisie et correction pour une fraction libre", 
   avancerJusquaQuestion(
     erreur.application,
     erreur.gestionnaires,
-    (html) => /3,5/.test(html) && /Toutes les fractions égales sont acceptées/.test(html),
+    (html) => /3,5/.test(html) && /Plusieurs réponses sont possibles/.test(html),
   );
   cliquer(erreur.gestionnaires, "champ-reponse", undefined, undefined, "0");
   cliquer(erreur.gestionnaires, "chiffre", undefined, "1");
@@ -848,7 +848,7 @@ it("colore immédiatement la mauvaise proposition et la bonne réponse d’un QC
   assert.doesNotMatch(application.innerHTML, /Correction expliquée/);
 });
 
-it("applique aussi les couleurs de rang aux choix décimaux d’un QCM NC-03", async () => {
+it("conserve les rôles de rang des QCM afin que la correction puisse les recolorer", async () => {
   const { application, gestionnaires } = installerFauxNavigateur(
     "?notion=fractions-simples-decimaux&questions=20&graine=qcm-nc03-1",
   );
@@ -1082,10 +1082,10 @@ it("rend NC-03 et NC-04 dans une seule notion avec des repères cohérents en ai
     assert.match(application.innerHTML, /fraction-empilee/);
     directVu ||= /famille-fraction-vers-decimal/.test(application.innerHTML);
     inverseVu ||= /famille-decimal-vers-fraction/.test(application.innerHTML);
-    libreVue ||= /Toutes les fractions égales sont acceptées/.test(
+    libreVue ||= /Plusieurs réponses sont possibles/.test(
       application.innerHTML,
     );
-    if (/Toutes les fractions égales sont acceptées/.test(application.innerHTML)) {
+    if (/Plusieurs réponses sont possibles/.test(application.innerHTML)) {
       assert.match(
         application.innerHTML,
         /fraction-reponse" role="group" aria-label="Fraction à compléter"/,
@@ -1113,7 +1113,7 @@ it("rend NC-03 et NC-04 dans une seule notion avec des repères cohérents en ai
         /figure-double-droite-fraction|figure-bandes-rail|figure-grille-repere|figure-correspondance-decimale/,
       );
     }
-    if (aideTableau && !/Toutes les fractions égales sont acceptées/.test(application.innerHTML)) {
+    if (aideTableau && !/Plusieurs réponses sont possibles/.test(application.innerHTML)) {
       assert.match(application.innerHTML, /figure-tableau-numeration/);
     }
     cliquer(gestionnaires, "fermer-correction");
@@ -1128,6 +1128,27 @@ it("rend NC-03 et NC-04 dans une seule notion avec des repères cohérents en ai
   assert.equal(droiteVue, true);
   assert.equal(tableauVu, true);
   assert.match(application.innerHTML, /Séance terminée/);
+});
+
+it("sépare les cours NC-03 et NC-04 en cinq pages ciblées", async () => {
+  for (const [notion, titrePropre, titreAbsent] of [
+    ["fraction-vers-decimal", /Lire une fraction décimale/, /Quand le dénominateur est donné/],
+    ["decimal-vers-fraction", /Quand le dénominateur est donné/, /Lire une fraction décimale/],
+  ]) {
+    const { application, gestionnaires } = installerFauxNavigateur(
+      `?notion=${notion}&mode=tableau&questions=5&graine=cours-${notion}`,
+    );
+    await import(`./app.js?fumee=cours-separe-${notion}-${Date.now()}`);
+    cliquer(gestionnaires, "cours");
+    let cibleVue = false;
+    for (let page = 1; page <= 5; page += 1) {
+      assert.match(application.innerHTML, new RegExp(`Cours · ${page} \/ 5`));
+      cibleVue ||= titrePropre.test(application.innerHTML);
+      assert.doesNotMatch(application.innerHTML, titreAbsent);
+      if (page < 5) cliquer(gestionnaires, "cours-suivant");
+    }
+    assert.equal(cibleVue, true);
+  }
 });
 
 it("garde les centièmes et millièmes imposés sans révéler le décimal en aide NC-03", async () => {
@@ -1431,7 +1452,7 @@ it("corrige les fractions libres 0,25 et 0,75 avec le rail puis les plaques", as
       application,
       gestionnaires,
       (html) => new RegExp(`aria-label="${decimal}"`).test(html)
-        && /Toutes les fractions égales sont acceptées/.test(html),
+        && /Plusieurs réponses sont possibles/.test(html),
     );
     cliquer(gestionnaires, "correction");
 
@@ -1590,7 +1611,7 @@ it("corrige la fraction libre 2,75 avec le rail et conserve 275 centièmes", asy
     application,
     gestionnaires,
     (html) => /aria-label="2,75"/.test(html)
-      && /Toutes les fractions égales sont acceptées/.test(html),
+      && /Plusieurs réponses sont possibles/.test(html),
   );
   cliquer(gestionnaires, "correction");
 
@@ -1694,10 +1715,10 @@ it("réemploie la conversion canonique dans l’aide d’une fraction libre gén
     application,
     gestionnaires,
     (html) => /aria-label="1,03"/.test(html)
-      && /Toutes les fractions égales sont acceptées/.test(html),
+      && /Plusieurs réponses sont possibles/.test(html),
   );
 
-  assert.match(application.innerHTML, /Toutes les fractions égales sont acceptées/);
+  assert.match(application.innerHTML, /Plusieurs réponses sont possibles/);
   assert.match(application.innerHTML, /mathsgo-role-unites">1<\/span>,/);
   assert.match(application.innerHTML, /mathsgo-role-centiemes">3<\/span>/);
   cliquer(gestionnaires, "aide");
@@ -1740,7 +1761,7 @@ it("corrige une fraction libre générique avec les plaques ou le tableau", asyn
     application,
     gestionnaires,
     (html) => /aria-label="1,03"/.test(html)
-      && /Toutes les fractions égales sont acceptées/.test(html),
+      && /Plusieurs réponses sont possibles/.test(html),
   );
 
   cliquer(gestionnaires, "correction");
@@ -1846,7 +1867,7 @@ it("garde l’atelier unique de Me guider masqué avant la construction", async 
   let libreVerifiee = false;
   let inverseVerifiee = false;
   for (let index = 0; index < 20; index += 1) {
-    const libre = /Toutes les fractions égales sont acceptées/.test(application.innerHTML);
+    const libre = /Plusieurs réponses sont possibles/.test(application.innerHTML);
     const inverse = /famille-decimal-vers-fraction/.test(application.innerHTML);
     if (libre || (inverse && !inverseVerifiee)) {
       assert.match(application.innerHTML, /class="decimal-question">[\s\S]*?mathsgo-role-unites/);
@@ -1971,10 +1992,10 @@ it("fait construire 0,5 avec les dixièmes puis la bande d’un demi sans livrer
     application,
     gestionnaires,
     (html) => /aria-label="0,5"/.test(html)
-      && /Toutes les fractions égales sont acceptées/.test(html),
+      && /Plusieurs réponses sont possibles/.test(html),
   );
   assert.match(application.innerHTML, /0,5/);
-  assert.match(application.innerHTML, /Toutes les fractions égales sont acceptées/);
+  assert.match(application.innerHTML, /Plusieurs réponses sont possibles/);
   cliquer(gestionnaires, "aide");
   cliquer(
     gestionnaires,
@@ -2026,10 +2047,10 @@ it("fait réorganiser 0,75 des lignes aux quadrants puis à la comparaison sans 
     application,
     gestionnaires,
     (html) => /aria-label="0,75"/.test(html)
-      && /Toutes les fractions égales sont acceptées/.test(html),
+      && /Plusieurs réponses sont possibles/.test(html),
   );
   assert.match(application.innerHTML, /0,75/);
-  assert.match(application.innerHTML, /Toutes les fractions égales sont acceptées/);
+  assert.match(application.innerHTML, /Plusieurs réponses sont possibles/);
   cliquer(gestionnaires, "aide");
   cliquer(
     gestionnaires,
@@ -2086,6 +2107,102 @@ it("fait réorganiser 0,75 des lignes aux quadrants puis à la comparaison sans 
   assert.doesNotMatch(aide, /0,75 égale 75 sur 100|75 sur 100 égale 3 sur 4/);
 });
 
+it("propose le rail puis la plaque pour trois quarts sans afficher les trois outils d’un coup", async () => {
+  const { application, gestionnaires } = installerFauxNavigateur(
+    "?notion=fractions-simples-decimaux&mode=tableau&questions=20&graine=audit-ui-1",
+  );
+  await import(`./app.js?fumee=aide-trois-quarts-${Date.now()}`);
+  cliquer(gestionnaires, "demarrer");
+  avancerJusquaQuestion(
+    application,
+    gestionnaires,
+    (html) => /famille-fraction-vers-decimal-quarts/.test(html)
+      && /aria-label="3 sur 4"/.test(html),
+  );
+  cliquer(gestionnaires, "aide");
+  let aide = extrairePanneauAide(application.innerHTML);
+  assert.match(aide, /figure-bandes-rail/);
+  assert.match(aide, />0,25<\/text>/);
+  assert.match(aide, />0,5<\/text>/);
+  assert.doesNotMatch(aide, /figure-seconde-lecture-aide|figure-tableau-numeration/);
+
+  for (let index = 0; index < 3; index += 1) {
+    cliquer(gestionnaires, "pas-fraction-suivant");
+  }
+  aide = extrairePanneauAide(application.innerHTML);
+  assert.match(aide, /Voir autrement avec la plaque de centièmes/);
+  assert.match(aide, /figure-seconde-lecture-aide/);
+  assert.match(aide, /data-objet="reorganisation-centiemes" data-centiemes="75"/);
+  assert.doesNotMatch(aide, /figure-tableau-numeration/);
+});
+
+it("explicite 118 centièmes groupe par groupe après le choix du rang", async () => {
+  const { application, gestionnaires } = installerFauxNavigateur(
+    "?notion=fractions-simples-decimaux&mode=tableau&questions=20&graine=audit-ui-44",
+  );
+  await import(`./app.js?fumee=aide-118-centiemes-${Date.now()}`);
+  cliquer(gestionnaires, "demarrer");
+  avancerJusquaQuestion(
+    application,
+    gestionnaires,
+    (html) => /famille-fraction-vers-decimal-centiemes/.test(html)
+      && /aria-label="118 sur 100"/.test(html),
+  );
+  cliquer(gestionnaires, "aide");
+  let aide = extrairePanneauAide(application.innerHTML);
+  assert.doesNotMatch(aide, /Lire chaque groupe dans son rang|aria-label="0,08"/);
+  cliquer(
+    gestionnaires,
+    "rang-fraction",
+    undefined,
+    undefined,
+    undefined,
+    undefined,
+    undefined,
+    "centiemes",
+  );
+  aide = extrairePanneauAide(application.innerHTML);
+  assert.match(aide, /Lire chaque groupe dans son rang/);
+  assert.match(aide, /aria-label="100 sur 100"/);
+  assert.match(aide, /aria-label="10 sur 100"/);
+  assert.match(aide, /aria-label="1 sur 10"/);
+  assert.match(aide, /aria-label="8 sur 100"/);
+  assert.match(aide, /aria-label="0,08"/);
+});
+
+it("montre huit dixièmes pleins avant de les partager en quatre-vingts centièmes", async () => {
+  const { application, gestionnaires } = installerFauxNavigateur(
+    "?notion=fractions-simples-decimaux&mode=tableau&questions=20&graine=audit-ui-119",
+  );
+  await import(`./app.js?fumee=aide-08-centiemes-${Date.now()}`);
+  cliquer(gestionnaires, "demarrer");
+  avancerJusquaQuestion(
+    application,
+    gestionnaires,
+    (html) => /famille-decimal-vers-fraction-centiemes/.test(html)
+      && /aria-label="0,8"/.test(html),
+  );
+  cliquer(gestionnaires, "aide");
+  let aide = extrairePanneauAide(application.innerHTML);
+  assert.equal((aide.match(/data-subdivision="aucune"/g) ?? []).length, 16);
+  assert.match(aide, /nd-cadre-unite-dixiemes/);
+  assert.doesNotMatch(aide, /data-subdivision="centiemes"/);
+  cliquer(
+    gestionnaires,
+    "rang-fraction",
+    undefined,
+    undefined,
+    undefined,
+    undefined,
+    undefined,
+    "centiemes",
+  );
+  aide = extrairePanneauAide(application.innerHTML);
+  assert.match(aide, /data-subdivision="centiemes"/);
+  assert.match(aide, /data-legende="8\/10=\?\/100"/);
+  assert.doesNotMatch(aide, /80\/100/);
+});
+
 it("propose le parcours DNB puis lance Au tableau sans saisie ni score", async () => {
   const { application, gestionnaires } = installerFauxNavigateur("");
   await import(`./app.js?fumee=menu-${Date.now()}`);
@@ -2103,8 +2220,9 @@ it("propose le parcours DNB puis lance Au tableau sans saisie ni score", async (
   assert.match(application.innerHTML, /M3\.6 21\.4 20\.4 2\.6/);
   assert.match(application.innerHTML, /Critères de divisibilité/);
   assert.match(application.innerHTML, /Carrés des entiers/);
-  assert.match(application.innerHTML, /Fractions simples et décimaux/);
-  assert.match(application.innerHTML, /0 \/ 4/);
+  assert.match(application.innerHTML, /Fraction → écriture décimale/);
+  assert.match(application.innerHTML, /Écriture décimale → fraction/);
+  assert.match(application.innerHTML, /0 \/ 5/);
   assert.match(application.innerHTML, /Choisis au moins un automatisme/);
   assert.match(application.innerHTML, /data-action="preparer" disabled/);
   assert.equal(
@@ -2118,7 +2236,7 @@ it("propose le parcours DNB puis lance Au tableau sans saisie ni score", async (
   }
 
   cliquer(gestionnaires, "choisir-notion", undefined, "criteres-divisibilite");
-  assert.match(application.innerHTML, /1 \/ 4/);
+  assert.match(application.innerHTML, /1 \/ 5/);
   assert.doesNotMatch(application.innerHTML, /data-action="preparer" disabled/);
   assert.equal(
     [...application.innerHTML.matchAll(/class="modrow is-selected"/g)].length,
@@ -2253,7 +2371,7 @@ it("sélectionne, révise et rejoue plusieurs automatismes dans une même série
   );
   cliquer(gestionnaires, "choisir-notion", undefined, "criteres-divisibilite");
   cliquer(gestionnaires, "choisir-notion", undefined, "carres-entiers-0-a-12");
-  assert.match(application.innerHTML, /2 \/ 4 <span class="theme-count-label">sélectionnés/);
+  assert.match(application.innerHTML, /2 \/ 5 <span class="theme-count-label">sélectionnés/);
   assert.match(application.innerHTML, /2 automatismes sélectionnés/);
   assert.match(
     application.innerHTML,

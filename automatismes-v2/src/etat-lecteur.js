@@ -30,6 +30,8 @@ import {
   connaitNotionLecteur,
   listerNotionsLecteur,
   NOTION_ECRITURES_MULTIPLES_NOMBRE,
+  NOTION_DECIMAL_VERS_FRACTION,
+  NOTION_FRACTION_VERS_DECIMAL,
   NOTION_FRACTIONS_SIMPLES_DECIMAUX,
   NOTION_NC01,
   NOTION_NC02,
@@ -38,11 +40,13 @@ import {
   NOTION_VOLUME_CYLINDRE,
   NOTION_VOLUME_PRISME,
   obtenirNotionLecteur,
-} from "./registre-lecteur.js?v=44";
-import { genererSerieMultinotions } from "./serie-multinotions.js?v=44";
+} from "./registre-lecteur.js?v=45";
+import { genererSerieMultinotions } from "./serie-multinotions.js?v=45";
 
 export {
   NOTION_ECRITURES_MULTIPLES_NOMBRE,
+  NOTION_DECIMAL_VERS_FRACTION,
+  NOTION_FRACTION_VERS_DECIMAL,
   NOTION_FRACTIONS_SIMPLES_DECIMAUX,
   NOTION_NC01,
   NOTION_NC02,
@@ -78,17 +82,21 @@ function normaliserNotions(configuration) {
   if (demandeesBrutes.some((notion) => typeof notion !== "string" || notion === "")) {
     throw new TypeError("identifiants de notions requis");
   }
-  const demandees = demandeesBrutes.map(normaliserIdentifiantModule);
-  if (new Set(demandees).size !== demandees.length) {
+  if (new Set(demandeesBrutes).size !== demandeesBrutes.length) {
     throw new RangeError("doublons de notions interdits");
   }
+  const demandees = demandeesBrutes.map(normaliserIdentifiantModule);
   for (const notion of demandees) {
     if (!connaitNotionLecteur(notion)) throw new RangeError(`notion inconnue : ${notion}`);
   }
   const ensemble = new Set(demandees);
-  return listerNotionsLecteur()
+  const ordonnees = listerNotionsLecteur()
     .map(({ id }) => id)
     .filter((id) => ensemble.has(id));
+  if (ensemble.has(NOTION_FRACTIONS_SIMPLES_DECIMAUX)) {
+    ordonnees.push(NOTION_FRACTIONS_SIMPLES_DECIMAUX);
+  }
+  return ordonnees;
 }
 
 function normaliserConfiguration(configuration = {}) {
