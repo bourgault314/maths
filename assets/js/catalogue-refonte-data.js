@@ -481,6 +481,14 @@ window.MATHSGO_CATALOGUE = {
       "tags": ["nombres-relatifs", "plateau-manipulation"],
       "cardDescription": "Manipuler les nombres relatifs avec rangement, simplification animée et retour en arrière."
     },
+    "https://digipad.app/p/1754235/397f3f517445b": {
+      "primaryNotion": "calcul-litteral",
+      "primaryGroup": "cours",
+      "collections": ["splat"],
+      "tags": ["splat", "cycle-3", "pensee-algebrique", "progression", "digipad"],
+      "thumbnail": "assets/img/thumbnails/splat/progression-cycle-3.svg?v=1",
+      "cardDescription": "Une progression expliquée pas à pas pour développer la pensée algébrique avec SPLAT! au cycle 3."
+    },
     "outils/splat.html": {
       "primaryNotion": "calcul-litteral",
       "primaryGroup": "generer",
@@ -5598,6 +5606,38 @@ window.MATHSGO_CATALOGUE = {
         "calcul mental"
       ],
       "kind": "tool",
+      "status": "published",
+      "featured": false,
+      "recent": false
+    },
+    {
+      "id": "reference-splat-cycle-3-digipad",
+      "title": "SPLAT! cycle 3 — une progression possible",
+      "description": "Une progression expliquée pas à pas pour développer la pensée algébrique avec SPLAT! au cycle 3.",
+      "path": "https://digipad.app/p/1754235/397f3f517445b",
+      "domains": [
+        "algebre"
+      ],
+      "notions": [
+        "calcul-litteral",
+        "equations",
+        "schemas-barres"
+      ],
+      "uses": [
+        "projeter"
+      ],
+      "types": [],
+      "filters": [],
+      "keywords": [
+        "splat",
+        "cycle 3",
+        "pensée algébrique",
+        "progression",
+        "inconnue",
+        "schéma en barres",
+        "digipad"
+      ],
+      "kind": "document",
       "status": "published",
       "featured": false,
       "recent": false
