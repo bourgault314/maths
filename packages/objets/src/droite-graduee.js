@@ -94,6 +94,8 @@ const TAILLE_NOM_LIGNE = 13;
 const TAILLE_NOM_MIN = 9; // en dessous, un nom de ligne n'est plus lisible au tableau
 const X_NOM = 12; // les noms de ligne sont calés à gauche, à cette abscisse
 const TAILLE_NOMBRES = 13;
+const TAILLE_NOMBRES_MIN = 9;
+const TAILLE_NOMBRES_MAX = 28;
 const TAILLE_ETIQUETTE_DEFAUT = 13;
 const TAILLE_ETIQUETTE_MIN = 9;
 const TAILLE_ETIQUETTE_MAX = 40;
@@ -101,6 +103,7 @@ const DEMI_GRADUATION = 8; // hauteur d'un trait de graduation, de part et d'aut
 const DECALAGE_NOMBRES_DESSUS = 15; // ligne de base des nombres au-dessus de l'axe
 const DECALAGE_NOMBRES_DESSOUS = 27; // ligne de base des nombres en dessous
 const RAYON_POINT = 4.5;
+const STYLES_POINTS = Object.freeze(["disque", "trait"]);
 const ECART_ENTRE_LIGNES = 10; // respiration entre les deux lignes d'une double droite
 const MARGE_BASSE = 8;
 const MARGE_HAUTE = 8;
@@ -497,6 +500,21 @@ function normaliserLigne(options, coteNombres, quoi) {
       `${quoi} : tailleEtiquette doit être comprise entre ${TAILLE_ETIQUETTE_MIN} et ${TAILLE_ETIQUETTE_MAX}.`,
     );
   }
+  const tailleNombresDemandee = o.tailleNombres == null
+    ? TAILLE_NOMBRES
+    : nombreFini(o.tailleNombres, `${quoi} : tailleNombres`);
+  const tailleNombres = Math.round(tailleNombresDemandee);
+  if (tailleNombres < TAILLE_NOMBRES_MIN || tailleNombres > TAILLE_NOMBRES_MAX) {
+    throw new RangeError(
+      `${quoi} : tailleNombres doit être comprise entre ${TAILLE_NOMBRES_MIN} et ${TAILLE_NOMBRES_MAX}.`,
+    );
+  }
+  const stylePoints = o.stylePoints ?? "disque";
+  if (!STYLES_POINTS.includes(stylePoints)) {
+    throw new RangeError(
+      `${quoi} : stylePoints invalide « ${stylePoints} » — attendu « disque » ou « trait ».`,
+    );
+  }
   // Masquage total demandé, ou garde-fou anti-surcharge.
   const nombresVisibles = o.afficherNombres === false ? false : graduations.length <= seuil;
 
@@ -510,6 +528,8 @@ function normaliserLigne(options, coteNombres, quoi) {
     points: normaliserPoints(o.points, min, max, quoi),
     nom: o.nom == null ? null : String(o.nom),
     tailleEtiquette,
+    tailleNombres,
+    stylePoints,
   };
 }
 
@@ -523,10 +543,10 @@ function decalageEtiquette(position, ligne) {
 }
 
 /** La bande de papier occupée par les nombres, autour de l'axe (y relatif). */
-function bandeDesNombres(coteNombres) {
+function bandeDesNombres(coteNombres, tailleNombres = TAILLE_NOMBRES) {
   return coteNombres === "dessus"
-    ? { haut: -DECALAGE_NOMBRES_DESSUS - 11, bas: -DECALAGE_NOMBRES_DESSUS + 5 }
-    : { haut: DECALAGE_NOMBRES_DESSOUS - 11, bas: DECALAGE_NOMBRES_DESSOUS + 5 };
+    ? { haut: -DECALAGE_NOMBRES_DESSUS - tailleNombres + 2, bas: -DECALAGE_NOMBRES_DESSUS + 5 }
+    : { haut: DECALAGE_NOMBRES_DESSOUS - tailleNombres + 2, bas: DECALAGE_NOMBRES_DESSOUS + 5 };
 }
 
 /**
@@ -544,7 +564,7 @@ function geometrieFraction(point, ligne) {
     { taille: ligne.tailleEtiquette },
   );
   const memeCote = ligne.nombresVisibles && point.position === ligne.coteNombres;
-  const bande = memeCote ? bandeDesNombres(ligne.coteNombres) : null;
+  const bande = memeCote ? bandeDesNombres(ligne.coteNombres, ligne.tailleNombres) : null;
 
   if (point.position === "dessus") {
     const bordBas = bande
@@ -576,7 +596,7 @@ function mesurerLigne(ligne) {
   let haut = DEMI_GRADUATION + 4;
   let bas = DEMI_GRADUATION + 4;
   if (ligne.nombresVisibles) {
-    const bande = bandeDesNombres(ligne.coteNombres);
+    const bande = bandeDesNombres(ligne.coteNombres, ligne.tailleNombres);
     if (ligne.coteNombres === "dessus") haut = Math.max(haut, -bande.haut + 4);
     else bas = Math.max(bas, bande.bas + 4);
   }
@@ -667,12 +687,15 @@ function trouDuTrait(xPoint, nombresPoses, ligne, position) {
   if (!ligne.nombresVisibles || position !== ligne.coteNombres) return null;
   const heurte = nombresPoses.some((n) => Math.abs(n.x - xPoint) < n.demiLargeur + 4);
   if (!heurte) return null;
-  const bande = bandeDesNombres(ligne.coteNombres);
+  const bande = bandeDesNombres(ligne.coteNombres, ligne.tailleNombres);
   return { haut: bande.haut - 3, bas: bande.bas + 3 };
 }
 
 function dessinerLigne(ligne, yAxe, xGauche, xDroite) {
-  const { min, max, graduations, etiquettes, nombresVisibles, coteNombres, points } = ligne;
+  const {
+    min, max, graduations, etiquettes, nombresVisibles, coteNombres, points,
+    tailleNombres, stylePoints,
+  } = ligne;
   const abscisse = (v) => xGauche + ((v - min) / (max - min)) * (xDroite - xGauche);
   let corps = "";
 
@@ -688,8 +711,8 @@ function dessinerLigne(ligne, yAxe, xGauche, xDroite) {
     const contenu = perso == null ? formaterNombre(valeur) : perso;
     if (contenu === "") continue;
     const y = coteNombres === "dessus" ? yAxe - DECALAGE_NOMBRES_DESSUS : yAxe + DECALAGE_NOMBRES_DESSOUS;
-    corps += texte(gx, y, contenu, TAILLE_NOMBRES, 400, COULEURS_DROITE.encre);
-    nombresPoses.push({ x: gx, demiLargeur: largeurTexte(contenu, TAILLE_NOMBRES) / 2 });
+    corps += texte(gx, y, contenu, tailleNombres, 700, COULEURS_DROITE.encre);
+    nombresPoses.push({ x: gx, demiLargeur: largeurTexte(contenu, tailleNombres, true) / 2 });
   }
 
   for (const point of points) {
@@ -714,7 +737,9 @@ function dessinerLigne(ligne, yAxe, xGauche, xDroite) {
           : yAxe + d - 11;
       const trouRelatif = trouDuTrait(px, nombresPoses, ligne, point.position);
       const trou = trouRelatif ? { haut: yAxe + trouRelatif.haut, bas: yAxe + trouRelatif.bas } : null;
-      corps += traitPointille(px, yHaut, yBas, point.couleur, trou);
+      if (stylePoints === "disque") {
+        corps += traitPointille(px, yHaut, yBas, point.couleur, trou);
+      }
       if (fraction) {
         corps += rendreFractionSvg(
           point.etiquette.numerateur,
@@ -735,9 +760,12 @@ function dessinerLigne(ligne, yAxe, xGauche, xDroite) {
         corps += texte(px, yEtiquette, point.etiquette, ligne.tailleEtiquette, 700, point.couleur);
       }
     }
-    // Le disque cerclé de blanc, posé en dernier : il reste lisible
-    // même quand le trait pointillé passe dessous.
-    corps += disque(px, yAxe, RAYON_POINT, point.couleur, COULEURS_DROITE.papier);
+    // Le module choisit entre le disque de repérage historique de l'objet et
+    // un trait épais, plus lisible sur une droite réduite à la largeur d'un
+    // téléphone. Le style par défaut reste inchangé pour les autres usages.
+    corps += stylePoints === "trait"
+      ? `<line x1="${arrondi2(px)}" y1="${arrondi2(yAxe - 12)}" x2="${arrondi2(px)}" y2="${arrondi2(yAxe + 12)}" stroke="${point.couleur}" stroke-width="5" stroke-linecap="round"/>`
+      : disque(px, yAxe, RAYON_POINT, point.couleur, COULEURS_DROITE.papier);
   }
   return corps;
 }
@@ -770,6 +798,10 @@ function lireLargeur(valeur, quoi) {
  *   graduations, les nombres ne sont plus écrits.
  * @param {number} [options.tailleEtiquette=13] — taille des étiquettes de
  *   points, de 9 à 40 pixels dans le dessin SVG.
+ * @param {number} [options.tailleNombres=13] — taille des nombres des
+ *   graduations, de 9 à 28 pixels dans le dessin SVG.
+ * @param {"disque"|"trait"} [options.stylePoints="disque"] — marqueur des
+ *   points ; le trait épais est destiné aux petites largeurs tactiles.
  * @param {Array<{valeur:number, etiquette?:string|{type:"fraction",
  *   numerateur:number,denominateur:number}, couleur?:string,
  *   position?:"dessus"|"dessous"}>} [options.points] — les points repérés.

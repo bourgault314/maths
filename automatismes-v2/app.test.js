@@ -2208,13 +2208,17 @@ it("rend GE-01 et GE-02 avec saisie signée, cours et placement aimanté", async
   cliquer(gestionnaires, "demarrer");
   assert.match(application.innerHTML, /carte-question-droite/);
   assert.match(application.innerHTML, /droite-graduee-interactive/);
+  assert.match(application.innerHTML, /droite-version-mobile/);
+  assert.match(application.innerHTML, /font-size="17" font-weight="700"/);
   assert.match(application.innerHTML, /data-profil="nombre-decimal"/);
   assert.match(application.innerHTML, /data-value="−"/);
 
   cliquer(gestionnaires, "aide");
   assert.match(application.innerHTML, /Compte les intervalles entre elles, pas les traits/);
   cliquer(gestionnaires, "cours");
-  assert.match(application.innerHTML, /Une droite donne une position/);
+  assert.match(application.innerHTML, /Comprendre les mots/);
+  assert.match(application.innerHTML, /Graduation/);
+  assert.match(application.innerHTML, /Intervalle/);
   assert.match(application.innerHTML, /Cours · 1 \/ 5/);
   cliquer(gestionnaires, "fermer-cours");
   cliquer(gestionnaires, "fermer-aide");
@@ -2229,7 +2233,7 @@ it("rend GE-01 et GE-02 avec saisie signée, cours et placement aimanté", async
   cliquer(gestionnaires, "valider");
   cliquer(gestionnaires, "correction");
   assert.match(application.innerHTML, /Correction expliquée/);
-  assert.match(application.innerHTML, /Le point .* se place sur la graduation d’abscisse/);
+  assert.match(application.innerHTML, /Le point .* se place ici/);
 });
 
 it("sélectionne, révise et rejoue plusieurs automatismes dans une même série", async () => {

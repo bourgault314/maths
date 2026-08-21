@@ -8,8 +8,10 @@ import {
   FAMILLE_DIAGNOSTIC,
   FAMILLE_LIRE_ABSCISSE,
   FAMILLE_PLACER_POINT,
+  VARIANTE_DEUX_POINTS_QCM,
+  VARIANTE_PAS_QCM,
 } from "./questions.js";
-import { genererSerieDroiteGraduee } from "./serie.js";
+import { genererSerieDroiteGraduee, planifierSerieDroiteGraduee } from "./serie.js";
 
 describe("série GE-01 + GE-02 — droite graduée", () => {
   it("respecte les quotas aux quatre jalons", () => {
@@ -36,7 +38,18 @@ describe("série GE-01 + GE-02 — droite graduée", () => {
       const droite = q.enonce.find((bloc) => bloc.type === "droite-graduee");
       return droite.pas.numerateur / droite.pas.denominateur;
     }));
-    for (const valeur of [0.1, 0.25, 0.5, 1, 10, 50]) assert.ok(pas.has(valeur));
+    for (const valeur of [0.1, 0.25, 0.5, 1, 2, 5, 10, 20, 25, 50]) assert.ok(pas.has(valeur));
     assert.ok(a.some((q) => q.enonce.find((bloc) => bloc.type === "droite-graduee").depart.numerateur < 0));
+  });
+
+  it("varie l’origine, les repères, les QCM de pas et la lecture de deux points", () => {
+    const plans = Array.from({ length: 8 }, (_, index) => planifierSerieDroiteGraduee({ graine: `variations-ge-${index}`, nombreQuestions: 20 })).flat();
+    assert.ok(plans.some((plan) => plan.variante === VARIANTE_PAS_QCM));
+    assert.ok(plans.some((plan) => plan.variante === VARIANTE_DEUX_POINTS_QCM));
+    assert.ok(plans.some((plan) => plan.departNumerateur > 0));
+    assert.ok(plans.some((plan) => plan.departNumerateur < 0));
+    assert.ok(plans.some((plan) => plan.etiquettes[0] > 0));
+    assert.ok(plans.every((plan) => plan.etiquettes[1] - plan.etiquettes[0] >= 2));
+    assert.ok(plans.every((plan) => !plan.etiquettes.includes(plan.indiceCible)));
   });
 });

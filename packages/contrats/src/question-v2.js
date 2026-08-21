@@ -130,7 +130,7 @@ function validerBlocs(blocs, nom, erreurs, { auMoinsUn = false } = {}) {
       : bloc.type === "solide"
         ? ["id", "type", "forme", "variante", "vue", "mesures"]
       : bloc.type === "droite-graduee"
-        ? ["id", "type", "depart", "pas", "nombreIntervalles", "etiquettes", "point"]
+        ? ["id", "type", "depart", "pas", "nombreIntervalles", "etiquettes", "point", "points"]
         : ["id", "type", "contenu"];
     validerClesConnues(bloc, cles, chemin, erreurs);
     if (!estIdentifiantValide(bloc.id)) {
@@ -199,17 +199,33 @@ function validerBlocs(blocs, nom, erreurs, { auMoinsUn = false } = {}) {
       } else if (bloc.etiquettes.some((indice) => !Number.isInteger(indice) || indice < 0 || indice > bloc.nombreIntervalles)) {
         erreurs.push(`${chemin}.etiquettes : indices de graduations valides requis`);
       }
-      if (bloc.point !== undefined) {
-        if (typeof bloc.point !== "object" || bloc.point === null || Array.isArray(bloc.point)) {
-          erreurs.push(`${chemin}.point : objet attendu`);
+      const validerPoint = (point, nom) => {
+        if (typeof point !== "object" || point === null || Array.isArray(point)) {
+          erreurs.push(`${nom} : objet attendu`);
         } else {
-          validerClesConnues(bloc.point, ["nom", "indice"], `${chemin}.point`, erreurs);
-          if (typeof bloc.point.nom !== "string" || !/^[A-Z]$/.test(bloc.point.nom)) {
-            erreurs.push(`${chemin}.point.nom : lettre majuscule requise`);
+          validerClesConnues(point, ["nom", "indice", "position"], nom, erreurs);
+          if (typeof point.nom !== "string" || !/^[A-Z]$/.test(point.nom)) {
+            erreurs.push(`${nom}.nom : lettre majuscule requise`);
           }
-          if (!Number.isInteger(bloc.point.indice) || bloc.point.indice < 0 || bloc.point.indice > bloc.nombreIntervalles) {
-            erreurs.push(`${chemin}.point.indice : graduation visible requise`);
+          if (!Number.isInteger(point.indice) || point.indice < 0 || point.indice > bloc.nombreIntervalles) {
+            erreurs.push(`${nom}.indice : graduation visible requise`);
           }
+          if (point.position !== undefined && point.position !== "dessus" && point.position !== "dessous") {
+            erreurs.push(`${nom}.position : « dessus » ou « dessous » attendu`);
+          }
+        }
+      };
+      if (bloc.point !== undefined && bloc.points !== undefined) {
+        erreurs.push(`${chemin} : « point » et « points » sont exclusifs`);
+      }
+      if (bloc.point !== undefined) validerPoint(bloc.point, `${chemin}.point`);
+      if (bloc.points !== undefined) {
+        if (!Array.isArray(bloc.points) || bloc.points.length < 2 || bloc.points.length > 3) {
+          erreurs.push(`${chemin}.points : deux ou trois points requis`);
+        } else {
+          bloc.points.forEach((point, indexPoint) => validerPoint(point, `${chemin}.points[${indexPoint}]`));
+          const noms = bloc.points.map((point) => point?.nom);
+          if (new Set(noms).size !== noms.length) erreurs.push(`${chemin}.points : noms distincts requis`);
         }
       }
     }

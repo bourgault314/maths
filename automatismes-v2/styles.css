@@ -70,14 +70,20 @@ h3,
 .droite-graduee-interactive {
   position: relative;
   width: min(100%, 760px);
-  margin: 12px auto;
+  margin: 16px auto;
 }
 
-.droite-graduee-interactive svg {
+.droite-graduee-interactive svg,
+.droite-version-large,
+.droite-version-mobile {
   display: block;
   width: 100%;
   height: auto;
   overflow: visible;
+}
+
+.droite-version-mobile {
+  display: none;
 }
 
 .cible-graduation {
@@ -116,6 +122,21 @@ h3,
   width: min(100%, 620px);
   margin-inline: auto;
   grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.saisie-numerique:has(.libelle-saisie-droite) {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.libelle-saisie-droite {
+  color: var(--mg-bleu);
+  font-family: var(--mg-maths, serif);
+  font-size: clamp(1.8rem, 5vw, 2.6rem);
+  font-weight: 700;
 }
 
 .etapes-droite {
@@ -165,8 +186,15 @@ h3,
   margin: 0;
 }
 
-.carte-cours-droite h3 {
-  margin: -44px 0 8px 48px;
+.entete-cours-droite {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.entete-cours-droite h3 {
+  margin: 0;
+  font-size: clamp(1.25rem, 4vw, 1.75rem);
 }
 
 .carte-cours-droite ol {
@@ -180,13 +208,74 @@ h3,
   background: color-mix(in srgb, var(--mg-orange) 12%, white);
 }
 
+.lexique-droite {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+  margin: 0;
+}
+
+.lexique-droite div {
+  padding: 10px 12px;
+  border: 1px solid var(--mg-ligne);
+  border-radius: 12px;
+  background: var(--mg-fond-doux);
+}
+
+.lexique-droite dt {
+  color: var(--mg-bleu);
+  font-weight: 800;
+}
+
+.lexique-droite dd {
+  margin: 2px 0 0;
+}
+
+.methode-cours-droite {
+  display: grid;
+  gap: 8px;
+}
+
+.echelles-cours-droite {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.echelles-cours-droite span {
+  min-width: 48px;
+  padding: 7px 10px;
+  border: 2px solid color-mix(in srgb, var(--mg-bleu) 25%, white);
+  border-radius: 999px;
+  color: var(--mg-bleu);
+  text-align: center;
+  font-weight: 800;
+}
+
 @media (max-width: 620px) {
+  .droite-graduee-interactive {
+    width: min(100%, 350px);
+    margin-block: 18px;
+  }
+
+  .droite-version-large {
+    display: none;
+  }
+
+  .droite-version-mobile {
+    display: block;
+  }
+
   .grille-qcm-droite {
     grid-template-columns: 1fr;
   }
 
   .cible-graduation {
     width: 38px;
+  }
+
+  .lexique-droite {
+    grid-template-columns: 1fr;
   }
 }
 

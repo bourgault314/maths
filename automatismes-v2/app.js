@@ -4741,7 +4741,7 @@ function rendreDroiteQuestion(bloc, {
   const etiquettes = Object.fromEntries(
     graduations.map((valeur, indice) => [
       String(valeur),
-      bloc.etiquettes.includes(indice) ? texteValeurDroite(bloc, indice) : " ",
+      bloc.etiquettes.includes(indice) ? texteValeurDroite(bloc, indice) : "",
     ]),
   );
   const question = questionCourante(etat);
@@ -4749,8 +4749,15 @@ function rendreDroiteQuestion(bloc, {
     ? Number(question.reponse.attendus[0].slice(2))
     : bloc.point?.indice;
   const choisi = indiceChoisiDroite();
-  const points = bloc.point
-    ? [{ valeur: valeurDroite(bloc, bloc.point.indice), etiquette: bloc.point.nom, position: "dessus" }]
+  const pointsDonnes = bloc.points ?? (bloc.point ? [bloc.point] : []);
+  const couleursPoints = [COULEURS.bleu, COULEURS.orange, COULEURS.turquoise];
+  const points = pointsDonnes.length > 0
+    ? pointsDonnes.map((point, index) => ({
+      valeur: valeurDroite(bloc, point.indice),
+      etiquette: point.nom,
+      position: point.position ?? (index % 2 === 0 ? "dessus" : "dessous"),
+      couleur: couleursPoints[index % couleursPoints.length],
+    }))
     : [
       ...(montrerChoix && choisi !== null && choisi !== attendu
         ? [{ valeur: valeurDroite(bloc, choisi), etiquette: "Ton point", couleur: COULEURS.erreur, position: "dessus" }]
@@ -4761,31 +4768,37 @@ function rendreDroiteQuestion(bloc, {
           ? [{ valeur: valeurDroite(bloc, choisi), etiquette: "Ton point", position: "dessus" }]
           : []),
     ];
-  const dessin = dessinerDroiteGraduee({
-    min: graduations[0],
-    max: graduations.at(-1),
-    graduations,
-    etiquettes,
-    points,
-    largeur: 760,
-    coteNombres: "dessous",
-    description: "Droite graduée avec deux valeurs de référence",
-  });
-  const commandes = interactive
-    ? graduations.map((valeur, indice) => {
-      const selectionne = choisi === indice;
-      const x = 100 * (dessin.geometrie.xGauche
-        + indice * (dessin.geometrie.xDroite - dessin.geometrie.xGauche) / bloc.nombreIntervalles) / dessin.largeur;
-      const y = 100 * dessin.geometrie.yAxe / dessin.hauteur;
-      return `<button class="cible-graduation ${selectionne ? "selectionnee" : ""}" type="button"
-        data-action="choix" data-id="g-${indice}" role="radio" aria-checked="${selectionne}"
-        aria-label="Placer le point sur la graduation ${indice + 1}"
-        style="left:${x}%;top:${y}%"></button>`;
-    }).join("")
-    : "";
+  const rendreVersion = (largeur, version) => {
+    const dessin = dessinerDroiteGraduee({
+      min: graduations[0],
+      max: graduations.at(-1),
+      graduations,
+      etiquettes,
+      points,
+      largeur,
+      tailleNombres: version === "mobile" ? 17 : 18,
+      tailleEtiquette: version === "mobile" ? 19 : 20,
+      stylePoints: "trait",
+      coteNombres: "dessous",
+      description: "Droite graduée avec deux valeurs de référence",
+    });
+    const commandes = interactive
+      ? graduations.map((valeur, indice) => {
+        const selectionne = choisi === indice;
+        const x = 100 * (dessin.geometrie.xGauche
+          + indice * (dessin.geometrie.xDroite - dessin.geometrie.xGauche) / bloc.nombreIntervalles) / dessin.largeur;
+        const y = 100 * dessin.geometrie.yAxe / dessin.hauteur;
+        return `<button class="cible-graduation ${selectionne ? "selectionnee" : ""}" type="button"
+          data-action="choix" data-id="g-${indice}" role="radio" aria-checked="${selectionne}"
+          aria-label="Placer le point sur la graduation ${indice + 1}"
+          style="left:${x}%;top:${y}%"></button>`;
+      }).join("")
+      : "";
+    return `<div class="droite-version-${version}">${dessin.svg}${commandes}</div>`;
+  };
   return `<div class="droite-graduee-interactive ${classe}" role="${interactive ? "radiogroup" : "img"}"
     aria-label="${interactive ? "Choisis une graduation" : "Droite graduée"}">
-    ${dessin.svg}${commandes}
+    ${rendreVersion(760, "large")}${rendreVersion(350, "mobile")}
   </div>`;
 }
 
@@ -4793,7 +4806,7 @@ function rendreQuestionDroiteGraduee() {
   const question = questionCourante(etat);
   const bloc = blocDroiteGraduee(question);
   const placement = familleQuestion(question) === "placer-point";
-  const diagnostic = familleQuestion(question) === "diagnostic";
+  const qcm = question.reponse.type === TYPE_REPONSE_CHOIX_UNIQUE && !placement;
   const afficherAttendu = !estEntrainement() && etat.reponseRevelee && placement;
   const valeur = estEntrainement()
     ? etat.saisie
@@ -4803,9 +4816,10 @@ function rendreQuestionDroiteGraduee() {
   const zone = placement
     ? `${rendreDroiteQuestion(bloc, { interactive: estEntrainement() && etat.validation === null, montrerAttendu: afficherAttendu, montrerChoix: estEntrainement() && indiceChoisiDroite() !== null })}
       <p class="precision">${estEntrainement() ? "Touche une graduation : le point s’y aimante." : "Indiquez la graduation choisie."}</p>`
-    : diagnostic
+    : qcm
       ? `${rendreDroiteQuestion(bloc)}<div class="grille-choix grille-qcm-droite" role="radiogroup">${rendreChoix(question)}</div>`
       : `${rendreDroiteQuestion(bloc)}<section class="saisie-numerique" aria-label="Réponse numérique">
+          <span class="libelle-saisie-droite">${familleQuestion(question) === "determiner-pas" ? "pas" : `x<sub>${echapper(bloc.point?.nom ?? "")}</sub>`} =</span>
           <output class="afficheur-reponse ${valeur ? "rempli" : ""}">${echapper(valeur || (estEntrainement() ? "…" : "?"))}</output>
           ${estEntrainement() && etat.validation === null ? '<p class="indication-clavier-physique">Chiffres · virgule · signe moins si nécessaire · Entrée pour valider</p>' : ""}
         </section>`;
@@ -4860,21 +4874,27 @@ function exempleDroiteCours({ depart, pas, intervalles, etiquettes, point }) {
 }
 
 function carteCoursDroite(index) {
-  if (index === 0) return `<article class="carte-cours-droite"><span class="numero-cours">1</span><h3>Une droite donne une position</h3>
-    ${exempleDroiteCours({ depart: [-3, 1], pas: [1, 1], intervalles: 7, etiquettes: [0, 3], point: { nom: "A", indice: 5 } })}
-    <p><strong>L’origine</strong> est la graduation 0. Les nombres augmentent vers la droite. L’<strong>abscisse</strong> est le nombre qui donne la position du point.</p></article>`;
-  if (index === 1) return `<article class="carte-cours-droite"><span class="numero-cours">2</span><h3>Trouver le pas</h3>
+  const entete = (numero, titre) => `<header class="entete-cours-droite"><span class="numero-cours">${numero}</span><h3>${titre}</h3></header>`;
+  if (index === 0) return `<article class="carte-cours-droite">${entete(1, "Comprendre les mots")}
+    ${exempleDroiteCours({ depart: [-3, 1], pas: [1, 1], intervalles: 7, etiquettes: [0, 3], point: { nom: "A", indice: 5, position: "dessus" } })}
+    <dl class="lexique-droite"><div><dt>Graduation</dt><dd>un trait placé sur la droite</dd></div><div><dt>Intervalle</dt><dd>l’espace entre deux traits</dd></div><div><dt>Origine</dt><dd>la graduation d’abscisse 0</dd></div><div><dt>Abscisse</dt><dd>le nombre qui indique la position du point</dd></div></dl>
+    <p class="definition-cours"><strong>Sens :</strong> les nombres augmentent vers la droite et diminuent vers la gauche.</p></article>`;
+  if (index === 1) return `<article class="carte-cours-droite">${entete(2, "Trouver le pas")}
     ${exempleDroiteCours({ depart: [-20, 1], pas: [10, 1], intervalles: 6, etiquettes: [0, 4] })}
-    <p>De −20 à 20, il y a <strong>4 intervalles</strong>. L’écart vaut 40, donc le pas vaut <strong>40 ÷ 4 = 10</strong>.</p><p class="alerte-droite"><strong>Attention :</strong> on compte les espaces, pas les traits.</p></article>`;
-  if (index === 2) return `<article class="carte-cours-droite"><span class="numero-cours">3</span><h3>Lire l’abscisse d’un point</h3>
-    ${exempleDroiteCours({ depart: [-2, 1], pas: [1, 2], intervalles: 8, etiquettes: [0, 4], point: { nom: "B", indice: 7 } })}
-    <ol><li>Je repère une valeur connue.</li><li>Je trouve le pas : ici 0,5.</li><li>J’avance graduation par graduation jusqu’au point.</li></ol></article>`;
-  if (index === 3) return `<article class="carte-cours-droite"><span class="numero-cours">4</span><h3>Placer un point</h3>
-    ${exempleDroiteCours({ depart: [-1, 1], pas: [1, 4], intervalles: 8, etiquettes: [0, 4], point: { nom: "M", indice: 6 } })}
-    <p>Pour placer M(0,5), je pars de 0 et j’avance de <strong>deux quarts</strong> vers la droite. Puis je contrôle : 0 + 2 × 0,25 = 0,5.</p></article>`;
-  return `<article class="carte-cours-droite"><span class="numero-cours">5</span><h3>L’origine n’est pas toujours visible</h3>
+    <ol class="methode-cours-droite"><li><strong>Écart :</strong> 20 − (−20) = 40.</li><li><strong>Intervalles :</strong> on compte 4 espaces.</li><li><strong>Pas :</strong> 40 ÷ 4 = 10.</li></ol>
+    <p class="alerte-droite"><strong>Piège fréquent :</strong> 5 traits délimitent seulement 4 intervalles.</p></article>`;
+  if (index === 2) return `<article class="carte-cours-droite">${entete(3, "Lire une abscisse")}
+    ${exempleDroiteCours({ depart: [-2, 1], pas: [1, 2], intervalles: 8, etiquettes: [0, 4], point: { nom: "B", indice: 7, position: "dessus" } })}
+    <ol class="methode-cours-droite"><li>Je trouve le pas : de −2 à 0, il y a 4 intervalles, donc le pas vaut 0,5.</li><li>Depuis 0, je vais de 3 intervalles vers la droite.</li><li>Je calcule : 0 + 3 × 0,5 = <strong>1,5</strong>.</li></ol>
+    <p class="definition-cours">Donc l’abscisse du point B est 1,5 : on écrit <strong>x<sub>B</sub> = 1,5</strong>.</p></article>`;
+  if (index === 3) return `<article class="carte-cours-droite">${entete(4, "Placer un point")}
+    ${exempleDroiteCours({ depart: [-1, 1], pas: [1, 4], intervalles: 8, etiquettes: [0, 4], point: { nom: "M", indice: 6, position: "dessus" } })}
+    <ol class="methode-cours-droite"><li>Je trouve le pas : ici 0,25.</li><li>Je choisis le repère 0, le plus proche de 0,5.</li><li>0,5 = 0 + 2 × 0,25 : je vais de 2 intervalles vers la droite.</li><li>Je touche la graduation ; le point s’y aimante.</li></ol></article>`;
+  return `<article class="carte-cours-droite">${entete(5, "Changer d’échelle")}
     ${exempleDroiteCours({ depart: [70, 1], pas: [1, 1], intervalles: 7, etiquettes: [0, 5], point: { nom: "P", indice: 3 } })}
-    <p>La méthode ne change pas : deux valeurs connues suffisent. Le pas peut être 0,1 ; 0,25 ; 0,5 ; 1 ; 10 ou 50.</p><p class="definition-cours">Je vérifie toujours le sens, le pas et le nombre d’intervalles.</p></article>`;
+    <p>Le zéro peut être décentré, absent ou en dehors de la partie dessinée. <strong>Ce n’est pas un problème :</strong> deux valeurs connues suffisent.</p>
+    <div class="echelles-cours-droite"><span>0,1</span><span>0,25</span><span>0,5</span><span>1</span><span>2</span><span>5</span><span>10</span><span>20</span><span>25</span><span>50</span></div>
+    <p class="definition-cours"><strong>Mon contrôle :</strong> sens → écart → intervalles → pas → position.</p></article>`;
 }
 
 function rendreCoursDroiteGraduee() {

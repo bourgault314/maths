@@ -178,6 +178,22 @@ describe("points repérés", () => {
     assert.ok(pointillesDe(svg, COULEURS_DROITE.point).length >= 1, "trait pointillé absent");
     assert.equal(disquesDe(svg, COULEURS_DROITE.point), 1);
   });
+
+  it("propose un marqueur épais et des nombres agrandis pour le lecteur mobile", () => {
+    const { svg } = dessinerDroiteGraduee({
+      min: -1,
+      max: 1,
+      pas: 0.25,
+      tailleNombres: 17,
+      tailleEtiquette: 19,
+      stylePoints: "trait",
+      points: [{ valeur: -0.5, etiquette: "A" }],
+    });
+    assert.match(svg, /font-size="17" font-weight="700"/);
+    assert.match(svg, /font-size="19" font-weight="700"/);
+    assert.match(svg, /stroke-width="5" stroke-linecap="round"/);
+    assert.equal(disquesDe(svg, COULEURS_DROITE.point), 0);
+  });
 });
 
 describe("étiquettes de graduation et masquage", () => {
