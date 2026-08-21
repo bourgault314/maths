@@ -4717,15 +4717,36 @@ function getEquationStepState(eq, revealState, varChar = xChar, opts = {}){
   if(!states.length) return null;
   return states[clamp(Math.round(Number(revealState)||1)-1,0,states.length-1)];
 }
-function getEquationStepTableMetricsFromInitial(eq, varChar = xChar){
+/* Vue Schéma — taille du tableau.
+   Le tableau vit seul dans une colonne de 740 points de large (x 820 → 1560) et
+   n'occupait que 132 points de haut sur les 1000 de la scène. La largeur est déjà
+   au maximum (maxW = 740) : le seul gisement était la hauteur. On agrandit donc les
+   lignes et les chiffres, sans JAMAIS toucher aux largeurs de cases, qui encodent
+   les quantités du schéma en barres. La vue Équation garde ses anciennes valeurs :
+   son tableau est placé tout en haut (y = 34) et descendrait sur les plateaux. */
+const EQ_STEP_SCHEMA_ROW_H = 130;
+const EQ_STEP_SCHEMA_FONT_SIZE = 92;
+const EQ_STEP_SCHEMA_PAD = 34;
+// Le « ? » est calé sur la largeur de sa case : à 0.70 il restait beaucoup plus petit
+// que les chiffres une fois ceux-ci agrandis.
+const EQ_STEP_SCHEMA_VAR_RATIO = 0.95;
+const EQ_STEP_SCHEMA_CAPTION_FONT = 50;
+const EQ_STEP_SCHEMA_CAPTION_MAX_W = 720;
+
+function getEquationStepSchemaTableTopY(){
+  return getEquationStepSchemaMidY() - EQ_STEP_SCHEMA_ROW_H;
+}
+
+function getEquationStepTableMetricsFromInitial(eq, varChar = xChar, opts = {}){
   const xVal = Math.max(1, Number(eq && eq.x) || 1);
+  const schema = !!opts.schema;
   // On reprend la grammaire du schéma du mode E classique : même hauteur,
   // même police, mêmes minima de cases. La seule différence est que le schéma
   // est centré, puisqu'en E pas à pas il est affiché seul.
   const baseW = 700;
-  const rowH = 66;
-  const fontSize = 58;
-  const pad = 26;
+  const rowH = schema ? EQ_STEP_SCHEMA_ROW_H : 66;
+  const fontSize = schema ? EQ_STEP_SCHEMA_FONT_SIZE : 58;
+  const pad = schema ? EQ_STEP_SCHEMA_PAD : 26;
   const minHiddenCellW = 78;
   const minVisibleCellW = 98;
   const minHiddenCellWValue1 = 78;
@@ -4737,7 +4758,7 @@ function getEquationStepTableMetricsFromInitial(eq, varChar = xChar){
     xVal * fixedUnit,
     xVal === 1 ? minHiddenCellWValue1 : minHiddenCellW
   );
-  const variableFontSize = Math.min(fontSize * 1.16, hiddenCellW * 0.70);
+  const variableFontSize = Math.min(fontSize * 1.16, hiddenCellW * (schema ? EQ_STEP_SCHEMA_VAR_RATIO : 0.70));
 
   return {
     baseW,
@@ -5228,6 +5249,61 @@ function eqSignedStepActionText(card, revealState, opts = {}){
   }
 }
 
+/* Largeur approchée d'un texte en gras, rapportée à la taille de police.
+   Volontairement généreuse : mieux vaut couper une ligne trop tôt que déborder. */
+const EQ_STEP_TEXT_CHAR_RATIO = 0.60;
+
+function eqStepTextWidth(str, fontSize){
+  return String(str == null ? "" : str).length * EQ_STEP_TEXT_CHAR_RATIO * (Number(fontSize) || 0);
+}
+
+/* La consigne d'étape tenait sur une seule ligne, ce qui la bloquait à 32 :
+   minuscule à côté du tableau agrandi. On autorise deux lignes, coupées au mot
+   le plus équilibré, ce qui permet de doubler la taille du texte. */
+function eqStepActionTextLines(message, fontSize, maxWidth){
+  const msg = String(message == null ? "" : message);
+  if(!msg || eqStepTextWidth(msg, fontSize) <= maxWidth) return [msg];
+  const words = msg.split(" ");
+  if(words.length < 2) return [msg];
+  let best = null;
+  for(let i=1;i<words.length;i++){
+    const a = words.slice(0, i).join(" ");
+    const b = words.slice(i).join(" ");
+    const w = Math.max(eqStepTextWidth(a, fontSize), eqStepTextWidth(b, fontSize));
+    if(best === null || w < best.w) best = {lines:[a, b], w};
+  }
+  return best ? best.lines : [msg];
+}
+
+/* Bloc de consigne aligné par le BAS : la dernière ligne se pose juste au-dessus
+   du tableau, que la consigne tienne sur une ou deux lignes. */
+function drawEqStepActionTextBlock(targetGroup, message, x, bottomY, opts = {}){
+  if(!message) return;
+  const maxWidth = Number(opts.maxWidth) || EQ_STEP_SCHEMA_CAPTION_MAX_W;
+  let fontSize = Number(opts.fontSize) || EQ_STEP_SCHEMA_CAPTION_FONT;
+  let lines = eqStepActionTextLines(message, fontSize, maxWidth);
+  // Filet de sécurité : si même coupée en deux la consigne déborde de la colonne
+  // (police réelle plus large que l'estimation), on réduit jusqu'à ce qu'elle rentre.
+  while(fontSize > 30 && lines.some(line => eqStepTextWidth(line, fontSize) > maxWidth)){
+    fontSize -= 2;
+    lines = eqStepActionTextLines(message, fontSize, maxWidth);
+  }
+  const gap = Math.round(fontSize * 1.16);
+  lines.forEach((line, i)=>{
+    drawEqStepActionText(targetGroup, line, x, bottomY - (lines.length - 1 - i) * gap, Object.assign({}, opts, {fontSize}));
+  });
+}
+
+/* Le titre d'étape débordait de son cadre et mordait sur la colonne voisine
+   dès que la correction passe en deux colonnes. On l'ajuste à la place disponible. */
+function fitEqStepFrameLabelFont(label, maxWidth, baseFontSize){
+  const s = String(label == null ? "" : label);
+  const base = Number(baseFontSize) || 28;
+  if(!s) return base;
+  const fitted = (Math.max(1, Number(maxWidth) || 1)) / (s.length * EQ_STEP_TEXT_CHAR_RATIO);
+  return Math.max(20, Math.min(base, Math.floor(fitted)));
+}
+
 function drawEqStepActionText(targetGroup, message, x, y, opts = {}){
   if(!message) return;
   const fontSize = opts.fontSize || 34;
@@ -5249,7 +5325,7 @@ function drawEquationStepSingaporeTable(targetGroup, card, revealState){
   const state = getEquationStepState(eq, schemaRevealState, varChar, schemaMode ? {includeVerify:true} : {});
   if(!state) return null;
 
-  const metrics = getEquationStepTableMetricsFromInitial(eq, varChar);
+  const metrics = getEquationStepTableMetricsFromInitial(eq, varChar, {schema: schemaMode});
   const gTable = el("g", {id:"eqStepSingaporeTable"});
 
   const isSchemaVerifyTable = schemaMode && state.kind === "verify" && state.verify;
@@ -5384,12 +5460,12 @@ function drawEquationStepAid(targetGroup, card, revealState){
       drawEquationStepSchemaIntro(targetGroup, card);
       return;
     }
-    drawEqStepActionText(
+    drawEqStepActionTextBlock(
       targetGroup,
       eqStepActionText(card, revealState, {useTableLabels:true}),
       1190,
-      392,
-      {fontSize:32, fill:"rgba(0,0,0,0.80)", weight:"900"}
+      getEquationStepSchemaTableTopY() - 26,
+      {fontSize:EQ_STEP_SCHEMA_CAPTION_FONT, maxWidth:EQ_STEP_SCHEMA_CAPTION_MAX_W, fill:"rgba(0,0,0,0.80)", weight:"900"}
     );
     const tableLayout = drawEquationStepSingaporeTable(targetGroup, card, revealState);
     if(shouldShowEquationStepEquabarButton(card, revealState) && tableLayout){
@@ -6880,12 +6956,12 @@ function renderCardEquationStepPrintScene(targetGroup, card, revealState, opts =
     if(layoutMode === "schema"){
       if(revealState > 0){
         if(showSchemaActionText && isUnitEquationStepFamily(card)){
-          drawEqStepActionText(
+          drawEqStepActionTextBlock(
             targetGroup,
             eqStepActionText(card, revealState, {useTableLabels:true}),
             1190,
-            392,
-            {fontSize:32, fill:"rgba(0,0,0,0.80)", weight:"900"}
+            getEquationStepSchemaTableTopY() - 26,
+            {fontSize:EQ_STEP_SCHEMA_CAPTION_FONT, maxWidth:EQ_STEP_SCHEMA_CAPTION_MAX_W, fill:"rgba(0,0,0,0.80)", weight:"900"}
           );
         }
         drawEquationStepSingaporeTable(targetGroup, card, revealState);
@@ -7377,7 +7453,7 @@ function renderCardEquationSignedStepPrint(targetSvg, card, printMode, tEl, tTex
     }));
     if(label){
       gFrame.appendChild(tText(x+28, y+44, label, {
-        "text-anchor":"start", "font-size":"26", "fill":"rgba(0,0,0,0.62)", "font-weight":"900"
+        "text-anchor":"start", "font-size":String(fitEqStepFrameLabelFont(label, w - 56, 26)), "fill":"rgba(0,0,0,0.62)", "font-weight":"900"
       }));
     }
 
@@ -7467,7 +7543,7 @@ function renderCardEquationStepPrint(targetSvg, card, printMode, tEl, tText, use
     }));
     if(label){
       gFrame.appendChild(tText(x+28, y+44, label, {
-        "text-anchor":"start", "font-size":"28", "fill":"rgba(0,0,0,0.64)", "font-weight":"900"
+        "text-anchor":"start", "font-size":String(fitEqStepFrameLabelFont(label, w - 56, 28)), "fill":"rgba(0,0,0,0.64)", "font-weight":"900"
       }));
     }
 
