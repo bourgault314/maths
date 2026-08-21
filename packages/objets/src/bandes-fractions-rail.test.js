@@ -550,6 +550,31 @@ describe("bandes fractionnaires sur rail — géométrie historique", () => {
     );
   });
 
+  it("garde une marge autour des fractions de synthèse au format standard", () => {
+    for (const { numerateur, denominateur } of [
+      { numerateur: 5, denominateur: 2 },
+      { numerateur: 8, denominateur: 4 },
+    ]) {
+      const rendu = dessinerBandesFractionnairesSurRailDecimal({
+        numerateur,
+        denominateur,
+        profil: "solution",
+        etape: "pieces",
+        largeur: 340,
+        afficherReperesIntermediairesCours: true,
+      });
+      const yBarre = attributPremier(rendu.svg, "ecriture-part-barre", "y1");
+      const taille = attributPremier(rendu.svg, "ecriture-part-numerateur", "font-size");
+      const debordCanonique = taille * 1.4;
+      const hautBande = rendu.donnees.yBande;
+      const basBande = hautBande + rendu.donnees.hauteurBande;
+
+      assert.equal(rendu.donnees.format, "standard");
+      assert.ok(yBarre - debordCanonique >= hautBande + 3);
+      assert.ok(yBarre + debordCanonique <= basBande - 3);
+    }
+  });
+
   it("garde les pièces de P6 fines tout en rendant leurs textes lisibles sur mobile", () => {
     const largeurAffichee = 234;
     const echelleMobile = largeurAffichee / 260;

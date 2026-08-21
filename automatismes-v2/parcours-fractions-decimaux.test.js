@@ -295,8 +295,15 @@ test("le cours et l’aide conservent l’ordre CPA et les nouveaux invariants",
   assert.match(application, /rendreBandesRailCours\(7, 2, "pieces"/);
   assert.match(application, /afficherReperesIntermediairesCours: true/);
   assert.match(application, /reperes-bandes-synthese-cours/);
-  assert.match(application, /rendreBandesRailCours\(5, 2, "pieces", true/);
-  assert.match(application, /rendreBandesRailCours\(8, 4, "pieces", true/);
+  assert.match(
+    application,
+    /rendreBandesRailCours\(5, 2, "pieces", true, 560, \{ largeurMobile: 340, afficherReperesIntermediairesCours: true \}\)/,
+  );
+  assert.match(
+    application,
+    /rendreBandesRailCours\(8, 4, "pieces", true, 560, \{ largeurMobile: 340, afficherReperesIntermediairesCours: true \}\)/,
+  );
+  assert.doesNotMatch(application, /formatMobile: "mobile-compact"/);
   assert.match(application, /rendreEchangesRangsCours\(\)/);
   assert.match(application, /rendreDecomposition354Cours\(\)/);
   assert.match(application, /function rendreConversionRangsCours/);
@@ -317,6 +324,11 @@ test("le cours et l’aide conservent l’ordre CPA et les nouveaux invariants",
   assert.match(application, /rendreBandesRailCours\(5, 1, "pieces"/);
   assert.match(application, /function rendreAidePoseBandesRiche/);
   assert.match(application, /classes: "figure-bandes-rail-aide"/);
+  assert.match(application, /classeResponsive: "figure-bandes-rail-aide-responsive"/);
+  assert.ok(
+    [...application.matchAll(/largeurMobile: 340/g)].length >= 5,
+    "le cours et les aides doivent conserver le rail mobile standard de 340 px",
+  );
   assert.match(application, /\["dixiemes", "demi", "comparaison"\]\[etape\]/);
   assert.match(application, /\["lignes", "quadrants", "comparaison"\]\[etape\]/);
   assert.match(application, /afficherEcritures: false/);

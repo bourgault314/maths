@@ -6,7 +6,7 @@
 
 import {
   SCHEMA_QUESTION_INSTANCE_V2,
-} from "../../../../contrats/src/question-v2.js?v=39";
+} from "../../../../contrats/src/question-v2.js?v=40";
 import {
   BASES_CARRES_ENTIERS,
   blocPuissance,
@@ -17,7 +17,7 @@ import {
   exigerParametresCarres,
   reponseEntier,
   valeurParametreOuTirage,
-} from "./commun.js?v=39";
+} from "./commun.js?v=40";
 
 export const NOM_GENERATEUR_CARRE_QUADRILLE =
   "nombres-et-calculs.carres-entiers-1-a-12.carre-quadrille";

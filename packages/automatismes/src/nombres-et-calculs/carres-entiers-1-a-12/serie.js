@@ -7,33 +7,33 @@ import {
   GABARIT_CALCUL_COURT_CARRE,
   BASES_CALCUL_COURT,
   OPERATIONS_CALCUL_COURT,
-} from "./calcul-court.js?v=39";
+} from "./calcul-court.js?v=40";
 import {
   BASES_ENCADREMENT_CARRE,
   FORMULATIONS_CALCUL_DIRECT,
   FORMULATIONS_CALCUL_DIRECT_QCM,
   GABARIT_CALCUL_DIRECT_CARRE,
-} from "./calcul-direct.js?v=39";
+} from "./calcul-direct.js?v=40";
 import {
   BASES_CARRE_QUADRILLE,
   FORMES_CARRE_QUADRILLE,
   GABARIT_CARRE_QUADRILLE,
-} from "./carre-quadrille.js?v=39";
+} from "./carre-quadrille.js?v=40";
 import {
   BASES_CARRES_ENTIERS,
-} from "./commun.js?v=39";
+} from "./commun.js?v=40";
 import {
   FORMULATIONS_RECONNAITRE_CARRES,
   GABARIT_RECONNAITRE_CARRES,
-} from "./reconnaitre-carres.js?v=39";
+} from "./reconnaitre-carres.js?v=40";
 import {
   FORMES_RETROUVER_ENTIER,
   GABARIT_RETROUVER_ENTIER_CARRE,
-} from "./retrouver-entier.js?v=39";
+} from "./retrouver-entier.js?v=40";
 import {
   BASES_SENS_NOTATION,
   GABARIT_SENS_NOTATION_CARRE,
-} from "./sens-notation.js?v=39";
+} from "./sens-notation.js?v=40";
 
 export const VERSION_PLAN_SERIE_NC02 = 2;
 

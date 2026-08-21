@@ -7,26 +7,26 @@
 import {
   creerGenerateur,
   validerGraine,
-} from "../../../../moteur-exercices/src/aleatoire.js?v=39";
+} from "../../../../moteur-exercices/src/aleatoire.js?v=40";
 import {
   GABARIT_DECIMAL_VERS_FRACTION,
   CIBLES_FRACTION_LIBRE,
   CIBLES_FRACTION_LIBRE_DECIMALES,
   CIBLES_FRACTION_LIBRE_DEMIS_QUARTS,
-} from "./decimal-vers-fraction.js?v=39";
+} from "./decimal-vers-fraction.js?v=40";
 import {
   GABARIT_FRACTION_VERS_DECIMAL,
   NUMERATEURS_CENTIEMES,
   NUMERATEURS_DENOMINATEUR_UN,
   NUMERATEURS_DIXIEMES,
   NUMERATEURS_MILLIEMES,
-} from "./fraction-vers-decimal.js?v=39";
+} from "./fraction-vers-decimal.js?v=40";
 import {
   MICRO_NOTION_NC03,
   MICRO_NOTION_NC04,
   NUMERATEURS_DEMIS,
   NUMERATEURS_QUARTS,
-} from "./commun.js?v=39";
+} from "./commun.js?v=40";
 
 export const VERSION_PLAN_SERIE_FRACTIONS_DECIMAUX = 4;
 

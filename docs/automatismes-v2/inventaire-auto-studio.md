@@ -1,6 +1,6 @@
 # Inventaire technique de `auto` et `studio` pour Automatismes V2
 
-**Inventaire vérifié le 16 août 2026.**
+**Inventaire vérifié le 21 août 2026.**
 
 Ce document empêche de refaire inutilement le travail déjà acquis. Il ne change
 pas la règle de provenance : l'ancien contenu pédagogique reste une archive
@@ -230,10 +230,11 @@ mobile standard de largeur source `340`. D-061 laisse visibles, dans le cours
 seulement, leurs repères décimaux intermédiaires tout en conservant la cible
 finale à `?`, puis remplace le rappel textuel des seuls demis par une synthèse
 symétrique sur deux rails de bandes, demis et quarts. Les profils d'aide
-restent masqués. Sur téléphone, les deux exemples détaillés gardent leur
-largeur source standard `340`, tandis que les deux rails de synthèse emploient
-la variante `mobile-compact` de largeur source `260`. Sa liste stratégique et
-sa note quotient ont été retirées.
+restent masqués. Sur téléphone, les exemples détaillés et les deux rails de
+synthèse gardent tous la largeur source standard `340`. La variante
+`mobile-compact` demeure un témoin testable dans l'objet partagé, mais elle
+n'est plus sélectionnée par le module visible. Sa liste stratégique et sa note
+quotient ont été retirées.
 Le matériel décimal traite les autres dixièmes et centièmes et le tableau va
 jusqu'aux millièmes. La droite graduée demeure une
 brique commune et un point de comparaison du Labo, mais n'est plus une forme

@@ -1491,3 +1491,27 @@ si l'utilisateur revient ensuite au menu, cette notion reste cochée.
 Les tests du lanceur couvrent l'arrivée vide, l'activation après un premier
 choix, la sélection multiple et la conservation d'un lien direct. Le graphe
 public V2 est invalidé d'un seul tenant en `v39`.
+
+## 21 août 2026
+
+### D-063 — La synthèse réemploie le même rail mobile que le cours et les aides
+
+La revue sur iPhone de la page 6 montre que les fractions `1/2` et `1/4` sont
+correctement proportionnées dans les exemples détaillés, mais trop hautes dans
+les deux rails de synthèse. Le moteur canonique n'est pas en cause : ces deux
+appels étaient les seuls du lecteur à demander la variante
+`mobile-compact` de largeur source `260`, dont la bande plus basse comprime
+l'écriture étagée.
+
+Les synthèses « De demi en demi » et « De quart en quart » utilisent désormais
+le format standard de largeur source `340`, comme les exemples détaillés,
+« Me guider » et les corrections. Elles conservent tous leurs repères
+décimaux intermédiaires et leur disposition symétrique. La primitive
+`rendreFractionSvg`, les profils anti-fuite, les générateurs, les questions,
+les réponses et l'ordre seedé restent inchangés.
+
+Le test d'intégration du parcours vérifie les deux appels de synthèse, l'usage
+du format standard dans les aides et l'absence de demande `mobile-compact`
+dans l'application. Le format demeure disponible dans l'objet partagé pour
+ses bancs de contrôle, mais n'est plus choisi par ce module visible. Le graphe
+public est invalidé atomiquement en `v40`.

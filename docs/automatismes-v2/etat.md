@@ -1,6 +1,19 @@
 # État du chantier Automatismes V2
 
-**Dernière mise à jour : 17 août 2026.**
+**Dernière mise à jour : 21 août 2026.**
+
+## Fractions canoniques dans la synthèse du cours du 21 août
+
+- D-063 corrige uniquement les deux rails de synthèse de la page 6 de
+  NC-03 / NC-04. Les demis et les quarts y reprennent le format mobile
+  standard de largeur source `340`, déjà employé dans les exemples détaillés,
+  « Me guider » et les corrections. Les fractions restent rendues par la
+  primitive canonique commune ; aucun générateur, profil de révélation,
+  repère, résultat ou ordre seedé n'est modifié.
+- Un test d'intégration interdit désormais au cours de redemander la variante
+  `mobile-compact` et vérifie que les appels d'aide conservent leur largeur
+  standard. La vérification complète passe **1 647 tests sur 1 647** dans
+  **232 suites**. Le graphe de cache est invalidé atomiquement en `v40`.
 
 ## Sélection explicite du lanceur du 17 août
 
