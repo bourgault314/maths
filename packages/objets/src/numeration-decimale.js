@@ -10,12 +10,12 @@ import {
   COULEURS_NUMERATION_DECIMALE,
   COULEURS_RANGS_NUMERATION_DECIMALE,
   TYPOGRAPHIE,
-} from "../../charte/src/charte.js?v=42";
-import { construireDonneesTableauNumeration } from "./fractions-decimaux.js?v=42";
+} from "../../charte/src/charte.js?v=43";
+import { construireDonneesTableauNumeration } from "./fractions-decimaux.js?v=43";
 import {
   mesurerEcritureFractionSvg,
   rendreFractionSvg,
-} from "./expressions.js?v=42";
+} from "./expressions.js?v=43";
 
 export const VERSION_NUMERATION_DECIMALE = 7;
 

@@ -5108,7 +5108,7 @@ body {
 
 .visuel-question-nc05 {
   width: min(100%, 520px);
-  max-height: 140px;
+  max-height: 184px;
   margin: 0 auto;
   display: grid;
   place-items: center;
@@ -5128,7 +5128,7 @@ body {
 }
 
 .figure-unite-aires-nc05 {
-  width: clamp(72px, 18vw, 118px);
+  width: clamp(112px, 18vw, 160px);
   margin: 0;
   aspect-ratio: 1;
   overflow: hidden;
@@ -5558,11 +5558,11 @@ body {
   }
 
   .mode-entrainement.avec-pave .visuel-question-nc05 {
-    max-height: 104px;
+    max-height: 146px;
   }
 
   .mode-entrainement.avec-pave .visuel-question-nc05 .figure-unite-aires-nc05 {
-    width: clamp(62px, 20vw, 86px);
+    width: clamp(104px, 32vw, 130px);
   }
 
   .mode-entrainement.avec-pave .carte-question-ecritures .zone-retour:empty {
