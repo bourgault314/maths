@@ -67,7 +67,7 @@ describe("registre du lecteur", () => {
       20,
     );
     assert.equal(obtenirNotionLecteur(NOTION_ECRITURES_MULTIPLES_NOMBRE).pagesCours, 6);
-    assert.equal(obtenirNotionLecteur(NOTION_DROITE_GRADUEE).pagesCours, 5);
+    assert.equal(obtenirNotionLecteur(NOTION_DROITE_GRADUEE).pagesCours, 6);
     assert.equal(
       obtenirNotionLecteur(NOTION_ECRITURES_MULTIPLES_NOMBRE).nombreQuestionsMaximum,
       20,

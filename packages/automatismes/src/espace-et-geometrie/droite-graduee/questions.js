@@ -27,10 +27,17 @@ export const VARIANTE_DIRECTE = "directe";
 export const VARIANTE_PAS_QCM = "pas-qcm";
 export const VARIANTE_LECTURE_QCM = "lecture-qcm";
 export const VARIANTE_DEUX_POINTS_QCM = "deux-points-qcm";
-const VARIANTES = new Set([VARIANTE_DIRECTE, VARIANTE_PAS_QCM, VARIANTE_LECTURE_QCM, VARIANTE_DEUX_POINTS_QCM]);
+export const VARIANTE_FRACTION_QCM = "fraction-qcm";
+const VARIANTES = new Set([
+  VARIANTE_DIRECTE,
+  VARIANTE_PAS_QCM,
+  VARIANTE_LECTURE_QCM,
+  VARIANTE_DEUX_POINTS_QCM,
+  VARIANTE_FRACTION_QCM,
+]);
 
 export const NOM_GENERATEUR_DROITE_GRADUEE = "espace-et-geometrie.droite-graduee.questions";
-export const VERSION_GENERATEUR_DROITE_GRADUEE = 2;
+export const VERSION_GENERATEUR_DROITE_GRADUEE = 3;
 export const GABARIT_DROITE_GRADUEE = Object.freeze({
   schema: SCHEMA_GABARIT_QUESTION,
   id: NOM_GENERATEUR_DROITE_GRADUEE,
@@ -48,6 +55,15 @@ function valeurAuIndice(p, indice) {
   );
 }
 function format(rationnel) { return formaterFractionEnDecimalSignee(rationnel.numerateur, rationnel.denominateur); }
+function formatFraction(fraction) {
+  return `${fraction.numerateur}/${fraction.denominateur}`.replace("-", "−");
+}
+function fractionAfficheePour(p, rationnel) {
+  const denominateur = p.pasDenominateur;
+  const numerateur = rationnel.numerateur * denominateur / rationnel.denominateur;
+  if (!Number.isSafeInteger(numerateur)) return rationnel;
+  return { numerateur, denominateur };
+}
 function rationnelDepuisEntier(entier) { return { numerateur: entier, denominateur: 1 }; }
 function ajouter(rationnel, entier) {
   return reduireFraction(rationnel.numerateur + entier * rationnel.denominateur, rationnel.denominateur);
@@ -86,6 +102,18 @@ function reponseQcm(valeurs, bonneValeur, decalage, prefixe = "proposition") {
   for (const valeur of valeurs) {
     const libelle = typeof valeur === "string" ? valeur : format(valeur);
     if (!uniques.includes(libelle)) uniques.push(libelle);
+  }
+  // Les mécanismes d'erreur peuvent parfois conduire au même nombre (par
+  // exemple « supposer le pas 1 » quand le pas vaut réellement 1). Un QCM
+  // diagnostique conserve néanmoins quatre propositions distinctes.
+  if (typeof bonneValeur !== "string") {
+    for (let ecart = 1; uniques.length < 4 && ecart <= 8; ecart += 1) {
+      for (const signe of [-1, 1]) {
+        const libelle = format(ajouter(bonneValeur, signe * ecart));
+        if (!uniques.includes(libelle)) uniques.push(libelle);
+        if (uniques.length >= 4) break;
+      }
+    }
   }
   let compteur = 0;
   const choix = uniques.slice(0, 4).map((libelle) => ({ id: `${prefixe}-${++compteur}`, libelle }));
@@ -132,11 +160,12 @@ function exigerParametres(p) {
   const cles = new Set([
     "famille", "variante", "departNumerateur", "departDenominateur", "pasNumerateur", "pasDenominateur",
     "nombreIntervalles", "etiquettes", "indiceCible", "nomPoint", "positionPoint", "indiceSecondPoint",
-    "nomSecondPoint", "decalageChoix",
+    "nomSecondPoint", "decalageChoix", "notation",
   ]);
   for (const cle of Object.keys(p)) if (!cles.has(cle)) throw new TypeError(`droite-graduee : paramètre inconnu « ${cle} »`);
   if (!FAMILLES_DROITE_GRADUEE.includes(p.famille)) throw new RangeError("droite-graduee : famille inconnue");
   if (!VARIANTES.has(p.variante)) throw new RangeError("droite-graduee : variante inconnue");
+  if (p.notation !== undefined && !new Set(["decimal", "fraction"]).has(p.notation)) throw new RangeError("droite-graduee : notation inconnue");
   for (const cle of ["departNumerateur", "pasNumerateur", "nombreIntervalles", "indiceCible", "decalageChoix"]) {
     if (!Number.isSafeInteger(p[cle])) throw new TypeError(`droite-graduee : ${cle} entier requis`);
   }
@@ -185,13 +214,29 @@ function qcmDeuxPoints(p) {
   const etiquette = (a, b) => `${p.nomPoint} = ${format(a)} ; ${p.nomSecondPoint} = ${format(b)}`;
   const decaleeA = reduireFraction(valeurA.numerateur * pas.denominateur + pas.numerateur * valeurA.denominateur, valeurA.denominateur * pas.denominateur);
   const decaleeB = reduireFraction(valeurB.numerateur * pas.denominateur + pas.numerateur * valeurB.denominateur, valeurB.denominateur * pas.denominateur);
+  const reculeeA = reduireFraction(valeurA.numerateur * pas.denominateur - pas.numerateur * valeurA.denominateur, valeurA.denominateur * pas.denominateur);
+  const reculeeB = reduireFraction(valeurB.numerateur * pas.denominateur - pas.numerateur * valeurB.denominateur, valeurB.denominateur * pas.denominateur);
   const correcte = etiquette(valeurA, valeurB);
   return reponseQcm([
     correcte,
     etiquette(valeurB, valeurA),
     etiquette(decaleeA, decaleeB),
+    etiquette(reculeeA, reculeeB),
+    etiquette(decaleeB, decaleeA),
     etiquette({ numerateur: Math.abs(valeurA.numerateur), denominateur: valeurA.denominateur }, { numerateur: Math.abs(valeurB.numerateur), denominateur: valeurB.denominateur }),
   ], correcte, p.decalageChoix, "couple");
+}
+
+function qcmFraction(p, cible) {
+  const fraction = fractionAfficheePour(p, cible);
+  const valeurs = [
+    fraction,
+    { numerateur: fraction.numerateur - 1, denominateur: fraction.denominateur },
+    { numerateur: fraction.numerateur + 1, denominateur: fraction.denominateur },
+    { numerateur: -fraction.numerateur, denominateur: fraction.denominateur },
+    { numerateur: fraction.numerateur + fraction.denominateur, denominateur: fraction.denominateur },
+  ].map(formatFraction);
+  return reponseQcm(valeurs, formatFraction(fraction), p.decalageChoix, "fraction");
 }
 
 export function genererQuestionDroiteGraduee({ parametres }) {
@@ -200,12 +245,18 @@ export function genererQuestionDroiteGraduee({ parametres }) {
   const cible = valeurAuIndice(p, p.indiceCible);
   const pas = reduireFraction(p.pasNumerateur, p.pasDenominateur);
   const point = { nom: p.nomPoint, indice: p.indiceCible, position: p.positionPoint };
+  const notation = p.notation === "fraction"
+    ? [texte("notation", "fraction")]
+    : [];
   let enonce;
   let reponse;
   let correction;
 
   if (p.famille === FAMILLE_PLACER_POINT) {
-    enonce = [texte("consigne", `Place le point ${p.nomPoint} d’abscisse ${format(cible)}.`), blocsDroite(p)];
+    const cibleEcrite = p.notation === "fraction"
+      ? formatFraction(fractionAfficheePour(p, cible))
+      : format(cible);
+    enonce = [texte("consigne", `Place le point ${p.nomPoint} d’abscisse ${cibleEcrite}.`), ...notation, blocsDroite(p)];
     reponse = reponseGraduation(p);
     const indiceReference = p.etiquettes.reduce((meilleur, indice) => Math.abs(indice - p.indiceCible) < Math.abs(meilleur - p.indiceCible) ? indice : meilleur);
     const reference = valeurAuIndice(p, indiceReference);
@@ -227,15 +278,19 @@ export function genererQuestionDroiteGraduee({ parametres }) {
   } else if (p.variante === VARIANTE_DEUX_POINTS_QCM) {
     const secondPoint = { nom: p.nomSecondPoint, indice: p.indiceSecondPoint, position: p.positionPoint === "dessus" ? "dessous" : "dessus" };
     const valeurB = valeurAuIndice(p, p.indiceSecondPoint);
-    enonce = [texte("consigne", `Lis les abscisses des points ${p.nomPoint} et ${p.nomSecondPoint}.`), blocsDroite(p, [point, secondPoint])];
+    enonce = [texte("consigne", `Lis les abscisses des points ${p.nomPoint} et ${p.nomSecondPoint}.`), ...notation, blocsDroite(p, [point, secondPoint])];
     reponse = qcmDeuxPoints(p);
     correction = [
       texte("methode", `Chaque intervalle vaut ${format(pas)}. On lit chaque point séparément à partir du repère le plus proche.`),
       texte("conclusion", `${p.nomPoint} a pour abscisse ${format(cible)} et ${p.nomSecondPoint} a pour abscisse ${format(valeurB)}.`),
     ];
   } else {
-    enonce = [texte("consigne", `Quelle est l’abscisse du point ${p.nomPoint} ?`), blocsDroite(p, [point])];
-    reponse = p.variante === VARIANTE_LECTURE_QCM ? qcmLecture(p, cible, pas) : reponseDecimale(cible);
+    enonce = [texte("consigne", `Quelle est l’abscisse du point ${p.nomPoint} ?`), ...notation, blocsDroite(p, [point])];
+    reponse = p.variante === VARIANTE_LECTURE_QCM
+      ? qcmLecture(p, cible, pas)
+      : p.variante === VARIANTE_FRACTION_QCM
+        ? qcmFraction(p, cible)
+        : reponseDecimale(cible);
     const indiceReference = p.etiquettes.reduce((meilleur, indice) => Math.abs(indice - p.indiceCible) < Math.abs(meilleur - p.indiceCible) ? indice : meilleur);
     const reference = valeurAuIndice(p, indiceReference);
     const deplacement = p.indiceCible - indiceReference;

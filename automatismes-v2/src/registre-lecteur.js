@@ -162,7 +162,7 @@ const DEFINITIONS = Object.freeze([
     rendu: RENDU_DROITE_GRADUEE,
     graineApercu: "apercu-ge01-ge02-complet",
     cours: true,
-    pagesCours: 5,
+    pagesCours: 6,
     creerSerie: genererSerieDroiteGraduee,
     nombreQuestionsMaximum: 20,
   }),

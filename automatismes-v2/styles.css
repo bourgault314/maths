@@ -189,7 +189,13 @@ h3,
 .entete-cours-droite {
   display: flex;
   align-items: center;
+  justify-content: center;
   gap: 12px;
+}
+
+.entete-cours-droite .numero-cours {
+  flex: 0 0 32px;
+  margin: 0;
 }
 
 .entete-cours-droite h3 {
@@ -236,6 +242,74 @@ h3,
   gap: 8px;
 }
 
+.droite-cours-annotee {
+  margin-block: 2px 0;
+}
+
+.exemple-abscisse,
+.precision-cours-droite {
+  text-align: center;
+}
+
+.exemple-abscisse {
+  padding: 9px 12px;
+  border-radius: 12px;
+  background: color-mix(in srgb, var(--mg-turquoise) 10%, white);
+}
+
+.carte-cours-droite-fractions .fraction-empilee,
+.fraction-question-droite {
+  vertical-align: middle;
+}
+
+.fraction-dans-texte {
+  display: inline-flex;
+}
+
+.etape-aide-droite {
+  overflow: hidden;
+  border: 1px solid var(--mg-ligne);
+  border-radius: 14px;
+  background: var(--mg-fond-doux);
+}
+
+.etape-aide-droite summary {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 12px;
+  color: var(--mg-bleu);
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.etape-aide-droite summary span {
+  display: grid;
+  place-items: center;
+  width: 30px;
+  height: 30px;
+  border-radius: 999px;
+  color: white;
+  background: var(--mg-turquoise);
+}
+
+.etape-aide-droite p {
+  margin: 0;
+  padding: 0 14px 14px 52px;
+}
+
+.rail-fraction-aide-droite {
+  padding: 12px;
+  border-left: 5px solid var(--mg-turquoise);
+  border-radius: 0 14px 14px 0;
+  background: var(--mg-fond-doux);
+}
+
+.rail-fraction-aide-droite h3,
+.rail-fraction-aide-droite p {
+  margin: 0;
+}
+
 .echelles-cours-droite {
   display: flex;
   flex-wrap: wrap;
@@ -275,7 +349,20 @@ h3,
   }
 
   .lexique-droite {
-    grid-template-columns: 1fr;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    font-size: .92rem;
+  }
+
+  .lexique-droite div {
+    padding: 8px;
+  }
+
+  .entete-cours-droite {
+    gap: 9px;
+  }
+
+  .droite-cours-annotee {
+    margin-block: -6px -10px;
   }
 }
 

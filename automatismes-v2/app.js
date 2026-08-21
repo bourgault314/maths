@@ -4823,9 +4823,14 @@ function rendreQuestionDroiteGraduee() {
           <output class="afficheur-reponse ${valeur ? "rempli" : ""}">${echapper(valeur || (estEntrainement() ? "…" : "?"))}</output>
           ${estEntrainement() && etat.validation === null ? '<p class="indication-clavier-physique">Chiffres · virgule · signe moins si nécessaire · Entrée pour valider</p>' : ""}
         </section>`;
+  const notationFraction = texteBloc(question, "notation") === "fraction";
+  const consigne = texteBloc(question, "consigne");
+  const consigneFraction = notationFraction
+    ? consigne.replace(/(−?\d+)\/(\d+)/, (_, numerateur, denominateur) => rendreFractionEmpilee(numerateur, denominateur, { classe: "fraction-question-droite" }))
+    : echapper(consigne);
   const carteQuestion = `<main class="carte-question carte-question-droite famille-${echapper(familleQuestion(question))}">
     <p class="etiquette-notion">${echapper(nomNotion())}</p>
-    <h1>${echapper(texteBloc(question, "consigne"))}</h1>
+    <h1>${consigneFraction}</h1>
     ${zone}
     ${estEntrainement() ? rendreZoneRetour() : '<div class="zone-retour" aria-hidden="true"></div>'}
   </main>`;
@@ -4835,12 +4840,30 @@ function rendreQuestionDroiteGraduee() {
 function rendreAideDroiteGraduee(question) {
   if (!etat.aideOuverte) return "";
   const bloc = blocDroiteGraduee(question);
-  const etapes = question.aide.blocs.map((element, index) => `<li><strong>${index + 1}</strong><span>${echapper(element.contenu)}</span></li>`).join("");
+  const titres = ["Repérer", "Compter", "Trouver le pas", "Se déplacer"];
+  const etapes = question.aide.blocs.map((element, index) => `<details class="etape-aide-droite" ${index === 0 ? "open" : ""}><summary><span>${index + 1}</span>${titres[index] ?? "Contrôler"}</summary><p>${echapper(element.contenu)}</p></details>`).join("");
+  const debut = bloc.etiquettes[0];
+  const fin = bloc.etiquettes[1];
+  const droiteExpliquee = rendreDroiteCoursAnnotee({
+    depart: [bloc.depart.numerateur, bloc.depart.denominateur],
+    pas: [bloc.pas.numerateur, bloc.pas.denominateur],
+    intervalles: bloc.nombreIntervalles,
+    etiquettes: bloc.etiquettes,
+    point: bloc.point,
+  }, [{ type: "accolade", debut, fin, texte: "deux valeurs connues" }, { type: "intervalles", debut, fin }]);
+  let railFraction = "";
+  if (texteBloc(question, "notation") === "fraction") {
+    const placement = familleQuestion(question) === "placer-point";
+    const indice = placement ? Number(question.reponse.attendus[0]?.slice(2)) : bloc.point?.indice;
+    const denominateur = bloc.pas.denominateur;
+    const numerateur = Math.max(1, Math.round(Math.abs(valeurDroite(bloc, indice)) * denominateur));
+    railFraction = `<section class="rail-fraction-aide-droite"><h3>Construire les quarts</h3>${rendreBandesRailCours(placement ? numerateur : 1, denominateur, "pieces", placement, 600, { largeurMobile: 330, afficherReperesIntermediairesCours: true })}<p>${placement ? "Regroupe d’abord 4 quarts pour former 1 unité, puis place les quarts restants." : "Une unité est partagée en 4 parts égales : chaque intervalle vaut un quart."}</p></section>`;
+  }
   return rendreCadrePanneau({
     type: "aide",
     surtitre: "Un indice à la fois",
     titre: "Lire l’échelle sans deviner",
-    contenu: `${rendreDroiteQuestion(bloc, { classe: "droite-aide" })}<ol class="etapes-droite">${etapes}</ol>${rendreAccesCoursDepuisAide()}`,
+    contenu: `${droiteExpliquee}<div class="etapes-droite">${etapes}</div>${railFraction}${rendreAccesCoursDepuisAide()}`,
     classes: "panneau-droite-graduee",
   });
 }
@@ -4863,43 +4886,115 @@ function rendreCorrectionDroiteGraduee(question) {
   });
 }
 
-function exempleDroiteCours({ depart, pas, intervalles, etiquettes, point }) {
-  return rendreDroiteQuestion({
+function donneesDroiteCours({ depart, pas, intervalles, etiquettes, point }) {
+  return {
     depart: { numerateur: depart[0], denominateur: depart[1] },
     pas: { numerateur: pas[0], denominateur: pas[1] },
     nombreIntervalles: intervalles,
     etiquettes,
     ...(point ? { point } : {}),
-  }, { classe: "droite-cours" });
+  };
+}
+
+function rendreDroiteCoursAnnotee(configuration, annotations = []) {
+  const bloc = donneesDroiteCours(configuration);
+  const graduations = Array.from({ length: bloc.nombreIntervalles + 1 }, (_, indice) => valeurDroite(bloc, indice));
+  const etiquettes = Object.fromEntries(graduations.map((valeur, indice) => [
+    String(valeur), bloc.etiquettes.includes(indice) ? texteValeurDroite(bloc, indice) : "",
+  ]));
+  const points = bloc.point ? [{
+    valeur: valeurDroite(bloc, bloc.point.indice), etiquette: bloc.point.nom,
+    position: bloc.point.position ?? "dessus", couleur: COULEURS.bleu,
+  }] : [];
+  const rendreVersion = (largeur, version) => {
+    const dessin = dessinerDroiteGraduee({
+      min: graduations[0], max: graduations.at(-1), graduations, etiquettes, points,
+      largeur, tailleNombres: version === "mobile" ? 17 : 18,
+      tailleEtiquette: version === "mobile" ? 19 : 20, stylePoints: "trait",
+      coteNombres: "dessous", description: "Droite graduée expliquée étape par étape",
+    });
+    const margeHaut = 58;
+    const margeBas = annotations.some((annotation) => annotation.type === "valeurs") ? 52 : 30;
+    const hauteur = dessin.hauteur + margeHaut + margeBas;
+    const corps = dessin.svg.slice(dessin.svg.indexOf(">") + 1, dessin.svg.lastIndexOf("</svg>"));
+    const x = (indice) => dessin.geometrie.xGauche + indice * (dessin.geometrie.xDroite - dessin.geometrie.xGauche) / bloc.nombreIntervalles;
+    const y = dessin.geometrie.yAxe + margeHaut;
+    const taille = version === "mobile" ? 13 : 16;
+    const textes = (contenu, xTexte, yTexte, couleur = COULEURS.bleu, poids = 700) => `<text x="${xTexte}" y="${yTexte}" text-anchor="middle" font-family="system-ui,sans-serif" font-size="${taille}" font-weight="${poids}" fill="${couleur}">${echapper(contenu)}</text>`;
+    const superpositions = annotations.map((annotation) => {
+      const x1 = x(annotation.debut ?? annotation.indice ?? 0);
+      const x2 = x(annotation.fin ?? annotation.indice ?? 0);
+      if (annotation.type === "accolade") {
+        const yy = y - 31;
+        return `<path d="M ${x1} ${yy + 8} Q ${x1} ${yy} ${x1 + 8} ${yy} L ${x2 - 8} ${yy} Q ${x2} ${yy} ${x2} ${yy + 8}" fill="none" stroke="${COULEURS.turquoise}" stroke-width="3" stroke-linecap="round"/>${textes(annotation.texte, (x1 + x2) / 2, yy - 8, COULEURS.bleu)}`;
+      }
+      if (annotation.type === "intervalles") {
+        return Array.from({ length: annotation.fin - annotation.debut }, (_, rang) => {
+          const gauche = x(annotation.debut + rang);
+          const droite = x(annotation.debut + rang + 1);
+          return `<path d="M ${gauche + 3} ${y + 32} Q ${(gauche + droite) / 2} ${y + 45} ${droite - 3} ${y + 32}" fill="none" stroke="${COULEURS.orange}" stroke-width="2"/>${textes(String(rang + 1), (gauche + droite) / 2, y + 55, COULEURS.orange)}`;
+        }).join("");
+      }
+      if (annotation.type === "sauts") {
+        return Array.from({ length: Math.abs(annotation.fin - annotation.debut) }, (_, rang) => {
+          const sens = annotation.fin >= annotation.debut ? 1 : -1;
+          const gauche = x(annotation.debut + rang * sens);
+          const droite = x(annotation.debut + (rang + 1) * sens);
+          const milieu = (gauche + droite) / 2;
+          return `<path d="M ${gauche} ${y - 14} Q ${milieu} ${y - 48} ${droite} ${y - 14}" fill="none" stroke="${COULEURS.turquoise}" stroke-width="3" stroke-linecap="round"/><path d="M ${droite - sens * 8} ${y - 21} L ${droite} ${y - 14} L ${droite - sens * 2} ${y - 25}" fill="none" stroke="${COULEURS.turquoise}" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>${textes(annotation.texte, milieu, y - 44, COULEURS.bleu)}`;
+        }).join("");
+      }
+      if (annotation.type === "appel") {
+        const tx = x1 + (annotation.decalage ?? 0);
+        return `${textes(annotation.texte, tx, 16, COULEURS.bleu)}<path d="M ${tx} 22 L ${x1} ${y - 12}" fill="none" stroke="${COULEURS.turquoise}" stroke-width="2.5" stroke-linecap="round"/><path d="M ${x1 - 5} ${y - 20} L ${x1} ${y - 12} L ${x1 + 5} ${y - 20}" fill="none" stroke="${COULEURS.turquoise}" stroke-width="2.5"/>`;
+      }
+      if (annotation.type === "valeurs") {
+        return annotation.elements.map((element) => textes(element.texte, x(element.indice), y + 52, element.couleur ?? COULEURS.bleu)).join("");
+      }
+      return "";
+    }).join("");
+    return `<div class="droite-version-${version}"><svg viewBox="0 0 ${largeur} ${hauteur}" width="${largeur}" height="${hauteur}" role="img" aria-label="Droite graduée annotée"><g transform="translate(0 ${margeHaut})">${corps}</g>${superpositions}</svg></div>`;
+  };
+  return `<div class="droite-graduee-interactive droite-cours droite-cours-annotee">${rendreVersion(760, "large")}${rendreVersion(350, "mobile")}</div>`;
 }
 
 function carteCoursDroite(index) {
   const entete = (numero, titre) => `<header class="entete-cours-droite"><span class="numero-cours">${numero}</span><h3>${titre}</h3></header>`;
   if (index === 0) return `<article class="carte-cours-droite">${entete(1, "Comprendre les mots")}
-    ${exempleDroiteCours({ depart: [-3, 1], pas: [1, 1], intervalles: 7, etiquettes: [0, 3], point: { nom: "A", indice: 5, position: "dessus" } })}
-    <dl class="lexique-droite"><div><dt>Graduation</dt><dd>un trait placé sur la droite</dd></div><div><dt>Intervalle</dt><dd>l’espace entre deux traits</dd></div><div><dt>Origine</dt><dd>la graduation d’abscisse 0</dd></div><div><dt>Abscisse</dt><dd>le nombre qui indique la position du point</dd></div></dl>
+    ${rendreDroiteCoursAnnotee({ depart: [-3, 1], pas: [1, 1], intervalles: 7, etiquettes: [0, 3, 5], point: { nom: "A", indice: 5, position: "dessus" } }, [
+      { type: "appel", indice: 1, texte: "graduation", decalage: -18 },
+      { type: "appel", indice: 3, texte: "origine", decalage: 18 },
+      { type: "intervalles", debut: 1, fin: 2 },
+    ])}
+    <p class="exemple-abscisse">Le point A est placé sur la graduation 2 : <strong>x<sub>A</sub> = 2</strong>.</p>
+    <dl class="lexique-droite"><div><dt>Graduation</dt><dd>un trait sur la droite</dd></div><div><dt>Intervalle</dt><dd>l’espace entre deux traits</dd></div><div><dt>Origine</dt><dd>la graduation 0</dd></div><div><dt>Abscisse</dt><dd>le nombre qui repère un point</dd></div></dl>
     <p class="definition-cours"><strong>Sens :</strong> les nombres augmentent vers la droite et diminuent vers la gauche.</p></article>`;
   if (index === 1) return `<article class="carte-cours-droite">${entete(2, "Trouver le pas")}
-    ${exempleDroiteCours({ depart: [-20, 1], pas: [10, 1], intervalles: 6, etiquettes: [0, 4] })}
+    ${rendreDroiteCoursAnnotee({ depart: [-20, 1], pas: [10, 1], intervalles: 6, etiquettes: [0, 4] }, [{ type: "accolade", debut: 0, fin: 4, texte: "écart : 40" }, { type: "intervalles", debut: 0, fin: 4 }])}
     <ol class="methode-cours-droite"><li><strong>Écart :</strong> 20 − (−20) = 40.</li><li><strong>Intervalles :</strong> on compte 4 espaces.</li><li><strong>Pas :</strong> 40 ÷ 4 = 10.</li></ol>
     <p class="alerte-droite"><strong>Piège fréquent :</strong> 5 traits délimitent seulement 4 intervalles.</p></article>`;
   if (index === 2) return `<article class="carte-cours-droite">${entete(3, "Lire une abscisse")}
-    ${exempleDroiteCours({ depart: [-2, 1], pas: [1, 2], intervalles: 8, etiquettes: [0, 4], point: { nom: "B", indice: 7, position: "dessus" } })}
-    <ol class="methode-cours-droite"><li>Je trouve le pas : de −2 à 0, il y a 4 intervalles, donc le pas vaut 0,5.</li><li>Depuis 0, je vais de 3 intervalles vers la droite.</li><li>Je calcule : 0 + 3 × 0,5 = <strong>1,5</strong>.</li></ol>
+    ${rendreDroiteCoursAnnotee({ depart: [-2, 1], pas: [1, 2], intervalles: 8, etiquettes: [0, 4], point: { nom: "B", indice: 7, position: "dessus" } }, [{ type: "sauts", debut: 4, fin: 7, texte: "+ 0,5" }, { type: "valeurs", elements: [{ indice: 4, texte: "0" }, { indice: 5, texte: "0,5" }, { indice: 6, texte: "1" }, { indice: 7, texte: "1,5" }] }])}
+    <ol class="methode-cours-droite"><li>De −2 à 0 : 2 ÷ 4 = <strong>0,5</strong>. C’est le pas.</li><li>Depuis 0, je fais 3 sauts de 0,5 vers la droite.</li></ol>
     <p class="definition-cours">Donc l’abscisse du point B est 1,5 : on écrit <strong>x<sub>B</sub> = 1,5</strong>.</p></article>`;
   if (index === 3) return `<article class="carte-cours-droite">${entete(4, "Placer un point")}
-    ${exempleDroiteCours({ depart: [-1, 1], pas: [1, 4], intervalles: 8, etiquettes: [0, 4], point: { nom: "M", indice: 6, position: "dessus" } })}
-    <ol class="methode-cours-droite"><li>Je trouve le pas : ici 0,25.</li><li>Je choisis le repère 0, le plus proche de 0,5.</li><li>0,5 = 0 + 2 × 0,25 : je vais de 2 intervalles vers la droite.</li><li>Je touche la graduation ; le point s’y aimante.</li></ol></article>`;
-  return `<article class="carte-cours-droite">${entete(5, "Changer d’échelle")}
-    ${exempleDroiteCours({ depart: [70, 1], pas: [1, 1], intervalles: 7, etiquettes: [0, 5], point: { nom: "P", indice: 3 } })}
-    <p>Le zéro peut être décentré, absent ou en dehors de la partie dessinée. <strong>Ce n’est pas un problème :</strong> deux valeurs connues suffisent.</p>
-    <div class="echelles-cours-droite"><span>0,1</span><span>0,25</span><span>0,5</span><span>1</span><span>2</span><span>5</span><span>10</span><span>20</span><span>25</span><span>50</span></div>
+    ${rendreDroiteCoursAnnotee({ depart: [-1, 1], pas: [1, 4], intervalles: 8, etiquettes: [0, 4], point: { nom: "M", indice: 6, position: "dessus" } }, [{ type: "sauts", debut: 4, fin: 6, texte: "+ 0,25" }, { type: "valeurs", elements: [{ indice: 4, texte: "0" }, { indice: 5, texte: "0,25" }, { indice: 6, texte: "0,5" }] }])}
+    <ol class="methode-cours-droite"><li>Le pas vaut <strong>0,25</strong>.</li><li>0,5 = 0 + 2 × 0,25 : je fais 2 sauts vers la droite.</li><li>Je touche la graduation ; le point s’y aimante.</li></ol></article>`;
+  if (index === 4) return `<article class="carte-cours-droite carte-cours-droite-fractions">${entete(5, "Placer une fraction")}
+    <p>Chaque unité est partagée en <strong>4 quarts</strong>. Je place 7 morceaux de <span class="fraction-dans-texte">${rendreFractionEmpilee(1, 4)}</span>.</p>
+    ${rendreBandesRailCours(7, 4, "pieces", true, 720, { largeurMobile: 340, afficherReperesIntermediairesCours: true })}
+    <p class="definition-cours">Les 4 premiers quarts fusionnent en 1 unité. Il reste 3 quarts : ${rendreFractionEmpilee(7, 4)} = 1 + ${rendreFractionEmpilee(3, 4)}.</p>
+    <p class="precision-cours-droite">Le rail aide à construire le nombre ; la réponse se place ensuite sur la droite graduée.</p></article>`;
+  return `<article class="carte-cours-droite">${entete(6, "Changer d’échelle")}
+    ${rendreDroiteCoursAnnotee({ depart: [70, 1], pas: [1, 1], intervalles: 7, etiquettes: [0, 5], point: { nom: "P", indice: 3, position: "dessus" } }, [{ type: "accolade", debut: 0, fin: 5, texte: "75 − 70 = 5" }, { type: "intervalles", debut: 0, fin: 5 }, { type: "sauts", debut: 0, fin: 3, texte: "+ 1" }, { type: "valeurs", elements: [{ indice: 0, texte: "70" }, { indice: 1, texte: "71" }, { indice: 2, texte: "72" }, { indice: 3, texte: "73" }] }])}
+    <p>Il y a 5 intervalles entre 70 et 75 : le pas vaut <strong>5 ÷ 5 = 1</strong>.</p>
+    <p>Le zéro n’est pas dessiné, mais les deux valeurs connues suffisent. Depuis 70, je fais 3 sauts de 1 : <strong>P a pour abscisse 73</strong>.</p>
     <p class="definition-cours"><strong>Mon contrôle :</strong> sens → écart → intervalles → pas → position.</p></article>`;
 }
 
 function rendreCoursDroiteGraduee() {
   if (!etat.coursOuvert) return "";
-  const titres = ["Vocabulaire", "Le pas", "Lire", "Placer", "Changer d’échelle"];
+  const titres = ["Vocabulaire", "Le pas", "Lire", "Placer", "Fractions", "Changer d’échelle"];
   const total = nombrePagesCours();
   const derniere = pageCoursCourante === total - 1;
   const pied = `<nav class="navigation-cours" aria-label="Navigation dans le cours">

@@ -52,4 +52,34 @@ describe("série GE-01 + GE-02 — droite graduée", () => {
     assert.ok(plans.every((plan) => plan.etiquettes[1] - plan.etiquettes[0] >= 2));
     assert.ok(plans.every((plan) => !plan.etiquettes.includes(plan.indiceCible)));
   });
+
+  it("installe une progression continue et dose les fractions", () => {
+    const attendusFractions = { 5: 0, 10: 1, 15: 2, 20: 3 };
+    for (const nombreQuestions of [5, 10, 15, 20]) {
+      const plans = planifierSerieDroiteGraduee({ graine: "progression-ge", nombreQuestions });
+      assert.equal(plans.filter((plan) => plan.notation === "fraction").length, attendusFractions[nombreQuestions]);
+      assert.ok(plans.every((plan) => plan.indiceCible > 0 && plan.indiceCible < plan.nombreIntervalles));
+      if (nombreQuestions === 5) {
+        assert.ok(plans.every((plan) => plan.etiquettes.some((indice) => {
+          const numerateur = plan.departNumerateur * plan.pasDenominateur
+            + indice * plan.pasNumerateur * plan.departDenominateur;
+          return numerateur === 0;
+        })));
+      }
+    }
+  });
+
+  it("produit toujours quatre distracteurs distincts pour les QCM", () => {
+    const registre = creerRegistreAutomatismes();
+    for (let index = 0; index < 100; index += 1) {
+      const questions = genererSerieDroiteGraduee({ registre, graine: `qcm-ge-${index}`, nombreQuestions: 20 });
+      for (const question of questions.filter((element) => element.reponse.choix && !element.reponse.choix[0]?.id.startsWith("g-"))) {
+        const libelles = question.reponse.choix.map((choix) => choix.libelle);
+        assert.equal(libelles.length, 4);
+        assert.equal(new Set(libelles).size, 4);
+        assert.ok(question.reponse.attendus.every((attendu) => question.reponse.choix.some((choix) => choix.id === attendu)));
+      }
+      assert.ok(questions.some((question) => question.enonce.some((bloc) => bloc.id === "notation" && bloc.contenu === "fraction")));
+    }
+  });
 });

@@ -2219,7 +2219,7 @@ it("rend GE-01 et GE-02 avec saisie signée, cours et placement aimanté", async
   assert.match(application.innerHTML, /Comprendre les mots/);
   assert.match(application.innerHTML, /Graduation/);
   assert.match(application.innerHTML, /Intervalle/);
-  assert.match(application.innerHTML, /Cours · 1 \/ 5/);
+  assert.match(application.innerHTML, /Cours · 1 \/ 6/);
   cliquer(gestionnaires, "fermer-cours");
   cliquer(gestionnaires, "fermer-aide");
   cliquer(gestionnaires, "valider");
