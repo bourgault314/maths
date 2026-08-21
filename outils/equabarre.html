@@ -985,48 +985,56 @@
     align-items:center;
   }
 
-  .equationTable{
-    border-collapse:collapse;
+  /* L'historique est une liste en grille de trois colonnes, comme celui
+     d'ÉquaSplat. Un tableau rétractait ses colonnes sur leur contenu : la
+     cellule d'opération était aussi étroite que « :2 », impossible de pousser
+     l'opération vers le bord. Ici chaque membre reçoit toute sa moitié. */
+  .equationList{
     margin:0 auto;
+    width:100%;
     font-size:clamp(24px,2.55vw,38px);
     font-weight:950;
-    line-height:1.18;
+    line-height:1.08;
   }
 
-  .equationTable td{
-    padding:0 8px;
+  .equationRow{
+    display:grid;
+    grid-template-columns:minmax(0,1fr) auto minmax(0,1fr);
+    align-items:baseline;
+    column-gap:20px;
+    width:100%;
     white-space:nowrap;
-    vertical-align:baseline;
   }
 
-  .equationTable .lhs{
+  .equationList .lhs{
     text-align:right;
+    min-width:0;
   }
 
-  .equationTable .eq{
+  .equationList .eq{
     text-align:center;
     color:#64748b;
-    padding-left:14px;
-    padding-right:14px;
+    min-width:1.1em;
   }
 
-  .equationTable .rhs{
+  .equationList .rhs{
     text-align:left;
+    min-width:0;
   }
 
 
   /* PATCH 36 — hiérarchie visuelle dans l'historique */
-  .equationTable tr.historyStep{
+  .equationRow.historyStep{
     color:#64748b;
     opacity:.86;
   }
 
-  .equationTable tr.currentStep{
+  .equationRow.currentStep{
     color:#0f172a;
     opacity:1;
   }
 
-  .equationTable tr.currentStep .eq{
+  .equationRow.currentStep .eq{
     color:#3b82f6;
   }
 
@@ -1697,11 +1705,11 @@
     scrollbar-width:thin;
   }
 
-  .stage:not(.emptyState) .equationTable{
+  .stage:not(.emptyState) .equationList{
     margin:0 auto;
   }
 
-  .stage:not(.emptyState) .equationTable td{
+  .stage:not(.emptyState) .equationRow{
     padding-top:1px;
     padding-bottom:1px;
   }
@@ -1974,7 +1982,7 @@
     padding-bottom:4px;
   }
 
-  .stage.fullscreenCompact:fullscreen:not(.emptyState) .equationTable{
+  .stage.fullscreenCompact:fullscreen:not(.emptyState) .equationList{
     font-size:clamp(22px,2.05vw,34px);
   }
 
@@ -2200,7 +2208,7 @@
     max-height:calc(var(--eq-row-h) * 5);
   }
 
-  .stage.fullscreenCompact:fullscreen:not(.emptyState) .equationTable{
+  .stage.fullscreenCompact:fullscreen:not(.emptyState) .equationList{
     font-size:clamp(20px,1.75vw,30px);
   }
 
@@ -2229,7 +2237,7 @@
       max-height:calc(var(--eq-row-h) * 5);
     }
 
-    .stage.fullscreenCompact:fullscreen:not(.emptyState) .equationTable{
+    .stage.fullscreenCompact:fullscreen:not(.emptyState) .equationList{
       font-size:clamp(18px,1.55vw,26px);
     }
 
@@ -2260,7 +2268,7 @@
     max-height:calc(var(--eq-row-h) * 5);
   }
 
-  .stage.fullscreenCompact:fullscreen:not(.emptyState) .equationTable{
+  .stage.fullscreenCompact:fullscreen:not(.emptyState) .equationList{
     font-size:clamp(24px,2.15vw,38px);
   }
 
@@ -2295,7 +2303,7 @@
       max-height:calc(var(--eq-row-h) * 5);
     }
 
-    .stage.fullscreenCompact:fullscreen:not(.emptyState) .equationTable{
+    .stage.fullscreenCompact:fullscreen:not(.emptyState) .equationList{
       font-size:clamp(20px,1.75vw,30px);
     }
 
@@ -2330,7 +2338,7 @@
     max-height:calc(var(--eq-row-h) * 5);
   }
 
-  .stage.fullscreenCompact:fullscreen:not(.emptyState) .equationTable{
+  .stage.fullscreenCompact:fullscreen:not(.emptyState) .equationList{
     font-size:clamp(28px,2.65vw,46px);
   }
 
@@ -2365,7 +2373,7 @@
       max-height:calc(var(--eq-row-h) * 5);
     }
 
-    .stage.fullscreenCompact:fullscreen:not(.emptyState) .equationTable{
+    .stage.fullscreenCompact:fullscreen:not(.emptyState) .equationList{
       font-size:clamp(22px,2.05vw,34px);
     }
 
@@ -2517,18 +2525,15 @@
       overflow-x:auto;
     }
 
-    .stage:not(:fullscreen):not(.emptyState) .equationTable{
+    .stage:not(:fullscreen):not(.emptyState) .equationList{
       font-size:clamp(18px,5.4vw,25px);
     }
 
-    .stage:not(:fullscreen):not(.emptyState) .equationTable td{
-      padding-left:4px;
-      padding-right:4px;
-    }
-
-    .stage:not(:fullscreen):not(.emptyState) .equationTable .eq{
-      padding-left:8px;
-      padding-right:8px;
+    /* Au téléphone les colonnes se resserrent : l'ancien tableau cumulait
+       4px de cellule et 8px de part et d'autre du signe égal, soit 12px. */
+    .stage:not(:fullscreen):not(.emptyState) .equationRow,
+    .stage:not(:fullscreen):not(.emptyState) .equationOpRow{
+      column-gap:12px;
     }
 
     .stage:not(:fullscreen):not(.emptyState) .instructionZone{
@@ -2665,7 +2670,7 @@
       overflow-x:auto;
     }
 
-    .stage:not(:fullscreen):not(.emptyState) .equationTable{
+    .stage:not(:fullscreen):not(.emptyState) .equationList{
       font-size:clamp(18px,5.25vw,25px);
     }
   }
@@ -2754,36 +2759,50 @@
     overflow:auto;
   }
 
-  .stage.detailedView:not(:fullscreen):not(.emptyState) .equationTable{
+  .stage.detailedView:not(:fullscreen):not(.emptyState) .equationList{
     font-size:clamp(24px,2.45vw,36px);
     margin:0 auto;
   }
 
-  .equationTable tr.operationStep td{
-    padding-top:2px;
-    padding-bottom:5px;
-  }
-
-  .equationTable .operationCell{
-    color:#475569;
-    opacity:.92;
+  /* La ligne d'opération, reprise d'ÉquaSplat : même grille que les
+     équations, donc chaque opération occupe toute sa moitié et part vers le
+     bord extérieur. Flèche droite, et le bleu de « transformer ». */
+  .equationOpRow{
+    display:grid;
+    grid-template-columns:minmax(0,1fr) auto minmax(0,1fr);
+    align-items:center;
+    column-gap:20px;
+    width:100%;
+    padding:1px 0 5px;
+    color:#2563eb;
+    opacity:1;
     font-size:.58em;
     font-weight:950;
+    line-height:1;
+  }
+
+  .equationOpRow .operationCell{
+    min-width:0;
+    width:100%;
+    display:flex;
+    align-items:center;
   }
 
   .operationWrap{
-    display:inline-flex;
+    display:flex;
     align-items:center;
-    gap:.22em;
+    gap:5px;
     white-space:nowrap;
   }
 
-  .operationCell.opLeft .operationWrap{
-    justify-content:flex-end;
+  .operationCell.opLeft{
+    justify-content:flex-start;
+    padding-left:3px;
   }
 
-  .operationCell.opRight .operationWrap{
-    justify-content:flex-start;
+  .operationCell.opRight{
+    justify-content:flex-end;
+    padding-right:3px;
   }
 
   .opLabel{
@@ -2792,24 +2811,9 @@
     letter-spacing:-.02em;
   }
 
-  .opArrowSvg{
-    width:1.6em;
-    height:1.28em;
-    display:block;
-    overflow:visible;
-  }
-
-  .opArrowSvg path{
-    fill:none;
-    stroke:currentColor;
-    stroke-width:3.2;
-    stroke-linecap:round;
-    stroke-linejoin:round;
-  }
-
-  .opArrowSvg .arrowHead{
-    fill:currentColor;
-    stroke:none;
+  .operationArrow{
+    font-size:1.35em;
+    line-height:.8;
   }
 
   .stage.detailedView:fullscreen:not(.emptyState){
@@ -2884,7 +2888,7 @@
     overflow:auto;
   }
 
-  .stage.detailedView:fullscreen:not(.emptyState) .equationTable{
+  .stage.detailedView:fullscreen:not(.emptyState) .equationList{
     font-size:clamp(27px,2.45vw,42px) !important;
   }
 
@@ -2935,8 +2939,8 @@
     overflow-x:hidden !important;
   }
 
-  .stage.detailedView:not(:fullscreen):not(.emptyState) .equationTable,
-  .stage.detailedView:fullscreen:not(.emptyState) .equationTable{
+  .stage.detailedView:not(:fullscreen):not(.emptyState) .equationList,
+  .stage.detailedView:fullscreen:not(.emptyState) .equationList{
     max-width:100%;
   }
 
@@ -3311,21 +3315,17 @@
       scrollbar-gutter:stable both-edges;
     }
 
-    .stage:not(:fullscreen):not(.emptyState) .equationTable,
-    .stage.detailedView:not(:fullscreen):not(.emptyState) .equationTable{
+    .stage:not(:fullscreen):not(.emptyState) .equationList,
+    .stage.detailedView:not(:fullscreen):not(.emptyState) .equationList{
       font-size:clamp(18px,5.2vw,22px) !important;
       line-height:1.12;
       margin:0 auto auto !important;
     }
 
-    .stage:not(:fullscreen):not(.emptyState) .equationTable td{
-      padding-left:3px;
-      padding-right:3px;
-    }
-
-    .stage:not(:fullscreen):not(.emptyState) .equationTable .eq{
-      padding-left:7px;
-      padding-right:7px;
+    /* Écran très étroit : 3px + 7px dans l'ancien tableau, soit 10px. */
+    .stage:not(:fullscreen):not(.emptyState) .equationRow,
+    .stage:not(:fullscreen):not(.emptyState) .equationOpRow{
+      column-gap:10px;
     }
 
     .stage:not(:fullscreen):not(.emptyState) .instructionZone,
@@ -4753,17 +4753,11 @@
       .replace(/"/g, "&quot;");
   }
 
-  function operationArrowSvg(side){
-    if(side === "left"){
-      return `<svg class="opArrowSvg opArrowLeft" viewBox="0 0 44 44" aria-hidden="true" focusable="false"><path d="M9 4 C9 21 24 20 29 32"/><path class="arrowHead" d="M23 31 L31 39 L34 28 Z"/></svg>`;
-    }
-    return `<svg class="opArrowSvg opArrowRight" viewBox="0 0 44 44" aria-hidden="true" focusable="false"><path d="M35 4 C35 21 20 20 15 32"/><path class="arrowHead" d="M21 31 L13 39 L10 28 Z"/></svg>`;
-  }
-
   function renderOperationRow(operation){
     if(!operation || operation.type !== "bothSides" || !operation.label) return "";
     const label = escapeHtml(operation.label);
-    return `<tr class="operationStep"><td class="operationCell opLeft"><span class="operationWrap"><span class="opLabel">${label}</span>${operationArrowSvg("left")}</span></td><td class="eq"></td><td class="operationCell opRight"><span class="operationWrap">${operationArrowSvg("right")}<span class="opLabel">${label}</span></span></td></tr>`;
+    const arrow = `<span class="operationArrow" aria-hidden="true">↓</span>`;
+    return `<div class="equationOpRow" aria-label="Même opération dans les deux membres : ${label}"><span class="operationCell opLeft"><span class="operationWrap"><span class="opLabel">${label}</span>${arrow}</span></span><span class="eq"></span><span class="operationCell opRight"><span class="operationWrap">${arrow}<span class="opLabel">${label}</span></span></span></div>`;
   }
 
   function renderEquationHistory(){
@@ -4784,15 +4778,17 @@
 
     const rows = [];
     steps.forEach((eq, i) => {
-      if(isDetailedEquationView() && i > 0){
+      // Sans condition de vue : l'opération accompagne l'équation en classique
+      // comme en rédaction, comme dans ÉquaSplat.
+      if(i > 0){
         rows.push(renderOperationRow(stepOps[i - 1]));
       }
       const {lhs, rhs} = splitEquation(eq);
       const cls = i === steps.length - 1 ? "currentStep" : "historyStep";
-      rows.push(`<tr class="${cls}"><td class="lhs">${escapeHtml(lhs)}</td><td class="eq">=</td><td class="rhs">${escapeHtml(rhs)}</td></tr>`);
+      rows.push(`<div class="equationRow ${cls}"><span class="lhs">${escapeHtml(lhs)}</span><span class="eq">=</span><span class="rhs">${escapeHtml(rhs)}</span></div>`);
     });
 
-    equationHistory.innerHTML = `<table class="equationTable" aria-label="Étapes de résolution"><tbody>${rows.join("")}</tbody></table>`;
+    equationHistory.innerHTML = `<div class="equationList" aria-label="Étapes de résolution">${rows.join("")}</div>`;
     equationHistory.scrollTop = equationHistory.scrollHeight;
     syncEquationToggleButton();
   }
