@@ -47,21 +47,39 @@
         /* Bouton Retour Accueil */
         .home-link {
             position: absolute;
-            left: 20px;
+            left: 12px;
             top: 50%;
             transform: translateY(-50%);
-            color: #888;
+            color: #cfd6dd;
             text-decoration: none;
-            font-size: 0.9rem;
-            display: flex;
+            font-size: 0.95rem;
+            display: inline-flex;
             align-items: center;
-            gap: 5px;
+            justify-content: center;
+            gap: 6px;
+            min-width: 44px;
+            min-height: 44px;
             transition: color 0.2s;
         }
         .home-link:hover { color: white; }
+        /* Sur téléphone le titre est centré : on ne garde que la flèche, sinon
+           le libellé vient se poser par-dessus CLUB MATHS. Le seuil est mesuré,
+           pas choisi : les deux tiennent côte à côte dès 436 px en Segoe UI, et
+           dès 491 px chez un visiteur qui ne l'a pas et retombe sur Verdana.
+           560 px couvre ce pire cas et rend le mot aux tablettes. */
+        .home-link svg { width: 24px; height: 24px; flex: 0 0 auto; display: block; }
+        @media (max-width: 560px) {
+            .home-link .home-link-label { display: none; }
+        }
 
         header h1 { margin: 0; font-weight: 300; letter-spacing: 1px; }
         header .subtitle { color: var(--primary); font-weight: bold; margin-top: 5px; display: block;}
+        /* Sur les petits téléphones, même la flèche seule se faisait percuter :
+           « CLUB MATHS » en 2em mesure 219 px en Verdana, et il n'en reste que
+           192 de libres à 320 px. Le titre descend d'un cran, rien d'autre. */
+        @media (max-width: 380px) {
+            header h1 { font-size: 1.6rem; }
+        }
 
         /* SECTIONS COMMUNES */
         section {
@@ -155,6 +173,14 @@
             border-radius: 10px;
             box-shadow: 0 5px 15px rgba(0,0,0,0.05);
         }
+        /* Défaut d'avant ce lot, trouvé au passage : ces 300 px de contenu plus
+           50 px de marge intérieure font 350 px, et faisaient glisser la page de
+           côté sur un écran de 320. En dessous de 380, la fiche prend la largeur
+           qu'il y a. La règle est ici, après celle qu'elle corrige : une requête
+           média n'ajoute aucune priorité, c'est l'ordre du fichier qui tranche. */
+        @media (max-width: 380px) {
+            .print-controls { min-width: 0; flex-basis: 100%; }
+        }
 
         .preview-paper {
             background: white;
@@ -230,7 +256,7 @@
 
     <div class="screen-wrapper">
         <header>
-            <a href="../index.html?domain=jeux-recherches&amp;notion=explorations" class="home-link">← Explorations</a>
+            <a href="../index.html?domain=jeux-recherches&amp;notion=explorations" class="home-link" title="Retour à Explorations" aria-label="Retour à Explorations"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M19 12H5"/><path d="M11 18l-6-6 6-6"/></svg><span class="home-link-label">Explorations</span></a>
             <h1>CLUB MATHS</h1>
             <span class="subtitle">Activité 2 : Le Jeu du Chaos (Fractales)</span>
         </header>
