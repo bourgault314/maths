@@ -164,12 +164,12 @@ test("la vidéo ouvre les références de Gerbert, les deux textes IREM suivent"
   ]);
 });
 
-test("Rekenrek retrouve l’ordre de son ancien index, à la carte près", () => {
+test("Rekenrek garde l’ordre choisi dans le menu actuel", () => {
   assert.deepEqual(cardsFor("rekenrek", "manipuler"), [
-    "Boulier Rekenrek",
-    "Rekenrek — fractions et centièmes",
-    "Rekenrek interactif"
-  ], "Le manipulable nu ouvrait la section, pas les fractions et centièmes.");
+    "Rekenrek interactif",
+    "Du Rekenrek au boulier Montessori",
+    "Rekenrek — fractions et centièmes"
+  ], "Le Rekenrek interactif ouvre la section, la transition Montessori suit, puis viennent les fractions et centièmes.");
 
   assert.deepEqual(cardsFor("rekenrek", "entrainer"), [
     "Ajouter 8 ou 9",

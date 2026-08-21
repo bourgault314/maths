@@ -976,6 +976,7 @@ window.MATHSGO_CATALOGUE = {
       "thumbnail": "assets/img/thumbnails/bouliers/rekenrek-fd.png?v=1",
       "collections": ["rekenrek"],
       "tags": ["rekenrek", "centiemes", "fractions", "decimaux", "manipulation"],
+      "rang": 3,
       "cardDescription": "Représenter des centièmes et passer entre écriture décimale, fractionnaire et monétaire sur un rekenrek."
     },
     "outils/bouliers/boulier_montessori/boulier-cycle3-petit-additions-soustractions.html": {
@@ -1008,7 +1009,8 @@ window.MATHSGO_CATALOGUE = {
       "thumbnail": "assets/img/thumbnails/bouliers/transition-rekenrek-montessori.png?v=1",
       "collections": ["montessori", "rekenrek"],
       "tags": ["rekenrek", "boulier-montessori", "numeration", "manipulation"],
-      "cardDescription": "Manipuler un rekenrek libre et faire varier ses couleurs et son organisation jusqu’à 100 billes."
+      "rang": 2,
+      "cardDescription": "Faire le lien entre le Rekenrek et le boulier Montessori en faisant varier les couleurs et l’organisation du boulier jusqu’à 100 billes."
     },
     "outils/bouliers/rekenrek/rekenrek.html": {
       "primaryNotion": "numeration",
@@ -1016,6 +1018,7 @@ window.MATHSGO_CATALOGUE = {
       "thumbnail": "assets/img/thumbnails/bouliers/rekenrek-interactif.png?v=1",
       "collections": ["rekenrek"],
       "tags": ["rekenrek", "numeration", "subitisation", "manipulation"],
+      "rang": 1,
       "cardDescription": "Manipuler librement les billes du rekenrek, masquer une partie et annoter la situation projetée."
     },
     "outils/plateaux_manipulation/engrenages_plateau.html": {
@@ -2301,8 +2304,8 @@ window.MATHSGO_CATALOGUE = {
     },
     {
       "id": "outils-bouliers-boulier-montessori-transition-rekenrek-montessori-html",
-      "title": "Boulier Rekenrek",
-      "description": "Manipuler un rekenrek libre et faire varier ses couleurs et son organisation jusqu’à 100 billes.",
+      "title": "Du Rekenrek au boulier Montessori",
+      "description": "Faire le lien entre le Rekenrek et le boulier Montessori en faisant varier les couleurs et l’organisation du boulier jusqu’à 100 billes.",
       "path": "outils/bouliers/boulier_montessori/transition_rekenrek-montessori.html",
       "domains": [
         "nombres-calculs"
