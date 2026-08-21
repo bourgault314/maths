@@ -5128,7 +5128,7 @@ body {
 }
 
 .figure-unite-aires-nc05 {
-  width: clamp(112px, 18vw, 160px);
+  width: clamp(72px, 18vw, 118px);
   margin: 0;
   aspect-ratio: 1;
   overflow: hidden;
@@ -5138,6 +5138,10 @@ body {
   display: block;
   width: 100%;
   height: auto;
+}
+
+.visuel-question-nc05 .figure-unite-aires-nc05 {
+  width: clamp(112px, 18vw, 160px);
 }
 
 .equivalence-aires-nc05 {
