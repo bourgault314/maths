@@ -730,7 +730,19 @@
     return String(a.title || "").localeCompare(String(b.title || ""), "fr", { numeric: true });
   }
 
+  function collectionCardRank(collectionId, path) {
+    if (collectionId !== "splat") return Infinity;
+    if (path === "outils/splat_tache_barre.html") return 0;
+    if (path === "outils/splat.html") return 1;
+    if (path === "outils/splat_equations.html") return 2;
+    return Infinity;
+  }
+
   function cardSortKey(item) {
+    if (item.resource) {
+      const collectionRank = collectionCardRank(state.collection, item.resource.path);
+      if (Number.isFinite(collectionRank)) return { title: item.resource.title, rang: collectionRank };
+    }
     if (item.family) return { title: item.family.title, rang: item.family.rang };
     return { title: item.resource.title, rang: resourceClassification(item.resource).rang };
   }
@@ -921,14 +933,6 @@
       if (state.query && !allWordsMatch(resourceHaystack(resource), state.query)) return false;
       return true;
     });
-    if (state.collection === "splat") {
-      const splatOrder = new Map([
-        ["outils/splat_tache_barre.html", 0],
-        ["outils/splat.html", 1],
-        ["outils/splat_equations.html", 2]
-      ]);
-      resources.sort((a, b) => (splatOrder.get(a.path) ?? 99) - (splatOrder.get(b.path) ?? 99));
-    }
     return resources;
   }
 
