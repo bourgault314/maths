@@ -2189,6 +2189,15 @@ it("rend NC-05 avec son cours, son aide et sa correction exacte", async () => {
   cliquer(gestionnaires, "cours");
   assert.match(application.innerHTML, /Une valeur, plusieurs écritures/);
   assert.match(application.innerHTML, /Cours · 1 \/ 6/);
+  for (let index = 0; index < 3; index += 1) {
+    cliquer(gestionnaires, "cours-suivant");
+  }
+  assert.match(application.innerHTML, /D’un cinquième aux centièmes/);
+  assert.match(application.innerHTML, /equivalence-aires-cours-nc05/);
+  assert.match(application.innerHTML, /aria-label="4 sur 5"/);
+  cliquer(gestionnaires, "cours-suivant");
+  assert.match(application.innerHTML, /120 % la dépasse/);
+  assert.match(application.innerHTML, /data-unites="2"/);
   cliquer(gestionnaires, "fermer-cours");
   cliquer(gestionnaires, "fermer-aide");
 
@@ -2196,6 +2205,40 @@ it("rend NC-05 avec son cours, son aide et sa correction exacte", async () => {
   cliquer(gestionnaires, "correction");
   assert.match(application.innerHTML, /On conserve donc exactement la même valeur/);
   assert.match(application.innerHTML, /panneau-ecritures-multiples/);
+  assert.match(application.innerHTML, /equivalence-aires-correction-nc05/);
+});
+
+it("fait disparaître progressivement les schémas dans une série NC-05 complète", async () => {
+  const { application, gestionnaires } = installerFauxNavigateur(
+    "?notion=ecritures-multiples-nombre&mode=tableau&questions=20&graine=visuels-nc05",
+  );
+  await import(`./app.js?fumee=visuels-nc05-${Date.now()}`);
+  cliquer(gestionnaires, "demarrer");
+
+  const positionsVisuelles = [];
+  for (let index = 0; index < 20; index += 1) {
+    if (/visuel-question-nc05/.test(application.innerHTML)) {
+      positionsVisuelles.push(index + 1);
+      assert.match(application.innerHTML, /figure-unite-aires-nc05/);
+      if (index === 2) {
+        assert.match(application.innerHTML, /famille-fraction-repere-pourcentage/);
+        cliquer(gestionnaires, "aide");
+        assert.match(application.innerHTML, /equivalence-aires-aide-nc05/);
+        assert.match(application.innerHTML, /\? centièmes/);
+        cliquer(gestionnaires, "fermer-aide");
+      }
+    }
+    cliquer(gestionnaires, "reponse");
+    cliquer(gestionnaires, "correction");
+    assert.match(
+      application.innerHTML,
+      /equivalence-aires-correction-nc05|figure-droite-nc05/,
+    );
+    cliquer(gestionnaires, "fermer-correction");
+    cliquer(gestionnaires, "suivant");
+  }
+  assert.deepEqual(positionsVisuelles, [3, 8, 11]);
+  assert.match(application.innerHTML, /Séance terminée/);
 });
 
 it("sélectionne, révise et rejoue plusieurs automatismes dans une même série", async () => {

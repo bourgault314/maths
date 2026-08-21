@@ -3,7 +3,7 @@ import {
   COULEURS_RANGS_NUMERATION_DECIMALE,
   RAYONS,
   TYPOGRAPHIE,
-} from "../packages/charte/src/charte.js?v=41";
+} from "../packages/charte/src/charte.js?v=42";
 import {
   avancerFractionAide,
   avancerCorrespondanceAide,
@@ -37,7 +37,7 @@ import {
   saisirChiffre,
   tournerSolide,
   validerReponse,
-} from "./src/etat-lecteur.js?v=41";
+} from "./src/etat-lecteur.js?v=42";
 import {
   TYPE_REPONSE_DEUX_ENTIERS,
   TYPE_REPONSE_ENTIER_NATUREL,
@@ -45,7 +45,7 @@ import {
   TYPE_REPONSE_NOMBRE_DECIMAL,
   TYPE_REPONSE_CHOIX_UNIQUE,
   TYPE_REPONSE_SELECTION_MULTIPLE,
-} from "../packages/contrats/src/question-v2.js?v=41";
+} from "../packages/contrats/src/question-v2.js?v=42";
 import {
   connaitNotionLecteur,
   obtenirNotionLecteur,
@@ -56,13 +56,13 @@ import {
   RENDU_SOLIDE,
   RENDU_VOLUME,
   NOTION_FRACTIONS_SIMPLES_DECIMAUX,
-} from "./src/registre-lecteur.js?v=41";
+} from "./src/registre-lecteur.js?v=42";
 import {
   DOMAINES_AUTOMATISMES,
   MICRO_NOTIONS_AUTOMATISMES,
   normaliserIdentifiantMicroNotion,
-} from "../packages/automatismes/src/identifiants.js?v=41";
-import { COURS_SOLIDES_USUELS } from "../packages/automatismes/src/espace-et-geometrie/solides-usuels/reconnaissance.js?v=41";
+} from "../packages/automatismes/src/identifiants.js?v=42";
+import { COURS_SOLIDES_USUELS } from "../packages/automatismes/src/espace-et-geometrie/solides-usuels/reconnaissance.js?v=42";
 import {
   creerCone,
   creerCube,
@@ -71,14 +71,14 @@ import {
   creerPrisme,
   creerPyramide,
   dessinerSolide,
-} from "../packages/objets/src/solides.js?v=41";
+} from "../packages/objets/src/solides.js?v=42";
 import {
   ACTION_TOUCHE_EFFACER,
   ACTION_TOUCHE_SAISIR,
   ACTION_TOUCHE_VALIDER,
   obtenirDispositionClavier,
-} from "../packages/objets/src/clavier.js?v=41";
-import { formulationCritereDivisibilite } from "../packages/automatismes/src/nombres-et-calculs/criteres-divisibilite/critere-precis.js?v=41";
+} from "../packages/objets/src/clavier.js?v=42";
+import { formulationCritereDivisibilite } from "../packages/automatismes/src/nombres-et-calculs/criteres-divisibilite/critere-precis.js?v=42";
 import {
   caseVide,
   difference,
@@ -95,36 +95,36 @@ import {
   variable,
   versHtmlEgalitesAlignees,
   versHtmlSemantique,
-} from "../packages/objets/src/expressions.js?v=41";
+} from "../packages/objets/src/expressions.js?v=42";
 import {
   dessinerCarreQuadrille,
-} from "../packages/objets/src/carre-quadrille.js?v=41";
+} from "../packages/objets/src/carre-quadrille.js?v=42";
 import {
   dessinerDoubleDroiteGraduee,
   dessinerDroiteGraduee,
-} from "../packages/objets/src/droite-graduee.js?v=41";
-import { dessinerGrilleFraction } from "../packages/objets/src/fractions.js?v=41";
-import { dessinerBandesFractionnairesSurRailDecimal } from "../packages/objets/src/bandes-fractions-rail.js?v=41";
+} from "../packages/objets/src/droite-graduee.js?v=42";
+import { dessinerGrilleFraction } from "../packages/objets/src/fractions.js?v=42";
+import { dessinerBandesFractionnairesSurRailDecimal } from "../packages/objets/src/bandes-fractions-rail.js?v=42";
 import {
   dessinerConversionRangsNumerationDecimale,
   dessinerEchangeRangsNumerationDecimale,
   dessinerMaterielNumerationDecimale,
   dessinerTableauNumerationDecimale,
-} from "../packages/objets/src/numeration-decimale.js?v=41";
+} from "../packages/objets/src/numeration-decimale.js?v=42";
 import {
   dessinerDemiAvecDixiemes,
   dessinerReorganisationCentiemes,
-} from "../packages/objets/src/correspondances-decimales.js?v=41";
+} from "../packages/objets/src/correspondances-decimales.js?v=42";
 import {
   construireDonneesTableauDepuisFraction,
   formaterFractionEnDecimal,
   reduireFraction,
-} from "../packages/objets/src/fractions-decimaux.js?v=41";
+} from "../packages/objets/src/fractions-decimaux.js?v=42";
 import {
   diagnostiquerDecimalVersNumerateur,
   diagnostiquerFractionLibre,
   diagnostiquerFractionVersDecimal,
-} from "./src/diagnostic-fractions-decimaux.js?v=41";
+} from "./src/diagnostic-fractions-decimaux.js?v=42";
 import {
   FAMILLE_CHAINE_EGALITES,
   FAMILLE_FRACTION_REPERE_POURCENTAGE,
@@ -134,7 +134,7 @@ import {
   FAMILLE_UNITE_DEPASSEMENT,
   formaterPourcentageEnDecimal,
   lirePourcentageQuestion,
-} from "../packages/automatismes/src/nombres-et-calculs/ecritures-multiples-nombre/questions.js?v=41";
+} from "../packages/automatismes/src/nombres-et-calculs/ecritures-multiples-nombre/questions.js?v=42";
 
 const MICRO_NOTION_FRACTION_VERS_DECIMAL =
   MICRO_NOTIONS_AUTOMATISMES.FRACTION_VERS_DECIMAL;
@@ -4212,6 +4212,12 @@ function varianteQuestionEcrituresMultiples(question) {
     ?.slice("variante-".length) ?? "";
 }
 
+function presentationQuestionEcrituresMultiples(question) {
+  return question.classement.complements
+    .find((complement) => complement.startsWith("presentation-"))
+    ?.slice("presentation-".length) ?? "abstraite";
+}
+
 function pourcentageQuestionEcrituresMultiples(question) {
   const pourcentage = lirePourcentageQuestion(question);
   if (!Number.isSafeInteger(pourcentage) || pourcentage < 1 || pourcentage > 250) {
@@ -4282,6 +4288,177 @@ function denominateurQuestionEcritures(question) {
     ?? null;
 }
 
+function dimensionsGrilleEcritures(denominateur) {
+  if (denominateur === 4) return { colonnes: 2, lignes: 2 };
+  if (denominateur === 100) return { colonnes: 10, lignes: 10 };
+  return { colonnes: denominateur, lignes: 1 };
+}
+
+function rendreUnitesAiresEcritures(
+  numerateur,
+  denominateur,
+  { nombreUnites = null, classe = "" } = {},
+) {
+  const dimensions = dimensionsGrilleEcritures(denominateur);
+  const totalUnites = nombreUnites
+    ?? Math.max(1, Math.ceil(numerateur / denominateur));
+  const figures = Array.from({ length: totalUnites }, (_, index) => {
+    const coloriees = Math.max(
+      0,
+      Math.min(denominateur, numerateur - index * denominateur),
+    );
+    return rendreFigureFraction(
+      dessinerGrilleFraction({
+        ...dimensions,
+        coloriees,
+        cote: denominateur === 100 ? 132 : 128,
+        ecriture: false,
+      }),
+      "figure-unite-aires-nc05",
+    );
+  }).join("");
+  return `<div class="unites-aires-nc05 ${classe}" data-unites="${totalUnites}">${figures}</div>`;
+}
+
+function fractionSourceAiresEcritures(question) {
+  const sourceFraction = blocQuestion(question, "source-fraction");
+  if (sourceFraction?.type === "rationnel") {
+    return {
+      numerateur: sourceFraction.numerateur,
+      denominateur: sourceFraction.denominateur,
+    };
+  }
+  const partieEntiere = blocQuestion(question, "partie-entiere")?.valeur;
+  const numerateurMixte = blocQuestion(question, "numerateur-mixte")?.valeur;
+  const denominateurMixte = blocQuestion(question, "denominateur-mixte")?.valeur;
+  if (
+    Number.isSafeInteger(partieEntiere)
+    && Number.isSafeInteger(numerateurMixte)
+    && Number.isSafeInteger(denominateurMixte)
+  ) {
+    return {
+      numerateur: partieEntiere * denominateurMixte + numerateurMixte,
+      denominateur: denominateurMixte,
+    };
+  }
+  const pourcentage = pourcentageQuestionEcrituresMultiples(question);
+  return { numerateur: pourcentage, denominateur: 100 };
+}
+
+function fractionRepereAiresEcritures(question, pourcentage) {
+  const source = fractionSourceAiresEcritures(question);
+  if (source.denominateur !== 100) return source;
+  const denominateur = denominateurQuestionEcritures(question);
+  if (
+    [2, 4, 5, 10].includes(denominateur)
+    && (pourcentage * denominateur) % 100 === 0
+  ) {
+    return {
+      numerateur: (pourcentage * denominateur) / 100,
+      denominateur,
+    };
+  }
+  const reduite = question.correction?.find(
+    (bloc) => bloc.id === "correction-fraction-reduite",
+  );
+  if (reduite?.type === "rationnel" && [2, 4, 5, 10].includes(reduite.denominateur)) {
+    return { numerateur: reduite.numerateur, denominateur: reduite.denominateur };
+  }
+  return null;
+}
+
+function rendreVisuelSourceEcritures(question, classe = "") {
+  const source = fractionSourceAiresEcritures(question);
+  return `<div class="modele-source-aires-nc05 ${classe}">
+    ${rendreUnitesAiresEcritures(source.numerateur, source.denominateur)}
+  </div>`;
+}
+
+function rendreEquivalenceAiresDepuisValeur(
+  pourcentage,
+  denominateurRepere = null,
+  { centiemesColories = true, classe = "" } = {},
+) {
+  const nombreUnites = Math.max(1, Math.ceil(pourcentage / 100));
+  const repereCompatible = [2, 4, 5, 10].includes(denominateurRepere)
+    && (pourcentage * denominateurRepere) % 100 === 0;
+  const centiemes = rendreUnitesAiresEcritures(
+    centiemesColories ? pourcentage : 0,
+    100,
+    { nombreUnites, classe: "unites-centiemes-nc05" },
+  );
+  if (!repereCompatible) {
+    return `<figure class="equivalence-aires-nc05 equivalence-aires-simple-nc05 ${classe}">
+      ${centiemes}
+      <figcaption>Chaque carré entier vaut 100 centièmes.</figcaption>
+    </figure>`;
+  }
+  const numerateurRepere = (pourcentage * denominateurRepere) / 100;
+  const repere = rendreUnitesAiresEcritures(
+    numerateurRepere,
+    denominateurRepere,
+    { nombreUnites, classe: "unites-repere-nc05" },
+  );
+  return `<figure class="equivalence-aires-nc05 ${classe}">
+    <div class="cote-equivalence-aires-nc05">
+      ${repere}
+      <p>${rendreFractionEmpilee(numerateurRepere, denominateurRepere)}</p>
+    </div>
+    <span class="egal-aires-nc05" role="math" aria-label="égal">=</span>
+    <div class="cote-equivalence-aires-nc05">
+      ${centiemes}
+      <p>${centiemesColories
+        ? rendreFractionEmpilee(pourcentage, 100)
+        : "? centièmes"}</p>
+    </div>
+    <figcaption>La même unité est découpée autrement, mais la surface représentée ne change pas.</figcaption>
+  </figure>`;
+}
+
+function rendreVisuelQuestionEcritures(question) {
+  if (presentationQuestionEcrituresMultiples(question) !== "visuelle") return "";
+  return `<section class="visuel-question-nc05" aria-label="Représentation de l’écriture donnée">
+    ${rendreVisuelSourceEcritures(question)}
+  </section>`;
+}
+
+function rendreVisuelAideEcritures(question, pourcentage) {
+  const source = fractionSourceAiresEcritures(question);
+  if (source.denominateur !== 100) {
+    return rendreEquivalenceAiresDepuisValeur(
+      pourcentage,
+      source.denominateur,
+      { centiemesColories: false, classe: "equivalence-aires-aide-nc05" },
+    );
+  }
+  if (pourcentage <= 100) {
+    return rendreFigureFraction(
+      dessinerGrilleFraction({
+        colonnes: 10,
+        lignes: 10,
+        coloriees: 0,
+        cote: 150,
+        ecriture: false,
+      }),
+      "figure-grille-aide-nc05",
+      "Une unité partagée en 100 cases égales",
+    );
+  }
+  return rendreVisuelSourceEcritures(question, "modele-source-aide-nc05");
+}
+
+function rendreVisuelCorrectionEcritures(question, pourcentage) {
+  if (familleQuestion(question) === FAMILLE_RECONNAITRE_EQUIVALENCES) {
+    return rendreDroiteEcritures(pourcentage, { equivalenceVisible: true });
+  }
+  const repere = fractionRepereAiresEcritures(question, pourcentage);
+  return rendreEquivalenceAiresDepuisValeur(
+    pourcentage,
+    repere?.denominateur ?? null,
+    { classe: "equivalence-aires-correction-nc05" },
+  );
+}
+
 function rendreChaineQuestionEcritures(question) {
   const variante = varianteQuestionEcrituresMultiples(question);
   const pourcentage = pourcentageQuestionEcrituresMultiples(question);
@@ -4345,7 +4522,8 @@ function rendreQuestionEcrituresMultiples() {
           aria-label="Écritures proposées">
           ${rendreChoix(question, rendreLibelleChoixEcritures)}
         </div>`
-      : `<p class="chaine-question-nc05">${rendreChaineQuestionEcritures(question)}</p>
+      : `${rendreVisuelQuestionEcritures(question)}
+        <p class="chaine-question-nc05">${rendreChaineQuestionEcritures(question)}</p>
         ${estEntrainement() ? '<p class="indication-clavier-physique">Chiffres · virgule si nécessaire · Retour arrière · Entrée pour valider</p>' : ""}`}
     ${estEntrainement() ? rendreZoneRetour() : '<div class="zone-retour" aria-hidden="true"></div>'}
   </main>`;
@@ -4466,23 +4644,7 @@ function rendreChaineCompleteEcritures(question) {
 function rendreAideEcrituresMultiples(question) {
   if (!etat.aideOuverte) return "";
   const pourcentage = pourcentageQuestionEcrituresMultiples(question);
-  const grille = pourcentage <= 100
-    && [
-      FAMILLE_POURCENTAGE_FRACTION_CENTIEMES,
-      FAMILLE_POURCENTAGE_DECIMAL,
-    ].includes(familleQuestion(question))
-    ? rendreFigureFraction(
-      dessinerGrilleFraction({
-        colonnes: 10,
-        lignes: 10,
-        coloriees: 0,
-        cote: 150,
-        ecriture: false,
-      }),
-      "figure-grille-aide-nc05",
-      "Une unité partagée en 100 cases égales",
-    )
-    : "";
+  const visuelAide = rendreVisuelAideEcritures(question, pourcentage);
   const etapes = question.aide.blocs.map((bloc, index) => `<details class="etape-aide-nc05" ${index === 0 ? "open" : ""}>
     <summary><span>${index + 1}</span>${["Repérer", "Traduire %", "Relier", "Vérifier"][index]}</summary>
     <p>${echapper(bloc.contenu)}</p>
@@ -4491,7 +4653,7 @@ function rendreAideEcrituresMultiples(question) {
       <span>Question en cours</span>
       <p class="chaine-question-nc05">${rendreChaineQuestionEcritures(question)}</p>
     </section>
-    <div class="visuels-aide-nc05">${grille}${rendreDroiteEcritures(pourcentage, {
+    <div class="visuels-aide-nc05">${visuelAide}${rendreDroiteEcritures(pourcentage, {
       etiquetteSource: etiquetteSourceAideEcritures(question),
     })}</div>
     <div class="etapes-aide-nc05">${etapes}</div>
@@ -4521,7 +4683,7 @@ function rendreCorrectionEcrituresMultiples(question) {
   const contenu = `${rendreReponseEleve(question)}
     ${diagnosticsChoisisEcritures(question)}
     <p class="principe-correction-nc05">Le symbole <strong>%</strong> signifie « sur 100 ». On conserve donc exactement la même valeur.</p>
-    ${rendreDroiteEcritures(pourcentage, { equivalenceVisible: true })}
+    ${rendreVisuelCorrectionEcritures(question, pourcentage)}
     <p class="titre-reponse-correcte">Réponse correcte</p>
     ${rendreChaineCompleteEcritures(question)}
     <p class="controle-grandeur-nc05">${pourcentage < 100
@@ -4593,20 +4755,26 @@ function rendreCarteCoursEcritures(index) {
   }
   if (index === 3) {
     return `<article class="carte-cours-nc05">
-      <span class="numero-cours">4</span><h3>Quatre repères à automatiser</h3>
+      <span class="numero-cours">4</span><h3>D’un cinquième aux centièmes</h3>
+      ${rendreEquivalenceAiresDepuisValeur(80, 5, {
+        classe: "equivalence-aires-cours-nc05",
+      })}
+      <p class="chaine-exemple-nc05">${rendreFractionEmpilee(4, 5)}<span>=</span>${rendreFractionEmpilee(80, 100)}<span>=</span>${rendrePourcentage(80)}</p>
       <div class="reperes-cours-nc05">
         ${rendreRepereCoursEcritures(1, 2)}
         ${rendreRepereCoursEcritures(1, 4)}
         ${rendreRepereCoursEcritures(3, 4)}
         ${rendreRepereCoursEcritures(1, 5)}
       </div>
-      <p class="definition-cours">Ces repères permettent ensuite de reconnaître rapidement leurs multiples.</p>
+      <p class="definition-cours">On ne change pas la surface : on partage seulement la même unité en 100 parts.</p>
     </article>`;
   }
   if (index === 4) {
     return `<article class="carte-cours-nc05">
       <span class="numero-cours">5</span><h3>100 % est l’unité ; 120 % la dépasse</h3>
-      ${rendreDroiteEcritures(120, { equivalenceVisible: true })}
+      ${rendreEquivalenceAiresDepuisValeur(120, 5, {
+        classe: "equivalence-aires-cours-nc05",
+      })}
       <p class="chaine-exemple-nc05 chaine-exemple-longue-nc05"><strong>1,2</strong><span>=</span>${rendreFractionEmpilee(12, 10)}<span>=</span>${rendreFractionEmpilee(6, 5)}<span>=</span><span class="ecriture-mixte"><strong>1</strong><span>+</span>${rendreFractionEmpilee(1, 5)}</span><span>=</span>${rendrePourcentage(120)}<span>=</span>${rendreFractionEmpilee(120, 100)}</p>
       <p class="definition-cours">Un pourcentage peut dépasser 100 % : il représente alors un nombre supérieur à 1.</p>
     </article>`;
