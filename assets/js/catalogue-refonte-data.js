@@ -239,7 +239,7 @@ window.MATHSGO_CATALOGUE = {
       "primaryGroup": "manipuler",
       "collections": [],
       "tags": ["schema-barres", "equation", "inconnue"],
-      "thumbnail": "assets/img/thumbnails/splat/equabarre.png?v=2",
+      "thumbnail": "assets/img/thumbnails/splat/equabarre.png?v=3",
       "cardDescription": "Représenter une équation par deux schémas en barres et transformer les deux membres pas à pas."
     },
     "outils/equasplat.html": {
