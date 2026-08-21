@@ -139,6 +139,14 @@ test("les deux retours écrits à la main se prennent au pouce sans manger le ti
     /@media \(max-width: \d+px\) \{\s*\.home-link \.home-link-label \{ display: none; \}/,
     "sur écran étroit, le libellé s'efface et la flèche reste",
   );
+  // Sur un écran de 320 px, la flèche seule se faisait encore percuter par un
+  // « CLUB MATHS » de 219 px — la largeur du titre en Verdana, chez un visiteur
+  // qui n'a pas Segoe UI. Le titre doit garder son cran de moins.
+  assert.match(
+    chaos,
+    /@media \(max-width: \d+px\) \{\s*header h1 \{ font-size: [\d.]+rem; \}/,
+    "sur les petits téléphones, le titre descend d'un cran pour laisser passer la flèche",
+  );
 
   const cartes = returnPages["outils/fabrication_materiel/cartes_premiers_1_100.html"];
   assert.match(cartes, /\.panel-head \.back \{[^}]*min-width: 44px; min-height: 44px;/s);
