@@ -4986,8 +4986,8 @@ function carteCoursDroite(index) {
     <p class="definition-cours">Les 4 premiers quarts fusionnent en 1 unité. Il reste 3 quarts : ${rendreFractionEmpilee(7, 4)} = 1 + ${rendreFractionEmpilee(3, 4)}.</p>
     <p class="precision-cours-droite">Le rail aide à construire le nombre ; la réponse se place ensuite sur la droite graduée.</p></article>`;
   return `<article class="carte-cours-droite">${entete(6, "Changer d’échelle")}
-    ${rendreDroiteCoursAnnotee({ depart: [70, 1], pas: [1, 1], intervalles: 7, etiquettes: [0, 5], point: { nom: "P", indice: 3, position: "dessus" } }, [{ type: "accolade", debut: 0, fin: 5, texte: "75 − 70 = 5" }, { type: "intervalles", debut: 0, fin: 5 }, { type: "sauts", debut: 0, fin: 3, texte: "+ 1" }, { type: "valeurs", elements: [{ indice: 0, texte: "70" }, { indice: 1, texte: "71" }, { indice: 2, texte: "72" }, { indice: 3, texte: "73" }] }])}
-    <p>Il y a 5 intervalles entre 70 et 75 : le pas vaut <strong>5 ÷ 5 = 1</strong>.</p>
+    ${rendreDroiteCoursAnnotee({ depart: [70, 1], pas: [1, 1], intervalles: 7, etiquettes: [0, 5], point: { nom: "P", indice: 3, position: "dessus" } }, [{ type: "intervalles", debut: 0, fin: 5 }, { type: "sauts", debut: 0, fin: 3, texte: "+ 1" }, { type: "valeurs", elements: [{ indice: 0, texte: "70" }, { indice: 1, texte: "71" }, { indice: 2, texte: "72" }, { indice: 3, texte: "73" }] }])}
+    <p>De 70 à 75, l’écart vaut <strong>75 − 70 = 5</strong>. Il y a 5 intervalles : le pas vaut <strong>5 ÷ 5 = 1</strong>.</p>
     <p>Le zéro n’est pas dessiné, mais les deux valeurs connues suffisent. Depuis 70, je fais 3 sauts de 1 : <strong>P a pour abscisse 73</strong>.</p>
     <p class="definition-cours"><strong>Mon contrôle :</strong> sens → écart → intervalles → pas → position.</p></article>`;
 }
