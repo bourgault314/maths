@@ -47,12 +47,12 @@
 // Le rendu est une chaîne SVG pure et déterministe : mêmes réglages,
 // même dessin, partout (diaporama, fiche, atelier, labo, exports).
 
-import { COULEURS } from "../../charte/src/charte.js?v=43";
+import { COULEURS } from "../../charte/src/charte.js?v=44";
 import {
   mesurerEcritureFractionSvg,
   rendreFractionSvg,
   verbaliserFraction,
-} from "./expressions.js?v=43";
+} from "./expressions.js?v=44";
 
 export const VERSION_DROITE_GRADUEE = 1;
 
